@@ -1,25 +1,22 @@
 #include "squid.h"
-#include "ICAPElements.h"
+#include "adaptation/Elements.h"
 
-#if 0 /* XXX: remove this file */
-
-const char *ICAP::crlf = "\r\n";
-
+const char *Adaptation::crlf = "\r\n";
 
 const char *
-ICAP::methodStr(ICAP::Method method)
+Adaptation::methodStr(Adaptation::Method method)
 {
     switch(method) {
 
-    case ICAP::methodReqmod:
+    case Adaptation::methodReqmod:
         return "REQMOD";
         break;
 
-    case ICAP::methodRespmod:
+    case Adaptation::methodRespmod:
         return "RESPMOD";
         break;
 
-    case ICAP::methodOptions:
+    case Adaptation::methodOptions:
         return "OPTIONS";
         break;
 
@@ -32,15 +29,15 @@ ICAP::methodStr(ICAP::Method method)
 
 
 const char *
-ICAP::vectPointStr(ICAP::VectPoint point)
+Adaptation::vectPointStr(Adaptation::VectPoint point)
 {
     switch(point) {
 
-    case ICAP::pointPreCache:
+    case Adaptation::pointPreCache:
         return "PRECACHE";
         break;
 
-    case ICAP::pointPostCache:
+    case Adaptation::pointPostCache:
         return "POSTCACHE";
         break;
 
@@ -52,4 +49,3 @@ ICAP::vectPointStr(ICAP::VectPoint point)
 }
 
 
-#endif /* if 0 -- remove this file */

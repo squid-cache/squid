@@ -35,6 +35,7 @@
 #define SQUID_ICAPSERVICEREP_H
 
 #include "cbdata.h"
+#include "adaptation/Service.h"
 #include "ICAPInitiator.h"
 #include "ICAPElements.h"
 
@@ -70,7 +71,8 @@ class ICAPOptXact;
  */
 
 
-class ICAPServiceRep : public RefCountable, public ICAPInitiator
+class ICAPServiceRep : public RefCountable, public Adaptation::Service,
+    public ICAPInitiator
 {
 
 public:
@@ -82,9 +84,6 @@ public:
 
     bool configure(Pointer &aSelf); // needs self pointer for ICAPOptXact
     void invalidate(); // call when the service is no longer needed or valid
-
-    const char *methodStr() const;
-    const char *vectPointStr() const;
 
     bool probed() const; // see comments above
     bool broken() const; // see comments above
@@ -101,20 +100,6 @@ public:
     
     //AsyncJob virtual methods
     virtual bool doneAll() const { return ICAPInitiator::doneAll() && false;}
-
-public:
-    String key;
-    ICAP::Method method;
-    ICAP::VectPoint point;
-    String uri;    // service URI
-
-    // URI components
-    String host;
-    int port;
-    String resource;
-
-    // XXX: use it when selecting a service and handling ICAP errors!
-    bool bypass;
 
 public: // treat these as private, they are for callbacks only
     void noteTimeToUpdate();
