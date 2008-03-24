@@ -74,13 +74,18 @@ Adaptation::Service::configure()
     debugs(3, 5, HERE << cfg_filename << ':' << config_lineno << ": " <<
         "service is " << methodStr() << "_" << vectPointStr());
 
-    if (false && uri.cmp("icap://", 7) != 0) { // XXX: parametrize and enable
-        debugs(3, 0, HERE << cfg_filename << ':' << config_lineno << ": " <<
-            "wrong service URI protocol: " << uri.buf());
-        return false;
-    }
+    // TODO: find core code that parses URLs and extracts various parts
 
-    const char *s = uri.buf() + 7;
+    // extract scheme and use it as the service protocol
+    const char *schemeSuffix = "://";
+    if (const char *schemeEnd = uri.pos(schemeSuffix))
+		protocol.limitInit(uri.buf(), schemeEnd - uri.buf());
+	debugs(3, 5, HERE << cfg_filename << ':' << config_lineno << ": " <<
+		"service protocol is " << protocol);
+	if (!protocol.size())
+		return false;
+
+    const char *s = uri.buf() + protocol.size() + sizeof(schemeSuffix);
 
     const char *e;
 
