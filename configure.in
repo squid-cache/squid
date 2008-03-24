@@ -731,6 +731,9 @@ AC_ARG_ENABLE(delay-pools,
   fi
 ])
 
+dnl disable generic/common adaptation support by default
+use_adaptation=no
+
 AM_CONDITIONAL(USE_ESI, false)
 AC_ARG_ENABLE(esi,
               AC_HELP_STRING([--enable-esi],[Enable ESI for accelerators. Requires libexpat. Enabling ESI will cause squid to follow the Edge Acceleration Specification (www.esi.org). This causes squid to IGNORE client Cache-Control headers. DO NOT use this in a squid configured as a web proxy, ONLY use it in a squid configured for webserver acceleration.]),
@@ -747,7 +750,16 @@ AM_CONDITIONAL(USE_ICAP_CLIENT, false)
 AC_ARG_ENABLE(icap-client,
               AC_HELP_STRING([--enable-icap-client],[Enable the ICAP client.]),
 	      use_icap_client=$enableval, use_icap_client=no)
-dnl The rest of ICAP code is below, to give eCAP a chance to enable ICAP
+if test "$use_icap_client" = "yes" ; then
+  AC_DEFINE(ICAP_CLIENT,1,[Enable ICAP client features in Squid])
+  AM_CONDITIONAL(USE_ICAP_CLIENT, true)
+  ICAP_LIBS="ICAP/libicap.la"
+  use_adaptation=yes
+else
+  AC_DEFINE(ICAP_CLIENT,0,[Enable ICAP client features in Squid])
+  ICAP_LIBS=""
+fi
+AC_SUBST(ICAP_LIBS)
 
 use_ecap=1
 AC_MSG_CHECKING(whether to support eCAP)
@@ -772,23 +784,14 @@ AC_ARG_ENABLE(ecap,
 )
 
 dnl Perform configuration consistency checks for eCAP
-
 if test $use_ecap = yes;
 then
-    dnl eCAP support requires loadable modules, which are enable by default
+    dnl eCAP support requires loadable modules, which are enabled by default
     if test "$use_loadable_modules" != "yes"
     then
         AC_MSG_ERROR([
             eCAP support requires loadable modules. Please do not use
             --disable-loadable-modules with --enable-ecap.]);
-    fi
-
-    dnl Currently, ICAP and eCAP support are mutually exclusive
-    if test "$use_icap_client" = "yes"
-    then
-        AC_MSG_ERROR([
-            Currently, ICAP and eCAP support are mutually exclusive
-            You cannot --enable-icap-client with --enable-ecap.]);
     fi
 fi
 
@@ -797,34 +800,25 @@ if test $use_ecap = yes;
 then
     AC_DEFINE(USE_ECAP,1,[Enable eCAP support])
     ECAP_LIBS="eCAP/libeCAP.la"
+    use_adaptation=yes
 else
-    AC_DEFINE(USE_ECAP,0,[Enable eCAP support])
+    AC_DEFINE(USE_ECAP,0,[Disable eCAP support])
     ECAP_LIBS=""
 fi
 AC_SUBST(ECAP_LIBS)
 
-dnl XXX: Turn on internal ICAP support if eCAP is enabled.
-dnl XXX: eCAP is temporary reusing some of the ICAP code.
-if test $use_ecap = yes;
+
+dnl enable adaptation if requested by specific adaptation mechanisms
+AM_CONDITIONAL(USE_ADAPTATION, test $use_adaptation = yes)
+if test $use_adaptation = yes
 then
-    use_icap_client=yes
-    AC_DEFINE(USE_ECAP_AS_ICAP_HACK,1,[eCAP code uses ICAP names])
+    AC_DEFINE(USE_ADAPTATION,1,[common adaptation support])
+    ADAPTATION_LIBS="adaptation/libadaptation.la"
 else
-    AC_DEFINE(USE_ECAP_AS_ICAP_HACK,0,[eCAP code uses ICAP names])
+    AC_DEFINE(USE_ADAPTATION,0,[common adaptation support])
+    ADAPTATION_LIBS=""
 fi
-
-dnl Finish ICAP configuration after eCAP had a chance to enable it
-if test "$use_icap_client" = "yes" ; then
-  AC_DEFINE(ICAP_CLIENT,1,[Enable ICAP client features in Squid])
-  AM_CONDITIONAL(USE_ICAP_CLIENT, true)
-  ICAP_LIBS="ICAP/libicap.a"
-else
-  dnl do not set ICAP_CLIENT to zero here to allow eCAP to overwrite
-  dnl AC_DEFINE(ICAP_CLIENT,0,[Enable ICAP client features in Squid])
-  ICAP_LIBS=""
-fi
-AC_SUBST(ICAP_LIBS)
-
+AC_SUBST(ADAPTATION_LIBS)
 
 
 dnl This is a developer only option. Developers know how to set defines
@@ -3513,6 +3507,8 @@ AC_CONFIG_FILES([\
 	src/fs/Makefile \
 	src/repl/Makefile \
 	src/auth/Makefile \
+	src/adaptation/Makefile \
+	src/ICAP/Makefile \
 	src/eCAP/Makefile \
 	contrib/Makefile \
 	snmplib/Makefile \
