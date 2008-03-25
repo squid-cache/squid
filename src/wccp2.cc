@@ -128,7 +128,7 @@ static EVH wccp2AssignBuckets;
 
 /* WCCP v2 packet header */
 
-/// \interface WCCPv2 Protocol
+/// \interface WCCPv2_Protocol
 struct wccp2_here_i_am_header_t
 {
     uint32_t type;
@@ -147,7 +147,7 @@ struct wccp2_security_none_t
     uint32_t security_option;
 };
 
-/// \interface WCCPv2 Protocol
+/// \interface WCCPv2_Protocol
 struct wccp2_security_md5_t
 {
     uint16_t security_type;
@@ -158,7 +158,7 @@ struct wccp2_security_md5_t
 
 /* Service info struct */
 
-/// \interface WCCPv2 Protocol
+/// \interface WCCPv2_Protocol
 struct wccp2_service_info_t
 {
     uint16_t service_type;
@@ -178,7 +178,7 @@ struct wccp2_service_info_t
     uint16_t port7;
 };
 
-/// \interface WCCPv2 Protocol
+/// \interface WCCPv2_Protocol
 struct wccp2_cache_identity_info_t
 {
     struct in_addr addr;
@@ -191,7 +191,7 @@ struct wccp2_cache_identity_info_t
 
 /* Web Cache identity info */
 
-/// \interface WCCPv2 Protocol
+/// \interface WCCPv2_Protocol
 struct wccp2_identity_info_t
 {
     uint16_t cache_identity_type;
@@ -202,7 +202,7 @@ struct wccp2_identity_info_t
 
 static struct wccp2_identity_info_t wccp2_identity_info;
 
-/// \interface WCCPv2 Protocol
+/// \interface WCCPv2_Protocol
 struct wccp2_cache_mask_identity_info_t
 {
     struct in_addr addr;
@@ -218,7 +218,7 @@ struct wccp2_cache_mask_identity_info_t
 
 /* Web Cache identity info */
 
-/// \interface WCCPv2 Protocol
+/// \interface WCCPv2_Protocol
 struct wccp2_mask_identity_info_t
 {
     uint16_t cache_identity_type;
@@ -231,7 +231,7 @@ static struct wccp2_mask_identity_info_t wccp2_mask_identity_info;
 
 /* View header */
 
-/// \interface WCCPv2 Protocol
+/// \interface WCCPv2_Protocol
 struct wccp2_cache_view_header_t
 {
     uint16_t cache_view_type;
@@ -243,7 +243,7 @@ static struct wccp2_cache_view_header_t wccp2_cache_view_header;
 
 /* View info */
 
-/// \interface WCCPv2 Protocol
+/// \interface WCCPv2_Protocol
 struct wccp2_cache_view_info_t
 {
     uint32_t num_routers;
@@ -254,7 +254,7 @@ static struct wccp2_cache_view_info_t wccp2_cache_view_info;
 
 /* Router ID element */
 
-/// \interface WCCPv2 Protocol
+/// \interface WCCPv2_Protocol
 struct wccp2_router_id_element_t
 {
     struct in_addr router_address;
@@ -265,7 +265,7 @@ static struct wccp2_router_id_element_t wccp2_router_id_element;
 
 /* Capability info header */
 
-/// \interface WCCpv2 Protocol
+/// \interface WCCpv2_Protocol
 struct wccp2_capability_info_header_t
 {
     uint16_t capability_info_type;
@@ -276,7 +276,7 @@ static struct wccp2_capability_info_header_t wccp2_capability_info_header;
 
 /* Capability element header */
 
-/// \interface WCCPv2 Protocol
+/// \interface WCCPv2_Protocol
 struct wccp2_capability_element_header_t
 {
     uint16_t capability_type;
@@ -285,7 +285,7 @@ struct wccp2_capability_element_header_t
 
 /* Capability element */
 
-/// \interface WCCPv2 Protocol
+/// \interface WCCPv2_Protocol
 struct wccp2_capability_element_t
 {
     uint16_t capability_type;
@@ -297,7 +297,7 @@ static struct wccp2_capability_element_t wccp2_capability_element;
 
 /* Mask Element */
 
-/// \interface WCCPv2 Protocol
+/// \interface WCCPv2_Protocol
 struct wccp2_mask_element_t
 {
     uint32_t source_ip_mask;
@@ -309,7 +309,7 @@ struct wccp2_mask_element_t
 
 /* Value Element */
 
-/// \interface WCCPv2 Protocol
+/// \interface WCCPv2_Protocol
 struct wccp2_value_element_t
 {
     uint32_t source_ip_value;
@@ -322,7 +322,7 @@ struct wccp2_value_element_t
 
 /* RECEIVED PACKET STRUCTURE */
 
-/// \interface WCCPv2 Protocol
+/// \interface WCCPv2_Protocol
 struct wccp2_i_see_you_t
 {
     uint32_t type;
@@ -335,7 +335,7 @@ static struct wccp2_i_see_you_t wccp2_i_see_you;
 
 /* Router ID element */
 
-/// \interface WCCPv2 Protocol
+/// \interface WCCPv2_Protocol
 struct wccp2_router_assign_element_t
 {
     struct in_addr router_address;
@@ -345,7 +345,7 @@ struct wccp2_router_assign_element_t
 
 /* Generic header struct */
 
-/// \interface WCCPv2 Protocol
+/// \interface WCCPv2_Protocol
 struct wccp2_item_header_t
 {
     uint16_t type;
@@ -354,7 +354,7 @@ struct wccp2_item_header_t
 
 /* Router identity struct */
 
-/// \interface WCCPv2 Protocol
+/// \interface WCCPv2_Protocol
 struct router_identity_info_t
 {
 
@@ -368,7 +368,7 @@ struct router_identity_info_t
 
 /* The received packet for a mask assignment is unusual */
 
-/// \interface WCCPv2 Protocol
+/// \interface WCCPv2_Protocol
 struct cache_mask_info_t
 {
     struct in_addr addr;
@@ -379,7 +379,7 @@ struct cache_mask_info_t
 
 /* assigment key */
 
-/// \interface WCCPv2 Protocol
+/// \interface WCCPv2_Protocol
 struct assignment_key_t
 {
     struct in_addr master_ip;
@@ -388,7 +388,7 @@ struct assignment_key_t
 
 /* Router view of WCCP */
 
-/// \interface WCCPv2 Protocol
+/// \interface WCCPv2_Protocol
 struct router_view_t
 {
 
@@ -400,7 +400,7 @@ struct router_view_t
 
 /* Lists used to keep track of caches, routers and services */
 
-/// \interface WCCPv2 Protocol
+/// \interface WCCPv2_Protocol
 struct wccp2_cache_list_t
 {
 
@@ -411,7 +411,7 @@ struct wccp2_cache_list_t
     struct wccp2_cache_list_t *next;
 };
 
-/// \interface WCCPv2 Protocol
+/// \interface WCCPv2_Protocol
 struct wccp2_router_list_t
 {
 
@@ -430,7 +430,7 @@ struct wccp2_router_list_t
 
 static int wccp2_numrouters;
 
-/// \interface WCCPv2 Protocol
+/// \interface WCCPv2_Protocol
 struct wccp2_service_list_t
 {
 
@@ -478,7 +478,6 @@ wccp2InitServices(void)
 }
 
 static void
-
 wccp2_update_service(struct wccp2_service_list_t *srv, int service,
                      int service_id, int service_priority, int service_proto, int service_flags,
                      int ports[])
