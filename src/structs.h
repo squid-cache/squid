@@ -149,9 +149,7 @@ struct SquidConfig
         */
         int highWaterMark;
         int lowWaterMark;
-    }
-
-    Swap;
+    } Swap;
     size_t memMaxSize;
 
     struct
@@ -159,9 +157,7 @@ struct SquidConfig
         int64_t min;
         int pct;
         int64_t max;
-    }
-
-    quickAbort;
+    } quickAbort;
     int64_t readAheadGap;
     RemovalPolicySettings *replPolicy;
     RemovalPolicySettings *memPolicy;
@@ -197,9 +193,7 @@ struct SquidConfig
         time_t idns_query;
 #endif
 
-    }
-
-    Timeout;
+    } Timeout;
     size_t maxRequestHeaderSize;
     int64_t maxRequestBodySize;
     size_t maxReplyHeaderSize;
@@ -216,10 +210,7 @@ struct SquidConfig
 
         u_short snmp;
 #endif
-
-    }
-
-    Port;
+    } Port;
 
     struct
     {
@@ -229,18 +220,14 @@ struct SquidConfig
         https_port_list *https;
 #endif
 
-    }
-
-    Sockaddr;
+    } Sockaddr;
 #if SQUID_SNMP
 
     struct
     {
         char *configFile;
         char *agentInfo;
-    }
-
-    Snmp;
+    } Snmp;
 #endif
 #if USE_WCCP
 
@@ -251,9 +238,7 @@ struct SquidConfig
 
         IPAddress address;
         int version;
-    }
-
-    Wccp;
+    } Wccp;
 #endif
 #if USE_WCCPv2
 
@@ -268,9 +253,7 @@ struct SquidConfig
         int weight;
         int rebuildwait;
         void *info;
-    }
-
-    Wccp2;
+    } Wccp2;
 #endif
 
 #if USE_ICMP
@@ -302,9 +285,7 @@ struct SquidConfig
         customlog *accesslogs;
 
         int rotateNumber;
-    }
-
-    Log;
+    } Log;
     char *adminEmail;
     char *EmailFrom;
     char *EmailProgram;
@@ -330,9 +311,7 @@ struct SquidConfig
         char *ssl_password;
 #endif
 
-    }
-
-    Program;
+    } Program;
 #if USE_DNSSERVERS
 
     int dnsChildren;
@@ -350,9 +329,7 @@ struct SquidConfig
         char *surrogate_id;
 #endif
 
-    }
-
-    Accel;
+    } Accel;
     char *appendDomain;
     size_t appendDomainLen;
     char *debugOptions;
@@ -371,9 +348,7 @@ struct SquidConfig
         char *file;
         time_t period;
         u_short port;
-    }
-
-    Announce;
+    } Announce;
 
     struct
     {
@@ -389,9 +364,7 @@ struct SquidConfig
 #endif
         /* FIXME INET6 : this should really be a CIDR value */
         IPAddress client_netmask;
-    }
-
-    Addrs;
+    } Addrs;
     size_t tcpRcvBufsz;
     size_t udpMaxHitObjsz;
     wordlist *hierarchy_stoplist;
@@ -406,16 +379,12 @@ struct SquidConfig
         int size;
         int low;
         int high;
-    }
-
-    ipcache;
+    } ipcache;
 
     struct
     {
         int size;
-    }
-
-    fqdncache;
+    } fqdncache;
     int minDirectHops;
     int minDirectRtt;
     cachemgr_passwd *passwd_list;
@@ -427,18 +396,14 @@ struct SquidConfig
         int64_t maxObjectSize;
         int64_t minObjectSize;
         size_t maxInMemObjSize;
-    }
-
-    Store;
+    } Store;
 
     struct
     {
         int high;
         int low;
         time_t period;
-    }
-
-    Netdb;
+    } Netdb;
 
     struct
     {
@@ -498,9 +463,7 @@ struct SquidConfig
         int global_internal_static;
         int dns_require_A;
         int debug_override_X;
-    }
-
-    onoff;
+    } onoff;
 
     class ACL *aclList;
 
@@ -540,9 +503,7 @@ struct SquidConfig
         acl_access *ssl_bump;
 #endif
 
-    }
-
-    accessList;
+    } accessList;
     acl_deny_info_list *denyInfoList;
     authConfig authConfiguration;
 
@@ -555,9 +516,7 @@ struct SquidConfig
         int epsv_all;
         int sanitycheck;
         int telnet;
-    }
-
-    Ftp;
+    } Ftp;
     refresh_t *Refresh;
 
     struct _cacheSwap
@@ -565,33 +524,25 @@ struct SquidConfig
         RefCount<class Store> *swapDirs;
         int n_allocated;
         int n_configured;
-    }
-
-    cacheSwap;
+    } cacheSwap;
 
     struct
     {
         char *directory;
         int use_short_names;
-    }
-
-    icons;
+    } icons;
     char *errorDirectory;
 
     struct
     {
         int maxtries;
         int onerror;
-    }
-
-    retry;
+    } retry;
 
     struct
     {
         size_t limit;
-    }
-
-    MemPools;
+    } MemPools;
 #if DELAY_POOLS
 
     DelayConfig Delay;
@@ -605,9 +556,7 @@ struct SquidConfig
         int icp_min_poll;
         int dns_min_poll;
         int http_min_poll;
-    }
-
-    comm_incoming;
+    } comm_incoming;
     int max_open_disk_fds;
     int uri_whitespace;
     int64_t rangeOffsetLimit;
@@ -620,9 +569,7 @@ struct SquidConfig
         int ttl;
         unsigned short port;
         char *encode_key;
-    }
-
-    mcast_miss;
+    } mcast_miss;
 #endif
 
     /* one access list per header type we know of */
@@ -640,9 +587,7 @@ struct SquidConfig
         time_t rewrite_period;
         size_t swapout_chunk_size;
         int rebuild_chunk_percentage;
-    }
-
-    digest;
+    } digest;
 #endif
 #if USE_SSL
 
@@ -650,9 +595,7 @@ struct SquidConfig
     {
         int unclean_shutdown;
         char *ssl_engine;
-    }
-
-    SSL;
+    } SSL;
 #endif
 
     wordlist *ext_methods;
@@ -662,9 +605,7 @@ struct SquidConfig
         int high_rptm;
         int high_pf;
         size_t high_memory;
-    }
-
-    warnings;
+    } warnings;
     char *store_dir_select_algorithm;
     int sleep_after_fork;	/* microseconds */
     time_t minimum_expiry_time;	/* seconds */
@@ -684,9 +625,7 @@ struct SquidConfig
         char *flags;
         acl_access *cert_error;
         SSL_CTX *sslContext;
-    }
-
-    ssl_client;
+    } ssl_client;
 #endif
 
     char *accept_filter;
@@ -700,9 +639,7 @@ struct SquidConfig2
     {
         int enable_purge;
         int mangle_request_headers;
-    }
-
-    onoff;
+    } onoff;
     uid_t effectiveUserID;
     gid_t effectiveGroupID;
 };
@@ -842,41 +779,18 @@ public:
 
 struct _http_state_flags
 {
-
-unsigned int proxying:
-    1;
-
-unsigned int keepalive:
-    1;
-
-unsigned int only_if_cached:
-    1;
-
-unsigned int headers_parsed:
-    1;
-
-unsigned int front_end_https:
-    2;
-
-unsigned int originpeer:
-    1;
-
-unsigned int keepalive_broken:
-    1;
-
-unsigned int abuse_detected:
-    1;
-
-unsigned int request_sent:
-    1;
-
-unsigned int do_next_read:
-    1;
-
-unsigned int consume_body_data:
-    1;
-
-unsigned int chunked:1;
+    unsigned int proxying:1;
+    unsigned int keepalive:1;
+    unsigned int only_if_cached:1;
+    unsigned int headers_parsed:1;
+    unsigned int front_end_https:2;
+    unsigned int originpeer:1;
+    unsigned int keepalive_broken:1;
+    unsigned int abuse_detected:1;
+    unsigned int request_sent:1;
+    unsigned int do_next_read:1;
+    unsigned int consume_body_data:1;
+    unsigned int chunked:1;
 };
 
 struct _ipcache_addrs
@@ -945,18 +859,14 @@ struct peer
         time_t last_connect_probe;
         int logged_state;	/* so we can print dead/revived msgs */
         int conn_open;		/* current opened connections */
-    }
-
-    stats;
+    } stats;
 
     struct
     {
         int version;
         int counts[ICP_END+1];
         u_short port;
-    }
-
-    icp;
+    } icp;
 #if USE_HTCP
 
     struct
@@ -964,9 +874,7 @@ struct peer
         double version;
         int counts[2];
         u_short port;
-    }
-
-    htcp;
+    } htcp;
 #endif
 
     u_short http_port;
@@ -976,63 +884,30 @@ struct peer
 
     struct
     {
-
-unsigned int proxy_only:
-        1;
-
-unsigned int no_query:
-        1;
-
-unsigned int background_ping:
-        1;
-
-unsigned int no_digest:
-        1;
-
-unsigned int default_parent:
-        1;
-
-unsigned int roundrobin:
-        1;
-
-unsigned int weighted_roundrobin:
-        1;
-
-unsigned int mcast_responder:
-        1;
-
-unsigned int closest_only:
-        1;
+        unsigned int proxy_only:1;
+        unsigned int no_query:1;
+        unsigned int background_ping:1;
+        unsigned int no_digest:1;
+        unsigned int default_parent:1;
+        unsigned int roundrobin:1;
+        unsigned int weighted_roundrobin:1;
+        unsigned int mcast_responder:1;
+        unsigned int closest_only:1;
 #if USE_HTCP
-
-unsigned int htcp:
-        1;
-
-unsigned int htcp_oldsquid:
-        1;
+        unsigned int htcp:1;
+        unsigned int htcp_oldsquid:1;
 #endif
-
-unsigned int no_netdb_exchange:
-        1;
+        unsigned int no_netdb_exchange:1;
 #if DELAY_POOLS
-
-unsigned int no_delay:
-        1;
+        unsigned int no_delay:1;
 #endif
-
-unsigned int allow_miss:
-        1;
+        unsigned int allow_miss:1;
 #if USE_CARP
-
-unsigned int carp:
-        1;
+        unsigned int carp:1;
 #endif
+        unsigned int originserver:1;
+    } options;
 
-unsigned int originserver:
-        1;
-    }
-
-    options;
     int weight;
     int basetime;
 
@@ -1046,18 +921,10 @@ unsigned int originserver:
 
         struct
         {
-
-unsigned int count_event_pending:
-            1;
-
-unsigned int counting:
-            1;
-        }
-
-        flags;
-    }
-
-    mcast;
+            unsigned int count_event_pending:1;
+            unsigned int counting:1;
+        } flags;
+    } mcast;
 #if USE_CACHE_DIGESTS
 
     PeerDigest *digest;
@@ -1079,9 +946,7 @@ unsigned int counting:
         unsigned int hash;
         double load_multiplier;
         double load_factor;	/* normalized weight value */
-    }
-
-    carp;
+    } carp;
 #endif
 
     char *login;		/* Proxy authorization */
@@ -1164,71 +1029,34 @@ struct request_flags
 #if HTTP_VIOLATIONS
         nocache_hack = 0;
 #endif
-#if LINUX_TPROXY
+#if LINUX_TPROXY2 || LINUX_TPROXY4
 	tproxy = 0;
 #endif
-
     }
 
-unsigned int range:
-    1;
-
-unsigned int nocache:
-    1;
-
-unsigned int ims:
-    1;
-
-unsigned int auth:
-    1;
-
-unsigned int cachable:
-    1;
-
-unsigned int hierarchical:
-    1;
-
-unsigned int loopdetect:
-    1;
-
-unsigned int proxy_keepalive:
-    1;
-
-unsigned int proxying:
-    1;	/* this should be killed, also in httpstateflags */
-
-unsigned int refresh:
-    1;
-
-unsigned int redirected:
-    1;
-
-unsigned int need_validation:
-    1;
+    unsigned int range:1;
+    unsigned int nocache:1;
+    unsigned int ims:1;
+    unsigned int auth:1;
+    unsigned int cachable:1;
+    unsigned int hierarchical:1;
+    unsigned int loopdetect:1;
+    unsigned int proxy_keepalive:1;
+    unsigned int proxying:1;	/* this should be killed, also in httpstateflags */
+    unsigned int refresh:1;
+    unsigned int redirected:1;
+    unsigned int need_validation:1;
 #if HTTP_VIOLATIONS
-
-unsigned int nocache_hack:
-    1;	/* for changing/ignoring no-cache requests */
+    unsigned int nocache_hack:1;	/* for changing/ignoring no-cache requests */
 #endif
-
-unsigned int accelerated:
-    1;
-
-unsigned int transparent:
-    1;
-
-#if LINUX_TPROXY
-unsigned int tproxy:
-    1; /* spoof client ip using tproxy */
+    unsigned int accelerated:1;
+    unsigned int transparent:1;
+#if LINUX_TPROXY2 || LINUX_TPROXY4
+    unsigned int tproxy:1; /* spoof client ip using tproxy */
 #endif
-unsigned int internal:
-    1;
-
-unsigned int internalclient:
-    1;
-
-unsigned int must_keepalive:
-    1;
+    unsigned int internal:1;
+    unsigned int internalclient:1;
+    unsigned int must_keepalive:1;
 
     // When adding new flags, please update cloneAdaptationImmune() as needed.
 
@@ -1244,11 +1072,8 @@ unsigned int must_keepalive:
 
 private:
 
-unsigned int reset_tcp:
-    1;
-
-unsigned int destinationIPLookedUp_:
-    1;
+    unsigned int reset_tcp:1;
+    unsigned int destinationIPLookedUp_:1;
 };
 
 struct _link_list
@@ -1276,42 +1101,19 @@ struct _refresh_t
 
     struct
     {
-
-unsigned int icase:
-        1;
-
-unsigned int refresh_ims:
-        1;
+        unsigned int icase:1;
+        unsigned int refresh_ims:1;
 #if HTTP_VIOLATIONS
-
-unsigned int override_expire:
-        1;
-
-unsigned int override_lastmod:
-        1;
-
-unsigned int reload_into_ims:
-        1;
-
-unsigned int ignore_reload:
-        1;
-
-unsigned int ignore_no_cache:
-        1;
-
-unsigned int ignore_no_store:
-        1;
-
-unsigned int ignore_private:
-        1;
-
-unsigned int ignore_auth:
-        1;
+        unsigned int override_expire:1;
+        unsigned int override_lastmod:1;
+        unsigned int reload_into_ims:1;
+        unsigned int ignore_reload:1;
+        unsigned int ignore_no_cache:1;
+        unsigned int ignore_no_store:1;
+        unsigned int ignore_private:1;
+        unsigned int ignore_auth:1;
 #endif
-
-    }
-
-    flags;
+    } flags;
 };
 
 /*
@@ -1354,9 +1156,7 @@ struct _StatCounters
         StatHist nh_svc_time;
         StatHist hit_svc_time;
         StatHist all_svc_time;
-    }
-
-    client_http;
+    } client_http;
 
     struct
     {
@@ -1367,12 +1167,8 @@ struct _StatCounters
             int errors;
             kb_t kbytes_in;
             kb_t kbytes_out;
-        }
-
-        all , http, ftp, other;
-    }
-
-    server;
+        } all , http, ftp, other;
+    } server;
 
     struct
     {
@@ -1396,31 +1192,23 @@ struct _StatCounters
         StatHist reply_svc_time;
         int query_timeouts;
         int times_used;
-    }
-
-    icp;
+    } icp;
 
     struct
     {
         int pkts_sent;
         int pkts_recv;
-    }
-
-    htcp;
+    } htcp;
 
     struct
     {
         int requests;
-    }
-
-    unlink;
+    } unlink;
 
     struct
     {
         StatHist svc_time;
-    }
-
-    dns;
+    } dns;
 
     struct
     {
@@ -1436,16 +1224,12 @@ struct _StatCounters
 #endif
 
         StatHist on_xition_count;
-    }
-
-    cd;
+    } cd;
 
     struct
     {
         int times_used;
-    }
-
-    netdb;
+    } netdb;
     int page_faults;
     int select_loops;
     int select_fds;
@@ -1460,7 +1244,6 @@ struct _StatCounters
 
     struct
     {
-
         struct
         {
             int opens;
@@ -1469,9 +1252,7 @@ struct _StatCounters
             int writes;
             int seeks;
             int unlinks;
-        }
-
-        disk;
+        } disk;
 
         struct
         {
@@ -1484,13 +1265,9 @@ struct _StatCounters
             int writes;
             int recvfroms;
             int sendtos;
-        }
-
-        sock;
+        } sock;
         int selects;
-    }
-
-    syscalls;
+    } syscalls;
     int aborted_requests;
 
     struct
@@ -1498,9 +1275,7 @@ struct _StatCounters
         int files_cleaned;
         int outs;
         int ins;
-    }
-
-    swap;
+    } swap;
 };
 
 /* per header statistics */
@@ -1536,18 +1311,14 @@ struct _ClientInfo
         kb_t kbytes_in;
         kb_t kbytes_out;
         kb_t hit_kbytes_out;
-    }
-
-    Http, Icp;
+    } Http, Icp;
 
     struct
     {
         time_t time;
         int n_req;
         int n_denied;
-    }
-
-    cutoff;
+    } cutoff;
     int n_established;		/* number of current established connections */
     time_t last_seen;
 };
@@ -1590,9 +1361,7 @@ struct _Logfile
     {
         unsigned int fatal;
         unsigned int syslog;
-    }
-
-    flags;
+    } flags;
 
     int syslog_priority;
 };

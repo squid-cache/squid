@@ -78,9 +78,7 @@ typedef struct
     char buf[NETDB_REQBUF_SZ];
     int buf_ofs;
     netdb_conn_state_t connstate;
-}
-
-netdbExchangeState;
+} netdbExchangeState;
 
 static hash_table *addr_table = NULL;
 static hash_table *host_table = NULL;

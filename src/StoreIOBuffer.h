@@ -74,12 +74,8 @@ public:
 
     struct
     {
-
-unsigned error:
-        1;
-    }
-
-    flags;
+        unsigned error:1;
+    } flags;
     size_t length;
     int64_t offset;
     char *data;

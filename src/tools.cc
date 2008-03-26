@@ -580,9 +580,7 @@ sig_child(int sig) {
 
     }
 
-    while (pid > 0 || (pid < 0 && errno == EINTR))
-
-        ;
+    while (pid > 0 || (pid < 0 && errno == EINTR));
     signal(sig, sig_child);
 
 #endif
@@ -1238,7 +1236,7 @@ keepCapabilities(void)
 
     if (prctl(PR_SET_KEEPCAPS, 1, 0, 0, 0)) {
         /* Silent failure unless TPROXY is required. Maybe not started as root */
-#if LINUX_TPROXY
+#if LINUX_TPROXY2 || LINUX_TPROXY4
 
         if (need_linux_tproxy)
             debugs(1, 1, "Error - tproxy support requires capability setting which has failed.  Continuing without tproxy support");
@@ -1248,7 +1246,6 @@ keepCapabilities(void)
 #endif
 
     }
-
 #endif
 }
 
@@ -1275,10 +1272,13 @@ restoreCapabilities(int keep)
 
     cap->inheritable = 0;
     cap->effective = (1 << CAP_NET_BIND_SERVICE);
-#if LINUX_TPROXY
 
+#if LINUX_TPROXY2
     if (need_linux_tproxy)
         cap->effective |= (1 << CAP_NET_ADMIN) | (1 << CAP_NET_BROADCAST);
+#elif LINUX_TPROXY4
+    if (need_linux_tproxy)
+        cap->effective |= (1 << CAP_NET_ADMIN);
 
 #endif
 
@@ -1287,7 +1287,7 @@ restoreCapabilities(int keep)
 
     if (capset(head, cap) != 0) {
         /* Silent failure unless TPROXY is required */
-#if LINUX_TPROXY
+#if LINUX_TPROXY2 || LINUX_TPROXY4
 
         if (need_linux_tproxy)
             debugs(50, 1, "Error enabling needed capabilities. Will continue without tproxy support");
@@ -1301,14 +1301,14 @@ restoreCapabilities(int keep)
 nocap:
     xfree(head);
     xfree(cap);
-#else
-#if LINUX_TPROXY
+#else /* not defined(_SQUID_LINUX_) && HAVE_SYS_CAPABILITY_H */
+
+#if LINUX_TPROXY2 || LINUX_TPROXY4
 
     if (need_linux_tproxy)
         debugs(50, 1, "Missing needed capability support. Will continue without tproxy support");
 
     need_linux_tproxy = 0;
-
 #endif
 
 #endif

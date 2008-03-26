@@ -1,4 +1,3 @@
-
 /*
  * $Id: IPInterception.cc,v 1.20 2008/02/05 22:38:24 amosjeffries Exp $
  *
@@ -88,11 +87,12 @@
 #include <linux/netfilter_ipv4.h>
 #endif
 
-#if IPF_TRANSPARENT
 int
-
 clientNatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &dst)
 {
+
+#if IPF_TRANSPARENT  /* --enable-ipf-transparent */
+
     dst = me;
     if( !me.IsIPv4() ) return -1;
     if( !peer.IsIPv4() ) return -1;
@@ -198,12 +198,11 @@ clientNatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &d
 
         return 0;
     }
-}
 
-#elif LINUX_NETFILTER
-int
-clientNatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &dst)
-{
+
+
+#elif LINUX_NETFILTER || LINUX_TPROXY4  /* --enable-linux-netfilter OR --enable-linux-tproxy4 */
+
     dst = me;
     if( !me.IsIPv4() ) return -1;
     if( !peer.IsIPv4() ) return -1;
@@ -213,12 +212,16 @@ clientNatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &d
 
     dst.GetAddrInfo(lookup,AF_INET);
 
+#if LINUX_NETFILTER
     if (getsockopt(fd, SOL_IP, SO_ORIGINAL_DST, lookup->ai_addr, &lookup->ai_addrlen) != 0)
+#elif LINUX_TPROXY4
+    if (getsockopt(fd, SOL_IP, IP_TRANSPARENT, lookup->ai_addr, &lookup->ai_addrlen) != 0)
+#endif
     {
         dst.FreeAddrInfo(lookup);
 
         if (squid_curtime - last_reported > 60) {
-            debugs(89, 1, "clientNatLookup: peer " << peer << " NF getsockopt(SO_ORIGINAL_DST) failed: " << xstrerror());
+            debugs(89, 1, "clientNatLookup: peer " << peer << " NF getsockopt(" << (LINUX_NETFILTER?"SO_ORIGINAL_DST":"IP_TRANSPARENT") << ") failed: " << xstrerror());
             last_reported = squid_curtime;
         }
 
@@ -234,13 +237,9 @@ clientNatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &d
         return 0;
     else
         return -1;
-}
 
-#elif PF_TRANSPARENT
-int
 
-clientNatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress dst)
-{
+#elif PF_TRANSPARENT  /* --enable-pf-transparent */
 
     struct pfioc_natlook nl;
     static int pffd = -1;
@@ -300,12 +299,10 @@ clientNatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress ds
         else
             return -1;
     }
-}
 
-#elif IPFW_TRANSPARENT
-int
-clientNatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &dst)
-{
+
+#elif IPFW_TRANSPARENT /* --enable-ipfw-transparent */
+
     int ret;
     struct addrinfo *lookup = NULL;
 
@@ -330,14 +327,13 @@ clientNatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &d
     dst.FreeAddrInfo(lookup);
 
     return 0;
-}
 
-#else
-int
-clientNatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &dst)
-{
+
+#else /* none of the transparent options configured */
+
     debugs(89, 1, "WARNING: transparent proxying not supported");
     return -1;
-}
+
 #endif
 
+}

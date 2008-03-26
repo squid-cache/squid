@@ -149,9 +149,7 @@ typedef struct
     char *user_name;
     char *passwd;
     char *pub_auth;
-}
-
-cachemgr_request;
+} cachemgr_request;
 
 /*
  * Debugging macros (info goes to error_log on your web server)
@@ -435,9 +433,7 @@ parse_status_line(const char *sline, const char **statusStr)
     if (strncasecmp(sline, "HTTP/", 5) || !sp)
         return -1;
 
-    while (xisspace(*++sp))
-
-        ;
+    while (xisspace(*++sp));
     if (!xisdigit(*sp))
         return -1;
 

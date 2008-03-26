@@ -187,9 +187,7 @@ ListContainer<C>::push_back (C const &element)
     if (head) {
         List<C> *tempNode = NULL;
 
-        for (tempNode = head; tempNode->next; tempNode = tempNode->next)
-
-            ;
+        for (tempNode = head; tempNode->next; tempNode = tempNode->next);
         tempNode->next = node;
     } else
         head = node;

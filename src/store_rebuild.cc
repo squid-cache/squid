@@ -51,9 +51,7 @@ typedef struct
     int total;
     /* number of entries read so far */
     int scanned;
-}
-
-store_rebuild_progress;
+} store_rebuild_progress;
 
 static store_rebuild_progress *RebuildProgress = NULL;
 
