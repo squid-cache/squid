@@ -54,9 +54,7 @@ public:
         double rtt;
         int samp;
         int hops;
-    }
-
-    cto;
+    } cto;
 };
 
 /// \bug redundant typedef

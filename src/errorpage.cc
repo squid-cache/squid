@@ -67,8 +67,7 @@ typedef struct
 {
     int id;
     char *page_name;
-}
-ErrorDynamicPageInfo;
+} ErrorDynamicPageInfo;
 
 /* local constant and vars */
 

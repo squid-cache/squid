@@ -118,7 +118,8 @@ fake_auth_setup()
     params[]={ {"digest", digest_parms, 2},
                {"basic", basic_parms, 2},
                {"ntlm", ntlm_parms, 1},
-               {"negotiate", negotiate_parms, 1}};
+               {"negotiate", negotiate_parms, 1}
+             };
 
     for (unsigned scheme=0; scheme < 4; scheme++)
         setup_scheme(getConfig(params[scheme].name), params[scheme].params, params[scheme].paramlength);

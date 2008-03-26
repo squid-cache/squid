@@ -77,9 +77,7 @@ struct _helper
         int replies;
         int queue_size;
         int avg_svc_time;
-    }
-
-    stats;
+    } stats;
 };
 
 struct _helper_stateful
@@ -105,9 +103,7 @@ struct _helper_stateful
         int replies;
         int queue_size;
         int avg_svc_time;
-    }
-
-    stats;
+    } stats;
 };
 
 struct _helper_server
@@ -133,26 +129,16 @@ struct _helper_server
 
     struct _helper_flags
     {
-
-unsigned int writing:
-        1;
-
-unsigned int closing:
-        1;
-
-unsigned int shutdown:
-        1;
-    }
-
-    flags;
+        unsigned int writing:1;
+        unsigned int closing:1;
+        unsigned int shutdown:1;
+    } flags;
 
     struct
     {
         int uses;
         unsigned int pending;
-    }
-
-    stats;
+    } stats;
 
     void *hIpc;
 };
@@ -183,19 +169,11 @@ struct _helper_stateful_server
 
     struct _helper_stateful_flags
     {
-
-unsigned int busy:
-        1;
-
-unsigned int closing:
-        1;
-
-unsigned int shutdown:
-        1;
+        unsigned int busy:1;
+        unsigned int closing:1;
+        unsigned int shutdown:1;
         stateful_helper_reserve_t reserved;
-    }
-
-    flags;
+    } flags;
 
     struct
     {
@@ -204,9 +182,7 @@ unsigned int shutdown:
         int releases;
         int deferbyfunc;
         int deferbycb;
-    }
-
-    stats;
+    } stats;
     int deferred_requests;	/* current number of deferred requests */
     void *data;			/* State data used by the calling routines */
     void *hIpc;

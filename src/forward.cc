@@ -49,8 +49,12 @@
 #include "SquidTime.h"
 #include "Store.h"
 
-#if LINUX_TPROXY
+#if LINUX_TPROXY2
+#ifdef HAVE_LINUX_NETFILTER_IPV4_IP_TPROXY_H
 #include <linux/netfilter_ipv4/ip_tproxy.h>
+#else
+#error " TPROXY v2 Header file missing: linux/netfilter_ipv4/ip_tproxy.h. Perhapse you meant to use TPROXY v4 ? "
+#endif
 #endif
 
 static PSC fwdStartCompleteWrapper;
@@ -100,9 +104,7 @@ FwdState::FwdState(int fd, StoreEntry * e, HttpRequest * r)
     request = HTTPMSGLOCK(r);
     start_t = squid_curtime;
 
-    e->lock()
-
-    ;
+    e->lock();
     EBIT_SET(e->flags, ENTRY_FWD_HDR_WAIT);
 }
 
@@ -519,9 +521,7 @@ FwdState::retryOrBail() {
             FwdServer **T, *T2 = NULL;
             servers = fs->next;
 
-            for (T = &servers; *T; T2 = *T, T = &(*T)->next)
-
-                ;
+            for (T = &servers; *T; T2 = *T, T = &(*T)->next);
             if (T2 && T2->_peer) {
                 /* cycle */
                 *T = fs;

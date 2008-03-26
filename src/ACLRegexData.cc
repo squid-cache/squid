@@ -125,9 +125,7 @@ aclParseRegexList(relist **curlist)
     int errcode;
     int flags = REG_EXTENDED | REG_NOSUB;
 
-    for (Tail = (relist **)curlist; *Tail; Tail = &((*Tail)->next))
-
-        ;
+    for (Tail = (relist **)curlist; *Tail; Tail = &((*Tail)->next));
     while ((t = ConfigParser::strtokFile())) {
         if (strcmp(t, "-i") == 0) {
             flags |= REG_ICASE;

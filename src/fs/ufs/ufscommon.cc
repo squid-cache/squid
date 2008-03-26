@@ -535,9 +535,7 @@ RebuildState::rebuildFromSwapLog()
                 currentEntry()->release();
                 counts.objcount--;
                 counts.cancelcount++;
-            }
-
-            continue;
+            } continue;
         } else {
             x = ::log(static_cast<double>(++counts.bad_log_op)) / ::log(10.0);
 
@@ -604,9 +602,7 @@ RebuildState::rebuildFromSwapLog()
             } else {
                 debug_trap("commonUfsDirRebuildFromSwapLog: bad condition");
                 debugs(47, 1, "\tSee " << __FILE__ << ":" << __LINE__);
-            }
-
-            continue;
+            } continue;
         } else if (used) {
             /* swapfile in use, not by this URL, log entry is newer */
             /* This is sorta bad: the log entry should NOT be newer at this

@@ -126,9 +126,7 @@ public:
     {
         QUOTE_METHOD_SHELL = 1,
         QUOTE_METHOD_URL
-    }
-
-    quote;
+    } quote;
 
     IPAddress local_addr;
 };

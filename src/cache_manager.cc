@@ -57,8 +57,7 @@ typedef struct
     char *action;
     char *user_name;
     char *passwd;
-}
-cachemgrStateData;
+} cachemgrStateData;
 
 static CacheManagerAction *cachemgrFindAction(const char *action);
 static cachemgrStateData *cachemgrParseUrl(const char *url);
@@ -104,9 +103,7 @@ CacheManager::registerAction(char const * action, char const * desc, OBJH * hand
     a->flags.pw_req = pw_req_flag;
     a->flags.atomic = atomic;
 
-    for (A = &ActionTable; *A; A = &(*A)->next)
-
-        ;
+    for (A = &ActionTable; *A; A = &(*A)->next);
     *A = a;
 
     debugs(16, 3, "CacheManager::registerAction: registered " <<  action);
@@ -271,9 +268,7 @@ cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry)
 
     mgr->entry = entry;
 
-    entry->lock()
-
-    ;
+    entry->lock();
     entry->expires = squid_curtime;
 
     debugs(16, 5, "CACHEMGR: " << fd_table[fd].ipaddr << " requesting '" << mgr->action << "'");

@@ -68,12 +68,8 @@ public:
 
     struct
     {
-
-int dovars:
-        1; /* for esiVar */
-    }
-
-    flags;
+        int dovars:1; /* for esiVar */
+    } flags;
     void finish();
 
 protected:

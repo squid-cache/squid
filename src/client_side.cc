@@ -2035,9 +2035,7 @@ ConnStateData::addContextToQueue(ClientSocketContext * context)
     ClientSocketContext::Pointer *S;
 
     for (S = (ClientSocketContext::Pointer *) & currentobject; S->getRaw();
-            S = &(*S)->next)
-
-        ;
+            S = &(*S)->next);
     *S = context;
 
     ++nrequests;
@@ -2050,9 +2048,7 @@ ConnStateData::getConcurrentRequestCount() const
     ClientSocketContext::Pointer *T;
 
     for (T = (ClientSocketContext::Pointer *) &currentobject;
-            T->getRaw(); T = &(*T)->next, ++result)
-
-        ;
+            T->getRaw(); T = &(*T)->next, ++result);
     return result;
 }
 
@@ -2217,8 +2213,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
 
     request->flags.transparent = http->flags.transparent;
 
-#if LINUX_TPROXY
-
+#if LINUX_TPROXY2 || LINUX_TPROXY4
     request->flags.tproxy = conn->port->tproxy && need_linux_tproxy;
 #endif
 
@@ -2653,9 +2648,7 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
         assert(chr == NULL);
         /* add to the client request queue */
 
-        for (H = &chr; *H; H = &(*H)->next)
-
-            ;
+        for (H = &chr; *H; H = &(*H)->next);
         *H = http;
 
         clientStreamRead(http->client_stream.tail->data, http, 0,
@@ -3123,6 +3116,13 @@ clientHttpConnectionsOpen(void)
 
         if (fd < 0)
             continue;
+
+#if LINUX_TPROXY4
+        /* because the transparent/non-transparent port info is only known here.
+         * we have to set the IP_TRANSPARENT option here. */
+        if(s->transparent)
+            comm_set_transparent(fd,0);
+#endif
 
         comm_listen(fd);
 

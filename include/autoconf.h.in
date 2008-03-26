@@ -792,8 +792,11 @@
 /* Enable support for Transparent Proxy on Linux (Netfilter) systems */
 #undef LINUX_NETFILTER
 
-/* Enable real Transparent Proxy support for Netfilter TPROXY. */
-#undef LINUX_TPROXY
+/* Enable real Transparent Proxy support for Netfilter TPROXY v2. */
+#undef LINUX_TPROXY2
+
+/* Enable real Transparent Proxy support for Netfilter TPROXY v4. */
+#undef LINUX_TPROXY4
 
 /* If we need to declare sys_errlist[] as external */
 #undef NEED_SYS_ERRLIST

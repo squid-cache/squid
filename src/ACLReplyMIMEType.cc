@@ -41,9 +41,7 @@
 
 /* explicit template instantiation required for some systems */
 
-template class ACLReplyHeaderStrategy<HDR_CONTENT_TYPE>
-
-;
+template class ACLReplyHeaderStrategy<HDR_CONTENT_TYPE>;
 
 ACL::Prototype ACLReplyMIMEType::RegistryProtoype(&ACLReplyMIMEType::RegistryEntry_, "rep_mime_type");
 

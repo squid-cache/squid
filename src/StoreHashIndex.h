@@ -85,9 +85,7 @@ private:
 };
 
 class StoreHashIndexEntry : public StoreEntry
-{}
-
-;
+{};
 
 class StoreSearchHashIndex : public StoreSearch
 {
