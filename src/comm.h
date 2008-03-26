@@ -56,6 +56,11 @@ SQUIDCEXTERN int comm_openex(int, int, IPAddress &, int, unsigned char TOS, cons
 SQUIDCEXTERN u_short comm_local_port(int fd);
 SQUIDCEXTERN int comm_set_tos(int fd, int tos);
 
+/**
+ * Set the socket IP_TRANSPARENT option for Linux TPROXY v4 support.
+ */
+SQUIDCEXTERN void comm_set_transparent(int fd, int tos);
+
 SQUIDCEXTERN void commSetSelect(int, unsigned int, PF *, void *, time_t);
 SQUIDCEXTERN void commResetSelect(int);
 
