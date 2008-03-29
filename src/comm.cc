@@ -631,11 +631,11 @@ void
 comm_set_transparent(int fd, int tos)
 {
 #if LINUX_TPROXY4
-    if (setsockopt(fd, IPPROTO_IP, IP_TRANSPARENT, (char *) &tos, sizeof(int)) < 0) {
-        debugs(50, 1, "comm_open: setsockopt(IP_TRANSPARENT) on FD " << fd << ": " << xstrerror());
+    if (setsockopt(fd, SOL_IP, IP_TRANSPARENT, (char *) &tos, sizeof(int)) < 0) {
+        debugs(50, DBG_IMPORTANT, "comm_open: setsockopt(IP_TRANSPARENT) on FD " << fd << ": " << xstrerror());
     }
 #else
-    debugs(50, 0, "WARNING: comm_open: setsockopt(IP_TRANSPARENT) not supported on this platform");
+    debugs(50, DBG_CRITICAL, "WARNING: comm_open: setsockopt(IP_TRANSPARENT) not supported on this platform");
 #endif /* sockopt */
 }
 
