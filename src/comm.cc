@@ -1319,6 +1319,12 @@ comm_old_accept(int fd, ConnectionDetail &details)
 
     commSetNonBlocking(sock);
 
+#if LINUX_TPROXY4
+    /* AYJ: do we need to set this again on every accept? */
+    if(fd_table[fd].flags.tproxy == 1)
+        comm_set_transparent(fd, 0);
+#endif
+
     PROF_stop(comm_accept);
     return sock;
 }
