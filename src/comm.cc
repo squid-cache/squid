@@ -1153,7 +1153,7 @@ comm_connect_addr(int sock, const IPAddress &address)
 
     debugs(5, 9, "comm_connect_addr: connecting socket " << sock << " to " << address << " (want family: " << F->sock_family << ")");
 
-    memset(&sas, NULL, slen);
+    memset(&sas, 0, slen);
     address.GetSockAddr(sas, F->sock_family);
 
     /* Establish connection. */
