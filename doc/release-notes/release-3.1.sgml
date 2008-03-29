@@ -298,6 +298,16 @@ This section gives an account of those changes in three categories:
 	   but please report the bugs anyway.
         </p>
 
+	<tag>--enable-linux-tproxy2</tag>
+	<p>New option to enable TPROXY version 2 support in squid (previously known as --enable-linux-tproxy).
+	Linux Kernel patches from Balabit are required before building squid with this option.
+	</p>
+
+	<tag>--enable-linux-tproxy4</tag>
+	<p>New option to enable TPROXY version 4+ support in squid.
+	This options requires a linux kernel 2.6.25 or later for embeded netfilter TPROXY targets.
+	</p>
+
 </descrip>
 </p>
 
@@ -308,7 +318,7 @@ This section gives an account of those changes in three categories:
 	<tag>--disable-internl-dns</tag>
 	<p>Better support for Linux using the external DNS helper.
            The helper will compile and work with dns_nameservers on more variants of Linux than previously.</p>
- 
+
 </descrip>
 </p>
 
@@ -334,6 +344,8 @@ porting one of these from Squid-2 to Squid-3 is most welcome.
 <p>The following configure options have been removed.
 
 <descrip>
+	<tag>--enable-linux-tproxy</tag>
+	<p>Replaced by --enable-linux-tproxy2 to make way for differences in TPROXY v2 and v4 support.</p>
 
 </descrip>
 
