@@ -1,4 +1,12 @@
-Changes to squid-3.0.STABLE1 (1 Mar 2008):
+Changes to squid-3.0.STABLE3 (31 Mar 2008):
+
+	- Improved HTTP 1.1 support.
+	- Improved MacOSX (Leopard) support
+	- Bug 2206: Proxy-Authentication regression in STABLE2.
+	- Strip Domain from NTLM usernames for use in class 4 Delay Pools
+	- ... and other bugs and minor code cleanup
+
+Changes to squid-3.0.STABLE2 (1 Mar 2008):
 
 	- Add myportname ACL for matching the accepting port name (see release notes)
 	- Add include directive for squid.conf (see release notes)
