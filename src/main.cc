@@ -70,6 +70,13 @@
 #include "MemPool.h"
 #include "ICMPSquid.h"
 
+#if ICAP_CLIENT
+#include "ICAP/ICAPConfig.h"
+#endif
+#if USE_ADAPTATION
+#include "adaptation/Config.h"
+#endif
+
 #if USE_WIN32_SERVICE
 
 #include "squid_windows.h"
@@ -1077,6 +1084,14 @@ mainInitialize(void)
 #endif
 
     memCheckInit();
+
+#if ICAP_CLIENT
+    TheICAPConfig.finalize(); // must be after we load modules
+#endif
+#if USE_ADAPTATION
+    Adaptation::Config::Finalize(); // must be last adaptation-related finalize
+#endif
+
 
     debugs(1, 1, "Ready to serve requests.");
 
