@@ -38,7 +38,7 @@
 #include "CommCalls.h"
 #include "MemBuf.h"
 #include "ICAPServiceRep.h"
-#include "ICAPInitiate.h"
+#include "adaptation/Initiate.h"
 
 class HttpMsg;
 class CommConnectCbParams;
@@ -53,11 +53,11 @@ class CommConnectCbParams;
 
 // Note: ICAPXaction must be the first parent for object-unaware cbdata to work
 
-class ICAPXaction: public ICAPInitiate
+class ICAPXaction: public Adaptation::Initiate
 {
 
 public:
-    ICAPXaction(const char *aTypeName, ICAPInitiator *anInitiator, ICAPServiceRep::Pointer &aService);
+    ICAPXaction(const char *aTypeName, Adaptation::Initiator *anInitiator, ICAPServiceRep::Pointer &aService);
     virtual ~ICAPXaction();
 
     void disableRetries();
@@ -71,7 +71,7 @@ public:
 
 protected:
     virtual void start();
-    virtual void noteInitiatorAborted(); // TODO: move to ICAPInitiate
+    virtual void noteInitiatorAborted(); // TODO: move to Adaptation::Initiate
 
     // comm hanndlers; called by comm handler wrappers
     virtual void handleCommConnected() = 0;
@@ -111,6 +111,8 @@ protected:
 
     // custom end-of-call checks
     virtual void callEnd();
+
+    ICAPServiceRep &service();
 
 protected:
     int connection;     // FD of the ICAP server connection
