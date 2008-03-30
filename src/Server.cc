@@ -39,17 +39,17 @@
 #include "HttpReply.h"
 #include "errorpage.h"
 
-#if ICAP_CLIENT
-#include "ICAP/ICAPModXact.h"
+#if USE_ADAPTATION
+#include "adaptation/Service.h"
 #include "ICAP/ICAPConfig.h"
 extern ICAPConfig TheICAPConfig;
 #endif
 
 ServerStateData::ServerStateData(FwdState *theFwdState): AsyncJob("ServerStateData"),requestSender(NULL)
-#if ICAP_CLIENT
+#if USE_ADAPTATION
     , adaptedHeadSource(NULL)
-    , icapAccessCheckPending(false)
-    , startedIcap(false)
+    , adaptationAccessCheckPending(false)
+    , startedAdaptation(false)
 #endif
 {
     fwd = theFwdState;
@@ -73,8 +73,8 @@ ServerStateData::~ServerStateData()
     if (requestBodySource != NULL)
         requestBodySource->clearConsumer();
 
-#if ICAP_CLIENT
-    cleanIcap();
+#if USE_ADAPTATION
+    cleanAdaptation();
 #endif
 
     if (responseBodyBuffer != NULL) {
@@ -151,11 +151,11 @@ ServerStateData::serverComplete2()
 {
     debugs(11,5,HERE << "serverComplete2 " << this);
 
-#if ICAP_CLIENT
+#if USE_ADAPTATION
     if (virginBodyDestination != NULL)
         stopProducingFor(virginBodyDestination, true);
 
-    if (!doneWithIcap())
+    if (!doneWithAdaptation())
         return;
 #endif
 
@@ -167,8 +167,8 @@ ServerStateData::serverComplete2()
 // to the ICAP service. And vice versa. Here, we quit only if we are done
 // talking to both.
 void ServerStateData::quitIfAllDone() {
-#if ICAP_CLIENT
-    if (!doneWithIcap()) {
+#if USE_ADAPTATION
+    if (!doneWithAdaptation()) {
         debugs(11,5, HERE << "transaction not done: still talking to ICAP");
         return;
     }
@@ -226,7 +226,7 @@ ServerStateData::abortOnBadEntry(const char *abortReason)
 void
 ServerStateData::noteMoreBodyDataAvailable(BodyPipe::Pointer bp)
 {
-#if ICAP_CLIENT
+#if USE_ADAPTATION
     if (adaptedBodySource == bp) {
         handleMoreAdaptedBodyAvailable();
         return;
@@ -239,7 +239,7 @@ ServerStateData::noteMoreBodyDataAvailable(BodyPipe::Pointer bp)
 void
 ServerStateData::noteBodyProductionEnded(BodyPipe::Pointer bp)
 {
-#if ICAP_CLIENT
+#if USE_ADAPTATION
     if (adaptedBodySource == bp) {
         handleAdaptedBodyProductionEnded();
         return;
@@ -252,7 +252,7 @@ ServerStateData::noteBodyProductionEnded(BodyPipe::Pointer bp)
 void
 ServerStateData::noteBodyProducerAborted(BodyPipe::Pointer bp)
 {
-#if ICAP_CLIENT
+#if USE_ADAPTATION
     if (adaptedBodySource == bp) {
         handleAdaptedBodyProducerAborted();
         return;
@@ -367,7 +367,7 @@ ServerStateData::sendMoreRequestBody()
     }
 }
 
-// called by noteIcapAnswer(), HTTP server overwrites this
+// called by noteAdaptationAnswer(), HTTP server overwrites this
 void
 ServerStateData::haveParsedReplyHeaders()
 {
@@ -380,22 +380,22 @@ ServerStateData::originalRequest()
     return request;
 }
 
-#if ICAP_CLIENT
+#if USE_ADAPTATION
 /*
  * Initiate an ICAP transaction.  Return true on success.
  * Caller will handle error condition by generating a Squid error message
  * or take other action.
  */
 bool
-ServerStateData::startIcap(ICAPServiceRep::Pointer service, HttpRequest *cause)
+ServerStateData::startAdaptation(Adaptation::ServicePointer service, HttpRequest *cause)
 {
-    debugs(11, 5, "ServerStateData::startIcap() called");
+    debugs(11, 5, "ServerStateData::startAdaptation() called");
     if (!service) {
-        debugs(11, 3, "ServerStateData::startIcap fails: lack of service");
+        debugs(11, 3, "ServerStateData::startAdaptation fails: lack of service");
         return false;
     }
     if (service->broken()) {
-        debugs(11, 3, "ServerStateData::startIcap fails: broken service");
+        debugs(11, 3, "ServerStateData::startAdaptation fails: broken service");
         return false;
     }
 
@@ -414,15 +414,15 @@ ServerStateData::startIcap(ICAPServiceRep::Pointer service, HttpRequest *cause)
             virginBodyDestination->setBodySize(size);
     }
 
-    adaptedHeadSource = initiateIcap(
-        new ICAPModXactLauncher(this, vrep, cause, service));
+    adaptedHeadSource = initiateAdaptation(service->makeXactLauncher(
+        this, vrep, cause));
     return adaptedHeadSource != NULL;
 }
 
 // properly cleans up ICAP-related state
 // may be called multiple times
-void ServerStateData::cleanIcap() {
-    debugs(11,5, HERE << "cleaning ICAP; ACL: " << icapAccessCheckPending);
+void ServerStateData::cleanAdaptation() {
+    debugs(11,5, HERE << "cleaning ICAP; ACL: " << adaptationAccessCheckPending);
 
     if (virginBodyDestination != NULL)
         stopProducingFor(virginBodyDestination, false);
@@ -432,13 +432,13 @@ void ServerStateData::cleanIcap() {
     if (adaptedBodySource != NULL)
         stopConsumingFrom(adaptedBodySource);
 
-    if (!icapAccessCheckPending) // we cannot cancel a pending callback
-        assert(doneWithIcap()); // make sure the two methods are in sync
+    if (!adaptationAccessCheckPending) // we cannot cancel a pending callback
+        assert(doneWithAdaptation()); // make sure the two methods are in sync
 }
 
 bool
-ServerStateData::doneWithIcap() const {
-    return !icapAccessCheckPending &&
+ServerStateData::doneWithAdaptation() const {
+    return !adaptationAccessCheckPending &&
         !virginBodyDestination && !adaptedHeadSource && !adaptedBodySource;
 }
 
@@ -446,7 +446,7 @@ ServerStateData::doneWithIcap() const {
 void
 ServerStateData::adaptVirginReplyBody(const char *data, ssize_t len)
 {
-    assert(startedIcap);
+    assert(startedAdaptation);
 
     if (!virginBodyDestination) {
         debugs(11,3, HERE << "ICAP does not want more virgin body");
@@ -504,17 +504,17 @@ ServerStateData::noteBodyConsumerAborted(BodyPipe::Pointer)
 {
     stopProducingFor(virginBodyDestination, false);
 
-    // do not force closeServer here in case we need to bypass IcapQueryAbort
+    // do not force closeServer here in case we need to bypass AdaptationQueryAbort
 
-    if (doneWithIcap()) // we may still be receiving adapted response
-        handleIcapCompleted();
+    if (doneWithAdaptation()) // we may still be receiving adapted response
+        handleAdaptationCompleted();
 }
 
 // received adapted response headers (body may follow)
 void
-ServerStateData::noteIcapAnswer(HttpMsg *msg)
+ServerStateData::noteAdaptationAnswer(HttpMsg *msg)
 {
-    clearIcap(adaptedHeadSource); // we do not expect more messages
+    clearAdaptation(adaptedHeadSource); // we do not expect more messages
 
     if (abortOnBadEntry("entry went bad while waiting for adapted headers"))
         return;
@@ -532,17 +532,17 @@ ServerStateData::noteIcapAnswer(HttpMsg *msg)
         assert(adaptedBodySource->setConsumerIfNotLate(this));
     } else {
         // no body
-        if (doneWithIcap()) // we may still be sending virgin response
-            handleIcapCompleted();
+        if (doneWithAdaptation()) // we may still be sending virgin response
+            handleAdaptationCompleted();
     }
 }
 
 // will not receive adapted response headers (and, hence, body)
 void
-ServerStateData::noteIcapQueryAbort(bool final)
+ServerStateData::noteAdaptationQueryAbort(bool final)
 {
-    clearIcap(adaptedHeadSource);
-    handleIcapAborted(!final);
+    clearAdaptation(adaptedHeadSource);
+    handleAdaptationAborted(!final);
 }
 
 // more adapted response body is available
@@ -574,22 +574,22 @@ ServerStateData::handleAdaptedBodyProductionEnded()
     if (abortOnBadEntry("entry went bad while waiting for adapted body eof"))
         return;
 
-    handleIcapCompleted();
+    handleAdaptationCompleted();
 }
 
 // premature end of the adapted response body
 void ServerStateData::handleAdaptedBodyProducerAborted()
 {
     stopConsumingFrom(adaptedBodySource);
-    handleIcapAborted();
+    handleAdaptationAborted();
 }
 
-// common part of noteIcapAnswer and handleAdaptedBodyProductionEnded
+// common part of noteAdaptationAnswer and handleAdaptedBodyProductionEnded
 void
-ServerStateData::handleIcapCompleted()
+ServerStateData::handleAdaptationCompleted()
 {
-    debugs(11,5, HERE << "handleIcapCompleted");
-    cleanIcap();
+    debugs(11,5, HERE << "handleAdaptationCompleted");
+    cleanAdaptation();
 
     // We stop reading origin response because we have no place to put it and
     // cannot use it. If some origin servers do not like that or if we want to
@@ -604,11 +604,11 @@ ServerStateData::handleIcapCompleted()
 }
 
 
-// common part of noteIcap*Aborted and noteBodyConsumerAborted methods
+// common part of noteAdaptation*Aborted and noteBodyConsumerAborted methods
 void
-ServerStateData::handleIcapAborted(bool bypassable)
+ServerStateData::handleAdaptationAborted(bool bypassable)
 {
-    debugs(11,5, HERE << "handleIcapAborted; bypassable: " << bypassable <<
+    debugs(11,5, HERE << "handleAdaptationAborted; bypassable: " << bypassable <<
         ", entry empty: " << entry->isEmpty());
 
     if (abortOnBadEntry("entry went bad while ICAP aborted"))
@@ -629,9 +629,9 @@ ServerStateData::handleIcapAborted(bool bypassable)
 }
 
 void
-ServerStateData::icapAclCheckDone(ICAPServiceRep::Pointer service)
+ServerStateData::adaptationAclCheckDone(Adaptation::ServicePointer service)
 {
-    icapAccessCheckPending = false;
+    adaptationAccessCheckPending = false;
 
     if (abortOnBadEntry("entry went bad while waiting for ICAP ACL check"))
         return;
@@ -644,9 +644,9 @@ ServerStateData::icapAclCheckDone(ICAPServiceRep::Pointer service)
     }
     // TODO: Should we check received5CBodyTooLarge on the server-side as well?
 
-    startedIcap = startIcap(service, originalRequest());
+    startedAdaptation = startAdaptation(service, originalRequest());
 
-    if (!startedIcap && (!service || service->bypass)) {
+    if (!startedAdaptation && (!service || service->cfg().bypass)) {
         // handle ICAP start failure when no service was selected
         // or where the selected service was optional
         setFinalReply(virginReply());
@@ -654,7 +654,7 @@ ServerStateData::icapAclCheckDone(ICAPServiceRep::Pointer service)
         return;
     }
 
-    if (!startedIcap) {
+    if (!startedAdaptation) {
         // handle start failure for an essential ICAP service
         ErrorState *err = errorCon(ERR_ICAP_FAILURE,
             HTTP_INTERNAL_SERVER_ERROR, originalRequest());
@@ -668,10 +668,10 @@ ServerStateData::icapAclCheckDone(ICAPServiceRep::Pointer service)
 }
 
 void
-ServerStateData::icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *data)
+ServerStateData::adaptationAclCheckDoneWrapper(Adaptation::ServicePointer service, void *data)
 {
     ServerStateData *state = (ServerStateData *)data;
-    state->icapAclCheckDone(service);
+    state->adaptationAclCheckDone(service);
 }
 #endif
 
@@ -690,15 +690,15 @@ ServerStateData::sendBodyIsTooLargeError()
 void
 ServerStateData::adaptOrFinalizeReply()
 {
-#if ICAP_CLIENT
+#if USE_ADAPTATION
 
     if (TheICAPConfig.onoff) {
-        ICAPAccessCheck *icap_access_check =
-            new ICAPAccessCheck(ICAP::methodRespmod, ICAP::pointPreCache,
-                request, virginReply(), icapAclCheckDoneWrapper, this);
+         Adaptation::AccessCheck *check = new Adaptation::AccessCheck(
+            Adaptation::methodRespmod, ICAP::pointPreCache,
+                request, virginReply(), adaptationAclCheckDoneWrapper, this);
 
-        icapAccessCheckPending = true;
-        icap_access_check->check(); // will eventually delete self
+        adaptationAccessCheckPending = true;
+        check->check(); // will eventually delete self
         return;
     }
 
@@ -710,9 +710,9 @@ ServerStateData::adaptOrFinalizeReply()
 void
 ServerStateData::addVirginReplyBody(const char *data, ssize_t len)
 {
-#if ICAP_CLIENT
-    assert(!icapAccessCheckPending); // or would need to buffer while waiting
-    if (startedIcap) {
+#if USE_ADAPTATION
+    assert(!adaptationAccessCheckPending); // or would need to buffer while waiting
+    if (startedAdaptation) {
         adaptVirginReplyBody(data, len);
         return;
     }
@@ -732,7 +732,7 @@ ServerStateData::storeReplyBody(const char *data, ssize_t len)
 
 size_t ServerStateData::replyBodySpace(size_t space)
 {
-#if ICAP_CLIENT
+#if USE_ADAPTATION
     if (responseBodyBuffer) {
 	return 0;	// Stop reading if already overflowed waiting for ICAP to catch up
     }
@@ -750,13 +750,14 @@ size_t ServerStateData::replyBodySpace(size_t space)
          * The BodyPipe will call our noteMoreBodySpaceAvailable() method
          * when it has free space again.
          */
-        size_t icap_space = virginBodyDestination->buf().potentialSpaceSize();
+        size_t adaptation_space =
+            virginBodyDestination->buf().potentialSpaceSize();
 
-        debugs(11,9, "ServerStateData may read up to min(" << icap_space <<
-               ", " << space << ") bytes");
+        debugs(11,9, "ServerStateData may read up to min(" <<
+            adaptation_space << ", " << space << ") bytes");
 
-        if (icap_space < space)
-            space = icap_space;
+        if (adaptation_space < space)
+            space = adaptation_space;
     }
 #endif
 
