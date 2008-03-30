@@ -34,8 +34,9 @@
 #ifndef SQUID_ICAPLAUNCHER_H
 #define SQUID_ICAPLAUNCHER_H
 
-#include "ICAP/ICAPInitiator.h"
-#include "ICAP/ICAPInitiate.h"
+#include "adaptation/Initiator.h"
+#include "adaptation/Initiate.h"
+#include "ICAP/ICAPServiceRep.h"
 
 /*
  * The ICAP Launcher starts an ICAP transaction. If the transaction fails
@@ -62,21 +63,21 @@ class ICAPXaction;
 // Note: ICAPInitiate must be the first parent for cbdata to work. We use
 // a temporary ICAPInitaitorHolder/toCbdata hacks and do not call cbdata
 // operations on the initiator directly.
-class ICAPLauncher: public ICAPInitiate, public ICAPInitiator
+class ICAPLauncher: public Adaptation::Initiate, public Adaptation::Initiator
 {
 public:
-    ICAPLauncher(const char *aTypeName, ICAPInitiator *anInitiator, ICAPServiceRep::Pointer &aService);
+    ICAPLauncher(const char *aTypeName, Adaptation::Initiator *anInitiator, Adaptation::ServicePointer &aService);
     virtual ~ICAPLauncher();
 
-    // ICAPInitiate: asynchronous communication with the initiator
+    // Adaptation::Initiate: asynchronous communication with the initiator
     void noteInitiatorAborted();
 
-    // ICAPInitiator: asynchronous communication with the current transaction
-    virtual void noteIcapAnswer(HttpMsg *message);
-    virtual void noteIcapQueryAbort(bool final);
+    // Adaptation::Initiator: asynchronous communication with the current transaction
+    virtual void noteAdaptationAnswer(HttpMsg *message);
+    virtual void noteAdaptationQueryAbort(bool final);
 
 protected:
-    // ICAPInitiate API implementation
+    // Adaptation::Initiate API implementation
     virtual void start();
     virtual bool doneAll() const;
     virtual void swanSong();
@@ -86,7 +87,7 @@ protected:
 
     void launchXaction(bool final);
 
-    ICAPInitiate *theXaction; // current ICAP transaction
+    Adaptation::Initiate *theXaction; // current ICAP transaction
     int theLaunches; // the number of transaction launches
 };
 
