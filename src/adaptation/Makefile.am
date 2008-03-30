@@ -9,10 +9,19 @@ INCLUDES = \
 noinst_LTLIBRARIES = libadaptation.la
 
 libadaptation_la_SOURCES = \
+	Config.cc \
+	Config.h \
 	Elements.cc \
 	Elements.h \
+	forward.h \
+	Initiate.cc \
+	Initiate.h \
+	Initiator.cc \
+	Initiator.h \
 	Service.cc \
 	Service.h \
+	ServiceConfig.cc \
+	ServiceConfig.h \
 	Xaction.cc \
 	Xaction.h
 
