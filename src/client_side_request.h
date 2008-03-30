@@ -43,9 +43,9 @@
 #include "dlink.h"
 #include "ICAP/AsyncJob.h"
 
-#if ICAP_CLIENT
-#include "ICAP/ICAPServiceRep.h"
-#include "ICAP/ICAPInitiator.h"
+#if USE_ADAPTATION
+#include "adaptation/forward.h"
+#include "adaptation/Initiator.h"
 
 class HttpMsg;
 #endif
@@ -60,8 +60,8 @@ class ConnStateData;
 class ClientRequestContext;
 
 class ClientHttpRequest
-#if ICAP_CLIENT
-    : public ICAPInitiator, // to start ICAP transactions
+#if USE_ADAPTATION
+    : public Adaptation::Initiator, // to start adaptation transactions
     public BodyConsumer     // to receive reply bodies in request satisf. mode
 #endif
 {
@@ -69,7 +69,7 @@ class ClientHttpRequest
 public:
     void *operator new (size_t);
     void operator delete (void *);
-#if ICAP_CLIENT
+#if USE_ADAPTATION
     void *toCbdata() { return this; }
 #endif
     ClientHttpRequest(ConnStateData *);
@@ -150,9 +150,9 @@ unsigned int purging:
     ClientRequestContext *calloutContext;
     void doCallouts();
 
-#if ICAP_CLIENT
-//AsyncJob virtual methods
-    virtual bool doneAll() const { return ICAPInitiator::doneAll() && 
+#if USE_ADAPTATION
+    // AsyncJob virtual methods
+    virtual bool doneAll() const { return Initiator::doneAll() && 
 				       BodyConsumer::doneAll() && false;}
 #endif
 
@@ -170,18 +170,18 @@ public:
     void sslBumpEstablish(comm_err_t errflag);
 #endif
 
-#if ICAP_CLIENT
+#if USE_ADAPTATION
 
 public:
-    bool startIcap(ICAPServiceRep::Pointer);
+    bool startAdaptation(Adaptation::ServicePointer);
 
     // private but exposed for ClientRequestContext
-    void handleIcapFailure(bool bypassable = false);
+    void handleAdaptationFailure(bool bypassable = false);
 
 private:
     // ICAPInitiator API, called by ICAPXaction
-    virtual void noteIcapAnswer(HttpMsg *message);
-    virtual void noteIcapQueryAbort(bool final);
+    virtual void noteAdaptationAnswer(HttpMsg *message);
+    virtual void noteAdaptationQueryAbort(bool final);
 
     // BodyConsumer API, called by BodyPipe
     virtual void noteMoreBodyDataAvailable(BodyPipe::Pointer);
@@ -191,8 +191,8 @@ private:
     void endRequestSatisfaction();
 
 private:
-    ICAPInitiate *icapHeadSource;
-    BodyPipe::Pointer icapBodySource;
+    Adaptation::Initiate *virginHeadSource;
+    BodyPipe::Pointer adaptedBodySource;
 
     bool request_satisfaction_mode;
     int64_t request_satisfaction_offset;

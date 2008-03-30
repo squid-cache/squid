@@ -1175,8 +1175,8 @@ HttpStateData::processReplyBody()
         return;
     }
 
-#if ICAP_CLIENT
-    if (icapAccessCheckPending)
+#if USE_ADAPTATION
+    if (adaptationAccessCheckPending)
         return;
 
 #endif
