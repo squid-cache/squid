@@ -55,6 +55,8 @@ bootstrap() {
 bootstrap_libtoolize() {
     ltver=$1
 
+    # TODO: when we have libtool2, tell libtoolize where to put its files
+    # instead of manualy moving files from ltdl to lib/libLtdl
     if egrep -q '^[[:space:]]*AC_LIBLTDL_' configure.in
     then
         extras="--ltdl"
@@ -84,6 +86,7 @@ bootstrap_libtoolize() {
 	then
 	    echo updating $dest
 	    # TODO: only move files that changed
+            chmod u+w $dest/*
             mv $src/* $dest/
             rmdir $src
 	else
