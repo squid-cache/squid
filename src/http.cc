@@ -1213,12 +1213,16 @@ HttpStateData::maybeReadVirginBody()
      * handler until we get a notification from someone that
      * its okay to read again.
      */
-    if (read_sz < 2)
-        return;
+    if (read_sz < 2) {
+	if (flags.headers_parsed)
+	    return;
+	else
+	    read_sz = 1024;
+    }
 
     if (flags.do_next_read) {
-        flags.do_next_read = 0;
-        entry->delayAwareRead(fd, readBuf->space(), read_sz, ReadReplyWrapper, this);
+	flags.do_next_read = 0;
+	entry->delayAwareRead(fd, readBuf->space(read_sz), read_sz, ReadReplyWrapper, this);
     }
 }
 
