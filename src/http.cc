@@ -689,7 +689,7 @@ HttpStateData::checkDateSkew(HttpReply *reply)
     }
 }
 
-/*
+/**
  * This creates the error page itself.. its likely
  * that the forward ported reply header max size patch
  * generates non http conformant error pages - in which
@@ -698,9 +698,7 @@ HttpStateData::checkDateSkew(HttpReply *reply)
 void
 HttpStateData::processReplyHeader()
 {
-    /* Creates a blank header. If this routine is made incremental, this will
-     * not do 
-     */
+    /** Creates a blank header. If this routine is made incremental, this will not do */
     Ctx ctx = ctx_enter(entry->mem_obj->url);
     debugs(11, 3, "processReplyHeader: key '" << entry->getMD5Text() << "'");
 
@@ -733,7 +731,7 @@ HttpStateData::processReplyHeader()
 	      ctx_exit(ctx);
 	      return;
 	 }
-	 
+
 	 if (!parsed) { // need more data
 	      assert(!error);
 	      assert(!eof);
@@ -741,9 +739,9 @@ HttpStateData::processReplyHeader()
 	      ctx_exit(ctx);
 	      return;
 	 }
-	 
+
 	 debugs(11, 9, "GOT HTTP REPLY HDR:\n---------\n" << readBuf->content() << "\n----------");
-	 
+
 	 header_bytes_read = headersEnd(readBuf->content(), readBuf->contentSize());
 	 readBuf->consume(header_bytes_read);
     }
@@ -763,7 +761,7 @@ HttpStateData::processReplyHeader()
 
     processSurrogateControl (vrep);
 
-    /* TODO: IF the reply is a 1.0 reply, AND it has a Connection: Header
+    /** \todo IF the reply is a 1.0 reply, AND it has a Connection: Header
      * Parse the header and remove all referenced headers
      */
 
@@ -864,18 +862,20 @@ HttpStateData::ConnectionStatus
 HttpStateData::statusIfComplete() const
 {
     const HttpReply *rep = virginReply();
-    /* If the reply wants to close the connection, it takes precedence */
+    /** \par
+     * If the reply wants to close the connection, it takes precedence */
 
     if (httpHeaderHasConnDir(&rep->header, "close"))
         return COMPLETE_NONPERSISTENT_MSG;
 
-    /* If we didn't send a keep-alive request header, then this
+    /** \par
+     * If we didn't send a keep-alive request header, then this
      * can not be a persistent connection.
      */
     if (!flags.keepalive)
         return COMPLETE_NONPERSISTENT_MSG;
 
-    /*
+    /** \par
      * If we haven't sent the whole request then this can not be a persistent
      * connection.
      */
@@ -884,11 +884,11 @@ HttpStateData::statusIfComplete() const
         return COMPLETE_NONPERSISTENT_MSG;
     }
 
-    /*
+    /** \par
      * What does the reply have to say about keep-alive?
      */
-    /*
-     * XXX BUG?
+    /**
+     \bug XXX BUG?
      * If the origin server (HTTP/1.0) does not send a keep-alive
      * header, but keeps the connection open anyway, what happens?
      * We'll return here and http.c waits for an EOF before changing
@@ -964,6 +964,7 @@ HttpStateData::ReadReplyWrapper(int fd, char *buf, size_t len, comm_err_t flag, 
     PROF_stop(HttpStateData_readReply);
 }
 */
+
 /* XXX this function is too long! */
 void
 HttpStateData::readReply (const CommIoCbParams &io)
@@ -1027,7 +1028,8 @@ HttpStateData::readReply (const CommIoCbParams &io)
         IOStats.Http.read_hist[bin]++;
     }
 
-    /* here the RFC says we should ignore whitespace between replies, but we can't as
+    /** \par
+     * Here the RFC says we should ignore whitespace between replies, but we can't as
      * doing so breaks HTTP/0.9 replies beginning with witespace, and in addition
      * the response splitting countermeasures is extremely likely to trigger on this,
      * not allowing connection reuse in the first place.
@@ -1072,19 +1074,23 @@ HttpStateData::readReply (const CommIoCbParams &io)
     PROF_stop(HttpStateData_processReplyBody);
 }
 
-// Checks whether we can continue with processing the body or doing ICAP.
-// Returns false if we cannot (e.g., due to lack of headers or errors).
+/**
+ \retval true    if we can continue with processing the body or doing ICAP.
+ */
 bool
 HttpStateData::continueAfterParsingHeader()
 {
-    if (!flags.headers_parsed && !eof) { // need more and may get more
+    if (!flags.headers_parsed && !eof) {
         debugs(11, 9, HERE << "needs more at " << readBuf->contentSize());
         flags.do_next_read = 1;
+        /** \retval false If we have not finished parsing the headers and may get more data.
+         *                Schedules more reads to retrieve the missing data.
+         */
         maybeReadVirginBody(); // schedules all kinds of reads; TODO: rename
-        return false; // wait for more data
+        return false;
     }
 
-    /* we are done with parsing, now check for errors */
+    /** If we are done with parsing, check for errors */
 
     err_type error = ERR_NONE;
 
@@ -1120,7 +1126,7 @@ HttpStateData::continueAfterParsingHeader()
     return false; // quit on error
 }
 
-/*
+/**
  * Call this when there is data from the origin server
  * which should be sent to either StoreEntry, or to ICAP...
  */
@@ -1156,7 +1162,7 @@ HttpStateData::decodeAndWriteReplyBody()
     return status;
 }
 
-/*
+/**
  * processReplyBody has two purposes:
  *  1 - take the reply body data, if any, and put it into either
  *      the StoreEntry, or give it over to ICAP.
@@ -1198,7 +1204,7 @@ HttpStateData::processReplyBody()
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
         /*
-         * the above writeReplyBody() call could ABORT this entry,
+         * The above writeReplyBody() call could ABORT this entry,
          * in that case, the server FD should already be closed.
          * there's nothing for us to do.
          */
@@ -1962,12 +1968,14 @@ HttpStateData::abortTransaction(const char *reason)
     deleteThis("HttpStateData::abortTransaction");
 }
 
+#if DEAD_CODE
 void
 httpBuildVersion(HttpVersion * version, unsigned int major, unsigned int minor)
 {
     version->major = major;
     version->minor = minor;
 }
+#endif
 
 HttpRequest *
 HttpStateData::originalRequest()
