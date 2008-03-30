@@ -2,40 +2,58 @@
 #define SQUID_ADAPTATION__SERVICE_H
 
 #include "SquidString.h"
+#include "RefCount.h"
+#include "adaptation/forward.h"
 #include "adaptation/Elements.h"
+#include "adaptation/ServiceConfig.h"
+
+// TODO: Move src/ICAP/ICAPServiceRep.h API comments here and update them
+
+class HttpMsg;
+class HttpRequest;
 
 namespace Adaptation {
 
 // manages adaptation service configuration in squid.conf
 // specific adaptation mechanisms extend this class
-class Service
+class Service: public RefCountable
 {
 public:
-    Service();
-    virtual ~Service();
-
-    const char *methodStr() const;
-    const char *vectPointStr() const;
+    typedef RefCount<Service> Pointer;
 
 public:
-    String key;    // service name in the configuration file
-    String uri;    // service URI
+    Service(const ServiceConfig &aConfig);
+    virtual ~Service();
 
-    // service URI components
-    String protocol;
-    String host;
-    String resource;
-    int port;
+    // call when the service is no longer needed or valid
+    virtual void invalidate() = 0;
 
-    Method method;   // what is being adapted (REQMOD vs RESPMOD)
-    VectPoint point; // where the adaptation happens (pre- or post-cache)
-    bool bypass;
+    virtual bool probed() const = 0; // see comments above
+    virtual bool broken() const = 0; // see comments above
+    virtual bool up() const = 0; // see comments above
+
+    virtual Initiate *makeXactLauncher(Initiator *, HttpMsg *virginHeader, HttpRequest *virginCause) = 0;
+
+    typedef void Callback(void *data, Pointer &service);
+    void callWhenReady(Callback *cb, void *data);
+
+    // the methods below can only be called on an up() service
+    virtual bool wantsUrl(const String &urlPath) const = 0;
+
+    // called by transactions to report service failure
+    virtual void noteFailure() = 0;
+
+    const ServiceConfig &cfg() const { return theConfig; }
 
 protected:
-    bool configure();
-    Method parseMethod(const char *str) const;
-    VectPoint parseVectPoint(const char *service) const;
+    bool finalize(); // called after creation
+    ServiceConfig &writeableCfg() { return theConfig; }
+
+private:
+    ServiceConfig theConfig;
 };
+
+typedef Service::Pointer ServicePointer;
 
 } // namespace Adaptation
 

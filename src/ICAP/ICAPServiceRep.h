@@ -36,7 +36,8 @@
 
 #include "cbdata.h"
 #include "adaptation/Service.h"
-#include "ICAPInitiator.h"
+#include "adaptation/forward.h"
+#include "adaptation/Initiator.h"
 #include "ICAPElements.h"
 
 class ICAPOptions;
@@ -72,22 +73,24 @@ class ICAPOptXact;
 
 
 class ICAPServiceRep : public RefCountable, public Adaptation::Service,
-    public ICAPInitiator
+    public Adaptation::Initiator
 {
 
 public:
     typedef RefCount<ICAPServiceRep> Pointer;
 
 public:
-    ICAPServiceRep();
+    ICAPServiceRep(const Adaptation::ServiceConfig &config);
     virtual ~ICAPServiceRep();
 
-    bool configure(Pointer &aSelf); // needs self pointer for ICAPOptXact
+    bool finalize(Pointer &aSelf); // needs self pointer for ICAPOptXact
     void invalidate(); // call when the service is no longer needed or valid
 
     bool probed() const; // see comments above
     bool broken() const; // see comments above
     bool up() const; // see comments above
+
+    virtual Adaptation::Initiate *makeXactLauncher(Adaptation::Initiator *, HttpMsg *virginHeader, HttpRequest *virginCause);
 
     void callWhenReady(AsyncCall::Pointer &cb);
 
@@ -99,15 +102,15 @@ public:
     void noteFailure(); // called by transactions to report service failure
     
     //AsyncJob virtual methods
-    virtual bool doneAll() const { return ICAPInitiator::doneAll() && false;}
+    virtual bool doneAll() const { return Adaptation::Initiator::doneAll() && false;}
 
 public: // treat these as private, they are for callbacks only
     void noteTimeToUpdate();
     void noteTimeToNotify();
 
     // receive either an ICAP OPTIONS response header or an abort message
-    virtual void noteIcapAnswer(HttpMsg *msg);
-    virtual void noteIcapQueryAbort(bool);
+    virtual void noteAdaptationAnswer(HttpMsg *msg);
+    virtual void noteAdaptationQueryAbort(bool);
 
 private:
     // stores Prepare() callback info
@@ -122,7 +125,7 @@ private:
     Clients theClients; // all clients waiting for a call back
 
     ICAPOptions *theOptions;
-    ICAPInitiate *theOptionsFetcher; // pending ICAP OPTIONS transaction
+    Adaptation::Initiate *theOptionsFetcher; // pending ICAP OPTIONS transaction
     time_t theLastUpdate; // time the options were last updated
 
     static const int TheSessionFailureLimit;

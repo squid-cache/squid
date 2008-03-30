@@ -10,11 +10,13 @@
 #include "ICAPOptXact.h"
 #include "ConfigParser.h"
 #include "ICAPConfig.h"
+#include "ICAPModXact.h"
 #include "SquidTime.h"
 
 CBDATA_CLASS_INIT(ICAPServiceRep);
 
-ICAPServiceRep::ICAPServiceRep(): AsyncJob("ICAPServiceRep"),
+ICAPServiceRep::ICAPServiceRep(const Adaptation::ServiceConfig &cfg):
+        AsyncJob("ICAPServiceRep"), Adaptation::Service(cfg),
         theOptions(NULL), theOptionsFetcher(0), theLastUpdate(0),
         theSessionFailures(0), isSuspended(0), notifying(false),
         updateScheduled(false), self(NULL),
@@ -28,23 +30,23 @@ ICAPServiceRep::~ICAPServiceRep()
 }
 
 bool
-ICAPServiceRep::configure(Pointer &aSelf)
+ICAPServiceRep::finalize(Pointer &aSelf)
 {
     assert(!self && aSelf != NULL);
     self = aSelf;
 
-	if (!Adaptation::Service::configure())
+	if (!Adaptation::Service::finalize())
         return false;
 
     // use /etc/services or default port if needed
-	const bool have_port = port >= 0;
+	const bool have_port = cfg().port >= 0;
     if (!have_port) {
         struct servent *serv = getservbyname("icap", "tcp");
 
         if (serv) {
-            port = htons(serv->s_port);
+            writeableCfg().port = htons(serv->s_port);
         } else {
-            port = 1344;
+            writeableCfg().port = 1344;
         }
     }
 
@@ -248,7 +250,7 @@ void ICAPServiceRep::checkOptions()
 
     if (!theOptions->valid()) {
         debugs(93,1, "WARNING: Squid got an invalid ICAP OPTIONS response " <<
-            "from service " << uri << "; error: " << theOptions->error);
+            "from service " << cfg().uri << "; error: " << theOptions->error);
         return;
     }
 
@@ -264,7 +266,7 @@ void ICAPServiceRep::checkOptions()
 
         while (iter != theOptions->methods.end()) {
 
-            if (*iter == method) {
+            if (*iter == cfg().method) {
                 method_found = true;
                 break;
             }
@@ -276,8 +278,8 @@ void ICAPServiceRep::checkOptions()
 
         if (!method_found) {
             debugs(93,1, "WARNING: Squid is configured to use ICAP method " <<
-                   ICAP::methodStr(method) <<
-                   " for service " << uri.buf() <<
+                   cfg().methodStr() <<
+                   " for service " << cfg().uri.buf() <<
                    " but OPTIONS response declares the methods are " << method_list.buf());
         }
     }
@@ -291,7 +293,7 @@ void ICAPServiceRep::checkOptions()
         // TODO: If skew is negative, the option will be considered down
         // because of stale options. We should probably change this.
         debugs(93, 1, "ICAP service's clock is skewed by " << skew <<
-            " seconds: " << uri.buf());
+            " seconds: " << cfg().uri.buf());
     }
 }
 
@@ -300,20 +302,20 @@ void ICAPServiceRep::announceStatusChange(const char *downPhrase, bool important
     if (wasAnnouncedUp == up()) // no significant changes to announce
         return;
 
-    const char *what = bypass ? "optional" : "essential";
+    const char *what = cfg().bypass ? "optional" : "essential";
     const char *state = wasAnnouncedUp ? downPhrase : "up";
     const int level = important ? 1 : 2;
-    debugs(93,level, what << " ICAP service is " << state << ": " << uri <<
-        ' ' << status());
+    debugs(93,level, what << " ICAP service is " << state << ": " <<
+        cfg().uri << ' ' << status());
 
     wasAnnouncedUp = !wasAnnouncedUp;
 }
 
 // we are receiving ICAP OPTIONS response headers here or NULL on failures
-void ICAPServiceRep::noteIcapAnswer(HttpMsg *msg)
+void ICAPServiceRep::noteAdaptationAnswer(HttpMsg *msg)
 {
     Must(theOptionsFetcher);
-    clearIcap(theOptionsFetcher);
+    clearAdaptation(theOptionsFetcher);
 
     Must(msg);
 
@@ -330,9 +332,9 @@ void ICAPServiceRep::noteIcapAnswer(HttpMsg *msg)
     handleNewOptions(newOptions);
 }
 
-void ICAPServiceRep::noteIcapQueryAbort(bool) {
+void ICAPServiceRep::noteAdaptationQueryAbort(bool) {
     Must(theOptionsFetcher);
-    clearIcap(theOptionsFetcher);
+    clearAdaptation(theOptionsFetcher);
 
     debugs(93,3, "ICAPService failed to fetch options " << status());
     handleNewOptions(0);
@@ -354,7 +356,8 @@ void ICAPServiceRep::startGettingOptions()
     Must(!theOptionsFetcher);
     debugs(93,6, "ICAPService will get new options " << status());
 
-    theOptionsFetcher = initiateIcap(new ICAPOptXactLauncher(this, self));
+    // XXX: check whether it is safe to use self as "this"
+    theOptionsFetcher = initiateAdaptation(new ICAPOptXactLauncher(this, this));
     Must(theOptionsFetcher);
     // TODO: timeout in case ICAPOptXact never calls us back?
     // Such a timeout should probably be a generic AsyncStart feature.
@@ -419,6 +422,13 @@ ICAPServiceRep::optionsFetchTime() const
 
     // use revival delay as "expiration" time for a service w/o valid options
     return squid_curtime + TheICAPConfig.service_revival_delay;
+}
+
+Adaptation::Initiate *
+ICAPServiceRep::makeXactLauncher(Adaptation::Initiator *initiator,
+    HttpMsg *virgin, HttpRequest *cause)
+{
+    return new ICAPModXactLauncher(initiator, virgin, cause, this);
 }
 
 // returns a temporary string depicting service status, for debugging
