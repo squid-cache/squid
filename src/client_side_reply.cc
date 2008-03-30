@@ -1827,6 +1827,9 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
         body_buf = buf;
     }
 
+    /* We've got the final data to start pushing... */
+    flags.storelogiccomplete = 1;
+
     reqofs += result.length;
 
     assert(reqofs <= HTTP_REQBUF_SZ || flags.headersSent);
