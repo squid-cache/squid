@@ -496,3 +496,17 @@ HttpReply::expectingBody(method_t req_method, int64_t& theSize) const
 
     return expectBody;
 }
+
+HttpReply *
+HttpReply::clone() const
+{
+    HttpReply *rep = new HttpReply();
+    rep->header.append(&header);
+    rep->hdrCacheInit();
+    rep->hdr_sz = hdr_sz;
+    rep->http_ver = http_ver;
+    rep->pstate = pstate;
+    rep->protocol = protocol;
+    rep->sline = sline;
+    return rep;
+}
