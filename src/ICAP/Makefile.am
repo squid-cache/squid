@@ -11,10 +11,6 @@ noinst_LTLIBRARIES = libicap.la
 libicap_la_SOURCES = \
 	ICAPClient.cc \
 	ICAPClient.h \
-	ICAPInitiator.cc \
-	ICAPInitiator.h \
-	ICAPInitiate.cc \
-	ICAPInitiate.h \
 	ICAPInOut.h \
 	ICAPConfig.cc \
 	ICAPConfig.h \
