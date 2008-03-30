@@ -43819,12 +43819,12 @@ _ACEOF
 
 { echo "$as_me:$LINENO: checking Maximum number of filedescriptors we can open" >&5
 echo $ECHO_N "checking Maximum number of filedescriptors we can open... $ECHO_C" >&6; }
+TLDFLAGS="$LDFLAGS"
 if test -n "$squid_filedescriptors_num" ; then
   SQUID_MAXFD=$squid_filedescriptors_num
   { echo "$as_me:$LINENO: result: $SQUID_MAXFD (user-forced)" >&5
 echo "${ECHO_T}$SQUID_MAXFD (user-forced)" >&6; }
 else
-  TLDFLAGS="$LDFLAGS"
   case $host in
   i386-unknown-freebsd*)
       if echo "$LDFLAGS" | grep -q pthread; then

@@ -3,7 +3,6 @@ Squid-3.0:
   Feature freeze:
 
   - overlapping helper feature implementation (plain or stateful or both). 
-  - Someone other than Robert to review the draft squid 3 release notes (in CVS already).
 
   Other?
 
@@ -23,6 +22,7 @@ Squid-3.0:
   - Authentication tidyups in proxy_auth acl managagement (Done).
   - Appropriate parts of rproxy (Done).
   - Some kind of Range support to at least the level of 2.5 and earlier (Done).
+  - Someone other than Robert to review the draft squid 3 release notes (in CVS already).
 
 
 Squid-3.1

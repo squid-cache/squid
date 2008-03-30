@@ -1,3 +1,6 @@
+1.10: - Fix processing of more than 256 queries
+      - Send a dummy NAS-Port-Type attribute
+      - Documentation cleanup
 1.09: - RADIUS protocol fixes by Henrik Nordstrom <hno@squid-cache.org>
       - Corrected how retransmits & timeouts is handled
       - The shared secret now verified properly

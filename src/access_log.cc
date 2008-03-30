@@ -587,8 +587,9 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             break;
 
         case LFT_TIME_SECONDS_SINCE_EPOCH:
-            outint = current_time.tv_sec;
-            doint = 1;
+	    // some platforms store time in 32-bit, some 64-bit...
+            outoff = static_cast<int64_t>(current_time.tv_sec);
+            dooff = 1;
             break;
 
         case LFT_TIME_SUBSECOND:
@@ -795,16 +796,16 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             break;
 
         case LFT_REPLY_HIGHOFFSET:
-            outint = static_cast<int>(al->cache.highOffset);
+            outoff = al->cache.highOffset;
 
-            doint = 1;
+            dooff = 1;
 
             break;
 
         case LFT_REPLY_OBJECTSIZE:
-            outint = static_cast<int>(al->cache.objectSize);
+            outoff = al->cache.objectSize;
 
-            doint = 1;
+            dooff = 1;
 
             break;
 
