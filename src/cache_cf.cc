@@ -3430,55 +3430,55 @@ free_access_log(customlog ** definitions)
 static void
 parse_icap_service_type(ICAPConfig * cfg)
 {
-    cfg->parseICAPService();
+    cfg->parseService();
 }
 
 static void
 free_icap_service_type(ICAPConfig * cfg)
 {
-    cfg->freeICAPService();
+    cfg->freeService();
 }
 
 static void
 dump_icap_service_type(StoreEntry * entry, const char *name, const ICAPConfig &cfg)
 {
-    cfg.dumpICAPService(entry, name);
+    cfg.dumpService(entry, name);
 }
 
 static void
 parse_icap_class_type(ICAPConfig * cfg)
 {
-    cfg->parseICAPClass();
+    cfg->parseClass();
 }
 
 static void
 free_icap_class_type(ICAPConfig * cfg)
 {
-    cfg->freeICAPClass();
+    cfg->freeClass();
 }
 
 static void
 dump_icap_class_type(StoreEntry * entry, const char *name, const ICAPConfig &cfg)
 {
-    cfg.dumpICAPClass(entry, name);
+    cfg.dumpClass(entry, name);
 }
 
 static void
 parse_icap_access_type(ICAPConfig * cfg)
 {
-    cfg->parseICAPAccess(LegacyParser);
+    cfg->parseAccess(LegacyParser);
 }
 
 static void
 free_icap_access_type(ICAPConfig * cfg)
 {
-    cfg->freeICAPAccess();
+    cfg->freeAccess();
 }
 
 static void
 dump_icap_access_type(StoreEntry * entry, const char *name, const ICAPConfig &cfg)
 {
-    cfg.dumpICAPAccess(entry, name);
+    cfg.dumpAccess(entry, name);
 }
 
 #endif
