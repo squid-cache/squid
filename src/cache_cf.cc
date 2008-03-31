@@ -2931,6 +2931,7 @@ parse_http_port_option(http_port_list * s, char *token)
 
     } else if (strcmp(token, "tproxy") == 0) {
         s->tproxy = 1;
+        s->transparent = 1;
         need_linux_tproxy = 1;
 #if USE_IPV6
         /* INET6: until transparent REDIRECT works on IPv6 SOCKET, force wildcard to IPv4 */
