@@ -70,6 +70,10 @@
 #include "MemPool.h"
 #include "ICMPSquid.h"
 
+#if USE_LOADABLE_MODULES
+#include "LoadableModules.h"
+#endif
+
 #if ICAP_CLIENT
 #include "ICAP/ICAPConfig.h"
 #endif
@@ -1084,6 +1088,10 @@ mainInitialize(void)
 #endif
 
     memCheckInit();
+
+#if USE_LOADABLE_MODULES
+    LoadableModulesConfigure(Config.loadable_module_names);
+#endif
 
 #if ICAP_CLIENT
     TheICAPConfig.finalize(); // must be after we load modules
