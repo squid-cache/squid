@@ -5043,6 +5043,23 @@ icap_access class_1 allow all
 DOC_END
 
 COMMENT_START
+ eCAP OPTIONS
+ -----------------------------------------------------------------------------
+COMMENT_END
+
+NAME: loadable_modules
+TYPE: wordlist
+IFDEF: USE_LOADABLE_MODULES
+LOC: Config.loadable_module_names
+DEFAULT: none
+DOC_START
+	Instructs Squid to load the specified dynamic module(s) or activate
+	preloaded module(s).
+Example:
+loadable_modules @DEFAULT_PREFIX@/lib/MinimalAdapter.so
+DOC_END
+
+COMMENT_START
  DNS OPTIONS
  -----------------------------------------------------------------------------
 COMMENT_END

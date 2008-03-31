@@ -25,6 +25,12 @@ else
 SNMP_SOURCE = 
 endif
 
+LOADABLE_MODULES_SOURCES = \
+	LoadableModule.h \
+	LoadableModule.cc \
+	LoadableModules.h \
+	LoadableModules.cc
+
 TESTS=$(check_PROGRAMS)
 check_PROGRAMS=
 
@@ -221,6 +227,7 @@ noinst_LIBRARIES = @DISK_LIBS@
 noinst_LTLIBRARIES = libsquid.la libauth.la
 
 INCLUDES        = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/lib/libTrie/include
+INCLUDES        += -I$(top_builddir)/lib
 INCLUDES	+= @SQUID_CPPUNIT_INC@
 
 EXTRA_PROGRAMS = \
@@ -315,6 +322,7 @@ EXTRA_squid_SOURCES = \
 	$(UNLINKDSOURCE) \
 	$(SSL_ALL_SOURCE) \
 	$(WIN32_ALL_SOURCE) \
+	$(LOADABLE_MODULES_SOURCES) \
 	DiskIO/DiskThreads/aiops.cc \
 	DiskIO/DiskThreads/aiops_win32.cc
 
@@ -715,6 +723,7 @@ squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	${ADAPTATION_LIBS}
 
 if USE_LOADABLE_MODULES
+squid_SOURCES += $(LOADABLE_MODULES_SOURCES)
 squid_LDADD += \
 	@LIBLTDL@
 squid_LDFLAGS = \
