@@ -246,13 +246,16 @@ int
 strListGetItem(const String * str, char del, const char **item, int *ilen, const char **pos)
 {
     size_t len;
-    static char delim[2][3] = {
-                                  { '"', '?', 0},
-                                  { '"', '\\', 0} };
+    static char delim[3][8] = {
+			"\"?,",
+			"\"\\",
+			"\"?, \t\r"
+    };
     int quoted = 0;
     assert(str && item && pos);
 
     delim[0][1] = del;
+    delim[2][1] = del;
 
     if (*pos) {
         if (!**pos)		/* end of string */
@@ -266,11 +269,8 @@ strListGetItem(const String * str, char del, const char **item, int *ilen, const
             return 0;
     }
 
-    /* skip leading ws (ltrim) */
-    *pos += xcountws(*pos);
-
-    /* skip leading delimiters */
-    *pos += strspn(*pos, delim[0]);
+    /* skip leading ws and delimiters */
+    *pos += strspn(*pos, delim[2]);
 
     *item = *pos;		/* remember item's start */
 
