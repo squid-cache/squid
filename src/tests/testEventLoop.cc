@@ -278,7 +278,7 @@ testEventLoop::testSetPrimaryEngine()
     /* one engine - gets a timeout */
     theLoop.registerEngine(&first_engine);
     theLoop.runOnce();
-    CPPUNIT_ASSERT_EQUAL(10, first_engine.lasttimeout);
+    CPPUNIT_ASSERT_EQUAL(EVENT_LOOP_TIMEOUT, first_engine.lasttimeout);
     /* two engines - the second gets the timeout */
     theLoop.registerEngine(&second_engine);
     theLoop.runOnce();
@@ -289,5 +289,4 @@ testEventLoop::testSetPrimaryEngine()
     theLoop.runOnce();
     CPPUNIT_ASSERT_EQUAL(10, first_engine.lasttimeout);
     CPPUNIT_ASSERT_EQUAL(0, second_engine.lasttimeout);
-
 }

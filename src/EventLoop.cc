@@ -92,9 +92,7 @@ EventLoop::run()
 {
     prepareToRun();
 
-    while (!runOnce())
-
-        ;
+    while (!runOnce());
 }
 
 bool
@@ -103,7 +101,7 @@ EventLoop::runOnce()
     bool sawActivity = false;
     runOnceResult = true;
     error = false;
-    loop_delay = 1000; /* 1s default delay */
+    loop_delay = EVENT_LOOP_TIMEOUT;
 
     AsyncEngine *waitingEngine = primaryEngine;
     if (!waitingEngine && !engines.empty())

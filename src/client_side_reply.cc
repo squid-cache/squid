@@ -827,9 +827,7 @@ clientReplyContext::purgeFoundObject(StoreEntry *entry)
     /* Swap in the metadata */
     http->storeEntry(entry);
 
-    http->storeEntry()->lock()
-
-    ;
+    http->storeEntry()->lock();
     http->storeEntry()->createMemObject(http->uri, http->log_uri);
 
     http->storeEntry()->mem_obj->method = http->request->method;
@@ -1607,9 +1605,7 @@ clientReplyContext::doGetMoreData()
         /* someone found the object in the cache for us */
         StoreIOBuffer tempBuffer;
 
-        http->storeEntry()->lock()
-
-        ;
+        http->storeEntry()->lock();
 
         if (http->storeEntry()->mem_obj == NULL) {
             /*

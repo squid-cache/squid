@@ -62,9 +62,7 @@ public:
         int code;
         const char *content_type;
         HttpVersion version;
-    }
-
-    http;
+    } http;
 
     class ICPDetails
     {
@@ -73,9 +71,7 @@ public:
         ICPDetails() : opcode(ICP_INVALID) {}
 
         icp_opcode opcode;
-    }
-
-    icp;
+    } icp;
 
     class CacheDetails
     {
@@ -93,8 +89,7 @@ public:
 #if USE_SSL
                 ,ssluser(NULL)
 #endif
-        {
-            ;
+        {;
         }
 
         IPAddress caddr;
@@ -111,9 +106,7 @@ public:
         const char *ssluser;
 #endif
 
-    }
-
-    cache;
+    } cache;
 
     class Headers
     {
@@ -123,9 +116,7 @@ public:
 
         char *request;
         char *reply;
-    }
-
-    headers;
+    } headers;
 
     // Why is this a sub-class and not a set of real "private:" fields?
     // It looks like its duplicating HTTPRequestMethod anyway!
@@ -136,9 +127,7 @@ public:
         Private() : method_str(NULL) {}
 
         const char *method_str;
-    }
-
-    _private;
+    } _private;
     HierarchyLogEntry hier;
     HttpReply *reply;
     HttpRequest *request;

@@ -65,9 +65,7 @@ public:
 
 unsigned int credentials_ok:
         2;	/*0=unchecked,1=ok,2=failed */
-    }
-
-    flags;
+    } flags;
     BasicAuthQueueNode *auth_queue;
 
 private:

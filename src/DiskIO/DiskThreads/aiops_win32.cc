@@ -82,9 +82,7 @@ typedef struct squidaio_request_t
 
     struct stat *statp;
     squidaio_result_t *resultp;
-}
-
-squidaio_request_t;
+} squidaio_request_t;
 
 typedef struct squidaio_request_queue_t
 {
@@ -94,9 +92,7 @@ typedef struct squidaio_request_queue_t
     squidaio_request_t *volatile *volatile tailp;
     unsigned long requests;
     unsigned long blocked;	/* main failed to lock the queue */
-}
-
-squidaio_request_queue_t;
+} squidaio_request_queue_t;
 
 typedef struct squidaio_thread_t squidaio_thread_t;
 

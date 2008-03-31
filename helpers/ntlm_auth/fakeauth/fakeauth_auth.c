@@ -55,6 +55,7 @@
 
 const char *authenticate_ntlm_domain = "WORKGROUP";
 int debug_enabled = 0;
+int strip_domain_enabled = 0;
 int NTLM_packet_debug_enabled = 0;
 
 /* NTLM authentication by ad@interlude.eu.org - 07/1999 */
@@ -327,6 +328,7 @@ usage(void)
     fprintf(stderr,
 	"Usage: %s [-d] [-v] [-h]\n"
 	" -d  enable debugging.\n"
+	" -S  strip domain from username.\n"
 	" -v  enable verbose NTLM packet debugging.\n"
 	" -h  this message\n\n",
 	my_program_name);
@@ -339,7 +341,7 @@ process_options(int argc, char *argv[])
     int opt, had_error = 0;
 
     opterr = 0;
-    while (-1 != (opt = getopt(argc, argv, "hdv"))) {
+    while (-1 != (opt = getopt(argc, argv, "hdvS"))) {
 	switch (opt) {
 	case 'd':
 	    debug_enabled = 1;
@@ -347,6 +349,9 @@ process_options(int argc, char *argv[])
 	case 'v':
 	    debug_enabled = 1;
 	    NTLM_packet_debug_enabled = 1;
+	    break;
+	case 'S':
+	    strip_domain_enabled = 1;
 	    break;
 	case 'h':
 	    usage();
@@ -423,7 +428,12 @@ main(int argc, char *argv[])
 	    if (!ntlmCheckHeader((ntlmhdr *) decoded, NTLM_AUTHENTICATE)) {
 		if (!ntlmDecodeAuth((struct ntlm_authenticate *) decoded, user, 256)) {
 		    lc(user);
+		    if (strip_domain_enabled) {
+			strtok_r(user, "\\", &p);
+			SEND2("AF %s", p);
+			} else {
 		    SEND2("AF %s", user);
+		    }
 		} else {
 		    lc(user);
 		    SEND2("NA invalid credentials, user=%s", user);

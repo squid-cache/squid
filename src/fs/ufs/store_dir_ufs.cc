@@ -602,9 +602,7 @@ UFSSwapDir::logFile(char const *ext) const
         while (strlen(pathtmp) && pathtmp[strlen(pathtmp) - 1] == '.')
             pathtmp[strlen(pathtmp) - 1] = '\0';
 
-        for (pathtmp2 = pathtmp; *pathtmp2 == '.'; pathtmp2++)
-
-            ;
+        for (pathtmp2 = pathtmp; *pathtmp2 == '.'; pathtmp2++);
         snprintf(lpath, SQUID_MAXPATHLEN - 64, Config.Log.swap, pathtmp2);
 
         if (strncmp(lpath, Config.Log.swap, SQUID_MAXPATHLEN - 64) == 0) {

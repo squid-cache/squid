@@ -110,15 +110,9 @@ struct _fqdncache_entry
 
     struct
     {
-
-unsigned int negcached:
-        1;
-
-unsigned int fromhosts:
-        1;
-    }
-
-    flags;
+        unsigned int negcached:1;
+        unsigned int fromhosts:1;
+    } flags;
 };
 
 /// \ingroup FQDNCacheInternal
@@ -129,8 +123,7 @@ static struct _fqdn_cache_stats
     int hits;
     int misses;
     int negative_hits;
-}
-FqdncacheStats;
+} FqdncacheStats;
 
 /// \ingroup FQDNCacheInternal
 static dlink_list lru_list;
@@ -505,7 +498,6 @@ fqdncacheHandleReply(void *data, rfc1035_rr * answers, int na, const char *error
 #if USE_DNSSERVERS
 
     fqdncacheParse(f, reply);
-    ;
 #else
 
     fqdncacheParse(f, answers, na, error_message);

@@ -104,21 +104,16 @@ public:
 
     struct
     {
-
-unsigned int flag_cbdata:
-        1;
-    }
-
-    flags;
+        unsigned int flag_cbdata:1;
+    } flags;
 
     struct
     {
         wordlist *server_msg;
         char *request;
         char *reply;
-    }
+    } ftp;
 
-    ftp;
     char *request_hdrs;
     char *err_msg; /* Preformatted error message from the cache */
 

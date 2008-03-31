@@ -99,18 +99,12 @@ public:
     {
         STRCB *callback;
         void *callback_data;
-    }
-
-    read;
+    } read;
 
     struct
     {
-
-unsigned int closing:
-        1;	/* debugging aid */
-    }
-
-    flags;
+        unsigned int closing:1;	/* debugging aid */
+    } flags;
 };
 
 StoreIOState::Pointer storeCreate(StoreEntry *, StoreIOState::STFNCB *, StoreIOState::STIOCB *, void *);

@@ -51,9 +51,7 @@ ACLSslErrorData::parse()
     List<ssl_error_t> **Tail;
     char *t = NULL;
 
-    for (Tail = &values; *Tail; Tail = &((*Tail)->next))
-
-        ;
+    for (Tail = &values; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
         List<ssl_error_t> *q = new List<ssl_error_t>(sslParseErrorString(t));
         *(Tail) = q;
