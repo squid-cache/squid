@@ -88,9 +88,7 @@ ACLMethodData::parse()
     List<HttpRequestMethod> **Tail;
     char *t = NULL;
 
-    for (Tail = &values; *Tail; Tail = &((*Tail)->next))
-
-        ;
+    for (Tail = &values; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
         List<HttpRequestMethod> *q = new List<HttpRequestMethod> (HttpRequestMethod(t, NULL));
         *(Tail) = q;

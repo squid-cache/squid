@@ -158,8 +158,7 @@ cbdata::operator new(size_t size, void *where)
  */
 void
 cbdata::operator delete(void *where, void *where2)
-{
-  ;
+{;
 }
 
 long

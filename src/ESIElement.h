@@ -55,9 +55,8 @@ struct esiTreeParent : public RefCountable
 
     virtual void fail(ESIElement * source, char const *reason = NULL) {}
 
-    virtual ~esiTreeParent(){}}
-
-;
+    virtual ~esiTreeParent(){}
+};
 
 typedef RefCount<esiTreeParent> esiTreeParentPtr;
 

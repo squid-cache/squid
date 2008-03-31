@@ -75,11 +75,8 @@ private:
     {
         Flags() : strict(0){}
 
-unsigned int strict:
-        1;
-    }
-
-    flags;
+        unsigned int strict:1;
+    } flags;
 };
 
 MEMPROXY_CLASS_INLINE(ACLMaxUserIP)          /**DOCS_NOSEMI*/

@@ -95,17 +95,10 @@ private:
 
     struct
     {
-
-unsigned int dont_retry:
-        1;
-
-unsigned int ftp_pasv_failed:
-        1;
-
-unsigned int forward_completed:1;
-    }
-
-    flags;
+        unsigned int dont_retry:1;
+        unsigned int ftp_pasv_failed:1;
+        unsigned int forward_completed:1;
+    } flags;
 #if LINUX_NETFILTER
     IPAddress src;
 #endif

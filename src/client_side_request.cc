@@ -1012,9 +1012,7 @@ ClientHttpRequest::loggingEntry(StoreEntry *newEntry)
     loggingEntry_ = newEntry;
 
     if (loggingEntry_)
-        loggingEntry_->lock()
-
-        ;
+        loggingEntry_->lock();
 }
 
 /*

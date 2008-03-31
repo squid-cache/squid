@@ -264,8 +264,8 @@ ICMPSquid::Open(void)
 
 #endif /* _SQUID_MSWIN_ */
     return icmp_sock;
-#else  /* USE_ICMP */
-	return 0;
+#else /* USE_ICMP */
+    return -1;
 #endif /* USE_ICMP */
 }
 

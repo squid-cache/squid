@@ -2023,9 +2023,7 @@ parse_hostdomain(void)
 
         l->domain = xstrdup(domain);
 
-        for (L = &(p->peer_domain); *L; L = &((*L)->next))
-
-            ;
+        for (L = &(p->peer_domain); *L; L = &((*L)->next));
         *L = l;
     }
 }
@@ -2057,9 +2055,7 @@ parse_hostdomaintype(void)
         l->type = parseNeighborType(type);
         l->domain = xstrdup(domain);
 
-        for (L = &(p->typelist); *L; L = &((*L)->next))
-
-            ;
+        for (L = &(p->typelist); *L; L = &((*L)->next));
         *L = l;
     }
 }

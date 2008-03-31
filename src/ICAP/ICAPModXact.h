@@ -298,9 +298,7 @@ private:
 
         enum Sending { sendingUndecided, sendingVirgin, sendingAdapted,
                        sendingDone } sending;
-    }
-
-    state;
+    } state;
 
     CBDATA_CLASS2(ICAPModXact);
 };

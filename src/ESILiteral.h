@@ -59,12 +59,9 @@ struct esiLiteral : public ESIElement
 
     struct
     {
+        int donevars:1;
+    } flags;
 
-int donevars:
-        1;
-    }
-
-    flags;
     ESIVarState *varState;
     void finish();
 

@@ -126,9 +126,7 @@ public:
     {
         STABH *callback;
         void *data;
-    }
-
-    abort;
+    } abort;
     char *log_url;
     RemovalPolicyNode repl;
     int id;
