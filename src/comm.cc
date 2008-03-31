@@ -48,6 +48,7 @@
 #include "SquidTime.h"
 #include "CommCalls.h"
 #include "IPAddress.h"
+#include "IPInterception.h"
 
 #if defined(_SQUID_CYGWIN_)
 #include <sys/ioctl.h>
@@ -633,6 +634,10 @@ comm_set_transparent(int fd, int tos)
 #if LINUX_TPROXY4
     if (setsockopt(fd, SOL_IP, IP_TRANSPARENT, (char *) &tos, sizeof(int)) < 0) {
         debugs(50, DBG_IMPORTANT, "comm_open: setsockopt(IP_TRANSPARENT) on FD " << fd << ": " << xstrerror());
+    }
+    else {
+        /* mark the socket as having transparent options */
+        fd_table[fd].flags.transparent = 1;
     }
 #else
     debugs(50, DBG_CRITICAL, "WARNING: comm_open: setsockopt(IP_TRANSPARENT) not supported on this platform");
@@ -1321,9 +1326,9 @@ comm_old_accept(int fd, ConnectionDetail &details)
 
 #if LINUX_TPROXY4
     /* AYJ: do we need to set this again on every accept? */
-    if(fd_table[fd].flags.tproxy == 1) {
+    if(fd_table[fd].flags.transparent == 1) {
         comm_set_transparent(sock, 0);
-        F->flags.tproxy = 1;
+        F->flags.transparent = 1;
     }
 #endif
 
