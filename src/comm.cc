@@ -629,9 +629,10 @@ comm_set_v6only(int fd, int tos)
 }
 
 void
-comm_set_transparent(int fd, int tos)
+comm_set_transparent(int fd)
 {
 #if LINUX_TPROXY4
+    int tos = 1;
     if (setsockopt(fd, SOL_IP, IP_TRANSPARENT, (char *) &tos, sizeof(int)) < 0) {
         debugs(50, DBG_IMPORTANT, "comm_open: setsockopt(IP_TRANSPARENT) on FD " << fd << ": " << xstrerror());
     }
