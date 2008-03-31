@@ -257,12 +257,7 @@ strListGetItem(const String * str, char del, const char **item, int *ilen, const
     delim[0][1] = del;
     delim[2][1] = del;
 
-    if (*pos) {
-        if (!**pos)		/* end of string */
-            return 0;
-        else
-            (*pos)++;
-    } else {
+    if (!*pos) {
         *pos = str->buf();
 
         if (!*pos)
