@@ -249,7 +249,7 @@ strListGetItem(const String * str, char del, const char **item, int *ilen, const
     static char delim[3][8] = {
 			"\"?,",
 			"\"\\",
-			"\"?, \t\r"
+			"\"?, \t\r\n"
     };
     int quoted = 0;
     assert(str && item && pos);
