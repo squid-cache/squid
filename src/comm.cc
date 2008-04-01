@@ -1328,7 +1328,7 @@ comm_old_accept(int fd, ConnectionDetail &details)
 #if LINUX_TPROXY4
     /* AYJ: do we need to set this again on every accept? */
     if(fd_table[fd].flags.transparent == 1) {
-        comm_set_transparent(sock, 0);
+        comm_set_transparent(sock);
         F->flags.transparent = 1;
     }
 #endif
