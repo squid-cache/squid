@@ -270,7 +270,7 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
 
     default:
         FwdState::Pointer fwd = new FwdState(client_fd, entry, request);
-#if LINUX_TPROXY
+#if LINUX_TPROXY2 || LINUX_TPROXY4
         /* If we need to transparently proxy the request
          * then we need the client source protocol, address and port */
         fwd->src = request->client_addr;
@@ -775,7 +775,7 @@ FwdState::connectStart()
     const char *domain = NULL;
     int ctimeout;
     int ftimeout = Config.Timeout.forward - (squid_curtime - start_t);
-#if LINUX_TPROXY
+#if LINUX_TPROXY2
 
     struct in_tproxy itp;
 #endif
@@ -802,7 +802,7 @@ FwdState::connectStart()
         ctimeout = Config.Timeout.connect;
     }
 
-#if LINUX_TPROXY
+#if LINUX_TPROXY2 || LINUX_TPROXY4
     if (request->flags.tproxy)
         client_addr = request->client_addr;
 
@@ -888,9 +888,14 @@ FwdState::connectStart()
     if (fs->_peer) {
         hierarchyNote(&request->hier, fs->code, fs->_peer->host);
     } else {
-#if LINUX_TPROXY
+#if LINUX_TPROXY2 || LINUX_TPROXY4
 
         if (request->flags.tproxy) {
+
+#if LINUX_TPROXY4
+            comm_set_transparent(fd);
+
+#elif LINUX_TPROXY2
             IPAddress addr;
 
             src.GetInAddr(itp.v.addr.faddr);
@@ -918,6 +923,7 @@ FwdState::connectStart()
                     request->flags.tproxy = 0;
                 }
             }
+#endif
         }
 
 #endif

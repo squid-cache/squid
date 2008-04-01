@@ -2712,7 +2712,6 @@ okToAccept()
 }
 
 ConnStateData *
-
 connStateCreate(const IPAddress &peer, const IPAddress &me, int fd, http_port_list *port)
 {
     ConnStateData *result = new ConnStateData;
@@ -2724,9 +2723,12 @@ connStateCreate(const IPAddress &peer, const IPAddress &me, int fd, http_port_li
     result->in.buf = (char *)memAllocBuf(CLIENT_REQ_BUF_SZ, &result->in.allocatedSize);
     result->port = cbdataReference(port);
 
-    if (port->transparent)
+#if LINUX_TPROXY4
+    if(port->transparent || port->tproxy)
+#else
+    if(port->transparent)
+#endif
     {
-
         IPAddress dst;
 
         if (clientNatLookup(fd, me, peer, dst) == 0) {
@@ -3120,8 +3122,8 @@ clientHttpConnectionsOpen(void)
 #if LINUX_TPROXY4
         /* because the transparent/non-transparent port info is only known here.
          * we have to set the IP_TRANSPARENT option here. */
-        if(s->transparent)
-            comm_set_transparent(fd,0);
+        if(s->tproxy)
+            comm_set_transparent(fd);
 #endif
 
         comm_listen(fd);
