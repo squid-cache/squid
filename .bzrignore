@@ -12,3 +12,10 @@ tmp
 .dirstamp
 *.la
 *.lo
+Makefile.in
+configure
+config.h.in
+cfgaux
+stamp-h.in
+aclocal.m4
+autoconf.h.in
