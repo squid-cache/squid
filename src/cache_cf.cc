@@ -59,6 +59,17 @@
 #include "ESIParser.h"
 #endif
 
+#if USE_ADAPTATION
+#include "adaptation/Config.h"
+
+static void parse_adaptation_service_set_type();
+
+static void parse_adaptation_access_type();
+static void dump_adaptation_access_type(StoreEntry *, const char *);
+static void free_adaptation_access_type();
+
+#endif
+
 #if ICAP_CLIENT
 #include "ICAP/ICAPConfig.h"
 
@@ -3421,6 +3432,35 @@ free_access_log(customlog ** definitions)
     }
 }
 
+#if USE_ADAPTATION
+
+static void
+parse_adaptation_service_set_type()
+{
+    Adaptation::Config::ParseServiceSet();
+}
+
+static void
+parse_adaptation_access_type()
+{
+    Adaptation::Config::ParseAccess(LegacyParser);
+}
+
+static void
+free_adaptation_access_type()
+{
+    Adaptation::Config::FreeAccess();
+}
+
+static void
+dump_adaptation_access_type(StoreEntry * entry, const char *name)
+{
+    Adaptation::Config::DumpAccess(entry, name);
+}
+
+#endif /* USE_ADAPTATION */
+
+
 #if ICAP_CLIENT
 
 static void
@@ -3442,39 +3482,43 @@ dump_icap_service_type(StoreEntry * entry, const char *name, const ICAPConfig &c
 }
 
 static void
-parse_icap_class_type(ICAPConfig * cfg)
+parse_icap_class_type(ICAPConfig *)
 {
-    cfg->parseClass();
+    debugs(93, 0, "WARNING: 'icap_class' is depricated. " <<
+        "Use 'adaptation_service_set' instead");
+    Adaptation::Config::ParseServiceSet();
 }
 
 static void
-free_icap_class_type(ICAPConfig * cfg)
+free_icap_class_type(ICAPConfig *)
 {
-    cfg->freeClass();
+    Adaptation::Config::FreeServiceSet();
 }
 
 static void
-dump_icap_class_type(StoreEntry * entry, const char *name, const ICAPConfig &cfg)
+dump_icap_class_type(StoreEntry * entry, const char *name, const ICAPConfig &)
 {
-    cfg.dumpClass(entry, name);
+    Adaptation::Config::DumpServiceSet(entry, name);
 }
 
 static void
-parse_icap_access_type(ICAPConfig * cfg)
+parse_icap_access_type(ICAPConfig *)
 {
-    cfg->parseAccess(LegacyParser);
+    debugs(93, 0, "WARNING: 'icap_access' is depricated. " <<
+        "Use 'adaptation_access' instead");
+    parse_adaptation_access_type();
 }
 
 static void
-free_icap_access_type(ICAPConfig * cfg)
+free_icap_access_type(ICAPConfig *)
 {
-    cfg->freeAccess();
+    free_adaptation_access_type();
 }
 
 static void
-dump_icap_access_type(StoreEntry * entry, const char *name, const ICAPConfig &cfg)
+dump_icap_access_type(StoreEntry * entry, const char *name, const ICAPConfig &)
 {
-    cfg.dumpAccess(entry, name);
+    dump_adaptation_access_type(entry, name);
 }
 
 #endif

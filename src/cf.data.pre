@@ -5007,16 +5007,15 @@ IFDEF: ICAP_CLIENT
 LOC: TheICAPConfig
 DEFAULT: none
 DOC_START
-	Defines an ICAP service chain. Eventually, multiple services per
-	vectoring point will be supported. For now, please specify a single
-	service per class:
+	This depricated option was documented to define an ICAP service
+	chain, even though it actually defined a set of similar, redundant
+	services, and the chains were not supported. 
 
-	icap_class classname servicename
+	To define a set of redundant services, please use the
+	adaptation_service_set directive.
 
-Example:
-icap_class class_1 service_1
-icap class class_2 service_1
-icap class class_3 service_3
+	If you need adaptation service chains, patches or sponsorship
+	is welcome.
 DOC_END
 
 NAME: icap_access
@@ -5025,21 +5024,9 @@ IFDEF: ICAP_CLIENT
 LOC: TheICAPConfig
 DEFAULT: none
 DOC_START
-	Redirects a request through an ICAP service class, depending
-	on given acls
-
-	icap_access classname allow|deny [!]aclname...
-
-	The icap_access statements are processed in the order they appear in
-	this configuration file. If an access list matches, the processing stops.
-	For an "allow" rule, the specified class is used for the request. A "deny"
-	rule simply stops processing without using the class. You can also use the
-	special classname "None".
-
-	For backward compatibility, it is also possible to use services
-	directly here.
-Example:
-icap_access class_1 allow all
+        This option is depricated. Please use adaptation_access, which
+	has the same ICAP functionality, but comes with better
+	documentation, and eCAP support.
 DOC_END
 
 COMMENT_START
@@ -5057,6 +5044,75 @@ DOC_START
 	preloaded module(s).
 Example:
 loadable_modules @DEFAULT_PREFIX@/lib/MinimalAdapter.so
+DOC_END
+
+COMMENT_START
+ MESSAGE ADAPTATION OPTIONS
+ -----------------------------------------------------------------------------
+COMMENT_END
+
+NAME: adaptation_service_set
+TYPE: adaptation_service_set_type
+IFDEF: USE_ADAPTATION
+LOC: none
+DEFAULT: none
+DOC_START
+
+	Defines a named adaptation service set. The set is populated in
+	the order of adaptation_service_set directives in this file.
+	When adaptation ACLs are processed, the first and only the first
+	applicable adaptation service from the set will be used. Thus,
+	the set should group similar, redundant services, rather than a
+	chain of complementary services.
+
+	If you have a single adaptation service, you do not need to
+	define a set containing it because adaptation_access accepts
+	service names.
+
+	See also: adaptation_access
+
+Example:
+adaptation_service_set svcBlocker urlFilterPrimary urlFilterBackup
+adaptation service_set svcLogger loggerLocal loggerRemote
+DOC_END
+
+NAME: adaptation_access
+TYPE: adaptation_access_type
+IFDEF: USE_ADAPTATION
+LOC: none
+DEFAULT: none
+DOC_START
+	Sends an HTTP transaction to an ICAP or eCAP adaptation	service.
+
+	adaptation_access service_name allow|deny [!]aclname...
+	adaptation_access set_name     allow|deny [!]aclname...
+
+	At each supported vectoring point, the adaptation_access
+	statements are processed in the order they appear in this
+	configuration file. Statements pointing to the following services
+	are ignored (i.e., skipped without checking their ACL):
+
+	    - services serving different vectoring points
+	    - "broken-but-bypassable" services
+	    - "up" services configured to ignore such transactions
+              (e.g., based on the ICAP Transfer-Ignore header).
+
+        When a set_name is used, all services in the set are checked
+	using the same rules, to find the first applicable one. See
+	adaptation_service_set for details.
+
+	If an access list is checked and there is a match, the
+	processing stops: For an "allow" rule, the corresponding
+	adaptation service is used for the transaction. For a "deny"
+	rule, no adaptation service is activated.
+
+	It is currently not possible to apply more than one adaptation
+	service at the same vectoring point to the same HTTP transaction.
+
+        See also: icap_service and ecap_service
+
+Example:
+adaptation_access service_1 allow all
 DOC_END
 
 COMMENT_START

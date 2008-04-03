@@ -62,7 +62,7 @@ Adaptation::ServicePointer
 ICAPConfig::createService(const Adaptation::ServiceConfig &cfg)
 {
     ICAPServiceRep::Pointer s = new ICAPServiceRep(cfg);
-    s->finalize(s);
+    s->setSelf(s);
     return s.getRaw();
 }
 

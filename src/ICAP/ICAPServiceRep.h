@@ -83,7 +83,9 @@ public:
     ICAPServiceRep(const Adaptation::ServiceConfig &config);
     virtual ~ICAPServiceRep();
 
-    bool finalize(Pointer &aSelf); // needs self pointer for ICAPOptXact
+    void setSelf(Pointer &aSelf); // needs self pointer for ICAPOptXact
+    virtual void finalize();
+
     void invalidate(); // call when the service is no longer needed or valid
 
     bool probed() const; // see comments above

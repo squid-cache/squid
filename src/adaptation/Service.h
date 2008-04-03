@@ -20,6 +20,7 @@ class Service: public RefCountable
 {
 public:
     typedef RefCount<Service> Pointer;
+    typedef String Id;
 
 public:
     Service(const ServiceConfig &aConfig);
@@ -45,8 +46,9 @@ public:
 
     const ServiceConfig &cfg() const { return theConfig; }
 
+    virtual void finalize(); // called after creation
+
 protected:
-    bool finalize(); // called after creation
     ServiceConfig &writeableCfg() { return theConfig; }
 
 private:
@@ -54,6 +56,10 @@ private:
 };
 
 typedef Service::Pointer ServicePointer;
+
+typedef Vector<Adaptation::ServicePointer> Services;
+extern Services &AllServices();
+extern ServicePointer FindService(const Service::Id &key);
 
 } // namespace Adaptation
 

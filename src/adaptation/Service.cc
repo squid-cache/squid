@@ -11,8 +11,25 @@ Adaptation::Service::Service(const ServiceConfig &aConfig): theConfig(aConfig)
 Adaptation::Service::~Service()
 {}
 
-bool
+void
 Adaptation::Service::finalize()
 {
-    return true;
+}
+
+Adaptation::Services &
+Adaptation::AllServices()
+{
+    static Services TheServices;
+    return TheServices;
+}
+
+Adaptation::ServicePointer
+Adaptation::FindService(const Service::Id& key)
+{
+    typedef Services::iterator SI;
+    for (SI i = AllServices().begin(); i != AllServices().end(); ++i) {
+        if ((*i)->cfg().key == key)
+            return *i;
+	}
+    return NULL;
 }
