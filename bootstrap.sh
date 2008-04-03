@@ -77,19 +77,18 @@ bootstrap_libtoolize() {
         sed 's/COPYING.LIB/ /g' $makefile > $makefile.new;
         chmod u+w $makefile
         mv $makefile.new $makefile
-        # leave writable, do not run chmod u-w $makefile
+        chmod u-w $makefile
 
         dest=lib/libLtdl
-        # move $src to $dest, preserving CVS structure
+        # move $src to $dest
 	if test -d $dest # already exists
 	then
-	    echo updating $dest
-	    # TODO: only move files that changed
+	    echo "Updating $dest from $src."
             chmod u+w $dest/*
             mv $src/* $dest/
             rmdir $src
 	else
-	    echo "Warning: Creating $dest which should have existed."
+	    echo "Creating $dest from $src."
 	    mv $src $dest
         fi
     fi
