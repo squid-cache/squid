@@ -40,7 +40,7 @@
 #include "errorpage.h"
 
 #if USE_ADAPTATION
-#include "adaptation/Service.h"
+#include "adaptation/AccessCheck.h"
 #include "ICAP/ICAPConfig.h"
 extern ICAPConfig TheICAPConfig;
 #endif

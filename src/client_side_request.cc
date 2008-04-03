@@ -60,6 +60,7 @@
 #include "wordlist.h"
 
 #if USE_ADAPTATION
+#include "adaptation/AccessCheck.h"
 #include "ICAP/ICAPConfig.h" /* XXX: replace with generic adaptation config */
 static void adaptationAclCheckDoneWrapper(Adaptation::ServicePointer service, void *data);
 #endif

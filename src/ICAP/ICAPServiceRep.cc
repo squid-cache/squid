@@ -29,14 +29,18 @@ ICAPServiceRep::~ICAPServiceRep()
     changeOptions(0);
 }
 
-bool
-ICAPServiceRep::finalize(Pointer &aSelf)
+void
+ICAPServiceRep::setSelf(Pointer &aSelf)
 {
     assert(!self && aSelf != NULL);
     self = aSelf;
+}
 
-	if (!Adaptation::Service::finalize())
-        return false;
+void
+ICAPServiceRep::finalize()
+{
+	Adaptation::Service::finalize();
+    assert(self != NULL);
 
     // use /etc/services or default port if needed
 	const bool have_port = cfg().port >= 0;
@@ -49,8 +53,6 @@ ICAPServiceRep::finalize(Pointer &aSelf)
             writeableCfg().port = 1344;
         }
     }
-
-    return true;
 }
 
 void ICAPServiceRep::invalidate()

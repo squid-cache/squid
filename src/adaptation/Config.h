@@ -19,69 +19,21 @@ class Class;
 
 typedef RefCount<Service> ServicePointer;
 
-class Class
-{
-
-public:
-    String key;
-    acl_access *accessList;
-
-    Vector<ServicePointer> services;
-
-    Class();
-    ~Class();
-
-    int prepare();
-    void finalize();
-
-private:
-    wordlist *service_names;
-};
-
-class AccessCheck: public virtual AsyncJob
-{
-
-public:
-    typedef void AccessCheckCallback(ServicePointer match, void *data);
-    AccessCheck(Method, VectPoint, HttpRequest *, HttpReply *, AccessCheckCallback *, void *);
-    ~AccessCheck();
-
-private:
-    Method method;
-    VectPoint point;
-    HttpRequest *req;
-    HttpReply *rep;
-    AccessCheckCallback *callback;
-    void *callback_data;
-    ACLChecklist *acl_checklist;
-    Vector<String> candidateClasses;
-    String matchedClass;
-    void do_callback();
-    ServicePointer findBestService(Class *c, bool preferUp);
-    bool done;
-
-public:
-    void check();
-    void checkCandidates();
-    static void AccessCheckCallbackWrapper(int, void*);
-#if 0
-    static EVH AccessCheckCallbackEvent;
-#endif
-//AsyncJob virtual methods
-    virtual bool doneAll() const { return AsyncJob::doneAll() && done;}
-
-private:
-    CBDATA_CLASS2(AccessCheck);
-};
+class ServiceGroup;
+class AccessRule;
 
 class Config
 {
 public:
-	static ServicePointer FindService(const String &key);
-	static Class *FindClass(const String &key);
-    static void AddService(ServicePointer s);
-	static void AddClass(Class *c);
 	static void Finalize();
+
+    static void ParseServiceSet(void);
+    static void FreeServiceSet(void);
+    static void DumpServiceSet(StoreEntry *, const char *);
+
+    static void ParseAccess(ConfigParser &parser);
+    static void FreeAccess(void);
+    static void DumpAccess(StoreEntry *, const char *);
 
 	friend class AccessCheck;
 
@@ -104,22 +56,7 @@ public:
     ServicePointer findService(const String&);
     Class * findClass(const String& key);
 
-    void parseClass(void);
-    void freeClass(void);
-    void dumpClass(StoreEntry *, const char *) const;
-
-    void parseAccess(ConfigParser &parser);
-    void freeAccess(void);
-    void dumpAccess(StoreEntry *, const char *) const;
-
     void finalize();
-
-protected:
-    // TODO: use std::hash_map<string, ...> instead
-    typedef Vector<Adaptation::ServicePointer> Services;
-    typedef Vector<Adaptation::Class*> Classes;
-    static Services &AllServices();
-    static Classes &AllClasses();
 
 private:
     Config(const Config &); // unsupported

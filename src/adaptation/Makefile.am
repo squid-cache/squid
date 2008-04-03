@@ -9,6 +9,10 @@ INCLUDES = \
 noinst_LTLIBRARIES = libadaptation.la
 
 libadaptation_la_SOURCES = \
+	AccessCheck.cc \
+	AccessCheck.h \
+	AccessRule.cc \
+	AccessRule.h \
 	Config.cc \
 	Config.h \
 	Elements.cc \
@@ -22,8 +26,8 @@ libadaptation_la_SOURCES = \
 	Service.h \
 	ServiceConfig.cc \
 	ServiceConfig.h \
-	Xaction.cc \
-	Xaction.h
+	ServiceGroups.cc \
+	ServiceGroups.h
 
 check_PROGRAMS = testHeaders
 
