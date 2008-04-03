@@ -25,7 +25,7 @@ class AccessRule;
 class Config
 {
 public:
-	static void Finalize();
+    static void Finalize();
 
     static void ParseServiceSet(void);
     static void FreeServiceSet(void);
@@ -35,7 +35,7 @@ public:
     static void FreeAccess(void);
     static void DumpAccess(StoreEntry *, const char *);
 
-	friend class AccessCheck;
+    friend class AccessCheck;
 
 public:
 

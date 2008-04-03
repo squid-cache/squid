@@ -6,7 +6,9 @@
 #include "adaptation/Service.h"
 
 Adaptation::Service::Service(const ServiceConfig &aConfig): theConfig(aConfig)
-{}
+{
+    debugs(93,3, HERE << "creating adaptation service " << theConfig.key);
+}
 
 Adaptation::Service::~Service()
 {}

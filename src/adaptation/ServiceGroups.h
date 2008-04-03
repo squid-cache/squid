@@ -19,9 +19,9 @@ public:
     // The iterators point back to 
     struct Loop {
         Loop(const iterator &b, const iterator &e): begin(b), end(e) {}
-		iterator begin;
-		iterator end;
-	};
+        iterator begin;
+        iterator end;
+    };
 
 public:
     ServiceGroup(const String &aKind);
