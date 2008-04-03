@@ -5,6 +5,7 @@ autom4te*
 stamp-h1
 libtool
 configure.lineno
+cfgaux
 *.patch
 icons/*.gif
 tags
@@ -21,6 +22,7 @@ install-sh
 missing
 configure
 depcomp
+lib/libLtdl
 lib/**/config.h
 Makefile
 */Makefile
