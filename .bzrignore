@@ -12,6 +12,7 @@ tmp
 .dirstamp
 *.la
 *.lo
+*/globals.cc
 Makefile.in
 configure
 config.h.in
@@ -19,3 +20,12 @@ cfgaux
 stamp-h.in
 aclocal.m4
 autoconf.h.in
+testHeaders
+doc/Programming-Guide/html
+helpers/*/Makefile
+helpers/*/*/Makefile
+scripts/Makefile
+snmplib/Makefile
+src/*/Makefile
+test-suite/Makefile
+tools/Makefile
