@@ -65,7 +65,6 @@ bootstrap_libtoolize() {
     fi
 
     bootstrap libtoolize$ltver $extras --force --copy --automake
-    echo "Warning: libtoolize 1.x does not update libtool.m4."
 
     # customize generated libltdl, if any
     if test -d libltdl
