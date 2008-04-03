@@ -28,8 +28,8 @@ public:
     bool operator != (void *) const { return prime != NULL; }
     bool operator !() const { return !prime; }
 
-	bool isThere(); // we have a valid initiator pointer
-	Initiator *ptr(); // asserts isThere()
+    bool isThere(); // we have a valid initiator pointer
+    Initiator *ptr(); // asserts isThere()
 
 private:
     InitiatorHolder &operator =(const InitiatorHolder &anInitiator);

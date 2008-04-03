@@ -1,5 +1,5 @@
-#ifndef SQUID_ADAPTATION__ACCESS_H
-#define SQUID_ADAPTATION__ACCESS_H
+#ifndef SQUID_ADAPTATION__ACCESS_CHECK_H
+#define SQUID_ADAPTATION__ACCESS_CHECK_H
 
 #include "ICAP/AsyncJob.h"
 #include "adaptation/Elements.h"
@@ -57,4 +57,4 @@ private:
 
 } // namespace Adaptation
 
-#endif /* SQUID_ADAPTATION__ACCESS_H */
+#endif /* SQUID_ADAPTATION__ACCESS_CHECK_H */

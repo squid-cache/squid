@@ -37,6 +37,7 @@ Adaptation::ServiceGroup::finalize()
         if (!FindService(id))
             debugs(93,0, "ERROR: Unknown adaptation name: " << id);
 	}
+    debugs(93,7, HERE << "finalized " << kind << ": " << id);
 }
 
 /* ServiceSet */
@@ -63,6 +64,25 @@ Adaptation::ServiceSet::finalize()
     }
 }
 #endif
+
+
+/* SingleService */
+
+Adaptation::SingleService::SingleService(const String &aServiceId):
+    ServiceGroup("single-service group")
+{
+    id = aServiceId;
+    services.push_back(aServiceId);
+}
+
+Adaptation::ServiceGroup::Loop
+Adaptation::SingleService::initialServices()
+{
+    return Loop(services.begin(), services.end()); // there should be only one
+}
+
+
+/* globals */
 
 Adaptation::Groups &
 Adaptation::AllGroups()
