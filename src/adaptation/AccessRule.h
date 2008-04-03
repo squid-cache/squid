@@ -16,7 +16,7 @@ public:
     ~AccessRule();
 
     void parse(ConfigParser &parser);
-    void finalize();	
+    void finalize();
 
     // service group consisting of one or more services
     ServiceGroup *group();

@@ -36,7 +36,7 @@
 #include "ConfigParser.h"
 #include "ACL.h"
 #include "Store.h"
-#include "Array.h"	// really Vector
+#include "Array.h"    // really Vector
 #include "adaptation/Config.h"
 #include "adaptation/Service.h"
 #include "adaptation/AccessRule.h"
@@ -57,7 +57,7 @@ Adaptation::Config::freeService()
     while (!serviceConfigs.empty()) {
         delete serviceConfigs.back();
         serviceConfigs.pop_back();
-	}
+    }
 }
 
 void
@@ -120,9 +120,9 @@ void
 Adaptation::Config::FreeServiceSet()
 {
     while (!AllGroups().empty()) {
-		delete AllGroups().back();
-		AllGroups().pop_back();
-	}
+        delete AllGroups().back();
+        AllGroups().pop_back();
+    }
 }
 
 void
@@ -147,7 +147,7 @@ Adaptation::Config::FreeAccess()
     while (!AllRules().empty()) {
         delete AllRules().back();
         AllRules().pop_back();
-	}
+    }
 }
 
 void
@@ -159,7 +159,7 @@ Adaptation::Config::DumpAccess(StoreEntry *entry, const char *name)
     for (CI i = AllRules().begin(); i != AllRules().end(); ++i) {
         snprintf(nom, 64, "%s %s", name, (*i)->groupId.buf());
         dump_acl_access(entry, nom, (*i)->acl);
-	}
+    }
 }
 
 Adaptation::Config::Config()
@@ -178,7 +178,7 @@ Adaptation::Config::~Config()
     while (!AllServices().empty()) {
         AllServices().back()->invalidate();
         AllServices().pop_back();
-	}
+    }
 
     freeService();
 }
