@@ -38,7 +38,6 @@ helpers/external_acl/ip_user/ip_user_check
 helpers/external_acl/session/squid_session
 helpers/external_acl/unix_group/squid_unix_group
 include/autoconf.h
-include/autoconf.h.in
 include/stamp-h1
 scripts/RunAccel
 scripts/RunCache
@@ -56,4 +55,6 @@ src/unlinkd
 src/DiskIO/DiskDaemon/diskd
 tools/cachemgr.cgi
 tools/squidclient
-
+config.h.in
+stamp-h.in
+autoconf.h.in

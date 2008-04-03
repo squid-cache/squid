@@ -89,7 +89,8 @@ GetInteger(void)
     if (token == NULL)
         self_destruct();
 
-    if (sscanf(token, "%d", &i) != 1)
+    // %i honors 0 and 0x prefixes, which are important for things like umask
+    if (sscanf(token, "%i", &i) != 1)
         self_destruct();
 
     return i;
