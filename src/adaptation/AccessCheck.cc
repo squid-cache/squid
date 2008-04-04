@@ -58,6 +58,8 @@ Adaptation::AccessCheck::~AccessCheck()
 {
     HTTPMSGUNLOCK(req);
     HTTPMSGUNLOCK(rep);
+    if (callback_data)
+        cbdataReferenceDone(callback_data);
 }
 
 /*
