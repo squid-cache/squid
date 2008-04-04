@@ -165,7 +165,7 @@ public:
     void handleAdaptationFailure(bool bypassable = false);
 
 private:
-    // ICAPInitiator API, called by ICAPXaction
+    // Adaptation::Initiator API
     virtual void noteAdaptationAnswer(HttpMsg *message);
     virtual void noteAdaptationQueryAbort(bool final);
 
