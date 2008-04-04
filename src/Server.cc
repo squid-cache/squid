@@ -41,8 +41,7 @@
 
 #if USE_ADAPTATION
 #include "adaptation/AccessCheck.h"
-#include "ICAP/ICAPConfig.h"
-extern ICAPConfig TheICAPConfig;
+#include "adaptation/Service.h"
 #endif
 
 ServerStateData::ServerStateData(FwdState *theFwdState): AsyncJob("ServerStateData"),requestSender(NULL)
@@ -642,7 +641,7 @@ ServerStateData::adaptationAclCheckDone(Adaptation::ServicePointer service)
         sendBodyIsTooLargeError();
         return;
     }
-    // TODO: Should we check received5CBodyTooLarge on the server-side as well?
+    // TODO: Should we check receivedBodyTooLarge on the server-side as well?
 
     startedAdaptation = startAdaptation(service, originalRequest());
 
@@ -691,17 +690,13 @@ void
 ServerStateData::adaptOrFinalizeReply()
 {
 #if USE_ADAPTATION
-
-    if (TheICAPConfig.onoff) {
-         Adaptation::AccessCheck *check = new Adaptation::AccessCheck(
-            Adaptation::methodRespmod, ICAP::pointPreCache,
-                request, virginReply(), adaptationAclCheckDoneWrapper, this);
-
-        adaptationAccessCheckPending = true;
-        check->check(); // will eventually delete self
+    // TODO: merge with client side and return void to hide the on/off logic?
+    // The callback can be called with a NULL service if adaptation is off.
+    adaptationAccessCheckPending = Adaptation::AccessCheck::Start(
+        Adaptation::methodRespmod, Adaptation::pointPreCache,
+        request, virginReply(), adaptationAclCheckDoneWrapper, this);
+    if (adaptationAccessCheckPending)
         return;
-    }
-
 #endif
 
     setFinalReply(virginReply());

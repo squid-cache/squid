@@ -61,7 +61,7 @@
 
 #if USE_ADAPTATION
 #include "adaptation/AccessCheck.h"
-#include "ICAP/ICAPConfig.h" /* XXX: replace with generic adaptation config */
+#include "adaptation/Service.h"
 static void adaptationAclCheckDoneWrapper(Adaptation::ServicePointer service, void *data);
 #endif
 
@@ -482,16 +482,6 @@ ClientRequestContext::clientAccessCheckDone(int answer)
 }
 
 #if USE_ADAPTATION
-void
-ClientRequestContext::adaptationAccessCheck()
-{
-    Adaptation::AccessCheck *check = new Adaptation::AccessCheck(
-        Adaptation::methodReqmod, Adaptation::pointPreCache,
-        http->request, NULL, adaptationAclCheckDoneWrapper, this);
-
-    check->check(); // will eventually delete self
-}
-
 static void
 adaptationAclCheckDoneWrapper(Adaptation::ServicePointer service, void *data)
 {
@@ -1063,13 +1053,13 @@ ClientHttpRequest::doCallouts()
     }
 
 #if USE_ADAPTATION
-    if (TheICAPConfig.onoff && !calloutContext->adaptation_acl_check_done) {
-        debugs(83, 3, HERE << "Doing calloutContext->adaptationAccessCheck()");
+    if (!calloutContext->adaptation_acl_check_done) {
         calloutContext->adaptation_acl_check_done = true;
-        calloutContext->adaptationAccessCheck();
-        return;
+        if (Adaptation::AccessCheck::Start(
+            Adaptation::methodReqmod, Adaptation::pointPreCache,
+            request, NULL, adaptationAclCheckDoneWrapper, this))
+            return; // will call callback
     }
-
 #endif
 
     if (!calloutContext->redirect_done) {
