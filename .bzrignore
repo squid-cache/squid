@@ -16,6 +16,7 @@ tmp
 *.la
 *.lo
 *.loT
+*/globals.cc
 Makefile.in
 aclocal.m4
 install-sh
@@ -60,3 +61,12 @@ tools/squidclient
 config.h.in
 stamp-h.in
 autoconf.h.in
+testHeaders
+doc/Programming-Guide/html
+helpers/*/Makefile
+helpers/*/*/Makefile
+scripts/Makefile
+snmplib/Makefile
+src/*/Makefile
+test-suite/Makefile
+tools/Makefile
