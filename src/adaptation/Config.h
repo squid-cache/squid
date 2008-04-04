@@ -25,7 +25,7 @@ class AccessRule;
 class Config
 {
 public:
-    static void Finalize();
+    static void Finalize(bool enable);
 
     static void ParseServiceSet(void);
     static void FreeServiceSet(void);
@@ -38,6 +38,7 @@ public:
     friend class AccessCheck;
 
 public:
+    static bool Enabled; // true if at least one adaptation mechanism is
 
     int onoff;
     int send_client_ip;
