@@ -9,10 +9,26 @@
 #include "adaptation/Service.h"
 #include "adaptation/ServiceGroups.h"
 #include "adaptation/AccessRule.h"
+#include "adaptation/Config.h"
 #include "adaptation/AccessCheck.h"
 
 
 cbdata_type Adaptation::AccessCheck::CBDATA_AccessCheck = CBDATA_UNKNOWN;
+
+bool
+Adaptation::AccessCheck::Start(Method method, VectPoint vp,
+    HttpRequest *req, HttpReply *rep, AccessCheckCallback *cb, void *cbdata) {
+
+    if (Config::Enabled) {
+        // the new check will call the callback and delete self, eventually
+        AccessCheck *check = new AccessCheck(method, vp, req, rep, cb, cbdata);
+        check->check();
+        return true;
+	}
+
+    debugs(83, 3, HERE << "adaptation off, skipping");
+    return false;
+}
 
 Adaptation::AccessCheck::AccessCheck(Method aMethod,
                                  VectPoint aPoint,
