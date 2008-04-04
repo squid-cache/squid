@@ -1093,11 +1093,19 @@ mainInitialize(void)
     LoadableModulesConfigure(Config.loadable_module_names);
 #endif
 
+#if USE_ADAPTATION
+    bool enableAdaptation = false;
+
+    // We can remove this dependency on specific adaptation mechanisms
+    // if we create a generic Registry of such mechanisms. Should we?
 #if ICAP_CLIENT
     TheICAPConfig.finalize(); // must be after we load modules
+    enableAdaptation = TheICAPConfig.onoff;
 #endif
-#if USE_ADAPTATION
-    Adaptation::Config::Finalize(); // must be last adaptation-related finalize
+    // same for eCAP
+
+    // must be the last adaptation-related finalize
+    Adaptation::Config::Finalize(enableAdaptation);
 #endif
 
 
