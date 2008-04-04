@@ -1057,7 +1057,7 @@ ClientHttpRequest::doCallouts()
         calloutContext->adaptation_acl_check_done = true;
         if (Adaptation::AccessCheck::Start(
             Adaptation::methodReqmod, Adaptation::pointPreCache,
-            request, NULL, adaptationAclCheckDoneWrapper, this))
+            request, NULL, adaptationAclCheckDoneWrapper, calloutContext))
             return; // will call callback
     }
 #endif
