@@ -246,31 +246,26 @@ int
 strListGetItem(const String * str, char del, const char **item, int *ilen, const char **pos)
 {
     size_t len;
-    static char delim[2][3] = {
-                                  { '"', '?', 0},
-                                  { '"', '\\', 0} };
+    static char delim[3][8] = {
+			"\"?,",
+			"\"\\",
+			" ?,\t\r\n"
+    };
     int quoted = 0;
     assert(str && item && pos);
 
     delim[0][1] = del;
+    delim[2][1] = del;
 
-    if (*pos) {
-        if (!**pos)		/* end of string */
-            return 0;
-        else
-            (*pos)++;
-    } else {
+    if (!*pos) {
         *pos = str->buf();
 
         if (!*pos)
             return 0;
     }
 
-    /* skip leading ws (ltrim) */
-    *pos += xcountws(*pos);
-
-    /* skip leading delimiters */
-    *pos += strspn(*pos, delim[0]);
+    /* skip leading ws and delimiters */
+    *pos += strspn(*pos, delim[2]);
 
     *item = *pos;		/* remember item's start */
 
@@ -338,6 +333,7 @@ httpHeaderParseInt(const char *start, int *value)
 int
 httpHeaderParseOffset(const char *start, int64_t * value)
 {
+    errno = 0;
     int64_t res = strtoll(start, NULL, 10);
     if (!res && EINVAL == errno)	/* maybe not portable? */
 	return 0;

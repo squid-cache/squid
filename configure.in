@@ -1811,6 +1811,61 @@ AC_ARG_WITH(dns-cname,
   [AC_DEFINE(DNS_CNAME, 0, [ 0 == Disable expermental CNAME recursion inside Squid DNS resolver stub]) AC_MSG_RESULT(no)]
 )
 
+dnl Check whether this OS defines ss_len as a member of sockaddr_storage
+AC_CACHE_CHECK([for ss_len field in struct sockaddr_storage],
+		ac_cv_have_ss_len_in_struct_ss, [
+	AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+		],
+		[ struct sockaddr_storage s; s.ss_len = 1; ],
+		[ ac_cv_have_ss_len_in_struct_ss="yes" ],
+		[ ac_cv_have_ss_len_in_struct_ss="no" ]
+	)
+])
+if test "x$ac_cv_have_ss_len_in_struct_ss" = "xyes" ; then
+	AC_DEFINE(HAVE_SS_LEN_IN_SS, 1, [Does struct sockaddr_storage have ss_len? 1: Yes, 0: No])
+else
+	AC_DEFINE(HAVE_SS_LEN_IN_SS, 0, [Does struct sockaddr_storage have ss_len? 1: Yes, 0: No])
+fi
+
+dnl Check whether this OS defines sin_len as a member of sockaddr_in as a backup to ss_len
+AC_CACHE_CHECK([for sin_len field in struct sockaddr_in],
+                ac_cv_have_sin_len_in_struct_sai, [
+        AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <sys/socket.h>
+                ],
+                [ struct sockaddr_in s; s.sin_len = 1; ],
+                [ ac_cv_have_sin_len_in_struct_sai="yes" ],
+                [ ac_cv_have_sin_len_in_struct_sai="no" ]
+        )
+])
+if test "x$ac_cv_have_sin_len_in_struct_sai" = "xyes" ; then
+        AC_DEFINE(HAVE_SIN_LEN_IN_SAI, 1, [Does struct sockaddr_in have sin_len? 1: Yes, 0: No])
+else
+        AC_DEFINE(HAVE_SIN_LEN_IN_SAI, 0, [Does struct sockaddr_in have sin_len? 1: Yes, 0: No])
+fi
+
+dnl Check whether this OS defines sin6_len as a member of sockaddr_in6 as a backup to ss_len
+AC_CACHE_CHECK([for sin6_len field in struct sockaddr_in6],
+                ac_cv_have_sin6_len_in_struct_sai, [
+        AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <sys/socket.h>
+                ],
+                [ struct sockaddr_in6 s; s.sin6_len = 1; ],
+                [ ac_cv_have_sin6_len_in_struct_sai="yes" ],
+                [ ac_cv_have_sin6_len_in_struct_sai="no" ]
+        )
+])
+if test "x$ac_cv_have_sin6_len_in_struct_sai" = "xyes" ; then
+        AC_DEFINE(HAVE_SIN6_LEN_IN_SAI, 1, [Does struct sockaddr_in6 have sin6_len? 1: Yes, 0: No])
+else
+        AC_DEFINE(HAVE_SIN6_LEN_IN_SAI, 0, [Does struct sockaddr_in6 have sin6_len? 1: Yes, 0: No])
+fi
+
 
 AC_ARG_WITH(filedescriptors,
 [  --with-filedescriptors=NUMBER

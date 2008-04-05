@@ -31,9 +31,12 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-
 #ifndef SQUID_DELAYVECTOR_H
 #define SQUID_DELAYVECTOR_H
+
+#include "config.h"
+
+#if DELAY_POOLS
 
 #include "CompositePoolNode.h"
 
@@ -85,4 +88,5 @@ private:
     typedef Vector<CompositePoolNode::Pointer>::const_iterator const_iterator;
 };
 
+#endif /* DELAY_POOLS */
 #endif /* SQUID_DELAYVECTOR_H */

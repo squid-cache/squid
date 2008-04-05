@@ -1151,16 +1151,15 @@ comm_connect_addr(int sock, const IPAddress &address)
     int x = 0;
     int err = 0;
     socklen_t errlen;
-    struct sockaddr_storage sas;
-    socklen_t slen = sizeof(struct sockaddr_storage);
+    struct addrinfo *AI = NULL;
     PROF_start(comm_connect_addr);
 
     assert(address.GetPort() != 0);
 
     debugs(5, 9, "comm_connect_addr: connecting socket " << sock << " to " << address << " (want family: " << F->sock_family << ")");
 
-    memset(&sas, 0, slen);
-    address.GetSockAddr(sas, F->sock_family);
+    /* FIXME INET6 : Bug 2222: when sock is an IPv4-only socket IPv6 traffic will crash. */
+    address.GetAddrInfo(AI, F->sock_family);
 
     /* Establish connection. */
     errno = 0;
@@ -1170,7 +1169,7 @@ comm_connect_addr(int sock, const IPAddress &address)
         F->flags.called_connect = 1;
         statCounter.syscalls.sock.connects++;
 
-        x = connect(sock, (struct sockaddr*)&sas, slen);
+        x = connect(sock, AI->ai_addr, AI->ai_addrlen);
 
         // XXX: ICAP code refuses callbacks during a pending comm_ call
         // Async calls development will fix this.
@@ -1182,8 +1181,12 @@ comm_connect_addr(int sock, const IPAddress &address)
         if (x < 0)
         {
             debugs(5,5, "comm_connect_addr: sock=" << sock << ", addrinfo( " <<
-                         ", family=" << sas.ss_family <<
-                         ", addrlen=" << slen <<
+                         " flags=" << AI->ai_flags <<
+                         ", family=" << AI->ai_family <<
+                         ", socktype=" << AI->ai_socktype <<
+                         ", protocol=" << AI->ai_protocol <<
+                         ", &addr=" << AI->ai_addr <<
+                         ", addrlen=" << AI->ai_addrlen <<
                          " )" );
             debugs(5, 9, "connect FD " << sock << ": (" << x << ") " << xstrerror());
             debugs(14,9, "connecting to: " << address );
@@ -1193,7 +1196,7 @@ comm_connect_addr(int sock, const IPAddress &address)
 #if defined(_SQUID_NEWSOS6_)
         /* Makoto MATSUSHITA <matusita@ics.es.osaka-u.ac.jp> */
 
-        connect(sock, (struct sockaddr*)&sas, slen);
+        connect(sock, AI->ai_addr, AI->ai_addrlen);
 
         if (errno == EINVAL) {
             errlen = sizeof(err);
@@ -1225,6 +1228,20 @@ comm_connect_addr(int sock, const IPAddress &address)
 #endif
 
     }
+
+#ifdef _SQUID_LINUX_
+    /* 2007-11-27:
+     * Linux Debian replaces our allocated AI pointer with garbage when 
+     * connect() fails. This leads to segmentation faults deallocating
+     * the system-allocated memory when we go to clean up our pointer.
+     * HACK: is to leak the memory returned since we can't deallocate.
+     */
+    if(errno != 0) {
+        AI = NULL;
+    }
+#endif
+
+    address.FreeAddrInfo(AI);
 
     PROF_stop(comm_connect_addr);
 
