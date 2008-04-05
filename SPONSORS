@@ -58,10 +58,6 @@ iiNet Ltd - http://www.iinet.net.au/
         recently supplied equipment to help develop and test the WCCPv2
         implementation in Squid-2.6 and Squid-3.
 
-Barefruit - http://www.barefruit.com/
-
-	Barefruit has funded Squid3 development and maintenance,
-	with a focus on content adaptation (ICAP and eCAP) support.
 Kaspersky Lab - http://www.kaspersky.com/
 
 	Kaspersky Lab funded initial development of ICAP support in
@@ -70,7 +66,7 @@ Kaspersky Lab - http://www.kaspersky.com/
 Barefruit - http://www.barefruit.com/
 
 	Barefruit has funded Squid3 development and maintenance,
-	with a focus on the ICAP client support.
+	with a focus on content adaptation (ICAP and eCAP) support.
 
 Palisade Systems - http://www.palisadesys.com/
 

@@ -358,7 +358,7 @@ void ICAPServiceRep::startGettingOptions()
     Must(!theOptionsFetcher);
     debugs(93,6, "ICAPService will get new options " << status());
 
-    // XXX: check whether it is safe to use self as "this"
+    // XXX: second "this" is "self"; this works but may stop if API changes
     theOptionsFetcher = initiateAdaptation(new ICAPOptXactLauncher(this, this));
     Must(theOptionsFetcher);
     // TODO: timeout in case ICAPOptXact never calls us back?
