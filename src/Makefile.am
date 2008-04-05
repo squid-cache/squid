@@ -1180,9 +1180,9 @@ check_PROGRAMS+= testHeaders \
 ## Special Universal .h dependency test script
 ## aborts if error encountered
 testHeaders: *.h DiskIO/*.h ICAP/*.h
-	../test-suite/testheaders.sh "$(CXXCOMPILE)" "." || exit 1
-	../test-suite/testheaders.sh "$(CXXCOMPILE)" "DiskIO" || exit 1
-	../test-suite/testheaders.sh "$(CXXCOMPILE)" "ICAP" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "." || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "DiskIO" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "ICAP" || exit 1
 ## src/repl/ has no .h files and its own makefile.
 
 
