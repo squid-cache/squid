@@ -888,6 +888,7 @@ FwdState::connectStart()
     if (fs->_peer) {
         hierarchyNote(&request->hier, fs->code, fs->_peer->host);
     } else {
+
 #if LINUX_TPROXY2 || LINUX_TPROXY4
 
         if (request->flags.tproxy) {
