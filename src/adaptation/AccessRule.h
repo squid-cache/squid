@@ -5,6 +5,7 @@
 #include "adaptation/forward.h"
 
 class acl_access;
+class ConfigParser;
 
 namespace Adaptation {
 
