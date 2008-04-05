@@ -9,14 +9,7 @@ AM_CXXFLAGS = @SQUID_CXXFLAGS@
 noinst_LTLIBRARIES = libeCAP.la
 
 libeCAP_la_SOURCES = \
-	Registry.h \
-	ContentAdapter.cc \
-	ContentAdapter.h \
-	\
-	ServiceRep.cc \
-	ServiceRep.h \
-	Xaction.cc \
-	Xaction.h
+	Registry.h
 
 INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
         -I$(top_srcdir)/src
