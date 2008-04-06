@@ -1,3 +1,7 @@
+Changes to squid-3.0.STABLE4 (2 Apr 2008):
+
+	- Bug 2288: compile error slipped into STABLE3.
+
 Changes to squid-3.0.STABLE3 (31 Mar 2008):
 
 	- Improved HTTP 1.1 support.

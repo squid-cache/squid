@@ -775,7 +775,7 @@ idnsSendQuery(idns_query * q)
             idnsSendQueryVC(q, ns);
             x = 0;
         } else {
-            x = comm_udp_sendto(DnsSocket, nameservers[ns].S, sizeof(nameservers[ns].S), q->buf, q->sz);
+            x = comm_udp_sendto(DnsSocket, &nameservers[ns].S, sizeof(nameservers[ns].S), q->buf, q->sz);
         }
 
         q->nsends++;
