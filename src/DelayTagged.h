@@ -33,11 +33,12 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
+#ifndef DELAYTAGGED_H
+#define DELAYTAGGED_H
 
 #include "config.h"
 
-#ifndef DELAYTAGGED_H
-#define DELAYTAGGED_H
+#if DELAY_POOLS
 
 #include "squid.h"
 #include "authenticate.h"
@@ -107,4 +108,5 @@ private:
     Splay<DelayTaggedBucket::Pointer> buckets;
 };
 
+#endif /* DELAY_POOLS */
 #endif /* DELAYTAGGED_H */

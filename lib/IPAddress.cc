@@ -1100,20 +1100,40 @@ void IPAddress::GetSockAddr(struct sockaddr_storage &addr, const int family) con
         if(addr.ss_family == 0) {
             addr.ss_family = AF_INET6;
         }
+#if HAVE_SS_LEN_IN_SS
+        /* not all OS have this field, BUT when they do it can be a problem if set wrong */
+        addr.ss_len = htons(sizeof(struct sockaddr_in6));
+#elif HAVE_SIN6_LEN_IN_SAI
+        sin->sin6_len = htons(sizeof(struct sockaddr_in6));
+#endif
     } else if( family == AF_INET || family == AF_UNSPEC && IsIPv4() ) {
         sin = (struct sockaddr_in*)&addr;
         addr.ss_family = AF_INET;
         sin->sin_port = m_SocketAddr.sin6_port;
         Map6to4( m_SocketAddr.sin6_addr, sin->sin_addr);
+#if HAVE_SS_LEN_IN_SS
+        /* not all OS have this field, BUT when they do it can be a problem if set wrong */
+        addr.ss_len = htons(sizeof(struct sockaddr_in));
+#elif HAVE_SIN_LEN_IN_SAI
+        sin->sin_len = htons(sizeof(struct sockaddr_in));
+#endif
     } else {
         IASSERT("false",false);
     }
-#else
+#else /* not USE_IPV6 */
     sin = (struct sockaddr_in*)&addr;
     memcpy(sin, &m_SocketAddr, sizeof(struct sockaddr_in));
 
     addr.ss_family = AF_INET;
+
+#if HAVE_SS_LEN_IN_SS
+    /* not all OS have this field, BUT when they do it can be a problem if set wrong */
+    addr.ss_len = htons(sizeof(struct sockaddr_in));
+#elif HAVE_SIN_LEN_IN_SAI
+     sin->sin_len = htons(sizeof(struct sockaddr_in));
 #endif
+
+#endif /* USE_IPV6 */
 }
 
 void IPAddress::GetSockAddr(struct sockaddr_in &buf) const
