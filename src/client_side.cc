@@ -2735,7 +2735,7 @@ connStateCreate(const IPAddress &peer, const IPAddress &me, int fd, http_port_li
         IPAddress dst;
 
         if (clientNatLookup(fd, me, peer, dst) == 0) {
-            result-> me = dst; /* XXX This should be moved to another field */
+            result->me = dst; /* XXX This should be moved to another field */
             result->transparent(true);
         }
     }
@@ -3113,21 +3113,21 @@ clientHttpConnectionsOpen(void)
 #endif
 
         enter_suid();
-        fd = comm_open(SOCK_STREAM,
-                       IPPROTO_TCP,
-                       s->s,
-                       COMM_NONBLOCKING, "HTTP Socket");
+
+#if LINUX_TPROXY4
+        if(s->tproxy) {
+            fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, s->s, (COMM_NONBLOCKING|COMM_TRANSPARENT), 0, "HTTP Socket");
+        }
+        else
+#endif
+        {
+            fd = comm_open(SOCK_STREAM, IPPROTO_TCP, s->s, COMM_NONBLOCKING, "HTTP Socket");
+        }
+
         leave_suid();
 
         if (fd < 0)
             continue;
-
-#if LINUX_TPROXY4
-        /* because the transparent/non-transparent port info is only known here.
-         * we have to set the IP_TRANSPARENT option here. */
-        if(s->tproxy)
-            comm_set_transparent(fd);
-#endif
 
         comm_listen(fd);
 

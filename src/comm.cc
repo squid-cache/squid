@@ -670,7 +670,6 @@ comm_openex(int sock_type,
     addr.GetAddrInfo(AI);
     AI->ai_socktype = sock_type;
     AI->ai_protocol = proto;
-    AI->ai_flags = flags;
 
     debugs(50, 3, "comm_openex: Attempt open socket for: " << addr );
 
@@ -770,6 +769,13 @@ comm_openex(int sock_type,
             return -1;
             PROF_stop(comm_open);
         }
+
+#if LINUX_TPROXY4
+    if((flags & COMM_TRANSPARENT)) {
+        comm_set_transparent(new_socket);
+        F->flags.transparent = 1;
+    }
+#endif
 
 #ifdef TCP_NODELAY
     if (sock_type == SOCK_STREAM)

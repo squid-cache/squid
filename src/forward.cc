@@ -845,12 +845,15 @@ FwdState::connectStart()
 
     debugs(17, 3, "fwdConnectStart: got outgoing addr " << outgoing << ", tos " << tos);
 
-    fd = comm_openex(SOCK_STREAM,
-                     IPPROTO_TCP,
-                     outgoing,
-                     COMM_NONBLOCKING,
-                     tos,
-                     url);
+#if LINUX_TPROXY4
+    if (request->flags.tproxy) {
+        fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, outgoing, (COMM_NONBLOCKING|COMM_TRANSPARENT), tos, url);
+    }
+    else
+#endif
+    {
+        fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, outgoing, COMM_NONBLOCKING, tos, url);
+    }
 
     debugs(17, 3, "fwdConnectStart: got TCP FD " << fd);
 
@@ -1261,6 +1264,11 @@ IPAddress
 getOutgoingAddr(HttpRequest * request)
 {
     ACLChecklist ch;
+
+#if LINUX_TPROXY4
+    if (request && request->flags.tproxy)
+        return request->client_addr;
+#endif
 
     if (request)
     {
