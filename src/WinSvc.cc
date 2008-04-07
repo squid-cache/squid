@@ -344,7 +344,7 @@ GetOSVersion()
 	    if (osvi.wProductType == VER_NT_WORKSTATION)
 		WIN32_OS_string = xstrdup("Windows Vista");
 	    else
-		WIN32_OS_string = xstrdup("Windows Server \"Longhorn\"");
+		WIN32_OS_string = xstrdup("Windows Server 2008");
 	    return _WIN_OS_WINLON;
 	}
 	break;
