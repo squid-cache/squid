@@ -892,14 +892,8 @@ FwdState::connectStart()
         hierarchyNote(&request->hier, fs->code, fs->_peer->host);
     } else {
 
-#if LINUX_TPROXY2 || LINUX_TPROXY4
-
+#if LINUX_TPROXY2
         if (request->flags.tproxy) {
-
-#if LINUX_TPROXY4
-            comm_set_transparent(fd);
-
-#elif LINUX_TPROXY2
             IPAddress addr;
 
             src.GetInAddr(itp.v.addr.faddr);
