@@ -247,6 +247,7 @@ int
 aclMatchArp(SplayNode<acl_arp_data *> **dataptr, IPAddress &c)
 {
     struct arpreq arpReq;
+    struct sockaddr_in *sa = NULL;
 
     IPAddress ipAddr = c;
 
@@ -254,7 +255,6 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, IPAddress &c)
 
     unsigned char ifbuffer[sizeof(struct ifreq) * 64];
     struct ifconf ifc;
-    struct sockaddr_in *sa = NULL;
 
     struct ifreq *ifr;
     int offset;
@@ -406,7 +406,8 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, IPAddress &c)
 
     memset(&arpReq, '\0', sizeof(arpReq));
 
-    ipAddr.GetSockAddr(arpReq.arp_pa);
+    sa = (sockaddr_in*)&arpReq.arp_pa;
+    ipAddr.GetSockAddr(*sa);
 
     /* Query ARP table */
     if (ioctl(HttpSockets[0], SIOCGARP, &arpReq) != -1) {

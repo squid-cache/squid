@@ -33,11 +33,12 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
+#ifndef DELAYUSER_H
+#define DELAYUSER_H
 
 #include "config.h"
 
-#ifndef DELAYUSER_H
-#define DELAYUSER_H
+#if DELAY_POOLS
 
 #include "squid.h"
 #include "authenticate.h"
@@ -106,4 +107,5 @@ private:
     Splay<DelayUserBucket::Pointer> buckets;
 };
 
+#endif /* DELAY_POOLS */
 #endif /* DELAYUSER_H */
