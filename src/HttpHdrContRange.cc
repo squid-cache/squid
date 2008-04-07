@@ -94,10 +94,9 @@ httpHdrRangeRespSpecParseInit(HttpHdrRangeSpec * spec, const char *field, int fl
             return 0;
 
         spec->length = size_diff(last_pos + 1, spec->offset);
+        /* Ensure typecast is safe */
+        assert (spec->length >= 0);
     }
-
-    /* Ensure typecast is safe */
-    assert (spec->length >= 0);
 
     /* we managed to parse, check if the result makes sence */
     if (known_spec(spec->length) && spec->length == 0) {

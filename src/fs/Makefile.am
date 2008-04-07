@@ -37,8 +37,8 @@ check_PROGRAMS=testHeaders
 ## Special Universal .h dependency test script
 ## aborts if error encountered
 testHeaders: ufs/*.h coss/*.h
-	../../test-suite/testheaders.sh "$(CXXCOMPILE)" "ufs" || exit 1
-	../../test-suite/testheaders.sh "$(CXXCOMPILE)" "coss" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "ufs" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "coss" || exit 1
 ## diskd/ has no .h files
 ## aufs/ has no .h files
 ## ./ has no .h files
