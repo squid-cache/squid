@@ -65,6 +65,7 @@
 #define COMM_NONBLOCKING	0x01
 #define COMM_NOCLOEXEC		0x02
 #define COMM_REUSEADDR		0x04
+#define COMM_TRANSPARENT	0x08
 
 #include "Debug.h"
 #define do_debug(SECTION, LEVEL) ((Debug::level = (LEVEL)) > Debug::Levels[SECTION])
