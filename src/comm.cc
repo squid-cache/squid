@@ -754,6 +754,13 @@ comm_openex(int sock_type,
             commSetReuseAddr(new_socket);
     }
 
+#if LINUX_TPROXY4
+    /* MUST be done before binding or face OS Error: "(99) Cannot assign requested address"... */
+    if((flags & COMM_TRANSPARENT)) {
+        comm_set_transparent(new_socket);
+    }
+#endif
+
     if (!addr.IsNoAddr())
     {
         if (commBind(new_socket, *AI) != COMM_OK) {
@@ -772,12 +779,6 @@ comm_openex(int sock_type,
             return -1;
             PROF_stop(comm_open);
         }
-
-#if LINUX_TPROXY4
-    if((flags & COMM_TRANSPARENT)) {
-        comm_set_transparent(new_socket);
-    }
-#endif
 
 #ifdef TCP_NODELAY
     if (sock_type == SOCK_STREAM)

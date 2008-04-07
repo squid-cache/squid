@@ -921,7 +921,6 @@ FwdState::connectStart()
                     request->flags.tproxy = 0;
                 }
             }
-#endif
         }
 
 #endif
