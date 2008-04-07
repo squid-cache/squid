@@ -628,6 +628,9 @@ comm_set_v6only(int fd, int tos)
 #endif /* sockopt */
 }
 
+/**
+ * Set the socket IP_TRANSPARENT option for Linux TPROXY v4 support.
+ */
 void
 comm_set_transparent(int fd)
 {
@@ -773,7 +776,6 @@ comm_openex(int sock_type,
 #if LINUX_TPROXY4
     if((flags & COMM_TRANSPARENT)) {
         comm_set_transparent(new_socket);
-        F->flags.transparent = 1;
     }
 #endif
 
@@ -1349,7 +1351,7 @@ comm_old_accept(int fd, ConnectionDetail &details)
     commSetNonBlocking(sock);
 
 #if LINUX_TPROXY4
-    /* AYJ: do we need to set this again on every accept? */
+    /* AYJ: do we actually need to set this again on every accept? */
     if(fd_table[fd].flags.transparent == 1) {
         comm_set_transparent(sock);
         F->flags.transparent = 1;
