@@ -2734,7 +2734,7 @@ connStateCreate(const IPAddress &peer, const IPAddress &me, int fd, http_port_li
     {
         IPAddress dst;
 
-        if (clientNatLookup(fd, me, peer, dst) == 0) {
+        if (IPInterceptor.NatLookup(fd, me, peer, dst) == 0) {
             result->me = dst; /* XXX This should be moved to another field */
             result->transparent(true);
         }
