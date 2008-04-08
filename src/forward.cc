@@ -49,13 +49,8 @@
 #include "SquidTime.h"
 #include "Store.h"
 
-#if LINUX_TPROXY2
-#ifdef HAVE_LINUX_NETFILTER_IPV4_IP_TPROXY_H
-#include <linux/netfilter_ipv4/ip_tproxy.h>
-#else
-#error " TPROXY v2 Header file missing: linux/netfilter_ipv4/ip_tproxy.h. Perhapse you meant to use TPROXY v4 ? "
-#endif
-#endif
+/* for IPInterceptor API */
+#include "IPInterception.h"
 
 static PSC fwdStartCompleteWrapper;
 static PF fwdServerClosedWrapper;
@@ -775,10 +770,6 @@ FwdState::connectStart()
     const char *domain = NULL;
     int ctimeout;
     int ftimeout = Config.Timeout.forward - (squid_curtime - start_t);
-#if LINUX_TPROXY2
-
-    struct in_tproxy itp;
-#endif
 
     IPAddress outgoing;
     unsigned short tos;
@@ -894,36 +885,14 @@ FwdState::connectStart()
 
 #if LINUX_TPROXY2
         if (request->flags.tproxy) {
-            IPAddress addr;
-
-            src.GetInAddr(itp.v.addr.faddr);
-            itp.v.addr.fport = 0;
-
-            /* If these syscalls fail then we just fallback to connecting
-             * normally by simply ignoring the errors...
-             */
-            itp.op = TPROXY_ASSIGN;
-
-            addr = (struct in_addr)itp.v.addr.faddr;
-            addr.SetPort(itp.v.addr.fport);
-
-            if (setsockopt(fd, SOL_IP, IP_TPROXY, &itp, sizeof(itp)) == -1) {
-                debugs(20, 1, "tproxy ip=" << addr << " ERROR ASSIGN");
-
+            // try to set the outgoing address using TPROXY v2
+            // if it fails we abort any further TPROXY actions on this connection
+            if(IPInterceptor.SetTPROXY2OutgoingAddr(int fd, const IPAddress &src) == -1) {
                 request->flags.tproxy = 0;
-            } else {
-                itp.op = TPROXY_FLAGS;
-                itp.v.flags = ITP_CONNECT;
-
-                if (setsockopt(fd, SOL_IP, IP_TPROXY, &itp, sizeof(itp)) == -1) {
-                    debugs(20, 1, "tproxy ip=" << addr << " ERROR CONNECT");
-
-                    request->flags.tproxy = 0;
-                }
             }
         }
-
 #endif
+
         hierarchyNote(&request->hier, fs->code, request->GetHost());
     }
 

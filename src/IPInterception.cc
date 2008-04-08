@@ -37,7 +37,9 @@
 #include "IPInterception.h"
 #include "SquidTime.h"
 
+
 #if IPF_TRANSPARENT
+
 #if HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
 #endif
@@ -71,7 +73,8 @@
 #elif HAVE_NETINET_IP_NAT_H
 #include <netinet/ip_nat.h>
 #endif
-#endif
+
+#endif /* IPF_TRANSPARENT required headers */
 
 #if PF_TRANSPARENT
 #include <sys/types.h>
@@ -81,10 +84,18 @@
 #include <net/if.h>
 #include <netinet/in.h>
 #include <net/pfvar.h>
-#endif
+#endif /* PF_TRANSPARENT required headers */
 
 #if LINUX_NETFILTER
 #include <linux/netfilter_ipv4.h>
+#endif
+
+#if LINUX_TPROXY2
+#ifdef HAVE_LINUX_NETFILTER_IPV4_IP_TPROXY_H
+#include <linux/netfilter_ipv4/ip_tproxy.h>
+#else
+#error " TPROXY v2 Header file missing: linux/netfilter_ipv4/ip_tproxy.h. Perhapse you meant to use TPROXY v4 ? "
+#endif
 #endif
 
 
@@ -343,3 +354,37 @@ IPIntercept::NatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAdd
 #endif
 
 }
+
+#if LINUX_TPROXY2
+IPIntercept::SetTproxy2OutgoingAddr(int fd, const IPAddress &src)
+{
+    IPAddress addr;
+    struct in_tproxy itp;
+
+    src.GetInAddr(itp.v.addr.faddr);
+    itp.v.addr.fport = 0;
+
+    /* If these syscalls fail then we just fallback to connecting
+     * normally by simply ignoring the errors...
+     */
+    itp.op = TPROXY_ASSIGN;
+
+    addr = (struct in_addr)itp.v.addr.faddr;
+    addr.SetPort(itp.v.addr.fport);
+
+    if (setsockopt(fd, SOL_IP, IP_TPROXY, &itp, sizeof(itp)) == -1) {
+        debugs(20, 1, "tproxy ip=" << addr << " ERROR ASSIGN");
+        return -1;
+    } else {
+        itp.op = TPROXY_FLAGS;
+        itp.v.flags = ITP_CONNECT;
+
+        if (setsockopt(fd, SOL_IP, IP_TPROXY, &itp, sizeof(itp)) == -1) {
+            debugs(20, 1, "tproxy ip=" << addr << " ERROR CONNECT");
+            return -1;
+        }
+    }
+
+    return 0;
+}
+#endif
