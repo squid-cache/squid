@@ -1,4 +1,3 @@
-
 /*
  * $Id: tools.cc,v 1.281 2008/02/11 22:44:50 rousskov Exp $
  *
@@ -40,6 +39,7 @@
 #include "MemBuf.h"
 #include "wordlist.h"
 #include "SquidTime.h"
+#include "IPInterception.h"
 
 #ifdef _SQUID_LINUX_
 #if HAVE_SYS_CAPABILITY_H
@@ -1235,16 +1235,11 @@ keepCapabilities(void)
 #if HAVE_PRCTL && defined(PR_SET_KEEPCAPS) && HAVE_SYS_CAPABILITY_H
 
     if (prctl(PR_SET_KEEPCAPS, 1, 0, 0, 0)) {
-        /* Silent failure unless TPROXY is required. Maybe not started as root */
-#if LINUX_TPROXY2 || LINUX_TPROXY4
-
-        if (need_linux_tproxy)
-            debugs(1, 1, "Error - tproxy support requires capability setting which has failed.  Continuing without tproxy support");
-
-        need_linux_tproxy = 0;
-
-#endif
-
+        /* Silent failure unless transparency is required. Maybe not started as root */
+        if (IPInterceptor.TransparentActive()) {
+            debugs(1, 1, "Error - full transparency support requires capability setting which has failed. Continuing without transparency support");
+            IPInterceptor.StopTransparency();
+        }
     }
 #endif
 }
@@ -1273,29 +1268,21 @@ restoreCapabilities(int keep)
     cap->inheritable = 0;
     cap->effective = (1 << CAP_NET_BIND_SERVICE);
 
-#if LINUX_TPROXY2
-    if (need_linux_tproxy)
-        cap->effective |= (1 << CAP_NET_ADMIN) | (1 << CAP_NET_BROADCAST);
-#elif LINUX_TPROXY4
-    if (need_linux_tproxy)
+    if(IPIntercept.TransparentActive()) {
         cap->effective |= (1 << CAP_NET_ADMIN);
-
+#if LINUX_TPROXY2
+        cap->effective |= (1 << CAP_NET_BROADCAST);
 #endif
+    }
 
     if (!keep)
         cap->permitted &= cap->effective;
 
     if (capset(head, cap) != 0) {
-        /* Silent failure unless TPROXY is required */
-#if LINUX_TPROXY2 || LINUX_TPROXY4
-
-        if (need_linux_tproxy)
-            debugs(50, 1, "Error enabling needed capabilities. Will continue without tproxy support");
-
-        need_linux_tproxy = 0;
-
-#endif
-
+        /* Silent failure unless transparency is required */
+        if(IPInterceptor.TransparentActive()) {
+            IPInterceptor.StopTransparency("Error enabling needed capabilities.");
+        }
     }
 
 nocap:
@@ -1303,13 +1290,9 @@ nocap:
     xfree(cap);
 #else /* not defined(_SQUID_LINUX_) && HAVE_SYS_CAPABILITY_H */
 
-#if LINUX_TPROXY2 || LINUX_TPROXY4
-
-    if (need_linux_tproxy)
-        debugs(50, 1, "Missing needed capability support. Will continue without tproxy support");
-
-    need_linux_tproxy = 0;
-#endif
+    if (IPInterceptor.TransparentActive()) {
+        IPInterceptor.StopTransparency("Missing needed capability support.");
+    }
 
 #endif
 }
