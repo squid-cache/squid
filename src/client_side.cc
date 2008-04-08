@@ -2213,12 +2213,9 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     }
 
     request->flags.accelerated = http->flags.accel;
-
-    request->flags.transparent = http->flags.transparent;
-
-#if LINUX_TPROXY2 || LINUX_TPROXY4
-    request->flags.tproxy = conn->port->tproxy && need_linux_tproxy;
-#endif
+    /* propagate the transparent and interception flags only if those modes are currently active. */
+    request->flags.transparent = http->flags.transparent && IPInterceptor.InterceptActive();
+    request->flags.tproxy = conn->port->tproxy && IPInterceptor.TransparentActive();
 
     if (internalCheck(request->urlpath.buf())) {
         if (internalHostnameIs(request->GetHost()) &&
