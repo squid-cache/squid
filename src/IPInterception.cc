@@ -87,12 +87,18 @@
 #include <linux/netfilter_ipv4.h>
 #endif
 
+
+// single global instance for access by other components.
+IPIntercept IPInterceptor;
+
+
+// TODO split this one call into one per transparency method
+//	with specific switching at run-time ??
+
 int
-clientNatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &dst)
+IPIntercept::NatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &dst)
 {
-
 #if IPF_TRANSPARENT  /* --enable-ipf-transparent */
-
     dst = me;
     if( !me.IsIPv4() ) return -1;
     if( !peer.IsIPv4() ) return -1;
