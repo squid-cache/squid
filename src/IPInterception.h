@@ -32,12 +32,31 @@
 #ifndef SQUID_IPINTERCEPTION_H
 #define SQUID_IPINTERCEPTION_H
 
-#include "IPAddress.h"
+class IPAddress;
 
-#if LINUX_TPROXY4 && !defined(IP_TRANSPARENT)
+/**
+ \defgroup IPInterceptAPI IP Interception and Transparent Proxy API
+ \ingroup SquidComponent
+ \par
+ * There is no formal state-machine for transparency and interception
+ * instead there is this neutral API which other connection state machines
+ * and the comm layer use to co-ordinate their own state for transparency.
+ */
+class IPIntercept
+{
+public:
+    int NatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &dst);
+}
+
+#if !defined(IP_TRANSPARENT)
+/// \ingroup IPInterceptAPI
 #define IP_TRANSPARENT 19
 #endif
 
-SQUIDCEXTERN int clientNatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &dst);
+/**
+ \ingroup IPInterceptAPI
+ * Globally available instance of the IP Interception manager.
+ */
+extern IPIntercept IPInterceptor;
 
 #endif /* SQUID_IPINTERCEPTION_H */
