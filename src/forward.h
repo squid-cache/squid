@@ -63,6 +63,7 @@ private:
     void start(Pointer aSelf);
 
     static void logReplyStatus(int tries, http_status status);
+    void updateHierarchyInfo();
     void completed();
     void retryOrBail();
 

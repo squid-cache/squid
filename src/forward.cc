@@ -683,7 +683,7 @@ FwdState::connectDone(int aServerFD, comm_err_t status, int xerrno)
     assert(server_fd == aServerFD);
 
     if (Config.onoff.log_ip_on_direct && status != COMM_ERR_DNS && fs->code == HIER_DIRECT)
-        hierarchyNote(&request->hier, fs->code, fd_table[server_fd].ipaddr);
+        updateHierarchyInfo();
 
     if (status == COMM_ERR_DNS) {
         /*
@@ -743,7 +743,7 @@ FwdState::connectTimeout(int fd)
     assert(fd == server_fd);
 
     if (Config.onoff.log_ip_on_direct && fs->code == HIER_DIRECT && fd_table[fd].ipaddr[0])
-        hierarchyNote(&request->hier, fs->code, fd_table[fd].ipaddr);
+        updateHierarchyInfo();
 
     if (entry->isEmpty()) {
         ErrorState *anErr = errorCon(ERR_CONNECT_FAIL, HTTP_GATEWAY_TIMEOUT, request);
@@ -810,12 +810,10 @@ FwdState::connectStart()
         server_fd = fd;
         n_tries++;
 
-        if (!fs->_peer) {
+        if (!fs->_peer)
             origin_tries++;
-            hierarchyNote(&request->hier, fs->code, request->GetHost());
-        } else {
-            hierarchyNote(&request->hier, fs->code, fs->_peer->host);
-        }
+
+        updateHierarchyInfo();
 
         comm_add_close_handler(fd, fwdServerClosedWrapper, this);
 
@@ -874,23 +872,17 @@ FwdState::connectStart()
 
     commSetTimeout(fd, ctimeout, fwdConnectTimeoutWrapper, this);
 
-    if (fs->_peer) {
-        hierarchyNote(&request->hier, fs->code, fs->_peer->host);
-    } else {
-
 #if LINUX_TPROXY2
-        if (request->flags.spoof_client_ip) {
-            // try to set the outgoing address using TPROXY v2
-            // if it fails we abort any further TPROXY actions on this connection
-            if(IPInterceptor.SetTproxy2OutgoingAddr(int fd, const IPAddress &src) == -1) {
-                request->flags.spoof_client_ip = 0;
-            }
+    if (!fs->_peer && request->flags.spoof_client_ip) {
+        // try to set the outgoing address using TPROXY v2
+        // if it fails we abort any further TPROXY actions on this connection
+        if(IPInterceptor.SetTproxy2OutgoingAddr(int fd, const IPAddress &src) == -1) {
+            request->flags.spoof_client_ip = 0;
         }
+    }
 #endif
 
-        hierarchyNote(&request->hier, fs->code, request->GetHost());
-    }
-
+    updateHierarchyInfo();
     commConnectStart(fd, host, port, fwdConnectDoneWrapper, this);
 }
 
@@ -1173,6 +1165,38 @@ FwdState::serversFree(FwdServer ** FSVR)
         fwdServerFree(fs);
     }
 }
+
+// updates HierarchyLogEntry, guessing nextHop and its format
+void
+FwdState::updateHierarchyInfo()
+{
+    assert(request);
+
+    FwdServer *fs = servers;
+    assert(fs);
+
+    // some callers use one condition, some use the other; are they the same?
+    assert((fs->code == HIER_DIRECT) == !fs->_peer);
+
+    const char *nextHop = NULL;
+
+    if (fs->_peer) { 
+        // went to peer, log peer domain name
+        nextHop = fs->_peer->host;
+    } else {
+        // went DIRECT, must honor log_ip_on_direct
+
+        // XXX: or should we use request->host_addr here? how?
+        assert(server_fd >= 0);
+        nextHop = fd_table[server_fd].ipaddr;
+        if (!Config.onoff.log_ip_on_direct || !nextHop[0])
+            nextHop = request->GetHost(); // domain name
+	}
+
+    assert(nextHop);
+    hierarchyNote(&request->hier, fs->code, nextHop);
+}
+
 
 /**** PRIVATE NON-MEMBER FUNCTIONS ********************************************/
 
