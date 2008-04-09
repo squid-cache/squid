@@ -2222,7 +2222,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         request->flags.intercepted = http->flags.intercepted;
     }
     if(IPInterceptor.TransparentActive()) {
-        request->flags.tproxy = conn->port->tproxy;
+        request->flags.spoof_client_ip = conn->port->spoof_client_ip;
     }
 
     if (internalCheck(request->urlpath.buf())) {
@@ -2732,7 +2732,7 @@ connStateCreate(const IPAddress &peer, const IPAddress &me, int fd, http_port_li
     result->in.buf = (char *)memAllocBuf(CLIENT_REQ_BUF_SZ, &result->in.allocatedSize);
     result->port = cbdataReference(port);
 
-    if(port->intercepted || port->tproxy) {
+    if(port->intercepted || port->spoof_client_ip) {
         IPAddress dst;
 
         if (IPInterceptor.NatLookup(fd, me, peer, dst) == 0) {
@@ -3115,7 +3115,7 @@ clientHttpConnectionsOpen(void)
 
         enter_suid();
 
-        if(s->tproxy) {
+        if(s->spoof_client_ip) {
             fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, s->s, (COMM_NONBLOCKING|COMM_TRANSPARENT), 0, "HTTP Socket");
         } else {
             fd = comm_open(SOCK_STREAM, IPPROTO_TCP, s->s, COMM_NONBLOCKING, "HTTP Socket");
@@ -3132,7 +3132,7 @@ clientHttpConnectionsOpen(void)
 
         debugs(1, 1, "Accepting " <<
                (s->intercepted ? " intercepted" : "") <<
-               (s->tproxy ? " spoofing" : "") <<
+               (s->spoof_client_ip ? " spoofing" : "") <<
                (s->sslBump ? " bumpy" : "") <<
                (s->accel ? " accelerated" : "") 
                << " HTTP connections at " << s->s

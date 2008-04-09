@@ -2931,7 +2931,7 @@ parse_http_port_option(http_port_list * s, char *token)
         }
 #endif
     } else if (strcmp(token, "tproxy") == 0) {
-        s->tproxy = 1;
+        s->spoof_client_ip = 1;
         IPInterceptor.StartTransparency();
 #if USE_IPV6
         /* INET6: until target TPROXY is known to work on IPv6 SOCKET, force wildcard to IPv4 */

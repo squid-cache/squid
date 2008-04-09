@@ -19,11 +19,11 @@ struct http_port_list
     char *name;                /* visible name */
     char *defaultsite;         /* default web site */
 
-    unsigned int intercepted:1;  /* intercepting proxy */
-    unsigned int tproxy:1;       /* spoof client ip using TPROXY */
-    unsigned int accel:1;        /* HTTP accelerator */
-    unsigned int vhost:1;        /* uses host header */
-    unsigned int sslBump:1;      /* intercepts CONNECT requests */
+    unsigned int intercepted:1;        /**< intercepting proxy port */
+    unsigned int spoof_client_ip:1;    /**< spoof client ip if possible */
+    unsigned int accel:1;              /**< HTTP accelerator */
+    unsigned int vhost:1;              /**< uses host header */
+    unsigned int sslBump:1;            /**< intercepts CONNECT requests */
 
     int vport;                 /* virtual port support, -1 for dynamic, >0 static*/
     int disable_pmtu_discovery;
