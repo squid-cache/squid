@@ -1218,7 +1218,7 @@ dnl "-64" from LDFLAGS
 	esac
 fi
 
-dnl Enable Linux transparent proxy support
+dnl Enable Linux transparent proxy support for obsolete TPROXY
 AC_ARG_ENABLE(linux-tproxy2,
 [  --enable-linux-tproxy2
 			  Enable real Transparent Proxy support for Netfilter TPROXY (version 2).],
@@ -1226,19 +1226,6 @@ AC_ARG_ENABLE(linux-tproxy2,
 	echo "Linux Netfilter/TPROXY v2 enabled"
 	AC_DEFINE(LINUX_TPROXY2, 1, [Enable real Transparent Proxy support for Netfilter TPROXY v2.])
 	LINUX_TPROXY2="yes"
-        if test -z "$LINUX_NETFILTER"; then
-	    echo "Linux-Netfilter Transparent Proxy automatically enabled"
-	    LINUX_NETFILTER="yes"
-	fi
-  fi
-])
-AC_ARG_ENABLE(linux-tproxy4,
-[  --enable-linux-tproxy4
-			  Enable real Transparent Proxy support for Netfilter TPROXY (version 4+).],
-[ if test "$enableval" = "yes" ; then
-	echo "Linux Netfilter/TPROXY v4 enabled"
-	AC_DEFINE(LINUX_TPROXY4, 1, [Enable real Transparent Proxy support for Netfilter TPROXY v4.])
-	LINUX_TPROXY4="yes"
         if test -z "$LINUX_NETFILTER"; then
 	    echo "Linux-Netfilter Transparent Proxy automatically enabled"
 	    LINUX_NETFILTER="yes"
@@ -2946,7 +2933,7 @@ if test "$LINUX_NETFILTER" ; then
 fi 
 if test "$LINUX_NETFILTER" = "no" ; then
     echo "WARNING: Cannot find necessary Linux kernel (Netfilter) header files"
-    echo "         Linux Transparent Proxy support WILL NOT be enabled"
+    echo "         Linux Transparent and Intercepting Proxy support WILL NOT be enabled"
     sleep 10
 fi
 
@@ -2967,7 +2954,7 @@ if test "$LINUX_TPROXY2" ; then
         echo "WARNING: Cannot find TPROXY v2 headers, you need to install the"
         echo "tproxy package from:"
         echo " - lynx http://www.balabit.com/downloads/tproxy/"
-        echo "Or select the '--enable-linux-tproxy4' option instead."
+        echo "Or select the '--enable-linux-netfilter' option instead for Netfilter support."
         sleep 10
     fi
 fi
