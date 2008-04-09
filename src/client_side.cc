@@ -1824,7 +1824,7 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
     char *host;
     char ntoabuf[MAX_IPSTRLEN];
 
-    http->flags.transparent = 1;
+    http->flags.intercepted = 1;
 
     if (*url != '/')
         return; /* already in good shape */
@@ -1995,8 +1995,8 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
         /* prepend our name & port */
         http->uri = xstrdup(internalLocalUri(NULL, url));
         http->flags.accel = 1;
-    } else if (conn->port->transparent) {
-	// Fallback on transparent if enabled, useful for "self" requests
+    } else if (conn->port->intercepted) {
+	// Fallback on transparent interception if enabled, useful for "self" requests
         prepareTransparentURL(conn, http, url, req_hdr);
     }
 
@@ -2213,9 +2213,17 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     }
 
     request->flags.accelerated = http->flags.accel;
-    /* propagate the transparent and interception flags only if those modes are currently active. */
-    request->flags.transparent = http->flags.transparent && IPInterceptor.InterceptActive();
-    request->flags.tproxy = conn->port->tproxy && IPInterceptor.TransparentActive();
+
+    /** \par
+     * If transparent or interception mode is working clone the transparent and interception flags
+     * from the port settings to the request.
+     */
+    if(IPInterceptor.InterceptActive()) {
+        request->flags.intercepted = http->flags.intercepted;
+    }
+    if(IPInterceptor.TransparentActive()) {
+        request->flags.tproxy = conn->port->tproxy;
+    }
 
     if (internalCheck(request->urlpath.buf())) {
         if (internalHostnameIs(request->GetHost()) &&
@@ -2715,6 +2723,7 @@ ConnStateData *
 connStateCreate(const IPAddress &peer, const IPAddress &me, int fd, http_port_list *port)
 {
     ConnStateData *result = new ConnStateData;
+
     result->peer = peer;
     result->log_addr = peer;
     result->log_addr.ApplyMask(Config.Addrs.client_netmask.GetCIDR());
@@ -2723,12 +2732,7 @@ connStateCreate(const IPAddress &peer, const IPAddress &me, int fd, http_port_li
     result->in.buf = (char *)memAllocBuf(CLIENT_REQ_BUF_SZ, &result->in.allocatedSize);
     result->port = cbdataReference(port);
 
-#if LINUX_TPROXY4
-    if(port->transparent || port->tproxy)
-#else
-    if(port->transparent)
-#endif
-    {
+    if(port->intercepted || port->tproxy) {
         IPAddress dst;
 
         if (IPInterceptor.NatLookup(fd, me, peer, dst) == 0) {
@@ -3111,13 +3115,9 @@ clientHttpConnectionsOpen(void)
 
         enter_suid();
 
-#if LINUX_TPROXY4
         if(s->tproxy) {
             fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, s->s, (COMM_NONBLOCKING|COMM_TRANSPARENT), 0, "HTTP Socket");
-        }
-        else
-#endif
-        {
+        } else {
             fd = comm_open(SOCK_STREAM, IPPROTO_TCP, s->s, COMM_NONBLOCKING, "HTTP Socket");
         }
 
@@ -3131,9 +3131,10 @@ clientHttpConnectionsOpen(void)
         comm_accept(fd, httpAccept, s);
 
         debugs(1, 1, "Accepting " <<
-               (s->transparent ? "transparently proxied" :
-                       s->sslBump ? "bumpy" :
-                       s->accel ? "accelerated" : "") 
+               (s->intercepted ? " intercepted" : "") <<
+               (s->tproxy ? " spoofing" : "") <<
+               (s->sslBump ? " bumpy" : "") <<
+               (s->accel ? " accelerated" : "") 
                << " HTTP connections at " << s->s
                << ", FD " << fd << "." );
 

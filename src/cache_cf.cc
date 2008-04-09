@@ -2920,8 +2920,8 @@ parse_http_port_option(http_port_list * s, char *token)
         else
             self_destruct();
 
-    } else if (strcmp(token, "transparent") == 0) {
-        s->transparent = 1;
+    } else if (strcmp(token, "transparent") == 0 || strcmp(token, "intercept") == 0) {
+        s->intercepted = 1;
         IPInterceptor.StartInterception();
 #if USE_IPV6
         /* INET6: until transparent REDIRECT works on IPv6 SOCKET, force wildcard to IPv4 */
@@ -3063,8 +3063,8 @@ dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
     if (s->defaultsite)
         storeAppendPrintf(e, " defaultsite=%s", s->defaultsite);
 
-    if (s->transparent)
-        storeAppendPrintf(e, " transparent");
+    if (s->intercepted)
+        storeAppendPrintf(e, " intercept");
 
     if (s->vhost)
         storeAppendPrintf(e, " vhost");

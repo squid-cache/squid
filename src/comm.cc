@@ -634,7 +634,7 @@ comm_set_v6only(int fd, int tos)
 void
 comm_set_transparent(int fd)
 {
-#if LINUX_TPROXY4
+#if defined(IP_TRANSPARENT)
     int tos = 1;
     if (setsockopt(fd, SOL_IP, IP_TRANSPARENT, (char *) &tos, sizeof(int)) < 0) {
         debugs(50, DBG_IMPORTANT, "comm_open: setsockopt(IP_TRANSPARENT) on FD " << fd << ": " << xstrerror());
@@ -754,12 +754,10 @@ comm_openex(int sock_type,
             commSetReuseAddr(new_socket);
     }
 
-#if LINUX_TPROXY4
     /* MUST be done before binding or face OS Error: "(99) Cannot assign requested address"... */
     if((flags & COMM_TRANSPARENT)) {
         comm_set_transparent(new_socket);
     }
-#endif
 
     if (!addr.IsNoAddr())
     {
@@ -1351,13 +1349,11 @@ comm_old_accept(int fd, ConnectionDetail &details)
 
     commSetNonBlocking(sock);
 
-#if LINUX_TPROXY4
-    /* AYJ: do we actually need to set this again on every accept? */
     if(fd_table[fd].flags.transparent == 1) {
-        comm_set_transparent(sock);
+        /* AYJ: do we actually need to set this again on every accept? */
+        //comm_set_transparent(sock);
         F->flags.transparent = 1;
     }
-#endif
 
     PROF_stop(comm_accept);
     return sock;
