@@ -117,7 +117,7 @@ public:
     struct
     {
         unsigned int accel:1;
-        unsigned int transparent:1;
+        unsigned int intercepted:1;
         unsigned int internal:1;
         unsigned int done_copying:1;
         unsigned int purging:1;

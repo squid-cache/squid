@@ -1,8 +1,6 @@
-
 /*
  * $Id: ProtoPort.h,v 1.1 2008/02/11 22:24:39 rousskov Exp $
  */
-
 #ifndef SQUID_PROTO_PORT_H
 #define SQUID_PROTO_PORT_H
 
@@ -21,20 +19,14 @@ struct http_port_list
     char *name;                /* visible name */
     char *defaultsite;         /* default web site */
 
-    unsigned int transparent:1; /* transparent proxy */
-
-    unsigned int accel:1; /* HTTP accelerator */
-
-    unsigned int vhost:1; /* uses host header */
-
-    unsigned int sslBump:1; /* intercepts CONNECT requests */
+    unsigned int intercepted:1;  /* intercepting proxy */
+    unsigned int tproxy:1;       /* spoof client ip using TPROXY */
+    unsigned int accel:1;        /* HTTP accelerator */
+    unsigned int vhost:1;        /* uses host header */
+    unsigned int sslBump:1;      /* intercepts CONNECT requests */
 
     int vport;                 /* virtual port support, -1 for dynamic, >0 static*/
     int disable_pmtu_discovery;
-
-#if LINUX_TPROXY2 || LINUX_TPROXY4
-    unsigned int tproxy:1; /* spoof client ip using tproxy */
-#endif
 
     struct {
 	unsigned int enabled;
