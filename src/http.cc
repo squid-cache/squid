@@ -1230,7 +1230,7 @@ HttpStateData::processReplyBody()
             closeHandler = NULL;
             fwd->unregister(fd);
 
-            if (orig_request->flags.tproxy)
+            if (orig_request->flags.spoof_client_ip)
                 client_addr = orig_request->client_addr;
 
             if (_peer) {

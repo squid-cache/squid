@@ -268,7 +268,7 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
 
         /* If we need to transparently proxy the request
          * then we need the client source protocol, address and port */
-        if(request->flags.tproxy) {
+        if(request->flags.spoof_client_ip) {
             fwd->src = request->client_addr;
             // AYJ: do we need to pass on the transparent flag also?
         }
@@ -795,7 +795,7 @@ FwdState::connectStart()
         ctimeout = Config.Timeout.connect;
     }
 
-    if (request->flags.tproxy)
+    if (request->flags.spoof_client_ip)
         client_addr = request->client_addr;
 
     if (ftimeout < 0)
@@ -835,7 +835,7 @@ FwdState::connectStart()
 
     debugs(17, 3, "fwdConnectStart: got outgoing addr " << outgoing << ", tos " << tos);
 
-    if (request->flags.tproxy) {
+    if (request->flags.spoof_client_ip) {
         fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, outgoing, (COMM_NONBLOCKING|COMM_TRANSPARENT), tos, url);
     } else {
         fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, outgoing, COMM_NONBLOCKING, tos, url);
@@ -879,11 +879,11 @@ FwdState::connectStart()
     } else {
 
 #if LINUX_TPROXY2
-        if (request->flags.tproxy) {
+        if (request->flags.spoof_client_ip) {
             // try to set the outgoing address using TPROXY v2
             // if it fails we abort any further TPROXY actions on this connection
             if(IPInterceptor.SetTproxy2OutgoingAddr(int fd, const IPAddress &src) == -1) {
-                request->flags.tproxy = 0;
+                request->flags.spoof_client_ip = 0;
             }
         }
 #endif
@@ -1222,7 +1222,7 @@ getOutgoingAddr(HttpRequest * request)
 {
     ACLChecklist ch;
 
-    if (request && request->flags.tproxy)
+    if (request && request->flags.spoof_client_ip)
         return request->client_addr;
 
     if (request)
