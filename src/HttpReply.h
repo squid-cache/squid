@@ -122,6 +122,11 @@ public:
 
     void packHeadersInto(Packer * p) const;
 
+    /// Clone this reply.
+    /// Could be done as a copy-contructor but we do not want to
+    /// accidently copy a HttpReply..
+    HttpReply *clone() const;
+
 private:
     /* initialize */
     void init();
