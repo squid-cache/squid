@@ -221,7 +221,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
     if (method == METHOD_CONNECT) {
         port = CONNECT_PORT;
 
-        if (sscanf(url, "[%[^:]]:%d", host, &port) < 1)
+        if (sscanf(url, "[%[^]]]:%d", host, &port) < 1)
             if (sscanf(url, "%[^:]:%d", host, &port) < 1)
                 return NULL;
 
