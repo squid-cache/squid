@@ -342,11 +342,11 @@ IPIntercept::NatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAdd
     if( !peer.IsIPv4() ) return -1;
 
     if(intercept_active) {
-        if( NetfilterInterception(fd, me, peer, dst, silent) == 0) return 0;
-        if( IPFWInterception(fd, me, peer, dst, silent) == 0) return 0;
+        if( NetfilterInterception(fd, me, dst, silent) == 0) return 0;
+        if( IPFWInterception(fd, me, dst, silent) == 0) return 0;
     }
     if(transparent_active) {
-        if( NetfilterTransparent(fd, me, peer, dst) == 0) return 0;
+        if( NetfilterTransparent(fd, me, dst, silent) == 0) return 0;
     }
 
     return -1;
