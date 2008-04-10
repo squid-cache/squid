@@ -33,6 +33,8 @@
 #ifndef SQUID_ESIEXPATPARSER_H
 #define SQUID_ESIEXPATPARSER_H
 
+#if USE_SQUID_ESI
+
 #include "ESIParser.h"
 #include "expat.h"
 
@@ -61,5 +63,7 @@ private:
 
     ESIParserClient *theClient;
 };
+
+#endif /* USE_SQUID_ESI */
 
 #endif /* SQUID_ESIEXPATPARSER_H */
