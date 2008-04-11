@@ -22,7 +22,7 @@ class IPAddress;
 class IPIntercept
 {
 public:
-    IPIntercept() : transparent_active(0), intercept_active(0) {};
+    IPIntercept() : transparent_active(0), intercept_active(0), last_reported(0) {};
     ~IPIntercept() {};
 
     /** Perform NAT lookups */
@@ -109,6 +109,7 @@ private:
 
     int transparent_active;
     int intercept_active;
+    time_t last_reported; /**< Time of last error report. Throttles NAT error display to 1 per minute */
 };
 
 #if LINUX_NETFILTER && !defined(IP_TRANSPARENT)

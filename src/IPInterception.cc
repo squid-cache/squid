@@ -119,7 +119,6 @@ int
 IPIntercept::NetfilterInterception(int fd, const IPAddress &me, IPAddress &dst, int silent)
 {
 #if LINUX_NETFILTER
-    static time_t last_reported = 0;
     struct addrinfo *lookup = NULL;
 
     dst.GetAddrInfo(lookup,AF_INET);
@@ -151,7 +150,6 @@ int
 IPIntercept::NetfilterTransparent(int fd, const IPAddress &me, IPAddress &dst, int silent)
 {
 #if LINUX_NETFILTER
-    static time_t last_reported = 0;
     struct addrinfo *lookup = NULL;
 
     if( ! fd_table[fd].flags.transparent) return -1;
@@ -185,7 +183,6 @@ int
 IPIntercept::IPFWInterception(int fd, const IPAddress &me, IPAddress &dst, int silent)
 {
 #if IPFW_TRANSPARENT
-    static time_t last_reported = 0;
     struct addrinfo *lookup = NULL;
 
     dst.GetAddrInfo(lookup,AF_INET);
@@ -236,7 +233,6 @@ IPIntercept::NatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAdd
 
     struct natlookup natLookup;
     static int natfd = -1;
-    static time_t last_reported = 0;
     int x;
 
 #if defined(IPFILTER_VERSION) && (IPFILTER_VERSION >= 4000027)
@@ -355,7 +351,6 @@ IPIntercept::NatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAdd
 
     struct pfioc_natlook nl;
     static int pffd = -1;
-    static time_t last_reported = 0;
 
     if( !me.IsIPv4() ) return -1;
     if( !peer.IsIPv4() ) return -1;
