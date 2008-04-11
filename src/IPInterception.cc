@@ -33,10 +33,10 @@
  *
  */
 
+#include "IPInterception.h"
+
 #include "squid.h"
 #include "clientStream.h"
-#include "IPInterception.h"
-#include "SquidTime.h"
 #include "fde.h"
 
 #if IPF_TRANSPARENT

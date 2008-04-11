@@ -11,6 +11,9 @@
 
 class IPAddress;
 
+/* for time_t */
+#include "SquidTime.h"
+
 /**
  \defgroup IPInterceptAPI IP Interception and Transparent Proxy API
  \ingroup SquidComponent
