@@ -131,7 +131,7 @@ IPIntercept::NetfilterInterception(int fd, const IPAddress &me, IPAddress &dst, 
      * Try NAT lookup for REDIRECT or DNAT targets. */
     if( getsockopt(fd, SOL_IP, SO_ORIGINAL_DST, lookup->ai_addr, &lookup->ai_addrlen) == 0) {
         if(!silent) {
-            debugs(89, DBG_IMPORTANT, HERE << "peer " << peer << " NF getsockopt(SO_ORIGINAL_DST) failed: " << xstrerror());
+            debugs(89, DBG_IMPORTANT, HERE << " NF getsockopt(SO_ORIGINAL_DST) failed: " << xstrerror());
             last_reported = squid_curtime;
         }
     }
@@ -164,7 +164,7 @@ IPIntercept::NetfilterTransparent(int fd, const IPAddress &me, IPAddress &dst, i
      * Try lookup for TPROXY targets. BUT, only if the FD is flagged for transparent operations. */
     if(getsockopt(fd, SOL_IP, IP_TRANSPARENT, lookup->ai_addr, &lookup->ai_addrlen) != 0) {
         if(!silent) {
-            debugs(89, DBG_IMPORTANT, HERE << "peer " << peer << " NF getsockopt(IP_TRANSPARENT) failed: " << xstrerror());
+            debugs(89, DBG_IMPORTANT, HERE << " NF getsockopt(IP_TRANSPARENT) failed: " << xstrerror());
             last_reported = squid_curtime;
         }
     }
@@ -195,7 +195,7 @@ IPIntercept::IPFWInterception(int fd, const IPAddress &me, IPAddress &dst, int s
      * Try lookup for IPFW interception. */
     if( getsockname(fd, lookup->ai_addr, &lookup->ai_addrlen) >= 0 ) {
         if( !silent ) {
-            debugs(89, DBG_IMPORTANT, HERE << "peer " << peer << " IPFW getsockname(...) failed: " << xstrerror());
+            debugs(89, DBG_IMPORTANT, HERE << " IPFW getsockname(...) failed: " << xstrerror());
             last_reported = squid_curtime;
         }
     }
