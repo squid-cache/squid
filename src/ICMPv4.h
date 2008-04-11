@@ -51,6 +51,15 @@
 #include <netinet/ip_icmp.h>
 #endif
 
+#ifndef _SQUID_LINUX_
+#ifndef _SQUID_CYGWIN_
+#ifndef _SQUID_MSWIN_
+#define icmphdr icmp
+#define iphdr ip
+#endif
+#endif
+#endif
+
 /* Linux uses its own field names. */
 #if defined (_SQUID_LINUX_)
 #ifdef icmp_id
