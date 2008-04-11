@@ -34,10 +34,12 @@
  */
 
 #include "IPInterception.h"
+#include "fde.h"
 
+#if 0
 #include "squid.h"
 #include "clientStream.h"
-#include "fde.h"
+#endif
 
 #if IPF_TRANSPARENT
 
