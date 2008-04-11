@@ -302,11 +302,6 @@ This section gives an account of those changes in three categories:
 	   but please report the bugs anyway.
         </p>
 
-	<tag>--enable-linux-tproxy2</tag>
-	<p>New option to enable TPROXY version 2 support in squid (previously known as --enable-linux-tproxy).
-	Linux Kernel patches from Balabit are required before building squid with this option.
-	</p>
-
 </descrip>
 </p>
 

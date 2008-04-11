@@ -1219,8 +1219,8 @@ dnl "-64" from LDFLAGS
 fi
 
 dnl Enable Linux transparent proxy support for obsolete TPROXY
-AC_ARG_ENABLE(linux-tproxy2,
-[  --enable-linux-tproxy2
+AC_ARG_ENABLE(linux-tproxy,
+[  --enable-linux-tproxy
 			  Enable real Transparent Proxy support for Netfilter TPROXY (version 2).],
 [ if test "$enableval" = "yes" ; then
 	echo "Linux Netfilter/TPROXY v2 enabled"
