@@ -10,6 +10,8 @@ Changes to squid-3.HEAD (current):
 	  CONNECT and transparently redirected SSL traffic, using configurable
 	  client- and server-side certificates. While decrypted, the traffic
 	  can be expected using ICAP.
+	- TPROXY version 4 support now included.
+	- IPFW and Netfilter interception methods may now both be built in one binary.
 
 Changes to squid-3.0.STABLE1 (13 Dec 2007):
 
