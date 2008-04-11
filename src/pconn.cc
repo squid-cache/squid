@@ -86,7 +86,10 @@ void
 IdleConnList::removeFD(int fd)
 {
     int index = findFDIndex(fd);
-    assert(index >= 0);
+    if (index < 0) {
+	debugs(48, 0, "IdleConnList::removeFD: FD " << fd << " NOT FOUND!");
+	return;
+    }
     debugs(48, 3, "IdleConnList::removeFD: found FD " << fd << " at index " << index);
 
     for (; index < nfds - 1; index++)

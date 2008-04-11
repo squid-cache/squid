@@ -1953,7 +1953,7 @@ DOC_START
 	which can be changed with the --with-coss-membuf-size=N configure
 	option.
 NOCOMMENT_START
-DEFAULT_IF_NONE: ufs @DEFAULT_SWAP_DIR@ 100 16 256
+cache_dir ufs @DEFAULT_SWAP_DIR@ 100 16 256
 NOCOMMENT_END
 DOC_END
 
