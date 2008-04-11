@@ -299,6 +299,16 @@ url_entry_sort(const void *A, const void *B)
         return u1->rtt - u2->rtt;
 }
 
+static void
+urnHandleReplyError(UrnState *urnState, StoreEntry *urlres_e)
+{
+    urlres_e->unlock();
+    urnState->entry->unlock();
+    HTTPMSGUNLOCK(urnState->request);
+    HTTPMSGUNLOCK(urnState->urlres_r);
+    delete urnState;
+}
+
 /* TODO: use the clientStream support for this */
 static void
 urnHandleReply(void *data, StoreIOBuffer result)
@@ -324,14 +334,9 @@ urnHandleReply(void *data, StoreIOBuffer result)
     /* Can't be lower because of the goto's */
     HttpVersion version(1, 0);
 
-    if (EBIT_TEST(urlres_e->flags, ENTRY_ABORTED)) {
-        goto error;
-    }
-
-    if (result.length == 0) {
-        goto error;
-    } else if (result.flags.error < 0) {
-        goto error;
+    if (EBIT_TEST(urlres_e->flags, ENTRY_ABORTED) || result.length == 0 || result.flags.error < 0) {
+        urnHandleReplyError(urnState, urlres_e);
+        return;
     }
 
     /* Update reqofs to point to where in the buffer we'd be */
@@ -339,7 +344,8 @@ urnHandleReply(void *data, StoreIOBuffer result)
 
     /* Handle reqofs being bigger than normal */
     if (urnState->reqofs >= URN_REQBUF_SZ) {
-        goto error;
+        urnHandleReplyError(urnState, urlres_e);
+        return;
     }
 
     /* If we haven't received the entire object (urn), copy more */
@@ -360,7 +366,8 @@ urnHandleReply(void *data, StoreIOBuffer result)
 
     if (0 == k) {
         debugs(52, 1, "urnHandleReply: didn't find end-of-headers for " << e->url()  );
-        goto error;
+        urnHandleReplyError(urnState, urlres_e);
+        return;
     }
 
     s = buf + k;
@@ -375,7 +382,8 @@ urnHandleReply(void *data, StoreIOBuffer result)
         err->url = xstrdup(e->url());
         errorAppendEntry(e, err);
         delete rep;
-        goto error;
+        urnHandleReplyError(urnState, urlres_e);
+        return;
     }
 
     delete rep;
@@ -395,7 +403,8 @@ urnHandleReply(void *data, StoreIOBuffer result)
         err = errorCon(ERR_URN_RESOLVE, HTTP_NOT_FOUND, urnState->request);
         err->url = xstrdup(e->url());
         errorAppendEntry(e, err);
-        goto error;
+        urnHandleReplyError(urnState, urlres_e);
+        return;
     }
 
     min_u = urnFindMinRtt(urls, urnState->request->method, NULL);
@@ -455,12 +464,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
     /* mb was absorbed in httpBodySet call, so we must not clean it */
     storeUnregister(urnState->sc, urlres_e, urnState);
 
-error:
-    urlres_e->unlock();
-    urnState->entry->unlock();
-    HTTPMSGUNLOCK(urnState->request);
-    HTTPMSGUNLOCK(urnState->urlres_r);
-    delete urnState;
+    urnHandleReplyError(urnState, urlres_e);
 }
 
 static url_entry *
