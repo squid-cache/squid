@@ -1264,7 +1264,7 @@ restoreCapabilities(int keep)
     cap->inheritable = 0;
     cap->effective = (1 << CAP_NET_BIND_SERVICE);
 
-    if(IPIntercept.TransparentActive()) {
+    if(IPInterceptor.TransparentActive()) {
         cap->effective |= (1 << CAP_NET_ADMIN);
 #if LINUX_TPROXY2
         cap->effective |= (1 << CAP_NET_BROADCAST);
