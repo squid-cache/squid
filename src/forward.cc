@@ -1220,7 +1220,7 @@ FwdState::updateHierarchyInfo()
         assert(server_fd >= 0);
         nextHop = fd_table[server_fd].ipaddr;
         if (!Config.onoff.log_ip_on_direct || !nextHop[0])
-            nextHop = request->GetHost(); // domain name
+            nextHop = request->host; // domain name
 	}
 
     assert(nextHop);
