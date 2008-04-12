@@ -1378,10 +1378,10 @@ FtpStateData::processReplyBody()
         return;
     }
 
-#if ICAP_CLIENT
+#if USE_ADAPTATION
 
-    if (icapAccessCheckPending) {
-        debugs(9,3, HERE << "returning from FtpStateData::processReplyBody due to icapAccessCheckPending");
+    if (adaptationAccessCheckPending) {
+        debugs(9,3, HERE << "returning from FtpStateData::processReplyBody due to adaptationAccessCheckPending");
         return;
     }
 
@@ -2585,9 +2585,9 @@ FtpStateData::processHeadResponse()
         return;
     }
 
-#if ICAP_CLIENT
-    if (icapAccessCheckPending) {
-        debugs(9,3, HERE << "returning due to icapAccessCheckPending");
+#if USE_ADAPTATION
+    if (adaptationAccessCheckPending) {
+        debugs(9,3, HERE << "returning due to adaptationAccessCheckPending");
         return;
     }
 #endif

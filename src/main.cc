@@ -70,6 +70,17 @@
 #include "MemPool.h"
 #include "ICMPSquid.h"
 
+#if USE_LOADABLE_MODULES
+#include "LoadableModules.h"
+#endif
+
+#if ICAP_CLIENT
+#include "ICAP/ICAPConfig.h"
+#endif
+#if USE_ADAPTATION
+#include "adaptation/Config.h"
+#endif
+
 #if USE_WIN32_SERVICE
 
 #include "squid_windows.h"
@@ -1077,6 +1088,26 @@ mainInitialize(void)
 #endif
 
     memCheckInit();
+
+#if USE_LOADABLE_MODULES
+    LoadableModulesConfigure(Config.loadable_module_names);
+#endif
+
+#if USE_ADAPTATION
+    bool enableAdaptation = false;
+
+    // We can remove this dependency on specific adaptation mechanisms
+    // if we create a generic Registry of such mechanisms. Should we?
+#if ICAP_CLIENT
+    TheICAPConfig.finalize(); // must be after we load modules
+    enableAdaptation = TheICAPConfig.onoff;
+#endif
+    // same for eCAP
+
+    // must be the last adaptation-related finalize
+    Adaptation::Config::Finalize(enableAdaptation);
+#endif
+
 
     debugs(1, 1, "Ready to serve requests.");
 

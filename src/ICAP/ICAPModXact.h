@@ -127,13 +127,11 @@ private:
     enum State { stDisabled, stWriting, stIeof, stDone } theState;
 };
 
-class ICAPInitiator;
-
 class ICAPModXact: public ICAPXaction, public BodyProducer, public BodyConsumer
 {
 
 public:
-    ICAPModXact(ICAPInitiator *anInitiator, HttpMsg *virginHeader, HttpRequest *virginCause, ICAPServiceRep::Pointer &s);
+    ICAPModXact(Adaptation::Initiator *anInitiator, HttpMsg *virginHeader, HttpRequest *virginCause, ICAPServiceRep::Pointer &s);
 
     // BodyProducer methods
     virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer);
@@ -310,7 +308,7 @@ private:
 class ICAPModXactLauncher: public ICAPLauncher
 {
 public:
-    ICAPModXactLauncher(ICAPInitiator *anInitiator, HttpMsg *virginHeader, HttpRequest *virginCause, ICAPServiceRep::Pointer &s);
+    ICAPModXactLauncher(Adaptation::Initiator *anInitiator, HttpMsg *virginHeader, HttpRequest *virginCause, Adaptation::ServicePointer s);
 
 protected:
     virtual ICAPXaction *createXaction();
