@@ -17,9 +17,9 @@ static PconnPool *icapPconnPool = new PconnPool("ICAP Servers");
 
 //CBDATA_CLASS_INIT(ICAPXaction);
 
-ICAPXaction::ICAPXaction(const char *aTypeName, ICAPInitiator *anInitiator, ICAPServiceRep::Pointer &aService):
+ICAPXaction::ICAPXaction(const char *aTypeName, Adaptation::Initiator *anInitiator, ICAPServiceRep::Pointer &aService):
         AsyncJob(aTypeName),
-        ICAPInitiate(aTypeName, anInitiator, aService),
+        Adaptation::Initiate(aTypeName, anInitiator, aService.getRaw()),
         connection(-1),
         commBuf(NULL), commBufSize(0),
         commEof(false),
@@ -38,6 +38,14 @@ ICAPXaction::~ICAPXaction()
         " [icapx" << id << ']'); // we should not call virtual status() here
 }
 
+ICAPServiceRep &
+ICAPXaction::service()
+{
+    ICAPServiceRep *s = dynamic_cast<ICAPServiceRep*>(&Initiate::service());
+    Must(s);
+    return *s;
+}
+
 void ICAPXaction::disableRetries() {
     debugs(93,5, typeName << (isRetriable ? " becomes" : " remains") <<
         " final" << status());
@@ -46,7 +54,7 @@ void ICAPXaction::disableRetries() {
 
 void ICAPXaction::start()
 {
-    ICAPInitiate::start();
+    Adaptation::Initiate::start();
 
     readBuf.init(SQUID_TCP_SO_RCVBUF, SQUID_TCP_SO_RCVBUF);
     commBuf = (char*)memAllocBuf(SQUID_TCP_SO_RCVBUF, &commBufSize);
@@ -61,13 +69,13 @@ void ICAPXaction::openConnection()
 
     Must(connection < 0);
 
-    const ICAPServiceRep &s = service();
+    const Adaptation::Service &s = service();
 
     if (!TheICAPConfig.reuse_connections)
         disableRetries(); // this will also safely drain pconn pool
 
     // TODO: check whether NULL domain is appropriate here
-    connection = icapPconnPool->pop(s.host.buf(), s.port, NULL, client_addr, isRetriable);
+    connection = icapPconnPool->pop(s.cfg().host.buf(), s.cfg().port, NULL, client_addr, isRetriable);
     if (connection >= 0) {
         debugs(93,3, HERE << "reused pconn FD " << connection);
 
@@ -86,19 +94,20 @@ void ICAPXaction::openConnection()
 
     IPAddress outgoing;
     connection = comm_open(SOCK_STREAM, 0, outgoing, 
-        COMM_NONBLOCKING, s.uri.buf());
+        COMM_NONBLOCKING, s.cfg().uri.buf());
 
     if (connection < 0)
         dieOnConnectionFailure(); // throws
 
-    debugs(93,3, typeName << " opens connection to " << s.host.buf() << ":" << s.port);
+    debugs(93,3, typeName << " opens connection to " << s.cfg().host.buf() << ":" << s.cfg().port);
 
     // TODO: service bypass status may differ from that of a transaction
     typedef CommCbMemFunT<ICAPXaction, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  asyncCall(93, 5, "ICAPXaction::noteCommTimedout",
 			TimeoutDialer(this,&ICAPXaction::noteCommTimedout));
 
-    commSetTimeout(connection, TheICAPConfig.connect_timeout(service().bypass), timeoutCall);
+    commSetTimeout(connection, TheICAPConfig.connect_timeout(
+        service().cfg().bypass), timeoutCall);
 
     typedef CommCbMemFunT<ICAPXaction, CommCloseCbParams> CloseDialer;
     closer =  asyncCall(93, 5, "ICAPXaction::noteCommClosed",
@@ -108,7 +117,7 @@ void ICAPXaction::openConnection()
     typedef CommCbMemFunT<ICAPXaction, CommConnectCbParams> ConnectDialer;
     connector = asyncCall(93,3, "ICAPXaction::noteCommConnected",
         ConnectDialer(this, &ICAPXaction::noteCommConnected));
-    commConnectStart(connection, s.host.buf(), s.port, connector);
+    commConnectStart(connection, s.cfg().host.buf(), s.cfg().port, connector);
 }
 
 /*
@@ -146,7 +155,8 @@ void ICAPXaction::closeConnection()
             debugs(93,3, HERE << "pushing pconn" << status());
 	    AsyncCall::Pointer call = NULL;
 	    commSetTimeout(connection, -1, call);
-            icapPconnPool->push(connection, theService->host.buf(), theService->port, NULL, client_addr);
+            icapPconnPool->push(connection, theService->cfg().host.buf(),
+                theService->cfg().port, NULL, client_addr);
             disableRetries();
         } else {
             debugs(93,3, HERE << "closing pconn" << status());
@@ -177,7 +187,7 @@ void ICAPXaction::noteCommConnected(const CommConnectCbParams &io)
 
 void ICAPXaction::dieOnConnectionFailure() {
     debugs(93, 2, HERE << typeName <<
-        " failed to connect to " << service().uri);
+        " failed to connect to " << service().cfg().uri);
     theService->noteFailure();
     throw TexcHere("cannot connect to the ICAP service");
 }
@@ -218,7 +228,8 @@ void ICAPXaction::noteCommTimedout(const CommTimeoutCbParams &io)
 void ICAPXaction::handleCommTimedout()
 {
     debugs(93, 2, HERE << typeName << " failed: timeout with " <<
-        theService->methodStr() << " " << theService->uri.buf() << status());
+        theService->cfg().methodStr() << " " <<
+        theService->cfg().uri.buf() << status());
     reuseConnection = false;
     service().noteFailure();
 
@@ -245,12 +256,12 @@ void ICAPXaction::callEnd()
         debugs(93, 5, HERE << typeName << " done with I/O" << status());
         closeConnection();
     }
-    ICAPInitiate::callEnd(); // may destroy us
+    Adaptation::Initiate::callEnd(); // may destroy us
 }
 
 bool ICAPXaction::doneAll() const
 {
-    return !connector && !reader && !writer && ICAPInitiate::doneAll();
+    return !connector && !reader && !writer && Adaptation::Initiate::doneAll();
 }
 
 void ICAPXaction::updateTimeout() {
@@ -262,7 +273,8 @@ void ICAPXaction::updateTimeout() {
 	    AsyncCall::Pointer call =  asyncCall(93, 5, "ICAPXaction::noteCommTimedout",
 				    TimeoutDialer(this,&ICAPXaction::noteCommTimedout));
 
-        commSetTimeout(connection, TheICAPConfig.io_timeout(service().bypass), call);
+        commSetTimeout(connection, 
+            TheICAPConfig.io_timeout(service().cfg().bypass), call);
     } else {
         // clear timeout when there is no I/O
         // Do we need a lifetime timeout?
@@ -396,7 +408,7 @@ void ICAPXaction::swanSong()
     if (theInitiator)
         tellQueryAborted(!isRetriable);
 
-    ICAPInitiate::swanSong();
+    Adaptation::Initiate::swanSong();
 }
 
 // returns a temporary string depicting transaction status, for debugging

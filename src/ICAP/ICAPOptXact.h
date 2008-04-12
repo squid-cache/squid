@@ -48,7 +48,7 @@ class ICAPOptXact: public ICAPXaction
 {
 
 public:
-    ICAPOptXact(ICAPInitiator *anInitiator, ICAPServiceRep::Pointer &aService);
+    ICAPOptXact(Adaptation::Initiator *anInitiator, ICAPServiceRep::Pointer &aService);
 
 protected:
     virtual void start();
@@ -70,7 +70,7 @@ private:
 class ICAPOptXactLauncher: public ICAPLauncher
 {
 public:
-    ICAPOptXactLauncher(ICAPInitiator *anInitiator, ICAPServiceRep::Pointer &aService);
+    ICAPOptXactLauncher(Adaptation::Initiator *anInitiator, Adaptation::ServicePointer aService);
 
 protected:
     virtual ICAPXaction *createXaction();
