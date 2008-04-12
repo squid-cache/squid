@@ -1963,6 +1963,9 @@ parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * metho
         /* prepend our name & port */
         http->uri = xstrdup(internalLocalUri(NULL, url));
         http->flags.accel = 1;
+    } else if (conn->port->transparent) {
+	// Fallback on transparent if enabled, useful for "self" requests
+        prepareTransparentURL(conn, http, url, req_hdr);
     }
 
     if (!http->uri) {
