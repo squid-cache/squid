@@ -99,12 +99,13 @@ Adaptation::AccessCheck::check()
 void
 Adaptation::AccessCheck::checkCandidates()
 {
-    debugs(93, 3, "Adaptation::AccessCheck checks " << candidates.size());
+    debugs(93, 4, "Adaptation::AccessCheck has " << candidates.size() << " rules");
 
     while (!candidates.empty()) {
         if (AccessRule *r = FindRule(topCandidate())) {
             // XXX: we do not have access to conn->rfc931 here.
             acl_checklist = aclChecklistCreate(r->acl, req, dash_str);
+            acl_checklist->reply = rep ? HTTPMSGLOCK(rep) : NULL;
             acl_checklist->nonBlockingCheck(AccessCheckCallbackWrapper, this);
             return;
         }
@@ -113,7 +114,7 @@ Adaptation::AccessCheck::checkCandidates()
     }
 
     // when there are no canidates, fake answer 1
-    debugs(93, 3, "Adaptation::AccessCheck::check: NO candidates left");
+    debugs(93, 4, "Adaptation::AccessCheck::check: NO candidates left");
     noteAnswer(1);
 }
 
@@ -130,9 +131,10 @@ Adaptation::AccessCheck::noteAnswer(int answer)
 {
     debugs(93, 5, HERE << "AccessCheck::noteAnswer " << answer);
     if (candidates.size())
-        debugs(93, 5, HERE << "was checking " << topCandidate());
+        debugs(93, 5, HERE << "was checking rule" << topCandidate());
 
     if (!answer) {
+        candidates.shift(); // the rule did not match
         checkCandidates();
         return;
     }
