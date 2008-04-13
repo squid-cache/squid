@@ -40,6 +40,8 @@
 #ifndef SQUID_ESILIBXML2PARSER_H
 #define SQUID_ESILIBXML2PARSER_H
 
+#if USE_SQUID_ESI
+
 #include "ESIParser.h"
 // workaround for definition of "free" that prevents include of
 // parser.h from libxml2 without errors
@@ -74,5 +76,7 @@ private:
 
     ESIParserClient *theClient;
 };
+
+#endif /* USE_SQUID_ESI */
 
 #endif /* SQUID_ESILIBXML2PARSER_H */

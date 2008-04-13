@@ -14,7 +14,7 @@ CBDATA_CLASS_INIT(ICAPOptXact);
 CBDATA_CLASS_INIT(ICAPOptXactLauncher);
 
 
-ICAPOptXact::ICAPOptXact(ICAPInitiator *anInitiator, ICAPServiceRep::Pointer &aService):
+ICAPOptXact::ICAPOptXact(Adaptation::Initiator *anInitiator, ICAPServiceRep::Pointer &aService):
     AsyncJob("ICAPOptXact"),
     ICAPXaction("ICAPOptXact", anInitiator, aService)
 {
@@ -42,9 +42,9 @@ void ICAPOptXact::handleCommConnected()
 
 void ICAPOptXact::makeRequest(MemBuf &buf)
 {
-    const ICAPServiceRep &s = service();
-    buf.Printf("OPTIONS %s ICAP/1.0\r\n", s.uri.buf());
-    buf.Printf("Host: %s:%d\r\n", s.host.buf(), s.port);
+    const Adaptation::Service &s = service();
+    buf.Printf("OPTIONS %s ICAP/1.0\r\n", s.cfg().uri.buf());
+    buf.Printf("Host: %s:%d\r\n", s.cfg().host.buf(), s.cfg().port);
     buf.append(ICAP::crlf, 2);
 }
 
@@ -88,7 +88,7 @@ HttpMsg *ICAPOptXact::parseResponse()
 
 /* ICAPOptXactLauncher */
 
-ICAPOptXactLauncher::ICAPOptXactLauncher(ICAPInitiator *anInitiator, ICAPServiceRep::Pointer &aService):
+ICAPOptXactLauncher::ICAPOptXactLauncher(Adaptation::Initiator *anInitiator, Adaptation::ServicePointer aService):
     AsyncJob("ICAPOptXactLauncher"),
     ICAPLauncher("ICAPOptXactLauncher", anInitiator, aService)
 {
@@ -96,5 +96,8 @@ ICAPOptXactLauncher::ICAPOptXactLauncher(ICAPInitiator *anInitiator, ICAPService
 
 ICAPXaction *ICAPOptXactLauncher::createXaction()
 {
-    return new ICAPOptXact(this, theService);
+    ICAPServiceRep::Pointer s =
+        dynamic_cast<ICAPServiceRep*>(theService.getRaw());
+    Must(s != NULL);
+    return new ICAPOptXact(this, s);
 }
