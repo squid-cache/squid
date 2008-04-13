@@ -7,8 +7,8 @@
 #include "HttpMsg.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
+#include "adaptation/Initiator.h"
 #include "ICAPServiceRep.h"
-#include "ICAPInitiator.h"
 #include "ICAPLauncher.h"
 #include "ICAPModXact.h"
 #include "ICAPClient.h"
@@ -37,7 +37,7 @@ ICAPModXact::State::State()
     memset(this, 0, sizeof(*this));
 }
 
-ICAPModXact::ICAPModXact(ICAPInitiator *anInitiator, HttpMsg *virginHeader,
+ICAPModXact::ICAPModXact(Adaptation::Initiator *anInitiator, HttpMsg *virginHeader,
     HttpRequest *virginCause, ICAPServiceRep::Pointer &aService):
     AsyncJob("ICAPModXact"),
     ICAPXaction("ICAPModXact", anInitiator, aService),
@@ -72,7 +72,7 @@ void ICAPModXact::start()
 
     estimateVirginBody(); // before virgin disappears!
 
-    canStartBypass = service().bypass;
+    canStartBypass = service().cfg().bypass;
 
     // it is an ICAP violation to send request to a service w/o known OPTIONS
 
@@ -716,14 +716,14 @@ void ICAPModXact::parseIcapHead()
 
 bool ICAPModXact::validate200Ok()
 {
-    if (ICAP::methodRespmod == service().method) {
+    if (ICAP::methodRespmod == service().cfg().method) {
         if (!gotEncapsulated("res-hdr"))
             return false;
 
         return true;
     }
 
-    if (ICAP::methodReqmod == service().method) {
+    if (ICAP::methodReqmod == service().cfg().method) {
         if (!gotEncapsulated("res-hdr") && !gotEncapsulated("req-hdr"))
             return false;
 
@@ -1047,7 +1047,7 @@ void ICAPModXact::makeRequestHeaders(MemBuf &buf)
     /*
      * XXX These should use HttpHdr interfaces instead of Printfs
      */
-    const ICAPServiceRep &s = service();
+    const Adaptation::ServiceConfig &s = service().cfg();
     buf.Printf("%s %s ICAP/1.0\r\n", s.methodStr(), s.uri.buf());
     buf.Printf("Host: %s:%d\r\n", s.host.buf(), s.port);
     buf.Printf("Date: %s\r\n", mkrfc1123(squid_curtime));
@@ -1540,7 +1540,7 @@ bool ICAPModXact::fillVirginHttpHeader(MemBuf &mb) const
 
 /* ICAPModXactLauncher */
 
-ICAPModXactLauncher::ICAPModXactLauncher(ICAPInitiator *anInitiator, HttpMsg *virginHeader, HttpRequest *virginCause, ICAPServiceRep::Pointer &aService):
+ICAPModXactLauncher::ICAPModXactLauncher(Adaptation::Initiator *anInitiator, HttpMsg *virginHeader, HttpRequest *virginCause, Adaptation::ServicePointer aService):
     AsyncJob("ICAPModXactLauncher"),
     ICAPLauncher("ICAPModXactLauncher", anInitiator, aService)
 {
@@ -1550,5 +1550,8 @@ ICAPModXactLauncher::ICAPModXactLauncher(ICAPInitiator *anInitiator, HttpMsg *vi
 
 ICAPXaction *ICAPModXactLauncher::createXaction()
 {
-    return new ICAPModXact(this, virgin.header, virgin.cause, theService);
+    ICAPServiceRep::Pointer s =
+        dynamic_cast<ICAPServiceRep*>(theService.getRaw());
+    Must(s != NULL);
+    return new ICAPModXact(this, virgin.header, virgin.cause, s);
 }

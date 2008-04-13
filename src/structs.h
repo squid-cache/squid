@@ -629,6 +629,10 @@ struct SquidConfig
 #endif
 
     char *accept_filter;
+
+#if USE_LOADABLE_MODULES
+    wordlist *loadable_module_names;
+#endif
 };
 
 SQUIDCEXTERN SquidConfig Config;

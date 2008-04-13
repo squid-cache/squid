@@ -83,7 +83,6 @@
 /**
  * Holds and manipulates IPv4, IPv6, and Socket Addresses.
  */
-
 class IPAddress
 {
 
@@ -148,62 +147,62 @@ public:
     /* methods */
 
     /** Test whether content can be used as an IPv4 address
-     *  \retval true  if content was received as an IPv4 address
-     *  \retval true  if content was received as an IPv4-Mapped address
-     *  \retval false if content was received as a non-mapped IPv6 native address.
+     \retval true  if content was received as an IPv4 address
+     \retval true  if content was received as an IPv4-Mapped address
+     \retval false if content was received as a non-mapped IPv6 native address.
      */
     bool IsIPv4() const;
 
     /** Test whether content can be used as an IPv6 address.
-     *  \retval true  if --enable-ipv6 has been compiled.
-     *  \retval false if --disable-ipv6 has been compiled.
-     *  \retval false if --with-ipv6-split-stack has been compiled AND content is IPv4-mapped.
+     \retval true  if --enable-ipv6 has been compiled.
+     \retval false if --disable-ipv6 has been compiled.
+     \retval false if --with-ipv6-split-stack has been compiled AND content is IPv4-mapped.
      */
     bool IsIPv6() const;
 
     /** Test whether content can be used as a Socket address.
-     *  \retval true  if address AND port are both set
-     *  \retval true  if content was received as a Socket address with port
-     *  \retval false if port in unset (zero)
+     \retval true  if address AND port are both set
+     \retval true  if content was received as a Socket address with port
+     \retval false if port in unset (zero)
      */
     bool IsSockAddr() const;
 
     /** Content-neutral test for whether the specific IP case ANY_ADDR is stored.
      *  This is the default content of a new undefined IPAddress object.
-     *  \retval true IPv4 0.0.0.0
-     *  \retval true IPv6 ::
-     *  \retval false anything else.
+     \retval true IPv4 0.0.0.0
+     \retval true IPv6 ::
+     \retval false anything else.
      */
     bool IsAnyAddr() const;
 
     /** Content-neutral test for whether the specific IP case NO_ADDR is stored.
-     *  \retval true IPv4 255.255.255.255
-     *  \retval true IPv6 ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff
-     *  \retval false anything else.
+     \retval true IPv4 255.255.255.255
+     \retval true IPv6 ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff
+     \retval false anything else.
      */
     bool IsNoAddr() const;
 
     /** Content-neutral test for whether the specific IP case LOCALHOST is stored.
      *  This is the default content of a new undefined IPAddress object.
-     *  \retval true IPv4 127.0.0.1
-     *  \retval true IPv6 ::1
-     *  \retval false anything else.
+     \retval true IPv4 127.0.0.1
+     \retval true IPv6 ::1
+     \retval false anything else.
      */
     bool IsLocalhost() const;
 
     /*@}*/
 
     /** Retrieve the Port if stored.
-     *  \retval 0 Port is unset or an error occured.
-     *  \retval n Port associated with this address in host native -endian.
+     \retval 0 Port is unset or an error occured.
+     \retval n Port associated with this address in host native -endian.
      */
     u_short GetPort() const;
 
     /** Set the Port value for an address.
      *  Replaces any previously existing Port value.
-     *  \param port Port being assigned in host native -endian.
-     *  \retval 0 Port is unset or an error occured.
-     *  \retval n Port associated with this address in host native -endian.
+     \param port Port being assigned in host native -endian.
+     \retval 0 Port is unset or an error occured.
+     \retval n Port associated with this address in host native -endian.
      */
     u_short SetPort(u_short port);
 
@@ -231,19 +230,19 @@ public:
 
     /**
      *  Valid results IF and only IF the stored IP address is actually a network bitmask
-     * \retval N number of bits which are set in the bitmask stored.
+     \retval N number of bits which are set in the bitmask stored.
      */
     int GetCIDR();
 
     /** Apply a mask to the stored address.
-     *  \param mask Netmask format to be bit-mask-AND'd over the stored address.
+     \param mask Netmask format to be bit-mask-AND'd over the stored address.
      */
     const int ApplyMask(const IPAddress &mask);
 
     /** Apply a mask to the stored address.
      *  CIDR will be converted appropriate to map the stored content.
-     *  \param cidr   CIDR Mask being applied. As an integer in host format.
-     *  \param mtype  Type of CIDR mask being applied (AF_INET or AF_INET6)
+     \param cidr   CIDR Mask being applied. As an integer in host format.
+     \param mtype  Type of CIDR mask being applied (AF_INET or AF_INET6)
      */
     bool ApplyMask(const unsigned int cidr, int mtype = AF_UNSPEC);
 
@@ -254,10 +253,10 @@ public:
      *  But for memory safety it requires a buffer as input
      *  instead of producing one magically.
      *  If buffer is not large enough the data is truncated silently.
-     * \param buf Allocated buffer to write address to
-     * \param len byte length of buffer available for writing.
-     * \param force (optional) require the IPA in a specific format.
-     * \return pointer to buffer received.
+     \param buf Allocated buffer to write address to
+     \param len byte length of buffer available for writing.
+     \param force (optional) require the IPA in a specific format.
+     \return pointer to buffer received.
      */
     char* NtoA(char *buf, unsigned int len, int force = AF_UNSPEC) const;
 
@@ -265,9 +264,9 @@ public:
      *  Provides a URL formatted version of the content.
      *  If buffer is not large enough the data is truncated silently.
      *  eg. 127.0.0.1:80 (IPv4) or [::1]:80 (IPv6)
-     * \param buf Allocated buffer to write address:port to
-     * \param len byte length of buffer available for writing.
-     * \return pointer to buffer received.
+     \param buf Allocated buffer to write address:port to
+     \param len byte length of buffer available for writing.
+     \return pointer to buffer received.
      */
     char* ToURL(char *buf, unsigned int len) const;
 
@@ -275,26 +274,26 @@ public:
      *  Provides a URL formatted version of the content.
      *  If buffer is not large enough the data is truncated silently.
      *  eg. 127.0.0.1 (IPv4) or [::1] (IPv6)
-     * \param buf Allocated buffer to write address to
-     * \param len byte length of buffer available for writing.
-     * \return pointer to buffer received.
+     \param buf Allocated buffer to write address to
+     \param len byte length of buffer available for writing.
+     \return pointer to buffer received.
      */
     unsigned int ToHostname(char *buf, const unsigned int len) const;
 
-    /** \fn bool GetReverseString(char buf[], IPAddressType show_format)
+    /**
      *  Convert the content into a Reverse-DNS string.
      *  The buffer sent MUST be allocated large enough to hold the resulting string.
      *  Name truncation will occur if buf does not have enough space.
      *  The constant MAX_IPSTRLEN is defined to provide for sizing arrays correctly.
-     *  \param show_format may be one of: AF_INET, AF_INET6 for the format of rDNS string wanted.
-     *  \param buf buffer to receive the text string output.
+     \param show_format may be one of: AF_INET, AF_INET6 for the format of rDNS string wanted.
+     \param buf buffer to receive the text string output.
      */
     bool GetReverseString(char buf[], int show_format = AF_UNSPEC) const;
 
     /** Test how two IP relate to each other.
-     *  \retval  0  IP are equal
-     *  \retval  1  IP rhs is greater (numerically) than that stored.
-     *  \retval -1  IP rhs is less (numerically) than that stored.
+     \retval  0  IP are equal
+     \retval  1  IP rhs is greater (numerically) than that stored.
+     \retval -1  IP rhs is less (numerically) than that stored.
      */
     int matchIPAddr(const IPAddress &rhs) const;
 
@@ -307,15 +306,15 @@ public:
      *  the caller MUST override these default settings.
      *  Some situations may also require an actual call to the system getaddrinfo()
      *  to pull relevant OS details for the socket.
-     *\par
+     \par
      *  IPAddress allocated objects MUST be destructed by IPAddress::FreeAddrInfo
      *  System getaddrinfo() allocated objects MUST be freed with system freeaddrinfo()
-     *\par
+     \par
      *  Some OS require that IPv4 addresses are pre-mapped by the client.
      *  The configure option --with-ipv4-mapping=yes will enable this.
      *
-     * \param ai structure to be filled out.
-     * \param force a specific sockaddr type is needed. default: don't care.
+     \param ai structure to be filled out.
+     \param force a specific sockaddr type is needed. default: don't care.
      */
 #if IPV6_SPECIAL_V4MAPPING
     void GetAddrInfo(struct addrinfo *&ai, int force = AF_INET6) const;
@@ -332,15 +331,15 @@ public:
      *  Initializes an empty addrinfo properly for use.
      *  It is intended for use in cases such as getsockopt() where the addrinfo is
      *  about to be changed and the stored details may not match the new ones coming.
-     *  \param ai addrinfo struct to be initialized as AF_UNSPEC with large address buffer
+     \param ai addrinfo struct to be initialized as AF_UNSPEC with large address buffer
      */
     void InitAddrInfo(struct addrinfo *&ai) const;
 
     /**
      *  Lookup a Host by Name. Equivalent to system call gethostbyname(char*)
-     *  \param s The textual FQDN of teh host being located.
-     *  \retval true	lookup was successful and an IPA was located.
-     *  \retval false	lookup failed or FQDN has no IP associated.
+     \param s The textual FQDN of the host being located.
+     \retval true	lookup was successful and an IPA was located.
+     \retval false	lookup failed or FQDN has no IP associated.
      */
     bool GetHostByName(const char *s);
 
