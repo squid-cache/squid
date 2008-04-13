@@ -5,7 +5,7 @@ all:
 
 dyn-docs:
 	rm -f -r tmp
-	cd ../../ && doxygen squid3.dox 2>doxygen.log
+	cd ../../ && (cat squid3.dox ; echo HTML_FILE_EXTENSION = .dyn ; echo HTML_OUTPUT = tmp ) | doxygen - 2>doxygen.log
 	mv tmp dyn
 
 html-docs:
