@@ -26,3 +26,7 @@ testHeaders: heap/*.h
 	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "heap" || exit 1
 ## ./ has no .h files.
 ## ./lru/ has no .h files.
+
+## No such file...
+testHeaders.c:
+	touch testHeaders.c
