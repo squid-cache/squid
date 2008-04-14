@@ -18,6 +18,10 @@ TESTS=$(check_PROGRAMS)
 ### Special Universal .h dependency test script
 #testHeaders: *.h
 # ./ has no .h files
+#
+## No Such file...
+#testHeaders.c:
+#	touch testHeaders.c
 
 SUBDIRS		= 
 

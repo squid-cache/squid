@@ -1194,6 +1194,9 @@ testHeaders: *.h DiskIO/*.h
 	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "DiskIO" || exit 1
 ## src/repl/ has no .h files and its own makefile.
 
+## No such file...
+testHeaders.c:
+	touch testHeaders.c
 
 ### Template for new Unit Test Program
 ## - add tests/testX to check_PROGRAMS above.
