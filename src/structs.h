@@ -1033,7 +1033,7 @@ struct request_flags
 #if HTTP_VIOLATIONS
         nocache_hack = 0;
 #endif
-#if LINUX_TPROXY
+#if LINUX_TPROXY2 || LINUX_TPROXY4
 	tproxy = 0;
 #endif
     }
@@ -1055,7 +1055,7 @@ struct request_flags
 #endif
     unsigned int accelerated:1;
     unsigned int transparent:1;
-#if LINUX_TPROXY
+#if LINUX_TPROXY2 || LINUX_TPROXY4
     unsigned int tproxy:1; /* spoof client ip using tproxy */
 #endif
     unsigned int internal:1;

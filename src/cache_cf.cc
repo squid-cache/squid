@@ -1,4 +1,3 @@
-
 /*
  * $Id: cache_cf.cc,v 1.544 2008/03/04 12:00:36 amosjeffries Exp $
  *
@@ -2939,7 +2938,7 @@ parse_http_port_option(http_port_list * s, char *token)
         else
             self_destruct();
 
-#if LINUX_TPROXY
+#if LINUX_TPROXY2 || LINUX_TPROXY4
 
     } else if (strcmp(token, "tproxy") == 0) {
         s->tproxy = 1;
@@ -2952,6 +2951,7 @@ parse_http_port_option(http_port_list * s, char *token)
         }
 #endif
 #endif
+
     } else if (strcmp(token, "ipv4") == 0) {
 #if USE_IPV6
         if( !s->s.SetIPv4() ) {
