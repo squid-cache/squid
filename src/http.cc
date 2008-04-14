@@ -1229,7 +1229,8 @@ HttpStateData::processReplyBody()
 	    comm_remove_close_handler(fd, closeHandler);
             closeHandler = NULL;
             fwd->unregister(fd);
-#if LINUX_TPROXY
+
+#if LINUX_TPROXY2 || LINUX_TPROXY4
 
             if (orig_request->flags.tproxy)
                 client_addr = orig_request->client_addr;

@@ -2216,8 +2216,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
 
     request->flags.transparent = http->flags.transparent;
 
-#if LINUX_TPROXY
-
+#if LINUX_TPROXY2 || LINUX_TPROXY4
     request->flags.tproxy = conn->port->tproxy && need_linux_tproxy;
 #endif
 
@@ -2716,7 +2715,6 @@ okToAccept()
 }
 
 ConnStateData *
-
 connStateCreate(const IPAddress &peer, const IPAddress &me, int fd, http_port_list *port)
 {
     ConnStateData *result = new ConnStateData;
@@ -2728,13 +2726,16 @@ connStateCreate(const IPAddress &peer, const IPAddress &me, int fd, http_port_li
     result->in.buf = (char *)memAllocBuf(CLIENT_REQ_BUF_SZ, &result->in.allocatedSize);
     result->port = cbdataReference(port);
 
-    if (port->transparent)
+#if LINUX_TPROXY4
+    if(port->transparent || port->tproxy)
+#else
+    if(port->transparent)
+#endif
     {
-
         IPAddress dst;
 
         if (clientNatLookup(fd, me, peer, dst) == 0) {
-            result-> me = dst; /* XXX This should be moved to another field */
+            result->me = dst; /* XXX This should be moved to another field */
             result->transparent(true);
         }
     }
@@ -3112,10 +3113,17 @@ clientHttpConnectionsOpen(void)
 #endif
 
         enter_suid();
-        fd = comm_open(SOCK_STREAM,
-                       IPPROTO_TCP,
-                       s->s,
-                       COMM_NONBLOCKING, "HTTP Socket");
+
+#if LINUX_TPROXY4
+        if(s->tproxy) {
+            fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, s->s, (COMM_NONBLOCKING|COMM_TRANSPARENT), 0, "HTTP Socket");
+        }
+        else
+#endif
+        {
+            fd = comm_open(SOCK_STREAM, IPPROTO_TCP, s->s, COMM_NONBLOCKING, "HTTP Socket");
+        }
+
         leave_suid();
 
         if (fd < 0)

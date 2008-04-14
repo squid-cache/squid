@@ -82,6 +82,9 @@ public:
 	unsigned int close_on_exec:1;
 	unsigned int read_pending:1;
 	unsigned int write_pending:1;
+#if LINUX_TPROXY4
+        unsigned int transparent:1;
+#endif
     } flags;
 
     int64_t bytes_read;
