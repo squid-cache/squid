@@ -25,6 +25,9 @@ trap "rm -rf $tmpdir" 0
 
 rm -f ${tag}.out
 bzr export $tmpdir $BZRROOT/$module/$branchpath || exit 1
+if [ ! -f $tmpdir/configyre ] && [ -f $tmpdir/configure.in ]; then
+	sh -c "cd $tmpdir && ./bootstrap.sh"
+fi
 if [ ! -f $tmpdir/configure ]; then
 	echo "ERROR! Tag $tag not found in $module"
 fi
