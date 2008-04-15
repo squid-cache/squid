@@ -108,8 +108,7 @@ echo "libtool  : $ltver"
 
 for dir in \
 	"" \
-	lib/libTrie \
-	lib/libLtdl
+	lib/libTrie
 do
     if [ -z "$dir" ] || [ -d $dir ]; then
 	if (
