@@ -1993,7 +1993,7 @@ if $CPPUNITCONFIG --help >/dev/null; then
   SQUID_CPPUNIT_LA=''
   SQUID_CPPUNIT_INC="`$CPPUNITCONFIG --cflags`"
 else
-  echo "cppunit does not apear to be installed. squid does not require this, but code testing with 'make check' will fail."
+  echo "cppunit does not appear to be installed. squid does not require this, but code testing with 'make check' will fail."
   SQUID_CPPUNIT_LA='' 
   SQUID_CPPUNIT_LIBS=''
   SQUID_CPPUNIT_INC=''
