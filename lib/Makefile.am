@@ -113,6 +113,10 @@ check_PROGRAMS= \
 testHeaders: $(top_srcdir)/include/*.h
 	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/include" || exit 1
 
+## No such file...
+testHeaders.c:
+	touch testHeaders.c
+
 tests_testAll_SOURCES= \
 	tests/testArray.h \
 	tests/testArray.cc \

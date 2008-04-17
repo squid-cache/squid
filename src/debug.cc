@@ -37,7 +37,6 @@
 
 #include "Debug.h"
 #include "SquidTime.h"
-#include <sstream>
 
 /* for Config */
 #include "structs.h"

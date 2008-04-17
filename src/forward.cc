@@ -49,8 +49,12 @@
 #include "SquidTime.h"
 #include "Store.h"
 
-#if LINUX_TPROXY
+#if LINUX_TPROXY2
+#ifdef HAVE_LINUX_NETFILTER_IPV4_IP_TPROXY_H
 #include <linux/netfilter_ipv4/ip_tproxy.h>
+#else
+#error " TPROXY v2 Header file missing: linux/netfilter_ipv4/ip_tproxy.h. Perhapse you meant to use TPROXY v4 ? "
+#endif
 #endif
 
 static PSC fwdStartCompleteWrapper;
@@ -266,7 +270,7 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
 
     default:
         FwdState::Pointer fwd = new FwdState(client_fd, entry, request);
-#if LINUX_TPROXY
+#if LINUX_TPROXY2 || LINUX_TPROXY4
         /* If we need to transparently proxy the request
          * then we need the client source protocol, address and port */
         fwd->src = request->client_addr;
@@ -771,7 +775,7 @@ FwdState::connectStart()
     const char *domain = NULL;
     int ctimeout;
     int ftimeout = Config.Timeout.forward - (squid_curtime - start_t);
-#if LINUX_TPROXY
+#if LINUX_TPROXY2
 
     struct in_tproxy itp;
 #endif
@@ -798,7 +802,7 @@ FwdState::connectStart()
         ctimeout = Config.Timeout.connect;
     }
 
-#if LINUX_TPROXY
+#if LINUX_TPROXY2 || LINUX_TPROXY4
     if (request->flags.tproxy)
         client_addr = request->client_addr;
 
@@ -839,12 +843,15 @@ FwdState::connectStart()
 
     debugs(17, 3, "fwdConnectStart: got outgoing addr " << outgoing << ", tos " << tos);
 
-    fd = comm_openex(SOCK_STREAM,
-                     IPPROTO_TCP,
-                     outgoing,
-                     COMM_NONBLOCKING,
-                     tos,
-                     url);
+#if LINUX_TPROXY4
+    if (request->flags.tproxy) {
+        fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, outgoing, (COMM_NONBLOCKING|COMM_TRANSPARENT), tos, url);
+    }
+    else
+#endif
+    {
+        fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, outgoing, COMM_NONBLOCKING, tos, url);
+    }
 
     debugs(17, 3, "fwdConnectStart: got TCP FD " << fd);
 
@@ -880,8 +887,7 @@ FwdState::connectStart()
     commSetTimeout(fd, ctimeout, fwdConnectTimeoutWrapper, this);
 
     if (!fs->_peer) {
-#if LINUX_TPROXY
-
+#if LINUX_TPROXY2
         if (request->flags.tproxy) {
             IPAddress addr;
 
@@ -1278,6 +1284,11 @@ IPAddress
 getOutgoingAddr(HttpRequest * request)
 {
     ACLChecklist ch;
+
+#if LINUX_TPROXY4
+    if (request && request->flags.tproxy)
+        return request->client_addr;
+#endif
 
     if (request)
     {
