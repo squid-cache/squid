@@ -165,34 +165,47 @@ const char *AsyncJob::status() const
 
 /* JobDialer */
 
-JobDialer::JobDialer(AsyncJob *aJob): job(aJob), lock(NULL)
+JobDialer::JobDialer(AsyncJob *aJob): job(NULL), lock(NULL)
 {
-    lock = cbdataReference(job->toCbdata());
+    if (aJob) {
+        lock = cbdataReference(aJob->toCbdata());
+        job = aJob;
+    }
 }
 
 JobDialer::JobDialer(const JobDialer &d): CallDialer(d),
-    job(d.job), lock(cbdataReference(d.lock))
+    job(NULL), lock(NULL)
 {
+    if (d.lock && cbdataReferenceValid(d.lock)) {
+        lock = cbdataReference(d.lock);
+        Must(d.job);
+        job = d.job;
+    }
 }
 
 JobDialer::~JobDialer(){
-    cbdataReferenceDone(lock);
+    cbdataReferenceDone(lock); // lock may be NULL
 }
 
 
 bool
 JobDialer::canDial(AsyncCall &call)
 {
-    if (!cbdataReferenceValid(lock))
-        return call.cancel("job is gone");
+    if (!lock)
+        return call.cancel("job was gone before the call");
 
+    if (!cbdataReferenceValid(lock))
+        return call.cancel("job gone after the call");
+
+    Must(job);
     return job->canBeCalled(call);
 }
 
 void
 JobDialer::dial(AsyncCall &call) 
 {
-    assert(cbdataReferenceValid(lock)); // canDial() checks for this
+    Must(lock && cbdataReferenceValid(lock)); // canDial() checks for this
+    Must(job);
 
     job->callStart(call);
 

@@ -1335,11 +1335,24 @@ fi
 dnl Enable Linux transparent proxy support
 AC_ARG_ENABLE(linux-tproxy,
 [  --enable-linux-tproxy
-			  Enable real Transparent Proxy support for Netfilter TPROXY.],
+			  Enable real Transparent Proxy support for Netfilter TPROXY (version 2).],
 [ if test "$enableval" = "yes" ; then
-	echo "Linux Netfilter/TPROXY enabled"
-	AC_DEFINE(LINUX_TPROXY, 1, [Enable real Transparent Proxy support for Netfilter TPROXY.])
-	LINUX_TPROXY="yes"
+	echo "Linux Netfilter/TPROXY v2 enabled"
+	AC_DEFINE(LINUX_TPROXY2, 1, [Enable real Transparent Proxy support for Netfilter TPROXY v2.])
+	LINUX_TPROXY2="yes"
+        if test -z "$LINUX_NETFILTER"; then
+	    echo "Linux-Netfilter Transparent Proxy automatically enabled"
+	    LINUX_NETFILTER="yes"
+	fi
+  fi
+])
+AC_ARG_ENABLE(linux-tproxy4,
+[  --enable-linux-tproxy4
+			  Enable real Transparent Proxy support for Netfilter TPROXY (version 4+).],
+[ if test "$enableval" = "yes" ; then
+	echo "Linux Netfilter/TPROXY v4 enabled"
+	AC_DEFINE(LINUX_TPROXY4, 1, [Enable real Transparent Proxy support for Netfilter TPROXY v4.])
+	LINUX_TPROXY4="yes"
         if test -z "$LINUX_NETFILTER"; then
 	    echo "Linux-Netfilter Transparent Proxy automatically enabled"
 	    LINUX_NETFILTER="yes"
@@ -1980,7 +1993,7 @@ if $CPPUNITCONFIG --help >/dev/null; then
   SQUID_CPPUNIT_LA=''
   SQUID_CPPUNIT_INC="`$CPPUNITCONFIG --cflags`"
 else
-  echo "cppunit does not apear to be installed. squid does not require this, but code testing with 'make check' will fail."
+  echo "cppunit does not appear to be installed. squid does not require this, but code testing with 'make check' will fail."
   SQUID_CPPUNIT_LA='' 
   SQUID_CPPUNIT_LIBS=''
   SQUID_CPPUNIT_INC=''
@@ -3051,25 +3064,26 @@ if test "$LINUX_NETFILTER" = "no" ; then
     sleep 10
 fi
 
-dnl Linux Netfilter/TPROXY support requires some specific header files
+dnl Linux Netfilter/TPROXYv2 support requires some specific header files
 dnl Shamelessly copied from shamelessly copied from above
-if test "$LINUX_TPROXY" ; then
-    AC_MSG_CHECKING(if TPROXY header files are installed)
+if test "$LINUX_TPROXY2" ; then
+    AC_MSG_CHECKING(if TPROXYv2 header files are installed)
     # hold on to your hats...
     if test "$ac_cv_header_linux_netfilter_ipv4_ip_tproxy_h" = "yes" && test "$LINUX_NETFILTER" = "yes"; then
-	LINUX_TPROXY="yes"
-	AC_DEFINE(LINUX_TPROXY, 1, [Enable real Transparent Proxy support for Netfilter TPROXY.])
+	LINUX_TPROXY2="yes"
+	AC_DEFINE(LINUX_TPROXY2, 1, [Enable real Transparent Proxy support for Netfilter TPROXY v2.])
     else
-	LINUX_TPROXY="no"
-	AC_DEFINE(LINUX_TPROXY, 0, [Enable real Transparent Proxy support for Netfilter TPROXY.])
+	LINUX_TPROXY2="no"
+	AC_DEFINE(LINUX_TPROXY2, 0, [Enable real Transparent Proxy support for Netfilter TPROXY v2.])
     fi
-    AC_MSG_RESULT($LINUX_TPROXY)
-fi
-if test "$LINUX_TPROXY" = "no" && test "$LINUX_NETFILTER" = "yes"; then
-    echo "WARNING: Cannot find TPROXY headers, you need to install the"
-    echo "tproxy package from:"
-    echo " - lynx http://www.balabit.com/downloads/tproxy/"
-    sleep 10
+    AC_MSG_RESULT($LINUX_TPROXY2)
+    if test "$LINUX_TPROXY2" = "no" && test "$LINUX_NETFILTER" = "yes"; then
+        echo "WARNING: Cannot find TPROXY v2 headers, you need to install the"
+        echo "tproxy package from:"
+        echo " - lynx http://www.balabit.com/downloads/tproxy/"
+        echo "Or select the '--enable-linux-tproxy4' option instead."
+        sleep 10
+    fi
 fi
 
 if test -z "$USE_GNUREGEX" ; then

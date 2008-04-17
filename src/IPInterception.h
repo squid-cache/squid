@@ -1,4 +1,3 @@
-
 /*
  * $Id: IPInterception.h,v 1.7 2007/12/14 23:11:45 amosjeffries Exp $
  *
@@ -30,13 +29,15 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
 #ifndef SQUID_IPINTERCEPTION_H
 #define SQUID_IPINTERCEPTION_H
 
 #include "IPAddress.h"
 
-SQUIDCEXTERN int
-clientNatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &dst);
+#if LINUX_TPROXY4 && !defined(IP_TRANSPARENT)
+#define IP_TRANSPARENT 19
+#endif
+
+SQUIDCEXTERN int clientNatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &dst);
 
 #endif /* SQUID_IPINTERCEPTION_H */

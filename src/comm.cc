@@ -48,6 +48,7 @@
 #include "SquidTime.h"
 #include "CommCalls.h"
 #include "IPAddress.h"
+#include "IPInterception.h"
 
 #if defined(_SQUID_CYGWIN_)
 #include <sys/ioctl.h>
@@ -628,6 +629,26 @@ comm_set_v6only(int fd, int tos)
 }
 
 /**
+ * Set the socket IP_TRANSPARENT option for Linux TPROXY v4 support.
+ */
+void
+comm_set_transparent(int fd)
+{
+#if LINUX_TPROXY4
+    int tos = 1;
+    if (setsockopt(fd, SOL_IP, IP_TRANSPARENT, (char *) &tos, sizeof(int)) < 0) {
+        debugs(50, DBG_IMPORTANT, "comm_open: setsockopt(IP_TRANSPARENT) on FD " << fd << ": " << xstrerror());
+    }
+    else {
+        /* mark the socket as having transparent options */
+        fd_table[fd].flags.transparent = 1;
+    }
+#else
+    debugs(50, DBG_CRITICAL, "WARNING: comm_open: setsockopt(IP_TRANSPARENT) not supported on this platform");
+#endif /* sockopt */
+}
+
+/**
  * Create a socket. Default is blocking, stream (TCP) socket.  IO_TYPE
  * is OR of flags specified in defines.h:COMM_*
  */
@@ -652,7 +673,6 @@ comm_openex(int sock_type,
     addr.GetAddrInfo(AI);
     AI->ai_socktype = sock_type;
     AI->ai_protocol = proto;
-    AI->ai_flags = flags;
 
     debugs(50, 3, "comm_openex: Attempt open socket for: " << addr );
 
@@ -733,6 +753,13 @@ comm_openex(int sock_type,
         if (opt_reuseaddr)
             commSetReuseAddr(new_socket);
     }
+
+#if LINUX_TPROXY4
+    /* MUST be done before binding or face OS Error: "(99) Cannot assign requested address"... */
+    if((flags & COMM_TRANSPARENT)) {
+        comm_set_transparent(new_socket);
+    }
+#endif
 
     if (!addr.IsNoAddr())
     {
@@ -1323,6 +1350,14 @@ comm_old_accept(int fd, ConnectionDetail &details)
     details.me.FreeAddrInfo(gai);
 
     commSetNonBlocking(sock);
+
+#if LINUX_TPROXY4
+    /* AYJ: do we actually need to set this again on every accept? */
+    if(fd_table[fd].flags.transparent == 1) {
+        comm_set_transparent(sock);
+        F->flags.transparent = 1;
+    }
+#endif
 
     PROF_stop(comm_accept);
     return sock;

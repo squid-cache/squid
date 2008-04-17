@@ -31,7 +31,8 @@ struct http_port_list
 
     int vport;                 /* virtual port support, -1 for dynamic, >0 static*/
     int disable_pmtu_discovery;
-#if LINUX_TPROXY
+
+#if LINUX_TPROXY2 || LINUX_TPROXY4
     unsigned int tproxy:1; /* spoof client ip using tproxy */
 #endif
 
