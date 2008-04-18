@@ -1,6 +1,6 @@
 
 /*
- * $Id: Debug.h,v 1.10 2007/08/24 01:02:09 amosjeffries Exp $
+ * $Id: Debug.h,v 1.13 2008/02/26 18:43:30 rousskov Exp $
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived
@@ -64,7 +64,11 @@ public:
     static void parseOptions(char const *);
 
 private:
+    // Hack: replaces global ::xassert() to debug debugging assertions
+    static void xassert(const char *msg, const char *file, int line);
+	
     static std::ostringstream *CurrentDebug;
+    static int TheDepth; // level of nested debugging calls
 };
 
 /* Debug stream */
