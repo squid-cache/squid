@@ -35,7 +35,6 @@
 #include "squid.h"
 #include "Debug.h"
 #include "SquidTime.h"
-#include <sstream>
 
 int Debug::Levels[MAX_DEBUG_SECTIONS];
 int Debug::level;
