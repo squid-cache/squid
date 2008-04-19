@@ -607,7 +607,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
                 spec = fmt->data.timespec;
 
                 if (!spec)
-                    spec = "%d/%b/%Y %H:%M:%S";
+                    spec = "%d/%b/%Y:%H:%M:%S";
 
                 if (fmt->type == LFT_TIME_LOCALTIME)
                     t = localtime(&squid_curtime);
