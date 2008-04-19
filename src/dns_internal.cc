@@ -288,7 +288,7 @@ idnsParseResolvConf(void)
 {
     FILE *fp;
     char buf[RESOLV_BUFSZ];
-    char *t;
+    const char *t;
     fp = fopen(_PATH_RESCONF, "r");
 
     if (fp == NULL) {
@@ -315,7 +315,18 @@ idnsParseResolvConf(void)
             debugs(78, 1, "Adding nameserver " << t << " from " << _PATH_RESCONF);
 
             idnsAddNameserver(t);
+        } else if (strcasecmp(t, "domain") == 0) {
+	    idnsFreeSearchpath();
+	    t = strtok(NULL, w_space);
+
+	    if (NULL == t)
+		continue;
+
+	    debugs(78, 1, "Adding domain " << t << " from " << _PATH_RESCONF);
+
+	    idnsAddPathComponent(t);
         } else if (strcasecmp(t, "search") == 0) {
+	    idnsFreeSearchpath();
             while (NULL != t) {
                 t = strtok(NULL, w_space);
 
@@ -343,6 +354,11 @@ idnsParseResolvConf(void)
                 }
             }
         }
+    }
+    if (npc == 0 && (t = getMyHostname())) {
+	t = strchr(t, '.');
+	if (t)
+	    idnsAddPathComponent(t+1);
     }
 
     fclose(fp);
