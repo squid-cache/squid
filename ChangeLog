@@ -1,3 +1,16 @@
+Changes to squid-3.0:
+
+	- Support for resolv.conf 'domain' option
+	- Improved URI support, including
+		longer URI up to 8192 bytes accepted
+		better handling of intercepted URI
+		better port for non-FQDN URI lookups
+	- Improved logging, including
+		Bug 3210 fixed: incorrect timestamp format in earlier 3.0 releases.
+		Fixed 'log_ip_on_direct' option behaviour
+	- Support for profiing on x86 64-bit systems
+	- .. and other bugs and minor code cleanups.
+
 Changes to squid-3.0.STABLE4 (2 Apr 2008):
 
 	- Bug 2288: compile error slipped into STABLE3.
