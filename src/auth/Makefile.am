@@ -30,3 +30,7 @@ testHeaders: basic/*.h digest/*.h ntlm/*.h negotiate/*.h
 	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "ntlm" || exit 1
 	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "negotiate" || exit 1
 ## ./ has no .h files
+
+## No such file...
+testHeaders.c:
+	touch testHeaders.c

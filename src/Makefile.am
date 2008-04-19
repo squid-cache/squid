@@ -227,7 +227,7 @@ noinst_LIBRARIES = @DISK_LIBS@
 noinst_LTLIBRARIES = libsquid.la libauth.la
 
 INCLUDES        = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/lib/libTrie/include
-INCLUDES        += -I$(top_builddir)/lib
+INCLUDES        += -I$(top_builddir)/lib -I$(top_srcdir)/lib
 INCLUDES	+= @SQUID_CPPUNIT_INC@
 
 EXTRA_PROGRAMS = \
@@ -1194,6 +1194,9 @@ testHeaders: *.h DiskIO/*.h
 	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "DiskIO" || exit 1
 ## src/repl/ has no .h files and its own makefile.
 
+## No such file...
+testHeaders.c:
+	touch testHeaders.c
 
 ### Template for new Unit Test Program
 ## - add tests/testX to check_PROGRAMS above.
