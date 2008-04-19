@@ -127,6 +127,8 @@ class BodyPipe: public RefCountable {
 		void postConsume(size_t size);
 		void postAppend(size_t size);
 
+		void startAutoConsumption(); // delayed start of enabled consumption
+
 	private:
 		int64_t  theBodySize;   // expected total content length, if known
 		Producer *theProducer; // content producer, if any
