@@ -370,8 +370,11 @@ BodyPipeCheckout::BodyPipeCheckout(BodyPipe &aPipe): pipe(aPipe),
 
 BodyPipeCheckout::~BodyPipeCheckout()
 {
-	if (!checkedIn)
-		pipe.undoCheckOut(*this);
+	if (!checkedIn) {
+//		pipe.undoCheckOut(*this);
+                debugs(91, 2, "BodyPipeCheckout will gone without the checkin performed"); 
+                pipe.checkIn(*this);
+        }
 }
 
 void
