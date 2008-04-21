@@ -1,4 +1,3 @@
-
 /*
  * $Id: StoreFileSystem.h,v 1.2 2006/05/29 00:15:01 robertc Exp $
  *
@@ -36,6 +35,9 @@
 
 #include "squid.h"
 #include "Array.h"
+
+/* ****** DOCUMENTATION ***** */
+
 
 /* forward decls */
 
