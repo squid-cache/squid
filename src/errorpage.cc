@@ -72,7 +72,7 @@ typedef struct
 /* local constant and vars */
 
 /**
-/// \ingroup ErrorPageInternal
+ \ingroup ErrorPageInternal
  *
  \note  hard coded error messages are not appended with %S
  *      automagically to give you more control on the format
