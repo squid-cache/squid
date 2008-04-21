@@ -128,8 +128,8 @@ public:
     char const * getDenyMessage();
 
     size_t refCount() const;
-    void _lock();		// please use AUTHUSERREQUESTLOCK()
-    void _unlock();		// please use AUTHUSERREQUESTUNLOCK()
+    void _lock();            /**< \note please use AUTHUSERREQUESTLOCK()   */
+    void _unlock();          /**< \note please use AUTHUSERREQUESTUNLOCK() */
 
     /**
      * Squid does not make assumptions about where the username is stored.

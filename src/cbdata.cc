@@ -158,7 +158,8 @@ cbdata::operator new(size_t size, void *where)
  */
 void
 cbdata::operator delete(void *where, void *where2)
-{;
+{
+    ; // empty.
 }
 
 long
@@ -169,7 +170,7 @@ cbdata::MakeOffset()
     return (long)dataOffset;
 }
 #else
-MEMPROXY_CLASS_INLINE(cbdata)			/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(cbdata);
 #endif
 
 static OBJH cbdataDump;
