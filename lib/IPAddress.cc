@@ -557,7 +557,7 @@ IPAddress& IPAddress::operator =(struct sockaddr_in const &s)
     return *this;
 };
 
-IPAddress& IPAddress::operator =(const sockaddr_storage &s)
+IPAddress& IPAddress::operator =(const struct sockaddr_storage &s)
 {
 #if USE_IPV6
     /* some AF_* magic to tell socket types apart and what we need to do */
@@ -582,13 +582,13 @@ void IPAddress::check4Mapped()
 }
 
 #if USE_IPV6
-IPAddress::IPAddress(sockaddr_in6 const &s)
+IPAddress::IPAddress(struct sockaddr_in6 const &s)
 {
     SetEmpty();
     operator=(s);
 };
 
-IPAddress& IPAddress::operator =(sockaddr_in6 const &s)
+IPAddress& IPAddress::operator =(struct sockaddr_in6 const &s)
 {
     memcpy(&m_SocketAddr, &s, sizeof(struct sockaddr_in6));
 
@@ -599,7 +599,7 @@ IPAddress& IPAddress::operator =(sockaddr_in6 const &s)
 
 #endif
 
-IPAddress::IPAddress(in_addr const &s)
+IPAddress::IPAddress(struct in_addr const &s)
 {
     SetEmpty();
     operator=(s);
