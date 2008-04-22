@@ -35,6 +35,8 @@
 
 #if USE_SQUID_ESI
 
+#if USE_SQUID_ESI
+
 #include "ESIParser.h"
 #include "expat.h"
 
@@ -63,6 +65,8 @@ private:
 
     ESIParserClient *theClient;
 };
+
+#endif /* USE_SQUID_ESI */
 
 #endif /* USE_SQUID_ESI */
 
