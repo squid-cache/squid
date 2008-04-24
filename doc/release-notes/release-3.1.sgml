@@ -177,11 +177,13 @@ This section gives a thorough account of those changes in three categories:
 	acl aclname dst ipv6
         </verb>
 
-	<tag>http(s)_port name= option</tag>
-	<p>New port option to assign internal names to listening ports
+	<tag>http(s)_port name= intercept</tag>
+	<p>New port options.
         <verb>
            name=        Specifies a internal name for the port. Defaults to
                         the port specification (port or addr:port)
+
+           intercept    Rename of old 'transparent' option to indicate proper functionality.
         </verb>
 
 	<tag>acl myportname</tag>
@@ -190,7 +192,6 @@ This section gives a thorough account of those changes in three categories:
         acl aclname myportname 3128 ...         # http(s)_port name
         </verb>
 
-	
         <tag>external_acl_type</tag>
         <p>New options 'ipv4' and 'ipv6' are added to set the IPv4/v6 protocol between squid and its helpers.
            Please be aware of some limits to these options. These options only affet the transport protocol used

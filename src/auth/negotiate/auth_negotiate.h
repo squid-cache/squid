@@ -54,7 +54,7 @@ public:
     dlink_list proxy_auth_list;
 };
 
-MEMPROXY_CLASS_INLINE(NegotiateUser)			/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(NegotiateUser);
 
 /// \ingroup AuthNegotiateAPI
 typedef class NegotiateUser negotiate_user_t;
@@ -107,7 +107,7 @@ private:
     NegotiateUser * _theUser;
 };
 
-MEMPROXY_CLASS_INLINE(AuthNegotiateUserRequest)		/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(AuthNegotiateUserRequest);
 
 /* configuration runtime data */
 

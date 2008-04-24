@@ -288,7 +288,6 @@ MEMPROXY_CLASS_INLINE(UFSStoreState::_queued_read);
 MEMPROXY_CLASS_INLINE(UFSStoreState::_queued_write);
 
 
-
 #include "StoreSearch.h"
 
 /// \ingroup UFS
