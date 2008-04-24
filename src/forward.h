@@ -100,10 +100,8 @@ private:
         unsigned int ftp_pasv_failed:1;
         unsigned int forward_completed:1;
     } flags;
-#if LINUX_NETFILTER || LINUX_TPROXY2 || LINUX_TPROXY4
-    IPAddress src;
-#endif
 
+    IPAddress src; /* Client address for this connection. Needed for transparent operations. */
 };
 
 #endif

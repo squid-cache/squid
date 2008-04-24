@@ -1230,12 +1230,8 @@ HttpStateData::processReplyBody()
             closeHandler = NULL;
             fwd->unregister(fd);
 
-#if LINUX_TPROXY2 || LINUX_TPROXY4
-
-            if (orig_request->flags.tproxy)
+            if (orig_request->flags.spoof_client_ip)
                 client_addr = orig_request->client_addr;
-
-#endif
 
             if (_peer) {
                 if (_peer->options.originserver)

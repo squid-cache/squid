@@ -49,13 +49,8 @@
 #include "SquidTime.h"
 #include "Store.h"
 
-#if LINUX_TPROXY2
-#ifdef HAVE_LINUX_NETFILTER_IPV4_IP_TPROXY_H
-#include <linux/netfilter_ipv4/ip_tproxy.h>
-#else
-#error " TPROXY v2 Header file missing: linux/netfilter_ipv4/ip_tproxy.h. Perhapse you meant to use TPROXY v4 ? "
-#endif
-#endif
+/* for IPInterceptor API */
+#include "IPInterception.h"
 
 static PSC fwdStartCompleteWrapper;
 static PF fwdServerClosedWrapper;
@@ -270,11 +265,13 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
 
     default:
         FwdState::Pointer fwd = new FwdState(client_fd, entry, request);
-#if LINUX_TPROXY2 || LINUX_TPROXY4
+
         /* If we need to transparently proxy the request
          * then we need the client source protocol, address and port */
-        fwd->src = request->client_addr;
-#endif
+        if(request->flags.spoof_client_ip) {
+            fwd->src = request->client_addr;
+            // AYJ: do we need to pass on the transparent flag also?
+        }
 
         fwd->start(fwd);
         return;
@@ -775,10 +772,6 @@ FwdState::connectStart()
     const char *domain = NULL;
     int ctimeout;
     int ftimeout = Config.Timeout.forward - (squid_curtime - start_t);
-#if LINUX_TPROXY2
-
-    struct in_tproxy itp;
-#endif
 
     IPAddress outgoing;
     unsigned short tos;
@@ -802,11 +795,8 @@ FwdState::connectStart()
         ctimeout = Config.Timeout.connect;
     }
 
-#if LINUX_TPROXY2 || LINUX_TPROXY4
-    if (request->flags.tproxy)
+    if (request->flags.spoof_client_ip)
         client_addr = request->client_addr;
-
-#endif
 
     if (ftimeout < 0)
         ftimeout = 5;
@@ -843,13 +833,9 @@ FwdState::connectStart()
 
     debugs(17, 3, "fwdConnectStart: got outgoing addr " << outgoing << ", tos " << tos);
 
-#if LINUX_TPROXY4
-    if (request->flags.tproxy) {
+    if (request->flags.spoof_client_ip) {
         fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, outgoing, (COMM_NONBLOCKING|COMM_TRANSPARENT), tos, url);
-    }
-    else
-#endif
-    {
+    } else {
         fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, outgoing, COMM_NONBLOCKING, tos, url);
     }
 
@@ -886,40 +872,15 @@ FwdState::connectStart()
 
     commSetTimeout(fd, ctimeout, fwdConnectTimeoutWrapper, this);
 
-    if (!fs->_peer) {
 #if LINUX_TPROXY2
-        if (request->flags.tproxy) {
-            IPAddress addr;
-
-            src.GetInAddr(itp.v.addr.faddr);
-            itp.v.addr.fport = 0;
-
-            /* If these syscalls fail then we just fallback to connecting
-             * normally by simply ignoring the errors...
-             */
-            itp.op = TPROXY_ASSIGN;
-
-            addr = (struct in_addr)itp.v.addr.faddr;
-            addr.SetPort(itp.v.addr.fport);
-
-            if (setsockopt(fd, SOL_IP, IP_TPROXY, &itp, sizeof(itp)) == -1) {
-                debugs(20, 1, "tproxy ip=" << addr << " ERROR ASSIGN");
-
-                request->flags.tproxy = 0;
-            } else {
-                itp.op = TPROXY_FLAGS;
-                itp.v.flags = ITP_CONNECT;
-
-                if (setsockopt(fd, SOL_IP, IP_TPROXY, &itp, sizeof(itp)) == -1) {
-                    debugs(20, 1, "tproxy ip=" << addr << " ERROR CONNECT");
-
-                    request->flags.tproxy = 0;
-                }
-            }
+    if (!fs->_peer && request->flags.spoof_client_ip) {
+        // try to set the outgoing address using TPROXY v2
+        // if it fails we abort any further TPROXY actions on this connection
+        if(IPInterceptor.SetTproxy2OutgoingAddr(int fd, const IPAddress &src) == -1) {
+            request->flags.spoof_client_ip = 0;
         }
-
-#endif
     }
+#endif
 
     updateHierarchyInfo();
     commConnectStart(fd, host, port, fwdConnectDoneWrapper, this);
@@ -1285,10 +1246,8 @@ getOutgoingAddr(HttpRequest * request)
 {
     ACLChecklist ch;
 
-#if LINUX_TPROXY4
-    if (request && request->flags.tproxy)
+    if (request && request->flags.spoof_client_ip)
         return request->client_addr;
-#endif
 
     if (request)
     {
