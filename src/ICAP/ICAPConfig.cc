@@ -186,6 +186,9 @@ ICAPAccessCheck::checkCandidates()
 
         // XXX we don't have access to conn->rfc931 here.
         acl_checklist = aclChecklistCreate(theClass->accessList, req, dash_str);
+        if (rep)
+            acl_checklist->reply = HTTPMSGLOCK(rep); // ACLChecklist unlocks
+
 
         acl_checklist->nonBlockingCheck(ICAPAccessCheckCallbackWrapper, this);
 
