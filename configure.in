@@ -2666,6 +2666,34 @@ if test "$ac_cv_func_setresuid" = "yes" ; then
   AC_DEFINE(HAVE_SETRESUID,1,[Yay! Another Linux brokenness.  Its not good enough to know that setresuid() exists, because RedHat 5.0 declare setresuid() but doesn't implement it.])
 fi
 
+dnl Yay!  This one is  a MacOSX brokenness.  Its not good enough
+dnl to know that strnstr() exists, because MacOSX 10.4 have a bad
+dnl copy that crashes with a buffer over-run!
+dnl
+AC_CACHE_CHECK(if strnstr is well implemented, ac_cv_func_strnstr,
+  AC_TRY_RUN([
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+    // we expect this to succeed, or crash on over-run.
+    // if it passes otherwise we may need a better check.
+int main(int argc, char **argv)
+{
+    int size = 20;
+    char *str = malloc(size);
+    memset(str, 'x', size);
+    strnstr(str, "fubar", size);
+    return 0;
+}
+  ],ac_cv_func_strnstr="yes",ac_cv_func_strnstr="no")
+)
+if test "$ac_cv_func_strnstr" = "yes" ; then
+  AC_DEFINE(HAVE_STRNSTR,1,[Yay! We have a working strnstr!])
+else
+  AC_DEFINE(HAVE_STRNSTR,0,[Yay! A MacOS X brokenness. Its not good enough to know that strnstr() exists, because MacOSX 10.4 and earlier may have a buffer overrun.])
+fi
+
+
 AM_CONDITIONAL(NEED_OWN_STRSEP, false)
 if test "$ac_cv_func_strsep" = "no" ; then
   AM_CONDITIONAL(NEED_OWN_STRSEP, true)

@@ -461,4 +461,10 @@ typedef union {
 #define RUNNING_ON_VALGRIND 0
 #endif /* WITH_VALGRIND */
 
+
+/*
+ * strnstr() is needed. The OS may not provide a working copy.
+ */
+#include "strnstr.h"
+
 #endif /* SQUID_CONFIG_H */

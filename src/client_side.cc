@@ -55,6 +55,7 @@
  * stream calls occur. Then we simply read as normal.
  */
 
+#include "config.h"
 #include "squid.h"
 #include "client_side.h"
 #include "clientStream.h"
@@ -1923,7 +1924,7 @@ parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * metho
      * Check that the headers don't have double-CR.
      * NP: strnstr is required so we don't search any possible binary body blobs.
      */
-    if ( strnstr(req_hdr, "\r\r\n", req_sz) ) {
+    if ( squid_strnstr(req_hdr, "\r\r\n", req_sz) ) {
         debugs(33, 1, "WARNING: suspicious HTTP request contains double CR");
         xfree(url);
         return parseHttpRequestAbort(conn, "error:double-CR");
