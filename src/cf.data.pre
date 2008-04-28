@@ -898,7 +898,7 @@ DOC_START
 
 	Options:
 
-	   transparent	Support for transparent interception of
+	   intercept	Support for IP-Layer interception of
 			outgoing requests without browser settings.
 
 	   tproxy	Support Linux TPROXY for spoofing outgoing

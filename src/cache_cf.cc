@@ -47,6 +47,8 @@
 #include "Parsing.h"
 #include "MemBuf.h"
 #include "wordlist.h"
+#include "IPInterception.h"
+
 #if HAVE_GLOB_H
 #include <glob.h>
 #endif
@@ -2905,15 +2907,6 @@ parse_http_port_option(http_port_list * s, char *token)
     } else if (strncmp(token, "name=", 5) == 0) {
         safe_free(s->name);
         s->name = xstrdup(token + 5);
-    } else if (strcmp(token, "transparent") == 0) {
-        s->transparent = 1;
-#if USE_IPV6
-        /* INET6: until transparent REDIRECT works on IPv6 SOCKET, force wildcard to IPv4 */
-        if( !s->s.SetIPv4() ) {
-            debugs(3, 0, "http(s)_port: IPv6 addresses cannot be 'transparent' (protocol does not provide NAT)" << s->s );
-            self_destruct();
-        }
-#endif
     } else if (strcmp(token, "vhost") == 0) {
         s->vhost = 1;
         s->accel = 1;
@@ -2938,18 +2931,25 @@ parse_http_port_option(http_port_list * s, char *token)
         else
             self_destruct();
 
-#if LINUX_TPROXY2 || LINUX_TPROXY4
-
-    } else if (strcmp(token, "tproxy") == 0) {
-        s->tproxy = 1;
-        need_linux_tproxy = 1;
+    } else if (strcmp(token, "transparent") == 0 || strcmp(token, "intercept") == 0) {
+        s->intercepted = 1;
+        IPInterceptor.StartInterception();
 #if USE_IPV6
         /* INET6: until transparent REDIRECT works on IPv6 SOCKET, force wildcard to IPv4 */
+        if( !s->s.SetIPv4() ) {
+            debugs(3, 0, "http(s)_port: IPv6 addresses cannot be 'transparent' (protocol does not provide NAT)" << s->s );
+            self_destruct();
+        }
+#endif
+    } else if (strcmp(token, "tproxy") == 0) {
+        s->spoof_client_ip = 1;
+        IPInterceptor.StartTransparency();
+#if USE_IPV6
+        /* INET6: until target TPROXY is known to work on IPv6 SOCKET, force wildcard to IPv4 */
         if( s->s.IsIPv6() && !s->s.SetIPv4() ) {
             debugs(3, 0, "http(s)_port: IPv6 addresses cannot be transparent (protocol does not provide NAT)" << s->s );
             self_destruct();
         }
-#endif
 #endif
 
     } else if (strcmp(token, "ipv4") == 0) {
@@ -3074,8 +3074,8 @@ dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
     if (s->defaultsite)
         storeAppendPrintf(e, " defaultsite=%s", s->defaultsite);
 
-    if (s->transparent)
-        storeAppendPrintf(e, " transparent");
+    if (s->intercepted)
+        storeAppendPrintf(e, " intercept");
 
     if (s->vhost)
         storeAppendPrintf(e, " vhost");

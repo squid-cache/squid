@@ -1028,13 +1028,10 @@ struct _iostats
 
 struct request_flags
 {
-    request_flags():range(0),nocache(0),ims(0),auth(0),cachable(0),hierarchical(0),loopdetect(0),proxy_keepalive(0),proxying(0),refresh(0),redirected(0),need_validation(0),accelerated(0),transparent(0),internal(0),internalclient(0),must_keepalive(0),destinationIPLookedUp_(0)
+    request_flags(): range(0),nocache(0),ims(0),auth(0),cachable(0),hierarchical(0),loopdetect(0),proxy_keepalive(0),proxying(0),refresh(0),redirected(0),need_validation(0),accelerated(0),intercepted(0),spoof_client_ip(0),internal(0),internalclient(0),must_keepalive(0),destinationIPLookedUp_(0)
     {
 #if HTTP_VIOLATIONS
         nocache_hack = 0;
-#endif
-#if LINUX_TPROXY2 || LINUX_TPROXY4
-	tproxy = 0;
 #endif
     }
 
@@ -1054,10 +1051,8 @@ struct request_flags
     unsigned int nocache_hack:1;	/* for changing/ignoring no-cache requests */
 #endif
     unsigned int accelerated:1;
-    unsigned int transparent:1;
-#if LINUX_TPROXY2 || LINUX_TPROXY4
-    unsigned int tproxy:1; /* spoof client ip using tproxy */
-#endif
+    unsigned int intercepted:1;  /**< transparently intercepted request */
+    unsigned int spoof_client_ip:1;  /**< spoof client ip if possible */
     unsigned int internal:1;
     unsigned int internalclient:1;
     unsigned int must_keepalive:1;

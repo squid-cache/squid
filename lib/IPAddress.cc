@@ -557,7 +557,7 @@ IPAddress& IPAddress::operator =(struct sockaddr_in const &s)
     return *this;
 };
 
-IPAddress& IPAddress::operator =(const sockaddr_storage &s)
+IPAddress& IPAddress::operator =(const struct sockaddr_storage &s)
 {
 #if USE_IPV6
     /* some AF_* magic to tell socket types apart and what we need to do */
@@ -582,13 +582,13 @@ void IPAddress::check4Mapped()
 }
 
 #if USE_IPV6
-IPAddress::IPAddress(sockaddr_in6 const &s)
+IPAddress::IPAddress(struct sockaddr_in6 const &s)
 {
     SetEmpty();
     operator=(s);
 };
 
-IPAddress& IPAddress::operator =(sockaddr_in6 const &s)
+IPAddress& IPAddress::operator =(struct sockaddr_in6 const &s)
 {
     memcpy(&m_SocketAddr, &s, sizeof(struct sockaddr_in6));
 
@@ -599,7 +599,7 @@ IPAddress& IPAddress::operator =(sockaddr_in6 const &s)
 
 #endif
 
-IPAddress::IPAddress(in_addr const &s)
+IPAddress::IPAddress(struct in_addr const &s)
 {
     SetEmpty();
     operator=(s);
@@ -820,7 +820,7 @@ void IPAddress::GetAddrInfo(struct addrinfo *&dst, int force) const
         dst->ai_protocol = IPPROTO_UDP;
 
 #if USE_IPV6
-    if( force == AF_INET6 || force == AF_UNSPEC && IsIPv6() )
+    if( force == AF_INET6 || (force == AF_UNSPEC && IsIPv6()) )
     {
         dst->ai_addr = (struct sockaddr*)new sockaddr_in6;
 
@@ -834,7 +834,7 @@ void IPAddress::GetAddrInfo(struct addrinfo *&dst, int force) const
         dst->ai_protocol = IPPROTO_IPV6;
     } else
 #endif
-        if( force == AF_INET || force == AF_UNSPEC && IsIPv4() )
+        if( force == AF_INET || (force == AF_UNSPEC && IsIPv4()) )
         {
 
             dst->ai_addr = (struct sockaddr*)new sockaddr_in;
@@ -1048,7 +1048,7 @@ unsigned int IPAddress::ToHostname(char *buf, const unsigned int blen) const
     while(*p != '\0' && p < buf+blen)
         p++;
 
-    if(IsIPv6() && p < buf+blen-1) {
+    if(IsIPv6() && p < (buf+blen-1) ) {
         *p = ']';
         p++;
     }
@@ -1072,7 +1072,7 @@ char* IPAddress::ToURL(char* buf, unsigned int blen) const
 
     p += ToHostname(p, blen);
 
-    if(m_SocketAddr.sin6_port > 0 && p < buf+blen-6) {
+    if(m_SocketAddr.sin6_port > 0 && p < (buf+blen-6) ) {
         /* 6 is max length of expected ':port' (short int) */
         snprintf(p, 6,":%d", GetPort() );
     }
@@ -1094,7 +1094,7 @@ void IPAddress::GetSockAddr(struct sockaddr_storage &addr, const int family) con
     }
 
 #if USE_IPV6
-    if( family == AF_INET6 || family == AF_UNSPEC && IsIPv6() )
+    if( family == AF_INET6 || (family == AF_UNSPEC && IsIPv6()) )
     {
         memcpy(&addr, &m_SocketAddr, sizeof(struct sockaddr_in6));
         if(addr.ss_family == 0) {
@@ -1106,7 +1106,7 @@ void IPAddress::GetSockAddr(struct sockaddr_storage &addr, const int family) con
 #elif HAVE_SIN6_LEN_IN_SAI
         sin->sin6_len = htons(sizeof(struct sockaddr_in6));
 #endif
-    } else if( family == AF_INET || family == AF_UNSPEC && IsIPv4() ) {
+    } else if( family == AF_INET || (family == AF_UNSPEC && IsIPv4()) ) {
         sin = (struct sockaddr_in*)&addr;
         addr.ss_family = AF_INET;
         sin->sin_port = m_SocketAddr.sin6_port;

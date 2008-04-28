@@ -177,11 +177,13 @@ This section gives a thorough account of those changes in three categories:
 	acl aclname dst ipv6
         </verb>
 
-	<tag>http(s)_port name= option</tag>
-	<p>New port option to assign internal names to listening ports
+	<tag>http(s)_port name= intercept</tag>
+	<p>New port options.
         <verb>
            name=        Specifies a internal name for the port. Defaults to
                         the port specification (port or addr:port)
+
+           intercept    Rename of old 'transparent' option to indicate proper functionality.
         </verb>
 
 	<tag>acl myportname</tag>
@@ -190,7 +192,6 @@ This section gives a thorough account of those changes in three categories:
         acl aclname myportname 3128 ...         # http(s)_port name
         </verb>
 
-	
         <tag>external_acl_type</tag>
         <p>New options 'ipv4' and 'ipv6' are added to set the IPv4/v6 protocol between squid and its helpers.
            Please be aware of some limits to these options. These options only affet the transport protocol used
@@ -241,6 +242,10 @@ This section gives a thorough account of those changes in three categories:
 
        Enabling this directive Squid rotates IP's per request.
         </verb>
+
+	<tag>http_port</tag>
+	<p>option 'transparent' is being deprecated in favour of 'intercept' which more clearly identifies what the option does.
+	For now option 'tproxy' remains with old behaviour meaning fully-invisible proxy using TPROXY support.</p>
 
 </descrip>
 
@@ -308,7 +313,14 @@ This section gives an account of those changes in three categories:
 	<tag>--disable-internl-dns</tag>
 	<p>Better support for Linux using the external DNS helper.
            The helper will compile and work with dns_nameservers on more variants of Linux than previously.</p>
- 
+
+	<tag>--enable-linux-netfilter</tag>
+	<p>This option now enables support for all three netfilter interception targets.
+        Adding TPROXY version 4+ support to squid through the TPROXY target.
+	This options requires a linux kernel 2.6.25 or later for embeded netfilter TPROXY targets.
+	Older REDIRECT and DNAT targets work as before on HTTP ports marked 'intercept'.
+	</p>
+
 </descrip>
 </p>
 
@@ -334,6 +346,8 @@ porting one of these from Squid-2 to Squid-3 is most welcome.
 <p>The following configure options have been removed.
 
 <descrip>
+	<tag>--enable-linux-tproxy</tag>
+	<p>Replaced by --enable-linux-tproxy2 to make way for differences in TPROXY v2 and v4 support.</p>
 
 </descrip>
 
