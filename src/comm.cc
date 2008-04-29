@@ -943,7 +943,7 @@ ConnectStateData::commResetFD()
     nul.FreeAddrInfo(AI);
 
     if (fd2 < 0) {
-        debugs(5, 0, "commResetFD: socket: " << xstrerror());
+        debugs(5, 0, HERE << "socket: " << xstrerror());
 
         if (ENFILE == errno || EMFILE == errno)
             fdAdjustReserved();
@@ -960,7 +960,7 @@ ConnectStateData::commResetFD()
 #endif
 
     if (dup2(fd2, fd) < 0) {
-        debugs(5, 0, "commResetFD: dup2: " << xstrerror());
+        debugs(5, 0, HERE << "dup2: " << xstrerror());
 
         if (ENFILE == errno || EMFILE == errno)
             fdAdjustReserved();
@@ -983,7 +983,7 @@ ConnectStateData::commResetFD()
     F->local_addr.GetAddrInfo(AI);
 
     if (commBind(fd, *AI) != COMM_OK) {
-        debugs(5, 0, "commResetFD: bind: " << xstrerror());
+        debugs(5, 0, HERE << "bind: " << xstrerror());
         F->local_addr.FreeAddrInfo(AI);
         return 0;
     }
@@ -999,7 +999,7 @@ ConnectStateData::commResetFD()
 
 #endif
 
-    copyFDFlags (fd, F);
+    copyFDFlags(fd, F);
 
     return 1;
 }
@@ -1030,9 +1030,9 @@ commReconnect(void *data)
     ipcache_nbgethostbyname(cs->host, commConnectDnsHandle, cs);
 }
 
-/* Connect SOCK to specified DEST_PORT at DEST_HOST. */
+/** Connect SOCK to specified DEST_PORT at DEST_HOST. */
 void
-ConnectStateData::Connect (int fd, void *me)
+ConnectStateData::Connect(int fd, void *me)
 {
     ConnectStateData *cs = (ConnectStateData *)me;
     assert (cs->fd == fd);
@@ -1052,23 +1052,23 @@ ConnectStateData::connect()
     if (S.IsAnyAddr())
         defaults();
 
-    debugs(5,5, "ConnectSateData::connect: to " << S);
+    debugs(5,5, HERE << "to " << S);
 
     switch (comm_connect_addr(fd, S) ) {
 
     case COMM_INPROGRESS:
-        debugs(5, 5, "ConnectStateData::connect: FD " << fd << ": COMM_INPROGRESS");
+        debugs(5, 5, HERE << "FD " << fd << ": COMM_INPROGRESS");
         commSetSelect(fd, COMM_SELECT_WRITE, ConnectStateData::Connect, this, 0);
         break;
 
     case COMM_OK:
-        debugs(5, 5, "ConnectStateData::connect: FD " << fd << ": COMM_OK - connected");
+        debugs(5, 5, HERE << "FD " << fd << ": COMM_OK - connected");
         ipcacheMarkGoodAddr(host, S);
         callCallback(COMM_OK, 0);
         break;
 
     default:
-        debugs(5, 5, "ConnectStateData::connect: FD " << fd << ": * - try again");
+        debugs(5, 5, HERE "FD " << fd << ": * - try again");
         tries++;
         ipcacheMarkBadAddr(host, S);
 
@@ -1078,7 +1078,7 @@ ConnectStateData::connect()
         if (commRetryConnect()) {
             eventAdd("commReconnect", commReconnect, this, this->addrcount == 1 ? 0.05 : 0.0, 0);
         } else {
-            debugs(5, 5, "ConnectStateData::connect: FD " << fd << ": * - ERR tried too many times already.");
+            debugs(5, 5, HERE << "FD " << fd << ": * - ERR tried too many times already.");
             callCallback(COMM_ERR_CONNECT, errno);
         }
     }
@@ -1087,7 +1087,7 @@ ConnectStateData::connect()
 int
 commSetTimeout_old(int fd, int timeout, PF * handler, void *data)
 {
-    debugs(5, 3, "commSetTimeout: FD " << fd << " timeout " << timeout);
+    debugs(5, 3, HERE << "FD " << fd << " timeout " << timeout);
     assert(fd >= 0);
     assert(fd < Squid_MaxFD);
     fde *F = &fd_table[fd];
@@ -1115,7 +1115,7 @@ int
 commSetTimeout(int fd, int timeout, PF * handler, void *data)
 {
     AsyncCall::Pointer call;
-    debugs(5, 3, "commSetTimeout: FD " << fd << " timeout " << timeout);
+    debugs(5, 3, HERE << "FD " << fd << " timeout " << timeout);
     if(handler != NULL)
 	call=commCbCall(5,4, "SomeTimeoutHandler", CommTimeoutCbPtrFun(handler, data));
     else
@@ -1126,7 +1126,7 @@ commSetTimeout(int fd, int timeout, PF * handler, void *data)
 
 int commSetTimeout(int fd, int timeout, AsyncCall::Pointer &callback)
 {
-    debugs(5, 3, "commSetTimeout: FD " << fd << " timeout " << timeout);
+    debugs(5, 3, HERE << "FD " << fd << " timeout " << timeout);
     assert(fd >= 0);
     assert(fd < Squid_MaxFD);
     fde *F = &fd_table[fd];
