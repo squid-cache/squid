@@ -68,7 +68,6 @@ libmiscutil_a_SOURCES = \
 	safe_inet_addr.c \
 	$(SNPRINTFSOURCE) \
 	Splay.cc \
-	strnstr.h \
 	strnstr.cc \
 	$(STRSEPSOURCE) \
 	$(STRTOLLSOURCE) \
