@@ -562,6 +562,10 @@
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
 
+/* Yay! A MacOS X brokenness. Its not good enough to know that strnstr()
+   exists, because MacOSX 10.4 and earlier may have a buffer overrun. */
+#undef HAVE_STRNSTR
+
 /* Define to 1 if you have the `strsep' function. */
 #undef HAVE_STRSEP
 
