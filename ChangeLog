@@ -1,4 +1,4 @@
-Changes to squid-3.0:
+Changes to squid-3.0.STABLE5 (28 Apr 2008):
 
 	- Support for resolv.conf 'domain' option
 	- Improved URI support, including
@@ -8,7 +8,7 @@ Changes to squid-3.0:
 	- Improved logging, including
 		Bug 3210 fixed: incorrect timestamp format in earlier 3.0 releases.
 		Fixed 'log_ip_on_direct' option behaviour
-	- Support for profiing on x86 64-bit systems
+	- Support for profiling on x86 64-bit systems
 	- .. and other bugs and minor code cleanups.
 
 Changes to squid-3.0.STABLE4 (2 Apr 2008):
