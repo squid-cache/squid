@@ -21,6 +21,10 @@ void
 shut_down(int)
 {}
 
+void
+reconfigure(int)
+{}
+
 /* end stubs */
 
 /* init legacy static-initialized modules */
