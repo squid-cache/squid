@@ -65,6 +65,9 @@
 #if HAVE_FCNTL_H
 #include	<fcntl.h>
 #endif
+#ifdef _SQUID_WIN32_
+#include <io.h>
+#endif
 
 #if HAVE_CTYPE_H
 #include	<ctype.h>
@@ -89,6 +92,12 @@
 #endif
 #if HAVE_STRING_H
 #include	<string.h>
+#endif
+#if HAVE_GETOPT_H
+#include <getopt.h>
+#endif
+#if HAVE_ERRNO_H
+#include <errno.h>
 #endif
 
 #include	"md5.h"
@@ -492,6 +501,12 @@ main(int argc, char **argv)
 	exit(1);
     }
 
+#ifdef _SQUID_MSWIN_
+    {
+	WSADATA wsaData;
+	WSAStartup(2, &wsaData);
+    }
+#endif
     /*
      *    Open a connection to the server.
      */
