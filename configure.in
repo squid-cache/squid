@@ -1841,7 +1841,7 @@ AC_ARG_ENABLE(x_accelerator_vary,
 dnl Enable IPv6 support
 AC_MSG_CHECKING([whether to enable IPv6])
 AC_ARG_ENABLE(ipv6,
-[  --enable-ipv6          Enable ipv6 support],
+[  --enable-ipv6           Enable ipv6 support],
 [ AC_MSG_RESULT(yes)
   AC_CACHE_CHECK([if PF_INET6 is available], $enableval,
     AC_TRY_RUN(
@@ -1903,6 +1903,16 @@ AC_ARG_WITH(localhost-ipv6,
 )
 # end IPv6-only options
 fi
+
+AC_ARG_ENABLE(zph-qos,
+[  --enable-zph-qos        Enable ZPH QOS support],
+[ if test "$enableval" = "yes" ; then
+    echo "ZPH QOS enabled"
+    AC_DEFINE(USE_ZPH_QOS,1,
+    [ Define this to use Squid's ZPH (Zero Penalty Hit) QOS features.
+      When enabled, Squid will alter TOS field of HIT responses for better QOS on intermediate routing/shaping devices.])
+  fi
+])
 
 dnl Optional CNAME-Recursion by Internal DNS engine
 AC_MSG_CHECKING([whether DNS CNAME recursion wanted])
