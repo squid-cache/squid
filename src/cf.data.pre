@@ -3319,6 +3319,18 @@ DOC_START
 	A list of other DNS names your cache has.
 DOC_END
 
+NAME: umask
+TYPE: int
+LOC: Config.umask
+DEFAULT: 027
+DOC_START
+	Minimum umask which should be enforced while the proxy
+	is running, in addition to the umask set at startup.
+
+	For a traditional octal representation of umasks, start
+        your value with 0.
+DOC_END
+
 COMMENT_START
  OPTIONS FOR THE CACHE REGISTRATION SERVICE
  -----------------------------------------------------------------------------

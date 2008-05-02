@@ -632,6 +632,7 @@ mainReconfigure(void)
     errorClean();
     enter_suid();		/* root to read config file */
     parseConfigFile(ConfigFile, manager);
+    setUmask(Config.umask);
     Mem::Report();
     setEffectiveUser();
     _db_init(Config.Log.log, Config.debugOptions);
@@ -1068,7 +1069,6 @@ int
 main(int argc, char **argv)
 #endif
 {
-    mode_t oldmask;
 #ifdef _SQUID_WIN32_
 
     int WIN32_init_err;
@@ -1211,6 +1211,7 @@ main(int argc, char **argv)
 
             return parse_err;
     }
+    setUmask(Config.umask);
     if (-1 == opt_send_signal)
         if (checkRunningPid())
             exit(1);

@@ -663,6 +663,7 @@ SQUIDCEXTERN int xrename(const char *from, const char *to);
 SQUIDCEXTERN int isPowTen(int);
 SQUIDCEXTERN void parseEtcHosts(void);
 SQUIDCEXTERN int getMyPort(void);
+SQUIDCEXTERN void setUmask(mode_t mask);
 
 SQUIDCEXTERN char *strwordtok(char *buf, char **t);
 SQUIDCEXTERN void strwordquote(MemBuf * mb, const char *str);

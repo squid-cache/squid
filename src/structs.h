@@ -740,6 +740,7 @@ struct _SquidConfig
 #endif
 
     char *accept_filter;
+    int umask;
 };
 
 struct _SquidConfig2

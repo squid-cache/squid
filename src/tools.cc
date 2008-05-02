@@ -1272,6 +1272,17 @@ getMyPort(void)
     return 0;			/* NOT REACHED */
 }
 
+/*
+ * Set the umask to at least the given mask. This is in addition
+ * to the umask set at startup
+ */
+void
+setUmask(mode_t mask)
+{
+    // No way to get the current umask value without setting it.
+    static const mode_t orig_umask = umask(mask); // once, to get
+    umask(mask | orig_umask); // always, to set
+}
 
 /*
  * Inverse of strwordtok. Quotes a word if needed
