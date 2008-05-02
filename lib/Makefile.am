@@ -77,7 +77,6 @@ libmiscutil_a_SOURCES = \
 	rfc3596.c \
 	$(SNPRINTFSOURCE) \
 	Splay.cc \
-	strnstr.h \
 	strnstr.cc \
 	$(STRSEPSOURCE) \
 	$(STRTOLLSOURCE) \
