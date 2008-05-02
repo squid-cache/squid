@@ -638,6 +638,7 @@ struct SquidConfig
 #endif
 
     char *accept_filter;
+    int umask;
 
 #if USE_LOADABLE_MODULES
     wordlist *loadable_module_names;
