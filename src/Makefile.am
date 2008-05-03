@@ -2242,6 +2242,7 @@ tests_testCoss_SOURCES= tests/testCoss.cc \
 	tests/testCoss.h \
 	$(SWAP_TEST_SOURCES)
 tests_testCoss_LDADD= \
+	libsquid.la \
 	$(SWAP_TEST_LDADD) \
 	@SSLLIB@
 tests_testCoss_LDFLAGS = $(LIBADD_DL)
