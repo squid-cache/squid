@@ -63,6 +63,7 @@ static void cachemgrStateFree(cachemgrStateData * mgr);
 static char *cachemgrPasswdGet(cachemgr_passwd *, const char *);
 static const char *cachemgrActionProtection(const CacheManagerAction * at);
 static OBJH cachemgrShutdown;
+static OBJH cachemgrReconfigure;
 static OBJH cachemgrMenu;
 static OBJH cachemgrOfflineToggle;
 
@@ -74,6 +75,9 @@ CacheManager::CacheManager()
     registerAction("shutdown",
                    "Shut Down the Squid Process",
                    cachemgrShutdown, 1, 1);
+    registerAction("reconfigure",
+                     "Reconfigure the Squid Process",
+                     cachemgrReconfigure, 1, 1);
     registerAction("offline_toggle",
                    "Toggle offline_mode setting",
                    cachemgrOfflineToggle, 1, 1);
@@ -348,6 +352,15 @@ cachemgrShutdown(StoreEntry * entryunused)
     shut_down(0);
 }
 
+static void
+cachemgrReconfigure(StoreEntry * sentry)
+{
+    debug(16, 0) ("Reconfigure by command.\n");
+    storeAppendPrintf(sentry, "Reconfiguring Squid Process ....");
+    reconfigure(SIGHUP);
+}
+
+/// \ingroup CacheManagerInternal
 static void
 cachemgrOfflineToggle(StoreEntry * sentry)
 {
