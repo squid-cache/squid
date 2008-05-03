@@ -1069,6 +1069,7 @@ int
 main(int argc, char **argv)
 #endif
 {
+    int oldmask;
 #ifdef _SQUID_WIN32_
 
     int WIN32_init_err;

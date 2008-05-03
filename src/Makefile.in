@@ -3743,6 +3743,7 @@ tests_testCoss_SOURCES = tests/testCoss.cc \
 	$(SWAP_TEST_SOURCES)
 
 tests_testCoss_LDADD = \
+	libsquid.la \
 	$(SWAP_TEST_LDADD) \
 	@SSLLIB@
 
