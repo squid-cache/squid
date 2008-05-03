@@ -106,6 +106,9 @@ public:
         long handle;
     } win32;
 #endif
+#if USE_ZPH_QOS
+    unsigned char upstreamTOS;			/* see FwdState::dispatch()  */
+#endif
 
 };
 
