@@ -1165,7 +1165,7 @@ AC_ARG_WITH(build-environment,
 ])
 
 if test $needlargefiles && test -z "$buildmodel"; then
-	for model in POSIX_V6_ILP32_OFFBIG XBS5_ILP32_OFFBIG POSIX_V6_LP64_OFF64 XBS5_LP64_OFF64 POSIX_V6_LPBIG_OFFBIG XBS5_LPBIG_OFFBIG; do
+	for model in POSIX_V6_LPBIG_OFFBIG XBS5_LPBIG_OFFBIG POSIX_V6_LP64_OFF64 XBS5_LP64_OFF64 POSIX_V6_ILP32_OFFBIG XBS5_ILP32_OFFBIG; do
 		if test "`getconf _$model 2>/dev/null || true`" = 1 || test "`getconf $model 2>/dev/null || true`" ; then
 			buildmodel=$model
 			break
