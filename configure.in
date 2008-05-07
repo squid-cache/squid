@@ -2107,15 +2107,9 @@ AC_CHECK_HEADERS( \
 	math.h \
 	memory.h \
 	mount.h \
-	net/if.h \
-	net/pfvar.h \
 	netdb.h \
 	netinet/in.h \
-	netinet/icmp6.h \
 	netinet/in_systm.h \
-	netinet/ip.h \
-	netinet/ip6.h \
-	netinet/ip_icmp.h \
 	netinet/ip_fil_compat.h \
 	openssl/err.h \
 	openssl/md5.h \
@@ -2183,14 +2177,24 @@ SQUID_DEFAULT_INCLUDES
 #endif
 )
 
-AC_CHECK_HEADERS(net/if.h \
+dnl *BSD dont include the depenencies for all their net/ and netinet/ files
+dns We must include a few basic type headers for them to work.
+AC_CHECK_HEADERS( \
+	net/if.h \
 	netinet/if_ether.h\
+	netinet/icmp6.h \
+	netinet/ip.h \
+	netinet/ip6.h \
 	netinet/ip_compat.h\
 	netinet/ip_fil.h\
+	netinet/ip_icmp.h \
 	netinet/ip_nat.h\
 	netinet/ipl.h \
+	net/pfvar.h \
 	sys/mount.h\
-	resolv.h,,,SQUID_BSDNET_INCLUDES)
+	resolv.h \
+,,,
+SQUID_BSDNET_INCLUDES)
 
 AC_CHECK_HEADERS([libxml/parser.h], [], [
     	SAVED_CPPFLAGS="$CPPFLAGS"
