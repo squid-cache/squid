@@ -22,6 +22,9 @@ AC_DEFUN([SQUID_DEFAULT_INCLUDES],[[
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 ]])     
 
 dnl and this is for AC_CHECK_SIZEOF
@@ -41,6 +44,9 @@ SQUID_DEFAULT_INCLUDES
 #endif
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+#if HAVE_NETINET_IP_H
+#include <netinet/ip.h>
 #endif
 #if HAVE_NETINET_IP_COMPAT_H
 #include <netinet/ip_compat.h>
