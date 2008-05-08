@@ -833,7 +833,21 @@ void IPAddress::GetAddrInfo(struct addrinfo *&dst, int force) const
         dst->ai_addrlen = sizeof(struct sockaddr_in6);
 
         dst->ai_family = ((struct sockaddr_in6*)dst->ai_addr)->sin6_family;
+
+#if 0
+        /**
+         * Enable only if you must and please report to squid-dev if you find a need for this.
+         *
+         * Vista may need this to cope with dual-stack (unsetting IP6_V6ONLY).
+         *         http://msdn.microsoft.com/en-us/library/ms738574(VS.85).aspx
+         * Linux appears to only do some things when its present.
+         *         (93) Bad Protocol
+         * FreeBSD dies horribly when using dual-stack with it set.
+         *         (43) Protocol not supported
+         */
         dst->ai_protocol = IPPROTO_IPV6;
+#endif
+
     } else
 #endif
         if( force == AF_INET || (force == AF_UNSPEC && IsIPv4()) )
