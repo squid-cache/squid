@@ -57,7 +57,7 @@ public:
     ServicePointer findService(const String&);
     Class * findClass(const String& key);
 
-    void finalize();
+    virtual void finalize();
 
 private:
     Config(const Config &); // unsupported
