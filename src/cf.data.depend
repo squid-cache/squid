@@ -30,6 +30,7 @@ adaptation_service_set_type	icap_service
 icap_access_type	icap_class acl
 icap_class_type		icap_service
 icap_service_type
+ecap_service_type
 int
 kb_int64_t
 kb_size_t

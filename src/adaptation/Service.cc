@@ -18,6 +18,11 @@ Adaptation::Service::finalize()
 {
 }
 
+bool Adaptation::Service::broken() const
+{
+    return probed() && !up();
+}
+
 Adaptation::Services &
 Adaptation::AllServices()
 {

@@ -552,6 +552,7 @@ HttpReply::calcMaxBodySize(HttpRequest& request)
     }
 }
 
+// XXX: check that this is sufficient for eCAP cloning
 HttpReply *
 HttpReply::clone() const
 {

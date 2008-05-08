@@ -64,15 +64,14 @@
 #include "adaptation/Config.h"
 
 static void parse_adaptation_service_set_type();
-
 static void parse_adaptation_access_type();
-static void dump_adaptation_access_type(StoreEntry *, const char *);
-static void free_adaptation_access_type();
 
 #endif
 
 #if ICAP_CLIENT
 #include "ICAP/ICAPConfig.h"
+
+static void free_adaptation_access_type(const char *);
 
 static void parse_icap_service_type(ICAPConfig *);
 static void dump_icap_service_type(StoreEntry *, const char *, const ICAPConfig &);
@@ -84,6 +83,13 @@ static void parse_icap_access_type(ICAPConfig *);
 static void dump_icap_access_type(StoreEntry *, const char *, const ICAPConfig &);
 static void free_icap_access_type(ICAPConfig *);
 
+#endif
+
+#if USE_ECAP
+#include "eCAP/Config.h"
+static void parse_ecap_service_type(Ecap::Config *);
+static void dump_ecap_service_type(StoreEntry *, const char *, const Ecap::Config &);
+static void free_ecap_service_type(Ecap::Config *);
 #endif
 
 CBDATA_TYPE(peer);
@@ -3446,18 +3452,6 @@ parse_adaptation_access_type()
     Adaptation::Config::ParseAccess(LegacyParser);
 }
 
-static void
-free_adaptation_access_type()
-{
-    Adaptation::Config::FreeAccess();
-}
-
-static void
-dump_adaptation_access_type(StoreEntry * entry, const char *name)
-{
-    Adaptation::Config::DumpAccess(entry, name);
-}
-
 #endif /* USE_ADAPTATION */
 
 
@@ -3506,19 +3500,43 @@ parse_icap_access_type(ICAPConfig *)
 {
     debugs(93, 0, "WARNING: 'icap_access' is depricated. " <<
         "Use 'adaptation_access' instead");
-    parse_adaptation_access_type();
+    Adaptation::Config::ParseAccess(LegacyParser);
 }
+
 
 static void
 free_icap_access_type(ICAPConfig *)
 {
-    free_adaptation_access_type();
+    Adaptation::Config::FreeAccess();
 }
 
 static void
 dump_icap_access_type(StoreEntry * entry, const char *name, const ICAPConfig &)
 {
-    dump_adaptation_access_type(entry, name);
+    Adaptation::Config::DumpAccess(entry, name);
 }
 
 #endif
+
+
+#if USE_ECAP
+
+static void
+parse_ecap_service_type(Ecap::Config * cfg)
+{
+    cfg->parseService();
+}
+
+static void
+free_ecap_service_type(Ecap::Config * cfg)
+{
+    cfg->freeService();
+}
+
+static void
+dump_ecap_service_type(StoreEntry * entry, const char *name, const Ecap::Config &cfg)
+{
+    cfg.dumpService(entry, name);
+}
+
+#endif /* USE_ECAP */
