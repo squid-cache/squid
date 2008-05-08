@@ -1130,6 +1130,66 @@ DOC_START
 	making the request.
 DOC_END
 
+NAME: zph_tos_local
+TYPE: int
+IFDEF: USE_ZPH_QOS
+DEFAULT: 0
+LOC: Config.zph_tos_local
+DOC_START
+       Allows you to select a TOS/Diffserv value to mark local hits. Read above
+       (tcp_outgoing_tos) for details/requirements about TOS.
+       Default: 0 (disabled).
+DOC_END
+
+NAME: zph_tos_peer
+TYPE: int
+IFDEF: USE_ZPH_QOS
+DEFAULT: 0
+LOC: Config.zph_tos_peer
+DOC_START
+       Allows you to select a TOS/Diffserv value to mark peer hits. Read above
+       (tcp_outgoing_tos) for details/requirements about TOS.
+       Default: 0 (disabled).
+DOC_END
+
+NAME: zph_tos_parent
+COMMENT: on|off
+TYPE: onoff
+IFDEF: USE_ZPH_QOS
+DEFAULT: on
+LOC: Config.onoff.zph_tos_parent
+DOC_START
+       Set this to off if you want only sibling hits to be marked.
+       If set to on (default), parent hits are being marked too.
+DOC_END
+
+NAME: zph_preserve_miss_tos
+COMMENT: on|off
+TYPE: onoff
+IFDEF: USE_ZPH_QOS
+DEFAULT: on
+LOC: Config.onoff.zph_preserve_miss_tos
+DOC_START
+       If set to on (default), any HTTP response towards clients will
+       have the TOS value of the response comming from the remote
+       server masked with the value of zph_preserve_miss_tos_mask.
+       For this to work correctly, you will need to patch your linux
+       kernel with the TOS preserving ZPH patch.
+       The kernel patch can be downloaded from http://zph.bratcheda.org
+DOC_END
+
+NAME: zph_preserve_miss_tos_mask
+TYPE: int
+IFDEF: USE_ZPH_QOS
+DEFAULT: 255
+LOC: Config.zph_preserve_miss_tos_mask
+DOC_START
+       Allows you to mask certain bits in the TOS received from the
+       remote server, before copying the value to the TOS send towards
+       clients.
+       Default: 255 (TOS from server is not changed).
+DOC_END
+
 NAME: tcp_outgoing_address
 TYPE: acl_address
 DEFAULT: none
@@ -3463,6 +3523,18 @@ LOC: Config.hostnameAliases
 DEFAULT: none
 DOC_START
 	A list of other DNS names your cache has.
+DOC_END
+
+NAME: umask
+TYPE: int
+LOC: Config.umask
+DEFAULT: 027
+DOC_START
+	Minimum umask which should be enforced while the proxy
+	is running, in addition to the umask set at startup.
+
+	For a traditional octal representation of umasks, start
+        your value with 0.
 DOC_END
 
 COMMENT_START

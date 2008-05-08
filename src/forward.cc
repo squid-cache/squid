@@ -934,6 +934,54 @@ FwdState::dispatch()
 
     netdbPingSite(request->GetHost());
 
+#if USE_ZPH_QOS
+    /* Retrieves remote server TOS value, and stores it as part of the
+     * original client request FD object. It is later used to forward
+     * remote server's TOS in the response to the client in case of a MISS.
+     */
+    fde * clientFde = &fd_table[client_fd];
+    if (clientFde)
+    {
+    	int tos = 1;
+    	int tos_len = sizeof(tos);
+    	clientFde->upstreamTOS = 0;
+        if (setsockopt(server_fd,SOL_IP,IP_RECVTOS,&tos,tos_len)==0)
+        {
+           unsigned char buf[512];
+           int len = 512;
+           if (getsockopt(server_fd,SOL_IP,IP_PKTOPTIONS,buf,(socklen_t*)&len) == 0)
+           {
+               /* Parse the PKTOPTIONS structure to locate the TOS data message
+                * prepared in the kernel by the ZPH incoming TCP TOS preserving
+                * patch.
+                */
+        	   unsigned char * p = buf;
+               while (p-buf < len)
+               {
+                  struct cmsghdr *o = (struct cmsghdr*)p;
+                  if (o->cmsg_len<=0)
+                     break;
+    
+                  if (o->cmsg_level == SOL_IP && o->cmsg_type == IP_TOS)
+                  {
+                	  clientFde->upstreamTOS = (unsigned char)(*(int*)CMSG_DATA(o));
+                	  break;
+                  }
+                  p += CMSG_LEN(o->cmsg_len);
+               }
+           }
+           else
+           {
+               debugs(33, 1, "ZPH: error in getsockopt(IP_PKTOPTIONS) on FD "<<server_fd<<" "<<xstrerror());
+           }
+        }
+        else
+        {
+        	debugs(33, 1, "ZPH: error in setsockopt(IP_RECVTOS) on FD "<<server_fd<<" "<<xstrerror());
+        }
+    }    
+#endif
+
     if (servers && (p = servers->_peer)) {
         p->stats.fetches++;
         request->peer_login = p->login;

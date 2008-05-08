@@ -340,18 +340,20 @@ bool IPAddress::SetIPv4()
 bool IPAddress::IsLocalhost() const
 {
 #if USE_IPV6
-    return        m_SocketAddr.sin6_addr.s6_addr32[0] == 0
+    return    (   m_SocketAddr.sin6_addr.s6_addr32[0] == 0
                && m_SocketAddr.sin6_addr.s6_addr32[1] == 0
                && m_SocketAddr.sin6_addr.s6_addr32[2] == 0
                && m_SocketAddr.sin6_addr.s6_addr32[3] == htonl(0x1)
-
+              )
 #if !IPV6_SPECIAL_LOCALHOST
-               || m_SocketAddr.sin6_addr.s6_addr32[0] == 0
+            ||
+              (   m_SocketAddr.sin6_addr.s6_addr32[0] == 0
                && m_SocketAddr.sin6_addr.s6_addr32[1] == 0
                && m_SocketAddr.sin6_addr.s6_addr32[2] == htonl(0xffff)
                && m_SocketAddr.sin6_addr.s6_addr32[3] == htonl(0x7F000001)
+              )
 #endif
-               ;
+            ;
 #else
 
     return (htonl(0x7F000001) == m_SocketAddr.sin_addr.s_addr);
@@ -831,7 +833,21 @@ void IPAddress::GetAddrInfo(struct addrinfo *&dst, int force) const
         dst->ai_addrlen = sizeof(struct sockaddr_in6);
 
         dst->ai_family = ((struct sockaddr_in6*)dst->ai_addr)->sin6_family;
+
+#if 0
+        /**
+         * Enable only if you must and please report to squid-dev if you find a need for this.
+         *
+         * Vista may need this to cope with dual-stack (unsetting IP6_V6ONLY).
+         *         http://msdn.microsoft.com/en-us/library/ms738574(VS.85).aspx
+         * Linux appears to only do some things when its present.
+         *         (93) Bad Protocol
+         * FreeBSD dies horribly when using dual-stack with it set.
+         *         (43) Protocol not supported
+         */
         dst->ai_protocol = IPPROTO_IPV6;
+#endif
+
     } else
 #endif
         if( force == AF_INET || (force == AF_UNSPEC && IsIPv4()) )
