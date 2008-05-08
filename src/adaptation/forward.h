@@ -21,6 +21,7 @@ class Initiator;
 class AccessCheck;
 class AccessRule;
 class ServiceGroup;
+class Message;
 
 typedef RefCount<Service> ServicePointer;
 
