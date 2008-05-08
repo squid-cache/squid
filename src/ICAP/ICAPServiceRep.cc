@@ -110,11 +110,6 @@ bool ICAPServiceRep::up() const
     return self != NULL && !isSuspended && hasOptions();
 }
 
-bool ICAPServiceRep::broken() const
-{
-    return probed() && !up();
-}
-
 bool ICAPServiceRep::wantsUrl(const String &urlPath) const
 {
     Must(hasOptions());

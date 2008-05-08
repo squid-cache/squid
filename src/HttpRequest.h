@@ -65,6 +65,8 @@ public:
 
     void initHTTP(const HttpRequestMethod& aMethod, protocol_t aProtocol, const char *aUrlpath);
 
+    virtual HttpRequest *clone() const;
+
     /* are responses to this request potentially cachable */
     bool cacheable() const;
 

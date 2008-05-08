@@ -69,6 +69,7 @@
 #include "forward.h"
 #include "MemPool.h"
 #include "ICMPSquid.h"
+#include "TextException.h"
 
 #if USE_LOADABLE_MODULES
 #include "LoadableModules.h"
@@ -76,6 +77,9 @@
 
 #if ICAP_CLIENT
 #include "ICAP/ICAPConfig.h"
+#endif
+#if USE_ECAP
+#include "eCAP/Config.h"
 #endif
 #if USE_ADAPTATION
 #include "adaptation/Config.h"
@@ -1099,11 +1103,13 @@ mainInitialize(void)
     // We can remove this dependency on specific adaptation mechanisms
     // if we create a generic Registry of such mechanisms. Should we?
 #if ICAP_CLIENT
-    TheICAPConfig.finalize(); // must be after we load modules
-    enableAdaptation = TheICAPConfig.onoff;
+    TheICAPConfig.finalize();
+    enableAdaptation = TheICAPConfig.onoff || enableAdaptation;
 #endif
-    // same for eCAP
-
+#if USE_ECAP
+    Ecap::TheConfig.finalize(); // must be after we load modules
+    enableAdaptation = Ecap::TheConfig.onoff || enableAdaptation;
+#endif
     // must be the last adaptation-related finalize
     Adaptation::Config::Finalize(enableAdaptation);
 #endif
@@ -1135,20 +1141,39 @@ mainInitialize(void)
     configured_once = 1;
 }
 
+static int SquidMain(int argc, char **argv);
+static int SquidMainSafe(int argc, char **argv);
+
 #if USE_WIN32_SERVICE
 /* When USE_WIN32_SERVICE is defined, the main function is placed in win32.cc */
 extern "C" void WINAPI
     SquidWinSvcMain(int argc, char **argv)
-{
-    SquidMain(argc, argv);
-}
-
-int
-SquidMain(int argc, char **argv)
 #else
 int
 main(int argc, char **argv)
 #endif
+{
+    SquidMainSafe(argc, argv);
+}
+
+static int
+SquidMainSafe(int argc, char **argv)
+{
+    try {
+        return SquidMain(argc, argv);
+	}
+    catch (const TextException &e) {
+		// XXX: add TextException::print
+        std::cerr << "dying from unhandled exception: " << e.message << std::endl;
+	}
+    catch (...) {
+        std::cerr << "dying from unhandled exception." << std::endl;
+	}
+	return -1;
+}
+
+static int
+SquidMain(int argc, char **argv)
 {
     mode_t oldmask;
 #ifdef _SQUID_WIN32_
