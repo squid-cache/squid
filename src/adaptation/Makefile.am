@@ -22,6 +22,8 @@ libadaptation_la_SOURCES = \
 	Initiate.h \
 	Initiator.cc \
 	Initiator.h \
+	Message.cc \
+	Message.h \
 	Service.cc \
 	Service.h \
 	ServiceConfig.cc \
