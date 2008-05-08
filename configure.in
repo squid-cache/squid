@@ -793,13 +793,21 @@ then
             eCAP support requires loadable modules. Please do not use
             --disable-loadable-modules with --enable-ecap.]);
     fi
+
+    dnl eCAP support requires libecap
+    AC_CHECK_LIB([ecap], [main],
+        [ECAP_LIBS="-lecap"],
+        [AC_MSG_FAILURE([
+            eCAP support requires libecap library,
+            but no usable library was found])]
+    )
 fi
 
 AM_CONDITIONAL(USE_ECAP, test $use_ecap = yes)
 if test $use_ecap = yes;
 then
     AC_DEFINE(USE_ECAP,1,[Enable eCAP support])
-    ECAP_LIBS="eCAP/libeCAP.la"
+    ECAP_LIBS="eCAP/libeCAP.la $ECAP_LIBS"
     use_adaptation=yes
 else
     AC_DEFINE(USE_ECAP,0,[Disable eCAP support])
