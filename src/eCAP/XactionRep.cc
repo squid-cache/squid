@@ -17,8 +17,8 @@ Ecap::XactionRep::XactionRep(Adaptation::Initiator *anInitiator,
     AsyncJob("Ecap::XactionRep"),
     Adaptation::Initiate("Ecap::XactionRep", anInitiator, aService),
     theVirgin(virginHeader), theCause(virginCause),
-    theVirginTranslator(theVirgin), theCauseTranslator(theCause),
-    theAnswerTranslator(theAnswer)
+    theVirginRep(theVirgin), theCauseRep(theCause),
+    theAnswerRep(theAnswer)
 {
 }
 
@@ -62,13 +62,13 @@ Ecap::XactionRep::terminateMaster()
 libecap::Message &
 Ecap::XactionRep::virginMessage()
 {
-    return theVirginTranslator;
+    return theVirginRep;
 }
 
 libecap::Message &
 Ecap::XactionRep::virginCause()
 {
-    return theCauseTranslator;
+    return theCauseRep;
 }
 
 void 
@@ -100,7 +100,7 @@ Ecap::XactionRep::makeAdaptedResponse()
 libecap::Message &
 Ecap::XactionRep::adaptedMessage()
 {
-    return theAnswerTranslator;
+    return theAnswerRep;
 }
 
 void 

@@ -13,8 +13,8 @@ libeCAP_la_SOURCES = \
 	Config.cc \
 	Host.h \
 	Host.cc \
-	MessageTranslator.h \
-	MessageTranslator.cc \
+	MessageRep.h \
+	MessageRep.cc \
 	ServiceRep.h \
 	ServiceRep.cc \
 	XactionRep.h \
