@@ -10,7 +10,7 @@
 #include "adaptation/Initiate.h"
 #include "adaptation/Service.h"
 #include "adaptation/Message.h"
-#include "eCAP/MessageTranslator.h"
+#include "eCAP/MessageRep.h"
 #include <libecap/common/forward.h>
 #include <libecap/common/memory.h>
 #include <libecap/host/xaction.h>
@@ -68,9 +68,9 @@ private:
 	Adaptation::Message theVirgin;
 	Adaptation::Message theCause;
 	Adaptation::Message theAnswer;
-	MessageTranslator theVirginTranslator;
-	MessageTranslator theCauseTranslator;
-	MessageTranslator theAnswerTranslator;
+	MessageRep theVirginRep;
+	MessageRep theCauseRep;
+	MessageRep theAnswerRep;
 
 	CBDATA_CLASS2(XactionRep);
 };

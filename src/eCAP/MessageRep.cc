@@ -4,5 +4,5 @@
 
 #include "squid.h"
 #include "adaptation/Message.h"
-#include "eCAP/MessageTranslator.h"
+#include "eCAP/MessageRep.h"
 
