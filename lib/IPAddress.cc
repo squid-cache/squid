@@ -340,18 +340,20 @@ bool IPAddress::SetIPv4()
 bool IPAddress::IsLocalhost() const
 {
 #if USE_IPV6
-    return        m_SocketAddr.sin6_addr.s6_addr32[0] == 0
+    return    (   m_SocketAddr.sin6_addr.s6_addr32[0] == 0
                && m_SocketAddr.sin6_addr.s6_addr32[1] == 0
                && m_SocketAddr.sin6_addr.s6_addr32[2] == 0
                && m_SocketAddr.sin6_addr.s6_addr32[3] == htonl(0x1)
-
+              )
 #if !IPV6_SPECIAL_LOCALHOST
-               || m_SocketAddr.sin6_addr.s6_addr32[0] == 0
+            ||
+              (   m_SocketAddr.sin6_addr.s6_addr32[0] == 0
                && m_SocketAddr.sin6_addr.s6_addr32[1] == 0
                && m_SocketAddr.sin6_addr.s6_addr32[2] == htonl(0xffff)
                && m_SocketAddr.sin6_addr.s6_addr32[3] == htonl(0x7F000001)
+              )
 #endif
-               ;
+            ;
 #else
 
     return (htonl(0x7F000001) == m_SocketAddr.sin_addr.s_addr);
