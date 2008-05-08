@@ -55,6 +55,8 @@ public:
     virtual HttpMsg *_lock();	// please use HTTPMSGLOCK()
     virtual void _unlock();	// please use HTTPMSGUNLOCK()
 
+	virtual HttpMsg *clone() const = 0;
+
 public:
     HttpVersion http_ver;
 
