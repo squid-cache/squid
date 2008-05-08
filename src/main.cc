@@ -698,6 +698,7 @@ mainReconfigure(void)
     errorClean();
     enter_suid();		/* root to read config file */
     parseConfigFile(ConfigFile, manager);
+    setUmask(Config.umask);
     Mem::Report();
     setEffectiveUser();
     _db_init(Config.Log.log, Config.debugOptions);
@@ -1175,7 +1176,6 @@ SquidMainSafe(int argc, char **argv)
 static int
 SquidMain(int argc, char **argv)
 {
-    mode_t oldmask;
 #ifdef _SQUID_WIN32_
 
     int WIN32_init_err;
@@ -1221,17 +1221,6 @@ SquidMain(int argc, char **argv)
 
 #endif
 #endif /* HAVE_MALLOPT */
-
-    /*
-     * The plan here is to set the umask to 007 (deny others for
-     * read,write,execute), but only if the umask is not already
-     * set.  Unfortunately, there is no way to get the current
-     * umask value without setting it.
-     */
-    oldmask = umask(S_IRWXO);
-
-    if (oldmask)
-        umask(oldmask);
 
     squid_srandom(time(NULL));
 
@@ -1306,6 +1295,7 @@ SquidMain(int argc, char **argv)
 
             return parse_err;
     }
+    setUmask(Config.umask);
     if (-1 == opt_send_signal)
         if (checkRunningPid())
             exit(1);

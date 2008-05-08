@@ -1278,7 +1278,7 @@ AC_ARG_WITH(build-environment,
 ])
 
 if test $needlargefiles && test -z "$buildmodel"; then
-	for model in POSIX_V6_ILP32_OFFBIG XBS5_ILP32_OFFBIG POSIX_V6_LP64_OFF64 XBS5_LP64_OFF64 POSIX_V6_LPBIG_OFFBIG XBS5_LPBIG_OFFBIG; do
+	for model in POSIX_V6_LPBIG_OFFBIG XBS5_LPBIG_OFFBIG POSIX_V6_LP64_OFF64 XBS5_LP64_OFF64 POSIX_V6_ILP32_OFFBIG XBS5_ILP32_OFFBIG; do
 		if test "`getconf _$model 2>/dev/null || true`" = 1 || test "`getconf $model 2>/dev/null || true`" ; then
 			buildmodel=$model
 			break
@@ -1849,7 +1849,7 @@ AC_ARG_ENABLE(x_accelerator_vary,
 dnl Enable IPv6 support
 AC_MSG_CHECKING([whether to enable IPv6])
 AC_ARG_ENABLE(ipv6,
-[  --enable-ipv6          Enable ipv6 support],
+[  --enable-ipv6           Enable ipv6 support],
 [ AC_MSG_RESULT(yes)
   AC_CACHE_CHECK([if PF_INET6 is available], $enableval,
     AC_TRY_RUN(
@@ -1911,6 +1911,16 @@ AC_ARG_WITH(localhost-ipv6,
 )
 # end IPv6-only options
 fi
+
+AC_ARG_ENABLE(zph-qos,
+[  --enable-zph-qos        Enable ZPH QOS support],
+[ if test "$enableval" = "yes" ; then
+    echo "ZPH QOS enabled"
+    AC_DEFINE(USE_ZPH_QOS,1,
+    [ Define this to use Squid's ZPH (Zero Penalty Hit) QOS features.
+      When enabled, Squid will alter TOS field of HIT responses for better QOS on intermediate routing/shaping devices.])
+  fi
+])
 
 dnl Optional CNAME-Recursion by Internal DNS engine
 AC_MSG_CHECKING([whether DNS CNAME recursion wanted])
@@ -2105,15 +2115,9 @@ AC_CHECK_HEADERS( \
 	math.h \
 	memory.h \
 	mount.h \
-	net/if.h \
-	net/pfvar.h \
 	netdb.h \
 	netinet/in.h \
-	netinet/icmp6.h \
 	netinet/in_systm.h \
-	netinet/ip.h \
-	netinet/ip6.h \
-	netinet/ip_icmp.h \
 	netinet/ip_fil_compat.h \
 	openssl/err.h \
 	openssl/md5.h \
@@ -2181,14 +2185,24 @@ SQUID_DEFAULT_INCLUDES
 #endif
 )
 
-AC_CHECK_HEADERS(net/if.h \
+dnl *BSD dont include the depenencies for all their net/ and netinet/ files
+dns We must include a few basic type headers for them to work.
+AC_CHECK_HEADERS( \
+	net/if.h \
 	netinet/if_ether.h\
+	netinet/icmp6.h \
+	netinet/ip.h \
+	netinet/ip6.h \
 	netinet/ip_compat.h\
 	netinet/ip_fil.h\
+	netinet/ip_icmp.h \
 	netinet/ip_nat.h\
 	netinet/ipl.h \
+	net/pfvar.h \
 	sys/mount.h\
-	resolv.h,,,SQUID_BSDNET_INCLUDES)
+	resolv.h \
+,,,
+SQUID_BSDNET_INCLUDES)
 
 AC_CHECK_HEADERS([libxml/parser.h], [], [
     	SAVED_CPPFLAGS="$CPPFLAGS"

@@ -409,6 +409,7 @@ parseConfigFile(const char *file_name, CacheManager & manager)
 
     if (!Config.chroot_dir) {
         leave_suid();
+        setUmask(Config.umask);
         _db_init(Config.Log.log, Config.debugOptions);
         enter_suid();
     }
