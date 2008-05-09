@@ -554,11 +554,9 @@ struct _SquidConfig
         int httpd_suppress_version_string;
         int global_internal_static;
         int debug_override_X;
-#if USE_ZPH_QOS
-        int zph_tos_parent;
-        int zph_preserve_miss_tos;
-#endif
-    } onoff;
+    }
+
+    onoff;
 
     class ACL *aclList;
 
@@ -722,11 +720,6 @@ struct _SquidConfig
     int sleep_after_fork;	/* microseconds */
     time_t minimum_expiry_time;	/* seconds */
     external_acl *externalAclHelperList;
-#if USE_ZPH_QOS
-    int zph_tos_local;
-    int zph_tos_peer;
-    int zph_preserve_miss_tos_mask; 
-#endif
 #if USE_SSL
 
     struct

@@ -1733,16 +1733,6 @@ AC_ARG_ENABLE(x_accelerator_vary,
   fi
 ])
 
-AC_ARG_ENABLE(zph-qos,
-[  --enable-zph-qos        Enable ZPH QOS support],
-[ if test "$enableval" = "yes" ; then
-    echo "ZPH QOS enabled"
-    AC_DEFINE(USE_ZPH_QOS,1,
-    [ Define this to use Squid's ZPH (Zero Penalty Hit) QOS features.
-      When enabled, Squid will alter TOS field of HIT responses for better QOS on intermediate routing/shaping devices.])
-  fi
-])
-
 AC_ARG_WITH(filedescriptors,
 [  --with-filedescriptors=NUMBER
                           Force squid to support NUMBER filedescriptors],
