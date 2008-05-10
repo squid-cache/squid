@@ -29,9 +29,59 @@ AM_PROG_CC_C_O
 AC_LANG_C
 AC_PROG_CXX
 AC_CANONICAL_HOST
-AC_DISABLE_SHARED
+
+
+use_loadable_modules=1
+AC_MSG_CHECKING(whether to use loadable modules)
+AC_ARG_ENABLE(loadable-modules,
+    [
+        AC_HELP_STRING(
+            [--disable-loadable-modules],
+            [do not support loadable modules])
+    ],
+    [
+        case "${enableval}" in
+            yes) use_loadable_modules=yes ;;
+            no) use_loadable_modules=no ;;
+            *) AC_MSG_ERROR(bad value ${enableval} for --disable-loadable-modules) ;;
+        esac
+        AC_MSG_RESULT([$use_loadable_modules, explicitly])
+    ],
+    [
+        use_loadable_modules=yes;
+        AC_MSG_RESULT([$use_loadable_modules, implicitly])
+    ]
+)        
+
+AM_CONDITIONAL(USE_LOADABLE_MODULES, test $use_loadable_modules = yes)
+
+if test $use_loadable_modules = yes;
+then
+    AC_DEFINE(USE_LOADABLE_MODULES, 1, [Support Loadable Modules])
+    AC_ENABLE_SHARED
+else
+    AC_DISABLE_SHARED
+fi
+
+AC_LIBTOOL_DLOPEN
+if test $use_loadable_modules = yes;
+then
+    AC_LIBLTDL_CONVENIENCE(lib/libLtdl)
+fi
 AC_PROG_LIBTOOL
 AC_LTDL_DLLIB
+
+# Do we need these unconditionally for "make distcheck" to work?
+AC_SUBST(INCLTDL)
+AC_SUBST(LIBLTDL)
+
+if test $use_loadable_modules = yes;
+then
+    # Why is this needed? Should not libtool's AC_LIBTOOL_DLOPEN do that?
+    LIBADD_DL=${lt_cv_dlopen_libs}
+    AC_SUBST([LIBADD_DL])
+fi
+
 AC_PROG_RANLIB
 
 
@@ -681,6 +731,9 @@ AC_ARG_ENABLE(delay-pools,
   fi
 ])
 
+dnl disable generic/common adaptation support by default
+use_adaptation=no
+
 AM_CONDITIONAL(USE_ESI, false)
 AC_ARG_ENABLE(esi,
               AC_HELP_STRING([--enable-esi],[Enable ESI for accelerators. Requires libexpat. Enabling ESI will cause squid to follow the Edge Acceleration Specification (www.esi.org). This causes squid to IGNORE client Cache-Control headers. DO NOT use this in a squid configured as a web proxy, ONLY use it in a squid configured for webserver acceleration.]),
@@ -700,12 +753,73 @@ AC_ARG_ENABLE(icap-client,
 if test "$use_icap_client" = "yes" ; then
   AC_DEFINE(ICAP_CLIENT,1,[Enable ICAP client features in Squid])
   AM_CONDITIONAL(USE_ICAP_CLIENT, true)
-  ICAP_LIBS="ICAP/libicap.a"
+  ICAP_LIBS="ICAP/libicap.la"
+  use_adaptation=yes
 else
   AC_DEFINE(ICAP_CLIENT,0,[Enable ICAP client features in Squid])
   ICAP_LIBS=""
 fi
 AC_SUBST(ICAP_LIBS)
+
+use_ecap=1
+AC_MSG_CHECKING(whether to support eCAP)
+AC_ARG_ENABLE(ecap,
+    [
+        AC_HELP_STRING(
+            [--enable-ecap],
+            [support loadable content adaptation modules])
+    ],
+    [
+        case "${enableval}" in
+            yes) use_ecap=yes ;;
+            no) use_ecap=no ;;
+            *) AC_MSG_ERROR(bad value ${enableval} for --enable-ecap) ;;
+        esac
+        AC_MSG_RESULT([$use_ecap, explicitly])
+    ],
+    [
+        use_ecap=no;
+        AC_MSG_RESULT([$use_ecap, implicitly])
+    ]
+)
+
+dnl Perform configuration consistency checks for eCAP
+if test $use_ecap = yes;
+then
+    dnl eCAP support requires loadable modules, which are enabled by default
+    if test "$use_loadable_modules" != "yes"
+    then
+        AC_MSG_ERROR([
+            eCAP support requires loadable modules. Please do not use
+            --disable-loadable-modules with --enable-ecap.]);
+    fi
+fi
+
+AM_CONDITIONAL(USE_ECAP, test $use_ecap = yes)
+if test $use_ecap = yes;
+then
+    AC_DEFINE(USE_ECAP,1,[Enable eCAP support])
+    ECAP_LIBS="eCAP/libeCAP.la"
+    use_adaptation=yes
+else
+    AC_DEFINE(USE_ECAP,0,[Disable eCAP support])
+    ECAP_LIBS=""
+fi
+AC_SUBST(ECAP_LIBS)
+
+
+dnl enable adaptation if requested by specific adaptation mechanisms
+AM_CONDITIONAL(USE_ADAPTATION, test $use_adaptation = yes)
+if test $use_adaptation = yes
+then
+    AC_DEFINE(USE_ADAPTATION,1,[common adaptation support])
+    ADAPTATION_LIBS="adaptation/libadaptation.la"
+else
+    AC_DEFINE(USE_ADAPTATION,0,[common adaptation support])
+    ADAPTATION_LIBS=""
+fi
+AC_SUBST(ADAPTATION_LIBS)
+
 
 dnl This is a developer only option. Developers know how to set defines
 dnl
@@ -1156,7 +1270,7 @@ AC_ARG_WITH(build-environment,
 ])
 
 if test $needlargefiles && test -z "$buildmodel"; then
-	for model in POSIX_V6_ILP32_OFFBIG XBS5_ILP32_OFFBIG POSIX_V6_LP64_OFF64 XBS5_LP64_OFF64 POSIX_V6_LPBIG_OFFBIG XBS5_LPBIG_OFFBIG; do
+	for model in POSIX_V6_LPBIG_OFFBIG XBS5_LPBIG_OFFBIG POSIX_V6_LP64_OFF64 XBS5_LP64_OFF64 POSIX_V6_ILP32_OFFBIG XBS5_ILP32_OFFBIG; do
 		if test "`getconf _$model 2>/dev/null || true`" = 1 || test "`getconf $model 2>/dev/null || true`" ; then
 			buildmodel=$model
 			break
@@ -1218,14 +1332,14 @@ dnl "-64" from LDFLAGS
 	esac
 fi
 
-dnl Enable Linux transparent proxy support
+dnl Enable Linux transparent proxy support for obsolete TPROXY
 AC_ARG_ENABLE(linux-tproxy,
 [  --enable-linux-tproxy
-			  Enable real Transparent Proxy support for Netfilter TPROXY.],
+			  Enable real Transparent Proxy support for Netfilter TPROXY (version 2).],
 [ if test "$enableval" = "yes" ; then
-	echo "Linux Netfilter/TPROXY enabled"
-	AC_DEFINE(LINUX_TPROXY, 1, [Enable real Transparent Proxy support for Netfilter TPROXY.])
-	LINUX_TPROXY="yes"
+	echo "Linux Netfilter/TPROXY v2 enabled"
+	AC_DEFINE(LINUX_TPROXY2, 1, [Enable real Transparent Proxy support for Netfilter TPROXY v2.])
+	LINUX_TPROXY2="yes"
         if test -z "$LINUX_NETFILTER"; then
 	    echo "Linux-Netfilter Transparent Proxy automatically enabled"
 	    LINUX_NETFILTER="yes"
@@ -1727,7 +1841,7 @@ AC_ARG_ENABLE(x_accelerator_vary,
 dnl Enable IPv6 support
 AC_MSG_CHECKING([whether to enable IPv6])
 AC_ARG_ENABLE(ipv6,
-[  --enable-ipv6          Enable ipv6 support],
+[  --enable-ipv6           Enable ipv6 support],
 [ AC_MSG_RESULT(yes)
   AC_CACHE_CHECK([if PF_INET6 is available], $enableval,
     AC_TRY_RUN(
@@ -1789,6 +1903,16 @@ AC_ARG_WITH(localhost-ipv6,
 )
 # end IPv6-only options
 fi
+
+AC_ARG_ENABLE(zph-qos,
+[  --enable-zph-qos        Enable ZPH QOS support],
+[ if test "$enableval" = "yes" ; then
+    echo "ZPH QOS enabled"
+    AC_DEFINE(USE_ZPH_QOS,1,
+    [ Define this to use Squid's ZPH (Zero Penalty Hit) QOS features.
+      When enabled, Squid will alter TOS field of HIT responses for better QOS on intermediate routing/shaping devices.])
+  fi
+])
 
 dnl Optional CNAME-Recursion by Internal DNS engine
 AC_MSG_CHECKING([whether DNS CNAME recursion wanted])
@@ -1866,7 +1990,7 @@ if $CPPUNITCONFIG --help >/dev/null; then
   SQUID_CPPUNIT_LA=''
   SQUID_CPPUNIT_INC="`$CPPUNITCONFIG --cflags`"
 else
-  echo "cppunit does not apear to be installed. squid does not require this, but code testing with 'make check' will fail."
+  echo "cppunit does not appear to be installed. squid does not require this, but code testing with 'make check' will fail."
   SQUID_CPPUNIT_LA='' 
   SQUID_CPPUNIT_LIBS=''
   SQUID_CPPUNIT_INC=''
@@ -1983,15 +2107,9 @@ AC_CHECK_HEADERS( \
 	math.h \
 	memory.h \
 	mount.h \
-	net/if.h \
-	net/pfvar.h \
 	netdb.h \
 	netinet/in.h \
-	netinet/icmp6.h \
 	netinet/in_systm.h \
-	netinet/ip.h \
-	netinet/ip6.h \
-	netinet/ip_icmp.h \
 	netinet/ip_fil_compat.h \
 	openssl/err.h \
 	openssl/md5.h \
@@ -2059,14 +2177,24 @@ SQUID_DEFAULT_INCLUDES
 #endif
 )
 
-AC_CHECK_HEADERS(net/if.h \
+dnl *BSD dont include the depenencies for all their net/ and netinet/ files
+dnl We must include a few basic type headers for them to work.
+AC_CHECK_HEADERS( \
+	net/if.h \
 	netinet/if_ether.h\
+	netinet/icmp6.h \
+	netinet/ip.h \
+	netinet/ip6.h \
 	netinet/ip_compat.h\
 	netinet/ip_fil.h\
+	netinet/ip_icmp.h \
 	netinet/ip_nat.h\
 	netinet/ipl.h \
+	net/pfvar.h \
 	sys/mount.h\
-	resolv.h,,,SQUID_BSDNET_INCLUDES)
+	resolv.h \
+,,,
+SQUID_BSDNET_INCLUDES)
 
 AC_CHECK_HEADERS([libxml/parser.h], [], [
     	SAVED_CPPFLAGS="$CPPFLAGS"
@@ -2795,6 +2923,34 @@ if test "$ac_cv_func_setresuid" = "yes" ; then
   AC_DEFINE(HAVE_SETRESUID,1,[Yay! Another Linux brokenness.  Its not good enough to know that setresuid() exists, because RedHat 5.0 declare setresuid() but doesn't implement it.])
 fi
 
+dnl Yay!  This one is  a MacOSX brokenness.  Its not good enough
+dnl to know that strnstr() exists, because MacOSX 10.4 have a bad
+dnl copy that crashes with a buffer over-run!
+dnl
+AC_CACHE_CHECK(if strnstr is well implemented, ac_cv_func_strnstr,
+  AC_TRY_RUN([
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+    // we expect this to succeed, or crash on over-run.
+    // if it passes otherwise we may need a better check.
+int main(int argc, char **argv)
+{
+    int size = 20;
+    char *str = malloc(size);
+    memset(str, 'x', size);
+    strnstr(str, "fubar", size);
+    return 0;
+}
+  ],ac_cv_func_strnstr="yes",ac_cv_func_strnstr="no")
+)
+if test "$ac_cv_func_strnstr" = "yes" ; then
+  AC_DEFINE(HAVE_STRNSTR,1,[Yay! We have a working strnstr!])
+else
+  AC_DEFINE(HAVE_STRNSTR,0,[Yay! A MacOS X brokenness. Its not good enough to know that strnstr() exists, because MacOSX 10.4 and earlier may have a buffer overrun.])
+fi
+
+
 AM_CONDITIONAL(NEED_OWN_STRSEP, false)
 if test "$ac_cv_func_strsep" = "no" ; then
   AM_CONDITIONAL(NEED_OWN_STRSEP, true)
@@ -2933,29 +3089,30 @@ if test "$LINUX_NETFILTER" ; then
 fi 
 if test "$LINUX_NETFILTER" = "no" ; then
     echo "WARNING: Cannot find necessary Linux kernel (Netfilter) header files"
-    echo "         Linux Transparent Proxy support WILL NOT be enabled"
+    echo "         Linux Transparent and Intercepting Proxy support WILL NOT be enabled"
     sleep 10
 fi
 
-dnl Linux Netfilter/TPROXY support requires some specific header files
+dnl Linux Netfilter/TPROXYv2 support requires some specific header files
 dnl Shamelessly copied from shamelessly copied from above
-if test "$LINUX_TPROXY" ; then
-    AC_MSG_CHECKING(if TPROXY header files are installed)
+if test "$LINUX_TPROXY2" ; then
+    AC_MSG_CHECKING(if TPROXYv2 header files are installed)
     # hold on to your hats...
     if test "$ac_cv_header_linux_netfilter_ipv4_ip_tproxy_h" = "yes" && test "$LINUX_NETFILTER" = "yes"; then
-	LINUX_TPROXY="yes"
-	AC_DEFINE(LINUX_TPROXY, 1, [Enable real Transparent Proxy support for Netfilter TPROXY.])
+	LINUX_TPROXY2="yes"
+	AC_DEFINE(LINUX_TPROXY2, 1, [Enable real Transparent Proxy support for Netfilter TPROXY v2.])
     else
-	LINUX_TPROXY="no"
-	AC_DEFINE(LINUX_TPROXY, 0, [Enable real Transparent Proxy support for Netfilter TPROXY.])
+	LINUX_TPROXY2="no"
+	AC_DEFINE(LINUX_TPROXY2, 0, [Enable real Transparent Proxy support for Netfilter TPROXY v2.])
     fi
-    AC_MSG_RESULT($LINUX_TPROXY)
-fi
-if test "$LINUX_TPROXY" = "no" && test "$LINUX_NETFILTER" = "yes"; then
-    echo "WARNING: Cannot find TPROXY headers, you need to install the"
-    echo "tproxy package from:"
-    echo " - lynx http://www.balabit.com/downloads/tproxy/"
-    sleep 10
+    AC_MSG_RESULT($LINUX_TPROXY2)
+    if test "$LINUX_TPROXY2" = "no" && test "$LINUX_NETFILTER" = "yes"; then
+        echo "WARNING: Cannot find TPROXY v2 headers, you need to install the"
+        echo "tproxy package from:"
+        echo " - lynx http://www.balabit.com/downloads/tproxy/"
+        echo "Or select the '--enable-linux-netfilter' option instead for Netfilter support."
+        sleep 10
+    fi
 fi
 
 if test -z "$USE_GNUREGEX" ; then
@@ -3448,6 +3605,9 @@ AC_CONFIG_FILES([\
 	src/fs/Makefile \
 	src/repl/Makefile \
 	src/auth/Makefile \
+	src/adaptation/Makefile \
+	src/ICAP/Makefile \
+	src/eCAP/Makefile \
 	contrib/Makefile \
 	snmplib/Makefile \
 	icons/Makefile \
@@ -3493,5 +3653,9 @@ AC_CONFIG_FILES([\
 ])
 
 AC_CONFIG_SUBDIRS(lib/libTrie)
+
+# must configure libltdl subdir unconditionally for "make distcheck" to work
+AC_CONFIG_SUBDIRS(lib/libLtdl)
+
 
 AC_OUTPUT

@@ -48,6 +48,7 @@
 #include "SquidTime.h"
 #include "CommCalls.h"
 #include "IPAddress.h"
+#include "IPInterception.h"
 
 #if defined(_SQUID_CYGWIN_)
 #include <sys/ioctl.h>
@@ -628,6 +629,26 @@ comm_set_v6only(int fd, int tos)
 }
 
 /**
+ * Set the socket IP_TRANSPARENT option for Linux TPROXY v4 support.
+ */
+void
+comm_set_transparent(int fd)
+{
+#if defined(IP_TRANSPARENT)
+    int tos = 1;
+    if (setsockopt(fd, SOL_IP, IP_TRANSPARENT, (char *) &tos, sizeof(int)) < 0) {
+        debugs(50, DBG_IMPORTANT, "comm_open: setsockopt(IP_TRANSPARENT) on FD " << fd << ": " << xstrerror());
+    }
+    else {
+        /* mark the socket as having transparent options */
+        fd_table[fd].flags.transparent = 1;
+    }
+#else
+    debugs(50, DBG_CRITICAL, "WARNING: comm_open: setsockopt(IP_TRANSPARENT) not supported on this platform");
+#endif /* sockopt */
+}
+
+/**
  * Create a socket. Default is blocking, stream (TCP) socket.  IO_TYPE
  * is OR of flags specified in defines.h:COMM_*
  */
@@ -652,7 +673,6 @@ comm_openex(int sock_type,
     addr.GetAddrInfo(AI);
     AI->ai_socktype = sock_type;
     AI->ai_protocol = proto;
-    AI->ai_flags = flags;
 
     debugs(50, 3, "comm_openex: Attempt open socket for: " << addr );
 
@@ -732,6 +752,11 @@ comm_openex(int sock_type,
 
         if (opt_reuseaddr)
             commSetReuseAddr(new_socket);
+    }
+
+    /* MUST be done before binding or face OS Error: "(99) Cannot assign requested address"... */
+    if((flags & COMM_TRANSPARENT)) {
+        comm_set_transparent(new_socket);
     }
 
     if (!addr.IsNoAddr())
@@ -902,6 +927,7 @@ ConnectStateData::commResetFD()
 {
     struct addrinfo *AI = NULL;
     IPAddress nul;
+    int new_family = AF_UNSPEC;
 
 // XXX: do we have to check this?
 //
@@ -911,14 +937,16 @@ ConnectStateData::commResetFD()
     statCounter.syscalls.sock.sockets++;
 
     /* setup a bare-bones addrinfo */
+    /* TODO INET6: for WinXP we may need to check the local_addr type and setup the family properly. */
     nul.GetAddrInfo(AI);
+    new_family = AI->ai_family;
 
     int fd2 = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
 
     nul.FreeAddrInfo(AI);
 
     if (fd2 < 0) {
-        debugs(5, 0, "commResetFD: socket: " << xstrerror());
+        debugs(5, 0, HERE << "socket: " << xstrerror());
 
         if (ENFILE == errno || EMFILE == errno)
             fdAdjustReserved();
@@ -935,7 +963,7 @@ ConnectStateData::commResetFD()
 #endif
 
     if (dup2(fd2, fd) < 0) {
-        debugs(5, 0, "commResetFD: dup2: " << xstrerror());
+        debugs(5, 0, HERE << "dup2: " << xstrerror());
 
         if (ENFILE == errno || EMFILE == errno)
             fdAdjustReserved();
@@ -948,6 +976,10 @@ ConnectStateData::commResetFD()
 
     close(fd2);
     fde *F = &fd_table[fd];
+
+    /* INET6: copy the new sockets family type to the FDE table */
+    fd_table[fd].sock_family = new_family;
+
     fd_table[fd].flags.called_connect = 0;
     /*
      * yuck, this has assumptions about comm_open() arguments for
@@ -958,7 +990,7 @@ ConnectStateData::commResetFD()
     F->local_addr.GetAddrInfo(AI);
 
     if (commBind(fd, *AI) != COMM_OK) {
-        debugs(5, 0, "commResetFD: bind: " << xstrerror());
+        debugs(5, 0, HERE << "bind: " << xstrerror());
         F->local_addr.FreeAddrInfo(AI);
         return 0;
     }
@@ -974,7 +1006,7 @@ ConnectStateData::commResetFD()
 
 #endif
 
-    copyFDFlags (fd, F);
+    copyFDFlags(fd, F);
 
     return 1;
 }
@@ -1005,9 +1037,9 @@ commReconnect(void *data)
     ipcache_nbgethostbyname(cs->host, commConnectDnsHandle, cs);
 }
 
-/* Connect SOCK to specified DEST_PORT at DEST_HOST. */
+/** Connect SOCK to specified DEST_PORT at DEST_HOST. */
 void
-ConnectStateData::Connect (int fd, void *me)
+ConnectStateData::Connect(int fd, void *me)
 {
     ConnectStateData *cs = (ConnectStateData *)me;
     assert (cs->fd == fd);
@@ -1027,23 +1059,33 @@ ConnectStateData::connect()
     if (S.IsAnyAddr())
         defaults();
 
-    debugs(5,5, "ConnectSateData::connect: to " << S);
+    debugs(5,5, HERE << "to " << S);
 
     switch (comm_connect_addr(fd, S) ) {
 
     case COMM_INPROGRESS:
-        debugs(5, 5, "ConnectStateData::connect: FD " << fd << ": COMM_INPROGRESS");
+        debugs(5, 5, HERE << "FD " << fd << ": COMM_INPROGRESS");
         commSetSelect(fd, COMM_SELECT_WRITE, ConnectStateData::Connect, this, 0);
         break;
 
     case COMM_OK:
-        debugs(5, 5, "ConnectStateData::connect: FD " << fd << ": COMM_OK - connected");
+        debugs(5, 5, HERE << "FD " << fd << ": COMM_OK - connected");
         ipcacheMarkGoodAddr(host, S);
         callCallback(COMM_OK, 0);
         break;
 
+#if USE_IPV6
+    case COMM_ERR_PROTOCOL:
+        /* problem using the desired protocol over this socket.
+         * count the connection attempt, reset the socket, and immediately try again */
+        tries++;
+        commResetFD();
+        connect();
+        break;
+#endif
+
     default:
-        debugs(5, 5, "ConnectStateData::connect: FD " << fd << ": * - try again");
+        debugs(5, 5, HERE "FD " << fd << ": * - try again");
         tries++;
         ipcacheMarkBadAddr(host, S);
 
@@ -1053,7 +1095,7 @@ ConnectStateData::connect()
         if (commRetryConnect()) {
             eventAdd("commReconnect", commReconnect, this, this->addrcount == 1 ? 0.05 : 0.0, 0);
         } else {
-            debugs(5, 5, "ConnectStateData::connect: FD " << fd << ": * - ERR tried too many times already.");
+            debugs(5, 5, HERE << "FD " << fd << ": * - ERR tried too many times already.");
             callCallback(COMM_ERR_CONNECT, errno);
         }
     }
@@ -1062,7 +1104,7 @@ ConnectStateData::connect()
 int
 commSetTimeout_old(int fd, int timeout, PF * handler, void *data)
 {
-    debugs(5, 3, "commSetTimeout: FD " << fd << " timeout " << timeout);
+    debugs(5, 3, HERE << "FD " << fd << " timeout " << timeout);
     assert(fd >= 0);
     assert(fd < Squid_MaxFD);
     fde *F = &fd_table[fd];
@@ -1090,7 +1132,7 @@ int
 commSetTimeout(int fd, int timeout, PF * handler, void *data)
 {
     AsyncCall::Pointer call;
-    debugs(5, 3, "commSetTimeout: FD " << fd << " timeout " << timeout);
+    debugs(5, 3, HERE << "FD " << fd << " timeout " << timeout);
     if(handler != NULL)
 	call=commCbCall(5,4, "SomeTimeoutHandler", CommTimeoutCbPtrFun(handler, data));
     else
@@ -1101,7 +1143,7 @@ commSetTimeout(int fd, int timeout, PF * handler, void *data)
 
 int commSetTimeout(int fd, int timeout, AsyncCall::Pointer &callback)
 {
-    debugs(5, 3, "commSetTimeout: FD " << fd << " timeout " << timeout);
+    debugs(5, 3, HERE << "FD " << fd << " timeout " << timeout);
     assert(fd >= 0);
     assert(fd < Squid_MaxFD);
     fde *F = &fd_table[fd];
@@ -1140,7 +1182,19 @@ comm_connect_addr(int sock, const IPAddress &address)
 
     debugs(5, 9, "comm_connect_addr: connecting socket " << sock << " to " << address << " (want family: " << F->sock_family << ")");
 
-    /* FIXME INET6 : Bug 2222: when sock is an IPv4-only socket IPv6 traffic will crash. */
+    /* BUG 2222 FIX: reset the FD when its found to be IPv4 in IPv6 mode */
+    /* inverse case of IPv4 failing to connect on IPv6 socket is handeld post-connect.
+     * this case must presently be handled here since the GetAddrInfo asserts on bad mappings.
+     * eventually we want it to throw a Must() that gets handled there instead of this if.
+     * NP: because commresetFD is private to ConnStateData we have to return an error and
+     *     trust its handled properly.
+     */
+#if USE_IPV6
+    if(F->sock_family == AF_INET && !address.IsIPv4()) {
+        return COMM_ERR_PROTOCOL;
+    }
+#endif
+
     address.GetAddrInfo(AI, F->sock_family);
 
     /* Establish connection. */
@@ -1323,6 +1377,12 @@ comm_old_accept(int fd, ConnectionDetail &details)
     details.me.FreeAddrInfo(gai);
 
     commSetNonBlocking(sock);
+
+    if(fd_table[fd].flags.transparent == 1) {
+        /* AYJ: do we actually need to set this again on every accept? */
+        //comm_set_transparent(sock);
+        F->flags.transparent = 1;
+    }
 
     PROF_stop(comm_accept);
     return sock;

@@ -82,6 +82,7 @@ public:
 	unsigned int close_on_exec:1;
 	unsigned int read_pending:1;
 	unsigned int write_pending:1;
+        unsigned int transparent:1;
     } flags;
 
     int64_t bytes_read;
@@ -113,6 +114,9 @@ public:
     struct { 
         long handle;
     } win32;
+#endif
+#if USE_ZPH_QOS
+    unsigned char upstreamTOS;			/* see FwdState::dispatch()  */
 #endif
 
 };

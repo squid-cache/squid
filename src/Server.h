@@ -52,16 +52,14 @@
 #include "ICAP/AsyncJob.h"
 #include "CommCalls.h"
 
-#if ICAP_CLIENT
-#include "ICAP/ICAPServiceRep.h"
-#include "ICAP/ICAPInitiator.h"
-
-class ICAPAccessCheck;
+#if USE_ADAPTATION
+#include "adaptation/forward.h"
+#include "adaptation/Initiator.h"
 #endif
 
 class ServerStateData:
-#if ICAP_CLIENT
-    public ICAPInitiator,
+#if USE_ADAPTATION
+    public Adaptation::Initiator,
     public BodyProducer,
 #endif
     public BodyConsumer
@@ -90,13 +88,13 @@ public:
     // a hack to reach HttpStateData::orignal_request
     virtual  HttpRequest *originalRequest();
 
-#if ICAP_CLIENT
-    void icapAclCheckDone(ICAPServiceRep::Pointer);
-    static void icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *data);
+#if USE_ADAPTATION
+    void adaptationAclCheckDone(Adaptation::ServicePointer service);
+    static void adaptationAclCheckDoneWrapper(Adaptation::ServicePointer service, void *data);
 
     // ICAPInitiator: start an ICAP transaction and receive adapted headers.
-    virtual void noteIcapAnswer(HttpMsg *message);
-    virtual void noteIcapQueryAbort(bool final);
+    virtual void noteAdaptationAnswer(HttpMsg *message);
+    virtual void noteAdaptationQueryAbort(bool final);
 
     // BodyProducer: provide virgin response body to ICAP.
     virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer );
@@ -106,8 +104,8 @@ public:
 
 //AsyncJob virtual methods
     virtual bool doneAll() const { return
-#if ICAP_CLIENT
-                                       ICAPInitiator::doneAll() &&
+#if USE_ADAPTATION
+                       Adaptation::Initiator::doneAll() &&
 				       BodyProducer::doneAll() &&
 #endif
 				       BodyConsumer::doneAll() && false;}
@@ -142,19 +140,19 @@ protected:
     // Entry-dependent callbacks use this check to quit if the entry went bad
     bool abortOnBadEntry(const char *abortReason);
 
-#if ICAP_CLIENT
-    bool startIcap(ICAPServiceRep::Pointer, HttpRequest *cause);
+#if USE_ADAPTATION
+    bool startAdaptation(Adaptation::ServicePointer service, HttpRequest *cause);
     void adaptVirginReplyBody(const char *buf, ssize_t len);
-    void cleanIcap();
-    virtual bool doneWithIcap() const; // did we end ICAP communication?
+    void cleanAdaptation();
+    virtual bool doneWithAdaptation() const; // did we end ICAP communication?
 
     // BodyConsumer for ICAP: consume adapted response body.
     void handleMoreAdaptedBodyAvailable();
     void handleAdaptedBodyProductionEnded();
     void handleAdaptedBodyProducerAborted();
 
-    void handleIcapCompleted();
-    void handleIcapAborted(bool bypassable = false);
+    void handleAdaptationCompleted();
+    void handleAdaptationAborted(bool bypassable = false);
 #endif
 
 protected:
@@ -184,13 +182,13 @@ protected:
     BodyPipe::Pointer requestBodySource; // to consume request body
     AsyncCall::Pointer requestSender; // set if we are expecting comm_write to call us back
 
-#if ICAP_CLIENT
+#if USE_ADAPTATION
     BodyPipe::Pointer virginBodyDestination; // to provide virgin response body
-    ICAPInitiate *adaptedHeadSource; // to get adapted response headers
+    Adaptation::Initiate *adaptedHeadSource; // to get adapted response headers
     BodyPipe::Pointer adaptedBodySource; // to consume adated response body
 
-    bool icapAccessCheckPending;
-    bool startedIcap;
+    bool adaptationAccessCheckPending;
+    bool startedAdaptation;
 #endif
 
 private:

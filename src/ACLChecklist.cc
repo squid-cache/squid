@@ -53,8 +53,8 @@ ACLChecklist::authenticated()
     } else if (request->flags.accelerated) {
         /* WWW authorization on accelerated requests */
         headertype = HDR_AUTHORIZATION;
-    } else if (request->flags.transparent) {
-        debugs(28, 1, "ACHChecklist::authenticated: authentication not applicable on transparently intercepted requests.");
+    } else if (request->flags.intercepted || request->flags.spoof_client_ip) {
+        debugs(28, DBG_IMPORTANT, HERE << " authentication not applicable on intercepted requests.");
         return -1;
     } else {
         /* Proxy authorization on proxy requests */

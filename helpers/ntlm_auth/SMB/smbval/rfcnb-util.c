@@ -340,7 +340,7 @@ RFCNB_Name_To_IP(char *host, struct in_addr *Dest_IP)
 	    return (RFCNBE_Bad);
 
 	} else { /* We got a name */
-	    Dest_IP->s_addr = ((struct sockaddr_in*)hp->h_addr_list[0])->sin_addr.s_addr;
+	    Dest_IP->s_addr = (*((struct in_addr*)hp->h_addr_list[0])).s_addr;
 	}
     } else { /* It was an IP address */
 	Dest_IP->s_addr = addr;

@@ -47,8 +47,12 @@ AuthUser::username () const
 void
 AuthUser::username(char const*aString)
 {
-    assert (!username() || !aString);
-    username_ = aString ? xstrdup(aString) : NULL;
+    if (aString) {
+        assert(!username_);
+        username_ = xstrdup(aString);
+    } else {
+        safe_free(username_);
+    }
 }
 
 void

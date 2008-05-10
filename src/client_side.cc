@@ -81,6 +81,7 @@
  * data flow.
  */
 
+#include "config.h"
 #include "squid.h"
 #include "client_side.h"
 #include "clientStream.h"
@@ -1824,7 +1825,7 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
     char *host;
     char ntoabuf[MAX_IPSTRLEN];
 
-    http->flags.transparent = 1;
+    http->flags.intercepted = 1;
 
     if (*url != '/')
         return; /* already in good shape */
@@ -1953,7 +1954,11 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
 
     debugs(33, 3, "parseHttpRequest: end = {" << end << "}");
 
-    if (strstr(req_hdr, "\r\r\n")) {
+    /*
+     * Check that the headers don't have double-CR.
+     * NP: strnstr is required so we don't search any possible binary body blobs.
+     */
+    if ( squid_strnstr(req_hdr, "\r\r\n", req_sz) ) {
         debugs(33, 1, "WARNING: suspicious HTTP request contains double CR");
         xfree(url);
         return parseHttpRequestAbort(conn, "error:double-CR");
@@ -1995,8 +2000,8 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
         /* prepend our name & port */
         http->uri = xstrdup(internalLocalUri(NULL, url));
         http->flags.accel = 1;
-    } else if (conn->port->transparent) {
-	// Fallback on transparent if enabled, useful for "self" requests
+    } else if (conn->port->intercepted) {
+	// Fallback on transparent interception if enabled, useful for "self" requests
         prepareTransparentURL(conn, http, url, req_hdr);
     }
 
@@ -2214,12 +2219,16 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
 
     request->flags.accelerated = http->flags.accel;
 
-    request->flags.transparent = http->flags.transparent;
-
-#if LINUX_TPROXY
-
-    request->flags.tproxy = conn->port->tproxy && need_linux_tproxy;
-#endif
+    /** \par
+     * If transparent or interception mode is working clone the transparent and interception flags
+     * from the port settings to the request.
+     */
+    if(IPInterceptor.InterceptActive()) {
+        request->flags.intercepted = http->flags.intercepted;
+    }
+    if(IPInterceptor.TransparentActive()) {
+        request->flags.spoof_client_ip = conn->port->spoof_client_ip;
+    }
 
     if (internalCheck(request->urlpath.buf())) {
         if (internalHostnameIs(request->GetHost()) &&
@@ -2716,10 +2725,10 @@ okToAccept()
 }
 
 ConnStateData *
-
 connStateCreate(const IPAddress &peer, const IPAddress &me, int fd, http_port_list *port)
 {
     ConnStateData *result = new ConnStateData;
+
     result->peer = peer;
     result->log_addr = peer;
     result->log_addr.ApplyMask(Config.Addrs.client_netmask.GetCIDR());
@@ -2728,13 +2737,11 @@ connStateCreate(const IPAddress &peer, const IPAddress &me, int fd, http_port_li
     result->in.buf = (char *)memAllocBuf(CLIENT_REQ_BUF_SZ, &result->in.allocatedSize);
     result->port = cbdataReference(port);
 
-    if (port->transparent)
-    {
-
+    if(port->intercepted || port->spoof_client_ip) {
         IPAddress dst;
 
-        if (clientNatLookup(fd, me, peer, dst) == 0) {
-            result-> me = dst; /* XXX This should be moved to another field */
+        if (IPInterceptor.NatLookup(fd, me, peer, dst) == 0) {
+            result->me = dst; /* XXX This should be moved to another field */
             result->transparent(true);
         }
     }
@@ -3112,10 +3119,13 @@ clientHttpConnectionsOpen(void)
 #endif
 
         enter_suid();
-        fd = comm_open(SOCK_STREAM,
-                       IPPROTO_TCP,
-                       s->s,
-                       COMM_NONBLOCKING, "HTTP Socket");
+
+        if(s->spoof_client_ip) {
+            fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, s->s, (COMM_NONBLOCKING|COMM_TRANSPARENT), 0, "HTTP Socket");
+        } else {
+            fd = comm_open(SOCK_STREAM, IPPROTO_TCP, s->s, COMM_NONBLOCKING, "HTTP Socket");
+        }
+
         leave_suid();
 
         if (fd < 0)
@@ -3126,9 +3136,10 @@ clientHttpConnectionsOpen(void)
         comm_accept(fd, httpAccept, s);
 
         debugs(1, 1, "Accepting " <<
-               (s->transparent ? "transparently proxied" :
-                       s->sslBump ? "bumpy" :
-                       s->accel ? "accelerated" : "") 
+               (s->intercepted ? " intercepted" : "") <<
+               (s->spoof_client_ip ? " spoofing" : "") <<
+               (s->sslBump ? " bumpy" : "") <<
+               (s->accel ? " accelerated" : "") 
                << " HTTP connections at " << s->s
                << ", FD " << fd << "." );
 

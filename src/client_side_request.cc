@@ -59,12 +59,10 @@
 #include "SquidTime.h"
 #include "wordlist.h"
 
-#if ICAP_CLIENT
-#include "ICAP/ICAPModXact.h"
-#include "ICAP/ICAPElements.h"
-#include "ICAP/ICAPConfig.h"
-static void icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *data);
-extern ICAPConfig TheICAPConfig;
+#if USE_ADAPTATION
+#include "adaptation/AccessCheck.h"
+#include "adaptation/Service.h"
+static void adaptationAclCheckDoneWrapper(Adaptation::ServicePointer service, void *data);
 #endif
 
 #if LINGERING_CLOSE
@@ -144,7 +142,7 @@ ClientHttpRequest::operator delete (void *address)
 }
 
 ClientHttpRequest::ClientHttpRequest(ConnStateData * aConn) : 
-#if ICAP_CLIENT
+#if USE_ADAPTATION
 AsyncJob("ClientHttpRequest"),
 #endif
 loggingEntry_(NULL)
@@ -152,7 +150,7 @@ loggingEntry_(NULL)
     start_time = current_time;
     setConn(aConn);
     dlinkAdd(this, &active, &ClientActiveRequests);
-#if ICAP_CLIENT
+#if USE_ADAPTATION
     request_satisfaction_mode = false;
 #endif
 }
@@ -255,11 +253,11 @@ ClientHttpRequest::~ClientHttpRequest()
 
     freeResources();
 
-#if ICAP_CLIENT
-    announceInitiatorAbort(icapHeadSource);
+#if USE_ADAPTATION
+    announceInitiatorAbort(virginHeadSource);
 
-    if (icapBodySource != NULL)
-        stopConsumingFrom(icapBodySource);
+    if (adaptedBodySource != NULL)
+        stopConsumingFrom(adaptedBodySource);
 #endif
 
     if (calloutContext)
@@ -483,43 +481,28 @@ ClientRequestContext::clientAccessCheckDone(int answer)
     http->doCallouts();
 }
 
-#if ICAP_CLIENT
-void
-ClientRequestContext::icapAccessCheck()
-{
-    ICAPAccessCheck *icap_access_check;
-
-    icap_access_check = new ICAPAccessCheck(ICAP::methodReqmod, ICAP::pointPreCache, http->request, NULL, icapAclCheckDoneWrapper, this);
-
-    if (icap_access_check != NULL) {
-        icap_access_check->check();
-        return;
-    }
-
-    http->doCallouts();
-}
-
+#if USE_ADAPTATION
 static void
-icapAclCheckDoneWrapper(ICAPServiceRep::Pointer service, void *data)
+adaptationAclCheckDoneWrapper(Adaptation::ServicePointer service, void *data)
 {
     ClientRequestContext *calloutContext = (ClientRequestContext *)data;
 
     if (!calloutContext->httpStateIsValid())
         return;
 
-    calloutContext->icapAclCheckDone(service);
+    calloutContext->adaptationAclCheckDone(service);
 }
 
 void
-ClientRequestContext::icapAclCheckDone(ICAPServiceRep::Pointer service)
+ClientRequestContext::adaptationAclCheckDone(Adaptation::ServicePointer service)
 {
-    debugs(93,3,HERE << this << " icapAclCheckDone called");
+    debugs(93,3,HERE << this << " adaptationAclCheckDone called");
     assert(http);
 
-    if (http->startIcap(service))
+    if (http->startAdaptation(service))
         return;
 
-    if (!service || service->bypass) {
+    if (!service || service->cfg().bypass) {
         // handle ICAP start failure when no service was selected
         // or where the selected service was optional
         http->doCallouts();
@@ -527,7 +510,7 @@ ClientRequestContext::icapAclCheckDone(ICAPServiceRep::Pointer service)
     }
 
     // handle start failure for an essential ICAP service
-    http->handleIcapFailure();
+    http->handleAdaptationFailure();
 }
 
 #endif
@@ -1069,14 +1052,14 @@ ClientHttpRequest::doCallouts()
         return;
     }
 
-#if ICAP_CLIENT
-    if (TheICAPConfig.onoff && !calloutContext->icap_acl_check_done) {
-        debugs(83, 3, HERE << "Doing calloutContext->icapAccessCheck()");
-        calloutContext->icap_acl_check_done = true;
-        calloutContext->icapAccessCheck();
-        return;
+#if USE_ADAPTATION
+    if (!calloutContext->adaptation_acl_check_done) {
+        calloutContext->adaptation_acl_check_done = true;
+        if (Adaptation::AccessCheck::Start(
+            Adaptation::methodReqmod, Adaptation::pointPreCache,
+            request, NULL, adaptationAclCheckDoneWrapper, calloutContext))
+            return; // will call callback
     }
-
 #endif
 
     if (!calloutContext->redirect_done) {
@@ -1136,33 +1119,34 @@ ClientHttpRequest::doCallouts()
 #include "client_side_request.cci"
 #endif
 
-#if ICAP_CLIENT
+#if USE_ADAPTATION
 /*
  * Initiate an ICAP transaction.  Return false on errors. 
  * The caller must handle errors.
  */
 bool
-ClientHttpRequest::startIcap(ICAPServiceRep::Pointer service)
+ClientHttpRequest::startAdaptation(Adaptation::ServicePointer service)
 {
-    debugs(85, 3, HERE << this << " ClientHttpRequest::startIcap() called");
+    debugs(85, 3, HERE << this << " ClientHttpRequest::startAdaptation() called");
     if (!service) {
-        debugs(85, 3, "ClientHttpRequest::startIcap fails: lack of service");
+        debugs(85, 3, "ClientHttpRequest::startAdaptation fails: lack of service");
         return false;
     }
     if (service->broken()) {
-        debugs(85, 3, "ClientHttpRequest::startIcap fails: broken service");
+        debugs(85, 3, "ClientHttpRequest::startAdaptation fails: broken service");
         return false;
     }
 
-    assert(!icapHeadSource);
-    assert(!icapBodySource);
-    icapHeadSource = initiateIcap(
-        new ICAPModXactLauncher(this, request, NULL, service));
-    return icapHeadSource != NULL;
+    assert(!virginHeadSource);
+    assert(!adaptedBodySource);
+    virginHeadSource = initiateAdaptation(service->makeXactLauncher(
+        this, request, NULL));
+
+    return virginHeadSource != NULL;
 }
 
 void
-ClientHttpRequest::noteIcapAnswer(HttpMsg *msg)
+ClientHttpRequest::noteAdaptationAnswer(HttpMsg *msg)
 {
     assert(cbdataReferenceValid(this));		// indicates bug
     assert(msg);
@@ -1185,8 +1169,8 @@ ClientHttpRequest::noteIcapAnswer(HttpMsg *msg)
 
         // subscribe to receive reply body
         if (new_rep->body_pipe != NULL) {
-            icapBodySource = new_rep->body_pipe;
-            assert(icapBodySource->setConsumerIfNotLate(this));
+            adaptedBodySource = new_rep->body_pipe;
+            assert(adaptedBodySource->setConsumerIfNotLate(this));
         }
 
         clientStreamNode *node = (clientStreamNode *)client_stream.tail->prev->data;
@@ -1198,34 +1182,34 @@ ClientHttpRequest::noteIcapAnswer(HttpMsg *msg)
         request_satisfaction_offset = 0;
         storeEntry()->replaceHttpReply(new_rep);
 
-        if (!icapBodySource) // no body
+        if (!adaptedBodySource) // no body
             storeEntry()->complete();
         clientGetMoreData(node, this);
     }
 
     // we are done with getting headers (but may be receiving body)
-    clearIcap(icapHeadSource);
+    clearAdaptation(virginHeadSource);
 
     if (!request_satisfaction_mode)
         doCallouts();
 }
 
 void
-ClientHttpRequest::noteIcapQueryAbort(bool final)
+ClientHttpRequest::noteAdaptationQueryAbort(bool final)
 {
-    clearIcap(icapHeadSource);
-    assert(!icapBodySource);
-    handleIcapFailure(!final);
+    clearAdaptation(virginHeadSource);
+    assert(!adaptedBodySource);
+    handleAdaptationFailure(!final);
 }
 
 void
 ClientHttpRequest::noteMoreBodyDataAvailable(BodyPipe::Pointer)
 {
     assert(request_satisfaction_mode);
-    assert(icapBodySource != NULL);
+    assert(adaptedBodySource != NULL);
 
-    if (const size_t contentSize = icapBodySource->buf().contentSize()) {
-        BodyPipeCheckout bpc(*icapBodySource);
+    if (const size_t contentSize = adaptedBodySource->buf().contentSize()) {
+        BodyPipeCheckout bpc(*adaptedBodySource);
         const StoreIOBuffer ioBuf(&bpc.buf, request_satisfaction_offset);
         storeEntry()->write(ioBuf);
         // assume can write everything
@@ -1234,7 +1218,7 @@ ClientHttpRequest::noteMoreBodyDataAvailable(BodyPipe::Pointer)
         bpc.checkIn();
     }
 
-    if (icapBodySource->exhausted())
+    if (adaptedBodySource->exhausted())
         endRequestSatisfaction();
     // else wait for more body data
 }
@@ -1242,12 +1226,12 @@ ClientHttpRequest::noteMoreBodyDataAvailable(BodyPipe::Pointer)
 void
 ClientHttpRequest::noteBodyProductionEnded(BodyPipe::Pointer)
 {
-    assert(!icapHeadSource);
-    if (icapBodySource != NULL) { // did not end request satisfaction yet
+    assert(!virginHeadSource);
+    if (adaptedBodySource != NULL) { // did not end request satisfaction yet
         // We do not expect more because noteMoreBodyDataAvailable always 
         // consumes everything. We do not even have a mechanism to consume
         // leftovers after noteMoreBodyDataAvailable notifications seize.
-        assert(icapBodySource->exhausted());
+        assert(adaptedBodySource->exhausted());
         endRequestSatisfaction();
     }
 }
@@ -1256,7 +1240,7 @@ void
 ClientHttpRequest::endRequestSatisfaction() {
     debugs(85,4, HERE << this << " ends request satisfaction");
     assert(request_satisfaction_mode);
-    stopConsumingFrom(icapBodySource);
+    stopConsumingFrom(adaptedBodySource);
 
     // TODO: anything else needed to end store entry formation correctly?
     storeEntry()->complete();
@@ -1265,15 +1249,15 @@ ClientHttpRequest::endRequestSatisfaction() {
 void
 ClientHttpRequest::noteBodyProducerAborted(BodyPipe::Pointer)
 {
-    assert(!icapHeadSource);
-    stopConsumingFrom(icapBodySource);
-    handleIcapFailure();
+    assert(!virginHeadSource);
+    stopConsumingFrom(adaptedBodySource);
+    handleAdaptationFailure();
 }
 
 void
-ClientHttpRequest::handleIcapFailure(bool bypassable)
+ClientHttpRequest::handleAdaptationFailure(bool bypassable)
 {
-    debugs(85,3, HERE << "handleIcapFailure(" << bypassable << ")");
+    debugs(85,3, HERE << "handleAdaptationFailure(" << bypassable << ")");
 
     const bool usedStore = storeEntry() && !storeEntry()->isEmpty();
     const bool usedPipe = request->body_pipe != NULL &&

@@ -52,6 +52,48 @@ bootstrap() {
   fi
 }
 
+bootstrap_libtoolize() {
+    ltver=$1
+
+    # TODO: when we have libtool2, tell libtoolize where to put its files
+    # instead of manualy moving files from ltdl to lib/libLtdl
+    if egrep -q '^[[:space:]]*AC_LIBLTDL_' configure.in
+    then
+        extras="--ltdl"
+    else
+        extras=""
+    fi
+
+    bootstrap libtoolize$ltver $extras --force --copy --automake
+
+    # customize generated libltdl, if any
+    if test -d libltdl
+    then
+        src=libltdl
+
+        # do not bundle with the huge standard license text
+        rm -fv $src/COPYING.LIB
+        makefile=$src/Makefile.in
+        sed 's/COPYING.LIB/ /g' $makefile > $makefile.new;
+        chmod u+w $makefile
+        mv $makefile.new $makefile
+        chmod u-w $makefile
+
+        dest=lib/libLtdl
+        # move $src to $dest
+	if test -d $dest # already exists
+	then
+	    echo "Updating $dest from $src."
+            chmod u+w $dest/*
+            mv $src/* $dest/
+            rmdir $src
+	else
+	    echo "Creating $dest from $src."
+	    mv $src $dest
+        fi
+    fi
+}
+
 # Adjust paths of required autool packages
 amver=`find_version automake ${amversions}`
 acver=`find_version autoconf ${acversions}`
@@ -81,7 +123,7 @@ do
 	    # Bootstrap the autotool subsystems
 	    bootstrap aclocal$amver
 	    bootstrap autoheader$acver
-	    bootstrap libtoolize$ltver --force --copy --automake
+	    bootstrap_libtoolize $ltver
 	    bootstrap automake$amver --foreign --add-missing --copy -f
 	    bootstrap autoconf$acver --force
 	fi ); then

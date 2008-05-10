@@ -22,6 +22,9 @@ typedef enum {
     COMM_ERR_CONNECT = -8,
     COMM_ERR_DNS = -9,
     COMM_ERR_CLOSING = -10,
+#if USE_IPV6
+    COMM_ERR_PROTOCOL = -11, /* IPv4 or IPv6 cannot be used on the fd socket */
+#endif
 } comm_err_t;
 
 typedef void CNCB(int fd, comm_err_t status, int xerrno, void *data);

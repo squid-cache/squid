@@ -38,108 +38,37 @@
 
 #include "event.h"
 #include "AsyncCall.h"
+#include "adaptation/Config.h"
 #include "ICAPServiceRep.h"
 
 class acl_access;
 
 class ConfigParser;
 
-class ICAPClass
+class ICAPConfig: public Adaptation::Config
 {
 
 public:
-    String key;
-    acl_access *accessList;
-
-    Vector<ICAPServiceRep::Pointer> services;
-
-    ICAPClass() : key(NULL), accessList(NULL) {};
-
-    int prepare();
-};
-
-class ICAPAccessCheck: public virtual AsyncJob
-{
-
-public:
-    typedef void ICAPAccessCheckCallback(ICAPServiceRep::Pointer match, void *data);
-    ICAPAccessCheck(ICAP::Method, ICAP::VectPoint, HttpRequest *, HttpReply *, ICAPAccessCheckCallback *, void *);
-    ~ICAPAccessCheck();
-
-private:
-    ICAP::Method method;
-    ICAP::VectPoint point;
-    HttpRequest *req;
-    HttpReply *rep;
-    ICAPAccessCheckCallback *callback;
-    void *callback_data;
-    ACLChecklist *acl_checklist;
-    Vector<String> candidateClasses;
-    String matchedClass;
-    void do_callback();
-    ICAPServiceRep::Pointer findBestService(ICAPClass *c, bool preferUp);
-    bool done;
-
-public:
-    void check();
-    void checkCandidates();
-    static void ICAPAccessCheckCallbackWrapper(int, void*);
-#if 0
-    static EVH ICAPAccessCheckCallbackEvent;
-#endif
-//AsyncJob virtual methods
-    virtual bool doneAll() const { return AsyncJob::doneAll() && done;}
-
-private:
-    CBDATA_CLASS2(ICAPAccessCheck);
-};
-
-class ICAPConfig
-{
-
-public:
-
-    int onoff;
+    int default_options_ttl;
     int preview_enable;
     int preview_size;
     time_t connect_timeout_raw;
     time_t io_timeout_raw;
-    int default_options_ttl;
-    int send_client_ip;
-    int send_client_username;
     int reuse_connections;
-    int service_failure_limit;
-    int service_revival_delay;
     char* client_username_header;
     int client_username_encode;
 
-    Vector<ICAPServiceRep::Pointer> services;
-    Vector<ICAPClass*> classes;
-
-    ICAPConfig() {};
-
+    ICAPConfig();
     ~ICAPConfig();
 
     time_t connect_timeout(bool bypassable) const;
     time_t io_timeout(bool bypassable) const;
 
-    void parseICAPService(void);
-    void freeICAPService(void);
-    void dumpICAPService(StoreEntry *, const char *) const;
-    ICAPServiceRep::Pointer findService(const String&);
-    ICAPClass * findClass(const String& key);
-
-    void parseICAPClass(void);
-    void freeICAPClass(void);
-    void dumpICAPClass(StoreEntry *, const char *) const;
-
-    void parseICAPAccess(ConfigParser &parser);
-    void freeICAPAccess(void);
-    void dumpICAPAccess(StoreEntry *, const char *) const;
-
 private:
-    ICAPConfig(const ICAPConfig &); // unsupported
-    ICAPConfig &operator =(const ICAPConfig &); // unsupported
+    ICAPConfig(const ICAPConfig &); // not implemented
+    ICAPConfig &operator =(const ICAPConfig &); // not implemented
+
+    virtual Adaptation::ServicePointer createService(const Adaptation::ServiceConfig &cfg);
 };
 
 extern ICAPConfig TheICAPConfig;

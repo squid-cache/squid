@@ -463,6 +463,10 @@ struct SquidConfig
         int global_internal_static;
         int dns_require_A;
         int debug_override_X;
+#if USE_ZPH_QOS        
+        int zph_tos_parent;
+        int zph_preserve_miss_tos;
+#endif        
     } onoff;
 
     class ACL *aclList;
@@ -610,6 +614,11 @@ struct SquidConfig
     int sleep_after_fork;	/* microseconds */
     time_t minimum_expiry_time;	/* seconds */
     external_acl *externalAclHelperList;
+#if USE_ZPH_QOS
+    int zph_tos_local;
+    int zph_tos_peer;
+    int zph_preserve_miss_tos_mask; 
+#endif
 #if USE_SSL
 
     struct
@@ -629,6 +638,11 @@ struct SquidConfig
 #endif
 
     char *accept_filter;
+    int umask;
+
+#if USE_LOADABLE_MODULES
+    wordlist *loadable_module_names;
+#endif
 };
 
 SQUIDCEXTERN SquidConfig Config;
@@ -1024,13 +1038,10 @@ struct _iostats
 
 struct request_flags
 {
-    request_flags():range(0),nocache(0),ims(0),auth(0),cachable(0),hierarchical(0),loopdetect(0),proxy_keepalive(0),proxying(0),refresh(0),redirected(0),need_validation(0),accelerated(0),transparent(0),internal(0),internalclient(0),must_keepalive(0),destinationIPLookedUp_(0)
+    request_flags(): range(0),nocache(0),ims(0),auth(0),cachable(0),hierarchical(0),loopdetect(0),proxy_keepalive(0),proxying(0),refresh(0),redirected(0),need_validation(0),accelerated(0),intercepted(0),spoof_client_ip(0),internal(0),internalclient(0),must_keepalive(0),destinationIPLookedUp_(0)
     {
 #if HTTP_VIOLATIONS
         nocache_hack = 0;
-#endif
-#if LINUX_TPROXY
-	tproxy = 0;
 #endif
     }
 
@@ -1050,10 +1061,8 @@ struct request_flags
     unsigned int nocache_hack:1;	/* for changing/ignoring no-cache requests */
 #endif
     unsigned int accelerated:1;
-    unsigned int transparent:1;
-#if LINUX_TPROXY
-    unsigned int tproxy:1; /* spoof client ip using tproxy */
-#endif
+    unsigned int intercepted:1;  /**< transparently intercepted request */
+    unsigned int spoof_client_ip:1;  /**< spoof client ip if possible */
     unsigned int internal:1;
     unsigned int internalclient:1;
     unsigned int must_keepalive:1;
