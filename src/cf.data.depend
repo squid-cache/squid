@@ -25,6 +25,8 @@ http_header_access
 http_header_replace
 http_port_list
 https_port_list
+adaptation_access_type	adaptation_service_set acl icap_service icap_class
+adaptation_service_set_type	icap_service
 icap_access_type	icap_class acl
 icap_class_type		icap_service
 icap_service_type

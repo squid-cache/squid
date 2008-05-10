@@ -64,7 +64,7 @@ fde::dumpStats (StoreEntry &dumpEntry, int fdNumber)
                       fdNumber,
 #endif
                       fdTypeStr[type],
-                      timeoutHandler != NULL ? (int) (timeout - squid_curtime) / 60 : 0,
+                      timeoutHandler != NULL ? (int) (timeout - squid_curtime) : 0,
                       bytes_read,
                       readPending(fdNumber) ? '*' : ' ',
                       bytes_written,

@@ -185,9 +185,6 @@ extern "C"
     extern const char *external_acl_message;      /* NULL */
     extern int opt_send_signal;	/* -1 */
     extern int opt_no_daemon; /* 0 */
-#if LINUX_TPROXY
-    extern int need_linux_tproxy; /* 0 */
-#endif
 
 
 #ifdef __cplusplus

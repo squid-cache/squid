@@ -49,9 +49,8 @@
 #include "SquidTime.h"
 #include "Store.h"
 
-#if LINUX_TPROXY
-#include <linux/netfilter_ipv4/ip_tproxy.h>
-#endif
+/* for IPInterceptor API */
+#include "IPInterception.h"
 
 static PSC fwdStartCompleteWrapper;
 static PF fwdServerClosedWrapper;
@@ -266,11 +265,13 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
 
     default:
         FwdState::Pointer fwd = new FwdState(client_fd, entry, request);
-#if LINUX_TPROXY
+
         /* If we need to transparently proxy the request
          * then we need the client source protocol, address and port */
-        fwd->src = request->client_addr;
-#endif
+        if(request->flags.spoof_client_ip) {
+            fwd->src = request->client_addr;
+            // AYJ: do we need to pass on the transparent flag also?
+        }
 
         fwd->start(fwd);
         return;
@@ -682,7 +683,7 @@ FwdState::connectDone(int aServerFD, comm_err_t status, int xerrno)
     assert(server_fd == aServerFD);
 
     if (Config.onoff.log_ip_on_direct && status != COMM_ERR_DNS && fs->code == HIER_DIRECT)
-        hierarchyNote(&request->hier, fs->code, fd_table[server_fd].ipaddr);
+        updateHierarchyInfo();
 
     if (status == COMM_ERR_DNS) {
         /*
@@ -742,7 +743,7 @@ FwdState::connectTimeout(int fd)
     assert(fd == server_fd);
 
     if (Config.onoff.log_ip_on_direct && fs->code == HIER_DIRECT && fd_table[fd].ipaddr[0])
-        hierarchyNote(&request->hier, fs->code, fd_table[fd].ipaddr);
+        updateHierarchyInfo();
 
     if (entry->isEmpty()) {
         ErrorState *anErr = errorCon(ERR_CONNECT_FAIL, HTTP_GATEWAY_TIMEOUT, request);
@@ -771,10 +772,6 @@ FwdState::connectStart()
     const char *domain = NULL;
     int ctimeout;
     int ftimeout = Config.Timeout.forward - (squid_curtime - start_t);
-#if LINUX_TPROXY
-
-    struct in_tproxy itp;
-#endif
 
     IPAddress outgoing;
     unsigned short tos;
@@ -798,11 +795,8 @@ FwdState::connectStart()
         ctimeout = Config.Timeout.connect;
     }
 
-#if LINUX_TPROXY
-    if (request->flags.tproxy)
+    if (request->flags.spoof_client_ip)
         client_addr = request->client_addr;
-
-#endif
 
     if (ftimeout < 0)
         ftimeout = 5;
@@ -816,12 +810,10 @@ FwdState::connectStart()
         server_fd = fd;
         n_tries++;
 
-        if (!fs->_peer) {
+        if (!fs->_peer)
             origin_tries++;
-            hierarchyNote(&request->hier, fs->code, request->GetHost());
-        } else {
-            hierarchyNote(&request->hier, fs->code, fs->_peer->host);
-        }
+
+        updateHierarchyInfo();
 
         comm_add_close_handler(fd, fwdServerClosedWrapper, this);
 
@@ -841,12 +833,11 @@ FwdState::connectStart()
 
     debugs(17, 3, "fwdConnectStart: got outgoing addr " << outgoing << ", tos " << tos);
 
-    fd = comm_openex(SOCK_STREAM,
-                     IPPROTO_TCP,
-                     outgoing,
-                     COMM_NONBLOCKING,
-                     tos,
-                     url);
+    if (request->flags.spoof_client_ip) {
+        fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, outgoing, (COMM_NONBLOCKING|COMM_TRANSPARENT), tos, url);
+    } else {
+        fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, outgoing, COMM_NONBLOCKING, tos, url);
+    }
 
     debugs(17, 3, "fwdConnectStart: got TCP FD " << fd);
 
@@ -881,45 +872,17 @@ FwdState::connectStart()
 
     commSetTimeout(fd, ctimeout, fwdConnectTimeoutWrapper, this);
 
-    if (fs->_peer) {
-        hierarchyNote(&request->hier, fs->code, fs->_peer->host);
-    } else {
-#if LINUX_TPROXY
-
-        if (request->flags.tproxy) {
-            IPAddress addr;
-
-            src.GetInAddr(itp.v.addr.faddr);
-            itp.v.addr.fport = 0;
-
-            /* If these syscalls fail then we just fallback to connecting
-             * normally by simply ignoring the errors...
-             */
-            itp.op = TPROXY_ASSIGN;
-
-            addr = (struct in_addr)itp.v.addr.faddr;
-            addr.SetPort(itp.v.addr.fport);
-
-            if (setsockopt(fd, SOL_IP, IP_TPROXY, &itp, sizeof(itp)) == -1) {
-                debugs(20, 1, "tproxy ip=" << addr << " ERROR ASSIGN");
-
-                request->flags.tproxy = 0;
-            } else {
-                itp.op = TPROXY_FLAGS;
-                itp.v.flags = ITP_CONNECT;
-
-                if (setsockopt(fd, SOL_IP, IP_TPROXY, &itp, sizeof(itp)) == -1) {
-                    debugs(20, 1, "tproxy ip=" << addr << " ERROR CONNECT");
-
-                    request->flags.tproxy = 0;
-                }
-            }
+#if LINUX_TPROXY2
+    if (!fs->_peer && request->flags.spoof_client_ip) {
+        // try to set the outgoing address using TPROXY v2
+        // if it fails we abort any further TPROXY actions on this connection
+        if(IPInterceptor.SetTproxy2OutgoingAddr(int fd, const IPAddress &src) == -1) {
+            request->flags.spoof_client_ip = 0;
         }
-
-#endif
-        hierarchyNote(&request->hier, fs->code, request->GetHost());
     }
+#endif
 
+    updateHierarchyInfo();
     commConnectStart(fd, host, port, fwdConnectDoneWrapper, this);
 }
 
@@ -970,6 +933,54 @@ FwdState::dispatch()
     EBIT_SET(entry->flags, ENTRY_DISPATCHED);
 
     netdbPingSite(request->GetHost());
+
+#if USE_ZPH_QOS
+    /* Retrieves remote server TOS value, and stores it as part of the
+     * original client request FD object. It is later used to forward
+     * remote server's TOS in the response to the client in case of a MISS.
+     */
+    fde * clientFde = &fd_table[client_fd];
+    if (clientFde)
+    {
+    	int tos = 1;
+    	int tos_len = sizeof(tos);
+    	clientFde->upstreamTOS = 0;
+        if (setsockopt(server_fd,SOL_IP,IP_RECVTOS,&tos,tos_len)==0)
+        {
+           unsigned char buf[512];
+           int len = 512;
+           if (getsockopt(server_fd,SOL_IP,IP_PKTOPTIONS,buf,(socklen_t*)&len) == 0)
+           {
+               /* Parse the PKTOPTIONS structure to locate the TOS data message
+                * prepared in the kernel by the ZPH incoming TCP TOS preserving
+                * patch.
+                */
+        	   unsigned char * p = buf;
+               while (p-buf < len)
+               {
+                  struct cmsghdr *o = (struct cmsghdr*)p;
+                  if (o->cmsg_len<=0)
+                     break;
+    
+                  if (o->cmsg_level == SOL_IP && o->cmsg_type == IP_TOS)
+                  {
+                	  clientFde->upstreamTOS = (unsigned char)(*(int*)CMSG_DATA(o));
+                	  break;
+                  }
+                  p += CMSG_LEN(o->cmsg_len);
+               }
+           }
+           else
+           {
+               debugs(33, 1, "ZPH: error in getsockopt(IP_PKTOPTIONS) on FD "<<server_fd<<" "<<xstrerror());
+           }
+        }
+        else
+        {
+        	debugs(33, 1, "ZPH: error in setsockopt(IP_RECVTOS) on FD "<<server_fd<<" "<<xstrerror());
+        }
+    }    
+#endif
 
     if (servers && (p = servers->_peer)) {
         p->stats.fetches++;
@@ -1203,6 +1214,38 @@ FwdState::serversFree(FwdServer ** FSVR)
     }
 }
 
+// updates HierarchyLogEntry, guessing nextHop and its format
+void
+FwdState::updateHierarchyInfo()
+{
+    assert(request);
+
+    FwdServer *fs = servers;
+    assert(fs);
+
+    // some callers use one condition, some use the other; are they the same?
+    assert((fs->code == HIER_DIRECT) == !fs->_peer);
+
+    const char *nextHop = NULL;
+
+    if (fs->_peer) { 
+        // went to peer, log peer domain name
+        nextHop = fs->_peer->host;
+    } else {
+        // went DIRECT, must honor log_ip_on_direct
+
+        // XXX: or should we use request->host_addr here? how?
+        assert(server_fd >= 0);
+        nextHop = fd_table[server_fd].ipaddr;
+        if (!Config.onoff.log_ip_on_direct || !nextHop[0])
+            nextHop = request->GetHost(); // domain name
+	}
+
+    assert(nextHop);
+    hierarchyNote(&request->hier, fs->code, nextHop);
+}
+
+
 /**** PRIVATE NON-MEMBER FUNCTIONS ********************************************/
 
 static void
@@ -1250,6 +1293,9 @@ IPAddress
 getOutgoingAddr(HttpRequest * request)
 {
     ACLChecklist ch;
+
+    if (request && request->flags.spoof_client_ip)
+        return request->client_addr;
 
     if (request)
     {

@@ -43,6 +43,9 @@ testHeaders: ufs/*.h coss/*.h
 ## aufs/ has no .h files
 ## ./ has no .h files
 
+## No such file...
+testHeaders.c:
+	touch testHeaders.c
 
 ## targets below to emulate distributed makefiles
 coss/all: libcoss.a

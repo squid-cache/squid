@@ -1181,8 +1181,8 @@ HttpStateData::processReplyBody()
         return;
     }
 
-#if ICAP_CLIENT
-    if (icapAccessCheckPending)
+#if USE_ADAPTATION
+    if (adaptationAccessCheckPending)
         return;
 
 #endif
@@ -1235,12 +1235,9 @@ HttpStateData::processReplyBody()
 	    comm_remove_close_handler(fd, closeHandler);
             closeHandler = NULL;
             fwd->unregister(fd);
-#if LINUX_TPROXY
 
-            if (orig_request->flags.tproxy)
+            if (orig_request->flags.spoof_client_ip)
                 client_addr = orig_request->client_addr;
-
-#endif
 
             if (_peer) {
                 if (_peer->options.originserver)

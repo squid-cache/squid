@@ -3,8 +3,16 @@
 #  $Id: Makefile.am,v 1.33 2007/12/14 23:11:44 amosjeffries Exp $
 #
 
-DIST_SUBDIRS = libTrie
-SUBDIRS= libTrie
+if USE_LOADABLE_MODULES
+DIST_SUBDIRS = libLtdl
+SUBDIRS      = libLtdl
+else
+DIST_SUBDIRS =
+SUBDIRS      =
+endif
+
+DIST_SUBDIRS += libTrie
+SUBDIRS      += libTrie
 
 install: all
 install-strip: all
@@ -69,6 +77,7 @@ libmiscutil_a_SOURCES = \
 	rfc3596.c \
 	$(SNPRINTFSOURCE) \
 	Splay.cc \
+	strnstr.cc \
 	$(STRSEPSOURCE) \
 	$(STRTOLLSOURCE) \
 	stub_memaccount.c \
@@ -104,6 +113,10 @@ check_PROGRAMS= \
 ## aborts if error encountered
 testHeaders: $(top_srcdir)/include/*.h
 	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/include" || exit 1
+
+## No such file...
+testHeaders.c:
+	touch testHeaders.c
 
 tests_testAll_SOURCES= \
 	tests/testArray.h \

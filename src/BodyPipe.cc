@@ -1,6 +1,7 @@
 
 #include "squid.h"
 #include "BodyPipe.h"
+#include "TextException.h"
 
 CBDATA_CLASS_INIT(BodyPipe);
 
@@ -284,10 +285,19 @@ void
 BodyPipe::enableAutoConsumption() {
 	mustAutoConsume = true;
 	debugs(91,5, HERE << "enabled auto consumption" << status());
-	if (!theConsumer && theBuf.hasContent()){
-			theConsumer = new BodySink;
-		scheduleBodyDataNotification();
-	}
+	if (!theConsumer && theBuf.hasContent())
+		startAutoConsumption();
+}
+
+// start auto consumption by creating body sink
+void
+BodyPipe::startAutoConsumption()
+{
+	Must(mustAutoConsume);
+	Must(!theConsumer);
+	theConsumer = new BodySink;
+	debugs(91,7, HERE << "starting auto consumption" << status());
+	scheduleBodyDataNotification();
 }
 
 MemBuf &
@@ -346,6 +356,9 @@ BodyPipe::postAppend(size_t size) {
 	thePutSize += size;
 	debugs(91,7, HERE << "added " << size << " bytes" << status());
 
+	if (mustAutoConsume && !theConsumer && size > 0)
+		startAutoConsumption();
+
 	// We should not consume here even if mustAutoConsume because the
 	// caller may not be ready for the data to be consumed during this call.
 	scheduleBodyDataNotification();
@@ -358,7 +371,7 @@ BodyPipe::postAppend(size_t size) {
 void
 BodyPipe::scheduleBodyDataNotification()
 {
-	if (theConsumer || mustAutoConsume) {
+	if (theConsumer) {
 		AsyncCall::Pointer call = asyncCall(91, 7,
 			"BodyConsumer::noteMoreBodyDataAvailable",
 			BodyConsumerDialer(theConsumer,

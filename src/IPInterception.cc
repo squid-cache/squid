@@ -1,9 +1,9 @@
-
 /*
  * $Id: IPInterception.cc,v 1.20 2008/02/05 22:38:24 amosjeffries Exp $
  *
  * DEBUG: section 89    NAT / IP Interception 
  * AUTHOR: Robert Collins
+ * AUTHOR: Amos Jeffries
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -33,12 +33,16 @@
  *
  */
 
+#include "IPInterception.h"
+#include "fde.h"
+
+#if 0
 #include "squid.h"
 #include "clientStream.h"
-#include "IPInterception.h"
-#include "SquidTime.h"
+#endif
 
 #if IPF_TRANSPARENT
+
 #if HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
 #endif
@@ -72,7 +76,8 @@
 #elif HAVE_NETINET_IP_NAT_H
 #include <netinet/ip_nat.h>
 #endif
-#endif
+
+#endif /* IPF_TRANSPARENT required headers */
 
 #if PF_TRANSPARENT
 #include <sys/types.h>
@@ -82,17 +87,143 @@
 #include <net/if.h>
 #include <netinet/in.h>
 #include <net/pfvar.h>
-#endif
+#endif /* PF_TRANSPARENT required headers */
 
 #if LINUX_NETFILTER
 #include <linux/netfilter_ipv4.h>
 #endif
 
-#if IPF_TRANSPARENT
-int
+#if LINUX_TPROXY2
+#ifdef HAVE_LINUX_NETFILTER_IPV4_IP_TPROXY_H
+#include <linux/netfilter_ipv4/ip_tproxy.h>
+#else
+#error " TPROXY v2 Header file missing: linux/netfilter_ipv4/ip_tproxy.h. Perhapse you meant to use TPROXY v4 ? "
+#endif
+#endif
 
-clientNatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &dst)
+
+// single global instance for access by other components.
+IPIntercept IPInterceptor;
+
+void
+IPIntercept::StopTransparency(const char *str) {
+    if(transparent_active) {
+        debugs(89, DBG_IMPORTANT, "Stopping full transparency: " << str);
+        transparent_active = 0;
+    }
+}
+
+void
+IPIntercept::StopInterception(const char *str) {
+    if(intercept_active) {
+        debugs(89, DBG_IMPORTANT, "Stopping IP interception: " << str);
+        intercept_active = 0;
+    }
+}
+
+int
+IPIntercept::NetfilterInterception(int fd, const IPAddress &me, IPAddress &dst, int silent)
 {
+#if LINUX_NETFILTER
+    struct addrinfo *lookup = NULL;
+
+    dst.GetAddrInfo(lookup,AF_INET);
+
+    /** \par
+     * Try NAT lookup for REDIRECT or DNAT targets. */
+    if( getsockopt(fd, SOL_IP, SO_ORIGINAL_DST, lookup->ai_addr, &lookup->ai_addrlen) == 0) {
+        if(!silent) {
+            debugs(89, DBG_IMPORTANT, HERE << " NF getsockopt(SO_ORIGINAL_DST) failed: " << xstrerror());
+            last_reported = squid_curtime;
+        }
+    }
+    else {
+        dst = *lookup;
+    }
+
+    dst.FreeAddrInfo(lookup);
+
+    if(me != dst) {
+        debugs(89, 5, HERE << "address: " << dst);
+        return 0;
+    }
+
+#endif
+    return -1;
+}
+
+int
+IPIntercept::NetfilterTransparent(int fd, const IPAddress &me, IPAddress &dst, int silent)
+{
+#if LINUX_NETFILTER
+    struct addrinfo *lookup = NULL;
+
+    if( ! fd_table[fd].flags.transparent) return -1;
+
+    dst.GetAddrInfo(lookup,AF_INET);
+
+    /** \par
+     * Try lookup for TPROXY targets. BUT, only if the FD is flagged for transparent operations. */
+    if(getsockopt(fd, SOL_IP, IP_TRANSPARENT, lookup->ai_addr, &lookup->ai_addrlen) != 0) {
+        if(!silent) {
+            debugs(89, DBG_IMPORTANT, HERE << " NF getsockopt(IP_TRANSPARENT) failed: " << xstrerror());
+            last_reported = squid_curtime;
+        }
+    }
+    else {
+        dst = *lookup;
+    }
+
+    dst.FreeAddrInfo(lookup);
+
+    if(me != dst) {
+        debugs(89, 5, HERE << "address: " << dst);
+        return 0;
+    }
+
+#endif
+    return -1;
+}
+
+int
+IPIntercept::IPFWInterception(int fd, const IPAddress &me, IPAddress &dst, int silent)
+{
+#if IPFW_TRANSPARENT
+    struct addrinfo *lookup = NULL;
+
+    dst.GetAddrInfo(lookup,AF_INET);
+
+    /** \par
+     * Try lookup for IPFW interception. */
+    if( getsockname(fd, lookup->ai_addr, &lookup->ai_addrlen) >= 0 ) {
+        if( !silent ) {
+            debugs(89, DBG_IMPORTANT, HERE << " IPFW getsockname(...) failed: " << xstrerror());
+            last_reported = squid_curtime;
+        }
+    }
+    else {
+        dst = *lookup;
+    }
+
+    dst.FreeAddrInfo(lookup);
+
+    if(me != dst) {
+        debugs(89, 5, HERE << "address: " << dst);
+        return 0;
+    }
+
+#endif
+    return -1;
+}
+
+
+// TODO split this one call into one per transparency method
+//	with specific switching at run-time ??
+
+int
+IPIntercept::NatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &dst)
+{
+#if IPF_TRANSPARENT  /* --enable-ipf-transparent */
     dst = me;
     if( !me.IsIPv4() ) return -1;
     if( !peer.IsIPv4() ) return -1;
@@ -108,7 +239,6 @@ clientNatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &d
 
     struct natlookup natLookup;
     static int natfd = -1;
-    static time_t last_reported = 0;
     int x;
 
 #if defined(IPFILTER_VERSION) && (IPFILTER_VERSION >= 4000027)
@@ -198,53 +328,35 @@ clientNatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &d
 
         return 0;
     }
-}
 
-#elif LINUX_NETFILTER
-int
-clientNatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &dst)
-{
+
+
+#elif LINUX_NETFILTER || IPFW_TRANSPARENT /* --enable-linux-netfilter OR --enable-ipfw-transparent */
+
+    /* Netfilter and IPFW share almost identical lookup methods for their NAT tables.
+     * This allows us to perform a nice clean failover sequence for them.
+     */
+    int silent = (squid_curtime - last_reported > 60 ? 0 : 1);
+
     dst = me;
-    if( !me.IsIPv4() ) return -1;
+
+    if( !me.IsIPv4()   ) return -1;
     if( !peer.IsIPv4() ) return -1;
 
-    static time_t last_reported = 0;
-    struct addrinfo *lookup = NULL;
-
-    dst.GetAddrInfo(lookup,AF_INET);
-
-    if (getsockopt(fd, SOL_IP, SO_ORIGINAL_DST, lookup->ai_addr, &lookup->ai_addrlen) != 0)
-    {
-        dst.FreeAddrInfo(lookup);
-
-        if (squid_curtime - last_reported > 60) {
-            debugs(89, 1, "clientNatLookup: peer " << peer << " NF getsockopt(SO_ORIGINAL_DST) failed: " << xstrerror());
-            last_reported = squid_curtime;
-        }
-
-        return -1;
+    if(intercept_active) {
+        if( NetfilterInterception(fd, me, dst, silent) == 0) return 0;
+        if( IPFWInterception(fd, me, dst, silent) == 0) return 0;
     }
-    dst = *lookup;
+    if(transparent_active) {
+        if( NetfilterTransparent(fd, me, dst, silent) == 0) return 0;
+    }
 
-    dst.FreeAddrInfo(lookup);
+    return -1;
 
-    debugs(89, 5, "clientNatLookup: addr = " << dst << "");
-
-    if (me != dst)
-        return 0;
-    else
-        return -1;
-}
-
-#elif PF_TRANSPARENT
-int
-
-clientNatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress dst)
-{
+#elif PF_TRANSPARENT  /* --enable-pf-transparent */
 
     struct pfioc_natlook nl;
     static int pffd = -1;
-    static time_t last_reported = 0;
 
     if( !me.IsIPv4() ) return -1;
     if( !peer.IsIPv4() ) return -1;
@@ -300,44 +412,47 @@ clientNatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress ds
         else
             return -1;
     }
+
+
+#else /* none of the transparent options configured */
+
+    debugs(89, 1, "WARNING: transparent proxying not supported");
+    return -1;
+
+#endif
+
 }
 
-#elif IPFW_TRANSPARENT
-int
-clientNatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &dst)
+#if LINUX_TPROXY2
+IPIntercept::SetTproxy2OutgoingAddr(int fd, const IPAddress &src)
 {
-    int ret;
-    struct addrinfo *lookup = NULL;
+    IPAddress addr;
+    struct in_tproxy itp;
 
-    if( !me.IsIPv4() ) return -1;
-    if( !peer.IsIPv4() ) return -1;
+    src.GetInAddr(itp.v.addr.faddr);
+    itp.v.addr.fport = 0;
 
-    dst.GetAddrInfo(lookup,AF_INET);
+    /* If these syscalls fail then we just fallback to connecting
+     * normally by simply ignoring the errors...
+     */
+    itp.op = TPROXY_ASSIGN;
 
-    ret = getsockname(fd, lookup->ai_addr, &lookup->ai_addrlen);
+    addr = (struct in_addr)itp.v.addr.faddr;
+    addr.SetPort(itp.v.addr.fport);
 
-    if (ret < 0) {
-
-        dst.FreeAddrInfo(lookup);
-
-        debugs(89, 1, "clientNatLookup: getpeername failed (fd " << fd << "), errstr " << xstrerror());
-
+    if (setsockopt(fd, SOL_IP, IP_TPROXY, &itp, sizeof(itp)) == -1) {
+        debugs(20, 1, "tproxy ip=" << addr << " ERROR ASSIGN");
         return -1;
+    } else {
+        itp.op = TPROXY_FLAGS;
+        itp.v.flags = ITP_CONNECT;
+
+        if (setsockopt(fd, SOL_IP, IP_TPROXY, &itp, sizeof(itp)) == -1) {
+            debugs(20, 1, "tproxy ip=" << addr << " ERROR CONNECT");
+            return -1;
+        }
     }
-
-    dst = *lookup;
-
-    dst.FreeAddrInfo(lookup);
 
     return 0;
 }
-
-#else
-int
-clientNatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &dst)
-{
-    debugs(89, 1, "WARNING: transparent proxying not supported");
-    return -1;
-}
 #endif
-

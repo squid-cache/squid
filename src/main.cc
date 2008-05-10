@@ -70,6 +70,17 @@
 #include "MemPool.h"
 #include "ICMPSquid.h"
 
+#if USE_LOADABLE_MODULES
+#include "LoadableModules.h"
+#endif
+
+#if ICAP_CLIENT
+#include "ICAP/ICAPConfig.h"
+#endif
+#if USE_ADAPTATION
+#include "adaptation/Config.h"
+#endif
+
 #if USE_WIN32_SERVICE
 
 #include "squid_windows.h"
@@ -683,6 +694,7 @@ mainReconfigure(void)
     errorClean();
     enter_suid();		/* root to read config file */
     parseConfigFile(ConfigFile, manager);
+    setUmask(Config.umask);
     Mem::Report();
     setEffectiveUser();
     _db_init(Config.Log.log, Config.debugOptions);
@@ -1078,6 +1090,26 @@ mainInitialize(void)
 
     memCheckInit();
 
+#if USE_LOADABLE_MODULES
+    LoadableModulesConfigure(Config.loadable_module_names);
+#endif
+
+#if USE_ADAPTATION
+    bool enableAdaptation = false;
+
+    // We can remove this dependency on specific adaptation mechanisms
+    // if we create a generic Registry of such mechanisms. Should we?
+#if ICAP_CLIENT
+    TheICAPConfig.finalize(); // must be after we load modules
+    enableAdaptation = TheICAPConfig.onoff;
+#endif
+    // same for eCAP
+
+    // must be the last adaptation-related finalize
+    Adaptation::Config::Finalize(enableAdaptation);
+#endif
+
+
     debugs(1, 1, "Ready to serve requests.");
 
     if (!configured_once) {
@@ -1119,7 +1151,6 @@ int
 main(int argc, char **argv)
 #endif
 {
-    mode_t oldmask;
 #ifdef _SQUID_WIN32_
 
     int WIN32_init_err;
@@ -1165,17 +1196,6 @@ main(int argc, char **argv)
 
 #endif
 #endif /* HAVE_MALLOPT */
-
-    /*
-     * The plan here is to set the umask to 007 (deny others for
-     * read,write,execute), but only if the umask is not already
-     * set.  Unfortunately, there is no way to get the current
-     * umask value without setting it.
-     */
-    oldmask = umask(S_IRWXO);
-
-    if (oldmask)
-        umask(oldmask);
 
     squid_srandom(time(NULL));
 
@@ -1250,6 +1270,7 @@ main(int argc, char **argv)
 
             return parse_err;
     }
+    setUmask(Config.umask);
     if (-1 == opt_send_signal)
         if (checkRunningPid())
             exit(1);

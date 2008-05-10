@@ -1,4 +1,3 @@
-
 /*
  * $Id: cache_cf.cc,v 1.544 2008/03/04 12:00:36 amosjeffries Exp $
  *
@@ -48,6 +47,8 @@
 #include "Parsing.h"
 #include "MemBuf.h"
 #include "wordlist.h"
+#include "IPInterception.h"
+
 #if HAVE_GLOB_H
 #include <glob.h>
 #endif
@@ -57,6 +58,17 @@
 #endif
 #if USE_SQUID_ESI
 #include "ESIParser.h"
+#endif
+
+#if USE_ADAPTATION
+#include "adaptation/Config.h"
+
+static void parse_adaptation_service_set_type();
+
+static void parse_adaptation_access_type();
+static void dump_adaptation_access_type(StoreEntry *, const char *);
+static void free_adaptation_access_type();
+
 #endif
 
 #if ICAP_CLIENT
@@ -391,6 +403,7 @@ parseConfigFile(const char *file_name, CacheManager & manager)
 
     if (!Config.chroot_dir) {
         leave_suid();
+        setUmask(Config.umask);
         _db_init(Config.Log.log, Config.debugOptions);
         enter_suid();
     }
@@ -2895,15 +2908,6 @@ parse_http_port_option(http_port_list * s, char *token)
     } else if (strncmp(token, "name=", 5) == 0) {
         safe_free(s->name);
         s->name = xstrdup(token + 5);
-    } else if (strcmp(token, "transparent") == 0) {
-        s->transparent = 1;
-#if USE_IPV6
-        /* INET6: until transparent REDIRECT works on IPv6 SOCKET, force wildcard to IPv4 */
-        if( !s->s.SetIPv4() ) {
-            debugs(3, 0, "http(s)_port: IPv6 addresses cannot be 'transparent' (protocol does not provide NAT)" << s->s );
-            self_destruct();
-        }
-#endif
     } else if (strcmp(token, "vhost") == 0) {
         s->vhost = 1;
         s->accel = 1;
@@ -2928,19 +2932,27 @@ parse_http_port_option(http_port_list * s, char *token)
         else
             self_destruct();
 
-#if LINUX_TPROXY
-
-    } else if (strcmp(token, "tproxy") == 0) {
-        s->tproxy = 1;
-        need_linux_tproxy = 1;
+    } else if (strcmp(token, "transparent") == 0 || strcmp(token, "intercept") == 0) {
+        s->intercepted = 1;
+        IPInterceptor.StartInterception();
 #if USE_IPV6
         /* INET6: until transparent REDIRECT works on IPv6 SOCKET, force wildcard to IPv4 */
+        if( !s->s.SetIPv4() ) {
+            debugs(3, 0, "http(s)_port: IPv6 addresses cannot be 'transparent' (protocol does not provide NAT)" << s->s );
+            self_destruct();
+        }
+#endif
+    } else if (strcmp(token, "tproxy") == 0) {
+        s->spoof_client_ip = 1;
+        IPInterceptor.StartTransparency();
+#if USE_IPV6
+        /* INET6: until target TPROXY is known to work on IPv6 SOCKET, force wildcard to IPv4 */
         if( s->s.IsIPv6() && !s->s.SetIPv4() ) {
             debugs(3, 0, "http(s)_port: IPv6 addresses cannot be transparent (protocol does not provide NAT)" << s->s );
             self_destruct();
         }
 #endif
-#endif
+
     } else if (strcmp(token, "ipv4") == 0) {
 #if USE_IPV6
         if( !s->s.SetIPv4() ) {
@@ -3063,8 +3075,8 @@ dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
     if (s->defaultsite)
         storeAppendPrintf(e, " defaultsite=%s", s->defaultsite);
 
-    if (s->transparent)
-        storeAppendPrintf(e, " transparent");
+    if (s->intercepted)
+        storeAppendPrintf(e, " intercept");
 
     if (s->vhost)
         storeAppendPrintf(e, " vhost");
@@ -3421,60 +3433,93 @@ free_access_log(customlog ** definitions)
     }
 }
 
+#if USE_ADAPTATION
+
+static void
+parse_adaptation_service_set_type()
+{
+    Adaptation::Config::ParseServiceSet();
+}
+
+static void
+parse_adaptation_access_type()
+{
+    Adaptation::Config::ParseAccess(LegacyParser);
+}
+
+static void
+free_adaptation_access_type()
+{
+    Adaptation::Config::FreeAccess();
+}
+
+static void
+dump_adaptation_access_type(StoreEntry * entry, const char *name)
+{
+    Adaptation::Config::DumpAccess(entry, name);
+}
+
+#endif /* USE_ADAPTATION */
+
+
 #if ICAP_CLIENT
 
 static void
 parse_icap_service_type(ICAPConfig * cfg)
 {
-    cfg->parseICAPService();
+    cfg->parseService();
 }
 
 static void
 free_icap_service_type(ICAPConfig * cfg)
 {
-    cfg->freeICAPService();
+    cfg->freeService();
 }
 
 static void
 dump_icap_service_type(StoreEntry * entry, const char *name, const ICAPConfig &cfg)
 {
-    cfg.dumpICAPService(entry, name);
+    cfg.dumpService(entry, name);
 }
 
 static void
-parse_icap_class_type(ICAPConfig * cfg)
+parse_icap_class_type(ICAPConfig *)
 {
-    cfg->parseICAPClass();
+    debugs(93, 0, "WARNING: 'icap_class' is depricated. " <<
+        "Use 'adaptation_service_set' instead");
+    Adaptation::Config::ParseServiceSet();
 }
 
 static void
-free_icap_class_type(ICAPConfig * cfg)
+free_icap_class_type(ICAPConfig *)
 {
-    cfg->freeICAPClass();
+    Adaptation::Config::FreeServiceSet();
 }
 
 static void
-dump_icap_class_type(StoreEntry * entry, const char *name, const ICAPConfig &cfg)
+dump_icap_class_type(StoreEntry * entry, const char *name, const ICAPConfig &)
 {
-    cfg.dumpICAPClass(entry, name);
+    Adaptation::Config::DumpServiceSet(entry, name);
 }
 
 static void
-parse_icap_access_type(ICAPConfig * cfg)
+parse_icap_access_type(ICAPConfig *)
 {
-    cfg->parseICAPAccess(LegacyParser);
+    debugs(93, 0, "WARNING: 'icap_access' is depricated. " <<
+        "Use 'adaptation_access' instead");
+    parse_adaptation_access_type();
 }
 
 static void
-free_icap_access_type(ICAPConfig * cfg)
+free_icap_access_type(ICAPConfig *)
 {
-    cfg->freeICAPAccess();
+    free_adaptation_access_type();
 }
 
 static void
-dump_icap_access_type(StoreEntry * entry, const char *name, const ICAPConfig &cfg)
+dump_icap_access_type(StoreEntry * entry, const char *name, const ICAPConfig &)
 {
-    cfg.dumpICAPAccess(entry, name);
+    dump_adaptation_access_type(entry, name);
 }
 
 #endif

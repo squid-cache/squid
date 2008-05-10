@@ -1,15 +1,16 @@
+This TODO list is no longer accurate. For more updated Squid-3 plans see:
+  http://wiki.squid-cache.org/RoadMap/Squid3
+
+
 Squid-3.0:
   
   Feature freeze:
 
-  - overlapping helper feature implementation (plain or stateful or both). 
-  - Someone other than Robert to review the draft squid 3 release notes (in CVS already).
+  - overlapping helper feature implementation (plain or stateful or both).
 
   Other?
 
   - Windows port (Merging in process, won't delay 3.0).
-  - Generalize socket binding to allow for multipe ICP/HTCP/SNMP sockets
-    (get rid of udp_incoming_address) (???)
 
   Done items:
 
@@ -23,6 +24,7 @@ Squid-3.0:
   - Authentication tidyups in proxy_auth acl managagement (Done).
   - Appropriate parts of rproxy (Done).
   - Some kind of Range support to at least the level of 2.5 and earlier (Done).
+  - Someone other than Robert to review the draft squid 3 release notes (in CVS already). (done)
 
 
 Squid-3.1
@@ -37,12 +39,14 @@ Squid-3.1
   - ETag caching (???)
   - Customized logging capabilities
   - External logging
-  - Other devel.squid-cache.org projects
   - header filtering improvements (bug #601)
+  - Generalize socket binding to allow for multipe ICP/HTCP/SNMP sockets
+    (get rid of udp_incoming_address) (???)
 
   Done Items:
 
   - IPv6
+  - Other devel.squid-cache.org projects (Done. some anyway)
 
 
 Later:
@@ -79,13 +83,10 @@ Our OLD Todo List, still containing some interesting items.
 
 (2)	be more persistent in forwarding requests; return fewer error pages
 (2)	Fix some problems with peer-selection.
-		- Allow for 'backup' parents 
 		- An orderd list of siblings to try.  
 		- Hash function load balancing
 (2)     Calculate Content-Length for multipart range replies (AR)
 
-(3)	hit metering
-(3)	ETag support (makes metadata bigger--ack!)
 (3)	Efficient public peer access control *without ACLs*
 	Bill Wichers <billw@unix0.waveform.net>
 	Dave Zarzycki <zarzycki@ricochet.net>
@@ -95,8 +96,6 @@ Our OLD Todo List, still containing some interesting items.
 	#    x milliseconds, then deny.
 	distant_peer_deny   200  75  10
 (3)     deny/allow tags for HTTP header fields (AR)
-(3)	LDAP support.  See http://miso.wwa.com/~donley/ and
-	Clayton Donley <qa1049@ilms04.cig.mot.com>
 (3)	What to do about ACL's and URL escaping?
 (3)	Review RFC 2068 and RFC 2109 for header handing, especially
 	Cache-Control.
@@ -110,19 +109,28 @@ Our OLD Todo List, still containing some interesting items.
 
 (5)	X-Proxy-hops header?
 (5)	internalize redirectors?
-(5)	For _popular_ objects, return hits if known to be stale, but then
-	initiate an IMS/refresh in the background.
 (5)	#ifdefs to disable IP caching
 (5)	REST for failed ftp transfers.
-(5)	Customizable access logging.
-(5)	Inline DNS queries with native resolver calls.
 (5)	MD5 acl type
-(5)	return "ERR_TOO_LARGE" messages for replies with
-	content-lengths larger than some limit.
-(5)	Bind HTTP/ICP sockets to multiple interfaces
 (5)	Custom X-Forwarded-For
 
+MOVED UP TO CURRENT LISTS:
+(5)	Bind HTTP/ICP sockets to multiple interfaces
+(3)	ETag support (makes metadata bigger--ack!)
+(5)	For _popular_ objects, return hits if known to be stale, but then
+	initiate an IMS/refresh in the background.
+
+
 DONE:
+(2)	Fix some problems with peer-selection.
+		- Allow for 'backup' parents 
+(5)	return "ERR_TOO_LARGE" messages for replies with
+	content-lengths larger than some limit.
+(3)	hit metering
+(5)	Customizable access logging.
+(3)	LDAP support.  See http://miso.wwa.com/~donley/ and
+	Clayton Donley <qa1049@ilms04.cig.mot.com>
+(5)	Inline DNS queries with native resolver calls.
 + s/sprintf/snprintf/g
 + Write the text for all the error message files
 + fix all the assert(!ERR_FOO) placeholders

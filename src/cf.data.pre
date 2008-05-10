@@ -898,7 +898,7 @@ DOC_START
 
 	Options:
 
-	   transparent	Support for transparent interception of
+	   intercept	Support for IP-Layer interception of
 			outgoing requests without browser settings.
 
 	   tproxy	Support Linux TPROXY for spoofing outgoing
@@ -1128,6 +1128,66 @@ DOC_START
 	Allows you to select a TOS/Diffserv value to mark client-side
 	connections with, based on the username or source address
 	making the request.
+DOC_END
+
+NAME: zph_tos_local
+TYPE: int
+IFDEF: USE_ZPH_QOS
+DEFAULT: 0
+LOC: Config.zph_tos_local
+DOC_START
+       Allows you to select a TOS/Diffserv value to mark local hits. Read above
+       (tcp_outgoing_tos) for details/requirements about TOS.
+       Default: 0 (disabled).
+DOC_END
+
+NAME: zph_tos_peer
+TYPE: int
+IFDEF: USE_ZPH_QOS
+DEFAULT: 0
+LOC: Config.zph_tos_peer
+DOC_START
+       Allows you to select a TOS/Diffserv value to mark peer hits. Read above
+       (tcp_outgoing_tos) for details/requirements about TOS.
+       Default: 0 (disabled).
+DOC_END
+
+NAME: zph_tos_parent
+COMMENT: on|off
+TYPE: onoff
+IFDEF: USE_ZPH_QOS
+DEFAULT: on
+LOC: Config.onoff.zph_tos_parent
+DOC_START
+       Set this to off if you want only sibling hits to be marked.
+       If set to on (default), parent hits are being marked too.
+DOC_END
+
+NAME: zph_preserve_miss_tos
+COMMENT: on|off
+TYPE: onoff
+IFDEF: USE_ZPH_QOS
+DEFAULT: on
+LOC: Config.onoff.zph_preserve_miss_tos
+DOC_START
+       If set to on (default), any HTTP response towards clients will
+       have the TOS value of the response comming from the remote
+       server masked with the value of zph_preserve_miss_tos_mask.
+       For this to work correctly, you will need to patch your linux
+       kernel with the TOS preserving ZPH patch.
+       The kernel patch can be downloaded from http://zph.bratcheda.org
+DOC_END
+
+NAME: zph_preserve_miss_tos_mask
+TYPE: int
+IFDEF: USE_ZPH_QOS
+DEFAULT: 255
+LOC: Config.zph_preserve_miss_tos_mask
+DOC_START
+       Allows you to mask certain bits in the TOS received from the
+       remote server, before copying the value to the TOS send towards
+       clients.
+       Default: 255 (TOS from server is not changed).
 DOC_END
 
 NAME: tcp_outgoing_address
@@ -3465,6 +3525,18 @@ DOC_START
 	A list of other DNS names your cache has.
 DOC_END
 
+NAME: umask
+TYPE: int
+LOC: Config.umask
+DEFAULT: 027
+DOC_START
+	Minimum umask which should be enforced while the proxy
+	is running, in addition to the umask set at startup.
+
+	For a traditional octal representation of umasks, start
+        your value with 0.
+DOC_END
+
 COMMENT_START
  OPTIONS FOR THE CACHE REGISTRATION SERVICE
  -----------------------------------------------------------------------------
@@ -5007,16 +5079,15 @@ IFDEF: ICAP_CLIENT
 LOC: TheICAPConfig
 DEFAULT: none
 DOC_START
-	Defines an ICAP service chain. Eventually, multiple services per
-	vectoring point will be supported. For now, please specify a single
-	service per class:
+	This depricated option was documented to define an ICAP service
+	chain, even though it actually defined a set of similar, redundant
+	services, and the chains were not supported. 
 
-	icap_class classname servicename
+	To define a set of redundant services, please use the
+	adaptation_service_set directive.
 
-Example:
-icap_class class_1 service_1
-icap class class_2 service_1
-icap class class_3 service_3
+	If you need adaptation service chains, patches or sponsorship
+	is welcome.
 DOC_END
 
 NAME: icap_access
@@ -5025,21 +5096,95 @@ IFDEF: ICAP_CLIENT
 LOC: TheICAPConfig
 DEFAULT: none
 DOC_START
-	Redirects a request through an ICAP service class, depending
-	on given acls
+        This option is depricated. Please use adaptation_access, which
+	has the same ICAP functionality, but comes with better
+	documentation, and eCAP support.
+DOC_END
 
-	icap_access classname allow|deny [!]aclname...
+COMMENT_START
+ eCAP OPTIONS
+ -----------------------------------------------------------------------------
+COMMENT_END
 
-	The icap_access statements are processed in the order they appear in
-	this configuration file. If an access list matches, the processing stops.
-	For an "allow" rule, the specified class is used for the request. A "deny"
-	rule simply stops processing without using the class. You can also use the
-	special classname "None".
-
-	For backward compatibility, it is also possible to use services
-	directly here.
+NAME: loadable_modules
+TYPE: wordlist
+IFDEF: USE_LOADABLE_MODULES
+LOC: Config.loadable_module_names
+DEFAULT: none
+DOC_START
+	Instructs Squid to load the specified dynamic module(s) or activate
+	preloaded module(s).
 Example:
-icap_access class_1 allow all
+loadable_modules @DEFAULT_PREFIX@/lib/MinimalAdapter.so
+DOC_END
+
+COMMENT_START
+ MESSAGE ADAPTATION OPTIONS
+ -----------------------------------------------------------------------------
+COMMENT_END
+
+NAME: adaptation_service_set
+TYPE: adaptation_service_set_type
+IFDEF: USE_ADAPTATION
+LOC: none
+DEFAULT: none
+DOC_START
+
+	Defines a named adaptation service set. The set is populated in
+	the order of adaptation_service_set directives in this file.
+	When adaptation ACLs are processed, the first and only the first
+	applicable adaptation service from the set will be used. Thus,
+	the set should group similar, redundant services, rather than a
+	chain of complementary services.
+
+	If you have a single adaptation service, you do not need to
+	define a set containing it because adaptation_access accepts
+	service names.
+
+	See also: adaptation_access
+
+Example:
+adaptation_service_set svcBlocker urlFilterPrimary urlFilterBackup
+adaptation service_set svcLogger loggerLocal loggerRemote
+DOC_END
+
+NAME: adaptation_access
+TYPE: adaptation_access_type
+IFDEF: USE_ADAPTATION
+LOC: none
+DEFAULT: none
+DOC_START
+	Sends an HTTP transaction to an ICAP or eCAP adaptation	service.
+
+	adaptation_access service_name allow|deny [!]aclname...
+	adaptation_access set_name     allow|deny [!]aclname...
+
+	At each supported vectoring point, the adaptation_access
+	statements are processed in the order they appear in this
+	configuration file. Statements pointing to the following services
+	are ignored (i.e., skipped without checking their ACL):
+
+	    - services serving different vectoring points
+	    - "broken-but-bypassable" services
+	    - "up" services configured to ignore such transactions
+              (e.g., based on the ICAP Transfer-Ignore header).
+
+        When a set_name is used, all services in the set are checked
+	using the same rules, to find the first applicable one. See
+	adaptation_service_set for details.
+
+	If an access list is checked and there is a match, the
+	processing stops: For an "allow" rule, the corresponding
+	adaptation service is used for the transaction. For a "deny"
+	rule, no adaptation service is activated.
+
+	It is currently not possible to apply more than one adaptation
+	service at the same vectoring point to the same HTTP transaction.
+
+        See also: icap_service and ecap_service
+
+Example:
+adaptation_access service_1 allow all
 DOC_END
 
 COMMENT_START

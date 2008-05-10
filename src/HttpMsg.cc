@@ -154,7 +154,7 @@ bool HttpMsg::parse(MemBuf *buf, bool eof, http_status *error)
     const size_t hdr_len = headersEnd(buf->content(), buf->contentSize());
 
     // TODO: move to httpReplyParseStep()
-    if (hdr_len > Config.maxReplyHeaderSize || hdr_len <= 0 && (size_t)buf->contentSize() > Config.maxReplyHeaderSize) {
+    if (hdr_len > Config.maxReplyHeaderSize || (hdr_len <= 0 && (size_t)buf->contentSize() > Config.maxReplyHeaderSize)) {
         debugs(58, 1, "HttpMsg::parse: Too large reply header (" <<
                hdr_len << " > " << Config.maxReplyHeaderSize);
         *error = HTTP_HEADER_TOO_LARGE;
