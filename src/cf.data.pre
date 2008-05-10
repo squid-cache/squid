@@ -5453,20 +5453,28 @@ DOC_START
 DOC_END
 
 NAME: forwarded_for
-COMMENT: on|off
-TYPE: onoff
+COMMENT: on|off|transparent|truncate|delete
+TYPE: string
 DEFAULT: on
 LOC: opt_forwarded_for
 DOC_START
-	If set, Squid will include your system's IP address or name
-	in the HTTP requests it forwards.  By default it looks like
-	this:
+	If set to "on", Squid will append your client's IP address
+	in the HTTP requests it forwards. By default it looks like:
 
 		X-Forwarded-For: 192.1.2.3
 
-	If you disable this, it will appear as
+	If set to "off", it will appear as
 
 		X-Forwarded-For: unknown
+
+	If set to "transparent", Squid will not alter the
+	X-Forwarded-For header in any way.
+
+	If set to "delete", Squid will delete the entire
+	X-Forwarded-For header.
+
+	If set to "truncate", Squid will remove all existing
+	X-Forwarded-For entries, and place itself as the sole entry.
 DOC_END
 
 NAME: cachemgr_passwd
