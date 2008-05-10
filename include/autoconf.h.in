@@ -988,11 +988,6 @@
 /* Define to enable CPU profiling within Squid */
 #undef USE_XPROF_STATS
 
-/* Define this to use Squid's ZPH (Zero Penalty Hit) QOS features. When
-   enabled, Squid will alter TOS field of HIT responses for better QOS on
-   intermediate routing/shaping devices. */
-#undef USE_ZPH_QOS
-
 /* Version number of package */
 #undef VERSION
 
