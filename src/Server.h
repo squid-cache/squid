@@ -31,18 +31,6 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
-/*
- * ServerStateData is a common base for server-side classes such as
- * HttpStateData and FtpStateData. All such classes must be able to
- * consume request bodies from the client-side or ICAP producer, adapt
- * virgin responses using ICAP, and provide the client-side consumer with
- * responses.
- *
- * TODO: Rename to ServerStateDataInfoRecordHandler.
- */
-
-
 #ifndef SQUID_SERVER_H
 #define SQUID_SERVER_H
 
@@ -57,6 +45,15 @@
 #include "adaptation/Initiator.h"
 #endif
 
+/**
+ * ServerStateData is a common base for server-side classes such as
+ * HttpStateData and FtpStateData. All such classes must be able to
+ * consume request bodies from the client-side or ICAP producer, adapt
+ * virgin responses using ICAP, and provide the client-side consumer with
+ * responses.
+ *
+ \todo TODO: Rename to ServerStateDataInfoRecordHandler.
+ */
 class ServerStateData:
 #if USE_ADAPTATION
     public Adaptation::Initiator,
@@ -69,7 +66,7 @@ public:
     ServerStateData(FwdState *);
     virtual ~ServerStateData();
 
-    // returns primary or "request data connection" fd
+    /// \return primary or "request data connection" fd
     virtual int dataDescriptor() const = 0; 
 
     // BodyConsumer: consume request body or adapted response body.
@@ -79,13 +76,13 @@ public:
     virtual void noteBodyProductionEnded(BodyPipe::Pointer);
     virtual void noteBodyProducerAborted(BodyPipe::Pointer);
 
-    // read response data from the network
+    /// read response data from the network
     virtual void maybeReadVirginBody() = 0;
 
-    // abnormal transaction termination; reason is for debugging only
+    /// abnormal transaction termination; reason is for debugging only
     virtual void abortTransaction(const char *reason) = 0;
 
-    // a hack to reach HttpStateData::orignal_request
+    /// a hack to reach HttpStateData::orignal_request
     virtual  HttpRequest *originalRequest();
 
 #if USE_ADAPTATION
@@ -111,16 +108,16 @@ public:
 				       BodyConsumer::doneAll() && false;}
 
 public: // should be protected
-    void serverComplete(); // call when no server communication is expected
+    void serverComplete();     /**< call when no server communication is expected */
 
 private:
-    void serverComplete2(); // Continuation of serverComplete
-    bool completed;	// serverComplete() has been called
+    void serverComplete2();    /**< Continuation of serverComplete */
+    bool completed;            /**< serverComplete() has been called */
 
 protected:
     // kids customize these
-    virtual void haveParsedReplyHeaders(); // default does nothing
-    virtual void completeForwarding(); // default calls fwd->complete()
+    virtual void haveParsedReplyHeaders(); /**< default does nothing */
+    virtual void completeForwarding(); /**< default calls fwd->complete() */
 
     // BodyConsumer for HTTP: consume request body.
     bool startRequestBodyFlow();
@@ -134,17 +131,17 @@ protected:
     virtual void sentRequestBody(const CommIoCbParams &io) = 0;
     virtual void doneSendingRequestBody() = 0;
 
-    virtual void closeServer() = 0; // end communication with the server
-    virtual bool doneWithServer() const = 0; // did we end communication?
+    virtual void closeServer() = 0;            /**< end communication with the server */
+    virtual bool doneWithServer() const = 0;   /**< did we end communication? */
 
-    // Entry-dependent callbacks use this check to quit if the entry went bad
+    /// Entry-dependent callbacks use this check to quit if the entry went bad
     bool abortOnBadEntry(const char *abortReason);
 
 #if USE_ADAPTATION
     bool startAdaptation(Adaptation::ServicePointer service, HttpRequest *cause);
     void adaptVirginReplyBody(const char *buf, ssize_t len);
     void cleanAdaptation();
-    virtual bool doneWithAdaptation() const; // did we end ICAP communication?
+    virtual bool doneWithAdaptation() const;   /**< did we end ICAP communication? */
 
     // BodyConsumer for ICAP: consume adapted response body.
     void handleMoreAdaptedBodyAvailable();
@@ -170,8 +167,8 @@ protected:
     size_t replyBodySpace(size_t space = 4096 * 10);
 
     // These should be private
-    int64_t currentOffset;	// Our current offset in the StoreEntry
-    MemBuf *responseBodyBuffer;	// Data temporarily buffered for ICAP
+    int64_t currentOffset;	/**< Our current offset in the StoreEntry */
+    MemBuf *responseBodyBuffer;	/**< Data temporarily buffered for ICAP */
 
 public: // should not be
     StoreEntry *entry;
@@ -179,24 +176,24 @@ public: // should not be
     HttpRequest *request;
 
 protected:
-    BodyPipe::Pointer requestBodySource; // to consume request body
-    AsyncCall::Pointer requestSender; // set if we are expecting comm_write to call us back
+    BodyPipe::Pointer requestBodySource;  /**< to consume request body */
+    AsyncCall::Pointer requestSender;     /**< set if we are expecting comm_write to call us back */
 
 #if USE_ADAPTATION
-    BodyPipe::Pointer virginBodyDestination; // to provide virgin response body
-    Adaptation::Initiate *adaptedHeadSource; // to get adapted response headers
-    BodyPipe::Pointer adaptedBodySource; // to consume adated response body
+    BodyPipe::Pointer virginBodyDestination;  /**< to provide virgin response body */
+    Adaptation::Initiate *adaptedHeadSource;  /**< to get adapted response headers */
+    BodyPipe::Pointer adaptedBodySource;      /**< to consume adated response body */
 
     bool adaptationAccessCheckPending;
     bool startedAdaptation;
 #endif
 
 private:
-    void quitIfAllDone(); // successful termination
+    void quitIfAllDone();            /**< successful termination */
     void sendBodyIsTooLargeError();
 
-	HttpReply *theVirginReply; // reply received from the origin server
-	HttpReply *theFinalReply; // adapted reply from ICAP or virgin reply
+    HttpReply *theVirginReply;       /**< reply received from the origin server */
+    HttpReply *theFinalReply;        /**< adapted reply from ICAP or virgin reply */
 };
 
 #endif /* SQUID_SERVER_H */
