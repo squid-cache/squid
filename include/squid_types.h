@@ -73,6 +73,10 @@
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+/* Several OS require types declared by in_systm.h without including it themselves. */
+#include <netinet/in_systm.h>
+#endif
 
 /* 
  * ISO C99 Standard printf() macros for 64 bit integers
