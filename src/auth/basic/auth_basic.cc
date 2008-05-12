@@ -322,9 +322,7 @@ AuthBasicConfig::AuthBasicConfig()
 
 AuthBasicConfig::~AuthBasicConfig()
 {
-    if(basicAuthRealm)
-        delete basicAuthRealm;
-    basicAuthRealm = NULL;
+    safe_free(basicAuthRealm);
 }
 
 void
@@ -393,15 +391,20 @@ BasicUser::BasicUser(AuthConfig *config) : AuthUser (config) , passwd (NULL), cr
 bool
 BasicUser::decodeCleartext()
 {
-    char *sent_auth;
+    char *sent_auth = NULL;
+
     /* username and password */
     sent_auth = xstrdup(httpAuthHeader);
+
     /* Trim trailing \n before decoding */
     strtok(sent_auth, "\n");
 
     cleartext = uudecode(sent_auth);
 
-    xfree(sent_auth);
+    safe_free(sent_auth);
+
+    if (!cleartext)
+        return false;
 
     /*
      * Don't allow NL or CR in the credentials.
@@ -420,13 +423,19 @@ BasicUser::decodeCleartext()
 void
 BasicUser::extractUsername()
 {
-    char * tempusername = cleartext;
-    /* terminate the username string */
+    char * seperator = strchr(cleartext, ':');
 
-    if ((cleartext = strchr(tempusername, ':')) != NULL)
-        *(cleartext)++ = '\0';
+    if (seperator == NULL) {
+        username(cleartext);
+    } else {
+        /* terminate the username */
+        *seperator = '\0';
 
-    username (tempusername);
+        username(cleartext);
+
+        /* replace the colon so we can find the password */
+        *seperator = ':';
+    }
 
     if (!basicConfig.casesensitive)
         Tolower((char *)username());
@@ -435,22 +444,22 @@ BasicUser::extractUsername()
 void
 BasicUser::extractPassword()
 {
-    passwd = cleartext;
+    passwd = strchr(cleartext, ':');
 
-    if (cleartext == NULL) {
+    if (passwd == NULL) {
         debugs(29, 4, "authenticateBasicDecodeAuth: no password in proxy authorization header '" << httpAuthHeader << "'");
         passwd = NULL;
         currentRequest->setDenyMessage ("no password was present in the HTTP [proxy-]authorization header. This is most likely a browser bug");
-    } else if (*cleartext == '\0') {
-        debugs(29, 4, "authenticateBasicDecodeAuth: Disallowing empty password,user is '" << username() << "'");
-        passwd = NULL;
-        currentRequest->setDenyMessage ("Request denied because you provided an empty password. Users MUST have a password.");
+    } else {
+        ++passwd;
+        if (*passwd == '\0') {
+            debugs(29, 4, "authenticateBasicDecodeAuth: Disallowing empty password,user is '" << username() << "'");
+            passwd = NULL;
+            currentRequest->setDenyMessage ("Request denied because you provided an empty password. Users MUST have a password.");
+        } else {
+            passwd = xstrndup(passwd, USER_IDENT_SZ);
+        }
     }
-
-    if (passwd)
-        passwd = xstrndup(cleartext, USER_IDENT_SZ);
-
-    cleartext = NULL;
 }
 
 void
