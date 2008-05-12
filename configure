@@ -24236,8 +24236,6 @@ fi
 
 
 
-
-
 for ac_header in \
 	arpa/inet.h \
 	arpa/nameser.h \
@@ -24264,8 +24262,6 @@ for ac_header in \
 	math.h \
 	memory.h \
 	mount.h \
-	net/if.h \
-	net/pfvar.h \
 	netdb.h \
 	netinet/in.h \
 	netinet/ip_fil_compat.h \
@@ -24508,6 +24504,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 #if HAVE_LIMITS_H
 #include <limits.h>
@@ -24564,10 +24563,17 @@ done
 
 
 
-for ac_header in net/if.h \
+
+
+
+for ac_header in \
+	net/if.h \
+	net/pfvar.h \
 	netinet/if_ether.h\
+	netinet/ip.h\
 	netinet/ip_compat.h\
 	netinet/ip_fil.h\
+	netinet/ip_icmp.h\
 	netinet/ip_nat.h\
 	netinet/ipl.h \
 	sys/mount.h\
@@ -24608,6 +24614,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 #if HAVE_SYS_TIME_H
 #include <sys/time.h>
@@ -24617,6 +24626,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+#if HAVE_NETINET_IP_H
+#include <netinet/ip.h>
 #endif
 #if HAVE_NETINET_IP_COMPAT_H
 #include <netinet/ip_compat.h>
@@ -26339,6 +26351,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 typedef int8_t ac__type_new_;
@@ -26418,6 +26433,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -26505,6 +26523,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -26567,6 +26588,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -26648,6 +26672,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -26710,6 +26737,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -26801,6 +26831,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -26884,6 +26917,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -27013,6 +27049,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 typedef char ac__type_new_;
@@ -27092,6 +27131,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -27179,6 +27221,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -27241,6 +27286,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -27322,6 +27370,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -27384,6 +27435,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -27475,6 +27529,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -27558,6 +27615,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -27687,6 +27747,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 typedef u_int8_t ac__type_new_;
@@ -27766,6 +27829,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -27853,6 +27919,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -27915,6 +27984,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -27996,6 +28068,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -28058,6 +28133,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -28149,6 +28227,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -28232,6 +28313,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -28361,6 +28445,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 typedef uint8_t ac__type_new_;
@@ -28440,6 +28527,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -28527,6 +28617,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -28589,6 +28682,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -28670,6 +28766,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -28732,6 +28831,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -28823,6 +28925,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -28906,6 +29011,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -29035,6 +29143,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 typedef int16_t ac__type_new_;
@@ -29114,6 +29225,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -29201,6 +29315,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -29263,6 +29380,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -29344,6 +29464,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -29406,6 +29529,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -29497,6 +29623,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -29580,6 +29709,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -29709,6 +29841,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 typedef short ac__type_new_;
@@ -29788,6 +29923,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -29875,6 +30013,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -29937,6 +30078,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -30018,6 +30162,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -30080,6 +30227,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -30171,6 +30321,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -30254,6 +30407,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -30383,6 +30539,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 typedef int ac__type_new_;
@@ -30462,6 +30621,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -30549,6 +30711,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -30611,6 +30776,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -30692,6 +30860,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -30754,6 +30925,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -30845,6 +31019,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -30928,6 +31105,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -31057,6 +31237,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 typedef u_int16_t ac__type_new_;
@@ -31136,6 +31319,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -31223,6 +31409,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -31285,6 +31474,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -31366,6 +31558,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -31428,6 +31623,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -31519,6 +31717,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -31602,6 +31803,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -31731,6 +31935,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 typedef uint16_t ac__type_new_;
@@ -31810,6 +32017,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -31897,6 +32107,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -31959,6 +32172,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -32040,6 +32256,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -32102,6 +32321,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -32193,6 +32415,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -32276,6 +32501,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -32405,6 +32633,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 typedef int32_t ac__type_new_;
@@ -32484,6 +32715,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -32571,6 +32805,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -32633,6 +32870,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -32714,6 +32954,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -32776,6 +33019,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -32867,6 +33113,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -32950,6 +33199,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -33079,6 +33331,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 typedef long ac__type_new_;
@@ -33158,6 +33413,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -33245,6 +33503,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -33307,6 +33568,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -33388,6 +33652,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -33450,6 +33717,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -33541,6 +33811,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -33624,6 +33897,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -33753,6 +34029,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 typedef u_int32_t ac__type_new_;
@@ -33832,6 +34111,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -33919,6 +34201,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -33981,6 +34266,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -34062,6 +34350,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -34124,6 +34415,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -34215,6 +34509,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -34298,6 +34595,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -34427,6 +34727,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 typedef uint32_t ac__type_new_;
@@ -34506,6 +34809,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -34593,6 +34899,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -34655,6 +34964,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -34736,6 +35048,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -34798,6 +35113,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -34889,6 +35207,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -34972,6 +35293,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -35101,6 +35425,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 typedef int64_t ac__type_new_;
@@ -35180,6 +35507,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -35267,6 +35597,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -35329,6 +35662,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -35410,6 +35746,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -35472,6 +35811,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -35563,6 +35905,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -35646,6 +35991,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -35775,6 +36123,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 typedef __int64 ac__type_new_;
@@ -35854,6 +36205,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -35941,6 +36295,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -36003,6 +36360,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -36084,6 +36444,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -36146,6 +36509,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -36237,6 +36603,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -36320,6 +36689,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -36449,6 +36821,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 typedef long long ac__type_new_;
@@ -36528,6 +36903,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -36615,6 +36993,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -36677,6 +37058,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -36758,6 +37142,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -36820,6 +37207,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -36911,6 +37301,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -36994,6 +37387,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -37123,6 +37519,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 typedef u_int64_t ac__type_new_;
@@ -37202,6 +37601,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -37289,6 +37691,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -37351,6 +37756,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -37432,6 +37840,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -37494,6 +37905,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -37585,6 +37999,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -37668,6 +38085,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -37797,6 +38217,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 typedef uint64_t ac__type_new_;
@@ -37876,6 +38299,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -37963,6 +38389,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -38025,6 +38454,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -38106,6 +38538,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -38168,6 +38603,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -38259,6 +38697,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -38342,6 +38783,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -38471,6 +38915,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 typedef pad128_t ac__type_new_;
@@ -38555,6 +39002,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -38641,6 +39091,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 typedef pid_t ac__type_new_;
@@ -38725,6 +39178,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 typedef size_t ac__type_new_;
@@ -38803,6 +39259,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -38890,6 +39349,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -38952,6 +39414,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -39033,6 +39498,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -39095,6 +39563,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -39186,6 +39657,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -39269,6 +39743,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -39396,6 +39873,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 typedef ssize_t ac__type_new_;
@@ -39480,6 +39960,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 typedef off_t ac__type_new_;
@@ -39558,6 +40041,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -39645,6 +40131,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -39707,6 +40196,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -39788,6 +40280,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -39850,6 +40345,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -39941,6 +40439,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 
@@ -40024,6 +40525,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 
@@ -40151,6 +40655,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
 
 
 typedef mode_t ac__type_new_;
@@ -40234,6 +40741,9 @@ cat >>conftest.$ac_ext <<_ACEOF
 #endif
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>
+#endif
+#if HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
 #endif
 
 

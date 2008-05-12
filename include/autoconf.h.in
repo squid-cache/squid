@@ -363,6 +363,12 @@
 /* Define to 1 if you have the <netinet/ip_fil.h> header file. */
 #undef HAVE_NETINET_IP_FIL_H
 
+/* Define to 1 if you have the <netinet/ip.h> header file. */
+#undef HAVE_NETINET_IP_H
+
+/* Define to 1 if you have the <netinet/ip_icmp.h> header file. */
+#undef HAVE_NETINET_IP_ICMP_H
+
 /* Define to 1 if you have the <netinet/ip_nat.h> header file. */
 #undef HAVE_NETINET_IP_NAT_H
 
