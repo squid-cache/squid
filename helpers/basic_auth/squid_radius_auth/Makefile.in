@@ -58,7 +58,8 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(libexecdir)" "$(DESTDIR)$(man8dir)"
 libexecPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(libexec_PROGRAMS)
-am_squid_radius_auth_OBJECTS = squid_rad_auth.$(OBJEXT) util.$(OBJEXT)
+am_squid_radius_auth_OBJECTS = squid_rad_auth.$(OBJEXT) \
+	radius-util.$(OBJEXT)
 squid_radius_auth_OBJECTS = $(am_squid_radius_auth_OBJECTS)
 squid_radius_auth_LDADD = $(LDADD)
 am__DEPENDENCIES_1 =
@@ -305,7 +306,8 @@ EXTRA_DIST = squid_radius_auth.8
 squid_radius_auth_SOURCES = \
 			squid_rad_auth.c \
 			radius.h \
-			util.c util.h
+			radius-util.c \
+			radius-util.h
 
 LDADD = -L$(top_builddir)/lib -lmiscutil $(SSLLIB) $(XTRA_LIBS)
 INCLUDES = -I$(top_srcdir)/include
@@ -380,8 +382,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/radius-util.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/squid_rad_auth.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/util.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	if $(COMPILE) -MT $@ -MD -MP -MF "$(DEPDIR)/$*.Tpo" -c -o $@ $<; \
