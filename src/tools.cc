@@ -680,10 +680,11 @@ getMyHostname(void)
 const char *
 uniqueHostname(void)
 {
+    debugs(21, 3, HERE << " Config: '" << Config.uniqueHostname << "'");
     return Config.uniqueHostname ? Config.uniqueHostname : getMyHostname();
 }
 
-/* leave a privilegied section. (Give up any privilegies)
+/** leave a priviliged section. (Give up any privilegies)
  * Routines that need privilegies can rap themselves in enter_suid()
  * and leave_suid()
  * To give upp all posibilites to gain privilegies use no_suid()
