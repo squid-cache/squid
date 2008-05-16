@@ -39,7 +39,9 @@ Adaptation::Initiate::Initiate(const char *aTypeName,
 
 Adaptation::Initiate::~Initiate()
 {
-    assert(!theInitiator);
+    // TODO: we cannot assert(!theInitiator) because that fails if a child
+    // constructor fails. AsyncJob should have wasStarted flag so that we
+    // can assert(!(wasStarted && theInitiator)).
 }
 
 // internal cleanup
