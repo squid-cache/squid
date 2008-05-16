@@ -1,9 +1,36 @@
 #include "squid.h"
 #include <libecap/adapter/service.h>
+#include <libecap/common/names.h>
 #include "TextException.h"
 #include "eCAP/ServiceRep.h"
 #include "eCAP/Host.h"
 
+const libecap::Name Ecap::protocolInternal("internal", libecap::Name::NextId());
+const libecap::Name Ecap::protocolCacheObj("cache_object", libecap::Name::NextId());
+const libecap::Name Ecap::protocolIcp("ICP", libecap::Name::NextId());
+#if USE_HTCP
+const libecap::Name Ecap::protocolHtcp("Htcp", libecap::Name::NextId());
+#endif
+
+Ecap::Host::Host()
+{
+    // assign our host-specific IDs to well-known names
+    libecap::headerReferer.assignHostId(HDR_REFERER);
+
+    libecap::protocolHttp.assignHostId(PROTO_HTTP);
+    libecap::protocolHttps.assignHostId(PROTO_HTTPS);
+    libecap::protocolFtp.assignHostId(PROTO_FTP);
+    libecap::protocolGopher.assignHostId(PROTO_GOPHER);
+    libecap::protocolWais.assignHostId(PROTO_WAIS);
+    libecap::protocolUrn.assignHostId(PROTO_URN);
+    libecap::protocolWhois.assignHostId(PROTO_WHOIS);
+    protocolInternal.assignHostId(PROTO_INTERNAL);
+    protocolCacheObj.assignHostId(PROTO_CACHEOBJ);
+    protocolIcp.assignHostId(PROTO_ICP);
+#if USE_HTCP
+    protocolHtcp.assignHostId(PROTO_HTCP);
+#endif
+}
 
 std::string
 Ecap::Host::uri() const

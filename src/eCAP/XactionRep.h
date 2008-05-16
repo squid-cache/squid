@@ -10,7 +10,7 @@
 #include "adaptation/Initiate.h"
 #include "adaptation/Service.h"
 #include "adaptation/Message.h"
-#include "eCAP/MessageTranslator.h"
+#include "eCAP/MessageRep.h"
 #include <libecap/common/forward.h>
 #include <libecap/common/memory.h>
 #include <libecap/host/xaction.h>
@@ -32,15 +32,15 @@ public:
 	void master(const AdapterXaction &aMaster); // establish a link
 
     // libecap::host::Xaction API
-    virtual libecap::Message &virginMessage() ; // request or response
-    virtual libecap::Message &virginCause() ; // request for the above response
-    virtual void useVirgin() ;  // final answer: no adaptation
-    virtual void cloneVirgin() ; // adapted message starts as virgin
-    virtual void makeAdaptedRequest() ; // make fresh adapted request
-    virtual void makeAdaptedResponse() ; // make fresh adapted response
-    virtual libecap::Message &adaptedMessage() ; // request or response
-    virtual void useAdapted() ; // final answer: adapted msg is ready
-    virtual void useNone() ; // final answer: no answer
+    virtual libecap::Message &virgin(); // request or response
+    virtual const libecap::Message *cause(); // request for the above response
+    virtual void useVirgin();  // final answer: no adaptation
+    virtual void adaptVirgin(); // adapted message starts as virgin
+    virtual void adaptNewRequest(); // make fresh adapted request
+    virtual void adaptNewResponse(); // make fresh adapted response
+    virtual libecap::Message *adapted(); // request or response
+    virtual void useAdapted(); // final answer: adapted msg is ready
+    virtual void useNone(); // final answer: no answer
 
     // BodyProducer API
     virtual void noteMoreBodySpaceAvailable(RefCount<BodyPipe> bp);
@@ -68,9 +68,9 @@ private:
 	Adaptation::Message theVirgin;
 	Adaptation::Message theCause;
 	Adaptation::Message theAnswer;
-	MessageTranslator theVirginTranslator;
-	MessageTranslator theCauseTranslator;
-	MessageTranslator theAnswerTranslator;
+	MessageRep theVirginRep;
+	MessageRep *theCauseRep;
+	MessageRep *theAnswerRep;
 
 	CBDATA_CLASS2(XactionRep);
 };
