@@ -14,17 +14,26 @@ namespace Ecap {
 class Host : public libecap::host::Host
 {
 public:
-		// About
-		virtual std::string uri() const; // unique across all vendors
-		virtual void describe(std::ostream &os) const; // free-format info
+        Host();
 
-		// Service management
-		virtual void noteService(const libecap::weak_ptr<libecap::adapter::Service> &s);
+        // About
+        virtual std::string uri() const; // unique across all vendors
+        virtual void describe(std::ostream &os) const; // free-format info
 
-		// Logging
-		virtual std::ostream *openDebug(libecap::LogVerbosity lv);
-		virtual void closeDebug(std::ostream *debug);
+        // Service management
+        virtual void noteService(const libecap::weak_ptr<libecap::adapter::Service> &s);
+
+        // Logging
+        virtual std::ostream *openDebug(libecap::LogVerbosity lv);
+        virtual void closeDebug(std::ostream *debug);
 };
+
+extern const libecap::Name protocolInternal;
+extern const libecap::Name protocolCacheObj;
+extern const libecap::Name protocolIcp;
+#if USE_HTCP
+extern const libecap::Name protocolHtcp;
+#endif
 
 } // namespace Ecap
 
