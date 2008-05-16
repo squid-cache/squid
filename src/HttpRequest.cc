@@ -150,6 +150,7 @@ HttpRequest::clone() const
     copy->hdr_sz = hdr_sz;
     copy->http_ver = http_ver;
     copy->pstate = pstate; // TODO: should we assert a specific state here?
+    copy->body_pipe = body_pipe;
 
     strncpy(copy->login, login, sizeof(login)); // MAX_LOGIN_SZ
     strncpy(copy->host, host, sizeof(host)); // SQUIDHOSTNAMELEN
