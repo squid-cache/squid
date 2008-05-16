@@ -17,14 +17,18 @@ Ecap::XactionRep::XactionRep(Adaptation::Initiator *anInitiator,
     AsyncJob("Ecap::XactionRep"),
     Adaptation::Initiate("Ecap::XactionRep", anInitiator, aService),
     theVirgin(virginHeader), theCause(virginCause),
-    theVirginTranslator(theVirgin), theCauseTranslator(theCause),
-    theAnswerTranslator(theAnswer)
+    theVirginRep(theVirgin, NULL), theCauseRep(NULL),
+    theAnswerRep(NULL)
 {
+    if (virginCause)
+        theCauseRep = new MessageRep(theCause, NULL);
 }
 
 Ecap::XactionRep::~XactionRep()
 {
     assert(!theMaster);
+    delete theCauseRep;
+    delete theAnswerRep;
 }
 
 void
@@ -60,47 +64,56 @@ Ecap::XactionRep::terminateMaster()
 }
 
 libecap::Message &
-Ecap::XactionRep::virginMessage()
+Ecap::XactionRep::virgin()
 {
-    return theVirginTranslator;
+    return theVirginRep;
 }
 
-libecap::Message &
-Ecap::XactionRep::virginCause()
+const libecap::Message *
+Ecap::XactionRep::cause()
 {
-    return theCauseTranslator;
+    return theCauseRep;
 }
 
 void 
 Ecap::XactionRep::useVirgin()
 {
     theMaster.reset();
-    theVirgin.copyTo(theAnswer);
+    Adaptation::Message::ShortCircuit(theVirgin, theAnswer);
+    Must(!theVirgin.body_pipe == !theAnswer.body_pipe);
     sendAnswer(theAnswer.header);
 }
 
 void 
-Ecap::XactionRep::cloneVirgin()
+Ecap::XactionRep::adaptVirgin()
 {
-    theVirgin.copyTo(theAnswer);
+    // XXX: check state everywhere
+    Must(!theAnswerRep);
+    Must(!theAnswer.header);
+    Must(!theAnswer.body_pipe);
+    theAnswer.set(theVirgin.header->clone());
+	theAnswerRep = new MessageRep(theAnswer, this);
+    Must(!theAnswer.body_pipe);
 }
 
 void 
-Ecap::XactionRep::makeAdaptedRequest()
+Ecap::XactionRep::adaptNewRequest()
 {
     theAnswer.set(new HttpRequest);
+	theAnswerRep = new MessageRep(theAnswer, this);
 }
 
 void 
-Ecap::XactionRep::makeAdaptedResponse()
+Ecap::XactionRep::adaptNewResponse()
 {
     theAnswer.set(new HttpReply);
+	theAnswerRep = new MessageRep(theAnswer, this);
 }
 
-libecap::Message &
-Ecap::XactionRep::adaptedMessage()
+libecap::Message *
+Ecap::XactionRep::adapted()
 {
-    return theAnswerTranslator;
+    return theAnswerRep;
 }
 
 void 
