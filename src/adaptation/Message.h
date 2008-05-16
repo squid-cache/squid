@@ -16,6 +16,8 @@ namespace Adaptation {
 
 // Manages the header and the body of an HTTP message being worked on.
 // Adaptation transactions use this class for virgin and adapted HTTP messages.
+// TODO: remove this class after adding refcounted message pointers and
+// after making sure nobody abruptly clears the HttpMsg::body_pipe pointer.
 class Message
 {
 
@@ -29,7 +31,7 @@ public:
     void clear();
     void set(Header *aHeader);
 
-	void copyTo(Message &dest);
+	static void ShortCircuit(Message &src, Message &dest);
 
 public:
     // virgin or adapted message being worked on
