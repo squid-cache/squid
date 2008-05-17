@@ -74,7 +74,7 @@ char util_sccsid[] =
 #endif
 
 #include	"md5.h"
-#include	"util.h"
+#include	"radius-util.h"
 
 /*
  *	Check for valid IP address in standard dot notation.
