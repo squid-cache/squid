@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.0.STABLE5 release notes</title>
+<title>Squid 3.0.STABLE6 release notes</title>
 <author>Squid Developers</author>
 <date>$Id: release-3.0.sgml,v 1.30.2.5 2008/02/28 00:26:31 amosjeffries Exp $</date>
 
@@ -14,7 +14,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.0.STABLE5.
+The Squid Team are pleased to announce the release of Squid-3.0.STABLE6.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.0/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -93,7 +93,6 @@ Some have been dropped as they are not needed. Some have not yet been forward-po
 	<item>Mapping of server error messages. Not yet ported.
 	<item>http_access2 access directive. Not yet ported.
 	<item>Location header rewrites. Not yet ported.
-	<item>umask directive. Not yet ported.
 	<item>wais_relay. Feature dropped as it's equivalent to cache_peer + cache_peer_access.
 	<item>urlgroup. Not yet ported.
 	<item>collapsed forwarding. Not yet ported.
@@ -344,6 +343,16 @@ See the accf_http(9) man page.
 	<p>New acl type myportname, matching the name of the http(s)_port where the request was accepted
 	<verb>
         acl aclname myportname 3128 ...         # http(s)_port name
+	</verb>
+
+	<tag>umask</tag>
+	<p>Ported from 2.6. Behaviour identical.
+	<verb>
+	Minimum umask which should be enforced while the proxy
+	is running, in addition to the umask set at startup.
+
+	For a traditional octal representation of umasks, start
+        your value with 0.
 	</verb>
 
 </descrip>
@@ -599,8 +608,6 @@ See the accf_http(9) man page.
 	<tag>location_rewrite_*</tag>
 	<p>Not yet ported to Squid-3.
 	<tag>refresh_stale_hit</tag>
-	<p>Not yet ported to Squid-3.
-	<tag>umask</tag>
 	<p>Not yet ported to Squid-3.
 	<tag>wais_relay_*</tag>
 	<p>equivalent to cache_peer + cache_peer_access.

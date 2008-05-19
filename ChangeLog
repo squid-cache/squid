@@ -1,3 +1,16 @@
+Changes to squid-3.0.STABLE6 (20 May 2008):
+
+	- Bug 2254: umask Feature from 2.6 added
+	- cachemgr.cgi default config file added
+	- Several authentication bug fixes
+	- Improved Windows Support
+	- better DNS lookup methods for unqualified hostames
+	- better support for 64-bit environments
+	- Bug 2332: Crash when tunnelling
+	- Removed the advertisement clause from BSD licenses
+	  according to the GPLv2+ changes in BSD
+	- ... and other bugs and minor cleanups
+
 Changes to squid-3.0.STABLE5 (28 Apr 2008):
 
 	- Support for resolv.conf 'domain' option

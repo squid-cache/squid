@@ -2,10 +2,10 @@
 <HTML>
 <HEAD>
  <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.21">
- <TITLE>Squid 3.0.STABLE5 release notes</TITLE>
+ <TITLE>Squid 3.0.STABLE6 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.0.STABLE5 release notes</H1>
+<H1>Squid 3.0.STABLE6 release notes</H1>
 
 <H2>Squid Developers</H2>$Id: release-3.0.sgml,v 1.30.2.5 2008/02/28 00:26:31 amosjeffries Exp $
 <HR>
@@ -15,7 +15,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1. Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.0.STABLE5.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.0.STABLE6.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.0/">http://www.squid-cache.org/Versions/v3/3.0/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -100,7 +100,6 @@ Some have been dropped as they are not needed. Some have not yet been forward-po
 <LI>Mapping of server error messages. Not yet ported.</LI>
 <LI>http_access2 access directive. Not yet ported.</LI>
 <LI>Location header rewrites. Not yet ported.</LI>
-<LI>umask directive. Not yet ported.</LI>
 <LI>wais_relay. Feature dropped as it's equivalent to cache_peer + cache_peer_access.</LI>
 <LI>urlgroup. Not yet ported.</LI>
 <LI>collapsed forwarding. Not yet ported.</LI>
@@ -421,6 +420,18 @@ See the accf_http(9) man page.
 </PRE>
 </P>
 
+<DT><B>umask</B><DD>
+<P>Ported from 2.6. Behaviour identical.
+<PRE>
+        Minimum umask which should be enforced while the proxy
+        is running, in addition to the umask set at startup.
+
+        For a traditional octal representation of umasks, start
+        your value with 0.
+        
+</PRE>
+</P>
+
 </DL>
 </P>
 
@@ -724,8 +735,6 @@ This is useful for class 4 Delay Pools in Squid 3.x</P>
 <DT><B>location_rewrite_*</B><DD>
 <P>Not yet ported to Squid-3.</P>
 <DT><B>refresh_stale_hit</B><DD>
-<P>Not yet ported to Squid-3.</P>
-<DT><B>umask</B><DD>
 <P>Not yet ported to Squid-3.</P>
 <DT><B>wais_relay_*</B><DD>
 <P>equivalent to cache_peer + cache_peer_access.</P>
