@@ -3339,6 +3339,7 @@ AC_CONFIG_FILES([\
 	helpers/external_acl/session/Makefile \
 	helpers/external_acl/unix_group/Makefile \
 	helpers/external_acl/wbinfo_group/Makefile \
+	helpers/external_acl/mswin_ad_group/Makefile \
 	helpers/external_acl/mswin_lm_group/Makefile \
 	tools/Makefile
 ])
