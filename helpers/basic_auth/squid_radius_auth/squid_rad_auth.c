@@ -93,7 +93,7 @@
 
 #include	"md5.h"
 #include	"radius.h"
-#include	"util.h"
+#include	"radius-util.h"
 
 #define MAXPWNAM	254
 #define MAXPASS		254
