@@ -27,9 +27,14 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#if HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <string.h>
 #include <time.h>
+#if HAVE_GETOPT_H
+#include <getopt.h>
+#endif
 
 #if defined(HAVE_DB_185_H)
 #include <db_185.h>
