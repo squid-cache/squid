@@ -13,7 +13,6 @@ tmp
 *.la
 *.lo
 */globals.cc
-Makefile.in
 configure
 config.h.in
 cfgaux
