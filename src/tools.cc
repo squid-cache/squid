@@ -1256,8 +1256,8 @@ static void
 restoreCapabilities(int keep)
 {
 #if defined(_SQUID_LINUX_) && HAVE_SYS_CAPABILITY_H
-    cap_user_header_t head = (cap_user_header_t) xcalloc(1, sizeof(cap_user_header_t));
-    cap_user_data_t cap = (cap_user_data_t) xcalloc(1, sizeof(cap_user_data_t));
+    cap_user_header_t head = (cap_user_header_t) xcalloc(1, sizeof(*head));
+    cap_user_data_t cap = (cap_user_data_t) xcalloc(1, sizeof(*cap));
 
     head->version = _LINUX_CAPABILITY_VERSION;
 
