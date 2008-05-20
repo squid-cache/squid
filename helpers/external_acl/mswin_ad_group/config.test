@@ -1,0 +1,8 @@
+#!/bin/sh
+if [ -f /usr/include/w32api/windows.h ]; then
+	exit 0
+fi
+if [ -f /usr/include/windows.h ]; then
+	exit 0
+fi
+exit 1
