@@ -1,3 +1,4 @@
+// 2008-05-14: rename to radius-util.* to avoid name clashes with squid util.*
 /*
  *
  *	RADIUS
@@ -73,7 +74,7 @@ char util_sccsid[] =
 #endif
 
 #include	"md5.h"
-#include	"util.h"
+#include	"radius-util.h"
 
 /*
  *	Check for valid IP address in standard dot notation.
@@ -174,4 +175,3 @@ void md5_calc(unsigned char *output, unsigned char *input, unsigned int inlen)
 	SquidMD5Update(&context, input, inlen);
 	SquidMD5Final(output, &context);
 }
-
