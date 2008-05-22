@@ -2850,8 +2850,6 @@ parse_http_port_option(http_port_list * s, char *token)
     } else if (strncmp(token, "name=", 5) == 0) {
         safe_free(s->name);
         s->name = xstrdup(token + 5);
-    } else if (strcmp(token, "transparent") == 0) {
-        s->transparent = 1;
     } else if (strcmp(token, "vhost") == 0) {
         s->vhost = 1;
         s->accel = 1;
@@ -2876,11 +2874,19 @@ parse_http_port_option(http_port_list * s, char *token)
         else
             self_destruct();
 
-#if LINUX_TPROXY
+    } else if (strcmp(token, "transparent") == 0) {
+        s->transparent = 1;
+        /* Log information regarding the port modes under interception. */
+        debugs(3, 1, "Starting Authentication on port " << s->s);
+        debugs(3, 1, "Disabling Authentication on port " << s->s << " (interception enabled)");
 
+#if LINUX_TPROXY
     } else if (strcmp(token, "tproxy") == 0) {
         s->tproxy = 1;
         need_linux_tproxy = 1;
+        /* Log information regarding the port modes under transparency. */
+        debugs(3, 1, "Starting IP Spoofing on port " << s->s);
+        debugs(3, 1, "Disabling Authentication on port " << s->s << " (IP spoofing enabled)");
 #endif
 
     } else {

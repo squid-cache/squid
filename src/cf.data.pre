@@ -106,6 +106,7 @@ DOC_START
 	proxy as the client then thinks it is talking to an origin server and
 	not the proxy. This is a limitation of bending the TCP/IP protocol to
 	transparently intercepting port 80, not a limitation in Squid.
+	Ports flagged 'transparent' or 'tproxy' have authentication disabled.
 
 	=== Parameters for the basic scheme follow. ===
 
@@ -895,9 +896,11 @@ DOC_START
 
 	   transparent	Support for transparent interception of
 			outgoing requests without browser settings.
+			NP: disables authentication on the port.
 
 	   tproxy	Support Linux TPROXY for spoofing outgoing
 			connections using the client IP address.
+			NP: disables authentication on the port.
 
 	   accel	Accelerator mode. Also needs at least one of
 			vhost / vport / defaultsite.
