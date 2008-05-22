@@ -445,7 +445,8 @@ snmpConnectionShutdown(void)
      * and 'out' sockets might be just one FD.  This prevents this
      * function from executing repeatedly.  When we are really ready to
      * exit or restart, main will comm_close the 'out' descriptor.
-     */ theInSnmpConnection = -1;
+     */
+    theInSnmpConnection = -1;
 
     /*
      * Normally we only write to the outgoing SNMP socket, but we
@@ -466,6 +467,8 @@ snmpConnectionClose(void)
     if (theOutSnmpConnection > -1) {
         debugs(49, 1, "FD " << theOutSnmpConnection << " Closing SNMP socket");
         comm_close(theOutSnmpConnection);
+        /* make sure the SNMP out connection is unset */
+        theOutSnmpConnection = -1;
     }
 }
 
