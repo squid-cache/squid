@@ -2935,20 +2935,30 @@ parse_http_port_option(http_port_list * s, char *token)
     } else if (strcmp(token, "transparent") == 0 || strcmp(token, "intercept") == 0) {
         s->intercepted = 1;
         IPInterceptor.StartInterception();
+        /* Log information regarding the port modes under interception. */
+        debugs(3, DBG_IMPORTANT, "Starting Authentication on port " << s->s);
+        debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (interception enabled)");
+
 #if USE_IPV6
         /* INET6: until transparent REDIRECT works on IPv6 SOCKET, force wildcard to IPv4 */
+        debugs(3, DBG_IMPORTANT, "Disabling IPv6 on port " << s->s << " (interception enabled)");
         if( !s->s.SetIPv4() ) {
-            debugs(3, 0, "http(s)_port: IPv6 addresses cannot be 'transparent' (protocol does not provide NAT)" << s->s );
+            debugs(3, DBG_CRITICAL, "http(s)_port: IPv6 addresses cannot be transparent (protocol does not provide NAT)" << s->s );
             self_destruct();
         }
 #endif
     } else if (strcmp(token, "tproxy") == 0) {
         s->spoof_client_ip = 1;
         IPInterceptor.StartTransparency();
+        /* Log information regarding the port modes under transparency. */
+        debugs(3, DBG_IMPORTANT, "Starting IP Spoofing on port " << s->s);
+        debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (Ip spoofing enabled)");
+
 #if USE_IPV6
         /* INET6: until target TPROXY is known to work on IPv6 SOCKET, force wildcard to IPv4 */
+        debugs(3, DBG_IMPORTANT, "Disabling IPv6 on port " << s->s << " (interception enabled)");
         if( s->s.IsIPv6() && !s->s.SetIPv4() ) {
-            debugs(3, 0, "http(s)_port: IPv6 addresses cannot be transparent (protocol does not provide NAT)" << s->s );
+            debugs(3, DBG_CRITICAL, "http(s)_port: IPv6 addresses cannot be transparent (protocol does not provide NAT)" << s->s );
             self_destruct();
         }
 #endif
