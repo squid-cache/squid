@@ -462,6 +462,9 @@ fatal_common(const char *message)
 void
 fatal(const char *message)
 {
+    /* suppress secondary errors from the dying */
+    shutting_down = 1;
+
     releaseServerSockets();
     /* check for store_dirs_rebuilding because fatal() is often
      * used in early initialization phases, long before we ever
