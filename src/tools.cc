@@ -1373,10 +1373,11 @@ restoreCapabilities(int keep)
 
 #ifdef  _LINUX_CAPABILITY_VERSION_1
     if (head->version != _LINUX_CAPABILITY_VERSION_1) {
+        debugs(50, 1, "Invalid capability version " << head->version << " (expected " << _LINUX_CAPABILITY_VERSION_1 << ")");
 #else
     if (head->version != _LINUX_CAPABILITY_VERSION) {
-#endif
         debugs(50, 1, "Invalid capability version " << head->version << " (expected " << _LINUX_CAPABILITY_VERSION << ")");
+#endif
         goto nocap;
     }
 
