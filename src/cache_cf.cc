@@ -2877,16 +2877,16 @@ parse_http_port_option(http_port_list * s, char *token)
     } else if (strcmp(token, "transparent") == 0) {
         s->transparent = 1;
         /* Log information regarding the port modes under interception. */
-        debugs(3, 1, "Starting Authentication on port " << s->s);
-        debugs(3, 1, "Disabling Authentication on port " << s->s << " (interception enabled)");
+        debugs(3, 1, "Starting Authentication on port " << inet_ntoa(s->s.sin_addr) << ":" << s->s.sin_port);
+        debugs(3, 1, "Disabling Authentication on port " << inet_ntoa(s->s.sin_addr) << ":" << s->s.sin_port << " (interception enabled)");
 
 #if LINUX_TPROXY
     } else if (strcmp(token, "tproxy") == 0) {
         s->tproxy = 1;
         need_linux_tproxy = 1;
         /* Log information regarding the port modes under transparency. */
-        debugs(3, 1, "Starting IP Spoofing on port " << s->s);
-        debugs(3, 1, "Disabling Authentication on port " << s->s << " (IP spoofing enabled)");
+        debugs(3, 1, "Starting IP Spoofing on port " << inet_ntoa(s->s.sin_addr) << ":" << s->s.sin_port);
+        debugs(3, 1, "Disabling Authentication on port " << inet_ntoa(s->s.sin_addr) << ":" << s->s.sin_port << " (IP spoofing enabled)");
 #endif
 
     } else {
