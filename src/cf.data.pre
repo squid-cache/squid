@@ -2875,6 +2875,10 @@ DOC_START
 	negatively-cached for a configurable amount of time.  The
 	default is 5 minutes.  Note that this is different from
 	negative caching of DNS lookups.
+
+	WARNING: Doing this VIOLATES the HTTP standard.  Enabling
+	this feature could make you liable for problems which it
+	causes.
 DOC_END
 
 NAME: positive_dns_ttl
