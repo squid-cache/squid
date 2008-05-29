@@ -2520,9 +2520,10 @@ DOC_START
 		 refresh-ims
 
 		override-expire enforces min age even if the server
-		sent a Expires: header. Doing this VIOLATES the HTTP
-		standard.  Enabling this feature could make you liable
-		for problems which it causes.
+		sent an explicit expiry time (e.g., with the
+		Expires: header or Cache-Control: max-age). Doing this
+		VIOLATES the HTTP standard.  Enabling this feature
+		could make you liable for problems which it causes.
 
 		override-lastmod enforces min age even on objects
 		that were modified recently.
