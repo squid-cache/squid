@@ -93,7 +93,7 @@ basicScheme::done()
     basicauthenticators = NULL;
 
     /* XXX Reinstate auth shutdown for dynamic schemes? */
-    debugs(29, 2, "authBasicDone: Basic authentication Shutdown.");
+    debugs(29, DBG_CRITICAL, HERE << "Basic authentication Shutdown.");
 }
 
 bool
@@ -107,11 +107,11 @@ AuthBasicConfig::configured() const
 {
     if ((authenticate != NULL) && (authenticateChildren != 0) &&
             (basicAuthRealm != NULL)) {
-        debugs(29, 9, "authBasicConfigured: returning configured");
+        debugs(29, 9, HERE << "returning configured");
         return true;
     }
 
-    debugs(29, 9, "authBasicConfigured: returning unconfigured");
+    debugs(29, 9, HERE << "returning unconfigured");
     return false;
 }
 
@@ -214,7 +214,7 @@ void
 AuthBasicConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, http_hdr_type type, HttpRequest * request)
 {
     if (authenticate) {
-        debugs(29, 9, "authenticateFixErrorHeader: Sending type:" << type << " header: 'Basic realm=\"" << basicAuthRealm << "\"'");
+        debugs(29, 9, HERE << "Sending type:" << type << " header: 'Basic realm=\"" << basicAuthRealm << "\"'");
         httpHeaderPutStrf(&rep->header, type, "Basic realm=\"%s\"", basicAuthRealm);
     }
 }
@@ -232,10 +232,8 @@ AuthBasicConfig::done()
 
 BasicUser::~BasicUser()
 {
-    if (passwd)
-        xfree(passwd);
-
-    safe_free (cleartext);
+    safe_free(passwd);
+    safe_free(cleartext);
 }
 
 static void
@@ -245,7 +243,7 @@ authenticateBasicHandleReply(void *data, char *reply)
     BasicAuthQueueNode *tmpnode;
     char *t = NULL;
     void *cbdata;
-    debugs(29, 9, "authenticateBasicHandleReply: {" << (reply ? reply : "<NULL>") << "}");
+    debugs(29, 9, HERE << "{" << (reply ? reply : "<NULL>") << "}");
 
     if (reply) {
         if ((t = strchr(reply, ' ')))
@@ -309,7 +307,6 @@ AuthBasicConfig::dump(StoreEntry * entry, const char *name, AuthConfig * scheme)
     storeAppendPrintf(entry, "%s basic concurrency %d\n", name, authenticateConcurrency);
     storeAppendPrintf(entry, "%s basic credentialsttl %d seconds\n", name, (int) credentialsTTL);
     storeAppendPrintf(entry, "%s basic casesensitive %s\n", name, casesensitive ? "on" : "off");
-
 }
 
 AuthBasicConfig::AuthBasicConfig()
@@ -346,7 +343,7 @@ AuthBasicConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
     } else if (strcasecmp(param_str, "casesensitive") == 0) {
         parse_onoff(&casesensitive);
     } else {
-        debugs(29, 0, "unrecognised basic auth scheme parameter '" << param_str << "'");
+        debugs(29, DBG_CRITICAL, HERE << "unrecognised basic auth scheme parameter '" << param_str << "'");
     }
 }
 
@@ -410,10 +407,10 @@ BasicUser::decodeCleartext()
      * Don't allow NL or CR in the credentials.
      * Oezguer Kesim <oec@codeblau.de>
      */
-    debugs(29, 9, "BasicUser::decodeCleartext: '" << cleartext << "'");
+    debugs(29, 9, HERE << "'" << cleartext << "'");
 
     if (strcspn(cleartext, "\r\n") != strlen(cleartext)) {
-        debugs(29, 1, "BasicUser::decodeCleartext: bad characters in authorization header '" << httpAuthHeader << "'");
+        debugs(29, 1, HERE << "bad characters in authorization header '" << httpAuthHeader << "'");
         safe_free(cleartext);
         return false;
     }
@@ -447,15 +444,15 @@ BasicUser::extractPassword()
     passwd = strchr(cleartext, ':');
 
     if (passwd == NULL) {
-        debugs(29, 4, "authenticateBasicDecodeAuth: no password in proxy authorization header '" << httpAuthHeader << "'");
+        debugs(29, 4, HERE << "no password in proxy authorization header '" << httpAuthHeader << "'");
         passwd = NULL;
-        currentRequest->setDenyMessage ("no password was present in the HTTP [proxy-]authorization header. This is most likely a browser bug");
+        currentRequest->setDenyMessage("no password was present in the HTTP [proxy-]authorization header. This is most likely a browser bug");
     } else {
         ++passwd;
         if (*passwd == '\0') {
-            debugs(29, 4, "authenticateBasicDecodeAuth: Disallowing empty password,user is '" << username() << "'");
+            debugs(29, 4, HERE << "Disallowing empty password,user is '" << username() << "'");
             passwd = NULL;
-            currentRequest->setDenyMessage ("Request denied because you provided an empty password. Users MUST have a password.");
+            currentRequest->setDenyMessage("Request denied because you provided an empty password. Users MUST have a password.");
         } else {
             passwd = xstrndup(passwd, USER_IDENT_SZ);
         }
@@ -490,7 +487,7 @@ BasicUser::makeLoggingInstance(AuthBasicUserRequest *auth_user_request)
 {
     if (username()) {
         /* log the username */
-        debugs(29, 9, "authBasicDecodeAuth: Creating new user for logging '" << username() << "'");
+        debugs(29, 9, HERE << "Creating new user for logging '" << username() << "'");
         /* new scheme data */
         BasicUser *basic_auth = new BasicUser(& basicConfig);
         auth_user_request->user(basic_auth);
@@ -508,7 +505,7 @@ AuthUser *
 BasicUser::makeCachedFrom()
 {
     /* the user doesn't exist in the username cache yet */
-    debugs(29, 9, "authBasicDecodeAuth: Creating new user '" << username() << "'");
+    debugs(29, 9, HERE << "Creating new user '" << username() << "'");
     BasicUser *basic_user = new BasicUser(&basicConfig);
     /* save the credentials */
     basic_user->username(username());
@@ -530,10 +527,10 @@ BasicUser::makeCachedFrom()
 void
 BasicUser::updateCached(BasicUser *from)
 {
-    debugs(29, 9, "authBasicDecodeAuth: Found user '" << from->username() << "' in the user cache as '" << this << "'");
+    debugs(29, 9, HERE << "Found user '" << from->username() << "' in the user cache as '" << this << "'");
 
     if (strcmp(from->passwd, passwd)) {
-        debugs(29, 4, "authBasicDecodeAuth: new password found. Updating in user master record and resetting auth state to unchecked");
+        debugs(29, 4, HERE << "new password found. Updating in user master record and resetting auth state to unchecked");
         flags.credentials_ok = 0;
         xfree(passwd);
         passwd = from->passwd;
@@ -541,12 +538,12 @@ BasicUser::updateCached(BasicUser *from)
     }
 
     if (flags.credentials_ok == 3) {
-        debugs(29, 4, "authBasicDecodeAuth: last attempt to authenticate this user failed, resetting auth state to unchecked");
+        debugs(29, 4, HERE << "last attempt to authenticate this user failed, resetting auth state to unchecked");
         flags.credentials_ok = 0;
     }
 }
 
-/*
+/**
  * Decode a Basic [Proxy-]Auth string, linking the passed
  * auth_user_request structure to any existing user structure or creating one
  * if needed. Note that just returning will be treated as 
@@ -599,7 +596,7 @@ AuthBasicConfig::decode(char const *proxy_auth)
     return auth_user_request;
 }
 
-/* Initialize helpers and the like for this auth scheme. Called AFTER parsing the
+/** Initialize helpers and the like for this auth scheme. Called AFTER parsing the
  * config file */
 void
 AuthBasicConfig::init(AuthConfig * scheme)
@@ -654,7 +651,7 @@ AuthBasicUserRequest::module_start(RH * handler, void *data)
     assert(user()->auth_type == AUTH_BASIC);
     basic_auth = dynamic_cast<basic_data *>(user());
     assert(basic_auth != NULL);
-    debugs(29, 9, "AuthBasicUserRequest::start: '" << basic_auth->username() << ":" << basic_auth->passwd << "'");
+    debugs(29, 9, HERE << "'" << basic_auth->username() << ":" << basic_auth->passwd << "'");
 
     if (basicConfig.authenticate == NULL) {
         handler(data, NULL);
@@ -672,7 +669,7 @@ AuthBasicUserRequest::module_start(RH * handler, void *data)
 }
 
 void
-BasicUser::submitRequest (AuthUserRequest * auth_user_request, RH * handler, void *data)
+BasicUser::submitRequest(AuthUserRequest * auth_user_request, RH * handler, void *data)
 {
     /* mark the user as haveing verification in progress */
     flags.credentials_ok = 2;
@@ -694,4 +691,3 @@ basicScheme::createConfig()
 {
     return &basicConfig;
 }
-
