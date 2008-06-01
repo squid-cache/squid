@@ -98,7 +98,7 @@ rfc1738_do_escape(const char *url, int encode_reserved)
 	bufsize = strlen(url) * 3 + 1;
 	buf = xcalloc(bufsize, 1);
     }
-    for (p = url, q = buf; *p != '\0'; p++, q++) {
+    for (p = url, q = buf; *p != '\0' && q < (buf + bufsize - 1); p++, q++) {
 	do_escape = 0;
 
 	/* RFC 1738 defines these chars as unsafe */
