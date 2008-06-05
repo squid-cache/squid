@@ -161,7 +161,9 @@ struct SquidConfig
     int64_t readAheadGap;
     RemovalPolicySettings *replPolicy;
     RemovalPolicySettings *memPolicy;
+#if HTTP_VIOLATIONS
     time_t negativeTtl;
+#endif
     time_t negativeDnsTtl;
     time_t positiveDnsTtl;
     time_t shutdownLifetime;

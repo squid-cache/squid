@@ -828,9 +828,11 @@ HttpStateData::haveParsedReplyHeaders()
 
     case -1:
 
+#if HTTP_VIOLATIONS
         if (Config.negativeTtl > 0)
             entry->cacheNegatively();
         else
+#endif
             entry->makePrivate();
 
         break;

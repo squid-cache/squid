@@ -2876,16 +2876,20 @@ DOC_START
 DOC_END
 
 NAME: negative_ttl
+IFDEF: HTTP_VIOLATIONS
 COMMENT: time-units
 TYPE: time_t
 LOC: Config.negativeTtl
-DEFAULT: 5 minutes
+DEFAULT: 0 seconds
 DOC_START
-	Time-to-Live (TTL) for failed requests.  Certain types of
-	failures (such as "connection refused" and "404 Not Found") are
-	negatively-cached for a configurable amount of time.  The
-	default is 5 minutes.  Note that this is different from
-	negative caching of DNS lookups.
+	Set the Default Time-to-Live (TTL) for failed requests.
+	Certain types of failures (such as "connection refused" and
+	"404 Not Found") are able to be negatively-cached for a short time.
+	Modern web servers should provide Expires: header, however if they
+	do not this can provide a minimum TTL.
+	The default is not to cache errors with unknown expiry details.
+
+	Note that this is different from negative caching of DNS lookups.
 
 	WARNING: Doing this VIOLATES the HTTP standard.  Enabling
 	this feature could make you liable for problems which it
