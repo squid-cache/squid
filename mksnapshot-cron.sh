@@ -82,8 +82,8 @@ make_snapshot()
 
 set +e
 
-# autotool derived files not kept in trunk, no need to bootstrap
-#../commit/bootstrap squid-3
+# autotool derived files not kept in trunk, but still need to bootstrap for make dist
+../commit/bootstrap squid-3
 make_snapshot ../commit/squid-3/mksnapshot.sh trunk v3 HEAD 6
 
 rm -f /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new

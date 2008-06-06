@@ -31,6 +31,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+#include "config.h"
 
 /* for ClientActiveRequests global */
 #include "dlink.h"
@@ -1831,12 +1832,14 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
 
     StoreIOBuffer tempBuffer;
     char *buf = next()->readBuffer.data;
-    char *body_buf = buf + reply->hdr_sz - next()->readBuffer.offset;
+    char *body_buf = buf + reply->hdr_sz;
 
     //Server side may disable ranges under some circumstances.
 
     if ((!http->request->range))
         next()->readBuffer.offset = 0;
+
+    body_buf -= next()->readBuffer.offset;
 
     if (next()->readBuffer.offset != 0) {
         if (next()->readBuffer.offset > body_size) {

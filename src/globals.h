@@ -97,7 +97,7 @@ extern "C"
     extern int opt_debug_stderr;	/* -1 */
     extern int opt_dns_tests;	/* 1 */
     extern int opt_foreground_rebuild;	/* 0 */
-    extern int opt_forwarded_for;	/* 1 */
+    extern char *opt_forwarded_for;	/* NULL */
     extern int opt_reload_hit_only;	/* 0 */
 #if HAVE_SYSLOG
 

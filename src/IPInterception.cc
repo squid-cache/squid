@@ -148,6 +148,7 @@ IPIntercept::NetfilterInterception(int fd, const IPAddress &me, IPAddress &dst, 
         return 0;
     }
 
+    debugs(89, 9, HERE << "address: me= " << me << ", dst= " << dst);
 #endif
     return -1;
 }
@@ -181,6 +182,7 @@ IPIntercept::NetfilterTransparent(int fd, const IPAddress &me, IPAddress &dst, i
         return 0;
     }
 
+    debugs(89, 9, HERE << "address: me= " << me << ", dst= " << dst);
 #endif
     return -1;
 }
@@ -212,6 +214,7 @@ IPIntercept::IPFWInterception(int fd, const IPAddress &me, IPAddress &dst, int s
         return 0;
     }
 
+    debugs(89, 9, HERE << "address: me= " << me << ", dst= " << dst);
 #endif
     return -1;
 }

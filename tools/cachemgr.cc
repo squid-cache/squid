@@ -795,16 +795,6 @@ process_request(cachemgr_request * req)
         return 1;
     }
 
-#if USE_IPV6
-    if ((s = socket(PF_INET6, SOCK_STREAM, 0)) < 0) {
-#else
-    if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
-#endif
-        snprintf(buf, 1024, "socket: %s\n", xstrerror());
-        error_html(buf);
-        return 1;
-    }
-
     S = *gethostbyname(req->hostname);
 
     if ( !S.IsAnyAddr() ) {
@@ -820,6 +810,16 @@ process_request(cachemgr_request * req)
     S.SetPort(req->port);
 
     S.GetAddrInfo(AI);
+
+#if USE_IPV6
+    if ((s = socket( AI->ai_family, SOCK_STREAM, 0)) < 0) {
+#else
+    if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
+#endif
+        snprintf(buf, 1024, "socket: %s\n", xstrerror());
+        error_html(buf);
+        return 1;
+    }
 
     if (connect(s, AI->ai_addr, AI->ai_addrlen) < 0) {
         snprintf(buf, 1024, "connect %s: %s\n",

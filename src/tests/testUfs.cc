@@ -1,6 +1,4 @@
-#if 0
-#include "squid.h"
-#endif
+#include "config.h"
 
 #include <stdexcept>
 
