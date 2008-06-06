@@ -33,7 +33,7 @@ libexec_PROGRAMS = \
 
 squidclient_SOURCES = squidclient.cc
 cachemgr__CGIEXT__SOURCES = cachemgr.cc
-cachemgr__CGIEXT__CFLAGS = -DDEFAULT_CACHEMGR_CONFIG=\"$(DEFAULT_CACHEMGR_CONFIG)\" $(AM_CFLAGS)
+cachemgr__CGIEXT__CXXFLAGS = -DDEFAULT_CACHEMGR_CONFIG=\"$(DEFAULT_CACHEMGR_CONFIG)\" $(AM_CXXFLAGS)
 
 LDADD = -L../lib -lmiscutil $(XTRA_LIBS)
 
@@ -45,6 +45,7 @@ DEFAULT_CACHEMGR_CONFIG = $(sysconfdir)/cachemgr.conf
 $(OBJS): $(top_srcdir)/include/version.h ../include/autoconf.h
 
 install-data-local:
+	$(INSTALL_DATA) $(srcdir)/cachemgr.conf $(DESTDIR)$(DEFAULT_CACHEMGR_CONFIG).default
 	@if test -f $(DESTDIR)$(DEFAULT_CACHEMGR_CONFIG) ; then \
 	        echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_CACHEMGR_CONFIG)" ; \
 	else \

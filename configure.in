@@ -2186,7 +2186,7 @@ SQUID_DEFAULT_INCLUDES
 )
 
 dnl *BSD dont include the depenencies for all their net/ and netinet/ files
-dns We must include a few basic type headers for them to work.
+dnl We must include a few basic type headers for them to work.
 AC_CHECK_HEADERS( \
 	net/if.h \
 	netinet/if_ether.h\
@@ -3220,7 +3220,12 @@ main() {
     if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
         perror("getrlimit: RLIMIT_NOFILE");
     } else {
+#if defined(__APPLE__)
+        /* asking for more than OPEN_MAX fails on Leopard */
+        rl.rlim_cur = (OPEN_MAX < rl.rlim_max ? OPEN_MAX : rl.rlim_max);
+#else
         rl.rlim_cur = rl.rlim_max;      /* set it to the max */
+#endif
         if (setrlimit(RLIMIT_NOFILE, &rl) < 0) {
             perror("setrlimit: RLIMIT_NOFILE");
         }
@@ -3656,6 +3661,7 @@ AC_CONFIG_FILES([\
 	helpers/external_acl/session/Makefile \
 	helpers/external_acl/unix_group/Makefile \
 	helpers/external_acl/wbinfo_group/Makefile \
+	helpers/external_acl/mswin_ad_group/Makefile \
 	helpers/external_acl/mswin_lm_group/Makefile \
 	tools/Makefile
 ])

@@ -1086,9 +1086,7 @@ StoreEntry::abort()
     assert(mem_obj != NULL);
     debugs(20, 6, "storeAbort: " << getMD5Text());
 
-    lock()
-
-    ;         /* lock while aborting */
+    lock();         /* lock while aborting */
     negativeCache();
 
     releaseRequest();
@@ -1452,10 +1450,21 @@ StoreEntry::checkNegativeHit() const
     return 1;
 }
 
+/**
+ * Set object for negative caching.
+ * Preserves any expiry information given by the server.
+ * In absence of proper expiry info it will set to expire immediately,
+ * or with HTTP-violations enabled the configured negative-TTL is observed
+ */
 void
 StoreEntry::negativeCache()
 {
-    expires = squid_curtime + Config.negativeTtl;
+    if(expires == 0)
+#if HTTP_VIOLATIONS
+        expires = squid_curtime + Config.negativeTtl;
+#else
+        expires = squid_curtime;
+#endif
     EBIT_SET(flags, ENTRY_NEGCACHED);
 }
 

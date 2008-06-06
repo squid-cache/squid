@@ -1,6 +1,7 @@
 /*
  * $Id$
  */
+#include "config.h"
 #include "dlink.h"
 
 /* dlink are Mem-pooled */
