@@ -660,6 +660,92 @@ acl CONNECT method CONNECT
 NOCOMMENT_END
 DOC_END
 
+NAME: follow_x_forwarded_for
+TYPE: acl_access
+IFDEF: FOLLOW_X_FORWARDED_FOR
+LOC: Config.accessList.followXFF
+DEFAULT: none
+DEFAULT_IF_NONE: deny all
+DOC_START
+	Allowing or Denying the X-Forwarded-For header to be followed to
+	find the original source of a request.
+
+	Requests may pass through a chain of several other proxies
+	before reaching us.  The X-Forwarded-For header will contain a
+	comma-separated list of the IP addresses in the chain, with the
+	rightmost address being the most recent.
+
+	If a request reaches us from a source that is allowed by this
+	configuration item, then we consult the X-Forwarded-For header
+	to see where that host received the request from.  If the
+	X-Forwarded-For header contains multiple addresses, and if
+	acl_uses_indirect_client is on, then we continue backtracking
+	until we reach an address for which we are not allowed to
+	follow the X-Forwarded-For header, or until we reach the first
+	address in the list.  (If acl_uses_indirect_client is off, then
+	it's impossible to backtrack through more than one level of
+	X-Forwarded-For addresses.)
+
+	The end result of this process is an IP address that we will
+	refer to as the indirect client address.  This address may
+	be treated as the client address for access control, delay
+	pools and logging, depending on the acl_uses_indirect_client,
+	delay_pool_uses_indirect_client and log_uses_indirect_client
+	options.
+
+	SECURITY CONSIDERATIONS:
+
+		Any host for which we follow the X-Forwarded-For header
+		can place incorrect information in the header, and Squid
+		will use the incorrect information as if it were the
+		source address of the request.  This may enable remote
+		hosts to bypass any access control restrictions that are
+		based on the client's source addresses.
+
+	For example:
+
+		acl localhost src 127.0.0.1
+		acl my_other_proxy srcdomain .proxy.example.com
+		follow_x_forwarded_for allow localhost
+		follow_x_forwarded_for allow my_other_proxy
+DOC_END
+
+NAME: acl_uses_indirect_client
+COMMENT: on|off
+TYPE: onoff
+IFDEF: FOLLOW_X_FORWARDED_FOR
+DEFAULT: on
+LOC: Config.onoff.acl_uses_indirect_client
+DOC_START
+	Controls whether the indirect client address
+	(see follow_x_forwarded_for) is used instead of the
+	direct client address in acl matching.
+DOC_END
+
+NAME: delay_pool_uses_indirect_client
+COMMENT: on|off
+TYPE: onoff
+IFDEF: FOLLOW_X_FORWARDED_FOR && DELAY_POOLS
+DEFAULT: on
+LOC: Config.onoff.delay_pool_uses_indirect_client
+DOC_START
+	Controls whether the indirect client address
+	(see follow_x_forwarded_for) is used instead of the
+	direct client address in delay pools.
+DOC_END
+
+NAME: log_uses_indirect_client
+COMMENT: on|off
+TYPE: onoff
+IFDEF: FOLLOW_X_FORWARDED_FOR
+DEFAULT: on
+LOC: Config.onoff.log_uses_indirect_client
+DOC_START
+	Controls whether the indirect client address
+	(see follow_x_forwarded_for) is used instead of the
+	direct client address in the access log.
+DOC_END
+
 NAME: http_access
 TYPE: acl_access
 LOC: Config.accessList.http

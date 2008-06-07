@@ -448,8 +448,8 @@ struct SquidConfig
         int ie_refresh;
         int vary_ignore_expire;
         int pipeline_prefetch;
-#if USE_SQUID_ESI
 
+#if USE_SQUID_ESI
         int surrogate_is_remote;
 #endif
 
@@ -465,10 +465,17 @@ struct SquidConfig
         int global_internal_static;
         int dns_require_A;
         int debug_override_X;
-#if USE_ZPH_QOS        
+
+#if FOLLOW_X_FORWARDED_FOR
+        int acl_uses_indirect_client;
+        int delay_pool_uses_indirect_client;
+        int log_uses_indirect_client;
+#endif /* FOLLOW_X_FORWARDED_FOR */
+
+#if USE_ZPH_QOS
         int zph_tos_parent;
         int zph_preserve_miss_tos;
-#endif        
+#endif
     } onoff;
 
     class ACL *aclList;
@@ -508,6 +515,9 @@ struct SquidConfig
 #if USE_SSL
         acl_access *ssl_bump;
 #endif
+#if FOLLOW_X_FORWARDED_FOR
+        acl_access *followXFF;
+#endif /* FOLLOW_X_FORWARDED_FOR */
 
     } accessList;
     acl_deny_info_list *denyInfoList;
@@ -1045,6 +1055,9 @@ struct request_flags
 #if HTTP_VIOLATIONS
         nocache_hack = 0;
 #endif
+#if FOLLOW_X_FORWARDED_FOR
+    done_follow_x_forwarded_for = 0;
+#endif /* FOLLOW_X_FORWARDED_FOR */
     }
 
     unsigned int range:1;
@@ -1081,6 +1094,9 @@ struct request_flags
     // that are safe for a related (e.g., ICAP-adapted) request to inherit
     request_flags cloneAdaptationImmune() const;
 
+#if FOLLOW_X_FORWARDED_FOR
+    unsigned int done_follow_x_forwarded_for;
+#endif /* FOLLOW_X_FORWARDED_FOR */
 private:
 
     unsigned int reset_tcp:1;
