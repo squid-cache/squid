@@ -1363,6 +1363,24 @@ AC_ARG_ENABLE(leakfinder,
   fi
 ])
 
+follow_xff=1
+AC_ARG_ENABLE(follow-x-forwarded-for,
+[  --enable-follow-x-forwarded-for
+                          Enable support for following the X-Forwarded-For
+                          HTTP header to try to find the IP address of the
+                          original or indirect client when a request has
+                          been forwarded through other proxies.],
+[ if test "$enableval" = "yes" ; then
+    echo "follow X-Forwarded-For enabled"
+    follow_xff=1
+  fi
+])
+if test $follow_xff = 1; then
+    AC_DEFINE(FOLLOW_X_FORWARDED_FOR, 1, [Enable following X-Forwarded-For headers])
+else
+    AC_DEFINE(FOLLOW_X_FORWARDED_FOR, 0)
+fi
+
 use_ident=1
 AC_ARG_ENABLE(ident-lookups,
 [  --disable-ident-lookups

@@ -122,6 +122,10 @@ public:
 
     IPAddress client_addr;
 
+#if FOLLOW_X_FORWARDED_FOR
+    IPAddress indirect_client_addr;
+#endif /* FOLLOW_X_FORWARDED_FOR */
+
     IPAddress my_addr;
 
     HierarchyLogEntry hier;
@@ -143,6 +147,10 @@ public:
     String extacl_passwd;	/* Password returned by extacl lookup */
 
     String extacl_log;		/* String to be used for access.log purposes */
+
+#if FOLLOW_X_FORWARDED_FOR
+    String x_forwarded_for_iterator; /* XXX a list of IP addresses */
+#endif /* FOLLOW_X_FORWARDED_FOR */
 
 public:
     bool multipartRangeRequest() const;

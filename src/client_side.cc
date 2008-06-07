@@ -2249,6 +2249,9 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     request->flags.internal = http->flags.internal;
     setLogUri (http, urlCanonicalClean(request));
     request->client_addr = conn->peer;
+#if FOLLOW_X_FORWARDED_FOR
+    request->indirect_client_addr = conn->peer;
+#endif /* FOLLOW_X_FORWARDED_FOR */
     request->my_addr = conn->me;
     request->http_ver = http_ver;
 
