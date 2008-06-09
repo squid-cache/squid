@@ -3035,7 +3035,7 @@ DEFAULT: 60 seconds
 DOC_START
 	The minimum caching time according to (Expires - Date)
 	Headers Squid honors if the object can't be revalidated
-	defaults to 60 seconds. In reverse proxy enorinments it
+	defaults to 60 seconds. In reverse proxy environments it
 	might be desirable to honor shorter object lifetimes. It
 	is most likely better to make your server return a
 	meaningful Last-Modified header however. In ESI environments
