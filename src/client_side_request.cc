@@ -71,8 +71,10 @@ static void adaptationAclCheckDoneWrapper(Adaptation::ServicePointer service, vo
 
 static const char *const crlf = "\r\n";
 
+#if FOLLOW_X_FORWARDED_FOR
 static void
 clientFollowXForwardedForCheck(int answer, void *data);
+#endif /* FOLLOW_X_FORWARDED_FOR */
 
 CBDATA_CLASS_INIT(ClientRequestContext);
 
