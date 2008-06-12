@@ -38,7 +38,7 @@
 #include "Stack.h"
 
 int
-main (int argc, char *argv)
+main(int argc, char **argv)
 {
     Stack<int> aStack;
     assert (aStack.size() == 0);
