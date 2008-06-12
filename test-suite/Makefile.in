@@ -379,7 +379,6 @@ AUTOMAKE_OPTIONS = subdir-objects
 AM_CFLAGS = @SQUID_CFLAGS@
 AM_CXXFLAGS = @SQUID_CXXFLAGS@
 INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/src
-EXTRA_DIST = testheaders.sh
 ESI_ALL_TESTS = \
 	ESIExpressions
 
