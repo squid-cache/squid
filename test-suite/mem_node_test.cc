@@ -46,7 +46,7 @@ xassert(const char *msg, const char *file, int line)
 }
 
 int
-main (int argc, char *argv)
+main(int argc, char **argv)
 {
     mem_node *aNode = new mem_node(0);
     assert (aNode);

@@ -116,7 +116,7 @@ testHdrVisit()
 }
 
 int
-main (int argc, char *argv)
+main(int argc, char **argv)
 {
     assert (mem_node::InUseCount() == 0);
     testLowAndHigh();

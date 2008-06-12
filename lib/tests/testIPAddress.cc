@@ -1,11 +1,12 @@
-#include <stdexcept>
+#include "config.h"
 
+#include <stdexcept>
+#include <cstring>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <string>
 
-#include "config.h"
 #include "testIPAddress.h"
 #include "IPAddress.h"
 
