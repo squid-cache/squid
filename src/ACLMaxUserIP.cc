@@ -163,7 +163,7 @@ ACLMaxUserIP::match(ACLChecklist *checklist)
 
     ti = match(checklist->auth_user_request, checklist->src_addr);
 
-    checklist->auth_user_request = NULL;
+    AUTHUSERREQUESTUNLOCK(checklist->auth_user_request, "ACLChecklist via ACLMaxUserIP");
 
     return ti;
 }
