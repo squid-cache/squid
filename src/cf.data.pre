@@ -465,6 +465,9 @@ DOC_START
 	By default, regular expressions are CASE-SENSITIVE.  To make
 	them case-insensitive, use the -i option.
 
+
+	***** ACL TYPES AVAILABLE *****
+
 	acl aclname src      ip-address/netmask ... (clients IP address)
 	acl aclname src      addr1-addr2/netmask ... (range of addresses)
 	acl aclname dst      ip-address/netmask ... (URL host's IP address)
@@ -479,7 +482,7 @@ DOC_START
 	  # the same subnet. If the client is on a different subnet, then Squid cannot
 	  # find out its MAC address.
 
-	acl aclname srcdomain   .foo.com ...    # reverse lookup, client IP
+	acl aclname srcdomain   .foo.com ...    # reverse lookup, from client IP
 	acl aclname dstdomain   .foo.com ...    # Destination server from URL
 	acl aclname srcdom_regex [-i] xxx ...   # regex matching client name
 	acl aclname dstdom_regex [-i] xxx ...   # regex matching server
@@ -487,7 +490,15 @@ DOC_START
 	  # based URL is used and no match is found. The name "none" is used
 	  # if the reverse lookup fails.
 
-	acl aclname http_status 200 301 500- 400-403 ...     # status code in reply
+	acl aclname src_as   number ...
+	acl aclname dst_as   number ...
+	  # Except for access control, AS numbers can be used for
+	  # routing of requests to specific caches. Here's an
+	  # example for routing all requests for AS#1241 and only
+	  # those to mycache.mydomain.net:
+	  # acl asexample dst_as 1241
+	  # cache_peer_access mycache.mydomain.net allow asexample
+	  # cache_peer_access mycache_mydomain.net deny all
 
 	acl aclname time     [day-abbrevs]  [h1:m1-h2:m2]
 	    day-abbrevs:
@@ -499,32 +510,32 @@ DOC_START
 		F - Friday
 		A - Saturday
 	    h1:m1 must be less than h2:m2
+
 	acl aclname url_regex [-i] ^http:// ...	# regex matching on whole URL
 	acl aclname urlpath_regex [-i] \.gif$ ...	# regex matching on URL path
+
 	acl aclname port     80 70 21 ...
 	acl aclname port     0-1024 ...		# ranges allowed
 	acl aclname myport   3128 ...		# (local socket TCP port)
 	acl aclname myportname 3128 ...		# http(s)_port name
+
 	acl aclname proto    HTTP FTP ...
+
 	acl aclname method   GET POST ...
+
+	acl aclname http_status 200 301 500- 400-403 ...     # status code in reply
+
 	acl aclname browser  [-i] regexp ...
 	  # pattern match on User-Agent header (see also req_header below)
+
 	acl aclname referer_regex  [-i] regexp ...
 	  # pattern match on Referer header
 	  # Referer is highly unreliable, so use with care
+
 	acl aclname ident    username ...
 	acl aclname ident_regex [-i] pattern ...
 	  # string match on ident output.
 	  # use REQUIRED to accept any non-null ident.
-	acl aclname src_as   number ...
-	acl aclname dst_as   number ...
-	  # Except for access control, AS numbers can be used for
-	  # routing of requests to specific caches. Here's an
-	  # example for routing all requests for AS#1241 and only
-	  # those to mycache.mydomain.net:
-	  # acl asexample dst_as 1241
-	  # cache_peer_access mycache.mydomain.net allow asexample
-	  # cache_peer_access mycache_mydomain.net deny all
 
 	acl aclname proxy_auth [-i] username ...
 	acl aclname proxy_auth_regex [-i] pattern ...
@@ -539,8 +550,8 @@ DOC_START
 	  # to check username/password combinations (see
 	  # auth_param directive).
 	  #
-	  # NOTE: proxy_auth can't be used in a transparent proxy as
-	  # the browser needs to be configured for using a proxy in order
+	  # NOTE: proxy_auth can't be used in a transparent/intercepting proxy
+	  # as the browser needs to be configured for using a proxy in order
 	  # to respond to proxy authentication.
 
 	acl aclname snmp_community string ...
@@ -566,7 +577,7 @@ DOC_START
 	  # clients may appear to come from multiple addresses if they are
 	  # going through proxy farms, so a limit of 1 may cause user problems.
 
-	acl aclname req_mime_type mime-type1 ...
+	acl aclname req_mime_type [-i] mime-type1 ...
 	  # regex match against the mime type of the request generated
 	  # by the client. Can be used to detect file upload or some
 	  # types HTTP tunneling requests.
@@ -578,7 +589,7 @@ DOC_START
 	  # thought of as a superset of "browser", "referer" and "mime-type"
 	  # ACLs.
 
-	acl aclname rep_mime_type mime-type1 ...
+	acl aclname rep_mime_type [-i] mime-type1 ...
 	  # regex match against the mime type of the reply received by
 	  # squid. Can be used to detect file download or some
 	  # types HTTP tunneling requests.
