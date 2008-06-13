@@ -315,11 +315,16 @@ getRoundRobinParent(HttpRequest * request)
         if (!peerHTTPOkay(p, request))
             continue;
 
-        if (p->weight == 1) {
-            if (q && q->rr_count < p->rr_count)
-                continue;
-        } else if (p->weight == 0 || (q && q->rr_count < (p->rr_count / p->weight))) {
+        if (p->weight == 0)
             continue;
+
+        if (q) {
+            if (p->weight == q->weight) {
+                if (q->rr_count < p->rr_count)
+                    continue;
+            } else if ( (double) q->rr_count / q->weight < (double) p->rr_count / p->weight) {
+                continue;
+            }
         }
 
         q = p;
@@ -328,7 +333,7 @@ getRoundRobinParent(HttpRequest * request)
     if (q)
         q->rr_count++;
 
-    debugs(15, 3, "getRoundRobinParent: returning " << (q ? q->host : "NULL"));
+    debugs(15, 3, HERE << "returning " << (q ? q->host : "NULL"));
 
     return q;
 }
