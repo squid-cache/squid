@@ -75,7 +75,7 @@ MemPoolTest::run()
 }
 
 int
-main (int argc, char *argv)
+main (int argc, char **argv)
 {
     MemPoolTest aTest;
     aTest.run();
