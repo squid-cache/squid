@@ -1176,18 +1176,13 @@ clientReplyContext::buildReplyHeader()
     hdr->delById(HDR_ETAG);
 #endif
 
-    // TODO: Should ESIInclude.cc that calls removeConnectionHeaderEntries
-    // also delete HDR_PROXY_CONNECTION and HDR_KEEP_ALIVE like we do below?
-
-    // XXX: Should HDR_PROXY_CONNECTION by studied instead of HDR_CONNECTION?
-    // httpHeaderHasConnDir does that but we do not. Is this is a bug?
-    hdr->delById(HDR_PROXY_CONNECTION);
-    /* here: Keep-Alive is a field-name, not a connection directive! */
-    hdr->delById(HDR_KEEP_ALIVE);
-    /* remove Set-Cookie if a hit */
-
     if (is_hit)
         hdr->delById(HDR_SET_COOKIE);
+
+    // if there is not configured a peer proxy with login=PASS option enabled 
+    // remove the Proxy-Authenticate header
+    if ( !(request->peer_login && strcmp(request->peer_login,"PASS") ==0))
+	reply->header.delById(HDR_PROXY_AUTHENTICATE);
 
     reply->header.removeHopByHopEntries();
 
@@ -1247,8 +1242,9 @@ clientReplyContext::buildReplyHeader()
     }
 
     /* Filter unproxyable authentication types */
+
     if (http->logType != LOG_TCP_DENIED &&
-            (hdr->has(HDR_WWW_AUTHENTICATE) || hdr->has(HDR_PROXY_AUTHENTICATE))) {
+	    (hdr->has(HDR_WWW_AUTHENTICATE) || hdr->has(HDR_PROXY_AUTHENTICATE))) {
         HttpHeaderPos pos = HttpHeaderInitPos;
         HttpHeaderEntry *e;
 
@@ -1270,7 +1266,19 @@ clientReplyContext::buildReplyHeader()
     }
 
     /* Handle authentication headers */
-    if (request->auth_user_request)
+    if(http->logType == LOG_TCP_DENIED &&
+       ( reply->sline.status == HTTP_PROXY_AUTHENTICATION_REQUIRED || 
+	 reply->sline.status == HTTP_UNAUTHORIZED) 
+	){
+	/* Add authentication header */
+	/*! \todo alter errorstate to be accel on|off aware. The 0 on the next line
+	 * depends on authenticate behaviour: all schemes to date send no extra
+	 * data on 407/401 responses, and do not check the accel state on 401/407
+	 * responses
+	 */
+	authenticateFixHeader(reply, request->auth_user_request, request, 0, 1);
+    }
+    else if (request->auth_user_request)
         authenticateFixHeader(reply, request->auth_user_request, request,
                               http->flags.accel, 0);
 
