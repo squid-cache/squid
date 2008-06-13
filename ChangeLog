@@ -2,7 +2,7 @@ Changes to squid-3.HEAD (current):
 
 	- IPv6 (Internet Protocol version 6) support
 	- ICMPv6 (Internet Control Message Protocol version 6) support
-	- FTP agent now supports EPRT command
+	- FTP agent now supports EPSV/EPRT commands
 	- DNS internal resolver now supports AAAA and CNAME records
 	- SNMP peer and client tables now support IPv6
 	- SNMP peer table supports named peers with multiple entries per IP
@@ -12,6 +12,64 @@ Changes to squid-3.HEAD (current):
 	  can be expected using ICAP.
 	- TPROXY version 4 support now included.
 	- IPFW and Netfilter interception methods may now both be built in one binary.
+	- ZPH Quality of Service patch now integrated
+	- Null store now fully obsoleted and removed
+	- Unknown request methods all supported
+	- Follow_x_forwarder_for ported from 2.6
+	- Follow XFF extensions added
+
+Changes to squid-3.0.STABLE6 (20 May 2008):
+ 
+	- Bug 2254: umask Feature from 2.6 added
+	- cachemgr.cgi default config file added
+	- Several authentication bug fixes
+	- Improved Windows Support
+	- better DNS lookup methods for unqualified hostames
+	- better support for 64-bit environments
+	- Bug 2332: Crash when tunnelling
+	- Removed the advertisement clause from BSD licenses
+	  according to the GPLv2+ changes in BSD
+	- ... and other bugs and minor cleanups
+
+Changes to squid-3.0.STABLE5 (28 Apr 2008):
+
+	- Support for resolv.conf 'domain' option
+	- Improved URI support, including
+		longer URI up to 8192 bytes accepted
+		better handling of intercepted URI
+		better port for non-FQDN URI lookups
+	- Improved logging, including
+		Bug 3210 fixed: incorrect timestamp format in earlier 3.0 releases.
+		Fixed 'log_ip_on_direct' option behaviour
+	- Support for profiling on x86 64-bit systems
+	- .. and other bugs and minor code cleanups.
+
+Changes to squid-3.0.STABLE4 (2 Apr 2008):
+
+	- Bug 2288: compile error slipped into STABLE3.
+
+Changes to squid-3.0.STABLE3 (31 Mar 2008):
+
+	- Improved HTTP 1.1 support.
+	- Improved MacOSX (Leopard) support
+	- Bug 2206: Proxy-Authentication regression in STABLE2.
+	- Strip Domain from NTLM usernames for use in class 4 Delay Pools
+	- ... and other bugs and minor code cleanup
+
+Changes to squid-3.0.STABLE2 (1 Mar 2008):
+
+	- Add myportname ACL for matching the accepting port name (see release notes)
+	- Add include directive for squid.conf (see release notes)
+	- Add ability to strip kerberos realm from usernames during Auth
+	- License cleanup to comply with GPLv2 or later
+	- Updated Error Pages and Translations
+	- Updated configuration examples
+	- Updated valgrind support for valgrind-3.3.0
+	- Improved support for Windows and MacOS X Leopard
+	- Improved support for files larger than 2GB
+	- Improved support for CARP arrays and WCCPv2
+	- Improved cachmgr, SNMP, and log reporting
+	- ... and as usual Many bug fixes since STABLE 1
 
 Changes to squid-3.0.STABLE1 (13 Dec 2007):
 
@@ -26,7 +84,7 @@ Changes to squid-3.0.STABLE1 (13 Dec 2007):
 
 Older ChangeLog follows. The sections relating to Squid-2.6 is not entirely
 authorative for this release and mirrored here for reference only.
-	
+
 	- CARP now plays well with the other peering algorithms,
 	  and support for CARP peerings is compiled by default. Can be
 	  disabled by --disable-carp
