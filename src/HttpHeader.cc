@@ -236,10 +236,11 @@ static http_hdr_type RequestHeadersArr[] =
         HDR_USER_AGENT, HDR_X_FORWARDED_FOR, HDR_SURROGATE_CAPABILITY
     };
 
+static HttpHeaderMask HopByHopHeadersMask;
 static http_hdr_type HopByHopHeadersArr[] =
     {
-        HDR_CONNECTION, HDR_KEEP_ALIVE, HDR_PROXY_AUTHENTICATE, HDR_PROXY_AUTHORIZATION,
-        HDR_TE, HDR_TRAILERS, HDR_TRANSFER_ENCODING, HDR_UPGRADE
+        HDR_CONNECTION, HDR_KEEP_ALIVE, /*HDR_PROXY_AUTHENTICATE,*/ HDR_PROXY_AUTHORIZATION,
+        HDR_TE, HDR_TRAILERS, HDR_TRANSFER_ENCODING, HDR_UPGRADE, HDR_PROXY_CONNECTION
     };
 
 /* header accounting */
@@ -303,6 +304,8 @@ httpHeaderInitModule(void)
     httpHeaderCalcMask(&RequestHeadersMask, GeneralHeadersArr, countof(GeneralHeadersArr));
 
     httpHeaderCalcMask(&RequestHeadersMask, EntityHeadersArr, countof(EntityHeadersArr));
+
+    httpHeaderCalcMask(&HopByHopHeadersMask, HopByHopHeadersArr, countof(HopByHopHeadersArr));
 
     /* init header stats */
     assert(HttpHeaderStatCount == hoReply + 1);
@@ -1773,11 +1776,16 @@ HttpHeader::removeHopByHopEntries()
 {
     removeConnectionHeaderEntries();
     
-    int count = countof(HopByHopHeadersArr);
-    
-    for (int i=0; i<count; i++)
-        delById(HopByHopHeadersArr[i]);    
-    
+    const HttpHeaderEntry *e;
+    HttpHeaderPos pos = HttpHeaderInitPos;
+    int headers_deleted = 0;
+    while ((e = getEntry(&pos))) {
+	int id = e->id;
+	if(CBIT_TEST(HopByHopHeadersMask, id)){
+	    delAt(pos, headers_deleted);
+	    CBIT_CLR(mask, id);
+	}
+    }
 }
 
 void

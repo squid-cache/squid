@@ -376,13 +376,6 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
     entry->lock();
     entry->buffer();
     rep = errorBuildReply(err);
-    /* Add authentication header */
-    /*! \todo alter errorstate to be accel on|off aware. The 0 on the next line
-     * depends on authenticate behaviour: all schemes to date send no extra
-     * data on 407/401 responses, and do not check the accel state on 401/407
-     * responses 
-     */
-    authenticateFixHeader(rep, err->auth_user_request, err->request, 0, 1);
     entry->replaceHttpReply(rep);
     EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
     entry->flush();
