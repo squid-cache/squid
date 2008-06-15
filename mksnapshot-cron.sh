@@ -105,8 +105,8 @@ make_snapshot ../commit/squid-2/mksnapshot.sh HEAD v2 HEAD 3
 ../commit/bootstrap squid-2.7
 make_snapshot ../commit/squid-2.7/mksnapshot.sh SQUID_2_7 v2 2.7 3
 
-../commit/bootstrap squid-2.6
-make_snapshot ../commit/squid-2.6/mksnapshot.sh SQUID_2_6 v2 2.6 3
+#../commit/bootstrap squid-2.6
+#make_snapshot ../commit/squid-2.6/mksnapshot.sh SQUID_2_6 v2 2.6 3
 
 #../commit/bootstrap squid-2.5
 #make_snapshot ../commit/squid-2.5/mksnapshot.sh SQUID_2_5 v2 2.5 3
