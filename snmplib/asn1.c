@@ -324,10 +324,10 @@ asn_build_unsigned_int(u_char * data, int *datalength,
 	return (NULL);
     }
     integer = *intp;
-    mask = (u_int) 0xFF << (8 * (sizeof(int) - 1));
-    /* mask is 0xFF000000 on a big-endian machine */
-    if ((u_char) ((integer & mask) >> (8 * (sizeof(int) - 1))) & 0x80) {
-	/* if MSB is set */
+    mask = (u_int) 0x80 << (8 * (sizeof(int) - 1));
+    /* mask is 0x80000000 on a big-endian machine */
+    if ((integer & mask) != 0) {
+	/* add a null byte if MSB is set, to prevent sign extension */
 	add_null_byte = 1;
 	intsize++;
     }
@@ -336,11 +336,11 @@ asn_build_unsigned_int(u_char * data, int *datalength,
      * this 2's complement integer. 
      * There should be no sequence of 9 consecutive 1's or 0's at the
      * most significant end of the integer.
+     * The 1's case is taken care of above by adding a null byte.
      */
     mask = (u_int) 0x1FF << ((8 * (sizeof(int) - 1)) - 1);
     /* mask is 0xFF800000 on a big-endian machine */
-    while ((((integer & mask) == 0)
-	    || ((integer & mask) == mask)) && intsize > 1) {
+    while (((integer & mask) == 0) && intsize > 1) {
 	intsize--;
 	integer <<= 8;
     }
