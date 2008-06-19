@@ -4094,7 +4094,7 @@ DOC_START
 
 	The relevant WCCPv2 flags:
 	+ src_ip_hash, dst_ip_hash
-	+ source_port_hash, dest_port_hash
+	+ source_port_hash, dst_port_hash
 	+ src_ip_alt_hash, dst_ip_alt_hash
 	+ src_port_alt_hash, dst_port_alt_hash
 	+ ports_source
