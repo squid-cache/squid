@@ -22021,6 +22021,12 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
 	IPFW_TRANSPARENT="yes"
+  else
+
+cat >>confdefs.h <<\_ACEOF
+#define IPFW_TRANSPARENT 0
+_ACEOF
+
   fi
 
 fi
@@ -22036,6 +22042,12 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
 	IPF_TRANSPARENT="yes"
+  else
+
+cat >>confdefs.h <<\_ACEOF
+#define IPF_TRANSPARENT 0
+_ACEOF
+
   fi
 
 fi
@@ -22051,6 +22063,12 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
 	PF_TRANSPARENT="yes"
+  else
+
+cat >>confdefs.h <<\_ACEOF
+#define PF_TRANSPARENT 0
+_ACEOF
+
   fi
 
 fi
@@ -22066,6 +22084,12 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
 	LINUX_NETFILTER="yes"
+  else
+
+cat >>confdefs.h <<\_ACEOF
+#define LINUX_NETFILTER 0
+_ACEOF
+
   fi
 
 fi
@@ -22166,6 +22190,12 @@ _ACEOF
 	    echo "Linux-Netfilter Transparent Proxy automatically enabled"
 	    LINUX_NETFILTER="yes"
 	fi
+  else
+
+cat >>confdefs.h <<\_ACEOF
+#define LINUX_TPROXY2 0
+_ACEOF
+
   fi
 
 fi
@@ -24510,6 +24540,10 @@ cat >>conftest.$ac_ext <<_ACEOF
 
 #if HAVE_LIMITS_H
 #include <limits.h>
+#endif
+/* Netfilter ip(6)tables v1.4.0 has broken headers */
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
 #endif
 
 
