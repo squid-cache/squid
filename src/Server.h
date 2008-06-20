@@ -116,7 +116,7 @@ private:
 
 protected:
     // kids customize these
-    virtual void haveParsedReplyHeaders(); /**< default does nothing */
+    virtual void haveParsedReplyHeaders(); /**< called when got final headers */
     virtual void completeForwarding(); /**< default calls fwd->complete() */
 
     // BodyConsumer for HTTP: consume request body.
@@ -191,6 +191,7 @@ protected:
 private:
     void quitIfAllDone();            /**< successful termination */
     void sendBodyIsTooLargeError();
+    void maybePurgeOthers();
 
     HttpReply *theVirginReply;       /**< reply received from the origin server */
     HttpReply *theFinalReply;        /**< adapted reply from ICAP or virgin reply */

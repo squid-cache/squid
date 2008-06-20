@@ -714,23 +714,30 @@ clientReplyContext::purgeRequestFindObjectToPurge()
     StoreEntry::getPublicByRequestMethod(this, http->request, METHOD_GET);
 }
 
+// Purges all entries with a given url
+// TODO: move to SideAgent parent, when we have one
 /*
  * We probably cannot purge Vary-affected responses because their MD5
  * keys depend on vary headers.
  */
+void
+purgeEntriesByUrl(const char *url)
+{
+    for (HttpRequestMethod m(METHOD_NONE); m != METHOD_ENUM_END; ++m) {
+        if (m.isCacheble()) {
+            if (StoreEntry *entry = storeGetPublic(url, m)) {
+                debugs(88, 5, "purging " << RequestMethodStr(m) << ' ' << url);
+                entry->release();
+            }
+        }
+    }
+}
+
 void 
 clientReplyContext::purgeAllCached()
 {
 	const char *url = urlCanonical(http->request);
-
-	for (HttpRequestMethod m(METHOD_NONE); m != METHOD_ENUM_END; ++m) {
-	    if (m.isCacheble()) {
-	        if (StoreEntry *entry = storeGetPublic(url, m)) {
-	            debugs(88, 5, "purging " << RequestMethodStr(m) << ' ' << url);
-	            entry->release();
-	        }
-	    }
-	}
+    purgeEntriesByUrl(url);
 }
 
 void
