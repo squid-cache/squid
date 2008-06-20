@@ -290,49 +290,6 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
         assert(e != pe);
         pe->release();
     }
-
-    if (forbidden)
-        return;
-
-    /// \todo AYJ: given the coment below + new behaviour of accepting METHOD_UNKNOWN, should we invert this test
-    ///		removing the object unless the method is nown to be safely kept?
-    switch (e->mem_obj->method.id()) {
-
-    case METHOD_PUT:
-
-    case METHOD_DELETE:
-
-    case METHOD_PROPPATCH:
-
-    case METHOD_MKCOL:
-
-    case METHOD_MOVE:
-
-    case METHOD_BMOVE:
-
-    case METHOD_BDELETE:
-        /** \par
-         * Remove any cached GET object if it is believed that the
-         * object may have changed as a result of other methods
-         */
-
-        if (e->mem_obj->request)
-            pe = storeGetPublicByRequestMethod(e->mem_obj->request, METHOD_GET);
-        else
-            pe = storeGetPublic(e->mem_obj->url, METHOD_GET);
-
-        if (pe != NULL) {
-            assert(e != pe);
-            pe->release();
-        }
-
-        break;
-
-    default:
-        /* Keep GCC happy. The methods above are all mutating HTTP methods
-         */
-        break;
-    }
 }
 
 void
@@ -774,6 +731,8 @@ HttpStateData::processReplyHeader()
 void
 HttpStateData::haveParsedReplyHeaders()
 {
+    ServerStateData::haveParsedReplyHeaders();
+
     Ctx ctx = ctx_enter(entry->mem_obj->url);
     HttpReply *rep = finalReply();
 

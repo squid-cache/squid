@@ -3705,6 +3705,8 @@ FtpStateData::appendSuccessHeader()
 void
 FtpStateData::haveParsedReplyHeaders()
 {
+    ServerStateData::haveParsedReplyHeaders();
+
     StoreEntry *e = entry;
 
     e->timestampsSet();

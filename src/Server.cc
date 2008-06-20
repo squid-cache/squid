@@ -37,12 +37,17 @@
 #include "Store.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
+#include "TextException.h"
 #include "errorpage.h"
 
 #if USE_ADAPTATION
 #include "adaptation/AccessCheck.h"
 #include "adaptation/Service.h"
 #endif
+
+// implemented in client_side_reply.cc until sides have a common parent
+extern void purgeEntriesByUrl(const char *url);
+
 
 ServerStateData::ServerStateData(FwdState *theFwdState): AsyncJob("ServerStateData"),requestSender(NULL)
 #if USE_ADAPTATION
@@ -366,11 +371,70 @@ ServerStateData::sendMoreRequestBody()
     }
 }
 
-// called by noteAdaptationAnswer(), HTTP server overwrites this
+// Compares hosts in urls, returns false if different, no sheme, or no host.
+static bool
+sameUrlHosts(const char *url1, const char *url2)
+{
+    // XXX: Want urlHostname() here, but it uses static storage and copying
+    const char *host1 = strchr(url1, ':');
+    const char *host2 = strchr(url2, ':');
+
+    if (host1 && host2) {
+        // skip scheme slashes
+        do {
+            ++host1;
+            ++host2;
+        } while (*host1 == '/' && *host2 == '/');
+
+        if (!*host1)
+            return false; // no host
+
+        // increment while the same until we reach the end of the URL/host
+        while (*host1 && *host1 != '/' && *host1 == *host2) {
+            ++host1;
+            ++host2;
+        }
+        return *host1 == *host2;
+    }
+
+    return false; // no URL scheme
+}
+
+// purges entries that match the value of a given HTTP [response] header
+static void
+purgeEntriesByHeader(const char *reqUrl, HttpMsg *rep, http_hdr_type hdr)
+{
+    if (const char *url = rep->header.getStr(hdr))
+        if (sameUrlHosts(reqUrl, url)) // prevent purging DoS, per RFC 2616
+            purgeEntriesByUrl(url);
+}
+
+// some HTTP methods should purge matching cache entries
+void
+ServerStateData::maybePurgeOthers()
+{
+   // only some HTTP methods should purge matching cache entries
+   if (!request->method.purgesOthers())
+       return;
+
+   // and probably only if the response was successful
+   if (theFinalReply->sline.status >= 400)
+       return;
+
+   // XXX: should we use originalRequest() here?
+   const char *reqUrl = urlCanonical(request);
+   debugs(88, 5, "maybe purging due to " << RequestMethodStr(request->method) << ' ' << reqUrl);
+   purgeEntriesByUrl(reqUrl);
+   purgeEntriesByHeader(reqUrl, theFinalReply, HDR_LOCATION);
+   purgeEntriesByHeader(reqUrl, theFinalReply, HDR_CONTENT_LOCATION);
+}
+
+// called (usually by kids) when we have final (possibly adapted) reply headers
 void
 ServerStateData::haveParsedReplyHeaders()
 {
-    // default does nothing
+   Must(theFinalReply);
+   maybePurgeOthers();
 }
 
 HttpRequest *
