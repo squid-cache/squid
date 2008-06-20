@@ -1435,12 +1435,9 @@ ESIContext::ParserState::popAll()
 void
 ESIContext::freeResources ()
 {
-    debugs(86, 5, "ESIContext::freeResources: Freeing for this=" << this);
+    debugs(86, 5, HERE << "Freeing for this=" << this);
 
-    if (rep) {
-        delete rep;
-        rep = NULL;
-    }
+    HTTPMSGUNLOCK(rep);
 
     finishChildren ();
 
