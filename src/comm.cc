@@ -709,9 +709,10 @@ comm_openex(int sock_type,
 
 #endif
 
-#if IPV6_SPECIAL_V4MAPPED && defined(_SQUID_MSWIN_)
+#if IPV6_SPECIAL_V4MAPPED
 
     /* Windows Vista supports Dual-Sockets. BUT defaults them to V6ONLY. Turn it OFF. */
+    /* Other OS may have this administratively disabled for general use. Same deal. */
     if( addr.IsIPv6() )
         comm_set_v6only(new_socket, 0);
 
