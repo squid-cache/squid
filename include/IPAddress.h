@@ -232,7 +232,7 @@ public:
      *  Valid results IF and only IF the stored IP address is actually a network bitmask
      \retval N number of bits which are set in the bitmask stored.
      */
-    int GetCIDR();
+    int GetCIDR() const;
 
     /** Apply a mask to the stored address.
      \param mask Netmask format to be bit-mask-AND'd over the stored address.
