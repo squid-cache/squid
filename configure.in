@@ -1889,7 +1889,7 @@ AC_ARG_ENABLE(ipv6,
       [ AC_DEFINE(USE_IPV6,0,[0 == Disable support for IPv6])
         AC_DEFINE(IPV6_SPECIAL_SPLITSTACK,0,[0 == Disable support for Split-Stack IPv6 Implementations])
         AC_DEFINE(IPV6_SPECIAL_LOCALHOST,0,[0 == Keep IPv4 and IPv6 Localhosts seperate.])
-        AC_DEFINE(IPV6_SPECIAL_V4MAPPING,0,[0 == Leave all v4-mapping to OS Implementation])
+        AC_DEFINE(IPV6_SPECIAL_V4MAPPED,0,[0 == Leave all v4-mapping to OS Implementation])
         AC_MSG_RESULT(no)
       ])
    )
@@ -1897,7 +1897,7 @@ AC_ARG_ENABLE(ipv6,
 [ AC_DEFINE(USE_IPV6,0,[Disable support for IPv6])
   AC_DEFINE(IPV6_SPECIAL_SPLITSTACK,0,[ 0 == Disable support for Split-Stack IPv6 Implementations])
   AC_DEFINE(IPV6_SPECIAL_LOCALHOST,0,[ 0 == Keep IPv4 and IPv6 Localhosts seperate.])
-  AC_DEFINE(IPV6_SPECIAL_V4MAPPING,0,[ 0 == Leave v4-mapping to OS Implementation])
+  AC_DEFINE(IPV6_SPECIAL_V4MAPPED,0,[ 0 == Leave v4-mapping to OS Implementation])
   AC_MSG_RESULT(no)
 ])
 if test $ac_cv_enable_ipv6 ; then
@@ -1910,11 +1910,12 @@ AC_ARG_WITH(ipv6-split-stack,
 )
 
 dnl Check for IPv6 Windows Vista option
+dnl Also useful for other OS
 AC_MSG_CHECKING([for IPv6 v4-mapping requirement])
 AC_ARG_WITH(ipv4-mapped,
   [  --with-ipv4-mapped  Hybrid-Stack OS require Squid to do any v4-mapping (Requires IPv6 Support)],
-  [AC_DEFINE(IPV6_SPECIAL_V4MAPPING, 1, [ 1 == Perform v4-mapping internally]) AC_MSG_RESULT(yes)],
-  [AC_DEFINE(IPV6_SPECIAL_V4MAPPING, 0, [ 0 == Leave all v4-mapping to the OS]) AC_MSG_RESULT(no)]
+  [AC_DEFINE(IPV6_SPECIAL_V4MAPPED, 1, [ 1 == Perform v4-mapping through v6 sockets]) AC_MSG_RESULT(yes)],
+  [AC_DEFINE(IPV6_SPECIAL_V4MAPPED, 0, [ 0 == Leave all v4-mapping to the OS default]) AC_MSG_RESULT(no)]
 )
 
 dnl Check for IPv6-pure option
