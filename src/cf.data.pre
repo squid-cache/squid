@@ -461,12 +461,14 @@ DEFAULT: all src all
 DOC_START
 	Defining an Access List
 
-	acl aclname acltype string1 ...
-	acl aclname acltype "file" ...
+	Every access list definition must begin with an aclname and acltype, 
+	followed by either type-specific arguments or a quoted filename that
+	they are read from.
 
-	when using "file", the file should contain one item per line
+	   acl aclname acltype argument ...
+	   acl aclname acltype "file" ...
 
-	acltype is one of the types described below
+	When using "file", the file should contain one item per line.
 
 	By default, regular expressions are CASE-SENSITIVE.  To make
 	them case-insensitive, use the -i option.
@@ -474,10 +476,10 @@ DOC_START
 
 	***** ACL TYPES AVAILABLE *****
 
-	acl aclname src      ip-address/netmask ... (clients IP address)
-	acl aclname src      addr1-addr2/netmask ... (range of addresses)
-	acl aclname dst      ip-address/netmask ... (URL host's IP address)
-	acl aclname myip     ip-address/netmask ... (local socket IP address)
+	acl aclname src ip-address/netmask ...		# clients IP address
+	acl aclname src addr1-addr2/netmask ...		# range of addresses
+	acl aclname dst ip-address/netmask ...		# URL host's IP address
+	acl aclname myip ip-address/netmask ...		# local socket IP address
 
 	acl aclname arp      mac-address ... (xx:xx:xx:xx:xx:xx notation)
 	  # The arp ACL requires the special configure option --enable-arp-acl.
@@ -488,16 +490,16 @@ DOC_START
 	  # the same subnet. If the client is on a different subnet, then Squid cannot
 	  # find out its MAC address.
 
-	acl aclname srcdomain   .foo.com ...    # reverse lookup, from client IP
-	acl aclname dstdomain   .foo.com ...    # Destination server from URL
-	acl aclname srcdom_regex [-i] xxx ...   # regex matching client name
-	acl aclname dstdom_regex [-i] xxx ...   # regex matching server
+	acl aclname srcdomain   .foo.com ...    	# reverse lookup, from client IP
+	acl aclname dstdomain   .foo.com ...    	# Destination server from URL
+	acl aclname srcdom_regex [-i] \.foo\.com ...	# regex matching client name
+	acl aclname dstdom_regex [-i] \.foo\.com ...	# regex matching server
 	  # For dstdomain and dstdom_regex a reverse lookup is tried if a IP
 	  # based URL is used and no match is found. The name "none" is used
 	  # if the reverse lookup fails.
 
-	acl aclname src_as   number ...
-	acl aclname dst_as   number ...
+	acl aclname src_as number ...
+	acl aclname dst_as number ...
 	  # Except for access control, AS numbers can be used for
 	  # routing of requests to specific caches. Here's an
 	  # example for routing all requests for AS#1241 and only
@@ -506,39 +508,39 @@ DOC_START
 	  # cache_peer_access mycache.mydomain.net allow asexample
 	  # cache_peer_access mycache_mydomain.net deny all
 
-	acl aclname time     [day-abbrevs]  [h1:m1-h2:m2]
-	    day-abbrevs:
-		S - Sunday
-		M - Monday
-		T - Tuesday
-		W - Wednesday
-		H - Thursday
-		F - Friday
-		A - Saturday
-	    h1:m1 must be less than h2:m2
+	acl aclname time [day-abbrevs] [h1:m1-h2:m2]
+	  #  day-abbrevs:
+	  #	S - Sunday
+	  #	M - Monday
+	  #	T - Tuesday
+	  #	W - Wednesday
+	  #	H - Thursday
+	  #	F - Friday
+	  #	A - Saturday
+	  #  h1:m1 must be less than h2:m2
 
-	acl aclname url_regex [-i] ^http:// ...	# regex matching on whole URL
+	acl aclname url_regex [-i] ^http:// ...		# regex matching on whole URL
 	acl aclname urlpath_regex [-i] \.gif$ ...	# regex matching on URL path
 
-	acl aclname port     80 70 21 ...
-	acl aclname port     0-1024 ...		# ranges allowed
-	acl aclname myport   3128 ...		# (local socket TCP port)
+	acl aclname port 80 70 21 ...
+	acl aclname port 0-1024 ...		# ranges allowed
+	acl aclname myport 3128 ...		# (local socket TCP port)
 	acl aclname myportname 3128 ...		# http(s)_port name
 
-	acl aclname proto    HTTP FTP ...
+	acl aclname proto HTTP FTP ...
 
-	acl aclname method   GET POST ...
+	acl aclname method GET POST ...
 
 	acl aclname http_status 200 301 500- 400-403 ...     # status code in reply
 
-	acl aclname browser  [-i] regexp ...
+	acl aclname browser [-i] regexp ...
 	  # pattern match on User-Agent header (see also req_header below)
 
-	acl aclname referer_regex  [-i] regexp ...
+	acl aclname referer_regex [-i] regexp ...
 	  # pattern match on Referer header
 	  # Referer is highly unreliable, so use with care
 
-	acl aclname ident    username ...
+	acl aclname ident username ...
 	acl aclname ident_regex [-i] pattern ...
 	  # string match on ident output.
 	  # use REQUIRED to accept any non-null ident.
@@ -583,7 +585,7 @@ DOC_START
 	  # clients may appear to come from multiple addresses if they are
 	  # going through proxy farms, so a limit of 1 may cause user problems.
 
-	acl aclname req_mime_type [-i] mime-type1 ...
+	acl aclname req_mime_type [-i] mime-type ...
 	  # regex match against the mime type of the request generated
 	  # by the client. Can be used to detect file upload or some
 	  # types HTTP tunneling requests.
@@ -595,7 +597,7 @@ DOC_START
 	  # thought of as a superset of "browser", "referer" and "mime-type"
 	  # ACLs.
 
-	acl aclname rep_mime_type [-i] mime-type1 ...
+	acl aclname rep_mime_type [-i] mime-type ...
 	  # regex match against the mime type of the reply received by
 	  # squid. Can be used to detect file download or some
 	  # types HTTP tunneling requests.
@@ -608,7 +610,7 @@ DOC_START
 	  # thought of as a superset of "browser", "referer" and "mime-type"
 	  # ACLs.
 
-	acl acl_name external class_name [arguments...]
+	acl aclname external class_name [arguments...]
 	  # external ACL lookup via a helper class defined by the
 	  # external_acl_type directive.
 
