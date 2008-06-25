@@ -2266,6 +2266,8 @@ DOC_START
 		et	Tag returned by external acl
 		ea	Log string returned by external acl
 		<st	Reply size including HTTP headers
+		>st	Request size including HTTP headers
+		st	Request+Reply size including HTTP headers
 		<sH	Reply high offset sent
 		<sS	Upstream object size
 		%	a literal % character
