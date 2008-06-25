@@ -78,7 +78,8 @@ public:
 
     public:
         CacheDetails() : caddr(),
-                size(0),
+                requestSize(0),
+                replySize(0),
                 highOffset(0),
                 objectSize(0),
                 code (LOG_TAG_NONE),
@@ -93,7 +94,8 @@ public:
         }
 
         IPAddress caddr;
-        int64_t size;
+        int64_t requestSize;
+        int64_t replySize;
         int64_t highOffset;
         int64_t objectSize;
         log_type code;

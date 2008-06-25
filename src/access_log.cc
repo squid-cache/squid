@@ -365,7 +365,7 @@ typedef enum {
     /*LFT_REQUEST_QUERY, * // * this is not needed. see strip_query_terms */
     LFT_REQUEST_VERSION,
 
-    /*LFT_REQUEST_SIZE_TOTAL, */
+    LFT_REQUEST_SIZE_TOTAL,
     /*LFT_REQUEST_SIZE_LINE, */
     /*LFT_REQUEST_SIZE_HEADERS, */
     /*LFT_REQUEST_SIZE_BODY, */
@@ -380,6 +380,7 @@ typedef enum {
     /*LFT_REPLY_SIZE_BODY_NO_TE, */
 
     LFT_TAG,
+    LFT_IO_SIZE_TOTAL,
     LFT_EXT_LOG,
 
     LFT_PERCENT			/* special string cases for escaped chars */
@@ -478,7 +479,7 @@ struct logformat_token_table_entry logformat_token_table[] =
         {">v", LFT_REQUEST_VERSION},
         {"rv", LFT_REQUEST_VERSION},
 
-        /*{ ">st", LFT_REQUEST_SIZE_TOTAL }, */
+        { ">st", LFT_REQUEST_SIZE_TOTAL },
         /*{ ">sl", LFT_REQUEST_SIZE_LINE }, * / / * the request line "GET ... " */
         /*{ ">sh", LFT_REQUEST_SIZE_HEADERS }, */
         /*{ ">sb", LFT_REQUEST_SIZE_BODY }, */
@@ -493,6 +494,7 @@ struct logformat_token_table_entry logformat_token_table[] =
         /*{ "<sB", LFT_REPLY_SIZE_BODY_NO_TE }, */
 
         {"et", LFT_TAG},
+        {"st", LFT_IO_SIZE_TOTAL},
         {"ea", LFT_EXT_LOG},
 
         {"%", LFT_PERCENT},
@@ -770,22 +772,22 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
 
         case LFT_REQUEST_VERSION:
             snprintf(tmp, sizeof(tmp), "%d.%d", (int) al->http.version.major, (int) al->http.version.minor);
-
             out = tmp;
-
             break;
 
-            /*case LFT_REQUEST_SIZE_TOTAL: */
+        case LFT_REQUEST_SIZE_TOTAL:
+            outint = al->cache.requestSize;
+            dooff = 1;
+            break;
+
             /*case LFT_REQUEST_SIZE_LINE: */
             /*case LFT_REQUEST_SIZE_HEADERS: */
             /*case LFT_REQUEST_SIZE_BODY: */
             /*case LFT_REQUEST_SIZE_BODY_NO_TE: */
 
         case LFT_REPLY_SIZE_TOTAL:
-            outoff = al->cache.size;
-
+            outoff = al->cache.replySize;
             dooff = 1;
-
             break;
 
         case LFT_REPLY_HIGHOFFSET:
@@ -813,6 +815,11 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
 
             quote = 1;
 
+            break;
+
+        case LFT_IO_SIZE_TOTAL:
+            outint = al->cache.requestSize + al->cache.replySize;
+            doint = 1;
             break;
 
         case LFT_EXT_LOG:
@@ -1299,7 +1306,7 @@ accessLogSquid(AccessLogEntry * al, Logfile * logfile)
                       client,
                       log_tags[al->cache.code],
                       al->http.code,
-                      al->cache.size,
+                      al->cache.replySize,
                       al->_private.method_str,
                       al->url,
                       user ? user : dash_str,
@@ -1317,7 +1324,7 @@ accessLogSquid(AccessLogEntry * al, Logfile * logfile)
                       client,
                       log_tags[al->cache.code],
                       al->http.code,
-                      al->cache.size,
+                      al->cache.replySize,
                       al->_private.method_str,
                       al->url,
                       user ? user : dash_str,
@@ -1361,7 +1368,7 @@ accessLogCommon(AccessLogEntry * al, Logfile * logfile)
                   al->url,
                   al->http.version.major, al->http.version.minor,
                   al->http.code,
-                  al->cache.size,
+                  al->cache.replySize,
                   log_tags[al->cache.code],
                   hier_strings[al->hier.code]);
 
