@@ -179,7 +179,7 @@ icpLogIcp(struct IN_ADDR caddr, log_type logcode, int len, const char *url, int 
 
     al.cache.caddr = caddr;
 
-    al.cache.size = len;
+    al.cache.replySize = len;
 
     al.cache.code = logcode;
 

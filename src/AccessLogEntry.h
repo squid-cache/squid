@@ -79,7 +79,9 @@ public:
     {
 
     public:
-        CacheDetails() : size(0),
+        CacheDetails() :
+                requestSize(0),
+                replySize(0),
                 highOffset(0),
                 objectSize(0),
                 code (LOG_TAG_NONE),
@@ -95,7 +97,8 @@ public:
         }
 
         struct IN_ADDR caddr;
-        int64_t size;
+        int64_t requestSize;
+        int64_t replySize;
         int64_t highOffset;
         int64_t objectSize;
         log_type code;

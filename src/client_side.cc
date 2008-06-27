@@ -459,7 +459,7 @@ clientPrepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry * aLogE
     aLogEntry->http.method = request->method;
     aLogEntry->http.version = request->http_ver;
     aLogEntry->hier = request->hier;
-
+    aLogEntry->cache.requestSize += request->content_length;
     aLogEntry->cache.extuser = request->extacl_user.buf();
 
     if (request->auth_user_request) {
@@ -495,7 +495,9 @@ ClientHttpRequest::logRequest()
 
         al.cache.caddr = getConn() != NULL ? getConn()->log_addr : no_addr;
 
-        al.cache.size = out.size;
+        al.cache.requestSize = req_sz;
+
+        al.cache.replySize = out.size;
 
         al.cache.highOffset = out.offset;
 
