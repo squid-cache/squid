@@ -190,7 +190,7 @@ FwdState::~FwdState()
     debugs(17, 3, HERE << "FwdState destructor done");
 }
 
-/*
+/**
  * This is the entry point for client-side to start forwarding
  * a transaction.  It is a static method that may or may not
  * allocate a FwdState.
@@ -283,7 +283,7 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
 void
 FwdState::fail(ErrorState * errorState)
 {
-    debugs(17, 3, "fwdFail: " << err_type_str[errorState->type] << " \"" << httpStatusString(errorState->httpStatus) << "\"\n\t" << entry->url()  );
+    debugs(17, 3, HERE << err_type_str[errorState->type] << " \"" << httpStatusString(errorState->httpStatus) << "\"\n\t" << entry->url()  );
 
     if (err)
         errorStateFree(err);
@@ -294,20 +294,20 @@ FwdState::fail(ErrorState * errorState)
         errorState->request = HTTPMSGLOCK(request);
 }
 
-/*
+/**
  * Frees fwdState without closing FD or generating an abort
  */
 void
 FwdState::unregister(int fd)
 {
-    debugs(17, 3, "fwdUnregister: " << entry->url()  );
+    debugs(17, 3, HERE << entry->url()  );
     assert(fd == server_fd);
     assert(fd > -1);
     comm_remove_close_handler(fd, fwdServerClosedWrapper, this);
     server_fd = -1;
 }
 
-/*
+/**
  * server-side modules call fwdComplete() when they are done
  * downloading an object.  Then, we either 1) re-forward the
  * request somewhere else if needed, or 2) call storeComplete()
@@ -318,7 +318,7 @@ FwdState::complete()
 {
     StoreEntry *e = entry;
     assert(entry->store_status == STORE_PENDING);
-    debugs(17, 3, "fwdComplete: " << e->url() << "\n\tstatus " << entry->getReply()->sline.status  );
+    debugs(17, 3, HERE << e->url() << "\n\tstatus " << entry->getReply()->sline.status  );
 #if URL_CHECKSUM_DEBUG
 
     entry->mem_obj->checkUrlChecksum();
