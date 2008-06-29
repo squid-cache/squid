@@ -236,7 +236,7 @@ void MemBuf::append(const char *newContent, mb_size_t sz)
     assert(!stolen); /* not frozen */
 
     if(!buf) {
-        grow(sz+1, MEM_BUF_MAX_SIZE);
+        grow((int)sz+1, MEM_BUF_MAX_SIZE);
     }
 
     PROF_start(MemBuf_append);
