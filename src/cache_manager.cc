@@ -52,10 +52,7 @@
 
 
 static CacheManagerAction *cachemgrFindAction(const char *action);
-static int cachemgrCheckPassword(cachemgrStateData *);
 static void cachemgrStateFree(cachemgrStateData * mgr);
-static char *cachemgrPasswdGet(cachemgr_passwd *, const char *);
-static const char *cachemgrActionProtection(const CacheManagerAction * at);
 static OBJH cachemgrShutdown;
 static OBJH cachemgrReconfigure;
 static OBJH cachemgrMenu;
@@ -151,7 +148,7 @@ CacheManager::ParseUrl(const char *url)
         debugs(16, 1, "CacheManager::ParseUrl: action '" << request << "' not found");
         return NULL;
     } else {
-        prot = cachemgrActionProtection(a);
+        prot = ActionProtection(a);
 
         if (!strcmp(prot, "disabled") || !strcmp(prot, "hidden")) {
             debugs(16, 1, "CacheManager::ParseUrl: action '" << request << "' is " << prot);
@@ -210,10 +207,10 @@ CacheManager::ParseHeaders(cachemgrStateData * mgr, const HttpRequest * request)
  \retval 1	if mgr->password is "disable"
  \retval !0	if mgr->password does not match configured password
  */
-static int
-cachemgrCheckPassword(cachemgrStateData * mgr)
+int
+CacheManager::CheckPassword(cachemgrStateData * mgr)
 {
-    char *pwd = cachemgrPasswdGet(Config.passwd_list, mgr->action);
+    char *pwd = PasswdGet(Config.passwd_list, mgr->action);
     CacheManagerAction *a = cachemgrFindAction(mgr->action);
     assert(a != NULL);
 
@@ -272,7 +269,7 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
 
     /* Check password */
 
-    if (cachemgrCheckPassword(mgr) != 0) {
+    if (CheckPassword(mgr) != 0) {
         /* build error message */
         ErrorState *err;
         HttpReply *rep;
@@ -374,12 +371,12 @@ cachemgrOfflineToggle(StoreEntry * sentry)
 }
 
 /// \ingroup CacheManagerInternal
-static const char *
-cachemgrActionProtection(const CacheManagerAction * at)
+const char *
+CacheManager::ActionProtection(const CacheManagerAction * at)
 {
     char *pwd;
     assert(at);
-    pwd = cachemgrPasswdGet(Config.passwd_list, at->action);
+    pwd = PasswdGet(Config.passwd_list, at->action);
 
     if (!pwd)
         return at->flags.pw_req ? "hidden" : "public";
@@ -401,13 +398,13 @@ cachemgrMenu(StoreEntry * sentry)
 
     for (a = ActionTable; a != NULL; a = a->next) {
         storeAppendPrintf(sentry, " %-22s\t%-32s\t%s\n",
-                          a->action, a->desc, cachemgrActionProtection(a));
+                          a->action, a->desc, CacheManager::GetInstance()->ActionProtection(a));
     }
 }
 
 /// \ingroup CacheManagerInternal
-static char *
-cachemgrPasswdGet(cachemgr_passwd * a, const char *action)
+char *
+CacheManager::PasswdGet(cachemgr_passwd * a, const char *action)
 {
     wordlist *w;
 
