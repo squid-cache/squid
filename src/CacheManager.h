@@ -100,11 +100,14 @@ public:
     virtual void Start(int fd, HttpRequest * request, StoreEntry * entry);
 
     static CacheManager* GetInstance();
+    const char *ActionProtection(const CacheManagerAction * at); //needs to be called from C
 
 protected:
     CacheManager(); 
     virtual cachemgrStateData* ParseUrl(const char *url);
     virtual void ParseHeaders(cachemgrStateData * mgr, const HttpRequest * request);
+    int CheckPassword(cachemgrStateData * mgr);
+    char *PasswdGet(cachemgr_passwd *, const char *);
 
 private:
     static CacheManager* instance;
