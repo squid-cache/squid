@@ -435,3 +435,13 @@ cachemgrPasswdGet(cachemgr_passwd * a, const char *action)
 
     return NULL;
 }
+
+CacheManager* CacheManager::instance=0;
+
+CacheManager*
+CacheManager::GetInstance() {
+	if (instance == 0)
+		instance = new CacheManager;
+	return instance;
+}
+

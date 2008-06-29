@@ -77,7 +77,6 @@ class CacheManager
 {
 
 public:
-    CacheManager();
     /* the holy trinity - assignment, copy cons, destructor */
     /* unimplemented - prevents bugs from synthetic */
     CacheManager & operator = (CacheManager &);
@@ -88,6 +87,16 @@ public:
 
     virtual void registerAction(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic);
     virtual CacheManagerAction * findAction(char const * action);
+
+    static CacheManager* GetInstance();
+
+protected:
+    CacheManager(); 
+
+private:
+    static CacheManager* instance;
+
+
 };
 
 #endif /* SQUID_CACHEMANAGER_H */
