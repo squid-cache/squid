@@ -50,18 +50,8 @@
 /// \ingroup CacheManagerInternal
 #define MGR_PASSWD_SZ 128
 
-/// \ingroup CacheManagerInternal
-typedef struct
-{
-    StoreEntry *entry;
-    char *action;
-    char *user_name;
-    char *passwd;
-} cachemgrStateData;
 
 static CacheManagerAction *cachemgrFindAction(const char *action);
-static cachemgrStateData *cachemgrParseUrl(const char *url);
-static void cachemgrParseHeaders(cachemgrStateData * mgr, const HttpRequest * request);
 static int cachemgrCheckPassword(cachemgrStateData *);
 static void cachemgrStateFree(cachemgrStateData * mgr);
 static char *cachemgrPasswdGet(cachemgr_passwd *, const char *);
@@ -134,8 +124,8 @@ cachemgrFindAction(const char *action)
 }
 
 /// \ingroup CacheManagerInternal
-static cachemgrStateData *
-cachemgrParseUrl(const char *url)
+cachemgrStateData *
+CacheManager::ParseUrl(const char *url)
 {
     int t;
     LOCAL_ARRAY(char, host, MAX_URL);
@@ -158,13 +148,13 @@ cachemgrParseUrl(const char *url)
 #endif
 
     } else if ((a = cachemgrFindAction(request)) == NULL) {
-        debugs(16, 1, "cachemgrParseUrl: action '" << request << "' not found");
+        debugs(16, 1, "CacheManager::ParseUrl: action '" << request << "' not found");
         return NULL;
     } else {
         prot = cachemgrActionProtection(a);
 
         if (!strcmp(prot, "disabled") || !strcmp(prot, "hidden")) {
-            debugs(16, 1, "cachemgrParseUrl: action '" << request << "' is " << prot);
+            debugs(16, 1, "CacheManager::ParseUrl: action '" << request << "' is " << prot);
             return NULL;
         }
     }
@@ -182,8 +172,8 @@ cachemgrParseUrl(const char *url)
 }
 
 /// \ingroup CacheManagerInternal
-static void
-cachemgrParseHeaders(cachemgrStateData * mgr, const HttpRequest * request)
+void
+CacheManager::ParseHeaders(cachemgrStateData * mgr, const HttpRequest * request)
 {
     const char *basic_cookie;	/* base 64 _decoded_ user:passwd pair */
     const char *passwd_del;
@@ -194,7 +184,7 @@ cachemgrParseHeaders(cachemgrStateData * mgr, const HttpRequest * request)
         return;
 
     if (!(passwd_del = strchr(basic_cookie, ':'))) {
-        debugs(16, 1, "cachemgrParseHeaders: unknown basic_cookie format '" << basic_cookie << "'");
+        debugs(16, 1, "CacheManager::ParseHeaders: unknown basic_cookie format '" << basic_cookie << "'");
         return;
     }
 
@@ -210,7 +200,7 @@ cachemgrParseHeaders(cachemgrStateData * mgr, const HttpRequest * request)
     mgr->passwd = xstrdup(passwd_del + 1);
 
     /* warning: this prints decoded password which maybe not what you want to do @?@ @?@ */
-    debugs(16, 9, "cachemgrParseHeaders: got user: '" << mgr->user_name << "' passwd: '" << mgr->passwd << "'");
+    debugs(16, 9, "CacheManager::ParseHeaders: got user: '" << mgr->user_name << "' passwd: '" << mgr->passwd << "'");
 }
 
 /**
@@ -255,14 +245,14 @@ cachemgrStateFree(cachemgrStateData * mgr)
 
 // API
 void
-cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry)
+CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
 {
     cachemgrStateData *mgr = NULL;
     ErrorState *err = NULL;
     CacheManagerAction *a;
     debugs(16, 3, "objectcacheStart: '" << entry->url() << "'" );
 
-    if ((mgr = cachemgrParseUrl(entry->url())) == NULL) {
+    if ((mgr = ParseUrl(entry->url())) == NULL) {
         err = errorCon(ERR_INVALID_URL, HTTP_NOT_FOUND, request);
         err->url = xstrdup(entry->url());
         errorAppendEntry(entry, err);
@@ -278,7 +268,7 @@ cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry)
     debugs(16, 5, "CACHEMGR: " << fd_table[fd].ipaddr << " requesting '" << mgr->action << "'");
 
     /* get additional info from request headers */
-    cachemgrParseHeaders(mgr, request);
+    ParseHeaders(mgr, request);
 
     /* Check password */
 
