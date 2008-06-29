@@ -256,7 +256,7 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
         return;
 
     case PROTO_CACHEOBJ:
-        cachemgrStart(client_fd, request, entry);
+        CacheManager::GetInstance()->Start(client_fd, request, entry);
         return;
 
     case PROTO_URN:

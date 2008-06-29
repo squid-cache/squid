@@ -66,6 +66,15 @@ public:
 };
 
 
+/// \ingroup CacheManagerInternal
+typedef struct
+{
+    StoreEntry *entry;
+    char *action;
+    char *user_name;
+    char *passwd;
+} cachemgrStateData;
+
 /**
  \ingroup CacheManagerAPI
  * a CacheManager - the menu system for interacting with squid.
@@ -88,10 +97,14 @@ public:
     virtual void registerAction(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic);
     virtual CacheManagerAction * findAction(char const * action);
 
+    virtual void Start(int fd, HttpRequest * request, StoreEntry * entry);
+
     static CacheManager* GetInstance();
 
 protected:
     CacheManager(); 
+    virtual cachemgrStateData* ParseUrl(const char *url);
+    virtual void ParseHeaders(cachemgrStateData * mgr, const HttpRequest * request);
 
 private:
     static CacheManager* instance;
