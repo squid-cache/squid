@@ -53,7 +53,13 @@ noinst_LIBRARIES = \
 	libntlmauth.a \
 	$(LIBSSPWIN32) \
 	@LIBREGEX@
+#
+# dirent.c, ecnrypt.c and getopt.c are needed for native Windows support.
+#
 EXTRA_libmiscutil_a_SOURCES = \
+	dirent.c \
+	encrypt.c \
+	getopt.c \
 	md5.c \
 	Profiler.c \
 	strsep.c \
