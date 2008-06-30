@@ -51,28 +51,23 @@
 #define MGR_PASSWD_SZ 128
 
 
-static CacheManagerAction *cachemgrFindAction(const char *action);
 static void cachemgrStateFree(cachemgrStateData * mgr);
-static OBJH cachemgrShutdown;
-static OBJH cachemgrReconfigure;
-static OBJH cachemgrMenu;
-static OBJH cachemgrOfflineToggle;
 
 /// \ingroup CacheManagerInternal
 CacheManagerAction *ActionTable = NULL;
 
 CacheManager::CacheManager()
 {
-    registerAction("menu", "This Cachemanager Menu", cachemgrMenu, 0, 1);
+    registerAction("menu", "This Cachemanager Menu", MenuCommand, 0, 1);
     registerAction("shutdown",
                    "Shut Down the Squid Process",
-                   cachemgrShutdown, 1, 1);
+                   ShutdownCommand, 1, 1);
     registerAction("reconfigure",
                      "Reconfigure the Squid Process",
-                     cachemgrReconfigure, 1, 1);
+                     ReconfigureCommand, 1, 1);
     registerAction("offline_toggle",
                    "Toggle offline_mode setting",
-                   cachemgrOfflineToggle, 1, 1);
+                   OfflineToggleCommand, 1, 1);
 }
 
 void
@@ -100,15 +95,13 @@ CacheManager::registerAction(char const * action, char const * desc, OBJH * hand
     debugs(16, 3, "CacheManager::registerAction: registered " <<  action);
 }
 
+/// \ingroup CacheManagerInternal
+//TODO: revert those two functions and turn ActionTable into a 
+//      private data member.
+//      In order to do so ActionTable must be extended to allow using
+//      function objects rather than C-style functions
 CacheManagerAction *
 CacheManager::findAction(char const * action)
-{
-    return cachemgrFindAction(action);
-}
-
-/// \ingroup CacheManagerInternal
-static CacheManagerAction *
-cachemgrFindAction(const char *action)
 {
     CacheManagerAction *a;
 
@@ -144,7 +137,7 @@ CacheManager::ParseUrl(const char *url)
         xstrncpy(request, "menu", MAX_URL);
 #endif
 
-    } else if ((a = cachemgrFindAction(request)) == NULL) {
+    } else if ((a = findAction(request)) == NULL) {
         debugs(16, 1, "CacheManager::ParseUrl: action '" << request << "' not found");
         return NULL;
     } else {
@@ -211,7 +204,7 @@ int
 CacheManager::CheckPassword(cachemgrStateData * mgr)
 {
     char *pwd = PasswdGet(Config.passwd_list, mgr->action);
-    CacheManagerAction *a = cachemgrFindAction(mgr->action);
+    CacheManagerAction *a = findAction(mgr->action);
     assert(a != NULL);
 
     if (pwd == NULL)
@@ -314,7 +307,7 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
            fd_table[fd].ipaddr << " requesting '" << 
            mgr->action << "'" );
     /* retrieve object requested */
-    a = cachemgrFindAction(mgr->action);
+    a = findAction(mgr->action);
     assert(a != NULL);
 
     entry->buffer();
@@ -343,16 +336,16 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
 }
 
 /// \ingroup CacheManagerInternal
-static void
-cachemgrShutdown(StoreEntry * entryunused)
+void
+CacheManager::ShutdownCommand(StoreEntry *unused)
 {
     debugs(16, 0, "Shutdown by command.");
     shut_down(0);
 }
 
 /// \ingroup CacheManagerInternal
-static void
-cachemgrReconfigure(StoreEntry * sentry)
+void
+CacheManager::ReconfigureCommand(StoreEntry * sentry)
 {
     debug(16, 0) ("Reconfigure by command.\n");
     storeAppendPrintf(sentry, "Reconfiguring Squid Process ....");
@@ -360,8 +353,8 @@ cachemgrReconfigure(StoreEntry * sentry)
 }
 
 /// \ingroup CacheManagerInternal
-static void
-cachemgrOfflineToggle(StoreEntry * sentry)
+void
+CacheManager::OfflineToggleCommand(StoreEntry * sentry)
 {
     Config.onoff.offline = !Config.onoff.offline;
     debugs(16, 0, "offline_mode now " << (Config.onoff.offline ? "ON" : "OFF") << ".");
@@ -391,8 +384,8 @@ CacheManager::ActionProtection(const CacheManagerAction * at)
 }
 
 /// \ingroup CacheManagerInternal
-static void
-cachemgrMenu(StoreEntry * sentry)
+void
+CacheManager::MenuCommand(StoreEntry * sentry)
 {
     CacheManagerAction *a;
 

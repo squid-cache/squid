@@ -110,6 +110,16 @@ protected:
 private:
     static CacheManager* instance;
 
+    //commands need to be static to be able to be referenced as C-style
+    //functions. Binding to nonstatic members can be done at runtime
+    //via the singleton, but it's syntactic hackery
+    //TODO: fix so that ActionTable uses a Command pattern and thus
+    //      function calls are properly object-wrapped
+    static void ShutdownCommand(StoreEntry *unused);
+    static void ReconfigureCommand(StoreEntry *sentry);
+    static void MenuCommand(StoreEntry *sentry);
+    static void OfflineToggleCommand(StoreEntry *sentry);
+
 
 };
 
