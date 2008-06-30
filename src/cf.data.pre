@@ -5879,4 +5879,18 @@ DOC_START
 	rounded to 1000.
 DOC_END
 
+NAME: windows_ipaddrchangemonitor
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: on
+LOC: Config.onoff.WIN32_IpAddrChangeMonitor
+DOC_START
+	On Windows Squid by default will monitor IP address changes and will 
+	reconfigure itself after any detected event. This is very useful for
+	proxies connected to internet with dial-up interfaces.
+	In some cases (a Proxy server acting as VPN gateway is one) it could be
+	desiderable to disable this behaviour setting this to 'off'.
+	Note: after changing this, Squid service must be restarted.
+DOC_END
+
 EOF

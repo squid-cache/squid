@@ -476,6 +476,7 @@ struct SquidConfig
         int zph_tos_parent;
         int zph_preserve_miss_tos;
 #endif
+        int WIN32_IpAddrChangeMonitor;
     } onoff;
 
     class ACL *aclList;
