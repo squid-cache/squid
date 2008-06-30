@@ -120,6 +120,8 @@ private:
     static void MenuCommand(StoreEntry *sentry);
     static void OfflineToggleCommand(StoreEntry *sentry);
 
+    void StateFree(cachemgrStateData * mgr);
+
 
 };
 
