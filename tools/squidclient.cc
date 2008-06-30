@@ -113,6 +113,15 @@ static struct stat sb;
 int total_bytes = 0;
 int io_timeout = 120;
 
+#ifdef _SQUID_MSWIN_
+void
+Win32SockCleanup(void)
+{
+    WSACleanup();
+    return;
+}
+#endif /* ifdef _SQUID_MSWIN_ */
+
 static void
 usage(const char *progname)
 {
@@ -317,6 +326,7 @@ main(int argc, char *argv[])
     {
 	WSADATA wsaData;
 	WSAStartup(2, &wsaData);
+	atexit(Win32SockCleanup);
     }
 #endif
     /* Build the HTTP request */

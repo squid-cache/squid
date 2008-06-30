@@ -56,6 +56,15 @@ ICMPPinger::~ICMPPinger()
     Close();
 }
 
+#ifdef _SQUID_MSWIN_
+void
+Win32SockCleanup(void)
+{
+    WSACleanup();
+    return;
+}
+#endif
+
 int
 ICMPPinger::Open(void)
 {
@@ -69,6 +78,7 @@ ICMPPinger::Open(void)
     struct sockaddr_in PS;
 
     WSAStartup(2, &wsaData);
+    atexit(Win32SockCleanup);
 
     getCurrentTime();
     _db_init(NULL, "ALL,1");
