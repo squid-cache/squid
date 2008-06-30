@@ -41,9 +41,6 @@
  \ingroup Components
  */
 
-/// \ingroup CacheManagerAPI
-extern void cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry);
-
 /**
  \ingroup CacheManagerAPI
  * A single menu item in the cache manager - an 'action'.
@@ -81,6 +78,7 @@ typedef struct
  * This is currently just an adapter to the global cachemgr* routines to
  * provide looser coupling between modules, but once fully transitioned,
  * an instance of this class will represent a single independent manager.
+ * TODO: update documentation to reflect the new singleton model.
  */
 class CacheManager
 {
@@ -94,18 +92,18 @@ public:
     /* inline so that we dont need to link in cachemgr.cc at all in tests */
     virtual ~CacheManager() {}
 
-    virtual void registerAction(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic);
-    virtual CacheManagerAction * findAction(char const * action);
+    void registerAction(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic);
+    CacheManagerAction * findAction(char const * action);
 
-    virtual void Start(int fd, HttpRequest * request, StoreEntry * entry);
+    void Start(int fd, HttpRequest * request, StoreEntry * entry);
 
     static CacheManager* GetInstance();
     const char *ActionProtection(const CacheManagerAction * at); //needs to be called from C
 
 protected:
     CacheManager(); 
-    virtual cachemgrStateData* ParseUrl(const char *url);
-    virtual void ParseHeaders(cachemgrStateData * mgr, const HttpRequest * request);
+    cachemgrStateData* ParseUrl(const char *url);
+    void ParseHeaders(cachemgrStateData * mgr, const HttpRequest * request);
     int CheckPassword(cachemgrStateData * mgr);
     char *PasswdGet(cachemgr_passwd *, const char *);
 
