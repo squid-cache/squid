@@ -51,7 +51,6 @@
 #define MGR_PASSWD_SZ 128
 
 
-static void cachemgrStateFree(cachemgrStateData * mgr);
 
 /// \ingroup CacheManagerInternal
 CacheManagerAction *ActionTable = NULL;
@@ -223,8 +222,8 @@ CacheManager::CheckPassword(cachemgrStateData * mgr)
 }
 
 /// \ingroup CacheManagerInternal
-static void
-cachemgrStateFree(cachemgrStateData * mgr)
+void
+CacheManager::StateFree(cachemgrStateData * mgr)
 {
     safe_free(mgr->action);
     safe_free(mgr->user_name);
@@ -297,7 +296,7 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
 
         entry->complete();
 
-        cachemgrStateFree(mgr);
+        StateFree(mgr);
 
         return;
     }
@@ -332,7 +331,7 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
     if (a->flags.atomic)
         entry->complete();
 
-    cachemgrStateFree(mgr);
+    StateFree(mgr);
 }
 
 /// \ingroup CacheManagerInternal
