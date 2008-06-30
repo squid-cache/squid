@@ -2474,6 +2474,7 @@ AC_CHECK_TYPE(mtyp_t,AC_DEFINE(HAVE_MTYP_T,1,[mtyp_t is defined by the system he
 dnl Check for needed libraries
 AC_CHECK_LIB(nsl, main)
 AC_CHECK_LIB(socket, main)
+dnl Check for Winsock only on MinGW, on Cygwin we must use emulated BSD socket API
 case "$host_os" in
   mingw|mingw32)
     AC_MSG_CHECKING(for winsock)
@@ -2504,6 +2505,11 @@ case "$host_os" in
 	LIBS="$save_LIBS"
     done
     AC_MSG_RESULT($have_winsock)
+    if test $have_winsock = winsock2; then
+       AC_CHECK_HEADERS(winsock2.h)
+    else
+       AC_CHECK_HEADERS(winsock.h)
+    fi
     ;;
 esac
 
@@ -3206,6 +3212,12 @@ AC_TRY_RUN([
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
+#if HAVE_WINSOCK_H
+#include <winsock.h>
+#endif
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif
 main() {
 	FILE *fp = fopen("conftestval", "w");
 	fprintf (fp, "%d\n", FD_SETSIZE);
@@ -3328,14 +3340,31 @@ AC_TRY_RUN([
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
+#if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
+#if HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+#if HAVE_WINSOCK_H
+#include <winsock.h>
+#endif
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif
 main ()
 {
 	FILE *fp;
         int fd,val=0,len=sizeof(int);
+#if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+	WSADATA wsaData;
+	WSAStartup(2, &wsaData);
+#endif
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) exit(1);
         if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &val, &len) < 0) exit(1);
+#if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+	WSACleanup();
+#endif
 	if (val<=0) exit(1);
         fp = fopen("conftestval", "w");
         fprintf (fp, "%d\n", val);
@@ -3354,14 +3383,31 @@ AC_TRY_RUN([
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
+#if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
+#if HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+#if HAVE_WINSOCK_H
+#include <winsock.h>
+#endif
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif
 main ()
 {
 	FILE *fp;
         int fd,val=0,len=sizeof(int);
+#if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+	WSADATA wsaData;
+	WSAStartup(2, &wsaData);
+#endif
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) exit(1);
         if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &val, &len) < 0) exit(1);
+#if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+	WSACleanup();
+#endif
 	if (val <= 0) exit(1);
 	fp = fopen("conftestval", "w"); 
 	fprintf (fp, "%d\n", val);
@@ -3380,14 +3426,31 @@ AC_TRY_RUN([
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
+#if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
+#if HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+#if HAVE_WINSOCK_H
+#include <winsock.h>
+#endif
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif
 main ()
 {
 	FILE *fp;
         int fd,val=0,len=sizeof(int);
+#if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+	WSADATA wsaData;
+	WSAStartup(2, &wsaData);
+#endif
 	if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) exit(1);
         if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &val, &len) < 0) exit(1);
+#if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+	WSACleanup();
+#endif
 	if (val <= 0) exit(1);
 	fp = fopen("conftestval", "w"); 
 	fprintf (fp, "%d\n", val);
@@ -3410,14 +3473,31 @@ AC_TRY_RUN([
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
+#if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
+#if HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+#if HAVE_WINSOCK_H
+#include <winsock.h>
+#endif
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif
 main ()
 {
 	FILE *fp;
         int fd,val=0,len=sizeof(int);
+#if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+	WSADATA wsaData;
+	WSAStartup(2, &wsaData);
+#endif
 	if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) exit(1);
         if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &val, &len) < 0) exit(1);
+#if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+	WSACleanup();
+#endif
 	if (val <= 0) exit(1);
 	fp = fopen("conftestval", "w"); 
 	fprintf (fp, "%d\n", val);
