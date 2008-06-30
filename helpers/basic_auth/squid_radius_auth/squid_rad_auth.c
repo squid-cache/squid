@@ -129,6 +129,15 @@ static int retries = 30;
 char *progname = "squid_rad_auth";
 int debug_flag = 0;
 
+#ifdef _SQUID_MSWIN_
+void
+Win32SockCleanup(void)
+{
+    WSACleanup();
+    return;
+}
+#endif /* ifdef _SQUID_MSWIN_ */
+
 /*
  *    Diff two timeval, b - a
  */
@@ -183,12 +192,10 @@ result_recv(u_int32_t host, u_short udp_port, char *buffer, int length)
 	    totallen, length);
 	return -1;
     }
-
     if (auth->id != request_id) {
 	/* Duplicate response of an earlier query, ignore */
 	return -1;
     }
-
     /* Verify the reply digest */
     memcpy(reply_digest, auth->vector, AUTH_VECTOR_LEN);
     memcpy(auth->vector, vector, AUTH_VECTOR_LEN);
@@ -200,7 +207,6 @@ result_recv(u_int32_t host, u_short udp_port, char *buffer, int length)
 	fprintf(stderr, "Warning: Received invalid reply digest from server\n");
 	return -1;
     }
-
     if (auth->code != PW_AUTHENTICATION_ACK)
 	return 1;
 
@@ -251,9 +257,9 @@ rad_auth_config(const char *cfname)
 	    crt = sscanf(line, "secret %s", secretkey);
 	if (!memcmp(line, "identifier", 10))
 	    sscanf(line, "identifier %s", identifier);
-       if (!memcmp(line, "service", 7))
+	if (!memcmp(line, "service", 7))
 	    sscanf(line, "service %s", svc_name);
-       if (!memcmp(line, "port", 4))
+	if (!memcmp(line, "port", 4))
 	    sscanf(line, "port %s", svc_name);
     }
     if (srv && crt)
@@ -347,7 +353,7 @@ authenticate(int sockfd, const char *username, const char *passwd)
     memcpy(cbc, auth->vector, AUTH_VECTOR_LEN);
     for (j = 0; j < length; j += AUTH_VECTOR_LEN) {
 	/* Calculate the MD5 Digest */
-	strcpy((char *)md5buf, secretkey);
+	strcpy((char *) md5buf, secretkey);
 	memcpy(md5buf + secretlen, cbc, AUTH_VECTOR_LEN);
 	md5_calc(cbc, md5buf, secretlen + AUTH_VECTOR_LEN);
 
@@ -400,7 +406,7 @@ authenticate(int sockfd, const char *username, const char *passwd)
      */
     auth->length = htons(total_length);
 
-    while(retry--) {
+    while (retry--) {
 	int time_spent;
 	struct timeval sent;
 	/*
@@ -433,7 +439,7 @@ authenticate(int sockfd, const char *username, const char *passwd)
 	    if (rc == 0)
 		return 1;
 	    if (rc == 1)
-	    	return 0;
+		return 0;
 	}
     }
 
@@ -459,7 +465,7 @@ main(int argc, char **argv)
     int c;
 
     while ((c = getopt(argc, argv, "h:p:f:w:i:t:")) != -1) {
-	switch(c) {
+	switch (c) {
 	case 'f':
 	    cfname = optarg;
 	    break;
@@ -490,21 +496,19 @@ main(int argc, char **argv)
 	    exit(1);
 	}
     }
-
     if (!*server) {
 	fprintf(stderr, "%s: Server not specified\n", argv[0]);
 	exit(1);
     }
-
     if (!*secretkey) {
 	fprintf(stderr, "%s: Shared secret not specified\n", argv[0]);
 	exit(1);
     }
-
 #ifdef _SQUID_MSWIN_
     {
 	WSADATA wsaData;
 	WSAStartup(2, &wsaData);
+	atexit(Win32SockCleanup);
     }
 #endif
     /*
