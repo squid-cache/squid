@@ -127,7 +127,7 @@ static void SquidShutdown(void);
 static void mainSetCwd(void);
 static int checkRunningPid(void);
 
-static CacheManager manager;
+static CacheManager *manager=CacheManager::GetInstance();
 
 #ifndef _SQUID_MSWIN_
 static const char *squid_start_script = "squid_start";
@@ -693,7 +693,7 @@ mainReconfigure(void)
     refererCloseLog();
     errorClean();
     enter_suid();		/* root to read config file */
-    parseConfigFile(ConfigFile, manager);
+    parseConfigFile(ConfigFile, *manager);
     setUmask(Config.umask);
     Mem::Report();
     setEffectiveUser();
@@ -730,7 +730,7 @@ mainReconfigure(void)
     serverConnectionsOpen();
 
     neighbors_init();
-    neighborsRegisterWithCacheManager(manager);
+    neighborsRegisterWithCacheManager(*manager);
 
     storeDirOpenSwapLogs();
 
@@ -966,76 +966,76 @@ mainInitialize(void)
 
         FwdState::initModule();
         /* register the modules in the cache manager menus */
-        accessLogRegisterWithCacheManager(manager);
-        asnRegisterWithCacheManager(manager);
-        authenticateRegisterWithCacheManager(&Config.authConfiguration, manager);
+        accessLogRegisterWithCacheManager(*manager);
+        asnRegisterWithCacheManager(*manager);
+        authenticateRegisterWithCacheManager(&Config.authConfiguration, *manager);
 #if USE_CARP
 
-        carpRegisterWithCacheManager(manager);
+        carpRegisterWithCacheManager(*manager);
 #endif
 
-        cbdataRegisterWithCacheManager(manager);
+        cbdataRegisterWithCacheManager(*manager);
         /* These use separate calls so that the comm loops can eventually
          * coexist.
          */
 #ifdef USE_EPOLL
 
-        commEPollRegisterWithCacheManager(manager);
+        commEPollRegisterWithCacheManager(*manager);
 #endif
 #ifdef USE_KQUEUE
 
-        commKQueueRegisterWithCacheManager(manager);
+        commKQueueRegisterWithCacheManager(*manager);
 #endif
 #ifdef USE_POLL
 
-        commPollRegisterWithCacheManager(manager);
+        commPollRegisterWithCacheManager(*manager);
 #endif
 #if defined(USE_SELECT) || defined(USE_SELECT_WIN32)
 
-        commSelectRegisterWithCacheManager(manager);
+        commSelectRegisterWithCacheManager(*manager);
 #endif
 
-        clientdbRegisterWithCacheManager(manager);
+        clientdbRegisterWithCacheManager(*manager);
 #if DELAY_POOLS
 
-        DelayPools::RegisterWithCacheManager(manager);
+        DelayPools::RegisterWithCacheManager(*manager);
 #endif
 
-        DiskIOModule::RegisterAllModulesWithCacheManager(manager);
+        DiskIOModule::RegisterAllModulesWithCacheManager(*manager);
 #if USE_DNSSERVERS
 
-        dnsRegisterWithCacheManager(manager);
+        dnsRegisterWithCacheManager(*manager);
 #endif
 
-        eventInit(manager);
-        externalAclRegisterWithCacheManager(manager);
-        fqdncacheRegisterWithCacheManager(manager);
-        FwdState::RegisterWithCacheManager(manager);
-        httpHeaderRegisterWithCacheManager(manager);
+        eventInit(*manager);
+        externalAclRegisterWithCacheManager(*manager);
+        fqdncacheRegisterWithCacheManager(*manager);
+        FwdState::RegisterWithCacheManager(*manager);
+        httpHeaderRegisterWithCacheManager(*manager);
 #if !USE_DNSSERVERS
 
-        idnsRegisterWithCacheManager(manager);
+        idnsRegisterWithCacheManager(*manager);
 #endif
 
-        ipcacheRegisterWithCacheManager(manager);
-        Mem::RegisterWithCacheManager(manager);
-        netdbRegisterWitHCacheManager(manager);
-        PconnModule::GetInstance()->registerWithCacheManager(manager);
-        redirectRegisterWithCacheManager(manager);
-        refreshRegisterWithCacheManager(manager);
-        statRegisterWithCacheManager(manager);
-        storeDigestRegisterWithCacheManager(manager);
-        StoreFileSystem::RegisterAllFsWithCacheManager(manager);
-        storeRegisterWithCacheManager(manager);
-        storeLogRegisterWithCacheManager(manager);
+        ipcacheRegisterWithCacheManager(*manager);
+        Mem::RegisterWithCacheManager(*manager);
+        netdbRegisterWitHCacheManager(*manager);
+        PconnModule::GetInstance()->registerWithCacheManager(*manager);
+        redirectRegisterWithCacheManager(*manager);
+        refreshRegisterWithCacheManager(*manager);
+        statRegisterWithCacheManager(*manager);
+        storeDigestRegisterWithCacheManager(*manager);
+        StoreFileSystem::RegisterAllFsWithCacheManager(*manager);
+        storeRegisterWithCacheManager(*manager);
+        storeLogRegisterWithCacheManager(*manager);
 #if DEBUGSTRINGS
 
-        StringRegistry::Instance().registerWithCacheManager(manager);
+        StringRegistry::Instance().registerWithCacheManager(*manager);
 #endif
 
 #if	USE_XPROF_STATS
 
-        xprofRegisterWithCacheManager(manager);
+        xprofRegisterWithCacheManager(*manager);
 #endif
 
     }
@@ -1054,7 +1054,7 @@ mainInitialize(void)
 
     neighbors_init();
 
-    neighborsRegisterWithCacheManager(manager);
+    neighborsRegisterWithCacheManager(*manager);
 
     if (Config.chroot_dir)
         no_suid();
@@ -1262,7 +1262,7 @@ main(int argc, char **argv)
         /* we may want the parsing process to set this up in the future */
         Store::Root(new StoreController);
 
-        parse_err = parseConfigFile(ConfigFile, manager);
+        parse_err = parseConfigFile(ConfigFile, *manager);
 
         Mem::Report();
         

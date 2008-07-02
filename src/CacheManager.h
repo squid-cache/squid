@@ -41,30 +41,39 @@
  \ingroup Components
  */
 
-/// \ingroup CacheManagerAPI
-extern void cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry);
-
-/**
- \ingroup CacheManagerAPI
- * A single menu item in the cache manager - an 'action'.
- */
-class CacheManagerAction
-{
-
-public:
-    char *action;
-    char *desc;
-    OBJH *handler;
-
-    struct
-    {
-        unsigned int pw_req:1;
-        unsigned int atomic:1;
-    } flags;
-
-    CacheManagerAction *next;
+class CacheManagerAction {
+public:    
+     virtual void run(StoreEntry *sentry) = 0;
+     char *action;
+     char *desc;
+     struct
+     {
+         unsigned int pw_req:1;
+         unsigned int atomic:1;
+     } flags;
+     CacheManagerAction *next;
+     virtual ~CacheManagerAction() { }
 };
 
+class CacheManagerActionLegacy : public CacheManagerAction {
+public:
+     OBJH *handler;
+     virtual void run (StoreEntry *sentry);
+};
+
+class CacheManagerShutdownAction : public CacheManagerAction {
+public:
+     virtual void run (StoreEntry *sentry);
+};
+
+/// \ingroup CacheManagerInternal
+typedef struct
+{
+    StoreEntry *entry;
+    char *action;
+    char *user_name;
+    char *passwd;
+} cachemgrStateData;
 
 /**
  \ingroup CacheManagerAPI
@@ -72,12 +81,12 @@ public:
  * This is currently just an adapter to the global cachemgr* routines to
  * provide looser coupling between modules, but once fully transitioned,
  * an instance of this class will represent a single independent manager.
+ * TODO: update documentation to reflect the new singleton model.
  */
 class CacheManager
 {
 
 public:
-    CacheManager();
     /* the holy trinity - assignment, copy cons, destructor */
     /* unimplemented - prevents bugs from synthetic */
     CacheManager & operator = (CacheManager &);
@@ -86,8 +95,37 @@ public:
     /* inline so that we dont need to link in cachemgr.cc at all in tests */
     virtual ~CacheManager() {}
 
-    virtual void registerAction(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic);
-    virtual CacheManagerAction * findAction(char const * action);
+    void registerAction(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic);
+    CacheManagerAction * findAction(char const * action);
+
+    void Start(int fd, HttpRequest * request, StoreEntry * entry);
+
+    static CacheManager* GetInstance();
+    const char *ActionProtection(const CacheManagerAction * at); //needs to be called from C
+
+protected:
+    CacheManager(); 
+    cachemgrStateData* ParseUrl(const char *url);
+    void ParseHeaders(cachemgrStateData * mgr, const HttpRequest * request);
+    int CheckPassword(cachemgrStateData * mgr);
+    char *PasswdGet(cachemgr_passwd *, const char *);
+
+private:
+    static CacheManager* instance;
+
+    //commands need to be static to be able to be referenced as C-style
+    //functions. Binding to nonstatic members can be done at runtime
+    //via the singleton, but it's syntactic hackery
+    //TODO: fix so that ActionTable uses a Command pattern and thus
+    //      function calls are properly object-wrapped
+    static void ShutdownCommand(StoreEntry *unused);
+    static void ReconfigureCommand(StoreEntry *sentry);
+    static void MenuCommand(StoreEntry *sentry);
+    static void OfflineToggleCommand(StoreEntry *sentry);
+
+    void StateFree(cachemgrStateData * mgr);
+
+
 };
 
 #endif /* SQUID_CACHEMANAGER_H */

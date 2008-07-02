@@ -50,62 +50,44 @@
 /// \ingroup CacheManagerInternal
 #define MGR_PASSWD_SZ 128
 
-/// \ingroup CacheManagerInternal
-typedef struct
-{
-    StoreEntry *entry;
-    char *action;
-    char *user_name;
-    char *passwd;
-} cachemgrStateData;
 
-static CacheManagerAction *cachemgrFindAction(const char *action);
-static cachemgrStateData *cachemgrParseUrl(const char *url);
-static void cachemgrParseHeaders(cachemgrStateData * mgr, const HttpRequest * request);
-static int cachemgrCheckPassword(cachemgrStateData *);
-static void cachemgrStateFree(cachemgrStateData * mgr);
-static char *cachemgrPasswdGet(cachemgr_passwd *, const char *);
-static const char *cachemgrActionProtection(const CacheManagerAction * at);
-static OBJH cachemgrShutdown;
-static OBJH cachemgrReconfigure;
-static OBJH cachemgrMenu;
-static OBJH cachemgrOfflineToggle;
 
 /// \ingroup CacheManagerInternal
 CacheManagerAction *ActionTable = NULL;
 
 CacheManager::CacheManager()
 {
-    registerAction("menu", "This Cachemanager Menu", cachemgrMenu, 0, 1);
+    registerAction("menu", "This Cachemanager Menu", MenuCommand, 0, 1);
     registerAction("shutdown",
                    "Shut Down the Squid Process",
-                   cachemgrShutdown, 1, 1);
+                   ShutdownCommand, 1, 1);
     registerAction("reconfigure",
                      "Reconfigure the Squid Process",
-                     cachemgrReconfigure, 1, 1);
+                     ReconfigureCommand, 1, 1);
     registerAction("offline_toggle",
                    "Toggle offline_mode setting",
-                   cachemgrOfflineToggle, 1, 1);
+                   OfflineToggleCommand, 1, 1);
 }
 
 void
 CacheManager::registerAction(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic)
 {
-    CacheManagerAction *a;
+    CacheManagerActionLegacy *a;
     CacheManagerAction **A;
 
     if (findAction(action) != NULL) {
-        debugs(16, 3, "CacheManager::registerAction: Duplicate '" << action << "'");
+        debugs(16, 3, "CacheManager::registerAction: Duplicate '" << action << "'. Skipping.");
         return;
     }
 
     assert (strstr (" ", action) == NULL);
-    a = (CacheManagerAction *)xcalloc(1, sizeof(CacheManagerAction));
+    a = new CacheManagerActionLegacy;
     a->action = xstrdup(action);
     a->desc = xstrdup(desc);
     a->handler = handler;
     a->flags.pw_req = pw_req_flag;
     a->flags.atomic = atomic;
+    a->next=0;
 
     for (A = &ActionTable; *A; A = &(*A)->next);
     *A = a;
@@ -113,15 +95,13 @@ CacheManager::registerAction(char const * action, char const * desc, OBJH * hand
     debugs(16, 3, "CacheManager::registerAction: registered " <<  action);
 }
 
+/// \ingroup CacheManagerInternal
+//TODO: revert those two functions and turn ActionTable into a 
+//      private data member.
+//      In order to do so ActionTable must be extended to allow using
+//      function objects rather than C-style functions
 CacheManagerAction *
 CacheManager::findAction(char const * action)
-{
-    return cachemgrFindAction(action);
-}
-
-/// \ingroup CacheManagerInternal
-static CacheManagerAction *
-cachemgrFindAction(const char *action)
 {
     CacheManagerAction *a;
 
@@ -134,8 +114,8 @@ cachemgrFindAction(const char *action)
 }
 
 /// \ingroup CacheManagerInternal
-static cachemgrStateData *
-cachemgrParseUrl(const char *url)
+cachemgrStateData *
+CacheManager::ParseUrl(const char *url)
 {
     int t;
     LOCAL_ARRAY(char, host, MAX_URL);
@@ -157,14 +137,14 @@ cachemgrParseUrl(const char *url)
         xstrncpy(request, "menu", MAX_URL);
 #endif
 
-    } else if ((a = cachemgrFindAction(request)) == NULL) {
-        debugs(16, 1, "cachemgrParseUrl: action '" << request << "' not found");
+    } else if ((a = findAction(request)) == NULL) {
+        debugs(16, 1, "CacheManager::ParseUrl: action '" << request << "' not found");
         return NULL;
     } else {
-        prot = cachemgrActionProtection(a);
+        prot = ActionProtection(a);
 
         if (!strcmp(prot, "disabled") || !strcmp(prot, "hidden")) {
-            debugs(16, 1, "cachemgrParseUrl: action '" << request << "' is " << prot);
+            debugs(16, 1, "CacheManager::ParseUrl: action '" << request << "' is " << prot);
             return NULL;
         }
     }
@@ -182,8 +162,8 @@ cachemgrParseUrl(const char *url)
 }
 
 /// \ingroup CacheManagerInternal
-static void
-cachemgrParseHeaders(cachemgrStateData * mgr, const HttpRequest * request)
+void
+CacheManager::ParseHeaders(cachemgrStateData * mgr, const HttpRequest * request)
 {
     const char *basic_cookie;	/* base 64 _decoded_ user:passwd pair */
     const char *passwd_del;
@@ -194,7 +174,7 @@ cachemgrParseHeaders(cachemgrStateData * mgr, const HttpRequest * request)
         return;
 
     if (!(passwd_del = strchr(basic_cookie, ':'))) {
-        debugs(16, 1, "cachemgrParseHeaders: unknown basic_cookie format '" << basic_cookie << "'");
+        debugs(16, 1, "CacheManager::ParseHeaders: unknown basic_cookie format '" << basic_cookie << "'");
         return;
     }
 
@@ -210,7 +190,7 @@ cachemgrParseHeaders(cachemgrStateData * mgr, const HttpRequest * request)
     mgr->passwd = xstrdup(passwd_del + 1);
 
     /* warning: this prints decoded password which maybe not what you want to do @?@ @?@ */
-    debugs(16, 9, "cachemgrParseHeaders: got user: '" << mgr->user_name << "' passwd: '" << mgr->passwd << "'");
+    debugs(16, 9, "CacheManager::ParseHeaders: got user: '" << mgr->user_name << "' passwd: '" << mgr->passwd << "'");
 }
 
 /**
@@ -220,11 +200,11 @@ cachemgrParseHeaders(cachemgrStateData * mgr, const HttpRequest * request)
  \retval 1	if mgr->password is "disable"
  \retval !0	if mgr->password does not match configured password
  */
-static int
-cachemgrCheckPassword(cachemgrStateData * mgr)
+int
+CacheManager::CheckPassword(cachemgrStateData * mgr)
 {
-    char *pwd = cachemgrPasswdGet(Config.passwd_list, mgr->action);
-    CacheManagerAction *a = cachemgrFindAction(mgr->action);
+    char *pwd = PasswdGet(Config.passwd_list, mgr->action);
+    CacheManagerAction *a = findAction(mgr->action);
     assert(a != NULL);
 
     if (pwd == NULL)
@@ -243,8 +223,8 @@ cachemgrCheckPassword(cachemgrStateData * mgr)
 }
 
 /// \ingroup CacheManagerInternal
-static void
-cachemgrStateFree(cachemgrStateData * mgr)
+void
+CacheManager::StateFree(cachemgrStateData * mgr)
 {
     safe_free(mgr->action);
     safe_free(mgr->user_name);
@@ -255,14 +235,14 @@ cachemgrStateFree(cachemgrStateData * mgr)
 
 // API
 void
-cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry)
+CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
 {
     cachemgrStateData *mgr = NULL;
     ErrorState *err = NULL;
     CacheManagerAction *a;
     debugs(16, 3, "objectcacheStart: '" << entry->url() << "'" );
 
-    if ((mgr = cachemgrParseUrl(entry->url())) == NULL) {
+    if ((mgr = ParseUrl(entry->url())) == NULL) {
         err = errorCon(ERR_INVALID_URL, HTTP_NOT_FOUND, request);
         err->url = xstrdup(entry->url());
         errorAppendEntry(entry, err);
@@ -278,11 +258,11 @@ cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry)
     debugs(16, 5, "CACHEMGR: " << fd_table[fd].ipaddr << " requesting '" << mgr->action << "'");
 
     /* get additional info from request headers */
-    cachemgrParseHeaders(mgr, request);
+    ParseHeaders(mgr, request);
 
     /* Check password */
 
-    if (cachemgrCheckPassword(mgr) != 0) {
+    if (CheckPassword(mgr) != 0) {
         /* build error message */
         ErrorState *err;
         HttpReply *rep;
@@ -317,7 +297,7 @@ cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry)
 
         entry->complete();
 
-        cachemgrStateFree(mgr);
+        StateFree(mgr);
 
         return;
     }
@@ -327,7 +307,7 @@ cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry)
            fd_table[fd].ipaddr << " requesting '" << 
            mgr->action << "'" );
     /* retrieve object requested */
-    a = cachemgrFindAction(mgr->action);
+    a = findAction(mgr->action);
     assert(a != NULL);
 
     entry->buffer();
@@ -345,27 +325,32 @@ cachemgrStart(int fd, HttpRequest * request, StoreEntry * entry)
         entry->replaceHttpReply(rep);
     }
 
-    a->handler(entry);
+    a->run(entry);
 
     entry->flush();
 
     if (a->flags.atomic)
         entry->complete();
 
-    cachemgrStateFree(mgr);
+    StateFree(mgr);
 }
 
 /// \ingroup CacheManagerInternal
-static void
-cachemgrShutdown(StoreEntry * entryunused)
+void
+CacheManager::ShutdownCommand(StoreEntry *unused)
+{
+    debugs(16, 0, "Shutdown by command.");
+    shut_down(0);
+}
+void CacheManagerShutdownAction::run(StoreEntry *sentry)
 {
     debugs(16, 0, "Shutdown by command.");
     shut_down(0);
 }
 
 /// \ingroup CacheManagerInternal
-static void
-cachemgrReconfigure(StoreEntry * sentry)
+void
+CacheManager::ReconfigureCommand(StoreEntry * sentry)
 {
     debug(16, 0) ("Reconfigure by command.\n");
     storeAppendPrintf(sentry, "Reconfiguring Squid Process ....");
@@ -373,8 +358,8 @@ cachemgrReconfigure(StoreEntry * sentry)
 }
 
 /// \ingroup CacheManagerInternal
-static void
-cachemgrOfflineToggle(StoreEntry * sentry)
+void
+CacheManager::OfflineToggleCommand(StoreEntry * sentry)
 {
     Config.onoff.offline = !Config.onoff.offline;
     debugs(16, 0, "offline_mode now " << (Config.onoff.offline ? "ON" : "OFF") << ".");
@@ -384,12 +369,12 @@ cachemgrOfflineToggle(StoreEntry * sentry)
 }
 
 /// \ingroup CacheManagerInternal
-static const char *
-cachemgrActionProtection(const CacheManagerAction * at)
+const char *
+CacheManager::ActionProtection(const CacheManagerAction * at)
 {
     char *pwd;
     assert(at);
-    pwd = cachemgrPasswdGet(Config.passwd_list, at->action);
+    pwd = PasswdGet(Config.passwd_list, at->action);
 
     if (!pwd)
         return at->flags.pw_req ? "hidden" : "public";
@@ -404,20 +389,20 @@ cachemgrActionProtection(const CacheManagerAction * at)
 }
 
 /// \ingroup CacheManagerInternal
-static void
-cachemgrMenu(StoreEntry * sentry)
+void
+CacheManager::MenuCommand(StoreEntry * sentry)
 {
     CacheManagerAction *a;
 
     for (a = ActionTable; a != NULL; a = a->next) {
         storeAppendPrintf(sentry, " %-22s\t%-32s\t%s\n",
-                          a->action, a->desc, cachemgrActionProtection(a));
+                          a->action, a->desc, CacheManager::GetInstance()->ActionProtection(a));
     }
 }
 
 /// \ingroup CacheManagerInternal
-static char *
-cachemgrPasswdGet(cachemgr_passwd * a, const char *action)
+char *
+CacheManager::PasswdGet(cachemgr_passwd * a, const char *action)
 {
     wordlist *w;
 
@@ -435,3 +420,19 @@ cachemgrPasswdGet(cachemgr_passwd * a, const char *action)
 
     return NULL;
 }
+
+CacheManager* CacheManager::instance=0;
+
+CacheManager*
+CacheManager::GetInstance() {
+	if (instance == 0)
+		instance = new CacheManager;
+	return instance;
+}
+
+
+void CacheManagerActionLegacy::run(StoreEntry *sentry)
+{
+	handler(sentry);
+}
+
