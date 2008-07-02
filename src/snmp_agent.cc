@@ -107,8 +107,8 @@ snmp_confFn(variable_list * Var, snint * ErrP)
     case CONF_VERSION:
         Answer = snmp_var_new(Var->name, Var->name_length);
         Answer->type = ASN_OCTET_STR;
-        Answer->val_len = strlen(appname);
-        Answer->val.string = (u_char *) xstrdup(appname);
+        Answer->val_len = strlen(APP_SHORTNAME);
+        Answer->val.string = (u_char *) xstrdup(APP_SHORTNAME);
         break;
 
     case CONF_VERSION_ID:

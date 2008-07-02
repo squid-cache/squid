@@ -895,7 +895,7 @@ WIN32_sendSignal(int WIN32_signal)
                              fdwAccess);		/* specify access     */
 
     if (schService == NULL) {
-        fprintf(stderr, "%s: ERROR: Could not open Service %s\n", appname,
+        fprintf(stderr, "%s: ERROR: Could not open Service %s\n", APP_SHORTNAME,
                 WIN32_Service_name);
         exit(1);
     } else {
@@ -905,7 +905,7 @@ WIN32_sendSignal(int WIN32_signal)
                             fdwControl,	/* control value to send  */
                             &ssStatus)) {	/* address of status info */
             fprintf(stderr, "%s: ERROR: Could not Control Service %s\n",
-                    appname, WIN32_Service_name);
+                    APP_SHORTNAME, WIN32_Service_name);
             exit(1);
         } else {
             /* Print the service status. */

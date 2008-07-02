@@ -248,7 +248,7 @@ usage(void)
             "       -V        Virtual host httpd-accelerator.\n"
             "       -X        Force full debugging.\n"
             "       -Y        Only return UDP_HIT or UDP_MISS_NOFETCH during fast reload.\n",
-            appname, CACHE_HTTP_PORT, DefaultConfigFile, CACHE_ICP_PORT);
+            APP_SHORTNAME, CACHE_HTTP_PORT, DefaultConfigFile, CACHE_ICP_PORT);
     exit(1);
 }
 
@@ -1413,7 +1413,7 @@ sendSignal(void)
         } else
 #ifdef _SQUID_MSWIN_
         {
-            fprintf(stderr, "%s: ERROR: Could not send ", appname);
+            fprintf(stderr, "%s: ERROR: Could not send ", APP_SHORTNAME);
             fprintf(stderr, "signal to Squid Service:\n");
             fprintf(stderr, "missing -n command line switch.\n");
             exit(1);
@@ -1427,13 +1427,13 @@ sendSignal(void)
         if (kill(pid, opt_send_signal) &&
                 /* ignore permissions if just running check */
                 !(opt_send_signal == 0 && errno == EPERM)) {
-            fprintf(stderr, "%s: ERROR: Could not send ", appname);
+            fprintf(stderr, "%s: ERROR: Could not send ", APP_SHORTNAME);
             fprintf(stderr, "signal %d to process %d: %s\n",
                     opt_send_signal, (int) pid, xstrerror());
             exit(1);
         }
     } else {
-        fprintf(stderr, "%s: ERROR: No running copy\n", appname);
+        fprintf(stderr, "%s: ERROR: No running copy\n", APP_SHORTNAME);
         exit(1);
     }
 
@@ -1534,7 +1534,7 @@ watch_child(char *argv[])
     if (*(argv[0]) == '(')
         return;
 
-    openlog(appname, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
+    openlog(APP_SHORTNAME, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
 
     if ((pid = fork()) < 0)
         syslog(LOG_ALERT, "fork failed: %s", xstrerror());
@@ -1578,7 +1578,7 @@ watch_child(char *argv[])
 
         if ((pid = fork()) == 0) {
             /* child */
-            openlog(appname, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
+            openlog(APP_SHORTNAME, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
             prog = xstrdup(argv[0]);
             argv[0] = xstrdup("(squid)");
             execvp(prog, argv);
@@ -1586,7 +1586,7 @@ watch_child(char *argv[])
         }
 
         /* parent */
-        openlog(appname, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
+        openlog(APP_SHORTNAME, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
 
         syslog(LOG_NOTICE, "Squid Parent: child process %d started", pid);
 

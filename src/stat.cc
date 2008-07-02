@@ -477,8 +477,7 @@ info_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "Current Time:\t%s\n",
                       mkrfc1123(current_time.tv_sec));
 
-    storeAppendPrintf(sentry, "Connection information for %s:\n",
-                      appname);
+    storeAppendPrintf(sentry, "Connection information for %s:\n",APP_SHORTNAME);
 
     storeAppendPrintf(sentry, "\tNumber of clients accessing cache:\t%u\n",
                       statCounter.client_http.clients);
@@ -517,8 +516,7 @@ info_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "\tSelect loop called: %d times, %0.3f ms avg\n",
                       statCounter.select_loops, 1000.0 * runtime / statCounter.select_loops);
 
-    storeAppendPrintf(sentry, "Cache information for %s:\n",
-                      appname);
+    storeAppendPrintf(sentry, "Cache information for %s:\n",APP_SHORTNAME);
 
     storeAppendPrintf(sentry, "\tHits as %% of all requests:\t5min: %3.1f%%, 60min: %3.1f%%\n",
                       statRequestHitRatio(5),
@@ -591,7 +589,7 @@ info_get(StoreEntry * sentry)
 
     cputime = rusage_cputime(&rusage);
 
-    storeAppendPrintf(sentry, "Resource usage for %s:\n", appname);
+    storeAppendPrintf(sentry, "Resource usage for %s:\n", APP_SHORTNAME);
 
     storeAppendPrintf(sentry, "\tUP Time:\t%.3f seconds\n", runtime);
 
@@ -623,8 +621,7 @@ info_get(StoreEntry * sentry)
 
     ms = mstats();
 
-    storeAppendPrintf(sentry, "Memory usage for %s via mstats():\n",
-                      appname);
+    storeAppendPrintf(sentry, "Memory usage for %s via mstats():\n",APP_SHORTNAME);
 
     storeAppendPrintf(sentry, "\tTotal space in arena:  %6d KB\n",
                       ms.bytes_total >> 10);
@@ -636,8 +633,7 @@ info_get(StoreEntry * sentry)
 
     mp = mallinfo();
 
-    storeAppendPrintf(sentry, "Memory usage for %s via mallinfo():\n",
-                      appname);
+    storeAppendPrintf(sentry, "Memory usage for %s via mallinfo():\n",APP_SHORTNAME);
 
     storeAppendPrintf(sentry, "\tTotal space in arena:  %6ld KB\n",
                       (long)mp.arena >> 10);
@@ -725,7 +721,7 @@ info_get(StoreEntry * sentry)
                           mp_stats.TheMeter->gb_freed.count);
     }
 
-    storeAppendPrintf(sentry, "File descriptor usage for %s:\n", appname);
+    storeAppendPrintf(sentry, "File descriptor usage for %s:\n", APP_SHORTNAME);
     storeAppendPrintf(sentry, "\tMaximum number of file descriptors:   %4d\n",
                       Squid_MaxFD);
     storeAppendPrintf(sentry, "\tLargest file desc currently in use:   %4d\n",
