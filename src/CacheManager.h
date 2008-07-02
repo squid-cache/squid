@@ -75,6 +75,15 @@ typedef struct
     char *passwd;
 } cachemgrStateData;
 
+/// \ingroup CacheManagerInternal
+typedef struct
+{
+    StoreEntry *entry;
+    char *action;
+    char *user_name;
+    char *passwd;
+} cachemgrStateData;
+
 /**
  \ingroup CacheManagerAPI
  * a CacheManager - the menu system for interacting with squid.
