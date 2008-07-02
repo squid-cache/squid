@@ -43,6 +43,7 @@
 #include "ExternalACL.h"
 #include "Store.h"
 #include "ICP.h"
+#include "ident.h"
 #include "HttpReply.h"
 #include "pconn.h"
 #include "Mem.h"
