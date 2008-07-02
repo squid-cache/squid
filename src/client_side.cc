@@ -93,6 +93,7 @@
 #include "HttpHdrContRange.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "ident.h"
 #include "MemObject.h"
 #include "fde.h"
 #include "client_side_request.h"

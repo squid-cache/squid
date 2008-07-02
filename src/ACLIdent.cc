@@ -41,6 +41,7 @@
 #include "ACLRegexData.h"
 #include "ACLUserData.h"
 #include "client_side.h"
+#include "ident.h"
 
 ACLIdent::~ACLIdent()
 {
