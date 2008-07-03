@@ -584,6 +584,27 @@ munge_other_line(const char *buf, cachemgr_request * req)
     return html;
 }
 
+static const char *
+munge_action_line(const char *_buf, cachemgr_request * req)
+{
+    static char html[2 * 1024];
+    char *buf = xstrdup(_buf);
+    char *x = buf;
+    const char *action, *description;
+    char *p;
+
+    if ((p = strchr(x, '\n')))
+       *p = '\0';
+    action = xstrtok(&x, '\t');
+    description = xstrtok(&x, '\t');
+    if (!description)
+       description = action;
+    if (!action)
+       return "";
+    snprintf(html, sizeof(html), " <a href=\"%s\">%s</a>", menu_url(req, action), description);
+    return html;
+}
+
 static int
 read_reply(int s, cachemgr_request * req)
 {
@@ -599,7 +620,7 @@ read_reply(int s, cachemgr_request * req)
 #endif
     /* interpretation states */
     enum {
-        isStatusLine, isHeaders, isBodyStart, isBody, isForward, isEof, isForwardEof, isSuccess, isError
+        isStatusLine, isHeaders, isActions, isBodyStart, isBody, isForward, isEof, isForwardEof, isSuccess, isError
     } istate = isStatusLine;
     int parse_menu = 0;
     const char *action = req->action;
@@ -694,6 +715,22 @@ read_reply(int s, cachemgr_request * req)
                 printf("<PRE>\n");
             }
 
+            istate = isActions;
+            /* yes, fall through, we do not want to loose the first line */
+
+        case isActions:
+            if (strncmp(buf, "action:", 7) == 0) {
+                fputs(" ", stdout);
+                fputs(munge_action_line(buf + 7, req), stdout);
+                break;
+            }
+            if (parse_menu) {
+                printf("<UL>\n");
+            } else {
+                printf("<HR noshade size=\"1px\">\n");
+                printf("<PRE>\n");
+            }
+
             istate = isBody;
             /* yes, fall through, we do not want to loose the first line */
 
@@ -714,9 +751,7 @@ read_reply(int s, cachemgr_request * req)
              * 401 to .cgi because web server filters out all auth info. Thus we
              * disable authentication headers for now.
              */
-            if (!strncasecmp(buf, "WWW-Authenticate:", 17) || !strncasecmp(buf, "Proxy-Authenticate:", 19))
-
-                ;	/* skip */
+            if (!strncasecmp(buf, "WWW-Authenticate:", 17) || !strncasecmp(buf, "Proxy-Authenticate:", 19));	/* skip */
             else
                 fputs(buf, stdout);
 
