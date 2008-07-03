@@ -35,6 +35,7 @@
 #define SQUID_CACHEMANAGER_H
 
 #include "squid.h"
+#include <list>
 
 /**
  \defgroup CacheManagerAPI Cache Manager API
@@ -51,14 +52,22 @@ public:
          unsigned int pw_req:1;
          unsigned int atomic:1;
      } flags;
+     virtual ~CacheManagerAction();
+     CacheManagerAction(char const *anAction, char const *aDesc, unsigned int isPwReq, unsigned int isAtomic);
+
      CacheManagerAction *next;
-     virtual ~CacheManagerAction() { }
 };
 
+/**
+ \ingroup CacheManagerAPI
+ * wrapper allowing c-style callbacks to be used. Arguments are supposed to
+ * managed by the caller, as they will be copied over by the constructor.
+ */
 class CacheManagerActionLegacy : public CacheManagerAction {
 public:
      OBJH *handler;
      virtual void run (StoreEntry *sentry);
+     CacheManagerActionLegacy(char const *anAction, char const *aDesc, unsigned int isPwReq, unsigned int isAtomic, OBJH *aHandler);
 };
 
 class CacheManagerShutdownAction : public CacheManagerAction {
@@ -66,14 +75,9 @@ public:
      virtual void run (StoreEntry *sentry);
 };
 
-/// \ingroup CacheManagerInternal
-typedef struct
-{
-    StoreEntry *entry;
-    char *action;
-    char *user_name;
-    char *passwd;
-} cachemgrStateData;
+class CacheManagerActionList : public std::list<CacheManagerAction> {
+	
+};
 
 /// \ingroup CacheManagerInternal
 typedef struct
