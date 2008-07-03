@@ -610,12 +610,11 @@ read_reply(int s, cachemgr_request * req)
 #ifdef _SQUID_MSWIN_
         perror(tmpfile);
         xfree(tmpfile);
+        closesocket(s);
 #else
-
         perror("fdopen");
-#endif
-
         close(s);
+#endif
         return 1;
     }
 
