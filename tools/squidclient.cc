@@ -86,7 +86,13 @@ using namespace Squid;
 #include "util.h"
 
 #ifndef BUFSIZ
-#define BUFSIZ 8192
+#define BUFSIZ		8192
+#endif
+#ifndef MESSAGELEN
+#define MESSAGELEN	65536
+#endif
+#ifndef HEADERLEN
+#define HEADERLEN	65536
 #endif
 
 typedef void SIGHDLR(int sig);
@@ -151,8 +157,8 @@ main(int argc, char *argv[])
     int opt_noaccept = 0;
     int opt_verbose = 0;
     const char *hostname, *localhost;
-    char url[BUFSIZ], msg[49152], buf[BUFSIZ];
-    char extra_hdrs[32768];
+    char url[BUFSIZ], msg[MESSAGELEN], buf[BUFSIZ];
+    char extra_hdrs[HEADERLEN];
     const char *method = "GET";
     extern char *optarg;
     time_t ims = 0;
