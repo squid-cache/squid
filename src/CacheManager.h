@@ -35,7 +35,7 @@
 #define SQUID_CACHEMANAGER_H
 
 #include "squid.h"
-#include <list>
+#include "Array.h"
 
 /**
  \defgroup CacheManagerAPI Cache Manager API
@@ -75,8 +75,7 @@ public:
      virtual void run (StoreEntry *sentry);
 };
 
-class CacheManagerActionList : public std::list<CacheManagerAction> {
-	
+class CacheManagerActionList : public Vector<CacheManagerAction *> {
 };
 
 /// \ingroup CacheManagerInternal
