@@ -81,13 +81,8 @@ CacheManager::registerAction(char const * action, char const * desc, OBJH * hand
     }
 
     assert (strstr (" ", action) == NULL);
-    a = new CacheManagerActionLegacy;
-    a->action = xstrdup(action);
-    a->desc = xstrdup(desc);
-    a->handler = handler;
-    a->flags.pw_req = pw_req_flag;
-    a->flags.atomic = atomic;
-    a->next=0;
+    a = new CacheManagerActionLegacy(action,desc,pw_req_flag,atomic,handler);
+    a->next=0; 
 
     for (A = &ActionTable; *A; A = &(*A)->next);
     *A = a;
@@ -436,3 +431,18 @@ void CacheManagerActionLegacy::run(StoreEntry *sentry)
 	handler(sentry);
 }
 
+CacheManagerAction::CacheManagerAction(char const *anAction, char const *aDesc, unsigned int isPwReq, unsigned int isAtomic)
+{
+    flags.pw_req = isPwReq;
+    flags.atomic = isAtomic;
+    action = xstrdup (anAction);
+    desc = xstrdup (aDesc);
+}
+CacheManagerAction::~CacheManagerAction() {
+    xfree(action);
+    xfree(desc);
+}
+
+CacheManagerActionLegacy::CacheManagerActionLegacy(char const *anAction, char const *aDesc, unsigned int isPwReq, unsigned int isAtomic, OBJH *aHandler) : CacheManagerAction(anAction, aDesc, isPwReq, isAtomic), handler(aHandler)
+{
+}
