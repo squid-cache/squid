@@ -53,10 +53,13 @@
 
 
 /// \ingroup CacheManagerInternal
-CacheManagerAction *ActionTable = NULL;
+CacheManagerActionList *ActionsList = NULL;
 
 CacheManager::CacheManager()
 {
+    if (ActionsList != NULL)
+         delete(ActionsList); //TODO: Laaazy. Will be moved to class member
+    ActionsList = new CacheManagerActionList;
     registerAction("menu", "This Cachemanager Menu", MenuCommand, 0, 1);
     registerAction("shutdown",
                    "Shut Down the Squid Process",
@@ -73,38 +76,36 @@ void
 CacheManager::registerAction(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic)
 {
     CacheManagerActionLegacy *a;
-    CacheManagerAction **A;
 
     if (findAction(action) != NULL) {
-        debugs(16, 3, "CacheManager::registerAction: Duplicate '" << action << "'. Skipping.");
+        debugs(16, 2, "CacheManager::registerAction: Duplicate '" << action << "'. Skipping.");
         return;
     }
 
     assert (strstr (" ", action) == NULL);
     a = new CacheManagerActionLegacy(action,desc,pw_req_flag,atomic,handler);
-    a->next=0; 
 
-    for (A = &ActionTable; *A; A = &(*A)->next);
-    *A = a;
+    *ActionsList += a;
 
     debugs(16, 3, "CacheManager::registerAction: registered " <<  action);
 }
 
 /// \ingroup CacheManagerInternal
-//TODO: revert those two functions and turn ActionTable into a 
-//      private data member.
-//      In order to do so ActionTable must be extended to allow using
-//      function objects rather than C-style functions
 CacheManagerAction *
 CacheManager::findAction(char const * action)
 {
-    CacheManagerAction *a;
+    CacheManagerActionList::iterator a;
 
-    for (a = ActionTable; a != NULL; a = a->next) {
-        if (0 == strcmp(a->action, action))
-            return a;
+    debugs(16, 5, "CacheManager::findAction: looking for action " << action);
+    for ( a = ActionsList->begin(); a != ActionsList->end(); a++) {
+    	//debugs(16, 6, " checking against '" << (*a)->action << "'");
+        if (0 == strcmp((*a)->action, action)) {
+            debugs(16, 6, " found");
+            return *a;
+        }
     }
 
+    debugs(16, 6, "Action not found.");
     return NULL;
 }
 
@@ -200,6 +201,8 @@ CacheManager::CheckPassword(cachemgrStateData * mgr)
 {
     char *pwd = PasswdGet(Config.passwd_list, mgr->action);
     CacheManagerAction *a = findAction(mgr->action);
+
+    debugs(16, 4, "CacheManager::CheckPassword for action " << mgr->action);
     assert(a != NULL);
 
     if (pwd == NULL)
@@ -387,11 +390,13 @@ CacheManager::ActionProtection(const CacheManagerAction * at)
 void
 CacheManager::MenuCommand(StoreEntry * sentry)
 {
-    CacheManagerAction *a;
+    CacheManagerActionList::iterator a;
 
-    for (a = ActionTable; a != NULL; a = a->next) {
+    debugs(16, 4, "CacheManager::MenuCommand invoked");
+    for (a = ActionsList->begin(); a != ActionsList->end(); ++a) {
+        debugs(16, 5, "  showing action " << (*a)->action);
         storeAppendPrintf(sentry, " %-22s\t%-32s\t%s\n",
-                          a->action, a->desc, CacheManager::GetInstance()->ActionProtection(a));
+            (*a)->action, (*a)->desc, CacheManager::GetInstance()->ActionProtection(*a));
     }
 }
 
@@ -420,9 +425,11 @@ CacheManager* CacheManager::instance=0;
 
 CacheManager*
 CacheManager::GetInstance() {
-	if (instance == 0)
-		instance = new CacheManager;
-	return instance;
+        if (instance == 0) {
+                debugs(16, 6, "CacheManager::GetInstance: starting cachemanager up");
+                instance = new CacheManager;
+        }
+        return instance;
 }
 
 
