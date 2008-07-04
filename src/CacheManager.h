@@ -73,15 +73,6 @@ public:
 class CacheManagerActionList : public Vector<CacheManagerAction *> {
 };
 
-/// \ingroup CacheManagerInternal
-typedef struct
-{
-    StoreEntry *entry;
-    char *action;
-    char *user_name;
-    char *passwd;
-} cachemgrStateData;
-
 /**
  \ingroup CacheManagerAPI
  * a CacheManager - the menu system for interacting with squid.
@@ -112,12 +103,6 @@ public:
     const char *ActionProtection(const CacheManagerAction * at); //needs to be called from C
 
 protected:
-    CacheManager(); 
-    cachemgrStateData* ParseUrl(const char *url);
-    void ParseHeaders(cachemgrStateData * mgr, const HttpRequest * request);
-    int CheckPassword(cachemgrStateData * mgr);
-    char *PasswdGet(cachemgr_passwd *, const char *);
-
     // command classes. They are private to the cachemanager because they
     // may require access to local data sources, plus we avoid polluting
     // the namespace more than needed.
@@ -136,17 +121,30 @@ protected:
          virtual void run (StoreEntry *sentry);
          OfflineToggleAction();
     };
+    class MenuAction : public CacheManagerAction {
+    public:
+         virtual void run (StoreEntry *sentry);
+         MenuAction();
+    };
 
+/// \ingroup CacheManagerInternal
+typedef struct
+{
+    StoreEntry *entry;
+    char *action;
+    char *user_name;
+    char *passwd;
+} cachemgrStateData;
+
+
+    CacheManager(); 
+    cachemgrStateData* ParseUrl(const char *url);
+    void ParseHeaders(cachemgrStateData * mgr, const HttpRequest * request);
+    int CheckPassword(cachemgrStateData * mgr);
+    char *PasswdGet(cachemgr_passwd *, const char *);
 
 private:
     static CacheManager* instance;
-
-    //commands need to be static to be able to be referenced as C-style
-    //functions. Binding to nonstatic members can be done at runtime
-    //via the singleton, but it's syntactic hackery
-    //TODO: fix so that ActionTable uses a Command pattern and thus
-    //      function calls are properly object-wrapped
-    static void MenuCommand(StoreEntry *sentry);
 
     void StateFree(cachemgrStateData * mgr);
 
