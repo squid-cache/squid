@@ -69,18 +69,6 @@ public:
      CacheManagerActionLegacy(char const *anAction, char const *aDesc, unsigned int isPwReq, unsigned int isAtomic, OBJH *aHandler);
 };
 
-class CacheManagerShutdownAction : public CacheManagerAction {
-public:
-     virtual void run (StoreEntry *sentry);
-     CacheManagerShutdownAction();
-};
-
-class CacheManagerReconfigureAction : public CacheManagerAction {
-public:
-     virtual void run (StoreEntry *sentry);
-     CacheManagerReconfigureAction();
-};
-
 
 class CacheManagerActionList : public Vector<CacheManagerAction *> {
 };
@@ -130,6 +118,26 @@ protected:
     int CheckPassword(cachemgrStateData * mgr);
     char *PasswdGet(cachemgr_passwd *, const char *);
 
+    // command classes. They are private to the cachemanager because they
+    // may require access to local data sources, plus we avoid polluting
+    // the namespace more than needed.
+    class CacheManagerShutdownAction : public CacheManagerAction {
+    public:
+         virtual void run (StoreEntry *sentry);
+         CacheManagerShutdownAction();
+    };
+    class CacheManagerReconfigureAction : public CacheManagerAction {
+    public:
+         virtual void run (StoreEntry *sentry);
+         CacheManagerReconfigureAction();
+    };
+    class CacheManagerOfflineToggleAction : public CacheManagerAction {
+    public:
+         virtual void run (StoreEntry *sentry);
+         CacheManagerOfflineToggleAction();
+    };
+
+
 private:
     static CacheManager* instance;
 
@@ -138,7 +146,6 @@ private:
     //via the singleton, but it's syntactic hackery
     //TODO: fix so that ActionTable uses a Command pattern and thus
     //      function calls are properly object-wrapped
-    static void ReconfigureCommand(StoreEntry *sentry);
     static void MenuCommand(StoreEntry *sentry);
     static void OfflineToggleCommand(StoreEntry *sentry);
 

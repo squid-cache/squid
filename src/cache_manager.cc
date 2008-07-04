@@ -61,9 +61,8 @@ CacheManager::CacheManager()
          delete(ActionsList); //TODO: Laaazy. Will be moved to class member
     ActionsList = new CacheManagerActionList;
     registerAction("menu", "This Cachemanager Menu", MenuCommand, 0, 1);
-    registerAction("offline_toggle",
-                   "Toggle offline_mode setting",
-                   OfflineToggleCommand, 1, 1);
+    //registerAction("offline_toggle", "Toggle offline_mode setting", OfflineToggleCommand, 1, 1);
+    registerAction(new CacheManagerOfflineToggleAction);
     registerAction(new CacheManagerShutdownAction);
     registerAction(new CacheManagerReconfigureAction);
 }
@@ -335,25 +334,25 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
     StateFree(mgr);
 }
 
-void CacheManagerShutdownAction::run(StoreEntry *sentry)
+void CacheManager::CacheManagerShutdownAction::run(StoreEntry *sentry)
 {
     debugs(16, 0, "Shutdown by command.");
     shut_down(0);
 }
-CacheManagerShutdownAction::CacheManagerShutdownAction() : CacheManagerAction("shutdown","Shut Down the Squid Process", 1, 1) { }
+CacheManager::CacheManagerShutdownAction::CacheManagerShutdownAction() : CacheManagerAction("shutdown","Shut Down the Squid Process", 1, 1) { }
 
 void
-CacheManagerReconfigureAction::run(StoreEntry * sentry)
+CacheManager::CacheManagerReconfigureAction::run(StoreEntry * sentry)
 {
     debug(16, 0) ("Reconfigure by command.\n");
     storeAppendPrintf(sentry, "Reconfiguring Squid Process ....");
     reconfigure(SIGHUP);
 }
-CacheManagerReconfigureAction::CacheManagerReconfigureAction() : CacheManagerAction("reconfigure","Reconfigure Squid", 1, 1) { }
+CacheManager::CacheManagerReconfigureAction::CacheManagerReconfigureAction() : CacheManagerAction("reconfigure","Reconfigure Squid", 1, 1) { }
 
 /// \ingroup CacheManagerInternal
 void
-CacheManager::OfflineToggleCommand(StoreEntry * sentry)
+CacheManager::CacheManagerOfflineToggleAction::run(StoreEntry * sentry)
 {
     Config.onoff.offline = !Config.onoff.offline;
     debugs(16, 0, "offline_mode now " << (Config.onoff.offline ? "ON" : "OFF") << ".");
@@ -361,6 +360,7 @@ CacheManager::OfflineToggleCommand(StoreEntry * sentry)
     storeAppendPrintf(sentry, "offline_mode is now %s\n",
                       Config.onoff.offline ? "ON" : "OFF");
 }
+CacheManager::CacheManagerOfflineToggleAction::CacheManagerOfflineToggleAction() : CacheManagerAction ("offline_toggle", "Toggle offline_mode setting", 1, 1) { }
 
 /// \ingroup CacheManagerInternal
 const char *
