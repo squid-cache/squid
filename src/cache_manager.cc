@@ -75,20 +75,26 @@ CacheManager::CacheManager()
 void
 CacheManager::registerAction(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic)
 {
-    CacheManagerActionLegacy *a;
+    debugs(16, 3, "CacheManager::registerAction: registering legacy " <<  action);
+    registerAction(new CacheManagerActionLegacy(action,desc,pw_req_flag,atomic,handler));
+}
 
+void
+CacheManager::registerAction(CacheManagerAction *anAction)
+{
+    char *action = anAction->action;
     if (findAction(action) != NULL) {
         debugs(16, 2, "CacheManager::registerAction: Duplicate '" << action << "'. Skipping.");
         return;
     }
 
     assert (strstr (" ", action) == NULL);
-    a = new CacheManagerActionLegacy(action,desc,pw_req_flag,atomic,handler);
 
-    *ActionsList += a;
+    *ActionsList += anAction;
 
     debugs(16, 3, "CacheManager::registerAction: registered " <<  action);
 }
+
 
 /// \ingroup CacheManagerInternal
 CacheManagerAction *
