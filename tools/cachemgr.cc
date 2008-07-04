@@ -636,11 +636,12 @@ read_reply(int s, cachemgr_request * req)
 #ifdef _SQUID_MSWIN_
         perror(tmpfile);
         xfree(tmpfile);
-        closesocket(s);
 #else
+
         perror("fdopen");
-        close(s);
 #endif
+
+        close(s);
         return 1;
     }
 
@@ -782,13 +783,13 @@ read_reply(int s, cachemgr_request * req)
         }
     }
 
-#ifdef _SQUID_MSWIN_
     fclose(fp);
+#ifdef _SQUID_MSWIN_
+
     remove(tmpfile);
     xfree(tmpfile);
-    closesocket(s);
-#else
     close(s);
+
 #endif
 
     return 0;
@@ -873,11 +874,7 @@ process_request(cachemgr_request * req)
                  req->hostname,
                  req->action,
                  make_auth_header(req));
-#ifdef _SQUID_MSWIN_
-    send(s, buf, l, 0);
-#else
     write(s, buf, l);
-#endif
     debug(1) fprintf(stderr, "wrote request: '%s'\n", buf);
     return read_reply(s, req);
 }
