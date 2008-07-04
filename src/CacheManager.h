@@ -75,6 +75,13 @@ public:
      CacheManagerShutdownAction();
 };
 
+class CacheManagerReconfigureAction : public CacheManagerAction {
+public:
+     virtual void run (StoreEntry *sentry);
+     CacheManagerReconfigureAction();
+};
+
+
 class CacheManagerActionList : public Vector<CacheManagerAction *> {
 };
 
