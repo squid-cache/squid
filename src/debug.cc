@@ -465,7 +465,7 @@ _db_init(const char *logfile, const char *options) {
 #if HAVE_SYSLOG && defined(LOG_LOCAL4)
 
     if (opt_syslog_enable)
-        openlog(appname, LOG_PID | LOG_NDELAY | LOG_CONS, syslog_facility);
+        openlog(APP_SHORTNAME, LOG_PID | LOG_NDELAY | LOG_CONS, syslog_facility);
 
 #endif /* HAVE_SYSLOG */
 

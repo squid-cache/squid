@@ -130,7 +130,7 @@ mail_warranty(void)
 
     char *filename;
 
-    if ((filename = tempnam(NULL, appname)) == NULL)
+    if ((filename = tempnam(NULL, APP_SHORTNAME)) == NULL)
         return;
 
     if ((fp = fopen(filename, "w")) == NULL)
@@ -141,7 +141,7 @@ mail_warranty(void)
     if (Config.EmailFrom)
         fprintf(fp, "From: %s\n", Config.EmailFrom);
     else
-        fprintf(fp, "From: %s@%s\n", appname, uniqueHostname());
+        fprintf(fp, "From: %s@%s\n", APP_SHORTNAME, uniqueHostname());
 
     fprintf(fp, "To: %s\n", Config.adminEmail);
 
@@ -177,7 +177,7 @@ dumpMallocStats(void)
 
     mp = mallinfo();
 
-    fprintf(debug_log, "Memory usage for %s via mallinfo():\n", appname);
+    fprintf(debug_log, "Memory usage for "APP_SHORTNAME" via mallinfo():\n");
 
     fprintf(debug_log, "\ttotal space in arena:  %6ld KB\n",
             (long)mp.arena >> 10);
@@ -851,7 +851,7 @@ readPidFile(void)
     int i;
 
     if (f == NULL || !strcmp(Config.pidFilename, "none")) {
-        fprintf(stderr, "%s: ERROR: No pid file name defined\n", appname);
+        fprintf(stderr, APP_SHORTNAME ": ERROR: No pid file name defined\n");
         exit(1);
     }
 
@@ -873,7 +873,7 @@ readPidFile(void)
         fclose(pid_fp);
     } else {
         if (errno != ENOENT) {
-            fprintf(stderr, "%s: ERROR: Could not read pid file\n", appname);
+            fprintf(stderr, APP_SHORTNAME ": ERROR: Could not read pid file\n");
             fprintf(stderr, "\t%s: %s\n", f, xstrerror());
             exit(1);
         }

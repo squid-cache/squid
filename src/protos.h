@@ -476,14 +476,6 @@ extern void reconfigure(int);
 extern void start_announce(void *unused);
 extern void waisStart(FwdState *);
 
-/* ident.c */
-#if USE_IDENT
-
-SQUIDCEXTERN void identStart(IPAddress &me, IPAddress &my_peer,
-                             IDCB * callback, void *cbdata);
-SQUIDCEXTERN void identInit(void);
-#endif
-
 SQUIDCEXTERN void statInit(void);
 extern void statRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN void statFreeMemory(void);
