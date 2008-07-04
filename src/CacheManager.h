@@ -72,6 +72,7 @@ public:
 class CacheManagerShutdownAction : public CacheManagerAction {
 public:
      virtual void run (StoreEntry *sentry);
+     CacheManagerShutdownAction();
 };
 
 class CacheManagerActionList : public Vector<CacheManagerAction *> {
@@ -130,7 +131,6 @@ private:
     //via the singleton, but it's syntactic hackery
     //TODO: fix so that ActionTable uses a Command pattern and thus
     //      function calls are properly object-wrapped
-    static void ShutdownCommand(StoreEntry *unused);
     static void ReconfigureCommand(StoreEntry *sentry);
     static void MenuCommand(StoreEntry *sentry);
     static void OfflineToggleCommand(StoreEntry *sentry);
