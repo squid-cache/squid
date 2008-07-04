@@ -52,18 +52,15 @@
 
 
 
-/// \ingroup CacheManagerInternal
-CacheManagerActionList *ActionsList = NULL;
-
 CacheManager::CacheManager()
 {
-    if (ActionsList != NULL)
-         delete(ActionsList); //TODO: Laaazy. Will be moved to class member
-    ActionsList = new CacheManagerActionList;
+    //if (ActionsList != NULL)
+    //     delete(ActionsList); //TODO: Laaazy. Will be moved to class member
+    //ActionsList = new CacheManagerActionList;
     registerAction(new OfflineToggleAction);
     registerAction(new ShutdownAction);
     registerAction(new ReconfigureAction);
-    registerAction(new MenuAction);
+    registerAction(new MenuAction(this));
 }
 
 void
@@ -84,7 +81,7 @@ CacheManager::registerAction(CacheManagerAction *anAction)
 
     assert (strstr (" ", action) == NULL);
 
-    *ActionsList += anAction;
+    ActionsList += anAction;
 
     debugs(16, 3, "CacheManager::registerAction: registered " <<  action);
 }
@@ -97,7 +94,7 @@ CacheManager::findAction(char const * action)
     CacheManagerActionList::iterator a;
 
     debugs(16, 5, "CacheManager::findAction: looking for action " << action);
-    for ( a = ActionsList->begin(); a != ActionsList->end(); a++) {
+    for ( a = ActionsList.begin(); a != ActionsList.end(); a++) {
         if (0 == strcmp((*a)->action, action)) {
             debugs(16, 6, " found");
             return *a;
@@ -387,13 +384,13 @@ CacheManager::MenuAction::run(StoreEntry * sentry)
     CacheManagerActionList::iterator a;
 
     debugs(16, 4, "CacheManager::MenuCommand invoked");
-    for (a = ActionsList->begin(); a != ActionsList->end(); ++a) {
+    for (a = cmgr->ActionsList.begin(); a != cmgr->ActionsList.end(); ++a) {
         debugs(16, 5, "  showing action " << (*a)->action);
         storeAppendPrintf(sentry, " %-22s\t%-32s\t%s\n",
-            (*a)->action, (*a)->desc, CacheManager::GetInstance()->ActionProtection(*a));
+            (*a)->action, (*a)->desc, cmgr->ActionProtection(*a));
     }
 }
-CacheManager::MenuAction::MenuAction() : CacheManagerAction ("menu", "Cache Manager Menu", 1, 1) { }
+CacheManager::MenuAction::MenuAction(CacheManager *aMgr) : CacheManagerAction ("menu", "Cache Manager Menu", 1, 1), cmgr(aMgr) { }
 
 /// \ingroup CacheManagerInternal
 char *
