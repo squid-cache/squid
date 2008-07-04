@@ -205,7 +205,7 @@ else
 AIOPS_SOURCE = DiskIO/DiskThreads/aiops.cc
 endif
 
-IDENT_ALL_SOURCE = ACLIdent.cc ACLIdent.h ident.cc
+IDENT_ALL_SOURCE = ACLIdent.cc ACLIdent.h ident.cc ident.h
 if ENABLE_IDENT
 IDENT_SOURCE = $(IDENT_ALL_SOURCE)
 else
