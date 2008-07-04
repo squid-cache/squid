@@ -61,15 +61,13 @@ CacheManager::CacheManager()
          delete(ActionsList); //TODO: Laaazy. Will be moved to class member
     ActionsList = new CacheManagerActionList;
     registerAction("menu", "This Cachemanager Menu", MenuCommand, 0, 1);
-    registerAction("shutdown",
-                   "Shut Down the Squid Process",
-                   ShutdownCommand, 1, 1);
     registerAction("reconfigure",
                      "Reconfigure the Squid Process",
                      ReconfigureCommand, 1, 1);
     registerAction("offline_toggle",
                    "Toggle offline_mode setting",
                    OfflineToggleCommand, 1, 1);
+    registerAction(new CacheManagerShutdownAction);
 }
 
 void
@@ -339,18 +337,12 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
     StateFree(mgr);
 }
 
-/// \ingroup CacheManagerInternal
-void
-CacheManager::ShutdownCommand(StoreEntry *unused)
-{
-    debugs(16, 0, "Shutdown by command.");
-    shut_down(0);
-}
 void CacheManagerShutdownAction::run(StoreEntry *sentry)
 {
     debugs(16, 0, "Shutdown by command.");
     shut_down(0);
 }
+CacheManagerShutdownAction::CacheManagerShutdownAction() : CacheManagerAction("shutdown","Shut Down the Squid Process", 1, 1) { }
 
 /// \ingroup CacheManagerInternal
 void
