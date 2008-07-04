@@ -60,11 +60,10 @@ CacheManager::CacheManager()
     if (ActionsList != NULL)
          delete(ActionsList); //TODO: Laaazy. Will be moved to class member
     ActionsList = new CacheManagerActionList;
-    registerAction("menu", "This Cachemanager Menu", MenuCommand, 0, 1);
-    //registerAction("offline_toggle", "Toggle offline_mode setting", OfflineToggleCommand, 1, 1);
     registerAction(new OfflineToggleAction);
     registerAction(new ShutdownAction);
     registerAction(new ReconfigureAction);
+    registerAction(new MenuAction);
 }
 
 void
@@ -99,7 +98,6 @@ CacheManager::findAction(char const * action)
 
     debugs(16, 5, "CacheManager::findAction: looking for action " << action);
     for ( a = ActionsList->begin(); a != ActionsList->end(); a++) {
-    	//debugs(16, 6, " checking against '" << (*a)->action << "'");
         if (0 == strcmp((*a)->action, action)) {
             debugs(16, 6, " found");
             return *a;
@@ -111,7 +109,7 @@ CacheManager::findAction(char const * action)
 }
 
 /// \ingroup CacheManagerInternal
-cachemgrStateData *
+CacheManager::cachemgrStateData *
 CacheManager::ParseUrl(const char *url)
 {
     int t;
@@ -384,7 +382,7 @@ CacheManager::ActionProtection(const CacheManagerAction * at)
 
 /// \ingroup CacheManagerInternal
 void
-CacheManager::MenuCommand(StoreEntry * sentry)
+CacheManager::MenuAction::run(StoreEntry * sentry)
 {
     CacheManagerActionList::iterator a;
 
@@ -395,6 +393,7 @@ CacheManager::MenuCommand(StoreEntry * sentry)
             (*a)->action, (*a)->desc, CacheManager::GetInstance()->ActionProtection(*a));
     }
 }
+CacheManager::MenuAction::MenuAction() : CacheManagerAction ("menu", "Cache Manager Menu", 1, 1) { }
 
 /// \ingroup CacheManagerInternal
 char *
