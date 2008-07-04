@@ -55,7 +55,6 @@ public:
      virtual ~CacheManagerAction();
      CacheManagerAction(char const *anAction, char const *aDesc, unsigned int isPwReq, unsigned int isAtomic);
 
-     CacheManagerAction *next;
 };
 
 /**
@@ -108,6 +107,7 @@ public:
     virtual ~CacheManager() {}
 
     void registerAction(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic);
+    void registerAction(CacheManagerAction *anAction);
     CacheManagerAction * findAction(char const * action);
 
     void Start(int fd, HttpRequest * request, StoreEntry * entry);
