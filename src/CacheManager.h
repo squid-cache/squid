@@ -121,20 +121,20 @@ protected:
     // command classes. They are private to the cachemanager because they
     // may require access to local data sources, plus we avoid polluting
     // the namespace more than needed.
-    class CacheManagerShutdownAction : public CacheManagerAction {
+    class ShutdownAction : public CacheManagerAction {
     public:
          virtual void run (StoreEntry *sentry);
-         CacheManagerShutdownAction();
+         ShutdownAction();
     };
-    class CacheManagerReconfigureAction : public CacheManagerAction {
+    class ReconfigureAction : public CacheManagerAction {
     public:
          virtual void run (StoreEntry *sentry);
-         CacheManagerReconfigureAction();
+         ReconfigureAction();
     };
-    class CacheManagerOfflineToggleAction : public CacheManagerAction {
+    class OfflineToggleAction : public CacheManagerAction {
     public:
          virtual void run (StoreEntry *sentry);
-         CacheManagerOfflineToggleAction();
+         OfflineToggleAction();
     };
 
 
@@ -147,7 +147,6 @@ private:
     //TODO: fix so that ActionTable uses a Command pattern and thus
     //      function calls are properly object-wrapped
     static void MenuCommand(StoreEntry *sentry);
-    static void OfflineToggleCommand(StoreEntry *sentry);
 
     void StateFree(cachemgrStateData * mgr);
 
