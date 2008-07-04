@@ -70,9 +70,6 @@ public:
 };
 
 
-class CacheManagerActionList : public Vector<CacheManagerAction *> {
-};
-
 /**
  \ingroup CacheManagerAPI
  * a CacheManager - the menu system for interacting with squid.
@@ -100,11 +97,11 @@ public:
     void Start(int fd, HttpRequest * request, StoreEntry * entry);
 
     static CacheManager* GetInstance();
-    const char *ActionProtection(const CacheManagerAction * at); //needs to be called from C
+    const char *ActionProtection(const CacheManagerAction * at);
 
 protected:
-    // command classes. They are private to the cachemanager because they
-    // may require access to local data sources, plus we avoid polluting
+    // command classes. They are private to the cachemanager, they
+    // may require access to local data, plus we avoid polluting
     // the namespace more than needed.
     class ShutdownAction : public CacheManagerAction {
     public:
@@ -122,19 +119,23 @@ protected:
          OfflineToggleAction();
     };
     class MenuAction : public CacheManagerAction {
+    private:
+         //needs to reference the cachemgr in order to get to ActionsList
+         CacheManager *cmgr;
     public:
          virtual void run (StoreEntry *sentry);
-         MenuAction();
+         MenuAction(CacheManager *); 
+
     };
 
-/// \ingroup CacheManagerInternal
-typedef struct
-{
-    StoreEntry *entry;
-    char *action;
-    char *user_name;
-    char *passwd;
-} cachemgrStateData;
+    /// \ingroup CacheManagerInternal
+    typedef struct
+    {
+        StoreEntry *entry;
+        char *action;
+        char *user_name;
+        char *passwd;
+    } cachemgrStateData;
 
 
     CacheManager(); 
@@ -142,6 +143,11 @@ typedef struct
     void ParseHeaders(cachemgrStateData * mgr, const HttpRequest * request);
     int CheckPassword(cachemgrStateData * mgr);
     char *PasswdGet(cachemgr_passwd *, const char *);
+
+    // \ingroup CacheManagerInternal
+    typedef Vector<CacheManagerAction *> CacheManagerActionList;
+    CacheManagerActionList ActionsList;
+
 
 private:
     static CacheManager* instance;
