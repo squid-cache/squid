@@ -93,6 +93,7 @@
 #include "HttpHdrContRange.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "ident.h"
 #include "MemObject.h"
 #include "fde.h"
 #include "client_side_request.h"
@@ -1057,8 +1058,8 @@ ClientHttpRequest::rangeBoundaryStr() const
 {
     assert(this);
     const char *key;
-    String b (full_appname_string);
-    b.append (":",1);
+    String b(APP_FULLNAME);
+    b.append(":",1);
     key = storeEntry()->getMD5Text();
     b.append(key, strlen(key));
     return b;
