@@ -51,18 +51,24 @@
 #define MGR_PASSWD_SZ 128
 
 
-
+/**
+ \ingroup CacheManagerInternals
+ * Constructor. Its purpose is to register internal commands
+ */
 CacheManager::CacheManager()
 {
-    //if (ActionsList != NULL)
-    //     delete(ActionsList); //TODO: Laaazy. Will be moved to class member
-    //ActionsList = new CacheManagerActionList;
     registerAction(new OfflineToggleAction);
     registerAction(new ShutdownAction);
     registerAction(new ReconfigureAction);
     registerAction(new MenuAction(this));
 }
 
+/**
+ \ingroup CacheManagerAPI
+ * Registers a C-style action, which is implemented as a pointer to a function
+ * taking as argument a pointer to a StoreEntry and returning void.
+ * Implemented via CacheManagerActionLegacy.
+ */
 void
 CacheManager::registerAction(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic)
 {
@@ -70,6 +76,12 @@ CacheManager::registerAction(char const * action, char const * desc, OBJH * hand
     registerAction(new CacheManagerActionLegacy(action,desc,pw_req_flag,atomic,handler));
 }
 
+/**
+ \ingroup CacheManagerAPI
+ * Registers a C++-style action, via a poiner to a subclass of 
+ * a CacheManagerAction object, whose run() method will be invoked when
+ * CacheManager identifies that the user has requested the action.
+ */
 void
 CacheManager::registerAction(CacheManagerAction *anAction)
 {
@@ -87,7 +99,12 @@ CacheManager::registerAction(CacheManagerAction *anAction)
 }
 
 
-/// \ingroup CacheManagerInternal
+/**
+ \ingroup CacheManagerInternal
+ * Locates an action in the actions registry ActionsList.
+\retval NULL  if Action not found
+\retval CacheManagerAction* if the action was found
+ */
 CacheManagerAction *
 CacheManager::findAction(char const * action)
 {
