@@ -122,7 +122,14 @@ CacheManager::findAction(char const * action)
     return NULL;
 }
 
-/// \ingroup CacheManagerInternal
+/**
+ \ingroup CacheManagerInternal
+ * define whether the URL is a cache-manager URL and parse the action
+ * requested by the user. Checks via CacheManager::ActionProtection() that the
+ * item is accessible by the user.
+ \retval CacheManager::cachemgrStateData state object for the following handling
+ \retval NULL if the action can't be found or can't be accessed by the user
+ */
 CacheManager::cachemgrStateData *
 CacheManager::ParseUrl(const char *url)
 {
@@ -171,6 +178,11 @@ CacheManager::ParseUrl(const char *url)
 }
 
 /// \ingroup CacheManagerInternal
+/*
+ \ingroup CacheManagerInternal
+ * Decodes the headers needed to perform user authentication and fills
+ * the details into the cachemgrStateData argument
+ */
 void
 CacheManager::ParseHeaders(cachemgrStateData * mgr, const HttpRequest * request)
 {
@@ -244,14 +256,19 @@ CacheManager::StateFree(cachemgrStateData * mgr)
     xfree(mgr);
 }
 
-// API
+/**
+ \ingroup CacheManagerAPI
+ * Main entry point in the Cache Manager's activity. Gets called as part
+ * of the forward chain if the right URL is detected there. Initiates
+ * all needed internal work and renders the response.
+ */
 void
 CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
 {
     cachemgrStateData *mgr = NULL;
     ErrorState *err = NULL;
     CacheManagerAction *a;
-    debugs(16, 3, "objectcacheStart: '" << entry->url() << "'" );
+    debugs(16, 3, "CacheManager::Start: '" << entry->url() << "'" );
 
     if ((mgr = ParseUrl(entry->url())) == NULL) {
         err = errorCon(ERR_INVALID_URL, HTTP_NOT_FOUND, request);
@@ -346,13 +363,16 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
     StateFree(mgr);
 }
 
+/// \ingroup CacheManagerInternal
 void CacheManager::ShutdownAction::run(StoreEntry *sentry)
 {
     debugs(16, 0, "Shutdown by command.");
     shut_down(0);
 }
+/// \ingroup CacheManagerInternal
 CacheManager::ShutdownAction::ShutdownAction() : CacheManagerAction("shutdown","Shut Down the Squid Process", 1, 1) { }
 
+/// \ingroup CacheManagerInternal
 void
 CacheManager::ReconfigureAction::run(StoreEntry * sentry)
 {
@@ -360,6 +380,7 @@ CacheManager::ReconfigureAction::run(StoreEntry * sentry)
     storeAppendPrintf(sentry, "Reconfiguring Squid Process ....");
     reconfigure(SIGHUP);
 }
+/// \ingroup CacheManagerInternal
 CacheManager::ReconfigureAction::ReconfigureAction() : CacheManagerAction("reconfigure","Reconfigure Squid", 1, 1) { }
 
 /// \ingroup CacheManagerInternal
@@ -372,9 +393,15 @@ CacheManager::OfflineToggleAction::run(StoreEntry * sentry)
     storeAppendPrintf(sentry, "offline_mode is now %s\n",
                       Config.onoff.offline ? "ON" : "OFF");
 }
+/// \ingroup CacheManagerInternal
 CacheManager::OfflineToggleAction::OfflineToggleAction() : CacheManagerAction ("offline_toggle", "Toggle offline_mode setting", 1, 1) { }
 
-/// \ingroup CacheManagerInternal
+/*
+ \ingroup CacheManagerInternal
+ * Renders the protection level text for an action.
+ * Also doubles as a check for the protection level.
+ * TODO: change this to an enum-based status rendered separately.
+ */
 const char *
 CacheManager::ActionProtection(const CacheManagerAction * at)
 {
@@ -407,9 +434,14 @@ CacheManager::MenuAction::run(StoreEntry * sentry)
             (*a)->action, (*a)->desc, cmgr->ActionProtection(*a));
     }
 }
+/// \ingroup CacheManagerInternal
 CacheManager::MenuAction::MenuAction(CacheManager *aMgr) : CacheManagerAction ("menu", "Cache Manager Menu", 1, 1), cmgr(aMgr) { }
 
-/// \ingroup CacheManagerInternal
+/*
+ \ingroup CacheManagerInternal
+ * gets from the global Config the password the user would need to supply
+ * for the action she queried
+ */
 char *
 CacheManager::PasswdGet(cachemgr_passwd * a, const char *action)
 {
@@ -432,6 +464,10 @@ CacheManager::PasswdGet(cachemgr_passwd * a, const char *action)
 
 CacheManager* CacheManager::instance=0;
 
+/**
+ \ingroup CacheManagerAPI
+ * Singleton accessor method.
+ */
 CacheManager*
 CacheManager::GetInstance() {
         if (instance == 0) {
@@ -442,11 +478,12 @@ CacheManager::GetInstance() {
 }
 
 
+/// \ingroup CacheManagerInternal
 void CacheManagerActionLegacy::run(StoreEntry *sentry)
 {
 	handler(sentry);
 }
-
+/// \ingroup CacheManagerInternal
 CacheManagerAction::CacheManagerAction(char const *anAction, char const *aDesc, unsigned int isPwReq, unsigned int isAtomic)
 {
     flags.pw_req = isPwReq;
@@ -454,11 +491,14 @@ CacheManagerAction::CacheManagerAction(char const *anAction, char const *aDesc, 
     action = xstrdup (anAction);
     desc = xstrdup (aDesc);
 }
-CacheManagerAction::~CacheManagerAction() {
+/// \ingroup CacheManagerInternal
+CacheManagerAction::~CacheManagerAction()
+{
     xfree(action);
     xfree(desc);
 }
 
+/// \ingroup CacheManagerInternal
 CacheManagerActionLegacy::CacheManagerActionLegacy(char const *anAction, char const *aDesc, unsigned int isPwReq, unsigned int isAtomic, OBJH *aHandler) : CacheManagerAction(anAction, aDesc, isPwReq, isAtomic), handler(aHandler)
 {
 }
