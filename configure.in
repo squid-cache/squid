@@ -1349,6 +1349,7 @@ dnl "-64" from LDFLAGS
 	    *)
 	        ;;
 	esac
+	;;
 esac
 
 dnl Enable Linux transparent proxy support for obsolete TPROXY
