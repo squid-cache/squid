@@ -68,6 +68,7 @@ EXTRA_libmiscutil_a_SOURCES = \
 libmiscutil_a_SOURCES = \
 	MemPool.cc \
 	base64.c \
+	charset.c \
 	getfullhostname.c \
 	hash.c \
 	heap.c \

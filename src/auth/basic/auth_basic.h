@@ -132,6 +132,7 @@ public:
     wordlist *authenticate;
     time_t credentialsTTL;
     int casesensitive;
+    int utf8;
 };
 
 #endif
