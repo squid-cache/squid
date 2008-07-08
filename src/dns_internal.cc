@@ -388,7 +388,7 @@ idnsParseWIN32SearchList(const char * Separator)
 	    t = (char *) xmalloc(Size);
 	    RegQueryValueEx(hndKey, "Domain", NULL, &Type, (LPBYTE) t,
 		&Size);
-	    debugs(78, 1, "Adding domain " << token << " from Registry");
+	    debugs(78, 1, "Adding domain " << t << " from Registry");
 	    idnsAddPathComponent(t);
 	    xfree(t);
 	}
@@ -412,7 +412,7 @@ idnsParseWIN32SearchList(const char * Separator)
 
         RegCloseKey(hndKey);
     }
-    if (npc == 0 && ((const char *) t = getMyHostname())) {
+    if (npc == 0 && (t = (char *) getMyHostname())) {
 	t = strchr(t, '.');
 	if (t)
 	    idnsAddPathComponent(t + 1);
@@ -443,7 +443,7 @@ idnsParseWIN32Registry(void)
 
             if (Result == ERROR_SUCCESS && Size) {
                 t = (char *) xmalloc(Size);
-                RegQueryValueEx(hndKey, "DhcpNameServer", NULL, &Type, t,
+                RegQueryValueEx(hndKey, "DhcpNameServer", NULL, &Type, (LPBYTE) t,
                                 &Size);
                 token = strtok(t, ", ");
 
@@ -460,7 +460,7 @@ idnsParseWIN32Registry(void)
 
             if (Result == ERROR_SUCCESS && Size) {
                 t = (char *) xmalloc(Size);
-                RegQueryValueEx(hndKey, "NameServer", NULL, &Type, t, &Size);
+                RegQueryValueEx(hndKey, "NameServer", NULL, &Type, (LPBYTE) t, &Size);
                 token = strtok(t, ", ");
 
                 while (token) {
@@ -514,7 +514,7 @@ idnsParseWIN32Registry(void)
                         if (Result == ERROR_SUCCESS && Size) {
                             t = (char *) xmalloc(Size);
                             RegQueryValueEx(hndKey2, "DhcpNameServer", NULL,
-                                            &Type, t, &Size);
+                                            &Type, (LPBYTE) t, &Size);
                             token = strtok(t, ", ");
 
                             while (token) {
@@ -532,7 +532,7 @@ idnsParseWIN32Registry(void)
                         if (Result == ERROR_SUCCESS && Size) {
                             t = (char *) xmalloc(Size);
                             RegQueryValueEx(hndKey2, "NameServer", NULL, &Type,
-                                            t, &Size);
+                                            (LPBYTE) t, &Size);
                             token = strtok(t, ", ");
 
                             while (token) {
@@ -573,7 +573,7 @@ idnsParseWIN32Registry(void)
 
             if (Result == ERROR_SUCCESS && Size) {
                 t = (char *) xmalloc(Size);
-                RegQueryValueEx(hndKey, "NameServer", NULL, &Type, t, &Size);
+                RegQueryValueEx(hndKey, "NameServer", NULL, &Type, (LPBYTE) t, &Size);
                 token = strtok(t, ", ");
 
                 while (token) {
