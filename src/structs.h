@@ -554,6 +554,7 @@ struct _SquidConfig
         int httpd_suppress_version_string;
         int global_internal_static;
         int debug_override_X;
+        int WIN32_IpAddrChangeMonitor;
     }
 
     onoff;
