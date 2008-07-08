@@ -400,7 +400,6 @@ CacheManager::OfflineToggleAction::OfflineToggleAction() : CacheManagerAction ("
  \ingroup CacheManagerInternal
  * Renders the protection level text for an action.
  * Also doubles as a check for the protection level.
- * TODO: change this to an enum-based status rendered separately.
  */
 const char *
 CacheManager::ActionProtection(const CacheManagerAction * at)
