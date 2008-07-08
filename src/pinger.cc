@@ -63,7 +63,9 @@ static int socket_to_squid = 1;
 
 #ifdef _SQUID_MSWIN_
 
+#if HAVE_WINSOCK2_H
 #include <winsock2.h>
+#endif
 #include <process.h>
 
 #define PINGER_TIMEOUT 5
