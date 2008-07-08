@@ -224,6 +224,12 @@ int Win32__WSAFDIsSet(int fd, fd_set FAR * set
                            );
 }
 
+void
+Win32SockCleanup(void)
+{
+    WSACleanup();
+    return;
+}
 #endif
 
 void
@@ -241,6 +247,7 @@ pingerOpen(void)
     struct sockaddr_in PS;
 
     WSAStartup(2, &wsaData);
+    atexit(Win32SockCleanup);
 
     getCurrentTime();
     _db_init(NULL, "ALL,1");

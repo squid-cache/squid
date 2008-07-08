@@ -399,8 +399,12 @@ main(int argc, char *argv[])
     for (;;) {
         memset(request, '\0', REQ_SZ);
 
-        if (fgets(request, REQ_SZ, stdin) == NULL)
-            exit(1);
+	if (fgets(request, REQ_SZ, stdin) == NULL) {
+#ifdef _SQUID_MSWIN_
+	    WSACleanup();
+#endif
+	    exit(1);
+	}
 
         t = strrchr(request, '\n');
 
