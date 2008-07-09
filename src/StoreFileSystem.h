@@ -131,7 +131,7 @@ public:
     virtual char const *type () const = 0;
     virtual SwapDir *createSwapDir() = 0;
     virtual void done() = 0;
-    virtual void registerWithCacheManager(CacheManager & manager);
+    virtual void registerWithCacheManager(void);
     virtual void setup() = 0;
     // Not implemented
     StoreFileSystem(StoreFileSystem const &);

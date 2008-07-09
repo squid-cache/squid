@@ -72,9 +72,9 @@ DiskDaemonDiskIOModule::init()
 }
 
 void
-DiskDaemonDiskIOModule::registerWithCacheManager(CacheManager & manager)
+DiskDaemonDiskIOModule::registerWithCacheManager(void)
 {
-    manager.registerAction("diskd", "DISKD Stats", Stats, 0, 1);
+    CacheManager::GetInstance()->registerAction("diskd", "DISKD Stats", Stats, 0, 1);
 }
 
 void

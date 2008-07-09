@@ -49,10 +49,10 @@ DiskIOModule::DiskIOModule()
 }
 
 void
-DiskIOModule::RegisterAllModulesWithCacheManager(CacheManager & manager)
+DiskIOModule::RegisterAllModulesWithCacheManager(void)
 {
     for (iterator i = GetModules().begin(); i != GetModules().end(); ++i)
-        (*i)->registerWithCacheManager(manager);
+        (*i)->registerWithCacheManager();
 }
 
 void
@@ -132,5 +132,5 @@ DiskIOModule::FindDefault()
 
 /* disk modules dont export anything by default */
 void
-DiskIOModule::registerWithCacheManager(CacheManager & manager)
+DiskIOModule::registerWithCacheManager(void)
 {}
