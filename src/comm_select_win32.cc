@@ -687,9 +687,10 @@ comm_select_init(void)
 }
 
 void
-commSelectRegisterWithCacheManager(CacheManager & manager)
+commSelectRegisterWithCacheManager(void)
 {
-    manager.registerAction("comm_select_incoming",
+    CacheManager::GetInstance()->
+            registerAction("comm_select_incoming",
                            "comm_incoming() stats",
                            commIncomingStats, 0, 1);
 }

@@ -86,11 +86,10 @@ dnsInit(void)
 }
 
 void
-dnsRegisterWithCacheManager(CacheManager & manager)
+dnsRegisterWithCacheManager(void)
 {
-    manager.registerAction("dns",
-                           "Dnsserver Statistics",
-                           dnsStats, 0, 1);
+    CacheManager::GetInstance->
+        registerAction("dns", "Dnsserver Statistics", dnsStats, 0, 1);
 }
 
 void

@@ -85,12 +85,10 @@ clientdbInit(void)
 }
 
 void
-clientdbRegisterWithCacheManager(CacheManager & manager)
+clientdbRegisterWithCacheManager(void)
 {
-    manager.registerAction("client_list",
-                           "Cache Client List",
-                           clientdbDump,
-                           0, 1);
+    CacheManager::GetInstance()->
+        registerAction("client_list", "Cache Client List", clientdbDump, 0, 1);
 }
 
 void

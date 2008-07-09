@@ -83,7 +83,7 @@ SQUIDCEXTERN void parse_IPAddress_list_token(IPAddress_list **, char *);
 /* client_side.c - FD related client side routines */
 
 SQUIDCEXTERN void clientdbInit(void);
-extern void clientdbRegisterWithCacheManager(CacheManager & manager);
+extern void clientdbRegisterWithCacheManager(void);
 
 SQUIDCEXTERN void clientdbUpdate(const IPAddress &, log_type, protocol_t, size_t);
 
@@ -135,13 +135,13 @@ SQUIDCEXTERN void disk_init(void);
 
 SQUIDCEXTERN void dnsShutdown(void);
 SQUIDCEXTERN void dnsInit(void);
-extern void dnsRegisterWithCacheManager(CacheManager & manager);
+extern void dnsRegisterWithCacheManager(void);
 SQUIDCEXTERN void dnsSubmit(const char *lookup, HLPCB * callback, void *data);
 
 /* dns_internal.c */
 SQUIDCEXTERN void idnsInit(void);
 SQUIDCEXTERN void idnsShutdown(void);
-extern void idnsRegisterWithCacheManager(CacheManager & manager);
+extern void idnsRegisterWithCacheManager(void);
 SQUIDCEXTERN void idnsALookup(const char *, IDNSCB *, void *);
 
 SQUIDCEXTERN void idnsPTRLookup(const IPAddress &, IDNSCB *, void *);
