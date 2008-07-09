@@ -47,7 +47,7 @@ public:
     virtual ~StoreSearch() {}
 
     /* not ready yet
-    void asList(void (*) (List<StoreEntryPointer), void *cbdata);
+    void asList(void (*) (CbDataList<StoreEntryPointer), void *cbdata);
     */
     /* callback the client when a new StoreEntry is available
      * or an error occurs 

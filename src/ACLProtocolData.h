@@ -37,7 +37,7 @@
 #define SQUID_ACLPROTOCOLDATA_H
 #include "ACL.h"
 #include "ACLData.h"
-#include "List.h"
+#include "CbDataList.h"
 
 class ACLProtocolData : public ACLData<protocol_t>
 {
@@ -55,7 +55,7 @@ public:
     bool empty() const;
     virtual ACLData<protocol_t> *clone() const;
 
-    List<protocol_t> *values;
+    CbDataList<protocol_t> *values;
 };
 
 MEMPROXY_CLASS_INLINE(ACLProtocolData);

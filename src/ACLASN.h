@@ -36,7 +36,7 @@
 #define SQUID_ACLASN_H
 
 #include "ACLData.h"
-#include "List.h"
+#include "CbDataList.h"
 #include "ACLStrategised.h"
 #include "ACLChecklist.h"
 #include "IPAddress.h"
@@ -45,7 +45,7 @@
 
 class CacheManager;
 
-SQUIDCEXTERN int asnMatchIp(List<int> *, IPAddress &);
+SQUIDCEXTERN int asnMatchIp(CbDataList<int> *, IPAddress &);
 
 /// \ingroup ACLAPI
 SQUIDCEXTERN void asnInit(void);
@@ -77,7 +77,7 @@ private:
     static ACLStrategised<IPAddress> SourceRegistryEntry_;
     static ACL::Prototype DestinationRegistryProtoype;
     static ACLStrategised<IPAddress> DestinationRegistryEntry_;
-    List<int> *data;
+    CbDataList<int> *data;
 };
 
 MEMPROXY_CLASS_INLINE(ACLASN)          /**DOCS_NOSEMI*/

@@ -72,7 +72,7 @@ struct squid_radix_node_head *AS_tree_head;
 /* explicit instantiation required for some systems */
 
 /// \cond AUTODOCS-IGNORE
-template cbdata_type List<int>::CBDATA_List;
+template cbdata_type CbDataList<int>::CBDATA_CbDataList;
 /// \endcond
 
 /**
@@ -82,7 +82,7 @@ template cbdata_type List<int>::CBDATA_List;
  */
 struct as_info
 {
-    List<int> *as_number;
+    CbDataList<int> *as_number;
     time_t expires;		/* NOTUSED */
 };
 
@@ -128,13 +128,13 @@ static OBJH asnStats;
 /* PUBLIC */
 
 int
-asnMatchIp(List<int> *data, IPAddress &addr)
+asnMatchIp(CbDataList<int> *data, IPAddress &addr)
 {
     struct squid_radix_node *rn;
     as_info *e;
     m_ADDR m_addr;
-    List<int> *a = NULL;
-    List<int> *b = NULL;
+    CbDataList<int> *a = NULL;
+    CbDataList<int> *b = NULL;
 
     debugs(53, 3, "asnMatchIp: Called for " << addr );
 
@@ -174,7 +174,7 @@ asnMatchIp(List<int> *data, IPAddress &addr)
 void
 ACLASN::prepareForUse()
 {
-    for (List<int> *i = data; i; i = i->
+    for (CbDataList<int> *i = data; i; i = i->
                                      next)
         asnCacheStart(i->element);
 }
@@ -388,8 +388,8 @@ asnAddNet(char *as_string, int as_number)
     rtentry_t *e;
 
     struct squid_radix_node *rn;
-    List<int> **Tail = NULL;
-    List<int> *q = NULL;
+    CbDataList<int> **Tail = NULL;
+    CbDataList<int> *q = NULL;
     as_info *asinfo = NULL;
 
     IPAddress mask;
@@ -439,14 +439,14 @@ asnAddNet(char *as_string, int as_number)
             debugs(53, 3, "asnAddNet: Warning: Found a network with multiple AS numbers!");
 
             for (Tail = &asinfo->as_number; *Tail; Tail = &(*Tail)->next);
-            q = new List<int> (as_number);
+            q = new CbDataList<int> (as_number);
 
             *(Tail) = q;
 
             e->e_info = asinfo;
         }
     } else {
-        q = new List<int> (as_number);
+        q = new CbDataList<int> (as_number);
         asinfo = (as_info *)xmalloc(sizeof(as_info));
         asinfo->as_number = q;
         rn = squid_rn_addroute(&e->e_addr, &e->e_mask, AS_tree_head, e->e_nodes);
@@ -492,8 +492,8 @@ destroyRadixNode(struct squid_radix_node *rn, void *w)
 static void
 destroyRadixNodeInfo(as_info * e_info)
 {
-    List<int> *prev = NULL;
-    List<int> *data = e_info->as_number;
+    CbDataList<int> *prev = NULL;
+    CbDataList<int> *data = e_info->as_number;
 
     while (data) {
         prev = data;
@@ -509,7 +509,7 @@ printRadixNode(struct squid_radix_node *rn, void *_sentry)
 {
     StoreEntry *sentry = (StoreEntry *)_sentry;
     rtentry_t *e = (rtentry_t *) rn;
-    List<int> *q;
+    CbDataList<int> *q;
     as_info *asinfo;
     char buf[MAX_IPSTRLEN];
     IPAddress addr;
@@ -551,7 +551,7 @@ ACLASN::dump()
 {
     wordlist *W = NULL;
     char buf[32];
-    List<int> *ldata = data;
+    CbDataList<int> *ldata = data;
 
     while (ldata != NULL) {
         snprintf(buf, sizeof(buf), "%d", ldata->element);
@@ -571,14 +571,14 @@ ACLASN::empty () const
 void
 ACLASN::parse()
 {
-    List<int> **curlist = &data;
-    List<int> **Tail;
-    List<int> *q = NULL;
+    CbDataList<int> **curlist = &data;
+    CbDataList<int> **Tail;
+    CbDataList<int> *q = NULL;
     char *t = NULL;
 
     for (Tail = curlist; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
-        q = new List<int> (atoi(t));
+        q = new CbDataList<int> (atoi(t));
         *(Tail) = q;
         Tail = &q->next;
     }
