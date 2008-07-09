@@ -606,11 +606,12 @@ comm_select_init(void)
 {}
 
 void
-commPollRegisterWithCacheManager(CacheManager & manager)
+commPollRegisterWithCacheManager(void)
 {
-    manager.registerAction("comm_poll_incoming",
-                           "comm_incoming() stats",
-                           commIncomingStats, 0, 1);
+    CacheManager::GetInstance()->
+        registerAction("comm_poll_incoming",
+                       "comm_incoming() stats",
+                       commIncomingStats, 0, 1);
 }
 
 

@@ -989,7 +989,7 @@ mainInitialize(void)
 #endif
 #ifdef USE_POLL
 
-        commPollRegisterWithCacheManager(*manager);
+        commPollRegisterWithCacheManager();
 #endif
 #if defined(USE_SELECT) || defined(USE_SELECT_WIN32)
 
