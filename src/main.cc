@@ -694,7 +694,7 @@ mainReconfigure(void)
     refererCloseLog();
     errorClean();
     enter_suid();		/* root to read config file */
-    parseConfigFile(ConfigFile, *manager);
+    parseConfigFile(ConfigFile);
     setUmask(Config.umask);
     Mem::Report();
     setEffectiveUser();
@@ -1263,7 +1263,7 @@ main(int argc, char **argv)
         /* we may want the parsing process to set this up in the future */
         Store::Root(new StoreController);
 
-        parse_err = parseConfigFile(ConfigFile, *manager);
+        parse_err = parseConfigFile(ConfigFile);
 
         Mem::Report();
         
