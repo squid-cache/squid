@@ -271,7 +271,7 @@ cbdataInternalAddType(cbdata_type type, const char *name, int size, FREE * free_
 }
 
 void
-cbdataRegisterWithCacheManager()
+cbdataRegisterWithCacheManager(void)
 {
     CacheManager *manager=CacheManager::GetInstance();
     manager->registerAction("cbdata",
