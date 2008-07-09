@@ -975,7 +975,7 @@ mainInitialize(void)
         carpRegisterWithCacheManager();
 #endif
 
-        cbdataRegisterWithCacheManager(*manager);
+        cbdataRegisterWithCacheManager();
         /* These use separate calls so that the comm loops can eventually
          * coexist.
          */
