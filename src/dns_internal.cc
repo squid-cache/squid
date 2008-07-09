@@ -1384,9 +1384,10 @@ idnsInit(void)
 }
 
 void
-idnsRegisterWithCacheManager(CacheManager & manager)
+idnsRegisterWithCacheManager(void)
 {
-    manager.registerAction("idns", "Internal DNS Statistics", idnsStats, 0, 1);
+    CacheManager::GetInstance()->
+        registerAction("idns", "Internal DNS Statistics", idnsStats, 0, 1);
 }
 
 void

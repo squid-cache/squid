@@ -993,10 +993,10 @@ mainInitialize(void)
 #endif
 #if defined(USE_SELECT) || defined(USE_SELECT_WIN32)
 
-        commSelectRegisterWithCacheManager(*manager);
+        commSelectRegisterWithCacheManager();
 #endif
 
-        clientdbRegisterWithCacheManager(*manager);
+        clientdbRegisterWithCacheManager();
 #if DELAY_POOLS
 
         DelayPools::RegisterWithCacheManager(*manager);
@@ -1005,7 +1005,7 @@ mainInitialize(void)
         DiskIOModule::RegisterAllModulesWithCacheManager();
 #if USE_DNSSERVERS
 
-        dnsRegisterWithCacheManager(*manager);
+        dnsRegisterWithCacheManager();
 #endif
 
         eventInit(*manager);
@@ -1015,7 +1015,7 @@ mainInitialize(void)
         httpHeaderRegisterWithCacheManager(*manager);
 #if !USE_DNSSERVERS
 
-        idnsRegisterWithCacheManager(*manager);
+        idnsRegisterWithCacheManager();
 #endif
 
         ipcacheRegisterWithCacheManager(*manager);
