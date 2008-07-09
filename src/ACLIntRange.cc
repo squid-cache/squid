@@ -40,7 +40,7 @@
 #include "Parsing.h"
 
 /* explicit instantiation required for some systems */
-template cbdata_type List< Range<int> >::CBDATA_List;
+template cbdata_type CbDataList< Range<int> >::CBDATA_CbDataList;
 
 void
 ACLIntRange::parse()
@@ -83,7 +83,7 @@ bool
 ACLIntRange::match(int i)
 {
     RangeType const toFind (i, i+1);
-    ListIterator<RangeType> iter(ranges);
+    CbDataListIterator<RangeType> iter(ranges);
 
     while (!iter.end()) {
         const RangeType & element = iter.next();
@@ -113,7 +113,7 @@ ACLIntRange::dump ()
 {
     wordlist *W = NULL;
     char buf[32];
-    ListIterator<RangeType> iter(ranges);
+    CbDataListIterator<RangeType> iter(ranges);
 
     while (!iter.end()) {
         const RangeType & element = iter.next();

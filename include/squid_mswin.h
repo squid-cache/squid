@@ -261,7 +261,7 @@ typedef char * caddr_t;
 #undef FD_CLR
 #define FD_CLR(fd, set) do { \
     u_int __i; \
-    SOCKET __sock = fd_table[fd].win32.handle; \
+    SOCKET __sock = _get_osfhandle(fd); \
     for (__i = 0; __i < ((fd_set FAR *)(set))->fd_count ; __i++) { \
         if (((fd_set FAR *)(set))->fd_array[__i] == __sock) { \
             while (__i < ((fd_set FAR *)(set))->fd_count-1) { \
@@ -278,7 +278,7 @@ typedef char * caddr_t;
 #undef FD_SET
 #define FD_SET(fd, set) do { \
     u_int __i; \
-    SOCKET __sock = fd_table[fd].win32.handle; \
+    SOCKET __sock = _get_osfhandle(fd); \
     for (__i = 0; __i < ((fd_set FAR *)(set))->fd_count; __i++) { \
         if (((fd_set FAR *)(set))->fd_array[__i] == (__sock)) { \
             break; \

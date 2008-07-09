@@ -429,7 +429,10 @@ main(int argc, char *argv[])
 		if (!ntlmDecodeAuth((struct ntlm_authenticate *) decoded, user, 256)) {
 		    lc(user);
 		    if (strip_domain_enabled) {
-			strtok_r(user, "\\", &p);
+			strtok(user, "\\");
+			p = strtok(NULL, "\\");
+			if (!p)
+			    p = user;
 			SEND2("AF %s", p);
 			} else {
 		    SEND2("AF %s", user);

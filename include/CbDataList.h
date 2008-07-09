@@ -38,48 +38,48 @@
 
 /// \ingroup POD
 template <class C>
-class List
+class CbDataList
 {
 
 public:
     void *operator new (size_t);
     void operator delete (void *);
-    List (C const &);
-    ~List();
+    CbDataList (C const &);
+    ~CbDataList();
 
     bool find(C const &)const;
     bool findAndTune(C const &);
-    List *next;
+    CbDataList *next;
     C element;
     bool empty() const { return this == NULL; }
 
 private:
-    CBDATA_CLASS(List);
+    CBDATA_CLASS(CbDataList);
 };
 
 /// \ingroup POD
 template<class C>
-class ListContainer
+class CbDataListContainer
 {
 
 public:
-    ListContainer();
-    ~ListContainer();
-    List<C> *push_back (C const &);
+    CbDataListContainer();
+    ~CbDataListContainer();
+    CbDataList<C> *push_back (C const &);
     C pop_front();
     bool empty() const;
 
-    List<C> *head;
+    CbDataList<C> *head;
 };
 
 /// \ingroup POD
 template<class C>
-class ListIterator
+class CbDataListIterator
 {
 public:
-    ListIterator(ListContainer<C> const &list) : next_entry(list.head) {}
+    CbDataListIterator(CbDataListContainer<C> const &list) : next_entry(list.head) {}
     const C & next() {
-	List<C> *entry = next_entry;
+	CbDataList<C> *entry = next_entry;
 	if (entry)
 	    next_entry = entry->next;
 	return entry->element;
@@ -89,40 +89,40 @@ public:
     }
 
 private:
-    List<C> *next_entry;
+    CbDataList<C> *next_entry;
 };
 
 /* implementation follows */
 
 /** \cond AUTODOCS-IGNORE */
 template <class C>
-cbdata_type List<C>::CBDATA_List = CBDATA_UNKNOWN;
+cbdata_type CbDataList<C>::CBDATA_CbDataList = CBDATA_UNKNOWN;
 /** \endcond */
 
 template <class C>
 void *
-List<C>::operator new (size_t byteCount)
+CbDataList<C>::operator new (size_t byteCount)
 {
-    CBDATA_INIT_TYPE(List);
+    CBDATA_INIT_TYPE(CbDataList);
 
-    List<C> *result = cbdataAlloc(List);
+    CbDataList<C> *result = cbdataAlloc(CbDataList);
 
     return result;
 }
 
 template <class C>
 void
-List<C>::operator delete (void *address)
+CbDataList<C>::operator delete (void *address)
 {
     cbdataFree(address);
 }
 
 template <class C>
-List<C>::List(C const &value) : next(NULL), element (value)
+CbDataList<C>::CbDataList(C const &value) : next(NULL), element (value)
 {}
 
 template <class C>
-List<C>::~List()
+CbDataList<C>::~CbDataList()
 {
     if (next)
         delete next;
@@ -130,9 +130,9 @@ List<C>::~List()
 
 template <class C>
 bool
-List<C>::find (C const &toFind) const
+CbDataList<C>::find (C const &toFind) const
 {
-    List<C> const *node = NULL;
+    CbDataList<C> const *node = NULL;
 
     for (node = this; node; node = node->next)
         if (node->element == toFind)
@@ -143,11 +143,11 @@ List<C>::find (C const &toFind) const
 
 template <class C>
 bool
-List<C>::findAndTune(C const & toFind)
+CbDataList<C>::findAndTune(C const & toFind)
 {
-    List<C> *prev = NULL;
+    CbDataList<C> *prev = NULL;
 
-    for (List<C> *node = this; node; node = node->
+    for (CbDataList<C> *node = this; node; node = node->
                                             next) {
         if (node->element == toFind) {
             if (prev != NULL) {
@@ -168,24 +168,24 @@ List<C>::findAndTune(C const & toFind)
 }
 
 template <class C>
-ListContainer<C>::ListContainer() : head (NULL)
+CbDataListContainer<C>::CbDataListContainer() : head (NULL)
 {}
 
 template <class C>
-ListContainer<C>::~ListContainer()
+CbDataListContainer<C>::~CbDataListContainer()
 {
     if (head)
         delete head;
 }
 
 template <class C>
-List<C> *
-ListContainer<C>::push_back (C const &element)
+CbDataList<C> *
+CbDataListContainer<C>::push_back (C const &element)
 {
-    List<C> *node = new List<C> (element);
+    CbDataList<C> *node = new CbDataList<C> (element);
 
     if (head) {
-        List<C> *tempNode = NULL;
+        CbDataList<C> *tempNode = NULL;
 
         for (tempNode = head; tempNode->next; tempNode = tempNode->next);
         tempNode->next = node;
@@ -197,11 +197,11 @@ ListContainer<C>::push_back (C const &element)
 
 template <class C>
 C
-ListContainer<C>::pop_front()
+CbDataListContainer<C>::pop_front()
 {
     if (head) {
         C result = head->element;
-        List<C> *node = head;
+        CbDataList<C> *node = head;
         head = head->next;
         node->next = NULL;
         delete node;
@@ -213,7 +213,7 @@ ListContainer<C>::pop_front()
 
 template <class C>
 bool
-ListContainer<C>::empty() const
+CbDataListContainer<C>::empty() const
 {
     return head == NULL;
 }

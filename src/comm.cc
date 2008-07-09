@@ -2509,13 +2509,13 @@ DeferredReadManager::~DeferredReadManager() {
 /* explicit instantiation required for some systems */
 
 /// \cond AUTODOCS-IGNORE
-template cbdata_type List<DeferredRead>::CBDATA_List;
+template cbdata_type CbDataList<DeferredRead>::CBDATA_CbDataList;
 /// \endcond
 
 void
 DeferredReadManager::delayRead(DeferredRead const &aRead) {
     debugs(5, 3, "Adding deferred read on FD " << aRead.theRead.fd);
-    List<DeferredRead> *temp = deferredReads.push_back(aRead);
+    CbDataList<DeferredRead> *temp = deferredReads.push_back(aRead);
     comm_add_close_handler (aRead.theRead.fd, CloseHandler, temp);
 }
 
@@ -2524,13 +2524,13 @@ DeferredReadManager::CloseHandler(int fd, void *thecbdata) {
     if (!cbdataReferenceValid (thecbdata))
         return;
 
-    List<DeferredRead> *temp = (List<DeferredRead> *)thecbdata;
+    CbDataList<DeferredRead> *temp = (CbDataList<DeferredRead> *)thecbdata;
 
     temp->element.markCancelled();
 }
 
 DeferredRead
-DeferredReadManager::popHead(ListContainer<DeferredRead> &deferredReads) {
+DeferredReadManager::popHead(CbDataListContainer<DeferredRead> &deferredReads) {
     assert (!deferredReads.empty());
 
     if (!deferredReads.head->element.cancelled)
@@ -2543,7 +2543,7 @@ DeferredReadManager::popHead(ListContainer<DeferredRead> &deferredReads) {
 
 void
 DeferredReadManager::kickReads(int const count) {
-    /* if we had List::size() we could consolidate this and flushReads */
+    /* if we had CbDataList::size() we could consolidate this and flushReads */
 
     if (count < 1) {
         flushReads();
@@ -2563,9 +2563,9 @@ DeferredReadManager::kickReads(int const count) {
 
 void
 DeferredReadManager::flushReads() {
-    ListContainer<DeferredRead> reads;
+    CbDataListContainer<DeferredRead> reads;
     reads = deferredReads;
-    deferredReads = ListContainer<DeferredRead>();
+    deferredReads = CbDataListContainer<DeferredRead>();
 
     while (!reads.empty()) {
         DeferredRead aRead = popHead(reads);

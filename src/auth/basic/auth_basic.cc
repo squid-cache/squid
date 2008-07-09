@@ -342,6 +342,8 @@ AuthBasicConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
         parse_time_t(&credentialsTTL);
     } else if (strcasecmp(param_str, "casesensitive") == 0) {
         parse_onoff(&casesensitive);
+    } else if (strcasecmp(param_str, "utf8") == 0) {
+        parse_onoff(&utf8);
     } else {
         debugs(29, DBG_CRITICAL, HERE << "unrecognised basic auth scheme parameter '" << param_str << "'");
     }
@@ -681,8 +683,15 @@ BasicUser::submitRequest(AuthUserRequest * auth_user_request, RH * handler, void
     r->handler = handler;
     r->data = cbdataReference(data);
     r->auth_user_request = auth_user_request;
-    xstrncpy(user, rfc1738_escape(username()), sizeof(user));
-    xstrncpy(pass, rfc1738_escape(passwd), sizeof(pass));
+    if (basicConfig.utf8) {
+	latin1_to_utf8(user, sizeof(user), username());
+	latin1_to_utf8(pass, sizeof(pass), passwd);
+	xstrncpy(user, rfc1738_escape(user), sizeof(user));
+	xstrncpy(pass, rfc1738_escape(pass), sizeof(pass));
+    } else {
+	xstrncpy(user, rfc1738_escape(username()), sizeof(user));
+	xstrncpy(pass, rfc1738_escape(passwd), sizeof(pass));
+    }
     snprintf(buf, sizeof(buf), "%s %s\n", user, pass);
     helperSubmit(basicauthenticators, buf, authenticateBasicHandleReply, r);
 }
