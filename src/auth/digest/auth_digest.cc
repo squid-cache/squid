@@ -949,6 +949,8 @@ AuthDigestConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
         parse_onoff(&CheckNonceCount);
     } else if (strcasecmp(param_str, "post_workaround") == 0) {
         parse_onoff(&PostWorkaround);
+    } else if (strcasecmp(param_str, "utf8") == 0) {
+        parse_onoff(&utf8);
     } else {
         debugs(29, 0, "unrecognised digest auth scheme parameter '" << param_str << "'");
     }
@@ -1364,7 +1366,13 @@ AuthDigestUserRequest::module_start(RH * handler, void *data)
     r->data = cbdataReference(data);
     r->auth_user_request = this;
     AUTHUSERREQUESTLOCK(r->auth_user_request, "r");
-    snprintf(buf, 8192, "\"%s\":\"%s\"\n", digest_user->username(), realm);
+    if (digestConfig.utf8) {
+	char user[1024];
+	latin1_to_utf8(user, sizeof(user), digest_user->username());
+	snprintf(buf, 8192, "\"%s\":\"%s\"\n", user, realm);
+    } else {
+	snprintf(buf, 8192, "\"%s\":\"%s\"\n", digest_user->username(), realm);
+    }
 
     helperSubmit(digestauthenticators, buf, authenticateDigestHandleReply, r);
 }

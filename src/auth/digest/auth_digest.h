@@ -164,6 +164,7 @@ public:
     int NonceStrictness;
     int CheckNonceCount;
     int PostWorkaround;
+    int utf8;
 };
 
 typedef class AuthDigestConfig auth_digest_config;

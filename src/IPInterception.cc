@@ -365,7 +365,7 @@ IPIntercept::NatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAdd
     if( !peer.IsIPv4() ) return -1;
 
     if (pffd < 0)
-        pffd = open("/dev/pf", O_RDWR);
+        pffd = open("/dev/pf", O_RDONLY);
 
     if (pffd < 0)
     {

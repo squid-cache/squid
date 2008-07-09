@@ -101,6 +101,9 @@ SQUIDCEXTERN char *rfc1738_escape_unescaped(const char *);
 SQUIDCEXTERN char *rfc1738_escape_part(const char *);
 SQUIDCEXTERN void rfc1738_unescape(char *);
 
+/* charset.c */
+SQUIDCEXTERN char *latin1_to_utf8(char *out, size_t size, const char *in);
+
 /* html.c */
 SQUIDCEXTERN char *html_quote(const char *);
 

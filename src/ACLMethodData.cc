@@ -64,15 +64,14 @@ ACLMethodData::match(HttpRequestMethod toFind)
 /* explicit instantiation required for some systems */
 
 /// \cond AUTODOCS-IGNORE
-template cbdata_type List<HttpRequestMethod>
-::CBDATA_List;
+template cbdata_type CbDataList<HttpRequestMethod>::CBDATA_CbDataList;
 /// \endcond
 
 wordlist *
 ACLMethodData::dump()
 {
     wordlist *W = NULL;
-    List<HttpRequestMethod> *data = values;
+    CbDataList<HttpRequestMethod> *data = values;
 
     while (data != NULL) {
         wordlistAdd(&W, RequestMethodStr(data->element));
@@ -85,12 +84,12 @@ ACLMethodData::dump()
 void
 ACLMethodData::parse()
 {
-    List<HttpRequestMethod> **Tail;
+    CbDataList<HttpRequestMethod> **Tail;
     char *t = NULL;
 
     for (Tail = &values; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
-        List<HttpRequestMethod> *q = new List<HttpRequestMethod> (HttpRequestMethod(t, NULL));
+        CbDataList<HttpRequestMethod> *q = new CbDataList<HttpRequestMethod> (HttpRequestMethod(t, NULL));
         *(Tail) = q;
         Tail = &q->next;
     }
