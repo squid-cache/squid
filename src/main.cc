@@ -985,7 +985,7 @@ mainInitialize(void)
 #endif
 #ifdef USE_KQUEUE
 
-        commKQueueRegisterWithCacheManager(*manager);
+        commKQueueRegisterWithCacheManager();
 #endif
 #ifdef USE_POLL
 

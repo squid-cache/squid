@@ -325,7 +325,7 @@ comm_quick_poll_required(void)
 }
 
 void
-commKQueueRegisterWithCacheManager(CacheManager & manager)
+commKQueueRegisterWithCacheManager(void)
 {
 }
 

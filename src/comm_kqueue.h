@@ -38,6 +38,6 @@
 
 class CacheManager;
 
-extern void commKQueueRegisterWithCacheManager(CacheManager & manager);
+extern void commKQueueRegisterWithCacheManager(void);
 
 #endif /* SQUID_COMM_KQUEUE_H */
