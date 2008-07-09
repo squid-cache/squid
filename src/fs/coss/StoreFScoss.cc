@@ -84,9 +84,9 @@ StoreFScoss::setup()
 }
 
 void
-StoreFScoss::registerWithCacheManager(CacheManager & manager)
+StoreFScoss::registerWithCacheManager()
 {
-    manager.registerAction("coss", "COSS Stats", Stats, 0, 1);
+    CacheManager::GetInstance()->registerAction("coss", "COSS Stats", Stats, 0, 1);
 }
 
 void

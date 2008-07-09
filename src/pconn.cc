@@ -340,11 +340,12 @@ PconnModule::GetInstance()
 }
 
 void
-PconnModule::registerWithCacheManager(CacheManager & manager)
+PconnModule::registerWithCacheManager(void)
 {
-    manager.registerAction("pconn",
-                           "Persistent Connection Utilization Histograms",
-                           DumpWrapper, 0, 1);
+    CacheManager::GetInstance()->
+        registerAction("pconn",
+                       "Persistent Connection Utilization Histograms",
+                       DumpWrapper, 0, 1);
 }
 
 void

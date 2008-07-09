@@ -114,7 +114,7 @@ public:
     /** prepare to handle requests */
     virtual void init(AuthConfig *) = 0;
     /** expose any/all statistics to a CacheManager */
-    virtual void registerWithCacheManager(CacheManager & manager);
+    virtual void registerWithCacheManager(void);
     /** parse config options */
     virtual void parse(AuthConfig *, int, char *) = 0;
     /** the http string id */

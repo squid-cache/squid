@@ -969,7 +969,7 @@ mainInitialize(void)
         /* register the modules in the cache manager menus */
         accessLogRegisterWithCacheManager();
         asnRegisterWithCacheManager();
-        authenticateRegisterWithCacheManager(&Config.authConfiguration, *manager);
+        authenticateRegisterWithCacheManager(&Config.authConfiguration);
 #if USE_CARP
 
         carpRegisterWithCacheManager(*manager);
@@ -1002,7 +1002,7 @@ mainInitialize(void)
         DelayPools::RegisterWithCacheManager(*manager);
 #endif
 
-        DiskIOModule::RegisterAllModulesWithCacheManager(*manager);
+        DiskIOModule::RegisterAllModulesWithCacheManager();
 #if USE_DNSSERVERS
 
         dnsRegisterWithCacheManager(*manager);
@@ -1021,7 +1021,7 @@ mainInitialize(void)
         ipcacheRegisterWithCacheManager(*manager);
         Mem::RegisterWithCacheManager(*manager);
         netdbRegisterWitHCacheManager(*manager);
-        PconnModule::GetInstance()->registerWithCacheManager(*manager);
+        PconnModule::GetInstance()->registerWithCacheManager();
         redirectRegisterWithCacheManager(*manager);
         refreshRegisterWithCacheManager(*manager);
         statRegisterWithCacheManager(*manager);
@@ -1031,7 +1031,7 @@ mainInitialize(void)
         storeLogRegisterWithCacheManager(*manager);
 #if DEBUGSTRINGS
 
-        StringRegistry::Instance().registerWithCacheManager(*manager);
+        StringRegistry::Instance().registerWithCacheManager();
 #endif
 
 #if	USE_XPROF_STATS

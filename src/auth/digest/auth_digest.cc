@@ -888,9 +888,10 @@ AuthDigestConfig::init(AuthConfig * scheme)
 }
 
 void
-AuthDigestConfig::registerWithCacheManager(CacheManager & manager)
+AuthDigestConfig::registerWithCacheManager(void)
 {
-    manager.registerAction("digestauthenticator",
+    CacheManager::GetInstance()->
+            registerAction("digestauthenticator",
                            "Digest User Authenticator Stats",
                            authenticateDigestStats, 0, 1);
 }

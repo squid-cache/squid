@@ -107,7 +107,7 @@ public:
     static void DumpWrapper(StoreEntry *e);
 
     PconnModule();
-    void registerWithCacheManager(CacheManager & manager);
+    void registerWithCacheManager(void);
 
     void add(PconnPool *);
 

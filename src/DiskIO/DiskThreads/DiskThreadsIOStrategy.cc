@@ -61,10 +61,11 @@ DiskThreadsIOStrategy::init(void)
 }
 
 void
-DiskThreadsIOStrategy::registerWithCacheManager(CacheManager & manager)
+DiskThreadsIOStrategy::registerWithCacheManager(void)
 {
-    manager.registerAction("squidaio_counts", "Async IO Function Counters",
-                           aioStats, 0, 1);
+    CacheManager::GetInstance()->
+        registerAction("squidaio_counts", "Async IO Function Counters",
+                       aioStats, 0, 1);
 }
 
 void

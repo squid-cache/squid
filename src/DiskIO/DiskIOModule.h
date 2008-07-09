@@ -47,7 +47,7 @@ class DiskIOModule
 {
 
 public:
-    static void RegisterAllModulesWithCacheManager(CacheManager & manager);
+    static void RegisterAllModulesWithCacheManager(void);
     static void SetupAllModules();
     static void ModuleAdd(DiskIOModule &);
     static void FreeAllModules();
@@ -63,7 +63,7 @@ public:
     virtual ~DiskIOModule(){}
 
     virtual void init() = 0;
-    virtual void registerWithCacheManager(CacheManager & manager);
+    virtual void registerWithCacheManager(void);
     virtual void shutdown() = 0;
     virtual DiskIOStrategy *createStrategy() = 0;
 

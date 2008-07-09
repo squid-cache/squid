@@ -58,7 +58,7 @@ public:
     virtual int callback();
     virtual void sync();
     virtual void init();
-    virtual void registerWithCacheManager(CacheManager & manager);
+    virtual void registerWithCacheManager(void);
     void done();
     /* Todo: add access limitations */
     bool initialised;

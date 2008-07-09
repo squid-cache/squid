@@ -254,9 +254,9 @@ ptrcmp(C const &lhs, C const &rhs)
 }
 
 void
-StringRegistry::registerWithCacheManager(CacheManager & manager)
+StringRegistry::registerWithCacheManager(void)
 {
-    manager.registerAction("strings",
+    CacheManager::GetInstance()->registerAction("strings",
                            "Strings in use in squid", Stat, 0, 1);
 }
 
