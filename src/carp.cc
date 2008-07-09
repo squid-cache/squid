@@ -153,9 +153,10 @@ carpInit(void)
 }
 
 void
-carpRegisterWithCacheManager(CacheManager & manager)
+carpRegisterWithCacheManager()
 {
-    manager.registerAction("carp", "CARP information", carpCachemgr, 0, 1);
+    CacheManager::GetInstance()->
+        registerAction("carp", "CARP information", carpCachemgr, 0, 1);
 }
 
 peer *

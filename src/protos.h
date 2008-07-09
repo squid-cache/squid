@@ -730,7 +730,7 @@ SQUIDCEXTERN int internalHostnameIs(const char *);
 
 #if USE_CARP
 SQUIDCEXTERN void carpInit(void);
-extern void carpRegisterWithCacheManager(CacheManager & manager);
+extern void carpRegisterWithCacheManager();
 SQUIDCEXTERN peer *carpSelectParent(HttpRequest *);
 #endif
 
