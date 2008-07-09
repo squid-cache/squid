@@ -144,7 +144,7 @@ extern void accessLogLog(AccessLogEntry *, ACLChecklist * checklist);
 extern void accessLogRotate(void);
 extern void accessLogClose(void);
 extern void accessLogInit(void);
-extern void accessLogRegisterWithCacheManager(CacheManager & manager);
+extern void accessLogRegisterWithCacheManager();
 extern void accessLogFreeMemory(AccessLogEntry * aLogEntry);
 extern const char *accessLogTime(time_t);
 extern int accessLogParseLogFormat(logformat_token ** fmt, char *def);
