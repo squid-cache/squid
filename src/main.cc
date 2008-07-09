@@ -967,8 +967,8 @@ mainInitialize(void)
 
         FwdState::initModule();
         /* register the modules in the cache manager menus */
-        accessLogRegisterWithCacheManager(*manager);
-        asnRegisterWithCacheManager(*manager);
+        accessLogRegisterWithCacheManager();
+        asnRegisterWithCacheManager();
         authenticateRegisterWithCacheManager(&Config.authConfiguration, *manager);
 #if USE_CARP
 

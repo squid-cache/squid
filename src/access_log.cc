@@ -105,7 +105,7 @@ static OBJH fvdbDumpVia;
 static OBJH fvdbDumpForw;
 static FREE fvdbFreeEntry;
 static void fvdbClear(void);
-static void fvdbRegisterWithCacheManager(CacheManager & manager);
+static void fvdbRegisterWithCacheManager();
 #endif
 
 static int LogfileStatus = LOG_DISABLE;
@@ -1611,11 +1611,11 @@ accessLogInit(void)
 }
 
 void
-accessLogRegisterWithCacheManager(CacheManager & manager)
+accessLogRegisterWithCacheManager()
 {
 #if FORW_VIA_DB
 
-    fvdbRegisterWithCacheManager(manager);
+    fvdbRegisterWithCacheManager();
 
 #endif
 }
@@ -1648,10 +1648,11 @@ fvdbInit(void)
 }
 
 static void
-fvdbRegisterWithCacheManager(CacheManager & manager)
+fvdbRegisterWithCacheManager()
 {
-    manager.registerAction("via_headers", "Via Request Headers", fvdbDumpVia, 0, 1);
-    manager.registerAction("forw_headers", "X-Forwarded-For Request Headers",
+    CacheManager *manager=CacheManager::GetInstance();
+    manager->registerAction("via_headers", "Via Request Headers", fvdbDumpVia, 0, 1);
+    manager->registerAction("forw_headers", "X-Forwarded-For Request Headers",
                            fvdbDumpForw, 0, 1);
 }
 

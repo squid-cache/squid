@@ -198,9 +198,9 @@ asnInit(void)
 }
 
 void
-asnRegisterWithCacheManager(CacheManager & manager)
+asnRegisterWithCacheManager()
 {
-    manager.registerAction("asndb", "AS Number Database", asnStats, 0, 1);
+    CacheManager::GetInstance()->registerAction("asndb", "AS Number Database", asnStats, 0, 1);
 }
 
 void
