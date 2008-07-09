@@ -618,11 +618,11 @@ fqdncache_init(void)
 
 /// \ingroup FQDNCacheAPI
 void
-fqdncacheRegisterWithCacheManager(CacheManager & manager)
+fqdncacheRegisterWithCacheManager(void)
 {
-    manager.registerAction("fqdncache",
-                           "FQDN Cache Stats and Contents",
-                           fqdnStats, 0, 1);
+    CacheManager::GetInstance()->
+        registerAction("fqdncache", "FQDN Cache Stats and Contents",
+                       fqdnStats, 0, 1);
 
 }
 

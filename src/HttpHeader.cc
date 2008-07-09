@@ -329,12 +329,12 @@ httpHeaderInitModule(void)
 }
 
 void
-httpHeaderRegisterWithCacheManager(CacheManager & manager)
+httpHeaderRegisterWithCacheManager(void)
 {
-    /* register with cache manager */
-    manager.registerAction("http_headers",
-                           "HTTP Header Statistics",
-                           httpHeaderStoreReport, 0, 1);
+    CacheManager::GetInstance()->
+        registerAction("http_headers",
+                       "HTTP Header Statistics",
+                       httpHeaderStoreReport, 0, 1);
 }
 
 void

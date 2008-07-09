@@ -92,6 +92,6 @@ protected:
 
 MEMPROXY_CLASS_INLINE(ACLExternal);
 
-extern void externalAclRegisterWithCacheManager(CacheManager & manager);
+extern void externalAclRegisterWithCacheManager(void);
 
 #endif /* SQUID_EXTERNALACL_H */

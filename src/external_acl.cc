@@ -1326,11 +1326,12 @@ externalAclInit(void)
 }
 
 void
-externalAclRegisterWithCacheManager(CacheManager & manager)
+externalAclRegisterWithCacheManager(void)
 {
-    manager.registerAction("external_acl",
-                           "External ACL stats",
-                           externalAclStats, 0, 1);
+    CacheManager::GetInstance()->
+        registerAction("external_acl",
+                       "External ACL stats",
+                       externalAclStats, 0, 1);
 }
 
 void

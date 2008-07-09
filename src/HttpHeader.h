@@ -269,7 +269,7 @@ private:
 };
 
 
-extern void httpHeaderRegisterWithCacheManager(CacheManager & manager);
+extern void httpHeaderRegisterWithCacheManager(void);
 extern int httpHeaderParseQuotedString (const char *start, String *val);
 SQUIDCEXTERN int httpHeaderHasByNameListMember(const HttpHeader * hdr, const char *name, const char *member, const char separator);
 SQUIDCEXTERN void httpHeaderUpdate(HttpHeader * old, const HttpHeader * fresh, const HttpHeaderMask * denied_mask);

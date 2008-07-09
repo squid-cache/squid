@@ -167,7 +167,7 @@ SQUIDCEXTERN void fqdncache_nbgethostbyaddr(IPAddress &, FQDNH *, void *);
 
 SQUIDCEXTERN const char *fqdncache_gethostbyaddr(IPAddress &, int flags);
 SQUIDCEXTERN void fqdncache_init(void);
-extern void fqdncacheRegisterWithCacheManager(CacheManager & manager);
+extern void fqdncacheRegisterWithCacheManager(void);
 SQUIDCEXTERN void fqdnStats(StoreEntry *);
 SQUIDCEXTERN void fqdncacheReleaseInvalid(const char *);
 
