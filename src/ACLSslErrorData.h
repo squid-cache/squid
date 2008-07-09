@@ -7,7 +7,7 @@
 #define SQUID_ACLSSL_ERRORDATA_H
 #include "ACL.h"
 #include "ACLData.h"
-#include "List.h"
+#include "CbDataList.h"
 #include "ssl_support.h"
 
 class ACLSslErrorData : public ACLData<ssl_error_t>
@@ -26,7 +26,7 @@ public:
     bool empty() const;
     virtual ACLData<ssl_error_t> *clone() const;
 
-    List<ssl_error_t> *values;
+    CbDataList<ssl_error_t> *values;
 };
 
 MEMPROXY_CLASS_INLINE(ACLSslErrorData);

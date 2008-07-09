@@ -63,14 +63,14 @@ ACLProtocolData::match(protocol_t toFind)
 /* explicit instantiation required for some systems */
 
 /// \cond AUTODOCS-IGNORE
-template cbdata_type List<protocol_t>::CBDATA_List;
+template cbdata_type CbDataList<protocol_t>::CBDATA_CbDataList;
 /// \endcond
 
 wordlist *
 ACLProtocolData::dump()
 {
     wordlist *W = NULL;
-    List<protocol_t> *data = values;
+    CbDataList<protocol_t> *data = values;
 
     while (data != NULL) {
         wordlistAdd(&W, ProtocolStr[data->element]);
@@ -83,12 +83,12 @@ ACLProtocolData::dump()
 void
 ACLProtocolData::parse()
 {
-    List<protocol_t> **Tail;
+    CbDataList<protocol_t> **Tail;
     char *t = NULL;
 
     for (Tail = &values; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
-        List<protocol_t> *q = new List<protocol_t> (urlParseProtocol(t));
+        CbDataList<protocol_t> *q = new CbDataList<protocol_t> (urlParseProtocol(t));
         *(Tail) = q;
         Tail = &q->next;
     }
