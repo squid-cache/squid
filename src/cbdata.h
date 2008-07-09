@@ -236,7 +236,7 @@ typedef enum {
 } cbdata_type;
 
 /// \ingroup CBDATAAPI
-extern void cbdataRegisterWithCacheManager();
+extern void cbdataRegisterWithCacheManager(void);
 
 #if CBDATA_DEBUG
 extern void *cbdataInternalAllocDbg(cbdata_type type, const char *, int);

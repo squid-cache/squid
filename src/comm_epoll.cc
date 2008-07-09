@@ -215,11 +215,12 @@ commResetSelect(int fd)
 static void commIncomingStats(StoreEntry * sentry);
 
 void
-commEPollRegisterWithCacheManager(CacheManager& manager)
+commEPollRegisterWithCacheManager(void)
 {
-    manager.registerAction("comm_epoll_incoming",
-                           "comm_incoming() stats",
-                           commIncomingStats, 0, 1);
+    CacheManager::GetInstance()->
+        registerAction("comm_epoll_incoming",
+                       "comm_incoming() stats",
+                        commIncomingStats, 0, 1);
 }
 
 static void

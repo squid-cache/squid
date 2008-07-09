@@ -981,7 +981,7 @@ mainInitialize(void)
          */
 #ifdef USE_EPOLL
 
-        commEPollRegisterWithCacheManager(*manager);
+        commEPollRegisterWithCacheManager();
 #endif
 #ifdef USE_KQUEUE
 

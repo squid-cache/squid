@@ -38,6 +38,6 @@
 
 class CacheManager;
 
-extern void commEPollRegisterWithCacheManager(CacheManager & manager);
+extern void commEPollRegisterWithCacheManager(void);
 
 #endif /* SQUID_COMM_EPOLL_H */
