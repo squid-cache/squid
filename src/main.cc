@@ -972,7 +972,7 @@ mainInitialize(void)
         authenticateRegisterWithCacheManager(&Config.authConfiguration);
 #if USE_CARP
 
-        carpRegisterWithCacheManager(*manager);
+        carpRegisterWithCacheManager();
 #endif
 
         cbdataRegisterWithCacheManager(*manager);
