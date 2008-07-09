@@ -736,6 +736,12 @@
 /* Define if you have PSAPI.DLL on Windows systems */
 #undef HAVE_WIN32_PSAPI
 
+/* Define to 1 if you have the <winsock2.h> header file. */
+#undef HAVE_WINSOCK2_H
+
+/* Define to 1 if you have the <winsock.h> header file. */
+#undef HAVE_WINSOCK_H
+
 /* __int64 is defined in system headers */
 #undef HAVE___INT64
 
