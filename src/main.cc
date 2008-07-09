@@ -1008,11 +1008,11 @@ mainInitialize(void)
         dnsRegisterWithCacheManager();
 #endif
 
-        eventInit(*manager);
-        externalAclRegisterWithCacheManager(*manager);
-        fqdncacheRegisterWithCacheManager(*manager);
+        eventInit();
+        externalAclRegisterWithCacheManager();
+        fqdncacheRegisterWithCacheManager();
         FwdState::RegisterWithCacheManager(*manager);
-        httpHeaderRegisterWithCacheManager(*manager);
+        httpHeaderRegisterWithCacheManager();
 #if !USE_DNSSERVERS
 
         idnsRegisterWithCacheManager();
