@@ -550,25 +550,18 @@ neighbors_init(void)
 }
 
 void
-neighborsRegisterWithCacheManager(CacheManager & manager)
+neighborsRegisterWithCacheManager()
 {
-    manager.registerAction("server_list",
+    CacheManager *manager = CacheManager::GetInstance();
+    manager->registerAction("server_list",
                            "Peer Cache Statistics",
                            neighborDumpPeers, 0, 1);
 
     if (theInIcpConnection >= 0) {
-        manager.registerAction("non_peers",
+        manager->registerAction("non_peers",
                                "List of Unknown sites sending ICP messages",
                                neighborDumpNonPeers, 0, 1);
     }
-
-    /* XXX FIXME: unregister if we were registered. Something like:
-     * else {
-     *   CacheManagerAction * action = manager.findAction("non_peers");
-     *   if (action != NULL)
-     *       manager.unregisterAction(action);
-     *  }
-     */
 }
 
 int

@@ -731,7 +731,7 @@ mainReconfigure(void)
     serverConnectionsOpen();
 
     neighbors_init();
-    neighborsRegisterWithCacheManager(*manager);
+    neighborsRegisterWithCacheManager();
 
     storeDirOpenSwapLogs();
 
@@ -1055,7 +1055,7 @@ mainInitialize(void)
 
     neighbors_init();
 
-    neighborsRegisterWithCacheManager(*manager);
+    neighborsRegisterWithCacheManager();
 
     if (Config.chroot_dir)
         no_suid();
