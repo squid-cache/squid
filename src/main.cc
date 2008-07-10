@@ -1027,8 +1027,8 @@ mainInitialize(void)
         statRegisterWithCacheManager();
         storeDigestRegisterWithCacheManager();
         StoreFileSystem::RegisterAllFsWithCacheManager(*manager);
-        storeRegisterWithCacheManager(*manager);
-        storeLogRegisterWithCacheManager(*manager);
+        storeRegisterWithCacheManager();
+        storeLogRegisterWithCacheManager();
 #if DEBUGSTRINGS
 
         StringRegistry::Instance().registerWithCacheManager();
@@ -1036,7 +1036,7 @@ mainInitialize(void)
 
 #if	USE_XPROF_STATS
 
-        xprofRegisterWithCacheManager(*manager);
+        xprofRegisterWithCacheManager();
 #endif
 
     }
