@@ -117,7 +117,7 @@ class StoreFileSystem
 {
 
 public:
-    static void RegisterAllFsWithCacheManager(CacheManager & manager);
+    static void RegisterAllFsWithCacheManager(void);
     static void SetupAllFs();
     static void FsAdd(StoreFileSystem &);
     static void FreeAllFs();
