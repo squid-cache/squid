@@ -913,7 +913,7 @@ netdbInit(void)
 }
 
 void
-netdbRegisterWitHCacheManager(CacheManager & manager)
+netdbRegisterWitHCacheManager(void)
 {
 #if USE_ICMP
     manager.registerAction("netdb",

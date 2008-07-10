@@ -599,11 +599,8 @@ refreshInit(void)
 }
 
 void
-refreshRegisterWithCacheManager(CacheManager & manager)
+refreshRegisterWithCacheManager(void)
 {
-    manager.registerAction("refresh",
-                           "Refresh Algorithm Statistics",
-                           refreshStats,
-                           0,
-                           1);
+    CacheManager::GetInstance()->
+        registerAction("refresh", "Refresh Algorithm Statistics", refreshStats, 0, 1);
 }

@@ -810,11 +810,12 @@ ipcache_init(void)
 
 /// \ingroup IPCacheAPI
 void
-ipcacheRegisterWithCacheManager(CacheManager & manager)
+ipcacheRegisterWithCacheManager(void)
 {
-    manager.registerAction("ipcache",
-                           "IP Cache Stats and Contents",
-                           stat_ipcache_get, 0, 1);
+    CacheManager::GetInstance()->
+        registerAction("ipcache",
+                       "IP Cache Stats and Contents",
+                       stat_ipcache_get, 0, 1);
 }
 
 /**

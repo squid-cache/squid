@@ -1018,14 +1018,14 @@ mainInitialize(void)
         idnsRegisterWithCacheManager();
 #endif
 
-        ipcacheRegisterWithCacheManager(*manager);
+        ipcacheRegisterWithCacheManager();
         Mem::RegisterWithCacheManager(*manager);
-        netdbRegisterWitHCacheManager(*manager);
+        netdbRegisterWitHCacheManager();
         PconnModule::GetInstance()->registerWithCacheManager();
-        redirectRegisterWithCacheManager(*manager);
-        refreshRegisterWithCacheManager(*manager);
-        statRegisterWithCacheManager(*manager);
-        storeDigestRegisterWithCacheManager(*manager);
+        redirectRegisterWithCacheManager();
+        refreshRegisterWithCacheManager();
+        statRegisterWithCacheManager();
+        storeDigestRegisterWithCacheManager();
         StoreFileSystem::RegisterAllFsWithCacheManager(*manager);
         storeRegisterWithCacheManager(*manager);
         storeLogRegisterWithCacheManager(*manager);

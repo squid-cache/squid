@@ -342,7 +342,7 @@ SQUIDCEXTERN const ipcache_addrs *ipcache_gethostbyname(const char *, int flags)
 SQUIDCEXTERN void ipcacheInvalidate(const char *);
 SQUIDCEXTERN void ipcacheInvalidateNegative(const char *);
 SQUIDCEXTERN void ipcache_init(void);
-extern void ipcacheRegisterWithCacheManager(CacheManager & manager);
+extern void ipcacheRegisterWithCacheManager(void);
 SQUIDCEXTERN void stat_ipcache_get(StoreEntry *);
 SQUIDCEXTERN void ipcacheCycleAddr(const char *name, ipcache_addrs *);
 
@@ -415,7 +415,7 @@ SQUIDCEXTERN int peerHTTPOkay(const peer *, HttpRequest *);
 SQUIDCEXTERN peer *whichPeer(const IPAddress &from);
 
 SQUIDCEXTERN void netdbInit(void);
-extern void netdbRegisterWitHCacheManager(CacheManager & manager);
+extern void netdbRegisterWitHCacheManager(void);
 
 SQUIDCEXTERN void netdbHandlePingReply(const IPAddress &from, int hops, int rtt);
 SQUIDCEXTERN void netdbPingSite(const char *hostname);
@@ -453,7 +453,7 @@ unsigned long getOutgoingTOS(HttpRequest * request);
 SQUIDCEXTERN void urnStart(HttpRequest *, StoreEntry *);
 
 SQUIDCEXTERN void redirectInit(void);
-extern void redirectRegisterWithCacheManager(CacheManager & manager);
+extern void redirectRegisterWithCacheManager(void);
 SQUIDCEXTERN void redirectShutdown(void);
 
 extern void refreshAddToList(const char *, int, time_t, int, time_t);
@@ -464,7 +464,7 @@ extern int refreshCheckHTCP(const StoreEntry *, HttpRequest *);
 extern int refreshCheckDigest(const StoreEntry *, time_t delta);
 extern time_t getMaxAge(const char *url);
 extern void refreshInit(void);
-extern void refreshRegisterWithCacheManager(CacheManager & manager);
+extern void refreshRegisterWithCacheManager(void);
 extern const refresh_t *refreshLimits(const char *url);
 
 extern void serverConnectionsClose(void);
@@ -477,7 +477,7 @@ extern void start_announce(void *unused);
 extern void waisStart(FwdState *);
 
 SQUIDCEXTERN void statInit(void);
-extern void statRegisterWithCacheManager(CacheManager & manager);
+extern void statRegisterWithCacheManager(void);
 SQUIDCEXTERN void statFreeMemory(void);
 SQUIDCEXTERN double median_svc_get(int, int);
 SQUIDCEXTERN void pconnHistCount(int, int);
@@ -563,7 +563,7 @@ SQUIDCEXTERN HASHCMP storeKeyHashCmp;
  * store_digest.c
  */
 SQUIDCEXTERN void storeDigestInit(void);
-extern void storeDigestRegisterWithCacheManager(CacheManager & manager);
+extern void storeDigestRegisterWithCacheManager(void);
 SQUIDCEXTERN void storeDigestNoteStoreReady(void);
 SQUIDCEXTERN void storeDigestScheduleRebuild(void);
 SQUIDCEXTERN void storeDigestDel(const StoreEntry * entry);
