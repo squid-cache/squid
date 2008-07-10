@@ -25,7 +25,7 @@ public:
     typedef RefCount<FwdState> Pointer;
     ~FwdState();
     static void initModule();
-    static void RegisterWithCacheManager(CacheManager & manager);
+    static void RegisterWithCacheManager(void);
 
     static void fwdStart(int fd, StoreEntry *, HttpRequest *);
     void startComplete(FwdServer *);

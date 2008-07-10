@@ -48,7 +48,7 @@ class Mem
 public:
     static void Init();
     static void Report();
-    static void RegisterWithCacheManager(CacheManager & manager);
+    static void RegisterWithCacheManager(void);
     static void Stats(StoreEntry *);
     static void CleanIdlePools(void *unused);
     static void Report(std::ostream &);

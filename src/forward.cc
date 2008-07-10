@@ -1180,11 +1180,10 @@ FwdState::initModule()
 }
 
 void
-FwdState::RegisterWithCacheManager(CacheManager & manager)
+FwdState::RegisterWithCacheManager(void)
 {
-    manager.registerAction("forward",
-                           "Request Forwarding Statistics",
-                           fwdStats, 0, 1);
+    CacheManager::GetInstance()->
+         registerAction("forward", "Request Forwarding Statistics", fwdStats, 0, 1);
 }
 
 void
