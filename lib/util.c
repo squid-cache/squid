@@ -931,8 +931,9 @@ xint64toa(int64_t num)
 void
 default_failure_notify(const char *message)
 {
-    write(2, message, strlen(message));
-    write(2, "\n", 1);
+    ssize_t tmp;
+    tmp = write(2, message, strlen(message));
+    tmp = write(2, "\n", 1);
     abort();
 }
 
