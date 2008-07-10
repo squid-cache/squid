@@ -538,7 +538,7 @@ SQUIDCEXTERN void storeLog(int tag, const StoreEntry * e);
 SQUIDCEXTERN void storeLogRotate(void);
 SQUIDCEXTERN void storeLogClose(void);
 SQUIDCEXTERN void storeLogOpen(void);
-SQUIDCEXTERN void storeLogRegisterWithCacheManager(CacheManager &);
+SQUIDCEXTERN void storeLogRegisterWithCacheManager(void);
 
 
 /*

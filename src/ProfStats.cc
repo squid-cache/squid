@@ -278,9 +278,10 @@ xprof_Init(void)
 }
 
 void
-xprofRegisterWithCacheManager(CacheManager & manager)
+xprofRegisterWithCacheManager(void)
 {
-    manager.registerAction("cpu_profile", "CPU Profiling Stats", xprof_summary, 0, 1);
+    CacheManager::GetInstance()->
+         registerAction("cpu_profile", "CPU Profiling Stats", xprof_summary, 0, 1);
 }
 
 void
