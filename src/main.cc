@@ -999,7 +999,7 @@ mainInitialize(void)
         clientdbRegisterWithCacheManager();
 #if DELAY_POOLS
 
-        DelayPools::RegisterWithCacheManager(*manager);
+        DelayPools::RegisterWithCacheManager();
 #endif
 
         DiskIOModule::RegisterAllModulesWithCacheManager();
