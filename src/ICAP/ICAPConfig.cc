@@ -218,7 +218,7 @@ ICAPAccessCheck::ICAPAccessCheckCallbackWrapper(int answer, void *data)
         debugs(93, 5, "ICAPAccessCheckCallbackWrapper matchedClass = " << ac->matchedClass.buf());
     }
 
-    if (!answer) {
+    if (answer!=ACCESS_ALLOWED) {
         ac->checkCandidates();
         return;
     }
