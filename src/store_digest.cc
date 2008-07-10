@@ -131,10 +131,10 @@ storeDigestInit(void)
 }
 
 void
-storeDigestRegisterWithCacheManager(CacheManager & manager)
+storeDigestRegisterWithCacheManager(void)
 {
-    manager.registerAction("store_digest", "Store Digest",
-                           storeDigestReport, 0, 1);
+    CacheManager::GetInstance()->
+        registerAction("store_digest", "Store Digest", storeDigestReport, 0, 1);
 }
 
 /* called when store_rebuild completes */

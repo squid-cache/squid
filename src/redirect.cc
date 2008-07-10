@@ -204,11 +204,10 @@ redirectInit(void)
 }
 
 void
-redirectRegisterWithCacheManager(CacheManager & manager)
+redirectRegisterWithCacheManager(void)
 {
-    manager.registerAction("redirector",
-                           "URL Redirector Stats",
-                           redirectStats, 0, 1);
+    CacheManager::GetInstance()->
+        registerAction("redirector", "URL Redirector Stats", redirectStats, 0, 1);
 }
 
 void
