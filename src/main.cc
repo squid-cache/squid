@@ -35,7 +35,6 @@
 #include "squid.h"
 #include "AccessLogEntry.h"
 #include "authenticate.h"
-#include "CacheManager.h"
 #include "ConfigParser.h"
 #include "errorpage.h"
 #include "event.h"
@@ -135,8 +134,6 @@ static const char *squid_start_script = "squid_start";
 #if TEST_ACCESS
 #include "test_access.c"
 #endif
-
-static CacheManager *manager=CacheManager::GetInstance();
 
 /** temporary thunk across to the unrefactored store interface */
 
@@ -1026,7 +1023,7 @@ mainInitialize(void)
         refreshRegisterWithCacheManager();
         statRegisterWithCacheManager();
         storeDigestRegisterWithCacheManager();
-        StoreFileSystem::RegisterAllFsWithCacheManager(*manager);
+        StoreFileSystem::RegisterAllFsWithCacheManager();
         storeRegisterWithCacheManager();
         storeLogRegisterWithCacheManager();
 #if DEBUGSTRINGS

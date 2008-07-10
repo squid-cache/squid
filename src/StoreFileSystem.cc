@@ -40,7 +40,7 @@
 Vector<StoreFileSystem*> *StoreFileSystem::_FileSystems = NULL;
 
 void
-StoreFileSystem::RegisterAllFsWithCacheManager(CacheManager & manager)
+StoreFileSystem::RegisterAllFsWithCacheManager(void)
 {
     for (iterator i = GetFileSystems().begin(); i != GetFileSystems().end(); ++i)
         (*i)->registerWithCacheManager();
