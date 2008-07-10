@@ -440,10 +440,9 @@ Mem::Report()
 }
 
 void
-Mem::RegisterWithCacheManager(CacheManager & manager)
+Mem::RegisterWithCacheManager(void)
 {
-    manager.registerAction("mem",
-                           "Memory Utilization",
+    CacheManager::GetInstance()->registerAction("mem", "Memory Utilization",
                            Mem::Stats, 0, 1);
 }
 

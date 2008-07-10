@@ -128,8 +128,6 @@ static void SquidShutdown(void);
 static void mainSetCwd(void);
 static int checkRunningPid(void);
 
-static CacheManager *manager=CacheManager::GetInstance();
-
 #ifndef _SQUID_MSWIN_
 static const char *squid_start_script = "squid_start";
 #endif
@@ -137,6 +135,8 @@ static const char *squid_start_script = "squid_start";
 #if TEST_ACCESS
 #include "test_access.c"
 #endif
+
+static CacheManager *manager=CacheManager::GetInstance();
 
 /** temporary thunk across to the unrefactored store interface */
 
@@ -1011,7 +1011,7 @@ mainInitialize(void)
         eventInit();
         externalAclRegisterWithCacheManager();
         fqdncacheRegisterWithCacheManager();
-        FwdState::RegisterWithCacheManager(*manager);
+        FwdState::RegisterWithCacheManager();
         httpHeaderRegisterWithCacheManager();
 #if !USE_DNSSERVERS
 
@@ -1019,7 +1019,7 @@ mainInitialize(void)
 #endif
 
         ipcacheRegisterWithCacheManager();
-        Mem::RegisterWithCacheManager(*manager);
+        Mem::RegisterWithCacheManager();
         netdbRegisterWitHCacheManager();
         PconnModule::GetInstance()->registerWithCacheManager();
         redirectRegisterWithCacheManager();
