@@ -64,7 +64,7 @@ class DelayPools
 
 public:
     static void Init();
-    static void RegisterWithCacheManager(CacheManager & manager);
+    static void RegisterWithCacheManager(void);
     static void Update(void *);
     static unsigned short pools();
     static void pools (u_short pools);

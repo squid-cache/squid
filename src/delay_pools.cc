@@ -556,9 +556,10 @@ DelayPools::Init()
 }
 
 void
-DelayPools::RegisterWithCacheManager(CacheManager & manager)
+DelayPools::RegisterWithCacheManager(void)
 {
-    manager.registerAction("delay", "Delay Pool Levels", Stats, 0, 1);
+    CacheManager::GetInstance()->
+        registerAction("delay", "Delay Pool Levels", Stats, 0, 1);
 }
 
 void
