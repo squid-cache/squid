@@ -968,11 +968,7 @@ mainInitialize(void)
         accessLogRegisterWithCacheManager(manager);
         asnRegisterWithCacheManager(manager);
         authenticateRegisterWithCacheManager(&Config.authConfiguration, manager);
-#if USE_CARP
-
         carpRegisterWithCacheManager(manager);
-#endif
-
         cbdataRegisterWithCacheManager(manager);
         /* These use separate calls so that the comm loops can eventually
          * coexist.
