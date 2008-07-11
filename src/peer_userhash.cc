@@ -37,6 +37,8 @@
 #include "squid.h"
 #include "CacheManager.h"
 #include "Store.h"
+#include "HttpRequest.h"
+#include "AuthUserRequest.h"
 
 #define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> (32-(n))))
 
@@ -153,7 +155,7 @@ peerUserHashInit(void)
 void
 peerUserHashRegisterWithCacheManager(CacheManager & manager)
 {
-    manager.registerAction("userhash", "CARP information", peerUserHashCachemgr, 0, 1);
+    manager.registerAction("userhash", "peer userhash information", peerUserHashCachemgr, 0, 1);
 }
 
 peer *

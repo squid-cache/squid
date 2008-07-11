@@ -65,6 +65,8 @@ const char *hier_strings[] =
 #endif
         "CARP",
         "ANY_PARENT",
+	"USERHASH",
+	"SOURCEHASH",
         "INVALID CODE"
     };
 
