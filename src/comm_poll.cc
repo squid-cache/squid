@@ -603,7 +603,9 @@ comm_poll_dns_incoming(void)
 
 void
 comm_select_init(void)
-{}
+{
+    commPollRegisterWithCacheManager();
+}
 
 void
 commPollRegisterWithCacheManager(void)
