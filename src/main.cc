@@ -979,17 +979,16 @@ mainInitialize(void)
         //commEPollRegisterWithCacheManager(); //moved to comm_epoll::comm_select_init()
 #endif
 #ifdef USE_KQUEUE
-
-        // commKQueueRegisterWithCacheManager(); //moved to comm_kqueue::comm_select_init()
+        // commKQueueRegisterWithCacheManager(); //moved to comm_kqueue::comm_select_init
 #endif
 #ifdef USE_POLL
-        // commPollRegisterWithCacheManager(); //moved to comm_poll::comm_select_init
+        // commPollRegisterWithCacheManager(); //moved to comm_poll::comm_select_init()
 #endif
 #if defined(USE_SELECT) || defined(USE_SELECT_WIN32)
-        // commSelectRegisterWithCacheManager(); // moved to comm_select::comm_select_init
+        // commSelectRegisterWithCacheManager(); //moved to comm_select::comm_select_init
 #endif
 
-        clientdbRegisterWithCacheManager();
+        //clientdbRegisterWithCacheManager(); //moved to clientdbInit()
 #if DELAY_POOLS
 
         DelayPools::RegisterWithCacheManager();
