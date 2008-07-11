@@ -626,10 +626,8 @@ serverConnectionsOpen(void)
     asnInit();
     ACL::Initialize();
     peerSelectInit();
-#if USE_CARP
 
     carpInit();
-#endif
 }
 
 void

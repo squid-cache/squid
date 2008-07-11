@@ -356,18 +356,6 @@ AC_ARG_ENABLE(xmalloc-statistics,
   fi
 ])
 
-use_carp=1
-AC_ARG_ENABLE(carp,
-[  --disable-carp          Disable CARP support],
-[ if test "$enableval" = "no" ; then
-    echo "CARP disabled"
-    use_carp=0
-  fi
-])      
-if test $use_carp = 1; then
-    AC_DEFINE(USE_CARP, 1, [Cache Array Routing Protocol])
-fi
-
 AC_ARG_ENABLE(async-io,
 [  --enable-async-io[=N_THREADS]
                           Shorthand for

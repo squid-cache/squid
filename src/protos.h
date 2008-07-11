@@ -728,11 +728,9 @@ SQUIDCEXTERN char *internalRemoteUri(const char *, u_short, const char *, const 
 SQUIDCEXTERN const char *internalHostname(void);
 SQUIDCEXTERN int internalHostnameIs(const char *);
 
-#if USE_CARP
 SQUIDCEXTERN void carpInit(void);
 extern void carpRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN peer *carpSelectParent(HttpRequest *);
-#endif
 
 
 #if USE_LEAKFINDER
