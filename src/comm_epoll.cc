@@ -97,6 +97,8 @@ comm_select_init(void)
     if (kdpfd < 0) {
         fatalf("comm_select_init: epoll_create(): %s\n",xstrerror());
     }
+
+    commEPollRegisterWithCacheManager();
 }
 
 static const char* epolltype_atoi(int x)

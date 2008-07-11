@@ -72,6 +72,10 @@ carpInit(void)
 
     safe_free(carp_peers);
     n_carp_peers = 0;
+
+    /* initialize cache manager before we have a chance to leave the execution path */
+    carpRegisterWithCacheManager();
+
     /* find out which peers we have */
 
     for (p = Config.peers; p; p = p->next) {
