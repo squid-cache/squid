@@ -916,10 +916,8 @@ void
 netdbRegisterWitHCacheManager(void)
 {
 #if USE_ICMP
-    manager.registerAction("netdb",
-                           "Network Measurement Database",
-                           netdbDump, 0, 1);
-
+    CacheManager::GetInstance()->
+        registerAction("netdb", "Network Measurement Database", netdbDump, 0, 1);
 #endif
 }
 
