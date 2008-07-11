@@ -625,7 +625,9 @@ ConnStateData::close()
 bool
 ConnStateData::isOpen() const
 {
-    return cbdataReferenceValid(this);
+    return cbdataReferenceValid(this) && // XXX: checking "this" in a method
+        fd >= 0 &&
+        !fd_table[fd].closing();
 }
 
 ConnStateData::~ConnStateData()
@@ -2301,10 +2303,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         connNoteUseOfBuffer(conn, http->req_sz);
         notedUseOfBuffer = true;
 
-        conn->handleRequestBodyData();
-
-        if (!request->body_pipe->exhausted())
-            conn->readSomeData();
+        conn->handleRequestBodyData(); // may comm_close and stop producing
 
         /* Is it too large? */
 
@@ -2321,7 +2320,10 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
             goto finish;
         }
 
-        context->mayUseConnection(true);
+        if (!request->body_pipe->productionEnded())
+            conn->readSomeData();
+
+        context->mayUseConnection(!request->body_pipe->productionEnded());
     }
 
     http->calloutContext = new ClientRequestContext(http);
