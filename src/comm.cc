@@ -336,7 +336,10 @@ comm_read(int fd, char *buf, int size, AsyncCall::Pointer &callback)
 {
     /* Make sure we're not reading anything and we're not closing */
     assert(isOpen(fd));
-    assert(!fd_table[fd].flags.closing);
+    assert(!fd_table[fd].flags.closing_);
+    // XXX: If we already called commio_finish_callback, the new callback 
+    // we are setting here would apply to the next connection with the same FD.
+    assert(!fd_table[fd].flags.close_request); 
 
     debugs(5, 4, "comm_read, queueing read for FD " << fd);
 
@@ -1490,6 +1493,23 @@ CommRead::doCallback(comm_err_t errcode, int xerrno)
 }
 
 void 
+comm_close_start(int fd, void *data)
+{
+    fde *F = &fd_table[fd];
+
+    F->flags.closing_ = 1;
+
+#if USE_SSL
+
+    if (F->ssl)
+        ssl_shutdown_method(fd);
+
+#endif
+
+}
+
+
+void 
 comm_close_complete(int fd, void *data)
 {
 #if USE_SSL
@@ -1541,7 +1561,10 @@ _comm_close(int fd, char const *file, int line)
     fdd_table[fd].close_file = file;
     fdd_table[fd].close_line = line;
 
-    if (F->flags.closing)
+    if(F->flags.close_request)
+	return;
+
+    if (F->flags.closing_)
         return;
 
     if (shutting_down && (!F->flags.open || F->type == FD_FILE))
@@ -1556,14 +1579,14 @@ _comm_close(int fd, char const *file, int line)
 
     PROF_start(comm_close);
 
-    F->flags.closing = 1;
+    F->flags.close_request = 1;
 
-#if USE_SSL
-
-    if (F->ssl)
-        ssl_shutdown_method(fd);
-
-#endif
+    AsyncCall::Pointer startCall=commCbCall(5,4, "comm_close_start",
+					    CommCloseCbPtrFun(comm_close_start, NULL));
+    typedef CommCloseCbParams Params;
+    Params &startParams = GetCommParams<Params>(startCall);
+    startParams.fd = fd;
+    ScheduleCallHere(startCall);
 
     commSetTimeout(fd, -1, NULL, NULL);
 
@@ -1586,12 +1609,11 @@ _comm_close(int fd, char const *file, int line)
     comm_empty_os_read_buffers(fd);
     
 
-    AsyncCall::Pointer call=commCbCall(5,4, "comm_close_complete",
+    AsyncCall::Pointer completeCall=commCbCall(5,4, "comm_close_complete",
 				       CommCloseCbPtrFun(comm_close_complete, NULL));
-    typedef CommCloseCbParams Params;
-    Params &params = GetCommParams<Params>(call);
-    params.fd = fd;
-    ScheduleCallHere(call);
+    Params &completeParams = GetCommParams<Params>(completeCall);
+    completeParams.fd = fd;
+    ScheduleCallHere(completeCall);
 
     PROF_stop(comm_close);
 }
@@ -1995,7 +2017,7 @@ comm_write(int fd, const char *buf, int size, IOCB * handler, void *handler_data
 void
 comm_write(int fd, const char *buf, int size, AsyncCall::Pointer &callback, FREE * free_func)
 {
-    assert(!fd_table[fd].flags.closing);
+    assert(!fd_table[fd].flags.closing_);
 
     debugs(5, 5, "comm_write: FD " << fd << ": sz " << size << ": asynCall " << callback  << ".");
 
@@ -2167,7 +2189,6 @@ comm_listen(int sock) {
     return sock;
 }
 
-// AcceptFD::callback() wrapper
 void
 comm_accept(int fd, IOACB *handler, void *handler_data) {
     debugs(5, 5, "comm_accept: FD " << fd << " handler: " << (void*)handler);
@@ -2234,7 +2255,7 @@ AcceptFD::acceptOne() {
 
         if (newfd == COMM_NOMESSAGE) {
             /* register interest again */
-            debugs(5, 5, "AcceptFD::acceptOne eof: FD " << fd <<
+            debugs(5, 5, HERE << "try later: FD " << fd <<
                 " handler: " << *theCallback);
             commSetSelect(fd, COMM_SELECT_READ, comm_accept_try, NULL, 0);
             return false;
@@ -2287,7 +2308,7 @@ comm_accept_try(int fd, void *) {
 void CommIO::Initialise() {
     /* Initialize done pipe signal */
     int DonePipe[2];
-    pipe(DonePipe);
+    (void)pipe(DonePipe);
     DoneFD = DonePipe[1];
     DoneReadFD = DonePipe[0];
     fd_open(DoneReadFD, FD_PIPE, "async-io completetion event: main");
