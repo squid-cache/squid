@@ -2,9 +2,9 @@
 /*
  * $Id: carp.cc,v 1.27 2008/01/14 12:13:49 hno Exp $
  *
- * DEBUG: section 39    Cache Array Routing Protocol
+ * DEBUG: section 39    Peer user hash based selection
  * AUTHOR: Henrik Nordstrom
- * BASED ON: carp.c by Eric Stern and draft-vinod-carp-v1-03.txt
+ * BASED ON: carp.cc
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -172,7 +172,11 @@ carpSelectParent(HttpRequest * request)
     if (n_carp_peers == 0)
         return NULL;
 
-    key = urlCanonical(request);
+    if (request->auth_user_request)
+	key = request->auth_user_request->username();
+
+    if (!key)
+	return NULL;
 
     /* calculate hash key */
     debugs(39, 2, "carpSelectParent: Calculating hash for " << key);
