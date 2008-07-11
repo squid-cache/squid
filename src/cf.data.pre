@@ -1571,6 +1571,8 @@ DOC_START
 		     round-robin
 		     weighted-round-robin
 		     carp
+		     userhash
+		     sourcehash
 		     multicast-responder
 		     closest-only
 		     no-digest
@@ -1644,6 +1646,12 @@ DOC_START
 		     be used as a CARP array. The requests will be
 		     distributed among the parents based on the CARP load
 		     balancing hash function based on their weight.
+
+                     use 'userhash' to load-balance amongst a set of parents
+                     based on the client proxy_auth or ident username.
+
+                     use 'sourcehash' to load-balance amongst a set of parents
+                     based on the client source ip.
 
 		     'multicast-responder' indicates the named peer
 		     is a member of a multicast group.  ICP queries will

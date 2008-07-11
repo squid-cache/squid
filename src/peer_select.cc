@@ -503,6 +503,10 @@ peerGetSomeParent(ps_state * ps)
 
     if ((p = getDefaultParent(request))) {
         code = DEFAULT_PARENT;
+    } else if ((p = peerUserHashSelectParent(request))) {
+        code = USERHASH_PARENT;
+    } else if ((p = peerSourceHashSelectParent(request))) {
+        code = SOURCEHASH_PARENT;
     } else if ((p = carpSelectParent(request))) {
         code = CARP;
     } else if ((p = getRoundRobinParent(request))) {
