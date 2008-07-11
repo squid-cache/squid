@@ -628,6 +628,8 @@ serverConnectionsOpen(void)
     peerSelectInit();
 
     carpInit();
+    peerUserHashInit();
+    peerSourceHashInit();
 }
 
 void
@@ -969,6 +971,8 @@ mainInitialize(void)
         asnRegisterWithCacheManager(manager);
         authenticateRegisterWithCacheManager(&Config.authConfiguration, manager);
         carpRegisterWithCacheManager(manager);
+	peerUserHashRegisterWithCacheManager(manager);
+	peerSourceHashRegisterWithCacheManager(manager);
         cbdataRegisterWithCacheManager(manager);
         /* These use separate calls so that the comm loops can eventually
          * coexist.

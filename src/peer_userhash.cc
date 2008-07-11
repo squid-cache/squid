@@ -40,9 +40,9 @@
 
 #define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> (32-(n))))
 
-static int n_carp_peers = 0;
-static peer **carp_peers = NULL;
-static OBJH carpCachemgr;
+static int n_userhash_peers = 0;
+static peer **userhash_peers = NULL;
+static OBJH peerUserHashCachemgr;
 
 static int
 peerSortWeight(const void *a, const void *b)
@@ -53,7 +53,7 @@ peerSortWeight(const void *a, const void *b)
 }
 
 void
-carpInit(void)
+peerUserHashInit(void)
 {
     int W = 0;
     int K;
@@ -64,16 +64,16 @@ carpInit(void)
     char *t;
     /* Clean up */
 
-    for (k = 0; k < n_carp_peers; k++) {
-        cbdataReferenceDone(carp_peers[k]);
+    for (k = 0; k < n_userhash_peers; k++) {
+        cbdataReferenceDone(userhash_peers[k]);
     }
 
-    safe_free(carp_peers);
-    n_carp_peers = 0;
+    safe_free(userhash_peers);
+    n_userhash_peers = 0;
     /* find out which peers we have */
 
     for (p = Config.peers; p; p = p->next) {
-        if (!p->options.carp)
+        if (!p->options.userhash)
             continue;
 
         assert(p->type == PEER_PARENT);
@@ -81,46 +81,46 @@ carpInit(void)
         if (p->weight == 0)
             continue;
 
-        n_carp_peers++;
+        n_userhash_peers++;
 
         W += p->weight;
     }
 
-    if (n_carp_peers == 0)
+    if (n_userhash_peers == 0)
         return;
 
-    carp_peers = (peer **)xcalloc(n_carp_peers, sizeof(*carp_peers));
+    userhash_peers = (peer **)xcalloc(n_userhash_peers, sizeof(*userhash_peers));
 
     /* Build a list of the found peers and calculate hashes and load factors */
-    for (P = carp_peers, p = Config.peers; p; p = p->next) {
-        if (!p->options.carp)
+    for (P = userhash_peers, p = Config.peers; p; p = p->next) {
+        if (!p->options.userhash)
             continue;
 
         if (p->weight == 0)
             continue;
 
         /* calculate this peers hash */
-        p->carp.hash = 0;
+        p->userhash.hash = 0;
 
         for (t = p->name; *t != 0; t++)
-            p->carp.hash += ROTATE_LEFT(p->carp.hash, 19) + (unsigned int) *t;
+            p->userhash.hash += ROTATE_LEFT(p->userhash.hash, 19) + (unsigned int) *t;
 
-        p->carp.hash += p->carp.hash * 0x62531965;
+        p->userhash.hash += p->userhash.hash * 0x62531965;
 
-        p->carp.hash = ROTATE_LEFT(p->carp.hash, 21);
+        p->userhash.hash = ROTATE_LEFT(p->userhash.hash, 21);
 
         /* and load factor */
-        p->carp.load_factor = ((double) p->weight) / (double) W;
+        p->userhash.load_factor = ((double) p->weight) / (double) W;
 
-        if (floor(p->carp.load_factor * 1000.0) == 0.0)
-            p->carp.load_factor = 0.0;
+        if (floor(p->userhash.load_factor * 1000.0) == 0.0)
+            p->userhash.load_factor = 0.0;
 
         /* add it to our list of peers */
         *P++ = cbdataReference(p);
     }
 
     /* Sort our list on weight */
-    qsort(carp_peers, n_carp_peers, sizeof(*carp_peers), peerSortWeight);
+    qsort(userhash_peers, n_userhash_peers, sizeof(*userhash_peers), peerSortWeight);
 
     /* Calculate the load factor multipliers X_k
      *
@@ -130,7 +130,7 @@ carpInit(void)
      * X_k = pow (X_k, {1/(K-k+1)})
      * simplified to have X_1 part of the loop
      */
-    K = n_carp_peers;
+    K = n_userhash_peers;
 
     P_last = 0.0;		/* Empty P_0 */
 
@@ -140,24 +140,24 @@ carpInit(void)
 
     for (k = 1; k <= K; k++) {
         double Kk1 = (double) (K - k + 1);
-        p = carp_peers[k - 1];
-        p->carp.load_multiplier = (Kk1 * (p->carp.load_factor - P_last)) / Xn;
-        p->carp.load_multiplier += pow(X_last, Kk1);
-        p->carp.load_multiplier = pow(p->carp.load_multiplier, 1.0 / Kk1);
-        Xn *= p->carp.load_multiplier;
-        X_last = p->carp.load_multiplier;
-        P_last = p->carp.load_factor;
+        p = userhash_peers[k - 1];
+        p->userhash.load_multiplier = (Kk1 * (p->userhash.load_factor - P_last)) / Xn;
+        p->userhash.load_multiplier += pow(X_last, Kk1);
+        p->userhash.load_multiplier = pow(p->userhash.load_multiplier, 1.0 / Kk1);
+        Xn *= p->userhash.load_multiplier;
+        X_last = p->userhash.load_multiplier;
+        P_last = p->userhash.load_factor;
     }
 }
 
 void
-carpRegisterWithCacheManager(CacheManager & manager)
+peerUserHashRegisterWithCacheManager(CacheManager & manager)
 {
-    manager.registerAction("carp", "CARP information", carpCachemgr, 0, 1);
+    manager.registerAction("userhash", "CARP information", peerUserHashCachemgr, 0, 1);
 }
 
 peer *
-carpSelectParent(HttpRequest * request)
+peerUserHashSelectParent(HttpRequest * request)
 {
     int k;
     const char *c;
@@ -169,7 +169,7 @@ carpSelectParent(HttpRequest * request)
     double high_score = 0;
     const char *key = NULL;
 
-    if (n_carp_peers == 0)
+    if (n_userhash_peers == 0)
         return NULL;
 
     if (request->auth_user_request)
@@ -179,19 +179,19 @@ carpSelectParent(HttpRequest * request)
 	return NULL;
 
     /* calculate hash key */
-    debugs(39, 2, "carpSelectParent: Calculating hash for " << key);
+    debugs(39, 2, "peerUserHashSelectParent: Calculating hash for " << key);
 
     for (c = key; *c != 0; c++)
         user_hash += ROTATE_LEFT(user_hash, 19) + *c;
 
     /* select peer */
-    for (k = 0; k < n_carp_peers; k++) {
-        tp = carp_peers[k];
-        combined_hash = (user_hash ^ tp->carp.hash);
+    for (k = 0; k < n_userhash_peers; k++) {
+        tp = userhash_peers[k];
+        combined_hash = (user_hash ^ tp->userhash.hash);
         combined_hash += combined_hash * 0x62531965;
         combined_hash = ROTATE_LEFT(combined_hash, 21);
-        score = combined_hash * tp->carp.load_multiplier;
-        debugs(39, 3, "carpSelectParent: " << tp->name << " combined_hash " << combined_hash  << 
+        score = combined_hash * tp->userhash.load_multiplier;
+        debugs(39, 3, "peerUserHashSelectParent: " << tp->name << " combined_hash " << combined_hash  << 
                " score " << std::setprecision(0) << score);
 
         if ((score > high_score) && peerHTTPOkay(tp, request)) {
@@ -201,13 +201,13 @@ carpSelectParent(HttpRequest * request)
     }
 
     if (p)
-        debugs(39, 2, "carpSelectParent: selected " << p->name);
+        debugs(39, 2, "peerUserHashSelectParent: selected " << p->name);
 
     return p;
 }
 
 static void
-carpCachemgr(StoreEntry * sentry)
+peerUserHashCachemgr(StoreEntry * sentry)
 {
     peer *p;
     int sumfetches = 0;
@@ -223,9 +223,9 @@ carpCachemgr(StoreEntry * sentry)
 
     for (p = Config.peers; p; p = p->next) {
         storeAppendPrintf(sentry, "%24s %10x %10f %10f %10f\n",
-                          p->name, p->carp.hash,
-                          p->carp.load_multiplier,
-                          p->carp.load_factor,
+                          p->name, p->userhash.hash,
+                          p->userhash.load_multiplier,
+                          p->userhash.load_factor,
                           sumfetches ? (double) p->stats.fetches / sumfetches : -1.0);
     }
 }
