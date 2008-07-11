@@ -980,15 +980,13 @@ mainInitialize(void)
 #endif
 #ifdef USE_KQUEUE
 
-        commKQueueRegisterWithCacheManager();
+        // commKQueueRegisterWithCacheManager(); //moved to comm_kqueue::comm_select_init()
 #endif
 #ifdef USE_POLL
-
-        commPollRegisterWithCacheManager();
+        // commPollRegisterWithCacheManager(); //moved to comm_poll::comm_select_init
 #endif
 #if defined(USE_SELECT) || defined(USE_SELECT_WIN32)
-
-        commSelectRegisterWithCacheManager();
+        // commSelectRegisterWithCacheManager(); // moved to comm_select::comm_select_init
 #endif
 
         clientdbRegisterWithCacheManager();
