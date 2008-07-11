@@ -894,6 +894,8 @@ netdbInit(void)
 #if USE_ICMP
     int n;
 
+    netdbRegisterWitHCacheManager();
+
     if (addr_table)
         return;
 

@@ -1026,6 +1026,8 @@ statInit(void)
     ClientActiveRequests.head = NULL;
 
     ClientActiveRequests.tail = NULL;
+
+    statRegisterWithCacheManager();
 }
 
 void

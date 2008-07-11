@@ -806,6 +806,8 @@ ipcache_init(void)
     n = hashPrime(ipcache_high / 4);
     ip_table = hash_create((HASHCMP *) strcmp, n, hash4);
     memDataInit(MEM_IPCACHE_ENTRY, "ipcache_entry", sizeof(ipcache_entry), 0);
+
+    ipcacheRegisterWithCacheManager();
 }
 
 /// \ingroup IPCacheAPI

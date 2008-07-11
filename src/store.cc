@@ -1397,6 +1397,8 @@ storeInit(void)
     eventAdd("storeLateRelease", storeLateRelease, NULL, 1.0, 1);
     Store::Root().init();
     storeRebuildStart();
+
+    storeRegisterWithCacheManager();
 }
 
 void

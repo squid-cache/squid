@@ -181,6 +181,8 @@ redirectInit(void)
 {
     static int init = 0;
 
+    redirectRegisterWithCacheManager();
+
     if (!Config.Program.redirect)
         return;
 

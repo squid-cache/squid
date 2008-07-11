@@ -1010,25 +1010,24 @@ mainInitialize(void)
         idnsRegisterWithCacheManager();
 #endif
 
-        ipcacheRegisterWithCacheManager();
+        // ipcacheRegisterWithCacheManager(); //moved to ipcache_init()
         Mem::RegisterWithCacheManager();
-        netdbRegisterWitHCacheManager();
+        // netdbRegisterWitHCacheManager(); //moved to netdbInit()
         PconnModule::GetInstance()->registerWithCacheManager();
-        redirectRegisterWithCacheManager();
-        refreshRegisterWithCacheManager();
-        statRegisterWithCacheManager();
-        storeDigestRegisterWithCacheManager();
+        // redirectRegisterWithCacheManager(); //moved to redirectInit()
+        // refreshRegisterWithCacheManager(); //moved to refreshInit()
+        // statRegisterWithCacheManager(); //moved to statInit()
+        // storeDigestRegisterWithCacheManager(); //moved to storeDigestInit()
         StoreFileSystem::RegisterAllFsWithCacheManager();
-        storeRegisterWithCacheManager();
+        // storeRegisterWithCacheManager(); //moved to storeInit()
         storeLogRegisterWithCacheManager();
 #if DEBUGSTRINGS
 
         StringRegistry::Instance().registerWithCacheManager();
 #endif
 
-#if	USE_XPROF_STATS
-
-        xprofRegisterWithCacheManager();
+#if USE_XPROF_STATS
+        // xprofRegisterWithCacheManager(); //moved to xprof_init()
 #endif
 
     }
