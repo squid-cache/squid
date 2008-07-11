@@ -123,7 +123,7 @@ Adaptation::AccessCheck::AccessCheckCallbackWrapper(int answer, void *data)
 {
     debugs(93, 8, "AccessCheckCallbackWrapper: answer=" << answer);
     AccessCheck *ac = (AccessCheck*)data;
-    ac->noteAnswer(answer);
+    ac->noteAnswer(answer==ACCESS_ALLOWED);
 }
 
 void
