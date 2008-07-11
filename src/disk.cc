@@ -133,7 +133,7 @@ file_close(int fd)
      */
     assert(F->write_handler == NULL);
 
-    F->flags.closing = 1;
+    F->flags.closing_ = 1;
 
 #if CALL_FSYNC_BEFORE_CLOSE
 
