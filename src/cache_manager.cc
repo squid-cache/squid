@@ -41,6 +41,7 @@
 #include "fde.h"
 #include "SquidTime.h"
 #include "wordlist.h"
+#include "Debug.h"
 
 /**
  \defgroup CacheManagerInternal Cache Manager Internals
@@ -154,13 +155,13 @@ CacheManager::ParseUrl(const char *url)
 #endif
 
     } else if ((a = findAction(request)) == NULL) {
-        debugs(16, 1, "CacheManager::ParseUrl: action '" << request << "' not found");
+        debugs(16, DBG_IMPORTANT, "CacheManager::ParseUrl: action '" << request << "' not found");
         return NULL;
     } else {
         prot = ActionProtection(a);
 
         if (!strcmp(prot, "disabled") || !strcmp(prot, "hidden")) {
-            debugs(16, 1, "CacheManager::ParseUrl: action '" << request << "' is " << prot);
+            debugs(16, DBG_IMPORTANT, "CacheManager::ParseUrl: action '" << request << "' is " << prot);
             return NULL;
         }
     }
@@ -195,7 +196,7 @@ CacheManager::ParseHeaders(cachemgrStateData * mgr, const HttpRequest * request)
         return;
 
     if (!(passwd_del = strchr(basic_cookie, ':'))) {
-        debugs(16, 1, "CacheManager::ParseHeaders: unknown basic_cookie format '" << basic_cookie << "'");
+        debugs(16, DBG_IMPORTANT, "CacheManager::ParseHeaders: unknown basic_cookie format '" << basic_cookie << "'");
         return;
     }
 
@@ -283,7 +284,7 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
     entry->lock();
     entry->expires = squid_curtime;
 
-    debugs(16, 5, "CACHEMGR: " << fd_table[fd].ipaddr << " requesting '" << mgr->action << "'");
+    debugs(16, 5, "CacheManager: " << fd_table[fd].ipaddr << " requesting '" << mgr->action << "'");
 
     /* get additional info from request headers */
     ParseHeaders(mgr, request);
@@ -298,12 +299,12 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
         /* warn if user specified incorrect password */
 
         if (mgr->passwd)
-            debugs(16, 1, "CACHEMGR: " << 
+            debugs(16, DBG_IMPORTANT, "CacheManager: " << 
                    (mgr->user_name ? mgr->user_name : "<unknown>") << "@" << 
                    fd_table[fd].ipaddr << ": incorrect password for '" << 
                    mgr->action << "'" );
         else
-            debugs(16, 1, "CACHEMGR: " << 
+            debugs(16, DBG_IMPORTANT, "CacheManager: " << 
                    (mgr->user_name ? mgr->user_name : "<unknown>") << "@" << 
                    fd_table[fd].ipaddr << ": password needed for '" << 
                    mgr->action << "'" );
@@ -330,7 +331,7 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
         return;
     }
 
-    debugs(16, 1, "CACHEMGR: " << 
+    debugs(16, DBG_IMPORTANT, "CacheManager: " << 
            (mgr->user_name ? mgr->user_name : "<unknown>") << "@" << 
            fd_table[fd].ipaddr << " requesting '" << 
            mgr->action << "'" );
@@ -366,7 +367,7 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
 /// \ingroup CacheManagerInternal
 void CacheManager::ShutdownAction::run(StoreEntry *sentry)
 {
-    debugs(16, 0, "Shutdown by command.");
+    debugs(16, DBG_CRITICAL, "Shutdown by Cache Manager command.");
     shut_down(0);
 }
 /// \ingroup CacheManagerInternal
@@ -376,7 +377,7 @@ CacheManager::ShutdownAction::ShutdownAction() : CacheManagerAction("shutdown","
 void
 CacheManager::ReconfigureAction::run(StoreEntry * sentry)
 {
-    debug(16, 0) ("Reconfigure by command.\n");
+    debug(16, DBG_IMPORTANT) ("Reconfigure by Cache Manager command.\n");
     storeAppendPrintf(sentry, "Reconfiguring Squid Process ....");
     reconfigure(SIGHUP);
 }
@@ -388,7 +389,7 @@ void
 CacheManager::OfflineToggleAction::run(StoreEntry * sentry)
 {
     Config.onoff.offline = !Config.onoff.offline;
-    debugs(16, 0, "offline_mode now " << (Config.onoff.offline ? "ON" : "OFF") << ".");
+    debugs(16, DBG_IMPORTANT, "offline_mode now " << (Config.onoff.offline ? "ON" : "OFF") << " by Cache Manager request.");
 
     storeAppendPrintf(sentry, "offline_mode is now %s\n",
                       Config.onoff.offline ? "ON" : "OFF");
