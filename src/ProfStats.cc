@@ -269,6 +269,8 @@ static hrtime_t now;
 static void
 xprof_Init(void)
 {
+    xprofRegisterWithCacheManager();
+
     if (xprof_inited)
         return;
 

@@ -108,6 +108,8 @@ static void storeDigestAdd(const StoreEntry *);
 void
 storeDigestInit(void)
 {
+    storeDigestRegisterWithCacheManager();
+
 #if USE_CACHE_DIGESTS
     const int cap = storeDigestCalcCap();
 

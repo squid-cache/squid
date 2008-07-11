@@ -596,6 +596,8 @@ refreshInit(void)
     DefaultRefresh.min = REFRESH_DEFAULT_MIN;
     DefaultRefresh.pct = REFRESH_DEFAULT_PCT;
     DefaultRefresh.max = REFRESH_DEFAULT_MAX;
+
+    refreshRegisterWithCacheManager();
 }
 
 void
