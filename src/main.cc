@@ -968,8 +968,7 @@ mainInitialize(void)
         // asnRegisterWithCacheManager(); //moved to asnInit()
         authenticateRegisterWithCacheManager(&Config.authConfiguration);
 #if USE_CARP
-
-        carpRegisterWithCacheManager();
+        // carpRegisterWithCacheManager(); //moved to carpInit()
 #endif
 
         cbdataRegisterWithCacheManager();
@@ -977,8 +976,7 @@ mainInitialize(void)
          * coexist.
          */
 #ifdef USE_EPOLL
-
-        commEPollRegisterWithCacheManager();
+        //commEPollRegisterWithCacheManager(); //moved to comm_epoll::comm_select_init()
 #endif
 #ifdef USE_KQUEUE
 
