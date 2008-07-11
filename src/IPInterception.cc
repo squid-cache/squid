@@ -90,6 +90,7 @@
 #endif /* PF_TRANSPARENT required headers */
 
 #if LINUX_NETFILTER
+#include <linux/types.h>
 #include <linux/netfilter_ipv4.h>
 #endif
 
