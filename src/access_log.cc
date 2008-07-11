@@ -1559,6 +1559,9 @@ void
 accessLogInit(void)
 {
     customlog *log;
+
+    accessLogRegisterWithCacheManager();
+
     assert(sizeof(log_tags) == (LOG_TYPE_MAX + 1) * sizeof(char *));
 
     for (log = Config.Log.accesslogs; log; log = log->next) {
@@ -1614,9 +1617,7 @@ void
 accessLogRegisterWithCacheManager()
 {
 #if FORW_VIA_DB
-
     fvdbRegisterWithCacheManager();
-
 #endif
 }
 
@@ -1648,7 +1649,7 @@ fvdbInit(void)
 }
 
 static void
-fvdbRegisterWithCacheManager()
+fvdbRegisterWithCacheManager(void)
 {
     CacheManager *manager=CacheManager::GetInstance();
     manager->registerAction("via_headers", "Via Request Headers", fvdbDumpVia, 0, 1);
