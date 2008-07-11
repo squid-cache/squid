@@ -729,7 +729,7 @@ SQUIDCEXTERN const char *internalHostname(void);
 SQUIDCEXTERN int internalHostnameIs(const char *);
 
 SQUIDCEXTERN void carpInit(void);
-SQUIDCEXTERN extern void carpRegisterWithCacheManager(CacheManager & manager);
+SQUIDCEXTERN void carpRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN peer *carpSelectParent(HttpRequest *);
 
 SQUIDCEXTERN void peerUserHashInit(void);
