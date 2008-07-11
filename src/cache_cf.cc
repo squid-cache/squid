@@ -1733,7 +1733,6 @@ parse_peer(peer ** head)
 
         } else if (!strcasecmp(token, "no-netdb-exchange")) {
             p->options.no_netdb_exchange = 1;
-#if USE_CARP
 
         } else if (!strcasecmp(token, "carp")) {
             if (p->type != PEER_PARENT)
@@ -1741,7 +1740,6 @@ parse_peer(peer ** head)
 
             p->options.carp = 1;
 
-#endif
 #if DELAY_POOLS
 
         } else if (!strcasecmp(token, "no-delay")) {
