@@ -70,6 +70,7 @@ static int max_poll_time = 1000;
 
 static struct epoll_event *pevents;
 
+static void commEPollRegisterWithCacheManager(void);
 
 
 /* XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX */
@@ -216,7 +217,7 @@ commResetSelect(int fd)
 
 static void commIncomingStats(StoreEntry * sentry);
 
-void
+static void
 commEPollRegisterWithCacheManager(void)
 {
     CacheManager::GetInstance()->

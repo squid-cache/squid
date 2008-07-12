@@ -601,13 +601,8 @@ comm_poll_dns_incoming(void)
     statHistCount(&statCounter.comm_dns_incoming, nevents);
 }
 
-void
-comm_select_init(void)
-{
-    commPollRegisterWithCacheManager();
-}
 
-void
+static void
 commPollRegisterWithCacheManager(void)
 {
     CacheManager::GetInstance()->
@@ -616,6 +611,11 @@ commPollRegisterWithCacheManager(void)
                        commIncomingStats, 0, 1);
 }
 
+void
+comm_select_init(void)
+{
+    commPollRegisterWithCacheManager();
+}
 
 static void
 commIncomingStats(StoreEntry * sentry)

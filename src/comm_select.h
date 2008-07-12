@@ -34,10 +34,5 @@
 #ifndef SQUID_COMM_SELECT_H
 #define SQUID_COMM_SELECT_H
 
-/* forward decls */
-
-class CacheManager;
-
-extern void commSelectRegisterWithCacheManager(void);
 
 #endif /* SQUID_COMM_SELECT_H */

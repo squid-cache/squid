@@ -91,6 +91,7 @@ static int kqmax;                /* max structs to buffer */
 static int kqoff;                /* offset into the buffer */
 static int max_poll_time = 1000;
 
+static void commKQueueRegisterWithCacheManager(void);
 
 /* XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX */
 /* Private functions */
@@ -326,7 +327,7 @@ comm_quick_poll_required(void)
     max_poll_time = 10;
 }
 
-void
+static void
 commKQueueRegisterWithCacheManager(void)
 {
 }
