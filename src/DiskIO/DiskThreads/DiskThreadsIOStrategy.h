@@ -58,7 +58,6 @@ public:
     virtual int callback();
     virtual void sync();
     virtual void init();
-    virtual void registerWithCacheManager(void);
     void done();
     /* Todo: add access limitations */
     bool initialised;
@@ -67,6 +66,7 @@ public:
 
 private:
     static void aioStats(StoreEntry * sentry);
+    void registerWithCacheManager(void);
 };
 
 #endif

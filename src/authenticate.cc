@@ -87,6 +87,8 @@ authenticateInit(authConfig * config)
         AuthUser::cacheInit();
     else
         AuthUser::CachedACLsReset();
+
+    authenticateRegisterWithCacheManager(&Config.authConfiguration);
 }
 
 void

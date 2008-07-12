@@ -69,6 +69,8 @@ DiskDaemonDiskIOModule::init()
     debugs(47, 1, "diskd started");
 #endif
     initialised = true;
+
+    registerWithCacheManager();
 }
 
 void
