@@ -38,8 +38,6 @@
 #include "CacheManager.h"
 #include "Store.h"
 
-#if USE_CARP
-
 #define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> (32-(n))))
 
 static int n_carp_peers = 0;
@@ -232,5 +230,3 @@ carpCachemgr(StoreEntry * sentry)
                           sumfetches ? (double) p->stats.fetches / sumfetches : -1.0);
     }
 }
-
-#endif

@@ -929,9 +929,7 @@ struct peer
         unsigned int no_delay:1;
 #endif
         unsigned int allow_miss:1;
-#if USE_CARP
         unsigned int carp:1;
-#endif
         unsigned int originserver:1;
     } options;
 
@@ -966,7 +964,6 @@ struct peer
     int rr_lastcount;
     peer *next;
     int test_fd;
-#if USE_CARP
 
     struct
     {
@@ -974,7 +971,6 @@ struct peer
         double load_multiplier;
         double load_factor;	/* normalized weight value */
     } carp;
-#endif
 
     char *login;		/* Proxy authorization */
     time_t connect_timeout;
