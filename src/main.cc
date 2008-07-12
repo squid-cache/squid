@@ -728,7 +728,7 @@ mainReconfigure(void)
     serverConnectionsOpen();
 
     neighbors_init();
-    neighborsRegisterWithCacheManager();
+    // neighborsRegisterWithCacheManager(); //moved to neighbors_init()
 
     storeDirOpenSwapLogs();
 
@@ -966,7 +966,8 @@ mainInitialize(void)
         /* register the modules in the cache manager menus */
         // accessLogRegisterWithCacheManager(); //moved to accessLogInit()
         // asnRegisterWithCacheManager(); //moved to asnInit()
-        authenticateRegisterWithCacheManager(&Config.authConfiguration);
+        // authenticateRegisterWithCacheManager(&Config.authConfiguration);
+	//   moved authenticateInit()
 #if USE_CARP
         // carpRegisterWithCacheManager(); //moved to carpInit()
 #endif
@@ -991,10 +992,11 @@ mainInitialize(void)
         //clientdbRegisterWithCacheManager(); //moved to clientdbInit()
 #if DELAY_POOLS
 
-        DelayPools::RegisterWithCacheManager();
+        //DelayPools::RegisterWithCacheManager(); //moved to DelayPools::Init()
 #endif
 
-        DiskIOModule::RegisterAllModulesWithCacheManager();
+        //DiskIOModule::RegisterAllModulesWithCacheManager();
+	//  moved to each module's init() function
 #if USE_DNSSERVERS
 
         dnsRegisterWithCacheManager();

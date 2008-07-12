@@ -63,7 +63,7 @@ public:
     virtual ~DiskIOModule(){}
 
     virtual void init() = 0;
-    virtual void registerWithCacheManager(void);
+    //virtual void registerWithCacheManager(void);
     virtual void shutdown() = 0;
     virtual DiskIOStrategy *createStrategy() = 0;
 

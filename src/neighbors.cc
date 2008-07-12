@@ -499,6 +499,8 @@ neighbors_init(void)
     peer *next = NULL;
     int fd = theInIcpConnection;
 
+    neighborsRegisterWithCacheManager();
+
     /* setup addrinfo for use */
     nul.InitAddrInfo(AI);
 

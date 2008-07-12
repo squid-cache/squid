@@ -58,6 +58,8 @@ DiskThreadsIOStrategy::init(void)
      * hasn't been parsed yet and we don't know how many cache_dirs
      * there are, which means we don't know how many threads to start.
      */
+
+     registerWithCacheManager();
 }
 
 void
