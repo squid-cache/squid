@@ -623,10 +623,8 @@ serverConnectionsOpen(void)
     asnInit();
     ACL::Initialize();
     peerSelectInit();
-#if USE_CARP
 
     carpInit();
-#endif
 }
 
 void
@@ -968,9 +966,7 @@ mainInitialize(void)
         // asnRegisterWithCacheManager(); //moved to asnInit()
         // authenticateRegisterWithCacheManager(&Config.authConfiguration);
 	//   moved authenticateInit()
-#if USE_CARP
         // carpRegisterWithCacheManager(); //moved to carpInit()
-#endif
 
         cbdataRegisterWithCacheManager();
         /* These use separate calls so that the comm loops can eventually
