@@ -124,6 +124,14 @@ storeLogClose(void)
     storelog = NULL;
 }
 
+static void
+storeLogRegisterWithCacheManager(void)
+{
+    CacheManager::GetInstance()->
+        registerAction("store_log_tags", "Histogram of store.log tags",
+                       storeLogTagsHist, 0, 1);
+}
+
 void
 storeLogOpen(void)
 {
@@ -135,14 +143,6 @@ storeLogOpen(void)
     }
 
     storelog = logfileOpen(Config.Log.store, 0, 1);
-}
-
-void
-storeLogRegisterWithCacheManager(void)
-{
-    CacheManager::GetInstance()->
-        registerAction("store_log_tags", "Histogram of store.log tags",
-                       storeLogTagsHist, 0, 1);
 }
 
 void

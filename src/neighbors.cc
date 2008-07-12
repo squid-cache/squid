@@ -488,6 +488,21 @@ neighborRemove(peer * target)
     first_ping = Config.peers;
 }
 
+static void
+neighborsRegisterWithCacheManager()
+{
+    CacheManager *manager = CacheManager::GetInstance();
+    manager->registerAction("server_list",
+                           "Peer Cache Statistics",
+                           neighborDumpPeers, 0, 1);
+
+    if (theInIcpConnection >= 0) {
+        manager->registerAction("non_peers",
+                               "List of Unknown sites sending ICP messages",
+                               neighborDumpNonPeers, 0, 1);
+    }
+}
+
 void
 neighbors_init(void)
 {
@@ -549,21 +564,6 @@ neighbors_init(void)
 
     first_ping = Config.peers;
     nul.FreeAddrInfo(AI);
-}
-
-void
-neighborsRegisterWithCacheManager()
-{
-    CacheManager *manager = CacheManager::GetInstance();
-    manager->registerAction("server_list",
-                           "Peer Cache Statistics",
-                           neighborDumpPeers, 0, 1);
-
-    if (theInIcpConnection >= 0) {
-        manager->registerAction("non_peers",
-                               "List of Unknown sites sending ICP messages",
-                               neighborDumpNonPeers, 0, 1);
-    }
 }
 
 int

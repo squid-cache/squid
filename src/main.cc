@@ -962,11 +962,9 @@ mainInitialize(void)
 
         FwdState::initModule();
         /* register the modules in the cache manager menus */
-        // accessLogRegisterWithCacheManager(); //moved to accessLogInit()
         // asnRegisterWithCacheManager(); //moved to asnInit()
         // authenticateRegisterWithCacheManager(&Config.authConfiguration);
 	//   moved authenticateInit()
-        // carpRegisterWithCacheManager(); //moved to carpInit()
 
         cbdataRegisterWithCacheManager();
         /* These use separate calls so that the comm loops can eventually
@@ -1047,7 +1045,7 @@ mainInitialize(void)
 
     neighbors_init();
 
-    neighborsRegisterWithCacheManager();
+    // neighborsRegisterWithCacheManager(); //moved to neighbors_init()
 
     if (Config.chroot_dir)
         no_suid();

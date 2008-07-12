@@ -1555,6 +1555,14 @@ hierarchyNote(HierarchyLogEntry * hl,
     xstrncpy(hl->host, cache_peer, SQUIDHOSTNAMELEN);
 }
 
+static void
+accessLogRegisterWithCacheManager(void)
+{
+#if FORW_VIA_DB
+    fvdbRegisterWithCacheManager();
+#endif
+}
+
 void
 accessLogInit(void)
 {
@@ -1610,14 +1618,6 @@ accessLogInit(void)
 
     fvdbInit();
 
-#endif
-}
-
-void
-accessLogRegisterWithCacheManager()
-{
-#if FORW_VIA_DB
-    fvdbRegisterWithCacheManager();
 #endif
 }
 
