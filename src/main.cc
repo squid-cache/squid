@@ -1001,7 +1001,7 @@ mainInitialize(void)
         eventInit();
         // externalAclRegisterWithCacheManager(); //moved to externalAclInit()
         // fqdncacheRegisterWithCacheManager(); //moved to fqdncache_init()
-        FwdState::RegisterWithCacheManager();
+        // FwdState::RegisterWithCacheManager(); //moved to FwdState::initModule
         // httpHeaderRegisterWithCacheManager(); //moved to httpHeaderInitModule
 #if !USE_DNSSERVERS
 	//TODO: remove cache manager registration functions from namespace
@@ -1012,17 +1012,19 @@ mainInitialize(void)
         // ipcacheRegisterWithCacheManager(); //moved to ipcache_init()
         // Mem::RegisterWithCacheManager(); //moved to Mem::Init()
         // netdbRegisterWitHCacheManager(); //moved to netdbInit()
-        PconnModule::GetInstance()->registerWithCacheManager();
+	// TODO: pconn is a good candidate for new-style registration
+        // PconnModule::GetInstance()->registerWithCacheManager();
+	//   moved to PconnModule::PconnModule()
         // redirectRegisterWithCacheManager(); //moved to redirectInit()
         // refreshRegisterWithCacheManager(); //moved to refreshInit()
         // statRegisterWithCacheManager(); //moved to statInit()
         // storeDigestRegisterWithCacheManager(); //moved to storeDigestInit()
-        StoreFileSystem::RegisterAllFsWithCacheManager();
+        // StoreFileSystem::RegisterAllFsWithCacheManager();
         // storeRegisterWithCacheManager(); //moved to storeInit()
-        storeLogRegisterWithCacheManager();
+        // storeLogRegisterWithCacheManager(); //moved to storeLogOpen()
 #if DEBUGSTRINGS
-
-        StringRegistry::Instance().registerWithCacheManager();
+        // cpu_prStringRegistry::Instance().registerWithCacheManager();
+	//   moved to class constructor
 #endif
 
 #if USE_XPROF_STATS

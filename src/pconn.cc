@@ -328,6 +328,7 @@ PconnModule::PconnModule() : pools(NULL), poolCount(0)
     pools = (PconnPool **) xcalloc(MAX_NUM_PCONN_POOLS, sizeof(*pools));
     pconn_fds_pool = memPoolCreate("pconn_fds", PCONN_FDS_SZ * sizeof(int));
     debugs(48, 0, "persistent connection module initialized");
+    registerWithCacheManager();
 }
 
 PconnModule *

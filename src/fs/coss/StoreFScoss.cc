@@ -52,6 +52,7 @@ StoreFScoss::GetInstance()
 StoreFScoss::StoreFScoss()
 {
     FsAdd(*this);
+    registerWithCacheManager();
 }
 
 char const *
