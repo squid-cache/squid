@@ -81,12 +81,12 @@ error_hard_text[] = {
 
                         {
                             ERR_SQUID_SIGNATURE,
-                            "\n<BR clear=\"all\">\n"
-                            "<HR noshade size=\"1px\">\n"
-                            "<ADDRESS>\n"
+                            "\n<br>\n"
+                            "<hr>\n"
+                            "<div id=\"footer\">\n"
                             "Generated %T by %h (%s)\n"
-                            "</ADDRESS>\n"
-                            "</BODY></HTML>\n"
+                            "</div>\n"
+                            "</body></html>\n"
                         },
                         {
                             TCP_RESET,
