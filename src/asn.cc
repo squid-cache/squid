@@ -179,6 +179,12 @@ ACLASN::prepareForUse()
         asnCacheStart(i->element);
 }
 
+static void
+asnRegisterWithCacheManager(void)
+{
+    CacheManager::GetInstance()->registerAction("asndb", "AS Number Database", asnStats, 0, 1);
+}
+
 /* initialize the radix tree structure */
 
 SQUIDCEXTERN int squid_max_keylen;	/* yuck.. this is in lib/radix.c */
@@ -197,12 +203,6 @@ asnInit(void)
     squid_rn_inithead(&AS_tree_head, 8);
 
     asnRegisterWithCacheManager();
-}
-
-void
-asnRegisterWithCacheManager()
-{
-    CacheManager::GetInstance()->registerAction("asndb", "AS Number Database", asnStats, 0, 1);
 }
 
 void

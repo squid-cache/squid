@@ -51,9 +51,6 @@ SQUIDCEXTERN int asnMatchIp(CbDataList<int> *, IPAddress &);
 SQUIDCEXTERN void asnInit(void);
 
 /// \ingroup ACLAPI
-extern void asnRegisterWithCacheManager();
-
-/// \ingroup ACLAPI
 SQUIDCEXTERN void asnFreeMemory(void);
 
 /// \ingroup ACLAPI

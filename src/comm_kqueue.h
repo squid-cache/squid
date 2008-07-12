@@ -34,10 +34,4 @@
 #ifndef SQUID_COMM_KQUEUE_H
 #define SQUID_COMM_KQUEUE_H
 
-/* forward decls */
-
-class CacheManager;
-
-extern void commKQueueRegisterWithCacheManager(void);
-
 #endif /* SQUID_COMM_KQUEUE_H */

@@ -73,6 +73,15 @@ authenticateSchemeCount(void)
     return rv;
 }
 
+static void
+authenticateRegisterWithCacheManager(authConfig * config)
+{
+    for (authConfig::iterator i = config->begin(); i != config->end(); ++i) {
+        AuthConfig *scheme = *i;
+        scheme->registerWithCacheManager();
+    }
+}
+
 void
 authenticateInit(authConfig * config)
 {
@@ -89,15 +98,6 @@ authenticateInit(authConfig * config)
         AuthUser::CachedACLsReset();
 
     authenticateRegisterWithCacheManager(&Config.authConfiguration);
-}
-
-void
-authenticateRegisterWithCacheManager(authConfig * config)
-{
-    for (authConfig::iterator i = config->begin(); i != config->end(); ++i) {
-        AuthConfig *scheme = *i;
-        scheme->registerWithCacheManager();
-    }
 }
 
 void
