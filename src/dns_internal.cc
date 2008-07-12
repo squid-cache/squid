@@ -1381,6 +1381,8 @@ idnsInit(void)
         idns_lookup_hash = hash_create((HASHCMP *) strcmp, 103, hash_string);
         init++;
     }
+
+    idnsRegisterWithCacheManager();
 }
 
 void

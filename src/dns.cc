@@ -60,6 +60,8 @@ dnsInit(void)
 {
     wordlist *w;
 
+    dnsRegisterWithCacheManager();
+
     if (!Config.Program.dnsserver)
         return;
 
