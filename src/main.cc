@@ -995,7 +995,7 @@ mainInitialize(void)
 	//  moved to each module's init() function
 #if USE_DNSSERVERS
 
-        dnsRegisterWithCacheManager();
+        // dnsRegisterWithCacheManager(); //moved to dnsInit()
 #endif
 
         eventInit();
@@ -1004,8 +1004,9 @@ mainInitialize(void)
         FwdState::RegisterWithCacheManager();
         httpHeaderRegisterWithCacheManager();
 #if !USE_DNSSERVERS
-
-        idnsRegisterWithCacheManager();
+	//TODO: remove cache manager registration functions from namespace
+	//      (protos.h and make them static where appropriate)
+        // idnsRegisterWithCacheManager(); // moved to idnsInit()
 #endif
 
         // ipcacheRegisterWithCacheManager(); //moved to ipcache_init()
