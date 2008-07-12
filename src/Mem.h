@@ -48,11 +48,13 @@ class Mem
 public:
     static void Init();
     static void Report();
-    static void RegisterWithCacheManager(void);
     static void Stats(StoreEntry *);
     static void CleanIdlePools(void *unused);
     static void Report(std::ostream &);
     static void PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, std::ostream &);
+
+protected:
+    static void RegisterWithCacheManager(void);
 };
 
 #endif /* SQUID_MEM */

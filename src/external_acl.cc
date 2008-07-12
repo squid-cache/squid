@@ -1323,6 +1323,8 @@ externalAclInit(void)
         firstTimeInit = 0;
         CBDATA_INIT_TYPE_FREECB(externalAclState, free_externalAclState);
     }
+
+    externalAclRegisterWithCacheManager();
 }
 
 void

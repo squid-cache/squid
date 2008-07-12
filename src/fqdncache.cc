@@ -593,6 +593,8 @@ fqdncache_init(void)
 {
     int n;
 
+    fqdncacheRegisterWithCacheManager();
+
     if (fqdn_table)
         return;
 

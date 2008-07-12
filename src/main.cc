@@ -999,10 +999,10 @@ mainInitialize(void)
 #endif
 
         eventInit();
-        externalAclRegisterWithCacheManager();
-        fqdncacheRegisterWithCacheManager();
+        // externalAclRegisterWithCacheManager(); //moved to externalAclInit()
+        // fqdncacheRegisterWithCacheManager(); //moved to fqdncache_init()
         FwdState::RegisterWithCacheManager();
-        httpHeaderRegisterWithCacheManager();
+        // httpHeaderRegisterWithCacheManager(); //moved to httpHeaderInitModule
 #if !USE_DNSSERVERS
 	//TODO: remove cache manager registration functions from namespace
 	//      (protos.h and make them static where appropriate)
@@ -1010,7 +1010,7 @@ mainInitialize(void)
 #endif
 
         // ipcacheRegisterWithCacheManager(); //moved to ipcache_init()
-        Mem::RegisterWithCacheManager();
+        // Mem::RegisterWithCacheManager(); //moved to Mem::Init()
         // netdbRegisterWitHCacheManager(); //moved to netdbInit()
         PconnModule::GetInstance()->registerWithCacheManager();
         // redirectRegisterWithCacheManager(); //moved to redirectInit()
