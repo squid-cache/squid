@@ -428,6 +428,8 @@ Mem::Init(void)
         if (StrPools[i].pool->objectSize() != StrPoolsAttrs[i].obj_size)
             debugs(13, 1, "Notice: " << StrPoolsAttrs[i].name << " is " << StrPools[i].pool->objectSize() << " bytes instead of requested " << StrPoolsAttrs[i].obj_size << " bytes");
     }
+
+    RegisterWithCacheManager();
 }
 
 void

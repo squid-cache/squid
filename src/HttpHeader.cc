@@ -326,6 +326,8 @@ httpHeaderInitModule(void)
     httpHdrCcInitModule();
 
     httpHdrScInitModule();
+
+    httpHeaderRegisterWithCacheManager();
 }
 
 void
