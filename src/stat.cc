@@ -1006,31 +1006,7 @@ statAvgDump(StoreEntry * sentry, int minutes, int hours)
     storeAppendPrintf(sentry, "cpu_usage = %f%%\n", dpercent(ct, dt));
 }
 
-
-void
-statInit(void)
-{
-    int i;
-    debugs(18, 5, "statInit: Initializing...");
-
-    for (i = 0; i < N_COUNT_HIST; i++)
-        statCountersInit(&CountHist[i]);
-
-    for (i = 0; i < N_COUNT_HOUR_HIST; i++)
-        statCountersInit(&CountHourHist[i]);
-
-    statCountersInit(&statCounter);
-
-    eventAdd("statAvgTick", statAvgTick, NULL, (double) COUNT_INTERVAL, 1);
-
-    ClientActiveRequests.head = NULL;
-
-    ClientActiveRequests.tail = NULL;
-
-    statRegisterWithCacheManager();
-}
-
-void
+static void
 statRegisterWithCacheManager(void)
 {
     CacheManager *manager = CacheManager::GetInstance();
@@ -1070,6 +1046,30 @@ statRegisterWithCacheManager(void)
     manager->registerAction("graph_variables", "Display cache metrics graphically",
                            statGraphDump, 0, 1);
 #endif
+}
+
+
+void
+statInit(void)
+{
+    int i;
+    debugs(18, 5, "statInit: Initializing...");
+
+    for (i = 0; i < N_COUNT_HIST; i++)
+        statCountersInit(&CountHist[i]);
+
+    for (i = 0; i < N_COUNT_HOUR_HIST; i++)
+        statCountersInit(&CountHourHist[i]);
+
+    statCountersInit(&statCounter);
+
+    eventAdd("statAvgTick", statAvgTick, NULL, (double) COUNT_INTERVAL, 1);
+
+    ClientActiveRequests.head = NULL;
+
+    ClientActiveRequests.tail = NULL;
+
+    statRegisterWithCacheManager();
 }
 
 static void

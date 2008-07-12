@@ -574,6 +574,13 @@ refreshStats(StoreEntry * sentry)
         refreshCountsStats(sentry, &refreshCounts[i]);
 }
 
+static void
+refreshRegisterWithCacheManager(void)
+{
+    CacheManager::GetInstance()->
+        registerAction("refresh", "Refresh Algorithm Statistics", refreshStats, 0, 1);
+}
+
 void
 refreshInit(void)
 {
@@ -598,11 +605,4 @@ refreshInit(void)
     DefaultRefresh.max = REFRESH_DEFAULT_MAX;
 
     refreshRegisterWithCacheManager();
-}
-
-void
-refreshRegisterWithCacheManager(void)
-{
-    CacheManager::GetInstance()->
-        registerAction("refresh", "Refresh Algorithm Statistics", refreshStats, 0, 1);
 }

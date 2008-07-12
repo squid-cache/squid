@@ -176,6 +176,13 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
     helperSubmit(redirectors, buf, redirectHandleReply, r);
 }
 
+static void
+redirectRegisterWithCacheManager(void)
+{
+    CacheManager::GetInstance()->
+        registerAction("redirector", "URL Redirector Stats", redirectStats, 0, 1);
+}
+
 void
 redirectInit(void)
 {
@@ -203,13 +210,6 @@ redirectInit(void)
         init = 1;
         CBDATA_INIT_TYPE(redirectStateData);
     }
-}
-
-void
-redirectRegisterWithCacheManager(void)
-{
-    CacheManager::GetInstance()->
-        registerAction("redirector", "URL Redirector Stats", redirectStats, 0, 1);
 }
 
 void

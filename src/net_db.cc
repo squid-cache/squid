@@ -886,6 +886,15 @@ netdbExchangeDone(void *data)
 
 #endif /* USE_ICMP */
 
+static void
+netdbRegisterWitHCacheManager(void)
+{
+#if USE_ICMP
+    CacheManager::GetInstance()->
+        registerAction("netdb", "Network Measurement Database", netdbDump, 0, 1);
+#endif
+}
+
 /* PUBLIC FUNCTIONS */
 
 void
@@ -911,15 +920,6 @@ netdbInit(void)
 
     netdbReloadState();
 
-#endif
-}
-
-void
-netdbRegisterWitHCacheManager(void)
-{
-#if USE_ICMP
-    CacheManager::GetInstance()->
-        registerAction("netdb", "Network Measurement Database", netdbDump, 0, 1);
 #endif
 }
 

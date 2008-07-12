@@ -52,6 +52,13 @@ peerSortWeight(const void *a, const void *b)
     return (*p1)->weight - (*p2)->weight;
 }
 
+static void
+carpRegisterWithCacheManager(void)
+{
+    CacheManager::GetInstance()->
+        registerAction("carp", "CARP information", carpCachemgr, 0, 1);
+}
+
 void
 carpInit(void)
 {
@@ -152,13 +159,6 @@ carpInit(void)
         X_last = p->carp.load_multiplier;
         P_last = p->carp.load_factor;
     }
-}
-
-void
-carpRegisterWithCacheManager()
-{
-    CacheManager::GetInstance()->
-        registerAction("carp", "CARP information", carpCachemgr, 0, 1);
 }
 
 peer *
