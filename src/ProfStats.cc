@@ -265,18 +265,21 @@ xprof_chk_overhead(int samples)
     }
 }
 
+// FIXME: 
+// this gets colled once per event. This doesn't seem to make much sense,
+// does it?
 static hrtime_t now;
 static void
 xprof_Init(void)
 {
-    xprofRegisterWithCacheManager();
-
     if (xprof_inited)
         return;
 
     xprof_delta = xprof_verystart = xprof_start_t = now;
 
     xprof_inited = 1;
+
+    xprofRegisterWithCacheManager(); //moved here so it's not double-init'ed
 }
 
 void

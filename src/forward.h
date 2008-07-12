@@ -25,7 +25,6 @@ public:
     typedef RefCount<FwdState> Pointer;
     ~FwdState();
     static void initModule();
-    static void RegisterWithCacheManager(void);
 
     static void fwdStart(int fd, StoreEntry *, HttpRequest *);
     void startComplete(FwdServer *);
@@ -66,6 +65,7 @@ private:
     void updateHierarchyInfo();
     void completed();
     void retryOrBail();
+    static void RegisterWithCacheManager(void);
 
 #if WIP_FWD_LOG
 

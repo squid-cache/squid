@@ -127,6 +127,8 @@ storeLogClose(void)
 void
 storeLogOpen(void)
 {
+    storeLogRegisterWithCacheManager();
+ 
     if (strcmp(Config.Log.store, "none") == 0) {
         debugs(20, 1, "Store logging disabled");
         return;

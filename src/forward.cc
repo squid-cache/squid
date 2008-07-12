@@ -1177,6 +1177,8 @@ FwdState::initModule()
         logfile = logfileOpen(Config.Log.forward, 0, 1);
 
 #endif
+
+    RegisterWithCacheManager();
 }
 
 void

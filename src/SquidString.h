@@ -60,7 +60,7 @@ public:
     void add
         (String const *);
 
-    void registerWithCacheManager(void);
+    StringRegistry();
 
     void remove
         (String const *);
