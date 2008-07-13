@@ -32,7 +32,7 @@ void testCacheManager::setUp()
 void
 testCacheManager::testCreate()
 {
-    CacheManager();
+    CacheManager()::GetInstance(); //it's a singleton..
 }
 
 /* an action to register */

@@ -726,7 +726,6 @@ mainReconfigure(void)
     serverConnectionsOpen();
 
     neighbors_init();
-    // neighborsRegisterWithCacheManager(); //moved to neighbors_init()
 
     storeDirOpenSwapLogs();
 
