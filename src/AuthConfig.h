@@ -36,7 +36,6 @@ class AuthUserRequest;
 class StoreEntry;
 class HttpReply;
 class HttpRequest;
-class CacheManager;
 
 /* for http_hdr_type parameters-by-value */
 #include "HttpHeader.h"

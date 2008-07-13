@@ -1293,6 +1293,15 @@ externalAclStats(StoreEntry * sentry)
     }
 }
 
+static void
+externalAclRegisterWithCacheManager(void)
+{
+    CacheManager::GetInstance()->
+        registerAction("external_acl",
+                       "External ACL stats",
+                       externalAclStats, 0, 1);
+}
+
 void
 externalAclInit(void)
 {
@@ -1325,15 +1334,6 @@ externalAclInit(void)
     }
 
     externalAclRegisterWithCacheManager();
-}
-
-void
-externalAclRegisterWithCacheManager(void)
-{
-    CacheManager::GetInstance()->
-        registerAction("external_acl",
-                       "External ACL stats",
-                       externalAclStats, 0, 1);
 }
 
 void

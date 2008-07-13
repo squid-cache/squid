@@ -34,7 +34,6 @@
 #ifndef SQUID_MEM
 #define SQUID_MEM
 
-class CacheManager;
 class StoreEntry;
 class MemPoolStats;
 class MemPoolMeter;

@@ -40,7 +40,6 @@
 #include "HttpRequestMethod.h"
 
 /* forward decls */
-class CacheManager;
 class HttpReply;
 class HttpRequest;
 

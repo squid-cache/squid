@@ -47,7 +47,6 @@ class DiskIOModule
 {
 
 public:
-    static void RegisterAllModulesWithCacheManager(void);
     static void SetupAllModules();
     static void ModuleAdd(DiskIOModule &);
     static void FreeAllModules();
@@ -74,6 +73,7 @@ public:
 
 protected:
     //bool initialised;
+    static void RegisterAllModulesWithCacheManager(void);
 
 private:
     static Vector<DiskIOModule*> &GetModules();
