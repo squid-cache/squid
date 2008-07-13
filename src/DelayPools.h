@@ -50,7 +50,6 @@ public:
 };
 
 /* forward decls */
-class CacheManager;
 class DelayPool;
 class Updateable;
 class StoreEntry;
@@ -64,7 +63,6 @@ class DelayPools
 
 public:
     static void Init();
-    static void RegisterWithCacheManager(void);
     static void Update(void *);
     static unsigned short pools();
     static void pools (u_short pools);
@@ -82,6 +80,7 @@ private:
     static unsigned short pools_;
     static void FreeDelayData ();
     static Vector<Updateable *> toUpdate;
+    static void RegisterWithCacheManager(void);
 };
 
 #endif /* SQUID_DELAYPOOLS_H */

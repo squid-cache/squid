@@ -550,18 +550,19 @@ time_t DelayPools::LastUpdate = 0;
 unsigned short DelayPools::pools_ (0);
 
 void
+DelayPools::RegisterWithCacheManager(void)
+{
+    CacheManager::GetInstance()->
+        registerAction("delay", "Delay Pool Levels", Stats, 0, 1);
+}
+
+void
 DelayPools::Init()
 {
     LastUpdate = getCurrentTime();
     RegisterWithCacheManager();
 }
 
-void
-DelayPools::RegisterWithCacheManager(void)
-{
-    CacheManager::GetInstance()->
-        registerAction("delay", "Delay Pool Levels", Stats, 0, 1);
-}
 
 void
 DelayPools::InitDelayData()

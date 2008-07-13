@@ -11,7 +11,6 @@
  \todo CLEANUP: Break multiple classes out of the generic pconn.h header
  */
 
-class CacheManager;
 class PconnPool;
 
 /* for CBDATA_CLASS2() macros */
@@ -90,7 +89,6 @@ private:
 };
 
 
-class CacheManager;
 class StoreEntry;
 class PconnPool;
 

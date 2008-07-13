@@ -968,52 +968,11 @@ mainInitialize(void)
          * coexist.
          */
 
-        //clientdbRegisterWithCacheManager(); //moved to clientdbInit()
-#if DELAY_POOLS
-
-        //DelayPools::RegisterWithCacheManager(); //moved to DelayPools::Init()
-#endif
-
-        //DiskIOModule::RegisterAllModulesWithCacheManager();
-	//  moved to each module's init() function
-#if USE_DNSSERVERS
-
-        // dnsRegisterWithCacheManager(); //moved to dnsInit()
-#endif
-
         eventInit();
-        // externalAclRegisterWithCacheManager(); //moved to externalAclInit()
-        // fqdncacheRegisterWithCacheManager(); //moved to fqdncache_init()
-        // FwdState::RegisterWithCacheManager(); //moved to FwdState::initModule
-        // httpHeaderRegisterWithCacheManager(); //moved to httpHeaderInitModule
-#if !USE_DNSSERVERS
-	//TODO: remove cache manager registration functions from namespace
-	//      (protos.h and make them static where appropriate)
-        // idnsRegisterWithCacheManager(); // moved to idnsInit()
-#endif
 
-        // ipcacheRegisterWithCacheManager(); //moved to ipcache_init()
-        // Mem::RegisterWithCacheManager(); //moved to Mem::Init()
-        // netdbRegisterWitHCacheManager(); //moved to netdbInit()
 	// TODO: pconn is a good candidate for new-style registration
         // PconnModule::GetInstance()->registerWithCacheManager();
 	//   moved to PconnModule::PconnModule()
-        // redirectRegisterWithCacheManager(); //moved to redirectInit()
-        // refreshRegisterWithCacheManager(); //moved to refreshInit()
-        // statRegisterWithCacheManager(); //moved to statInit()
-        // storeDigestRegisterWithCacheManager(); //moved to storeDigestInit()
-        // StoreFileSystem::RegisterAllFsWithCacheManager();
-        // storeRegisterWithCacheManager(); //moved to storeInit()
-        // storeLogRegisterWithCacheManager(); //moved to storeLogOpen()
-#if DEBUGSTRINGS
-        // cpu_prStringRegistry::Instance().registerWithCacheManager();
-	//   moved to class constructor
-#endif
-
-#if USE_XPROF_STATS
-        // xprofRegisterWithCacheManager(); //moved to xprof_init()
-#endif
-
     }
 
 #if USE_WCCP

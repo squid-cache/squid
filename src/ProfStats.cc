@@ -265,6 +265,13 @@ xprof_chk_overhead(int samples)
     }
 }
 
+static void
+xprofRegisterWithCacheManager(void)
+{
+    CacheManager::GetInstance()->
+         registerAction("cpu_profile", "CPU Profiling Stats", xprof_summary, 0, 1);
+}
+
 // FIXME: 
 // this gets colled once per event. This doesn't seem to make much sense,
 // does it?
@@ -280,13 +287,6 @@ xprof_Init(void)
     xprof_inited = 1;
 
     xprofRegisterWithCacheManager(); //moved here so it's not double-init'ed
-}
-
-void
-xprofRegisterWithCacheManager(void)
-{
-    CacheManager::GetInstance()->
-         registerAction("cpu_profile", "CPU Profiling Stats", xprof_summary, 0, 1);
 }
 
 void

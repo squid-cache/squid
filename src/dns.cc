@@ -55,6 +55,13 @@ dnsStats(StoreEntry * sentry)
     helperStats(sentry, dnsservers);
 }
 
+static void
+dnsRegisterWithCacheManager(void)
+{
+    CacheManager::GetInstance->
+        registerAction("dns", "Dnsserver Statistics", dnsStats, 0, 1);
+}
+
 void
 dnsInit(void)
 {
@@ -85,13 +92,6 @@ dnsInit(void)
     }
 
     helperOpenServers(dnsservers);
-}
-
-void
-dnsRegisterWithCacheManager(void)
-{
-    CacheManager::GetInstance->
-        registerAction("dns", "Dnsserver Statistics", dnsStats, 0, 1);
 }
 
 void

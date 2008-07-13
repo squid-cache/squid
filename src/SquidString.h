@@ -37,10 +37,6 @@
 
 #include "config.h"
 
-/* forward decls */
-
-class CacheManager;
-
 /** todo checks to wrap this include properly */
 #include <ostream>
 

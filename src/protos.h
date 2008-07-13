@@ -43,7 +43,6 @@
 /* some parameters stil need this */
 #include "wordlist.h"
 
-class CacheManager;
 class HttpRequestMethod;
 
 
