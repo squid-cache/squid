@@ -1189,7 +1189,7 @@ check_PROGRAMS+= testHeaders \
 
 ## Special Universal .h dependency test script
 ## aborts if error encountered
-testHeaders: *.h DiskIO/*.h
+testHeaders: $(top_srcdir)/src/*.h $(top_srcdir)/src/DiskIO/*.h
 	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "." || exit 1
 	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "DiskIO" || exit 1
 ## src/repl/ has no .h files and its own makefile.
@@ -1231,6 +1231,7 @@ tests_testAuth_SOURCES= tests/testAuth.cc tests/testMain.cc  tests/testAuth.h $(
 	StatHist.cc HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
 	tests/stub_HttpRequest.cc tests/stub_DelayId.cc \
 	tests/stub_MemObject.cc mem_node.cc \
+	tests/stub_cache_manager.cc \
 	stmem.cc \
 	tests/stub_comm.cc \
 	tests/stub_http.cc \
@@ -1311,6 +1312,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_DelayId.cc \
 	tests/stub_MemObject.cc \
 	tests/stub_store.cc \
+	tests/stub_cache_manager.cc \
 	tests/testACLMaxUserIP.cc \
 	tests/testACLMaxUserIP.h \
 	tests/testMain.cc \
