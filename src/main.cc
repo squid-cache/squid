@@ -625,6 +625,8 @@ serverConnectionsOpen(void)
     peerSelectInit();
 
     carpInit();
+    peerUserHashInit();
+    peerSourceHashInit();
 }
 
 void

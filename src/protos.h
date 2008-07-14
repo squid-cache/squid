@@ -719,6 +719,11 @@ SQUIDCEXTERN int internalHostnameIs(const char *);
 SQUIDCEXTERN void carpInit(void);
 SQUIDCEXTERN peer *carpSelectParent(HttpRequest *);
 
+SQUIDCEXTERN void peerUserHashInit(void);
+SQUIDCEXTERN peer * peerUserHashSelectParent(HttpRequest * request);
+
+SQUIDCEXTERN void peerSourceHashInit(void);
+SQUIDCEXTERN peer * peerSourceHashSelectParent(HttpRequest * request);
 
 #if USE_LEAKFINDER
 SQUIDCEXTERN void leakInit(void);

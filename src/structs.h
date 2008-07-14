@@ -930,6 +930,8 @@ struct peer
 #endif
         unsigned int allow_miss:1;
         unsigned int carp:1;
+        unsigned int userhash:1;
+        unsigned int sourcehash:1;
         unsigned int originserver:1;
     } options;
 
@@ -971,6 +973,20 @@ struct peer
         double load_multiplier;
         double load_factor;	/* normalized weight value */
     } carp;
+
+    struct
+    {
+        unsigned int hash;
+        double load_multiplier;
+        double load_factor;	/* normalized weight value */
+    } userhash;
+
+    struct
+    {
+        unsigned int hash;
+        double load_multiplier;
+        double load_factor;	/* normalized weight value */
+    } sourcehash;
 
     char *login;		/* Proxy authorization */
     time_t connect_timeout;
