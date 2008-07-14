@@ -1175,8 +1175,7 @@ TEST_CALL_SOURCES = \
 	AsyncCall.cc
 
 
-check_PROGRAMS+= testHeaders \
-	tests/testAuth \
+check_PROGRAMS+= tests/testAuth \
 	tests/testACLMaxUserIP \
 	tests/testBoilerplate \
 	tests/testCacheManager \
@@ -1511,7 +1510,9 @@ tests_testDiskIO_SOURCES= \
 	$(SWAP_TEST_SOURCES) \
 	tests/testDiskIO.cc \
 	tests/testDiskIO.h \
-	tests/testMain.cc
+	tests/testMain.cc \
+	tests/stub_cache_manager.cc
+
 tests_testDiskIO_LDADD= \
 	$(SWAP_TEST_LDADD) \
 	libsquid.la \
@@ -2230,6 +2231,7 @@ tests_testStore_SOURCES= \
 	tests/TestSwapDir.h \
 	tests/stub_fd.cc \
 	tests/stub_HttpReply.cc \
+	tests/stub_cache_manager.cc \
 	$(STORE_TEST_SOURCES)
 
 tests_testStore_LDADD= \
@@ -2250,6 +2252,7 @@ tests_testString_SOURCES= \
 	tests/testMain.cc \
 	tests/testString.cc \
 	tests/testString.h \
+	tests/stub_cache_manager.cc \
 	$(TESTSOURCES) \
 	time.cc 
 
@@ -2318,6 +2321,7 @@ SWAP_TEST_DS =\
 tests_testUfs_SOURCES= tests/testUfs.cc \
 	tests/testMain.cc \
 	tests/testUfs.h \
+	tests/stub_cache_manager.cc \
 	$(SWAP_TEST_SOURCES)
 tests_testUfs_LDADD= \
 	libsquid.la \
@@ -2330,6 +2334,7 @@ tests_testUfs_DEPENDENCIES = \
 tests_testCoss_SOURCES= tests/testCoss.cc \
 	tests/testMain.cc \
 	tests/testCoss.h \
+	tests/stub_cache_manager.cc \
 	$(SWAP_TEST_SOURCES)
 tests_testCoss_LDADD= \
 	libsquid.la \
