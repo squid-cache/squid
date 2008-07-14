@@ -1,26 +1,24 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
-<TITLE>ERROR: FTP upload failed</TITLE>
-<STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
-</HEAD><BODY>
-<H1>ERROR</H1>
-<H2>FTP PUT/upload failed</H2>
-<HR noshade size="1px">
-<P>
-While trying to PUT the following URL:
-<A HREF="%U">%U</A>
-<P>
-Squid sent the following FTP command:
-<PRE><STRONG>
-        %f
-</STRONG></PRE>
-and then received this reply
-<PRE><STRONG>
-        %F
-</STRONG></PRE>
-<P>
-This means that:
-<PRE>
-Check path, permissions, diskspace and try again.
-</PRE>
-<P>Your cache administrator is <A HREF="mailto:%w%W">%w</A>. 
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>ERROR: FTP upload failed</title>
+<style type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></style>
+</head><body>
+<h1>ERROR</h1>
+<h2>FTP PUT/upload failed</h2>
+<hr>
+<p>While trying to PUT the following URL: <a href="%U">%U</a></p>
+
+<p>Squid sent the following FTP command:</p>
+<blockquote>
+<p><b>%f</b></p>
+</blockquote>
+
+<p>The server responded with:</p>
+<blockquote>
+<p><b>%F</b></p>
+</blockquote>
+
+<p>This means that the FTP server may not have permission or space to store the file. Check the path, permissions, diskspace and try again.</p>
+
+<p>Your cache administrator is <a href="mailto:%w%W">%w</a>.</p>
