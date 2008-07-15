@@ -151,7 +151,7 @@ mail_warranty(void)
 
     snprintf(command, 256, "%s %s < %s", Config.EmailProgram, Config.adminEmail, filename);
 
-    (void)system(command);		/* XXX should avoid system(3) */
+    if(system(command)) {}		/* XXX should avoid system(3) */
 
     unlink(filename);
 }
