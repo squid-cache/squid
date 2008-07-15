@@ -2308,7 +2308,7 @@ comm_accept_try(int fd, void *) {
 void CommIO::Initialise() {
     /* Initialize done pipe signal */
     int DonePipe[2];
-    (void)pipe(DonePipe);
+    if(pipe(DonePipe)) {}
     DoneFD = DonePipe[1];
     DoneReadFD = DonePipe[0];
     fd_open(DoneReadFD, FD_PIPE, "async-io completetion event: main");
