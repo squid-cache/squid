@@ -149,9 +149,10 @@ eventDelete(EVH * func, void *arg)
 }
 
 void
-eventInit(CacheManager &manager)
+eventInit(void)
 {
-    manager.registerAction("events", "Event Queue", eventDump, 0, 1);
+    CacheManager::GetInstance()->
+        registerAction("events", "Event Queue", eventDump, 0, 1);
 }
 
 static void

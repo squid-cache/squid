@@ -44,6 +44,7 @@
 static int n_sourcehash_peers = 0;
 static peer **sourcehash_peers = NULL;
 static OBJH peerSourceHashCachemgr;
+static void peerSourceHashRegisterWithCacheManager(void);
 
 static int
 peerSortWeight(const void *a, const void *b)
@@ -86,6 +87,8 @@ peerSourceHashInit(void)
 
         W += p->weight;
     }
+
+    peerSourceHashRegisterWithCacheManager();
 
     if (n_sourcehash_peers == 0)
         return;
@@ -151,10 +154,12 @@ peerSourceHashInit(void)
     }
 }
 
-void
-peerSourceHashRegisterWithCacheManager(CacheManager & manager)
+static void
+peerSourceHashRegisterWithCacheManager(void)
 {
-    manager.registerAction("sourcehash", "peer sourcehash information", peerSourceHashCachemgr, 0, 1);
+    CacheManager::GetInstance()->
+        registerAction("sourcehash", "peer sourcehash information", 
+	               peerSourceHashCachemgr, 0, 1);
 }
 
 peer *

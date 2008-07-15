@@ -213,9 +213,6 @@ SQUIDCEXTERN TimersArray *xprof_Timers;
 SQUIDCEXTERN void xprof_start(xprof_type type, const char *timer);
 SQUIDCEXTERN void xprof_stop(xprof_type type, const char *timer);
 SQUIDCEXTERN void xprof_event(void *data);
-#if __cplusplus
-extern void xprofRegisterWithCacheManager(CacheManager & manager);
-#endif
 
 #define PROF_start(type) xprof_start(XPROF_##type, #type)
 #define PROF_stop(type) xprof_stop(XPROF_##type, #type)

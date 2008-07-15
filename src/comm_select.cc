@@ -654,6 +654,15 @@ comm_select_dns_incoming(void)
     statHistCount(&statCounter.comm_dns_incoming, nevents);
 }
 
+static void
+commSelectRegisterWithCacheManager(void)
+{
+    CacheManager::GetInstance()->
+        registerAction("comm_select_incoming",
+                       "comm_incoming() stats",
+                       commIncomingStats, 0, 1);
+}
+
 void
 comm_select_init(void)
 {
@@ -662,14 +671,8 @@ comm_select_init(void)
     FD_ZERO(&global_readfds);
     FD_ZERO(&global_writefds);
     nreadfds = nwritefds = 0;
-}
 
-void
-commSelectRegisterWithCacheManager(CacheManager & manager)
-{
-    manager.registerAction("comm_select_incoming",
-                           "comm_incoming() stats",
-                           commIncomingStats, 0, 1);
+    commSelectRegisterWithCacheManager();
 }
 
 /*

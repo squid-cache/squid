@@ -22,7 +22,7 @@ check_PROGRAMS= testHeaders
 
 ## Special Universal .h dependency test script
 ## aborts if error encountered
-testHeaders: heap/*.h
+testHeaders: $(top_srcdir)/src/repl/heap/*.h
 	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "heap" || exit 1
 ## ./ has no .h files.
 ## ./lru/ has no .h files.

@@ -104,7 +104,6 @@
  *    given StoreEntry. A maxobjsize of -1 means 'any size'.
  */
 
-class CacheManager;
 class SwapDir;
 
 /**
@@ -117,7 +116,6 @@ class StoreFileSystem
 {
 
 public:
-    static void RegisterAllFsWithCacheManager(CacheManager & manager);
     static void SetupAllFs();
     static void FsAdd(StoreFileSystem &);
     static void FreeAllFs();
@@ -131,7 +129,6 @@ public:
     virtual char const *type () const = 0;
     virtual SwapDir *createSwapDir() = 0;
     virtual void done() = 0;
-    virtual void registerWithCacheManager(CacheManager & manager);
     virtual void setup() = 0;
     // Not implemented
     StoreFileSystem(StoreFileSystem const &);
@@ -139,10 +136,12 @@ public:
 
 protected:
     bool initialised;
+    virtual void registerWithCacheManager(void);
 
 private:
     static Vector<StoreFileSystem*> &GetFileSystems();
     static Vector<StoreFileSystem*> *_FileSystems;
+    static void RegisterAllFsWithCacheManager(void);
 };
 
 // TODO: Kill this typedef!

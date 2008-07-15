@@ -770,6 +770,17 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
 #endif
 }
 
+/// \ingroup IPCacheInternal
+static void
+ipcacheRegisterWithCacheManager(void)
+{
+    CacheManager::GetInstance()->
+        registerAction("ipcache",
+                       "IP Cache Stats and Contents",
+                       stat_ipcache_get, 0, 1);
+}
+
+
 /**
  \ingroup IPCacheAPI
  *
@@ -806,15 +817,8 @@ ipcache_init(void)
     n = hashPrime(ipcache_high / 4);
     ip_table = hash_create((HASHCMP *) strcmp, n, hash4);
     memDataInit(MEM_IPCACHE_ENTRY, "ipcache_entry", sizeof(ipcache_entry), 0);
-}
 
-/// \ingroup IPCacheAPI
-void
-ipcacheRegisterWithCacheManager(CacheManager & manager)
-{
-    manager.registerAction("ipcache",
-                           "IP Cache Stats and Contents",
-                           stat_ipcache_get, 0, 1);
+    ipcacheRegisterWithCacheManager();
 }
 
 /**

@@ -86,7 +86,7 @@ public:
     virtual char const *type() const;
     virtual SwapDir *createSwapDir();
     virtual void done();
-    virtual void registerWithCacheManager(CacheManager & manager);
+    virtual void registerWithCacheManager(void);
     virtual void setup();
     /* Not implemented */
     StoreFScoss (StoreFScoss const &);

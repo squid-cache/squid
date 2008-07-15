@@ -488,6 +488,21 @@ neighborRemove(peer * target)
     first_ping = Config.peers;
 }
 
+static void
+neighborsRegisterWithCacheManager()
+{
+    CacheManager *manager = CacheManager::GetInstance();
+    manager->registerAction("server_list",
+                           "Peer Cache Statistics",
+                           neighborDumpPeers, 0, 1);
+
+    if (theInIcpConnection >= 0) {
+        manager->registerAction("non_peers",
+                               "List of Unknown sites sending ICP messages",
+                               neighborDumpNonPeers, 0, 1);
+    }
+}
+
 void
 neighbors_init(void)
 {
@@ -498,6 +513,8 @@ neighbors_init(void)
     peer *thisPeer = NULL;
     peer *next = NULL;
     int fd = theInIcpConnection;
+
+    neighborsRegisterWithCacheManager();
 
     /* setup addrinfo for use */
     nul.InitAddrInfo(AI);
@@ -547,28 +564,6 @@ neighbors_init(void)
 
     first_ping = Config.peers;
     nul.FreeAddrInfo(AI);
-}
-
-void
-neighborsRegisterWithCacheManager(CacheManager & manager)
-{
-    manager.registerAction("server_list",
-                           "Peer Cache Statistics",
-                           neighborDumpPeers, 0, 1);
-
-    if (theInIcpConnection >= 0) {
-        manager.registerAction("non_peers",
-                               "List of Unknown sites sending ICP messages",
-                               neighborDumpNonPeers, 0, 1);
-    }
-
-    /* XXX FIXME: unregister if we were registered. Something like:
-     * else {
-     *   CacheManagerAction * action = manager.findAction("non_peers");
-     *   if (action != NULL)
-     *       manager.unregisterAction(action);
-     *  }
-     */
 }
 
 int

@@ -212,9 +212,10 @@ AuthNegotiateConfig::init(AuthConfig * scheme)
 }
 
 void
-AuthNegotiateConfig::registerWithCacheManager(CacheManager & manager)
+AuthNegotiateConfig::registerWithCacheManager(void)
 {
-    manager.registerAction("negotiateauthenticator",
+    CacheManager::GetInstance()->
+            registerAction("negotiateauthenticator",
                            "Negotiate User Authenticator Stats",
                            authenticateNegotiateStats, 0, 1);
 }

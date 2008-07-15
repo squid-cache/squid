@@ -1309,6 +1309,13 @@ idnsRcodeCount(int rcode, int attempt)
 
 /* ====================================================================== */
 
+static void
+idnsRegisterWithCacheManager(void)
+{
+    CacheManager::GetInstance()->
+        registerAction("idns", "Internal DNS Statistics", idnsStats, 0, 1);
+}
+
 void
 idnsInit(void)
 {
@@ -1381,12 +1388,8 @@ idnsInit(void)
         idns_lookup_hash = hash_create((HASHCMP *) strcmp, 103, hash_string);
         init++;
     }
-}
 
-void
-idnsRegisterWithCacheManager(CacheManager & manager)
-{
-    manager.registerAction("idns", "Internal DNS Statistics", idnsStats, 0, 1);
+    idnsRegisterWithCacheManager();
 }
 
 void

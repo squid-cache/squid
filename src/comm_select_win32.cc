@@ -684,12 +684,15 @@ comm_select_init(void)
     FD_ZERO(&global_readfds);
     FD_ZERO(&global_writefds);
     nreadfds = nwritefds = 0;
+
+    commSelectRegisterWithCacheManager();
 }
 
 void
-commSelectRegisterWithCacheManager(CacheManager & manager)
+commSelectRegisterWithCacheManager(void)
 {
-    manager.registerAction("comm_select_incoming",
+    CacheManager::GetInstance()->
+            registerAction("comm_select_incoming",
                            "comm_incoming() stats",
                            commIncomingStats, 0, 1);
 }

@@ -256,7 +256,7 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
         return;
 
     case PROTO_CACHEOBJ:
-        cachemgrStart(client_fd, request, entry);
+        CacheManager::GetInstance()->Start(client_fd, request, entry);
         return;
 
     case PROTO_URN:
@@ -1177,14 +1177,15 @@ FwdState::initModule()
         logfile = logfileOpen(Config.Log.forward, 0, 1);
 
 #endif
+
+    RegisterWithCacheManager();
 }
 
 void
-FwdState::RegisterWithCacheManager(CacheManager & manager)
+FwdState::RegisterWithCacheManager(void)
 {
-    manager.registerAction("forward",
-                           "Request Forwarding Statistics",
-                           fwdStats, 0, 1);
+    CacheManager::GetInstance()->
+         registerAction("forward", "Request Forwarding Statistics", fwdStats, 0, 1);
 }
 
 void

@@ -52,6 +52,13 @@ peerSortWeight(const void *a, const void *b)
     return (*p1)->weight - (*p2)->weight;
 }
 
+static void
+carpRegisterWithCacheManager(void)
+{
+    CacheManager::GetInstance()->
+        registerAction("carp", "CARP information", carpCachemgr, 0, 1);
+}
+
 void
 carpInit(void)
 {
@@ -70,6 +77,10 @@ carpInit(void)
 
     safe_free(carp_peers);
     n_carp_peers = 0;
+
+    /* initialize cache manager before we have a chance to leave the execution path */
+    carpRegisterWithCacheManager();
+
     /* find out which peers we have */
 
     for (p = Config.peers; p; p = p->next) {
@@ -148,12 +159,6 @@ carpInit(void)
         X_last = p->carp.load_multiplier;
         P_last = p->carp.load_factor;
     }
-}
-
-void
-carpRegisterWithCacheManager(CacheManager & manager)
-{
-    manager.registerAction("carp", "CARP information", carpCachemgr, 0, 1);
 }
 
 peer *
