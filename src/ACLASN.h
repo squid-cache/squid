@@ -41,17 +41,10 @@
 #include "ACLChecklist.h"
 #include "IPAddress.h"
 
-/* forward decls */
-
-class CacheManager;
-
 SQUIDCEXTERN int asnMatchIp(CbDataList<int> *, IPAddress &);
 
 /// \ingroup ACLAPI
 SQUIDCEXTERN void asnInit(void);
-
-/// \ingroup ACLAPI
-extern void asnRegisterWithCacheManager(CacheManager & manager);
 
 /// \ingroup ACLAPI
 SQUIDCEXTERN void asnFreeMemory(void);

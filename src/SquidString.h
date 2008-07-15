@@ -37,10 +37,6 @@
 
 #include "config.h"
 
-/* forward decls */
-
-class CacheManager;
-
 /** todo checks to wrap this include properly */
 #include <ostream>
 
@@ -60,7 +56,7 @@ public:
     void add
         (String const *);
 
-    void registerWithCacheManager(CacheManager & manager);
+    StringRegistry();
 
     void remove
         (String const *);

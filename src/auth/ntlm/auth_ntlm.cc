@@ -198,9 +198,10 @@ AuthNTLMConfig::init(AuthConfig * scheme)
 }
 
 void
-AuthNTLMConfig::registerWithCacheManager(CacheManager & manager)
+AuthNTLMConfig::registerWithCacheManager(void)
 {
-    manager.registerAction("ntlmauthenticator",
+    CacheManager::GetInstance()->
+            registerAction("ntlmauthenticator",
                            "NTLM User Authenticator Stats",
                            authenticateNTLMStats, 0, 1);
 }

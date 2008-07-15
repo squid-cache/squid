@@ -54,12 +54,6 @@ DiskThreadsDiskIOModule::init()
 }
 
 void
-DiskThreadsDiskIOModule::registerWithCacheManager(CacheManager & manager)
-{
-    DiskThreadsIOStrategy::Instance.registerWithCacheManager(manager);
-}
-
-void
 DiskThreadsDiskIOModule::shutdown()
 {
     DiskThreadsIOStrategy::Instance.done();

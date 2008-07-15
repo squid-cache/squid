@@ -124,23 +124,25 @@ storeLogClose(void)
     storelog = NULL;
 }
 
+static void
+storeLogRegisterWithCacheManager(void)
+{
+    CacheManager::GetInstance()->
+        registerAction("store_log_tags", "Histogram of store.log tags",
+                       storeLogTagsHist, 0, 1);
+}
+
 void
 storeLogOpen(void)
 {
+    storeLogRegisterWithCacheManager();
+ 
     if (strcmp(Config.Log.store, "none") == 0) {
         debugs(20, 1, "Store logging disabled");
         return;
     }
 
     storelog = logfileOpen(Config.Log.store, 0, 1);
-}
-
-void
-storeLogRegisterWithCacheManager(CacheManager & manager)
-{
-    manager.registerAction("store_log_tags",
-	"Histogram of store.log tags",
-	storeLogTagsHist, 0, 1);
 }
 
 void

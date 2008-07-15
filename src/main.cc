@@ -35,7 +35,6 @@
 #include "squid.h"
 #include "AccessLogEntry.h"
 #include "authenticate.h"
-#include "CacheManager.h"
 #include "ConfigParser.h"
 #include "errorpage.h"
 #include "event.h"
@@ -127,8 +126,6 @@ extern void log_trace_init(char *);
 static void SquidShutdown(void);
 static void mainSetCwd(void);
 static int checkRunningPid(void);
-
-static CacheManager manager;
 
 #ifndef _SQUID_MSWIN_
 static const char *squid_start_script = "squid_start";
@@ -694,7 +691,7 @@ mainReconfigure(void)
     refererCloseLog();
     errorClean();
     enter_suid();		/* root to read config file */
-    parseConfigFile(ConfigFile, manager);
+    parseConfigFile(ConfigFile);
     setUmask(Config.umask);
     Mem::Report();
     setEffectiveUser();
@@ -731,7 +728,6 @@ mainReconfigure(void)
     serverConnectionsOpen();
 
     neighbors_init();
-    neighborsRegisterWithCacheManager(manager);
 
     storeDirOpenSwapLogs();
 
@@ -967,76 +963,17 @@ mainInitialize(void)
 
         FwdState::initModule();
         /* register the modules in the cache manager menus */
-        accessLogRegisterWithCacheManager(manager);
-        asnRegisterWithCacheManager(manager);
-        authenticateRegisterWithCacheManager(&Config.authConfiguration, manager);
-        carpRegisterWithCacheManager(manager);
-	peerUserHashRegisterWithCacheManager(manager);
-	peerSourceHashRegisterWithCacheManager(manager);
-        cbdataRegisterWithCacheManager(manager);
+
+        cbdataRegisterWithCacheManager();
         /* These use separate calls so that the comm loops can eventually
          * coexist.
          */
-#ifdef USE_EPOLL
 
-        commEPollRegisterWithCacheManager(manager);
-#endif
-#ifdef USE_KQUEUE
+        eventInit();
 
-        commKQueueRegisterWithCacheManager(manager);
-#endif
-#ifdef USE_POLL
-
-        commPollRegisterWithCacheManager(manager);
-#endif
-#if defined(USE_SELECT) || defined(USE_SELECT_WIN32)
-
-        commSelectRegisterWithCacheManager(manager);
-#endif
-
-        clientdbRegisterWithCacheManager(manager);
-#if DELAY_POOLS
-
-        DelayPools::RegisterWithCacheManager(manager);
-#endif
-
-        DiskIOModule::RegisterAllModulesWithCacheManager(manager);
-#if USE_DNSSERVERS
-
-        dnsRegisterWithCacheManager(manager);
-#endif
-
-        eventInit(manager);
-        externalAclRegisterWithCacheManager(manager);
-        fqdncacheRegisterWithCacheManager(manager);
-        FwdState::RegisterWithCacheManager(manager);
-        httpHeaderRegisterWithCacheManager(manager);
-#if !USE_DNSSERVERS
-
-        idnsRegisterWithCacheManager(manager);
-#endif
-
-        ipcacheRegisterWithCacheManager(manager);
-        Mem::RegisterWithCacheManager(manager);
-        netdbRegisterWitHCacheManager(manager);
-        PconnModule::GetInstance()->registerWithCacheManager(manager);
-        redirectRegisterWithCacheManager(manager);
-        refreshRegisterWithCacheManager(manager);
-        statRegisterWithCacheManager(manager);
-        storeDigestRegisterWithCacheManager(manager);
-        StoreFileSystem::RegisterAllFsWithCacheManager(manager);
-        storeRegisterWithCacheManager(manager);
-        storeLogRegisterWithCacheManager(manager);
-#if DEBUGSTRINGS
-
-        StringRegistry::Instance().registerWithCacheManager(manager);
-#endif
-
-#if	USE_XPROF_STATS
-
-        xprofRegisterWithCacheManager(manager);
-#endif
-
+	// TODO: pconn is a good candidate for new-style registration
+        // PconnModule::GetInstance()->registerWithCacheManager();
+	//   moved to PconnModule::PconnModule()
     }
 
 #if USE_WCCP
@@ -1053,7 +990,7 @@ mainInitialize(void)
 
     neighbors_init();
 
-    neighborsRegisterWithCacheManager(manager);
+    // neighborsRegisterWithCacheManager(); //moved to neighbors_init()
 
     if (Config.chroot_dir)
         no_suid();
@@ -1261,7 +1198,7 @@ main(int argc, char **argv)
         /* we may want the parsing process to set this up in the future */
         Store::Root(new StoreController);
 
-        parse_err = parseConfigFile(ConfigFile, manager);
+        parse_err = parseConfigFile(ConfigFile);
 
         Mem::Report();
         

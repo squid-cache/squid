@@ -272,6 +272,15 @@ static void httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e);
  * Module initialization routines
  */
 
+static void
+httpHeaderRegisterWithCacheManager(void)
+{
+    CacheManager::GetInstance()->
+        registerAction("http_headers",
+                       "HTTP Header Statistics",
+                       httpHeaderStoreReport, 0, 1);
+}
+
 void
 httpHeaderInitModule(void)
 {
@@ -326,15 +335,8 @@ httpHeaderInitModule(void)
     httpHdrCcInitModule();
 
     httpHdrScInitModule();
-}
 
-void
-httpHeaderRegisterWithCacheManager(CacheManager & manager)
-{
-    /* register with cache manager */
-    manager.registerAction("http_headers",
-                           "HTTP Header Statistics",
-                           httpHeaderStoreReport, 0, 1);
+    httpHeaderRegisterWithCacheManager();
 }
 
 void

@@ -624,9 +624,10 @@ AuthBasicConfig::init(AuthConfig * scheme)
 }
 
 void
-AuthBasicConfig::registerWithCacheManager(CacheManager & manager)
+AuthBasicConfig::registerWithCacheManager(void)
 {
-    manager.registerAction("basicauthenticator",
+    CacheManager::GetInstance()->
+            registerAction("basicauthenticator",
                            "Basic User Authenticator Stats",
                            authenticateBasicStats, 0, 1);
 }

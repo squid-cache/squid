@@ -45,6 +45,7 @@
 static int n_userhash_peers = 0;
 static peer **userhash_peers = NULL;
 static OBJH peerUserHashCachemgr;
+static void peerUserHashRegisterWithCacheManager(void);
 
 static int
 peerSortWeight(const void *a, const void *b)
@@ -73,6 +74,9 @@ peerUserHashInit(void)
     safe_free(userhash_peers);
     n_userhash_peers = 0;
     /* find out which peers we have */
+
+    
+    peerUserHashRegisterWithCacheManager();
 
     for (p = Config.peers; p; p = p->next) {
         if (!p->options.userhash)
@@ -152,10 +156,12 @@ peerUserHashInit(void)
     }
 }
 
-void
-peerUserHashRegisterWithCacheManager(CacheManager & manager)
+static void
+peerUserHashRegisterWithCacheManager(void)
 {
-    manager.registerAction("userhash", "peer userhash information", peerUserHashCachemgr, 0, 1);
+    CacheManager::GetInstance()->
+        registerAction("userhash", "peer userhash information", peerUserHashCachemgr, 
+	0, 1);
 }
 
 peer *

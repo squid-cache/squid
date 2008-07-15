@@ -1,6 +1,5 @@
-
 /*
- * $Id: DiskDaemonDiskIOModule.h,v 1.2 2006/05/29 00:15:03 robertc Exp $
+ * AUTHOR: Francesco Chemolli
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -28,30 +27,46 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
- * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_DISKDAEMONDISKIOMODULE_H
-#define SQUID_DISKDAEMONDISKIOMODULE_H
+#include "CacheManager.h"
+#include "squid.h"
 
-#include "DiskIO/DiskIOModule.h"
+static CacheManager *cm=0;
 
-class DiskDaemonDiskIOModule : public DiskIOModule
+CacheManager::CacheManager()
 {
+}
 
-public:
-    static DiskDaemonDiskIOModule &GetInstance();
-    DiskDaemonDiskIOModule();
-    virtual void init();
-    virtual void shutdown();
-    virtual char const *type () const;
-    virtual DiskIOStrategy* createStrategy();
+void
+CacheManager::registerAction(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic)
+{
+    return;
+}
 
-private:
-    static void Stats(StoreEntry * sentry);
-    static DiskDaemonDiskIOModule Instance;
-    bool initialised;
-    void registerWithCacheManager(void);
-};
+void
+CacheManager::registerAction(CacheManagerAction *anAction)
+{
+    return;
+}
 
-#endif /* SQUID_DISKDAEMONDISKIOMODULE_H */
+CacheManagerAction *
+CacheManager::findAction(char const * action)
+{
+    return 0;
+}
+
+void
+CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
+{
+    return;
+}
+
+CacheManager*
+CacheManager::GetInstance(void)
+{
+    if (!cm)
+        cm=new CacheManager();
+    return cm;
+}
+

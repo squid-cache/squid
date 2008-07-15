@@ -105,7 +105,7 @@ static OBJH fvdbDumpVia;
 static OBJH fvdbDumpForw;
 static FREE fvdbFreeEntry;
 static void fvdbClear(void);
-static void fvdbRegisterWithCacheManager(CacheManager & manager);
+static void fvdbRegisterWithCacheManager();
 #endif
 
 static int LogfileStatus = LOG_DISABLE;
@@ -1555,10 +1555,21 @@ hierarchyNote(HierarchyLogEntry * hl,
     xstrncpy(hl->host, cache_peer, SQUIDHOSTNAMELEN);
 }
 
+static void
+accessLogRegisterWithCacheManager(void)
+{
+#if FORW_VIA_DB
+    fvdbRegisterWithCacheManager();
+#endif
+}
+
 void
 accessLogInit(void)
 {
     customlog *log;
+
+    accessLogRegisterWithCacheManager();
+
     assert(sizeof(log_tags) == (LOG_TYPE_MAX + 1) * sizeof(char *));
 
     for (log = Config.Log.accesslogs; log; log = log->next) {
@@ -1610,16 +1621,6 @@ accessLogInit(void)
 #endif
 }
 
-void
-accessLogRegisterWithCacheManager(CacheManager & manager)
-{
-#if FORW_VIA_DB
-
-    fvdbRegisterWithCacheManager(manager);
-
-#endif
-}
-
 const char *
 accessLogTime(time_t t)
 {
@@ -1648,10 +1649,11 @@ fvdbInit(void)
 }
 
 static void
-fvdbRegisterWithCacheManager(CacheManager & manager)
+fvdbRegisterWithCacheManager(void)
 {
-    manager.registerAction("via_headers", "Via Request Headers", fvdbDumpVia, 0, 1);
-    manager.registerAction("forw_headers", "X-Forwarded-For Request Headers",
+    CacheManager *manager=CacheManager::GetInstance();
+    manager->registerAction("via_headers", "Via Request Headers", fvdbDumpVia, 0, 1);
+    manager->registerAction("forw_headers", "X-Forwarded-For Request Headers",
                            fvdbDumpForw, 0, 1);
 }
 

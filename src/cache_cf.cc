@@ -382,9 +382,10 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
 }
 
 int
-parseConfigFile(const char *file_name, CacheManager & manager)
+parseConfigFile(const char *file_name)
 {
     int err_count = 0;
+    CacheManager *manager=CacheManager::GetInstance();
 
     configFreeMemory();
 
@@ -409,7 +410,7 @@ parseConfigFile(const char *file_name, CacheManager & manager)
     }
 
     if (opt_send_signal == -1) {
-        manager.registerAction("config",
+        manager->registerAction("config",
                                "Current Squid Configuration",
                                dump_config,
                                1, 1);

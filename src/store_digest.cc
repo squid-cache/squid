@@ -101,6 +101,13 @@ static void storeDigestAdd(const StoreEntry *);
 
 #endif /* USE_CACHE_DIGESTS */
 
+static void
+storeDigestRegisterWithCacheManager(void)
+{
+    CacheManager::GetInstance()->
+        registerAction("store_digest", "Store Digest", storeDigestReport, 0, 1);
+}
+
 /*
  * PUBLIC FUNCTIONS
  */
@@ -108,6 +115,8 @@ static void storeDigestAdd(const StoreEntry *);
 void
 storeDigestInit(void)
 {
+    storeDigestRegisterWithCacheManager();
+
 #if USE_CACHE_DIGESTS
     const int cap = storeDigestCalcCap();
 
@@ -128,13 +137,6 @@ storeDigestInit(void)
     store_digest = NULL;
     debugs(71, 3, "Local cache digest is 'off'");
 #endif
-}
-
-void
-storeDigestRegisterWithCacheManager(CacheManager & manager)
-{
-    manager.registerAction("store_digest", "Store Digest",
-                           storeDigestReport, 0, 1);
 }
 
 /* called when store_rebuild completes */
