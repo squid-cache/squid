@@ -299,9 +299,12 @@ ntlmDecodeAuth(struct ntlm_authenticate *auth, char *buf, size_t size)
     buf += (s - 1);
     *buf++ = '\\';		/* Using \ is more consistent with MS-proxy */
 
-    p = ntlmGetString(&auth->hdr, &auth->user, auth->flags);
+    if( (p = ntlmGetString(&auth->hdr, &auth->user, auth->flags)) == NULL)
+        return 1;
+
     if ((s = strlen(p) + 1) >= size)
 	return 1;
+
     while (*p)
 	*buf++ = (*p++);	//tolower
 
