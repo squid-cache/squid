@@ -384,19 +384,67 @@ getWeightedRoundRobinParent(HttpRequest * request)
     return q;
 }
 
-/* This gets called every 5 minutes to clear the round-robin counter. */
-void
-peerClearRR(void *data)
+/**
+ * This gets called every 5 minutes to clear the round-robin counter.
+ * The exact timing is an arbitrary default, set on estimate timing of a
+ * large number of requests in a high-performance environment during the
+ * period. The larger the number of requests between cycled resets the
+ * more balanced the operations.
+ *
+ \param data	unused.
+ \todo Make the reset timing a selectable parameter in squid.conf
+ */
+static void 
+peerClearRRLoop(void *data)
 {
-    peer *p = (peer *)data;
-    p->rr_count -= p->rr_lastcount;
+    peerClearRR();
+    eventAdd("peerClearRR", peerClearRRLoop, data, 5 * 60.0, 0);
+}
 
-    if (p->rr_count < 0)
+/**
+ * This gets called on startup and restart to kick off the peer round-robin
+ * maintenance event. It ensures that no matter how many times its called
+ * no more than one event is scheduled.
+ */
+void
+peerClearRRStart(void)
+{
+    static int event_added = 0;
+    if (!event_added) {
+        peerClearRRLoop(NULL);
+    }
+}
+
+/**
+ * Called whenever the round-robin counters need to be reset to a sane state.
+ * So far those times are:
+ \item On startup and reconfigure - to set the counters to sane initial settings.
+ \item When a peer has revived from dead, to prevent the revived peer being
+ *     flooded with requests which it has 'missed' during the down period.
+ */
+void
+peerClearRR()
+{
+    peer *p = NULL;
+    for (p = Config.peers; p; p = p->next) {
         p->rr_count = 0;
+    }
+}
 
-    p->rr_lastcount = p->rr_count;
+/**
+ * Perform all actions when a peer is detected revived.
+ */
+void
+peerAlive(peer *p)
+{
+    if (p->stats.logged_state == PEER_DEAD && p->tcp_up) {
+        debugs(15, 1, "Detected REVIVED " << neighborTypeStr(p) << ": " << p->name);
+        p->stats.logged_state = PEER_ALIVE;
+        peerClearRR();
+    }
 
-    eventAdd("peerClearRR", peerClearRR, p, 5 * 60.0, 0);
+    p->stats.last_reply = squid_curtime;
+    p->stats.probe_start = 0;
 }
 
 peer *
@@ -857,13 +905,7 @@ peerNoteDigestLookup(HttpRequest * request, peer * p, lookup_t lookup)
 static void
 neighborAlive(peer * p, const MemObject * mem, const icp_common_t * header)
 {
-    if (p->stats.logged_state == PEER_DEAD && p->tcp_up) {
-        debugs(15, 1, "Detected REVIVED " << neighborTypeStr(p) << ": " << p->name);
-        p->stats.logged_state = PEER_ALIVE;
-    }
-
-    p->stats.last_reply = squid_curtime;
-    p->stats.probe_start = 0;
+    peerAlive(p);
     p->stats.pings_acked++;
 
     if ((icp_opcode) header->opcode <= ICP_END)
@@ -901,14 +943,7 @@ neighborUpdateRtt(peer * p, MemObject * mem)
 static void
 neighborAliveHtcp(peer * p, const MemObject * mem, const htcpReplyData * htcp)
 {
-    if (p->stats.logged_state == PEER_DEAD && p->tcp_up) {
-        debugs(15, 1, "Detected REVIVED " << neighborTypeStr(p) << ": " << p->name);
-        p->stats.logged_state = PEER_ALIVE;
-    }
-
-    p->stats.last_reply = squid_curtime;
-    p->stats.probe_start = 0;
-    p->stats.pings_acked++;
+    peerAlive(p);
     p->htcp.counts[htcp->hit ? 1 : 0]++;
     p->htcp.version = htcp->version;
 }
@@ -1317,13 +1352,13 @@ peerConnectSucceded(peer * p)
 {
     if (!p->tcp_up) {
         debugs(15, 2, "TCP connection to " << p->host << "/" << p->http_port << " succeded");
-        debugs(15, 1, "Detected REVIVED " << neighborTypeStr(p) << ": " << p->name);
-        p->stats.logged_state = PEER_ALIVE;
+        p->tcp_up = PEER_TCP_MAGIC_COUNT; // NP: so peerAlive(p) works properly.
+        peerAlive(p);
 	if (!p->n_addresses)
 	    ipcache_nbgethostbyname(p->host, peerDNSConfigure, p);
     }
-
-    p->tcp_up = PEER_TCP_MAGIC_COUNT;
+    else
+        p->tcp_up = PEER_TCP_MAGIC_COUNT;
 }
 
 static void
