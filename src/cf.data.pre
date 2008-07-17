@@ -4591,7 +4591,6 @@ DOC_START
 	requests, except those in your local domain use something like:
 
 		acl local-servers dstdomain .foo.net
-		acl all src 0.0.0.0/0.0.0.0
 		never_direct deny local-servers
 		never_direct allow all
 
