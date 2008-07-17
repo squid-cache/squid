@@ -1843,8 +1843,7 @@ parse_peer(peer ** head)
     *head = p;
 
     Config.npeers++;
-
-    peerClearRR(p);
+    peerClearRRStart();
 }
 
 static void
