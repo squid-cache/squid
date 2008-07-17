@@ -963,7 +963,6 @@ struct peer
     IPAddress addresses[10];
     int n_addresses;
     int rr_count;
-    int rr_lastcount;
     peer *next;
     int test_fd;
 

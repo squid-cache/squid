@@ -1863,7 +1863,7 @@ parse_peer(peer ** head)
 
     *head = p;
 
-    peerClearRR(p);
+    peerClearRRStart();
 }
 
 static void
