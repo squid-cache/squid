@@ -653,8 +653,7 @@ getMyHostname(void)
             if(xgetaddrinfo(host, NULL, NULL, &AI) == 0) {
                 /* DNS lookup successful */
                 /* use the official name from DNS lookup */
-                debugs(50, 6, "getMyHostname: '" << host << "' resolved into '" << AI->ai_canonname << "'");
-                xstrncpy(host, AI->ai_canonname, SQUIDHOSTNAMELEN);
+                debugs(50, 6, "getMyHostname: '" << host << "' has rDNS.");
                 present = 1;
 
                 /* AYJ: do we want to flag AI_ALL and cache the result anywhere. ie as our local host IPs? */
@@ -667,7 +666,7 @@ getMyHostname(void)
             }
 
             if(AI) xfreeaddrinfo(AI);
-            debugs(50, 1, "WARNING: getaddrinfo('" << host << "') failed: " << xstrerror());
+            debugs(50, 1, "WARNING: '" << host << "' rDNS test failed: " << xstrerror());
         }
     }
 
