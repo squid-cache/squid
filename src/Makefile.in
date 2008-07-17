@@ -247,22 +247,23 @@ am__squid_SOURCES_DIST = access_log.cc AccessLogEntry.h acl.cc \
 	mem_node.h Mem.h MemBuf.cc MemObject.cc MemObject.h mime.cc \
 	multicast.cc neighbors.cc net_db.cc Packer.cc Packer.h \
 	Parsing.cc Parsing.h ProfStats.cc pconn.cc pconn.h \
-	PeerDigest.h peer_digest.cc peer_select.cc PeerSelectState.h \
-	PingData.h protos.h redirect.cc referer.cc refresh.cc \
-	RemovalPolicy.cc RemovalPolicy.h send-announce.cc snmp_core.cc \
-	snmp_agent.cc squid.h SquidNew.cc ACLCertificateData.cc \
-	ACLCertificateData.h ACLCertificate.cc ACLCertificate.h \
-	ssl_support.cc ssl_support.h stat.cc StatHist.cc String.cc \
-	stmem.cc stmem.h store.cc Store.h StoreFileSystem.cc \
-	StoreFileSystem.h StoreHashIndex.h store_io.cc StoreIOBuffer.h \
-	StoreIOState.cc StoreIOState.h store_client.cc StoreClient.h \
-	store_digest.cc store_dir.cc store_key_md5.cc store_log.cc \
-	store_rebuild.cc store_swapin.cc store_swapmeta.cc \
-	store_swapout.cc StoreMeta.cc StoreMeta.h StoreMetaMD5.cc \
-	StoreMetaMD5.h StoreMetaSTD.cc StoreMetaSTD.h \
-	StoreMetaSTDLFS.cc StoreMetaSTDLFS.h StoreMetaObjSize.h \
-	StoreMetaUnpacker.cc StoreMetaUnpacker.h StoreMetaURL.cc \
-	StoreMetaURL.h StoreMetaVary.cc StoreMetaVary.h StoreSearch.h \
+	PeerDigest.h peer_digest.cc peer_select.cc peer_sourcehash.cc \
+	peer_userhash.cc PeerSelectState.h PingData.h protos.h \
+	redirect.cc referer.cc refresh.cc RemovalPolicy.cc \
+	RemovalPolicy.h send-announce.cc snmp_core.cc snmp_agent.cc \
+	squid.h SquidNew.cc ACLCertificateData.cc ACLCertificateData.h \
+	ACLCertificate.cc ACLCertificate.h ssl_support.cc \
+	ssl_support.h stat.cc StatHist.cc String.cc stmem.cc stmem.h \
+	store.cc Store.h StoreFileSystem.cc StoreFileSystem.h \
+	StoreHashIndex.h store_io.cc StoreIOBuffer.h StoreIOState.cc \
+	StoreIOState.h store_client.cc StoreClient.h store_digest.cc \
+	store_dir.cc store_key_md5.cc store_log.cc store_rebuild.cc \
+	store_swapin.cc store_swapmeta.cc store_swapout.cc \
+	StoreMeta.cc StoreMeta.h StoreMetaMD5.cc StoreMetaMD5.h \
+	StoreMetaSTD.cc StoreMetaSTD.h StoreMetaSTDLFS.cc \
+	StoreMetaSTDLFS.h StoreMetaObjSize.h StoreMetaUnpacker.cc \
+	StoreMetaUnpacker.h StoreMetaURL.cc StoreMetaURL.h \
+	StoreMetaVary.cc StoreMetaVary.h StoreSearch.h \
 	StoreSwapLogData.cc StoreSwapLogData.h Server.cc Server.h \
 	structs.h SwapDir.cc SwapDir.h time.cc tools.cc tunnel.cc \
 	typedefs.h unlinkd.cc url.cc URL.h URLScheme.cc URLScheme.h \
@@ -352,7 +353,8 @@ am_squid_OBJECTS = access_log.$(OBJEXT) acl.$(OBJEXT) \
 	mime.$(OBJEXT) multicast.$(OBJEXT) neighbors.$(OBJEXT) \
 	net_db.$(OBJEXT) Packer.$(OBJEXT) Parsing.$(OBJEXT) \
 	$(am__objects_19) pconn.$(OBJEXT) peer_digest.$(OBJEXT) \
-	peer_select.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
+	peer_select.$(OBJEXT) peer_sourcehash.$(OBJEXT) \
+	peer_userhash.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
 	refresh.$(OBJEXT) RemovalPolicy.$(OBJEXT) \
 	send-announce.$(OBJEXT) $(am__objects_21) SquidNew.$(OBJEXT) \
 	$(am__objects_23) stat.$(OBJEXT) StatHist.$(OBJEXT) \
@@ -488,15 +490,16 @@ am__tests_testCacheManager_SOURCES_DIST = debug.cc globals.cc \
 	ipc.cc ipc_win32.cc ipcache.cc int.cc internal.cc list.cc \
 	logfile.cc multicast.cc mem_node.cc MemBuf.cc MemObject.cc \
 	mime.cc neighbors.cc net_db.cc Packer.cc Parsing.cc pconn.cc \
-	peer_digest.cc peer_select.cc redirect.cc referer.cc \
-	refresh.cc RemovalPolicy.cc Server.cc snmp_core.cc \
-	snmp_agent.cc ACLCertificateData.cc ACLCertificateData.h \
-	ACLCertificate.cc ACLCertificate.h ssl_support.cc \
-	ssl_support.h stat.cc StatHist.cc stmem.cc store.cc \
-	store_client.cc store_digest.cc store_dir.cc store_io.cc \
-	store_key_md5.cc store_log.cc store_rebuild.cc store_swapin.cc \
-	store_swapmeta.cc store_swapout.cc StoreFileSystem.cc \
-	StoreIOState.cc StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
+	peer_digest.cc peer_select.cc peer_sourcehash.cc \
+	peer_userhash.cc redirect.cc referer.cc refresh.cc \
+	RemovalPolicy.cc Server.cc snmp_core.cc snmp_agent.cc \
+	ACLCertificateData.cc ACLCertificateData.h ACLCertificate.cc \
+	ACLCertificate.h ssl_support.cc ssl_support.h stat.cc \
+	StatHist.cc stmem.cc store.cc store_client.cc store_digest.cc \
+	store_dir.cc store_io.cc store_key_md5.cc store_log.cc \
+	store_rebuild.cc store_swapin.cc store_swapmeta.cc \
+	store_swapout.cc StoreFileSystem.cc StoreIOState.cc \
+	StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
 	StoreMetaSTDLFS.cc StoreMetaUnpacker.cc StoreMetaURL.cc \
 	StoreMetaVary.cc StoreSwapLogData.cc tools.cc tunnel.cc \
 	SwapDir.cc url.cc URLScheme.cc urn.cc useragent.cc wccp2.cc \
@@ -533,7 +536,8 @@ am_tests_testCacheManager_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	MemBuf.$(OBJEXT) MemObject.$(OBJEXT) mime.$(OBJEXT) \
 	neighbors.$(OBJEXT) net_db.$(OBJEXT) Packer.$(OBJEXT) \
 	Parsing.$(OBJEXT) pconn.$(OBJEXT) peer_digest.$(OBJEXT) \
-	peer_select.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
+	peer_select.$(OBJEXT) peer_sourcehash.$(OBJEXT) \
+	peer_userhash.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
 	refresh.$(OBJEXT) RemovalPolicy.$(OBJEXT) Server.$(OBJEXT) \
 	$(am__objects_21) $(am__objects_23) stat.$(OBJEXT) \
 	StatHist.$(OBJEXT) stmem.$(OBJEXT) store.$(OBJEXT) \
@@ -710,19 +714,20 @@ am__tests_testEvent_SOURCES_DIST = debug.cc EventLoop.h EventLoop.cc \
 	ipc.cc ipc_win32.cc ipcache.cc int.cc internal.cc list.cc \
 	logfile.cc multicast.cc mem_node.cc MemBuf.cc MemObject.cc \
 	mime.cc neighbors.cc net_db.cc Packer.cc Parsing.cc pconn.cc \
-	peer_digest.cc peer_select.cc redirect.cc referer.cc \
-	refresh.cc Server.cc snmp_core.cc snmp_agent.cc \
-	ACLCertificateData.cc ACLCertificateData.h ACLCertificate.cc \
-	ACLCertificate.h ssl_support.cc ssl_support.h stat.cc \
-	StatHist.cc stmem.cc store.cc store_client.cc store_digest.cc \
-	store_dir.cc store_io.cc store_key_md5.cc store_log.cc \
-	store_rebuild.cc store_swapin.cc store_swapmeta.cc \
-	store_swapout.cc StoreFileSystem.cc StoreIOState.cc \
-	StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc StoreMetaUnpacker.cc StoreMetaURL.cc \
-	StoreMetaVary.cc StoreSwapLogData.cc tools.cc tunnel.cc \
-	SwapDir.cc url.cc URLScheme.cc urn.cc useragent.cc wccp2.cc \
-	whois.cc win32.cc wordlist.cc
+	peer_digest.cc peer_select.cc peer_sourcehash.cc \
+	peer_userhash.cc redirect.cc referer.cc refresh.cc Server.cc \
+	snmp_core.cc snmp_agent.cc ACLCertificateData.cc \
+	ACLCertificateData.h ACLCertificate.cc ACLCertificate.h \
+	ssl_support.cc ssl_support.h stat.cc StatHist.cc stmem.cc \
+	store.cc store_client.cc store_digest.cc store_dir.cc \
+	store_io.cc store_key_md5.cc store_log.cc store_rebuild.cc \
+	store_swapin.cc store_swapmeta.cc store_swapout.cc \
+	StoreFileSystem.cc StoreIOState.cc StoreMeta.cc \
+	StoreMetaMD5.cc StoreMetaSTD.cc StoreMetaSTDLFS.cc \
+	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
+	StoreSwapLogData.cc tools.cc tunnel.cc SwapDir.cc url.cc \
+	URLScheme.cc urn.cc useragent.cc wccp2.cc whois.cc win32.cc \
+	wordlist.cc
 am_tests_testEvent_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
 	globals.$(OBJEXT) HttpRequest.$(OBJEXT) \
 	HttpRequestMethod.$(OBJEXT) mem.$(OBJEXT) \
@@ -756,7 +761,8 @@ am_tests_testEvent_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
 	MemBuf.$(OBJEXT) MemObject.$(OBJEXT) mime.$(OBJEXT) \
 	neighbors.$(OBJEXT) net_db.$(OBJEXT) Packer.$(OBJEXT) \
 	Parsing.$(OBJEXT) pconn.$(OBJEXT) peer_digest.$(OBJEXT) \
-	peer_select.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
+	peer_select.$(OBJEXT) peer_sourcehash.$(OBJEXT) \
+	peer_userhash.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
 	refresh.$(OBJEXT) Server.$(OBJEXT) $(am__objects_21) \
 	$(am__objects_23) stat.$(OBJEXT) StatHist.$(OBJEXT) \
 	stmem.$(OBJEXT) store.$(OBJEXT) store_client.$(OBJEXT) \
@@ -812,19 +818,20 @@ am__tests_testEventLoop_SOURCES_DIST = debug.cc EventLoop.h \
 	ipc.cc ipc_win32.cc ipcache.cc int.cc internal.cc list.cc \
 	logfile.cc multicast.cc mem_node.cc MemBuf.cc MemObject.cc \
 	mime.cc neighbors.cc net_db.cc Packer.cc Parsing.cc pconn.cc \
-	peer_digest.cc peer_select.cc redirect.cc referer.cc \
-	refresh.cc Server.cc snmp_core.cc snmp_agent.cc \
-	ACLCertificateData.cc ACLCertificateData.h ACLCertificate.cc \
-	ACLCertificate.h ssl_support.cc ssl_support.h stat.cc \
-	StatHist.cc stmem.cc store.cc store_client.cc store_digest.cc \
-	store_dir.cc store_io.cc store_key_md5.cc store_log.cc \
-	store_rebuild.cc store_swapin.cc store_swapmeta.cc \
-	store_swapout.cc StoreFileSystem.cc StoreIOState.cc \
-	StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc StoreMetaUnpacker.cc StoreMetaURL.cc \
-	StoreMetaVary.cc StoreSwapLogData.cc tools.cc tunnel.cc \
-	SwapDir.cc url.cc URLScheme.cc urn.cc useragent.cc wccp2.cc \
-	whois.cc win32.cc wordlist.cc
+	peer_digest.cc peer_select.cc peer_sourcehash.cc \
+	peer_userhash.cc redirect.cc referer.cc refresh.cc Server.cc \
+	snmp_core.cc snmp_agent.cc ACLCertificateData.cc \
+	ACLCertificateData.h ACLCertificate.cc ACLCertificate.h \
+	ssl_support.cc ssl_support.h stat.cc StatHist.cc stmem.cc \
+	store.cc store_client.cc store_digest.cc store_dir.cc \
+	store_io.cc store_key_md5.cc store_log.cc store_rebuild.cc \
+	store_swapin.cc store_swapmeta.cc store_swapout.cc \
+	StoreFileSystem.cc StoreIOState.cc StoreMeta.cc \
+	StoreMetaMD5.cc StoreMetaSTD.cc StoreMetaSTDLFS.cc \
+	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
+	StoreSwapLogData.cc tools.cc tunnel.cc SwapDir.cc url.cc \
+	URLScheme.cc urn.cc useragent.cc wccp2.cc whois.cc win32.cc \
+	wordlist.cc
 am_tests_testEventLoop_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
 	globals.$(OBJEXT) HttpRequest.$(OBJEXT) \
 	HttpRequestMethod.$(OBJEXT) mem.$(OBJEXT) \
@@ -858,7 +865,8 @@ am_tests_testEventLoop_OBJECTS = debug.$(OBJEXT) EventLoop.$(OBJEXT) \
 	MemBuf.$(OBJEXT) MemObject.$(OBJEXT) mime.$(OBJEXT) \
 	neighbors.$(OBJEXT) net_db.$(OBJEXT) Packer.$(OBJEXT) \
 	Parsing.$(OBJEXT) pconn.$(OBJEXT) peer_digest.$(OBJEXT) \
-	peer_select.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
+	peer_select.$(OBJEXT) peer_sourcehash.$(OBJEXT) \
+	peer_userhash.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
 	refresh.$(OBJEXT) Server.$(OBJEXT) $(am__objects_21) \
 	$(am__objects_23) stat.$(OBJEXT) StatHist.$(OBJEXT) \
 	stmem.$(OBJEXT) store.$(OBJEXT) store_client.$(OBJEXT) \
@@ -940,15 +948,16 @@ am__tests_testHttpRequest_SOURCES_DIST = debug.cc globals.cc \
 	ipc.cc ipc_win32.cc ipcache.cc int.cc internal.cc list.cc \
 	logfile.cc multicast.cc mem_node.cc MemBuf.cc MemObject.cc \
 	mime.cc neighbors.cc net_db.cc Packer.cc Parsing.cc pconn.cc \
-	peer_digest.cc peer_select.cc redirect.cc referer.cc \
-	refresh.cc RemovalPolicy.cc Server.cc snmp_core.cc \
-	snmp_agent.cc ACLCertificateData.cc ACLCertificateData.h \
-	ACLCertificate.cc ACLCertificate.h ssl_support.cc \
-	ssl_support.h stat.cc StatHist.cc stmem.cc store.cc \
-	store_client.cc store_digest.cc store_dir.cc store_io.cc \
-	store_key_md5.cc store_log.cc store_rebuild.cc store_swapin.cc \
-	store_swapmeta.cc store_swapout.cc StoreFileSystem.cc \
-	StoreIOState.cc StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
+	peer_digest.cc peer_select.cc peer_sourcehash.cc \
+	peer_userhash.cc redirect.cc referer.cc refresh.cc \
+	RemovalPolicy.cc Server.cc snmp_core.cc snmp_agent.cc \
+	ACLCertificateData.cc ACLCertificateData.h ACLCertificate.cc \
+	ACLCertificate.h ssl_support.cc ssl_support.h stat.cc \
+	StatHist.cc stmem.cc store.cc store_client.cc store_digest.cc \
+	store_dir.cc store_io.cc store_key_md5.cc store_log.cc \
+	store_rebuild.cc store_swapin.cc store_swapmeta.cc \
+	store_swapout.cc StoreFileSystem.cc StoreIOState.cc \
+	StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
 	StoreMetaSTDLFS.cc StoreMetaUnpacker.cc StoreMetaURL.cc \
 	StoreMetaVary.cc StoreSwapLogData.cc tools.cc tunnel.cc \
 	SwapDir.cc url.cc URLScheme.cc urn.cc useragent.cc wccp2.cc \
@@ -985,7 +994,8 @@ am_tests_testHttpRequest_OBJECTS = debug.$(OBJEXT) globals.$(OBJEXT) \
 	MemBuf.$(OBJEXT) MemObject.$(OBJEXT) mime.$(OBJEXT) \
 	neighbors.$(OBJEXT) net_db.$(OBJEXT) Packer.$(OBJEXT) \
 	Parsing.$(OBJEXT) pconn.$(OBJEXT) peer_digest.$(OBJEXT) \
-	peer_select.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
+	peer_select.$(OBJEXT) peer_sourcehash.$(OBJEXT) \
+	peer_userhash.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
 	refresh.$(OBJEXT) RemovalPolicy.$(OBJEXT) Server.$(OBJEXT) \
 	$(am__objects_21) $(am__objects_23) stat.$(OBJEXT) \
 	StatHist.$(OBJEXT) stmem.$(OBJEXT) store.$(OBJEXT) \
@@ -1123,19 +1133,19 @@ am__tests_testURL_SOURCES_DIST = debug.cc url.cc URLScheme.cc \
 	ipc.cc ipc_win32.cc ipcache.cc int.cc internal.cc list.cc \
 	logfile.cc multicast.cc mem_node.cc MemBuf.cc MemObject.cc \
 	mime.cc neighbors.cc net_db.cc Packer.cc Parsing.cc pconn.cc \
-	peer_digest.cc peer_select.cc redirect.cc referer.cc \
-	refresh.cc Server.cc snmp_core.cc snmp_agent.cc \
-	ACLCertificateData.cc ACLCertificateData.h ACLCertificate.cc \
-	ACLCertificate.h ssl_support.cc ssl_support.h stat.cc \
-	StatHist.cc stmem.cc store.cc store_client.cc store_digest.cc \
-	store_dir.cc store_io.cc store_key_md5.cc store_log.cc \
-	store_rebuild.cc store_swapin.cc store_swapmeta.cc \
-	store_swapout.cc StoreFileSystem.cc StoreIOState.cc \
-	StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
-	StoreMetaSTDLFS.cc StoreMetaUnpacker.cc StoreMetaURL.cc \
-	StoreMetaVary.cc StoreSwapLogData.cc tools.cc tunnel.cc \
-	SwapDir.cc urn.cc useragent.cc wccp2.cc whois.cc win32.cc \
-	wordlist.cc
+	peer_digest.cc peer_select.cc peer_sourcehash.cc \
+	peer_userhash.cc redirect.cc referer.cc refresh.cc Server.cc \
+	snmp_core.cc snmp_agent.cc ACLCertificateData.cc \
+	ACLCertificateData.h ACLCertificate.cc ACLCertificate.h \
+	ssl_support.cc ssl_support.h stat.cc StatHist.cc stmem.cc \
+	store.cc store_client.cc store_digest.cc store_dir.cc \
+	store_io.cc store_key_md5.cc store_log.cc store_rebuild.cc \
+	store_swapin.cc store_swapmeta.cc store_swapout.cc \
+	StoreFileSystem.cc StoreIOState.cc StoreMeta.cc \
+	StoreMetaMD5.cc StoreMetaSTD.cc StoreMetaSTDLFS.cc \
+	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
+	StoreSwapLogData.cc tools.cc tunnel.cc SwapDir.cc urn.cc \
+	useragent.cc wccp2.cc whois.cc win32.cc wordlist.cc
 am_tests_testURL_OBJECTS = debug.$(OBJEXT) url.$(OBJEXT) \
 	URLScheme.$(OBJEXT) globals.$(OBJEXT) HttpRequest.$(OBJEXT) \
 	HttpRequestMethod.$(OBJEXT) mem.$(OBJEXT) \
@@ -1169,7 +1179,8 @@ am_tests_testURL_OBJECTS = debug.$(OBJEXT) url.$(OBJEXT) \
 	MemBuf.$(OBJEXT) MemObject.$(OBJEXT) mime.$(OBJEXT) \
 	neighbors.$(OBJEXT) net_db.$(OBJEXT) Packer.$(OBJEXT) \
 	Parsing.$(OBJEXT) pconn.$(OBJEXT) peer_digest.$(OBJEXT) \
-	peer_select.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
+	peer_select.$(OBJEXT) peer_sourcehash.$(OBJEXT) \
+	peer_userhash.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
 	refresh.$(OBJEXT) Server.$(OBJEXT) $(am__objects_21) \
 	$(am__objects_23) stat.$(OBJEXT) StatHist.$(OBJEXT) \
 	stmem.$(OBJEXT) store.$(OBJEXT) store_client.$(OBJEXT) \
@@ -1261,20 +1272,21 @@ am__tests_test_http_range_SOURCES_DIST = tests/test_http_range.cc \
 	icp_v3.cc ACLIdent.cc ACLIdent.h ident.cc int.cc internal.cc \
 	ipc.cc ipc_win32.cc ipcache.cc list.cc logfile.cc mem.cc \
 	mem_node.cc MemObject.cc mime.cc multicast.cc neighbors.cc \
-	net_db.cc Parsing.cc peer_digest.cc peer_select.cc pconn.cc \
-	redirect.cc referer.cc refresh.cc RemovalPolicy.cc Server.cc \
-	snmp_core.cc snmp_agent.cc ACLCertificateData.cc \
-	ACLCertificateData.h ACLCertificate.cc ACLCertificate.h \
-	ssl_support.cc ssl_support.h stat.cc StatHist.cc stmem.cc \
-	store.cc store_client.cc store_digest.cc store_dir.cc \
-	store_key_md5.cc store_io.cc store_log.cc store_rebuild.cc \
-	store_swapin.cc store_swapmeta.cc store_swapout.cc \
-	StoreFileSystem.cc StoreIOState.cc StoreMeta.cc \
-	StoreMetaMD5.cc StoreMetaSTD.cc StoreMetaSTDLFS.cc \
-	StoreMetaUnpacker.cc StoreMetaURL.cc StoreMetaVary.cc \
-	StoreSwapLogData.cc String.cc SwapDir.cc time.cc tools.cc \
-	tunnel.cc url.cc URLScheme.cc urn.cc useragent.cc wccp2.cc \
-	whois.cc win32.cc wordlist.cc Packer.cc MemBuf.cc
+	net_db.cc Parsing.cc peer_digest.cc peer_select.cc \
+	peer_sourcehash.cc peer_userhash.cc pconn.cc redirect.cc \
+	referer.cc refresh.cc RemovalPolicy.cc Server.cc snmp_core.cc \
+	snmp_agent.cc ACLCertificateData.cc ACLCertificateData.h \
+	ACLCertificate.cc ACLCertificate.h ssl_support.cc \
+	ssl_support.h stat.cc StatHist.cc stmem.cc store.cc \
+	store_client.cc store_digest.cc store_dir.cc store_key_md5.cc \
+	store_io.cc store_log.cc store_rebuild.cc store_swapin.cc \
+	store_swapmeta.cc store_swapout.cc StoreFileSystem.cc \
+	StoreIOState.cc StoreMeta.cc StoreMetaMD5.cc StoreMetaSTD.cc \
+	StoreMetaSTDLFS.cc StoreMetaUnpacker.cc StoreMetaURL.cc \
+	StoreMetaVary.cc StoreSwapLogData.cc String.cc SwapDir.cc \
+	time.cc tools.cc tunnel.cc url.cc URLScheme.cc urn.cc \
+	useragent.cc wccp2.cc whois.cc win32.cc wordlist.cc Packer.cc \
+	MemBuf.cc
 am_tests_test_http_range_OBJECTS = tests/test_http_range.$(OBJEXT) \
 	access_log.$(OBJEXT) acl.$(OBJEXT) acl_noncore.$(OBJEXT) \
 	ACLChecklist.$(OBJEXT) ACLProxyAuth.$(OBJEXT) \
@@ -1304,22 +1316,23 @@ am_tests_test_http_range_OBJECTS = tests/test_http_range.$(OBJEXT) \
 	logfile.$(OBJEXT) mem.$(OBJEXT) mem_node.$(OBJEXT) \
 	MemObject.$(OBJEXT) mime.$(OBJEXT) multicast.$(OBJEXT) \
 	neighbors.$(OBJEXT) net_db.$(OBJEXT) Parsing.$(OBJEXT) \
-	peer_digest.$(OBJEXT) peer_select.$(OBJEXT) pconn.$(OBJEXT) \
-	redirect.$(OBJEXT) referer.$(OBJEXT) refresh.$(OBJEXT) \
-	RemovalPolicy.$(OBJEXT) Server.$(OBJEXT) $(am__objects_21) \
-	$(am__objects_23) stat.$(OBJEXT) StatHist.$(OBJEXT) \
-	stmem.$(OBJEXT) store.$(OBJEXT) store_client.$(OBJEXT) \
-	store_digest.$(OBJEXT) store_dir.$(OBJEXT) \
-	store_key_md5.$(OBJEXT) store_io.$(OBJEXT) store_log.$(OBJEXT) \
-	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
-	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
-	StoreFileSystem.$(OBJEXT) StoreIOState.$(OBJEXT) \
-	StoreMeta.$(OBJEXT) StoreMetaMD5.$(OBJEXT) \
-	StoreMetaSTD.$(OBJEXT) StoreMetaSTDLFS.$(OBJEXT) \
-	StoreMetaUnpacker.$(OBJEXT) StoreMetaURL.$(OBJEXT) \
-	StoreMetaVary.$(OBJEXT) StoreSwapLogData.$(OBJEXT) \
-	String.$(OBJEXT) SwapDir.$(OBJEXT) time.$(OBJEXT) \
-	tools.$(OBJEXT) tunnel.$(OBJEXT) url.$(OBJEXT) \
+	peer_digest.$(OBJEXT) peer_select.$(OBJEXT) \
+	peer_sourcehash.$(OBJEXT) peer_userhash.$(OBJEXT) \
+	pconn.$(OBJEXT) redirect.$(OBJEXT) referer.$(OBJEXT) \
+	refresh.$(OBJEXT) RemovalPolicy.$(OBJEXT) Server.$(OBJEXT) \
+	$(am__objects_21) $(am__objects_23) stat.$(OBJEXT) \
+	StatHist.$(OBJEXT) stmem.$(OBJEXT) store.$(OBJEXT) \
+	store_client.$(OBJEXT) store_digest.$(OBJEXT) \
+	store_dir.$(OBJEXT) store_key_md5.$(OBJEXT) store_io.$(OBJEXT) \
+	store_log.$(OBJEXT) store_rebuild.$(OBJEXT) \
+	store_swapin.$(OBJEXT) store_swapmeta.$(OBJEXT) \
+	store_swapout.$(OBJEXT) StoreFileSystem.$(OBJEXT) \
+	StoreIOState.$(OBJEXT) StoreMeta.$(OBJEXT) \
+	StoreMetaMD5.$(OBJEXT) StoreMetaSTD.$(OBJEXT) \
+	StoreMetaSTDLFS.$(OBJEXT) StoreMetaUnpacker.$(OBJEXT) \
+	StoreMetaURL.$(OBJEXT) StoreMetaVary.$(OBJEXT) \
+	StoreSwapLogData.$(OBJEXT) String.$(OBJEXT) SwapDir.$(OBJEXT) \
+	time.$(OBJEXT) tools.$(OBJEXT) tunnel.$(OBJEXT) url.$(OBJEXT) \
 	URLScheme.$(OBJEXT) urn.$(OBJEXT) useragent.$(OBJEXT) \
 	wccp2.$(OBJEXT) whois.$(OBJEXT) $(am__objects_25) \
 	wordlist.$(OBJEXT) Packer.$(OBJEXT) MemBuf.$(OBJEXT)
@@ -1368,12 +1381,13 @@ am__ufsdump_SOURCES_DIST = debug.cc int.cc mem.cc store_key_md5.cc \
 	list.cc logfile.cc mem_node.cc mem_node.h Mem.h MemBuf.cc \
 	MemObject.cc MemObject.h mime.cc multicast.cc neighbors.cc \
 	net_db.cc Packer.cc Parsing.cc ProfStats.cc pconn.cc \
-	peer_digest.cc peer_select.cc protos.h redirect.cc referer.cc \
-	refresh.cc RemovalPolicy.cc send-announce.cc snmp_core.cc \
-	snmp_agent.cc squid.h ACLCertificateData.cc \
-	ACLCertificateData.h ACLCertificate.cc ACLCertificate.h \
-	ssl_support.cc ssl_support.h tunnel.cc Server.cc SquidNew.cc \
-	stat.cc StatHist.cc stmem.cc store_io.cc StoreIOBuffer.h \
+	peer_digest.cc peer_select.cc peer_sourcehash.cc \
+	peer_userhash.cc protos.h redirect.cc referer.cc refresh.cc \
+	RemovalPolicy.cc send-announce.cc snmp_core.cc snmp_agent.cc \
+	squid.h ACLCertificateData.cc ACLCertificateData.h \
+	ACLCertificate.cc ACLCertificate.h ssl_support.cc \
+	ssl_support.h tunnel.cc Server.cc SquidNew.cc stat.cc \
+	StatHist.cc stmem.cc store_io.cc StoreIOBuffer.h \
 	StoreIOState.cc store_client.cc StoreClient.h store_digest.cc \
 	store_dir.cc store_log.cc store_rebuild.cc store_swapin.cc \
 	store_swapmeta.cc store_swapout.cc structs.h SwapDir.cc \
@@ -1416,14 +1430,15 @@ am_ufsdump_OBJECTS = debug.$(OBJEXT) int.$(OBJEXT) mem.$(OBJEXT) \
 	MemObject.$(OBJEXT) mime.$(OBJEXT) multicast.$(OBJEXT) \
 	neighbors.$(OBJEXT) net_db.$(OBJEXT) Packer.$(OBJEXT) \
 	Parsing.$(OBJEXT) $(am__objects_19) pconn.$(OBJEXT) \
-	peer_digest.$(OBJEXT) peer_select.$(OBJEXT) redirect.$(OBJEXT) \
-	referer.$(OBJEXT) refresh.$(OBJEXT) RemovalPolicy.$(OBJEXT) \
-	send-announce.$(OBJEXT) $(am__objects_21) $(am__objects_23) \
-	tunnel.$(OBJEXT) Server.$(OBJEXT) SquidNew.$(OBJEXT) \
-	stat.$(OBJEXT) StatHist.$(OBJEXT) stmem.$(OBJEXT) \
-	store_io.$(OBJEXT) StoreIOState.$(OBJEXT) \
-	store_client.$(OBJEXT) store_digest.$(OBJEXT) \
-	store_dir.$(OBJEXT) store_log.$(OBJEXT) \
+	peer_digest.$(OBJEXT) peer_select.$(OBJEXT) \
+	peer_sourcehash.$(OBJEXT) peer_userhash.$(OBJEXT) \
+	redirect.$(OBJEXT) referer.$(OBJEXT) refresh.$(OBJEXT) \
+	RemovalPolicy.$(OBJEXT) send-announce.$(OBJEXT) \
+	$(am__objects_21) $(am__objects_23) tunnel.$(OBJEXT) \
+	Server.$(OBJEXT) SquidNew.$(OBJEXT) stat.$(OBJEXT) \
+	StatHist.$(OBJEXT) stmem.$(OBJEXT) store_io.$(OBJEXT) \
+	StoreIOState.$(OBJEXT) store_client.$(OBJEXT) \
+	store_digest.$(OBJEXT) store_dir.$(OBJEXT) store_log.$(OBJEXT) \
 	store_rebuild.$(OBJEXT) store_swapin.$(OBJEXT) \
 	store_swapmeta.$(OBJEXT) store_swapout.$(OBJEXT) \
 	SwapDir.$(OBJEXT) tools.$(OBJEXT) $(am__objects_24) \
@@ -2183,6 +2198,8 @@ squid_SOURCES = \
 	PeerDigest.h \
 	peer_digest.cc \
 	peer_select.cc \
+	peer_sourcehash.cc \
+	peer_userhash.cc \
 	PeerSelectState.h \
 	PingData.h \
 	protos.h \
@@ -2465,6 +2482,8 @@ ufsdump_SOURCES = \
 	pconn.cc \
 	peer_digest.cc \
 	peer_select.cc \
+	peer_sourcehash.cc \
+	peer_userhash.cc \
 	protos.h \
 	redirect.cc \
 	referer.cc \
@@ -2848,6 +2867,8 @@ tests_testCacheManager_SOURCES = \
 	pconn.cc \
 	peer_digest.cc \
 	peer_select.cc \
+	peer_sourcehash.cc \
+	peer_userhash.cc \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \
@@ -3018,6 +3039,8 @@ tests_testEvent_SOURCES = \
 	pconn.cc \
 	peer_digest.cc \
 	peer_select.cc \
+	peer_sourcehash.cc \
+	peer_userhash.cc \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \
@@ -3172,6 +3195,8 @@ tests_testEventLoop_SOURCES = \
 	pconn.cc \
 	peer_digest.cc \
 	peer_select.cc \
+	peer_sourcehash.cc \
+	peer_userhash.cc \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \
@@ -3349,6 +3374,8 @@ tests_test_http_range_SOURCES = \
 	Parsing.cc \
 	peer_digest.cc \
 	peer_select.cc \
+	peer_sourcehash.cc \
+	peer_userhash.cc \
 	pconn.cc \
 	redirect.cc \
 	referer.cc \
@@ -3507,6 +3534,8 @@ tests_testHttpRequest_SOURCES = \
 	pconn.cc \
 	peer_digest.cc \
 	peer_select.cc \
+	peer_sourcehash.cc \
+	peer_userhash.cc \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \
@@ -3855,6 +3884,8 @@ tests_testURL_SOURCES = \
 	pconn.cc \
 	peer_digest.cc \
 	peer_select.cc \
+	peer_sourcehash.cc \
+	peer_userhash.cc \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \
@@ -4784,6 +4815,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pconn.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/peer_digest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/peer_select.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/peer_sourcehash.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/peer_userhash.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pinger.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/recv-announce.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/redirect.Po@am__quote@

@@ -67,6 +67,8 @@ const char *hier_strings[] =
         "CARP",
 #endif
         "ANY_PARENT",
+	"USERHASH",
+	"SOURCEHASH",
         "INVALID CODE"
     };
 
@@ -513,8 +515,11 @@ peerGetSomeParent(ps_state * ps)
 
     if ((p = getDefaultParent(request))) {
         code = DEFAULT_PARENT;
+    } else if ((p = peerUserHashSelectParent(request))) {
+        code = USERHASH_PARENT;
+    } else if ((p = peerSourceHashSelectParent(request))) {
+        code = SOURCEHASH_PARENT;
 #if USE_CARP
-
     } else if ((p = carpSelectParent(request))) {
         code = CARP;
 #endif

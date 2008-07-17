@@ -176,6 +176,8 @@ typedef enum {
     CARP,
 #endif
     ANY_OLD_PARENT,
+    USERHASH_PARENT,
+    SOURCEHASH_PARENT,
     HIER_MAX
 } hier_code;
 

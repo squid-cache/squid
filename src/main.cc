@@ -567,6 +567,8 @@ serverConnectionsOpen(void)
 
     carpInit();
 #endif
+    peerUserHashInit();
+    peerSourceHashInit();
 }
 
 void
@@ -912,6 +914,8 @@ mainInitialize(void)
         carpRegisterWithCacheManager(manager);
 #endif
 
+	peerUserHashRegisterWithCacheManager(manager);
+	peerSourceHashRegisterWithCacheManager(manager);
         cbdataRegisterWithCacheManager(manager);
         /* These use separate calls so that the comm loops can eventually
          * coexist.
