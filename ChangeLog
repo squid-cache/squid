@@ -1,4 +1,4 @@
-Changes to squid-3.0.STABLE8 (20 Jul 2008):
+Changes to squid-3.0.STABLE8 (18 Jul 2008):
 
 	- Port from 2.6: Support for cachemgr sub-actions
 	- Port from 2.6: userhash peer selection method
@@ -15,6 +15,7 @@ Changes to squid-3.0.STABLE8 (20 Jul 2008):
 	- Fixes several issues on 64-bit systems
 	- Fixes several issues on older or stricter compilers
 	- Linux-2.6.24/2.6.25 netfilter_ipv4.h __u32 workaround
+	- Update Release Notes: 'all' ACL is built-in since 3.0.STABLE1
 
 Changes to squid-3.0.STABLE7 (22 Jun 2008):
 

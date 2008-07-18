@@ -1,11 +1,11 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
 <HEAD>
- <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.50">
- <TITLE>Squid 3.0.STABLE7 release notes</TITLE>
+ <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.21">
+ <TITLE>Squid 3.0.STABLE8 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.0.STABLE7 release notes</H1>
+<H1>Squid 3.0.STABLE8 release notes</H1>
 
 <H2>Squid Developers</H2>$Id: release-3.0.sgml,v 1.30.2.5 2008/02/28 00:26:31 amosjeffries Exp $
 <HR>
@@ -15,7 +15,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1. Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.0.STABLE7.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.0.STABLE8.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.0/">http://www.squid-cache.org/Versions/v3/3.0/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -505,10 +505,6 @@ See the accf_http(9) man page.
 </P>
 <P>Removed options:
 <PRE>
-    userhash, not yet ported to Squid-3
-
-    sourcehash, not yet ported to Squid-2
-
     monitorurl, monitorsize etc, not yet ported to Squid-3
 
     connection-auth=, not yet ported to Squid-3
@@ -520,7 +516,7 @@ See the accf_http(9) man page.
 <PRE>
     no-store, replaces the older read-only option
 
-    min-size, not yet portedto Squid-3
+    min-size, not yet ported to Squid-3
         
 </PRE>
 </P>
@@ -597,7 +593,9 @@ See the accf_http(9) man page.
         
 </PRE>
 </P>
+
 <DT><B>acl</B><DD>
+<P>The 'all' ACL is now provided as a built-in. Warnings will be displayed if any attempt is made to redefine it.</P>
 <P>New types:
 <PRE>
     acl aclname http_status 200 301 500- 400-403 ...     # status code in reply
@@ -615,6 +613,7 @@ See the accf_http(9) man page.
         
 </PRE>
 </P>
+
 <DT><B>short_icon_urls</B><DD>
 <P>New default:
 <PRE>
@@ -675,15 +674,6 @@ See the accf_http(9) man page.
     &lt;sH     Reply high offset sent
 
     &lt;sS     Upstream object size
-        
-</PRE>
-</P>
-
-<P>Removed format tags:
-<PRE>
-    &gt;st     Request size including HTTP headers, not yet ported to Squid-3.
-
-    st      Request+Reply size including HTTP headers, not yet ported to Squid-3.
         
 </PRE>
 </P>

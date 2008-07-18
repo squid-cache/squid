@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.0.STABLE7 release notes</title>
+<title>Squid 3.0.STABLE8 release notes</title>
 <author>Squid Developers</author>
 <date>$Id: release-3.0.sgml,v 1.30.2.5 2008/02/28 00:26:31 amosjeffries Exp $</date>
 
@@ -14,7 +14,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.0.STABLE7.
+The Squid Team are pleased to announce the release of Squid-3.0.STABLE8.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.0/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -418,10 +418,6 @@ See the accf_http(9) man page.
 	</verb>
 	<p>Removed options:
 	<verb>
-    userhash, not yet ported to Squid-3
-
-    sourcehash, not yet ported to Squid-2
-
     monitorurl, monitorsize etc, not yet ported to Squid-3
 
     connection-auth=, not yet ported to Squid-3
@@ -431,7 +427,7 @@ See the accf_http(9) man page.
 	<verb>
     no-store, replaces the older read-only option
 
-    min-size, not yet portedto Squid-3
+    min-size, not yet ported to Squid-3
 	</verb>
 	<p>COSS file system:
 	<verb>
@@ -492,7 +488,9 @@ See the accf_http(9) man page.
     ensures that the client will receive an updated version
     if one is available.
 	</verb>
+
 	<tag>acl</tag>
+	<p>The 'all' ACL is now provided as a built-in. Warnings will be displayed if any attempt is made to redefine it.
 	<p>New types:
 	<verb>
     acl aclname http_status 200 301 500- 400-403 ...     # status code in reply
@@ -506,6 +504,7 @@ See the accf_http(9) man page.
 	# match against the urlgroup as indicated by redirectors
 
 	</verb>
+
 	<tag>short_icon_urls</tag>
 	<p>New default:
 	<verb>
@@ -556,13 +555,6 @@ See the accf_http(9) man page.
     &lt;sH     Reply high offset sent
 
     &lt;sS     Upstream object size
-	</verb>
-
-	<p>Removed format tags:
-	<verb>
-    &gt;st     Request size including HTTP headers, not yet ported to Squid-3.
-
-    st      Request+Reply size including HTTP headers, not yet ported to Squid-3.
 	</verb>
 
 	<tag>reply_body_max_size</tag>
