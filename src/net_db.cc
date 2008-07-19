@@ -884,16 +884,15 @@ netdbExchangeDone(void *data)
     cbdataFree(ex);
 }
 
-#endif /* USE_ICMP */
-
 static void
-netdbRegisterWitHCacheManager(void)
+netdbRegisterWithCacheManager(void)
 {
-#if USE_ICMP
     CacheManager::GetInstance()->
         registerAction("netdb", "Network Measurement Database", netdbDump, 0, 1);
-#endif
 }
+
+#endif /* USE_ICMP */
+
 
 /* PUBLIC FUNCTIONS */
 
@@ -903,7 +902,7 @@ netdbInit(void)
 #if USE_ICMP
     int n;
 
-    netdbRegisterWitHCacheManager();
+    netdbRegisterWithCacheManager();
 
     if (addr_table)
         return;
