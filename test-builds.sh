@@ -1,11 +1,12 @@
-# #!/bin/bash
+#!/bin/sh
 #
 #  Run specific build tests for a given OS environment.
 #
 
-if test -f "./test-suite/buildtests/os-${1}.opts" ; then
-	echo "TESTING: ${1}"
-	./test-suite/buildtest.sh ./test-suite/buildtests/os-${1}
+tmp="${1}"
+if test -x "./test-suite/buildtests/os-${tmp}.opts" ; then
+	echo "TESTING: ${tmp}"
+	./test-suite/buildtest.sh ./test-suite/buildtests/os-${tmp}
 fi
 
 #
@@ -17,6 +18,7 @@ fi
 #
 
 for f in `ls -1 ./test-suite/buildtests/layer*.opts` ; do
-	echo "TESTING: ${f/.opts}"
-	./test-suite/buildtest.sh ${f/.opts}
+	arg=`echo "${f}" | sed s/\\.opts//`
+	echo "TESTING: ${arg}"
+	./test-suite/buildtest.sh "${arg}"
 done

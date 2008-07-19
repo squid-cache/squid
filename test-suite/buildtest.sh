@@ -1,4 +1,4 @@
-# #!/bin/bash
+#!/bin/sh -ex
 #
 # Configure and run a test build against any given set of configure options
 # or compile-time flags.
@@ -12,19 +12,19 @@ dist="${1}"
 log=`echo "${dist}" | sed s/..test-suite.buildtests.//g `
 
 # ... and send everything there...
-(
+{
 
-if test -f ${dist/.opts}.opts ; then
-	echo "BUILD: ${dist/.opts}.opts"
-	. ./${dist/.opts}.opts
+if test -x ${dist%%.opts}.opts ; then
+	echo "BUILD: ${dist%%.opts}.opts"
+	. ./${dist%%.opts}.opts
 else
 	echo "BUILD: DEFAULT"
 	OPTS=""
 fi
 
-if test -f ${dist/.opts/}.flags ; then
-#	echo "DEBUG: ${dist/.opts}.flags"
-	FLAGS=`cat ./${dist}.flags`
+if test -f ${dist%%.opts}.flags ; then
+#	echo "DEBUG: ${dist%%.opts}.flags"
+	FLAGS=`cat ./${dist%%.opts}.flags`
 # else nothing set for flags.
 fi
 
@@ -42,7 +42,6 @@ rm -f -r src/fs/aufs/.deps src/fs/diskd/.deps &&
 	make check &&
 	make
 
-
-) 2>&1 > ./buildtest_${log}.log
+} 2>&1 > ./buildtest_${log}.log
 
 # do not build any of the install's ...
