@@ -1610,8 +1610,10 @@ dump_peer_options(StoreEntry * sentry, peer * p)
     if (p->options.roundrobin)
         storeAppendPrintf(sentry, " round-robin");
 
+#if USE_CARP
     if (p->options.carp)
         storeAppendPrintf(sentry, " carp");
+#endif
 
     if (p->options.userhash)
         storeAppendPrintf(sentry, " userhash");
