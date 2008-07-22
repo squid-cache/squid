@@ -681,8 +681,7 @@ ServerStateData::handleAdaptationAborted(bool bypassable)
 
     if (entry->isEmpty()) {
         debugs(11,9, HERE << "creating ICAP error entry after ICAP failure");
-        ErrorState *err =
-            errorCon(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR, request);
+        ErrorState *err = errorCon(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR, request);
         err->xerrno = errno;
         fwd->fail(err);
         fwd->dontRetry(true);

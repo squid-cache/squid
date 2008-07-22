@@ -309,7 +309,7 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
                    fd_table[fd].ipaddr << ": password needed for '" << 
                    mgr->action << "'" );
 
-        rep = errorBuildReply(err);
+        rep = err->BuildHttpReply();
 
         errorStateFree(err);
 
