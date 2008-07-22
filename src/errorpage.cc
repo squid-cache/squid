@@ -32,6 +32,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+#include "config.h"
 
 #include "errorpage.h"
 #include "AuthUserRequest.h"
@@ -119,9 +120,6 @@ static char *errorLoadText(const char *page_name);
 static const char *errorFindHardText(err_type type);
 static ErrorDynamicPageInfo *errorDynamicPageInfoCreate(int id, const char *page_name);
 static void errorDynamicPageInfoDestroy(ErrorDynamicPageInfo * info);
-static MemBuf *errorBuildContent(ErrorState * err);
-static int errorDump(ErrorState * err, MemBuf * mb);
-static const char *errorConvert(char token, ErrorState * err);
 static IOCB errorSendComplete;
 
 
@@ -245,7 +243,7 @@ errorTryLoadText(const char *page_name, const char *dir)
     }
 
     if (len < 0) {
-        debugs(4, 0, "errorTryLoadText: failed to fully read: '" << path << "': " << xstrerror());
+        debugs(4, DBG_CRITICAL, HERE << "failed to fully read: '" << path << "': " << xstrerror());
     }
 
     file_close(fd);
@@ -278,7 +276,7 @@ static void
 errorDynamicPageInfoDestroy(ErrorDynamicPageInfo * info)
 {
     assert(info);
-    xfree(info->page_name);
+    safe_free(info->page_name);
     delete info;
 }
 
@@ -346,7 +344,6 @@ errorCon(err_type type, http_status status, HttpRequest * request)
 void
 errorAppendEntry(StoreEntry * entry, ErrorState * err)
 {
-    HttpReply *rep;
     assert(entry->mem_obj != NULL);
     assert (entry->isEmpty());
     debugs(4, 4, "Creating an error page for entry " << entry <<
@@ -375,8 +372,7 @@ errorAppendEntry(StoreEntry * entry, ErrorState * err)
 
     entry->lock();
     entry->buffer();
-    rep = errorBuildReply(err);
-    entry->replaceHttpReply(rep);
+    entry->replaceHttpReply( err->BuildHttpReply() );
     EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
     entry->flush();
     entry->complete();
@@ -403,7 +399,7 @@ errorSend(int fd, ErrorState * err)
     /* moved in front of errorBuildBuf @?@ */
     err->flags.flag_cbdata = 1;
 
-    rep = errorBuildReply(err);
+    rep = err->BuildHttpReply();
 
     comm_write_mbuf(fd, rep->pack(), errorSendComplete, err);
 
@@ -454,63 +450,61 @@ errorStateFree(ErrorState * err)
     cbdataFree(err);
 }
 
-/// \ingroup ErrorPageInternal
-static int
-errorDump(ErrorState * err, MemBuf * mb)
+int
+ErrorState::Dump(MemBuf * mb)
 {
-    HttpRequest *r = err->request;
     MemBuf str;
     const char *p = NULL;	/* takes priority over mb if set */
     char ntoabuf[MAX_IPSTRLEN];
 
     str.reset();
     /* email subject line */
-    str.Printf("CacheErrorInfo - %s", errorPageName(err->type));
+    str.Printf("CacheErrorInfo - %s", errorPageName(type));
     mb->Printf("?subject=%s", rfc1738_escape_part(str.buf));
     str.reset();
     /* email body */
     str.Printf("CacheHost: %s\r\n", getMyHostname());
     /* - Err Msgs */
-    str.Printf("ErrPage: %s\r\n", errorPageName(err->type));
+    str.Printf("ErrPage: %s\r\n", errorPageName(type));
 
-    if (err->xerrno) {
-        str.Printf("Err: (%d) %s\r\n", err->xerrno, strerror(err->xerrno));
+    if (xerrno) {
+        str.Printf("Err: (%d) %s\r\n", xerrno, strerror(xerrno));
     } else {
         str.Printf("Err: [none]\r\n");
     }
 
-    if (err->auth_user_request->denyMessage())
-        str.Printf("Auth ErrMsg: %s\r\n", err->auth_user_request->denyMessage());
+    if (auth_user_request->denyMessage())
+        str.Printf("Auth ErrMsg: %s\r\n", auth_user_request->denyMessage());
 
-    if (err->dnsserver_msg) {
-        str.Printf("DNS Server ErrMsg: %s\r\n", err->dnsserver_msg);
+    if (dnsserver_msg) {
+        str.Printf("DNS Server ErrMsg: %s\r\n", dnsserver_msg);
     }
 
     /* - TimeStamp */
     str.Printf("TimeStamp: %s\r\n\r\n", mkrfc1123(squid_curtime));
 
     /* - IP stuff */
-    str.Printf("ClientIP: %s\r\n", err->src_addr.NtoA(ntoabuf,MAX_IPSTRLEN));
+    str.Printf("ClientIP: %s\r\n", src_addr.NtoA(ntoabuf,MAX_IPSTRLEN));
 
-    if (r && r->hier.host) {
-        str.Printf("ServerIP: %s\r\n", r->hier.host);
+    if (request && request->hier.host) {
+        str.Printf("ServerIP: %s\r\n", request->hier.host);
     }
 
     str.Printf("\r\n");
     /* - HTTP stuff */
     str.Printf("HTTP Request:\r\n");
 
-    if (NULL != r) {
+    if (NULL != request) {
         Packer p;
         str.Printf("%s %s HTTP/%d.%d\n",
-                   RequestMethodStr(r->method),
-                   r->urlpath.size() ? r->urlpath.buf() : "/",
-                   r->http_ver.major, r->http_ver.minor);
+                   RequestMethodStr(request->method),
+                   request->urlpath.size() ? request->urlpath.buf() : "/",
+                   request->http_ver.major, request->http_ver.minor);
         packerToMemInit(&p, &str);
-        r->header.packInto(&p);
+        request->header.packInto(&p);
         packerClean(&p);
-    } else if (err->request_hdrs) {
-        p = err->request_hdrs;
+    } else if (request_hdrs) {
+        p = request_hdrs;
     } else {
         p = "[none]";
     }
@@ -518,11 +512,11 @@ errorDump(ErrorState * err, MemBuf * mb)
     str.Printf("\r\n");
     /* - FTP stuff */
 
-    if (err->ftp.request) {
-        str.Printf("FTP Request: %s\r\n", err->ftp.request);
-        str.Printf("FTP Reply: %s\r\n", err->ftp.reply);
+    if (ftp.request) {
+        str.Printf("FTP Request: %s\r\n", ftp.request);
+        str.Printf("FTP Reply: %s\r\n", ftp.reply);
         str.Printf("FTP Msg: ");
-        wordlistCat(err->ftp.server_msg, &str);
+        wordlistCat(ftp.server_msg, &str);
         str.Printf("\r\n");
     }
 
@@ -535,11 +529,9 @@ errorDump(ErrorState * err, MemBuf * mb)
 /// \ingroup ErrorPageInternal
 #define CVT_BUF_SZ 512
 
-/// \ingroup ErrorPageInternal
-static const char *
-errorConvert(char token, ErrorState * err)
+const char *
+ErrorState::Convert(char token)
 {
-    HttpRequest *r = err->request;
     static MemBuf mb;
     const char *p = NULL;	/* takes priority over mb if set */
     int do_quote = 1;
@@ -551,8 +543,8 @@ errorConvert(char token, ErrorState * err)
 
     case 'a':
 
-        if (r && r->auth_user_request)
-            p = r->auth_user_request->username();
+        if (request && request->auth_user_request)
+            p = request->auth_user_request->username();
 
         if (!p)
             p = "-";
@@ -560,24 +552,24 @@ errorConvert(char token, ErrorState * err)
         break;
 
     case 'B':
-        p = r ? ftpUrlWith2f(r) : "[no URL]";
+        p = request ? ftpUrlWith2f(request) : "[no URL]";
 
         break;
 
     case 'c':
-        p = errorPageName(err->type);
+        p = errorPageName(type);
 
         break;
 
     case 'e':
-        mb.Printf("%d", err->xerrno);
+        mb.Printf("%d", xerrno);
 
         break;
 
     case 'E':
 
-        if (err->xerrno)
-            mb.Printf("(%d) %s", err->xerrno, strerror(err->xerrno));
+        if (xerrno)
+            mb.Printf("(%d) %s", xerrno, strerror(xerrno));
         else
             mb.Printf("[No Error]");
 
@@ -585,8 +577,8 @@ errorConvert(char token, ErrorState * err)
 
     case 'f':
         /* FTP REQUEST LINE */
-        if (err->ftp.request)
-            p = err->ftp.request;
+        if (ftp.request)
+            p = ftp.request;
         else
             p = "nothing";
 
@@ -594,8 +586,8 @@ errorConvert(char token, ErrorState * err)
 
     case 'F':
         /* FTP REPLY LINE */
-        if (err->ftp.request)
-            p = err->ftp.reply;
+        if (ftp.request)
+            p = ftp.reply;
         else
             p = "nothing";
 
@@ -603,7 +595,7 @@ errorConvert(char token, ErrorState * err)
 
     case 'g':
         /* FTP SERVER MESSAGE */
-        wordlistCat(err->ftp.server_msg, &mb);
+        wordlistCat(ftp.server_msg, &mb);
 
         break;
 
@@ -613,24 +605,24 @@ errorConvert(char token, ErrorState * err)
         break;
 
     case 'H':
-        if (r) {
-            if (r->hier.host)
-                p = r->hier.host;
+        if (request) {
+            if (request->hier.host)
+                p = request->hier.host;
             else
-                p = r->GetHost();
+                p = request->GetHost();
         } else
             p = "[unknown host]";
 
         break;
 
     case 'i':
-        mb.Printf("%s", err->src_addr.NtoA(ntoabuf,MAX_IPSTRLEN));
+        mb.Printf("%s", src_addr.NtoA(ntoabuf,MAX_IPSTRLEN));
 
         break;
 
     case 'I':
-        if (r && r->hier.host) {
-            mb.Printf("%s", r->hier.host);
+        if (request && request->hier.host) {
+            mb.Printf("%s", request->hier.host);
         } else
             p = "[unknown]";
 
@@ -646,12 +638,12 @@ errorConvert(char token, ErrorState * err)
         break;
 
     case 'm':
-        p = err->auth_user_request->denyMessage("[not available]");
+        p = auth_user_request->denyMessage("[not available]");
 
         break;
 
     case 'M':
-        p = r ? RequestMethodStr(r->method) : "[unknown method]";
+        p = request ? RequestMethodStr(request->method) : "[unknown method]";
 
         break;
 
@@ -661,8 +653,8 @@ errorConvert(char token, ErrorState * err)
         break;
 
     case 'p':
-        if (r) {
-            mb.Printf("%d", (int) r->port);
+        if (request) {
+            mb.Printf("%d", (int) request->port);
         } else {
             p = "[unknown port]";
         }
@@ -670,22 +662,22 @@ errorConvert(char token, ErrorState * err)
         break;
 
     case 'P':
-        p = r ? ProtocolStr[r->protocol] : "[unknown protocol]";
+        p = request ? ProtocolStr[request->protocol] : "[unknown protocol]";
         break;
 
     case 'R':
 
-        if (NULL != r) {
+        if (NULL != request) {
             Packer p;
             mb.Printf("%s %s HTTP/%d.%d\n",
-                      RequestMethodStr(r->method),
-                      r->urlpath.size() ? r->urlpath.buf() : "/",
-                      r->http_ver.major, r->http_ver.minor);
+                      RequestMethodStr(request->method),
+                      request->urlpath.size() ? request->urlpath.buf() : "/",
+                      request->http_ver.major, request->http_ver.minor);
             packerToMemInit(&p, &mb);
-            r->header.packInto(&p);
+            request->header.packInto(&p);
             packerClean(&p);
-        } else if (err->request_hdrs) {
-            p = err->request_hdrs;
+        } else if (request_hdrs) {
+            p = request_hdrs;
         } else {
             p = "[no request]";
         }
@@ -699,14 +691,14 @@ errorConvert(char token, ErrorState * err)
     case 'S':
         /* signature may contain %-escapes, recursion */
 
-        if (err->page_id != ERR_SQUID_SIGNATURE) {
-            const int saved_id = err->page_id;
-            err->page_id = ERR_SQUID_SIGNATURE;
-            MemBuf *sign_mb = errorBuildContent(err);
+        if (page_id != ERR_SQUID_SIGNATURE) {
+            const int saved_id = page_id;
+            page_id = ERR_SQUID_SIGNATURE;
+            MemBuf *sign_mb = BuildContent();
             mb.Printf("%s", sign_mb->content());
             sign_mb->clean();
             delete sign_mb;
-            err->page_id = saved_id;
+            page_id = saved_id;
             do_quote = 0;
         } else {
             /* wow, somebody put %S into ERR_SIGNATURE, stop recursion */
@@ -724,11 +716,11 @@ errorConvert(char token, ErrorState * err)
         break;
 
     case 'U':
-        p = r ? urlCanonicalClean(r) : err->url ? err->url : "[no URL]";
+        p = request ? urlCanonicalClean(request) : url ? url : "[no URL]";
         break;
 
     case 'u':
-        p = r ? urlCanonical(r) : err->url ? err->url : "[no URL]";
+        p = request ? urlCanonical(request) : url ? url : "[no URL]";
         break;
 
     case 'w':
@@ -742,21 +734,21 @@ errorConvert(char token, ErrorState * err)
 
     case 'W':
         if (Config.adminEmail && Config.onoff.emailErrData)
-            errorDump(err, &mb);
+            Dump(&mb);
 
         break;
 
     case 'z':
-        if (err->dnsserver_msg)
-            p = err->dnsserver_msg;
+        if (dnsserver_msg)
+            p = dnsserver_msg;
         else
             p = "[unknown]";
 
         break;
 
     case 'Z':
-        if (err->err_msg)
-            p = err->err_msg;
+        if (err_msg)
+            p = err_msg;
         else
             p = "[unknown]";
 
@@ -789,10 +781,10 @@ errorConvert(char token, ErrorState * err)
 }
 
 HttpReply *
-errorBuildReply(ErrorState * err)
+ErrorState::BuildHttpReply()
 {
     HttpReply *rep = new HttpReply;
-    const char *name = errorPageName(err->page_id);
+    const char *name = errorPageName(page_id);
     /* no LMT for error pages; error pages expire immediately */
     HttpVersion version(1, 0);
 
@@ -800,15 +792,15 @@ errorBuildReply(ErrorState * err)
         /* Redirection */
         rep->setHeaders(version, HTTP_MOVED_TEMPORARILY, NULL, "text/html", 0, 0, squid_curtime);
 
-        if (err->request) {
-            char *quoted_url = rfc1738_escape_part(urlCanonical(err->request));
+        if (request) {
+            char *quoted_url = rfc1738_escape_part(urlCanonical(request));
             httpHeaderPutStrf(&rep->header, HDR_LOCATION, name, quoted_url);
         }
 
-        httpHeaderPutStrf(&rep->header, HDR_X_SQUID_ERROR, "%d %s", err->httpStatus, "Access Denied");
+        httpHeaderPutStrf(&rep->header, HDR_X_SQUID_ERROR, "%d %s", httpStatus, "Access Denied");
     } else {
-        MemBuf *content = errorBuildContent(err);
-        rep->setHeaders(version, err->httpStatus, NULL, "text/html", content->contentSize(), 0, squid_curtime);
+        MemBuf *content = BuildContent();
+        rep->setHeaders(version, httpStatus, NULL, "text/html", content->contentSize(), 0, squid_curtime);
         /*
          * include some information for downstream caches. Implicit
          * replaceable content. This isn't quite sufficient. xerrno is not
@@ -817,8 +809,7 @@ errorBuildReply(ErrorState * err)
          * might want to know. Someone _will_ want to know OTOH, the first
          * X-CACHE-MISS entry should tell us who.
          */
-        httpHeaderPutStrf(&rep->header, HDR_X_SQUID_ERROR, "%s %d",
-                          name, err->xerrno);
+        httpHeaderPutStrf(&rep->header, HDR_X_SQUID_ERROR, "%s %d", name, xerrno);
         httpBodySet(&rep->body, content);
         /* do not memBufClean() or delete the content, it was absorbed by httpBody */
     }
@@ -826,25 +817,23 @@ errorBuildReply(ErrorState * err)
     return rep;
 }
 
-/// \ingroup ErrorPageInternal
-static MemBuf *
-errorBuildContent(ErrorState * err)
+MemBuf *
+ErrorState::BuildContent()
 {
     MemBuf *content = new MemBuf;
     const char *m;
     const char *p;
     const char *t;
-    assert(err != NULL);
-    assert(err->page_id > ERR_NONE && err->page_id < error_page_count);
+    assert(page_id > ERR_NONE && page_id < error_page_count);
     content->init();
-    m = error_text[err->page_id];
+    m = error_text[page_id];
     assert(m);
 
     while ((p = strchr(m, '%'))) {
         content->append(m, p - m);	/* copy */
-        t = errorConvert(*++p, err);	/* convert */
+        t = Convert(*++p);		/* convert */
         content->Printf("%s", t);	/* copy */
-        m = p + 1;		/* advance */
+        m = p + 1;			/* advance */
     }
 
     if (*m)

@@ -1465,7 +1465,7 @@ ESIContext::fail ()
     ErrorState * err = clientBuildError(errorpage, errorstatus, NULL, http->getConn()->peer, http->request);
     err->err_msg = errormessage;
     errormessage = NULL;
-    rep = errorBuildReply (err);
+    rep = err->BuildHttpReply();
     assert (rep->body.mb->contentSize() >= 0);
     size_t errorprogress = rep->body.mb->contentSize();
     /* Tell esiSend where to start sending from */
