@@ -77,11 +77,6 @@
 #define s6_addr32 __u6_addr.__u6_addr32
 #endif
 
-// OpenBSD also hide v6only socket option we need for comm layer. :-(
-#if !defined(IPV6_V6ONLY) && defined(_SQUID_OPENBSD_)
-#define IPV6_V6ONLY		27 // from OpenBSD 4.3 headers. (NP: does not match other OS values for same)
-#endif
-
 /// Length of buffer that needs to be allocated to old a null-terminated IP-string
 // Yuck. But there are still structures that need it to be an 'integer constant'.
 #define MAX_IPSTRLEN  75
