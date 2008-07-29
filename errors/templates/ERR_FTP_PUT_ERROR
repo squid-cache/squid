@@ -11,12 +11,12 @@
 
 <p>Squid sent the following FTP command:</p>
 <blockquote>
-<p><b>%f</b></p>
+<pre>%f</pre>
 </blockquote>
 
 <p>The server responded with:</p>
 <blockquote>
-<p><b>%F</b></p>
+<pre>%F</pre>
 </blockquote>
 
 <p>This means that the FTP server may not have permission or space to store the file. Check the path, permissions, diskspace and try again.</p>

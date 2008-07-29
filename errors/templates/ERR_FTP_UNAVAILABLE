@@ -12,13 +12,13 @@
 <p>Squid sent the following FTP command:</p>
 
 <blockquote>
-<p><b>%f</b></p>
+<pre>%f</pre>
 </blockquote>
 
 <p>The server responded with:</p>
 <blockquote>
-<p><b>%F</b></p>
-<p><b>%g</b></p>
+<pre>%F</pre>
+<pre>%g</pre>
 </blockquote>
 
 <p>Your cache administrator is <a href="mailto:%w%W">%w</a>.</p>
