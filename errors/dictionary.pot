@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-07-30 03:28+1300\n"
+"POT-Creation-Date: 2008-07-31 23:09+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -245,14 +245,14 @@ msgstr ""
 msgid "Operation successful"
 msgstr ""
 
-#: templates/ERR_CACHE_ACCESS_DENIED:8
+#: templates/ERR_CACHE_ACCESS_DENIED:7
 msgid ""
 "Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
 "have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
 "chpasswd.cgi\">change</a> your default password."
 msgstr ""
 
-#: templates/ERR_CACHE_MGR_ACCESS_DENIED:8
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
 msgid ""
 "Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
 "have difficulties authenticating yourself or, if you <em>are</em> the "
@@ -516,12 +516,6 @@ msgid ""
 "You have issued a request with a <q>only-if-cached</q> cache control "
 "directive. The document was not found in the cache, <em>or</em> it required "
 "revalidation prohibited by the <q>only-if-cached</q> directive."
-msgstr ""
-
-#: templates/ERR_CACHE_ACCESS_DENIED:7 templates/ERR_CACHE_MGR_ACCESS_DENIED:7
-msgid ""
-"You need to use Netscape version 2.0 or greater, or Microsoft Internet "
-"Explorer 3.0, or an HTTP/1.1 compliant browser for this to work."
 msgstr ""
 
 #: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
