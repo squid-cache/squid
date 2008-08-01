@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-07-15 23:14+1300\n"
+"POT-Creation-Date: 2008-07-31 23:09+1300\n"
 "PO-Revision-Date: 2008-07-20 11:29+1200\n"
 "Last-Translator: Amos Jeffries <squid3@treenet.co.nz>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -11,49 +11,26 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Pootle 1.1.0\n"
 
-#: templates/ERR_FTP_FAILURE:8 templates/ERR_FTP_FORBIDDEN:8
-#: templates/ERR_FTP_NOT_FOUND:8 templates/ERR_FTP_PUT_ERROR:8
-#: templates/ERR_FTP_UNAVAILABLE:8
-msgid "%F"
-msgstr "%F"
-
-#: templates/ERR_FTP_FAILURE:6 templates/ERR_FTP_FORBIDDEN:6
-#: templates/ERR_FTP_NOT_FOUND:6 templates/ERR_FTP_PUT_ERROR:6
-#: templates/ERR_FTP_UNAVAILABLE:6
-msgid "%f"
-msgstr "%f"
-
-#: templates/ERR_FTP_FAILURE:9 templates/ERR_FTP_FORBIDDEN:9
-#: templates/ERR_FTP_NOT_FOUND:9 templates/ERR_FTP_UNAVAILABLE:9
-msgid "%g"
-msgstr "%g"
-
-#: templates/ERR_DNS_FAIL:7
-msgid "%z"
-msgstr "%z"
-
 #: templates/ERR_INVALID_REQ:4
-msgid "<b>Invalid Request</b> error was encountered while trying to process the request:"
+msgid ""
+"<b>Invalid Request</b> error was encountered while trying to process the "
+"request:"
 msgstr ""
 "<b>Invalid Request</b> error was encountered while trying to process the "
 "request:"
 
 #: templates/ERR_INVALID_RESP:4
-msgid "<b>Invalid Response</b> error was encountered while trying to process the request:"
+msgid ""
+"<b>Invalid Response</b> error was encountered while trying to process the "
+"request:"
 msgstr ""
 "<b>Invalid Response</b> error was encountered while trying to process the "
 "request:"
 
-#: templates/generic:8
-msgid "@LONG_DESCRIPTION@"
-msgstr "@LONG_DESCRIPTION@"
-
-#: templates/generic:5
-msgid "@SHORT_DESCRIPTION@"
-msgstr "@SHORT_DESCRIPTION@"
-
 #: templates/ERR_READ_TIMEOUT:7
-msgid "A Timeout occurred while waiting to read data from the network.  The network or server may be down or congested.  Please retry your request."
+msgid ""
+"A Timeout occurred while waiting to read data from the network.  The network "
+"or server may be down or congested.  Please retry your request."
 msgstr ""
 "A Timeout occurred while waiting to read data from the network.  The network "
 "or server may be down or congested.  Please retry your request."
@@ -67,36 +44,47 @@ msgid "Access Denied."
 msgstr "Access Denied."
 
 #: templates/ERR_ACCESS_DENIED:6
-msgid "Access control configuration prevents your request from being allowed at this time.  Please contact your service provider if you feel this is incorrect."
+msgid ""
+"Access control configuration prevents your request from being allowed at "
+"this time.  Please contact your service provider if you feel this is "
+"incorrect."
 msgstr ""
 "Access control configuration prevents your request from being allowed at "
 "this time.  Please contact your service provider if you feel this is "
 "incorrect."
 
 #: templates/ERR_FTP_FORBIDDEN:4
-msgid "An FTP authentication failure occurred while trying to retrieve the URL: <a href=\"%U\">%U</a>"
+msgid ""
+"An FTP authentication failure occurred while trying to retrieve the URL: <a "
+"href=\"%U\">%U</a>"
 msgstr ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 
 #: templates/ERR_FTP_FAILURE:4
-msgid "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U\">%U</a>"
+msgid ""
+"An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
+"\">%U</a>"
 msgstr ""
-"An FTP protocol error occurred while trying to retrieve the URL: <a "
-"href=\"%U\">%U</a>"
+"An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
+"\">%U</a>"
 
 #: templates/ERR_ICAP_FAILURE:10
 msgid "An Illegal response was received from the ICAP server."
 msgstr "An Illegal response was received from the ICAP server."
 
 #: templates/ERR_READ_ERROR:7
-msgid "An error condition occurred while reading data from the network.  Please retry your request."
+msgid ""
+"An error condition occurred while reading data from the network.  Please "
+"retry your request."
 msgstr ""
 "An error condition occurred while reading data from the network.  Please "
 "retry your request."
 
 #: templates/ERR_WRITE_ERROR:7
-msgid "An error condition occurred while writing to the network.  Please retry your request."
+msgid ""
+"An error condition occurred while writing to the network.  Please retry your "
+"request."
 msgstr ""
 "An error condition occurred while writing to the network.  Please retry your "
 "request."
@@ -119,8 +107,8 @@ msgid "Connection Lifetime Expired"
 msgstr "Connection Lifetime Expired"
 
 #: templates/ERR_CONNECT_FAIL:5
-msgid "Connection to %I Failed."
-msgstr "Connection to %I Failed."
+msgid "Connection to %I failed."
+msgstr "Connection to %I failed."
 
 #: templates/ERR_INVALID_REQ:10
 msgid "Content-Length missing for POST or PUT requests."
@@ -141,7 +129,6 @@ msgstr "Content-Length missing for POST or PUT requests."
 #: templates/ERR_SOCKET_FAILURE:2 templates/ERR_TOO_BIG:2
 #: templates/ERR_UNSUP_REQ:2 templates/ERR_URN_RESOLVE:2
 #: templates/ERR_WRITE_ERROR:2 templates/ERR_ZERO_SIZE_OBJECT:2
-#: templates/generic:2
 msgid "ERROR"
 msgstr "ERROR"
 
@@ -170,7 +157,6 @@ msgstr "ERROR: FTP upload failed"
 #: templates/ERR_SHUTTING_DOWN:1 templates/ERR_SOCKET_FAILURE:1
 #: templates/ERR_TOO_BIG:1 templates/ERR_UNSUP_REQ:1
 #: templates/ERR_WRITE_ERROR:1 templates/ERR_ZERO_SIZE_OBJECT:1
-#: templates/generic:1
 msgid "ERROR: The requested URL could not be retrieved"
 msgstr "ERROR: The requested URL could not be retrieved"
 
@@ -223,13 +209,17 @@ msgid "ICAP protocol error."
 msgstr "ICAP protocol error."
 
 #: templates/ERR_TOO_BIG:7
-msgid "If you are making a GET request, then the item you are trying to download is too large."
+msgid ""
+"If you are making a GET request, then the item you are trying to download is "
+"too large."
 msgstr ""
 "If you are making a GET request, then the item you are trying to download is "
 "too large."
 
 #: templates/ERR_TOO_BIG:6
-msgid "If you are making a POST or PUT request, then the item you are trying to upload is too large."
+msgid ""
+"If you are making a POST or PUT request, then the item you are trying to "
+"upload is too large."
 msgstr ""
 "If you are making a POST or PUT request, then the item you are trying to "
 "upload is too large."
@@ -259,7 +249,8 @@ msgid "Missing hostname"
 msgstr "Missing hostname"
 
 #: templates/ERR_INVALID_URL:8
-msgid "Missing or incorrect access protocol (should be <q>http://</q> or similar)"
+msgid ""
+"Missing or incorrect access protocol (should be <q>http://</q> or similar)"
 msgstr ""
 "Missing or incorrect access protocol (should be <q>http://</q> or similar)"
 
@@ -275,18 +266,25 @@ msgstr "No Wais Relay"
 msgid "Operation successful"
 msgstr "Operation successful"
 
-#: templates/ERR_CACHE_ACCESS_DENIED:8
-msgid "Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/chpasswd.cgi\">change</a> your default password."
+#: templates/ERR_CACHE_ACCESS_DENIED:7
+msgid ""
+"Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
+"have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
+"chpasswd.cgi\">change</a> your default password."
 msgstr ""
-"Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you have "
-"difficulties authenticating yourself or <a href=\"http://%h/cgi-"
-"bin/chpasswd.cgi\">change</a> your default password."
+"Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
+"have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
+"chpasswd.cgi\">change</a> your default password."
 
-#: templates/ERR_CACHE_MGR_ACCESS_DENIED:8
-msgid "Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you have difficulties authenticating yourself or, if you <em>are</em> the administrator, read Squid documentation on cache manager interface and check cache log for more detailed error messages."
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
+msgid ""
+"Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
+"have difficulties authenticating yourself or, if you <em>are</em> the "
+"administrator, read Squid documentation on cache manager interface and check "
+"cache log for more detailed error messages."
 msgstr ""
-"Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you have "
-"difficulties authenticating yourself or, if you <em>are</em> the "
+"Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
+"have difficulties authenticating yourself or, if you <em>are</em> the "
 "administrator, read Squid documentation on cache manager interface and check "
 "cache log for more detailed error messages."
 
@@ -316,13 +314,17 @@ msgid "Some possible problems are:"
 msgstr "Some possible problems are:"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:6
-msgid "Sorry, you are not currently allowed to request %U from this cache manager until you have authenticated yourself."
+msgid ""
+"Sorry, you are not currently allowed to request %U from this cache manager "
+"until you have authenticated yourself."
 msgstr ""
 "Sorry, you are not currently allowed to request %U from this cache manager "
 "until you have authenticated yourself."
 
 #: templates/ERR_CACHE_ACCESS_DENIED:6
-msgid "Sorry, you are not currently allowed to request %U from this cache until you have authenticated yourself."
+msgid ""
+"Sorry, you are not currently allowed to request %U from this cache until you "
+"have authenticated yourself."
 msgstr ""
 "Sorry, you are not currently allowed to request %U from this cache until you "
 "have authenticated yourself."
@@ -332,19 +334,25 @@ msgid "Squid did not receive any data for this request."
 msgstr "Squid did not receive any data for this request."
 
 #: templates/ERR_UNSUP_REQ:6
-msgid "Squid does not support all request methods for all access protocols. For example, you can not POST a Gopher request."
+msgid ""
+"Squid does not support all request methods for all access protocols. For "
+"example, you can not POST a Gopher request."
 msgstr ""
 "Squid does not support all request methods for all access protocols. For "
 "example, you can not POST a Gopher request."
 
 #: templates/ERR_LIFETIME_EXP:6
-msgid "Squid has terminated the request because it has exceeded the maximum connection lifetime."
+msgid ""
+"Squid has terminated the request because it has exceeded the maximum "
+"connection lifetime."
 msgstr ""
 "Squid has terminated the request because it has exceeded the maximum "
 "connection lifetime."
 
 #: templates/ERR_SOCKET_FAILURE:7
-msgid "Squid is unable to create a TCP socket, presumably due to excessive load. Please retry your request."
+msgid ""
+"Squid is unable to create a TCP socket, presumably due to excessive load. "
+"Please retry your request."
 msgstr ""
 "Squid is unable to create a TCP socket, presumably due to excessive load. "
 "Please retry your request."
@@ -364,7 +372,9 @@ msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
-msgid "The HTTP Response message received from the contacted server could not be understood or was otherwise malformed. Please contact the site operator."
+msgid ""
+"The HTTP Response message received from the contacted server could not be "
+"understood or was otherwise malformed. Please contact the site operator."
 msgstr ""
 "The HTTP Response message received from the contacted server could not be "
 "understood or was otherwise malformed. Please contact the site operator."
@@ -392,14 +402,17 @@ msgstr "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
 #: templates/ERR_SHUTTING_DOWN:4 templates/ERR_SOCKET_FAILURE:4
 #: templates/ERR_TOO_BIG:4 templates/ERR_UNSUP_REQ:4
 #: templates/ERR_WRITE_ERROR:4 templates/ERR_ZERO_SIZE_OBJECT:4
-#: templates/generic:4
-msgid "The following error was encountered while trying to retrieve the URL: <a href=\"%U\">%U</a>"
+msgid ""
+"The following error was encountered while trying to retrieve the URL: <a "
+"href=\"%U\">%U</a>"
 msgstr ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 
 #: templates/ERR_URN_RESOLVE:4
-msgid "The following error was encountered while trying to retrieve the URN: <a href=\"%U\">%U</a>"
+msgid ""
+"The following error was encountered while trying to retrieve the URN: <a "
+"href=\"%U\">%U</a>"
 msgstr ""
 "The following error was encountered while trying to retrieve the URN: <a "
 "href=\"%U\">%U</a>"
@@ -425,31 +438,35 @@ msgstr "The request or reply is too large."
 #: templates/ERR_SHUTTING_DOWN:3 templates/ERR_SOCKET_FAILURE:3
 #: templates/ERR_TOO_BIG:3 templates/ERR_UNSUP_REQ:3
 #: templates/ERR_WRITE_ERROR:3 templates/ERR_ZERO_SIZE_OBJECT:3
-#: templates/generic:3
 msgid "The requested URL could not be retrieved"
 msgstr "The requested URL could not be retrieved"
 
-#: templates/ERR_FTP_FAILURE:7 templates/ERR_FTP_FORBIDDEN:7
-#: templates/ERR_FTP_NOT_FOUND:7 templates/ERR_FTP_PUT_ERROR:7
-#: templates/ERR_FTP_UNAVAILABLE:7
+#: templates/ERR_FTP_FAILURE:6 templates/ERR_FTP_FORBIDDEN:6
+#: templates/ERR_FTP_NOT_FOUND:6 templates/ERR_FTP_PUT_ERROR:6
+#: templates/ERR_FTP_UNAVAILABLE:6
 msgid "The server responded with:"
 msgstr "The server responded with:"
 
 #: templates/ERR_CONNECT_FAIL:6 templates/ERR_ICAP_FAILURE:6
 #: templates/ERR_READ_ERROR:6 templates/ERR_READ_TIMEOUT:6
 #: templates/ERR_SECURE_CONNECT_FAIL:6 templates/ERR_SOCKET_FAILURE:6
-#: templates/ERR_WRITE_ERROR:6 templates/generic:6
+#: templates/ERR_WRITE_ERROR:6
 msgid "The system returned: <i>%E</i>"
 msgstr "The system returned: <i>%E</i>"
 
 #: templates/ERR_NO_RELAY:6
-msgid "There is no WAIS Relay host defined for this Cache!  Yell at the administrator."
+msgid ""
+"There is no WAIS Relay host defined for this Cache!  Yell at the "
+"administrator."
 msgstr ""
 "There is no WAIS Relay host defined for this Cache!  Yell at the "
 "administrator."
 
 #: templates/ERR_TOO_BIG:8
-msgid "These limits have been established by the Internet Service Provider who operates this cache.  Please contact them directly if you feel this is an error."
+msgid ""
+"These limits have been established by the Internet Service Provider who "
+"operates this cache.  Please contact them directly if you feel this is an "
+"error."
 msgstr ""
 "These limits have been established by the Internet Service Provider who "
 "operates this cache.  Please contact them directly if you feel this is an "
@@ -460,13 +477,18 @@ msgid "This cache does not support FTP."
 msgstr "This cache does not support FTP."
 
 #: templates/ERR_SHUTTING_DOWN:5
-msgid "This cache is in the process of shutting down and can not service your request at this time.  Please retry your request again soon."
+msgid ""
+"This cache is in the process of shutting down and can not service your "
+"request at this time.  Please retry your request again soon."
 msgstr ""
 "This cache is in the process of shutting down and can not service your "
 "request at this time.  Please retry your request again soon."
 
 #: templates/ERR_FORWARDING_DENIED:6
-msgid "This cache will not forward your request because it is trying to enforce a sibling relationship.  Perhaps the client at %i is a cache which has been misconfigured."
+msgid ""
+"This cache will not forward your request because it is trying to enforce a "
+"sibling relationship.  Perhaps the client at %i is a cache which has been "
+"misconfigured."
 msgstr ""
 "This cache will not forward your request because it is trying to enforce a "
 "sibling relationship.  Perhaps the client at %i is a cache which has been "
@@ -476,37 +498,46 @@ msgstr ""
 msgid "This means that some aspect of the ICAP communication failed."
 msgstr "This means that some aspect of the ICAP communication failed."
 
-#: templates/ERR_FTP_PUT_ERROR:9
-msgid "This means that the FTP server may not have permission or space to store the file. Check the path, permissions, diskspace and try again."
+#: templates/ERR_FTP_PUT_ERROR:7
+msgid ""
+"This means that the FTP server may not have permission or space to store the "
+"file. Check the path, permissions, diskspace and try again."
 msgstr ""
 "This means that the FTP server may not have permission or space to store the "
 "file. Check the path, permissions, diskspace and try again."
 
-#: templates/ERR_DNS_FAIL:8
-msgid "This means that the cache was not able to resolve the hostname presented in the URL. Check if the address is correct."
+#: templates/ERR_DNS_FAIL:7
+msgid ""
+"This means that the cache was not able to resolve the hostname presented in "
+"the URL. Check if the address is correct."
 msgstr ""
 "This means that the cache was not able to resolve the hostname presented in "
 "the URL. Check if the address is correct."
 
 #: templates/ERR_ESI:7
-msgid "This means that the surrogate was not able to process the ESI template. Please report this error to the webmaster."
+msgid ""
+"This means that the surrogate was not able to process the ESI template. "
+"Please report this error to the webmaster."
 msgstr ""
 "This means that the surrogate was not able to process the ESI template. "
 "Please report this error to the webmaster."
 
-#: templates/generic:7
-msgid "This means:"
-msgstr "This means:"
-
-#: templates/ERR_FTP_NOT_FOUND:10
-msgid "This might be caused by an FTP URL with an absolute path (which does not comply with RFC 1738).  If this is the cause, then the file can be found at <a href=\"%B\">%B</a>."
+#: templates/ERR_FTP_NOT_FOUND:7
+msgid ""
+"This might be caused by an FTP URL with an absolute path (which does not "
+"comply with RFC 1738).  If this is the cause, then the file can be found at "
+"<a href=\"%B\">%B</a>."
 msgstr ""
 "This might be caused by an FTP URL with an absolute path (which does not "
 "comply with RFC 1738).  If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 
 #: templates/ERR_SECURE_CONNECT_FAIL:7
-msgid "This proxy and the remote host failed to negotiate a mutually acceptable security settings for handling your request. It is possible that the remote host does not support secure connections, or the proxy is not satisfied with the host security credentials."
+msgid ""
+"This proxy and the remote host failed to negotiate a mutually acceptable "
+"security settings for handling your request. It is possible that the remote "
+"host does not support secure connections, or the proxy is not satisfied with "
+"the host security credentials."
 msgstr ""
 "This proxy and the remote host failed to negotiate a mutually acceptable "
 "security settings for handling your request. It is possible that the remote "
@@ -514,7 +545,11 @@ msgstr ""
 "the host security credentials."
 
 #: templates/ERR_CANNOT_FORWARD:6
-msgid "This request could not be forwarded to the origin server or to any parent caches.  The most likely cause for this error is that the cache administrator does not allow this cache to make direct connections to origin servers, and all configured parent caches are currently unreachable."
+msgid ""
+"This request could not be forwarded to the origin server or to any parent "
+"caches.  The most likely cause for this error is that the cache "
+"administrator does not allow this cache to make direct connections to origin "
+"servers, and all configured parent caches are currently unreachable."
 msgstr ""
 "This request could not be forwarded to the origin server or to any parent "
 "caches.  The most likely cause for this error is that the cache "
@@ -534,7 +569,9 @@ msgid "Unsupported Request Method and Protocol"
 msgstr "Unsupported Request Method and Protocol"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS:5
-msgid "Valid document was not found in the cache and <q>only-if-cached</q> directive was specified."
+msgid ""
+"Valid document was not found in the cache and <q>only-if-cached</q> "
+"directive was specified."
 msgstr ""
 "Valid document was not found in the cache and <q>only-if-cached</q> "
 "directive was specified."
@@ -548,24 +585,21 @@ msgid "Write Error"
 msgstr "Write Error"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS:6
-msgid "You have issued a request with a <q>only-if-cached</q> cache control directive. The document was not found in the cache, <em>or</em> it required revalidation prohibited by the <q>only-if-cached</q> directive."
+msgid ""
+"You have issued a request with a <q>only-if-cached</q> cache control "
+"directive. The document was not found in the cache, <em>or</em> it required "
+"revalidation prohibited by the <q>only-if-cached</q> directive."
 msgstr ""
 "You have issued a request with a <q>only-if-cached</q> cache control "
 "directive. The document was not found in the cache, <em>or</em> it required "
 "revalidation prohibited by the <q>only-if-cached</q> directive."
 
-#: templates/ERR_CACHE_ACCESS_DENIED:7 templates/ERR_CACHE_MGR_ACCESS_DENIED:7
-msgid "You need to use Netscape version 2.0 or greater, or Microsoft Internet Explorer 3.0, or an HTTP/1.1 compliant browser for this to work."
-msgstr ""
-"You need to use Netscape version 2.0 or greater, or Microsoft Internet "
-"Explorer 3.0, or an HTTP/1.1 compliant browser for this to work."
-
 #: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
-#: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:9
+#: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
 #: templates/ERR_FORWARDING_DENIED:7 templates/ERR_FTP_DISABLED:7
-#: templates/ERR_FTP_FAILURE:10 templates/ERR_FTP_FORBIDDEN:10
-#: templates/ERR_FTP_NOT_FOUND:11 templates/ERR_FTP_PUT_ERROR:10
-#: templates/ERR_FTP_UNAVAILABLE:10 templates/ERR_INVALID_REQ:12
+#: templates/ERR_FTP_FAILURE:7 templates/ERR_FTP_FORBIDDEN:7
+#: templates/ERR_FTP_NOT_FOUND:8 templates/ERR_FTP_PUT_ERROR:8
+#: templates/ERR_FTP_UNAVAILABLE:7 templates/ERR_INVALID_REQ:12
 #: templates/ERR_INVALID_RESP:7 templates/ERR_INVALID_URL:12
 #: templates/ERR_LIFETIME_EXP:7 templates/ERR_NO_RELAY:7
 #: templates/ERR_ONLY_IF_CACHED_MISS:7 templates/ERR_READ_ERROR:8
@@ -578,7 +612,9 @@ msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
 msgstr "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
 
 #: templates/ERR_INVALID_RESP:6
-msgid "Your cache administrator may be able to provide you with more details about the exact nature of the problem if needed."
+msgid ""
+"Your cache administrator may be able to provide you with more details about "
+"the exact nature of the problem if needed."
 msgstr ""
 "Your cache administrator may be able to provide you with more details about "
 "the exact nature of the problem if needed."

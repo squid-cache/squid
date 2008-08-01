@@ -9,7 +9,7 @@
 <hr>
 <p>The following error was encountered while trying to retrieve the URL: <a href="%U">%U</a></p>
 <blockquote>
-<p><b>Connection to %I Failed.</b></p>
+<p><b>Connection to %I failed.</b></p>
 </blockquote>
 
 <p>The system returned: <i>%E</i></p>
