@@ -11,13 +11,13 @@
 
 <p>Squid sent the following FTP command:</p>
 <blockquote>
-<p><b>%f</b></p>
+<pre>%f</pre>
 </blockquote>
 
 <p>The server responded with:</p>
 <blockquote>
-<p><b>%F</b></p>
-<p><b>%g</b></p>
+<pre>%F</pre>
+<pre>%g</pre>
 </blockquote>
 
 <p>This might be caused by an FTP URL with an absolute path (which does not comply with RFC 1738).  If this is the cause, then the file can be found at <a href="%B">%B</a>.</p>
