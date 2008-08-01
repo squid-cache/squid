@@ -404,7 +404,7 @@ main(int argc, char **argv)
 	fprintf(stderr, "\n" PROGRAM_NAME " version " PROGRAM_VERSION "\n\n");
 	fprintf(stderr, "Usage: " PROGRAM_NAME " -b basedn -f filter [options] ldap_server_name\n\n");
 	fprintf(stderr, "\t-b basedn (REQUIRED)\tbase dn under where to search for groups\n");
-	fprintf(stderr, "\t-f filter (REQUIRED)\tgroup search filter pattern. %%v = user,\n\t\t\t\t%%a = group\n");
+	fprintf(stderr, "\t-f filter (REQUIRED)\tgroup search filter pattern. %%u = user,\n\t\t\t\t%%v = group\n");
 	fprintf(stderr, "\t-B basedn (REQUIRED)\tbase dn under where to search for users\n");
 	fprintf(stderr, "\t-F filter (REQUIRED)\tuser search filter pattern. %%s = login\n");
 	fprintf(stderr, "\t-s base|one|sub\t\tsearch scope\n");
