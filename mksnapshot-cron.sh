@@ -34,6 +34,9 @@ make_snapshot()
     *-cfgman.tar.gz)
 	type=-cfgman.tar.gz
 	;;
+    *-langpack.tar.gz)
+	type=-langpack.tar.gz
+	;;
     *)
 	type=`echo $file | sed -e 's/.*\.tar\.gz/.tar.gz/' -e 's/.*\.tar\.bz2/.tar.bz2/' -e 's/.*\.patch/.patch/' -e 's/.*\.diff/.diff/' -e 's/.*-RELEASENOTES.html/-RELEASENOTES.html/' -e 's/^.*ChangeLog.txt$/-ChangeLog.txt/' -e 's/.*-cfgman/-cfgman/'`
     esac
