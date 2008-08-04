@@ -52,7 +52,7 @@ make_snapshot()
     rm -f $dst/squid-$ver.snapshot$type
     ln -s $file $dst/squid-$ver.snapshot$type
     rm -f $dst/squid-$ver.snapshot$type.md5
-    ln -s $file $dst/squid-$ver.snapshot$type.md5
+    ln -s $file.md5 $dst/squid-$ver.snapshot$type.md5
 
     # cleanup old snapshots
     ls $dst/*-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]$type | sed -e 's/.*-\([0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'$type'\)/\1/' | sort -r | tail +$save | while read f; do
