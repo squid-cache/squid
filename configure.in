@@ -3694,6 +3694,23 @@ if test $ac_cv_have_res_ns_list = "yes" ; then
 fi
 fi
 
+dnl Squid now has limited locale handling ...
+DO_TRANSLATE="yes"
+AC_ARG_WITH(po2html,
+[  --without-po2html     Translation toolkit is required to auto-build translated
+                        error pages. If it is not present this option can be used
+                        to run the 'make dist' target without translating.
+                        A drop-in bundle of pre-translated files is available from
+                        http://www.squid-cache.org/Versions/v3/HEAD/
+],
+[ if test "$enableval" != "yes" ; then
+    echo "Disabling Translation Toolkit dependency"
+    DO_TRANSLATE="no"
+  fi
+])
+AC_SUBST(DO_TRANSLATE)
+
+
 dnl Need the debugging version of malloc if available
 XTRA_OBJS=''
 if test "$ac_cv_lib_malloc_main" = "yes" ; then
