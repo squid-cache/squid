@@ -10,6 +10,12 @@ errordir = $(datadir)/errors
 
 DEFAULT_ERROR_DIR	= $(errordir)
 
+# List of automated translations possible:
+TRANSLATIONS = \
+	en
+
+# Legacy language contributions...
+#
 INSTALL_LANGUAGES	= @ERR_LANGUAGES@
 LANGUAGES	= \
 		Armenian \
@@ -53,14 +59,30 @@ install-data-local:
 		for f in $(srcdir)/$$l/ERR_*; do \
 			echo "$(INSTALL_DATA) $$f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l"; \
 			$(INSTALL_DATA) $$f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; \
-		done \
+		done; \
+	done; \
+	for l in $(TRANSLATIONS) templates; do \
+	  if test -d $(srcdir)/$$l; then \
+		$(mkinstalldirs) $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l && \
+		for f in $(srcdir)/$$l/ERR_*; do \
+			echo "$(INSTALL_DATA) $$f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l"; \
+			$(INSTALL_DATA) $$f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; \
+		done; \
+	  fi \
 	done
 
 uninstall-local:
-	@for l in $(INSTALL_LANGUAGES); do \
+	@ for l in $(INSTALL_LANGUAGES); do \
 		for f in $(srcdir)/$$l/ERR_*; do \
 	        	rm -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; \
-		done \
+		done; \
+	done; \
+	for l in $(TRANSLATIONS) templates; do \
+	  if test -d $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; then \
+		for f in $(srcdir)/$$l/ERR_*; do \
+	        	rm -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; \
+		done; \
+	  fi \
 	done
 
 # undocumented hack.  You can use this target to create multi-lingual
@@ -69,6 +91,10 @@ uninstall-local:
 #	make ADDLANG=English DESTLANG=French addlang
 #
 # by Andres Kroonmaa <andre@mail.lbi.ee>
+#
+# UPDATE: this hack completely breaks HTML standards and with the addition
+#	  of language translations is now largely obsolete.
+#	  It will be removed without notice at some future date.
 #
 addlang: all
 	-@if test -d $(srcdir)/$(ADDLANG); then \
@@ -85,7 +111,7 @@ addlang: all
 	fi
 
 dist-hook:
-	@ for lang in $(LANGUAGES); do \
+	for lang in $(LANGUAGES); do \
 	  if test "$$lang" = .; then :; else \
 	    test -d $(distdir)/$$lang \
 	    || mkdir $(distdir)/$$lang \
@@ -93,4 +119,28 @@ dist-hook:
 	    cp -p $(srcdir)/$$lang/ERR_*  $(distdir)/$$lang \
 	      || exit 1; \
 	  fi; \
-	done		
+	done; \
+	if test "$(DO_TRANSLATE)" = "yes" ; then \
+		translate; \
+	fi
+
+translate:
+	for lang in $(TRANSLATIONS); do \
+		test -d $$lang || rm -r $$lang; \
+		mkdir $$lang; \
+		test -d $(distdir)/$$lang \
+		  || mkdir $(distdir)/$$lang \
+		  || exit 1; \
+		cd $$lang; \
+		for f in `ls -1 ../templates`; do \
+			echo "po2html -i ../$$lang.po -t ../templates/$$f"; \
+			po2html -i ../$$lang.po -t ../templates/$$f \
+			 | sed -r s/\>\ \ ?\</\>\\n\</g >$$f || exit 1; \
+		done; \
+		cd ..; \
+		cp -p $(srcdir)/$$lang/ERR_*  $(distdir)/$$lang \
+		  || exit 1; \
+	done
+
+all:
+	translate
