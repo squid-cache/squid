@@ -58,6 +58,7 @@
 /**
  * Maximum length (buffer size) for token strings.
  */
+// AYJ: must match re-definition in helpers/negotiate_auth/squid_kerb_auth/squid_kerb_auth.c
 #define MAX_AUTHTOKEN_LEN   32768
 
 static void
