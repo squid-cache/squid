@@ -1901,7 +1901,7 @@ parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * metho
 
         /* XXX need a way to say "this many character length string" */
         debugs(33, 1, "clientParseRequestMethod: Unsupported method: This is not a bug. see squid.conf extension_methods");
-        debugs(33, 1, "clientParseRequestMethod: Unsupported method in request '" << tmp << "'");
+        debugs(33, 1, "clientParseRequestMethod: Unsupported method in request '" << garbage << "'");
 
         /* XXX where's the method set for this error? */
         return parseHttpRequestAbort(conn, "error:unsupported-request-method");
