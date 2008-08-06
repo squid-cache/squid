@@ -128,7 +128,7 @@ dist-hook:
 
 translate:
 	for lang in $(TRANSLATIONS); do \
-		test -d $$lang || rm -r $$lang; \
+		test -d $$lang && rm -r $$lang; \
 		mkdir $$lang; \
 		test -d $(distdir)/$$lang \
 		  || mkdir $(distdir)/$$lang \
