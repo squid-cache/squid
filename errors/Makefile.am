@@ -12,7 +12,9 @@ DEFAULT_ERROR_DIR	= $(errordir)
 
 # List of automated translations possible:
 TRANSLATIONS = \
-	en
+	de \
+	en en-au en-gb \
+	it
 
 # Legacy language contributions...
 #
