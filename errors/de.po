@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: squid 3.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-08-06 22:11+1300\n"
-"PO-Revision-Date: 2008-07-31 20:32+1200\n"
+"PO-Revision-Date: 2008-08-07 05:16+1200\n"
 "Last-Translator: Robert Förster <Dessa@gmake.de>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "MIME-Version: 1.0\n"
@@ -217,11 +217,11 @@ msgstr "Weiterleitung verweigert."
 #: templates/ERR_UNSUP_REQ:8 templates/ERR_URN_RESOLVE:8
 #: templates/ERR_WRITE_ERROR:9 templates/ERR_ZERO_SIZE_OBJECT:8
 msgid "Generated %T by %h (%s)"
-msgstr ""
+msgstr "Erzeugt am %T von %h (%s)"
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
-msgstr "Hey, erwarte nicht zuviel von URNs auf %T :)"
+msgstr "Hey, erwarte nicht zuviel von URNs am %T :)"
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
