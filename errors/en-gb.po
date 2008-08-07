@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: squid 3.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-08-06 22:11+1300\n"
-"PO-Revision-Date: 2008-08-01 21:07+1200\n"
+"PO-Revision-Date: 2008-08-07 16:23+1200\n"
 "Last-Translator: Amos Jeffries <squid3@treenet.co.nz>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "MIME-Version: 1.0\n"
@@ -218,7 +218,7 @@ msgstr "Forwarding Denied."
 #: templates/ERR_UNSUP_REQ:8 templates/ERR_URN_RESOLVE:8
 #: templates/ERR_WRITE_ERROR:9 templates/ERR_ZERO_SIZE_OBJECT:8
 msgid "Generated %T by %h (%s)"
-msgstr ""
+msgstr "Generated %T by %h (%s)"
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
