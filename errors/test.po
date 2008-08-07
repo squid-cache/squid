@@ -1,3 +1,4 @@
+#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
@@ -10,6 +11,18 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Translate Toolkit 1.1.1\n"
+
+#: templates/ERR_INVALID_REQ:4
+msgid ""
+"<b>Invalid Request</b> error was encountered while trying to process the "
+"request:"
+msgstr ""
+
+#: templates/ERR_INVALID_RESP:4
+msgid ""
+"<b>Invalid Response</b> error was encountered while trying to process the "
+"request:"
+msgstr ""
 
 #: templates/ERR_READ_TIMEOUT:7
 msgid ""
