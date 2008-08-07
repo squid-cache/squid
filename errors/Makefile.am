@@ -124,25 +124,25 @@ dist-hook:
 	  fi; \
 	done; \
 	if test "$(DO_TRANSLATE)" = "yes" ; then \
-		translate; \
+		make translate; \
+		test -d $(distdir)/$$lang \
+		  || mkdir $(distdir)/$$lang \
+		  || exit 1; \
+		cp -p $(srcdir)/$$lang/ERR_*  $(distdir)/$$lang \
+		  || exit 1; \
 	fi
 
 translate:
 	for lang in $(TRANSLATIONS); do \
 		test -d $$lang && rm -r $$lang; \
 		mkdir $$lang; \
-		test -d $(distdir)/$$lang \
-		  || mkdir $(distdir)/$$lang \
-		  || exit 1; \
 		cd $$lang; \
 		for f in `ls -1 ../templates`; do \
 			echo "po2html -i ../$$lang.po -t ../templates/$$f"; \
 			po2html -i ../$$lang.po -t ../templates/$$f \
-			 | sed -r s/\>\ \ ?\</\>\\n\</g >$$f || exit 1; \
+			 | sed -E s/\>\ \ ?\</\>\\n\</g >$$f || exit 1; \
 		done; \
 		cd ..; \
-		cp -p $(srcdir)/$$lang/ERR_*  $(distdir)/$$lang \
-		  || exit 1; \
 	done
 
 all:
