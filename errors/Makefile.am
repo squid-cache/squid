@@ -139,8 +139,7 @@ translate:
 		cd $$lang; \
 		for f in `ls -1 ../templates`; do \
 			echo "po2html -i ../$$lang.po -t ../templates/$$f"; \
-			po2html -i ../$$lang.po -t ../templates/$$f \
-			 | sed -E s/\>\ \ ?\</\>\\n\</g >$$f || exit 1; \
+			po2html -i ../$$lang.po -t ../templates/$$f >$$f || exit 1; \
 		done; \
 		cd ..; \
 	done
