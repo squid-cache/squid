@@ -145,4 +145,6 @@ translate:
 	done
 
 all:
-	translate
+	if test "$(DO_TRANSLATE)" = "yes" ; then \
+		make translate; \
+	fi
