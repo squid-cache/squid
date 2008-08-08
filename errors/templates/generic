@@ -19,3 +19,8 @@
 <blockquote>
     <p>@LONG_DESCRIPTION@</p>
 </blockquote>
+
+<br>   
+<hr> 
+<div id="footer">Generated %T by %h (%s)</div>
+</body></html>

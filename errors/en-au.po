@@ -2,36 +2,15 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-07-15 23:14+1300\n"
-"PO-Revision-Date: 2008-07-27 13:46+0000\n"
-"Last-Translator: Amos Jeffries <Unknown>\n"
+"POT-Creation-Date: 2008-08-06 22:11+1300\n"
+"PO-Revision-Date: 2008-08-07 16:21+1200\n"
+"Last-Translator: Amos Jeffries <squid3@treenet.co.nz>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Pootle 1.1.0\n"
 "X-Launchpad-Export-Date: 2008-07-31 11:24+0000\n"
-"X-Generator: Launchpad (build Unknown)\n"
-
-#: templates/ERR_FTP_FAILURE:8 templates/ERR_FTP_FORBIDDEN:8
-#: templates/ERR_FTP_NOT_FOUND:8 templates/ERR_FTP_PUT_ERROR:8
-#: templates/ERR_FTP_UNAVAILABLE:8
-msgid "%F"
-msgstr "%F"
-
-#: templates/ERR_FTP_FAILURE:6 templates/ERR_FTP_FORBIDDEN:6
-#: templates/ERR_FTP_NOT_FOUND:6 templates/ERR_FTP_PUT_ERROR:6
-#: templates/ERR_FTP_UNAVAILABLE:6
-msgid "%f"
-msgstr "%f"
-
-#: templates/ERR_FTP_FAILURE:9 templates/ERR_FTP_FORBIDDEN:9
-#: templates/ERR_FTP_NOT_FOUND:9 templates/ERR_FTP_UNAVAILABLE:9
-msgid "%g"
-msgstr "%g"
-
-#: templates/ERR_DNS_FAIL:7
-msgid "%z"
-msgstr "%z"
 
 #: templates/ERR_INVALID_REQ:4
 msgid ""
@@ -48,14 +27,6 @@ msgid ""
 msgstr ""
 "<b>Invalid Response</b> error was encountered while trying to process the "
 "request:"
-
-#: templates/generic:8
-msgid "@LONG_DESCRIPTION@"
-msgstr "@LONG_DESCRIPTION@"
-
-#: templates/generic:5
-msgid "@SHORT_DESCRIPTION@"
-msgstr "@SHORT_DESCRIPTION@"
 
 #: templates/ERR_READ_TIMEOUT:7
 msgid ""
@@ -93,11 +64,11 @@ msgstr ""
 
 #: templates/ERR_FTP_FAILURE:4
 msgid ""
-"An FTP protocol error occurred while trying to retrieve the URL: <a "
-"href=\"%U\">%U</a>"
+"An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
+"\">%U</a>"
 msgstr ""
-"An FTP protocol error occurred while trying to retrieve the URL: <a "
-"href=\"%U\">%U</a>"
+"An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
+"\">%U</a>"
 
 #: templates/ERR_ICAP_FAILURE:10
 msgid "An Illegal response was received from the ICAP server."
@@ -137,8 +108,8 @@ msgid "Connection Lifetime Expired"
 msgstr "Connection Lifetime Expired"
 
 #: templates/ERR_CONNECT_FAIL:5
-msgid "Connection to %I Failed."
-msgstr "Connection to %I Failed."
+msgid "Connection to %I failed."
+msgstr "Connection to %I failed."
 
 #: templates/ERR_INVALID_REQ:10
 msgid "Content-Length missing for POST or PUT requests."
@@ -159,7 +130,6 @@ msgstr "Content-Length missing for POST or PUT requests."
 #: templates/ERR_SOCKET_FAILURE:2 templates/ERR_TOO_BIG:2
 #: templates/ERR_UNSUP_REQ:2 templates/ERR_URN_RESOLVE:2
 #: templates/ERR_WRITE_ERROR:2 templates/ERR_ZERO_SIZE_OBJECT:2
-#: templates/generic:2
 msgid "ERROR"
 msgstr "ERROR"
 
@@ -188,7 +158,6 @@ msgstr "ERROR: FTP upload failed"
 #: templates/ERR_SHUTTING_DOWN:1 templates/ERR_SOCKET_FAILURE:1
 #: templates/ERR_TOO_BIG:1 templates/ERR_UNSUP_REQ:1
 #: templates/ERR_WRITE_ERROR:1 templates/ERR_ZERO_SIZE_OBJECT:1
-#: templates/generic:1
 msgid "ERROR: The requested URL could not be retrieved"
 msgstr "ERROR: The requested URL could not be retrieved"
 
@@ -231,6 +200,25 @@ msgstr "File updated"
 #: templates/ERR_FORWARDING_DENIED:5
 msgid "Forwarding Denied."
 msgstr "Forwarding Denied."
+
+#: templates/ERR_ACCESS_DENIED:8 templates/ERR_CACHE_ACCESS_DENIED:8
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED:8 templates/ERR_CANNOT_FORWARD:8
+#: templates/ERR_CONNECT_FAIL:9 templates/ERR_DNS_FAIL:9 templates/ERR_ESI:9
+#: templates/ERR_FORWARDING_DENIED:8 templates/ERR_FTP_DISABLED:8
+#: templates/ERR_FTP_FAILURE:8 templates/ERR_FTP_FORBIDDEN:8
+#: templates/ERR_FTP_NOT_FOUND:9 templates/ERR_FTP_PUT_CREATED:4
+#: templates/ERR_FTP_PUT_ERROR:9 templates/ERR_FTP_PUT_MODIFIED:4
+#: templates/ERR_FTP_UNAVAILABLE:8 templates/ERR_ICAP_FAILURE:11
+#: templates/ERR_INVALID_REQ:13 templates/ERR_INVALID_RESP:8
+#: templates/ERR_INVALID_URL:13 templates/ERR_LIFETIME_EXP:8
+#: templates/ERR_NO_RELAY:8 templates/ERR_ONLY_IF_CACHED_MISS:8
+#: templates/ERR_READ_ERROR:9 templates/ERR_READ_TIMEOUT:9
+#: templates/ERR_SECURE_CONNECT_FAIL:9 templates/ERR_SHUTTING_DOWN:7
+#: templates/ERR_SOCKET_FAILURE:9 templates/ERR_TOO_BIG:10
+#: templates/ERR_UNSUP_REQ:8 templates/ERR_URN_RESOLVE:8
+#: templates/ERR_WRITE_ERROR:9 templates/ERR_ZERO_SIZE_OBJECT:8
+msgid "Generated %T by %h (%s)"
+msgstr "Generated %T by %h (%s)"
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
@@ -298,17 +286,17 @@ msgstr "No Wais Relay"
 msgid "Operation successful"
 msgstr "Operation successful"
 
-#: templates/ERR_CACHE_ACCESS_DENIED:8
+#: templates/ERR_CACHE_ACCESS_DENIED:7
 msgid ""
 "Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
-"have difficulties authenticating yourself or <a href=\"http://%h/cgi-"
-"bin/chpasswd.cgi\">change</a> your default password."
+"have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
+"chpasswd.cgi\">change</a> your default password."
 msgstr ""
 "Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
-"have difficulties authenticating yourself or <a href=\"http://%h/cgi-"
-"bin/chpasswd.cgi\">change</a> your default password."
+"have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
+"chpasswd.cgi\">change</a> your default password."
 
-#: templates/ERR_CACHE_MGR_ACCESS_DENIED:8
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
 msgid ""
 "Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
 "have difficulties authenticating yourself or, if you <em>are</em> the "
@@ -400,10 +388,8 @@ msgid "The ESI processor returned:"
 msgstr "The ESI processor returned:"
 
 #: templates/ERR_FTP_UNAVAILABLE:4
-msgid ""
-"The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
-msgstr ""
-"The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
+msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
+msgstr "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
 msgid ""
@@ -436,7 +422,6 @@ msgstr "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
 #: templates/ERR_SHUTTING_DOWN:4 templates/ERR_SOCKET_FAILURE:4
 #: templates/ERR_TOO_BIG:4 templates/ERR_UNSUP_REQ:4
 #: templates/ERR_WRITE_ERROR:4 templates/ERR_ZERO_SIZE_OBJECT:4
-#: templates/generic:4
 msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
@@ -453,10 +438,8 @@ msgstr ""
 "href=\"%U\">%U</a>"
 
 #: templates/ERR_CONNECT_FAIL:7
-msgid ""
-"The remote host or network may be down.  Please try the request again."
-msgstr ""
-"The remote host or network may be down.  Please try the request again."
+msgid "The remote host or network may be down.  Please try the request again."
+msgstr "The remote host or network may be down.  Please try the request again."
 
 #: templates/ERR_TOO_BIG:5
 msgid "The request or reply is too large."
@@ -475,20 +458,19 @@ msgstr "The request or reply is too large."
 #: templates/ERR_SHUTTING_DOWN:3 templates/ERR_SOCKET_FAILURE:3
 #: templates/ERR_TOO_BIG:3 templates/ERR_UNSUP_REQ:3
 #: templates/ERR_WRITE_ERROR:3 templates/ERR_ZERO_SIZE_OBJECT:3
-#: templates/generic:3
 msgid "The requested URL could not be retrieved"
 msgstr "The requested URL could not be retrieved"
 
-#: templates/ERR_FTP_FAILURE:7 templates/ERR_FTP_FORBIDDEN:7
-#: templates/ERR_FTP_NOT_FOUND:7 templates/ERR_FTP_PUT_ERROR:7
-#: templates/ERR_FTP_UNAVAILABLE:7
+#: templates/ERR_FTP_FAILURE:6 templates/ERR_FTP_FORBIDDEN:6
+#: templates/ERR_FTP_NOT_FOUND:6 templates/ERR_FTP_PUT_ERROR:6
+#: templates/ERR_FTP_UNAVAILABLE:6
 msgid "The server responded with:"
 msgstr "The server responded with:"
 
 #: templates/ERR_CONNECT_FAIL:6 templates/ERR_ICAP_FAILURE:6
 #: templates/ERR_READ_ERROR:6 templates/ERR_READ_TIMEOUT:6
 #: templates/ERR_SECURE_CONNECT_FAIL:6 templates/ERR_SOCKET_FAILURE:6
-#: templates/ERR_WRITE_ERROR:6 templates/generic:6
+#: templates/ERR_WRITE_ERROR:6
 msgid "The system returned: <i>%E</i>"
 msgstr "The system returned: <i>%E</i>"
 
@@ -536,7 +518,7 @@ msgstr ""
 msgid "This means that some aspect of the ICAP communication failed."
 msgstr "This means that some aspect of the ICAP communication failed."
 
-#: templates/ERR_FTP_PUT_ERROR:9
+#: templates/ERR_FTP_PUT_ERROR:7
 msgid ""
 "This means that the FTP server may not have permission or space to store the "
 "file. Check the path, permissions, diskspace and try again."
@@ -544,7 +526,7 @@ msgstr ""
 "This means that the FTP server may not have permission or space to store the "
 "file. Check the path, permissions, diskspace and try again."
 
-#: templates/ERR_DNS_FAIL:8
+#: templates/ERR_DNS_FAIL:7
 msgid ""
 "This means that the cache was not able to resolve the hostname presented in "
 "the URL. Check if the address is correct."
@@ -560,11 +542,7 @@ msgstr ""
 "This means that the surrogate was not able to process the ESI template. "
 "Please report this error to the webmaster."
 
-#: templates/generic:7
-msgid "This means:"
-msgstr "This means:"
-
-#: templates/ERR_FTP_NOT_FOUND:10
+#: templates/ERR_FTP_NOT_FOUND:7
 msgid ""
 "This might be caused by an FTP URL with an absolute path (which does not "
 "comply with RFC 1738).  If this is the cause, then the file can be found at "
@@ -636,20 +614,12 @@ msgstr ""
 "directive. The document was not found in the cache, <em>or</em> it required "
 "revalidation prohibited by the <q>only-if-cached</q> directive."
 
-#: templates/ERR_CACHE_ACCESS_DENIED:7 templates/ERR_CACHE_MGR_ACCESS_DENIED:7
-msgid ""
-"You need to use Netscape version 2.0 or greater, or Microsoft Internet "
-"Explorer 3.0, or an HTTP/1.1 compliant browser for this to work."
-msgstr ""
-"You need to use Netscape version 2.0 or greater, or Microsoft Internet "
-"Explorer 3.0, or an HTTP/1.1 compliant browser for this to work."
-
 #: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
-#: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:9
+#: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
 #: templates/ERR_FORWARDING_DENIED:7 templates/ERR_FTP_DISABLED:7
-#: templates/ERR_FTP_FAILURE:10 templates/ERR_FTP_FORBIDDEN:10
-#: templates/ERR_FTP_NOT_FOUND:11 templates/ERR_FTP_PUT_ERROR:10
-#: templates/ERR_FTP_UNAVAILABLE:10 templates/ERR_INVALID_REQ:12
+#: templates/ERR_FTP_FAILURE:7 templates/ERR_FTP_FORBIDDEN:7
+#: templates/ERR_FTP_NOT_FOUND:8 templates/ERR_FTP_PUT_ERROR:8
+#: templates/ERR_FTP_UNAVAILABLE:7 templates/ERR_INVALID_REQ:12
 #: templates/ERR_INVALID_RESP:7 templates/ERR_INVALID_URL:12
 #: templates/ERR_LIFETIME_EXP:7 templates/ERR_NO_RELAY:7
 #: templates/ERR_ONLY_IF_CACHED_MISS:7 templates/ERR_READ_ERROR:8

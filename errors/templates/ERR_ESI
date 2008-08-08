@@ -21,3 +21,8 @@
 <p>This means that the surrogate was not able to process the ESI template. Please report this error to the webmaster.</p>
 
 <p>Your webmaster is <a href="mailto:%w">%w</a>.</p>
+
+<br>   
+<hr> 
+<div id="footer">Generated %T by %h (%s)</div>
+</body></html>

@@ -17,3 +17,8 @@
 <p>Sorry, you are not currently allowed to request %U from this cache until you have authenticated yourself.</p>
 
 <p>Please contact the <a href="mailto:%w%W">cache administrator</a> if you have difficulties authenticating yourself or <a href="http://%h/cgi-bin/chpasswd.cgi">change</a> your default password.</p>
+
+<br>   
+<hr> 
+<div id="footer">Generated %T by %h (%s)</div>
+</body></html>
