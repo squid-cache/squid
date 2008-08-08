@@ -22,3 +22,8 @@
 <li><p>The ICAP server is not reachable.</p></li>
 <li><p>An Illegal response was received from the ICAP server.</p></li>
 </ul>
+
+<br>   
+<hr> 
+<div id="footer">Generated %T by %h (%s)</div>
+</body></html>

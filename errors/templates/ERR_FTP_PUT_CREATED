@@ -7,3 +7,8 @@
 <h1 style="background-color:#00ff00; width:100%">Operation successful</h1>
 <h2>File created</h2>
 <hr>
+
+<br>   
+<hr> 
+<div id="footer">Generated %T by %h (%s)</div>
+</body></html>

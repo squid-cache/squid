@@ -31,5 +31,6 @@ msgcat ./pot/*.pot -s -o dictionary.pot.new &&
 for f in `ls -1 ./*.po` ; do
 	echo -n "Update: ${f} ... "
 	msgmerge --verbose -s -o ${f}.new ${f} dictionary.pot
+	chown --reference=${f} ${f}.new
 	mv ${f}.new ${f}
 done
