@@ -302,6 +302,9 @@ This section gives a thorough account of those changes in three categories:
 <p>
 <descrip>
 
+	<tag>dns_testnames</tag>
+	<p>Obsolete. This feature is no longer relevant to modern networks and causes boot problems.</p>
+
 </descrip>
 
 

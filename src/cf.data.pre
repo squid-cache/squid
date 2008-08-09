@@ -5464,17 +5464,6 @@ DOC_START
 	definitions.
 DOC_END
 
-NAME: dns_testnames
-TYPE: wordlist
-LOC: Config.dns_testname_list
-DEFAULT: none
-DEFAULT_IF_NONE: netscape.com internic.net nlanr.net microsoft.com
-DOC_START
-	The DNS tests exit as soon as the first site is successfully looked up
-
-	This test can be disabled with the -D command line option.
-DOC_END
-
 NAME: append_domain
 TYPE: string
 LOC:  Config.appendDomain
