@@ -30,6 +30,9 @@ AC_LANG_C
 AC_PROG_CXX
 AC_CANONICAL_HOST
 
+dnl Make location configure settings available to the code
+AC_DEFINE_UNQUOTED([DEFAULT_SQUID_CONFIG_DIR], "${sysconfdir}" , [Location of Configuration files] )
+AC_DEFINE_UNQUOTED([DEFAULT_SQUID_DATA_DIR], "${datadir}" , [Location of other data files] )
 
 use_loadable_modules=1
 AC_MSG_CHECKING(whether to use loadable modules)
@@ -1034,44 +1037,6 @@ AC_ARG_ENABLE(cache-digests,
     AC_DEFINE(USE_CACHE_DIGESTS,1,[Use Cache Digests for locating objects in neighbor caches.  This code is still semi-experimental.])
   fi
 ])
-
-dnl Select Default Error language
-AC_ARG_ENABLE(default-err-language,
-[  --enable-default-err-language=lang
-                          Select default language for Error pages (see
-                          errors directory) ],
-[
-    if test -d $srcdir/errors/$enableval; then
-	ERR_DEFAULT_LANGUAGE=$enableval
-    else
-	echo "ERROR! Unknown language $enableval, see errors/ directory"
-	exit 1
-    fi
-],[ERR_DEFAULT_LANGUAGE="English"])
-AC_SUBST(ERR_DEFAULT_LANGUAGE)
-
-dnl Select languages to be installed
-AC_ARG_ENABLE(err-languages,
-[  --enable-err-languages=\"lang1 lang2..\"
-                          Select languages to be installed. (All will be
-                          installed by default) ],
-[
-    for l in $enableval; do
-        if test -d $srcdir/errors/$l; then :; else
-	    echo "ERROR! Unknown language $$l, see errors/"
-	    exit 1
-	fi
-    done
-    ERR_LANGUAGES=$enableval
-],[
-    ERR_LANGUAGES=
-    for l in $srcdir/errors/*; do
-        if test -f $l/ERR_ACCESS_DENIED; then
-            ERR_LANGUAGES="$ERR_LANGUAGES `basename $l`"
-	fi
-    done
-])
-AC_SUBST(ERR_LANGUAGES)
 
 dnl Size of COSS memory buffer
 AC_ARG_WITH(coss-membuf-size,
@@ -3709,6 +3674,22 @@ AC_ARG_WITH(po2html,
   fi
 ])
 AC_SUBST(DO_TRANSLATE)
+
+
+dnl Squid now has limited locale handling ...
+dnl on error pages
+AC_ARG_ENABLE(auto-locale,
+[  --enable-auto-locale  This enables squid to lookup translated error pages
+                          based on the clients request headers. Without it squid
+                          is limited to a single language set in squid.conf],
+[ if test "$enableval" = "yes" ; then
+    echo "Enabling Multi-Language Support"
+    AC_DEFINE(USE_ERR_LOCALES,1,[Use multi-language support on error pages])
+ else
+    echo "Disabling Multi-Language Support"
+    AC_DEFINE(USE_ERR_LOCALES,0,[Use multi-language support on error pages])
+  fi
+])
 
 
 dnl Need the debugging version of malloc if available

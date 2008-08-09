@@ -522,7 +522,8 @@ configDoConfigure(void)
 
     requirePathnameExists("Icon Directory", Config.icons.directory);
 
-    requirePathnameExists("Error Directory", Config.errorDirectory);
+    if(Config.errorDirectory)
+        requirePathnameExists("Error Directory", Config.errorDirectory);
 
 #if HTTP_VIOLATIONS
 
