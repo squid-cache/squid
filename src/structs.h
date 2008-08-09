@@ -371,7 +371,6 @@ struct SquidConfig
     size_t udpMaxHitObjsz;
     wordlist *hierarchy_stoplist;
     wordlist *mcast_group_list;
-    wordlist *dns_testname_list;
     wordlist *dns_nameservers;
     peer *peers;
     int npeers;

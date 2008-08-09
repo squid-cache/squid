@@ -207,9 +207,9 @@ usage(void)
 {
     fprintf(stderr,
 #if USE_WIN32_SERVICE
-            "Usage: %s [-cdhirvzCDFNRVYX] [-s | -l facility] [-f config-file] [-[au] port] [-k signal] [-n name] [-O CommandLine]\n"
+            "Usage: %s [-cdhirvzCFNRVYX] [-s | -l facility] [-f config-file] [-[au] port] [-k signal] [-n name] [-O CommandLine]\n"
 #else
-            "Usage: %s [-cdhvzCDFNRVYX] [-s | -l facility] [-f config-file] [-[au] port] [-k signal]\n"
+            "Usage: %s [-cdhvzCFNRVYX] [-s | -l facility] [-f config-file] [-[au] port] [-k signal]\n"
 #endif
             "       -a port   Specify HTTP port number (default: %d).\n"
             "       -d level  Write debugging to stderr also.\n"
@@ -233,7 +233,7 @@ usage(void)
             "       -v        Print version.\n"
             "       -z        Create swap directories\n"
             "       -C        Do not catch fatal signals.\n"
-            "       -D        Disable initial DNS tests.\n"
+            "       -D        OBSOLETE. Scheduled for removal.\n"
             "       -F        Don't serve any requests until store is rebuilt.\n"
             "       -N        No daemon mode.\n"
 #if USE_WIN32_SERVICE
@@ -279,8 +279,8 @@ mainParseOptions(int argc, char *argv[])
 
         case 'D':
             /** \par D
-             * Unset/disable global option for optional DNS tests. opt_dns_tests */
-            opt_dns_tests = 0;
+             * OBSOLETE: WAS: override to prevent optional startup DNS tests. */
+            debugs(1,DBG_CRITICAL, "WARNING: -D command-line option is obsolete.");
             break;
 
         case 'F':
