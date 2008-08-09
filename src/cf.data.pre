@@ -4712,17 +4712,42 @@ COMMENT_END
 NAME: error_directory
 TYPE: string
 LOC: Config.errorDirectory
-DEFAULT: @DEFAULT_ERROR_DIR@
+DEFAULT: none
 DOC_START
 	If you wish to create your own versions of the default
-	(English) error files, either to customize them to suit your
-	language or company copy the template English files to another
-	directory and point this tag at them.
+	error files to customize them to suit your company copy
+	the error/template files to another directory and point
+	this tag at them.
+
+	WARNING: This option will disable multi-language support
+	         on error pages if used.
 
 	The squid developers are interested in making squid available in
 	a wide variety of languages. If you are making translations for a
-	langauge that Squid does not currently provide please consider
+	language that Squid does not currently provide please consider
 	contributing your translation back to the project.
+	http://wiki.squid-cache.org/Translations
+
+	The squid developers working on translations are happy to supply drop-in
+	translated error files in exchange for any new language contributions.
+DOC_END
+
+NAME: error_default_language
+IFDEF: USE_ERR_LOCALES
+TYPE: string
+LOC: Config.errorDefaultLanguage
+DEFAULT: none
+DOC_START
+	Set the default language which squid will send error pages in
+	if no existing translation matches the clients language
+	preferences.
+
+	If unset (default) generic English will be used.
+
+	The squid developers are interested in making squid available in
+	a wide variety of languages. If you are interested in making
+	translations for any language see the squid wiki for details.
+	http://wiki.squid-cache.org/Translations
 DOC_END
 
 NAME: err_html_text
@@ -4759,7 +4784,7 @@ DEFAULT: none
 DOC_START
 	Usage:   deny_info err_page_name acl
 	or       deny_info http://... acl
-	Example: deny_info ERR_CUSTOM_ACCESS_DENIED bad_guys
+	or       deny_info TCP_RESET acl
 
 	This can be used to return a ERR_ page for requests which
 	do not pass the 'http_access' rules.  Squid remembers the last
@@ -4773,8 +4798,9 @@ DOC_START
 	- When none of the http_access lines matches. It's then the last
 	  acl processed on the last http_access line.
 
-	You may use ERR_ pages that come with Squid or create your own pages
-	and put them into the configured errors/ directory.
+	NP: If providing your own custom error pages with error_directory
+	    you may also specify them by your custom file name:
+	    Example: deny_info ERR_CUSTOM_ACCESS_DENIED bad_guys
 
 	Alternatively you can specify an error URL. The browsers will
 	get redirected (302) to the specified URL. %s in the redirection

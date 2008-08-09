@@ -9,7 +9,7 @@
 DEFAULT_CONFIG_FILE = $(sysconfdir)/squid.conf
 DEFAULT_CACHEMGR_CONFIG = $(sysconfdir)/cachemgr.conf
 DEFAULT_MIME_TABLE      = $(sysconfdir)/mime.conf
-DEFAULT_ERROR_DIR       = $(datadir)/errors/@ERR_DEFAULT_LANGUAGE@
+DEFAULT_ERROR_DIR       = $(datadir)/errors
 
 SUBSTITUTE=sed "\
 	s%@DEFAULT_CONFIG_FILE@%$(DEFAULT_CONFIG_FILE)%g;\

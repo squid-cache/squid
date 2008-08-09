@@ -549,6 +549,9 @@ struct SquidConfig
         int use_short_names;
     } icons;
     char *errorDirectory;
+#if USE_ERR_LOCALES
+    char *errorDefaultLanguage;
+#endif
 
     struct
     {
