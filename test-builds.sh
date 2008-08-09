@@ -20,5 +20,5 @@ fi
 for f in `ls -1 ./test-suite/buildtests/layer*.opts` ; do
 	arg=`echo "${f}" | sed s/\\.opts//`
 	echo "TESTING: ${arg}"
-	./test-suite/buildtest.sh "${arg}"
+	./test-suite/buildtest.sh "${arg}" || exit 1
 done

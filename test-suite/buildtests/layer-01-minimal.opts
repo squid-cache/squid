@@ -1,0 +1,90 @@
+#
+# Minimal configuration options.
+# - Everthing that can be disabled is
+# - Everyhing that can be done without is 
+#
+# The options for this level can be easily generated semi-automatically from configure.in by:
+#	grep -E "^AC_ARG_ENABLE" ./configure.in | grep -o -E "[0-9a-z\-]+[,]" | grep -o -E "[^,]+" >disable.opts
+# followed by insertion of '	--disable-' and '\' strings
+#
+# 	grep -E "^AC_ARG_WITH" ./configure.in | grep -o -E "[0-9a-z\-]+[,]" | grep -o -E "[^,]+" >without.opts
+# followed by insertion of '	--without-' and ' \' strings
+#
+OPTS=" \
+	--disable-loadable-modules \
+	--disable-gnuregex \
+	--disable-optimizations \
+	--disable-inline \
+	--disable-debug-cbdata \
+	--disable-xmalloc-statistics \
+	--disable-async-io \
+	--disable-storeio \
+	--disable-disk-io \
+	--disable-removal-policies \
+	--disable-icmp \
+	--disable-delay-pools \
+	--disable-esi \
+	--disable-icap-client \
+	--disable-ecap \
+	--disable-useragent-log \
+	--disable-referer-log \
+	--disable-wccp \
+	--disable-wccpv2 \
+	--disable-kill-parent-hack \
+	--disable-snmp \
+	--disable-cachemgr-hostname \
+	--disable-arp-acl \
+	--disable-htcp \
+	--disable-ssl \
+	--disable-forw-via-db \
+	--disable-cache-digests \
+	--disable-poll \
+	--disable-select \
+	--disable-kqueue \
+	--disable-epoll \
+	--disable-http-violations \
+	--disable-ipfw-transparent \
+	--disable-ipf-transparent \
+	--disable-pf-transparent \
+	--disable-linux-netfilter \
+	--disable-linux-tproxy \
+	--disable-leakfinder \
+	--disable-follow-x-forwarded-for \
+	--disable-ident-lookups \
+	--disable-internal-dns \
+	--disable-default-hostsfile \
+	--disable-auth \
+	--disable-basic-auth-helpers \
+	--disable-ntlm-auth-helpers \
+	--disable-negotiate-auth-helpers \
+	--disable-digest-auth-helpers \
+	--disable-ntlm-fail-open \
+	--disable-external-acl-helpers \
+	--disable-mempools \
+	--disable-win32-service \
+	--disable-unlinkd \
+	--disable-stacktraces \
+	--disable-cpu-profiling \
+	--disable-vary \
+	--disable-ipv6 \
+	--disable-zph-qos \
+	--disable-auto-locale \
+ \
+	--without-default-user \
+	--without-aufs-threads \
+	--without-pthreads \
+	--without-aio \
+	--without-dl \
+	--without-openssl \
+	--without-coss-membuf-size \
+	--without-large-files \
+	--without-build-environment \
+	--without-valgrind-debug \
+	--without-ipv6-split-stack \
+	--without-ipv4-mapped \
+	--without-localhost-ipv6 \
+	--without-dns-cname \
+	--without-filedescriptors \
+	--without-cppunit-basedir \
+	--without-po2html \
+	"
