@@ -28,15 +28,12 @@ LANGUAGES	= \
 		Czech \
 		Danish \
 		Dutch \
-		English \
 		Estonian \
 		Finnish \
 		French \
-		German \
 		Greek \
 		Hebrew \
 		Hungarian \
-		Italian \
 		Japanese \
 		Korean \
 		Lithuanian \
