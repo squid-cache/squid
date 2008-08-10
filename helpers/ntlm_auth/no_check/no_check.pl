@@ -15,7 +15,7 @@ die ("Edit $0 to configure a domain!") unless (defined($authdomain));
 
 while(<STDIN>) {
 	chop;
-	if (substr($_, 2) eq "YR") {
+	if (substr($_, 0, 2) eq "YR") {
 		print "TT ".encode_base64(&make_ntlm_static_challenge);
 		next;
 	}
@@ -32,11 +32,11 @@ while(<STDIN>) {
 	}
 	if ($res{type} eq "challenge") { # Huh? WE are the challengers.
 		print "BH Squid-helper protocol error: unexpected challenge-request\n";
-		next;		
+		next;
 	}
 	if ($res{type} eq "authentication") {
 		print "AF $res{domain}\\$res{user}\n";
-		next;		
+		next;
 	}
 	print "BH internal error\n";	# internal error
 }
