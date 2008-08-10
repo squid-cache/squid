@@ -31,7 +31,7 @@ fi
 #
 # empty all the existing code, reconfigure and builds test code
 
-make -k distclean
+make -k distclean || echo "distclean done. errors are unwanted but okay here."
 
 #
 # above command currently encounters dependancy problems on cleanup.

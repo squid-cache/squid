@@ -19,7 +19,6 @@ TRANSLATIONS = \
 
 # Legacy language contributions...
 #
-INSTALL_LANGUAGES	= @ERR_LANGUAGES@
 LANGUAGES	= \
 		Armenian \
 		Azerbaijani \
@@ -28,15 +27,12 @@ LANGUAGES	= \
 		Czech \
 		Danish \
 		Dutch \
-		English \
 		Estonian \
 		Finnish \
 		French \
-		German \
 		Greek \
 		Hebrew \
 		Hungarian \
-		Italian \
 		Japanese \
 		Korean \
 		Lithuanian \
@@ -57,7 +53,7 @@ LANGUAGES	= \
 		Ukrainian-utf8
 
 install-data-local: 
-	@for l in $(INSTALL_LANGUAGES); do \
+	@for l in $(LANGUAGES); do \
 		$(mkinstalldirs) $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l && \
 		for f in $(srcdir)/$$l/ERR_*; do \
 			echo "$(INSTALL_DATA) $$f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l"; \
@@ -75,7 +71,7 @@ install-data-local:
 	done
 
 uninstall-local:
-	@ for l in $(INSTALL_LANGUAGES); do \
+	@ for l in $(LANGUAGES); do \
 		for f in $(srcdir)/$$l/ERR_*; do \
 	        	rm -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; \
 		done; \
@@ -145,4 +141,6 @@ translate:
 	done
 
 all:
-	translate
+	if test "$(DO_TRANSLATE)" = "yes" ; then \
+		make translate; \
+	fi

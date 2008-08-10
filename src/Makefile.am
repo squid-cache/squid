@@ -1053,7 +1053,7 @@ DEFAULT_PINGER		= $(libexecdir)/`echo pinger | sed '$(transform);s/$$/$(EXEEXT)/
 DEFAULT_UNLINKD		= $(libexecdir)/`echo unlinkd | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_DISKD		= $(libexecdir)/`echo diskd | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_ICON_DIR	= $(datadir)/icons
-DEFAULT_ERROR_DIR	= $(datadir)/errors/@ERR_DEFAULT_LANGUAGE@
+DEFAULT_ERROR_DIR	= $(datadir)/errors
 DEFAULT_MIB_PATH	= $(datadir)/mib.txt
 DEFAULT_HOSTS		= @OPT_DEFAULT_HOSTS@
 
@@ -1090,7 +1090,7 @@ cf_gen_defines.h: $(srcdir)/cf_gen_defines $(srcdir)/cf.data.pre
 
 
 ## FIXME: generate a sed command file from configure. Then this doesn't
-## depend on the Makefile. 
+## depend on the Makefile.
 cf.data: cf.data.pre Makefile
 	sed "\
 	s%@DEFAULT_HTTP_PORT@%$(DEFAULT_HTTP_PORT)%g;\

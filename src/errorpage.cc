@@ -58,6 +58,13 @@
  */
 
 
+#ifndef DEFAULT_SQUID_ERROR_DIR
+/** Where to look for errors if config path fails.
+ \note Please use ./configure --datadir=/path instead of patching
+ */
+#define DEFAULT_SQUID_ERROR_DIR   DEFAULT_SQUID_DATA_DIR"/errors"
+#endif
+
 /// \ingroup ErrorPageInternal
 CBDATA_CLASS_INIT(ErrorState);
 
@@ -115,7 +122,7 @@ static char **error_text = NULL;
 /// \ingroup ErrorPageInternal
 static int error_page_count = 0;
 
-static char *errorTryLoadText(const char *page_name, const char *dir);
+static char *errorTryLoadText(const char *page_name, const char *dir, bool silent = false);
 static char *errorLoadText(const char *page_name);
 static const char *errorFindHardText(err_type type);
 static ErrorDynamicPageInfo *errorDynamicPageInfoCreate(int id, const char *page_name);
@@ -147,20 +154,30 @@ errorInitialize(void)
 
     for (i = ERR_NONE, ++i; i < error_page_count; ++i) {
         safe_free(error_text[i]);
-        /* hard-coded ? */
 
-        if ((text = errorFindHardText(i)))
+        if ((text = errorFindHardText(i))) {
+            /**\par
+             * Index any hard-coded error text into defaults.
+             */
             error_text[i] = xstrdup(text);
-        else if (i < ERR_MAX) {
-            /* precompiled ? */
+
+        } else if (i < ERR_MAX) {
+            /**\par
+             * Index precompiled fixed template files from one of two sources:
+             *  (a) default language translation directory (error_default_language)
+             *  (b) admin specified custom directory (error_directory)
+             */
             error_text[i] = errorLoadText(err_type_str[i]);
+
         } else {
-            /* dynamic */
+            /** \par
+             * Index any unknown file names used by deny_info.
+             */
             ErrorDynamicPageInfo *info = ErrorDynamicPages.items[i - ERR_MAX];
             assert(info && info->id == i && info->page_name);
 
             if (strchr(info->page_name, ':') == NULL) {
-                /* Not on redirected errors... */
+                /** But only if they are not redirection URL. */
                 error_text[i] = errorLoadText(info->page_name);
             }
         }
@@ -198,17 +215,38 @@ errorFindHardText(err_type type)
     return NULL;
 }
 
-
-/// \ingroup ErrorPageInternal
+/**
+ * \ingroup ErrorPageInternal
+ *
+ * Load into the in-memory error text Index a file probably available at:
+ *  (a) admin specified custom directory (error_directory)
+ *  (b) default language translation directory (error_default_language)
+ *  (c) English sub-directory where errors should ALWAYS exist
+ */
 static char *
 errorLoadText(const char *page_name)
 {
-    /* test configured location */
-    char *text = errorTryLoadText(page_name, Config.errorDirectory);
-    /* test default location if failed */
+    char *text = NULL;
 
-    if (!text && strcmp(Config.errorDirectory, DEFAULT_SQUID_ERROR_DIR))
-        text = errorTryLoadText(page_name, DEFAULT_SQUID_ERROR_DIR);
+    /** test error_directory configured location */
+    if(Config.errorDirectory)
+        text = errorTryLoadText(page_name, Config.errorDirectory);
+
+#if USE_ERR_LOCALES
+    /** test error_default_language location */
+    if(!text && Config.errorDefaultLanguage) {
+        char dir[256];
+        snprintf(dir,256,"%s/%s", DEFAULT_SQUID_ERROR_DIR, Config.errorDefaultLanguage);
+        text = errorTryLoadText(page_name, dir);
+        if(!text) {
+            debugs(1, DBG_CRITICAL, "Unable to load default language. Reset to English");
+        }
+    }
+#endif
+
+    /* test default location if failed (templates == English translation base templates) */
+    if (!text)
+        text = errorTryLoadText(page_name, DEFAULT_SQUID_ERROR_DIR"/templates");
 
     /* giving up if failed */
     if (!text)
@@ -219,7 +257,7 @@ errorLoadText(const char *page_name)
 
 /// \ingroup ErrorPageInternal
 static char *
-errorTryLoadText(const char *page_name, const char *dir)
+errorTryLoadText(const char *page_name, const char *dir, bool silent)
 {
     int fd;
     char path[MAXPATHLEN];
@@ -232,7 +270,9 @@ errorTryLoadText(const char *page_name, const char *dir)
     fd = file_open(path, O_RDONLY | O_TEXT);
 
     if (fd < 0) {
-        debugs(4, 0, "errorTryLoadText: '" << path << "': " << xstrerror());
+        /* with dynamic locale negotiation we may see some failures before a success. */
+        if(!silent)
+            debugs(4, DBG_CRITICAL, HERE << "'" << path << "': " << xstrerror());
         return NULL;
     }
 
@@ -821,13 +861,88 @@ MemBuf *
 ErrorState::BuildContent()
 {
     MemBuf *content = new MemBuf;
-    const char *m;
+    const char *m = NULL;
     const char *p;
     const char *t;
+
     assert(page_id > ERR_NONE && page_id < error_page_count);
-    content->init();
-    m = error_text[page_id];
+
+#if USE_ERR_LOCALES
+    String hdr;
+    char dir[256];
+    int l = 0;
+
+    /** error_directory option in squid.conf overrides translations.
+     * Otherwise locate the Accept-Language header
+     */
+    if(!Config.errorDirectory && request->header.getList(HDR_ACCEPT_LANGUAGE, &hdr) ) {
+
+        const char *buf = hdr.buf(); // raw header string for parsing
+        int pos = 0; // current parsing position in header string
+        char *reset = NULL; // where to reset the p pointer for each new tag file
+        char *dt = NULL;
+
+        /* prep the directory path string to prevent snprintf ... */
+        l = strlen(DEFAULT_SQUID_ERROR_DIR);
+        memcpy(dir, DEFAULT_SQUID_ERROR_DIR, l);
+        dir[ l++ ] = '/';
+        reset = dt = dir + l;
+
+        debugs(4, 6, HERE << "Testing Header: '" << hdr << "'");
+
+        while( pos < hdr.size() ) {
+
+/*
+ * Header value format:
+ *  - sequence of whitespace delimited tags
+ *  - each tag may suffix with ';'.* which we can ignore.
+ *  - IFF a tag contains only two characters we can wildcard ANY translations matching: <it> '-'? .*
+ *    with preference given to an exact match.
+ */
+            while(pos < hdr.size() && buf[pos] != ';' && buf[pos] != ',' && !xisspace(buf[pos]) && dt < (dir+256) ) {
+                *dt++ = xtolower(buf[pos++]);
+            }
+            *dt++ = '\0'; // nul-terminated the filename content string before system use.
+
+            debugs(4, 9, HERE << "STATE: dt='" << dt << "', reset='" << reset << "', reset[1]='" << reset[1] << "', pos=" << pos << ", buf='" << &buf[pos] << "'");
+
+            /* if we found anything we might use, try it. */
+            if(*reset != '\0') {
+
+                debugs(4, 6, HERE << "Found language '" << reset << "', testing for available template in: '" << dir << "'");
+                m = errorTryLoadText( err_type_str[page_id], dir, false);
+
+                if(m) break; // FOUND IT!!
+
+#if HAVE_GLOB
+                if( (dt - reset) == 2) {
+                    /* TODO glob the error directory for sub-dirs matching: <tag> '-*'   */
+                    /* use first result. */
+                    debugs(4,2, HERE << "wildcard fallback errors not coded yet.");
+                }
+#endif
+            }
+
+            dt = reset; // reset for next tag testing. we replace the failed name instead of cloning.
+
+            // IFF we terminated the tag on ';' we need to skip the 'q=' bit to the next ',' or end.
+            while(pos < hdr.size() && buf[pos] != ',') pos++;
+            if(buf[pos] == ',') pos++;
+        }
+    }
+#endif /* USE_ERR_LOCALES */
+
+    /** \par
+     * If client-specific error templates are not enabled or available.
+     * fall back to the old style squid.conf settings.
+     */
+    if(!m) {
+        m = error_text[page_id];
+        debugs(4, 1, HERE << "No existing languages found. Fall back on default language.");
+    }
+
     assert(m);
+    content->init();
 
     while ((p = strchr(m, '%'))) {
         content->append(m, p - m);	/* copy */

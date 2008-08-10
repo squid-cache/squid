@@ -41,6 +41,7 @@ The most important of these new features are:
 
 <itemize>
 	<item>IPv6 Support
+	<item>Error Page Localization
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -107,6 +108,20 @@ Most user-facing changes are reflected in squid.conf (see below).
    with the RADIUS server. A new helper will be needed for IPv6 RADIUS protocol.
 
 
+<sect2>Error Page Localization
+<p>
+The error pages presented by squid may now be localized per-request to match the visitors local preferred language.
+
+<p>Squid needs to be build with the --enable-auto-locale option. And the error_directory option in squid.conf needs to be removed.
+
+<p>For best coverage of languages, using the latest language pack of error files is recommended.
+Updates can be downloaded from <url url="http://www.squid-cahch.org/Versions/langpack/" name="www.squid-cache.org/Versions/langpack/">
+
+<p>The squid developers are interested in making squid available in a wide variety of languages.
+   Contributions of new languages is encouraged.
+   Details at <url url="http://wiki.squid-cache.org/Translations" named="The Squid wiki">
+
+
 <sect1>Changes to squid.conf
 <p>
 There have been changes to Squid's configuration file since Squid-3.0.
@@ -165,6 +180,17 @@ This section gives a thorough account of those changes in three categories:
 	Syntax:
 		include /path/to/file1 /path/to/file2
 	</verb>
+
+        <tag>error_default_language</tag>
+        <p>New option to replace the old configure option --enable-default-err-language
+        <verb>
+        Set the default language which squid will send error pages in
+        if no existing translation matches the clients language
+        preferences.
+
+        If unset (default) generic English will be used.
+	</verb>
+
 
 </descrip>
 
@@ -247,12 +273,37 @@ This section gives a thorough account of those changes in three categories:
 	<p>option 'transparent' is being deprecated in favour of 'intercept' which more clearly identifies what the option does.
 	For now option 'tproxy' remains with old behaviour meaning fully-invisible proxy using TPROXY support.</p>
 
+	<tag>error_directory</tag>
+	<p>Now an optiona entry in squid.conf. If present it will force all visitors to receive the error pages
+	contained in the directory it points at. If absent error page localization will be given a chance.
+	<verb>
+        If you wish to create your own versions of the default
+        error files to customize them to suit your company copy
+        the error/template files to another directory and point
+        this tag at them.
+
+        WARNING: This option will disable multi-language support
+                 on error pages if used.
+
+        The squid developers are interested in making squid available in
+        a wide variety of languages. If you are making translations for a
+        language that Squid does not currently provide please consider
+        contributing your translation back to the project.
+        http://wiki.squid-cache.org/Translations
+
+        The squid developers working on translations are happy to supply drop-in
+        translated error files in exchange for any new language contributions.
+	</verb>
+
 </descrip>
 
 
 <sect2>Removed tags<label id="removedtags">
 <p>
 <descrip>
+
+	<tag>dns_testnames</tag>
+	<p>Obsolete. This feature is no longer relevant to modern networks and causes boot problems.</p>
 
 </descrip>
 
@@ -303,6 +354,9 @@ This section gives an account of those changes in three categories:
 	   but please report the bugs anyway.
         </p>
 
+	<tag>--enable-auto-locale</tag>
+	<p>Enable error page localization for visitors.</p>
+
 </descrip>
 </p>
 
@@ -348,7 +402,10 @@ porting one of these from Squid-2 to Squid-3 is most welcome.
 <descrip>
 	<tag>--enable-linux-tproxy</tag>
 	<p>Replaced by --enable-linux-tproxy2 to make way for differences in TPROXY v2 and v4 support.</p>
-
+	<tag>--enable-default-err-language</tag>
+	<p>Replaced by error_default_language squid.conf option</p>
+	<tag>--enable-err-languages</tag>
+	<p>Removed.</p>
 </descrip>
 
 </article>
