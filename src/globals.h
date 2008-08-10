@@ -95,7 +95,6 @@ extern "C"
     extern int neighbors_do_private_keys;	/* 1 */
     extern int opt_catch_signals;	/* 1 */
     extern int opt_debug_stderr;	/* -1 */
-    extern int opt_dns_tests;	/* 1 */
     extern int opt_foreground_rebuild;	/* 0 */
     extern char *opt_forwarded_for;	/* NULL */
     extern int opt_reload_hit_only;	/* 0 */

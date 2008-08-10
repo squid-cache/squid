@@ -217,11 +217,6 @@
  */
 #define N_COUNT_HOUR_HIST (86400 * 3) / (60 * COUNT_INTERVAL)
 
-/* were to look for errors if config path fails */
-#ifndef DEFAULT_SQUID_ERROR_DIR
-#define DEFAULT_SQUID_ERROR_DIR "/usr/local/squid/etc/errors"
-#endif
-
 /* handy to determine the #elements in a static array */
 #define countof(arr) (sizeof(arr)/sizeof(*arr))
 

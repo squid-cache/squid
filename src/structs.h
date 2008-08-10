@@ -371,7 +371,6 @@ struct SquidConfig
     size_t udpMaxHitObjsz;
     wordlist *hierarchy_stoplist;
     wordlist *mcast_group_list;
-    wordlist *dns_testname_list;
     wordlist *dns_nameservers;
     peer *peers;
     int npeers;
@@ -549,6 +548,9 @@ struct SquidConfig
         int use_short_names;
     } icons;
     char *errorDirectory;
+#if USE_ERR_LOCALES
+    char *errorDefaultLanguage;
+#endif
 
     struct
     {
