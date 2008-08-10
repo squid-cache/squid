@@ -2610,11 +2610,13 @@ parse_wordlist(wordlist ** list)
         wordlistAdd(list, token);
 }
 
+#if 0 /* now unused */
 static int
 check_null_wordlist(wordlist * w)
 {
     return w == NULL;
 }
+#endif
 
 static int
 check_null_acl_access(acl_access * a)
