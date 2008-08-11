@@ -424,6 +424,9 @@ max(A const & lhs, A const & rhs)
 #include "protos.h"
 #include "globals.h"
 
+/* Exclude CPPUnit tests from the below restriction. */
+/* BSD implementation uses these still */
+#if !defined(SQUID_UNIT_TEST)
 /*
  * Squid source files should not call these functions directly.
  * Use xmalloc, xfree, xcalloc, snprintf, and xstrdup instead.
@@ -434,7 +437,6 @@ max(A const & lhs, A const & rhs)
 #endif
 template <class V>
 void free(V x) { fatal("Do not use ::free()"); }
-
 #ifndef calloc
 #define calloc +
 #endif
@@ -444,6 +446,7 @@ void free(V x) { fatal("Do not use ::free()"); }
 #ifndef strdup
 #define strdup +
 #endif
+#endif /* !SQUID_UNIT_TEST */
 
 /*
  * Hey dummy, don't be tempted to move this to lib/config.h.in
