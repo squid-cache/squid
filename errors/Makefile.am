@@ -111,7 +111,7 @@ addlang: all
 
 dist-hook:
 	for lang in $(LANGUAGES); do \
-	  if test "$$lang" = .; then :; else \
+	  if test -d $(srcdir)/$$lang ; then \
 	    test -d $(distdir)/$$lang \
 	    || mkdir $(distdir)/$$lang \
 	    || exit 1; \
@@ -119,28 +119,33 @@ dist-hook:
 	      || exit 1; \
 	  fi; \
 	done; \
-	if test "$(DO_TRANSLATE)" = "yes" ; then \
-		make translate; \
+	make translate; \
+	for lang in $(TRANSLATIONS); do \
+	  if test -d $(srcdir)/$$lang ; then \
 		test -d $(distdir)/$$lang \
 		  || mkdir $(distdir)/$$lang \
 		  || exit 1; \
 		cp -p $(srcdir)/$$lang/ERR_*  $(distdir)/$$lang \
 		  || exit 1; \
-	fi
+	  fi; \
+	done
 
 translate:
-	for lang in $(TRANSLATIONS); do \
+	if test "$(PO2HTML)" != "" ; then \
+	  for lang in $(TRANSLATIONS); do \
 		test -d $$lang && rm -r $$lang; \
 		mkdir $$lang; \
 		cd $$lang; \
 		for f in `ls -1 ../templates`; do \
-			echo "po2html -i ../$$lang.po -t ../templates/$$f"; \
-			po2html -i ../$$lang.po -t ../templates/$$f >$$f || exit 1; \
+			$(PO2HTML) -i ../$$lang.po -t ../templates/$$f >$$f || exit 1; \
 		done; \
 		cd ..; \
-	done
+	  done; \
+	else \
+	  echo "WARNING: Translation toolkit was not detected."; \
+	  echo "A drop-in bundle of pre-translated files is available from"; \
+	  echo "http://www.squid-cache.org/Versions/langpack/"; \
+	fi
 
 all:
-	if test "$(DO_TRANSLATE)" = "yes" ; then \
-		make translate; \
-	fi
+	make translate
