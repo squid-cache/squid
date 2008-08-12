@@ -4,7 +4,7 @@
 #
 
 tmp="${1}"
-if test -x "./test-suite/buildtests/os-${tmp}.opts" ; then
+if test -e ./test-suite/buildtests/os-${tmp}.opts ; then
 	echo "TESTING: ${tmp}"
 	./test-suite/buildtest.sh ./test-suite/buildtests/os-${tmp}
 fi
