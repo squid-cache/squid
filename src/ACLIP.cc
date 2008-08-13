@@ -372,22 +372,22 @@ acl_ip_data::FactoryParse(const char *t)
 #endif
 
     /* Decode addr1 */
-    if (!*addr1) {
+    if (!*addr1 || !(q->addr1 = addr1)) {
         debugs(28, 0, "aclIpParseIpData: unknown first address in '" << t << "'");
         delete q;
         self_destruct();
         return NULL;
     }
-    else q->addr1 = addr1;
 
     /* Decode addr2 */
-    if (*addr2 && !(q->addr2=addr2) ) {
+    if (!*addr2)
+	q->addr2.SetAnyAddr();
+    else if (!(q->addr2=addr2) ) {
         debugs(28, 0, "aclIpParseIpData: unknown second address in '" << t << "'");
         delete q;
         self_destruct();
         return NULL;
     }
-    else q->addr2 = addr1;
 
     /* Decode mask (NULL or empty means a exact host mask) */
     if (!DecodeMask(mask, q->mask, iptype)) {
