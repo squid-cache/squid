@@ -14,7 +14,7 @@ log=`echo "${dist}" | sed s/..test-suite.buildtests.//g `
 # ... and send everything there...
 {
 
-if test -x ${dist%%.opts}.opts ; then
+if test -e ${dist%%.opts}.opts ; then
 	echo "BUILD: ${dist%%.opts}.opts"
 	. ./${dist%%.opts}.opts
 else

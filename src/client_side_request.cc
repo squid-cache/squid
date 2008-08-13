@@ -58,6 +58,7 @@
 #include "ClientRequestContext.h"
 #include "SquidTime.h"
 #include "wordlist.h"
+#include "inet_pton.h"
 
 #if USE_ADAPTATION
 #include "adaptation/AccessCheck.h"
@@ -447,7 +448,7 @@ clientFollowXForwardedForCheck(int answer, void *data)
         while (l > 0 && ! (p[l-1] == ',' || xisspace(p[l-1])))
             l--;
         asciiaddr = p+l;
-        if (inet_aton(asciiaddr, &addr) != 0)
+        if (xinet_pton(AF_INET, asciiaddr, &addr) != 0)
         {
             request->indirect_client_addr = addr;
             request->x_forwarded_for_iterator.cut(l);
