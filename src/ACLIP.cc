@@ -387,7 +387,7 @@ acl_ip_data::FactoryParse(const char *t)
         self_destruct();
         return NULL;
     }
-    else q->addr2 = addr2;
+    else q->addr2 = addr1;
 
     /* Decode mask (NULL or empty means a exact host mask) */
     if (!DecodeMask(mask, q->mask, iptype)) {

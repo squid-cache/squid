@@ -428,11 +428,11 @@ BOOL WINAPI SSP_LogonUser(PTSTR szUser, PTSTR szPassword, PTSTR szDomain)
 
         /* Initialize auth identity structure */
 	ZeroMemory(&ai, sizeof(ai));
-	ai.Domain = szDomain;
+	ai.Domain = (void *)szDomain;
 	ai.DomainLength = lstrlen(szDomain);
-	ai.User = szUser;
+	ai.User = (void *)szUser;
 	ai.UserLength = lstrlen(szUser);
-	ai.Password = szPassword;
+	ai.Password = (void *)szPassword;
 	ai.PasswordLength = lstrlen(szPassword);
 #if defined(UNICODE) || defined(_UNICODE)
 	ai.Flags = SEC_WINNT_AUTH_IDENTITY_UNICODE;
