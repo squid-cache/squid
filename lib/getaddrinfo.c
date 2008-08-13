@@ -80,6 +80,7 @@
 #endif
 
 #include "getaddrinfo.h"
+#include "inet_pton.h"
 
 static struct addrinfo *
 dup_addrinfo (struct addrinfo *info, void *addr, size_t addrlen)
@@ -171,7 +172,7 @@ xgetaddrinfo (const char *nodename, const char *servname,
       return (*res == NULL) ? EAI_MEMORY : 0;
     }
 
-  /* If AI_NUMERIC is specified, use inet_addr to translate numbers and
+  /* If AI_NUMERIC is specified, use xinet_pton to translate numbers and
      dots notation. */
   if (hints->ai_flags & AI_NUMERICHOST)
     {
@@ -185,6 +186,8 @@ xgetaddrinfo (const char *nodename, const char *servname,
 
       sin.sin_family = result.ai_family;
       sin.sin_port = htons (port);
+      if (xinet_pton(result.ai_family, nodename, &sin.sin_addr))
+        return EAI_NONAME;
       sin.sin_addr.s_addr = inet_addr (nodename);
       /* Duplicate result and addr and return */
       *res = dup_addrinfo (&result, &sin, sizeof sin);
