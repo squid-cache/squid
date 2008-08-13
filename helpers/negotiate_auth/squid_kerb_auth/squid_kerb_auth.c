@@ -37,6 +37,10 @@
 #include "spnegohelp.h"
 #endif
 
+// AYJ: must match the definition in src/auth/negotiate/auth_negotiate.cc
+#define MAX_AUTHTOKEN_LEN	32768
+
+// AYJ: match define in include/rfc2181.h
 #ifndef HOST_NAME_MAX
 #define HOST_NAME_MAX 256
 #endif
@@ -172,11 +176,9 @@ int check_gss_err(OM_uint32 major_status, OM_uint32 minor_status, const char* fu
   return(0);
 }
 
-
-
 int main(int argc, char * const argv[])
 {
-  char buf[6400];
+  char buf[MAX_AUTHTOKEN_LEN];
   char *c;
   int length=0;
   static int err=0;

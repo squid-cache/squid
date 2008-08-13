@@ -50,6 +50,12 @@
 #include "negotiateScheme.h"
 #include "wordlist.h"
 
+/**
+ * Maximum length (buffer size) for token strings.
+ */
+// AYJ: must match re-definition in helpers/negotiate_auth/squid_kerb_auth/squid_kerb_auth.c
+#define MAX_AUTHTOKEN_LEN   32768
+
 static void
 authenticateNegotiateReleaseServer(AuthUserRequest * auth_user_request);
 
@@ -547,7 +553,7 @@ void
 AuthNegotiateUserRequest::module_start(RH * handler, void *data)
 {
     authenticateStateData *r = NULL;
-    static char buf[8192];
+    static char buf[MAX_AUTHTOKEN_LEN];
     negotiate_user_t *negotiate_user;
     auth_user_t *auth_user = user();
 
@@ -573,9 +579,9 @@ AuthNegotiateUserRequest::module_start(RH * handler, void *data)
     AUTHUSERREQUESTLOCK(r->auth_user_request, "r");
 
     if (auth_state == AUTHENTICATE_STATE_INITIAL) {
-        snprintf(buf, 8192, "YR %s\n", client_blob); //CHECKME: can ever client_blob be 0 here?
+        snprintf(buf, MAX_AUTHTOKEN_LEN, "YR %s\n", client_blob); //CHECKME: can ever client_blob be 0 here?
     } else {
-        snprintf(buf, 8192, "KK %s\n", client_blob);
+        snprintf(buf, MAX_AUTHTOKEN_LEN, "KK %s\n", client_blob);
     }
 
     waiting = 1;
