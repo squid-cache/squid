@@ -41,7 +41,9 @@
 #include "SwapDir.h"
 
 #if USE_WCCPv2
+#if HAVE_NETDB_H
 #include <netdb.h>
+#endif
 
 #define WCCP_PORT 2048
 #define WCCP_RESPONSE_SIZE 12448
