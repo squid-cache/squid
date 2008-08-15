@@ -20,12 +20,7 @@ if test -e ${dist%%.opts}.opts ; then
 else
 	echo "BUILD: DEFAULT"
 	OPTS=""
-fi
-
-if test -f ${dist%%.opts}.flags ; then
-#	echo "DEBUG: ${dist%%.opts}.flags"
-	FLAGS=`cat ./${dist%%.opts}.flags`
-# else nothing set for flags.
+	FLAGS=""
 fi
 
 #

@@ -1,4 +1,4 @@
-# #!/bin/bash
+#!/bin/sh
 #
 # Configure options currently used by Ubuntu Packaged Release
 #
@@ -44,3 +44,11 @@ OPTS=" \
 	--enable-epoll \
 	--enable-linux-netfilter \
 "
+
+# Ubuntu for some reason built using 'cc' instead of gcc
+export CC="/usr/bin/cc"
+export CXX="g++"
+export CFLAGS="-g -O2 -g -Wall -O2"
+export CXXFLAGS="-g -O2 -g -Wall -O2"
+export CPPFLAGS=""
+export LDFLAGS="-Wl,-Bsymbolic-functions"
