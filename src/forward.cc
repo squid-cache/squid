@@ -1211,8 +1211,8 @@ FwdState::updateHierarchyInfo()
     const char *nextHop = NULL;
 
     if (fs->_peer) { 
-        // went to peer, log peer domain name
-        nextHop = fs->_peer->host;
+        // went to peer, log peer host name
+        nextHop = fs->_peer->name;
     } else {
         // went DIRECT, must honor log_ip_on_direct
 
