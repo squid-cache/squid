@@ -91,7 +91,11 @@ SQUIDCEXTERN void xxfree(const void *);
  */
 #define _SQUID_EXTERNNEW_ extern
 #else
+#ifdef __GNUC_STDC_INLINE__
+#define _SQUID_EXTERNNEW_ extern inline __attribute__((gnu_inline))
+#else
 #define _SQUID_EXTERNNEW_ extern inline
+#endif
 #endif
 #endif
 #include "SquidNew.h"
