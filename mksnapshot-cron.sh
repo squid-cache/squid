@@ -2,7 +2,7 @@
 # Nightly cron job to generate snapshot releases
 top=$PWD
 versions=/server/httpd/htdocs/squid-cache.org/Versions/
-TMPDIR=/tmp/hno.cron
+TMPDIR=/tmp/$LOGNAME.cron
 export TMPDIR
 if [ -d $TMPDIR ]; then
 	chmod -R +w $TMPDIR
