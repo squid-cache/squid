@@ -1,4 +1,4 @@
-# #!/bin/bash
+#!/bin/sh
 #
 # Configure options currently used by Debian Packaged Release
 #
@@ -44,3 +44,13 @@ OPTS=" \
 	--enable-epoll \
 	--enable-linux-netfilter \
 "
+
+# Debian for some reason builds using explicit 'cc' instead of 'gcc' or automatic
+export build_alias="i486-linux-gnu"
+export CC="cc"
+export CFLAGS="-g -O2 -g -Wall -O2"
+export LDFLAGS=""
+export CPPFLAGS=""
+export CXX="g++"
+export CXXFLAGS="-g -O2 -g -Wall -O2"
+export FFLAGS="-g -O2"

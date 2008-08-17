@@ -34,3 +34,7 @@ for f in `ls -1 ./*.po` ; do
 	chown --reference=${f} ${f}.new
 	mv ${f}.new ${f}
 done
+
+# cleanup.
+rm -r -f ./pot
+rm -f dictionary.pot.new
