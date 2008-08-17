@@ -26,7 +26,6 @@ LANGUAGES	= \
 		Armenian \
 		Azerbaijani \
 		Bulgarian \
-		Catalan \
 		Czech \
 		Danish \
 		Dutch \
