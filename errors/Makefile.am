@@ -14,6 +14,7 @@ DEFAULT_ERROR_DIR	= $(errordir)
 TRANSLATIONS = \
 	de \
 	en en-au en-gb \
+	fr \
 	it \
 	pt-br
 
