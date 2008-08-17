@@ -30,7 +30,6 @@ LANGUAGES	= \
 		Dutch \
 		Estonian \
 		Finnish \
-		French \
 		Greek \
 		Hebrew \
 		Hungarian \
