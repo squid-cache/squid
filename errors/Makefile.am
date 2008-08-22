@@ -13,6 +13,7 @@ DEFAULT_ERROR_DIR	= $(errordir)
 # List of automated translations possible:
 TRANSLATIONS = \
 	ca \
+	da \
 	de \
 	en en-au en-gb \
 	es \
@@ -27,7 +28,6 @@ LANGUAGES	= \
 		Azerbaijani \
 		Bulgarian \
 		Czech \
-		Danish \
 		Dutch \
 		Estonian \
 		Finnish \
