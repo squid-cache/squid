@@ -1,8 +1,8 @@
-# $Id: Makefile.am,v 1.11 2003/05/21 08:24:26 hno Exp $
+# $Id$
 #
 
-ICON1	=	anthony-binhex.gif
-ICON2 	=	anthony-bomb.gif \
+ICONS	=	anthony-binhex.gif \
+		anthony-bomb.gif \
 		anthony-box.gif \
 		anthony-box2.gif \
 		anthony-c.gif \
@@ -30,23 +30,8 @@ ICON2 	=	anthony-bomb.gif \
 		anthony-xpm.gif
 
 icondir = $(datadir)/icons
-icon_DATA = $(ICON1) $(ICON2)
-EXTRA_DIST = $(ICON1) $(ICON2) icons.shar
+icon_DATA = $(ICONS)
+EXTRA_DIST = $(ICONS)
 DISTCLEANFILES = 
 
-# The magic with ICON1,2 is to have a single dependency
-# for all of the icons.
-$(ICON2): $(ICON1)
-
-$(ICON1):
-	@if [ ! -f "$(srcdir)/$(ICON1)" ]; then \
-	    $(SHELL) "$(srcdir)/icons.shar" ; \
-	    touch -r "$(srcdir)/icons.shar" *.gif ; \
-	fi
-
-update-icons.shar:
-	shar --no-timestamp $(ICON1) $(ICON2) > $@ 2>/dev/null || \
-	shar $(ICON1) $(ICON2) > $@
-
 ## DEFAULT_ICON_DIR        = $(sysconfdir)/icons
-
