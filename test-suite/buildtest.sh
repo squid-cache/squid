@@ -1,4 +1,4 @@
-#!/bin/sh -ex
+#!/bin/sh
 #
 # Configure and run a test build against any given set of configure options
 # or compile-time flags.
@@ -33,9 +33,9 @@ make -k distclean || echo "distclean done. errors are unwanted but okay here."
 #
 rm -f -r src/fs/aufs/.deps src/fs/diskd/.deps &&
 	./bootstrap.sh &&
-	./configure ${OPTS} &&
-	make check &&
-	make
+	./configure --silent ${OPTS} 2>&1 &&
+	make check 2>&1 &&
+	make 2>&1
 
 } 2>&1 > ./buildtest_${log}.log
 
