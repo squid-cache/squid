@@ -61,26 +61,14 @@ typedef BOOL (WINAPI * PFInitializeCriticalSectionAndSpinCount) (LPCRITICAL_SECT
 #endif
 
 void
-#if STDC_HEADERS
 _db_print(const char *format,...)
 {
-#else
-_db_print(va_alist)
-va_dcl
-{
-    const char *format = NULL;
-#endif
 
     LOCAL_ARRAY(char, f, BUFSIZ);
     va_list args1;
-#if STDC_HEADERS
 
     va_list args2;
     va_list args3;
-#else
-#define args2 args1
-#define args3 args1
-#endif
 #ifdef _SQUID_MSWIN_
     /* Multiple WIN32 threads may call this simultaneously */
 
@@ -119,7 +107,6 @@ va_dcl
     if (!Ctx_Lock)
         ctx_print();
 
-#if STDC_HEADERS
 
     va_start(args1, format);
 
@@ -127,11 +114,6 @@ va_dcl
 
     va_start(args3, format);
 
-#else
-
-    format = va_arg(args1, const char *);
-
-#endif
 
     snprintf(f, BUFSIZ, "%s| %s",
              debugLogTime(),
@@ -154,13 +136,11 @@ va_dcl
 
     va_end(args1);
 
-#if STDC_HEADERS
 
     va_end(args2);
 
     va_end(args3);
 
-#endif
 }
 
 static void

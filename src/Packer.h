@@ -46,11 +46,7 @@ typedef void (*ObjPackMethod) (void *obj, Packer * p);
 #endif
 /* append/vprintf's for Packer */
 typedef void (*append_f) (void *, const char *buf, int size);
-#if STDC_HEADERS
 typedef void (*vprintf_f) (void *, const char *fmt, va_list args);
-#else
-typedef void (*vprintf_f) ();
-#endif
 
 
 class Packer
@@ -65,11 +61,7 @@ public:
 
 SQUIDCEXTERN void packerClean(Packer * p);
 SQUIDCEXTERN void packerAppend(Packer * p, const char *buf, int size);
-#if STDC_HEADERS
 SQUIDCEXTERN void
 packerPrintf(Packer * p, const char *fmt,...) PRINTF_FORMAT_ARG2;
-#else
-SQUIDCEXTERN void packerPrintf();
-#endif
 
 #endif /* SQUID_PACKER_H */
