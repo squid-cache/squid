@@ -1084,7 +1084,7 @@ squid.conf.documented: cf_parser.h
 	true
 
 squid.conf.default: squid.conf.documented
-	grep -v -E "^[#\ ]" squid.conf.documented | grep -v -E "^$" >squid.conf.default
+	grep -v -E "^[#\ ]" squid.conf.documented | grep . >squid.conf.default
 
 cf_parser.h: cf.data cf_gen$(EXEEXT)
 	./cf_gen cf.data $(srcdir)/cf.data.depend
