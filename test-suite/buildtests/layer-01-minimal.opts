@@ -10,6 +10,16 @@
 # 	grep -E "^AC_ARG_WITH" ./configure.in | grep -o -E "[0-9a-z\-]+[,]" | grep -o -E "[^,]+" >without.opts
 # followed by insertion of '	--without-' and ' \' strings
 #
+# sometimes it's just too automatic.. Following options should be just stripped
+#
+#   --without-default-user \
+#   --without-aufs-threads \
+#   --without-coss-membuf-size \
+#   --without-filedescriptors \
+#   --without-cppunit-basedir \
+#   --without-build-environment \
+#
+#
 OPTS=" \
 	--disable-loadable-modules \
 	--disable-gnuregex \
@@ -70,21 +80,15 @@ OPTS=" \
 	--disable-zph-qos \
 	--disable-auto-locale \
  \
-	--without-default-user \
-	--without-aufs-threads \
 	--without-pthreads \
 	--without-aio \
 	--without-dl \
 	--without-openssl \
-	--without-coss-membuf-size \
 	--without-large-files \
-	--without-build-environment \
 	--without-valgrind-debug \
 	--without-ipv6-split-stack \
 	--without-ipv4-mapped \
 	--without-localhost-ipv6 \
 	--without-dns-cname \
-	--without-filedescriptors \
-	--without-cppunit-basedir \
 	--without-po2html \
 	"
