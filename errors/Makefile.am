@@ -13,6 +13,7 @@ DEFAULT_ERROR_DIR	= $(errordir)
 # List of automated translations possible:
 TRANSLATIONS = \
 	ca \
+	da \
 	de \
 	en en-au en-gb \
 	es \
@@ -27,7 +28,6 @@ LANGUAGES	= \
 		Azerbaijani \
 		Bulgarian \
 		Czech \
-		Danish \
 		Dutch \
 		Estonian \
 		Finnish \
@@ -88,7 +88,7 @@ uninstall-local:
 # undocumented hack.  You can use this target to create multi-lingual
 # error pages.  For example:
 #
-#	make ADDLANG=English DESTLANG=French addlang
+#	$(MAKE) ADDLANG=English DESTLANG=French addlang
 #
 # by Andres Kroonmaa <andre@mail.lbi.ee>
 #
@@ -120,7 +120,7 @@ dist-hook:
 	      || exit 1; \
 	  fi; \
 	done; \
-	make translate; \
+	$(MAKE) translate; \
 	for lang in $(TRANSLATIONS); do \
 	  if test -d $(srcdir)/$$lang ; then \
 		test -d $(distdir)/$$lang \
@@ -149,4 +149,4 @@ translate:
 	fi
 
 all:
-	make translate
+	$(MAKE) translate
