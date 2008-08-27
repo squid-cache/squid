@@ -88,7 +88,7 @@ uninstall-local:
 # undocumented hack.  You can use this target to create multi-lingual
 # error pages.  For example:
 #
-#	$(MAKE) ADDLANG=English DESTLANG=French addlang
+#	make ADDLANG=English DESTLANG=French addlang
 #
 # by Andres Kroonmaa <andre@mail.lbi.ee>
 #
