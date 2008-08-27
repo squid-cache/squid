@@ -979,6 +979,7 @@ BUILT_SOURCES = \
 
 sysconf_DATA = \
 	squid.conf.default \
+	squid.conf.documented \
 	mime.conf.default
 
 data_DATA = \
@@ -1078,9 +1079,12 @@ test_cache_digest: test_cache_digest.o CacheDigest.o debug.o globals.o store_key
 ## If autodependency works well this is not needed anymore
 cache_cf.o: cf_parser.h
 
-# squd.conf.default is built by cf_gen when making cf_parser.h
-squid.conf.default: cf_parser.h
+# squid.conf.default is built by cf_gen when making cf_parser.h
+squid.conf.documented: cf_parser.h
 	true
+
+squid.conf.default: squid.conf.documented
+	grep -v -E "^[#\ ]" squid.conf.documented | grep . >squid.conf.default
 
 cf_parser.h: cf.data cf_gen$(EXEEXT)
 	./cf_gen cf.data $(srcdir)/cf.data.depend
@@ -1131,6 +1135,10 @@ install-data-local: install-sysconfDATA install-dataDATA
 	        echo "$(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE)"; \
 	        $(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE); \
 	fi
+	echo "$(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE).default"; \
+	$(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE).default; \
+	echo "$(INSTALL_DATA) squid.conf.documented $(DESTDIR)$(DEFAULT_CONFIG_FILE).documented"; \
+	$(INSTALL_DATA) squid.conf.documented $(DESTDIR)$(DEFAULT_CONFIG_FILE).documented; \
 	$(mkinstalldirs) $(DESTDIR)$(DEFAULT_LOG_PREFIX)
 
 uninstall-local:
@@ -1145,7 +1153,7 @@ uninstall-local:
 #		$(RM) -f $(DESTDIR)$(DEFAULT_CONFIG_FILE); \
 #	fi
 
-DISTCLEANFILES = cf_gen_defines.h cf.data cf_parser.h squid.conf.default \
+DISTCLEANFILES = cf_gen_defines.h cf.data cf_parser.h squid.conf.default squid.conf.documented \
 	globals.cc string_arrays.c repl_modules.cc 
 
 ##install-pinger:
