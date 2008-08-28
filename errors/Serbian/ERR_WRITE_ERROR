@@ -10,11 +10,11 @@
 Tokom pokušaja da se dovuèe strana sa sledeæom adresom (URL):
 <A HREF="%U">%U</A>
 <P>
-dogodila se sledeæa greška:
+Dogodila se sledeæa greška:
 <UL>
 <LI>
 <STRONG>
-Greška u pisanju.
+Greška u upisu.
 </STRONG>
 </UL>
 
@@ -23,5 +23,9 @@ Sistem je dao povratnu informaciju:
 <PRE><I>    %E</I></PRE>
 
 <P>
-Desila se greška prilikom pisanja po mreži. Molimo pokušajte ponovo.
-<P>Vaš cache/proxy administrator je: <A HREF="mailto:%w%W">%w</A>. 
+<PRE>
+Desila se greška prilikom upisa u mreži. Molimo pokušajte ponovo.
+</PRE>
+</P>
+
+<P>Vaš keš/proksi administrator je: <A HREF="mailto:%w">%w</A>. 

@@ -10,7 +10,7 @@
 Tokom pokušaja da se dovuèe strana sa sledeæom adresom (URL):
 <A HREF="%U">%U</A>
 <P>
-dogodila se sledeæa greška:
+Dogodila se sledeæa greška:
 <UL>
 <LI>
 <STRONG>
@@ -29,8 +29,8 @@ DNS server je vratio informaciju:
 <P>
 što znaèi:
 <PRE>
-   Proksi server nije u stanju da identifikuje ime raèunara koje je upisano u 
+   Proksi server nije u stanju da identifikuje ime raèunara koje se nalazi u 
    adresi (URL). Proverite da li je adresa ispravna.
 </PRE>
 </P>
-<P>Vaš cache administrator je <A HREF="mailto:%w%W">%w</A>.
+<P>Vaš keš administrator je <A HREF="mailto:%w">%w</A>.

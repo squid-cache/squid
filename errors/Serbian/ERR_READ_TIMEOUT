@@ -10,7 +10,7 @@
 Tokom pokušaja da se dovuèe strana sa sledeæom adresom (URL):
 <A HREF="%U">%U</A>
 <P>
-dogodila se sledeæa greška:
+Dogodila se sledeæa greška:
 <UL>
 <LI>
 <STRONG>
@@ -29,3 +29,5 @@ Mreža ili server su možda preoptereæeni ili nedostupni.
 Molimo pokušajte ponovo.
 </PRE>
 </P>
+
+<P>Vaš keš/proksi administrator je: <A HREF="mailto:%w">%w</A>. 
