@@ -532,6 +532,70 @@ urlCanonicalClean(const HttpRequest * request)
     return buf;
 }
 
+const char *
+urlAbsolute(const HttpRequest * req, const char *relUrl)
+{
+    LOCAL_ARRAY(char, portbuf, 32);
+    LOCAL_ARRAY(char, urlbuf, MAX_URL);
+    char *path, *last_slash;
+
+    if (relUrl == NULL) {
+	return (NULL);
+    }
+    if (req->method.id() == METHOD_CONNECT) {
+	return (NULL);
+    }
+    if (strchr(relUrl, ':') != NULL) {
+	return (NULL);
+    }
+    if (req->protocol == PROTO_URN) {
+	snprintf(urlbuf, MAX_URL, "urn:%s", req->urlpath.buf());
+    } else {
+	portbuf[0] = '\0';
+	if (req->port != urlDefaultPort(req->protocol)) {
+	    snprintf(portbuf, 32, ":%d", req->port);
+	}
+	if (relUrl[0] == '/') {
+	    snprintf(urlbuf, MAX_URL, "%s://%s%s%s%s%s",
+		ProtocolStr[req->protocol],
+		req->login,
+		*req->login ? "@" : null_string,
+		req->GetHost(),
+		portbuf,
+		relUrl
+		);
+	} else {
+	    path = xstrdup(req->urlpath.buf());
+	    last_slash = strrchr(path, '/');
+	    if (last_slash == NULL) {
+		snprintf(urlbuf, MAX_URL, "%s://%s%s%s%s/%s",
+		    ProtocolStr[req->protocol],
+		    req->login,
+		    *req->login ? "@" : null_string,
+		    req->GetHost(),
+		    portbuf,
+		    relUrl
+		    );
+	    } else {
+		last_slash++;
+		*last_slash = '\0';
+		snprintf(urlbuf, MAX_URL, "%s://%s%s%s%s%s%s",
+		    ProtocolStr[req->protocol],
+		    req->login,
+		    *req->login ? "@" : null_string,
+		    req->GetHost(),
+		    portbuf,
+		    path,
+		    relUrl
+		    );
+	    }
+	    xfree(path);
+	}
+    }
+
+    return (xstrdup(urlbuf));
+}
+
 /*
  * matchDomainName() compares a hostname with a domainname according
  * to the following rules:

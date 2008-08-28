@@ -246,7 +246,7 @@ HttpRequestMethod::purgesOthers() const
         /* all others */
         case METHOD_OTHER:
         default:
-            return false; // be conservative: we do not know some methods specs
+            return true; // RFC says to purge if we don't know the method
 	}
 
     return false; // not reached
