@@ -19,6 +19,7 @@ TRANSLATIONS = \
 	es \
 	fr \
 	it \
+	nl \
 	pt-br
 
 # Legacy language contributions...
@@ -28,7 +29,6 @@ LANGUAGES	= \
 		Azerbaijani \
 		Bulgarian \
 		Czech \
-		Dutch \
 		Estonian \
 		Finnish \
 		Greek \
