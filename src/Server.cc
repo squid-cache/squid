@@ -409,11 +409,13 @@ purgeEntriesByHeader(const HttpRequest *req, const char *reqUrl, HttpMsg *rep, h
 	    if (absUrl != NULL) {
 	        url = absUrl;
 	    }
-        if (sameUrlHosts(reqUrl, url)) { // prevent purging DoS, per RFC 2616
+	    if (absUrl != NULL) { // if the URL was relative, it is by nature the same host
+            purgeEntriesByUrl(url);
+	    } else if (sameUrlHosts(reqUrl, url)) { // prevent purging DoS, per RFC 2616 13.10, second last paragraph
             purgeEntriesByUrl(url);
         }
         if (absUrl != NULL) {
-            xfree((void *)absUrl);
+            safe_free((void *)absUrl);
         }
     }
 }
