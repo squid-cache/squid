@@ -389,8 +389,7 @@ AC_ARG_WITH(aufs-threads,
     aufs_io_threads=$withval
     ;;
   *)
-    echo "ERROR: Invalid --with-aufs-threads argument"
-    exit 1
+    AC_MSG_ERROR(--with-aufs-threads expects a numeric argument)
     ;;
   esac
 ])
@@ -450,8 +449,7 @@ if test -n "$STORE_MODULES"; then
 	if test -d $srcdir/src/fs/$module; then
 	    :
 	else
-	    echo "ERROR: storeio $module does not exists"
-	    exit 1
+	    AC_MSG_ERROR(storeio $module does not exist)
 	fi
     done
     echo "Store modules built: $STORE_MODULES"
@@ -558,8 +556,7 @@ if test -n "$DISK_MODULES"; then
 	if test -d $srcdir/src/DiskIO/$module; then
 	    :
 	else
-	    echo "ERROR: disk-io $module does not exists"
-	    exit 1
+	    AC_MSG_ERROR(disk-io $module does not exist)
 	fi
     done
     DISK_LIBS="lib`echo $DISK_MODULES|sed -e 's% %.a lib%g'`.a"
@@ -688,8 +685,7 @@ if test -n "$REPL_POLICIES"; then
 	if test -d $srcdir/src/repl/$module; then
 	    :
 	else
-	    echo "ERROR: Removal policy $module does not exists"
-	    exit 1
+	    AC_MSG_ERROR(Removal policy $module does not exist)
 	fi
     done
     echo "Removal policies built: $REPL_POLICIES"
@@ -1041,7 +1037,7 @@ AC_ARG_ENABLE(cache-digests,
 dnl Size of COSS memory buffer
 AC_ARG_WITH(coss-membuf-size,
 [  --with-coss-membuf-size COSS membuf size (default 1048576 bytes) ],
-[  if test "$with_coss_membuf_size"; then
+[  if test -n "$withval" -a "x$withval" != "xno" ; then
       echo "Setting COSS membuf size to $with_coss_membuf_size bytes"
       AC_DEFINE_UNQUOTED(COSS_MEMBUF_SZ, $with_coss_membuf_size,[Define if you want to set the COSS membuf size])
    fi
@@ -1201,7 +1197,7 @@ needlargefiles=
 
 AC_ARG_WITH(large-files,
 [  --with-large-files      Enable support for large files (logs etc).],
-[ if test "$withval" = yes; then
+[ if test "x$withval" = "xyes"; then
 	needlargefiles=1
   fi
 ])
@@ -1255,8 +1251,7 @@ default|"")
 	if test "`getconf _$buildmodel 2>/dev/null || true`" = 1 || test "`getconf $buildmodel 2>/dev/null || true`" ; then
 	    : # All fine
 	else
-	    echo "ERROR: Build environment $buildmodel not known to getconf."
-	    exit 1
+	    AC_MSG_ERROR(Build environment $buildmodel not known to getconf.)
 	fi
 	CFLAGS="`getconf ${buildmodel}_CFLAGS` $CFLAGS"
 	CXXFLAGS="`getconf ${buildmodel}_CFLAGS` $CXXFLAGS"
@@ -1444,8 +1439,7 @@ if test -n "$AUTH_MODULES"; then
 	if test -d $srcdir/src/auth/$module; then
 	    :
 	else
-	    echo "ERROR: Auth scheme $module does not exists"
-	    exit 1
+	    AC_MSG_ERROR(Auth scheme $module does not exist)
 	fi
 	eval AUTH_MODULE_${module}=yes
     done
@@ -1508,8 +1502,7 @@ if test -n "$BASIC_AUTH_HELPERS"; then
 		    ;;
 	    esac
 	else
-	    echo "ERROR: Basic auth helper $helper does not exists"
-	    exit 1
+	    AC_MSG_ERROR(Basic auth helper $helper does not exist)
 	fi
     done
     echo "Basic auth helpers built: $BASIC_AUTH_HELPERS"
@@ -1552,8 +1545,7 @@ if test -n "$NTLM_AUTH_HELPERS"; then
 	if test -d $srcdir/helpers/ntlm_auth/$helper; then
 	    :
 	else
-	    echo "ERROR: NTLM Auth helper $helper does not exists"
-	    exit 1
+	    AC_MSG_ERROR(NTLM Auth helper $helper does not exist)
 	fi
     done
     echo "NTLM auth helpers built: $NTLM_AUTH_HELPERS"
@@ -1596,8 +1588,7 @@ if test -n "$NEGOTIATE_AUTH_HELPERS"; then
 	if test -d $srcdir/helpers/negotiate_auth/$helper; then
 	    :
 	else
-	    echo "ERROR: Negotiate Auth helper $helper does not exists"
-	    exit 1
+	    AC_MSG_ERROR(Negotiate Auth helper $helper does not exist)
 	fi
     done
     echo "Negotiate auth helpers built: $NEGOTIATE_AUTH_HELPERS"
@@ -1640,8 +1631,7 @@ if test -n "$DIGEST_AUTH_HELPERS"; then
 	if test -f $srcdir/helpers/digest_auth/$helper/Makefile.in; then
 		:
 	else
-		echo "ERROR: digest auth helper $helper does not exists"
-		exit 1
+		AC_MSG_ERROR(digest auth helper $helper does not exist)
 	fi
     done
     echo "Digest auth helpers built: $DIGEST_AUTH_HELPERS"
@@ -1692,8 +1682,7 @@ if test -n "$EXTERNAL_ACL_HELPERS"; then
 	if test -f $srcdir/helpers/external_acl/$helper/Makefile.in; then
 		:
 	else
-		echo "ERROR: external acl helper $helper does not exists"
-		exit 1
+		AC_MSG_ERROR(external acl helper $helper does not exist)
 	fi
     done
     echo "External acl helpers built: $EXTERNAL_ACL_HELPERS"
@@ -1758,8 +1747,7 @@ if test "$require_sasl" = "yes"; then
 			echo "using SASL"
 			LIBSASL="-lsasl"
 		else
-			echo "ERROR: Neither SASL nor SASL2 found"
-			exit 1
+			AC_MSG_ERROR(Neither SASL nor SASL2 found)
 		fi
 	fi
 	AC_SUBST(LIBSASL)
@@ -1980,7 +1968,16 @@ fi
 AC_ARG_WITH(filedescriptors,
 [  --with-filedescriptors=NUMBER
                           Force squid to support NUMBER filedescriptors],
-[ squid_filedescriptors_num=$withval ])
+[ 
+  case ${withval} in
+    [[0-9]]*)
+      squid_filedescriptors_num=$withval
+      ;;
+    *)
+      AC_MSG_ERROR(--with-filedescriptors expects a numeric argument)
+      ;;
+    esac
+])
 
 AC_PATH_PROG(CPPUNITCONFIG, cppunit-config, false)
 if $CPPUNITCONFIG --help >/dev/null; then
@@ -2004,15 +2001,14 @@ AC_ARG_WITH(cppunit-basedir,
 	echo "Using cppunit includes from $withval"
 	SQUID_CPPUNIT_INC="-I${withval}/include"
     else
-	echo "ERROR: Cannot find cppunit at $withval"
-	exit 1
+	AC_MSG_ERROR(Cannot find cppunit at $withval)
     fi
   if test -f $withval/lib/libcppunit.la; then
 	echo "Using cppunit lib from $withval"
 	SQUID_CPPUNIT_LA="${withval}/lib/libcppunit.la"
 	SQUID_CPPUNIT_LIBS='$(SQUID_CPPUNIT_LA)'
     else
-	echo "ERROR: Cannot find cppunit at $withval"
+	AC_MSG_ERROR(Cannot find cppunit at $withval)
 	exit 1
     fi
 ])
