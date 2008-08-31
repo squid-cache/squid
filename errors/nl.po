@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-08-06 22:11+1300\n"
+"POT-Creation-Date: 2008-09-01 03:03+1300\n"
 "PO-Revision-Date: 2008-08-29 00:49+1200\n"
 "Last-Translator: Mark Visser <mark@cal026031.student.utwente.nl>\n"
 "Language-Team: Dutch <nl@li.org>\n"
@@ -60,8 +60,8 @@ msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"De FTP authenticatie is mislukt tijdens het opvragen van de URL: <a "
-"href=\"%U\">%U</a>"
+"De FTP authenticatie is mislukt tijdens het opvragen van de URL: <a href=\"%U"
+"\">%U</a>"
 
 #: templates/ERR_FTP_FAILURE:4
 msgid ""
@@ -299,8 +299,8 @@ msgid ""
 "chpasswd.cgi\">change</a> your default password."
 msgstr ""
 "Neem contact op met de <a href=\"mailto:%w%W\">cache beheerder</a> als u "
-"problemen heeft om uzelf te identificeren of <a href=\"http://%h/cgi-"
-"bin/chpasswd.cgi\">verander</a> hier uw standaard wachtwoord."
+"problemen heeft om uzelf te identificeren of <a href=\"http://%h/cgi-bin/"
+"chpasswd.cgi\">verander</a> hier uw standaard wachtwoord."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
 msgid ""
@@ -390,6 +390,11 @@ msgstr ""
 msgid "Squid sent the following FTP command:"
 msgstr "Squid stuurde de volgende FTP opdracht:"
 
+#: templates/ERR_DNS_FAIL:6
+#, fuzzy
+msgid "The DNS server returned:"
+msgstr "De dnsserver gaf als antwoord:"
+
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
 msgstr ""
@@ -397,8 +402,8 @@ msgstr ""
 #: templates/ERR_FTP_UNAVAILABLE:4
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr ""
-"De FTP server was te druk bezet tijdens het opvragen van de URL: <a "
-"href=\"%U\">%U</a>"
+"De FTP server was te druk bezet tijdens het opvragen van de URL: <a href=\"%U"
+"\">%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
 msgid ""
@@ -409,10 +414,6 @@ msgstr ""
 #: templates/ERR_ICAP_FAILURE:9
 msgid "The ICAP server is not reachable."
 msgstr ""
-
-#: templates/ERR_DNS_FAIL:6
-msgid "The dnsserver returned:"
-msgstr "De dnsserver gaf als antwoord:"
 
 #: templates/ERR_FTP_NOT_FOUND:4
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
@@ -591,8 +592,8 @@ msgid ""
 "Valid document was not found in the cache and <q>only-if-cached</q> "
 "directive was specified."
 msgstr ""
-"Een geldig document werd niet gevonden in de cache, en de <q>only-if-"
-"cached</q> richtlijn was ingesteld."
+"Een geldig document werd niet gevonden in de cache, en de <q>only-if-cached</"
+"q> richtlijn was ingesteld."
 
 #: templates/ERR_FTP_PUT_ERROR:4
 #, fuzzy
@@ -612,8 +613,8 @@ msgid ""
 msgstr ""
 "U heeft een verzoek gedaan met een <q>only-if-cached</q> cachebeheer "
 "richtlijn. Het document werd niet gevonden in de cache <em>of</em> er was "
-"een herbevestiging nodig die niet werd toegestaan door de <q>only-if-"
-"cached</q> richtlijn."
+"een herbevestiging nodig die niet werd toegestaan door de <q>only-if-cached</"
+"q> richtlijn."
 
 #: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
 #: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8

@@ -29,5 +29,5 @@ Sistem je dao povratnu informaciju:
 </PRE>
 </P>
 
-<P>Vaš keš/proksi administrator je: <A HREF="mailto:%w">%w</A>. 
+<P>Vaš keš/proksi administrator je: <A HREF="mailto:%w%W">%w</A>. 
 
