@@ -315,7 +315,7 @@ SQUIDCEXTERN size_t getpagesize(void);
 #define SA_RESETHAND SA_ONESHOT
 #endif
 
-#if LEACK_CHECK_MODE
+#if LEAK_CHECK_MODE
 #define LOCAL_ARRAY(type,name,size) \
         static type *local_##name=NULL; \
         type *name = local_##name ? local_##name : \

@@ -120,7 +120,7 @@ dist-hook:
 	      || exit 1; \
 	  fi; \
 	done; \
-	make translate; \
+	$(MAKE) translate; \
 	for lang in $(TRANSLATIONS); do \
 	  if test -d $(srcdir)/$$lang ; then \
 		test -d $(distdir)/$$lang \
@@ -151,4 +151,4 @@ translate:
 	fi
 
 all:
-	make translate
+	$(MAKE) translate

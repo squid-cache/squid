@@ -54,7 +54,7 @@
 
 #define MAX_LINE	1024	/* longest configuration line */
 #define _PATH_PARSER		"cf_parser.h"
-#define _PATH_SQUID_CONF	"squid.conf.default"
+#define _PATH_SQUID_CONF	"squid.conf.documented"
 #define _PATH_CF_DEPEND		"cf.data.depend"
 
 enum State {
