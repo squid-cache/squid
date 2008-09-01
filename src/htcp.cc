@@ -1311,7 +1311,7 @@ htcpForwardClr(char *buf, int sz)
 {
     peer *p;
     
-    for (p = Config.peers; p; p->next) {
+    for (p = Config.peers; p; p = p->next) {
         if (!p->options.htcp) {
             continue;
         }
@@ -1324,14 +1324,6 @@ htcpForwardClr(char *buf, int sz)
 }
 
 static void
-
-htcpHandleData(char *buf, int sz, IPAddress &from)
-{
-
-}
-
-static void
-
 htcpHandle(char *buf, int sz, IPAddress &from)
 {
     htcpHeader htcpHdr;
@@ -1374,8 +1366,8 @@ htcpHandle(char *buf, int sz, IPAddress &from)
         return;
     }
 
-    hbuf += sizeof(htcpHeader);
-    hsz -= sizeof(htcpHeader);
+    hbuf = buf + sizeof(htcpHeader);
+    hsz = sz - sizeof(htcpHeader);
 
     if ((size_t)hsz < sizeof(htcpDataHeader))
     {
