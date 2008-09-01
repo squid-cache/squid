@@ -37,6 +37,11 @@
 #include "HttpHeader.h"
 #include "IPAddress.h"
 
+typedef enum {
+    HTCP_CLR_PURGE,
+    HTCP_CLR_INVALIDATION,
+} htcp_clr_reason;
+
 /// \ingroup ServerProtocolHTCP
 class HtcpReplyData
 {
@@ -68,6 +73,9 @@ SQUIDCEXTERN void htcpInit(void);
 
 /// \ingroup ServerProtocolHTCP
 SQUIDCEXTERN void htcpQuery(StoreEntry * e, HttpRequest * req, peer * p);
+
+/// \ingroup ServerProtocolHTCP
+SQUIDCEXTERN void htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, HttpRequestMethod * method, peer * p, htcp_clr_reason reason);
 
 /// \ingroup ServerProtocolHTCP
 SQUIDCEXTERN void htcpSocketShutdown(void);

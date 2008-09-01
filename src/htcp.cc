@@ -176,6 +176,7 @@ struct _htcpStuff
     int rr;
     int f1;
     int response;
+    int reason;
     u_int32_t msg_id;
     htcpSpecifier S;
     htcpDetail D;
@@ -247,8 +248,6 @@ static void htcpFreeSpecifier(htcpSpecifier * s);
 static void htcpFreeDetail(htcpDetail * s);
 
 static void htcpHandle(char *buf, int sz, IPAddress &from);
-
-static void htcpHandleData(char *buf, int sz, IPAddress &from);
 
 static void htcpHandleMon(htcpDataHeader *, char *buf, int sz, IPAddress &from);
 
@@ -439,6 +438,26 @@ htcpBuildTstOpData(char *buf, size_t buflen, htcpStuff * stuff)
 }
 
 static ssize_t
+htcpBuildClrOpData(char *buf, size_t buflen, htcpStuff * stuff)
+{
+    u_short reason;
+    
+    switch (stuff->rr) {
+    case RR_REQUEST:
+        debugs(31, 3, "htcpBuildClrOpData: RR_REQUEST");
+        reason = htons((u_short)stuff->reason);
+        xmemcpy(buf, &reason, 2);
+        return htcpBuildSpecifier(buf + 2, buflen - 2, stuff) + 2;
+    case RR_RESPONSE:
+        break;
+    default:
+        fatal_dump("htcpBuildClrOpData: bad RR value");
+    }
+    
+    return 0;
+}
+
+static ssize_t
 htcpBuildOpData(char *buf, size_t buflen, htcpStuff * stuff)
 {
     ssize_t off = 0;
@@ -451,7 +470,7 @@ htcpBuildOpData(char *buf, size_t buflen, htcpStuff * stuff)
         break;
 
     case HTCP_CLR:
-        /* nothing to be done */
+        off = htcpBuildClrOpData(buf + off, buflen, stuff);
         break;
 
     default:
@@ -1288,96 +1307,27 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, IPAddress &from)
 }
 
 static void
+htcpForwardClr(char *buf, int sz)
+{
+    peer *p;
+    
+    for (p = Config.peers; p; p->next) {
+        if (!p->options.htcp) {
+            continue;
+        }
+        if (!p->options.htcp_forward_clr) {
+            continue;
+        }
+        
+        htcpSend(buf, sz, p->in_addr);
+    }
+}
+
+static void
 
 htcpHandleData(char *buf, int sz, IPAddress &from)
 {
-    htcpDataHeader hdr;
 
-    if ((size_t)sz < sizeof(htcpDataHeader))
-    {
-        debugs(31, 1, "htcpHandleData: msg size less than htcpDataHeader size");
-        return;
-    }
-
-    if (!old_squid_format)
-    {
-        xmemcpy(&hdr, buf, sizeof(hdr));
-    } else
-    {
-        htcpDataHeaderSquid hdrSquid;
-        xmemcpy(&hdrSquid, buf, sizeof(hdrSquid));
-        hdr.length = hdrSquid.length;
-        hdr.opcode = hdrSquid.opcode;
-        hdr.response = hdrSquid.response;
-        hdr.F1 = hdrSquid.F1;
-        hdr.RR = hdrSquid.RR;
-        hdr.reserved = 0;
-        hdr.msg_id = hdrSquid.msg_id;
-    }
-
-    hdr.length = ntohs(hdr.length);
-    hdr.msg_id = ntohl(hdr.msg_id);
-    debugs(31, 3, "htcpHandleData: sz = " << sz);
-    debugs(31, 3, "htcpHandleData: length = " << hdr.length);
-
-    if (hdr.opcode >= HTCP_END)
-    {
-        debugs(31, 1, "htcpHandleData: client " << from << ", opcode " << hdr.opcode << " out of range");
-        return;
-    }
-
-    debugs(31, 3, "htcpHandleData: opcode = " << hdr.opcode << " " << htcpOpcodeStr[hdr.opcode]);
-    debugs(31, 3, "htcpHandleData: response = " << hdr.response);
-    debugs(31, 3, "htcpHandleData: F1 = " << hdr.F1);
-    debugs(31, 3, "htcpHandleData: RR = " << hdr.RR);
-    debugs(31, 3, "htcpHandleData: msg_id = " << hdr.msg_id);
-
-    if (sz < hdr.length)
-    {
-        debugs(31, 1, "htcpHandleData: sz < hdr.length");
-        return;
-    }
-
-    /*
-     * set sz = hdr.length so we ignore any AUTH fields following
-     * the DATA.
-     */
-    sz = (int) hdr.length;
-
-    buf += sizeof(htcpDataHeader);
-
-    sz -= sizeof(htcpDataHeader);
-
-    debugs(31, 3, "htcpHandleData: sz = " << sz);
-
-    htcpHexdump("htcpHandleData", buf, sz);
-
-    switch (hdr.opcode)
-    {
-
-    case HTCP_NOP:
-        htcpHandleNop(&hdr, buf, sz, from);
-        break;
-
-    case HTCP_TST:
-        htcpHandleTst(&hdr, buf, sz, from);
-        break;
-
-    case HTCP_MON:
-        htcpHandleMon(&hdr, buf, sz, from);
-        break;
-
-    case HTCP_SET:
-        htcpHandleSet(&hdr, buf, sz, from);
-        break;
-
-    case HTCP_CLR:
-        htcpHandleClr(&hdr, buf, sz, from);
-        break;
-
-    default:
-        return;
-    }
 }
 
 static void
@@ -1385,6 +1335,9 @@ static void
 htcpHandle(char *buf, int sz, IPAddress &from)
 {
     htcpHeader htcpHdr;
+    htcpDataHeader hdr;
+    char *hbuf;
+    int hsz;
     assert (sz >= 0);
 
     if ((size_t)sz < sizeof(htcpHeader))
@@ -1421,9 +1374,82 @@ htcpHandle(char *buf, int sz, IPAddress &from)
         return;
     }
 
-    buf += sizeof(htcpHeader);
-    sz -= sizeof(htcpHeader);
-    htcpHandleData(buf, sz, from);
+    hbuf += sizeof(htcpHeader);
+    hsz -= sizeof(htcpHeader);
+
+    if ((size_t)hsz < sizeof(htcpDataHeader))
+    {
+        debugs(31, 1, "htcpHandleData: msg size less than htcpDataHeader size");
+        return;
+    }
+
+    if (!old_squid_format)
+    {
+        xmemcpy(&hdr, hbuf, sizeof(hdr));
+    } else {
+        htcpDataHeaderSquid hdrSquid;
+        xmemcpy(&hdrSquid, hbuf, sizeof(hdrSquid));
+        hdr.length = hdrSquid.length;
+        hdr.opcode = hdrSquid.opcode;
+        hdr.response = hdrSquid.response;
+        hdr.F1 = hdrSquid.F1;
+        hdr.RR = hdrSquid.RR;
+        hdr.reserved = 0;
+        hdr.msg_id = hdrSquid.msg_id;
+    }
+
+    hdr.length = ntohs(hdr.length);
+    hdr.msg_id = ntohl(hdr.msg_id);
+    debugs(31, 3, "htcpHandleData: hsz = " << hsz);
+    debugs(31, 3, "htcpHandleData: length = " << hdr.length);
+
+    if (hdr.opcode >= HTCP_END) {
+        debugs(31, 1, "htcpHandleData: client " << from << ", opcode " << hdr.opcode << " out of range");
+        return;
+    }
+
+    debugs(31, 3, "htcpHandleData: opcode = " << hdr.opcode << " " << htcpOpcodeStr[hdr.opcode]);
+    debugs(31, 3, "htcpHandleData: response = " << hdr.response);
+    debugs(31, 3, "htcpHandleData: F1 = " << hdr.F1);
+    debugs(31, 3, "htcpHandleData: RR = " << hdr.RR);
+    debugs(31, 3, "htcpHandleData: msg_id = " << hdr.msg_id);
+
+    if (hsz < hdr.length) {
+        debugs(31, 1, "htcpHandleData: sz < hdr.length");
+        return;
+    }
+
+    /*
+     * set sz = hdr.length so we ignore any AUTH fields following
+     * the DATA.
+     */
+    hsz = (int) hdr.length;
+    hbuf += sizeof(htcpDataHeader);
+    hsz -= sizeof(htcpDataHeader);
+    debugs(31, 3, "htcpHandleData: hsz = " << hsz);
+
+    htcpHexdump("htcpHandleData", hbuf, hsz);
+
+    switch (hdr.opcode) {
+    case HTCP_NOP:
+        htcpHandleNop(&hdr, hbuf, hsz, from);
+        break;
+    case HTCP_TST:
+        htcpHandleTst(&hdr, hbuf, hsz, from);
+        break;
+    case HTCP_MON:
+        htcpHandleMon(&hdr, hbuf, hsz, from);
+        break;
+    case HTCP_SET:
+        htcpHandleSet(&hdr, hbuf, hsz, from);
+        break;
+    case HTCP_CLR:
+        htcpHandleClr(&hdr, hbuf, hsz, from);
+        htcpForwardClr(buf, sz);
+        break;
+    default:
+        break;
+    }
 }
 
 static void
@@ -1523,51 +1549,31 @@ htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
         return;
 
     old_squid_format = p->options.htcp_oldsquid;
-
     memset(&flags, '\0', sizeof(flags));
-
     snprintf(vbuf, sizeof(vbuf), "%d/%d",
              req->http_ver.major, req->http_ver.minor);
-
     stuff.op = HTCP_TST;
-
     stuff.rr = RR_REQUEST;
-
     stuff.f1 = 1;
-
     stuff.response = 0;
-
     stuff.msg_id = ++msg_id_counter;
-
     stuff.S.method = (char *) RequestMethodStr(req->method);
-
     stuff.S.uri = (char *) e->url();
-
     stuff.S.version = vbuf;
-
     HttpStateData::httpBuildRequestHeader(req, req, e, &hdr, flags);
-
     mb.init();
-
     packerToMemInit(&pa, &mb);
-
     hdr.packInto(&pa);
-
     hdr.clean();
-
     packerClean(&pa);
-
     stuff.S.req_hdrs = mb.buf;
-
     pktlen = htcpBuildPacket(pkt, sizeof(pkt), &stuff);
-
     mb.clean();
-
     if (!pktlen) {
         debugs(31, 1, "htcpQuery: htcpBuildPacket() failed");
         return;
     }
-
+    
     htcpSend(pkt, (int) pktlen, p->in_addr);
 
     queried_id[stuff.msg_id % N_QUERIED_KEYS] = stuff.msg_id;
@@ -1575,6 +1581,72 @@ htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
     storeKeyCopy(save_key, (const cache_key *)e->key);
     queried_addr[stuff.msg_id % N_QUERIED_KEYS] = p->in_addr;
     debugs(31, 3, "htcpQuery: key (" << save_key << ") " << storeKeyText(save_key));
+}
+
+void
+htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, HttpRequestMethod * method, peer * p, htcp_clr_reason reason)
+{
+    static char pkt[8192];
+    ssize_t pktlen;
+    char vbuf[32];
+    htcpStuff stuff;
+    HttpHeader hdr;
+    Packer pa;
+    MemBuf mb;
+    http_state_flags flags;
+
+    if (htcpInSocket < 0)
+    	return;
+
+    old_squid_format = p->options.htcp_oldsquid;
+    memset(&flags, '\0', sizeof(flags));
+    snprintf(vbuf, sizeof(vbuf), "%d/%d",
+	req->http_ver.major, req->http_ver.minor);
+    stuff.op = HTCP_CLR;
+    stuff.rr = RR_REQUEST;
+    stuff.f1 = 0;
+    stuff.response = 0;
+    stuff.msg_id = ++msg_id_counter;
+    switch (reason) {
+    case HTCP_CLR_INVALIDATION:
+    	stuff.reason = 1;
+    	break;
+    default:
+    	stuff.reason = 0;
+    	break;
+    }
+    stuff.S.method = (char *) RequestMethodStr(req->method);
+    if (e == NULL || e->mem_obj == NULL) {
+    	if (uri == NULL) {
+            return;
+    	}
+    	stuff.S.uri = xstrdup(uri);
+    } else {
+    	stuff.S.uri = (char *) e->url();
+    }
+    stuff.S.version = vbuf;
+    if (reason != HTCP_CLR_INVALIDATION) {
+        HttpStateData::httpBuildRequestHeader(req, req, e, &hdr, flags);
+        mb.init();
+        packerToMemInit(&pa, &mb);
+        hdr.packInto(&pa);
+        hdr.clean();
+        packerClean(&pa);
+    	stuff.S.req_hdrs = mb.buf;
+    }
+    pktlen = htcpBuildPacket(pkt, sizeof(pkt), &stuff);
+    if (reason != HTCP_CLR_INVALIDATION) {
+        mb.clean();
+    }
+    if (e == NULL) {
+    	xfree(stuff.S.uri);
+    }
+    if (!pktlen) {
+    	debug(31, 1) ("htcpQuery: htcpBuildPacket() failed\n");
+    	return;
+    }
+    
+    htcpSend(pkt, (int) pktlen, p->in_addr);
 }
 
 /*
