@@ -37,11 +37,6 @@
 #include "HttpHeader.h"
 #include "IPAddress.h"
 
-typedef enum {
-    HTCP_CLR_PURGE,
-    HTCP_CLR_INVALIDATION,
-} htcp_clr_reason;
-
 /// \ingroup ServerProtocolHTCP
 class HtcpReplyData
 {

@@ -46,7 +46,7 @@
 #endif
 
 // implemented in client_side_reply.cc until sides have a common parent
-extern void purgeEntriesByUrl(const char *url);
+extern void purgeEntriesByUrl(HttpRequest * req, const char *url);
 
 
 ServerStateData::ServerStateData(FwdState *theFwdState): AsyncJob("ServerStateData"),requestSender(NULL)
@@ -402,7 +402,7 @@ sameUrlHosts(const char *url1, const char *url2)
 
 // purges entries that match the value of a given HTTP [response] header
 static void
-purgeEntriesByHeader(const HttpRequest *req, const char *reqUrl, HttpMsg *rep, http_hdr_type hdr)
+purgeEntriesByHeader(HttpRequest *req, const char *reqUrl, HttpMsg *rep, http_hdr_type hdr)
 {
     const char *url, *absUrl;
     
@@ -412,9 +412,9 @@ purgeEntriesByHeader(const HttpRequest *req, const char *reqUrl, HttpMsg *rep, h
 	        url = absUrl;
 	    }
 	    if (absUrl != NULL) { // if the URL was relative, it is by nature the same host
-            purgeEntriesByUrl(url);
+            purgeEntriesByUrl(req, url);
 	    } else if (sameUrlHosts(reqUrl, url)) { // prevent purging DoS, per RFC 2616 13.10, second last paragraph
-            purgeEntriesByUrl(url);
+            purgeEntriesByUrl(req, url);
         }
         if (absUrl != NULL) {
             safe_free(absUrl);
@@ -437,7 +437,7 @@ ServerStateData::maybePurgeOthers()
    // XXX: should we use originalRequest() here?
    const char *reqUrl = urlCanonical(request);
    debugs(88, 5, "maybe purging due to " << RequestMethodStr(request->method) << ' ' << reqUrl);
-   purgeEntriesByUrl(reqUrl);
+   purgeEntriesByUrl(request, reqUrl);
    purgeEntriesByHeader(request, reqUrl, theFinalReply, HDR_LOCATION);
    purgeEntriesByHeader(request, reqUrl, theFinalReply, HDR_CONTENT_LOCATION);
 }

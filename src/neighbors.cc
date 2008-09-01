@@ -1840,7 +1840,7 @@ neighborsHtcpClear(StoreEntry * e, const char *uri, HttpRequest * req, HttpReque
         if (p->options.htcp_no_purge_clr && reason == HTCP_CLR_PURGE) {
             continue;
         }
-        debug(15, 1) ("neighborsHtcpClear: sending CLR to %s\n", p->in_addr->ToURL(buf, 128););
+        debug(15, 1) ("neighborsHtcpClear: sending CLR to %s\n", p->in_addr.ToURL(buf, 128));
         htcpClear(e, uri, req, method, p, reason);
     }
 }
