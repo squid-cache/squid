@@ -535,8 +535,9 @@ urlCanonicalClean(const HttpRequest * request)
 const char *
 urlAbsolute(const HttpRequest * req, const char *relUrl)
 {
-    char portbuf[32], urlbuf[MAX_URL];
-    char *path, *last_slash;
+    char urlbuf[MAX_URL];
+    const char *path, *last_slash;
+    size_t urllen, pathlen;
 
     if (relUrl == NULL) {
         return (NULL);
@@ -550,45 +551,43 @@ urlAbsolute(const HttpRequest * req, const char *relUrl)
     if (req->protocol == PROTO_URN) {
         snprintf(urlbuf, MAX_URL, "urn:%s", req->urlpath.buf());
     } else {
-    	portbuf[0] = '\0';
     	if (req->port != urlDefaultPort(req->protocol)) {
-    	    snprintf(portbuf, 32, ":%d", req->port);
-    	}
-    	if (relUrl[0] == '/') {
-    	    snprintf(urlbuf, MAX_URL, "%s://%s%s%s%s%s",
-                ProtocolStr[req->protocol],
-                req->login,
-                *req->login ? "@" : null_string,
-                req->GetHost(),
-                portbuf,
-                relUrl
-            );
+    	    urllen = snprintf(urlbuf, MAX_URL, "%s://%s%s%s:%d",
+        		ProtocolStr[req->protocol],
+        		req->login,
+        		*req->login ? "@" : null_string,
+        		req->GetHost(),
+        		req->port
+    	    );
     	} else {
-    	    path = xstrdup(req->urlpath.buf());
+    	    urllen = snprintf(urlbuf, MAX_URL, "%s://%s%s%s",
+        		ProtocolStr[req->protocol],
+        		req->login,
+        		*req->login ? "@" : null_string,
+        		req->GetHost()
+    	    );	    
+    	}
+	
+    	if (relUrl[0] == '/') {
+    	    strncpy(&urlbuf[urllen], relUrl, MAX_URL - urllen - 1);
+    	} else {
+    	    path = req->urlpath.buf();
     	    last_slash = strrchr(path, '/');
     	    if (last_slash == NULL) {
-                snprintf(urlbuf, MAX_URL, "%s://%s%s%s%s/%s",
-                    ProtocolStr[req->protocol],
-                    req->login,
-                    *req->login ? "@" : null_string,
-                    req->GetHost(),
-                    portbuf,
-                    relUrl
-                );
+        		urlbuf[urllen++] = '/';
+        		strncpy(&urlbuf[urllen], relUrl, MAX_URL - urllen - 1);
     	    } else {
-                last_slash++;
-                *last_slash = '\0';
-                snprintf(urlbuf, MAX_URL, "%s://%s%s%s%s%s%s",
-                    ProtocolStr[req->protocol],
-                    req->login,
-                    *req->login ? "@" : null_string,
-                    req->GetHost(),
-                    portbuf,
-                    path,
-                    relUrl
-                );
+        		last_slash++;
+        		pathlen = last_slash - path;
+        		if (pathlen > MAX_URL - urllen - 1) {
+        		    pathlen = MAX_URL - urllen - 1;
+        		}
+        		strncpy(&urlbuf[urllen], path, pathlen);
+        		urllen += pathlen;
+        		if (urllen + 1 < MAX_URL) {
+        		    strncpy(&urlbuf[urllen], relUrl, MAX_URL - urllen - 1);
+        		}
     	    }
-    	    xfree(path);
     	}
     }
 
