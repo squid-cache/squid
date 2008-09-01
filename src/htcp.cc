@@ -1582,7 +1582,7 @@ htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, HttpRequestMethod 
     ssize_t pktlen;
     char vbuf[32];
     htcpStuff stuff;
-    HttpHeader hdr;
+    HttpHeader hdr(hoRequest);
     Packer pa;
     MemBuf mb;
     http_state_flags flags;
