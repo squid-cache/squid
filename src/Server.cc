@@ -404,8 +404,10 @@ sameUrlHosts(const char *url1, const char *url2)
 static void
 purgeEntriesByHeader(const HttpRequest *req, const char *reqUrl, HttpMsg *rep, http_hdr_type hdr)
 {
-    if (const char *url = rep->header.getStr(hdr)) {
-	    const char *absUrl = urlAbsolute(req, url);
+    const char *url, *absUrl;
+    
+    if ((url = rep->header.getStr(hdr)) != NULL) {
+	    absUrl = urlAbsolute(req, url);
 	    if (absUrl != NULL) {
 	        url = absUrl;
 	    }
@@ -415,7 +417,7 @@ purgeEntriesByHeader(const HttpRequest *req, const char *reqUrl, HttpMsg *rep, h
             purgeEntriesByUrl(url);
         }
         if (absUrl != NULL) {
-            safe_free((void *)absUrl);
+            safe_free(absUrl);
         }
     }
 }
