@@ -404,17 +404,17 @@ sameUrlHosts(const char *url1, const char *url2)
 static void
 purgeEntriesByHeader(const HttpRequest *req, const char *reqUrl, HttpMsg *rep, http_hdr_type hdr)
 {
-    const char *url, *absUrl;
+    const char *hdrUrl, *absUrl;
     
-    if ((url = rep->header.getStr(hdr)) != NULL) {
-	    absUrl = urlAbsolute(req, url);
+    if ((hdrUrl = rep->header.getStr(hdr)) != NULL) {
+	    absUrl = urlMakeAbsolute(req, hdrUrl);
 	    if (absUrl != NULL) {
-	        url = absUrl;
+	        hdrUrl = absUrl;
 	    }
 	    if (absUrl != NULL) { // if the URL was relative, it is by nature the same host
-            purgeEntriesByUrl(url);
-	    } else if (sameUrlHosts(reqUrl, url)) { // prevent purging DoS, per RFC 2616 13.10, second last paragraph
-            purgeEntriesByUrl(url);
+                purgeEntriesByUrl(hdrUrl);
+	    } else if (sameUrlHosts(reqUrl, hdrUrl)) { // prevent purging DoS, per RFC 2616 13.10, second last paragraph
+                purgeEntriesByUrl(hdrUrl);
         }
         if (absUrl != NULL) {
             safe_free(absUrl);
