@@ -553,9 +553,9 @@ urlIsRelative(const char *url)
     for (p = url; *p != '\0' && *p != ':' && *p != '#' && *p != '?'; p++);
 
     if (*p == ':') {
-        return (1);
+        return (0);
     }
-    return (0);
+    return (1);
 }
 
 /*
