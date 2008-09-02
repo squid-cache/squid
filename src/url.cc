@@ -535,7 +535,7 @@ urlCanonicalClean(const HttpRequest * request)
 const char *
 urlAbsolute(const HttpRequest * req, const char *relUrl)
 {
-    char urlbuf[MAX_URL];
+    char *urlbuf;
     const char *path, *last_slash;
     size_t urllen, pathlen;
 
@@ -548,6 +548,7 @@ urlAbsolute(const HttpRequest * req, const char *relUrl)
     if (strchr(relUrl, ':') != NULL) {
         return (NULL);
     }
+    urlbuf = (char *)xmalloc(MAX_URL * sizeof(char));
     if (req->protocol == PROTO_URN) {
         snprintf(urlbuf, MAX_URL, "urn:%s", req->urlpath.buf());
     } else {
@@ -591,7 +592,7 @@ urlAbsolute(const HttpRequest * req, const char *relUrl)
     	}
     }
 
-    return (xstrdup(urlbuf));
+    return (urlbuf);
 }
 
 /*
