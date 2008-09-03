@@ -406,19 +406,30 @@ purgeEntriesByHeader(const HttpRequest *req, const char *reqUrl, HttpMsg *rep, h
 {
     const char *hdrUrl, *absUrl;
     
-    if ((hdrUrl = rep->header.getStr(hdr)) != NULL) {
-	    absUrl = urlMakeAbsolute(req, hdrUrl);
-	    if (absUrl != NULL) {
-	        hdrUrl = absUrl;
-	    }
-	    if (absUrl != NULL) { // if the URL was relative, it is by nature the same host
-                purgeEntriesByUrl(hdrUrl);
-	    } else if (sameUrlHosts(reqUrl, hdrUrl)) { // prevent purging DoS, per RFC 2616 13.10, second last paragraph
-                purgeEntriesByUrl(hdrUrl);
-        }
+    absUrl = NULL;
+    hdrUrl = rep->header.getStr(hdr);
+    if (hdrUrl == NULL) {
+        return;
+    }
+    
+    /*
+     * If the URL is relative, make it absolute so we can find it.
+     * If it's absolute, make sure the host parts match to avoid DOS attacks
+     * as per RFC 2616 13.10.
+     */
+    if (urlIsRelative(hdrUrl)) {
+        absUrl = urlMakeAbsolute(req, hdrUrl);
         if (absUrl != NULL) {
-            safe_free(absUrl);
+            hdrUrl = absUrl;
         }
+    } else if (!sameUrlHosts(reqUrl, hdrUrl)) {
+        return;
+    }
+    
+    purgeEntriesByUrl(hdrUrl);
+    
+    if (absUrl != NULL) {
+        safe_free(absUrl);
     }
 }
 
