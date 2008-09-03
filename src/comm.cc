@@ -990,6 +990,11 @@ ConnectStateData::commResetFD()
      * the original socket
      */
 
+    /* MUST be done before binding or face OS Error: "(99) Cannot assign requested address"... */
+    if( F->flags.transparent ) {
+        comm_set_transparent(fd);
+    }
+
     AI = NULL;
     F->local_addr.GetAddrInfo(AI);
 
