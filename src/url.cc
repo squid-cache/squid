@@ -535,8 +535,8 @@ urlCanonicalClean(const HttpRequest * request)
 /*
  * Test if a URL is relative.
  *
- * RFC 1808 says that colons can show up in 'fragments' or 'queries'.
- * Fragments come after a '#' and queries come after '?'.
+ * RFC 2396, Section 5 (Page 17) implies that in a relative URL, a '/' will
+ * appear before a ':'.
  */
 int
 urlIsRelative(const char *url)
@@ -550,7 +550,7 @@ urlIsRelative(const char *url)
         return (0);
     }
 
-    for (p = url; *p != '\0' && *p != ':' && *p != '#' && *p != '?'; p++);
+    for (p = url; *p != '\0' && *p != ':' && *p != '/'; p++);
 
     if (*p == ':') {
         return (0);
@@ -559,9 +559,12 @@ urlIsRelative(const char *url)
 }
 
 /*
- * Take a potentially relative URL.  If the URL is _not_ relative, return NULL.
- * If the URL is relative, generate an absolute URL based on the provided
+ * Convert a relative URL to an absolute URL using the context of a given
  * request.
+ *
+ * It is assumed that you have already ensured that the URL is relative.
+ *
+ * If NULL is returned, you should use the original URL unchanged.
  */
 const char *
 urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
@@ -573,52 +576,52 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
     if (req->method.id() == METHOD_CONNECT) {
         return (NULL);
     }
-    if (!urlIsRelative(relUrl)) {
-        return (NULL);
-    }
+    
     urlbuf = (char *)xmalloc(MAX_URL * sizeof(char));
+    
     if (req->protocol == PROTO_URN) {
         snprintf(urlbuf, MAX_URL, "urn:%s", req->urlpath.buf());
-    } else {
-    	if (req->port != urlDefaultPort(req->protocol)) {
-    	    urllen = snprintf(urlbuf, MAX_URL, "%s://%s%s%s:%d",
-        		ProtocolStr[req->protocol],
-        		req->login,
-        		*req->login ? "@" : null_string,
-        		req->GetHost(),
-        		req->port
-    	    );
-    	} else {
-    	    urllen = snprintf(urlbuf, MAX_URL, "%s://%s%s%s",
-        		ProtocolStr[req->protocol],
-        		req->login,
-        		*req->login ? "@" : null_string,
-        		req->GetHost()
-    	    );	    
-    	}
-	
-    	if (relUrl[0] == '/') {
-    	    strncpy(&urlbuf[urllen], relUrl, MAX_URL - urllen - 1);
-    	} else {
-    	    path = req->urlpath.buf();
-    	    last_slash = strrchr(path, '/');
-    	    if (last_slash == NULL) {
-        		urlbuf[urllen++] = '/';
-        		strncpy(&urlbuf[urllen], relUrl, MAX_URL - urllen - 1);
-    	    } else {
-        		last_slash++;
-        		pathlen = last_slash - path;
-        		if (pathlen > MAX_URL - urllen - 1) {
-        		    pathlen = MAX_URL - urllen - 1;
-        		}
-        		strncpy(&urlbuf[urllen], path, pathlen);
-        		urllen += pathlen;
-        		if (urllen + 1 < MAX_URL) {
-        		    strncpy(&urlbuf[urllen], relUrl, MAX_URL - urllen - 1);
-        		}
-    	    }
-    	}
+        return (urlbuf);
     }
+        
+	if (req->port != urlDefaultPort(req->protocol)) {
+	    urllen = snprintf(urlbuf, MAX_URL, "%s://%s%s%s:%d",
+    		ProtocolStr[req->protocol],
+    		req->login,
+    		*req->login ? "@" : null_string,
+    		req->GetHost(),
+    		req->port
+	    );
+	} else {
+	    urllen = snprintf(urlbuf, MAX_URL, "%s://%s%s%s",
+    		ProtocolStr[req->protocol],
+    		req->login,
+    		*req->login ? "@" : null_string,
+    		req->GetHost()
+	    );	    
+	}
+
+	if (relUrl[0] == '/') {
+	    strncpy(&urlbuf[urllen], relUrl, MAX_URL - urllen - 1);
+	} else {
+	    path = req->urlpath.buf();
+	    last_slash = strrchr(path, '/');
+	    if (last_slash == NULL) {
+    		urlbuf[urllen++] = '/';
+    		strncpy(&urlbuf[urllen], relUrl, MAX_URL - urllen - 1);
+	    } else {
+    		last_slash++;
+    		pathlen = last_slash - path;
+    		if (pathlen > MAX_URL - urllen - 1) {
+    		    pathlen = MAX_URL - urllen - 1;
+    		}
+    		strncpy(&urlbuf[urllen], path, pathlen);
+    		urllen += pathlen;
+    		if (urllen + 1 < MAX_URL) {
+    		    strncpy(&urlbuf[urllen], relUrl, MAX_URL - urllen - 1);
+    		}
+	    }
+	}
 
     return (urlbuf);
 }
