@@ -567,6 +567,9 @@ urlIsRelative(const char *url)
  * If NULL is returned it is an indication that the method in use in the
  * request does not distinguish between relative and absolute and you should
  * use the url unchanged.
+ *
+ * If non-NULL is returned, it is up to the caller to free the resulting
+ * memory using safe_free().
  */
 char *
 urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
