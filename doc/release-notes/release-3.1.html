@@ -1,13 +1,13 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
 <HEAD>
- <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.21">
+ <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.50">
  <TITLE>Squid 3.1.PRE1 release notes</TITLE>
 </HEAD>
 <BODY>
 <H1>Squid 3.1.PRE1 release notes</H1>
 
-<H2>Squid Developers</H2>$Id: release-3.1.html,v 1.5 2008/01/17 10:09:05 hno Exp $
+<H2>Squid Developers</H2>$Id: release-3.1.sgml,v 1.6 2008/01/17 10:09:05 hno Exp $
 <HR>
 <EM>This document contains the release notes for version 3.1 of Squid.
 Squid is a WWW Cache application developed by the National Laboratory
@@ -44,6 +44,7 @@ While this release is not deemed ready for production use, we believe it is read
 <P>
 <UL>
 <LI>IPv6 Support</LI>
+<LI>Error Page Localization</LI>
 </UL>
 </P>
 <P>Most user-facing changes are reflected in squid.conf (see below).</P>
@@ -112,7 +113,180 @@ A new one will be needed for IPv6 traffic between the helper and server.</P>
 with the RADIUS server. A new helper will be needed for IPv6 RADIUS protocol.</P>
 
 
-<H2><A NAME="ss4.2">4.2 Changes to squid.conf</A>
+<H3>Error Page Localization</H3>
+
+<P>The error pages presented by squid may now be localized per-request to match the visitors local preferred language.</P>
+
+<P>Squid needs to be build with the --enable-auto-locale option. And the error_directory option in squid.conf needs to be removed.</P>
+
+<P>For best coverage of languages, using the latest language pack of error files is recommended.
+Updates can be downloaded from 
+<A HREF="http://www.squid-cahch.org/Versions/langpack/">www.squid-cache.org/Versions/langpack/</A></P>
+
+<P>The squid developers are interested in making squid available in a wide variety of languages.
+Contributions of new languages is encouraged.
+Details at 
+<A HREF="http://wiki.squid-cache.org/Translations">http://wiki.squid-cache.org/Translations</A></P>
+
+<H2><A NAME="s5">5. Windows support</A></H2>
+
+<P>This Squid version can run on Windows as a system service using the Cygwin emulation environment, 
+or can be compiled in Windows native mode using the MinGW + MSYS development environment. Windows NT 4 SP4 and later are supported.</P>
+<P>On Windows 2000 and later the service is configured to use the Windows Service Recovery option
+restarting automatically after 60 seconds.</P>
+
+<H2><A NAME="ss5.1">5.1 Usage</A>
+</H2>
+
+<P>Some new command line options was added for the Windows service support:</P>
+<P>The service installation is made with -i command line switch, it's possible to use -f switch at
+the same time for specify a different config-file settings for the Squid Service that will be
+stored on the Windows Registry.</P>
+<P>A new -n switch specify the Windows Service Name, so multiple Squid instance are allowed.
+<EM>"Squid"</EM> is the default when the switch is not used.</P>
+<P>So, to install the service, the syntax is: </P>
+
+<P>
+<PRE>
+squid -i [-f file] [-n name]
+</PRE>
+</P>
+<P>Service uninstallation is made with -r command line switch with the appropriate -n switch.</P>
+<P>The -k switch family must be used with the appropriate -f and -n switches, so the syntax is: </P>
+<P>
+<PRE>
+squid -k command [-f file] -n service-name
+</PRE>
+
+where <EM>service-name</EM> is the name specified with -n options at service install time.</P>
+<P>To use the Squid original command line, the new -O switch must be used ONCE, the syntax is: </P>
+<P>
+<PRE>
+squid -O cmdline [-n service-name]
+</PRE>
+
+If multiple service command line options must be specified, use quote. The -n switch is
+needed only when a non default service name is in use.</P>
+<P>Don't use the "Start parameters" in the Windows 2000/XP/2003 Service applet: they are
+specific to Windows services functionality and Squid is not designed for understand they.</P>
+<P>In the following example the command line of the "squidsvc" Squid service is set to "-D -u 3130": </P>
+<P>
+<PRE>
+squid -O "-D -u 3130" -n squidsvc
+</PRE>
+</P>
+
+<H2><A NAME="ss5.2">5.2 PSAPI.DLL (Process Status Helper) Considerations</A>
+</H2>
+
+<P>The process status helper functions make it easier for you to obtain information about
+processes and device drivers running on Microsoft® Windows NT®/Windows® 2000. These
+functions are available in PSAPI.DLL, which is distributed in the Microsoft® Platform
+Software Development Kit (SDK). The same information is generally available through the
+performance data in the registry, but it is more difficult to get to it. PSAPI.DLL is
+freely redistributable.</P>
+<P>PSAPI.DLL is available only on Windows NT, 2000, XP and 2003. The implementation in Squid is
+aware of this, and try to use it only on the right platform.</P>
+<P>On Windows NT PSAPI.DLL can be found as component of many applications, if you need it,
+you can find it on Windows NT Resource KIT. If you have problem, it can be
+downloaded from here:
+<A HREF="http://download.microsoft.com/download/platformsdk/Redist/4.0.1371.1/NT4/EN-US/psinst.EXE">http://download.microsoft.com/download/platformsdk/Redist/4.0.1371.1/NT4/EN-US/psinst.EXE</A></P>
+<P>On Windows 2000 and later it is available installing the Windows Support Tools, located on the
+Support\Tools folder of the installation Windows CD-ROM.</P>
+
+<H2><A NAME="ss5.3">5.3 Registry DNS lookup</A>
+</H2>
+
+<P>On Windows platforms, if no value is specified in the <EM>dns_nameservers</EM> option on
+squid.conf or in the /etc/resolv.conf file, the list of DNS name servers are
+taken from the Windows registry, both static and dynamic DHCP configurations
+are supported.</P>
+
+<H2><A NAME="ss5.4">5.4 Compatibility Notes</A>
+</H2>
+
+<P>
+<UL>
+<LI>It's recommended to use '/' char in Squid paths instead of '\'</LI>
+<LI>Paths with spaces (like 'C:\Programs Files\Squid) are NOT supported by Squid</LI>
+<LI>Include wildcard patterns in squid.conf are NOT supported on Windows</LI>
+<LI>When using ACL like 'acl aclname acltype "file"' the file must be in DOS text
+format (CR+LF) and the full Windows path must be specified, for example:
+
+<PRE>
+acl blocklist url_regex -i "c:/squid/etc/blocked1.txt"
+</PRE>
+
+</LI>
+<LI>The Windows equivalent of '/dev/null' is 'NUL'</LI>
+<LI>Squid doesn't know how to run external helpers based on scripts, like .bat, .cmd,
+.vbs, .pl, etc. So in squid.conf the interpreter path must be always specified, for example:
+
+<PRE>
+redirect_program c:/perl/bin/perl.exe c:/squid/libexec/redir.pl
+redirect_program c:/winnt/system32/cmd.exe /C c:/squid/libexec/redir.cmd
+</PRE>
+</LI>
+<LI>When Squid runs in command line mode, the launching user account must have administrative privilege on the system</LI>
+<LI>"Start parameters" in the Windows 2000/XP/2003 Service applet cannot be used</LI>
+<LI>Building with MinGW, when the configure option --enable-truncate is used, Squid cannot run on Windows NT, only Windows 2000 and later are supported</LI>
+</UL>
+</P>
+
+<H2><A NAME="ss5.5">5.5 Known Limitations</A>
+</H2>
+
+<P>
+<UL>
+<LI>DISKD: still needs to be ported</LI>
+<LI>WCCP: cannot work because user space GRE support on Windows is missing</LI>
+<LI>Transparent Proxy: missing Windows non commercial interception driver</LI>
+<LI>Some code sections can make blocking calls.</LI>
+<LI>Some external helpers may not work.</LI>
+<LI>File Descriptors number hard-limited to 2048 when building with MinGW.</LI>
+</UL>
+</P>
+
+<H2><A NAME="ss5.6">5.6 Using cache manager on Windows</A>
+</H2>
+
+<P>On Windows, cache manager (cachemgr.cgi) can be used with Microsoft IIS or Apache.
+Some specific configuration could be needed:</P>
+
+<H3>IIS 6 (Windows 2003)</H3>
+
+<P>On IIS 6.0 all CGI extensions are denied by default for security reason, so the following configuration is needed:</P>
+<P>
+<UL>
+<LI>Create a cgi-bin Directory</LI>
+<LI>Define the cgi-bin IIS Virtual Directory with read and CGI execute IIS
+permissions, ASP scripts are not needed. This automatically defines a
+cgi-bin IIS web application </LI>
+<LI>Copy cachemgr.cgi into cgi-bin directory and look to file permissions:
+the IIS system account and SYSTEM must be able to read and execute the file</LI>
+<LI>In IIS manager go to Web Service extensions and add a new Web Service
+Extension called <EM>"Squid Cachemgr"</EM>, add the cachemgr.cgi file and set the
+extension status to <EM>Allowed</EM></LI>
+</UL>
+</P>
+
+<H3>Apache:</H3>
+
+<P>On Windows, cachemgr.cgi needs to create a temporary file, so Apache must be instructed
+to pass the TMP and TEMP Windows environment variables to CGI applications:
+<PRE>
+ScriptAlias /squid/cgi-bin/ "c:/squid/libexec/"
+&lt;Location /squid/cgi-bin/cachemgr.cgi&gt;
+    PassEnv TMP TEMP
+    Order allow,deny
+    Allow from workstation.example.com
+&lt;/Location&gt;
+</PRE>
+</P>
+
+
+
+<H2><A NAME="ss5.7">5.7 Changes to squid.conf</A>
 </H2>
 
 <P>There have been changes to Squid's configuration file since Squid-3.0.</P>
@@ -135,7 +309,8 @@ with the RADIUS server. A new helper will be needed for IPv6 RADIUS protocol.</P
 
 <P>
 <DL>
-<DT><B>pinger_enable</B><DD><P>New option to enable/disable the ICMP pinger helper with a reconfigure instead of a full rebuild.
+<DT><B>pinger_enable</B><DD>
+<P>New option to enable/disable the ICMP pinger helper with a reconfigure instead of a full rebuild.
 <PRE>
         Control whether the pinger is active at run-time.
         Enables turning ICMP pinger on and off with a simple squid -k reconfigure.
@@ -144,7 +319,8 @@ with the RADIUS server. A new helper will be needed for IPv6 RADIUS protocol.</P
 </PRE>
 </P>
 
-<DT><B>dns_v4_fallback</B><DD><P>New option to prevent squid from always looking up IPv4 regardless of whether IPv6 addresses are found.
+<DT><B>dns_v4_fallback</B><DD>
+<P>New option to prevent squid from always looking up IPv4 regardless of whether IPv6 addresses are found.
 Squid will follow a policy of prefering IPv6 links, keeping the IPv4 only as a safety net behind IPv6.
 <PRE>
         Standard practice with DNS is to lookup either A or AAAA records
@@ -164,7 +340,8 @@ Squid will follow a policy of prefering IPv6 links, keeping the IPv4 only as a s
 </PRE>
 </P>
 
-<DT><B>include</B><DD><P>New option to import entire secondary configuration files into squid.conf.
+<DT><B>include</B><DD>
+<P>New option to import entire secondary configuration files into squid.conf.
 <PRE>
         Squid will follow the files immediately and insert all their content
         as if it was at that position in squid.conf. As per squid.conf some
@@ -179,6 +356,19 @@ Squid will follow a policy of prefering IPv6 links, keeping the IPv4 only as a s
 </PRE>
 </P>
 
+<DT><B>error_default_language</B><DD>
+<P>New option to replace the old configure option --enable-default-err-language
+<PRE>
+        Set the default language which squid will send error pages in
+        if no existing translation matches the clients language
+        preferences.
+
+        If unset (default) generic English will be used.
+        
+</PRE>
+</P>
+
+
 </DL>
 </P>
 
@@ -186,30 +376,35 @@ Squid will follow a policy of prefering IPv6 links, keeping the IPv4 only as a s
 
 <P>
 <DL>
-<DT><B>acl dst ipvs</B><DD><P>New preset content - ipv6 - available as a preset type in the src and dst ACL matching all of the public IPv6 network space.
+<DT><B>acl dst ipvs</B><DD>
+<P>New preset content - ipv6 - available as a preset type in the src and dst ACL matching all of the public IPv6 network space.
 <PRE>
         acl aclname dst ipv6
         
 </PRE>
 </P>
 
-<DT><B>http(s)_port name= option</B><DD><P>New port option to assign internal names to listening ports
+<DT><B>http(s)_port name= intercept</B><DD>
+<P>New port options.
 <PRE>
            name=        Specifies a internal name for the port. Defaults to
                         the port specification (port or addr:port)
+
+           intercept    Rename of old 'transparent' option to indicate proper functionality.
         
 </PRE>
 </P>
 
-<DT><B>acl myportname</B><DD><P>New acl type myportname, matching the name of the http(s)_port where the request was accepted
+<DT><B>acl myportname</B><DD>
+<P>New acl type myportname, matching the name of the http(s)_port where the request was accepted
 <PRE>
         acl aclname myportname 3128 ...         # http(s)_port name
         
 </PRE>
 </P>
 
-
-<DT><B>external_acl_type</B><DD><P>New options 'ipv4' and 'ipv6' are added to set the IPv4/v6 protocol between squid and its helpers.
+<DT><B>external_acl_type</B><DD>
+<P>New options 'ipv4' and 'ipv6' are added to set the IPv4/v6 protocol between squid and its helpers.
 Please be aware of some limits to these options. These options only affet the transport protocol used
 to send data to and from the helpers. Squid in IPv6-mode may still send %SRC addresses in IPv4 or IPv6
 format, so all helpers will need to be checked and converted to cope with such information cleanly.
@@ -223,7 +418,8 @@ format, so all helpers will need to be checked and converted to cope with such i
 </PRE>
 </P>
 
-<DT><B>tcp_outgoing_address</B><DD><P>This option causes some problems when bridging IPv4 and IPv6. A workaround has been provided.
+<DT><B>tcp_outgoing_address</B><DD>
+<P>This option causes some problems when bridging IPv4 and IPv6. A workaround has been provided.
 <PRE>
         Squid is built with a capability of bridging the IPv4 and IPv6 internets.
         tcp_outgoing_address as previously used breaks this bridging by forcing
@@ -247,7 +443,8 @@ format, so all helpers will need to be checked and converted to cope with such i
 </PRE>
 </P>
 
-<DT><B>balance_on_multiple_ip</B><DD><P>The previous default behavour (rotate per-request) of this setting causes failover clashes with IPv6 built-in mechanisms.
+<DT><B>balance_on_multiple_ip</B><DD>
+<P>The previous default behavour (rotate per-request) of this setting causes failover clashes with IPv6 built-in mechanisms.
 It has thus been turned off by default. Making the 'best choice' IP continue in use for any hostname until it encounters a connection failure and failover drops to the next known IP.
 <PRE>
        Modern IP resolvers in squid sort lookup results by preferred access.
@@ -263,6 +460,34 @@ It has thus been turned off by default. Making the 'best choice' IP continue in 
 </PRE>
 </P>
 
+<DT><B>http_port</B><DD>
+<P>option 'transparent' is being deprecated in favour of 'intercept' which more clearly identifies what the option does.
+For now option 'tproxy' remains with old behaviour meaning fully-invisible proxy using TPROXY support.</P>
+
+<DT><B>error_directory</B><DD>
+<P>Now an optiona entry in squid.conf. If present it will force all visitors to receive the error pages
+contained in the directory it points at. If absent error page localization will be given a chance.
+<PRE>
+        If you wish to create your own versions of the default
+        error files to customize them to suit your company copy
+        the error/template files to another directory and point
+        this tag at them.
+
+        WARNING: This option will disable multi-language support
+                 on error pages if used.
+
+        The squid developers are interested in making squid available in
+        a wide variety of languages. If you are making translations for a
+        language that Squid does not currently provide please consider
+        contributing your translation back to the project.
+        http://wiki.squid-cache.org/Translations
+
+        The squid developers working on translations are happy to supply drop-in
+        translated error files in exchange for any new language contributions.
+        
+</PRE>
+</P>
+
 </DL>
 </P>
 
@@ -272,11 +497,14 @@ It has thus been turned off by default. Making the 'best choice' IP continue in 
 <P>
 <DL>
 
+<DT><B>dns_testnames</B><DD>
+<P>Obsolete. This feature is no longer relevant to modern networks and causes boot problems.</P>
+
 </DL>
 </P>
 
 
-<H2><A NAME="ss4.3">4.3 Changes to ./configure Options</A>
+<H2><A NAME="ss5.8">5.8 Changes to ./configure Options</A>
 </H2>
 
 <P>There have been some changes to Squid's build configuration since Squid-3.0.</P>
@@ -300,19 +528,24 @@ It has thus been turned off by default. Making the 'best choice' IP continue in 
 
 <P>
 <DL>
-<DT><B>--enable-ipv6</B><DD><P>Buildwith IPv6 support. The default is to build without.</P>
+<DT><B>--enable-ipv6</B><DD>
+<P>Buildwith IPv6 support. The default is to build without.</P>
 
-<DT><B>--with-localhost-ipv6</B><DD><P>Build support for squid to map all 127.0.0.1 traffic onto ::1.
+<DT><B>--with-localhost-ipv6</B><DD>
+<P>Build support for squid to map all 127.0.0.1 traffic onto ::1.
 The default is to build with 127.0.0.1 and ::1 being considered seperate IP.
 see the IPv6 details above for a better description. </P>
 
-<DT><B>--with-ipv6-split-stack</B><DD><P>Enable special additions for IPv6 support in Windows XP.
+<DT><B>--with-ipv6-split-stack</B><DD>
+<P>Enable special additions for IPv6 support in Windows XP.
 see the IPv6 details above for a better description.</P>
 
-<DT><B>--with-ipv4-mapped</B><DD><P>Enable special additions for IPv6 support in Windows Vista.
+<DT><B>--with-ipv4-mapped</B><DD>
+<P>Enable special additions for IPv6 support in Windows Vista.
 see the IPv6 details above for a better description.</P>
 
-<DT><B>--with-dns-cname</B><DD><P>Enable CNAME recursion within the Internal DNS resolver stub squid uses.
+<DT><B>--with-dns-cname</B><DD>
+<P>Enable CNAME recursion within the Internal DNS resolver stub squid uses.
 This has no effect on the external DNS helper.
 Please note this extension is still experimental and may encounter problems.
 To see if it is actually needed you can run squid without it for a period and
@@ -320,14 +553,24 @@ check the CNAME-Only Requests statistics squid maintains.
 If it produces ongoing serious problems the external helper may be needed
 but please report the bugs anyway.</P>
 
+<DT><B>--enable-auto-locale</B><DD>
+<P>Enable error page localization for visitors.</P>
+
 </DL>
 </P>
 <H3><A NAME="modifiedoptions"></A> Changes to existing options</H3>
 
 <P>
 <DL>
-<DT><B>--disable-internl-dns</B><DD><P>Better support for Linux using the external DNS helper.
+<DT><B>--disable-internl-dns</B><DD>
+<P>Better support for Linux using the external DNS helper.
 The helper will compile and work with dns_nameservers on more variants of Linux than previously.</P>
+
+<DT><B>--enable-linux-netfilter</B><DD>
+<P>This option now enables support for all three netfilter interception targets.
+Adding TPROXY version 4+ support to squid through the TPROXY target.
+This options requires a linux kernel 2.6.25 or later for embeded netfilter TPROXY targets.
+Older REDIRECT and DNAT targets work as before on HTTP ports marked 'intercept'.</P>
 
 </DL>
 </P>
@@ -337,11 +580,14 @@ The helper will compile and work with dns_nameservers on more variants of Linux 
 porting one of these from Squid-2 to Squid-3 is most welcome.</P>
 <P>
 <DL>
-<DT><B>--enable-devpoll</B><DD><P>Support for Solaris /dev/poll</P>
+<DT><B>--enable-devpoll</B><DD>
+<P>Support for Solaris /dev/poll</P>
 
-<DT><B>--enable-select-simple</B><DD><P>Basic POSIX select() loop without any binary fd_set optimizations.</P>
+<DT><B>--enable-select-simple</B><DD>
+<P>Basic POSIX select() loop without any binary fd_set optimizations.</P>
 
-<DT><B>--enable-follow-x-forwarded-for</B><DD><P>Support following the X-Forwarded-For HTTP header for determining the
+<DT><B>--enable-follow-x-forwarded-for</B><DD>
+<P>Support following the X-Forwarded-For HTTP header for determining the
 client IP address</P>
 </DL>
 </P>
@@ -351,7 +597,12 @@ client IP address</P>
 <P>The following configure options have been removed.</P>
 <P>
 <DL>
-
+<DT><B>--enable-linux-tproxy</B><DD>
+<P>Replaced by --enable-linux-tproxy2 to make way for differences in TPROXY v2 and v4 support.</P>
+<DT><B>--enable-default-err-language</B><DD>
+<P>Replaced by error_default_language squid.conf option</P>
+<DT><B>--enable-err-languages</B><DD>
+<P>Removed.</P>
 </DL>
 </P>
 
