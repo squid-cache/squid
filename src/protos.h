@@ -385,6 +385,9 @@ SQUIDCEXTERN void neighborAddAcl(const char *, const char *);
 SQUIDCEXTERN void neighborsUdpAck(const cache_key *, icp_common_t *, const IPAddress &);
 SQUIDCEXTERN void neighborAdd(const char *, const char *, int, int, int, int, int);
 SQUIDCEXTERN void neighbors_init(void);
+#if USE_HTCP
+SQUIDCEXTERN void neighborsHtcpClear(StoreEntry *, const char *, HttpRequest *, HttpRequestMethod *, htcp_clr_reason);
+#endif
 SQUIDCEXTERN peer *peerFindByName(const char *);
 SQUIDCEXTERN peer *peerFindByNameAndPort(const char *, unsigned short);
 SQUIDCEXTERN peer *getDefaultParent(HttpRequest * request);

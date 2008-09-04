@@ -274,6 +274,9 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
 
     if (pe != NULL) {
         assert(e != pe);
+#if USE_HTCP
+        neighborsHtcpClear(e, NULL, e->mem_obj->request, &e->mem_obj->method, HTCP_CLR_INVALIDATION);
+#endif
         pe->release();
     }
 
@@ -288,6 +291,10 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
 
     if (pe != NULL) {
         assert(e != pe);
+#if USE_HTCP
+        HttpRequestMethod headMethod(METHOD_HEAD);
+        neighborsHtcpClear(e, NULL, e->mem_obj->request, &headMethod, HTCP_CLR_INVALIDATION);
+#endif
         pe->release();
     }
 }
