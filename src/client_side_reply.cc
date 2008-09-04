@@ -721,13 +721,16 @@ clientReplyContext::purgeRequestFindObjectToPurge()
  * keys depend on vary headers.
  */
 void
-purgeEntriesByUrl(const char *url)
+purgeEntriesByUrl(HttpRequest * req, const char *url)
 {
     for (HttpRequestMethod m(METHOD_NONE); m != METHOD_ENUM_END; ++m) {
         if (m.isCacheble()) {
             if (StoreEntry *entry = storeGetPublic(url, m)) {
                 debugs(88, 5, "purging " << RequestMethodStr(m) << ' ' << url);
                 entry->release();
+#if USE_HTCP
+                neighborsHtcpClear(NULL, url, req, &m, HTCP_CLR_INVALIDATION);
+#endif
             }
         }
     }
@@ -737,7 +740,7 @@ void
 clientReplyContext::purgeAllCached()
 {
 	const char *url = urlCanonical(http->request);
-    purgeEntriesByUrl(url);
+    purgeEntriesByUrl(http->request, url);
 }
 
 void

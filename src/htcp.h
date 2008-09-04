@@ -70,6 +70,9 @@ SQUIDCEXTERN void htcpInit(void);
 SQUIDCEXTERN void htcpQuery(StoreEntry * e, HttpRequest * req, peer * p);
 
 /// \ingroup ServerProtocolHTCP
+SQUIDCEXTERN void htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, HttpRequestMethod * method, peer * p, htcp_clr_reason reason);
+
+/// \ingroup ServerProtocolHTCP
 SQUIDCEXTERN void htcpSocketShutdown(void);
 
 /// \ingroup ServerProtocolHTCP

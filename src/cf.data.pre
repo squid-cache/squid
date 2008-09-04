@@ -1585,6 +1585,10 @@ DOC_START
 		     max-conn=n
 		     htcp
 		     htcp-oldsquid
+		     htcp-no-clr
+		     htcp-no-purge-clr
+		     htcp-only-clr
+		     htcp-forward-clr
 		     originserver
 		     name=xxx
 		     forceddomain=name
@@ -1726,6 +1730,20 @@ DOC_START
 		     use 'htcp-oldsquid' to send HTCP to old Squid versions
 		     You MUST also set htcp_access expicitly. The default of
 		     deny all will prevent peer traffic.		     
+
+		     use 'htcp-no-clr' to send HTCP to the neighbor but without
+		     sending any CLR requests.  This cannot be used with
+		     htcp-only-clr.
+		
+		     use 'htcp-no-purge-clr' to send HTCP to the neighbor
+		     including CLRs but only when they do not result from
+		     PURGE requests.
+		
+		     use 'htcp-only-clr' to send HTCP to the neighbor but ONLY
+		     CLR requests.  This cannot be used with htcp-no-clr.
+		
+		     use 'htcp-forward-clr' to forward any HTCP CLR requests
+		     this proxy receives to the peer.
 
 		     'originserver' causes this parent peer to be contacted as
 		     a origin server. Meant to be used in accelerator setups.
