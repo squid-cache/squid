@@ -1585,52 +1585,12 @@ clientReplyContext::doGetMoreData()
         assert(http->out.size == 0);
         assert(http->out.offset == 0);
 #if USE_ZPH_QOS
-        if(Config.zph_tos_local || Config.zph_tos_peer ||
-            (Config.onoff.zph_preserve_miss_tos && Config.zph_preserve_miss_tos_mask) )
+        if (Config.zph_tos_local)
         {
-            int need_change = 0;
-            int hit = 0;
-            int tos = 0;
-            int tos_old = 0;
-            int tos_len = sizeof(tos_old);
-            int res;
-
-            if (Config.zph_tos_local) {
-                /* local hit */
-                hit = 1;
-                tos = Config.zph_tos_local;
-            }
-            else if(Config.zph_tos_peer &&
-                    (http->request->hier.code==SIBLING_HIT ||
-                     (Config.onoff.zph_tos_parent && http->request->hier.code==PARENT_HIT ) ) )
-            {
-                /* sibling or parent hit */
-                hit = 1;
-                tos = Config.zph_tos_peer;
-             }
-
-             if(http->request->flags.proxy_keepalive) {
-                 res = getsockopt(http->getConn()->fd, IPPROTO_IP, IP_TOS, &tos_old, (socklen_t*)&tos_len);
-                 if (res < 0) {
-                     debugs(33, 1, "ZPH: error in getsockopt(IP_TOS) on keepalived FD "<< http->getConn()->fd << " " << xstrerror());
-                 }
-                 else if (hit && tos_old != tos) {
-                     /* HIT: 1-st request, or previous was MISS,
-                      * or local/parent hit change.
-                      */
-                     need_change = 1;                    
-                 }
-             }
-             else if (hit) {
-                 /* no keepalive */
-                 need_change = 1;
-             }
-             if(need_change) {
-                 comm_set_tos(http->getConn()->fd,tos);
-             }
+            debugs(33, 2, "ZPH Local hit, TOS="<<Config.zph_tos_local);
+            comm_set_tos(http->getConn()->fd,Config.zph_tos_local);
         }
 #endif /* USE_ZPH_QOS */
-
         tempBuffer.offset = reqofs;
         tempBuffer.length = getNextNode()->readBuffer.length;
         tempBuffer.data = getNextNode()->readBuffer.data;
@@ -1895,13 +1855,22 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
         body_buf = buf;
     }
 
-#if USE_ZPH_QOS    
-    if (reqofs==0 && !logTypeIsATcpHit(http->logType) &&
-       	Config.onoff.zph_preserve_miss_tos &&
-       	Config.zph_preserve_miss_tos_mask)
+#if USE_ZPH_QOS
+    if (reqofs==0 && !logTypeIsATcpHit(http->logType))
     {
-    	int tos = fd_table[fd].upstreamTOS & Config.zph_preserve_miss_tos_mask;
-    	comm_set_tos(fd,tos);
+        int tos = 0;
+        if (Config.zph_tos_peer && 
+             (http->request->hier.code==SIBLING_HIT || 
+                Config.onoff.zph_tos_parent && http->request->hier.code==PARENT_HIT) )
+        {
+            tos = Config.zph_tos_peer;
+            debugs(33, 2, "ZPH: Peer hit with hier.code="<<http->request->hier.code<<", TOS="<<tos);
+        }
+        else if (Config.onoff.zph_preserve_miss_tos && Config.zph_preserve_miss_tos_mask) {
+            tos = fd_table[fd].upstreamTOS & Config.zph_preserve_miss_tos_mask;
+            debugs(33, 2, "ZPH: Preserving TOS on miss, TOS="<<tos);
+        }
+        comm_set_tos(fd,tos);
     }
 #endif    
 
