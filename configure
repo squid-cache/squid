@@ -22249,7 +22249,7 @@ if test "${enable_default_err_language+set}" = set; then
     fi
 
 else
-  ERR_DEFAULT_LANGUAGE="English"
+  ERR_DEFAULT_LANGUAGE="templates"
 fi
 
 
