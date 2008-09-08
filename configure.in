@@ -954,7 +954,7 @@ AC_ARG_ENABLE(default-err-language,
 	echo "ERROR! Unknown language $enableval, see errors/ directory"
 	exit 1
     fi
-],[ERR_DEFAULT_LANGUAGE="English"])
+],[ERR_DEFAULT_LANGUAGE="templates"])
 AC_SUBST(ERR_DEFAULT_LANGUAGE)
 
 dnl Select languages to be installed

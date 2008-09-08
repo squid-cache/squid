@@ -4422,15 +4422,18 @@ TYPE: string
 LOC: Config.errorDirectory
 DEFAULT: @DEFAULT_ERROR_DIR@
 DOC_START
-	If you wish to create your own versions of the default
-	(English) error files, either to customize them to suit your
-	language or company copy the template English files to another
-	directory and point this tag at them.
+	If you wish to create your own versions of the default files, to
+	customize them to suit your company copy the template files to
+	another directory and point this tag at them.
+
+	Current Language updates can be downloaded from:
+		http://www.squid-cache.org/Versions/langpack/
 
 	The squid developers are interested in making squid available in
 	a wide variety of languages. If you are making translations for a
 	langauge that Squid does not currently provide please consider
 	contributing your translation back to the project.
+	see http://wiki.squid-cache.org/Translations
 DOC_END
 
 NAME: err_html_text
