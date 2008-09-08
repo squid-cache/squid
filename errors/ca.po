@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-08-06 22:11+1300\n"
+"POT-Creation-Date: 2008-09-01 03:03+1300\n"
 "PO-Revision-Date: 2008-08-17 19:57+1200\n"
 "Last-Translator: Jordi Bruguera <jordi@dns1.grn.es>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -29,8 +29,8 @@ msgid ""
 "or server may be down or congested.  Please retry your request."
 msgstr ""
 "Hi ha hagut un exc&eacute;s en el temps de lectura de dades de la xarxa.Hi "
-"ha congesti&oacute; o indisposici&oacute; del servidor i/o la xarxa"
-".Intenteu-ho d'aqui a una estona."
+"ha congesti&oacute; o indisposici&oacute; del servidor i/o la xarxa.Intenteu-"
+"ho d'aqui a una estona."
 
 #: templates/ERR_URN_RESOLVE:3
 msgid "A URL for the requested URN could not be retrieved"
@@ -63,8 +63,8 @@ msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
 msgstr ""
-"S'ha produ&iuml;t un error FTP mentre s'intentava llegir la URL: <a "
-"href=\"%U\">%U</a>"
+"S'ha produ&iuml;t un error FTP mentre s'intentava llegir la URL: <a href=\"%U"
+"\">%U</a>"
 
 #: templates/ERR_ICAP_FAILURE:10
 msgid "An Illegal response was received from the ICAP server."
@@ -286,9 +286,9 @@ msgid ""
 "have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
 "chpasswd.cgi\">change</a> your default password."
 msgstr ""
-"Contacteu ambel vostre <a href=\"mailto:%w%W\">administrador de "
-"<i>cache</i></a> si teniudificultats per a autentificar-vos o "
-"<ahref=\"http://%h/cgi-bin/chpasswd.cgi\">canvieu</a> la vostra contrasenya."
+"Contacteu ambel vostre <a href=\"mailto:%w%W\">administrador de <i>cache</"
+"i></a> si teniudificultats per a autentificar-vos o <ahref=\"http://%h/cgi-"
+"bin/chpasswd.cgi\">canvieu</a> la vostra contrasenya."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
 msgid ""
@@ -297,8 +297,8 @@ msgid ""
 "administrator, read Squid documentation on cache manager interface and check "
 "cache log for more detailed error messages."
 msgstr ""
-"Contacteu ambel vostre <a href=\"mailto:%w%W\">administrador de cache</a>. Si "
-"vosaltres <em>sou</em> l'administrador d'aquesta cache, llegiu-vos la "
+"Contacteu ambel vostre <a href=\"mailto:%w%W\">administrador de cache</a>. "
+"Si vosaltres <em>sou</em> l'administrador d'aquesta cache, llegiu-vos la "
 "documentació de l'Squid en l'apartat de l'administrador de la cache."
 
 #: templates/ERR_READ_ERROR:5
@@ -383,6 +383,11 @@ msgstr ""
 msgid "Squid sent the following FTP command:"
 msgstr "La <i>cache</i> ha enviat la comanda FTP:"
 
+#: templates/ERR_DNS_FAIL:6
+#, fuzzy
+msgid "The DNS server returned:"
+msgstr "El servidor de DNS diu:"
+
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
 msgstr ""
@@ -390,8 +395,8 @@ msgstr ""
 #: templates/ERR_FTP_UNAVAILABLE:4
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr ""
-"El servidor FTP estava massa ocupat quan intentava mostrar la URL: <a "
-"href=\"%U\">%U</a>"
+"El servidor FTP estava massa ocupat quan intentava mostrar la URL: <a href="
+"\"%U\">%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
 msgid ""
@@ -402,10 +407,6 @@ msgstr ""
 #: templates/ERR_ICAP_FAILURE:9
 msgid "The ICAP server is not reachable."
 msgstr ""
-
-#: templates/ERR_DNS_FAIL:6
-msgid "The dnsserver returned:"
-msgstr "El servidor de DNS diu:"
 
 #: templates/ERR_FTP_NOT_FOUND:4
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
@@ -604,10 +605,9 @@ msgid ""
 "directive. The document was not found in the cache, <em>or</em> it required "
 "revalidation prohibited by the <q>only-if-cached</q> directive."
 msgstr ""
-"Heu fet una petició amb la directiva de control de cache <q>only-if-"
-"cached</q>. El document no s'ha trobat a la cache, o necessitava "
-"revalidaci&oacute;, expressament prohibida per la directiva <q>only-if-"
-"cached</q>."
+"Heu fet una petició amb la directiva de control de cache <q>only-if-cached</"
+"q>. El document no s'ha trobat a la cache, o necessitava revalidaci&oacute;, "
+"expressament prohibida per la directiva <q>only-if-cached</q>."
 
 #: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
 #: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
@@ -624,7 +624,8 @@ msgstr ""
 #: templates/ERR_URN_RESOLVE:7 templates/ERR_WRITE_ERROR:8
 #: templates/ERR_ZERO_SIZE_OBJECT:7
 msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
-msgstr "L'administrador d'aquesta cache &eacute;s <a href=\"mailto:%w%W\">%w</a>."
+msgstr ""
+"L'administrador d'aquesta cache &eacute;s <a href=\"mailto:%w%W\">%w</a>."
 
 #: templates/ERR_INVALID_RESP:6
 msgid ""

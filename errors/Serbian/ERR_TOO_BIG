@@ -10,7 +10,7 @@
 Tokom pokušaja da se dovuèe strana sa sledeæom adresom (URL):
 <A HREF="%U">%U</A>
 <P>
-dogodila se sledeæa greška:
+Dogodila se sledeæa greška:
 <UL>
 <LI>
 <STRONG>
@@ -20,9 +20,9 @@ Zahtev ili odgovor je prevelik.
 Ukoliko je vaš zahtev POST ili PUT, onda je telo zahteva (to što
 pokušavate da upload-ujete) preveliko. Ako ste uputili GET zahtev,
 onda je telo odgovora (to što pokušavate da skinete) preveliko.
-Ove limite postavio je internet servis provajder koji koristi ovaj
+Ove limite postavio je intenet servis provajder koji koristi ovaj
 proksi server. Ako smatrate da je to greška, molimo stupite u kontakt
 sa administratorom.
 </UL>
 
-<P>Vaš cache/proxy administrator je: <A HREF="mailto:%w%W">%w</A>. 
+<P>Vaš keš/proksi administrator je: <A HREF="mailto:%w">%w</A>. 

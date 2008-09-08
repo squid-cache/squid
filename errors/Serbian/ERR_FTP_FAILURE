@@ -6,8 +6,7 @@
 <H1>GREŠKA</H1>
 <H2>Tražena adresa (URL) ne može da se dovuèe</H2>
 <HR noshade size="1px">
-Prilikom pokušaja da se dovuèe URL: <A HREF="%U">%U</A> desila
-se greška u FTP protokolu.
+Desila se greška u FTP protokolu prilikom dovlaèenja URL-a: <A HREF="%U">%U</A>
 <P>
 <P>
 Squid je poslao sledeæu FTP komandu:
@@ -16,5 +15,5 @@ i onda dobio sledeæi odgovor
 <blockquote><strong><pre>%F</pre></strong></blockquote>
 <blockquote><strong><pre>%g</pre></strong></blockquote>
 
-<P>Vaš cache/proxy administrator je: <A HREF="mailto:%w%W">%w</A>. 
+<P>Vaš keš/proksi administrator je: <A HREF="mailto:%w">%w</A>. 
 
