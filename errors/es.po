@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: squid\n"
-"Report-Msgid-Bugs-To: FULL NAME <EMAIL@ADDRESS>\n"
-"POT-Creation-Date: 2008-08-06 22:11+1300\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2008-09-01 03:03+1300\n"
 "PO-Revision-Date: 2008-08-13 00:31+0000\n"
 "Last-Translator: Iker Sagasti Markina <iker@irontec.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
@@ -364,6 +364,11 @@ msgstr ""
 msgid "Squid sent the following FTP command:"
 msgstr "Squid ha enviado el siguiente comando FTP:"
 
+#: templates/ERR_DNS_FAIL:6
+#, fuzzy
+msgid "The DNS server returned:"
+msgstr "El servidor dns devolvió:"
+
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
 msgstr ""
@@ -381,10 +386,6 @@ msgstr ""
 #: templates/ERR_ICAP_FAILURE:9
 msgid "The ICAP server is not reachable."
 msgstr "El servidor ICAP no es alcanzable."
-
-#: templates/ERR_DNS_FAIL:6
-msgid "The dnsserver returned:"
-msgstr "El servidor dns devolvió:"
 
 #: templates/ERR_FTP_NOT_FOUND:4
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"

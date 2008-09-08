@@ -10,7 +10,7 @@
 Tokom pokušaja da se dovuèe strana sa sledeæom adresom (URL):
 <A HREF="%U">%U</A>
 <P>
-dogodila se sledeæa greška:
+Dogodila se sledeæa greška:
 <UL>
 <LI>
 <STRONG>
@@ -24,7 +24,9 @@ Sistem je dao povratnu informaciju:
 
 <P>
 <PRE>
-Desila se greška prilikom isèitavanja podataka sa mreže.
+Desila se greška prilikom èitanja podataka sa mreže.
 Molimo pokušajte ponovo.
 </PRE>
 </P>
+
+<P>Vaš keš/proksi administrator je: <A HREF="mailto:%w">%w</A>. 

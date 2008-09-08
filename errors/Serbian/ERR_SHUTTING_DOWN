@@ -10,14 +10,13 @@
 Tokom pokušaja da se dovuèe strana sa sledeæom adresom (URL):
 <A HREF="%U">%U</A>
 <P>
-dogodila se sledeæa greška:
+Dogodila se sledeæa greška:
 <UL>
 <LI>
 <STRONG>
-Ovaj proksi server je u procesu obaranja i ne može da
-opsluži zahtev u ovom trenutku. Molimo pokušajte ponovo
-uskoro.
+Ovaj proksi server je u procesu iskljuèivanja i ne može da
+izvrši zahtev u ovom trenutku. Molimo pokušajte ponovo uskoro.
 </STRONG>
 </UL>
 
-<P>Vaš cache/proxy administrator je: <A HREF="mailto:%w%W">%w</A>.
+<P>Vaš keš/proksi administrator je: <A HREF="mailto:%w">%w</A>.
