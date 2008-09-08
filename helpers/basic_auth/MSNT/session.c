@@ -296,14 +296,12 @@ RFCNB_Hangup(struct RFCNB_Con *con_Handle)
 void
 RFCNB_Get_Error(char *buffer, int buf_len)
 {
-
     if (RFCNB_saved_errno <= 0) {
-	sprintf(buffer, "%s", RFCNB_Error_Strings[RFCNB_errno]);
+	snprintf(buffer, (buf_len-1) ,"%s", RFCNB_Error_Strings[RFCNB_errno]);
     } else {
-	sprintf(buffer, "%s\n\terrno:%s", RFCNB_Error_Strings[RFCNB_errno],
+	snprintf(buffer, (buf_len-1), "%s\n\terrno:%s", RFCNB_Error_Strings[RFCNB_errno],
 	    strerror(RFCNB_saved_errno));
     }
-
 }
 
 /* Pick up the last error response and returns as a code                 */
@@ -311,9 +309,7 @@ RFCNB_Get_Error(char *buffer, int buf_len)
 int
 RFCNB_Get_Last_Error(void)
 {
-
     return (RFCNB_errno);
-
 }
 
 /* Pick up saved errno as well */

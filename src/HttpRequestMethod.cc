@@ -243,11 +243,16 @@ HttpRequestMethod::purgesOthers() const
         case METHOD_PURGE:
             return true;
 
-        /* all others */
+        /*
+         * RFC 2616 sayeth, in section 13.10, final paragraph:
+         * A cache that passes through requests for methods it does not
+         * understand SHOULD invalidate any entities referred to by the
+         * Request-URI.
+         */
         case METHOD_OTHER:
         default:
-            return false; // be conservative: we do not know some methods specs
+            return true;
 	}
 
-    return false; // not reached
+    return true; // not reached, but just in case
 }
