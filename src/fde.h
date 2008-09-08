@@ -44,11 +44,6 @@ class fde
 
 public:
     fde() { clear(); };
-    /** Clear the fde class properly back to NULL equivalent. */
-    inline void clear() {
-        memset(this, 0, sizeof(fde));
-        local_addr.SetEmpty(); // IPAddress likes to be setup nicely.
-    }
     
     /**
      * Return true if the the comm_close for this fd called.
@@ -128,6 +123,16 @@ public:
     unsigned char upstreamTOS;			/* see FwdState::dispatch()  */
 #endif
 
+private:
+    /** Clear the fde class back to NULL equivalent. */
+    inline void clear() {
+        timeoutHandler = NULL;
+        closeHandler = NULL;
+        // XXX: the following memset may corrupt or leak new or changed members
+        memset(this, 0, sizeof(fde));
+        local_addr.SetEmpty(); // IPAddress likes to be setup nicely.
+    }
+    
 };
 
 #endif /* SQUID_FDE_H */
