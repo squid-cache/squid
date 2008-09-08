@@ -1,4 +1,4 @@
-
+#error COSS Support is not stable in 3.0. Please do not use.
 /*
  * $Id: StoreFScoss.h,v 1.3 2006/05/29 00:15:09 robertc Exp $
  *

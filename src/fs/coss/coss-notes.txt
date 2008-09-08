@@ -1,5 +1,13 @@
 COSS notes
 
+Amos Jeffries <squid3@treenet.co.nz>
+
+COSS Support is not stable in 3.0. Please do not use.
+
+Any help porting the stability fixes from Squid 2.6 and 2.7
+is very welcome though to resolve this issue.
+
+
 Adrian Chadd <adrian@creative.net.au>
 
 $Id: coss-notes.txt,v 1.3 2003/08/27 21:19:38 wessels Exp $

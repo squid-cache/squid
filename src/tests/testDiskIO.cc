@@ -8,7 +8,9 @@
 #include "SwapDir.h"
 #include "DiskIO/DiskIOModule.h"
 #include "fs/ufs/ufscommon.h"
+#if 0 // AYJ: COSS in 3.0 is disabled.
 #include "fs/coss/CossSwapDir.h"
+#endif
 #include "Mem.h"
 #include "MemObject.h"
 #include "HttpHeader.h"
