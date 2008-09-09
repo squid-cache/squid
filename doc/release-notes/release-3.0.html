@@ -123,11 +123,229 @@ Some have been dropped as they are not needed. Some have not yet been forward-po
 </P>
 <P>See 
 <A HREF="http://www.squid-cache.org/Doc/FAQ/FAQ-6.html#ss6.7">http://www.squid-cache.org/Doc/FAQ/FAQ-6.html#ss6.7</A> for a definition of all log types.</P>
+<H2><A NAME="s5">5. Windows support</A></H2>
+
+<P>This Squid version can run on Windows as a system service using the Cygwin emulation environment, 
+or can be compiled in Windows native mode using the MinGW + MSYS development environment. Windows NT 4 SP4 and later are supported.<BR>
+On Windows 2000 and later the service is configured to use the Windows Service Recovery option
+restarting automatically after 60 seconds.
+<DL>
+
+<DT><B>Usage</B><DD>
+<P>Some new command line options were added for the Windows service support:<BR></P>
+<P>The service installation is made with -i command line switch, it's possible to use -f switch at
+the same time for specify a different config-file settings for the Squid Service that will be
+stored on the Windows Registry.</P>
+<P>A new -n switch specify the Windows Service Name, so multiple Squid instance are allowed.
+<EM>"Squid"</EM> is the default when the switch is not used.</P>
+<P>So, to install the service, the syntax is: </P>
+<P>
+<PRE>
+squid -i [-f file] [-n name]
+</PRE>
+</P>
+<P>Service uninstallation is made with -r command line switch with the appropriate -n switch.</P>
+<P>The -k switch family must be used with the appropriate -f and -n switches, so the syntax is: </P>
+<P>
+<PRE>
+squid -k command [-f file] -n service-name
+</PRE>
+
+where <EM>service-name</EM> is the name specified with -n options at service install time.</P>
+<P>To use the Squid original command line, the new -O switch must be used ONCE, the syntax is: </P>
+<P>
+<PRE>
+squid -O cmdline [-n service-name]
+</PRE>
+
+If multiple service command line options must be specified, use quote. The -n switch is
+needed only when a non default service name is in use.</P>
+<P>Don't use the "Start parameters" in the Windows 2000/XP/2003 Service applet: they are
+specific to Windows services functionality and Squid is not designed for understand they.</P>
+<P>In the following example the command line of the "squidsvc" Squid service is set to "-D -u 3130": </P>
+<P>
+<PRE>
+squid -O "-D -u 3130" -n squidsvc
+</PRE>
+</P>
+</DL>
+</P>
+<P>
+<DL>
+<DT><B>PSAPI.DLL (Process Status Helper) Considerations</B><DD>
+<P>The process status helper functions make it easier for you to obtain information about
+processes and device drivers running on Microsoft® Windows NT®/Windows® 2000. These
+functions are available in PSAPI.DLL, which is distributed in the Microsoft® Platform
+Software Development Kit (SDK). The same information is generally available through the
+performance data in the registry, but it is more difficult to get to it. PSAPI.DLL is
+freely redistributable.</P>
+<P>PSAPI.DLL is available only on Windows NT, 2000, XP and 2003. The implementation in Squid is
+aware of this, and try to use it only on the right platform.</P>
+<P>On Windows NT PSAPI.DLL can be found as component of many applications, if you need it,
+you can find it on Windows NT Resource KIT. If you have problem, it can be
+downloaded from here:
+<A HREF="http://download.microsoft.com/download/platformsdk/Redist/4.0.1371.1/NT4/EN-US/psinst.EXE">http://download.microsoft.com/download/platformsdk/Redist/4.0.1371.1/NT4/EN-US/psinst.EXE</A></P>
+<P>On Windows 2000 and later it is available installing the Windows Support Tools, located on the
+Support\Tools folder of the installation Windows CD-ROM.</P>
+</DL>
+</P>
+<P>
+<DL>
+<DT><B>Registry DNS lookup</B><DD>
+<P>On Windows platforms, if no value is specified in the <EM>dns_nameservers</EM> option on
+squid.conf or in the /etc/resolv.conf file, the list of DNS name servers are
+taken from the Windows registry, both static and dynamic DHCP configurations
+are supported.</P>
+</DL>
+</P>
+<P>
+<DL>
+<DT><B>Compatibility Notes</B><DD>
+<P>
+<UL>
+<LI>It's recommended to use '/' char in Squid paths instead of '\'</LI>
+<LI>Paths with spaces (like 'C:\Programs Files\Squid) are NOT supported by Squid</LI>
+<LI>When using ACL like 'acl aclname acltype "file"' the file must be in DOS text
+format (CR+LF) and the full Windows path must be specified, for example:
+
+<PRE>
+acl blocklist url_regex -i "c:/squid/etc/blocked1.txt"
+</PRE>
+
+</LI>
+<LI>The Windows equivalent of '/dev/null' is 'NUL'</LI>
+<LI>Squid doesn't know how to run external helpers based on scripts, like .bat, .cmd,
+.vbs, .pl, etc. So in squid.conf the interpreter path must be always specified, for example:
+
+<PRE>
+redirect_program c:/perl/bin/perl.exe c:/squid/libexec/redir.pl
+redirect_program c:/winnt/system32/cmd.exe /C c:/squid/libexec/redir.cmd
+</PRE>
+</LI>
+<LI>When Squid runs in command line mode, the launching user account must have administrative privilege on the system</LI>
+<LI>"Start parameters" in the Windows 2000/XP/2003 Service applet cannot be used</LI>
+<LI>Building with MinGW, when the configure option --enable-truncate is used, Squid cannot run on Windows NT, only Windows 2000 and later are supported</LI>
+</UL>
+</P>
+</DL>
+</P>
+<P>
+<DL>
+<DT><B>Known Limitations</B><DD>
+<P>
+<UL>
+<LI>Squid features not operational:<BR>
+<UL>
+<LI>DISKD: still needs to be ported<BR></LI>
+<LI>WCCP: cannot work because user space GRE support on Windows is missing<BR></LI>
+<LI>Transparent Proxy: missing Windows non commercial interception driver<BR></LI>
+</UL>
+</LI>
+<LI>Some code sections can make blocking calls.</LI>
+<LI>Some external helpers may not work.</LI>
+<LI>File Descriptors number hard-limited to 2048 when building with MinGW.</LI>
+</UL>
+</P>
+</DL>
+</P>
+<P>
+<DL>
+<DT><B>Building Squid on Windows</B><DD>
+<P>A reasonably recent release of 
+<A HREF="http://www.cygwin.com/">Cygwin</A> or 
+<A HREF="http://www.mingw.org/">MinGW</A> is needed.<BR>
+The usage of the Cygwin environment is very similar to other Unix/Linux environments, and -devel version of libraries must be installed.<BR>
+For the MinGW environment, the packages MSYS, MinGW and msysDTK must be installed. Some additional libraries and tools must be downloaded separately:<BR><BR>
+OpenSSL: 
+<A HREF="http://www.slproweb.com/products/Win32OpenSSL.html">Shining Light Productions Win32 OpenSSL</A><BR>
+libcrypt: 
+<A HREF="http://sourceforge.net/projects/mingwrep/">MinGW packages repository</A><BR>
+db-1.85: 
+<A HREF="http://tinycobol.org/download.html">TinyCOBOL download area</A><BR>
+uudecode: 
+<A HREF="http://unxutils.sourceforge.net/">Native Win32 ports of some GNU utilities</A><BR><BR>
+When running configure, --disable-wccp and --disable-wccpv2 options should always specified to avoid compile errors.<BR>
+<UL>
+<LI>New configure options:<BR>
+<UL>
+<LI>--enable-win32-service<BR></LI>
+</UL>
+</LI>
+<LI>Updated configure options:<BR>
+<UL>
+<LI>--enable-arp-acl<BR></LI>
+<LI>--enable-default-hostsfile<BR></LI>
+</UL>
+</LI>
+<LI>Unsupported configure options:<BR>
+<UL>
+<LI>--enable-coss-aio-ops: On Windows Posix AIO is not available<BR></LI>
+<LI>--with-large-files: No suitable build environment is available on both Cygwin and MinGW, but --enable-large-cache-files works fine<BR></LI>
+</UL>
+</LI>
+<LI>Recommended configure minimal options for Windows:<BR>
+<UL>
+<LI>--prefix=c:/squid --disable-wccp --disable-wccpv2 --enable-win32-service --enable-default-hostsfile=none</LI>
+</UL>
+</LI>
+</UL>
+<BR>
+Before build Squid with SSL support, some operations are needed (in the following example OpenSSL is installed in C:\OpenSSL and MinGW in C:\MinGW):
+<UL>
+<LI>Copy C:\OpenSSL\lib\MinGW content to C:\MinGW\lib<BR></LI>
+<LI>Copy C:\OpenSSL\include\openssl content to C:\MinGW\include\openssl<BR></LI>
+<LI>Rename C:\MinGW\lib\ssleay32.a to C:\MinGW\lib\libssleay32.a<BR></LI>
+</UL>
+</P>
+
+</DL>
+</P>
+<P>
+<DL>
+<DT><B>Using cache manager on Windows:</B><DD>
+<P>On Windows, cache manager (cachemgr.cgi) can be used with Microsoft IIS or Apache.<BR>
+Some specific configuration could be needed:<BR>
+<UL>
+<LI>IIS 6 (Windows 2003):<BR>
+<UL>
+<LI>On IIS 6.0 all CGI extensions are denied by default for security reason, so the following configuration is needed:<BR>
+<UL>
+<LI>Create a cgi-bin Directory</LI>
+<LI>Define the cgi-bin IIS Virtual Directory with read and CGI execute IIS
+permissions, ASP scripts are not needed. This automatically defines a
+cgi-bin IIS web application </LI>
+<LI>Copy cachemgr.cgi into cgi-bin directory and look to file permissions:
+the IIS system account and SYSTEM must be able to read and execute the file</LI>
+<LI>In IIS manager go to Web Service extensions and add a new Web Service
+Extension called <EM>"Squid Cachemgr"</EM>, add the cachemgr.cgi file and set the
+extension status to <EM>Allowed</EM></LI>
+</UL>
+</LI>
+</UL>
+</LI>
+<LI>Apache:<BR>
+<UL>
+<LI>On Windows, cachemgr.cgi needs to create a temporary file, so Apache must be instructed
+to pass the TMP and TEMP Windows environment variables to CGI applications:<BR>
+<PRE>
+ScriptAlias /squid/cgi-bin/ "c:/squid/libexec/"
+&lt;Location /squid/cgi-bin/cachemgr.cgi&gt;
+    PassEnv TMP TEMP
+    Order allow,deny
+    Allow from workstation.example.com
+&lt;/Location&gt;
+</PRE>
+</LI>
+</UL>
+</LI>
+</UL>
+</P>
+</DL>
+</P>
 
 
 
-
-<H2><A NAME="ss4.4">4.4 Changes to squid.conf</A>
+<H2><A NAME="ss5.1">5.1 Changes to squid.conf</A>
 </H2>
 
 <P>There have been many changes to Squid's configuration file since Squid-2.6.</P>
@@ -333,7 +551,7 @@ If set to 1 and the ICAP server cannot be reached, the request will go
 through without being processed by an ICAP server
 service_url = icap://servername:port/service
 
-Note: reqmod_precache and respmod_postcache is not yet implemented
+Note: reqmod_postcache and respmod_postcache is not yet implemented
 
 Example:
 icap_service service_1 reqmod_precache 0 icap://icap1.mydomain.net:1344/reqmod
@@ -732,7 +950,7 @@ This is useful for class 4 Delay Pools in Squid 3.x</P>
 </P>
 
 
-<H2><A NAME="ss4.5">4.5 Changes to ./configure Options</A>
+<H2><A NAME="ss5.2">5.2 Changes to ./configure Options</A>
 </H2>
 
 <P>There have been some changes to Squid's build configuration since Squid-2.6.</P>
