@@ -3957,7 +3957,17 @@ TYPE: address
 LOC: Config.Wccp.router
 DEFAULT: 0.0.0.0
 IFDEF: USE_WCCP
-DOC_NONE
+DOC_START
+	Use this option to define your WCCP ``home'' router for
+	Squid.
+
+	wccp_router supports a single WCCP(v1) router
+
+	wccp2_router supports multiple WCCPv2 routers
+
+	only one of the two may be used at the same time and defines
+	which version of WCCP to use.
+DOC_END
 
 NAME: wccp2_router
 TYPE: IPAddress_list
@@ -4005,33 +4015,33 @@ DOC_START
 DOC_END
 
 NAME: wccp2_forwarding_method
-TYPE: int
+TYPE: wccp2_method
 LOC: Config.Wccp2.forwarding_method
-DEFAULT: 1
+DEFAULT: gre
 IFDEF: USE_WCCPv2
 DOC_START
 	WCCP2 allows the setting of forwarding methods between the
 	router/switch and the cache.  Valid values are as follows:
 
-	1 - GRE encapsulation (forward the packet in a GRE/WCCP tunnel)
-	2 - L2 redirect (forward the packet using Layer 2/MAC rewriting)
+	gre - GRE encapsulation (forward the packet in a GRE/WCCP tunnel)
+	l2 - L2 redirect (forward the packet using Layer 2/MAC rewriting)
 
 	Currently (as of IOS 12.4) cisco routers only support GRE.
 	Cisco switches only support the L2 redirect assignment method.
 DOC_END
 
 NAME: wccp2_return_method
-TYPE: int
+TYPE: wccp2_method
 LOC: Config.Wccp2.return_method
-DEFAULT: 1
+DEFAULT: gre
 IFDEF: USE_WCCPv2
 DOC_START
 	WCCP2 allows the setting of return methods between the
 	router/switch and the cache for packets that the cache
 	decides not to handle.  Valid values are as follows:
 
-	1 - GRE encapsulation (forward the packet in a GRE/WCCP tunnel)
-	2 - L2 redirect (forward the packet using Layer 2/MAC rewriting)
+	gre - GRE encapsulation (forward the packet in a GRE/WCCP tunnel)
+	l2 - L2 redirect (forward the packet using Layer 2/MAC rewriting)
 
 	Currently (as of IOS 12.4) cisco routers only support GRE.
 	Cisco switches only support the L2 redirect assignment.
