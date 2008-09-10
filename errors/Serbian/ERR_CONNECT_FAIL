@@ -10,7 +10,7 @@
 Tokom pokušaja da se dovuèe strana sa sledeæom adresom (URL):
 <A HREF="%U">%U</A>
 <P>
-dogodila se sledeæa greška:
+Dogodila se sledeæa greška:
 <UL>
 <LI>
 <STRONG>
@@ -28,5 +28,4 @@ Sistem je dao povratnu informaciju:
     Udaljeni raèunar ili mreža nisu operativni. Molimo pokušajte kasnije.
 </PRE>
 </P>
-<P>Vaš cache administrator je <A HREF="mailto:%w%W">%w</A>.
-
+<P>Vaš keš administrator je <A HREF="mailto:%w">%w</A>.

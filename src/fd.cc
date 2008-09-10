@@ -103,8 +103,7 @@ fd_close(int fd)
     F->flags.open = 0;
     fdUpdateBiggest(fd, 0);
     Number_FD--;
-    F->clear();
-    F->timeout = 0;
+    *F = fde();
 }
 
 #ifdef _SQUID_MSWIN_

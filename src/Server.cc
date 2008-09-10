@@ -402,11 +402,35 @@ sameUrlHosts(const char *url1, const char *url2)
 
 // purges entries that match the value of a given HTTP [response] header
 static void
-purgeEntriesByHeader(const char *reqUrl, HttpMsg *rep, http_hdr_type hdr)
+purgeEntriesByHeader(const HttpRequest *req, const char *reqUrl, HttpMsg *rep, http_hdr_type hdr)
 {
-    if (const char *url = rep->header.getStr(hdr))
-        if (sameUrlHosts(reqUrl, url)) // prevent purging DoS, per RFC 2616
-            purgeEntriesByUrl(url);
+    const char *hdrUrl, *absUrl;
+    
+    absUrl = NULL;
+    hdrUrl = rep->header.getStr(hdr);
+    if (hdrUrl == NULL) {
+        return;
+    }
+    
+    /*
+     * If the URL is relative, make it absolute so we can find it.
+     * If it's absolute, make sure the host parts match to avoid DOS attacks
+     * as per RFC 2616 13.10.
+     */
+    if (urlIsRelative(hdrUrl)) {
+        absUrl = urlMakeAbsolute(req, hdrUrl);
+        if (absUrl != NULL) {
+            hdrUrl = absUrl;
+        }
+    } else if (!sameUrlHosts(reqUrl, hdrUrl)) {
+        return;
+    }
+    
+    purgeEntriesByUrl(hdrUrl);
+    
+    if (absUrl != NULL) {
+        safe_free(absUrl);
+    }
 }
 
 // some HTTP methods should purge matching cache entries
@@ -425,8 +449,8 @@ ServerStateData::maybePurgeOthers()
    const char *reqUrl = urlCanonical(request);
    debugs(88, 5, "maybe purging due to " << RequestMethodStr(request->method) << ' ' << reqUrl);
    purgeEntriesByUrl(reqUrl);
-   purgeEntriesByHeader(reqUrl, theFinalReply, HDR_LOCATION);
-   purgeEntriesByHeader(reqUrl, theFinalReply, HDR_CONTENT_LOCATION);
+   purgeEntriesByHeader(request, reqUrl, theFinalReply, HDR_LOCATION);
+   purgeEntriesByHeader(request, reqUrl, theFinalReply, HDR_CONTENT_LOCATION);
 }
 
 // called (usually by kids) when we have final (possibly adapted) reply headers
