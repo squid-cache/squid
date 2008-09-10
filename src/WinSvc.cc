@@ -66,10 +66,10 @@ static void Win32SockCleanup(void);
 SQUIDCEXTERN LPCRITICAL_SECTION dbg_mutex;
 void WIN32_ExceptionHandlerCleanup(void);
 static int s_iInitCount = 0;
-#endif
+static HANDLE NotifyAddrChange_thread = INVALID_HANDLE_VALUE;
+#endif /* _SQUID_MSWIN_ */
 
 static int Squid_Aborting = 0;
-static HANDLE NotifyAddrChange_thread = INVALID_HANDLE_VALUE;
 
 #undef NotifyAddrChange
 typedef DWORD(WINAPI * PFNotifyAddrChange) (OUT PHANDLE, IN LPOVERLAPPED);
@@ -473,7 +473,7 @@ WIN32_IpAddrChangeMonitorInit()
     }
     return status;
 }
-#endif
+#endif /* _SQUID_MSWIN_ */
 
 int WIN32_Subsystem_Init(int * argc, char *** argv)
 {

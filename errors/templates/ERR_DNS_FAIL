@@ -13,7 +13,7 @@
 <p><b>Unable to determine IP address from host name <q>%H</q></b></p>
 </blockquote>
 
-<p>The dnsserver returned:</p>
+<p>The DNS server returned:</p>
 <blockquote>
 <pre>%z</pre>
 </blockquote>

@@ -10,7 +10,7 @@
 Tokom pokušaja da se dovuèe strana sa sledeæom adresom (URL):
 <A HREF="%U">%U</A>
 <P>
-dogodila se sledeæa greška:
+Dogodila se sledeæa greška:
 <UL>
 <LI>
 <STRONG>
@@ -18,14 +18,12 @@ Neispravna adresa (URL)
 </STRONG>
 </UL>
 <P>
-Neki aspekt zahtevane adrese (URL) nije ispravan. Moguæi problemi:
+Jedan od aspekata zahtevane adrese (URL) nije ispravan. Moguæi problemi:
 <UL>
-<LI>Pristupni protokol nedostaje ili je neispravan (trebao bi da bude `http://'' ili slièno)
+<LI>Pristupni protokol nedostaje ili je neispravan (trebao bi da bude &quot;http://'' ili slièno)
 <LI>Nedostaje ime raèunara (servera)
 <LI>Nedozvoljeni dvostruki-escape u URL putanji
 <LI>Nedozvoljeni karakteri u imenu raèunara; donja crta (_) nije dozvoljena
 </UL>
 
-<P>Vaš cache/proxy administrator je: <A HREF="mailto:%w%W">%w</A>. 
-
-
+<P>Vaš keš/proksi administrator je: <A HREF="mailto:%w">%w</A>.
