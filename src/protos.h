@@ -813,10 +813,13 @@ SQUIDCEXTERN void externalAclShutdown(void);
 SQUIDCEXTERN char *strtokFile(void);
 
 #if USE_WCCPv2
+
+SQUIDCEXTERN void parse_wccp2_method(int *v);
+SQUIDCEXTERN void free_wccp2_method(int *v);
+SQUIDCEXTERN void dump_wccp2_method(StoreEntry * e, const char *label, int v);
+
 SQUIDCEXTERN void parse_wccp2_service(void *v);
-
 SQUIDCEXTERN void free_wccp2_service(void *v);
-
 SQUIDCEXTERN void dump_wccp2_service(StoreEntry * e, const char *label, void *v);
 
 SQUIDCEXTERN int check_null_wccp2_service(void *v);
