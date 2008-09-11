@@ -101,10 +101,18 @@ extern void comm_read_cancel(int fd, AsyncCall::Pointer &callback);
 extern int comm_udp_recvfrom(int fd, void *buf, size_t len, int flags, IPAddress &from);
 extern int comm_udp_recv(int fd, void *buf, size_t len, int flags);
 extern ssize_t comm_udp_send(int s, const void *buf, size_t len, int flags);
-extern void commMarkHalfClosed(int);
-extern int commIsHalfClosed(int);
-extern void commCheckHalfClosed(void *);
 extern bool comm_has_incomplete_write(int);
+
+/** The read channel has closed and the caller does not expect more data
+ * but needs to detect connection aborts. The current detection method uses
+ * 0-length reads: We read until the error occurs or the writer closes
+ * the connection. If there is a read error, we close the connection.
+ */
+extern void commStartHalfClosedMonitor(int fd);
+extern bool commHasHalfClosedMonitor(int fd);
+// XXX: remove these wrappers which minimize client_side.cc changes in a commit
+inline void commMarkHalfClosed(int fd) { commStartHalfClosedMonitor(fd); }
+inline bool commIsHalfClosed(int fd) { return commHasHalfClosedMonitor(fd); }
 
 /* Not sure where these should live yet */
 
@@ -131,53 +139,6 @@ public:
 private:
     static AcceptLimiter Instance_;
     Vector<Acceptor> deferred;
-};
-
-/* App layer doesn't want any more data from the socket, as the read channel is
- * closed, but we need to detect aborts, so this lets us do so.
- */
-
-class AbortChecker
-{
-
-public:
-    static AbortChecker &Instance();
-    /* the current method of checking, is via a 0 length read every second.
-     * if nothing is returned by the next IO loop, we let it be.
-     * If an error occurs, we close the conn.
-     * Note that some tcp environments may allow direct polling for the socket status
-     * and this could be adjusted to use that method for the test. (in which case
-     * the singleton should be refactored to have the tcp engine register the
-     * instance with it).
-     */
-    static IOCB AbortCheckReader;
-
-    bool isMonitoring(int fd) const;
-    void monitor (int);
-    void stopMonitoring (int);
-    void doIOLoop();
-
-private:
-    static AbortChecker Instance_;
-    static void AddCheck (int const &, void *);
-    static int IntCompare (int const &, int const &);
-    static void RemoveCheck (int const &, void *);
-    AbortChecker() : fds (NULL), checking (false), lastCheck (0){}
-
-    mutable SplayNode<int> *fds;
-    bool checking;
-    time_t lastCheck;
-    bool contains (int const) const;
-
-    void remove
-        (int const);
-
-    void add
-        (int const);
-
-    void addCheck (int const);
-
-    void removeCheck (int const);
 };
 
 /* A comm engine that calls comm_select */
