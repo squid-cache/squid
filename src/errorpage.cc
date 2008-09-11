@@ -239,7 +239,7 @@ errorLoadText(const char *page_name)
         snprintf(dir,256,"%s/%s", DEFAULT_SQUID_ERROR_DIR, Config.errorDefaultLanguage);
         text = errorTryLoadText(page_name, dir);
         if(!text) {
-            debugs(1, DBG_CRITICAL, "Unable to load default language. Reset to English");
+            debugs(1, DBG_CRITICAL, "Unable to load default error language files. Reset to backups.");
         }
     }
 #endif
@@ -938,7 +938,7 @@ ErrorState::BuildContent()
      */
     if(!m) {
         m = error_text[page_id];
-        debugs(4, 1, HERE << "No existing languages found. Fall back on default language.");
+        debugs(4, 2, HERE << "No existing error page language negotiated for " << page_id << ". Using default error file.");
     }
 
     assert(m);
