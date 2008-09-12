@@ -109,8 +109,8 @@ send_announce(const ipcache_addrs * ia, void *junk)
         }
     }
 
-    S.SetPort(port);
     S = ia->in_addrs[0];
+    S.SetPort(port);
     assert(theOutIcpConnection > 0);
     x = comm_udp_sendto(theOutIcpConnection, S, sndbuf, strlen(sndbuf) + 1);
 

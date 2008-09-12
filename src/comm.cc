@@ -67,6 +67,10 @@ typedef enum {
 	IOCB_WRITE
 } iocb_type;
 
+static void commStopHalfClosedMonitor(int fd);
+static IOCB commHalfClosedReader;
+
+
 struct comm_io_callback_t {
 	iocb_type type;
 	int fd;
@@ -176,8 +180,6 @@ commio_cancel_callback(int fd, comm_io_callback_t *ccb)
 	assert(ccb->active());
 
 	ccb->xerrno = 0;
-//	delete ccb->callback;
-	ccb->callback = NULL;
 	ccb->callback = NULL;
 }
 
@@ -334,20 +336,25 @@ comm_read(int fd, char *buf, int size, IOCB *handler, void *handler_data)
 void
 comm_read(int fd, char *buf, int size, AsyncCall::Pointer &callback)
 {
-    /* Make sure we're not reading anything and we're not closing */
-    assert(isOpen(fd));
-    assert(!fd_table[fd].flags.closing_);
-    // XXX: If we already called commio_finish_callback, the new callback 
-    // we are setting here would apply to the next connection with the same FD.
-    assert(!fd_table[fd].flags.close_request); 
+    debugs(5, 5, "comm_read, queueing read for FD " << fd << "; asynCall " << callback);
 
-    debugs(5, 4, "comm_read, queueing read for FD " << fd);
+    /* Make sure we are open and not closing */
+    assert(isOpen(fd));
+    assert(!fd_table[fd].closing());
+    comm_io_callback_t *ccb = COMMIO_FD_READCB(fd);
+
+    // Make sure we are either not reading or just passively monitoring.
+    // Active/passive conflicts are OK and simply cancel passive monitoring.
+    if (ccb->active()) {
+        // if the assertion below fails, we have an active comm_read conflict
+        assert(commHasHalfClosedMonitor(fd));
+        commStopHalfClosedMonitor(fd);
+        assert(!ccb->active());
+    }
 
     /* Queue the read */
-    /* XXX ugly */
-    commio_set_callback(fd, IOCB_READ, COMMIO_FD_READCB(fd),
-        callback, (char *)buf, NULL, size);
-    commSetSelect(fd, COMM_SELECT_READ, commHandleRead, COMMIO_FD_READCB(fd), 0);
+    commio_set_callback(fd, IOCB_READ, ccb, callback, (char *)buf, NULL, size);
+    commSetSelect(fd, COMM_SELECT_READ, commHandleRead, ccb, 0);
 }
 
 /**
@@ -434,6 +441,8 @@ comm_read_cancel(int fd, IOCB *callback, void *data)
         return;
 	}
 
+    call->cancel("old comm_read_cancel");
+
     typedef CommIoCbParams Params;
     const Params &params = GetCommParams<Params>(cb->callback);
 
@@ -466,7 +475,7 @@ comm_read_cancel(int fd, AsyncCall::Pointer &callback)
     }
 
     AsyncCall::Pointer call = cb->callback;
-    assert(call != NULL); // XXX: should never fails (active() checks for callback==NULL)
+    assert(call != NULL); // XXX: should never fail (active() checks for callback==NULL)
     
     /* Ok, we can be reasonably sure we won't lose any data here! */
     assert(call == callback);
@@ -1274,6 +1283,10 @@ comm_connect_addr(int sock, const IPAddress &address)
 
     }
 
+/* Squid seems to be working fine without this code. With this code,
+ * we leak memory on many connect requests because of EINPROGRESS.
+ * If you find that this code is needed, please file a bug report. */
+#if 0
 #ifdef _SQUID_LINUX_
     /* 2007-11-27:
      * Linux Debian replaces our allocated AI pointer with garbage when 
@@ -1284,6 +1297,7 @@ comm_connect_addr(int sock, const IPAddress &address)
     if(errno != 0) {
         AI = NULL;
     }
+#endif
 #endif
 
     address.FreeAddrInfo(AI);
@@ -1500,10 +1514,6 @@ CommRead::doCallback(comm_err_t errcode, int xerrno)
 void 
 comm_close_start(int fd, void *data)
 {
-    fde *F = &fd_table[fd];
-
-    F->flags.closing_ = 1;
-
 #if USE_SSL
 
     if (F->ssl)
@@ -1530,9 +1540,6 @@ comm_close_complete(int fd, void *data)
 
     close(fd);
 
-    if (AbortChecker::Instance().isMonitoring(fd))
-        AbortChecker::Instance().stopMonitoring(fd);
-
     fdc_table[fd] = AcceptFD(fd);
 
     statCounter.syscalls.sock.closes++;
@@ -1557,25 +1564,19 @@ comm_close_complete(int fd, void *data)
 void
 _comm_close(int fd, char const *file, int line)
 {
-    fde *F = NULL;
-
-    debugs(5, 5, "comm_close: FD " << fd);
+    debugs(5, 3, "comm_close: start closing FD " << fd);
     assert(fd >= 0);
     assert(fd < Squid_MaxFD);
-    F = &fd_table[fd];
+
+    fde *F = &fd_table[fd];
     fdd_table[fd].close_file = file;
     fdd_table[fd].close_line = line;
 
-    if(F->flags.close_request)
-	return;
-
-    if (F->flags.closing_)
+    if (F->closing())
         return;
 
     if (shutting_down && (!F->flags.open || F->type == FD_FILE))
         return;
-
-    assert(F->flags.open);
 
     /* The following fails because ipc.c is doing calls to pipe() to create sockets! */
     assert(isOpen(fd));
@@ -1595,7 +1596,7 @@ _comm_close(int fd, char const *file, int line)
 
     commSetTimeout(fd, -1, NULL, NULL);
 
-    /* new-style read/write handler stuff */
+    // notify read/write handlers
     if (commio_has_callback(fd, IOCB_WRITE, COMMIO_FD_WRITECB(fd))) {
         commio_finish_callback(fd, COMMIO_FD_WRITECB(fd), COMM_ERR_CLOSING, errno);
     }
@@ -1603,7 +1604,7 @@ _comm_close(int fd, char const *file, int line)
         commio_finish_callback(fd, COMMIO_FD_READCB(fd), COMM_ERR_CLOSING, errno);
     }
 
-    /* Do callbacks for read/accept routines, if any */
+    // notify accept handlers
     fdc_table[fd].notify(-1, COMM_ERR_CLOSING, 0, ConnectionDetail());
 
     commCallCloseHandlers(fd);
@@ -1618,6 +1619,8 @@ _comm_close(int fd, char const *file, int line)
 				       CommCloseCbPtrFun(comm_close_complete, NULL));
     Params &completeParams = GetCommParams<Params>(completeCall);
     completeParams.fd = fd;
+    // must use async call to wait for all callbacks 
+    // scheduled before comm_close() to finish
     ScheduleCallHere(completeCall);
 
     PROF_stop(comm_close);
@@ -2022,20 +2025,18 @@ comm_write(int fd, const char *buf, int size, IOCB * handler, void *handler_data
 void
 comm_write(int fd, const char *buf, int size, AsyncCall::Pointer &callback, FREE * free_func)
 {
-    assert(!fd_table[fd].flags.closing_);
+    debugs(5, 5, "comm_write: FD " << fd << ": sz " << size << ": asynCall " << callback);
 
-    debugs(5, 5, "comm_write: FD " << fd << ": sz " << size << ": asynCall " << callback  << ".");
+    /* Make sure we are open, not closing, and not writing */
+    assert(isOpen(fd));
+    assert(!fd_table[fd].closing());
+    comm_io_callback_t *ccb = COMMIO_FD_WRITECB(fd);
+    assert(!ccb->active());
 
-    if (commio_has_callback(fd, IOCB_WRITE, COMMIO_FD_WRITECB(fd))) {
-        /* This means that the write has been scheduled, but has not
-         * triggered yet 
-         */
-        fatalf ("comm_write: fd %d: pending callback!\n", fd);
-    }
-
-    commio_set_callback(fd, IOCB_WRITE, COMMIO_FD_WRITECB(fd),
-        callback, (char *)buf, free_func, size);
-    commSetSelect(fd, COMM_SELECT_WRITE, commHandleWrite, COMMIO_FD_WRITECB(fd), 0);
+    /* Queue the write */
+    commio_set_callback(fd, IOCB_WRITE, ccb, callback,
+	(char *)buf, free_func, size);
+    commSetSelect(fd, COMM_SELECT_WRITE, commHandleWrite, ccb, 0);
 }
 
 
@@ -2393,130 +2394,65 @@ AcceptLimiter::kick() {
     comm_accept (temp.acceptFD, temp.theFunction, temp.theData);
 }
 
+/// Start waiting for a possibly half-closed connection to close 
+// by scheduling a read callback to a monitoring handler that 
+// will close the connection on read errors.
 void
-commMarkHalfClosed(int fd) {
-    assert (isOpen(fd));
-    AbortChecker::Instance().monitor(fd);
+commStartHalfClosedMonitor(int fd) {
+    assert(isOpen(fd));
+    assert(!commHasHalfClosedMonitor(fd));
+
+    AsyncCall::Pointer call = commCbCall(5,4, "commHalfClosedReader",
+	CommIoCbPtrFun(&commHalfClosedReader, NULL));
+    comm_read(fd, NULL, 0, call);
 }
 
-int commIsHalfClosed(int fd) {
-    assert (isOpen(fd));
+/// checks whether we are waiting for possibly half-closed connection to close
+// We are monitoring if the read handler for the fd is the monitoring handler.
+bool
+commHasHalfClosedMonitor(int fd) {
+    assert(isOpen(fd));
 
-    return AbortChecker::Instance().isMonitoring(fd);
-}
-
-void
-commCheckHalfClosed(void *data) {
-    AbortChecker::Instance().doIOLoop();
-    eventAdd("commCheckHalfClosed", commCheckHalfClosed, NULL, 1.0, false);
-}
-
-AbortChecker &AbortChecker::Instance() {return Instance_;}
-
-AbortChecker AbortChecker::Instance_;
-
-void
-AbortChecker::AbortCheckReader(int fd, char *, size_t size, comm_err_t flag, int xerrno, void *data) {
-    assert (size == 0);
-    /* sketch:
-     * if the read is ok and 0, the conn is still open.
-     * if the read is a fail, close the conn
-     */
-
-    if (flag != COMM_OK && flag != COMM_ERR_CLOSING) {
-        debugs(5, 3, "AbortChecker::AbortCheckReader: FD " << fd << " aborted");
-        comm_close(fd);
+    if (const comm_io_callback_t *cb = COMMIO_FD_READCB(fd)) {
+	AsyncCall::Pointer call = cb->callback;
+	if (call != NULL) {
+	    // check whether the callback has the right type (it should)
+	    // and uses commHalfClosedReader as the address to call back
+            typedef CommIoCbPtrFun IoDialer;
+	    if (IoDialer *d = dynamic_cast<IoDialer*>(call->getDialer()))
+	        return d->handler == &commHalfClosedReader;
+	}
     }
+    return false;
 }
 
-void
-AbortChecker::monitor(int fd) {
-    assert (!contains(fd));
-
-    add
-        (fd);
-
-    debugs(5, 3, "AbortChecker::monitor: monitoring half closed FD " << fd << " for aborts");
+/// stop waiting for possibly half-closed connection to close
+static void
+commStopHalfClosedMonitor(int const fd) {
+    comm_read_cancel(fd, &commHalfClosedReader, NULL);
 }
 
-void
-AbortChecker::stopMonitoring (int fd) {
-    assert (contains (fd));
+/// I/O handler for the possibly half-closed connection monitoring code
+static void
+commHalfClosedReader(int fd, char *, size_t size, comm_err_t flag, int, void *) {
+    // there cannot be more data coming in on half-closed connections
+    assert(size == 0); 
 
-    remove
-        (fd);
+    // nothing to do if fd is being closed
+    if (flag == COMM_ERR_CLOSING)
+        return;
 
-    debugs(5, 3, "AbortChecker::stopMonitoring: stopped monitoring half closed FD " << fd << " for aborts");
+    // if read failed, close the connection
+    if (flag != COMM_OK) {
+        debugs(5, 3, "commHalfClosedReader: closing FD " << fd);
+        comm_close(fd);
+        return;
+    }
+
+    // continue waiting for close or error
+    commStartHalfClosedMonitor(fd);
 }
 
-#include "splay.h"
-void
-AbortChecker::doIOLoop() {
-    fds->walk(RemoveCheck, this);
-    fds->walk(AddCheck, this);
-}
-
-void
-AbortChecker::AddCheck (int const &fd, void *data) {
-    AbortChecker *me = (AbortChecker *)data;
-    me->addCheck(fd);
-}
-
-void
-AbortChecker::RemoveCheck (int const &fd, void *data) {
-    AbortChecker *me = (AbortChecker *)data;
-    me->removeCheck(fd);
-}
-
-
-int
-AbortChecker::IntCompare (int const &lhs, int const &rhs) {
-    return lhs - rhs;
-}
-
-bool
-AbortChecker::isMonitoring(int fd) const {
-    return contains(fd);
-}
-
-bool
-AbortChecker::contains (int const fd) const {
-    fds = fds->splay(fd, IntCompare);
-
-    if (splayLastResult != 0)
-        return false;
-
-    return true;
-}
-
-void
-
-AbortChecker::remove
-    (int const fd) {
-
-    fds = fds->remove
-          (fd, IntCompare);
-}
-
-void
-
-AbortChecker::add
-    (int const fd) {
-    fds = fds->insert (fd, IntCompare);
-}
-
-void
-AbortChecker::addCheck (int const fd) {
-    /* assert comm_is_open (fd); */
-    comm_read(fd, NULL, 0, AbortCheckReader, NULL);
-}
-
-void
-AbortChecker::removeCheck (int const fd) {
-    /*
-      comm_read_cancel(fd, AbortCheckReader, NULL);
-    */
-}
 
 CommRead::CommRead() : fd(-1), buf(NULL), len(0), callback(NULL) {}
 

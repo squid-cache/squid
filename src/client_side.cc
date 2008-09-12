@@ -602,14 +602,14 @@ ConnStateData::freeAllContexts()
 void ConnStateData::connStateClosed(const CommCloseCbParams &io)
 {
     assert (fd == io.fd);
-    close();
+    deleteThis("ConnStateData::connStateClosed");
 }
 
+// cleans up before destructor is called
 void
-ConnStateData::close()
+ConnStateData::swanSong()
 {
-    debugs(33, 3, "ConnStateData::close: FD " << fd);
-    deleteThis("ConnStateData::close");
+    debugs(33, 2, "ConnStateData::swanSong: FD " << fd);
     fd = -1;
     flags.readMoreRequests = false;
     clientdbEstablished(peer, -1);	/* decrement */
@@ -617,9 +617,12 @@ ConnStateData::close()
     freeAllContexts();
 
     if (auth_user_request != NULL) {
-        debugs(33, 4, "ConnStateData::close: freeing auth_user_request '" << auth_user_request << "' (this is '" << this << "')");
+        debugs(33, 4, "ConnStateData::swanSong: freeing auth_user_request '" << auth_user_request << "' (this is '" << this << "')");
         auth_user_request->onConnectionClose(this);
     }
+
+    BodyProducer::swanSong();
+    flags.swanSang = true;
 }
 
 bool
@@ -636,7 +639,10 @@ ConnStateData::~ConnStateData()
     debugs(33, 3, "ConnStateData::~ConnStateData: FD " << fd);
 
     if (isOpen())
-        close();
+        debugs(33, 1, "BUG: ConnStateData did not close FD " << fd);
+
+    if (!flags.swanSang)
+        debugs(33, 1, "BUG: ConnStateData was not destroyed properly; FD " << fd);
 
     AUTHUSERREQUESTUNLOCK(auth_user_request, "~conn");
 
@@ -1587,6 +1593,8 @@ ClientSocketContext::doClose()
     comm_close(fd());
 }
 
+/** Called to initiate (and possibly complete) closing of the context.
+ * The underlying socket may be already closed */
 void
 ClientSocketContext::initiateClose(const char *reason)
 {
@@ -1660,10 +1668,11 @@ ClientSocketContext::writeComplete(int fd, char *bufnotused, size_t size, comm_e
         return;
 
     case STREAM_UNPLANNED_COMPLETE:
-        /* fallthrough */
+        initiateClose("STREAM_UNPLANNED_COMPLETE");
+        return;
 
     case STREAM_FAILED:
-        initiateClose("STREAM_UNPLANNED_COMPLETE|STREAM_FAILED");
+        initiateClose("STREAM_FAILED");
         return;
 
     default:
@@ -2551,6 +2560,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
          * The above check with connFinishedWithConn() only
          * succeeds _if_ the buffer is empty which it won't
          * be if we have an incomplete request.
+         * XXX: This duplicates ClientSocketContext::keepaliveNextRequest
          */
         if (getConcurrentRequestCount() == 0 && commIsHalfClosed(fd)) {
             debugs(33, 5, "clientReadRequest: FD " << fd << ": half-closed connection, no completed request parsed, connection closing.");
