@@ -482,10 +482,19 @@ clientFollowXForwardedForCheck(int answer, void *data)
     request->x_forwarded_for_iterator.clean();
     request->flags.done_follow_x_forwarded_for = 1;
 
-    if (answer == ACCESS_DENIED)
-        calloutContext->clientAccessCheckDone(answer);
-    else
-        calloutContext->clientAccessCheck();
+    /* If follow XFF is denied, we reset the indirect_client_addr
+       to the direct client. Thats the one we are configured to check for */
+    if (answer == ACCESS_DENIED) {
+        request->indirect_client_addr = request->client_addr;
+    }
+    /* on a failure, leave it as undefined state ?? */
+    else if (answer != ACCESS_ALLOWED) {
+        debugs(28, DBG_CRITICAL, "Follow X-Forwarded-For encountered an error. Ignoring address: " << request->indirect_client_addr );
+        request->indirect_client_addr = request->client_addr;
+    }
+
+    /* process actual access ACL as normal. */
+    calloutContext->clientAccessCheck();
 }
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
@@ -504,9 +513,8 @@ ClientRequestContext::clientAccessCheck()
         return;
     }
 #endif /* FOLLOW_X_FORWARDED_FOR */
-    
-    acl_checklist =
-        clientAclChecklistCreate(Config.accessList.http, http);
+
+    acl_checklist = clientAclChecklistCreate(Config.accessList.http, http);
     acl_checklist->nonBlockingCheck(clientAccessCheckDoneWrapper, this);
 }
 
