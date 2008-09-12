@@ -817,6 +817,9 @@ SQUIDCEXTERN char *strtokFile(void);
 SQUIDCEXTERN void parse_wccp2_method(int *v);
 SQUIDCEXTERN void free_wccp2_method(int *v);
 SQUIDCEXTERN void dump_wccp2_method(StoreEntry * e, const char *label, int v);
+SQUIDCEXTERN void parse_wccp2_amethod(int *v);
+SQUIDCEXTERN void free_wccp2_amethod(int *v);
+SQUIDCEXTERN void dump_wccp2_amethod(StoreEntry * e, const char *label, int v);
 
 SQUIDCEXTERN void parse_wccp2_service(void *v);
 SQUIDCEXTERN void free_wccp2_service(void *v);
