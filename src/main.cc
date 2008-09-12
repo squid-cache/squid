@@ -111,12 +111,14 @@ static volatile int do_shutdown = 0;
 static volatile int shutdown_status = 0;
 
 static void mainRotate(void);
-static void mainReconfigure(void);
+static void mainReconfigureStart(void);
+static void mainReconfigureFinish(void*);
 static void mainInitialize(void);
 static void usage(void);
 static void mainParseOptions(int argc, char *argv[]);
 static void sendSignal(void);
 static void serverConnectionsOpen(void);
+static void serverConnectionsClose(void);
 static void watch_child(char **);
 static void setEffectiveUser(void);
 #if MEM_GEN_TRACE
@@ -172,7 +174,7 @@ SignalEngine::checkEvents(int timeout)
     PROF_start(SignalEngine_checkEvents);
 
     if (do_reconfigure) {
-        mainReconfigure();
+        mainReconfigureStart();
         do_reconfigure = 0;
     } else if (do_rotate) {
         mainRotate();
@@ -629,7 +631,7 @@ serverConnectionsOpen(void)
     peerSourceHashInit();
 }
 
-void
+static void
 serverConnectionsClose(void)
 {
     assert(shutting_down || reconfiguring);
@@ -658,11 +660,12 @@ serverConnectionsClose(void)
 }
 
 static void
-mainReconfigure(void)
+mainReconfigureStart(void)
 {
     debugs(1, 1, "Reconfiguring Squid Cache (version " << version_string << ")...");
     reconfiguring = 1;
-    /* Already called serverConnectionsClose and ipcacheShutdownServers() */
+
+    // Initiate asynchronous closing sequence
     serverConnectionsClose();
     icpConnectionClose();
 #if USE_HTCP
@@ -689,6 +692,15 @@ mainReconfigure(void)
     accessLogClose();
     useragentLogClose();
     refererCloseLog();
+
+    eventAdd("mainReconfigureFinish", &mainReconfigureFinish, NULL, 0, 1,
+        false);
+}
+
+static void
+mainReconfigureFinish(void *) {
+    debugs(1, 3, "finishing reconfiguring");
+
     errorClean();
     enter_suid();		/* root to read config file */
     parseConfigFile(ConfigFile);
@@ -1065,8 +1077,6 @@ mainInitialize(void)
 #endif
 
         eventAdd("memPoolCleanIdlePools", Mem::CleanIdlePools, NULL, 15.0, 1);
-
-        eventAdd("commCheckHalfClosed", commCheckHalfClosed, NULL, 1.0, false);
     }
 
     configured_once = 1;
@@ -1597,6 +1607,12 @@ watch_child(char *argv[])
 static void
 SquidShutdown()
 {
+    /* XXX: This function is called after the main loop has quit, which
+     * means that no AsyncCalls would be called, including close handlers.
+     * TODO: We need to close/shut/free everything that needs calls before
+     * exiting the loop.
+     */ 
+
 #if USE_WIN32_SERVICE
     WIN32_svcstatusupdate(SERVICE_STOP_PENDING, 10000);
 #endif

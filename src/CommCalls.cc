@@ -1,4 +1,5 @@
 #include "squid.h"
+#include "fde.h"
 #include "CommCalls.h"
 
 /* CommCommonCbParams */
@@ -61,6 +62,19 @@ CommIoCbParams::CommIoCbParams(void *aData): CommCommonCbParams(aData),
     buf(NULL), size(0)
 {
 }
+
+void
+CommIoCbParams::syncWithComm()
+{
+    // change parameters if the call was scheduled before comm_close but
+    // is being fired after comm_close
+    if (fd >= 0 && fd_table[fd].closing() && flag != COMM_ERR_CLOSING) {
+	debugs(5, 3, HERE << "converting late call to COMM_ERR_CLOSING: FD " << fd);
+	flag = COMM_ERR_CLOSING;
+	size = 0;
+    }
+}		
+
 
 void
 CommIoCbParams::print(std::ostream &os) const
