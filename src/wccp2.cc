@@ -1994,7 +1994,7 @@ wccp2AssignBuckets(void *voidnotused)
 
 /**
  * Parse wccp2_return_method and wccp2_forwarding_method options
- * they can be '1' aka 'gre_hash' or  '2' aka 'l2_mask'
+ * they can be '1' aka 'gre' or  '2' aka 'l2'
  * repesenting the integer numeric of the same.
  */
 void
@@ -2046,7 +2046,7 @@ free_wccp2_method(int *v)
  * repesenting the integer numeric of the same.
  */
 void
-parse_wccp2_method(int *method)
+parse_wccp2_amethod(int *method)
 {
     char *t;
 

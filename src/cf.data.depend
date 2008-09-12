@@ -48,6 +48,7 @@ tristate
 uri_whitespace
 ushort
 wccp2_method
+wccp2_amethod
 wccp2_service
 wccp2_service_info
 wordlist
