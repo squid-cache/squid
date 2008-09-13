@@ -979,7 +979,7 @@ ErrorState::BuildContent()
         if(!Config.errorDirectory)
             err_language = Config.errorDefaultLanguage;
 #endif
-        debugs(4, 2, HERE << "No existing error page language negotiated for " << page_id << ". Using default error file.");
+        debugs(4, 2, HERE << "No existing error page language negotiated for " << errorPageName(page_id) << ". Using default error file.");
     }
 
     assert(m);
