@@ -64,6 +64,7 @@ public:
 
     peer *_peer;		/* peer request made to */
     int eof;			/* reached end-of-object? */
+    int lastChunk;		/* reached last chunk of a chunk-encoded reply */
     HttpRequest *orig_request;
     int fd;
     http_state_flags flags;
