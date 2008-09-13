@@ -198,7 +198,7 @@ IPIntercept::IPFWInterception(int fd, const IPAddress &me, IPAddress &dst, int s
 
     /** \par
      * Try lookup for IPFW interception. */
-    if( getsockname(fd, lookup->ai_addr, &lookup->ai_addrlen) >= 0 ) {
+    if( getsockname(fd, lookup->ai_addr, &lookup->ai_addrlen) != 0 ) {
         if( !silent ) {
             debugs(89, DBG_IMPORTANT, HERE << " IPFW getsockname(...) failed: " << xstrerror());
             last_reported = squid_curtime;
