@@ -340,14 +340,26 @@ IPIntercept::NatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAdd
     /* Netfilter and IPFW share almost identical lookup methods for their NAT tables.
      * This allows us to perform a nice clean failover sequence for them.
      */
-    int silent = (squid_curtime - last_reported > 60 ? 0 : 1);
 
     dst = me;
 
     if( !me.IsIPv4()   ) return -1;
     if( !peer.IsIPv4() ) return -1;
 
+#if 0
+    // Crop interception errors down to one per minute.
+    int silent = (squid_curtime - last_reported > 60 ? 0 : 1);
+#else
+    // Show all interception errors.
+    int silent = 0;
+#endif
+
     if(intercept_active) {
+
+#if TO_SILENCE_ALL_NAT_IF_TPROXY_IS_RUNNING
+        silent |= fd_table[fd].flags.transparent;
+#endif
+
         if( NetfilterInterception(fd, me, dst, silent) == 0) return 0;
         if( IPFWInterception(fd, me, dst, silent) == 0) return 0;
     }
