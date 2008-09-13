@@ -3705,6 +3705,8 @@ FtpStateData::appendSuccessHeader()
 void
 FtpStateData::haveParsedReplyHeaders()
 {
+    ServerStateData::haveParsedReplyHeaders();
+
     StoreEntry *e = entry;
 
     e->timestampsSet();
@@ -3725,7 +3727,7 @@ HttpReply *
 FtpStateData::ftpAuthRequired(HttpRequest * request, const char *realm)
 {
     ErrorState *err = errorCon(ERR_CACHE_ACCESS_DENIED, HTTP_UNAUTHORIZED, request);
-    HttpReply *newrep = errorBuildReply(err);
+    HttpReply *newrep = err->BuildHttpReply();
     errorStateFree(err);
     /* add Authenticate header */
     newrep->header.putAuth("Basic", realm);

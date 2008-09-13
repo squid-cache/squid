@@ -43,7 +43,7 @@
 #include "squid.h"
 #include "comm.h"
 #include "CommCalls.h"
-#include "List.h"
+#include "CbDataList.h"
 
 class CommRead
 {
@@ -92,10 +92,10 @@ public:
 
 private:
     static PF CloseHandler;
-    static DeferredRead popHead(ListContainer<DeferredRead> &deferredReads);
+    static DeferredRead popHead(CbDataListContainer<DeferredRead> &deferredReads);
     void kickARead(DeferredRead const &);
     void flushReads();
-    ListContainer<DeferredRead> deferredReads;
+    CbDataListContainer<DeferredRead> deferredReads;
 };
 
 

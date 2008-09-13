@@ -130,7 +130,7 @@ mail_warranty(void)
 
     char *filename;
 
-    if ((filename = tempnam(NULL, appname)) == NULL)
+    if ((filename = tempnam(NULL, APP_SHORTNAME)) == NULL)
         return;
 
     if ((fp = fopen(filename, "w")) == NULL)
@@ -141,7 +141,7 @@ mail_warranty(void)
     if (Config.EmailFrom)
         fprintf(fp, "From: %s\n", Config.EmailFrom);
     else
-        fprintf(fp, "From: %s@%s\n", appname, uniqueHostname());
+        fprintf(fp, "From: %s@%s\n", APP_SHORTNAME, uniqueHostname());
 
     fprintf(fp, "To: %s\n", Config.adminEmail);
 
@@ -151,7 +151,7 @@ mail_warranty(void)
 
     snprintf(command, 256, "%s %s < %s", Config.EmailProgram, Config.adminEmail, filename);
 
-    system(command);		/* XXX should avoid system(3) */
+    if(system(command)) {}		/* XXX should avoid system(3) */
 
     unlink(filename);
 }
@@ -177,7 +177,7 @@ dumpMallocStats(void)
 
     mp = mallinfo();
 
-    fprintf(debug_log, "Memory usage for %s via mallinfo():\n", appname);
+    fprintf(debug_log, "Memory usage for "APP_SHORTNAME" via mallinfo():\n");
 
     fprintf(debug_log, "\ttotal space in arena:  %6ld KB\n",
             (long)mp.arena >> 10);
@@ -461,6 +461,9 @@ fatal_common(const char *message)
 void
 fatal(const char *message)
 {
+    /* suppress secondary errors from the dying */
+    shutting_down = 1;
+
     releaseServerSockets();
     /* check for store_dirs_rebuilding because fatal() is often
      * used in early initialization phases, long before we ever
@@ -650,8 +653,7 @@ getMyHostname(void)
             if(xgetaddrinfo(host, NULL, NULL, &AI) == 0) {
                 /* DNS lookup successful */
                 /* use the official name from DNS lookup */
-                debugs(50, 6, "getMyHostname: '" << host << "' resolved into '" << AI->ai_canonname << "'");
-                xstrncpy(host, AI->ai_canonname, SQUIDHOSTNAMELEN);
+                debugs(50, 6, "getMyHostname: '" << host << "' has rDNS.");
                 present = 1;
 
                 /* AYJ: do we want to flag AI_ALL and cache the result anywhere. ie as our local host IPs? */
@@ -664,7 +666,7 @@ getMyHostname(void)
             }
 
             if(AI) xfreeaddrinfo(AI);
-            debugs(50, 1, "WARNING: getaddrinfo('" << host << "') failed: " << xstrerror());
+            debugs(50, 1, "WARNING: '" << host << "' rDNS test failed: " << xstrerror());
         }
     }
 
@@ -680,10 +682,11 @@ getMyHostname(void)
 const char *
 uniqueHostname(void)
 {
+    debugs(21, 3, HERE << " Config: '" << Config.uniqueHostname << "'");
     return Config.uniqueHostname ? Config.uniqueHostname : getMyHostname();
 }
 
-/* leave a privilegied section. (Give up any privilegies)
+/** leave a priviliged section. (Give up any privilegies)
  * Routines that need privilegies can rap themselves in enter_suid()
  * and leave_suid()
  * To give upp all posibilites to gain privilegies use no_suid()
@@ -847,7 +850,7 @@ readPidFile(void)
     int i;
 
     if (f == NULL || !strcmp(Config.pidFilename, "none")) {
-        fprintf(stderr, "%s: ERROR: No pid file name defined\n", appname);
+        fprintf(stderr, APP_SHORTNAME ": ERROR: No pid file name defined\n");
         exit(1);
     }
 
@@ -869,7 +872,7 @@ readPidFile(void)
         fclose(pid_fp);
     } else {
         if (errno != ENOENT) {
-            fprintf(stderr, "%s: ERROR: Could not read pid file\n", appname);
+            fprintf(stderr, APP_SHORTNAME ": ERROR: Could not read pid file\n");
             fprintf(stderr, "\t%s: %s\n", f, xstrerror());
             exit(1);
         }
@@ -1183,6 +1186,17 @@ getMyPort(void)
     return 0;			/* NOT REACHED */
 }
 
+/*
+ * Set the umask to at least the given mask. This is in addition
+ * to the umask set at startup
+ */
+void
+setUmask(mode_t mask)
+{
+    // No way to get the current umask value without setting it.
+    static const mode_t orig_umask = umask(mask); // once, to get
+    umask(mask | orig_umask); // always, to set
+}
 
 /*
  * Inverse of strwordtok. Quotes a word if needed
@@ -1244,18 +1258,21 @@ static void
 restoreCapabilities(int keep)
 {
 #if defined(_SQUID_LINUX_) && HAVE_SYS_CAPABILITY_H
-    cap_user_header_t head = (cap_user_header_t) xcalloc(1, sizeof(cap_user_header_t));
-    cap_user_data_t cap = (cap_user_data_t) xcalloc(1, sizeof(cap_user_data_t));
+#ifndef _LINUX_CAPABILITY_VERSION_1
+#define _LINUX_CAPABILITY_VERSION_1 _LINUX_CAPABILITY_VERSION
+#endif
+    cap_user_header_t head = (cap_user_header_t) xcalloc(1, sizeof(*head));
+    cap_user_data_t cap = (cap_user_data_t) xcalloc(1, sizeof(*cap));
 
-    head->version = _LINUX_CAPABILITY_VERSION;
+    head->version = _LINUX_CAPABILITY_VERSION_1;
 
     if (capget(head, cap) != 0) {
         debugs(50, 1, "Can't get current capabilities");
         goto nocap;
     }
 
-    if (head->version != _LINUX_CAPABILITY_VERSION) {
-        debugs(50, 1, "Invalid capability version " << head->version << " (expected " << _LINUX_CAPABILITY_VERSION << ")");
+    if (head->version != _LINUX_CAPABILITY_VERSION_1) {
+        debugs(50, 1, "Invalid capability version " << head->version << " (expected " << _LINUX_CAPABILITY_VERSION_1 << ")");
         goto nocap;
     }
 

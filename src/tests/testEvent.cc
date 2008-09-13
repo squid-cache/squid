@@ -1,6 +1,4 @@
-#if 0
-#include "squid.h"
-#endif
+#include "config.h"
 
 #include <cppunit/TestAssert.h>
 
@@ -16,6 +14,10 @@ CPPUNIT_TEST_SUITE_REGISTRATION( testEvent );
 /* stub functions to link successfully */
 void
 shut_down(int)
+{}
+
+void
+reconfigure(int)
 {}
 
 /* end stubs */

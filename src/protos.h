@@ -43,7 +43,6 @@
 /* some parameters stil need this */
 #include "wordlist.h"
 
-class CacheManager;
 class HttpRequestMethod;
 
 
@@ -83,7 +82,6 @@ SQUIDCEXTERN void parse_IPAddress_list_token(IPAddress_list **, char *);
 /* client_side.c - FD related client side routines */
 
 SQUIDCEXTERN void clientdbInit(void);
-extern void clientdbRegisterWithCacheManager(CacheManager & manager);
 
 SQUIDCEXTERN void clientdbUpdate(const IPAddress &, log_type, protocol_t, size_t);
 
@@ -135,13 +133,11 @@ SQUIDCEXTERN void disk_init(void);
 
 SQUIDCEXTERN void dnsShutdown(void);
 SQUIDCEXTERN void dnsInit(void);
-extern void dnsRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN void dnsSubmit(const char *lookup, HLPCB * callback, void *data);
 
 /* dns_internal.c */
 SQUIDCEXTERN void idnsInit(void);
 SQUIDCEXTERN void idnsShutdown(void);
-extern void idnsRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN void idnsALookup(const char *, IDNSCB *, void *);
 
 SQUIDCEXTERN void idnsPTRLookup(const IPAddress &, IDNSCB *, void *);
@@ -167,7 +163,6 @@ SQUIDCEXTERN void fqdncache_nbgethostbyaddr(IPAddress &, FQDNH *, void *);
 
 SQUIDCEXTERN const char *fqdncache_gethostbyaddr(IPAddress &, int flags);
 SQUIDCEXTERN void fqdncache_init(void);
-extern void fqdncacheRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN void fqdnStats(StoreEntry *);
 SQUIDCEXTERN void fqdncacheReleaseInvalid(const char *);
 
@@ -342,7 +337,6 @@ SQUIDCEXTERN const ipcache_addrs *ipcache_gethostbyname(const char *, int flags)
 SQUIDCEXTERN void ipcacheInvalidate(const char *);
 SQUIDCEXTERN void ipcacheInvalidateNegative(const char *);
 SQUIDCEXTERN void ipcache_init(void);
-extern void ipcacheRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN void stat_ipcache_get(StoreEntry *);
 SQUIDCEXTERN void ipcacheCycleAddr(const char *name, ipcache_addrs *);
 
@@ -391,13 +385,13 @@ SQUIDCEXTERN void neighborAddAcl(const char *, const char *);
 SQUIDCEXTERN void neighborsUdpAck(const cache_key *, icp_common_t *, const IPAddress &);
 SQUIDCEXTERN void neighborAdd(const char *, const char *, int, int, int, int, int);
 SQUIDCEXTERN void neighbors_init(void);
-extern void neighborsRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN peer *peerFindByName(const char *);
 SQUIDCEXTERN peer *peerFindByNameAndPort(const char *, unsigned short);
 SQUIDCEXTERN peer *getDefaultParent(HttpRequest * request);
 SQUIDCEXTERN peer *getRoundRobinParent(HttpRequest * request);
 SQUIDCEXTERN peer *getWeightedRoundRobinParent(HttpRequest * request);
-SQUIDCEXTERN void peerClearRR(void *);
+SQUIDCEXTERN void peerClearRRStart(void);
+SQUIDCEXTERN void peerClearRR(void);
 SQUIDCEXTERN peer *getAnyParent(HttpRequest * request);
 SQUIDCEXTERN lookup_t peerDigestLookup(peer * p, HttpRequest * request);
 SQUIDCEXTERN peer *neighborsDigestSelect(HttpRequest * request);
@@ -415,7 +409,6 @@ SQUIDCEXTERN int peerHTTPOkay(const peer *, HttpRequest *);
 SQUIDCEXTERN peer *whichPeer(const IPAddress &from);
 
 SQUIDCEXTERN void netdbInit(void);
-extern void netdbRegisterWitHCacheManager(CacheManager & manager);
 
 SQUIDCEXTERN void netdbHandlePingReply(const IPAddress &from, int hops, int rtt);
 SQUIDCEXTERN void netdbPingSite(const char *hostname);
@@ -453,7 +446,6 @@ unsigned long getOutgoingTOS(HttpRequest * request);
 SQUIDCEXTERN void urnStart(HttpRequest *, StoreEntry *);
 
 SQUIDCEXTERN void redirectInit(void);
-extern void redirectRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN void redirectShutdown(void);
 
 extern void refreshAddToList(const char *, int, time_t, int, time_t);
@@ -464,10 +456,8 @@ extern int refreshCheckHTCP(const StoreEntry *, HttpRequest *);
 extern int refreshCheckDigest(const StoreEntry *, time_t delta);
 extern time_t getMaxAge(const char *url);
 extern void refreshInit(void);
-extern void refreshRegisterWithCacheManager(CacheManager & manager);
 extern const refresh_t *refreshLimits(const char *url);
 
-extern void serverConnectionsClose(void);
 extern void shut_down(int);
 extern void rotate_logs(int);
 extern void reconfigure(int);
@@ -476,16 +466,7 @@ extern void reconfigure(int);
 extern void start_announce(void *unused);
 extern void waisStart(FwdState *);
 
-/* ident.c */
-#if USE_IDENT
-
-SQUIDCEXTERN void identStart(IPAddress &me, IPAddress &my_peer,
-                             IDCB * callback, void *cbdata);
-SQUIDCEXTERN void identInit(void);
-#endif
-
 SQUIDCEXTERN void statInit(void);
-extern void statRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN void statFreeMemory(void);
 SQUIDCEXTERN double median_svc_get(int, int);
 SQUIDCEXTERN void pconnHistCount(int, int);
@@ -546,7 +527,6 @@ SQUIDCEXTERN void storeLog(int tag, const StoreEntry * e);
 SQUIDCEXTERN void storeLogRotate(void);
 SQUIDCEXTERN void storeLogClose(void);
 SQUIDCEXTERN void storeLogOpen(void);
-SQUIDCEXTERN void storeLogRegisterWithCacheManager(CacheManager &);
 
 
 /*
@@ -571,7 +551,6 @@ SQUIDCEXTERN HASHCMP storeKeyHashCmp;
  * store_digest.c
  */
 SQUIDCEXTERN void storeDigestInit(void);
-extern void storeDigestRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN void storeDigestNoteStoreReady(void);
 SQUIDCEXTERN void storeDigestScheduleRebuild(void);
 SQUIDCEXTERN void storeDigestDel(const StoreEntry * entry);
@@ -596,7 +575,8 @@ SQUIDCEXTERN void storeSwapInStart(store_client *);
  */
 SQUIDCEXTERN store_client *storeClientListAdd(StoreEntry * e, void *data);
 SQUIDCEXTERN int storeClientCopyPending(store_client *, StoreEntry * e, void *data);
-SQUIDCEXTERN int storeUnregister(store_client * sc, StoreEntry * e, void *data);
+SQUIDCEXTERN int storeUnregister(store_client * sc, StoreEntry * e, void *data)
+;
 SQUIDCEXTERN int storePendingNClients(const StoreEntry * e);
 SQUIDCEXTERN int storeClientIsThisAClient(store_client * sc, void *someClient);
 
@@ -657,6 +637,8 @@ SQUIDCEXTERN protocol_t urlParseProtocol(const char *, const char *e = NULL);
 SQUIDCEXTERN void urlInitialize(void);
 SQUIDCEXTERN HttpRequest *urlParse(const HttpRequestMethod&, char *, HttpRequest *request = NULL);
 SQUIDCEXTERN const char *urlCanonical(HttpRequest *);
+SQUIDCEXTERN bool urlIsRelative(const char *);
+SQUIDCEXTERN char *urlMakeAbsolute(const HttpRequest *, const char *);
 SQUIDCEXTERN char *urlRInternal(const char *host, u_short port, const char *dir, const char *name);
 SQUIDCEXTERN char *urlInternal(const char *dir, const char *name);
 SQUIDCEXTERN int matchDomainName(const char *host, const char *domain);
@@ -694,6 +676,7 @@ SQUIDCEXTERN int xrename(const char *from, const char *to);
 SQUIDCEXTERN int isPowTen(int);
 SQUIDCEXTERN void parseEtcHosts(void);
 SQUIDCEXTERN int getMyPort(void);
+SQUIDCEXTERN void setUmask(mode_t mask);
 
 SQUIDCEXTERN char *strwordtok(char *buf, char **t);
 SQUIDCEXTERN void strwordquote(MemBuf * mb, const char *str);
@@ -735,12 +718,14 @@ SQUIDCEXTERN char *internalRemoteUri(const char *, u_short, const char *, const 
 SQUIDCEXTERN const char *internalHostname(void);
 SQUIDCEXTERN int internalHostnameIs(const char *);
 
-#if USE_CARP
 SQUIDCEXTERN void carpInit(void);
-extern void carpRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN peer *carpSelectParent(HttpRequest *);
-#endif
 
+SQUIDCEXTERN void peerUserHashInit(void);
+SQUIDCEXTERN peer * peerUserHashSelectParent(HttpRequest * request);
+
+SQUIDCEXTERN void peerSourceHashInit(void);
+SQUIDCEXTERN peer * peerSourceHashSelectParent(HttpRequest * request);
 
 #if USE_LEAKFINDER
 SQUIDCEXTERN void leakInit(void);

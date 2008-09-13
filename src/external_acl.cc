@@ -677,7 +677,7 @@ aclMatchExternal(external_acl_data *acl, ACLChecklist * ch)
         key = makeExternalAclKey(ch, acl);
 
         if (acl->def->require_auth)
-            ch->auth_user_request = NULL;
+            AUTHUSERREQUESTUNLOCK(ch->auth_user_request, "ACLChecklist via aclMatchExternal");
 
         if (!key) {
             /* Not sufficient data to process */
@@ -1293,6 +1293,15 @@ externalAclStats(StoreEntry * sentry)
     }
 }
 
+static void
+externalAclRegisterWithCacheManager(void)
+{
+    CacheManager::GetInstance()->
+        registerAction("external_acl",
+                       "External ACL stats",
+                       externalAclStats, 0, 1);
+}
+
 void
 externalAclInit(void)
 {
@@ -1323,14 +1332,8 @@ externalAclInit(void)
         firstTimeInit = 0;
         CBDATA_INIT_TYPE_FREECB(externalAclState, free_externalAclState);
     }
-}
 
-void
-externalAclRegisterWithCacheManager(CacheManager & manager)
-{
-    manager.registerAction("external_acl",
-                           "External ACL stats",
-                           externalAclStats, 0, 1);
+    externalAclRegisterWithCacheManager();
 }
 
 void

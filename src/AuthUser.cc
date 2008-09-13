@@ -1,4 +1,3 @@
-
 /*
  * $Id: AuthUser.cc,v 1.10 2007/12/14 23:11:45 amosjeffries Exp $
  *

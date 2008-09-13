@@ -884,7 +884,15 @@ netdbExchangeDone(void *data)
     cbdataFree(ex);
 }
 
+static void
+netdbRegisterWithCacheManager(void)
+{
+    CacheManager::GetInstance()->
+        registerAction("netdb", "Network Measurement Database", netdbDump, 0, 1);
+}
+
 #endif /* USE_ICMP */
+
 
 /* PUBLIC FUNCTIONS */
 
@@ -893,6 +901,8 @@ netdbInit(void)
 {
 #if USE_ICMP
     int n;
+
+    netdbRegisterWithCacheManager();
 
     if (addr_table)
         return;
@@ -908,17 +918,6 @@ netdbInit(void)
     eventAddIsh("netdbSaveState", netdbSaveState, NULL, 3600.0, 1);
 
     netdbReloadState();
-
-#endif
-}
-
-void
-netdbRegisterWitHCacheManager(CacheManager & manager)
-{
-#if USE_ICMP
-    manager.registerAction("netdb",
-                           "Network Measurement Database",
-                           netdbDump, 0, 1);
 
 #endif
 }

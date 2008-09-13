@@ -1,31 +1,31 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
-<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
+<TITLE>GREŠKA: Tražena adresa (URL) ne može da se dovuce</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
-<H1>ERROR</H1>
-<H2>The requested URL could not be retrieved</H2>
+<H1>GREŠKA</H1>
+<H2>Tražena adresa (URL) ne može da se dovuce</H2>
 <HR noshade size="1px">
 <P>
-While trying to retrieve the URL:
+Tokom pokušaja da se dovuce strana sa sledecom adresom (URL):
 <A HREF="%U">%U</A>
 <P>
-The following error was encountered:
+Dogodila se sledeca greška:
 <UL>
 <LI>
 <STRONG>
-Failed to establish a secure connection to %I
+Nije uspelo uspostavljanje sigune konekcije sa %I
 </STRONG>
 </UL>
 
 <P>
-The system returned:
+Sistem je vratio:
 <PRE><I>    %E</I></PRE>
 
 <P>
-This proxy and the remote host failed to negotiate a mutually acceptable
-security settings for handling your request. It is possible that the remote
-host does not support secure connections, or the proxy is not satisfied with
-the host security credentials.
+Ovaj proksi i udaljeni server nisu uspeli da se dogovore oko sigunosnih
+podešavanja za izvršavanje vašeg zahteva. Moguce je da je udaljeni server
+ne podržava sigune konekcije, ili da proksi nije zadovoljan sa pravilima
+sigunosti udaljenog servera.
 
-<P>Your cache administrator is <A HREF="mailto:%w%W">%w</A>. 
+<P>Vaš keš administrator je <A HREF="mailto:%w">%w</A>. 

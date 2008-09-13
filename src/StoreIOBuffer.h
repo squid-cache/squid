@@ -68,8 +68,8 @@ public:
 
     void dump() const
     {
-        fwrite(data, length, 1, stderr);
-        fwrite("\n", 1, 1, stderr);
+        if(fwrite(data, length, 1, stderr)) {}
+        if(fwrite("\n", 1, 1, stderr)) {}
     }
 
     struct

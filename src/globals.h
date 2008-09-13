@@ -64,14 +64,14 @@ extern "C"
     extern char config_input_line[BUFSIZ];
     extern const char *DefaultConfigFile;	/* DEFAULT_CONFIG_FILE */
     extern const char *cfg_filename;	/* NULL */
-    extern const char *const appname;	/* "squid" */
+//MOVED:version.h:APP_SHORTNAME    extern const char *const appname;	/* "squid" */
     extern const char *const dash_str;	/* "-" */
     extern const char *const null_string;	/* "" */
     extern const char *const version_string;	/* VERSION */
-    extern const char *const full_appname_string;	/* PACKAGE "/" VERSION */
+//MOVED:versions.h:APP_FULLNAME    extern const char *const full_appname_string;	/* PACKAGE "/" VERSION */
     extern const char *const appname_string;	/* PACKAGE */
-    extern char * visible_appname_string;
     extern const char *const w_space;	/* " \t\n\r" */
+    extern char const * visible_appname_string; /* NULL */
     extern const char *fdTypeStr[];
     extern const char *hier_strings[];
     extern const char *memStatusStr[];
@@ -95,9 +95,8 @@ extern "C"
     extern int neighbors_do_private_keys;	/* 1 */
     extern int opt_catch_signals;	/* 1 */
     extern int opt_debug_stderr;	/* -1 */
-    extern int opt_dns_tests;	/* 1 */
     extern int opt_foreground_rebuild;	/* 0 */
-    extern int opt_forwarded_for;	/* 1 */
+    extern char *opt_forwarded_for;	/* NULL */
     extern int opt_reload_hit_only;	/* 0 */
 #if HAVE_SYSLOG
 

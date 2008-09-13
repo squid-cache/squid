@@ -12,6 +12,7 @@ AM_CXXFLAGS = @SQUID_CXXFLAGS@
 INCLUDES        = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/src
 
 EXTRA_PROGRAMS = mem_node_test membanger splay tcp-banger2 rfc1738
+EXTRA_DIST = testheaders.sh
 
 ESI_ALL_TESTS = \
 	ESIExpressions

@@ -105,8 +105,14 @@ DelayId::DelayClient(ClientHttpRequest * http)
         return DelayId();
     }
 
-    for (pool = 0; pool < DelayPools::pools(); pool++) {
+    for (pool = 0; pool < DelayPools::pools(); pool++)
+    {
         ACLChecklist ch;
+#if FOLLOW_X_FORWARDED_FOR
+    if (Config.onoff.delay_pool_uses_indirect_client)
+        ch.src_addr = r->indirect_client_addr;
+    else
+#endif /* FOLLOW_X_FORWARDED_FOR */        
         ch.src_addr = r->client_addr;
         ch.my_addr = r->my_addr;
 

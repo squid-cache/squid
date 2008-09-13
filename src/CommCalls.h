@@ -41,6 +41,9 @@ public:
     CommCommonCbParams(const CommCommonCbParams &params);
     ~CommCommonCbParams();
 
+    /// last chance to adjust based on the current Comm state
+    void syncWithComm() {} // not virtual because fire() knows dialer type
+
     void print(std::ostream &os) const;
 
 public:
@@ -78,6 +81,7 @@ public:
     CommIoCbParams(void *aData);
 
     void print(std::ostream &os) const;
+    void syncWithComm();
 
 public:
     char *buf;
@@ -137,7 +141,7 @@ public:
     Method method;
 
 protected:
-    virtual void doDial() { (object->*method)(this->params); }
+    virtual void doDial() { this->params.syncWithComm(); (object->*method)(this->params); }
 };
 
 
@@ -285,6 +289,7 @@ template <class Dialer>
 void
 CommCbFunPtrCallT<Dialer>::fire()
 {
+    dialer.params.syncWithComm();
     dialer.dial();
 }
 

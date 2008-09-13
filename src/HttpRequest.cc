@@ -95,6 +95,9 @@ HttpRequest::init()
     extacl_passwd = null_string;
     extacl_log = null_string;
     pstate = psReadyToParseStartLine;
+#if FOLLOW_X_FORWARDED_FOR
+    indirect_client_addr.SetEmpty();
+#endif /* FOLLOW_X_FORWARDED_FOR */
 }
 
 void

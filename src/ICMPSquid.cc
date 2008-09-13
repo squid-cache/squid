@@ -121,7 +121,7 @@ ICMPSquid::SendEcho(IPAddress &to, int opcode, const char *payload, int len)
             return;
         }
         /** All other send errors are ignored. */
-    } else if (x != len) {
+    } else if (x != slen) {
         debugs(37, 1, HERE << "Wrote " << x << " of " << slen << " bytes");
     }
 }

@@ -77,5 +77,5 @@ AuthConfig::Find(const char *proxy_auth)
 
 /* Default behaviour is to expose nothing */
 void
-AuthConfig::registerWithCacheManager(CacheManager & manager)
+AuthConfig::registerWithCacheManager(void)
 {}

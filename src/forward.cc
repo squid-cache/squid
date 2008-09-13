@@ -190,7 +190,7 @@ FwdState::~FwdState()
     debugs(17, 3, HERE << "FwdState destructor done");
 }
 
-/*
+/**
  * This is the entry point for client-side to start forwarding
  * a transaction.  It is a static method that may or may not
  * allocate a FwdState.
@@ -256,7 +256,7 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
         return;
 
     case PROTO_CACHEOBJ:
-        cachemgrStart(client_fd, request, entry);
+        CacheManager::GetInstance()->Start(client_fd, request, entry);
         return;
 
     case PROTO_URN:
@@ -283,7 +283,7 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
 void
 FwdState::fail(ErrorState * errorState)
 {
-    debugs(17, 3, "fwdFail: " << err_type_str[errorState->type] << " \"" << httpStatusString(errorState->httpStatus) << "\"\n\t" << entry->url()  );
+    debugs(17, 3, HERE << err_type_str[errorState->type] << " \"" << httpStatusString(errorState->httpStatus) << "\"\n\t" << entry->url()  );
 
     if (err)
         errorStateFree(err);
@@ -294,20 +294,20 @@ FwdState::fail(ErrorState * errorState)
         errorState->request = HTTPMSGLOCK(request);
 }
 
-/*
+/**
  * Frees fwdState without closing FD or generating an abort
  */
 void
 FwdState::unregister(int fd)
 {
-    debugs(17, 3, "fwdUnregister: " << entry->url()  );
+    debugs(17, 3, HERE << entry->url()  );
     assert(fd == server_fd);
     assert(fd > -1);
     comm_remove_close_handler(fd, fwdServerClosedWrapper, this);
     server_fd = -1;
 }
 
-/*
+/**
  * server-side modules call fwdComplete() when they are done
  * downloading an object.  Then, we either 1) re-forward the
  * request somewhere else if needed, or 2) call storeComplete()
@@ -318,7 +318,7 @@ FwdState::complete()
 {
     StoreEntry *e = entry;
     assert(entry->store_status == STORE_PENDING);
-    debugs(17, 3, "fwdComplete: " << e->url() << "\n\tstatus " << entry->getReply()->sline.status  );
+    debugs(17, 3, HERE << e->url() << "\n\tstatus " << entry->getReply()->sline.status  );
 #if URL_CHECKSUM_DEBUG
 
     entry->mem_obj->checkUrlChecksum();
@@ -934,6 +934,54 @@ FwdState::dispatch()
 
     netdbPingSite(request->GetHost());
 
+#if USE_ZPH_QOS
+    /* Retrieves remote server TOS value, and stores it as part of the
+     * original client request FD object. It is later used to forward
+     * remote server's TOS in the response to the client in case of a MISS.
+     */
+    fde * clientFde = &fd_table[client_fd];
+    if (clientFde)
+    {
+    	int tos = 1;
+    	int tos_len = sizeof(tos);
+    	clientFde->upstreamTOS = 0;
+        if (setsockopt(server_fd,SOL_IP,IP_RECVTOS,&tos,tos_len)==0)
+        {
+           unsigned char buf[512];
+           int len = 512;
+           if (getsockopt(server_fd,SOL_IP,IP_PKTOPTIONS,buf,(socklen_t*)&len) == 0)
+           {
+               /* Parse the PKTOPTIONS structure to locate the TOS data message
+                * prepared in the kernel by the ZPH incoming TCP TOS preserving
+                * patch.
+                */
+        	   unsigned char * p = buf;
+               while (p-buf < len)
+               {
+                  struct cmsghdr *o = (struct cmsghdr*)p;
+                  if (o->cmsg_len<=0)
+                     break;
+    
+                  if (o->cmsg_level == SOL_IP && o->cmsg_type == IP_TOS)
+                  {
+                	  clientFde->upstreamTOS = (unsigned char)(*(int*)CMSG_DATA(o));
+                	  break;
+                  }
+                  p += CMSG_LEN(o->cmsg_len);
+               }
+           }
+           else
+           {
+               debugs(33, 1, "ZPH: error in getsockopt(IP_PKTOPTIONS) on FD "<<server_fd<<" "<<xstrerror());
+           }
+        }
+        else
+        {
+        	debugs(33, 1, "ZPH: error in setsockopt(IP_RECVTOS) on FD "<<server_fd<<" "<<xstrerror());
+        }
+    }    
+#endif
+
     if (servers && (p = servers->_peer)) {
         p->stats.fetches++;
         request->peer_login = p->login;
@@ -1129,14 +1177,15 @@ FwdState::initModule()
         logfile = logfileOpen(Config.Log.forward, 0, 1);
 
 #endif
+
+    RegisterWithCacheManager();
 }
 
 void
-FwdState::RegisterWithCacheManager(CacheManager & manager)
+FwdState::RegisterWithCacheManager(void)
 {
-    manager.registerAction("forward",
-                           "Request Forwarding Statistics",
-                           fwdStats, 0, 1);
+    CacheManager::GetInstance()->
+         registerAction("forward", "Request Forwarding Statistics", fwdStats, 0, 1);
 }
 
 void
@@ -1181,8 +1230,8 @@ FwdState::updateHierarchyInfo()
     const char *nextHop = NULL;
 
     if (fs->_peer) { 
-        // went to peer, log peer domain name
-        nextHop = fs->_peer->host;
+        // went to peer, log peer host name
+        nextHop = fs->_peer->name;
     } else {
         // went DIRECT, must honor log_ip_on_direct
 

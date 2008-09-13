@@ -49,7 +49,7 @@ typedef void EVH(void *);
 extern void eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata=true);
 SQUIDCEXTERN void eventAddIsh(const char *name, EVH * func, void *arg, double delta_ish, int);
 SQUIDCEXTERN void eventDelete(EVH * func, void *arg);
-SQUIDCEXTERN void eventInit(CacheManager &);
+SQUIDCEXTERN void eventInit(void);
 SQUIDCEXTERN void eventFreeMemory(void);
 SQUIDCEXTERN int eventFind(EVH *, void *);
 

@@ -339,9 +339,6 @@ SQUIDCEXTERN StoreEntry *storeCreateEntry(const char *, const char *, request_fl
 SQUIDCEXTERN void storeInit(void);
 
 /// \ingroup StoreAPI
-extern void storeRegisterWithCacheManager(CacheManager & manager);
-
-/// \ingroup StoreAPI
 SQUIDCEXTERN void storeConfigure(void);
 
 /// \ingroup StoreAPI

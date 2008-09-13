@@ -48,6 +48,10 @@
 void shut_down(int)
 {}
 
+void
+reconfigure(int)
+{}
+
 #if WHENITMINIMAL
 void
 eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata)

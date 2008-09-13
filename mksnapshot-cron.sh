@@ -2,7 +2,7 @@
 # Nightly cron job to generate snapshot releases
 top=$PWD
 versions=/server/httpd/htdocs/squid-cache.org/Versions/
-TMPDIR=/tmp/hno.cron
+TMPDIR=/tmp/$LOGNAME.cron
 export TMPDIR
 if [ -d $TMPDIR ]; then
 	chmod -R +w $TMPDIR
@@ -34,6 +34,9 @@ make_snapshot()
     *-cfgman.tar.gz)
 	type=-cfgman.tar.gz
 	;;
+    *-langpack.tar.gz)
+	type=-langpack.tar.gz
+	;;
     *)
 	type=`echo $file | sed -e 's/.*\.tar\.gz/.tar.gz/' -e 's/.*\.tar\.bz2/.tar.bz2/' -e 's/.*\.patch/.patch/' -e 's/.*\.diff/.diff/' -e 's/.*-RELEASENOTES.html/-RELEASENOTES.html/' -e 's/^.*ChangeLog.txt$/-ChangeLog.txt/' -e 's/.*-cfgman/-cfgman/'`
     esac
@@ -49,7 +52,7 @@ make_snapshot()
     rm -f $dst/squid-$ver.snapshot$type
     ln -s $file $dst/squid-$ver.snapshot$type
     rm -f $dst/squid-$ver.snapshot$type.md5
-    ln -s $file $dst/squid-$ver.snapshot$type.md5
+    ln -s $file.md5 $dst/squid-$ver.snapshot$type.md5
 
     # cleanup old snapshots
     ls $dst/*-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]$type | sed -e 's/.*-\([0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'$type'\)/\1/' | sort -r | tail +$save | while read f; do
@@ -82,8 +85,8 @@ make_snapshot()
 
 set +e
 
-# autotool derived files not kept in trunk, no need to bootstrap
-#../commit/bootstrap squid-3
+# autotool derived files not kept in trunk, but still need to bootstrap for make dist
+../commit/bootstrap squid-3
 make_snapshot ../commit/squid-3/mksnapshot.sh trunk v3 HEAD 6
 
 rm -f /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new
@@ -105,8 +108,8 @@ make_snapshot ../commit/squid-2/mksnapshot.sh HEAD v2 HEAD 3
 ../commit/bootstrap squid-2.7
 make_snapshot ../commit/squid-2.7/mksnapshot.sh SQUID_2_7 v2 2.7 3
 
-../commit/bootstrap squid-2.6
-make_snapshot ../commit/squid-2.6/mksnapshot.sh SQUID_2_6 v2 2.6 3
+#../commit/bootstrap squid-2.6
+#make_snapshot ../commit/squid-2.6/mksnapshot.sh SQUID_2_6 v2 2.6 3
 
 #../commit/bootstrap squid-2.5
 #make_snapshot ../commit/squid-2.5/mksnapshot.sh SQUID_2_5 v2 2.5 3

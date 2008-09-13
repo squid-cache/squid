@@ -24,7 +24,7 @@ check_PROGRAMS= testHeaders
 
 ## Special Universal .h dependency test script
 ## aborts if error encountered
-testHeaders: basic/*.h digest/*.h ntlm/*.h negotiate/*.h
+testHeaders: $(top_srcdir)/src/auth/basic/*.h $(top_srcdir)/src/auth/digest/*.h $(top_srcdir)/src/auth/ntlm/*.h $(top_srcdir)/src/auth/negotiate/*.h
 	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "basic" || exit 1
 	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "digest" || exit 1
 	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "ntlm" || exit 1

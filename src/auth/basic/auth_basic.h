@@ -124,7 +124,7 @@ public:
     virtual void fixHeader(AuthUserRequest *, HttpReply *, http_hdr_type, HttpRequest *);
     virtual void init(AuthConfig *);
     virtual void parse(AuthConfig *, int, char *);
-    virtual void registerWithCacheManager(CacheManager & manager);
+    virtual void registerWithCacheManager(void);
     virtual const char * type() const;
     int authenticateChildren;
     int authenticateConcurrency;
@@ -132,6 +132,7 @@ public:
     wordlist *authenticate;
     time_t credentialsTTL;
     int casesensitive;
+    int utf8;
 };
 
 #endif

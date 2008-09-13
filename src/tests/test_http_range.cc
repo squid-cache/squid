@@ -31,9 +31,9 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+#include "config.h"
 
 #if 0
-#include "squid.h"
 //#include "Store.h"
 //#include "client_side_request.h"
 #endif
@@ -51,6 +51,10 @@
 /* Stub routines */
 void
 shut_down(int)
+{}
+
+void
+reconfigure(int)
 {}
 
 SQUIDCEXTERN void httpHeaderPutStr(HttpHeader * hdr, http_hdr_type type, const char *str)

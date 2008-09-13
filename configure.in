@@ -30,6 +30,13 @@ AC_LANG_C
 AC_PROG_CXX
 AC_CANONICAL_HOST
 
+dnl Make location configure settings available to the code
+dnl Pass squid data directory (icons, errors etc)  base location to code files as a compiler define
+CFLAGS="-DDEFAULT_SQUID_DATA_DIR=\"$datadir\" $CFLAGS"
+CXXFLAGS="-DDEFAULT_SQUID_DATA_DIR=\"$datadir\" $CXXFLAGS"
+dnl Pass squid.conf directory base location to code files as a compiler define
+CFLAGS="-DDEFAULT_SQUID_CONFIG_DIR=\"$sysconfdir\" $CFLAGS"
+CXXFLAGS="-DDEFAULT_SQUID_CONFIG_DIR=\"$sysconfdir\" $CXXFLAGS"
 
 use_loadable_modules=1
 AC_MSG_CHECKING(whether to use loadable modules)
@@ -51,7 +58,7 @@ AC_ARG_ENABLE(loadable-modules,
         use_loadable_modules=yes;
         AC_MSG_RESULT([$use_loadable_modules, implicitly])
     ]
-)        
+)
 
 AM_CONDITIONAL(USE_LOADABLE_MODULES, test $use_loadable_modules = yes)
 
@@ -356,18 +363,6 @@ AC_ARG_ENABLE(xmalloc-statistics,
   fi
 ])
 
-use_carp=1
-AC_ARG_ENABLE(carp,
-[  --disable-carp          Disable CARP support],
-[ if test "$enableval" = "no" ; then
-    echo "CARP disabled"
-    use_carp=0
-  fi
-])      
-if test $use_carp = 1; then
-    AC_DEFINE(USE_CARP, 1, [Cache Array Routing Protocol])
-fi
-
 AC_ARG_ENABLE(async-io,
 [  --enable-async-io[=N_THREADS]
                           Shorthand for
@@ -398,8 +393,7 @@ AC_ARG_WITH(aufs-threads,
     aufs_io_threads=$withval
     ;;
   *)
-    echo "ERROR: Invalid --with-aufs-threads argument"
-    exit 1
+    AC_MSG_ERROR(--with-aufs-threads expects a numeric argument)
     ;;
   esac
 ])
@@ -459,8 +453,7 @@ if test -n "$STORE_MODULES"; then
 	if test -d $srcdir/src/fs/$module; then
 	    :
 	else
-	    echo "ERROR: storeio $module does not exists"
-	    exit 1
+	    AC_MSG_ERROR(storeio $module does not exist)
 	fi
     done
     echo "Store modules built: $STORE_MODULES"
@@ -567,8 +560,7 @@ if test -n "$DISK_MODULES"; then
 	if test -d $srcdir/src/DiskIO/$module; then
 	    :
 	else
-	    echo "ERROR: disk-io $module does not exists"
-	    exit 1
+	    AC_MSG_ERROR(disk-io $module does not exist)
 	fi
     done
     DISK_LIBS="lib`echo $DISK_MODULES|sed -e 's% %.a lib%g'`.a"
@@ -697,8 +689,7 @@ if test -n "$REPL_POLICIES"; then
 	if test -d $srcdir/src/repl/$module; then
 	    :
 	else
-	    echo "ERROR: Removal policy $module does not exists"
-	    exit 1
+	    AC_MSG_ERROR(Removal policy $module does not exist)
 	fi
     done
     echo "Removal policies built: $REPL_POLICIES"
@@ -1047,48 +1038,10 @@ AC_ARG_ENABLE(cache-digests,
   fi
 ])
 
-dnl Select Default Error language
-AC_ARG_ENABLE(default-err-language,
-[  --enable-default-err-language=lang
-                          Select default language for Error pages (see
-                          errors directory) ],
-[
-    if test -d $srcdir/errors/$enableval; then
-	ERR_DEFAULT_LANGUAGE=$enableval
-    else
-	echo "ERROR! Unknown language $enableval, see errors/ directory"
-	exit 1
-    fi
-],[ERR_DEFAULT_LANGUAGE="English"])
-AC_SUBST(ERR_DEFAULT_LANGUAGE)
-
-dnl Select languages to be installed
-AC_ARG_ENABLE(err-languages,
-[  --enable-err-languages=\"lang1 lang2..\"
-                          Select languages to be installed. (All will be
-                          installed by default) ],
-[
-    for l in $enableval; do
-        if test -d $srcdir/errors/$l; then :; else
-	    echo "ERROR! Unknown language $$l, see errors/"
-	    exit 1
-	fi
-    done
-    ERR_LANGUAGES=$enableval
-],[
-    ERR_LANGUAGES=
-    for l in $srcdir/errors/*; do
-        if test -f $l/ERR_ACCESS_DENIED; then
-            ERR_LANGUAGES="$ERR_LANGUAGES `basename $l`"
-	fi
-    done
-])
-AC_SUBST(ERR_LANGUAGES)
-
 dnl Size of COSS memory buffer
 AC_ARG_WITH(coss-membuf-size,
 [  --with-coss-membuf-size COSS membuf size (default 1048576 bytes) ],
-[  if test "$with_coss_membuf_size"; then
+[  if test -n "$withval" -a "x$withval" != "xno" ; then
       echo "Setting COSS membuf size to $with_coss_membuf_size bytes"
       AC_DEFINE_UNQUOTED(COSS_MEMBUF_SZ, $with_coss_membuf_size,[Define if you want to set the COSS membuf size])
    fi
@@ -1196,6 +1149,8 @@ AC_ARG_ENABLE(ipfw-transparent,
 	echo "IPFW Transparent Proxy enabled"
 	AC_DEFINE(IPFW_TRANSPARENT,1,[Enable support for Transparent Proxy on systems using FreeBSD IPFW address redirection.])
 	IPFW_TRANSPARENT="yes"
+  else
+	AC_DEFINE(IPFW_TRANSPARENT,0,[Enable support for Transparent Proxy on systems using FreeBSD IPFW address redirection.])
   fi
 ])
 
@@ -1208,6 +1163,8 @@ AC_ARG_ENABLE(ipf-transparent,
 	echo "IP-Filter Transparent Proxy enabled"
 	AC_DEFINE(IPF_TRANSPARENT,1,[Enable support for Transparent Proxy on systems using IP-Filter address redirection. This provides "masquerading" support for non Linux system.])
 	IPF_TRANSPARENT="yes"
+  else
+	AC_DEFINE(IPF_TRANSPARENT,0,[Enable support for Transparent Proxy on systems using IP-Filter address redirection. This provides "masquerading" support for non Linux system.])
   fi
 ])
 
@@ -1220,6 +1177,8 @@ AC_ARG_ENABLE(pf-transparent,
 	echo "PF Transparent Proxy enabled"
 	AC_DEFINE(PF_TRANSPARENT,1,[Enable support for Transparent Proxy on systems using PF address redirection. This provides "masquerading" support for OpenBSD.])
 	PF_TRANSPARENT="yes"
+  else
+	AC_DEFINE(PF_TRANSPARENT,0,[Enable support for Transparent Proxy on systems using PF address redirection. This provides "masquerading" support for OpenBSD.])
   fi
 ])
 
@@ -1231,6 +1190,8 @@ AC_ARG_ENABLE(linux-netfilter,
 	echo "Linux (Netfilter) Transparent Proxy enabled"
 	AC_DEFINE(LINUX_NETFILTER,1,[Enable support for Transparent Proxy on Linux (Netfilter) systems])
 	LINUX_NETFILTER="yes"
+  else
+	AC_DEFINE(LINUX_NETFILTER,0,[Enable support for Transparent Proxy on Linux (Netfilter) systems])
   fi
 ])
 
@@ -1240,7 +1201,7 @@ needlargefiles=
 
 AC_ARG_WITH(large-files,
 [  --with-large-files      Enable support for large files (logs etc).],
-[ if test "$withval" = yes; then
+[ if test "x$withval" = "xyes"; then
 	needlargefiles=1
   fi
 ])
@@ -1270,7 +1231,7 @@ AC_ARG_WITH(build-environment,
 ])
 
 if test $needlargefiles && test -z "$buildmodel"; then
-	for model in POSIX_V6_ILP32_OFFBIG XBS5_ILP32_OFFBIG POSIX_V6_LP64_OFF64 XBS5_LP64_OFF64 POSIX_V6_LPBIG_OFFBIG XBS5_LPBIG_OFFBIG; do
+	for model in POSIX_V6_LPBIG_OFFBIG XBS5_LPBIG_OFFBIG POSIX_V6_LP64_OFF64 XBS5_LP64_OFF64 POSIX_V6_ILP32_OFFBIG XBS5_ILP32_OFFBIG; do
 		if test "`getconf _$model 2>/dev/null || true`" = 1 || test "`getconf $model 2>/dev/null || true`" ; then
 			buildmodel=$model
 			break
@@ -1279,17 +1240,22 @@ if test $needlargefiles && test -z "$buildmodel"; then
 	if test -z "$buildmodel"; then
 		echo "WARNING: No suitable build environment found for large files. Trying to use _FILE_OFFSET_BITS=64"
 		sleep 1
+	fi
+fi
+case "$buildmodel" in
+default|"")
+	if test "$needlargefiles"; then
+		echo "Enabling -D_FILE_OFFSET_BITS=64"
 		CFLAGS="-D_FILE_OFFSET_BITS=64 $CFLAGS"
 		CXXFLAGS="-D_FILE_OFFSET_BITS=64 $CXXFLAGS"
 	fi
-fi
-if test -n "$buildmodel" && test "$buildmodel" != "default"; then
+	;;
+*)
 	echo "Using $buildmodel build environment"
 	if test "`getconf _$buildmodel 2>/dev/null || true`" = 1 || test "`getconf $buildmodel 2>/dev/null || true`" ; then
 	    : # All fine
 	else
-	    echo "ERROR: Build environment $buildmodel not known to getconf."
-	    exit 1
+	    AC_MSG_ERROR(Build environment $buildmodel not known to getconf.)
 	fi
 	CFLAGS="`getconf ${buildmodel}_CFLAGS` $CFLAGS"
 	CXXFLAGS="`getconf ${buildmodel}_CFLAGS` $CXXFLAGS"
@@ -1297,14 +1263,19 @@ if test -n "$buildmodel" && test "$buildmodel" != "default"; then
 	LDFLAGS="`getconf ${buildmodel}_LDFLAGS` $LDFLAGS"
 	case "$host" in
 dnl
-dnl On Solaris getconf returns for CFLAGS -Xa and -Usun options, but:
-dnl   -Xa is supported only by Sun cc, so we need to remove it when using gcc
-dnl   The 'sun' define is needed by ipfilter includes, so we must remove -Usun
+dnl On Solaris getconf returns for CFLAGS -xarch=generic64, -Xa and -Usun options, and
+dnl for LDFLAGS -xarch=generic64, but:
+dnl   "-Xa" is supported only by Sun cc, so we need to remove it when using gcc
+dnl   For gcc "-xarch=generic64" must be replaced with "-m64"
+dnl   The 'sun' define is needed by ipfilter includes, so we must remove "-Usun"
 	    *-solaris*)
     		if test "$GCC" = "yes"; then
 		    echo "Removing -Xa for gcc on $host"
 		    CFLAGS="`echo $CFLAGS | sed -e 's/-Xa//'`"
 		    CXXFLAGS="`echo $CXXFLAGS | sed -e 's/-Xa//'`"
+		    echo "Replacing -xarch=generic64 with -m64 for gcc on $host"
+		    CFLAGS="`echo $CFLAGS | sed -e 's/-xarch=generic64/-m64/'`"
+		    LDFLAGS="`echo $LDFLAGS | sed -e 's/-xarch=generic64//'`"
 		fi
 		echo "Removing -Usun on $host"
 		CFLAGS="`echo $CFLAGS | sed -e 's/-Usun//'`"
@@ -1330,7 +1301,8 @@ dnl "-64" from LDFLAGS
 	    *)
 	        ;;
 	esac
-fi
+	;;
+esac
 
 dnl Enable Linux transparent proxy support for obsolete TPROXY
 AC_ARG_ENABLE(linux-tproxy,
@@ -1344,6 +1316,8 @@ AC_ARG_ENABLE(linux-tproxy,
 	    echo "Linux-Netfilter Transparent Proxy automatically enabled"
 	    LINUX_NETFILTER="yes"
 	fi
+  else
+	AC_DEFINE(LINUX_TPROXY2, 0, [Enable real Transparent Proxy support for Netfilter TPROXY v2.])
   fi
 ])
 
@@ -1362,6 +1336,24 @@ AC_ARG_ENABLE(leakfinder,
 	AM_CONDITIONAL(MAKE_LEAKFINDER, true)
   fi
 ])
+
+follow_xff=1
+AC_ARG_ENABLE(follow-x-forwarded-for,
+[  --enable-follow-x-forwarded-for
+                          Enable support for following the X-Forwarded-For
+                          HTTP header to try to find the IP address of the
+                          original or indirect client when a request has
+                          been forwarded through other proxies.],
+[ if test "$enableval" = "yes" ; then
+    echo "follow X-Forwarded-For enabled"
+    follow_xff=1
+  fi
+])
+if test $follow_xff = 1; then
+    AC_DEFINE(FOLLOW_X_FORWARDED_FOR, 1, [Enable following X-Forwarded-For headers])
+else
+    AC_DEFINE(FOLLOW_X_FORWARDED_FOR, 0)
+fi
 
 use_ident=1
 AC_ARG_ENABLE(ident-lookups,
@@ -1451,8 +1443,7 @@ if test -n "$AUTH_MODULES"; then
 	if test -d $srcdir/src/auth/$module; then
 	    :
 	else
-	    echo "ERROR: Auth scheme $module does not exists"
-	    exit 1
+	    AC_MSG_ERROR(Auth scheme $module does not exist)
 	fi
 	eval AUTH_MODULE_${module}=yes
     done
@@ -1515,8 +1506,7 @@ if test -n "$BASIC_AUTH_HELPERS"; then
 		    ;;
 	    esac
 	else
-	    echo "ERROR: Basic auth helper $helper does not exists"
-	    exit 1
+	    AC_MSG_ERROR(Basic auth helper $helper does not exist)
 	fi
     done
     echo "Basic auth helpers built: $BASIC_AUTH_HELPERS"
@@ -1559,8 +1549,7 @@ if test -n "$NTLM_AUTH_HELPERS"; then
 	if test -d $srcdir/helpers/ntlm_auth/$helper; then
 	    :
 	else
-	    echo "ERROR: NTLM Auth helper $helper does not exists"
-	    exit 1
+	    AC_MSG_ERROR(NTLM Auth helper $helper does not exist)
 	fi
     done
     echo "NTLM auth helpers built: $NTLM_AUTH_HELPERS"
@@ -1603,8 +1592,7 @@ if test -n "$NEGOTIATE_AUTH_HELPERS"; then
 	if test -d $srcdir/helpers/negotiate_auth/$helper; then
 	    :
 	else
-	    echo "ERROR: Negotiate Auth helper $helper does not exists"
-	    exit 1
+	    AC_MSG_ERROR(Negotiate Auth helper $helper does not exist)
 	fi
     done
     echo "Negotiate auth helpers built: $NEGOTIATE_AUTH_HELPERS"
@@ -1647,8 +1635,7 @@ if test -n "$DIGEST_AUTH_HELPERS"; then
 	if test -f $srcdir/helpers/digest_auth/$helper/Makefile.in; then
 		:
 	else
-		echo "ERROR: digest auth helper $helper does not exists"
-		exit 1
+		AC_MSG_ERROR(digest auth helper $helper does not exist)
 	fi
     done
     echo "Digest auth helpers built: $DIGEST_AUTH_HELPERS"
@@ -1699,8 +1686,7 @@ if test -n "$EXTERNAL_ACL_HELPERS"; then
 	if test -f $srcdir/helpers/external_acl/$helper/Makefile.in; then
 		:
 	else
-		echo "ERROR: external acl helper $helper does not exists"
-		exit 1
+		AC_MSG_ERROR(external acl helper $helper does not exist)
 	fi
     done
     echo "External acl helpers built: $EXTERNAL_ACL_HELPERS"
@@ -1765,8 +1751,7 @@ if test "$require_sasl" = "yes"; then
 			echo "using SASL"
 			LIBSASL="-lsasl"
 		else
-			echo "ERROR: Neither SASL nor SASL2 found"
-			exit 1
+			AC_MSG_ERROR(Neither SASL nor SASL2 found)
 		fi
 	fi
 	AC_SUBST(LIBSASL)
@@ -1840,8 +1825,9 @@ AC_ARG_ENABLE(x_accelerator_vary,
 
 dnl Enable IPv6 support
 AC_MSG_CHECKING([whether to enable IPv6])
+use_ipng=no
 AC_ARG_ENABLE(ipv6,
-[  --enable-ipv6          Enable ipv6 support],
+[  --enable-ipv6           Enable ipv6 support],
 [ AC_MSG_RESULT(yes)
   AC_CACHE_CHECK([if PF_INET6 is available], $enableval,
     AC_TRY_RUN(
@@ -1857,52 +1843,67 @@ AC_ARG_ENABLE(ipv6,
       ],
       [ AC_DEFINE(USE_IPV6,1,[Enable support for IPv6 ])
         AC_MSG_RESULT(yes)
+        use_ipng=yes
       ],
       [ AC_DEFINE(USE_IPV6,0,[0 == Disable support for IPv6])
-        AC_DEFINE(IPV6_SPECIAL_SPLITSTACK,0,[0 == Disable support for Split-Stack IPv6 Implementations])
-        AC_DEFINE(IPV6_SPECIAL_LOCALHOST,0,[0 == Keep IPv4 and IPv6 Localhosts seperate.])
-        AC_DEFINE(IPV6_SPECIAL_V4MAPPING,0,[0 == Leave all v4-mapping to OS Implementation])
+        AC_DEFINE(IPV6_SPECIAL_SPLITSTACK,0,[Enable support for IPv6 on split-stack implementations])
+        AC_DEFINE(IPV6_SPECIAL_LOCALHOST,0,[Convert IPv4-localhost requests to IPv6. Default: Keep seperate.])
+        AC_DEFINE(IPV6_SPECIAL_V4MAPPED,0,[Enable v4-mapping through v6 sockets])
         AC_MSG_RESULT(no)
       ])
    )
 ],
 [ AC_DEFINE(USE_IPV6,0,[Disable support for IPv6])
-  AC_DEFINE(IPV6_SPECIAL_SPLITSTACK,0,[ 0 == Disable support for Split-Stack IPv6 Implementations])
-  AC_DEFINE(IPV6_SPECIAL_LOCALHOST,0,[ 0 == Keep IPv4 and IPv6 Localhosts seperate.])
-  AC_DEFINE(IPV6_SPECIAL_V4MAPPING,0,[ 0 == Leave v4-mapping to OS Implementation])
+  AC_DEFINE(IPV6_SPECIAL_SPLITSTACK,0,[Enable support for IPv6 on split-stack implementations])
+  AC_DEFINE(IPV6_SPECIAL_LOCALHOST,0,[Convert IPv4-localhost requests to IPv6. Default: Keep seperate.])
+  AC_DEFINE(IPV6_SPECIAL_V4MAPPED,0,[Enable v4-mapping through v6 sockets])
   AC_MSG_RESULT(no)
 ])
-if test $ac_cv_enable_ipv6 ; then
+
+if test "$use_ipng" = "yes"; then
+
 dnl Check for Windows XP option
 AC_MSG_CHECKING([for IPv6 split-stack requirement])
 AC_ARG_WITH(ipv6-split-stack,
-  [  --with-ipv6-split-stack  Require IPv6 split-stack support (Requires IPv6 Support)],
-  [AC_DEFINE(IPV6_SPECIAL_SPLITSTACK, 1, [ 1 == Enable support for IPv6 on split-stack implementations]) AC_MSG_RESULT(yes)],
-  [AC_DEFINE(IPV6_SPECIAL_SPLITSTACK, 0, [ 0 == Disable support for split-stack IPv6 implementations]) AC_MSG_RESULT(no)]
+  [  --with-ipv6-split-stack  Require IPv6 split-stack support. Requires IPv6 Support.],
+  [AC_DEFINE(IPV6_SPECIAL_SPLITSTACK, 1, [Enable support for IPv6 on split-stack implementations]) AC_MSG_RESULT(yes)],
+  [AC_DEFINE(IPV6_SPECIAL_SPLITSTACK, 0, [Enable support for IPv6 on split-stack implementations]) AC_MSG_RESULT(no)]
 )
 
 dnl Check for IPv6 Windows Vista option
+dnl Also useful for other OS
 AC_MSG_CHECKING([for IPv6 v4-mapping requirement])
 AC_ARG_WITH(ipv4-mapped,
-  [  --with-ipv4-mapped  Hybrid-Stack OS require Squid to do any v4-mapping (Requires IPv6 Support)],
-  [AC_DEFINE(IPV6_SPECIAL_V4MAPPING, 1, [ 1 == Perform v4-mapping internally]) AC_MSG_RESULT(yes)],
-  [AC_DEFINE(IPV6_SPECIAL_V4MAPPING, 0, [ 0 == Leave all v4-mapping to the OS]) AC_MSG_RESULT(no)]
+  [  --with-ipv4-mapped  Hybrid-Stack OS require Squid to do any v4-mapping. Requires IPv6 Support.],
+  [AC_DEFINE(IPV6_SPECIAL_V4MAPPED, 1, [Enable v4-mapping through v6 sockets]) AC_MSG_RESULT(yes)],
+  [AC_DEFINE(IPV6_SPECIAL_V4MAPPED, 0, [Enable v4-mapping through v6 sockets]) AC_MSG_RESULT(no)]
 )
 
 dnl Check for IPv6-pure option
 AC_MSG_CHECKING([for IPv6-Localhost requirement])
 AC_ARG_WITH(localhost-ipv6,
-  [  --with-localhost-ipv6    Prefer IPv6 localhost address over IPv4 (Requires IPv6 Support).
+  [  --with-localhost-ipv6    Prefer IPv6 localhost address over IPv4. Requires IPv6 Support.
                            Treats 127.0.0.1 and ::1 as identical and converts all inputs of to ::1
                            This depends on Dual-Stack support in the OS and all applications
                            squid contacts via localhost being IPv6 enabled.
                            Default: OFF. Treats these two IP as different, squid.conf must
                            define both 127.0.0.1 and ::1 for the localhost ACL, etc. ],
-  [AC_DEFINE(IPV6_SPECIAL_LOCALHOST, 1, [ 1 == Convert IPv4-localhost requests to IPv6.]) AC_MSG_RESULT(yes)],
-  [AC_DEFINE(IPV6_SPECIAL_LOCALHOST, 0, [ 0 == Keep IPv4 and IPv6 Localhosts seperate.]) AC_MSG_RESULT(no)]
+  [AC_DEFINE(IPV6_SPECIAL_LOCALHOST, 1, [Convert IPv4-localhost requests to IPv6. Default: keep seperate.]) AC_MSG_RESULT(yes)],
+  [AC_DEFINE(IPV6_SPECIAL_LOCALHOST, 0, [Convert IPv4-localhost requests to IPv6. Default: Keep seperate.]) AC_MSG_RESULT(no)]
 )
+
 # end IPv6-only options
 fi
+
+AC_ARG_ENABLE(zph-qos,
+[  --enable-zph-qos        Enable ZPH QOS support],
+[ if test "$enableval" = "yes" ; then
+    echo "ZPH QOS enabled"
+    AC_DEFINE(USE_ZPH_QOS,1,
+    [ Define this to use Squid's ZPH (Zero Penalty Hit) QOS features.
+      When enabled, Squid will alter TOS field of HIT responses for better QOS on intermediate routing/shaping devices.])
+  fi
+])
 
 dnl Optional CNAME-Recursion by Internal DNS engine
 AC_MSG_CHECKING([whether DNS CNAME recursion wanted])
@@ -1971,7 +1972,16 @@ fi
 AC_ARG_WITH(filedescriptors,
 [  --with-filedescriptors=NUMBER
                           Force squid to support NUMBER filedescriptors],
-[ squid_filedescriptors_num=$withval ])
+[ 
+  case ${withval} in
+    [[0-9]]*)
+      squid_filedescriptors_num=$withval
+      ;;
+    *)
+      AC_MSG_ERROR(--with-filedescriptors expects a numeric argument)
+      ;;
+    esac
+])
 
 AC_PATH_PROG(CPPUNITCONFIG, cppunit-config, false)
 if $CPPUNITCONFIG --help >/dev/null; then
@@ -1995,15 +2005,14 @@ AC_ARG_WITH(cppunit-basedir,
 	echo "Using cppunit includes from $withval"
 	SQUID_CPPUNIT_INC="-I${withval}/include"
     else
-	echo "ERROR: Cannot find cppunit at $withval"
-	exit 1
+	AC_MSG_ERROR(Cannot find cppunit at $withval)
     fi
   if test -f $withval/lib/libcppunit.la; then
 	echo "Using cppunit lib from $withval"
 	SQUID_CPPUNIT_LA="${withval}/lib/libcppunit.la"
 	SQUID_CPPUNIT_LIBS='$(SQUID_CPPUNIT_LA)'
     else
-	echo "ERROR: Cannot find cppunit at $withval"
+	AC_MSG_ERROR(Cannot find cppunit at $withval)
 	exit 1
     fi
 ])
@@ -2097,15 +2106,9 @@ AC_CHECK_HEADERS( \
 	math.h \
 	memory.h \
 	mount.h \
-	net/if.h \
-	net/pfvar.h \
 	netdb.h \
 	netinet/in.h \
-	netinet/icmp6.h \
 	netinet/in_systm.h \
-	netinet/ip.h \
-	netinet/ip6.h \
-	netinet/ip_icmp.h \
 	netinet/ip_fil_compat.h \
 	openssl/err.h \
 	openssl/md5.h \
@@ -2171,16 +2174,30 @@ SQUID_DEFAULT_INCLUDES
 #if HAVE_LIMITS_H
 #include <limits.h>
 #endif
+/* Netfilter ip(6)tables v1.4.0 has broken headers */
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
 )
 
-AC_CHECK_HEADERS(net/if.h \
+dnl *BSD dont include the depenencies for all their net/ and netinet/ files
+dnl We must include a few basic type headers for them to work.
+AC_CHECK_HEADERS( \
+	net/if.h \
 	netinet/if_ether.h\
+	netinet/icmp6.h \
+	netinet/ip.h \
+	netinet/ip6.h \
 	netinet/ip_compat.h\
 	netinet/ip_fil.h\
+	netinet/ip_icmp.h \
 	netinet/ip_nat.h\
 	netinet/ipl.h \
+	net/pfvar.h \
 	sys/mount.h\
-	resolv.h,,,SQUID_BSDNET_INCLUDES)
+	resolv.h \
+,,,
+SQUID_BSDNET_INCLUDES)
 
 AC_CHECK_HEADERS([libxml/parser.h], [], [
     	SAVED_CPPFLAGS="$CPPFLAGS"
@@ -2417,6 +2434,7 @@ AC_CHECK_TYPE(mtyp_t,AC_DEFINE(HAVE_MTYP_T,1,[mtyp_t is defined by the system he
 dnl Check for needed libraries
 AC_CHECK_LIB(nsl, main)
 AC_CHECK_LIB(socket, main)
+dnl Check for Winsock only on MinGW, on Cygwin we must use emulated BSD socket API
 case "$host_os" in
   mingw|mingw32)
     AC_MSG_CHECKING(for winsock)
@@ -2447,6 +2465,11 @@ case "$host_os" in
 	LIBS="$save_LIBS"
     done
     AC_MSG_RESULT($have_winsock)
+    if test $have_winsock = winsock2; then
+       AC_CHECK_HEADERS(winsock2.h)
+    else
+       AC_CHECK_HEADERS(winsock.h)
+    fi
     ;;
 esac
 
@@ -2909,6 +2932,34 @@ if test "$ac_cv_func_setresuid" = "yes" ; then
   AC_DEFINE(HAVE_SETRESUID,1,[Yay! Another Linux brokenness.  Its not good enough to know that setresuid() exists, because RedHat 5.0 declare setresuid() but doesn't implement it.])
 fi
 
+dnl Yay!  This one is  a MacOSX brokenness.  Its not good enough
+dnl to know that strnstr() exists, because MacOSX 10.4 have a bad
+dnl copy that crashes with a buffer over-run!
+dnl
+AC_CACHE_CHECK(if strnstr is well implemented, ac_cv_func_strnstr,
+  AC_TRY_RUN([
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+    // we expect this to succeed, or crash on over-run.
+    // if it passes otherwise we may need a better check.
+int main(int argc, char **argv)
+{
+    int size = 20;
+    char *str = malloc(size);
+    memset(str, 'x', size);
+    strnstr(str, "fubar", size);
+    return 0;
+}
+  ],ac_cv_func_strnstr="yes",ac_cv_func_strnstr="no")
+)
+if test "$ac_cv_func_strnstr" = "yes" ; then
+  AC_DEFINE(HAVE_STRNSTR,1,[Yay! We have a working strnstr!])
+else
+  AC_DEFINE(HAVE_STRNSTR,0,[Yay! A MacOS X brokenness. Its not good enough to know that strnstr() exists, because MacOSX 10.4 and earlier may have a buffer overrun.])
+fi
+
+
 AM_CONDITIONAL(NEED_OWN_STRSEP, false)
 if test "$ac_cv_func_strsep" = "no" ; then
   AM_CONDITIONAL(NEED_OWN_STRSEP, true)
@@ -3121,6 +3172,12 @@ AC_TRY_RUN([
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
+#if HAVE_WINSOCK_H
+#include <winsock.h>
+#endif
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif
 main() {
 	FILE *fp = fopen("conftestval", "w");
 	fprintf (fp, "%d\n", FD_SETSIZE);
@@ -3170,7 +3227,12 @@ main() {
     if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
         perror("getrlimit: RLIMIT_NOFILE");
     } else {
+#if defined(__APPLE__)
+        /* asking for more than OPEN_MAX fails on Leopard */
+        rl.rlim_cur = (OPEN_MAX < rl.rlim_max ? OPEN_MAX : rl.rlim_max);
+#else
         rl.rlim_cur = rl.rlim_max;      /* set it to the max */
+#endif
         if (setrlimit(RLIMIT_NOFILE, &rl) < 0) {
             perror("setrlimit: RLIMIT_NOFILE");
         }
@@ -3238,14 +3300,31 @@ AC_TRY_RUN([
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
+#if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
+#if HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+#if HAVE_WINSOCK_H
+#include <winsock.h>
+#endif
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif
 main ()
 {
 	FILE *fp;
         int fd,val=0,len=sizeof(int);
+#if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+	WSADATA wsaData;
+	WSAStartup(2, &wsaData);
+#endif
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) exit(1);
         if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &val, &len) < 0) exit(1);
+#if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+	WSACleanup();
+#endif
 	if (val<=0) exit(1);
         fp = fopen("conftestval", "w");
         fprintf (fp, "%d\n", val);
@@ -3264,14 +3343,31 @@ AC_TRY_RUN([
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
+#if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
+#if HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+#if HAVE_WINSOCK_H
+#include <winsock.h>
+#endif
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif
 main ()
 {
 	FILE *fp;
         int fd,val=0,len=sizeof(int);
+#if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+	WSADATA wsaData;
+	WSAStartup(2, &wsaData);
+#endif
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) exit(1);
         if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &val, &len) < 0) exit(1);
+#if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+	WSACleanup();
+#endif
 	if (val <= 0) exit(1);
 	fp = fopen("conftestval", "w"); 
 	fprintf (fp, "%d\n", val);
@@ -3290,14 +3386,31 @@ AC_TRY_RUN([
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
+#if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
+#if HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+#if HAVE_WINSOCK_H
+#include <winsock.h>
+#endif
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif
 main ()
 {
 	FILE *fp;
         int fd,val=0,len=sizeof(int);
+#if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+	WSADATA wsaData;
+	WSAStartup(2, &wsaData);
+#endif
 	if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) exit(1);
         if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &val, &len) < 0) exit(1);
+#if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+	WSACleanup();
+#endif
 	if (val <= 0) exit(1);
 	fp = fopen("conftestval", "w"); 
 	fprintf (fp, "%d\n", val);
@@ -3320,14 +3433,31 @@ AC_TRY_RUN([
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
+#if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
+#if HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+#if HAVE_WINSOCK_H
+#include <winsock.h>
+#endif
+#if HAVE_WINSOCK2_H
+#include <winsock2.h>
+#endif
 main ()
 {
 	FILE *fp;
         int fd,val=0,len=sizeof(int);
+#if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+	WSADATA wsaData;
+	WSAStartup(2, &wsaData);
+#endif
 	if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) exit(1);
         if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &val, &len) < 0) exit(1);
+#if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+	WSACleanup();
+#endif
 	if (val <= 0) exit(1);
 	fp = fopen("conftestval", "w"); 
 	fprintf (fp, "%d\n", val);
@@ -3529,6 +3659,26 @@ if test $ac_cv_have_res_ns_list = "yes" ; then
 fi
 fi
 
+dnl Squid now has .po translation capability, given the right toolkit
+AX_WITH_PROG([PO2HTML],[po2html])
+AC_SUBST(PO2HTML)
+
+dnl Squid now has limited locale handling ...
+dnl on error pages
+AC_ARG_ENABLE(auto-locale,
+[  --enable-auto-locale  This enables squid to lookup translated error pages
+                          based on the clients request headers. Without it squid
+                          is limited to a single language set in squid.conf],
+[ if test "$enableval" = "yes" ; then
+    echo "Enabling Multi-Language Support"
+    AC_DEFINE(USE_ERR_LOCALES,1,[Use multi-language support on error pages])
+ else
+    echo "Disabling Multi-Language Support"
+    AC_DEFINE(USE_ERR_LOCALES,0,[Use multi-language support on error pages])
+  fi
+])
+
+
 dnl Need the debugging version of malloc if available
 XTRA_OBJS=''
 if test "$ac_cv_lib_malloc_main" = "yes" ; then
@@ -3606,6 +3756,7 @@ AC_CONFIG_FILES([\
 	helpers/external_acl/session/Makefile \
 	helpers/external_acl/unix_group/Makefile \
 	helpers/external_acl/wbinfo_group/Makefile \
+	helpers/external_acl/mswin_ad_group/Makefile \
 	helpers/external_acl/mswin_lm_group/Makefile \
 	tools/Makefile
 ])

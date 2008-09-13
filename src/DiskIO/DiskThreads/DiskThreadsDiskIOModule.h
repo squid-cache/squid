@@ -43,7 +43,7 @@ public:
     static DiskThreadsDiskIOModule &GetInstance();
     DiskThreadsDiskIOModule();
     virtual void init();
-    virtual void registerWithCacheManager(CacheManager & manager);
+    //virtual void registerWithCacheManager(void);
     virtual void shutdown();
     virtual char const *type () const;
     virtual DiskIOStrategy* createStrategy();

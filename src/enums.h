@@ -173,10 +173,10 @@ typedef enum {
     CD_PARENT_HIT,
     CD_SIBLING_HIT,
 #endif
-#if USE_CARP
     CARP,
-#endif
     ANY_OLD_PARENT,
+    USERHASH_PARENT,
+    SOURCEHASH_PARENT,
     HIER_MAX
 } hier_code;
 

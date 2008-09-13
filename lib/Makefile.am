@@ -53,7 +53,13 @@ noinst_LIBRARIES = \
 	libntlmauth.a \
 	$(LIBSSPWIN32) \
 	@LIBREGEX@
+#
+# dirent.c, encrypt.c and getopt.c are needed for native Windows support.
+#
 EXTRA_libmiscutil_a_SOURCES = \
+	dirent.c \
+	encrypt.c \
+	getopt.c \
 	md5.c \
 	Profiler.c \
 	strsep.c \
@@ -62,6 +68,7 @@ EXTRA_libmiscutil_a_SOURCES = \
 libmiscutil_a_SOURCES = \
 	MemPool.cc \
 	base64.c \
+	charset.c \
 	getfullhostname.c \
 	hash.c \
 	heap.c \
@@ -77,6 +84,7 @@ libmiscutil_a_SOURCES = \
 	rfc3596.c \
 	$(SNPRINTFSOURCE) \
 	Splay.cc \
+	strnstr.cc \
 	$(STRSEPSOURCE) \
 	$(STRTOLLSOURCE) \
 	stub_memaccount.c \
