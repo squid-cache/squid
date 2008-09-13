@@ -114,7 +114,7 @@ ChildVirtual::operator delete(void *address)
 ChildVirtual::~ChildVirtual(){}
 
 int
-main (int argc, char *argv)
+main(int argc, char **argv)
 {
     assert (BaseVirtual::Calls.news() == 0);
     assert (BaseVirtual::Calls.deletes() == 0);

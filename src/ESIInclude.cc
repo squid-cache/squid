@@ -67,14 +67,22 @@ esiBufferDetach (clientStreamNode *node, ClientHttpRequest *http)
     clientStreamDetach (node, http);
 }
 
-/*
- * Write a chunk of data to a client 'socket'. 
- * If the reply is present, send the reply headers down the wire too,
- * and clean them up when finished.
- * Pre-condition: 
+/**
+ * Write a chunk of data to a client 'socket'.
+ * If the reply is present, send the reply headers down the wire too.
+ *
+ * Pre-condition:
  *   The request is an internal ESI subrequest.
  *   data context is not NULL
  *   There are no more entries in the stream chain.
+ *   The caller is responsible for creation and deletion of the Reply headers.
+ * 
+ \note
+ * Bug 975, bug 1566 : delete rep; 2006/09/02: TS, #975
+ * 
+ * This was causing double-deletes. Its possible that not deleting
+ * it here will cause memory leaks, but if so, this delete should
+ * not be reinstated or it will trigger bug #975 again - RBC 20060903
  */
 void
 esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *rep, StoreIOBuffer receivedData)
@@ -97,7 +105,7 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
     assert (receivedData.length <= sizeof(esiStream->localbuffer->buf));
     assert (!esiStream->finished);
 
-    debugs (86,5, "esiBufferRecipient rep " << rep << " body " << receivedData.data << " len " << receivedData.length);
+    debugs (86,5, HERE << "rep " << rep << " body " << receivedData.data << " len " << receivedData.length);
     assert (node->readBuffer.offset == receivedData.offset || receivedData.length == 0);
 
     /* trivial case */
@@ -119,15 +127,6 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
             headersLog(0, 0, http->request->method, rep);
 
 #endif
-
-            /* delete rep; 2006/09/02: TS, #975
-             * 
-             * This was causing double-deletes. Its possible that not deleting
-             * it here will cause memory leaks, but if so, this delete should
-             * not be reinstated or it will trigger bug #975 again - RBC
-             * 20060903
-             */
-
             rep = NULL;
         }
     }
@@ -154,7 +153,7 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
     /* EOF / Read error /  aborted entry */
     if (rep == NULL && receivedData.data == NULL && receivedData.length == 0) {
         /* TODO: get stream status to test the entry for aborts */
-        debugs(86, 5, "Finished reading upstream data in subrequest");
+        debugs(86, 5, HERE << "Finished reading upstream data in subrequest");
         esiStream->include->subRequestDone (esiStream, true);
         esiStream->finished = 1;
         httpRequestFree (http);
@@ -209,9 +208,8 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
             tempBuffer.length = sizeof (esiStream->buffer->buf);
             tempBuffer.data = esiStream->buffer->buf;
             /* now just read into 'buffer' */
-            clientStreamRead (node,
-                              http, tempBuffer);
-            debugs(86, 5, "esiBufferRecipient: Requested more data for ESI subrequest");
+            clientStreamRead (node, http, tempBuffer);
+            debugs(86, 5, HERE << "Requested more data for ESI subrequest");
         }
 
         break;

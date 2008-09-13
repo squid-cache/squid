@@ -106,6 +106,8 @@ DOC_START
 	proxy as the client then thinks it is talking to an origin server and
 	not the proxy. This is a limitation of bending the TCP/IP protocol to
 	transparently intercepting port 80, not a limitation in Squid.
+	Ports flagged 'transparent', 'intercept', or 'tproxy' have authentication
+	disabled.
 
 	=== Parameters for the basic scheme follow. ===
 
@@ -459,20 +461,25 @@ DEFAULT: all src all
 DOC_START
 	Defining an Access List
 
-	acl aclname acltype string1 ...
-	acl aclname acltype "file" ...
+	Every access list definition must begin with an aclname and acltype, 
+	followed by either type-specific arguments or a quoted filename that
+	they are read from.
 
-	when using "file", the file should contain one item per line
+	   acl aclname acltype argument ...
+	   acl aclname acltype "file" ...
 
-	acltype is one of the types described below
+	When using "file", the file should contain one item per line.
 
 	By default, regular expressions are CASE-SENSITIVE.  To make
 	them case-insensitive, use the -i option.
 
-	acl aclname src      ip-address/netmask ... (clients IP address)
-	acl aclname src      addr1-addr2/netmask ... (range of addresses)
-	acl aclname dst      ip-address/netmask ... (URL host's IP address)
-	acl aclname myip     ip-address/netmask ... (local socket IP address)
+
+	***** ACL TYPES AVAILABLE *****
+
+	acl aclname src ip-address/netmask ...		# clients IP address
+	acl aclname src addr1-addr2/netmask ...		# range of addresses
+	acl aclname dst ip-address/netmask ...		# URL host's IP address
+	acl aclname myip ip-address/netmask ...		# local socket IP address
 
 	acl aclname arp      mac-address ... (xx:xx:xx:xx:xx:xx notation)
 	  # The arp ACL requires the special configure option --enable-arp-acl.
@@ -483,45 +490,16 @@ DOC_START
 	  # the same subnet. If the client is on a different subnet, then Squid cannot
 	  # find out its MAC address.
 
-	acl aclname srcdomain   .foo.com ...    # reverse lookup, client IP
-	acl aclname dstdomain   .foo.com ...    # Destination server from URL
-	acl aclname srcdom_regex [-i] xxx ...   # regex matching client name
-	acl aclname dstdom_regex [-i] xxx ...   # regex matching server
+	acl aclname srcdomain   .foo.com ...    	# reverse lookup, from client IP
+	acl aclname dstdomain   .foo.com ...    	# Destination server from URL
+	acl aclname srcdom_regex [-i] \.foo\.com ...	# regex matching client name
+	acl aclname dstdom_regex [-i] \.foo\.com ...	# regex matching server
 	  # For dstdomain and dstdom_regex a reverse lookup is tried if a IP
 	  # based URL is used and no match is found. The name "none" is used
 	  # if the reverse lookup fails.
 
-	acl aclname http_status 200 301 500- 400-403 ...     # status code in reply
-
-	acl aclname time     [day-abbrevs]  [h1:m1-h2:m2]
-	    day-abbrevs:
-		S - Sunday
-		M - Monday
-		T - Tuesday
-		W - Wednesday
-		H - Thursday
-		F - Friday
-		A - Saturday
-	    h1:m1 must be less than h2:m2
-	acl aclname url_regex [-i] ^http:// ...	# regex matching on whole URL
-	acl aclname urlpath_regex [-i] \.gif$ ...	# regex matching on URL path
-	acl aclname port     80 70 21 ...
-	acl aclname port     0-1024 ...		# ranges allowed
-	acl aclname myport   3128 ...		# (local socket TCP port)
-	acl aclname myportname 3128 ...		# http(s)_port name
-	acl aclname proto    HTTP FTP ...
-	acl aclname method   GET POST ...
-	acl aclname browser  [-i] regexp ...
-	  # pattern match on User-Agent header (see also req_header below)
-	acl aclname referer_regex  [-i] regexp ...
-	  # pattern match on Referer header
-	  # Referer is highly unreliable, so use with care
-	acl aclname ident    username ...
-	acl aclname ident_regex [-i] pattern ...
-	  # string match on ident output.
-	  # use REQUIRED to accept any non-null ident.
-	acl aclname src_as   number ...
-	acl aclname dst_as   number ...
+	acl aclname src_as number ...
+	acl aclname dst_as number ...
 	  # Except for access control, AS numbers can be used for
 	  # routing of requests to specific caches. Here's an
 	  # example for routing all requests for AS#1241 and only
@@ -529,6 +507,43 @@ DOC_START
 	  # acl asexample dst_as 1241
 	  # cache_peer_access mycache.mydomain.net allow asexample
 	  # cache_peer_access mycache_mydomain.net deny all
+
+	acl aclname time [day-abbrevs] [h1:m1-h2:m2]
+	  #  day-abbrevs:
+	  #	S - Sunday
+	  #	M - Monday
+	  #	T - Tuesday
+	  #	W - Wednesday
+	  #	H - Thursday
+	  #	F - Friday
+	  #	A - Saturday
+	  #  h1:m1 must be less than h2:m2
+
+	acl aclname url_regex [-i] ^http:// ...		# regex matching on whole URL
+	acl aclname urlpath_regex [-i] \.gif$ ...	# regex matching on URL path
+
+	acl aclname port 80 70 21 ...
+	acl aclname port 0-1024 ...		# ranges allowed
+	acl aclname myport 3128 ...		# (local socket TCP port)
+	acl aclname myportname 3128 ...		# http(s)_port name
+
+	acl aclname proto HTTP FTP ...
+
+	acl aclname method GET POST ...
+
+	acl aclname http_status 200 301 500- 400-403 ...     # status code in reply
+
+	acl aclname browser [-i] regexp ...
+	  # pattern match on User-Agent header (see also req_header below)
+
+	acl aclname referer_regex [-i] regexp ...
+	  # pattern match on Referer header
+	  # Referer is highly unreliable, so use with care
+
+	acl aclname ident username ...
+	acl aclname ident_regex [-i] pattern ...
+	  # string match on ident output.
+	  # use REQUIRED to accept any non-null ident.
 
 	acl aclname proxy_auth [-i] username ...
 	acl aclname proxy_auth_regex [-i] pattern ...
@@ -543,8 +558,8 @@ DOC_START
 	  # to check username/password combinations (see
 	  # auth_param directive).
 	  #
-	  # NOTE: proxy_auth can't be used in a transparent proxy as
-	  # the browser needs to be configured for using a proxy in order
+	  # NOTE: proxy_auth can't be used in a transparent/intercepting proxy
+	  # as the browser needs to be configured for using a proxy in order
 	  # to respond to proxy authentication.
 
 	acl aclname snmp_community string ...
@@ -570,7 +585,7 @@ DOC_START
 	  # clients may appear to come from multiple addresses if they are
 	  # going through proxy farms, so a limit of 1 may cause user problems.
 
-	acl aclname req_mime_type mime-type1 ...
+	acl aclname req_mime_type [-i] mime-type ...
 	  # regex match against the mime type of the request generated
 	  # by the client. Can be used to detect file upload or some
 	  # types HTTP tunneling requests.
@@ -582,7 +597,7 @@ DOC_START
 	  # thought of as a superset of "browser", "referer" and "mime-type"
 	  # ACLs.
 
-	acl aclname rep_mime_type mime-type1 ...
+	acl aclname rep_mime_type [-i] mime-type ...
 	  # regex match against the mime type of the reply received by
 	  # squid. Can be used to detect file download or some
 	  # types HTTP tunneling requests.
@@ -595,7 +610,7 @@ DOC_START
 	  # thought of as a superset of "browser", "referer" and "mime-type"
 	  # ACLs.
 
-	acl acl_name external class_name [arguments...]
+	acl aclname external class_name [arguments...]
 	  # external ACL lookup via a helper class defined by the
 	  # external_acl_type directive.
 
@@ -645,6 +660,92 @@ acl Safe_ports port 591		# filemaker
 acl Safe_ports port 777		# multiling http
 acl CONNECT method CONNECT
 NOCOMMENT_END
+DOC_END
+
+NAME: follow_x_forwarded_for
+TYPE: acl_access
+IFDEF: FOLLOW_X_FORWARDED_FOR
+LOC: Config.accessList.followXFF
+DEFAULT: none
+DEFAULT_IF_NONE: deny all
+DOC_START
+	Allowing or Denying the X-Forwarded-For header to be followed to
+	find the original source of a request.
+
+	Requests may pass through a chain of several other proxies
+	before reaching us.  The X-Forwarded-For header will contain a
+	comma-separated list of the IP addresses in the chain, with the
+	rightmost address being the most recent.
+
+	If a request reaches us from a source that is allowed by this
+	configuration item, then we consult the X-Forwarded-For header
+	to see where that host received the request from.  If the
+	X-Forwarded-For header contains multiple addresses, and if
+	acl_uses_indirect_client is on, then we continue backtracking
+	until we reach an address for which we are not allowed to
+	follow the X-Forwarded-For header, or until we reach the first
+	address in the list.  (If acl_uses_indirect_client is off, then
+	it's impossible to backtrack through more than one level of
+	X-Forwarded-For addresses.)
+
+	The end result of this process is an IP address that we will
+	refer to as the indirect client address.  This address may
+	be treated as the client address for access control, delay
+	pools and logging, depending on the acl_uses_indirect_client,
+	delay_pool_uses_indirect_client and log_uses_indirect_client
+	options.
+
+	SECURITY CONSIDERATIONS:
+
+		Any host for which we follow the X-Forwarded-For header
+		can place incorrect information in the header, and Squid
+		will use the incorrect information as if it were the
+		source address of the request.  This may enable remote
+		hosts to bypass any access control restrictions that are
+		based on the client's source addresses.
+
+	For example:
+
+		acl localhost src 127.0.0.1
+		acl my_other_proxy srcdomain .proxy.example.com
+		follow_x_forwarded_for allow localhost
+		follow_x_forwarded_for allow my_other_proxy
+DOC_END
+
+NAME: acl_uses_indirect_client
+COMMENT: on|off
+TYPE: onoff
+IFDEF: FOLLOW_X_FORWARDED_FOR
+DEFAULT: on
+LOC: Config.onoff.acl_uses_indirect_client
+DOC_START
+	Controls whether the indirect client address
+	(see follow_x_forwarded_for) is used instead of the
+	direct client address in acl matching.
+DOC_END
+
+NAME: delay_pool_uses_indirect_client
+COMMENT: on|off
+TYPE: onoff
+IFDEF: FOLLOW_X_FORWARDED_FOR && DELAY_POOLS
+DEFAULT: on
+LOC: Config.onoff.delay_pool_uses_indirect_client
+DOC_START
+	Controls whether the indirect client address
+	(see follow_x_forwarded_for) is used instead of the
+	direct client address in delay pools.
+DOC_END
+
+NAME: log_uses_indirect_client
+COMMENT: on|off
+TYPE: onoff
+IFDEF: FOLLOW_X_FORWARDED_FOR
+DEFAULT: on
+LOC: Config.onoff.log_uses_indirect_client
+DOC_START
+	Controls whether the indirect client address
+	(see follow_x_forwarded_for) is used instead of the
+	direct client address in the access log.
 DOC_END
 
 NAME: http_access
@@ -900,9 +1001,11 @@ DOC_START
 
 	   intercept	Support for IP-Layer interception of
 			outgoing requests without browser settings.
+			NP: disables authentication and IPv6 on the port.
 
 	   tproxy	Support Linux TPROXY for spoofing outgoing
 			connections using the client IP address.
+			NP: disables authentication and IPv6 on the port.
 
 	   accel	Accelerator mode. Also needs at least one of
 			vhost / vport / defaultsite.
@@ -1128,6 +1231,66 @@ DOC_START
 	Allows you to select a TOS/Diffserv value to mark client-side
 	connections with, based on the username or source address
 	making the request.
+DOC_END
+
+NAME: zph_tos_local
+TYPE: int
+IFDEF: USE_ZPH_QOS
+DEFAULT: 0
+LOC: Config.zph_tos_local
+DOC_START
+       Allows you to select a TOS/Diffserv value to mark local hits. Read above
+       (tcp_outgoing_tos) for details/requirements about TOS.
+       Default: 0 (disabled).
+DOC_END
+
+NAME: zph_tos_peer
+TYPE: int
+IFDEF: USE_ZPH_QOS
+DEFAULT: 0
+LOC: Config.zph_tos_peer
+DOC_START
+       Allows you to select a TOS/Diffserv value to mark peer hits. Read above
+       (tcp_outgoing_tos) for details/requirements about TOS.
+       Default: 0 (disabled).
+DOC_END
+
+NAME: zph_tos_parent
+COMMENT: on|off
+TYPE: onoff
+IFDEF: USE_ZPH_QOS
+DEFAULT: on
+LOC: Config.onoff.zph_tos_parent
+DOC_START
+       Set this to off if you want only sibling hits to be marked.
+       If set to on (default), parent hits are being marked too.
+DOC_END
+
+NAME: zph_preserve_miss_tos
+COMMENT: on|off
+TYPE: onoff
+IFDEF: USE_ZPH_QOS
+DEFAULT: on
+LOC: Config.onoff.zph_preserve_miss_tos
+DOC_START
+       If set to on (default), any HTTP response towards clients will
+       have the TOS value of the response comming from the remote
+       server masked with the value of zph_preserve_miss_tos_mask.
+       For this to work correctly, you will need to patch your linux
+       kernel with the TOS preserving ZPH patch.
+       The kernel patch can be downloaded from http://zph.bratcheda.org
+DOC_END
+
+NAME: zph_preserve_miss_tos_mask
+TYPE: int
+IFDEF: USE_ZPH_QOS
+DEFAULT: 255
+LOC: Config.zph_preserve_miss_tos_mask
+DOC_START
+       Allows you to mask certain bits in the TOS received from the
+       remote server, before copying the value to the TOS send towards
+       clients.
+       Default: 255 (TOS from server is not changed).
 DOC_END
 
 NAME: tcp_outgoing_address
@@ -1408,6 +1571,8 @@ DOC_START
 		     round-robin
 		     weighted-round-robin
 		     carp
+		     userhash
+		     sourcehash
 		     multicast-responder
 		     closest-only
 		     no-digest
@@ -1481,6 +1646,12 @@ DOC_START
 		     be used as a CARP array. The requests will be
 		     distributed among the parents based on the CARP load
 		     balancing hash function based on their weight.
+
+                     use 'userhash' to load-balance amongst a set of parents
+                     based on the client proxy_auth or ident username.
+
+                     use 'sourcehash' to load-balance amongst a set of parents
+                     based on the client source ip.
 
 		     'multicast-responder' indicates the named peer
 		     is a member of a multicast group.  ICP queries will
@@ -2103,12 +2274,16 @@ DOC_START
 		et	Tag returned by external acl
 		ea	Log string returned by external acl
 		<st	Reply size including HTTP headers
+		>st	Request size including HTTP headers
+		st	Request+Reply size including HTTP headers
 		<sH	Reply high offset sent
 		<sS	Upstream object size
 		%	a literal % character
 
-logformat squid  %ts.%03tu %6tr %>a %Ss/%03Hs %<st %rm %ru %un %Sh/%<A %mt
-logformat squidmime  %ts.%03tu %6tr %>a %Ss/%03Hs %<st %rm %ru %un %Sh/%<A %mt [%>h] [%<h]
+	The default formats available (which do not need re-defining) are:
+
+logformat squid %ts.%03tu %6tr %>a %Ss/%03Hs %<st %rm %ru %un %Sh/%<A %mt
+logformat squidmime %ts.%03tu %6tr %>a %Ss/%03Hs %<st %rm %ru %un %Sh/%<A %mt [%>h] [%<h]
 logformat common %>a %ui %un [%tl] "%rm %ru HTTP/%rv" %Hs %<st %Ss:%Sh
 logformat combined %>a %ui %un [%tl] "%rm %ru HTTP/%rv" %Hs %<st "%{Referer}>h" "%{User-Agent}>h" %Ss:%Sh
 DOC_END
@@ -2672,9 +2847,10 @@ DOC_START
 		 refresh-ims
 
 		override-expire enforces min age even if the server
-		sent a Expires: header. Doing this VIOLATES the HTTP
-		standard.  Enabling this feature could make you liable
-		for problems which it causes.
+		sent an explicit expiry time (e.g., with the
+		Expires: header or Cache-Control: max-age). Doing this
+		VIOLATES the HTTP standard.  Enabling this feature
+		could make you liable for problems which it causes.
 
 		override-lastmod enforces min age even on objects
 		that were modified recently.
@@ -2800,16 +2976,24 @@ DOC_START
 DOC_END
 
 NAME: negative_ttl
+IFDEF: HTTP_VIOLATIONS
 COMMENT: time-units
 TYPE: time_t
 LOC: Config.negativeTtl
-DEFAULT: 5 minutes
+DEFAULT: 0 seconds
 DOC_START
-	Time-to-Live (TTL) for failed requests.  Certain types of
-	failures (such as "connection refused" and "404 Not Found") are
-	negatively-cached for a configurable amount of time.  The
-	default is 5 minutes.  Note that this is different from
-	negative caching of DNS lookups.
+	Set the Default Time-to-Live (TTL) for failed requests.
+	Certain types of failures (such as "connection refused" and
+	"404 Not Found") are able to be negatively-cached for a short time.
+	Modern web servers should provide Expires: header, however if they
+	do not this can provide a minimum TTL.
+	The default is not to cache errors with unknown expiry details.
+
+	Note that this is different from negative caching of DNS lookups.
+
+	WARNING: Doing this VIOLATES the HTTP standard.  Enabling
+	this feature could make you liable for problems which it
+	causes.
 DOC_END
 
 NAME: positive_dns_ttl
@@ -2865,7 +3049,7 @@ DEFAULT: 60 seconds
 DOC_START
 	The minimum caching time according to (Expires - Date)
 	Headers Squid honors if the object can't be revalidated
-	defaults to 60 seconds. In reverse proxy enorinments it
+	defaults to 60 seconds. In reverse proxy environments it
 	might be desirable to honor shorter object lifetimes. It
 	is most likely better to make your server return a
 	meaningful Last-Modified header however. In ESI environments
@@ -3465,6 +3649,18 @@ DOC_START
 	A list of other DNS names your cache has.
 DOC_END
 
+NAME: umask
+TYPE: int
+LOC: Config.umask
+DEFAULT: 027
+DOC_START
+	Minimum umask which should be enforced while the proxy
+	is running, in addition to the umask set at startup.
+
+	For a traditional octal representation of umasks, start
+        your value with 0.
+DOC_END
+
 COMMENT_START
  OPTIONS FOR THE CACHE REGISTRATION SERVICE
  -----------------------------------------------------------------------------
@@ -3910,7 +4106,7 @@ DOC_START
 
 	The relevant WCCPv2 flags:
 	+ src_ip_hash, dst_ip_hash
-	+ source_port_hash, dest_port_hash
+	+ source_port_hash, dst_port_hash
 	+ src_ip_alt_hash, dst_ip_alt_hash
 	+ src_port_alt_hash, dst_port_alt_hash
 	+ ports_source
@@ -4516,17 +4712,42 @@ COMMENT_END
 NAME: error_directory
 TYPE: string
 LOC: Config.errorDirectory
-DEFAULT: @DEFAULT_ERROR_DIR@
+DEFAULT: none
 DOC_START
 	If you wish to create your own versions of the default
-	(English) error files, either to customize them to suit your
-	language or company copy the template English files to another
-	directory and point this tag at them.
+	error files to customize them to suit your company copy
+	the error/template files to another directory and point
+	this tag at them.
+
+	WARNING: This option will disable multi-language support
+	         on error pages if used.
 
 	The squid developers are interested in making squid available in
 	a wide variety of languages. If you are making translations for a
-	langauge that Squid does not currently provide please consider
+	language that Squid does not currently provide please consider
 	contributing your translation back to the project.
+	http://wiki.squid-cache.org/Translations
+
+	The squid developers working on translations are happy to supply drop-in
+	translated error files in exchange for any new language contributions.
+DOC_END
+
+NAME: error_default_language
+IFDEF: USE_ERR_LOCALES
+TYPE: string
+LOC: Config.errorDefaultLanguage
+DEFAULT: none
+DOC_START
+	Set the default language which squid will send error pages in
+	if no existing translation matches the clients language
+	preferences.
+
+	If unset (default) generic English will be used.
+
+	The squid developers are interested in making squid available in
+	a wide variety of languages. If you are interested in making
+	translations for any language see the squid wiki for details.
+	http://wiki.squid-cache.org/Translations
 DOC_END
 
 NAME: err_html_text
@@ -4563,7 +4784,7 @@ DEFAULT: none
 DOC_START
 	Usage:   deny_info err_page_name acl
 	or       deny_info http://... acl
-	Example: deny_info ERR_CUSTOM_ACCESS_DENIED bad_guys
+	or       deny_info TCP_RESET acl
 
 	This can be used to return a ERR_ page for requests which
 	do not pass the 'http_access' rules.  Squid remembers the last
@@ -4577,8 +4798,9 @@ DOC_START
 	- When none of the http_access lines matches. It's then the last
 	  acl processed on the last http_access line.
 
-	You may use ERR_ pages that come with Squid or create your own pages
-	and put them into the configured errors/ directory.
+	NP: If providing your own custom error pages with error_directory
+	    you may also specify them by your custom file name:
+	    Example: deny_info ERR_CUSTOM_ACCESS_DENIED bad_guys
 
 	Alternatively you can specify an error URL. The browsers will
 	get redirected (302) to the specified URL. %s in the redirection
@@ -4692,7 +4914,6 @@ DOC_START
 	requests, except those in your local domain use something like:
 
 		acl local-servers dstdomain .foo.net
-		acl all src 0.0.0.0/0.0.0.0
 		never_direct deny local-servers
 		never_direct allow all
 
@@ -5243,17 +5464,6 @@ DOC_START
 	definitions.
 DOC_END
 
-NAME: dns_testnames
-TYPE: wordlist
-LOC: Config.dns_testname_list
-DEFAULT: none
-DEFAULT_IF_NONE: netscape.com internic.net nlanr.net microsoft.com
-DOC_START
-	The DNS tests exit as soon as the first site is successfully looked up
-
-	This test can be disabled with the -D command line option.
-DOC_END
-
 NAME: append_domain
 TYPE: string
 LOC:  Config.appendDomain
@@ -5381,20 +5591,28 @@ DOC_START
 DOC_END
 
 NAME: forwarded_for
-COMMENT: on|off
-TYPE: onoff
+COMMENT: on|off|transparent|truncate|delete
+TYPE: string
 DEFAULT: on
 LOC: opt_forwarded_for
 DOC_START
-	If set, Squid will include your system's IP address or name
-	in the HTTP requests it forwards.  By default it looks like
-	this:
+	If set to "on", Squid will append your client's IP address
+	in the HTTP requests it forwards. By default it looks like:
 
 		X-Forwarded-For: 192.1.2.3
 
-	If you disable this, it will appear as
+	If set to "off", it will appear as
 
 		X-Forwarded-For: unknown
+
+	If set to "transparent", Squid will not alter the
+	X-Forwarded-For header in any way.
+
+	If set to "delete", Squid will delete the entire
+	X-Forwarded-For header.
+
+	If set to "truncate", Squid will remove all existing
+	X-Forwarded-For entries, and place itself as the sole entry.
 DOC_END
 
 NAME: cachemgr_passwd
@@ -5435,6 +5653,7 @@ DOC_START
 		offline_toggle *
 		pconn
 		peer_select
+		reconfigure *
 		redirector
 		refresh
 		server_list
@@ -5680,6 +5899,20 @@ DOC_START
 	until all the child processes have been started.
 	On Windows value less then 1000 (1 milliseconds) are
 	rounded to 1000.
+DOC_END
+
+NAME: windows_ipaddrchangemonitor
+COMMENT: on|off
+TYPE: onoff
+DEFAULT: on
+LOC: Config.onoff.WIN32_IpAddrChangeMonitor
+DOC_START
+	On Windows Squid by default will monitor IP address changes and will 
+	reconfigure itself after any detected event. This is very useful for
+	proxies connected to internet with dial-up interfaces.
+	In some cases (a Proxy server acting as VPN gateway is one) it could be
+	desiderable to disable this behaviour setting this to 'off'.
+	Note: after changing this, Squid service must be restarted.
 DOC_END
 
 EOF

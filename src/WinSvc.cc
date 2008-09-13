@@ -66,10 +66,10 @@ static void Win32SockCleanup(void);
 SQUIDCEXTERN LPCRITICAL_SECTION dbg_mutex;
 void WIN32_ExceptionHandlerCleanup(void);
 static int s_iInitCount = 0;
-#endif
+static HANDLE NotifyAddrChange_thread = INVALID_HANDLE_VALUE;
+#endif /* _SQUID_MSWIN_ */
 
 static int Squid_Aborting = 0;
-static HANDLE NotifyAddrChange_thread = INVALID_HANDLE_VALUE;
 
 #undef NotifyAddrChange
 typedef DWORD(WINAPI * PFNotifyAddrChange) (OUT PHANDLE, IN LPOVERLAPPED);
@@ -390,16 +390,18 @@ WIN32_Abort(int sig)
     WIN32_Exit();
 }
 
+#ifdef _SQUID_MSWIN_
 void
 WIN32_IpAddrChangeMonitorExit()
 {
     DWORD status = ERROR_SUCCESS;
 
-    if (NotifyAddrChange_thread == INVALID_HANDLE_VALUE) {
+    if (NotifyAddrChange_thread != INVALID_HANDLE_VALUE) {
 	TerminateThread(NotifyAddrChange_thread, status);
 	CloseHandle(NotifyAddrChange_thread);
     }
 }
+#endif
 
 void
 WIN32_Exit()
@@ -459,7 +461,7 @@ WIN32_IpAddrChangeMonitorInit()
     DWORD status = ERROR_SUCCESS;
     DWORD threadID = 0, ThrdParam = 0;
 
-    if (WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE) {
+    if ((WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE) && (Config.onoff.WIN32_IpAddrChangeMonitor)) {
 	NotifyAddrChange_thread = CreateThread(NULL, 0, WIN32_IpAddrChangeMonitor,
 	    &ThrdParam, 0, &threadID);
 	if (NotifyAddrChange_thread == NULL) {
@@ -471,7 +473,7 @@ WIN32_IpAddrChangeMonitorInit()
     }
     return status;
 }
-#endif
+#endif /* _SQUID_MSWIN_ */
 
 int WIN32_Subsystem_Init(int * argc, char *** argv)
 {
@@ -893,7 +895,7 @@ WIN32_sendSignal(int WIN32_signal)
                              fdwAccess);		/* specify access     */
 
     if (schService == NULL) {
-        fprintf(stderr, "%s: ERROR: Could not open Service %s\n", appname,
+        fprintf(stderr, "%s: ERROR: Could not open Service %s\n", APP_SHORTNAME,
                 WIN32_Service_name);
         exit(1);
     } else {
@@ -903,7 +905,7 @@ WIN32_sendSignal(int WIN32_signal)
                             fdwControl,	/* control value to send  */
                             &ssStatus)) {	/* address of status info */
             fprintf(stderr, "%s: ERROR: Could not Control Service %s\n",
-                    appname, WIN32_Service_name);
+                    APP_SHORTNAME, WIN32_Service_name);
             exit(1);
         } else {
             /* Print the service status. */

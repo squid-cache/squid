@@ -382,9 +382,10 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
 }
 
 int
-parseConfigFile(const char *file_name, CacheManager & manager)
+parseConfigFile(const char *file_name)
 {
     int err_count = 0;
+    CacheManager *manager=CacheManager::GetInstance();
 
     configFreeMemory();
 
@@ -403,12 +404,13 @@ parseConfigFile(const char *file_name, CacheManager & manager)
 
     if (!Config.chroot_dir) {
         leave_suid();
+        setUmask(Config.umask);
         _db_init(Config.Log.log, Config.debugOptions);
         enter_suid();
     }
 
     if (opt_send_signal == -1) {
-        manager.registerAction("config",
+        manager->registerAction("config",
                                "Current Squid Configuration",
                                dump_config,
                                1, 1);
@@ -449,7 +451,7 @@ configDoConfigure(void)
     if (Config.onoff.httpd_suppress_version_string)
         visible_appname_string = (char *)appname_string;
     else
-        visible_appname_string = (char *)full_appname_string;
+        visible_appname_string = (char const *)APP_FULLNAME;
 
 #if USE_DNSSERVERS
 
@@ -520,7 +522,8 @@ configDoConfigure(void)
 
     requirePathnameExists("Icon Directory", Config.icons.directory);
 
-    requirePathnameExists("Error Directory", Config.errorDirectory);
+    if(Config.errorDirectory)
+        requirePathnameExists("Error Directory", Config.errorDirectory);
 
 #if HTTP_VIOLATIONS
 
@@ -1732,7 +1735,6 @@ parse_peer(peer ** head)
 
         } else if (!strcasecmp(token, "no-netdb-exchange")) {
             p->options.no_netdb_exchange = 1;
-#if USE_CARP
 
         } else if (!strcasecmp(token, "carp")) {
             if (p->type != PEER_PARENT)
@@ -1740,7 +1742,18 @@ parse_peer(peer ** head)
 
             p->options.carp = 1;
 
-#endif
+        } else if (!strcasecmp(token, "userhash")) {
+            if (p->type != PEER_PARENT)
+                fatalf("parse_peer: non-parent userhash peer %s/%d\n", p->host, p->http_port);
+
+            p->options.userhash = 1;
+
+        } else if (!strcasecmp(token, "sourcehash")) {
+            if (p->type != PEER_PARENT)
+                fatalf("parse_peer: non-parent sourcehash peer %s/%d\n", p->host, p->http_port);
+
+            p->options.sourcehash = 1;
+
 #if DELAY_POOLS
 
         } else if (!strcasecmp(token, "no-delay")) {
@@ -1851,7 +1864,7 @@ parse_peer(peer ** head)
 
     *head = p;
 
-    peerClearRR(p);
+    peerClearRRStart();
 }
 
 static void
@@ -2597,11 +2610,13 @@ parse_wordlist(wordlist ** list)
         wordlistAdd(list, token);
 }
 
+#if 0 /* now unused */
 static int
 check_null_wordlist(wordlist * w)
 {
     return w == NULL;
 }
+#endif
 
 static int
 check_null_acl_access(acl_access * a)
@@ -2934,20 +2949,30 @@ parse_http_port_option(http_port_list * s, char *token)
     } else if (strcmp(token, "transparent") == 0 || strcmp(token, "intercept") == 0) {
         s->intercepted = 1;
         IPInterceptor.StartInterception();
+        /* Log information regarding the port modes under interception. */
+        debugs(3, DBG_IMPORTANT, "Starting Authentication on port " << s->s);
+        debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (interception enabled)");
+
 #if USE_IPV6
         /* INET6: until transparent REDIRECT works on IPv6 SOCKET, force wildcard to IPv4 */
+        debugs(3, DBG_IMPORTANT, "Disabling IPv6 on port " << s->s << " (interception enabled)");
         if( !s->s.SetIPv4() ) {
-            debugs(3, 0, "http(s)_port: IPv6 addresses cannot be 'transparent' (protocol does not provide NAT)" << s->s );
+            debugs(3, DBG_CRITICAL, "http(s)_port: IPv6 addresses cannot be transparent (protocol does not provide NAT)" << s->s );
             self_destruct();
         }
 #endif
     } else if (strcmp(token, "tproxy") == 0) {
         s->spoof_client_ip = 1;
         IPInterceptor.StartTransparency();
+        /* Log information regarding the port modes under transparency. */
+        debugs(3, DBG_IMPORTANT, "Starting IP Spoofing on port " << s->s);
+        debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (Ip spoofing enabled)");
+
 #if USE_IPV6
         /* INET6: until target TPROXY is known to work on IPv6 SOCKET, force wildcard to IPv4 */
+        debugs(3, DBG_IMPORTANT, "Disabling IPv6 on port " << s->s << " (interception enabled)");
         if( s->s.IsIPv6() && !s->s.SetIPv4() ) {
-            debugs(3, 0, "http(s)_port: IPv6 addresses cannot be transparent (protocol does not provide NAT)" << s->s );
+            debugs(3, DBG_CRITICAL, "http(s)_port: IPv6 addresses cannot be transparent (protocol does not provide NAT)" << s->s );
             self_destruct();
         }
 #endif

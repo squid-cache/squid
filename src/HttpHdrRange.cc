@@ -260,7 +260,7 @@ HttpHdrRange::parseInit(const String * range_spec)
         return 0;
 
     /* skip "bytes="; hack! */
-    pos = range_spec->buf() + 5;
+    pos = range_spec->buf() + 6;
 
     /* iterate through comma separated list */
     while (strListGetItem(range_spec, ',', &item, &ilen, &pos)) {

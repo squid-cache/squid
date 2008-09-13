@@ -29,13 +29,13 @@ ACLSslErrorData::match(ssl_error_t toFind)
 
 /* explicit instantiation required for some systems */
 
-template cbdata_type List<ssl_error_t>::CBDATA_List;
+template cbdata_type CbDataList<ssl_error_t>::CBDATA_CbDataList;
 
 wordlist *
 ACLSslErrorData::dump()
 {
     wordlist *W = NULL;
-    List<ssl_error_t> *data = values;
+    CbDataList<ssl_error_t> *data = values;
 
     while (data != NULL) {
         wordlistAdd(&W, sslFindErrorString(data->element));
@@ -48,12 +48,12 @@ ACLSslErrorData::dump()
 void
 ACLSslErrorData::parse()
 {
-    List<ssl_error_t> **Tail;
+    CbDataList<ssl_error_t> **Tail;
     char *t = NULL;
 
     for (Tail = &values; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
-        List<ssl_error_t> *q = new List<ssl_error_t>(sslParseErrorString(t));
+        CbDataList<ssl_error_t> *q = new CbDataList<ssl_error_t>(sslParseErrorString(t));
         *(Tail) = q;
         Tail = &q->next;
     }

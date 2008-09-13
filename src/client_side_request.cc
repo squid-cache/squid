@@ -58,6 +58,7 @@
 #include "ClientRequestContext.h"
 #include "SquidTime.h"
 #include "wordlist.h"
+#include "inet_pton.h"
 
 #if USE_ADAPTATION
 #include "adaptation/AccessCheck.h"
@@ -70,6 +71,11 @@ static void adaptationAclCheckDoneWrapper(Adaptation::ServicePointer service, vo
 #endif
 
 static const char *const crlf = "\r\n";
+
+#if FOLLOW_X_FORWARDED_FOR
+static void
+clientFollowXForwardedForCheck(int answer, void *data);
+#endif /* FOLLOW_X_FORWARDED_FOR */
 
 CBDATA_CLASS_INIT(ClientRequestContext);
 
@@ -343,6 +349,10 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
 
     request->client_addr.SetNoAddr();
 
+#if FOLLOW_X_FORWARDED_FOR
+    request->indirect_client_addr.SetNoAddr();
+#endif /* FOLLOW_X_FORWARDED_FOR */
+    
     request->my_addr.SetNoAddr();	/* undefined for internal requests */
 
     request->my_addr.SetPort(0);
@@ -380,12 +390,131 @@ ClientRequestContext::httpStateIsValid()
     return false;
 }
 
+#if FOLLOW_X_FORWARDED_FOR
+/**
+ * clientFollowXForwardedForCheck() checks the indirect_client_addr
+ * against the followXFF ACL, or cleans up and passes control to
+ * clientAccessCheck().
+ */
+
+static void
+clientFollowXForwardedForCheck(int answer, void *data)
+{
+    ClientRequestContext *calloutContext = (ClientRequestContext *) data;
+    ClientHttpRequest *http = NULL;
+    HttpRequest *request = NULL;
+
+    if (!calloutContext->httpStateIsValid())
+        return;
+
+        http = calloutContext->http;
+    request = http->request;
+    /*
+     * answer should be be ACCESS_ALLOWED or ACCESS_DENIED if we are
+     * called as a result of ACL checks, or -1 if we are called when
+     * there's nothing left to do.
+     */
+    if (answer == ACCESS_ALLOWED &&
+        request->x_forwarded_for_iterator.size () != 0)
+    {
+        /*
+        * The IP address currently in request->indirect_client_addr
+        * is trusted to use X-Forwarded-For.  Remove the last
+        * comma-delimited element from x_forwarded_for_iterator and use
+        * it to to replace indirect_client_addr, then repeat the cycle.
+        */
+        const char *p;
+        const char *asciiaddr;
+        int l;
+        struct in_addr addr;
+        p = request->x_forwarded_for_iterator.buf();
+        l = request->x_forwarded_for_iterator.size();
+
+        /*
+        * XXX x_forwarded_for_iterator should really be a list of
+        * IP addresses, but it's a String instead.  We have to
+        * walk backwards through the String, biting off the last
+        * comma-delimited part each time.  As long as the data is in
+        * a String, we should probably implement and use a variant of
+        * strListGetItem() that walks backwards instead of forwards
+        * through a comma-separated list.  But we don't even do that;
+        * we just do the work in-line here.
+        */
+        /* skip trailing space and commas */
+        while (l > 0 && (p[l-1] == ',' || xisspace(p[l-1])))
+            l--;
+        request->x_forwarded_for_iterator.cut(l);
+        /* look for start of last item in list */
+        while (l > 0 && ! (p[l-1] == ',' || xisspace(p[l-1])))
+            l--;
+        asciiaddr = p+l;
+        if (xinet_pton(AF_INET, asciiaddr, &addr) != 0)
+        {
+            request->indirect_client_addr = addr;
+            request->x_forwarded_for_iterator.cut(l);
+            if (! Config.onoff.acl_uses_indirect_client)
+            {
+                /*
+                * If acl_uses_indirect_client is off, then it's impossible
+                * to follow more than one level of X-Forwarded-For.
+                */
+                request->x_forwarded_for_iterator.clean();
+            }
+            calloutContext->acl_checklist =
+            clientAclChecklistCreate(Config.accessList.followXFF, http);
+            calloutContext->acl_checklist->
+            nonBlockingCheck(clientFollowXForwardedForCheck, data);
+            return;
+        }
+    } /*if (answer == ACCESS_ALLOWED &&
+        request->x_forwarded_for_iterator.size () != 0)*/
+
+    /* clean up, and pass control to clientAccessCheck */
+    if (Config.onoff.log_uses_indirect_client)
+    {
+        /*
+        * Ensure that the access log shows the indirect client
+        * instead of the direct client.
+        */
+        ConnStateData *conn = http->getConn();
+        conn->log_addr = request->indirect_client_addr;
+    }
+    request->x_forwarded_for_iterator.clean();
+    request->flags.done_follow_x_forwarded_for = 1;
+
+    /* If follow XFF is denied, we reset the indirect_client_addr
+       to the direct client. Thats the one we are configured to check for */
+    if (answer == ACCESS_DENIED) {
+        request->indirect_client_addr = request->client_addr;
+    }
+    /* on a failure, leave it as undefined state ?? */
+    else if (answer != ACCESS_ALLOWED) {
+        debugs(28, DBG_CRITICAL, "Follow X-Forwarded-For encountered an error. Ignoring address: " << request->indirect_client_addr );
+        request->indirect_client_addr = request->client_addr;
+    }
+
+    /* process actual access ACL as normal. */
+    calloutContext->clientAccessCheck();
+}
+#endif /* FOLLOW_X_FORWARDED_FOR */
+
 /* This is the entry point for external users of the client_side routines */
 void
 ClientRequestContext::clientAccessCheck()
 {
-    acl_checklist =
-        clientAclChecklistCreate(Config.accessList.http, http);
+#if FOLLOW_X_FORWARDED_FOR
+    if (!http->request->flags.done_follow_x_forwarded_for &&
+        Config.accessList.followXFF &&
+        http->request->header.has(HDR_X_FORWARDED_FOR))
+    {
+        http->request->x_forwarded_for_iterator = 
+            http->request->header.getList(HDR_X_FORWARDED_FOR);
+        clientFollowXForwardedForCheck(ACCESS_ALLOWED, this);
+        return;
+    }
+#endif /* FOLLOW_X_FORWARDED_FOR */
+
+    acl_checklist = clientAclChecklistCreate(Config.accessList.http, http);
     acl_checklist->nonBlockingCheck(clientAccessCheckDoneWrapper, this);
 }
 
@@ -811,6 +940,9 @@ ClientRequestContext::clientRedirectDone(char *result)
         new_request->http_ver = old_request->http_ver;
         new_request->header.append(&old_request->header);
         new_request->client_addr = old_request->client_addr;
+#if FOLLOW_X_FORWARDED_FOR
+        new_request->indirect_client_addr = old_request->indirect_client_addr;
+#endif /* FOLLOW_X_FORWARDED_FOR */
         new_request->my_addr = old_request->my_addr;
         new_request->flags = old_request->flags;
         new_request->flags.redirected = 1;

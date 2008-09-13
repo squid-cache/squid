@@ -32,6 +32,7 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
+#include "config.h"
 
 #if 0
 #include "squid.h"

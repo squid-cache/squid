@@ -58,13 +58,16 @@ DiskThreadsIOStrategy::init(void)
      * hasn't been parsed yet and we don't know how many cache_dirs
      * there are, which means we don't know how many threads to start.
      */
+
+     registerWithCacheManager();
 }
 
 void
-DiskThreadsIOStrategy::registerWithCacheManager(CacheManager & manager)
+DiskThreadsIOStrategy::registerWithCacheManager(void)
 {
-    manager.registerAction("squidaio_counts", "Async IO Function Counters",
-                           aioStats, 0, 1);
+    CacheManager::GetInstance()->
+        registerAction("squidaio_counts", "Async IO Function Counters",
+                       aioStats, 0, 1);
 }
 
 void

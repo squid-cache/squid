@@ -148,6 +148,7 @@ public:
     char const* image() const;
 
     bool isCacheble() const;
+    bool purgesOthers() const;
 
 private:
     static const char *RequestMethodStr[];

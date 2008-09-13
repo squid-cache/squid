@@ -1,0 +1,29 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>ERROR: FTP upload failed</title>
+<style type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></style>
+</head><body>
+<h1>ERROR</h1>
+<h2>FTP PUT/upload failed</h2>
+<hr>
+<p>While trying to PUT the following URL: <a href="%U">%U</a></p>
+
+<p>Squid sent the following FTP command:</p>
+<blockquote>
+<pre>%f</pre>
+</blockquote>
+
+<p>The server responded with:</p>
+<blockquote>
+<pre>%F</pre>
+</blockquote>
+
+<p>This means that the FTP server may not have permission or space to store the file. Check the path, permissions, diskspace and try again.</p>
+
+<p>Your cache administrator is <a href="mailto:%w%W">%w</a>.</p>
+
+<br>   
+<hr> 
+<div id="footer">Generated %T by %h (%s)</div>
+</body></html>

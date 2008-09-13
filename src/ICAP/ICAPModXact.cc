@@ -1178,6 +1178,7 @@ void ICAPModXact::encapsulateHead(MemBuf &icapBuf, const char *section, MemBuf &
     // end cloning
         
     // remove all hop-by-hop headers from the clone
+    headClone->header.delById(HDR_PROXY_AUTHENTICATE);
     headClone->header.removeHopByHopEntries();
 
     // pack polished HTTP header

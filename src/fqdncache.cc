@@ -582,6 +582,16 @@ fqdncache_nbgethostbyaddr(IPAddress &addr, FQDNH * handler, void *handlerData)
 #endif
 }
 
+/// \ingroup FQDNCacheInternal
+static void
+fqdncacheRegisterWithCacheManager(void)
+{
+    CacheManager::GetInstance()->
+        registerAction("fqdncache", "FQDN Cache Stats and Contents",
+                       fqdnStats, 0, 1);
+
+}
+
 /**
  \ingroup FQDNCacheAPI
  *
@@ -592,6 +602,8 @@ void
 fqdncache_init(void)
 {
     int n;
+
+    fqdncacheRegisterWithCacheManager();
 
     if (fqdn_table)
         return;
@@ -614,16 +626,6 @@ fqdncache_init(void)
 
     memDataInit(MEM_FQDNCACHE_ENTRY, "fqdncache_entry",
                 sizeof(fqdncache_entry), 0);
-}
-
-/// \ingroup FQDNCacheAPI
-void
-fqdncacheRegisterWithCacheManager(CacheManager & manager)
-{
-    manager.registerAction("fqdncache",
-                           "FQDN Cache Stats and Contents",
-                           fqdnStats, 0, 1);
-
 }
 
 /**

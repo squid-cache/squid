@@ -31,6 +31,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+#include "config.h"
 
 /* for ClientActiveRequests global */
 #include "dlink.h"
@@ -50,6 +51,9 @@
 #include "ESI.h"
 #endif
 #include "MemObject.h"
+#if USE_ZPH_QOS
+#include "fde.h"
+#endif
 #include "ACLChecklist.h"
 #include "ACL.h"
 #if DELAY_POOLS
@@ -710,23 +714,30 @@ clientReplyContext::purgeRequestFindObjectToPurge()
     StoreEntry::getPublicByRequestMethod(this, http->request, METHOD_GET);
 }
 
+// Purges all entries with a given url
+// TODO: move to SideAgent parent, when we have one
 /*
  * We probably cannot purge Vary-affected responses because their MD5
  * keys depend on vary headers.
  */
+void
+purgeEntriesByUrl(const char *url)
+{
+    for (HttpRequestMethod m(METHOD_NONE); m != METHOD_ENUM_END; ++m) {
+        if (m.isCacheble()) {
+            if (StoreEntry *entry = storeGetPublic(url, m)) {
+                debugs(88, 5, "purging " << RequestMethodStr(m) << ' ' << url);
+                entry->release();
+            }
+        }
+    }
+}
+
 void 
 clientReplyContext::purgeAllCached()
 {
 	const char *url = urlCanonical(http->request);
-
-	for (HttpRequestMethod m(METHOD_NONE); m != METHOD_ENUM_END; ++m) {
-	    if (m.isCacheble()) {
-	        if (StoreEntry *entry = storeGetPublic(url, m)) {
-	            debugs(88, 5, "purging " << RequestMethodStr(m) << ' ' << url);
-	            entry->release();
-	        }
-	    }
-	}
+    purgeEntriesByUrl(url);
 }
 
 void
@@ -1172,18 +1183,13 @@ clientReplyContext::buildReplyHeader()
     hdr->delById(HDR_ETAG);
 #endif
 
-    // TODO: Should ESIInclude.cc that calls removeConnectionHeaderEntries
-    // also delete HDR_PROXY_CONNECTION and HDR_KEEP_ALIVE like we do below?
-
-    // XXX: Should HDR_PROXY_CONNECTION by studied instead of HDR_CONNECTION?
-    // httpHeaderHasConnDir does that but we do not. Is this is a bug?
-    hdr->delById(HDR_PROXY_CONNECTION);
-    /* here: Keep-Alive is a field-name, not a connection directive! */
-    hdr->delById(HDR_KEEP_ALIVE);
-    /* remove Set-Cookie if a hit */
-
     if (is_hit)
         hdr->delById(HDR_SET_COOKIE);
+
+    // if there is not configured a peer proxy with login=PASS option enabled 
+    // remove the Proxy-Authenticate header
+    if ( !(request->peer_login && strcmp(request->peer_login,"PASS") ==0))
+	reply->header.delById(HDR_PROXY_AUTHENTICATE);
 
     reply->header.removeHopByHopEntries();
 
@@ -1243,8 +1249,9 @@ clientReplyContext::buildReplyHeader()
     }
 
     /* Filter unproxyable authentication types */
+
     if (http->logType != LOG_TCP_DENIED &&
-            (hdr->has(HDR_WWW_AUTHENTICATE) || hdr->has(HDR_PROXY_AUTHENTICATE))) {
+	    (hdr->has(HDR_WWW_AUTHENTICATE) || hdr->has(HDR_PROXY_AUTHENTICATE))) {
         HttpHeaderPos pos = HttpHeaderInitPos;
         HttpHeaderEntry *e;
 
@@ -1266,7 +1273,19 @@ clientReplyContext::buildReplyHeader()
     }
 
     /* Handle authentication headers */
-    if (request->auth_user_request)
+    if(http->logType == LOG_TCP_DENIED &&
+       ( reply->sline.status == HTTP_PROXY_AUTHENTICATION_REQUIRED || 
+	 reply->sline.status == HTTP_UNAUTHORIZED) 
+	){
+	/* Add authentication header */
+	/*! \todo alter errorstate to be accel on|off aware. The 0 on the next line
+	 * depends on authenticate behaviour: all schemes to date send no extra
+	 * data on 407/401 responses, and do not check the accel state on 401/407
+	 * responses
+	 */
+	authenticateFixHeader(reply, request->auth_user_request, request, 0, 1);
+    }
+    else if (request->auth_user_request)
         authenticateFixHeader(reply, request->auth_user_request, request,
                               http->flags.accel, 0);
 
@@ -1565,6 +1584,13 @@ clientReplyContext::doGetMoreData()
         /* guarantee nothing has been sent yet! */
         assert(http->out.size == 0);
         assert(http->out.offset == 0);
+#if USE_ZPH_QOS
+        if (Config.zph_tos_local)
+        {
+            debugs(33, 2, "ZPH Local hit, TOS="<<Config.zph_tos_local);
+            comm_set_tos(http->getConn()->fd,Config.zph_tos_local);
+        }
+#endif /* USE_ZPH_QOS */
         tempBuffer.offset = reqofs;
         tempBuffer.length = getNextNode()->readBuffer.length;
         tempBuffer.data = getNextNode()->readBuffer.data;
@@ -1776,12 +1802,14 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
 
     StoreIOBuffer tempBuffer;
     char *buf = next()->readBuffer.data;
-    char *body_buf = buf + reply->hdr_sz - next()->readBuffer.offset;
+    char *body_buf = buf + reply->hdr_sz;
 
     //Server side may disable ranges under some circumstances.
 
     if ((!http->request->range))
         next()->readBuffer.offset = 0;
+
+    body_buf -= next()->readBuffer.offset;
 
     if (next()->readBuffer.offset != 0) {
         if (next()->readBuffer.offset > body_size) {
@@ -1826,6 +1854,25 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
         xmemcpy(buf, result.data, result.length);
         body_buf = buf;
     }
+
+#if USE_ZPH_QOS
+    if (reqofs==0 && !logTypeIsATcpHit(http->logType))
+    {
+        int tos = 0;
+        if (Config.zph_tos_peer && 
+             (http->request->hier.code==SIBLING_HIT || 
+                Config.onoff.zph_tos_parent && http->request->hier.code==PARENT_HIT) )
+        {
+            tos = Config.zph_tos_peer;
+            debugs(33, 2, "ZPH: Peer hit with hier.code="<<http->request->hier.code<<", TOS="<<tos);
+        }
+        else if (Config.onoff.zph_preserve_miss_tos && Config.zph_preserve_miss_tos_mask) {
+            tos = fd_table[fd].upstreamTOS & Config.zph_preserve_miss_tos_mask;
+            debugs(33, 2, "ZPH: Preserving TOS on miss, TOS="<<tos);
+        }
+        comm_set_tos(fd,tos);
+    }
+#endif    
 
     /* We've got the final data to start pushing... */
     flags.storelogiccomplete = 1;

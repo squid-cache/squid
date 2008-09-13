@@ -417,7 +417,7 @@ error_html(const char *msg)
     printf("<HTML><HEAD><TITLE>Cache Manager Error</TITLE>\n");
     printf("<STYLE type=\"text/css\"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}--></STYLE></HEAD>\n");
     printf("<BODY><H1>Cache Manager Error</H1>\n");
-    printf("<P>\n%s</P>\n", msg);
+    printf("<P>\n%s</P>\n", html_quote(msg));
     print_trailer();
 }
 
@@ -531,7 +531,7 @@ munge_other_line(const char *buf, cachemgr_request * req)
     if (!strchr(buf, '\t') || *buf == '\t') {
         /* nope, just text */
         snprintf(html, sizeof(html), "%s%s",
-                 table_line_num ? "</table>\n<pre>" : "", buf);
+                 table_line_num ? "</table>\n<pre>" : "", html_quote(buf));
         table_line_num = 0;
         return html;
     }
@@ -568,7 +568,7 @@ munge_other_line(const char *buf, cachemgr_request * req)
         l += snprintf(html + l, sizeof(html) - l, "<%s colspan=\"%d\" align=\"%s\">%s</%s>",
                       ttag, column_span,
                       is_header ? "center" : is_number(cell) ? "right" : "left",
-                      cell, ttag);
+                      html_quote(cell), ttag);
     }
 
     xfree(buf_copy);
@@ -576,6 +576,27 @@ munge_other_line(const char *buf, cachemgr_request * req)
     l += snprintf(html + l, sizeof(html) - l, "</tr>\n");
     next_is_header = is_header && strstr(buf, "\t\t");
     table_line_num++;
+    return html;
+}
+
+static const char *
+munge_action_line(const char *_buf, cachemgr_request * req)
+{
+    static char html[2 * 1024];
+    char *buf = xstrdup(_buf);
+    char *x = buf;
+    const char *action, *description;
+    char *p;
+
+    if ((p = strchr(x, '\n')))
+       *p = '\0';
+    action = xstrtok(&x, '\t');
+    description = xstrtok(&x, '\t');
+    if (!description)
+       description = action;
+    if (!action)
+       return "";
+    snprintf(html, sizeof(html), " <a href=\"%s\">%s</a>", menu_url(req, action), description);
     return html;
 }
 
@@ -594,7 +615,7 @@ read_reply(int s, cachemgr_request * req)
 #endif
     /* interpretation states */
     enum {
-        isStatusLine, isHeaders, isBodyStart, isBody, isForward, isEof, isForwardEof, isSuccess, isError
+        isStatusLine, isHeaders, isActions, isBodyStart, isBody, isForward, isEof, isForwardEof, isSuccess, isError
     } istate = isStatusLine;
     int parse_menu = 0;
     const char *action = req->action;
@@ -689,6 +710,22 @@ read_reply(int s, cachemgr_request * req)
                 printf("<PRE>\n");
             }
 
+            istate = isActions;
+            /* yes, fall through, we do not want to loose the first line */
+
+        case isActions:
+            if (strncmp(buf, "action:", 7) == 0) {
+                fputs(" ", stdout);
+                fputs(munge_action_line(buf + 7, req), stdout);
+                break;
+            }
+            if (parse_menu) {
+                printf("<UL>\n");
+            } else {
+                printf("<HR noshade size=\"1px\">\n");
+                printf("<PRE>\n");
+            }
+
             istate = isBody;
             /* yes, fall through, we do not want to loose the first line */
 
@@ -709,9 +746,7 @@ read_reply(int s, cachemgr_request * req)
              * 401 to .cgi because web server filters out all auth info. Thus we
              * disable authentication headers for now.
              */
-            if (!strncasecmp(buf, "WWW-Authenticate:", 17) || !strncasecmp(buf, "Proxy-Authenticate:", 19))
-
-                ;	/* skip */
+            if (!strncasecmp(buf, "WWW-Authenticate:", 17) || !strncasecmp(buf, "Proxy-Authenticate:", 19));	/* skip */
             else
                 fputs(buf, stdout);
 
@@ -795,16 +830,6 @@ process_request(cachemgr_request * req)
         return 1;
     }
 
-#if USE_IPV6
-    if ((s = socket(PF_INET6, SOCK_STREAM, 0)) < 0) {
-#else
-    if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
-#endif
-        snprintf(buf, 1024, "socket: %s\n", xstrerror());
-        error_html(buf);
-        return 1;
-    }
-
     S = *gethostbyname(req->hostname);
 
     if ( !S.IsAnyAddr() ) {
@@ -820,6 +845,16 @@ process_request(cachemgr_request * req)
     S.SetPort(req->port);
 
     S.GetAddrInfo(AI);
+
+#if USE_IPV6
+    if ((s = socket( AI->ai_family, SOCK_STREAM, 0)) < 0) {
+#else
+    if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
+#endif
+        snprintf(buf, 1024, "socket: %s\n", xstrerror());
+        error_html(buf);
+        return 1;
+    }
 
     if (connect(s, AI->ai_addr, AI->ai_addrlen) < 0) {
         snprintf(buf, 1024, "connect %s: %s\n",

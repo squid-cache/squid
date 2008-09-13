@@ -142,7 +142,6 @@ static IDNSCB ipcacheHandleReply;
 #endif
 static IPH ipcacheHandleCnameRecurse;
 static int ipcacheExpiredEntry(ipcache_entry *);
-static int ipcache_testname(void);
 #if USE_DNSSERVERS
 static int ipcacheParse(ipcache_entry *, const char *buf);
 #else
@@ -167,24 +166,6 @@ static long ipcache_high = 200;
 #if LIBRESOLV_DNS_TTL_HACK
 extern int _dns_ttl_;
 #endif
-
-/// \ingroup IPCacheInternal
-static int
-ipcache_testname(void)
-{
-    wordlist *w = NULL;
-    debugs(14, 1, "Performing DNS Tests...");
-
-    if ((w = Config.dns_testname_list) == NULL)
-        return 1;
-
-    for (; w; w = w->next) {
-        if (gethostbyname(w->key) != NULL)
-            return 1;
-    }
-
-    return 0;
-}
 
 /**
  \ingroup IPCacheInternal
@@ -770,6 +751,17 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
 #endif
 }
 
+/// \ingroup IPCacheInternal
+static void
+ipcacheRegisterWithCacheManager(void)
+{
+    CacheManager::GetInstance()->
+        registerAction("ipcache",
+                       "IP Cache Stats and Contents",
+                       stat_ipcache_get, 0, 1);
+}
+
+
 /**
  \ingroup IPCacheAPI
  *
@@ -781,19 +773,9 @@ void
 ipcache_init(void)
 {
     int n;
-    debugs(14, 3, "Initializing IP Cache...");
+    debugs(14, DBG_IMPORTANT, "Initializing IP Cache...");
     memset(&IpcacheStats, '\0', sizeof(IpcacheStats));
     memset(&lru_list, '\0', sizeof(lru_list));
-    /* test naming lookup */
-
-    if (!opt_dns_tests) {
-        debugs(14, 4, "ipcache_init: Skipping DNS name lookup tests.");
-    } else if (!ipcache_testname()) {
-        fatal("ipcache_init: DNS name lookup tests failed.");
-    } else {
-        debugs(14, 1, "Successful DNS name lookup tests...");
-    }
-
     memset(&static_addrs, '\0', sizeof(ipcache_addrs));
 
     static_addrs.in_addrs = (IPAddress *)xcalloc(1, sizeof(IPAddress));
@@ -806,15 +788,8 @@ ipcache_init(void)
     n = hashPrime(ipcache_high / 4);
     ip_table = hash_create((HASHCMP *) strcmp, n, hash4);
     memDataInit(MEM_IPCACHE_ENTRY, "ipcache_entry", sizeof(ipcache_entry), 0);
-}
 
-/// \ingroup IPCacheAPI
-void
-ipcacheRegisterWithCacheManager(CacheManager & manager)
-{
-    manager.registerAction("ipcache",
-                           "IP Cache Stats and Contents",
-                           stat_ipcache_get, 0, 1);
+    ipcacheRegisterWithCacheManager();
 }
 
 /**

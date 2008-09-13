@@ -4,13 +4,13 @@
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>GREŠKA</H1>
-<H2>FTP upload nije uspeo </H2>
+<H2>FTP upload nije uspeo</H2>
 <HR noshade size="1px">
 <P>
 Tokom pokušaja da se PRENESE strana sa sledeæom adresom (URL):
 <A HREF="%U">%U</A>
 <P>
-Dok je pokušavao da prenese (PUT) sledeæi URL:
+dok je pokušavao da prenese (PUT) sledeæi URL:
 <A HREF="%U">%U</A>
 <P>
 Squid je zadao sledeæu komandu:
@@ -28,5 +28,5 @@ da bi dobio odgovor:
 treba da proverite putanju, privilegije, raspoloživ prostor na disku i pokušate ponovo.
 </PRE>
 
-<P>Vaš cache/proxy administrator je: <A HREF="mailto:%w%W">%w</A>. 
+<P>Vaš keš/proksi administrator je: <A HREF="mailto:%w">%w</A>. 
 

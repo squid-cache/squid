@@ -778,7 +778,7 @@ AuthDigestConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, 
     if (!authenticate)
         return;
 
-    int stale = 1;
+    int stale = 0;
 
     if (auth_user_request) {
         AuthDigestUserRequest *digest_request;
@@ -888,9 +888,10 @@ AuthDigestConfig::init(AuthConfig * scheme)
 }
 
 void
-AuthDigestConfig::registerWithCacheManager(CacheManager & manager)
+AuthDigestConfig::registerWithCacheManager(void)
 {
-    manager.registerAction("digestauthenticator",
+    CacheManager::GetInstance()->
+            registerAction("digestauthenticator",
                            "Digest User Authenticator Stats",
                            authenticateDigestStats, 0, 1);
 }
@@ -948,6 +949,8 @@ AuthDigestConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
         parse_onoff(&CheckNonceCount);
     } else if (strcasecmp(param_str, "post_workaround") == 0) {
         parse_onoff(&PostWorkaround);
+    } else if (strcasecmp(param_str, "utf8") == 0) {
+        parse_onoff(&utf8);
     } else {
         debugs(29, 0, "unrecognised digest auth scheme parameter '" << param_str << "'");
     }
@@ -1222,7 +1225,6 @@ AuthDigestConfig::decode(char const *proxy_auth)
 
     if (digest_request->cnonce && strlen(digest_request->nc) != 8) {
         debugs(29, 4, "authenticateDigestDecode: nonce count length invalid");
-        delete digest_request;
         return authDigestLogUsername(username, digest_request);
     }
 
@@ -1244,7 +1246,6 @@ AuthDigestConfig::decode(char const *proxy_auth)
     if (digest_request->qop && strcmp(digest_request->qop, QOP_AUTH) != 0) {
         /* we received a qop option we didn't send */
         debugs(29, 4, "authenticateDigestDecode: Invalid qop option received");
-        delete digest_request;
         return authDigestLogUsername(username, digest_request);
     }
 
@@ -1255,21 +1256,18 @@ AuthDigestConfig::decode(char const *proxy_auth)
 
     if (!digest_request->response || strlen(digest_request->response) != 32) {
         debugs(29, 4, "authenticateDigestDecode: Response length invalid");
-        delete digest_request;
         return authDigestLogUsername(username, digest_request);
     }
 
     /* do we have a username ? */
     if (!username || username[0] == '\0') {
         debugs(29, 4, "authenticateDigestDecode: Empty or not present username");
-        delete digest_request;
         return authDigestLogUsername(username, digest_request);
     }
 
     /* check that we're not being hacked / the username hasn't changed */
     if (nonce->user && strcmp(username, nonce->user->username())) {
         debugs(29, 4, "authenticateDigestDecode: Username for the nonce does not equal the username for the request");
-        delete digest_request;
         return authDigestLogUsername(username, digest_request);
     }
 
@@ -1277,7 +1275,6 @@ AuthDigestConfig::decode(char const *proxy_auth)
     if ((digest_request->qop && !digest_request->cnonce)
             || (!digest_request->qop && digest_request->cnonce)) {
         debugs(29, 4, "authenticateDigestDecode: qop without cnonce, or vice versa!");
-        delete digest_request;
         return authDigestLogUsername(username, digest_request);
     }
 
@@ -1287,7 +1284,6 @@ AuthDigestConfig::decode(char const *proxy_auth)
     else if (strcmp(digest_request->algorithm, "MD5")
              && strcmp(digest_request->algorithm, "MD5-sess")) {
         debugs(29, 4, "authenticateDigestDecode: invalid algorithm specified!");
-        delete digest_request;
         return authDigestLogUsername(username, digest_request);
     }
 
@@ -1370,7 +1366,13 @@ AuthDigestUserRequest::module_start(RH * handler, void *data)
     r->data = cbdataReference(data);
     r->auth_user_request = this;
     AUTHUSERREQUESTLOCK(r->auth_user_request, "r");
-    snprintf(buf, 8192, "\"%s\":\"%s\"\n", digest_user->username(), realm);
+    if (digestConfig.utf8) {
+	char user[1024];
+	latin1_to_utf8(user, sizeof(user), digest_user->username());
+	snprintf(buf, 8192, "\"%s\":\"%s\"\n", user, realm);
+    } else {
+	snprintf(buf, 8192, "\"%s\":\"%s\"\n", digest_user->username(), realm);
+    }
 
     helperSubmit(digestauthenticators, buf, authenticateDigestHandleReply, r);
 }

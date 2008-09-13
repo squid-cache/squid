@@ -55,10 +55,19 @@ dnsStats(StoreEntry * sentry)
     helperStats(sentry, dnsservers);
 }
 
+static void
+dnsRegisterWithCacheManager(void)
+{
+    CacheManager::GetInstance->
+        registerAction("dns", "Dnsserver Statistics", dnsStats, 0, 1);
+}
+
 void
 dnsInit(void)
 {
     wordlist *w;
+
+    dnsRegisterWithCacheManager();
 
     if (!Config.Program.dnsserver)
         return;
@@ -83,14 +92,6 @@ dnsInit(void)
     }
 
     helperOpenServers(dnsservers);
-}
-
-void
-dnsRegisterWithCacheManager(CacheManager & manager)
-{
-    manager.registerAction("dns",
-                           "Dnsserver Statistics",
-                           dnsStats, 0, 1);
 }
 
 void

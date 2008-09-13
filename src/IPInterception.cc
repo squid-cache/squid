@@ -32,7 +32,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
+#include "config.h"
 #include "IPInterception.h"
 #include "fde.h"
 
@@ -90,6 +90,7 @@
 #endif /* PF_TRANSPARENT required headers */
 
 #if LINUX_NETFILTER
+#include <linux/types.h>
 #include <linux/netfilter_ipv4.h>
 #endif
 
@@ -148,6 +149,7 @@ IPIntercept::NetfilterInterception(int fd, const IPAddress &me, IPAddress &dst, 
         return 0;
     }
 
+    debugs(89, 9, HERE << "address: me= " << me << ", dst= " << dst);
 #endif
     return -1;
 }
@@ -181,6 +183,7 @@ IPIntercept::NetfilterTransparent(int fd, const IPAddress &me, IPAddress &dst, i
         return 0;
     }
 
+    debugs(89, 9, HERE << "address: me= " << me << ", dst= " << dst);
 #endif
     return -1;
 }
@@ -195,7 +198,7 @@ IPIntercept::IPFWInterception(int fd, const IPAddress &me, IPAddress &dst, int s
 
     /** \par
      * Try lookup for IPFW interception. */
-    if( getsockname(fd, lookup->ai_addr, &lookup->ai_addrlen) >= 0 ) {
+    if( getsockname(fd, lookup->ai_addr, &lookup->ai_addrlen) != 0 ) {
         if( !silent ) {
             debugs(89, DBG_IMPORTANT, HERE << " IPFW getsockname(...) failed: " << xstrerror());
             last_reported = squid_curtime;
@@ -212,6 +215,7 @@ IPIntercept::IPFWInterception(int fd, const IPAddress &me, IPAddress &dst, int s
         return 0;
     }
 
+    debugs(89, 9, HERE << "address: me= " << me << ", dst= " << dst);
 #endif
     return -1;
 }
@@ -362,7 +366,7 @@ IPIntercept::NatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAdd
     if( !peer.IsIPv4() ) return -1;
 
     if (pffd < 0)
-        pffd = open("/dev/pf", O_RDWR);
+        pffd = open("/dev/pf", O_RDONLY);
 
     if (pffd < 0)
     {

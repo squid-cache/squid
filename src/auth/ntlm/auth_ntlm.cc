@@ -198,9 +198,10 @@ AuthNTLMConfig::init(AuthConfig * scheme)
 }
 
 void
-AuthNTLMConfig::registerWithCacheManager(CacheManager & manager)
+AuthNTLMConfig::registerWithCacheManager(void)
 {
-    manager.registerAction("ntlmauthenticator",
+    CacheManager::GetInstance()->
+            registerAction("ntlmauthenticator",
                            "NTLM User Authenticator Stats",
                            authenticateNTLMStats, 0, 1);
 }
@@ -279,7 +280,6 @@ AuthNTLMConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, ht
 
         if (!keep_alive) {
             /* drop the connection */
-            rep->header.delByName("keep-alive");
             request->flags.proxy_keepalive = 0;
         }
     } else {
@@ -292,7 +292,6 @@ AuthNTLMConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, ht
         case AUTHENTICATE_STATE_FAILED:
             /* here it makes sense to drop the connection, as auth is
              * tied to it, even if MAYBE the client could handle it - Kinkie */
-            rep->header.delByName("keep-alive");
             request->flags.proxy_keepalive = 0;
             /* fall through */
 

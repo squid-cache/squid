@@ -63,10 +63,10 @@ const char *hier_strings[] =
         "CD_PARENT_HIT",
         "CD_SIBLING_HIT",
 #endif
-#if USE_CARP
         "CARP",
-#endif
         "ANY_PARENT",
+	"USERHASH",
+	"SOURCEHASH",
         "INVALID CODE"
     };
 
@@ -505,12 +505,12 @@ peerGetSomeParent(ps_state * ps)
 
     if ((p = getDefaultParent(request))) {
         code = DEFAULT_PARENT;
-#if USE_CARP
-
+    } else if ((p = peerUserHashSelectParent(request))) {
+        code = USERHASH_PARENT;
+    } else if ((p = peerSourceHashSelectParent(request))) {
+        code = SOURCEHASH_PARENT;
     } else if ((p = carpSelectParent(request))) {
         code = CARP;
-#endif
-
     } else if ((p = getRoundRobinParent(request))) {
         code = ROUNDROBIN_PARENT;
     } else if ((p = getWeightedRoundRobinParent(request))) {

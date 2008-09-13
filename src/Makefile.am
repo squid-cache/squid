@@ -205,7 +205,7 @@ else
 AIOPS_SOURCE = DiskIO/DiskThreads/aiops.cc
 endif
 
-IDENT_ALL_SOURCE = ACLIdent.cc ACLIdent.h ident.cc
+IDENT_ALL_SOURCE = ACLIdent.cc ACLIdent.h ident.cc ident.h
 if ENABLE_IDENT
 IDENT_SOURCE = $(IDENT_ALL_SOURCE)
 else
@@ -593,6 +593,8 @@ squid_SOURCES = \
 	PeerDigest.h \
 	peer_digest.cc \
 	peer_select.cc \
+	peer_sourcehash.cc \
+	peer_userhash.cc \
 	PeerSelectState.h \
 	PingData.h \
 	protos.h \
@@ -890,6 +892,8 @@ ufsdump_SOURCES = \
 	pconn.cc \
 	peer_digest.cc \
 	peer_select.cc \
+	peer_sourcehash.cc \
+	peer_userhash.cc \
 	protos.h \
 	redirect.cc \
 	referer.cc \
@@ -975,6 +979,7 @@ BUILT_SOURCES = \
 
 sysconf_DATA = \
 	squid.conf.default \
+	squid.conf.documented \
 	mime.conf.default
 
 data_DATA = \
@@ -1049,7 +1054,7 @@ DEFAULT_PINGER		= $(libexecdir)/`echo pinger | sed '$(transform);s/$$/$(EXEEXT)/
 DEFAULT_UNLINKD		= $(libexecdir)/`echo unlinkd | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_DISKD		= $(libexecdir)/`echo diskd | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_ICON_DIR	= $(datadir)/icons
-DEFAULT_ERROR_DIR	= $(datadir)/errors/@ERR_DEFAULT_LANGUAGE@
+DEFAULT_ERROR_DIR	= $(datadir)/errors
 DEFAULT_MIB_PATH	= $(datadir)/mib.txt
 DEFAULT_HOSTS		= @OPT_DEFAULT_HOSTS@
 
@@ -1074,9 +1079,12 @@ test_cache_digest: test_cache_digest.o CacheDigest.o debug.o globals.o store_key
 ## If autodependency works well this is not needed anymore
 cache_cf.o: cf_parser.h
 
-# squd.conf.default is built by cf_gen when making cf_parser.h
-squid.conf.default: cf_parser.h
+# squid.conf.default is built by cf_gen when making cf_parser.h
+squid.conf.documented: cf_parser.h
 	true
+
+squid.conf.default: squid.conf.documented
+	grep -v -E "^[#\ ]" squid.conf.documented | grep . >squid.conf.default
 
 cf_parser.h: cf.data cf_gen$(EXEEXT)
 	./cf_gen cf.data $(srcdir)/cf.data.depend
@@ -1086,7 +1094,7 @@ cf_gen_defines.h: $(srcdir)/cf_gen_defines $(srcdir)/cf.data.pre
 
 
 ## FIXME: generate a sed command file from configure. Then this doesn't
-## depend on the Makefile. 
+## depend on the Makefile.
 cf.data: cf.data.pre Makefile
 	sed "\
 	s%@DEFAULT_HTTP_PORT@%$(DEFAULT_HTTP_PORT)%g;\
@@ -1127,6 +1135,10 @@ install-data-local: install-sysconfDATA install-dataDATA
 	        echo "$(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE)"; \
 	        $(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE); \
 	fi
+	echo "$(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE).default"; \
+	$(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE).default; \
+	echo "$(INSTALL_DATA) squid.conf.documented $(DESTDIR)$(DEFAULT_CONFIG_FILE).documented"; \
+	$(INSTALL_DATA) squid.conf.documented $(DESTDIR)$(DEFAULT_CONFIG_FILE).documented; \
 	$(mkinstalldirs) $(DESTDIR)$(DEFAULT_LOG_PREFIX)
 
 uninstall-local:
@@ -1141,7 +1153,7 @@ uninstall-local:
 #		$(RM) -f $(DESTDIR)$(DEFAULT_CONFIG_FILE); \
 #	fi
 
-DISTCLEANFILES = cf_gen_defines.h cf.data cf_parser.h squid.conf.default \
+DISTCLEANFILES = cf_gen_defines.h cf.data cf_parser.h squid.conf.default squid.conf.documented \
 	globals.cc string_arrays.c repl_modules.cc 
 
 ##install-pinger:
@@ -1171,8 +1183,7 @@ TEST_CALL_SOURCES = \
 	AsyncCall.cc
 
 
-check_PROGRAMS+= testHeaders \
-	tests/testAuth \
+check_PROGRAMS+= tests/testAuth \
 	tests/testACLMaxUserIP \
 	tests/testBoilerplate \
 	tests/testCacheManager \
@@ -1189,7 +1200,7 @@ check_PROGRAMS+= testHeaders \
 
 ## Special Universal .h dependency test script
 ## aborts if error encountered
-testHeaders: *.h DiskIO/*.h
+testHeaders: $(top_srcdir)/src/*.h $(top_srcdir)/src/DiskIO/*.h
 	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "." || exit 1
 	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "DiskIO" || exit 1
 ## src/repl/ has no .h files and its own makefile.
@@ -1231,6 +1242,7 @@ tests_testAuth_SOURCES= tests/testAuth.cc tests/testMain.cc  tests/testAuth.h $(
 	StatHist.cc HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
 	tests/stub_HttpRequest.cc tests/stub_DelayId.cc \
 	tests/stub_MemObject.cc mem_node.cc \
+	tests/stub_cache_manager.cc \
 	stmem.cc \
 	tests/stub_comm.cc \
 	tests/stub_http.cc \
@@ -1311,6 +1323,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	tests/stub_DelayId.cc \
 	tests/stub_MemObject.cc \
 	tests/stub_store.cc \
+	tests/stub_cache_manager.cc \
 	tests/testACLMaxUserIP.cc \
 	tests/testACLMaxUserIP.h \
 	tests/testMain.cc \
@@ -1435,6 +1448,8 @@ tests_testCacheManager_SOURCES = \
 	pconn.cc \
 	peer_digest.cc \
 	peer_select.cc \
+	peer_sourcehash.cc \
+	peer_userhash.cc \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \
@@ -1503,7 +1518,9 @@ tests_testDiskIO_SOURCES= \
 	$(SWAP_TEST_SOURCES) \
 	tests/testDiskIO.cc \
 	tests/testDiskIO.h \
-	tests/testMain.cc
+	tests/testMain.cc \
+	tests/stub_cache_manager.cc
+
 tests_testDiskIO_LDADD= \
 	$(SWAP_TEST_LDADD) \
 	libsquid.la \
@@ -1606,6 +1623,8 @@ tests_testEvent_SOURCES = \
 	pconn.cc \
 	peer_digest.cc \
 	peer_select.cc \
+	peer_sourcehash.cc \
+	peer_userhash.cc \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \
@@ -1762,6 +1781,8 @@ tests_testEventLoop_SOURCES = \
 	pconn.cc \
 	peer_digest.cc \
 	peer_select.cc \
+	peer_sourcehash.cc \
+	peer_userhash.cc \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \
@@ -1907,6 +1928,8 @@ tests_test_http_range_SOURCES = \
 	Parsing.cc \
 	peer_digest.cc \
 	peer_select.cc \
+	peer_sourcehash.cc \
+	peer_userhash.cc \
 	pconn.cc \
 	redirect.cc \
 	referer.cc \
@@ -2068,6 +2091,8 @@ tests_testHttpRequest_SOURCES = \
 	pconn.cc \
 	peer_digest.cc \
 	peer_select.cc \
+	peer_sourcehash.cc \
+	peer_userhash.cc \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \
@@ -2214,6 +2239,7 @@ tests_testStore_SOURCES= \
 	tests/TestSwapDir.h \
 	tests/stub_fd.cc \
 	tests/stub_HttpReply.cc \
+	tests/stub_cache_manager.cc \
 	$(STORE_TEST_SOURCES)
 
 tests_testStore_LDADD= \
@@ -2234,6 +2260,7 @@ tests_testString_SOURCES= \
 	tests/testMain.cc \
 	tests/testString.cc \
 	tests/testString.h \
+	tests/stub_cache_manager.cc \
 	$(TESTSOURCES) \
 	time.cc 
 
@@ -2302,6 +2329,7 @@ SWAP_TEST_DS =\
 tests_testUfs_SOURCES= tests/testUfs.cc \
 	tests/testMain.cc \
 	tests/testUfs.h \
+	tests/stub_cache_manager.cc \
 	$(SWAP_TEST_SOURCES)
 tests_testUfs_LDADD= \
 	libsquid.la \
@@ -2314,8 +2342,10 @@ tests_testUfs_DEPENDENCIES = \
 tests_testCoss_SOURCES= tests/testCoss.cc \
 	tests/testMain.cc \
 	tests/testCoss.h \
+	tests/stub_cache_manager.cc \
 	$(SWAP_TEST_SOURCES)
 tests_testCoss_LDADD= \
+	libsquid.la \
 	$(SWAP_TEST_LDADD) \
 	@SSLLIB@
 tests_testCoss_LDFLAGS = $(LIBADD_DL)
@@ -2429,6 +2459,8 @@ tests_testURL_SOURCES = \
 	pconn.cc \
 	peer_digest.cc \
 	peer_select.cc \
+	peer_sourcehash.cc \
+	peer_userhash.cc \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \

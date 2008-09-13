@@ -34,10 +34,4 @@
 #ifndef SQUID_COMM_EPOLL_H
 #define SQUID_COMM_EPOLL_H
 
-/* forward decls */
-
-class CacheManager;
-
-extern void commEPollRegisterWithCacheManager(CacheManager & manager);
-
 #endif /* SQUID_COMM_EPOLL_H */

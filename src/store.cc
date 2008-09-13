@@ -1086,9 +1086,7 @@ StoreEntry::abort()
     assert(mem_obj != NULL);
     debugs(20, 6, "storeAbort: " << getMD5Text());
 
-    lock()
-
-    ;         /* lock while aborting */
+    lock();         /* lock while aborting */
     negativeCache();
 
     releaseRequest();
@@ -1389,6 +1387,16 @@ StoreEntry::validLength() const
     return 0;
 }
 
+static void
+storeRegisterWithCacheManager(void)
+{
+    CacheManager *manager=CacheManager::GetInstance();
+    manager->registerAction("storedir", "Store Directory Stats", Store::Stats, 0, 1);
+    manager->registerAction("store_io", "Store IO Interface Stats", storeIOStats, 0, 1);
+    manager->registerAction("store_check_cachable_stats", "storeCheckCachable() Stats",
+                           storeCheckCachableStats, 0, 1);
+}
+
 void
 storeInit(void)
 {
@@ -1399,20 +1407,8 @@ storeInit(void)
     eventAdd("storeLateRelease", storeLateRelease, NULL, 1.0, 1);
     Store::Root().init();
     storeRebuildStart();
-}
 
-void
-storeRegisterWithCacheManager(CacheManager & manager)
-{
-    manager.registerAction("storedir",
-                           "Store Directory Stats",
-                           Store::Stats, 0, 1);
-    manager.registerAction("store_check_cachable_stats",
-                           "storeCheckCachable() Stats",
-                           storeCheckCachableStats, 0, 1);
-    manager.registerAction("store_io",
-                           "Store IO Interface Stats",
-                           storeIOStats, 0, 1);
+    storeRegisterWithCacheManager();
 }
 
 void
@@ -1452,10 +1448,21 @@ StoreEntry::checkNegativeHit() const
     return 1;
 }
 
+/**
+ * Set object for negative caching.
+ * Preserves any expiry information given by the server.
+ * In absence of proper expiry info it will set to expire immediately,
+ * or with HTTP-violations enabled the configured negative-TTL is observed
+ */
 void
 StoreEntry::negativeCache()
 {
-    expires = squid_curtime + Config.negativeTtl;
+    if(expires == 0)
+#if HTTP_VIOLATIONS
+        expires = squid_curtime + Config.negativeTtl;
+#else
+        expires = squid_curtime;
+#endif
     EBIT_SET(flags, ENTRY_NEGCACHED);
 }
 

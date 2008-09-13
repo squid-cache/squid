@@ -118,15 +118,15 @@ IPAddress::~IPAddress()
 }
 
 int
-IPAddress::GetCIDR()
+IPAddress::GetCIDR() const
 {
     uint8_t shift,byte;
     uint8_t bit,caught;
     int len = 0;
 #if USE_IPV6
-    uint8_t *ptr= m_SocketAddr.sin6_addr.s6_addr;
+    const uint8_t *ptr= m_SocketAddr.sin6_addr.s6_addr;
 #else
-    uint8_t *ptr= (uint8_t *)&m_SocketAddr.sin_addr.s_addr;
+    const uint8_t *ptr= (uint8_t *)&m_SocketAddr.sin_addr.s_addr;
 #endif
 
     /* Let's scan all the bits from Most Significant to Least */
@@ -340,18 +340,20 @@ bool IPAddress::SetIPv4()
 bool IPAddress::IsLocalhost() const
 {
 #if USE_IPV6
-    return        m_SocketAddr.sin6_addr.s6_addr32[0] == 0
+    return    (   m_SocketAddr.sin6_addr.s6_addr32[0] == 0
                && m_SocketAddr.sin6_addr.s6_addr32[1] == 0
                && m_SocketAddr.sin6_addr.s6_addr32[2] == 0
                && m_SocketAddr.sin6_addr.s6_addr32[3] == htonl(0x1)
-
+              )
 #if !IPV6_SPECIAL_LOCALHOST
-               || m_SocketAddr.sin6_addr.s6_addr32[0] == 0
+            ||
+              (   m_SocketAddr.sin6_addr.s6_addr32[0] == 0
                && m_SocketAddr.sin6_addr.s6_addr32[1] == 0
                && m_SocketAddr.sin6_addr.s6_addr32[2] == htonl(0xffff)
                && m_SocketAddr.sin6_addr.s6_addr32[3] == htonl(0x7F000001)
+              )
 #endif
-               ;
+            ;
 #else
 
     return (htonl(0x7F000001) == m_SocketAddr.sin_addr.s_addr);
@@ -820,7 +822,7 @@ void IPAddress::GetAddrInfo(struct addrinfo *&dst, int force) const
         dst->ai_protocol = IPPROTO_UDP;
 
 #if USE_IPV6
-    if( force == AF_INET6 || force == AF_UNSPEC && IsIPv6() )
+    if( force == AF_INET6 || (force == AF_UNSPEC && IsIPv6()) )
     {
         dst->ai_addr = (struct sockaddr*)new sockaddr_in6;
 
@@ -831,10 +833,24 @@ void IPAddress::GetAddrInfo(struct addrinfo *&dst, int force) const
         dst->ai_addrlen = sizeof(struct sockaddr_in6);
 
         dst->ai_family = ((struct sockaddr_in6*)dst->ai_addr)->sin6_family;
+
+#if 0
+        /**
+         * Enable only if you must and please report to squid-dev if you find a need for this.
+         *
+         * Vista may need this to cope with dual-stack (unsetting IP6_V6ONLY).
+         *         http://msdn.microsoft.com/en-us/library/ms738574(VS.85).aspx
+         * Linux appears to only do some things when its present.
+         *         (93) Bad Protocol
+         * FreeBSD dies horribly when using dual-stack with it set.
+         *         (43) Protocol not supported
+         */
         dst->ai_protocol = IPPROTO_IPV6;
+#endif
+
     } else
 #endif
-        if( force == AF_INET || force == AF_UNSPEC && IsIPv4() )
+        if( force == AF_INET || (force == AF_UNSPEC && IsIPv4()) )
         {
 
             dst->ai_addr = (struct sockaddr*)new sockaddr_in;
@@ -1048,7 +1064,7 @@ unsigned int IPAddress::ToHostname(char *buf, const unsigned int blen) const
     while(*p != '\0' && p < buf+blen)
         p++;
 
-    if(IsIPv6() && p < buf+blen-1) {
+    if(IsIPv6() && p < (buf+blen-1) ) {
         *p = ']';
         p++;
     }
@@ -1072,7 +1088,7 @@ char* IPAddress::ToURL(char* buf, unsigned int blen) const
 
     p += ToHostname(p, blen);
 
-    if(m_SocketAddr.sin6_port > 0 && p < buf+blen-6) {
+    if(m_SocketAddr.sin6_port > 0 && p < (buf+blen-6) ) {
         /* 6 is max length of expected ':port' (short int) */
         snprintf(p, 6,":%d", GetPort() );
     }
@@ -1094,7 +1110,7 @@ void IPAddress::GetSockAddr(struct sockaddr_storage &addr, const int family) con
     }
 
 #if USE_IPV6
-    if( family == AF_INET6 || family == AF_UNSPEC && IsIPv6() )
+    if( family == AF_INET6 || (family == AF_UNSPEC && IsIPv6()) )
     {
         memcpy(&addr, &m_SocketAddr, sizeof(struct sockaddr_in6));
         if(addr.ss_family == 0) {
@@ -1106,7 +1122,7 @@ void IPAddress::GetSockAddr(struct sockaddr_storage &addr, const int family) con
 #elif HAVE_SIN6_LEN_IN_SAI
         sin->sin6_len = htons(sizeof(struct sockaddr_in6));
 #endif
-    } else if( family == AF_INET || family == AF_UNSPEC && IsIPv4() ) {
+    } else if( family == AF_INET || (family == AF_UNSPEC && IsIPv4()) ) {
         sin = (struct sockaddr_in*)&addr;
         addr.ss_family = AF_INET;
         sin->sin_port = m_SocketAddr.sin6_port;

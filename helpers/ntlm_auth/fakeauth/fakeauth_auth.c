@@ -299,9 +299,12 @@ ntlmDecodeAuth(struct ntlm_authenticate *auth, char *buf, size_t size)
     buf += (s - 1);
     *buf++ = '\\';		/* Using \ is more consistent with MS-proxy */
 
-    p = ntlmGetString(&auth->hdr, &auth->user, auth->flags);
+    if( (p = ntlmGetString(&auth->hdr, &auth->user, auth->flags)) == NULL)
+        return 1;
+
     if ((s = strlen(p) + 1) >= size)
 	return 1;
+
     while (*p)
 	*buf++ = (*p++);	//tolower
 
@@ -429,7 +432,10 @@ main(int argc, char *argv[])
 		if (!ntlmDecodeAuth((struct ntlm_authenticate *) decoded, user, 256)) {
 		    lc(user);
 		    if (strip_domain_enabled) {
-			strtok_r(user, "\\", &p);
+			strtok(user, "\\");
+			p = strtok(NULL, "\\");
+			if (!p)
+			    p = user;
 			SEND2("AF %s", p);
 			} else {
 		    SEND2("AF %s", user);
