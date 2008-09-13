@@ -122,16 +122,15 @@ Updates can be downloaded from <url url="http://www.squid-cahch.org/Versions/lan
    Details at <url url="http://wiki.squid-cache.org/Translations" named="The Squid wiki">
 
 <sect>Windows support
-
-<p>This Squid version can run on Windows as a system service using the Cygwin emulation environment, 
-or can be compiled in Windows native mode using the MinGW + MSYS development environment. Windows NT 4 SP4 and later are supported.
-
+<P>This Squid version can run on Windows as a system service using the Cygwin emulation environment, 
+or can be compiled in Windows native mode using the MinGW + MSYS development environment. Windows NT 4 SP4 and later are supported.<newline>
 On Windows 2000 and later the service is configured to use the Windows Service Recovery option
 restarting automatically after 60 seconds.
+<descrip>
 
-<sect1>Usage
+<tag>Usage</tag>
 
-<p>Some new command line options was added for the Windows service support:
+Some new command line options were added for the Windows service support:<newline>
 
 The service installation is made with -i command line switch, it's possible to use -f switch at
 the same time for specify a different config-file settings for the Squid Service that will be
@@ -142,7 +141,7 @@ A new -n switch specify the Windows Service Name, so multiple Squid instance are
 
 So, to install the service, the syntax is: 
 
-<p><verb>squid -i [-f file] [-n name]</verb>
+<verb>squid -i [-f file] [-n name]</verb>
 
 Service uninstallation is made with -r command line switch with the appropriate -n switch.
 
@@ -163,10 +162,12 @@ specific to Windows services functionality and Squid is not designed for underst
 In the following example the command line of the "squidsvc" Squid service is set to "-D -u 3130": 
 
 <verb>squid -O "-D -u 3130" -n squidsvc</verb>
+</descrip>
 
-<sect1>PSAPI.DLL (Process Status Helper) Considerations
+<descrip>
+<tag>PSAPI.DLL (Process Status Helper) Considerations</tag>
 
-<p>The process status helper functions make it easier for you to obtain information about
+The process status helper functions make it easier for you to obtain information about
 processes and device drivers running on Microsoft® Windows NT®/Windows® 2000. These
 functions are available in PSAPI.DLL, which is distributed in the Microsoft® Platform
 Software Development Kit (SDK). The same information is generally available through the
@@ -183,19 +184,21 @@ downloaded from here:
 
 On Windows 2000 and later it is available installing the Windows Support Tools, located on the
 Support\Tools folder of the installation Windows CD-ROM.
+</descrip>
 
-<sect1>Registry DNS lookup
-
-<p>On Windows platforms, if no value is specified in the <em/dns_nameservers/ option on
+<descrip>
+<tag>Registry DNS lookup</tag>
+On Windows platforms, if no value is specified in the <em/dns_nameservers/ option on
 squid.conf or in the /etc/resolv.conf file, the list of DNS name servers are
 taken from the Windows registry, both static and dynamic DHCP configurations
 are supported.
+</descrip>
 
-<sect1>Compatibility Notes
-<p><itemize>
+<descrip>
+<tag>Compatibility Notes</tag>
+<itemize>
 <item>It's recommended to use '/' char in Squid paths instead of '\'
 <item>Paths with spaces (like 'C:\Programs Files\Squid) are NOT supported by Squid
-<item>Include wildcard patterns in squid.conf are NOT supported on Windows
 <item>When using ACL like 'acl aclname acltype "file"' the file must be in DOS text
 format (CR+LF) and the full Windows path must be specified, for example:
 
@@ -211,26 +214,72 @@ redirect_program c:/winnt/system32/cmd.exe /C c:/squid/libexec/redir.cmd</verb>
 <item>"Start parameters" in the Windows 2000/XP/2003 Service applet cannot be used
 <item>Building with MinGW, when the configure option --enable-truncate is used, Squid cannot run on Windows NT, only Windows 2000 and later are supported
 </itemize>
+</descrip>
 
-<sect1>Known Limitations
-
-<p><itemize>
-<item>DISKD: still needs to be ported
-<item>WCCP: cannot work because user space GRE support on Windows is missing
-<item>Transparent Proxy: missing Windows non commercial interception driver
+<descrip>
+<tag>Known Limitations</tag>
+<itemize>
+<item>Squid features not operational:<newline>
+<itemize>
+<item>DISKD: still needs to be ported<newline>
+<item>WCCP: cannot work because user space GRE support on Windows is missing<newline>
+<item>Transparent Proxy: missing Windows non commercial interception driver<newline>
+</itemize>
 <item>Some code sections can make blocking calls.
 <item>Some external helpers may not work.
 <item>File Descriptors number hard-limited to 2048 when building with MinGW.
 </itemize>
+</descrip>
 
-<sect1>Using cache manager on Windows
+<descrip>
+<tag>Building Squid on Windows</tag>
+A reasonably recent release of <url url="http://www.cygwin.com/" name="Cygwin"> or <url url="http://www.mingw.org/" name="MinGW"> is needed.<newline>
+The usage of the Cygwin environment is very similar to other Unix/Linux environments, and -devel version of libraries must be installed.<newline>
+For the MinGW environment, the packages MSYS, MinGW and msysDTK must be installed. Some additional libraries and tools must be downloaded separately:<newline><newline>
+OpenSSL: <url url="http://www.slproweb.com/products/Win32OpenSSL.html" name="Shining Light Productions Win32 OpenSSL"><newline>
+libcrypt: <url url="http://sourceforge.net/projects/mingwrep/" name="MinGW packages repository"><newline>
+db-1.85: <url url="http://tinycobol.org/download.html" name="TinyCOBOL download area"><newline>
+uudecode: <url url="http://unxutils.sourceforge.net/" name="Native Win32 ports of some GNU utilities"><newline><newline>
+When running configure, --disable-wccp and --disable-wccpv2 options should always specified to avoid compile errors.<newline>
+<itemize>
+<item>New configure options:<newline>
+<itemize>
+<item>--enable-win32-service<newline>
+</itemize>
+<item>Updated configure options:<newline>
+<itemize>
+<item>--enable-arp-acl<newline>
+<item>--enable-default-hostsfile<newline>
+</itemize>
+<item>Unsupported configure options:<newline>
+<itemize>
+<item>--enable-coss-aio-ops: On Windows Posix AIO is not available<newline>
+<item>--with-large-files: No suitable build environment is available on both Cygwin and MinGW, but --enable-large-cache-files works fine<newline>
+</itemize>
+<item>Recommended configure minimal options for Windows:<newline>
+<itemize>
+<item>--prefix=c:/squid --disable-wccp --disable-wccpv2 --enable-win32-service --enable-default-hostsfile=none
+</itemize>
+</itemize>
+<newline>
+Before build Squid with SSL support, some operations are needed (in the following example OpenSSL is installed in C:\OpenSSL and MinGW in C:\MinGW):
+<itemize>
+<item>Copy C:\OpenSSL\lib\MinGW content to C:\MinGW\lib<newline>
+<item>Copy C:\OpenSSL\include\openssl content to C:\MinGW\include\openssl<newline>
+<item>Rename C:\MinGW\lib\ssleay32.a to C:\MinGW\lib\libssleay32.a<newline>
+</itemize>
 
-<p>On Windows, cache manager (cachemgr.cgi) can be used with Microsoft IIS or Apache.
-Some specific configuration could be needed:
+</descrip>
 
-<sect2>IIS 6 (Windows 2003)
-<p>On IIS 6.0 all CGI extensions are denied by default for security reason, so the following configuration is needed:
-<p><itemize>
+<descrip>
+<tag>Using cache manager on Windows:</tag>
+On Windows, cache manager (cachemgr.cgi) can be used with Microsoft IIS or Apache.<newline>
+Some specific configuration could be needed:<newline>
+<itemize>
+<item>IIS 6 (Windows 2003):<newline>
+<itemize>
+<item>On IIS 6.0 all CGI extensions are denied by default for security reason, so the following configuration is needed:<newline>
+<itemize>
 <item>Create a cgi-bin Directory
 <item>Define the cgi-bin IIS Virtual Directory with read and CGI execute IIS
 permissions, ASP scripts are not needed. This automatically defines a
@@ -241,10 +290,11 @@ the IIS system account and SYSTEM must be able to read and execute the file
 Extension called <em/"Squid Cachemgr"/, add the cachemgr.cgi file and set the
 extension status to <em/Allowed/
 </itemize>
-
-<sect2>Apache:
-<p>On Windows, cachemgr.cgi needs to create a temporary file, so Apache must be instructed
- to pass the TMP and TEMP Windows environment variables to CGI applications:
+</itemize>
+<item>Apache:<newline>
+<itemize>
+<item>On Windows, cachemgr.cgi needs to create a temporary file, so Apache must be instructed
+ to pass the TMP and TEMP Windows environment variables to CGI applications:<newline>
 <verb>
 ScriptAlias /squid/cgi-bin/ "c:/squid/libexec/"
 &lt;Location /squid/cgi-bin/cachemgr.cgi&gt;
@@ -253,7 +303,9 @@ ScriptAlias /squid/cgi-bin/ "c:/squid/libexec/"
     Allow from workstation.example.com
 &lt;/Location&gt;
 </verb>
-
+</itemize>
+</itemize>
+</descrip>
 
 
 <sect1>Changes to squid.conf
