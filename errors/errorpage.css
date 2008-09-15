@@ -1,0 +1,49 @@
+
+// page basics
+html body {
+    background-color:#ffffff;
+    font-family:verdana,sans-serif
+}
+
+// initial title
+h1 {
+}
+
+// page sub-title
+h2 {
+}
+
+// general text
+p {
+}
+
+// error brief description
+#error p {
+}
+
+// some data which may have caused the prblem
+#data {
+}
+
+// the error message received from the system or other software
+#sysmsg {
+}
+
+
+pre {
+    font-family:sans-serif
+}
+
+// horizontal lines
+hr {
+}
+
+// page footer
+#footer {
+}
+
+// special event: FTP success page titles
+ftpsuccess {
+   background-color:#00ff00;
+   width:100%
+}
