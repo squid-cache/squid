@@ -1401,11 +1401,14 @@ comm_old_accept(int fd, ConnectionDetail &details)
 
     commSetNonBlocking(sock);
 
+#if 0
+// AYJ: 2008-09-16 - might be a bad idea to pass this down from here.
+//	if KK is right, this flag should be set on successful NatLookup
+
     if(fd_table[fd].flags.transparent == 1) {
-        /* AYJ: do we actually need to set this again on every accept? */
-        //comm_set_transparent(sock);
         F->flags.transparent = 1;
     }
+#endif
 
     PROF_stop(comm_accept);
     return sock;

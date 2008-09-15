@@ -158,68 +158,25 @@ int
 IPIntercept::NetfilterTransparent(int fd, const IPAddress &me, IPAddress &dst, int silent)
 {
 #if LINUX_NETFILTER
-    struct addrinfo *lookup = NULL;
-
-    if( ! fd_table[fd].flags.transparent) return -1;
-
-    dst.GetAddrInfo(lookup,AF_INET);
 
     /** \par
      * Try lookup for TPROXY targets. BUT, only if the FD is flagged for transparent operations. */
-    if(getsockopt(fd, SOL_IP, IP_TRANSPARENT, lookup->ai_addr, &lookup->ai_addrlen) != 0) {
+    if(getsockopt(fd, SOL_IP, IP_TRANSPARENT, NULL, 0) != 0) {
         if(!silent) {
             debugs(89, DBG_IMPORTANT, HERE << " NF getsockopt(IP_TRANSPARENT) failed on FD " << fd << ": " << xstrerror());
             last_reported = squid_curtime;
         }
+        return -1;
     }
     else {
-        dst = *lookup;
-    }
-
-    dst.FreeAddrInfo(lookup);
-
-    if(me != dst) {
-        debugs(89, 5, HERE << "address: " << dst);
+        // mark the socket for preservation of IP_TRANSPARENT
+        fd_table[fd].flags.transparent = 1;
         return 0;
     }
 
-    debugs(89, 9, HERE << "address: me= " << me << ", dst= " << dst);
 #endif
     return -1;
 }
-
-int
-IPIntercept::IPFWInterception(int fd, const IPAddress &me, IPAddress &dst, int silent)
-{
-#if IPFW_TRANSPARENT
-    struct addrinfo *lookup = NULL;
-
-    dst.GetAddrInfo(lookup,AF_INET);
-
-    /** \par
-     * Try lookup for IPFW interception. */
-    if( getsockname(fd, lookup->ai_addr, &lookup->ai_addrlen) != 0 ) {
-        if( !silent ) {
-            debugs(89, DBG_IMPORTANT, HERE << " IPFW getsockname(...) failed on FD " << fd << ": " << xstrerror());
-            last_reported = squid_curtime;
-        }
-    }
-    else {
-        dst = *lookup;
-    }
-
-    dst.FreeAddrInfo(lookup);
-
-    if(me != dst) {
-        debugs(89, 5, HERE << "address: " << dst);
-        return 0;
-    }
-
-    debugs(89, 9, HERE << "address: me= " << me << ", dst= " << dst);
-#endif
-    return -1;
-}
-
 
 // TODO split this one call into one per transparency method
 //	with specific switching at run-time ??
@@ -355,11 +312,6 @@ IPIntercept::NatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAdd
 #endif
 
     if(intercept_active) {
-
-#if TO_SILENCE_ALL_NAT_IF_TPROXY_IS_RUNNING
-        silent |= fd_table[fd].flags.transparent;
-#endif
-
         if( NetfilterInterception(fd, me, dst, silent) == 0) return 0;
         if( IPFWInterception(fd, me, dst, silent) == 0) return 0;
     }
