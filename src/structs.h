@@ -551,6 +551,7 @@ struct SquidConfig
 #if USE_ERR_LOCALES
     char *errorDefaultLanguage;
 #endif
+    char *errorStylesheet;
 
     struct
     {

@@ -122,6 +122,9 @@ static char **error_text = NULL;
 /// \ingroup ErrorPageInternal
 static int error_page_count = 0;
 
+/// \ingroup ErrorPageInternal
+static MemBuf error_page_stylesheet_content;
+
 static char *errorTryLoadText(const char *page_name, const char *dir, bool silent = false);
 static char *errorLoadText(const char *page_name);
 static const char *errorFindHardText(err_type type);
@@ -181,6 +184,11 @@ errorInitialize(void)
                 error_text[i] = errorLoadText(info->page_name);
             }
         }
+    }
+
+    // look for and load stylesheet into global MemBuf for it.
+    if(Config.errorStylesheet) {
+        error_page_stylesheet_content = errorLoadText(Config.errorStylesheet);
     }
 }
 
@@ -672,6 +680,11 @@ ErrorState::Convert(char token)
         } else
             p = "[unknown]";
 
+        break;
+
+    case 'l':
+        mb.append(error_page_stylesheet_content.content(), error_page_stylesheet_content.contentSize());
+        do_quote = 0;
         break;
 
     case 'L':
