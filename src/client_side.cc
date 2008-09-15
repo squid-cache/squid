@@ -2016,8 +2016,8 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
      */
     if (conn->transparent()) {
         /* intercept or transparent mode, properly working with no failures */
-        http->flags.intercepted = conn->port.flags.intercepted;
-        http->flags.spoof_client_ip = conn->port.flags.spoof_client_ip;
+        http->flags.intercepted = conn->port->intercepted;
+        http->flags.spoof_client_ip = conn->port->spoof_client_ip;
         prepareTransparentURL(conn, http, url, req_hdr);
 
     } else if (conn->port->intercepted || conn->port->spoof_client_ip) {
