@@ -226,11 +226,14 @@ void MemBuf::consume(mb_size_t shiftSize)
     PROF_stop(MemBuf_consume);
 }
 
-// calls memcpy, appends exactly size bytes, extends buffer if needed
+/**
+ * calls memcpy, appends exactly size bytes,
+ * extends buffer or creates buffer if needed.
+ */
 void MemBuf::append(const char *newContent, mb_size_t sz)
 {
     assert(sz >= 0);
-    assert(buf);
+    assert(buf || (0==capacity && 0==size));
     assert(!stolen); /* not frozen */
 
     PROF_start(MemBuf_append);
@@ -247,7 +250,7 @@ void MemBuf::append(const char *newContent, mb_size_t sz)
     PROF_stop(MemBuf_append);
 }
 
-// updates content size after external append
+/// updates content size after external append
 void MemBuf::appended(mb_size_t sz)
 {
     assert(size + sz <= capacity);
