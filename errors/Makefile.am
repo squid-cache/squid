@@ -20,6 +20,7 @@ TRANSLATIONS = \
 	en en-au en-gb \
 	es \
 	fr \
+	id \
 	it \
 	nl \
 	pt-br
