@@ -45,7 +45,6 @@ LANGUAGES	= \
 		Serbian \
 		Simplify_Chinese \
 		Slovak \
-		Spanish \
 		Swedish \
 		Traditional_Chinese \
 		Turkish \
