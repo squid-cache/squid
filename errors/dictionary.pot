@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-08-06 22:11+1300\n"
+"POT-Creation-Date: 2008-09-01 03:03+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -344,6 +344,10 @@ msgstr ""
 msgid "Squid sent the following FTP command:"
 msgstr ""
 
+#: templates/ERR_DNS_FAIL:6
+msgid "The DNS server returned:"
+msgstr ""
+
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
 msgstr ""
@@ -360,10 +364,6 @@ msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:9
 msgid "The ICAP server is not reachable."
-msgstr ""
-
-#: templates/ERR_DNS_FAIL:6
-msgid "The dnsserver returned:"
 msgstr ""
 
 #: templates/ERR_FTP_NOT_FOUND:4

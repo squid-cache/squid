@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-08-06 22:11+1300\n"
+"POT-Creation-Date: 2008-09-01 03:03+1300\n"
 "PO-Revision-Date: 2008-08-17 17:39+1200\n"
 "Last-Translator: Frank Denia <j@4u.net>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -29,9 +29,9 @@ msgid ""
 "or server may be down or congested.  Please retry your request."
 msgstr ""
 "Un d&eacute;lai critique s'est &eacute;coul&eacute; en attendant "
-"desdonn&eacute;es du r&eacute;seau. Le r&eacute;seau ou le serveur "
-"sontpeut-&ecirc;tre hors service ou d&eacute;faillants. Veuillez "
-"r&eacute;it&eacute;rer votre requ&ecirc;te."
+"desdonn&eacute;es du r&eacute;seau. Le r&eacute;seau ou le serveur sontpeut-"
+"&ecirc;tre hors service ou d&eacute;faillants. Veuillez r&eacute;it&eacute;"
+"rer votre requ&ecirc;te."
 
 #: templates/ERR_URN_RESOLVE:3
 msgid "A URL for the requested URN could not be retrieved"
@@ -77,8 +77,8 @@ msgid ""
 "An error condition occurred while reading data from the network.  Please "
 "retry your request."
 msgstr ""
-"Une erreur est survenue en essayant d'acc&eacute;der au "
-"r&eacute;seau.Veuillez r&eacute;it&eacute;rer votre requ&ecirc;te."
+"Une erreur est survenue en essayant d'acc&eacute;der au r&eacute;seau."
+"Veuillez r&eacute;it&eacute;rer votre requ&ecirc;te."
 
 #: templates/ERR_WRITE_ERROR:7
 msgid ""
@@ -292,8 +292,8 @@ msgid ""
 "chpasswd.cgi\">change</a> your default password."
 msgstr ""
 "Veuillez contacter l'<a href=\"mailto:%w%W\">administrateur du cache</a>si "
-"vous avez des difficult&eacute;s &agrave; vous authentifier, ou<a "
-"href=\"http://%h/cgi-bin/chpasswd.cgi\">changez</a> votre mot de passe."
+"vous avez des difficult&eacute;s &agrave; vous authentifier, ou<a href="
+"\"http://%h/cgi-bin/chpasswd.cgi\">changez</a> votre mot de passe."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
 #, fuzzy
@@ -348,9 +348,9 @@ msgid ""
 "Sorry, you are not currently allowed to request %U from this cache until you "
 "have authenticated yourself."
 msgstr ""
-"D&eacute;sol&eacute;, vous n'&ecirc;tes actuellement pas "
-"autoris&eacute;&agrave; demander %U &agrave; ce cache tant que vous ne vous "
-"&ecirc;tes pas identifi&eacute;."
+"D&eacute;sol&eacute;, vous n'&ecirc;tes actuellement pas autoris&eacute;"
+"&agrave; demander %U &agrave; ce cache tant que vous ne vous &ecirc;tes pas "
+"identifi&eacute;."
 
 #: templates/ERR_ZERO_SIZE_OBJECT:6
 msgid "Squid did not receive any data for this request."
@@ -379,14 +379,19 @@ msgid ""
 "Please retry your request."
 msgstr ""
 "Squid n'est pas en mesure de cr&eacute;er une socket TCP, "
-"probablement&agrave; cause d'une charge excessive. Veuillez "
-"r&eacute;it&eacute;rer votrerequ&ecirc;te."
+"probablement&agrave; cause d'une charge excessive. Veuillez r&eacute;"
+"it&eacute;rer votrerequ&ecirc;te."
 
 #: templates/ERR_FTP_FAILURE:5 templates/ERR_FTP_FORBIDDEN:5
 #: templates/ERR_FTP_NOT_FOUND:5 templates/ERR_FTP_PUT_ERROR:5
 #: templates/ERR_FTP_UNAVAILABLE:5
 msgid "Squid sent the following FTP command:"
 msgstr "Squid a envoy&eacute; la commande FTP suivante:"
+
+#: templates/ERR_DNS_FAIL:6
+#, fuzzy
+msgid "The DNS server returned:"
+msgstr "Le serveur de noms a retourn&eacute;:"
 
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
@@ -395,8 +400,8 @@ msgstr ""
 #: templates/ERR_FTP_UNAVAILABLE:4
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr ""
-"Le serveur FTP &eacute;tait trop encombr&eacute; pour charger l'URL: <a "
-"href=\"%U\">%U</a>"
+"Le serveur FTP &eacute;tait trop encombr&eacute; pour charger l'URL: <a href="
+"\"%U\">%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
 msgid ""
@@ -407,10 +412,6 @@ msgstr ""
 #: templates/ERR_ICAP_FAILURE:9
 msgid "The ICAP server is not reachable."
 msgstr ""
-
-#: templates/ERR_DNS_FAIL:6
-msgid "The dnsserver returned:"
-msgstr "Le serveur de noms a retourn&eacute;:"
 
 #: templates/ERR_FTP_NOT_FOUND:4
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
@@ -482,8 +483,8 @@ msgid ""
 "There is no WAIS Relay host defined for this Cache!  Yell at the "
 "administrator."
 msgstr ""
-"Il n'y a pas de machine d&eacute;finie comme relais WAIS sur ce cache&nbsp"
-";!Adressez-vous &agrave; votre administrateur."
+"Il n'y a pas de machine d&eacute;finie comme relais WAIS sur ce cache&nbsp;!"
+"Adressez-vous &agrave; votre administrateur."
 
 #: templates/ERR_TOO_BIG:8
 msgid ""
@@ -502,8 +503,8 @@ msgid ""
 "request at this time.  Please retry your request again soon."
 msgstr ""
 "Ce cache est en cours de mise hors-service temporaire et il lui est "
-"impossible de satisfaire votre requete actuellement. Veuillez "
-"r&eacute;iterer votre requete ult&eacute;rieurement."
+"impossible de satisfaire votre requete actuellement. Veuillez r&eacute;"
+"iterer votre requete ult&eacute;rieurement."
 
 #: templates/ERR_FORWARDING_DENIED:6
 msgid ""
@@ -531,9 +532,9 @@ msgid ""
 "This means that the cache was not able to resolve the hostname presented in "
 "the URL. Check if the address is correct."
 msgstr ""
-"En d'autres termes le cache n'a pas &eacute;t&eacute; en mesure de "
-"r&eacute;soudre le nom de machine pr&eacute;sent&eacute; dans l'URL.  "
-"V&eacute;rifiez si l'adresse est correcte."
+"En d'autres termes le cache n'a pas &eacute;t&eacute; en mesure de r&eacute;"
+"soudre le nom de machine pr&eacute;sent&eacute; dans l'URL.  V&eacute;rifiez "
+"si l'adresse est correcte."
 
 #: templates/ERR_ESI:7
 msgid ""
@@ -591,8 +592,8 @@ msgid ""
 "directive was specified."
 msgstr ""
 "Aucun document valide n'a &eacute;t&eacute; trouv&eacute; dans le cache et "
-"la directive<q>only-if-cached</q> a &eacute;t&eacute; "
-"sp&eacute;cifi&eacute;e."
+"la directive<q>only-if-cached</q> a &eacute;t&eacute; sp&eacute;cifi&eacute;"
+"e."
 
 #: templates/ERR_FTP_PUT_ERROR:4
 msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
@@ -608,10 +609,10 @@ msgid ""
 "directive. The document was not found in the cache, <em>or</em> it required "
 "revalidation prohibited by the <q>only-if-cached</q> directive."
 msgstr ""
-"Vous avez formul&eacute; une requ&ecirc;te avec la directive de "
-"contr&ocirc;le<q>only-if-cached</q>. Le document n'a pas &eacute;t&eacute; "
-"trouv&eacute; dans le cache, <em>ou</em> il n&eacute;cessite une "
-"revalidation, interdite par la directive<q>only-if-cached</q>."
+"Vous avez formul&eacute; une requ&ecirc;te avec la directive de contr&ocirc;"
+"le<q>only-if-cached</q>. Le document n'a pas &eacute;t&eacute; trouv&eacute; "
+"dans le cache, <em>ou</em> il n&eacute;cessite une revalidation, interdite "
+"par la directive<q>only-if-cached</q>."
 
 #: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
 #: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8

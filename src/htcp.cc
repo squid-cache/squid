@@ -1474,19 +1474,18 @@ htcpRecv(int fd, void *data)
 void
 htcpInit(void)
 {
-    IPAddress sendOn;
-
     if (Config.Port.htcp <= 0) {
         debugs(31, 1, "HTCP Disabled.");
         return;
     }
-    sendOn = Config.Addrs.udp_outgoing;
-    sendOn.SetPort(Config.Port.htcp);
+
+    IPAddress incomingAddr = Config.Addrs.udp_incoming;
+    incomingAddr.SetPort(Config.Port.htcp);
 
     enter_suid();
     htcpInSocket = comm_open(SOCK_DGRAM,
                              IPPROTO_UDP,
-                             sendOn,
+                             incomingAddr,
                              COMM_NONBLOCKING,
                              "HTCP Socket");
     leave_suid();
@@ -1499,10 +1498,13 @@ htcpInit(void)
     debugs(31, 1, "Accepting HTCP messages on port " << Config.Port.htcp << ", FD " << htcpInSocket << ".");
 
     if (!Config.Addrs.udp_outgoing.IsNoAddr()) {
+        IPAddress outgoingAddr = Config.Addrs.udp_outgoing;
+        outgoingAddr.SetPort(Config.Port.htcp);
+
         enter_suid();
         htcpOutSocket = comm_open(SOCK_DGRAM,
                                   IPPROTO_UDP,
-                                  sendOn,
+                                  outgoingAddr,
                                   COMM_NONBLOCKING,
                                   "Outgoing HTCP Socket");
         leave_suid();

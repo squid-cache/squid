@@ -461,7 +461,6 @@ extern time_t getMaxAge(const char *url);
 extern void refreshInit(void);
 extern const refresh_t *refreshLimits(const char *url);
 
-extern void serverConnectionsClose(void);
 extern void shut_down(int);
 extern void rotate_logs(int);
 extern void reconfigure(int);

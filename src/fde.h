@@ -44,20 +44,9 @@ class fde
 
 public:
     fde() { clear(); };
-    /** Clear the fde class properly back to NULL equivalent. */
-    inline void clear() {
-        memset(this, 0, sizeof(fde));
-        local_addr.SetEmpty(); // IPAddress likes to be setup nicely.
-    }
     
-    /**
-     * Return true if the the comm_close for this fd called.
-     * Two flags used for the filedescriptor closing procedure:
-     * - The flag flags.close_request which set when the comm_close called
-     * - The flag flags.closing which scheduled to be set just before the 
-     *    comm_close handlers called.
-     */
-    bool closing() {return flags.closing_ || flags.close_request;}
+    /// True if comm_close for this fd has been called
+    bool closing() { return flags.close_request; }
 
     /* NOTE: memset is used on fdes today. 20030715 RBC */
     static void DumpStats (StoreEntry *);
@@ -79,9 +68,8 @@ public:
     struct
     {
 	unsigned int open:1;
-	unsigned int close_request:1;
+	unsigned int close_request:1; // file_ or comm_close has been called
 	unsigned int write_daemon:1;
-	unsigned int closing_:1;
 	unsigned int socket_eof:1;
 	unsigned int nolinger:1;
 	unsigned int nonblocking:1;
@@ -128,6 +116,16 @@ public:
     unsigned char upstreamTOS;			/* see FwdState::dispatch()  */
 #endif
 
+private:
+    /** Clear the fde class back to NULL equivalent. */
+    inline void clear() {
+        timeoutHandler = NULL;
+        closeHandler = NULL;
+        // XXX: the following memset may corrupt or leak new or changed members
+        memset(this, 0, sizeof(fde));
+        local_addr.SetEmpty(); // IPAddress likes to be setup nicely.
+    }
+    
 };
 
 #endif /* SQUID_FDE_H */

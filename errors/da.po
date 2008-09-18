@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-08-06 22:11+1300\n"
-"PO-Revision-Date: 2008-08-23 00:41+1200\n"
+"POT-Creation-Date: 2008-09-01 03:03+1300\n"
+"PO-Revision-Date: 2008-08-23 18:07+1200\n"
 "Last-Translator: Morten S. Nielsen <mortensn@geocities.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "MIME-Version: 1.0\n"
@@ -62,8 +62,8 @@ msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
 msgstr ""
-"En FTP protokol fejl opstod under hentning af f&oslash;gende URL: <a "
-"href=\"%U\">%U</a>"
+"En FTP protokol fejl opstod under hentning af f&oslash;gende URL: <a href=\"%"
+"U\">%U</a>"
 
 #: templates/ERR_ICAP_FAILURE:10
 msgid "An Illegal response was received from the ICAP server."
@@ -215,7 +215,7 @@ msgstr ""
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
-msgstr "Hallo, forvent nu ikke for meget af URNs på %T :)"
+msgstr "Hallo, forvent nu ikke for meget af URNs p&aring; %T :)"
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
@@ -283,8 +283,8 @@ msgid ""
 "chpasswd.cgi\">change</a> your default password."
 msgstr ""
 "Kontakt <a href=\"mailto:%w%W\">cache administratoren</a> hvis du har "
-"problemer med at autenticiere dig eller <a href=\"http://%h/cgi-"
-"bin/chpasswd.cgi\">skift</a> dit password."
+"problemer med at autenticiere dig eller <a href=\"http://%h/cgi-bin/chpasswd."
+"cgi\">skift</a> dit password."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
 msgid ""
@@ -373,6 +373,10 @@ msgstr ""
 msgid "Squid sent the following FTP command:"
 msgstr "Proxy'en Squid sendte f&oslash;lgende FTP kommando:"
 
+#: templates/ERR_DNS_FAIL:6
+msgid "The DNS server returned:"
+msgstr ""
+
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
 msgstr ""
@@ -380,8 +384,8 @@ msgstr ""
 #: templates/ERR_FTP_UNAVAILABLE:4
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr ""
-"FTP serveren var optaget da f&oslash;gende URL skulle hentes: <a "
-"href=\"%U\">%U</a>"
+"FTP serveren var optaget da f&oslash;gende URL skulle hentes: <a href=\"%U\">"
+"%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
 msgid ""
@@ -391,10 +395,6 @@ msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:9
 msgid "The ICAP server is not reachable."
-msgstr ""
-
-#: templates/ERR_DNS_FAIL:6
-msgid "The dnsserver returned:"
 msgstr ""
 
 #: templates/ERR_FTP_NOT_FOUND:4
@@ -426,9 +426,8 @@ msgstr ""
 #: templates/ERR_CONNECT_FAIL:7
 msgid "The remote host or network may be down.  Please try the request again."
 msgstr ""
-"Der kunne ikke opn&aring;s forbindelse til den anden computer. "
-"Netv&aelig;rket eller computeren kan v&aelig;re nede.  Pr&oslash;v eventuelt "
-"igen."
+"Der kunne ikke opn&aring;s forbindelse til den anden computer. Netv&aelig;"
+"rket eller computeren kan v&aelig;re nede.  Pr&oslash;v eventuelt igen."
 
 #: templates/ERR_TOO_BIG:5
 msgid "The request or reply is too large."
@@ -497,9 +496,9 @@ msgid ""
 "sibling relationship.  Perhaps the client at %i is a cache which has been "
 "misconfigured."
 msgstr ""
-"Denne cache vil ikke videresende din foresp&oslash;rgsel fordi den "
-"pr&oslash;ver at opretholde et s&oslash;skendeforhold. M&aring;ske er "
-"klienten p&aring; %i en fejlkonfigureret cache."
+"Denne cache vil ikke videresende din foresp&oslash;rgsel fordi den pr&oslash;"
+"ver at opretholde et s&oslash;skendeforhold. M&aring;ske er klienten "
+"p&aring; %i en fejlkonfigureret cache."
 
 #: templates/ERR_ICAP_FAILURE:7
 msgid "This means that some aspect of the ICAP communication failed."
@@ -574,8 +573,8 @@ msgid ""
 "Valid document was not found in the cache and <q>only-if-cached</q> "
 "directive was specified."
 msgstr ""
-"Dokumentet blev ikke fundet i cachen og <q>only-if-cached</q> (kun-hvis-"
-"gemt-i-cachen) direktivet var specificeret."
+"Dokumentet blev ikke fundet i cachen og <q>only-if-cached</q> (kun-hvis-gemt-"
+"i-cachen) direktivet var specificeret."
 
 #: templates/ERR_FTP_PUT_ERROR:4
 msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
@@ -595,8 +594,8 @@ msgid ""
 msgstr ""
 "Du har sendt en foresp&oslash;rgsel med en <q>only-if-cached</q> cache "
 "kontrol direktiv. Dokumentet blev ikke fundet i cachen, <em>eller</em> det "
-"kr&aelig;ver en bekr&aelig;ftelse af gyldighed som bliver forbudt af <q"
-">only-if-cached</q> direktivet."
+"kr&aelig;ver en bekr&aelig;ftelse af gyldighed som bliver forbudt af <q>only-"
+"if-cached</q> direktivet."
 
 #: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
 #: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
