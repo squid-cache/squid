@@ -426,7 +426,7 @@ purgeEntriesByHeader(HttpRequest *req, const char *reqUrl, HttpMsg *rep, http_hd
         return;
     }
     
-    purgeEntriesByUrl(hdrUrl);
+    purgeEntriesByUrl(req, hdrUrl);
     
     if (absUrl != NULL) {
         safe_free(absUrl);

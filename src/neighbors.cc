@@ -1824,7 +1824,7 @@ neighborsHtcpReply(const cache_key * key, htcpReplyData * htcp, const IPAddress 
 }
 
 void
-neighborsHtcpClear(StoreEntry * e, const char *uri, HttpRequest * req, HttpRequestMethod * method, htcp_clr_reason reason)
+neighborsHtcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestMethod &method, htcp_clr_reason reason)
 {
     peer *p;
     char buf[128];

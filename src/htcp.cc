@@ -1578,7 +1578,7 @@ htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
 }
 
 void
-htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, HttpRequestMethod * method, peer * p, htcp_clr_reason reason)
+htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestMethod &method, peer * p, htcp_clr_reason reason)
 {
     static char pkt[8192];
     ssize_t pktlen;
@@ -1627,6 +1627,9 @@ htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, HttpRequestMethod 
         hdr.clean();
         packerClean(&pa);
     	stuff.S.req_hdrs = mb.buf;
+        debug(31, 1) ("htcpClear: headers: %s\n", stuff.S.req_hdrs);
+    } else {
+        stuff.S.req_hdrs = NULL;
     }
     pktlen = htcpBuildPacket(pkt, sizeof(pkt), &stuff);
     if (reason != HTCP_CLR_INVALIDATION) {
@@ -1636,7 +1639,7 @@ htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, HttpRequestMethod 
     	xfree(stuff.S.uri);
     }
     if (!pktlen) {
-    	debug(31, 1) ("htcpQuery: htcpBuildPacket() failed\n");
+    	debug(31, 1) ("htcpClear: htcpBuildPacket() failed\n");
     	return;
     }
     
