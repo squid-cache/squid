@@ -723,17 +723,30 @@ clientReplyContext::purgeRequestFindObjectToPurge()
 void
 purgeEntriesByUrl(HttpRequest * req, const char *url)
 {
+#if USE_HTCP
+    bool get_or_head_sent = false;
+#endif
+    
     for (HttpRequestMethod m(METHOD_NONE); m != METHOD_ENUM_END; ++m) {
         if (m.isCacheble()) {
             if (StoreEntry *entry = storeGetPublic(url, m)) {
                 debugs(88, 5, "purging " << RequestMethodStr(m) << ' ' << url);
-                entry->release();
 #if USE_HTCP
-                neighborsHtcpClear(NULL, url, req, &m, HTCP_CLR_INVALIDATION);
+                neighborsHtcpClear(entry, url, req, m, HTCP_CLR_INVALIDATION);
+                if (m == METHOD_GET || m == METHOD_HEAD) {
+                    get_or_head_sent = true;
+                }
 #endif
+                entry->release();
             }
         }
     }
+
+#if USE_HTCP
+    if (!get_or_head_sent) {
+        neighborsHtcpClear(NULL, url, req, HttpRequestMethod(METHOD_GET), HTCP_CLR_INVALIDATION);
+    }
+#endif
 }
 
 void 
@@ -854,6 +867,9 @@ clientReplyContext::purgeDoPurgeGet(StoreEntry *newEntry)
     if (!newEntry->isNull()) {
         /* Release the cached URI */
         debugs(88, 4, "clientPurgeRequest: GET '" << newEntry->url() << "'" );
+#if USE_HTCP
+        neighborsHtcpClear(newEntry, NULL, http->request, HttpRequestMethod(METHOD_GET), HTCP_CLR_PURGE);
+#endif
         newEntry->release();
         purgeStatus = HTTP_OK;
     }
@@ -867,6 +883,9 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 {
     if (newEntry && !newEntry->isNull()) {
         debugs(88, 4, "clientPurgeRequest: HEAD '" << newEntry->url() << "'" );
+#if USE_HTCP
+        neighborsHtcpClear(newEntry, NULL, http->request, HttpRequestMethod(METHOD_HEAD), HTCP_CLR_PURGE);
+#endif
         newEntry->release();
         purgeStatus = HTTP_OK;
     }
@@ -879,6 +898,9 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 
         if (entry) {
             debugs(88, 4, "clientPurgeRequest: Vary GET '" << entry->url() << "'" );
+#if USE_HTCP
+            neighborsHtcpClear(entry, NULL, http->request, HttpRequestMethod(METHOD_GET), HTCP_CLR_PURGE);
+#endif
             entry->release();
             purgeStatus = HTTP_OK;
         }
@@ -887,6 +909,9 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 
         if (entry) {
             debugs(88, 4, "clientPurgeRequest: Vary HEAD '" << entry->url() << "'" );
+#if USE_HTCP
+            neighborsHtcpClear(entry, NULL, http->request, HttpRequestMethod(METHOD_HEAD), HTCP_CLR_PURGE);
+#endif
             entry->release();
             purgeStatus = HTTP_OK;
         }
