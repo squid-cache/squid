@@ -1,5 +1,5 @@
 /*
- * $Id: ICMPv6.h,v 1.1 2007/12/14 23:11:45 amosjeffries Exp $
+ * $Id: ICMPPinger.h,v 1.1 2007/12/14 23:11:45 amosjeffries Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels, Amos Jeffries
@@ -31,66 +31,53 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#ifndef _INCLUDE_ICMPV6_H
-#define _INCLUDE_ICMPV6_H
+#ifndef _INCLUDE_ICMPPINGER_H
+#define _INCLUDE_ICMPPINGER_H
 
 #include "config.h"
-
-#if USE_IPV6
-
-#include "ICMP.h"
-#include "IPAddress.h"
-
-#if HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
-#if HAVE_NETINET_ICMP6_H
-#include <netinet/icmp6.h>
-#endif
-#if HAVE_NETINET_IP6_H
-#include <netinet/ip6.h>
-#endif
-
-/* see RFC 4443 section 2.1 */
-#ifndef ICMP6_ECHOREQUEST
-#define ICMP6_ECHOREQUEST 128
-#endif
-
-/* see RFC 4443 section 2.1 */
-#ifndef ICMP6_ECHOREPLY
-#define ICMP6_ECHOREPLY 129
-#endif
-
-/* see RFC 4443 section 2.1 */
-#ifndef IPPROTO_ICMPV6
-#define IPPROTO_ICMPV6 58
-#endif
+#include "Icmp.h"
 
 /**
- * Class partially implementing RFC 4443 - ICMPv6 for IP version 6.
- * Provides ECHO-REQUEST, ECHO-REPLY (secion 4)
+ * Implements the interface to squid for ICMP operations
  */
-class ICMPv6 : public ICMP
+class IcmpPinger : public Icmp
 {
 public:
-    ICMPv6();
-    virtual ~ICMPv6();
+    IcmpPinger();
+    virtual ~IcmpPinger();
 
+    /// Start and initiate control channel to squid
     virtual int Open();
 
+    /// Shutdown pinger helper and control channel
+    virtual void Close();
+
 #if USE_ICMP
-    virtual void SendEcho(IPAddress &, int, const char*, int);
+
+    /// Send ICMP results back to squid.
+    void SendResult(pingerReplyData &preply, int len);
+
+    /// Handle ICMP requests from squid, passing to helpers.
     virtual void Recv(void);
-#endif
+
+private:
+    // unused in IcmpPinger
+    virtual void SendEcho(IPAddress &to, int opcode, const char *payload, int len) {};
+
+    /**
+     * Control channel(s) to squid.
+     * May be STDIN/STDOUT pipes or an IP socket depending on the OS
+     */
+    int socket_from_squid;
+    int socket_to_squid;
+#endif /* USE_ICMP */
 };
 
 #if USE_ICMP
 
 /// pinger helper contains one of these as a global object.
-SQUIDCEXTERN ICMPv6 icmp6;
+SQUIDCEXTERN IcmpPinger control;
 
-#endif /* USE_ICMP && SQUID_HELPER */
+#endif
 
-#endif /* USE_IPV6 */
-
-#endif /* _INCLUDE_ICMPV6_H */
+#endif
