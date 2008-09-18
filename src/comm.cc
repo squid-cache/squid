@@ -1401,14 +1401,8 @@ comm_old_accept(int fd, ConnectionDetail &details)
 
     commSetNonBlocking(sock);
 
-#if 0
-// AYJ: 2008-09-16 - might be a bad idea to pass this down from here.
-//	if KK is right, this flag should be set on successful NatLookup
-
-    if(fd_table[fd].flags.transparent == 1) {
-        F->flags.transparent = 1;
-    }
-#endif
+    /* IFF the socket is (tproxy) transparent, pass the flag down to allow spoofing */
+    F->flags.transparent = fd_table[fd].flags.transparent;
 
     PROF_stop(comm_accept);
     return sock;

@@ -158,27 +158,15 @@ int
 IPIntercept::NetfilterTransparent(int fd, const IPAddress &me, IPAddress &dst, int silent)
 {
 #if LINUX_NETFILTER
-    int tmp = 0;
 
-    /** \par
-     * Try lookup for TPROXY targets. BUT, only if the FD is flagged for transparent operations. */
-    if(getsockopt(fd, SOL_IP, IP_TRANSPARENT, NULL, &tmp) != 0) {
-        if(!silent) {
-            debugs(89, DBG_IMPORTANT, HERE << " NF getsockopt(IP_TRANSPARENT) failed on FD " << fd << ": " << xstrerror());
-            last_reported = squid_curtime;
-        }
-        return -1;
-    }
-    else {
-        // mark the socket for preservation of IP_TRANSPARENT
-        fd_table[fd].flags.transparent = 1;
-        dst = me;
-        debugs(89, 9, HERE << "address: me= " << me << ", dst= " << dst);
-        return 0;
-    }
-
-#endif
+    /* Trust the user configured properly. If not no harm done.
+     * We will simply attempt a bind outgoing on our own IP.
+     * Maybe a port clash which will show them the problem.
+     */
+    return (fd_table[fd].flags.transparent ? 0 : -1);
+#else
     return -1;
+#endif
 }
 
 // TODO split this one call into one per transparency method
