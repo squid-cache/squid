@@ -169,8 +169,37 @@ IPIntercept::NetfilterTransparent(int fd, const IPAddress &me, IPAddress &dst, i
 #endif
 }
 
-// TODO split this one call into one per transparency method
-//	with specific switching at run-time ??
+int
+IPIntercept::IPFWInterception(int fd, const IPAddress &me, IPAddress &dst, int silent)
+{
+#if IPFW_TRANSPARENT
+    struct addrinfo *lookup = NULL;
+
+    dst.GetAddrInfo(lookup,AF_INET);
+
+    /** \par
+     * Try lookup for IPFW interception. */
+    if( getsockname(fd, lookup->ai_addr, &lookup->ai_addrlen) != 0 ) {
+        if( !silent ) {
+            debugs(89, DBG_IMPORTANT, HERE << " IPFW getsockname(...) failed: " << xstrerror());
+            last_reported = squid_curtime;
+        }
+    }
+    else {
+        dst = *lookup;
+    }
+
+    dst.FreeAddrInfo(lookup);
+
+    if(me != dst) {
+        debugs(89, 5, HERE << "address: " << dst);
+        return 0;
+    }
+
+    debugs(89, 9, HERE << "address: me= " << me << ", dst= " << dst);
+#endif
+    return -1;
+}
 
 int
 IPIntercept::NatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &dst)
