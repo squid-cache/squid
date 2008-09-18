@@ -18,6 +18,7 @@ TRANSLATIONS = \
 	en en-au en-gb \
 	es \
 	fr \
+	id \
 	it \
 	nl \
 	pt-br
@@ -45,7 +46,6 @@ LANGUAGES	= \
 		Serbian \
 		Simplify_Chinese \
 		Slovak \
-		Spanish \
 		Swedish \
 		Traditional_Chinese \
 		Turkish \
