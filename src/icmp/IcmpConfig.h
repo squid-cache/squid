@@ -50,15 +50,15 @@
  * This structure is included as a child field of the global Config
  * such that if ICMP is built it can be accessed as Config.pinger.*
  */
-class ICMPConfig {
+class IcmpConfig {
 
 public:
 
     /** \todo These methods should really be defined in an ICMPConfig.cc file
      * alongside any custom parsing routines needed for this component.
      * First though, the whole global Config dependancy tree needs fixing */
-    ICMPConfig() : program(NULL), enable(0) {};
-    ~ICMPConfig() { if(program) delete program; program = NULL; };
+    IcmpConfig() : program(NULL), enable(0) {};
+    ~IcmpConfig() { if(program) delete program; program = NULL; };
 
 /* variables */
 
