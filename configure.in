@@ -31,8 +31,12 @@ AC_PROG_CXX
 AC_CANONICAL_HOST
 
 dnl Make location configure settings available to the code
-AC_DEFINE_UNQUOTED([DEFAULT_SQUID_CONFIG_DIR], "${sysconfdir}" , [Location of Configuration files] )
-AC_DEFINE_UNQUOTED([DEFAULT_SQUID_DATA_DIR], "${datadir}" , [Location of other data files] )
+dnl Pass squid data directory (icons, errors etc)  base location to code files as a compiler define
+CFLAGS="-DDEFAULT_SQUID_DATA_DIR=\\\"$datadir\\\" $CFLAGS"
+CXXFLAGS="-DDEFAULT_SQUID_DATA_DIR=\\\"$datadir\\\" $CXXFLAGS"
+dnl Pass squid.conf directory base location to code files as a compiler define
+CFLAGS="-DDEFAULT_SQUID_CONFIG_DIR=\\\"$sysconfdir\\\" $CFLAGS"
+CXXFLAGS="-DDEFAULT_SQUID_CONFIG_DIR=\\\"$sysconfdir\\\" $CXXFLAGS"
 
 use_loadable_modules=1
 AC_MSG_CHECKING(whether to use loadable modules)
@@ -54,7 +58,7 @@ AC_ARG_ENABLE(loadable-modules,
         use_loadable_modules=yes;
         AC_MSG_RESULT([$use_loadable_modules, implicitly])
     ]
-)        
+)
 
 AM_CONDITIONAL(USE_LOADABLE_MODULES, test $use_loadable_modules = yes)
 

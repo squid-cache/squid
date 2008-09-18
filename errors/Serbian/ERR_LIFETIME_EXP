@@ -10,15 +10,15 @@
 Tokom pokušaja da se dovuèe strana sa sledeæom adresom (URL):
 <A HREF="%U">%U</A>
 <P>
-dogodila se sledeæa greška:
+Dogodila se sledeæa greška:
 <UL>
 <LI>
 <STRONG>
-Dozvoljeno vreme dužine konekcije je prekoraèeno.
+Dozvoljeno trajanje konekcije je prekoraèeno.
 </STRONG>
 </UL>
 <P>
 Proksi server je prekinuo konekciju jer je prekoraèila
-dozvoljenu dužinu trajanja konekcije.
+dozvoljeno trajanje konekcije.
 
-<P>Vaš cache/proxy administrator je: <A HREF="mailto:%w%W">%w</A>. 
+<P>Vaš keš/proksi administrator je: <A HREF="mailto:%w">%w</A>. 

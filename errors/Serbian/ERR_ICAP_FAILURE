@@ -1,33 +1,33 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
-<TITLE>ERROR: The requested URL could not be retrieved</TITLE>
+<TITLE>GREŠKA: Tražena adresa (URL) ne može da se dovuce</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD><BODY>
-<H1>ERROR</H1>
-<H2>The requested URL could not be retrieved</H2>
+<H1>GREŠKA</H1>
+<H2>Tražena adresa (URL) ne može da se dovuce</H2>
 <HR noshade size="1px">
 <P>
-While trying to retrieve the URL:
+Tokom pokušaja da se dovuce strana sa sledecom adresom (URL):
 <A HREF="%U">%U</A>
 <P>
-The following error was encountered:
+Dogodila se sledeca greška:
 <UL>
 <LI>
 <STRONG>
-ICAP protocol error.
+Greška u ICAP protokolu.
 </STRONG>
 </UL>
 
 <P>
-The system returned:
+Sistem je vratio:
 <PRE><I>    %E</I></PRE>
 
 <P>
-This means that:
-Some aspect of the ICAP communication failed. Possible problems:
+Ovo znaci da:
+Neki aspekti ICAP protokola nisu u redu. Moguci problemi:
 <UL>
-<LI>ICAP server is not reachable.
-<LI>Illegal response from ICAP server.
+<LI>ICAP server je nedostupan.
+<LI>Pogrešan odgovor od ICAP servera.
 </UL>
 </P>
 

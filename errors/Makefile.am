@@ -18,6 +18,7 @@ TRANSLATIONS = \
 	en en-au en-gb \
 	es \
 	fr \
+	id \
 	it \
 	nl \
 	pt-br
@@ -45,7 +46,6 @@ LANGUAGES	= \
 		Serbian \
 		Simplify_Chinese \
 		Slovak \
-		Spanish \
 		Swedish \
 		Traditional_Chinese \
 		Turkish \
@@ -132,14 +132,16 @@ dist-hook:
 	done
 
 translate:
-	if test "$(PO2HTML)" != "" ; then \
+	@ if test "$(PO2HTML)" != "" ; then \
 	  for lang in $(TRANSLATIONS); do \
 		test -d $$lang && rm -r $$lang; \
 		mkdir $$lang; \
 		cd $$lang; \
+		echo -n "Translate '$$lang' ..."; \
 		for f in `ls -1 ../templates`; do \
-			$(PO2HTML) -i ../$$lang.po -t ../templates/$$f >$$f || exit 1; \
+			$(PO2HTML) --progress=none -i ../$$lang.po -t ../templates/$$f >$$f || exit 1; \
 		done; \
+		echo "done."; \
 		cd ..; \
 	  done; \
 	else \

@@ -98,5 +98,7 @@ fi
 
 # Generate language-pack tarballs
 # NP: Only to be done on HEAD branch.
-sh -c "cd $tmpdir/errors && tar -zcf ${PWD}/${PACKAGE}-${VERSION}-${date}-langpack.tar.gz ./*/*"
-echo ${PACKAGE}-${VERSION}-${date}-langpack.tar.gz >>${tag}.out
+if test "${VERSION}" = "3.HEAD" ; then
+	sh -c "cd $tmpdir/errors && tar -zcf ${PWD}/${PACKAGE}-${VERSION}-${date}-langpack.tar.gz ./*/*"
+	echo ${PACKAGE}-${VERSION}-${date}-langpack.tar.gz >>${tag}.out
+fi
