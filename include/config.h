@@ -111,6 +111,9 @@
 #elif defined(__OpenBSD__)
 #define _SQUID_OPENBSD_
 
+#elif defined(__DragonFly__)
+#define _SQUID_DRAGONFLY_
+
 #elif defined(__CYGWIN32__)  || defined(__CYGWIN__)
 #define _SQUID_CYGWIN_
 #define _SQUID_WIN32_
@@ -340,7 +343,7 @@ typedef union {
 /* 
  * Don't allow inclusion of malloc.h on FreeBSD, Next and OpenBSD 
  */
-#if defined(HAVE_MALLOC_H) && (defined(_SQUID_FREEBSD_) || defined(_SQUID_NEXT_) || defined(_SQUID_OPENBSD_))
+#if defined(HAVE_MALLOC_H) && (defined(_SQUID_FREEBSD_) || defined(_SQUID_NEXT_) || defined(_SQUID_OPENBSD_) || defined(_SQUID_DRAGONFLY_))
 #undef HAVE_MALLOC_H
 #endif
 
