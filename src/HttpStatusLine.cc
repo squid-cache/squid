@@ -37,6 +37,7 @@
 #include "HttpStatusLine.h"
 
 /* local constants */
+/* AYJ: see bug 2469 - RFC2616 confirms stating 'SP characters' plural! */
 const char *HttpStatusLineFormat = "HTTP/%d.%d %3d %s\r\n";
 
 void
