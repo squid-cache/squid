@@ -935,7 +935,7 @@ AC_ARG_ENABLE(forw-via-db,
 
 AC_ARG_ENABLE(cache-digests,
 [  --enable-cache-digests  Use Cache Digests
-                          see http://www.squid-cache.org/FAQ/FAQ-16.html],
+                          see http://wiki.squid-cache.org/SquidFaq/CacheDigests],
 [ if test "$enableval" = "yes" ; then
     echo "USE_CACHE_DIGESTS enabled"
     AC_DEFINE(USE_CACHE_DIGESTS,1,[Use Cache Digests for locating objects in neighbor caches.  This code is still semi-experimental.])
@@ -3051,7 +3051,7 @@ AC_DEFINE_UNQUOTED(SQUID_MAXFD, $SQUID_MAXFD,[Maximum number of open filedescrip
 if test "$SQUID_MAXFD" -lt 512 ; then
     echo "WARNING: $SQUID_MAXFD may not be enough filedescriptors if your"
     echo "         cache will be very busy.  Please see the FAQ page"
-    echo "         http://www.squid-cache.org/FAQ/FAQ-11.html#filedescriptors"
+    echo "         http://wiki.squid-cache.org/SquidFaq/TroubleShooting"
     echo "         on how to increase your filedescriptor limit"
     sleep 10
 fi
