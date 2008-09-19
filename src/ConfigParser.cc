@@ -110,7 +110,7 @@ ConfigParser::strtokFile(void)
 
         /* skip comments */
         /* skip blank lines */
-    } while( *t != '#' && !*t );
+    } while( *t == '#' || !*t );
 
     return t;
 }
