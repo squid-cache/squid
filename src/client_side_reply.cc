@@ -51,9 +51,7 @@
 #include "ESI.h"
 #endif
 #include "MemObject.h"
-#if USE_ZPH_QOS
 #include "fde.h"
-#endif
 #include "ACLChecklist.h"
 #include "ACL.h"
 #if DELAY_POOLS
@@ -1843,6 +1841,11 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     ConnStateData * conn = http->getConn();
 
     int fd = conn != NULL ? conn->fd : -1;
+    if (fd >= 0 && fd_table[fd].closing()) { // too late, our conn is closing
+        // TODO: should we also quit when fd is negative?
+        debugs(33,3, HERE << "not sending more data to a closing FD " << fd);
+        return;
+    }
 
     char *buf = next()->readBuffer.data;
 
@@ -1858,6 +1861,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 #if USE_ZPH_QOS
     if (reqofs==0 && !logTypeIsATcpHit(http->logType))
     {
+        assert(fd >= 0); // the beginning of this method implies fd may be -1
         int tos = 0;
         if (Config.zph_tos_peer && 
              (http->request->hier.code==SIBLING_HIT || 
