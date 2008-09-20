@@ -23,6 +23,8 @@ bin_PROGRAMS = \
 libexec_PROGRAMS = \
 	cachemgr$(CGIEXT)
 
+DEFAULT_CACHEMGR_CONFIG = $(sysconfdir)/cachemgr.conf
+
 squidclient_SOURCES = squidclient.cc
 cachemgr__CGIEXT__SOURCES = cachemgr.cc
 cachemgr__CGIEXT__CXXFLAGS = -DDEFAULT_CACHEMGR_CONFIG=\"$(DEFAULT_CACHEMGR_CONFIG)\" $(AM_CXXFLAGS)
@@ -31,8 +33,6 @@ LDADD = -L../lib -lmiscutil $(XTRA_LIBS)
 
 EXTRA_DIST = \
 	cachemgr.conf
-
-DEFAULT_CACHEMGR_CONFIG = $(sysconfdir)/cachemgr.conf
 
 $(OBJS): $(top_srcdir)/include/version.h ../include/autoconf.h
 
