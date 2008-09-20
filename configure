@@ -1666,7 +1666,7 @@ Optional Features:
   --enable-ssl            Enable ssl gatewaying support using OpenSSL
   --enable-forw-via-db    Enable Forw/Via database
   --enable-cache-digests  Use Cache Digests
-                          see http://www.squid-cache.org/FAQ/FAQ-16.html
+                          see http://wiki.squid-cache.org/SquidFaq/CacheDigests
   --enable-default-err-language=lang
                           Select default language for Error pages (see
                           errors directory)
@@ -45270,7 +45270,7 @@ _ACEOF
 if test "$SQUID_MAXFD" -lt 512 ; then
     echo "WARNING: $SQUID_MAXFD may not be enough filedescriptors if your"
     echo "         cache will be very busy.  Please see the FAQ page"
-    echo "         http://www.squid-cache.org/FAQ/FAQ-11.html#filedescriptors"
+    echo "         http://wiki.squid-cache.org/SquidFaq/TroubleShooting"
     echo "         on how to increase your filedescriptor limit"
     sleep 10
 fi
