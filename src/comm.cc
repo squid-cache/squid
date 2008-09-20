@@ -1008,7 +1008,7 @@ ConnectStateData::commResetFD()
     F->local_addr.GetAddrInfo(AI);
 
     if (commBind(fd, *AI) != COMM_OK) {
-        debugs(5, 0, HERE << "bind: " << xstrerror());
+        debugs(5, DBG_CRITICAL, "WARNING: Reset of FD " << fd << " for " << F->local_addr << " failed to bind: " << xstrerror());
         F->local_addr.FreeAddrInfo(AI);
         return 0;
     }

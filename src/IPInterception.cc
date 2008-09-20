@@ -161,12 +161,13 @@ IPIntercept::NetfilterTransparent(int fd, const IPAddress &me, IPAddress &dst, i
 
     /* Trust the user configured properly. If not no harm done.
      * We will simply attempt a bind outgoing on our own IP.
-     * Maybe a port clash which will show them the problem.
      */
-    return (fd_table[fd].flags.transparent ? 0 : -1);
-#else
-    return -1;
+    if(fd_table[fd].flags.transparent) {
+        dst.SetPort(0); // allow random outgoing port to prevent address clashes
+        return 0;
+    }
 #endif
+    return -1;
 }
 
 int
