@@ -19,6 +19,57 @@ Uncomment and edit the following lines in /usr/local/squid/etc/squid.conf:
 
 ==============================================================================
 
+acl, http_access
+
+    Access control lists.  This is important because it prevents people
+    from stealing your network resources.  To fill in the
+    "localnet" ACL, use your network address (for instance 192.168.10.0
+    your CIDR network mask (for instance 255.255.255.0 or /24):
+
+        acl manager proto cache_object
+        acl localhost src 127.0.0.1
+        acl localnet src 192.168.10.0/24
+
+        http_access deny manager all
+        http_access allow localnet
+        http_access deny all
+
+cache_mgr
+
+    Put here the e-mail address of the manager:
+
+visible_hostname
+
+    The host name you advertise for the cache.
+
+cache_effective_user
+
+    If building your own squid; use ./configure --with-default-user=X
+
+    If you must start Squid as root, find a safe user and group to run
+    as after startup (typically "nobody" and "nogroup").  Do not use
+    "root", for security reasons.
+
+
+==============================================================================
+
+Some configuration lines which are optional but may be needed.
+
+
+cache_dir ufs /usr/local/squid/var/cache 100 16 256
+
+    Add here (first number, here 100) the amount of hard disk space 
+    (in megabytes) to devote to caching.
+    The default is to store files in 256 MB of memory instead of disk
+
+    Linux :  use aufs instead of ufs
+    BSD   :  use diskd instead of ufs
+
+cache_mem 256 MB
+
+    How much memory to allocate for cached files in-memory.
+    The default is shown.
+
 cache_peer, never_direct/always_direct
 
     If you have a parent cache, put it here.  The administrators of the
@@ -26,50 +77,16 @@ cache_peer, never_direct/always_direct
     always ask permission before adding a parent cache. See also the
     never_direct/always_direct directives.
 
-cache_dir ufs /usr/local/squid/var/cache 100 16 256
-
-    Add here (first number, here 100) the amount of hard disk space 
-    (in megabytes) to devote to caching.
-
-acl, http_access, icp_access
-
-    Access control lists.  This is important because it prevents people
-    from stealing your network resources.  To fill in the
-    "allowed_hosts" ACL, use your network address (for instance
-    192.168.10.0 and your network mask (for instance 255.255.255.0):
-
-        acl manager proto cache_object
-        acl localhost src 127.0.0.1/255.255.255.255
-        acl all src 0.0.0.0/0.0.0.0
-        acl allowed_hosts src 192.168.10.0/255.255.255.0
-
-        http_access deny manager all
-        http_access allow allowed_hosts
-        http_access deny all
-
-        icp_access  allow  allowed_hosts
-        icp_access deny all
-
-cache_mgr
-
-    Put here the e-mail address of the manager:
-
-cache_effective_user
-
-    If you must start Squid as root, find a safe user and group to run
-    as after startup (typically "nobody" and "nogroup").  Do not use
-    "root", for security reasons.
-
-visible_hostname
-
-    The host name you advertise for the cache.
 
 ==============================================================================
 
 After editing squid.conf to your liking, run Squid from the command
 line TWICE:
 
+To create any disk cache_dir configured:
     % /usr/local/squid/sbin/squid -z
+
+To start squid:
     % /usr/local/squid/sbin/squid 
 
 Check in the cache.log (/usr/local/squid/var/logs/cache.log) that
