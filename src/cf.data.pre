@@ -831,8 +831,8 @@ DOC_START
 
 NOCOMMENT_START
 #Allow ICP queries from local networks only
-icp_access allow localnet
-icp_access deny all
+#icp_access allow localnet
+#icp_access deny all
 NOCOMMENT_END
 DOC_END
 
@@ -856,8 +856,8 @@ DOC_START
 
 NOCOMMENT_START
 #Allow HTCP queries from local networks only
-htcp_access allow localnet
-htcp_access deny all
+#htcp_access allow localnet
+#htcp_access deny all
 NOCOMMENT_END
 DOC_END
 
@@ -883,7 +883,7 @@ DOC_END
 NAME: miss_access
 TYPE: acl_access
 LOC: Config.accessList.miss
-DEFAULT: none
+DEFAULT: allow all
 DOC_START
 	Use to force your neighbors to use you as a sibling instead of
 	a parent.  For example:
@@ -897,11 +897,6 @@ DOC_START
 
 	By default, allow all clients who passed the http_access rules
 	to fetch MISSES from us.
-
-NOCOMMENT_START
-#Default setting:
-# miss_access allow all
-NOCOMMENT_END
 DOC_END
 
 NAME: ident_lookup_access
@@ -1555,9 +1550,7 @@ DOC_START
 
 	  icp-port:  Used for querying neighbor caches about
 		     objects.  To have a non-ICP neighbor
-		     specify '7' for the ICP port and make sure the
-		     neighbor machine has the UDP echo port
-		     enabled in its /etc/inetd.conf file.
+		     specify '0' for the ICP port.
 		NOTE: Also requires icp_port option enabled to send/receive
 		      requests via this method.
 
@@ -1918,7 +1911,7 @@ COMMENT_END
 NAME: cache_mem
 COMMENT: (bytes)
 TYPE: b_size_t
-DEFAULT: 8 MB
+DEFAULT: 256 MB
 LOC: Config.memMaxSize
 DOC_START
 	NOTE: THIS PARAMETER DOES NOT SPECIFY THE MAXIMUM PROCESS SIZE.
@@ -1955,7 +1948,7 @@ DOC_END
 NAME: maximum_object_size_in_memory
 COMMENT: (bytes)
 TYPE: b_size_t
-DEFAULT: 8 KB
+DEFAULT: 512 KB
 LOC: Config.Store.maxInMemObjSize
 DOC_START
 	Objects greater than this size will not be attempted to kept in
@@ -2124,7 +2117,7 @@ DOC_START
 	which can be changed with the --with-coss-membuf-size=N configure
 	option.
 NOCOMMENT_START
-cache_dir ufs @DEFAULT_SWAP_DIR@ 100 16 256
+# cache_dir ufs @DEFAULT_SWAP_DIR@ 100 16 256
 NOCOMMENT_END
 DOC_END
 
@@ -2291,7 +2284,7 @@ DOC_END
 NAME: access_log cache_access_log
 TYPE: access_log
 LOC: Config.Log.accesslogs
-DEFAULT: none
+DEFAULT: @DEFAULT_ACCESS_LOG@ squid
 DOC_START
 	These files log client request activities. Has a line every HTTP or
 	ICP request. The format is:
@@ -2314,9 +2307,9 @@ DOC_START
 
 	And priority could be any of:
 	err, warning, notice, info, debug.
-NOCOMMENT_START
-access_log @DEFAULT_ACCESS_LOG@ squid
-NOCOMMENT_END
+
+	Default:
+		access_log @DEFAULT_ACCESS_LOG@ squid
 DOC_END
 
 NAME: log_access
@@ -2342,14 +2335,17 @@ DOC_END
 
 NAME: cache_store_log
 TYPE: string
-DEFAULT: @DEFAULT_STORE_LOG@
+DEFAULT: none
 LOC: Config.Log.store
 DOC_START
 	Logs the activities of the storage manager.  Shows which
 	objects are ejected from the cache, and which objects are
-	saved and for how long.  To disable, enter "none". There are
-	not really utilities to analyze this data, so you can safely
+	saved and for how long.  To disable, enter "none" or remove the line.
+	There are not really utilities to analyze this data, so you can safely
 	disable it.
+NOCOMMENT_START
+# cache_store_log @DEFAULT_STORE_LOG@
+NOCOMMENT_END
 DOC_END
 
 NAME: cache_swap_state cache_swap_log
@@ -3085,7 +3081,7 @@ COMMENT_END
 NAME: request_header_max_size
 COMMENT: (KB)
 TYPE: b_size_t
-DEFAULT: 20 KB
+DEFAULT: 64 KB
 LOC: Config.maxRequestHeaderSize
 DOC_START
 	This specifies the maximum size for HTTP headers in a request.
@@ -3098,7 +3094,7 @@ DOC_END
 NAME: reply_header_max_size
 COMMENT: (KB)
 TYPE: b_size_t
-DEFAULT: 20 KB
+DEFAULT: 64 KB
 LOC: Config.maxReplyHeaderSize
 DOC_START
 	This specifies the maximum size for HTTP headers in a reply.
@@ -3962,6 +3958,7 @@ LOC: Config.Wccp.router
 DEFAULT: 0.0.0.0
 IFDEF: USE_WCCP
 DOC_NONE
+
 NAME: wccp2_router
 TYPE: IPAddress_list
 LOC: Config.Wccp2.router
@@ -4087,7 +4084,6 @@ DOC_START
 	wccp2_service dynamic 80	# a dynamic service type which will be
 					# fleshed out with subsequent options.
 	wccp2_service standard 0 password=foo
-
 DOC_END
 
 NAME: wccp2_service_info
@@ -4138,6 +4134,7 @@ LOC: Config.Wccp.address
 DEFAULT: 0.0.0.0
 IFDEF: USE_WCCP
 DOC_NONE
+
 NAME: wccp2_address
 TYPE: address
 LOC: Config.Wccp2.address
@@ -4315,13 +4312,14 @@ LOC: Config.Addrs.snmp_incoming
 DEFAULT: 0.0.0.0
 IFDEF: SQUID_SNMP
 DOC_NONE
+
 NAME: snmp_outgoing_address
 TYPE: address
 LOC: Config.Addrs.snmp_outgoing
 DEFAULT: 255.255.255.255
 IFDEF: SQUID_SNMP
 DOC_START
-	Just like 'udp_incoming_address' above, but for the SNMP port.
+	Just like 'udp_incoming_address', but for the SNMP port.
 
 	snmp_incoming_address	is used for the SNMP socket receiving
 				messages from SNMP agents.
@@ -4354,7 +4352,7 @@ DOC_START
 	and from neighbor caches.  The standard UDP port for ICP is 3130.
 	Default is disabled (0).
 NOCOMMENT_START
-icp_port @DEFAULT_ICP_PORT@
+#icp_port @DEFAULT_ICP_PORT@
 NOCOMMENT_END
 DOC_END
 
