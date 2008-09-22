@@ -137,7 +137,7 @@ storeLogOpen(void)
 {
     storeLogRegisterWithCacheManager();
  
-    if (strcmp(Config.Log.store, "none") == 0) {
+    if (Config.Log.store == NULL || strcmp(Config.Log.store, "none") == 0) {
         debugs(20, 1, "Store logging disabled");
         return;
     }
