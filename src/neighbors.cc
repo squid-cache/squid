@@ -1836,13 +1836,15 @@ neighborsHtcpReply(const cache_key * key, htcpReplyData * htcp, const IPAddress 
     mem->ping_reply_callback(p, ntype, PROTO_HTCP, htcp, mem->ircb_data);
 }
 
+/*
+ * Send HTCP CLR messages to all peers configured to receive them.
+ */
 void
 neighborsHtcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestMethod &method, htcp_clr_reason reason)
 {
     peer *p;
     char buf[128];
 
-    debug(15, 1) ("neighborsHtcpClear: clear reason: %d\n", reason);
     for (p = Config.peers; p; p = p->next) {
         if (!p->options.htcp) {
             continue;
@@ -1853,7 +1855,7 @@ neighborsHtcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const Htt
         if (p->options.htcp_no_purge_clr && reason == HTCP_CLR_PURGE) {
             continue;
         }
-        debug(15, 1) ("neighborsHtcpClear: sending CLR to %s\n", p->in_addr.ToURL(buf, 128));
+        debugs(15, 3, "neighborsHtcpClear: sending CLR to " << p->in_addr.ToURL(buf, 128));
         htcpClear(e, uri, req, method, p, reason);
     }
 }

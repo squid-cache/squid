@@ -1306,6 +1306,10 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, IPAddress &from)
     htcpFreeSpecifier(s);
 }
 
+/*
+ * Forward a CLR request to all peers who have requested that CLRs be
+ * forwarded to them.
+ */
 static void
 htcpForwardClr(char *buf, int sz)
 {
@@ -1323,6 +1327,14 @@ htcpForwardClr(char *buf, int sz)
     }
 }
 
+/*
+ * Do the first pass of handling an HTCP message.  This used to be two
+ * separate functions, htcpHandle and htcpHandleData.  They were merged to
+ * allow for forwarding HTCP packets easily to other peers if desired.
+ *
+ * This function now works out what type of message we have received and then
+ * hands it off to other functions to break apart message-specific data.
+ */
 static void
 htcpHandle(char *buf, int sz, IPAddress &from)
 {
@@ -1577,6 +1589,9 @@ htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
     debugs(31, 3, "htcpQuery: key (" << save_key << ") " << storeKeyText(save_key));
 }
 
+/*
+ * Send an HTCP CLR message for a specified item to a given peer.
+ */
 void
 htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestMethod &method, peer * p, htcp_clr_reason reason)
 {
@@ -1627,7 +1642,6 @@ htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestM
         hdr.clean();
         packerClean(&pa);
     	stuff.S.req_hdrs = mb.buf;
-        debug(31, 1) ("htcpClear: headers: %s\n", stuff.S.req_hdrs);
     } else {
         stuff.S.req_hdrs = NULL;
     }
@@ -1639,7 +1653,7 @@ htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestM
     	xfree(stuff.S.uri);
     }
     if (!pktlen) {
-    	debug(31, 1) ("htcpClear: htcpBuildPacket() failed\n");
+    	debugs(31, 1, "htcpClear: htcpBuildPacket() failed");
     	return;
     }
     
