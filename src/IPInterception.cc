@@ -155,7 +155,7 @@ IPIntercept::NetfilterInterception(int fd, const IPAddress &me, IPAddress &dst, 
 }
 
 int
-IPIntercept::NetfilterTransparent(int fd, const IPAddress &me, IPAddress &dst, int silent)
+IPIntercept::NetfilterTransparent(int fd, const IPAddress &me, IPAddress &client, int silent)
 {
 #if LINUX_NETFILTER
 
@@ -163,7 +163,7 @@ IPIntercept::NetfilterTransparent(int fd, const IPAddress &me, IPAddress &dst, i
      * We will simply attempt a bind outgoing on our own IP.
      */
     if(fd_table[fd].flags.transparent) {
-        dst.SetPort(0); // allow random outgoing port to prevent address clashes
+        client.SetPort(0); // allow random outgoing port to prevent address clashes
         return 0;
     }
 #endif
@@ -203,10 +203,10 @@ IPIntercept::IPFWInterception(int fd, const IPAddress &me, IPAddress &dst, int s
 }
 
 int
-IPIntercept::NatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &dst)
+IPIntercept::NatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &client, IPAddress &dst)
 {
 #if IPF_TRANSPARENT  /* --enable-ipf-transparent */
-    dst = me;
+    client = me;
     if( !me.IsIPv4() ) return -1;
     if( !peer.IsIPv4() ) return -1;
 
@@ -302,9 +302,9 @@ IPIntercept::NatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAdd
     } else
     {
         if (me != natLookup.nl_realip) {
-            dst = natLookup.nl_realip;
+            client = natLookup.nl_realip;
 
-            dst.SetPort(ntohs(natLookup.nl_realport));
+            client.SetPort(ntohs(natLookup.nl_realport));
         }
         // else. we already copied it.
 
@@ -319,7 +319,8 @@ IPIntercept::NatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAdd
      * This allows us to perform a nice clean failover sequence for them.
      */
 
-    dst = me;
+    client = me;
+    dst = peer;
 
     if( !me.IsIPv4()   ) return -1;
     if( !peer.IsIPv4() ) return -1;
@@ -333,8 +334,8 @@ IPIntercept::NatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAdd
 #endif
 
     if(intercept_active) {
-        if( NetfilterInterception(fd, me, dst, silent) == 0) return 0;
-        if( IPFWInterception(fd, me, dst, silent) == 0) return 0;
+        if( NetfilterInterception(fd, me, client, silent) == 0) return 0;
+        if( IPFWInterception(fd, me, client, silent) == 0) return 0;
     }
     if(transparent_active) {
         if( NetfilterTransparent(fd, me, dst, silent) == 0) return 0;
@@ -364,7 +365,7 @@ IPIntercept::NatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAdd
 
     }
 
-    dst.SetEmpty();
+    client.SetEmpty();
 
     memset(&nl, 0, sizeof(struct pfioc_natlook));
     peer.GetInAddr(nl.saddr.v4);
@@ -393,8 +394,8 @@ IPIntercept::NatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAdd
     } else
     {
         int natted = (me != nl.rdaddr.v4);
-        dst = nl.rdaddr.v4;
-        dst.SetPort(ntohs(nl.rdport));
+        client = nl.rdaddr.v4;
+        client.SetPort(ntohs(nl.rdport));
 
         if (natted)
             return 0;
