@@ -247,7 +247,7 @@ static ssize_t htcpBuildTstOpData(char *buf, size_t buflen, htcpStuff * stuff);
 static void htcpFreeSpecifier(htcpSpecifier * s);
 static void htcpFreeDetail(htcpDetail * s);
 
-static void htcpHandle(char *buf, int sz, IPAddress &from);
+static void htcpHandleMsg(char *buf, int sz, IPAddress &from);
 
 static void htcpHandleMon(htcpDataHeader *, char *buf, int sz, IPAddress &from);
 
@@ -600,7 +600,7 @@ htcpSend(const char *buf, int len, IPAddress &to)
                         len);
 
     if (x < 0)
-        debugs(31, 1, "htcpSend: FD " << htcpOutSocket << " sendto: " << xstrerror());
+        debugs(31, 3, "htcpSend: FD " << htcpOutSocket << " sendto: " << xstrerror());
     else
         statCounter.htcp.pkts_sent++;
 }
@@ -652,7 +652,7 @@ htcpUnpackSpecifier(char *buf, int sz)
     buf += 2;
 
     if (l > sz) {
-        debugs(31, 1, "htcpUnpackSpecifier: failed to unpack METHOD");
+        debugs(31, 3, "htcpUnpackSpecifier: failed to unpack METHOD");
         htcpFreeSpecifier(s);
         return NULL;
     }
@@ -670,7 +670,7 @@ htcpUnpackSpecifier(char *buf, int sz)
     sz -= 2;
 
     if (l > sz) {
-        debugs(31, 1, "htcpUnpackSpecifier: failed to unpack URI");
+        debugs(31, 3, "htcpUnpackSpecifier: failed to unpack URI");
         htcpFreeSpecifier(s);
         return NULL;
     }
@@ -693,7 +693,7 @@ htcpUnpackSpecifier(char *buf, int sz)
     sz -= 2;
 
     if (l > sz) {
-        debugs(31, 1, "htcpUnpackSpecifier: failed to unpack VERSION");
+        debugs(31, 3, "htcpUnpackSpecifier: failed to unpack VERSION");
         htcpFreeSpecifier(s);
         return NULL;
     }
@@ -716,7 +716,7 @@ htcpUnpackSpecifier(char *buf, int sz)
     sz -= 2;
 
     if (l > sz) {
-        debugs(31, 1, "htcpUnpackSpecifier: failed to unpack REQ-HDRS");
+        debugs(31, 3, "htcpUnpackSpecifier: failed to unpack REQ-HDRS");
         htcpFreeSpecifier(s);
         return NULL;
     }
@@ -770,7 +770,7 @@ htcpUnpackDetail(char *buf, int sz)
     buf += 2;
 
     if (l > sz) {
-        debugs(31, 1, "htcpUnpackDetail: failed to unpack RESP_HDRS");
+        debugs(31, 3, "htcpUnpackDetail: failed to unpack RESP_HDRS");
         htcpFreeDetail(d);
         return NULL;
     }
@@ -788,7 +788,7 @@ htcpUnpackDetail(char *buf, int sz)
     sz -= 2;
 
     if (l > sz) {
-        debugs(31, 1, "htcpUnpackDetail: failed to unpack ENTITY_HDRS");
+        debugs(31, 3, "htcpUnpackDetail: failed to unpack ENTITY_HDRS");
         htcpFreeDetail(d);
         return NULL;
     }
@@ -811,7 +811,7 @@ htcpUnpackDetail(char *buf, int sz)
     sz -= 2;
 
     if (l > sz) {
-        debugs(31, 1, "htcpUnpackDetail: failed to unpack CACHE_HDRS");
+        debugs(31, 3, "htcpUnpackDetail: failed to unpack CACHE_HDRS");
         htcpFreeDetail(d);
         return NULL;
     }
@@ -936,7 +936,7 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, IPAddr
 
     if (!pktlen)
     {
-        debugs(31, 1, "htcpTstReply: htcpBuildPacket() failed");
+        debugs(31, 3, "htcpTstReply: htcpBuildPacket() failed");
         return;
     }
 
@@ -974,7 +974,7 @@ htcpClrReply(htcpDataHeader * dhdr, int purgeSucceeded, IPAddress &from)
 
     if (pktlen == 0)
     {
-        debugs(31, 1, "htcpClrReply: htcpBuildPacket() failed");
+        debugs(31, 3, "htcpClrReply: htcpBuildPacket() failed");
         return;
     }
 
@@ -1121,7 +1121,7 @@ htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, IPAddress &from)
 
     if (!key)
     {
-        debugs(31, 1, "htcpHandleTstResponse: No query key for response id '" << hdr->msg_id << "' from '" << from << "'");
+        debugs(31, 3, "htcpHandleTstResponse: No query key for response id '" << hdr->msg_id << "' from '" << from << "'");
         return;
     }
 
@@ -1129,7 +1129,7 @@ htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, IPAddress &from)
 
     if ( *peer != from || peer->GetPort() != from.GetPort() )
     {
-        debugs(31, 1, "htcpHandleTstResponse: Unexpected response source " << from );
+        debugs(31, 3, "htcpHandleTstResponse: Unexpected response source " << from );
         return;
     }
 
@@ -1152,7 +1152,7 @@ htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, IPAddress &from)
         d = htcpUnpackDetail(buf, sz);
 
         if (d == NULL) {
-            debugs(31, 1, "htcpHandleTstResponse: bad DETAIL");
+            debugs(31, 3, "htcpHandleTstResponse: bad DETAIL");
             return;
         }
 
@@ -1336,7 +1336,7 @@ htcpForwardClr(char *buf, int sz)
  * hands it off to other functions to break apart message-specific data.
  */
 static void
-htcpHandle(char *buf, int sz, IPAddress &from)
+htcpHandleMsg(char *buf, int sz, IPAddress &from)
 {
     htcpHeader htcpHdr;
     htcpDataHeader hdr;
@@ -1346,7 +1346,7 @@ htcpHandle(char *buf, int sz, IPAddress &from)
 
     if ((size_t)sz < sizeof(htcpHeader))
     {
-        debugs(31, 1, "htcpHandle: msg size less than htcpHeader size");
+        debugs(31, 3, "htcpHandle: msg size less than htcpHeader size");
         return;
     }
 
@@ -1365,7 +1365,7 @@ htcpHandle(char *buf, int sz, IPAddress &from)
 
     if (sz != htcpHdr.length)
     {
-        debugs(31, 1, "htcpHandle: sz/" << sz << " != htcpHdr.length/" <<
+        debugs(31, 3, "htcpHandle: sz/" << sz << " != htcpHdr.length/" <<
                htcpHdr.length << " from " << from );
 
         return;
@@ -1373,7 +1373,7 @@ htcpHandle(char *buf, int sz, IPAddress &from)
 
     if (htcpHdr.major != 0)
     {
-        debugs(31, 1, "htcpHandle: Unknown major version " << htcpHdr.major << " from " << from );
+        debugs(31, 3, "htcpHandle: Unknown major version " << htcpHdr.major << " from " << from );
 
         return;
     }
@@ -1383,7 +1383,7 @@ htcpHandle(char *buf, int sz, IPAddress &from)
 
     if ((size_t)hsz < sizeof(htcpDataHeader))
     {
-        debugs(31, 1, "htcpHandleData: msg size less than htcpDataHeader size");
+        debugs(31, 3, "htcpHandleData: msg size less than htcpDataHeader size");
         return;
     }
 
@@ -1408,7 +1408,7 @@ htcpHandle(char *buf, int sz, IPAddress &from)
     debugs(31, 3, "htcpHandleData: length = " << hdr.length);
 
     if (hdr.opcode >= HTCP_END) {
-        debugs(31, 1, "htcpHandleData: client " << from << ", opcode " << hdr.opcode << " out of range");
+        debugs(31, 3, "htcpHandleData: client " << from << ", opcode " << hdr.opcode << " out of range");
         return;
     }
 
@@ -1419,7 +1419,7 @@ htcpHandle(char *buf, int sz, IPAddress &from)
     debugs(31, 3, "htcpHandleData: msg_id = " << hdr.msg_id);
 
     if (hsz < hdr.length) {
-        debugs(31, 1, "htcpHandleData: sz < hdr.length");
+        debugs(31, 3, "htcpHandleData: sz < hdr.length");
         return;
     }
 
@@ -1472,7 +1472,7 @@ htcpRecv(int fd, void *data)
     if (len)
         statCounter.htcp.pkts_recv++;
 
-    htcpHandle(buf, len, from);
+    htcpHandleMsg(buf, len, from);
 
     commSetSelect(fd, COMM_SELECT_READ, htcpRecv, NULL, 0);
 }
@@ -1576,7 +1576,7 @@ htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
     pktlen = htcpBuildPacket(pkt, sizeof(pkt), &stuff);
     mb.clean();
     if (!pktlen) {
-        debugs(31, 1, "htcpQuery: htcpBuildPacket() failed");
+        debugs(31, 3, "htcpQuery: htcpBuildPacket() failed");
         return;
     }
     
@@ -1653,7 +1653,7 @@ htcpClear(StoreEntry * e, const char *uri, HttpRequest * req, const HttpRequestM
     	xfree(stuff.S.uri);
     }
     if (!pktlen) {
-    	debugs(31, 1, "htcpClear: htcpBuildPacket() failed");
+    	debugs(31, 3, "htcpClear: htcpBuildPacket() failed");
     	return;
     }
     
