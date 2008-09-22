@@ -21,7 +21,8 @@ TRANSLATIONS = \
 	id \
 	it \
 	nl \
-	pt-br
+	pt-br \
+	sv
 
 # Legacy language contributions...
 #
@@ -46,7 +47,6 @@ LANGUAGES	= \
 		Serbian \
 		Simplify_Chinese \
 		Slovak \
-		Swedish \
 		Traditional_Chinese \
 		Turkish \
 		Ukrainian-1251 \
