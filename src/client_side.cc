@@ -2772,10 +2772,11 @@ connStateCreate(const IPAddress &peer, const IPAddress &me, int fd, http_port_li
     result->port = cbdataReference(port);
 
     if(port->intercepted || port->spoof_client_ip) {
-        IPAddress dst;
+        IPAddress client, dst;
 
-        if (IPInterceptor.NatLookup(fd, me, peer, dst) == 0) {
-            result->me = dst; /* XXX This should be moved to another field */
+        if (IPInterceptor.NatLookup(fd, me, peer, client, dst) == 0) {
+            result->me = client;
+            result->peer = dst;
             result->transparent(true);
         }
     }
