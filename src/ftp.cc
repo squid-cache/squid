@@ -123,6 +123,7 @@ class FtpStateData;
 typedef void (FTPSM) (FtpStateData *);
 
 /// common code for FTP control and data channels
+// does not own the channel descriptor, which is managed by FtpStateData
 class FtpChannel {
 public:
     FtpChannel(): fd(-1) {}
@@ -414,7 +415,7 @@ FTPSM *FTP_SM_FUNCS[] =
         ftpReadMkdir		/* SENT_MKDIR */
     };
 
-/// close handler called by Comm when FTP control channel is closed prematurely
+/// handler called by Comm when FTP control channel is closed unexpectedly
 void 
 FtpStateData::ctrlClosed(const CommCloseCbParams &io)
 {
@@ -422,12 +423,13 @@ FtpStateData::ctrlClosed(const CommCloseCbParams &io)
     deleteThis("FtpStateData::ctrlClosed");
 }
 
-/// close handler called by Comm when FTP data channel is closed prematurely
+/// handler called by Comm when FTP data channel is closed unexpectedly
 void 
 FtpStateData::dataClosed(const CommCloseCbParams &io)
 {
     data.clear();
-    deleteThis("FtpStateData::dataClosed");
+    failed(ERR_FTP_FAILURE, 0); // or is it better to call abortTransaction()?
+    /* failed closes ctrl.fd and frees ftpState */
 }
 
 FtpStateData::FtpStateData(FwdState *theFwdState) : AsyncJob("FtpStateData"), ServerStateData(theFwdState)
@@ -463,6 +465,11 @@ FtpStateData::~FtpStateData()
     }
 
     data.close();
+
+    if (ctrl.fd >= 0) {
+        debugs(9, DBG_IMPORTANT, HERE << "Internal bug: FtpStateData left " <<
+            "control FD " << ctrl.fd << " open");
+    }
 
     if (ctrl.buf) {
         memFreeBuf(ctrl.size, ctrl.buf);
