@@ -377,7 +377,7 @@ CacheManager::ShutdownAction::ShutdownAction() : CacheManagerAction("shutdown","
 void
 CacheManager::ReconfigureAction::run(StoreEntry * sentry)
 {
-    debug(16, DBG_IMPORTANT) ("Reconfigure by Cache Manager command.\n");
+    debugs(16, DBG_IMPORTANT, "Reconfigure by Cache Manager command.");
     storeAppendPrintf(sentry, "Reconfiguring Squid Process ....");
     reconfigure(SIGHUP);
 }

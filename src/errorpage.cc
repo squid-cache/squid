@@ -245,8 +245,9 @@ errorLoadText(const char *page_name)
 #endif
 
     /* test default location if failed (templates == English translation base templates) */
-    if (!text)
+    if (!text) {
         text = errorTryLoadText(page_name, DEFAULT_SQUID_ERROR_DIR"/templates");
+    }
 
     /* giving up if failed */
     if (!text)
@@ -370,6 +371,7 @@ errorCon(err_type type, http_status status, HttpRequest * request)
 {
     ErrorState *err = new ErrorState;
     err->page_id = type;	/* has to be reset manually if needed */
+    err->err_language = NULL;
     err->type = type;
     err->httpStatus = status;
 
@@ -487,6 +489,10 @@ errorStateFree(ErrorState * err)
     safe_free(err->ftp.reply);
     AUTHUSERREQUESTUNLOCK(err->auth_user_request, "errstate");
     safe_free(err->err_msg);
+#if USE_ERR_LOCALES
+    if(err->err_language != Config.errorDefaultLanguage)
+#endif
+        safe_free(err->err_language);
     cbdataFree(err);
 }
 
@@ -850,6 +856,33 @@ ErrorState::BuildHttpReply()
          * X-CACHE-MISS entry should tell us who.
          */
         httpHeaderPutStrf(&rep->header, HDR_X_SQUID_ERROR, "%s %d", name, xerrno);
+
+#if USE_ERR_LOCALES
+        /*
+         * If error page auto-negotiate is enabled in any way, send the Vary.
+         * RFC 2616 section 13.6 and 14.44 says MAY and SHOULD do this.
+         * We have even better reasons though:
+         * see http://wiki.squid-cache.org/KnowledgeBase/VaryNotCaching
+         */
+        if(!Config.errorDirectory) {
+            /* We 'negotiated' this ONLY from the Accept-Language. */
+            httpHeaderDelById(&rep->header, HDR_VARY);
+            httpHeaderPutStrf(&rep->header, HDR_VARY, "Accept-Language");
+        }
+
+        /* add the Content-Language header according to RFC section 14.12 */
+        if(err_language) {
+            httpHeaderPutStrf(&rep->header, HDR_CONTENT_LANGUAGE, "%s", err_language);
+        }
+        else
+#endif /* USE_ERROR_LOCALES */
+        {
+            /* default templates are in English */
+            /* language is known unless error_directory override used */
+            if(!Config.errorDirectory)
+                httpHeaderPutStrf(&rep->header, HDR_CONTENT_LANGUAGE, "en");
+        }
+
         httpBodySet(&rep->body, content);
         /* do not memBufClean() or delete the content, it was absorbed by httpBody */
     }
@@ -912,7 +945,11 @@ ErrorState::BuildContent()
                 debugs(4, 6, HERE << "Found language '" << reset << "', testing for available template in: '" << dir << "'");
                 m = errorTryLoadText( err_type_str[page_id], dir, false);
 
-                if(m) break; // FOUND IT!!
+                if(m) {
+                    /* store the language we found for the Content-Language reply header */
+                    err_language = xstrdup(reset);
+                    break;
+                }
 
 #if HAVE_GLOB
                 if( (dt - reset) == 2) {
@@ -939,6 +976,10 @@ ErrorState::BuildContent()
     if(!m) {
         m = error_text[page_id];
         debugs(4, 2, HERE << "No existing error page language negotiated for " << page_id << ". Using default error file.");
+#if USE_ERR_LOCALES
+        if(!Config.errorDirectory)
+            err_language = Config.errorDefaultLanguage;
+#endif
     }
 
     assert(m);
