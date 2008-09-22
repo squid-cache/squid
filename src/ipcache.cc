@@ -681,6 +681,14 @@ ipcacheHandleReply(void *data, rfc1035_rr * answers, int na, const char *error_m
  \param handler		Pointer to the function to be called when the reply
  *			from the IP cache (or the DNS if the IP cache misses)
  \param handlerData	Information that is passed to the handler and does not affect the IP cache.
+ *
+ * XXX: on hits and some errors, the handler is called immediately instead
+ * of scheduling an async call. This reentrant behavior means that the
+ * user job must be extra careful after calling ipcache_nbgethostbyname,
+ * especially if the handler destroys the job. Moreover, the job has 
+ * no way of knowing whether the reentrant call happened. commConnectStart
+ * protects the job by scheduling an async call, but some user code calls 
+ * ipcache_nbgethostbyname directly.
  */
 void
 ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
