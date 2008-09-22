@@ -114,6 +114,7 @@ private:
 public:
     err_type type;
     int page_id;
+    char *err_language;
     http_status httpStatus;
     AuthUserRequest *auth_user_request;
     HttpRequest *request;
