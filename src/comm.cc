@@ -1008,7 +1008,7 @@ ConnectStateData::commResetFD()
     F->local_addr.GetAddrInfo(AI);
 
     if (commBind(fd, *AI) != COMM_OK) {
-        debugs(5, 0, HERE << "bind: " << xstrerror());
+        debugs(5, DBG_CRITICAL, "WARNING: Reset of FD " << fd << " for " << F->local_addr << " failed to bind: " << xstrerror());
         F->local_addr.FreeAddrInfo(AI);
         return 0;
     }
@@ -1401,11 +1401,8 @@ comm_old_accept(int fd, ConnectionDetail &details)
 
     commSetNonBlocking(sock);
 
-    if(fd_table[fd].flags.transparent == 1) {
-        /* AYJ: do we actually need to set this again on every accept? */
-        //comm_set_transparent(sock);
-        F->flags.transparent = 1;
-    }
+    /* IFF the socket is (tproxy) transparent, pass the flag down to allow spoofing */
+    F->flags.transparent = fd_table[fd].flags.transparent;
 
     PROF_stop(comm_accept);
     return sock;
@@ -1515,7 +1512,7 @@ void
 comm_close_start(int fd, void *data)
 {
 #if USE_SSL
-
+    fde *F = &fd_table[fd];
     if (F->ssl)
         ssl_shutdown_method(fd);
 
@@ -1886,23 +1883,23 @@ commSetTcpKeepalive(int fd, int idle, int interval, int timeout)
     if (timeout && interval) {
 	int count = (timeout + interval - 1) / interval;
 	if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPCNT, &count, sizeof(on)) < 0)
-	    debug(5, 1) ("commSetKeepalive: FD %d: %s\n", fd, xstrerror());
+	    debugs(5, 1, "commSetKeepalive: FD " << fd << ": " << xstrerror());
     }
 #endif
 #ifdef TCP_KEEPIDLE
     if (idle) {
 	if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &idle, sizeof(on)) < 0)
-	    debug(5, 1) ("commSetKeepalive: FD %d: %s\n", fd, xstrerror());
+	    debugs(5, 1, "commSetKeepalive: FD " << fd << ": " << xstrerror());
     }
 #endif
 #ifdef TCP_KEEPINTVL
     if (interval) {
 	if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &interval, sizeof(on)) < 0)
-	    debug(5, 1) ("commSetKeepalive: FD %d: %s\n", fd, xstrerror());
+	    debugs(5, 1, "commSetKeepalive: FD " << fd << ": " << xstrerror());
     }
 #endif
     if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (char *) &on, sizeof(on)) < 0)
-	debug(5, 1) ("commSetKeepalive: FD %d: %s\n", fd, xstrerror());
+	debugs(5, 1, "commSetKeepalive: FD " << fd << ": " << xstrerror());
 }
 
 void
@@ -2174,8 +2171,7 @@ comm_listen(int sock) {
 #ifdef SO_ACCEPTFILTER
 	struct accept_filter_arg afa;
 	bzero(&afa, sizeof(afa));
-	debug(5, 0) ("Installing accept filter '%s' on FD %d\n",
-	Config.accept_filter, sock);
+	debugs(5, DBG_CRITICAL, "Installing accept filter '" << Config.accept_filter << "' on FD " << sock);
 	xstrncpy(afa.af_name, Config.accept_filter, sizeof(afa.af_name));
 	x = setsockopt(sock, SOL_SOCKET, SO_ACCEPTFILTER, &afa, sizeof(afa));
 	if (x < 0)

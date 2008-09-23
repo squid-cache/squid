@@ -76,7 +76,7 @@ static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeader
         HttpHeader * hdr_out, int we_do_ranges, http_state_flags);
 
 HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"), ServerStateData(theFwdState),
-        header_bytes_read(0), reply_bytes_read(0), httpChunkDecoder(NULL)
+        lastChunk(0), header_bytes_read(0), reply_bytes_read(0), httpChunkDecoder(NULL)
 {
     debugs(11,5,HERE << "HttpStateData " << this << " created");
     ignoreCacheControl = false;
@@ -876,15 +876,15 @@ HttpStateData::persistentConnStatus() const
     if (!flags.headers_parsed)
         return INCOMPLETE_MSG;
 
+    if (eof) // already reached EOF
+        return COMPLETE_NONPERSISTENT_MSG;
+
     /* In chunked responce we do not know the content length but we are absolutelly 
      * sure about the end of response, so we are calling the statusIfComplete to
      * decide if we can be persistant 
      */
-    if (eof && flags.chunked)
+    if (lastChunk && flags.chunked)
 	return statusIfComplete();
-
-    if (eof) // already reached EOF
-        return COMPLETE_NONPERSISTENT_MSG;
 
     const int64_t clen = vrep->bodySize(request->method);
 
@@ -1116,8 +1116,8 @@ HttpStateData::decodeAndWriteReplyBody()
     data=decodedData.content();
     addVirginReplyBody(data, len);
     if (done) {
-	eof = 1;
-	flags.do_next_read = 0;
+        lastChunk = 1;
+        flags.do_next_read = 0;
     }
     SQUID_EXIT_THROWING_CODE(status);
     return status;
