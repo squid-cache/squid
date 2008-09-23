@@ -8,13 +8,13 @@ msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-09-01 03:03+1300\n"
-"PO-Revision-Date: 2008-07-24 22:00+0000\n"
-"Last-Translator: Ricardo Ichizo <n1ghtcr4wler@gmail.com>\n"
+"PO-Revision-Date: 2008-09-23 01:28+1200\n"
+"Last-Translator: Aecio F. Neto <aecioneto@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <pt_BR@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Launchpad (build Unknown)\n"
+"X-Generator: Pootle 1.1.0\n"
 "X-Launchpad-Export-Date: 2008-07-27 05:12+0000\n"
 
 #: templates/ERR_INVALID_REQ:4
@@ -36,24 +36,26 @@ msgid ""
 "A Timeout occurred while waiting to read data from the network.  The network "
 "or server may be down or congested.  Please retry your request."
 msgstr ""
+"Tempo esgotado esperando a leitura de dados pela rede. A rede ou o servidor "
+"pode estar desconectado ou congestionado. Por favor, tente novamente sua "
+"requisição."
 
 #: templates/ERR_URN_RESOLVE:3
 msgid "A URL for the requested URN could not be retrieved"
-msgstr "Uma URL para a URN requisitada não pôde ser recuperada"
+msgstr "Uma URL para a URN requisitada não pode ser recuperada"
 
 #: templates/ERR_ACCESS_DENIED:5
 msgid "Access Denied."
 msgstr "Acesso Negado."
 
 #: templates/ERR_ACCESS_DENIED:6
-#, fuzzy
 msgid ""
 "Access control configuration prevents your request from being allowed at "
 "this time.  Please contact your service provider if you feel this is "
 "incorrect."
 msgstr ""
 "A configuração do controle de acesso impede que sua requisição seja "
-"permitida nesse horário. Por favor, contate seu provedor de serviço se você "
+"permitida neste momento. Por favor, contate seu provedor de serviço se você "
 "acha que isso está incorreto."
 
 #: templates/ERR_FTP_FORBIDDEN:4
@@ -61,16 +63,16 @@ msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"Uma falha na autenticação FTP ocorreu ao tentar recuperar a URL: <a href=\"%U"
-"\">%U</a>"
+"Ocorreu uma falha na autenticação do FTP ao tentar recuperar a URL: <a "
+"href=\"%U\">%U</a>"
 
 #: templates/ERR_FTP_FAILURE:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
 msgstr ""
-"Um erro no protocolo FTP ocorreu ao tentar recuperar a URL: <a href=\"%U\">%"
-"U</a>"
+"Um erro no protocolo FTP ocorreu ao tentar recuperar a URL: <a "
+"href=\"%U\">%U</a>"
 
 #: templates/ERR_ICAP_FAILURE:10
 msgid "An Illegal response was received from the ICAP server."
@@ -85,12 +87,11 @@ msgstr ""
 "requisição."
 
 #: templates/ERR_WRITE_ERROR:7
-#, fuzzy
 msgid ""
 "An error condition occurred while writing to the network.  Please retry your "
 "request."
 msgstr ""
-"Uma condição de erro ocorreu ao tentar acessar a rede. Por favor,repita sua "
+"Ocorreu um erro ao tentar escrever na rede. Por favor, repita sua "
 "requisição."
 
 #: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
@@ -104,7 +105,7 @@ msgstr "Acesso negado ao gerenciador de cache."
 
 #: templates/ERR_URN_RESOLVE:5
 msgid "Cannot Resolve URN"
-msgstr "Não pôde resolver URN"
+msgstr "Não é possível resolver URN"
 
 #: templates/ERR_LIFETIME_EXP:5
 msgid "Connection Lifetime Expired"
@@ -112,7 +113,7 @@ msgstr "Tempo de vida da conexão expirou"
 
 #: templates/ERR_CONNECT_FAIL:5
 msgid "Connection to %I failed."
-msgstr ""
+msgstr "Conexão para %I falhou."
 
 #: templates/ERR_INVALID_REQ:10
 msgid "Content-Length missing for POST or PUT requests."
@@ -134,7 +135,7 @@ msgstr "Content-Length faltando para requisições POST ou PUT."
 #: templates/ERR_UNSUP_REQ:2 templates/ERR_URN_RESOLVE:2
 #: templates/ERR_WRITE_ERROR:2 templates/ERR_ZERO_SIZE_OBJECT:2
 msgid "ERROR"
-msgstr "ERROE"
+msgstr "ERRO"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:1
 msgid "ERROR: Cache Access Denied"
@@ -162,16 +163,15 @@ msgstr "ERRO: upload via FTP falhou"
 #: templates/ERR_TOO_BIG:1 templates/ERR_UNSUP_REQ:1
 #: templates/ERR_WRITE_ERROR:1 templates/ERR_ZERO_SIZE_OBJECT:1
 msgid "ERROR: The requested URL could not be retrieved"
-msgstr "ERRO: A URL requisitada não pôde ser recuperada"
+msgstr "ERRO: A URL requisitada não pode ser recuperada"
 
 #: templates/ERR_URN_RESOLVE:1
-#, fuzzy
 msgid "ERROR: The requested URN not be retrieved"
-msgstr "ERRO: A URN requisitada não pôde ser recuperada"
+msgstr "ERRO: A URN requisitada não pode ser recuperada"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
-msgstr "Processamento de ESI falhou."
+msgstr "O processamento de ESI falhou."
 
 #: templates/ERR_FTP_PUT_CREATED:1
 msgid "FTP PUT Successful: File Created"
@@ -182,9 +182,8 @@ msgid "FTP PUT Successful: File updated"
 msgstr "FTP - PUT bem sucedido: Arquivo Atualizado"
 
 #: templates/ERR_FTP_PUT_ERROR:3
-#, fuzzy
 msgid "FTP PUT/upload failed"
-msgstr "FTP - PUT/upload falhou"
+msgstr "FTP - PUT/envio falhou"
 
 #: templates/ERR_FTP_DISABLED:5
 msgid "FTP is Disabled"
@@ -223,11 +222,11 @@ msgstr "Encaminhamento Negado."
 #: templates/ERR_UNSUP_REQ:8 templates/ERR_URN_RESOLVE:8
 #: templates/ERR_WRITE_ERROR:9 templates/ERR_ZERO_SIZE_OBJECT:8
 msgid "Generated %T by %h (%s)"
-msgstr ""
+msgstr "Gerado %T por %h (%s)"
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
-msgstr ""
+msgstr "Olha, não espere muito por URNs em %T :)"
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
@@ -242,13 +241,12 @@ msgstr ""
 "baixar é muito grande."
 
 #: templates/ERR_TOO_BIG:6
-#, fuzzy
 msgid ""
 "If you are making a POST or PUT request, then the item you are trying to "
 "upload is too large."
 msgstr ""
 "Se você está fazendo uma requisição POST ou PUT, então o item que você está "
-"tentando subir é muito grande."
+"tentando enviar é muito grande."
 
 #: templates/ERR_INVALID_REQ:11 templates/ERR_INVALID_URL:11
 msgid "Illegal character in hostname; underscores are not allowed."
@@ -256,7 +254,7 @@ msgstr "Caracter ilegal no nome de host; underscores não são permitidos."
 
 #: templates/ERR_INVALID_URL:10
 msgid "Illegal double-escape in the URL-Path"
-msgstr ""
+msgstr "Escape duplo ilegal na URL-Path"
 
 #: templates/ERR_INVALID_URL:5
 msgid "Invalid URL"
@@ -271,24 +269,21 @@ msgid "Missing URL."
 msgstr "URL faltando."
 
 #: templates/ERR_INVALID_URL:9
-#, fuzzy
 msgid "Missing hostname"
-msgstr "Nome de host faltando."
+msgstr "Nome do host faltando"
 
 #: templates/ERR_INVALID_URL:8
 msgid ""
 "Missing or incorrect access protocol (should be <q>http://</q> or similar)"
 msgstr ""
-"Protocolo de acesso faltando ou incorreto (deveria se <q>http://</q> ou "
+"Protocolo de acesso faltando ou incorreto (deveria ser <q>http://</q> ou "
 "semelhante)"
 
 #: templates/ERR_INVALID_REQ:6
-#, fuzzy
 msgid "Missing or unknown request method."
 msgstr "Método de requisição faltando ou desconhecido."
 
 #: templates/ERR_NO_RELAY:5
-#, fuzzy
 msgid "No Wais Relay"
 msgstr "Sem Wais Relay"
 
@@ -302,9 +297,9 @@ msgid ""
 "have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
 "chpasswd.cgi\">change</a> your default password."
 msgstr ""
-"Por favor, contate o <a href=\"mailto:%w%W\">administrador de cache</a> se "
-"você está tendo dificuldades em se autenticar ou <a href=\"http://%h/cgi-bin/"
-"chpasswd.cgi\">mude</a> sua senha."
+"Por favor, contate o <a href=\"mailto:%w%W\">administrador do cache</a> se "
+"você está tendo dificuldades em se autenticar ou <a href=\"http://%h/cgi-"
+"bin/chpasswd.cgi\">mude</a> sua senha."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
 msgid ""
@@ -313,7 +308,7 @@ msgid ""
 "administrator, read Squid documentation on cache manager interface and check "
 "cache log for more detailed error messages."
 msgstr ""
-"Por favor, contate o <a href=\"mailto:%w%W\">administrador de cache</a> se "
+"Por favor, contate o <a href=\"mailto:%w%W\">administrador do cache</a> se "
 "você está tendo dificuldades em se autenticar ou, se você <em>é</em> o "
 "administrador, leia a documentação do Squid na interface de gerenciamento de "
 "cache e cheque o log para maiores detalhes sobre mensagens de erro."
@@ -332,11 +327,11 @@ msgstr "Requisição é muito grande."
 
 #: templates/ERR_SOCKET_FAILURE:5
 msgid "Socket Failure"
-msgstr "Falha no soquete"
+msgstr "Falha de socket"
 
 #: templates/ERR_INVALID_URL:6
 msgid "Some aspect of the requested URL is incorrect."
-msgstr ""
+msgstr "Alguma característica da URL requisitada é incorreta."
 
 #: templates/ERR_ICAP_FAILURE:8 templates/ERR_INVALID_REQ:5
 #: templates/ERR_INVALID_URL:7
@@ -348,7 +343,7 @@ msgid ""
 "Sorry, you are not currently allowed to request %U from this cache manager "
 "until you have authenticated yourself."
 msgstr ""
-"Desculpe, atualmente você não está permitido a requisitar %U desse "
+"Desculpe. Atualmente, você não tem permissão para requisitar %U deste "
 "gerenciador de cache até que você tenha se autenticado."
 
 #: templates/ERR_CACHE_ACCESS_DENIED:6
@@ -356,8 +351,8 @@ msgid ""
 "Sorry, you are not currently allowed to request %U from this cache until you "
 "have authenticated yourself."
 msgstr ""
-"Desculpe, atualmente você não está permitido a requisitar %U desse cache até "
-"que você tenha se autenticado."
+"Desculpe. Atualmente, você não está permitido a requisitar %U desse cache "
+"até que você tenha se autenticado."
 
 #: templates/ERR_ZERO_SIZE_OBJECT:6
 msgid "Squid did not receive any data for this request."
@@ -385,7 +380,7 @@ msgid ""
 "Squid is unable to create a TCP socket, presumably due to excessive load. "
 "Please retry your request."
 msgstr ""
-"Squid não pode criar um soquete TCP, presumivelmente devido a uma carga "
+"Squid não pode criar um socket TCP, presumivelmente devido a uma carga "
 "excessiva. Por favor, repita sua requisição."
 
 #: templates/ERR_FTP_FAILURE:5 templates/ERR_FTP_FORBIDDEN:5
@@ -395,9 +390,8 @@ msgid "Squid sent the following FTP command:"
 msgstr "Squid enviou o seguinte comando FTP:"
 
 #: templates/ERR_DNS_FAIL:6
-#, fuzzy
 msgid "The DNS server returned:"
-msgstr "O servidor de domínio retornou:"
+msgstr "O servidor DNS retornou:"
 
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
@@ -406,16 +400,16 @@ msgstr "O processador ESI retornou:"
 #: templates/ERR_FTP_UNAVAILABLE:4
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr ""
-"O servidor FTP estava muito ocupado para recuperar a URL: <a href=\"%U\">%U</"
-"a>"
+"O servidor FTP estava muito ocupado para recuperar a URL: <a "
+"href=\"%U\">%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
 msgid ""
 "The HTTP Response message received from the contacted server could not be "
 "understood or was otherwise malformed. Please contact the site operator."
 msgstr ""
-"A mensagem de resposta HTTP recebida do servidor contactado não pôde ser "
-"entendida ou estava mal-formada. Por favor, contate o operador da página."
+"A mensagem da resposta HTTP recebida do servidor contatado não pode ser "
+"entendida ou estava mal-formada. Por favor, contate o administrador do site."
 
 #: templates/ERR_ICAP_FAILURE:9
 msgid "The ICAP server is not reachable."
@@ -440,8 +434,8 @@ msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"O seguinte erro foi encontrado ao tentar recuperar a URL: <a href=\"%U\">%U</"
-"a>"
+"O seguinte erro foi encontrado ao tentar recuperar a URL: <a "
+"href=\"%U\">%U</a>"
 
 #: templates/ERR_URN_RESOLVE:4
 msgid ""
@@ -491,7 +485,6 @@ msgid "The system returned: <i>%E</i>"
 msgstr "O sistema retornou: <i>%E</i>"
 
 #: templates/ERR_NO_RELAY:6
-#, fuzzy
 msgid ""
 "There is no WAIS Relay host defined for this Cache!  Yell at the "
 "administrator."
@@ -500,14 +493,13 @@ msgstr ""
 "administrador."
 
 #: templates/ERR_TOO_BIG:8
-#, fuzzy
 msgid ""
 "These limits have been established by the Internet Service Provider who "
 "operates this cache.  Please contact them directly if you feel this is an "
 "error."
 msgstr ""
-"Esses limites foram estabelecidos pelo Provedor de Serviço Internet no qual "
-"esse cache opera. Por favor, contate-os diretamente se você acha que isso é "
+"Esses limites foram estabelecidos pelo Provedor de Serviço Internet em que "
+"este cache opera. Por favor, contate-os diretamente se você acha que isso é "
 "um erro."
 
 #: templates/ERR_FTP_DISABLED:6
@@ -519,6 +511,8 @@ msgid ""
 "This cache is in the process of shutting down and can not service your "
 "request at this time.  Please retry your request again soon."
 msgstr ""
+"Este cache está sendo desligado ou não pode servir sua requisição neste "
+"momento. Por favor, tente novamente sua requisição em breve."
 
 #: templates/ERR_FORWARDING_DENIED:6
 msgid ""
@@ -526,33 +520,37 @@ msgid ""
 "sibling relationship.  Perhaps the client at %i is a cache which has been "
 "misconfigured."
 msgstr ""
+"Este cache não encaminhará sua requisição porque está tentando forçar um "
+"relacionamento. Talvez o cliente em %i é um cache que está mal configurado."
 
 #: templates/ERR_ICAP_FAILURE:7
 msgid "This means that some aspect of the ICAP communication failed."
-msgstr ""
+msgstr "Isto significa que alguma característica da comunicação ICAP falhou."
 
 #: templates/ERR_FTP_PUT_ERROR:7
 msgid ""
 "This means that the FTP server may not have permission or space to store the "
 "file. Check the path, permissions, diskspace and try again."
 msgstr ""
-"Significa que o servidor FTP não tem permissão ou espaço suficiente para "
-"armazenar o arquivo. Cheque o caminho, permissões, espaço em disco e tente "
-"novamente."
+"Isto significa que o servidor FTP não tem permissão ou espaço suficiente "
+"para armazenar o arquivo. Verifique o caminho, permissão, espaço em disco e "
+"tente novamente."
 
 #: templates/ERR_DNS_FAIL:7
 msgid ""
 "This means that the cache was not able to resolve the hostname presented in "
 "the URL. Check if the address is correct."
 msgstr ""
-"Significa que o cache não pôde resolver o nome de host contido na URL. "
-"Cheque se o endereço está correto."
+"Isto significa que o cache não pode resolver o nome de host contido na URL. "
+"Verifique se o endereço está correto."
 
 #: templates/ERR_ESI:7
 msgid ""
 "This means that the surrogate was not able to process the ESI template. "
 "Please report this error to the webmaster."
 msgstr ""
+"Isto significa que o surrogate não pode processar o modelo do ESI. Por "
+"favor, informe este erro ao webmaster."
 
 #: templates/ERR_FTP_NOT_FOUND:7
 msgid ""
@@ -560,6 +558,9 @@ msgid ""
 "comply with RFC 1738).  If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
+"Isto pode ter sido causado por uma URL de FTP com um caminho absoluto (que "
+"não é conforme com a RFC 1738). Se esta for a causa, então o arquivo pode "
+"ser encontrado em <a href=\"%B\">%B</a>."
 
 #: templates/ERR_SECURE_CONNECT_FAIL:7
 msgid ""
@@ -568,6 +569,10 @@ msgid ""
 "host does not support secure connections, or the proxy is not satisfied with "
 "the host security credentials."
 msgstr ""
+"Este proxy e o host remoto falharam em negociar uma configuração de "
+"segurança aceitável entre si para atender sua requisição. É possível que o "
+"host remoto não suporte conexões seguras ou que o proxy não está satisfeito "
+"com as credenciais de segurança do host."
 
 #: templates/ERR_CANNOT_FORWARD:6
 msgid ""
@@ -576,6 +581,11 @@ msgid ""
 "administrator does not allow this cache to make direct connections to origin "
 "servers, and all configured parent caches are currently unreachable."
 msgstr ""
+"Esta requisição não pode ser encaminhada ao servidor de origem or para "
+"nenhum cache superior. A causa mais provável para este erro é que o "
+"administrador do cache não permite que este cache faça conexões diretas aos "
+"servidores de origem e que todos caches superiores estão inalcançáveis no "
+"momento."
 
 #: templates/ERR_DNS_FAIL:5
 msgid "Unable to determine IP address from host name <q>%H</q>"
@@ -587,7 +597,7 @@ msgstr "Impossível encaminhar essa requisição nesse momento."
 
 #: templates/ERR_UNSUP_REQ:5
 msgid "Unsupported Request Method and Protocol"
-msgstr "Método de Requisição Não-Suportado e Protocolo"
+msgstr "O método de Requisição ou o procoloco não é suportado"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS:5
 msgid ""
@@ -598,7 +608,6 @@ msgstr ""
 "cached</q> foi especificada."
 
 #: templates/ERR_FTP_PUT_ERROR:4
-#, fuzzy
 msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
 msgstr "Ao tentar executar o PUT na seguinte URL: <a href=\"%U\">%U</a>"
 
@@ -612,6 +621,9 @@ msgid ""
 "directive. The document was not found in the cache, <em>or</em> it required "
 "revalidation prohibited by the <q>only-if-cached</q> directive."
 msgstr ""
+"Você enviou uma requisição com a diretiva de controle de cache <q>only-if-"
+"cached</q>. O documento não foi encontrado no cache <em>ou</em> o cache "
+"requer uma revalidação, que é proibida por esta diretiva."
 
 #: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
 #: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
@@ -628,14 +640,14 @@ msgstr ""
 #: templates/ERR_URN_RESOLVE:7 templates/ERR_WRITE_ERROR:8
 #: templates/ERR_ZERO_SIZE_OBJECT:7
 msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
-msgstr "Seu administrador de cache é <a href=\"mailto:%w%W\">%w</a>."
+msgstr "Seu administrador do cache é <a href=\"mailto:%w%W\">%w</a>."
 
 #: templates/ERR_INVALID_RESP:6
 msgid ""
 "Your cache administrator may be able to provide you with more details about "
 "the exact nature of the problem if needed."
 msgstr ""
-"Seu administrador de cache pode providenciar com maiores detalhes a exata "
+"Seu administrador do cache pode providenciar com maiores detalhes a exata "
 "natureza do problema, caso seja necessário."
 
 #: templates/ERR_ESI:8
@@ -644,4 +656,4 @@ msgstr "Seu webmaster é <a href=\"mailto:%w\">%w</a>."
 
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
-msgstr ""
+msgstr "Resposta de tamanho zero"
