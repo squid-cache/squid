@@ -2962,6 +2962,10 @@ parse_http_port_option(http_port_list * s, char *token)
         }
 #endif
     } else if (strcmp(token, "tproxy") == 0) {
+        if(s->intercepted || s->accel) {
+            debugs(3,DBG_CRITICAL, "http(s)_port: TPROXY option requires its own interception port. It cannot be shared.");
+            self_destruct();
+        }
         s->spoof_client_ip = 1;
         IPInterceptor.StartTransparency();
         /* Log information regarding the port modes under transparency. */
@@ -3044,6 +3048,11 @@ parse_http_port_option(http_port_list * s, char *token)
         s->sslBump = 1; // accelerated when bumped, otherwise not
 #endif
     } else {
+        self_destruct();
+    }
+
+    if( s->spoof_client_ip && (s->intercepted || s->accel) ) {
+        debugs(3,DBG_CRITICAL, "http(s)_port: TPROXY option requires its own interception port. It cannot be shared.");
         self_destruct();
     }
 }
