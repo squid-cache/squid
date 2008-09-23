@@ -1839,8 +1839,6 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
     char *host;
     char ntoabuf[MAX_IPSTRLEN];
 
-    http->flags.intercepted = 1;
-
     if (*url != '/')
         return; /* already in good shape */
 
@@ -2006,17 +2004,35 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
 #endif
 
     /* Rewrite the URL in transparent or accelerator mode */
+    /* NP: there are several cases to traverse here:
+     *  - standard mode (forward proxy)
+     *  - transparent mode (TPROXY)
+     *  - transparent mode with failures
+     *  - intercept mode (NAT)
+     *  - intercept mode with failures
+     *  - accelerator mode (reverse proxy)
+     *  - internal URL
+     *  - mixed combos of the above with internal URL
+     */
     if (conn->transparent()) {
+        /* intercept or transparent mode, properly working with no failures */
+        http->flags.intercepted = conn->port->intercepted;
+        http->flags.spoof_client_ip = conn->port->spoof_client_ip;
         prepareTransparentURL(conn, http, url, req_hdr);
+
+    } else if (conn->port->intercepted || conn->port->spoof_client_ip) {
+        /* transparent or intercept mode with failures */
+        prepareTransparentURL(conn, http, url, req_hdr);
+
     } else if (conn->port->accel || conn->switchedToHttps()) {
+        /* accelerator mode */
         prepareAcceleratedURL(conn, http, url, req_hdr);
+
     } else if (internalCheck(url)) {
+        /* internal URL mode */
         /* prepend our name & port */
         http->uri = xstrdup(internalLocalUri(NULL, url));
         http->flags.accel = 1;
-    } else if (conn->port->intercepted) {
-	// Fallback on transparent interception if enabled, useful for "self" requests
-        prepareTransparentURL(conn, http, url, req_hdr);
     }
 
     if (!http->uri) {
@@ -2756,10 +2772,11 @@ connStateCreate(const IPAddress &peer, const IPAddress &me, int fd, http_port_li
     result->port = cbdataReference(port);
 
     if(port->intercepted || port->spoof_client_ip) {
-        IPAddress dst;
+        IPAddress client, dst;
 
-        if (IPInterceptor.NatLookup(fd, me, peer, dst) == 0) {
-            result->me = dst; /* XXX This should be moved to another field */
+        if (IPInterceptor.NatLookup(fd, me, peer, client, dst) == 0) {
+            result->me = client;
+            result->peer = dst;
             result->transparent(true);
         }
     }
