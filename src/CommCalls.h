@@ -41,8 +41,9 @@ public:
     CommCommonCbParams(const CommCommonCbParams &params);
     ~CommCommonCbParams();
 
-    /// last chance to adjust based on the current Comm state
-    void syncWithComm() {} // not virtual because fire() knows dialer type
+    /// adjust using the current Comm state; returns false to cancel the call
+    // not virtual because callers know dialer type
+    bool syncWithComm() { return true; } 
 
     void print(std::ostream &os) const;
 
@@ -73,6 +74,8 @@ public:
 class CommConnectCbParams: public CommCommonCbParams {
 public:
     CommConnectCbParams(void *aData);
+
+    bool syncWithComm(); // see CommCommonCbParams::syncWithComm
 };
 
 // read/write (I/O) parameters
@@ -81,7 +84,7 @@ public:
     CommIoCbParams(void *aData);
 
     void print(std::ostream &os) const;
-    void syncWithComm();
+    bool syncWithComm(); // see CommCommonCbParams::syncWithComm
 
 public:
     char *buf;
@@ -133,6 +136,9 @@ public:
     CommCbMemFunT(C *obj, Method meth): JobDialer(obj),
         CommDialerParamsT<Params>(obj), object(obj), method(meth) {}
 
+    virtual bool canDial(AsyncCall &c) { return JobDialer::canDial(c) && 
+        this->params.syncWithComm(); }
+
     virtual void print(std::ostream &os) const {
         os << '('; this->params.print(os); os << ')'; }
 
@@ -141,7 +147,7 @@ public:
     Method method;
 
 protected:
-    virtual void doDial() { this->params.syncWithComm(); (object->*method)(this->params); }
+    virtual void doDial() { (object->*method)(this->params); }
 };
 
 
@@ -282,6 +288,9 @@ CommCbFunPtrCallT<Dialer>::canFire()
     if (!cbdataReferenceValid(dialer.params.data))
         return cancel("callee gone");
 
+    if (!dialer.params.syncWithComm())
+        return cancel("out of sync w/comm");
+
     return true;
 }
 
@@ -289,7 +298,6 @@ template <class Dialer>
 void
 CommCbFunPtrCallT<Dialer>::fire()
 {
-    dialer.params.syncWithComm();
     dialer.dial();
 }
 
