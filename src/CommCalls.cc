@@ -55,6 +55,17 @@ CommConnectCbParams::CommConnectCbParams(void *aData):
 {
 }
 
+bool
+CommConnectCbParams::syncWithComm()
+{
+    // drop the call if the call was scheduled before comm_close but
+    // is being fired after comm_close
+    if (fd >= 0 && fd_table[fd].closing()) {
+	debugs(5, 3, HERE << "droppin late connect call: FD " << fd);
+        return false;
+    }
+    return true; // now we are in sync and can handle the call
+}
 
 /* CommIoCbParams */
 
@@ -63,7 +74,7 @@ CommIoCbParams::CommIoCbParams(void *aData): CommCommonCbParams(aData),
 {
 }
 
-void
+bool
 CommIoCbParams::syncWithComm()
 {
     // change parameters if the call was scheduled before comm_close but
@@ -73,6 +84,7 @@ CommIoCbParams::syncWithComm()
 	flag = COMM_ERR_CLOSING;
 	size = 0;
     }
+    return true; // now we are in sync and can handle the call
 }		
 
 
