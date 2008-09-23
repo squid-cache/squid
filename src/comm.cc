@@ -1886,23 +1886,23 @@ commSetTcpKeepalive(int fd, int idle, int interval, int timeout)
     if (timeout && interval) {
 	int count = (timeout + interval - 1) / interval;
 	if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPCNT, &count, sizeof(on)) < 0)
-	    debug(5, 1) ("commSetKeepalive: FD %d: %s\n", fd, xstrerror());
+	    debugs(5, 1, "commSetKeepalive: FD " << fd << ": " << xstrerror());
     }
 #endif
 #ifdef TCP_KEEPIDLE
     if (idle) {
 	if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &idle, sizeof(on)) < 0)
-	    debug(5, 1) ("commSetKeepalive: FD %d: %s\n", fd, xstrerror());
+	    debugs(5, 1, "commSetKeepalive: FD " << fd << ": " << xstrerror());
     }
 #endif
 #ifdef TCP_KEEPINTVL
     if (interval) {
 	if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &interval, sizeof(on)) < 0)
-	    debug(5, 1) ("commSetKeepalive: FD %d: %s\n", fd, xstrerror());
+	    debugs(5, 1, "commSetKeepalive: FD " << fd << ": " << xstrerror());
     }
 #endif
     if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (char *) &on, sizeof(on)) < 0)
-	debug(5, 1) ("commSetKeepalive: FD %d: %s\n", fd, xstrerror());
+	debugs(5, 1, "commSetKeepalive: FD " << fd << ": " << xstrerror());
 }
 
 void
@@ -2174,8 +2174,7 @@ comm_listen(int sock) {
 #ifdef SO_ACCEPTFILTER
 	struct accept_filter_arg afa;
 	bzero(&afa, sizeof(afa));
-	debug(5, 0) ("Installing accept filter '%s' on FD %d\n",
-	Config.accept_filter, sock);
+	debugs(5, DBG_CRITICAL, "Installing accept filter '" << Config.accept_filter << "' on FD " << sock);
 	xstrncpy(afa.af_name, Config.accept_filter, sizeof(afa.af_name));
 	x = setsockopt(sock, SOL_SOCKET, SO_ACCEPTFILTER, &afa, sizeof(afa));
 	if (x < 0)
