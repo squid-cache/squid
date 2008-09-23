@@ -29,7 +29,7 @@ public:
     ~IPIntercept() {};
 
     /** Perform NAT lookups */
-    int NatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &dst);
+    int NatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &client, IPAddress &dst);
 
 #if LINUX_TPROXY2
     // only relevant to TPROXY v2 connections.
@@ -89,7 +89,7 @@ private:
      \retval 0     Successfuly located the new address.
      \retval -1    An error occured during NAT lookups.
      */
-    int NetfilterInterception(int fd, const IPAddress &me, IPAddress &dst, int silent);
+    int NetfilterInterception(int fd, const IPAddress &me, IPAddress &client, int silent);
 
     /**
      * perform Lookups on Netfilter fully-transparent interception targets (TPROXY).
@@ -107,7 +107,7 @@ private:
      \retval 0     Successfuly located the new address.
      \retval -1    An error occured during NAT lookups.
      */
-    int IPFWInterception(int fd, const IPAddress &me, IPAddress &dst, int silent);
+    int IPFWInterception(int fd, const IPAddress &me, IPAddress &client, int silent);
 
 
     int transparent_active;

@@ -87,7 +87,7 @@ public:
     virtual bool addElement(ESIElement::Pointer)
     {
         /* Don't accept children */
-        debug (86,5)("ESIElement::addElement: Failed for %p\n",this);
+        debugs(86,5, "ESIElement::addElement: Failed for " << this);
         return false;
     }
 
@@ -95,7 +95,7 @@ public:
     /* process this element */
     virtual esiProcessResult_t process (int dovars)
     {
-        debug (86,5) ("esiProcessComplete: Processed %p\n",this);
+        debugs(86,5, "esiProcessComplete: Processed " << this);
         return ESI_PROCESS_COMPLETE;
     }
 

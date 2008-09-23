@@ -1362,10 +1362,21 @@ peerConnectSucceded(peer * p)
         p->tcp_up = PEER_TCP_MAGIC_COUNT;
 }
 
+/// called by Comm when test_fd is closed while connect is in progress
+static void
+peerProbeClosed(int fd, void *data)
+{
+    peer *p = (peer*)data;
+    p->test_fd = -1;
+    // it is a failure because we failed to connect
+    peerConnectFailedSilent(p);
+}
+
 static void
 peerProbeConnectTimeout(int fd, void *data)
 {
     peer * p = (peer *)data;
+    comm_remove_close_handler(fd, &peerProbeClosed, p);
     comm_close(fd);
     p->test_fd = -1;
     peerConnectFailedSilent(p);
@@ -1395,6 +1406,7 @@ peerProbeConnect(peer * p)
     if (fd < 0)
         return ret;
 
+    comm_add_close_handler(fd, &peerProbeClosed, p);
     commSetTimeout(fd, ctimeout, peerProbeConnectTimeout, p);
 
     p->test_fd = fd;
@@ -1421,6 +1433,7 @@ peerProbeConnectDone(int fd, comm_err_t status, int xerrno, void *data)
         peerConnectFailedSilent(p);
     }
 
+    comm_remove_close_handler(fd, &peerProbeClosed, p);
     comm_close(fd);
     p->test_fd = -1;
     return;

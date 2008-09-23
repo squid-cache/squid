@@ -18,9 +18,11 @@ TRANSLATIONS = \
 	en en-au en-gb \
 	es \
 	fr \
+	id \
 	it \
 	nl \
-	pt-br
+	pt-br \
+	sv
 
 # Legacy language contributions...
 #
@@ -45,8 +47,6 @@ LANGUAGES	= \
 		Serbian \
 		Simplify_Chinese \
 		Slovak \
-		Spanish \
-		Swedish \
 		Traditional_Chinese \
 		Turkish \
 		Ukrainian-1251 \

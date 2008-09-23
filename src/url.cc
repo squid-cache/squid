@@ -357,7 +357,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
 
     /* reject duplicate or leading dots */
     if (strstr(host, "..") || *host == '.') {
-        debug(23, 1) ("urlParse: Illegal hostname '%s'\n", host);
+        debugs(23, 1, "urlParse: Illegal hostname '" << host << "'");
         return NULL;
     }
 
