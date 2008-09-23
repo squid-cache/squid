@@ -1893,7 +1893,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
         int tos = 0;
         if (Config.zph_tos_peer && 
              (http->request->hier.code==SIBLING_HIT || 
-                Config.onoff.zph_tos_parent && http->request->hier.code==PARENT_HIT) )
+                (Config.onoff.zph_tos_parent && http->request->hier.code==PARENT_HIT) ) )
         {
             tos = Config.zph_tos_peer;
             debugs(33, 2, "ZPH: Peer hit with hier.code="<<http->request->hier.code<<", TOS="<<tos);

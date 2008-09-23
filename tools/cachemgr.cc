@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -140,8 +140,7 @@ extern "C"
 #define DEFAULT_CACHEMGR_CONFIG "/etc/squid/cachemgr.conf"
 #endif
 
-typedef struct
-{
+typedef struct {
     char *server;
     char *hostname;
     int port;
@@ -153,7 +152,7 @@ typedef struct
 
 /*
  * Debugging macros (info goes to error_log on your web server)
- * Note: do not run cache manager with non zero debugging level 
+ * Note: do not run cache manager with non zero debugging level
  *       if you do not debug, it may write a lot of [sensitive]
  *       information to your error log.
  */
@@ -589,13 +588,13 @@ munge_action_line(const char *_buf, cachemgr_request * req)
     char *p;
 
     if ((p = strchr(x, '\n')))
-       *p = '\0';
+        *p = '\0';
     action = xstrtok(&x, '\t');
     description = xstrtok(&x, '\t');
     if (!description)
-       description = action;
+        description = action;
     if (!action)
-       return "";
+        return "";
     snprintf(html, sizeof(html), " <a href=\"%s\">%s</a>", menu_url(req, action), description);
     return html;
 }
@@ -881,8 +880,7 @@ process_request(cachemgr_request * req)
 }
 
 int
-main(int argc, char *argv[])
-{
+main(int argc, char *argv[]) {
     char *s;
     cachemgr_request *req;
 
@@ -914,8 +912,7 @@ main(int argc, char *argv[])
 }
 
 static char *
-read_post_request(void)
-{
+read_post_request(void) {
     char *s;
     char *buf;
     int len;
@@ -942,8 +939,7 @@ read_post_request(void)
 }
 
 static char *
-read_get_request(void)
-{
+read_get_request(void) {
     char *s;
 
     if ((s = getenv("QUERY_STRING")) == NULL)
@@ -953,8 +949,7 @@ read_get_request(void)
 }
 
 static cachemgr_request *
-read_request(void)
-{
+read_request(void) {
     char *buf;
 
     cachemgr_request *req;
@@ -1029,12 +1024,11 @@ read_request(void)
 /* Routines to support authentication */
 
 /*
- * Encodes auth info into a "public" form. 
+ * Encodes auth info into a "public" form.
  * Currently no powerful encryption is used.
  */
 static void
-make_pub_auth(cachemgr_request * req)
-{
+make_pub_auth(cachemgr_request * req) {
     static char buf[1024];
     safe_free(req->pub_auth);
     debug(3) fprintf(stderr, "cmgr: encoding for pub...\n");
@@ -1057,8 +1051,7 @@ make_pub_auth(cachemgr_request * req)
 }
 
 static void
-decode_pub_auth(cachemgr_request * req)
-{
+decode_pub_auth(cachemgr_request * req) {
     char *buf;
     const char *host_name;
     const char *time_str;
@@ -1116,15 +1109,13 @@ decode_pub_auth(cachemgr_request * req)
 }
 
 static void
-reset_auth(cachemgr_request * req)
-{
+reset_auth(cachemgr_request * req) {
     safe_free(req->passwd);
     safe_free(req->pub_auth);
 }
 
 static const char *
-make_auth_header(const cachemgr_request * req)
-{
+make_auth_header(const cachemgr_request * req) {
     static char buf[1024];
     size_t stringLength = 0;
     const char *str64;
@@ -1149,8 +1140,7 @@ make_auth_header(const cachemgr_request * req)
 }
 
 static int
-check_target_acl(const char *hostname, int port)
-{
+check_target_acl(const char *hostname, int port) {
     char config_line[BUFSIZ];
     FILE *fp = NULL;
     int ret = 0;

@@ -699,7 +699,7 @@ FwdState::connectDone(int aServerFD, comm_err_t status, int xerrno)
 
         ErrorState *anErr = errorCon(ERR_DNS_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
 
-        anErr->dnsserver_msg = xstrdup(dns_error_message);
+        anErr->dnsserver_msg = xstrdup(dns_error_message_safe());
 
         fail(anErr);
 
