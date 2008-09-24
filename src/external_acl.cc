@@ -134,7 +134,7 @@ public:
 
 struct _external_acl_format
 {
-    enum {
+    enum format_type {
         EXT_ACL_UNKNOWN,
         EXT_ACL_LOGIN,
 #if USE_IDENT
@@ -225,7 +225,7 @@ free_external_acl(void *data)
  \param format   - structure to contain all the info about this format element.
  */
 void
-parse_header_token(external_acl_format *format, char *header, const _external_acl_format type)
+parse_header_token(external_acl_format *format, char *header, const _external_acl_format::format_type type)
 {
     /* header format */
     char *member, *end;
@@ -369,12 +369,14 @@ parse_externalAclHelper(external_acl ** list)
         if (strncmp(token, "%{", 2) == 0) {
             // deprecated. but assume the old configs all referred to request headers.
             debugs(82, DBG_IMPORTANT, "WARNING: external_acl_type format %{...} is being replaced by %>{...} for : " << token);
-            parse_header_token(format, (token+2), EXT_ACL_HEADER_REQUEST);
+            parse_header_token(format, (token+2), _external_acl_format::EXT_ACL_HEADER_REQUEST);
+        }
 
         if (strncmp(token, "%>{", 3) == 0) {
-            parse_header_token(format, (token+3), EXT_ACL_HEADER_REQUEST);
+            parse_header_token(format, (token+3), _external_acl_format::EXT_ACL_HEADER_REQUEST);
+	}
         if (strncmp(token, "%<{", 3) == 0) {
-            parse_header_token(format, (token+3), EXT_ACL_HEADER_REPLY);
+            parse_header_token(format, (token+3), _external_acl_format::EXT_ACL_HEADER_REPLY);
 
         } else if (strcmp(token, "%LOGIN") == 0) {
             format->type = _external_acl_format::EXT_ACL_LOGIN;
@@ -489,15 +491,15 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
         for (format = node->format; format; format = format->next) {
             switch (format->type) {
 
-            case _external_acl_format::EXT_ACL_HEADER:
+            case _external_acl_format::EXT_ACL_HEADER_REQUEST:
 
-            case _external_acl_format::EXT_ACL_HEADER_ID:
+            case _external_acl_format::EXT_ACL_HEADER_REQUEST_ID:
                 storeAppendPrintf(sentry, " %%{%s}", format->header);
                 break;
 
-            case _external_acl_format::EXT_ACL_HEADER_MEMBER:
+            case _external_acl_format::EXT_ACL_HEADER_REQUEST_MEMBER:
 
-            case _external_acl_format::EXT_ACL_HEADER_ID_MEMBER:
+            case _external_acl_format::EXT_ACL_HEADER_REQUEST_ID_MEMBER:
                 storeAppendPrintf(sentry, " %%{%s:%s}", format->header, format->member);
                 break;
 #define DUMP_EXT_ACL_TYPE(a) \
@@ -542,9 +544,7 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
 
                 DUMP_EXT_ACL_TYPE(EXT_USER);
 
-            case _external_acl_format::EXT_ACL_UNKNOWN:
-
-            case _external_acl_format::EXT_ACL_END:
+            default:
                 fatal("unknown external_acl format error");
                 break;
             }
