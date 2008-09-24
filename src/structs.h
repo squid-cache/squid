@@ -925,6 +925,10 @@ struct peer
 #if USE_HTCP
         unsigned int htcp:1;
         unsigned int htcp_oldsquid:1;
+        unsigned int htcp_no_clr:1;
+        unsigned int htcp_no_purge_clr:1;
+        unsigned int htcp_only_clr:1;
+        unsigned int htcp_forward_clr:1;
 #endif
         unsigned int no_netdb_exchange:1;
 #if DELAY_POOLS
