@@ -427,6 +427,8 @@ libsquid_la_SOURCES = \
 	comm.h \
 	CommCalls.cc \
 	CommCalls.h \
+	DescriptorSet.cc \
+	DescriptorSet.h \
 	IPInterception.cc \
 	IPInterception.h \
         ICAP/AsyncJob.cc \
