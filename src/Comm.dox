@@ -1,0 +1,182 @@
+/**
+\defgroup Comm Comm Module
+\ingroup Components
+ 
+
+\section Basic Basic Comm API principles
+
+  \par
+  Comm API supports four major kinds of socket-related operations:
+  accept, connect, read, and write. Sockets are identified by their
+  descriptors.
+
+  \par
+  A Comm user requests its interest in operations by calling an
+  appropriate API function (e.g., comm_read()) and optionally providing
+  a notification "callback" (a.k.a., handler). For a given descriptor,
+  there can be no more than one registered user per operation.
+
+  \par
+  In addition to the four operations listed above, a user can register
+  to be notified when a given descriptor is closed.
+
+  \par
+  When a Comm operation completes, all users that registered the
+  corresponding handler are notified. When a descriptor is closed, all
+  users that registered any callback for the descriptor are notified
+  (this will change though, see "Anticipated changes" below).
+
+  \par
+  All Comm notifications are asynchronous, performed using the
+  AsyncCall API.
+
+  \par
+  Notifications for four operations listed above are scheduled in the
+  order of the corresponding operations completion. User code can assume
+  that the operation has completed (possibly with an error) only after
+  receiving a notification. Until then, I/O resources such as buffers
+  must remain available for the operation.
+
+  \par
+  Notifications related to closing of a descriptor are documented
+  separately.
+
+
+\section IO-cancel I/O cancellation
+
+  \par
+  To cancel an interest in a read operation, call comm_read_cancel()
+  with an AsyncCall object. This call guarantees that the passed Call
+  will be canceled (see the AsyncCall API for call cancellation
+  definitions and details). Naturally, the code has to store the
+  original read callback Call pointer to use this interface. 
+
+  \par
+  The comm_read_cancel() call does not guarantee that the read operation
+  has not already happen.
+
+  \par
+  The comm_read_cancel() call guarantees that the read operation will not
+  start for read operations that are performed by Comm (i.e., where read
+  start is controlled by Comm).  There is no such guarantee for
+  asynchronous read operations scheduled by Comm but started by the
+  operating system or other threads.
+
+  \par
+  The above applies to comm_read_cancel() interface with an AsyncCall
+  object as a parameter. You cannot reliably cancel an interest in read
+  operation using the old comm_read_cancel() call that uses a function
+  pointer. The handler may get even called after old comm_read_cancel()
+  was called.
+
+  \par
+  It is OK to call comm_read_cancel (both flavors) at any time as long
+  as the descriptor has not been closed and there is either no read
+  interest registered or the passed parameters match the registered
+  ones. If the descriptor has been closed, the behavior is undefined.
+  Otherwise, if parameters do not match, you get an assertion.
+
+  \par
+  To cancel Comm operations other than read, close the descriptor with
+  comm_close().
+
+
+\section comm-close Descriptor closing with comm_close
+
+  \par
+  The comm_close() function does not close the descriptor but initiates
+  the following closing sequence:
+
+  \par
+      -# The descriptor is placed in a "closing" state.
+      -# The registered read, write, and accept callbacks (if any) are
+         scheduled (in an unspecified order).
+      -# The close callbacks are scheduled (in an unspecified order).
+      -# A call to the internal descriptor closing handler is
+         scheduled.
+
+  \par
+  The "unspecified" order above means that the user should not rely on
+  any specific or deterministic order because the currently hard-coded
+  order may change.
+
+  \par
+  The read, write, and accept notifications (scheduled in step #2
+  above) carry the COMM_ERR_CLOSING error flag. When handling
+  COMM_ERR_CLOSING event, the user code should limit
+  descriptor-related processing, especially Comm calls, because
+  supported Comm functionality is very limited when the descriptor is
+  closing. New code should use the close handlers instead (scheduled
+  in step #3).
+
+  \par
+  The internal closing handler (scheduled in step #4 above) closes the
+  descriptor. When the descriptor is closed, all operations on the
+  descriptor are prohibited and may cause bugs and asserts. Currently,
+  the same descriptor will eventually be reused for another socket and
+  Comm may not notice that a buggy code is still using a stale
+  descriptor, but that may change.
+
+  \par
+  Since all notifications are asynchronous, it is possible for a read
+  or write notification that was scheduled before comm_close() was
+  called to arrive at its destination after comm_close() was called.
+  Such notification will arrive with COMM_ERR_CLOSING flag even though
+  that flag was not set at the time of the I/O (and the I/O may have
+  been successful). This behavior may change.
+
+
+\section Future Anticipated changes and preparation recommendations
+
+  \par
+  This section lists anticipated Comm API changes and provides
+  recommendations for developers writing new (or rewriting old) Comm
+  user code. The changes are listed in a rough order from more likely
+  to less certain and from near-feature to long-term.
+
+  \par
+  The old comm_read_cancel() function that uses a function pointer will be
+  removed as unreliable. Use the AsyncCall-based comm_read_cancel()
+  instead.
+
+  \par
+  COMM_ERR_CLOSING interface will be removed. The read, write, and
+  accept notifications will not be scheduled after comm_close() is
+  called.  New user code should register close handlers instead.
+
+  \par
+  When COMM_ERR_CLOSING interface is removed, pending notifications
+  (if any) will be canceled after comm_close() is called. However, the
+  cancellation may be removed later if Comm is modified to provide safe
+  access to closing descriptors and their fragile state. New user code
+  should continue to assume that it is safe to access Comm in a read,
+  write, and accept handlers.
+
+  \par
+  The old comm_read_cancel() call that uses a function pointer will be
+  removed as unreliable. New user code should use comm_read_cancel() with
+  an AsyncCall parameter.
+
+  \par
+  Comm users may be required to become children of Comm-provided
+  classes, to eliminate the need for a complicated (albeit hidden)
+  hierarchy of Comm callback dialers (see CommCalls.h) and to provide
+  default implementation for common I/O handling cases.  New user code
+  should use methods of AsyncJob-derived classes to handle Comm
+  notifications instead of using stand-alone functions. Additionally, it
+  should not call comm_close() for descriptors it does not "own".
+
+  \par
+  The comm_close() API will be used exclusively for "stop future I/O,
+  schedule a close callback call, and cancel all other callbacks"
+  purposes. New user code should not use comm_close() for the purpose of
+  immediately ending a job.
+
+  \par
+  Raw socket descriptors will be replaced with unique IDs or small
+  objects that help detect stale descriptor/socket usage bugs and
+  encapsulate access to socket-specific information. New user code
+  should treat descriptor integers as opaque objects.
+
+
+ */
