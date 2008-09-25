@@ -134,6 +134,8 @@ SQUIDCEXTERN void disk_init(void);
 SQUIDCEXTERN void dnsShutdown(void);
 SQUIDCEXTERN void dnsInit(void);
 SQUIDCEXTERN void dnsSubmit(const char *lookup, HLPCB * callback, void *data);
+/// XXX: a temporary hack to work around the missing DNS error info
+const char *dns_error_message_safe();
 
 /* dns_internal.c */
 SQUIDCEXTERN void idnsInit(void);
@@ -385,6 +387,9 @@ SQUIDCEXTERN void neighborAddAcl(const char *, const char *);
 SQUIDCEXTERN void neighborsUdpAck(const cache_key *, icp_common_t *, const IPAddress &);
 SQUIDCEXTERN void neighborAdd(const char *, const char *, int, int, int, int, int);
 SQUIDCEXTERN void neighbors_init(void);
+#if USE_HTCP
+SQUIDCEXTERN void neighborsHtcpClear(StoreEntry *, const char *, HttpRequest *, const HttpRequestMethod &, htcp_clr_reason);
+#endif
 SQUIDCEXTERN peer *peerFindByName(const char *);
 SQUIDCEXTERN peer *peerFindByNameAndPort(const char *, unsigned short);
 SQUIDCEXTERN peer *getDefaultParent(HttpRequest * request);
@@ -812,10 +817,16 @@ SQUIDCEXTERN void externalAclShutdown(void);
 SQUIDCEXTERN char *strtokFile(void);
 
 #if USE_WCCPv2
+
+SQUIDCEXTERN void parse_wccp2_method(int *v);
+SQUIDCEXTERN void free_wccp2_method(int *v);
+SQUIDCEXTERN void dump_wccp2_method(StoreEntry * e, const char *label, int v);
+SQUIDCEXTERN void parse_wccp2_amethod(int *v);
+SQUIDCEXTERN void free_wccp2_amethod(int *v);
+SQUIDCEXTERN void dump_wccp2_amethod(StoreEntry * e, const char *label, int v);
+
 SQUIDCEXTERN void parse_wccp2_service(void *v);
-
 SQUIDCEXTERN void free_wccp2_service(void *v);
-
 SQUIDCEXTERN void dump_wccp2_service(StoreEntry * e, const char *label, void *v);
 
 SQUIDCEXTERN int check_null_wccp2_service(void *v);

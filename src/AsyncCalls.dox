@@ -1,0 +1,91 @@
+/**
+\defgroup AsyncCalls Asynchronous Calls
+\ingroup Components
+ 
+
+\section Terminology Terminology
+
+- \b Call: an AsyncCall object meant to be delivered from the Caller to the
+  Recipient.
+- \b Recipient: the code being the destination of the Call. The specific
+  function receiving the call is often called "handler".
+- \b Caller: the code scheduling or placing the Call.
+- \b Creator: the code creating the Call.
+- \b Dialing: the final act of delivering the Call to the Recipient.
+- \b Canceling: preventing the call from being dialed in the future.
+- <b>Pending call</b>: the call which has been scheduled but no attempt to dial
+  it has been made.
+- <b>Live call</b>: the in-progress call that has been dialed and the Recipient
+  (receiving) function has not finished yet.
+
+
+\section Life Typical life cycle
+
+-# Creator creates a Call object and stores its pointer, possibly in a
+temporary variable. If Creator is the future Recipient of the Call, it
+is customary to talk about a "callback". In such context, Creator gives
+the Call pointer to some other code (the future Caller). Calls are
+refcounted and the AsyncCall::Pointer class must be used to point and
+share them.
+-# Time passes and something triggers the need to dial the call.
+-# Caller schedules (a.k.a, places) the Call. The Call is placed in the
+AsyncCallQueue. The queue preserves the scheduling call order.
+-# Time passes and it is now time to dial the call.
+-# AsyncCallQueue checks whether the call can be dialed. If yes,
+AsyncCallQueue dials the Call and the Recipient receives it. Otherwise,
+only a debugging message is logged (if enabled). Dialing a call involves
+several state checks at several stages, depending on the Call type.
+-# The Call is alive while the Recipient is handling it. That state ends
+when the Recipient code (a.k.a., handler) returns. At that point, the
+AsyncCallQueue proceeds to handle other calls.
+-# The Call object is destroyed when the last reference to it is gone.
+One should not try to invalidate or delete the call.
+
+
+\section Rules Basic rules
+
+- Callbacks must be called: If a Caller has a Call pointer as a
+callback, the Caller must make that Call when conditions are right
+(possibly with a call-specific error indicator). Whether that Call will
+be dialed is irrelevant here.
+
+- Unwanted calls must be canceled: If Recipient may not be able to
+handle the call back, then it must cancel it.  Whether that Call will be
+scheduled is irrelevant here. If the Recipient has an AsyncCall pointer,
+calling AsyncCall::cancel is sufficient, but the code should use
+call-specific APIs when possible (e.g., comm_read_cancel or comm_close).
+
+- Processed calls should be forgotten: If you scheduled, received, or
+cancel the call, set its pointer to NULL. The Caller should forget the
+call after scheduling it. the recipient should forget the call when it
+receives or cancels it. These are just cleanup rules to avoid
+double-scheduling or double-cancellation as well as situations where the
+code assumes it can still change a pending Call (which will not work for
+SMP code).
+
+- The calls are received in the order they were scheduled.
+
+- The Recipient is guaranteed to receive at most one Call at a time. An
+attempt to dial call B while some call A is alive is a bug, and call B
+will not be dialed.
+
+
+\section Canceling Call Canceling
+
+- A call may be canceled at any time.
+
+- A canceled call will not be dialed. 
+
+- Cancellation has immediate effect: The call will never be dialed
+after cancel() is called
+
+- Cancellation by non-Recipients is discouraged because it may not work
+in an SMP environment.
+
+- A late call cancellation is cancellation that is performed after the Call
+has already been dialed (i.e., the call is or was alive at the time of the
+cancellation).  Late cancellation is a no-op. It is not a bug to cancel
+something late, but the canceling code should be aware of that possibility.
+
+
+*/

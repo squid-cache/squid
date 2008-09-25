@@ -122,6 +122,24 @@ class FtpStateData;
 /// \ingroup ServerProtocolFTPInternal
 typedef void (FTPSM) (FtpStateData *);
 
+/// common code for FTP control and data channels
+// does not own the channel descriptor, which is managed by FtpStateData
+class FtpChannel {
+public:
+    FtpChannel(): fd(-1) {}
+
+    /// called after the socket is opened, sets up close handler
+    void opened(int aFd, const AsyncCall::Pointer &aCloser);
+
+    void close(); /// clears the close handler and calls comm_close
+    void clear(); /// just resets fd and close handler
+
+    int fd; /// channel descriptor; \todo: remove because the closer has it
+
+private:
+    AsyncCall::Pointer closer; /// Comm close handler callback
+};
+
 /// \ingroup ServerProtocolFTPInternal
 class FtpStateData : public ServerStateData
 {
@@ -159,9 +177,10 @@ public:
     char *old_filepath;
     char typecode;
 
-    struct
+    // \todo: optimize ctrl and data structs member order, to minimize size
+    /// FTP control channel info; the channel is opened once per transaction
+    struct CtrlChannel: public FtpChannel
     {
-        int fd;
         char *buf;
         size_t size;
         size_t offset;
@@ -171,9 +190,9 @@ public:
         int replycode;
     } ctrl;
 
-    struct
+    /// FTP data channel info; the channel may be opened/closed a few times
+    struct DataChannel: public FtpChannel
     {
-        int fd;
         MemBuf *readBuf;
         char *host;
         u_short port;
@@ -183,7 +202,6 @@ public:
     struct _ftp_flags flags;
 
 private:
-    AsyncCall::Pointer closeHandler;
     CBDATA_CLASS(FtpStateData);
 
 public:
@@ -222,7 +240,8 @@ public:
     static CNCB ftpPasvCallback;
     static PF ftpDataWrite;
     void ftpTimeout(const CommTimeoutCbParams &io);
-    void ftpSocketClosed(const CommCloseCbParams &io);
+    void ctrlClosed(const CommCloseCbParams &io);
+    void dataClosed(const CommCloseCbParams &io);
     void ftpReadControlReply(const CommIoCbParams &io);
     void ftpWriteCommandCallback(const CommIoCbParams &io);
     void ftpAcceptDataConnection(const CommAcceptCbParams &io);
@@ -238,6 +257,7 @@ public:
 
     virtual bool doneWithServer() const;
     virtual bool haveControlChannel(const char *caller_name) const;
+    AsyncCall::Pointer dataCloser(); /// creates a Comm close callback
 
 private:
     // BodyConsumer for HTTP: consume request body.
@@ -395,11 +415,26 @@ FTPSM *FTP_SM_FUNCS[] =
         ftpReadMkdir		/* SENT_MKDIR */
     };
 
+/// handler called by Comm when FTP control channel is closed unexpectedly
 void 
-FtpStateData::ftpSocketClosed(const CommCloseCbParams &io)
+FtpStateData::ctrlClosed(const CommCloseCbParams &io)
 {
-    ctrl.fd = -1;
-    deleteThis("FtpStateData::ftpSocketClosed");
+    ctrl.clear();
+    deleteThis("FtpStateData::ctrlClosed");
+}
+
+/// handler called by Comm when FTP data channel is closed unexpectedly
+void 
+FtpStateData::dataClosed(const CommCloseCbParams &io)
+{
+    data.clear();
+    failed(ERR_FTP_FAILURE, 0);
+    /* failed closes ctrl.fd and frees ftpState */
+
+    /* NP: failure recovery may be possible when its only a data.fd failure.
+     *     is the ctrl.fd is still fine, we can send ABOR down it and retry.
+     *     Just need to watch out for wider Squid states like shutting down or reconfigure.
+     */
 }
 
 FtpStateData::FtpStateData(FwdState *theFwdState) : AsyncJob("FtpStateData"), ServerStateData(theFwdState)
@@ -408,8 +443,6 @@ FtpStateData::FtpStateData(FwdState *theFwdState) : AsyncJob("FtpStateData"), Se
     debugs(9, 3, HERE << "'" << url << "'" );
     statCounter.server.all.requests++;
     statCounter.server.ftp.requests++;
-    ctrl.fd = theFwdState->server_fd;
-    data.fd = -1;
     theSize = -1;
     mdtm = -1;
 
@@ -419,9 +452,9 @@ FtpStateData::FtpStateData(FwdState *theFwdState) : AsyncJob("FtpStateData"), Se
     flags.rest_supported = 1;
 
     typedef CommCbMemFunT<FtpStateData, CommCloseCbParams> Dialer;
-    closeHandler = asyncCall(9, 5, "FtpStateData::ftpSocketClosed",
-				 Dialer(this,&FtpStateData::ftpSocketClosed));
-    comm_add_close_handler(ctrl.fd, closeHandler);
+    AsyncCall::Pointer closer = asyncCall(9, 5, "FtpStateData::ctrlClosed",
+        Dialer(this, &FtpStateData::ctrlClosed));
+    ctrl.opened(theFwdState->server_fd, closer);
 
     if (request->method == METHOD_PUT)
         flags.put = 1;
@@ -436,10 +469,11 @@ FtpStateData::~FtpStateData()
         reply_hdr = NULL;
     }
 
-    if (data.fd > -1) {
-        int fd = data.fd;
-        data.fd = -1;
-        comm_close(fd);
+    data.close();
+
+    if (ctrl.fd >= 0) {
+        debugs(9, DBG_IMPORTANT, HERE << "Internal bug: FtpStateData left " <<
+            "control FD " << ctrl.fd << " open");
     }
 
     if (ctrl.buf) {
@@ -1209,14 +1243,9 @@ FtpStateData::dataComplete()
     debugs(9, 3,HERE);
 
     /* Connection closed; transfer done. */
-    if (data.fd > -1) {
-        /**
-         * Close data socket so it does not occupy resources while
-         * we wait.
-         */
-        comm_close(data.fd);
-        data.fd = -1;
-    }
+
+    /// Close data channel, if any, to conserve resources while we wait.
+    data.close();
 
     /* expect the "transfer complete" message on the control socket */
     /*
@@ -2453,12 +2482,8 @@ ftpSendPassive(FtpStateData * ftpState)
         return;
     }
 
-    /** \par
-      * Closes any old FTP-Data connection which may exist. */
-    if (ftpState->data.fd >= 0) {
-        comm_close(ftpState->data.fd);
-        ftpState->data.fd = -1;
-    }
+    /// Closes any old FTP-Data connection which may exist. */
+    ftpState->data.close();
 
     /** \par
       * Checks for previous EPSV/PASV failures on this server/session.
@@ -2499,17 +2524,7 @@ ftpSendPassive(FtpStateData * ftpState)
         return;
     }
 
-    /*
-     * No comm_add_close_handler() here.  If we have both ctrl and
-     * data FD's call ftpSocketClosed() upon close, then we have
-     * to delete the close handler which did NOT get called
-     * to prevent ftpSocketClosed() getting called twice.
-     * Instead we'll always call comm_close() on the ctrl FD.
-     *
-     * XXX this should not actually matter if the ftpState is cbdata
-     * managed correctly and comm close handlers are cbdata fenced
-     */
-    ftpState->data.fd = fd;
+    ftpState->data.opened(fd, ftpState->dataCloser());
 
     /** \par
       * Send EPSV (ALL,2,1) or PASV on the control channel.
@@ -2715,15 +2730,9 @@ ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
     struct addrinfo *AI = NULL;
     int on = 1;
     int x = 0;
-    /*
-     * Tear down any old data connection if any. We are about to
-     * establish a new one.
-     */
 
-    if (ftpState->data.fd > 0) {
-        comm_close(ftpState->data.fd);
-        ftpState->data.fd = -1;
-    }
+    /// Close old data channel, if any. We may open a new one below.
+    ftpState->data.close();
 
     /*
      * Set up a listen socket on the same local address as the
@@ -2772,7 +2781,7 @@ ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
         return -1;
     }
 
-    ftpState->data.fd = fd;
+    ftpState->data.opened(fd, ftpState->dataCloser());
     ftpState->data.port = comm_local_port(fd);
     ftpState->data.host = NULL;
     return fd;
@@ -2962,9 +2971,8 @@ void FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
 
     /**\par
      * Replace the Listen socket with the accepted data socket */
-    comm_close(data.fd);
-
-    data.fd = io.nfd;
+    data.close();
+    data.opened(io.nfd, dataCloser());
     data.port = io.details.peer.GetPort();
     io.details.peer.NtoA(data.host,SQUIDHOSTNAMELEN);
 
@@ -3797,7 +3805,11 @@ void
 FtpStateData::doneSendingRequestBody()
 {
     debugs(9,3, HERE);
-    ftpWriteTransferDone(this);
+    dataComplete();
+/* NP: RFC 959  3.3.  DATA CONNECTION MANAGEMENT
+ * if transfer type is 'stream' call dataComplete()
+ * otherwise leave open. (reschedule control channel read?)
+ */
 }
 
 /**
@@ -3830,16 +3842,10 @@ FtpStateData::closeServer()
 
     if (ctrl.fd > -1) {
         fwd->unregister(ctrl.fd);
-	comm_remove_close_handler(ctrl.fd, closeHandler);
-        closeHandler = NULL;
-        comm_close(ctrl.fd);
-        ctrl.fd = -1;
+        ctrl.close();
     }
 
-    if (data.fd > -1) {
-        comm_close(data.fd);
-        data.fd = -1;
-    }
+    data.close();
 }
 
 /**
@@ -3891,7 +3897,51 @@ FtpStateData::abortTransaction(const char *reason)
         comm_close(ctrl.fd);
         return;
     }
-    
+
     fwd->handleUnregisteredServerEnd();
     deleteThis("FtpStateData::abortTransaction");
+}
+
+/// creates a data channel Comm close callback
+AsyncCall::Pointer
+FtpStateData::dataCloser()
+{
+    typedef CommCbMemFunT<FtpStateData, CommCloseCbParams> Dialer;
+    return asyncCall(9, 5, "FtpStateData::dataClosed",
+        Dialer(this, &FtpStateData::dataClosed));
+}
+
+/// configures the channel with a descriptor and registers a close handler
+void
+FtpChannel::opened(int aFd, const AsyncCall::Pointer &aCloser)
+{
+    assert(fd < 0);
+    assert(closer == NULL);
+
+    assert(aFd >= 0);
+    assert(aCloser != NULL);
+
+    fd = aFd;
+    closer = aCloser;
+    comm_add_close_handler(fd, closer);
+}
+
+/// planned close: removes the close handler and calls comm_close
+void
+FtpChannel::close()
+{
+    if (fd >= 0) {
+        comm_remove_close_handler(fd, closer);
+        closer = NULL;
+        comm_close(fd); // we do not expect to be called back
+        fd = -1;
+    }
+}
+
+/// just resets fd and close handler
+void
+FtpChannel::clear()
+{
+    fd = -1;
+    closer = NULL;
 }
