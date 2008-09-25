@@ -24,7 +24,8 @@ TRANSLATIONS = \
 	it \
 	nl \
 	pt-br \
-	sv
+	sv \
+	uk
 
 # Legacy language contributions...
 #
@@ -50,10 +51,7 @@ LANGUAGES	= \
 		Simplify_Chinese \
 		Slovak \
 		Traditional_Chinese \
-		Turkish \
-		Ukrainian-1251 \
-		Ukrainian-koi8-u \
-		Ukrainian-utf8
+		Turkish
 
 install-data-local: 
 	@for l in $(LANGUAGES); do \

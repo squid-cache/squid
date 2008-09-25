@@ -545,4 +545,15 @@ enum {
     DISABLE_PMTU_TRANSPARENT
 };
 
+#if USE_HTCP
+/*
+ * This should be in htcp.h but because neighborsHtcpClear is defined in
+ * protos.h it has to be here.
+ */
+typedef enum {
+    HTCP_CLR_PURGE,
+    HTCP_CLR_INVALIDATION,
+} htcp_clr_reason;
+#endif
+
 #endif /* SQUID_ENUMS_H */

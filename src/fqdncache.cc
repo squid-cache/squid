@@ -941,3 +941,14 @@ snmp_netFqdnFn(variable_list * Var, snint * ErrP)
 }
 
 #endif /*SQUID_SNMP */
+
+/// XXX: a hack to work around the missing DNS error info
+// see http://www.squid-cache.org/bugs/show_bug.cgi?id=2459
+const char *
+dns_error_message_safe()
+{
+    if (dns_error_message)
+		return dns_error_message;
+	debugs(35,DBG_IMPORTANT, "Internal error: lost DNS error info");
+	return "lost DNS error";
+}
