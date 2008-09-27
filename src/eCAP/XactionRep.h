@@ -22,7 +22,7 @@ namespace Ecap {
    xaction that Squid communicates with. One eCAP module may register many 
    eCAP xactions. */
 class XactionRep : public Adaptation::Initiate, public libecap::host::Xaction,
-    public BodyProducer, public BodyConsumer
+    public BodyConsumer, public BodyProducer
 {
 public:
     XactionRep(Adaptation::Initiator *anInitiator, HttpMsg *virginHeader, HttpRequest *virginCause, const Adaptation::ServicePointer &service);
@@ -32,15 +32,25 @@ public:
 	void master(const AdapterXaction &aMaster); // establish a link
 
     // libecap::host::Xaction API
-    virtual libecap::Message &virgin(); // request or response
-    virtual const libecap::Message *cause(); // request for the above response
-    virtual void useVirgin();  // final answer: no adaptation
-    virtual void adaptVirgin(); // adapted message starts as virgin
-    virtual void adaptNewRequest(); // make fresh adapted request
-    virtual void adaptNewResponse(); // make fresh adapted response
-    virtual libecap::Message *adapted(); // request or response
-    virtual void useAdapted(); // final answer: adapted msg is ready
-    virtual void useNone(); // final answer: no answer
+    virtual libecap::Message &virgin();
+    virtual const libecap::Message &cause();
+    virtual libecap::Message &adapted();
+    virtual void useVirgin();
+    virtual void useAdapted(const libecap::shared_ptr<libecap::Message> &msg);
+    virtual void adaptationDelayed(const libecap::Delay &);
+    virtual void adaptationAborted();
+    virtual void adapterWontConsume();
+    virtual void adapterWillConsume();
+    virtual void adapterDoneConsuming();
+    virtual void consumeVirgin(size_type n);
+    virtual void pauseVirginProduction();
+    virtual void resumeVirginProduction();
+    virtual void setAdaptedBodySize(const libecap::BodySize &size);
+    virtual void appendAdapted(const libecap::Area &area);
+    virtual void noteAdaptedBodyEnd();
+
+	// libecap::Callable API, via libecap::host::Xaction
+	virtual bool callable() const;
 
     // BodyProducer API
     virtual void noteMoreBodySpaceAvailable(RefCount<BodyPipe> bp);
@@ -56,21 +66,28 @@ public:
 
     // AsyncJob API (via Initiate)
     virtual void start();
-    virtual void swangSong();
+    virtual bool doneAll() const;
+    virtual void swanSong();
     virtual const char *status() const;
 
 protected:
+    Adaptation::Message &answer();
+
+    bool sendingVirgin() const;
+    void dropVirgin(const char *reason);
+    bool doneWithAdapted() const;
+
     void terminateMaster();
+    void scheduleStop(const char *reason);
 
 private:
 	AdapterXaction theMaster; // the actual adaptation xaction we represent
 
-	Adaptation::Message theVirgin;
-	Adaptation::Message theCause;
-	Adaptation::Message theAnswer;
 	MessageRep theVirginRep;
 	MessageRep *theCauseRep;
-	MessageRep *theAnswerRep;
+
+	typedef libecap::shared_ptr<libecap::Message> MessagePtr;
+	MessagePtr theAnswerRep;
 
 	CBDATA_CLASS2(XactionRep);
 };
