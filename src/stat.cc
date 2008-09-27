@@ -477,8 +477,7 @@ info_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "Current Time:\t%s\n",
                       mkrfc1123(current_time.tv_sec));
 
-    storeAppendPrintf(sentry, "Connection information for %s:\n",
-                      appname);
+    storeAppendPrintf(sentry, "Connection information for %s:\n",APP_SHORTNAME);
 
     storeAppendPrintf(sentry, "\tNumber of clients accessing cache:\t%u\n",
                       statCounter.client_http.clients);
@@ -517,8 +516,7 @@ info_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "\tSelect loop called: %d times, %0.3f ms avg\n",
                       statCounter.select_loops, 1000.0 * runtime / statCounter.select_loops);
 
-    storeAppendPrintf(sentry, "Cache information for %s:\n",
-                      appname);
+    storeAppendPrintf(sentry, "Cache information for %s:\n",APP_SHORTNAME);
 
     storeAppendPrintf(sentry, "\tHits as %% of all requests:\t5min: %3.1f%%, 60min: %3.1f%%\n",
                       statRequestHitRatio(5),
@@ -591,7 +589,7 @@ info_get(StoreEntry * sentry)
 
     cputime = rusage_cputime(&rusage);
 
-    storeAppendPrintf(sentry, "Resource usage for %s:\n", appname);
+    storeAppendPrintf(sentry, "Resource usage for %s:\n", APP_SHORTNAME);
 
     storeAppendPrintf(sentry, "\tUP Time:\t%.3f seconds\n", runtime);
 
@@ -623,8 +621,7 @@ info_get(StoreEntry * sentry)
 
     ms = mstats();
 
-    storeAppendPrintf(sentry, "Memory usage for %s via mstats():\n",
-                      appname);
+    storeAppendPrintf(sentry, "Memory usage for %s via mstats():\n",APP_SHORTNAME);
 
     storeAppendPrintf(sentry, "\tTotal space in arena:  %6d KB\n",
                       ms.bytes_total >> 10);
@@ -636,8 +633,7 @@ info_get(StoreEntry * sentry)
 
     mp = mallinfo();
 
-    storeAppendPrintf(sentry, "Memory usage for %s via mallinfo():\n",
-                      appname);
+    storeAppendPrintf(sentry, "Memory usage for %s via mallinfo():\n",APP_SHORTNAME);
 
     storeAppendPrintf(sentry, "\tTotal space in arena:  %6ld KB\n",
                       (long)mp.arena >> 10);
@@ -725,7 +721,7 @@ info_get(StoreEntry * sentry)
                           mp_stats.TheMeter->gb_freed.count);
     }
 
-    storeAppendPrintf(sentry, "File descriptor usage for %s:\n", appname);
+    storeAppendPrintf(sentry, "File descriptor usage for %s:\n", APP_SHORTNAME);
     storeAppendPrintf(sentry, "\tMaximum number of file descriptors:   %4d\n",
                       Squid_MaxFD);
     storeAppendPrintf(sentry, "\tLargest file desc currently in use:   %4d\n",
@@ -1010,6 +1006,48 @@ statAvgDump(StoreEntry * sentry, int minutes, int hours)
     storeAppendPrintf(sentry, "cpu_usage = %f%%\n", dpercent(ct, dt));
 }
 
+static void
+statRegisterWithCacheManager(void)
+{
+    CacheManager *manager = CacheManager::GetInstance();
+    manager->registerAction("info", "General Runtime Information",
+                            info_get, 0, 1);
+    manager->registerAction("service_times", "Service Times (Percentiles)",
+                           service_times, 0, 1);
+    manager->registerAction("filedescriptors", "Process Filedescriptor Allocation",
+                           fde::DumpStats, 0, 1);
+    manager->registerAction("objects", "All Cache Objects", stat_objects_get, 0, 0);
+    manager->registerAction("vm_objects", "In-Memory and In-Transit Objects",
+                           stat_vmobjects_get, 0, 0);
+    manager->registerAction("io", "Server-side network read() size histograms",
+                           stat_io_get, 0, 1);
+    manager->registerAction("counters", "Traffic and Resource Counters",
+                           statCountersDump, 0, 1);
+    manager->registerAction("peer_select", "Peer Selection Algorithms",
+                           statPeerSelect, 0, 1);
+    manager->registerAction("digest_stats", "Cache Digest and ICP blob",
+                           statDigestBlob, 0, 1);
+    manager->registerAction("5min", "5 Minute Average of Counters",
+                           statAvg5min, 0, 1);
+    manager->registerAction("60min", "60 Minute Average of Counters",
+                           statAvg60min, 0, 1);
+    manager->registerAction("utilization", "Cache Utilization",
+                           statUtilization, 0, 1);
+    manager->registerAction("histograms", "Full Histogram Counts",
+                           statCountersHistograms, 0, 1);
+    manager->registerAction("active_requests",
+                           "Client-side Active Requests",
+                           statClientRequests, 0, 1);
+#if DEBUG_OPENFD
+    manager->registerAction("openfd_objects", "Objects with Swapout files open",
+                           statOpenfdObj, 0, 0);
+#endif
+#if STAT_GRAPHS
+    manager->registerAction("graph_variables", "Display cache metrics graphically",
+                           statGraphDump, 0, 1);
+#endif
+}
+
 
 void
 statInit(void)
@@ -1030,82 +1068,8 @@ statInit(void)
     ClientActiveRequests.head = NULL;
 
     ClientActiveRequests.tail = NULL;
-}
 
-void
-statRegisterWithCacheManager(CacheManager & manager)
-{
-    manager.registerAction("info",
-                           "General Runtime Information",
-                           info_get, 0, 1);
-
-    manager.registerAction("service_times",
-                           "Service Times (Percentiles)",
-                           service_times, 0, 1);
-
-    manager.registerAction("filedescriptors",
-                           "Process Filedescriptor Allocation",
-                           fde::DumpStats, 0, 1);
-
-    manager.registerAction("objects",
-                           "All Cache Objects",
-                           stat_objects_get, 0, 0);
-
-    manager.registerAction("vm_objects",
-                           "In-Memory and In-Transit Objects",
-                           stat_vmobjects_get, 0, 0);
-
-#if DEBUG_OPENFD
-
-    manager.registerAction("openfd_objects",
-                           "Objects with Swapout files open",
-                           statOpenfdObj, 0, 0);
-
-#endif
-
-    manager.registerAction("io",
-                           "Server-side network read() size histograms",
-                           stat_io_get, 0, 1);
-
-    manager.registerAction("counters",
-                           "Traffic and Resource Counters",
-                           statCountersDump, 0, 1);
-
-    manager.registerAction("peer_select",
-                           "Peer Selection Algorithms",
-                           statPeerSelect, 0, 1);
-
-    manager.registerAction("digest_stats",
-                           "Cache Digest and ICP blob",
-                           statDigestBlob, 0, 1);
-
-    manager.registerAction("5min",
-                           "5 Minute Average of Counters",
-                           statAvg5min, 0, 1);
-
-    manager.registerAction("60min",
-                           "60 Minute Average of Counters",
-                           statAvg60min, 0, 1);
-
-    manager.registerAction("utilization",
-                           "Cache Utilization",
-                           statUtilization, 0, 1);
-
-#if STAT_GRAPHS
-
-    manager.registerAction("graph_variables",
-                           "Display cache metrics graphically",
-                           statGraphDump, 0, 1);
-
-#endif
-
-    manager.registerAction("histograms",
-                           "Full Histogram Counts",
-                           statCountersHistograms, 0, 1);
-
-    manager.registerAction("active_requests",
-                           "Client-side Active Requests",
-                           statClientRequests, 0, 1);
+    statRegisterWithCacheManager();
 }
 
 static void
@@ -1710,7 +1674,7 @@ statClientRequests(StoreEntry * s)
 
 #if DELAY_POOLS
 
-        storeAppendPrintf(s, "delay_pool %d\n", DelayId::DelayClient(http) >> 16);
+        storeAppendPrintf(s, "delay_pool %d\n", DelayId::DelayClient(http).pool());
 
 #endif
 

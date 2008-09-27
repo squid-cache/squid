@@ -40,10 +40,10 @@
 Vector<StoreFileSystem*> *StoreFileSystem::_FileSystems = NULL;
 
 void
-StoreFileSystem::RegisterAllFsWithCacheManager(CacheManager & manager)
+StoreFileSystem::RegisterAllFsWithCacheManager(void)
 {
     for (iterator i = GetFileSystems().begin(); i != GetFileSystems().end(); ++i)
-        (*i)->registerWithCacheManager(manager);
+        (*i)->registerWithCacheManager();
 }
 
 void
@@ -98,5 +98,5 @@ StoreFileSystem::FreeAllFs()
 
 /* no filesystem is required to export statistics */
 void
-StoreFileSystem::registerWithCacheManager(CacheManager & manager)
+StoreFileSystem::registerWithCacheManager(void)
 {}

@@ -388,9 +388,10 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
 }
 
 int
-parseConfigFile(const char *file_name, CacheManager & manager)
+parseConfigFile(const char *file_name)
 {
     int err_count = 0;
+    CacheManager *manager=CacheManager::GetInstance();
 
     configFreeMemory();
 
@@ -415,7 +416,7 @@ parseConfigFile(const char *file_name, CacheManager & manager)
     }
 
     if (opt_send_signal == -1) {
-        manager.registerAction("config",
+        manager->registerAction("config",
                                "Current Squid Configuration",
                                dump_config,
                                1, 1);
@@ -456,7 +457,7 @@ configDoConfigure(void)
     if (Config.onoff.httpd_suppress_version_string)
         visible_appname_string = (char *)appname_string;
     else
-        visible_appname_string = (char *)full_appname_string;
+        visible_appname_string = (char const *)APP_FULLNAME;
 
 #if USE_DNSSERVERS
 
@@ -527,7 +528,8 @@ configDoConfigure(void)
 
     requirePathnameExists("Icon Directory", Config.icons.directory);
 
-    requirePathnameExists("Error Directory", Config.errorDirectory);
+    if(Config.errorDirectory)
+        requirePathnameExists("Error Directory", Config.errorDirectory);
 
 #if HTTP_VIOLATIONS
 
@@ -1735,11 +1737,26 @@ parse_peer(peer ** head)
         } else if (!strcasecmp(token, "htcp-oldsquid")) {
             p->options.htcp = 1;
             p->options.htcp_oldsquid = 1;
+        } else if (!strcasecmp(token, "htcp-no-clr")) {
+            if (p->options.htcp_only_clr)
+        	fatalf("parse_peer: can't set htcp-no-clr and htcp-only-clr simultaneously");
+            p->options.htcp = 1;
+            p->options.htcp_no_clr = 1;
+        } else if (!strcasecmp(token, "htcp-no-purge-clr")) {
+            p->options.htcp = 1;
+            p->options.htcp_no_purge_clr = 1;
+        } else if (!strcasecmp(token, "htcp-only-clr")) {
+            if (p->options.htcp_no_clr)
+        	fatalf("parse_peer: can't set htcp-no-clr and htcp-only-clr simultaneously");
+            p->options.htcp = 1;
+            p->options.htcp_only_clr = 1;
+        } else if (!strcasecmp(token, "htcp-forward-clr")) {
+            p->options.htcp = 1;
+            p->options.htcp_forward_clr = 1;
 #endif
 
         } else if (!strcasecmp(token, "no-netdb-exchange")) {
             p->options.no_netdb_exchange = 1;
-#if USE_CARP
 
         } else if (!strcasecmp(token, "carp")) {
             if (p->type != PEER_PARENT)
@@ -1747,7 +1764,18 @@ parse_peer(peer ** head)
 
             p->options.carp = 1;
 
-#endif
+        } else if (!strcasecmp(token, "userhash")) {
+            if (p->type != PEER_PARENT)
+                fatalf("parse_peer: non-parent userhash peer %s/%d\n", p->host, p->http_port);
+
+            p->options.userhash = 1;
+
+        } else if (!strcasecmp(token, "sourcehash")) {
+            if (p->type != PEER_PARENT)
+                fatalf("parse_peer: non-parent sourcehash peer %s/%d\n", p->host, p->http_port);
+
+            p->options.sourcehash = 1;
+
 #if DELAY_POOLS
 
         } else if (!strcasecmp(token, "no-delay")) {
@@ -1858,7 +1886,7 @@ parse_peer(peer ** head)
 
     *head = p;
 
-    peerClearRR(p);
+    peerClearRRStart();
 }
 
 static void
@@ -2604,11 +2632,13 @@ parse_wordlist(wordlist ** list)
         wordlistAdd(list, token);
 }
 
+#if 0 /* now unused */
 static int
 check_null_wordlist(wordlist * w)
 {
     return w == NULL;
 }
+#endif
 
 static int
 check_null_acl_access(acl_access * a)
@@ -2954,6 +2984,10 @@ parse_http_port_option(http_port_list * s, char *token)
         }
 #endif
     } else if (strcmp(token, "tproxy") == 0) {
+        if(s->intercepted || s->accel) {
+            debugs(3,DBG_CRITICAL, "http(s)_port: TPROXY option requires its own interception port. It cannot be shared.");
+            self_destruct();
+        }
         s->spoof_client_ip = 1;
         IPInterceptor.StartTransparency();
         /* Log information regarding the port modes under transparency. */
@@ -3036,6 +3070,11 @@ parse_http_port_option(http_port_list * s, char *token)
         s->sslBump = 1; // accelerated when bumped, otherwise not
 #endif
     } else {
+        self_destruct();
+    }
+
+    if( s->spoof_client_ip && (s->intercepted || s->accel) ) {
+        debugs(3,DBG_CRITICAL, "http(s)_port: TPROXY option requires its own interception port. It cannot be shared.");
         self_destruct();
     }
 }

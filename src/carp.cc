@@ -38,8 +38,6 @@
 #include "CacheManager.h"
 #include "Store.h"
 
-#if USE_CARP
-
 #define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> (32-(n))))
 
 static int n_carp_peers = 0;
@@ -52,6 +50,13 @@ peerSortWeight(const void *a, const void *b)
     const peer *const *p1 = (const peer *const *)a;
     const peer *const *p2 = (const peer *const *)b;
     return (*p1)->weight - (*p2)->weight;
+}
+
+static void
+carpRegisterWithCacheManager(void)
+{
+    CacheManager::GetInstance()->
+        registerAction("carp", "CARP information", carpCachemgr, 0, 1);
 }
 
 void
@@ -72,6 +77,10 @@ carpInit(void)
 
     safe_free(carp_peers);
     n_carp_peers = 0;
+
+    /* initialize cache manager before we have a chance to leave the execution path */
+    carpRegisterWithCacheManager();
+
     /* find out which peers we have */
 
     for (p = Config.peers; p; p = p->next) {
@@ -152,12 +161,6 @@ carpInit(void)
     }
 }
 
-void
-carpRegisterWithCacheManager(CacheManager & manager)
-{
-    manager.registerAction("carp", "CARP information", carpCachemgr, 0, 1);
-}
-
 peer *
 carpSelectParent(HttpRequest * request)
 {
@@ -227,5 +230,3 @@ carpCachemgr(StoreEntry * sentry)
                           sumfetches ? (double) p->stats.fetches / sumfetches : -1.0);
     }
 }
-
-#endif

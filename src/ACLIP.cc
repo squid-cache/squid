@@ -52,29 +52,36 @@ ACLIP::operator delete (void *address)
     fatal ("ACLIP::operator delete: unused");
 }
 
+/**
+ * Writes an IP ACL data into a buffer, then copies the buffer into the wordlist given
+ *
+ \param ip	ACL data structure to display
+ \param state	wordlist structure which is being generated
+ */
 void
 ACLIP::DumpIpListWalkee(acl_ip_data * const & ip, void *state)
 {
-    char tmpbuf[MAX_IPSTRLEN];
+    char tmpbuf[ ((MAX_IPSTRLEN*2)+6) ]; // space for 2 IPs and a CIDR mask(3) and seperators(3).
     MemBuf mb;
     wordlist **W = static_cast<wordlist **>(state);
+    tmpbuf[0] = '\0';
+
     mb.init();
-    mb.Printf("%s", ip->addr1.NtoA(tmpbuf,MAX_IPSTRLEN));
+    assert(mb.max_capacity > 0 && 1==1 );
 
-    if (!ip->addr2.IsAnyAddr())
-        mb.Printf("-%s", ip->addr2.NtoA(tmpbuf,MAX_IPSTRLEN));
-
-    if (!ip->mask.IsNoAddr())
-        mb.Printf("/%s", ip->mask.NtoA(tmpbuf,MAX_IPSTRLEN));
-
+    ip->toStr(tmpbuf, sizeof(tmpbuf) );
+    assert(mb.max_capacity > 0 && 2==2 );
+    mb.append(tmpbuf, strlen(tmpbuf) );
+    assert(mb.max_capacity > 0 && 3==3);
     wordlistAdd(W, mb.buf);
-
     mb.clean();
 }
 
-/*
- * aclIpDataToStr - print/format an acl_ip_data structure for
- * debugging output.
+/**
+ * print/format an acl_ip_data structure for debugging output.
+ *
+ \param buf	string buffer to write to
+ \param len	size of the buffer available
  */
 void
 acl_ip_data::toStr(char *buf, int len) const
@@ -88,8 +95,7 @@ acl_ip_data::toStr(char *buf, int len) const
     rlen = strlen(buf);
     b2 = buf + rlen;
 
-    if (!addr2.IsAnyAddr())
-    {
+    if (!addr2.IsAnyAddr()) {
         b2[0] = '-'; rlen++;
         addr2.NtoA(&(b2[1]), len - rlen );
         rlen = strlen(buf);
@@ -99,10 +105,13 @@ acl_ip_data::toStr(char *buf, int len) const
 
     b3 = buf + rlen;
 
-    if (!mask.IsNoAddr())
-    {
+    if (!mask.IsNoAddr()) {
         b3[0] = '/'; rlen++;
-        mask.NtoA(&(b3[1]), len - rlen );
+#if USE_IPV6
+        snprintf(&(b3[1]), (len-rlen), "%u", mask.GetCIDR() - (addr1.IsIPv4()?96:0) );
+#else
+        snprintf(&(b3[1]), (len-rlen), "%u", mask.GetCIDR() );
+#endif
     }
     else
         b3[0] = '\0';
@@ -363,22 +372,22 @@ acl_ip_data::FactoryParse(const char *t)
 #endif
 
     /* Decode addr1 */
-    if (!*addr1) {
+    if (!*addr1 || !(q->addr1 = addr1)) {
         debugs(28, 0, "aclIpParseIpData: unknown first address in '" << t << "'");
         delete q;
         self_destruct();
         return NULL;
     }
-    else q->addr1 = addr1;
 
     /* Decode addr2 */
-    if (*addr2 && !(q->addr2=addr2) ) {
+    if (!*addr2)
+	q->addr2.SetAnyAddr();
+    else if (!(q->addr2=addr2) ) {
         debugs(28, 0, "aclIpParseIpData: unknown second address in '" << t << "'");
         delete q;
         self_destruct();
         return NULL;
     }
-    else q->addr2 = addr2;
 
     /* Decode mask (NULL or empty means a exact host mask) */
     if (!DecodeMask(mask, q->mask, iptype)) {

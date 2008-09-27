@@ -236,10 +236,11 @@ static http_hdr_type RequestHeadersArr[] =
         HDR_USER_AGENT, HDR_X_FORWARDED_FOR, HDR_SURROGATE_CAPABILITY
     };
 
+static HttpHeaderMask HopByHopHeadersMask;
 static http_hdr_type HopByHopHeadersArr[] =
     {
-        HDR_CONNECTION, HDR_KEEP_ALIVE, HDR_PROXY_AUTHENTICATE, HDR_PROXY_AUTHORIZATION,
-        HDR_TE, HDR_TRAILERS, HDR_TRANSFER_ENCODING, HDR_UPGRADE
+        HDR_CONNECTION, HDR_KEEP_ALIVE, /*HDR_PROXY_AUTHENTICATE,*/ HDR_PROXY_AUTHORIZATION,
+        HDR_TE, HDR_TRAILERS, HDR_TRANSFER_ENCODING, HDR_UPGRADE, HDR_PROXY_CONNECTION
     };
 
 /* header accounting */
@@ -270,6 +271,15 @@ static void httpHeaderStatDump(const HttpHeaderStat * hs, StoreEntry * e);
 /*
  * Module initialization routines
  */
+
+static void
+httpHeaderRegisterWithCacheManager(void)
+{
+    CacheManager::GetInstance()->
+        registerAction("http_headers",
+                       "HTTP Header Statistics",
+                       httpHeaderStoreReport, 0, 1);
+}
 
 void
 httpHeaderInitModule(void)
@@ -304,6 +314,8 @@ httpHeaderInitModule(void)
 
     httpHeaderCalcMask(&RequestHeadersMask, EntityHeadersArr, countof(EntityHeadersArr));
 
+    httpHeaderCalcMask(&HopByHopHeadersMask, HopByHopHeadersArr, countof(HopByHopHeadersArr));
+
     /* init header stats */
     assert(HttpHeaderStatCount == hoReply + 1);
 
@@ -323,15 +335,8 @@ httpHeaderInitModule(void)
     httpHdrCcInitModule();
 
     httpHdrScInitModule();
-}
 
-void
-httpHeaderRegisterWithCacheManager(CacheManager & manager)
-{
-    /* register with cache manager */
-    manager.registerAction("http_headers",
-                           "HTTP Header Statistics",
-                           httpHeaderStoreReport, 0, 1);
+    httpHeaderRegisterWithCacheManager();
 }
 
 void
@@ -1773,11 +1778,16 @@ HttpHeader::removeHopByHopEntries()
 {
     removeConnectionHeaderEntries();
     
-    int count = countof(HopByHopHeadersArr);
-    
-    for (int i=0; i<count; i++)
-        delById(HopByHopHeadersArr[i]);    
-    
+    const HttpHeaderEntry *e;
+    HttpHeaderPos pos = HttpHeaderInitPos;
+    int headers_deleted = 0;
+    while ((e = getEntry(&pos))) {
+	int id = e->id;
+	if(CBIT_TEST(HopByHopHeadersMask, id)){
+	    delAt(pos, headers_deleted);
+	    CBIT_CLR(mask, id);
+	}
+    }
 }
 
 void

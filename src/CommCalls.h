@@ -41,6 +41,10 @@ public:
     CommCommonCbParams(const CommCommonCbParams &params);
     ~CommCommonCbParams();
 
+    /// adjust using the current Comm state; returns false to cancel the call
+    // not virtual because callers know dialer type
+    bool syncWithComm() { return true; } 
+
     void print(std::ostream &os) const;
 
 public:
@@ -70,6 +74,8 @@ public:
 class CommConnectCbParams: public CommCommonCbParams {
 public:
     CommConnectCbParams(void *aData);
+
+    bool syncWithComm(); // see CommCommonCbParams::syncWithComm
 };
 
 // read/write (I/O) parameters
@@ -78,6 +84,7 @@ public:
     CommIoCbParams(void *aData);
 
     void print(std::ostream &os) const;
+    bool syncWithComm(); // see CommCommonCbParams::syncWithComm
 
 public:
     char *buf;
@@ -128,6 +135,9 @@ public:
 
     CommCbMemFunT(C *obj, Method meth): JobDialer(obj),
         CommDialerParamsT<Params>(obj), object(obj), method(meth) {}
+
+    virtual bool canDial(AsyncCall &c) { return JobDialer::canDial(c) && 
+        this->params.syncWithComm(); }
 
     virtual void print(std::ostream &os) const {
         os << '('; this->params.print(os); os << ')'; }
@@ -277,6 +287,9 @@ CommCbFunPtrCallT<Dialer>::canFire()
 
     if (!cbdataReferenceValid(dialer.params.data))
         return cancel("callee gone");
+
+    if (!dialer.params.syncWithComm())
+        return cancel("out of sync w/comm");
 
     return true;
 }

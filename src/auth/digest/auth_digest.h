@@ -153,7 +153,7 @@ public:
     virtual void fixHeader(AuthUserRequest *, HttpReply *, http_hdr_type, HttpRequest *);
     virtual void init(AuthConfig *);
     virtual void parse(AuthConfig *, int, char *);
-    virtual void registerWithCacheManager(CacheManager & manager);
+    virtual void registerWithCacheManager(void);
     virtual const char * type() const;
     int authenticateChildren;
     char *digestAuthRealm;
@@ -164,6 +164,7 @@ public:
     int NonceStrictness;
     int CheckNonceCount;
     int PostWorkaround;
+    int utf8;
 };
 
 typedef class AuthDigestConfig auth_digest_config;

@@ -36,7 +36,7 @@
 #define SQUID_ACLINTRANGE_H
 
 #include "ACLData.h"
-#include "List.h"
+#include "CbDataList.h"
 #include "Range.h"
 
 /// \ingroup ACLAPI
@@ -55,7 +55,7 @@ public:
 
 private:
     typedef Range<int> RangeType;
-    ListContainer <RangeType> ranges;
+    CbDataListContainer <RangeType> ranges;
 };
 
 #endif /* SQUID_ACLINTRANGE_H */

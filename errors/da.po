@@ -1,0 +1,629 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: squid 3.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2008-09-01 03:03+1300\n"
+"PO-Revision-Date: 2008-08-23 18:07+1200\n"
+"Last-Translator: Morten S. Nielsen <mortensn@geocities.com>\n"
+"Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Pootle 1.1.0\n"
+
+#: templates/ERR_INVALID_REQ:4
+msgid ""
+"<b>Invalid Request</b> error was encountered while trying to process the "
+"request:"
+msgstr ""
+
+#: templates/ERR_INVALID_RESP:4
+msgid ""
+"<b>Invalid Response</b> error was encountered while trying to process the "
+"request:"
+msgstr ""
+
+#: templates/ERR_READ_TIMEOUT:7
+msgid ""
+"A Timeout occurred while waiting to read data from the network.  The network "
+"or server may be down or congested.  Please retry your request."
+msgstr ""
+"En timeout opstod mens der der blev ventet p&aelig; at l&aelig;se data fra "
+"netv&aelig;rket.  Netv&aelig;rket kan v&aelig;re nede eller forstoppet.  "
+"Pr&oslash;v igen."
+
+#: templates/ERR_URN_RESOLVE:3
+msgid "A URL for the requested URN could not be retrieved"
+msgstr "URL for den angivne URN kunne ikke hentes"
+
+#: templates/ERR_ACCESS_DENIED:5
+msgid "Access Denied."
+msgstr "Adgang N&aelig;gtet."
+
+#: templates/ERR_ACCESS_DENIED:6
+msgid ""
+"Access control configuration prevents your request from being allowed at "
+"this time.  Please contact your service provider if you feel this is "
+"incorrect."
+msgstr ""
+"Adgangs kontrollen tillader ikke din foresp&oslash;rgsel.  Kontakt din "
+"udbyder nu, hvis du mener dette er en fejl."
+
+#: templates/ERR_FTP_FORBIDDEN:4
+msgid ""
+"An FTP authentication failure occurred while trying to retrieve the URL: <a "
+"href=\"%U\">%U</a>"
+msgstr ""
+"En FTP autenticierings fejl opstod under hentning af f&oslash;gende URL: <a "
+"href=\"%U\">%U</a>"
+
+#: templates/ERR_FTP_FAILURE:4
+msgid ""
+"An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
+"\">%U</a>"
+msgstr ""
+"En FTP protokol fejl opstod under hentning af f&oslash;gende URL: <a href=\"%"
+"U\">%U</a>"
+
+#: templates/ERR_ICAP_FAILURE:10
+msgid "An Illegal response was received from the ICAP server."
+msgstr ""
+
+#: templates/ERR_READ_ERROR:7
+msgid ""
+"An error condition occurred while reading data from the network.  Please "
+"retry your request."
+msgstr ""
+"En fejl opstod mens der blev l&aelig;st data fra nettet.  Pr&oslash;v igen."
+
+#: templates/ERR_WRITE_ERROR:7
+msgid ""
+"An error condition occurred while writing to the network.  Please retry your "
+"request."
+msgstr ""
+"En fejl opstod mens der blev skrevet data til nettet.  Pr&oslash;v igen."
+
+#: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
+msgid "Cache Access Denied."
+msgstr "Cache Adgang N&aelig;gtet."
+
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED:3
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED:5
+msgid "Cache Manager Access Denied."
+msgstr "Cache Administrator Adgang N&aelig;gtet."
+
+#: templates/ERR_URN_RESOLVE:5
+msgid "Cannot Resolve URN"
+msgstr "Kan Ikke Opl&oslash;se URN"
+
+#: templates/ERR_LIFETIME_EXP:5
+msgid "Connection Lifetime Expired"
+msgstr "Levetiden for forbindelsen udl&oslash;b"
+
+#: templates/ERR_CONNECT_FAIL:5
+msgid "Connection to %I failed."
+msgstr ""
+
+#: templates/ERR_INVALID_REQ:10
+msgid "Content-Length missing for POST or PUT requests."
+msgstr "Content-Length mangler til POST eller PUT foresp&oslash;rgsler"
+
+#: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
+#: templates/ERR_CONNECT_FAIL:2 templates/ERR_DNS_FAIL:2 templates/ERR_ESI:2
+#: templates/ERR_FORWARDING_DENIED:2 templates/ERR_FTP_DISABLED:2
+#: templates/ERR_FTP_FAILURE:2 templates/ERR_FTP_FORBIDDEN:2
+#: templates/ERR_FTP_NOT_FOUND:2 templates/ERR_FTP_PUT_ERROR:2
+#: templates/ERR_FTP_UNAVAILABLE:2 templates/ERR_ICAP_FAILURE:2
+#: templates/ERR_INVALID_REQ:2 templates/ERR_INVALID_RESP:2
+#: templates/ERR_INVALID_URL:2 templates/ERR_LIFETIME_EXP:2
+#: templates/ERR_NO_RELAY:2 templates/ERR_ONLY_IF_CACHED_MISS:2
+#: templates/ERR_READ_ERROR:2 templates/ERR_READ_TIMEOUT:2
+#: templates/ERR_SECURE_CONNECT_FAIL:2 templates/ERR_SHUTTING_DOWN:2
+#: templates/ERR_SOCKET_FAILURE:2 templates/ERR_TOO_BIG:2
+#: templates/ERR_UNSUP_REQ:2 templates/ERR_URN_RESOLVE:2
+#: templates/ERR_WRITE_ERROR:2 templates/ERR_ZERO_SIZE_OBJECT:2
+msgid "ERROR"
+msgstr "FEJL"
+
+#: templates/ERR_CACHE_ACCESS_DENIED:1
+msgid "ERROR: Cache Access Denied"
+msgstr "FEJL: Cache Adgang N&aelig;gtet"
+
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED:1
+msgid "ERROR: Cache Manager Access Denied"
+msgstr "FEJL: Cache Administrator Adgang N&aelig;gtet"
+
+#: templates/ERR_FTP_PUT_ERROR:1
+msgid "ERROR: FTP upload failed"
+msgstr "FEJL: FTP upload fejlede"
+
+#: templates/ERR_ACCESS_DENIED:1 templates/ERR_CANNOT_FORWARD:1
+#: templates/ERR_CONNECT_FAIL:1 templates/ERR_DNS_FAIL:1 templates/ERR_ESI:1
+#: templates/ERR_FORWARDING_DENIED:1 templates/ERR_FTP_DISABLED:1
+#: templates/ERR_FTP_FAILURE:1 templates/ERR_FTP_FORBIDDEN:1
+#: templates/ERR_FTP_NOT_FOUND:1 templates/ERR_FTP_UNAVAILABLE:1
+#: templates/ERR_ICAP_FAILURE:1 templates/ERR_INVALID_REQ:1
+#: templates/ERR_INVALID_RESP:1 templates/ERR_INVALID_URL:1
+#: templates/ERR_LIFETIME_EXP:1 templates/ERR_NO_RELAY:1
+#: templates/ERR_ONLY_IF_CACHED_MISS:1 templates/ERR_READ_ERROR:1
+#: templates/ERR_READ_TIMEOUT:1 templates/ERR_SECURE_CONNECT_FAIL:1
+#: templates/ERR_SHUTTING_DOWN:1 templates/ERR_SOCKET_FAILURE:1
+#: templates/ERR_TOO_BIG:1 templates/ERR_UNSUP_REQ:1
+#: templates/ERR_WRITE_ERROR:1 templates/ERR_ZERO_SIZE_OBJECT:1
+msgid "ERROR: The requested URL could not be retrieved"
+msgstr "FEJL: Den angivne URL kunne ikke hentes"
+
+#: templates/ERR_URN_RESOLVE:1
+msgid "ERROR: The requested URN not be retrieved"
+msgstr "FEJL: Den angivne URN kunne ikke hentes"
+
+#: templates/ERR_ESI:5
+msgid "ESI Processing failed."
+msgstr ""
+
+#: templates/ERR_FTP_PUT_CREATED:1
+msgid "FTP PUT Successful: File Created"
+msgstr "FTP PUT Lykkedes: Fil Oprettet"
+
+#: templates/ERR_FTP_PUT_MODIFIED:1
+msgid "FTP PUT Successful: File updated"
+msgstr "FTP PUT Lykkedes: Fil Opdateret"
+
+#: templates/ERR_FTP_PUT_ERROR:3
+msgid "FTP PUT/upload failed"
+msgstr "FTP PUT/upload fejlede"
+
+#: templates/ERR_FTP_DISABLED:5
+msgid "FTP is Disabled"
+msgstr "FTP er sl&aring;et fra"
+
+#: templates/ERR_SECURE_CONNECT_FAIL:5
+msgid "Failed to establish a secure connection to %I"
+msgstr ""
+
+#: templates/ERR_FTP_PUT_CREATED:3
+msgid "File created"
+msgstr "Fil oprettet"
+
+#: templates/ERR_FTP_PUT_MODIFIED:3
+msgid "File updated"
+msgstr "Fil opdateret"
+
+#: templates/ERR_FORWARDING_DENIED:5
+msgid "Forwarding Denied."
+msgstr "Videresendelse N&aelig;gtet."
+
+#: templates/ERR_ACCESS_DENIED:8 templates/ERR_CACHE_ACCESS_DENIED:8
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED:8 templates/ERR_CANNOT_FORWARD:8
+#: templates/ERR_CONNECT_FAIL:9 templates/ERR_DNS_FAIL:9 templates/ERR_ESI:9
+#: templates/ERR_FORWARDING_DENIED:8 templates/ERR_FTP_DISABLED:8
+#: templates/ERR_FTP_FAILURE:8 templates/ERR_FTP_FORBIDDEN:8
+#: templates/ERR_FTP_NOT_FOUND:9 templates/ERR_FTP_PUT_CREATED:4
+#: templates/ERR_FTP_PUT_ERROR:9 templates/ERR_FTP_PUT_MODIFIED:4
+#: templates/ERR_FTP_UNAVAILABLE:8 templates/ERR_ICAP_FAILURE:11
+#: templates/ERR_INVALID_REQ:13 templates/ERR_INVALID_RESP:8
+#: templates/ERR_INVALID_URL:13 templates/ERR_LIFETIME_EXP:8
+#: templates/ERR_NO_RELAY:8 templates/ERR_ONLY_IF_CACHED_MISS:8
+#: templates/ERR_READ_ERROR:9 templates/ERR_READ_TIMEOUT:9
+#: templates/ERR_SECURE_CONNECT_FAIL:9 templates/ERR_SHUTTING_DOWN:7
+#: templates/ERR_SOCKET_FAILURE:9 templates/ERR_TOO_BIG:10
+#: templates/ERR_UNSUP_REQ:8 templates/ERR_URN_RESOLVE:8
+#: templates/ERR_WRITE_ERROR:9 templates/ERR_ZERO_SIZE_OBJECT:8
+msgid "Generated %T by %h (%s)"
+msgstr ""
+
+#: templates/ERR_URN_RESOLVE:6
+msgid "Hey, don't expect too much from URNs on %T :)"
+msgstr "Hallo, forvent nu ikke for meget af URNs p&aring; %T :)"
+
+#: templates/ERR_ICAP_FAILURE:5
+msgid "ICAP protocol error."
+msgstr ""
+
+#: templates/ERR_TOO_BIG:7
+msgid ""
+"If you are making a GET request, then the item you are trying to download is "
+"too large."
+msgstr ""
+
+#: templates/ERR_TOO_BIG:6
+msgid ""
+"If you are making a POST or PUT request, then the item you are trying to "
+"upload is too large."
+msgstr ""
+
+#: templates/ERR_INVALID_REQ:11 templates/ERR_INVALID_URL:11
+msgid "Illegal character in hostname; underscores are not allowed."
+msgstr ""
+
+#: templates/ERR_INVALID_URL:10
+msgid "Illegal double-escape in the URL-Path"
+msgstr "Ugyldig dobbelt-escape i URL sti"
+
+#: templates/ERR_INVALID_URL:5
+msgid "Invalid URL"
+msgstr "Ugyldig URL"
+
+#: templates/ERR_INVALID_REQ:8
+msgid "Missing HTTP Identifier (HTTP/1.0)."
+msgstr "Manglende HTTP Identifikator (ved HTTP/1.0)"
+
+#: templates/ERR_INVALID_REQ:7
+msgid "Missing URL."
+msgstr "Manglende URL."
+
+#: templates/ERR_INVALID_URL:9
+msgid "Missing hostname"
+msgstr "Manglende maskinnavn"
+
+#: templates/ERR_INVALID_URL:8
+msgid ""
+"Missing or incorrect access protocol (should be <q>http://</q> or similar)"
+msgstr ""
+"Manglende eller ukendt adgangsprotokol (burde v&aelig;re <q>http://</q> "
+"eller tilsvarende)"
+
+#: templates/ERR_INVALID_REQ:6
+msgid "Missing or unknown request method."
+msgstr "Manglende eller ukendt foresp&oslash;rgsels metode."
+
+#: templates/ERR_NO_RELAY:5
+msgid "No Wais Relay"
+msgstr "Ingen WAIS Rel&aelig;"
+
+#: templates/ERR_FTP_PUT_CREATED:2 templates/ERR_FTP_PUT_MODIFIED:2
+msgid "Operation successful"
+msgstr "Handlingen lykkedes"
+
+#: templates/ERR_CACHE_ACCESS_DENIED:7
+msgid ""
+"Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
+"have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
+"chpasswd.cgi\">change</a> your default password."
+msgstr ""
+"Kontakt <a href=\"mailto:%w%W\">cache administratoren</a> hvis du har "
+"problemer med at autenticiere dig eller <a href=\"http://%h/cgi-bin/chpasswd."
+"cgi\">skift</a> dit password."
+
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
+msgid ""
+"Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
+"have difficulties authenticating yourself or, if you <em>are</em> the "
+"administrator, read Squid documentation on cache manager interface and check "
+"cache log for more detailed error messages."
+msgstr ""
+"Kontakt <a href=\"mailto:%w%W\">cache administratoren</a> hvis du har "
+"problemer med at autenticiere dig eller hvis du <em>er</em> cache "
+"administratoren, l&aelig;s Squid dokumentationen for cache administrator "
+"interfacet og check cache loggen for mere detaljerede fejlmeddelelser."
+
+#: templates/ERR_READ_ERROR:5
+msgid "Read Error"
+msgstr "L&aelig;se fejl"
+
+#: templates/ERR_READ_TIMEOUT:5
+msgid "Read Timeout"
+msgstr ""
+
+#: templates/ERR_INVALID_REQ:9
+msgid "Request is too large."
+msgstr "Foresp&oslash;rgslen er for stor."
+
+#: templates/ERR_SOCKET_FAILURE:5
+msgid "Socket Failure"
+msgstr "Socket Fejl"
+
+#: templates/ERR_INVALID_URL:6
+msgid "Some aspect of the requested URL is incorrect."
+msgstr ""
+
+#: templates/ERR_ICAP_FAILURE:8 templates/ERR_INVALID_REQ:5
+#: templates/ERR_INVALID_URL:7
+msgid "Some possible problems are:"
+msgstr "Mulige problemer kan v&aelig;re:"
+
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED:6
+msgid ""
+"Sorry, you are not currently allowed to request %U from this cache manager "
+"until you have authenticated yourself."
+msgstr ""
+"Du har desv&aelig;rre ikke lov til at hente %U fra denne cache f&oslash;rend "
+"du har autenticieret dig selv."
+
+#: templates/ERR_CACHE_ACCESS_DENIED:6
+msgid ""
+"Sorry, you are not currently allowed to request %U from this cache until you "
+"have authenticated yourself."
+msgstr ""
+"Du har desv&aelig;rre ikke lov til at hente %U fra denne cache f&oslash;rend "
+"du har autenticieret dig selv."
+
+#: templates/ERR_ZERO_SIZE_OBJECT:6
+#, fuzzy
+msgid "Squid did not receive any data for this request."
+msgstr "Proxy'en Squid modtog ingen data for denne foresp&oslash;rgsel."
+
+#: templates/ERR_UNSUP_REQ:6
+msgid ""
+"Squid does not support all request methods for all access protocols. For "
+"example, you can not POST a Gopher request."
+msgstr ""
+"Proxy'en Squid underst&oslash;tter ikke alle foresp&oslash;rgselsmetoder for "
+"alle adgangs protokoller. For eksempel kan du ikke POST en Gopher "
+"foresp&oslash;rgsel."
+
+#: templates/ERR_LIFETIME_EXP:6
+msgid ""
+"Squid has terminated the request because it has exceeded the maximum "
+"connection lifetime."
+msgstr ""
+"Proxy'en Squid har afsluttet foresp&oslash;rgslen fordi den har overskredet "
+"den maksimale levetid for forbindelser (connection timeout)."
+
+#: templates/ERR_SOCKET_FAILURE:7
+msgid ""
+"Squid is unable to create a TCP socket, presumably due to excessive load. "
+"Please retry your request."
+msgstr ""
+
+#: templates/ERR_FTP_FAILURE:5 templates/ERR_FTP_FORBIDDEN:5
+#: templates/ERR_FTP_NOT_FOUND:5 templates/ERR_FTP_PUT_ERROR:5
+#: templates/ERR_FTP_UNAVAILABLE:5
+msgid "Squid sent the following FTP command:"
+msgstr "Proxy'en Squid sendte f&oslash;lgende FTP kommando:"
+
+#: templates/ERR_DNS_FAIL:6
+msgid "The DNS server returned:"
+msgstr ""
+
+#: templates/ERR_ESI:6
+msgid "The ESI processor returned:"
+msgstr ""
+
+#: templates/ERR_FTP_UNAVAILABLE:4
+msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
+msgstr ""
+"FTP serveren var optaget da f&oslash;gende URL skulle hentes: <a href=\"%U\">"
+"%U</a>"
+
+#: templates/ERR_INVALID_RESP:5
+msgid ""
+"The HTTP Response message received from the contacted server could not be "
+"understood or was otherwise malformed. Please contact the site operator."
+msgstr ""
+
+#: templates/ERR_ICAP_FAILURE:9
+msgid "The ICAP server is not reachable."
+msgstr ""
+
+#: templates/ERR_FTP_NOT_FOUND:4
+msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
+msgstr "Den f&oslash;gende URL kunne ikke hentes: <a href=\"%U\">%U</a>"
+
+#: templates/ERR_ACCESS_DENIED:4 templates/ERR_CACHE_ACCESS_DENIED:4
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED:4 templates/ERR_CANNOT_FORWARD:4
+#: templates/ERR_CONNECT_FAIL:4 templates/ERR_DNS_FAIL:4 templates/ERR_ESI:4
+#: templates/ERR_FORWARDING_DENIED:4 templates/ERR_FTP_DISABLED:4
+#: templates/ERR_ICAP_FAILURE:4 templates/ERR_INVALID_URL:4
+#: templates/ERR_LIFETIME_EXP:4 templates/ERR_NO_RELAY:4
+#: templates/ERR_ONLY_IF_CACHED_MISS:4 templates/ERR_READ_ERROR:4
+#: templates/ERR_READ_TIMEOUT:4 templates/ERR_SECURE_CONNECT_FAIL:4
+#: templates/ERR_SHUTTING_DOWN:4 templates/ERR_SOCKET_FAILURE:4
+#: templates/ERR_TOO_BIG:4 templates/ERR_UNSUP_REQ:4
+#: templates/ERR_WRITE_ERROR:4 templates/ERR_ZERO_SIZE_OBJECT:4
+msgid ""
+"The following error was encountered while trying to retrieve the URL: <a "
+"href=\"%U\">%U</a>"
+msgstr ""
+
+#: templates/ERR_URN_RESOLVE:4
+msgid ""
+"The following error was encountered while trying to retrieve the URN: <a "
+"href=\"%U\">%U</a>"
+msgstr ""
+
+#: templates/ERR_CONNECT_FAIL:7
+msgid "The remote host or network may be down.  Please try the request again."
+msgstr ""
+"Der kunne ikke opn&aring;s forbindelse til den anden computer. Netv&aelig;"
+"rket eller computeren kan v&aelig;re nede.  Pr&oslash;v eventuelt igen."
+
+#: templates/ERR_TOO_BIG:5
+msgid "The request or reply is too large."
+msgstr ""
+
+#: templates/ERR_ACCESS_DENIED:3 templates/ERR_CANNOT_FORWARD:3
+#: templates/ERR_CONNECT_FAIL:3 templates/ERR_DNS_FAIL:3 templates/ERR_ESI:3
+#: templates/ERR_FORWARDING_DENIED:3 templates/ERR_FTP_DISABLED:3
+#: templates/ERR_FTP_FAILURE:3 templates/ERR_FTP_FORBIDDEN:3
+#: templates/ERR_FTP_NOT_FOUND:3 templates/ERR_FTP_UNAVAILABLE:3
+#: templates/ERR_ICAP_FAILURE:3 templates/ERR_INVALID_REQ:3
+#: templates/ERR_INVALID_RESP:3 templates/ERR_INVALID_URL:3
+#: templates/ERR_LIFETIME_EXP:3 templates/ERR_NO_RELAY:3
+#: templates/ERR_ONLY_IF_CACHED_MISS:3 templates/ERR_READ_ERROR:3
+#: templates/ERR_READ_TIMEOUT:3 templates/ERR_SECURE_CONNECT_FAIL:3
+#: templates/ERR_SHUTTING_DOWN:3 templates/ERR_SOCKET_FAILURE:3
+#: templates/ERR_TOO_BIG:3 templates/ERR_UNSUP_REQ:3
+#: templates/ERR_WRITE_ERROR:3 templates/ERR_ZERO_SIZE_OBJECT:3
+msgid "The requested URL could not be retrieved"
+msgstr "Den angivne URL kunne ikke hentes"
+
+#: templates/ERR_FTP_FAILURE:6 templates/ERR_FTP_FORBIDDEN:6
+#: templates/ERR_FTP_NOT_FOUND:6 templates/ERR_FTP_PUT_ERROR:6
+#: templates/ERR_FTP_UNAVAILABLE:6
+msgid "The server responded with:"
+msgstr ""
+
+#: templates/ERR_CONNECT_FAIL:6 templates/ERR_ICAP_FAILURE:6
+#: templates/ERR_READ_ERROR:6 templates/ERR_READ_TIMEOUT:6
+#: templates/ERR_SECURE_CONNECT_FAIL:6 templates/ERR_SOCKET_FAILURE:6
+#: templates/ERR_WRITE_ERROR:6
+msgid "The system returned: <i>%E</i>"
+msgstr "Systemet returnerede: <i>%E</i>"
+
+#: templates/ERR_NO_RELAY:6
+#, fuzzy
+msgid ""
+"There is no WAIS Relay host defined for this Cache!  Yell at the "
+"administrator."
+msgstr ""
+"Der er ikke nogen WAIS Rel&aelig; maskine defineret for denne proxy cache!  "
+"R&aring;b efter administratoren!"
+
+#: templates/ERR_TOO_BIG:8
+msgid ""
+"These limits have been established by the Internet Service Provider who "
+"operates this cache.  Please contact them directly if you feel this is an "
+"error."
+msgstr ""
+
+#: templates/ERR_FTP_DISABLED:6
+msgid "This cache does not support FTP."
+msgstr "Denne cache underst&oslash;tter ikke FTP."
+
+#: templates/ERR_SHUTTING_DOWN:5
+msgid ""
+"This cache is in the process of shutting down and can not service your "
+"request at this time.  Please retry your request again soon."
+msgstr ""
+"Proxy cachen er i gang med at lukke ned og kan derfor ikke betjene din "
+"foresp&oslash;rgsel nu.  Pr&oslash;v venligst igen snart."
+
+#: templates/ERR_FORWARDING_DENIED:6
+msgid ""
+"This cache will not forward your request because it is trying to enforce a "
+"sibling relationship.  Perhaps the client at %i is a cache which has been "
+"misconfigured."
+msgstr ""
+"Denne cache vil ikke videresende din foresp&oslash;rgsel fordi den pr&oslash;"
+"ver at opretholde et s&oslash;skendeforhold. M&aring;ske er klienten "
+"p&aring; %i en fejlkonfigureret cache."
+
+#: templates/ERR_ICAP_FAILURE:7
+msgid "This means that some aspect of the ICAP communication failed."
+msgstr ""
+
+#: templates/ERR_FTP_PUT_ERROR:7
+msgid ""
+"This means that the FTP server may not have permission or space to store the "
+"file. Check the path, permissions, diskspace and try again."
+msgstr ""
+
+#: templates/ERR_DNS_FAIL:7
+#, fuzzy
+msgid ""
+"This means that the cache was not able to resolve the hostname presented in "
+"the URL. Check if the address is correct."
+msgstr ""
+"Dette betyder at cachen kunne ikke opl&oslash;se det angivne navn i URL'en. "
+"Check at adressen er korrekt."
+
+#: templates/ERR_ESI:7
+msgid ""
+"This means that the surrogate was not able to process the ESI template. "
+"Please report this error to the webmaster."
+msgstr ""
+
+#: templates/ERR_FTP_NOT_FOUND:7
+msgid ""
+"This might be caused by an FTP URL with an absolute path (which does not "
+"comply with RFC 1738).  If this is the cause, then the file can be found at "
+"<a href=\"%B\">%B</a>."
+msgstr ""
+"Dette kan muligvis for&aring;rsages af en FTP URL med en absolut sti "
+"(hvilket ikke er i overensstemmelse med standarden RFC 1738).  Hvis dette er "
+"&aring;rsagen, kan filen findes p&aring; <a href=\"%B\">%B</a>."
+
+#: templates/ERR_SECURE_CONNECT_FAIL:7
+msgid ""
+"This proxy and the remote host failed to negotiate a mutually acceptable "
+"security settings for handling your request. It is possible that the remote "
+"host does not support secure connections, or the proxy is not satisfied with "
+"the host security credentials."
+msgstr ""
+
+#: templates/ERR_CANNOT_FORWARD:6
+msgid ""
+"This request could not be forwarded to the origin server or to any parent "
+"caches.  The most likely cause for this error is that the cache "
+"administrator does not allow this cache to make direct connections to origin "
+"servers, and all configured parent caches are currently unreachable."
+msgstr ""
+"Denne foresp&oslash;rgsel kunne ikke videresendes til den oprindelige server "
+"eller en af for&aelig;ldre cache'ene.  Dette skyldes sandsynligvis at cache "
+"administratoren tillader ikke denne cache at udf&oslash;re direkte "
+"forbindelser til servere og alle for&aelig;ldre cache'er kan ikke n&aring;s "
+"for &oslash;jeblikket."
+
+#: templates/ERR_DNS_FAIL:5
+msgid "Unable to determine IP address from host name <q>%H</q>"
+msgstr "Kunne ikke finde IP nummeret for navnet <q>%H</q>"
+
+#: templates/ERR_CANNOT_FORWARD:5
+msgid "Unable to forward this request at this time."
+msgstr "Kunne ikke vidersende foresp&oslash;rgslen."
+
+#: templates/ERR_UNSUP_REQ:5
+msgid "Unsupported Request Method and Protocol"
+msgstr "Uunderst&oslash;ttet Foresp&oslash;rgsels Metode og Protokol"
+
+#: templates/ERR_ONLY_IF_CACHED_MISS:5
+msgid ""
+"Valid document was not found in the cache and <q>only-if-cached</q> "
+"directive was specified."
+msgstr ""
+"Dokumentet blev ikke fundet i cachen og <q>only-if-cached</q> (kun-hvis-gemt-"
+"i-cachen) direktivet var specificeret."
+
+#: templates/ERR_FTP_PUT_ERROR:4
+msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
+msgstr ""
+"Under udf&oslash;relse af PUT kommando (sending) p&aring; f&oslash;lgende "
+"URL: <a href=\"%U\">%U</a>"
+
+#: templates/ERR_WRITE_ERROR:5
+msgid "Write Error"
+msgstr "Skrive Fejl"
+
+#: templates/ERR_ONLY_IF_CACHED_MISS:6
+msgid ""
+"You have issued a request with a <q>only-if-cached</q> cache control "
+"directive. The document was not found in the cache, <em>or</em> it required "
+"revalidation prohibited by the <q>only-if-cached</q> directive."
+msgstr ""
+"Du har sendt en foresp&oslash;rgsel med en <q>only-if-cached</q> cache "
+"kontrol direktiv. Dokumentet blev ikke fundet i cachen, <em>eller</em> det "
+"kr&aelig;ver en bekr&aelig;ftelse af gyldighed som bliver forbudt af <q>only-"
+"if-cached</q> direktivet."
+
+#: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
+#: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
+#: templates/ERR_FORWARDING_DENIED:7 templates/ERR_FTP_DISABLED:7
+#: templates/ERR_FTP_FAILURE:7 templates/ERR_FTP_FORBIDDEN:7
+#: templates/ERR_FTP_NOT_FOUND:8 templates/ERR_FTP_PUT_ERROR:8
+#: templates/ERR_FTP_UNAVAILABLE:7 templates/ERR_INVALID_REQ:12
+#: templates/ERR_INVALID_RESP:7 templates/ERR_INVALID_URL:12
+#: templates/ERR_LIFETIME_EXP:7 templates/ERR_NO_RELAY:7
+#: templates/ERR_ONLY_IF_CACHED_MISS:7 templates/ERR_READ_ERROR:8
+#: templates/ERR_READ_TIMEOUT:8 templates/ERR_SECURE_CONNECT_FAIL:8
+#: templates/ERR_SHUTTING_DOWN:6 templates/ERR_SOCKET_FAILURE:8
+#: templates/ERR_TOO_BIG:9 templates/ERR_UNSUP_REQ:7
+#: templates/ERR_URN_RESOLVE:7 templates/ERR_WRITE_ERROR:8
+#: templates/ERR_ZERO_SIZE_OBJECT:7
+msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
+msgstr ""
+
+#: templates/ERR_INVALID_RESP:6
+msgid ""
+"Your cache administrator may be able to provide you with more details about "
+"the exact nature of the problem if needed."
+msgstr ""
+
+#: templates/ERR_ESI:8
+msgid "Your webmaster is <a href=\"mailto:%w\">%w</a>."
+msgstr ""
+
+#: templates/ERR_ZERO_SIZE_OBJECT:5
+msgid "Zero Sized Reply"
+msgstr "Nul St&oslash;rrelse Svar"

@@ -10,7 +10,7 @@
 Tokom pokušaja da se dovuèe strana sa sledeæom adresom (URL):
 <A HREF="%U">%U</A>
 <P>
-dogodila se sledeæa greška:
+Dogodila se sledeæa greška:
 <UL>
 <LI>
 <STRONG>
@@ -22,9 +22,9 @@ Prosleðivanje odbijeno.
 što znaèi:
 <PRE>
   Ovaj proksi server neæe da prosledi vaš zahtev zato što pokušava da
-  poštuje sibling odnose. Možda je klijent na %i proksi koji je pogrešno
+  poštuje sibling odnose. Možda je klijent na %i proksi serveru koji je pogrešno
   konfigurisan. 
 </PRE>
 </P>
 
-<P>Vaš cache/proxy administrator je: <A HREF="mailto:%w%W">%w</A>. 
+<P>Vaš keš/proksi administrator je: <A HREF="mailto:%w">%w</A>. 

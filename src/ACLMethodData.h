@@ -37,7 +37,7 @@
 
 #include "ACL.h"
 #include "ACLData.h"
-#include "List.h"
+#include "CbDataList.h"
 
 /// \ingroup ACLAPI
 class ACLMethodData : public ACLData<HttpRequestMethod>
@@ -56,7 +56,7 @@ public:
     bool empty() const;
     virtual ACLData<HttpRequestMethod> *clone() const;
 
-    List<HttpRequestMethod> *values;
+    CbDataList<HttpRequestMethod> *values;
 };
 
 MEMPROXY_CLASS_INLINE(ACLMethodData);

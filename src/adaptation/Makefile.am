@@ -34,7 +34,7 @@ libadaptation_la_SOURCES = \
 check_PROGRAMS = testHeaders
 
 ## test .h correctness
-testHeaders: *.h
+testHeaders: $(top_srcdir)/src/adaptation/*.h
 	$(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "." || exit 1
 
 ## No such file...

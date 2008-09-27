@@ -76,7 +76,7 @@ static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeader
         HttpHeader * hdr_out, int we_do_ranges, http_state_flags);
 
 HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"), ServerStateData(theFwdState),
-        header_bytes_read(0), reply_bytes_read(0), httpChunkDecoder(NULL)
+        lastChunk(0), header_bytes_read(0), reply_bytes_read(0), httpChunkDecoder(NULL)
 {
     debugs(11,5,HERE << "HttpStateData " << this << " created");
     ignoreCacheControl = false;
@@ -274,6 +274,9 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
 
     if (pe != NULL) {
         assert(e != pe);
+#if USE_HTCP
+        neighborsHtcpClear(e, NULL, e->mem_obj->request, e->mem_obj->method, HTCP_CLR_INVALIDATION);
+#endif
         pe->release();
     }
 
@@ -288,50 +291,10 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
 
     if (pe != NULL) {
         assert(e != pe);
+#if USE_HTCP
+        neighborsHtcpClear(e, NULL, e->mem_obj->request, HttpRequestMethod(METHOD_HEAD), HTCP_CLR_INVALIDATION);
+#endif
         pe->release();
-    }
-
-    if (forbidden)
-        return;
-
-    /// \todo AYJ: given the coment below + new behaviour of accepting METHOD_UNKNOWN, should we invert this test
-    ///		removing the object unless the method is nown to be safely kept?
-    switch (e->mem_obj->method.id()) {
-
-    case METHOD_PUT:
-
-    case METHOD_DELETE:
-
-    case METHOD_PROPPATCH:
-
-    case METHOD_MKCOL:
-
-    case METHOD_MOVE:
-
-    case METHOD_BMOVE:
-
-    case METHOD_BDELETE:
-        /** \par
-         * Remove any cached GET object if it is believed that the
-         * object may have changed as a result of other methods
-         */
-
-        if (e->mem_obj->request)
-            pe = storeGetPublicByRequestMethod(e->mem_obj->request, METHOD_GET);
-        else
-            pe = storeGetPublic(e->mem_obj->url, METHOD_GET);
-
-        if (pe != NULL) {
-            assert(e != pe);
-            pe->release();
-        }
-
-        break;
-
-    default:
-        /* Keep GCC happy. The methods above are all mutating HTTP methods
-         */
-        break;
     }
 }
 
@@ -774,6 +737,8 @@ HttpStateData::processReplyHeader()
 void
 HttpStateData::haveParsedReplyHeaders()
 {
+    ServerStateData::haveParsedReplyHeaders();
+
     Ctx ctx = ctx_enter(entry->mem_obj->url);
     HttpReply *rep = finalReply();
 
@@ -917,15 +882,15 @@ HttpStateData::persistentConnStatus() const
     if (!flags.headers_parsed)
         return INCOMPLETE_MSG;
 
+    if (eof) // already reached EOF
+        return COMPLETE_NONPERSISTENT_MSG;
+
     /* In chunked responce we do not know the content length but we are absolutelly 
      * sure about the end of response, so we are calling the statusIfComplete to
      * decide if we can be persistant 
      */
-    if (eof && flags.chunked)
+    if (lastChunk && flags.chunked)
 	return statusIfComplete();
-
-    if (eof) // already reached EOF
-        return COMPLETE_NONPERSISTENT_MSG;
 
     const int64_t clen = vrep->bodySize(request->method);
 
@@ -1157,8 +1122,8 @@ HttpStateData::decodeAndWriteReplyBody()
     data=decodedData.content();
     addVirginReplyBody(data, len);
     if (done) {
-	eof = 1;
-	flags.do_next_read = 0;
+        lastChunk = 1;
+        flags.do_next_read = 0;
     }
     SQUID_EXIT_THROWING_CODE(status);
     return status;

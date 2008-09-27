@@ -40,7 +40,6 @@
 #include "HttpRequestMethod.h"
 
 /* forward decls */
-class CacheManager;
 class HttpReply;
 class HttpRequest;
 
@@ -78,7 +77,8 @@ public:
 
     public:
         CacheDetails() : caddr(),
-                size(0),
+                requestSize(0),
+                replySize(0),
                 highOffset(0),
                 objectSize(0),
                 code (LOG_TAG_NONE),
@@ -93,7 +93,8 @@ public:
         }
 
         IPAddress caddr;
-        int64_t size;
+        int64_t requestSize;
+        int64_t replySize;
         int64_t highOffset;
         int64_t objectSize;
         log_type code;
@@ -142,7 +143,6 @@ extern void accessLogLog(AccessLogEntry *, ACLChecklist * checklist);
 extern void accessLogRotate(void);
 extern void accessLogClose(void);
 extern void accessLogInit(void);
-extern void accessLogRegisterWithCacheManager(CacheManager & manager);
 extern void accessLogFreeMemory(AccessLogEntry * aLogEntry);
 extern const char *accessLogTime(time_t);
 extern int accessLogParseLogFormat(logformat_token ** fmt, char *def);

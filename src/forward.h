@@ -3,7 +3,6 @@
 
 /* forward decls */
 
-class CacheManager;
 class ErrorState;
 
 #include "comm.h"
@@ -25,7 +24,6 @@ public:
     typedef RefCount<FwdState> Pointer;
     ~FwdState();
     static void initModule();
-    static void RegisterWithCacheManager(CacheManager & manager);
 
     static void fwdStart(int fd, StoreEntry *, HttpRequest *);
     void startComplete(FwdServer *);
@@ -66,6 +64,7 @@ private:
     void updateHierarchyInfo();
     void completed();
     void retryOrBail();
+    static void RegisterWithCacheManager(void);
 
 #if WIP_FWD_LOG
 

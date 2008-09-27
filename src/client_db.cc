@@ -75,26 +75,26 @@ clientdbAdd(const IPAddress &addr)
     return c;
 }
 
+static void
+clientdbRegisterWithCacheManager(void)
+{
+    CacheManager::GetInstance()->
+        registerAction("client_list", "Cache Client List", clientdbDump, 0, 1);
+}
+
 void
 clientdbInit(void)
 {
+    clientdbRegisterWithCacheManager();
+
     if (client_table)
         return;
 
     client_table = hash_create((HASHCMP *) strcmp, CLIENT_DB_HASH_SIZE, hash_string);
+
 }
 
 void
-clientdbRegisterWithCacheManager(CacheManager & manager)
-{
-    manager.registerAction("client_list",
-                           "Cache Client List",
-                           clientdbDump,
-                           0, 1);
-}
-
-void
-
 clientdbUpdate(const IPAddress &addr, log_type ltype, protocol_t p, size_t size)
 {
     char key[MAX_IPSTRLEN];

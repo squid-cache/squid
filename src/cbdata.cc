@@ -271,16 +271,17 @@ cbdataInternalAddType(cbdata_type type, const char *name, int size, FREE * free_
 }
 
 void
-cbdataRegisterWithCacheManager(CacheManager & manager)
+cbdataRegisterWithCacheManager(void)
 {
-    manager.registerAction("cbdata",
-                           "Callback Data Registry Contents",
-                           cbdataDump, 0, 1);
+    CacheManager *manager=CacheManager::GetInstance();
+    manager->registerAction("cbdata",
+                            "Callback Data Registry Contents",
+                            cbdataDump, 0, 1);
 #if CBDATA_DEBUG
 
-    manager.registerAction("cbdatahistory",
-                           "Detailed call history for all current cbdata contents",
-                           cbdataDumpHistory, 0, 1);
+    manager->registerAction("cbdatahistory",
+                            "Detailed call history for all current cbdata contents",
+                            cbdataDumpHistory, 0, 1);
 #endif
 }
 

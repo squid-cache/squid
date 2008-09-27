@@ -95,3 +95,10 @@ if [ -x $tmpdir/scripts/www/build-cfg-help.pl ]; then
 	gzip -f -9 ${PACKAGE}-${VERSION}-${date}-cfgman.html
 	echo ${PACKAGE}-${VERSION}-${date}-cfgman.html.gz >>${tag}.out
 fi
+
+# Generate language-pack tarballs
+# NP: Only to be done on HEAD branch.
+if test "${VERSION}" = "3.HEAD" ; then
+	sh -c "cd $tmpdir/errors && tar -zcf ${PWD}/${PACKAGE}-${VERSION}-${date}-langpack.tar.gz ./*/*"
+	echo ${PACKAGE}-${VERSION}-${date}-langpack.tar.gz >>${tag}.out
+fi

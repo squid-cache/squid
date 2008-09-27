@@ -69,12 +69,19 @@
  *   This OS has at least one version that defines these as private
  *   kernel macros commented as being 'non-standard'.
  *   We need to use them, much nicer than the OS-provided __u*_*[]
+ * UPDATE: OpenBSD 4.3 has the same.
  */
-#if USE_IPV6 && defined(_SQUID_FREEBSD_)
+#if USE_IPV6 && ( defined(_SQUID_FREEBSD_) || defined(_SQUID_OPENBSD_) )
 #define s6_addr8  __u6_addr.__u6_addr8
 #define s6_addr16 __u6_addr.__u6_addr16
 #define s6_addr32 __u6_addr.__u6_addr32
 #endif
+
+/* OpenBSD also hide v6only socket option we need for comm layer. :-( */
+#if !defined(IPV6_V6ONLY) && defined(_SQUID_OPENBSD_)
+#define IPV6_V6ONLY		27 // from OpenBSD 4.3 headers. (NP: does not match non-BSD OS values)
+#endif
+
 
 /// Length of buffer that needs to be allocated to old a null-terminated IP-string
 // Yuck. But there are still structures that need it to be an 'integer constant'.
@@ -232,7 +239,7 @@ public:
      *  Valid results IF and only IF the stored IP address is actually a network bitmask
      \retval N number of bits which are set in the bitmask stored.
      */
-    int GetCIDR();
+    int GetCIDR() const;
 
     /** Apply a mask to the stored address.
      \param mask Netmask format to be bit-mask-AND'd over the stored address.

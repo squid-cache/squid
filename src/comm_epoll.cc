@@ -70,6 +70,7 @@ static int max_poll_time = 1000;
 
 static struct epoll_event *pevents;
 
+static void commEPollRegisterWithCacheManager(void);
 
 
 /* XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX */
@@ -97,6 +98,8 @@ comm_select_init(void)
     if (kdpfd < 0) {
         fatalf("comm_select_init: epoll_create(): %s\n",xstrerror());
     }
+
+    commEPollRegisterWithCacheManager();
 }
 
 static const char* epolltype_atoi(int x)
@@ -214,12 +217,13 @@ commResetSelect(int fd)
 
 static void commIncomingStats(StoreEntry * sentry);
 
-void
-commEPollRegisterWithCacheManager(CacheManager& manager)
+static void
+commEPollRegisterWithCacheManager(void)
 {
-    manager.registerAction("comm_epoll_incoming",
-                           "comm_incoming() stats",
-                           commIncomingStats, 0, 1);
+    CacheManager::GetInstance()->
+        registerAction("comm_epoll_incoming",
+                       "comm_incoming() stats",
+                        commIncomingStats, 0, 1);
 }
 
 static void

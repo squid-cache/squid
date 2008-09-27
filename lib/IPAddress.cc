@@ -118,15 +118,15 @@ IPAddress::~IPAddress()
 }
 
 int
-IPAddress::GetCIDR()
+IPAddress::GetCIDR() const
 {
     uint8_t shift,byte;
     uint8_t bit,caught;
     int len = 0;
 #if USE_IPV6
-    uint8_t *ptr= m_SocketAddr.sin6_addr.s6_addr;
+    const uint8_t *ptr= m_SocketAddr.sin6_addr.s6_addr;
 #else
-    uint8_t *ptr= (uint8_t *)&m_SocketAddr.sin_addr.s_addr;
+    const uint8_t *ptr= (uint8_t *)&m_SocketAddr.sin_addr.s_addr;
 #endif
 
     /* Let's scan all the bits from Most Significant to Least */

@@ -89,7 +89,11 @@ SQUIDCEXTERN void xxfree(const void *);
  */
 #define _SQUID_EXTERNNEW_ extern
 #else
+#ifdef __GNUC_STDC_INLINE__
+#define _SQUID_EXTERNNEW_ extern inline __attribute__((gnu_inline))
+#else
 #define _SQUID_EXTERNNEW_ extern inline
+#endif
 #endif
 #endif
 #include "SquidNew.h"
@@ -100,6 +104,9 @@ SQUIDCEXTERN char *rfc1738_escape(const char *);
 SQUIDCEXTERN char *rfc1738_escape_unescaped(const char *);
 SQUIDCEXTERN char *rfc1738_escape_part(const char *);
 SQUIDCEXTERN void rfc1738_unescape(char *);
+
+/* charset.c */
+SQUIDCEXTERN char *latin1_to_utf8(char *out, size_t size, const char *in);
 
 /* html.c */
 SQUIDCEXTERN char *html_quote(const char *);
