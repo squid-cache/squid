@@ -98,7 +98,9 @@
 
 #ifdef _SQUID_MSWIN_
 
+#if HAVE_WINSOCK2_H
 #include <winsock2.h>
+#endif
 #include <process.h>
 
 #endif

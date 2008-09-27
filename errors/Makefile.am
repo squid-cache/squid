@@ -10,24 +10,33 @@ errordir = $(datadir)/errors
 
 DEFAULT_ERROR_DIR	= $(errordir)
 
-INSTALL_LANGUAGES	= @ERR_LANGUAGES@
+# List of automated translations possible:
+TRANSLATIONS = \
+	ca \
+	da \
+	de \
+	en en-au en-gb \
+	es \
+	fr \
+	id \
+	it \
+	nl \
+	pt-br \
+	sv \
+	uk
+
+# Legacy language contributions...
+#
 LANGUAGES	= \
 		Armenian \
 		Azerbaijani \
 		Bulgarian \
-		Catalan \
 		Czech \
-		Danish \
-		Dutch \
-		English \
 		Estonian \
 		Finnish \
-		French \
-		German \
 		Greek \
 		Hebrew \
 		Hungarian \
-		Italian \
 		Japanese \
 		Korean \
 		Lithuanian \
@@ -39,28 +48,39 @@ LANGUAGES	= \
 		Serbian \
 		Simplify_Chinese \
 		Slovak \
-		Spanish \
-		Swedish \
 		Traditional_Chinese \
-		Turkish \
-		Ukrainian-1251 \
-		Ukrainian-koi8-u \
-		Ukrainian-utf8
+		Turkish
 
 install-data-local: 
-	@for l in $(INSTALL_LANGUAGES); do \
+	@for l in $(LANGUAGES); do \
 		$(mkinstalldirs) $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l && \
 		for f in $(srcdir)/$$l/ERR_*; do \
 			echo "$(INSTALL_DATA) $$f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l"; \
 			$(INSTALL_DATA) $$f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; \
-		done \
+		done; \
+	done; \
+	for l in $(TRANSLATIONS) templates; do \
+	  if test -d $(srcdir)/$$l; then \
+		$(mkinstalldirs) $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l && \
+		for f in $(srcdir)/$$l/ERR_*; do \
+			echo "$(INSTALL_DATA) $$f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l"; \
+			$(INSTALL_DATA) $$f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; \
+		done; \
+	  fi \
 	done
 
 uninstall-local:
-	@for l in $(INSTALL_LANGUAGES); do \
+	@ for l in $(LANGUAGES); do \
 		for f in $(srcdir)/$$l/ERR_*; do \
 	        	rm -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; \
-		done \
+		done; \
+	done; \
+	for l in $(TRANSLATIONS) templates; do \
+	  if test -d $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; then \
+		for f in $(srcdir)/$$l/ERR_*; do \
+	        	rm -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; \
+		done; \
+	  fi \
 	done
 
 # undocumented hack.  You can use this target to create multi-lingual
@@ -69,6 +89,10 @@ uninstall-local:
 #	make ADDLANG=English DESTLANG=French addlang
 #
 # by Andres Kroonmaa <andre@mail.lbi.ee>
+#
+# UPDATE: this hack completely breaks HTML standards and with the addition
+#	  of language translations is now largely obsolete.
+#	  It will be removed without notice at some future date.
 #
 addlang: all
 	-@if test -d $(srcdir)/$(ADDLANG); then \
@@ -85,12 +109,44 @@ addlang: all
 	fi
 
 dist-hook:
-	@ for lang in $(LANGUAGES); do \
-	  if test "$$lang" = .; then :; else \
+	for lang in $(LANGUAGES); do \
+	  if test -d $(srcdir)/$$lang ; then \
 	    test -d $(distdir)/$$lang \
 	    || mkdir $(distdir)/$$lang \
 	    || exit 1; \
 	    cp -p $(srcdir)/$$lang/ERR_*  $(distdir)/$$lang \
 	      || exit 1; \
 	  fi; \
-	done		
+	done; \
+	$(MAKE) translate; \
+	for lang in $(TRANSLATIONS); do \
+	  if test -d $(srcdir)/$$lang ; then \
+		test -d $(distdir)/$$lang \
+		  || mkdir $(distdir)/$$lang \
+		  || exit 1; \
+		cp -p $(srcdir)/$$lang/ERR_*  $(distdir)/$$lang \
+		  || exit 1; \
+	  fi; \
+	done
+
+translate:
+	@ if test "$(PO2HTML)" != "" ; then \
+	  for lang in $(TRANSLATIONS); do \
+		test -d $$lang && rm -r $$lang; \
+		mkdir $$lang; \
+		cd $$lang; \
+		echo -n "Translate '$$lang' ..."; \
+		for f in `ls -1 ../templates`; do \
+			$(PO2HTML) --progress=none -i ../$$lang.po -t ../templates/$$f >$$f || exit 1; \
+		done; \
+		echo "done."; \
+		cd ..; \
+	  done; \
+	else \
+	  echo "WARNING: Translation toolkit was not detected."; \
+	  echo "A drop-in bundle of pre-translated files is available from"; \
+	  echo "http://www.squid-cache.org/Versions/langpack/"; \
+	fi
+
+all:
+	$(MAKE) translate

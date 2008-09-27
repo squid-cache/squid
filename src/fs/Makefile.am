@@ -36,7 +36,7 @@ check_PROGRAMS=testHeaders
 
 ## Special Universal .h dependency test script
 ## aborts if error encountered
-testHeaders: ufs/*.h coss/*.h
+testHeaders: $(top_srcdir)/src/fs/ufs/*.h $(top_srcdir)/src/fs/coss/*.h
 	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "ufs" || exit 1
 	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "coss" || exit 1
 ## diskd/ has no .h files

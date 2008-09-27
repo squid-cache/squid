@@ -1,0 +1,25 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>ERROR: The requested URL could not be retrieved</title>
+<style type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></style>
+</head><body>
+<h1>ERROR</h1>
+<h2>The requested URL could not be retrieved</h2>
+<hr>
+<p>The following error was encountered while trying to retrieve the URL: <a href="%U">%U</a></p>
+
+<blockquote>
+<p><b>Read Error</b></p>
+</blockquote>
+
+<p>The system returned: <i>%E</i></p>
+
+<p>An error condition occurred while reading data from the network.  Please retry your request.</p>
+
+<p>Your cache administrator is <a href="mailto:%w%W">%w</a>.</p>
+
+<br>   
+<hr> 
+<div id="footer">Generated %T by %h (%s)</div>
+</body></html>

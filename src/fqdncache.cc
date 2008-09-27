@@ -582,6 +582,16 @@ fqdncache_nbgethostbyaddr(IPAddress &addr, FQDNH * handler, void *handlerData)
 #endif
 }
 
+/// \ingroup FQDNCacheInternal
+static void
+fqdncacheRegisterWithCacheManager(void)
+{
+    CacheManager::GetInstance()->
+        registerAction("fqdncache", "FQDN Cache Stats and Contents",
+                       fqdnStats, 0, 1);
+
+}
+
 /**
  \ingroup FQDNCacheAPI
  *
@@ -592,6 +602,8 @@ void
 fqdncache_init(void)
 {
     int n;
+
+    fqdncacheRegisterWithCacheManager();
 
     if (fqdn_table)
         return;
@@ -614,16 +626,6 @@ fqdncache_init(void)
 
     memDataInit(MEM_FQDNCACHE_ENTRY, "fqdncache_entry",
                 sizeof(fqdncache_entry), 0);
-}
-
-/// \ingroup FQDNCacheAPI
-void
-fqdncacheRegisterWithCacheManager(CacheManager & manager)
-{
-    manager.registerAction("fqdncache",
-                           "FQDN Cache Stats and Contents",
-                           fqdnStats, 0, 1);
-
 }
 
 /**
@@ -939,3 +941,14 @@ snmp_netFqdnFn(variable_list * Var, snint * ErrP)
 }
 
 #endif /*SQUID_SNMP */
+
+/// XXX: a hack to work around the missing DNS error info
+// see http://www.squid-cache.org/bugs/show_bug.cgi?id=2459
+const char *
+dns_error_message_safe()
+{
+    if (dns_error_message)
+		return dns_error_message;
+	debugs(35,DBG_IMPORTANT, "Internal error: lost DNS error info");
+	return "lost DNS error";
+}

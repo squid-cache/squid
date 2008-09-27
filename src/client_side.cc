@@ -93,6 +93,7 @@
 #include "HttpHdrContRange.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "ident.h"
 #include "MemObject.h"
 #include "fde.h"
 #include "client_side_request.h"
@@ -463,7 +464,7 @@ clientPrepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry * aLogE
     aLogEntry->http.method = request->method;
     aLogEntry->http.version = request->http_ver;
     aLogEntry->hier = request->hier;
-
+    aLogEntry->cache.requestSize += request->content_length;
     aLogEntry->cache.extuser = request->extacl_user.buf();
 
     if (request->auth_user_request) {
@@ -501,7 +502,9 @@ ClientHttpRequest::logRequest()
 
         if(getConn() != NULL) al.cache.caddr = getConn()->log_addr;
 
-        al.cache.size = out.size;
+        al.cache.requestSize = req_sz;
+
+        al.cache.replySize = out.size;
 
         al.cache.highOffset = out.offset;
 
@@ -599,14 +602,14 @@ ConnStateData::freeAllContexts()
 void ConnStateData::connStateClosed(const CommCloseCbParams &io)
 {
     assert (fd == io.fd);
-    close();
+    deleteThis("ConnStateData::connStateClosed");
 }
 
+// cleans up before destructor is called
 void
-ConnStateData::close()
+ConnStateData::swanSong()
 {
-    debugs(33, 3, "ConnStateData::close: FD " << fd);
-    deleteThis("ConnStateData::close");
+    debugs(33, 2, "ConnStateData::swanSong: FD " << fd);
     fd = -1;
     flags.readMoreRequests = false;
     clientdbEstablished(peer, -1);	/* decrement */
@@ -614,15 +617,20 @@ ConnStateData::close()
     freeAllContexts();
 
     if (auth_user_request != NULL) {
-        debugs(33, 4, "ConnStateData::close: freeing auth_user_request '" << auth_user_request << "' (this is '" << this << "')");
+        debugs(33, 4, "ConnStateData::swanSong: freeing auth_user_request '" << auth_user_request << "' (this is '" << this << "')");
         auth_user_request->onConnectionClose(this);
     }
+
+    BodyProducer::swanSong();
+    flags.swanSang = true;
 }
 
 bool
 ConnStateData::isOpen() const
 {
-    return cbdataReferenceValid(this);
+    return cbdataReferenceValid(this) && // XXX: checking "this" in a method
+        fd >= 0 &&
+        !fd_table[fd].closing();
 }
 
 ConnStateData::~ConnStateData()
@@ -631,7 +639,10 @@ ConnStateData::~ConnStateData()
     debugs(33, 3, "ConnStateData::~ConnStateData: FD " << fd);
 
     if (isOpen())
-        close();
+        debugs(33, 1, "BUG: ConnStateData did not close FD " << fd);
+
+    if (!flags.swanSang)
+        debugs(33, 1, "BUG: ConnStateData was not destroyed properly; FD " << fd);
 
     AUTHUSERREQUESTUNLOCK(auth_user_request, "~conn");
 
@@ -1055,8 +1066,8 @@ ClientHttpRequest::rangeBoundaryStr() const
 {
     assert(this);
     const char *key;
-    String b (full_appname_string);
-    b.append (":",1);
+    String b(APP_FULLNAME);
+    b.append(":",1);
     key = storeEntry()->getMD5Text();
     b.append(key, strlen(key));
     return b;
@@ -1582,6 +1593,8 @@ ClientSocketContext::doClose()
     comm_close(fd());
 }
 
+/** Called to initiate (and possibly complete) closing of the context.
+ * The underlying socket may be already closed */
 void
 ClientSocketContext::initiateClose(const char *reason)
 {
@@ -1655,10 +1668,11 @@ ClientSocketContext::writeComplete(int fd, char *bufnotused, size_t size, comm_e
         return;
 
     case STREAM_UNPLANNED_COMPLETE:
-        /* fallthrough */
+        initiateClose("STREAM_UNPLANNED_COMPLETE");
+        return;
 
     case STREAM_FAILED:
-        initiateClose("STREAM_UNPLANNED_COMPLETE|STREAM_FAILED");
+        initiateClose("STREAM_FAILED");
         return;
 
     default:
@@ -1825,8 +1839,6 @@ prepareTransparentURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
     char *host;
     char ntoabuf[MAX_IPSTRLEN];
 
-    http->flags.intercepted = 1;
-
     if (*url != '/')
         return; /* already in good shape */
 
@@ -1992,17 +2004,35 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
 #endif
 
     /* Rewrite the URL in transparent or accelerator mode */
+    /* NP: there are several cases to traverse here:
+     *  - standard mode (forward proxy)
+     *  - transparent mode (TPROXY)
+     *  - transparent mode with failures
+     *  - intercept mode (NAT)
+     *  - intercept mode with failures
+     *  - accelerator mode (reverse proxy)
+     *  - internal URL
+     *  - mixed combos of the above with internal URL
+     */
     if (conn->transparent()) {
+        /* intercept or transparent mode, properly working with no failures */
+        http->flags.intercepted = conn->port->intercepted;
+        http->flags.spoof_client_ip = conn->port->spoof_client_ip;
         prepareTransparentURL(conn, http, url, req_hdr);
+
+    } else if (conn->port->intercepted || conn->port->spoof_client_ip) {
+        /* transparent or intercept mode with failures */
+        prepareTransparentURL(conn, http, url, req_hdr);
+
     } else if (conn->port->accel || conn->switchedToHttps()) {
+        /* accelerator mode */
         prepareAcceleratedURL(conn, http, url, req_hdr);
+
     } else if (internalCheck(url)) {
+        /* internal URL mode */
         /* prepend our name & port */
         http->uri = xstrdup(internalLocalUri(NULL, url));
         http->flags.accel = 1;
-    } else if (conn->port->intercepted) {
-	// Fallback on transparent interception if enabled, useful for "self" requests
-        prepareTransparentURL(conn, http, url, req_hdr);
     }
 
     if (!http->uri) {
@@ -2249,6 +2279,9 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     request->flags.internal = http->flags.internal;
     setLogUri (http, urlCanonicalClean(request));
     request->client_addr = conn->peer;
+#if FOLLOW_X_FORWARDED_FOR
+    request->indirect_client_addr = conn->peer;
+#endif /* FOLLOW_X_FORWARDED_FOR */
     request->my_addr = conn->me;
     request->http_ver = http_ver;
 
@@ -2295,10 +2328,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         connNoteUseOfBuffer(conn, http->req_sz);
         notedUseOfBuffer = true;
 
-        conn->handleRequestBodyData();
-
-        if (!request->body_pipe->exhausted())
-            conn->readSomeData();
+        conn->handleRequestBodyData(); // may comm_close and stop producing
 
         /* Is it too large? */
 
@@ -2315,7 +2345,10 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
             goto finish;
         }
 
-        context->mayUseConnection(true);
+        if (!request->body_pipe->productionEnded())
+            conn->readSomeData();
+
+        context->mayUseConnection(!request->body_pipe->productionEnded());
     }
 
     http->calloutContext = new ClientRequestContext(http);
@@ -2543,6 +2576,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
          * The above check with connFinishedWithConn() only
          * succeeds _if_ the buffer is empty which it won't
          * be if we have an incomplete request.
+         * XXX: This duplicates ClientSocketContext::keepaliveNextRequest
          */
         if (getConcurrentRequestCount() == 0 && commIsHalfClosed(fd)) {
             debugs(33, 5, "clientReadRequest: FD " << fd << ": half-closed connection, no completed request parsed, connection closing.");
@@ -2738,10 +2772,11 @@ connStateCreate(const IPAddress &peer, const IPAddress &me, int fd, http_port_li
     result->port = cbdataReference(port);
 
     if(port->intercepted || port->spoof_client_ip) {
-        IPAddress dst;
+        IPAddress client, dst;
 
-        if (IPInterceptor.NatLookup(fd, me, peer, dst) == 0) {
-            result->me = dst; /* XXX This should be moved to another field */
+        if (IPInterceptor.NatLookup(fd, me, peer, client, dst) == 0) {
+            result->me = client;
+            result->peer = dst;
             result->transparent(true);
         }
     }

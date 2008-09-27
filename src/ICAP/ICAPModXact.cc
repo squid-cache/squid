@@ -80,11 +80,6 @@ void ICAPModXact::start()
         startWriting();
     else
         waitForService();
-
-    // XXX: If commConnectStart in startWriting fails, we may get here
-    //_after_ the object got destroyed. Somebody please fix commConnectStart!
-    // TODO: Does re-entrance protection in callStart() solve the above?
-    // TODO: Check that comm using AsyncCalls solves this problem.
 }
 
 void ICAPModXact::waitForService()
@@ -118,8 +113,6 @@ void ICAPModXact::startWriting()
     decideOnRetries();
 
     openConnection();
-    // put nothing here as openConnection calls commConnectStart
-    // and that may call us back without waiting for the next select loop
 }
 
 // connection with the ICAP service established
@@ -1178,6 +1171,7 @@ void ICAPModXact::encapsulateHead(MemBuf &icapBuf, const char *section, MemBuf &
     // end cloning
         
     // remove all hop-by-hop headers from the clone
+    headClone->header.delById(HDR_PROXY_AUTHENTICATE);
     headClone->header.removeHopByHopEntries();
 
     // pack polished HTTP header

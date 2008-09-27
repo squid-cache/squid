@@ -10,7 +10,7 @@
 Tokom pokušaja da se dovuèe strana sa sledeæom adresom (URL):
 <A HREF="%U">%U</A>
 <P>
-dogodila se sledeæa greška:
+Dogodila se sledeæa greška:
 <UL>
 <LI>
 <STRONG>
@@ -19,13 +19,11 @@ Vaš zahtev ne može da se prosledi u ovom trenutku.
 </UL>
 
 <P>
-Ovaj zahtev nije moga da bude prosleðen izvornom serveru niti bilo kom
-nadreðenom proksi serveru. Najverovatniji uzrok ove greške je da:
-This request could not be forwarded to the origin server or to any
-parent caches.  The most likely cause for this error is that:
+Ovaj zahtev nije mogao da bude prosleðen izvonom serveru niti bilo kom
+nadreðenom proxy serveru. Najverovatniji uzrok ove greške je da:
 <UL>
-<LI>Cache administrator ne dozvoljava da ovaj proksi server
-direktno pristupi izvornom serveru, 
+<LI>Keš administrator ne dozvoljava da ovaj proksi server
+direktno pristupi izvonom serveru, 
 <LI>Svi konfigurisani nadreðeni proksi serveri su trenutno nedostupni.
 </UL>
-<P>Vaš cache administrator je <A HREF="mailto:%w%W">%w</A>. 
+<P>Vaš keš administrator je <A HREF="mailto:%w">%w</A>.

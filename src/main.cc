@@ -35,7 +35,6 @@
 #include "squid.h"
 #include "AccessLogEntry.h"
 #include "authenticate.h"
-#include "CacheManager.h"
 #include "ConfigParser.h"
 #include "errorpage.h"
 #include "event.h"
@@ -43,6 +42,7 @@
 #include "ExternalACL.h"
 #include "Store.h"
 #include "ICP.h"
+#include "ident.h"
 #include "HttpReply.h"
 #include "pconn.h"
 #include "Mem.h"
@@ -115,12 +115,14 @@ static volatile int do_shutdown = 0;
 static volatile int shutdown_status = 0;
 
 static void mainRotate(void);
-static void mainReconfigure(void);
+static void mainReconfigureStart(void);
+static void mainReconfigureFinish(void*);
 static void mainInitialize(void);
 static void usage(void);
 static void mainParseOptions(int argc, char *argv[]);
 static void sendSignal(void);
 static void serverConnectionsOpen(void);
+static void serverConnectionsClose(void);
 static void watch_child(char **);
 static void setEffectiveUser(void);
 #if MEM_GEN_TRACE
@@ -130,8 +132,6 @@ extern void log_trace_init(char *);
 static void SquidShutdown(void);
 static void mainSetCwd(void);
 static int checkRunningPid(void);
-
-static CacheManager manager;
 
 #ifndef _SQUID_MSWIN_
 static const char *squid_start_script = "squid_start";
@@ -178,7 +178,7 @@ SignalEngine::checkEvents(int timeout)
     PROF_start(SignalEngine_checkEvents);
 
     if (do_reconfigure) {
-        mainReconfigure();
+        mainReconfigureStart();
         do_reconfigure = 0;
     } else if (do_rotate) {
         mainRotate();
@@ -213,9 +213,9 @@ usage(void)
 {
     fprintf(stderr,
 #if USE_WIN32_SERVICE
-            "Usage: %s [-cdhirvzCDFNRVYX] [-s | -l facility] [-f config-file] [-[au] port] [-k signal] [-n name] [-O CommandLine]\n"
+            "Usage: %s [-cdhirvzCFNRVYX] [-s | -l facility] [-f config-file] [-[au] port] [-k signal] [-n name] [-O CommandLine]\n"
 #else
-            "Usage: %s [-cdhvzCDFNRVYX] [-s | -l facility] [-f config-file] [-[au] port] [-k signal]\n"
+            "Usage: %s [-cdhvzCFNRVYX] [-s | -l facility] [-f config-file] [-[au] port] [-k signal]\n"
 #endif
             "       -a port   Specify HTTP port number (default: %d).\n"
             "       -d level  Write debugging to stderr also.\n"
@@ -239,7 +239,7 @@ usage(void)
             "       -v        Print version.\n"
             "       -z        Create swap directories\n"
             "       -C        Do not catch fatal signals.\n"
-            "       -D        Disable initial DNS tests.\n"
+            "       -D        OBSOLETE. Scheduled for removal.\n"
             "       -F        Don't serve any requests until store is rebuilt.\n"
             "       -N        No daemon mode.\n"
 #if USE_WIN32_SERVICE
@@ -251,7 +251,7 @@ usage(void)
             "       -V        Virtual host httpd-accelerator.\n"
             "       -X        Force full debugging.\n"
             "       -Y        Only return UDP_HIT or UDP_MISS_NOFETCH during fast reload.\n",
-            appname, CACHE_HTTP_PORT, DefaultConfigFile, CACHE_ICP_PORT);
+            APP_SHORTNAME, CACHE_HTTP_PORT, DefaultConfigFile, CACHE_ICP_PORT);
     exit(1);
 }
 
@@ -285,8 +285,8 @@ mainParseOptions(int argc, char *argv[])
 
         case 'D':
             /** \par D
-             * Unset/disable global option for optional DNS tests. opt_dns_tests */
-            opt_dns_tests = 0;
+             * OBSOLETE: WAS: override to prevent optional startup DNS tests. */
+            debugs(1,DBG_CRITICAL, "WARNING: -D command-line option is obsolete.");
             break;
 
         case 'F':
@@ -629,13 +629,13 @@ serverConnectionsOpen(void)
     asnInit();
     ACL::Initialize();
     peerSelectInit();
-#if USE_CARP
 
     carpInit();
-#endif
+    peerUserHashInit();
+    peerSourceHashInit();
 }
 
-void
+static void
 serverConnectionsClose(void)
 {
     assert(shutting_down || reconfiguring);
@@ -664,11 +664,12 @@ serverConnectionsClose(void)
 }
 
 static void
-mainReconfigure(void)
+mainReconfigureStart(void)
 {
     debugs(1, 1, "Reconfiguring Squid Cache (version " << version_string << ")...");
     reconfiguring = 1;
-    /* Already called serverConnectionsClose and ipcacheShutdownServers() */
+
+    // Initiate asynchronous closing sequence
     serverConnectionsClose();
     icpConnectionClose();
 #if USE_HTCP
@@ -695,9 +696,18 @@ mainReconfigure(void)
     accessLogClose();
     useragentLogClose();
     refererCloseLog();
+
+    eventAdd("mainReconfigureFinish", &mainReconfigureFinish, NULL, 0, 1,
+        false);
+}
+
+static void
+mainReconfigureFinish(void *) {
+    debugs(1, 3, "finishing reconfiguring");
+
     errorClean();
     enter_suid();		/* root to read config file */
-    parseConfigFile(ConfigFile, manager);
+    parseConfigFile(ConfigFile);
     setUmask(Config.umask);
     Mem::Report();
     setEffectiveUser();
@@ -734,7 +744,6 @@ mainReconfigure(void)
     serverConnectionsOpen();
 
     neighbors_init();
-    neighborsRegisterWithCacheManager(manager);
 
     storeDirOpenSwapLogs();
 
@@ -970,78 +979,17 @@ mainInitialize(void)
 
         FwdState::initModule();
         /* register the modules in the cache manager menus */
-        accessLogRegisterWithCacheManager(manager);
-        asnRegisterWithCacheManager(manager);
-        authenticateRegisterWithCacheManager(&Config.authConfiguration, manager);
-#if USE_CARP
 
-        carpRegisterWithCacheManager(manager);
-#endif
-
-        cbdataRegisterWithCacheManager(manager);
+        cbdataRegisterWithCacheManager();
         /* These use separate calls so that the comm loops can eventually
          * coexist.
          */
-#ifdef USE_EPOLL
 
-        commEPollRegisterWithCacheManager(manager);
-#endif
-#ifdef USE_KQUEUE
+        eventInit();
 
-        commKQueueRegisterWithCacheManager(manager);
-#endif
-#ifdef USE_POLL
-
-        commPollRegisterWithCacheManager(manager);
-#endif
-#if defined(USE_SELECT) || defined(USE_SELECT_WIN32)
-
-        commSelectRegisterWithCacheManager(manager);
-#endif
-
-        clientdbRegisterWithCacheManager(manager);
-#if DELAY_POOLS
-
-        DelayPools::RegisterWithCacheManager(manager);
-#endif
-
-        DiskIOModule::RegisterAllModulesWithCacheManager(manager);
-#if USE_DNSSERVERS
-
-        dnsRegisterWithCacheManager(manager);
-#endif
-
-        eventInit(manager);
-        externalAclRegisterWithCacheManager(manager);
-        fqdncacheRegisterWithCacheManager(manager);
-        FwdState::RegisterWithCacheManager(manager);
-        httpHeaderRegisterWithCacheManager(manager);
-#if !USE_DNSSERVERS
-
-        idnsRegisterWithCacheManager(manager);
-#endif
-
-        ipcacheRegisterWithCacheManager(manager);
-        Mem::RegisterWithCacheManager(manager);
-        netdbRegisterWitHCacheManager(manager);
-        PconnModule::GetInstance()->registerWithCacheManager(manager);
-        redirectRegisterWithCacheManager(manager);
-        refreshRegisterWithCacheManager(manager);
-        statRegisterWithCacheManager(manager);
-        storeDigestRegisterWithCacheManager(manager);
-        StoreFileSystem::RegisterAllFsWithCacheManager(manager);
-        storeRegisterWithCacheManager(manager);
-        storeLogRegisterWithCacheManager(manager);
-#if DEBUGSTRINGS
-
-        StringRegistry::Instance().registerWithCacheManager(manager);
-#endif
-
-#if	USE_XPROF_STATS
-
-        xprofRegisterWithCacheManager(manager);
-#endif
-
+	// TODO: pconn is a good candidate for new-style registration
+        // PconnModule::GetInstance()->registerWithCacheManager();
+	//   moved to PconnModule::PconnModule()
     }
 
 #if USE_WCCP
@@ -1058,7 +1006,7 @@ mainInitialize(void)
 
     neighbors_init();
 
-    neighborsRegisterWithCacheManager(manager);
+    // neighborsRegisterWithCacheManager(); //moved to neighbors_init()
 
     if (Config.chroot_dir)
         no_suid();
@@ -1135,8 +1083,6 @@ mainInitialize(void)
 #endif
 
         eventAdd("memPoolCleanIdlePools", Mem::CleanIdlePools, NULL, 15.0, 1);
-
-        eventAdd("commCheckHalfClosed", commCheckHalfClosed, NULL, 1.0, false);
     }
 
     configured_once = 1;
@@ -1287,7 +1233,7 @@ SquidMain(int argc, char **argv)
         /* we may want the parsing process to set this up in the future */
         Store::Root(new StoreController);
 
-        parse_err = parseConfigFile(ConfigFile, manager);
+        parse_err = parseConfigFile(ConfigFile);
 
         Mem::Report();
         
@@ -1437,7 +1383,7 @@ sendSignal(void)
         } else
 #ifdef _SQUID_MSWIN_
         {
-            fprintf(stderr, "%s: ERROR: Could not send ", appname);
+            fprintf(stderr, "%s: ERROR: Could not send ", APP_SHORTNAME);
             fprintf(stderr, "signal to Squid Service:\n");
             fprintf(stderr, "missing -n command line switch.\n");
             exit(1);
@@ -1451,13 +1397,13 @@ sendSignal(void)
         if (kill(pid, opt_send_signal) &&
                 /* ignore permissions if just running check */
                 !(opt_send_signal == 0 && errno == EPERM)) {
-            fprintf(stderr, "%s: ERROR: Could not send ", appname);
+            fprintf(stderr, "%s: ERROR: Could not send ", APP_SHORTNAME);
             fprintf(stderr, "signal %d to process %d: %s\n",
                     opt_send_signal, (int) pid, xstrerror());
             exit(1);
         }
     } else {
-        fprintf(stderr, "%s: ERROR: No running copy\n", appname);
+        fprintf(stderr, "%s: ERROR: No running copy\n", APP_SHORTNAME);
         exit(1);
     }
 
@@ -1558,7 +1504,7 @@ watch_child(char *argv[])
     if (*(argv[0]) == '(')
         return;
 
-    openlog(appname, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
+    openlog(APP_SHORTNAME, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
 
     if ((pid = fork()) < 0)
         syslog(LOG_ALERT, "fork failed: %s", xstrerror());
@@ -1602,7 +1548,7 @@ watch_child(char *argv[])
 
         if ((pid = fork()) == 0) {
             /* child */
-            openlog(appname, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
+            openlog(APP_SHORTNAME, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
             prog = xstrdup(argv[0]);
             argv[0] = xstrdup("(squid)");
             execvp(prog, argv);
@@ -1610,7 +1556,7 @@ watch_child(char *argv[])
         }
 
         /* parent */
-        openlog(appname, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
+        openlog(APP_SHORTNAME, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
 
         syslog(LOG_NOTICE, "Squid Parent: child process %d started", pid);
 
@@ -1686,6 +1632,12 @@ watch_child(char *argv[])
 static void
 SquidShutdown()
 {
+    /* XXX: This function is called after the main loop has quit, which
+     * means that no AsyncCalls would be called, including close handlers.
+     * TODO: We need to close/shut/free everything that needs calls before
+     * exiting the loop.
+     */ 
+
 #if USE_WIN32_SERVICE
     WIN32_svcstatusupdate(SERVICE_STOP_PENDING, 10000);
 #endif

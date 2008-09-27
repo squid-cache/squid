@@ -55,6 +55,12 @@
  \ingroup AuthNegotiateAPI
  */
 
+/**
+ * Maximum length (buffer size) for token strings.
+ */
+// AYJ: must match re-definition in helpers/negotiate_auth/squid_kerb_auth/squid_kerb_auth.c
+#define MAX_AUTHTOKEN_LEN   32768
+
 static void
 authenticateNegotiateReleaseServer(AuthUserRequest * auth_user_request);
 
@@ -212,9 +218,10 @@ AuthNegotiateConfig::init(AuthConfig * scheme)
 }
 
 void
-AuthNegotiateConfig::registerWithCacheManager(CacheManager & manager)
+AuthNegotiateConfig::registerWithCacheManager(void)
 {
-    manager.registerAction("negotiateauthenticator",
+    CacheManager::GetInstance()->
+            registerAction("negotiateauthenticator",
                            "Negotiate User Authenticator Stats",
                            authenticateNegotiateStats, 0, 1);
 }
@@ -561,7 +568,7 @@ void
 AuthNegotiateUserRequest::module_start(RH * handler, void *data)
 {
     authenticateStateData *r = NULL;
-    static char buf[8192];
+    static char buf[MAX_AUTHTOKEN_LEN];
     negotiate_user_t *negotiate_user;
     AuthUser *auth_user = user();
 
@@ -587,9 +594,9 @@ AuthNegotiateUserRequest::module_start(RH * handler, void *data)
     AUTHUSERREQUESTLOCK(r->auth_user_request, "r");
 
     if (auth_state == AUTHENTICATE_STATE_INITIAL) {
-        snprintf(buf, 8192, "YR %s\n", client_blob); //CHECKME: can ever client_blob be 0 here?
+        snprintf(buf, MAX_AUTHTOKEN_LEN, "YR %s\n", client_blob); //CHECKME: can ever client_blob be 0 here?
     } else {
-        snprintf(buf, 8192, "KK %s\n", client_blob);
+        snprintf(buf, MAX_AUTHTOKEN_LEN, "KK %s\n", client_blob);
     }
 
     waiting = 1;

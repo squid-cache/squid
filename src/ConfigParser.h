@@ -38,10 +38,6 @@
 
 #include "squid.h"
 
-/* forward decls */
-
-class CacheManager;
-
 /*
  * A configuration file Parser. Instances of this class track
  * parsing state and perform tokenisation. Syntax is currently
@@ -66,6 +62,6 @@ public:
     static char * strtokFile();
 };
 
-extern int parseConfigFile(const char *file_name, CacheManager & manager);
+extern int parseConfigFile(const char *file_name);
 
 #endif /* SQUID_CONFIGPARSER_H */

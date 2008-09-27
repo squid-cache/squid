@@ -142,7 +142,6 @@ public:
     ClientSocketContext::Pointer getCurrentContext() const;
     void addContextToQueue(ClientSocketContext * context);
     int getConcurrentRequestCount() const;
-    void close();
     bool isOpen() const;
 
     int fd;
@@ -188,6 +187,7 @@ public:
     struct
     {
         bool readMoreRequests;
+        bool swanSang; // XXX: temporary flag to check proper cleanup
     } flags;
     http_port_list *port;
 
@@ -213,6 +213,7 @@ public:
 
     // AsyncJob API
     virtual bool doneAll() const { return BodyProducer::doneAll() && false;}
+    virtual void swanSong();
 
 #if USE_SSL
     bool switchToHttps();

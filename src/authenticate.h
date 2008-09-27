@@ -83,8 +83,6 @@ extern void authenticateAuthUserMerge(AuthUser *, AuthUser *);
 /// \ingroup AuthAPI
 extern void authenticateInit(authConfig *);
 /// \ingroup AuthAPI
-extern void authenticateRegisterWithCacheManager(authConfig * config, CacheManager & manager);
-/// \ingroup AuthAPI
 extern void authenticateShutdown(void);
 /// \ingroup AuthAPI
 extern int authenticateAuthUserInuse(AuthUser * auth_user);

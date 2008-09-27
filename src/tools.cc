@@ -130,7 +130,7 @@ mail_warranty(void)
 
     char *filename;
 
-    if ((filename = tempnam(NULL, appname)) == NULL)
+    if ((filename = tempnam(NULL, APP_SHORTNAME)) == NULL)
         return;
 
     if ((fp = fopen(filename, "w")) == NULL)
@@ -141,7 +141,7 @@ mail_warranty(void)
     if (Config.EmailFrom)
         fprintf(fp, "From: %s\n", Config.EmailFrom);
     else
-        fprintf(fp, "From: %s@%s\n", appname, uniqueHostname());
+        fprintf(fp, "From: %s@%s\n", APP_SHORTNAME, uniqueHostname());
 
     fprintf(fp, "To: %s\n", Config.adminEmail);
 
@@ -151,7 +151,7 @@ mail_warranty(void)
 
     snprintf(command, 256, "%s %s < %s", Config.EmailProgram, Config.adminEmail, filename);
 
-    system(command);		/* XXX should avoid system(3) */
+    if(system(command)) {}		/* XXX should avoid system(3) */
 
     unlink(filename);
 }
@@ -177,7 +177,7 @@ dumpMallocStats(void)
 
     mp = mallinfo();
 
-    fprintf(debug_log, "Memory usage for %s via mallinfo():\n", appname);
+    fprintf(debug_log, "Memory usage for "APP_SHORTNAME" via mallinfo():\n");
 
     fprintf(debug_log, "\ttotal space in arena:  %6ld KB\n",
             (long)mp.arena >> 10);
@@ -653,8 +653,7 @@ getMyHostname(void)
             if(xgetaddrinfo(host, NULL, NULL, &AI) == 0) {
                 /* DNS lookup successful */
                 /* use the official name from DNS lookup */
-                debugs(50, 6, "getMyHostname: '" << host << "' resolved into '" << AI->ai_canonname << "'");
-                xstrncpy(host, AI->ai_canonname, SQUIDHOSTNAMELEN);
+                debugs(50, 6, "getMyHostname: '" << host << "' has rDNS.");
                 present = 1;
 
                 /* AYJ: do we want to flag AI_ALL and cache the result anywhere. ie as our local host IPs? */
@@ -667,7 +666,7 @@ getMyHostname(void)
             }
 
             if(AI) xfreeaddrinfo(AI);
-            debugs(50, 1, "WARNING: getaddrinfo('" << host << "') failed: " << xstrerror());
+            debugs(50, 1, "WARNING: '" << host << "' rDNS test failed: " << xstrerror());
         }
     }
 
@@ -851,7 +850,7 @@ readPidFile(void)
     int i;
 
     if (f == NULL || !strcmp(Config.pidFilename, "none")) {
-        fprintf(stderr, "%s: ERROR: No pid file name defined\n", appname);
+        fprintf(stderr, APP_SHORTNAME ": ERROR: No pid file name defined\n");
         exit(1);
     }
 
@@ -873,7 +872,7 @@ readPidFile(void)
         fclose(pid_fp);
     } else {
         if (errno != ENOENT) {
-            fprintf(stderr, "%s: ERROR: Could not read pid file\n", appname);
+            fprintf(stderr, APP_SHORTNAME ": ERROR: Could not read pid file\n");
             fprintf(stderr, "\t%s: %s\n", f, xstrerror());
             exit(1);
         }

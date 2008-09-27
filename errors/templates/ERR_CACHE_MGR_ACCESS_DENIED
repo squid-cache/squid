@@ -1,0 +1,23 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>ERROR: Cache Manager Access Denied</title>
+<style type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></style>
+</head><body>
+<h1>ERROR</h1>
+<h2>Cache Manager Access Denied.</h2>
+<hr>
+<p>The following error was encountered while trying to retrieve the URL: <a href="%U">%U</a></p>
+
+<blockquote>
+<p><b>Cache Manager Access Denied.</b></p>
+</blockquote>
+
+<p>Sorry, you are not currently allowed to request %U from this cache manager until you have authenticated yourself.</p>
+
+<p>Please contact the <a href="mailto:%w%W">cache administrator</a> if you have difficulties authenticating yourself or, if you <em>are</em> the administrator, read Squid documentation on cache manager interface and check cache log for more detailed error messages.</p>
+
+<br>   
+<hr> 
+<div id="footer">Generated %T by %h (%s)</div>
+</body></html>

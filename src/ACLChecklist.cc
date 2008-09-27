@@ -582,9 +582,15 @@ aclChecklistCreate(const acl_access * A, HttpRequest * request, const char *iden
     if (A)
         checklist->accessList = cbdataReference(A);
 
-    if (request != NULL) {
+    if (request != NULL)
+    {
         checklist->request = HTTPMSGLOCK(request);
-        checklist->src_addr = request->client_addr;
+#if FOLLOW_X_FORWARDED_FOR
+        if (Config.onoff.acl_uses_indirect_client)
+            checklist->src_addr = request->indirect_client_addr;
+        else
+#endif /* FOLLOW_X_FORWARDED_FOR */
+            checklist->src_addr = request->client_addr;
         checklist->my_addr = request->my_addr;
     }
 

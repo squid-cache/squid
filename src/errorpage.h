@@ -80,14 +80,41 @@
  */
 
 class AuthUserRequest;
+class HttpReply;
+class MemBuf;
 
 /// \ingroup ErrorPageAPI
 class ErrorState
 {
+public:
+    /**
+     * Allocates and initializes an error response
+     */
+    HttpReply *BuildHttpReply(void);
+
+private:
+    /**
+     * Locates error page template to be used for this error
+     * and constructs the HTML page content from it.
+     */
+    MemBuf *BuildContent(void);
+
+    /**
+     * Convert an error template into an error page.
+     */
+    const char *Convert(char token);
+
+    /**
+     * CacheManager / Debug dump of the ErrorState object.
+     * Writes output into the given MemBuf.
+     \retval 0 successful completion.
+     */
+    int Dump(MemBuf * mb);
 
 public:
     err_type type;
     int page_id;
+    char *err_language;
     http_status httpStatus;
     AuthUserRequest *auth_user_request;
     HttpRequest *request;
@@ -134,12 +161,6 @@ SQUIDCEXTERN void errorInitialize(void);
 
 /// \ingroup ErrorPageAPI
 SQUIDCEXTERN void errorClean(void);
-
-/**
- \ingroup ErrorPageInternal
- * Allocates and initializes an error response
- */
-SQUIDCEXTERN HttpReply *errorBuildReply(ErrorState * err);
 
 /**
  \ingroup ErrorPageAPI

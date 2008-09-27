@@ -1,4 +1,3 @@
-
 /*
  * $Id: ident.cc,v 1.78 2007/12/14 23:11:47 amosjeffries Exp $
  *
@@ -34,6 +33,7 @@
  */
 
 #include "squid.h"
+#include "ident.h"
 #include "comm.h"
 #include "MemBuf.h"
 

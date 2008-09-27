@@ -328,6 +328,7 @@ PconnModule::PconnModule() : pools(NULL), poolCount(0)
     pools = (PconnPool **) xcalloc(MAX_NUM_PCONN_POOLS, sizeof(*pools));
     pconn_fds_pool = memPoolCreate("pconn_fds", PCONN_FDS_SZ * sizeof(int));
     debugs(48, 0, "persistent connection module initialized");
+    registerWithCacheManager();
 }
 
 PconnModule *
@@ -340,11 +341,12 @@ PconnModule::GetInstance()
 }
 
 void
-PconnModule::registerWithCacheManager(CacheManager & manager)
+PconnModule::registerWithCacheManager(void)
 {
-    manager.registerAction("pconn",
-                           "Persistent Connection Utilization Histograms",
-                           DumpWrapper, 0, 1);
+    CacheManager::GetInstance()->
+        registerAction("pconn",
+                       "Persistent Connection Utilization Histograms",
+                       DumpWrapper, 0, 1);
 }
 
 void

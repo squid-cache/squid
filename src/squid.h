@@ -196,13 +196,18 @@ using namespace Squid;
 
 /*
  * Filedescriptor limits in the different select loops
+ *
+ * NP: FreeBSD 7 defines FD_SETSIZE as unsigned but Squid needs
+ *     it to be signed to compare it with signed values.
+ *     Linux and others including FreeBSD <7, define it as signed.
+ *     If this causes any issues please contact squid-dev@squid-cache.org
  */
 #if defined(USE_SELECT) || defined(USE_SELECT_WIN32)
 /* Limited by design */
-# define SQUID_MAXFD_LIMIT FD_SETSIZE
+# define SQUID_MAXFD_LIMIT ((signed int)FD_SETSIZE)
 #elif defined(USE_POLL)
 /* Limited due to delay pools */
-# define SQUID_MAXFD_LIMIT FD_SETSIZE
+# define SQUID_MAXFD_LIMIT ((signed int)FD_SETSIZE)
 #elif defined(USE_KQUEUE) || defined(USE_EPOLL)
 # define SQUID_FDSET_NOUSE 1
 #else
@@ -315,7 +320,7 @@ SQUIDCEXTERN size_t getpagesize(void);
 #define SA_RESETHAND SA_ONESHOT
 #endif
 
-#if LEACK_CHECK_MODE
+#if LEAK_CHECK_MODE
 #define LOCAL_ARRAY(type,name,size) \
         static type *local_##name=NULL; \
         type *name = local_##name ? local_##name : \
@@ -425,6 +430,9 @@ max(A const & lhs, A const & rhs)
 #include "protos.h"
 #include "globals.h"
 
+/* Exclude CPPUnit tests from the below restriction. */
+/* BSD implementation uses these still */
+#if !defined(SQUID_UNIT_TEST)
 /*
  * Squid source files should not call these functions directly.
  * Use xmalloc, xfree, xcalloc, snprintf, and xstrdup instead.
@@ -435,7 +443,6 @@ max(A const & lhs, A const & rhs)
 #endif
 template <class V>
 void free(V x) { fatal("Do not use ::free()"); }
-
 #ifndef calloc
 #define calloc +
 #endif
@@ -445,6 +452,7 @@ void free(V x) { fatal("Do not use ::free()"); }
 #ifndef strdup
 #define strdup +
 #endif
+#endif /* !SQUID_UNIT_TEST */
 
 /*
  * Hey dummy, don't be tempted to move this to lib/config.h.in

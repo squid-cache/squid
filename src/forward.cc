@@ -190,7 +190,7 @@ FwdState::~FwdState()
     debugs(17, 3, HERE << "FwdState destructor done");
 }
 
-/*
+/**
  * This is the entry point for client-side to start forwarding
  * a transaction.  It is a static method that may or may not
  * allocate a FwdState.
@@ -256,7 +256,7 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
         return;
 
     case PROTO_CACHEOBJ:
-        cachemgrStart(client_fd, request, entry);
+        CacheManager::GetInstance()->Start(client_fd, request, entry);
         return;
 
     case PROTO_URN:
@@ -283,7 +283,7 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
 void
 FwdState::fail(ErrorState * errorState)
 {
-    debugs(17, 3, "fwdFail: " << err_type_str[errorState->type] << " \"" << httpStatusString(errorState->httpStatus) << "\"\n\t" << entry->url()  );
+    debugs(17, 3, HERE << err_type_str[errorState->type] << " \"" << httpStatusString(errorState->httpStatus) << "\"\n\t" << entry->url()  );
 
     if (err)
         errorStateFree(err);
@@ -294,20 +294,20 @@ FwdState::fail(ErrorState * errorState)
         errorState->request = HTTPMSGLOCK(request);
 }
 
-/*
+/**
  * Frees fwdState without closing FD or generating an abort
  */
 void
 FwdState::unregister(int fd)
 {
-    debugs(17, 3, "fwdUnregister: " << entry->url()  );
+    debugs(17, 3, HERE << entry->url()  );
     assert(fd == server_fd);
     assert(fd > -1);
     comm_remove_close_handler(fd, fwdServerClosedWrapper, this);
     server_fd = -1;
 }
 
-/*
+/**
  * server-side modules call fwdComplete() when they are done
  * downloading an object.  Then, we either 1) re-forward the
  * request somewhere else if needed, or 2) call storeComplete()
@@ -318,7 +318,7 @@ FwdState::complete()
 {
     StoreEntry *e = entry;
     assert(entry->store_status == STORE_PENDING);
-    debugs(17, 3, "fwdComplete: " << e->url() << "\n\tstatus " << entry->getReply()->sline.status  );
+    debugs(17, 3, HERE << e->url() << "\n\tstatus " << entry->getReply()->sline.status  );
 #if URL_CHECKSUM_DEBUG
 
     entry->mem_obj->checkUrlChecksum();
@@ -699,7 +699,7 @@ FwdState::connectDone(int aServerFD, comm_err_t status, int xerrno)
 
         ErrorState *anErr = errorCon(ERR_DNS_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
 
-        anErr->dnsserver_msg = xstrdup(dns_error_message);
+        anErr->dnsserver_msg = xstrdup(dns_error_message_safe());
 
         fail(anErr);
 
@@ -1177,14 +1177,15 @@ FwdState::initModule()
         logfile = logfileOpen(Config.Log.forward, 0, 1);
 
 #endif
+
+    RegisterWithCacheManager();
 }
 
 void
-FwdState::RegisterWithCacheManager(CacheManager & manager)
+FwdState::RegisterWithCacheManager(void)
 {
-    manager.registerAction("forward",
-                           "Request Forwarding Statistics",
-                           fwdStats, 0, 1);
+    CacheManager::GetInstance()->
+         registerAction("forward", "Request Forwarding Statistics", fwdStats, 0, 1);
 }
 
 void
@@ -1223,14 +1224,11 @@ FwdState::updateHierarchyInfo()
     FwdServer *fs = servers;
     assert(fs);
 
-    // some callers use one condition, some use the other; are they the same?
-    assert((fs->code == HIER_DIRECT) == !fs->_peer);
-
     const char *nextHop = NULL;
 
-    if (fs->_peer) { 
-        // went to peer, log peer domain name
-        nextHop = fs->_peer->host;
+    if (fs->_peer) {
+        // went to peer, log peer host name
+        nextHop = fs->_peer->name;
     } else {
         // went DIRECT, must honor log_ip_on_direct
 
@@ -1239,7 +1237,7 @@ FwdState::updateHierarchyInfo()
         nextHop = fd_table[server_fd].ipaddr;
         if (!Config.onoff.log_ip_on_direct || !nextHop[0])
             nextHop = request->GetHost(); // domain name
-	}
+    }
 
     assert(nextHop);
     hierarchyNote(&request->hier, fs->code, nextHop);

@@ -371,7 +371,6 @@ struct SquidConfig
     size_t udpMaxHitObjsz;
     wordlist *hierarchy_stoplist;
     wordlist *mcast_group_list;
-    wordlist *dns_testname_list;
     wordlist *dns_nameservers;
     peer *peers;
     int npeers;
@@ -448,8 +447,8 @@ struct SquidConfig
         int ie_refresh;
         int vary_ignore_expire;
         int pipeline_prefetch;
-#if USE_SQUID_ESI
 
+#if USE_SQUID_ESI
         int surrogate_is_remote;
 #endif
 
@@ -465,10 +464,18 @@ struct SquidConfig
         int global_internal_static;
         int dns_require_A;
         int debug_override_X;
-#if USE_ZPH_QOS        
+
+#if FOLLOW_X_FORWARDED_FOR
+        int acl_uses_indirect_client;
+        int delay_pool_uses_indirect_client;
+        int log_uses_indirect_client;
+#endif /* FOLLOW_X_FORWARDED_FOR */
+
+#if USE_ZPH_QOS
         int zph_tos_parent;
         int zph_preserve_miss_tos;
-#endif        
+#endif
+        int WIN32_IpAddrChangeMonitor;
     } onoff;
 
     class ACL *aclList;
@@ -508,6 +515,9 @@ struct SquidConfig
 #if USE_SSL
         acl_access *ssl_bump;
 #endif
+#if FOLLOW_X_FORWARDED_FOR
+        acl_access *followXFF;
+#endif /* FOLLOW_X_FORWARDED_FOR */
 
     } accessList;
     acl_deny_info_list *denyInfoList;
@@ -538,6 +548,9 @@ struct SquidConfig
         int use_short_names;
     } icons;
     char *errorDirectory;
+#if USE_ERR_LOCALES
+    char *errorDefaultLanguage;
+#endif
 
     struct
     {
@@ -912,15 +925,19 @@ struct peer
 #if USE_HTCP
         unsigned int htcp:1;
         unsigned int htcp_oldsquid:1;
+        unsigned int htcp_no_clr:1;
+        unsigned int htcp_no_purge_clr:1;
+        unsigned int htcp_only_clr:1;
+        unsigned int htcp_forward_clr:1;
 #endif
         unsigned int no_netdb_exchange:1;
 #if DELAY_POOLS
         unsigned int no_delay:1;
 #endif
         unsigned int allow_miss:1;
-#if USE_CARP
         unsigned int carp:1;
-#endif
+        unsigned int userhash:1;
+        unsigned int sourcehash:1;
         unsigned int originserver:1;
     } options;
 
@@ -952,10 +969,8 @@ struct peer
     IPAddress addresses[10];
     int n_addresses;
     int rr_count;
-    int rr_lastcount;
     peer *next;
     int test_fd;
-#if USE_CARP
 
     struct
     {
@@ -963,7 +978,20 @@ struct peer
         double load_multiplier;
         double load_factor;	/* normalized weight value */
     } carp;
-#endif
+
+    struct
+    {
+        unsigned int hash;
+        double load_multiplier;
+        double load_factor;	/* normalized weight value */
+    } userhash;
+
+    struct
+    {
+        unsigned int hash;
+        double load_multiplier;
+        double load_factor;	/* normalized weight value */
+    } sourcehash;
 
     char *login;		/* Proxy authorization */
     time_t connect_timeout;
@@ -1045,6 +1073,9 @@ struct request_flags
 #if HTTP_VIOLATIONS
         nocache_hack = 0;
 #endif
+#if FOLLOW_X_FORWARDED_FOR
+    done_follow_x_forwarded_for = 0;
+#endif /* FOLLOW_X_FORWARDED_FOR */
     }
 
     unsigned int range:1;
@@ -1081,6 +1112,9 @@ struct request_flags
     // that are safe for a related (e.g., ICAP-adapted) request to inherit
     request_flags cloneAdaptationImmune() const;
 
+#if FOLLOW_X_FORWARDED_FOR
+    unsigned int done_follow_x_forwarded_for;
+#endif /* FOLLOW_X_FORWARDED_FOR */
 private:
 
     unsigned int reset_tcp:1;

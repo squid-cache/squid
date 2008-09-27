@@ -36,7 +36,6 @@ class AuthUserRequest;
 class StoreEntry;
 class HttpReply;
 class HttpRequest;
-class CacheManager;
 
 /* for http_hdr_type parameters-by-value */
 #include "HttpHeader.h"
@@ -114,7 +113,7 @@ public:
     /** prepare to handle requests */
     virtual void init(AuthConfig *) = 0;
     /** expose any/all statistics to a CacheManager */
-    virtual void registerWithCacheManager(CacheManager & manager);
+    virtual void registerWithCacheManager(void);
     /** parse config options */
     virtual void parse(AuthConfig *, int, char *) = 0;
     /** the http string id */
