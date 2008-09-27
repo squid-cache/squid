@@ -91,7 +91,7 @@ Adaptation::Initiate::service()
 }
 
 const char *Adaptation::Initiate::status() const {
-    return ""; // for now
+    return AsyncJob::status(); // for now
 }
 
 
