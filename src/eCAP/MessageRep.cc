@@ -22,22 +22,6 @@ Ecap::HeaderRep::HeaderRep(HttpMsg &aMessage): theHeader(aMessage.header),
 {
 }
 
-http_hdr_type
-Ecap::HeaderRep::TranslateHeaderId(const Name &name)
-{
-    if (name.assignedHostId())
-        return static_cast<http_hdr_type>(name.hostId());
-    return HDR_OTHER;
-}
-
-protocol_t
-Ecap::HeaderRep::TranslateProtocolId(const Name &name)
-{
-    if (name.assignedHostId())
-        return static_cast<protocol_t>(name.hostId());
-    return PROTO_NONE; // no PROTO_OTHER
-}
-
 bool
 Ecap::HeaderRep::hasAny(const Name &name) const
 {
@@ -101,22 +85,37 @@ Ecap::HeaderRep::parse(const Area &buf)
     Must(theMessage.parse(&mb, true, &error));
 }
 
+http_hdr_type
+Ecap::HeaderRep::TranslateHeaderId(const Name &name)
+{
+    if (name.assignedHostId())
+        return static_cast<http_hdr_type>(name.hostId());
+    return HDR_OTHER;
+}
+
+
+/* FirstLineRep */
+
+Ecap::FirstLineRep::FirstLineRep(HttpMsg &aMessage): theMessage(aMessage)
+{
+}
+
 libecap::Version
-Ecap::HeaderRep::version() const
+Ecap::FirstLineRep::version() const
 {
     return libecap::Version(theMessage.http_ver.major,
         theMessage.http_ver.minor);
 }
 
 void
-Ecap::HeaderRep::version(const libecap::Version &aVersion)
+Ecap::FirstLineRep::version(const libecap::Version &aVersion)
 {
     theMessage.http_ver.major = aVersion.majr;
     theMessage.http_ver.minor = aVersion.minr;
 }
 
 libecap::Name
-Ecap::HeaderRep::protocol() const
+Ecap::FirstLineRep::protocol() const
 {
     // TODO: optimize?
     switch (theMessage.protocol) {
@@ -143,22 +142,30 @@ Ecap::HeaderRep::protocol() const
 }
 
 void
-Ecap::HeaderRep::protocol(const Name &p)
+Ecap::FirstLineRep::protocol(const Name &p)
 {
     // TODO: what happens if we fail to translate some protocol?
     theMessage.protocol = TranslateProtocolId(p);
 }
 
+protocol_t
+Ecap::FirstLineRep::TranslateProtocolId(const Name &name)
+{
+    if (name.assignedHostId())
+        return static_cast<protocol_t>(name.hostId());
+    return PROTO_NONE; // no PROTO_OTHER
+}
+
 
 /* RequestHeaderRep */
 
-Ecap::RequestHeaderRep::RequestHeaderRep(HttpRequest &aMessage):
-    HeaderRep(aMessage), theMessage(aMessage)
+Ecap::RequestLineRep::RequestLineRep(HttpRequest &aMessage):
+    FirstLineRep(aMessage), theMessage(aMessage)
 {
 }
 
 void
-Ecap::RequestHeaderRep::uri(const Area &aUri)
+Ecap::RequestLineRep::uri(const Area &aUri)
 {
     // TODO: if method is not set, urlPath will assume it is not connect;
     // Can we change urlParse API to remove the method parameter?
@@ -169,15 +176,15 @@ Ecap::RequestHeaderRep::uri(const Area &aUri)
     Must(ok);
 }
 
-Ecap::RequestHeaderRep::Area
-Ecap::RequestHeaderRep::uri() const
+Ecap::RequestLineRep::Area
+Ecap::RequestLineRep::uri() const
 {
     return Area::FromTempBuffer(theMessage.urlpath.buf(),
         theMessage.urlpath.size());
 }
 
 void
-Ecap::RequestHeaderRep::method(const Name &aMethod)
+Ecap::RequestLineRep::method(const Name &aMethod)
 {
     if (aMethod.assignedHostId()) {
         const int id = aMethod.hostId();
@@ -191,8 +198,8 @@ Ecap::RequestHeaderRep::method(const Name &aMethod)
     }
 }
 
-Ecap::RequestHeaderRep::Name
-Ecap::RequestHeaderRep::method() const
+Ecap::RequestLineRep::Name
+Ecap::RequestLineRep::method() const
 {
     switch (theMessage.method.id()) {
         case METHOD_GET: return libecap::methodGet;
@@ -206,42 +213,89 @@ Ecap::RequestHeaderRep::method() const
     }
 }
 
+libecap::Version
+Ecap::RequestLineRep::version() const
+{
+    return FirstLineRep::version();
+}
+
+void
+Ecap::RequestLineRep::version(const libecap::Version &aVersion)
+{
+    FirstLineRep::version(aVersion);
+}
+
+libecap::Name
+Ecap::RequestLineRep::protocol() const
+{
+    return FirstLineRep::protocol();
+}
+
+void
+Ecap::RequestLineRep::protocol(const Name &p)
+{
+    FirstLineRep::protocol(p);
+}
+
 
 /* ReplyHeaderRep */
 
-Ecap::ReplyHeaderRep::ReplyHeaderRep(HttpReply &aMessage):
-    HeaderRep(aMessage), theMessage(aMessage)
+Ecap::StatusLineRep::StatusLineRep(HttpReply &aMessage):
+    FirstLineRep(aMessage), theMessage(aMessage)
 {
 }
 
 void
-Ecap::ReplyHeaderRep::statusCode(int code)
+Ecap::StatusLineRep::statusCode(int code)
 {
     // TODO: why is .status a enum? Do we not support unknown statuses?
     theMessage.sline.status = static_cast<http_status>(code);
 }
 
 int
-Ecap::ReplyHeaderRep::statusCode() const
+Ecap::StatusLineRep::statusCode() const
 {
     // TODO: see statusCode(code) TODO above
     return static_cast<int>(theMessage.sline.status);
 }
 
 void
-Ecap::ReplyHeaderRep::reasonPhrase(const Area &)
+Ecap::StatusLineRep::reasonPhrase(const Area &)
 {
     // Squid does not support custom reason phrases
     theMessage.sline.reason = NULL;
 }
 
-Ecap::ReplyHeaderRep::Area
-Ecap::ReplyHeaderRep::reasonPhrase() const
+Ecap::StatusLineRep::Area
+Ecap::StatusLineRep::reasonPhrase() const
 {
     return theMessage.sline.reason ?
         Area::FromTempString(std::string(theMessage.sline.reason)) : Area();
 }
 
+libecap::Version
+Ecap::StatusLineRep::version() const
+{
+    return FirstLineRep::version();
+}
+
+void
+Ecap::StatusLineRep::version(const libecap::Version &aVersion)
+{
+    FirstLineRep::version(aVersion);
+}
+
+libecap::Name
+Ecap::StatusLineRep::protocol() const
+{
+    return FirstLineRep::protocol();
+}
+
+void
+Ecap::StatusLineRep::protocol(const Name &p)
+{
+    FirstLineRep::protocol(p);
+}
 
 /* BodyRep */
 
@@ -249,10 +303,18 @@ Ecap::BodyRep::BodyRep(const BodyPipe::Pointer &aBody): theBody(aBody)
 {
 }
 
+void
+Ecap::BodyRep::tie(const BodyPipe::Pointer &aBody)
+{
+    Must(!theBody);
+    Must(aBody != NULL);
+    theBody = aBody;
+}
+
 Ecap::BodyRep::BodySize
 Ecap::BodyRep::bodySize() const
 {
-    return BodySize(theBody->bodySize());
+    return !theBody ? BodySize() : BodySize(theBody->bodySize());
 }
 
 Ecap::BodyRep::size_type
@@ -267,19 +329,6 @@ Ecap::BodyRep::productionEnded() const
     return theBody->productionEnded();
 }
    
-void
-Ecap::BodyRep::bodySize(const Ecap::BodyRep::BodySize &size)
-{
-    Must(size.known());
-    theBody->setBodySize(size.value());
-}
-
-Ecap::BodyRep::size_type
-Ecap::BodyRep::append(const Ecap::BodyRep::Area &area)
-{
-    return theBody->putMoreData(area.start, area.size);
-}
-
 Ecap::BodyRep::Area
 Ecap::BodyRep::prefix(Ecap::BodyRep::size_type size) const
 {
@@ -288,29 +337,24 @@ Ecap::BodyRep::prefix(Ecap::BodyRep::size_type size) const
     return Area::FromTempBuffer(theBody->buf().content(), size);
 }
 
-void
-Ecap::BodyRep::consume(Ecap::BodyRep::size_type size)
-{
-    theBody->consume(size);
-}
-
 
 /* MessageRep */
 
-Ecap::MessageRep::MessageRep(Adaptation::Message &aMessage,
-    Ecap::XactionRep *aXaction):
-    theMessage(aMessage), theXaction(aXaction),
+Ecap::MessageRep::MessageRep(HttpMsg *rawHeader):
+    theMessage(rawHeader), theFirstLineRep(NULL),
     theHeaderRep(NULL), theBodyRep(NULL)
 {
     Must(theMessage.header); // we do not want to represent a missing message
 
     if (HttpRequest *req = dynamic_cast<HttpRequest*>(theMessage.header))
-        theHeaderRep = new RequestHeaderRep(*req);
+        theFirstLineRep = new RequestLineRep(*req);
     else
     if (HttpReply *rep = dynamic_cast<HttpReply*>(theMessage.header))
-        theHeaderRep = new ReplyHeaderRep(*rep);
+        theFirstLineRep = new StatusLineRep(*rep);
     else
 	    Must(false); // unknown message header type
+
+    theHeaderRep = new HeaderRep(*theMessage.header);
 
     if (theMessage.body_pipe != NULL)
         theBodyRep = new BodyRep(theMessage.body_pipe);
@@ -319,6 +363,33 @@ Ecap::MessageRep::MessageRep(Adaptation::Message &aMessage,
 Ecap::MessageRep::~MessageRep()
 {
     delete theHeaderRep;
+    delete theBodyRep;
+}
+
+libecap::shared_ptr<libecap::Message>
+Ecap::MessageRep::clone() const
+{
+    HttpMsg *hdr = theMessage.header->clone();
+    hdr->body_pipe = NULL; // if any; TODO: remove pipe cloning from ::clone?
+    libecap::shared_ptr<libecap::Message> res(new MessageRep(hdr));
+
+    // restore indication of a body if needed, but not the pipe
+    if (theMessage.header->body_pipe != NULL)
+        res->addBody();
+
+    return res;
+}
+
+libecap::FirstLine &
+Ecap::MessageRep::firstLine()
+{
+    return *theFirstLineRep;
+}
+
+const libecap::FirstLine &
+Ecap::MessageRep::firstLine() const
+{
+    return *theFirstLineRep;
 }
 
 libecap::Header &
@@ -342,11 +413,18 @@ Ecap::MessageRep::body()
 void
 Ecap::MessageRep::addBody()
 {
-    Must(theXaction);
     Must(!theBodyRep);
+    Must(!theMessage.body_pipe); // set in tieBody()
+    theBodyRep = new BodyRep(NULL);
+}
+
+void
+Ecap::MessageRep::tieBody(Ecap::XactionRep *x)
+{
+    Must(theBodyRep != NULL); // addBody must be called first
     Must(!theMessage.body_pipe);
-    theMessage.body_pipe = new BodyPipe(theXaction);
-    theBodyRep = new BodyRep(theMessage.body_pipe);
+    theMessage.body_pipe = new BodyPipe(x);
+    theBodyRep->tie(theMessage.body_pipe);
 }
 
 const libecap::Body *Ecap::MessageRep::body() const

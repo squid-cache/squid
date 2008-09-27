@@ -34,14 +34,8 @@ public:
     virtual Area image() const;
     virtual void parse(const Area &buf); // throws on failures
 
-    virtual libecap::Version version() const;
-    virtual void version(const libecap::Version &aVersion);
-    virtual Name protocol() const;
-    virtual void protocol(const Name &aProtocol);
-
 protected:
     static http_hdr_type TranslateHeaderId(const Name &name);
-    static protocol_t TranslateProtocolId(const Name &name);
 
 private:
     HttpHeader &theHeader; // the header being translated to libecap
@@ -49,11 +43,36 @@ private:
 };
 
 
-// Translates Squid HttpRequest into libecap::Header + libecap::RequestLine.
-class RequestHeaderRep: public HeaderRep, public libecap::RequestLine
+// Helps translate Squid HttpMsg into libecap::FirstLine (see children).
+class FirstLineRep
 {
 public:
-    RequestHeaderRep(HttpRequest &aMessage);
+    typedef libecap::Name Name;
+
+public:
+    FirstLineRep(HttpMsg &aMessage);
+
+    libecap::Version version() const;
+    void version(const libecap::Version &aVersion);
+    Name protocol() const;
+    void protocol(const Name &aProtocol);
+
+protected:
+    static protocol_t TranslateProtocolId(const Name &name);
+
+private:
+    HttpMsg &theMessage; // the message which first line is being translated
+};
+
+// Translates Squid HttpRequest into libecap::RequestLine.
+class RequestLineRep: public libecap::RequestLine, public FirstLineRep
+{
+public:
+//    typedef libecap::Name Name;
+    typedef libecap::Area Area;
+
+public:
+    RequestLineRep(HttpRequest &aMessage);
 
     virtual void uri(const Area &aUri);
     virtual Area uri() const;
@@ -61,15 +80,24 @@ public:
     virtual void method(const Name &aMethod);
     virtual Name method() const;
 
+    virtual libecap::Version version() const;
+    virtual void version(const libecap::Version &aVersion);
+    virtual Name protocol() const;
+    virtual void protocol(const Name &aProtocol);
+
 private:
     HttpRequest &theMessage; // the request header being translated to libecap
 };
 
-// Translates Squid HttpReply into libecap::Header + libecap::StatusLine.
-class ReplyHeaderRep: public HeaderRep, public libecap::StatusLine
+// Translates Squid HttpReply into libecap::StatusLine.
+class StatusLineRep: public libecap::StatusLine, public FirstLineRep
 {
 public:
-    ReplyHeaderRep(HttpReply &aMessage);
+    typedef libecap::Name Name;
+    typedef libecap::Area Area;
+
+public:
+    StatusLineRep(HttpReply &aMessage);
 
     virtual void statusCode(int code);
     virtual int statusCode() const;
@@ -77,33 +105,34 @@ public:
     virtual void reasonPhrase(const Area &phrase);
     virtual Area reasonPhrase() const;
 
+    virtual libecap::Version version() const;
+    virtual void version(const libecap::Version &aVersion);
+    virtual Name protocol() const;
+    virtual void protocol(const Name &aProtocol);
+
 private:
     HttpReply &theMessage; // the request header being translated to libecap
 };
 
 
-// Translates Squid HttpMsg into libecap::Body.
+// Translates Squid BodyPipe into libecap::Body.
 class BodyRep: public libecap::Body
 {
 public:
     typedef libecap::Area Area;
     typedef libecap::BodySize BodySize;
+    using libecap::Body::size_type;
 
 public:
-    BodyRep(const BodyPipe::Pointer &aBody);
+    BodyRep(const BodyPipe::Pointer &aBody); // using NULL pointer? see tie()
 
-    // stats
+    void tie(const BodyPipe::Pointer &aBody); // late binding if !theBody;
+
+    // libecap::Body API
     virtual BodySize bodySize() const;
     virtual size_type consumedSize() const;
-    virtual bool productionEnded() const; // producedSize will not grow
-   
-    // called by producers
-    virtual void bodySize(const BodySize &size); // throws if already !
-    virtual size_type append(const Area &area); // throws on overflow
-
-    // called by consumers
+    virtual bool productionEnded() const;
     virtual Area prefix(size_type size) const;
-    virtual void consume(size_type size);
 
 private:
     BodyPipe::Pointer theBody; // the body being translated to libecap
@@ -113,8 +142,13 @@ private:
 class MessageRep: public libecap::Message
 {
 public:
-    MessageRep(Adaptation::Message &aMessage, Ecap::XactionRep *aXaction);
+    explicit MessageRep(HttpMsg *rawHeader);
     virtual ~MessageRep();
+
+	virtual libecap::shared_ptr<libecap::Message> clone() const;
+
+	virtual libecap::FirstLine &firstLine();
+	virtual const libecap::FirstLine &firstLine() const;
 
     virtual libecap::Header &header();
     virtual const libecap::Header &header() const;
@@ -122,12 +156,16 @@ public:
     virtual void addBody();
     virtual libecap::Body *body();
     virtual const libecap::Body *body() const;
+	void tieBody(Ecap::XactionRep *x); // to a specific transaction
+
+	Adaptation::Message &raw() { return theMessage; } // for host access
+	const Adaptation::Message &raw() const { return theMessage; } // for host
 
 private:
-    Adaptation::Message &theMessage; // the message being translated to libecap
-    Ecap::XactionRep *theXaction; // host transaction managing the translation
-    HeaderRep *theHeaderRep;
-    BodyRep *theBodyRep;
+    Adaptation::Message theMessage; // the message being translated to libecap
+    libecap::FirstLine *theFirstLineRep; // request or status line wrapper
+    HeaderRep *theHeaderRep; // header wrapper
+    BodyRep *theBodyRep; // body wrapper
 };
 
 } // namespace Ecap;
