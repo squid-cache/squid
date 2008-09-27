@@ -568,7 +568,7 @@ tunnelConnectDone(int fdnotused, comm_err_t status, int xerrno, void *data)
         debugs(26, 4, "tunnelConnect: Unknown host: " << tunnelState->host);
         err = errorCon(ERR_DNS_FAIL, HTTP_NOT_FOUND, request);
         *tunnelState->status_ptr = HTTP_NOT_FOUND;
-        err->dnsserver_msg = xstrdup(dns_error_message);
+        err->dnsserver_msg = xstrdup(dns_error_message_safe());
         err->callback = tunnelErrorComplete;
         err->callback_data = tunnelState;
         errorSend(tunnelState->client.fd(), err);

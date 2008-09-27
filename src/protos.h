@@ -135,6 +135,8 @@ SQUIDCEXTERN void dnsShutdown(void);
 SQUIDCEXTERN void dnsInit(void);
 extern void dnsRegisterWithCacheManager(CacheManager & manager);
 SQUIDCEXTERN void dnsSubmit(const char *lookup, HLPCB * callback, void *data);
+/// XXX: a temporary hack to work around the missing DNS error info
+const char *dns_error_message_safe();
 
 /* dns_internal.c */
 SQUIDCEXTERN void idnsInit(void);
