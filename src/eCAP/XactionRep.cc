@@ -1,4 +1,6 @@
 #include "squid.h"
+#include <libecap/common/area.h>
+#include <libecap/common/delay.h>
 #include <libecap/adapter/xaction.h>
 #include "TextException.h"
 #include "assert.h"
@@ -16,19 +18,17 @@ Ecap::XactionRep::XactionRep(Adaptation::Initiator *anInitiator,
     const Adaptation::ServicePointer &aService):
     AsyncJob("Ecap::XactionRep"),
     Adaptation::Initiate("Ecap::XactionRep", anInitiator, aService),
-    theVirgin(virginHeader), theCause(virginCause),
-    theVirginRep(theVirgin, NULL), theCauseRep(NULL),
-    theAnswerRep(NULL)
+    theVirginRep(virginHeader), theCauseRep(NULL)
 {
     if (virginCause)
-        theCauseRep = new MessageRep(theCause, NULL);
+        theCauseRep = new MessageRep(virginCause);
 }
 
 Ecap::XactionRep::~XactionRep()
 {
     assert(!theMaster);
     delete theCauseRep;
-    delete theAnswerRep;
+    theAnswerRep.reset();
 }
 
 void
@@ -43,11 +43,17 @@ void
 Ecap::XactionRep::start()
 {
     Must(theMaster);
+
+    // register as a consumer if there is a body
+    // we do not actually consume unless the adapter tells us to
+    BodyPipePointer &p = theVirginRep.raw().body_pipe;
+    Must(!p || p->setConsumerIfNotLate(this));
+
     theMaster->start();
 }
 
 void
-Ecap::XactionRep::swangSong()
+Ecap::XactionRep::swanSong()
 {
     terminateMaster();
     Adaptation::Initiate::swanSong();
@@ -69,62 +75,207 @@ Ecap::XactionRep::virgin()
     return theVirginRep;
 }
 
-const libecap::Message *
+const libecap::Message &
 Ecap::XactionRep::cause()
 {
-    return theCauseRep;
+    Must(theCauseRep != NULL);
+    return *theCauseRep;
+}
+
+libecap::Message &
+Ecap::XactionRep::adapted()
+{
+    Must(theAnswerRep != NULL);
+    return *theAnswerRep;
+}
+
+Adaptation::Message &
+Ecap::XactionRep::answer()
+{
+	MessageRep *rep = dynamic_cast<MessageRep*>(theAnswerRep.get());
+	Must(rep);
+    return rep->raw();
+}
+
+bool
+Ecap::XactionRep::doneAll() const
+{
+    if (theMaster) {
+        if (!doneWithAdapted() || sendingVirgin())
+            return false;
+	}   
+
+    return Adaptation::Initiate::doneAll();
+}
+
+// are we still sending virgin body to theMaster?
+bool
+Ecap::XactionRep::doneWithAdapted() const
+{
+    if (!theAnswerRep)
+        return false;
+
+    // we are not done if we are producing
+    MessageRep *answer = dynamic_cast<MessageRep*>(theAnswerRep.get());
+	Must(answer);
+    const BodyPipePointer &ap = answer->raw().body_pipe;
+    return !ap || !ap->stillProducing(this);
+}
+
+// are we still sending virgin body to theMaster?
+bool
+Ecap::XactionRep::sendingVirgin() const
+{
+    // we are sending if we are consuming
+    const BodyPipePointer &vp = theVirginRep.raw().body_pipe;
+    return vp != NULL && vp->stillConsuming(this);
+}
+
+// stops sending virgin to theMaster and enables auto-consumption
+void
+Ecap::XactionRep::dropVirgin(const char *reason)
+{
+    debugs(93,4, HERE << "because " << reason);
+
+    BodyPipePointer &p = theVirginRep.raw().body_pipe;
+    Must(p != NULL);
+    Must(p->stillConsuming(this));
+    stopConsumingFrom(p);
+    p->enableAutoConsumption();
+    if (doneWithAdapted())
+        theMaster.reset();
 }
 
 void 
 Ecap::XactionRep::useVirgin()
 {
-    theMaster.reset();
-    Adaptation::Message::ShortCircuit(theVirgin, theAnswer);
-    Must(!theVirgin.body_pipe == !theAnswer.body_pipe);
-    sendAnswer(theAnswer.header);
-}
+    debugs(93,3, HERE << status());
 
-void 
-Ecap::XactionRep::adaptVirgin()
-{
     // XXX: check state everywhere
     Must(!theAnswerRep);
-    Must(!theAnswer.header);
-    Must(!theAnswer.body_pipe);
-    theAnswer.set(theVirgin.header->clone());
-	theAnswerRep = new MessageRep(theAnswer, this);
-    Must(!theAnswer.body_pipe);
-}
-
-void 
-Ecap::XactionRep::adaptNewRequest()
-{
-    theAnswer.set(new HttpRequest);
-	theAnswerRep = new MessageRep(theAnswer, this);
-}
-
-void 
-Ecap::XactionRep::adaptNewResponse()
-{
-    theAnswer.set(new HttpReply);
-	theAnswerRep = new MessageRep(theAnswer, this);
-}
-
-libecap::Message *
-Ecap::XactionRep::adapted()
-{
-    return theAnswerRep;
-}
-
-void 
-Ecap::XactionRep::useAdapted()
-{
     theMaster.reset();
-    sendAnswer(theAnswer.header);
+
+	HttpMsg *answer = theVirginRep.raw().header->clone();
+	Must(!theVirginRep.raw().body_pipe == !answer->body_pipe); // check clone()
+
+	if (answer->body_pipe != NULL) {
+        // if libecap consumed, we cannot shortcircuit
+        Must(!answer->body_pipe->consumedSize());
+        Must(answer->body_pipe->stillConsuming(this));
+		stopConsumingFrom(answer->body_pipe);
+    }
+
+	sendAnswer(answer);
+    Must(done());
 }
 
 void 
-Ecap::XactionRep::useNone()
+Ecap::XactionRep::useAdapted(const libecap::shared_ptr<libecap::Message> &m)
+{
+    debugs(93,3, HERE << status());
+    theAnswerRep = m;
+	MessageRep *rep = dynamic_cast<MessageRep*>(theAnswerRep.get());
+	Must(rep);
+	HttpMsg *answer = rep->raw().header;
+    if (!theAnswerRep->body()) {
+        if (!sendingVirgin())
+            theMaster.reset();
+        sendAnswer(answer);
+	} else {
+		Must(!answer->body_pipe); // only host can set body pipes
+		rep->tieBody(this);
+        debugs(93,4, HERE << "adapter will produce body" << status());
+        // libecap will produce
+        sendAnswer(answer);
+    }
+}
+
+// if adapter does not want to consume, we should not either
+void
+Ecap::XactionRep::adapterWontConsume()
+{
+    if (sendingVirgin())
+        dropVirgin("adapterWontConsume");
+}
+
+void
+Ecap::XactionRep::adapterWillConsume()
+{
+    Must(sendingVirgin());
+    theMaster->noteVirginDataAvailable(); // XXX: async
+}
+
+void
+Ecap::XactionRep::adapterDoneConsuming()
+{
+    if (sendingVirgin())
+        dropVirgin("adapterDoneConsuming");
+}
+
+void
+Ecap::XactionRep::consumeVirgin(size_type n)
+{
+    BodyPipePointer &p = theVirginRep.raw().body_pipe;
+    Must(p != NULL);
+    const size_t size = static_cast<size_t>(n); // XXX: check for overflow
+    const size_t sizeMax = static_cast<size_t>(p->buf().contentSize()); // TODO: make MemBuf use size_t?
+    p->consume(min(size, sizeMax));
+}
+
+void
+Ecap::XactionRep::pauseVirginProduction()
+{
+    // TODO: support production pauses
+}
+
+void
+Ecap::XactionRep::resumeVirginProduction()
+{
+    // TODO: support production pauses
+}
+
+void
+Ecap::XactionRep::setAdaptedBodySize(const libecap::BodySize &size)
+{
+    Must(answer().body_pipe != NULL);
+    if (size.known())
+        answer().body_pipe->setBodySize(size.value());
+    // else the piped body size is unknown by default
+}
+
+void
+Ecap::XactionRep::appendAdapted(const libecap::Area &area)
+{
+    BodyPipe *p = answer().body_pipe.getRaw();
+    Must(p);
+    Must(p->putMoreData(area.start, area.size) == area.size);
+}
+
+bool
+Ecap::XactionRep::callable() const
+{
+    return !done();
+}
+
+void
+Ecap::XactionRep::noteAdaptedBodyEnd()
+{
+    Must(answer().body_pipe != NULL);
+    answer().body_pipe->clearProducer(true);
+    if (!sendingVirgin())
+        theMaster.reset();
+}
+
+void
+Ecap::XactionRep::adaptationDelayed(const libecap::Delay &d)
+{
+    debugs(93,3, HERE << "adapter needs time: " <<
+       d.state << '/' << d.progress);
+    // XXX: set timeout?
+}
+
+void 
+Ecap::XactionRep::adaptationAborted()
 {
     theMaster.reset();
     tellQueryAborted(true); // should eCAP support retries?
@@ -140,8 +291,7 @@ Ecap::XactionRep::noteMoreBodySpaceAvailable(RefCount<BodyPipe> bp)
 void 
 Ecap::XactionRep::noteBodyConsumerAborted(RefCount<BodyPipe> bp)
 {
-    Must(theMaster);
-    theMaster->noteAdaptedAborted();
+    terminateMaster();
 }
 
 void
@@ -161,8 +311,7 @@ Ecap::XactionRep::noteBodyProductionEnded(RefCount<BodyPipe> bp)
 void
 Ecap::XactionRep::noteBodyProducerAborted(RefCount<BodyPipe> bp)
 {
-    Must(theMaster);
-    theMaster->noteVirginAborted();
+    terminateMaster();
 }
 
 void
@@ -173,5 +322,30 @@ Ecap::XactionRep::noteInitiatorAborted()
 
 const char *Ecap::XactionRep::status() const
 {
-	return Adaptation::Initiate::status();
+    static MemBuf buf;
+    buf.reset();
+
+    buf.append(" [", 2);
+
+    if (theAnswerRep != NULL) {
+		MessageRep *answer = dynamic_cast<MessageRep*>(theAnswerRep.get());
+		Must(answer);
+		const BodyPipePointer &ap = answer->raw().body_pipe;
+		if (ap != NULL && ap->stillProducing(this))
+			buf.append("Ab ", 3);
+        else
+			buf.append("A. ", 3);
+	}
+
+    const BodyPipePointer &vp = theVirginRep.raw().body_pipe;
+    if (vp != NULL && vp->stillConsuming(this))
+		buf.append("Vb ", 3);
+    else
+		buf.append("V. ", 3);
+
+    buf.Printf(" ecapx%d]", id);
+
+    buf.terminate();
+
+    return buf.content();
 }
