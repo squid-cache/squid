@@ -831,6 +831,6 @@ dns_error_message_safe()
 {
     if (dns_error_message)
 		return dns_error_message;
-	debugs(35,DBG_IMPORTANT, "Internal error: lost DNS error info");
+	debugs(35,1, "Internal error: lost DNS error info");
 	return "lost DNS error";
 }
