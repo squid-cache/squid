@@ -37,7 +37,8 @@ public:
     // virgin or adapted message being worked on
     Header *header;   // parsed HTTP status/request line and headers
 
-	// Copy of header->body_pipe, in case somebody moves the original.
+    /// Copy of header->body_pipe, in case somebody moves the original.
+    /// \todo Find and fix the code that moves (if any) and remove this.
 	BodyPipePointer body_pipe;
 
 private:
