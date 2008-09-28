@@ -16,6 +16,7 @@ DEFAULT_STYLESHEET	= $(sysconfigdir)/errorpage.css
 TRANSLATIONS = \
 	bg \
 	ca \
+	cs \
 	da \
 	de \
 	en en-au en-gb \
