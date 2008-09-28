@@ -27,7 +27,8 @@ TRANSLATIONS = \
 	nl \
 	pt-br \
 	sv \
-	uk
+	uk \
+	zh-cn
 
 # Legacy language contributions...
 #
