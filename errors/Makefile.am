@@ -23,6 +23,7 @@ TRANSLATIONS = \
 	fr \
 	id \
 	it \
+	ja \
 	nl \
 	pt-br \
 	sv \
