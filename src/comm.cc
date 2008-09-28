@@ -1499,21 +1499,6 @@ comm_reset_close(int fd)
     comm_close(fd);
 }
 
-void
-CommRead::doCallback(comm_err_t errcode, int xerrno)
-{
-    if (callback != NULL) {
-        typedef CommIoCbParams Params;
-        Params &params = GetCommParams<Params>(callback);
-        params.fd = fd;
-        params.size = 0;
-        params.flag = errcode;
-        params.xerrno = xerrno;
-        ScheduleCallHere(callback);
-        callback = NULL;
-    }
-}
-
 void 
 comm_close_start(int fd, void *data)
 {
@@ -2519,7 +2504,15 @@ void
 DeferredReadManager::delayRead(DeferredRead const &aRead) {
     debugs(5, 3, "Adding deferred read on FD " << aRead.theRead.fd);
     CbDataList<DeferredRead> *temp = deferredReads.push_back(aRead);
-    comm_add_close_handler (aRead.theRead.fd, CloseHandler, temp);
+
+    // We have to use a global function as a closer and point to temp 
+    // instead of "this" because DeferredReadManager is not a job and
+    // is not even cbdata protected
+    AsyncCall::Pointer closer = commCbCall(5,4,
+        "DeferredReadManager::CloseHandler",
+        CommCloseCbPtrFun(&CloseHandler, temp));
+    comm_add_close_handler(aRead.theRead.fd, closer);
+    temp->element.closer = closer; // remeber so that we can cancel
 }
 
 void
@@ -2529,6 +2522,7 @@ DeferredReadManager::CloseHandler(int fd, void *thecbdata) {
 
     CbDataList<DeferredRead> *temp = (CbDataList<DeferredRead> *)thecbdata;
 
+    temp->element.closer = NULL;
     temp->element.markCancelled();
 }
 
@@ -2536,8 +2530,11 @@ DeferredRead
 DeferredReadManager::popHead(CbDataListContainer<DeferredRead> &deferredReads) {
     assert (!deferredReads.empty());
 
-    if (!deferredReads.head->element.cancelled)
-        comm_remove_close_handler(deferredReads.head->element.theRead.fd, CloseHandler, deferredReads.head);
+    DeferredRead &read = deferredReads.head->element;
+    if (!read.cancelled) {
+        comm_remove_close_handler(read.theRead.fd, read.closer);
+        read.closer = NULL;
+    }
 
     DeferredRead result = deferredReads.pop_front();
 
