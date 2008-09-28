@@ -14,6 +14,7 @@ DEFAULT_STYLESHEET	= $(sysconfigdir)/errorpage.css
 
 # List of automated translations possible:
 TRANSLATIONS = \
+	bg \
 	ca \
 	da \
 	de \
@@ -32,7 +33,6 @@ TRANSLATIONS = \
 LANGUAGES	= \
 		Armenian \
 		Azerbaijani \
-		Bulgarian \
 		Czech \
 		Estonian \
 		Finnish \
