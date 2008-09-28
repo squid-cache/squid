@@ -55,6 +55,20 @@ Ecap::XactionRep::start()
 void
 Ecap::XactionRep::swanSong()
 {
+    // clear body_pipes, if any
+
+    if (theAnswerRep != NULL) {
+		BodyPipe::Pointer body_pipe = answer().body_pipe;
+		if (body_pipe != NULL && body_pipe->stillProducing(this))
+			stopProducingFor(body_pipe, false);
+	}
+
+    {
+		BodyPipe::Pointer body_pipe = theVirginRep.raw().body_pipe;
+		if (body_pipe != NULL && body_pipe->stillConsuming(this))
+			stopConsumingFrom(body_pipe);
+	}
+
     terminateMaster();
     Adaptation::Initiate::swanSong();
 }
@@ -327,21 +341,25 @@ const char *Ecap::XactionRep::status() const
 
     buf.append(" [", 2);
 
+    const BodyPipePointer &vp = theVirginRep.raw().body_pipe;
+    if (vp != NULL && vp->stillConsuming(this)) {
+		buf.append("Vb", 2);
+		buf.append(vp->status(), strlen(vp->status())); // XXX
+	}
+    else
+		buf.append("V.", 2);
+
     if (theAnswerRep != NULL) {
 		MessageRep *answer = dynamic_cast<MessageRep*>(theAnswerRep.get());
 		Must(answer);
 		const BodyPipePointer &ap = answer->raw().body_pipe;
-		if (ap != NULL && ap->stillProducing(this))
-			buf.append("Ab ", 3);
+		if (ap != NULL && ap->stillProducing(this)) {
+			buf.append(" Ab", 3);
+			buf.append(ap->status(), strlen(ap->status())); // XXX
+		}
         else
-			buf.append("A. ", 3);
+			buf.append(" A.", 3);
 	}
-
-    const BodyPipePointer &vp = theVirginRep.raw().body_pipe;
-    if (vp != NULL && vp->stillConsuming(this))
-		buf.append("Vb ", 3);
-    else
-		buf.append("V. ", 3);
 
     buf.Printf(" ecapx%d]", id);
 
