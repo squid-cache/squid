@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: squid 3.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-09-26 01:24+1300\n"
-"PO-Revision-Date: 2008-09-28 21:29+1200\n"
+"PO-Revision-Date: 2008-09-29 03:09+1200\n"
 "Last-Translator: Evgeni Gechev <etg@setcom.bg>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "MIME-Version: 1.0\n"
@@ -24,8 +24,8 @@ msgid ""
 "<b>Invalid Response</b> error was encountered while trying to process the "
 "request:"
 msgstr ""
-"При опит за обработка на заявката възникна следната грешка - <b>Невалидна "
-"заявка</b>:"
+"При опит за обработка на заявката възникна следната грешка - <b>Невалиден "
+"отговор</b>:"
 
 #: templates/ERR_READ_TIMEOUT:7
 msgid ""
@@ -247,7 +247,7 @@ msgstr ""
 #: templates/ERR_INVALID_REQ:11 templates/ERR_INVALID_URL:11
 msgid "Illegal character in hostname; underscores are not allowed."
 msgstr ""
-"Невалиден символ в името на съвръра (напр. символът за подчертаване е "
+"Невалиден символ в името на сървъра (напр. символът за подчертаване е "
 "недопустим)"
 
 #: templates/ERR_INVALID_URL:10
