@@ -362,8 +362,9 @@ Ecap::MessageRep::MessageRep(HttpMsg *rawHeader):
 
 Ecap::MessageRep::~MessageRep()
 {
-    delete theHeaderRep;
     delete theBodyRep;
+    delete theHeaderRep;
+    delete theFirstLineRep;
 }
 
 libecap::shared_ptr<libecap::Message>
