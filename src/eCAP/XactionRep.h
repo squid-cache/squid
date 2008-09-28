@@ -39,15 +39,14 @@ public:
     virtual void useAdapted(const libecap::shared_ptr<libecap::Message> &msg);
     virtual void adaptationDelayed(const libecap::Delay &);
     virtual void adaptationAborted();
-    virtual void adapterWontConsume();
-    virtual void adapterWillConsume();
-    virtual void adapterDoneConsuming();
-    virtual void consumeVirgin(size_type n);
-    virtual void pauseVirginProduction();
-    virtual void resumeVirginProduction();
-    virtual void setAdaptedBodySize(const libecap::BodySize &size);
-    virtual void appendAdapted(const libecap::Area &area);
-    virtual void noteAdaptedBodyEnd();
+    virtual void vbIgnore();
+    virtual void vbMake();
+    virtual void vbStopMaking();
+    virtual void vbMakeMore();
+    virtual libecap::Area vbContent(libecap::off_type offset, libecap::size_type size);
+    virtual void vbContentShift(libecap::size_type size);
+    virtual void noteAbContentDone(bool atEnd);
+    virtual void noteAbContentAvailable();
 
 	// libecap::Callable API, via libecap::host::Xaction
 	virtual bool callable() const;
@@ -76,6 +75,8 @@ protected:
     bool sendingVirgin() const;
     void dropVirgin(const char *reason);
     bool doneWithAdapted() const;
+
+    void moveAbContent();
 
     void terminateMaster();
     void scheduleStop(const char *reason);
