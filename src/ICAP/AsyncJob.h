@@ -30,7 +30,7 @@
  * asynchronous calls.
  */
 
-class TextException;
+class std::exception;
 
 /// \ingroup AsyncJobAPI
 class AsyncJob
@@ -63,7 +63,7 @@ public:
     // asynchronous call maintenance
     bool canBeCalled(AsyncCall &call) const;
     void callStart(AsyncCall &call);
-    virtual void callException(const TextException &e);
+    virtual void callException(const std::exception &e);
     virtual void callEnd();
 
 protected:
