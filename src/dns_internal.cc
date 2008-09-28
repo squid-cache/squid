@@ -836,6 +836,7 @@ idnsSendQuery(idns_query * q)
     }
 
     nameservers[ns].nqueries++;
+    q->queue_t = current_time;
     dlinkAdd(q, &q->lru, &lru_list);
     idnsTickleQueue();
 }
