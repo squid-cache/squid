@@ -196,11 +196,11 @@ Ecap::XactionRep::useAdapted(const libecap::shared_ptr<libecap::Message> &m)
 }
 
 void
-Ecap::XactionRep::vbIgnore()
+Ecap::XactionRep::vbDiscard()
 {
     Must(proxyingVb == opUndecided);
     // if adapter does not need vb, we do not need to send it
-    dropVirgin("vbIgnore");
+    dropVirgin("vbDiscard");
     Must(proxyingVb == opNever);
 }
 
@@ -232,7 +232,7 @@ Ecap::XactionRep::vbMakeMore()
 }
 
 libecap::Area
-Ecap::XactionRep::vbContent(libecap::off_type o, libecap::size_type s)
+Ecap::XactionRep::vbContent(libecap::size_type o, libecap::size_type s)
 {
     Must(canAccessVb);
     // We may not be proxyingVb yet. It should be OK, but see vbContentShift().
