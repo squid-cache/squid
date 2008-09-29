@@ -71,17 +71,11 @@ static void parse_adaptation_access_type();
 #if ICAP_CLIENT
 #include "ICAP/ICAPConfig.h"
 
-static void free_adaptation_access_type(const char *);
-
 static void parse_icap_service_type(ICAPConfig *);
 static void dump_icap_service_type(StoreEntry *, const char *, const ICAPConfig &);
 static void free_icap_service_type(ICAPConfig *);
 static void parse_icap_class_type(ICAPConfig *);
-static void dump_icap_class_type(StoreEntry *, const char *, const ICAPConfig &);
-static void free_icap_class_type(ICAPConfig *);
 static void parse_icap_access_type(ICAPConfig *);
-static void dump_icap_access_type(StoreEntry *, const char *, const ICAPConfig &);
-static void free_icap_access_type(ICAPConfig *);
 
 #endif
 
@@ -3534,36 +3528,11 @@ parse_icap_class_type(ICAPConfig *)
 }
 
 static void
-free_icap_class_type(ICAPConfig *)
-{
-    Adaptation::Config::FreeServiceSet();
-}
-
-static void
-dump_icap_class_type(StoreEntry * entry, const char *name, const ICAPConfig &)
-{
-    Adaptation::Config::DumpServiceSet(entry, name);
-}
-
-static void
 parse_icap_access_type(ICAPConfig *)
 {
     debugs(93, 0, "WARNING: 'icap_access' is depricated. " <<
         "Use 'adaptation_access' instead");
     Adaptation::Config::ParseAccess(LegacyParser);
-}
-
-
-static void
-free_icap_access_type(ICAPConfig *)
-{
-    Adaptation::Config::FreeAccess();
-}
-
-static void
-dump_icap_access_type(StoreEntry * entry, const char *name, const ICAPConfig &)
-{
-    Adaptation::Config::DumpAccess(entry, name);
 }
 
 #endif
