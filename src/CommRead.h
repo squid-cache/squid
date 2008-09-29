@@ -51,19 +51,10 @@ class CommRead
 public:
     CommRead ();
     CommRead (int fd, char *buf, int len, AsyncCall::Pointer &callback);
-    void queueCallback(size_t retval, comm_err_t errcode, int xerrno);
-    bool hasCallback() const;
-    void hasCallbackInvariant() const;
-    void hasNoCallbackInvariant() const;
-    void tryReading();
-    void read();
-    void initiateActualRead();
-    void doCallback(comm_err_t errcode, int xerrno);
     int fd;
     char *buf;
     int len;
     AsyncCall::Pointer callback;
-    static void ReadTry(int fd, void *data);
 };
 
 class DeferredRead
@@ -78,6 +69,7 @@ public:
     void *theContext;
     CommRead theRead;
     bool cancelled;
+    AsyncCall::Pointer closer; ///< internal close handler used by Comm
 
 private:
 };

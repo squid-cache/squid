@@ -101,6 +101,7 @@ public:
     time_t timeout;
     void *lifetime_data;
     AsyncCall::Pointer closeHandler;
+    AsyncCall::Pointer halfClosedReader; /// read handler for half-closed fds
     CommWriteStateData *wstate;         /* State data for comm_write */
     READ_HANDLER *read_method;
     WRITE_HANDLER *write_method;
@@ -121,6 +122,7 @@ private:
     inline void clear() {
         timeoutHandler = NULL;
         closeHandler = NULL;
+        halfClosedReader = NULL;
         // XXX: the following memset may corrupt or leak new or changed members
         memset(this, 0, sizeof(fde));
         local_addr.SetEmpty(); // IPAddress likes to be setup nicely.
