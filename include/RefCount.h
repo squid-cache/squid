@@ -75,7 +75,7 @@ public:
 
     C & operator * () {return *const_cast<C *>(p_); }
 
-    C const * getRaw() const{return p_; }
+    C const * getRaw() const {return p_; }
 
     C * getRaw() {return const_cast<C *>(p_); }
 
