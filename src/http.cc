@@ -62,8 +62,8 @@
 #define SQUID_EXIT_THROWING_CODE(status) \
   	status = true; \
     } \
-    catch (const TextException &e) { \
-	debugs (11, 1, "Exception error:" << e.message); \
+    catch (const std::exception &e) { \
+	debugs (11, 1, "Exception error:" << e.what()); \
 	status = false; \
     }  
 
