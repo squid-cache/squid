@@ -39,11 +39,11 @@ public:
     virtual void useAdapted(const libecap::shared_ptr<libecap::Message> &msg);
     virtual void adaptationDelayed(const libecap::Delay &);
     virtual void adaptationAborted();
-    virtual void vbIgnore();
+    virtual void vbDiscard();
     virtual void vbMake();
     virtual void vbStopMaking();
     virtual void vbMakeMore();
-    virtual libecap::Area vbContent(libecap::off_type offset, libecap::size_type size);
+    virtual libecap::Area vbContent(libecap::size_type offset, libecap::size_type size);
     virtual void vbContentShift(libecap::size_type size);
     virtual void noteAbContentDone(bool atEnd);
     virtual void noteAbContentAvailable();
