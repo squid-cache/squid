@@ -60,20 +60,20 @@ Ecap::XactionRep::swanSong()
     // this code does not maintain proxying* and canAccessVb states; should it?
 
     if (theAnswerRep != NULL) {
-		BodyPipe::Pointer body_pipe = answer().body_pipe;
-		if (body_pipe != NULL) {
-			Must(body_pipe->stillProducing(this));
-			stopProducingFor(body_pipe, false);
-		}
-	}
+        BodyPipe::Pointer body_pipe = answer().body_pipe;
+        if (body_pipe != NULL) {
+            Must(body_pipe->stillProducing(this));
+            stopProducingFor(body_pipe, false);
+        }
+    }
 
     {
-		BodyPipe::Pointer body_pipe = theVirginRep.raw().body_pipe;
-		if (body_pipe != NULL) {
-			Must(body_pipe->stillConsuming(this));
-			stopConsumingFrom(body_pipe);
-		}
-	}
+        BodyPipe::Pointer body_pipe = theVirginRep.raw().body_pipe;
+        if (body_pipe != NULL) {
+            Must(body_pipe->stillConsuming(this));
+            stopConsumingFrom(body_pipe);
+        }
+    }
 
     terminateMaster();
     Adaptation::Initiate::swanSong();
@@ -102,8 +102,8 @@ Ecap::XactionRep::adapted()
 Adaptation::Message &
 Ecap::XactionRep::answer()
 {
-	MessageRep *rep = dynamic_cast<MessageRep*>(theAnswerRep.get());
-	Must(rep);
+    MessageRep *rep = dynamic_cast<MessageRep*>(theAnswerRep.get());
+    Must(rep);
     return rep->raw();
 }
 
@@ -114,7 +114,7 @@ Ecap::XactionRep::terminateMaster()
         AdapterXaction x = theMaster;
         theMaster.reset();
         x->stop();
-	}
+    }
 }
 
 bool
@@ -161,9 +161,9 @@ Ecap::XactionRep::useVirgin()
     if (proxyingVb == opUndecided)
         proxyingVb = opNever;
 
-	HttpMsg *clone = theVirginRep.raw().header->clone();
+    HttpMsg *clone = theVirginRep.raw().header->clone();
     // check that clone() copies the pipe so that we do not have to
-	Must(!theVirginRep.raw().header->body_pipe == !clone->body_pipe);
+    Must(!theVirginRep.raw().header->body_pipe == !clone->body_pipe);
     sendAnswer(clone);
     Must(done());
 }
@@ -176,17 +176,17 @@ Ecap::XactionRep::useAdapted(const libecap::shared_ptr<libecap::Message> &m)
     theAnswerRep = m;
     Must(proxyingAb == opUndecided);
 
-	HttpMsg *msg = answer().header;
+    HttpMsg *msg = answer().header;
     if (!theAnswerRep->body()) { // final, bodyless answer
         proxyingAb = opNever;
         sendAnswer(msg);
-	} else { // got answer headers but need to handle body
+    } else { // got answer headers but need to handle body
         proxyingAb = opOn;
-		Must(!msg->body_pipe); // only host can set body pipes
+        Must(!msg->body_pipe); // only host can set body pipes
         MessageRep *rep = dynamic_cast<MessageRep*>(theAnswerRep.get());
-		Must(rep);
-		rep->tieBody(this); // sets us as a producer
-		Must(msg->body_pipe != NULL); // check tieBody
+        Must(rep);
+        rep->tieBody(this); // sets us as a producer
+        Must(msg->body_pipe != NULL); // check tieBody
 
         sendAnswer(msg);
 
@@ -249,11 +249,11 @@ Ecap::XactionRep::vbContent(libecap::size_type o, libecap::size_type s)
 
     // nsize means no size limit: all content starting from offset
     const size_t size = s == libecap::nsize ?
-		haveSize - offset : static_cast<size_t>(s);
+        haveSize - offset : static_cast<size_t>(s);
 
     // XXX: optimize by making theBody a shared_ptr (see Area::FromTemp*() src)
     return libecap::Area::FromTempBuffer(p->buf().content() + offset,
-		min(static_cast<size_t>(haveSize - offset), size));
+        min(static_cast<size_t>(haveSize - offset), size));
 }
 
 void
@@ -375,7 +375,7 @@ Ecap::XactionRep::moveAbContent()
     const libecap::Area c = theMaster->abContent(0, libecap::nsize);
     debugs(93,5, HERE << " up to " << c.size << " bytes");
     if (const size_t used = answer().body_pipe->putMoreData(c.start, c.size))
-		theMaster->abContentShift(used);
+        theMaster->abContentShift(used);
 }
 
 const char *
@@ -391,22 +391,22 @@ Ecap::XactionRep::status() const
         if (!canAccessVb)
             buf.append("x", 1);
         if (vp != NULL && vp->stillConsuming(this)) {
-		    buf.append("Vb", 2);
+            buf.append("Vb", 2);
             buf.append(vp->status(), strlen(vp->status())); // XXX
-		} else
+        } else
             buf.append("V.", 2);
-	}
+    }
 
     if (proxyingAb == opOn) {
         MessageRep *rep = dynamic_cast<MessageRep*>(theAnswerRep.get());
         Must(rep);
-		const BodyPipePointer &ap = rep->raw().body_pipe;
-		if (ap != NULL && ap->stillProducing(this)) {
-			buf.append(" Ab", 3);
-			buf.append(ap->status(), strlen(ap->status())); // XXX
-		} else
-			buf.append(" A.", 3);
-	}
+        const BodyPipePointer &ap = rep->raw().body_pipe;
+        if (ap != NULL && ap->stillProducing(this)) {
+            buf.append(" Ab", 3);
+            buf.append(ap->status(), strlen(ap->status())); // XXX
+        } else
+            buf.append(" A.", 3);
+    }
 
     buf.Printf(" ecapx%d]", id);
 
