@@ -566,7 +566,7 @@ void ICAPModXact::parseMore()
         parseBody();
 }
 
-void ICAPModXact::callException(const TextException &e)
+void ICAPModXact::callException(const std::exception &e)
 {
     if (!canStartBypass || isRetriable) {
         ICAPXaction::callException(e);
@@ -575,10 +575,10 @@ void ICAPModXact::callException(const TextException &e)
 
     try {
         debugs(93, 3, "bypassing ICAPModXact::" << inCall << " exception: " <<
-           e.message << ' ' << status());
+           e.what() << ' ' << status());
         bypassFailure();
     }
-    catch (const TextException &bypassE) {
+    catch (const std::exception &bypassE) {
         ICAPXaction::callException(bypassE);
     }
 }
