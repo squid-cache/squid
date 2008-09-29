@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -48,18 +48,15 @@ public:
 
     RefCount (C const *p) : p_(p) { reference (*this); }
 
-    ~RefCount()
-    {
+    ~RefCount() {
         dereference();
     }
 
-    RefCount (const RefCount &p) : p_(p.p_)
-    {
+    RefCount (const RefCount &p) : p_(p.p_) {
         reference (p);
     }
 
-    RefCount& operator = (const RefCount& p)
-    {
+    RefCount& operator = (const RefCount& p) {
         // DO NOT CHANGE THE ORDER HERE!!!
         // This preserves semantics on self assignment
         C const *newP_ = p.p_;
@@ -68,7 +65,7 @@ public:
         return *this;
     }
 
-	bool operator !() const { return !p_; }
+    bool operator !() const { return !p_; }
 
     C const * operator-> () const {return p_; }
 
@@ -82,19 +79,16 @@ public:
 
     C * getRaw() {return const_cast<C *>(p_); }
 
-    bool operator == (const RefCount& p) const
-    {
+    bool operator == (const RefCount& p) const {
         return p.p_ == p_;
     }
 
-    bool operator != (const RefCount &p) const
-    {
+    bool operator != (const RefCount &p) const {
         return p.p_ != p_;
     }
 
 private:
-    void dereference(C const *newP = NULL)
-    {
+    void dereference(C const *newP = NULL) {
         /* Setting p_ first is important:
         * we may be freed ourselves as a result of
         * delete p_;
@@ -106,8 +100,7 @@ private:
             delete tempP_;
     }
 
-    void reference (const RefCount& p)
-    {
+    void reference (const RefCount& p) {
         if (p.p_)
             p.p_->RefCountReference();
     }
@@ -116,15 +109,13 @@ private:
 
 };
 
-struct RefCountable_
-{
-    RefCountable_():count_(0){}
+struct RefCountable_ {
+    RefCountable_():count_(0) {}
 
-    virtual ~RefCountable_(){}
+    virtual ~RefCountable_() {}
 
     /* Not private, to allow class hierarchies */
-    void RefCountReference() const
-    {
+    void RefCountReference() const {
 #if REFCOUNT_DEBUG
         debug (0,1)("Incrementing this %p from count %u\n",this,count_);
 #endif
@@ -132,8 +123,7 @@ struct RefCountable_
         ++count_;
     }
 
-    unsigned RefCountDereference() const
-    {
+    unsigned RefCountDereference() const {
 #if REFCOUNT_DEBUG
         debug (0,1)("Decrementing this %p from count %u\n",this,count_);
 #endif

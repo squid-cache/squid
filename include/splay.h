@@ -33,7 +33,7 @@ public:
     SplayNode<V> const * finish() const;
 
     SplayNode<V> * remove
-        (const Value data, SPLAYCMP * compare);
+    (const Value data, SPLAYCMP * compare);
 
     SplayNode<V> * insert(Value data, SPLAYCMP * compare);
 
@@ -61,14 +61,14 @@ public:
     typedef void SPLAYFREE(Value &);
     typedef SplayIterator<V> iterator;
     typedef const SplayConstIterator<V> const_iterator;
-    Splay():head(NULL), elements (0){}
+    Splay():head(NULL), elements (0) {}
 
     mutable SplayNode<V> * head;
     template <class FindValue> Value const *find (FindValue const &, int( * compare)(FindValue const &a, Value const &b)) const;
     void insert(Value const &, SPLAYCMP *compare);
 
     void remove
-        (Value const &, SPLAYCMP *compare);
+    (Value const &, SPLAYCMP *compare);
 
     void destroy(SPLAYFREE *);
 
@@ -159,7 +159,7 @@ SplayNode<V>::destroy(SPLAYFREE * free_func)
 template<class V>
 SplayNode<V> *
 SplayNode<V>::remove
-    (Value const dataToRemove, SPLAYCMP * compare)
+(Value const dataToRemove, SPLAYCMP * compare)
 {
     if (this == NULL)
         return NULL;
@@ -312,7 +312,7 @@ Splay<V>::insert(Value const &value, SPLAYCMP *compare)
 template <class V>
 void
 Splay<V>::remove
-    (Value const &value, SPLAYCMP *compare)
+(Value const &value, SPLAYCMP *compare)
 {
     assert (find (value, compare));
 

@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -188,24 +188,23 @@ struct group {
 };
 
 struct statfs {
-   long    f_type;     /* type of filesystem (see below) */
-   long    f_bsize;    /* optimal transfer block size */
-   long    f_blocks;   /* total data blocks in file system */
-   long    f_bfree;    /* free blocks in fs */
-   long    f_bavail;   /* free blocks avail to non-superuser */
-   long    f_files;    /* total file nodes in file system */
-   long    f_ffree;    /* free file nodes in fs */
-   long    f_fsid;     /* file system id */
-   long    f_namelen;  /* maximum length of filenames */
-   long    f_spare[6]; /* spare for later */
+    long    f_type;     /* type of filesystem (see below) */
+    long    f_bsize;    /* optimal transfer block size */
+    long    f_blocks;   /* total data blocks in file system */
+    long    f_bfree;    /* free blocks in fs */
+    long    f_bavail;   /* free blocks avail to non-superuser */
+    long    f_files;    /* total file nodes in file system */
+    long    f_ffree;    /* free file nodes in fs */
+    long    f_fsid;     /* file system id */
+    long    f_namelen;  /* maximum length of filenames */
+    long    f_spare[6]; /* spare for later */
 };
 
 #ifndef HAVE_GETTIMEOFDAY
-struct timezone 
-  {
+struct timezone {
     int	tz_minuteswest;	/* minutes west of Greenwich */
     int	tz_dsttime;	/* type of dst correction */
-  };
+};
 #endif
 
 #define CHANGE_FD_SETSIZE 1
@@ -245,7 +244,7 @@ typedef char * caddr_t;
 #undef FD_READ
 #undef FD_WRITE
 #define EISCONN WSAEISCONN
-#define EINPROGRESS WSAEINPROGRESS 
+#define EINPROGRESS WSAEINPROGRESS
 #define EWOULDBLOCK WSAEWOULDBLOCK
 #define EALREADY WSAEALREADY
 #define ETIMEDOUT WSAETIMEDOUT
@@ -297,14 +296,14 @@ typedef char * caddr_t;
 
 /* internal to Microsoft CRTLIB */
 typedef struct {
-        long osfhnd;    /* underlying OS file HANDLE */
-        char osfile;    /* attributes of file (e.g., open in text mode?) */
-        char pipech;    /* one char buffer for handles opened on pipes */
+    long osfhnd;    /* underlying OS file HANDLE */
+    char osfile;    /* attributes of file (e.g., open in text mode?) */
+    char pipech;    /* one char buffer for handles opened on pipes */
 #ifdef _MT
-        int lockinitflag;
-        CRITICAL_SECTION lock;
+    int lockinitflag;
+    CRITICAL_SECTION lock;
 #endif  /* _MT */
-    }   ioinfo;
+}   ioinfo;
 #define IOINFO_L2E          5
 #define IOINFO_ARRAY_ELTS   (1 << IOINFO_L2E)
 #define _pioinfo(i) ( __pioinfo[(i) >> IOINFO_L2E] + ((i) & (IOINFO_ARRAY_ELTS - 1)) )
@@ -337,18 +336,17 @@ int close(int fd)
     int l_so_type_siz = sizeof(l_so_type);
     SOCKET sock = _get_osfhandle(fd);
 
-    if (::getsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0){
+    if (::getsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0) {
         int result = 0;
-	    if (closesocket(sock) == SOCKET_ERROR) {
-	        errno = WSAGetLastError();
-	        result = 1;
-	    }
-	    _free_osfhnd(fd);
-	    _osfile(fd) = 0;
-	    return result;
-    }
-    else
-	    return _close(fd);
+        if (closesocket(sock) == SOCKET_ERROR) {
+            errno = WSAGetLastError();
+            result = 1;
+        }
+        _free_osfhnd(fd);
+        _osfile(fd) = 0;
+        return result;
+    } else
+        return _close(fd);
 }
 
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
@@ -376,9 +374,9 @@ int read(int fd, void * buf, size_t siz)
     SOCKET sock = _get_osfhandle(fd);
 
     if (::getsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0)
-	return ::recv(sock, (char FAR *) buf, (int)siz, 0);
+        return ::recv(sock, (char FAR *) buf, (int)siz, 0);
     else
-	return _read(fd, buf, (unsigned int)siz);
+        return _read(fd, buf, (unsigned int)siz);
 }
 
 inline
@@ -389,19 +387,20 @@ int write(int fd, const void * buf, size_t siz)
     SOCKET sock = _get_osfhandle(fd);
 
     if (::getsockopt(sock, SOL_SOCKET, SO_TYPE, l_so_type, &l_so_type_siz) == 0)
-	return ::send(sock, (char FAR *) buf, siz, 0);
+        return ::send(sock, (char FAR *) buf, siz, 0);
     else
-	return _write(fd, buf, siz);
+        return _write(fd, buf, siz);
 }
 
-inline 
+inline
 char *index(const char *s, int c)
 {
     return (char *)strchr(s,c);
 }
 
 /** \cond AUTODOCS-IGNORE */
-namespace Squid {
+namespace Squid
+{
 /** \endcond */
 
 inline
@@ -409,43 +408,39 @@ int accept(int s, struct sockaddr * a, size_t * l)
 {
     SOCKET result;
     if ((result = ::accept(_get_osfhandle(s), a, (int *)l)) == INVALID_SOCKET) {
-	if (WSAEMFILE == (errno = WSAGetLastError()))
-	    errno = EMFILE;
-	return -1;
-    }
-    else
-	return _open_osfhandle(result, 0);
+        if (WSAEMFILE == (errno = WSAGetLastError()))
+            errno = EMFILE;
+        return -1;
+    } else
+        return _open_osfhandle(result, 0);
 }
 
 inline
 int bind(int s, struct sockaddr * n, int l)
 {
     if (::bind(_get_osfhandle(s),n,l) == SOCKET_ERROR) {
-	errno = WSAGetLastError();
-	return -1;
-    }
-    else
-	return 0;
+        errno = WSAGetLastError();
+        return -1;
+    } else
+        return 0;
 }
 
 inline
 int connect(int s, const struct sockaddr * n, int l)
 {
     if (::connect(_get_osfhandle(s),n,l) == SOCKET_ERROR) {
-	if (WSAEMFILE == (errno = WSAGetLastError()))
-	    errno = EMFILE;
-	return -1;
-    }
-    else
-	return 0;
+        if (WSAEMFILE == (errno = WSAGetLastError()))
+            errno = EMFILE;
+        return -1;
+    } else
+        return 0;
 }
 
-inline 
-struct hostent * gethostbyname (const char *n)
-{
-    HOSTENT FAR * result; 
+inline
+struct hostent * gethostbyname (const char *n) {
+    HOSTENT FAR * result;
     if ((result = ::gethostbyname(n)) == NULL)
-	errno = WSAGetLastError();
+        errno = WSAGetLastError();
     return result;
 }
 #define gethostbyname(n) Squid::gethostbyname(n)
@@ -455,7 +450,7 @@ SERVENT FAR* getservbyname (const char * n, const char * p)
 {
     SERVENT FAR * result;
     if ((result = ::getservbyname(n, p)) == NULL)
-	errno = WSAGetLastError();
+        errno = WSAGetLastError();
     return result;
 }
 #define getservbyname(n,p) Squid::getservbyname(n,p)
@@ -465,7 +460,7 @@ HOSTENT FAR * gethostbyaddr(const char * a, int l, int t)
 {
     HOSTENT FAR * result;
     if ((result = ::gethostbyaddr(a, l, t)) == NULL)
-	errno = WSAGetLastError();
+        errno = WSAGetLastError();
     return result;
 }
 #define gethostbyaddr(a,l,t) Squid::gethostbyaddr(a,l,t)
@@ -474,22 +469,20 @@ inline
 int getsockname(int s, struct sockaddr * n, size_t * l)
 {
     if ((::getsockname(_get_osfhandle(s), n, (int *)l)) == SOCKET_ERROR) {
-	errno = WSAGetLastError();
-	return -1;
-    }
-    else
-	return 0;
+        errno = WSAGetLastError();
+        return -1;
+    } else
+        return 0;
 }
 
 inline
 int gethostname(char * n, size_t l)
 {
     if ((::gethostname(n, l)) == SOCKET_ERROR) {
-	errno = WSAGetLastError();
-	return -1;
-    }
-    else
-	return 0;
+        errno = WSAGetLastError();
+        return -1;
+    } else
+        return 0;
 }
 #define gethostname(n,l) Squid::gethostname(n,l)
 
@@ -498,11 +491,10 @@ int getsockopt(int s, int l, int o, void * v, int * n)
 {
     Sleep(1);
     if ((::getsockopt(_get_osfhandle(s), l, o,(char *) v, n)) == SOCKET_ERROR) {
-	errno = WSAGetLastError();
-	return -1;
-    }
-    else
-	return 0;
+        errno = WSAGetLastError();
+        return -1;
+    } else
+        return 0;
 }
 
 /* Simple ioctl() emulation */
@@ -510,34 +502,31 @@ inline
 int ioctl(int s, int c, void * a)
 {
     if ((::ioctlsocket(_get_osfhandle(s), c, (u_long FAR *)a)) == SOCKET_ERROR) {
-	errno = WSAGetLastError();
-	return -1;
-    }
-    else
-	return 0;
+        errno = WSAGetLastError();
+        return -1;
+    } else
+        return 0;
 }
 
 inline
 int ioctlsocket(int s, long c, u_long FAR * a)
 {
     if ((::ioctlsocket(_get_osfhandle(s), c, a)) == SOCKET_ERROR) {
-	errno = WSAGetLastError();
-	return -1;
-    }
-    else
-	return 0;
+        errno = WSAGetLastError();
+        return -1;
+    } else
+        return 0;
 }
 
 inline
 int listen(int s, int b)
 {
     if (::listen(_get_osfhandle(s), b) == SOCKET_ERROR) {
-	if (WSAEMFILE == (errno = WSAGetLastError()))
-	    errno = EMFILE;
-	return -1;
-    }
-    else
-	return 0;
+        if (WSAEMFILE == (errno = WSAGetLastError()))
+            errno = EMFILE;
+        return -1;
+    } else
+        return 0;
 }
 #define listen(s,b) Squid::listen(s,b)
 
@@ -546,10 +535,9 @@ int recv(int s, void * b, size_t l, int f)
 {
     int result;
     if ((result = ::recv(_get_osfhandle(s), (char *)b, l, f)) == SOCKET_ERROR) {
-	errno = WSAGetLastError();
+        errno = WSAGetLastError();
         return -1;
-    }
-    else
+    } else
         return result;
 }
 
@@ -558,10 +546,9 @@ int recvfrom(int s, void * b, size_t l, int f, struct sockaddr * fr, size_t * fl
 {
     int result;
     if ((result = ::recvfrom(_get_osfhandle(s), (char *)b, l, f, fr, (int *)fl)) == SOCKET_ERROR) {
-	errno = WSAGetLastError();
-	return -1;
-    }
-    else
+        errno = WSAGetLastError();
+        return -1;
+    } else
         return result;
 }
 
@@ -570,10 +557,9 @@ int select(int n, fd_set * r, fd_set * w, fd_set * e, struct timeval * t)
 {
     int result;
     if ((result = ::select(n,r,w,e,t)) == SOCKET_ERROR) {
-	errno = WSAGetLastError();
-	return -1;
-    }
-    else
+        errno = WSAGetLastError();
+        return -1;
+    } else
         return result;
 }
 #define select(n,r,w,e,t) Squid::select(n,r,w,e,t)
@@ -583,10 +569,9 @@ int send(int s, const void * b, size_t l, int f)
 {
     int result;
     if ((result = ::send(_get_osfhandle(s), (char *)b, l, f)) == SOCKET_ERROR) {
-	errno = WSAGetLastError();
-	return -1;
-    }
-    else
+        errno = WSAGetLastError();
+        return -1;
+    } else
         return result;
 }
 
@@ -595,10 +580,9 @@ int sendto(int s, const void * b, size_t l, int f, const struct sockaddr * t, in
 {
     int result;
     if ((result = ::sendto(_get_osfhandle(s), (char *)b, l, f, t, tl)) == SOCKET_ERROR) {
-	errno = WSAGetLastError();
-	return -1;
-    }
-    else
+        errno = WSAGetLastError();
+        return -1;
+    } else
         return result;
 }
 
@@ -612,8 +596,7 @@ int setsockopt(SOCKET s, int l, int o, const char * v, int n)
     if (::setsockopt(socket, l, o, v, n) == SOCKET_ERROR) {
         errno = WSAGetLastError();
         return -1;
-    }
-    else
+    } else
         return 0;
 }
 #define setsockopt(s,l,o,v,n) Squid::setsockopt(s,l,o,v,n)
@@ -622,11 +605,10 @@ inline
 int shutdown(int s, int h)
 {
     if (::shutdown(_get_osfhandle(s),h) == SOCKET_ERROR) {
-	errno = WSAGetLastError();
-	return -1;
-    }
-    else
-	return 0;
+        errno = WSAGetLastError();
+        return -1;
+    } else
+        return 0;
 }
 
 inline
@@ -634,12 +616,11 @@ int socket(int f, int t, int p)
 {
     SOCKET result;
     if ((result = ::socket(f, t, p)) == INVALID_SOCKET) {
-	if (WSAEMFILE == (errno = WSAGetLastError()))
-	    errno = EMFILE;
-	return -1;
-    }
-    else
-	return _open_osfhandle(result, 0);
+        if (WSAEMFILE == (errno = WSAGetLastError()))
+            errno = EMFILE;
+        return -1;
+    } else
+        return _open_osfhandle(result, 0);
 }
 #define socket(f,t,p) Squid::socket(f,t,p)
 
@@ -647,10 +628,9 @@ inline
 int WSAAsyncSelect(int s, HWND h, unsigned int w, long e)
 {
     if (::WSAAsyncSelect(_get_osfhandle(s), h, w, e) == SOCKET_ERROR) {
-	errno = WSAGetLastError();
-	return -1;
-    }
-    else
+        errno = WSAGetLastError();
+        return -1;
+    } else
         return 0;
 }
 
@@ -663,29 +643,26 @@ int WSADuplicateSocket(int s, DWORD n, LPWSAPROTOCOL_INFO l)
 #else
     if (::WSADuplicateSocketA(_get_osfhandle(s), n, l) == SOCKET_ERROR) {
 #endif
-	errno = WSAGetLastError();
-	return -1;
-    }
-    else
+        errno = WSAGetLastError();
+        return -1;
+    } else
         return 0;
 }
 
 #undef WSASocket
 inline
-int WSASocket(int a, int t, int p, LPWSAPROTOCOL_INFO i, GROUP g, DWORD f)
-{
+int WSASocket(int a, int t, int p, LPWSAPROTOCOL_INFO i, GROUP g, DWORD f) {
     SOCKET result;
 #ifdef UNICODE
     if ((result = ::WSASocketW(a, t, p, i, g, f)) == INVALID_SOCKET) {
 #else
     if ((result = ::WSASocketA(a, t, p, i, g, f)) == INVALID_SOCKET) {
 #endif
-	if (WSAEMFILE == (errno = WSAGetLastError()))
-	    errno = EMFILE;
-	return -1;
-    }
-    else
-	return _open_osfhandle(result, 0);
+        if (WSAEMFILE == (errno = WSAGetLastError()))
+            errno = EMFILE;
+        return -1;
+    } else
+        return _open_osfhandle(result, 0);
 }
 
 } /* namespace Squid */
@@ -721,22 +698,22 @@ int WSASocket(int a, int t, int p, LPWSAPROTOCOL_INFO i, GROUP g, DWORD f)
 #define	RUSAGE_CHILDREN	-1		/* terminated child processes */
 
 struct rusage {
-	struct timeval ru_utime;	/* user time used */
-	struct timeval ru_stime;	/* system time used */
-	long ru_maxrss;			/* integral max resident set size */
-	long ru_ixrss;			/* integral shared text memory size */
-	long ru_idrss;			/* integral unshared data size */
-	long ru_isrss;			/* integral unshared stack size */
-	long ru_minflt;			/* page reclaims */
-	long ru_majflt;			/* page faults */
-	long ru_nswap;			/* swaps */
-	long ru_inblock;		/* block input operations */
-	long ru_oublock;		/* block output operations */
-	long ru_msgsnd;			/* messages sent */
-	long ru_msgrcv;			/* messages received */
-	long ru_nsignals;		/* signals received */
-	long ru_nvcsw;			/* voluntary context switches */
-	long ru_nivcsw;			/* involuntary context switches */
+    struct timeval ru_utime;	/* user time used */
+    struct timeval ru_stime;	/* system time used */
+    long ru_maxrss;			/* integral max resident set size */
+    long ru_ixrss;			/* integral shared text memory size */
+    long ru_idrss;			/* integral unshared data size */
+    long ru_isrss;			/* integral unshared stack size */
+    long ru_minflt;			/* page reclaims */
+    long ru_majflt;			/* page faults */
+    long ru_nswap;			/* swaps */
+    long ru_inblock;		/* block input operations */
+    long ru_oublock;		/* block output operations */
+    long ru_msgsnd;			/* messages sent */
+    long ru_msgrcv;			/* messages received */
+    long ru_nsignals;		/* signals received */
+    long ru_nvcsw;			/* voluntary context switches */
+    long ru_nivcsw;			/* involuntary context switches */
 };
 
 #undef ACL

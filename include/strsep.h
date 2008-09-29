@@ -34,23 +34,23 @@
 
 /**
 \par
-   Searches the next delimiter (char listed in DELIM) starting at *STRINGP.
-   If one is found, it is overwritten with a NULL, and *STRINGP is advanced
-   to point to the next char after it.  Otherwise, *STRINGP is set to NULL.
-   If *STRINGP was already NULL, nothing happens.
-   Returns the old value of *STRINGP.
+Searches the next delimiter (char listed in DELIM) starting at *STRINGP.
+If one is found, it is overwritten with a NULL, and *STRINGP is advanced
+to point to the next char after it.  Otherwise, *STRINGP is set to NULL.
+If *STRINGP was already NULL, nothing happens.
+Returns the old value of *STRINGP.
 \par
-   This is a variant of strtok() that is multithread-safe and supports
-   empty fields.
+This is a variant of strtok() that is multithread-safe and supports
+empty fields.
 
 \note   Caveat: It modifies the original string.
 \note   Caveat: These functions cannot be used on constant strings.
 \note   Caveat: The identity of the delimiting character is lost.
 \note   Caveat: It doesn't work with multibyte strings unless all of the delimiter
-                characters are ASCII characters < 0x30.
+characters are ASCII characters < 0x30.
 
-   See also strtok_r().
- */
+See also strtok_r().
+*/
 SQUIDCEXTERN char *strsep(char **stringp, const char *delim);
 
 #endif /* HAVE_STRSEP */

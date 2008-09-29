@@ -420,7 +420,7 @@ class IPAddress_list
 {
 public:
     IPAddress_list() { next = NULL; };
-    ~IPAddress_list() { if(next) delete next; next = NULL; };
+    ~IPAddress_list() { if (next) delete next; next = NULL; };
 
     IPAddress s;
     IPAddress_list *next;
