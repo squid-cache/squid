@@ -1109,14 +1109,15 @@ SquidMainSafe(int argc, char **argv)
     try {
         return SquidMain(argc, argv);
 	}
-    catch (const TextException &e) {
-		// XXX: add TextException::print
-        std::cerr << "dying from unhandled exception: " << e.message << std::endl;
+    catch (const std::exception &e) {
+        std::cerr << "dying from an unhandled exception: " << e.what() << std::endl;
+		throw;
 	}
     catch (...) {
-        std::cerr << "dying from unhandled exception." << std::endl;
+        std::cerr << "dying from an unhandled exception." << std::endl;
+		throw;
 	}
-	return -1;
+	return -1; // not reached
 }
 
 static int
