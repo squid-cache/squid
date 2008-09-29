@@ -6,10 +6,10 @@
 #ifndef SQUID__ADAPTATION__MESSAGE_H
 #define SQUID__ADAPTATION__MESSAGE_H
 
+#include "RefCount.h"
+
 class HttpMsg;
 class BodyPipe;
-template <class C>
-class RefCount;
 typedef RefCount<BodyPipe> BodyPipePointer;
 
 namespace Adaptation {
