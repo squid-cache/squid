@@ -4786,6 +4786,20 @@ DOC_START
 	http://wiki.squid-cache.org/Translations
 DOC_END
 
+NAME: error_log_languages
+IFDEF: USE_ERR_LOCALES
+TYPE: onoff
+LOC: Config.errorLogMissingLanguages
+DEFAULT: on
+DOC_START
+	Log to cache.log what languages users are attempting to
+	auto-negotiate for translations.
+
+	Successful negotiations are not logged. Only failures
+	have meaning to indicate that Squid may need an upgrade
+	of is error page translations.
+DOC_END
+
 NAME: err_page_stylesheet
 TYPE: string
 LOC: Config.errorStylesheet
