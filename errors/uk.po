@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: squid\n"
-"Report-Msgid-Bugs-To: FULL NAME <EMAIL@ADDRESS>\n"
-"POT-Creation-Date: 2008-08-06 22:11+1300\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2008-09-29 15:05+1300\n"
 "PO-Revision-Date: 2008-09-24 23:28+0000\n"
 "Last-Translator: FrenzY <frenzy.ivan@gmail.com>\n"
 "Language-Team: Ukrainian <uk@li.org>\n"
@@ -57,13 +57,13 @@ msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"FTP аутентифікація, на етапі отримання URL, пройшла невдало: <a "
-"href=\"%U\">%U</a>"
+"FTP аутентифікація, на етапі отримання URL, пройшла невдало: <a href=\"%U\">%"
+"U</a>"
 
 #: templates/ERR_FTP_FAILURE:4
 msgid ""
-"An FTP protocol error occurred while trying to retrieve the URL: <a "
-"href=\"%U\">%U</a>"
+"An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
+"\">%U</a>"
 msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:10
@@ -283,12 +283,12 @@ msgstr "Операція пройшла успішно"
 #: templates/ERR_CACHE_ACCESS_DENIED:7
 msgid ""
 "Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
-"have difficulties authenticating yourself or <a href=\"http://%h/cgi-"
-"bin/chpasswd.cgi\">change</a> your default password."
+"have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
+"chpasswd.cgi\">change</a> your default password."
 msgstr ""
 "Будь-ласка, зв'яжіться з <a href=\"mailto:%w%W\">адміністратором кеш-"
-"серверу</a> якщо у вас виникли труднощі під час аутентифікації або <a "
-"href=\"http://%h/cgi-bin/chpasswd.cgi\">змініть</a> ваш пароль по-замовченні."
+"серверу</a> якщо у вас виникли труднощі під час аутентифікації або <a href="
+"\"http://%h/cgi-bin/chpasswd.cgi\">змініть</a> ваш пароль по-замовченні."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
 msgid ""
@@ -376,13 +376,17 @@ msgstr ""
 msgid "Squid sent the following FTP command:"
 msgstr "Squid надіслав наступну FTP команду:"
 
+#: templates/ERR_DNS_FAIL:6
+#, fuzzy
+msgid "The DNS server returned:"
+msgstr "DNS сервер повернув наступне:"
+
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
 msgstr "ESI процесор повернув наступне:"
 
 #: templates/ERR_FTP_UNAVAILABLE:4
-msgid ""
-"The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
+msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr "FTP сервер занадто зайнятий, щоб отримати URL: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
@@ -394,10 +398,6 @@ msgstr ""
 #: templates/ERR_ICAP_FAILURE:9
 msgid "The ICAP server is not reachable."
 msgstr "ICAP сервер чомусь недоступний."
-
-#: templates/ERR_DNS_FAIL:6
-msgid "The dnsserver returned:"
-msgstr "DNS сервер повернув наступне:"
 
 #: templates/ERR_FTP_NOT_FOUND:4
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
@@ -418,20 +418,19 @@ msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"Наступна помилка була отримана під час спроби отримання URL: <a "
-"href=\"%U\">%U</a>"
+"Наступна помилка була отримана під час спроби отримання URL: <a href=\"%U\">%"
+"U</a>"
 
 #: templates/ERR_URN_RESOLVE:4
 msgid ""
 "The following error was encountered while trying to retrieve the URN: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"Наступна помилка була отримана під час спроби отримання URN: <a "
-"href=\"%U\">%U</a>"
+"Наступна помилка була отримана під час спроби отримання URN: <a href=\"%U\">%"
+"U</a>"
 
 #: templates/ERR_CONNECT_FAIL:7
-msgid ""
-"The remote host or network may be down.  Please try the request again."
+msgid "The remote host or network may be down.  Please try the request again."
 msgstr ""
 "Віддалений сервер чи мережа \"не дихає\". Будь-ласка, спробуйте запит знову."
 
