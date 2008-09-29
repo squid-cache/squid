@@ -2,14 +2,14 @@
 <html><head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <title>ERROR: The requested URL could not be retrieved</title>
-<style type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></style>
+<style type="text/css"><!-- %l --></style>
 </head><body>
 <h1>ERROR</h1>
 <h2>The requested URL could not be retrieved</h2>
 <hr>
 <p>The following error was encountered while trying to retrieve the URL: <a href="%U">%U</a></p>
 
-<blockquote>
+<blockquote id="error">
 <p><b>@SHORT_DESCRIPTION@</b></p>
 </blockquote>
 
@@ -20,7 +20,7 @@
     <p>@LONG_DESCRIPTION@</p>
 </blockquote>
 
-<br>   
-<hr> 
+<br>
+<hr>
 <div id="footer">Generated %T by %h (%s)</div>
 </body></html>
