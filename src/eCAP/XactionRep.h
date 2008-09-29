@@ -72,10 +72,7 @@ public:
 protected:
     Adaptation::Message &answer();
 
-    bool sendingVirgin() const;
     void dropVirgin(const char *reason);
-    bool doneWithAdapted() const;
-
     void moveAbContent();
 
     void terminateMaster();
@@ -89,6 +86,11 @@ private:
 
 	typedef libecap::shared_ptr<libecap::Message> MessagePtr;
 	MessagePtr theAnswerRep;
+
+    typedef enum { opUndecided, opOn, opComplete, opNever } OperationState;
+	OperationState proxyingVb; // delivering virgin body from core to adapter
+	OperationState proxyingAb; // delivering adapted body from adapter to core
+	bool canAccessVb;          // virgin BodyPipe content is accessible
 
 	CBDATA_CLASS2(XactionRep);
 };
