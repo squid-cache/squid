@@ -13,13 +13,13 @@
 
                       All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of CMU not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 CMU DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -32,7 +32,7 @@ SOFTWARE.
 struct synch_state {
     int waiting;
     int status;
-/* status codes */
+    /* status codes */
 #define STAT_SUCCESS	0
 #define STAT_ERROR	1
 #define STAT_TIMEOUT 2
@@ -41,20 +41,21 @@ struct synch_state {
 };
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
     extern struct synch_state snmp_synch_state;
 
-/* Synchronize Input with Agent */
+    /* Synchronize Input with Agent */
     int snmp_synch_input(int, struct snmp_session *, int,
-	struct snmp_pdu *, void *);
+                         struct snmp_pdu *, void *);
 
-/* Synchronize Response with Agent */
+    /* Synchronize Response with Agent */
     int snmp_synch_response(struct snmp_session *, struct snmp_pdu *,
-	struct snmp_pdu **);
+                            struct snmp_pdu **);
 
-/* Synchronize Setup */
+    /* Synchronize Setup */
     void snmp_synch_setup(struct snmp_session *);
 
 #ifdef __cplusplus

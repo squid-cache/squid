@@ -54,7 +54,7 @@
 #define SQ_MESH  SQUIDMIB, 5          /* cacheMesh group { squid 5 }    */
 #define LEN_SQ_MESH LEN_SQUIDMIB+1
 
-/* 
+/*
  * cacheSystem group { squid 1 }
  */
 
@@ -69,7 +69,7 @@ enum {
 #define LEN_SYS LEN_SQ_SYS + 1
 #define LEN_SYS_INST LEN_SQ_SYS + 2
 
-/* 
+/*
  * cacheConfig group { squid 2 }
  */
 
@@ -88,7 +88,7 @@ enum {
 #define LEN_CONF_INST LEN_SQ_CONF + 2
 
 
-/* 
+/*
  * cacheStorageConfig group { cacheConfig 5 }
  */
 enum {
@@ -103,7 +103,7 @@ enum {
 #define LEN_CONF_ST LEN_CONF + 1
 #define LEN_CONF_ST_INST LEN_CONF + 2
 
-/* 
+/*
  * Cache Performance Group  {squid 3}
  */
 
@@ -176,7 +176,7 @@ enum {
     PERF_MEDIAN_ICP_REPLY, /* cacheIcpReplySvcTime */
     PERF_MEDIAN_DNS, /* cacheDnsSvcTime */
     PERF_MEDIAN_RHR, /* cacheRequestHitRatio */
-    PERF_MEDIAN_BHR, /* cacheRequestByteRatio */ 
+    PERF_MEDIAN_BHR, /* cacheRequestByteRatio */
     PERF_MEDIAN_HTTP_NH, /* cacheHttpNhSvcTime */
     PERF_MEDIAN_END
 };
@@ -184,7 +184,7 @@ enum {
 
 
 
-/* 
+/*
  * cacheNetwork group  { squid 4 }
  */
 
@@ -198,7 +198,7 @@ enum {
 
 /* cacheIpCache */
 enum {
-    IP_START, 
+    IP_START,
     IP_ENT, /* cacheIpEntrie */
     IP_REQ, /* cacheIpRequests */
     IP_HITS, /* acheIpHits */
@@ -236,19 +236,19 @@ enum {
 
 
 
-/* 
+/*
  * cacheMesh group { squid 5 }
  */
 
 enum {
-    MESH_START,  
+    MESH_START,
     MESH_PTBL,  /* cachePeerTable  */
     MESH_CTBL,  /* cacheClientTable */
     MESH_END
 };
 
 /* cachePeerEntry */
-enum {			
+enum {
     MESH_PTBL_START,
     MESH_PTBL_INDEX, /* cachePeerIndex  */
     MESH_PTBL_NAME, /* cachePeerName  */
@@ -269,7 +269,7 @@ enum {
 };
 
 /* cacheClientEntry */
-enum {				
+enum {
     MESH_CTBL_START,
     MESH_CTBL_ADDR_TYPE, /* cacheClientAddressType */
     MESH_CTBL_ADDR,      /* cacheClientAddress */
