@@ -145,10 +145,10 @@ public:
     explicit MessageRep(HttpMsg *rawHeader);
     virtual ~MessageRep();
 
-	virtual libecap::shared_ptr<libecap::Message> clone() const;
+    virtual libecap::shared_ptr<libecap::Message> clone() const;
 
-	virtual libecap::FirstLine &firstLine();
-	virtual const libecap::FirstLine &firstLine() const;
+    virtual libecap::FirstLine &firstLine();
+    virtual const libecap::FirstLine &firstLine() const;
 
     virtual libecap::Header &header();
     virtual const libecap::Header &header() const;
@@ -156,10 +156,10 @@ public:
     virtual void addBody();
     virtual libecap::Body *body();
     virtual const libecap::Body *body() const;
-	void tieBody(Ecap::XactionRep *x); // to a specific transaction
+    void tieBody(Ecap::XactionRep *x); // to a specific transaction
 
-	Adaptation::Message &raw() { return theMessage; } // for host access
-	const Adaptation::Message &raw() const { return theMessage; } // for host
+    Adaptation::Message &raw() { return theMessage; } // for host access
+    const Adaptation::Message &raw() const { return theMessage; } // for host
 
 private:
     Adaptation::Message theMessage; // the message being translated to libecap

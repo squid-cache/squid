@@ -23,8 +23,8 @@ public:
     ServiceRep(const Adaptation::ServiceConfig &config);
     virtual ~ServiceRep();
 
-	typedef libecap::shared_ptr<libecap::adapter::Service> AdapterService;
-	void noteService(const AdapterService &s);
+    typedef libecap::shared_ptr<libecap::adapter::Service> AdapterService;
+    void noteService(const AdapterService &s);
 
     virtual void finalize();
 
@@ -42,10 +42,10 @@ public:
     // called by transactions to report service failure
     virtual void noteFailure();
 
-	virtual const char *status() const;
+    virtual const char *status() const;
 
 private:
-	AdapterService theService; // the actual adaptation service we represent
+    AdapterService theService; // the actual adaptation service we represent
 };
 
 } // namespace Ecap
