@@ -64,7 +64,7 @@ template<class C>
 Range<C>::Range () : start(), end() {}
 
 template<class C>
-Range<C>::Range (C start_, C end_) : start(start_), end(end_){}
+Range<C>::Range (C start_, C end_) : start(start_), end(end_) {}
 
 template<class C>
 Range<C>
