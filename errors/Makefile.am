@@ -9,7 +9,7 @@ errordir = $(datadir)/errors
 ##dist-hook eveything
 
 DEFAULT_ERROR_DIR	= $(errordir)
-DEFAULT_STYLESHEET	= $(sysconfigdir)/errorpage.css
+DEFAULT_STYLESHEET	= $(sysconfdir)/errorpage.css
 
 
 # List of automated translations possible:
