@@ -69,6 +69,7 @@
 #include "forward.h"
 #include "MemPool.h"
 #include "ICMPSquid.h"
+#include "TextException.h"
 
 #if USE_LOADABLE_MODULES
 #include "LoadableModules.h"
@@ -1082,20 +1083,42 @@ mainInitialize(void)
     configured_once = 1;
 }
 
+/// unsafe main routine -- may throw
+static int SquidMain(int argc, char **argv);
+/// unsafe main routine wrapper to catch exceptions
+static int SquidMainSafe(int argc, char **argv);
+
 #if USE_WIN32_SERVICE
 /* When USE_WIN32_SERVICE is defined, the main function is placed in win32.cc */
 extern "C" void WINAPI
     SquidWinSvcMain(int argc, char **argv)
-{
-    SquidMain(argc, argv);
-}
-
-int
-SquidMain(int argc, char **argv)
 #else
 int
 main(int argc, char **argv)
 #endif
+{
+    SquidMainSafe(argc, argv);
+}
+
+static int
+SquidMainSafe(int argc, char **argv)
+{
+    try {
+        return SquidMain(argc, argv);
+	}
+    catch (const std::exception &e) {
+        std::cerr << "dying from an unhandled exception: " << e.what() << std::endl;
+		throw;
+	}
+    catch (...) {
+        std::cerr << "dying from an unhandled exception." << std::endl;
+		throw;
+	}
+	return -1; // not reached
+}
+
+static int
+SquidMain(int argc, char **argv)
 {
 #ifdef _SQUID_WIN32_
 
