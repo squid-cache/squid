@@ -2312,7 +2312,7 @@ DOC_END
 NAME: access_log cache_access_log
 TYPE: access_log
 LOC: Config.Log.accesslogs
-DEFAULT: @DEFAULT_ACCESS_LOG@ squid
+DEFAULT_IF_NONE: @DEFAULT_ACCESS_LOG@ squid
 DOC_START
 	These files log client request activities. Has a line every HTTP or
 	ICP request. The format is:
@@ -2353,7 +2353,7 @@ DOC_END
 
 NAME: cache_log
 TYPE: string
-DEFAULT: @DEFAULT_CACHE_LOG@
+DEFAULT_IF_NONE: @DEFAULT_CACHE_LOG@
 LOC: Config.Log.log
 DOC_START
 	Cache logging file. This is where general information about
