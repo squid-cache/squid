@@ -59,7 +59,6 @@
    H - server host name                         x
    i - client IP address                        x
    I - server IP address                        x
-   l - HREF link for CSS stylesheet inclusion   x
    L - HREF link for more info/contact          x
    M - Request Method                           x
    m - Error message returned by auth helper    x
