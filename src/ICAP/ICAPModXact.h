@@ -158,7 +158,7 @@ public:
 
 protected:
     // bypasses exceptions if needed and possible
-    virtual void callException(const TextException &e);
+    virtual void callException(const std::exception &e);
 
 private:
     virtual void start();
