@@ -723,8 +723,7 @@ squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@DISK_LINKOBJS@ \
 	@REPL_OBJS@ \
 	@AUTH_LINKOBJS@ \
-	@AUTH_OBJS@ \
-	${ADAPTATION_LIBS}
+	@AUTH_OBJS@
 
 if USE_LOADABLE_MODULES
 squid_SOURCES += $(LOADABLE_MODULES_SOURCES)
@@ -960,8 +959,7 @@ ufsdump_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@DISK_LINKOBJS@ \
 	@REPL_OBJS@ \
 	@AUTH_LINKOBJS@ \
-	@AUTH_OBJS@ \
-	${ADAPTATION_LIBS}
+	@AUTH_OBJS@
 
 nodist_ufsdump_SOURCES = \
 	repl_modules.cc \
@@ -1513,8 +1511,7 @@ tests_testCacheManager_LDADD = \
 tests_testCacheManager_LDFLAGS = $(LIBADD_DL)
 tests_testCacheManager_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
-	@SQUID_CPPUNIT_LA@ \
-	${ADAPTATION_LIBS}
+	@SQUID_CPPUNIT_LA@
 
 tests_testDiskIO_SOURCES= \
 	$(SWAP_TEST_SOURCES) \
@@ -1687,8 +1684,7 @@ tests_testEvent_LDADD = \
 tests_testEvent_LDFLAGS = $(LIBADD_DL)
 tests_testEvent_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
-	@SQUID_CPPUNIT_LA@ \
-	${ADAPTATION_LIBS}
+	@SQUID_CPPUNIT_LA@
 
 ## Tests of the EventLoop module.
 tests_testEventLoop_SOURCES = \
@@ -1845,8 +1841,7 @@ tests_testEventLoop_LDADD = \
 tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
 tests_testEventLoop_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
-	@SQUID_CPPUNIT_LA@ \
-	${ADAPTATION_LIBS}
+	@SQUID_CPPUNIT_LA@
 
 tests_test_http_range_SOURCES = \
 	tests/test_http_range.cc \
@@ -2156,8 +2151,7 @@ tests_testHttpRequest_LDADD = \
 tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 tests_testHttpRequest_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
-	@SQUID_CPPUNIT_LA@ \
-	${ADAPTATION_LIBS}
+	@SQUID_CPPUNIT_LA@
 
 ## Tests of the ICMP base module.
 # Its used by pinger so SHOULD NOT require more dependancies! :-(
@@ -2521,5 +2515,4 @@ tests_testURL_LDADD = \
 tests_testURL_LDFLAGS = $(LIBADD_DL)
 tests_testURL_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
-	@SQUID_CPPUNIT_LA@ \
-	${ADAPTATION_LIBS}
+	@SQUID_CPPUNIT_LA@

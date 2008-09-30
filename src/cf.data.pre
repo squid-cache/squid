@@ -5275,7 +5275,7 @@ DOC_END
 NAME: icap_class
 TYPE: icap_class_type
 IFDEF: ICAP_CLIENT
-LOC: TheICAPConfig
+LOC: none
 DEFAULT: none
 DOC_START
 	This depricated option was documented to define an ICAP service
@@ -5292,7 +5292,7 @@ DOC_END
 NAME: icap_access
 TYPE: icap_access_type
 IFDEF: ICAP_CLIENT
-LOC: TheICAPConfig
+LOC: none
 DEFAULT: none
 DOC_START
         This option is depricated. Please use adaptation_access, which
@@ -5304,6 +5304,45 @@ COMMENT_START
  eCAP OPTIONS
  -----------------------------------------------------------------------------
 COMMENT_END
+
+NAME: ecap_enable
+TYPE: onoff
+IFDEF: USE_ECAP
+COMMENT: on|off
+LOC: Ecap::TheConfig.onoff
+DEFAULT: off
+DOC_START
+	Controls whether eCAP support is enabled.
+DOC_END
+
+NAME: ecap_service
+TYPE: ecap_service_type
+IFDEF: USE_ECAP
+LOC: Ecap::TheConfig
+DEFAULT: none
+DOC_START
+	Defines a single eCAP service
+
+	ecap_service servicename vectoring_point bypass service_url
+
+	vectoring_point = reqmod_precache|reqmod_postcache|respmod_precache|respmod_postcache
+		This specifies at which point of transaction processing the
+		eCAP service should be activated. *_postcache vectoring points
+		are not yet supported.
+	bypass = 1|0
+		If set to 1, the eCAP service is treated as optional. If the
+		service cannot be reached or malfunctions, Squid will try to
+		ignore any errors and process the message as if the service
+		was not enabled. No all eCAP errors can be bypassed.
+		If set to 0, the eCAP service is treated as essential and all
+		eCAP errors will result in an error page returned to the
+		HTTP client.
+	service_url = ecap://vendor/service_name?custom&cgi=style&parameters=optional
+
+Example:
+ecap_service service_1 reqmod_precache 0 ecap://filters-R-us/leakDetector?on_error=block
+ecap_service service_2 respmod_precache 1 icap://filters-R-us/virusFilter?config=/etc/vf.cfg
+DOC_END
 
 NAME: loadable_modules
 TYPE: wordlist
