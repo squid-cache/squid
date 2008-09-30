@@ -96,7 +96,7 @@ class BodyPipe: public RefCountable {
 		bool mayNeedMoreData() const { return !bodySizeKnown() || needsMoreData(); }
 		bool needsMoreData() const { return bodySizeKnown() && unproducedSize() > 0; }
 		uint64_t unproducedSize() const; // size of still unproduced data
-		bool stillProducing(Producer *producer) const { return theProducer == producer; }
+		bool stillProducing(const Producer *producer) const { return theProducer == producer; }
 
 		// called by consumers
 		bool setConsumerIfNotLate(Consumer *aConsumer);
@@ -105,7 +105,7 @@ class BodyPipe: public RefCountable {
 		void consume(size_t size);
 		bool expectMoreAfter(uint64_t offset) const;
 		bool exhausted() const; // saw eof/abort and all data consumed
-		bool stillConsuming(Consumer *consumer) const { return theConsumer == consumer; }
+		bool stillConsuming(const Consumer *consumer) const { return theConsumer == consumer; }
 
 		// start or continue consuming when there is no consumer
 		void enableAutoConsumption();
