@@ -2312,7 +2312,7 @@ DOC_END
 NAME: access_log cache_access_log
 TYPE: access_log
 LOC: Config.Log.accesslogs
-DEFAULT: @DEFAULT_ACCESS_LOG@ squid
+DEFAULT_IF_NONE: @DEFAULT_ACCESS_LOG@ squid
 DOC_START
 	These files log client request activities. Has a line every HTTP or
 	ICP request. The format is:
@@ -2353,7 +2353,7 @@ DOC_END
 
 NAME: cache_log
 TYPE: string
-DEFAULT: @DEFAULT_CACHE_LOG@
+DEFAULT_IF_NONE: @DEFAULT_CACHE_LOG@
 LOC: Config.Log.log
 DOC_START
 	Cache logging file. This is where general information about
@@ -4798,16 +4798,6 @@ DOC_START
 	Successful negotiations are not logged. Only failures
 	have meaning to indicate that Squid may need an upgrade
 	of is error page translations.
-DOC_END
-
-NAME: err_page_stylesheet
-TYPE: string
-LOC: Config.errorStylesheet
-DEFAULT: @DEFAULT_CONFIG_DIR@/errorpage.css
-DOC_START
-	CSS Stylesheet to pattern the display of Squid default error pages.
-
-	For information on CSS see http://www.w3.org/Style/CSS/
 DOC_END
 
 NAME: err_html_text
