@@ -74,8 +74,8 @@ static void parse_adaptation_access_type();
 static void parse_icap_service_type(ICAPConfig *);
 static void dump_icap_service_type(StoreEntry *, const char *, const ICAPConfig &);
 static void free_icap_service_type(ICAPConfig *);
-static void parse_icap_class_type(ICAPConfig *);
-static void parse_icap_access_type(ICAPConfig *);
+static void parse_icap_class_type();
+static void parse_icap_access_type();
 
 #endif
 
@@ -3520,7 +3520,7 @@ dump_icap_service_type(StoreEntry * entry, const char *name, const ICAPConfig &c
 }
 
 static void
-parse_icap_class_type(ICAPConfig *)
+parse_icap_class_type()
 {
     debugs(93, 0, "WARNING: 'icap_class' is depricated. " <<
         "Use 'adaptation_service_set' instead");
@@ -3528,7 +3528,7 @@ parse_icap_class_type(ICAPConfig *)
 }
 
 static void
-parse_icap_access_type(ICAPConfig *)
+parse_icap_access_type()
 {
     debugs(93, 0, "WARNING: 'icap_access' is depricated. " <<
         "Use 'adaptation_access' instead");
