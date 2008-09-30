@@ -66,6 +66,13 @@ ServerStateData::ServerStateData(FwdState *theFwdState): AsyncJob("ServerStateDa
 
 ServerStateData::~ServerStateData()
 {
+    // paranoid: check that swanSong has been called
+    assert(!requestBodySource);
+#if USE_ADAPTATION
+    assert(!virginBodyDestination);
+    assert(!adaptedBodySource);
+#endif
+
     entry->unlock();
 
     HTTPMSGUNLOCK(request);
@@ -74,6 +81,16 @@ ServerStateData::~ServerStateData()
 
     fwd = NULL; // refcounted
 
+    if (responseBodyBuffer != NULL) {
+	delete responseBodyBuffer;
+	responseBodyBuffer = NULL;
+    }
+}
+
+void
+ServerStateData::swanSong()
+{
+    // get rid of our piping obligations
     if (requestBodySource != NULL)
         requestBodySource->clearConsumer();
 
@@ -81,11 +98,13 @@ ServerStateData::~ServerStateData()
     cleanAdaptation();
 #endif
 
-    if (responseBodyBuffer != NULL) {
-	delete responseBodyBuffer;
-	responseBodyBuffer = NULL;
-    }
+    BodyConsumer::swanSong();
+#if USE_ADAPTATION
+    Initiator::swanSong();
+    BodyProducer::swanSong();
+#endif
 }
+
 
 HttpReply *
 ServerStateData::virginReply() {
