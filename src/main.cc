@@ -1088,7 +1088,9 @@ mainInitialize(void)
     configured_once = 1;
 }
 
+/// unsafe main routine -- may throw
 static int SquidMain(int argc, char **argv);
+/// unsafe main routine wrapper to catch exceptions
 static int SquidMainSafe(int argc, char **argv);
 
 #if USE_WIN32_SERVICE
