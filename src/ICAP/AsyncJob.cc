@@ -115,7 +115,7 @@ void AsyncJob::callStart(AsyncCall &call)
         typeName << " status in:" << status());
 }
 
-void AsyncJob::callException(const TextException &e)
+void AsyncJob::callException(const std::exception &e)
 {
     // we must be called asynchronously and hence, the caller must lock us
     Must(cbdataReferenceValid(toCbdata()));
@@ -212,9 +212,9 @@ JobDialer::dial(AsyncCall &call)
     try {
         doDial();
 	}
-    catch (const TextException &e) {
+    catch (const std::exception &e) {
         debugs(call.debugSection, 3,
-            HERE << call.name << " threw exception: " << e.message);
+            HERE << call.name << " threw exception: " << e.what());
         job->callException(e);
     }
 
