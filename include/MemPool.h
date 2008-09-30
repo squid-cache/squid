@@ -74,7 +74,7 @@ typedef struct _MemPoolGlobalStats MemPoolGlobalStats;
 /// \ingroup MemPoolsAPI
 class MemPoolIterator
 {
-  public:
+public:
     MemImplementingAllocator *pool;
     MemPoolIterator * next;
 };
@@ -85,8 +85,8 @@ class MemPoolIterator
  */
 class mgb_t
 {
-  public:
-    mgb_t() : count(0), bytes(0){}
+public:
+    mgb_t() : count(0), bytes(0) {}
     double count;
     double bytes;
 };
@@ -97,7 +97,7 @@ class mgb_t
  */
 class MemPoolMeter
 {
-  public:
+public:
     void flush();
     MemMeter alloc;
     MemMeter inuse;
@@ -116,9 +116,9 @@ class MemPoolMeter
 class MemImplementingAllocator;
 
 /// \ingroup MemPoolsAPI
-class MemPools 
+class MemPools
 {
-  public:
+public:
     static MemPools &GetInstance();
     MemPools();
     void init();
@@ -180,7 +180,7 @@ class MemPools
     int mem_idle_limit;
     int poolCount;
     bool defaultIsChunked;
-  private:
+private:
     static MemPools *Instance;
 };
 
@@ -249,7 +249,7 @@ private:
  */
 class MemAllocatorProxy
 {
-  public:
+public:
     inline MemAllocatorProxy(char const *aLabel, size_t const &);
 
     /**
@@ -273,7 +273,7 @@ class MemAllocatorProxy
     int getStats(MemPoolStats * stats);
 
     char const * objectType() const;
-  private:
+private:
     MemAllocator *getAllocator() const;
     const char *label;
     size_t size;
@@ -285,7 +285,7 @@ class MemAllocatorProxy
 /**
  \ingroup MemPoolsAPI
  \hideinitializer
- * 
+ *
  * This macro is intended for use within the declaration of a class.
  */
 #define MEMPROXY_CLASS(CLASS) \
@@ -296,7 +296,7 @@ class MemAllocatorProxy
 /**
  \ingroup MemPoolsAPI
  \hideinitializer
- * 
+ *
  * This macro is intended for use within the .h or .cci of a class as appropriate.
  */
 #define MEMPROXY_CLASS_INLINE(CLASS) \
@@ -324,7 +324,7 @@ CLASS::operator delete (void *address) \
 /// \ingroup MemPoolsAPI
 class MemImplementingAllocator : public MemAllocator
 {
-  public:
+public:
     MemImplementingAllocator(char const *aLabel, size_t aSize);
     virtual MemPoolMeter const &getMeter() const;
     virtual MemPoolMeter &getMeter();
@@ -347,14 +347,14 @@ class MemImplementingAllocator : public MemAllocator
     virtual void setChunkSize(size_t chunksize) {}
     virtual size_t objectSize() const;
     virtual int getInUseCount() = 0;
-  protected:
+protected:
     virtual void *allocate() = 0;
     virtual void deallocate(void *) = 0;
-  private:
+private:
     MemPoolMeter meter;
-  public:
+public:
     MemImplementingAllocator *next;
-  public:
+public:
     size_t alloc_calls;
     size_t free_calls;
     size_t obj_size;
@@ -363,7 +363,7 @@ class MemImplementingAllocator : public MemAllocator
 /// \ingroup MemPoolsAPI
 class MemPool : public MemImplementingAllocator
 {
-  public:
+public:
     friend class MemChunk;
     MemPool(const char *label, size_t obj_size);
     ~MemPool();
@@ -380,10 +380,10 @@ class MemPool : public MemImplementingAllocator
     void *get();
     void push(void *obj);
     virtual int getInUseCount();
-  protected:
+protected:
     virtual void *allocate();
     virtual void deallocate(void *);
-  public:
+public:
     /**
      * Allows you tune chunk size of pooling. Objects are allocated in chunks
      * instead of individually. This conserves memory, reduces fragmentation.
@@ -413,7 +413,7 @@ class MemPool : public MemImplementingAllocator
 /// \ingroup MemPoolsAPI
 class MemMalloc : public MemImplementingAllocator
 {
-  public:
+public:
     MemMalloc(char const *label, size_t aSize);
     virtual bool idleTrigger(int shift) const;
     virtual void clean(time_t maxage);
@@ -425,17 +425,17 @@ class MemMalloc : public MemImplementingAllocator
     virtual int getStats(MemPoolStats * stats);
 
     virtual int getInUseCount();
-  protected:
+protected:
     virtual void *allocate();
     virtual void deallocate(void *);
-  private:
+private:
     int inuse;
 };
 
 /// \ingroup MemPoolsAPI
 class MemChunk
 {
-  public:
+public:
     MemChunk(MemPool *pool);
     ~MemChunk();
     void *freeList;
@@ -450,7 +450,7 @@ class MemChunk
 /// \ingroup MemPoolsAPI
 class MemPoolStats
 {
-  public:
+public:
     MemAllocator *pool;
     const char *label;
     MemPoolMeter *meter;
@@ -472,8 +472,7 @@ class MemPoolStats
 
 /// \ingroup MemPoolsAPI
 /// \todo Classify and add constructor/destructor to initialize properly.
-struct _MemPoolGlobalStats
-{
+struct _MemPoolGlobalStats {
     MemPoolMeter *TheMeter;
 
     int tot_pools_alloc;
