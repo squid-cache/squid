@@ -550,6 +550,7 @@ struct SquidConfig
     char *errorDirectory;
 #if USE_ERR_LOCALES
     char *errorDefaultLanguage;
+    int errorLogMissingLanguages;
 #endif
     char *errorStylesheet;
 

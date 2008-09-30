@@ -37,7 +37,7 @@ get_tick(void)
     uint32_t lo, hi;
     // Based on an example in Wikipedia
     /* We cannot use "=A", since this would use %rax on x86_64 */
-    asm volatile ("rdtsc" : "=a" (lo), "=d" (hi));
+asm volatile ("rdtsc" : "=a" (lo), "=d" (hi));
     return (hrtime_t)hi << 32 | lo;
 }
 
@@ -185,8 +185,7 @@ typedef struct _xprof_stats_node xprof_stats_node;
 
 typedef struct _xprof_stats_data xprof_stats_data;
 
-struct _xprof_stats_data
-{
+struct _xprof_stats_data {
     hrtime_t start;
     hrtime_t stop;
     hrtime_t delta;
@@ -197,8 +196,7 @@ struct _xprof_stats_data
     int64_t summ;
 };
 
-struct _xprof_stats_node
-{
+struct _xprof_stats_node {
     const char *name;
     xprof_stats_data accu;
     xprof_stats_data hist;
