@@ -122,9 +122,6 @@ static char **error_text = NULL;
 /// \ingroup ErrorPageInternal
 static int error_page_count = 0;
 
-/// \ingroup ErrorPageInternal
-static MemBuf error_stylesheet;
-
 static char *errorTryLoadText(const char *page_name, const char *dir, bool silent = false);
 static char *errorLoadText(const char *page_name);
 static const char *errorFindHardText(err_type type);
@@ -183,17 +180,6 @@ errorInitialize(void)
                 /** But only if they are not redirection URL. */
                 error_text[i] = errorLoadText(info->page_name);
             }
-        }
-    }
-
-    error_stylesheet.reset();
-
-    // look for and load stylesheet into global MemBuf for it.
-    if(Config.errorStylesheet) {
-        char *temp = errorLoadText(Config.errorStylesheet);
-        if(temp) {
-            error_stylesheet.Printf("%s",temp);
-            safe_free(temp);
         }
     }
 }
@@ -686,11 +672,6 @@ ErrorState::Convert(char token)
         } else
             p = "[unknown]";
 
-        break;
-
-    case 'l':
-        mb.append(error_stylesheet.content(), error_stylesheet.contentSize());
-        do_quote = 0;
         break;
 
     case 'L':
