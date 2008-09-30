@@ -119,9 +119,7 @@ private:
 class BodyRep: public libecap::Body
 {
 public:
-    typedef libecap::Area Area;
     typedef libecap::BodySize BodySize;
-    using libecap::Body::size_type;
 
 public:
     BodyRep(const BodyPipe::Pointer &aBody); // using NULL pointer? see tie()
@@ -130,9 +128,6 @@ public:
 
     // libecap::Body API
     virtual BodySize bodySize() const;
-    virtual size_type consumedSize() const;
-    virtual bool productionEnded() const;
-    virtual Area prefix(size_type size) const;
 
 private:
     BodyPipe::Pointer theBody; // the body being translated to libecap

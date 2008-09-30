@@ -317,26 +317,6 @@ Ecap::BodyRep::bodySize() const
     return !theBody ? BodySize() : BodySize(theBody->bodySize());
 }
 
-Ecap::BodyRep::size_type
-Ecap::BodyRep::consumedSize() const
-{
-    return theBody->consumedSize();
-}
-
-bool
-Ecap::BodyRep::productionEnded() const
-{
-    return theBody->productionEnded();
-}
-   
-Ecap::BodyRep::Area
-Ecap::BodyRep::prefix(Ecap::BodyRep::size_type size) const
-{
-    Must(size <= static_cast<size_type>(theBody->buf().contentSize()));
-    // XXX: optimize by making theBody a shared_ptr (see FromTemp*() src)
-    return Area::FromTempBuffer(theBody->buf().content(), size);
-}
-
 
 /* MessageRep */
 
