@@ -718,6 +718,7 @@ idnsInitVCConnected(int fd, comm_err_t status, int xerrno, void *data)
     nsvc * vc = (nsvc *)data;
 
     if (status != COMM_OK) {
+        debugs(78, 1, "idnsInitVCConnected: Failed to connect to nameserver " << inet_ntoa(nameservers[vc->ns].S.sin_addr) << " using TCP!");
         comm_close(fd);
         return;
     }
@@ -744,6 +745,7 @@ idnsInitVC(int ns)
 
     nsvc *vc = cbdataAlloc(nsvc);
     nameservers[ns].vc = vc;
+    vc->ns = ns;
 
     IPAddress addr;
 
@@ -779,6 +781,12 @@ idnsSendQueryVC(idns_query * q, int ns)
         idnsInitVC(ns);
 
     nsvc *vc = nameservers[ns].vc;
+
+    if (!vc) {
+        debugs(78, 1, "idnsSendQuery: Failed to initiate TCP connection to nameserver " << inet_ntoa(nameservers[vc->ns].S.sin_addr) << "!");
+
+        return;
+    }
 
     vc->queue->reset();
 
