@@ -383,7 +383,7 @@ HttpStateData::cacheableReply()
         }
     }
 
-    if (request->flags.auth) {
+    if (request->flags.auth || request->flags.auth_sent) {
         /*
          * Responses to requests with authorization may be cached
          * only if a Cache-Control: public reply header is present.
@@ -715,6 +715,9 @@ HttpStateData::processReplyHeader()
 	 httpChunkDecoder = new ChunkedCodingParser;
     }
 
+    if(!peerSupportsConnectionPinning())
+	orig_request->flags.connection_auth_disabled = 1;
+
     HttpReply *vrep = setVirginReply(newrep);
     flags.headers_parsed = 1;
 
@@ -730,6 +733,67 @@ HttpStateData::processReplyHeader()
 
     ctx_exit(ctx);
 
+}
+
+/**
+ * returns true if the peer can support connection pinning
+*/
+bool HttpStateData::peerSupportsConnectionPinning() const
+{
+    const HttpReply *rep = entry->mem_obj->getReply();
+    const HttpHeader *hdr = &rep->header;
+    bool rc;
+    String header;
+
+    if (!_peer)
+	return true;
+    
+    /*If this peer does not support connection pinning (authenticated 
+      connections) return false
+     */
+    if (!_peer->connection_auth)
+	return false;
+
+    /*The peer supports connection pinning and the http reply status 
+      is not unauthorized, so the related connection can be pinned
+     */
+    if (rep->sline.status != HTTP_UNAUTHORIZED)
+	return true;
+    
+    /*The server respond with HTTP_UNAUTHORIZED and the peer configured 
+      with "connection-auth=on" we know that the peer supports pinned 
+      connections
+    */
+    if (_peer->connection_auth == 1)
+	return true;
+
+    /*At this point peer has configured with "connection-auth=auto" 
+      parameter so we need some extra checks to decide if we are going 
+      to allow pinned connections or not
+    */
+
+    /*if the peer configured with originserver just allow connection 
+        pinning (squid 2.6 behaviour)
+     */
+    if (_peer->options.originserver)
+	return true;
+
+    /*if the connections it is already pinned it is OK*/
+    if (request->flags.pinned)
+	return true;
+    
+    /*Allow pinned connections only if the Proxy-support header exists in 
+      reply and has in its list the "Session-Based-Authentication" 
+      which means that the peer supports connection pinning.
+     */
+    if (!hdr->has(HDR_PROXY_SUPPORT))
+	return false;
+
+    header = hdr->getStrOrList(HDR_PROXY_SUPPORT);
+    /* XXX This ought to be done in a case-insensitive manner */
+    rc = (strstr(header.buf(), "Session-Based-Authentication") != NULL);
+
+    return rc;
 }
 
 // Called when we parsed (and possibly adapted) the headers but
@@ -1141,6 +1205,7 @@ HttpStateData::processReplyBody()
 {
     AsyncCall::Pointer call;
     IPAddress client_addr;
+    bool ispinned = false;
 
     if (!flags.headers_parsed) {
         flags.do_next_read = 1;
@@ -1206,7 +1271,17 @@ HttpStateData::processReplyBody()
             if (orig_request->flags.spoof_client_ip)
                 client_addr = orig_request->client_addr;
 
-            if (_peer) {
+
+	    if (request->flags.pinned) {
+		ispinned = true;
+	    } else if (request->flags.connection_auth && request->flags.auth_sent) {
+		ispinned = true;
+	    }
+	   
+	    if (orig_request->pinnedConnection() && ispinned) {
+		orig_request->pinnedConnection()->pinConnection(fd, orig_request, _peer, 
+								(request->flags.connection_auth != 0));
+	    } else if (_peer) {
                 if (_peer->options.originserver)
                     fwd->pconnPush(fd, _peer->name, orig_request->port, orig_request->GetHost(), client_addr);
                 else
@@ -1715,7 +1790,7 @@ HttpStateData::decideIfWeDoRanges (HttpRequest * orig_request)
      */
 
     if (NULL == orig_request->range || !orig_request->flags.cachable
-            || orig_request->range->offsetLimitExceeded())
+            || orig_request->range->offsetLimitExceeded() || orig_request->flags.connection_auth)
         result = false;
 
         debugs(11, 8, "decideIfWeDoRanges: range specs: " <<
@@ -1745,6 +1820,12 @@ HttpStateData::buildRequestPrefix(HttpRequest * request,
         HttpHeader hdr(hoRequest);
         Packer p;
         httpBuildRequestHeader(request, orig_request, entry, &hdr, flags);
+	
+	if (request->flags.pinned && request->flags.connection_auth)
+            request->flags.auth_sent = 1;
+        else if (hdr.has(HDR_AUTHORIZATION))
+            request->flags.auth_sent = 1;
+
         packerToMemInit(&p, mb);
         hdr.packInto(&p);
         hdr.clean();
@@ -1798,7 +1879,9 @@ HttpStateData::sendRequest()
     /*
      * Is keep-alive okay for all request methods?
      */
-    if (!Config.onoff.server_pconns)
+    if (orig_request->flags.must_keepalive)
+	flags.keepalive = 1;
+    else if (!Config.onoff.server_pconns)
         flags.keepalive = 0;
     else if (_peer == NULL)
         flags.keepalive = 1;

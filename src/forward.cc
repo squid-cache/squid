@@ -804,6 +804,35 @@ FwdState::connectStart()
     if (ftimeout < ctimeout)
         ctimeout = ftimeout;
 
+
+    request->flags.pinned = 0;
+    if (fs->code == PINNED) {
+	ConnStateData *pinned_connection = request->pinnedConnection();
+	assert(pinned_connection);
+        fd = pinned_connection->validatePinnedConnection(request, fs->_peer);
+        if (fd >= 0) {
+	    pinned_connection->unpinConnection();
+#if 0
+            if (!fs->_peer)
+                fs->code = HIER_DIRECT;
+#endif
+            server_fd = fd;
+            n_tries++;
+            request->flags.pinned = 1;
+            if (pinned_connection->pinnedAuth())
+                request->flags.auth = 1;
+            comm_add_close_handler(fd, fwdServerClosedWrapper, this);
+            connectDone(fd, COMM_OK, 0);
+            return;
+        }
+       /* Failure. Fall back on next path */
+        request->releasePinnedConnection();
+        servers = fs->next;
+        fwdServerFree(fs);
+        connectStart();
+        return;
+    }	
+
     fd = fwdPconnPool->pop(host, port, domain, client_addr, checkRetriable());
     if (fd >= 0) {
         debugs(17, 3, "fwdConnectStart: reusing pconn FD " << fd);

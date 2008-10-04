@@ -189,6 +189,16 @@ public:
         bool readMoreRequests;
         bool swanSang; // XXX: temporary flag to check proper cleanup
     } flags;
+    struct {
+        int fd;                 /* pinned server side connection */
+        char *host;             /* host name of pinned connection */
+        int port;               /* port of pinned connection */
+        bool pinned;             /* this connection was pinned */
+        bool auth;               /* pinned for www authentication */
+        struct peer *peer;             /* peer the connection goes via */
+	AsyncCall::Pointer closeHandler; /*The close handler for pinned server side connection*/
+     } pinning;
+
     http_port_list *port;
 
     bool transparent() const;
@@ -205,6 +215,31 @@ public:
 
     void handleReadData(char *buf, size_t size);
     void handleRequestBodyData();
+
+    /**
+     * Correlate the current ConnStateData object with the pinning_fd socket descriptor.
+     */
+    void pinConnection(int fd, HttpRequest *request, struct peer *peer, bool auth);
+    /**
+     * Decorrelate the ConnStateData object from its pinned peer
+     */
+    void unpinConnection();    
+    /**
+     * Checks if there is pinning info if it is valid. It can close the server side connection
+     * if pinned info is not valid.
+     \param request   if it is not NULL also checks if the pinning info refers to the request client side HttpRequest
+     \param peer      if it is not NULL also check if the peer is the pinning peer
+     \return          The fd of the server side connection or -1 if fails.
+     */
+    int validatePinnedConnection(HttpRequest *request, const struct peer *peer=NULL);
+    /**
+     * returts the pinned peer if exists, NULL otherwise
+     */
+    struct peer *pinnedPeer() const {return pinning.peer;}
+    bool pinnedAuth() const {return pinning.auth;}
+
+    // pining related comm callbacks
+    void clientPinnedConnectionClosed(const CommCloseCbParams &io);
 
     // comm callbacks
     void clientReadRequest(const CommIoCbParams &io);
