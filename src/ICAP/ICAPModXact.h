@@ -208,7 +208,6 @@ private:
     void parseIcapHead();
     void parseHttpHead();
     bool parseHead(HttpMsg *head);
-    void inheritVirginProperties(HttpRequest &newR, const HttpRequest &oldR);
 
     void decideOnParsingBody();
     void parseBody();

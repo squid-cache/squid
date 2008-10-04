@@ -177,7 +177,8 @@ typedef enum {
     ANY_OLD_PARENT,
     USERHASH_PARENT,
     SOURCEHASH_PARENT,
-    HIER_MAX
+    HIER_MAX,
+    PINNED
 } hier_code;
 
 /// \ingroup ServerProtocolICPAPI

@@ -828,6 +828,56 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     if (req_hdr->has(HDR_AUTHORIZATION))
         request->flags.auth = 1;
 
+    ConnStateData *http_conn = http->getConn();
+    assert(http_conn);
+    request->flags.connection_auth_disabled = http_conn->port->connection_auth_disabled;
+    if (!request->flags.connection_auth_disabled) {
+	if (http_conn->pinning.fd != -1) {
+	    if (http_conn->pinning.auth) {
+		request->flags.connection_auth = 1;
+		request->flags.auth = 1;
+	    } else {
+		request->flags.connection_proxy_auth = 1;
+	    }
+	    request->setPinnedConnection(http_conn);
+	}
+    }
+
+    /* check if connection auth is used, and flag as candidate for pinning
+     * in such case.
+     * Note: we may need to set flags.connection_auth even if the connection
+     * is already pinned if it was pinned earlier due to proxy auth
+     */
+    if (!request->flags.connection_auth) {
+	if (req_hdr->has(HDR_AUTHORIZATION) || req_hdr->has(HDR_PROXY_AUTHORIZATION)) {
+	    HttpHeaderPos pos = HttpHeaderInitPos;
+	    HttpHeaderEntry *e;
+	    int may_pin = 0;
+	    while ((e = req_hdr->getEntry(&pos))) {
+		if (e->id == HDR_AUTHORIZATION || e->id == HDR_PROXY_AUTHORIZATION) {
+		    const char *value = e->value.buf();
+		    if (strncasecmp(value, "NTLM ", 5) == 0
+			||
+			strncasecmp(value, "Negotiate ", 10) == 0
+			||
+			strncasecmp(value, "Kerberos ", 9) == 0) {
+			if (e->id == HDR_AUTHORIZATION) {
+			    request->flags.connection_auth = 1;
+			    may_pin = 1;
+			} else {
+			    request->flags.connection_proxy_auth = 1;
+			    may_pin = 1;
+			}
+		    }
+		}
+	    }
+	    if (may_pin && !request->pinnedConnection()) {
+		request->setPinnedConnection(http->getConn());
+	    }
+	}
+    }
+
+
     if (request->login[0] != '\0')
         request->flags.auth = 1;
 
