@@ -435,7 +435,7 @@ CacheManager::MenuAction::run(StoreEntry * sentry)
     }
 }
 /// \ingroup CacheManagerInternal
-CacheManager::MenuAction::MenuAction(CacheManager *aMgr) : CacheManagerAction ("menu", "Cache Manager Menu", 1, 1), cmgr(aMgr) { }
+CacheManager::MenuAction::MenuAction(CacheManager *aMgr) : CacheManagerAction ("menu", "Cache Manager Menu", 0, 1), cmgr(aMgr) { }
 
 /*
  \ingroup CacheManagerInternal

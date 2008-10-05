@@ -46,7 +46,7 @@
 
 #ifdef HAVE_GETADDRINFO
 
-    /* These functions are provided by the OS */
+/* These functions are provided by the OS */
 #define xgetaddrinfo	getaddrinfo
 #define xfreeaddrinfo	freeaddrinfo
 #define xgai_strerror	gai_strerror
@@ -54,11 +54,10 @@
 #else /* !HAVE_GETADDRINFO */
 
 /* SG 23/09/2007:
-   On Windows the following definitions are already available, may be that
-   this could be needed on some other platform */
+On Windows the following definitions are already available, may be that
+this could be needed on some other platform */
 #if 0
-struct addrinfo
-  {
+struct addrinfo {
     int ai_flags;  	  	/* AI_PASSIVE, AI_CANONNAME, AI_NUMERICHOST */
     int ai_family; 	  	/* PF_xxx */
     int ai_socktype;	 	/* SOCK_xxx */
@@ -67,7 +66,7 @@ struct addrinfo
     char *ai_canonname;		/* canonical name for nodename */
     struct sockaddr *ai_addr;	/* binary address */
     struct addrinfo *ai_next;	/* next structure in linked list */
-  };
+};
 
 /* Supposed to be defined in <netdb.h> */
 #define AI_PASSIVE     1       /* Socket address is intended for `bind'.  */
@@ -102,7 +101,7 @@ struct addrinfo
 
 /* RFC 2553 / Posix resolver */
 SQUIDCEXTERN int xgetaddrinfo (const char *nodename, const char *servname,
-		 const struct addrinfo *hints, struct addrinfo **res);
+                               const struct addrinfo *hints, struct addrinfo **res);
 
 /* Free addrinfo structure and associated storage */
 SQUIDCEXTERN void xfreeaddrinfo (struct addrinfo *ai);

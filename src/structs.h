@@ -550,6 +550,7 @@ struct SquidConfig
     char *errorDirectory;
 #if USE_ERR_LOCALES
     char *errorDefaultLanguage;
+    int errorLogMissingLanguages;
 #endif
     char *errorStylesheet;
 
@@ -1016,6 +1017,7 @@ struct peer
 #endif
 
     int front_end_https;
+    int connection_auth;
 };
 
 struct _net_db_name
@@ -1100,6 +1102,11 @@ struct request_flags
     unsigned int internal:1;
     unsigned int internalclient:1;
     unsigned int must_keepalive:1;
+    unsigned int connection_auth:1; /** Request wants connection oriented auth */
+    unsigned int connection_auth_disabled:1; /** Connection oriented auth can not be supported */
+    unsigned int connection_proxy_auth:1; /** Request wants connection oriented auth */
+    unsigned int pinned:1;      /* Request sent on a pinned connection */
+    unsigned int auth_sent:1;   /* Authentication forwarded */
 
     // When adding new flags, please update cloneAdaptationImmune() as needed.
 

@@ -99,6 +99,8 @@ public:
 
     virtual bool expectingBody(const HttpRequestMethod&, int64_t&) const;
 
+    virtual bool inheritProperties(const HttpMsg *aMsg);
+
     void updateOnNotModified(HttpReply const *other);
 
     /** set commonly used info with one call */

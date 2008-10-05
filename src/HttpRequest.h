@@ -65,6 +65,8 @@ public:
 
     void initHTTP(const HttpRequestMethod& aMethod, protocol_t aProtocol, const char *aUrlpath);
 
+    virtual HttpRequest *clone() const;
+
     /* are responses to this request potentially cachable */
     bool cacheable() const;
 
@@ -98,6 +100,12 @@ public:
 
 private:
     char host[SQUIDHOSTNAMELEN];
+    
+    /***
+     * The client side connection data of pinned connections for the client side 
+     * request related objects 
+     */
+    ConnStateData *pinned_connection;
 
 public:
     IPAddress host_addr;
@@ -174,6 +182,18 @@ public:
     static HttpRequest * CreateFromUrlAndMethod(char * url, const HttpRequestMethod& method);
 
     static HttpRequest * CreateFromUrl(char * url);
+    
+    void setPinnedConnection(ConnStateData *conn) {
+	pinned_connection = cbdataReference(conn);
+    }
+
+    ConnStateData *pinnedConnection() {
+	return pinned_connection;
+    }
+
+    void releasePinnedConnection() {
+	cbdataReferenceDone(pinned_connection);
+    }
 
 private:
     const char *packableURI(bool full_uri) const;
@@ -184,7 +204,8 @@ protected:
     virtual bool sanityCheckStartLine(MemBuf *buf, http_status *error);
 
     virtual void hdrCacheInit();
-
+    
+    virtual bool inheritProperties(const HttpMsg *aMsg);
 };
 
 MEMPROXY_CLASS_INLINE(HttpRequest)          /**DOCS_NOSEMI*/

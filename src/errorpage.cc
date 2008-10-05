@@ -969,6 +969,9 @@ ErrorState::BuildContent()
                     err_language = xstrdup(reset);
                     break;
                 }
+                else if(Config.errorLogMissingLanguages) {
+                    debugs(4, DBG_IMPORTANT, "WARNING: Error Pages Missing Language: " << reset);
+                }
 
 #if HAVE_GLOB
                 if( (dt - reset) == 2) {

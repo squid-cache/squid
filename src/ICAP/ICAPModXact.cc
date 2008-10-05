@@ -566,7 +566,7 @@ void ICAPModXact::parseMore()
         parseBody();
 }
 
-void ICAPModXact::callException(const TextException &e)
+void ICAPModXact::callException(const std::exception &e)
 {
     if (!canStartBypass || isRetriable) {
         ICAPXaction::callException(e);
@@ -575,10 +575,10 @@ void ICAPModXact::callException(const TextException &e)
 
     try {
         debugs(93, 3, "bypassing ICAPModXact::" << inCall << " exception: " <<
-           e.message << ' ' << status());
+           e.what() << ' ' << status());
         bypassFailure();
     }
-    catch (const TextException &bypassE) {
+    catch (const std::exception &bypassE) {
         ICAPXaction::callException(bypassE);
     }
 }
@@ -782,14 +782,16 @@ void ICAPModXact::prepEchoing()
     // allocate the adapted message and copy metainfo
     Must(!adapted.header);
     HttpMsg *newHead = NULL;
-    if (const HttpRequest *oldR = dynamic_cast<const HttpRequest*>(oldHead)) {
+    if (dynamic_cast<const HttpRequest*>(oldHead)) {
         HttpRequest *newR = new HttpRequest;
-        inheritVirginProperties(*newR, *oldR);
         newHead = newR;
-    } else
-    if (dynamic_cast<const HttpReply*>(oldHead))
-        newHead = new HttpReply;
+    } 
+    else if (dynamic_cast<const HttpReply*>(oldHead)) {
+	HttpReply *newRep = new HttpReply;
+	newHead = newRep;
+    }
     Must(newHead);
+    newHead->inheritProperties(oldHead);
 
     adapted.setHeader(newHead);
 
@@ -845,15 +847,18 @@ void ICAPModXact::parseHttpHead()
         if (!parseHead(adapted.header))
             return; // need more header data
 
-        if (HttpRequest *newHead = dynamic_cast<HttpRequest*>(adapted.header)) {
+        if (dynamic_cast<HttpRequest*>(adapted.header)) {
             const HttpRequest *oldR = dynamic_cast<const HttpRequest*>(virgin.header);
             Must(oldR);
             // TODO: the adapted request did not really originate from the 
             // client; give proxy admin an option to prevent copying of 
             // sensitive client information here. See the following thread:
             // http://www.squid-cache.org/mail-archive/squid-dev/200703/0040.html
-            inheritVirginProperties(*newHead, *oldR);
         }
+
+	// Maybe adapted.header==NULL if HttpReply and have Http 0.9 ....
+	if(adapted.header) 
+	    adapted.header->inheritProperties(virgin.header);
     }
 
     decideOnParsingBody();
@@ -879,22 +884,6 @@ bool ICAPModXact::parseHead(HttpMsg *head)
     debugs(93, 5, HERE << "parse success, consume " << head->hdr_sz << " bytes, return true");
     readBuf.consume(head->hdr_sz);
     return true;
-}
-
-// TODO: Move this method to HttpRequest?
-void ICAPModXact::inheritVirginProperties(HttpRequest &newR, const HttpRequest &oldR) {
-
-    newR.client_addr = oldR.client_addr;
-    newR.my_addr = oldR.my_addr;
-
-    // This may be too conservative for the 204 No Content case
-    // may eventually need cloneNullAdaptationImmune() for that.
-    newR.flags = oldR.flags.cloneAdaptationImmune();
-
-    if (oldR.auth_user_request) {
-        newR.auth_user_request = oldR.auth_user_request;
-	AUTHUSERREQUESTLOCK(newR.auth_user_request, "newR in ICAPModXact");
-    }
 }
 
 void ICAPModXact::decideOnParsingBody() {
@@ -1152,7 +1141,6 @@ void ICAPModXact::encapsulateHead(MemBuf &icapBuf, const char *section, MemBuf &
         HttpRequest* new_request = new HttpRequest;
         urlParse(old_request->method, old_request->canonical,new_request);
         new_request->http_ver = old_request->http_ver;
-        inheritVirginProperties(*new_request, *old_request);
         headClone = new_request;
     } 
     else if (const HttpReply *old_reply = dynamic_cast<const HttpReply*>(head)) {
@@ -1162,6 +1150,7 @@ void ICAPModXact::encapsulateHead(MemBuf &icapBuf, const char *section, MemBuf &
     }
     
     Must(headClone);
+    headClone->inheritProperties(head);
     
     HttpHeaderPos pos = HttpHeaderInitPos;
     HttpHeaderEntry* p_head_entry = NULL;
