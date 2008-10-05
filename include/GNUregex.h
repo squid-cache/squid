@@ -8,19 +8,19 @@
 
 /* Definitions for data structures and routines for the regular
  * expression library, version 0.12.
- * 
+ *
  * Copyright (C) 1985, 1989, 1990, 1991, 1992, 1993 Free Software Foundation, Inc.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2, or (at your option)
  * any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.  */
@@ -47,7 +47,7 @@ typedef unsigned reg_syntax_t;
 #define RE_BACKSLASH_ESCAPE_IN_LISTS (1)
 
 /* If this bit is not set, then + and ? are operators, and \+ and \? are
- * literals. 
+ * literals.
  * If set, then \+ and \? are operators and + and ? are literals.  */
 #define RE_BK_PLUS_QM (RE_BACKSLASH_ESCAPE_IN_LISTS << 1)
 
@@ -63,8 +63,8 @@ typedef unsigned reg_syntax_t;
  * ^  is an anchor if it is at the beginning of a regular
  * expression or after an open-group or an alternation operator;
  * $  is an anchor if it is at the end of a regular expression, or
- * before a close-group or an alternation operator.  
- * 
+ * before a close-group or an alternation operator.
+ *
  * This bit could be (re)combined with RE_CONTEXT_INDEP_OPS, because
  * POSIX draft 11.2 says that * etc. in leading positions is undefined.
  * We already implemented a previous draft which made those constructs
@@ -74,7 +74,7 @@ typedef unsigned reg_syntax_t;
 /* If this bit is set, then special characters are always special
  * regardless of where they are in the pattern.
  * If this bit is not set, then special characters are special only in
- * some contexts; otherwise they are ordinary.  Specifically, 
+ * some contexts; otherwise they are ordinary.  Specifically,
  * * + ? and intervals are only special when not after the beginning,
  * open-group, or alternation operator.  */
 #define RE_CONTEXT_INDEP_OPS (RE_CONTEXT_INDEP_ANCHORS << 1)
@@ -96,7 +96,7 @@ typedef unsigned reg_syntax_t;
 #define RE_HAT_LISTS_NOT_NEWLINE (RE_DOT_NOT_NULL << 1)
 
 /* If this bit is set, either \{...\} or {...} defines an
- * interval, depending on RE_NO_BK_BRACES. 
+ * interval, depending on RE_NO_BK_BRACES.
  * If not set, \{, \}, {, and } are literals.  */
 #define RE_INTERVALS (RE_HAT_LISTS_NOT_NEWLINE << 1)
 
@@ -121,7 +121,7 @@ typedef unsigned reg_syntax_t;
  * If not set, then \<digit> is a back-reference.  */
 #define RE_NO_BK_REFS (RE_NO_BK_PARENS << 1)
 
-/* If this bit is set, then | is an alternation operator, and \| is literal. 
+/* If this bit is set, then | is an alternation operator, and \| is literal.
  * If not set, then \| is an alternation operator, and | is literal.  */
 #define RE_NO_BK_VBAR (RE_NO_BK_REFS << 1)
 
@@ -275,7 +275,7 @@ typedef enum {
  * private to the regex routines.  */
 
 struct re_pattern_buffer {
-/* [[[begin pattern_buffer]]] */
+    /* [[[begin pattern_buffer]]] */
     /* Space that holds the compiled pattern.  It is declared as
      * `unsigned char *' because its elements are
      * sometimes used as array indexes.  */
@@ -338,7 +338,7 @@ struct re_pattern_buffer {
     /* If true, an anchor at a newline matches.  */
     unsigned newline_anchor:1;
 
-/* [[[end pattern_buffer]]] */
+    /* [[[end pattern_buffer]]] */
 };
 
 typedef struct re_pattern_buffer regex_t;
@@ -399,10 +399,10 @@ typedef struct {
 extern int regcomp _RE_ARGS((regex_t * preg, const char *pattern, int cflags));
 extern int regexec
     _RE_ARGS((const regex_t * preg, const char *string, size_t nmatch,
-	regmatch_t pmatch[], int eflags));
+              regmatch_t pmatch[], int eflags));
 extern size_t regerror
-       _RE_ARGS((int errcode, const regex_t * preg, char *errbuf,
-	size_t errbuf_size));
+    _RE_ARGS((int errcode, const regex_t * preg, char *errbuf,
+              size_t errbuf_size));
 extern void regfree _RE_ARGS((regex_t * preg));
 
 #endif /* SQUID_REGEXP_LIBRARY_H */

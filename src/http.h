@@ -118,6 +118,7 @@ private:
                                  MemBuf * mb,
                                  http_state_flags flags);
     static bool decideIfWeDoRanges (HttpRequest * orig_request);
+    bool peerSupportsConnectionPinning() const;
 
     ChunkedCodingParser *httpChunkDecoder;
 private:

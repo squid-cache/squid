@@ -55,6 +55,9 @@ public:
     virtual HttpMsg *_lock();	// please use HTTPMSGLOCK()
     virtual void _unlock();	// please use HTTPMSGUNLOCK()
 
+	///< produce a message copy, except for a few connection-specific settings
+	virtual HttpMsg *clone() const = 0; ///< \todo rename: not a true copy?
+
 public:
     HttpVersion http_ver;
 
@@ -89,6 +92,8 @@ public:
     virtual bool expectingBody(const HttpRequestMethod&, int64_t&) const = 0;
 
     void firstLineBuf(MemBuf&);
+    
+    virtual bool inheritProperties(const HttpMsg *aMsg) = 0;
 
 protected:
     virtual bool sanityCheckStartLine(MemBuf *buf, http_status *error) = 0;

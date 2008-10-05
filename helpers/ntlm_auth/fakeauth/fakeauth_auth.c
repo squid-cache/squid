@@ -428,7 +428,10 @@ main(int argc, char *argv[])
 	    } else
 		SEND2("TT %s", data);
 	} else if (strncasecmp(buf, "KK ", 3) == 0) {
-	    if (!ntlmCheckHeader((ntlmhdr *) decoded, NTLM_AUTHENTICATE)) {
+            if(!decoded) {
+                SEND2("BH received KK with no data! user=%s", user);
+            }
+	    else if (!ntlmCheckHeader((ntlmhdr *) decoded, NTLM_AUTHENTICATE)) {
 		if (!ntlmDecodeAuth((struct ntlm_authenticate *) decoded, user, 256)) {
 		    lc(user);
 		    if (strip_domain_enabled) {

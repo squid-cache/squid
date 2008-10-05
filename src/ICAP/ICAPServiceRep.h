@@ -89,7 +89,6 @@ public:
     void invalidate(); // call when the service is no longer needed or valid
 
     bool probed() const; // see comments above
-    bool broken() const; // see comments above
     bool up() const; // see comments above
 
     virtual Adaptation::Initiate *makeXactLauncher(Adaptation::Initiator *, HttpMsg *virginHeader, HttpRequest *virginCause);

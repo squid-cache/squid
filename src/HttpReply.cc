@@ -552,6 +552,7 @@ HttpReply::calcMaxBodySize(HttpRequest& request)
     }
 }
 
+// XXX: check that this is sufficient for eCAP cloning
 HttpReply *
 HttpReply::clone() const
 {
@@ -561,7 +562,20 @@ HttpReply::clone() const
     rep->hdr_sz = hdr_sz;
     rep->http_ver = http_ver;
     rep->pstate = pstate;
+    rep->body_pipe = body_pipe;
+
     rep->protocol = protocol;
     rep->sline = sline;
+    rep->keep_alive = keep_alive;
     return rep;
+}
+
+
+bool HttpReply::inheritProperties(const HttpMsg *aMsg)
+{
+    const HttpReply *aRep = dynamic_cast<const HttpReply*>(aMsg);
+    if(!aRep)
+	return false;
+    keep_alive = aRep->keep_alive;
+    return true;
 }

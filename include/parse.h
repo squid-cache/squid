@@ -9,13 +9,13 @@
 
                       All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of CMU not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 CMU DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -67,7 +67,8 @@ struct snmp_mib_tree {
 #define TYPE_NULL	    10
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
     void init_mib(char *);
@@ -79,9 +80,9 @@ extern "C" {
     void sprint_value(char *, oid *, int, struct variable_list *);
     void print_value(oid *, int, struct variable_list *);
 
-/*void print_variable_list(struct variable_list *); */
-/*void print_variable_list_value(struct variable_list *); */
-/*void print_type(struct variable_list *); */
+    /*void print_variable_list(struct variable_list *); */
+    /*void print_variable_list_value(struct variable_list *); */
+    /*void print_type(struct variable_list *); */
     void print_oid_nums(oid *, int);
 
     struct snmp_mib_tree *read_mib(char *);

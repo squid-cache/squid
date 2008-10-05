@@ -64,10 +64,7 @@
 #include "adaptation/Config.h"
 
 static void parse_adaptation_service_set_type();
-
 static void parse_adaptation_access_type();
-static void dump_adaptation_access_type(StoreEntry *, const char *);
-static void free_adaptation_access_type();
 
 #endif
 
@@ -77,13 +74,16 @@ static void free_adaptation_access_type();
 static void parse_icap_service_type(ICAPConfig *);
 static void dump_icap_service_type(StoreEntry *, const char *, const ICAPConfig &);
 static void free_icap_service_type(ICAPConfig *);
-static void parse_icap_class_type(ICAPConfig *);
-static void dump_icap_class_type(StoreEntry *, const char *, const ICAPConfig &);
-static void free_icap_class_type(ICAPConfig *);
-static void parse_icap_access_type(ICAPConfig *);
-static void dump_icap_access_type(StoreEntry *, const char *, const ICAPConfig &);
-static void free_icap_access_type(ICAPConfig *);
+static void parse_icap_class_type();
+static void parse_icap_access_type();
 
+#endif
+
+#if USE_ECAP
+#include "eCAP/Config.h"
+static void parse_ecap_service_type(Ecap::Config *);
+static void dump_ecap_service_type(StoreEntry *, const char *, const Ecap::Config &);
+static void free_ecap_service_type(Ecap::Config *);
 #endif
 
 CBDATA_TYPE(peer);
@@ -107,9 +107,7 @@ static const char *const list_sep = ", \t\n\r";
 
 static void parse_logformat(logformat ** logformat_definitions);
 static void parse_access_log(customlog ** customlog_definitions);
-#if UNUSED_CODE
 static int check_null_access_log(customlog *customlog_definitions);
-#endif
 
 static void dump_logformat(StoreEntry * entry, const char *name, logformat * definitions);
 static void dump_access_log(StoreEntry * entry, const char *name, customlog * definitions);
@@ -1692,6 +1690,7 @@ parse_peer(peer ** head)
         self_destruct();
 
     p->icp.port = GetUdpService();
+    p->connection_auth = 2;    /* auto */
 
     while ((token = strtok(NULL, w_space))) {
         if (!strcasecmp(token, "proxy-only")) {
@@ -1845,6 +1844,14 @@ parse_peer(peer ** head)
             p->front_end_https = 1;
         } else if (strcmp(token, "front-end-https=auto") == 0) {
             p->front_end_https = 2;
+        }else if (strcmp(token, "connection-auth=off") == 0) {
+            p->connection_auth = 0;
+        } else if (strcmp(token, "connection-auth") == 0) {
+            p->connection_auth = 1;
+        } else if (strcmp(token, "connection-auth=on") == 0) {
+            p->connection_auth = 1;
+        } else if (strcmp(token, "connection-auth=auto") == 0) {
+            p->connection_auth = 2;
         } else {
             debugs(3, 0, "parse_peer: token='" << token << "'");
             self_destruct();
@@ -2869,6 +2876,7 @@ parse_http_port_specification(http_port_list * s, char *token)
 
     s->disable_pmtu_discovery = DISABLE_PMTU_OFF;
     s->name = xstrdup(token);
+    s->connection_auth_disabled = false;
 
 #if USE_IPV6
     if (*token == '[') {
@@ -2952,6 +2960,14 @@ parse_http_port_option(http_port_list * s, char *token)
         s->accel = 1;
     } else if (strcmp(token, "accel") == 0) {
         s->accel = 1;
+    } else if (strcmp(token, "no-connection-auth") == 0) {
+        s->connection_auth_disabled = true;
+    } else if (strcmp(token, "connection-auth=off") == 0) {
+          s->connection_auth_disabled = true;
+    } else if (strcmp(token, "connection-auth") == 0) {
+          s->connection_auth_disabled = false;
+    } else if (strcmp(token, "connection-auth=on") == 0) {
+          s->connection_auth_disabled = false;
     } else if (strncmp(token, "disable-pmtu-discovery=", 23) == 0) {
         if (!strcasecmp(token + 23, "off"))
             s->disable_pmtu_discovery = DISABLE_PMTU_OFF;
@@ -3132,6 +3148,11 @@ dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
 
     if (s->vport)
         storeAppendPrintf(e, " vport");
+
+    if (s->connection_auth_disabled)
+        storeAppendPrintf(e, " connection-auth=off");
+    else
+        storeAppendPrintf(e, " connection-auth=on");
 
     if (s->disable_pmtu_discovery != DISABLE_PMTU_OFF) {
         const char *pmtu;
@@ -3392,13 +3413,11 @@ done:
     *logs = cl;
 }
 
-#if UNUSED_CODE
 static int
 check_null_access_log(customlog *customlog_definitions)
 {
     return customlog_definitions == NULL;
 }
-#endif
 
 static void
 dump_logformat(StoreEntry * entry, const char *name, logformat * definitions)
@@ -3496,18 +3515,6 @@ parse_adaptation_access_type()
     Adaptation::Config::ParseAccess(LegacyParser);
 }
 
-static void
-free_adaptation_access_type()
-{
-    Adaptation::Config::FreeAccess();
-}
-
-static void
-dump_adaptation_access_type(StoreEntry * entry, const char *name)
-{
-    Adaptation::Config::DumpAccess(entry, name);
-}
-
 #endif /* USE_ADAPTATION */
 
 
@@ -3532,7 +3539,7 @@ dump_icap_service_type(StoreEntry * entry, const char *name, const ICAPConfig &c
 }
 
 static void
-parse_icap_class_type(ICAPConfig *)
+parse_icap_class_type()
 {
     debugs(93, 0, "WARNING: 'icap_class' is depricated. " <<
         "Use 'adaptation_service_set' instead");
@@ -3540,35 +3547,34 @@ parse_icap_class_type(ICAPConfig *)
 }
 
 static void
-free_icap_class_type(ICAPConfig *)
-{
-    Adaptation::Config::FreeServiceSet();
-}
-
-static void
-dump_icap_class_type(StoreEntry * entry, const char *name, const ICAPConfig &)
-{
-    Adaptation::Config::DumpServiceSet(entry, name);
-}
-
-static void
-parse_icap_access_type(ICAPConfig *)
+parse_icap_access_type()
 {
     debugs(93, 0, "WARNING: 'icap_access' is depricated. " <<
         "Use 'adaptation_access' instead");
-    parse_adaptation_access_type();
-}
-
-static void
-free_icap_access_type(ICAPConfig *)
-{
-    free_adaptation_access_type();
-}
-
-static void
-dump_icap_access_type(StoreEntry * entry, const char *name, const ICAPConfig &)
-{
-    dump_adaptation_access_type(entry, name);
+    Adaptation::Config::ParseAccess(LegacyParser);
 }
 
 #endif
+
+
+#if USE_ECAP
+
+static void
+parse_ecap_service_type(Ecap::Config * cfg)
+{
+    cfg->parseService();
+}
+
+static void
+free_ecap_service_type(Ecap::Config * cfg)
+{
+    cfg->freeService();
+}
+
+static void
+dump_ecap_service_type(StoreEntry * entry, const char *name, const Ecap::Config &cfg)
+{
+    cfg.dumpService(entry, name);
+}
+
+#endif /* USE_ECAP */

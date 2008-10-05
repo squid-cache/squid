@@ -100,6 +100,7 @@ static void peerGetSomeDirect(ps_state *);
 static void peerGetSomeParent(ps_state *);
 static void peerGetAllParents(ps_state *);
 static void peerAddFwdServer(FwdServer **, peer *, hier_code);
+static void peerSelectPinned(ps_state * ps);
 
 CBDATA_CLASS_INIT(ps_state);
 
@@ -322,6 +323,8 @@ peerSelectFoo(ps_state * ps)
         debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[ps->direct]);
     }
 
+    if (!entry || entry->ping_status == PING_NONE)
+        peerSelectPinned(ps);
     if (entry == NULL) {
         (void) 0;
     } else if (entry->ping_status == PING_NONE) {
@@ -360,6 +363,33 @@ peerSelectFoo(ps_state * ps)
     }
 
     peerSelectCallback(ps);
+}
+
+/*
+ * peerSelectPinned
+ *
+ * Selects a pinned connection
+ */
+int peerAllowedToUse(const peer * p, HttpRequest * request);
+static void
+peerSelectPinned(ps_state * ps)
+{
+    HttpRequest *request = ps->request;
+    peer *peer;
+    if (!request->pinnedConnection())
+        return;
+    if (request->pinnedConnection()->validatePinnedConnection(request) != -1) {
+	peer = request->pinnedConnection()->pinnedPeer();
+        if (peer && peerAllowedToUse(peer, request)) {
+            peerAddFwdServer(&ps->servers, peer, PINNED);
+            if (ps->entry)
+                ps->entry->ping_status = PING_DONE;     /* Skip ICP */
+        } else if (!peer && ps->direct != DIRECT_NO) {
+            peerAddFwdServer(&ps->servers, NULL, PINNED);
+            if (ps->entry)
+                ps->entry->ping_status = PING_DONE;     /* Skip ICP */
+        }
+    }
 }
 
 /*
