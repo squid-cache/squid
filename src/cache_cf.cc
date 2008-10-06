@@ -1690,6 +1690,7 @@ parse_peer(peer ** head)
         self_destruct();
 
     p->icp.port = GetUdpService();
+    p->connection_auth = 2;    /* auto */
 
     while ((token = strtok(NULL, w_space))) {
         if (!strcasecmp(token, "proxy-only")) {
@@ -1843,6 +1844,14 @@ parse_peer(peer ** head)
             p->front_end_https = 1;
         } else if (strcmp(token, "front-end-https=auto") == 0) {
             p->front_end_https = 2;
+        }else if (strcmp(token, "connection-auth=off") == 0) {
+            p->connection_auth = 0;
+        } else if (strcmp(token, "connection-auth") == 0) {
+            p->connection_auth = 1;
+        } else if (strcmp(token, "connection-auth=on") == 0) {
+            p->connection_auth = 1;
+        } else if (strcmp(token, "connection-auth=auto") == 0) {
+            p->connection_auth = 2;
         } else {
             debugs(3, 0, "parse_peer: token='" << token << "'");
             self_destruct();
@@ -2867,6 +2876,7 @@ parse_http_port_specification(http_port_list * s, char *token)
 
     s->disable_pmtu_discovery = DISABLE_PMTU_OFF;
     s->name = xstrdup(token);
+    s->connection_auth_disabled = false;
 
 #if USE_IPV6
     if (*token == '[') {
@@ -2950,6 +2960,14 @@ parse_http_port_option(http_port_list * s, char *token)
         s->accel = 1;
     } else if (strcmp(token, "accel") == 0) {
         s->accel = 1;
+    } else if (strcmp(token, "no-connection-auth") == 0) {
+        s->connection_auth_disabled = true;
+    } else if (strcmp(token, "connection-auth=off") == 0) {
+          s->connection_auth_disabled = true;
+    } else if (strcmp(token, "connection-auth") == 0) {
+          s->connection_auth_disabled = false;
+    } else if (strcmp(token, "connection-auth=on") == 0) {
+          s->connection_auth_disabled = false;
     } else if (strncmp(token, "disable-pmtu-discovery=", 23) == 0) {
         if (!strcasecmp(token + 23, "off"))
             s->disable_pmtu_discovery = DISABLE_PMTU_OFF;
@@ -3130,6 +3148,11 @@ dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
 
     if (s->vport)
         storeAppendPrintf(e, " vport");
+
+    if (s->connection_auth_disabled)
+        storeAppendPrintf(e, " connection-auth=off");
+    else
+        storeAppendPrintf(e, " connection-auth=on");
 
     if (s->disable_pmtu_discovery != DISABLE_PMTU_OFF) {
         const char *pmtu;

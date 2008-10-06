@@ -92,6 +92,8 @@ public:
     virtual bool expectingBody(const HttpRequestMethod&, int64_t&) const = 0;
 
     void firstLineBuf(MemBuf&);
+    
+    virtual bool inheritProperties(const HttpMsg *aMsg) = 0;
 
 protected:
     virtual bool sanityCheckStartLine(MemBuf *buf, http_status *error) = 0;

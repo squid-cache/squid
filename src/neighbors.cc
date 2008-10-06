@@ -51,7 +51,7 @@
 /* count mcast group peers every 15 minutes */
 #define MCAST_COUNT_RATE 900
 
-static int peerAllowedToUse(const peer *, HttpRequest *);
+int peerAllowedToUse(const peer *, HttpRequest *);
 static int peerWouldBePinged(const peer *, HttpRequest *);
 static void neighborRemove(peer *);
 static void neighborAlive(peer *, const MemObject *, const icp_common_t *);
@@ -136,7 +136,7 @@ neighborType(const peer * p, const HttpRequest * request)
  * this function figures out if it is appropriate to fetch REQUEST
  * from PEER.
  */
-static int
+int
 peerAllowedToUse(const peer * p, HttpRequest * request)
 {
 
@@ -1652,6 +1652,13 @@ dump_peer_options(StoreEntry * sentry, peer * p)
 
     if (p->domain)
         storeAppendPrintf(sentry, " forceddomain=%s", p->domain);
+
+    if(p->connection_auth == 0)
+	storeAppendPrintf(sentry, " connection-auth=off");
+    else if(p->connection_auth == 1)
+	storeAppendPrintf(sentry, " connection-auth=on");
+    else if(p->connection_auth == 2)
+	storeAppendPrintf(sentry, " connection-auth=auto");
 
     storeAppendPrintf(sentry, "\n");
 }

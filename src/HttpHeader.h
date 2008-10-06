@@ -83,6 +83,7 @@ typedef enum {
     HDR_PROXY_AUTHENTICATION_INFO,
     HDR_PROXY_AUTHORIZATION,
     HDR_PROXY_CONNECTION,
+    HDR_PROXY_SUPPORT,
     HDR_PUBLIC,
     HDR_RANGE,
     HDR_REQUEST_RANGE,		/**< some clients use this, sigh */

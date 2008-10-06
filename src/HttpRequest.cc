@@ -74,6 +74,7 @@ HttpRequest::init()
     login[0] = '\0';
     host[0] = '\0';
     auth_user_request = NULL;
+    pinned_connection = NULL;
     port = 0;
     canonical = NULL;
     memset(&flags, '\0', sizeof(flags));
@@ -126,6 +127,9 @@ HttpRequest::clean()
         delete range;
         range = NULL;
     }
+
+    if(pinned_connection)
+	cbdataReferenceDone(pinned_connection);
 
     tag.clean();
 
@@ -508,5 +512,29 @@ HttpRequest::cacheable() const
     if (protocol == PROTO_CACHEOBJ)
         return false;
 
+    return true;
+}
+
+bool HttpRequest::inheritProperties(const HttpMsg *aMsg)
+{
+    const HttpRequest* aReq = dynamic_cast<const HttpRequest*>(aMsg);
+    if(!aReq)
+	return false;
+    
+    client_addr = aReq->client_addr;
+    my_addr = aReq->my_addr;
+
+    // This may be too conservative for the 204 No Content case
+    // may eventually need cloneNullAdaptationImmune() for that.
+    flags = aReq->flags.cloneAdaptationImmune();
+
+    if (aReq->auth_user_request) {
+        auth_user_request = aReq->auth_user_request;
+	AUTHUSERREQUESTLOCK(auth_user_request, "inheritProperties");
+    }
+
+    if(aReq->pinned_connection) {
+	pinned_connection = cbdataReference(aReq->pinned_connection);
+    }
     return true;
 }

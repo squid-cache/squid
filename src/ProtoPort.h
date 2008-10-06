@@ -26,6 +26,7 @@ struct http_port_list
     unsigned int sslBump:1;            /**< intercepts CONNECT requests */
 
     int vport;                 /* virtual port support, -1 for dynamic, >0 static*/
+    bool connection_auth_disabled;     /* Don't support connection oriented auth */
     int disable_pmtu_discovery;
 
     struct {

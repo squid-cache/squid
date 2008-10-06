@@ -737,7 +737,7 @@ DOC_END
 NAME: delay_pool_uses_indirect_client
 COMMENT: on|off
 TYPE: onoff
-IFDEF: FOLLOW_X_FORWARDED_FOR && DELAY_POOLS
+IFDEF: FOLLOW_X_FORWARDED_FOR DELAY_POOLS
 DEFAULT: on
 LOC: Config.onoff.delay_pool_uses_indirect_client
 DOC_START
@@ -1032,6 +1032,11 @@ DOC_START
 
 	   protocol=	Protocol to reconstruct accelerated requests with.
 			Defaults to http.
+
+           connection-auth[=on|off]
+                        use connection-auth=off to tell Squid to prevent 
+                        forwarding Microsoft connection oriented authentication
+			(NTLM, Negotiate and Kerberos)
 
 	   disable-pmtu-discovery=
 			Control Path-MTU discovery usage:
@@ -1602,6 +1607,7 @@ DOC_START
 		     sslcipher=...
 		     ssloptions=...
 		     front-end-https[=on|auto]
+                     connection-auth[=on|off|auto]
 
 		     use 'proxy-only' to specify objects fetched
 		     from this cache should not be saved locally.
@@ -1824,6 +1830,12 @@ DOC_START
 		     on this header. If set to auto the header will
 		     only be added if the request is forwarded as a https://
 		     URL.
+                     
+                     use connection-auth=off to tell Squid that this peer does
+                     not support Microsoft connection oriented authentication,
+                     and any such challenges received from there should be
+                     ignored. Default is auto to automatically determine the
+                     status of the peer.
 DOC_END
 
 NAME: cache_peer_domain cache_host_domain
