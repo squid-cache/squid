@@ -43,12 +43,20 @@ class StoreIOBuffer
 {
 
 public:
-    StoreIOBuffer():length(0), offset (0), data (NULL){flags.error = 0;}
+    StoreIOBuffer():length(0), offset (0), data (NULL) {flags.error = 0;}
 
     StoreIOBuffer(size_t aLength, int64_t anOffset, char *someData) :
-            length (aLength), offset (anOffset), data (someData)
+            offset (anOffset), data (someData)
     {
-        flags.error = 0;
+        /* maintain own state: detect size errors now */
+        if (aLength <0) {
+            flags.error = 1;
+            length = 0;
+        }
+        else {
+            flags.error = 0;
+            length = aLength;
+        }
     }
 
     /* Create a StoreIOBuffer from a MemBuf and offset */
