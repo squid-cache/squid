@@ -3757,7 +3757,6 @@ AC_CONFIG_FILES([\
 	helpers/ntlm_auth/mswin_sspi/Makefile \
 	helpers/negotiate_auth/Makefile \
 	helpers/negotiate_auth/mswin_sspi/Makefile \
-	helpers/negotiate_auth/squid_kerb_auth/Makefile \
 	helpers/external_acl/Makefile \
 	helpers/external_acl/ip_user/Makefile \
 	helpers/external_acl/ldap_group/Makefile \
@@ -3774,5 +3773,7 @@ AC_CONFIG_SUBDIRS(lib/libTrie)
 # must configure libltdl subdir unconditionally for "make distcheck" to work
 AC_CONFIG_SUBDIRS(lib/libLtdl)
 
+# Kerberos Helper has its own auto-tools system
+AC_CONFIG_SUBDIRS(helpers/negotiate_auth/squid_kerb_auth)
 
 AC_OUTPUT

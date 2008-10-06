@@ -19,6 +19,11 @@
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307, USA.
  *
+ *   As a special exemption, M Moeller gives permission to link this program
+ *   with MIT, Heimdal or other GSS/Kerberos libraries, and distribute
+ *   the resulting executable, without including the source code for
+ *   the Libraries in the source distribution.
+ *
  * -----------------------------------------------------------------------------
  */
 /*
@@ -32,41 +37,100 @@
 #include <time.h>
 #include <sys/time.h>
 
+#include "config.h"
+
+#ifdef HAVE_SQUID
+#ifdef PACKAGE
+#undef PACKAGE
+#endif
+#ifdef PACKAGE_BUGREPORT
+#undef PACKAGE_BUGREPORT
+#endif
+#ifdef PACKAGE_NAME
+#undef PACKAGE_NAME
+#endif
+#ifdef PACKAGE_STRING
+#undef PACKAGE_STRING
+#endif
+#ifdef PACKAGE_TARNAME
+#undef PACKAGE_TARNAME
+#endif
+#ifdef PACKAGE_VERSION
+#undef PACKAGE_VERSION
+#endif
+#ifdef VERSION
+#undef VERSION
+#endif
+#ifdef HAVE_GETADDRINFO_H
 #include "getaddrinfo.h"
+#endif
+#ifdef HAVE_GETNAMEINFO_H
 #include "getnameinfo.h"
+#endif
+#ifdef HAVE_UTIL_H
+#include "util.h"
+#endif
+#ifdef PACKAGE
+#undef PACKAGE
+#endif
+#ifdef PACKAGE_BUGREPORT
+#undef PACKAGE_BUGREPORT
+#endif
+#ifdef PACKAGE_NAME
+#undef PACKAGE_NAME
+#endif
+#ifdef PACKAGE_STRING
+#undef PACKAGE_STRING
+#endif
+#ifdef PACKAGE_TARNAME
+#undef PACKAGE_TARNAME
+#endif
+#ifdef PACKAGE_VERSION
+#undef PACKAGE_VERSION
+#endif
+#ifdef VERSION
+#undef VERSION
+#endif
+/*
+ * Reset varibles 
+ */
+#include "config.h"
+#endif
+#if !defined(HAVE_DECL_XGETADDRINFO) || !HAVE_DECL_XGETADDRINFO
+#define xgetaddrinfo    getaddrinfo
+#endif
+#if !defined(HAVE_DECL_XFREEADDRINFO) || !HAVE_DECL_XFREEADDRINFO
+#define xfreeaddrinfo   freeaddrinfo
+#endif
+#if !defined(HAVE_DECL_XGAI_STRERROR) || !HAVE_DECL_XGAI_STRERROR
+#define xgai_strerror   gai_strerror
+#endif
+#if !defined(HAVE_DECL_XGETNAMEINFO) || !HAVE_DECL_XGETNAMEINFO
+#define xgetnameinfo    getnameinfo
+#endif
+#if !defined(HAVE_DECL_XMALLOC) || !HAVE_DECL_XMALLOC
+#define xmalloc	malloc
+#endif
+#if !defined(HAVE_DECL_XSTRDUP) || !HAVE_DECL_XSTRDUP
+#define xstrdup strdup
+#endif
+#if !defined(HAVE_DECL_XFREE) || !HAVE_DECL_XFREE
+#define xfree free
+#endif
 
 #include "base64.h"
 #ifndef HAVE_SPNEGO
 #include "spnegohelp.h"
 #endif
 
-// AYJ: must match the definition in src/auth/negotiate/auth_negotiate.cc
-#define MAX_AUTHTOKEN_LEN	32768
-
-// AYJ: match define in include/rfc2181.h
-#ifndef HOST_NAME_MAX
-#define HOST_NAME_MAX 256
-#endif
-#ifndef MAXHOSTNAMELEN
-#define MAXHOSTNAMELEN HOST_NAME_MAX
-#endif
-
 #define PROGRAM "squid_kerb_auth"
 
-#ifdef HEIMDAL
-#include <gssapi.h>
-#define gss_nt_service_name GSS_C_NT_HOSTBASED_SERVICE
-#else
-#include <gssapi/gssapi.h>
-#ifndef SOLARIS_11
-#include <gssapi/gssapi_generic.h>
-#else
-#define gss_nt_service_name GSS_C_NT_HOSTBASED_SERVICE
-#endif
+
+#ifndef MAX_AUTHTOKEN_LEN
+#define MAX_AUTHTOKEN_LEN   65535
 #endif
 
-#include <krb5.h>
-int check_gss_err(OM_uint32 major_status, OM_uint32 minor_status, const char* function, int debug, int loging);
+int check_gss_err(OM_uint32 major_status, OM_uint32 minor_status, const char* function, int debug, int log);
 char *gethost_name(void);
 static const char *LogTime(void);
 
@@ -81,20 +145,19 @@ static const char *LogTime()
 
     gettimeofday(&now, NULL);
     if (now.tv_sec != last_t) {
-        tm = localtime(&now.tv_sec);
+        tm = localtime((time_t *)&now.tv_sec);
         strftime(buf, 127, "%Y/%m/%d %H:%M:%S", tm);
         last_t = now.tv_sec;
     }
     return buf;
 }
 
-// AYJ: this looks like a duplicate of the lib/gethostname function */
 char *gethost_name(void) {
-  char      hostname[MAXHOSTNAMELEN];
+  char      hostname[sysconf(_SC_HOST_NAME_MAX)];
   struct addrinfo *hres=NULL, *hres_list;
   int rc,count;
 
-  rc = gethostname(hostname,MAXHOSTNAMELEN);
+  rc = gethostname(hostname,sysconf(_SC_HOST_NAME_MAX));
   if (rc)
     {
       fprintf(stderr, "%s| %s: error while resolving hostname '%s'\n", LogTime(), PROGRAM, hostname);
@@ -103,7 +166,6 @@ char *gethost_name(void) {
   rc = xgetaddrinfo(hostname,NULL,NULL,&hres);
   if (rc != 0) {
     fprintf(stderr, "%s| %s: error while resolving hostname with getaddrinfo: %s\n", LogTime(), PROGRAM, xgai_strerror(rc));
-    xfreeaddrinfo(hres);
     return NULL;
   }
   hres_list=hres;
@@ -112,7 +174,7 @@ char *gethost_name(void) {
     count++;
     hres_list=hres_list->ai_next;
   }
-  rc = xgetnameinfo(hres->ai_addr, hres->ai_addrlen,hostname, sizeof (hostname), NULL, 0, 0);
+  rc = xgetnameinfo (hres->ai_addr, hres->ai_addrlen,hostname, sizeof (hostname), NULL, 0, 0);
   if (rc != 0) {
     fprintf(stderr, "%s| %s: error while resolving ip address with getnameinfo: %s\n", LogTime(), PROGRAM, xgai_strerror(rc));
     xfreeaddrinfo(hres);
@@ -120,11 +182,11 @@ char *gethost_name(void) {
   }
 
   xfreeaddrinfo(hres);
-  hostname[MAXHOSTNAMELEN]='\0';
-  return(strdup(hostname));
+  hostname[sysconf(_SC_HOST_NAME_MAX)-1]='\0';
+  return(xstrdup(hostname));
 }
 
-int check_gss_err(OM_uint32 major_status, OM_uint32 minor_status, const char* function, int debug, int loging) {
+int check_gss_err(OM_uint32 major_status, OM_uint32 minor_status, const char* function, int debug, int log) {
   if (GSS_ERROR(major_status)) {
     OM_uint32 maj_stat,min_stat;
     OM_uint32 msg_ctx = 0;
@@ -171,15 +233,17 @@ int check_gss_err(OM_uint32 major_status, OM_uint32 minor_status, const char* fu
       }
       gss_release_buffer(&min_stat, &status_string);
     }
-    if (debug)
+    if (debug) 
       fprintf(stderr, "%s| %s: %s failed: %s\n", LogTime(), PROGRAM, function, buf);
-    fprintf(stdout, "NA %s failed: %s\n",function, buf);
-    if (loging)
+    fprintf(stdout, "BH %s failed: %s\n",function, buf);
+    if (log)
       fprintf(stderr, "%s| %s: User not authenticated\n", LogTime(), PROGRAM);
     return(1);
   }
   return(0);
 }
+
+
 
 int main(int argc, char * const argv[])
 {
@@ -187,7 +251,10 @@ int main(int argc, char * const argv[])
   char *c;
   int length=0;
   static int err=0;
-  int opt, rc, debug=0, loging=0;
+  int opt, debug=0, log=0;
+#ifndef HAVE_SPNEGO
+  int rc;
+#endif
   OM_uint32 ret_flags=0, spnego_flag=0;
   char *service_name=(char *)"HTTP",*host_name=NULL;
   char *token = NULL;
@@ -197,12 +264,13 @@ int main(int argc, char * const argv[])
   gss_name_t 		client_name = GSS_C_NO_NAME;
   gss_name_t 		server_name = GSS_C_NO_NAME;
   gss_cred_id_t 	server_creds = GSS_C_NO_CREDENTIAL;
-  gss_cred_id_t 	delegated_cred = GSS_C_NO_CREDENTIAL;
   gss_buffer_desc 	service = GSS_C_EMPTY_BUFFER;
   gss_buffer_desc 	input_token = GSS_C_EMPTY_BUFFER;
   gss_buffer_desc 	output_token = GSS_C_EMPTY_BUFFER;
   const unsigned char	*kerberosToken       = NULL;
+#ifndef HAVE_SPNEGO
   size_t		kerberosTokenLength = 0;
+#endif
   const unsigned char	*spnegoToken         = NULL ;
   size_t		spnegoTokenLength   = 0;
 
@@ -215,23 +283,28 @@ int main(int argc, char * const argv[])
       debug = 1;
       break;              
     case 'i':
-      loging = 1;
+      log = 1;
       break;              
     case 's':
-      service_principal = strdup(optarg);
+      service_principal = xstrdup(optarg);
       break;
     case 'h':
-      fprintf(stdout, "Usage: \n");
-      fprintf(stdout, "squid_kerb_auth -d [-s SPN]\n");
-      fprintf(stdout, "SPN = service principal name\n");
-      fprintf(stdout, "Can be set to GSS_C_NO_NAME to allow any entry from keytab\n");
-      fprintf(stdout, "default SPN is HTTP/fqdn@DEFAULT_REALM\n");
-      break;
+      fprintf(stderr, "Usage: \n");
+      fprintf(stderr, "squid_kerb_auth [-d] [-i] [-s SPN] [-h]\n");
+      fprintf(stderr, "-d full debug\n");
+      fprintf(stderr, "-i informational messages\n");
+      fprintf(stderr, "-s service principal name\n");
+      fprintf(stderr, "-h help\n");
+      fprintf(stderr, "The SPN can be set to GSS_C_NO_NAME to allow any entry from keytab\n");
+      fprintf(stderr, "default SPN is HTTP/fqdn@DEFAULT_REALM\n");
+      exit(0);
     default:
       fprintf(stderr, "%s| %s: unknown option: -%c.\n", LogTime(), PROGRAM, opt);
     }
   }
 
+  if (debug)
+    fprintf(stderr, "%s| %s: Starting version %s\n", LogTime(), PROGRAM, VERSION);
   if (service_principal && strcasecmp(service_principal,"GSS_C_NO_NAME") ) {
     service.value = service_principal;
     service.length = strlen((char *)service.value);
@@ -239,9 +312,10 @@ int main(int argc, char * const argv[])
     host_name=gethost_name();
     if ( !host_name ) {
       fprintf(stderr, "%s| %s: Local hostname could not be determined. Please specify the service principal\n", LogTime(), PROGRAM);
+      fprintf(stdout, "BH hostname error\n");
       exit(-1);
     }
-    service.value = malloc(strlen(service_name)+strlen(host_name)+2);
+    service.value = xmalloc(strlen(service_name)+strlen(host_name)+2);
     snprintf(service.value,strlen(service_name)+strlen(host_name)+2,"%s@%s",service_name,host_name);
     service.length = strlen((char *)service.value);
   }
@@ -253,8 +327,10 @@ int main(int argc, char * const argv[])
 	  fprintf(stderr, "%s| %s: fgets() failed! dying..... errno=%d (%s)\n", LogTime(), PROGRAM, ferror(stdin),
 		 strerror(ferror(stdin)));
 
+        fprintf(stdout, "BH input error\n");
 	exit(1);    /* BIIG buffer */
       }
+      fprintf(stdout, "BH input error\n");
       exit(0);
     }
 
@@ -268,25 +344,25 @@ int main(int argc, char * const argv[])
     if (err) {
       if (debug)
 	fprintf(stderr, "%s| %s: Oversized message\n", LogTime(), PROGRAM);
-      fprintf(stdout, "NA Oversized message\n");
+      fprintf(stdout, "BH Oversized message\n");
       err = 0;
       continue;
     }
 
     if (debug)
-      fprintf(stderr, "%s| %s: Got '%s' from squid (length: %d).\n", LogTime(), PROGRAM, buf?buf:"NULL",length);
+      fprintf(stderr, "%s| %s: Got '%s' from squid (length: %d).\n", LogTime(), PROGRAM, buf,length);
 
     if (buf[0] == '\0') {
       if (debug)
 	fprintf(stderr, "%s| %s: Invalid request\n", LogTime(), PROGRAM);
-      fprintf(stdout, "NA Invalid request\n");
+      fprintf(stdout, "BH Invalid request\n");
       continue;
     }
 
     if (strlen(buf) < 2) {
       if (debug)
 	fprintf(stderr, "%s| %s: Invalid request [%s]\n", LogTime(), PROGRAM, buf);
-      fprintf(stdout, "NA Invalid request\n");
+      fprintf(stdout, "BH Invalid request\n");
       continue;
     }
 
@@ -295,37 +371,40 @@ int main(int argc, char * const argv[])
       gss_release_buffer(&minor_status, &output_token);
       gss_release_buffer(&minor_status, &service);
       gss_release_cred(&minor_status, &server_creds);
-      gss_release_cred(&minor_status, &delegated_cred);
-      gss_release_name(&minor_status, &server_name);
-      gss_release_name(&minor_status, &client_name);
-      gss_delete_sec_context(&minor_status, &gss_context, NULL);
+      if (server_name)
+        gss_release_name(&minor_status, &server_name);
+      if (client_name)
+        gss_release_name(&minor_status, &client_name);
+      if (gss_context != GSS_C_NO_CONTEXT )
+        gss_delete_sec_context(&minor_status, &gss_context, NULL);
       if (kerberosToken) {
 	/* Allocated by parseNegTokenInit, but no matching free function exists.. */
         if (!spnego_flag)
-          free((char *)kerberosToken);
+          xfree((char *)kerberosToken);
         kerberosToken=NULL;
       }
       if (spnego_flag) {
 	/* Allocated by makeNegTokenTarg, but no matching free function exists.. */
         if (spnegoToken) 
-	  free((char *)spnegoToken);
+	  xfree((char *)spnegoToken);
       	spnegoToken=NULL;
       }
       if (token) {
-        free(token);
+        xfree(token);
         token=NULL;
       }
       if (host_name) {
-        free(host_name);
+        xfree(host_name);
         host_name=NULL;
       }
+      fprintf(stdout, "BH quit command\n");
       exit(0);
     }
 
-    if ( !strncmp(buf, "YR", 2) && !strncmp(buf, "KK", 2) ) {
+    if ( strncmp(buf, "YR", 2) && strncmp(buf, "KK", 2) ) {
       if (debug)
 	fprintf(stderr, "%s| %s: Invalid request [%s]\n", LogTime(), PROGRAM, buf);
-      fprintf(stdout, "NA Invalid request\n");
+      fprintf(stdout, "BH Invalid request\n");
       continue;
     }
     if ( !strncmp(buf, "YR", 2) ){
@@ -337,14 +416,16 @@ int main(int argc, char * const argv[])
     if (strlen(buf) <= 3) {
       if (debug)
 	fprintf(stderr, "%s| %s: Invalid negotiate request [%s]\n", LogTime(), PROGRAM, buf);
-      fprintf(stdout, "NA Invalid negotiate request\n");
+      fprintf(stdout, "BH Invalid negotiate request\n");
       continue;
     }
         
-    input_token.length = base64_decode_len(buf+3);
-    input_token.value = malloc(input_token.length);
+    input_token.length = ska_base64_decode_len(buf+3);
+    if (debug)
+      fprintf(stderr, "%s| %s: Decode '%s' (decoded length: %d).\n", LogTime(), PROGRAM, buf+3,(int)input_token.length);
+    input_token.value = xmalloc(input_token.length);
 
-    base64_decode(input_token.value,buf+3,input_token.length);
+    ska_base64_decode(input_token.value,buf+3,input_token.length);
 
  
 #ifndef HAVE_SPNEGO
@@ -359,16 +440,18 @@ int main(int argc, char * const argv[])
       if ( rc < 100 || rc > 199 ) {
 	if (debug)
 	  fprintf(stderr, "%s| %s: Invalid GSS-SPNEGO query [%s]\n", LogTime(), PROGRAM, buf);
-	fprintf(stdout, "NA Invalid GSS-SPNEGO query\n");
+	fprintf(stdout, "BH Invalid GSS-SPNEGO query\n");
 	goto cleanup;
       } 
       if ((input_token.length >= sizeof ntlmProtocol + 1) &&
 	  (!memcmp (input_token.value, ntlmProtocol, sizeof ntlmProtocol))) {
 	if (debug)
 	  fprintf(stderr, "%s| %s: received type %d NTLM token\n", LogTime(), PROGRAM, (int) *((unsigned char *)input_token.value + sizeof ntlmProtocol));
-	fprintf(stdout, "NA received type %d NTLM token\n",(int) *((unsigned char *)input_token.value + sizeof ntlmProtocol));
+	fprintf(stdout, "BH received type %d NTLM token\n",(int) *((unsigned char *)input_token.value + sizeof ntlmProtocol));
 	goto cleanup;
       } 
+      if (debug)
+	fprintf(stderr, "%s| %s: Token is possibly a GSSAPI token\n", LogTime(), PROGRAM);
       spnego_flag=0;
     } else {
       gss_release_buffer(&minor_status, &input_token);
@@ -381,7 +464,7 @@ int main(int argc, char * const argv[])
 	(!memcmp (input_token.value, ntlmProtocol, sizeof ntlmProtocol))) {
       if (debug)
 	fprintf(stderr, "%s| %s: received type %d NTLM token\n", LogTime(), PROGRAM, (int) *((unsigned char *)input_token.value + sizeof ntlmProtocol));
-      fprintf(stdout, "NA received type %d NTLM token\n",(int) *((unsigned char *)input_token.value + sizeof ntlmProtocol));
+      fprintf(stdout, "BH received type %d NTLM token\n",(int) *((unsigned char *)input_token.value + sizeof ntlmProtocol));
       goto cleanup;
     } 
 #endif
@@ -400,13 +483,13 @@ int main(int argc, char * const argv[])
   				     gss_nt_service_name, &server_name);
     }
 
-    if ( check_gss_err(major_status,minor_status,"gss_import_name()",debug,loging) )
+    if ( check_gss_err(major_status,minor_status,"gss_import_name()",debug,log) )
       goto cleanup;
 
     major_status = gss_acquire_cred(&minor_status, server_name, GSS_C_INDEFINITE,
 				    GSS_C_NO_OID_SET, GSS_C_ACCEPT, &server_creds,
 				    NULL, NULL);
-    if (check_gss_err(major_status,minor_status,"gss_acquire_cred()",debug,loging) )
+    if (check_gss_err(major_status,minor_status,"gss_acquire_cred()",debug,log) )
       goto cleanup;
 
     major_status = gss_accept_sec_context(&minor_status,
@@ -419,7 +502,7 @@ int main(int argc, char * const argv[])
 					  &output_token,
 					  &ret_flags,
 					  NULL,
-					  &delegated_cred);
+					  NULL);
 
 
     if (output_token.length) {
@@ -431,7 +514,7 @@ int main(int argc, char * const argv[])
 				  &spnegoTokenLength))!=0 ) {
 	  if (debug)
 	    fprintf(stderr, "%s| %s: makeNegTokenTarg failed with rc=%d\n", LogTime(), PROGRAM, rc);
-	  fprintf(stdout, "NA makeNegTokenTarg failed with rc=%d\n",rc);
+	  fprintf(stdout, "BH makeNegTokenTarg failed with rc=%d\n",rc);
 	  goto cleanup;
 	}
       } else {
@@ -442,17 +525,17 @@ int main(int argc, char * const argv[])
       spnegoToken = output_token.value;
       spnegoTokenLength = output_token.length;
 #endif
-      token = malloc(base64_encode_len(spnegoTokenLength));
+      token = xmalloc(ska_base64_encode_len(spnegoTokenLength));
       if (token == NULL) {
 	if (debug)
 	  fprintf(stderr, "%s| %s: Not enough memory\n", LogTime(), PROGRAM);
-	fprintf(stdout, "NA Not enough memory\n");
+	fprintf(stdout, "BH Not enough memory\n");
         goto cleanup;
       }
 
-      base64_encode(token,(const char *)spnegoToken,base64_encode_len(spnegoTokenLength),spnegoTokenLength);
+      ska_base64_encode(token,(const char *)spnegoToken,ska_base64_encode_len(spnegoTokenLength),spnegoTokenLength);
 
-      if (check_gss_err(major_status,minor_status,"gss_accept_sec_context()",debug,loging) )
+      if (check_gss_err(major_status,minor_status,"gss_accept_sec_context()",debug,log) )
 	goto cleanup;
       if (major_status & GSS_S_CONTINUE_NEEDED) {
 	if (debug)
@@ -464,28 +547,28 @@ int main(int argc, char * const argv[])
       major_status = gss_display_name(&minor_status, client_name, &output_token,
 				      NULL);
 
-      if (check_gss_err(major_status,minor_status,"gss_display_name()",debug,loging) )
+      if (check_gss_err(major_status,minor_status,"gss_display_name()",debug,log) )
 	goto cleanup;
       fprintf(stdout, "AF %s %s\n",token,(char *)output_token.value);
       if (debug)
 	fprintf(stderr, "%s| %s: AF %s %s\n", LogTime(), PROGRAM, token,(char *)output_token.value); 
-      if (loging)
+      if (log)
 	fprintf(stderr, "%s| %s: User %s authenticated\n", LogTime(), PROGRAM, (char *)output_token.value);
       goto cleanup;
     } else {
-      if (check_gss_err(major_status,minor_status,"gss_accept_sec_context()",debug,loging) )
+      if (check_gss_err(major_status,minor_status,"gss_accept_sec_context()",debug,log) )
 	goto cleanup;
       if (major_status & GSS_S_CONTINUE_NEEDED) {
 	if (debug)
 	  fprintf(stderr, "%s| %s: continuation needed\n", LogTime(), PROGRAM);
-	fprintf(stdout, "NA No token to return to continue\n");
+	fprintf(stdout, "NA %s\n",token);
 	goto cleanup;
       }
       gss_release_buffer(&minor_status, &output_token);
       major_status = gss_display_name(&minor_status, client_name, &output_token,
 				      NULL);
 
-      if (check_gss_err(major_status,minor_status,"gss_display_name()",debug,loging) )
+      if (check_gss_err(major_status,minor_status,"gss_display_name()",debug,log) )
 	goto cleanup;
       /* 
        *  Return dummy token AA. May need an extra return tag then AF
@@ -493,30 +576,31 @@ int main(int argc, char * const argv[])
       fprintf(stdout, "AF %s %s\n","AA==",(char *)output_token.value);
       if (debug)
 	fprintf(stderr, "%s| %s: AF %s %s\n", LogTime(), PROGRAM, "AA==", (char *)output_token.value);
-      if (loging)
+      if (log)
 	fprintf(stderr, "%s| %s: User %s authenticated\n", LogTime(), PROGRAM, (char *)output_token.value);
 
 cleanup:
       gss_release_buffer(&minor_status, &input_token);
       gss_release_buffer(&minor_status, &output_token);
       gss_release_cred(&minor_status, &server_creds);
-      gss_release_cred(&minor_status, &delegated_cred);
-      gss_release_name(&minor_status, &server_name);
-      gss_release_name(&minor_status, &client_name);
+      if (server_name)
+        gss_release_name(&minor_status, &server_name);
+      if (client_name)
+        gss_release_name(&minor_status, &client_name);
       if (kerberosToken) {
 	/* Allocated by parseNegTokenInit, but no matching free function exists.. */
 	if (!spnego_flag)
-           free((char *)kerberosToken);
+           xfree((char *)kerberosToken);
       	kerberosToken=NULL;
       }
       if (spnego_flag) {
 	/* Allocated by makeNegTokenTarg, but no matching free function exists.. */
         if (spnegoToken)
-	  free((char *)spnegoToken);
+	  xfree((char *)spnegoToken);
       	spnegoToken=NULL;
       }
       if (token) {
-        free(token);
+        xfree(token);
       	token=NULL;
       }
       continue;            

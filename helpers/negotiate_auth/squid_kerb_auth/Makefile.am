@@ -1,25 +1,19 @@
-#
-#  Makefile for the Squid Object Cache server
-#
-#  $Id: Makefile.am,v 1.2 2008/01/07 15:25:14 hno Exp $
-#
+EXTRA_DIST = reconf configure
+SUBDIRS = 
 
-libexec_PROGRAMS = squid_kerb_auth
+bin_PROGRAMS = squid_kerb_auth squid_kerb_auth_test
 
-SPNEGO = spnegohelp/derparse.c spnegohelp/derparse.h spnegohelp/Makefile spnegohelp/spnego.c spnegohelp/spnego.h spnegohelp/spnegohelp.c spnegohelp/spnegohelp.h spnegohelp/spnegoparse.c spnegohelp/spnegoparse.h
-SOURCE = squid_kerb_auth.c base64.c base64.h
-EXTRA_DIST = readme.txt do.sh
+if HAVE_SPNEGO
+squid_kerb_auth_SOURCES = squid_kerb_auth.c base64.c
+squid_kerb_auth_test_SOURCES = squid_kerb_auth_test.c base64.c
+else
+squid_kerb_auth_SOURCES = squid_kerb_auth.c base64.c spnegohelp/derparse.c  spnegohelp/spnego.c  spnegohelp/spnegohelp.c  spnegohelp/spnegoparse.c
+INCLUDES = -Ispnegohelp 
+squid_kerb_auth_test_SOURCES = squid_kerb_auth_test.c base64.c
+endif
 
-squid_kerb_auth_SOURCES = $(SOURCE) $(SPNEGO)
 
-CPPFLAGS = $(KERBINC) -I$(srcdir)/spnegohelp -I. -I$(top_srcdir)/include
-LDADD = -L$(top_builddir)/lib -lmiscutil $(XTRA_LIBS) $(KERBLIBS) 
-
-# HEIMDAL
-#KERBINC = -DHEIMDAL -I/usr/include/heimdal
-#KERBLIBS = -lgssapi -lkrb5 -lcom_err -lasn1 -lroken
-
-# MIT
-KERBINC = 
-KERBLIBS = -lgssapi_krb5 -lkrb5 -lcom_err
-
+squid_kerb_auth_LDFLAGS = 
+squid_kerb_auth_LDADD =
+squid_kerb_auth_test_LDFLAGS = 
+squid_kerb_auth_test_LDADD =
