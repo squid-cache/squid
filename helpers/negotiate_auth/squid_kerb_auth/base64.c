@@ -8,7 +8,7 @@
 #include "base64.h"
 
 
-static void base64_init(void);
+static void ska_base64_init(void);
 
 static int base64_initialized = 0;
 #define BASE64_VALUE_SZ 256
@@ -17,7 +17,7 @@ const char base64_code[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
 
 
 static void
-base64_init(void)
+ska_base64_init(void)
 {
     int i;
 
@@ -31,7 +31,7 @@ base64_init(void)
     base64_initialized = 1;
 }
 
-void base64_decode(char* result, const char *data, int result_size)
+void ska_base64_decode(char* result, const char *data, int result_size)
 {
     int j;
     int c;
@@ -39,7 +39,7 @@ void base64_decode(char* result, const char *data, int result_size)
     if (!data)
 	return;
     if (!base64_initialized)
-	base64_init();
+	ska_base64_init();
     val = c = 0;
     
     for (j = 0; *data ;data++) {
@@ -66,7 +66,7 @@ void base64_decode(char* result, const char *data, int result_size)
 }
 
 /* adopted from http://ftp.sunet.se/pub2/gnu/vm/base64-encode.c with adjustments */
-void base64_encode(char* result, const char *data, int result_size, int data_size)
+void ska_base64_encode(char* result, const char *data, int result_size, int data_size)
 {
     int bits = 0;
     int char_count = 0;
@@ -76,7 +76,7 @@ void base64_encode(char* result, const char *data, int result_size, int data_siz
 	return;
 
     if (!base64_initialized)
-	base64_init();
+	ska_base64_init();
 
     while (data_size--) {
         int c = (unsigned char) *data++;
@@ -134,12 +134,12 @@ end:
     return;
 }
 
-int base64_encode_len(int len)
+int ska_base64_encode_len(int len)
 {
   return ((len+2)/3*4)+1;
 }
 
-int base64_decode_len(const char *data)
+int ska_base64_decode_len(const char *data)
 {
   int i,j;
 
