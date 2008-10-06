@@ -1215,7 +1215,7 @@ idnsCheckQueue(void *unused)
     for (n = lru_list.tail; n; n = p) {
 
         p = n->prev;
-        q = n->data;
+        q = static_cast<idns_query*>(n->data);
 
         /* Anything to process in the queue? */
         if (tvSubDsec(q->queue_t, current_time) < Config.Timeout.idns_retransmit )
