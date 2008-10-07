@@ -21,6 +21,7 @@
 #   --with-cppunit-basedir=PATH \
 #   --with-openssl=PATH \
 #   --with-po2html=PATH \
+#   --with-tags=TAGS \
 #
 OPTS=" \
 	--enable-loadable-modules \
@@ -93,6 +94,5 @@ OPTS=" \
 	--with-localhost-ipv6 \
 	--with-pic \
 	--with-pthreads \
-	--with-tags \
 	--with-valgrind-debug \
 	"
