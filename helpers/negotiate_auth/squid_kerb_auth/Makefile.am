@@ -1,4 +1,4 @@
-EXTRA_DIST = reconf configure
+EXTRA_DIST = configure README NEWS ChangeLog AUTHORS INSTALL
 SUBDIRS = 
 
 bin_PROGRAMS = squid_kerb_auth squid_kerb_auth_test
