@@ -50,7 +50,7 @@ extern "C"
 {
 #endif
 
-    extern FILE *debug_log;		/* NULL */
+//MOVED:Debug.h    extern FILE *debug_log;		/* NULL */
 //MOVED:structs.h    extern SquidConfig Config;
 //MOVED:structs.h    extern SquidConfig2 Config2;
     extern char *ConfigFile;	/* NULL */
