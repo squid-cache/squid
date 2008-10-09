@@ -1244,6 +1244,21 @@ FwdState::serversFree(FwdServer ** FSVR)
     }
 }
 
+/** From Comment #5 by Henrik Nordstrom made at
+http://www.squid-cache.org/bugs/show_bug.cgi?id=2391 on 2008-09-19
+
+updateHierarchyInfo should be called each time a new path has been
+selected or when more information about the path is available (i.e. the
+server IP), and when it's called it needs to be given reasonable
+arguments describing the now selected path..
+
+It does not matter from a functional perspective if it gets called a few
+times more than what is really needed, but calling it too often may
+obviously hurt performance.
+
+\todo Current code looks fine, even if using !fs->_peer as condition 
+instead of HIER_DIRECT would be clearer.
+*/
 // updates HierarchyLogEntry, guessing nextHop and its format
 void
 FwdState::updateHierarchyInfo()
