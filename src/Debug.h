@@ -78,6 +78,8 @@ private:
     static int TheDepth; // level of nested debugging calls
 };
 
+extern FILE *debug_log;
+
 /* Debug stream */
 #define debugs(SECTION, LEVEL, CONTENT) \
    do { \

@@ -566,7 +566,6 @@ squid_SOURCES = \
 	mime.cc \
 	multicast.cc \
 	neighbors.cc \
-	net_db.cc \
 	Packer.cc \
 	Packer.h \
 	Parsing.cc \
@@ -853,7 +852,6 @@ ufsdump_SOURCES = \
 	mime.cc \
 	multicast.cc \
 	neighbors.cc \
-	net_db.cc \
 	Packer.cc \
 	Parsing.cc \
 	$(XPROF_STATS_SOURCE) \
@@ -1393,7 +1391,6 @@ tests_testCacheManager_SOURCES = \
 	MemObject.cc \
 	mime.cc \
 	neighbors.cc \
-	net_db.cc \
 	Packer.cc \
 	Parsing.cc \
 	pconn.cc \
@@ -1568,7 +1565,6 @@ tests_testEvent_SOURCES = \
 	MemObject.cc \
 	mime.cc \
 	neighbors.cc \
-	net_db.cc \
 	Packer.cc \
 	Parsing.cc \
 	pconn.cc \
@@ -1725,7 +1721,6 @@ tests_testEventLoop_SOURCES = \
 	MemObject.cc \
 	mime.cc \
 	neighbors.cc \
-	net_db.cc \
 	Packer.cc \
 	Parsing.cc \
 	pconn.cc \
@@ -1873,7 +1868,6 @@ tests_test_http_range_SOURCES = \
 	mime.cc \
 	multicast.cc \
 	neighbors.cc \
-	net_db.cc \
 	Parsing.cc \
 	peer_digest.cc \
 	peer_select.cc \
@@ -2033,7 +2027,6 @@ tests_testHttpRequest_SOURCES = \
 	MemObject.cc \
 	mime.cc \
 	neighbors.cc \
-	net_db.cc \
 	Packer.cc \
 	Parsing.cc \
 	pconn.cc \
@@ -2381,7 +2374,6 @@ tests_testURL_SOURCES = \
 	MemObject.cc \
 	mime.cc \
 	neighbors.cc \
-	net_db.cc \
 	Packer.cc \
 	Parsing.cc \
 	pconn.cc \
