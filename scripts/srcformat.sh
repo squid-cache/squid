@@ -34,7 +34,7 @@ for FILENAME in `ls -1`; do
 
     if test -d $FILENAME ; then
 	cd $FILENAME
-	$ROOT/scripts/md5checker.sh "$ROOT"  || exit 1
+	$ROOT/scripts/srcformat.sh "$ROOT"  || exit 1
 	cd ..
     fi
 
