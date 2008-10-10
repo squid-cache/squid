@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -151,7 +151,7 @@ mail_warranty(void)
 
     snprintf(command, 256, "%s %s < %s", Config.EmailProgram, Config.adminEmail, filename);
 
-    if(system(command)) {}		/* XXX should avoid system(3) */
+    if (system(command)) {}		/* XXX should avoid system(3) */
 
     unlink(filename);
 }
@@ -502,8 +502,7 @@ fatalf(const char *fmt,...)
 #else
 void
 fatalf(va_alist)
-va_dcl
-{
+va_dcl {
     va_list args;
     const char *fmt = NULL;
     va_start(args);
@@ -620,11 +619,11 @@ getMyHostname(void)
      * If the first http_port address has a specific address, try a
      * reverse DNS lookup on it.
      */
-    if( !sa.IsAnyAddr() ) {
+    if ( !sa.IsAnyAddr() ) {
 
         sa.GetAddrInfo(AI);
         /* we are looking for a name. */
-        if(xgetnameinfo(AI->ai_addr, AI->ai_addrlen, host, SQUIDHOSTNAMELEN, NULL, 0, NI_NAMEREQD ) == 0) {
+        if (xgetnameinfo(AI->ai_addr, AI->ai_addrlen, host, SQUIDHOSTNAMELEN, NULL, 0, NI_NAMEREQD ) == 0) {
             /* DNS lookup successful */
             /* use the official name from DNS lookup */
             debugs(50, 4, "getMyHostname: resolved " << sa << " to '" << host << "'");
@@ -639,25 +638,23 @@ getMyHostname(void)
 
         sa.FreeAddrInfo(AI);
         debugs(50, 1, "WARNING: failed to resolve " << sa << " to a fully qualified hostname");
-    }
-    else {
+    } else {
         if (gethostname(host, SQUIDHOSTNAMELEN) < 0) {
             debugs(50, 1, "WARNING: gethostname failed: " << xstrerror());
-        }
-        else {
+        } else {
             /* Verify that the hostname given resolves properly */
             struct addrinfo hints;
             memset(&hints, 0, sizeof(addrinfo));
             hints.ai_flags = AI_CANONNAME;
 
-            if(xgetaddrinfo(host, NULL, NULL, &AI) == 0) {
+            if (xgetaddrinfo(host, NULL, NULL, &AI) == 0) {
                 /* DNS lookup successful */
                 /* use the official name from DNS lookup */
                 debugs(50, 6, "getMyHostname: '" << host << "' has rDNS.");
                 present = 1;
 
                 /* AYJ: do we want to flag AI_ALL and cache the result anywhere. ie as our local host IPs? */
-                if(AI) {
+                if (AI) {
                     xfreeaddrinfo(AI);
                     AI = NULL;
                 }
@@ -665,7 +662,7 @@ getMyHostname(void)
                 return host;
             }
 
-            if(AI) xfreeaddrinfo(AI);
+            if (AI) xfreeaddrinfo(AI);
             debugs(50, 1, "WARNING: '" << host << "' rDNS test failed: " << xstrerror());
         }
     }
@@ -1216,7 +1213,7 @@ strwordquote(MemBuf * mb, const char *str)
         mb->append(str, l);
         str += l;
 
-        switch(*str) {
+        switch (*str) {
 
         case '\n':
             mb->append("\\n", 2);
@@ -1281,7 +1278,7 @@ restoreCapabilities(int keep)
     cap->inheritable = 0;
     cap->effective = (1 << CAP_NET_BIND_SERVICE);
 
-    if(IPInterceptor.TransparentActive()) {
+    if (IPInterceptor.TransparentActive()) {
         cap->effective |= (1 << CAP_NET_ADMIN);
 #if LINUX_TPROXY2
         cap->effective |= (1 << CAP_NET_BROADCAST);

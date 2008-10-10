@@ -32,12 +32,11 @@
 // The GSS Mechanism OID enumeration values (SPNEGO_MECH_OID) control which offset in
 // the array below, that a mechanism can be found.
 //
-MECH_OID g_stcMechOIDList [] =
-{
-   { (unsigned char*) "\x06\x09\x2a\x86\x48\x82\xf7\x12\x01\x02\x02",  11, 9, spnego_mech_oid_Kerberos_V5_Legacy  },  //  1.2.840.48018.1.2.2 
-   { (unsigned char*) "\x06\x09\x2a\x86\x48\x86\xf7\x12\x01\x02\x02",  11, 9, spnego_mech_oid_Kerberos_V5         },  //  1.2.840.113554.1.2.2
-   { (unsigned char*) "\x06\x06\x2b\x06\x01\x05\x05\x02",               8, 6, spnego_mech_oid_Spnego              },  //  1.3.6.1.1.5.5.2
-   { (unsigned char*) "",												0, 0, spnego_mech_oid_NotUsed             }   //  Placeholder
+MECH_OID g_stcMechOIDList [] = {
+    { (unsigned char*) "\x06\x09\x2a\x86\x48\x82\xf7\x12\x01\x02\x02",  11, 9, spnego_mech_oid_Kerberos_V5_Legacy  },  //  1.2.840.48018.1.2.2
+    { (unsigned char*) "\x06\x09\x2a\x86\x48\x86\xf7\x12\x01\x02\x02",  11, 9, spnego_mech_oid_Kerberos_V5         },  //  1.2.840.113554.1.2.2
+    { (unsigned char*) "\x06\x06\x2b\x06\x01\x05\x05\x02",               8, 6, spnego_mech_oid_Spnego              },  //  1.3.6.1.1.5.5.2
+    { (unsigned char*) "",												0, 0, spnego_mech_oid_NotUsed             }   //  Placeholder
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -66,100 +65,91 @@ MECH_OID g_stcMechOIDList [] =
 int ASNDerGetLength( unsigned char* pbLengthData, long nBoundaryLength, long* pnLength,
                      long* pnNumLengthBytes )
 {
-   int   nReturn = SPNEGO_E_INVALID_LENGTH;
-   int   nNumLengthBytes = 0;
+    int   nReturn = SPNEGO_E_INVALID_LENGTH;
+    int   nNumLengthBytes = 0;
 
-   // First check if the extended length bit is set
+    // First check if the extended length bit is set
 
-   if ( *pbLengthData & LEN_XTND )
-   {
-      // Lower 7 bits contain the number of trailing bytes that describe the length
-      nNumLengthBytes = *pbLengthData & LEN_MASK;
+    if ( *pbLengthData & LEN_XTND ) {
+        // Lower 7 bits contain the number of trailing bytes that describe the length
+        nNumLengthBytes = *pbLengthData & LEN_MASK;
 
-      // Check that the number of bytes we are about to read is within our boundary
-      // constraints
+        // Check that the number of bytes we are about to read is within our boundary
+        // constraints
 
-      if ( nNumLengthBytes <= nBoundaryLength - 1 )
-      {
+        if ( nNumLengthBytes <= nBoundaryLength - 1 ) {
 
-         // For now, our handler won't deal with lengths greater than 4 bytes
-         if ( nNumLengthBytes >= 1 && nNumLengthBytes <= 4 )
-         {
-            // 0 out the initial length
-            *pnLength = 0L;
+            // For now, our handler won't deal with lengths greater than 4 bytes
+            if ( nNumLengthBytes >= 1 && nNumLengthBytes <= 4 ) {
+                // 0 out the initial length
+                *pnLength = 0L;
 
-            // Bump by 1 byte
-            pbLengthData++;
+                // Bump by 1 byte
+                pbLengthData++;
 
-   #if defined(__LITTLE_ENDIAN__) || !defined(WORDS_BIGENDIAN) 
+#if defined(__LITTLE_ENDIAN__) || !defined(WORDS_BIGENDIAN)
 
-            // There may be a cleaner way to do this, but for now, this seems to be
-            // an easy way to do the transformation
-            switch ( nNumLengthBytes )
-            {
-               case 1:
-               {
-                  *( ( (unsigned char*) pnLength ) ) = *pbLengthData;
-                  break;
-               }
+                // There may be a cleaner way to do this, but for now, this seems to be
+                // an easy way to do the transformation
+                switch ( nNumLengthBytes ) {
+                case 1: {
+                    *( ( (unsigned char*) pnLength ) ) = *pbLengthData;
+                    break;
+                }
 
-               case 2:
-               {
-                  *( ( (unsigned char*) pnLength ) ) = *(pbLengthData + 1);
-                  *( ( (unsigned char*) pnLength ) + 1 ) = *(pbLengthData);
+                case 2: {
+                    *( ( (unsigned char*) pnLength ) ) = *(pbLengthData + 1);
+                    *( ( (unsigned char*) pnLength ) + 1 ) = *(pbLengthData);
 
-                  break;
-               }
+                    break;
+                }
 
-               case 3:
-               {
-                  *( ( (unsigned char*) pnLength ) ) = *(pbLengthData + 2);
-                  *( ( (unsigned char*) pnLength ) + 2 ) = *(pbLengthData + 1);
-                  *( ( (unsigned char*) pnLength ) + 3 ) = *(pbLengthData);
-                  break;
-               }
+                case 3: {
+                    *( ( (unsigned char*) pnLength ) ) = *(pbLengthData + 2);
+                    *( ( (unsigned char*) pnLength ) + 2 ) = *(pbLengthData + 1);
+                    *( ( (unsigned char*) pnLength ) + 3 ) = *(pbLengthData);
+                    break;
+                }
 
-               case 4:
-               {
-                  *( ( (unsigned char*) pnLength ) ) = *(pbLengthData + 3);
-                  *( ( (unsigned char*) pnLength ) + 1 ) = *(pbLengthData + 2);
-                  *( ( (unsigned char*) pnLength ) + 2 ) = *(pbLengthData + 1);
-                  *( ( (unsigned char*) pnLength ) + 3 ) = *(pbLengthData);
-                  break;
-               }
+                case 4: {
+                    *( ( (unsigned char*) pnLength ) ) = *(pbLengthData + 3);
+                    *( ( (unsigned char*) pnLength ) + 1 ) = *(pbLengthData + 2);
+                    *( ( (unsigned char*) pnLength ) + 2 ) = *(pbLengthData + 1);
+                    *( ( (unsigned char*) pnLength ) + 3 ) = *(pbLengthData);
+                    break;
+                }
 
-            }  // SWITCH ( nNumLengthBytes )
+                }  // SWITCH ( nNumLengthBytes )
 
-   #else
-            // We are Big-Endian, so the length can be copied in from the source
-            // as is.  Ensure that we adjust for the number of bytes we actually
-            // copy.
+#else
+                // We are Big-Endian, so the length can be copied in from the source
+                // as is.  Ensure that we adjust for the number of bytes we actually
+                // copy.
 
-            memcpy( ( (unsigned char *) pnLength ) + ( 4 - nNumLengthBytes ),
-                     pbLengthData, nNumLengthBytes );
-   #endif
+                memcpy( ( (unsigned char *) pnLength ) + ( 4 - nNumLengthBytes ),
+                        pbLengthData, nNumLengthBytes );
+#endif
 
-            // Account for the initial length byte
-            *pnNumLengthBytes = nNumLengthBytes + 1;
-            nReturn = SPNEGO_E_SUCCESS;
+                // Account for the initial length byte
+                *pnNumLengthBytes = nNumLengthBytes + 1;
+                nReturn = SPNEGO_E_SUCCESS;
 
-         }  // IF Valid Length
+            }  // IF Valid Length
 
-      }  // IF num bytes to read is within the boundary length
+        }  // IF num bytes to read is within the boundary length
 
-   }  // IF xtended length
-   else
-   {
+    }  // IF xtended length
+    else {
 
-      // Extended bit is not set, so the length is in the value and the one
-      // byte describes the length
-      *pnLength = *pbLengthData & LEN_MASK;
-      *pnNumLengthBytes = 1;
-      nReturn = SPNEGO_E_SUCCESS;
+        // Extended bit is not set, so the length is in the value and the one
+        // byte describes the length
+        *pnLength = *pbLengthData & LEN_MASK;
+        *pnNumLengthBytes = 1;
+        nReturn = SPNEGO_E_SUCCESS;
 
-   }
-   LOG(("ASNDerGetLength returned %d\n",nReturn));
-   return nReturn;
+    }
+    LOG(("ASNDerGetLength returned %d\n",nReturn));
+    return nReturn;
 }
 
 
@@ -174,7 +164,7 @@ int ASNDerGetLength( unsigned char* pbLengthData, long nBoundaryLength, long* pn
 //    [in]  nLengthWithToken  -  Expected token length (with data)
 //    [in]  nBoundaryLength   -  Length that value must not exceed.
 //    [out] pnLength          -  Filled out with data length
-//    [out] pnTokenLength     -  Filled out with number of bytes 
+//    [out] pnTokenLength     -  Filled out with number of bytes
 //                               consumed by token identifier and length.
 //
 // Returns:
@@ -190,67 +180,59 @@ int ASNDerGetLength( unsigned char* pbLengthData, long nBoundaryLength, long* pn
 ////////////////////////////////////////////////////////////////////////////
 
 int ASNDerCheckToken( unsigned char* pbTokenData, unsigned char nToken,
-                        long nLengthWithToken, long nBoundaryLength,
-                        long* pnLength, long* pnTokenLength )
+                      long nLengthWithToken, long nBoundaryLength,
+                      long* pnLength, long* pnTokenLength )
 {
 
-   int   nReturn = SPNEGO_E_INVALID_LENGTH;
-   long  nNumLengthBytes = 0L;
+    int   nReturn = SPNEGO_E_INVALID_LENGTH;
+    long  nNumLengthBytes = 0L;
 
-   // Make sure that we've at least got 2 bytes of room to work with
+    // Make sure that we've at least got 2 bytes of room to work with
 
-   if ( nBoundaryLength >= 2 )
-   {
-      // The first byte of the token data MUST match the specified token
-      if ( *pbTokenData == nToken )
-      {
-         // Next byte indicates the length
-         pbTokenData++;
+    if ( nBoundaryLength >= 2 ) {
+        // The first byte of the token data MUST match the specified token
+        if ( *pbTokenData == nToken ) {
+            // Next byte indicates the length
+            pbTokenData++;
 
-         // Get the length described by the token
-         if ( ( nReturn = ASNDerGetLength( pbTokenData, nBoundaryLength, pnLength,
-                                             &nNumLengthBytes )  ) == SPNEGO_E_SUCCESS )
-         {
-            // Verify that the length is LESS THAN the boundary length
-            // (this should prevent us walking out of our buffer)
-            if ( ( nBoundaryLength - ( nNumLengthBytes + 1 ) < *pnLength ) )
-            {
+            // Get the length described by the token
+            if ( ( nReturn = ASNDerGetLength( pbTokenData, nBoundaryLength, pnLength,
+                                              &nNumLengthBytes )  ) == SPNEGO_E_SUCCESS ) {
+                // Verify that the length is LESS THAN the boundary length
+                // (this should prevent us walking out of our buffer)
+                if ( ( nBoundaryLength - ( nNumLengthBytes + 1 ) < *pnLength ) ) {
 
-               nReturn = SPNEGO_E_INVALID_LENGTH;
+                    nReturn = SPNEGO_E_INVALID_LENGTH;
 
-            }
+                }
 
-            // If we were passed a length to check, do so now
-            if ( nLengthWithToken > 0L )
-            {
+                // If we were passed a length to check, do so now
+                if ( nLengthWithToken > 0L ) {
 
-               // Check that the expected length matches
-               if ( ( nLengthWithToken - ( nNumLengthBytes + 1 ) ) != *pnLength )
-               {
+                    // Check that the expected length matches
+                    if ( ( nLengthWithToken - ( nNumLengthBytes + 1 ) ) != *pnLength ) {
 
-                  nReturn = SPNEGO_E_INVALID_LENGTH;
+                        nReturn = SPNEGO_E_INVALID_LENGTH;
 
-               }
+                    }
 
-            }  // IF need to validate length
+                }  // IF need to validate length
 
-            if ( SPNEGO_E_SUCCESS == nReturn )
-            {
-               *pnTokenLength = nNumLengthBytes + 1;
-            }
+                if ( SPNEGO_E_SUCCESS == nReturn ) {
+                    *pnTokenLength = nNumLengthBytes + 1;
+                }
 
-         }  // IF ASNDerGetLength
+            }  // IF ASNDerGetLength
 
-      }  // IF token matches
-      else
-      {
-         nReturn = SPNEGO_E_TOKEN_NOT_FOUND;
-      }
+        }  // IF token matches
+        else {
+            nReturn = SPNEGO_E_TOKEN_NOT_FOUND;
+        }
 
-   }  // IF Boundary Length is at least 2 bytes 
+    }  // IF Boundary Length is at least 2 bytes
 
-   LOG(("ASNDerCheckToken returned %d\n",nReturn));
-   return nReturn;
+    LOG(("ASNDerCheckToken returned %d\n",nReturn));
+    return nReturn;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -275,39 +257,34 @@ int ASNDerCheckToken( unsigned char* pbTokenData, unsigned char nToken,
 ////////////////////////////////////////////////////////////////////////////
 
 int ASNDerCheckOID( unsigned char* pbTokenData, SPNEGO_MECH_OID nMechOID, long nBoundaryLength,
-                     long* pnTokenLength )
+                    long* pnTokenLength )
 {
-   int   nReturn = 0L;
-   long  nLength = 0L;
+    int   nReturn = 0L;
+    long  nLength = 0L;
 
-   // Verify that we have an OID token
-   if ( ( nReturn = ASNDerCheckToken( pbTokenData, OID, 0L, nBoundaryLength, 
-                                       &nLength, pnTokenLength ) ) == SPNEGO_E_SUCCESS )
-   {
-      // Add the data length to the Token Length
-      *pnTokenLength += nLength;
+    // Verify that we have an OID token
+    if ( ( nReturn = ASNDerCheckToken( pbTokenData, OID, 0L, nBoundaryLength,
+                                       &nLength, pnTokenLength ) ) == SPNEGO_E_SUCCESS ) {
+        // Add the data length to the Token Length
+        *pnTokenLength += nLength;
 
-      // Token Lengths plus the actual length must match the length in our OID list element.
-      // If it doesn't, we're done
-      if ( *pnTokenLength == g_stcMechOIDList[nMechOID].iLen )
-      {
-         // Memcompare the token and the expected field
-         if ( memcmp( pbTokenData, g_stcMechOIDList[nMechOID].ucOid, *pnTokenLength ) != 0 )
-         {
-   	    LOG(("ASNDerCheckOID memcmp failed\n"));
+        // Token Lengths plus the actual length must match the length in our OID list element.
+        // If it doesn't, we're done
+        if ( *pnTokenLength == g_stcMechOIDList[nMechOID].iLen ) {
+            // Memcompare the token and the expected field
+            if ( memcmp( pbTokenData, g_stcMechOIDList[nMechOID].ucOid, *pnTokenLength ) != 0 ) {
+                LOG(("ASNDerCheckOID memcmp failed\n"));
+                nReturn = SPNEGO_E_UNEXPECTED_OID;
+            }
+        } else {
+            LOG(("ASNDerCheckOID token length failed\n"));
             nReturn = SPNEGO_E_UNEXPECTED_OID;
-         }
-      }
-      else
-      {
-         LOG(("ASNDerCheckOID token length failed\n"));
-         nReturn = SPNEGO_E_UNEXPECTED_OID;
-      }
+        }
 
-   }  // IF OID Token CHecks
+    }  // IF OID Token CHecks
 
-   LOG(("ASNDerCheckOID returned %d\n",nReturn));
-   return nReturn;
+    LOG(("ASNDerCheckOID returned %d\n",nReturn));
+    return nReturn;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -330,36 +307,27 @@ int ASNDerCheckOID( unsigned char* pbTokenData, SPNEGO_MECH_OID nMechOID, long n
 
 int ASNDerCalcNumLengthBytes( long nLength )
 {
-      if ( nLength <= 0x7F )
-      {
-         // A single byte will be sufficient for describing this length.
-         // The byte will simply contain the length
-         return 1;
-      }
-      else if ( nLength <= 0xFF )
-      {
-         // Two bytes are necessary, one to say how many following bytes
-         // describe the length, and one to give the length
-         return 2;
-      }
-      else if ( nLength <= 0xFFFF )
-      {
-         // Three bytes are necessary, one to say how many following bytes
-         // describe the length, and two to give the length
-         return 3;
-      }
-      else if ( nLength <= 0xFFFFFF )
-      {
-         // Four bytes are necessary, one to say how many following bytes
-         // describe the length, and three to give the length
-         return 4;
-      }
-      else
-      {
-         // Five bytes are necessary, one to say how many following bytes
-         // describe the length, and four to give the length
-         return 5;
-      }
+    if ( nLength <= 0x7F ) {
+        // A single byte will be sufficient for describing this length.
+        // The byte will simply contain the length
+        return 1;
+    } else if ( nLength <= 0xFF ) {
+        // Two bytes are necessary, one to say how many following bytes
+        // describe the length, and one to give the length
+        return 2;
+    } else if ( nLength <= 0xFFFF ) {
+        // Three bytes are necessary, one to say how many following bytes
+        // describe the length, and two to give the length
+        return 3;
+    } else if ( nLength <= 0xFFFFFF ) {
+        // Four bytes are necessary, one to say how many following bytes
+        // describe the length, and three to give the length
+        return 4;
+    } else {
+        // Five bytes are necessary, one to say how many following bytes
+        // describe the length, and four to give the length
+        return 5;
+    }
 }
 
 
@@ -384,11 +352,11 @@ int ASNDerCalcNumLengthBytes( long nLength )
 
 long ASNDerCalcTokenLength( long nLength, long nDataLength )
 {
-   // Add a byte to the length size to account for a single byte to
-   // hold the token type.
-   long  nTotalLength = ASNDerCalcNumLengthBytes( nLength ) + 1;
+    // Add a byte to the length size to account for a single byte to
+    // hold the token type.
+    long  nTotalLength = ASNDerCalcNumLengthBytes( nLength ) + 1;
 
-   return nTotalLength + nDataLength;
+    return nTotalLength + nDataLength;
 }
 
 
@@ -413,20 +381,19 @@ long ASNDerCalcTokenLength( long nLength, long nDataLength )
 
 long ASNDerCalcElementLength( long nDataLength, long* pnInternalLength )
 {
-   // First the type token and the actual data
-   long  nTotalLength = ASNDerCalcTokenLength( nDataLength, nDataLength );
+    // First the type token and the actual data
+    long  nTotalLength = ASNDerCalcTokenLength( nDataLength, nDataLength );
 
-   // Internal length is the length without the element sequence token
-   if ( NULL != pnInternalLength )
-   {
-      *pnInternalLength = nTotalLength;
-   }
+    // Internal length is the length without the element sequence token
+    if ( NULL != pnInternalLength ) {
+        *pnInternalLength = nTotalLength;
+    }
 
-   // Next add in the element's sequence token (remember that its
-   // length is the total length of the type token and data)
-   nTotalLength += ASNDerCalcTokenLength( nTotalLength, 0L );
+    // Next add in the element's sequence token (remember that its
+    // length is the total length of the type token and data)
+    nTotalLength += ASNDerCalcTokenLength( nTotalLength, 0L );
 
-   return nTotalLength;
+    return nTotalLength;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -452,22 +419,21 @@ long ASNDerCalcElementLength( long nDataLength, long* pnInternalLength )
 
 long ASNDerCalcMechListLength( SPNEGO_MECH_OID mechoid, long* pnInternalLength )
 {
-   // First the OID
-   long  nTotalLength = g_stcMechOIDList[mechoid].iLen;
+    // First the OID
+    long  nTotalLength = g_stcMechOIDList[mechoid].iLen;
 
-   // Next add in a sequence token
-   nTotalLength += ASNDerCalcTokenLength( nTotalLength, 0L );
+    // Next add in a sequence token
+    nTotalLength += ASNDerCalcTokenLength( nTotalLength, 0L );
 
-   // Internal length is the length without the element sequence token
-   if ( NULL != pnInternalLength )
-   {
-      *pnInternalLength = nTotalLength;
-   }
+    // Internal length is the length without the element sequence token
+    if ( NULL != pnInternalLength ) {
+        *pnInternalLength = nTotalLength;
+    }
 
-   // Finally add in the element's sequence token
-   nTotalLength += ASNDerCalcTokenLength( nTotalLength, 0L );
+    // Finally add in the element's sequence token
+    nTotalLength += ASNDerCalcTokenLength( nTotalLength, 0L );
 
-   return nTotalLength;
+    return nTotalLength;
 }
 
 
@@ -490,79 +456,72 @@ long ASNDerCalcMechListLength( SPNEGO_MECH_OID mechoid, long* pnInternalLength )
 
 int ASNDerWriteLength( unsigned char* pbData, long nLength )
 {
-   int   nNumBytesRequired = ASNDerCalcNumLengthBytes( nLength );
-   int   nNumLengthBytes = nNumBytesRequired - 1;
+    int   nNumBytesRequired = ASNDerCalcNumLengthBytes( nLength );
+    int   nNumLengthBytes = nNumBytesRequired - 1;
 
 
-   if ( nNumBytesRequired > 1 )
-   {
+    if ( nNumBytesRequired > 1 ) {
 
-      // Write out the number of bytes following which will be used
-      *pbData = (unsigned char ) ( LEN_XTND | nNumLengthBytes );
+        // Write out the number of bytes following which will be used
+        *pbData = (unsigned char ) ( LEN_XTND | nNumLengthBytes );
 
-      // Point to where we'll actually write the length
-      pbData++;
+        // Point to where we'll actually write the length
+        pbData++;
 
-#if defined(__LITTLE_ENDIAN__) || !defined(WORDS_BIGENDIAN) 
+#if defined(__LITTLE_ENDIAN__) || !defined(WORDS_BIGENDIAN)
 
-      // There may be a cleaner way to do this, but for now, this seems to be
-      // an easy way to do the transformation
-      switch ( nNumLengthBytes )
-      {
-         case 1:
-         {
+        // There may be a cleaner way to do this, but for now, this seems to be
+        // an easy way to do the transformation
+        switch ( nNumLengthBytes ) {
+        case 1: {
             // Cast the length to a single byte, since we know that it
             // is 0x7F or less (or we wouldn't only need a single byte).
-      
+
             *pbData = (unsigned char) nLength;
             break;
-         }
+        }
 
-         case 2:
-         {
+        case 2: {
             *pbData = *( ( (unsigned char*) &nLength ) + 1 );
             *( pbData + 1) = *( ( (unsigned char*) &nLength ) );
             break;
-         }
+        }
 
-         case 3:
-         {
+        case 3: {
             *pbData = *( ( (unsigned char*) &nLength ) + 3 );
             *( pbData + 1) = *( ( (unsigned char*) &nLength ) + 2 );
             *( pbData + 2) = *( ( (unsigned char*) &nLength ) );
             break;
-         }
+        }
 
-         case 4:
-         {
+        case 4: {
             *pbData = *( ( (unsigned char*) &nLength ) + 3 );
             *( pbData + 1) = *( ( (unsigned char*) &nLength ) + 2 );
             *( pbData + 2) = *( ( (unsigned char*) &nLength ) + 1 );
             *( pbData + 3) = *( ( (unsigned char*) &nLength ) );
             break;
-         }
+        }
 
-      }  // SWITCH ( nNumLengthBytes )
+        }  // SWITCH ( nNumLengthBytes )
 
 #else
-      // We are Big-Endian, so the length can be copied in from the source
-      // as is.  Ensure that we adjust for the number of bytes we actually
-      // copy.
+        // We are Big-Endian, so the length can be copied in from the source
+        // as is.  Ensure that we adjust for the number of bytes we actually
+        // copy.
 
-      memcpy( pbData,
-               ( (unsigned char *) &nLength ) + ( 4 - nNumLengthBytes ), nNumLengthBytes );
+        memcpy( pbData,
+                ( (unsigned char *) &nLength ) + ( 4 - nNumLengthBytes ), nNumLengthBytes );
 #endif
 
-   }  // IF > 1 byte for length
-   else
-   {
-      // Cast the length to a single byte, since we know that it
-      // is 0x7F or less (or we wouldn't only need a single byte).
-      
-      *pbData = (unsigned char) nLength;
-   }
+    }  // IF > 1 byte for length
+    else {
+        // Cast the length to a single byte, since we know that it
+        // is 0x7F or less (or we wouldn't only need a single byte).
 
-   return nNumBytesRequired;
+        *pbData = (unsigned char) nLength;
+    }
+
+    return nNumBytesRequired;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -587,34 +546,33 @@ int ASNDerWriteLength( unsigned char* pbData, long nLength )
 ////////////////////////////////////////////////////////////////////////////
 
 int ASNDerWriteToken( unsigned char* pbData, unsigned char ucType,
-                     unsigned char* pbTokenValue, long nLength )
+                      unsigned char* pbTokenValue, long nLength )
 {
-   int   nTotalBytesWrittenOut = 0L;
-   int   nNumLengthBytesWritten = 0L;
+    int   nTotalBytesWrittenOut = 0L;
+    int   nNumLengthBytesWritten = 0L;
 
-   // Write out the type
-   *pbData = ucType;
+    // Write out the type
+    *pbData = ucType;
 
-   // Wrote 1 byte, and move data pointer
-   nTotalBytesWrittenOut++;
-   pbData++;
+    // Wrote 1 byte, and move data pointer
+    nTotalBytesWrittenOut++;
+    pbData++;
 
-   // Now write out the length and adjust the number of bytes written out
-   nNumLengthBytesWritten = ASNDerWriteLength( pbData, nLength );
+    // Now write out the length and adjust the number of bytes written out
+    nNumLengthBytesWritten = ASNDerWriteLength( pbData, nLength );
 
-   nTotalBytesWrittenOut += nNumLengthBytesWritten;
-   pbData += nNumLengthBytesWritten;
+    nTotalBytesWrittenOut += nNumLengthBytesWritten;
+    pbData += nNumLengthBytesWritten;
 
-   // Write out the token value if we got one.  The assumption is that the
-   // nLength value indicates how many bytes are in pbTokenValue.
+    // Write out the token value if we got one.  The assumption is that the
+    // nLength value indicates how many bytes are in pbTokenValue.
 
-   if ( NULL != pbTokenValue )
-   {
-      memcpy( pbData, pbTokenValue, nLength );
-      nTotalBytesWrittenOut += nLength;
-   }
+    if ( NULL != pbTokenValue ) {
+        memcpy( pbData, pbTokenValue, nLength );
+        nTotalBytesWrittenOut += nLength;
+    }
 
-   return nTotalBytesWrittenOut;
+    return nTotalBytesWrittenOut;
 }
 
 
@@ -640,9 +598,9 @@ int ASNDerWriteToken( unsigned char* pbData, unsigned char ucType,
 int ASNDerWriteOID( unsigned char* pbData, SPNEGO_MECH_OID eMechOID )
 {
 
-   memcpy( pbData, g_stcMechOIDList[eMechOID].ucOid, g_stcMechOIDList[eMechOID].iLen );
+    memcpy( pbData, g_stcMechOIDList[eMechOID].ucOid, g_stcMechOIDList[eMechOID].iLen );
 
-   return g_stcMechOIDList[eMechOID].iLen;
+    return g_stcMechOIDList[eMechOID].iLen;
 }
 
 
@@ -667,25 +625,25 @@ int ASNDerWriteOID( unsigned char* pbData, SPNEGO_MECH_OID eMechOID )
 
 long ASNDerWriteMechList( unsigned char* pbData, SPNEGO_MECH_OID mechoid )
 {
-   // First get the length
-   long  nInternalLength = 0L;
-   long  nMechListLength = ASNDerCalcMechListLength( mechoid, &nInternalLength );
-   long  nTempLength = 0L;
+    // First get the length
+    long  nInternalLength = 0L;
+    long  nMechListLength = ASNDerCalcMechListLength( mechoid, &nInternalLength );
+    long  nTempLength = 0L;
 
-   nTempLength = ASNDerWriteToken( pbData, SPNEGO_NEGINIT_ELEMENT_MECHTYPES,
+    nTempLength = ASNDerWriteToken( pbData, SPNEGO_NEGINIT_ELEMENT_MECHTYPES,
                                     NULL, nInternalLength );
 
-   // Adjust the data pointer
-   pbData += nTempLength;
+    // Adjust the data pointer
+    pbData += nTempLength;
 
-   // Now write the Sequence token and the OID (the OID is a BLOB in the global
-   // structure.
+    // Now write the Sequence token and the OID (the OID is a BLOB in the global
+    // structure.
 
-   nTempLength = ASNDerWriteToken( pbData, SPNEGO_CONSTRUCTED_SEQUENCE,
+    nTempLength = ASNDerWriteToken( pbData, SPNEGO_CONSTRUCTED_SEQUENCE,
                                     g_stcMechOIDList[mechoid].ucOid,
                                     g_stcMechOIDList[mechoid].iLen );
 
-   return nMechListLength;
+    return nMechListLength;
 }
 
 
@@ -713,20 +671,20 @@ long ASNDerWriteMechList( unsigned char* pbData, SPNEGO_MECH_OID mechoid )
 int ASNDerWriteElement( unsigned char* pbData, unsigned char ucElementSequence,
                         unsigned char ucType, unsigned char* pbTokenValue, long nLength )
 {
-   // First get the length
-   long  nInternalLength = 0L;
-   long  nElementLength = ASNDerCalcElementLength( nLength, &nInternalLength );
-   long  nTempLength = 0L;
+    // First get the length
+    long  nInternalLength = 0L;
+    long  nElementLength = ASNDerCalcElementLength( nLength, &nInternalLength );
+    long  nTempLength = 0L;
 
-   // Write out the sequence byte and the length of the type and data
-   nTempLength = ASNDerWriteToken( pbData, ucElementSequence, NULL, nInternalLength );
+    // Write out the sequence byte and the length of the type and data
+    nTempLength = ASNDerWriteToken( pbData, ucElementSequence, NULL, nInternalLength );
 
-   // Adjust the data pointer
-   pbData += nTempLength;
+    // Adjust the data pointer
+    pbData += nTempLength;
 
-   // Now write the type and the data.
-   nTempLength = ASNDerWriteToken( pbData, ucType, pbTokenValue, nLength );
+    // Now write the type and the data.
+    nTempLength = ASNDerWriteToken( pbData, ucType, pbTokenValue, nLength );
 
-   return nElementLength;
+    return nElementLength;
 }
 

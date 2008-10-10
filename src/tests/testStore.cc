@@ -15,7 +15,7 @@ TestStore::callback()
 StoreEntry*
 
 TestStore::get
-    (const cache_key*)
+(const cache_key*)
 {
     return NULL;
 }
@@ -23,7 +23,7 @@ TestStore::get
 void
 
 TestStore::get
-    (String, void (*)(StoreEntry*, void*), void*)
+(String, void (*)(StoreEntry*, void*), void*)
 {}
 
 void

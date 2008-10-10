@@ -31,7 +31,7 @@ class intnode
 {
 
 public:
-    intnode() : i(0){}
+    intnode() : i(0) {}
 
     intnode (int anInt) : i (anInt) {}
 
@@ -164,8 +164,7 @@ main(int argc, char *argv[])
         /* intnode* */
         SplayNode<intnode *> *safeTop = NULL;
 
-        for ( int i = 0; i < 100; i++)
-        {
+        for ( int i = 0; i < 100; i++) {
             intnode *I;
             I = new intnode;
             I->i = squid_random();
@@ -184,8 +183,7 @@ main(int argc, char *argv[])
         /* intnode */
         SplayNode<intnode> *safeTop = NULL;
 
-        for (int i = 0; i < 100; i++)
-        {
+        for (int i = 0; i < 100; i++) {
             intnode I;
             I.i = squid_random();
             safeTop = safeTop->insert(I, compareintref);

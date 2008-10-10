@@ -1,7 +1,7 @@
 
 /*
  * $Id: store_dir_coss.cc,v 1.77 2007/11/15 16:47:36 wessels Exp $
- * vim: set et : 
+ * vim: set et :
  *
  * DEBUG: section 47    Store COSS Directory Routines
  * AUTHOR: Eric Stern
@@ -22,12 +22,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -58,15 +58,13 @@ MemAllocator *coss_index_pool = NULL;
 
 typedef struct _RebuildState RebuildState;
 
-struct _RebuildState
-{
+struct _RebuildState {
     CossSwapDir *sd;
     int n_read;
     FILE *log;
     int speed;
 
-    struct
-    {
+    struct {
         unsigned int clean:1;
     } flags;
 
@@ -444,7 +442,8 @@ storeCossRebuildFromSwapLog(void *data)
                 storeCossRemove(rb->sd, e);
                 rb->counts.objcount--;
                 rb->counts.cancelcount++;
-            } continue;
+            }
+            continue;
         } else {
             x = log(static_cast<double>(++rb->counts.bad_log_op)) / log(10.0);
 
@@ -750,7 +749,7 @@ CossSwapDir::writeCleanStart()
 
 /* RBC 20050101 - I think there is a race condition here,
  * *current can be freed as its not ref counted, if/when
- * the store overruns the log writer 
+ * the store overruns the log writer
  */
 const StoreEntry *
 CossCleanLog::nextEntry()
@@ -1042,7 +1041,7 @@ CossSwapDir::parse(int anIndex, char *aPath)
 
     parseOptions(0);
 
-    if (NULL == io) 
+    if (NULL == io)
         changeIO(DiskIOModule::FindDefault());
 
     /* Enforce maxobjsize being set to something */

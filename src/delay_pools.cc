@@ -22,12 +22,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -553,7 +553,7 @@ void
 DelayPools::RegisterWithCacheManager(void)
 {
     CacheManager::GetInstance()->
-        registerAction("delay", "Delay Pool Levels", Stats, 0, 1);
+    registerAction("delay", "Delay Pool Levels", Stats, 0, 1);
 }
 
 void
@@ -864,7 +864,7 @@ unsigned int
 IndividualPool::makeKey (IPAddress &src_addr) const
 {
     /* FIXME INET6 : IPv6 requires a 64-128 bit result from this function */
-    if( !src_addr.IsIPv4() )
+    if ( !src_addr.IsIPv4() )
         return 1;
 
     /* Temporary bypass for IPv4-only */
@@ -891,7 +891,7 @@ unsigned int
 ClassCNetPool::makeKey (IPAddress &src_addr) const
 {
     /* FIXME INET6 : IPv6 requires a 64-128 bit result from this function */
-    if( !src_addr.IsIPv4() )
+    if ( !src_addr.IsIPv4() )
         return 1;
 
     /* Temporary bypass for IPv4-only */
@@ -965,7 +965,7 @@ unsigned char
 ClassCHostPool::makeHostKey (IPAddress &src_addr) const
 {
     /* FIXME INET6 : IPv6 requires a 64-128 bit result from this function */
-    if( !src_addr.IsIPv4() )
+    if ( !src_addr.IsIPv4() )
         return 1;
 
     /* Temporary bypass for IPv4-only */
@@ -978,7 +978,7 @@ unsigned int
 ClassCHostPool::makeKey (IPAddress &src_addr) const
 {
     /* FIXME INET6 : IPv6 requires a 64-128 bit result from this function */
-    if( !src_addr.IsIPv4() )
+    if ( !src_addr.IsIPv4() )
         return 1;
 
     /* Temporary bypass for IPv4-only */

@@ -14,12 +14,12 @@ cbdata_type Ecap::XactionRep::CBDATA_XactionRep = CBDATA_UNKNOWN;
 
 
 Ecap::XactionRep::XactionRep(Adaptation::Initiator *anInitiator,
-    HttpMsg *virginHeader, HttpRequest *virginCause,
-    const Adaptation::ServicePointer &aService):
-    AsyncJob("Ecap::XactionRep"),
-    Adaptation::Initiate("Ecap::XactionRep", anInitiator, aService),
-    theVirginRep(virginHeader), theCauseRep(NULL),
-    proxyingVb(opUndecided), proxyingAb(opUndecided), canAccessVb(false)
+                             HttpMsg *virginHeader, HttpRequest *virginCause,
+                             const Adaptation::ServicePointer &aService):
+        AsyncJob("Ecap::XactionRep"),
+        Adaptation::Initiate("Ecap::XactionRep", anInitiator, aService),
+        theVirginRep(virginHeader), theCauseRep(NULL),
+        proxyingVb(opUndecided), proxyingAb(opUndecided), canAccessVb(false)
 {
     if (virginCause)
         theCauseRep = new MessageRep(virginCause);
@@ -121,7 +121,7 @@ bool
 Ecap::XactionRep::doneAll() const
 {
     return proxyingVb >= opComplete && proxyingAb >= opComplete &&
-        Adaptation::Initiate::doneAll();
+           Adaptation::Initiate::doneAll();
 }
 
 // stops receiving virgin and enables auto-consumption
@@ -142,7 +142,7 @@ Ecap::XactionRep::dropVirgin(const char *reason)
     // called from adapter handler so does not inform adapter
 }
 
-void 
+void
 Ecap::XactionRep::useVirgin()
 {
     debugs(93,3, HERE << status());
@@ -163,16 +163,16 @@ Ecap::XactionRep::useVirgin()
         canAccessVb = false;
         proxyingVb = opComplete;
     } else
-    if (proxyingVb == opUndecided) {
-        vbody_pipe = NULL; // it is not our pipe anymore
-        proxyingVb = opNever;
-    }
+        if (proxyingVb == opUndecided) {
+            vbody_pipe = NULL; // it is not our pipe anymore
+            proxyingVb = opNever;
+        }
 
     sendAnswer(clone);
     Must(done());
 }
 
-void 
+void
 Ecap::XactionRep::useAdapted(const libecap::shared_ptr<libecap::Message> &m)
 {
     debugs(93,3, HERE << status());
@@ -253,11 +253,11 @@ Ecap::XactionRep::vbContent(libecap::size_type o, libecap::size_type s)
 
     // nsize means no size limit: all content starting from offset
     const size_t size = s == libecap::nsize ?
-        haveSize - offset : static_cast<size_t>(s);
+                        haveSize - offset : static_cast<size_t>(s);
 
     // XXX: optimize by making theBody a shared_ptr (see Area::FromTemp*() src)
     return libecap::Area::FromTempBuffer(p->buf().content() + offset,
-        min(static_cast<size_t>(haveSize - offset), size));
+                                         min(static_cast<size_t>(haveSize - offset), size));
 }
 
 void
@@ -305,11 +305,11 @@ void
 Ecap::XactionRep::adaptationDelayed(const libecap::Delay &d)
 {
     debugs(93,3, HERE << "adapter needs time: " <<
-       d.state << '/' << d.progress);
+           d.state << '/' << d.progress);
     // XXX: set timeout?
 }
 
-void 
+void
 Ecap::XactionRep::adaptationAborted()
 {
     tellQueryAborted(true); // should eCAP support retries?
@@ -322,14 +322,14 @@ Ecap::XactionRep::callable() const
     return !done();
 }
 
-void 
+void
 Ecap::XactionRep::noteMoreBodySpaceAvailable(RefCount<BodyPipe> bp)
 {
     Must(proxyingAb == opOn);
     moveAbContent();
 }
 
-void 
+void
 Ecap::XactionRep::noteBodyConsumerAborted(RefCount<BodyPipe> bp)
 {
     Must(proxyingAb == opOn);

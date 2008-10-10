@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -134,8 +134,7 @@ static EVH wccp2AssignBuckets;
 /* WCCP v2 packet header */
 
 /// \interface WCCPv2_Protocol
-struct wccp2_here_i_am_header_t
-{
+struct wccp2_here_i_am_header_t {
     uint32_t type;
     uint16_t version;
     uint16_t length;
@@ -145,16 +144,14 @@ static struct wccp2_here_i_am_header_t wccp2_here_i_am_header;
 
 /* Security struct for the "no security" option */
 
-struct wccp2_security_none_t
-{
+struct wccp2_security_none_t {
     uint16_t security_type;
     uint16_t security_length;
     uint32_t security_option;
 };
 
 /// \interface WCCPv2_Protocol
-struct wccp2_security_md5_t
-{
+struct wccp2_security_md5_t {
     uint16_t security_type;
     uint16_t security_length;
     uint32_t security_option;
@@ -164,8 +161,7 @@ struct wccp2_security_md5_t
 /* Service info struct */
 
 /// \interface WCCPv2_Protocol
-struct wccp2_service_info_t
-{
+struct wccp2_service_info_t {
     uint16_t service_type;
     uint16_t service_length;
     uint8_t service;
@@ -184,8 +180,7 @@ struct wccp2_service_info_t
 };
 
 /// \interface WCCPv2_Protocol
-struct wccp2_cache_identity_info_t
-{
+struct wccp2_cache_identity_info_t {
     struct in_addr addr;
     uint16_t hash_revision;
     char bits[2];
@@ -197,8 +192,7 @@ struct wccp2_cache_identity_info_t
 /* Web Cache identity info */
 
 /// \interface WCCPv2_Protocol
-struct wccp2_identity_info_t
-{
+struct wccp2_identity_info_t {
     uint16_t cache_identity_type;
     uint16_t cache_identity_length;
 
@@ -208,8 +202,7 @@ struct wccp2_identity_info_t
 static struct wccp2_identity_info_t wccp2_identity_info;
 
 /// \interface WCCPv2_Protocol
-struct wccp2_cache_mask_identity_info_t
-{
+struct wccp2_cache_mask_identity_info_t {
     struct in_addr addr;
     uint32_t num1;
     uint32_t num2;
@@ -224,8 +217,7 @@ struct wccp2_cache_mask_identity_info_t
 /* Web Cache identity info */
 
 /// \interface WCCPv2_Protocol
-struct wccp2_mask_identity_info_t
-{
+struct wccp2_mask_identity_info_t {
     uint16_t cache_identity_type;
     uint16_t cache_identity_length;
 
@@ -237,8 +229,7 @@ static struct wccp2_mask_identity_info_t wccp2_mask_identity_info;
 /* View header */
 
 /// \interface WCCPv2_Protocol
-struct wccp2_cache_view_header_t
-{
+struct wccp2_cache_view_header_t {
     uint16_t cache_view_type;
     uint16_t cache_view_length;
     uint32_t cache_view_version;
@@ -249,8 +240,7 @@ static struct wccp2_cache_view_header_t wccp2_cache_view_header;
 /* View info */
 
 /// \interface WCCPv2_Protocol
-struct wccp2_cache_view_info_t
-{
+struct wccp2_cache_view_info_t {
     uint32_t num_routers;
     uint32_t num_caches;
 };
@@ -260,8 +250,7 @@ static struct wccp2_cache_view_info_t wccp2_cache_view_info;
 /* Router ID element */
 
 /// \interface WCCPv2_Protocol
-struct wccp2_router_id_element_t
-{
+struct wccp2_router_id_element_t {
     struct in_addr router_address;
     uint32_t received_id;
 };
@@ -271,8 +260,7 @@ static struct wccp2_router_id_element_t wccp2_router_id_element;
 /* Capability info header */
 
 /// \interface WCCpv2_Protocol
-struct wccp2_capability_info_header_t
-{
+struct wccp2_capability_info_header_t {
     uint16_t capability_info_type;
     uint16_t capability_info_length;
 };
@@ -282,8 +270,7 @@ static struct wccp2_capability_info_header_t wccp2_capability_info_header;
 /* Capability element header */
 
 /// \interface WCCPv2_Protocol
-struct wccp2_capability_element_header_t
-{
+struct wccp2_capability_element_header_t {
     uint16_t capability_type;
     uint16_t capability_length;
 };
@@ -291,8 +278,7 @@ struct wccp2_capability_element_header_t
 /* Capability element */
 
 /// \interface WCCPv2_Protocol
-struct wccp2_capability_element_t
-{
+struct wccp2_capability_element_t {
     uint16_t capability_type;
     uint16_t capability_length;
     uint32_t capability_value;
@@ -303,8 +289,7 @@ static struct wccp2_capability_element_t wccp2_capability_element;
 /* Mask Element */
 
 /// \interface WCCPv2_Protocol
-struct wccp2_mask_element_t
-{
+struct wccp2_mask_element_t {
     uint32_t source_ip_mask;
     uint32_t dest_ip_mask;
     uint16_t source_port_mask;
@@ -315,8 +300,7 @@ struct wccp2_mask_element_t
 /* Value Element */
 
 /// \interface WCCPv2_Protocol
-struct wccp2_value_element_t
-{
+struct wccp2_value_element_t {
     uint32_t source_ip_value;
     uint32_t dest_ip_value;
     uint16_t source_port_value;
@@ -328,8 +312,7 @@ struct wccp2_value_element_t
 /* RECEIVED PACKET STRUCTURE */
 
 /// \interface WCCPv2_Protocol
-struct wccp2_i_see_you_t
-{
+struct wccp2_i_see_you_t {
     uint32_t type;
     uint16_t version;
     uint16_t length;
@@ -341,8 +324,7 @@ static struct wccp2_i_see_you_t wccp2_i_see_you;
 /* Router ID element */
 
 /// \interface WCCPv2_Protocol
-struct wccp2_router_assign_element_t
-{
+struct wccp2_router_assign_element_t {
     struct in_addr router_address;
     uint32_t received_id;
     uint32_t change_number;
@@ -351,8 +333,7 @@ struct wccp2_router_assign_element_t
 /* Generic header struct */
 
 /// \interface WCCPv2_Protocol
-struct wccp2_item_header_t
-{
+struct wccp2_item_header_t {
     uint16_t type;
     uint16_t length;
 };
@@ -360,8 +341,7 @@ struct wccp2_item_header_t
 /* Router identity struct */
 
 /// \interface WCCPv2_Protocol
-struct router_identity_info_t
-{
+struct router_identity_info_t {
 
     struct wccp2_item_header_t header;
 
@@ -374,8 +354,7 @@ struct router_identity_info_t
 /* The received packet for a mask assignment is unusual */
 
 /// \interface WCCPv2_Protocol
-struct cache_mask_info_t
-{
+struct cache_mask_info_t {
     struct in_addr addr;
     uint32_t num1;
     uint32_t num2;
@@ -385,8 +364,7 @@ struct cache_mask_info_t
 /* assigment key */
 
 /// \interface WCCPv2_Protocol
-struct assignment_key_t
-{
+struct assignment_key_t {
     struct in_addr master_ip;
     uint32_t master_number;
 };
@@ -394,8 +372,7 @@ struct assignment_key_t
 /* Router view of WCCP */
 
 /// \interface WCCPv2_Protocol
-struct router_view_t
-{
+struct router_view_t {
 
     struct wccp2_item_header_t header;
     uint32_t change_number;
@@ -406,8 +383,7 @@ struct router_view_t
 /* Lists used to keep track of caches, routers and services */
 
 /// \interface WCCPv2_Protocol
-struct wccp2_cache_list_t
-{
+struct wccp2_cache_list_t {
 
     struct in_addr cache_ip;
 
@@ -417,8 +393,7 @@ struct wccp2_cache_list_t
 };
 
 /// \interface WCCPv2_Protocol
-struct wccp2_router_list_t
-{
+struct wccp2_router_list_t {
 
     struct wccp2_router_id_element_t *info;
 
@@ -436,8 +411,7 @@ struct wccp2_router_list_t
 static int wccp2_numrouters;
 
 /// \interface WCCPv2_Protocol
-struct wccp2_service_list_t
-{
+struct wccp2_service_list_t {
 
     struct wccp2_service_info_t info;
     uint32_t num_routers;
@@ -461,8 +435,7 @@ struct wccp2_service_list_t
 
 static struct wccp2_service_list_t *wccp2_service_list_head = NULL;
 
-int empty_portlist[WCCP2_NUMPORTS] =
-    {0, 0, 0, 0, 0, 0, 0, 0};
+int empty_portlist[WCCP2_NUMPORTS] = {0, 0, 0, 0, 0, 0, 0, 0};
 
 /* END WCCP V2 */
 void wccp2_add_service_list(int service, int service_id, int service_priority,
@@ -531,15 +504,13 @@ wccp2_add_service_list(int service, int service_id, int service_priority,
 }
 
 static struct wccp2_service_list_t *
-            wccp2_get_service_by_id(int service, int service_id)
-{
+            wccp2_get_service_by_id(int service, int service_id) {
 
     struct wccp2_service_list_t *p;
 
     p = wccp2_service_list_head;
 
-    while (p != NULL)
-    {
+    while (p != NULL) {
         if (p->info.service == service && p->info.service_id == service_id) {
             return p;
         }
@@ -618,19 +589,16 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
 
     /* Make sure the security type matches what we expect */
 
-    if (ntohl(ws->security_option) != srv->wccp2_security_type)
-    {
+    if (ntohl(ws->security_option) != srv->wccp2_security_type) {
         debugs(80, 1, "wccp2_check_security: received packet has the wrong security option");
         return 0;
     }
 
-    if (srv->wccp2_security_type == WCCP2_NO_SECURITY)
-    {
+    if (srv->wccp2_security_type == WCCP2_NO_SECURITY) {
         return 1;
     }
 
-    if (srv->wccp2_security_type != WCCP2_MD5_SECURITY)
-    {
+    if (srv->wccp2_security_type != WCCP2_MD5_SECURITY) {
         debugs(80, 1, "wccp2_check_security: invalid security option");
         return 0;
     }
@@ -981,7 +949,7 @@ wccp2ConnectionOpen(void)
         return;
     }
 
-    if( !Config.Wccp2.address.SetIPv4() ) {
+    if ( !Config.Wccp2.address.SetIPv4() ) {
         debugs(80, 0, "WCCPv2 Disabled. " << Config.Wccp2.address << " is not an IPv4 address.");
         return;
     }
@@ -1170,14 +1138,16 @@ wccp2HandleUdp(int sock, void *not_used)
 
     commSetSelect(sock, COMM_SELECT_READ, wccp2HandleUdp, NULL, 0);
 
-/* FIXME INET6 : drop conversion boundary */ IPAddress from_tmp;
+    /* FIXME INET6 : drop conversion boundary */
+    IPAddress from_tmp;
 
     len = comm_udp_recvfrom(sock,
                             &wccp2_i_see_you,
                             WCCP_RESPONSE_SIZE,
                             0,
                             from_tmp);
-/* FIXME INET6 : drop conversion boundary */ from_tmp.GetSockAddr(from);
+    /* FIXME INET6 : drop conversion boundary */
+    from_tmp.GetSockAddr(from);
 
     if (len < 0)
         return;
@@ -1969,7 +1939,8 @@ wccp2AssignBuckets(void *voidnotused)
                 /* send packet */
 
                 if (wccp2_numrouters > 1) {
-/* FIXME INET6 : drop temp conversion */ IPAddress tmp_rtr(router);
+                    /* FIXME INET6 : drop temp conversion */
+                    IPAddress tmp_rtr(router);
                     comm_udp_sendto(theWccp2Connection,
                                     tmp_rtr,
                                     &wccp_packet,
@@ -2022,8 +1993,7 @@ parse_wccp2_method(int *method)
 void
 dump_wccp2_method(StoreEntry * e, const char *label, int v)
 {
-    switch(v)
-    {
+    switch (v) {
     case WCCP2_METHOD_GRE:
         storeAppendPrintf(e, "%s gre\n", label);
         break;
@@ -2070,8 +2040,7 @@ parse_wccp2_amethod(int *method)
 void
 dump_wccp2_amethod(StoreEntry * e, const char *label, int v)
 {
-    switch(v)
-    {
+    switch (v) {
     case WCCP2_ASSIGNMENT_METHOD_HASH:
         storeAppendPrintf(e, "%s hash\n", label);
         break;
@@ -2501,27 +2470,27 @@ wccp2SortCacheList(struct wccp2_cache_list_t *head)
 
     /* Go through each position in the list one at a time */
     for (this_item = head; this_item->next; this_item = this_item->next) {
-	/* Find the item with the lowest IP */
-	next_lowest = this_item;
+        /* Find the item with the lowest IP */
+        next_lowest = this_item;
 
-	for (find_item = this_item; find_item->next; find_item = find_item->next) {
-	    if (find_item->cache_ip.s_addr < next_lowest->cache_ip.s_addr) {
-		next_lowest = find_item;
-	    }
-	}
-	/* Swap if we need to */
-	if (next_lowest != this_item) {
-	    /* First make a copy of the current item */
-	    memcpy(&tmp, this_item, sizeof(struct wccp2_cache_list_t));
+        for (find_item = this_item; find_item->next; find_item = find_item->next) {
+            if (find_item->cache_ip.s_addr < next_lowest->cache_ip.s_addr) {
+                next_lowest = find_item;
+            }
+        }
+        /* Swap if we need to */
+        if (next_lowest != this_item) {
+            /* First make a copy of the current item */
+            memcpy(&tmp, this_item, sizeof(struct wccp2_cache_list_t));
 
-	    /* Next update the pointers to maintain the linked list */
-	    tmp.next = next_lowest->next;
-	    next_lowest->next = this_item->next;
+            /* Next update the pointers to maintain the linked list */
+            tmp.next = next_lowest->next;
+            next_lowest->next = this_item->next;
 
-	    /* Finally copy the updated items to their correct location */
-	    memcpy(this_item, next_lowest, sizeof(struct wccp2_cache_list_t));
-	    memcpy(next_lowest, &tmp, sizeof(struct wccp2_cache_list_t));
-	}
+            /* Finally copy the updated items to their correct location */
+            memcpy(this_item, next_lowest, sizeof(struct wccp2_cache_list_t));
+            memcpy(next_lowest, &tmp, sizeof(struct wccp2_cache_list_t));
+        }
     }
 }
 

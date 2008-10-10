@@ -18,12 +18,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -55,10 +55,10 @@ public:
     virtual void create();
 
     virtual StoreEntry * get
-        (const cache_key *);
+    (const cache_key *);
 
     virtual void get
-        (String const, STOREGETCLIENT, void * cbdata);
+    (String const, STOREGETCLIENT, void * cbdata);
 
     virtual void init();
 
@@ -115,8 +115,7 @@ class SwapDir : public Store
 {
 
 public:
-    SwapDir(char const *aType) : theType (aType), cur_size (0), max_size(0), max_objsize (-1), cleanLog(NULL)
-    {
+    SwapDir(char const *aType) : theType (aType), cur_size (0), max_size(0), max_objsize (-1), cleanLog(NULL) {
         fs.blksize = 1024;
         path = NULL;
     }
@@ -129,12 +128,12 @@ public:
     virtual void diskFull();
 
     virtual StoreEntry * get
-        (const cache_key *);
+    (const cache_key *);
 
     virtual void get
-        (String const, STOREGETCLIENT, void * cbdata);
+    (String const, STOREGETCLIENT, void * cbdata);
 
-virtual size_t maxSize() const { return max_size;}
+    virtual size_t maxSize() const { return max_size;}
 
     virtual size_t minSize() const;
     virtual void stat (StoreEntry &anEntry) const;
@@ -167,9 +166,8 @@ public:
     int removals;
     int scanned;
 
-    struct Flags
-    {
-        Flags() : selected(0), read_only(0){}
+    struct Flags {
+        Flags() : selected(0), read_only(0) {}
         unsigned int selected:1;
         unsigned int read_only:1;
     } flags;
@@ -198,7 +196,7 @@ public:
     {
 
     public:
-        virtual ~CleanLog(){}
+        virtual ~CleanLog() {}
 
         virtual const StoreEntry *nextEntry() = 0;
         virtual void write(StoreEntry const &) = 0;
@@ -209,8 +207,7 @@ public:
     virtual void writeCleanDone();
     virtual void parse(int index, char *path) = 0;
 
-    struct
-    {
+    struct {
         int blksize;
     } fs;
 };

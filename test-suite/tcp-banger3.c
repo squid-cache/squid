@@ -131,53 +131,53 @@ get_url(const char *url)
     assert(!strncmp(url, "http://", 7));
     strncpy(host, url + 7, URL_BUF_SZ);
     if ((t = strchr(host, '/')))
-	*t = '\0';
+        *t = '\0';
     if ((t = strchr(host, ':'))) {
-	*t = '\0';
-	port = (unsigned short) atoi(t + 1);
+        *t = '\0';
+        port = (unsigned short) atoi(t + 1);
     }
 #if 0
     if ((int) port != 80)
-	return 0;
+        return 0;
 #endif
     t = strchr(url + 7, '/');
     strncpy(path, (t ? t : "/"), URL_BUF_SZ);
     memset(&S, '\0', sizeof(S));
     h = gethostbyname(host);
     if (!h)
-	return 0;
+        return 0;
     memcpy(&S.sin_addr.s_addr, h->h_addr_list[0], sizeof(S.sin_addr.s_addr));
     S.sin_port = htons(port);
     S.sin_family = AF_INET;
     if (debug)
-	fprintf(stderr, "%s (%s) %d %s\n", host, inet_ntoa(S.sin_addr), (int) port, path);
+        fprintf(stderr, "%s (%s) %d %s\n", host, inet_ntoa(S.sin_addr), (int) port, path);
     s = socket(PF_INET, SOCK_STREAM, 0);
     if (s < 0) {
-	perror("socket");
-	return -errno;
+        perror("socket");
+        return -errno;
     }
     x = connect(s, (struct sockaddr *) &S, sizeof(S));
     if (x < 0) {
-	perror(host);
-	return -errno;
+        perror(host);
+        return -errno;
     }
     snprintf(request, URL_BUF_SZ,
-	"GET %s HTTP/1.1\r\n"
-	"Accept: */*\r\n"
-	"Host: %s\r\n"
-	"Connection: close\r\n"
-	"\r\n",
-	path,
-	host);
+             "GET %s HTTP/1.1\r\n"
+             "Accept: */*\r\n"
+             "Host: %s\r\n"
+             "Connection: close\r\n"
+             "\r\n",
+             path,
+             host);
     x = write(s, request, strlen(request));
     if (x < 0) {
-	perror("write");
-	return -errno;
+        perror("write");
+        return -errno;
     }
     do {
-	x = read(s, reply, READ_BUF_SZ);
-	if (x > 0)
-	    nr += x;
+        x = read(s, reply, READ_BUF_SZ);
+        if (x > 0)
+            nr += x;
     } while (x > 0);
     close(s);
     return nr;
@@ -192,21 +192,21 @@ child_main_loop(void)
     struct timeval t1;
     struct timeval t2;
     if (debug)
-	fprintf(stderr, "Child PID %d entering child_main_loop\n", (int) getpid());
+        fprintf(stderr, "Child PID %d entering child_main_loop\n", (int) getpid());
     setbuf(stdin, NULL);
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
     while (fgets(buf, URL_BUF_SZ, stdin)) {
-	t = strchr(buf, '\n');
-	if (t == NULL)
-	    continue;
-	*t = '\0';
-	if (strncmp(buf, "http://", 7))
-	    continue;
-	gettimeofday(&t1, NULL);
-	n = get_url(buf);
-	gettimeofday(&t2, NULL);
-	printf("%d %d\n", n, tvSubMsec(t1, t2));
+        t = strchr(buf, '\n');
+        if (t == NULL)
+            continue;
+        *t = '\0';
+        if (strncmp(buf, "http://", 7))
+            continue;
+        gettimeofday(&t1, NULL);
+        n = get_url(buf);
+        gettimeofday(&t2, NULL);
+        printf("%d %d\n", n, tvSubMsec(t1, t2));
     }
 }
 
@@ -219,28 +219,28 @@ create_a_thing(char *argv[])
     pid_t pid;
     thing *t;
     if (pipe(p2c) < 0)
-	abort();
+        abort();
     if (pipe(c2p) < 0)
-	abort();
+        abort();
     prfd = p2c[0];
     cwfd = p2c[1];
     crfd = c2p[0];
     pwfd = c2p[1];
     if ((pid = fork()) < 0)
-	abort();
+        abort();
     if (pid > 0) {		/* parent */
-	/* close shared socket with child */
-	close(crfd);
-	close(cwfd);
-	t = calloc(1, sizeof(*t));
-	t->wfd = pwfd;
-	t->rfd = prfd;
-	if (pwfd > maxfd)
-	    maxfd = pwfd;
-	if (prfd > maxfd)
-	    maxfd = prfd;
-	t->pid = pid;
-	return t;
+        /* close shared socket with child */
+        close(crfd);
+        close(cwfd);
+        t = calloc(1, sizeof(*t));
+        t->wfd = pwfd;
+        t->rfd = prfd;
+        if (pwfd > maxfd)
+            maxfd = pwfd;
+        if (prfd > maxfd)
+            maxfd = prfd;
+        t->pid = pid;
+        return t;
     }
     /* child */
     close(prfd);
@@ -260,13 +260,13 @@ create_children(char *argv[])
     thing **T = &things;
     int i;
     for (i = 0; i < 20; i++) {
-	t = create_a_thing(argv);
-	assert(t);
-	if (debug)
-	    fprintf(stderr, "Thing #%d on FD %d/%d\n",
-		i, t->rfd, t->wfd);
-	*T = t;
-	T = &t->next;
+        t = create_a_thing(argv);
+        assert(t);
+        if (debug)
+            fprintf(stderr, "Thing #%d on FD %d/%d\n",
+                    i, t->rfd, t->wfd);
+        *T = t;
+        T = &t->next;
     }
 }
 
@@ -275,9 +275,9 @@ parent_read_url(void)
 {
     static char buf[URL_BUF_SZ];
     while (fgets(buf, URL_BUF_SZ, stdin)) {
-	if (strncmp(buf, "http://", 7))
-	    continue;
-	return buf;
+        if (strncmp(buf, "http://", 7))
+            continue;
+        return buf;
     }
     return NULL;
 }
@@ -288,9 +288,9 @@ get_idle_thing(void)
     thing *t;
     thing *n = things;
     while ((t = n)) {
-	n = t->next;
-	if (t->state == 0)
-	    break;
+        n = t->next;
+        if (t->state == 0)
+            break;
     }
     return t;
 }
@@ -303,12 +303,12 @@ dispatch(thing * t, char *url)
     assert(t->state == 0);
     x = write(t->wfd, url, strlen(url));
     if (x < 0)
-	perror("write");
+        perror("write");
     if (debug)
-	fprintf(stderr, "dispatched URL to thing PID %d, %d bytes\n", (int) t->pid, x);
+        fprintf(stderr, "dispatched URL to thing PID %d, %d bytes\n", (int) t->pid, x);
     strncpy(t->url, url, URL_BUF_SZ);
     if ((s = strchr(t->url, '\n')))
-	*s = '\0';
+        *s = '\0';
     t->state = 1;
     FD_SET(t->rfd, &R1);
 }
@@ -322,10 +322,10 @@ read_reply(thing * t)
     int j;
     x = read(t->rfd, buf, 128);
     if (x < 0) {
-	perror("read");
+        perror("read");
     } else if (2 == sscanf(buf, "%d %d", &i, &j)) {
-	gettimeofday(&now, NULL);
-	printf("%d.%06d %9d %9d %s\n", (int) now.tv_sec, (int) now.tv_usec, i, j, t->url);
+        gettimeofday(&now, NULL);
+        printf("%d.%06d %9d %9d %s\n", (int) now.tv_sec, (int) now.tv_usec, i, j, t->url);
     }
     t->state = 0;
     FD_CLR(t->rfd, &R1);
@@ -341,25 +341,25 @@ parent_main_loop(void)
     struct timeval to;
     FD_ZERO(&R1);
     for (;;) {
-	while ((t = get_idle_thing()) && (url = parent_read_url()))
-	    dispatch(t, url);
-	R2 = R1;
-	to.tv_sec = 60;
-	to.tv_usec = 0;
-	x = select(maxfd + 1, &R2, NULL, NULL, &to);
-	if (x < 0) {
-	    perror("select");
-	    continue;
-	} else if (x == 0) {
-	    return;
-	}
-	for (t = things; t; t = t->next) {
-	    if (t->state != 1)
-		continue;
-	    if (!FD_ISSET(t->rfd, &R2))
-		continue;
-	    read_reply(t);
-	}
+        while ((t = get_idle_thing()) && (url = parent_read_url()))
+            dispatch(t, url);
+        R2 = R1;
+        to.tv_sec = 60;
+        to.tv_usec = 0;
+        x = select(maxfd + 1, &R2, NULL, NULL, &to);
+        if (x < 0) {
+            perror("select");
+            continue;
+        } else if (x == 0) {
+            return;
+        }
+        for (t = things; t; t = t->next) {
+            if (t->state != 1)
+                continue;
+            if (!FD_ISSET(t->rfd, &R2))
+                continue;
+            read_reply(t);
+        }
     }
 }
 
@@ -369,7 +369,7 @@ sig_child(int sig)
     int status;
     pid_t pid;
     do {
-	pid = waitpid(-1, &status, WNOHANG);
+        pid = waitpid(-1, &status, WNOHANG);
     } while (pid > 0 || (pid < 0 && errno == EINTR));
     signal(sig, sig_child);
 }
@@ -383,6 +383,6 @@ main(int argc, char *argv[])
     create_children(argv);
     parent_main_loop();
     for (i = 3; i <= maxfd; i++)
-	close(i);
+        close(i);
     sleep(1);
 }

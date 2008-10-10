@@ -19,12 +19,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -39,8 +39,8 @@
 #include "HttpReply.h"
 
 // IcapInOut manages a pointer to the HTTP message being worked on.
-// For HTTP responses, request header information is also available 
-// as the "cause". ICAP transactions use this class to store virgin 
+// For HTTP responses, request header information is also available
+// as the "cause". ICAP transactions use this class to store virgin
 // and adapted HTTP messages.
 
 class ICAPInOut
@@ -51,14 +51,12 @@ public:
 
     ICAPInOut(): header(0), cause(0) {}
 
-    ~ICAPInOut()
-    {
+    ~ICAPInOut() {
         HTTPMSGUNLOCK(cause);
         HTTPMSGUNLOCK(header);
     }
 
-    void setCause(HttpRequest *r)
-    {
+    void setCause(HttpRequest *r) {
         if (r) {
             HTTPMSGUNLOCK(cause);
             cause = HTTPMSGLOCK(r);
@@ -67,11 +65,10 @@ public:
         }
     }
 
-    void setHeader(Header *h)
-    {
+    void setHeader(Header *h) {
         HTTPMSGUNLOCK(header);
         header = HTTPMSGLOCK(h);
-		body_pipe = header->body_pipe;
+        body_pipe = header->body_pipe;
     }
 
 public:
@@ -81,8 +78,8 @@ public:
     // HTTP request header for HTTP responses (the cause of the response)
     HttpRequest *cause;
 
-	// Copy of header->body_pipe, in case somebody moves the original.
-	BodyPipe::Pointer body_pipe;
+    // Copy of header->body_pipe, in case somebody moves the original.
+    BodyPipe::Pointer body_pipe;
 };
 
 // TODO: s/Header/Message/i ?

@@ -3,7 +3,7 @@
  * denyusers.c
  * (C) 2000 Antonino Iannella, Stellar-X Pty Ltd
  * Released under GPL, see COPYING-2.0 for details.
- * 
+ *
  * These routines are to block users attempting to use the proxy which
  * have been explicitly denied by the system administrator.
  * Routines at the bottom also use the allowed user functions.
@@ -28,13 +28,13 @@ int
 Read_denyusers(void)
 {
     if (!init) {
-	memset(&DenyUsers, '\0', sizeof(DenyUsers));
-	init = 1;
+        memset(&DenyUsers, '\0', sizeof(DenyUsers));
+        init = 1;
     }
     if (*Denyuserpath)
-	return Read_usersfile(Denyuserpath, &DenyUsers);
+        return Read_usersfile(Denyuserpath, &DenyUsers);
     else
-	return 0;
+        return 0;
 }
 
 static void
@@ -54,11 +54,11 @@ Check_ifuserdenied(char *ConnectingUser)
 {
     /* If user string is empty, deny */
     if (ConnectingUser[0] == '\0')
-	return 1;
+        return 1;
 
     /* If denied user list is empty, allow */
     if (DenyUsers.Inuse == 0)
-	return 0;
+        return 0;
 
     return Check_userlist(&DenyUsers, ConnectingUser);
 }
@@ -73,10 +73,10 @@ int
 Check_user(char *ConnectingUser)
 {
     if (Check_ifuserdenied(ConnectingUser) == 1)
-	return 1;
+        return 1;
 
     if (Check_ifuserallowed(ConnectingUser) == 0)
-	return 1;
+        return 1;
 
     return 0;
 }
@@ -110,9 +110,9 @@ Checktimer()
 
     /* If timeout has expired, check the denied user file, else return */
     if (difftime(Currenttime, Lasttime) < 60)
-	return;
+        return;
     else {
-	Check_forchange(-1);
-	Lasttime = Currenttime;
+        Check_forchange(-1);
+        Lasttime = Currenttime;
     }
 }

@@ -36,7 +36,7 @@ Adaptation::ServiceGroup::finalize()
         // TODO: fail on failures
         if (!FindService(id))
             debugs(93,0, "ERROR: Unknown adaptation name: " << id);
-	}
+    }
     debugs(93,7, HERE << "finalized " << kind << ": " << id);
 }
 
@@ -69,7 +69,7 @@ Adaptation::ServiceSet::finalize()
 /* SingleService */
 
 Adaptation::SingleService::SingleService(const String &aServiceId):
-    ServiceGroup("single-service group")
+        ServiceGroup("single-service group")
 {
     id = aServiceId;
     services.push_back(aServiceId);

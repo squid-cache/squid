@@ -21,15 +21,14 @@ void (*snmplib_debug_hook) (va_alist) = NULL;
 
 extern void
 #if STDC_HEADERS
-snmplib_debug(int lvl, const char *fmt,...)
+    snmplib_debug(int lvl, const char *fmt,...)
 {
     char buf[BUFSIZ];
     va_list args;
     va_start(args, fmt);
 #else
-snmplib_debug(va_alist)
-     va_dcl
-{
+    snmplib_debug(va_alist)
+    va_dcl {
     va_list args;
     int lvl;
     char char *fmt;
@@ -39,10 +38,10 @@ snmplib_debug(va_alist)
     fmt = va_arg(args, char *);
 #endif
     if (snmplib_debug_hook != NULL) {
-	vsnprintf(buf, BUFSIZ, fmt, args);
-	snmplib_debug_hook(lvl, buf);
+        vsnprintf(buf, BUFSIZ, fmt, args);
+        snmplib_debug_hook(lvl, buf);
     } else {
-	vfprintf(stderr, fmt, args);
+        vfprintf(stderr, fmt, args);
     }
     va_end(args);
 }

@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -35,7 +35,7 @@
 
 /*
  * The code in this file is Copyrighted (C) 1999 by Hewlett Packard.
- * 
+ *
  *
  * For a description of these cache replacement policies see --
  *  http://www.hpl.hp.com/techreports/1999/HPL-1999-69.html
@@ -56,7 +56,7 @@
  * in cache regardless of size.  Achieves lower hit rate than GDS
  * because there are more large objects in cache (so less room for
  * smaller popular objects).
- * 
+ *
  * This version implements a tie-breaker based upon recency
  * (e->lastref): for objects that have the same reference count
  * the most recent object wins (gets a higher key value).
@@ -102,7 +102,7 @@ HeapKeyGen_StoreEntry_LFUDA(void *entry, double heap_age)
  * keeping more small, popular objects in cache.  Achieves lower
  * byte hit rate than LFUDA because there are fewer large objects
  * in cache.
- * 
+ *
  * This version implements a tie-breaker based upon recency
  * (e->lastref): for objects that have the same reference count
  * the most recent object wins (gets a higher key value).
@@ -144,9 +144,9 @@ heap_key
 HeapKeyGen_StoreEntry_LRU(void *entry, double heap_age)
 {
     StoreEntry *e = (StoreEntry *)entry;
-    debugs(81, 3, "HeapKeyGen_StoreEntry_LRU: " << 
-                  e->getMD5Text() << " heap_age=" << heap_age << 
-                  " lastref=" << (double) e->lastref  );
+    debugs(81, 3, "HeapKeyGen_StoreEntry_LRU: " <<
+           e->getMD5Text() << " heap_age=" << heap_age <<
+           " lastref=" << (double) e->lastref  );
 
     if (e->mem_obj && e->mem_obj->url)
         debugs(81, 3, "HeapKeyGen_StoreEntry_LRU: url=" << e->mem_obj->url);

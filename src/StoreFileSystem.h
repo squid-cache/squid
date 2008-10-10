@@ -17,12 +17,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -40,7 +40,7 @@
 
 /**
  \defgroup FileSystems	Storage Filesystems
- * 
+ *
  \section Introduction Introduction
  \par
  * Traditionally, Squid has always used the Unix filesystem (\link UFS UFS\endlink)
@@ -50,7 +50,7 @@
  * Our work indicates that the poor performance is mostly
  * due to the synchronous nature of open() and unlink()
  * system calls, and perhaps thrashing of inode/buffer caches.
- * 
+ *
  \par
  * We want to try out our own, customized filesystems with Squid.
  * In order to do that, we need a well-defined interface
@@ -58,7 +58,7 @@
  * devices. We also require tighter control of the replacement
  * policy by each storage module, rather than a single global
  * replacement policy.
- * 
+ *
  \section BuildStructure Build structure
  \par
  * The storage types live in \em src/fs/. Each subdirectory corresponds
@@ -68,34 +68,34 @@
  *
  \todo DOCS: add template addition to configure.in for storage module addition.
  \todo DOCS: add template Makefile.am for storage module addition.
- * 
+ *
  \par
  * configure will take a list of storage types through the
  * --enable-store-io parameter. This parameter takes a list of
  * space seperated storage types. For example,
  * --enable-store-io="ufs coss" .
- * 
+ *
  \par
  * Each storage type must create an archive file
  * in \em src/fs/foo/.a . This file is automatically linked into
  * squid at compile time.
- * 
+ *
  \par
  * Each storage filesystem must inherit from StoreFileSystem and provide
  * all virtual function hooks for squid to operate with.
- * 
+ *
  \section OperationOfStorageModules Operation of a Storage Module
  \par
  *    Squid understands the concept of multiple diverse storage directories.
  *    Each storage directory provides a caching object store, with object
  *    storage, retrieval, indexing and replacement.
- * 
+ *
  \par
  *    Each open object has associated with it a storeIOState object. The
  *    storeIOState object is used to record the state of the current
  *    object. Each storeIOState can have a storage module specific data
  *    structure containing information private to the storage module.
- * 
+ *
  \par
  *    Each SwapDir has the concept of a maximum object size. This is used
  *    as a basic hint to the storage layer in first choosing a suitable
@@ -124,7 +124,7 @@ public:
     typedef Vector<StoreFileSystem*>::const_iterator const_iterator;
     StoreFileSystem() : initialised(false) {}
 
-    virtual ~StoreFileSystem(){}
+    virtual ~StoreFileSystem() {}
 
     virtual char const *type () const = 0;
     virtual SwapDir *createSwapDir() = 0;

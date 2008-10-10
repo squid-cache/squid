@@ -41,15 +41,15 @@ testStoreEntryStream::testGetStream()
 
         const int preFlushCount = anEntry->_flush_calls;
         // may have already flushed
-        CPPUNIT_ASSERT(preFlushCount >= 0); 
+        CPPUNIT_ASSERT(preFlushCount >= 0);
         stream.flush();
         // flushed at least once more
         CPPUNIT_ASSERT(anEntry->_flush_calls > preFlushCount);
 
         CPPUNIT_ASSERT_EQUAL(1, anEntry->_buffer_calls);
 
-        CPPUNIT_ASSERT_EQUAL(String("12345677.7 some text   !."), 
-anEntry->_appended_text);
+        CPPUNIT_ASSERT_EQUAL(String("12345677.7 some text   !."),
+                             anEntry->_appended_text);
     }
 
     delete anEntry;

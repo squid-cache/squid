@@ -48,8 +48,7 @@
 #if USE_ICMP
 
 /* This is a line-data format struct. DO NOT alter. */
-struct pingerEchoData
-{
+struct pingerEchoData {
     IPAddress to;
     unsigned char opcode;
     int psize;
@@ -57,8 +56,7 @@ struct pingerEchoData
 };
 
 /* This is a line-data format struct. DO NOT alter. */
-struct pingerReplyData
-{
+struct pingerReplyData {
     IPAddress from;
     unsigned char opcode;
     int rtt;
@@ -67,8 +65,7 @@ struct pingerReplyData
     char payload[PINGER_PAYLOAD_SZ];
 };
 
-struct icmpEchoData
-{
+struct icmpEchoData {
     struct timeval tv;
     unsigned char opcode;
     char payload[MAX_PAYLOAD];
@@ -127,7 +124,7 @@ protected:
 
     /**
      * Translate TTL to a hop distance
-     * 
+     *
      \param ttl	negative     : n > 33
      \param ttl	n(0...32)    : 32 >= n >= 1
      \param ttl	n(33...62)   : 32 >= n >= 1

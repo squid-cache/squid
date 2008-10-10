@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -64,7 +64,7 @@
 #define         mutex_trylock(m)        (void)0
 #define         mutex_init(m)           ((m)=123456)
 
-/* 
+/*
  * Private function prototypes.
  */
 static void _heap_ify_up(heap * hp, heap_node * elm);
@@ -101,7 +101,7 @@ new_heap(int initSize, heap_key_func gen_key)
     assert(hp != NULL);
 
     if (initSize <= 0)
-	initSize = MinSize;
+        initSize = MinSize;
     hp->nodes = xcalloc(initSize, sizeof(heap_node *));
     assert(hp->nodes != NULL);
 
@@ -124,7 +124,7 @@ delete_heap(heap * hp)
     int i;
     assert(hp != NULL);
     for (i = 0; i < hp->last; i++) {
-	xfree(hp->nodes[i]);
+        xfree(hp->nodes[i]);
     }
     xfree(hp->nodes);
     xfree(hp);
@@ -149,7 +149,7 @@ heap_insert(heap * hp, void *dat)
     elm->data = dat;
 
     if (_heap_should_grow(hp))
-	_heap_grow(hp);
+        _heap_grow(hp);
 
     hp->nodes[hp->last] = elm;
     elm->id = hp->last;
@@ -179,20 +179,20 @@ heap_delete(heap * hp, heap_node * elm)
     heap_extractlast(hp);
 
     if (elm == lastNode) {
-	/*
-	 * lastNode just got freed, so don't access it in the next
-	 * block.
-	 */
-	(void) 0;
+        /*
+         * lastNode just got freed, so don't access it in the next
+         * block.
+         */
+        (void) 0;
     } else if (hp->last > 0) {
-	if (lastNode->key < hp->nodes[Parent(lastNode->id)]->key)
-	    _heap_ify_up(hp, lastNode);		/* COOL! */
-	_heap_ify_down(hp, lastNode);
+        if (lastNode->key < hp->nodes[Parent(lastNode->id)]->key)
+            _heap_ify_up(hp, lastNode);		/* COOL! */
+        _heap_ify_down(hp, lastNode);
     }
     return data;
 }
 
-/* 
+/*
  * Delete the last element (leaf) out of the heap.  Does not require a
  * heapify operation.
  */
@@ -209,7 +209,7 @@ heap_gen_key(heap * hp, heap_t dat)
 #endif /* heap_gen_key */
 
 
-/* 
+/*
  * Returns the data of the node with the largest KEY value and removes that
  * node from the heap.  Returns NULL if the heap was empty.
  */
@@ -219,7 +219,7 @@ heap_extractmin(heap * hp)
     heap_t data;
 
     if (hp->last <= 0)
-	return NULL;
+        return NULL;
 
     mutex_lock(hp->lock);
 
@@ -232,7 +232,7 @@ heap_extractmin(heap * hp)
 }
 
 
-/* 
+/*
  * Remove the last node in HP.  Frees the heap internal structure and
  * returns the data pointes to by the last node.
  */
@@ -248,7 +248,7 @@ heap_extractlast(heap * hp)
 }
 
 
-/* 
+/*
  * The semantics of this routine is the same as the followings:
  *        heap_delete(hp, elm);
  *        heap_insert(hp, dat);
@@ -265,14 +265,14 @@ heap_update(heap * hp, heap_node * elm, void *dat)
     elm->data = dat;
 
     if (elm->key < hp->nodes[Parent(elm->id)]->key)
-	_heap_ify_up(hp, elm);
+        _heap_ify_up(hp, elm);
     _heap_ify_down(hp, elm);
 
     return old;
 }
 
 
-/* 
+/*
  * A pointer to the root node's DATA.
  */
 void *
@@ -283,7 +283,7 @@ heap_peepmin(heap * hp)
 }
 
 
-/* 
+/*
  * The KEY of the root node.
  */
 heap_key
@@ -294,7 +294,7 @@ heap_peepminkey(heap * hp)
 }
 
 
-/* 
+/*
  * Same as heap_peep except that this return the KEY of the node.
  * Only meant for iteration.
  */
@@ -306,7 +306,7 @@ heap_peepkey(heap * hp, int n)
 }
 
 
-/* 
+/*
  * A pointer to Nth node's DATA. The caller can iterate through HP by
  * calling this routine.  eg. Caller can execute the following code:
  *   for(i = 0; i < heap_nodes(hp); i++)
@@ -323,7 +323,7 @@ heap_peep(heap * hp, int n)
 
 
 #ifndef	heap_nodes
-/* 
+/*
  * Current number of nodes in HP.
  */
 int
@@ -335,7 +335,7 @@ heap_nodes(heap * hp)
 
 
 #ifndef	heap_empty
-/* 
+/*
  * Determine if the heap is empty.  Returns 1 if HP has no elements and 0
  * otherwise.
  */
@@ -348,7 +348,7 @@ heap_empty(heap * hp)
 
 /****************** Private Functions *******************/
 
-/* 
+/*
  * Maintain the heap order property (parent is smaller than children) which
  * may only be violated at ELM downwards.  Assumes caller has locked the heap.
  */
@@ -359,31 +359,31 @@ _heap_ify_down(heap * hp, heap_node * elm)
     int left = 0, right = 0;
     int true = 1;
     while (true) {
-	left = Left(elm->id);
-	right = Right(elm->id);
-	if (!_heap_node_exist(hp, left)) {
-	    /* At the bottom of the heap (no child). */
+        left = Left(elm->id);
+        right = Right(elm->id);
+        if (!_heap_node_exist(hp, left)) {
+            /* At the bottom of the heap (no child). */
 
-	    assert(!_heap_node_exist(hp, right));
-	    break;
-	} else if (!_heap_node_exist(hp, right))
-	    /*  Only left child exists. */
+            assert(!_heap_node_exist(hp, right));
+            break;
+        } else if (!_heap_node_exist(hp, right))
+            /*  Only left child exists. */
 
-	    kid = hp->nodes[left];
-	else {
-	    if (hp->nodes[right]->key < hp->nodes[left]->key)
-		kid = hp->nodes[right];
-	    else
-		kid = hp->nodes[left];
-	}
-	if (elm->key <= kid->key)
-	    break;
-	_heap_swap_element(hp, kid, elm);
+            kid = hp->nodes[left];
+        else {
+            if (hp->nodes[right]->key < hp->nodes[left]->key)
+                kid = hp->nodes[right];
+            else
+                kid = hp->nodes[left];
+        }
+        if (elm->key <= kid->key)
+            break;
+        _heap_swap_element(hp, kid, elm);
     }
 }
 
 
-/* 
+/*
  * Maintain the heap property above ELM.  Caller has locked the heap.
  */
 static void
@@ -391,17 +391,17 @@ _heap_ify_up(heap * hp, heap_node * elm)
 {
     heap_node *parentNode;
     while (elm->id > 0) {
-	parentNode = hp->nodes[Parent(elm->id)];
-	if (parentNode->key <= elm->key)
-	    break;
-	_heap_swap_element(hp, parentNode, elm);	/* Demote the parent. */
+        parentNode = hp->nodes[Parent(elm->id)];
+        if (parentNode->key <= elm->key)
+            break;
+        _heap_swap_element(hp, parentNode, elm);	/* Demote the parent. */
     }
 }
 
 
-/* 
+/*
  * Swap the position of ELM1 and ELM2 in heap structure. Their IDs are also
- * swapped. 
+ * swapped.
  */
 static void
 _heap_swap_element(heap * hp, heap_node * elm1, heap_node * elm2)
@@ -416,7 +416,7 @@ _heap_swap_element(heap * hp, heap_node * elm1, heap_node * elm2)
 
 
 #ifdef	NOTDEF
-/* 
+/*
  * Copy KEY and DATA fields of SRC to DEST. ID field is NOT copied.
  */
 static void
@@ -429,19 +429,19 @@ _heap_copy_element(heap_node * src, heap_node * dest)
 #endif /* NOTDEF */
 
 
-/* 
+/*
  * True if HP needs to be grown in size.
  */
 static int
 _heap_should_grow(heap * hp)
 {
     if (hp->size <= hp->last)
-	return 1;
+        return 1;
     return 0;
 }
 
 
-/* 
+/*
  * Grow HP.
  */
 static void
@@ -450,14 +450,14 @@ _heap_grow(heap * hp)
     int newSize;
 
     if (hp->size > Threshold)
-	newSize = hp->size * SlowRate;
+        newSize = hp->size * SlowRate;
     else
-	newSize = hp->size * NormalRate;
+        newSize = hp->size * NormalRate;
 
     hp->nodes = xrealloc(hp->nodes, newSize * sizeof(heap_node *));
 #if COMMENTED_OUT
     for (i = 0; i < hp->size; i++)
-	newNodes[i] = hp->nodes[i];
+        newNodes[i] = hp->nodes[i];
     xfree(hp->nodes);
     hp->nodes = newNodes;
 #endif
@@ -465,14 +465,14 @@ _heap_grow(heap * hp)
 }
 
 
-/* 
+/*
  * True if a node with ID exists in HP.
  */
 static int
 _heap_node_exist(heap * hp, int id)
 {
     if ((id >= hp->last) || (id < 0) || (hp->nodes[id] == NULL))
-	return 0;
+        return 0;
     return 1;
 }
 
@@ -480,15 +480,15 @@ _heap_node_exist(heap * hp, int id)
  * Printing and debug functions
  ****************************************************************************/
 
-/* 
- * Print the heap in element order, id..last. 
+/*
+ * Print the heap in element order, id..last.
  */
 static void
 heap_print_inorder(heap * hp, int id)
 {
     while (id < hp->last) {
-	printf("%d\tKey = %.04f\n", id, hp->nodes[id]->key);
-	id++;
+        printf("%d\tKey = %.04f\n", id, hp->nodes[id]->key);
+        id++;
     }
 }
 
@@ -501,18 +501,18 @@ verify_heap_property(heap * hp)
     int i = 0;
     int correct = 1;
     for (i = 0; i < hp->last / 2; i++) {
-	correct = 1;
-	if (_heap_node_exist(hp, Left(i)))
-	    if (hp->nodes[i]->key > hp->nodes[Left(i)]->key)
-		correct = 0;
-	if (_heap_node_exist(hp, Right(i)))
-	    if (hp->nodes[i]->key > hp->nodes[Right(i)]->key)
-		correct = 0;
-	if (!correct) {
-	    printf("verifyHeap: violated at %d", i);
-	    heap_print_inorder(hp, 0);
-	    break;
-	}
+        correct = 1;
+        if (_heap_node_exist(hp, Left(i)))
+            if (hp->nodes[i]->key > hp->nodes[Left(i)]->key)
+                correct = 0;
+        if (_heap_node_exist(hp, Right(i)))
+            if (hp->nodes[i]->key > hp->nodes[Right(i)]->key)
+                correct = 0;
+        if (!correct) {
+            printf("verifyHeap: violated at %d", i);
+            heap_print_inorder(hp, 0);
+            break;
+        }
     }
     return correct;
 }
@@ -530,9 +530,9 @@ compare_heap_keys(const void *a, const void *b)
     heap_node **bn = (heap_node **) b;
     float cmp = (*an)->key - (*bn)->key;
     if (cmp < 0)
-	return -1;
+        return -1;
     else
-	return 1;
+        return 1;
 }
 
 /*
@@ -556,7 +556,7 @@ calc_heap_skew(heap * heap, int replace)
     float norm = 0;
     unsigned long max;
 
-    /* 
+    /*
      * Lock the heap to copy it.  If replacing it need to keep the heap locked
      * until we are all done.
      */
@@ -564,52 +564,52 @@ calc_heap_skew(heap * heap, int replace)
 
     max = heap_nodes(heap);
 
-    /* 
+    /*
      * Copy the heap nodes to a new storage area for offline sorting.
      */
     nodes = xmalloc(max * sizeof(heap_node *));
     memcpy(nodes, heap->nodes, max * sizeof(heap_node *));
 
     if (replace == 0) {
-	/* 
-	 * Unlock the heap to allow updates from other threads before the sort.
-	 * This allows other heap operations to proceed concurrently with the
-	 * heap skew computation on the heap at the time of the call ...
-	 */
-	mutex_unlock(hp->lock);
+        /*
+         * Unlock the heap to allow updates from other threads before the sort.
+         * This allows other heap operations to proceed concurrently with the
+         * heap skew computation on the heap at the time of the call ...
+         */
+        mutex_unlock(hp->lock);
     }
     qsort(nodes, max, sizeof(heap_node *), compare_heap_keys);
 
     for (id = 0; id < max; id++) {
-	diff = id - nodes[id]->id;
-	skew += abs(diff);
+        diff = id - nodes[id]->id;
+        skew += abs(diff);
 
 #ifdef	HEAP_DEBUG_SKEW
-	skewsq += diff * diff;
+        skewsq += diff * diff;
 #ifdef	HEAP_DEBUG_ALL
-	printf("%d\tKey = %f, diff = %d\n", id, nodes[id]->key, diff);
+        printf("%d\tKey = %f, diff = %d\n", id, nodes[id]->key, diff);
 #endif /* HEAP_DEBUG */
 #endif /* HEAP_DEBUG_SKEW */
     }
 
     if (replace != 0) {
-	/* 
-	 * Replace the original heap with the newly sorted heap and let it
-	 * continue.  Then compute the skew using the copy of the previous heap
-	 * which we maintain as private data.
-	 */
-	memcpy(heap->nodes, nodes, max * sizeof(heap_node *));
+        /*
+         * Replace the original heap with the newly sorted heap and let it
+         * continue.  Then compute the skew using the copy of the previous heap
+         * which we maintain as private data.
+         */
+        memcpy(heap->nodes, nodes, max * sizeof(heap_node *));
 
-	for (id = 0; id < max; id++) {
-	    /* 
-	     * Fix up all the ID values in the copied nodes.
-	     */
-	    heap->nodes[id]->id = id;
-	}
+        for (id = 0; id < max; id++) {
+            /*
+             * Fix up all the ID values in the copied nodes.
+             */
+            heap->nodes[id]->id = id;
+        }
 
-	mutex_unlock(hp->lock);
+        mutex_unlock(hp->lock);
     }
-    /* 
+    /*
      * The skew value is normalized to a range of [0..1]; the distribution
      * appears to be a skewed Gaussian distribution.  For random insertions
      * into a heap the normalized skew will be slightly less than 0.5.  The
@@ -618,7 +618,7 @@ calc_heap_skew(heap * heap, int replace)
      */
     norm = skew * 2.56 / (max * max);
 
-    /* 
+    /*
      * Free the nodes array; note this is just an array of pointers, not data!
      */
     xfree(nodes);

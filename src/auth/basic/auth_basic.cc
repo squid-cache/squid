@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -467,8 +467,8 @@ BasicUser::decode(char const *proxy_auth, AuthUserRequest *auth_user_request)
     currentRequest = auth_user_request;
     httpAuthHeader = proxy_auth;
     if (decodeCleartext ()) {
-	extractUsername();
-	extractPassword();
+        extractUsername();
+        extractPassword();
     }
     currentRequest = NULL;
     httpAuthHeader = NULL;
@@ -478,9 +478,9 @@ bool
 BasicUser::valid() const
 {
     if (username() == NULL)
-	return false;
+        return false;
     if (passwd == NULL)
-	return false;
+        return false;
     return true;
 }
 
@@ -548,8 +548,8 @@ BasicUser::updateCached(BasicUser *from)
 /**
  * Decode a Basic [Proxy-]Auth string, linking the passed
  * auth_user_request structure to any existing user structure or creating one
- * if needed. Note that just returning will be treated as 
- * "cannot decode credentials". Use the message field to return a 
+ * if needed. Note that just returning will be treated as
+ * "cannot decode credentials". Use the message field to return a
  * descriptive message to the user.
  */
 AuthUserRequest *
@@ -627,9 +627,9 @@ void
 AuthBasicConfig::registerWithCacheManager(void)
 {
     CacheManager::GetInstance()->
-            registerAction("basicauthenticator",
-                           "Basic User Authenticator Stats",
-                           authenticateBasicStats, 0, 1);
+    registerAction("basicauthenticator",
+                   "Basic User Authenticator Stats",
+                   authenticateBasicStats, 0, 1);
 }
 
 void
@@ -684,13 +684,13 @@ BasicUser::submitRequest(AuthUserRequest * auth_user_request, RH * handler, void
     r->data = cbdataReference(data);
     r->auth_user_request = auth_user_request;
     if (basicConfig.utf8) {
-	latin1_to_utf8(user, sizeof(user), username());
-	latin1_to_utf8(pass, sizeof(pass), passwd);
-	xstrncpy(user, rfc1738_escape(user), sizeof(user));
-	xstrncpy(pass, rfc1738_escape(pass), sizeof(pass));
+        latin1_to_utf8(user, sizeof(user), username());
+        latin1_to_utf8(pass, sizeof(pass), passwd);
+        xstrncpy(user, rfc1738_escape(user), sizeof(user));
+        xstrncpy(pass, rfc1738_escape(pass), sizeof(pass));
     } else {
-	xstrncpy(user, rfc1738_escape(username()), sizeof(user));
-	xstrncpy(pass, rfc1738_escape(passwd), sizeof(pass));
+        xstrncpy(user, rfc1738_escape(username()), sizeof(user));
+        xstrncpy(pass, rfc1738_escape(passwd), sizeof(pass));
     }
     snprintf(buf, sizeof(buf), "%s %s\n", user, pass);
     helperSubmit(basicauthenticators, buf, authenticateBasicHandleReply, r);

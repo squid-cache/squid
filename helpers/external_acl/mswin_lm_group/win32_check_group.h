@@ -9,7 +9,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- 
+
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -55,13 +55,13 @@ debug(char *format,...)
 #ifdef DEBUG
 #ifdef _SQUID_MSWIN_
     if (debug_enabled) {
-	va_list args;
+        va_list args;
 
-	va_start(args, format);
-	fprintf(stderr, "%s[%d]: ", myname, mypid);
-	vfprintf(stderr, format, args);
-	fprintf(stderr, "\n");
-	va_end(args);
+        va_start(args, format);
+        fprintf(stderr, "%s[%d]: ", myname, mypid);
+        vfprintf(stderr, format, args);
+        fprintf(stderr, "\n");
+        va_end(args);
     }
 #endif /* _SQUID_MSWIN_ */
 #endif /* DEBUG */

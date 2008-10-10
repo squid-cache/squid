@@ -1,4 +1,4 @@
-#define SQUID_UNIT_TEST 1 
+#define SQUID_UNIT_TEST 1
 
 #include "squid.h"
 #include <sstream>
@@ -26,7 +26,7 @@ testHttpRequestMethod::testConstructCharStart()
 }
 
 /*
- * We can also parse precise ranges of characters 
+ * We can also parse precise ranges of characters
  */
 void
 testHttpRequestMethod::testConstructCharStartEnd()

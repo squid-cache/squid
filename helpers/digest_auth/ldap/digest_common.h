@@ -50,8 +50,8 @@ typedef struct _request_data {
     int error;
 } RequestData;
 
-/* to use a backend, include your backend.h file 
- * and define thusly: 
+/* to use a backend, include your backend.h file
+ * and define thusly:
  * #define ProcessArguments(A, B) MyHandleArguments(A,B)
  * #define GetHHA1(A) MyGetHHA1(A)
  */

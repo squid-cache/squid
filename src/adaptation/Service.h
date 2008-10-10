@@ -12,7 +12,8 @@
 class HttpMsg;
 class HttpRequest;
 
-namespace Adaptation {
+namespace Adaptation
+{
 
 // manages adaptation service configuration in squid.conf
 // specific adaptation mechanisms extend this class

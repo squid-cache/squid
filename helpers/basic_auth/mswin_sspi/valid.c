@@ -20,7 +20,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- 
+
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -63,52 +63,52 @@ Valid_Group(char *UserName, char *Group)
     DWORD i;
     DWORD dwTotalCount = 0;
 
-/* Convert ANSI User Name and Group to Unicode */
+    /* Convert ANSI User Name and Group to Unicode */
 
     MultiByteToWideChar(CP_ACP, 0, UserName,
-	strlen(UserName) + 1, wszUserName,
-	sizeof(wszUserName) / sizeof(wszUserName[0]));
+                        strlen(UserName) + 1, wszUserName,
+                        sizeof(wszUserName) / sizeof(wszUserName[0]));
     MultiByteToWideChar(CP_ACP, 0, Group,
-	strlen(Group) + 1, wszGroup, sizeof(wszGroup) / sizeof(wszGroup[0]));
+                        strlen(Group) + 1, wszGroup, sizeof(wszGroup) / sizeof(wszGroup[0]));
 
     /*
-     * Call the NetUserGetLocalGroups function 
-	 * specifying information level 0.
-	 * 
-	 * The LG_INCLUDE_INDIRECT flag specifies that the 
-	 * function should also return the names of the local 
-	 * groups in which the user is indirectly a member.
-	 */
-	nStatus = NetUserGetLocalGroups(NULL,
-	    wszUserName,
-	    dwLevel,
-	    dwFlags,
-	    (LPBYTE *) & pBuf, dwPrefMaxLen, &dwEntriesRead, &dwTotalEntries);
-	/*
-	 * If the call succeeds,
-	 */
+     * Call the NetUserGetLocalGroups function
+     * specifying information level 0.
+     *
+     * The LG_INCLUDE_INDIRECT flag specifies that the
+     * function should also return the names of the local
+     * groups in which the user is indirectly a member.
+     */
+    nStatus = NetUserGetLocalGroups(NULL,
+                                    wszUserName,
+                                    dwLevel,
+                                    dwFlags,
+                                    (LPBYTE *) & pBuf, dwPrefMaxLen, &dwEntriesRead, &dwTotalEntries);
+    /*
+     * If the call succeeds,
+     */
     if (nStatus == NERR_Success) {
-	if ((pTmpBuf = pBuf) != NULL) {
-	    for (i = 0; i < dwEntriesRead; i++) {
-		if (pTmpBuf == NULL) {
-		    result = FALSE;
-		    break;
-		}
-		if (wcscmp(pTmpBuf->lgrui0_name, wszGroup) == 0) {
-		    result = TRUE;
-		    break;
-		}
-		pTmpBuf++;
-		dwTotalCount++;
-	    }
-	}
+        if ((pTmpBuf = pBuf) != NULL) {
+            for (i = 0; i < dwEntriesRead; i++) {
+                if (pTmpBuf == NULL) {
+                    result = FALSE;
+                    break;
+                }
+                if (wcscmp(pTmpBuf->lgrui0_name, wszGroup) == 0) {
+                    result = TRUE;
+                    break;
+                }
+                pTmpBuf++;
+                dwTotalCount++;
+            }
+        }
     } else
-	    result = FALSE;
-/*
- * Free the allocated memory.
- */
+        result = FALSE;
+    /*
+     * Free the allocated memory.
+     */
     if (pBuf != NULL)
-	NetApiBufferFree(pBuf);
+        NetApiBufferFree(pBuf);
     return result;
 }
 
@@ -137,40 +137,40 @@ Valid_User(char *UserName, char *Password, char *Group)
             break;
     }
     if (domain_qualify == NULL) {
-	strcpy(User, NTDomain);
-	strcpy(NTDomain, Default_NTDomain);
+        strcpy(User, NTDomain);
+        strcpy(NTDomain, Default_NTDomain);
     } else {
-	strcpy(User, domain_qualify + 1);
-	domain_qualify[0] = '\0';
+        strcpy(User, domain_qualify + 1);
+        domain_qualify[0] = '\0';
     }
     /* Log the client on to the local computer. */
     if (!SSP_LogonUser(User, Password, NTDomain)) {
-	result = NTV_LOGON_ERROR;
+        result = NTV_LOGON_ERROR;
         errormsg = NTV_LOGON_ERROR_MSG;
         debug("%s\n", errormsg);
     } else {
-	result = NTV_NO_ERROR;
-	if (strcmp(NTDomain, NTV_DEFAULT_DOMAIN) == 0)
-	    strcpy(DomainUser, User);
-	else {
-	    strcpy(DomainUser, NTDomain);
-	    strcat(DomainUser, "\\");
-	    strcat(DomainUser, User);
-	}
-	if (UseAllowedGroup) {
-	    if (!Valid_Group(DomainUser, NTAllowedGroup)) {
-		result = NTV_GROUP_ERROR;
+        result = NTV_NO_ERROR;
+        if (strcmp(NTDomain, NTV_DEFAULT_DOMAIN) == 0)
+            strcpy(DomainUser, User);
+        else {
+            strcpy(DomainUser, NTDomain);
+            strcat(DomainUser, "\\");
+            strcat(DomainUser, User);
+        }
+        if (UseAllowedGroup) {
+            if (!Valid_Group(DomainUser, NTAllowedGroup)) {
+                result = NTV_GROUP_ERROR;
                 errormsg = NTV_GROUP_ERROR_MSG;
                 debug("%s\n", errormsg);
-	    }
-	}
-	if (UseDisallowedGroup) {
-	    if (Valid_Group(DomainUser, NTDisAllowedGroup)) {
-		result = NTV_GROUP_ERROR;
+            }
+        }
+        if (UseDisallowedGroup) {
+            if (Valid_Group(DomainUser, NTDisAllowedGroup)) {
+                result = NTV_GROUP_ERROR;
                 errormsg = NTV_GROUP_ERROR_MSG;
                 debug("%s\n", errormsg);
-	    }
-	}
+            }
+        }
     }
     return result;
 }

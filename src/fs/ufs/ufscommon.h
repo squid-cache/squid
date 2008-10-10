@@ -17,12 +17,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -251,8 +251,7 @@ protected:
 
     /** \todo These should be in the IO strategy */
 
-    struct
-    {
+    struct {
         /**
          * DPW 2006-05-24
          * the write_draining flag is used to avoid recursion inside
@@ -339,21 +338,20 @@ public:
     FILE *log;
     int log_entries;
     int record_size;
-    
-    UFSSwapLogParser(FILE *fp):log(fp),log_entries(-1), record_size(0){
+
+    UFSSwapLogParser(FILE *fp):log(fp),log_entries(-1), record_size(0) {
     }
-    virtual ~UFSSwapLogParser(){};
-    
+    virtual ~UFSSwapLogParser() {};
+
     static UFSSwapLogParser *GetUFSSwapLogParser(FILE *fp);
-    
+
     virtual bool ReadRecord(StoreSwapLogData &swapData) = 0;
     int SwapLogEntries();
-    void Close()
-    {
-	if(log){
-	    fclose(log);
-	    log = NULL;
-	}
+    void Close() {
+        if (log) {
+            fclose(log);
+            log = NULL;
+        }
     }
 };
 
@@ -371,7 +369,7 @@ public:
     /** \todo Iterator API - garh, wrong place */
     /**
      * callback the client when a new StoreEntry is available
-     * or an error occurs 
+     * or an error occurs
      */
     virtual void next(void (callback)(void *cbdata), void *cbdata);
 
@@ -386,14 +384,13 @@ public:
 
     RefCount<UFSSwapDir> sd;
     int n_read;
-/*    FILE *log;*/
+    /*    FILE *log;*/
     UFSSwapLogParser *LogParser;
     int speed;
     int curlvl1;
     int curlvl2;
 
-    struct
-    {
+    struct {
         unsigned int need_to_validate:1;
         unsigned int clean:1;
         unsigned int init:1;

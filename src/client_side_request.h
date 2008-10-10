@@ -19,12 +19,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -61,8 +61,8 @@ class ClientRequestContext;
 
 class ClientHttpRequest
 #if USE_ADAPTATION
-    : public Adaptation::Initiator, // to start adaptation transactions
-    public BodyConsumer     // to receive reply bodies in request satisf. mode
+            : public Adaptation::Initiator, // to start adaptation transactions
+            public BodyConsumer     // to receive reply bodies in request satisf. mode
 #endif
 {
 
@@ -100,8 +100,7 @@ public:
     char *uri;
     char *log_uri;
 
-    struct
-    {
+    struct {
         int64_t offset;
         int64_t size;
         size_t headers_sz;
@@ -114,8 +113,7 @@ public:
     struct timeval start_time;
     AccessLogEntry al;
 
-    struct
-    {
+    struct {
         unsigned int accel:1;
         unsigned int intercepted:1;
         unsigned int spoof_client_ip:1;
@@ -124,8 +122,7 @@ public:
         unsigned int purging:1;
     } flags;
 
-    struct
-    {
+    struct {
         http_status status;
         char *location;
     } redirect;
@@ -139,8 +136,10 @@ public:
 
 #if USE_ADAPTATION
     // AsyncJob virtual methods
-    virtual bool doneAll() const { return Initiator::doneAll() && 
-				       BodyConsumer::doneAll() && false;}
+    virtual bool doneAll() const {
+        return Initiator::doneAll() &&
+               BodyConsumer::doneAll() && false;
+    }
 #endif
 
 private:

@@ -25,8 +25,7 @@ typedef enum {
 
 /* Generic */
 
-typedef struct
-{
+typedef struct {
     void *data;
     AuthUserRequest *auth_user_request;
     RH *handler;

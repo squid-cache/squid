@@ -3,10 +3,10 @@
  * confload.c
  * (C) 2000 Antonino Iannella, Stellar-X Pty Ltd
  * Released under GPL, see COPYING-2.0 for details.
- * 
+ *
  * These routines load the msntauth configuration file.
  * It stores the servers to query, sets the denied and
- * allowed user files, and provides the 
+ * allowed user files, and provides the
  * authenticating function.
  */
 
@@ -73,17 +73,17 @@ OpenConfigFile(void)
 
     /* Open file */
     if ((ConfigFile = fopen(CONFIGFILE, "r")) == NULL) {
-	syslog(LOG_ERR, "OpenConfigFile: Failed to open %s.", CONFIGFILE);
-	syslog(LOG_ERR, "%s", strerror(errno));
-	return 1;
+        syslog(LOG_ERR, "OpenConfigFile: Failed to open %s.", CONFIGFILE);
+        syslog(LOG_ERR, "%s", strerror(errno));
+        return 1;
     }
     /* Read in, one line at a time */
     while (!feof(ConfigFile)) {
-	Confbuf[0] = '\0';
-	if (NULL == fgets(Confbuf, 2048, ConfigFile))
-	    break;
-	Confbuf[2048] = '\0';
-	ProcessLine(Confbuf);
+        Confbuf[0] = '\0';
+        if (NULL == fgets(Confbuf, 2048, ConfigFile))
+            break;
+        Confbuf[2048] = '\0';
+        ProcessLine(Confbuf);
     }
 
     /*
@@ -92,8 +92,8 @@ OpenConfigFile(void)
      * not set in the confugration file.
      */
     if (Serversqueried == 0) {
-	syslog(LOG_ERR, "OpenConfigFile: No servers set in %s. At least one is needed.", CONFIGFILE);
-	return 1;
+        syslog(LOG_ERR, "OpenConfigFile: No servers set in %s. At least one is needed.", CONFIGFILE);
+        return 1;
     }
     fclose(ConfigFile);
     return 0;
@@ -111,59 +111,59 @@ ProcessLine(char *Linebuf)
 
     /* Ignore empty lines */
     if (strlen(Linebuf) == 0)
-	return;
+        return;
 
     /* Break up on whitespaces */
     if ((Directive = strtok(Linebuf, " \t\n")) == NULL)
-	return;
+        return;
 
     /* Check for a comment line. If found, stop . */
     if (Directive[0] == '#')
-	return;
+        return;
 
     /* Check for server line. Check for 3 parameters. */
     if (strcasecmp(Directive, "server") == 0) {
-	Param1 = strtok(NULL, " \t\n");
-	if (NULL == Param1) {
-	    syslog(LOG_ERR, "ProcessLine: 'server' missing PDC parameter.");
-	    return;
-	}
-	Param2 = strtok(NULL, " \t\n");
-	if (NULL == Param2) {
-	    syslog(LOG_ERR, "ProcessLine: 'server' missing BDC parameter.");
-	    return;
-	}
-	Param3 = strtok(NULL, " \t\n");
-	if (NULL == Param3) {
-	    syslog(LOG_ERR, "ProcessLine: 'server' missing domain parameter.");
-	    return;
-	}
-	AddServer(Param1, Param2, Param3);
-	return;
+        Param1 = strtok(NULL, " \t\n");
+        if (NULL == Param1) {
+            syslog(LOG_ERR, "ProcessLine: 'server' missing PDC parameter.");
+            return;
+        }
+        Param2 = strtok(NULL, " \t\n");
+        if (NULL == Param2) {
+            syslog(LOG_ERR, "ProcessLine: 'server' missing BDC parameter.");
+            return;
+        }
+        Param3 = strtok(NULL, " \t\n");
+        if (NULL == Param3) {
+            syslog(LOG_ERR, "ProcessLine: 'server' missing domain parameter.");
+            return;
+        }
+        AddServer(Param1, Param2, Param3);
+        return;
     }
     /* Check for denyusers line */
     if (strcasecmp(Directive, "denyusers") == 0) {
-	Param1 = strtok(NULL, " \t\n");
+        Param1 = strtok(NULL, " \t\n");
 
-	if (NULL == Param1) {
-	    syslog(LOG_ERR, "ProcessLine: A 'denyusers' line needs a filename parameter.");
-	    return;
-	}
-	memset(Denyuserpath, '\0', MAXPATHLEN);
-	strncpy(Denyuserpath, Param1, MAXPATHLEN - 1);
-	return;
+        if (NULL == Param1) {
+            syslog(LOG_ERR, "ProcessLine: A 'denyusers' line needs a filename parameter.");
+            return;
+        }
+        memset(Denyuserpath, '\0', MAXPATHLEN);
+        strncpy(Denyuserpath, Param1, MAXPATHLEN - 1);
+        return;
     }
     /* Check for allowusers line */
     if (strcasecmp(Directive, "allowusers") == 0) {
-	Param1 = strtok(NULL, " \t\n");
+        Param1 = strtok(NULL, " \t\n");
 
-	if (NULL == Param1) {
-	    syslog(LOG_ERR, "ProcessLine: An 'allowusers' line needs a filename parameter.");
-	    return;
-	}
-	memset(Allowuserpath, '\0', MAXPATHLEN);
-	strncpy(Allowuserpath, Param1, MAXPATHLEN - 1);
-	return;
+        if (NULL == Param1) {
+            syslog(LOG_ERR, "ProcessLine: An 'allowusers' line needs a filename parameter.");
+            return;
+        }
+        memset(Allowuserpath, '\0', MAXPATHLEN);
+        strncpy(Allowuserpath, Param1, MAXPATHLEN - 1);
+        return;
     }
     /* Reports error for unknown line */
     syslog(LOG_ERR, "ProcessLine: Ignoring '%s' line.", Directive);
@@ -180,19 +180,19 @@ void
 AddServer(char *ParamPDC, char *ParamBDC, char *ParamDomain)
 {
     if (Serversqueried == MAXSERVERS) {
-	syslog(LOG_ERR, "AddServer: Ignoring '%s' server line; "
-	    "too many servers.", ParamPDC);
-	return;
+        syslog(LOG_ERR, "AddServer: Ignoring '%s' server line; "
+               "too many servers.", ParamPDC);
+        return;
     }
     if (gethostbyname(ParamPDC) == NULL) {
-	syslog(LOG_ERR, "AddServer: Ignoring host '%s'. "
-	    "Cannot resolve its address.", ParamPDC);
-	return;
+        syslog(LOG_ERR, "AddServer: Ignoring host '%s'. "
+               "Cannot resolve its address.", ParamPDC);
+        return;
     }
     if (gethostbyname(ParamBDC) == NULL) {
-	syslog(LOG_USER | LOG_ERR, "AddServer: Ignoring host '%s'. "
-	    "Cannot resolve its address.", ParamBDC);
-	return;
+        syslog(LOG_USER | LOG_ERR, "AddServer: Ignoring host '%s'. "
+               "Cannot resolve its address.", ParamBDC);
+        return;
     }
     /* NOTE: ServerArray is zeroed in OpenConfigFile() */
     assert(Serversqueried < MAXSERVERS);
@@ -213,8 +213,8 @@ QueryServers(char *username, char *password)
 {
     int i;
     for (i = 0; i < Serversqueried; i++) {
-	if (0 == QueryServerForUser(i, username, password))
-	    return 0;
+        if (0 == QueryServerForUser(i, username, password))
+            return 0;
     }
     return 1;
 }
@@ -236,30 +236,30 @@ QueryServerForUser(int x, char *username, char *password)
     int result = 1;
 
     result = Valid_User(username, password, ServerArray[x].pdc,
-	ServerArray[x].bdc, ServerArray[x].domain);
+                        ServerArray[x].bdc, ServerArray[x].domain);
 
     switch (result) {		/* Write any helpful syslog messages */
     case 0:
-	break;
+        break;
     case 1:
-	syslog(LOG_AUTHPRIV | LOG_INFO, "Server error when checking %s.",
-	    username);
-	break;
+        syslog(LOG_AUTHPRIV | LOG_INFO, "Server error when checking %s.",
+               username);
+        break;
     case 2:
-	syslog(LOG_AUTHPRIV | LOG_INFO, "Protocol error when checking %s.",
-	    username);
-	break;
+        syslog(LOG_AUTHPRIV | LOG_INFO, "Protocol error when checking %s.",
+               username);
+        break;
     case 3:
-	syslog(LOG_AUTHPRIV | LOG_INFO, "Authentication failed for %s.",
-	    username);
-	break;
+        syslog(LOG_AUTHPRIV | LOG_INFO, "Authentication failed for %s.",
+               username);
+        break;
     }
 
     return result;
 }
 
 /* Valid_User return codes -
- * 
+ *
  * 0 - User authenticated successfully.
  * 1 - Server error.
  * 2 - Protocol error.

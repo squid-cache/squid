@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -70,17 +70,17 @@ unlinkdUnlink(const char *path)
      */
     if (queuelen >= UNLINKD_QUEUE_LIMIT) {
 #if defined(USE_EPOLL) || defined(USE_KQUEUE)
-	/*
-	 * DPW 2007-04-23
-	 * We can't use fd_set when using epoll() or kqueue().  In
-	 * these cases we block for 10 ms.
-	 */
-	xusleep(10000);
+        /*
+         * DPW 2007-04-23
+         * We can't use fd_set when using epoll() or kqueue().  In
+         * these cases we block for 10 ms.
+         */
+        xusleep(10000);
 #else
-	/*
-	 * DPW 2007-04-23
-	 * When we can use select, block for up to 100 ms.
-	 */
+        /*
+         * DPW 2007-04-23
+         * When we can use select, block for up to 100 ms.
+         */
         struct timeval to;
         fd_set R;
         FD_ZERO(&R);
@@ -145,8 +145,7 @@ unlinkdClose(void)
 #ifdef _SQUID_MSWIN_
 {
 
-    if (unlinkd_wfd > -1)
-    {
+    if (unlinkd_wfd > -1) {
         debugs(2, 1, "Closing unlinkd pipe on FD " << unlinkd_wfd);
         shutdown(unlinkd_wfd, SD_BOTH);
         comm_close(unlinkd_wfd);
@@ -160,8 +159,7 @@ unlinkdClose(void)
     } else
         debugs(2, 0, "unlinkdClose: WARNING: unlinkd_wfd is " << unlinkd_wfd);
 
-    if (hIpc)
-    {
+    if (hIpc) {
         if (WaitForSingleObject(hIpc, 5000) != WAIT_OBJECT_0) {
             getCurrentTime();
             debugs(2, 1, "unlinkdClose: WARNING: (unlinkd," << pid << "d) didn't exit in 5 seconds");
@@ -205,11 +203,11 @@ unlinkdInit(void)
               /* pipes and poll() don't get along on DUNIX -DW */
               IPC_STREAM,
 #elif defined(_SQUID_MSWIN_)
-/* select() will fail on a pipe */
-IPC_TCP_SOCKET,
+              /* select() will fail on a pipe */
+              IPC_TCP_SOCKET,
 #else
-/* We currently need to use FIFO.. see below */
-IPC_FIFO,
+              /* We currently need to use FIFO.. see below */
+              IPC_FIFO,
 #endif
               Config.Program.unlinkd,
               args,

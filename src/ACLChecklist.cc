@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -78,7 +78,7 @@ ACLChecklist::authenticated()
     AuthUserRequest *old_auth_user_request = auth_user_request;
     auth_acl_t result = AuthUserRequest::tryToAuthenticateAndSetAuthUser (&auth_user_request, headertype, request, conn(), src_addr);
     if (auth_user_request)
-	AUTHUSERREQUESTLOCK(auth_user_request, "ACLChecklist");
+        AUTHUSERREQUESTLOCK(auth_user_request, "ACLChecklist");
     AUTHUSERREQUESTUNLOCK(old_auth_user_request, "old ACLChecklist");
     switch (result) {
 
@@ -129,8 +129,8 @@ ACLChecklist::check()
     currentAnswer(ACCESS_DENIED);
 
     if (callerGone()) {
-	checkCallback(currentAnswer());
-	return;
+        checkCallback(currentAnswer());
+        return;
     }
 
     /* NOTE: This holds a cbdata reference to the current access_list
@@ -253,15 +253,15 @@ ACLChecklist::checkCallback(allow_t answer)
 
     if (auth_user_request) {
         /* the checklist lock */
-	AUTHUSERREQUESTUNLOCK(auth_user_request, "ACLChecklist");
+        AUTHUSERREQUESTUNLOCK(auth_user_request, "ACLChecklist");
         /* it might have been connection based */
         assert(conn() != NULL);
-	/*
-	 * DPW 2007-05-08
-	 * yuck, this make me uncomfortable.  why do this here?
-	 * ConnStateData will do its own unlocking.
-	 */
-	AUTHUSERREQUESTUNLOCK(conn()->auth_user_request, "conn via ACLChecklist");
+        /*
+         * DPW 2007-05-08
+         * yuck, this make me uncomfortable.  why do this here?
+         * ConnStateData will do its own unlocking.
+         */
+        AUTHUSERREQUESTUNLOCK(conn()->auth_user_request, "conn via ACLChecklist");
         conn()->auth_type = AUTH_BROKEN;
     }
 
@@ -294,10 +294,10 @@ ACLChecklist::matchAclList(const ACLList * head, bool const fast)
         if (fast)
             changeState(NullState::Instance());
 
-	if (finished()) {
-	    PROF_stop(aclMatchAclList);
-	    return;
-	}
+        if (finished()) {
+            PROF_stop(aclMatchAclList);
+            return;
+        }
 
         if (!nodeMatched || state_ != NullState::Instance()) {
             debugs(28, 3, "aclmatchAclList: " << this << " returning false (AND list entry failed to match)");
@@ -311,12 +311,12 @@ ACLChecklist::matchAclList(const ACLList * head, bool const fast)
                    " nodeMatched=" << (nodeMatched ? 1 : 0) <<
                    " async_in_progress=" << (async_in_progress ? 1 : 0) <<
                    " lastACLResult() = " << (lastACLResult() ? 1 : 0) <<
-		   " finished() = " << finished());
+                   " finished() = " << finished());
 
-	    if (finished()) {
-		PROF_stop(aclMatchAclList);
-		return;
-	    }
+            if (finished()) {
+                PROF_stop(aclMatchAclList);
+                return;
+            }
 
             if (async && nodeMatched && !asyncInProgress() && lastACLResult()) {
                 // async acl, but using cached response, and it was a match
@@ -449,7 +449,7 @@ ACLChecklist::NullState::Instance()
 
 void
 ACLChecklist::NullState::checkForAsync(ACLChecklist *) const
-    {}
+{}
 
 ACLChecklist::NullState ACLChecklist::NullState::_instance;
 
@@ -582,8 +582,7 @@ aclChecklistCreate(const acl_access * A, HttpRequest * request, const char *iden
     if (A)
         checklist->accessList = cbdataReference(A);
 
-    if (request != NULL)
-    {
+    if (request != NULL) {
         checklist->request = HTTPMSGLOCK(request);
 #if FOLLOW_X_FORWARDED_FOR
         if (Config.onoff.acl_uses_indirect_client)

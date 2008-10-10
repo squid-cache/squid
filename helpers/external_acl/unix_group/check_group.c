@@ -3,9 +3,9 @@
  *
  * This is a helper for the external ACL interface for Squid Cache
  * Copyright (C) 2002 Rodrigo Albani de Campos (rodrigo@geekbunker.org)
- * 
+ *
  * It reads STDIN looking for a username that matches a specified group
- * Returns `OK' if the user belongs to the group or `ERR' otherwise, as 
+ * Returns `OK' if the user belongs to the group or `ERR' otherwise, as
  * described on http://devel.squid-cache.org/external_acl/config.html
  * To compile this program, use:
  *
@@ -65,9 +65,9 @@
 
 #define BUFSIZE 8192		/* the stdin buffer size */
 #define MAX_GROUP 10		/* maximum number of groups specified 
-				 * on the command line */
+* on the command line */
 
-/* 
+/*
  * Verify if user´s primary group matches groupname
  * Returns 0 if user is not on the group
  * Returns 1 otherwise
@@ -79,15 +79,15 @@ validate_user_pw(char *username, char *groupname)
     struct group *g;
 
     if ((p = getpwnam(username)) == NULL) {
-	/* Returns an error if user does not exist in the /etc/passwd */
-	fprintf(stderr, "helper: User does not exist '%s'\n", username);
-	return 0;
+        /* Returns an error if user does not exist in the /etc/passwd */
+        fprintf(stderr, "helper: User does not exist '%s'\n", username);
+        return 0;
     } else {
-	/* Verify if the this is the primary user group */
-	if ((g = getgrgid(p->pw_gid)) != NULL) {
-	    if ((strcmp(groupname, g->gr_name)) == 0)
-		return 1;
-	}
+        /* Verify if the this is the primary user group */
+        if ((g = getgrgid(p->pw_gid)) != NULL) {
+            if ((strcmp(groupname, g->gr_name)) == 0)
+                return 1;
+        }
     }
 
     return 0;
@@ -96,22 +96,22 @@ validate_user_pw(char *username, char *groupname)
 static int
 validate_user_gr(char *username, char *groupname)
 {
-    /* 
+    /*
      * Verify if the user belongs to groupname as listed in the
      * /etc/group file
      */
     struct group *g;
 
     if ((g = getgrnam(groupname)) == NULL) {
-	fprintf(stderr, "helper: Group does not exist '%s'\n",
-	    groupname);
-	return 0;
+        fprintf(stderr, "helper: Group does not exist '%s'\n",
+                groupname);
+        return 0;
     } else {
-	while (*(g->gr_mem) != NULL) {
-	    if (strcmp(*((g->gr_mem)++), username) == 0) {
-		return 1;
-	    }
-	}
+        while (*(g->gr_mem) != NULL) {
+            if (strcmp(*((g->gr_mem)++), username) == 0) {
+                return 1;
+            }
+        }
     }
     return 0;
 }
@@ -120,16 +120,16 @@ static void
 usage(char *program)
 {
     fprintf(stderr, "Usage: %s -g group1 [-g group2 ...] [-p] [-s]\n\n",
-	program);
+            program);
     fprintf(stderr, "-g group\n");
     fprintf(stderr,
-	"			The group name or id that the user must belong in order to\n");
+            "			The group name or id that the user must belong in order to\n");
     fprintf(stderr,
-	"			be allowed to authenticate.\n");
+            "			be allowed to authenticate.\n");
     fprintf(stderr,
-	"-p			Verify primary user group as well\n");
+            "-p			Verify primary user group as well\n");
     fprintf(stderr,
-	"-s			Strip NT domain from usernames\n");
+            "-s			Strip NT domain from usernames\n");
 }
 
 
@@ -146,89 +146,89 @@ main(int argc, char *argv[])
 
     /* get user options */
     while ((ch = getopt(argc, argv, "spg:")) != -1) {
-  	switch (ch) {
-	case 's':
-	    strip_dm = 1;
-	    break;
-	case 'p':
-	    check_pw = 1;
-	    break;
-	case 'g':
-	    grents[i] = calloc(strlen(optarg) + 1, sizeof(char));
-	    strcpy(grents[i], optarg);
-	    if (i < MAX_GROUP) {
-		i++;
-	    } else {
-		fprintf(stderr,
-		    "Exceeded maximum number of allowed groups (%i)\n", i);
-		exit(1);
-	    }
-	    break;
-	case '?':
-	    if (xisprint(optopt)) {
+        switch (ch) {
+        case 's':
+            strip_dm = 1;
+            break;
+        case 'p':
+            check_pw = 1;
+            break;
+        case 'g':
+            grents[i] = calloc(strlen(optarg) + 1, sizeof(char));
+            strcpy(grents[i], optarg);
+            if (i < MAX_GROUP) {
+                i++;
+            } else {
+                fprintf(stderr,
+                        "Exceeded maximum number of allowed groups (%i)\n", i);
+                exit(1);
+            }
+            break;
+        case '?':
+            if (xisprint(optopt)) {
 
-		fprintf(stderr, "Unknown option '-%c'.\n", optopt);
-	    } else {
-		fprintf(stderr, "Unknown option character `\\x%x'.\n", optopt);
-	    }
+                fprintf(stderr, "Unknown option '-%c'.\n", optopt);
+            } else {
+                fprintf(stderr, "Unknown option character `\\x%x'.\n", optopt);
+            }
 
-	default:
-	    usage(argv[0]);
-	    exit(1);
-	}
+        default:
+            usage(argv[0]);
+            exit(1);
+        }
     }
     if (optind < argc) {
-	fprintf(stderr, "Unknown option '%s'\n", argv[optind]);
-	usage(argv[0]);
-	exit(1);
+        fprintf(stderr, "Unknown option '%s'\n", argv[optind]);
+        usage(argv[0]);
+        exit(1);
     }
     while (fgets(buf, sizeof(buf), stdin)) {
-	j = 0;
-	if ((p = strchr(buf, '\n')) == NULL) {
-	    /* too large message received.. skip and deny */
-	    fprintf(stderr, "%s: ERROR: Too large: %s\n", argv[0], buf);
-	    while (fgets(buf, sizeof(buf), stdin)) {
-		fprintf(stderr, "%s: ERROR: Too large..: %s\n", argv[0], buf);
-		if (strchr(buf, '\n') != NULL)
-		    break;
-	    }
-	    goto error;
-	}
-	*p = '\0';
-	if ((p = strtok(buf, " ")) == NULL) {
-	    goto error;
-	} else {
-	    user = p;
-	    rfc1738_unescape(user);
-	    if (user && strip_dm) {
-		suser = strchr(user, '\\');
-		if (!suser) suser = strchr(user, '/');
-		if (suser && suser[1]) user = suser + 1;
-	    }
-	    /* check groups supplied by Squid */
-	    while ((p = strtok(NULL, " ")) != NULL) {
-		rfc1738_unescape(p);
-		if (check_pw == 1)
-		    j += validate_user_pw(user, p);
+        j = 0;
+        if ((p = strchr(buf, '\n')) == NULL) {
+            /* too large message received.. skip and deny */
+            fprintf(stderr, "%s: ERROR: Too large: %s\n", argv[0], buf);
+            while (fgets(buf, sizeof(buf), stdin)) {
+                fprintf(stderr, "%s: ERROR: Too large..: %s\n", argv[0], buf);
+                if (strchr(buf, '\n') != NULL)
+                    break;
+            }
+            goto error;
+        }
+        *p = '\0';
+        if ((p = strtok(buf, " ")) == NULL) {
+            goto error;
+        } else {
+            user = p;
+            rfc1738_unescape(user);
+            if (user && strip_dm) {
+                suser = strchr(user, '\\');
+                if (!suser) suser = strchr(user, '/');
+                if (suser && suser[1]) user = suser + 1;
+            }
+            /* check groups supplied by Squid */
+            while ((p = strtok(NULL, " ")) != NULL) {
+                rfc1738_unescape(p);
+                if (check_pw == 1)
+                    j += validate_user_pw(user, p);
 
-		j += validate_user_gr(user, p);
-	    }
-	}
+                j += validate_user_gr(user, p);
+            }
+        }
 
-	/* check groups supplied on the command line */
-	for (i = 0; grents[i] != NULL; i++) {
-	    if (check_pw == 1) {
-		j += validate_user_pw(user, grents[i]);
-	    }
-	    j += validate_user_gr(user, grents[i]);
-	}
+        /* check groups supplied on the command line */
+        for (i = 0; grents[i] != NULL; i++) {
+            if (check_pw == 1) {
+                j += validate_user_pw(user, grents[i]);
+            }
+            j += validate_user_gr(user, grents[i]);
+        }
 
-	if (j > 0) {
-	    printf("OK\n");
-	} else {
+        if (j > 0) {
+            printf("OK\n");
+        } else {
 error:
-	    printf("ERR\n");
-	}
+            printf("ERR\n");
+        }
     }
     return 0;
 }

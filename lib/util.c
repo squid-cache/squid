@@ -2,7 +2,7 @@
 /*
  * $Id: util.c,v 1.98 2007/12/06 02:37:15 amosjeffries Exp $
  *
- * DEBUG: 
+ * DEBUG:
  * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -843,7 +843,7 @@ tvSubDsec(struct timeval t1, struct timeval t2)
 
 /*
  *  xstrncpy() - similar to strncpy(3) but terminates string
- *  always with '\0' if (n != 0 and dst != NULL), 
+ *  always with '\0' if (n != 0 and dst != NULL),
  *  and doesn't do padding
  */
 char *
@@ -931,8 +931,8 @@ xint64toa(int64_t num)
 void
 default_failure_notify(const char *message)
 {
-    if(write(2, message, strlen(message))) {}
-    if(write(2, "\n", 1)) {}
+    if (write(2, message, strlen(message))) {}
+    if (write(2, "\n", 1)) {}
     abort();
 }
 

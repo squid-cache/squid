@@ -33,7 +33,7 @@ MDPrint(unsigned char digest[16])
 {
     unsigned int i;
     for (i = 0; i < 16; i++)
-	printf("%02x", digest[i]);
+        printf("%02x", digest[i]);
 }
 
 int
@@ -46,9 +46,9 @@ main(int argc, char **argv)
     MDString("message digest");
     MDString("abcdefghijklmnopqrstuvwxyz");
     MDString
-	("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
+    ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
     MDString
-	("1234567890123456789012345678901234567890\
+    ("1234567890123456789012345678901234567890\
 1234567890123456789012345678901234567890");
     return 0;
 }
