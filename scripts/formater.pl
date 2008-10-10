@@ -25,7 +25,7 @@ use IPC::Open2;
 #
 # NP: The Squid code requires astyle version 1.22 or later
 #
-$ASTYLE_BIN="/usr/bin/astyle";
+$ASTYLE_BIN="/usr/local/bin/astyle";
 
 #$ASTYLE_BIN="/usr/local/src/astyle-1.22/bin/astyle";
 $ASTYLE_ARGS ="--mode=c -s4 -O -l";
