@@ -23,12 +23,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -41,15 +41,14 @@
 #include "HttpHdrSc.h"
 
 /* this table is used for parsing surrogate control header */
-static const HttpHeaderFieldAttrs ScAttrs[SC_ENUM_END] =
-    {
-        {"no-store", (http_hdr_type)SC_NO_STORE},
+static const HttpHeaderFieldAttrs ScAttrs[SC_ENUM_END] = {
+    {"no-store", (http_hdr_type)SC_NO_STORE},
 
-        {"no-store-remote", (http_hdr_type)SC_NO_STORE_REMOTE},
-        {"max-age", (http_hdr_type)SC_MAX_AGE},
-        {"content", (http_hdr_type)SC_CONTENT},
-        {"Other,", (http_hdr_type)SC_OTHER}	/* ',' will protect from matches */
-    };
+    {"no-store-remote", (http_hdr_type)SC_NO_STORE_REMOTE},
+    {"max-age", (http_hdr_type)SC_MAX_AGE},
+    {"content", (http_hdr_type)SC_CONTENT},
+    {"Other,", (http_hdr_type)SC_OTHER}	/* ',' will protect from matches */
+};
 
 HttpHeaderFieldInfo *ScFieldsInfo = NULL;
 

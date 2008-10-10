@@ -1,19 +1,19 @@
-/* 
+/*
  * Unix SMB/Netbios implementation.
  * Version 1.9.
  * SMB Byte handling
  * Copyright (C) Andrew Tridgell 1992-1995
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -23,13 +23,13 @@
 #define _BYTEORDER_H_
 
 /*
- * This file implements macros for machine independent short and 
+ * This file implements macros for machine independent short and
  * int manipulation
  */
 
 #undef CAREFUL_ALIGNMENT
 
-/* we know that the 386 can handle misalignment and has the "right" 
+/* we know that the 386 can handle misalignment and has the "right"
  * byteorder */
 #ifdef __i386__
 #define CAREFUL_ALIGNMENT 0
@@ -62,7 +62,7 @@ typedef unsigned int uint32;
  * alignment errors */
 /*
  * WARNING: This section is dependent on the length of int16 and int32
- * being correct 
+ * being correct
  */
 #define SVAL(buf,pos) (*(uint16 *)((char *)(buf) + (pos)))
 #define IVAL(buf,pos) (*(uint32 *)((char *)(buf) + (pos)))

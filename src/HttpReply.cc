@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -53,21 +53,20 @@
  * origin server to set headers it should not in a 304, we must explicitly ignore
  * these too. Specifically all entity-headers except those permitted in a 304
  * (rfc2616 10.3.5) must be ignored.
- * 
+ *
  * The list of headers we don't update is made up of:
  *     all hop-by-hop headers
  *     all entity-headers except Expires and Content-Location
  */
 static HttpHeaderMask Denied304HeadersMask;
-static http_hdr_type Denied304HeadersArr[] =
-    {
-        // hop-by-hop headers
-        HDR_CONNECTION, HDR_KEEP_ALIVE, HDR_PROXY_AUTHENTICATE, HDR_PROXY_AUTHORIZATION,
-        HDR_TE, HDR_TRAILERS, HDR_TRANSFER_ENCODING, HDR_UPGRADE,
-        // entity headers
-        HDR_ALLOW, HDR_CONTENT_ENCODING, HDR_CONTENT_LANGUAGE, HDR_CONTENT_LENGTH,
-        HDR_CONTENT_MD5, HDR_CONTENT_RANGE, HDR_CONTENT_TYPE, HDR_LAST_MODIFIED
-    };
+static http_hdr_type Denied304HeadersArr[] = {
+    // hop-by-hop headers
+    HDR_CONNECTION, HDR_KEEP_ALIVE, HDR_PROXY_AUTHENTICATE, HDR_PROXY_AUTHORIZATION,
+    HDR_TE, HDR_TRAILERS, HDR_TRANSFER_ENCODING, HDR_UPGRADE,
+    // entity headers
+    HDR_ALLOW, HDR_CONTENT_ENCODING, HDR_CONTENT_LANGUAGE, HDR_CONTENT_LENGTH,
+    HDR_CONTENT_MD5, HDR_CONTENT_RANGE, HDR_CONTENT_TYPE, HDR_LAST_MODIFIED
+};
 
 /* module initialization */
 void
@@ -78,9 +77,9 @@ httpReplyInitModule(void)
     httpHeaderCalcMask(&Denied304HeadersMask, Denied304HeadersArr, countof(Denied304HeadersArr));
 }
 
-HttpReply::HttpReply() : HttpMsg(hoReply), date (0), last_modified (0), 
-	expires (0), surrogate_control (NULL), content_range (NULL), keep_alive (0), 
-	protoPrefix("HTTP/"), bodySizeMax(-2)
+HttpReply::HttpReply() : HttpMsg(hoReply), date (0), last_modified (0),
+        expires (0), surrogate_control (NULL), content_range (NULL), keep_alive (0),
+        protoPrefix("HTTP/"), bodySizeMax(-2)
 {
     init();
 }
@@ -117,7 +116,7 @@ void HttpReply::reset()
 void
 HttpReply::clean()
 {
-    // we used to assert that the pipe is NULL, but now the message only 
+    // we used to assert that the pipe is NULL, but now the message only
     // points to a pipe that is owned and initiated by another object.
     body_pipe = NULL;
 
@@ -521,7 +520,7 @@ HttpReply::expectedBodyTooLarge(HttpRequest& request)
     int64_t expectedSize = -1;
     if (!expectingBody(request.method, expectedSize))
         return false;
-    
+
     debugs(58, 6, HERE << expectedSize << " >? " << bodySizeMax);
 
     if (expectedSize < 0) // expecting body of an unknown length
@@ -574,8 +573,8 @@ HttpReply::clone() const
 bool HttpReply::inheritProperties(const HttpMsg *aMsg)
 {
     const HttpReply *aRep = dynamic_cast<const HttpReply*>(aMsg);
-    if(!aRep)
-	return false;
+    if (!aRep)
+        return false;
     keep_alive = aRep->keep_alive;
     return true;
 }

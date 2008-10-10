@@ -93,10 +93,9 @@ public:
     char *uri;			/* = "/dir/index.html" */
     char *response;
 
-    struct
-    {
+    struct {
         unsigned int authinfo_sent:1;
-	unsigned int invalid_password:1;
+        unsigned int invalid_password:1;
         unsigned int helper_queried:1;
     } flags;
     digest_nonce_h *nonce;
@@ -110,8 +109,7 @@ MEMPROXY_CLASS_INLINE(AuthDigestUserRequest)		/**DOCS_NOSEMI*/
 
 /* data to be encoded into the nonce's b64 representation */
 
-struct _digest_nonce_data
-{
+struct _digest_nonce_data {
     time_t creationtime;
     /* in memory address of the nonce struct (similar purpose to an ETag) */
     digest_nonce_h *self;
@@ -120,8 +118,7 @@ struct _digest_nonce_data
 
 /* the nonce structure we'll pass around */
 
-struct _digest_nonce_h : public hash_link
-{
+struct _digest_nonce_h : public hash_link {
     digest_nonce_data noncedata;
     /* number of uses we've seen of this nonce */
     unsigned long nc;
@@ -131,8 +128,7 @@ struct _digest_nonce_h : public hash_link
     DigestUser *user;
     /* has this nonce been invalidated ? */
 
-    struct
-    {
+    struct {
         unsigned int valid:1;
         unsigned int incache:1;
     } flags;

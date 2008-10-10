@@ -18,12 +18,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -58,7 +58,7 @@ public:
     void registerEngine(AsyncEngine *engine);
 
     /** start the event loop running. The loop will run until it is stopped by
-     * calling stop(), or when the loop is completely idle - nothing 
+     * calling stop(), or when the loop is completely idle - nothing
      * dispatched in a loop, and all engines idle.
      */
     void run();
@@ -74,13 +74,13 @@ public:
      * lowest requested timeout gathered from the other engines each loop.
      * (There is a default of 10ms if all engines are idle or request higher
      * delays).
-     * If no primary has been nominated, the last async engine added is 
+     * If no primary has been nominated, the last async engine added is
      * implicitly the default.
      */
     void setPrimaryEngine(AsyncEngine * engine);
 
     /** set the time service. There can be only one time service set at any
-     * time. The time service is invoked on each loop 
+     * time. The time service is invoked on each loop
      */
     void setTimeService(TimeEngine *engine);
 

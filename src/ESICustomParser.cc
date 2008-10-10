@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  ;  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -120,154 +120,154 @@ ESICustomParser::parse(char const *dataToParse, size_t const lengthOfData, bool 
         switch (lastTag) {
 
         case ESITAG: {
-                ++openESITags;
-                char *tagEnd = strchr(const_cast<char *>(tag), '>');
+            ++openESITags;
+            char *tagEnd = strchr(const_cast<char *>(tag), '>');
 
-                if (!tagEnd) {
-                    error = "Could not find end ('>') of tag";
-                    return false;
-                }
-
-                if (tagEnd - tag > (ssize_t)remainingCount) {
-                    error = "Tag ends beyond the parse buffer.";
-                    return false;
-                }
-
-                if (*(tagEnd - 1) == '/')
-                    --openESITags;
-
-                char * endofName = strpbrk(const_cast<char *>(tag), w_space);
-
-                if (endofName > tagEnd)
-                    endofName = const_cast<char *>(tagEnd);
-
-                *endofName = '\0';
-
-                *tagEnd = '\0';
-
-                Vector<char *>attributes;
-
-                char *attribute = const_cast<char *>(endofName + 1);
-
-                while (attribute > tag && attribute < tagEnd) {
-                    /* leading spaces */
-
-                    while (attribute < tagEnd && (xisspace(*attribute) || (*attribute == '/')))
-                        ++attribute;
-
-                    if (! (attribute < tagEnd))
-                        break;
-
-                    /* attribute name */
-                    attributes.push_back(attribute);
-
-                    char *nextSpace = strpbrk(attribute, w_space);
-
-                    char *equals = strchr(attribute, '=');
-
-                    if (!equals) {
-                        error = "Missing attribute value.";
-                        return false;
-                    }
-
-                    if (nextSpace && nextSpace < equals)
-                        *nextSpace = '\0';
-                    else
-                        *equals = '\0';
-
-                    ++equals;
-
-                    while (equals < tagEnd && xisspace(*equals))
-                        ++equals;
-
-                    char sep = *equals;
-
-                    if (sep != '\'' && sep != '"') {
-                        error = "Unknown identifier (";
-                        error.append (sep);
-                        error.append (")");
-                        return false;
-                    }
-
-                    char *value = equals + 1;
-                    char *end = strchr (value, sep);
-                    attributes.push_back(value);
-                    *end = '\0';
-                    attribute = end + 1;
-                }
-
-                theClient->start (tag + 1, (const char **)attributes.items, attributes.size() >> 1);
-                /* TODO: attributes */
-
-                if (*(tagEnd - 1) == '/')
-                    theClient->end (tag + 1);
-
-                remainingCount -= tagEnd - currentPos + 1;
-
-                currentPos = tagEnd + 1;
+            if (!tagEnd) {
+                error = "Could not find end ('>') of tag";
+                return false;
             }
 
-            break;
+            if (tagEnd - tag > (ssize_t)remainingCount) {
+                error = "Tag ends beyond the parse buffer.";
+                return false;
+            }
 
-        case ESIENDTAG: {
-                if (!openESITags)
-                    return false;
-
-                char const *tagEnd = strchr(tag, '>');
-
-                if (!tagEnd)
-                    return false;
-
-                if (tagEnd - tag > (ssize_t)remainingCount)
-                    return false;
-
-                char * endofName = strpbrk(const_cast<char *>(tag), w_space);
-
-                if (endofName > tagEnd)
-                    endofName = const_cast<char *>(tagEnd);
-
-                *endofName = '\0';
-
-                theClient->end (tag + 2);
-
+            if (*(tagEnd - 1) == '/')
                 --openESITags;
 
-                remainingCount -= tagEnd - currentPos + 1;
+            char * endofName = strpbrk(const_cast<char *>(tag), w_space);
 
-                currentPos = tagEnd + 1;
+            if (endofName > tagEnd)
+                endofName = const_cast<char *>(tagEnd);
+
+            *endofName = '\0';
+
+            *tagEnd = '\0';
+
+            Vector<char *>attributes;
+
+            char *attribute = const_cast<char *>(endofName + 1);
+
+            while (attribute > tag && attribute < tagEnd) {
+                /* leading spaces */
+
+                while (attribute < tagEnd && (xisspace(*attribute) || (*attribute == '/')))
+                    ++attribute;
+
+                if (! (attribute < tagEnd))
+                    break;
+
+                /* attribute name */
+                attributes.push_back(attribute);
+
+                char *nextSpace = strpbrk(attribute, w_space);
+
+                char *equals = strchr(attribute, '=');
+
+                if (!equals) {
+                    error = "Missing attribute value.";
+                    return false;
+                }
+
+                if (nextSpace && nextSpace < equals)
+                    *nextSpace = '\0';
+                else
+                    *equals = '\0';
+
+                ++equals;
+
+                while (equals < tagEnd && xisspace(*equals))
+                    ++equals;
+
+                char sep = *equals;
+
+                if (sep != '\'' && sep != '"') {
+                    error = "Unknown identifier (";
+                    error.append (sep);
+                    error.append (")");
+                    return false;
+                }
+
+                char *value = equals + 1;
+                char *end = strchr (value, sep);
+                attributes.push_back(value);
+                *end = '\0';
+                attribute = end + 1;
             }
 
-            break;
+            theClient->start (tag + 1, (const char **)attributes.items, attributes.size() >> 1);
+            /* TODO: attributes */
+
+            if (*(tagEnd - 1) == '/')
+                theClient->end (tag + 1);
+
+            remainingCount -= tagEnd - currentPos + 1;
+
+            currentPos = tagEnd + 1;
+        }
+
+        break;
+
+        case ESIENDTAG: {
+            if (!openESITags)
+                return false;
+
+            char const *tagEnd = strchr(tag, '>');
+
+            if (!tagEnd)
+                return false;
+
+            if (tagEnd - tag > (ssize_t)remainingCount)
+                return false;
+
+            char * endofName = strpbrk(const_cast<char *>(tag), w_space);
+
+            if (endofName > tagEnd)
+                endofName = const_cast<char *>(tagEnd);
+
+            *endofName = '\0';
+
+            theClient->end (tag + 2);
+
+            --openESITags;
+
+            remainingCount -= tagEnd - currentPos + 1;
+
+            currentPos = tagEnd + 1;
+        }
+
+        break;
 
         case ESICOMMENT: {
-                /* Further optimisation potential:
-                 * 1) recognize end comments for esi and don't callback on 
-                 * comments.
-                 * 2) provide the comment length to the caller.
-                 */
-                /* Comments must not be nested, without CDATA
-                 * and we don't support CDATA
-                 */
-                char *commentEnd = strstr (const_cast<char *>(tag), "-->");
+            /* Further optimisation potential:
+             * 1) recognize end comments for esi and don't callback on
+             * comments.
+             * 2) provide the comment length to the caller.
+             */
+            /* Comments must not be nested, without CDATA
+             * and we don't support CDATA
+             */
+            char *commentEnd = strstr (const_cast<char *>(tag), "-->");
 
-                if (!commentEnd) {
-                    error = "missing end of comment";
-                    return false;
-                }
-
-                if (commentEnd - tag > (ssize_t)remainingCount) {
-                    error = "comment ends beyond parse buffer";
-                    return false;
-                }
-
-                *commentEnd = '\0';
-                theClient->parserComment (tag + 4);
-                remainingCount -= commentEnd - currentPos + 3;
-                currentPos = commentEnd + 3;
+            if (!commentEnd) {
+                error = "missing end of comment";
+                return false;
             }
 
-            break;
-            break;
+            if (commentEnd - tag > (ssize_t)remainingCount) {
+                error = "comment ends beyond parse buffer";
+                return false;
+            }
+
+            *commentEnd = '\0';
+            theClient->parserComment (tag + 4);
+            remainingCount -= commentEnd - currentPos + 3;
+            currentPos = commentEnd + 3;
+        }
+
+        break;
+        break;
 
         default:
             fatal ("unknown ESI tag type found");

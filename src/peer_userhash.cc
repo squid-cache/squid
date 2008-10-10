@@ -22,12 +22,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -75,7 +75,7 @@ peerUserHashInit(void)
     n_userhash_peers = 0;
     /* find out which peers we have */
 
-    
+
     peerUserHashRegisterWithCacheManager();
 
     for (p = Config.peers; p; p = p->next) {
@@ -160,8 +160,8 @@ static void
 peerUserHashRegisterWithCacheManager(void)
 {
     CacheManager::GetInstance()->
-        registerAction("userhash", "peer userhash information", peerUserHashCachemgr, 
-	0, 1);
+    registerAction("userhash", "peer userhash information", peerUserHashCachemgr,
+                   0, 1);
 }
 
 peer *
@@ -181,10 +181,10 @@ peerUserHashSelectParent(HttpRequest * request)
         return NULL;
 
     if (request->auth_user_request)
-	key = request->auth_user_request->username();
+        key = request->auth_user_request->username();
 
     if (!key)
-	return NULL;
+        return NULL;
 
     /* calculate hash key */
     debugs(39, 2, "peerUserHashSelectParent: Calculating hash for " << key);
@@ -199,7 +199,7 @@ peerUserHashSelectParent(HttpRequest * request)
         combined_hash += combined_hash * 0x62531965;
         combined_hash = ROTATE_LEFT(combined_hash, 21);
         score = combined_hash * tp->userhash.load_multiplier;
-        debugs(39, 3, "peerUserHashSelectParent: " << tp->name << " combined_hash " << combined_hash  << 
+        debugs(39, 3, "peerUserHashSelectParent: " << tp->name << " combined_hash " << combined_hash  <<
                " score " << std::setprecision(0) << score);
 
         if ((score > high_score) && peerHTTPOkay(tp, request)) {

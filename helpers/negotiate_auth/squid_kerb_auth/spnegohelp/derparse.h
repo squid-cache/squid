@@ -30,20 +30,20 @@ extern "C"
 {
 #endif
 
-/* Identifier Types */
+    /* Identifier Types */
 #define  IDENTIFIER_MASK               0xC0  // Bits 7 and 8
 #define  IDENTIFIER_UNIVERSAL          0x00  // 00 = universal
 #define  IDENTIFIER_APPLICATION        0x40  // 01 = application
 #define  IDENTIFIER_CONTEXT_SPECIFIC   0x80  // 10 = context specific
 #define  IDENTIFIER_PRIVATE            0xC0  // 11 = Private
 
-/* Encoding type */
+    /* Encoding type */
 
 #define FORM_MASK       0x20    /* Bit 6 */
 #define PRIMITIVE       0x00    /* 0 = primitive */
 #define CONSTRUCTED     0x20    /* 1 = constructed */
 
-/* Universal tags */
+    /* Universal tags */
 
 #define TAG_MASK        0x1F    /* Bits 5 - 1 */
 #define BOOLEAN         0x01    /*  1: TRUE or FALSE */
@@ -72,7 +72,7 @@ extern "C"
 #define UNIVERSALSTR    0x1C    /* 28: Universal String */
 #define BMPSTR          0x1E    /* 30: Basic Multilingual Plane String */
 
-/* Length encoding */
+    /* Length encoding */
 
 #define LEN_XTND  0x80      /* Indefinite or long form */
 #define LEN_MASK  0x7f      /* Bits 7 - 1 */
@@ -165,40 +165,39 @@ extern "C"
 // of these which we'll use for validation/searches/parsing.
 //
 
-typedef struct _mechOID
-{
-   unsigned char*    ucOid;            // Byte representation of OID
-   int               iLen;             // Length of the OID, length and identifier
-   int               iActualDataLen;   // Length of the actual OID 
-   SPNEGO_MECH_OID   eMechanismOID;     // Which OID is this?   
-} MECH_OID;
+    typedef struct _mechOID {
+        unsigned char*    ucOid;            // Byte representation of OID
+        int               iLen;             // Length of the OID, length and identifier
+        int               iActualDataLen;   // Length of the actual OID
+        SPNEGO_MECH_OID   eMechanismOID;     // Which OID is this?
+    } MECH_OID;
 
 
 //
 // ASN Der functions
 //
 
-int ASNDerGetLength( unsigned char* pbLengthData, long nBoundaryLength, long* pnLength,
-                    long* pnNumLengthBytes );
-int ASNDerCheckToken( unsigned char* pbTokenData, unsigned char nToken,
-                        long nCheckLength, long nBoundaryLength, long* pnLength,
+    int ASNDerGetLength( unsigned char* pbLengthData, long nBoundaryLength, long* pnLength,
+                         long* pnNumLengthBytes );
+    int ASNDerCheckToken( unsigned char* pbTokenData, unsigned char nToken,
+                          long nCheckLength, long nBoundaryLength, long* pnLength,
+                          long* pnTokenLength );
+    int ASNDerCheckOID( unsigned char* pbTokenData, SPNEGO_MECH_OID nMechOID, long nBoundaryLength,
                         long* pnTokenLength );
-int ASNDerCheckOID( unsigned char* pbTokenData, SPNEGO_MECH_OID nMechOID, long nBoundaryLength,
-                     long* pnTokenLength );
-int ASNDerCalcNumLengthBytes( long nLength );
-long ASNDerCalcTokenLength( long nLength, long nDataLength );
-long ASNDerCalcElementLength( long nDataLength, long* pnInternalLength );
-long ASNDerCalcMechListLength( SPNEGO_MECH_OID mechoid, long* pnInternalLength );
-int ASNDerWriteLength( unsigned char* pbData, long nLength );
-int ASNDerWriteToken( unsigned char* pbData, unsigned char ucType,
-                     unsigned char* pbTokenValue, long nLength );
-int ASNDerWriteOID( unsigned char* pbData, SPNEGO_MECH_OID eMechOID );
-long ASNDerWriteMechList( unsigned char* pbData, SPNEGO_MECH_OID mechoid );
-int ASNDerWriteElement( unsigned char* pbData, unsigned char ucElementSequence,
-                        unsigned char ucType, unsigned char* pbTokenValue, long nLength );
+    int ASNDerCalcNumLengthBytes( long nLength );
+    long ASNDerCalcTokenLength( long nLength, long nDataLength );
+    long ASNDerCalcElementLength( long nDataLength, long* pnInternalLength );
+    long ASNDerCalcMechListLength( SPNEGO_MECH_OID mechoid, long* pnInternalLength );
+    int ASNDerWriteLength( unsigned char* pbData, long nLength );
+    int ASNDerWriteToken( unsigned char* pbData, unsigned char ucType,
+                          unsigned char* pbTokenValue, long nLength );
+    int ASNDerWriteOID( unsigned char* pbData, SPNEGO_MECH_OID eMechOID );
+    long ASNDerWriteMechList( unsigned char* pbData, SPNEGO_MECH_OID mechoid );
+    int ASNDerWriteElement( unsigned char* pbData, unsigned char ucElementSequence,
+                            unsigned char ucType, unsigned char* pbTokenValue, long nLength );
 
 
-   // C++ Specific
+    // C++ Specific
 #if defined(__cplusplus)
 }
 #endif

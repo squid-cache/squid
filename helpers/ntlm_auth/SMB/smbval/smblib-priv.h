@@ -2,12 +2,12 @@
 #define __SMBLIB_PRIV_H__
 
 /* UNIX SMBlib NetBIOS implementation
- * 
+ *
  * Version 1.0
  * SMBlib private Defines
- * 
+ *
  * Copyright (C) Richard Sharpe 1996
- * 
+ *
  */
 
 /*
@@ -15,12 +15,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -281,8 +281,8 @@ typedef unsigned char UCHAR;
 #define SMB_openx_axr_offset    34	/* Reserved                */
 #define SMB_openx_axo_offset    35	/* offset of next wct      */
 #define SMB_openx_flg_offset    37	/* Flags, bit0 = need more info */
-					  /* bit1 = exclusive oplock */
-					  /* bit2 = batch oplock     */
+/* bit1 = exclusive oplock */
+/* bit2 = batch oplock     */
 #define SMB_openx_mod_offset    39	/* mode to open with       */
 #define SMB_openx_atr_offset    41	/* search attributes       */
 #define SMB_openx_fat_offset    43	/* File attributes         */
@@ -377,7 +377,7 @@ typedef unsigned char UCHAR;
 #define SMB_ssetpLM_buf_offset  55
 
 #define SMB_ssetpNTLM_mbs_offset 37	/* Max Buffer Size for NT LM 0.12  */
-					  /* and above                       */
+/* and above                       */
 #define SMB_ssetpNTLM_mmc_offset 39	/* Max Multiplex count             */
 #define SMB_ssetpNTLM_vcn_offset 41	/* VC Number                       */
 #define SMB_ssetpNTLM_snk_offset 43	/* Session key                     */
@@ -501,7 +501,7 @@ typedef enum {
 extern char *SMB_Prots[];
 
 /*
- * static char *SMB_Prots[] = {"PC NETWORK PROGRAM 1.0", 
+ * static char *SMB_Prots[] = {"PC NETWORK PROGRAM 1.0",
  * "MICROSOFT NETWORKS 1.03",
  * "MICROSOFT NETWORKS 3.0",
  * "DOS LANMAN1.0",
@@ -537,12 +537,12 @@ extern int SMB_Types[];
 typedef struct SMB_Status {
 
     union {
-	struct {
-	    unsigned char ErrorClass;
-	    unsigned char Reserved;
-	    unsigned short Error;
-	} DosError;
-	unsigned int NtStatus;
+        struct {
+            unsigned char ErrorClass;
+            unsigned char Reserved;
+            unsigned short Error;
+        } DosError;
+        unsigned int NtStatus;
     } status;
 } SMB_Status;
 
@@ -636,7 +636,7 @@ extern int SMBlib_SMB_Error;	/* last Error             */
 #endif
 
 SMB_Tree_Handle SMB_TreeConnect(SMB_Handle_Type con, SMB_Tree_Handle tree,
-    char *path, char *password, char *dev);
+                                char *path, char *password, char *dev);
 
 int SMB_Init();
 void SMB_Get_My_Name(char *name, int len);
@@ -644,7 +644,7 @@ int SMB_Negotiate(SMB_Handle_Type Con_Handle, char *Prots[]);
 int SMB_Discon(SMB_Handle_Type Con_Handle, BOOL KeepHandle);
 
 int SMB_Logon_Server(SMB_Handle_Type Con_Handle, char *UserName,
-    char *PassWord, char *UserDomain, int precrypted);
+                     char *PassWord, char *UserDomain, int precrypted);
 
 int SMB_Get_Error_Msg(int msg, char *msgbuf, int len);
 

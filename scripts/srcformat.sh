@@ -1,3 +1,6 @@
+#!/bin/bash
+#
+# Would be used on squid-cache. But FreeBSD astyle version is too old.
 #!/usr/local/bin/bash
 #
 # A checker to recursively reformat all source files: .h .c .cc .cci

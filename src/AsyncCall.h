@@ -21,11 +21,11 @@
  * event stores the pointer to the callback function and cbdata-protected
  * callback data. To call a method of an object, the method is wrapped
  * in a method-specific, static callback function and the pointer to the
- * object is passed to the wrapper. For the method call to be safe, the 
+ * object is passed to the wrapper. For the method call to be safe, the
  * class must be cbdata-enabled.
  \par
  * You do not have to use the macros below to make or receive asynchronous
- * method calls, but they give you a uniform interface and handy call 
+ * method calls, but they give you a uniform interface and handy call
  * debugging.
  */
 
@@ -45,24 +45,24 @@ public:
 
     AsyncCall(int aDebugSection, int aDebugLevel, const char *aName);
     virtual ~AsyncCall();
-    
+
     void make(); // fire if we can; handles general call debugging
 
     // can be called from canFire() for debugging; always returns false
     bool cancel(const char *reason);
-    
+
     bool canceled() { return isCanceled != NULL; }
 
     virtual CallDialer *getDialer() = 0;
 
     void print(std::ostream &os);
-   
+
     void setNext(AsyncCall::Pointer aNext) {
-         theNext = aNext;
+        theNext = aNext;
     }
 
     AsyncCall::Pointer &Next() {
-         return theNext;
+        return theNext;
     }
 
 public:
@@ -116,14 +116,16 @@ class AsyncCallT: public AsyncCall
 {
 public:
     AsyncCallT(int aDebugSection, int aDebugLevel, const char *aName,
-        const Dialer &aDialer): AsyncCall(aDebugSection, aDebugLevel, aName),
-        dialer(aDialer) {}
+               const Dialer &aDialer): AsyncCall(aDebugSection, aDebugLevel, aName),
+            dialer(aDialer) {}
 
     CallDialer *getDialer() { return &dialer; }
 
 protected:
-    virtual bool canFire() { return AsyncCall::canFire() && 
-        dialer.canDial(*this); }
+    virtual bool canFire() {
+        return AsyncCall::canFire() &&
+               dialer.canDial(*this);
+    }
     virtual void fire() { dialer.dial(*this); }
 
     Dialer dialer;
@@ -133,7 +135,7 @@ template <class Dialer>
 inline
 AsyncCall *
 asyncCall(int aDebugSection, int aDebugLevel, const char *aName,
-    const Dialer &aDialer)
+          const Dialer &aDialer)
 {
     return new AsyncCallT<Dialer>(aDebugSection, aDebugLevel, aName, aDialer);
 }

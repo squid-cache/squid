@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -269,10 +269,10 @@ static void
 xprofRegisterWithCacheManager(void)
 {
     CacheManager::GetInstance()->
-         registerAction("cpu_profile", "CPU Profiling Stats", xprof_summary, 0, 1);
+    registerAction("cpu_profile", "CPU Profiling Stats", xprof_summary, 0, 1);
 }
 
-// FIXME: 
+// FIXME:
 // this gets colled once per event. This doesn't seem to make much sense,
 // does it?
 static hrtime_t now;

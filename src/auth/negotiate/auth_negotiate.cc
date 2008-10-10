@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -221,9 +221,9 @@ void
 AuthNegotiateConfig::registerWithCacheManager(void)
 {
     CacheManager::GetInstance()->
-            registerAction("negotiateauthenticator",
-                           "Negotiate User Authenticator Stats",
-                           authenticateNegotiateStats, 0, 1);
+    registerAction("negotiateauthenticator",
+                   "Negotiate User Authenticator Stats",
+                   authenticateNegotiateStats, 0, 1);
 }
 
 bool
@@ -313,7 +313,7 @@ AuthNegotiateConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *re
 
     /* Need keep-alive */
     if (!request->flags.proxy_keepalive && request->flags.must_keepalive)
-	return;
+        return;
 
     /* New request, no user details */
     if (auth_user_request == NULL) {
@@ -448,18 +448,18 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
         if (arg)
             *arg++ = '\0';
         safe_free(negotiate_request->server_blob);
-	negotiate_request->request->flags.must_keepalive = 1;
-	if (negotiate_request->request->flags.proxy_keepalive) {
-	    negotiate_request->server_blob = xstrdup(blob);
-	    negotiate_request->auth_state = AUTHENTICATE_STATE_IN_PROGRESS;
-	    auth_user_request->denyMessage("Authentication in progress");
-	    debugs(29, 4, "authenticateNegotiateHandleReply: Need to challenge the client with a server blob '" << blob << "'");
-	    result = S_HELPER_RESERVE;
-	} else {
-	    negotiate_request->auth_state = AUTHENTICATE_STATE_FAILED;
-	    auth_user_request->denyMessage("NTLM authentication requires a persistent connection");
-	    result = S_HELPER_RELEASE;
-	}
+        negotiate_request->request->flags.must_keepalive = 1;
+        if (negotiate_request->request->flags.proxy_keepalive) {
+            negotiate_request->server_blob = xstrdup(blob);
+            negotiate_request->auth_state = AUTHENTICATE_STATE_IN_PROGRESS;
+            auth_user_request->denyMessage("Authentication in progress");
+            debugs(29, 4, "authenticateNegotiateHandleReply: Need to challenge the client with a server blob '" << blob << "'");
+            result = S_HELPER_RESERVE;
+        } else {
+            negotiate_request->auth_state = AUTHENTICATE_STATE_FAILED;
+            auth_user_request->denyMessage("NTLM authentication requires a persistent connection");
+            result = S_HELPER_RELEASE;
+        }
     } else if (strncasecmp(reply, "AF ", 3) == 0 && arg != NULL) {
         /* we're finished, release the helper */
 
@@ -487,7 +487,7 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
         /* see if this is an existing user with a different proxy_auth
          * string */
         AuthUserHashPointer *usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, negotiate_user->username()));
-	AuthUser *local_auth_user = negotiate_request->user();
+        AuthUser *local_auth_user = negotiate_request->user();
         while (usernamehash && (usernamehash->user()->auth_type != AUTH_NEGOTIATE || strcmp(usernamehash->user()->username(), negotiate_user->username()) != 0))
             usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
         if (usernamehash) {
@@ -507,7 +507,7 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
          * existing user or a new user */
         local_auth_user->expiretime = current_time.tv_sec;
         authenticateNegotiateReleaseServer(negotiate_request);
-	negotiate_request->auth_state = AUTHENTICATE_STATE_DONE;
+        negotiate_request->auth_state = AUTHENTICATE_STATE_DONE;
 
     } else if (strncasecmp(reply, "NA ", 3) == 0 && arg != NULL) {
         /* authentication failure (wrong password, etc.) */
@@ -546,8 +546,8 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
     }
 
     if (negotiate_request->request) {
-	HTTPMSGUNLOCK(negotiate_request->request);
-	negotiate_request->request = NULL;
+        HTTPMSGUNLOCK(negotiate_request->request);
+        negotiate_request->request = NULL;
     }
     r->handler(r->data, NULL);
     cbdataReferenceDone(r->data);
@@ -621,8 +621,8 @@ authenticateNegotiateReleaseServer(AuthUserRequest * auth_user_request)
     /* DPW 2007-05-07
      * yes, it is possible */
     if (negotiate_request->authserver) {
-	helperStatefulReleaseServer(negotiate_request->authserver);
-	negotiate_request->authserver = NULL;
+        helperStatefulReleaseServer(negotiate_request->authserver);
+        negotiate_request->authserver = NULL;
     }
 }
 
@@ -720,7 +720,7 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * request, ConnStateData * co
     /* locate second word */
     blob = proxy_auth;
 
-    if(blob) {
+    if (blob) {
         while (xisspace(*blob) && *blob)
             blob++;
 
@@ -742,9 +742,9 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * request, ConnStateData * co
         conn->auth_type = AUTH_NEGOTIATE;
         assert(conn->auth_user_request == NULL);
         conn->auth_user_request = this;
-	AUTHUSERREQUESTLOCK(conn->auth_user_request, "conn");
-	this->request = request;
-	HTTPMSGLOCK(this->request);
+        AUTHUSERREQUESTLOCK(conn->auth_user_request, "conn");
+        this->request = request;
+        HTTPMSGLOCK(this->request);
         return;
 
         break;
@@ -764,18 +764,18 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * request, ConnStateData * co
 
         client_blob = xstrdup (blob);
 
-	if (this->request)
-	    HTTPMSGUNLOCK(this->request);
-	this->request = request;
-	HTTPMSGLOCK(this->request);
+        if (this->request)
+            HTTPMSGUNLOCK(this->request);
+        this->request = request;
+        HTTPMSGLOCK(this->request);
         return;
 
         break;
 
     case AUTHENTICATE_STATE_DONE:
-	fatal("AuthNegotiateUserRequest::authenticate: unexpect auth state DONE! Report a bug to the squid developers.\n");
+        fatal("AuthNegotiateUserRequest::authenticate: unexpect auth state DONE! Report a bug to the squid developers.\n");
 
-	break;
+        break;
 
     case AUTHENTICATE_STATE_FAILED:
         /* we've failed somewhere in authentication */
@@ -790,7 +790,7 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * request, ConnStateData * co
 }
 
 AuthNegotiateUserRequest::AuthNegotiateUserRequest() :
-    /*conn(NULL),*/ auth_state(AUTHENTICATE_STATE_NONE),
+        /*conn(NULL),*/ auth_state(AUTHENTICATE_STATE_NONE),
         _theUser(NULL)
 {
     waiting=0;
@@ -811,8 +811,8 @@ AuthNegotiateUserRequest::~AuthNegotiateUserRequest()
         authserver = NULL;
     }
     if (request) {
-	HTTPMSGUNLOCK(request);
-	request = NULL;
+        HTTPMSGUNLOCK(request);
+        request = NULL;
     }
 }
 

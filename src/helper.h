@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -56,8 +56,7 @@ typedef struct _helper_stateful_flags helper_stateful_flags;
 
 typedef stateful_helper_callback_t HLPSCB(void *, void *lastserver, char *buf);
 
-struct _helper
-{
+struct _helper {
     wordlist *cmdline;
     dlink_list servers;
     dlink_list queue;
@@ -71,8 +70,7 @@ struct _helper
     time_t last_queue_warn;
     time_t last_restart;
 
-    struct
-    {
+    struct {
         int requests;
         int replies;
         int queue_size;
@@ -80,8 +78,7 @@ struct _helper
     } stats;
 };
 
-struct _helper_stateful
-{
+struct _helper_stateful {
     wordlist *cmdline;
     dlink_list servers;
     dlink_list queue;
@@ -97,8 +94,7 @@ struct _helper_stateful
     time_t last_queue_warn;
     time_t last_restart;
 
-    struct
-    {
+    struct {
         int requests;
         int replies;
         int queue_size;
@@ -106,8 +102,7 @@ struct _helper_stateful
     } stats;
 };
 
-struct _helper_server
-{
+struct _helper_server {
     int index;
     int pid;
     IPAddress addr;
@@ -127,15 +122,13 @@ struct _helper_server
     helper *parent;
     helper_request **requests;
 
-    struct _helper_flags
-    {
+    struct _helper_flags {
         unsigned int writing:1;
         unsigned int closing:1;
         unsigned int shutdown:1;
     } flags;
 
-    struct
-    {
+    struct {
         int uses;
         unsigned int pending;
     } stats;
@@ -145,8 +138,7 @@ struct _helper_server
 
 class helper_stateful_request;
 
-struct _helper_stateful_server
-{
+struct _helper_stateful_server {
     int index;
     int pid;
     IPAddress addr;
@@ -167,16 +159,14 @@ struct _helper_stateful_server
     statefulhelper *parent;
     helper_stateful_request *request;
 
-    struct _helper_stateful_flags
-    {
+    struct _helper_stateful_flags {
         unsigned int busy:1;
         unsigned int closing:1;
         unsigned int shutdown:1;
         stateful_helper_reserve_t reserved;
     } flags;
 
-    struct
-    {
+    struct {
         int uses;
         int submits;
         int releases;

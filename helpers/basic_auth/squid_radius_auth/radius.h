@@ -17,7 +17,7 @@
  *	in advertising or publicity pertaining to distribution of the
  *	program without specific prior permission, and notice be given
  *	in supporting documentation that copying and distribution is by
- *	permission of Livingston Enterprises, Inc.   
+ *	permission of Livingston Enterprises, Inc.
  *
  *	Livingston Enterprises, Inc. makes no representations about
  *	the suitability of this software for any purpose.  It is
@@ -35,11 +35,11 @@
 
 
 typedef struct pw_auth_hdr {
-	u_char		code;
-	u_char		id;
-	u_short		length;
-	u_char		vector[AUTH_VECTOR_LEN];
-	u_char		data[2];
+    u_char		code;
+    u_char		id;
+    u_short		length;
+    u_char		vector[AUTH_VECTOR_LEN];
+    u_char		data[2];
 } AUTH_HDR;
 
 #define AUTH_HDR_LEN			20

@@ -139,10 +139,10 @@ testHttpRequest::testIPv6HostColonBug()
     CPPUNIT_ASSERT_EQUAL(expected_port, aRequest->port);
     CPPUNIT_ASSERT(aRequest->method == METHOD_GET);
 #if USE_IPV6
-      /* We hasve fixed this in IPv6 build. */
+    /* We hasve fixed this in IPv6 build. */
     CPPUNIT_ASSERT_EQUAL(String("[2000:800::45]"), String(aRequest->GetHost()));
 #else
-      /* NO fix is possible in IPv4-pure build. */
+    /* NO fix is possible in IPv4-pure build. */
     CPPUNIT_ASSERT_EQUAL(String("2000:800::45"), String(aRequest->GetHost()));
 #endif
     CPPUNIT_ASSERT_EQUAL(String("/foo"), aRequest->urlpath);

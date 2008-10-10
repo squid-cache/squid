@@ -3,7 +3,7 @@
  * allowusers.c
  * (C) 2000 Antonino Iannella, Stellar-X Pty Ltd
  * Released under GPL, see COPYING-2.0 for details.
- * 
+ *
  * These routines are to allow users attempting to use the proxy which
  * have been explicitly allowed by the system administrator.
  * The code originated from denyusers.c.
@@ -27,13 +27,13 @@ int
 Read_allowusers(void)
 {
     if (!init) {
-	memset(&AllowUsers, '\0', sizeof(AllowUsers));
-	init = 1;
+        memset(&AllowUsers, '\0', sizeof(AllowUsers));
+        init = 1;
     }
     if (*Allowuserpath)
-	return Read_usersfile(Allowuserpath, &AllowUsers);
+        return Read_usersfile(Allowuserpath, &AllowUsers);
     else
-	return 0;
+        return 0;
 }
 
 int

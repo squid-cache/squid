@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -36,33 +36,33 @@
 /*
  * Rationale:
  * ----------
- * 
+ *
  * OK, we have to major interfaces comm.c and store.c.
- * 
+ *
  * Store.c has a nice storeAppend[Printf] capability which makes "storing"
- * things easy and painless. 
- * 
+ * things easy and painless.
+ *
  * Comm.c lacks commAppend[Printf] because comm does not handle its own
  * buffers (no mem_obj equivalent for comm.c).
- * 
+ *
  * Thus, if one wants to be able to store _and_ comm_write an object, s/he
  * has to implement two almost identical functions.
- * 
+ *
  * Packer
  * ------
- * 
+ *
  * Packer provides for a more uniform interface to store and comm modules.
  * Packer has its own append and printf routines that "know" where to send
  * incoming data. In case of store interface, Packer sends data to
  * storeAppend.  Otherwise, Packer uses a MemBuf that can be flushed later to
  * comm_write.
- * 
+ *
  * Thus, one can write just one function that will either "pack" things for
  * comm_write or "append" things to store, depending on actual packer
  * supplied.
- * 
+ *
  * It is amazing how much work a tiny object can save. :)
- * 
+ *
  */
 
 
@@ -176,8 +176,7 @@ packerPrintf(Packer * p, const char *fmt,...)
 #else
 void
 packerPrintf(va_alist)
-va_dcl
-{
+va_dcl {
     va_list args;
     Packer *p = NULL;
     const char *fmt = NULL;

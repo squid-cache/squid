@@ -8,7 +8,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- 
+
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -41,13 +41,13 @@ void hex_dump(void *data, int size)
         char addrstr[10] = {0};
         char hexstr[ 16*3 + 5] = {0};
         char charstr[16*1 + 5] = {0};
-        for(n=1;n<=size;n++) {
+        for (n=1;n<=size;n++) {
             if (n%16 == 1) {
                 /* store address for this line */
                 snprintf(addrstr, sizeof(addrstr), "%.4x",
-                   ((unsigned int)p-(unsigned int)data) );
+                         ((unsigned int)p-(unsigned int)data) );
             }
-            
+
             c = *p;
             if (xisalnum(c) == 0) {
                 c = '.';
@@ -61,12 +61,12 @@ void hex_dump(void *data, int size)
             snprintf(bytestr, sizeof(bytestr), "%c", c);
             strncat(charstr, bytestr, sizeof(charstr)-strlen(charstr)-1);
 
-            if(n%16 == 0) { 
+            if (n%16 == 0) {
                 /* line completed */
                 fprintf(stderr, "[%4.4s]   %-50.50s  %s\n", addrstr, hexstr, charstr);
                 hexstr[0] = 0;
                 charstr[0] = 0;
-            } else if(n%8 == 0) {
+            } else if (n%8 == 0) {
                 /* half line: add whitespaces */
                 strncat(hexstr, "  ", sizeof(hexstr)-strlen(hexstr)-1);
                 strncat(charstr, " ", sizeof(charstr)-strlen(charstr)-1);

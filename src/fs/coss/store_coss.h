@@ -35,16 +35,14 @@ public:
     int lockcount;
     char buffer[COSS_MEMBUF_SZ];
 
-    struct _cossmembuf_flags
-    {
+    struct _cossmembuf_flags {
         unsigned int full:1;
         unsigned int writing:1;
     } flags;
 };
 
 /// \ingroup COSS
-struct _cossindex
-{
+struct _cossindex {
     /**
      \note The dlink_node MUST be the first member of the structure.
      *     This member is later pointer typecasted to coss_index_node *.
@@ -72,8 +70,7 @@ public:
     size_t requestoffset;	/* in blocks */
     int64_t reqdiskoffset;	/* in blocks */
 
-    struct
-    {
+    struct {
         unsigned int reading:1;
         unsigned int writing:1;
     } flags;

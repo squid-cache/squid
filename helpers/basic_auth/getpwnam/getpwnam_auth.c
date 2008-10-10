@@ -10,7 +10,7 @@
  *
  * Uses getpwnam() routines for authentication.
  * This has the following advantages over the NCSA module:
- * 
+ *
  * - Allow authentication of all know local users
  * - Allows authentication through nsswitch.conf
  *   + can handle NIS(+) requests
@@ -18,7 +18,7 @@
  *   + can handle PAM request
  *
  * 2006-07: Giancarlo Razzolini <linux-fan@onda.com.br>
- * 
+ *
  * Added functionality for doing shadow authentication too,
  * using the getspnam() function on systems that support it.
  *
@@ -53,36 +53,36 @@
 #define ERR    "ERR\n"
 #define OK     "OK\n"
 
-static int 
+static int
 passwd_auth(char *user, char *passwd)
 {
     struct passwd *pwd;
     pwd = getpwnam(user);
     if (pwd == NULL) {
-	return 0;		/* User does not exist */
+        return 0;		/* User does not exist */
     } else {
-	if (strcmp(pwd->pw_passwd, (char *) crypt(passwd, pwd->pw_passwd))) {
-	    return 2;		/* Wrong password */
-	} else {
-	    return 1;		/* Authentication Sucessful */
-	}
+        if (strcmp(pwd->pw_passwd, (char *) crypt(passwd, pwd->pw_passwd))) {
+            return 2;		/* Wrong password */
+        } else {
+            return 1;		/* Authentication Sucessful */
+        }
     }
 }
 
 #if HAVE_SHADOW_H
-static int 
+static int
 shadow_auth(char *user, char *passwd)
 {
     struct spwd *pwd;
     pwd = getspnam(user);
     if (pwd == NULL) {
-	return passwd_auth(user, passwd);	/* Fall back to passwd_auth */
+        return passwd_auth(user, passwd);	/* Fall back to passwd_auth */
     } else {
-	if (strcmp(pwd->sp_pwdp, crypt(passwd, pwd->sp_pwdp))) {
-	    return 2;		/* Wrong password */
-	} else {
-	    return 1;		/* Authentication Sucessful */
-	}
+        if (strcmp(pwd->sp_pwdp, crypt(passwd, pwd->sp_pwdp))) {
+            return 2;		/* Wrong password */
+        } else {
+            return 1;		/* Authentication Sucessful */
+        }
     }
 }
 #endif
@@ -97,33 +97,33 @@ main(int argc, char **argv)
     setbuf(stdout, NULL);
     while (fgets(buf, 256, stdin) != NULL) {
 
-	if ((p = strchr(buf, '\n')) != NULL)
-	    *p = '\0';		/* strip \n */
+        if ((p = strchr(buf, '\n')) != NULL)
+            *p = '\0';		/* strip \n */
 
-	if ((user = strtok(buf, " ")) == NULL) {
-	    printf(ERR);
-	    continue;
-	}
-	if ((passwd = strtok(NULL, "")) == NULL) {
-	    printf(ERR);
-	    continue;
-	}
-	rfc1738_unescape(user);
-	rfc1738_unescape(passwd);
+        if ((user = strtok(buf, " ")) == NULL) {
+            printf(ERR);
+            continue;
+        }
+        if ((passwd = strtok(NULL, "")) == NULL) {
+            printf(ERR);
+            continue;
+        }
+        rfc1738_unescape(user);
+        rfc1738_unescape(passwd);
 #if HAVE_SHADOW_H
-	auth = shadow_auth(user, passwd);
+        auth = shadow_auth(user, passwd);
 #else
-	auth = passwd_auth(user, passwd);
+        auth = passwd_auth(user, passwd);
 #endif
-	if (auth == 0) {
-	    printf("ERR No such user\n");
-	} else {
-	    if (auth == 2) {
-		printf("ERR Wrong password\n");
-	    } else {
-		printf(OK);
-	    }
-	}
+        if (auth == 0) {
+            printf("ERR No such user\n");
+        } else {
+            if (auth == 2) {
+                printf("ERR Wrong password\n");
+            } else {
+                printf(OK);
+            }
+        }
     }
     exit(0);
 }

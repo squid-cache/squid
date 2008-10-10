@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -65,8 +65,7 @@ enum _squidaio_thread_status {
 };
 typedef enum _squidaio_thread_status squidaio_thread_status;
 
-typedef struct squidaio_request_t
-{
+typedef struct squidaio_request_t {
 
     struct squidaio_request_t *next;
     squidaio_request_type request_type;
@@ -88,8 +87,7 @@ typedef struct squidaio_request_t
     squidaio_result_t *resultp;
 } squidaio_request_t;
 
-typedef struct squidaio_request_queue_t
-{
+typedef struct squidaio_request_queue_t {
     pthread_mutex_t mutex;
     pthread_cond_t cond;
     squidaio_request_t *volatile head;
@@ -100,8 +98,7 @@ typedef struct squidaio_request_queue_t
 
 typedef struct squidaio_thread_t squidaio_thread_t;
 
-struct squidaio_thread_t
-{
+struct squidaio_thread_t {
     squidaio_thread_t *next;
     pthread_t thread;
     squidaio_thread_status status;
@@ -146,26 +143,24 @@ static MemAllocator *squidaio_request_pool = NULL;
 static MemAllocator *squidaio_thread_pool = NULL;
 static squidaio_request_queue_t request_queue;
 
-static struct
-{
+static struct {
     squidaio_request_t *head, **tailp;
 }
 
 request_queue2 = {
 
-                     NULL, &request_queue2.head
-                 };
+    NULL, &request_queue2.head
+};
 static squidaio_request_queue_t done_queue;
 
-static struct
-{
+static struct {
     squidaio_request_t *head, **tailp;
 }
 
 done_requests = {
 
-                    NULL, &done_requests.head
-                };
+    NULL, &done_requests.head
+};
 static pthread_attr_t globattr;
 #if HAVE_SCHED_H
 

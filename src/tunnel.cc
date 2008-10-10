@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -71,7 +71,7 @@ public:
     {
 
     public:
-        Connection() : len (0),buf ((char *)xmalloc(SQUID_TCP_SO_RCVBUF)), size_ptr(NULL), fd_(-1){}
+        Connection() : len (0),buf ((char *)xmalloc(SQUID_TCP_SO_RCVBUF)), size_ptr(NULL), fd_(-1) {}
 
         ~Connection();
         int const & fd() const { return fd_;}
@@ -136,12 +136,12 @@ tunnelServerClosed(int fd, void *data)
 
     if (tunnelState->noConnections()) {
         tunnelStateFree(tunnelState);
-	return;
+        return;
     }
-    
+
     if (!tunnelState->server.len) {
-	comm_close(tunnelState->client.fd());
-	return;
+        comm_close(tunnelState->client.fd());
+        return;
     }
 }
 
@@ -155,12 +155,12 @@ tunnelClientClosed(int fd, void *data)
 
     if (tunnelState->noConnections()) {
         tunnelStateFree(tunnelState);
-	return;
+        return;
     }
-    
+
     if (!tunnelState->client.len) {
-	comm_close(tunnelState->server.fd());
-	return;
+        comm_close(tunnelState->server.fd());
+        return;
     }
 }
 
@@ -235,7 +235,7 @@ TunnelStateData::readServer(char *buf, size_t len, comm_err_t errcode, int xerrn
 {
     /*
      * Bail out early on COMM_ERR_CLOSING
-     * - close handlers will tidy up for us 
+     * - close handlers will tidy up for us
      */
 
     if (errcode == COMM_ERR_CLOSING)
@@ -261,7 +261,7 @@ TunnelStateData::Connection::error(int const xerrno)
     if (xerrno == COMM_ERR_CLOSING)
         return;
 
-    debugs(50, debugLevelForError(xerrno), "tunnelReadServer: FD " << fd() << 
+    debugs(50, debugLevelForError(xerrno), "tunnelReadServer: FD " << fd() <<
            ": read failure: " << xstrerror());
 
     if (!ignoreErrno(xerrno))
@@ -284,7 +284,7 @@ TunnelStateData::readClient(char *buf, size_t len, comm_err_t errcode, int xerrn
 {
     /*
      * Bail out early on COMM_ERR_CLOSING
-     * - close handlers will tidy up for us 
+     * - close handlers will tidy up for us
      */
 
     if (errcode == COMM_ERR_CLOSING)
@@ -304,13 +304,13 @@ void
 TunnelStateData::copy (size_t len, comm_err_t errcode, int xerrno, Connection &from, Connection &to, IOCB *completion)
 {
     /* I think this is to prevent free-while-in-a-callback behaviour
-     * - RBC 20030229 
+     * - RBC 20030229
      */
     cbdataInternalLock(this);	/* ??? should be locked by the caller... */
 
     /* Bump the server connection timeout on any activity */
     if (server.fd() != -1)
-	commSetTimeout(server.fd(), Config.Timeout.read, tunnelTimeout, this);
+        commSetTimeout(server.fd(), Config.Timeout.read, tunnelTimeout, this);
 
     if (len < 0 || errcode)
         from.error (xerrno);
@@ -476,7 +476,7 @@ tunnelConnectTimeout(int fd, void *data)
             hierarchyNote(&tunnelState->request->hier, tunnelState->servers->code,
                           tunnelState->host);
     } else
-       debugs(26, 1, "tunnelConnectTimeout(): tunnelState->servers is NULL");
+        debugs(26, 1, "tunnelConnectTimeout(): tunnelState->servers is NULL");
 
     err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
 

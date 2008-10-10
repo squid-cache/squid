@@ -24,12 +24,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -280,7 +280,7 @@ AuthUserRequest::connLastHeader()
 }
 
 /*
- * authenticateAuthenticateUser: call the module specific code to 
+ * authenticateAuthenticateUser: call the module specific code to
  * log this user request in.
  * Cache hits may change the auth_user pointer in the structure if needed.
  * This is basically a handle approach.
@@ -312,17 +312,17 @@ authTryGetUser (AuthUserRequest **auth_user_request, ConnStateData * conn, HttpR
  * AUTH_ACL_CANNOT_AUTHENTICATE,
  * AUTH_AUTHENTICATED
  *
- * How to use: In your proxy-auth dependent acl code, use the following 
+ * How to use: In your proxy-auth dependent acl code, use the following
  * construct:
  * int rv;
  * if ((rv = AuthenticateAuthenticate()) != AUTH_AUTHENTICATED)
  *   return rv;
- * 
+ *
  * when this code is reached, the request/connection is authenticated.
  *
- * if you have non-acl code, but want to force authentication, you need a 
+ * if you have non-acl code, but want to force authentication, you need a
  * callback mechanism like the acl testing routines that will send a 40[1|7] to
- * the client when rv==AUTH_ACL_CHALLENGE, and will communicate with 
+ * the client when rv==AUTH_ACL_CHALLENGE, and will communicate with
  * the authenticateStart routine for rv==AUTH_ACL_HELPER
  *
  * Caller is responsible for locking and unlocking their *auth_user_request!
@@ -343,31 +343,29 @@ AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_typ
      */
 
     if (((proxy_auth == NULL) && (!authenticateUserAuthenticated(authTryGetUser(auth_user_request,conn,request))))
-            || (conn != NULL  && conn->auth_type == AUTH_BROKEN))
-    {
+            || (conn != NULL  && conn->auth_type == AUTH_BROKEN)) {
         /* no header or authentication failed/got corrupted - restart */
         debugs(29, 4, "authenticateAuthenticate: broken auth or no proxy_auth header. Requesting auth header.");
         /* something wrong with the AUTH credentials. Force a new attempt */
 
         if (conn != NULL) {
             conn->auth_type = AUTH_UNKNOWN;
-	    AUTHUSERREQUESTUNLOCK(conn->auth_user_request, "conn");
+            AUTHUSERREQUESTUNLOCK(conn->auth_user_request, "conn");
         }
 
-	*auth_user_request = NULL;
+        *auth_user_request = NULL;
         return AUTH_ACL_CHALLENGE;
     }
 
     /*
      * Is this an already authenticated connection with a new auth header?
-     * No check for function required in the if: its compulsory for conn based 
+     * No check for function required in the if: its compulsory for conn based
      * auth modules
      */
     if (proxy_auth && conn != NULL && conn->auth_user_request &&
             authenticateUserAuthenticated(conn->auth_user_request) &&
             conn->auth_user_request->connLastHeader() != NULL &&
-            strcmp(proxy_auth, conn->auth_user_request->connLastHeader()))
-    {
+            strcmp(proxy_auth, conn->auth_user_request->connLastHeader())) {
         debugs(29, 2, "authenticateAuthenticate: DUPLICATE AUTH - authentication header on already authenticated connection!. AU " <<
                conn->auth_user_request << ", Current user '" <<
                conn->auth_user_request->username() << "' proxy_auth " <<
@@ -378,10 +376,10 @@ AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_typ
          */
 
         /* This should _only_ ever occur on the first pass through
-         * authenticateAuthenticate 
+         * authenticateAuthenticate
          */
         assert(*auth_user_request == NULL);
-	AUTHUSERREQUESTUNLOCK(conn->auth_user_request, "conn");
+        AUTHUSERREQUESTUNLOCK(conn->auth_user_request, "conn");
         /* Set the connection auth type */
         conn->auth_type = AUTH_UNKNOWN;
     }
@@ -390,8 +388,7 @@ AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_typ
      * not had bungled connection oriented authentication happen on it. */
     debugs(29, 9, "authenticateAuthenticate: header " << (proxy_auth ? proxy_auth : "-") << ".");
 
-    if (*auth_user_request == NULL)
-    {
+    if (*auth_user_request == NULL) {
         debugs(29, 9, "authenticateAuthenticate: This is a new checklist test on FD:" << (conn != NULL ? conn->fd : -1)  );
 
         if (proxy_auth && !request->auth_user_request && conn != NULL && conn->auth_user_request) {
@@ -403,7 +400,7 @@ AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_typ
                        "' to '" << proxy_auth << "' (client " <<
                        src_addr << ")");
 
-		AUTHUSERREQUESTUNLOCK(conn->auth_user_request, "conn");
+                AUTHUSERREQUESTUNLOCK(conn->auth_user_request, "conn");
                 conn->auth_type = AUTH_UNKNOWN;
             }
         }
@@ -413,7 +410,7 @@ AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_typ
             /* beginning of a new request check */
             debugs(29, 4, "authenticateAuthenticate: no connection authentication type");
 
-	    *auth_user_request = AuthConfig::CreateAuthUser(proxy_auth);
+            *auth_user_request = AuthConfig::CreateAuthUser(proxy_auth);
             if (!authenticateValidateUser(*auth_user_request)) {
                 if (*auth_user_request == NULL)
                     return AUTH_ACL_CHALLENGE;
@@ -423,7 +420,7 @@ AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_typ
 
                 if ((*auth_user_request)->username()) {
                     request->auth_user_request = *auth_user_request;
-		    AUTHUSERREQUESTLOCK(request->auth_user_request, "request");
+                    AUTHUSERREQUESTLOCK(request->auth_user_request, "request");
                 }
 
                 *auth_user_request = NULL;
@@ -450,8 +447,7 @@ AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_typ
         }
     }
 
-    if (!authenticateUserAuthenticated(*auth_user_request))
-    {
+    if (!authenticateUserAuthenticated(*auth_user_request)) {
         /* User not logged in. Log them in */
         authenticateAuthenticateUser(*auth_user_request, request,
                                      conn, headertype);
@@ -462,7 +458,7 @@ AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_typ
 
             if (NULL == request->auth_user_request) {
                 request->auth_user_request = *auth_user_request;
-		AUTHUSERREQUESTLOCK(request->auth_user_request, "request");
+                AUTHUSERREQUESTLOCK(request->auth_user_request, "request");
             }
 
             /* fallthrough to -2 */
@@ -485,7 +481,7 @@ AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_typ
             if ((*auth_user_request)->username()) {
                 if (!request->auth_user_request) {
                     request->auth_user_request = *auth_user_request;
-		    AUTHUSERREQUESTLOCK(request->auth_user_request, "request");
+                    AUTHUSERREQUESTLOCK(request->auth_user_request, "request");
                 }
             }
 
@@ -498,7 +494,7 @@ AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_typ
     /* the credentials are correct at this point */
     if (NULL == request->auth_user_request) {
         request->auth_user_request = *auth_user_request;
-	AUTHUSERREQUESTLOCK(request->auth_user_request, "request");
+        AUTHUSERREQUESTLOCK(request->auth_user_request, "request");
         authenticateAuthUserRequestSetIp(*auth_user_request, src_addr);
     }
 
@@ -513,15 +509,14 @@ AuthUserRequest::tryToAuthenticateAndSetAuthUser(AuthUserRequest ** auth_user_re
     AuthUserRequest *t = authTryGetUser (auth_user_request, conn, request);
 
     if (t && t->lastReply != AUTH_ACL_CANNOT_AUTHENTICATE
-            && t->lastReply != AUTH_ACL_HELPER)
-    {
+            && t->lastReply != AUTH_ACL_HELPER) {
         if (!*auth_user_request)
             *auth_user_request = t;
 
-	if (!request->auth_user_request && t->lastReply == AUTH_AUTHENTICATED) {
-	    request->auth_user_request = t;
-	    AUTHUSERREQUESTLOCK(request->auth_user_request, "request");
-	}
+        if (!request->auth_user_request && t->lastReply == AUTH_AUTHENTICATED) {
+            request->auth_user_request = t;
+            AUTHUSERREQUESTLOCK(request->auth_user_request, "request");
+        }
         return t->lastReply;
     }
 
@@ -558,8 +553,7 @@ AuthUserRequest::addReplyAuthHeader(HttpReply * rep, AuthUserRequest * auth_user
 {
     http_hdr_type type;
 
-    switch (rep->sline.status)
-    {
+    switch (rep->sline.status) {
 
     case HTTP_PROXY_AUTHENTICATION_REQUIRED:
         /* Proxy authorisation needed */
@@ -588,8 +582,7 @@ AuthUserRequest::addReplyAuthHeader(HttpReply * rep, AuthUserRequest * auth_user
         if ((auth_user_request != NULL) && authenticateDirection(auth_user_request) == 1)
             /* scheme specific */
             auth_user_request->user()->config->fixHeader(auth_user_request, rep, type, request);
-        else
-        {
+        else {
             /* call each configured & running authscheme */
 
             for (authConfig::iterator  i = Config.authConfiguration.begin(); i != Config.authConfiguration.end(); ++i) {
@@ -608,11 +601,10 @@ AuthUserRequest::addReplyAuthHeader(HttpReply * rep, AuthUserRequest * auth_user
      * response - ie digest auth
      */
 
-    if (auth_user_request != NULL)
-    {
+    if (auth_user_request != NULL) {
         auth_user_request->addHeader(rep, accelerated);
-	if (auth_user_request->lastReply != AUTH_AUTHENTICATED)
-	    auth_user_request->lastReply = AUTH_ACL_CANNOT_AUTHENTICATE;
+        if (auth_user_request->lastReply != AUTH_AUTHENTICATED)
+            auth_user_request->lastReply = AUTH_ACL_CANNOT_AUTHENTICATE;
     }
 }
 

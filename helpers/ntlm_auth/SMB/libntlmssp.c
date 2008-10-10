@@ -7,7 +7,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- 
+
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -42,21 +42,20 @@ SMB_Handle_Type SMB_Connect_Server(SMB_Handle_Type Con_Handle, char *server, cha
 
 /* this one is reallllly haackiish. We really should be using anything from smblib-priv.h
  */
-static char *SMB_Prots[] =
-{"PC NETWORK PROGRAM 1.0",
-    "MICROSOFT NETWORKS 1.03",
-    "MICROSOFT NETWORKS 3.0",
-    "DOS LANMAN1.0",
-    "LANMAN1.0",
-    "DOS LM1.2X002",
-    "LM1.2X002",
-    "DOS LANMAN2.1",
-    "LANMAN2.1",
-    "Samba",
-    "NT LM 0.12",
-    "NT LANMAN 1.0",
-    NULL
-};
+static char *SMB_Prots[] = {"PC NETWORK PROGRAM 1.0",
+                            "MICROSOFT NETWORKS 1.03",
+                            "MICROSOFT NETWORKS 3.0",
+                            "DOS LANMAN1.0",
+                            "LANMAN1.0",
+                            "DOS LM1.2X002",
+                            "LM1.2X002",
+                            "DOS LANMAN2.1",
+                            "LANMAN2.1",
+                            "Samba",
+                            "NT LM 0.12",
+                            "NT LANMAN 1.0",
+                            NULL
+                           };
 
 #if 0
 int SMB_Discon(SMB_Handle_Type Con_Handle, BOOL KeepHandle);
@@ -74,7 +73,7 @@ int SMB_Logon_Server(SMB_Handle_Type Con_Handle, char *UserName, char *PassWord,
 #define ENCODED_PASS_LEN 24
 static unsigned char challenge[NONCE_LEN];
 static unsigned char lmencoded_empty_pass[ENCODED_PASS_LEN],
-	ntencoded_empty_pass[ENCODED_PASS_LEN];
+ntencoded_empty_pass[ENCODED_PASS_LEN];
 SMB_Handle_Type handle = NULL;
 
 /* Disconnects from the DC. A reconnection will be done upon the next request
@@ -83,7 +82,7 @@ void
 dc_disconnect()
 {
     if (handle != NULL)
-	SMB_Discon(handle, 0);
+        SMB_Discon(handle, 0);
     handle = NULL;
 }
 
@@ -100,7 +99,7 @@ is_dc_ok(char *domain, char *domain_controller)
 {
     SMB_Handle_Type h = SMB_Connect_Server(NULL, domain_controller, domain);
     if (h == NULL)
-	return 0;
+        return 0;
     SMB_Discon(h, 0);
     return 1;
 }
@@ -114,7 +113,7 @@ init_challenge(char *domain, char *domain_controller)
     int smberr;
 
     if (handle != NULL) {
-	return 0;
+        return 0;
     }
     debug("Connecting to server %s domain %s\n", domain_controller, domain);
     handle = SMB_Connect_Server(NULL, domain_controller, domain);
@@ -123,24 +122,24 @@ init_challenge(char *domain, char *domain_controller)
 
 
     if (handle == NULL) {	/* couldn't connect */
-	debug("Couldn't connect to SMB Server. Error:%s\n", errstr);
-	return 1;
+        debug("Couldn't connect to SMB Server. Error:%s\n", errstr);
+        return 1;
     }
     if (SMB_Negotiate(handle, SMB_Prots) < 0) {		/* An error */
-	debug("Error negotiating protocol with SMB Server\n");
-	SMB_Discon(handle, 0);
-	handle = NULL;
-	return 2;
+        debug("Error negotiating protocol with SMB Server\n");
+        SMB_Discon(handle, 0);
+        handle = NULL;
+        return 2;
     }
     if (handle->Security == 0) {	/* share-level security, unuseable */
-	debug("SMB Server uses share-level security .. we need user security.\n");
-	SMB_Discon(handle, 0);
-	handle = NULL;
-	return 3;
+        debug("SMB Server uses share-level security .. we need user security.\n");
+        SMB_Discon(handle, 0);
+        handle = NULL;
+        return 3;
     }
     memcpy(challenge, handle->Encrypt_Key, NONCE_LEN);
-		SMBencrypt((unsigned char *)"",challenge,lmencoded_empty_pass);
-		SMBNTencrypt((unsigned char *)"",challenge,ntencoded_empty_pass);
+    SMBencrypt((unsigned char *)"",challenge,lmencoded_empty_pass);
+    SMBNTencrypt((unsigned char *)"",challenge,ntencoded_empty_pass);
     return 0;
 }
 
@@ -148,12 +147,12 @@ static char my_domain[100], my_domain_controller[100];
 const char *
 make_challenge(char *domain, char *domain_controller)
 {
-	/* trying to circumvent some strange problem wih pointers in SMBLib */
-	/* Ugly as hell, but the lib is going to be dropped... */
-	strcpy(my_domain,domain);
-	strcpy(my_domain_controller,domain_controller);
+    /* trying to circumvent some strange problem wih pointers in SMBLib */
+    /* Ugly as hell, but the lib is going to be dropped... */
+    strcpy(my_domain,domain);
+    strcpy(my_domain_controller,domain_controller);
     if (init_challenge(my_domain, my_domain_controller) > 0) {
-	return NULL;
+        return NULL;
     }
     return ntlm_make_challenge(my_domain, my_domain_controller, (char *)challenge, NONCE_LEN);
 }
@@ -180,14 +179,14 @@ fetch_credentials(ntlm_authenticate * auth, int auth_length)
     tmp = ntlm_fetch_string((char *) auth, auth_length, &auth->domain);
     *p = '\0';
     if (tmp.str == NULL)
-	return NULL;
+        return NULL;
     memcpy(p, tmp.str, tmp.l);
     p += tmp.l;
     *p++ = '\\';
     *p = '\0';
     tmp = ntlm_fetch_string((char *) auth, auth_length, &auth->user);
     if (tmp.str == NULL)
-	return NULL;
+        return NULL;
     memcpy(p, tmp.str, tmp.l);
     *(p + tmp.l) = '\0';
     return credentials;
@@ -209,86 +208,86 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
     lstring tmp;
 
     if (handle == NULL) {	/*if null we aren't connected, but it shouldn't happen */
-	debug("Weird, we've been disconnected\n");
-	ntlm_errno = NTLM_NOT_CONNECTED;
-	return NULL;
+        debug("Weird, we've been disconnected\n");
+        ntlm_errno = NTLM_NOT_CONNECTED;
+        return NULL;
     }
 
-/*      debug("fetching domain\n"); */
+    /*      debug("fetching domain\n"); */
     tmp = ntlm_fetch_string((char *) auth, auth_length, &auth->domain);
     if (tmp.str == NULL || tmp.l == 0) {
-	debug("No domain supplied. Returning no-auth\n");
-	ntlm_errno = NTLM_LOGON_ERROR;
-	return NULL;
+        debug("No domain supplied. Returning no-auth\n");
+        ntlm_errno = NTLM_LOGON_ERROR;
+        return NULL;
     }
     if (tmp.l > MAX_DOMAIN_LEN) {
-	debug("Domain string exceeds %d bytes, rejecting\n", MAX_DOMAIN_LEN);
-	ntlm_errno = NTLM_LOGON_ERROR;
-	return NULL;
+        debug("Domain string exceeds %d bytes, rejecting\n", MAX_DOMAIN_LEN);
+        ntlm_errno = NTLM_LOGON_ERROR;
+        return NULL;
     }
     memcpy(domain, tmp.str, tmp.l);
     user = domain + tmp.l;
     *user++ = '\0';
 
-/*      debug("fetching user name\n"); */
+    /*      debug("fetching user name\n"); */
     tmp = ntlm_fetch_string((char *) auth, auth_length, &auth->user);
     if (tmp.str == NULL || tmp.l == 0) {
-	debug("No username supplied. Returning no-auth\n");
-	ntlm_errno = NTLM_LOGON_ERROR;
-	return NULL;
+        debug("No username supplied. Returning no-auth\n");
+        ntlm_errno = NTLM_LOGON_ERROR;
+        return NULL;
     }
     if (tmp.l > MAX_USERNAME_LEN) {
-	debug("Username string exceeds %d bytes, rejecting\n", MAX_USERNAME_LEN);
-	ntlm_errno = NTLM_LOGON_ERROR;
-	return NULL;
+        debug("Username string exceeds %d bytes, rejecting\n", MAX_USERNAME_LEN);
+        ntlm_errno = NTLM_LOGON_ERROR;
+        return NULL;
     }
     memcpy(user, tmp.str, tmp.l);
     *(user + tmp.l) = '\0';
 
-		
+
     /* Authenticating against the NT response doesn't seem to work... */
     tmp = ntlm_fetch_string((char *) auth, auth_length, &auth->lmresponse);
     if (tmp.str == NULL || tmp.l == 0) {
-	fprintf(stderr, "No auth at all. Returning no-auth\n");
-	ntlm_errno = NTLM_LOGON_ERROR;
-	return NULL;
+        fprintf(stderr, "No auth at all. Returning no-auth\n");
+        ntlm_errno = NTLM_LOGON_ERROR;
+        return NULL;
     }
     if (tmp.l > MAX_PASSWD_LEN) {
-	debug("Password string exceeds %d bytes, rejecting\n", MAX_PASSWD_LEN);
-	ntlm_errno = NTLM_LOGON_ERROR;
-	return NULL;
+        debug("Password string exceeds %d bytes, rejecting\n", MAX_PASSWD_LEN);
+        ntlm_errno = NTLM_LOGON_ERROR;
+        return NULL;
     }
 
     memcpy(pass, tmp.str, tmp.l);
     pass[min(MAX_PASSWD_LEN,tmp.l)] = '\0';
 
 #if 1
-		debug ("Empty LM pass detection: user: '%s', ours:'%s', his: '%s'"
-					 "(length: %d)\n",
-					 user,lmencoded_empty_pass,tmp.str,tmp.l);
-		if (memcmp(tmp.str,lmencoded_empty_pass,ENCODED_PASS_LEN)==0) {
-			fprintf(stderr,"Empty LM password supplied for user %s\\%s. "
-							"No-auth\n",domain,user);
-			ntlm_errno=NTLM_LOGON_ERROR;
-			return NULL;
-		}
-		
-		tmp = ntlm_fetch_string ((char *) auth, auth_length, &auth->ntresponse);
-		if (tmp.str != NULL && tmp.l != 0) {
-			debug ("Empty NT pass detection: user: '%s', ours:'%s', his: '%s'"
-						 "(length: %d)\n",
-						 user,ntencoded_empty_pass,tmp.str,tmp.l);
-			if (memcmp(tmp.str,lmencoded_empty_pass,ENCODED_PASS_LEN)==0) {
-				fprintf(stderr,"Empty NT password supplied for user %s\\%s. "
-								"No-auth\n",domain,user);
-				ntlm_errno=NTLM_LOGON_ERROR;
-				return NULL;
-			}
-		}
+    debug ("Empty LM pass detection: user: '%s', ours:'%s', his: '%s'"
+           "(length: %d)\n",
+           user,lmencoded_empty_pass,tmp.str,tmp.l);
+    if (memcmp(tmp.str,lmencoded_empty_pass,ENCODED_PASS_LEN)==0) {
+        fprintf(stderr,"Empty LM password supplied for user %s\\%s. "
+                "No-auth\n",domain,user);
+        ntlm_errno=NTLM_LOGON_ERROR;
+        return NULL;
+    }
+
+    tmp = ntlm_fetch_string ((char *) auth, auth_length, &auth->ntresponse);
+    if (tmp.str != NULL && tmp.l != 0) {
+        debug ("Empty NT pass detection: user: '%s', ours:'%s', his: '%s'"
+               "(length: %d)\n",
+               user,ntencoded_empty_pass,tmp.str,tmp.l);
+        if (memcmp(tmp.str,lmencoded_empty_pass,ENCODED_PASS_LEN)==0) {
+            fprintf(stderr,"Empty NT password supplied for user %s\\%s. "
+                    "No-auth\n",domain,user);
+            ntlm_errno=NTLM_LOGON_ERROR;
+            return NULL;
+        }
+    }
 #endif
 
-		/* TODO: check against empty password!!!!! */
-		
+    /* TODO: check against empty password!!!!! */
+
 
 
     debug("checking domain: '%s', user: '%s', pass='%s'\n", domain, user, pass);
@@ -297,8 +296,8 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
     debug("Login attempt had result %d\n", rv);
 
     if (rv != NTV_NO_ERROR) {	/* failed */
-	ntlm_errno = rv;
-	return NULL;
+        ntlm_errno = rv;
+        return NULL;
     }
     *(user - 1) = '\\';		/* hack. Performing, but ugly. */
 

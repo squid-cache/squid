@@ -18,12 +18,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -56,21 +56,21 @@ private:
     /**
      \par
      * The scheme of this URL. This has the 'type code' smell about it.
-     * In future we may want to make the methods that dispatch based on 
-     * the scheme virtual and have a class per protocol. 
+     * In future we may want to make the methods that dispatch based on
+     * the scheme virtual and have a class per protocol.
      \par
      * On the other hand, having Protocol as an explicit concept is useful,
      * see for instance the ACLProtocol acl type. One way to represent this
-     * is to have one prototype URL with no host etc for each scheme, 
+     * is to have one prototype URL with no host etc for each scheme,
      * another is to have an explicit scheme class, and then each URL class
-     * could be a subclass of the scheme. Another way is one instance of 
+     * could be a subclass of the scheme. Another way is one instance of
      * a URLScheme class instance for each URLScheme we support, and one URL
      * class for each manner of treating the scheme : a Hierarchical URL, a
      * non-hierarchical URL etc.
      \par
      * Deferring the decision, its a type code for now. RBC 20060507.
      \par
-     * In order to make taking any of these routes easy, scheme is private 
+     * In order to make taking any of these routes easy, scheme is private
      * and immutable, only settable at construction time,
      */
     URLScheme const scheme;

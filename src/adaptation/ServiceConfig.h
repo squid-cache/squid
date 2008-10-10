@@ -5,7 +5,8 @@
 #include "RefCount.h"
 #include "adaptation/Elements.h"
 
-namespace Adaptation {
+namespace Adaptation
+{
 
 // manages adaptation service configuration in squid.conf
 class ServiceConfig

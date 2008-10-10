@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -343,7 +343,7 @@ store_client::doCopy(StoreEntry *anEntry)
 
     if (storeClientNoMoreToSend(entry, this)) {
         /* There is no more to send! */
-	debugs(33, 3, HERE << "There is no more to send!");
+        debugs(33, 3, HERE << "There is no more to send!");
         callback(0);
         flags.store_copying = 0;
         return;
@@ -496,7 +496,7 @@ store_client::fail()
     /* synchronous open failures callback from the store,
      * before startSwapin detects the failure.
      * TODO: fix this inconsistent behaviour - probably by
-     * having storeSwapInStart become a callback functions, 
+     * having storeSwapInStart become a callback functions,
      * not synchronous
      */
 
@@ -647,7 +647,7 @@ storeUnregister(store_client * sc, StoreEntry * e, void *data)
     if (mem == NULL)
         return 0;
 
-        debugs(90, 3, "storeUnregister: called for '" << e->getMD5Text() << "'");
+    debugs(90, 3, "storeUnregister: called for '" << e->getMD5Text() << "'");
 
     if (sc == NULL) {
         debugs(90, 3, "storeUnregister: No matching client for '" << e->getMD5Text() << "'");

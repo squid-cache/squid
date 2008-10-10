@@ -21,7 +21,7 @@ public:
     /// Handle ICMP responses.
     virtual void Recv(void) {};
 
-/* methods to relay test data from tester to private methods being tested */
+    /* methods to relay test data from tester to private methods being tested */
     int testChecksum(unsigned short *ptr, int size) { return CheckSum(ptr,size); };
     int testHops(int ttl) { return ipHops(ttl); };
 };

@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -39,7 +39,7 @@
  *   each item is individually malloc()ed from system, imposing libmalloc
  *   overhead, and additionally we add our overhead of pointer size per item
  *   as we keep a list of pointer to free items.
- * 
+ *
  * Chunking:
  *   xmalloc Chunk that fits at least MEM_MIN_FREE (32) items in an array, but
  *   limit Chunk size to MEM_CHUNK_MAX_SIZE (256K). Chunk size is rounded up to
@@ -47,26 +47,26 @@
  *   Minimum Chunk size is MEM_CHUNK_SIZE (16K).
  *   A number of items fits into a single chunk, depending on item size.
  *   Maximum number of items per chunk is limited to MEM_MAX_FREE (65535).
- * 
+ *
  *   We populate Chunk with a linkedlist, each node at first word of item,
  *   and pointing at next free item. Chunk->FreeList is pointing at first
  *   free node. Thus we stuff free housekeeping into the Chunk itself, and
  *   omit pointer overhead per item.
- * 
+ *
  *   Chunks are created on demand, and new chunks are inserted into linklist
  *   of chunks so that Chunks with smaller pointer value are placed closer
  *   to the linklist head. Head is a hotspot, servicing most of requests, so
  *   slow sorting occurs and Chunks in highest memory tend to become idle
  *   and freeable.
- * 
+ *
  *   event is registered that runs every 15 secs and checks reference time
  *   of each idle chunk. If a chunk is not referenced for 15 secs, it is
  *   released.
- * 
+ *
  *   [If mem_idle_limit is exceeded with pools, every chunk that becomes
  *   idle is immediately considered for release, unless this is the only
  *   chunk with free items in it.] (not implemented)
- * 
+ *
  *   In cachemgr output, there are new columns for chunking. Special item,
  *   Frag, is shown to estimate approximately fragmentation of chunked
  *   pools. Fragmentation is calculated by taking amount of items in use,
@@ -76,7 +76,7 @@
  *   twice the needed amount of chunks are in use.
  *   "part" item shows number of chunks partially filled. This shows how
  *   badly fragmentation is spread across all chunks.
- * 
+ *
  *   Andres Kroonmaa.
  *   Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
@@ -118,7 +118,7 @@ MemPools::GetInstance()
      * if we are called during static initialisations.
      */
     if (!Instance)
-	Instance = new MemPools;
+        Instance = new MemPools;
     return *Instance;
 }
 
@@ -147,7 +147,7 @@ memPoolIterateNext(MemPoolIterator * iter)
 
     pool = iter->pool;
     if (!pool)
-	return NULL;
+        return NULL;
 
     iter->pool = pool->next;
     return pool;
@@ -170,30 +170,30 @@ static int
 memCompChunks(MemChunk * const &chunkA, MemChunk * const &chunkB)
 {
     if (chunkA->objCache > chunkB->objCache)
-	return 1;
+        return 1;
     else if (chunkA->objCache < chunkB->objCache)
-	return -1;
+        return -1;
     else
-	return 0;
+        return 0;
 }
 
 /* Compare object to chunk */
-static int 
+static int
 memCompObjChunks(void *const &obj, MemChunk * const &chunk)
 {
     /* object is lower in memory than the chunks arena */
     if (obj < chunk->objCache)
-	return -1;
+        return -1;
     /* object is within the pool */
     if (obj < (void *) ((char *) chunk->objCache + chunk->pool->chunk_size))
-	return 0;
+        return 0;
     /* object is above the pool */
     return 1;
 }
 
-MemChunk::MemChunk(MemPool *aPool) 
+MemChunk::MemChunk(MemPool *aPool)
 {
-    /* should have a pool for this too - 
+    /* should have a pool for this too -
      * note that this requres:
      * allocate one chunk for the pool of chunks's first chunk
      * allocate a chunk from that pool
@@ -209,14 +209,14 @@ MemChunk::MemChunk(MemPool *aPool)
     void **Free = (void **)freeList;
 
     for (int i = 1; i < pool->chunk_capacity; i++) {
-	*Free = (void *) ((char *) Free + pool->obj_size);
-	void **nextFree = (void **)*Free;
-	(void) VALGRIND_MAKE_MEM_NOACCESS(Free, pool->obj_size);
-	Free = nextFree;
+        *Free = (void *) ((char *) Free + pool->obj_size);
+        void **nextFree = (void **)*Free;
+        (void) VALGRIND_MAKE_MEM_NOACCESS(Free, pool->obj_size);
+        Free = nextFree;
     }
     nextFreeChunk = pool->nextFreeChunk;
     pool->nextFreeChunk = this;
-    
+
     memMeterAdd(pool->getMeter().alloc, pool->chunk_capacity);
     memMeterAdd(pool->getMeter().idle, pool->chunk_capacity);
     pool->idle += pool->chunk_capacity;
@@ -245,11 +245,11 @@ MemPool::MemPool(const char *aLabel, size_t aSize) : MemImplementingAllocator(aL
 
     /* Append as Last */
     for (last_pool = MemPools::GetInstance().pools; last_pool && last_pool->next;)
-	last_pool = last_pool->next;
+        last_pool = last_pool->next;
     if (last_pool)
-	last_pool->next = this;
+        last_pool->next = this;
     else
-	MemPools::GetInstance().pools = this;
+        MemPools::GetInstance().pools = this;
 
     memPID = ++Pool_id_counter;
 }
@@ -294,16 +294,16 @@ MemPool::get()
 
     /* first, try cache */
     if (freeCache) {
-	Free = (void **)freeCache;
-	(void) VALGRIND_MAKE_MEM_DEFINED(Free, obj_size);
-	freeCache = *Free;
-	*Free = NULL;
-	return Free;
+        Free = (void **)freeCache;
+        (void) VALGRIND_MAKE_MEM_DEFINED(Free, obj_size);
+        freeCache = *Free;
+        *Free = NULL;
+        return Free;
     }
     /* then try perchunk freelist chain */
     if (nextFreeChunk == NULL) {
-	/* no chunk with frees, so create new one */
-	createChunk();
+        /* no chunk with frees, so create new one */
+        createChunk();
     }
     /* now we have some in perchunk freelist chain */
     MemChunk *chunk = nextFreeChunk;
@@ -315,8 +315,8 @@ MemPool::get()
     chunk->lastref = squid_curtime;
 
     if (chunk->freeList == NULL) {
-	/* last free in this chunk, so remove us from perchunk freelist chain */
-	nextFreeChunk = chunk->nextFreeChunk;
+        /* last free in this chunk, so remove us from perchunk freelist chain */
+        nextFreeChunk = chunk->nextFreeChunk;
     }
     (void) VALGRIND_MAKE_MEM_DEFINED(Free, obj_size);
     return Free;
@@ -332,23 +332,23 @@ MemPool::createChunk()
 
     chunk = Chunks;
     if (chunk == NULL) {	/* first chunk in pool */
-	Chunks = newChunk;
-	return;
+        Chunks = newChunk;
+        return;
     }
     if (newChunk->objCache < chunk->objCache) {
-	/* we are lowest ram chunk, insert as first chunk */
-	newChunk->next = chunk;
-	Chunks = newChunk;
-	return;
+        /* we are lowest ram chunk, insert as first chunk */
+        newChunk->next = chunk;
+        Chunks = newChunk;
+        return;
     }
     while (chunk->next) {
-	if (newChunk->objCache < chunk->next->objCache) {
-	    /* new chunk is in lower ram, insert here */
-	    newChunk->next = chunk->next;
-	    chunk->next = newChunk;
-	    return;
-	}
-	chunk = chunk->next;
+        if (newChunk->objCache < chunk->next->objCache) {
+            /* new chunk is in lower ram, insert here */
+            newChunk->next = chunk->next;
+            chunk->next = newChunk;
+            return;
+        }
+        chunk = chunk->next;
     }
     /* we are the worst chunk in chain, add as last */
     chunk->next = newChunk;
@@ -359,11 +359,11 @@ MemPool::createChunk()
  * MemPools::GetInstance().setDefaultPoolChunking() can be called.
  */
 MemPools::MemPools() : pools(NULL), mem_idle_limit(2 * MB),
-  poolCount (0), defaultIsChunked (!DISABLE_POOLS && !RUNNING_ON_VALGRIND)
+        poolCount (0), defaultIsChunked (!DISABLE_POOLS && !RUNNING_ON_VALGRIND)
 {
     char *cfg = getenv("MEMPOOLS");
     if (cfg)
-	defaultIsChunked = atoi(cfg);
+        defaultIsChunked = atoi(cfg);
 #if HAVE_MALLOPT && M_MMAP_MAX
     mallopt(M_MMAP_MAX, MEM_MAX_MMAP_CHUNKS);
 #endif
@@ -376,19 +376,19 @@ MemPool::setChunkSize(size_t chunksize)
     size_t csize = chunksize;
 
     if (Chunks)		/* unsafe to tamper */
-	return;
+        return;
 
     csize = ((csize + MEM_PAGE_SIZE - 1) / MEM_PAGE_SIZE) * MEM_PAGE_SIZE;	/* round up to page size */
     cap = csize / obj_size;
 
     if (cap < MEM_MIN_FREE)
-	cap = MEM_MIN_FREE;
+        cap = MEM_MIN_FREE;
     if (cap * obj_size > MEM_CHUNK_MAX_SIZE)
-	cap = MEM_CHUNK_MAX_SIZE / obj_size;
+        cap = MEM_CHUNK_MAX_SIZE / obj_size;
     if (cap > MEM_MAX_FREE)
-	cap = MEM_MAX_FREE;
+        cap = MEM_MAX_FREE;
     if (cap < 1)
-	cap = 1;
+        cap = 1;
 
     csize = cap * obj_size;
     csize = ((csize + MEM_PAGE_SIZE - 1) / MEM_PAGE_SIZE) * MEM_PAGE_SIZE;	/* round up to page size */
@@ -409,9 +409,9 @@ MemPools::create(const char *label, size_t obj_size, bool const chunked)
 {
     ++poolCount;
     if (chunked)
-	return new MemPool (label, obj_size);
+        return new MemPool (label, obj_size);
     else
-	return new MemMalloc (label, obj_size);
+        return new MemMalloc (label, obj_size);
 }
 
 void
@@ -434,9 +434,9 @@ MemPool::~MemPool()
     assert(inuse == 0 && "While trying to destroy pool");
 
     chunk = Chunks;
-    while( (fchunk = chunk) != NULL) {
+    while ( (fchunk = chunk) != NULL) {
         chunk = chunk->next;
-	delete fchunk;
+        delete fchunk;
     }
     /* TODO we should be doing something about the original Chunks pointer here. */
 
@@ -444,13 +444,13 @@ MemPool::~MemPool()
 
     /* Pool clean, remove it from List and free */
     for (find_pool = MemPools::GetInstance().pools, prev_pool = NULL; (find_pool && this != find_pool); find_pool = find_pool->next)
-	prev_pool = find_pool;
+        prev_pool = find_pool;
     assert(find_pool != NULL && "pool to destroy not found");
 
     if (prev_pool)
-	prev_pool->next = next;
+        prev_pool->next = next;
     else
-	MemPools::GetInstance().pools = next;
+        MemPools::GetInstance().pools = next;
     --MemPools::GetInstance().poolCount;
 }
 
@@ -473,17 +473,17 @@ MemImplementingAllocator::flushMeters()
 
     calls = free_calls;
     if (calls) {
-	getMeter().gb_freed.count += calls;
-	memMeterDel(getMeter().inuse, calls);
-	memMeterAdd(getMeter().idle, calls);
-	free_calls = 0;
+        getMeter().gb_freed.count += calls;
+        memMeterDel(getMeter().inuse, calls);
+        memMeterAdd(getMeter().idle, calls);
+        free_calls = 0;
     }
     calls = alloc_calls;
     if (calls) {
-	meter.gb_saved.count += calls;
-	memMeterAdd(meter.inuse, calls);
-	memMeterDel(meter.idle, calls);
-	alloc_calls = 0;
+        meter.gb_saved.count += calls;
+        memMeterAdd(meter.inuse, calls);
+        memMeterDel(meter.idle, calls);
+        alloc_calls = 0;
     }
 }
 
@@ -496,7 +496,7 @@ MemImplementingAllocator::flushMetersFull()
 }
 
 void
-MemPoolMeter::flush() 
+MemPoolMeter::flush()
 {
     alloc.level = 0;
     inuse.level = 0;
@@ -519,14 +519,14 @@ MemPools::flushMeters()
 
     iter = memPoolIterate();
     while ((pool = memPoolIterateNext(iter))) {
-	pool->flushMetersFull();
-	memMeterAdd(TheMeter.alloc, pool->getMeter().alloc.level * pool->obj_size);
-	memMeterAdd(TheMeter.inuse, pool->getMeter().inuse.level * pool->obj_size);
-	memMeterAdd(TheMeter.idle, pool->getMeter().idle.level * pool->obj_size);
-	TheMeter.gb_saved.count += pool->getMeter().gb_saved.count;
-	TheMeter.gb_freed.count += pool->getMeter().gb_freed.count;
-	TheMeter.gb_saved.bytes += pool->getMeter().gb_saved.bytes;
-	TheMeter.gb_freed.bytes += pool->getMeter().gb_freed.bytes;
+        pool->flushMetersFull();
+        memMeterAdd(TheMeter.alloc, pool->getMeter().alloc.level * pool->obj_size);
+        memMeterAdd(TheMeter.inuse, pool->getMeter().inuse.level * pool->obj_size);
+        memMeterAdd(TheMeter.idle, pool->getMeter().idle.level * pool->obj_size);
+        TheMeter.gb_saved.count += pool->getMeter().gb_saved.count;
+        TheMeter.gb_freed.count += pool->getMeter().gb_freed.count;
+        TheMeter.gb_saved.bytes += pool->getMeter().gb_saved.bytes;
+        TheMeter.gb_freed.bytes += pool->getMeter().gb_freed.bytes;
     }
     memPoolIterateDone(&iter);
 }
@@ -549,7 +549,7 @@ void *
 MemImplementingAllocator::alloc()
 {
     if (++alloc_calls == FLUSH_LIMIT)
-	flushMeters();
+        flushMeters();
 
     return allocate();
 }
@@ -594,21 +594,21 @@ MemPool::convertFreeCacheToChunkFreeCache()
     void *Free;
     /*
      * OK, so we have to go through all the global freeCache and find the Chunk
-     * any given Free belongs to, and stuff it into that Chunk's freelist 
+     * any given Free belongs to, and stuff it into that Chunk's freelist
      */
 
     while ((Free = freeCache) != NULL) {
-	MemChunk *chunk = NULL;
-	chunk = const_cast<MemChunk *>(*allChunks.find(Free, memCompObjChunks));
-	assert(splayLastResult == 0);
-	assert(chunk->inuse_count > 0);
-	chunk->inuse_count--;
-	(void) VALGRIND_MAKE_MEM_DEFINED(Free, sizeof(void *));
-	freeCache = *(void **)Free;	/* remove from global cache */
-	*(void **)Free = chunk->freeList;	/* stuff into chunks freelist */
-	(void) VALGRIND_MAKE_MEM_NOACCESS(Free, sizeof(void *));
-	chunk->freeList = Free;
-	chunk->lastref = squid_curtime;
+        MemChunk *chunk = NULL;
+        chunk = const_cast<MemChunk *>(*allChunks.find(Free, memCompObjChunks));
+        assert(splayLastResult == 0);
+        assert(chunk->inuse_count > 0);
+        chunk->inuse_count--;
+        (void) VALGRIND_MAKE_MEM_DEFINED(Free, sizeof(void *));
+        freeCache = *(void **)Free;	/* remove from global cache */
+        *(void **)Free = chunk->freeList;	/* stuff into chunks freelist */
+        (void) VALGRIND_MAKE_MEM_NOACCESS(Free, sizeof(void *));
+        chunk->freeList = Free;
+        chunk->lastref = squid_curtime;
     }
 
 }
@@ -621,9 +621,9 @@ MemPool::clean(time_t maxage)
     time_t age;
 
     if (!this)
-	return;
+        return;
     if (!Chunks)
-	return;
+        return;
 
     flushMetersFull();
     convertFreeCacheToChunkFreeCache();
@@ -634,17 +634,17 @@ MemPool::clean(time_t maxage)
 
     chunk = Chunks;
     while ((freechunk = chunk->next) != NULL) {
-	age = squid_curtime - freechunk->lastref;
-	freechunk->nextFreeChunk = NULL;
-	if (freechunk->inuse_count == 0)
-	    if (age >= maxage) {
-		chunk->next = freechunk->next;
-		delete freechunk;
-		freechunk = NULL;
-	    }
-	if (chunk->next == NULL)
-	    break;
-	chunk = chunk->next;
+        age = squid_curtime - freechunk->lastref;
+        freechunk->nextFreeChunk = NULL;
+        if (freechunk->inuse_count == 0)
+            if (age >= maxage) {
+                chunk->next = freechunk->next;
+                delete freechunk;
+                freechunk = NULL;
+            }
+        if (chunk->next == NULL)
+            break;
+        chunk = chunk->next;
     }
 
     /* Recreate nextFreeChunk list from scratch */
@@ -657,30 +657,30 @@ MemPool::clean(time_t maxage)
     chunk->nextFreeChunk = NULL;
 
     while (chunk->next) {
-	chunk->next->nextFreeChunk = NULL;
-	if (chunk->next->inuse_count < chunk_capacity) {
-	    listTail = nextFreeChunk;
-	    while (listTail->nextFreeChunk) {
-		if (chunk->next->inuse_count > listTail->nextFreeChunk->inuse_count)
-		    break;
-		if ((chunk->next->inuse_count == listTail->nextFreeChunk->inuse_count) &&
-		    (chunk->next->objCache < listTail->nextFreeChunk->objCache))
-		    break;
-		listTail = listTail->nextFreeChunk;
-	    }
-	    chunk->next->nextFreeChunk = listTail->nextFreeChunk;
-	    listTail->nextFreeChunk = chunk->next;
-	}
-	chunk = chunk->next;
+        chunk->next->nextFreeChunk = NULL;
+        if (chunk->next->inuse_count < chunk_capacity) {
+            listTail = nextFreeChunk;
+            while (listTail->nextFreeChunk) {
+                if (chunk->next->inuse_count > listTail->nextFreeChunk->inuse_count)
+                    break;
+                if ((chunk->next->inuse_count == listTail->nextFreeChunk->inuse_count) &&
+                        (chunk->next->objCache < listTail->nextFreeChunk->objCache))
+                    break;
+                listTail = listTail->nextFreeChunk;
+            }
+            chunk->next->nextFreeChunk = listTail->nextFreeChunk;
+            listTail->nextFreeChunk = chunk->next;
+        }
+        chunk = chunk->next;
     }
     /* We started from 2nd chunk. If first chunk is full, remove it */
     if (nextFreeChunk->inuse_count == chunk_capacity)
-	nextFreeChunk = nextFreeChunk->nextFreeChunk;
+        nextFreeChunk = nextFreeChunk->nextFreeChunk;
 
     return;
 }
 
-/* 
+/*
  * Returns all cached frees to their home chunks
  * If chunks unreferenced age is over, destroys Idle chunk
  * Flushes meters for a pool
@@ -698,12 +698,12 @@ MemPools::clean(time_t maxage)
     int shift = 1;
     flushMeters();
     if (TheMeter.idle.level > mem_idle_limit)
-	maxage = shift = 0;
+        maxage = shift = 0;
 
     iter = memPoolIterate();
     while ((pool = memPoolIterateNext(iter)))
-	if (pool->idleTrigger(shift))
-	    pool->clean(maxage);
+        if (pool->idleTrigger(shift))
+            pool->clean(maxage);
     memPoolIterateDone(&iter);
 }
 
@@ -727,8 +727,8 @@ MemPool::getStats(MemPoolStats * stats)
     int chunks_partial = 0;
 
     if (stats != &pp_stats)	/* need skip memset for GlobalStats accumulation */
-	/* XXX Fixme */
-	memset(stats, 0, sizeof(MemPoolStats));
+        /* XXX Fixme */
+        memset(stats, 0, sizeof(MemPoolStats));
 
     clean((time_t) 555555);	/* don't want to get chunks released before reporting */
 
@@ -741,11 +741,11 @@ MemPool::getStats(MemPoolStats * stats)
     /* gather stats for each Chunk */
     chunk = Chunks;
     while (chunk) {
-	if (chunk->inuse_count == 0)
-	    chunks_free++;
-	else if (chunk->inuse_count < chunk_capacity)
-	    chunks_partial++;
-	chunk = chunk->next;
+        if (chunk->inuse_count == 0)
+            chunks_free++;
+        else if (chunk->inuse_count < chunk_capacity)
+            chunks_partial++;
+        chunk = chunk->next;
     }
 
     stats->chunks_alloc += chunkCount;
@@ -767,8 +767,8 @@ int
 MemMalloc::getStats(MemPoolStats * stats)
 {
     if (stats != &pp_stats)	/* need skip memset for GlobalStats accumulation */
-	/* XXX Fixme */
-	memset(stats, 0, sizeof(MemPoolStats));
+        /* XXX Fixme */
+        memset(stats, 0, sizeof(MemPoolStats));
 
     stats->pool = this;
     stats->label = objectType();
@@ -793,7 +793,7 @@ MemMalloc::getStats(MemPoolStats * stats)
 int
 MemMalloc::getInUseCount()
 {
-	return inuse;
+    return inuse;
 }
 
 /*
@@ -814,8 +814,8 @@ memPoolGetGlobalStats(MemPoolGlobalStats * stats)
     /* gather all stats for Totals */
     iter = memPoolIterate();
     while ((pool = memPoolIterateNext(iter))) {
-	if (pool->getStats(&pp_stats) > 0)
-	    pools_inuse++;
+        if (pool->getStats(&pp_stats) > 0)
+            pools_inuse++;
     }
     memPoolIterateDone(&iter);
 
@@ -894,7 +894,7 @@ MemAllocator *
 MemAllocatorProxy::getAllocator() const
 {
     if (!theAllocator)
-	theAllocator = MemPools::GetInstance().create(objectType(), size);
+        theAllocator = MemPools::GetInstance().create(objectType(), size);
     return theAllocator;
 }
 
@@ -902,9 +902,9 @@ int
 MemAllocatorProxy::inUseCount() const
 {
     if (!theAllocator)
-	return 0;
+        return 0;
     else
-	return memPoolInUseCount(theAllocator);
+        return memPoolInUseCount(theAllocator);
 }
 
 size_t
@@ -932,17 +932,17 @@ MemAllocatorProxy::getStats(MemPoolStats * stats)
 }
 
 MemImplementingAllocator::MemImplementingAllocator(char const *aLabel, size_t aSize) : MemAllocator(aLabel),
-	next(NULL),
-	alloc_calls(0),
-	free_calls(0),
-	obj_size(RoundedSize(aSize))
+        next(NULL),
+        alloc_calls(0),
+        free_calls(0),
+        obj_size(RoundedSize(aSize))
 {
 }
 
 void
 MemAllocator::zeroOnPush(bool doIt)
 {
-	doZeroOnPush = doIt;
+    doZeroOnPush = doIt;
 }
 
 MemPoolMeter const &
