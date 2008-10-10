@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -66,8 +66,7 @@ clientdbAdd(const IPAddress &addr)
     hash_join(client_table, &c->hash);
     statCounter.client_http.clients++;
 
-    if ((statCounter.client_http.clients > max_clients) && !cleanup_running && cleanup_scheduled < 2)
-    {
+    if ((statCounter.client_http.clients > max_clients) && !cleanup_running && cleanup_scheduled < 2) {
         cleanup_scheduled++;
         eventAdd("client_db garbage collector", clientdbScheduledGC, NULL, 90, 0);
     }
@@ -79,7 +78,7 @@ static void
 clientdbRegisterWithCacheManager(void)
 {
     CacheManager::GetInstance()->
-        registerAction("client_list", "Cache Client List", clientdbDump, 0, 1);
+    registerAction("client_list", "Cache Client List", clientdbDump, 0, 1);
 }
 
 void
@@ -113,16 +112,14 @@ clientdbUpdate(const IPAddress &addr, log_type ltype, protocol_t p, size_t size)
     if (c == NULL)
         debug_trap("clientdbUpdate: Failed to add entry");
 
-    if (p == PROTO_HTTP)
-    {
+    if (p == PROTO_HTTP) {
         c->Http.n_requests++;
         c->Http.result_hist[ltype]++;
         kb_incr(&c->Http.kbytes_out, size);
 
         if (logTypeIsATcpHit(ltype))
             kb_incr(&c->Http.hit_kbytes_out, size);
-    } else if (p == PROTO_ICP)
-    {
+    } else if (p == PROTO_ICP) {
         c->Icp.n_requests++;
         c->Icp.result_hist[ltype]++;
         kb_incr(&c->Icp.kbytes_out, size);
@@ -391,29 +388,27 @@ client_entry(IPAddress *current)
     ClientInfo *c = NULL;
     char key[MAX_IPSTRLEN];
 
-    if (current)
-    {
+    if (current) {
         current->NtoA(key,MAX_IPSTRLEN);
         hash_first(client_table);
         while ((c = (ClientInfo *) hash_next(client_table))) {
-	  if (!strcmp(key, hashKeyStr(&c->hash)))
+            if (!strcmp(key, hashKeyStr(&c->hash)))
                 break;
         }
-	
+
         c = (ClientInfo *) hash_next(client_table);
-    } else
-    {
-      hash_first(client_table);
-      c = (ClientInfo *) hash_next(client_table);
+    } else {
+        hash_first(client_table);
+        c = (ClientInfo *) hash_next(client_table);
     }
 
     hash_last(client_table);
 
     if (c)
-      return (&c->addr);
+        return (&c->addr);
     else
-      return (NULL);
-    
+        return (NULL);
+
 }
 
 variable_list *
@@ -442,28 +437,26 @@ snmp_meshCtblFn(variable_list * Var, snint * ErrP)
 
     switch (Var->name[LEN_SQ_NET + 2]) {
 
-    case MESH_CTBL_ADDR_TYPE:
-        {
-            int ival;
-            ival = c->addr.IsIPv4() ? INETADDRESSTYPE_IPV4 : INETADDRESSTYPE_IPV6 ;
-            Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                          ival, SMI_INTEGER);
-        }
-        break;
+    case MESH_CTBL_ADDR_TYPE: {
+        int ival;
+        ival = c->addr.IsIPv4() ? INETADDRESSTYPE_IPV4 : INETADDRESSTYPE_IPV6 ;
+        Answer = snmp_var_new_integer(Var->name, Var->name_length,
+                                      ival, SMI_INTEGER);
+    }
+    break;
 
-    case MESH_CTBL_ADDR:
-        {
-	  Answer = snmp_var_new(Var->name, Var->name_length);
-            // InetAddress doesn't have its own ASN.1 type,
-            // like IpAddr does (SMI_IPADDRESS)
-            // See: rfc4001.txt
-	  Answer->type = ASN_OCTET_STR;
-	  char client[MAX_IPSTRLEN];
-	  c->addr.NtoA(client,MAX_IPSTRLEN);
-	  Answer->val_len = strlen(client);
-	  Answer->val.string =  (u_char *) xstrdup(client);
-        }
-        break;
+    case MESH_CTBL_ADDR: {
+        Answer = snmp_var_new(Var->name, Var->name_length);
+        // InetAddress doesn't have its own ASN.1 type,
+        // like IpAddr does (SMI_IPADDRESS)
+        // See: rfc4001.txt
+        Answer->type = ASN_OCTET_STR;
+        char client[MAX_IPSTRLEN];
+        c->addr.NtoA(client,MAX_IPSTRLEN);
+        Answer->val_len = strlen(client);
+        Answer->val.string =  (u_char *) xstrdup(client);
+    }
+    break;
     case MESH_CTBL_HTBYTES:
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
                                       (snint) c->Http.kbytes_out.kb,

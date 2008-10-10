@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -49,8 +49,7 @@
 #define WCCP_I_SEE_YOU 8
 #define WCCP_ASSIGN_BUCKET 9
 
-struct wccp_here_i_am_t
-{
+struct wccp_here_i_am_t {
     int type;
     int version;
     int revision;
@@ -59,16 +58,14 @@ struct wccp_here_i_am_t
     int id;
 };
 
-struct wccp_cache_entry_t
-{
+struct wccp_cache_entry_t {
     IPAddress ip_addr;
     int revision;
     char hash[WCCP_HASH_SIZE];
     int reserved;
 };
 
-struct wccp_i_see_you_t
-{
+struct wccp_i_see_you_t {
     int type;
     int version;
     int change;
@@ -78,8 +75,7 @@ struct wccp_i_see_you_t
     struct wccp_cache_entry_t wccp_cache_entry[WCCP_ACTIVE_CACHES];
 };
 
-struct wccp_assign_bucket_t
-{
+struct wccp_assign_bucket_t {
     int type;
     int id;
     int number;
@@ -222,7 +218,7 @@ wccpHandleUdp(int sock, void *not_used)
                             0,
                             from);
     debugs(80, 3, "wccpHandleUdp: " << len << " bytes WCCP pkt from " << from <<
-            ": type=" <<
+           ": type=" <<
            (unsigned) ntohl(wccp_i_see_you.type) << ", version=" <<
            (unsigned) ntohl(wccp_i_see_you.version) << ", change=" <<
            (unsigned) ntohl(wccp_i_see_you.change) << ", id=" <<

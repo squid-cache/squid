@@ -18,12 +18,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -74,7 +74,7 @@ public:
     virtual const char *getMD5Text() const;
     StoreEntry();
     StoreEntry(const char *url, const char *log_url);
-    virtual ~StoreEntry(){}
+    virtual ~StoreEntry() {}
 
     virtual HttpReply const *getReply() const;
     virtual void write (StoreIOBuffer);
@@ -140,18 +140,24 @@ public:
     u_short flags;
     /* END OF ON-DISK STORE_META_STD */
 
-    sfileno swap_filen:25;
+sfileno swap_filen:
+    25;
 
-    sdirno swap_dirn:7;
+sdirno swap_dirn:
+    7;
     u_short lock_count;		/* Assume < 65536! */
 
-    mem_status_t mem_status:3;
+mem_status_t mem_status:
+    3;
 
-    ping_status_t ping_status:3;
+ping_status_t ping_status:
+    3;
 
-    store_status_t store_status:3;
+store_status_t store_status:
+    3;
 
-    swap_status_t swap_status:3;
+swap_status_t swap_status:
+    3;
 
 public:
     static size_t inUseCount();
@@ -159,8 +165,7 @@ public:
     static void getPublicByRequest(StoreClient * aClient, HttpRequest * request);
     static void getPublic(StoreClient * aClient, const char *uri, const HttpRequestMethod& method);
 
-    virtual bool isNull()
-    {
+    virtual bool isNull() {
         return false;
     };
 
@@ -198,24 +203,23 @@ class NullStoreEntry:public StoreEntry
 
 public:
     static NullStoreEntry *getInstance();
-    bool isNull()
-    {
+    bool isNull() {
         return true;
     }
 
     const char *getMD5Text() const;
     _SQUID_INLINE_ HttpReply const *getReply() const;
-    void write (StoreIOBuffer){}
+    void write (StoreIOBuffer) {}
 
     bool isEmpty () const {return true;}
 
     virtual size_t bytesWanted(Range<size_t> const aRange) const { assert (aRange.size());return aRange.end - 1;}
 
     void operator delete(void *address);
-    void complete(){}
+    void complete() {}
 
 private:
-    store_client_t storeClientType() const{return STORE_MEM_CLIENT;}
+    store_client_t storeClientType() const {return STORE_MEM_CLIENT;}
 
     char const *getSerialisedMetaData();
     bool swapoutPossible() {return false;}
@@ -261,11 +265,11 @@ public:
 
     /** Retrieve a store entry from the store */
     virtual StoreEntry * get
-        (const cache_key *) = 0;
+    (const cache_key *) = 0;
 
     /** \todo imeplement the async version */
     virtual void get
-        (String const key , STOREGETCLIENT callback, void *cbdata) = 0;
+    (String const key , STOREGETCLIENT callback, void *cbdata) = 0;
 
     /* prepare the store for use. The store need not be usable immediately,
      * it should respond to readable() and writable() with true as soon

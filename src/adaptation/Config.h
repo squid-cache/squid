@@ -11,7 +11,8 @@ class ConfigParser;
 template <class C>
 class RefCount;
 
-namespace Adaptation {
+namespace Adaptation
+{
 
 class Service;
 class ServiceConfig;
@@ -57,7 +58,7 @@ public:
     ServicePointer findService(const String&);
     Class * findClass(const String& key);
 
-    void finalize();
+    virtual void finalize();
 
 private:
     Config(const Config &); // unsupported

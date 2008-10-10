@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  ;  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -76,10 +76,10 @@ esiBufferDetach (clientStreamNode *node, ClientHttpRequest *http)
  *   data context is not NULL
  *   There are no more entries in the stream chain.
  *   The caller is responsible for creation and deletion of the Reply headers.
- * 
+ *
  \note
  * Bug 975, bug 1566 : delete rep; 2006/09/02: TS, #975
- * 
+ *
  * This was causing double-deletes. Its possible that not deleting
  * it here will cause memory leaks, but if so, this delete should
  * not be reinstated or it will trigger bug #975 again - RBC 20060903
@@ -90,10 +90,10 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
     /* Test preconditions */
     assert (node != NULL);
     /* ESI TODO: handle thisNode rather than asserting
-     * - it should only ever happen if we cause an 
-     * abort and the callback chain loops back to 
-     * here, so we can simply return. However, that 
-     * itself shouldn't happen, so it stays as an 
+     * - it should only ever happen if we cause an
+     * abort and the callback chain loops back to
+     * here, so we can simply return. However, that
+     * itself shouldn't happen, so it stays as an
      * assert for now. */
     assert (cbdataReferenceValid (node));
     assert (node->node.next == NULL);
@@ -191,28 +191,28 @@ esiBufferRecipient (clientStreamNode *node, ClientHttpRequest *http, HttpReply *
         return;
 
     case STREAM_NONE: {
-            StoreIOBuffer tempBuffer;
+        StoreIOBuffer tempBuffer;
 
-            if (!esiStream->buffer.getRaw()) {
-                esiStream->buffer = esiStream->localbuffer;
-            }
-
-            esiStream->buffer = esiStream->buffer->tail();
-
-            if (esiStream->buffer->len) {
-                esiStream->buffer->next = new ESISegment;
-                esiStream->buffer = esiStream->buffer->next;
-            }
-
-            tempBuffer.offset = http->out.offset;
-            tempBuffer.length = sizeof (esiStream->buffer->buf);
-            tempBuffer.data = esiStream->buffer->buf;
-            /* now just read into 'buffer' */
-            clientStreamRead (node, http, tempBuffer);
-            debugs(86, 5, HERE << "Requested more data for ESI subrequest");
+        if (!esiStream->buffer.getRaw()) {
+            esiStream->buffer = esiStream->localbuffer;
         }
 
-        break;
+        esiStream->buffer = esiStream->buffer->tail();
+
+        if (esiStream->buffer->len) {
+            esiStream->buffer->next = new ESISegment;
+            esiStream->buffer = esiStream->buffer->next;
+        }
+
+        tempBuffer.offset = http->out.offset;
+        tempBuffer.length = sizeof (esiStream->buffer->buf);
+        tempBuffer.data = esiStream->buffer->buf;
+        /* now just read into 'buffer' */
+        clientStreamRead (node, http, tempBuffer);
+        debugs(86, 5, HERE << "Requested more data for ESI subrequest");
+    }
+
+    break;
 
     default:
         fatal ("Hit unreachable code in esiBufferRecipient\n");
@@ -546,12 +546,12 @@ ESIInclude::subRequestDone (ESIStreamContext::Pointer stream, bool success)
 
     if (flags.finished || flags.failed) {
         /* Kick ESI Processor */
-        debugs (86, 5, "ESIInclude " << this << 
-                " SubRequest " << stream.getRaw() << 
+        debugs (86, 5, "ESIInclude " << this <<
+                " SubRequest " << stream.getRaw() <<
                 " completed, kicking processor , status " <<
                 (flags.finished ? "OK" : "FAILED"));
         /* There is a race condition - and we have no reproducible test case -
-         * during a subrequest the parent will get set to NULL, which is not 
+         * during a subrequest the parent will get set to NULL, which is not
          * meant to be possible. Rather than killing squid, we let it leak
          * memory but complain in the log.
          *
@@ -562,14 +562,14 @@ ESIInclude::subRequestDone (ESIStreamContext::Pointer stream, bool success)
          */
         if (parent.getRaw() == NULL) {
             debugs (86, 0, "ESIInclude::subRequestDone: Sub request completed "
-                   "after finish() called and parent unlinked. Unable to "
-                   "continue handling the request, and may be memory leaking. "
-                   "See http://www.squid-cache.org/bugs/show_bug.cgi?id=951 - we "
-                   "are looking for a reproducible test case. This will require "
-                   "an ESI template with includes, probably with alt-options, "
-                   "and we're likely to need traffic dumps to allow us to "
-                   "reconstruct the exact tcp handling sequences to trigger this "
-                   "rather elusive bug.");
+                    "after finish() called and parent unlinked. Unable to "
+                    "continue handling the request, and may be memory leaking. "
+                    "See http://www.squid-cache.org/bugs/show_bug.cgi?id=951 - we "
+                    "are looking for a reproducible test case. This will require "
+                    "an ESI template with includes, probably with alt-options, "
+                    "and we're likely to need traffic dumps to allow us to "
+                    "reconstruct the exact tcp handling sequences to trigger this "
+                    "rather elusive bug.");
             return;
         }
         assert (parent.getRaw());

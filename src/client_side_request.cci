@@ -3,7 +3,7 @@
  * $Id: client_side_request.cci,v 1.6 2008/02/13 00:00:57 rousskov Exp $
  *
  * DEBUG: section 85    Client-side Request Routines
- * AUTHOR: Robert Collins 
+ * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -52,8 +52,8 @@ ClientHttpRequest::memObject() const
 ConnStateData *
 ClientHttpRequest::getConn()
 {
-    if(!cbdataReferenceValid(conn_))
-	return NULL;
+    if (!cbdataReferenceValid(conn_))
+        return NULL;
 
     return conn_;
 }
@@ -61,8 +61,8 @@ ClientHttpRequest::getConn()
 ConnStateData * const
 ClientHttpRequest::getConn() const
 {
-    if(!cbdataReferenceValid(conn_))
-	return NULL;
+    if (!cbdataReferenceValid(conn_))
+        return NULL;
 
     return conn_;
 }
@@ -72,8 +72,8 @@ ClientHttpRequest::setConn(ConnStateData * aConn)
 {
     assert (conn_ == NULL || aConn == NULL);
 
-    if(conn_)
-	cbdataReferenceDone(conn_);
+    if (conn_)
+        cbdataReferenceDone(conn_);
 
     conn_ = cbdataReference(aConn);
 }

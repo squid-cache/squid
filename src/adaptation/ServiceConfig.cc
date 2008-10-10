@@ -6,8 +6,8 @@
 #include "ConfigParser.h"
 #include "adaptation/ServiceConfig.h"
 
-Adaptation::ServiceConfig::ServiceConfig(): 
-    port(-1), method(methodNone), point(pointNone), bypass(false)
+Adaptation::ServiceConfig::ServiceConfig():
+        port(-1), method(methodNone), point(pointNone), bypass(false)
 {}
 
 const char *
@@ -63,24 +63,24 @@ Adaptation::ServiceConfig::parse()
     ConfigParser::ParseString(&uri);
 
     debugs(3, 5, HERE << cfg_filename << ':' << config_lineno << ": " <<
-        key.buf() << " " << method_point << " " << bypass);
+           key.buf() << " " << method_point << " " << bypass);
 
     method = parseMethod(method_point);
     point = parseVectPoint(method_point);
 
     debugs(3, 5, HERE << cfg_filename << ':' << config_lineno << ": " <<
-        "service_configConfig is " << methodStr() << "_" << vectPointStr());
+           "service_configConfig is " << methodStr() << "_" << vectPointStr());
 
     // TODO: find core code that parses URLs and extracts various parts
 
     // extract scheme and use it as the service_configConfig protocol
     const char *schemeSuffix = "://";
     if (const char *schemeEnd = uri.pos(schemeSuffix))
-		protocol.limitInit(uri.buf(), schemeEnd - uri.buf());
-	debugs(3, 5, HERE << cfg_filename << ':' << config_lineno << ": " <<
-		"service protocol is " << protocol);
-	if (!protocol.size())
-		return false;
+        protocol.limitInit(uri.buf(), schemeEnd - uri.buf());
+    debugs(3, 5, HERE << cfg_filename << ':' << config_lineno << ": " <<
+           "service protocol is " << protocol);
+    if (!protocol.size())
+        return false;
 
     // skip scheme
     const char *s = uri.buf() + protocol.size() + strlen(schemeSuffix);
@@ -101,16 +101,16 @@ Adaptation::ServiceConfig::parse()
     host.limitInit(s, len);
     s = e;
 
-	port = -1;
+    port = -1;
     if (have_port) {
         s++;
 
         if ((e = strchr(s, '/')) != NULL) {
             char *t;
-			const unsigned long p = strtoul(s, &t, 0);
+            const unsigned long p = strtoul(s, &t, 0);
 
-			if (p > 65535) // port value is too high
-				return false;
+            if (p > 65535) // port value is too high
+                return false;
 
             port = static_cast<int>(p);
 
@@ -132,14 +132,14 @@ Adaptation::ServiceConfig::parse()
 
     if (len > 1024) {
         debugs(3, 0, HERE << cfg_filename << ':' << config_lineno << ": " <<
-            "long resource name (>1024), probably wrong");
+               "long resource name (>1024), probably wrong");
     }
 
     resource.limitInit(s, len + 1);
 
     if ((bypass != 0) && (bypass != 1)) {
         debugs(3, 0, HERE << cfg_filename << ':' << config_lineno << ": " <<
-            "wrong bypass value; 0 or 1 expected: " << bypass);
+               "wrong bypass value; 0 or 1 expected: " << bypass);
         return false;
     }
 

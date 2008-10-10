@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -180,7 +180,7 @@ urlDefaultPort(protocol_t p)
  * If the 'request' arg is non-NULL, put parsed values there instead
  * of allocating a new HttpRequest.
  *
- * This abuses HttpRequest as a way of representing the parsed url 
+ * This abuses HttpRequest as a way of representing the parsed url
  * and its components.
  * method is used to switch parsers and to init the HttpRequest.
  * If method is METHOD_CONNECT, then rather than a URL a hostname:port is
@@ -236,7 +236,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
             *dst = *src;
         }
         if (i >= l)
-           return NULL;
+            return NULL;
         *dst = '\0';
 
         /* Then its :// */
@@ -252,7 +252,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
             *dst = *src;
         }
 
-        /* 
+        /*
          * We can't check for "i >= l" here because we could be at the end of the line
          * and have a perfectly valid URL w/ no trailing '/'. In this case we assume we've
          * been -given- a valid URL and the path is just '/'.
@@ -287,12 +287,13 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
         }
 
         /* Is there any host information? (we should eventually parse it above) */
-        if(*host == '[') {
+        if (*host == '[') {
             /* strip any IPA brackets. valid under IPv6. */
             dst = host;
 #if USE_IPV6
             /* only for IPv6 sadly, pre-IPv6/URL code can't handle the clean result properly anyway. */
-            src = host; src++;
+            src = host;
+            src++;
             l = strlen(host);
             i = 1;
             for (; i < l && *src != ']' && *src != '\0'; i++, src++, dst++) {
@@ -303,16 +304,16 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
             *(dst++) = '\0';
 #else
             /* IPv4-pure needs to skip the whole hostname to ']' inclusive for now */
-            while(*dst != '\0' && *dst != ']') dst++;
+            while (*dst != '\0' && *dst != ']') dst++;
 #endif
 
             /* skip ahead to either start of port, or original EOS */
-            while(*dst != '\0' && *dst != ':') dst++;
+            while (*dst != '\0' && *dst != ':') dst++;
             t = dst;
         } else {
             t = strrchr(host, ':');
 
-            if(t != strchr(host,':') ) {
+            if (t != strchr(host,':') ) {
                 /* RFC 2732 states IPv6 "SHOULD" be bracketed. allowing for times when its not. */
                 /* RFC 3986 'update' simply modifies this to an "is" with no emphasis at all! */
                 /* therefore we MUST accept the case where they are not bracketed at all. */
@@ -321,7 +322,8 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
         }
 
         if (t && *t == ':') {
-            *t = '\0'; t++;
+            *t = '\0';
+            t++;
             port = atoi(t);
         }
     }
@@ -357,7 +359,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
 
     /* reject duplicate or leading dots */
     if (strstr(host, "..") || *host == '.') {
-        debug(23, 1) ("urlParse: Illegal hostname '%s'\n", host);
+        debugs(23, 1, "urlParse: Illegal hostname '" << host << "'");
         return NULL;
     }
 
@@ -486,7 +488,7 @@ urlCanonicalClean(const HttpRequest * request)
         switch (request->method.id()) {
 
         case METHOD_CONNECT:
-            snprintf(buf, MAX_URL, "%s:%d", 
+            snprintf(buf, MAX_URL, "%s:%d",
                      request->GetHost(),
                      request->port);
             break;
@@ -578,31 +580,31 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
     if (req->method.id() == METHOD_CONNECT) {
         return (NULL);
     }
-    
+
     char *urlbuf = (char *)xmalloc(MAX_URL * sizeof(char));
-    
+
     if (req->protocol == PROTO_URN) {
         snprintf(urlbuf, MAX_URL, "urn:%s", req->urlpath.buf());
         return (urlbuf);
     }
-        
+
     size_t urllen;
 
     if (req->port != urlDefaultPort(req->protocol)) {
         urllen = snprintf(urlbuf, MAX_URL, "%s://%s%s%s:%d",
-            ProtocolStr[req->protocol],
-            req->login,
-            *req->login ? "@" : null_string,
-            req->GetHost(),
-            req->port
-        );
+                          ProtocolStr[req->protocol],
+                          req->login,
+                          *req->login ? "@" : null_string,
+                          req->GetHost(),
+                          req->port
+                         );
     } else {
         urllen = snprintf(urlbuf, MAX_URL, "%s://%s%s%s",
-            ProtocolStr[req->protocol],
-            req->login,
-            *req->login ? "@" : null_string,
-            req->GetHost()
-        );
+                          ProtocolStr[req->protocol],
+                          req->login,
+                          *req->login ? "@" : null_string,
+                          req->GetHost()
+                         );
     }
 
     if (relUrl[0] == '/') {
@@ -612,7 +614,7 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
         const char *last_slash = strrchr(path, '/');
 
         if (last_slash == NULL) {
-               urlbuf[urllen++] = '/';
+            urlbuf[urllen++] = '/';
             strncpy(&urlbuf[urllen], relUrl, MAX_URL - urllen - 1);
         } else {
             last_slash++;
@@ -634,7 +636,7 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
 /*
  * matchDomainName() compares a hostname with a domainname according
  * to the following rules:
- * 
+ *
  *    HOST          DOMAIN        MATCH?
  * ------------- -------------    ------
  *    foo.com       foo.com         YES

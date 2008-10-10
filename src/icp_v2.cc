@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -105,8 +105,8 @@ _icp_common_t::getOpCode() const
 /* ICPState */
 
 ICPState::ICPState(icp_common_t &aHeader, HttpRequest *aRequest):
-	header(aHeader),
-	request(HTTPMSGLOCK(aRequest)),
+        header(aHeader),
+        request(HTTPMSGLOCK(aRequest)),
         fd(-1),
         url(NULL)
 {}
@@ -128,8 +128,7 @@ class ICP2State : public ICPState, public StoreClient
 
 public:
     ICP2State(icp_common_t & aHeader, HttpRequest *aRequest):
-	ICPState(aHeader, aRequest),rtt(0),src_rtt(0),flags(0)
-    {}
+            ICPState(aHeader, aRequest),rtt(0),src_rtt(0),flags(0) {}
 
     ~ICP2State();
     void created(StoreEntry * newEntry);
@@ -284,14 +283,12 @@ icpUdpSend(int fd,
 
     x = comm_udp_sendto(fd, to, msg, len);
 
-    if (x >= 0)
-    {
+    if (x >= 0) {
         /* successfully written */
         icpLogIcp(to, logcode, len, (char *) (msg + 1), delay);
         icpCount(msg, SENT, (size_t) len, delay);
         safe_free(msg);
-    } else if (0 == delay)
-    {
+    } else if (0 == delay) {
         /* send failed, but queue it */
         queue = (icpUdpData *) xcalloc(1, sizeof(icpUdpData));
         queue->address = to;
@@ -313,8 +310,7 @@ icpUdpSend(int fd,
 
         commSetSelect(fd, COMM_SELECT_WRITE, icpUdpSendQueue, NULL, 0);
         statCounter.icp.replies_queued++;
-    } else
-    {
+    } else {
         /* don't queue it */
         statCounter.icp.replies_dropped++;
     }
@@ -394,15 +390,13 @@ icpDenyAccess(IPAddress &from, char *url, int reqnum, int fd)
 {
     debugs(12, 2, "icpDenyAccess: Access Denied for " << from << " by " << AclMatchedName << ".");
 
-    if (clientdbCutoffDenied(from))
-    {
+    if (clientdbCutoffDenied(from)) {
         /*
          * count this DENIED query in the clientdb, even though
          * we're not sending an ICP reply...
          */
         clientdbUpdate(from, LOG_UDP_DENIED, PROTO_ICP, 0);
-    } else
-    {
+    } else {
         icpCreateAndSend(ICP_DENIED, 0, url, reqnum, 0, fd, from);
     }
 }
@@ -432,8 +426,7 @@ icpGetUrlToSend(char *url)
 HttpRequest *
 icpGetRequest(char *url, int reqnum, int fd, IPAddress &from)
 {
-    if (strpbrk(url, w_space))
-    {
+    if (strpbrk(url, w_space)) {
         url = rfc1738_escape(url);
         icpCreateAndSend(ICP_ERR, 0, rfc1738_escape(url), reqnum, 0, fd, from);
         return NULL;
@@ -463,15 +456,13 @@ doV2Query(int fd, IPAddress &from, char *buf, icp_common_t header)
 
     HTTPMSGLOCK(icp_request);
 
-    if (!icpAccessAllowed(from, icp_request))
-    {
+    if (!icpAccessAllowed(from, icp_request)) {
         icpDenyAccess(from, url, header.reqnum, fd);
         HTTPMSGUNLOCK(icp_request);
         return;
     }
 
-    if (header.flags & ICP_FLAG_SRC_RTT)
-    {
+    if (header.flags & ICP_FLAG_SRC_RTT) {
         rtt = netdbHostRtt(icp_request->GetHost());
         int hops = netdbHostHops(icp_request->GetHost());
         src_rtt = ((hops & 0xFFFF) << 16) | (rtt & 0xFFFF);
@@ -503,8 +494,7 @@ doV2Query(int fd, IPAddress &from, char *buf, icp_common_t header)
 void
 _icp_common_t::handleReply(char *buf, IPAddress &from)
 {
-    if (neighbors_do_private_keys && reqnum == 0)
-    {
+    if (neighbors_do_private_keys && reqnum == 0) {
         debugs(12, 0, "icpHandleIcpV2: Neighbor " << from << " returned reqnum = 0");
         debugs(12, 0, "icpHandleIcpV2: Disabling use of private keys");
         neighbors_do_private_keys = 0;
@@ -521,8 +511,7 @@ _icp_common_t::handleReply(char *buf, IPAddress &from)
 static void
 icpHandleIcpV2(int fd, IPAddress &from, char *buf, int len)
 {
-    if (len <= 0)
-    {
+    if (len <= 0) {
         debugs(12, 3, "icpHandleIcpV2: ICP message is too small");
         return;
     }
@@ -532,14 +521,12 @@ icpHandleIcpV2(int fd, IPAddress &from, char *buf, int len)
      * Length field should match the number of bytes read
      */
 
-    if (len != header.length)
-    {
+    if (len != header.length) {
         debugs(12, 3, "icpHandleIcpV2: ICP message is too small");
         return;
     }
 
-    switch (header.opcode)
-    {
+    switch (header.opcode) {
 
     case ICP_QUERY:
         /* We have a valid packet */
@@ -651,8 +638,8 @@ icpHandleUdp(int sock, void *data)
         else if (icp_version == ICP_VERSION_3)
             icpHandleIcpV3(sock, from, buf, len);
         else
-        debugs(12, 1, "WARNING: Unused ICP version " << icp_version <<
-               " received from " << from);
+            debugs(12, 1, "WARNING: Unused ICP version " << icp_version <<
+                   " received from " << from);
     }
 }
 
@@ -740,7 +727,7 @@ icpConnectionsOpen(void)
 }
 
 /**
- * icpConnectionShutdown only closes the 'in' socket if it is 
+ * icpConnectionShutdown only closes the 'in' socket if it is
  * different than the 'out' socket.
  */
 void

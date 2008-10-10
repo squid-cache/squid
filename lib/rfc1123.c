@@ -2,7 +2,7 @@
 /*
  * $Id: rfc1123.c,v 1.41 2007/12/06 02:37:15 amosjeffries Exp $
  *
- * DEBUG: 
+ * DEBUG:
  * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -71,8 +71,7 @@
 static int make_month(const char *s);
 static int make_num(const char *s);
 
-static const char *month_names[12] =
-{
+static const char *month_names[12] = {
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };
@@ -82,9 +81,9 @@ static int
 make_num(const char *s)
 {
     if (*s >= '0' && *s <= '9')
-	return 10 * (*s - '0') + *(s + 1) - '0';
+        return 10 * (*s - '0') + *(s + 1) - '0';
     else
-	return *(s + 1) - '0';
+        return *(s + 1) - '0';
 }
 
 static int
@@ -98,8 +97,8 @@ make_month(const char *s)
     month[2] = xtolower(*(s + 2));
 
     for (i = 0; i < 12; i++)
-	if (!strncmp(month_names[i], month, 3))
-	    return i;
+        if (!strncmp(month_names[i], month, 3))
+            return i;
     return -1;
 }
 
@@ -107,54 +106,52 @@ static int
 tmSaneValues(struct tm *tm)
 {
     if (tm->tm_sec < 0 || tm->tm_sec > 59)
-	return 0;
+        return 0;
     if (tm->tm_min < 0 || tm->tm_min > 59)
-	return 0;
+        return 0;
     if (tm->tm_hour < 0 || tm->tm_hour > 23)
-	return 0;
+        return 0;
     if (tm->tm_mday < 1 || tm->tm_mday > 31)
-	return 0;
+        return 0;
     if (tm->tm_mon < 0 || tm->tm_mon > 11)
-	return 0;
+        return 0;
     return 1;
 }
 
 static struct tm *
-parse_date_elements(const char *day, const char *month, const char *year,
-	const char *time, const char *zone)
-{
+            parse_date_elements(const char *day, const char *month, const char *year,
+                                const char *time, const char *zone) {
     static struct tm tm;
     char *t;
     memset(&tm, 0, sizeof(tm));
 
     if (!day || !month || !year || !time)
-	return NULL;
+        return NULL;
     tm.tm_mday = atoi(day);
     tm.tm_mon = make_month(month);
     if (tm.tm_mon < 0)
-	return NULL;
+        return NULL;
     tm.tm_year = atoi(year);
     if (strlen(year) == 4)
-	tm.tm_year -= 1900;
+        tm.tm_year -= 1900;
     else if (tm.tm_year < 70)
-	tm.tm_year += 100;
+        tm.tm_year += 100;
     else if (tm.tm_year > 19000)
-	tm.tm_year -= 19000;
+        tm.tm_year -= 19000;
     tm.tm_hour = make_num(time);
     t = strchr(time, ':');
     if (!t)
-	return NULL;
+        return NULL;
     t++;
     tm.tm_min = atoi(t);
     t = strchr(t, ':');
     if (t)
-	tm.tm_sec = atoi(t + 1);
+        tm.tm_sec = atoi(t + 1);
     return tmSaneValues(&tm) ? &tm : NULL;
 }
 
 static struct tm *
-parse_date(const char *str)
-{
+            parse_date(const char *str) {
     struct tm *tm;
     static char tmp[64];
     char *t;
@@ -168,29 +165,29 @@ parse_date(const char *str)
     xstrncpy(tmp, str, 64);
 
     for (t = strtok(tmp, ", "); t; t = strtok(NULL, ", ")) {
-	if (xisdigit(*t)) {
-	    if (!day) {
-		day = t;
-		t = strchr(t, '-');
-		if (t) {
-		    *t++ = '\0';
-		    month = t;
-		    t = strchr(t, '-');
-		    if (!t)
-			return NULL;
-		    *t++ = '\0';
-		    year = t;
-		}
-	    } else if (strchr(t, ':'))
-		time = t;
-	    else if (!year)
-		year = t;
-	} else if (!wday)
-	    wday = t;
-	else if (!month)
-	    month = t;
-	else if (!zone)
-	    zone = t;
+        if (xisdigit(*t)) {
+            if (!day) {
+                day = t;
+                t = strchr(t, '-');
+                if (t) {
+                    *t++ = '\0';
+                    month = t;
+                    t = strchr(t, '-');
+                    if (!t)
+                        return NULL;
+                    *t++ = '\0';
+                    year = t;
+                }
+            } else if (strchr(t, ':'))
+                time = t;
+            else if (!year)
+                year = t;
+        } else if (!wday)
+            wday = t;
+        else if (!month)
+            month = t;
+        else if (!zone)
+            zone = t;
     }
     tm = parse_date_elements(day, month, year, time, zone);
 
@@ -203,24 +200,24 @@ parse_rfc1123(const char *str)
     struct tm *tm;
     time_t t;
     if (NULL == str)
-	return -1;
+        return -1;
     tm = parse_date(str);
     if (!tm)
-	return -1;
+        return -1;
     tm->tm_isdst = -1;
 #ifdef HAVE_TIMEGM
     t = timegm(tm);
 #elif HAVE_TM_TM_GMTOFF
     t = mktime(tm);
     if (t != -1) {
-	struct tm *local = localtime(&t);
-	t += local->tm_gmtoff;
+        struct tm *local = localtime(&t);
+        t += local->tm_gmtoff;
     }
 #else
     /* some systems do not have tm_gmtoff so we fake it */
     t = mktime(tm);
     if (t != -1) {
-	time_t dst = 0;
+        time_t dst = 0;
 #if defined (_TIMEZONE)
 #elif defined (_timezone)
 #elif defined(_SQUID_AIX_)
@@ -228,18 +225,18 @@ parse_rfc1123(const char *str)
 #elif defined(_SQUID_MSWIN_)
 #elif defined(_SQUID_SGI_)
 #else
-	extern long timezone;
+        extern long timezone;
 #endif
-	/*
-	 * The following assumes a fixed DST offset of 1 hour,
-	 * which is probably wrong.
-	 */
-	if (tm->tm_isdst > 0)
-	    dst = -3600;
+        /*
+         * The following assumes a fixed DST offset of 1 hour,
+         * which is probably wrong.
+         */
+        if (tm->tm_isdst > 0)
+            dst = -3600;
 #if defined ( _timezone) || defined(_SQUID_WIN32_)
-	t -= (_timezone + dst);
+        t -= (_timezone + dst);
 #else
-	t -= (timezone + dst);
+        t -= (timezone + dst);
 #endif
     }
 #endif
@@ -281,17 +278,17 @@ mkhttpdlogtime(const time_t * t)
     day_offset = lt->tm_yday - gmt_yday;
     /* wrap round on end of year */
     if (day_offset > 1)
-	day_offset = -1;
+        day_offset = -1;
     else if (day_offset < -1)
-	day_offset = 1;
+        day_offset = 1;
 
     min_offset = day_offset * 1440 + (lt->tm_hour - gmt_hour) * 60
-	+ (lt->tm_min - gmt_min);
+                 + (lt->tm_min - gmt_min);
 
     len = strftime(buf, 127 - 5, "%d/%b/%Y:%H:%M:%S ", lt);
     snprintf(buf + len, 128 - len, "%+03d%02d",
-	(min_offset / 60) % 24,
-	min_offset % 60);
+             (min_offset / 60) % 24,
+             min_offset % 60);
 #else /* USE_GMT */
     buf[0] = '\0';
     strftime(buf, 127, "%d/%b/%Y:%H:%M:%S -000", gmt);

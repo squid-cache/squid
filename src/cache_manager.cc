@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -79,7 +79,7 @@ CacheManager::registerAction(char const * action, char const * desc, OBJH * hand
 
 /**
  \ingroup CacheManagerAPI
- * Registers a C++-style action, via a poiner to a subclass of 
+ * Registers a C++-style action, via a poiner to a subclass of
  * a CacheManagerAction object, whose run() method will be invoked when
  * CacheManager identifies that the user has requested the action.
  */
@@ -299,14 +299,14 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
         /* warn if user specified incorrect password */
 
         if (mgr->passwd)
-            debugs(16, DBG_IMPORTANT, "CacheManager: " << 
-                   (mgr->user_name ? mgr->user_name : "<unknown>") << "@" << 
-                   fd_table[fd].ipaddr << ": incorrect password for '" << 
+            debugs(16, DBG_IMPORTANT, "CacheManager: " <<
+                   (mgr->user_name ? mgr->user_name : "<unknown>") << "@" <<
+                   fd_table[fd].ipaddr << ": incorrect password for '" <<
                    mgr->action << "'" );
         else
-            debugs(16, DBG_IMPORTANT, "CacheManager: " << 
-                   (mgr->user_name ? mgr->user_name : "<unknown>") << "@" << 
-                   fd_table[fd].ipaddr << ": password needed for '" << 
+            debugs(16, DBG_IMPORTANT, "CacheManager: " <<
+                   (mgr->user_name ? mgr->user_name : "<unknown>") << "@" <<
+                   fd_table[fd].ipaddr << ": password needed for '" <<
                    mgr->action << "'" );
 
         rep = err->BuildHttpReply();
@@ -331,9 +331,9 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
         return;
     }
 
-    debugs(16, DBG_IMPORTANT, "CacheManager: " << 
-           (mgr->user_name ? mgr->user_name : "<unknown>") << "@" << 
-           fd_table[fd].ipaddr << " requesting '" << 
+    debugs(16, DBG_IMPORTANT, "CacheManager: " <<
+           (mgr->user_name ? mgr->user_name : "<unknown>") << "@" <<
+           fd_table[fd].ipaddr << " requesting '" <<
            mgr->action << "'" );
     /* retrieve object requested */
     a = findAction(mgr->action);
@@ -377,7 +377,7 @@ CacheManager::ShutdownAction::ShutdownAction() : CacheManagerAction("shutdown","
 void
 CacheManager::ReconfigureAction::run(StoreEntry * sentry)
 {
-    debug(16, DBG_IMPORTANT) ("Reconfigure by Cache Manager command.\n");
+    debugs(16, DBG_IMPORTANT, "Reconfigure by Cache Manager command.");
     storeAppendPrintf(sentry, "Reconfiguring Squid Process ....");
     reconfigure(SIGHUP);
 }
@@ -431,11 +431,11 @@ CacheManager::MenuAction::run(StoreEntry * sentry)
     for (a = cmgr->ActionsList.begin(); a != cmgr->ActionsList.end(); ++a) {
         debugs(16, 5, "  showing action " << (*a)->action);
         storeAppendPrintf(sentry, " %-22s\t%-32s\t%s\n",
-            (*a)->action, (*a)->desc, cmgr->ActionProtection(*a));
+                          (*a)->action, (*a)->desc, cmgr->ActionProtection(*a));
     }
 }
 /// \ingroup CacheManagerInternal
-CacheManager::MenuAction::MenuAction(CacheManager *aMgr) : CacheManagerAction ("menu", "Cache Manager Menu", 1, 1), cmgr(aMgr) { }
+CacheManager::MenuAction::MenuAction(CacheManager *aMgr) : CacheManagerAction ("menu", "Cache Manager Menu", 0, 1), cmgr(aMgr) { }
 
 /*
  \ingroup CacheManagerInternal
@@ -469,19 +469,20 @@ CacheManager* CacheManager::instance=0;
  * Singleton accessor method.
  */
 CacheManager*
-CacheManager::GetInstance() {
-        if (instance == 0) {
-                debugs(16, 6, "CacheManager::GetInstance: starting cachemanager up");
-                instance = new CacheManager;
-        }
-        return instance;
+CacheManager::GetInstance()
+{
+    if (instance == 0) {
+        debugs(16, 6, "CacheManager::GetInstance: starting cachemanager up");
+        instance = new CacheManager;
+    }
+    return instance;
 }
 
 
 /// \ingroup CacheManagerInternal
 void CacheManagerActionLegacy::run(StoreEntry *sentry)
 {
-	handler(sentry);
+    handler(sentry);
 }
 /// \ingroup CacheManagerInternal
 CacheManagerAction::CacheManagerAction(char const *anAction, char const *aDesc, unsigned int isPwReq, unsigned int isAtomic)

@@ -19,16 +19,16 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *  
+ *
  */
 
 #ifndef _NTLM_H_
@@ -131,21 +131,21 @@ debug(char *format,...)
 #if FAIL_DEBUG
     if (debug_enabled || fail_debug_enabled) {
 #else
-    if (debug_enabled) {
+        if (debug_enabled) {
 #endif
-	va_list args;
+            va_list args;
 
-	va_start(args, format);
-	fprintf(stderr, "ntlm-auth[%ld]: ", (long)getpid());
-	vfprintf(stderr, format, args);
-	va_end(args);
+            va_start(args, format);
+            fprintf(stderr, "ntlm-auth[%ld]: ", (long)getpid());
+            vfprintf(stderr, format, args);
+            va_end(args);
 #if FAIL_DEBUG
-	fail_debug_enabled = 0;
+            fail_debug_enabled = 0;
 #endif
-    }
+        }
 #endif /* _SQUID_MSWIN_ */
 #endif /* DEBUG */
-}
+    }
 #endif /* __GNUC__ */
 
 

@@ -100,6 +100,7 @@ public:
     virtual void processReplyBody() = 0;
 
 //AsyncJob virtual methods
+    virtual void swanSong();
     virtual bool doneAll() const { return
 #if USE_ADAPTATION
                        Adaptation::Initiator::doneAll() &&

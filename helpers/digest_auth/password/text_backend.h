@@ -8,7 +8,7 @@
  * - comment lines are possible and should start with a '#';
  * - empty or blank lines are possible;
  * - file format is username:password
- * 
+ *
  * This implementation could be improved by using such a triple for
  * the file format.  However storing such a triple does little to
  * improve security: If compromised the username:realm:HA1 combination

@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -36,7 +36,7 @@
 #include "squid.h"
 #include "Store.h"
 
-// low-level buffer allocation, 
+// low-level buffer allocation,
 // does not free old buffer and does not adjust or look at len_
 void
 String::allocBuffer(size_t sz)
@@ -257,14 +257,14 @@ StringRegistry::StringRegistry()
 {
 #if DEBUGSTRINGS
     CacheManager::GetInstance()->registerAction("strings",
-                           "Strings in use in squid", Stat, 0, 1);
+            "Strings in use in squid", Stat, 0, 1);
 #endif
 }
 
 void
 
 StringRegistry::add
-    (String const *entry)
+(String const *entry)
 {
     entries.insert(entry, ptrcmp);
 }
@@ -272,7 +272,7 @@ StringRegistry::add
 void
 
 StringRegistry::remove
-    (String const *entry)
+(String const *entry)
 {
     entries.remove(entry, ptrcmp);
 }

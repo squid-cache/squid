@@ -1,19 +1,19 @@
-/* 
+/*
  * Unix SMB/Netbios implementation.
  * Version 1.9.
  * a implementation of MD4 designed for use in the SMB authentication protocol
  * Copyright (C) Andrew Tridgell 1997
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -22,8 +22,8 @@
 #include <string.h>
 #include "md4.h"
 
-/* NOTE: This code makes no attempt to be fast! 
- * 
+/* NOTE: This code makes no attempt to be fast!
+ *
  * It assumes that a int is at least 32 bits long
  */
 
@@ -69,7 +69,7 @@ mdfour64(uint32 * M)
     uint32 X[16];
 
     for (j = 0; j < 16; j++)
-	X[j] = M[j];
+        X[j] = M[j];
 
     AA = A;
     BB = B;
@@ -138,7 +138,7 @@ mdfour64(uint32 * M)
     D &= 0xFFFFFFFF;
 
     for (j = 0; j < 16; j++)
-	X[j] = 0;
+        X[j] = 0;
 }
 
 static void
@@ -147,8 +147,8 @@ copy64(uint32 * M, unsigned char *in)
     int i;
 
     for (i = 0; i < 16; i++)
-	M[i] = (in[i * 4 + 3] << 24) | (in[i * 4 + 2] << 16) |
-	    (in[i * 4 + 1] << 8) | (in[i * 4 + 0] << 0);
+        M[i] = (in[i * 4 + 3] << 24) | (in[i * 4 + 2] << 16) |
+               (in[i * 4 + 1] << 8) | (in[i * 4 + 0] << 0);
 }
 
 static void
@@ -175,31 +175,31 @@ mdfour(unsigned char *out, unsigned char *in, int n)
     D = 0x10325476;
 
     while (n > 64) {
-	copy64(M, in);
-	mdfour64(M);
-	in += 64;
-	n -= 64;
+        copy64(M, in);
+        mdfour64(M);
+        in += 64;
+        n -= 64;
     }
 
     for (i = 0; i < 128; i++)
-	buf[i] = 0;
+        buf[i] = 0;
     memcpy(buf, in, n);
     buf[n] = 0x80;
 
     if (n <= 55) {
-	copy4(buf + 56, b);
-	copy64(M, buf);
-	mdfour64(M);
+        copy4(buf + 56, b);
+        copy64(M, buf);
+        mdfour64(M);
     } else {
-	copy4(buf + 120, b);
-	copy64(M, buf);
-	mdfour64(M);
-	copy64(M, buf + 64);
-	mdfour64(M);
+        copy4(buf + 120, b);
+        copy64(M, buf);
+        mdfour64(M);
+        copy64(M, buf + 64);
+        mdfour64(M);
     }
 
     for (i = 0; i < 128; i++)
-	buf[i] = 0;
+        buf[i] = 0;
     copy64(M, buf);
 
     copy4(out, A);

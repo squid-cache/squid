@@ -11,10 +11,10 @@
 
 
 ICAPLauncher::ICAPLauncher(const char *aTypeName,
-    Adaptation::Initiator *anInitiator, Adaptation::ServicePointer &aService):
-    AsyncJob(aTypeName),
-    Adaptation::Initiate(aTypeName, anInitiator, aService),
-    theXaction(0), theLaunches(0)
+                           Adaptation::Initiator *anInitiator, Adaptation::ServicePointer &aService):
+        AsyncJob(aTypeName),
+        Adaptation::Initiate(aTypeName, anInitiator, aService),
+        theXaction(0), theLaunches(0)
 {
 }
 
@@ -48,7 +48,7 @@ void ICAPLauncher::noteAdaptationAnswer(HttpMsg *message)
     sendAnswer(message);
     clearAdaptation(theXaction);
     Must(done());
-    debugs(93,3, HERE << "ICAPLauncher::noteAdaptationAnswer exiting "); 
+    debugs(93,3, HERE << "ICAPLauncher::noteAdaptationAnswer exiting ");
 }
 
 void ICAPLauncher::noteInitiatorAborted()
@@ -69,13 +69,14 @@ void ICAPLauncher::noteAdaptationQueryAbort(bool final)
         launchXaction(true);
     } else {
         debugs(93,3, HERE << "cannot retry the failed ICAP xaction; tries: " <<
-            theLaunches << "; final: " << final);
+               theLaunches << "; final: " << final);
         Must(done()); // swanSong will notify the initiator
     }
 
 }
 
-bool ICAPLauncher::doneAll() const {
+bool ICAPLauncher::doneAll() const
+{
     return (!theInitiator || !theXaction) && Adaptation::Initiate::doneAll();
 }
 

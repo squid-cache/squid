@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -110,9 +110,9 @@ ACLMaxUserIP::parse()
 }
 
 /*
- * aclMatchUserMaxIP - check for users logging in from multiple IP's 
+ * aclMatchUserMaxIP - check for users logging in from multiple IP's
  * 0 : No match
- * 1 : Match 
+ * 1 : Match
  */
 int
 ACLMaxUserIP::match(AuthUserRequest * auth_user_request,
@@ -131,19 +131,17 @@ ACLMaxUserIP::match(AuthUserRequest * auth_user_request,
     debugs(28, 1, "aclMatchUserMaxIP: user '" << auth_user_request->username() << "' tries to use too many IP addresses (max " << maximum << " allowed)!");
 
     /* this is a match */
-    if (flags.strict)
-    {
+    if (flags.strict) {
         /*
          * simply deny access - the user name is already associated with
-         * the request 
+         * the request
          */
         /* remove _this_ ip, as it is the culprit for going over the limit */
         authenticateAuthUserRequestRemoveIp(auth_user_request, src_addr);
         debugs(28, 4, "aclMatchUserMaxIP: Denying access in strict mode");
-    } else
-    {
+    } else {
         /*
-         * non-strict - remove some/all of the cached entries 
+         * non-strict - remove some/all of the cached entries
          * ie to allow the user to move machines easily
          */
         authenticateAuthUserRequestClearIp(auth_user_request);

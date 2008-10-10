@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  ;  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -37,11 +37,11 @@
 #include "ESIExpression.h"
 
 /* stack precedence rules:
- * before pushing an operator onto the stack, the 
+ * before pushing an operator onto the stack, the
  * top 2 elements are checked. if either has a higher
  * or equal precedence than the current operator, they
- * are evaluated. 
- * Start of expression has 5 precedence, 
+ * are evaluated.
+ * Start of expression has 5 precedence,
  * end of expression has 0 precedence
  * literal has 1 as does expression results
  * | has 2
@@ -57,8 +57,7 @@ typedef struct _stackmember stackmember;
 typedef int evaluate (stackmember * stack, int *depth, int whereAmI,
                       stackmember * candidate);
 
-typedef enum
-{
+typedef enum {
     ESI_EXPR_INVALID,
     ESI_EXPR_LITERAL,
     ESI_EXPR_OR,
@@ -75,8 +74,7 @@ typedef enum
     ESI_EXPR_EXPR			/* the result of an expr PRI 1 */
 } evaltype;
 
-typedef enum
-{
+typedef enum {
     ESI_LITERAL_STRING,
     ESI_LITERAL_FLOAT,
     ESI_LITERAL_INT,
@@ -84,11 +82,9 @@ typedef enum
     ESI_LITERAL_INVALID
 } literalhint;
 
-struct _stackmember
-{
+struct _stackmember {
     evaluate *eval;
-    union
-    {
+    union {
         char *string;
         double floating;
         int integral;
@@ -897,7 +893,7 @@ printliteral (stackmember s)
         break;
 
     case ESI_LITERAL_INT:
-        debug (86,1) ("%d", s.value.integral);        
+        debug (86,1) ("%d", s.value.integral);
         break;
 
     case ESI_LITERAL_BOOL:

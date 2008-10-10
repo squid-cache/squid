@@ -60,8 +60,7 @@ public:
     char *passwd;
     time_t credentials_checkedtime;
 
-    struct
-    {
+    struct {
 
 unsigned int credentials_ok:
         2;	/*0=unchecked,1=ok,2=failed */

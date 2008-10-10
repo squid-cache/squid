@@ -4,7 +4,8 @@
 #include "SquidString.h"
 
 // wrapper for dlopen(3), libltdl, and friends
-class LoadableModule {
+class LoadableModule
+{
 public:
     enum LoadMode { lmNow, lmLazy };
 

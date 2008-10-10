@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -69,6 +69,7 @@
 #include "forward.h"
 #include "MemPool.h"
 #include "ICMPSquid.h"
+#include "TextException.h"
 
 #if USE_LOADABLE_MODULES
 #include "LoadableModules.h"
@@ -76,6 +77,9 @@
 
 #if ICAP_CLIENT
 #include "ICAP/ICAPConfig.h"
+#endif
+#if USE_ECAP
+#include "eCAP/Config.h"
 #endif
 #if USE_ADAPTATION
 #include "adaptation/Config.h"
@@ -143,8 +147,7 @@ class StoreRootEngine : public AsyncEngine
 {
 
 public:
-    int checkEvents(int timeout)
-    {
+    int checkEvents(int timeout) {
         Store::Root().callback();
         return EVENT_IDLE;
     };
@@ -158,8 +161,7 @@ public:
     virtual int checkEvents(int timeout);
 
 private:
-    static void StopEventLoop(void * data)
-    {
+    static void StopEventLoop(void * data) {
         static_cast<SignalEngine *>(data)->loop.stop();
     }
 
@@ -182,7 +184,7 @@ SignalEngine::checkEvents(int timeout)
     } else if (do_shutdown) {
         doShutdown(do_shutdown > 0 ? (int) Config.shutdownLifetime : 0);
         do_shutdown = 0;
-	}
+    }
 
     PROF_stop(SignalEngine_checkEvents);
     return EVENT_IDLE;
@@ -270,8 +272,7 @@ mainParseOptions(int argc, char *argv[])
 #endif
     {
 
-        switch (c)
-        {
+        switch (c) {
 
         case 'C':
             /** \par C
@@ -694,11 +695,12 @@ mainReconfigureStart(void)
     refererCloseLog();
 
     eventAdd("mainReconfigureFinish", &mainReconfigureFinish, NULL, 0, 1,
-        false);
+             false);
 }
 
 static void
-mainReconfigureFinish(void *) {
+mainReconfigureFinish(void *)
+{
     debugs(1, 3, "finishing reconfiguring");
 
     errorClean();
@@ -897,7 +899,7 @@ mainInitialize(void)
         debugs(1, 1, "Windows sockets initialized");
 
     if (WIN32_OS_version > _WIN_OS_WINNT) {
-	WIN32_IpAddrChangeMonitorInit();
+        WIN32_IpAddrChangeMonitorInit();
     }
 
 #endif
@@ -983,9 +985,9 @@ mainInitialize(void)
 
         eventInit();
 
-	// TODO: pconn is a good candidate for new-style registration
+        // TODO: pconn is a good candidate for new-style registration
         // PconnModule::GetInstance()->registerWithCacheManager();
-	//   moved to PconnModule::PconnModule()
+        //   moved to PconnModule::PconnModule()
     }
 
 #if USE_WCCP
@@ -1048,11 +1050,13 @@ mainInitialize(void)
     // We can remove this dependency on specific adaptation mechanisms
     // if we create a generic Registry of such mechanisms. Should we?
 #if ICAP_CLIENT
-    TheICAPConfig.finalize(); // must be after we load modules
-    enableAdaptation = TheICAPConfig.onoff;
+    TheICAPConfig.finalize();
+    enableAdaptation = TheICAPConfig.onoff || enableAdaptation;
 #endif
-    // same for eCAP
-
+#if USE_ECAP
+    Ecap::TheConfig.finalize(); // must be after we load modules
+    enableAdaptation = Ecap::TheConfig.onoff || enableAdaptation;
+#endif
     // must be the last adaptation-related finalize
     Adaptation::Config::Finalize(enableAdaptation);
 #endif
@@ -1082,20 +1086,40 @@ mainInitialize(void)
     configured_once = 1;
 }
 
+/// unsafe main routine -- may throw
+static int SquidMain(int argc, char **argv);
+/// unsafe main routine wrapper to catch exceptions
+static int SquidMainSafe(int argc, char **argv);
+
 #if USE_WIN32_SERVICE
 /* When USE_WIN32_SERVICE is defined, the main function is placed in win32.cc */
 extern "C" void WINAPI
     SquidWinSvcMain(int argc, char **argv)
-{
-    SquidMain(argc, argv);
-}
-
-int
-SquidMain(int argc, char **argv)
 #else
 int
 main(int argc, char **argv)
 #endif
+{
+    SquidMainSafe(argc, argv);
+}
+
+static int
+SquidMainSafe(int argc, char **argv)
+{
+    try {
+        return SquidMain(argc, argv);
+    } catch (const std::exception &e) {
+        std::cerr << "dying from an unhandled exception: " << e.what() << std::endl;
+        throw;
+    } catch (...) {
+        std::cerr << "dying from an unhandled exception." << std::endl;
+        throw;
+    }
+    return -1; // not reached
+}
+
+static int
+SquidMain(int argc, char **argv)
 {
 #ifdef _SQUID_WIN32_
 
@@ -1160,25 +1184,22 @@ main(int argc, char **argv)
     mainParseOptions(argc, argv);
 
     if (opt_parse_cfg_only) {
-	Debug::parseOptions("ALL,1");
+        Debug::parseOptions("ALL,1");
     }
 
 #if USE_WIN32_SERVICE
 
-    if (opt_install_service)
-    {
+    if (opt_install_service) {
         WIN32_InstallService();
         return 0;
     }
 
-    if (opt_remove_service)
-    {
+    if (opt_remove_service) {
         WIN32_RemoveService();
         return 0;
     }
 
-    if (opt_command_line)
-    {
+    if (opt_command_line) {
         WIN32_SetServiceCommandLine();
         return 0;
     }
@@ -1211,7 +1232,7 @@ main(int argc, char **argv)
         parse_err = parseConfigFile(ConfigFile);
 
         Mem::Report();
-        
+
         if (opt_parse_cfg_only)
 
             return parse_err;
@@ -1236,8 +1257,7 @@ main(int argc, char **argv)
 #endif
 
     /* send signal to running copy and exit */
-    if (opt_send_signal != -1)
-    {
+    if (opt_send_signal != -1) {
         /* chroot if configured to run inside chroot */
 
         if (Config.chroot_dir) {
@@ -1253,8 +1273,7 @@ main(int argc, char **argv)
         /* NOTREACHED */
     }
 
-    if (opt_create_swap_dirs)
-    {
+    if (opt_create_swap_dirs) {
         /* chroot if configured to run inside chroot */
 
         if (Config.chroot_dir && chroot(Config.chroot_dir)) {
@@ -1278,8 +1297,7 @@ main(int argc, char **argv)
 
     comm_select_init();
 
-    if (opt_no_daemon)
-    {
+    if (opt_no_daemon) {
         /* we have to init fdstat here. */
         fd_open(0, FD_LOG, "stdin");
         fd_open(1, FD_LOG, "stdout");
@@ -1586,7 +1604,7 @@ watch_child(char *argv[])
 
             case SIGINT:
             case SIGTERM:
-		syslog(LOG_ALERT, "Exiting due to unexpected forced shutdown");
+                syslog(LOG_ALERT, "Exiting due to unexpected forced shutdown");
                 exit(1);
                 break;
 
@@ -1611,7 +1629,7 @@ SquidShutdown()
      * means that no AsyncCalls would be called, including close handlers.
      * TODO: We need to close/shut/free everything that needs calls before
      * exiting the loop.
-     */ 
+     */
 
 #if USE_WIN32_SERVICE
     WIN32_svcstatusupdate(SERVICE_STOP_PENDING, 10000);

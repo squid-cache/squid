@@ -23,12 +23,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -81,7 +81,7 @@ bool
 DelayId::operator == (DelayId const &rhs) const
 {
     /* Doesn't compare composites properly....
-     * only use to test against default ID's 
+     * only use to test against default ID's
      */
     return pool_ == rhs.pool_ && compositeId == rhs.compositeId;
 }
@@ -105,15 +105,14 @@ DelayId::DelayClient(ClientHttpRequest * http)
         return DelayId();
     }
 
-    for (pool = 0; pool < DelayPools::pools(); pool++)
-    {
+    for (pool = 0; pool < DelayPools::pools(); pool++) {
         ACLChecklist ch;
 #if FOLLOW_X_FORWARDED_FOR
-    if (Config.onoff.delay_pool_uses_indirect_client)
-        ch.src_addr = r->indirect_client_addr;
-    else
-#endif /* FOLLOW_X_FORWARDED_FOR */        
-        ch.src_addr = r->client_addr;
+        if (Config.onoff.delay_pool_uses_indirect_client)
+            ch.src_addr = r->indirect_client_addr;
+        else
+#endif /* FOLLOW_X_FORWARDED_FOR */
+            ch.src_addr = r->client_addr;
         ch.my_addr = r->my_addr;
 
         if (http->getConn() != NULL)

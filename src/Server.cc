@@ -46,7 +46,7 @@
 #endif
 
 // implemented in client_side_reply.cc until sides have a common parent
-extern void purgeEntriesByUrl(const char *url);
+extern void purgeEntriesByUrl(HttpRequest * req, const char *url);
 
 
 ServerStateData::ServerStateData(FwdState *theFwdState): AsyncJob("ServerStateData"),requestSender(NULL)
@@ -66,6 +66,13 @@ ServerStateData::ServerStateData(FwdState *theFwdState): AsyncJob("ServerStateDa
 
 ServerStateData::~ServerStateData()
 {
+    // paranoid: check that swanSong has been called
+    assert(!requestBodySource);
+#if USE_ADAPTATION
+    assert(!virginBodyDestination);
+    assert(!adaptedBodySource);
+#endif
+
     entry->unlock();
 
     HTTPMSGUNLOCK(request);
@@ -74,6 +81,16 @@ ServerStateData::~ServerStateData()
 
     fwd = NULL; // refcounted
 
+    if (responseBodyBuffer != NULL) {
+	delete responseBodyBuffer;
+	responseBodyBuffer = NULL;
+    }
+}
+
+void
+ServerStateData::swanSong()
+{
+    // get rid of our piping obligations
     if (requestBodySource != NULL)
         requestBodySource->clearConsumer();
 
@@ -81,11 +98,13 @@ ServerStateData::~ServerStateData()
     cleanAdaptation();
 #endif
 
-    if (responseBodyBuffer != NULL) {
-	delete responseBodyBuffer;
-	responseBodyBuffer = NULL;
-    }
+    BodyConsumer::swanSong();
+#if USE_ADAPTATION
+    Initiator::swanSong();
+    BodyProducer::swanSong();
+#endif
 }
+
 
 HttpReply *
 ServerStateData::virginReply() {
@@ -402,7 +421,7 @@ sameUrlHosts(const char *url1, const char *url2)
 
 // purges entries that match the value of a given HTTP [response] header
 static void
-purgeEntriesByHeader(const HttpRequest *req, const char *reqUrl, HttpMsg *rep, http_hdr_type hdr)
+purgeEntriesByHeader(HttpRequest *req, const char *reqUrl, HttpMsg *rep, http_hdr_type hdr)
 {
     const char *hdrUrl, *absUrl;
     
@@ -426,7 +445,7 @@ purgeEntriesByHeader(const HttpRequest *req, const char *reqUrl, HttpMsg *rep, h
         return;
     }
     
-    purgeEntriesByUrl(hdrUrl);
+    purgeEntriesByUrl(req, hdrUrl);
     
     if (absUrl != NULL) {
         safe_free(absUrl);
@@ -448,7 +467,7 @@ ServerStateData::maybePurgeOthers()
    // XXX: should we use originalRequest() here?
    const char *reqUrl = urlCanonical(request);
    debugs(88, 5, "maybe purging due to " << RequestMethodStr(request->method) << ' ' << reqUrl);
-   purgeEntriesByUrl(reqUrl);
+   purgeEntriesByUrl(request, reqUrl);
    purgeEntriesByHeader(request, reqUrl, theFinalReply, HDR_LOCATION);
    purgeEntriesByHeader(request, reqUrl, theFinalReply, HDR_CONTENT_LOCATION);
 }

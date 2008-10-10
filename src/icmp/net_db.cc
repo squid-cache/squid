@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -67,8 +67,7 @@ typedef enum {
     STATE_BODY
 } netdb_conn_state_t;
 
-typedef struct
-{
+typedef struct {
     peer *p;
     StoreEntry *e;
     store_client *sc;
@@ -264,8 +263,7 @@ netdbAdd(IPAddress &addr)
     if (memInUse(MEM_NETDBENTRY) > Config.Netdb.high)
         netdbPurgeLRU();
 
-    if ((n = netdbLookupAddr(addr)) == NULL)
-    {
+    if ((n = netdbLookupAddr(addr)) == NULL) {
         n = (netdbEntry *)memAllocate(MEM_NETDBENTRY);
         netdbHashInsert(n, addr);
     }
@@ -351,8 +349,7 @@ networkFromInaddr(const IPAddress &in)
 
     /* in IPv6 the 'network' should be the routing section. */
 
-    if( in.IsIPv6() )
-    {
+    if ( in.IsIPv6() ) {
         out.ApplyMask(64, AF_INET6);
         debugs(14, 5, "networkFromInaddr : Masked IPv6 Address to " << in << "/64 routing part.");
         return out;
@@ -465,7 +462,7 @@ static void
 netdbSaveState(void *foo)
 {
     if (strcmp(Config.netdbFilename, "none") == 0)
-	return;
+        return;
 
     Logfile *lf;
     netdbEntry *n;
@@ -519,8 +516,8 @@ netdbSaveState(void *foo)
     logfileClose(lf);
     getCurrentTime();
     debugs(38, 1, "NETDB state saved; " <<
-                 count << " entries, " <<
-                 tvSubMsec(start, current_time) << " msec" );
+           count << " entries, " <<
+           tvSubMsec(start, current_time) << " msec" );
     eventAddIsh("netdbSaveState", netdbSaveState, NULL, 3600.0, 1);
 }
 
@@ -528,7 +525,7 @@ static void
 netdbReloadState(void)
 {
     if (strcmp(Config.netdbFilename, "none") == 0)
-	return;
+        return;
 
     char *s;
     int fd;
@@ -642,8 +639,8 @@ netdbReloadState(void)
     xfree(buf);
     getCurrentTime();
     debugs(38, 1, "NETDB state reloaded; " <<
-                  count << " entries, " << 
-                  tvSubMsec(start, current_time) << " msec" );
+           count << " entries, " <<
+           tvSubMsec(start, current_time) << " msec" );
 }
 
 static const char *
@@ -888,7 +885,7 @@ static void
 netdbRegisterWithCacheManager(void)
 {
     CacheManager::GetInstance()->
-        registerAction("netdb", "Network Measurement Database", netdbDump, 0, 1);
+    registerAction("netdb", "Network Measurement Database", netdbDump, 0, 1);
 }
 
 #endif /* USE_ICMP */
@@ -933,7 +930,7 @@ netdbPingSite(const char *hostname)
             return;
 
     ipcache_nbgethostbyname(hostname, netdbSendPing,
-			    new generic_cbdata(xstrdup(hostname)));
+                            new generic_cbdata(xstrdup(hostname)));
 
 #endif
 }
@@ -991,8 +988,7 @@ netdbHops(IPAddress &addr)
 #if USE_ICMP
     netdbEntry *n = netdbLookupAddr(addr);
 
-    if (n && n->pings_recv)
-    {
+    if (n && n->pings_recv) {
         n->last_use_time = squid_curtime;
         return (int) (n->hops + 0.5);
     }
@@ -1164,7 +1160,7 @@ netdbExchangeUpdatePeer(IPAddress &addr, peer * e, double rtt, double hops)
            std::setfill('0')<< std::setprecision(2) << hops << " hops, " <<
            rtt << " rtt");
 
-    if( !addr.IsIPv4() ) {
+    if ( !addr.IsIPv4() ) {
         debugs(38, 5, "netdbExchangeUpdatePeer: Aborting peer update for '" << addr << "', NetDB cannot handle IPv6.");
         return;
     }
@@ -1251,7 +1247,7 @@ netdbBinaryExchange(StoreEntry * s)
             continue;
 
         /* FIXME INET6 : NetDB cannot yet handle IPv6 addresses. Ensure only IPv4 get sent. */
-        if( !addr.IsIPv4() )
+        if ( !addr.IsIPv4() )
             continue;
 
         buf[i++] = (char) NETDB_EX_NETWORK;

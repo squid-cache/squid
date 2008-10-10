@@ -7,14 +7,16 @@
 
 class HttpMsg;
 
-namespace Adaptation {
+namespace Adaptation
+{
 
 /* Initiator holder associtates an initiator with its cbdata. It is used as
  * a temporary hack to make cbdata work with multiple inheritance. We need
  * this hack because we cannot know whether the initiator pointer is still
- * valid without dereferencing it to call toCbdata() 
+ * valid without dereferencing it to call toCbdata()
  * TODO: JobDialer uses the same trick. Factor out or move this code. */
-class InitiatorHolder {
+class InitiatorHolder
+{
 public:
     InitiatorHolder(Initiator *anInitiator);
     InitiatorHolder(const InitiatorHolder &anInitiator);
@@ -40,7 +42,7 @@ private:
 
 /*
  * The  Initiate is a common base for  queries or transactions
- * initiated by an Initiator. This interface exists to allow an 
+ * initiated by an Initiator. This interface exists to allow an
  * initiator to signal its "initiatees" that it is aborting and no longer
  * expecting an answer. The class is also handy for implementing common
  * initiate actions such as maintaining and notifying the initiator.

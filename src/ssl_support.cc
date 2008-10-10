@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -199,7 +199,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         case X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD:
             debugs(83, 5, "SSL Certificate has illegal \'not before\' field: " <<
                    buffer);
-            
+
             break;
 
         case X509_V_ERR_CERT_HAS_EXPIRED:
@@ -228,14 +228,13 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         }
     }
 
-if (!dont_verify_domain && server) {}
+    if (!dont_verify_domain && server) {}
 
     return ok;
 }
 
 /// \ingroup ServerProtocolSSLInternal
-static struct ssl_option
-{
+static struct ssl_option {
     const char *name;
     long value;
 }
@@ -243,122 +242,122 @@ static struct ssl_option
 ssl_options[] = {
 
 #ifdef SSL_OP_MICROSOFT_SESS_ID_BUG
-                    {
-                        "MICROSOFT_SESS_ID_BUG", SSL_OP_MICROSOFT_SESS_ID_BUG
-                    },
+    {
+        "MICROSOFT_SESS_ID_BUG", SSL_OP_MICROSOFT_SESS_ID_BUG
+    },
 #endif
 #ifdef SSL_OP_NETSCAPE_CHALLENGE_BUG
-                    {
-                        "NETSCAPE_CHALLENGE_BUG", SSL_OP_NETSCAPE_CHALLENGE_BUG
-                    },
+    {
+        "NETSCAPE_CHALLENGE_BUG", SSL_OP_NETSCAPE_CHALLENGE_BUG
+    },
 #endif
 #ifdef SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG
-                    {
-                        "NETSCAPE_REUSE_CIPHER_CHANGE_BUG", SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG
-                    },
+    {
+        "NETSCAPE_REUSE_CIPHER_CHANGE_BUG", SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG
+    },
 #endif
 #ifdef SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG
-                    {
-                        "SSLREF2_REUSE_CERT_TYPE_BUG", SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG
-                    },
+    {
+        "SSLREF2_REUSE_CERT_TYPE_BUG", SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG
+    },
 #endif
 #ifdef SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER
-                    {
-                        "MICROSOFT_BIG_SSLV3_BUFFER", SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER
-                    },
+    {
+        "MICROSOFT_BIG_SSLV3_BUFFER", SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER
+    },
 #endif
 #ifdef SSL_OP_MSIE_SSLV2_RSA_PADDING
-                    {
-                        "MSIE_SSLV2_RSA_PADDING", SSL_OP_MSIE_SSLV2_RSA_PADDING
-                    },
+    {
+        "MSIE_SSLV2_RSA_PADDING", SSL_OP_MSIE_SSLV2_RSA_PADDING
+    },
 #endif
 #ifdef SSL_OP_SSLEAY_080_CLIENT_DH_BUG
-                    {
-                        "SSLEAY_080_CLIENT_DH_BUG", SSL_OP_SSLEAY_080_CLIENT_DH_BUG
-                    },
+    {
+        "SSLEAY_080_CLIENT_DH_BUG", SSL_OP_SSLEAY_080_CLIENT_DH_BUG
+    },
 #endif
 #ifdef SSL_OP_TLS_D5_BUG
-                    {
-                        "TLS_D5_BUG", SSL_OP_TLS_D5_BUG
-                    },
+    {
+        "TLS_D5_BUG", SSL_OP_TLS_D5_BUG
+    },
 #endif
 #ifdef SSL_OP_TLS_BLOCK_PADDING_BUG
-                    {
-                        "TLS_BLOCK_PADDING_BUG", SSL_OP_TLS_BLOCK_PADDING_BUG
-                    },
+    {
+        "TLS_BLOCK_PADDING_BUG", SSL_OP_TLS_BLOCK_PADDING_BUG
+    },
 #endif
 #ifdef SSL_OP_TLS_ROLLBACK_BUG
-                    {
-                        "TLS_ROLLBACK_BUG", SSL_OP_TLS_ROLLBACK_BUG
-                    },
+    {
+        "TLS_ROLLBACK_BUG", SSL_OP_TLS_ROLLBACK_BUG
+    },
 #endif
 #ifdef SSL_OP_ALL
-                    {
-                        "ALL", SSL_OP_ALL
-                    },
+    {
+        "ALL", SSL_OP_ALL
+    },
 #endif
 #ifdef SSL_OP_SINGLE_DH_USE
-                    {
-                        "SINGLE_DH_USE", SSL_OP_SINGLE_DH_USE
-                    },
+    {
+        "SINGLE_DH_USE", SSL_OP_SINGLE_DH_USE
+    },
 #endif
 #ifdef SSL_OP_EPHEMERAL_RSA
-                    {
-                        "EPHEMERAL_RSA", SSL_OP_EPHEMERAL_RSA
-                    },
+    {
+        "EPHEMERAL_RSA", SSL_OP_EPHEMERAL_RSA
+    },
 #endif
 #ifdef SSL_OP_PKCS1_CHECK_1
-                    {
-                        "PKCS1_CHECK_1", SSL_OP_PKCS1_CHECK_1
-                    },
+    {
+        "PKCS1_CHECK_1", SSL_OP_PKCS1_CHECK_1
+    },
 #endif
 #ifdef SSL_OP_PKCS1_CHECK_2
-                    {
-                        "PKCS1_CHECK_2", SSL_OP_PKCS1_CHECK_2
-                    },
+    {
+        "PKCS1_CHECK_2", SSL_OP_PKCS1_CHECK_2
+    },
 #endif
 #ifdef SSL_OP_NETSCAPE_CA_DN_BUG
-                    {
-                        "NETSCAPE_CA_DN_BUG", SSL_OP_NETSCAPE_CA_DN_BUG
-                    },
+    {
+        "NETSCAPE_CA_DN_BUG", SSL_OP_NETSCAPE_CA_DN_BUG
+    },
 #endif
 #ifdef SSL_OP_NON_EXPORT_FIRST
-                    {
-                        "NON_EXPORT_FIRST", SSL_OP_NON_EXPORT_FIRST
-                    },
+    {
+        "NON_EXPORT_FIRST", SSL_OP_NON_EXPORT_FIRST
+    },
 #endif
 #ifdef SSL_OP_CIPHER_SERVER_PREFERENCE
-                    {
-                        "CIPHER_SERVER_PREFERENCE", SSL_OP_CIPHER_SERVER_PREFERENCE
-                    },
+    {
+        "CIPHER_SERVER_PREFERENCE", SSL_OP_CIPHER_SERVER_PREFERENCE
+    },
 #endif
 #ifdef SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG
-                    {
-                        "NETSCAPE_DEMO_CIPHER_CHANGE_BUG", SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG
-                    },
+    {
+        "NETSCAPE_DEMO_CIPHER_CHANGE_BUG", SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG
+    },
 #endif
 #ifdef SSL_OP_NO_SSLv2
-                    {
-                        "NO_SSLv2", SSL_OP_NO_SSLv2
-                    },
+    {
+        "NO_SSLv2", SSL_OP_NO_SSLv2
+    },
 #endif
 #ifdef SSL_OP_NO_SSLv3
-                    {
-                        "NO_SSLv3", SSL_OP_NO_SSLv3
-                    },
+    {
+        "NO_SSLv3", SSL_OP_NO_SSLv3
+    },
 #endif
 #ifdef SSL_OP_NO_TLSv1
-                    {
-                        "NO_TLSv1", SSL_OP_NO_TLSv1
-                    },
+    {
+        "NO_TLSv1", SSL_OP_NO_TLSv1
+    },
 #endif
-                    {
-                        "", 0
-                    },
-                    {
-                        NULL, 0
-                    }
-                };
+    {
+        "", 0
+    },
+    {
+        NULL, 0
+    }
+};
 
 /// \ingroup ServerProtocolSSLInternal
 static long
@@ -500,8 +499,7 @@ ssl_parse_flags(const char *flags)
     return fl;
 }
 
-struct SslErrorMapEntry
-{
+struct SslErrorMapEntry {
     const char *name;
     ssl_error_t value;
 };
@@ -553,7 +551,8 @@ sslFindErrorString(ssl_error_t value)
 // "dup" function for SSL_get_ex_new_index("cert_err_check")
 static int
 ssl_dupAclChecklist(CRYPTO_EX_DATA *, CRYPTO_EX_DATA *, void *,
-    int, long, void *) {
+                    int, long, void *)
+{
     // We do not support duplication of ACLCheckLists.
     // If duplication is needed, we can count copies with cbdata.
     assert(false);
@@ -563,7 +562,8 @@ ssl_dupAclChecklist(CRYPTO_EX_DATA *, CRYPTO_EX_DATA *, void *,
 // "free" function for SSL_get_ex_new_index("cert_err_check")
 static void
 ssl_freeAclChecklist(void *, void *ptr, CRYPTO_EX_DATA *,
-    int, long, void *) {
+                     int, long, void *)
+{
     delete static_cast<ACLChecklist *>(ptr); // may be NULL
 }
 
@@ -733,7 +733,7 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
 
     if (!SSL_CTX_check_private_key(sslContext)) {
         ssl_error = ERR_get_error();
-        debugs(83, 0, "SSL private key '" << 
+        debugs(83, 0, "SSL private key '" <<
                certfile << "' does not match public key '" <<
                keyfile << "': " << ERR_error_string(ssl_error, NULL)  );
         goto error;
@@ -763,7 +763,7 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
         cert_names = SSL_load_client_CA_file(clientCA);
 
         if (cert_names == NULL) {
-            debugs(83, 1, "Error loading the client CA certificates from '" << clientCA << "\': " << ERR_error_string(ERR_get_error(),NULL)  ); 
+            debugs(83, 1, "Error loading the client CA certificates from '" << clientCA << "\': " << ERR_error_string(ERR_get_error(),NULL)  );
             goto error;
         }
 

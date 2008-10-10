@@ -143,14 +143,14 @@ static void
 free_request(struct _request *r)
 {
     if (r->url)
-	free(r->url);
+        free(r->url);
     free(r);
 }
 
 #define RFC1123_STRFTIME "%a, %d %b %Y %H:%M:%S GMT"
 char *
 mkrfc1123(t)
-     time_t *t;
+time_t *t;
 {
     static char buf[128];
     struct tm *gmt = gmtime(t);
@@ -164,15 +164,15 @@ fd_close(int fd)
 {
     close(fd);
     if (FD[fd].ccb)
-	FD[fd].ccb(fd, FD[fd].data);
+        FD[fd].ccb(fd, FD[fd].data);
     FD[fd].ccb = NULL;
     FD[fd].cb = NULL;
     FD[fd].data = NULL;
     nfds--;
     if (fd == maxfd) {
-	while (fd > 0 && FD[fd].cb == NULL)
-	    fd--;
-	maxfd = fd;
+        while (fd > 0 && FD[fd].cb == NULL)
+            fd--;
+        maxfd = fd;
     }
 }
 
@@ -185,7 +185,7 @@ fd_open(int fd, CB * cb, void *data, CB * ccb)
     FD[fd].data = data;
     FD[fd].start = now.tv_sec;
     if (fd > maxfd)
-	maxfd = fd;
+        maxfd = fd;
     nfds++;
 }
 
@@ -206,62 +206,62 @@ read_reply(int fd, void *data)
     int len;
     int used = 0;
     if ((len = read(fd, buf, READ_BUF_SZ)) <= 0) {
-	fd_close(fd);
-	reqpersec++;
-	nrequests++;
-	return;
+        fd_close(fd);
+        reqpersec++;
+        nrequests++;
+        return;
     }
     total_bytes_read += len;
     if (r->headfound < 2) {
-	char *p, *header = NULL;
-	int oldlen = strlen(r->buf);
-	int newlen = oldlen + len;
-	assert(oldlen <= READ_BUF_SZ);
-	memcpy(r->buf + oldlen, buf, len);
-	r->buf[newlen + 1] = '\0';
-	for (p = r->buf; r->headfound < 2 && used < newlen; p++, used++) {
-	    switch (*p) {
-	    case '\n':
-		r->headfound++;
-		if (!header)
-		    break;
-		/* Decode header */
-		if (strncmp(header, "HTTP", 4) == 0)
-		    r->status = atoi(header + 8);
-		else if (strncasecmp(header, "Content-Length:", 15) == 0)
-		    r->content_length = atoi(header + 15);
-		else if (strncasecmp(header, "X-Request-URI:", 14) == 0) {
-		    /* Check URI */
-		    if (strncmp(r->url, header + 15, strcspn(header + 15, "\r\n"))) {
-			char url[8192];
-			strncpy(url, header + 15, strcspn(header + 15, "\r\n"));
-			url[strcspn(header + 15, "\r\n")] = '\n';
-			fprintf(stderr, "ERROR: Sent %s received %s\n",
-			    r->url, url);
-		    }
-		}
-		header = NULL;
-		break;
-	    case '\r':
-		break;
-	    default:
-		r->headfound = 0;
-		if (!header)
-		    header = p;
-		break;
-	    }
-	}
-	if (header) {
-	    memmove(r->buf, header, newlen - (header - r->buf) + 1);
-	}
-	assert(used >= oldlen);
-	used -= oldlen;
+        char *p, *header = NULL;
+        int oldlen = strlen(r->buf);
+        int newlen = oldlen + len;
+        assert(oldlen <= READ_BUF_SZ);
+        memcpy(r->buf + oldlen, buf, len);
+        r->buf[newlen + 1] = '\0';
+        for (p = r->buf; r->headfound < 2 && used < newlen; p++, used++) {
+            switch (*p) {
+            case '\n':
+                r->headfound++;
+                if (!header)
+                    break;
+                /* Decode header */
+                if (strncmp(header, "HTTP", 4) == 0)
+                    r->status = atoi(header + 8);
+                else if (strncasecmp(header, "Content-Length:", 15) == 0)
+                    r->content_length = atoi(header + 15);
+                else if (strncasecmp(header, "X-Request-URI:", 14) == 0) {
+                    /* Check URI */
+                    if (strncmp(r->url, header + 15, strcspn(header + 15, "\r\n"))) {
+                        char url[8192];
+                        strncpy(url, header + 15, strcspn(header + 15, "\r\n"));
+                        url[strcspn(header + 15, "\r\n")] = '\n';
+                        fprintf(stderr, "ERROR: Sent %s received %s\n",
+                                r->url, url);
+                    }
+                }
+                header = NULL;
+                break;
+            case '\r':
+                break;
+            default:
+                r->headfound = 0;
+                if (!header)
+                    header = p;
+                break;
+            }
+        }
+        if (header) {
+            memmove(r->buf, header, newlen - (header - r->buf) + 1);
+        }
+        assert(used >= oldlen);
+        used -= oldlen;
     }
     r->bodysize += len - used;
     if (opt_checksum) {
-	for (; used < len; used++) {
-	    r->sum += buf[used];
-	}
+        for (; used < len; used++) {
+            r->sum += buf[used];
+        }
     }
 }
 
@@ -272,34 +272,33 @@ reply_done(int fd, void *data)
     if (opt_range);		/* skip size checks for now */
     else if (strcmp(r->method, "HEAD") == 0);
     else if (r->bodysize != r->content_length && r->content_length >= 0)
-	fprintf(stderr, "ERROR: %s got %d of %d bytes\n",
-	    r->url, r->bodysize, r->content_length);
+        fprintf(stderr, "ERROR: %s got %d of %d bytes\n",
+                r->url, r->bodysize, r->content_length);
     else if (r->validsize >= 0) {
-	if (r->validsize != r->bodysize)
-	    fprintf(stderr, "WARNING: %s size mismatch wanted %d bytes got %d\n",
-		r->url, r->validsize, r->bodysize);
-	else if (opt_checksum && r->validsum != r->sum)
-	    fprintf(stderr, "WARNING: %s invalid checksum wanted 0x%lx got 0x%lx\n",
-		r->url, r->validsum, r->sum);
+        if (r->validsize != r->bodysize)
+            fprintf(stderr, "WARNING: %s size mismatch wanted %d bytes got %d\n",
+                    r->url, r->validsize, r->bodysize);
+        else if (opt_checksum && r->validsum != r->sum)
+            fprintf(stderr, "WARNING: %s invalid checksum wanted 0x%lx got 0x%lx\n",
+                    r->url, r->validsum, r->sum);
     }
     if (r->validstatus && r->status != r->validstatus) {
-	    fprintf(stderr, "WARNING: %s status mismatch wanted %d got %d\n",
-		r->url, r->validstatus, r->status);
+        fprintf(stderr, "WARNING: %s status mismatch wanted %d got %d\n",
+                r->url, r->validstatus, r->status);
     }
     if (trace_file) {
-	if (opt_checksum)
-	    fprintf(trace_file, "%s %s %d %s %d 0x%lx\n",
-		r->method, r->url, r->status, r->requestbodyfile, r->bodysize, r->sum);
-	else
-	    fprintf(trace_file, "%s %s %d %s %d\n",
-		r->method, r->url, r->status, r->requestbodyfile, r->bodysize);
+        if (opt_checksum)
+            fprintf(trace_file, "%s %s %d %s %d 0x%lx\n",
+                    r->method, r->url, r->status, r->requestbodyfile, r->bodysize, r->sum);
+        else
+            fprintf(trace_file, "%s %s %d %s %d\n",
+                    r->method, r->url, r->status, r->requestbodyfile, r->bodysize);
     }
     free_request(r);
 }
 
 struct _request *
-request(char *urlin)
-{
+            request(char *urlin) {
     int s = -1, f = -1;
     char buf[4096];
     char msg[8192];
@@ -312,19 +311,19 @@ request(char *urlin)
     struct sockaddr_in S;
     struct _request *r;
     if (*urlin == '\0')
-	return NULL;
+        return NULL;
     if ((s = socket(PF_INET, SOCK_STREAM, 0)) < 0) {
-	perror("socket");
-	return NULL;
+        perror("socket");
+        return NULL;
     }
     memset(&S, '\0', sizeof(struct sockaddr_in));
     S.sin_family = AF_INET;
     S.sin_port = htons(proxy_port);
     S.sin_addr.s_addr = inet_addr(proxy_addr);
     if (connect(s, (struct sockaddr *) &S, sizeof(S)) < 0) {
-	close(s);
-	perror("connect");
-	return NULL;
+        close(s);
+        perror("connect");
+        return NULL;
     }
     strcpy(urlbuf, urlin);
     method = strtok(urlbuf, " ");
@@ -334,15 +333,15 @@ request(char *urlin)
     size = strtok(NULL, " ");
     checksum = strtok(NULL, " ");
     if (!url) {
-	url = method;
-	method = "GET";
+        url = method;
+        method = "GET";
     }
     if (!file)
-	file = "-";
+        file = "-";
     if (!size)
-	size = "-";
+        size = "-";
     if (!checksum)
-	checksum = "-";
+        checksum = "-";
     r = calloc(1, sizeof *r);
     assert(r != NULL);
     r->url = strdup(url);
@@ -351,95 +350,95 @@ request(char *urlin)
     strcpy(r->requestbodyfile, file);
     r->fd = s;
     if (size && strcmp(size, "-") != 0)
-	r->validsize = atoi(size);
+        r->validsize = atoi(size);
     else
-	r->validsize = -1;	/* Unknown */
+        r->validsize = -1;	/* Unknown */
     if (checksum && strcmp(checksum, "-") != 0)
-	r->validsum = strtoul(checksum, NULL, 0);
+        r->validsum = strtoul(checksum, NULL, 0);
     if (status)
-	r->validstatus = atoi(status);
+        r->validstatus = atoi(status);
     r->content_length = -1;	/* Unknown */
     if (opt_accel) {
-	host = strchr(url, '/') + 2;
-	url = strchr(host, '/');
+        host = strchr(url, '/') + 2;
+        url = strchr(host, '/');
     } else {
-	host = NULL;
+        host = NULL;
     }
     sprintf(msg, "%s %s HTTP/1.0\r\n", method, url);
     if (host) {
-	url[0] = '\0';
-	sprintf(buf, "Host: %s\r\n", host);
-	strcat(msg, buf);
-	url[0] = '/';
+        url[0] = '\0';
+        sprintf(buf, "Host: %s\r\n", host);
+        strcat(msg, buf);
+        url[0] = '/';
     }
     strcat(msg, "Accept: */*\r\n");
     if (opt_ims && (lrand48() & 0x03) == 0) {
-	w = time(NULL) - (lrand48() & 0x3FFFF);
-	sprintf(buf, "If-Modified-Since: %s\r\n", mkrfc850(&w));
-	strcat(msg, buf);
+        w = time(NULL) - (lrand48() & 0x3FFFF);
+        sprintf(buf, "If-Modified-Since: %s\r\n", mkrfc850(&w));
+        strcat(msg, buf);
     }
     if (file && strcmp(file, "-") != 0) {
-	f = open(file, O_RDONLY);
-	if (f < 0) {
-	    perror("open file");
-	    exit(1);
-	}
-	fstat(f, &st);
-	sprintf(buf, "Content-Length: %d\r\n", (int) st.st_size);
-	strcat(msg, buf);
+        f = open(file, O_RDONLY);
+        if (f < 0) {
+            perror("open file");
+            exit(1);
+        }
+        fstat(f, &st);
+        sprintf(buf, "Content-Length: %d\r\n", (int) st.st_size);
+        strcat(msg, buf);
     }
     if (opt_range && (lrand48() & 0x03) == 0) {
-	int len;
-	int count = 0;
-	strcat(msg, "Range: bytes=");
-	while (((len = (int) lrand48()) & 0x03) == 0 || !count) {
-	    const int offset = (int) lrand48();
-	    if (count)
-		strcat(msg, ",");
-	    switch (lrand48() & 0x03) {
-	    case 0:
-		sprintf(buf, "-%d", len);
-		break;
-	    case 1:
-		sprintf(buf, "%d-", offset);
-		break;
-	    default:
-		sprintf(buf, "%d-%d", offset, offset + len);
-		break;
-	    }
-	    strcat(msg, buf);
-	    count++;
-	}
-	strcat(msg, "\r\n");
+        int len;
+        int count = 0;
+        strcat(msg, "Range: bytes=");
+        while (((len = (int) lrand48()) & 0x03) == 0 || !count) {
+            const int offset = (int) lrand48();
+            if (count)
+                strcat(msg, ",");
+            switch (lrand48() & 0x03) {
+            case 0:
+                sprintf(buf, "-%d", len);
+                break;
+            case 1:
+                sprintf(buf, "%d-", offset);
+                break;
+            default:
+                sprintf(buf, "%d-%d", offset, offset + len);
+                break;
+            }
+            strcat(msg, buf);
+            count++;
+        }
+        strcat(msg, "\r\n");
     }
     strcat(msg, custom_header);
     strcat(msg, "\r\n");
     len = strlen(msg);
     if ((len2 = write(s, msg, len)) != len) {
-	close(s);
-	perror("write request");
-	free_request(r);
-	return NULL;
+        close(s);
+        perror("write request");
+        free_request(r);
+        return NULL;
     } else
-	total_bytes_written += len2;
+        total_bytes_written += len2;
     if (f >= 0) {
-	while ((len = read(f, buf, sizeof(buf))) > 0) {
-	    len2 = write(s, buf, len);
-	    if (len2 < 0) {
-		perror("write body");
-		close(s);
-		free_request(r);
-	    }
-	}
-	if (len < 0) {
-	    perror("read body");
-	    exit(1);
-	}
+        while ((len = read(f, buf, sizeof(buf))) > 0) {
+            len2 = write(s, buf, len);
+            if (len2 < 0) {
+                perror("write body");
+                close(s);
+                free_request(r);
+            }
+        }
+        if (len < 0) {
+            perror("read body");
+            exit(1);
+        }
     }
-/*
- * if (fcntl(s, F_SETFL, O_NDELAY) < 0)
- * perror("fcntl O_NDELAY");
- */
+    /*
+     * if (fcntl(s, F_SETFL, O_NDELAY) < 0)
+     * perror("fcntl O_NDELAY");
+     */
     return r;
 }
 
@@ -451,21 +450,21 @@ read_url(int fd, void *junk)
     char *t;
     buf[0] = '\0';
     if (fgets(buf, 8191, stdin) == NULL) {
-	printf("Done Reading URLS\n");
-	fd_close(0);
-	nfds++;
-	return;
+        printf("Done Reading URLS\n");
+        fd_close(0);
+        nfds++;
+        return;
     }
     if (buf[0] == '\0')
-	return;
+        return;
     if ((t = strchr(buf, '\n')))
-	*t = '\0';
+        *t = '\0';
     r = request(buf);
     if (!r) {
-	max_connections = nfds - 1;
-	printf("NOTE: max_connections set at %d\n", max_connections);
+        max_connections = nfds - 1;
+        printf("NOTE: max_connections set at %d\n", max_connections);
     } else {
-	fd_open(r->fd, read_reply, r, reply_done);
+        fd_open(r->fd, read_reply, r, reply_done);
     }
 }
 
@@ -483,8 +482,8 @@ usage(void)
 
 int
 main(argc, argv)
-     int argc;
-     char *argv[];
+int argc;
+char *argv[];
 {
     int i;
     int c;
@@ -501,48 +500,48 @@ main(argc, argv)
     start = last = now;
     custom_header = strdup("");
     while ((c = getopt(argc, argv, "ap:h:H:n:icrl:L:t:")) != -1) {
-	switch (c) {
-	case 'a':
-	    opt_accel = 1;
-	    break;
-	case 'p':
-	    proxy_port = atoi(optarg);
-	    break;
-	case 'h':
-	    proxy_addr = strdup(optarg);
-	    break;
-	case 'n':
-	    max_connections = atoi(optarg);
-	    break;
-	case 'i':
-	    opt_ims = 1;
-	    break;
-	case 'l':
-	    lifetime = (time_t) atoi(optarg);
-	    break;
-	case 'L':
-	    process_lifetime = (time_t) atoi(optarg);
-	    break;
-	case 'c':
-	    opt_checksum = 1;
-	    break;
-	case 't':
-	    trace_file = fopen(optarg, "a");
-	    assert(trace_file);
-	    setbuf(trace_file, NULL);
-	    break;
-	case 'r':
-	    opt_range = 1;
-	    break;
-	case 'H':
-	    custom_header = realloc(custom_header, strlen(custom_header) + strlen(optarg) + 2 + 1);
-	    strcat(custom_header, optarg);
-	    strcat(custom_header, "\r\n");
-	    break;
-	default:
-	    usage();
-	    return 1;
-	}
+        switch (c) {
+        case 'a':
+            opt_accel = 1;
+            break;
+        case 'p':
+            proxy_port = atoi(optarg);
+            break;
+        case 'h':
+            proxy_addr = strdup(optarg);
+            break;
+        case 'n':
+            max_connections = atoi(optarg);
+            break;
+        case 'i':
+            opt_ims = 1;
+            break;
+        case 'l':
+            lifetime = (time_t) atoi(optarg);
+            break;
+        case 'L':
+            process_lifetime = (time_t) atoi(optarg);
+            break;
+        case 'c':
+            opt_checksum = 1;
+            break;
+        case 't':
+            trace_file = fopen(optarg, "a");
+            assert(trace_file);
+            setbuf(trace_file, NULL);
+            break;
+        case 'r':
+            opt_range = 1;
+            break;
+        case 'H':
+            custom_header = realloc(custom_header, strlen(custom_header) + strlen(optarg) + 2 + 1);
+            strcat(custom_header, optarg);
+            strcat(custom_header, "\r\n");
+            break;
+        default:
+            usage();
+            return 1;
+        }
     }
     fd_open(0, read_url, NULL, NULL);
     nfds--;
@@ -550,58 +549,58 @@ main(argc, argv)
     signal(SIGPIPE, SIG_IGN);
     FD_ZERO(&R2);
     while (nfds || FD[0].cb) {
-	FD_ZERO(&R);
-	to.tv_sec = 0;
-	to.tv_usec = 100000;
-	if (nfds < max_connections && FD[0].cb)
-	    FD_SET(0, &R);
-	for (i = 1; i <= maxfd; i++) {
-	    if (FD[i].cb == NULL)
-		continue;
-	    if (now.tv_sec - FD[i].start > lifetime) {
-		fprintf(stderr, "WARNING: fd %d lifetime timeout\n", i);
-		fd_close(i);
-		continue;
-	    }
-	    FD_SET(i, &R);
-	}
-	if (select(maxfd + 1, &R, NULL, NULL, &to) < 0) {
-	    fprintf(stderr, "maxfd=%d\n", maxfd);
-	    if (errno != EINTR)
-		perror("select");
-	    continue;
-	}
-	gettimeofday(&now, NULL);
-	for (i = 0; i <= maxfd; i++) {
-	    if (!FD_ISSET(i, &R))
-		continue;
-	    FD[i].cb(i, FD[i].data);
-	    if (nfds < max_connections && FD[0].cb) {
-		j = 0;
-		FD_SET(0, &R2);
-		to.tv_sec = 0;
-		to.tv_usec = 0;
-		if (select(1, &R2, NULL, NULL, &to) == 1)
-		    FD[0].cb(0, FD[0].data);
-	    }
-	}
-	if (now.tv_sec > last.tv_sec) {
-	    last = now;
-	    dt = (int) (now.tv_sec - start.tv_sec);
-	    printf("T+ %6d: %9d req (%+4d), %4d conn, %3d/sec avg, %dmb, %dkb/sec avg\n",
-		dt,
-		nrequests,
-		reqpersec,
-		nfds,
-		(int) (nrequests / dt),
-		(int) (total_bytes_read / 1024 / 1024),
-		(int) (total_bytes_read / 1024 / dt));
-	    reqpersec = 0;
-	    /*
-	     * if (dt > process_lifetime)
-	     *     exit(0);
-	     */
-	}
+        FD_ZERO(&R);
+        to.tv_sec = 0;
+        to.tv_usec = 100000;
+        if (nfds < max_connections && FD[0].cb)
+            FD_SET(0, &R);
+        for (i = 1; i <= maxfd; i++) {
+            if (FD[i].cb == NULL)
+                continue;
+            if (now.tv_sec - FD[i].start > lifetime) {
+                fprintf(stderr, "WARNING: fd %d lifetime timeout\n", i);
+                fd_close(i);
+                continue;
+            }
+            FD_SET(i, &R);
+        }
+        if (select(maxfd + 1, &R, NULL, NULL, &to) < 0) {
+            fprintf(stderr, "maxfd=%d\n", maxfd);
+            if (errno != EINTR)
+                perror("select");
+            continue;
+        }
+        gettimeofday(&now, NULL);
+        for (i = 0; i <= maxfd; i++) {
+            if (!FD_ISSET(i, &R))
+                continue;
+            FD[i].cb(i, FD[i].data);
+            if (nfds < max_connections && FD[0].cb) {
+                j = 0;
+                FD_SET(0, &R2);
+                to.tv_sec = 0;
+                to.tv_usec = 0;
+                if (select(1, &R2, NULL, NULL, &to) == 1)
+                    FD[0].cb(0, FD[0].data);
+            }
+        }
+        if (now.tv_sec > last.tv_sec) {
+            last = now;
+            dt = (int) (now.tv_sec - start.tv_sec);
+            printf("T+ %6d: %9d req (%+4d), %4d conn, %3d/sec avg, %dmb, %dkb/sec avg\n",
+                   dt,
+                   nrequests,
+                   reqpersec,
+                   nfds,
+                   (int) (nrequests / dt),
+                   (int) (total_bytes_read / 1024 / 1024),
+                   (int) (total_bytes_read / 1024 / dt));
+            reqpersec = 0;
+            /*
+             * if (dt > process_lifetime)
+             *     exit(0);
+             */
+        }
     }
     printf("Exiting normally\n");
     return 0;

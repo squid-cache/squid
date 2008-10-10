@@ -21,16 +21,16 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *  
+ *
  */
 
 #include <unistd.h>
@@ -61,7 +61,7 @@ hash_url(const void *data, unsigned int size)
     unsigned int i, j, n;
     j = strlen(s);
     for (i = j / 2, n = 0; i < j; i++)
-	n ^= 271 * (unsigned) s[i];
+        n ^= 271 * (unsigned) s[i];
     i = n ^ (j * 271);
     return i % size;
 }
@@ -74,8 +74,8 @@ hash_string(const void *data, unsigned int size)
     unsigned int j = 0;
     unsigned int i = 0;
     while (*s) {
-	j++;
-	n ^= 271 * (unsigned) *s++;
+        j++;
+        n ^= 271 * (unsigned) *s++;
     }
     i = n ^ (j * 271);
     return i % size;
@@ -114,30 +114,30 @@ hash4(const void *data, unsigned int size)
     loop = (len + 8 - 1) >> 3;
     switch (len & (8 - 1)) {
     case 0:
-	do {
-	    HASH4;
-	    /* FALLTHROUGH */
-    case 7:
-	    HASH4;
-	    /* FALLTHROUGH */
-    case 6:
-	    HASH4;
-	    /* FALLTHROUGH */
-    case 5:
-	    HASH4;
-	    /* FALLTHROUGH */
-    case 4:
-	    HASH4;
-	    /* FALLTHROUGH */
-    case 3:
-	    HASH4;
-	    /* FALLTHROUGH */
-    case 2:
-	    HASH4;
-	    /* FALLTHROUGH */
-    case 1:
-	    HASH4;
-	} while (--loop);
+        do {
+            HASH4;
+            /* FALLTHROUGH */
+        case 7:
+            HASH4;
+            /* FALLTHROUGH */
+        case 6:
+            HASH4;
+            /* FALLTHROUGH */
+        case 5:
+            HASH4;
+            /* FALLTHROUGH */
+        case 4:
+            HASH4;
+            /* FALLTHROUGH */
+        case 3:
+            HASH4;
+            /* FALLTHROUGH */
+        case 2:
+            HASH4;
+            /* FALLTHROUGH */
+        case 1:
+            HASH4;
+        } while (--loop);
     }
     return h % size;
 }
@@ -152,9 +152,9 @@ hash_create(HASHCMP * cmp_func, int hash_sz, HASHHASH * hash_func)
 {
     hash_table *hid = calloc(1, sizeof(hash_table));
     if (!hash_sz)
-	hid->size = (unsigned int) DEFAULT_HASH_SIZE;
+        hid->size = (unsigned int) DEFAULT_HASH_SIZE;
     else
-	hid->size = (unsigned int) hash_sz;
+        hid->size = (unsigned int) hash_sz;
     /* allocate and null the buckets */
     hid->buckets = calloc(hid->size, sizeof(hash_link *));
     hid->cmp = cmp_func;
@@ -180,9 +180,9 @@ hash_insert(hash_table * hid, const char *k, void *item)
     /* Add to the given hash table 'hid' */
     new = calloc(1, sizeof(hash_link));
     if (!new) {
-	fprintf(stderr, "calloc failed!\n");
-	print_stats();
-	exit(1);
+        fprintf(stderr, "calloc failed!\n");
+        print_stats();
+        exit(1);
     }
     new->item = item;
     new->key = (char *) k;
@@ -193,7 +193,7 @@ hash_insert(hash_table * hid, const char *k, void *item)
 
 /*
  *  hash_join - joins a hash_link under its key lnk->key
- *  into the hash table 'hid'.  
+ *  into the hash table 'hid'.
  *
  *  It does not copy any data into the hash table, only links pointers.
  */
@@ -219,9 +219,9 @@ hash_lookup(hash_table * hid, const void *k)
     assert(k != NULL);
     b = hid->hash(k, hid->size);
     for (walker = hid->buckets[b]; walker != NULL; walker = walker->next) {
-	if ((hid->cmp) (k, walker->key) == 0)
-	    return (walker);
-	assert(walker != walker->next);
+        if ((hid->cmp) (k, walker->key) == 0)
+            return (walker);
+        assert(walker != walker->next);
     }
     return NULL;
 }
@@ -236,16 +236,16 @@ hash_first(hash_table * hid)
     int i;
 
     for (i = 0; i < hid->size; i++) {
-	hid->current_slot = i;
-	if (hid->buckets[i] != NULL)
-	    return (hid->current_ptr = hid->buckets[i]);
+        hid->current_slot = i;
+        if (hid->buckets[i] != NULL)
+            return (hid->current_ptr = hid->buckets[i]);
     }
     return NULL;
 }
 
 /*
  *  hash_next - returns the next item in the hash table 'hid'.
- *  Otherwise, returns NULL on error or end of list.  
+ *  Otherwise, returns NULL on error or end of list.
  *
  *  MUST call hash_first() before hash_next().
  */
@@ -255,15 +255,15 @@ hash_next(hash_table * hid)
     int i;
 
     if (hid->current_ptr != NULL) {
-	hid->current_ptr = hid->current_ptr->next;
-	if (hid->current_ptr != NULL)
-	    return (hid->current_ptr);	/* next item */
+        hid->current_ptr = hid->current_ptr->next;
+        if (hid->current_ptr != NULL)
+            return (hid->current_ptr);	/* next item */
     }
     /* find next bucket */
     for (i = hid->current_slot + 1; i < hid->size; i++) {
-	hid->current_slot = i;
-	if (hid->buckets[i] != NULL)
-	    return (hid->current_ptr = hid->buckets[i]);
+        hid->current_slot = i;
+        if (hid->buckets[i] != NULL)
+            return (hid->current_ptr = hid->buckets[i]);
     }
     return NULL;		/* end of list */
 }
@@ -275,10 +275,10 @@ hash_delete(hash_table * hid, const char *key)
 }
 
 /*
- *  hash_delete_link - deletes the given hash_link node from the 
+ *  hash_delete_link - deletes the given hash_link node from the
  *  hash table 'hid'. If FreeLink then free the given hash_link.
  *
- *  On success, it returns 0 and deletes the link; otherwise, 
+ *  On success, it returns 0 and deletes the link; otherwise,
  *  returns non-zero on error.
  */
 int
@@ -287,26 +287,26 @@ hash_unlink(hash_table * hid, hash_link * hl, int FreeLink)
     hash_link *walker, *prev;
     int i;
     if (hl == NULL)
-	return -1;
+        return -1;
     i = hid->hash(hl->key, hid->size);
     for (prev = NULL, walker = hid->buckets[i];
-	walker != NULL; prev = walker, walker = walker->next) {
-	if (walker == hl) {
-	    if (prev == NULL) {	/* it's the head */
-		hid->buckets[i] = walker->next;
-	    } else {
-		prev->next = walker->next;	/* skip it */
-	    }
-	    /* fix walker state if needed */
-	    if (walker == hid->current_ptr)
-		hid->current_ptr = walker->next;
-	    if (FreeLink) {
-		if (walker) {
-		    free(walker);
-		}
-	    }
-	    return 0;
-	}
+            walker != NULL; prev = walker, walker = walker->next) {
+        if (walker == hl) {
+            if (prev == NULL) {	/* it's the head */
+                hid->buckets[i] = walker->next;
+            } else {
+                prev->next = walker->next;	/* skip it */
+            }
+            /* fix walker state if needed */
+            if (walker == hid->current_ptr)
+                hid->current_ptr = walker->next;
+            if (FreeLink) {
+                if (walker) {
+                    free(walker);
+                }
+            }
+            return 0;
+        }
     }
     return 1;
 }
@@ -326,14 +326,14 @@ hash_remove_link(hash_table * hid, hash_link * hl)
 }
 
 /*
- *  hash_get_bucket - returns the head item of the bucket 
+ *  hash_get_bucket - returns the head item of the bucket
  *  in the hash table 'hid'. Otherwise, returns NULL on error.
  */
 hash_link *
 hash_get_bucket(hash_table * hid, unsigned int bucket)
 {
     if (bucket >= hid->size)
-	return NULL;
+        return NULL;
     return (hid->buckets[bucket]);
 }
 
@@ -344,7 +344,7 @@ hashFreeMemory(hash_table * hid)
     if (hid->buckets);
     free(hid->buckets);
     if (hid)
-	free(hid);
+        free(hid);
 }
 
 
@@ -368,36 +368,36 @@ main(void)
 
     printf("creating hash table\n");
     if ((hid = hash_create(strcmp, 229, hash_string)) < 0) {
-	printf("hash_create error.\n");
-	exit(1);
+        printf("hash_create error.\n");
+        exit(1);
     }
     printf("done creating hash table: %d\n", hid);
 
     while (fgets(buf, BUFSIZ, stdin)) {
-	buf[strlen(buf) - 1] = '\0';
-	printf("Inserting '%s' for item %p to hash table: %d\n",
-	    buf, buf, hid);
-	hash_insert(hid, xstrdup(buf), (void *) 0x12345678);
-	if (random() % 17 == 0)
-	    strcpy(todelete, buf);
+        buf[strlen(buf) - 1] = '\0';
+        printf("Inserting '%s' for item %p to hash table: %d\n",
+               buf, buf, hid);
+        hash_insert(hid, xstrdup(buf), (void *) 0x12345678);
+        if (random() % 17 == 0)
+            strcpy(todelete, buf);
     }
 
     printf("walking hash table...\n");
     for (i = 0, walker = hash_first(hid); walker; walker = hash_next(hid)) {
-	printf("item %5d: key: '%s' item: %p\n", i++, walker->key,
-	    walker->item);
+        printf("item %5d: key: '%s' item: %p\n", i++, walker->key,
+               walker->item);
     }
     printf("done walking hash table...\n");
 
     if (todelete[0]) {
-	printf("deleting %s from %d\n", todelete, hid);
-	if (hash_delete(hid, todelete))
-	    printf("hash_delete error\n");
+        printf("deleting %s from %d\n", todelete, hid);
+        if (hash_delete(hid, todelete))
+            printf("hash_delete error\n");
     }
     printf("walking hash table...\n");
     for (i = 0, walker = hash_first(hid); walker; walker = hash_next(hid)) {
-	printf("item %5d: key: '%s' item: %p\n", i++, walker->key,
-	    walker->item);
+        printf("item %5d: key: '%s' item: %p\n", i++, walker->key,
+               walker->item);
     }
     printf("done walking hash table...\n");
 

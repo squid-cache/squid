@@ -12,22 +12,28 @@ DEFAULT_ERROR_DIR	= $(errordir)
 
 # List of automated translations possible:
 TRANSLATIONS = \
+	bg \
 	ca \
+	cs \
 	da \
 	de \
 	en en-au en-gb \
 	es \
 	fr \
+	id \
 	it \
+	ja \
 	nl \
-	pt-br
+	pt-br \
+	sv \
+	uk \
+	zh-cn
 
 # Legacy language contributions...
 #
 LANGUAGES	= \
 		Armenian \
 		Azerbaijani \
-		Bulgarian \
 		Czech \
 		Estonian \
 		Finnish \
@@ -45,13 +51,8 @@ LANGUAGES	= \
 		Serbian \
 		Simplify_Chinese \
 		Slovak \
-		Spanish \
-		Swedish \
 		Traditional_Chinese \
-		Turkish \
-		Ukrainian-1251 \
-		Ukrainian-koi8-u \
-		Ukrainian-utf8
+		Turkish
 
 install-data-local: 
 	@for l in $(LANGUAGES); do \

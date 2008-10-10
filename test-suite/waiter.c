@@ -16,8 +16,8 @@ main(int argc, char *argv[])
     to.tv_sec = alarm.tv_sec - now.tv_sec;
     to.tv_usec = alarm.tv_usec - now.tv_usec;
     if (to.tv_usec < 0) {
-	to.tv_usec += 1000000;
-	to.tv_sec -= 1;
+        to.tv_usec += 1000000;
+        to.tv_sec -= 1;
     }
     select(1, NULL, NULL, NULL, &to);
     return 0;

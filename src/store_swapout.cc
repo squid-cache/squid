@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -56,8 +56,8 @@ storeSwapOutStart(StoreEntry * e)
     /* Build the swap metadata, so the filesystem will know how much
      * metadata there is to store
      */
-    debugs(20, 5, "storeSwapOutStart: Begin SwapOut '" << e->url() << "' to dirno " <<  
-           e->swap_dirn << ", fileno " << std::hex << std::setw(8) << std::setfill('0') << 
+    debugs(20, 5, "storeSwapOutStart: Begin SwapOut '" << e->url() << "' to dirno " <<
+           e->swap_dirn << ", fileno " << std::hex << std::setw(8) << std::setfill('0') <<
            std::uppercase << e->swap_filen);
     e->swap_status = SWAPOUT_WRITING;
     /* If we start swapping out objects with OutOfBand Metadata,
@@ -192,7 +192,7 @@ StoreEntry::swapOut()
     debugs(20, 7, HERE << "storeSwapOut: swapout.queue_offset = " << mem_obj->swapout.queue_offset);
 
     if (mem_obj->swapout.sio != NULL)
-    debugs(20, 7, "storeSwapOut: storeOffset() = " << mem_obj->swapout.sio->offset()  );
+        debugs(20, 7, "storeSwapOut: storeOffset() = " << mem_obj->swapout.sio->offset()  );
 
     int64_t swapout_maxsize = mem_obj->endOffset() - mem_obj->swapout.queue_offset;
 
@@ -317,8 +317,8 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
     cbdataFree(c);
 
     if (errflag) {
-        debugs(20, 1, "storeSwapOutFileClosed: dirno " << e->swap_dirn << ", swapfile " << 
-               std::hex << std::setw(8) << std::setfill('0') << std::uppercase << 
+        debugs(20, 1, "storeSwapOutFileClosed: dirno " << e->swap_dirn << ", swapfile " <<
+               std::hex << std::setw(8) << std::setfill('0') << std::uppercase <<
                e->swap_filen << ", errflag=" << errflag);
         debugs(20, 1, "\t" << xstrerror());
 
@@ -342,8 +342,8 @@ storeSwapOutFileClosed(void *data, int errflag, StoreIOState::Pointer self)
         e->releaseRequest();
     } else {
         /* swapping complete */
-        debugs(20, 3, "storeSwapOutFileClosed: SwapOut complete: '" << e->url() << "' to " << 
-               e->swap_dirn  << ", " << std::hex << std::setw(8) << std::setfill('0') << 
+        debugs(20, 3, "storeSwapOutFileClosed: SwapOut complete: '" << e->url() << "' to " <<
+               e->swap_dirn  << ", " << std::hex << std::setw(8) << std::setfill('0') <<
                std::uppercase << e->swap_filen);
         e->swap_file_sz = e->objectLen() + mem->swap_hdr_sz;
         e->swap_status = SWAPOUT_DONE;

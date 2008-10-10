@@ -18,12 +18,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -83,6 +83,7 @@ typedef enum {
     HDR_PROXY_AUTHENTICATION_INFO,
     HDR_PROXY_AUTHORIZATION,
     HDR_PROXY_CONNECTION,
+    HDR_PROXY_SUPPORT,
     HDR_PUBLIC,
     HDR_RANGE,
     HDR_REQUEST_RANGE,		/**< some clients use this, sigh */
@@ -142,8 +143,7 @@ typedef enum {
     hoReply
 } http_hdr_owner_type;
 
-struct _HttpHeaderFieldAttrs
-{
+struct _HttpHeaderFieldAttrs {
     const char *name;
     http_hdr_type id;
     field_type type;

@@ -19,16 +19,16 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *  
+ *
  */
 
 #ifndef SQUID_CONFIG_H
@@ -111,6 +111,9 @@
 #elif defined(__OpenBSD__)
 #define _SQUID_OPENBSD_
 
+#elif defined(__DragonFly__)
+#define _SQUID_DRAGONFLY_
+
 #elif defined(__CYGWIN32__)  || defined(__CYGWIN__)
 #define _SQUID_CYGWIN_
 #define _SQUID_WIN32_
@@ -129,10 +132,10 @@
 #elif defined(__EMX__) || defined(OS2) || defined(__OS2__)
 #define _SQUID_OS2_
 /*
- *  FIXME: the os2 port of bash seems to have problems checking
- *  the return codes of programs in if statements.  These options
- *  need to be overridden.
- */
+*  FIXME: the os2 port of bash seems to have problems checking
+*  the return codes of programs in if statements.  These options
+*  need to be overridden.
+*/
 #endif
 
 /* FD_SETSIZE must be redefined before including sys/types.h */
@@ -317,22 +320,22 @@ typedef long mtyp_t;
 #if defined(_SQUID_SOLARIS_) && (defined(i386) || defined(__i386))
 #ifndef HAVE_PAD128_T
 typedef union {
-	long double	_q;
-	int32_t		_l[4];
+    long double	_q;
+    int32_t		_l[4];
 } pad128_t;
 #endif
 #ifndef HAVE_UPAD128_T
 typedef union {
-	long double	_q;
-	uint32_t	_l[4];
+    long double	_q;
+    uint32_t	_l[4];
 } upad128_t;
 #endif
 #endif
 
-/* 
- * Don't allow inclusion of malloc.h on FreeBSD, Next and OpenBSD 
+/*
+ * Don't allow inclusion of malloc.h on FreeBSD, Next and OpenBSD
  */
-#if defined(HAVE_MALLOC_H) && (defined(_SQUID_FREEBSD_) || defined(_SQUID_NEXT_) || defined(_SQUID_OPENBSD_))
+#if defined(HAVE_MALLOC_H) && (defined(_SQUID_FREEBSD_) || defined(_SQUID_NEXT_) || defined(_SQUID_OPENBSD_) || defined(_SQUID_DRAGONFLY_))
 #undef HAVE_MALLOC_H
 #endif
 
@@ -404,7 +407,7 @@ typedef union {
 
 /* gcc doesn't recognize the Windows native 64 bit formatting tags causing
  * the compile fail, so we must disable the check on native Windows.
- */  
+ */
 
 #if __GNUC__ && !defined(_SQUID_MSWIN_)
 #define PRINTF_FORMAT_ARG1 __attribute__ ((format (printf, 1, 2)))

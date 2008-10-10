@@ -2,12 +2,12 @@
 #define __RFCNB_H__
 
 /* UNIX RFCNB (RFC1001/RFC1002) NetBIOS implementation
- * 
+ *
  * Version 1.0
  * RFCNB Defines
- * 
+ *
  * Copyright (C) Richard Sharpe 1996
- * 
+ *
  */
 
 /*
@@ -15,12 +15,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -77,8 +77,8 @@ typedef struct RFCNB_Con {
 } RFCNB_Con;
 
 typedef char RFCNB_Hdr[4];	/* The header is 4 bytes long with  */
-				    /* char[0] as the type, char[1] the */
-				    /* flags, and char[2..3] the length */
+/* char[0] as the type, char[1] the */
+/* flags, and char[2..3] the length */
 
 /* Macros to extract things from the header. These are for portability
  * between architecture types where we are worried about byte order     */
@@ -111,13 +111,13 @@ typedef char RFCNB_Hdr[4];	/* The header is 4 bytes long with  */
 #define RFCNB_Pkt_Type(p) (CVAL(p, RFCNB_Pkt_Type_Offset))
 
 /*typedef struct RFCNB_Hdr {
- * 
+ *
  * unsigned char type;
  * unsigned char flags;
  * int16 len;
- * 
+ *
  * } RFCNB_Hdr;
- * 
+ *
  * typedef struct RFCNB_Sess_Pkt {
  * unsigned char type;
  * unsigned char flags;
@@ -127,21 +127,21 @@ typedef char RFCNB_Hdr[4];	/* The header is 4 bytes long with  */
  * unsigned char n2_len;
  * char calling_name[33];
  * } RFCNB_Sess_Pkt;
- * 
- * 
+ *
+ *
  * typedef struct RFCNB_Nack_Pkt {
- * 
+ *
  * struct RFCNB_Hdr hdr;
  * unsigned char error;
- * 
+ *
  * } RFCNB_Nack_Pkt;
- * 
+ *
  * typedef struct RFCNB_Retarget_Pkt {
- * 
+ *
  * struct RFCNB_Hdr hdr;
  * int dest_ip;
  * unsigned char port;
- * 
+ *
  * } RFCNB_Redir_Pkt; */
 
 /* Static variables */

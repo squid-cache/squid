@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -44,10 +44,10 @@ SwapDir::~SwapDir()
 }
 
 void
-SwapDir::create(){}
+SwapDir::create() {}
 
 void
-SwapDir::dump(StoreEntry &)const{}
+SwapDir::dump(StoreEntry &)const {}
 
 bool
 SwapDir::doubleCheck(StoreEntry &)
@@ -56,7 +56,7 @@ SwapDir::doubleCheck(StoreEntry &)
 }
 
 void
-SwapDir::unlink(StoreEntry &){}
+SwapDir::unlink(StoreEntry &) {}
 
 void
 SwapDir::stat(StoreEntry &output) const
@@ -79,7 +79,7 @@ void
 SwapDir::statfs(StoreEntry &)const {}
 
 void
-SwapDir::maintain(){}
+SwapDir::maintain() {}
 
 size_t
 SwapDir::minSize() const
@@ -89,10 +89,10 @@ SwapDir::minSize() const
 }
 
 void
-SwapDir::reference(StoreEntry &){}
+SwapDir::reference(StoreEntry &) {}
 
 void
-SwapDir::dereference(StoreEntry &){}
+SwapDir::dereference(StoreEntry &) {}
 
 int
 SwapDir::callback()
@@ -101,7 +101,7 @@ SwapDir::callback()
 }
 
 void
-SwapDir::sync(){}
+SwapDir::sync() {}
 
 /* Move to StoreEntry ? */
 bool
@@ -129,10 +129,10 @@ SwapDir::canLog(StoreEntry const &e)const
 }
 
 void
-SwapDir::openLog(){}
+SwapDir::openLog() {}
 
 void
-SwapDir::closeLog(){}
+SwapDir::closeLog() {}
 
 int
 SwapDir::writeCleanStart()
@@ -141,10 +141,10 @@ SwapDir::writeCleanStart()
 }
 
 void
-SwapDir::writeCleanDone(){}
+SwapDir::writeCleanDone() {}
 
 void
-SwapDir::logEntry(const StoreEntry & e, int op) const{}
+SwapDir::logEntry(const StoreEntry & e, int op) const {}
 
 char const *
 SwapDir::type() const
@@ -153,7 +153,7 @@ SwapDir::type() const
 }
 
 /* NOT performance critical. Really. Don't bother optimising for speed
- * - RBC 20030718 
+ * - RBC 20030718
  */
 ConfigOption *
 SwapDir::getOptionTree() const
@@ -263,12 +263,12 @@ SwapDir::optionMaxSizeDump(StoreEntry * e) const
 }
 
 /* Swapdirs do not have an index of their own - thus they ask their parent..
- * but the parent child relationship isn't implemented yet 
+ * but the parent child relationship isn't implemented yet
  */
 StoreEntry *
 
 SwapDir::get
-    (const cache_key *key)
+(const cache_key *key)
 {
     return Store::Root().get(key);
 }
@@ -276,7 +276,7 @@ SwapDir::get
 void
 
 SwapDir::get
-    (String const key, STOREGETCLIENT callback, void *cbdata)
+(String const key, STOREGETCLIENT callback, void *cbdata)
 {
     fatal("not implemented");
 }

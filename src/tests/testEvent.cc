@@ -43,12 +43,10 @@ testEvent::testCreate()
 
 /* Helper for tests - an event which records the number of calls it received. */
 
-struct CalledEvent
-{
+struct CalledEvent {
     CalledEvent() : calls(0) {}
 
-    static void Handler(void *data)
-    {
+    static void Handler(void *data) {
         static_cast<CalledEvent *>(data)->calls++;
     }
 
@@ -99,15 +97,15 @@ testEvent::testDump()
     /* loop over the strings, showing exactly where they differ (if at all) */
     printf("Actual Text:\n");
     /* TODO: these should really be just [] lookups, but String doesn't have those here yet. */
-    for( int i = 0; i < anEntry->_appended_text.size(); i++) {
+    for ( int i = 0; i < anEntry->_appended_text.size(); i++) {
         CPPUNIT_ASSERT( expect.buf()[i] );
         CPPUNIT_ASSERT( anEntry->_appended_text.buf()[i] );
 
         /* slight hack to make special chars visible */
-        switch(anEntry->_appended_text.buf()[i])
-        {
+        switch (anEntry->_appended_text.buf()[i]) {
         case '\t':
-            printf("\\t"); break;
+            printf("\\t");
+            break;
         default:
             printf("%c", anEntry->_appended_text.buf()[i] );
         }
@@ -142,7 +140,7 @@ testEvent::testCheckEvents()
     CalledEvent event;
     /* with no events, its an idle engine */
     CPPUNIT_ASSERT_EQUAL(int(AsyncEngine::EVENT_IDLE), scheduler.checkEvents(0));
-    /* event running now gets will get sent to the dispatcher and the 
+    /* event running now gets will get sent to the dispatcher and the
      * engine becomes idle.
      */
     scheduler.schedule("test event", CalledEvent::Handler, &event, 0, 0, false);

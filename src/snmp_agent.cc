@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -39,13 +39,13 @@
 #include "SquidTime.h"
 
 /************************************************************************
- 
+
  SQUID MIB Implementation
- 
+
  ************************************************************************/
 
-/* 
- * cacheSystem group 
+/*
+ * cacheSystem group
  */
 
 variable_list *
@@ -84,8 +84,8 @@ snmp_sysFn(variable_list * Var, snint * ErrP)
     return Answer;
 }
 
-/* 
- * cacheConfig group 
+/*
+ * cacheConfig group
  */
 variable_list *
 snmp_confFn(variable_list * Var, snint * ErrP)
@@ -190,7 +190,7 @@ snmp_confFn(variable_list * Var, snint * ErrP)
 }
 
 
-/* 
+/*
  * cacheMesh group
  *   - cachePeerTable
  */
@@ -206,29 +206,26 @@ snmp_meshPtblFn(variable_list * Var, snint * ErrP)
     debugs(49, 5, "snmp_meshPtblFn: peer " << Var->name[LEN_SQ_MESH + 3] << " requested!");
     *ErrP = SNMP_ERR_NOERROR;
 
-    u_int index = Var->name[LEN_SQ_MESH + 3] ; 
-    for (p = Config.peers; p != NULL; p = p->next, cnt++)
-      {
-        if (p->index == index)
-	  {
-	    laddr = p->in_addr ;
-	    break;
-	  }
-      }
+    u_int index = Var->name[LEN_SQ_MESH + 3] ;
+    for (p = Config.peers; p != NULL; p = p->next, cnt++) {
+        if (p->index == index) {
+            laddr = p->in_addr ;
+            break;
+        }
+    }
 
     if (p == NULL) {
-      *ErrP = SNMP_ERR_NOSUCHNAME;
-      return NULL;
+        *ErrP = SNMP_ERR_NOSUCHNAME;
+        return NULL;
     }
 
 
     switch (Var->name[LEN_SQ_MESH + 2]) {
-    case MESH_PTBL_INDEX: // FIXME INET6: Should be visible?
-        {
-            Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                          (snint)p->index, SMI_INTEGER);
-        }
-        break;
+    case MESH_PTBL_INDEX: { // FIXME INET6: Should be visible?
+        Answer = snmp_var_new_integer(Var->name, Var->name_length,
+                                      (snint)p->index, SMI_INTEGER);
+    }
+    break;
 
 
     case MESH_PTBL_NAME:
@@ -240,27 +237,25 @@ snmp_meshPtblFn(variable_list * Var, snint * ErrP)
 
         break;
 
-    case MESH_PTBL_ADDR_TYPE:
-        {
-            int ival;
-            ival = laddr.IsIPv4() ? INETADDRESSTYPE_IPV4 : INETADDRESSTYPE_IPV6 ;
-            Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                          ival, SMI_INTEGER);
-        }
-        break;
-    case MESH_PTBL_ADDR:
-        {
-            Answer = snmp_var_new(Var->name, Var->name_length);
-            // InetAddress doesn't have its own ASN.1 type,
-            // like IpAddr does (SMI_IPADDRESS)
-            // See: rfc4001.txt
-            Answer->type = ASN_OCTET_STR;
-	    char host[MAX_IPSTRLEN];
-	    laddr.NtoA(host,MAX_IPSTRLEN);
-	    Answer->val_len = strlen(host);
-	    Answer->val.string =  (u_char *) xstrdup(host);
-        }
-        break;
+    case MESH_PTBL_ADDR_TYPE: {
+        int ival;
+        ival = laddr.IsIPv4() ? INETADDRESSTYPE_IPV4 : INETADDRESSTYPE_IPV6 ;
+        Answer = snmp_var_new_integer(Var->name, Var->name_length,
+                                      ival, SMI_INTEGER);
+    }
+    break;
+    case MESH_PTBL_ADDR: {
+        Answer = snmp_var_new(Var->name, Var->name_length);
+        // InetAddress doesn't have its own ASN.1 type,
+        // like IpAddr does (SMI_IPADDRESS)
+        // See: rfc4001.txt
+        Answer->type = ASN_OCTET_STR;
+        char host[MAX_IPSTRLEN];
+        laddr.NtoA(host,MAX_IPSTRLEN);
+        Answer->val_len = strlen(host);
+        Answer->val.string =  (u_char *) xstrdup(host);
+    }
+    break;
 
     case MESH_PTBL_HTTP:
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
@@ -413,16 +408,16 @@ snmp_prfSysFn(variable_list * Var, snint * ErrP)
         break;
 
     case PERF_SYS_CURUSED_FD:
-	Answer = snmp_var_new_integer(Var->name, Var->name_length,
-				      (snint) Number_FD,
-				      SMI_GAUGE32);
-	break;
+        Answer = snmp_var_new_integer(Var->name, Var->name_length,
+                                      (snint) Number_FD,
+                                      SMI_GAUGE32);
+        break;
 
     case PERF_SYS_CURMAX_FD:
-	Answer = snmp_var_new_integer(Var->name, Var->name_length,
-				      (snint) Biggest_FD,
-				      SMI_GAUGE32);
-	break;
+        Answer = snmp_var_new_integer(Var->name, Var->name_length,
+                                      (snint) Biggest_FD,
+                                      SMI_GAUGE32);
+        break;
 
     case PERF_SYS_NUMOBJCNT:
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
@@ -615,10 +610,10 @@ snmp_prfProtoFn(variable_list * Var, snint * ErrP)
             x = statByteHitRatio(minutes);
             break;
 
-	case PERF_MEDIAN_HTTP_NH:
-	    x = statHistDeltaMedian(&l->client_http.nh_svc_time,
-				    &f->client_http.nh_svc_time);
-	    break;
+        case PERF_MEDIAN_HTTP_NH:
+            x = statHistDeltaMedian(&l->client_http.nh_svc_time,
+                                    &f->client_http.nh_svc_time);
+            break;
 
         default:
             *ErrP = SNMP_ERR_NOSUCHNAME;

@@ -21,5 +21,5 @@ LoadableModulesConfigure(const wordlist *names)
     int count = 0;
     for (const wordlist *i = names; i; i = i->next, ++count)
         LoadModule(i->key);
-    debugs(1, 1, "loaded " << count << " Squid modules");
+    debugs(1, 1, "Squid modules loaded: " << count);
 }

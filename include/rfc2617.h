@@ -5,7 +5,7 @@
  * The following copyright and licence statement covers all changes made to the
  * reference implementation.
  *
- * Key changes to the reference implementation were: 
+ * Key changes to the reference implementation were:
  * alteration to a plain C layout.
  * Create CvtBin function
  * Allow CalcHA1 to make use of precaculated username:password:realm hash's

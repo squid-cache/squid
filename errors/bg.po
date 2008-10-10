@@ -1,0 +1,648 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: squid 3.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2008-09-29 15:05+1300\n"
+"PO-Revision-Date: 2008-09-29 03:09+1200\n"
+"Last-Translator: Evgeni Gechev <etg@setcom.bg>\n"
+"Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Pootle 1.1.0\n"
+
+#: templates/ERR_INVALID_REQ:4
+msgid ""
+"<b>Invalid Request</b> error was encountered while trying to process the "
+"request:"
+msgstr ""
+"При опит за обработка на заявката възникна следната грешка - <b>Невалидна "
+"заявка</b>:"
+
+#: templates/ERR_INVALID_RESP:4
+msgid ""
+"<b>Invalid Response</b> error was encountered while trying to process the "
+"request:"
+msgstr ""
+"При опит за обработка на заявката възникна следната грешка - <b>Невалиден "
+"отговор</b>:"
+
+#: templates/ERR_READ_TIMEOUT:7
+msgid ""
+"A Timeout occurred while waiting to read data from the network.  The network "
+"or server may be down or congested.  Please retry your request."
+msgstr ""
+"Изтече максимално допустимото време за четене на данни от мрежата. Мрежата "
+"или сървърът са недостъпни или претоварени. Моля, опитайте отново да "
+"направите Вашата заявка."
+
+#: templates/ERR_URN_RESOLVE:3
+msgid "A URL for the requested URN could not be retrieved"
+msgstr "Недостатъчна информация за локализиране на обекта"
+
+#: templates/ERR_ACCESS_DENIED:5
+msgid "Access Denied."
+msgstr "Отказан достъп"
+
+#: templates/ERR_ACCESS_DENIED:6
+msgid ""
+"Access control configuration prevents your request from being allowed at "
+"this time.  Please contact your service provider if you feel this is "
+"incorrect."
+msgstr ""
+"Конфигурацията за контрол на достъпа не позволява да бъде изпълнена Вашата "
+"заявка в този момент. Моля, ако считате, че това е неправилно, да се "
+"обърнете към Вашия Интернет доставчик."
+
+#: templates/ERR_FTP_FORBIDDEN:4
+msgid ""
+"An FTP authentication failure occurred while trying to retrieve the URL: <a "
+"href=\"%U\">%U</a>"
+msgstr ""
+"Възникна грешка при ауторизация към отдалечения FTP сървър при доставката на "
+"URL:<a href=\"%U\">%U</a>"
+
+#: templates/ERR_FTP_FAILURE:4
+msgid ""
+"An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
+"\">%U</a>"
+msgstr ""
+"Възникна грешка на FTP протокола при опит за доставка на: <a href=\"%U\">%U</"
+"a>"
+
+#: templates/ERR_ICAP_FAILURE:10
+msgid "An Illegal response was received from the ICAP server."
+msgstr "Невалиден отговор от ICAP сървъра."
+
+#: templates/ERR_READ_ERROR:7
+msgid ""
+"An error condition occurred while reading data from the network.  Please "
+"retry your request."
+msgstr ""
+"Възникна грешка при четене на данни от мрежата. Моля, опитайте отново да "
+"направите Вашата заявка."
+
+#: templates/ERR_WRITE_ERROR:7
+msgid ""
+"An error condition occurred while writing to the network.  Please retry your "
+"request."
+msgstr ""
+"Възникна грешка при изпращане на данни в мрежата. Моля, опитайте отново да "
+"направите Вашата заявка."
+
+#: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
+msgid "Cache Access Denied."
+msgstr "Отказан достъп до кешираните данни."
+
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED:3
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED:5
+msgid "Cache Manager Access Denied."
+msgstr "Отказан достъп до кеш мениджъра."
+
+#: templates/ERR_URN_RESOLVE:5
+msgid "Cannot Resolve URN"
+msgstr "Проблем при локализиране на обекта."
+
+#: templates/ERR_LIFETIME_EXP:5
+msgid "Connection Lifetime Expired"
+msgstr "Превишено максимално допустимо време за съществуване на връзката."
+
+#: templates/ERR_CONNECT_FAIL:5
+msgid "Connection to %I failed."
+msgstr "Връзката до %l не може да бъде осъществена."
+
+#: templates/ERR_INVALID_REQ:10
+msgid "Content-Length missing for POST or PUT requests."
+msgstr "Липсващо поле Content-Length за заявка от тип POST или PUT."
+
+#: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
+#: templates/ERR_CONNECT_FAIL:2 templates/ERR_DNS_FAIL:2 templates/ERR_ESI:2
+#: templates/ERR_FORWARDING_DENIED:2 templates/ERR_FTP_DISABLED:2
+#: templates/ERR_FTP_FAILURE:2 templates/ERR_FTP_FORBIDDEN:2
+#: templates/ERR_FTP_NOT_FOUND:2 templates/ERR_FTP_PUT_ERROR:2
+#: templates/ERR_FTP_UNAVAILABLE:2 templates/ERR_ICAP_FAILURE:2
+#: templates/ERR_INVALID_REQ:2 templates/ERR_INVALID_RESP:2
+#: templates/ERR_INVALID_URL:2 templates/ERR_LIFETIME_EXP:2
+#: templates/ERR_NO_RELAY:2 templates/ERR_ONLY_IF_CACHED_MISS:2
+#: templates/ERR_READ_ERROR:2 templates/ERR_READ_TIMEOUT:2
+#: templates/ERR_SECURE_CONNECT_FAIL:2 templates/ERR_SHUTTING_DOWN:2
+#: templates/ERR_SOCKET_FAILURE:2 templates/ERR_TOO_BIG:2
+#: templates/ERR_UNSUP_REQ:2 templates/ERR_URN_RESOLVE:2
+#: templates/ERR_WRITE_ERROR:2 templates/ERR_ZERO_SIZE_OBJECT:2
+msgid "ERROR"
+msgstr "ГРЕШКА"
+
+#: templates/ERR_CACHE_ACCESS_DENIED:1
+msgid "ERROR: Cache Access Denied"
+msgstr "ГРЕШКА: Отказан достъп до кешираните данни."
+
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED:1
+msgid "ERROR: Cache Manager Access Denied"
+msgstr "ГРЕШКА: Отказан достъп до кеш мениджъра."
+
+#: templates/ERR_FTP_PUT_ERROR:1
+msgid "ERROR: FTP upload failed"
+msgstr "ГРЕШКА: Неуспешен опит за качване на файл."
+
+#: templates/ERR_ACCESS_DENIED:1 templates/ERR_CANNOT_FORWARD:1
+#: templates/ERR_CONNECT_FAIL:1 templates/ERR_DNS_FAIL:1 templates/ERR_ESI:1
+#: templates/ERR_FORWARDING_DENIED:1 templates/ERR_FTP_DISABLED:1
+#: templates/ERR_FTP_FAILURE:1 templates/ERR_FTP_FORBIDDEN:1
+#: templates/ERR_FTP_NOT_FOUND:1 templates/ERR_FTP_UNAVAILABLE:1
+#: templates/ERR_ICAP_FAILURE:1 templates/ERR_INVALID_REQ:1
+#: templates/ERR_INVALID_RESP:1 templates/ERR_INVALID_URL:1
+#: templates/ERR_LIFETIME_EXP:1 templates/ERR_NO_RELAY:1
+#: templates/ERR_ONLY_IF_CACHED_MISS:1 templates/ERR_READ_ERROR:1
+#: templates/ERR_READ_TIMEOUT:1 templates/ERR_SECURE_CONNECT_FAIL:1
+#: templates/ERR_SHUTTING_DOWN:1 templates/ERR_SOCKET_FAILURE:1
+#: templates/ERR_TOO_BIG:1 templates/ERR_UNSUP_REQ:1
+#: templates/ERR_WRITE_ERROR:1 templates/ERR_ZERO_SIZE_OBJECT:1
+msgid "ERROR: The requested URL could not be retrieved"
+msgstr "ГРЕШКА: Заявената страница е недостъпна."
+
+#: templates/ERR_URN_RESOLVE:1
+msgid "ERROR: The requested URN not be retrieved"
+msgstr "ГРЕШКА: Заявеният адрес е недостъпен."
+
+#: templates/ERR_ESI:5
+msgid "ESI Processing failed."
+msgstr "Неуспешна обработка на ESI заявка."
+
+#: templates/ERR_FTP_PUT_CREATED:1
+msgid "FTP PUT Successful: File Created"
+msgstr "Файлът е създаден успешно."
+
+#: templates/ERR_FTP_PUT_MODIFIED:1
+msgid "FTP PUT Successful: File updated"
+msgstr "Файлът е обновен успешно."
+
+#: templates/ERR_FTP_PUT_ERROR:3
+msgid "FTP PUT/upload failed"
+msgstr "Заявката за качване на файл е неуспешна."
+
+#: templates/ERR_FTP_DISABLED:5
+msgid "FTP is Disabled"
+msgstr "Протоколът FTP е забранен."
+
+#: templates/ERR_SECURE_CONNECT_FAIL:5
+msgid "Failed to establish a secure connection to %I"
+msgstr "Неуспешен опит за осъществяване на криптирана връзка към %l"
+
+#: templates/ERR_FTP_PUT_CREATED:3
+msgid "File created"
+msgstr "Файлът е създаден"
+
+#: templates/ERR_FTP_PUT_MODIFIED:3
+msgid "File updated"
+msgstr "Файлът е обновен"
+
+#: templates/ERR_FORWARDING_DENIED:5
+msgid "Forwarding Denied."
+msgstr "Пренасочването на заявката е отказано."
+
+#: templates/ERR_ACCESS_DENIED:8 templates/ERR_CACHE_ACCESS_DENIED:8
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED:8 templates/ERR_CANNOT_FORWARD:8
+#: templates/ERR_CONNECT_FAIL:9 templates/ERR_DNS_FAIL:9 templates/ERR_ESI:9
+#: templates/ERR_FORWARDING_DENIED:8 templates/ERR_FTP_DISABLED:8
+#: templates/ERR_FTP_FAILURE:8 templates/ERR_FTP_FORBIDDEN:8
+#: templates/ERR_FTP_NOT_FOUND:9 templates/ERR_FTP_PUT_CREATED:4
+#: templates/ERR_FTP_PUT_ERROR:9 templates/ERR_FTP_PUT_MODIFIED:4
+#: templates/ERR_FTP_UNAVAILABLE:8 templates/ERR_ICAP_FAILURE:11
+#: templates/ERR_INVALID_REQ:13 templates/ERR_INVALID_RESP:8
+#: templates/ERR_INVALID_URL:13 templates/ERR_LIFETIME_EXP:8
+#: templates/ERR_NO_RELAY:8 templates/ERR_ONLY_IF_CACHED_MISS:8
+#: templates/ERR_READ_ERROR:9 templates/ERR_READ_TIMEOUT:9
+#: templates/ERR_SECURE_CONNECT_FAIL:9 templates/ERR_SHUTTING_DOWN:7
+#: templates/ERR_SOCKET_FAILURE:9 templates/ERR_TOO_BIG:10
+#: templates/ERR_UNSUP_REQ:8 templates/ERR_URN_RESOLVE:8
+#: templates/ERR_WRITE_ERROR:9 templates/ERR_ZERO_SIZE_OBJECT:8
+msgid "Generated %T by %h (%s)"
+msgstr ""
+
+#: templates/ERR_URN_RESOLVE:6
+msgid "Hey, don't expect too much from URNs on %T :)"
+msgstr ""
+
+#: templates/ERR_ICAP_FAILURE:5
+msgid "ICAP protocol error."
+msgstr "Грешка на ICAP протокола."
+
+#: templates/ERR_TOO_BIG:7
+msgid ""
+"If you are making a GET request, then the item you are trying to download is "
+"too large."
+msgstr ""
+"Ако Вашата заявка е от тип GET, то файлът, който се опитвате да свалите, е "
+"прекалено голям."
+
+#: templates/ERR_TOO_BIG:6
+msgid ""
+"If you are making a POST or PUT request, then the item you are trying to "
+"upload is too large."
+msgstr ""
+"Ако Вашата заявка е от тип POST или PUT, то данните, които се опитвате да "
+"изпратите, са с прекалено голям обем."
+
+#: templates/ERR_INVALID_REQ:11 templates/ERR_INVALID_URL:11
+msgid "Illegal character in hostname; underscores are not allowed."
+msgstr ""
+"Невалиден символ в името на сървъра (напр. символът за подчертаване е "
+"недопустим)"
+
+#: templates/ERR_INVALID_URL:10
+msgid "Illegal double-escape in the URL-Path"
+msgstr "Невалиден double-escape символ в адреса"
+
+#: templates/ERR_INVALID_URL:5
+msgid "Invalid URL"
+msgstr "Невалиден адрес"
+
+#: templates/ERR_INVALID_REQ:8
+msgid "Missing HTTP Identifier (HTTP/1.0)."
+msgstr "Липсващ HTTP идентификатор (HTTP/1.0)."
+
+#: templates/ERR_INVALID_REQ:7
+msgid "Missing URL."
+msgstr "Липсващ адрес."
+
+#: templates/ERR_INVALID_URL:9
+msgid "Missing hostname"
+msgstr "Липсващо име на сървъра."
+
+#: templates/ERR_INVALID_URL:8
+msgid ""
+"Missing or incorrect access protocol (should be <q>http://</q> or similar)"
+msgstr ""
+"Липсващ или невалиден протокол за достъп (трябва да е <q>http://</q> или "
+"нещо подобно)"
+
+#: templates/ERR_INVALID_REQ:6
+msgid "Missing or unknown request method."
+msgstr "Липсващ или непознат метод за достъп."
+
+#: templates/ERR_NO_RELAY:5
+msgid "No Wais Relay"
+msgstr "Няма конфигуриран WAIS Relay"
+
+#: templates/ERR_FTP_PUT_CREATED:2 templates/ERR_FTP_PUT_MODIFIED:2
+msgid "Operation successful"
+msgstr "Операцията е успешна."
+
+#: templates/ERR_CACHE_ACCESS_DENIED:7
+msgid ""
+"Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
+"have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
+"chpasswd.cgi\">change</a> your default password."
+msgstr ""
+"Моля обърнете се към <a href=\"mailto:%w%W\">администратора</a> ако имате "
+"проблем с достъпа или <a href=\"http://%h/cgi-bin/chpasswd.cgi\">сменете</a> "
+"паролата си."
+
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
+msgid ""
+"Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
+"have difficulties authenticating yourself or, if you <em>are</em> the "
+"administrator, read Squid documentation on cache manager interface and check "
+"cache log for more detailed error messages."
+msgstr ""
+"Моля обърнете се към <a href=\"mailto:%w%W\">администратора</a> ако имате "
+"проблем с достъпа или, ако <em>сте</em> администратора, прочетете "
+"документацията на Squid за кеш мениджър интерфейса и проверете логовете за "
+"по-подробни съобщения за грешката."
+
+#: templates/ERR_READ_ERROR:5
+msgid "Read Error"
+msgstr "Грешка при четене"
+
+#: templates/ERR_READ_TIMEOUT:5
+msgid "Read Timeout"
+msgstr "Изтече максимално допустимото време за четене"
+
+#: templates/ERR_INVALID_REQ:9
+msgid "Request is too large."
+msgstr "Заявката е прекалено голяма."
+
+#: templates/ERR_SOCKET_FAILURE:5
+msgid "Socket Failure"
+msgstr "Грешка при Socket операция"
+
+#: templates/ERR_INVALID_URL:6
+msgid "Some aspect of the requested URL is incorrect."
+msgstr "Неправилен адрес."
+
+#: templates/ERR_ICAP_FAILURE:8 templates/ERR_INVALID_REQ:5
+#: templates/ERR_INVALID_URL:7
+msgid "Some possible problems are:"
+msgstr "Възможни грешки:"
+
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED:6
+msgid ""
+"Sorry, you are not currently allowed to request %U from this cache manager "
+"until you have authenticated yourself."
+msgstr ""
+"Съжалявам, не Ви е позволен достъп до %U от този кеш мениджър докато не "
+"представите своето име и парола за достъп."
+
+#: templates/ERR_CACHE_ACCESS_DENIED:6
+msgid ""
+"Sorry, you are not currently allowed to request %U from this cache until you "
+"have authenticated yourself."
+msgstr ""
+"Съжалявам, не Ви е позволен достъп до %U от този кеш докато не представите "
+"своето име и парола за достъп."
+
+#: templates/ERR_ZERO_SIZE_OBJECT:6
+msgid "Squid did not receive any data for this request."
+msgstr "Кеш сървърът не получи никакви данни за тази заявка."
+
+#: templates/ERR_UNSUP_REQ:6
+msgid ""
+"Squid does not support all request methods for all access protocols. For "
+"example, you can not POST a Gopher request."
+msgstr ""
+"Кеш сървърът не поддържа всички методи на заявка за всички протоколи. "
+"Например, не можете да заявите метод POST за протокол Gopher."
+
+#: templates/ERR_LIFETIME_EXP:6
+msgid ""
+"Squid has terminated the request because it has exceeded the maximum "
+"connection lifetime."
+msgstr ""
+"Кеш сървърът прекрати заявката, защото тя продължи повече от максимално "
+"допустимото време."
+
+#: templates/ERR_SOCKET_FAILURE:7
+msgid ""
+"Squid is unable to create a TCP socket, presumably due to excessive load. "
+"Please retry your request."
+msgstr ""
+"Кеш сървърът не е в състояние да създаде TCP socket, вероятно поради голямо "
+"натоварване. Моля, опитайте отново да направите Вашата заявка."
+
+#: templates/ERR_FTP_FAILURE:5 templates/ERR_FTP_FORBIDDEN:5
+#: templates/ERR_FTP_NOT_FOUND:5 templates/ERR_FTP_PUT_ERROR:5
+#: templates/ERR_FTP_UNAVAILABLE:5
+msgid "Squid sent the following FTP command:"
+msgstr "Кеш сървърът изпрати следната FTP команда:"
+
+#: templates/ERR_DNS_FAIL:6
+msgid "The DNS server returned:"
+msgstr "Сървърът на имена върна следния отговор:"
+
+#: templates/ERR_ESI:6
+msgid "The ESI processor returned:"
+msgstr "Обработката на ESI заявката върна следния резултат:"
+
+#: templates/ERR_FTP_UNAVAILABLE:4
+msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
+msgstr ""
+
+#: templates/ERR_INVALID_RESP:5
+msgid ""
+"The HTTP Response message received from the contacted server could not be "
+"understood or was otherwise malformed. Please contact the site operator."
+msgstr ""
+"Отговорът на HTTP заявката, получен от отсрещния сървър, е неразбираем или "
+"невалиден. Моля свържете се със съответния администратор."
+
+#: templates/ERR_ICAP_FAILURE:9
+msgid "The ICAP server is not reachable."
+msgstr "ICAP сървърът е недостъпен."
+
+#: templates/ERR_FTP_NOT_FOUND:4
+msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
+msgstr "Следният адрес е недостъпен: <a href=\"%U\">%U</a>"
+
+#: templates/ERR_ACCESS_DENIED:4 templates/ERR_CACHE_ACCESS_DENIED:4
+#: templates/ERR_CACHE_MGR_ACCESS_DENIED:4 templates/ERR_CANNOT_FORWARD:4
+#: templates/ERR_CONNECT_FAIL:4 templates/ERR_DNS_FAIL:4 templates/ERR_ESI:4
+#: templates/ERR_FORWARDING_DENIED:4 templates/ERR_FTP_DISABLED:4
+#: templates/ERR_ICAP_FAILURE:4 templates/ERR_INVALID_URL:4
+#: templates/ERR_LIFETIME_EXP:4 templates/ERR_NO_RELAY:4
+#: templates/ERR_ONLY_IF_CACHED_MISS:4 templates/ERR_READ_ERROR:4
+#: templates/ERR_READ_TIMEOUT:4 templates/ERR_SECURE_CONNECT_FAIL:4
+#: templates/ERR_SHUTTING_DOWN:4 templates/ERR_SOCKET_FAILURE:4
+#: templates/ERR_TOO_BIG:4 templates/ERR_UNSUP_REQ:4
+#: templates/ERR_WRITE_ERROR:4 templates/ERR_ZERO_SIZE_OBJECT:4
+msgid ""
+"The following error was encountered while trying to retrieve the URL: <a "
+"href=\"%U\">%U</a>"
+msgstr "Възникна следната грешка при опит за достъп до: <a href=\"%U\">%U</a>"
+
+#: templates/ERR_URN_RESOLVE:4
+msgid ""
+"The following error was encountered while trying to retrieve the URN: <a "
+"href=\"%U\">%U</a>"
+msgstr "Възникна следната грешка при опит за достъп до: <a href=\"%U\">%U</a>"
+
+#: templates/ERR_CONNECT_FAIL:7
+msgid "The remote host or network may be down.  Please try the request again."
+msgstr ""
+"Вероятно отдалеченият сървър или мрежа са недостъпни. Моля, опитайте отново "
+"да направите Вашата заявка."
+
+#: templates/ERR_TOO_BIG:5
+msgid "The request or reply is too large."
+msgstr "Заявката или отговорът са прекалено големи."
+
+#: templates/ERR_ACCESS_DENIED:3 templates/ERR_CANNOT_FORWARD:3
+#: templates/ERR_CONNECT_FAIL:3 templates/ERR_DNS_FAIL:3 templates/ERR_ESI:3
+#: templates/ERR_FORWARDING_DENIED:3 templates/ERR_FTP_DISABLED:3
+#: templates/ERR_FTP_FAILURE:3 templates/ERR_FTP_FORBIDDEN:3
+#: templates/ERR_FTP_NOT_FOUND:3 templates/ERR_FTP_UNAVAILABLE:3
+#: templates/ERR_ICAP_FAILURE:3 templates/ERR_INVALID_REQ:3
+#: templates/ERR_INVALID_RESP:3 templates/ERR_INVALID_URL:3
+#: templates/ERR_LIFETIME_EXP:3 templates/ERR_NO_RELAY:3
+#: templates/ERR_ONLY_IF_CACHED_MISS:3 templates/ERR_READ_ERROR:3
+#: templates/ERR_READ_TIMEOUT:3 templates/ERR_SECURE_CONNECT_FAIL:3
+#: templates/ERR_SHUTTING_DOWN:3 templates/ERR_SOCKET_FAILURE:3
+#: templates/ERR_TOO_BIG:3 templates/ERR_UNSUP_REQ:3
+#: templates/ERR_WRITE_ERROR:3 templates/ERR_ZERO_SIZE_OBJECT:3
+msgid "The requested URL could not be retrieved"
+msgstr "Заявеният адрес е недостъпен."
+
+#: templates/ERR_FTP_FAILURE:6 templates/ERR_FTP_FORBIDDEN:6
+#: templates/ERR_FTP_NOT_FOUND:6 templates/ERR_FTP_PUT_ERROR:6
+#: templates/ERR_FTP_UNAVAILABLE:6
+msgid "The server responded with:"
+msgstr "Сървърът даде следния отговор:"
+
+#: templates/ERR_CONNECT_FAIL:6 templates/ERR_ICAP_FAILURE:6
+#: templates/ERR_READ_ERROR:6 templates/ERR_READ_TIMEOUT:6
+#: templates/ERR_SECURE_CONNECT_FAIL:6 templates/ERR_SOCKET_FAILURE:6
+#: templates/ERR_WRITE_ERROR:6
+msgid "The system returned: <i>%E</i>"
+msgstr "Операционната система даде следното съобщение: <i>%E</i>"
+
+#: templates/ERR_NO_RELAY:6
+msgid ""
+"There is no WAIS Relay host defined for this Cache!  Yell at the "
+"administrator."
+msgstr ""
+"Няма дефиниран WAIS Relay за този кеш сървър. Обърнете се към администратора."
+
+#: templates/ERR_TOO_BIG:8
+msgid ""
+"These limits have been established by the Internet Service Provider who "
+"operates this cache.  Please contact them directly if you feel this is an "
+"error."
+msgstr ""
+"Тези ограничения са поставени от Интернет доставчика, който администрира "
+"този кеш сървър. Ако считате това за неправилно, моля обърнете се към "
+"администратора."
+
+#: templates/ERR_FTP_DISABLED:6
+msgid "This cache does not support FTP."
+msgstr "Този кеш сървър не поддържа FTP"
+
+#: templates/ERR_SHUTTING_DOWN:5
+msgid ""
+"This cache is in the process of shutting down and can not service your "
+"request at this time.  Please retry your request again soon."
+msgstr ""
+"Кеш сървърът е в процес на рестартиране и в момента не може да изпълни "
+"вашата заявка. Моля опитайте отново след няколко минути."
+
+#: templates/ERR_FORWARDING_DENIED:6
+msgid ""
+"This cache will not forward your request because it is trying to enforce a "
+"sibling relationship.  Perhaps the client at %i is a cache which has been "
+"misconfigured."
+msgstr ""
+"Този кеш сървър няма да пренасочи Вашата заявка, защото не е висшестоящ кеш "
+"сървър за клиента, от който идва заявката. Вероятно клиентът %i е неправилно "
+"конфигуриран кеш сървър."
+
+#: templates/ERR_ICAP_FAILURE:7
+msgid "This means that some aspect of the ICAP communication failed."
+msgstr "Неуспешна ICAP комуникация."
+
+#: templates/ERR_FTP_PUT_ERROR:7
+msgid ""
+"This means that the FTP server may not have permission or space to store the "
+"file. Check the path, permissions, diskspace and try again."
+msgstr ""
+"FTP сървърът няма права или достатъчно място за съхранение на файла. "
+"Проверете пътя, правата за достъп, свободното дисково пространство, и "
+"опитайте отново."
+
+#: templates/ERR_DNS_FAIL:7
+msgid ""
+"This means that the cache was not able to resolve the hostname presented in "
+"the URL. Check if the address is correct."
+msgstr "Сървърът не може да бъде намерен. Проверете дали адресът е правилен."
+
+#: templates/ERR_ESI:7
+msgid ""
+"This means that the surrogate was not able to process the ESI template. "
+"Please report this error to the webmaster."
+msgstr ""
+"ESI шаблонът не може да бъде обработен. Обърнете се към администратора на "
+"web сървъра"
+
+#: templates/ERR_FTP_NOT_FOUND:7
+msgid ""
+"This might be caused by an FTP URL with an absolute path (which does not "
+"comply with RFC 1738).  If this is the cause, then the file can be found at "
+"<a href=\"%B\">%B</a>."
+msgstr ""
+"Това би могло да бъде причинено от заявка, в която е посочен абсолютен път "
+"(което е неправилно според документ RFC 1738). Ако това е причината, то "
+"файлът би могъл да бъде намерен на адрес <a href=\"%B\">%B</a>."
+
+#: templates/ERR_SECURE_CONNECT_FAIL:7
+msgid ""
+"This proxy and the remote host failed to negotiate a mutually acceptable "
+"security settings for handling your request. It is possible that the remote "
+"host does not support secure connections, or the proxy is not satisfied with "
+"the host security credentials."
+msgstr ""
+"Proxy сървърът и отсрещният web сървър не могат да договорят взаимно "
+"приемливи параметри за осъществяване на връзката. Възможно е отсрещният web "
+"сървър да не приема криптирани връзки, или proxy сървърът да не приема за "
+"достатъчно нивото на сигурност на web сървъра."
+
+#: templates/ERR_CANNOT_FORWARD:6
+msgid ""
+"This request could not be forwarded to the origin server or to any parent "
+"caches.  The most likely cause for this error is that the cache "
+"administrator does not allow this cache to make direct connections to origin "
+"servers, and all configured parent caches are currently unreachable."
+msgstr ""
+"Заявката не може да бъде пренасочена към сървъра източник или към някой от "
+"висшестоящите кеш сървъри.  Най-вероятно причината за тази грешка е, че "
+"администратора не позволява директни обръщения към сървъра източник, и "
+"всички кеш сървъри от по-горно ниво в момента са недостъпни."
+
+#: templates/ERR_DNS_FAIL:5
+msgid "Unable to determine IP address from host name <q>%H</q>"
+msgstr "Не може да бъде намерен IP адресът на сървъра <q>%H</q>"
+
+#: templates/ERR_CANNOT_FORWARD:5
+msgid "Unable to forward this request at this time."
+msgstr "Заявката не може да бъде пренасочена в този момент."
+
+#: templates/ERR_UNSUP_REQ:5
+msgid "Unsupported Request Method and Protocol"
+msgstr "Сървърът не поддържа метода и/или протокола, посочен в заявката"
+
+#: templates/ERR_ONLY_IF_CACHED_MISS:5
+msgid ""
+"Valid document was not found in the cache and <q>only-if-cached</q> "
+"directive was specified."
+msgstr ""
+"Подадена е заявка за обект, който не се намира в кеша, а попада в обсега на "
+"директивата <q>only-if-cached</q>."
+
+#: templates/ERR_FTP_PUT_ERROR:4
+msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
+msgstr "При опит да бъде записан файлът: <a href=\"%U\">%U</a>"
+
+#: templates/ERR_WRITE_ERROR:5
+msgid "Write Error"
+msgstr "Грешка при запис"
+
+#: templates/ERR_ONLY_IF_CACHED_MISS:6
+msgid ""
+"You have issued a request with a <q>only-if-cached</q> cache control "
+"directive. The document was not found in the cache, <em>or</em> it required "
+"revalidation prohibited by the <q>only-if-cached</q> directive."
+msgstr ""
+"Подадена е заявка за обект, който не се намира в кеша, а попада в обсега на "
+"директивата <q>only-if-cached</q>. За да бъде изпълнена заявката, документът "
+"трябва да бъде изтеглен наново или да бъде проверена неговата валидност, "
+"което е недопустимо поради директивата <q>only-if-cached</q>."
+
+#: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
+#: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
+#: templates/ERR_FORWARDING_DENIED:7 templates/ERR_FTP_DISABLED:7
+#: templates/ERR_FTP_FAILURE:7 templates/ERR_FTP_FORBIDDEN:7
+#: templates/ERR_FTP_NOT_FOUND:8 templates/ERR_FTP_PUT_ERROR:8
+#: templates/ERR_FTP_UNAVAILABLE:7 templates/ERR_INVALID_REQ:12
+#: templates/ERR_INVALID_RESP:7 templates/ERR_INVALID_URL:12
+#: templates/ERR_LIFETIME_EXP:7 templates/ERR_NO_RELAY:7
+#: templates/ERR_ONLY_IF_CACHED_MISS:7 templates/ERR_READ_ERROR:8
+#: templates/ERR_READ_TIMEOUT:8 templates/ERR_SECURE_CONNECT_FAIL:8
+#: templates/ERR_SHUTTING_DOWN:6 templates/ERR_SOCKET_FAILURE:8
+#: templates/ERR_TOO_BIG:9 templates/ERR_UNSUP_REQ:7
+#: templates/ERR_URN_RESOLVE:7 templates/ERR_WRITE_ERROR:8
+#: templates/ERR_ZERO_SIZE_OBJECT:7
+msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
+msgstr "Вашият кеш администратор е <a href=\"mailto:%w%W\">%w</a>."
+
+#: templates/ERR_INVALID_RESP:6
+msgid ""
+"Your cache administrator may be able to provide you with more details about "
+"the exact nature of the problem if needed."
+msgstr ""
+"Ако Ви е необходимо, Вашият кеш администратор може би е в състояние да Ви "
+"достави по-подробни данни за възникналия проблем."
+
+#: templates/ERR_ESI:8
+msgid "Your webmaster is <a href=\"mailto:%w\">%w</a>."
+msgstr "Вашият web администратор е <a href=\"mailto:%w\">%w</a>."
+
+#: templates/ERR_ZERO_SIZE_OBJECT:5
+msgid "Zero Sized Reply"
+msgstr "Отговор с нулева големина"

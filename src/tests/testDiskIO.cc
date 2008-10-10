@@ -1,4 +1,4 @@
-#define SQUID_UNIT_TEST 1 
+#define SQUID_UNIT_TEST 1
 
 #include "squid.h"
 #include <stdexcept>

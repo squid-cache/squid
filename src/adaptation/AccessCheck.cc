@@ -17,25 +17,26 @@ cbdata_type Adaptation::AccessCheck::CBDATA_AccessCheck = CBDATA_UNKNOWN;
 
 bool
 Adaptation::AccessCheck::Start(Method method, VectPoint vp,
-    HttpRequest *req, HttpReply *rep, AccessCheckCallback *cb, void *cbdata) {
+                               HttpRequest *req, HttpReply *rep, AccessCheckCallback *cb, void *cbdata)
+{
 
     if (Config::Enabled) {
         // the new check will call the callback and delete self, eventually
         AccessCheck *check = new AccessCheck(method, vp, req, rep, cb, cbdata);
         check->check();
         return true;
-	}
+    }
 
     debugs(83, 3, HERE << "adaptation off, skipping");
     return false;
 }
 
 Adaptation::AccessCheck::AccessCheck(Method aMethod,
-                                 VectPoint aPoint,
-                                 HttpRequest *aReq,
-                                 HttpReply *aRep,
-                                 AccessCheckCallback *aCallback,
-                                 void *aCallbackData): AsyncJob("AccessCheck"), done(FALSE)
+                                     VectPoint aPoint,
+                                     HttpRequest *aReq,
+                                     HttpReply *aRep,
+                                     AccessCheckCallback *aCallback,
+                                     void *aCallbackData): AsyncJob("AccessCheck"), done(FALSE)
 {
     // TODO: assign these at creation time
 
@@ -177,20 +178,21 @@ Adaptation::AccessCheck::do_callback()
             debugs(93,3,HERE << "do_callback: no rule" << topCandidate());
         }
         candidates.shift(); // done with topCandidate()
-	} else {
+    } else {
         debugs(93,3,HERE << "do_callback: no candidate rules");
-	}
+    }
 
     callback(service, validated_cbdata);
     done = TRUE;
 }
 
 Adaptation::ServicePointer
-Adaptation::AccessCheck::findBestService(AccessRule &r, bool preferUp) {
+Adaptation::AccessCheck::findBestService(AccessRule &r, bool preferUp)
+{
 
     const char *what = preferUp ? "up " : "";
-    debugs(93,7,HERE << "looking for the first matching " << 
-        what << "service in group " << r.groupId);
+    debugs(93,7,HERE << "looking for the first matching " <<
+           what << "service in group " << r.groupId);
 
     ServicePointer secondBest;
 
@@ -199,7 +201,7 @@ Adaptation::AccessCheck::findBestService(AccessRule &r, bool preferUp) {
     if (!g) {
         debugs(93,5,HERE << "lost " << r.groupId << " group in rule" << r.id);
         return ServicePointer();
-	}
+    }
 
     ServiceGroup::Loop loop(g->initialServices());
     typedef ServiceGroup::iterator SGI;
@@ -239,8 +241,8 @@ Adaptation::AccessCheck::findBestService(AccessRule &r, bool preferUp) {
         }
 
         debugs(93,5,HERE << "found first matching " <<
-            what << "service for " << r.groupId << " group in rule" << r.id <<
-            ": " << service->cfg().key);
+               what << "service for " << r.groupId << " group in rule" << r.id <<
+               ": " << service->cfg().key);
 
         return service;
     }
@@ -248,12 +250,12 @@ Adaptation::AccessCheck::findBestService(AccessRule &r, bool preferUp) {
     if (secondBest != NULL) {
         what = "down ";
         debugs(93,5,HERE << "found first matching " <<
-            what << "service for " << r.groupId << " group in rule" << r.id <<
-            ": " << secondBest->cfg().key);
+               what << "service for " << r.groupId << " group in rule" << r.id <<
+               ": " << secondBest->cfg().key);
         return secondBest;
     }
 
-    debugs(93,5,HERE << "found no matching " << 
-        what << "services for " << r.groupId << " group in rule" << r.id);
+    debugs(93,5,HERE << "found no matching " <<
+           what << "services for " << r.groupId << " group in rule" << r.id);
     return ServicePointer();
 }

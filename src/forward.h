@@ -93,8 +93,7 @@ private:
     http_status last_status;
 #endif
 
-    struct
-    {
+    struct {
         unsigned int dont_retry:1;
         unsigned int ftp_pasv_failed:1;
         unsigned int forward_completed:1;

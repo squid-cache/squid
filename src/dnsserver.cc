@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -220,7 +220,7 @@ lookup(const char *buf)
         xfreeaddrinfo(AI);
         AI = NULL;
 
-        if( 0 == (res = xgetaddrinfo(buf,NULL,&hints,&AI)) )
+        if ( 0 == (res = xgetaddrinfo(buf,NULL,&hints,&AI)) )
             break;
 
         if (res != EAI_AGAIN)
@@ -234,10 +234,10 @@ lookup(const char *buf)
 
     /* check if it's already an IP address in text form. */
     ipa = buf;
-    if( ipa.IsAnyAddr() ) {
+    if ( ipa.IsAnyAddr() ) {
         /* its a domain name. Use the forward-DNS lookup already done */
 
-        if(res == 0) {
+        if (res == 0) {
 #if LIBRESOLV_DNS_TTL_HACK
             /* DNS TTL handling - bne@CareNet.hu
              * for first try it's a dirty hack, by hacking getanswer
@@ -249,25 +249,24 @@ lookup(const char *buf)
 
             i = 0;
             aiptr = AI;
-            while(NULL != aiptr && 32 >= i) {
+            while (NULL != aiptr && 32 >= i) {
                 memset(ntoabuf, 0, MAX_IPSTRLEN);
 
                 /* getaddrinfo given a host has a nasty tendency to return duplicate addr's */
                 /* BUT sorted fortunately, so we can drop most of them easily */
-                if( prev_addr &&
-                   prev_addr->ai_family==aiptr->ai_family &&
-                   memcmp(aiptr->ai_addr, prev_addr->ai_addr, aiptr->ai_addrlen)==0
-                  ) {
+                if ( prev_addr &&
+                        prev_addr->ai_family==aiptr->ai_family &&
+                        memcmp(aiptr->ai_addr, prev_addr->ai_addr, aiptr->ai_addrlen)==0
+                   ) {
                     prev_addr = aiptr;
                     aiptr = aiptr->ai_next;
                     continue;
-                }
-                else {
+                } else {
                     prev_addr = aiptr;
                 }
 
                 /* annoying inet_ntop breaks the nice code by requiring the in*_addr */
-                switch(aiptr->ai_family) {
+                switch (aiptr->ai_family) {
                 case AF_INET:
                     xinet_ntop(aiptr->ai_family, &((struct sockaddr_in*)aiptr->ai_addr)->sin_addr, ntoabuf, MAX_IPSTRLEN);
                     break;
@@ -288,16 +287,14 @@ lookup(const char *buf)
             prev_addr=NULL;
             printf("\n");
         }
-    }
-    else /* its an IPA in text form. perform rDNS */
-    {
+    } else { /* its an IPA in text form. perform rDNS */
         /* You'd expect getaddrinfo given AI_CANONNAME would do a lookup on
          * missing FQDN. But no, it only copies the input string to that
          * position regardless of its content.
          */
-        if(NULL != AI && NULL != AI->ai_addr) {
-            for(;;) {
-                if( 0 == (res = xgetnameinfo(AI->ai_addr, AI->ai_addrlen, ntoabuf, MAX_IPSTRLEN, NULL,0,0)) )
+        if (NULL != AI && NULL != AI->ai_addr) {
+            for (;;) {
+                if ( 0 == (res = xgetnameinfo(AI->ai_addr, AI->ai_addrlen, ntoabuf, MAX_IPSTRLEN, NULL,0,0)) )
                     break;
 
                 if (res != EAI_AGAIN)
@@ -310,7 +307,7 @@ lookup(const char *buf)
             }
         }
 
-        if(res == 0) {
+        if (res == 0) {
 #if LIBRESOLV_DNS_TTL_HACK
             /* DNS TTL handling - bne@CareNet.hu
              * for first try it's a dirty hack, by hacking getanswer
@@ -323,32 +320,32 @@ lookup(const char *buf)
         }
     }
 
-    switch(res) {
-        case 0:
-            /* no error. */
-            break;
+    switch (res) {
+    case 0:
+        /* no error. */
+        break;
 
-        case EAI_AGAIN:
-            printf("$fail Name Server for domain '%s' is unavailable.\n", buf);
-            break;
+    case EAI_AGAIN:
+        printf("$fail Name Server for domain '%s' is unavailable.\n", buf);
+        break;
 
-        case EAI_FAIL:
-            printf("$fail DNS Domain/IP '%s' does not exist: %s.\n", buf, xgai_strerror(res));
-            break;
+    case EAI_FAIL:
+        printf("$fail DNS Domain/IP '%s' does not exist: %s.\n", buf, xgai_strerror(res));
+        break;
 
 #if defined(EAI_NODATA) || defined(EAI_NONAME)
 #ifdef EAI_NODATA
         /* deprecated. obsolete on some OS */
-        case EAI_NODATA:
+    case EAI_NODATA:
 #endif
 #ifdef EAI_NONAME
-        case EAI_NONAME:
+    case EAI_NONAME:
 #endif
-            printf("$fail DNS Domain/IP '%s' exists without any FQDN/IPs: %s.\n", buf, xgai_strerror(res));
-            break;
+        printf("$fail DNS Domain/IP '%s' exists without any FQDN/IPs: %s.\n", buf, xgai_strerror(res));
+        break;
 #endif
-       default:
-            printf("$fail A system error occured looking up Domain/IP '%s': %s.\n", buf, xgai_strerror(res));
+    default:
+        printf("$fail A system error occured looking up Domain/IP '%s': %s.\n", buf, xgai_strerror(res));
     }
 
     xfreeaddrinfo(AI);
@@ -365,7 +362,7 @@ usage(void)
             "\t-v             Version\n"
             "\t-s nameserver  Specify alternate name server(s).  'nameserver'\n"
             "\t               must be an IPv4 address, -s option may be repeated\n"
-            );
+           );
 }
 
 #ifdef _SQUID_RES_NSADDR6_LARRAY
@@ -434,35 +431,33 @@ main(int argc, char *argv[])
                 opt_s = 1;
             }
 
-/* AYJ:
- *  I experimented with all the permutations of mixed/unmixed nscount/nscount6 IPv4/IPv6/Both/invalid
- * 
- *  I'm not sure if splitting them really helps.
- *  I've seen no evidence of IPv4 resolver *ever* being used when some IPv6 are set (or not even)
- *  BUT, have seen segfault when IPv4 is added to NSADDR6 list (_res._u._ext).
- *  It also appears to not do ANY lookup when _res.nscount==0.
- * 
- *  BUT, even if _res.nsaddrs is memset to NULL, it resolves IFF IPv6 set in _ext.
- * 
- *  SO, am splittig the IPv4/v6 into the seperate _res fields
- *      and making nscount a total of IPv4+IPv6 /w nscount6 the IPv6 sub-counter
- *	ie. nscount = count(NSv4)+count(NSv6) & nscount6 = count(NSv6)
- * 
- * If ANYONE knows better please let us know.
- * 
- */
-            if( !(ipa = optarg) ) {
+            /* AYJ:
+             *  I experimented with all the permutations of mixed/unmixed nscount/nscount6 IPv4/IPv6/Both/invalid
+             *
+             *  I'm not sure if splitting them really helps.
+             *  I've seen no evidence of IPv4 resolver *ever* being used when some IPv6 are set (or not even)
+             *  BUT, have seen segfault when IPv4 is added to NSADDR6 list (_res._u._ext).
+             *  It also appears to not do ANY lookup when _res.nscount==0.
+             *
+             *  BUT, even if _res.nsaddrs is memset to NULL, it resolves IFF IPv6 set in _ext.
+             *
+             *  SO, am splittig the IPv4/v6 into the seperate _res fields
+             *      and making nscount a total of IPv4+IPv6 /w nscount6 the IPv6 sub-counter
+             *	ie. nscount = count(NSv4)+count(NSv6) & nscount6 = count(NSv6)
+             *
+             * If ANYONE knows better please let us know.
+             *
+             */
+            if ( !(ipa = optarg) ) {
                 fprintf(stderr, "%s appears to be a bad nameserver FQDN/IP.\n",optarg);
-            }
-            else if( ipa.IsIPv4() ) {
+            } else if ( ipa.IsIPv4() ) {
                 if (_SQUID_RES_NSADDR_COUNT == MAXNS) {
                     fprintf(stderr, "Too many -s options, only %d are allowed\n", MAXNS);
                     break;
                 }
                 _SQUID_RES_NSADDR_LIST[_SQUID_RES_NSADDR_COUNT] = _SQUID_RES_NSADDR_LIST[0];
                 ipa.GetInAddr(_SQUID_RES_NSADDR_LIST[_SQUID_RES_NSADDR_COUNT++].sin_addr);
-            }
-            else if( ipa.IsIPv6() ) {
+            } else if ( ipa.IsIPv6() ) {
 #if USE_IPV6 && defined(_SQUID_RES_NSADDR6_LIST)
 
                 /* because things NEVER seem to resolve in tests without _res.nscount being a total. */
@@ -517,12 +512,12 @@ main(int argc, char *argv[])
     for (;;) {
         memset(request, '\0', REQ_SZ);
 
-	if (fgets(request, REQ_SZ, stdin) == NULL) {
+        if (fgets(request, REQ_SZ, stdin) == NULL) {
 #ifdef _SQUID_MSWIN_
-	    WSACleanup();
+            WSACleanup();
 #endif
-	    exit(1);
-	}
+            exit(1);
+        }
 
         t = strrchr(request, '\n');
 

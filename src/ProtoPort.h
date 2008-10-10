@@ -7,8 +7,7 @@
 //#include "typedefs.h"
 #include "cbdata.h"
 
-struct http_port_list
-{
+struct http_port_list {
     http_port_list(const char *aProtocol);
     ~http_port_list();
 
@@ -26,18 +25,19 @@ struct http_port_list
     unsigned int sslBump:1;            /**< intercepts CONNECT requests */
 
     int vport;                 /* virtual port support, -1 for dynamic, >0 static*/
+    bool connection_auth_disabled;     /* Don't support connection oriented auth */
     int disable_pmtu_discovery;
 
     struct {
-	unsigned int enabled;
-	unsigned int idle;
-	unsigned int interval;
-	unsigned int timeout;
+        unsigned int enabled;
+        unsigned int idle;
+        unsigned int interval;
+        unsigned int timeout;
     } tcp_keepalive;
 
 #if USE_SSL
-     // XXX: temporary hack to ease move of SSL options to http_port
-    http_port_list &http; 
+    // XXX: temporary hack to ease move of SSL options to http_port
+    http_port_list &http;
 
     char *cert;
     char *key;
@@ -60,8 +60,7 @@ struct http_port_list
 
 #if USE_SSL
 
-struct https_port_list: public http_port_list
-{
+struct https_port_list: public http_port_list {
     https_port_list();
 };
 

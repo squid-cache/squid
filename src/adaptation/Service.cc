@@ -18,6 +18,11 @@ Adaptation::Service::finalize()
 {
 }
 
+bool Adaptation::Service::broken() const
+{
+    return probed() && !up();
+}
+
 Adaptation::Services &
 Adaptation::AllServices()
 {
@@ -32,6 +37,6 @@ Adaptation::FindService(const Service::Id& key)
     for (SI i = AllServices().begin(); i != AllServices().end(); ++i) {
         if ((*i)->cfg().key == key)
             return *i;
-	}
+    }
     return NULL;
 }

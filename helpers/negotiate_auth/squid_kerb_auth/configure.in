@@ -1,0 +1,501 @@
+dnl This program is free software; you can redistribute it and/or modify
+dnl it under the terms of the GNU General Public License as published by
+dnl the Free Software Foundation; either version 2 of the License, or
+dnl (at your option) any later version.
+dnl
+dnl This program is distributed in the hope that it will be useful,
+dnl but WITHOUT ANY WARRANTY; without even the implied warranty of
+dnl MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+dnl GNU General Public License for more details.
+dnl
+dnl You should have received a copy of the GNU General Public License
+dnl along with this program; if not, write to the Free Software
+dnl Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307, USA.
+dnl
+dnl Process this file with autoconf to produce a configure script.
+
+
+AC_INIT([squid_kerb_auth],[1.0.3],[markus_moeller@compuserve.com])
+AM_INIT_AUTOMAKE(squid_kerb_auth,1.0.3)
+
+AC_PROG_CC
+AC_PROG_CPP
+
+AC_TRY_COMPILE([int main()
+  { 
+     return; 
+  } 
+])
+
+SPARCV9=""
+sys=`uname`
+case $sys in
+         Linux) w_flag="-Wl,-R"
+                w_flag_2=""
+		;;
+         AIX) w_flag="-Wl,-blibpath:"
+              w_flag_2=":/usr/lib:/lib"
+              ;;
+         SunOS) w_flag="-R"
+                w_flag_2=""
+		rel=`uname -r`
+		case $rel in
+		         5.10|5.11) AC_DEFINE(HAVE_NEW_SEAM_KERBEROS,1,[Define to 1 if you have New Solaris 10/OpenSolaris Kerberos])
+               		   ;;
+         		*) ;;
+		esac
+                  ;;
+         FreeBSD) w_flag="-Wl,-R"
+                w_flag_2=""
+                ;;
+         *) w_flag="-Wl,-rpath"
+            w_flag_2=""
+            ;;
+esac
+
+
+enable_arg="no"
+check_mit() {
+       if test "x$ac_krb5_config" = "xyes" ; then
+           ac_heimdal=`krb5-config --version 2>/dev/null | grep heimdal`
+           if test "x$ac_heimdal" != "x" ; then
+               check_heimdal
+               return
+           fi   
+       fi
+       AC_DEFINE(HAVE_MIT_KERBEROS,1,[Define to 1 if you have MIT Kerberos])
+       ac_gss_libs="resolv com_err des425 k5crypto krb5 gssapi_krb5"
+       ac_includedir=""
+       ac_libdir=""
+       case $sys in
+	        Linux) if test "x$enableval" != "xyes" -a "x$enableval" != "x" ; then
+                         ac_libdir=$enableval/lib
+                         ac_includedir=$enableval/include
+                       else
+                         ac_libdir=`rpm -q -l  krb5 2>/dev/null | grep "/libgssapi_krb5" |  sed -e 's/\/libgssapi_krb5.*//' | head -1`
+                         ac_includedir=`rpm -q -l krb5-devel 2>/dev/null | grep /krb5.h$ | sed -e 's/\/krb5.h//' | head -1`
+                       fi
+                       if test "x$ac_includedir" != "x" ; then
+                         CPPFLAGS="$CPPFLAGS -I$ac_includedir"
+                       else
+                         ac_gssapi_cflags=`krb5-config --cflags gssapi 2>/dev/null`
+                         if test "x$ac_gssapi_cflags" != "x" ; then
+                           CPPFLAGS="$CPPFLAGS $ac_gssapi_cflags"
+                         fi
+                       fi
+                       AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h gssapi/gssapi_generic.h)
+                       if test "x$ac_libdir" != "x" ; then
+                         LDFLAGS="$LDFLAGS -L$ac_libdir $w_flag$ac_libdir$w_flag_2"
+                         for lib in $ac_gss_libs; do
+                           AC_CHECK_LIB($lib,main)
+                         done
+                       else
+                         ac_gssapi_libs=`krb5-config --libs gssapi 2>/dev/null`
+                         if test "x$ac_gssapi_libs" != "x" ; then
+                           LDFLAGS="$LDFLAGS $ac_gssapi_libs"
+                         else
+                           for lib in $ac_gss_libs; do
+                             AC_CHECK_LIB($lib,main)
+                           done
+                         fi
+                       fi
+                       ;;
+                *) if test "x$enableval" != "xyes" -a "x$enableval" != "x" ; then
+                     ac_libdir=$enableval/lib
+                     ac_includedir=$enableval/include
+                     CPPFLAGS="$CPPFLAGS -I$ac_includedir"
+                     AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h gssapi/gssapi_generic.h)
+                     LDFLAGS="$LDFLAGS -L$ac_libdir $w_flag$ac_libdir$w_flag_2"
+                     for lib in $ac_gss_libs; do
+                        AC_CHECK_LIB($lib,main)
+                     done
+                   else
+                     ac_gssapi_cflags=`krb5-config --cflags gssapi 2>/dev/null`
+                     if test "x$ac_gssapi_cflags" != "x" ; then
+                         CPPFLAGS="$CPPFLAGS $ac_gssapi_cflags"
+                     fi
+                     ac_gssapi_libs=`krb5-config --libs gssapi 2>/dev/null`
+                     if test "x$ac_gssapi_libs" != "x" ; then
+                         LDFLAGS="$LDFLAGS $ac_gssapi_libs"
+                     else
+                         for lib in $ac_gss_libs; do
+                            AC_CHECK_LIB($lib,main)
+                         done
+                     fi
+                     AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h gssapi/gssapi_generic.h)
+                   fi
+                   ;;
+       esac
+       enable_arg="mit"
+}
+check_heimdal(){
+       if test "x$ac_krb5_config" = "xyes" ; then
+           ac_heimdal=`krb5-config --version 2>/dev/null | grep heimdal`
+           if test "x$ac_heimdal" = "x" ; then
+               check_mit
+               return
+           fi
+       fi
+       AC_DEFINE(HAVE_HEIMDAL_KERBEROS,1,[Define to 1 if you have Heimdal Kerberos])
+       ac_gss_libs="resolv crypto des crypt roken com_err asn1 krb5 gssapi"
+       ac_includedir=""
+       ac_libdir=""
+       case $sys in
+	        Linux) if test "x$enableval" != "xyes" -a "x$enableval" != "x" ; then
+                         ac_libdir=$enableval/lib
+                         ac_includedir=$enableval/include
+                       else
+                         ac_libdir=`rpm -q -l  heimdal-devel 2>/dev/null | grep "/libroken" |  sed -e 's/\/libroken.*//' | head -1`
+                         ac_includedir=`rpm -q -l heimdal-devel 2>/dev/null | grep /krb5.h$ | sed -e 's/\/krb5.h//' | head -1`
+                       fi
+                       if test "x$ac_includedir" != "x" ; then
+                          CPPFLAGS="$CPPFLAGS -I$ac_includedir"
+                       else
+                         ac_gssapi_cflags=`krb5-config --cflags gssapi 2>/dev/null`
+                         if test "x$ac_gssapi_cflags" != "x" ; then
+                           CPPFLAGS="$CPPFLAGS $ac_gssapi_cflags"
+                         fi
+                       fi
+                       AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h)
+                       if test "x$ac_libdir" != "x" ; then
+                         LDFLAGS="$LDFLAGS -L$ac_libdir $w_flag$ac_libdir$w_flag_2"
+                         for lib in $ac_gss_libs; do
+                           AC_CHECK_LIB($lib,main)
+                         done
+                       else
+                         ac_gssapi_libs=`krb5-config --libs gssapi 2>/dev/null`
+                         if test "x$ac_gssapi_libs" != "x" ; then
+                           ac_libdir=`echo $ac_gssapi_libs | grep "\-L"`
+                           if test "x$ac_libdir" != "x" ; then
+                             ac_libdir=`echo $ac_gssapi_libs | sed -e 's/.*-L//' | sed -e 's/ .*//'`  
+                             LDFLAGS="$LDFLAGS $w_flag$ac_libdir$w_flag_2"
+                           fi
+                           LDFLAGS="$LDFLAGS $ac_gssapi_libs"
+                         else
+                           for lib in $ac_gss_libs; do
+                             AC_CHECK_LIB($lib,main)
+                           done
+                         fi
+                       fi
+                       ;;
+                *) if test "x$enableval" != "xyes" -a "x$enableval" != "x" ; then
+                     ac_libdir=$enableval/lib
+                     ac_includedir=$enableval/include
+                     CPPFLAGS="$CPPFLAGS -I$ac_includedir"
+                     AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h)
+                     LDFLAGS="$LDFLAGS -L$ac_libdir $w_flag$ac_libdir$w_flag_2"
+                     for lib in $ac_gss_libs; do
+                        AC_CHECK_LIB($lib,main)
+                     done
+                   else
+                     ac_gssapi_cflags=`krb5-config --cflags gssapi 2>/dev/null`
+                     if test "x$ac_gssapi_cflags" != "x" ; then
+                         CPPFLAGS="$CPPFLAGS $ac_gssapi_cflags"
+                     fi
+                     ac_gssapi_libs=`krb5-config --libs gssapi 2>/dev/null`
+                     if test "x$ac_gssapi_libs" != "x" ; then
+                         ac_libdir=`echo $ac_gssapi_libs | grep "\-L"`
+                         if test "x$ac_libdir" != "x" ; then
+                           ac_libdir=`echo $ac_gssapi_libs | sed -e 's/.*-L//' | sed -e 's/ .*//'`  
+                           LDFLAGS="$LDFLAGS $w_flag$ac_libdir$w_flag_2"
+                         fi
+                         LDFLAGS="$LDFLAGS $ac_gssapi_libs"
+                     else
+                         for lib in $ac_gss_libs; do
+                            AC_CHECK_LIB($lib,main)
+                         done
+                     fi
+                     AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h)
+                   fi
+                   ;;
+       esac
+       enable_arg="heimdal"
+}
+check_nas(){
+       AC_DEFINE(HAVE_NAS_KERBEROS,1,[Define to 1 if you have NAS Kerberos])
+       AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h gssapi/gssapi_generic.h)
+       LDFLAGS="$LDFLAGS -L/usr/lib"
+       ac_gss_libs="krb5 gssapi_krb5 ksvc";
+       for lib in $ac_gss_libs; do
+          AC_CHECK_LIB($lib,main)
+       done
+       enable_arg="nas"
+}
+
+check_seam_64(){
+       SPARCV9s="/sparcv9"
+       check_seam
+       enable_arg="seam64"
+}
+
+check_seam(){
+       AC_DEFINE(HAVE_SEAM_KERBEROS,1,[Define to 1 if you have SEAM Kerberos])
+       AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_ext.h)
+       ac_sol_libs="nsl socket resolv gss"
+       for lib in $ac_sol_libs; do
+          AC_CHECK_LIB($lib,main)
+       done
+       enable_arg="seam"
+}
+
+dnl Define MIT libraries
+AC_ARG_ENABLE(mit,
+  [  --enable-mit[=DIR]	  enable use of MIT package (default=yes) ],
+  [
+    if test "x$enableval" != "xno" ; then
+       check_mit
+    fi ])
+
+dnl Define Heimdal libraries
+AC_ARG_ENABLE(heimdal,
+  [  --enable-heimdal[=DIR]	  enable use of Heimdal package (default=no) ],
+  [
+    if test "x$enableval" != "xno" ; then
+       check_heimdal
+    fi ])
+
+dnl Define NAS libraries
+AC_ARG_ENABLE(nas,
+  [  --enable-nas 		  enable use of NAS(AIX) package (default=no) ],
+  [
+    if test "x$enableval" != "xno" ; then
+       check_nas
+    fi ])
+
+dnl Define SEAM libraries
+AC_ARG_ENABLE(seam,
+  [  --enable-seam[=SRC]	  enable use of SEAM(Solaris) package (default=no) ],
+  [
+    if test "x$enableval" != "xno" ; then
+       check_seam
+    fi ])
+
+dnl Define SEAM libraries
+AC_ARG_ENABLE(seam-64,
+  [  --enable-seam-64[=SRC]	  enable use of 64bit SEAM(Solaris) package (default=no) ],
+  [
+    if test "x$enableval" != "xno" ; then
+       check_seam_64
+    fi ])
+
+dnl Define system default
+if test "$enable_arg" = "no"; then
+  dnl Autodetect system
+  dnl Check krb5-config first
+  AC_CHECK_PROG(ac_krb5_config,krb5-config,yes,no)
+  case $sys in
+           Linux) rpm -q heimdal-lib >/dev/null 2>&1
+                  if test $? == 0 ; then
+                    check_heimdal
+		  else 
+		    check_mit
+                  fi 
+                  ;;
+           AIX)   lslpp -L krb5.client.rte >/dev/null 2>&1
+                  if test $? == 0 ; then
+                    check_nas
+		  else 
+		    check_mit
+                  fi
+                  ;;
+           SunOS) pkginfo SUNWgss >/dev/null 2>&1
+                  if test $? == 0 ; then
+                    check_seam
+		  else 
+		    check_mit
+                  fi
+                  ;;
+           FreeBSD) check_heimdal
+                    ;;
+           *) check_mit
+              ;;
+  esac
+fi
+
+
+old_LIBS=$LIBS
+AC_CACHE_CHECK([for SPNEGO support],ac_cv_have_spnego,[
+  AC_TRY_RUN([
+#ifdef HAVE_HEIMDAL_KERBEROS
+#ifdef HAVE_GSSAPI_GSSAPI_H
+#include <gssapi/gssapi.h>
+#elif defined(HAVE_GSSAPI_H)
+#include <gssapi.h>
+#endif
+#else
+#ifdef HAVE_SEAM_KERBEROS
+#ifdef HAVE_GSSAPI_GSSAPI_H
+#include <gssapi/gssapi.h>
+#elif defined(HAVE_GSSAPI_H)
+#include <gssapi.h>
+#endif
+#ifdef HAVE_GSSAPI_GSSAPI_EXT_H
+#include <gssapi/gssapi_ext.h>
+#endif
+#else /*MIT*/
+#ifdef HAVE_GSSAPI_GSSAPI_H
+#include <gssapi/gssapi.h>
+#elif defined(HAVE_GSSAPI_H)
+#include <gssapi.h>
+#endif
+#ifdef HAVE_GSSAPI_GSSAPI_KRB5_H
+#include <gssapi/gssapi_krb5.h>
+#endif
+#ifdef HAVE_GSSAPI_GSSAPI_GENERIC_H
+#include <gssapi/gssapi_generic.h>
+#endif
+#endif
+#endif
+
+int main(int argc, char *argv[]) {
+ OM_uint32 major_status,minor_status;
+ gss_OID_set gss_mech_set;
+ int i;
+
+static gss_OID_desc _gss_mech_spnego  = {6, (void *)"\x2b\x06\x01\x05\x05\x02"};
+gss_OID gss_mech_spnego = &_gss_mech_spnego;
+
+ major_status = gss_indicate_mechs( &minor_status, &gss_mech_set);
+
+ for (i=0;i<gss_mech_set->count;i++) {
+     if (!memcmp(gss_mech_set->elements[i].elements,gss_mech_spnego->elements,gss_mech_set->elements[i].length)) {
+        return 0;
+     }
+ }
+
+ return 1;
+}],
+  ac_cv_have_spnego=yes,
+  ac_cv_have_spnego=no)])
+if test x"$ac_cv_have_spnego" = x"yes"; then
+  AC_DEFINE(HAVE_SPNEGO,1, [Define to 1 if you have SPNEGO support])
+fi
+LIBS=$old_LIBS
+
+AC_C_BIGENDIAN
+
+eval ac_p_include=$includedir
+CPPFLAGS="$CPPFLAGS -I$ac_p_include -I../../../include"
+AC_CACHE_CHECK([for SQUID],ac_cv_have_squid,[
+AC_TRY_RUN([
+#include <config.h>
+int main(int argc, char *argv[]) {
+#ifdef SQUID_CONFIG_H
+return 0;
+#else
+return 1;
+#endif
+}],
+  ac_cv_have_squid=yes,
+  ac_cv_have_squid=no)])
+eval ac_p_lib=$libdir
+LDFLAGS="$LDFLAGS -L../../../lib -L$ac_p_lib $w_flag$ac_p_lib$w_flag_2"
+if test x"$ac_cv_have_squid" = x"yes"; then
+  AC_DEFINE(HAVE_SQUID,1, [Define to 1 if you have SQUID])
+  AC_CHECK_HEADERS(getaddrinfo.h getnameinfo.h util.h)
+  AC_CHECK_DECLS([xgetaddrinfo], [], [], [[#include <getaddrinfo.h>]])
+  AC_CHECK_DECLS([xfreeaddrinfo], [], [], [[#include <getaddrinfo.h>]])
+  AC_CHECK_DECLS([xgai_strerror], [], [], [[#include <getaddrinfo.h>]])
+  AC_CHECK_DECLS([xgetnameinfo], [], [], [[#include <getnameinfo.h>]])
+  AC_CHECK_DECLS([xstrdup], [], [], [[#include <util.h>]])
+  AC_CHECK_DECLS([xmalloc], [], [], [[#include <util.h>]])
+  AC_CHECK_DECLS([xfree], [], [], [[#include <util.h>]])
+  AC_CHECK_LIB(m,main)
+  AC_CHECK_LIB(mw,main)
+  LIBS="-lmiscutil $LIBS"
+fi
+
+AC_CONFIG_HEADER(config.h)
+AH_TOP([/*
+ * -----------------------------------------------------------------------------
+ *
+ * Author: Markus Moeller (|MAIL|)
+ *
+ * Copyright (C) 2007 Markus Moeller. All rights reserved.
+ *
+ *   This program is free software; you can redistribute it and/or modify
+ *   it under the terms of the GNU General Public License as published by
+ *   the Free Software Foundation; either version 2 of the License, or
+ *   (at your option) any later version.
+ *
+ *   This program is distributed in the hope that it will be useful,
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *   GNU General Public License for more details.
+ *
+ *   You should have received a copy of the GNU General Public License
+ *   along with this program; if not, write to the Free Software
+ *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307, USA.
+ *
+ *   As a special exemption, M Moeller gives permission to link this program
+ *   with MIT, Heimdal or other GSS/Kerberos libraries, and distribute
+ *   the resulting executable, without including the source code for
+ *   the Libraries in the source distribution.
+ *
+ * -----------------------------------------------------------------------------
+ */
+])
+AH_BOTTOM([
+#ifdef HAVE_HEIMDAL_KERBEROS
+#ifdef HAVE_GSSAPI_GSSAPI_H
+#include <gssapi/gssapi.h>
+#elif defined(HAVE_GSSAPI_H)
+#include <gssapi.h>
+#endif
+#define gss_nt_service_name GSS_C_NT_HOSTBASED_SERVICE
+#else
+#ifdef HAVE_SEAM_KERBEROS
+#ifdef HAVE_GSSAPI_GSSAPI_H
+#include <gssapi/gssapi.h>
+#elif defined(HAVE_GSSAPI_H)
+#include <gssapi.h>
+#endif
+#ifdef HAVE_GSSAPI_GSSAPI_EXT_H
+#include <gssapi/gssapi_ext.h>
+#endif
+#define gss_nt_service_name GSS_C_NT_HOSTBASED_SERVICE
+#else /*MIT*/
+#ifdef HAVE_GSSAPI_GSSAPI_H
+#include <gssapi/gssapi.h>
+#elif defined(HAVE_GSSAPI_H)
+#include <gssapi.h>
+#endif
+#ifdef HAVE_GSSAPI_GSSAPI_KRB5_H
+#include <gssapi/gssapi_krb5.h>
+#endif
+#ifdef HAVE_GSSAPI_GSSAPI_GENERIC_H
+#include <gssapi/gssapi_generic.h>
+#endif
+#endif
+#endif
+
+])
+
+echo "configure: ## -----------------------------##"
+echo "configure: ##"
+echo "configure: ## $enable_arg has been selected"
+echo "configure: ##"
+echo "configure: ## -----------------------------##"
+
+dnl set variable for use in automakefile(s)
+AM_CONDITIONAL(HAVE_SPNEGO, test x"$ac_cv_have_spnego" = x"yes" )
+
+MY_CFLAGS="-Wall -Wextra -Werror -Wcomment -Wpointer-arith -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wdeclaration-after-statement -Wshadow"
+for ac_cv_my_cflag in $MY_CFLAGS; do
+echo "int main()
+  {
+     return 0;
+  };" > conftest.c
+${CC} $ac_cv_my_cflag -c conftest.c 2>/dev/null
+res=$?
+rm -f conftest.*
+if test "$res" = "0"; then
+ CFLAGS="$CFLAGS $ac_cv_my_cflag"
+fi
+done
+
+AC_OUTPUT(Makefile)
+
+echo "configure: updating config.h"
+sed -e "s/|MAIL|/"$PACKAGE_BUGREPORT"/" config.h > .config.h.tmp
+mv .config.h.tmp config.h

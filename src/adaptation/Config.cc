@@ -18,12 +18,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -69,7 +69,7 @@ Adaptation::Config::dumpService(StoreEntry *entry, const char *name) const
     for (SCI i = AllServices().begin(); i != AllServices().end(); ++i) {
         const ServiceConfig &cfg = (*i)->cfg();
         storeAppendPrintf(entry, "%s %s_%s %s %d %s\n", name, cfg.key.buf(),
-            cfg.methodStr(), cfg.vectPointStr(), cfg.bypass, cfg.uri.buf());
+                          cfg.methodStr(), cfg.vectPointStr(), cfg.bypass, cfg.uri.buf());
     }
 }
 
@@ -81,13 +81,19 @@ Adaptation::Config::finalize()
     const Vector<ServiceConfig*> &configs = serviceConfigs;
     debugs(93,3, "Found " << configs.size() << " service configs.");
     for (VISCI i = configs.begin(); i != configs.end(); ++i) {
+        const ServiceConfig &cfg = **i;
+        if (FindService(cfg.key) != NULL) {
+            debugs(93,0, "ERROR: Duplicate adaptation service name: " <<
+                   cfg.key);
+            continue; // TODO: make fatal
+        }
         ServicePointer s = createService(**i);
         if (s != NULL)
             AllServices().push_back(s);
     }
 
     debugs(93,3, "Created " << configs.size() <<
-        " message adaptation services.");
+           " message adaptation services.");
 }
 
 // poor man for_each
@@ -172,7 +178,7 @@ Adaptation::Config::Config()
     // XXX: should we init members?
 }
 
-// XXX: this is called for ICAP and eCAP configs, but deals mostly 
+// XXX: this is called for ICAP and eCAP configs, but deals mostly
 // with global arrays shared by those individual configs
 Adaptation::Config::~Config()
 {

@@ -7,12 +7,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -54,8 +54,8 @@ static void init_db(void)
 {
     db = dbopen(db_path, O_CREAT | O_RDWR, 0666, DB_BTREE, NULL);
     if (!db) {
-	fprintf(stderr, "%s: Failed to open session db '%s'\n", program_name, db_path);
-	exit(1);
+        fprintf(stderr, "%s: Failed to open session db '%s'\n", program_name, db_path);
+        exit(1);
     }
 }
 
@@ -72,15 +72,15 @@ static int session_active(const char *details)
     key.data = (void *)details;
     key.size = strlen(details);
     if (db->get(db, &key, &data, 0) == 0) {
-	time_t timestamp;
-	if (data.size != sizeof(timestamp)) {
-	    fprintf(stderr, "%s: CORRUPTED DATABASE (%s)\n", program_name, details);
-	    db->del(db, &key, 0);
-	    return 0;
-	}
-	memcpy(&timestamp, data.data, sizeof(timestamp));
-	if (timestamp + session_ttl >= time(NULL))
-	    return 1;
+        time_t timestamp;
+        if (data.size != sizeof(timestamp)) {
+            fprintf(stderr, "%s: CORRUPTED DATABASE (%s)\n", program_name, details);
+            db->del(db, &key, 0);
+            return 0;
+        }
+        memcpy(&timestamp, data.data, sizeof(timestamp));
+        if (timestamp + session_ttl >= time(NULL))
+            return 1;
     }
     return 0;
 }
@@ -120,21 +120,21 @@ int main(int argc, char **argv)
     program_name = argv[0];
 
     while ((opt = getopt(argc, argv, "t:b:a?")) != -1) {
-	switch(opt) {
-	case 't':
-	    session_ttl = strtol(optarg, NULL, 0);
-	    break;
-	case 'b':
-	    db_path = optarg;
-	    break;
-	case 'a':
-	    default_action = 0;
-	    break;
-	case '?':
-	    usage();
-	    exit(0);
-	    break;
-	}
+        switch (opt) {
+        case 't':
+            session_ttl = strtol(optarg, NULL, 0);
+            break;
+        case 'b':
+            db_path = optarg;
+            break;
+        case 'a':
+            default_action = 0;
+            break;
+        case '?':
+            usage();
+            exit(0);
+            break;
+        }
     }
 
     setbuf(stdout, NULL);
@@ -142,36 +142,36 @@ int main(int argc, char **argv)
     init_db();
 
     while (fgets(request, sizeof(request), stdin)) {
-	const char *index, *detail;
-	char *lastdetail;
-	int action = 0;
-	index = strtok(request, " \n");
-	detail = strtok(NULL, "\n");
-	lastdetail = strrchr(detail, ' ');
-	if (lastdetail) {
-	    if (strcmp(lastdetail, " LOGIN") == 0) {
-		*lastdetail++ = '\0';
-		action = 1;
-	    } else if (strcmp(lastdetail, " LOGOUT") == 0) {
-		action = -1;
-		*lastdetail++ = '\0';
-	    }
-	}
-	if (action == -1) {
-	    session_logout(detail);
-	    printf("%s OK message=\"Bye\"\n", index);
-	} else if (action == 1) {
-	    session_login(detail);
-	    printf("%s OK message=\"Welcome\"\n", index);
-	} else if (session_active(detail)) {
-	    session_login(detail);
-	    printf("%s OK\n", index);
-	} else if (default_action == 1) {
-	    session_login(detail);
-	    printf("%s ERR message=\"Welcome\"\n", index);
-	} else {
-	    printf("%s ERR message=\"No session available\"\n", index);
-	}
+        const char *index, *detail;
+        char *lastdetail;
+        int action = 0;
+        index = strtok(request, " \n");
+        detail = strtok(NULL, "\n");
+        lastdetail = strrchr(detail, ' ');
+        if (lastdetail) {
+            if (strcmp(lastdetail, " LOGIN") == 0) {
+                *lastdetail++ = '\0';
+                action = 1;
+            } else if (strcmp(lastdetail, " LOGOUT") == 0) {
+                action = -1;
+                *lastdetail++ = '\0';
+            }
+        }
+        if (action == -1) {
+            session_logout(detail);
+            printf("%s OK message=\"Bye\"\n", index);
+        } else if (action == 1) {
+            session_login(detail);
+            printf("%s OK message=\"Welcome\"\n", index);
+        } else if (session_active(detail)) {
+            session_login(detail);
+            printf("%s OK\n", index);
+        } else if (default_action == 1) {
+            session_login(detail);
+            printf("%s ERR message=\"Welcome\"\n", index);
+        } else {
+            printf("%s ERR message=\"No session available\"\n", index);
+        }
     }
     shutdown_db();
     return 0;

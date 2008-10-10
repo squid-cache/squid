@@ -46,14 +46,14 @@ public:
     virtual int callback();
 
     virtual StoreEntry* get
-        (const cache_key*);
+    (const cache_key*);
 
     virtual void get
-        (String, void (*)(StoreEntry*, void*), void*);
+    (String, void (*)(StoreEntry*, void*), void*);
 
     virtual void init();
 
-virtual void maintain() {};
+    virtual void maintain() {};
 
     virtual size_t maxSize() const;
 
@@ -61,9 +61,9 @@ virtual void maintain() {};
 
     virtual void stat(StoreEntry &) const; /* output stats to the provided store entry */
 
-    virtual void reference(StoreEntry &){}	/* Reference this object */
+    virtual void reference(StoreEntry &) {}	/* Reference this object */
 
-    virtual void dereference(StoreEntry &){}	/* Unreference this object */
+    virtual void dereference(StoreEntry &) {}	/* Unreference this object */
 
     virtual void updateSize(int64_t size, int sign) {}
 

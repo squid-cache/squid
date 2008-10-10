@@ -19,16 +19,16 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *  
+ *
  */
 
 #ifndef SQUID_UTIL_H
@@ -73,7 +73,7 @@ SQUIDCEXTERN void Tolower(char *);
 SQUIDCEXTERN void xfree(void *);
 SQUIDCEXTERN void xxfree(const void *);
 #ifdef __cplusplus
-/* 
+/*
  * Any code using libstdc++ must have externally resolvable overloads
  * for void * operator new - which means in the .o for the binary,
  * or in a shared library. static libs don't propogate the symbol
@@ -82,7 +82,7 @@ SQUIDCEXTERN void xxfree(const void *);
  */
 #ifndef _SQUID_EXTERNNEW_
 #if defined(_SQUID_SGI_) && !defined(_GNUC_)
-/* 
+/*
  * The gcc compiler treats extern inline functions as being extern,
  * while the SGI MIPSpro compilers treat them as inline. To get equivalent
  * behavior, remove the inline keyword.

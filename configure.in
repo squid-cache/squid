@@ -784,13 +784,21 @@ then
             eCAP support requires loadable modules. Please do not use
             --disable-loadable-modules with --enable-ecap.]);
     fi
+
+    dnl eCAP support requires libecap
+    AC_CHECK_LIB([ecap], [main],
+        [ECAP_LIBS="-lecap"],
+        [AC_MSG_FAILURE([
+            eCAP support requires libecap library,
+            but no usable library was found])]
+    )
 fi
 
 AM_CONDITIONAL(USE_ECAP, test $use_ecap = yes)
 if test $use_ecap = yes;
 then
     AC_DEFINE(USE_ECAP,1,[Enable eCAP support])
-    ECAP_LIBS="eCAP/libeCAP.la"
+    ECAP_LIBS="eCAP/libeCAP.la $ECAP_LIBS"
     use_adaptation=yes
 else
     AC_DEFINE(USE_ECAP,0,[Disable eCAP support])
@@ -1031,7 +1039,7 @@ AC_ARG_ENABLE(forw-via-db,
 
 AC_ARG_ENABLE(cache-digests,
 [  --enable-cache-digests  Use Cache Digests
-                          see http://www.squid-cache.org/FAQ/FAQ-16.html],
+                          see http://wiki.squid-cache.org/SquidFaq/CacheDigests],
 [ if test "$enableval" = "yes" ; then
     echo "USE_CACHE_DIGESTS enabled"
     AC_DEFINE(USE_CACHE_DIGESTS,1,[Use Cache Digests for locating objects in neighbor caches.  This code is still semi-experimental.])
@@ -1593,6 +1601,15 @@ if test -n "$NEGOTIATE_AUTH_HELPERS"; then
 	    :
 	else
 	    AC_MSG_ERROR(Negotiate Auth helper $helper does not exist)
+	fi
+	# Kerberos helper has its own configure system
+	if test "$srcdir/helpers/negotiate_auth/$helper/configure" ; then
+	    if test $helper = squid_kerb_auth; then
+		AC_CONFIG_SUBDIRS(helpers/negotiate_auth/squid_kerb_auth)
+	    else
+		echo "ERROR: configure.in needs to be extended to support $helper!"
+		exit 1
+	    fi
 	fi
     done
     echo "Negotiate auth helpers built: $NEGOTIATE_AUTH_HELPERS"
@@ -3282,7 +3299,7 @@ AC_DEFINE_UNQUOTED(SQUID_MAXFD, $SQUID_MAXFD,[Maximum number of open filedescrip
 if test "$SQUID_MAXFD" -lt 512 ; then
     echo "WARNING: $SQUID_MAXFD may not be enough filedescriptors if your"
     echo "         cache will be very busy.  Please see the FAQ page"
-    echo "         http://www.squid-cache.org/FAQ/FAQ-11.html#filedescriptors"
+    echo "         http://wiki.squid-cache.org/SquidFaq/TroubleShooting"
     echo "         on how to increase your filedescriptor limit"
     sleep 10
 fi
@@ -3750,7 +3767,6 @@ AC_CONFIG_FILES([\
 	helpers/ntlm_auth/mswin_sspi/Makefile \
 	helpers/negotiate_auth/Makefile \
 	helpers/negotiate_auth/mswin_sspi/Makefile \
-	helpers/negotiate_auth/squid_kerb_auth/Makefile \
 	helpers/external_acl/Makefile \
 	helpers/external_acl/ip_user/Makefile \
 	helpers/external_acl/ldap_group/Makefile \
@@ -3766,6 +3782,5 @@ AC_CONFIG_SUBDIRS(lib/libTrie)
 
 # must configure libltdl subdir unconditionally for "make distcheck" to work
 AC_CONFIG_SUBDIRS(lib/libLtdl)
-
 
 AC_OUTPUT

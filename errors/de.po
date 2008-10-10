@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-09-01 03:03+1300\n"
-"PO-Revision-Date: 2008-08-07 05:16+1200\n"
+"POT-Creation-Date: 2008-09-29 15:05+1300\n"
+"PO-Revision-Date: 2008-09-13 11:56+1200\n"
 "Last-Translator: Robert Förster <Dessa@gmake.de>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "MIME-Version: 1.0\n"
@@ -381,13 +381,12 @@ msgid "Squid sent the following FTP command:"
 msgstr "Squid sendete das folgende FTP Kommando:"
 
 #: templates/ERR_DNS_FAIL:6
-#, fuzzy
 msgid "The DNS server returned:"
-msgstr "Der DNS-Server gab zurück:"
+msgstr "Der DNS-Server meldete:"
 
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
-msgstr "Der ESI-Prozessor gab zurück:"
+msgstr "Der ESI-Prozessor meldete:"
 
 #: templates/ERR_FTP_UNAVAILABLE:4
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"

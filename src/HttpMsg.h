@@ -19,12 +19,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -54,6 +54,9 @@ public:
 
     virtual HttpMsg *_lock();	// please use HTTPMSGLOCK()
     virtual void _unlock();	// please use HTTPMSGUNLOCK()
+
+    ///< produce a message copy, except for a few connection-specific settings
+    virtual HttpMsg *clone() const = 0; ///< \todo rename: not a true copy?
 
 public:
     HttpVersion http_ver;
@@ -90,6 +93,8 @@ public:
 
     void firstLineBuf(MemBuf&);
 
+    virtual bool inheritProperties(const HttpMsg *aMsg) = 0;
+
 protected:
     virtual bool sanityCheckStartLine(MemBuf *buf, http_status *error) = 0;
 
@@ -105,15 +110,15 @@ protected:
 
 /* Temporary parsing state; might turn into the replacement parser later on */
 struct _HttpParser {
-	char state;
-	const char *buf;
-	int bufsiz;
-	int req_start, req_end;
-	int hdr_start, hdr_end;
-	int m_start, m_end;
-	int u_start, u_end;
-	int v_start, v_end;
-	int v_maj, v_min;
+    char state;
+    const char *buf;
+    int bufsiz;
+    int req_start, req_end;
+    int hdr_start, hdr_end;
+    int m_start, m_end;
+    int u_start, u_end;
+    int v_start, v_end;
+    int v_maj, v_min;
 };
 typedef struct _HttpParser HttpParser;
 

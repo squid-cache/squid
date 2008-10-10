@@ -19,12 +19,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -43,12 +43,18 @@ class StoreIOBuffer
 {
 
 public:
-    StoreIOBuffer():length(0), offset (0), data (NULL){flags.error = 0;}
+    StoreIOBuffer():length(0), offset (0), data (NULL) {flags.error = 0;}
 
     StoreIOBuffer(size_t aLength, int64_t anOffset, char *someData) :
-            length (aLength), offset (anOffset), data (someData)
-    {
-        flags.error = 0;
+            offset (anOffset), data (someData) {
+        /* maintain own state: detect size errors now */
+        if (aLength <0) {
+            flags.error = 1;
+            length = 0;
+        } else {
+            flags.error = 0;
+            length = aLength;
+        }
     }
 
     /* Create a StoreIOBuffer from a MemBuf and offset */
@@ -56,24 +62,20 @@ public:
     StoreIOBuffer(MemBuf *aMemBuf, int64_t anOffset) :
             length(aMemBuf->contentSize()),
             offset (anOffset),
-            data(aMemBuf->content())
-    {
+            data(aMemBuf->content()) {
         flags.error = 0;
     }
 
-    Range<int64_t> range() const
-    {
+    Range<int64_t> range() const {
         return Range<int64_t>(offset, offset + length);
     }
 
-    void dump() const
-    {
-        if(fwrite(data, length, 1, stderr)) {}
-        if(fwrite("\n", 1, 1, stderr)) {}
+    void dump() const {
+        if (fwrite(data, length, 1, stderr)) {}
+        if (fwrite("\n", 1, 1, stderr)) {}
     }
 
-    struct
-    {
+    struct {
         unsigned error:1;
     } flags;
     size_t length;
