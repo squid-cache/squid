@@ -9,6 +9,7 @@
 
 
 #include "AsyncCall.h"
+#include "TextException.h"
 
 /**
  \defgroup AsyncJobAPI Async-Jobs API
@@ -29,8 +30,6 @@
  * processing code so that individual job classes do not have to wrap all
  * asynchronous calls.
  */
-
-class std::exception;
 
 /// \ingroup AsyncJobAPI
 class AsyncJob
