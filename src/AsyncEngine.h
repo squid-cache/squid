@@ -19,12 +19,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -64,7 +64,7 @@ public:
 
     /* Check the engine for events. If there are events that have completed,
      * the engine should at this point hand them off to their dispatcher.
-     * Engines that operate asynchronously - i.e. the DiskThreads engine - 
+     * Engines that operate asynchronously - i.e. the DiskThreads engine -
      * should hand events off to their dispatcher as they arrive rather than
      * waiting for checkEvents to be called. Engines like poll and select should
      * use this call as the time to perform their checks with the OS for new
@@ -73,7 +73,7 @@ public:
      * The return value is the status code of the event checking. If its a
      * non-negative value then it is used as hint for the minimum requested
      * time before checkEvents is called again. I.e. the event engine knows
-     * how long it is until the next event will be scheduled - so it will 
+     * how long it is until the next event will be scheduled - so it will
      * return that time (in milliseconds).
      *
      * The timeout value is a requested timeout for this engine - the engine

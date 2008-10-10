@@ -8,7 +8,8 @@
 #include "adaptation/Initiator.h"
 #include "adaptation/Initiate.h"
 
-namespace Adaptation {
+namespace Adaptation
+{
 
 // AdaptInitiator::noteAdaptionAnswer Dialer locks/unlocks the message in transit
 // TODO: replace HTTPMSGLOCK with general RefCounting and delete this class
@@ -18,9 +19,9 @@ public:
     typedef UnaryMemFunT<Initiator, HttpMsg*> Parent;
 
     AnswerDialer(Initiator *obj, Parent::Method meth, HttpMsg *msg):
-        Parent(obj, meth, msg) { HTTPMSGLOCK(arg1); }
+            Parent(obj, meth, msg) { HTTPMSGLOCK(arg1); }
     AnswerDialer(const AnswerDialer &d):
-        Parent(d) { HTTPMSGLOCK(arg1); }
+            Parent(d) { HTTPMSGLOCK(arg1); }
     virtual ~AnswerDialer() { HTTPMSGUNLOCK(arg1); }
 };
 
@@ -30,8 +31,8 @@ public:
 /* Initiate */
 
 Adaptation::Initiate::Initiate(const char *aTypeName,
-    Initiator *anInitiator, ServicePointer aService):
-    AsyncJob(aTypeName), theInitiator(anInitiator), theService(aService)
+                               Initiator *anInitiator, ServicePointer aService):
+        AsyncJob(aTypeName), theInitiator(anInitiator), theService(aService)
 {
     assert(theService != NULL);
     assert(theInitiator);
@@ -39,7 +40,9 @@ Adaptation::Initiate::Initiate(const char *aTypeName,
 
 Adaptation::Initiate::~Initiate()
 {
-    assert(!theInitiator);
+    // TODO: we cannot assert(!theInitiator) because that fails if a child
+    // constructor fails. AsyncJob should have wasStarted flag so that we
+    // can assert(!(wasStarted && theInitiator)).
 }
 
 // internal cleanup
@@ -66,8 +69,8 @@ void Adaptation::Initiate::sendAnswer(HttpMsg *msg)
     assert(msg);
     if (theInitiator.isThere()) {
         CallJob(93, 5, __FILE__, __LINE__, "Initiator::noteAdaptAnswer",
-            AnswerDialer(theInitiator.ptr(), &Initiator::noteAdaptationAnswer, msg));
-	}        
+                AnswerDialer(theInitiator.ptr(), &Initiator::noteAdaptationAnswer, msg));
+    }
     clearInitiator();
 }
 
@@ -76,8 +79,8 @@ void Adaptation::Initiate::tellQueryAborted(bool final)
 {
     if (theInitiator.isThere()) {
         CallJobHere1(93, 5, theInitiator.ptr(),
-            Initiator::noteAdaptationQueryAbort, final);
-	}
+                     Initiator::noteAdaptationQueryAbort, final);
+    }
     clearInitiator();
 }
 
@@ -88,15 +91,16 @@ Adaptation::Initiate::service()
     return *theService;
 }
 
-const char *Adaptation::Initiate::status() const {
-    return ""; // for now
+const char *Adaptation::Initiate::status() const
+{
+    return AsyncJob::status(); // for now
 }
 
 
 /* InitiatorHolder */
 
 Adaptation::InitiatorHolder::InitiatorHolder(Initiator *anInitiator):
-    prime(0), cbdata(0)
+        prime(0), cbdata(0)
 {
     if (anInitiator) {
         cbdata = cbdataReference(anInitiator->toCbdata());
@@ -105,7 +109,7 @@ Adaptation::InitiatorHolder::InitiatorHolder(Initiator *anInitiator):
 }
 
 Adaptation::InitiatorHolder::InitiatorHolder(const InitiatorHolder &anInitiator):
-    prime(0), cbdata(0)
+        prime(0), cbdata(0)
 {
     if (anInitiator != NULL && cbdataReferenceValid(anInitiator.cbdata)) {
         cbdata = cbdataReference(anInitiator.cbdata);
@@ -118,7 +122,8 @@ Adaptation::InitiatorHolder::~InitiatorHolder()
     clear();
 }
 
-void Adaptation::InitiatorHolder::clear() {
+void Adaptation::InitiatorHolder::clear()
+{
     if (prime) {
         prime = NULL;
         cbdataReferenceDone(cbdata);
@@ -132,7 +137,8 @@ Adaptation::Initiator *Adaptation::InitiatorHolder::ptr()
 }
 
 bool
-Adaptation::InitiatorHolder::isThere() {
+Adaptation::InitiatorHolder::isThere()
+{
     return prime && cbdataReferenceValid(cbdata);
 }
 

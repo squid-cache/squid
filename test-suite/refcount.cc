@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -44,8 +44,7 @@ public:
 
     ~_ToRefCount() {--Instances;}
 
-    int someMethod()
-    {
+    int someMethod() {
         if (!this)
             exit(1);
 
@@ -68,8 +67,11 @@ class AlsoRefCountable : public RefCountable, public _ToRefCount
 public:
     typedef RefCount<AlsoRefCountable> Pointer;
 
-    int doSomething() { if (!this)
-            exit (1); return 1;}
+    int doSomething() {
+        if (!this)
+            exit (1);
+        return 1;
+    }
 };
 
 int

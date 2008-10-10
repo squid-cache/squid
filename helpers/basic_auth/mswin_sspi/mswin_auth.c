@@ -18,15 +18,15 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- 
+
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 */
 
 #include "config.h"
-#include <stdio.h> 	 
-#include <getopt.h> 	 
+#include <stdio.h>
+#include <getopt.h>
 #include "util.h"
 
 /* Check if we try to compile on a Windows Platform */
@@ -53,13 +53,13 @@ void
 usage()
 {
     fprintf(stderr,
-	"%s usage:\n%s [-A|D UserGroup][-O DefaultDomain][-d]\n"
-	"-A can specify a Windows Local Group name allowed to authenticate\n"
-	"-D can specify a Windows Local Group name not allowed to authenticate\n"
-	"-O can specify the default Domain against to authenticate\n"
-	"-d enable debugging.\n"
-	"-h this message\n\n",
-	my_program_name, my_program_name);
+            "%s usage:\n%s [-A|D UserGroup][-O DefaultDomain][-d]\n"
+            "-A can specify a Windows Local Group name allowed to authenticate\n"
+            "-D can specify a Windows Local Group name not allowed to authenticate\n"
+            "-O can specify the default Domain against to authenticate\n"
+            "-d enable debugging.\n"
+            "-h this message\n\n",
+            my_program_name, my_program_name);
 }
 
 void
@@ -67,37 +67,37 @@ process_options(int argc, char *argv[])
 {
     int opt, had_error = 0;
     while (-1 != (opt = getopt(argc, argv, "dhA:D:O:"))) {
-	switch (opt) {
-	case 'A':
-	    safe_free(NTAllowedGroup);
-	    NTAllowedGroup=xstrdup(optarg);
-	    UseAllowedGroup = 1;
-	    break;
-	case 'D':
-	    safe_free(NTDisAllowedGroup);
-	    NTDisAllowedGroup=xstrdup(optarg);
-	    UseDisallowedGroup = 1;
-	    break;
-	case 'O':
-	    strncpy(Default_NTDomain, optarg, DNLEN);
-	    break;
-	case 'd':
-	    debug_enabled = 1;
-	    break;
-	case 'h':
-	    usage(argv[0]);
-	    exit(0);
-	case '?':
-	    opt = optopt;
-	    /* fall thru to default */
-	default:
-	    fprintf(stderr, "Unknown option: -%c. Exiting\n", opt);
-	    had_error = 1;
-	}
+        switch (opt) {
+        case 'A':
+            safe_free(NTAllowedGroup);
+            NTAllowedGroup=xstrdup(optarg);
+            UseAllowedGroup = 1;
+            break;
+        case 'D':
+            safe_free(NTDisAllowedGroup);
+            NTDisAllowedGroup=xstrdup(optarg);
+            UseDisallowedGroup = 1;
+            break;
+        case 'O':
+            strncpy(Default_NTDomain, optarg, DNLEN);
+            break;
+        case 'd':
+            debug_enabled = 1;
+            break;
+        case 'h':
+            usage(argv[0]);
+            exit(0);
+        case '?':
+            opt = optopt;
+            /* fall thru to default */
+        default:
+            fprintf(stderr, "Unknown option: -%c. Exiting\n", opt);
+            had_error = 1;
+        }
     }
     if (had_error) {
-	usage();
-	exit(1);
+        usage();
+        exit(1);
     }
 }
 
@@ -121,62 +121,62 @@ main(int argc, char **argv)
     debug("%s build " __DATE__ ", " __TIME__ " starting up...\n", my_program_name);
 
     if (LoadSecurityDll(SSP_BASIC, NTLM_PACKAGE_NAME) == NULL) {
-	fprintf(stderr, "FATAL, can't initialize SSPI, exiting.\n");
-	exit(1);
+        fprintf(stderr, "FATAL, can't initialize SSPI, exiting.\n");
+        exit(1);
     }
     debug("SSPI initialized OK\n");
 
     atexit(UnloadSecurityDll);
 
-        /* initialize FDescs */
+    /* initialize FDescs */
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
 
     while (1) {
-	/* Read whole line from standard input. Terminate on break. */
-	if (fgets(wstr, 255, stdin) == NULL)
-	    break;
+        /* Read whole line from standard input. Terminate on break. */
+        if (fgets(wstr, 255, stdin) == NULL)
+            break;
 
-	if (NULL == strchr(wstr, '\n')) {
-	    err = 1;
-	    continue;
-	}
-	if (err) {
-	    fprintf(stderr, "Oversized message\n");
+        if (NULL == strchr(wstr, '\n')) {
+            err = 1;
+            continue;
+        }
+        if (err) {
+            fprintf(stderr, "Oversized message\n");
             puts("ERR");
-	    goto error;
-	}
-	
-	if ((p = strchr(wstr, '\n')) != NULL)
-	    *p = '\0';		/* strip \n */
-	if ((p = strchr(wstr, '\r')) != NULL)
-	    *p = '\0';		/* strip \r */
-	/* Clear any current settings */
-	username[0] = '\0';
-	password[0] = '\0';
-	sscanf(wstr, "%s %s", username, password);	/* Extract parameters */
+            goto error;
+        }
+
+        if ((p = strchr(wstr, '\n')) != NULL)
+            *p = '\0';		/* strip \n */
+        if ((p = strchr(wstr, '\r')) != NULL)
+            *p = '\0';		/* strip \r */
+        /* Clear any current settings */
+        username[0] = '\0';
+        password[0] = '\0';
+        sscanf(wstr, "%s %s", username, password);	/* Extract parameters */
 
         debug("Got %s from Squid\n", wstr);
 
-	/* Check for invalid or blank entries */
-	if ((username[0] == '\0') || (password[0] == '\0')) {
-	    fprintf(stderr, "Invalid Request\n");
-	    puts("ERR");
-	    fflush(stdout);
-	    continue;
-	}
-	rfc1738_unescape(username);
-	rfc1738_unescape(password);
+        /* Check for invalid or blank entries */
+        if ((username[0] == '\0') || (password[0] == '\0')) {
+            fprintf(stderr, "Invalid Request\n");
+            puts("ERR");
+            fflush(stdout);
+            continue;
+        }
+        rfc1738_unescape(username);
+        rfc1738_unescape(password);
 
         debug("Trying to validate; %s %s\n", username, password);
 
-	if (Valid_User(username, password, NTGroup) == NTV_NO_ERROR)
-	    puts("OK");
-	else
+        if (Valid_User(username, password, NTGroup) == NTV_NO_ERROR)
+            puts("OK");
+        else
             printf("ERR %s\n", errormsg);
 error:
-	err = 0;
-	fflush(stdout);
+        err = 0;
+        fflush(stdout);
     }
     return 0;
 }

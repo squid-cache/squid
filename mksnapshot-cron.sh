@@ -99,6 +99,9 @@ cp ../commit/squid-3/SPONSORS /server/httpd/htdocs/squid-cache.org/SPONSORS.new
 chmod 444 /server/httpd/htdocs/squid-cache.org/SPONSORS.new
 mv -f /server/httpd/htdocs/squid-cache.org/SPONSORS.new /server/httpd/htdocs/squid-cache.org/SPONSORS.txt
 
+../commit/bootstrap squid-3.1
+make_snapshot ../commit/squid-3/mksnapshot.sh branches/SQUID_3_1 v3 3.1 3
+
 ../commit/bootstrap squid-3.0
 make_snapshot ../commit/squid-3/mksnapshot.sh branches/SQUID_3_0 v3 3.0 3
 

@@ -18,12 +18,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -83,8 +83,7 @@ public:
      * when it is, so thats ok. */
     ClientHttpRequest *http;
 
-    struct
-    {
+    struct {
         int passthrough:1;
         int oktosend:1;
         int finished:1;
@@ -108,13 +107,13 @@ public:
     ESISegment::Pointer buffered; /* unprocessed data - for whatever reason */
     ESISegment::Pointer incoming;
     /* processed data we are waiting to send, or for
-     * potential errors to be resolved 
+     * potential errors to be resolved
      */
     ESISegment::Pointer outbound;
     ESISegment::Pointer outboundtail; /* our write segment */
     /* the offset to the next character to send -
-     * non zero if we haven't sent the entire segment 
-     * for some reason 
+     * non zero if we haven't sent the entire segment
+     * for some reason
      */
     size_t outbound_offset;
     int64_t readpos; /* the logical position we are reading from */

@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -40,16 +40,14 @@
 #define IDENT_PORT 113
 #define IDENT_KEY_SZ 50
 
-typedef struct _IdentClient
-{
+typedef struct _IdentClient {
     IDCB *callback;
     void *callback_data;
 
     struct _IdentClient *next;
 } IdentClient;
 
-typedef struct _IdentStateData
-{
+typedef struct _IdentStateData {
     hash_link hash;		/* must be first */
     int fd;			/* IDENT fd */
 
@@ -217,8 +215,7 @@ identStart(IPAddress &me, IPAddress &my_peer, IDCB * callback, void *data)
     my_peer.ToURL(key2, IDENT_KEY_SZ);
     snprintf(key, IDENT_KEY_SZ, "%s,%s", key1, key2);
 
-    if ((state = (IdentStateData *)hash_lookup(ident_hash, key)) != NULL)
-    {
+    if ((state = (IdentStateData *)hash_lookup(ident_hash, key)) != NULL) {
         identClientAdd(state, callback, data);
         return;
     }
@@ -229,8 +226,7 @@ identStart(IPAddress &me, IPAddress &my_peer, IDCB * callback, void *data)
                    COMM_NONBLOCKING,
                    "ident");
 
-    if (fd == COMM_ERROR)
-    {
+    if (fd == COMM_ERROR) {
         /* Failed to get a local socket */
         callback(NULL, data);
         return;

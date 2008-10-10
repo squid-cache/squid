@@ -19,12 +19,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -177,7 +177,8 @@ typedef enum {
     ANY_OLD_PARENT,
     USERHASH_PARENT,
     SOURCEHASH_PARENT,
-    HIER_MAX
+    HIER_MAX,
+    PINNED
 } hier_code;
 
 /// \ingroup ServerProtocolICPAPI
@@ -337,7 +338,7 @@ typedef enum {
     STREAM_NONE,		/* No particular status */
     STREAM_COMPLETE,		/* All data has been flushed, no more reads allowed */
     /* an unpredicted end has occured, no more
-     * reads occured, but no need to tell 
+     * reads occured, but no need to tell
      * downstream that an error occured
      */
     STREAM_UNPLANNED_COMPLETE,
@@ -544,5 +545,16 @@ enum {
     DISABLE_PMTU_ALWAYS,
     DISABLE_PMTU_TRANSPARENT
 };
+
+#if USE_HTCP
+/*
+ * This should be in htcp.h but because neighborsHtcpClear is defined in
+ * protos.h it has to be here.
+ */
+typedef enum {
+    HTCP_CLR_PURGE,
+    HTCP_CLR_INVALIDATION,
+} htcp_clr_reason;
+#endif
 
 #endif /* SQUID_ENUMS_H */

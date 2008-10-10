@@ -21,7 +21,7 @@ public:
 
 private:
     static ACLSslErrorStrategy Instance_;
-    ACLSslErrorStrategy(){}
+    ACLSslErrorStrategy() {}
 
     ACLSslErrorStrategy&operator=(ACLSslErrorStrategy const &);
 };

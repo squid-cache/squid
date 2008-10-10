@@ -50,7 +50,7 @@ testIcmp::testHops()
     // zero
     CPPUNIT_ASSERT_EQUAL(33, icmp.testHops(0));
 
-        /* test each valid case boundary */
+    /* test each valid case boundary */
     // n(1...32)    : 32 >= n >= 1
     CPPUNIT_ASSERT_EQUAL(32, icmp.testHops(1));
     CPPUNIT_ASSERT_EQUAL(1, icmp.testHops(32));
@@ -75,7 +75,7 @@ testIcmp::testHops()
     CPPUNIT_ASSERT_EQUAL(63, icmp.testHops(193));
     CPPUNIT_ASSERT_EQUAL(1, icmp.testHops(255));
 
-        /* test invalid (over values) */
+    /* test invalid (over values) */
     // 256 - produces zero
     CPPUNIT_ASSERT_EQUAL(0, icmp.testHops(256));
     // 257 - produces negative hops

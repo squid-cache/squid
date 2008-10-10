@@ -5,7 +5,8 @@
 #include "Array.h"
 #include "adaptation/forward.h"
 
-namespace Adaptation {
+namespace Adaptation
+{
 
 // Interface for grouping adaptation services together.
 // Specific groups differ in how the first and the next services are selected
@@ -18,7 +19,7 @@ public:
 
     // Information sufficient to iterate services stored in the group,
     // grouped together to simplify initial/sequentialServices interfaces.
-    // The iterators point back to 
+    // The iterators point back to
     struct Loop {
         Loop(const iterator &b, const iterator &e): begin(b), end(e) {}
         iterator begin;

@@ -22,12 +22,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -56,7 +56,7 @@ static void
 carpRegisterWithCacheManager(void)
 {
     CacheManager::GetInstance()->
-        registerAction("carp", "CARP information", carpCachemgr, 0, 1);
+    registerAction("carp", "CARP information", carpCachemgr, 0, 1);
 }
 
 void
@@ -192,7 +192,7 @@ carpSelectParent(HttpRequest * request)
         combined_hash += combined_hash * 0x62531965;
         combined_hash = ROTATE_LEFT(combined_hash, 21);
         score = combined_hash * tp->carp.load_multiplier;
-        debugs(39, 3, "carpSelectParent: " << tp->name << " combined_hash " << combined_hash  << 
+        debugs(39, 3, "carpSelectParent: " << tp->name << " combined_hash " << combined_hash  <<
                " score " << std::setprecision(0) << score);
 
         if ((score > high_score) && peerHTTPOkay(tp, request)) {

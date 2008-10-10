@@ -7,11 +7,13 @@
 class acl_access;
 class ConfigParser;
 
-namespace Adaptation {
+namespace Adaptation
+{
 
 // manages adaptation_access configuration by associating an acl with
 // an adaptation service group
-class AccessRule {
+class AccessRule
+{
 public:
     AccessRule();
     ~AccessRule();

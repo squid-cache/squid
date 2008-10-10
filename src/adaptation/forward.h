@@ -11,7 +11,8 @@ class RefCount;
 template <class Item>
 class Vector;
 
-namespace Adaptation {
+namespace Adaptation
+{
 
 class Service;
 class ServiceConfig;
@@ -21,6 +22,7 @@ class Initiator;
 class AccessCheck;
 class AccessRule;
 class ServiceGroup;
+class Message;
 
 typedef RefCount<Service> ServicePointer;
 

@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  ;  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -62,9 +62,9 @@
 #include "IPAddress.h"
 
 /* quick reference on behaviour here.
- * The ESI specification 1.0 requires the ESI processor to be able to 
- * return an error code at any point in the processing. To that end 
- * we buffer the incoming esi body until we know we will be able to 
+ * The ESI specification 1.0 requires the ESI processor to be able to
+ * return an error code at any point in the processing. To that end
+ * we buffer the incoming esi body until we know we will be able to
  * satisfy the request. At that point we start streaming the queued
  * data downstream.
  *
@@ -74,10 +74,10 @@ class ESIStreamContext;
 
 /* TODO: split this out into separate files ? */
 /* Parsing: quick and dirty. ESI files are not valid XML, so a generic
- * XML parser is not much use. Also we need a push parser not a pull 
+ * XML parser is not much use. Also we need a push parser not a pull
  * parser, so LibXML is out.
  *
- * Interpreter methods: 
+ * Interpreter methods:
  * Render: May only ever be called after Process returns PROCESS_COMPLETE.
  * Renders the resulting content into a ESISegment chain.
  * Process: returns the status of the node.
@@ -106,8 +106,7 @@ typedef ESIContext::esiKick_t esiKick_t;
 
 /* esiComment */
 
-struct esiComment : public ESIElement
-{
+struct esiComment : public ESIElement {
     MEMPROXY_CLASS(esiComment);
     ~esiComment();
     esiComment();
@@ -150,8 +149,7 @@ static ESIElement * esiRemoveNew(void);
 
 /* esiTry */
 
-struct esiTry : public ESIElement
-{
+struct esiTry : public ESIElement {
     MEMPROXY_CLASS(esiTry);
 
     esiTry(esiTreeParentPtr aParent);
@@ -168,8 +166,7 @@ struct esiTry : public ESIElement
     ESIElement::Pointer attempt;
     ESIElement::Pointer except;
 
-    struct
-    {
+    struct {
         int attemptok:1; /* the attempt branch process correctly */
         int exceptok:1; /* likewise */
         int attemptfailed:1; /* The attempt branch failed */
@@ -191,8 +188,7 @@ MEMPROXY_CLASS_INLINE(esiTry)		/**DOCS_NOSEMI*/
 
 /* esiChoose */
 
-struct esiChoose : public ESIElement
-{
+struct esiChoose : public ESIElement {
     MEMPROXY_CLASS(esiChoose);
 
     esiChoose(esiTreeParentPtr);
@@ -226,8 +222,7 @@ MEMPROXY_CLASS_INLINE(esiChoose)		/**DOCS_NOSEMI*/
 
 /* esiWhen */
 
-struct esiWhen : public esiSequence
-{
+struct esiWhen : public esiSequence {
     MEMPROXY_CLASS(esiWhen);
     esiWhen(esiTreeParentPtr aParent, int attributes, const char **attr, ESIVarState *);
     ~esiWhen();
@@ -250,8 +245,7 @@ MEMPROXY_CLASS_INLINE(esiWhen)		/**DOCS_NOSEMI*/
 
 /* esiOtherwise */
 
-struct esiOtherwise : public esiSequence
-{
+struct esiOtherwise : public esiSequence {
     //    void *operator new (size_t byteCount);
     //    void operator delete (void *address);
     esiOtherwise(esiTreeParentPtr aParent) : esiSequence (aParent) {}
@@ -730,9 +724,9 @@ esiStreamDetach (clientStreamNode *thisNode, ClientHttpRequest *http)
  * callback to a set of processors like thisNode, to prevent multiple parsing
  * overhead. More thoughts on thisNode: We have to parse multiple times, because
  * the output of one processor may create a very different tree. What we could
- * do is something like DOM and pass that down to a final renderer. This is 
+ * do is something like DOM and pass that down to a final renderer. This is
  * getting into web server territory though...
- * 
+ *
  * Preconditions:
  *   This is not the last node in the stream.
  *   ESI processing has been enabled.
@@ -744,7 +738,7 @@ esiProcessStream (clientStreamNode *thisNode, ClientHttpRequest *http, HttpReply
     /* test preconditions */
     assert (thisNode != NULL);
     /* ESI TODO: handle thisNode rather than asserting - it should only ever
-     * happen if we cause an abort and the callback chain 
+     * happen if we cause an abort and the callback chain
      * loops back to here, so we can simply return. However, that itself
      * shouldn't happen, so it stays as an assert for now. */
     assert (cbdataReferenceValid (thisNode));
@@ -1358,8 +1352,7 @@ ESIContext::process ()
         status = tree->process(0);
         processing = false;
 
-        switch (status)
-        {
+        switch (status) {
 
         case ESI_PROCESS_COMPLETE:
             debugs(86, 5, "esiProcess: tree Processed OK");
@@ -1386,8 +1379,7 @@ ESIContext::process ()
             break;
         }
 
-        if (status != ESI_PROCESS_PENDING_MAYFAIL && (flags.finishedtemplate || cachedASTInUse))
-        {
+        if (status != ESI_PROCESS_PENDING_MAYFAIL && (flags.finishedtemplate || cachedASTInUse)) {
             /* We've read the entire template, and no nodes will
              * return failure
              */
@@ -1396,8 +1388,7 @@ ESIContext::process ()
         }
 
         if (status == ESI_PROCESS_COMPLETE
-                && (flags.finishedtemplate || cachedASTInUse))
-        {
+                && (flags.finishedtemplate || cachedASTInUse)) {
             /* we've finished all processing. Render and send. */
             debugs(86, 5, "esiProcess, processing complete");
             flags.finished = 1;
@@ -1483,7 +1474,7 @@ ESIContext::fail ()
     send ();
 
     /* don't cancel anything. The stream nodes will clean up after
-     * themselves when the reply is freed - and we don't know what to 
+     * themselves when the reply is freed - and we don't know what to
      * clean anyway.
      */
 }
@@ -2115,9 +2106,9 @@ ElementList::setNULL (int start, int end)
         if (elements[loopPosition].getRaw())
             elements[loopPosition]->finish();
 
-            debugs(86, 5, "esiSequence::NULLElements: Setting index " <<
-                   loopPosition << ", pointer " <<
-                   elements[loopPosition].getRaw() << " to NULL");
+        debugs(86, 5, "esiSequence::NULLElements: Setting index " <<
+               loopPosition << ", pointer " <<
+               elements[loopPosition].getRaw() << " to NULL");
 
         elements[loopPosition] = NULL;
     }
@@ -2338,7 +2329,7 @@ esiWhen::esiWhen (esiTreeParentPtr aParent, int attrcount, const char **attr,ESI
             /* ignore mistyped attributes.
              * TODO:? error on these for user feedback - config parameter needed
              */
-             debugs(86, 1, "Found misttyped attribute on ESI When clause");
+            debugs(86, 1, "Found misttyped attribute on ESI When clause");
         }
     }
 
@@ -2438,7 +2429,7 @@ esiEnableProcessing (HttpReply *rep)
 
         if (!sctusable || sctusable->content.size() == 0)
             /* Nothing generic or targeted at us, or no
-             * content processing requested 
+             * content processing requested
              */
             return 0;
 

@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -38,40 +38,39 @@
 #include "HttpRequestMethod.h"
 #include "wordlist.h"
 
-const char* HttpRequestMethod::RequestMethodStr[] =
-    {
-        "NONE",
-        "GET",
-        "POST",
-        "PUT",
-        "HEAD",
-        "CONNECT",
-        "TRACE",
-        "PURGE",
-        "OPTIONS",
-        "DELETE",
-        "PROPFIND",
-        "PROPPATCH",
-        "MKCOL",
-        "COPY",
-        "MOVE",
-        "LOCK",
-        "UNLOCK",
-        "BMOVE",
-        "BDELETE",
-        "BPROPFIND",
-        "BPROPPATCH",
-        "BCOPY",
-        "SEARCH",
-        "SUBSCRIBE",
-        "UNSUBSCRIBE",
-        "POLL",
-        "REPORT",
-        "MKACTIVITY",
-        "CHECKOUT",
-        "MERGE",
-        "ERROR"
-    };
+const char* HttpRequestMethod::RequestMethodStr[] = {
+    "NONE",
+    "GET",
+    "POST",
+    "PUT",
+    "HEAD",
+    "CONNECT",
+    "TRACE",
+    "PURGE",
+    "OPTIONS",
+    "DELETE",
+    "PROPFIND",
+    "PROPPATCH",
+    "MKCOL",
+    "COPY",
+    "MOVE",
+    "LOCK",
+    "UNLOCK",
+    "BMOVE",
+    "BDELETE",
+    "BPROPFIND",
+    "BPROPPATCH",
+    "BCOPY",
+    "SEARCH",
+    "SUBSCRIBE",
+    "UNSUBSCRIBE",
+    "POLL",
+    "REPORT",
+    "MKACTIVITY",
+    "CHECKOUT",
+    "MERGE",
+    "ERROR"
+};
 
 static
 _method_t &operator++ (_method_t &aMethod)
@@ -83,7 +82,7 @@ _method_t &operator++ (_method_t &aMethod)
 
 /*
  * Construct a HttpRequestMethod from a NULL terminated string such as "GET"
- * or from a range of chars, * such as "GET" from "GETFOOBARBAZ" 
+ * or from a range of chars, * such as "GET" from "GETFOOBARBAZ"
  * (pass in pointer to G and pointer to F.)
  */
 HttpRequestMethod::HttpRequestMethod(char const *begin, char const *end) : theMethod (METHOD_NONE)
@@ -107,12 +106,12 @@ HttpRequestMethod::HttpRequestMethod(char const *begin, char const *end) : theMe
      */
     if (NULL == end)
         end = begin + strcspn(begin, w_space);
-      
+
     if (end == begin) {
-    	theMethod = METHOD_NONE;
-    	return;
+        theMethod = METHOD_NONE;
+        return;
     }
- 
+
     for (++theMethod; theMethod < METHOD_ENUM_END; ++theMethod) {
         if (0 == strncasecmp(begin, RequestMethodStr[theMethod], end-begin)) {
             return;
@@ -171,13 +170,12 @@ HttpRequestMethod::Configure(SquidConfig &Config)
 #endif
 }
 
-char const* 
+char const*
 HttpRequestMethod::image() const
 {
     if (METHOD_OTHER != theMethod) {
         return RequestMethodStr[theMethod];
-    }
-    else {
+    } else {
         if (theImage.size()>0) {
             return theImage.buf();
         } else {
@@ -186,7 +184,7 @@ HttpRequestMethod::image() const
     }
 }
 
-bool 
+bool
 HttpRequestMethod::isCacheble() const
 {
     // TODO: optimize the lookup with a precomputed flags array
@@ -204,44 +202,44 @@ HttpRequestMethod::isCacheble() const
 
     if (theMethod == METHOD_POST)
         return false;
-    
+
     if (theMethod == METHOD_OTHER)
         return false;
-    
+
     return true;
 }
 
-bool 
+bool
 HttpRequestMethod::purgesOthers() const
 {
     // TODO: optimize the lookup with a precomputed flags array
 
     switch (theMethod) {
         /* common sense suggests purging is not required? */
-        case METHOD_GET:     // XXX: but we do purge HEAD on successful GET   
-        case METHOD_HEAD:
-        case METHOD_NONE:
-        case METHOD_CONNECT:
-        case METHOD_TRACE:
-        case METHOD_OPTIONS:
-        case METHOD_PROPFIND:
-        case METHOD_BPROPFIND:
-        case METHOD_COPY:
-        case METHOD_BCOPY:
-        case METHOD_LOCK:
-        case METHOD_UNLOCK:
-        case METHOD_SEARCH:
-            return false;
+    case METHOD_GET:     // XXX: but we do purge HEAD on successful GET
+    case METHOD_HEAD:
+    case METHOD_NONE:
+    case METHOD_CONNECT:
+    case METHOD_TRACE:
+    case METHOD_OPTIONS:
+    case METHOD_PROPFIND:
+    case METHOD_BPROPFIND:
+    case METHOD_COPY:
+    case METHOD_BCOPY:
+    case METHOD_LOCK:
+    case METHOD_UNLOCK:
+    case METHOD_SEARCH:
+        return false;
 
         /* purging mandated by RFC 2616 */
-        case METHOD_POST:
-        case METHOD_PUT:
-        case METHOD_DELETE:
-            return true;
+    case METHOD_POST:
+    case METHOD_PUT:
+    case METHOD_DELETE:
+        return true;
 
         /* purging suggested by common sense */
-        case METHOD_PURGE:
-            return true;
+    case METHOD_PURGE:
+        return true;
 
         /*
          * RFC 2616 sayeth, in section 13.10, final paragraph:
@@ -249,10 +247,10 @@ HttpRequestMethod::purgesOthers() const
          * understand SHOULD invalidate any entities referred to by the
          * Request-URI.
          */
-        case METHOD_OTHER:
-        default:
-            return true;
-	}
+    case METHOD_OTHER:
+    default:
+        return true;
+    }
 
     return true; // not reached, but just in case
 }

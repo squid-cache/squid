@@ -18,10 +18,10 @@ class AsyncCallQueue
 {
 public:
     // there is only one queue
-    static AsyncCallQueue &Instance(); 
+    static AsyncCallQueue &Instance();
 
     // make this async call when we get a chance
-    void schedule(AsyncCall::Pointer &call); 
+    void schedule(AsyncCall::Pointer &call);
 
     // fire all scheduled calls; returns true if at least one was fired
     bool fire();

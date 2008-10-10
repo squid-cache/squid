@@ -19,12 +19,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -62,7 +62,7 @@ public:
 
 class RemovalPolicy
 {
-  public:
+public:
     const char *_type;
     void *_data;
     void (*Free) (RemovalPolicy * policy);
@@ -73,30 +73,30 @@ class RemovalPolicy
     RemovalPolicyWalker *(*WalkInit) (RemovalPolicy * policy);
     RemovalPurgeWalker *(*PurgeInit) (RemovalPolicy * policy, int max_scan);
     void (*Stats) (RemovalPolicy * policy, StoreEntry * entry);
-  private:
+private:
     CBDATA_CLASS2(RemovalPolicy);
 };
 
 class RemovalPolicyWalker
 {
-  public:
+public:
     RemovalPolicy *_policy;
     void *_data;
     const StoreEntry *(*Next) (RemovalPolicyWalker * walker);
     void (*Done) (RemovalPolicyWalker * walker);
-  private:
+private:
     CBDATA_CLASS2(RemovalPolicyWalker);
 };
 
 class RemovalPurgeWalker
 {
-  public:
+public:
     RemovalPolicy *_policy;
     void *_data;
     int scanned, max_scan, locked;
     StoreEntry *(*Next) (RemovalPurgeWalker * walker);
     void (*Done) (RemovalPurgeWalker * walker);
-  private:
+private:
     CBDATA_CLASS2(RemovalPurgeWalker);
 };
 

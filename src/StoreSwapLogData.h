@@ -17,12 +17,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -43,7 +43,7 @@
  *      takes a StoreEntry as a parameter and returns a tlv linked
  *      list.  Second, storeSwapMetaPack() converts the tlv list
  *      into a character buffer that we can write.
- * 
+ *
  \note  MemObject has a MemObject::swap_hdr_sz.
  *      This value is the size of that character buffer; the size of the
  *      swap file meta data.  The StoreEntry has a member
@@ -51,7 +51,7 @@
  *      Thus, the size of the object "content" is
  \code    StoreEntry->swap_file_sz  - MemObject->swap_hdr_sz;    \endcode
  \note The swap file content includes the HTTP reply headers and the HTTP reply body (if any).
- * 
+ *
  \par
  *      When reading a swap file, there is a similar process to extract
  *      the swap meta data.  First, storeSwapMetaUnpack() converts a
@@ -63,7 +63,7 @@
 
 /*
  * Do we need to have the dirn in here? I don't think so, since we already
- * know the dirn .. 
+ * know the dirn ..
  */
 /**
  \ingroup FielFormatSwapStateAPI
@@ -167,10 +167,10 @@ MEMPROXY_CLASS_INLINE(StoreSwapLogData)		/**DOCS_NOSEMI*/
 class StoreSwapLogHeader
 {
 public:
-     StoreSwapLogHeader();
-     char op;
-     int version;
-     int record_size;
+    StoreSwapLogHeader();
+    char op;
+    int version;
+    int record_size;
 };
 
 

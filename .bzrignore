@@ -66,6 +66,7 @@ stamp-h1
 tags
 test-suite/Makefile
 testHeaders
+testHeaders.c
 tmp
 tools/Makefile
 tools/cachemgr.cgi

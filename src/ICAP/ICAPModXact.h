@@ -158,7 +158,7 @@ public:
 
 protected:
     // bypasses exceptions if needed and possible
-    virtual void callException(const TextException &e);
+    virtual void callException(const std::exception &e);
 
 private:
     virtual void start();
@@ -208,7 +208,6 @@ private:
     void parseIcapHead();
     void parseHttpHead();
     bool parseHead(HttpMsg *head);
-    void inheritVirginProperties(HttpRequest &newR, const HttpRequest &oldR);
 
     void decideOnParsingBody();
     void parseBody();

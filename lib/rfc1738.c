@@ -1,7 +1,7 @@
 /*
  * $Id: rfc1738.c,v 1.28 2007/12/06 02:37:15 amosjeffries Exp $
  *
- * DEBUG: 
+ * DEBUG:
  * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -43,12 +43,11 @@
 
 #include "util.h"
 
-/*  
+/*
  *  RFC 1738 defines that these characters should be escaped, as well
  *  any non-US-ASCII character or anything between 0x00 - 0x1F.
  */
-static char rfc1738_unsafe_chars[] =
-{
+static char rfc1738_unsafe_chars[] = {
     (char) 0x3C,		/* < */
     (char) 0x3E,		/* > */
     (char) 0x22,		/* " */
@@ -69,8 +68,7 @@ static char rfc1738_unsafe_chars[] =
     (char) 0x20			/* space */
 };
 
-static char rfc1738_reserved_chars[] =
-{
+static char rfc1738_reserved_chars[] = {
     (char) 0x3b,		/* ; */
     (char) 0x2f,		/* / */
     (char) 0x3f,		/* ? */
@@ -81,7 +79,7 @@ static char rfc1738_reserved_chars[] =
 };
 
 /*
- *  rfc1738_escape - Returns a static buffer contains the RFC 1738 
+ *  rfc1738_escape - Returns a static buffer contains the RFC 1738
  *  compliant, escaped version of the given url.
  */
 static char *
@@ -94,52 +92,52 @@ rfc1738_do_escape(const char *url, int encode_reserved)
     unsigned int i, do_escape;
 
     if (buf == NULL || strlen(url) * 3 > bufsize) {
-	xfree(buf);
-	bufsize = strlen(url) * 3 + 1;
-	buf = xcalloc(bufsize, 1);
+        xfree(buf);
+        bufsize = strlen(url) * 3 + 1;
+        buf = xcalloc(bufsize, 1);
     }
     for (p = url, q = buf; *p != '\0' && q < (buf + bufsize - 1); p++, q++) {
-	do_escape = 0;
+        do_escape = 0;
 
-	/* RFC 1738 defines these chars as unsafe */
-	for (i = 0; i < sizeof(rfc1738_unsafe_chars); i++) {
-	    if (*p == rfc1738_unsafe_chars[i]) {
-		do_escape = 1;
-		break;
-	    }
-	}
-	/* Handle % separately */
-	if (encode_reserved >= 0 && *p == '%')
-	    do_escape = 1;
-	/* RFC 1738 defines these chars as reserved */
-	for (i = 0; i < sizeof(rfc1738_reserved_chars) && encode_reserved > 0; i++) {
-	    if (*p == rfc1738_reserved_chars[i]) {
-		do_escape = 1;
-		break;
-	    }
-	}
-	/* RFC 1738 says any control chars (0x00-0x1F) are encoded */
-	if ((unsigned char) *p <= (unsigned char) 0x1F) {
-	    do_escape = 1;
-	}
-	/* RFC 1738 says 0x7f is encoded */
-	if (*p == (char) 0x7F) {
-	    do_escape = 1;
-	}
-	/* RFC 1738 says any non-US-ASCII are encoded */
-	if (((unsigned char) *p >= (unsigned char) 0x80)) { 
-	    do_escape = 1;
-	}
-	/* Do the triplet encoding, or just copy the char */
-	/* note: we do not need snprintf here as q is appropriately
-	 * allocated - KA */
+        /* RFC 1738 defines these chars as unsafe */
+        for (i = 0; i < sizeof(rfc1738_unsafe_chars); i++) {
+            if (*p == rfc1738_unsafe_chars[i]) {
+                do_escape = 1;
+                break;
+            }
+        }
+        /* Handle % separately */
+        if (encode_reserved >= 0 && *p == '%')
+            do_escape = 1;
+        /* RFC 1738 defines these chars as reserved */
+        for (i = 0; i < sizeof(rfc1738_reserved_chars) && encode_reserved > 0; i++) {
+            if (*p == rfc1738_reserved_chars[i]) {
+                do_escape = 1;
+                break;
+            }
+        }
+        /* RFC 1738 says any control chars (0x00-0x1F) are encoded */
+        if ((unsigned char) *p <= (unsigned char) 0x1F) {
+            do_escape = 1;
+        }
+        /* RFC 1738 says 0x7f is encoded */
+        if (*p == (char) 0x7F) {
+            do_escape = 1;
+        }
+        /* RFC 1738 says any non-US-ASCII are encoded */
+        if (((unsigned char) *p >= (unsigned char) 0x80)) {
+            do_escape = 1;
+        }
+        /* Do the triplet encoding, or just copy the char */
+        /* note: we do not need snprintf here as q is appropriately
+         * allocated - KA */
 
-	if (do_escape == 1) {
-	    (void) sprintf(q, "%%%02X", (unsigned char) *p);
-	    q += sizeof(char) * 2;
-	} else {
-	    *q = *p;
-	}
+        if (do_escape == 1) {
+            (void) sprintf(q, "%%%02X", (unsigned char) *p);
+            q += sizeof(char) * 2;
+        } else {
+            *q = *p;
+        }
     }
     *q = '\0';
     return (buf);
@@ -176,7 +174,7 @@ rfc1738_escape_part(const char *url)
 }
 
 /*
- *  rfc1738_unescape() - Converts escaped characters (%xy numbers) in 
+ *  rfc1738_unescape() - Converts escaped characters (%xy numbers) in
  *  given the string.  %% is a %. %ab is the 8-bit hexadecimal number "ab"
  */
 void
@@ -186,26 +184,26 @@ rfc1738_unescape(char *s)
     int i, j;			/* i is write, j is read */
     unsigned int x;
     for (i = j = 0; s[j]; i++, j++) {
-	s[i] = s[j];
-	if (s[i] != '%')
-	    continue;
-	if (s[j + 1] == '%') {	/* %% case */
-	    j++;
-	    continue;
-	}
-	if (s[j + 1] && s[j + 2]) {
-	    if (s[j + 1] == '0' && s[j + 2] == '0') {	/* %00 case */
-		j += 2;
-		continue;
-	    }
-	    hexnum[0] = s[j + 1];
-	    hexnum[1] = s[j + 2];
-	    hexnum[2] = '\0';
-	    if (1 == sscanf(hexnum, "%x", &x)) {
-		s[i] = (char) (0x0ff & x);
-		j += 2;
-	    }
-	}
+        s[i] = s[j];
+        if (s[i] != '%')
+            continue;
+        if (s[j + 1] == '%') {	/* %% case */
+            j++;
+            continue;
+        }
+        if (s[j + 1] && s[j + 2]) {
+            if (s[j + 1] == '0' && s[j + 2] == '0') {	/* %00 case */
+                j += 2;
+                continue;
+            }
+            hexnum[0] = s[j + 1];
+            hexnum[1] = s[j + 2];
+            hexnum[2] = '\0';
+            if (1 == sscanf(hexnum, "%x", &x)) {
+                s[i] = (char) (0x0ff & x);
+                j += 2;
+            }
+        }
     }
     s[i] = '\0';
 }

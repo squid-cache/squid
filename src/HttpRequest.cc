@@ -74,6 +74,7 @@ HttpRequest::init()
     login[0] = '\0';
     host[0] = '\0';
     auth_user_request = NULL;
+    pinned_connection = NULL;
     port = 0;
     canonical = NULL;
     memset(&flags, '\0', sizeof(flags));
@@ -127,6 +128,9 @@ HttpRequest::clean()
         range = NULL;
     }
 
+    if(pinned_connection)
+	cbdataReferenceDone(pinned_connection);
+
     tag.clean();
 
     extacl_user.clean();
@@ -141,6 +145,59 @@ HttpRequest::reset()
 {
     clean();
     init();
+}
+
+HttpRequest *
+HttpRequest::clone() const
+{
+    HttpRequest *copy = new HttpRequest(method, protocol, urlpath.buf());
+    // TODO: move common cloning clone to Msg::copyTo() or copy ctor
+    copy->header.append(&header);
+    copy->hdrCacheInit();
+    copy->hdr_sz = hdr_sz;
+    copy->http_ver = http_ver;
+    copy->pstate = pstate; // TODO: should we assert a specific state here?
+    copy->body_pipe = body_pipe;
+
+    strncpy(copy->login, login, sizeof(login)); // MAX_LOGIN_SZ
+    strncpy(copy->host, host, sizeof(host)); // SQUIDHOSTNAMELEN
+    copy->host_addr = host_addr;
+
+    if (auth_user_request) {
+        copy->auth_user_request = auth_user_request;
+        AUTHUSERREQUESTLOCK(copy->auth_user_request, "HttpRequest::clone");
+	}
+
+    copy->port = port;
+    // urlPath handled in ctor
+	copy->canonical = canonical ? xstrdup(canonical) : NULL;
+    
+    // This may be too conservative for the 204 No Content case
+    // may eventually need cloneNullAdaptationImmune() for that.
+    copy->flags = flags.cloneAdaptationImmune();
+
+	copy->range = range ? new HttpHdrRange(*range) : NULL;
+	copy->ims = ims;
+	copy->imslen = imslen;
+	copy->max_forwards = max_forwards;
+    copy->client_addr = client_addr;
+    copy->my_addr = my_addr;
+    copy->hier = hier; // Is it safe to copy? Should we?
+
+    copy->errType = errType;
+
+    // XXX: what to do with copy->peer_login?
+
+	copy->lastmod = lastmod;
+    copy->vary_headers = vary_headers ? xstrdup(vary_headers) : NULL;
+    // XXX: what to do with copy->peer_domain?
+
+    copy->tag = tag;
+    copy->extacl_user = extacl_user;
+    copy->extacl_passwd = extacl_passwd;
+    copy->extacl_log = extacl_log;
+
+    return copy;
 }
 
 bool
@@ -455,5 +512,29 @@ HttpRequest::cacheable() const
     if (protocol == PROTO_CACHEOBJ)
         return false;
 
+    return true;
+}
+
+bool HttpRequest::inheritProperties(const HttpMsg *aMsg)
+{
+    const HttpRequest* aReq = dynamic_cast<const HttpRequest*>(aMsg);
+    if(!aReq)
+	return false;
+    
+    client_addr = aReq->client_addr;
+    my_addr = aReq->my_addr;
+
+    // This may be too conservative for the 204 No Content case
+    // may eventually need cloneNullAdaptationImmune() for that.
+    flags = aReq->flags.cloneAdaptationImmune();
+
+    if (aReq->auth_user_request) {
+        auth_user_request = aReq->auth_user_request;
+	AUTHUSERREQUESTLOCK(auth_user_request, "inheritProperties");
+    }
+
+    if(aReq->pinned_connection) {
+	pinned_connection = cbdataReference(aReq->pinned_connection);
+    }
     return true;
 }

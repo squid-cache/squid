@@ -1,20 +1,20 @@
-/* 
+/*
  * Unix SMB/Netbios implementation.
  * Version 1.9.
  * SMB parameters and setup
  * Copyright (C) Andrew Tridgell 1992-1997
  * Modified by Jeremy Allison 1995.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -50,7 +50,7 @@ static void strupper(char *s);
 
 /*
  * This implements the X/Open SMB password encryption
- * It takes a password, a 8 byte "crypt key" and puts 24 bytes of 
+ * It takes a password, a 8 byte "crypt key" and puts 24 bytes of
  * encrypted password into p24 */
 void
 SMBencrypt(uchar * passwd, uchar * c8, uchar * p24)
@@ -72,13 +72,13 @@ _my_wcslen(int16 * str)
 {
     int len = 0;
     while (*str++ != 0)
-	len++;
+        len++;
     return len;
 }
 
 /*
  * Convert a string into an NT UNICODE string.
- * Note that regardless of processor type 
+ * Note that regardless of processor type
  * this must be in intel (little-endian)
  * format.
  */
@@ -90,17 +90,17 @@ _my_mbstowcs(int16 * dst, uchar * src, int len)
     int16 val;
 
     for (i = 0; i < len; i++) {
-	val = *src;
-	SSVAL(dst, 0, val);
-	dst++;
-	src++;
-	if (val == 0)
-	    break;
+        val = *src;
+        SSVAL(dst, 0, val);
+        dst++;
+        src++;
+        if (val == 0)
+            break;
     }
     return i;
 }
 
-/* 
+/*
  * Creates the MD4 Hash of the users password in NT UNICODE.
  */
 
@@ -113,7 +113,7 @@ E_md4hash(uchar * passwd, uchar * p16)
     /* Password cannot be longer than 128 characters */
     len = strlen((char *) passwd);
     if (len > 128)
-	len = 128;
+        len = 128;
     /* Password must be converted to NT unicode */
     _my_mbstowcs(wpwd, passwd, len);
     wpwd[len] = 0;		/* Ensure string is null terminated */
@@ -169,10 +169,10 @@ StrnCpy(char *dest, char *src, int n)
 {
     char *d = dest;
     if (!dest)
-	return (NULL);
+        return (NULL);
     if (!src) {
-	*dest = 0;
-	return (dest);
+        *dest = 0;
+        return (dest);
     }
     while (n-- && (*d++ = *src++));
     *d = 0;
@@ -185,26 +185,26 @@ strupper(char *s)
     while (*s) {
 #if UNUSED_CODE
 #if !defined(KANJI_WIN95_COMPATIBILITY)
-	if (lp_client_code_page() == KANJI_CODEPAGE) {
+        if (lp_client_code_page() == KANJI_CODEPAGE) {
 
-	    if (is_shift_jis(*s)) {
-		if (is_sj_lower(s[0], s[1]))
-		    s[1] = sj_toupper2(s[1]);
-		s += 2;
-	    } else if (is_kana(*s)) {
-		s++;
-	    } else {
-		if (islower((int)(unsigned char)*s))
-		    *s = toupper((int)(unsigned char)*s);
-		s++;
-	    }
-	} else
+            if (is_shift_jis(*s)) {
+                if (is_sj_lower(s[0], s[1]))
+                    s[1] = sj_toupper2(s[1]);
+                s += 2;
+            } else if (is_kana(*s)) {
+                s++;
+            } else {
+                if (islower((int)(unsigned char)*s))
+                    *s = toupper((int)(unsigned char)*s);
+                s++;
+            }
+        } else
 #endif /* KANJI_WIN95_COMPATIBILITY */
 #endif /* UNUSED_CODE */
-	{
-	    if (islower((int)(unsigned char)*s))
-		*s = toupper((int)(unsigned char)*s);
-	    s++;
-	}
+        {
+            if (islower((int)(unsigned char)*s))
+                *s = toupper((int)(unsigned char)*s);
+            s++;
+        }
     }
 }

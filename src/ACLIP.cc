@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -96,24 +96,24 @@ acl_ip_data::toStr(char *buf, int len) const
     b2 = buf + rlen;
 
     if (!addr2.IsAnyAddr()) {
-        b2[0] = '-'; rlen++;
+        b2[0] = '-';
+        rlen++;
         addr2.NtoA(&(b2[1]), len - rlen );
         rlen = strlen(buf);
-    }
-    else
+    } else
         b2[0] = '\0';
 
     b3 = buf + rlen;
 
     if (!mask.IsNoAddr()) {
-        b3[0] = '/'; rlen++;
+        b3[0] = '/';
+        rlen++;
 #if USE_IPV6
         snprintf(&(b3[1]), (len-rlen), "%u", mask.GetCIDR() - (addr1.IsIPv4()?96:0) );
 #else
         snprintf(&(b3[1]), (len-rlen), "%u", mask.GetCIDR() );
 #endif
-    }
-    else
+    } else
         b3[0] = '\0';
 }
 
@@ -170,7 +170,7 @@ acl_ip_data::NetworkCompare(acl_ip_data * const & a, acl_ip_data * const &b)
     if (ret == 0) {
         char buf_n1[3*(MAX_IPSTRLEN+1)];
         char buf_n2[3*(MAX_IPSTRLEN+1)];
-        if(bina) {
+        if (bina) {
             b->toStr(buf_n1, 3*(MAX_IPSTRLEN+1));
             a->toStr(buf_n2, 3*(MAX_IPSTRLEN+1));
         } else {
@@ -199,16 +199,14 @@ acl_ip_data::DecodeMask(const char *asc, IPAddress &mask, int ctype)
     /* default is a mask that doesn't change any IP */
     mask.SetNoAddr();
 
-    if (!asc || !*asc)
-    {
+    if (!asc || !*asc) {
         return true;
     }
 
     /* An int mask 128, 32 */
     if ((sscanf(asc, "%d%c", &a1, &junk)==1) &&
-         (a1 <= 128) && (a1  >= 0)
-       )
-    {
+            (a1 <= 128) && (a1  >= 0)
+       ) {
         return mask.ApplyMask(a1, ctype);
     }
 
@@ -306,7 +304,7 @@ acl_ip_data::FactoryParse(const char *t)
 
         memset(&hints, 0, sizeof(struct addrinfo));
 
-        if( iptype != AF_UNSPEC ) {
+        if ( iptype != AF_UNSPEC ) {
             hints.ai_flags |= AI_NUMERICHOST;
         }
 
@@ -317,8 +315,8 @@ acl_ip_data::FactoryParse(const char *t)
         int errcode = xgetaddrinfo(addr1,NULL,&hints,&hp);
         if (hp == NULL) {
             debugs(28, 0, "aclIpParseIpData: Bad host/IP: '" << addr1 <<
-                          "' in '" << t << "', flags=" << hints.ai_flags <<
-                          " : (" << errcode << ") " << xgai_strerror(errcode) );
+                   "' in '" << t << "', flags=" << hints.ai_flags <<
+                   " : (" << errcode << ") " << xgai_strerror(errcode) );
             self_destruct();
             return NULL;
         }
@@ -333,13 +331,12 @@ acl_ip_data::FactoryParse(const char *t)
             /* BUT sorted fortunately, so we can drop most of them easily */
             r->addr1 = *x;
             x = x->ai_next;
-            if( prev_addr && r->addr1 == *prev_addr) {
+            if ( prev_addr && r->addr1 == *prev_addr) {
                 debugs(28, 3, "aclIpParseIpData: Duplicate host/IP: '" << r->addr1 << "' dropped.");
                 delete r;
                 *Q = NULL;
                 continue;
-            }
-            else
+            } else
                 prev_addr = &r->addr1;
 
             debugs(28, 3, "aclIpParseIpData: Located host/IP: '" << r->addr1 << "'");
@@ -365,7 +362,7 @@ acl_ip_data::FactoryParse(const char *t)
 
 #if !USE_IPV6
     /* ignore IPv6 addresses when built with IPv4-only */
-    if( iptype == AF_INET6 ) {
+    if ( iptype == AF_INET6 ) {
         debugs(28, 0, "aclIpParseIpData: IPv6 has not been enabled. build with '--enable-ipv6'");
         return NULL;
     }
@@ -381,7 +378,7 @@ acl_ip_data::FactoryParse(const char *t)
 
     /* Decode addr2 */
     if (!*addr2)
-	q->addr2.SetAnyAddr();
+        q->addr2.SetAnyAddr();
     else if (!(q->addr2=addr2) ) {
         debugs(28, 0, "aclIpParseIpData: unknown second address in '" << t << "'");
         delete q;
@@ -465,4 +462,4 @@ ACLIP::match(IPAddress &clientip)
 
 acl_ip_data::acl_ip_data () :addr1(), addr2(), mask(), next (NULL) {}
 
-acl_ip_data::acl_ip_data (IPAddress const &anAddress1, IPAddress const &anAddress2, IPAddress const &aMask, acl_ip_data *aNext) : addr1(anAddress1), addr2(anAddress2), mask(aMask), next(aNext){}
+acl_ip_data::acl_ip_data (IPAddress const &anAddress1, IPAddress const &anAddress2, IPAddress const &aMask, acl_ip_data *aNext) : addr1(anAddress1), addr2(anAddress2), mask(aMask), next(aNext) {}

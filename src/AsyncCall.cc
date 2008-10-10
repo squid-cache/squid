@@ -13,11 +13,11 @@ unsigned int AsyncCall::TheLastId = 0;
 /* AsyncCall */
 
 AsyncCall::AsyncCall(int aDebugSection, int aDebugLevel,
-    const char *aName): name(aName), debugSection(aDebugSection),
-    debugLevel(aDebugLevel), id(++TheLastId), theNext(0), isCanceled(NULL)
+                     const char *aName): name(aName), debugSection(aDebugSection),
+        debugLevel(aDebugLevel), id(++TheLastId), theNext(0), isCanceled(NULL)
 {
     debugs(debugSection, debugLevel, "The AsyncCall " << name << " constructed, this=" << this <<
-        " [call" << id << ']');
+           " [call" << id << ']');
 }
 
 AsyncCall::~AsyncCall()
@@ -29,7 +29,7 @@ void
 AsyncCall::make()
 {
     debugs(debugSection, debugLevel, HERE << "make call " << name <<
-	" [call"<< id << ']');
+           " [call"<< id << ']');
     if (canFire()) {
         fire();
         return;
@@ -39,7 +39,7 @@ AsyncCall::make()
         isCanceled = "unknown reason";
 
     debugs(debugSection, debugLevel, HERE << "will not call " << name <<
-        " [call"<< id << ']' << " because of " << isCanceled);
+           " [call"<< id << ']' << " because of " << isCanceled);
 }
 
 bool
@@ -47,7 +47,7 @@ AsyncCall::cancel(const char *reason)
 {
     if (isCanceled)
         debugs(debugSection, debugLevel, HERE << "will not call " << name <<
-	    " [call"<< id << ']' << " also because " << reason);
+               " [call"<< id << ']' << " also because " << reason);
     isCanceled = reason;
     return false;
 }
@@ -70,10 +70,10 @@ AsyncCall::print(std::ostream &os)
 }
 
 bool
-ScheduleCall(const char *fileName, int fileLine, AsyncCall::Pointer &call) 
+ScheduleCall(const char *fileName, int fileLine, AsyncCall::Pointer &call)
 {
     debugs(call->debugSection, call->debugLevel, fileName << "(" << fileLine <<
-	") will call " << *call << " [call"<< call->id << ']' );
+           ") will call " << *call << " [call"<< call->id << ']' );
     AsyncCallQueue::Instance().schedule(call);
     return true;
 }

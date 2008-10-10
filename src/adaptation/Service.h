@@ -12,7 +12,8 @@
 class HttpMsg;
 class HttpRequest;
 
-namespace Adaptation {
+namespace Adaptation
+{
 
 // manages adaptation service configuration in squid.conf
 // specific adaptation mechanisms extend this class
@@ -30,7 +31,7 @@ public:
     virtual void invalidate() = 0;
 
     virtual bool probed() const = 0; // see comments above
-    virtual bool broken() const = 0; // see comments above
+    virtual bool broken() const;
     virtual bool up() const = 0; // see comments above
 
     virtual Initiate *makeXactLauncher(Initiator *, HttpMsg *virginHeader, HttpRequest *virginCause) = 0;

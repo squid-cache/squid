@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -60,27 +60,25 @@ static double xm_deltat = 0;
 /* string pools */
 #define mem_str_pool_count 3
 
-static const struct
-{
+static const struct {
     const char *name;
     size_t obj_size;
 }
 
 StrPoolsAttrs[mem_str_pool_count] = {
 
-                                        {
-                                            "Short Strings", MemAllocator::RoundedSize(36),
-                                        },				/* to fit rfc1123 and similar */
-                                        {
-                                            "Medium Strings", MemAllocator::RoundedSize(128),
-                                        },				/* to fit most urls */
-                                        {
-                                            "Long Strings", MemAllocator::RoundedSize(512)
-                                        }				/* other */
-                                    };
+    {
+        "Short Strings", MemAllocator::RoundedSize(36),
+    },				/* to fit rfc1123 and similar */
+    {
+        "Medium Strings", MemAllocator::RoundedSize(128),
+    },				/* to fit most urls */
+    {
+        "Long Strings", MemAllocator::RoundedSize(512)
+    }				/* other */
+};
 
-static struct
-{
+static struct {
     MemAllocator *pool;
 }
 
@@ -140,17 +138,17 @@ Mem::Stats(StoreEntry * sentry)
     memBufStats(stream);
 #if WITH_VALGRIND
     if (RUNNING_ON_VALGRIND) {
-	long int leaked = 0, dubious = 0, reachable = 0, suppressed = 0;
-	stream << "Valgrind Report:\n";
-	stream << "Type\tAmount\n";
-       debugs(13, 1, "Asking valgrind for memleaks");
-	VALGRIND_DO_LEAK_CHECK;
-       debugs(13, 1, "Getting valgrind statistics");
-	VALGRIND_COUNT_LEAKS(leaked, dubious, reachable, suppressed);
-	stream << "Leaked\t" << leaked << "\n";
-	stream << "Dubious\t" << dubious << "\n";
-	stream << "Reachable\t" << reachable << "\n";
-	stream << "Suppressed\t" << suppressed << "\n";
+        long int leaked = 0, dubious = 0, reachable = 0, suppressed = 0;
+        stream << "Valgrind Report:\n";
+        stream << "Type\tAmount\n";
+        debugs(13, 1, "Asking valgrind for memleaks");
+        VALGRIND_DO_LEAK_CHECK;
+        debugs(13, 1, "Getting valgrind statistics");
+        VALGRIND_COUNT_LEAKS(leaked, dubious, reachable, suppressed);
+        stream << "Leaked\t" << leaked << "\n";
+        stream << "Dubious\t" << dubious << "\n";
+        stream << "Reachable\t" << reachable << "\n";
+        stream << "Suppressed\t" << suppressed << "\n";
     }
 #endif
     stream.flush();
@@ -436,16 +434,16 @@ void
 Mem::Report()
 {
     debugs(13, 3, "Memory pools are '" <<
-        (Config.onoff.mem_pools ? "on" : "off")  << "'; limit: " <<
-        std::setprecision(3) << toMB(MemPools::GetInstance().idleLimit()) <<
-        " MB");
+           (Config.onoff.mem_pools ? "on" : "off")  << "'; limit: " <<
+           std::setprecision(3) << toMB(MemPools::GetInstance().idleLimit()) <<
+           " MB");
 }
 
 void
 Mem::RegisterWithCacheManager(void)
 {
     CacheManager::GetInstance()->registerAction("mem", "Memory Utilization",
-                           Mem::Stats, 0, 1);
+            Mem::Stats, 0, 1);
 }
 
 mem_type &operator++ (mem_type &aMem)

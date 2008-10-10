@@ -5,7 +5,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 /*
- * test StoreEntryStream 
+ * test StoreEntryStream
  */
 
 class testStoreEntryStream : public CPPUNIT_NS::TestFixture

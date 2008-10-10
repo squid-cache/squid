@@ -50,7 +50,8 @@
  * This structure is included as a child field of the global Config
  * such that if ICMP is built it can be accessed as Config.pinger.*
  */
-class IcmpConfig {
+class IcmpConfig
+{
 
 public:
 
@@ -58,9 +59,9 @@ public:
      * alongside any custom parsing routines needed for this component.
      * First though, the whole global Config dependancy tree needs fixing */
     IcmpConfig() : program(NULL), enable(0) {};
-    ~IcmpConfig() { if(program) delete program; program = NULL; };
+    ~IcmpConfig() { if (program) delete program; program = NULL; };
 
-/* variables */
+    /* variables */
 
     /** pinger helper application path */
     char *program;

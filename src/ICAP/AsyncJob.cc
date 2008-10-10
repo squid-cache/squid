@@ -12,7 +12,8 @@
 
 unsigned int AsyncJob::TheLastId = 0;
 
-AsyncJob *AsyncJob::AsyncStart(AsyncJob *job) {
+AsyncJob *AsyncJob::AsyncStart(AsyncJob *job)
+{
     assert(job);
     CallJobHere(93, 5, job, AsyncJob::noteStart);
     return job;
@@ -21,7 +22,7 @@ AsyncJob *AsyncJob::AsyncStart(AsyncJob *job) {
 AsyncJob::AsyncJob(const char *aTypeName): typeName(aTypeName), inCall(NULL), id(++TheLastId)
 {
     debugs(93,3, "AsyncJob of type " << typeName << " constructed, this=" << this <<
-	   " [async" << id << ']'); 
+           " [async" << id << ']');
 }
 
 AsyncJob::~AsyncJob()
@@ -47,12 +48,12 @@ void AsyncJob::deleteThis(const char *aReason)
         // if we are in-call, then the call wrapper will delete us
         debugs(93, 4, typeName << " will NOT delete in-call job, reason: " << stopReason);
         return;
-	}
-    
+    }
+
     // there is no call wrapper waiting for our return, so we fake it
     debugs(93, 5, typeName << " will delete this, reason: " << stopReason);
     AsyncCall::Pointer fakeCall = asyncCall(93,4, "FAKE-deleteThis",
-        MemFun(this, &AsyncJob::deleteThis, aReason));
+                                            MemFun(this, &AsyncJob::deleteThis, aReason));
     inCall = fakeCall;
     callEnd();
 //    delete fakeCall;
@@ -63,11 +64,11 @@ void AsyncJob::mustStop(const char *aReason)
     // XXX: temporary code to catch cases where mustStop is called outside
     // of an async call context. Will be removed when that becomes impossible.
     // Until then, this will cause memory leaks and possibly other problems.
-    if (!inCall) { 
+    if (!inCall) {
         stopReason = aReason;
         debugs(93, 5, typeName << " will STALL, reason: " << stopReason);
         return;
-	}
+    }
 
     Must(inCall != NULL); // otherwise nobody will delete us if we are done()
     Must(aReason);
@@ -95,8 +96,8 @@ bool AsyncJob::canBeCalled(AsyncCall &call) const
     if (inCall != NULL) {
         // This may happen when we have bugs or some module is not calling
         // us asynchronously (comm used to do that).
-        debugs(93, 5, HERE << inCall << " is in progress; " << 
-            call << " canot reenter the job.");
+        debugs(93, 5, HERE << inCall << " is in progress; " <<
+               call << " canot reenter the job.");
         return call.cancel("reentrant job call");
     }
 
@@ -112,10 +113,10 @@ void AsyncJob::callStart(AsyncCall &call)
 
     inCall = &call; // XXX: ugly, but safe if callStart/callEnd,Ex are paired
     debugs(inCall->debugSection, inCall->debugLevel,
-        typeName << " status in:" << status());
+           typeName << " status in:" << status());
 }
 
-void AsyncJob::callException(const TextException &e)
+void AsyncJob::callException(const std::exception &e)
 {
     // we must be called asynchronously and hence, the caller must lock us
     Must(cbdataReferenceValid(toCbdata()));
@@ -141,7 +142,7 @@ void AsyncJob::callEnd()
     }
 
     debugs(inCall->debugSection, inCall->debugLevel,
-        typeName << " status out:" << status());
+           typeName << " status out:" << status());
     inCall = NULL;
 }
 
@@ -152,9 +153,9 @@ const char *AsyncJob::status() const
     buf.reset();
 
     buf.append(" [", 2);
-    if (stopReason != NULL){
+    if (stopReason != NULL) {
         buf.Printf("Stopped, reason:");
-	buf.Printf(stopReason);
+        buf.Printf(stopReason);
     }
     buf.Printf(" job%d]", id);
     buf.terminate();
@@ -174,7 +175,7 @@ JobDialer::JobDialer(AsyncJob *aJob): job(NULL), lock(NULL)
 }
 
 JobDialer::JobDialer(const JobDialer &d): CallDialer(d),
-    job(NULL), lock(NULL)
+        job(NULL), lock(NULL)
 {
     if (d.lock && cbdataReferenceValid(d.lock)) {
         lock = cbdataReference(d.lock);
@@ -183,7 +184,8 @@ JobDialer::JobDialer(const JobDialer &d): CallDialer(d),
     }
 }
 
-JobDialer::~JobDialer(){
+JobDialer::~JobDialer()
+{
     cbdataReferenceDone(lock); // lock may be NULL
 }
 
@@ -202,7 +204,7 @@ JobDialer::canDial(AsyncCall &call)
 }
 
 void
-JobDialer::dial(AsyncCall &call) 
+JobDialer::dial(AsyncCall &call)
 {
     Must(lock && cbdataReferenceValid(lock)); // canDial() checks for this
     Must(job);
@@ -211,10 +213,9 @@ JobDialer::dial(AsyncCall &call)
 
     try {
         doDial();
-	}
-    catch (const TextException &e) {
+    } catch (const std::exception &e) {
         debugs(call.debugSection, 3,
-            HERE << call.name << " threw exception: " << e.message);
+               HERE << call.name << " threw exception: " << e.what());
         job->callException(e);
     }
 

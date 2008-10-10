@@ -19,8 +19,7 @@ enum {
 
 struct RefCountable_;
 
-struct diomsg
-{
+struct diomsg {
     mtyp_t mtype;
     int id;
     int seq_no;

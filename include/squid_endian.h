@@ -19,16 +19,16 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
- *  
+ *
  */
 
 #ifndef SQUID_ENDIAN_H
@@ -61,7 +61,7 @@
 /*
  * Some systems define bswap_16() and bswap_32() in <byteswap.h>
  *
- * Some systems define bswap16() and bswap32() in <sys/bswap.h>.  
+ * Some systems define bswap16() and bswap32() in <sys/bswap.h>.
  *
  * Some systems define htobe16()/be16toh() and friends in <sys/endian.h>.
  */
@@ -139,16 +139,16 @@
 #    define le16toh(x) bswap16(x)
 #    define le32toh(x) bswap32(x)
 #  else /* ! WORDS_BIGENDIAN */
-       /*
-        * XXX: What about unusual byte orders like 3412 or 2143 ?
-        *      Nothing else in squid seems to care about them,
-        *      so we don't worry about them here either.
-        */
+/*
+* XXX: What about unusual byte orders like 3412 or 2143 ?
+*      Nothing else in squid seems to care about them,
+*      so we don't worry about them here either.
+*/
 #    define htole16(x) (x)
 #    define htole32(x) (x)
 #    define le16toh(x) (x)
 #    define le32toh(x) (x)
 #  endif /* ! WORDS_BIGENDIAN */
 #endif /* ! HAVE_HTOLE16 && ! defined(htole16) */
- 
+
 #endif /* SQUID_ENDIAN_H */

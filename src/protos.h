@@ -18,12 +18,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -134,6 +134,8 @@ SQUIDCEXTERN void disk_init(void);
 SQUIDCEXTERN void dnsShutdown(void);
 SQUIDCEXTERN void dnsInit(void);
 SQUIDCEXTERN void dnsSubmit(const char *lookup, HLPCB * callback, void *data);
+/// XXX: a temporary hack to work around the missing DNS error info
+const char *dns_error_message_safe();
 
 /* dns_internal.c */
 SQUIDCEXTERN void idnsInit(void);
@@ -385,6 +387,9 @@ SQUIDCEXTERN void neighborAddAcl(const char *, const char *);
 SQUIDCEXTERN void neighborsUdpAck(const cache_key *, icp_common_t *, const IPAddress &);
 SQUIDCEXTERN void neighborAdd(const char *, const char *, int, int, int, int, int);
 SQUIDCEXTERN void neighbors_init(void);
+#if USE_HTCP
+SQUIDCEXTERN void neighborsHtcpClear(StoreEntry *, const char *, HttpRequest *, const HttpRequestMethod &, htcp_clr_reason);
+#endif
 SQUIDCEXTERN peer *peerFindByName(const char *);
 SQUIDCEXTERN peer *peerFindByNameAndPort(const char *, unsigned short);
 SQUIDCEXTERN peer *getDefaultParent(HttpRequest * request);
@@ -756,7 +761,7 @@ SQUIDCEXTERN void logfilePrintf(va_alist);
 SQUIDCEXTERN int getrusage(int, struct rusage *);
 SQUIDCEXTERN int getpagesize(void);
 #if !defined(_XPG4_2) && !(defined(__EXTENSIONS__) || \
-        (!defined(_POSIX_C_SOURCE) && !defined(_XOPEN_SOURCE)))
+(!defined(_POSIX_C_SOURCE) && !defined(_XOPEN_SOURCE)))
 SQUIDCEXTERN int gethostname(char *, int);
 #endif
 #endif
@@ -786,45 +791,51 @@ SQUIDCEXTERN int SquidMain(int, char **);
 SQUIDCEXTERN int WIN32_pipe(int[2]);
 
 SQUIDCEXTERN int WIN32_getrusage(int, struct rusage *);
-SQUIDCEXTERN void WIN32_ExceptionHandlerInit(void);
+            SQUIDCEXTERN void WIN32_ExceptionHandlerInit(void);
 
-SQUIDCEXTERN int Win32__WSAFDIsSet(int fd, fd_set* set);
-SQUIDCEXTERN DWORD WIN32_IpAddrChangeMonitorInit();
+            SQUIDCEXTERN int Win32__WSAFDIsSet(int fd, fd_set* set);
+            SQUIDCEXTERN DWORD WIN32_IpAddrChangeMonitorInit();
 
 #endif
 
-/* external_acl.c */
-class external_acl;
-SQUIDCEXTERN void parse_externalAclHelper(external_acl **);
+            /* external_acl.c */
+            class external_acl;
+            SQUIDCEXTERN void parse_externalAclHelper(external_acl **);
 
-SQUIDCEXTERN void dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl *);
+            SQUIDCEXTERN void dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl *);
 
-SQUIDCEXTERN void free_externalAclHelper(external_acl **);
+            SQUIDCEXTERN void free_externalAclHelper(external_acl **);
 
-typedef void EAH(void *data, void *result);
-class ACLChecklist;
-SQUIDCEXTERN void externalAclLookup(ACLChecklist * ch, void *acl_data, EAH * handler, void *data);
+            typedef void EAH(void *data, void *result);
+            class ACLChecklist;
+            SQUIDCEXTERN void externalAclLookup(ACLChecklist * ch, void *acl_data, EAH * handler, void *data);
 
-SQUIDCEXTERN void externalAclInit(void);
+            SQUIDCEXTERN void externalAclInit(void);
 
-SQUIDCEXTERN void externalAclShutdown(void);
+            SQUIDCEXTERN void externalAclShutdown(void);
 
-SQUIDCEXTERN char *strtokFile(void);
+            SQUIDCEXTERN char *strtokFile(void);
 
 #if USE_WCCPv2
-SQUIDCEXTERN void parse_wccp2_service(void *v);
 
-SQUIDCEXTERN void free_wccp2_service(void *v);
+            SQUIDCEXTERN void parse_wccp2_method(int *v);
+            SQUIDCEXTERN void free_wccp2_method(int *v);
+            SQUIDCEXTERN void dump_wccp2_method(StoreEntry * e, const char *label, int v);
+            SQUIDCEXTERN void parse_wccp2_amethod(int *v);
+            SQUIDCEXTERN void free_wccp2_amethod(int *v);
+            SQUIDCEXTERN void dump_wccp2_amethod(StoreEntry * e, const char *label, int v);
 
-SQUIDCEXTERN void dump_wccp2_service(StoreEntry * e, const char *label, void *v);
+            SQUIDCEXTERN void parse_wccp2_service(void *v);
+            SQUIDCEXTERN void free_wccp2_service(void *v);
+            SQUIDCEXTERN void dump_wccp2_service(StoreEntry * e, const char *label, void *v);
 
-SQUIDCEXTERN int check_null_wccp2_service(void *v);
+            SQUIDCEXTERN int check_null_wccp2_service(void *v);
 
-SQUIDCEXTERN void parse_wccp2_service_info(void *v);
+            SQUIDCEXTERN void parse_wccp2_service_info(void *v);
 
-SQUIDCEXTERN void free_wccp2_service_info(void *v);
+            SQUIDCEXTERN void free_wccp2_service_info(void *v);
 
-SQUIDCEXTERN void dump_wccp2_service_info(StoreEntry * e, const char *label, void *v);
+            SQUIDCEXTERN void dump_wccp2_service_info(StoreEntry * e, const char *label, void *v);
 
 #endif
 

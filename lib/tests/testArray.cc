@@ -11,7 +11,7 @@ CPPUNIT_TEST_SUITE_REGISTRATION( testArray );
 
 void testArray::all()
 {
-  CPPUNIT_ASSERT( 1 == 1 );
+    CPPUNIT_ASSERT( 1 == 1 );
     Vector<int> aArray;
     CPPUNIT_ASSERT (aArray.size() == 0);
     aArray.push_back(2);

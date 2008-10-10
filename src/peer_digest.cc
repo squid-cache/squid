@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -250,7 +250,7 @@ peerDigestNotePeerGone(PeerDigest * pd)
 }
 
 /* callback for eventAdd() (with peer digest locked)
- * request new digest if our copy is too old or if we lack one; 
+ * request new digest if our copy is too old or if we lack one;
  * schedule next check otherwise */
 static void
 peerDigestCheck(void *data)
@@ -268,8 +268,8 @@ peerDigestCheck(void *data)
     }
 
     debugs(72, 3, "peerDigestCheck: peer " <<  pd->peer->host << ":" << pd->peer->http_port);
-    debugs(72, 3, "peerDigestCheck: time: " << squid_curtime << 
-           ", last received: " << (long int) pd->times.received << "  (" << 
+    debugs(72, 3, "peerDigestCheck: time: " << squid_curtime <<
+           ", last received: " << (long int) pd->times.received << "  (" <<
            std::showpos << (int) (squid_curtime - pd->times.received) << ")");
 
     /* decide when we should send the request:
@@ -544,8 +544,8 @@ peerDigestFetchReply(void *data, char *buf, ssize_t size)
         assert(reply);
         assert (reply->sline.status != 0);
         status = reply->sline.status;
-        debugs(72, 3, "peerDigestFetchReply: " << pd->host.buf() << " status: " << status << 
-               ", expires: " << (long int) reply->expires << " (" << std::showpos << 
+        debugs(72, 3, "peerDigestFetchReply: " << pd->host.buf() << " status: " << status <<
+               ", expires: " << (long int) reply->expires << " (" << std::showpos <<
                (int) (reply->expires - squid_curtime) << ")");
 
         /* this "if" is based on clientHandleIMSReply() */
@@ -1000,9 +1000,9 @@ peerDigestSetCBlock(PeerDigest * pd, const char *buf)
            (int) cblock.ver.current << " (req: " << (int) cblock.ver.required <<
            ")");
 
-    debugs(72, 2, "\t size: " << 
-           cblock.mask_size << " bytes, e-cnt: " << 
-           cblock.count << ", e-util: " << 
+    debugs(72, 2, "\t size: " <<
+           cblock.mask_size << " bytes, e-cnt: " <<
+           cblock.count << ", e-util: " <<
            xpercentInt(cblock.count, cblock.capacity) << "%" );
     /* check version requirements (both ways) */
 
@@ -1058,8 +1058,8 @@ peerDigestSetCBlock(PeerDigest * pd, const char *buf)
     }
 
     if (!pd->cd) {
-        debugs(72, 2, "creating " << host << " digest; size: " << cblock.mask_size << " (" << 
-                std::showpos <<  (int) (cblock.mask_size - freed_size) << ") bytes");
+        debugs(72, 2, "creating " << host << " digest; size: " << cblock.mask_size << " (" <<
+               std::showpos <<  (int) (cblock.mask_size - freed_size) << ") bytes");
         pd->cd = cacheDigestCreate(cblock.capacity, cblock.bits_per_entry);
 
         if (cblock.mask_size >= freed_size)

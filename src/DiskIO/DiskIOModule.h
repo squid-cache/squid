@@ -18,12 +18,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -51,7 +51,7 @@ public:
     static void ModuleAdd(DiskIOModule &);
     static void FreeAllModules();
     static DiskIOModule *Find(char const *type);
-    /* find *any* usable disk module. This will look for the 'best' 
+    /* find *any* usable disk module. This will look for the 'best'
      * available module for this system.
      */
     static DiskIOModule *FindDefault();
@@ -59,7 +59,7 @@ public:
     typedef Vector<DiskIOModule*>::iterator iterator;
     typedef Vector<DiskIOModule*>::const_iterator const_iterator;
     DiskIOModule();
-    virtual ~DiskIOModule(){}
+    virtual ~DiskIOModule() {}
 
     virtual void init() = 0;
     //virtual void registerWithCacheManager(void);

@@ -15,7 +15,8 @@
 
 class HttpMsg;
 
-namespace Adaptation {
+namespace Adaptation
+{
 
 class Initiator: virtual public AsyncJob
 {

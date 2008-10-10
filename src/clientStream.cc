@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with thisObject program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -49,14 +49,14 @@
  \par
  * Each pipe node has a data push function, and a data request function.
  * This limits flexability - the data flow is no longer assembled at each
- * step. 
+ * step.
  *
  \par
  * An alternative approach is to pass each node in the pipe the call-
- * back to use on each IO call. This allows the callbacks to be changed 
- * very easily by a participating node, but requires more maintenance 
- * in each node (store the callback to the most recent IO request in 
- * the nodes context.) Such an approach also prevents dynamically 
+ * back to use on each IO call. This allows the callbacks to be changed
+ * very easily by a participating node, but requires more maintenance
+ * in each node (store the callback to the most recent IO request in
+ * the nodes context.) Such an approach also prevents dynamically
  * changing the pipeline from outside without an additional interface
  * method to extract the callback and context from the next node.
  *
@@ -70,12 +70,12 @@
  * Each node including the HEAD of the clientStream has a cbdataReference
  * held by the stream. Freeing the stream then removes that reference
  * and cbdataFree()'s every node.
- * Any node with other References, and all nodes downstream will only 
+ * Any node with other References, and all nodes downstream will only
  * free when those references are released.
- * Stream nodes MAY hold references to the data member of the node. 
+ * Stream nodes MAY hold references to the data member of the node.
  *
  \par
- * Specifically - on creation no reference is made. 
+ * Specifically - on creation no reference is made.
  * If you pass a data variable to a node, give it an initial reference.
  * If the data member is non-null on FREE, cbdataFree WILL be called.
  * This you must never call cbdataFree on your own context without
@@ -86,7 +86,7 @@
  * No data member may hold a reference to it's stream node.
  * The stream guarantees that DETACH will be called before
  * freeing the node, alowing data members to cleanup.
- * 
+ *
  \par
  * If a node's data holds a reference to something that needs to
  * free the stream a circular reference list will occur.
@@ -184,7 +184,7 @@ clientStreamCallback(clientStreamNode * thisObject, ClientHttpRequest * http,
     assert(thisObject && http && thisObject->node.next);
     next = thisObject->next();
 
-    debugs(87, 3, "clientStreamCallback: Calling " << next->callback << " with cbdata " << 
+    debugs(87, 3, "clientStreamCallback: Calling " << next->callback << " with cbdata " <<
            next->data.getRaw() << " from node " << thisObject);
     next->callback(next, http, rep, replyBuffer);
 }

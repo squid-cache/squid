@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -44,8 +44,7 @@
 
 #ifdef _SQUID_WIN32_
 
-struct arpreq
-{
+struct arpreq {
 
     IPAddress arp_pa;   /* protocol address */
 
@@ -69,7 +68,7 @@ struct arpreq
 #endif
 #include <net/route.h>
 #include <net/if.h>
-#if defined(_SQUID_FREEBSD_) || defined(_SQUID_NETBSD_) || defined(_SQUID_OPENBSD_)
+#if defined(_SQUID_FREEBSD_) || defined(_SQUID_NETBSD_) || defined(_SQUID_OPENBSD_) || defined(_SQUID_DRAGONFLY_)
 #include <net/if_arp.h>
 #endif
 #if HAVE_NETINET_IF_ETHER_H
@@ -134,17 +133,17 @@ ACLARP::empty () const
  * Subject: Another Squid patch... :)
  * Date:    Thu, 04 Dec 1997 19:55:01 +0300
  * ============================================================================
- * 
+ *
  * Working on setting up a proper firewall for a network containing some
  * Win'95 computers at our Univ, I've discovered that some smart students
  * avoid the restrictions easily just changing their IP addresses in Win'95
  * Contol Panel... It has been getting boring, so I took Squid-1.1.18
  * sources and added a new acl type for hard-wired access control:
- * 
+ *
  * acl <name> arp <Ethernet address> ...
- * 
+ *
  * For example,
- * 
+ *
  * acl students arp 00:00:21:55:ed:22 00:00:21:ff:55:38
  *
  * NOTE: Linux code by David Luyer <luyer@ucs.uwa.edu.au>.
@@ -231,8 +230,7 @@ int
 ACLARP::match(ACLChecklist *checklist)
 {
     /* IPv6 does not do ARP */
-    if(!checklist->src_addr.IsIPv4())
-    {
+    if (!checklist->src_addr.IsIPv4()) {
         debugs(14, 3, "ACLARP::match: IPv4 Required for ARP Lookups. Skipping " << checklist->src_addr );
         return 0;
     }
@@ -263,10 +261,10 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, IPAddress &c)
     /*
      * The linux kernel 2.2 maintains per interface ARP caches and
      * thus requires an interface name when doing ARP queries.
-     * 
+     *
      * The older 2.0 kernels appear to use a unified ARP cache,
      * and require an empty interface name
-     * 
+     *
      * To support both, we attempt the lookup with a blank interface
      * name first. If that does not succeed, the try each interface
      * in turn
@@ -439,7 +437,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, IPAddress &c)
         return (0 == splayLastResult);
     }
 
-#elif defined(_SQUID_FREEBSD_) || defined(_SQUID_NETBSD_) || defined(_SQUID_OPENBSD_)
+#elif defined(_SQUID_FREEBSD_) || defined(_SQUID_NETBSD_) || defined(_SQUID_OPENBSD_) || defined(_SQUID_DRAGONFLY_)
 
     SplayNode<acl_arp_data *> **Top = dataptr;
 

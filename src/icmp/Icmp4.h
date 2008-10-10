@@ -106,8 +106,7 @@
 #endif
 
 /* IP Header */
-typedef struct iphdr
-{
+typedef struct iphdr {
 
 u_int8_t  ip_vhl:
     4;          /* Length of the header in dwords */
@@ -126,8 +125,7 @@ u_int8_t  version:
 } iphdr;
 
 /* ICMP header */
-typedef struct icmphdr
-{
+typedef struct icmphdr {
     u_int8_t  icmp_type;        /* ICMP packet type                 */
     u_int8_t  icmp_code;        /* Type sub code                    */
     u_int16_t icmp_cksum;

@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -48,8 +48,7 @@ class ICP3State : public ICPState, public StoreClient
 
 public:
     ICP3State(icp_common_t &aHeader, HttpRequest *aRequest) :
-	ICPState(aHeader, aRequest)
-	{}
+            ICPState(aHeader, aRequest) {}
 
     ~ICP3State();
     void created (StoreEntry *newEntry);
@@ -66,8 +65,7 @@ doV3Query(int fd, IPAddress &from, char *buf, icp_common_t header)
     if (!icp_request)
         return;
 
-    if (!icpAccessAllowed(from, icp_request))
-    {
+    if (!icpAccessAllowed(from, icp_request)) {
         icpDenyAccess (from, url, header.reqnum, fd);
         delete icp_request;
         return;
@@ -113,8 +111,7 @@ ICP3State::created(StoreEntry *newEntry)
 void
 icpHandleIcpV3(int fd, IPAddress&from, char *buf, int len)
 {
-    if (len <= 0)
-    {
+    if (len <= 0) {
         debugs(12, 3, "icpHandleIcpV3: ICP message is too small");
         return;
     }
@@ -124,14 +121,12 @@ icpHandleIcpV3(int fd, IPAddress&from, char *buf, int len)
      * Length field should match the number of bytes read
      */
 
-    if (len != header.length)
-    {
+    if (len != header.length) {
         debugs(12, 3, "icpHandleIcpV3: ICP message is too small");
         return;
     }
 
-    switch (header.opcode)
-    {
+    switch (header.opcode) {
 
     case ICP_QUERY:
         doV3Query(fd, from, buf, header);

@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -173,8 +173,7 @@ diskCombineWrites(struct _fde_disk *fdd)
      * XXX This currently ignores any seeks (file_offset)
      */
 
-    if (fdd->write_q != NULL && fdd->write_q->next != NULL)
-    {
+    if (fdd->write_q != NULL && fdd->write_q->next != NULL) {
         len = 0;
 
         for (q = fdd->write_q; q != NULL; q = q->next)
@@ -485,7 +484,7 @@ diskHandleRead(int fd, void *data)
 
 /* start read operation */
 /* buffer must be allocated from the caller.
- * It must have at least req_len space in there. 
+ * It must have at least req_len space in there.
  * call handler when a reading is complete. */
 void
 file_read(int fd, char *buf, int req_len, off_t offset, DRCB * handler, void *client_data)
@@ -516,7 +515,7 @@ safeunlink(const char *s, int quiet)
 
 /*
  * Same as rename(2) but complains if something goes wrong;
- * the caller is responsible for handing and explaining the 
+ * the caller is responsible for handing and explaining the
  * consequences of errors.
  */
 int
@@ -526,7 +525,7 @@ xrename(const char *from, const char *to)
 #if defined (_SQUID_OS2_) || defined (_SQUID_WIN32_)
 
     remove
-        (to);
+    (to);
 
 #endif
 

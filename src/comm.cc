@@ -49,6 +49,7 @@
 #include "CommCalls.h"
 #include "IPAddress.h"
 #include "IPInterception.h"
+#include "DescriptorSet.h"
 
 #if defined(_SQUID_CYGWIN_)
 #include <sys/ioctl.h>
@@ -226,6 +227,11 @@ private:
 
 /* STATIC */
 
+static DescriptorSet *TheHalfClosed = NULL; /// the set of half-closed FDs
+static bool WillCheckHalfClosed = false; /// true if check is scheduled
+static EVH commHalfClosedCheck;
+static void commPlanHalfClosedCheck();
+
 static comm_err_t commBind(int s, struct addrinfo &);
 static void commSetReuseAddr(int);
 static void commSetNoLinger(int);
@@ -347,7 +353,7 @@ comm_read(int fd, char *buf, int size, AsyncCall::Pointer &callback)
     // Active/passive conflicts are OK and simply cancel passive monitoring.
     if (ccb->active()) {
         // if the assertion below fails, we have an active comm_read conflict
-        assert(commHasHalfClosedMonitor(fd));
+        assert(fd_table[fd].halfClosedReader != NULL);
         commStopHalfClosedMonitor(fd);
         assert(!ccb->active());
     }
@@ -1008,7 +1014,7 @@ ConnectStateData::commResetFD()
     F->local_addr.GetAddrInfo(AI);
 
     if (commBind(fd, *AI) != COMM_OK) {
-        debugs(5, 0, HERE << "bind: " << xstrerror());
+        debugs(5, DBG_CRITICAL, "WARNING: Reset of FD " << fd << " for " << F->local_addr << " failed to bind: " << xstrerror());
         F->local_addr.FreeAddrInfo(AI);
         return 0;
     }
@@ -1401,11 +1407,8 @@ comm_old_accept(int fd, ConnectionDetail &details)
 
     commSetNonBlocking(sock);
 
-    if(fd_table[fd].flags.transparent == 1) {
-        /* AYJ: do we actually need to set this again on every accept? */
-        //comm_set_transparent(sock);
-        F->flags.transparent = 1;
-    }
+    /* IFF the socket is (tproxy) transparent, pass the flag down to allow spoofing */
+    F->flags.transparent = fd_table[fd].flags.transparent;
 
     PROF_stop(comm_accept);
     return sock;
@@ -1496,27 +1499,11 @@ comm_reset_close(int fd)
     comm_close(fd);
 }
 
-void
-CommRead::doCallback(comm_err_t errcode, int xerrno)
-{
-    if (callback != NULL) {
-        typedef CommIoCbParams Params;
-        Params &params = GetCommParams<Params>(callback);
-        params.fd = fd;
-        params.size = 0;
-        params.flag = errcode;
-        params.xerrno = xerrno;
-        ScheduleCallHere(callback);
-        callback = NULL;
-    }
-}
-
 void 
 comm_close_start(int fd, void *data)
 {
 #if USE_SSL
     fde *F = &fd_table[fd];
-
     if (F->ssl)
         ssl_shutdown_method(fd);
 
@@ -1595,6 +1582,9 @@ _comm_close(int fd, char const *file, int line)
     startParams.fd = fd;
     ScheduleCallHere(startCall);
 
+    // a half-closed fd may lack a reader, so we stop monitoring explicitly
+    if (commHasHalfClosedMonitor(fd))
+        commStopHalfClosedMonitor(fd);
     commSetTimeout(fd, -1, NULL, NULL);
 
     // notify read/write handlers
@@ -1887,23 +1877,23 @@ commSetTcpKeepalive(int fd, int idle, int interval, int timeout)
     if (timeout && interval) {
 	int count = (timeout + interval - 1) / interval;
 	if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPCNT, &count, sizeof(on)) < 0)
-	    debug(5, 1) ("commSetKeepalive: FD %d: %s\n", fd, xstrerror());
+	    debugs(5, 1, "commSetKeepalive: FD " << fd << ": " << xstrerror());
     }
 #endif
 #ifdef TCP_KEEPIDLE
     if (idle) {
 	if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &idle, sizeof(on)) < 0)
-	    debug(5, 1) ("commSetKeepalive: FD %d: %s\n", fd, xstrerror());
+	    debugs(5, 1, "commSetKeepalive: FD " << fd << ": " << xstrerror());
     }
 #endif
 #ifdef TCP_KEEPINTVL
     if (interval) {
 	if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &interval, sizeof(on)) < 0)
-	    debug(5, 1) ("commSetKeepalive: FD %d: %s\n", fd, xstrerror());
+	    debugs(5, 1, "commSetKeepalive: FD " << fd << ": " << xstrerror());
     }
 #endif
     if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (char *) &on, sizeof(on)) < 0)
-	debug(5, 1) ("commSetKeepalive: FD %d: %s\n", fd, xstrerror());
+	debugs(5, 1, "commSetKeepalive: FD " << fd << ": " << xstrerror());
 }
 
 void
@@ -1932,10 +1922,15 @@ comm_init(void) {
     RESERVED_FD = XMIN(100, Squid_MaxFD / 4);
 
     conn_close_pool = memPoolCreate("close_handler", sizeof(close_handler));
+
+    TheHalfClosed = new DescriptorSet;
 }
 
 void
 comm_exit(void) {
+    delete TheHalfClosed;
+    TheHalfClosed = NULL;
+
     safe_free(fd_table);
     safe_free(fdd_table);
     if (fdc_table) {
@@ -2175,8 +2170,7 @@ comm_listen(int sock) {
 #ifdef SO_ACCEPTFILTER
 	struct accept_filter_arg afa;
 	bzero(&afa, sizeof(afa));
-	debug(5, 0) ("Installing accept filter '%s' on FD %d\n",
-	Config.accept_filter, sock);
+	debugs(5, DBG_CRITICAL, "Installing accept filter '" << Config.accept_filter << "' on FD " << sock);
 	xstrncpy(afa.af_name, Config.accept_filter, sizeof(afa.af_name));
 	x = setsockopt(sock, SOL_SOCKET, SO_ACCEPTFILTER, &afa, sizeof(afa));
 	if (x < 0)
@@ -2400,37 +2394,65 @@ AcceptLimiter::kick() {
 // will close the connection on read errors.
 void
 commStartHalfClosedMonitor(int fd) {
+    debugs(5, 5, HERE << "adding FD " << fd << " to " << *TheHalfClosed);
     assert(isOpen(fd));
     assert(!commHasHalfClosedMonitor(fd));
+    (void)TheHalfClosed->add(fd); // could also assert the result
+    commPlanHalfClosedCheck(); // may schedule check if we added the first FD
+}
 
-    AsyncCall::Pointer call = commCbCall(5,4, "commHalfClosedReader",
-	CommIoCbPtrFun(&commHalfClosedReader, NULL));
-    comm_read(fd, NULL, 0, call);
+static
+void
+commPlanHalfClosedCheck()
+{
+    if (!WillCheckHalfClosed && !TheHalfClosed->empty()) {
+        eventAdd("commHalfClosedCheck", &commHalfClosedCheck, NULL, 1.0, 1);
+        WillCheckHalfClosed = true;
+    }
+}
+
+/// iterates over all descriptors that may need half-closed tests and
+/// calls comm_read for those that do; re-schedules the check if needed
+static
+void
+commHalfClosedCheck(void *) {
+    debugs(5, 5, HERE << "checking " << *TheHalfClosed);
+
+    typedef DescriptorSet::const_iterator DSCI;
+    const DSCI end = TheHalfClosed->end();
+    for (DSCI i = TheHalfClosed->begin(); i != end; ++i) {
+        const int fd = *i;
+        if (!fd_table[fd].halfClosedReader) { // not reading already
+            AsyncCall::Pointer call = commCbCall(5,4, "commHalfClosedReader",
+                CommIoCbPtrFun(&commHalfClosedReader, NULL));
+            comm_read(fd, NULL, 0, call);
+            fd_table[fd].halfClosedReader = call;
+        }
+    }
+
+    WillCheckHalfClosed = false; // as far as we know
+    commPlanHalfClosedCheck(); // may need to check again
 }
 
 /// checks whether we are waiting for possibly half-closed connection to close
 // We are monitoring if the read handler for the fd is the monitoring handler.
 bool
 commHasHalfClosedMonitor(int fd) {
-    assert(isOpen(fd));
-
-    if (const comm_io_callback_t *cb = COMMIO_FD_READCB(fd)) {
-	AsyncCall::Pointer call = cb->callback;
-	if (call != NULL) {
-	    // check whether the callback has the right type (it should)
-	    // and uses commHalfClosedReader as the address to call back
-            typedef CommIoCbPtrFun IoDialer;
-	    if (IoDialer *d = dynamic_cast<IoDialer*>(call->getDialer()))
-	        return d->handler == &commHalfClosedReader;
-	}
-    }
-    return false;
+    return TheHalfClosed->has(fd);
 }
 
 /// stop waiting for possibly half-closed connection to close
 static void
 commStopHalfClosedMonitor(int const fd) {
-    comm_read_cancel(fd, &commHalfClosedReader, NULL);
+    debugs(5, 5, HERE << "removing FD " << fd << " from " << *TheHalfClosed);
+
+    // cancel the read if one was scheduled
+    AsyncCall::Pointer reader = fd_table[fd].halfClosedReader;
+    if (reader != NULL)
+        comm_read_cancel(fd, reader);
+    fd_table[fd].halfClosedReader = NULL;
+
+    TheHalfClosed->del(fd);
 }
 
 /// I/O handler for the possibly half-closed connection monitoring code
@@ -2438,6 +2460,9 @@ static void
 commHalfClosedReader(int fd, char *, size_t size, comm_err_t flag, int, void *) {
     // there cannot be more data coming in on half-closed connections
     assert(size == 0); 
+    assert(commHasHalfClosedMonitor(fd)); // or we would have canceled the read
+
+    fd_table[fd].halfClosedReader = NULL; // done reading, for now
 
     // nothing to do if fd is being closed
     if (flag == COMM_ERR_CLOSING)
@@ -2451,7 +2476,7 @@ commHalfClosedReader(int fd, char *, size_t size, comm_err_t flag, int, void *) 
     }
 
     // continue waiting for close or error
-    commStartHalfClosedMonitor(fd);
+    commPlanHalfClosedCheck(); // make sure this fd will be checked again
 }
 
 
@@ -2479,7 +2504,15 @@ void
 DeferredReadManager::delayRead(DeferredRead const &aRead) {
     debugs(5, 3, "Adding deferred read on FD " << aRead.theRead.fd);
     CbDataList<DeferredRead> *temp = deferredReads.push_back(aRead);
-    comm_add_close_handler (aRead.theRead.fd, CloseHandler, temp);
+
+    // We have to use a global function as a closer and point to temp 
+    // instead of "this" because DeferredReadManager is not a job and
+    // is not even cbdata protected
+    AsyncCall::Pointer closer = commCbCall(5,4,
+        "DeferredReadManager::CloseHandler",
+        CommCloseCbPtrFun(&CloseHandler, temp));
+    comm_add_close_handler(aRead.theRead.fd, closer);
+    temp->element.closer = closer; // remeber so that we can cancel
 }
 
 void
@@ -2489,6 +2522,7 @@ DeferredReadManager::CloseHandler(int fd, void *thecbdata) {
 
     CbDataList<DeferredRead> *temp = (CbDataList<DeferredRead> *)thecbdata;
 
+    temp->element.closer = NULL;
     temp->element.markCancelled();
 }
 
@@ -2496,8 +2530,11 @@ DeferredRead
 DeferredReadManager::popHead(CbDataListContainer<DeferredRead> &deferredReads) {
     assert (!deferredReads.empty());
 
-    if (!deferredReads.head->element.cancelled)
-        comm_remove_close_handler(deferredReads.head->element.theRead.fd, CloseHandler, deferredReads.head);
+    DeferredRead &read = deferredReads.head->element;
+    if (!read.cancelled) {
+        comm_remove_close_handler(read.theRead.fd, read.closer);
+        read.closer = NULL;
+    }
 
     DeferredRead result = deferredReads.pop_front();
 

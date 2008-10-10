@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -38,22 +38,21 @@
 #include "HttpHeader.h"
 
 /* this table is used for parsing cache control header */
-static const HttpHeaderFieldAttrs CcAttrs[CC_ENUM_END] =
-    {
-        {"public", (http_hdr_type)CC_PUBLIC},
+static const HttpHeaderFieldAttrs CcAttrs[CC_ENUM_END] = {
+    {"public", (http_hdr_type)CC_PUBLIC},
 
-        {"private", (http_hdr_type)CC_PRIVATE},
-        {"no-cache", (http_hdr_type)CC_NO_CACHE},
-        {"no-store", (http_hdr_type)CC_NO_STORE},
-        {"no-transform", (http_hdr_type)CC_NO_TRANSFORM},
-        {"must-revalidate", (http_hdr_type)CC_MUST_REVALIDATE},
-        {"proxy-revalidate", (http_hdr_type)CC_PROXY_REVALIDATE},
-        {"only-if-cached", (http_hdr_type)CC_ONLY_IF_CACHED},
-        {"max-age", (http_hdr_type)CC_MAX_AGE},
-        {"s-maxage", (http_hdr_type)CC_S_MAXAGE},
-        {"max-stale", (http_hdr_type)CC_MAX_STALE},
-        {"Other,", (http_hdr_type)CC_OTHER}	/* ',' will protect from matches */
-    };
+    {"private", (http_hdr_type)CC_PRIVATE},
+    {"no-cache", (http_hdr_type)CC_NO_CACHE},
+    {"no-store", (http_hdr_type)CC_NO_STORE},
+    {"no-transform", (http_hdr_type)CC_NO_TRANSFORM},
+    {"must-revalidate", (http_hdr_type)CC_MUST_REVALIDATE},
+    {"proxy-revalidate", (http_hdr_type)CC_PROXY_REVALIDATE},
+    {"only-if-cached", (http_hdr_type)CC_ONLY_IF_CACHED},
+    {"max-age", (http_hdr_type)CC_MAX_AGE},
+    {"s-maxage", (http_hdr_type)CC_S_MAXAGE},
+    {"max-stale", (http_hdr_type)CC_MAX_STALE},
+    {"Other,", (http_hdr_type)CC_OTHER}	/* ',' will protect from matches */
+};
 
 HttpHeaderFieldInfo *CcFieldsInfo = NULL;
 

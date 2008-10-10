@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -64,10 +64,7 @@
 #include "adaptation/Config.h"
 
 static void parse_adaptation_service_set_type();
-
 static void parse_adaptation_access_type();
-static void dump_adaptation_access_type(StoreEntry *, const char *);
-static void free_adaptation_access_type();
 
 #endif
 
@@ -77,13 +74,16 @@ static void free_adaptation_access_type();
 static void parse_icap_service_type(ICAPConfig *);
 static void dump_icap_service_type(StoreEntry *, const char *, const ICAPConfig &);
 static void free_icap_service_type(ICAPConfig *);
-static void parse_icap_class_type(ICAPConfig *);
-static void dump_icap_class_type(StoreEntry *, const char *, const ICAPConfig &);
-static void free_icap_class_type(ICAPConfig *);
-static void parse_icap_access_type(ICAPConfig *);
-static void dump_icap_access_type(StoreEntry *, const char *, const ICAPConfig &);
-static void free_icap_access_type(ICAPConfig *);
+static void parse_icap_class_type();
+static void parse_icap_access_type();
 
+#endif
+
+#if USE_ECAP
+#include "eCAP/Config.h"
+static void parse_ecap_service_type(Ecap::Config *);
+static void dump_ecap_service_type(StoreEntry *, const char *, const Ecap::Config &);
+static void free_ecap_service_type(Ecap::Config *);
 #endif
 
 CBDATA_TYPE(peer);
@@ -107,9 +107,7 @@ static const char *const list_sep = ", \t\n\r";
 
 static void parse_logformat(logformat ** logformat_definitions);
 static void parse_access_log(customlog ** customlog_definitions);
-#if UNUSED_CODE
 static int check_null_access_log(customlog *customlog_definitions);
-#endif
 
 static void dump_logformat(StoreEntry * entry, const char *name, logformat * definitions);
 static void dump_access_log(StoreEntry * entry, const char *name, customlog * definitions);
@@ -233,20 +231,20 @@ parseManyConfigFiles(char* files, int depth)
     int i;
     memset(&globbuf, 0, sizeof(globbuf));
     for (path = strwordtok(files, &saveptr); path; path = strwordtok(NULL, &saveptr)) {
-	if (glob(path, globbuf.gl_pathc ? GLOB_APPEND : 0, NULL, &globbuf) != 0) {
-	    fatalf("Unable to find configuration file: %s: %s",
-		path, xstrerror());
-	}
-     }
+        if (glob(path, globbuf.gl_pathc ? GLOB_APPEND : 0, NULL, &globbuf) != 0) {
+            fatalf("Unable to find configuration file: %s: %s",
+                   path, xstrerror());
+        }
+    }
     for (i = 0; i < (int)globbuf.gl_pathc; i++) {
-	error_count += parseOneConfigFile(globbuf.gl_pathv[i], depth);
+        error_count += parseOneConfigFile(globbuf.gl_pathv[i], depth);
     }
     globfree(&globbuf);
 #else
     char* file = strwordtok(files, &saveptr);
     while (file != NULL) {
-	error_count += parseOneConfigFile(file, depth);
-	file = strwordtok(NULL, &saveptr);
+        error_count += parseOneConfigFile(file, depth);
+        file = strwordtok(NULL, &saveptr);
     }
 #endif /* HAVE_GLOB */
     return error_count;
@@ -353,13 +351,13 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
 
         debugs(3, 5, "Processing: '" << tmp_line << "'");
 
-	/* Handle includes here */
+        /* Handle includes here */
         if (tmp_line_len >= 9 && strncmp(tmp_line, "include", 7) == 0 && xisspace(tmp_line[7])) {
             err_count += parseManyConfigFiles(tmp_line + 8, depth + 1);
-	} else if (!parse_line(tmp_line)) {
+        } else if (!parse_line(tmp_line)) {
             debugs(3, 0, HERE << cfg_filename << ":" << config_lineno << " unrecognized: '" << tmp_line << "'");
- 	    err_count++;
- 	}
+            err_count++;
+        }
 
         safe_free(tmp_line);
         tmp_line_len = 0;
@@ -411,9 +409,9 @@ parseConfigFile(const char *file_name)
 
     if (opt_send_signal == -1) {
         manager->registerAction("config",
-                               "Current Squid Configuration",
-                               dump_config,
-                               1, 1);
+                                "Current Squid Configuration",
+                                dump_config,
+                                1, 1);
     }
 
     return err_count;
@@ -430,8 +428,8 @@ configDoConfigure(void)
 
 #if SIZEOF_OFF_T <= 4
     if (Config.Store.maxObjectSize > 0x7FFF0000) {
-	debugs(3, 0, "WARNING: This Squid binary can not handle files larger than 2GB. Limiting maximum_object_size to just below 2GB");
-	Config.Store.maxObjectSize = 0x7FFF0000;
+        debugs(3, 0, "WARNING: This Squid binary can not handle files larger than 2GB. Limiting maximum_object_size to just below 2GB");
+        Config.Store.maxObjectSize = 0x7FFF0000;
     }
 #endif
     if (0 == Store::Root().maxSize())
@@ -522,7 +520,7 @@ configDoConfigure(void)
 
     requirePathnameExists("Icon Directory", Config.icons.directory);
 
-    if(Config.errorDirectory)
+    if (Config.errorDirectory)
         requirePathnameExists("Error Directory", Config.errorDirectory);
 
 #if HTTP_VIOLATIONS
@@ -530,8 +528,7 @@ configDoConfigure(void)
     {
         const refresh_t *R;
 
-        for (R = Config.Refresh; R; R = R->next)
-        {
+        for (R = Config.Refresh; R; R = R->next) {
             if (!R->flags.override_expire)
                 continue;
 
@@ -540,8 +537,7 @@ configDoConfigure(void)
             break;
         }
 
-        for (R = Config.Refresh; R; R = R->next)
-        {
+        for (R = Config.Refresh; R; R = R->next) {
             if (!R->flags.override_lastmod)
                 continue;
 
@@ -550,8 +546,7 @@ configDoConfigure(void)
             break;
         }
 
-        for (R = Config.Refresh; R; R = R->next)
-        {
+        for (R = Config.Refresh; R; R = R->next) {
             if (!R->flags.reload_into_ims)
                 continue;
 
@@ -560,8 +555,7 @@ configDoConfigure(void)
             break;
         }
 
-        for (R = Config.Refresh; R; R = R->next)
-        {
+        for (R = Config.Refresh; R; R = R->next) {
             if (!R->flags.ignore_reload)
                 continue;
 
@@ -570,8 +564,7 @@ configDoConfigure(void)
             break;
         }
 
-        for (R = Config.Refresh; R; R = R->next)
-        {
+        for (R = Config.Refresh; R; R = R->next) {
             if (!R->flags.ignore_no_cache)
                 continue;
 
@@ -580,8 +573,7 @@ configDoConfigure(void)
             break;
         }
 
-        for (R = Config.Refresh; R; R = R->next)
-        {
+        for (R = Config.Refresh; R; R = R->next) {
             if (!R->flags.ignore_no_store)
                 continue;
 
@@ -590,8 +582,7 @@ configDoConfigure(void)
             break;
         }
 
-        for (R = Config.Refresh; R; R = R->next)
-        {
+        for (R = Config.Refresh; R; R = R->next) {
             if (!R->flags.ignore_private)
                 continue;
 
@@ -600,8 +591,7 @@ configDoConfigure(void)
             break;
         }
 
-        for (R = Config.Refresh; R; R = R->next)
-        {
+        for (R = Config.Refresh; R; R = R->next) {
             if (!R->flags.ignore_auth)
                 continue;
 
@@ -750,9 +740,9 @@ parseTimeLine(time_t * tptr, const char *units)
     if (0 == d)
         (void) 0;
     else if ((token = strtok(NULL, w_space)) == NULL)
-        debugs(3, 0, "WARNING: No units on '" << 
-                     config_input_line << "', assuming " << 
-                     d << " " << units  );
+        debugs(3, 0, "WARNING: No units on '" <<
+               config_input_line << "', assuming " <<
+               d << " " << units  );
     else if ((m = parseTimeUnits(token)) == 0)
         self_destruct();
 
@@ -824,9 +814,9 @@ parseBytesLine64(int64_t * bptr, const char *units)
     if (0.0 == d)
         (void) 0;
     else if ((token = strtok(NULL, w_space)) == NULL)
-        debugs(3, 0, "WARNING: No units on '" << 
-                     config_input_line << "', assuming " <<
-                     d << " " <<  units  );
+        debugs(3, 0, "WARNING: No units on '" <<
+               config_input_line << "', assuming " <<
+               d << " " <<  units  );
     else if ((m = parseBytesUnits(token)) == 0) {
         self_destruct();
         return;
@@ -869,9 +859,9 @@ parseBytesLine(size_t * bptr, const char *units)
     if (0.0 == d)
         (void) 0;
     else if ((token = strtok(NULL, w_space)) == NULL)
-        debugs(3, 0, "WARNING: No units on '" << 
-                     config_input_line << "', assuming " <<
-                     d << " " <<  units  );
+        debugs(3, 0, "WARNING: No units on '" <<
+               config_input_line << "', assuming " <<
+               d << " " <<  units  );
     else if ((m = parseBytesUnits(token)) == 0) {
         self_destruct();
         return;
@@ -1000,17 +990,13 @@ parse_address(IPAddress *addr)
         return;
     }
 
-    if (!strcmp(token,"any_addr"))
-    {
+    if (!strcmp(token,"any_addr")) {
         addr->SetAnyAddr();
-	(void) 0;
-    }
-    else if ( (!strcmp(token,"no_addr")) || (!strcmp(token,"full_mask")) )
-    {
+        (void) 0;
+    } else if ( (!strcmp(token,"no_addr")) || (!strcmp(token,"full_mask")) ) {
         addr->SetNoAddr();
-	(void) 0;
-    }
-    else
+        (void) 0;
+    } else
         *addr = token;
 }
 
@@ -1401,7 +1387,7 @@ dump_cachedir(StoreEntry * entry, const char *name, SquidConfig::_cacheSwap swap
 
     for (i = 0; i < swap.n_configured; i++) {
         s = dynamic_cast<SwapDir *>(swap.swapDirs[i].getRaw());
-        if(!s) continue;
+        if (!s) continue;
         storeAppendPrintf(entry, "%s %s %s", name, s->type(), s->path);
         s->dump(*entry);
         storeAppendPrintf(entry, "\n");
@@ -1507,7 +1493,7 @@ parse_cachedir(SquidConfig::_cacheSwap * swap)
         if ((strcasecmp(path_str, dynamic_cast<SwapDir *>(swap->swapDirs[i].getRaw())->path)
             ) == 0) {
             /* this is specific to on-fs Stores. The right
-             * way to handle this is probably to have a mapping 
+             * way to handle this is probably to have a mapping
              * from paths to stores, and have on-fs stores
              * register with that, and lookip in that in their
              * own setup logic. RBC 20041225. TODO.
@@ -1624,8 +1610,8 @@ GetService(const char *proto)
     /** Parses a port number or service name from the squid.conf */
     char *token = strtok(NULL, w_space);
     if (token == NULL) {
-       self_destruct();
-       return 0; /* NEVER REACHED */
+        self_destruct();
+        return 0; /* NEVER REACHED */
     }
     /** Returns either the service port number from /etc/services */
     port = getservbyname(token, proto);
@@ -1673,7 +1659,7 @@ parse_peer(peer ** head)
         self_destruct();
 
     p->host = xstrdup(token);
-                             
+
     p->name = xstrdup(token);
 
     if ((token = strtok(NULL, w_space)) == NULL)
@@ -1692,6 +1678,7 @@ parse_peer(peer ** head)
         self_destruct();
 
     p->icp.port = GetUdpService();
+    p->connection_auth = 2;    /* auto */
 
     while ((token = strtok(NULL, w_space))) {
         if (!strcasecmp(token, "proxy-only")) {
@@ -1731,6 +1718,22 @@ parse_peer(peer ** head)
         } else if (!strcasecmp(token, "htcp-oldsquid")) {
             p->options.htcp = 1;
             p->options.htcp_oldsquid = 1;
+        } else if (!strcasecmp(token, "htcp-no-clr")) {
+            if (p->options.htcp_only_clr)
+                fatalf("parse_peer: can't set htcp-no-clr and htcp-only-clr simultaneously");
+            p->options.htcp = 1;
+            p->options.htcp_no_clr = 1;
+        } else if (!strcasecmp(token, "htcp-no-purge-clr")) {
+            p->options.htcp = 1;
+            p->options.htcp_no_purge_clr = 1;
+        } else if (!strcasecmp(token, "htcp-only-clr")) {
+            if (p->options.htcp_no_clr)
+                fatalf("parse_peer: can't set htcp-no-clr and htcp-only-clr simultaneously");
+            p->options.htcp = 1;
+            p->options.htcp_only_clr = 1;
+        } else if (!strcasecmp(token, "htcp-forward-clr")) {
+            p->options.htcp = 1;
+            p->options.htcp_forward_clr = 1;
 #endif
 
         } else if (!strcasecmp(token, "no-netdb-exchange")) {
@@ -1829,6 +1832,14 @@ parse_peer(peer ** head)
             p->front_end_https = 1;
         } else if (strcmp(token, "front-end-https=auto") == 0) {
             p->front_end_https = 2;
+        } else if (strcmp(token, "connection-auth=off") == 0) {
+            p->connection_auth = 0;
+        } else if (strcmp(token, "connection-auth") == 0) {
+            p->connection_auth = 1;
+        } else if (strcmp(token, "connection-auth=on") == 0) {
+            p->connection_auth = 1;
+        } else if (strcmp(token, "connection-auth=auto") == 0) {
+            p->connection_auth = 2;
         } else {
             debugs(3, 0, "parse_peer: token='" << token << "'");
             self_destruct();
@@ -2297,7 +2308,7 @@ parse_refreshpattern(refresh_t ** head)
 #endif
 
         } else
-             debugs(22, 0, "redreshAddToList: Unknown option '" << pattern << "': " << token);
+            debugs(22, 0, "redreshAddToList: Unknown option '" << pattern << "': " << token);
     }
 
     if ((errcode = regcomp(&comp, pattern, flags)) != 0) {
@@ -2755,30 +2766,30 @@ parse_IPAddress_list_token(IPAddress_list ** head, char *token)
 #if USE_IPV6
     if (*token == '[') {
         /* [host]:port */
-	host = token + 1;
-	t = strchr(host, ']');
-	if (!t)
-	    self_destruct();
-	*t++ = '\0';
-	if (*t != ':')
-	    self_destruct();
-	port = xatos(t + 1);
+        host = token + 1;
+        t = strchr(host, ']');
+        if (!t)
+            self_destruct();
+        *t++ = '\0';
+        if (*t != ':')
+            self_destruct();
+        port = xatos(t + 1);
     } else
 #endif
-    if ((t = strchr(token, ':'))) {
-        /* host:port */
-        host = token;
-        *t = '\0';
-        port = xatos(t + 1);
+        if ((t = strchr(token, ':'))) {
+            /* host:port */
+            host = token;
+            *t = '\0';
+            port = xatos(t + 1);
 
-        if (0 == port)
-            self_destruct();
-    } else if ((port = strtol(token, &tmp, 10)), !*tmp) {
-        /* port */
-    } else {
-        host = token;
-        port = 0;
-    }
+            if (0 == port)
+                self_destruct();
+        } else if ((port = strtol(token, &tmp, 10)), !*tmp) {
+            /* port */
+        } else {
+            host = token;
+            port = 0;
+        }
 
     if (NULL == host)
         ipa.SetAnyAddr();
@@ -2825,7 +2836,8 @@ dump_IPAddress_list(StoreEntry * e, const char *n, const IPAddress_list * s)
 static void
 free_IPAddress_list(IPAddress_list ** head)
 {
-    if(*head) delete *head; *head = NULL;
+    if (*head) delete *head;
+    *head = NULL;
 }
 
 #if CURRENTLY_UNUSED
@@ -2853,38 +2865,39 @@ parse_http_port_specification(http_port_list * s, char *token)
 
     s->disable_pmtu_discovery = DISABLE_PMTU_OFF;
     s->name = xstrdup(token);
+    s->connection_auth_disabled = false;
 
 #if USE_IPV6
     if (*token == '[') {
         /* [ipv6]:port */
-	host = token + 1;
-	t = strchr(host, ']');
-	if (!t) {
+        host = token + 1;
+        t = strchr(host, ']');
+        if (!t) {
             debugs(3, 0, "http(s)_port: missing ']' on IPv6 address: " << token);
-	    self_destruct();
+            self_destruct();
         }
-	*t++ = '\0';
-	if (*t != ':') {
+        *t++ = '\0';
+        if (*t != ':') {
             debugs(3, 0, "http(s)_port: missing Port in: " << token);
-	    self_destruct();
+            self_destruct();
         }
-	port = xatos(t + 1);
+        port = xatos(t + 1);
     } else
 #endif
-    if ((t = strchr(token, ':'))) {
-        /* host:port */
-        /* ipv4:port */
-        host = token;
-        *t = '\0';
-        port = xatos(t + 1);
+        if ((t = strchr(token, ':'))) {
+            /* host:port */
+            /* ipv4:port */
+            host = token;
+            *t = '\0';
+            port = xatos(t + 1);
 
-    } else if ((port = strtol(token, &junk, 10)), !*junk) {
-        /* port */
-        debugs(3, 3, "http(s)_port: found Listen on Port: " << port);
-    } else {
-        debugs(3, 0, "http(s)_port: missing Port: " << token);
-        self_destruct();
-    }
+        } else if ((port = strtol(token, &junk, 10)), !*junk) {
+            /* port */
+            debugs(3, 3, "http(s)_port: found Listen on Port: " << port);
+        } else {
+            debugs(3, 0, "http(s)_port: missing Port: " << token);
+            self_destruct();
+        }
 
     if (port == 0) {
         debugs(3, 0, "http(s)_port: Port cannot be 0: " << token);
@@ -2895,18 +2908,15 @@ parse_http_port_specification(http_port_list * s, char *token)
         s->s.SetAnyAddr();
         s->s.SetPort(port);
         debugs(3, 3, "http(s)_port: found Listen on wildcard address: " << s->s);
-    }
-    else if ( s->s = host ) { /* check/parse numeric IPA */
+    } else if ( s->s = host ) { /* check/parse numeric IPA */
         s->s.SetPort(port);
         debugs(3, 3, "http(s)_port: Listen on Host/IP: " << host << " --> " << s->s);
-    }
-    else if ( s->s.GetHostByName(host) ) { /* check/parse for FQDN */
+    } else if ( s->s.GetHostByName(host) ) { /* check/parse for FQDN */
         /* dont use ipcache */
         s->defaultsite = xstrdup(host);
         s->s.SetPort(port);
         debugs(3, 3, "http(s)_port: found Listen as Host " << s->defaultsite << " on IP: " << s->s);
-    }
-    else {
+    } else {
         debugs(3, 0, "http(s)_port: failed to resolve Host/IP: " << host);
         self_destruct();
     }
@@ -2936,6 +2946,14 @@ parse_http_port_option(http_port_list * s, char *token)
         s->accel = 1;
     } else if (strcmp(token, "accel") == 0) {
         s->accel = 1;
+    } else if (strcmp(token, "no-connection-auth") == 0) {
+        s->connection_auth_disabled = true;
+    } else if (strcmp(token, "connection-auth=off") == 0) {
+        s->connection_auth_disabled = true;
+    } else if (strcmp(token, "connection-auth") == 0) {
+        s->connection_auth_disabled = false;
+    } else if (strcmp(token, "connection-auth=on") == 0) {
+        s->connection_auth_disabled = false;
     } else if (strncmp(token, "disable-pmtu-discovery=", 23) == 0) {
         if (!strcasecmp(token + 23, "off"))
             s->disable_pmtu_discovery = DISABLE_PMTU_OFF;
@@ -2956,12 +2974,16 @@ parse_http_port_option(http_port_list * s, char *token)
 #if USE_IPV6
         /* INET6: until transparent REDIRECT works on IPv6 SOCKET, force wildcard to IPv4 */
         debugs(3, DBG_IMPORTANT, "Disabling IPv6 on port " << s->s << " (interception enabled)");
-        if( !s->s.SetIPv4() ) {
+        if ( !s->s.SetIPv4() ) {
             debugs(3, DBG_CRITICAL, "http(s)_port: IPv6 addresses cannot be transparent (protocol does not provide NAT)" << s->s );
             self_destruct();
         }
 #endif
     } else if (strcmp(token, "tproxy") == 0) {
+        if (s->intercepted || s->accel) {
+            debugs(3,DBG_CRITICAL, "http(s)_port: TPROXY option requires its own interception port. It cannot be shared.");
+            self_destruct();
+        }
         s->spoof_client_ip = 1;
         IPInterceptor.StartTransparency();
         /* Log information regarding the port modes under transparency. */
@@ -2971,7 +2993,7 @@ parse_http_port_option(http_port_list * s, char *token)
 #if USE_IPV6
         /* INET6: until target TPROXY is known to work on IPv6 SOCKET, force wildcard to IPv4 */
         debugs(3, DBG_IMPORTANT, "Disabling IPv6 on port " << s->s << " (interception enabled)");
-        if( s->s.IsIPv6() && !s->s.SetIPv4() ) {
+        if ( s->s.IsIPv6() && !s->s.SetIPv4() ) {
             debugs(3, DBG_CRITICAL, "http(s)_port: IPv6 addresses cannot be transparent (protocol does not provide NAT)" << s->s );
             self_destruct();
         }
@@ -2979,28 +3001,28 @@ parse_http_port_option(http_port_list * s, char *token)
 
     } else if (strcmp(token, "ipv4") == 0) {
 #if USE_IPV6
-        if( !s->s.SetIPv4() ) {
+        if ( !s->s.SetIPv4() ) {
             debugs(3, 0, "http(s)_port: IPv6 addresses cannot be used a IPv4-Only." << s->s );
             self_destruct();
         }
 #endif
-    }else if (strcmp(token, "tcpkeepalive") == 0) {
-	s->tcp_keepalive.enabled = 1;
+    } else if (strcmp(token, "tcpkeepalive") == 0) {
+        s->tcp_keepalive.enabled = 1;
     } else if (strncmp(token, "tcpkeepalive=", 13) == 0) {
-	char *t = token + 13;
-	s->tcp_keepalive.enabled = 1;
-	s->tcp_keepalive.idle = atoi(t);
-	t = strchr(t, ',');
-	if (t) {
-	    t++;
-	    s->tcp_keepalive.interval = atoi(t);
-	    t = strchr(t, ',');
-	}
-	if (t) {
-	    t++;
-	    s->tcp_keepalive.timeout = atoi(t);
-	    t = strchr(t, ',');
-	}
+        char *t = token + 13;
+        s->tcp_keepalive.enabled = 1;
+        s->tcp_keepalive.idle = atoi(t);
+        t = strchr(t, ',');
+        if (t) {
+            t++;
+            s->tcp_keepalive.interval = atoi(t);
+            t = strchr(t, ',');
+        }
+        if (t) {
+            t++;
+            s->tcp_keepalive.timeout = atoi(t);
+            t = strchr(t, ',');
+        }
 #if USE_SSL
     } else if (strncmp(token, "cert=", 5) == 0) {
         safe_free(s->cert);
@@ -3044,6 +3066,11 @@ parse_http_port_option(http_port_list * s, char *token)
         s->sslBump = 1; // accelerated when bumped, otherwise not
 #endif
     } else {
+        self_destruct();
+    }
+
+    if ( s->spoof_client_ip && (s->intercepted || s->accel) ) {
+        debugs(3,DBG_CRITICAL, "http(s)_port: TPROXY option requires its own interception port. It cannot be shared.");
         self_destruct();
     }
 }
@@ -3108,6 +3135,11 @@ dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
     if (s->vport)
         storeAppendPrintf(e, " vport");
 
+    if (s->connection_auth_disabled)
+        storeAppendPrintf(e, " connection-auth=off");
+    else
+        storeAppendPrintf(e, " connection-auth=on");
+
     if (s->disable_pmtu_discovery != DISABLE_PMTU_OFF) {
         const char *pmtu;
 
@@ -3120,49 +3152,49 @@ dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
     }
 
     if (s->tcp_keepalive.enabled) {
-	if (s->tcp_keepalive.idle || s->tcp_keepalive.interval || s->tcp_keepalive.timeout) {
-	    storeAppendPrintf(e, " tcp_keepalive=%d,%d,%d", s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
-	} else {
-	    storeAppendPrintf(e, " tcp_keepalive");
-	}
+        if (s->tcp_keepalive.idle || s->tcp_keepalive.interval || s->tcp_keepalive.timeout) {
+            storeAppendPrintf(e, " tcp_keepalive=%d,%d,%d", s->tcp_keepalive.idle, s->tcp_keepalive.interval, s->tcp_keepalive.timeout);
+        } else {
+            storeAppendPrintf(e, " tcp_keepalive");
+        }
     }
 
 #if USE_SSL
-        if (s->cert)
-            storeAppendPrintf(e, " cert=%s", s->cert);
+    if (s->cert)
+        storeAppendPrintf(e, " cert=%s", s->cert);
 
-        if (s->key)
-            storeAppendPrintf(e, " key=%s", s->key);
+    if (s->key)
+        storeAppendPrintf(e, " key=%s", s->key);
 
-        if (s->version)
-            storeAppendPrintf(e, " version=%d", s->version);
+    if (s->version)
+        storeAppendPrintf(e, " version=%d", s->version);
 
-        if (s->options)
-            storeAppendPrintf(e, " options=%s", s->options);
+    if (s->options)
+        storeAppendPrintf(e, " options=%s", s->options);
 
-        if (s->cipher)
-            storeAppendPrintf(e, " cipher=%s", s->cipher);
+    if (s->cipher)
+        storeAppendPrintf(e, " cipher=%s", s->cipher);
 
-        if (s->cafile)
-            storeAppendPrintf(e, " cafile=%s", s->cafile);
+    if (s->cafile)
+        storeAppendPrintf(e, " cafile=%s", s->cafile);
 
-        if (s->capath)
-            storeAppendPrintf(e, " capath=%s", s->capath);
+    if (s->capath)
+        storeAppendPrintf(e, " capath=%s", s->capath);
 
-        if (s->crlfile)
-            storeAppendPrintf(e, " crlfile=%s", s->crlfile);
+    if (s->crlfile)
+        storeAppendPrintf(e, " crlfile=%s", s->crlfile);
 
-        if (s->dhfile)
-            storeAppendPrintf(e, " dhparams=%s", s->dhfile);
+    if (s->dhfile)
+        storeAppendPrintf(e, " dhparams=%s", s->dhfile);
 
-        if (s->sslflags)
-            storeAppendPrintf(e, " sslflags=%s", s->sslflags);
+    if (s->sslflags)
+        storeAppendPrintf(e, " sslflags=%s", s->sslflags);
 
-        if (s->sslcontext)
-            storeAppendPrintf(e, " sslcontext=%s", s->sslcontext);
+    if (s->sslcontext)
+        storeAppendPrintf(e, " sslcontext=%s", s->sslcontext);
 
-        if (s->sslBump)
-            storeAppendPrintf(e, " sslBump");
+    if (s->sslBump)
+        storeAppendPrintf(e, " sslBump");
 #endif
 }
 
@@ -3367,13 +3399,11 @@ done:
     *logs = cl;
 }
 
-#if UNUSED_CODE
 static int
 check_null_access_log(customlog *customlog_definitions)
 {
     return customlog_definitions == NULL;
 }
-#endif
 
 static void
 dump_logformat(StoreEntry * entry, const char *name, logformat * definitions)
@@ -3471,18 +3501,6 @@ parse_adaptation_access_type()
     Adaptation::Config::ParseAccess(LegacyParser);
 }
 
-static void
-free_adaptation_access_type()
-{
-    Adaptation::Config::FreeAccess();
-}
-
-static void
-dump_adaptation_access_type(StoreEntry * entry, const char *name)
-{
-    Adaptation::Config::DumpAccess(entry, name);
-}
-
 #endif /* USE_ADAPTATION */
 
 
@@ -3507,43 +3525,42 @@ dump_icap_service_type(StoreEntry * entry, const char *name, const ICAPConfig &c
 }
 
 static void
-parse_icap_class_type(ICAPConfig *)
+parse_icap_class_type()
 {
     debugs(93, 0, "WARNING: 'icap_class' is depricated. " <<
-        "Use 'adaptation_service_set' instead");
+           "Use 'adaptation_service_set' instead");
     Adaptation::Config::ParseServiceSet();
 }
 
 static void
-free_icap_class_type(ICAPConfig *)
-{
-    Adaptation::Config::FreeServiceSet();
-}
-
-static void
-dump_icap_class_type(StoreEntry * entry, const char *name, const ICAPConfig &)
-{
-    Adaptation::Config::DumpServiceSet(entry, name);
-}
-
-static void
-parse_icap_access_type(ICAPConfig *)
+parse_icap_access_type()
 {
     debugs(93, 0, "WARNING: 'icap_access' is depricated. " <<
-        "Use 'adaptation_access' instead");
-    parse_adaptation_access_type();
-}
-
-static void
-free_icap_access_type(ICAPConfig *)
-{
-    free_adaptation_access_type();
-}
-
-static void
-dump_icap_access_type(StoreEntry * entry, const char *name, const ICAPConfig &)
-{
-    dump_adaptation_access_type(entry, name);
+           "Use 'adaptation_access' instead");
+    Adaptation::Config::ParseAccess(LegacyParser);
 }
 
 #endif
+
+
+#if USE_ECAP
+
+static void
+parse_ecap_service_type(Ecap::Config * cfg)
+{
+    cfg->parseService();
+}
+
+static void
+free_ecap_service_type(Ecap::Config * cfg)
+{
+    cfg->freeService();
+}
+
+static void
+dump_ecap_service_type(StoreEntry * entry, const char *name, const Ecap::Config &cfg)
+{
+    cfg.dumpService(entry, name);
+}
+
+#endif /* USE_ECAP */

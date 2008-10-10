@@ -19,12 +19,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -83,7 +83,7 @@
  *
  \todo ClientStreams: These details should really be codified as a class which all ClientStream nodes inherit from.
  *
- \par	Each node must have: 
+ \par	Each node must have:
  \li	read method - to allow loose coupling in the pipeline. (The reader may
                       therefore change if the pipeline is altered, even mid-flow).
  \li	callback method - likewise.
@@ -188,7 +188,7 @@ SQUIDCEXTERN void clientStreamDetach(clientStreamNode *thisObject, ClientHttpReq
 /**
  \ingroup ClientStreamAPI
  *
- * Detachs the tail of the stream. CURRENTLY DOES NOT clean up the tail node data - 
+ * Detachs the tail of the stream. CURRENTLY DOES NOT clean up the tail node data -
  * this must be done separately. Thus Abort may ONLY be called by the tail node.
  *
  \param thisObject	'this' reference for the client stream

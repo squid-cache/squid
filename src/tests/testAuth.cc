@@ -34,10 +34,10 @@ find_proxy_auth(char const *type)
 {
     char const * proxy_auths[][2]= { {"basic","Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ=="},
 
-                                     {"digest", "Digest username=\"robertdig\", realm=\"Squid proxy-caching web server\", nonce=\"yy8rQXjEWwixXVBj\", uri=\"/images/bg8.gif\", response=\"f75a7d3edd48d93c681c75dc4fb58700\", qop=auth, nc=00000012, cnonce=\"e2216641961e228e\" "},
-                                     {"ntlm", "NTLM "},
-                                     {"negotiate", "Negotiate "}
-                                   };
+        {"digest", "Digest username=\"robertdig\", realm=\"Squid proxy-caching web server\", nonce=\"yy8rQXjEWwixXVBj\", uri=\"/images/bg8.gif\", response=\"f75a7d3edd48d93c681c75dc4fb58700\", qop=auth, nc=00000012, cnonce=\"e2216641961e228e\" "},
+        {"ntlm", "NTLM "},
+        {"negotiate", "Negotiate "}
+    };
 
     for (unsigned count = 0; count < 4 ; count++) {
         if (strcasecmp(type, proxy_auths[count][0]) == 0)
@@ -116,10 +116,10 @@ fake_auth_setup()
     }
 
     params[]={ {"digest", digest_parms, 2},
-               {"basic", basic_parms, 2},
-               {"ntlm", ntlm_parms, 1},
-               {"negotiate", negotiate_parms, 1}
-             };
+        {"basic", basic_parms, 2},
+        {"ntlm", ntlm_parms, 1},
+        {"negotiate", negotiate_parms, 1}
+    };
 
     for (unsigned scheme=0; scheme < 4; scheme++)
         setup_scheme(getConfig(params[scheme].name), params[scheme].params, params[scheme].paramlength);

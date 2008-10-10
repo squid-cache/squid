@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -210,7 +210,7 @@ IcmpPinger::Recv(void)
 
 #if USE_IPV6
     /* pass request for ICMPv6 handing */
-    if(pecho.to.IsIPv6()) {
+    if (pecho.to.IsIPv6()) {
         debugs(42, 2, HERE << " Pass " << pecho.to << " off to ICMPv6 module.");
         icmp6.SendEcho(pecho.to,
                        pecho.opcode,
@@ -220,14 +220,13 @@ IcmpPinger::Recv(void)
 #endif
 
     /* pass the packet for ICMP handling */
-    else if(pecho.to.IsIPv4()) {
+    else if (pecho.to.IsIPv4()) {
         debugs(42, 2, HERE << " Pass " << pecho.to << " off to ICMPv4 module.");
         icmp4.SendEcho(pecho.to,
                        pecho.opcode,
                        pecho.payload,
                        pecho.psize);
-    }
-    else {
+    } else {
         debugs(42, 1, HERE << " IP has unknown Type. " << pecho.to );
     }
 }

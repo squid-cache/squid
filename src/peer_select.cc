@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -43,45 +43,42 @@
 #include "forward.h"
 #include "SquidTime.h"
 
-const char *hier_strings[] =
-    {
-        "NONE",
-        "DIRECT",
-        "SIBLING_HIT",
-        "PARENT_HIT",
-        "DEFAULT_PARENT",
-        "SINGLE_PARENT",
-        "FIRST_UP_PARENT",
-        "FIRST_PARENT_MISS",
-        "CLOSEST_PARENT_MISS",
-        "CLOSEST_PARENT",
-        "CLOSEST_DIRECT",
-        "NO_DIRECT_FAIL",
-        "SOURCE_FASTEST",
-        "ROUNDROBIN_PARENT",
+const char *hier_strings[] = {
+    "NONE",
+    "DIRECT",
+    "SIBLING_HIT",
+    "PARENT_HIT",
+    "DEFAULT_PARENT",
+    "SINGLE_PARENT",
+    "FIRST_UP_PARENT",
+    "FIRST_PARENT_MISS",
+    "CLOSEST_PARENT_MISS",
+    "CLOSEST_PARENT",
+    "CLOSEST_DIRECT",
+    "NO_DIRECT_FAIL",
+    "SOURCE_FASTEST",
+    "ROUNDROBIN_PARENT",
 #if USE_CACHE_DIGESTS
-        "CD_PARENT_HIT",
-        "CD_SIBLING_HIT",
+    "CD_PARENT_HIT",
+    "CD_SIBLING_HIT",
 #endif
-        "CARP",
-        "ANY_PARENT",
-	"USERHASH",
-	"SOURCEHASH",
-        "INVALID CODE"
-    };
+    "CARP",
+    "ANY_PARENT",
+    "USERHASH",
+    "SOURCEHASH",
+    "INVALID CODE"
+};
 
-static struct
-{
+static struct {
     int timeouts;
 } PeerStats;
 
-static const char *DirectStr[] =
-    {
-        "DIRECT_UNKNOWN",
-        "DIRECT_NO",
-        "DIRECT_MAYBE",
-        "DIRECT_YES"
-    };
+static const char *DirectStr[] = {
+    "DIRECT_UNKNOWN",
+    "DIRECT_NO",
+    "DIRECT_MAYBE",
+    "DIRECT_YES"
+};
 
 static void peerSelectFoo(ps_state *);
 static void peerPingTimeout(void *data);
@@ -100,6 +97,7 @@ static void peerGetSomeDirect(ps_state *);
 static void peerGetSomeParent(ps_state *);
 static void peerGetAllParents(ps_state *);
 static void peerAddFwdServer(FwdServer **, peer *, hier_code);
+static void peerSelectPinned(ps_state * ps);
 
 CBDATA_CLASS_INIT(ps_state);
 
@@ -322,6 +320,8 @@ peerSelectFoo(ps_state * ps)
         debugs(44, 3, "peerSelectFoo: direct = " << DirectStr[ps->direct]);
     }
 
+    if (!entry || entry->ping_status == PING_NONE)
+        peerSelectPinned(ps);
     if (entry == NULL) {
         (void) 0;
     } else if (entry->ping_status == PING_NONE) {
@@ -363,8 +363,35 @@ peerSelectFoo(ps_state * ps)
 }
 
 /*
+ * peerSelectPinned
+ *
+ * Selects a pinned connection
+ */
+int peerAllowedToUse(const peer * p, HttpRequest * request);
+static void
+peerSelectPinned(ps_state * ps)
+{
+    HttpRequest *request = ps->request;
+    peer *peer;
+    if (!request->pinnedConnection())
+        return;
+    if (request->pinnedConnection()->validatePinnedConnection(request) != -1) {
+        peer = request->pinnedConnection()->pinnedPeer();
+        if (peer && peerAllowedToUse(peer, request)) {
+            peerAddFwdServer(&ps->servers, peer, PINNED);
+            if (ps->entry)
+                ps->entry->ping_status = PING_DONE;     /* Skip ICP */
+        } else if (!peer && ps->direct != DIRECT_NO) {
+            peerAddFwdServer(&ps->servers, NULL, PINNED);
+            if (ps->entry)
+                ps->entry->ping_status = PING_DONE;     /* Skip ICP */
+        }
+    }
+}
+
+/*
  * peerGetSomeNeighbor
- * 
+ *
  * Selects a neighbor (parent or sibling) based on one of the
  * following methods:
  *      Cache Digests
@@ -408,9 +435,9 @@ peerGetSomeNeighbor(ps_state * ps)
 
             if (ps->ping.n_sent == 0)
                 debugs(44, 0, "WARNING: neighborsUdpPing returned 0");
-                debugs(44, 3, "peerSelect: " << ps->ping.n_replies_expected <<
-                       " ICP replies expected, RTT " << ps->ping.timeout <<
-                       " msec");
+            debugs(44, 3, "peerSelect: " << ps->ping.n_replies_expected <<
+                   " ICP replies expected, RTT " << ps->ping.timeout <<
+                   " msec");
 
 
             if (ps->ping.n_replies_expected > 0) {
@@ -435,7 +462,7 @@ peerGetSomeNeighbor(ps_state * ps)
 
 /*
  * peerGetSomeNeighborReplies
- * 
+ *
  * Selects a neighbor (parent or sibling) based on ICP/HTCP replies.
  */
 static void
@@ -456,8 +483,7 @@ peerGetSomeNeighborReplies(ps_state * ps)
 
     if ((p = ps->hit)) {
         code = ps->hit_type == PEER_PARENT ? PARENT_HIT : SIBLING_HIT;
-    } else
-    {
+    } else {
         if (!ps->closest_parent_miss.IsAnyAddr()) {
             p = whichPeer(ps->closest_parent_miss);
             code = CLOSEST_PARENT_MISS;
@@ -475,7 +501,7 @@ peerGetSomeNeighborReplies(ps_state * ps)
 
 /*
  * peerGetSomeDirect
- * 
+ *
  * Simply adds a 'direct' entry to the FwdServers list if this
  * request can be forwarded directly to the origin server
  */
@@ -487,7 +513,7 @@ peerGetSomeDirect(ps_state * ps)
 
     /* WAIS is not implemented natively */
     if (ps->request->protocol == PROTO_WAIS)
-	return;
+        return;
 
     peerAddFwdServer(&ps->servers, NULL, HIER_DIRECT);
 }
@@ -669,9 +695,9 @@ static void
 peerHandleHtcpReply(peer * p, peer_t type, htcpReplyData * htcp, void *data)
 {
     ps_state *psstate = (ps_state *)data;
-    debugs(44, 3, "peerHandleHtcpReply: " << 
-                  (htcp->hit ? "HIT" : "MISS") << " " << 
-                  psstate->entry->url()  );
+    debugs(44, 3, "peerHandleHtcpReply: " <<
+           (htcp->hit ? "HIT" : "MISS") << " " <<
+           psstate->entry->url()  );
     psstate->ping.n_recv++;
 
     if (htcp->hit) {
@@ -751,9 +777,9 @@ static void
 peerAddFwdServer(FwdServer ** FSVR, peer * p, hier_code code)
 {
     FwdServer *fs = (FwdServer *)memAllocate(MEM_FWD_SERVER);
-    debugs(44, 5, "peerAddFwdServer: adding " << 
-                 (p ? p->host : "DIRECT")  << " " << 
-                 hier_strings[code]  );
+    debugs(44, 5, "peerAddFwdServer: adding " <<
+           (p ? p->host : "DIRECT")  << " " <<
+           hier_strings[code]  );
     fs->_peer = cbdataReference(p);
     fs->code = code;
 

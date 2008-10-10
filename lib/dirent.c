@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -38,14 +38,14 @@
  * This file is a part of the mingw-runtime package.
  * No warranty is given; refer to the file DISCLAIMER within the package.
  *
- * Derived from DIRLIB.C by Matt J. Weinstein 
+ * Derived from DIRLIB.C by Matt J. Weinstein
  * This note appears in the DIRLIB.H
  * DIRLIB.H by M. J. Weinstein   Released to public domain 1-Jan-89
  *
  * Updated by Jeremy Bettis <jeremy@hksys.com>
  * Significantly revised and rewinddir, seekdir and telldir added by Colin
  * Peters <colin@fu.is.saga-u.ac.jp>
- *      
+ *
  */
 
 #include "util.h"
@@ -81,24 +81,24 @@ opendir(const CHAR * szPath)
     errno = 0;
 
     if (!szPath) {
-	errno = EFAULT;
-	return (DIR *) 0;
+        errno = EFAULT;
+        return (DIR *) 0;
     }
     if (szPath[0] == '\0') {
-	errno = ENOTDIR;
-	return (DIR *) 0;
+        errno = ENOTDIR;
+        return (DIR *) 0;
     }
     /* Attempt to determine if the given path really is a directory. */
     rc = GetFileAttributes(szPath);
     if (rc == (unsigned int) -1) {
-	/* call GetLastError for more error info */
-	errno = ENOENT;
-	return (DIR *) 0;
+        /* call GetLastError for more error info */
+        errno = ENOENT;
+        return (DIR *) 0;
     }
     if (!(rc & FILE_ATTRIBUTE_DIRECTORY)) {
-	/* Error, entry exists but not a directory. */
-	errno = ENOTDIR;
-	return (DIR *) 0;
+        /* Error, entry exists but not a directory. */
+        errno = ENOTDIR;
+        return (DIR *) 0;
     }
     /* Make an absolute pathname.  */
     _fullpath(szFullPath, szPath, MAX_PATH);
@@ -106,25 +106,25 @@ opendir(const CHAR * szPath)
     /* Allocate enough space to store DIR structure and the complete
      * directory path given. */
     nd = (DIR *) malloc(sizeof(DIR) + (strlen(szFullPath)
-	    + strlen(SLASH)
-	    + strlen(SUFFIX) + 1)
-	* sizeof(CHAR));
+                                       + strlen(SLASH)
+                                       + strlen(SUFFIX) + 1)
+                        * sizeof(CHAR));
 
     if (!nd) {
-	/* Error, out of memory. */
-	errno = ENOMEM;
-	return (DIR *) 0;
+        /* Error, out of memory. */
+        errno = ENOMEM;
+        return (DIR *) 0;
     }
     /* Create the search expression. */
     strcpy(nd->dd_name, szFullPath);
 
     /* Add on a slash if the path does not end with one. */
     if (nd->dd_name[0] != '\0'
-	&& strchr(nd->dd_name, '/') != nd->dd_name
-	+ strlen(nd->dd_name) - 1
-	&& strchr(nd->dd_name, '\\') != nd->dd_name
-	+ strlen(nd->dd_name) - 1) {
-	strcat(nd->dd_name, SLASH);
+            && strchr(nd->dd_name, '/') != nd->dd_name
+            + strlen(nd->dd_name) - 1
+            && strchr(nd->dd_name, '\\') != nd->dd_name
+            + strlen(nd->dd_name) - 1) {
+        strcat(nd->dd_name, SLASH);
     }
     /* Add on the search pattern */
     strcat(nd->dd_name, SUFFIX);
@@ -155,57 +155,56 @@ opendir(const CHAR * szPath)
  * next entry in the directory.
  */
 struct dirent *
-readdir(DIR * dirp)
-{
+            readdir(DIR * dirp) {
     errno = 0;
 
     /* Check for valid DIR struct. */
     if (!dirp) {
-	errno = EFAULT;
-	return (struct dirent *) 0;
+        errno = EFAULT;
+        return (struct dirent *) 0;
     }
     if (dirp->dd_stat < 0) {
-	/* We have already returned all files in the directory
-	 * (or the structure has an invalid dd_stat). */
-	return (struct dirent *) 0;
+        /* We have already returned all files in the directory
+         * (or the structure has an invalid dd_stat). */
+        return (struct dirent *) 0;
     } else if (dirp->dd_stat == 0) {
-	/* We haven't started the search yet. */
-	/* Start the search */
-	dirp->dd_handle = _findfirst(dirp->dd_name, &(dirp->dd_dta));
+        /* We haven't started the search yet. */
+        /* Start the search */
+        dirp->dd_handle = _findfirst(dirp->dd_name, &(dirp->dd_dta));
 
-	if (dirp->dd_handle == -1) {
-	    /* Whoops! Seems there are no files in that
-	     * directory. */
-	    dirp->dd_stat = -1;
-	} else {
-	    dirp->dd_stat = 1;
-	}
+        if (dirp->dd_handle == -1) {
+            /* Whoops! Seems there are no files in that
+             * directory. */
+            dirp->dd_stat = -1;
+        } else {
+            dirp->dd_stat = 1;
+        }
     } else {
-	/* Get the next search entry. */
-	if (_findnext(dirp->dd_handle, &(dirp->dd_dta))) {
-	    /* We are off the end or otherwise error.     
-	     * _findnext sets errno to ENOENT if no more file
-	     * Undo this. */
-	    DWORD winerr = GetLastError();
-	    if (winerr == ERROR_NO_MORE_FILES)
-		errno = 0;
-	    _findclose(dirp->dd_handle);
-	    dirp->dd_handle = -1;
-	    dirp->dd_stat = -1;
-	} else {
-	    /* Update the status to indicate the correct
-	     * number. */
-	    dirp->dd_stat++;
-	}
+        /* Get the next search entry. */
+        if (_findnext(dirp->dd_handle, &(dirp->dd_dta))) {
+            /* We are off the end or otherwise error.
+             * _findnext sets errno to ENOENT if no more file
+             * Undo this. */
+            DWORD winerr = GetLastError();
+            if (winerr == ERROR_NO_MORE_FILES)
+                errno = 0;
+            _findclose(dirp->dd_handle);
+            dirp->dd_handle = -1;
+            dirp->dd_stat = -1;
+        } else {
+            /* Update the status to indicate the correct
+             * number. */
+            dirp->dd_stat++;
+        }
     }
 
     if (dirp->dd_stat > 0) {
-	/* Successfully got an entry. Everything about the file is
-	 * already appropriately filled in except the length of the
-	 * file name. */
-	dirp->dd_dir.d_namlen = strlen(dirp->dd_dta.name);
-	strcpy(dirp->dd_dir.d_name, dirp->dd_dta.name);
-	return &dirp->dd_dir;
+        /* Successfully got an entry. Everything about the file is
+         * already appropriately filled in except the length of the
+         * file name. */
+        dirp->dd_dir.d_namlen = strlen(dirp->dd_dta.name);
+        strcpy(dirp->dd_dir.d_name, dirp->dd_dta.name);
+        return &dirp->dd_dir;
     }
     return (struct dirent *) 0;
 }
@@ -225,11 +224,11 @@ closedir(DIR * dirp)
     rc = 0;
 
     if (!dirp) {
-	errno = EFAULT;
-	return -1;
+        errno = EFAULT;
+        return -1;
     }
     if (dirp->dd_handle != -1) {
-	rc = _findclose(dirp->dd_handle);
+        rc = _findclose(dirp->dd_handle);
     }
     /* Delete the dir structure. */
     free(dirp);
@@ -249,11 +248,11 @@ rewinddir(DIR * dirp)
     errno = 0;
 
     if (!dirp) {
-	errno = EFAULT;
-	return;
+        errno = EFAULT;
+        return;
     }
     if (dirp->dd_handle != -1) {
-	_findclose(dirp->dd_handle);
+        _findclose(dirp->dd_handle);
     }
     dirp->dd_handle = -1;
     dirp->dd_stat = 0;
@@ -271,8 +270,8 @@ telldir(DIR * dirp)
     errno = 0;
 
     if (!dirp) {
-	errno = EFAULT;
-	return -1;
+        errno = EFAULT;
+        return -1;
     }
     return dirp->dd_stat;
 }
@@ -292,25 +291,25 @@ seekdir(DIR * dirp, long lPos)
     errno = 0;
 
     if (!dirp) {
-	errno = EFAULT;
-	return;
+        errno = EFAULT;
+        return;
     }
     if (lPos < -1) {
-	/* Seeking to an invalid position. */
-	errno = EINVAL;
-	return;
+        /* Seeking to an invalid position. */
+        errno = EINVAL;
+        return;
     } else if (lPos == -1) {
-	/* Seek past end. */
-	if (dirp->dd_handle != -1) {
-	    _findclose(dirp->dd_handle);
-	}
-	dirp->dd_handle = -1;
-	dirp->dd_stat = -1;
+        /* Seek past end. */
+        if (dirp->dd_handle != -1) {
+            _findclose(dirp->dd_handle);
+        }
+        dirp->dd_handle = -1;
+        dirp->dd_stat = -1;
     } else {
-	/* Rewind and read forward to the appropriate index. */
-	rewinddir(dirp);
+        /* Rewind and read forward to the appropriate index. */
+        rewinddir(dirp);
 
-	while ((dirp->dd_stat < lPos) && readdir(dirp));
+        while ((dirp->dd_stat < lPos) && readdir(dirp));
     }
 }
 #endif /* _SQUID_MSWIN_ */

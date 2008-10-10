@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -43,8 +43,7 @@
 #endif
 #include <process.h>
 
-struct ipc_params
-{
+struct ipc_params {
     int type;
     int crfd;
     int cwfd;
@@ -54,8 +53,7 @@ struct ipc_params
     char **args;
 };
 
-struct thread_params
-{
+struct thread_params {
     int type;
     int rfd;
     int send_fd;
@@ -240,7 +238,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     params.cwfd = cwfd;
 
     params.PS = *aiPS;
-    
+
     params.local_addr = local_addr;
 
     params.prog = prog;
@@ -364,10 +362,8 @@ static unsigned int __stdcall
 ipc_thread_1(void *in_params)
 {
     int t1, t2, t3, retval = -1;
-    int p2c[2] =
-        {-1, -1};
-    int c2p[2] =
-        {-1, -1};
+    int p2c[2] = {-1, -1};
+    int c2p[2] = {-1, -1};
     HANDLE hProcess = NULL, thread = NULL;
     pid_t pid = -1;
 
@@ -394,7 +390,7 @@ ipc_thread_1(void *in_params)
 
     IPAddress PS = params->PS;
     IPAddress local_addr = params->local_addr;
-    
+
     buf1 = (char *)xcalloc(1, 8192);
     strcpy(buf1, params->prog);
     prog = strtok(buf1, w_space);
@@ -708,7 +704,7 @@ ipc_thread_1(void *in_params)
     if (-1 == ipcSend(cwfd, buf1, strlen(buf1)))
         goto cleanup;
 
-        debugs(54, 2, "ipc(" << prog << "," << pid << "): started successfully");
+    debugs(54, 2, "ipc(" << prog << "," << pid << "): started successfully");
 
     /* cycle */
     for (;;) {

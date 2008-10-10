@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -57,31 +57,27 @@ static STMCB storeWriteComplete;
 
 #define STORE_IN_MEM_BUCKETS            (229)
 
-const char *memStatusStr[] =
-    {
-        "NOT_IN_MEMORY",
-        "IN_MEMORY"
-    };
+const char *memStatusStr[] = {
+    "NOT_IN_MEMORY",
+    "IN_MEMORY"
+};
 
-const char *pingStatusStr[] =
-    {
-        "PING_NONE",
-        "PING_WAITING",
-        "PING_DONE"
-    };
+const char *pingStatusStr[] = {
+    "PING_NONE",
+    "PING_WAITING",
+    "PING_DONE"
+};
 
-const char *storeStatusStr[] =
-    {
-        "STORE_OK",
-        "STORE_PENDING"
-    };
+const char *storeStatusStr[] = {
+    "STORE_OK",
+    "STORE_PENDING"
+};
 
-const char *swapStatusStr[] =
-    {
-        "SWAPOUT_NONE",
-        "SWAPOUT_WRITING",
-        "SWAPOUT_DONE"
-    };
+const char *swapStatusStr[] = {
+    "SWAPOUT_NONE",
+    "SWAPOUT_WRITING",
+    "SWAPOUT_DONE"
+};
 
 extern OBJH storeIOStats;
 
@@ -92,8 +88,7 @@ extern OBJH storeIOStats;
 
 typedef struct _storerepl_entry storerepl_entry_t;
 
-struct _storerepl_entry
-{
+struct _storerepl_entry {
     const char *typestr;
     REMOVALPOLICYCREATE *create;
 };
@@ -815,8 +810,7 @@ StoreEntry::write (StoreIOBuffer writeBuffer)
     PROF_start(StoreEntry_write);
     assert(store_status == STORE_PENDING);
 
-    if (!writeBuffer.length)
-      {
+    if (!writeBuffer.length) {
         /* the headers are received already, but we have not received
          * any body data. There are BROKEN abuses of HTTP which require
          * the headers to be passed along before any body data - see
@@ -828,7 +822,7 @@ StoreEntry::write (StoreIOBuffer writeBuffer)
         PROF_stop(StoreEntry_write);
         invokeHandlers();
         return;
-      }
+    }
 
     debugs(20, 5, "storeWrite: writing " << writeBuffer.length << " bytes for '" << getMD5Text() << "'");
     PROF_stop(StoreEntry_write);
@@ -891,11 +885,9 @@ storeAppendVPrintf(StoreEntry * e, const char *fmt, va_list vargs)
     e->append(buf, strlen(buf));
 }
 
-struct _store_check_cachable_hist
-{
+struct _store_check_cachable_hist {
 
-    struct
-    {
+    struct {
         int non_get;
         int not_entry_cachable;
         int wrong_content_length;
@@ -907,8 +899,7 @@ struct _store_check_cachable_hist
         int too_many_open_fds;
     } no;
 
-    struct
-    {
+    struct {
         int Default;
     } yes;
 } store_check_cachable_hist;
@@ -933,7 +924,7 @@ StoreEntry::checkTooSmall()
 
     if (STORE_OK == store_status)
         if (mem_obj->object_sz < 0 ||
-	    mem_obj->object_sz < Config.Store.minObjectSize)
+                mem_obj->object_sz < Config.Store.minObjectSize)
             return 1;
     if (getReply()->content_length > -1)
         if (getReply()->content_length < Config.Store.minObjectSize)
@@ -1114,18 +1105,18 @@ StoreEntry::abort()
      * Should we check abort.data for validity?
      */
     if (mem_obj->abort.callback) {
-	if (!cbdataReferenceValid(mem_obj->abort.data))
-	    debugs(20,1,HERE << "queueing event when abort.data is not valid");
+        if (!cbdataReferenceValid(mem_obj->abort.data))
+            debugs(20,1,HERE << "queueing event when abort.data is not valid");
         eventAdd("mem_obj->abort.callback",
                  mem_obj->abort.callback,
                  mem_obj->abort.data,
                  0.0,
                  true);
-	unregisterAbort();
+        unregisterAbort();
     }
 
     /* XXX Should we reverse these two, so that there is no
-     * unneeded disk swapping triggered? 
+     * unneeded disk swapping triggered?
      */
     /* Notify the client side */
     invokeHandlers();
@@ -1184,8 +1175,8 @@ storeGetMemSpace(int size)
 
 
 /* thunk through to Store::Root().maintain(). Note that this would be better still
- * if registered against the root store itself, but that requires more complex 
- * update logic - bigger fish to fry first. Long term each store when 
+ * if registered against the root store itself, but that requires more complex
+ * update logic - bigger fish to fry first. Long term each store when
  * it becomes active will self register
  */
 void
@@ -1394,7 +1385,7 @@ storeRegisterWithCacheManager(void)
     manager->registerAction("storedir", "Store Directory Stats", Store::Stats, 0, 1);
     manager->registerAction("store_io", "Store IO Interface Stats", storeIOStats, 0, 1);
     manager->registerAction("store_check_cachable_stats", "storeCheckCachable() Stats",
-                           storeCheckCachableStats, 0, 1);
+                            storeCheckCachableStats, 0, 1);
 }
 
 void
@@ -1457,7 +1448,7 @@ StoreEntry::checkNegativeHit() const
 void
 StoreEntry::negativeCache()
 {
-    if(expires == 0)
+    if (expires == 0)
 #if HTTP_VIOLATIONS
         expires = squid_curtime + Config.negativeTtl;
 #else
@@ -1535,9 +1526,9 @@ StoreEntry::timestampsSet()
             served_date = squid_curtime - age;
 
     if (reply->expires > 0 && reply->date > -1)
-	expires = served_date + (reply->expires - reply->date);
+        expires = served_date + (reply->expires - reply->date);
     else
-	expires = reply->expires;
+        expires = reply->expires;
 
     lastmod = reply->last_modified;
 
@@ -1558,8 +1549,8 @@ StoreEntry::unregisterAbort()
 {
     assert(mem_obj);
     if (mem_obj->abort.callback) {
-	mem_obj->abort.callback = NULL;
-	cbdataReferenceDone(mem_obj->abort.data);
+        mem_obj->abort.callback = NULL;
+        cbdataReferenceDone(mem_obj->abort.data);
     }
 }
 
@@ -1847,7 +1838,7 @@ StoreEntry::trimMemory()
      * objects.  We have to wait until the mem_status changes.
      */
     if (mem_status == IN_MEMORY)
-	return;
+        return;
 
     if (mem_obj->policyLowestOffsetToKeep() == 0)
         /* Nothing to do */

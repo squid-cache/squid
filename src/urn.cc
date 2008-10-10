@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -68,8 +68,7 @@ public:
     HttpRequest *request;
     HttpRequest *urlres_r;
 
-    struct
-    {
+    struct {
         unsigned int force_menu:1;
     } flags;
     char reqbuf[URN_REQBUF_SZ];
@@ -79,14 +78,12 @@ private:
     char *urlres;
 };
 
-typedef struct
-{
+typedef struct {
     char *url;
     char *host;
     int rtt;
 
-    struct
-    {
+    struct {
         int cached;
     } flags;
 } url_entry;
@@ -159,8 +156,8 @@ urnFindMinRtt(url_entry * urls, const HttpRequestMethod& m, int *rtt_ret)
         *rtt_ret = min_rtt;
 
     debugs(52, 1, "urnFindMinRtt: Returning '" <<
-                  (min_u ? min_u->url : "NONE") << "' RTT " << 
-                  min_rtt  );
+           (min_u ? min_u->url : "NONE") << "' RTT " <<
+           min_rtt  );
 
     return min_u;
 }
@@ -171,8 +168,8 @@ UrnState::getHost (String &urlpath)
     char * result;
     char const *t;
 
-/* FIXME: this appears to be parsing the URL. *very* badly. */
-/* FIXME: a proper encapsulated URI/URL type needs to clear this up. */
+    /* FIXME: this appears to be parsing the URL. *very* badly. */
+    /* FIXME: a proper encapsulated URI/URL type needs to clear this up. */
 
     if ((t = urlpath.pos(':')) != NULL) {
         urlpath.set(t, '\0');

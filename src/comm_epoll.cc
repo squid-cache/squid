@@ -104,7 +104,7 @@ comm_select_init(void)
 
 static const char* epolltype_atoi(int x)
 {
-    switch(x) {
+    switch (x) {
 
     case EPOLL_CTL_ADD:
         return "EPOLL_CTL_ADD";
@@ -136,13 +136,13 @@ commSetSelect(int fd, unsigned int type, PF * handler,
 
     struct epoll_event ev;
     assert(fd >= 0);
-    debugs(5, DEBUG_EPOLL ? 0 : 8, "commSetSelect(FD " << fd << ",type=" << type << 
-           ",handler=" << handler << ",client_data=" << client_data << 
+    debugs(5, DEBUG_EPOLL ? 0 : 8, "commSetSelect(FD " << fd << ",type=" << type <<
+           ",handler=" << handler << ",client_data=" << client_data <<
            ",timeout=" << timeout << ")");
 
     if (RUNNING_ON_VALGRIND) {
-	/* Keep valgrind happy.. complains about uninitialized bytes otherwise */
-	memset(&ev, 0, sizeof(ev));
+        /* Keep valgrind happy.. complains about uninitialized bytes otherwise */
+        memset(&ev, 0, sizeof(ev));
     }
     ev.events = 0;
     ev.data.fd = fd;
@@ -156,11 +156,11 @@ commSetSelect(int fd, unsigned int type, PF * handler,
 
     if (type & COMM_SELECT_READ) {
         if (handler) {
-	    // Hack to keep the events flowing if there is data immediately ready
-	    if (F->flags.read_pending)
-		ev.events |= EPOLLOUT;
+            // Hack to keep the events flowing if there is data immediately ready
+            if (F->flags.read_pending)
+                ev.events |= EPOLLOUT;
             ev.events |= EPOLLIN;
-	}
+        }
 
         F->read_handler = handler;
 
@@ -197,7 +197,7 @@ commSetSelect(int fd, unsigned int type, PF * handler,
         F->epoll_state = ev.events;
 
         if (epoll_ctl(kdpfd, epoll_ctl_type, fd, &ev) < 0) {
-            debugs(5, DEBUG_EPOLL ? 0 : 8, "commSetSelect: epoll_ctl(," << epolltype_atoi(epoll_ctl_type) << 
+            debugs(5, DEBUG_EPOLL ? 0 : 8, "commSetSelect: epoll_ctl(," << epolltype_atoi(epoll_ctl_type) <<
                    ",,): failed on FD " << fd << ": " << xstrerror());
         }
     }
@@ -221,9 +221,9 @@ static void
 commEPollRegisterWithCacheManager(void)
 {
     CacheManager::GetInstance()->
-        registerAction("comm_epoll_incoming",
-                       "comm_incoming() stats",
-                        commIncomingStats, 0, 1);
+    registerAction("comm_epoll_incoming",
+                   "comm_incoming() stats",
+                   commIncomingStats, 0, 1);
 }
 
 static void
@@ -291,9 +291,9 @@ comm_select(int msec)
     for (i = 0, cevents = pevents; i < num; i++, cevents++) {
         fd = cevents->data.fd;
         F = &fd_table[fd];
-        debugs(5, DEBUG_EPOLL ? 0 : 8, "comm_select(): got FD " << fd << " events=" << 
-              std::hex << cevents->events << " monitoring=" << F->epoll_state << 
-              " F->read_handler=" << F->read_handler << " F->write_handler=" << F->write_handler);
+        debugs(5, DEBUG_EPOLL ? 0 : 8, "comm_select(): got FD " << fd << " events=" <<
+               std::hex << cevents->events << " monitoring=" << F->epoll_state <<
+               " F->read_handler=" << F->read_handler << " F->write_handler=" << F->write_handler);
 
         // TODO: add EPOLLPRI??
 

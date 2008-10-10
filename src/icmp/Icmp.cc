@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -48,7 +48,7 @@ void
 Icmp::Close()
 {
 #if USE_ICMP
-    if(icmp_sock > 0)
+    if (icmp_sock > 0)
         close(icmp_sock);
     icmp_sock = -1;
     icmp_ident = 0;
@@ -64,7 +64,7 @@ Icmp::CheckSum(unsigned short *ptr, int size)
     unsigned short oddbyte;
     unsigned short answer;
 
-    if(!ptr) return 65535; // bad input.
+    if (!ptr) return 65535; // bad input.
 
     sum = 0;
 

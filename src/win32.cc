@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -119,8 +119,7 @@ int WIN32_getrusage(int who, struct rusage *usage)
 #if HAVE_WIN32_PSAPI
 
     if ((WIN32_OS_version == _WIN_OS_WINNT) || (WIN32_OS_version == _WIN_OS_WIN2K)
-            || (WIN32_OS_version == _WIN_OS_WINXP) || (WIN32_OS_version == _WIN_OS_WINNET))
-    {
+            || (WIN32_OS_version == _WIN_OS_WINXP) || (WIN32_OS_version == _WIN_OS_WINNET)) {
         /* On Windows NT/2000 call PSAPI.DLL for process Memory */
         /* informations -- Guido Serassio                       */
         HANDLE hProcess;
@@ -134,9 +133,9 @@ int WIN32_getrusage(int who, struct rusage *usage)
             FILETIME ftCreate, ftExit, ftKernel, ftUser;
 
             if (GetProcessTimes(hProcess, &ftCreate, &ftExit, &ftKernel, &ftUser)) {
-		int64_t *ptUser = (int64_t *)&ftUser;
+                int64_t *ptUser = (int64_t *)&ftUser;
                 int64_t tUser64 = *ptUser / 10;
-		int64_t *ptKernel = (int64_t *)&ftKernel;
+                int64_t *ptKernel = (int64_t *)&ftKernel;
                 int64_t tKernel64 = *ptKernel / 10;
                 usage->ru_utime.tv_sec =(long)(tUser64 / 1000000);
                 usage->ru_stime.tv_sec =(long)(tKernel64 / 1000000);
@@ -165,7 +164,7 @@ int WIN32_getrusage(int who, struct rusage *usage)
 
 
 int Win32__WSAFDIsSet(int fd, fd_set FAR * set
-                         )
+                     )
 {
     fde *F = &fd_table[fd];
     SOCKET s = F->win32.handle;

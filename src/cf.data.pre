@@ -411,10 +411,20 @@ DOC_START
 	  %USER_CERTCHAIN SSL User certificate chain in PEM format
 	  %USER_CERT_xx	SSL User certificate subject attribute xx
 	  %USER_CA_xx	SSL User certificate issuer attribute xx
-	  %{Header}	HTTP request header
-	  %{Hdr:member}	HTTP request header list member
-	  %{Hdr:;member}
+
+	  %>{Header}	HTTP request header
+	  %>{Hdr:member}
+	  		HTTP request header list member
+	  %>{Hdr:;member}
 	  		HTTP request header list member using ; as
+	  		list separator. ; can be any non-alphanumeric
+			character.
+
+	  %<{Header}	HTTP reply header
+	  %<{Hdr:member}
+	  		HTTP reply header list member
+	  %<{Hdr:;member}
+	  		HTTP reply header list member using ; as
 	  		list separator. ; can be any non-alphanumeric
 			character.
 
@@ -727,7 +737,7 @@ DOC_END
 NAME: delay_pool_uses_indirect_client
 COMMENT: on|off
 TYPE: onoff
-IFDEF: FOLLOW_X_FORWARDED_FOR && DELAY_POOLS
+IFDEF: FOLLOW_X_FORWARDED_FOR DELAY_POOLS
 DEFAULT: on
 LOC: Config.onoff.delay_pool_uses_indirect_client
 DOC_START
@@ -831,8 +841,8 @@ DOC_START
 
 NOCOMMENT_START
 #Allow ICP queries from local networks only
-icp_access allow localnet
-icp_access deny all
+#icp_access allow localnet
+#icp_access deny all
 NOCOMMENT_END
 DOC_END
 
@@ -856,8 +866,8 @@ DOC_START
 
 NOCOMMENT_START
 #Allow HTCP queries from local networks only
-htcp_access allow localnet
-htcp_access deny all
+#htcp_access allow localnet
+#htcp_access deny all
 NOCOMMENT_END
 DOC_END
 
@@ -883,7 +893,7 @@ DOC_END
 NAME: miss_access
 TYPE: acl_access
 LOC: Config.accessList.miss
-DEFAULT: none
+DEFAULT: allow all
 DOC_START
 	Use to force your neighbors to use you as a sibling instead of
 	a parent.  For example:
@@ -897,11 +907,6 @@ DOC_START
 
 	By default, allow all clients who passed the http_access rules
 	to fetch MISSES from us.
-
-NOCOMMENT_START
-#Default setting:
-# miss_access allow all
-NOCOMMENT_END
 DOC_END
 
 NAME: ident_lookup_access
@@ -963,6 +968,12 @@ DOC_START
 
 	If you set this parameter none (the default), there will be
 	no limit imposed.
+
+	Configuration Format is:
+		reply_body_max_size SIZE UNITS [acl ...]
+	ie.
+		reply_body_max_size 10 MB
+
 DOC_END
 
 COMMENT_START
@@ -1027,6 +1038,11 @@ DOC_START
 
 	   protocol=	Protocol to reconstruct accelerated requests with.
 			Defaults to http.
+
+           connection-auth[=on|off]
+                        use connection-auth=off to tell Squid to prevent 
+                        forwarding Microsoft connection oriented authentication
+			(NTLM, Negotiate and Kerberos)
 
 	   disable-pmtu-discovery=
 			Control Path-MTU discovery usage:
@@ -1555,9 +1571,7 @@ DOC_START
 
 	  icp-port:  Used for querying neighbor caches about
 		     objects.  To have a non-ICP neighbor
-		     specify '7' for the ICP port and make sure the
-		     neighbor machine has the UDP echo port
-		     enabled in its /etc/inetd.conf file.
+		     specify '0' for the ICP port.
 		NOTE: Also requires icp_port option enabled to send/receive
 		      requests via this method.
 
@@ -1585,6 +1599,10 @@ DOC_START
 		     max-conn=n
 		     htcp
 		     htcp-oldsquid
+		     htcp-no-clr
+		     htcp-no-purge-clr
+		     htcp-only-clr
+		     htcp-forward-clr
 		     originserver
 		     name=xxx
 		     forceddomain=name
@@ -1595,6 +1613,7 @@ DOC_START
 		     sslcipher=...
 		     ssloptions=...
 		     front-end-https[=on|auto]
+                     connection-auth[=on|off|auto]
 
 		     use 'proxy-only' to specify objects fetched
 		     from this cache should not be saved locally.
@@ -1727,6 +1746,20 @@ DOC_START
 		     You MUST also set htcp_access expicitly. The default of
 		     deny all will prevent peer traffic.		     
 
+		     use 'htcp-no-clr' to send HTCP to the neighbor but without
+		     sending any CLR requests.  This cannot be used with
+		     htcp-only-clr.
+		
+		     use 'htcp-no-purge-clr' to send HTCP to the neighbor
+		     including CLRs but only when they do not result from
+		     PURGE requests.
+		
+		     use 'htcp-only-clr' to send HTCP to the neighbor but ONLY
+		     CLR requests.  This cannot be used with htcp-no-clr.
+		
+		     use 'htcp-forward-clr' to forward any HTCP CLR requests
+		     this proxy receives to the peer.
+
 		     'originserver' causes this parent peer to be contacted as
 		     a origin server. Meant to be used in accelerator setups.
 
@@ -1803,6 +1836,12 @@ DOC_START
 		     on this header. If set to auto the header will
 		     only be added if the request is forwarded as a https://
 		     URL.
+                     
+                     use connection-auth=off to tell Squid that this peer does
+                     not support Microsoft connection oriented authentication,
+                     and any such challenges received from there should be
+                     ignored. Default is auto to automatically determine the
+                     status of the peer.
 DOC_END
 
 NAME: cache_peer_domain cache_host_domain
@@ -1918,7 +1957,7 @@ COMMENT_END
 NAME: cache_mem
 COMMENT: (bytes)
 TYPE: b_size_t
-DEFAULT: 8 MB
+DEFAULT: 256 MB
 LOC: Config.memMaxSize
 DOC_START
 	NOTE: THIS PARAMETER DOES NOT SPECIFY THE MAXIMUM PROCESS SIZE.
@@ -1955,7 +1994,7 @@ DOC_END
 NAME: maximum_object_size_in_memory
 COMMENT: (bytes)
 TYPE: b_size_t
-DEFAULT: 8 KB
+DEFAULT: 512 KB
 LOC: Config.Store.maxInMemObjSize
 DOC_START
 	Objects greater than this size will not be attempted to kept in
@@ -2124,7 +2163,7 @@ DOC_START
 	which can be changed with the --with-coss-membuf-size=N configure
 	option.
 NOCOMMENT_START
-cache_dir ufs @DEFAULT_SWAP_DIR@ 100 16 256
+# cache_dir ufs @DEFAULT_SWAP_DIR@ 100 16 256
 NOCOMMENT_END
 DOC_END
 
@@ -2292,6 +2331,7 @@ NAME: access_log cache_access_log
 TYPE: access_log
 LOC: Config.Log.accesslogs
 DEFAULT: none
+DEFAULT_IF_NONE: @DEFAULT_ACCESS_LOG@ squid
 DOC_START
 	These files log client request activities. Has a line every HTTP or
 	ICP request. The format is:
@@ -2314,9 +2354,9 @@ DOC_START
 
 	And priority could be any of:
 	err, warning, notice, info, debug.
-NOCOMMENT_START
-access_log @DEFAULT_ACCESS_LOG@ squid
-NOCOMMENT_END
+
+	Default:
+		access_log @DEFAULT_ACCESS_LOG@ squid
 DOC_END
 
 NAME: log_access
@@ -2332,7 +2372,8 @@ DOC_END
 
 NAME: cache_log
 TYPE: string
-DEFAULT: @DEFAULT_CACHE_LOG@
+DEFAULT: none
+DEFAULT_IF_NONE: @DEFAULT_CACHE_LOG@
 LOC: Config.Log.log
 DOC_START
 	Cache logging file. This is where general information about
@@ -2342,14 +2383,17 @@ DOC_END
 
 NAME: cache_store_log
 TYPE: string
-DEFAULT: @DEFAULT_STORE_LOG@
+DEFAULT: none
 LOC: Config.Log.store
 DOC_START
 	Logs the activities of the storage manager.  Shows which
 	objects are ejected from the cache, and which objects are
-	saved and for how long.  To disable, enter "none". There are
-	not really utilities to analyze this data, so you can safely
+	saved and for how long.  To disable, enter "none" or remove the line.
+	There are not really utilities to analyze this data, so you can safely
 	disable it.
+NOCOMMENT_START
+# cache_store_log @DEFAULT_STORE_LOG@
+NOCOMMENT_END
 DOC_END
 
 NAME: cache_swap_state cache_swap_log
@@ -3085,7 +3129,7 @@ COMMENT_END
 NAME: request_header_max_size
 COMMENT: (KB)
 TYPE: b_size_t
-DEFAULT: 20 KB
+DEFAULT: 64 KB
 LOC: Config.maxRequestHeaderSize
 DOC_START
 	This specifies the maximum size for HTTP headers in a request.
@@ -3098,7 +3142,7 @@ DOC_END
 NAME: reply_header_max_size
 COMMENT: (KB)
 TYPE: b_size_t
-DEFAULT: 20 KB
+DEFAULT: 64 KB
 LOC: Config.maxReplyHeaderSize
 DOC_START
 	This specifies the maximum size for HTTP headers in a reply.
@@ -3961,7 +4005,18 @@ TYPE: address
 LOC: Config.Wccp.router
 DEFAULT: 0.0.0.0
 IFDEF: USE_WCCP
-DOC_NONE
+DOC_START
+	Use this option to define your WCCP ``home'' router for
+	Squid.
+
+	wccp_router supports a single WCCP(v1) router
+
+	wccp2_router supports multiple WCCPv2 routers
+
+	only one of the two may be used at the same time and defines
+	which version of WCCP to use.
+DOC_END
+
 NAME: wccp2_router
 TYPE: IPAddress_list
 LOC: Config.Wccp2.router
@@ -4008,33 +4063,33 @@ DOC_START
 DOC_END
 
 NAME: wccp2_forwarding_method
-TYPE: int
+TYPE: wccp2_method
 LOC: Config.Wccp2.forwarding_method
-DEFAULT: 1
+DEFAULT: gre
 IFDEF: USE_WCCPv2
 DOC_START
 	WCCP2 allows the setting of forwarding methods between the
 	router/switch and the cache.  Valid values are as follows:
 
-	1 - GRE encapsulation (forward the packet in a GRE/WCCP tunnel)
-	2 - L2 redirect (forward the packet using Layer 2/MAC rewriting)
+	gre - GRE encapsulation (forward the packet in a GRE/WCCP tunnel)
+	l2  - L2 redirect (forward the packet using Layer 2/MAC rewriting)
 
 	Currently (as of IOS 12.4) cisco routers only support GRE.
 	Cisco switches only support the L2 redirect assignment method.
 DOC_END
 
 NAME: wccp2_return_method
-TYPE: int
+TYPE: wccp2_method
 LOC: Config.Wccp2.return_method
-DEFAULT: 1
+DEFAULT: gre
 IFDEF: USE_WCCPv2
 DOC_START
 	WCCP2 allows the setting of return methods between the
 	router/switch and the cache for packets that the cache
 	decides not to handle.  Valid values are as follows:
 
-	1 - GRE encapsulation (forward the packet in a GRE/WCCP tunnel)
-	2 - L2 redirect (forward the packet using Layer 2/MAC rewriting)
+	gre - GRE encapsulation (forward the packet in a GRE/WCCP tunnel)
+	l2  - L2 redirect (forward the packet using Layer 2/MAC rewriting)
 
 	Currently (as of IOS 12.4) cisco routers only support GRE.
 	Cisco switches only support the L2 redirect assignment.
@@ -4046,16 +4101,16 @@ DOC_START
 DOC_END
 
 NAME: wccp2_assignment_method
-TYPE: int
+TYPE: wccp2_amethod
 LOC: Config.Wccp2.assignment_method
-DEFAULT: 1
+DEFAULT: hash
 IFDEF: USE_WCCPv2
 DOC_START
 	WCCP2 allows the setting of methods to assign the WCCP hash
 	Valid values are as follows:
 
-	1 - Hash assignment
-	2 - Mask assignment
+	hash - Hash assignment
+	mask  - Mask assignment
 
 	As a general rule, cisco routers support the hash assignment method
 	and cisco switches support the mask assignment method.
@@ -4087,7 +4142,6 @@ DOC_START
 	wccp2_service dynamic 80	# a dynamic service type which will be
 					# fleshed out with subsequent options.
 	wccp2_service standard 0 password=foo
-
 DOC_END
 
 NAME: wccp2_service_info
@@ -4138,6 +4192,7 @@ LOC: Config.Wccp.address
 DEFAULT: 0.0.0.0
 IFDEF: USE_WCCP
 DOC_NONE
+
 NAME: wccp2_address
 TYPE: address
 LOC: Config.Wccp2.address
@@ -4315,13 +4370,14 @@ LOC: Config.Addrs.snmp_incoming
 DEFAULT: 0.0.0.0
 IFDEF: SQUID_SNMP
 DOC_NONE
+
 NAME: snmp_outgoing_address
 TYPE: address
 LOC: Config.Addrs.snmp_outgoing
 DEFAULT: 255.255.255.255
 IFDEF: SQUID_SNMP
 DOC_START
-	Just like 'udp_incoming_address' above, but for the SNMP port.
+	Just like 'udp_incoming_address', but for the SNMP port.
 
 	snmp_incoming_address	is used for the SNMP socket receiving
 				messages from SNMP agents.
@@ -4354,7 +4410,7 @@ DOC_START
 	and from neighbor caches.  The standard UDP port for ICP is 3130.
 	Default is disabled (0).
 NOCOMMENT_START
-icp_port @DEFAULT_ICP_PORT@
+#icp_port @DEFAULT_ICP_PORT@
 NOCOMMENT_END
 DOC_END
 
@@ -4748,6 +4804,20 @@ DOC_START
 	a wide variety of languages. If you are interested in making
 	translations for any language see the squid wiki for details.
 	http://wiki.squid-cache.org/Translations
+DOC_END
+
+NAME: error_log_languages
+IFDEF: USE_ERR_LOCALES
+TYPE: onoff
+LOC: Config.errorLogMissingLanguages
+DEFAULT: on
+DOC_START
+	Log to cache.log what languages users are attempting to
+	auto-negotiate for translations.
+
+	Successful negotiations are not logged. Only failures
+	have meaning to indicate that Squid may need an upgrade
+	of is error page translations.
 DOC_END
 
 NAME: err_html_text
@@ -5225,7 +5295,7 @@ DOC_END
 NAME: icap_class
 TYPE: icap_class_type
 IFDEF: ICAP_CLIENT
-LOC: TheICAPConfig
+LOC: none
 DEFAULT: none
 DOC_START
 	This depricated option was documented to define an ICAP service
@@ -5242,7 +5312,7 @@ DOC_END
 NAME: icap_access
 TYPE: icap_access_type
 IFDEF: ICAP_CLIENT
-LOC: TheICAPConfig
+LOC: none
 DEFAULT: none
 DOC_START
         This option is depricated. Please use adaptation_access, which
@@ -5254,6 +5324,45 @@ COMMENT_START
  eCAP OPTIONS
  -----------------------------------------------------------------------------
 COMMENT_END
+
+NAME: ecap_enable
+TYPE: onoff
+IFDEF: USE_ECAP
+COMMENT: on|off
+LOC: Ecap::TheConfig.onoff
+DEFAULT: off
+DOC_START
+	Controls whether eCAP support is enabled.
+DOC_END
+
+NAME: ecap_service
+TYPE: ecap_service_type
+IFDEF: USE_ECAP
+LOC: Ecap::TheConfig
+DEFAULT: none
+DOC_START
+	Defines a single eCAP service
+
+	ecap_service servicename vectoring_point bypass service_url
+
+	vectoring_point = reqmod_precache|reqmod_postcache|respmod_precache|respmod_postcache
+		This specifies at which point of transaction processing the
+		eCAP service should be activated. *_postcache vectoring points
+		are not yet supported.
+	bypass = 1|0
+		If set to 1, the eCAP service is treated as optional. If the
+		service cannot be reached or malfunctions, Squid will try to
+		ignore any errors and process the message as if the service
+		was not enabled. No all eCAP errors can be bypassed.
+		If set to 0, the eCAP service is treated as essential and all
+		eCAP errors will result in an error page returned to the
+		HTTP client.
+	service_url = ecap://vendor/service_name?custom&cgi=style&parameters=optional
+
+Example:
+ecap_service service_1 reqmod_precache 0 ecap://filters-R-us/leakDetector?on_error=block
+ecap_service service_2 respmod_precache 1 icap://filters-R-us/virusFilter?config=/etc/vf.cfg
+DOC_END
 
 NAME: loadable_modules
 TYPE: wordlist
