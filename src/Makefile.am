@@ -1619,6 +1619,7 @@ nodist_tests_testEvent_SOURCES = \
 tests_testEvent_LDADD = \
 	libsquid.la \
 	libauth.la \
+	icmp/libicmp.la icmp/libicmp-core.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
 	@REGEXLIB@ \
@@ -1774,6 +1775,7 @@ nodist_tests_testEventLoop_SOURCES = \
 tests_testEventLoop_LDADD = \
 	libsquid.la \
 	libauth.la \
+	icmp/libicmp.la icmp/libicmp-core.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
 	@REGEXLIB@ \
@@ -1924,6 +1926,7 @@ nodist_tests_test_http_range_SOURCES = \
 tests_test_http_range_LDADD = \
 	libsquid.la \
 	libauth.la \
+	icmp/libicmp.la icmp/libicmp-core.la \
 	@REPL_OBJS@ \
 	@STORE_OBJS@ \
 	${ADAPTATION_LIBS} \
@@ -2080,6 +2083,7 @@ nodist_tests_testHttpRequest_SOURCES = \
 tests_testHttpRequest_LDADD = \
 	libsquid.la \
 	libauth.la \
+	icmp/libicmp.la icmp/libicmp-core.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
 	@REGEXLIB@ \
@@ -2423,6 +2427,7 @@ nodist_tests_testURL_SOURCES = \
 tests_testURL_LDADD = \
 	libsquid.la \
 	libauth.la \
+	icmp/libicmp.la icmp/libicmp-core.la \
 	@REGEXLIB@ \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \

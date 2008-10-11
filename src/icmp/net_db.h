@@ -1,6 +1,7 @@
 #ifndef ICMP_NET_DB_H
 #define ICMP_NET_DB_H
 
+#include "config.h"
 
 class IPAddress;
 class StoreEntry;
@@ -32,6 +33,5 @@ SQUIDCEXTERN void netdbExchangeStart(void *);
 SQUIDCEXTERN void netdbExchangeUpdatePeer(IPAddress &, peer *, double, double);
 SQUIDCEXTERN peer *netdbClosestParent(HttpRequest *);
 SQUIDCEXTERN void netdbHostData(const char *host, int *samp, int *rtt, int *hops);
-
 
 #endif /* ICMP_NET_DB_H */

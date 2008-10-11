@@ -10,6 +10,13 @@
 #include <iostream>
 #include <sstream>
 
+/* AYJ: the debug stuff here should really be in a stub_debug.cc file for tests to link */
+
+/* for correct pre-definitions of debug objects */
+#include "Debug.h"
+
+FILE *debug_log = NULL;
+
 void
 xassert(const char *msg, const char *file, int line)
 {

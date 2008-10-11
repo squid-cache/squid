@@ -44,6 +44,7 @@
 #include "comm.h"
 #include "MemBuf.h"
 #include "http.h"
+#include "icmp/net_db.h"
 
 typedef struct _Countstr Countstr;
 
@@ -857,7 +858,6 @@ htcpAccessCheck(acl_access * acl, htcpSpecifier * s, IPAddress &from)
 }
 
 static void
-
 htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, IPAddress &from)
 {
     htcpStuff stuff;
@@ -867,9 +867,6 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, IPAddr
     Packer p;
     ssize_t pktlen;
     char *host;
-    int rtt = 0;
-    int hops = 0;
-    int samp = 0;
     char cto_buf[128];
     memset(&stuff, '\0', sizeof(stuff));
     stuff.op = HTCP_TST;
@@ -911,7 +908,11 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, IPAddr
 
         hdr.reset();
 
+#if USE_ICMP
         if ((host = urlHostname(spec->uri))) {
+	    int rtt = 0;
+	    int hops = 0;
+            int samp = 0;
             netdbHostData(host, &samp, &rtt, &hops);
 
             if (rtt || hops) {
@@ -920,6 +921,7 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, IPAddr
                 hdr.putExt("Cache-to-Origin", cto_buf);
             }
         }
+#endif /* USE_ICMP */
 
         hdr.packInto(&p);
         stuff.D.cache_hdrs = xstrdup(mb.buf);
