@@ -681,7 +681,7 @@ nodist_squid_SOURCES = \
 squid_LDADD = \
 	libsquid.la \
 	libauth.la \
-	libsquid-icmp.la \
+	icmp/libicmp.la icmp/libicmp-core.la \
 	-L../lib \
 	@XTRA_OBJS@ \
 	@DISK_LINKOBJS@ \
@@ -904,7 +904,7 @@ ufsdump_SOURCES = \
 ufsdump_LDADD = \
 	libsquid.la \
 	libauth.la \
-	libsquid-icmp.la \
+	icmp/libicmp.la icmp/libicmp-core.la \
 	-L../lib \
 	@XTRA_OBJS@ \
 	@REPL_OBJS@ \
@@ -1447,7 +1447,7 @@ nodist_tests_testCacheManager_SOURCES = \
 tests_testCacheManager_LDADD = \
 	libsquid.la \
 	libauth.la \
-	libsquid-icmp.la \
+	icmp/libicmp.la icmp/libicmp-core.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
 	@REGEXLIB@ \
