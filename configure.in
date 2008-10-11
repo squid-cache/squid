@@ -1593,11 +1593,6 @@ if test "$NEGOTIATE_AUTH_HELPERS" = "all" ; then
 	    if test -f $dir/config.test && sh $dir/config.test "$@";  then
 		NEGOTIATE_AUTH_HELPERS="$NEGOTIATE_AUTH_HELPERS $helper"
 	    fi
-	    # Kerberos helper has its own configure system
-	    if test "$dir" = "$srcdir/helpers/negotiate_auth/squid_kerb_auth" ; then
-	        NEGOTIATE_AUTH_HELPERS="$NEGOTIATE_AUTH_HELPERS $helper"
-		AC_CONFIG_SUBDIRS(helpers/negotiate_auth/squid_kerb_auth)
-	    fi
 	done
 fi
 if test -n "$NEGOTIATE_AUTH_HELPERS"; then
@@ -1606,6 +1601,15 @@ if test -n "$NEGOTIATE_AUTH_HELPERS"; then
 	    :
 	else
 	    AC_MSG_ERROR(Negotiate Auth helper $helper does not exist)
+	fi
+	# Kerberos helper has its own configure system
+	if test "$srcdir/helpers/negotiate_auth/$helper/configure" ; then
+	    if test $helper = squid_kerb_auth; then
+		AC_CONFIG_SUBDIRS(helpers/negotiate_auth/squid_kerb_auth)
+	    else
+		echo "ERROR: configure.in needs to be extended to support $helper!"
+		exit 1
+	    fi
 	fi
     done
     echo "Negotiate auth helpers built: $NEGOTIATE_AUTH_HELPERS"
