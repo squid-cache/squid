@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -49,8 +49,7 @@ union sigval {
     void *sival_ptr; /* pointer value */
 };
 
-struct sigevent
-{
+struct sigevent {
     int sigev_notify; /* notification mode */
     int sigev_signo; /* signal number */
     union sigval sigev_value; /* signal value */
@@ -58,8 +57,7 @@ struct sigevent
 
 #endif
 
-struct aiocb64
-{
+struct aiocb64 {
     int aio_fildes; /* file descriptor */
     void *aio_buf; /* buffer location */
     size_t aio_nbytes; /* length of transfer */
@@ -70,8 +68,7 @@ struct aiocb64
     int aio_lio_opcode; /* listio operation */
 };
 
-struct aiocb
-{
+struct aiocb {
     int aio_fildes; /* file descriptor */
     void *aio_buf; /* buffer location */
     size_t aio_nbytes; /* length of transfer */

@@ -113,7 +113,7 @@ public:
     ~StoreSearchCoss();
     /* Iterator API - garh, wrong place */
     /* callback the client when a new StoreEntry is available
-     * or an error occurs 
+     * or an error occurs
      */
     virtual void next(void (callback)(void *cbdata), void *cbdata);
     /* return true if a new StoreEntry is immediately available */

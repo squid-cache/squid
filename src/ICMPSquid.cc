@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -74,15 +74,15 @@ ICMPSquid::SendEcho(IPAddress &to, int opcode, const char *payload, int len)
     int x, slen;
 
     /** \li Does nothing if the pinger socket is not available. */
-    if(icmp_sock < 0) {
+    if (icmp_sock < 0) {
         debugs(37, 2, HERE << " Socket Closed. Aborted send to " << pecho.to << ", opcode " << opcode << ", len " << pecho.psize);
         return;
     }
 
     /** \li  If no payload is given or is set as NULL it will ignore payload and len */
-    if(!payload)
+    if (!payload)
         len = 0;
-   
+
     /** \li Otherwise if len is 0, uses strlen() to detect length of payload.
      \bug This will result in part of the payload being truncated if it contains a NULL character.
      \bug Or it may result in a buffer over-run if the payload is not nul-terminated properly.
@@ -102,7 +102,7 @@ ICMPSquid::SendEcho(IPAddress &to, int opcode, const char *payload, int len)
 
     pecho.psize = len;
 
-    if(len > 0)
+    if (len > 0)
         xmemcpy(pecho.payload, payload, len);
 
     slen = sizeof(pingerEchoData) - PINGER_PAYLOAD_SZ + pecho.psize;
@@ -213,7 +213,7 @@ ICMPSquid::Open(void)
     IPAddress localhost;
 
     /* User configured disabled. */
-    if(!Config.pinger.enable) {
+    if (!Config.pinger.enable) {
         Close();
         return -1;
     }
@@ -255,7 +255,7 @@ ICMPSquid::Open(void)
 #if USE_IPV6
     SendEcho(localhost, S_ICMP_ECHO, "ip6-localhost");
 #endif
-    if(localhost.SetIPv4())
+    if (localhost.SetIPv4())
         SendEcho(localhost, S_ICMP_ECHO, "localhost");
 
 #ifdef _SQUID_MSWIN_

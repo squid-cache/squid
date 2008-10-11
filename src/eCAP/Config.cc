@@ -21,10 +21,11 @@ Ecap::Config::~Config()
 }
 
 void
-Ecap::Config::finalize() {
-	Adaptation::Config::finalize();
-	libecap::shared_ptr<Ecap::Host> host(new Ecap::Host);
-	libecap::RegisterHost(host);
+Ecap::Config::finalize()
+{
+    Adaptation::Config::finalize();
+    libecap::shared_ptr<Ecap::Host> host(new Ecap::Host);
+    libecap::RegisterHost(host);
 }
 
 Adaptation::ServicePointer

@@ -19,12 +19,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -58,8 +58,7 @@ public:
     virtual void reset();
 
     // use HTTPMSGLOCK() instead of calling this directly
-    virtual HttpRequest *_lock()
-    {
+    virtual HttpRequest *_lock() {
         return static_cast<HttpRequest*>(HttpMsg::_lock());
     };
 
@@ -74,14 +73,12 @@ public:
     /* HACK: These two methods are only inline to get around Makefile dependancies */
     /*      caused by HttpRequest being used in places it really shouldn't.        */
     /*      ideally they would be methods of URL instead. */
-    inline void SetHost(const char *src)
-    {
+    inline void SetHost(const char *src) {
         host_addr.SetEmpty();
         host_addr = src;
-        if( host_addr.IsAnyAddr() ) {
+        if ( host_addr.IsAnyAddr() ) {
             xstrncpy(host, src, SQUIDHOSTNAMELEN);
-        }
-        else {
+        } else {
             host_addr.ToHostname(host, SQUIDHOSTNAMELEN);
             debugs(23, 3, "HttpRequest::SetHost() given IP: " << host_addr);
         }
@@ -100,10 +97,10 @@ public:
 
 private:
     char host[SQUIDHOSTNAMELEN];
-    
+
     /***
-     * The client side connection data of pinned connections for the client side 
-     * request related objects 
+     * The client side connection data of pinned connections for the client side
+     * request related objects
      */
     ConnStateData *pinned_connection;
 
@@ -182,17 +179,17 @@ public:
     static HttpRequest * CreateFromUrlAndMethod(char * url, const HttpRequestMethod& method);
 
     static HttpRequest * CreateFromUrl(char * url);
-    
+
     void setPinnedConnection(ConnStateData *conn) {
-	pinned_connection = cbdataReference(conn);
+        pinned_connection = cbdataReference(conn);
     }
 
     ConnStateData *pinnedConnection() {
-	return pinned_connection;
+        return pinned_connection;
     }
 
     void releasePinnedConnection() {
-	cbdataReferenceDone(pinned_connection);
+        cbdataReferenceDone(pinned_connection);
     }
 
 private:
@@ -204,7 +201,7 @@ protected:
     virtual bool sanityCheckStartLine(MemBuf *buf, http_status *error);
 
     virtual void hdrCacheInit();
-    
+
     virtual bool inheritProperties(const HttpMsg *aMsg);
 };
 

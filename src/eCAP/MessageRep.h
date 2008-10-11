@@ -11,7 +11,8 @@
 #include <libecap/common/header.h>
 #include <libecap/common/body.h>
 
-namespace Ecap {
+namespace Ecap
+{
 
 class XactionRep;
 

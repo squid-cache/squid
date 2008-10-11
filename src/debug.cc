@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -66,8 +66,7 @@ _db_print(const char *format,...)
 {
 #else
 _db_print(va_alist)
-va_dcl
-{
+va_dcl {
     const char *format = NULL;
 #endif
 
@@ -84,8 +83,7 @@ va_dcl
 #ifdef _SQUID_MSWIN_
     /* Multiple WIN32 threads may call this simultaneously */
 
-    if (!dbg_mutex)
-    {
+    if (!dbg_mutex) {
         HMODULE krnl_lib = GetModuleHandle("Kernel32");
         PFInitializeCriticalSectionAndSpinCount InitializeCriticalSectionAndSpinCount = NULL;
 
@@ -175,7 +173,7 @@ _db_print_file(const char *format, va_list args) {
     vfprintf(debug_log, format, args);
 
 //*AYJ:*/    if (!Config.onoff.buffered_logs)
-        fflush(debug_log);
+    fflush(debug_log);
 }
 
 static void
@@ -230,7 +228,7 @@ debugArg(const char *arg) {
     l = atoi(arg);
     assert(s >= -1);
 
-    if(s >= MAX_DEBUG_SECTIONS)
+    if (s >= MAX_DEBUG_SECTIONS)
         s = MAX_DEBUG_SECTIONS-1;
 
     if (l < 0)
@@ -290,109 +288,109 @@ static struct syslog_facility_name {
 syslog_facility_names[] = {
 
 #ifdef LOG_AUTH
-                              {
-                                  "auth", LOG_AUTH
-                              },
+    {
+        "auth", LOG_AUTH
+    },
 #endif
 #ifdef LOG_AUTHPRIV
-                              {
-                                  "authpriv", LOG_AUTHPRIV
-                              },
+    {
+        "authpriv", LOG_AUTHPRIV
+    },
 #endif
 #ifdef LOG_CRON
-                              {
-                                  "cron", LOG_CRON
-                              },
+    {
+        "cron", LOG_CRON
+    },
 #endif
 #ifdef LOG_DAEMON
-                              {
-                                  "daemon", LOG_DAEMON
-                              },
+    {
+        "daemon", LOG_DAEMON
+    },
 #endif
 #ifdef LOG_FTP
-                              {
-                                  "ftp", LOG_FTP
-                              },
+    {
+        "ftp", LOG_FTP
+    },
 #endif
 #ifdef LOG_KERN
-                              {
-                                  "kern", LOG_KERN
-                              },
+    {
+        "kern", LOG_KERN
+    },
 #endif
 #ifdef LOG_LPR
-                              {
-                                  "lpr", LOG_LPR
-                              },
+    {
+        "lpr", LOG_LPR
+    },
 #endif
 #ifdef LOG_MAIL
-                              {
-                                  "mail", LOG_MAIL
-                              },
+    {
+        "mail", LOG_MAIL
+    },
 #endif
 #ifdef LOG_NEWS
-                              {
-                                  "news", LOG_NEWS
-                              },
+    {
+        "news", LOG_NEWS
+    },
 #endif
 #ifdef LOG_SYSLOG
-                              {
-                                  "syslog", LOG_SYSLOG
-                              },
+    {
+        "syslog", LOG_SYSLOG
+    },
 #endif
 #ifdef LOG_USER
-                              {
-                                  "user", LOG_USER
-                              },
+    {
+        "user", LOG_USER
+    },
 #endif
 #ifdef LOG_UUCP
-                              {
-                                  "uucp", LOG_UUCP
-                              },
+    {
+        "uucp", LOG_UUCP
+    },
 #endif
 #ifdef LOG_LOCAL0
-                              {
-                                  "local0", LOG_LOCAL0
-                              },
+    {
+        "local0", LOG_LOCAL0
+    },
 #endif
 #ifdef LOG_LOCAL1
-                              {
-                                  "local1", LOG_LOCAL1
-                              },
+    {
+        "local1", LOG_LOCAL1
+    },
 #endif
 #ifdef LOG_LOCAL2
-                              {
-                                  "local2", LOG_LOCAL2
-                              },
+    {
+        "local2", LOG_LOCAL2
+    },
 #endif
 #ifdef LOG_LOCAL3
-                              {
-                                  "local3", LOG_LOCAL3
-                              },
+    {
+        "local3", LOG_LOCAL3
+    },
 #endif
 #ifdef LOG_LOCAL4
-                              {
-                                  "local4", LOG_LOCAL4
-                              },
+    {
+        "local4", LOG_LOCAL4
+    },
 #endif
 #ifdef LOG_LOCAL5
-                              {
-                                  "local5", LOG_LOCAL5
-                              },
+    {
+        "local5", LOG_LOCAL5
+    },
 #endif
 #ifdef LOG_LOCAL6
-                              {
-                                  "local6", LOG_LOCAL6
-                              },
+    {
+        "local6", LOG_LOCAL6
+    },
 #endif
 #ifdef LOG_LOCAL7
-                              {
-                                  "local7", LOG_LOCAL7
-                              },
+    {
+        "local7", LOG_LOCAL7
+    },
 #endif
-                              {
-                                  NULL, 0
-                              }
-                          };
+    {
+        NULL, 0
+    }
+};
 
 #endif
 
@@ -438,7 +436,7 @@ Debug::parseOptions(char const *options) {
     char *p = NULL;
     char *s = NULL;
 
-    if(Config.onoff.debug_override_X) {
+    if (Config.onoff.debug_override_X) {
         debugs(0, 9, "command-line -X overrides: " << options);
         return;
     }
@@ -505,7 +503,7 @@ _db_rotate_log(void) {
 #ifdef _SQUID_MSWIN_
 
         remove
-            (to);
+        (to);
 
 #endif
 
@@ -527,7 +525,7 @@ _db_rotate_log(void) {
 #ifdef _SQUID_MSWIN_
 
         remove
-            (to);
+        (to);
 
 #endif
 
@@ -579,15 +577,15 @@ xassert(const char *msg, const char *file, int line) {
  *
  * Rationale
  * ---------
- * 
+ *
  * When you have a long nested processing sequence, it is often impossible
  * for low level routines to know in what larger context they operate. If a
  * routine coredumps, one can restore the context using debugger trace.
  * However, in many case you do not want to coredump, but just want to report
  * a potential problem. A report maybe useless out of problem context.
- * 
+ *
  * To solve this potential problem, use the following approach:
- * 
+ *
  * int
  * top_level_foo(const char *url)
  * {
@@ -601,7 +599,7 @@ xassert(const char *msg, const char *file, int line) {
  *      // exit, clean after yourself
  *      ctx_exit(ctx);
  * }
- * 
+ *
  * void
  * bottom_level_boo(int status, void *data)
  * {
@@ -611,32 +609,32 @@ xassert(const char *msg, const char *file, int line) {
  *      debugs(13, 6, "DOS attack detected, data: " << data);
  *      ...
  * }
- * 
+ *
  * Current implementation is extremely simple but still very handy. It has a
  * negligible overhead (descriptions are not duplicated).
- * 
+ *
  * When the _first_ debug message for a given context is printed, it is
  * prepended with the current context description. Context is printed with
  * the same debugging level as the original message.
- * 
+ *
  * Note that we do not print context every type you do ctx_enter(). This
  * approach would produce too many useless messages.  For the same reason, a
  * context description is printed at most _once_ even if you have 10
  * debugging messages within one context.
- * 
+ *
  * Contexts can be nested, of course. You must use ctx_enter() to enter a
  * context (push it onto stack).  It is probably safe to exit several nested
  * contexts at _once_ by calling ctx_exit() at the top level (this will pop
  * all context till current one). However, as in any stack, you cannot start
  * in the middle.
- * 
- * Analysis: 
+ *
+ * Analysis:
  * i)   locate debugging message,
  * ii)  locate current context by going _upstream_ in your log file,
  * iii) hack away.
  *
  *
- * To-Do: 
+ * To-Do:
  * -----
  *
  *       decide if we want to dup() descriptions (adds overhead) but allows to
@@ -772,10 +770,10 @@ Debug::finishDebug() {
 // Relies on assert macro calling xassert() without a specific scope.
 void
 Debug::xassert(const char *msg, const char *file, int line) {
-	
+
     if (CurrentDebug) {
         *CurrentDebug << "assertion failed: " << file << ":" << line <<
-            ": \"" << msg << "\"";
+        ": \"" << msg << "\"";
     }
     abort();
 }

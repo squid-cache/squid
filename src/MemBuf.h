@@ -18,12 +18,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -150,7 +150,7 @@ public:
     /**
      \deprecated use space*() and content*() methods to access safely instead.
      * public, read-only.
-     * 
+     *
      \todo XXX: hide these members completely and remove 0-termination
      *          so that consume() does not need to memmove all the time
      */
@@ -169,7 +169,7 @@ public:
      \deprecated Use interface function instead
      \todo XXX: make these private after converting memBuf*() functions to methods
      */
-    mb_size_t capacity;	
+    mb_size_t capacity;
 
     unsigned stolen:1;		/* the buffer has been stolen for use by someone else */
 

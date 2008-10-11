@@ -18,18 +18,15 @@ public:
     int _buffer_calls;
     int _flush_calls;
 
-    virtual void buffer()
-    {
+    virtual void buffer() {
         _buffer_calls += 1;
     }
 
-    virtual void flush()
-    {
+    virtual void flush() {
         _flush_calls += 1;
     }
 
-    virtual void append(char const * buf, int len)
-    {
+    virtual void append(char const * buf, int len) {
         _appended_text.append(buf, len);
     }
 };

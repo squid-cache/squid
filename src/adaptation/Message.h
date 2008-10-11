@@ -12,7 +12,8 @@ class HttpMsg;
 class BodyPipe;
 typedef RefCount<BodyPipe> BodyPipePointer;
 
-namespace Adaptation {
+namespace Adaptation
+{
 
 // Manages the header and the body of an HTTP message being worked on.
 // Adaptation transactions use this class for virgin and adapted HTTP messages.
@@ -31,7 +32,7 @@ public:
     void clear();
     void set(Header *aHeader);
 
-	static void ShortCircuit(Message &src, Message &dest);
+    static void ShortCircuit(Message &src, Message &dest);
 
 public:
     // virgin or adapted message being worked on
@@ -39,7 +40,7 @@ public:
 
     /// Copy of header->body_pipe, in case somebody moves the original.
     /// \todo Find and fix the code that moves (if any) and remove this.
-	BodyPipePointer body_pipe;
+    BodyPipePointer body_pipe;
 
 private:
     Message(const Message &); // not implemented

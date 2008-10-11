@@ -19,12 +19,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -81,26 +81,26 @@ public:
 protected:
     // Transfer-* extension list representation
     // maintains wordlist and does parsing/matching
-    class TransferList {
-        public:
-            TransferList();
-            ~TransferList();
+    class TransferList
+    {
+    public:
+        TransferList();
+        ~TransferList();
 
-            bool matches(const String &urlPath) const;
+        bool matches(const String &urlPath) const;
 
-            void parse(const String &buf, bool &foundStar);
-            void add(const char *extension);
-            void report(int level, const char *prefix) const;
+        void parse(const String &buf, bool &foundStar);
+        void add(const char *extension);
+        void report(int level, const char *prefix) const;
 
-        public:
-            wordlist *extensions; // TODO: optimize with a hash of some sort
-            const char *name;  // header name, mostly for debugging
-            TransferKind kind; // to simplify caller's life
+    public:
+        wordlist *extensions; // TODO: optimize with a hash of some sort
+        const char *name;  // header name, mostly for debugging
+        TransferKind kind; // to simplify caller's life
     };
 
     // varios Transfer-* lists
-    struct Transfers
-    {
+    struct Transfers {
         TransferList preview;
         TransferList ignore;
         TransferList complete;

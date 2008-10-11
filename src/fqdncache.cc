@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -93,8 +93,7 @@ typedef struct _fqdncache_entry fqdncache_entry;
  * where structures of type fqdncache_entry whose most
  * interesting members are:
  */
-struct _fqdncache_entry
-{
+struct _fqdncache_entry {
     hash_link hash;		/* must be first */
     time_t lastref;
     time_t expires;
@@ -108,16 +107,14 @@ struct _fqdncache_entry
     dlink_node lru;
     unsigned short locks;
 
-    struct
-    {
+    struct {
         unsigned int negcached:1;
         unsigned int fromhosts:1;
     } flags;
 };
 
 /// \ingroup FQDNCacheInternal
-static struct _fqdn_cache_stats
-{
+static struct _fqdn_cache_stats {
     int requests;
     int replies;
     int hits;
@@ -529,8 +526,7 @@ fqdncache_nbgethostbyaddr(IPAddress &addr, FQDNH * handler, void *handlerData)
     debugs(35, 4, "fqdncache_nbgethostbyaddr: Name '" << name << "'.");
     FqdncacheStats.requests++;
 
-    if (name[0] == '\0')
-    {
+    if (name[0] == '\0') {
         debugs(35, 4, "fqdncache_nbgethostbyaddr: Invalid name!");
         dns_error_message = "Invalid hostname";
         handler(NULL, handlerData);
@@ -539,17 +535,14 @@ fqdncache_nbgethostbyaddr(IPAddress &addr, FQDNH * handler, void *handlerData)
 
     f = fqdncache_get(name);
 
-    if (NULL == f)
-    {
+    if (NULL == f) {
         /* miss */
         (void) 0;
-    } else if (fqdncacheExpiredEntry(f))
-    {
+    } else if (fqdncacheExpiredEntry(f)) {
         /* hit, but expired -- bummer */
         fqdncacheRelease(f);
         f = NULL;
-    } else
-    {
+    } else {
         /* hit */
         debugs(35, 4, "fqdncache_nbgethostbyaddr: HIT for '" << name << "'");
 
@@ -587,8 +580,8 @@ static void
 fqdncacheRegisterWithCacheManager(void)
 {
     CacheManager::GetInstance()->
-        registerAction("fqdncache", "FQDN Cache Stats and Contents",
-                       fqdnStats, 0, 1);
+    registerAction("fqdncache", "FQDN Cache Stats and Contents",
+                   fqdnStats, 0, 1);
 
 }
 
@@ -651,20 +644,16 @@ fqdncache_gethostbyaddr(IPAddress &addr, int flags)
     FqdncacheStats.requests++;
     f = fqdncache_get(name);
 
-    if (NULL == f)
-    {
+    if (NULL == f) {
         (void) 0;
-    } else if (fqdncacheExpiredEntry(f))
-    {
+    } else if (fqdncacheExpiredEntry(f)) {
         fqdncacheRelease(f);
         f = NULL;
-    } else if (f->flags.negcached)
-    {
+    } else if (f->flags.negcached) {
         FqdncacheStats.negative_hits++;
         dns_error_message = f->error_message;
         return NULL;
-    } else
-    {
+    } else {
         FqdncacheStats.hits++;
         f->lastref = squid_curtime;
         dns_error_message = f->error_message;
@@ -675,8 +664,7 @@ fqdncache_gethostbyaddr(IPAddress &addr, int flags)
 
     FqdncacheStats.misses++;
 
-    if (flags & FQDN_LOOKUP_IF_MISS)
-    {
+    if (flags & FQDN_LOOKUP_IF_MISS) {
         fqdncache_nbgethostbyaddr(addr, dummy_handler, NULL);
     }
 
@@ -948,7 +936,7 @@ const char *
 dns_error_message_safe()
 {
     if (dns_error_message)
-		return dns_error_message;
-	debugs(35,DBG_IMPORTANT, "Internal error: lost DNS error info");
-	return "lost DNS error";
+        return dns_error_message;
+    debugs(35,DBG_IMPORTANT, "Internal error: lost DNS error info");
+    return "lost DNS error";
 }

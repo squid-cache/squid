@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -222,7 +222,7 @@ storeDirSelectSwapDirRoundRobin(const StoreEntry * e)
  *
  * Note: We should modify this later on to prefer sticking objects
  * in the *tightest fit* swapdir to conserve space, along with the
- * actual swapdir usage. But for now, this hack will do while  
+ * actual swapdir usage. But for now, this hack will do while
  * testing, so you should order your swapdirs in the config file
  * from smallest maxobjsize to unlimited (-1) maxobjsize.
  *
@@ -320,10 +320,10 @@ storeDirSwapLog(const StoreEntry * e, int op)
 
     assert(op > SWAP_LOG_NOP && op < SWAP_LOG_MAX);
 
-    debugs(20, 3, "storeDirSwapLog: " << 
-           swap_log_op_str[op] << " " <<  
-           e->getMD5Text() << " " <<  
-           e->swap_dirn << " " << 
+    debugs(20, 3, "storeDirSwapLog: " <<
+           swap_log_op_str[op] << " " <<
+           e->getMD5Text() << " " <<
+           e->swap_dirn << " " <<
            std::hex << std::uppercase << std::setfill('0') << std::setw(8) << e->swap_filen);
 
     dynamic_cast<SwapDir *>(INDEXSD(e->swap_dirn))->logEntry(*e, op);
@@ -410,7 +410,7 @@ storeDirCloseSwapLogs(void)
 
 /*
  *  storeDirWriteCleanLogs
- * 
+ *
  *  Writes a "clean" swap log file from in-memory metadata.
  *  This is a rewrite of the original function to troll each
  *  StoreDir and write the logs, and flush at the end of
@@ -522,7 +522,7 @@ StoreController::sync(void)
 }
 
 /*
- * handle callbacks all avaliable fs'es 
+ * handle callbacks all avaliable fs'es
  */
 int
 StoreController::callback()
@@ -641,7 +641,7 @@ free_cachedir(SquidConfig::_cacheSwap * swap)
     for (i = 0; i < swap->n_configured; i++) {
         /* TODO XXX this lets the swapdir free resources asynchronously
         * swap->swapDirs[i]->deactivate();
-        * but there may be such a means already. 
+        * but there may be such a means already.
         * RBC 20041225
         */
         swap->swapDirs[i] = NULL;
@@ -690,7 +690,7 @@ StoreController::dereference(StoreEntry & e)
 StoreEntry *
 
 StoreController::get
-    (const cache_key *key)
+(const cache_key *key)
 {
 
     return swapDir->get
@@ -700,7 +700,7 @@ StoreController::get
 void
 
 StoreController::get
-    (String const key, STOREGETCLIENT callback, void *cbdata)
+(String const key, STOREGETCLIENT callback, void *cbdata)
 {
     fatal("not implemented");
 }
@@ -708,7 +708,7 @@ StoreController::get
 StoreHashIndex::StoreHashIndex()
 {
     if (store_table)
-	abort();
+        abort();
     assert (store_table == NULL);
 }
 
@@ -765,7 +765,7 @@ StoreHashIndex::create()
 StoreEntry *
 
 StoreHashIndex::get
-    (const cache_key *key)
+(const cache_key *key)
 {
     PROF_start(storeGet);
     debugs(20, 3, "storeGet: looking up " << storeKeyText(key));
@@ -777,7 +777,7 @@ StoreHashIndex::get
 void
 
 StoreHashIndex::get
-    (String const key, STOREGETCLIENT callback, void *cbdata)
+(String const key, STOREGETCLIENT callback, void *cbdata)
 {
     fatal("not implemented");
 }
@@ -809,7 +809,7 @@ StoreHashIndex::init()
          * driven by the StoreHashIndex, not by each store.
         *
         * That is, the HashIndex should perform a search of each dir it is
-        * indexing to do the hash insertions. The search is then able to 
+        * indexing to do the hash insertions. The search is then able to
         * decide 'from-memory', or 'from-clean-log' or 'from-dirty-log' or
         * 'from-no-log'.
         *

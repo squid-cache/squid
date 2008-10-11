@@ -23,9 +23,7 @@
 #define C	0xB
 
 static void next(void);
-static unsigned x[3] =
-{X0, X1, X2}, a[3] =
-{A0, A1, A2}, c = C;
+static unsigned x[3] = {X0, X1, X2}, a[3] = {A0, A1, A2}, c = C;
 
 double drand48(void);
 
@@ -49,7 +47,7 @@ next(void)
     ADDEQU(p[1], q[0], carry0);
     MUL(a[1], x[0], r);
     x[2] = LOW(carry0 + carry1 + CARRY(p[1], r[0]) + q[1] + r[1] +
-	a[0] * x[2] + a[1] * x[1] + a[2] * x[0]);
+               a[0] * x[2] + a[1] * x[1] + a[2] * x[0]);
     x[1] = LOW(p[1] + r[0]);
     x[0] = LOW(p[0]);
 }

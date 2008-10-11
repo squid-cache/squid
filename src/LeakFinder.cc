@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -71,7 +71,7 @@ LeakFinder::LeakFinder()
 void *
 
 LeakFinder::add
-    (void *p, const char *file, int line)
+(void *p, const char *file, int line)
 {
     assert(hash_lookup(table, p) == NULL);
     LeakFinderPtr *c = new LeakFinderPtr(p, file, line);
@@ -138,8 +138,8 @@ LeakFinder::dump()
     LeakFinderPtr *c;
 
     while ((c = (LeakFinderPtr *)hash_next(table))) {
-         debugs(45, 1, std::setw(20) << c->key << " last used " << std::setw(9) << (squid_curtime - c->when) << 
-                " seconds ago by " << c->file << ":" << c->line);
+        debugs(45, 1, std::setw(20) << c->key << " last used " << std::setw(9) << (squid_curtime - c->when) <<
+               " seconds ago by " << c->file << ":" << c->line);
     }
 }
 

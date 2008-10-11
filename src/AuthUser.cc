@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -243,8 +243,7 @@ AuthUser::removeIp(IPAddress ipaddr)
 {
     auth_user_ip_t *ipdata = (auth_user_ip_t *) ip_list.head;
 
-    while (ipdata)
-    {
+    while (ipdata) {
         /* walk the ip list */
 
         if (ipdata->ipaddr == ipaddr) {
@@ -275,8 +274,7 @@ AuthUser::addIp(IPAddress ipaddr)
      * preventing old entries being flushed and locking a user out after
      * a timeout+reconfigure
      */
-    while (ipdata)
-    {
+    while (ipdata) {
         auth_user_ip_t *tempnode = (auth_user_ip_t *) ipdata->node.next;
         /* walk the ip list */
 

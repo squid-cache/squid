@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -43,19 +43,19 @@
 
 /*
  * On naming conventions:
- * 
- * HTTP/1.1 defines message-header as 
- * 
+ *
+ * HTTP/1.1 defines message-header as
+ *
  * message-header = field-name ":" [ field-value ] CRLF
  * field-name     = token
  * field-value    = *( field-content | LWS )
- * 
+ *
  * HTTP/1.1 does not give a name name a group of all message-headers in a message.
  * Squid 1.1 seems to refer to that group _plus_ start-line as "headers".
- * 
+ *
  * HttpHeader is an object that represents all message-headers in a message.
  * HttpHeader does not manage start-line.
- * 
+ *
  * HttpHeader is implemented as a collection of header "entries".
  * An entry is a (field_id, field_name, field_value) triplet.
  */
@@ -66,85 +66,84 @@
  */
 
 /*
- * A table with major attributes for every known field. 
- * We calculate name lengths and reorganize this array on start up. 
+ * A table with major attributes for every known field.
+ * We calculate name lengths and reorganize this array on start up.
  * After reorganization, field id can be used as an index to the table.
  */
-static const HttpHeaderFieldAttrs HeadersAttrs[] =
-    {
-        {"Accept", HDR_ACCEPT, ftStr},
+static const HttpHeaderFieldAttrs HeadersAttrs[] = {
+    {"Accept", HDR_ACCEPT, ftStr},
 
-        {"Accept-Charset", HDR_ACCEPT_CHARSET, ftStr},
-        {"Accept-Encoding", HDR_ACCEPT_ENCODING, ftStr},
-        {"Accept-Language", HDR_ACCEPT_LANGUAGE, ftStr},
-        {"Accept-Ranges", HDR_ACCEPT_RANGES, ftStr},
-        {"Age", HDR_AGE, ftInt},
-        {"Allow", HDR_ALLOW, ftStr},
-        {"Authorization", HDR_AUTHORIZATION, ftStr},	/* for now */
-        {"Cache-Control", HDR_CACHE_CONTROL, ftPCc},
-        {"Connection", HDR_CONNECTION, ftStr},
-        {"Content-Base", HDR_CONTENT_BASE, ftStr},
-        {"Content-Encoding", HDR_CONTENT_ENCODING, ftStr},
-        {"Content-Language", HDR_CONTENT_LANGUAGE, ftStr},
-        {"Content-Length", HDR_CONTENT_LENGTH, ftInt64},
-        {"Content-Location", HDR_CONTENT_LOCATION, ftStr},
-        {"Content-MD5", HDR_CONTENT_MD5, ftStr},	/* for now */
-        {"Content-Range", HDR_CONTENT_RANGE, ftPContRange},
-        {"Content-Type", HDR_CONTENT_TYPE, ftStr},
-        {"Cookie", HDR_COOKIE, ftStr},
-        {"Date", HDR_DATE, ftDate_1123},
-        {"ETag", HDR_ETAG, ftETag},
-        {"Expires", HDR_EXPIRES, ftDate_1123},
-        {"From", HDR_FROM, ftStr},
-        {"Host", HDR_HOST, ftStr},
-        {"If-Match", HDR_IF_MATCH, ftStr},	/* for now */
-        {"If-Modified-Since", HDR_IF_MODIFIED_SINCE, ftDate_1123},
-        {"If-None-Match", HDR_IF_NONE_MATCH, ftStr},	/* for now */
-        {"If-Range", HDR_IF_RANGE, ftDate_1123_or_ETag},
-        {"Keep-Alive", HDR_KEEP_ALIVE, ftStr},
-        {"Last-Modified", HDR_LAST_MODIFIED, ftDate_1123},
-        {"Link", HDR_LINK, ftStr},
-        {"Location", HDR_LOCATION, ftStr},
-        {"Max-Forwards", HDR_MAX_FORWARDS, ftInt},
-        {"Mime-Version", HDR_MIME_VERSION, ftStr},	/* for now */
-        {"Pragma", HDR_PRAGMA, ftStr},
-        {"Proxy-Authenticate", HDR_PROXY_AUTHENTICATE, ftStr},
-        {"Proxy-Authentication-Info", HDR_PROXY_AUTHENTICATION_INFO, ftStr},
-        {"Proxy-Authorization", HDR_PROXY_AUTHORIZATION, ftStr},
-        {"Proxy-Connection", HDR_PROXY_CONNECTION, ftStr},
-	{"Proxy-support", HDR_PROXY_SUPPORT, ftStr},
-        {"Public", HDR_PUBLIC, ftStr},
-        {"Range", HDR_RANGE, ftPRange},
-        {"Referer", HDR_REFERER, ftStr},
-        {"Request-Range", HDR_REQUEST_RANGE, ftPRange},	/* usually matches HDR_RANGE */
-        {"Retry-After", HDR_RETRY_AFTER, ftStr},	/* for now (ftDate_1123 or ftInt!) */
-        {"Server", HDR_SERVER, ftStr},
-        {"Set-Cookie", HDR_SET_COOKIE, ftStr},
-        {"TE", HDR_TE, ftStr},
-        {"Title", HDR_TITLE, ftStr},
-        {"Trailers", HDR_TRAILERS, ftStr},
-        {"Transfer-Encoding", HDR_TRANSFER_ENCODING, ftStr},
-        {"Upgrade", HDR_UPGRADE, ftStr},	/* for now */
-        {"User-Agent", HDR_USER_AGENT, ftStr},
-        {"Vary", HDR_VARY, ftStr},	/* for now */
-        {"Via", HDR_VIA, ftStr},	/* for now */
-        {"Warning", HDR_WARNING, ftStr},	/* for now */
-        {"WWW-Authenticate", HDR_WWW_AUTHENTICATE, ftStr},
-        {"Authentication-Info", HDR_AUTHENTICATION_INFO, ftStr},
-        {"X-Cache", HDR_X_CACHE, ftStr},
-        {"X-Cache-Lookup", HDR_X_CACHE_LOOKUP, ftStr},
-        {"X-Forwarded-For", HDR_X_FORWARDED_FOR, ftStr},
-        {"X-Request-URI", HDR_X_REQUEST_URI, ftStr},
-        {"X-Squid-Error", HDR_X_SQUID_ERROR, ftStr},
-        {"Negotiate", HDR_NEGOTIATE, ftStr},
+    {"Accept-Charset", HDR_ACCEPT_CHARSET, ftStr},
+    {"Accept-Encoding", HDR_ACCEPT_ENCODING, ftStr},
+    {"Accept-Language", HDR_ACCEPT_LANGUAGE, ftStr},
+    {"Accept-Ranges", HDR_ACCEPT_RANGES, ftStr},
+    {"Age", HDR_AGE, ftInt},
+    {"Allow", HDR_ALLOW, ftStr},
+    {"Authorization", HDR_AUTHORIZATION, ftStr},	/* for now */
+    {"Cache-Control", HDR_CACHE_CONTROL, ftPCc},
+    {"Connection", HDR_CONNECTION, ftStr},
+    {"Content-Base", HDR_CONTENT_BASE, ftStr},
+    {"Content-Encoding", HDR_CONTENT_ENCODING, ftStr},
+    {"Content-Language", HDR_CONTENT_LANGUAGE, ftStr},
+    {"Content-Length", HDR_CONTENT_LENGTH, ftInt64},
+    {"Content-Location", HDR_CONTENT_LOCATION, ftStr},
+    {"Content-MD5", HDR_CONTENT_MD5, ftStr},	/* for now */
+    {"Content-Range", HDR_CONTENT_RANGE, ftPContRange},
+    {"Content-Type", HDR_CONTENT_TYPE, ftStr},
+    {"Cookie", HDR_COOKIE, ftStr},
+    {"Date", HDR_DATE, ftDate_1123},
+    {"ETag", HDR_ETAG, ftETag},
+    {"Expires", HDR_EXPIRES, ftDate_1123},
+    {"From", HDR_FROM, ftStr},
+    {"Host", HDR_HOST, ftStr},
+    {"If-Match", HDR_IF_MATCH, ftStr},	/* for now */
+    {"If-Modified-Since", HDR_IF_MODIFIED_SINCE, ftDate_1123},
+    {"If-None-Match", HDR_IF_NONE_MATCH, ftStr},	/* for now */
+    {"If-Range", HDR_IF_RANGE, ftDate_1123_or_ETag},
+    {"Keep-Alive", HDR_KEEP_ALIVE, ftStr},
+    {"Last-Modified", HDR_LAST_MODIFIED, ftDate_1123},
+    {"Link", HDR_LINK, ftStr},
+    {"Location", HDR_LOCATION, ftStr},
+    {"Max-Forwards", HDR_MAX_FORWARDS, ftInt},
+    {"Mime-Version", HDR_MIME_VERSION, ftStr},	/* for now */
+    {"Pragma", HDR_PRAGMA, ftStr},
+    {"Proxy-Authenticate", HDR_PROXY_AUTHENTICATE, ftStr},
+    {"Proxy-Authentication-Info", HDR_PROXY_AUTHENTICATION_INFO, ftStr},
+    {"Proxy-Authorization", HDR_PROXY_AUTHORIZATION, ftStr},
+    {"Proxy-Connection", HDR_PROXY_CONNECTION, ftStr},
+    {"Proxy-support", HDR_PROXY_SUPPORT, ftStr},
+    {"Public", HDR_PUBLIC, ftStr},
+    {"Range", HDR_RANGE, ftPRange},
+    {"Referer", HDR_REFERER, ftStr},
+    {"Request-Range", HDR_REQUEST_RANGE, ftPRange},	/* usually matches HDR_RANGE */
+    {"Retry-After", HDR_RETRY_AFTER, ftStr},	/* for now (ftDate_1123 or ftInt!) */
+    {"Server", HDR_SERVER, ftStr},
+    {"Set-Cookie", HDR_SET_COOKIE, ftStr},
+    {"TE", HDR_TE, ftStr},
+    {"Title", HDR_TITLE, ftStr},
+    {"Trailers", HDR_TRAILERS, ftStr},
+    {"Transfer-Encoding", HDR_TRANSFER_ENCODING, ftStr},
+    {"Upgrade", HDR_UPGRADE, ftStr},	/* for now */
+    {"User-Agent", HDR_USER_AGENT, ftStr},
+    {"Vary", HDR_VARY, ftStr},	/* for now */
+    {"Via", HDR_VIA, ftStr},	/* for now */
+    {"Warning", HDR_WARNING, ftStr},	/* for now */
+    {"WWW-Authenticate", HDR_WWW_AUTHENTICATE, ftStr},
+    {"Authentication-Info", HDR_AUTHENTICATION_INFO, ftStr},
+    {"X-Cache", HDR_X_CACHE, ftStr},
+    {"X-Cache-Lookup", HDR_X_CACHE_LOOKUP, ftStr},
+    {"X-Forwarded-For", HDR_X_FORWARDED_FOR, ftStr},
+    {"X-Request-URI", HDR_X_REQUEST_URI, ftStr},
+    {"X-Squid-Error", HDR_X_SQUID_ERROR, ftStr},
+    {"Negotiate", HDR_NEGOTIATE, ftStr},
 #if X_ACCELERATOR_VARY
-        {"X-Accelerator-Vary", HDR_X_ACCELERATOR_VARY, ftStr},
+    {"X-Accelerator-Vary", HDR_X_ACCELERATOR_VARY, ftStr},
 #endif
-        {"Surrogate-Capability", HDR_SURROGATE_CAPABILITY, ftStr},
-        {"Surrogate-Control", HDR_SURROGATE_CONTROL, ftPSc},
-        {"Front-End-Https", HDR_FRONT_END_HTTPS, ftStr},
-        {"Other:", HDR_OTHER, ftStr}	/* ':' will not allow matches */
-    };
+    {"Surrogate-Capability", HDR_SURROGATE_CAPABILITY, ftStr},
+    {"Surrogate-Control", HDR_SURROGATE_CONTROL, ftPSc},
+    {"Front-End-Https", HDR_FRONT_END_HTTPS, ftStr},
+    {"Other:", HDR_OTHER, ftStr}	/* ':' will not allow matches */
+};
 
 static HttpHeaderFieldInfo *Headers = NULL;
 
@@ -161,100 +160,93 @@ http_hdr_type &operator++ (http_hdr_type &aHeader)
  * Headers that are currently not recognized, are commented out.
  */
 static HttpHeaderMask ListHeadersMask;	/* set run-time using  ListHeadersArr */
-static http_hdr_type ListHeadersArr[] =
-    {
-        HDR_ACCEPT,
-        HDR_ACCEPT_CHARSET, HDR_ACCEPT_ENCODING, HDR_ACCEPT_LANGUAGE,
-        HDR_ACCEPT_RANGES, HDR_ALLOW,
-        HDR_CACHE_CONTROL,
-        HDR_CONTENT_ENCODING,
-        HDR_CONTENT_LANGUAGE,
-        HDR_CONNECTION,
-        HDR_IF_MATCH, HDR_IF_NONE_MATCH,
-        HDR_LINK, HDR_PRAGMA,
-        HDR_PROXY_CONNECTION,
-	HDR_PROXY_SUPPORT,
-        HDR_TRANSFER_ENCODING,
-        HDR_UPGRADE,
-        HDR_VARY,
-        HDR_VIA,
-        /* HDR_WARNING, */
-        HDR_WWW_AUTHENTICATE,
-        HDR_AUTHENTICATION_INFO,
-        HDR_PROXY_AUTHENTICATION_INFO,
-        /* HDR_EXPECT, HDR_TE, HDR_TRAILER */
+static http_hdr_type ListHeadersArr[] = {
+    HDR_ACCEPT,
+    HDR_ACCEPT_CHARSET, HDR_ACCEPT_ENCODING, HDR_ACCEPT_LANGUAGE,
+    HDR_ACCEPT_RANGES, HDR_ALLOW,
+    HDR_CACHE_CONTROL,
+    HDR_CONTENT_ENCODING,
+    HDR_CONTENT_LANGUAGE,
+    HDR_CONNECTION,
+    HDR_IF_MATCH, HDR_IF_NONE_MATCH,
+    HDR_LINK, HDR_PRAGMA,
+    HDR_PROXY_CONNECTION,
+    HDR_PROXY_SUPPORT,
+    HDR_TRANSFER_ENCODING,
+    HDR_UPGRADE,
+    HDR_VARY,
+    HDR_VIA,
+    /* HDR_WARNING, */
+    HDR_WWW_AUTHENTICATE,
+    HDR_AUTHENTICATION_INFO,
+    HDR_PROXY_AUTHENTICATION_INFO,
+    /* HDR_EXPECT, HDR_TE, HDR_TRAILER */
 #if X_ACCELERATOR_VARY
-        HDR_X_ACCELERATOR_VARY,
+    HDR_X_ACCELERATOR_VARY,
 #endif
-        HDR_SURROGATE_CAPABILITY,
-        HDR_SURROGATE_CONTROL,
-        HDR_X_FORWARDED_FOR
-    };
+    HDR_SURROGATE_CAPABILITY,
+    HDR_SURROGATE_CONTROL,
+    HDR_X_FORWARDED_FOR
+};
 
 /* general-headers */
-static http_hdr_type GeneralHeadersArr[] =
-    {
-        HDR_CACHE_CONTROL, HDR_CONNECTION, HDR_DATE, HDR_PRAGMA,
-        HDR_TRANSFER_ENCODING,
-        HDR_UPGRADE,
-        /* HDR_TRAILER, */
-        HDR_VIA,
-    };
+static http_hdr_type GeneralHeadersArr[] = {
+    HDR_CACHE_CONTROL, HDR_CONNECTION, HDR_DATE, HDR_PRAGMA,
+    HDR_TRANSFER_ENCODING,
+    HDR_UPGRADE,
+    /* HDR_TRAILER, */
+    HDR_VIA,
+};
 
 /* entity-headers */
-static http_hdr_type EntityHeadersArr[] =
-    {
-        HDR_ALLOW, HDR_CONTENT_BASE, HDR_CONTENT_ENCODING, HDR_CONTENT_LANGUAGE,
-        HDR_CONTENT_LENGTH, HDR_CONTENT_LOCATION, HDR_CONTENT_MD5,
-        HDR_CONTENT_RANGE, HDR_CONTENT_TYPE, HDR_ETAG, HDR_EXPIRES, HDR_LAST_MODIFIED, HDR_LINK,
-        HDR_OTHER
-    };
+static http_hdr_type EntityHeadersArr[] = {
+    HDR_ALLOW, HDR_CONTENT_BASE, HDR_CONTENT_ENCODING, HDR_CONTENT_LANGUAGE,
+    HDR_CONTENT_LENGTH, HDR_CONTENT_LOCATION, HDR_CONTENT_MD5,
+    HDR_CONTENT_RANGE, HDR_CONTENT_TYPE, HDR_ETAG, HDR_EXPIRES, HDR_LAST_MODIFIED, HDR_LINK,
+    HDR_OTHER
+};
 
 static HttpHeaderMask ReplyHeadersMask;		/* set run-time using ReplyHeaders */
-static http_hdr_type ReplyHeadersArr[] =
-    {
-        HDR_ACCEPT, HDR_ACCEPT_CHARSET, HDR_ACCEPT_ENCODING, HDR_ACCEPT_LANGUAGE,
-        HDR_ACCEPT_RANGES, HDR_AGE,
-        HDR_LOCATION, HDR_MAX_FORWARDS,
-        HDR_MIME_VERSION, HDR_PUBLIC, HDR_RETRY_AFTER, HDR_SERVER, HDR_SET_COOKIE,
-        HDR_VARY,
-        HDR_WARNING, HDR_PROXY_CONNECTION, HDR_X_CACHE,
-        HDR_X_CACHE_LOOKUP,
-        HDR_X_REQUEST_URI,
+static http_hdr_type ReplyHeadersArr[] = {
+    HDR_ACCEPT, HDR_ACCEPT_CHARSET, HDR_ACCEPT_ENCODING, HDR_ACCEPT_LANGUAGE,
+    HDR_ACCEPT_RANGES, HDR_AGE,
+    HDR_LOCATION, HDR_MAX_FORWARDS,
+    HDR_MIME_VERSION, HDR_PUBLIC, HDR_RETRY_AFTER, HDR_SERVER, HDR_SET_COOKIE,
+    HDR_VARY,
+    HDR_WARNING, HDR_PROXY_CONNECTION, HDR_X_CACHE,
+    HDR_X_CACHE_LOOKUP,
+    HDR_X_REQUEST_URI,
 #if X_ACCELERATOR_VARY
-        HDR_X_ACCELERATOR_VARY,
+    HDR_X_ACCELERATOR_VARY,
 #endif
-        HDR_X_SQUID_ERROR,
-        HDR_SURROGATE_CONTROL
-    };
+    HDR_X_SQUID_ERROR,
+    HDR_SURROGATE_CONTROL
+};
 
 static HttpHeaderMask RequestHeadersMask;	/* set run-time using RequestHeaders */
-static http_hdr_type RequestHeadersArr[] =
-    {
-        HDR_AUTHORIZATION, HDR_FROM, HDR_HOST,
-        HDR_IF_MATCH, HDR_IF_MODIFIED_SINCE, HDR_IF_NONE_MATCH,
-        HDR_IF_RANGE, HDR_MAX_FORWARDS, HDR_PROXY_CONNECTION,
-        HDR_PROXY_AUTHORIZATION, HDR_RANGE, HDR_REFERER, HDR_REQUEST_RANGE,
-        HDR_USER_AGENT, HDR_X_FORWARDED_FOR, HDR_SURROGATE_CAPABILITY
-    };
+static http_hdr_type RequestHeadersArr[] = {
+    HDR_AUTHORIZATION, HDR_FROM, HDR_HOST,
+    HDR_IF_MATCH, HDR_IF_MODIFIED_SINCE, HDR_IF_NONE_MATCH,
+    HDR_IF_RANGE, HDR_MAX_FORWARDS, HDR_PROXY_CONNECTION,
+    HDR_PROXY_AUTHORIZATION, HDR_RANGE, HDR_REFERER, HDR_REQUEST_RANGE,
+    HDR_USER_AGENT, HDR_X_FORWARDED_FOR, HDR_SURROGATE_CAPABILITY
+};
 
 static HttpHeaderMask HopByHopHeadersMask;
-static http_hdr_type HopByHopHeadersArr[] =
-    {
-        HDR_CONNECTION, HDR_KEEP_ALIVE, /*HDR_PROXY_AUTHENTICATE,*/ HDR_PROXY_AUTHORIZATION,
-        HDR_TE, HDR_TRAILERS, HDR_TRANSFER_ENCODING, HDR_UPGRADE, HDR_PROXY_CONNECTION
-    };
+static http_hdr_type HopByHopHeadersArr[] = {
+    HDR_CONNECTION, HDR_KEEP_ALIVE, /*HDR_PROXY_AUTHENTICATE,*/ HDR_PROXY_AUTHORIZATION,
+    HDR_TE, HDR_TRAILERS, HDR_TRANSFER_ENCODING, HDR_UPGRADE, HDR_PROXY_CONNECTION
+};
 
 /* header accounting */
-static HttpHeaderStat HttpHeaderStats[] =
-    {
-        {"all"},
+static HttpHeaderStat HttpHeaderStats[] = {
+    {"all"},
 #if USE_HTCP
-        {"HTCP reply"},
+    {"HTCP reply"},
 #endif
-        {"request"},
-        {"reply"}
-    };
+    {"request"},
+    {"reply"}
+};
 static int HttpHeaderStatCount = countof(HttpHeaderStats);
 
 static int HeaderEntryParsedCount = 0;
@@ -278,9 +270,9 @@ static void
 httpHeaderRegisterWithCacheManager(void)
 {
     CacheManager::GetInstance()->
-        registerAction("http_headers",
-                       "HTTP Header Statistics",
-                       httpHeaderStoreReport, 0, 1);
+    registerAction("http_headers",
+                   "HTTP Header Statistics",
+                   httpHeaderStoreReport, 0, 1);
 }
 
 void
@@ -509,8 +501,8 @@ HttpHeader::parse(const char *header_start, const char *header_end)
     HttpHeaderStats[owner].parsedCount++;
 
     if (memchr(header_start, '\0', header_end - header_start)) {
-        debugs(55, 1, "WARNING: HTTP header contains NULL characters {" << 
-                      getStringPrefix(header_start, header_end) << "}");
+        debugs(55, 1, "WARNING: HTTP header contains NULL characters {" <<
+               getStringPrefix(header_start, header_end) << "}");
         goto reset;
     }
 
@@ -537,7 +529,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
 
                 if (Config.onoff.relaxed_header_parser && field_end > this_line + 1 && field_end[-1] == '\r') {
                     debugs(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2,
-                    "WARNING: Double CR characters in HTTP header {" << getStringPrefix(field_start, field_end) << "}");
+                           "WARNING: Double CR characters in HTTP header {" << getStringPrefix(field_start, field_end) << "}");
                     field_end--;
                 }
             }
@@ -545,7 +537,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
             /* Barf on stray CR characters */
             if (memchr(this_line, '\r', field_end - this_line)) {
                 debugs(55, 1, "WARNING: suspicious CR characters in HTTP header {" <<
-                              getStringPrefix(field_start, field_end) << "}");
+                       getStringPrefix(field_start, field_end) << "}");
 
                 if (Config.onoff.relaxed_header_parser) {
                     char *p = (char *) this_line;	/* XXX Warning! This destroys original header content and violates specifications somewhat */
@@ -558,7 +550,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
 
             if (this_line + 1 == field_end && this_line > field_start) {
                 debugs(55, 1, "WARNING: Blank continuation line in HTTP header {" <<
-                              getStringPrefix(header_start, header_end) << "}");
+                       getStringPrefix(header_start, header_end) << "}");
                 goto reset;
             }
         } while (field_ptr < header_end && (*field_ptr == ' ' || *field_ptr == '\t'));
@@ -566,7 +558,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
         if (field_start == field_end) {
             if (field_ptr < header_end) {
                 debugs(55, 1, "WARNING: unparseable HTTP header field near {" <<
-                              getStringPrefix(field_start, header_end) << "}");
+                       getStringPrefix(field_start, header_end) << "}");
                 goto reset;
             }
 
@@ -574,10 +566,10 @@ HttpHeader::parse(const char *header_start, const char *header_end)
         }
 
         if ((e = HttpHeaderEntry::parse(field_start, field_end)) == NULL) {
-            debugs(55, 1, "WARNING: unparseable HTTP header field {" << 
-                          getStringPrefix(field_start, field_end) << "}");
+            debugs(55, 1, "WARNING: unparseable HTTP header field {" <<
+                   getStringPrefix(field_start, field_end) << "}");
             debugs(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2,
-            " in {" << getStringPrefix(header_start, header_end) << "}");
+                   " in {" << getStringPrefix(header_start, header_end) << "}");
 
             if (Config.onoff.relaxed_header_parser)
                 continue;
@@ -589,7 +581,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
             if (e->value.cmp(e2->value.buf()) != 0) {
                 int64_t l1, l2;
                 debugs(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2,
-                  "WARNING: found two conflicting content-length headers in {" << getStringPrefix(header_start, header_end) << "}");
+                       "WARNING: found two conflicting content-length headers in {" << getStringPrefix(header_start, header_end) << "}");
 
                 if (!Config.onoff.relaxed_header_parser) {
                     delete e;
@@ -611,7 +603,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
                 }
             } else {
                 debugs(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2,
-                "NOTICE: found double content-length header");
+                       "NOTICE: found double content-length header");
 
                 if (Config.onoff.relaxed_header_parser) {
                     delete e;
@@ -625,7 +617,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
 
         if (e->id == HDR_OTHER && stringHasWhitespace(e->name.buf())) {
             debugs(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2,
-                   "WARNING: found whitespace in HTTP header name {" << 
+                   "WARNING: found whitespace in HTTP header name {" <<
                    getStringPrefix(field_start, field_end) << "}");
 
             if (!Config.onoff.relaxed_header_parser) {
@@ -677,7 +669,7 @@ HttpHeader::getEntry(HttpHeaderPos * pos) const
 }
 
 /*
- * returns a pointer to a specified entry if any 
+ * returns a pointer to a specified entry if any
  * note that we return one entry so it does not make much sense to ask for
  * "list" headers
  */
@@ -734,7 +726,7 @@ HttpHeader::findLastEntry(http_hdr_type id) const
 }
 
 /*
- * deletes all fields with a given name if any, returns #fields deleted; 
+ * deletes all fields with a given name if any, returns #fields deleted;
  */
 int
 HttpHeader::delByName(const char *name)
@@ -818,7 +810,7 @@ HttpHeader::refreshMask()
     debugs(55, 7, "refreshing the mask in hdr " << this);
     HttpHeaderPos pos = HttpHeaderInitPos;
     while (HttpHeaderEntry *e = getEntry(&pos)) {
-       CBIT_SET(mask, e->id);
+        CBIT_SET(mask, e->id);
     }
 }
 
@@ -1308,7 +1300,7 @@ HttpHeader::getSc() const
         return NULL;
 
     String s;
-   
+
     (void) getList(HDR_SURROGATE_CONTROL, &s);
 
     HttpHdrSc *sc = httpHdrScParseCreate(&s);
@@ -1370,8 +1362,7 @@ HttpHeader::getAuth(http_hdr_type id, const char *auth_scheme) const
 ETag
 HttpHeader::getETag(http_hdr_type id) const
 {
-    ETag etag =
-        {NULL, -1};
+    ETag etag = {NULL, -1};
     HttpHeaderEntry *e;
     assert(Headers[id].type == ftETag);		/* must be of an appropriate type */
 
@@ -1453,7 +1444,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
 {
     /* note: name_start == field_start */
     const char *name_end = (const char *)memchr(field_start, ':', field_end - field_start);
-    int name_len = name_end ? name_end - field_start : 0;
+    int name_len = name_end ? name_end - field_start :0;
     const char *value_start = field_start + name_len + 1;	/* skip ':' */
     /* note: value_end == field_end */
 
@@ -1779,16 +1770,16 @@ void
 HttpHeader::removeHopByHopEntries()
 {
     removeConnectionHeaderEntries();
-    
+
     const HttpHeaderEntry *e;
     HttpHeaderPos pos = HttpHeaderInitPos;
     int headers_deleted = 0;
     while ((e = getEntry(&pos))) {
-	int id = e->id;
-	if(CBIT_TEST(HopByHopHeadersMask, id)){
-	    delAt(pos, headers_deleted);
-	    CBIT_CLR(mask, id);
-	}
+        int id = e->id;
+        if (CBIT_TEST(HopByHopHeadersMask, id)) {
+            delAt(pos, headers_deleted);
+            CBIT_CLR(mask, id);
+        }
     }
 }
 
@@ -1798,8 +1789,8 @@ HttpHeader::removeConnectionHeaderEntries()
     if (has(HDR_CONNECTION)) {
         /* anything that matches Connection list member will be deleted */
         String strConnection;
-	
-	(void) getList(HDR_CONNECTION, &strConnection);
+
+        (void) getList(HDR_CONNECTION, &strConnection);
         const HttpHeaderEntry *e;
         HttpHeaderPos pos = HttpHeaderInitPos;
         /*

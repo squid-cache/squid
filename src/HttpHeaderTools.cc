@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -247,9 +247,9 @@ strListGetItem(const String * str, char del, const char **item, int *ilen, const
 {
     size_t len;
     static char delim[3][8] = {
-			"\"?,",
-			"\"\\",
-			" ?,\t\r\n"
+        "\"?,",
+        "\"\\",
+        " ?,\t\r\n"
     };
     int quoted = 0;
     assert(str && item && pos);
@@ -336,7 +336,7 @@ httpHeaderParseOffset(const char *start, int64_t * value)
     errno = 0;
     int64_t res = strtoll(start, NULL, 10);
     if (!res && EINVAL == errno)	/* maybe not portable? */
-	return 0;
+        return 0;
     *value = res;
     return 1;
 }

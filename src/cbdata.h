@@ -18,12 +18,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -409,7 +409,7 @@ extern cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, in
 
 /**
  \ingroup CBDATAAPI
- * 
+ *
  * Initializes the cbdatatype. Must be called prior to the first use of cbdataAlloc() for the type.
  *
  \par
@@ -421,7 +421,7 @@ extern cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, in
 
 /**
  \ingroup CBDATAAPI
- * 
+ *
  * Initializes the cbdatatype. Must be called prior to the first use of cbdataAlloc() for the type.
  *
  \par
@@ -441,15 +441,14 @@ extern cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, in
  */
 class generic_cbdata
 {
-  public:
+public:
 
     generic_cbdata(void * data) : data(data) {}
 
-    template<typename wrapped_type>void unwrap(wrapped_type **output) 
-      {
-	*output = static_cast<wrapped_type *>(data);
-	delete this;
-      }
+    template<typename wrapped_type>void unwrap(wrapped_type **output) {
+        *output = static_cast<wrapped_type *>(data);
+        delete this;
+    }
 
     /**
      * The wrapped data - only public to allow the mild abuse of this facility
@@ -459,7 +458,7 @@ class generic_cbdata
      \todo CODE: make this a private field.
      */
     void *data; /* the wrapped data */
-  private:
+private:
     CBDATA_CLASS2(generic_cbdata);
 };
 

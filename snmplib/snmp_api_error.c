@@ -7,9 +7,9 @@
 /***************************************************************************
  *
  *           Copyright 1997 by Carnegie Mellon University
- * 
+ *
  *                       All Rights Reserved
- * 
+ *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose and without fee is hereby granted,
  * provided that the above copyright notice appear in all copies and that
@@ -17,7 +17,7 @@
  * supporting documentation, and that the name of CMU not be
  * used in advertising or publicity pertaining to distribution of the
  * software without specific, written prior permission.
- * 
+ *
  * CMU DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
  * ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
  * CMU BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR
@@ -25,9 +25,9 @@
  * WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
- * 
+ *
  * Author: Ryan Troll <ryan+@andrew.cmu.edu>
- * 
+ *
  ***************************************************************************/
 
 #ifdef HAVE_CONFIG_H
@@ -44,8 +44,7 @@
 
 int snmp_errno = 0;
 
-static const char *api_errors[17] =
-{
+static const char *api_errors[17] = {
     "Unknown Error",
     "Generic Error",
     "Invalid local port",
@@ -80,8 +79,8 @@ snmp_api_error(int err)
 {
     int foo = (err * -1);
     if ((foo < SNMPERR_GENERR) ||
-	(foo > SNMPERR_LAST))
-	foo = 0;
+            (foo > SNMPERR_LAST))
+        foo = 0;
 
     return (api_errors[foo]);
 }

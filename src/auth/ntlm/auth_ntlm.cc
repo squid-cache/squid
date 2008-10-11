@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -201,9 +201,9 @@ void
 AuthNTLMConfig::registerWithCacheManager(void)
 {
     CacheManager::GetInstance()->
-            registerAction("ntlmauthenticator",
-                           "NTLM User Authenticator Stats",
-                           authenticateNTLMStats, 0, 1);
+    registerAction("ntlmauthenticator",
+                   "NTLM User Authenticator Stats",
+                   authenticateNTLMStats, 0, 1);
 }
 
 bool
@@ -271,7 +271,7 @@ AuthNTLMConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, ht
 
     /* Need keep-alive */
     if (!request->flags.proxy_keepalive && request->flags.must_keepalive)
-	return;
+        return;
 
     /* New request, no user details */
     if (auth_user_request == NULL) {
@@ -388,18 +388,18 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
     if (strncasecmp(reply, "TT ", 3) == 0) {
         /* we have been given a blob to send to the client */
         safe_free(ntlm_request->server_blob);
-	ntlm_request->request->flags.must_keepalive = 1;
-	if (ntlm_request->request->flags.proxy_keepalive) {
-	    ntlm_request->server_blob = xstrdup(blob);
-	    ntlm_request->auth_state = AUTHENTICATE_STATE_IN_PROGRESS;
-	    auth_user_request->denyMessage("Authentication in progress");
-	    debugs(29, 4, "authenticateNTLMHandleReply: Need to challenge the client with a server blob '" << blob << "'");
-	    result = S_HELPER_RESERVE;
-	} else {
-	    ntlm_request->auth_state = AUTHENTICATE_STATE_FAILED;
-	    auth_user_request->denyMessage("NTLM authentication requires a persistent connection");
-	    result = S_HELPER_RELEASE;
-	}
+        ntlm_request->request->flags.must_keepalive = 1;
+        if (ntlm_request->request->flags.proxy_keepalive) {
+            ntlm_request->server_blob = xstrdup(blob);
+            ntlm_request->auth_state = AUTHENTICATE_STATE_IN_PROGRESS;
+            auth_user_request->denyMessage("Authentication in progress");
+            debugs(29, 4, "authenticateNTLMHandleReply: Need to challenge the client with a server blob '" << blob << "'");
+            result = S_HELPER_RESERVE;
+        } else {
+            ntlm_request->auth_state = AUTHENTICATE_STATE_FAILED;
+            auth_user_request->denyMessage("NTLM authentication requires a persistent connection");
+            result = S_HELPER_RELEASE;
+        }
     } else if (strncasecmp(reply, "AF ", 3) == 0) {
         /* we're finished, release the helper */
         ntlm_user->username(blob);
@@ -413,7 +413,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
         /* see if this is an existing user with a different proxy_auth
          * string */
         auth_user_hash_pointer *usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, ntlm_user->username()));
-	AuthUser *local_auth_user = ntlm_request->user();
+        AuthUser *local_auth_user = ntlm_request->user();
         while (usernamehash && (usernamehash->user()->auth_type != AUTH_NTLM || strcmp(usernamehash->user()->username(), ntlm_user->username()) != 0))
             usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
         if (usernamehash) {
@@ -433,7 +433,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
          * existing user or a new user */
         local_auth_user->expiretime = current_time.tv_sec;
         authenticateNTLMReleaseServer(ntlm_request);
-	ntlm_request->auth_state = AUTHENTICATE_STATE_DONE;
+        ntlm_request->auth_state = AUTHENTICATE_STATE_DONE;
     } else if (strncasecmp(reply, "NA ", 3) == 0) {
         /* authentication failure (wrong password, etc.) */
         auth_user_request->denyMessage(blob);
@@ -460,8 +460,8 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
     }
 
     if (ntlm_request->request) {
-	HTTPMSGUNLOCK(ntlm_request->request);
-	ntlm_request->request = NULL;
+        HTTPMSGUNLOCK(ntlm_request->request);
+        ntlm_request->request = NULL;
     }
     r->handler(r->data, NULL);
     cbdataReferenceDone(r->data);
@@ -535,8 +535,8 @@ authenticateNTLMReleaseServer(AuthUserRequest * auth_user_request)
      * yes, it is possible */
     assert(ntlm_request != NULL);
     if (ntlm_request->authserver) {
-	helperStatefulReleaseServer(ntlm_request->authserver);
-	ntlm_request->authserver = NULL;
+        helperStatefulReleaseServer(ntlm_request->authserver);
+        ntlm_request->authserver = NULL;
     }
 }
 
@@ -635,7 +635,7 @@ AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, h
     blob = proxy_auth;
 
     /* if proxy_auth is actually NULL, we'd better not manipulate it. */
-    if(blob) {
+    if (blob) {
         while (xisspace(*blob) && *blob)
             blob++;
 
@@ -657,9 +657,9 @@ AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, h
         conn->auth_type = AUTH_NTLM;
         assert(conn->auth_user_request == NULL);
         conn->auth_user_request = this;
-	AUTHUSERREQUESTLOCK(conn->auth_user_request, "conn");
-	this->request = request;
-	HTTPMSGLOCK(this->request);
+        AUTHUSERREQUESTLOCK(conn->auth_user_request, "conn");
+        this->request = request;
+        HTTPMSGLOCK(this->request);
         return;
 
         break;
@@ -679,18 +679,18 @@ AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, h
 
         client_blob = xstrdup (blob);
 
-	if (this->request)
-	    HTTPMSGUNLOCK(this->request);
-	this->request = request;
-	HTTPMSGLOCK(this->request);
+        if (this->request)
+            HTTPMSGUNLOCK(this->request);
+        this->request = request;
+        HTTPMSGLOCK(this->request);
         return;
 
         break;
 
     case AUTHENTICATE_STATE_DONE:
-	fatal("AuthNTLMUserRequest::authenticate: unexpect auth state DONE! Report a bug to the squid developers.\n");
+        fatal("AuthNTLMUserRequest::authenticate: unexpect auth state DONE! Report a bug to the squid developers.\n");
 
-	break;
+        break;
 
     case AUTHENTICATE_STATE_FAILED:
         /* we've failed somewhere in authentication */
@@ -705,7 +705,7 @@ AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, h
 }
 
 AuthNTLMUserRequest::AuthNTLMUserRequest() :
-    /*conn(NULL),*/ auth_state(AUTHENTICATE_STATE_NONE),
+        /*conn(NULL),*/ auth_state(AUTHENTICATE_STATE_NONE),
         _theUser(NULL)
 {
     waiting=0;
@@ -726,8 +726,8 @@ AuthNTLMUserRequest::~AuthNTLMUserRequest()
         authserver = NULL;
     }
     if (request) {
-	HTTPMSGUNLOCK(request);
-	request = NULL;
+        HTTPMSGUNLOCK(request);
+        request = NULL;
     }
 }
 

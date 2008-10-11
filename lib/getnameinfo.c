@@ -129,300 +129,298 @@
 #endif
 
 static const struct afd {
-	int a_af;
-	int a_addrlen;
-	int a_socklen;
-	int a_off;
-	int a_portoff;
+    int a_af;
+    int a_addrlen;
+    int a_socklen;
+    int a_off;
+    int a_portoff;
 } afdl [] = {
 #ifdef INET6
-	{PF_INET6, sizeof(struct in6_addr), sizeof(struct sockaddr_in6),
-	 offsetof(struct sockaddr_in6, sin6_addr),
-	 offsetof(struct sockaddr_in6, sin6_port)},
+    {PF_INET6, sizeof(struct in6_addr), sizeof(struct sockaddr_in6),
+        offsetof(struct sockaddr_in6, sin6_addr),
+        offsetof(struct sockaddr_in6, sin6_port)},
 #endif
-	{PF_INET, sizeof(struct in_addr), sizeof(struct sockaddr_in),
-	 offsetof(struct sockaddr_in, sin_addr),
-	 offsetof(struct sockaddr_in, sin_port)},
-	{0, 0, 0, 0, 0},
+    {PF_INET, sizeof(struct in_addr), sizeof(struct sockaddr_in),
+     offsetof(struct sockaddr_in, sin_addr),
+     offsetof(struct sockaddr_in, sin_port)},
+    {0, 0, 0, 0, 0},
 };
 
 #ifdef INET6
 static int ip6_parsenumeric __P((const struct sockaddr *, const char *, char *,
-				 size_t, int));
+                                 size_t, int));
 static int ip6_sa2str __P((const struct sockaddr_in6 *, char *, size_t, int));
 #endif
 
 int
 xgetnameinfo(sa, salen, host, hostlen, serv, servlen, flags)
-	const struct sockaddr *sa;
-	socklen_t salen;
-	char *host;
-	size_t hostlen;
-	char *serv;
-	size_t servlen;
-	int flags;
+const struct sockaddr *sa;
+socklen_t salen;
+char *host;
+size_t hostlen;
+char *serv;
+size_t servlen;
+int flags;
 {
-	const struct afd *afd;
-	struct servent *sp;
-	struct hostent *hp;
-	u_short port;
-	int family, i;
-	const char *addr;
-	u_int32_t v4a;
-	int h_error;
-	char numserv[512];
+    const struct afd *afd;
+    struct servent *sp;
+    struct hostent *hp;
+    u_short port;
+    int family, i;
+    const char *addr;
+    u_int32_t v4a;
+    int h_error;
+    char numserv[512];
 
-	if (sa == NULL)
-		return EAI_FAIL;
+    if (sa == NULL)
+        return EAI_FAIL;
 
 #ifdef HAVE_SA_LEN	/*XXX*/
-	if (sa->sa_len != salen)
-		return EAI_FAIL;
+    if (sa->sa_len != salen)
+        return EAI_FAIL;
 #endif
 
-	family = sa->sa_family;
-	for (i = 0; afdl[i].a_af; i++)
-		if (afdl[i].a_af == family) {
-			afd = &afdl[i];
-			goto found;
-		}
-	return EAI_FAMILY;
+    family = sa->sa_family;
+    for (i = 0; afdl[i].a_af; i++)
+        if (afdl[i].a_af == family) {
+            afd = &afdl[i];
+            goto found;
+        }
+    return EAI_FAMILY;
 
- found:
-	if (salen != afd->a_socklen)
-		return EAI_FAIL;
+found:
+    if (salen != afd->a_socklen)
+        return EAI_FAIL;
 
-	/* network byte order */
-	memcpy(&port, (const char *)sa + afd->a_portoff, sizeof(port));
-	addr = (const char *)sa + afd->a_off;
+    /* network byte order */
+    memcpy(&port, (const char *)sa + afd->a_portoff, sizeof(port));
+    addr = (const char *)sa + afd->a_off;
 
-	if (serv == NULL || servlen == 0) {
-		/*
-		 * do nothing in this case.
-		 * in case you are wondering if "&&" is more correct than
-		 * "||" here: RFC3493 says that serv == NULL OR servlen == 0
-		 * means that the caller does not want the result.
-		 */
-	} else {
-		if (flags & NI_NUMERICSERV)
-			sp = NULL;
-		else {
-			sp = getservbyport(port,
-				(flags & NI_DGRAM) ? "udp" : "tcp");
-		}
-		if (sp) {
-			if (strlen(sp->s_name) + 1 > servlen)
-				return EAI_OVERFLOW;
-			strncpy(serv, sp->s_name, servlen);
-		} else {
-			snprintf(numserv, sizeof(numserv), "%u", ntohs(port));
-			if (strlen(numserv) + 1 > servlen)
-				return EAI_OVERFLOW;
-			strncpy(serv, numserv, servlen);
-		}
-	}
+    if (serv == NULL || servlen == 0) {
+        /*
+         * do nothing in this case.
+         * in case you are wondering if "&&" is more correct than
+         * "||" here: RFC3493 says that serv == NULL OR servlen == 0
+         * means that the caller does not want the result.
+         */
+    } else {
+        if (flags & NI_NUMERICSERV)
+            sp = NULL;
+        else {
+            sp = getservbyport(port,
+                               (flags & NI_DGRAM) ? "udp" : "tcp");
+        }
+        if (sp) {
+            if (strlen(sp->s_name) + 1 > servlen)
+                return EAI_OVERFLOW;
+            strncpy(serv, sp->s_name, servlen);
+        } else {
+            snprintf(numserv, sizeof(numserv), "%u", ntohs(port));
+            if (strlen(numserv) + 1 > servlen)
+                return EAI_OVERFLOW;
+            strncpy(serv, numserv, servlen);
+        }
+    }
 
-	switch (sa->sa_family) {
-	case AF_INET:
-		v4a = (u_int32_t)
-		    ntohl(((const struct sockaddr_in *)sa)->sin_addr.s_addr);
-		if (IN_MULTICAST(v4a) || IN_EXPERIMENTAL(v4a))
-			flags |= NI_NUMERICHOST;
-		v4a >>= IN_CLASSA_NSHIFT;
-		if (v4a == 0)
-			flags |= NI_NUMERICHOST;
-		break;
+    switch (sa->sa_family) {
+    case AF_INET:
+        v4a = (u_int32_t)
+              ntohl(((const struct sockaddr_in *)sa)->sin_addr.s_addr);
+        if (IN_MULTICAST(v4a) || IN_EXPERIMENTAL(v4a))
+            flags |= NI_NUMERICHOST;
+        v4a >>= IN_CLASSA_NSHIFT;
+        if (v4a == 0)
+            flags |= NI_NUMERICHOST;
+        break;
 #ifdef INET6
-	case AF_INET6:
-	    {
-		const struct sockaddr_in6 *sin6;
-		sin6 = (const struct sockaddr_in6 *)sa;
-		switch (sin6->sin6_addr.s6_addr[0]) {
-		case 0x00:
-			if (IN6_IS_ADDR_V4MAPPED(&sin6->sin6_addr))
-				;
-			else if (IN6_IS_ADDR_LOOPBACK(&sin6->sin6_addr))
-				;
-			else
-				flags |= NI_NUMERICHOST;
-			break;
-		default:
-			if (IN6_IS_ADDR_LINKLOCAL(&sin6->sin6_addr))
-				flags |= NI_NUMERICHOST;
-			else if (IN6_IS_ADDR_MULTICAST(&sin6->sin6_addr))
-				flags |= NI_NUMERICHOST;
-			break;
-		}
-	    }
-		break;
+    case AF_INET6: {
+        const struct sockaddr_in6 *sin6;
+        sin6 = (const struct sockaddr_in6 *)sa;
+        switch (sin6->sin6_addr.s6_addr[0]) {
+        case 0x00:
+            if (IN6_IS_ADDR_V4MAPPED(&sin6->sin6_addr))
+                ;
+            else if (IN6_IS_ADDR_LOOPBACK(&sin6->sin6_addr))
+                ;
+            else
+                flags |= NI_NUMERICHOST;
+            break;
+        default:
+            if (IN6_IS_ADDR_LINKLOCAL(&sin6->sin6_addr))
+                flags |= NI_NUMERICHOST;
+            else if (IN6_IS_ADDR_MULTICAST(&sin6->sin6_addr))
+                flags |= NI_NUMERICHOST;
+            break;
+        }
+    }
+    break;
 #endif
-	}
-	if (host == NULL || hostlen == 0) {
-		/*
-		 * do nothing in this case.
-		 * in case you are wondering if "&&" is more correct than
-		 * "||" here: RFC3493 says that host == NULL or hostlen == 0
-		 * means that the caller does not want the result.
-		 */
-	} else if (flags & NI_NUMERICHOST) {
-		/* NUMERICHOST and NAMEREQD conflicts with each other */
-		if (flags & NI_NAMEREQD)
-			return EAI_NONAME;
+    }
+    if (host == NULL || hostlen == 0) {
+        /*
+         * do nothing in this case.
+         * in case you are wondering if "&&" is more correct than
+         * "||" here: RFC3493 says that host == NULL or hostlen == 0
+         * means that the caller does not want the result.
+         */
+    } else if (flags & NI_NUMERICHOST) {
+        /* NUMERICHOST and NAMEREQD conflicts with each other */
+        if (flags & NI_NAMEREQD)
+            return EAI_NONAME;
 
-		goto numeric;
-	} else {
+        goto numeric;
+    } else {
 #ifdef USE_GETIPNODEBY
-		hp = getipnodebyaddr(addr, afd->a_addrlen, afd->a_af, &h_error);
+        hp = getipnodebyaddr(addr, afd->a_addrlen, afd->a_af, &h_error);
 #else
-		hp = gethostbyaddr(addr, afd->a_addrlen, afd->a_af);
+        hp = gethostbyaddr(addr, afd->a_addrlen, afd->a_af);
 #ifdef HAVE_H_ERRNO
-		h_error = h_errno;
+        h_error = h_errno;
 #else
-		h_error = EINVAL;
+        h_error = EINVAL;
 #endif
 #endif
 
-		if (hp) {
+        if (hp) {
 #if 0
-			if (flags & NI_NOFQDN) {
-				/*
-				 * According to RFC3493 section 6.2, NI_NOFQDN
-				 * means "node name portion of the FQDN shall
-				 * be returned for local hosts."  The following
-				 * code tries to implement it by returning the
-				 * first label (the part before the first
-				 * period) of the FQDN.  However, it is not
-				 * clear if this always makes sense, since the
-				 * given address may be outside of "local
-				 * hosts."  Due to the unclear description, we
-				 * disable the code in this implementation.
-				 */
-				char *p;
-				p = strchr(hp->h_name, '.');
-				if (p)
-					*p = '\0';
-			}
+            if (flags & NI_NOFQDN) {
+                /*
+                 * According to RFC3493 section 6.2, NI_NOFQDN
+                 * means "node name portion of the FQDN shall
+                 * be returned for local hosts."  The following
+                 * code tries to implement it by returning the
+                 * first label (the part before the first
+                 * period) of the FQDN.  However, it is not
+                 * clear if this always makes sense, since the
+                 * given address may be outside of "local
+                 * hosts."  Due to the unclear description, we
+                 * disable the code in this implementation.
+                 */
+                char *p;
+                p = strchr(hp->h_name, '.');
+                if (p)
+                    *p = '\0';
+            }
 #endif
-			if (strlen(hp->h_name) + 1 > hostlen) {
+            if (strlen(hp->h_name) + 1 > hostlen) {
 #ifdef USE_GETIPNODEBY
-				freehostent(hp);
+                freehostent(hp);
 #endif
-				return EAI_OVERFLOW;
-			}
-			strncpy(host, hp->h_name, hostlen);
+                return EAI_OVERFLOW;
+            }
+            strncpy(host, hp->h_name, hostlen);
 #ifdef USE_GETIPNODEBY
-			freehostent(hp);
+            freehostent(hp);
 #endif
-		} else {
-			if (flags & NI_NAMEREQD)
-				return EAI_NONAME;
+        } else {
+            if (flags & NI_NAMEREQD)
+                return EAI_NONAME;
 
-		  numeric:
-			switch(afd->a_af) {
+numeric:
+            switch (afd->a_af) {
 #ifdef INET6
-			case AF_INET6:
-			{
-				int error;
+            case AF_INET6: {
+                int error;
 
-				if ((error = ip6_parsenumeric(sa, addr, host,
-							      hostlen,
-							      flags)) != 0)
-					return(error);
-				break;
-			}
+                if ((error = ip6_parsenumeric(sa, addr, host,
+                                              hostlen,
+                                              flags)) != 0)
+                    return(error);
+                break;
+            }
 #endif
-			default:
-				if (xinet_ntop(afd->a_af, addr, host,
-				    hostlen) == NULL)
-					return EAI_SYSTEM;
-				break;
-			}
-		}
-	}
-	return(0);
+            default:
+                if (xinet_ntop(afd->a_af, addr, host,
+                               hostlen) == NULL)
+                    return EAI_SYSTEM;
+                break;
+            }
+        }
+    }
+    return(0);
 }
 
 #ifdef INET6
 static int
 ip6_parsenumeric(sa, addr, host, hostlen, flags)
-	const struct sockaddr *sa;
-	const char *addr;
-	char *host;
-	size_t hostlen;
-	int flags;
+const struct sockaddr *sa;
+const char *addr;
+char *host;
+size_t hostlen;
+int flags;
 {
-	int numaddrlen;
-	char numaddr[512];
+    int numaddrlen;
+    char numaddr[512];
 
-	if (xinet_ntop(AF_INET6, addr, numaddr, sizeof(numaddr)) == NULL)
-		return EAI_SYSTEM;
+    if (xinet_ntop(AF_INET6, addr, numaddr, sizeof(numaddr)) == NULL)
+        return EAI_SYSTEM;
 
-	numaddrlen = strlen(numaddr);
-	if (numaddrlen + 1 > hostlen) /* don't forget terminator */
-		return EAI_OVERFLOW;
-	strncpy(host, numaddr, hostlen);
+    numaddrlen = strlen(numaddr);
+    if (numaddrlen + 1 > hostlen) /* don't forget terminator */
+        return EAI_OVERFLOW;
+    strncpy(host, numaddr, hostlen);
 
-	if (((const struct sockaddr_in6 *)sa)->sin6_scope_id) {
-		char zonebuf[SQUIDHOSTNAMELEN];
-		int zonelen;
+    if (((const struct sockaddr_in6 *)sa)->sin6_scope_id) {
+        char zonebuf[SQUIDHOSTNAMELEN];
+        int zonelen;
 
-		zonelen = ip6_sa2str(
-		    (const struct sockaddr_in6 *)(const void *)sa,
-		    zonebuf, sizeof(zonebuf), flags);
-		if (zonelen < 0)
-			return EAI_OVERFLOW;
-		if (zonelen + 1 + numaddrlen + 1 > hostlen)
-			return EAI_OVERFLOW;
+        zonelen = ip6_sa2str(
+                      (const struct sockaddr_in6 *)(const void *)sa,
+                      zonebuf, sizeof(zonebuf), flags);
+        if (zonelen < 0)
+            return EAI_OVERFLOW;
+        if (zonelen + 1 + numaddrlen + 1 > hostlen)
+            return EAI_OVERFLOW;
 
-		/* construct <numeric-addr><delim><zoneid> */
-		memcpy(host + numaddrlen + 1, zonebuf,
-		    (size_t)zonelen);
-		host[numaddrlen] = SCOPE_DELIMITER;
-		host[numaddrlen + 1 + zonelen] = '\0';
-	}
+        /* construct <numeric-addr><delim><zoneid> */
+        memcpy(host + numaddrlen + 1, zonebuf,
+               (size_t)zonelen);
+        host[numaddrlen] = SCOPE_DELIMITER;
+        host[numaddrlen + 1 + zonelen] = '\0';
+    }
 
-	return 0;
+    return 0;
 }
 
 /* ARGSUSED */
 static int
 ip6_sa2str(sa6, buf, bufsiz, flags)
-	const struct sockaddr_in6 *sa6;
-	char *buf;
-	size_t bufsiz;
-	int flags;
+const struct sockaddr_in6 *sa6;
+char *buf;
+size_t bufsiz;
+int flags;
 {
-	unsigned int ifindex;
-	const struct in6_addr *a6;
-	int n;
+    unsigned int ifindex;
+    const struct in6_addr *a6;
+    int n;
 
-	ifindex = (unsigned int)sa6->sin6_scope_id;
-	a6 = &sa6->sin6_addr;
+    ifindex = (unsigned int)sa6->sin6_scope_id;
+    a6 = &sa6->sin6_addr;
 
 #ifdef NI_NUMERICSCOPE
-	if ((flags & NI_NUMERICSCOPE) != 0) {
-		n = snprintf(buf, bufsiz, "%u", sa6->sin6_scope_id);
-		if (n < 0 || n >= bufsiz)
-			return -1;
-		else
-			return n;
-	}
+    if ((flags & NI_NUMERICSCOPE) != 0) {
+        n = snprintf(buf, bufsiz, "%u", sa6->sin6_scope_id);
+        if (n < 0 || n >= bufsiz)
+            return -1;
+        else
+            return n;
+    }
 #endif
 
-	/* if_indextoname() does not take buffer size.  not a good api... */
-	if ((IN6_IS_ADDR_LINKLOCAL(a6) || IN6_IS_ADDR_MC_LINKLOCAL(a6) ||
-	     IN6_IS_ADDR_MC_NODELOCAL(a6)) && bufsiz >= IF_NAMESIZE) {
-		char *p = if_indextoname(ifindex, buf);
-		if (p)
-			return (strlen(p));
-	}
+    /* if_indextoname() does not take buffer size.  not a good api... */
+    if ((IN6_IS_ADDR_LINKLOCAL(a6) || IN6_IS_ADDR_MC_LINKLOCAL(a6) ||
+            IN6_IS_ADDR_MC_NODELOCAL(a6)) && bufsiz >= IF_NAMESIZE) {
+        char *p = if_indextoname(ifindex, buf);
+        if (p)
+            return (strlen(p));
+    }
 
-	/* last resort */
-	n = snprintf(buf, bufsiz, "%u", sa6->sin6_scope_id);
-	if (n < 0 || n >= bufsiz)
-		return -1;
-	else
-		return n;
+    /* last resort */
+    n = snprintf(buf, bufsiz, "%u", sa6->sin6_scope_id);
+    if (n < 0 || n >= bufsiz)
+        return -1;
+    else
+        return n;
 }
 #endif /* INET6 */
 #endif

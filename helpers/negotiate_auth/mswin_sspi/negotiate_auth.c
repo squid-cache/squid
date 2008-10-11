@@ -59,8 +59,8 @@ uc(char *string)
 {
     char *p = string, c;
     while ((c = *p)) {
-	*p = xtoupper(c);
-	p++;
+        *p = xtoupper(c);
+        p++;
     }
 }
 
@@ -70,8 +70,8 @@ lc(char *string)
 {
     char *p = string, c;
     while ((c = *p)) {
-	*p = xtolower(c);
-	p++;
+        *p = xtolower(c);
+        p++;
     }
 }
 
@@ -95,11 +95,11 @@ void
 usage()
 {
     fprintf(stderr,
-	"Usage: %s [-d] [-v] [-h]\n"
-	" -d  enable debugging.\n"
-        " -v  enable verbose Negotiate packet debugging.\n"
-	" -h  this message\n\n",
-	my_program_name);
+            "Usage: %s [-d] [-v] [-h]\n"
+            " -d  enable debugging.\n"
+            " -v  enable verbose Negotiate packet debugging.\n"
+            " -h  this message\n\n",
+            my_program_name);
 }
 
 
@@ -110,28 +110,28 @@ process_options(int argc, char *argv[])
 
     opterr =0;
     while (-1 != (opt = getopt(argc, argv, "hdv"))) {
-	switch (opt) {
-	case 'd':
-	    debug_enabled = 1;
-	    break;
-	case 'v':
-	    debug_enabled = 1;
-	    Negotiate_packet_debug_enabled = 1;
-	    break;
-	case 'h':
-	    usage();
-	    exit(0);
-	case '?':
-	    opt = optopt;
-	    /* fall thru to default */
-	default:
-	    fprintf(stderr, "unknown option: -%c. Exiting\n", opt);
-	    usage();
-	    had_error = 1;
-	}
+        switch (opt) {
+        case 'd':
+            debug_enabled = 1;
+            break;
+        case 'v':
+            debug_enabled = 1;
+            Negotiate_packet_debug_enabled = 1;
+            break;
+        case 'h':
+            usage();
+            exit(0);
+        case '?':
+            opt = optopt;
+            /* fall thru to default */
+        default:
+            fprintf(stderr, "unknown option: -%c. Exiting\n", opt);
+            usage();
+            had_error = 1;
+        }
     }
     if (had_error)
-	exit(1);
+        exit(1);
 }
 
 int
@@ -147,21 +147,21 @@ manage_request()
     BOOL Done = FALSE;
 
 try_again:
-    if (fgets(buf, BUFFER_SIZE, stdin) == NULL) 
+    if (fgets(buf, BUFFER_SIZE, stdin) == NULL)
         return 0;
 
     c = memchr(buf, '\n', BUFFER_SIZE);	/* safer against overrun than strchr */
     if (c) {
-	if (oversized) {
-	    helperfail("illegal request received");
-	    fprintf(stderr, "Illegal request received: '%s'\n", buf);
-	    return 1;
-	}
-	*c = '\0';
+        if (oversized) {
+            helperfail("illegal request received");
+            fprintf(stderr, "Illegal request received: '%s'\n", buf);
+            return 1;
+        }
+        *c = '\0';
     } else {
-	fprintf(stderr, "No newline in '%s'\n", buf);
-	oversized = 1;
-	goto try_again;
+        fprintf(stderr, "No newline in '%s'\n", buf);
+        oversized = 1;
+        goto try_again;
     }
 
     if ((strlen(buf) > 3) && Negotiate_packet_debug_enabled) {
@@ -173,28 +173,28 @@ try_again:
         debug("Got '%s' from Squid\n", buf);
 
     if (memcmp(buf, "YR ", 3) == 0) {	/* refresh-request */
-	/* figure out what we got */
+        /* figure out what we got */
         decoded = base64_decode(buf + 3);
-	/*  Note: we don't need to manage memory at this point, since
-	 *  base64_decode returns a pointer to static storage.
-	 */
-	if (!decoded) {		/* decoding failure, return error */
-	    SEND("NA * Packet format error, couldn't base64-decode");
-	    return 1;
-	}
-	/* Obtain server blob against SSPI */
+        /*  Note: we don't need to manage memory at this point, since
+         *  base64_decode returns a pointer to static storage.
+         */
+        if (!decoded) {		/* decoding failure, return error */
+            SEND("NA * Packet format error, couldn't base64-decode");
+            return 1;
+        }
+        /* Obtain server blob against SSPI */
         plen = (strlen(buf) - 3) * 3 / 4;		/* we only need it here. Optimization */
         c = (char *) SSP_MakeNegotiateBlob(decoded, plen, &Done, &status, cred);
 
         if (status == SSP_OK) {
             if (Done) {
-	        lc(cred);		/* let's lowercase them for our convenience */
+                lc(cred);		/* let's lowercase them for our convenience */
                 have_serverblob = 0;
                 Done = FALSE;
                 if (Negotiate_packet_debug_enabled) {
                     printf("AF %s %s\n",c,cred);
                     decoded = base64_decode(c);
-	            debug("sending 'AF' %s to squid with data:\n", cred);
+                    debug("sending 'AF' %s to squid with data:\n", cred);
                     hex_dump(decoded, (strlen(c) * 3) / 4);
                 } else
                     SEND3("AF %s %s", c, cred);
@@ -202,7 +202,7 @@ try_again:
                 if (Negotiate_packet_debug_enabled) {
                     printf("TT %s\n",c);
                     decoded = base64_decode(c);
-	            debug("sending 'TT' to squid with data:\n");
+                    debug("sending 'TT' to squid with data:\n");
                     hex_dump(decoded, (strlen(c) * 3) / 4);
                 } else {
                     SEND2("TT %s", c);
@@ -211,33 +211,33 @@ try_again:
             }
         } else
             helperfail("can't obtain server blob");
-	return 1;
+        return 1;
     }
 
     if (memcmp(buf, "KK ", 3) == 0) {	/* authenticate-request */
         if (!have_serverblob) {
-	    helperfail("invalid server blob");
-	    return 1;
+            helperfail("invalid server blob");
+            return 1;
         }
-	/* figure out what we got */
-	decoded = base64_decode(buf + 3);
-	/*  Note: we don't need to manage memory at this point, since
-	 *  base64_decode returns a pointer to static storage.
-	 */
-	if (!decoded) {		/* decoding failure, return error */
-	    SEND("NA * Packet format error, couldn't base64-decode");
-	    return 1;
-	}
+        /* figure out what we got */
+        decoded = base64_decode(buf + 3);
+        /*  Note: we don't need to manage memory at this point, since
+         *  base64_decode returns a pointer to static storage.
+         */
+        if (!decoded) {		/* decoding failure, return error */
+            SEND("NA * Packet format error, couldn't base64-decode");
+            return 1;
+        }
 
         /* check against SSPI */
-	plen = (strlen(buf) - 3) * 3 / 4;		/* we only need it here. Optimization */
+        plen = (strlen(buf) - 3) * 3 / 4;		/* we only need it here. Optimization */
         c = (char *) SSP_ValidateNegotiateCredentials(decoded, plen, &Done, &status, cred);
-        
+
         if (status == SSP_ERROR) {
 #if FAIL_DEBUG
             fail_debug_enabled = 1;
 #endif
-            FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | 
+            FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
                           FORMAT_MESSAGE_IGNORE_INSERTS,
                           NULL,
                           GetLastError(),
@@ -249,43 +249,43 @@ try_again:
                 ErrorMessage[strlen(ErrorMessage) - 1] = '\0';
             if (ErrorMessage[strlen(ErrorMessage) - 1] == '\r')
                 ErrorMessage[strlen(ErrorMessage) - 1] = '\0';
-	    SEND2("NA * %s", ErrorMessage);
+            SEND2("NA * %s", ErrorMessage);
             LocalFree(ErrorMessage);
-	    return 1;
-	}
+            return 1;
+        }
 
         if (Done) {
-	    lc(cred);		/* let's lowercase them for our convenience */
+            lc(cred);		/* let's lowercase them for our convenience */
             have_serverblob = 0;
             Done = FALSE;
             if (Negotiate_packet_debug_enabled) {
                 printf("AF %s %s\n",c,cred);
                 decoded = base64_decode(c);
-	        debug("sending 'AF' %s to squid with data:\n", cred);
+                debug("sending 'AF' %s to squid with data:\n", cred);
                 hex_dump(decoded, (strlen(c) * 3) / 4);
             } else {
                 SEND3("AF %s %s", c, cred);
             }
-	    return 1;
+            return 1;
         } else {
             if (Negotiate_packet_debug_enabled) {
                 printf("TT %s\n",c);
                 decoded = base64_decode(c);
-	        debug("sending 'TT' to squid with data:\n");
+                debug("sending 'TT' to squid with data:\n");
                 hex_dump(decoded, (strlen(c) * 3) / 4);
             } else
-               	SEND2("TT %s", c);
-	    return 1;
+                SEND2("TT %s", c);
+            return 1;
         }
 
     } else {	/* not an auth-request */
-	helperfail("illegal request received");
-	fprintf(stderr, "Illegal request received: '%s'\n", buf);
-	return 1;
+        helperfail("illegal request received");
+        fprintf(stderr, "Illegal request received: '%s'\n", buf);
+        return 1;
     }
     helperfail("detected protocol error");
     return 1;
-/********* END ********/
+    /********* END ********/
 }
 
 int
@@ -296,10 +296,10 @@ main(int argc, char *argv[])
     process_options(argc, argv);
 
     debug("%s build " __DATE__ ", " __TIME__ " starting up...\n", my_program_name);
-    
+
     if (LoadSecurityDll(SSP_NTLM, NEGOTIATE_PACKAGE_NAME) == NULL) {
-	fprintf(stderr, "FATAL, can't initialize SSPI, exiting.\n");
-	exit(1);
+        fprintf(stderr, "FATAL, can't initialize SSPI, exiting.\n");
+        exit(1);
     }
     debug("SSPI initialized OK\n");
 
@@ -310,7 +310,7 @@ main(int argc, char *argv[])
     setbuf(stderr, NULL);
 
     while (manage_request()) {
-	/* everything is done within manage_request */
+        /* everything is done within manage_request */
     }
     exit(0);
 }

@@ -6,7 +6,7 @@ const char *Adaptation::crlf = "\r\n";
 const char *
 Adaptation::methodStr(Adaptation::Method method)
 {
-    switch(method) {
+    switch (method) {
 
     case Adaptation::methodReqmod:
         return "REQMOD";
@@ -31,7 +31,7 @@ Adaptation::methodStr(Adaptation::Method method)
 const char *
 Adaptation::vectPointStr(Adaptation::VectPoint point)
 {
-    switch(point) {
+    switch (point) {
 
     case Adaptation::pointPreCache:
         return "PRECACHE";

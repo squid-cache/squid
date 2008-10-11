@@ -18,7 +18,7 @@
 /* HeaderRep */
 
 Ecap::HeaderRep::HeaderRep(HttpMsg &aMessage): theHeader(aMessage.header),
-    theMessage(aMessage)
+        theMessage(aMessage)
 {
 }
 
@@ -28,8 +28,8 @@ Ecap::HeaderRep::hasAny(const Name &name) const
     const http_hdr_type squidId = TranslateHeaderId(name);
     // XXX: optimize to remove getByName: we do not need the value here
     return squidId == HDR_OTHER ?
-        theHeader.getByName(name.image().c_str()).size() > 0:
-        (bool)theHeader.has(squidId);
+           theHeader.getByName(name.image().c_str()).size() > 0:
+           (bool)theHeader.has(squidId);
 }
 
 Ecap::HeaderRep::Value
@@ -37,8 +37,8 @@ Ecap::HeaderRep::value(const Name &name) const
 {
     const http_hdr_type squidId = TranslateHeaderId(name);
     const String value = squidId == HDR_OTHER ?
-        theHeader.getByName(name.image().c_str()) :
-        theHeader.getStrOrList(squidId);
+                         theHeader.getByName(name.image().c_str()) :
+                         theHeader.getStrOrList(squidId);
     return Value::FromTempString(value.buf());
 }
 
@@ -47,7 +47,7 @@ Ecap::HeaderRep::add(const Name &name, const Value &value)
 {
     const http_hdr_type squidId = TranslateHeaderId(name); // HDR_OTHER OK
     HttpHeaderEntry *e = new HttpHeaderEntry(squidId, name.image().c_str(),
-        value.toString().c_str());
+            value.toString().c_str());
     theHeader.addEntry(e);
 }
 
@@ -104,7 +104,7 @@ libecap::Version
 Ecap::FirstLineRep::version() const
 {
     return libecap::Version(theMessage.http_ver.major,
-        theMessage.http_ver.minor);
+                            theMessage.http_ver.minor);
 }
 
 void
@@ -119,22 +119,35 @@ Ecap::FirstLineRep::protocol() const
 {
     // TODO: optimize?
     switch (theMessage.protocol) {
-        case PROTO_HTTP: return libecap::protocolHttp;
-        case PROTO_HTTPS: return libecap::protocolHttps;
-        case PROTO_FTP: return libecap::protocolFtp;
-        case PROTO_GOPHER: return libecap::protocolGopher;
-        case PROTO_WAIS: return libecap::protocolWais;
-        case PROTO_WHOIS: return libecap::protocolWhois;
-        case PROTO_URN: return libecap::protocolUrn;
-        case PROTO_ICP: return protocolIcp;
+    case PROTO_HTTP:
+        return libecap::protocolHttp;
+    case PROTO_HTTPS:
+        return libecap::protocolHttps;
+    case PROTO_FTP:
+        return libecap::protocolFtp;
+    case PROTO_GOPHER:
+        return libecap::protocolGopher;
+    case PROTO_WAIS:
+        return libecap::protocolWais;
+    case PROTO_WHOIS:
+        return libecap::protocolWhois;
+    case PROTO_URN:
+        return libecap::protocolUrn;
+    case PROTO_ICP:
+        return protocolIcp;
 #if USE_HTCP
-        case PROTO_HTCP: return protocolHtcp;
+    case PROTO_HTCP:
+        return protocolHtcp;
 #endif
-        case PROTO_CACHEOBJ: return protocolCacheObj;
-        case PROTO_INTERNAL: return protocolInternal;
-        case PROTO_NONE: return Name();
+    case PROTO_CACHEOBJ:
+        return protocolCacheObj;
+    case PROTO_INTERNAL:
+        return protocolInternal;
+    case PROTO_NONE:
+        return Name();
 
-        case PROTO_MAX: break; // should not happen
+    case PROTO_MAX:
+        break; // should not happen
         // no default to catch PROTO_ additions
     }
     Must(false); // not reached
@@ -160,7 +173,7 @@ Ecap::FirstLineRep::TranslateProtocolId(const Name &name)
 /* RequestHeaderRep */
 
 Ecap::RequestLineRep::RequestLineRep(HttpRequest &aMessage):
-    FirstLineRep(aMessage), theMessage(aMessage)
+        FirstLineRep(aMessage), theMessage(aMessage)
 {
 }
 
@@ -180,7 +193,7 @@ Ecap::RequestLineRep::Area
 Ecap::RequestLineRep::uri() const
 {
     return Area::FromTempBuffer(theMessage.urlpath.buf(),
-        theMessage.urlpath.size());
+                                theMessage.urlpath.size());
 }
 
 void
@@ -194,7 +207,7 @@ Ecap::RequestLineRep::method(const Name &aMethod)
     } else {
         const std::string &image = aMethod.image();
         theMessage.method = HttpRequestMethod(image.data(),
-            image.data() + image.size());
+                                              image.data() + image.size());
     }
 }
 
@@ -202,14 +215,22 @@ Ecap::RequestLineRep::Name
 Ecap::RequestLineRep::method() const
 {
     switch (theMessage.method.id()) {
-        case METHOD_GET: return libecap::methodGet;
-        case METHOD_POST: return libecap::methodPost;
-        case METHOD_PUT: return libecap::methodPut;
-        case METHOD_HEAD: return libecap::methodHead;
-        case METHOD_CONNECT: return libecap::methodConnect;
-        case METHOD_DELETE: return libecap::methodDelete;
-        case METHOD_TRACE: return libecap::methodTrace;
-        default: return Name(theMessage.method.image());
+    case METHOD_GET:
+        return libecap::methodGet;
+    case METHOD_POST:
+        return libecap::methodPost;
+    case METHOD_PUT:
+        return libecap::methodPut;
+    case METHOD_HEAD:
+        return libecap::methodHead;
+    case METHOD_CONNECT:
+        return libecap::methodConnect;
+    case METHOD_DELETE:
+        return libecap::methodDelete;
+    case METHOD_TRACE:
+        return libecap::methodTrace;
+    default:
+        return Name(theMessage.method.image());
     }
 }
 
@@ -241,7 +262,7 @@ Ecap::RequestLineRep::protocol(const Name &p)
 /* ReplyHeaderRep */
 
 Ecap::StatusLineRep::StatusLineRep(HttpReply &aMessage):
-    FirstLineRep(aMessage), theMessage(aMessage)
+        FirstLineRep(aMessage), theMessage(aMessage)
 {
 }
 
@@ -270,7 +291,7 @@ Ecap::StatusLineRep::Area
 Ecap::StatusLineRep::reasonPhrase() const
 {
     return theMessage.sline.reason ?
-        Area::FromTempString(std::string(theMessage.sline.reason)) : Area();
+           Area::FromTempString(std::string(theMessage.sline.reason)) : Area();
 }
 
 libecap::Version
@@ -321,18 +342,18 @@ Ecap::BodyRep::bodySize() const
 /* MessageRep */
 
 Ecap::MessageRep::MessageRep(HttpMsg *rawHeader):
-    theMessage(rawHeader), theFirstLineRep(NULL),
-    theHeaderRep(NULL), theBodyRep(NULL)
+        theMessage(rawHeader), theFirstLineRep(NULL),
+        theHeaderRep(NULL), theBodyRep(NULL)
 {
     Must(theMessage.header); // we do not want to represent a missing message
 
     if (HttpRequest *req = dynamic_cast<HttpRequest*>(theMessage.header))
         theFirstLineRep = new RequestLineRep(*req);
     else
-    if (HttpReply *rep = dynamic_cast<HttpReply*>(theMessage.header))
-        theFirstLineRep = new StatusLineRep(*rep);
-    else
-        Must(false); // unknown message header type
+        if (HttpReply *rep = dynamic_cast<HttpReply*>(theMessage.header))
+            theFirstLineRep = new StatusLineRep(*rep);
+        else
+            Must(false); // unknown message header type
 
     theHeaderRep = new HeaderRep(*theMessage.header);
 

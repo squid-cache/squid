@@ -1,6 +1,6 @@
 /*
  * $Id: ufscommon.cc,v 1.15 2007/11/15 16:47:38 wessels Exp $
- * vim: set et : 
+ * vim: set et :
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Robert Collins
@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -46,36 +46,37 @@
 CBDATA_CLASS_INIT(RebuildState);
 
 
-class UFSSwapLogParser_old:public UFSSwapLogParser{
+class UFSSwapLogParser_old:public UFSSwapLogParser
+{
 public:
-    struct StoreSwapLogDataOld{
-	char op;
-	sfileno swap_filen;
-	time_t timestamp;
-	time_t lastref;
-	time_t expires;
-	time_t lastmod;
-	size_t swap_file_sz;
-	u_short refcount;
-	u_short flags;
-	unsigned char key[SQUID_MD5_DIGEST_LENGTH];
+    struct StoreSwapLogDataOld {
+        char op;
+        sfileno swap_filen;
+        time_t timestamp;
+        time_t lastref;
+        time_t expires;
+        time_t lastmod;
+        size_t swap_file_sz;
+        u_short refcount;
+        u_short flags;
+        unsigned char key[SQUID_MD5_DIGEST_LENGTH];
     };
-    UFSSwapLogParser_old(FILE *fp):UFSSwapLogParser(fp)
-    {
-	record_size = sizeof(UFSSwapLogParser_old::StoreSwapLogDataOld);
+    UFSSwapLogParser_old(FILE *fp):UFSSwapLogParser(fp) {
+        record_size = sizeof(UFSSwapLogParser_old::StoreSwapLogDataOld);
     }
     bool ReadRecord(StoreSwapLogData &swapData);
 };
 
 
-bool UFSSwapLogParser_old::ReadRecord(StoreSwapLogData &swapData){
+bool UFSSwapLogParser_old::ReadRecord(StoreSwapLogData &swapData)
+{
     UFSSwapLogParser_old::StoreSwapLogDataOld readData;
     int bytes = sizeof(UFSSwapLogParser_old::StoreSwapLogDataOld);
 
     assert(log);
 
-    if (fread(&readData, bytes, 1, log) != 1){
-	return false;
+    if (fread(&readData, bytes, 1, log) != 1) {
+        return false;
     }
     swapData.op = readData.op;
     swapData.swap_filen = readData.swap_filen;
@@ -91,11 +92,11 @@ bool UFSSwapLogParser_old::ReadRecord(StoreSwapLogData &swapData){
 }
 
 
-class UFSSwapLogParser_v1:public UFSSwapLogParser{
+class UFSSwapLogParser_v1:public UFSSwapLogParser
+{
 public:
-    UFSSwapLogParser_v1(FILE *fp):UFSSwapLogParser(fp)
-    {
-	record_size = sizeof(StoreSwapLogData);
+    UFSSwapLogParser_v1(FILE *fp):UFSSwapLogParser(fp) {
+        record_size = sizeof(StoreSwapLogData);
     }
     bool ReadRecord(StoreSwapLogData &swapData);
 };
@@ -106,8 +107,8 @@ bool UFSSwapLogParser_v1::ReadRecord(StoreSwapLogData &swapData)
     int bytes = sizeof(StoreSwapLogData);
 
     assert(log);
-    
-    if (fread(&swapData, bytes, 1, log) != 1){
+
+    if (fread(&swapData, bytes, 1, log) != 1) {
         return false;
     }
     return true;
@@ -121,44 +122,45 @@ UFSSwapLogParser *UFSSwapLogParser::GetUFSSwapLogParser(FILE *fp)
     assert(fp);
 
     if (fread(&header, sizeof(StoreSwapLogHeader), 1, fp) != 1)
-	 return NULL;
+        return NULL;
 
-    if (header.op != SWAP_LOG_VERSION){
-	debugs(47, 1, "Old swap file detected... ");
-	fseek(fp, 0, SEEK_SET);
-	return new UFSSwapLogParser_old(fp);
+    if (header.op != SWAP_LOG_VERSION) {
+        debugs(47, 1, "Old swap file detected... ");
+        fseek(fp, 0, SEEK_SET);
+        return new UFSSwapLogParser_old(fp);
     }
 
-    if (header.version == 1){
-	if (fseek(fp, header.record_size, SEEK_SET) != 0)
-	    return NULL;
-	  
-	if (header.record_size == sizeof(struct UFSSwapLogParser_old::StoreSwapLogDataOld)){
-	    debugs(47, 1, "Version 1 of swap file without LFS support detected... ");
-	    return new UFSSwapLogParser_old(fp);
-	}
+    if (header.version == 1) {
+        if (fseek(fp, header.record_size, SEEK_SET) != 0)
+            return NULL;
 
-	if (header.record_size == sizeof(StoreSwapLogData)){
-	    debugs(47, 1, "Version 1 of swap file with LFS support detected... ");
-	    return new UFSSwapLogParser_v1(fp);
-	}
-	  
-	debugs(47, 1, "The swap file has wrong format!... ");
-	return NULL;
-    }     
+        if (header.record_size == sizeof(struct UFSSwapLogParser_old::StoreSwapLogDataOld)) {
+            debugs(47, 1, "Version 1 of swap file without LFS support detected... ");
+            return new UFSSwapLogParser_old(fp);
+        }
+
+        if (header.record_size == sizeof(StoreSwapLogData)) {
+            debugs(47, 1, "Version 1 of swap file with LFS support detected... ");
+            return new UFSSwapLogParser_v1(fp);
+        }
+
+        debugs(47, 1, "The swap file has wrong format!... ");
+        return NULL;
+    }
 
     return NULL;
 }
 
-int UFSSwapLogParser::SwapLogEntries(){
+int UFSSwapLogParser::SwapLogEntries()
+{
     struct stat sb;
-    
-    if (log_entries >= 0)
-	return log_entries;
 
-    if (log && record_size && 0 == fstat(fileno(log), &sb)){
-	log_entries = sb.st_size/record_size;
-	return log_entries;
+    if (log_entries >= 0)
+        return log_entries;
+
+    if (log && record_size && 0 == fstat(fileno(log), &sb)) {
+        log_entries = sb.st_size/record_size;
+        return log_entries;
     }
 
     return 0;
@@ -181,7 +183,7 @@ RebuildState::RebuildState (RefCount<UFSSwapDir> aSwapDir) : sd (aSwapDir),LogPa
     FILE *fp = sd->openTmpSwapLog(&clean, &zeroLengthLog);
 
     if (fp && !zeroLengthLog)
-	LogParser = UFSSwapLogParser::GetUFSSwapLogParser(fp);
+        LogParser = UFSSwapLogParser::GetUFSSwapLogParser(fp);
 
     if (LogParser == NULL ) {
         fromLog = false;
@@ -190,8 +192,8 @@ RebuildState::RebuildState (RefCount<UFSSwapDir> aSwapDir) : sd (aSwapDir),LogPa
             fclose(fp);
 
     } else {
-	fromLog = true;
-	flags.clean = (unsigned int) clean;
+        fromLog = true;
+        flags.clean = (unsigned int) clean;
     }
 
     if (!clean)
@@ -205,7 +207,7 @@ RebuildState::~RebuildState()
     sd->closeTmpSwapLog();
 
     if (LogParser)
-	delete LogParser;
+        delete LogParser;
 }
 
 void
@@ -232,12 +234,10 @@ RebuildState::rebuildStep()
         rebuildFromDirectory();
 }
 
-struct InitStoreEntry : public unary_function<StoreMeta, void>
-{
-    InitStoreEntry(StoreEntry *anEntry, cache_key *aKey):what(anEntry),index(aKey){}
+struct InitStoreEntry : public unary_function<StoreMeta, void> {
+    InitStoreEntry(StoreEntry *anEntry, cache_key *aKey):what(anEntry),index(aKey) {}
 
-    void operator()(StoreMeta const &x)
-    {
+    void operator()(StoreMeta const &x) {
         switch (x.getType()) {
 
         case STORE_META_KEY:
@@ -246,7 +246,7 @@ struct InitStoreEntry : public unary_function<StoreMeta, void>
             break;
 
         case STORE_META_STD:
-	struct old_metahdr{
+            struct old_metahdr {
                 time_t timestamp;
                 time_t lastref;
                 time_t expires;
@@ -255,19 +255,19 @@ struct InitStoreEntry : public unary_function<StoreMeta, void>
                 u_short refcount;
                 u_short flags;
             } *tmp;
-	    tmp = (struct old_metahdr *)x.value;
+            tmp = (struct old_metahdr *)x.value;
             assert(x.length == STORE_HDR_METASIZE_OLD);
-	    what->timestamp = tmp->timestamp;
-	    what->lastref = tmp->lastref;
-	    what->expires = tmp->expires;
-	    what->lastmod = tmp->lastmod;
-	    what->swap_file_sz = tmp->swap_file_sz;
-	    what->refcount = tmp->refcount;
-	    what->flags = tmp->flags;
+            what->timestamp = tmp->timestamp;
+            what->lastref = tmp->lastref;
+            what->expires = tmp->expires;
+            what->lastmod = tmp->lastmod;
+            what->swap_file_sz = tmp->swap_file_sz;
+            what->refcount = tmp->refcount;
+            what->flags = tmp->flags;
             break;
 
-	case STORE_META_STD_LFS:
-	    assert(x.length == STORE_HDR_METASIZE);
+        case STORE_META_STD_LFS:
+            assert(x.length == STORE_HDR_METASIZE);
             xmemcpy(&what->timestamp, x.value, STORE_HDR_METASIZE);
             break;
 
@@ -321,7 +321,7 @@ RebuildState::rebuildFromDirectory()
 
         if ((++counts.scancount & 0xFFFF) == 0)
             debugs(47, 3, "  " << sd->path  << " " << std::setw(7) << counts.scancount  << " files opened so far.");
-            debugs(47, 9, "file_in: fd=" << fd  << " "<< std::setfill('0') << std::hex << std::uppercase << std::setw(8) << filn);
+        debugs(47, 9, "file_in: fd=" << fd  << " "<< std::setfill('0') << std::hex << std::uppercase << std::setw(8) << filn);
 
 
         statCounter.syscalls.disk.reads++;
@@ -410,7 +410,7 @@ RebuildState::rebuildFromDirectory()
          * which will conflict when the in core index gets around to scanning
          * store B.
          *
-         * this suggests that rather than searching for duplicates, the 
+         * this suggests that rather than searching for duplicates, the
          * index rebuild should just assume its the most recent accurate
          * store entry and whoever indexes the stores handles duplicates.
          */
@@ -429,7 +429,7 @@ RebuildState::rebuildFromDirectory()
         }
 
         counts.objcount++;
-	// tmpe.dump(5);
+        // tmpe.dump(5);
         currentEntry(sd->addDiskRestore(key,
                                         filn,
                                         tmpe.swap_file_sz,
@@ -470,8 +470,8 @@ RebuildState::rebuildFromSwapLog()
         if (LogParser->ReadRecord(swapData) != 1) {
             debugs(47, 1, "Done reading " << sd->path << " swaplog (" << n_read << " entries)");
             LogParser->Close();
-	    delete LogParser;
-	    LogParser = NULL;
+            delete LogParser;
+            LogParser = NULL;
             _done = true;
             return;
         }
@@ -488,7 +488,7 @@ RebuildState::rebuildFromSwapLog()
          * BC: during 2.4 development, we changed the way swap file
          * numbers are assigned and stored.  The high 16 bits used
          * to encode the SD index number.  There used to be a call
-         * to storeDirProperFileno here that re-assigned the index 
+         * to storeDirProperFileno here that re-assigned the index
          * bits.  Now, for backwards compatibility, we just need
          * to mask it off.
          */
@@ -535,7 +535,8 @@ RebuildState::rebuildFromSwapLog()
                 currentEntry()->release();
                 counts.objcount--;
                 counts.cancelcount++;
-            } continue;
+            }
+            continue;
         } else {
             x = ::log(static_cast<double>(++counts.bad_log_op)) / ::log(10.0);
 
@@ -602,16 +603,17 @@ RebuildState::rebuildFromSwapLog()
             } else {
                 debug_trap("commonUfsDirRebuildFromSwapLog: bad condition");
                 debugs(47, 1, "\tSee " << __FILE__ << ":" << __LINE__);
-            } continue;
+            }
+            continue;
         } else if (used) {
             /* swapfile in use, not by this URL, log entry is newer */
             /* This is sorta bad: the log entry should NOT be newer at this
              * point.  If the log is dirty, the filesize check should have
              * caught this.  If the log is clean, there should never be a
              * newer entry. */
-             debugs(47, 1, "WARNING: newer swaplog entry for dirno " <<
-                    sd->index  << ", fileno "<< std::setfill('0') << std::hex <<
-                    std::uppercase << std::setw(8) << swapData.swap_filen);
+            debugs(47, 1, "WARNING: newer swaplog entry for dirno " <<
+                   sd->index  << ", fileno "<< std::setfill('0') << std::hex <<
+                   std::uppercase << std::setw(8) << swapData.swap_filen);
 
             /* I'm tempted to remove the swapfile here just to be safe,
              * but there is a bad race condition in the NOVM version if
@@ -716,7 +718,7 @@ RebuildState::getNextFile(sfileno * filn_p, int *size)
                 entry = readdir(td);
 
                 if (entry == NULL && errno == ENOENT)
-                debugs(47, 1, "commonUfsDirGetNextFile: directory does not exist!.");
+                    debugs(47, 1, "commonUfsDirGetNextFile: directory does not exist!.");
                 debugs(47, 3, "commonUfsDirGetNextFile: Directory " << fullpath);
             }
         }

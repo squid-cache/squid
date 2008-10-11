@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -45,8 +45,7 @@ IPAddress theOutSNMPAddr;
 typedef struct _mib_tree_entry mib_tree_entry;
 typedef oid *(instance_Fn) (oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn);
 
-struct _mib_tree_entry
-{
+struct _mib_tree_entry {
     oid *name;
     int len;
     oid_ParseFn *parsefunction;
@@ -173,10 +172,10 @@ snmpInit(void)
                                                                                                                                                         LEN_SQ_PRF + 2, snmp_prfSysFn, static_Inst, 0),
                                                                                                                                             snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 2, SQ_PRF, PERF_SYS, PERF_SYS_CURRESERVED_FD),
                                                                                                                                                         LEN_SQ_PRF + 2, snmp_prfSysFn, static_Inst, 0),
-																	    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 2, SQ_PRF, PERF_SYS, PERF_SYS_CURUSED_FD),
-																			LEN_SQ_PRF + 2, snmp_prfSysFn, static_Inst, 0),
-																	    snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 2, SQ_PRF, PERF_SYS, PERF_SYS_CURMAX_FD),
-																			LEN_SQ_PRF + 2, snmp_prfSysFn, static_Inst, 0)),
+                                                                                                                                            snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 2, SQ_PRF, PERF_SYS, PERF_SYS_CURUSED_FD),
+                                                                                                                                                        LEN_SQ_PRF + 2, snmp_prfSysFn, static_Inst, 0),
+                                                                                                                                            snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 2, SQ_PRF, PERF_SYS, PERF_SYS_CURMAX_FD),
+                                                                                                                                                        LEN_SQ_PRF + 2, snmp_prfSysFn, static_Inst, 0)),
                                                                                                                                 snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 1, SQ_PRF, PERF_PROTO),
                                                                                                                                             LEN_SQ_PRF + 1, NULL, NULL, 2,
                                                                                                                                             snmpAddNode(snmpCreateOid(LEN_SQ_PRF + 2, SQ_PRF, PERF_PROTO, PERF_PROTOSTAT_AGGR),
@@ -423,7 +422,7 @@ snmpConnectionOpen(void)
         if (x < 0)
             debugs(51, 1, "theOutSnmpConnection FD " << theOutSnmpConnection << ": getsockname: " << xstrerror());
         else
-	    theOutSNMPAddr = *xaddr;
+            theOutSNMPAddr = *xaddr;
 
         theOutSNMPAddr.FreeAddrInfo(xaddr);
     }
@@ -585,20 +584,18 @@ snmpConstructReponse(snmp_request_t * rq)
 
 static struct snmp_pdu *
 
-            snmpAgentResponse(struct snmp_pdu *PDU)
-{
+            snmpAgentResponse(struct snmp_pdu *PDU) {
 
     struct snmp_pdu *Answer = NULL;
 
     debugs(49, 5, "snmpAgentResponse: Called.");
 
-    if ((Answer = snmp_pdu_create(SNMP_PDU_RESPONSE)))
-    {
+    if ((Answer = snmp_pdu_create(SNMP_PDU_RESPONSE))) {
         Answer->reqid = PDU->reqid;
         Answer->errindex = 0;
 
         if (PDU->command == SNMP_PDU_GET || PDU->command == SNMP_PDU_GETNEXT) {
-	  /* Indirect way */
+            /* Indirect way */
             int get_next = (PDU->command == SNMP_PDU_GETNEXT);
             variable_list *VarPtr_;
             variable_list **RespVars = &(Answer->variables);
@@ -661,8 +658,8 @@ static struct snmp_pdu *
                 *RespVars = VarNew;
 
                 RespVars = &(VarNew->next_variable);
-            } 
-        } 
+            }
+        }
     }
 
     return (Answer);
@@ -719,7 +716,7 @@ snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
         while ((mibTreeEntry) && (count < CurrentLen) && (!mibTreeEntry->parsefunction)) {
             mib_tree_entry *nextmibTreeEntry = snmpTreeEntry(Current[count], count, mibTreeEntry);
 
-            if (!nextmibTreeEntry)  
+            if (!nextmibTreeEntry)
                 break;
             else
                 mibTreeEntry = nextmibTreeEntry;
@@ -736,21 +733,20 @@ snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
 
 
     if ((mibTreeEntry) && (mibTreeEntry->parsefunction)) {
-      *NextLen = CurrentLen;  
-      *Next = (*mibTreeEntry->instancefunction) (Current, NextLen, mibTreeEntry, &Fn);
-      if (*Next)
-	{
-	  debugs(49, 6, "snmpTreeNext: Next : ");
-	  snmpDebugOid(6, *Next, *NextLen);
-	  return (Fn);
-	}
+        *NextLen = CurrentLen;
+        *Next = (*mibTreeEntry->instancefunction) (Current, NextLen, mibTreeEntry, &Fn);
+        if (*Next) {
+            debugs(49, 6, "snmpTreeNext: Next : ");
+            snmpDebugOid(6, *Next, *NextLen);
+            return (Fn);
+        }
     }
 
     if ((mibTreeEntry) && (mibTreeEntry->parsefunction)) {
         count--;
         nextoid = snmpTreeSiblingEntry(Current[count], count, mibTreeEntry->parent);
         if (nextoid) {
-	  debugs(49, 5, "snmpTreeNext: Next OID found for sibling" << nextoid );
+            debugs(49, 5, "snmpTreeNext: Next OID found for sibling" << nextoid );
             mibTreeEntry = nextoid;
             count++;
         } else {
@@ -783,13 +779,11 @@ snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
         *Next = (*mibTreeEntry->instancefunction) (mibTreeEntry->name, NextLen, mibTreeEntry, &Fn);
     }
 
-    if (*Next)
-	{
-	  debugs(49, 6, "snmpTreeNext: Next : ");
-	  snmpDebugOid(6, *Next, *NextLen);
-	  return (Fn);
-	}
-    else
+    if (*Next) {
+        debugs(49, 6, "snmpTreeNext: Next : ");
+        snmpDebugOid(6, *Next, *NextLen);
+        return (Fn);
+    } else
         return NULL;
 }
 
@@ -825,7 +819,7 @@ time_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
         while ((loop < TIME_INDEX_LEN) && (identifier != index[loop]))
             loop++;
 
-        if (loop < (TIME_INDEX_LEN - 1)) { 
+        if (loop < (TIME_INDEX_LEN - 1)) {
             instance = (oid *)xmalloc(sizeof(name) * (*len));
             xmemcpy(instance, name, (sizeof(name) * *len));
             instance[*len - 1] = index[++loop];
@@ -849,24 +843,24 @@ peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
             current = current->leaves[0];
 
         instance = client_Inst(current->name, len, current, Fn);
-    } else if (*len <= current->len) { 
-      instance = (oid *)xmalloc(sizeof(name) * ( *len + 1));
-      xmemcpy(instance, name, (sizeof(name) * *len));
-      instance[*len] = 1 ;
-      *len += 1;  
+    } else if (*len <= current->len) {
+        instance = (oid *)xmalloc(sizeof(name) * ( *len + 1));
+        xmemcpy(instance, name, (sizeof(name) * *len));
+        instance[*len] = 1 ;
+        *len += 1;
     } else {
-      int no = name[current->len] ;
-      int i ; // Note: This works because the Confifg.peers 
-              // keep its index acording to its position.
-      for ( i=0 ; peers && (i < no) ; peers = peers->next , i++ ) ;
-      
-      if (peers) {
-	  instance = (oid *)xmalloc(sizeof(name) * (current->len + 1 ));
-	  xmemcpy(instance, name, (sizeof(name) * current->len ));
-	  instance[current->len] = no + 1 ; // i.e. the next index on cache_peeer table.
-      } else {
-	return (instance);
-      }
+        int no = name[current->len] ;
+        int i ; // Note: This works because the Confifg.peers
+        // keep its index acording to its position.
+        for ( i=0 ; peers && (i < no) ; peers = peers->next , i++ ) ;
+
+        if (peers) {
+            instance = (oid *)xmalloc(sizeof(name) * (current->len + 1 ));
+            xmemcpy(instance, name, (sizeof(name) * current->len ));
+            instance[current->len] = no + 1 ; // i.e. the next index on cache_peeer table.
+        } else {
+            return (instance);
+        }
     }
     *Fn = current->parsefunction;
     return (instance);
@@ -881,14 +875,14 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
     int size = 0;
     int newshift = 0;
 
-    if(*len <= current->len) {
-        aux  = client_entry(NULL);  
-        if(aux)
+    if (*len <= current->len) {
+        aux  = client_entry(NULL);
+        if (aux)
             laddr = *aux;
         else
             laddr.SetAnyAddr();
 
-        if(laddr.IsIPv4())
+        if (laddr.IsIPv4())
             size = sizeof(in_addr);
 #if USE_IPV6
         else
@@ -903,16 +897,16 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
             *len += size ;
         }
     } else {
-        int shift = *len - current->len ; // i.e 4 or 16 
-        oid2addr(&name[*len - shift], laddr,shift); 
-        aux = client_entry(&laddr);  
-        if(aux)
+        int shift = *len - current->len ; // i.e 4 or 16
+        oid2addr(&name[*len - shift], laddr,shift);
+        aux = client_entry(&laddr);
+        if (aux)
             laddr = *aux;
         else
             laddr.SetAnyAddr();
-      
-        if(!laddr.IsAnyAddr()) {
-            if(laddr.IsIPv4())
+
+        if (!laddr.IsAnyAddr()) {
+            if (laddr.IsIPv4())
                 newshift = sizeof(in_addr);
 #if USE_IPV6
             else
@@ -924,7 +918,7 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
             *len = current->len + newshift ;
         }
     }
-    
+
     *Fn = current->parsefunction;
     return (instance);
 }
@@ -935,7 +929,7 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
  */
 
 /*
- * Tree utility functions. 
+ * Tree utility functions.
  */
 
 /*
@@ -1029,8 +1023,7 @@ va_dcl
     entry->instancefunction = instancefunction;
     entry->children = children;
 
-    if (children > 0)
-    {
+    if (children > 0) {
         entry->leaves = (mib_tree_entry **)xmalloc(sizeof(mib_tree_entry *) * children);
 
         for (loop = 0; loop < children; loop++) {
@@ -1070,8 +1063,7 @@ va_dcl
 
     new_oid = (oid *)xmalloc(sizeof(oid) * length);
 
-    if (length > 0)
-    {
+    if (length > 0) {
         for (loop = 0; loop < length; loop++) {
             new_oid[loop] = va_arg(args, int);
         }
@@ -1106,82 +1098,79 @@ snmpSnmplibDebug(int lvl, char *buf)
 
 
 
-/* 
+/*
    IPv4 address: 10.10.0.9  ==>
-   oid == 10.10.0.9 
-   IPv6 adress : 20:01:32:ef:a2:21:fb:32:00:00:00:00:00:00:00:00:OO:01 ==> 
-   oid == 32.1.50.239.162.33.251.20.50.0.0.0.0.0.0.0.0.0.1 
+   oid == 10.10.0.9
+   IPv6 adress : 20:01:32:ef:a2:21:fb:32:00:00:00:00:00:00:00:00:OO:01 ==>
+   oid == 32.1.50.239.162.33.251.20.50.0.0.0.0.0.0.0.0.0.1
 */
 void
 addr2oid(IPAddress &addr, oid * Dest)
 {
-  u_int i ;
-  u_char *cp = NULL;
-  struct in_addr iaddr;
+    u_int i ;
+    u_char *cp = NULL;
+    struct in_addr iaddr;
 #if USE_IPV6
-  struct in6_addr i6addr;
-  oid code = addr.IsIPv4()? INETADDRESSTYPE_IPV4  : INETADDRESSTYPE_IPV6 ;
-  u_int size = (code == INETADDRESSTYPE_IPV4) ? sizeof(struct in_addr):sizeof(struct in6_addr);
+    struct in6_addr i6addr;
+    oid code = addr.IsIPv4()? INETADDRESSTYPE_IPV4  : INETADDRESSTYPE_IPV6 ;
+    u_int size = (code == INETADDRESSTYPE_IPV4) ? sizeof(struct in_addr):sizeof(struct in6_addr);
 #else
-  oid code = INETADDRESSTYPE_IPV4 ;
-  u_int size = sizeof(struct in_addr) ;
+    oid code = INETADDRESSTYPE_IPV4 ;
+    u_int size = sizeof(struct in_addr) ;
 #endif /* USE_IPV6 */
-  //  Dest[0] = code ;
-  if ( code == INETADDRESSTYPE_IPV4 ) {
-    addr.GetInAddr(iaddr);
-    cp = (u_char *) &(iaddr.s_addr);
-  }
-#if USE_IPV6
-  else 
-   {
-    addr.GetInAddr(i6addr);
-    cp = (u_char *) &i6addr;
-   }
-#endif
-  for ( i=0 ; i < size ; i++)
-    {
-      // OID's are in network order
-      Dest[i] = *cp++;  
+    //  Dest[0] = code ;
+    if ( code == INETADDRESSTYPE_IPV4 ) {
+        addr.GetInAddr(iaddr);
+        cp = (u_char *) &(iaddr.s_addr);
     }
-  debugs(49, 7, "addr2oid: Dest : ");
-  snmpDebugOid(7, Dest, size );
+#if USE_IPV6
+    else {
+        addr.GetInAddr(i6addr);
+        cp = (u_char *) &i6addr;
+    }
+#endif
+    for ( i=0 ; i < size ; i++) {
+        // OID's are in network order
+        Dest[i] = *cp++;
+    }
+    debugs(49, 7, "addr2oid: Dest : ");
+    snmpDebugOid(7, Dest, size );
 
 }
 
-/* 
+/*
    oid == 10.10.0.9 ==>
    IPv4 address: 10.10.0.9
-   oid == 32.1.50.239.162.33.251.20.50.0.0.0.0.0.0.0.0.0.1 ==> 
+   oid == 32.1.50.239.162.33.251.20.50.0.0.0.0.0.0.0.0.0.1 ==>
    IPv6 adress : 20:01:32:ef:a2:21:fb:32:00:00:00:00:00:00:00:00:OO:01
 */
 void
 oid2addr(oid * id, IPAddress &addr, u_int size)
 {
-  struct in_addr iaddr;
-  u_int i;
-  u_char *cp;
+    struct in_addr iaddr;
+    u_int i;
+    u_char *cp;
 #if USE_IPV6
-  struct in6_addr i6addr;
-  if ( size == sizeof(struct in_addr) )
+    struct in6_addr i6addr;
+    if ( size == sizeof(struct in_addr) )
 #endif /* USE_IPV6 */
-  cp = (u_char *) &(iaddr.s_addr);
+        cp = (u_char *) &(iaddr.s_addr);
 #if USE_IPV6
-  else 
-  cp = (u_char *) &(i6addr);
+    else
+        cp = (u_char *) &(i6addr);
 #endif /* USE_IPV6 */
-  debugs(49, 7, "oid2addr: id : ");
-  snmpDebugOid(7, id, size  );
-  for(i=0 ; i<size; i++)
-    {
-    cp[i] = id[i];
+    debugs(49, 7, "oid2addr: id : ");
+    snmpDebugOid(7, id, size  );
+    for (i=0 ; i<size; i++) {
+        cp[i] = id[i];
     }
 #if USE_IPV6
-  if ( size == sizeof(struct in_addr) )
+    if ( size == sizeof(struct in_addr) )
 #endif
-      addr = iaddr;
+        addr = iaddr;
 #if USE_IPV6
-  else
-      addr = i6addr;
+    else
+        addr = i6addr;
 #endif
 
 }
@@ -1204,7 +1193,7 @@ public:
 
 private:
     static ACLSNMPCommunityStrategy Instance_;
-    ACLSNMPCommunityStrategy(){}
+    ACLSNMPCommunityStrategy() {}
 
     ACLSNMPCommunityStrategy&operator=(ACLSNMPCommunityStrategy const &);
 };
