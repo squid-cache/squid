@@ -50,6 +50,7 @@
 #include "IPAddress.h"
 #include "IPInterception.h"
 #include "DescriptorSet.h"
+#include "icmp/net_db.h"
 
 #if defined(_SQUID_CYGWIN_)
 #include <sys/ioctl.h>
@@ -1113,8 +1114,10 @@ ConnectStateData::connect()
         tries++;
         ipcacheMarkBadAddr(host, S);
 
+#if USE_ICMP
         if (Config.onoff.test_reachability)
             netdbDeleteAddrNetwork(S);
+#endif
 
         if (commRetryConnect()) {
             eventAdd("commReconnect", commReconnect, this, this->addrcount == 1 ? 0.05 : 0.0, 0);

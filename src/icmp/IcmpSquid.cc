@@ -33,7 +33,8 @@
  */
 
 #include "squid.h"
-#include "IcmpSquid.h"
+#include "icmp/IcmpSquid.h"
+#include "icmp/net_db.h"
 #include "comm.h"
 #include "SquidTime.h"
 

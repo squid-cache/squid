@@ -42,6 +42,7 @@
 #include "htcp.h"
 #include "forward.h"
 #include "SquidTime.h"
+#include "icmp/net_db.h"
 
 const char *hier_strings[] = {
     "NONE",
@@ -241,6 +242,7 @@ peerSelectCallback(ps_state * psstate)
 static int
 peerCheckNetdbDirect(ps_state * psstate)
 {
+#if USE_ICMP
     peer *p;
     int myrtt;
     int myhops;
@@ -248,11 +250,12 @@ peerCheckNetdbDirect(ps_state * psstate)
     if (psstate->direct == DIRECT_NO)
         return 0;
 
+    /* base lookup on RTT and Hops if ICMP NetDB is enabled. */
+
     myrtt = netdbHostRtt(psstate->request->GetHost());
 
     debugs(44, 3, "peerCheckNetdbDirect: MY RTT = " << myrtt << " msec");
     debugs(44, 3, "peerCheckNetdbDirect: minimum_direct_rtt = " << Config.minDirectRtt << " msec");
-
 
     if (myrtt && myrtt <= Config.minDirectRtt)
         return 1;
@@ -261,7 +264,6 @@ peerCheckNetdbDirect(ps_state * psstate)
 
     debugs(44, 3, "peerCheckNetdbDirect: MY hops = " << myhops);
     debugs(44, 3, "peerCheckNetdbDirect: minimum_direct_hops = " << Config.minDirectHops);
-
 
     if (myhops && myhops <= Config.minDirectHops)
         return 1;
@@ -275,6 +277,8 @@ peerCheckNetdbDirect(ps_state * psstate)
 
     if (myrtt && myrtt <= psstate->ping.p_rtt)
         return 1;
+
+#endif /* USE_ICMP */
 
     return 0;
 }
@@ -396,7 +400,7 @@ peerSelectPinned(ps_state * ps)
  * following methods:
  *      Cache Digests
  *      CARP
- *      Netdb RTT estimates
+ *      ICMP Netdb RTT estimates
  *      ICP/HTCP queries
  */
 static void
@@ -621,12 +625,12 @@ static void
 peerIcpParentMiss(peer * p, icp_common_t * header, ps_state * ps)
 {
     int rtt;
-    int hops;
 
+#if USE_ICMP
     if (Config.onoff.query_icmp) {
         if (header->flags & ICP_FLAG_SRC_RTT) {
             rtt = header->pad & 0xFFFF;
-            hops = (header->pad >> 16) & 0xFFFF;
+            int hops = (header->pad >> 16) & 0xFFFF;
 
             if (rtt > 0 && rtt < 0xFFFF)
                 netdbUpdatePeer(ps->request, p, rtt, hops);
@@ -637,6 +641,7 @@ peerIcpParentMiss(peer * p, icp_common_t * header, ps_state * ps)
             }
         }
     }
+#endif /* USE_ICMP */
 
     /* if closest-only is set, then don't allow FIRST_PARENT_MISS */
     if (p->options.closest_only)
@@ -720,12 +725,12 @@ static void
 peerHtcpParentMiss(peer * p, htcpReplyData * htcp, ps_state * ps)
 {
     int rtt;
-    int hops;
 
+#if USE_ICMP
     if (Config.onoff.query_icmp) {
         if (htcp->cto.rtt > 0) {
             rtt = (int) htcp->cto.rtt * 1000;
-            hops = (int) htcp->cto.hops * 1000;
+            int hops = (int) htcp->cto.hops * 1000;
             netdbUpdatePeer(ps->request, p, rtt, hops);
 
             if (rtt && (ps->ping.p_rtt == 0 || rtt < ps->ping.p_rtt)) {
@@ -734,6 +739,7 @@ peerHtcpParentMiss(peer * p, htcpReplyData * htcp, ps_state * ps)
             }
         }
     }
+#endif /* USE_ICMP */
 
     /* if closest-only is set, then don't allow FIRST_PARENT_MISS */
     if (p->options.closest_only)

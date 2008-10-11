@@ -47,6 +47,7 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "IPAddress.h"
+#include "icmp/net_db.h"
 
 /* count mcast group peers every 15 minutes */
 #define MCAST_COUNT_RATE 900
@@ -1278,9 +1279,12 @@ peerDNSConfigure(const ipcache_addrs * ia, void *data)
     if (p->type == PEER_MULTICAST)
         peerCountMcastPeersSchedule(p, 10);
 
+#if USE_ICMP
     if (p->type != PEER_MULTICAST)
         if (!p->options.no_netdb_exchange)
             eventAddIsh("netdbExchangeStart", netdbExchangeStart, p, 30.0, 1);
+#endif
+
 }
 
 static void
