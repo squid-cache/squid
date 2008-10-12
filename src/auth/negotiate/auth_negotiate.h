@@ -34,8 +34,7 @@ typedef enum {
 /* Generic */
 
 /// \ingroup AuthNegotiateAPI
-typedef struct
-{
+typedef struct {
     void *data;
     AuthUserRequest *auth_user_request;
     RH *handler;

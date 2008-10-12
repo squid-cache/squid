@@ -11,7 +11,8 @@ class ConfigParser;
 template <class C>
 class RefCount;
 
-namespace Adaptation {
+namespace Adaptation
+{
 
 class Service;
 class ServiceConfig;

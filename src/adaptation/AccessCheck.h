@@ -8,7 +8,8 @@
 class HttpRequest;
 class HttpReply;
 
-namespace Adaptation {
+namespace Adaptation
+{
 
 class AccessRule;
 
@@ -19,8 +20,8 @@ public:
     typedef void AccessCheckCallback(ServicePointer match, void *data);
 
     // use this to start async ACL checks; returns true if started
-    static bool Start(Method method, VectPoint vp, HttpRequest *req, 
-        HttpReply *rep, AccessCheckCallback *cb, void *cbdata);
+    static bool Start(Method method, VectPoint vp, HttpRequest *req,
+                      HttpReply *rep, AccessCheckCallback *cb, void *cbdata);
 
 protected:
     // use Start to start adaptation checks

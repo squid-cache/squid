@@ -4,12 +4,12 @@
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
  *
- * This file contains ACL routines that are not part of the 
+ * This file contains ACL routines that are not part of the
  * ACL class, nor any other class yet, and that need to be
- * factored into appropriate places. They are here to reduce 
+ * factored into appropriate places. They are here to reduce
  * unneeded dependencies between the ACL class and the rest
  * of squid.
- * 
+ *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -26,12 +26,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -311,7 +311,7 @@ aclDestroyDenyInfoList(acl_deny_info_list ** list)
 
 /*
  * This function traverses all ACL elements referenced
- * by an access list (presumably 'http_access').   If 
+ * by an access list (presumably 'http_access').   If
  * it finds a PURGE method ACL, then it returns TRUE,
  * otherwise FALSE.
  */

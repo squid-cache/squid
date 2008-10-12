@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -39,14 +39,13 @@
 #include "CacheManager.h"
 #include "SquidTime.h"
 
-static const char *storeLogTags[] =
-    {
-        "CREATE",
-        "SWAPIN",
-        "SWAPOUT",
-        "RELEASE",
-        "SO_FAIL",
-    };
+static const char *storeLogTags[] = {
+    "CREATE",
+    "SWAPIN",
+    "SWAPOUT",
+    "RELEASE",
+    "SO_FAIL",
+};
 
 static int storeLogTagsCounts[STORE_LOG_SWAPOUTFAIL+1];
 static OBJH storeLogTagsHist;
@@ -128,15 +127,15 @@ static void
 storeLogRegisterWithCacheManager(void)
 {
     CacheManager::GetInstance()->
-        registerAction("store_log_tags", "Histogram of store.log tags",
-                       storeLogTagsHist, 0, 1);
+    registerAction("store_log_tags", "Histogram of store.log tags",
+                   storeLogTagsHist, 0, 1);
 }
 
 void
 storeLogOpen(void)
 {
     storeLogRegisterWithCacheManager();
- 
+
     if (Config.Log.store == NULL || strcmp(Config.Log.store, "none") == 0) {
         debugs(20, 1, "Store logging disabled");
         return;
@@ -150,8 +149,8 @@ storeLogTagsHist(StoreEntry *e)
 {
     int tag;
     for (tag = 0; tag <= STORE_LOG_SWAPOUTFAIL; tag++) {
-	storeAppendPrintf(e, "%s %d\n",
-	    storeLogTags[tag],
-	    storeLogTagsCounts[tag]);
+        storeAppendPrintf(e, "%s %d\n",
+                          storeLogTags[tag],
+                          storeLogTagsCounts[tag]);
     }
 }

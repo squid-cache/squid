@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -46,15 +46,14 @@ int file_read_method(int, char *, int);
 int file_write_method(int, const char *, int);
 #endif
 
-const char *fdTypeStr[] =
-    {
-        "None",
-        "Log",
-        "File",
-        "Socket",
-        "Pipe",
-        "Unknown"
-    };
+const char *fdTypeStr[] = {
+    "None",
+    "Log",
+    "File",
+    "Socket",
+    "Pipe",
+    "Unknown"
+};
 
 static void fdUpdateBiggest(int fd, int);
 
@@ -265,9 +264,9 @@ fdDumpOpen(void)
         if (i == fileno(debug_log))
             continue;
 
-        debugs(51, 1, "Open FD "<< std::left<< std::setw(10) << 
+        debugs(51, 1, "Open FD "<< std::left<< std::setw(10) <<
                (F->bytes_read && F->bytes_written ? "READ/WRITE" :
-                F->bytes_read ? "READING" : F->bytes_written ? "WRITING" : 
+                F->bytes_read ? "READING" : F->bytes_written ? "WRITING" :
                 "UNSTARTED")  <<
                " "<< std::right << std::setw(4) << i  << " " << F->desc);
     }
@@ -324,7 +323,7 @@ fdAdjustReserved(void)
     }
 
     if (Squid_MaxFD - newReserve < XMIN(256, Squid_MaxFD / 2))
-	fatalf("Too few filedescriptors available in the system (%d usable of %d).\n", Squid_MaxFD - newReserve, Squid_MaxFD);
+        fatalf("Too few filedescriptors available in the system (%d usable of %d).\n", Squid_MaxFD - newReserve, Squid_MaxFD);
 
     debugs(51, 0, "Reserved FD adjusted from " << RESERVED_FD << " to " << newReserve << " due to failures");
     RESERVED_FD = newReserve;

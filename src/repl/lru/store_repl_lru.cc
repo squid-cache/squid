@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -40,8 +40,7 @@
 
 REMOVALPOLICYCREATE createRemovalPolicy_lru;
 
-struct LruPolicyData
-{
+struct LruPolicyData {
     void setPolicyNode (StoreEntry *, void *) const;
     RemovalPolicy *policy;
     dlink_list list;
@@ -89,8 +88,7 @@ LruPolicyData::setPolicyNode (StoreEntry *entry, void *value) const
 
 typedef struct _LruNode LruNode;
 
-struct _LruNode
-{
+struct _LruNode {
     /* Note: the dlink_node MUST be the first member of the LruNode
      * structure. This member is later pointer typecasted to LruNode *.
      */
@@ -161,8 +159,7 @@ lru_referenced(RemovalPolicy * policy, const StoreEntry * entry,
 
 typedef struct _LruWalkData LruWalkData;
 
-struct _LruWalkData
-{
+struct _LruWalkData {
     LruNode *current;
 };
 
@@ -213,8 +210,7 @@ lru_walkInit(RemovalPolicy * policy)
 
 typedef struct _LruPurgeData LruPurgeData;
 
-struct _LruPurgeData
-{
+struct _LruPurgeData {
     LruNode *current;
     LruNode *start;
 };

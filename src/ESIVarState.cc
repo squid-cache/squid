@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  ;  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -41,19 +41,17 @@
 CBDATA_TYPE (ESIVarState);
 FREE ESIVarStateFree;
 
-char const *ESIVariableUserAgent::esiUserOs[]=
-    {
-        "WIN",
-        "MAC",
-        "UNIX",
-        "OTHER"
-    };
+char const *ESIVariableUserAgent::esiUserOs[]= {
+    "WIN",
+    "MAC",
+    "UNIX",
+    "OTHER"
+};
 
-char const * esiBrowsers[]=
-    {"MSIE",
-     "MOZILLA",
-     "OTHER"
-    };
+char const * esiBrowsers[]= {"MSIE",
+                             "MOZILLA",
+                             "OTHER"
+                            };
 
 
 void
@@ -114,8 +112,7 @@ ESIVariableQuery::queryString() const
 }
 
 struct _query_elem const *
-            ESIVariableQuery::queryVector() const
-    {
+            ESIVariableQuery::queryVector() const {
         return query;
     }
 
@@ -354,20 +351,20 @@ ESIVariableUserAgent::ESIVariableUserAgent(ESIVarState &state)
     /* Grr this Node is painful - RFC 2616 specifies that 'by convention' the tokens are in order of importance
      * in identifying the product. According to the RFC the above should be interpreted as:
      * Product - Mozilla version 4.0
-     * in comments - compatible; .... 3705 
+     * in comments - compatible; .... 3705
      *
      * Useing the RFC a more appropriate header would be
      *    User-Agent: MSIE/6.0 Mozilla/4.0 Windows-NT/5.1 .NET-CLR/1.0.3705
      *    or something similar.
      *
-     * Because we can't parse under those rules and get real-world useful answers, we follow the following 
+     * Because we can't parse under those rules and get real-world useful answers, we follow the following
      * algorithm:
      * if the string Windows appears in the header, the OS is WIN.
      * If the string Mac appears in the header, the OS is MAC.
      * If the string nix, or BSD appears in the header, the OS is UNIX.
-     * If the string MSIE appears in the header, the BROWSER is MSIE, and the version is the string from 
+     * If the string MSIE appears in the header, the BROWSER is MSIE, and the version is the string from
      * MSIE<sp> to the first ;, or end of string.
-     * If the String MSIE does not appear in the header, and MOZILLA does, we use the version from the 
+     * If the String MSIE does not appear in the header, and MOZILLA does, we use the version from the
      * /version field.
      * if MOZILLA doesn't appear, the browser is set to OTHER.
      * In future, this may be better implemented as a regexp.

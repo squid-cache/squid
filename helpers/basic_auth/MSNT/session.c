@@ -1,10 +1,10 @@
 /* UNIX RFCNB (RFC1001/RFC1002) NetBIOS implementation
- * 
+ *
  * Version 1.0
  * Session Routines ...
- * 
+ *
  * Copyright (C) Richard Sharpe 1996
- * 
+ *
  */
 
 /*
@@ -12,12 +12,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -47,13 +47,13 @@ void (*Prot_Print_Routine) () = NULL;	/* Pointer to print routine */
 /* Set up a session with a remote name. We are passed Called_Name as a
  * string which we convert to a NetBIOS name, ie space terminated, up to
  * 16 characters only if we need to. If Called_Address is not empty, then
- * we use it to connect to the remote end, but put in Called_Name ... Called 
+ * we use it to connect to the remote end, but put in Called_Name ... Called
  * Address can be a DNS based name, or a TCP/IP address ...
  */
 
 void *
 RFCNB_Call(char *Called_Name, char *Calling_Name, char *Called_Address,
-    int port)
+           int port)
 {
     struct RFCNB_Con *con;
     struct in_addr Dest_IP;
@@ -65,15 +65,15 @@ RFCNB_Call(char *Called_Name, char *Calling_Name, char *Called_Address,
     /* Now, we really should look up the port in /etc/services ... */
 
     if (port == 0)
-	port = RFCNB_Default_Port;
+        port = RFCNB_Default_Port;
 
     /* Create a connection structure first */
 
     if ((con = (struct RFCNB_Con *) malloc(sizeof(struct RFCNB_Con))) == NULL) {	/* Error in size */
 
-	RFCNB_errno = RFCNBE_NoSpace;
-	RFCNB_saved_errno = errno;
-	return (NULL);
+        RFCNB_errno = RFCNBE_NoSpace;
+        RFCNB_saved_errno = errno;
+        return (NULL);
 
     }
     con->fd = -0;		/* no descriptor yet */
@@ -86,13 +86,13 @@ RFCNB_Call(char *Called_Name, char *Calling_Name, char *Called_Address,
 
     Service_Address = Called_Name;
     if (strcmp(Called_Address, "") != 0) {	/* If the Called Address = "" */
-	Service_Address = Called_Address;
+        Service_Address = Called_Address;
     }
     if ((errno = RFCNB_Name_To_IP(Service_Address, &Dest_IP)) < 0) {	/* Error */
 
-	/* No need to modify RFCNB_errno as it was done by RFCNB_Name_To_IP */
+        /* No need to modify RFCNB_errno as it was done by RFCNB_Name_To_IP */
         free(con);
-	return (NULL);
+        return (NULL);
 
     }
     /* Now connect to the remote end */
@@ -101,76 +101,76 @@ RFCNB_Call(char *Called_Name, char *Calling_Name, char *Called_Address,
 
     while (redirect) {		/* Connect and get session info etc */
 
-	redirect = FALSE;	/* Assume all OK */
+        redirect = FALSE;	/* Assume all OK */
 
-	/* Build the redirect info. First one is first addr called */
-	/* And tack it onto the list of addresses we called        */
+        /* Build the redirect info. First one is first addr called */
+        /* And tack it onto the list of addresses we called        */
 
-	if ((redir_addr = (struct redirect_addr *) malloc(sizeof(struct redirect_addr))) == NULL) {	/* Could not get space */
+        if ((redir_addr = (struct redirect_addr *) malloc(sizeof(struct redirect_addr))) == NULL) {	/* Could not get space */
 
-	    RFCNB_errno = RFCNBE_NoSpace;
-	    RFCNB_saved_errno = errno;
+            RFCNB_errno = RFCNBE_NoSpace;
+            RFCNB_saved_errno = errno;
             free(con);
-	    return (NULL);
+            return (NULL);
 
-	}
-	memcpy((char *) &(redir_addr->ip_addr), (char *) &Dest_IP, sizeof(Dest_IP));
-	redir_addr->port = port;
-	redir_addr->next = NULL;
+        }
+        memcpy((char *) &(redir_addr->ip_addr), (char *) &Dest_IP, sizeof(Dest_IP));
+        redir_addr->port = port;
+        redir_addr->next = NULL;
 
-	if (con->redirect_list == NULL) {	/* Stick on head */
+        if (con->redirect_list == NULL) {	/* Stick on head */
 
-	    con->redirect_list = con->last_addr = redir_addr;
+            con->redirect_list = con->last_addr = redir_addr;
 
-	} else {
+        } else {
 
-	    con->last_addr->next = redir_addr;
-	    con->last_addr = redir_addr;
+            con->last_addr->next = redir_addr;
+            con->last_addr = redir_addr;
 
-	}
+        }
 
-	/* Now, make that connection */
+        /* Now, make that connection */
 
-	if ((Client = RFCNB_IP_Connect(Dest_IP, port)) < 0) {	/* Error */
+        if ((Client = RFCNB_IP_Connect(Dest_IP, port)) < 0) {	/* Error */
 
-	    /* No need to modify RFCNB_errno as it was done by RFCNB_IP_Connect */
+            /* No need to modify RFCNB_errno as it was done by RFCNB_IP_Connect */
             free(con);
-	    return (NULL);
+            return (NULL);
 
-	}
-	con->fd = Client;
+        }
+        con->fd = Client;
 
-	/* Now send and handle the RFCNB session request              */
-	/* If we get a redirect, we will comeback with redirect true 
-	 * and a new IP address in DEST_IP                            */
+        /* Now send and handle the RFCNB session request              */
+        /* If we get a redirect, we will comeback with redirect true
+         * and a new IP address in DEST_IP                            */
 
-	if ((errno = RFCNB_Session_Req(con,
-		    Called_Name,
-		    Calling_Name,
-		    &redirect, &Dest_IP, &port)) < 0) {
+        if ((errno = RFCNB_Session_Req(con,
+                                       Called_Name,
+                                       Calling_Name,
+                                       &redirect, &Dest_IP, &port)) < 0) {
 
-	    /* No need to modify RFCNB_errno as it was done by RFCNB_Session.. */
-	    RFCNB_Close(con->fd);	/* Close it */
+            /* No need to modify RFCNB_errno as it was done by RFCNB_Session.. */
+            RFCNB_Close(con->fd);	/* Close it */
             free(con);
-	    return (NULL);
+            return (NULL);
 
-	}
-	if (redirect) {
+        }
+        if (redirect) {
 
-	    /* We have to close the connection, and then try again */
+            /* We have to close the connection, and then try again */
 
-	    (con->redirects)++;
+            (con->redirects)++;
 
-	    RFCNB_Close(con->fd);	/* Close it */
+            RFCNB_Close(con->fd);	/* Close it */
 
-	}
+        }
     }
 
     return (con);
 
 }
 
-/* We send a packet to the other end ... for the moment, we treat the 
+/* We send a packet to the other end ... for the moment, we treat the
  * data as a series of pointers to blocks of data ... we should check the
  * length ... */
 
@@ -187,9 +187,9 @@ RFCNB_Send(struct RFCNB_Con *Con_Handle, struct RFCNB_Pkt *udata, int Length)
 
     if (pkt == NULL) {
 
-	RFCNB_errno = RFCNBE_NoSpace;
-	RFCNB_saved_errno = errno;
-	return (RFCNBE_Bad);
+        RFCNB_errno = RFCNBE_NoSpace;
+        RFCNB_saved_errno = errno;
+        return (RFCNBE_Bad);
 
     }
     pkt->next = udata;		/* The user data we want to send */
@@ -209,9 +209,9 @@ RFCNB_Send(struct RFCNB_Con *Con_Handle, struct RFCNB_Pkt *udata, int Length)
 
     if ((len = RFCNB_Put_Pkt(Con_Handle, pkt, Length + RFCNB_Pkt_Hdr_Len)) < 0) {
 
-	/* No need to change RFCNB_errno as it was done by put_pkt ...     */
+        /* No need to change RFCNB_errno as it was done by put_pkt ...     */
 
-	return (RFCNBE_Bad);	/* Should be able to write that lot ... */
+        return (RFCNBE_Bad);	/* Should be able to write that lot ... */
 
     }
     /* Now we have sent that lot, let's get rid of the RFCNB Header and return */
@@ -224,7 +224,7 @@ RFCNB_Send(struct RFCNB_Con *Con_Handle, struct RFCNB_Pkt *udata, int Length)
 
 }
 
-/* We pick up a message from the internet ... We have to worry about 
+/* We pick up a message from the internet ... We have to worry about
  * non-message packets ...                                           */
 
 int
@@ -235,9 +235,9 @@ RFCNB_Recv(struct RFCNB_Con *con_Handle, struct RFCNB_Pkt *Data, int Length)
 
     if (con_Handle == NULL) {
 
-	RFCNB_errno = RFCNBE_BadHandle;
-	RFCNB_saved_errno = errno;
-	return (RFCNBE_Bad);
+        RFCNB_errno = RFCNBE_BadHandle;
+        RFCNB_saved_errno = errno;
+        return (RFCNBE_Bad);
 
     }
     /* Now get a packet from below. We allocate a header first */
@@ -248,9 +248,9 @@ RFCNB_Recv(struct RFCNB_Con *con_Handle, struct RFCNB_Pkt *Data, int Length)
 
     if (pkt == NULL) {
 
-	RFCNB_errno = RFCNBE_NoSpace;
-	RFCNB_saved_errno = errno;
-	return (RFCNBE_Bad);
+        RFCNB_errno = RFCNBE_NoSpace;
+        RFCNB_saved_errno = errno;
+        return (RFCNBE_Bad);
 
     }
     pkt->next = Data;		/* Plug in the data portion */
@@ -258,10 +258,10 @@ RFCNB_Recv(struct RFCNB_Con *con_Handle, struct RFCNB_Pkt *Data, int Length)
     if ((ret_len = RFCNB_Get_Pkt(con_Handle, pkt, Length + RFCNB_Pkt_Hdr_Len)) < 0) {
 
 #ifdef RFCNB_DEBUG
-	fprintf(stderr, "Bad packet return in RFCNB_Recv... \n");
+        fprintf(stderr, "Bad packet return in RFCNB_Recv... \n");
 #endif
 
-	return (RFCNBE_Bad);
+        return (RFCNBE_Bad);
 
     }
     /* We should check that we go a message and not a keep alive */
@@ -282,8 +282,8 @@ RFCNB_Hangup(struct RFCNB_Con *con_Handle)
 {
 
     if (con_Handle != NULL) {
-	RFCNB_Close(con_Handle->fd);	/* Could this fail? */
-	free(con_Handle);
+        RFCNB_Close(con_Handle->fd);	/* Could this fail? */
+        free(con_Handle);
     }
     return 0;
 
@@ -297,10 +297,10 @@ void
 RFCNB_Get_Error(char *buffer, int buf_len)
 {
     if (RFCNB_saved_errno <= 0) {
-	snprintf(buffer, (buf_len-1) ,"%s", RFCNB_Error_Strings[RFCNB_errno]);
+        snprintf(buffer, (buf_len-1) ,"%s", RFCNB_Error_Strings[RFCNB_errno]);
     } else {
-	snprintf(buffer, (buf_len-1), "%s\n\terrno:%s", RFCNB_Error_Strings[RFCNB_errno],
-	    strerror(RFCNB_saved_errno));
+        snprintf(buffer, (buf_len-1), "%s\n\terrno:%s", RFCNB_Error_Strings[RFCNB_errno],
+                 strerror(RFCNB_saved_errno));
     }
 }
 

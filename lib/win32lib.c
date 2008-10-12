@@ -22,12 +22,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -60,77 +60,77 @@ LPCRITICAL_SECTION dbg_mutex = NULL;
 void GetProcessName(pid_t, char *);
 
 #if defined(_MSC_VER)		/* Microsoft C Compiler ONLY */
-size_t 
+size_t
 getpagesize()
 {
     static DWORD system_pagesize = 0;
     if (!system_pagesize) {
-	SYSTEM_INFO system_info;
-	GetSystemInfo(&system_info);
-	system_pagesize = system_info.dwPageSize;
+        SYSTEM_INFO system_info;
+        GetSystemInfo(&system_info);
+        system_pagesize = system_info.dwPageSize;
     }
     return system_pagesize;
 }
 #endif
 
-uid_t 
+uid_t
 geteuid(void)
 {
     return 100;
 }
 
-uid_t 
+uid_t
 getuid(void)
 {
     return 100;
 }
 
-int 
+int
 setuid(uid_t uid)
 {
     return 0;
 }
 
-int 
+int
 seteuid(uid_t euid)
 {
     return 0;
 }
 
-gid_t 
+gid_t
 getegid(void)
 {
     return 100;
 }
 
-gid_t 
+gid_t
 getgid(void)
 {
     return 100;
 }
 
-int 
+int
 setgid(gid_t gid)
 {
     return 0;
 }
 
-int 
+int
 setegid(gid_t egid)
 {
     return 0;
 }
 
-int 
+int
 chroot(const char *dirname)
 {
     if (SetCurrentDirectory(dirname))
-	return 0;
+        return 0;
     else
-	return GetLastError();
+        return GetLastError();
 }
 
-void 
+void
 GetProcessName(pid_t pid, char *ProcessName)
 {
     HANDLE hProcess;
@@ -139,26 +139,26 @@ GetProcessName(pid_t pid, char *ProcessName)
 #if HAVE_WIN32_PSAPI
     /* Get a handle to the process. */
     hProcess = OpenProcess(PROCESS_QUERY_INFORMATION |
-	PROCESS_VM_READ,
-	FALSE, pid);
+                           PROCESS_VM_READ,
+                           FALSE, pid);
     /* Get the process name. */
     if (NULL != hProcess) {
-	HMODULE hMod;
-	DWORD cbNeeded;
+        HMODULE hMod;
+        DWORD cbNeeded;
 
-	if (EnumProcessModules(hProcess, &hMod, sizeof(hMod), &cbNeeded))
-	    GetModuleBaseName(hProcess, hMod, ProcessName, sizeof(ProcessName));
-	else {
-	    CloseHandle(hProcess);
-	    return;
-	}
+        if (EnumProcessModules(hProcess, &hMod, sizeof(hMod), &cbNeeded))
+            GetModuleBaseName(hProcess, hMod, ProcessName, sizeof(ProcessName));
+        else {
+            CloseHandle(hProcess);
+            return;
+        }
     } else
-	return;
+        return;
     CloseHandle(hProcess);
 #endif
 }
 
-int 
+int
 kill(pid_t pid, int sig)
 {
     HANDLE hProcess;
@@ -166,24 +166,24 @@ kill(pid_t pid, int sig)
     char ProcessNameToCheck[MAX_PATH];
 
     if (sig == 0) {
-	if ((hProcess = OpenProcess(PROCESS_QUERY_INFORMATION |
-		    PROCESS_VM_READ,
-		    FALSE, pid)) == NULL)
-	    return -1;
-	else {
-	    CloseHandle(hProcess);
-	    GetProcessName(getpid(), MyProcessName);
-	    GetProcessName(pid, ProcessNameToCheck);
-	    if (strcmp(MyProcessName, ProcessNameToCheck) == 0)
-		return 0;
-	    return -1;
-	}
+        if ((hProcess = OpenProcess(PROCESS_QUERY_INFORMATION |
+                                    PROCESS_VM_READ,
+                                    FALSE, pid)) == NULL)
+            return -1;
+        else {
+            CloseHandle(hProcess);
+            GetProcessName(getpid(), MyProcessName);
+            GetProcessName(pid, ProcessNameToCheck);
+            if (strcmp(MyProcessName, ProcessNameToCheck) == 0)
+                return 0;
+            return -1;
+        }
     } else
-	return 0;
+        return 0;
 }
 
 #ifndef HAVE_GETTIMEOFDAY
-int 
+int
 gettimeofday(struct timeval *pcur_time, void *tzp)
 {
     struct _timeb current;
@@ -194,14 +194,14 @@ gettimeofday(struct timeval *pcur_time, void *tzp)
     pcur_time->tv_sec = current.time;
     pcur_time->tv_usec = current.millitm * 1000L;
     if (tz) {
-	tz->tz_minuteswest = current.timezone;	/* minutes west of Greenwich  */
-	tz->tz_dsttime = current.dstflag;	/* type of dst correction  */
+        tz->tz_minuteswest = current.timezone;	/* minutes west of Greenwich  */
+        tz->tz_dsttime = current.dstflag;	/* type of dst correction  */
     }
     return 0;
 }
 #endif
 
-int 
+int
 statfs(const char *path, struct statfs *sfs)
 {
     char drive[4];
@@ -209,20 +209,20 @@ statfs(const char *path, struct statfs *sfs)
     DWORD vsn, maxlen, flags;
 
     if (!sfs) {
-	errno = EINVAL;
-	return -1;
+        errno = EINVAL;
+        return -1;
     }
     strncpy(drive, path, 2);
     drive[2] = '\0';
     strcat(drive, "\\");
 
     if (!GetDiskFreeSpace(drive, &spc, &bps, &freec, &totalc)) {
-	errno = ENOENT;
-	return -1;
+        errno = ENOENT;
+        return -1;
     }
     if (!GetVolumeInformation(drive, NULL, 0, &vsn, &maxlen, &flags, NULL, 0)) {
-	errno = ENOENT;
-	return -1;
+        errno = ENOENT;
+        return -1;
     }
     sfs->f_type = flags;
     sfs->f_bsize = spc * bps;
@@ -242,30 +242,30 @@ WIN32_ftruncate(int fd, off_t size)
     unsigned int curpos;
 
     if (fd < 0)
-	return -1;
+        return -1;
 
     hfile = (HANDLE) _get_osfhandle(fd);
     curpos = SetFilePointer(hfile, 0, NULL, FILE_CURRENT);
     if (curpos == 0xFFFFFFFF
-	|| SetFilePointer(hfile, size, NULL, FILE_BEGIN) == 0xFFFFFFFF
-	|| !SetEndOfFile(hfile)) {
-	int error = GetLastError();
+            || SetFilePointer(hfile, size, NULL, FILE_BEGIN) == 0xFFFFFFFF
+            || !SetEndOfFile(hfile)) {
+        int error = GetLastError();
 
-	switch (error) {
-	case ERROR_INVALID_HANDLE:
-	    errno = EBADF;
-	    break;
-	default:
-	    errno = EIO;
-	    break;
-	}
+        switch (error) {
+        case ERROR_INVALID_HANDLE:
+            errno = EBADF;
+            break;
+        default:
+            errno = EIO;
+            break;
+        }
 
-	return -1;
+        return -1;
     }
     return 0;
 }
 
-int 
+int
 WIN32_truncate(const char *pathname, off_t length)
 {
     int fd;
@@ -274,10 +274,10 @@ WIN32_truncate(const char *pathname, off_t length)
     fd = open(pathname, O_RDWR);
 
     if (fd == -1)
-	errno = EBADF;
+        errno = EBADF;
     else {
-	res = WIN32_ftruncate(fd, length);
-	_close(fd);
+        res = WIN32_ftruncate(fd, length);
+        _close(fd);
     }
 
     return res;
@@ -290,178 +290,178 @@ static struct _wsaerrtext {
 } _wsaerrtext[] = {
 
     {
-	WSA_E_CANCELLED, "WSA_E_CANCELLED", "Lookup cancelled."
+        WSA_E_CANCELLED, "WSA_E_CANCELLED", "Lookup cancelled."
     },
     {
-	WSA_E_NO_MORE, "WSA_E_NO_MORE", "No more data available."
+        WSA_E_NO_MORE, "WSA_E_NO_MORE", "No more data available."
     },
     {
-	WSAEACCES, "WSAEACCES", "Permission denied."
+        WSAEACCES, "WSAEACCES", "Permission denied."
     },
     {
-	WSAEADDRINUSE, "WSAEADDRINUSE", "Address already in use."
+        WSAEADDRINUSE, "WSAEADDRINUSE", "Address already in use."
     },
     {
-	WSAEADDRNOTAVAIL, "WSAEADDRNOTAVAIL", "Cannot assign requested address."
+        WSAEADDRNOTAVAIL, "WSAEADDRNOTAVAIL", "Cannot assign requested address."
     },
     {
-	WSAEAFNOSUPPORT, "WSAEAFNOSUPPORT", "Address family not supported by protocol family."
+        WSAEAFNOSUPPORT, "WSAEAFNOSUPPORT", "Address family not supported by protocol family."
     },
     {
-	WSAEALREADY, "WSAEALREADY", "Operation already in progress."
+        WSAEALREADY, "WSAEALREADY", "Operation already in progress."
     },
     {
-	WSAEBADF, "WSAEBADF", "Bad file number."
+        WSAEBADF, "WSAEBADF", "Bad file number."
     },
     {
-	WSAECANCELLED, "WSAECANCELLED", "Operation cancelled."
+        WSAECANCELLED, "WSAECANCELLED", "Operation cancelled."
     },
     {
-	WSAECONNABORTED, "WSAECONNABORTED", "Software caused connection abort."
+        WSAECONNABORTED, "WSAECONNABORTED", "Software caused connection abort."
     },
     {
-	WSAECONNREFUSED, "WSAECONNREFUSED", "Connection refused."
+        WSAECONNREFUSED, "WSAECONNREFUSED", "Connection refused."
     },
     {
-	WSAECONNRESET, "WSAECONNRESET", "Connection reset by peer."
+        WSAECONNRESET, "WSAECONNRESET", "Connection reset by peer."
     },
     {
-	WSAEDESTADDRREQ, "WSAEDESTADDRREQ", "Destination address required."
+        WSAEDESTADDRREQ, "WSAEDESTADDRREQ", "Destination address required."
     },
     {
-	WSAEDQUOT, "WSAEDQUOT", "Disk quota exceeded."
+        WSAEDQUOT, "WSAEDQUOT", "Disk quota exceeded."
     },
     {
-	WSAEFAULT, "WSAEFAULT", "Bad address."
+        WSAEFAULT, "WSAEFAULT", "Bad address."
     },
     {
-	WSAEHOSTDOWN, "WSAEHOSTDOWN", "Host is down."
+        WSAEHOSTDOWN, "WSAEHOSTDOWN", "Host is down."
     },
     {
-	WSAEHOSTUNREACH, "WSAEHOSTUNREACH", "No route to host."
+        WSAEHOSTUNREACH, "WSAEHOSTUNREACH", "No route to host."
     },
     {
-	WSAEINPROGRESS, "WSAEINPROGRESS", "Operation now in progress."
+        WSAEINPROGRESS, "WSAEINPROGRESS", "Operation now in progress."
     },
     {
-	WSAEINTR, "WSAEINTR", "Interrupted function call."
+        WSAEINTR, "WSAEINTR", "Interrupted function call."
     },
     {
-	WSAEINVAL, "WSAEINVAL", "Invalid argument."
+        WSAEINVAL, "WSAEINVAL", "Invalid argument."
     },
     {
-	WSAEINVALIDPROCTABLE, "WSAEINVALIDPROCTABLE", "Invalid procedure table from service provider."
+        WSAEINVALIDPROCTABLE, "WSAEINVALIDPROCTABLE", "Invalid procedure table from service provider."
     },
     {
-	WSAEINVALIDPROVIDER, "WSAEINVALIDPROVIDER", "Invalid service provider version number."
+        WSAEINVALIDPROVIDER, "WSAEINVALIDPROVIDER", "Invalid service provider version number."
     },
     {
-	WSAEISCONN, "WSAEISCONN", "Socket is already connected."
+        WSAEISCONN, "WSAEISCONN", "Socket is already connected."
     },
     {
-	WSAELOOP, "WSAELOOP", "Too many levels of symbolic links."
+        WSAELOOP, "WSAELOOP", "Too many levels of symbolic links."
     },
     {
-	WSAEMFILE, "WSAEMFILE", "Too many open files."
+        WSAEMFILE, "WSAEMFILE", "Too many open files."
     },
     {
-	WSAEMSGSIZE, "WSAEMSGSIZE", "Message too long."
+        WSAEMSGSIZE, "WSAEMSGSIZE", "Message too long."
     },
     {
-	WSAENAMETOOLONG, "WSAENAMETOOLONG", "File name is too long."
+        WSAENAMETOOLONG, "WSAENAMETOOLONG", "File name is too long."
     },
     {
-	WSAENETDOWN, "WSAENETDOWN", "Network is down."
+        WSAENETDOWN, "WSAENETDOWN", "Network is down."
     },
     {
-	WSAENETRESET, "WSAENETRESET", "Network dropped connection on reset."
+        WSAENETRESET, "WSAENETRESET", "Network dropped connection on reset."
     },
     {
-	WSAENETUNREACH, "WSAENETUNREACH", "Network is unreachable."
+        WSAENETUNREACH, "WSAENETUNREACH", "Network is unreachable."
     },
     {
-	WSAENOBUFS, "WSAENOBUFS", "No buffer space available."
+        WSAENOBUFS, "WSAENOBUFS", "No buffer space available."
     },
     {
-	WSAENOMORE, "WSAENOMORE", "No more data available."
+        WSAENOMORE, "WSAENOMORE", "No more data available."
     },
     {
-	WSAENOPROTOOPT, "WSAENOPROTOOPT", "Bad protocol option."
+        WSAENOPROTOOPT, "WSAENOPROTOOPT", "Bad protocol option."
     },
     {
-	WSAENOTCONN, "WSAENOTCONN", "Socket is not connected."
+        WSAENOTCONN, "WSAENOTCONN", "Socket is not connected."
     },
     {
-	WSAENOTEMPTY, "WSAENOTEMPTY", "Directory is not empty."
+        WSAENOTEMPTY, "WSAENOTEMPTY", "Directory is not empty."
     },
     {
-	WSAENOTSOCK, "WSAENOTSOCK", "Socket operation on nonsocket."
+        WSAENOTSOCK, "WSAENOTSOCK", "Socket operation on nonsocket."
     },
     {
-	WSAEOPNOTSUPP, "WSAEOPNOTSUPP", "Operation not supported."
+        WSAEOPNOTSUPP, "WSAEOPNOTSUPP", "Operation not supported."
     },
     {
-	WSAEPFNOSUPPORT, "WSAEPFNOSUPPORT", "Protocol family not supported."
+        WSAEPFNOSUPPORT, "WSAEPFNOSUPPORT", "Protocol family not supported."
     },
     {
-	WSAEPROCLIM, "WSAEPROCLIM", "Too many processes."
+        WSAEPROCLIM, "WSAEPROCLIM", "Too many processes."
     },
     {
-	WSAEPROTONOSUPPORT, "WSAEPROTONOSUPPORT", "Protocol not supported."
+        WSAEPROTONOSUPPORT, "WSAEPROTONOSUPPORT", "Protocol not supported."
     },
     {
-	WSAEPROTOTYPE, "WSAEPROTOTYPE", "Protocol wrong type for socket."
+        WSAEPROTOTYPE, "WSAEPROTOTYPE", "Protocol wrong type for socket."
     },
     {
-	WSAEPROVIDERFAILEDINIT, "WSAEPROVIDERFAILEDINIT", "Unable to initialise a service provider."
+        WSAEPROVIDERFAILEDINIT, "WSAEPROVIDERFAILEDINIT", "Unable to initialise a service provider."
     },
     {
-	WSAEREFUSED, "WSAEREFUSED", "Refused."
+        WSAEREFUSED, "WSAEREFUSED", "Refused."
     },
     {
-	WSAEREMOTE, "WSAEREMOTE", "Too many levels of remote in path."
+        WSAEREMOTE, "WSAEREMOTE", "Too many levels of remote in path."
     },
     {
-	WSAESHUTDOWN, "WSAESHUTDOWN", "Cannot send after socket shutdown."
+        WSAESHUTDOWN, "WSAESHUTDOWN", "Cannot send after socket shutdown."
     },
     {
-	WSAESOCKTNOSUPPORT, "WSAESOCKTNOSUPPORT", "Socket type not supported."
+        WSAESOCKTNOSUPPORT, "WSAESOCKTNOSUPPORT", "Socket type not supported."
     },
     {
-	WSAESTALE, "WSAESTALE", "Stale NFS file handle."
+        WSAESTALE, "WSAESTALE", "Stale NFS file handle."
     },
     {
-	WSAETIMEDOUT, "WSAETIMEDOUT", "Connection timed out."
+        WSAETIMEDOUT, "WSAETIMEDOUT", "Connection timed out."
     },
     {
-	WSAETOOMANYREFS, "WSAETOOMANYREFS", "Too many references."
+        WSAETOOMANYREFS, "WSAETOOMANYREFS", "Too many references."
     },
     {
-	WSAEUSERS, "WSAEUSERS", "Too many users."
+        WSAEUSERS, "WSAEUSERS", "Too many users."
     },
     {
-	WSAEWOULDBLOCK, "WSAEWOULDBLOCK", "Resource temporarily unavailable."
+        WSAEWOULDBLOCK, "WSAEWOULDBLOCK", "Resource temporarily unavailable."
     },
     {
-	WSANOTINITIALISED, "WSANOTINITIALISED", "Successful WSAStartup not yet performed."
+        WSANOTINITIALISED, "WSANOTINITIALISED", "Successful WSAStartup not yet performed."
     },
     {
-	WSASERVICE_NOT_FOUND, "WSASERVICE_NOT_FOUND", "Service not found."
+        WSASERVICE_NOT_FOUND, "WSASERVICE_NOT_FOUND", "Service not found."
     },
     {
-	WSASYSCALLFAILURE, "WSASYSCALLFAILURE", "System call failure."
+        WSASYSCALLFAILURE, "WSASYSCALLFAILURE", "System call failure."
     },
     {
-	WSASYSNOTREADY, "WSASYSNOTREADY", "Network subsystem is unavailable."
+        WSASYSNOTREADY, "WSASYSNOTREADY", "Network subsystem is unavailable."
     },
     {
-	WSATYPE_NOT_FOUND, "WSATYPE_NOT_FOUND", "Class type not found."
+        WSATYPE_NOT_FOUND, "WSATYPE_NOT_FOUND", "Class type not found."
     },
     {
-	WSAVERNOTSUPPORTED, "WSAVERNOTSUPPORTED", "Winsock.dll version out of range."
+        WSAVERNOTSUPPORTED, "WSAVERNOTSUPPORTED", "Winsock.dll version out of range."
     },
     {
-	WSAEDISCON, "WSAEDISCON", "Graceful shutdown in progress."
+        WSAEDISCON, "WSAEDISCON", "Graceful shutdown in progress."
     }
 };
 
@@ -475,33 +475,29 @@ wsastrerror(int err)
     int i, errind = -1;
 
     if (err == 0)
-	return "(0) No error.";
+        return "(0) No error.";
     for (i = 0; i < sizeof(_wsaerrtext) / sizeof(struct _wsaerrtext); i++) {
-	if (_wsaerrtext[i].err != err)
-	    continue;
-	errind = i;
-	break;
+        if (_wsaerrtext[i].err != err)
+            continue;
+        errind = i;
+        break;
     }
     if (errind == -1)
-	snprintf(xwsaerror_buf, BUFSIZ, "Unknown");
+        snprintf(xwsaerror_buf, BUFSIZ, "Unknown");
     else
-	snprintf(xwsaerror_buf, BUFSIZ, "%s, %s", _wsaerrtext[errind].errconst, _wsaerrtext[errind].errdesc);
+        snprintf(xwsaerror_buf, BUFSIZ, "%s, %s", _wsaerrtext[errind].errconst, _wsaerrtext[errind].errdesc);
     return xwsaerror_buf;
 }
 
 struct passwd *
-getpwnam(char *unused)
-{
-    static struct passwd pwd =
-    {NULL, NULL, 100, 100, NULL, NULL, NULL};
+            getpwnam(char *unused) {
+    static struct passwd pwd = {NULL, NULL, 100, 100, NULL, NULL, NULL};
     return &pwd;
 }
 
 struct group *
-getgrnam(char *unused)
-{
-    static struct group grp =
-    {NULL, NULL, 100, NULL};
+            getgrnam(char *unused) {
+    static struct group grp = {NULL, NULL, 100, NULL};
     return &grp;
 }
 
@@ -514,36 +510,36 @@ WIN32_strerror(int err)
     static char xbstrerror_buf[BUFSIZ];
 
     if (err < 0 || err >= sys_nerr)
-	strncpy(xbstrerror_buf, wsastrerror(err), BUFSIZ);
+        strncpy(xbstrerror_buf, wsastrerror(err), BUFSIZ);
     else
-	strncpy(xbstrerror_buf, strerror(err), BUFSIZ);
+        strncpy(xbstrerror_buf, strerror(err), BUFSIZ);
     return xbstrerror_buf;
 }
 
 #if defined(__MINGW32__)	/* MinGW environment */
-int 
+int
 _free_osfhnd(int filehandle)
 {
     if (((unsigned) filehandle < SQUID_MAXFD) &&
-	(_osfile(filehandle) & FOPEN) &&
-	(_osfhnd(filehandle) != (long) INVALID_HANDLE_VALUE)) {
-	switch (filehandle) {
-	case 0:
-	    SetStdHandle(STD_INPUT_HANDLE, NULL);
-	    break;
-	case 1:
-	    SetStdHandle(STD_OUTPUT_HANDLE, NULL);
-	    break;
-	case 2:
-	    SetStdHandle(STD_ERROR_HANDLE, NULL);
-	    break;
-	}
-	_osfhnd(filehandle) = (long) INVALID_HANDLE_VALUE;
-	return (0);
+            (_osfile(filehandle) & FOPEN) &&
+            (_osfhnd(filehandle) != (long) INVALID_HANDLE_VALUE)) {
+        switch (filehandle) {
+        case 0:
+            SetStdHandle(STD_INPUT_HANDLE, NULL);
+            break;
+        case 1:
+            SetStdHandle(STD_OUTPUT_HANDLE, NULL);
+            break;
+        case 2:
+            SetStdHandle(STD_ERROR_HANDLE, NULL);
+            break;
+        }
+        _osfhnd(filehandle) = (long) INVALID_HANDLE_VALUE;
+        return (0);
     } else {
-	errno = EBADF;		/* bad handle */
-	_doserrno = 0L;		/* not an OS error */
-	return -1;
+        errno = EBADF;		/* bad handle */
+        _doserrno = 0L;		/* not an OS error */
+        return -1;
     }
 }
 #endif
@@ -553,8 +549,7 @@ struct errorentry {
     int POSIX_errno;
 };
 
-static struct errorentry errortable[] =
-{
+static struct errorentry errortable[] = {
     {ERROR_INVALID_FUNCTION, EINVAL},
     {ERROR_FILE_NOT_FOUND, ENOENT},
     {ERROR_PATH_NOT_FOUND, ENOENT},
@@ -608,23 +603,23 @@ static struct errorentry errortable[] =
 #define MIN_EACCES_RANGE ERROR_WRITE_PROTECT
 #define MAX_EACCES_RANGE ERROR_SHARING_BUFFER_EXCEEDED
 
-void 
+void
 WIN32_maperror(unsigned long WIN32_oserrno)
 {
     int i;
 
     _doserrno = WIN32_oserrno;
     for (i = 0; i < (sizeof(errortable) / sizeof(struct errorentry)); ++i) {
-	if (WIN32_oserrno == errortable[i].WIN32_code) {
-	    errno = errortable[i].POSIX_errno;
-	    return;
-	}
+        if (WIN32_oserrno == errortable[i].WIN32_code) {
+            errno = errortable[i].POSIX_errno;
+            return;
+        }
     }
     if (WIN32_oserrno >= MIN_EACCES_RANGE && WIN32_oserrno <= MAX_EACCES_RANGE)
-	errno = EACCES;
+        errno = EACCES;
     else if (WIN32_oserrno >= MIN_EXEC_ERROR && WIN32_oserrno <= MAX_EXEC_ERROR)
-	errno = ENOEXEC;
+        errno = ENOEXEC;
     else
-	errno = EINVAL;
+        errno = EINVAL;
 }
 #endif

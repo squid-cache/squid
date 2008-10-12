@@ -3,6 +3,8 @@
 
 // Origin: xstd/TextException
 
+#include "squid.h"
+#include <exception>
 
 // simple exception to report custom errors
 // we may want to change the interface to be able to report system errors

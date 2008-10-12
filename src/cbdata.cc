@@ -23,12 +23,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -71,7 +71,7 @@ class CBDataCall
 {
 
 public:
-    CBDataCall (char const *callLabel, char const *aFile, int aLine) : label(callLabel), file(aFile), line(aLine){}
+    CBDataCall (char const *callLabel, char const *aFile, int aLine) : label(callLabel), file(aFile), line(aLine) {}
 
     char const *label;
     char const *file;
@@ -111,8 +111,7 @@ public:
     cbdata_type type;
 #if CBDATA_DEBUG
 
-    void addHistory(char const *label, char const *file, int line)
-    {
+    void addHistory(char const *label, char const *file, int line) {
         if (calls.size() > 1000)
             return;
 
@@ -179,8 +178,7 @@ static OBJH cbdataDumpHistory;
 #endif
 
 /// \ingroup CBDATAInternal
-struct CBDataIndex
-{
+struct CBDataIndex {
     MemAllocator *pool;
     FREE *free_func;
 }
@@ -253,7 +251,7 @@ cbdataInternalInitType(cbdata_type type, const char *name, int size, FREE * free
 
 #if HASHED_CBDATA
     if (!cbdata_htable)
-	cbdata_htable = hash_create(cbdata_cmp, 1 << 12, cbdata_hash);
+        cbdata_htable = hash_create(cbdata_cmp, 1 << 12, cbdata_hash);
 #endif
 }
 
@@ -368,10 +366,10 @@ cbdataInternalFree(void *p)
 #endif
 
     /* This is ugly. But: operator delete doesn't get
-     * the type parameter, so we can't use that 
+     * the type parameter, so we can't use that
      * to free the memory.
      * So, we free it ourselves.
-     * Note that this means a non-placement 
+     * Note that this means a non-placement
      * new would be a seriously bad idea.
      * Lastly, if we where a templated class,
      * we could use the normal delete operator
@@ -478,10 +476,10 @@ cbdataInternalUnlock(const void *p)
 #endif
 
     /* This is ugly. But: operator delete doesn't get
-     * the type parameter, so we can't use that 
+     * the type parameter, so we can't use that
      * to free the memory.
      * So, we free it ourselves.
-     * Note that this means a non-placement 
+     * Note that this means a non-placement
      * new would be a seriously bad idea.
      * Lastly, if we where a templated class,
      * we could use the normal delete operator
@@ -561,12 +559,10 @@ cbdata::dump(StoreEntry *sentry) const
                       '!', p, type, locks, file, line);
 }
 
-struct CBDataDumper : public unary_function<cbdata, void>
-{
-    CBDataDumper(StoreEntry *anEntry):where(anEntry){}
+struct CBDataDumper : public unary_function<cbdata, void> {
+    CBDataDumper(StoreEntry *anEntry):where(anEntry) {}
 
-    void operator()(cbdata const &x)
-    {
+    void operator()(cbdata const &x) {
         x.dump(where);
     }
 
@@ -612,24 +608,20 @@ CBDATA_CLASS_INIT(generic_cbdata);
 
 #if CBDATA_DEBUG
 
-struct CBDataCallDumper : public unary_function<CBDataCall, void>
-{
-    CBDataCallDumper (StoreEntry *anEntry):where(anEntry){}
+struct CBDataCallDumper : public unary_function<CBDataCall, void> {
+    CBDataCallDumper (StoreEntry *anEntry):where(anEntry) {}
 
-    void operator()(CBDataCall const &x)
-    {
+    void operator()(CBDataCall const &x) {
         storeAppendPrintf(where, "%s\t%s\t%d\n", x.label, x.file, x.line);
     }
 
     StoreEntry *where;
 };
 
-struct CBDataHistoryDumper : public CBDataDumper
-{
-    CBDataHistoryDumper(StoreEntry *anEntry):CBDataDumper(anEntry),where(anEntry), callDumper(anEntry){}
+struct CBDataHistoryDumper : public CBDataDumper {
+    CBDataHistoryDumper(StoreEntry *anEntry):CBDataDumper(anEntry),where(anEntry), callDumper(anEntry) {}
 
-    void operator()(cbdata const &x)
-    {
+    void operator()(cbdata const &x) {
         CBDataDumper::operator()(x);
         storeAppendPrintf(where, "\n");
         storeAppendPrintf(where, "Action\tFile\tLine\n");

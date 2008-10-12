@@ -46,7 +46,7 @@ testEventLoop::testCreate()
 #if POLISHED_MAIN_LOOP
 
 /*
- * Running the loop once is useful for integration with other loops, such as 
+ * Running the loop once is useful for integration with other loops, such as
  * migrating to it in incrementally.
  *
  * This test works by having a custom dispatcher and engine which record how
@@ -58,11 +58,9 @@ class RecordDispatcher : public CompletionDispatcher
 
 public:
     int calls;
-    RecordDispatcher(): calls(0)
-    {}
+    RecordDispatcher(): calls(0) {}
 
-    bool dispatch()
-    {
+    bool dispatch() {
         ++calls;
         /* claim we dispatched calls to be useful for the testStopOnIdle test.
          */
@@ -80,16 +78,14 @@ public:
     int lasttimeout;
     int return_timeout;
     RecordingEngine(int return_timeout=0): calls(0), lasttimeout(0),
-            return_timeout(return_timeout)
-          {}
+            return_timeout(return_timeout) {}
 
-          virtual int checkEvents(int timeout)
-          {
-              ++calls;
-              lasttimeout = timeout;
-              return return_timeout;
-          }
-      };
+    virtual int checkEvents(int timeout) {
+        ++calls;
+        lasttimeout = timeout;
+        return return_timeout;
+    }
+};
 
 #if POLISHED_MAIN_LOOP
 
@@ -123,11 +119,9 @@ class ShutdownDispatcher : public CompletionDispatcher
 public:
     EventLoop &theLoop;
     int calls;
-    ShutdownDispatcher(EventLoop & theLoop):theLoop(theLoop), calls(0)
-    {}
+    ShutdownDispatcher(EventLoop & theLoop):theLoop(theLoop), calls(0) {}
 
-    bool dispatch()
-    {
+    bool dispatch() {
         if (++calls == 2)
             theLoop.stop();
 
@@ -245,8 +239,7 @@ public:
     StubTime() : calls(0) {}
 
     int calls;
-    void tick()
-    {
+    void tick() {
         ++calls;
     }
 };

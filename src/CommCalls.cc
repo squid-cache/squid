@@ -5,12 +5,12 @@
 /* CommCommonCbParams */
 
 CommCommonCbParams::CommCommonCbParams(void *aData):
-    data(cbdataReference(aData)), fd(-1), xerrno(0), flag(COMM_OK) 
+        data(cbdataReference(aData)), fd(-1), xerrno(0), flag(COMM_OK)
 {
 }
 
 CommCommonCbParams::CommCommonCbParams(const CommCommonCbParams &p):
-    data(cbdataReference(p.data)), fd(p.fd), xerrno(p.xerrno), flag(p.flag)
+        data(cbdataReference(p.data)), fd(p.fd), xerrno(p.xerrno), flag(p.flag)
 {
 }
 
@@ -35,7 +35,7 @@ CommCommonCbParams::print(std::ostream &os) const
 /* CommAcceptCbParams */
 
 CommAcceptCbParams::CommAcceptCbParams(void *aData): CommCommonCbParams(aData),
-    nfd(-1)
+        nfd(-1)
 {
 }
 
@@ -51,7 +51,7 @@ CommAcceptCbParams::print(std::ostream &os) const
 /* CommConnectCbParams */
 
 CommConnectCbParams::CommConnectCbParams(void *aData):
-    CommCommonCbParams(aData)
+        CommCommonCbParams(aData)
 {
 }
 
@@ -61,7 +61,7 @@ CommConnectCbParams::syncWithComm()
     // drop the call if the call was scheduled before comm_close but
     // is being fired after comm_close
     if (fd >= 0 && fd_table[fd].closing()) {
-	debugs(5, 3, HERE << "droppin late connect call: FD " << fd);
+        debugs(5, 3, HERE << "droppin late connect call: FD " << fd);
         return false;
     }
     return true; // now we are in sync and can handle the call
@@ -70,7 +70,7 @@ CommConnectCbParams::syncWithComm()
 /* CommIoCbParams */
 
 CommIoCbParams::CommIoCbParams(void *aData): CommCommonCbParams(aData),
-    buf(NULL), size(0)
+        buf(NULL), size(0)
 {
 }
 
@@ -80,12 +80,12 @@ CommIoCbParams::syncWithComm()
     // change parameters if the call was scheduled before comm_close but
     // is being fired after comm_close
     if (fd >= 0 && fd_table[fd].closing() && flag != COMM_ERR_CLOSING) {
-	debugs(5, 3, HERE << "converting late call to COMM_ERR_CLOSING: FD " << fd);
-	flag = COMM_ERR_CLOSING;
-	size = 0;
+        debugs(5, 3, HERE << "converting late call to COMM_ERR_CLOSING: FD " << fd);
+        flag = COMM_ERR_CLOSING;
+        size = 0;
     }
     return true; // now we are in sync and can handle the call
-}		
+}
 
 
 void
@@ -95,21 +95,21 @@ CommIoCbParams::print(std::ostream &os) const
     if (buf) {
         os << ", size=" << size;
         os << ", buf=" << (void*)buf;
-	}
+    }
 }
 
 
 /* CommCloseCbParams */
 
 CommCloseCbParams::CommCloseCbParams(void *aData):
-    CommCommonCbParams(aData)
+        CommCommonCbParams(aData)
 {
 }
 
 /* CommTimeoutCbParams */
 
 CommTimeoutCbParams::CommTimeoutCbParams(void *aData):
-    CommCommonCbParams(aData)
+        CommCommonCbParams(aData)
 {
 }
 
@@ -117,9 +117,9 @@ CommTimeoutCbParams::CommTimeoutCbParams(void *aData):
 /* CommAcceptCbPtrFun */
 
 CommAcceptCbPtrFun::CommAcceptCbPtrFun(IOACB *aHandler,
-    const CommAcceptCbParams &aParams):
-    CommDialerParamsT<CommAcceptCbParams>(aParams),
-    handler(aHandler)
+                                       const CommAcceptCbParams &aParams):
+        CommDialerParamsT<CommAcceptCbParams>(aParams),
+        handler(aHandler)
 {
 }
 
@@ -141,9 +141,9 @@ CommAcceptCbPtrFun::print(std::ostream &os) const
 /* CommConnectCbPtrFun */
 
 CommConnectCbPtrFun::CommConnectCbPtrFun(CNCB *aHandler,
-    const CommConnectCbParams &aParams):
-    CommDialerParamsT<CommConnectCbParams>(aParams),
-    handler(aHandler)
+        const CommConnectCbParams &aParams):
+        CommDialerParamsT<CommConnectCbParams>(aParams),
+        handler(aHandler)
 {
 }
 
@@ -165,8 +165,8 @@ CommConnectCbPtrFun::print(std::ostream &os) const
 /* CommIoCbPtrFun */
 
 CommIoCbPtrFun::CommIoCbPtrFun(IOCB *aHandler, const CommIoCbParams &aParams):
-    CommDialerParamsT<CommIoCbParams>(aParams),
-    handler(aHandler)
+        CommDialerParamsT<CommIoCbParams>(aParams),
+        handler(aHandler)
 {
 }
 
@@ -188,9 +188,9 @@ CommIoCbPtrFun::print(std::ostream &os) const
 /* CommCloseCbPtrFun */
 
 CommCloseCbPtrFun::CommCloseCbPtrFun(PF *aHandler,
-    const CommCloseCbParams &aParams):
-    CommDialerParamsT<CommCloseCbParams>(aParams),
-    handler(aHandler)
+                                     const CommCloseCbParams &aParams):
+        CommDialerParamsT<CommCloseCbParams>(aParams),
+        handler(aHandler)
 {
 }
 
@@ -211,9 +211,9 @@ CommCloseCbPtrFun::print(std::ostream &os) const
 /* CommTimeoutCbPtrFun */
 
 CommTimeoutCbPtrFun::CommTimeoutCbPtrFun(PF *aHandler,
-    const CommTimeoutCbParams &aParams):
-    CommDialerParamsT<CommTimeoutCbParams>(aParams),
-    handler(aHandler)
+        const CommTimeoutCbParams &aParams):
+        CommDialerParamsT<CommTimeoutCbParams>(aParams),
+        handler(aHandler)
 {
 }
 

@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -55,8 +55,8 @@ StoreMeta::validType(char type)
 
     /* Not yet implemented */
     if (type >= STORE_META_END ||
-	    type == STORE_META_STOREURL ||
-	    type == STORE_META_VARY_ID) {
+            type == STORE_META_STOREURL ||
+            type == STORE_META_VARY_ID) {
         debugs(20, 3, "storeSwapMetaUnpack: Not yet implemented (" << type << ") in disk metadata");
         return false;
     }
@@ -77,8 +77,7 @@ class IntRange
 {
 
 public:
-    IntRange (int minimum, int maximum) : _min (minimum), _max (maximum)
-    {
+    IntRange (int minimum, int maximum) : _min (minimum), _max (maximum) {
         if (_min > _max) {
             int temp = _min;
             _min = _max;
@@ -86,8 +85,7 @@ public:
         }
     }
 
-    bool includes (int anInt) const
-    {
+    bool includes (int anInt) const {
         if (anInt < _min || anInt > _max)
             return false;
 
@@ -140,8 +138,8 @@ StoreMeta::Factory (char type, size_t len, void const *value)
         result = new StoreMetaSTDLFS;
         break;
 
-     case STORE_META_OBJSIZE:
-	result = new StoreMetaObjSize;
+    case STORE_META_OBJSIZE:
+        result = new StoreMetaObjSize;
         break;
 
     case STORE_META_VARY_HEADERS:
@@ -204,7 +202,7 @@ StoreMeta::checkConsistency(StoreEntry *e) const
         break;
 
     case STORE_META_OBJSIZE:
-	break;
+        break;
 
     default:
         debugs(20, 1, "WARNING: got unused STORE_META type " << getType());

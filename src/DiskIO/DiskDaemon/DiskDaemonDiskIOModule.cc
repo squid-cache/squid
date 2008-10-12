@@ -18,12 +18,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -53,7 +53,7 @@ DiskDaemonDiskIOModule::init()
 {
     /* We may be reused - for instance in coss - eventually.
      * When we do, we either need per-using-module stats (
-     * no singleton pattern), or we need to refcount the 
+     * no singleton pattern), or we need to refcount the
      * initialisation level and handle multiple clients.
      * RBC - 20030718.
      */

@@ -1,4 +1,4 @@
-/* 
+/*
  * NDS LDAP helper functions
  * Copied From Samba-3.0.24 pdb_nds.c and trimmed down to the
  * limited functionality needed to access the plain text password only
@@ -6,21 +6,21 @@
  * Original copyright & license follows:
  *
  * Copyright (C) Vince Brimhall			2004-2005
- *   
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- * 
+ *
 */
 
 #include "digest_common.h"
@@ -69,86 +69,73 @@
 **********************************************************************/
 
 static int berEncodePasswordData(
-	struct berval **requestBV,
-	const char    *objectDN,
-	const char    *password,
-	const char    *password2)
+    struct berval **requestBV,
+    const char    *objectDN,
+    const char    *password,
+    const char    *password2)
 {
-	int err = 0, rc=0;
-	BerElement *requestBer = NULL;
+    int err = 0, rc=0;
+    BerElement *requestBer = NULL;
 
-	const char    * utf8ObjPtr = NULL;
-	int     utf8ObjSize = 0;
-	const char    * utf8PwdPtr = NULL;
-	int     utf8PwdSize = 0;
-	const char    * utf8Pwd2Ptr = NULL;
-	int     utf8Pwd2Size = 0;
+    const char    * utf8ObjPtr = NULL;
+    int     utf8ObjSize = 0;
+    const char    * utf8PwdPtr = NULL;
+    int     utf8PwdSize = 0;
+    const char    * utf8Pwd2Ptr = NULL;
+    int     utf8Pwd2Size = 0;
 
 
-	/* Convert objectDN and tag strings from Unicode to UTF-8 */
-	utf8ObjSize = strlen(objectDN)+1;
-	utf8ObjPtr = objectDN;
+    /* Convert objectDN and tag strings from Unicode to UTF-8 */
+    utf8ObjSize = strlen(objectDN)+1;
+    utf8ObjPtr = objectDN;
 
-	if (password != NULL)
-	{
-		utf8PwdSize = strlen(password)+1;
-		utf8PwdPtr = password;
-	}
+    if (password != NULL) {
+        utf8PwdSize = strlen(password)+1;
+        utf8PwdPtr = password;
+    }
 
-	if (password2 != NULL)
-	{
-		utf8Pwd2Size = strlen(password2)+1;
-		utf8Pwd2Ptr = password2;
-	}
+    if (password2 != NULL) {
+        utf8Pwd2Size = strlen(password2)+1;
+        utf8Pwd2Ptr = password2;
+    }
 
-	/* Allocate a BerElement for the request parameters. */
-	if((requestBer = ber_alloc()) == NULL)
-	{
-		err = LDAP_ENCODING_ERROR;
-		goto Cleanup;
-	}
+    /* Allocate a BerElement for the request parameters. */
+    if ((requestBer = ber_alloc()) == NULL) {
+        err = LDAP_ENCODING_ERROR;
+        goto Cleanup;
+    }
 
-	if (password != NULL && password2 != NULL)
-	{
-		/* BER encode the NMAS Version, the objectDN, and the password */
-		rc = ber_printf(requestBer, "{iooo}", NMAS_LDAP_EXT_VERSION, utf8ObjPtr, utf8ObjSize, utf8PwdPtr, utf8PwdSize, utf8Pwd2Ptr, utf8Pwd2Size);
-	}
-	else if (password != NULL)
-	{
-		/* BER encode the NMAS Version, the objectDN, and the password */
-		rc = ber_printf(requestBer, "{ioo}", NMAS_LDAP_EXT_VERSION, utf8ObjPtr, utf8ObjSize, utf8PwdPtr, utf8PwdSize);
-	}
-	else
-	{
-		/* BER encode the NMAS Version and the objectDN */
-		rc = ber_printf(requestBer, "{io}", NMAS_LDAP_EXT_VERSION, utf8ObjPtr, utf8ObjSize);
-	}
+    if (password != NULL && password2 != NULL) {
+        /* BER encode the NMAS Version, the objectDN, and the password */
+        rc = ber_printf(requestBer, "{iooo}", NMAS_LDAP_EXT_VERSION, utf8ObjPtr, utf8ObjSize, utf8PwdPtr, utf8PwdSize, utf8Pwd2Ptr, utf8Pwd2Size);
+    } else if (password != NULL) {
+        /* BER encode the NMAS Version, the objectDN, and the password */
+        rc = ber_printf(requestBer, "{ioo}", NMAS_LDAP_EXT_VERSION, utf8ObjPtr, utf8ObjSize, utf8PwdPtr, utf8PwdSize);
+    } else {
+        /* BER encode the NMAS Version and the objectDN */
+        rc = ber_printf(requestBer, "{io}", NMAS_LDAP_EXT_VERSION, utf8ObjPtr, utf8ObjSize);
+    }
 
-	if (rc < 0)
-	{
-		err = LDAP_ENCODING_ERROR;
-		goto Cleanup;
-	}
-	else
-	{
-		err = 0;
-	}
+    if (rc < 0) {
+        err = LDAP_ENCODING_ERROR;
+        goto Cleanup;
+    } else {
+        err = 0;
+    }
 
-	/* Convert the BER we just built to a berval that we'll send with the extended request. */
-	if(ber_flatten(requestBer, requestBV) == LBER_ERROR)
-	{
-		err = LDAP_ENCODING_ERROR;
-		goto Cleanup;
-	}
+    /* Convert the BER we just built to a berval that we'll send with the extended request. */
+    if (ber_flatten(requestBer, requestBV) == LBER_ERROR) {
+        err = LDAP_ENCODING_ERROR;
+        goto Cleanup;
+    }
 
 Cleanup:
 
-	if(requestBer)
-	{
-		ber_free(requestBer, 1);
-	}
+    if (requestBer) {
+        ber_free(requestBer, 1);
+    }
 
-	return err;
+    return err;
 }
 
 /**********************************************************************
@@ -157,89 +144,79 @@ Cleanup:
 **********************************************************************/
 
 static int berEncodeLoginData(
-	struct berval **requestBV,
-	char     *objectDN,
-	unsigned int  methodIDLen,
-	unsigned int *methodID,
-	char     *tag,
-	size_t   putDataLen,
-	void     *putData)
+    struct berval **requestBV,
+    char     *objectDN,
+    unsigned int  methodIDLen,
+    unsigned int *methodID,
+    char     *tag,
+    size_t   putDataLen,
+    void     *putData)
 {
-	int err = 0;
-	BerElement *requestBer = NULL;
+    int err = 0;
+    BerElement *requestBer = NULL;
 
-	unsigned int i;
-	unsigned int elemCnt = methodIDLen / sizeof(unsigned int);
+    unsigned int i;
+    unsigned int elemCnt = methodIDLen / sizeof(unsigned int);
 
-	char	*utf8ObjPtr=NULL;
-	int     utf8ObjSize = 0;
+    char	*utf8ObjPtr=NULL;
+    int     utf8ObjSize = 0;
 
-	char    *utf8TagPtr = NULL;
-	int     utf8TagSize = 0;
+    char    *utf8TagPtr = NULL;
+    int     utf8TagSize = 0;
 
-	utf8ObjPtr = objectDN;
-	utf8ObjSize = strlen(utf8ObjPtr)+1;
+    utf8ObjPtr = objectDN;
+    utf8ObjSize = strlen(utf8ObjPtr)+1;
 
-	utf8TagPtr = tag;
-	utf8TagSize = strlen(utf8TagPtr)+1;
+    utf8TagPtr = tag;
+    utf8TagSize = strlen(utf8TagPtr)+1;
 
-	/* Allocate a BerElement for the request parameters. */
-	if((requestBer = ber_alloc()) == NULL)
-	{
-		err = LDAP_ENCODING_ERROR;
-		goto Cleanup;
-	}
+    /* Allocate a BerElement for the request parameters. */
+    if ((requestBer = ber_alloc()) == NULL) {
+        err = LDAP_ENCODING_ERROR;
+        goto Cleanup;
+    }
 
-	/* BER encode the NMAS Version and the objectDN */
-	err = (ber_printf(requestBer, "{io", NMAS_LDAP_EXT_VERSION, utf8ObjPtr, utf8ObjSize) < 0) ? LDAP_ENCODING_ERROR : 0;
+    /* BER encode the NMAS Version and the objectDN */
+    err = (ber_printf(requestBer, "{io", NMAS_LDAP_EXT_VERSION, utf8ObjPtr, utf8ObjSize) < 0) ? LDAP_ENCODING_ERROR : 0;
 
-	/* BER encode the MethodID Length and value */
-	if (!err)
-	{
-		err = (ber_printf(requestBer, "{i{", methodIDLen) < 0) ? LDAP_ENCODING_ERROR : 0;
-	}
+    /* BER encode the MethodID Length and value */
+    if (!err) {
+        err = (ber_printf(requestBer, "{i{", methodIDLen) < 0) ? LDAP_ENCODING_ERROR : 0;
+    }
 
-	for (i = 0; !err && i < elemCnt; i++)
-	{
-		err = (ber_printf(requestBer, "i", methodID[i]) < 0) ? LDAP_ENCODING_ERROR : 0;
-	}
+    for (i = 0; !err && i < elemCnt; i++) {
+        err = (ber_printf(requestBer, "i", methodID[i]) < 0) ? LDAP_ENCODING_ERROR : 0;
+    }
 
-	if (!err)
-	{
-		err = (ber_printf(requestBer, "}}", 0) < 0) ? LDAP_ENCODING_ERROR : 0;
-	}
+    if (!err) {
+        err = (ber_printf(requestBer, "}}", 0) < 0) ? LDAP_ENCODING_ERROR : 0;
+    }
 
-	if(putData)
-	{
-		/* BER Encode the the tag and data */
-		err = (ber_printf(requestBer, "oio}", utf8TagPtr, utf8TagSize, putDataLen, putData, putDataLen) < 0) ? LDAP_ENCODING_ERROR : 0;
-	}
-	else
-	{
-		/* BER Encode the the tag */
-		err = (ber_printf(requestBer, "o}", utf8TagPtr, utf8TagSize) < 0) ? LDAP_ENCODING_ERROR : 0;
-	}
+    if (putData) {
+        /* BER Encode the the tag and data */
+        err = (ber_printf(requestBer, "oio}", utf8TagPtr, utf8TagSize, putDataLen, putData, putDataLen) < 0) ? LDAP_ENCODING_ERROR : 0;
+    } else {
+        /* BER Encode the the tag */
+        err = (ber_printf(requestBer, "o}", utf8TagPtr, utf8TagSize) < 0) ? LDAP_ENCODING_ERROR : 0;
+    }
 
-	if (err)
-	{
-		goto Cleanup;
-	}
+    if (err) {
+        goto Cleanup;
+    }
 
-	/* Convert the BER we just built to a berval that we'll send with the extended request. */
-	if(ber_flatten(requestBer, requestBV) == LBER_ERROR)
-	{
-		err = LDAP_ENCODING_ERROR;
-		goto Cleanup;
-	}
+    /* Convert the BER we just built to a berval that we'll send with the extended request. */
+    if (ber_flatten(requestBer, requestBV) == LBER_ERROR) {
+        err = LDAP_ENCODING_ERROR;
+        goto Cleanup;
+    }
 
 Cleanup:
 
-	if(requestBer)
-	{
-		ber_free(requestBer, 1);
-	}
+    if (requestBer) {
+        ber_free(requestBer, 1);
+    }
 
-	return err;
+    return err;
 }
 
 /**********************************************************************
@@ -249,75 +226,60 @@ Cleanup:
 **********************************************************************/
 
 static int berDecodeLoginData(
-	struct berval *replyBV,
-	int      *serverVersion,
-	size_t   *retDataLen,
-	void     *retData )
+    struct berval *replyBV,
+    int      *serverVersion,
+    size_t   *retDataLen,
+    void     *retData )
 {
-	int err = 0;
-	BerElement *replyBer = NULL;
-	char    *retOctStr = NULL;
-	size_t  retOctStrLen = 0;
+    int err = 0;
+    BerElement *replyBer = NULL;
+    char    *retOctStr = NULL;
+    size_t  retOctStrLen = 0;
 
-	if((replyBer = ber_init(replyBV)) == NULL)
-	{
-		err = LDAP_OPERATIONS_ERROR;
-		goto Cleanup;
-	}
+    if ((replyBer = ber_init(replyBV)) == NULL) {
+        err = LDAP_OPERATIONS_ERROR;
+        goto Cleanup;
+    }
 
-	if(retData)
-	{
-		retOctStrLen = *retDataLen + 1;
-		retOctStr = SMB_MALLOC_ARRAY(char, retOctStrLen);
-		if(!retOctStr)
-		{
-			err = LDAP_OPERATIONS_ERROR;
-			goto Cleanup;
-		}
-	
-		if(ber_scanf(replyBer, "{iis}", serverVersion, &err, retOctStr, &retOctStrLen) != -1)
-		{
-			if (*retDataLen >= retOctStrLen)
-			{
-				memcpy(retData, retOctStr, retOctStrLen);
-			}
-			else if (!err)
-			{	
-				err = LDAP_NO_MEMORY;
-			}
+    if (retData) {
+        retOctStrLen = *retDataLen + 1;
+        retOctStr = SMB_MALLOC_ARRAY(char, retOctStrLen);
+        if (!retOctStr) {
+            err = LDAP_OPERATIONS_ERROR;
+            goto Cleanup;
+        }
 
-			*retDataLen = retOctStrLen;
-		}
-		else if (!err)
-		{
-			err = LDAP_DECODING_ERROR;
-		}
-	}
-	else
-	{
-		if(ber_scanf(replyBer, "{ii}", serverVersion, &err) == -1)
-		{
-			if (!err)
-			{
-				err = LDAP_DECODING_ERROR;
-			}
-		}
-	}
+        if (ber_scanf(replyBer, "{iis}", serverVersion, &err, retOctStr, &retOctStrLen) != -1) {
+            if (*retDataLen >= retOctStrLen) {
+                memcpy(retData, retOctStr, retOctStrLen);
+            } else if (!err) {
+                err = LDAP_NO_MEMORY;
+            }
+
+            *retDataLen = retOctStrLen;
+        } else if (!err) {
+            err = LDAP_DECODING_ERROR;
+        }
+    } else {
+        if (ber_scanf(replyBer, "{ii}", serverVersion, &err) == -1) {
+            if (!err) {
+                err = LDAP_DECODING_ERROR;
+            }
+        }
+    }
 
 Cleanup:
 
-	if(replyBer)
-	{
-		ber_free(replyBer, 1);
-	}
+    if (replyBer) {
+        ber_free(replyBer, 1);
+    }
 
-	if (retOctStr != NULL)
-	{
-		memset(retOctStr, 0, retOctStrLen);
-		free(retOctStr);
-	}
+    if (retOctStr != NULL) {
+        memset(retOctStr, 0, retOctStrLen);
+        free(retOctStr);
+    }
 
-	return err;
+    return err;
 }
 
 /**********************************************************************
@@ -326,91 +288,81 @@ Cleanup:
 **********************************************************************/
 
 static int getLoginConfig(
-	LDAP	 *ld,
-	char     *objectDN,
-	unsigned int  methodIDLen,
-	unsigned int *methodID,
-	char     *tag,
-	size_t   *dataLen,
-	void     *data )
+    LDAP	 *ld,
+    char     *objectDN,
+    unsigned int  methodIDLen,
+    unsigned int *methodID,
+    char     *tag,
+    size_t   *dataLen,
+    void     *data )
 {
-	int     err = 0;
-	struct  berval *requestBV = NULL;
-	char    *replyOID = NULL;
-	struct  berval *replyBV = NULL;
-	int     serverVersion = 0;
+    int     err = 0;
+    struct  berval *requestBV = NULL;
+    char    *replyOID = NULL;
+    struct  berval *replyBV = NULL;
+    int     serverVersion = 0;
 
-	/* Validate unicode parameters. */
-	if((strlen(objectDN) == 0) || ld == NULL)
-	{
-		return LDAP_NO_SUCH_ATTRIBUTE;
-	}
+    /* Validate unicode parameters. */
+    if ((strlen(objectDN) == 0) || ld == NULL) {
+        return LDAP_NO_SUCH_ATTRIBUTE;
+    }
 
-	err = berEncodeLoginData(&requestBV, objectDN, methodIDLen, methodID, tag, 0, NULL);
-	if(err)
-	{
-		goto Cleanup;
-	}
+    err = berEncodeLoginData(&requestBV, objectDN, methodIDLen, methodID, tag, 0, NULL);
+    if (err) {
+        goto Cleanup;
+    }
 
-	/* Call the ldap_extended_operation (synchronously) */
-	if((err = ldap_extended_operation_s(ld, NMASLDAP_GET_LOGIN_CONFIG_REQUEST,
-					requestBV, NULL, NULL, &replyOID, &replyBV)))
-	{
-		goto Cleanup;
-	}
+    /* Call the ldap_extended_operation (synchronously) */
+    if ((err = ldap_extended_operation_s(ld, NMASLDAP_GET_LOGIN_CONFIG_REQUEST,
+                                         requestBV, NULL, NULL, &replyOID, &replyBV))) {
+        goto Cleanup;
+    }
 
-	/* Make sure there is a return OID */
-	if(!replyOID)
-	{
-		err = LDAP_NOT_SUPPORTED;
-		goto Cleanup;
-	}
+    /* Make sure there is a return OID */
+    if (!replyOID) {
+        err = LDAP_NOT_SUPPORTED;
+        goto Cleanup;
+    }
 
-	/* Is this what we were expecting to get back. */
-	if(strcmp(replyOID, NMASLDAP_GET_LOGIN_CONFIG_RESPONSE))
-	{
-		err = LDAP_NOT_SUPPORTED;
-		goto Cleanup;
-	}
+    /* Is this what we were expecting to get back. */
+    if (strcmp(replyOID, NMASLDAP_GET_LOGIN_CONFIG_RESPONSE)) {
+        err = LDAP_NOT_SUPPORTED;
+        goto Cleanup;
+    }
 
-	/* Do we have a good returned berval? */
-	if(!replyBV)
-	{
-		/* No; returned berval means we experienced a rather drastic error. */
-		/* Return operations error. */
-		err = LDAP_OPERATIONS_ERROR;
-		goto Cleanup;
-	}
+    /* Do we have a good returned berval? */
+    if (!replyBV) {
+        /* No; returned berval means we experienced a rather drastic error. */
+        /* Return operations error. */
+        err = LDAP_OPERATIONS_ERROR;
+        goto Cleanup;
+    }
 
-	err = berDecodeLoginData(replyBV, &serverVersion, dataLen, data);
+    err = berDecodeLoginData(replyBV, &serverVersion, dataLen, data);
 
-	if(serverVersion != NMAS_LDAP_EXT_VERSION)
-	{
-		err = LDAP_OPERATIONS_ERROR;
-		goto Cleanup;
-	}
+    if (serverVersion != NMAS_LDAP_EXT_VERSION) {
+        err = LDAP_OPERATIONS_ERROR;
+        goto Cleanup;
+    }
 
 Cleanup:
 
-	if(replyBV)
-	{
-		ber_bvfree(replyBV);
-	}
+    if (replyBV) {
+        ber_bvfree(replyBV);
+    }
 
-	/* Free the return OID string if one was returned. */
-	if(replyOID)
-	{
-		ldap_memfree(replyOID);
-	}
+    /* Free the return OID string if one was returned. */
+    if (replyOID) {
+        ldap_memfree(replyOID);
+    }
 
-	/* Free memory allocated while building the request ber and berval. */
-	if(requestBV)
-	{
-		ber_bvfree(requestBV);
-	}
+    /* Free memory allocated while building the request ber and berval. */
+    if (requestBV) {
+        ber_bvfree(requestBV);
+    }
 
-	/* Return the appropriate error/success code. */
-	return err;
+    /* Return the appropriate error/success code. */
+    return err;
 }
 
 /**********************************************************************
@@ -418,66 +370,57 @@ Cleanup:
 **********************************************************************/
 
 static int nmasldap_get_simple_pwd(
-	LDAP	 *ld,
-	char     *objectDN,
-	size_t	 pwdLen,
-	char     *pwd )
+    LDAP	 *ld,
+    char     *objectDN,
+    size_t	 pwdLen,
+    char     *pwd )
 {
-	int err = 0;
-	unsigned int methodID = 0;
-	unsigned int methodIDLen = sizeof(methodID);
-	char    tag[] = {'P','A','S','S','W','O','R','D',' ','H','A','S','H',0};
-	char    *pwdBuf=NULL;
-	size_t  pwdBufLen, bufferLen;
+    int err = 0;
+    unsigned int methodID = 0;
+    unsigned int methodIDLen = sizeof(methodID);
+    char    tag[] = {'P','A','S','S','W','O','R','D',' ','H','A','S','H',0};
+    char    *pwdBuf=NULL;
+    size_t  pwdBufLen, bufferLen;
 
-	bufferLen = pwdBufLen = pwdLen+2;
-	pwdBuf = SMB_MALLOC_ARRAY(char, pwdBufLen); /* digest and null */
-	if(pwdBuf == NULL)
-	{
-		return LDAP_NO_MEMORY;
-	}
+    bufferLen = pwdBufLen = pwdLen+2;
+    pwdBuf = SMB_MALLOC_ARRAY(char, pwdBufLen); /* digest and null */
+    if (pwdBuf == NULL) {
+        return LDAP_NO_MEMORY;
+    }
 
-	err = getLoginConfig(ld, objectDN, methodIDLen, &methodID, tag, &pwdBufLen, pwdBuf);
-	if (err == 0)
-	{
-		if (pwdBufLen !=0)
-		{
-			pwdBuf[pwdBufLen] = 0;       /* null terminate */
+    err = getLoginConfig(ld, objectDN, methodIDLen, &methodID, tag, &pwdBufLen, pwdBuf);
+    if (err == 0) {
+        if (pwdBufLen !=0) {
+            pwdBuf[pwdBufLen] = 0;       /* null terminate */
 
-			switch (pwdBuf[0])
-			{
-				case 1:  /* cleartext password  */
-					break;
-				case 2:  /* SHA1 HASH */
-				case 3:  /* MD5_ID */
-				case 4:  /* UNIXCrypt_ID */
-				case 8:  /* SSHA_ID */
-				default: /* Unknown digest */
-					err = LDAP_INAPPROPRIATE_AUTH;  /* only return clear text */
-					break;
-			}
+            switch (pwdBuf[0]) {
+            case 1:  /* cleartext password  */
+                break;
+            case 2:  /* SHA1 HASH */
+            case 3:  /* MD5_ID */
+            case 4:  /* UNIXCrypt_ID */
+            case 8:  /* SSHA_ID */
+            default: /* Unknown digest */
+                err = LDAP_INAPPROPRIATE_AUTH;  /* only return clear text */
+                break;
+            }
 
-			if (!err)
-			{
-				if (pwdLen >= pwdBufLen-1)
-				{
-					memcpy(pwd, &pwdBuf[1], pwdBufLen-1);  /* skip digest tag and include null */
-				}
-				else
-				{
-					err = LDAP_NO_MEMORY;
-				}
-			}
-		}
-	}
+            if (!err) {
+                if (pwdLen >= pwdBufLen-1) {
+                    memcpy(pwd, &pwdBuf[1], pwdBufLen-1);  /* skip digest tag and include null */
+                } else {
+                    err = LDAP_NO_MEMORY;
+                }
+            }
+        }
+    }
 
-	if (pwdBuf != NULL)
-	{
-		memset(pwdBuf, 0, bufferLen);
-		free(pwdBuf);
-	}
+    if (pwdBuf != NULL) {
+        memset(pwdBuf, 0, bufferLen);
+        free(pwdBuf);
+    }
 
-	return err;
+    return err;
 }
 
 
@@ -486,113 +429,99 @@ static int nmasldap_get_simple_pwd(
 **********************************************************************/
 
 static int nmasldap_get_password(
-	LDAP	 *ld,
-	char     *objectDN,
-	size_t   *pwdSize,	/* in bytes */
-	unsigned char     *pwd )
+    LDAP	 *ld,
+    char     *objectDN,
+    size_t   *pwdSize,	/* in bytes */
+    unsigned char     *pwd )
 {
-	int err = 0;
+    int err = 0;
 
-	struct berval *requestBV = NULL;
-	char *replyOID = NULL;
-	struct berval *replyBV = NULL;
-	int serverVersion;
-	char *pwdBuf;
-	size_t pwdBufLen, bufferLen;
+    struct berval *requestBV = NULL;
+    char *replyOID = NULL;
+    struct berval *replyBV = NULL;
+    int serverVersion;
+    char *pwdBuf;
+    size_t pwdBufLen, bufferLen;
 
-	/* Validate char parameters. */
-	if(objectDN == NULL || (strlen(objectDN) == 0) || pwdSize == NULL || ld == NULL)
-	{
-		return LDAP_NO_SUCH_ATTRIBUTE;
-	}
+    /* Validate char parameters. */
+    if (objectDN == NULL || (strlen(objectDN) == 0) || pwdSize == NULL || ld == NULL) {
+        return LDAP_NO_SUCH_ATTRIBUTE;
+    }
 
-	bufferLen = pwdBufLen = *pwdSize;
-	pwdBuf = SMB_MALLOC_ARRAY(char, pwdBufLen+2);
-	if(pwdBuf == NULL)
-	{
-		return LDAP_NO_MEMORY;
-	}
+    bufferLen = pwdBufLen = *pwdSize;
+    pwdBuf = SMB_MALLOC_ARRAY(char, pwdBufLen+2);
+    if (pwdBuf == NULL) {
+        return LDAP_NO_MEMORY;
+    }
 
-	err = berEncodePasswordData(&requestBV, objectDN, NULL, NULL);
-	if(err)
-	{
-		goto Cleanup;
-	}
+    err = berEncodePasswordData(&requestBV, objectDN, NULL, NULL);
+    if (err) {
+        goto Cleanup;
+    }
 
-	/* Call the ldap_extended_operation (synchronously) */
-	if((err = ldap_extended_operation_s(ld, NMASLDAP_GET_PASSWORD_REQUEST, requestBV, NULL, NULL, &replyOID, &replyBV)))
-	{
-		goto Cleanup;
-	}
+    /* Call the ldap_extended_operation (synchronously) */
+    if ((err = ldap_extended_operation_s(ld, NMASLDAP_GET_PASSWORD_REQUEST, requestBV, NULL, NULL, &replyOID, &replyBV))) {
+        goto Cleanup;
+    }
 
-	/* Make sure there is a return OID */
-	if(!replyOID)
-	{
-		err = LDAP_NOT_SUPPORTED;
-		goto Cleanup;
-	}
+    /* Make sure there is a return OID */
+    if (!replyOID) {
+        err = LDAP_NOT_SUPPORTED;
+        goto Cleanup;
+    }
 
-	/* Is this what we were expecting to get back. */
-	if(strcmp(replyOID, NMASLDAP_GET_PASSWORD_RESPONSE))
-	{
-		err = LDAP_NOT_SUPPORTED;
-		goto Cleanup;
-	}
+    /* Is this what we were expecting to get back. */
+    if (strcmp(replyOID, NMASLDAP_GET_PASSWORD_RESPONSE)) {
+        err = LDAP_NOT_SUPPORTED;
+        goto Cleanup;
+    }
 
-	/* Do we have a good returned berval? */
-	if(!replyBV)
-	{
-		/* No; returned berval means we experienced a rather drastic error. */
-		/* Return operations error. */
-		err = LDAP_OPERATIONS_ERROR;
-		goto Cleanup;
-	}
+    /* Do we have a good returned berval? */
+    if (!replyBV) {
+        /* No; returned berval means we experienced a rather drastic error. */
+        /* Return operations error. */
+        err = LDAP_OPERATIONS_ERROR;
+        goto Cleanup;
+    }
 
-	err = berDecodeLoginData(replyBV, &serverVersion, &pwdBufLen, pwdBuf);
+    err = berDecodeLoginData(replyBV, &serverVersion, &pwdBufLen, pwdBuf);
 
-	if(serverVersion != NMAS_LDAP_EXT_VERSION)
-	{
-		err = LDAP_OPERATIONS_ERROR;
-		goto Cleanup;
-	}
+    if (serverVersion != NMAS_LDAP_EXT_VERSION) {
+        err = LDAP_OPERATIONS_ERROR;
+        goto Cleanup;
+    }
 
-	if (!err && pwdBufLen != 0)
-	{
-		if (*pwdSize >= pwdBufLen+1 && pwd != NULL)
-		{
-			memcpy(pwd, pwdBuf, pwdBufLen);
-			pwd[pwdBufLen] = 0; /* add null termination */
-		}
-		*pwdSize = pwdBufLen; /* does not include null termination */
-	}
+    if (!err && pwdBufLen != 0) {
+        if (*pwdSize >= pwdBufLen+1 && pwd != NULL) {
+            memcpy(pwd, pwdBuf, pwdBufLen);
+            pwd[pwdBufLen] = 0; /* add null termination */
+        }
+        *pwdSize = pwdBufLen; /* does not include null termination */
+    }
 
 Cleanup:
 
-	if(replyBV)
-	{
-		ber_bvfree(replyBV);
-	}
+    if (replyBV) {
+        ber_bvfree(replyBV);
+    }
 
-	/* Free the return OID string if one was returned. */
-	if(replyOID)
-	{
-		ldap_memfree(replyOID);
-	}
+    /* Free the return OID string if one was returned. */
+    if (replyOID) {
+        ldap_memfree(replyOID);
+    }
 
-	/* Free memory allocated while building the request ber and berval. */
-	if(requestBV)
-	{
-		ber_bvfree(requestBV);
-	}
+    /* Free memory allocated while building the request ber and berval. */
+    if (requestBV) {
+        ber_bvfree(requestBV);
+    }
 
-	if (pwdBuf != NULL)
-	{
-		memset(pwdBuf, 0, bufferLen);
-		free(pwdBuf);
-	}
+    if (pwdBuf != NULL) {
+        memset(pwdBuf, 0, bufferLen);
+        free(pwdBuf);
+    }
 
-	/* Return the appropriate error/success code. */
-	return err;
+    /* Return the appropriate error/success code. */
+    return err;
 }
 
 /**********************************************************************
@@ -600,38 +529,38 @@ Cleanup:
  *********************************************************************/
 
 int nds_get_password(
-	LDAP *ld,
-	char *object_dn,
-	size_t *pwd_len,
-	char *pwd )
+    LDAP *ld,
+    char *object_dn,
+    size_t *pwd_len,
+    char *pwd )
 {
-	int rc = -1;
+    int rc = -1;
 
-	rc = nmasldap_get_password(ld, object_dn, pwd_len, (unsigned char *)pwd);
-	if (rc == LDAP_SUCCESS) {
+    rc = nmasldap_get_password(ld, object_dn, pwd_len, (unsigned char *)pwd);
+    if (rc == LDAP_SUCCESS) {
 #ifdef DEBUG_PASSWORD
-		DEBUG(100,("nmasldap_get_password returned %s for %s\n", pwd, object_dn));
-#endif    
-		DEBUG(5, ("NDS Universal Password retrieved for %s\n", object_dn));
-	} else {
-		DEBUG(3, ("NDS Universal Password NOT retrieved for %s\n", object_dn));
-	}
+        DEBUG(100,("nmasldap_get_password returned %s for %s\n", pwd, object_dn));
+#endif
+        DEBUG(5, ("NDS Universal Password retrieved for %s\n", object_dn));
+    } else {
+        DEBUG(3, ("NDS Universal Password NOT retrieved for %s\n", object_dn));
+    }
 
-	if (rc != LDAP_SUCCESS) {
-		rc = nmasldap_get_simple_pwd(ld, object_dn, *pwd_len, pwd);
-		if (rc == LDAP_SUCCESS) {
+    if (rc != LDAP_SUCCESS) {
+        rc = nmasldap_get_simple_pwd(ld, object_dn, *pwd_len, pwd);
+        if (rc == LDAP_SUCCESS) {
 #ifdef DEBUG_PASSWORD
-			DEBUG(100,("nmasldap_get_simple_pwd returned %s for %s\n", pwd, object_dn));
-#endif    
-			DEBUG(5, ("NDS Simple Password retrieved for %s\n", object_dn));
-		} else {
-			/* We couldn't get the password */
-			DEBUG(3, ("NDS Simple Password NOT retrieved for %s\n", object_dn));
-			return LDAP_INVALID_CREDENTIALS;
-		}
-	}
+            DEBUG(100,("nmasldap_get_simple_pwd returned %s for %s\n", pwd, object_dn));
+#endif
+            DEBUG(5, ("NDS Simple Password retrieved for %s\n", object_dn));
+        } else {
+            /* We couldn't get the password */
+            DEBUG(3, ("NDS Simple Password NOT retrieved for %s\n", object_dn));
+            return LDAP_INVALID_CREDENTIALS;
+        }
+    }
 
-	/* We got the password */
-	return LDAP_SUCCESS;
+    /* We got the password */
+    return LDAP_SUCCESS;
 }
 

@@ -108,7 +108,8 @@ echo "libtool  : $ltver"
 
 for dir in \
 	"" \
-	lib/libTrie
+	lib/libTrie \
+	helpers/negotiate_auth/squid_kerb_auth
 do
     if [ -z "$dir" ] || [ -d $dir ]; then
 	if (

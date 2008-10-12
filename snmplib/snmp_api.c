@@ -3,9 +3,9 @@
 /**********************************************************************
  *
  *           Copyright 1997 by Carnegie Mellon University
- * 
+ *
  *                       All Rights Reserved
- * 
+ *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose and without fee is hereby granted,
  * provided that the above copyright notice appear in all copies and that
@@ -13,7 +13,7 @@
  * supporting documentation, and that the name of CMU not be
  * used in advertising or publicity pertaining to distribution of the
  * software without specific, written prior permission.
- * 
+ *
  * CMU DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
  * ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
  * CMU BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR
@@ -21,7 +21,7 @@
  * WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
- * 
+ *
  **********************************************************************/
 
 #include "config.h"
@@ -100,22 +100,22 @@
  */
 int
 snmp_build(session, pdu, packet, out_length)
-     struct snmp_session *session;
-     struct snmp_pdu *pdu;
-     u_char *packet;
-     int *out_length;
+struct snmp_session *session;
+struct snmp_pdu *pdu;
+u_char *packet;
+int *out_length;
 {
     u_char *bufp;
 
     bufp = snmp_msg_Encode(packet, out_length,
-	session->community, session->community_len,
-	session->Version,
-	pdu);
+                           session->community, session->community_len,
+                           session->Version,
+                           pdu);
     snmplib_debug(8, "LIBSNMP: snmp_build():  Packet len %d (requid %d)\n",
-	*out_length, pdu->reqid);
+                  *out_length, pdu->reqid);
 
     if (bufp == NULL)
-	return (-1);
+        return (-1);
 
     return (0);
 }
@@ -127,9 +127,9 @@ snmp_build(session, pdu, packet, out_length)
  */
 u_char *
 snmp_parse(struct snmp_session * session,
-    struct snmp_pdu * pdu,
-    u_char * data,
-    int length)
+           struct snmp_pdu * pdu,
+           u_char * data,
+           int length)
 {
     u_char Community[128];
     u_char *bufp;
@@ -137,14 +137,14 @@ snmp_parse(struct snmp_session * session,
 
     /* Decode the entire message. */
     data = snmp_msg_Decode(data, &length,
-	Community, &CommunityLen,
-	&session->Version, pdu);
+                           Community, &CommunityLen,
+                           &session->Version, pdu);
     if (data == NULL)
-	return (NULL);
+        return (NULL);
 
     bufp = (u_char *) xmalloc(CommunityLen + 1);
     if (bufp == NULL)
-	return (NULL);
+        return (NULL);
 
     strncpy((char *) bufp, (char *) Community, CommunityLen);
     bufp[CommunityLen] = '\0';

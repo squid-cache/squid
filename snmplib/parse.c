@@ -3,13 +3,13 @@
 
                       All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of CMU not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 CMU DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -162,8 +162,7 @@ struct tok {
 };
 
 
-struct tok tokens[] =
-{
+struct tok tokens[] = {
     {"obsolete", sizeof("obsolete") - 1, OBSOLETE},
     {"Opaque", sizeof("Opaque") - 1, SNMP_OPAQUE},
     {"recommended", sizeof("recommended") - 1, RECOMMENDED},
@@ -175,10 +174,10 @@ struct tok tokens[] =
     {"read-write", sizeof("read-write") - 1, READWRITE},
     {"TimeTicks", sizeof("TimeTicks") - 1, TIMETICKS},
     {"OBJECTIDENTIFIER", sizeof("OBJECTIDENTIFIER") - 1, OBJID},
-	/*
-	 * This CONTINUE appends the next word onto OBJECT,
-	 * hopefully matching OBJECTIDENTIFIER above.
-	 */
+    /*
+     * This CONTINUE appends the next word onto OBJECT,
+     * hopefully matching OBJECTIDENTIFIER above.
+     */
     {"OBJECT", sizeof("OBJECT") - 1, CONTINUE},
     {"NetworkAddress", sizeof("NetworkAddress") - 1, NETADDR},
     {"Gauge", sizeof("Gauge") - 1, GAUGE},
@@ -206,7 +205,7 @@ struct tok tokens[] =
     {"INDEX", sizeof("INDEX") - 1, INDEX},
     {"\"", sizeof("\"") - 1, QUOTE},
     {"END", sizeof("END") - 1, ENDOFFILE},
-/* Hacks for easier MIBFILE coercing */
+    /* Hacks for easier MIBFILE coercing */
     {"read-create", sizeof("read-create") - 1, READWRITE},
     {NULL}
 };
@@ -226,13 +225,13 @@ hash_init(void)
 
     memset((char *) buckets, '\0', sizeof(buckets));
     for (tp = tokens; tp->name; tp++) {
-	for (h = 0, cp = tp->name; *cp; cp++)
-	    h += *cp;
-	tp->hash = h;
-	b = BUCKET(h);
-	if (buckets[b])
-	    tp->next = buckets[b];	/* BUG ??? */
-	buckets[b] = tp;
+        for (h = 0, cp = tp->name; *cp; cp++)
+            h += *cp;
+        tp->hash = h;
+        b = BUCKET(h);
+        if (buckets[b])
+            tp->next = buckets[b];	/* BUG ??? */
+        buckets[b] = tp;
     }
 }
 
@@ -249,13 +248,13 @@ init_node_hash(struct node *nodes)
 
     memset((char *) nbuckets, '\0', sizeof(nbuckets));
     for (np = nodes; np;) {
-	nextp = np->next;
-	hash = 0;
-	for (cp = np->parent; *cp; cp++)
-	    hash += *cp;
-	np->next = nbuckets[NBUCKET(hash)];
-	nbuckets[NBUCKET(hash)] = np;
-	np = nextp;
+        nextp = np->next;
+        hash = 0;
+        for (cp = np->parent; *cp; cp++)
+            hash += *cp;
+        np->next = nbuckets[NBUCKET(hash)];
+        nbuckets[NBUCKET(hash)] = np;
+        np = nextp;
     }
 }
 
@@ -265,32 +264,32 @@ print_error(const char *string, const char *token, int type)
 {
     assert(string != NULL);
     if (type == ENDOFFILE)
-	snmplib_debug(0, "%s(EOF): On or around line %d\n", string, Line);
+        snmplib_debug(0, "%s(EOF): On or around line %d\n", string, Line);
     else if (token)
-	snmplib_debug(0, "%s(%s): On or around line %d\n", string, token, Line);
+        snmplib_debug(0, "%s(%s): On or around line %d\n", string, token, Line);
     else
-	snmplib_debug(0, "%s: On or around line %d\n", string, Line);
+        snmplib_debug(0, "%s: On or around line %d\n", string, Line);
 }
 
 #ifdef TEST
 print_subtree(tree, count)
-     struct snmp_mib_tree *tree;
-     int count;
+struct snmp_mib_tree *tree;
+int count;
 {
     struct snmp_mib_tree *tp;
     int i;
 
     for (i = 0; i < count; i++)
-	printf("  ");
+        printf("  ");
     printf("Children of %s:\n", tree->label);
     count++;
     for (tp = tree->child_list; tp; tp = tp->next_peer) {
-	for (i = 0; i < count; i++)
-	    printf("  ");
-	printf("%s\n", tp->label);
+        for (i = 0; i < count; i++)
+            printf("  ");
+        printf("%s\n", tp->label);
     }
     for (tp = tree->child_list; tp; tp = tp->next_peer) {
-	print_subtree(tp, count);
+        print_subtree(tp, count);
     }
 }
 #endif /* TEST */
@@ -303,41 +302,41 @@ build_translation_table(void)
     int count;
 
     for (count = 0; count < 40; count++) {
-	switch (count) {
-	case OBJID:
-	    translation_table[count] = TYPE_OBJID;
-	    break;
-	case OCTETSTR:
-	    translation_table[count] = TYPE_OCTETSTR;
-	    break;
-	case INTEGER:
-	    translation_table[count] = TYPE_INTEGER;
-	    break;
-	case NETADDR:
-	    translation_table[count] = TYPE_IPADDR;
-	    break;
-	case IPADDR:
-	    translation_table[count] = TYPE_IPADDR;
-	    break;
-	case COUNTER:
-	    translation_table[count] = TYPE_COUNTER;
-	    break;
-	case GAUGE:
-	    translation_table[count] = TYPE_GAUGE;
-	    break;
-	case TIMETICKS:
-	    translation_table[count] = TYPE_TIMETICKS;
-	    break;
-	case SNMP_OPAQUE:
-	    translation_table[count] = TYPE_OPAQUE;
-	    break;
-	case NUL:
-	    translation_table[count] = TYPE_NULL;
-	    break;
-	default:
-	    translation_table[count] = TYPE_OTHER;
-	    break;
-	}
+        switch (count) {
+        case OBJID:
+            translation_table[count] = TYPE_OBJID;
+            break;
+        case OCTETSTR:
+            translation_table[count] = TYPE_OCTETSTR;
+            break;
+        case INTEGER:
+            translation_table[count] = TYPE_INTEGER;
+            break;
+        case NETADDR:
+            translation_table[count] = TYPE_IPADDR;
+            break;
+        case IPADDR:
+            translation_table[count] = TYPE_IPADDR;
+            break;
+        case COUNTER:
+            translation_table[count] = TYPE_COUNTER;
+            break;
+        case GAUGE:
+            translation_table[count] = TYPE_GAUGE;
+            break;
+        case TIMETICKS:
+            translation_table[count] = TYPE_TIMETICKS;
+            break;
+        case SNMP_OPAQUE:
+            translation_table[count] = TYPE_OPAQUE;
+            break;
+        case NUL:
+            translation_table[count] = TYPE_NULL;
+            break;
+        default:
+            translation_table[count] = TYPE_OTHER;
+            break;
+        }
     }
 }
 
@@ -358,79 +357,78 @@ do_subtree(struct snmp_mib_tree *root, struct node **nodes)
     tp = root;
     hash = 0;
     for (cp = tp->label; *cp; cp++)
-	hash += *cp;
+        hash += *cp;
     headp = &nbuckets[NBUCKET(hash)];
     /*
      * Search each of the nodes for one whose parent is root, and
      * move each into a separate list.
      */
     for (np = *headp; np; np = np->next) {
-	if ((*tp->label != *np->parent) || strcmp(tp->label, np->parent)) {
-	    if ((*tp->label == *np->label) && !strcmp(tp->label, np->label)) {
-		/* if there is another node with the same label, assume that
-		 * any children after this point in the list belong to the other node.
-		 * This adds some scoping to the table and allows vendors to
-		 * reuse names such as "ip".
-		 */
-		break;
-	    }
-	    oldnp = np;
-	} else {
-	    if (child_list == NULL) {
-		child_list = childp = np;	/* first entry in child list */
-	    } else {
-		childp->next = np;
-		childp = np;
-	    }
-	    /* take this node out of the node list */
-	    if (oldnp == NULL) {
-		*headp = np->next;	/* fix root of node list */
-	    } else {
-		oldnp->next = np->next;		/* link around this node */
-	    }
-	}
+        if ((*tp->label != *np->parent) || strcmp(tp->label, np->parent)) {
+            if ((*tp->label == *np->label) && !strcmp(tp->label, np->label)) {
+                /* if there is another node with the same label, assume that
+                 * any children after this point in the list belong to the other node.
+                 * This adds some scoping to the table and allows vendors to
+                 * reuse names such as "ip".
+                 */
+                break;
+            }
+            oldnp = np;
+        } else {
+            if (child_list == NULL) {
+                child_list = childp = np;	/* first entry in child list */
+            } else {
+                childp->next = np;
+                childp = np;
+            }
+            /* take this node out of the node list */
+            if (oldnp == NULL) {
+                *headp = np->next;	/* fix root of node list */
+            } else {
+                oldnp->next = np->next;		/* link around this node */
+            }
+        }
     }
     if (childp)
-	childp->next = 0;	/* re-terminate list */
+        childp->next = 0;	/* re-terminate list */
     /*
      * Take each element in the child list and place it into the tree.
      */
     for (np = child_list; np; np = np->next) {
-	tp = (struct snmp_mib_tree *) xmalloc(sizeof(struct snmp_mib_tree));
-	tp->parent = root;
-	tp->next_peer = NULL;
-	tp->child_list = NULL;
-	strcpy(tp->label, np->label);
-	tp->subid = np->subid;
-	tp->type = translation_table[np->type];
-	tp->enums = np->enums;
-	np->enums = NULL;	/* so we don't free them later */
-	if (root->child_list == NULL) {
-	    root->child_list = tp;
-	} else {
-	    peer->next_peer = tp;
-	}
-	peer = tp;
-/*      if (tp->type == TYPE_OTHER) */
-	do_subtree(tp, nodes);	/* recurse on this child if it isn't an end node */
+        tp = (struct snmp_mib_tree *) xmalloc(sizeof(struct snmp_mib_tree));
+        tp->parent = root;
+        tp->next_peer = NULL;
+        tp->child_list = NULL;
+        strcpy(tp->label, np->label);
+        tp->subid = np->subid;
+        tp->type = translation_table[np->type];
+        tp->enums = np->enums;
+        np->enums = NULL;	/* so we don't free them later */
+        if (root->child_list == NULL) {
+            root->child_list = tp;
+        } else {
+            peer->next_peer = tp;
+        }
+        peer = tp;
+        /*      if (tp->type == TYPE_OTHER) */
+        do_subtree(tp, nodes);	/* recurse on this child if it isn't an end node */
     }
     /* free all nodes that were copied into tree */
     oldnp = NULL;
     for (np = child_list; np; np = np->next) {
-	if (oldnp)
-	    xfree(oldnp);
-	oldnp = np;
+        if (oldnp)
+            xfree(oldnp);
+        oldnp = np;
     }
     if (oldnp)
-	xfree(oldnp);
+        xfree(oldnp);
 }
 
 #ifndef TEST
 static
 #endif
 struct snmp_mib_tree *
-build_tree(struct node *nodes)
-{
+            build_tree(struct node *nodes) {
     struct node *np;
     struct snmp_mib_tree *tp;
     int bucket, nodes_left = 0;
@@ -454,20 +452,20 @@ build_tree(struct node *nodes)
 #endif /* TEST */
     /* If any nodes are left, the tree is probably inconsistent */
     for (bucket = 0; bucket < NHASHSIZE; bucket++) {
-	if (nbuckets[bucket]) {
-	    nodes_left = 1;
-	    break;
-	}
+        if (nbuckets[bucket]) {
+            nodes_left = 1;
+            break;
+        }
     }
     if (nodes_left) {
-	snmplib_debug(0, "The mib description doesn't seem to be consistent.\n");
-	snmplib_debug(0, "Some nodes couldn't be linked under the \"iso\" tree.\n");
-	snmplib_debug(0, "these nodes are left:\n");
-	for (bucket = 0; bucket < NHASHSIZE; bucket++) {
-	    for (np = nbuckets[bucket]; np; np = np->next)
-		snmplib_debug(5, "%s ::= { %s %d } (%d)\n", np->label, np->parent, np->subid,
-		    np->type);
-	}
+        snmplib_debug(0, "The mib description doesn't seem to be consistent.\n");
+        snmplib_debug(0, "Some nodes couldn't be linked under the \"iso\" tree.\n");
+        snmplib_debug(0, "these nodes are left:\n");
+        for (bucket = 0; bucket < NHASHSIZE; bucket++) {
+            for (np = nbuckets[bucket]; np; np = np->next)
+                snmplib_debug(5, "%s ::= { %s %d } (%d)\n", np->label, np->parent, np->subid,
+                              np->type);
+        }
     }
     return tp;
 }
@@ -491,12 +489,12 @@ get_token(register FILE *fp, register char *token)
     ch = (unsigned char)last;
     /* skip all white space */
     while (xisspace(ch) && ch != -1) {
-	ch = getc(fp);
-	if (ch == '\n')
-	    Line++;
+        ch = getc(fp);
+        if (ch == '\n')
+            Line++;
     }
     if (ch == -1)
-	return ENDOFFILE;
+        return ENDOFFILE;
 
     /*
      * Accumulate characters until end of token is found.  Then attempt to match this
@@ -504,51 +502,51 @@ get_token(register FILE *fp, register char *token)
      * a label.
      */
     do {
-	if (ch == '\n')
-	    Line++;
-	if (xisspace(ch) || ch == '(' || ch == ')' ||
-	    ch == '{' || ch == '}' || ch == ',' ||
-	    ch == '"') {
-	    if (!xisspace(ch) && *token == 0) {
-		hash += ch;
-		*cp++ = ch;
-		last = ' ';
-	    } else {
-		last = ch;
-	    }
-	    *cp = '\0';
+        if (ch == '\n')
+            Line++;
+        if (xisspace(ch) || ch == '(' || ch == ')' ||
+                ch == '{' || ch == '}' || ch == ',' ||
+                ch == '"') {
+            if (!xisspace(ch) && *token == 0) {
+                hash += ch;
+                *cp++ = ch;
+                last = ' ';
+            } else {
+                last = ch;
+            }
+            *cp = '\0';
 
-	    for (tp = buckets[BUCKET(hash)]; tp; tp = tp->next) {
-		if ((tp->hash == hash) && (strcmp(tp->name, token) == 0))
-		    break;
-	    }
-	    if (tp) {
-		if (tp->token == CONTINUE)
-		    continue;
-		return (tp->token);
-	    }
-	    if (token[0] == '-' && token[1] == '-') {
-		/* strip comment */
-		while ((ch = getc(fp)) != -1)
-		    if (ch == '\n') {
-			Line++;
-			break;
-		    }
-		if (ch == -1)
-		    return ENDOFFILE;
-		last = ch;
-		return get_token(fp, token);
-	    }
-	    for (cp = token; *cp; cp++)
-		if (!xisdigit(*cp))
-		    return LABEL;
-	    return NUMBER;
-	} else {
-	    hash += ch;
-	    *cp++ = ch;
-	    if (ch == '\n')
-		Line++;
-	}
+            for (tp = buckets[BUCKET(hash)]; tp; tp = tp->next) {
+                if ((tp->hash == hash) && (strcmp(tp->name, token) == 0))
+                    break;
+            }
+            if (tp) {
+                if (tp->token == CONTINUE)
+                    continue;
+                return (tp->token);
+            }
+            if (token[0] == '-' && token[1] == '-') {
+                /* strip comment */
+                while ((ch = getc(fp)) != -1)
+                    if (ch == '\n') {
+                        Line++;
+                        break;
+                    }
+                if (ch == -1)
+                    return ENDOFFILE;
+                last = ch;
+                return get_token(fp, token);
+            }
+            for (cp = token; *cp; cp++)
+                if (!xisdigit(*cp))
+                    return LABEL;
+            return NUMBER;
+        } else {
+            hash += ch;
+            *cp++ = ch;
+            if (ch == '\n')
+                Line++;
+        }
 
     } while ((ch = getc(fp)) != -1);
     return ENDOFFILE;
@@ -571,45 +569,45 @@ getoid(register FILE *fp, register struct subid *SubOid, int length)
     register char *cp;
 
     if ((type = get_token(fp, token)) != LEFTBRACKET) {
-	print_error("Expected \"{\"", token, type);
-	return 0;
+        print_error("Expected \"{\"", token, type);
+        return 0;
     }
     type = get_token(fp, token);
     for (count = 0; count < length; count++, SubOid++) {
-	SubOid->label = 0;
-	SubOid->subid = -1;
-	if (type == RIGHTBRACKET) {
-	    return count;
-	} else if (type != LABEL && type != NUMBER) {
-	    print_error("Not valid for object identifier", token, type);
-	    return 0;
-	}
-	if (type == LABEL) {
-	    /* this entry has a label */
-	    cp = (char *) xmalloc((unsigned) strlen(token) + 1);
-	    strcpy(cp, token);
-	    SubOid->label = cp;
-	    type = get_token(fp, token);
-	    if (type == LEFTPAREN) {
-		type = get_token(fp, token);
-		if (type == NUMBER) {
-		    SubOid->subid = atoi(token);
-		    if ((type = get_token(fp, token)) != RIGHTPAREN) {
-			print_error("Unexpected a closing parenthesis", token, type);
-			return 0;
-		    }
-		} else {
-		    print_error("Expected a number", token, type);
-		    return 0;
-		}
-	    } else {
-		continue;
-	    }
-	} else {
-	    /* this entry  has just an integer sub-identifier */
-	    SubOid->subid = atoi(token);
-	}
-	type = get_token(fp, token);
+        SubOid->label = 0;
+        SubOid->subid = -1;
+        if (type == RIGHTBRACKET) {
+            return count;
+        } else if (type != LABEL && type != NUMBER) {
+            print_error("Not valid for object identifier", token, type);
+            return 0;
+        }
+        if (type == LABEL) {
+            /* this entry has a label */
+            cp = (char *) xmalloc((unsigned) strlen(token) + 1);
+            strcpy(cp, token);
+            SubOid->label = cp;
+            type = get_token(fp, token);
+            if (type == LEFTPAREN) {
+                type = get_token(fp, token);
+                if (type == NUMBER) {
+                    SubOid->subid = atoi(token);
+                    if ((type = get_token(fp, token)) != RIGHTPAREN) {
+                        print_error("Unexpected a closing parenthesis", token, type);
+                        return 0;
+                    }
+                } else {
+                    print_error("Expected a number", token, type);
+                    return 0;
+                }
+            } else {
+                continue;
+            }
+        } else {
+            /* this entry  has just an integer sub-identifier */
+            SubOid->subid = atoi(token);
+        }
+        type = get_token(fp, token);
     }
     return count;
 
@@ -623,9 +621,9 @@ free_node(struct node *np)
 
     ep = np->enums;
     while (ep) {
-	tep = ep;
-	ep = ep->next;
-	xfree((char *) tep);
+        tep = ep;
+        ep = ep->next;
+        xfree((char *) tep);
     }
     xfree((char *) np);
 }
@@ -637,8 +635,7 @@ free_node(struct node *np)
  * Returns 0 on error.
  */
 static struct node *
-parse_objectid(FILE *fp, char *name)
-{
+            parse_objectid(FILE *fp, char *name) {
     int type;
     char token[64];
     register int count;
@@ -649,73 +646,73 @@ parse_objectid(FILE *fp, char *name)
 
     type = get_token(fp, token);
     if (type != EQUALS) {
-	print_error("Bad format", token, type);
-	return 0;
+        print_error("Bad format", token, type);
+        return 0;
     }
     if ((length = getoid(fp, SubOid, 32)) != 0) {
-	np = root = (struct node *) xmalloc(sizeof(struct node));
-	memset((char *) np, '\0', sizeof(struct node));
-	/*
-	 * For each parent-child subid pair in the subid array,
-	 * create a node and link it into the node list.
-	 */
-	for (count = 0, op = SubOid, nop = SubOid + 1; count < (length - 2); count++,
-	    op++, nop++) {
-	    /* every node must have parent's name and child's name or number */
-	    if (op->label && (nop->label || (nop->subid != -1))) {
-		strcpy(np->parent, op->label);
-		if (nop->label)
-		    strcpy(np->label, nop->label);
-		if (nop->subid != -1)
-		    np->subid = nop->subid;
-		np->type = 0;
-		np->enums = 0;
-		/* set up next entry */
-		np->next = (struct node *) xmalloc(sizeof(*np->next));
-		memset((char *) np->next, '\0', sizeof(struct node));
-		oldnp = np;
-		np = np->next;
-	    }
-	}
-	np->next = (struct node *) NULL;
-	/*
-	 * The above loop took care of all but the last pair.  This pair is taken
-	 * care of here.  The name for this node is taken from the label for this
-	 * entry.
-	 * np still points to an unused entry.
-	 */
-	if (count == (length - 2)) {
-	    if (op->label) {
-		strcpy(np->parent, op->label);
-		strcpy(np->label, name);
-		if (nop->subid != -1)
-		    np->subid = nop->subid;
-		else
-		    print_error("Warning: This entry is pretty silly", np->label, type);
-	    } else {
-		free_node(np);
-		if (oldnp)
-		    oldnp->next = NULL;
-		else
-		    return NULL;
-	    }
-	} else {
-	    print_error("Missing end of oid", (char *) NULL, type);
-	    free_node(np);	/* the last node allocated wasn't used */
-	    if (oldnp)
-		oldnp->next = NULL;
-	    return NULL;
-	}
-	/* free the oid array */
-	for (count = 0, op = SubOid; count < length; count++, op++) {
-	    if (op->label)
-		xfree(op->label);
-	    op->label = 0;
-	}
-	return root;
+        np = root = (struct node *) xmalloc(sizeof(struct node));
+        memset((char *) np, '\0', sizeof(struct node));
+        /*
+         * For each parent-child subid pair in the subid array,
+         * create a node and link it into the node list.
+         */
+        for (count = 0, op = SubOid, nop = SubOid + 1; count < (length - 2); count++,
+                op++, nop++) {
+            /* every node must have parent's name and child's name or number */
+            if (op->label && (nop->label || (nop->subid != -1))) {
+                strcpy(np->parent, op->label);
+                if (nop->label)
+                    strcpy(np->label, nop->label);
+                if (nop->subid != -1)
+                    np->subid = nop->subid;
+                np->type = 0;
+                np->enums = 0;
+                /* set up next entry */
+                np->next = (struct node *) xmalloc(sizeof(*np->next));
+                memset((char *) np->next, '\0', sizeof(struct node));
+                oldnp = np;
+                np = np->next;
+            }
+        }
+        np->next = (struct node *) NULL;
+        /*
+         * The above loop took care of all but the last pair.  This pair is taken
+         * care of here.  The name for this node is taken from the label for this
+         * entry.
+         * np still points to an unused entry.
+         */
+        if (count == (length - 2)) {
+            if (op->label) {
+                strcpy(np->parent, op->label);
+                strcpy(np->label, name);
+                if (nop->subid != -1)
+                    np->subid = nop->subid;
+                else
+                    print_error("Warning: This entry is pretty silly", np->label, type);
+            } else {
+                free_node(np);
+                if (oldnp)
+                    oldnp->next = NULL;
+                else
+                    return NULL;
+            }
+        } else {
+            print_error("Missing end of oid", (char *) NULL, type);
+            free_node(np);	/* the last node allocated wasn't used */
+            if (oldnp)
+                oldnp->next = NULL;
+            return NULL;
+        }
+        /* free the oid array */
+        for (count = 0, op = SubOid; count < length; count++, op++) {
+            if (op->label)
+                xfree(op->label);
+            op->label = 0;
+        }
+        return root;
     } else {
-	print_error("Bad object identifier", (char *) NULL, type);
-	return 0;
+        print_error("Bad object identifier", (char *) NULL, type);
+        return 0;
     }
 }
 
@@ -731,12 +728,12 @@ parse_asntype(FILE *fp)
 
     type = get_token(fp, token);
     if (type != SEQUENCE) {
-	print_error("Not a sequence", token, type);	/* should we handle this */
-	return ENDOFFILE;
+        print_error("Not a sequence", token, type);	/* should we handle this */
+        return ENDOFFILE;
     }
     while ((type = get_token(fp, token)) != ENDOFFILE) {
-	if (type == RIGHTBRACKET)
-	    return type;
+        if (type == RIGHTBRACKET)
+            return type;
     }
     print_error("Expected \"}\"", token, type);
     return ENDOFFILE;
@@ -747,8 +744,7 @@ parse_asntype(FILE *fp)
  * Returns 0 on error.
  */
 static struct node *
-parse_objecttype(register FILE *fp, char *name)
-{
+            parse_objecttype(register FILE *fp, char *name) {
     register int type;
     char token[64];
     int count, length;
@@ -761,8 +757,8 @@ parse_objecttype(register FILE *fp, char *name)
 
     type = get_token(fp, token);
     if (type != SYNTAX) {
-	print_error("Bad format for OBJECT TYPE", token, type);
-	return 0;
+        print_error("Bad format for OBJECT TYPE", token, type);
+        return 0;
     }
     np = (struct node *) xmalloc(sizeof(struct node));
     np->next = 0;
@@ -772,71 +768,71 @@ parse_objecttype(register FILE *fp, char *name)
     np->type = type;
     switch (type) {
     case SEQUENCE:
-	strcpy(syntax, token);
-	if (nexttype == OF) {
-	    strcat(syntax, " ");
-	    strcat(syntax, nexttoken);
-	    nexttype = get_token(fp, nexttoken);
-	    strcat(syntax, " ");
-	    strcat(syntax, nexttoken);
-	    nexttype = get_token(fp, nexttoken);
-	}
-	break;
+        strcpy(syntax, token);
+        if (nexttype == OF) {
+            strcat(syntax, " ");
+            strcat(syntax, nexttoken);
+            nexttype = get_token(fp, nexttoken);
+            strcat(syntax, " ");
+            strcat(syntax, nexttoken);
+            nexttype = get_token(fp, nexttoken);
+        }
+        break;
     case INTEGER:
-	strcpy(syntax, token);
-	if (nexttype == LEFTBRACKET) {
-	    /* if there is an enumeration list, parse it */
-	    while ((type = get_token(fp, token)) != ENDOFFILE) {
-		if (type == RIGHTBRACKET)
-		    break;
-		if (type == LABEL) {
-		    /* this is an enumerated label */
-		    if (np->enums == 0) {
-			ep = np->enums = (struct enum_list *)
-			    xmalloc(sizeof(struct enum_list));
-		    } else {
-			ep->next = (struct enum_list *)
-			    xmalloc(sizeof(struct enum_list));
-			ep = ep->next;
-		    }
-		    ep->next = 0;
-		    /* a reasonable approximation for the length */
-		    ep->label = (char *) xmalloc((unsigned) strlen(token) + 1);
-		    strcpy(ep->label, token);
-		    type = get_token(fp, token);
-		    if (type != LEFTPAREN) {
-			print_error("Expected \"(\"", token, type);
-			free_node(np);
-			return 0;
-		    }
-		    type = get_token(fp, token);
-		    if (type != NUMBER) {
-			print_error("Expected integer", token, type);
-			free_node(np);
-			return 0;
-		    }
-		    ep->value = atoi(token);
-		    type = get_token(fp, token);
-		    if (type != RIGHTPAREN) {
-			print_error("Expected \")\"", token, type);
-			free_node(np);
-			return 0;
-		    }
-		}
-	    }
-	    if (type == ENDOFFILE) {
-		print_error("Expected \"}\"", token, type);
-		free_node(np);
-		return 0;
-	    }
-	    nexttype = get_token(fp, nexttoken);
-	} else if (nexttype == LEFTPAREN) {
-	    /* ignore the "constrained integer" for now */
-	    nexttype = get_token(fp, nexttoken);
-	    nexttype = get_token(fp, nexttoken);
-	    nexttype = get_token(fp, nexttoken);
-	}
-	break;
+        strcpy(syntax, token);
+        if (nexttype == LEFTBRACKET) {
+            /* if there is an enumeration list, parse it */
+            while ((type = get_token(fp, token)) != ENDOFFILE) {
+                if (type == RIGHTBRACKET)
+                    break;
+                if (type == LABEL) {
+                    /* this is an enumerated label */
+                    if (np->enums == 0) {
+                        ep = np->enums = (struct enum_list *)
+                                         xmalloc(sizeof(struct enum_list));
+                    } else {
+                        ep->next = (struct enum_list *)
+                                   xmalloc(sizeof(struct enum_list));
+                        ep = ep->next;
+                    }
+                    ep->next = 0;
+                    /* a reasonable approximation for the length */
+                    ep->label = (char *) xmalloc((unsigned) strlen(token) + 1);
+                    strcpy(ep->label, token);
+                    type = get_token(fp, token);
+                    if (type != LEFTPAREN) {
+                        print_error("Expected \"(\"", token, type);
+                        free_node(np);
+                        return 0;
+                    }
+                    type = get_token(fp, token);
+                    if (type != NUMBER) {
+                        print_error("Expected integer", token, type);
+                        free_node(np);
+                        return 0;
+                    }
+                    ep->value = atoi(token);
+                    type = get_token(fp, token);
+                    if (type != RIGHTPAREN) {
+                        print_error("Expected \")\"", token, type);
+                        free_node(np);
+                        return 0;
+                    }
+                }
+            }
+            if (type == ENDOFFILE) {
+                print_error("Expected \"}\"", token, type);
+                free_node(np);
+                return 0;
+            }
+            nexttype = get_token(fp, nexttoken);
+        } else if (nexttype == LEFTPAREN) {
+            /* ignore the "constrained integer" for now */
+            nexttype = get_token(fp, nexttoken);
+            nexttype = get_token(fp, nexttoken);
+            nexttype = get_token(fp, nexttoken);
+        }
+        break;
     case OBJID:
     case OCTETSTR:
     case NETADDR:
@@ -847,36 +843,36 @@ parse_objecttype(register FILE *fp, char *name)
     case SNMP_OPAQUE:
     case NUL:
     case LABEL:
-	strcpy(syntax, token);
-	break;
+        strcpy(syntax, token);
+        break;
     default:
-	print_error("Bad syntax", token, type);
-	free_node(np);
-	return 0;
+        print_error("Bad syntax", token, type);
+        free_node(np);
+        return 0;
     }
     if (nexttype != ACCESS) {
-	print_error("Should be ACCESS", nexttoken, nexttype);
-	free_node(np);
-	return 0;
+        print_error("Should be ACCESS", nexttoken, nexttype);
+        free_node(np);
+        return 0;
     }
     type = get_token(fp, token);
     if (type != READONLY && type != READWRITE && type != WRITEONLY
-	&& type != NOACCESS) {
-	print_error("Bad access type", nexttoken, nexttype);
-	free_node(np);
-	return 0;
+            && type != NOACCESS) {
+        print_error("Bad access type", nexttoken, nexttype);
+        free_node(np);
+        return 0;
     }
     type = get_token(fp, token);
     if (type != SNMP_STATUS) {
-	print_error("Should be STATUS", token, nexttype);
-	free_node(np);
-	return 0;
+        print_error("Should be STATUS", token, nexttype);
+        free_node(np);
+        return 0;
     }
     type = get_token(fp, token);
     if (type != MANDATORY && type != SNMP_OPTIONAL && type != OBSOLETE && type != RECOMMENDED) {
-	print_error("Bad status", token, type);
-	free_node(np);
-	return 0;
+        print_error("Bad status", token, type);
+        free_node(np);
+        return 0;
     }
     /* Fetch next token.  Either:
      *
@@ -885,90 +881,90 @@ parse_objecttype(register FILE *fp, char *name)
      */
     type = get_token(fp, token);
     if ((type != DESCRIPTION) && (type != INDEX) && (type != EQUALS)) {
-	print_error("Should be DESCRIPTION, INDEX, or EQUALS", token, nexttype);
-	free_node(np);
-	return 0;
+        print_error("Should be DESCRIPTION, INDEX, or EQUALS", token, nexttype);
+        free_node(np);
+        return 0;
     }
     if (type == DESCRIPTION) {
 
-	type = get_token(fp, token);
-	if (type != QUOTE) {
-	    print_error("Should be Description open quote", token, nexttype);
-	    free_node(np);
-	    return 0;
-	}
-	/* Fetch description string */
-	{
-	    int ReadChar;
+        type = get_token(fp, token);
+        if (type != QUOTE) {
+            print_error("Should be Description open quote", token, nexttype);
+            free_node(np);
+            return 0;
+        }
+        /* Fetch description string */
+        {
+            int ReadChar;
 
-	    ReadChar = last;
-	    /* skip everything until closing quote */
-	    while ((ReadChar != '"') && (ReadChar != -1)) {
-		ReadChar = getc(fp);
-		if (ReadChar == '\n')
-		    Line++;
-	    }
-	    last = ' ';
-	}
-	/* ASSERT:  Done with description. */
-	type = get_token(fp, token);
+            ReadChar = last;
+            /* skip everything until closing quote */
+            while ((ReadChar != '"') && (ReadChar != -1)) {
+                ReadChar = getc(fp);
+                if (ReadChar == '\n')
+                    Line++;
+            }
+            last = ' ';
+        }
+        /* ASSERT:  Done with description. */
+        type = get_token(fp, token);
     }
     if ((type != INDEX) && (type != EQUALS)) {
-	print_error("Should be INDEX, or EQUALS", token, nexttype);
-	free_node(np);
-	return 0;
+        print_error("Should be INDEX, or EQUALS", token, nexttype);
+        free_node(np);
+        return 0;
     }
     if (type == INDEX) {
 
-	/* Scarf INDEX */
+        /* Scarf INDEX */
 
-	type = get_token(fp, token);
-	if (type != LEFTBRACKET) {
-	    print_error("Should be INDEX left brace", token, type);
-	    free_node(np);
-	    return 0;
-	}
-	/* Fetch description string */
-	{
-	    int ReadChar;
+        type = get_token(fp, token);
+        if (type != LEFTBRACKET) {
+            print_error("Should be INDEX left brace", token, type);
+            free_node(np);
+            return 0;
+        }
+        /* Fetch description string */
+        {
+            int ReadChar;
 
-	    ReadChar = last;
-	    /* skip everything until closing quote */
-	    while ((ReadChar != '}') && (ReadChar != -1)) {
-		ReadChar = getc(fp);
-		if (ReadChar == '\n')
-		    Line++;
-	    }
-	    last = ' ';
-	}
-	/* ASSERT:  Done with INDEX. */
-	type = get_token(fp, token);
+            ReadChar = last;
+            /* skip everything until closing quote */
+            while ((ReadChar != '}') && (ReadChar != -1)) {
+                ReadChar = getc(fp);
+                if (ReadChar == '\n')
+                    Line++;
+            }
+            last = ' ';
+        }
+        /* ASSERT:  Done with INDEX. */
+        type = get_token(fp, token);
     }
     if (type != EQUALS) {
-	print_error("Bad format", token, type);
-	free_node(np);
-	return 0;
+        print_error("Bad format", token, type);
+        free_node(np);
+        return 0;
     }
     length = getoid(fp, SubOid, 32);
     if (length > 1 && length <= 32) {
-	/* just take the last pair in the oid list */
-	if (SubOid[length - 2].label)
-	    strncpy(np->parent, SubOid[length - 2].label, 64);
-	strcpy(np->label, name);
-	if (SubOid[length - 1].subid != -1)
-	    np->subid = SubOid[length - 1].subid;
-	else
-	    print_error("Warning: This entry is pretty silly", np->label, type);
+        /* just take the last pair in the oid list */
+        if (SubOid[length - 2].label)
+            strncpy(np->parent, SubOid[length - 2].label, 64);
+        strcpy(np->label, name);
+        if (SubOid[length - 1].subid != -1)
+            np->subid = SubOid[length - 1].subid;
+        else
+            print_error("Warning: This entry is pretty silly", np->label, type);
     } else {
-	print_error("No end to oid", (char *) NULL, type);
-	free_node(np);
-	np = 0;
+        print_error("No end to oid", (char *) NULL, type);
+        free_node(np);
+        np = 0;
     }
     /* free oid array */
     for (count = 0; count < length; count++) {
-	if (SubOid[count].label)
-	    xfree(SubOid[count].label);
-	SubOid[count].label = 0;
+        if (SubOid[count].label)
+            xfree(SubOid[count].label);
+        SubOid[count].label = 0;
     }
     return np;
 }
@@ -982,8 +978,7 @@ parse_objecttype(register FILE *fp, char *name)
 static
 #endif
 struct node *
-parse(FILE *fp)
-{
+            parse(FILE *fp) {
     char token[64];
     char name[64];
     int type = 1;
@@ -992,83 +987,82 @@ parse(FILE *fp)
     hash_init();
 
     while (type != ENDOFFILE) {
-	type = get_token(fp, token);
-	if (type != LABEL) {
-	    if (type == ENDOFFILE) {
-		return root;
-	    }
-	    print_error(token, "is a reserved word", type);
-	    return NULL;
-	}
-	strncpy(name, token, 64);
-	type = get_token(fp, token);
-	if (type == OBJTYPE) {
-	    if (root == NULL) {
-		/* first link in chain */
-		np = root = parse_objecttype(fp, name);
-		if (np == NULL) {
-		    print_error("Bad parse of object type", (char *) NULL, type);
-		    return NULL;
-		}
-	    } else {
-		np->next = parse_objecttype(fp, name);
-		if (np->next == NULL) {
-		    print_error("Bad parse of objecttype", (char *) NULL, type);
-		    return NULL;
-		}
-	    }
-	    /* now find end of chain */
-	    while (np->next)
-		np = np->next;
-	} else if (type == OBJID) {
-	    if (root == NULL) {
-		/* first link in chain */
-		np = root = parse_objectid(fp, name);
-		if (np == NULL) {
-		    print_error("Bad parse of object id", (char *) NULL, type);
-		    return NULL;
-		}
-	    } else {
-		np->next = parse_objectid(fp, name);
-		if (np->next == NULL) {
-		    print_error("Bad parse of object type", (char *) NULL, type);
-		    return NULL;
-		}
-	    }
-	    /* now find end of chain */
-	    while (np->next)
-		np = np->next;
-	} else if (type == EQUALS) {
-	    type = parse_asntype(fp);
-	} else if (type == ENDOFFILE) {
-	    break;
-	} else {
-	    print_error("Bad operator", (char *) NULL, type);
-	    return NULL;
-	}
+        type = get_token(fp, token);
+        if (type != LABEL) {
+            if (type == ENDOFFILE) {
+                return root;
+            }
+            print_error(token, "is a reserved word", type);
+            return NULL;
+        }
+        strncpy(name, token, 64);
+        type = get_token(fp, token);
+        if (type == OBJTYPE) {
+            if (root == NULL) {
+                /* first link in chain */
+                np = root = parse_objecttype(fp, name);
+                if (np == NULL) {
+                    print_error("Bad parse of object type", (char *) NULL, type);
+                    return NULL;
+                }
+            } else {
+                np->next = parse_objecttype(fp, name);
+                if (np->next == NULL) {
+                    print_error("Bad parse of objecttype", (char *) NULL, type);
+                    return NULL;
+                }
+            }
+            /* now find end of chain */
+            while (np->next)
+                np = np->next;
+        } else if (type == OBJID) {
+            if (root == NULL) {
+                /* first link in chain */
+                np = root = parse_objectid(fp, name);
+                if (np == NULL) {
+                    print_error("Bad parse of object id", (char *) NULL, type);
+                    return NULL;
+                }
+            } else {
+                np->next = parse_objectid(fp, name);
+                if (np->next == NULL) {
+                    print_error("Bad parse of object type", (char *) NULL, type);
+                    return NULL;
+                }
+            }
+            /* now find end of chain */
+            while (np->next)
+                np = np->next;
+        } else if (type == EQUALS) {
+            type = parse_asntype(fp);
+        } else if (type == ENDOFFILE) {
+            break;
+        } else {
+            print_error("Bad operator", (char *) NULL, type);
+            return NULL;
+        }
     }
 #ifdef TEST
     {
-	struct enum_list *ep;
+        struct enum_list *ep;
 
-	for (np = root; np; np = np->next) {
-	    printf("%s ::= { %s %d } (%d)\n", np->label, np->parent, np->subid,
-		np->type);
-	    if (np->enums) {
-		printf("Enums: \n");
-		for (ep = np->enums; ep; ep = ep->next) {
-		    printf("%s(%d)\n", ep->label, ep->value);
-		}
-	    }
-	}
+        for (np = root; np; np = np->next) {
+            printf("%s ::= { %s %d } (%d)\n", np->label, np->parent, np->subid,
+                   np->type);
+            if (np->enums) {
+                printf("Enums: \n");
+                for (ep = np->enums; ep; ep = ep->next) {
+                    printf("%s(%d)\n", ep->label, ep->value);
+                }
+            }
+        }
     }
 #endif /* TEST */
     return root;
 }
 
 struct snmp_mib_tree *
-read_mib(char *filename)
-{
+            read_mib(char *filename) {
     FILE *fp;
     struct node *nodes;
     struct snmp_mib_tree *tree;
@@ -1077,24 +1071,24 @@ read_mib(char *filename)
 
     fp = fopen(filename, "r");
     if (fp == NULL) {
-	snmplib_debug(1, "init_mib: %s: %s\n", filename, xstrerror());
-	return (NULL);
+        snmplib_debug(1, "init_mib: %s: %s\n", filename, xstrerror());
+        return (NULL);
     }
     mbuf[0] = '\0';
     while ((p = fgets(mbuf, 256, fp)) && strncmp(mbuf, "DUMMY",
-	    strlen("DUMMY")));
+            strlen("DUMMY")));
     if (!p) {
-	snmplib_debug(0, "Bad MIB version or tag missing, install original!\n");
-	return NULL;
+        snmplib_debug(0, "Bad MIB version or tag missing, install original!\n");
+        return NULL;
     }
     if (!strcmp(mbuf, "DUMMY")) {
-	snmplib_debug(0, "You need to update your MIB!\n");
-	return NULL;
+        snmplib_debug(0, "You need to update your MIB!\n");
+        return NULL;
     }
     nodes = parse(fp);
     if (!nodes) {
-	snmplib_debug(0, "Mib table is bad.  Exiting\n");
-	return NULL;
+        snmplib_debug(0, "Mib table is bad.  Exiting\n");
+        return NULL;
     }
     tree = build_tree(nodes);
     fclose(fp);

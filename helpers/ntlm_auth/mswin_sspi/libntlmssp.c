@@ -8,7 +8,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- 
+
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -43,52 +43,52 @@ Valid_Group(char *UserName, char *Group)
     DWORD i;
     DWORD dwTotalCount = 0;
 
-/* Convert ANSI User Name and Group to Unicode */
+    /* Convert ANSI User Name and Group to Unicode */
 
     MultiByteToWideChar(CP_ACP, 0, UserName,
-	strlen(UserName) + 1, wszUserName,
-	sizeof(wszUserName) / sizeof(wszUserName[0]));
+                        strlen(UserName) + 1, wszUserName,
+                        sizeof(wszUserName) / sizeof(wszUserName[0]));
     MultiByteToWideChar(CP_ACP, 0, Group,
-	strlen(Group) + 1, wszGroup, sizeof(wszGroup) / sizeof(wszGroup[0]));
+                        strlen(Group) + 1, wszGroup, sizeof(wszGroup) / sizeof(wszGroup[0]));
 
     /*
-     * Call the NetUserGetLocalGroups function 
-	 * specifying information level 0.
-	 * 
-	 * The LG_INCLUDE_INDIRECT flag specifies that the 
-	 * function should also return the names of the local 
-	 * groups in which the user is indirectly a member.
-	 */
-	nStatus = NetUserGetLocalGroups(NULL,
-	    wszUserName,
-	    dwLevel,
-	    dwFlags,
-	    (LPBYTE *) & pBuf, dwPrefMaxLen, &dwEntriesRead, &dwTotalEntries);
-	/*
-	 * If the call succeeds,
-	 */
+     * Call the NetUserGetLocalGroups function
+     * specifying information level 0.
+     *
+     * The LG_INCLUDE_INDIRECT flag specifies that the
+     * function should also return the names of the local
+     * groups in which the user is indirectly a member.
+     */
+    nStatus = NetUserGetLocalGroups(NULL,
+                                    wszUserName,
+                                    dwLevel,
+                                    dwFlags,
+                                    (LPBYTE *) & pBuf, dwPrefMaxLen, &dwEntriesRead, &dwTotalEntries);
+    /*
+     * If the call succeeds,
+     */
     if (nStatus == NERR_Success) {
-	if ((pTmpBuf = pBuf) != NULL) {
-	    for (i = 0; i < dwEntriesRead; i++) {
-		if (pTmpBuf == NULL) {
-		    result = FALSE;
-		    break;
-		}
-		if (wcscmp(pTmpBuf->lgrui0_name, wszGroup) == 0) {
-		    result = TRUE;
-		    break;
-		}
-		pTmpBuf++;
-		dwTotalCount++;
-	    }
-	}
+        if ((pTmpBuf = pBuf) != NULL) {
+            for (i = 0; i < dwEntriesRead; i++) {
+                if (pTmpBuf == NULL) {
+                    result = FALSE;
+                    break;
+                }
+                if (wcscmp(pTmpBuf->lgrui0_name, wszGroup) == 0) {
+                    result = TRUE;
+                    break;
+                }
+                pTmpBuf++;
+                dwTotalCount++;
+            }
+        }
     } else
-	    result = FALSE;
-/*
- * Free the allocated memory.
- */
+        result = FALSE;
+    /*
+     * Free the allocated memory.
+     */
     if (pBuf != NULL)
-	NetApiBufferFree(pBuf);
+        NetApiBufferFree(pBuf);
     return result;
 }
 
@@ -104,7 +104,7 @@ char * AllocStrFromLSAStr(LSA_UNICODE_STRING LsaStr)
     safe_free(target);
     target = (char *)xmalloc(len);
     if (target == NULL)
-	return NULL;
+        return NULL;
 
     /* copy unicode buffer */
     WideCharToMultiByte(CP_ACP, 0, LsaStr.Buffer, LsaStr.Length, target, len, NULL, NULL );
@@ -126,80 +126,80 @@ char * GetDomainName(void)
     DWORD netret;
     char * DomainName = NULL;
 
-    /* 
+    /*
      * Always initialize the object attributes to all zeroes.
-     */ 
+     */
     memset(&ObjectAttributes, '\0', sizeof(ObjectAttributes));
 
-    /* 
+    /*
      * You need the local workstation name. Use NetWkstaGetInfo at level
      * 100 to retrieve a WKSTA_INFO_100 structure.
-     * 
+     *
      * The wki100_computername field contains a pointer to a UNICODE
      * string containing the local computer name.
-     */ 
+     */
     netret = NetWkstaGetInfo(NULL, 100, (LPBYTE *)&pwkiWorkstationInfo);
     if (netret == NERR_Success) {
-	/* 
-	 * We have the workstation name in:
-	 * pwkiWorkstationInfo->wki100_computername
-	 * 
-	 * Next, open the policy object for the local system using
-	 * the LsaOpenPolicy function.
-	 */ 
-	status = LsaOpenPolicy(
-                 NULL,
-                 &ObjectAttributes,
-                 GENERIC_READ | POLICY_VIEW_LOCAL_INFORMATION,
-                 &PolicyHandle
-                );
-	
-	/* 
-	 * Error checking.
-	 */ 
-	if (status) {
-	    debug("OpenPolicy Error: %ld\n", status);
-	} else {
+        /*
+         * We have the workstation name in:
+         * pwkiWorkstationInfo->wki100_computername
+         *
+         * Next, open the policy object for the local system using
+         * the LsaOpenPolicy function.
+         */
+        status = LsaOpenPolicy(
+                     NULL,
+                     &ObjectAttributes,
+                     GENERIC_READ | POLICY_VIEW_LOCAL_INFORMATION,
+                     &PolicyHandle
+                 );
 
-	    /* 
-	     * You have a handle to the policy object. Now, get the
-	     * domain information using LsaQueryInformationPolicy.
-	     */ 
-	    status = LsaQueryInformationPolicy(PolicyHandle,
-		PolicyPrimaryDomainInformation,
-		(void **)&ppdiDomainInfo);
-	    if (status) {
-		debug("LsaQueryInformationPolicy Error: %ld\n", status);
-	    } else  {
+        /*
+         * Error checking.
+         */
+        if (status) {
+            debug("OpenPolicy Error: %ld\n", status);
+        } else {
 
-		/* Get name in useable format */
-		DomainName = AllocStrFromLSAStr(ppdiDomainInfo->Name);
+            /*
+             * You have a handle to the policy object. Now, get the
+             * domain information using LsaQueryInformationPolicy.
+             */
+            status = LsaQueryInformationPolicy(PolicyHandle,
+                                               PolicyPrimaryDomainInformation,
+                                               (void **)&ppdiDomainInfo);
+            if (status) {
+                debug("LsaQueryInformationPolicy Error: %ld\n", status);
+            } else  {
 
-		/* 
-		 * Check the Sid pointer, if it is null, the
-		 * workstation is either a stand-alone computer
-		 * or a member of a workgroup.
-		 */ 
-		if (ppdiDomainInfo->Sid) {
+                /* Get name in useable format */
+                DomainName = AllocStrFromLSAStr(ppdiDomainInfo->Name);
 
-		    /* 
-		     * Member of a domain. Display it in debug mode.
-		     */ 
-		    debug("Member of Domain %s\n",DomainName);
-		} else {
-		    DomainName = NULL;
+                /*
+                 * Check the Sid pointer, if it is null, the
+                 * workstation is either a stand-alone computer
+                 * or a member of a workgroup.
+                 */
+                if (ppdiDomainInfo->Sid) {
+
+                    /*
+                     * Member of a domain. Display it in debug mode.
+                     */
+                    debug("Member of Domain %s\n",DomainName);
+                } else {
+                    DomainName = NULL;
                 }
-	    }
-	}
+            }
+        }
 
-	/* 
-	 * Clean up all the memory buffers created by the LSA and
-	 * Net* APIs.
-	 */ 
-	NetApiBufferFree(pwkiWorkstationInfo);
-	LsaFreeMemory((LPVOID)ppdiDomainInfo);
-    } else 
-	debug("NetWkstaGetInfo Error: %ld\n", netret);
+        /*
+         * Clean up all the memory buffers created by the LSA and
+         * Net* APIs.
+         */
+        NetApiBufferFree(pwkiWorkstationInfo);
+        LsaFreeMemory((LPVOID)ppdiDomainInfo);
+    } else
+        debug("NetWkstaGetInfo Error: %ld\n", netret);
     return DomainName;
 }
 
@@ -228,9 +228,9 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
         tmp = ntlm_fetch_string((char *) auth, auth_length, &auth->domain);
 
         if (tmp.str == NULL || tmp.l == 0) {
-	    debug("No domain supplied. Returning no-auth\n");
-	    ntlm_errno = NTLM_BAD_REQUEST;
-	    return NULL;
+            debug("No domain supplied. Returning no-auth\n");
+            ntlm_errno = NTLM_BAD_REQUEST;
+            return NULL;
         }
         if (Use_Unicode) {
             /* copy unicode buffer */
@@ -239,18 +239,18 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
             domain[tmp.l / sizeof(WCHAR)] = '\0';
         } else {
             if (tmp.l > DNLEN) {
-	        debug("Domain string exceeds %d bytes, rejecting\n", DNLEN);
-	        ntlm_errno = NTLM_BAD_REQUEST;
-	        return NULL;
+                debug("Domain string exceeds %d bytes, rejecting\n", DNLEN);
+                ntlm_errno = NTLM_BAD_REQUEST;
+                return NULL;
             }
             memcpy(domain, tmp.str, tmp.l);
             domain[tmp.l] = '\0';
         }
         tmp = ntlm_fetch_string((char *) auth, auth_length, &auth->user);
         if (tmp.str == NULL || tmp.l == 0) {
-	    debug("No username supplied. Returning no-auth\n");
-	    ntlm_errno = NTLM_BAD_REQUEST;
-	    return NULL;
+            debug("No username supplied. Returning no-auth\n");
+            ntlm_errno = NTLM_BAD_REQUEST;
+            return NULL;
         }
         if (Use_Unicode) {
             /* copy unicode buffer */
@@ -259,9 +259,9 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
             user[tmp.l / sizeof(WCHAR)] = '\0';
         } else {
             if (tmp.l > UNLEN) {
-	        debug("Username string exceeds %d bytes, rejecting\n", UNLEN);
-	        ntlm_errno = NTLM_BAD_REQUEST;
-	        return NULL;
+                debug("Username string exceeds %d bytes, rejecting\n", UNLEN);
+                ntlm_errno = NTLM_BAD_REQUEST;
+                return NULL;
             }
             memcpy(user, tmp.str, tmp.l);
             user[tmp.l] = '\0';
@@ -276,23 +276,23 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
     debug("Login attempt had result %d\n", rv);
 
     if (!rv) {			/* failed */
-	ntlm_errno = NTLM_SSPI_ERROR;
-	return NULL;
+        ntlm_errno = NTLM_SSPI_ERROR;
+        return NULL;
     }
-    
+
     if (UseAllowedGroup) {
-	if (!Valid_Group(credentials, NTAllowedGroup)) {
-	    ntlm_errno = NTLM_BAD_NTGROUP;
-	    debug("User %s not in allowed Group %s\n", credentials, NTAllowedGroup);
-	    return NULL;
-	}
+        if (!Valid_Group(credentials, NTAllowedGroup)) {
+            ntlm_errno = NTLM_BAD_NTGROUP;
+            debug("User %s not in allowed Group %s\n", credentials, NTAllowedGroup);
+            return NULL;
+        }
     }
     if (UseDisallowedGroup) {
-	if (Valid_Group(credentials, NTDisAllowedGroup)) {
-	    ntlm_errno = NTLM_BAD_NTGROUP;
-	    debug("User %s is in denied Group %s\n", credentials, NTDisAllowedGroup);
-	    return NULL;
-	}
+        if (Valid_Group(credentials, NTDisAllowedGroup)) {
+            ntlm_errno = NTLM_BAD_NTGROUP;
+            debug("User %s is in denied Group %s\n", credentials, NTDisAllowedGroup);
+            return NULL;
+        }
     }
 
     debug("credentials: %s\n", credentials);
@@ -309,12 +309,12 @@ ntlm_make_negotiate(void)
     memcpy(ne.signature, "NTLMSSP", 8);		/* set the signature */
     ne.type = le32toh(NTLM_NEGOTIATE);	/* this is a challenge */
     ne.flags = le32toh(
-	NEGOTIATE_ALWAYS_SIGN |
-	NEGOTIATE_USE_NTLM |
-	NEGOTIATE_USE_LM |
-	NEGOTIATE_ASCII |
-	0
-	);
+                   NEGOTIATE_ALWAYS_SIGN |
+                   NEGOTIATE_USE_NTLM |
+                   NEGOTIATE_USE_LM |
+                   NEGOTIATE_ASCII |
+                   0
+               );
     encoded = base64_encode_bin((char *) &ne, NEGOTIATE_LENGTH);
     debug("Negotiate packet not supplied - self generated\n");
     return encoded;
@@ -340,13 +340,13 @@ void hex_dump(void *data, int size)
         char addrstr[10] = {0};
         char hexstr[ 16*3 + 5] = {0};
         char charstr[16*1 + 5] = {0};
-        for(n=1;n<=size;n++) {
+        for (n=1;n<=size;n++) {
             if (n%16 == 1) {
                 /* store address for this line */
                 snprintf(addrstr, sizeof(addrstr), "%.4x",
-                   ((unsigned int)p-(unsigned int)data) );
+                         ((unsigned int)p-(unsigned int)data) );
             }
-            
+
             c = *p;
             if (xisalnum(c) == 0) {
                 c = '.';
@@ -360,12 +360,12 @@ void hex_dump(void *data, int size)
             snprintf(bytestr, sizeof(bytestr), "%c", c);
             strncat(charstr, bytestr, sizeof(charstr)-strlen(charstr)-1);
 
-            if(n%16 == 0) { 
+            if (n%16 == 0) {
                 /* line completed */
                 fprintf(stderr, "[%4.4s]   %-50.50s  %s\n", addrstr, hexstr, charstr);
                 hexstr[0] = 0;
                 charstr[0] = 0;
-            } else if(n%8 == 0) {
+            } else if (n%8 == 0) {
                 /* half line: add whitespaces */
                 strncat(hexstr, "  ", sizeof(hexstr)-strlen(hexstr)-1);
                 strncat(charstr, " ", sizeof(charstr)-strlen(charstr)-1);

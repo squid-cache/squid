@@ -1,10 +1,10 @@
 /* UNIX RFCNB (RFC1001/RFC1002) NetBIOS implementation
- * 
+ *
  * Version 1.0
  * RFCNB Utility Routines ...
- * 
+ *
  * Copyright (C) Richard Sharpe 1996
- * 
+ *
  */
 
 /*
@@ -12,12 +12,12 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -36,8 +36,7 @@
 #include <arpa/inet.h>
 #include <string.h>
 
-const char *RFCNB_Error_Strings[] =
-{
+const char *RFCNB_Error_Strings[] = {
 
     "RFCNBE_OK: Routine completed successfully.",
     "RFCNBE_NoSpace: No space available for a malloc call.",
@@ -77,20 +76,20 @@ RFCNB_CvtPad_Name(char *name1, char *name2)
 
     for (i = 0; i < 16; i++) {
 
-	if (i >= len) {
+        if (i >= len) {
 
-	    c1 = 'C';
-	    c2 = 'A';		/* CA is a space */
+            c1 = 'C';
+            c2 = 'A';		/* CA is a space */
 
-	} else {
+        } else {
 
-	    c = name1[i];
-	    c1 = (char) ((int) c / 16 + (int) 'A');
-	    c2 = (char) ((int) c % 16 + (int) 'A');
-	}
+            c = name1[i];
+            c1 = (char) ((int) c / 16 + (int) 'A');
+            c2 = (char) ((int) c % 16 + (int) 'A');
+        }
 
-	name2[i * 2] = c1;
-	name2[i * 2 + 1] = c2;
+        name2[i * 2] = c1;
+        name2[i * 2 + 1] = c2;
 
     }
 
@@ -101,10 +100,10 @@ RFCNB_CvtPad_Name(char *name1, char *name2)
 /* Converts an Ascii NB Name (16 chars) to an RFCNB Name (32 chars)
  * Uses the encoding in RFC1001. Each nibble of byte is added to 'A'
  * to produce the next byte in the name.
- * 
- * This routine assumes that AName is 16 bytes long and that NBName has 
- * space for 32 chars, so be careful ... 
- * 
+ *
+ * This routine assumes that AName is 16 bytes long and that NBName has
+ * space for 32 chars, so be careful ...
+ *
  */
 
 void
@@ -115,13 +114,13 @@ RFCNB_AName_To_NBName(char *AName, char *NBName)
 
     for (i = 0; i < 16; i++) {
 
-	c = AName[i];
+        c = AName[i];
 
-	c1 = (char) ((c >> 4) + 'A');
-	c2 = (char) ((c & 0xF) + 'A');
+        c1 = (char) ((c >> 4) + 'A');
+        c2 = (char) ((c & 0xF) + 'A');
 
-	NBName[i * 2] = c1;
-	NBName[i * 2 + 1] = c2;
+        NBName[i * 2] = c1;
+        NBName[i * 2 + 1] = c2;
     }
 
     NBName[32] = 0;		/* Put in a null */
@@ -138,12 +137,12 @@ RFCNB_NBName_To_AName(char *NBName, char *AName)
 
     for (i = 0; i < 16; i++) {
 
-	c1 = NBName[i * 2];
-	c2 = NBName[i * 2 + 1];
+        c1 = NBName[i * 2];
+        c2 = NBName[i * 2 + 1];
 
-	c = (char) (((int) c1 - (int) 'A') * 16 + ((int) c2 - (int) 'A'));
+        c = (char) (((int) c1 - (int) 'A') * 16 + ((int) c2 - (int) 'A'));
 
-	AName[i] = c;
+        AName[i] = c;
 
     }
 
@@ -169,27 +168,27 @@ RFCNB_Print_Hex(FILE * fd, struct RFCNB_Pkt *pkt, int Offset, int Len)
 
     while (pkt_ptr != NULL) {
 
-	for (i = 0;
-	    i < ((Len > (pkt_ptr->len) ? pkt_ptr->len : Len) - Offset);
-	    i++) {
+        for (i = 0;
+                i < ((Len > (pkt_ptr->len) ? pkt_ptr->len : Len) - Offset);
+                i++) {
 
-	    c = pkt_ptr->data[i + Offset];
-	    c1 = Hex_List[c >> 4];
-	    c2 = Hex_List[c & 0xF];
+            c = pkt_ptr->data[i + Offset];
+            c1 = Hex_List[c >> 4];
+            c2 = Hex_List[c & 0xF];
 
-	    outbuf1[j++] = c1;
-	    outbuf1[j++] = c2;
+            outbuf1[j++] = c1;
+            outbuf1[j++] = c2;
 
-	    if (j == 32) {	/* Print and reset */
-		outbuf1[j] = 0;
-		fprintf(fd, "    %s\n", outbuf1);
-		j = 0;
-	    }
-	}
+            if (j == 32) {	/* Print and reset */
+                outbuf1[j] = 0;
+                fprintf(fd, "    %s\n", outbuf1);
+                j = 0;
+            }
+        }
 
-	Offset = 0;
-	Len = Len - pkt_ptr->len;	/* Reduce amount by this much */
-	pkt_ptr = pkt_ptr->next;
+        Offset = 0;
+        Len = Len - pkt_ptr->len;	/* Reduce amount by this much */
+        pkt_ptr = pkt_ptr->next;
 
     }
 
@@ -197,8 +196,8 @@ RFCNB_Print_Hex(FILE * fd, struct RFCNB_Pkt *pkt, int Offset, int Len)
 
     if (j > 0) {
 
-	outbuf1[j] = 0;
-	fprintf(fd, "    %s\n", outbuf1);
+        outbuf1[j] = 0;
+        fprintf(fd, "    %s\n", outbuf1);
 
     }
     fprintf(fd, "\n");
@@ -209,26 +208,25 @@ RFCNB_Print_Hex(FILE * fd, struct RFCNB_Pkt *pkt, int Offset, int Len)
 /* Get a packet of size n */
 
 struct RFCNB_Pkt *
-RFCNB_Alloc_Pkt(int n)
-{
+            RFCNB_Alloc_Pkt(int n) {
     RFCNB_Pkt *pkt;
 
     if ((pkt = malloc(sizeof(struct RFCNB_Pkt))) == NULL) {
-	RFCNB_errno = RFCNBE_NoSpace;
-	RFCNB_saved_errno = errno;
-	return (NULL);
+        RFCNB_errno = RFCNBE_NoSpace;
+        RFCNB_saved_errno = errno;
+        return (NULL);
     }
     pkt->next = NULL;
     pkt->len = n;
 
     if (n == 0)
-	return (pkt);
+        return (pkt);
 
     if ((pkt->data = malloc(n)) == NULL) {
-	RFCNB_errno = RFCNBE_NoSpace;
-	RFCNB_saved_errno = errno;
-	free(pkt);
-	return (NULL);
+        RFCNB_errno = RFCNBE_NoSpace;
+        RFCNB_saved_errno = errno;
+        free(pkt);
+        return (NULL);
     }
     return (pkt);
 
@@ -243,14 +241,14 @@ RFCNB_Free_Pkt(struct RFCNB_Pkt *pkt)
 
     while (pkt != NULL) {
 
-	pkt_next = pkt->next;
+        pkt_next = pkt->next;
 
-	if (pkt->data != NULL)
-	    free(pkt->data);
+        if (pkt->data != NULL)
+            free(pkt->data);
 
-	free(pkt);
+        free(pkt);
 
-	pkt = pkt_next;
+        pkt = pkt_next;
 
     }
 
@@ -273,70 +271,70 @@ RFCNB_Print_Pkt(FILE * fd, char *dirn, struct RFCNB_Pkt *pkt, int len)
 
     case RFCNB_SESSION_MESSAGE:
 
-	fprintf(fd, "SESSION MESSAGE: Length = %i\n", RFCNB_Pkt_Len(pkt->data));
-	RFCNB_Print_Hex(fd, pkt, RFCNB_Pkt_Hdr_Len,
+        fprintf(fd, "SESSION MESSAGE: Length = %i\n", RFCNB_Pkt_Len(pkt->data));
+        RFCNB_Print_Hex(fd, pkt, RFCNB_Pkt_Hdr_Len,
 #ifdef RFCNB_PRINT_DATA
-	    RFCNB_Pkt_Len(pkt->data) - RFCNB_Pkt_Hdr_Len);
+                        RFCNB_Pkt_Len(pkt->data) - RFCNB_Pkt_Hdr_Len);
 #else
-	    40);
+                        40);
 #endif
 
-	if (Prot_Print_Routine != 0) {	/* Print the rest of the packet */
+        if (Prot_Print_Routine != 0) {	/* Print the rest of the packet */
 
-	    Prot_Print_Routine(fd, strcmp(dirn, "sent"), pkt, RFCNB_Pkt_Hdr_Len,
-		RFCNB_Pkt_Len(pkt->data) - RFCNB_Pkt_Hdr_Len);
+            Prot_Print_Routine(fd, strcmp(dirn, "sent"), pkt, RFCNB_Pkt_Hdr_Len,
+                               RFCNB_Pkt_Len(pkt->data) - RFCNB_Pkt_Hdr_Len);
 
-	}
-	break;
+        }
+        break;
 
     case RFCNB_SESSION_REQUEST:
 
-	fprintf(fd, "SESSION REQUEST: Length = %i\n",
-	    RFCNB_Pkt_Len(pkt->data));
-	RFCNB_NBName_To_AName((char *) (pkt->data + RFCNB_Pkt_Called_Offset), lname);
-	fprintf(fd, "  Called Name: %s\n", lname);
-	RFCNB_NBName_To_AName((char *) (pkt->data + RFCNB_Pkt_Calling_Offset), lname);
-	fprintf(fd, "  Calling Name: %s\n", lname);
+        fprintf(fd, "SESSION REQUEST: Length = %i\n",
+                RFCNB_Pkt_Len(pkt->data));
+        RFCNB_NBName_To_AName((char *) (pkt->data + RFCNB_Pkt_Called_Offset), lname);
+        fprintf(fd, "  Called Name: %s\n", lname);
+        RFCNB_NBName_To_AName((char *) (pkt->data + RFCNB_Pkt_Calling_Offset), lname);
+        fprintf(fd, "  Calling Name: %s\n", lname);
 
-	break;
+        break;
 
     case RFCNB_SESSION_ACK:
 
-	fprintf(fd, "RFCNB SESSION ACK: Length = %i\n",
-	    RFCNB_Pkt_Len(pkt->data));
+        fprintf(fd, "RFCNB SESSION ACK: Length = %i\n",
+                RFCNB_Pkt_Len(pkt->data));
 
-	break;
+        break;
 
     case RFCNB_SESSION_REJ:
-	fprintf(fd, "RFCNB SESSION REJECT: Length = %i\n",
-	    RFCNB_Pkt_Len(pkt->data));
+        fprintf(fd, "RFCNB SESSION REJECT: Length = %i\n",
+                RFCNB_Pkt_Len(pkt->data));
 
-	if (RFCNB_Pkt_Len(pkt->data) < 1) {
-	    fprintf(fd, "   Protocol Error, short Reject packet!\n");
-	} else {
-	    fprintf(fd, "   Error = %x\n", CVAL(pkt->data, RFCNB_Pkt_Error_Offset));
-	}
+        if (RFCNB_Pkt_Len(pkt->data) < 1) {
+            fprintf(fd, "   Protocol Error, short Reject packet!\n");
+        } else {
+            fprintf(fd, "   Error = %x\n", CVAL(pkt->data, RFCNB_Pkt_Error_Offset));
+        }
 
-	break;
+        break;
 
     case RFCNB_SESSION_RETARGET:
 
-	fprintf(fd, "RFCNB SESSION RETARGET: Length = %i\n",
-	    RFCNB_Pkt_Len(pkt->data));
+        fprintf(fd, "RFCNB SESSION RETARGET: Length = %i\n",
+                RFCNB_Pkt_Len(pkt->data));
 
-	/* Print out the IP address etc and the port? */
+        /* Print out the IP address etc and the port? */
 
-	break;
+        break;
 
     case RFCNB_SESSION_KEEP_ALIVE:
 
-	fprintf(fd, "RFCNB SESSION KEEP ALIVE: Length = %i\n",
-	    RFCNB_Pkt_Len(pkt->data));
-	break;
+        fprintf(fd, "RFCNB SESSION KEEP ALIVE: Length = %i\n",
+                RFCNB_Pkt_Len(pkt->data));
+        break;
 
     default:
 
-	break;
+        break;
     }
 
 }
@@ -354,20 +352,20 @@ RFCNB_Name_To_IP(char *host, struct in_addr *Dest_IP)
 
     if ((addr = inet_addr(host)) == INADDR_NONE) {	/* Oh well, a good try :-) */
 
-	/* Now try a name look up with gethostbyname */
+        /* Now try a name look up with gethostbyname */
 
-	if ((hp = gethostbyname(host)) == NULL) {	/* Not in DNS */
+        if ((hp = gethostbyname(host)) == NULL) {	/* Not in DNS */
 
-	    /* Try NetBIOS name lookup, how the hell do we do that? */
-	    RFCNB_errno = RFCNBE_BadName;	/* Is this right? */
-	    RFCNB_saved_errno = errno;
-	    return (RFCNBE_Bad);
+            /* Try NetBIOS name lookup, how the hell do we do that? */
+            RFCNB_errno = RFCNBE_BadName;	/* Is this right? */
+            RFCNB_saved_errno = errno;
+            return (RFCNBE_Bad);
 
-	} else { /* We got a name */
+        } else { /* We got a name */
             Dest_IP->s_addr = (*((struct in_addr*)hp->h_addr_list[0])).s_addr;
-	}
+        }
     } else { /* It was an IP address */
-	Dest_IP->s_addr = addr;
+        Dest_IP->s_addr = addr;
     }
 
     return 0;
@@ -401,9 +399,9 @@ RFCNB_IP_Connect(struct in_addr Dest_IP, int port)
 
     if ((fd = socket(PF_INET, SOCK_STREAM, 0)) < 0) {	/* Handle the error */
 
-	RFCNB_errno = RFCNBE_BadSocket;
-	RFCNB_saved_errno = errno;
-	return (RFCNBE_Bad);
+        RFCNB_errno = RFCNBE_BadSocket;
+        RFCNB_saved_errno = errno;
+        return (RFCNBE_Bad);
     }
     memset((char *) &Socket, 0, sizeof(Socket));
     memcpy((char *) &Socket.sin_addr, (char *) &Dest_IP, sizeof(Dest_IP));
@@ -415,27 +413,27 @@ RFCNB_IP_Connect(struct in_addr Dest_IP, int port)
 
     if (connect(fd, (struct sockaddr *) &Socket, sizeof(Socket)) < 0) {		/* Error */
 
-	close(fd);
-	RFCNB_errno = RFCNBE_ConnectFailed;
-	RFCNB_saved_errno = errno;
-	return (RFCNBE_Bad);
+        close(fd);
+        RFCNB_errno = RFCNBE_ConnectFailed;
+        RFCNB_saved_errno = errno;
+        return (RFCNBE_Bad);
     }
     return (fd);
 
 }
 
-/* handle the details of establishing the RFCNB session with remote 
- * end 
- * 
+/* handle the details of establishing the RFCNB session with remote
+ * end
+ *
  */
 
 int
 RFCNB_Session_Req(struct RFCNB_Con *con,
-    char *Called_Name,
-    char *Calling_Name,
-    BOOL * redirect,
-    struct in_addr *Dest_IP,
-    int *port)
+                  char *Called_Name,
+                  char *Calling_Name,
+                  BOOL * redirect,
+                  struct in_addr *Dest_IP,
+                  int *port)
 {
     char *sess_pkt;
 
@@ -451,7 +449,7 @@ RFCNB_Session_Req(struct RFCNB_Con *con,
 
     if (pkt == NULL) {
 
-	return (RFCNBE_Bad);	/* Leave the error that RFCNB_Alloc_Pkt gives) */
+        return (RFCNBE_Bad);	/* Leave the error that RFCNB_Alloc_Pkt gives) */
 
     }
     sess_pkt = pkt->data;	/* Get pointer to packet proper */
@@ -474,7 +472,7 @@ RFCNB_Session_Req(struct RFCNB_Con *con,
 
     if ((len = RFCNB_Put_Pkt(con, pkt, RFCNB_Pkt_Sess_Len)) < 0) {
 
-	return (RFCNBE_Bad);	/* Should be able to write that lot ... */
+        return (RFCNBE_Bad);	/* Should be able to write that lot ... */
 
     }
 #ifdef RFCNB_DEBUG
@@ -489,7 +487,7 @@ RFCNB_Session_Req(struct RFCNB_Con *con,
 
     if ((len = RFCNB_Get_Pkt(con, &res_pkt, sizeof(resp))) < 0) {
 
-	return (RFCNBE_Bad);
+        return (RFCNBE_Bad);
 
     }
     /* Now analyze the packet ... */
@@ -498,52 +496,52 @@ RFCNB_Session_Req(struct RFCNB_Con *con,
 
     case RFCNB_SESSION_REJ:	/* Didnt like us ... too bad */
 
-	/* Why did we get rejected ? */
+        /* Why did we get rejected ? */
 
-	switch (CVAL(resp, RFCNB_Pkt_Error_Offset)) {
+        switch (CVAL(resp, RFCNB_Pkt_Error_Offset)) {
 
-	case 0x80:
-	    RFCNB_errno = RFCNBE_CallRejNLOCN;
-	    break;
-	case 0x81:
-	    RFCNB_errno = RFCNBE_CallRejNLFCN;
-	    break;
-	case 0x82:
-	    RFCNB_errno = RFCNBE_CallRejCNNP;
-	    break;
-	case 0x83:
-	    RFCNB_errno = RFCNBE_CallRejInfRes;
-	    break;
-	case 0x8F:
-	    RFCNB_errno = RFCNBE_CallRejUnSpec;
-	    break;
-	default:
-	    RFCNB_errno = RFCNBE_ProtErr;
-	    break;
-	}
+        case 0x80:
+            RFCNB_errno = RFCNBE_CallRejNLOCN;
+            break;
+        case 0x81:
+            RFCNB_errno = RFCNBE_CallRejNLFCN;
+            break;
+        case 0x82:
+            RFCNB_errno = RFCNBE_CallRejCNNP;
+            break;
+        case 0x83:
+            RFCNB_errno = RFCNBE_CallRejInfRes;
+            break;
+        case 0x8F:
+            RFCNB_errno = RFCNBE_CallRejUnSpec;
+            break;
+        default:
+            RFCNB_errno = RFCNBE_ProtErr;
+            break;
+        }
 
-	return (RFCNBE_Bad);
-	break;
+        return (RFCNBE_Bad);
+        break;
 
     case RFCNB_SESSION_ACK:	/* Got what we wanted ...      */
 
-	return (0);
-	break;
+        return (0);
+        break;
 
     case RFCNB_SESSION_RETARGET:	/* Go elsewhere                */
 
-	*redirect = TRUE;	/* Copy port and ip addr       */
+        *redirect = TRUE;	/* Copy port and ip addr       */
 
-	memcpy(Dest_IP, (resp + RFCNB_Pkt_IP_Offset), sizeof(struct in_addr));
-	*port = SVAL(resp, RFCNB_Pkt_Port_Offset);
+        memcpy(Dest_IP, (resp + RFCNB_Pkt_IP_Offset), sizeof(struct in_addr));
+        *port = SVAL(resp, RFCNB_Pkt_Port_Offset);
 
-	return (0);
-	break;
+        return (0);
+        break;
 
     default:			/* A protocol error */
 
-	RFCNB_errno = RFCNBE_ProtErr;
-	return (RFCNBE_Bad);
-	break;
+        RFCNB_errno = RFCNBE_ProtErr;
+        return (RFCNBE_Bad);
+        break;
     }
 }

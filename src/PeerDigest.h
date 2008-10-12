@@ -19,12 +19,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -40,8 +40,7 @@
 
 #include "cbdata.h"
 
-struct _Version
-{
+struct _Version {
     short int current;		/* current version */
     short int required;		/* minimal version that can safely handle current version */
 };
@@ -50,7 +49,7 @@ struct _Version
 
 class StoreDigestCBlock
 {
-  public:
+public:
     Version ver;
     int capacity;
     int count;
@@ -62,8 +61,7 @@ class StoreDigestCBlock
     int reserved[32 - 6];
 };
 
-struct _DigestFetchState
-{
+struct _DigestFetchState {
     PeerDigest *pd;
     StoreEntry *entry;
     StoreEntry *old_entry;
@@ -76,8 +74,7 @@ struct _DigestFetchState
     time_t resp_time;
     time_t expires;
 
-    struct
-    {
+    struct {
         int msg;
         int bytes;
     }
@@ -100,15 +97,13 @@ public:
     String host;                /**< copy of peer->host */
     const char *req_result;     /**< text status of the last request */
 
-    struct
-    {
+    struct {
         unsigned int needed:1;          /**< there were requests for this digest */
         unsigned int usable:1;          /**< can be used for lookups */
         unsigned int requested:1;       /**< in process of receiving [fresh] digest */
     } flags;
 
-    struct
-    {
+    struct {
         /* all times are absolute unless augmented with _delay */
         time_t initialized;	/* creation */
         time_t needed;		/* first lookup/use by a peer */
@@ -120,13 +115,11 @@ public:
         time_t disabled;	/* disabled for good */
     } times;
 
-    struct
-    {
+    struct {
         cd_guess_stats guess;
         int used_count;
 
-        struct
-        {
+        struct {
             int msgs;
             kb_t kbytes;
         } sent, recv;

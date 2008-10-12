@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -39,8 +39,9 @@
 #include "mem_node.h"
 #include <iostream>
 
-class StreamTest {
-  public:
+class StreamTest
+{
+public:
     std::ostream &serialise(std::ostream &);
     int const getAnInt() const;
     char const *getACString() const;
@@ -79,9 +80,9 @@ main(int argc, char **argv)
     debugs (1,1,"test" << "string");
     debugs (1,1,"test" << "string");
     if (true)
-	debugs(1,9,"this won't compile if the macro is broken.");
+        debugs(1,9,"this won't compile if the macro is broken.");
     else
-	debugs(1,1,"bar");
+        debugs(1,1,"bar");
     StreamTest aStreamObject;
     StreamTest *streamPointer (&aStreamObject);
     debugs(1,1,aStreamObject);

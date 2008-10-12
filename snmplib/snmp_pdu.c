@@ -10,9 +10,9 @@
 /**********************************************************************
  *
  *           Copyright 1997 by Carnegie Mellon University
- * 
+ *
  *                       All Rights Reserved
- * 
+ *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose and without fee is hereby granted,
  * provided that the above copyright notice appear in all copies and that
@@ -20,7 +20,7 @@
  * supporting documentation, and that the name of CMU not be
  * used in advertising or publicity pertaining to distribution of the
  * software without specific, written prior permission.
- * 
+ *
  * CMU DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
  * ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
  * CMU BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR
@@ -28,9 +28,9 @@
  * WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
- * 
+ *
  * Author: Ryan Troll <ryan+@andrew.cmu.edu>
- * 
+ *
  **********************************************************************/
 
 #include "config.h"
@@ -104,8 +104,7 @@
  */
 
 struct snmp_pdu *
-snmp_pdu_create(int command)
-{
+            snmp_pdu_create(int command) {
     struct snmp_pdu *pdu;
 
 #ifdef DEBUG_PDU
@@ -114,8 +113,8 @@ snmp_pdu_create(int command)
 
     pdu = (struct snmp_pdu *) xmalloc(sizeof(struct snmp_pdu));
     if (pdu == NULL) {
-	snmp_set_api_error(SNMPERR_OS_ERR);
-	return (NULL);
+        snmp_set_api_error(SNMPERR_OS_ERR);
+        return (NULL);
     }
     memset((char *) pdu, '\0', sizeof(struct snmp_pdu));
 
@@ -139,8 +138,7 @@ snmp_pdu_create(int command)
 /* Clone an existing PDU.
  */
 struct snmp_pdu *
-snmp_pdu_clone(struct snmp_pdu *Src)
-{
+            snmp_pdu_clone(struct snmp_pdu *Src) {
     struct snmp_pdu *Dest;
 
 #ifdef DEBUG_PDU
@@ -149,8 +147,8 @@ snmp_pdu_clone(struct snmp_pdu *Src)
 
     Dest = (struct snmp_pdu *) xmalloc(sizeof(struct snmp_pdu));
     if (Dest == NULL) {
-	snmp_set_api_error(SNMPERR_OS_ERR);
-	return (NULL);
+        snmp_set_api_error(SNMPERR_OS_ERR);
+        return (NULL);
     }
     xmemcpy((char *) Dest, (char *) Src, sizeof(struct snmp_pdu));
 
@@ -174,14 +172,12 @@ snmp_pdu_clone(struct snmp_pdu *Src)
  * be returned.
  */
 struct snmp_pdu *
-snmp_pdu_fix(struct snmp_pdu *pdu, int command)
-{
+            snmp_pdu_fix(struct snmp_pdu *pdu, int command) {
     return (snmp_fix_pdu(pdu, command));
 }
 
 struct snmp_pdu *
-snmp_fix_pdu(struct snmp_pdu *pdu, int command)
-{
+            snmp_fix_pdu(struct snmp_pdu *pdu, int command) {
     struct variable_list *var, *newvar;
     struct snmp_pdu *newpdu;
     int i;
@@ -189,19 +185,19 @@ snmp_fix_pdu(struct snmp_pdu *pdu, int command)
 
 #ifdef DEBUG_PDU
     snmplib_debug(8, "PDU %x:  Fixing.  Err index is %d\n",
-	(unsigned int) pdu, (unsigned int) pdu->errindex);
+                  (unsigned int) pdu, (unsigned int) pdu->errindex);
 #endif
 
     if (pdu->command != SNMP_PDU_RESPONSE ||
-	pdu->errstat == SNMP_ERR_NOERROR ||
-	pdu->errindex <= 0) {
-	snmp_set_api_error(SNMPERR_UNABLE_TO_FIX);
-	return (NULL);
+            pdu->errstat == SNMP_ERR_NOERROR ||
+            pdu->errindex <= 0) {
+        snmp_set_api_error(SNMPERR_UNABLE_TO_FIX);
+        return (NULL);
     }
     /* clone the pdu */
     newpdu = snmp_pdu_clone(pdu);
     if (newpdu == NULL)
-	return (NULL);
+        return (NULL);
 
     newpdu->variables = 0;
     newpdu->command = command;
@@ -216,53 +212,53 @@ snmp_fix_pdu(struct snmp_pdu *pdu, int command)
 
     /* skip first variable if necessary */
     if (pdu->errindex == i) {
-	var = var->next_variable;
-	i++;
+        var = var->next_variable;
+        i++;
     }
     if (var != NULL) {
 
-	/* VAR is the first uncopied variable */
+        /* VAR is the first uncopied variable */
 
-	/* Clone this variable */
-	newpdu->variables = snmp_var_clone(var);
-	if (newpdu->variables == NULL) {
-	    snmp_pdu_free(newpdu);
-	    return (NULL);
-	}
-	copied++;
+        /* Clone this variable */
+        newpdu->variables = snmp_var_clone(var);
+        if (newpdu->variables == NULL) {
+            snmp_pdu_free(newpdu);
+            return (NULL);
+        }
+        copied++;
 
-	newvar = newpdu->variables;
+        newvar = newpdu->variables;
 
-	/* VAR has been copied to NEWVAR. */
-	while (var->next_variable) {
+        /* VAR has been copied to NEWVAR. */
+        while (var->next_variable) {
 
-	    /* Skip the item that was bad */
-	    if (++i == pdu->errindex) {
-		var = var->next_variable;
-		continue;
-	    }
-	    /* Copy this var */
-	    newvar->next_variable = snmp_var_clone(var->next_variable);
-	    if (newvar->next_variable == NULL) {
-		snmp_pdu_free(newpdu);
-		return (NULL);
-	    }
-	    /* Move to the next one */
-	    newvar = newvar->next_variable;
-	    var = var->next_variable;
-	    copied++;
-	}
-	newvar->next_variable = NULL;
+            /* Skip the item that was bad */
+            if (++i == pdu->errindex) {
+                var = var->next_variable;
+                continue;
+            }
+            /* Copy this var */
+            newvar->next_variable = snmp_var_clone(var->next_variable);
+            if (newvar->next_variable == NULL) {
+                snmp_pdu_free(newpdu);
+                return (NULL);
+            }
+            /* Move to the next one */
+            newvar = newvar->next_variable;
+            var = var->next_variable;
+            copied++;
+        }
+        newvar->next_variable = NULL;
     }
     /* If we didn't copy anything, free the new pdu. */
     if (i < pdu->errindex || copied == 0) {
-	snmp_free_pdu(newpdu);
-	snmp_set_api_error(SNMPERR_UNABLE_TO_FIX);
-	return (NULL);
+        snmp_free_pdu(newpdu);
+        snmp_set_api_error(SNMPERR_UNABLE_TO_FIX);
+        return (NULL);
     }
 #ifdef DEBUG_PDU
     snmplib_debug(8, "PDU %x:  Fixed PDU is %x\n",
-	(unsigned int) pdu, (unsigned int) newpdu);
+                  (unsigned int) pdu, (unsigned int) newpdu);
 #endif
     return (newpdu);
 }
@@ -286,13 +282,13 @@ snmp_free_pdu(struct snmp_pdu *pdu)
 
     vp = pdu->variables;
     while (vp) {
-	ovp = vp;
-	vp = vp->next_variable;
-	snmp_var_free(ovp);
+        ovp = vp;
+        vp = vp->next_variable;
+        snmp_var_free(ovp);
     }
 
     if (pdu->enterprise)
-	xfree((char *) pdu->enterprise);
+        xfree((char *) pdu->enterprise);
     xfree((char *) pdu);
 }
 
@@ -307,7 +303,7 @@ snmp_free_pdu(struct snmp_pdu *pdu)
 /*
  * RFC 1902: Structure of Management Information for SNMPv2
  *
- *   PDU ::= 
+ *   PDU ::=
  *    SEQUENCE {
  *      request-id   INTEGER32
  *      error-status INTEGER
@@ -327,7 +323,7 @@ snmp_free_pdu(struct snmp_pdu *pdu)
 /*
  * RFC 1157: A Simple Network Management Protocol (SNMP)
  *
- *   PDU ::= 
+ *   PDU ::=
  *    SEQUENCE {
  *      request-id   INTEGER
  *      error-status INTEGER
@@ -347,7 +343,7 @@ snmp_free_pdu(struct snmp_pdu *pdu)
 
 u_char *
 snmp_pdu_encode(u_char * DestBuf, int *DestBufLen,
-    struct snmp_pdu *PDU)
+                struct snmp_pdu *PDU)
 {
     u_char *bufp;
 
@@ -358,117 +354,117 @@ snmp_pdu_encode(u_char * DestBuf, int *DestBufLen,
     /* ASN.1 Header */
     switch (PDU->command) {
 
-/**********************************************************************/
+        /**********************************************************************/
 #ifdef TRP_REQ_MSG
     case TRP_REQ_MSG:
 
-	/* SNMPv1 Trap */
+        /* SNMPv1 Trap */
 
-	/* enterprise */
-	bufp = asn_build_objid(DestBuf, DestBufLen,
-	    (u_char) (ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_OBJECT_ID),
-	    (oid *) PDU->enterprise, PDU->enterprise_length);
-	if (bufp == NULL)
-	    return (NULL);
+        /* enterprise */
+        bufp = asn_build_objid(DestBuf, DestBufLen,
+                               (u_char) (ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_OBJECT_ID),
+                               (oid *) PDU->enterprise, PDU->enterprise_length);
+        if (bufp == NULL)
+            return (NULL);
 
-	/* agent-addr */
-	bufp = asn_build_string(bufp, DestBufLen,
-	    (u_char) (SMI_IPADDRESS | ASN_PRIMITIVE),
-	    (u_char *) & PDU->agent_addr.sin_addr.s_addr,
-	    sizeof(PDU->agent_addr.sin_addr.s_addr));
-	if (bufp == NULL)
-	    return (NULL);
+        /* agent-addr */
+        bufp = asn_build_string(bufp, DestBufLen,
+                                (u_char) (SMI_IPADDRESS | ASN_PRIMITIVE),
+                                (u_char *) & PDU->agent_addr.sin_addr.s_addr,
+                                sizeof(PDU->agent_addr.sin_addr.s_addr));
+        if (bufp == NULL)
+            return (NULL);
 
-	/* generic trap */
-	bufp = asn_build_int(bufp, DestBufLen,
-	    (u_char) (ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_INTEGER),
-	    (int *) &PDU->trap_type, sizeof(PDU->trap_type));
-	if (bufp == NULL)
-	    return (NULL);
+        /* generic trap */
+        bufp = asn_build_int(bufp, DestBufLen,
+                             (u_char) (ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_INTEGER),
+                             (int *) &PDU->trap_type, sizeof(PDU->trap_type));
+        if (bufp == NULL)
+            return (NULL);
 
-	/* specific trap */
-	bufp = asn_build_int(bufp, DestBufLen,
-	    (u_char) (ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_INTEGER),
-	    (int *) &PDU->specific_type,
-	    sizeof(PDU->specific_type));
-	if (bufp == NULL)
-	    return (NULL);
+        /* specific trap */
+        bufp = asn_build_int(bufp, DestBufLen,
+                             (u_char) (ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_INTEGER),
+                             (int *) &PDU->specific_type,
+                             sizeof(PDU->specific_type));
+        if (bufp == NULL)
+            return (NULL);
 
-	/* timestamp */
-	bufp = asn_build_unsigned_int(bufp, DestBufLen,
-	    (u_char) (SMI_TIMETICKS | ASN_PRIMITIVE),
-	    &PDU->time, sizeof(PDU->time));
-	if (bufp == NULL)
-	    return (NULL);
-	break;
+        /* timestamp */
+        bufp = asn_build_unsigned_int(bufp, DestBufLen,
+                                      (u_char) (SMI_TIMETICKS | ASN_PRIMITIVE),
+                                      &PDU->time, sizeof(PDU->time));
+        if (bufp == NULL)
+            return (NULL);
+        break;
 #endif
 
-/**********************************************************************/
+        /**********************************************************************/
 
     case SNMP_PDU_GETBULK:
 
-	/* SNMPv2 Bulk Request */
+        /* SNMPv2 Bulk Request */
 
-	/* request id */
-	bufp = asn_build_int(DestBuf, DestBufLen,
-	    (u_char) (ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_INTEGER),
-	    &PDU->reqid, sizeof(PDU->reqid));
-	if (bufp == NULL)
-	    return (NULL);
+        /* request id */
+        bufp = asn_build_int(DestBuf, DestBufLen,
+                             (u_char) (ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_INTEGER),
+                             &PDU->reqid, sizeof(PDU->reqid));
+        if (bufp == NULL)
+            return (NULL);
 
-	/* non-repeaters */
-	bufp = asn_build_int(bufp, DestBufLen,
-	    (u_char) (ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_INTEGER),
-	    &PDU->non_repeaters,
-	    sizeof(PDU->non_repeaters));
-	if (bufp == NULL)
-	    return (NULL);
+        /* non-repeaters */
+        bufp = asn_build_int(bufp, DestBufLen,
+                             (u_char) (ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_INTEGER),
+                             &PDU->non_repeaters,
+                             sizeof(PDU->non_repeaters));
+        if (bufp == NULL)
+            return (NULL);
 
-	/* max-repetitions */
-	bufp = asn_build_int(bufp, DestBufLen,
-	    (u_char) (ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_INTEGER),
-	    &PDU->max_repetitions,
-	    sizeof(PDU->max_repetitions));
-	if (bufp == NULL)
-	    return (NULL);
-	break;
+        /* max-repetitions */
+        bufp = asn_build_int(bufp, DestBufLen,
+                             (u_char) (ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_INTEGER),
+                             &PDU->max_repetitions,
+                             sizeof(PDU->max_repetitions));
+        if (bufp == NULL)
+            return (NULL);
+        break;
 
-/**********************************************************************/
+        /**********************************************************************/
 
     default:
 
-	/* Normal PDU Encoding */
+        /* Normal PDU Encoding */
 
-	/* request id */
+        /* request id */
 #ifdef DEBUG_PDU_ENCODE
-	snmplib_debug(8, "PDU: Request ID %d (0x%x)\n", PDU->reqid, DestBuf);
+        snmplib_debug(8, "PDU: Request ID %d (0x%x)\n", PDU->reqid, DestBuf);
 #endif
-	bufp = asn_build_int(DestBuf, DestBufLen,
-	    (u_char) (ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_INTEGER),
-	    &PDU->reqid, sizeof(PDU->reqid));
-	if (bufp == NULL)
-	    return (NULL);
+        bufp = asn_build_int(DestBuf, DestBufLen,
+                             (u_char) (ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_INTEGER),
+                             &PDU->reqid, sizeof(PDU->reqid));
+        if (bufp == NULL)
+            return (NULL);
 
-	/* error status */
+        /* error status */
 #ifdef DEBUG_PDU_ENCODE
-	snmplib_debug(8, "PDU: Error Status %d (0x%x)\n", PDU->errstat, bufp);
+        snmplib_debug(8, "PDU: Error Status %d (0x%x)\n", PDU->errstat, bufp);
 #endif
-	bufp = asn_build_int(bufp, DestBufLen,
-	    (u_char) (ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_INTEGER),
-	    &PDU->errstat, sizeof(PDU->errstat));
-	if (bufp == NULL)
-	    return (NULL);
+        bufp = asn_build_int(bufp, DestBufLen,
+                             (u_char) (ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_INTEGER),
+                             &PDU->errstat, sizeof(PDU->errstat));
+        if (bufp == NULL)
+            return (NULL);
 
-	/* error index */
+        /* error index */
 #ifdef DEBUG_PDU_ENCODE
-	snmplib_debug(8, "PDU: Error index %d (0x%x)\n", PDU->errindex, bufp);
+        snmplib_debug(8, "PDU: Error index %d (0x%x)\n", PDU->errindex, bufp);
 #endif
-	bufp = asn_build_int(bufp, DestBufLen,
-	    (u_char) (ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_INTEGER),
-	    &PDU->errindex, sizeof(PDU->errindex));
-	if (bufp == NULL)
-	    return (NULL);
-	break;
+        bufp = asn_build_int(bufp, DestBufLen,
+                             (u_char) (ASN_UNIVERSAL | ASN_PRIMITIVE | ASN_INTEGER),
+                             &PDU->errindex, sizeof(PDU->errindex));
+        if (bufp == NULL)
+            return (NULL);
+        break;
     }				/* End of encoding */
 
     return (bufp);
@@ -483,8 +479,8 @@ snmp_pdu_encode(u_char * DestBuf, int *DestBufLen,
  */
 u_char *
 snmp_pdu_decode(u_char * Packet,	/* data */
-    int *Length,		/* &length */
-    struct snmp_pdu * PDU)
+                int *Length,		/* &length */
+                struct snmp_pdu * PDU)
 {				/* pdu */
     u_char *bufp;
     u_char PDUType;
@@ -496,7 +492,7 @@ snmp_pdu_decode(u_char * Packet,	/* data */
 
     bufp = asn_parse_header(Packet, Length, &PDUType);
     if (bufp == NULL)
-	ASN_PARSE_ERROR(NULL);
+        ASN_PARSE_ERROR(NULL);
 
 #ifdef DEBUG_PDU_DECODE
     snmplib_debug(8, "PDU Type: %d\n", PDUType);
@@ -508,125 +504,125 @@ snmp_pdu_decode(u_char * Packet,	/* data */
 #ifdef TRP_REQ_MSG
     case TRP_REQ_MSG:
 
-	/* SNMPv1 Trap Message */
+        /* SNMPv1 Trap Message */
 
-	/* enterprise */
-	PDU->enterprise_length = MAX_NAME_LEN;
-	bufp = asn_parse_objid(bufp, Length,
-	    &ASNType, objid, &PDU->enterprise_length);
-	if (bufp == NULL)
-	    ASN_PARSE_ERROR(NULL);
+        /* enterprise */
+        PDU->enterprise_length = MAX_NAME_LEN;
+        bufp = asn_parse_objid(bufp, Length,
+                               &ASNType, objid, &PDU->enterprise_length);
+        if (bufp == NULL)
+            ASN_PARSE_ERROR(NULL);
 
-	PDU->enterprise = (oid *) xmalloc(PDU->enterprise_length * sizeof(oid));
-	if (PDU->enterprise == NULL) {
-	    snmp_set_api_error(SNMPERR_OS_ERR);
-	    return (NULL);
-	}
-	xmemcpy((char *) PDU->enterprise, (char *) objid,
-	    PDU->enterprise_length * sizeof(oid));
+        PDU->enterprise = (oid *) xmalloc(PDU->enterprise_length * sizeof(oid));
+        if (PDU->enterprise == NULL) {
+            snmp_set_api_error(SNMPERR_OS_ERR);
+            return (NULL);
+        }
+        xmemcpy((char *) PDU->enterprise, (char *) objid,
+                PDU->enterprise_length * sizeof(oid));
 
-	/* Agent-addr */
-	four = 4;
-	bufp = asn_parse_string(bufp, Length,
-	    &ASNType,
-	    (u_char *) & PDU->agent_addr.sin_addr.s_addr,
-	    &four);
-	if (bufp == NULL)
-	    ASN_PARSE_ERROR(NULL);
+        /* Agent-addr */
+        four = 4;
+        bufp = asn_parse_string(bufp, Length,
+                                &ASNType,
+                                (u_char *) & PDU->agent_addr.sin_addr.s_addr,
+                                &four);
+        if (bufp == NULL)
+            ASN_PARSE_ERROR(NULL);
 
-	/* Generic trap */
-	bufp = asn_parse_int(bufp, Length,
-	    &ASNType,
-	    (int *) &PDU->trap_type,
-	    sizeof(PDU->trap_type));
-	if (bufp == NULL)
-	    ASN_PARSE_ERROR(NULL);
+        /* Generic trap */
+        bufp = asn_parse_int(bufp, Length,
+                             &ASNType,
+                             (int *) &PDU->trap_type,
+                             sizeof(PDU->trap_type));
+        if (bufp == NULL)
+            ASN_PARSE_ERROR(NULL);
 
-	/* Specific Trap */
-	bufp = asn_parse_int(bufp, Length,
-	    &ASNType,
-	    (int *) &PDU->specific_type,
-	    sizeof(PDU->specific_type));
-	if (bufp == NULL)
-	    ASN_PARSE_ERROR(NULL);
+        /* Specific Trap */
+        bufp = asn_parse_int(bufp, Length,
+                             &ASNType,
+                             (int *) &PDU->specific_type,
+                             sizeof(PDU->specific_type));
+        if (bufp == NULL)
+            ASN_PARSE_ERROR(NULL);
 
-	/* Timestamp */
-	bufp = asn_parse_unsigned_int(bufp, Length,
-	    &ASNType,
-	    &PDU->time, sizeof(PDU->time));
-	if (bufp == NULL)
-	    ASN_PARSE_ERROR(NULL);
-	break;
+        /* Timestamp */
+        bufp = asn_parse_unsigned_int(bufp, Length,
+                                      &ASNType,
+                                      &PDU->time, sizeof(PDU->time));
+        if (bufp == NULL)
+            ASN_PARSE_ERROR(NULL);
+        break;
 #endif
 
-/**********************************************************************/
+        /**********************************************************************/
 
     case SNMP_PDU_GETBULK:
 
-	/* SNMPv2 Bulk Request */
+        /* SNMPv2 Bulk Request */
 
-	/* request id */
-	bufp = asn_parse_int(bufp, Length,
-	    &ASNType,
-	    &PDU->reqid, sizeof(PDU->reqid));
-	if (bufp == NULL)
-	    ASN_PARSE_ERROR(NULL);
+        /* request id */
+        bufp = asn_parse_int(bufp, Length,
+                             &ASNType,
+                             &PDU->reqid, sizeof(PDU->reqid));
+        if (bufp == NULL)
+            ASN_PARSE_ERROR(NULL);
 
-	/* non-repeaters */
-	bufp = asn_parse_int(bufp, Length,
-	    &ASNType,
-	    &PDU->non_repeaters, sizeof(PDU->non_repeaters));
-	if (bufp == NULL)
-	    ASN_PARSE_ERROR(NULL);
+        /* non-repeaters */
+        bufp = asn_parse_int(bufp, Length,
+                             &ASNType,
+                             &PDU->non_repeaters, sizeof(PDU->non_repeaters));
+        if (bufp == NULL)
+            ASN_PARSE_ERROR(NULL);
 
-	/* max-repetitions */
-	bufp = asn_parse_int(bufp, Length,
-	    &ASNType,
-	    &PDU->max_repetitions, sizeof(PDU->max_repetitions));
-	if (bufp == NULL)
-	    ASN_PARSE_ERROR(NULL);
-	break;
+        /* max-repetitions */
+        bufp = asn_parse_int(bufp, Length,
+                             &ASNType,
+                             &PDU->max_repetitions, sizeof(PDU->max_repetitions));
+        if (bufp == NULL)
+            ASN_PARSE_ERROR(NULL);
+        break;
 
-/**********************************************************************/
+        /**********************************************************************/
 
     default:
 
-	/* Normal PDU Encoding */
+        /* Normal PDU Encoding */
 
-	/* request id */
-	bufp = asn_parse_int(bufp, Length,
-	    &ASNType,
-	    &PDU->reqid, sizeof(PDU->reqid));
-	if (bufp == NULL)
-	    ASN_PARSE_ERROR(NULL);
-
-#ifdef DEBUG_PDU_DECODE
-	snmplib_debug(8, "PDU Request ID: %d\n", PDU->reqid);
-#endif
-
-	/* error status */
-	bufp = asn_parse_int(bufp, Length,
-	    &ASNType,
-	    &PDU->errstat, sizeof(PDU->errstat));
-	if (bufp == NULL)
-	    ASN_PARSE_ERROR(NULL);
+        /* request id */
+        bufp = asn_parse_int(bufp, Length,
+                             &ASNType,
+                             &PDU->reqid, sizeof(PDU->reqid));
+        if (bufp == NULL)
+            ASN_PARSE_ERROR(NULL);
 
 #ifdef DEBUG_PDU_DECODE
-	snmplib_debug(8, "PDU Error Status: %d\n", PDU->errstat);
+        snmplib_debug(8, "PDU Request ID: %d\n", PDU->reqid);
 #endif
 
-	/* error index */
-	bufp = asn_parse_int(bufp, Length,
-	    &ASNType,
-	    &PDU->errindex, sizeof(PDU->errindex));
-	if (bufp == NULL)
-	    ASN_PARSE_ERROR(NULL);
+        /* error status */
+        bufp = asn_parse_int(bufp, Length,
+                             &ASNType,
+                             &PDU->errstat, sizeof(PDU->errstat));
+        if (bufp == NULL)
+            ASN_PARSE_ERROR(NULL);
 
 #ifdef DEBUG_PDU_DECODE
-	snmplib_debug(8, "PDU Error Index: %d\n", PDU->errindex);
+        snmplib_debug(8, "PDU Error Status: %d\n", PDU->errstat);
 #endif
 
-	break;
+        /* error index */
+        bufp = asn_parse_int(bufp, Length,
+                             &ASNType,
+                             &PDU->errindex, sizeof(PDU->errindex));
+        if (bufp == NULL)
+            ASN_PARSE_ERROR(NULL);
+
+#ifdef DEBUG_PDU_DECODE
+        snmplib_debug(8, "PDU Error Index: %d\n", PDU->errindex);
+#endif
+
+        break;
     }
 
     return (bufp);
@@ -644,19 +640,19 @@ snmp_add_null_var(struct snmp_pdu *pdu, oid * name, int name_length)
 
     vars = snmp_var_new(name, name_length);
     if (vars == NULL) {
-	perror("snmp_add_null_var:xmalloc");
-	return;
+        perror("snmp_add_null_var:xmalloc");
+        return;
     }
     if (pdu->variables == NULL) {
-	pdu->variables = vars;
+        pdu->variables = vars;
     } else {
 
-	/* Insert at the end */
-	for (ptr = pdu->variables;
-	    ptr->next_variable;
-	    ptr = ptr->next_variable)
-	    /*EXIT */ ;
-	ptr->next_variable = vars;
+        /* Insert at the end */
+        for (ptr = pdu->variables;
+                ptr->next_variable;
+                ptr = ptr->next_variable)
+            /*EXIT */ ;
+        ptr->next_variable = vars;
     }
 
     return;

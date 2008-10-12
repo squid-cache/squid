@@ -9,7 +9,8 @@
 
 #include "adaptation/Config.h"
 
-namespace Ecap {
+namespace Ecap
+{
 
 class Config: public Adaptation::Config
 {
@@ -18,7 +19,7 @@ public:
     Config();
     ~Config();
 
-	virtual void finalize();
+    virtual void finalize();
 
 private:
     Config(const Config &); // not implemented

@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -58,8 +58,7 @@ typedef enum {
     rcCount
 } refreshCountsEnum;
 
-typedef struct
-{
+typedef struct {
     bool expires;
     bool min;
     bool lmfactor;
@@ -90,8 +89,7 @@ enum {
     STALE_DEFAULT = 299
 };
 
-static struct RefreshCounts
-{
+static struct RefreshCounts {
     const char *proto;
     int total;
     int status[STALE_DEFAULT + 1];
@@ -344,14 +342,14 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
         if (sf.expires) {
             debugs(22, 3, "refreshCheck: returning FRESH_EXPIRES");
             return FRESH_EXPIRES;
-	}
+        }
 
         assert(!sf.max);
 
         if (sf.lmfactor) {
             debugs(22, 3, "refreshCheck: returning FRESH_LMFACTOR_RULE");
             return FRESH_LMFACTOR_RULE;
-	}
+        }
 
         assert(sf.min);
 
@@ -400,8 +398,8 @@ refreshIsCachable(const StoreEntry * entry)
     /*
      * Don't look at the request to avoid no-cache and other nuisances.
      * the object should have a mem_obj so the URL will be found there.
-     * minimum_expiry_time seconds delta (defaults to 60 seconds), to 
-     * avoid objects which expire almost immediately, and which can't 
+     * minimum_expiry_time seconds delta (defaults to 60 seconds), to
+     * avoid objects which expire almost immediately, and which can't
      * be refreshed.
      */
     int reason = refreshCheck(entry, NULL, Config.minimum_expiry_time);
@@ -578,7 +576,7 @@ static void
 refreshRegisterWithCacheManager(void)
 {
     CacheManager::GetInstance()->
-        registerAction("refresh", "Refresh Algorithm Statistics", refreshStats, 0, 1);
+    registerAction("refresh", "Refresh Algorithm Statistics", refreshStats, 0, 1);
 }
 
 void

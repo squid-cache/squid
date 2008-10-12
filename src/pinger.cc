@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -155,23 +155,23 @@ main(int argc, char *argv[])
     debugs(42, 0, "pinger: Initialising ICMP pinger ...");
 
     icmp4_worker = icmp4.Open();
-    if(icmp4_worker < 0) {
+    if (icmp4_worker < 0) {
         debugs(42, 0, "pinger: Unable to start ICMP pinger.");
     }
     max_fd = max(max_fd, icmp4_worker);
 
 #if USE_IPV6
     icmp6_worker = icmp6.Open();
-    if(icmp6_worker <0 ) {
+    if (icmp6_worker <0 ) {
         debugs(42, 0, "pinger: Unable to start ICMPv6 pinger.");
     }
     max_fd = max(max_fd, icmp6_worker);
 #endif
 
     /** abort if neither worker could open a socket. */
-    if(icmp4_worker == -1) {
+    if (icmp4_worker == -1) {
 #if USE_IPV6
-        if(icmp6_worker == -1)
+        if (icmp6_worker == -1)
 #endif
         {
             debugs(42, 0, "FATAL: pinger: Unable to open any ICMP sockets.");
@@ -179,7 +179,7 @@ main(int argc, char *argv[])
         }
     }
 
-    if( (squid_link = control.Open()) < 0) {
+    if ( (squid_link = control.Open()) < 0) {
         debugs(42, 0, "FATAL: pinger: Unable to setup Pinger control sockets.");
         icmp4.Close();
 #if USE_IPV6
@@ -196,12 +196,12 @@ main(int argc, char *argv[])
         tv.tv_sec = PINGER_TIMEOUT;
         tv.tv_usec = 0;
         FD_ZERO(&R);
-        if(icmp4_worker >= 0) {
+        if (icmp4_worker >= 0) {
             FD_SET(icmp4_worker, &R);
         }
 #if USE_IPV6
 
-        if(icmp6_worker >= 0) {
+        if (icmp6_worker >= 0) {
             FD_SET(icmp6_worker, &R);
         }
 #endif

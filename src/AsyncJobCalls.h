@@ -30,7 +30,7 @@ class NullaryMemFunT: public JobDialer
 public:
     typedef void (C::*Method)();
     explicit NullaryMemFunT(C *anObject, Method aMethod):
-        JobDialer(anObject), object(anObject), method(aMethod) {}
+            JobDialer(anObject), object(anObject), method(aMethod) {}
 
     virtual void print(std::ostream &os) const {  os << "()"; }
 
@@ -39,7 +39,7 @@ public:
     Method method;
 
 protected:
-	virtual void doDial() { (object->*method)(); }
+    virtual void doDial() { (object->*method)(); }
 };
 
 template <class C, class Argument1>
@@ -48,8 +48,8 @@ class UnaryMemFunT: public JobDialer
 public:
     typedef void (C::*Method)(Argument1);
     explicit UnaryMemFunT(C *anObject, Method aMethod, const Argument1 &anArg1):
-        JobDialer(anObject),
-        object(anObject), method(aMethod), arg1(anArg1) {}
+            JobDialer(anObject),
+            object(anObject), method(aMethod), arg1(anArg1) {}
 
     virtual void print(std::ostream &os) const {  os << '(' << arg1 << ')'; }
 
@@ -59,7 +59,7 @@ public:
     Argument1 arg1;
 
 protected:
-	virtual void doDial() { (object->*method)(arg1); }
+    virtual void doDial() { (object->*method)(arg1); }
 };
 
 // ... add more as needed
@@ -79,7 +79,7 @@ MemFun(C *object, typename NullaryMemFunT<C>::Method method)
 template <class C, class Argument1>
 UnaryMemFunT<C, Argument1>
 MemFun(C *object, typename UnaryMemFunT<C, Argument1>::Method method,
-    Argument1 arg1)
+       Argument1 arg1)
 {
     return UnaryMemFunT<C, Argument1>(object, method, arg1);
 }

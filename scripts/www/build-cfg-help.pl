@@ -56,7 +56,7 @@ my (%all_names);
 my ($comment);
 my (%defines);
 
-my $version = "3.0-PRE6";
+my $version = "3.1.0";
 my $verbose = '';
 my $path = "/tmp";
 my $format = "splithtml";

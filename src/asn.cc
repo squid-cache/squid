@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -55,7 +55,8 @@
 
 
 /* 32/128 bits address in memory with length */
-class m_ADDR {
+class m_ADDR
+{
 public:
     uint8_t len;
     IPAddress addr;
@@ -76,18 +77,16 @@ template cbdata_type CbDataList<int>::CBDATA_CbDataList;
 /// \endcond
 
 /**
- * Structure for as number information. it could be simply 
+ * Structure for as number information. it could be simply
  * a list but it's coded as a structure for future
  * enhancements (e.g. expires)
  */
-struct as_info
-{
+struct as_info {
     CbDataList<int> *as_number;
     time_t expires;		/* NOTUSED */
 };
 
-struct ASState
-{
+struct ASState {
     StoreEntry *entry;
     store_client *sc;
     HttpRequest *request;
@@ -99,8 +98,7 @@ struct ASState
 };
 
 /** entry into the radix tree */
-struct rtentry_t
-{
+struct rtentry_t {
     struct squid_radix_node e_nodes[2];
     as_info *e_info;
     m_ADDR e_addr;
@@ -175,7 +173,7 @@ void
 ACLASN::prepareForUse()
 {
     for (CbDataList<int> *i = data; i; i = i->
-                                     next)
+                                           next)
         asnCacheStart(i->element);
 }
 
@@ -475,8 +473,7 @@ destroyRadixNode(struct squid_radix_node *rn, void *w)
 
     struct squid_radix_node_head *rnh = (struct squid_radix_node_head *) w;
 
-    if (rn && !(rn->rn_flags & RNF_ROOT))
-    {
+    if (rn && !(rn->rn_flags & RNF_ROOT)) {
         rtentry_t *e = (rtentry_t *) rn;
         rn = squid_rn_delete(rn->rn_key, rn->rn_mask, rnh);
 
@@ -641,7 +638,8 @@ ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLChecklist *chec
         debugs(28, 3, "asnMatchAcl: Can't yet compare '" << "unknown" /*name*/ << "' ACL for '" << checklist->request->GetHost() << "'");
         checklist->changeState (DestinationIPLookup::Instance());
     } else {
-        IPAddress noaddr; noaddr.SetNoAddr();
+        IPAddress noaddr;
+        noaddr.SetNoAddr();
         return data->match(noaddr);
     }
 

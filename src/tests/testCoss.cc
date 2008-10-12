@@ -180,7 +180,7 @@ testCoss::testCossSearch()
     loop.run();
 
     /* cannot use loop.run(); as the loop will never idle: the store-dir
-     * clean() scheduled event prevents it 
+     * clean() scheduled event prevents it
      */
 
     /* nothing left to rebuild */
@@ -268,7 +268,7 @@ testCoss::testCossSearch()
         throw std::runtime_error("Failed to clean test work directory");
 }
 
-/* The COSS store should always configure an IO engine even if none is 
+/* The COSS store should always configure an IO engine even if none is
  * supplied on the configuration line.
  */
 void

@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -116,9 +116,9 @@ authenticateDigestNonceNew(void)
      * The contents of the nonce are implementation dependent. The quality
      * of the implementation depends on a good choice. A nonce might, for
      * example, be constructed as the base 64 encoding of
-     * 
+     *
      * time-stamp H(time-stamp ":" ETag ":" private-key)
-     * 
+     *
      * where time-stamp is a server-generated time or other non-repeating
      * value, ETag is the value of the HTTP ETag header associated with
      * the requested entity, and private-key is data known only to the
@@ -135,7 +135,7 @@ authenticateDigestNonceNew(void)
      * user often go through different proxies in the farm. Also, IP
      * address spoofing is not that hard.)
      * ====
-     * 
+     *
      * Now for my reasoning:
      * We will not accept a unrecognised nonce->we have all recognisable
      * nonces stored. If we send out unique base64 encodings we guarantee
@@ -331,7 +331,7 @@ authenticateDigestNonceFindNonce(const char *nonceb64)
     if (nonceb64 == NULL)
         return NULL;
 
-        debugs(29, 9, "authDigestNonceFindNonce:looking for nonceb64 '" << nonceb64 << "' in the nonce cache.");
+    debugs(29, 9, "authDigestNonceFindNonce:looking for nonceb64 '" << nonceb64 << "' in the nonce cache.");
 
     nonce = static_cast < digest_nonce_h * >(hash_lookup(digest_nonce_cache, nonceb64));
 
@@ -706,8 +706,8 @@ AuthDigestUserRequest::module_direction()
 
     case Failed:
 
-         /* send new challenge */
-         return 1;
+        /* send new challenge */
+        return 1;
     }
 
     return -2;
@@ -845,7 +845,7 @@ authenticateDigestHandleReply(void *data, char *reply)
 
     if (reply && (strncasecmp(reply, "ERR", 3) == 0)) {
         digest_request->credentials(AuthDigestUserRequest::Failed);
-	digest_request->flags.invalid_password = 1;
+        digest_request->flags.invalid_password = 1;
 
         if (t && *t)
             digest_request->setDenyMessage(t);
@@ -891,9 +891,9 @@ void
 AuthDigestConfig::registerWithCacheManager(void)
 {
     CacheManager::GetInstance()->
-            registerAction("digestauthenticator",
-                           "Digest User Authenticator Stats",
-                           authenticateDigestStats, 0, 1);
+    registerAction("digestauthenticator",
+                   "Digest User Authenticator Stats",
+                   authenticateDigestStats, 0, 1);
 }
 
 /* free any allocated configuration details */
@@ -1003,7 +1003,7 @@ authDigestNonceUserUnlink(digest_nonce_h * nonce)
     }
 
     /* this reference to user was not locked because freeeing the user frees
-     * the nonce too. 
+     * the nonce too.
      */
     nonce->user = NULL;
 }
@@ -1367,11 +1367,11 @@ AuthDigestUserRequest::module_start(RH * handler, void *data)
     r->auth_user_request = this;
     AUTHUSERREQUESTLOCK(r->auth_user_request, "r");
     if (digestConfig.utf8) {
-	char user[1024];
-	latin1_to_utf8(user, sizeof(user), digest_user->username());
-	snprintf(buf, 8192, "\"%s\":\"%s\"\n", user, realm);
+        char user[1024];
+        latin1_to_utf8(user, sizeof(user), digest_user->username());
+        snprintf(buf, 8192, "\"%s\":\"%s\"\n", user, realm);
     } else {
-	snprintf(buf, 8192, "\"%s\":\"%s\"\n", digest_user->username(), realm);
+        snprintf(buf, 8192, "\"%s\":\"%s\"\n", digest_user->username(), realm);
     }
 
     helperSubmit(digestauthenticators, buf, authenticateDigestHandleReply, r);

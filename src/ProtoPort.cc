@@ -9,7 +9,8 @@
 
 http_port_list::http_port_list(const char *aProtocol)
 #if USE_SSL
-    : http(*this)
+        :
+        http(*this)
 #endif
 {
     protocol = xstrdup(aProtocol);

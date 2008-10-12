@@ -1602,6 +1602,15 @@ if test -n "$NEGOTIATE_AUTH_HELPERS"; then
 	else
 	    AC_MSG_ERROR(Negotiate Auth helper $helper does not exist)
 	fi
+	# Kerberos helper has its own configure system
+	if test "$srcdir/helpers/negotiate_auth/$helper/configure" ; then
+	    if test $helper = squid_kerb_auth; then
+		AC_CONFIG_SUBDIRS(helpers/negotiate_auth/squid_kerb_auth)
+	    else
+		echo "ERROR: configure.in needs to be extended to support $helper!"
+		exit 1
+	    fi
+	fi
     done
     echo "Negotiate auth helpers built: $NEGOTIATE_AUTH_HELPERS"
 fi
@@ -3757,7 +3766,6 @@ AC_CONFIG_FILES([\
 	helpers/ntlm_auth/mswin_sspi/Makefile \
 	helpers/negotiate_auth/Makefile \
 	helpers/negotiate_auth/mswin_sspi/Makefile \
-	helpers/negotiate_auth/squid_kerb_auth/Makefile \
 	helpers/external_acl/Makefile \
 	helpers/external_acl/ip_user/Makefile \
 	helpers/external_acl/ldap_group/Makefile \
@@ -3773,6 +3781,5 @@ AC_CONFIG_SUBDIRS(lib/libTrie)
 
 # must configure libltdl subdir unconditionally for "make distcheck" to work
 AC_CONFIG_SUBDIRS(lib/libLtdl)
-
 
 AC_OUTPUT

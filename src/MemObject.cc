@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -144,7 +144,7 @@ MemObject::write ( StoreIOBuffer writeBuffer, STMCB *callback, void *callbackDat
     writeBuffer.offset += (_reply ? _reply->hdr_sz : 0);
 
     /* We don't separate out mime headers yet, so ensure that the first
-     * write is at offset 0 - where they start 
+     * write is at offset 0 - where they start
      */
     assert (data_hdr.endOffset() || writeBuffer.offset == 0);
 
@@ -184,12 +184,10 @@ MemObject::replaceHttpReply(HttpReply *newrep)
     _reply = HTTPMSGLOCK(newrep);
 }
 
-struct LowestMemReader : public unary_function<store_client, void>
-{
-    LowestMemReader(int64_t seed):current(seed){}
+struct LowestMemReader : public unary_function<store_client, void> {
+    LowestMemReader(int64_t seed):current(seed) {}
 
-    void operator() (store_client const &x)
-    {
+    void operator() (store_client const &x) {
         if (x.memReaderHasLowerOffset(current))
             current = x.copyInto.offset;
     }
@@ -197,12 +195,10 @@ struct LowestMemReader : public unary_function<store_client, void>
     int64_t current;
 };
 
-struct StoreClientStats : public unary_function<store_client, void>
-{
-    StoreClientStats(MemBuf *anEntry):where(anEntry),index(0){}
+struct StoreClientStats : public unary_function<store_client, void> {
+    StoreClientStats(MemBuf *anEntry):where(anEntry),index(0) {}
 
-    void operator()(store_client const &x)
-    {
+    void operator()(store_client const &x) {
         x.dumpStats(where, index++);
     }
 
@@ -296,7 +292,7 @@ MemObject::objectBytesOnDisk() const
     /*
      * NOTE: storeOffset() represents the disk file size,
      * not the amount of object data on disk.
-     * 
+     *
      * If we don't have at least 'swap_hdr_sz' bytes
      * then none of the object data is on disk.
      *

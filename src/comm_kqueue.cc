@@ -133,7 +133,7 @@ kq_update_events(int fd, short filter, PF * handler)
 
         EV_SET(kep, (uintptr_t) fd, filter, kep_flags, 0, 0, 0);
 
-	/* Check if we've used the last one. If we have then submit them all */
+        /* Check if we've used the last one. If we have then submit them all */
         if (kqoff == kqmax - 1) {
             int ret;
 
@@ -218,10 +218,10 @@ commResetSelect(int fd)
 {
     fde *F = &fd_table[fd];
     if (F->read_handler) {
-	kq_update_events(fd, EVFILT_READ, (PF *)1);
+        kq_update_events(fd, EVFILT_READ, (PF *)1);
     }
     if (F->write_handler) {
-	kq_update_events(fd, EVFILT_WRITE, (PF *)1);
+        kq_update_events(fd, EVFILT_WRITE, (PF *)1);
     }
 }
 
@@ -296,7 +296,7 @@ comm_select(int msec)
 
             if ((hdl = F->read_handler) != NULL) {
                 F->read_handler = NULL;
-		F->flags.read_pending = 0;
+                F->flags.read_pending = 0;
                 hdl(fd, F->read_data);
             }
 
