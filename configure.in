@@ -1888,23 +1888,28 @@ AC_ARG_WITH(ipv6-split-stack,
 )
 
 dnl Check for IPv6 Windows Vista option
-dnl Also useful for other OS
+dnl Also useful for other OS with hybrid-stack defaults turned OFF
+use_v4map=yes
 AC_MSG_CHECKING([for IPv6 v4-mapping requirement])
 AC_ARG_WITH(ipv4-mapped,
-  [  --with-ipv4-mapped  Hybrid-Stack OS require Squid to do any v4-mapping. Requires IPv6 Support.],
-  [AC_DEFINE(IPV6_SPECIAL_V4MAPPED, 1, [Enable v4-mapping through v6 sockets]) AC_MSG_RESULT(yes)],
-  [AC_DEFINE(IPV6_SPECIAL_V4MAPPED, 0, [Enable v4-mapping through v6 sockets]) AC_MSG_RESULT(no)]
+  [  --with-ipv4-mapped  Squid uses Hybrid-Stack features to do v4-mapping. Requires IPv6 Support.],
+  [use_v4map=yes],
+  [use_v4map=no]
 )
+if test "x$use_v4map" = "xyes" ; then
+    AC_DEFINE(IPV6_SPECIAL_V4MAPPED, 1, [Enable v4-mapping through v6 sockets]) AC_MSG_RESULT(yes)],
+else
+    AC_DEFINE(IPV6_SPECIAL_V4MAPPED, 0, [Enable v4-mapping through v6 sockets]) AC_MSG_RESULT(no)]    
+fi
 
 dnl Check for IPv6-pure option
 AC_MSG_CHECKING([for IPv6-Localhost requirement])
 AC_ARG_WITH(localhost-ipv6,
   [  --with-localhost-ipv6    Prefer IPv6 localhost address over IPv4. Requires IPv6 Support.
-                           Treats 127.0.0.1 and ::1 as identical and converts all inputs of to ::1
+                           Treats 127.0.0.1 and ::1 as identical and converts all inputs of localhost to ::1
                            This depends on Dual-Stack support in the OS and all applications
                            squid contacts via localhost being IPv6 enabled.
-                           Default: OFF. Treats these two IP as different, squid.conf must
-                           define both 127.0.0.1 and ::1 for the localhost ACL, etc. ],
+                           WARNING: This is an RFC violation!],
   [AC_DEFINE(IPV6_SPECIAL_LOCALHOST, 1, [Convert IPv4-localhost requests to IPv6. Default: keep seperate.]) AC_MSG_RESULT(yes)],
   [AC_DEFINE(IPV6_SPECIAL_LOCALHOST, 0, [Convert IPv4-localhost requests to IPv6. Default: Keep seperate.]) AC_MSG_RESULT(no)]
 )
@@ -1921,14 +1926,6 @@ AC_ARG_ENABLE(zph-qos,
       When enabled, Squid will alter TOS field of HIT responses for better QOS on intermediate routing/shaping devices.])
   fi
 ])
-
-dnl Optional CNAME-Recursion by Internal DNS engine
-AC_MSG_CHECKING([whether DNS CNAME recursion wanted])
-AC_ARG_WITH(dns-cname,
-  [  --with-dns-cname         Enable CNAME-Recursion in Internal DNS stub.],
-  [AC_DEFINE(DNS_CNAME, 1, [ 1 == Enable expermental CNAME recursion inside Squid DNS resolver stub]) AC_MSG_RESULT(yes)],
-  [AC_DEFINE(DNS_CNAME, 0, [ 0 == Disable expermental CNAME recursion inside Squid DNS resolver stub]) AC_MSG_RESULT(no)]
-)
 
 dnl Check whether this OS defines ss_len as a member of sockaddr_storage
 AC_CACHE_CHECK([for ss_len field in struct sockaddr_storage],
