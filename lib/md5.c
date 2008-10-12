@@ -47,9 +47,9 @@ static byteSwap(uint32_t * buf, unsigned words)
     uint8_t *p = (uint8_t *) buf;
 
     do {
-	*buf++ = (uint32_t) ((unsigned) p[3] << 8 | p[2]) << 16 |
-	    ((unsigned) p[1] << 8 | p[0]);
-	p += 4;
+        *buf++ = (uint32_t) ((unsigned) p[3] << 8 | p[2]) << 16 |
+                 ((unsigned) p[1] << 8 | p[0]);
+        p += 4;
     } while (--words);
 }
 #else
@@ -86,12 +86,12 @@ SquidMD5Update(struct SquidMD5Context *ctx, const void *_buf, unsigned len)
 
     t = ctx->bytes[0];
     if ((ctx->bytes[0] = t + len) < t)
-	ctx->bytes[1]++;	/* Carry from low to high */
+        ctx->bytes[1]++;	/* Carry from low to high */
 
     t = 64 - (t & 0x3f);	/* Space available in ctx->in (at least 1) */
     if (t > len) {
-	memcpy((uint8_t *) ctx->in + 64 - t, buf, len);
-	return;
+        memcpy((uint8_t *) ctx->in + 64 - t, buf, len);
+        return;
     }
     /* First chunk is an odd size */
     memcpy((uint8_t *) ctx->in + 64 - t, buf, t);
@@ -102,11 +102,11 @@ SquidMD5Update(struct SquidMD5Context *ctx, const void *_buf, unsigned len)
 
     /* Process data in 64-byte chunks */
     while (len >= 64) {
-	memcpy(ctx->in, buf, 64);
-	byteSwap(ctx->in, 16);
-	SquidMD5Transform(ctx->buf, ctx->in);
-	buf += 64;
-	len -= 64;
+        memcpy(ctx->in, buf, 64);
+        byteSwap(ctx->in, 16);
+        SquidMD5Transform(ctx->buf, ctx->in);
+        buf += 64;
+        len -= 64;
     }
 
     /* Handle any remaining bytes of data. */
@@ -114,7 +114,7 @@ SquidMD5Update(struct SquidMD5Context *ctx, const void *_buf, unsigned len)
 }
 
 /*
- * Final wrapup - pad to 64-byte boundary with the bit pattern 
+ * Final wrapup - pad to 64-byte boundary with the bit pattern
  * 1 0* (64-bit count of bits processed, MSB-first)
  */
 void
@@ -130,11 +130,11 @@ SquidMD5Final(unsigned char digest[16], struct SquidMD5Context *ctx)
     count = 56 - 1 - count;
 
     if (count < 0) {		/* Padding forces an extra block */
-	memset(p, 0, count + 8);
-	byteSwap(ctx->in, 16);
-	SquidMD5Transform(ctx->buf, ctx->in);
-	p = (uint8_t *) ctx->in;
-	count = 56;
+        memset(p, 0, count + 8);
+        byteSwap(ctx->in, 16);
+        SquidMD5Transform(ctx->buf, ctx->in);
+        p = (uint8_t *) ctx->in;
+        count = 56;
     }
     memset(p, 0, count);
     byteSwap(ctx->in, 14);

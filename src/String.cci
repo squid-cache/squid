@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -149,7 +149,7 @@ String::caseCmp(char const *aString, size_t count) const
 void
 String::set(char const *loc, char const ch)
 {
-    if(loc < buf_ || loc > (buf_ + size_) ) return;
+    if (loc < buf_ || loc > (buf_ + size_) ) return;
 
     buf_[loc-buf_] = ch;
 }
@@ -157,12 +157,12 @@ String::set(char const *loc, char const ch)
 void
 String::cut(size_t newLength)
 {
-    if(newLength < 0 || newLength > len_) return;
+    if (newLength < 0 || newLength > len_) return;
 
     len_ = newLength;
 
     // buf_ may be NULL on zero-length strings.
-    if(len_ == 0 && buf_ == NULL) return;
+    if (len_ == 0 && buf_ == NULL) return;
 
     buf_[newLength] = '\0';
 }
@@ -170,7 +170,7 @@ String::cut(size_t newLength)
 void
 String::cutPointer(char const *loc)
 {
-    if(loc < buf_ || loc > (buf_ + size_) ) return;
+    if (loc < buf_ || loc > (buf_ + size_) ) return;
 
     len_ = loc-buf_;
     buf_[len_] = '\0';

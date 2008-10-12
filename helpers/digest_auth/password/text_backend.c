@@ -11,7 +11,7 @@
  * - comment lines are possible and should start with a '#';
  * - empty or blank lines are possible;
  * - file format is username:plaintext or username:realm:HA1
- * 
+ *
  * To build a directory integrated backend, you need to be able to
  * calculate the HA1 returned to squid. To avoid storing a plaintext
  * password you can calculate MD5(username:realm:password) when the
@@ -64,55 +64,55 @@ read_passwd_file(const char *passwdfile, int ha1mode)
     char *realm;
 
     if (hash != NULL) {
-	hashFreeItems(hash, my_free);
+        hashFreeItems(hash, my_free);
     }
     /* initial setup */
     hash = hash_create((HASHCMP *) strcmp, 7921, hash_string);
     if (NULL == hash) {
-	fprintf(stderr, "digest_pw_auth: cannot create hash table\n");
-	exit(1);
+        fprintf(stderr, "digest_pw_auth: cannot create hash table\n");
+        exit(1);
     }
     f = fopen(passwdfile, "r");
     while (fgets(buf, 8192, f) != NULL) {
-	if ((buf[0] == '#') || (buf[0] == ' ') || (buf[0] == '\t') ||
-	    (buf[0] == '\n'))
-	    continue;
-	user = strtok(buf, ":\n");
-	realm = strtok(NULL, ":\n");
-	passwd = strtok(NULL, ":\n");
-	if (!passwd) {
-	    passwd = realm;
-	    realm = NULL;
-	}
-	if ((strlen(user) > 0) && passwd) {
-	    if (strncmp(passwd, "{HHA1}", 6) == 0) {
-		ha1 = passwd + 6;
-		passwd = NULL;
-	    } else if (ha1mode) {
-		ha1 = passwd;
-		passwd = NULL;
-	    }
-	    if (ha1 && strlen(ha1) != 32) {
-		/* We cannot accept plaintext passwords when using HA1 encoding,
-		 * as the passwords may be output to cache.log if debugging is on.
-		 */
-		fprintf(stderr, "digest_pw_auth: ignoring invalid password for %s\n", user);
-		continue;
-	    }
-	    u = xcalloc(1, sizeof(*u));
-	    if (realm) {
-		int len = strlen(user) + strlen(realm) + 2;
-		u->hash.key = malloc(len);
-		snprintf(u->hash.key, len, "%s:%s", user, realm);
-	    } else {
-		u->hash.key = xstrdup(user);
-	    }
-	    if (ha1)
-		u->ha1 = xstrdup(ha1);
-	    else
-		u->passwd = xstrdup(passwd);
-	    hash_join(hash, &u->hash);
-	}
+        if ((buf[0] == '#') || (buf[0] == ' ') || (buf[0] == '\t') ||
+                (buf[0] == '\n'))
+            continue;
+        user = strtok(buf, ":\n");
+        realm = strtok(NULL, ":\n");
+        passwd = strtok(NULL, ":\n");
+        if (!passwd) {
+            passwd = realm;
+            realm = NULL;
+        }
+        if ((strlen(user) > 0) && passwd) {
+            if (strncmp(passwd, "{HHA1}", 6) == 0) {
+                ha1 = passwd + 6;
+                passwd = NULL;
+            } else if (ha1mode) {
+                ha1 = passwd;
+                passwd = NULL;
+            }
+            if (ha1 && strlen(ha1) != 32) {
+                /* We cannot accept plaintext passwords when using HA1 encoding,
+                 * as the passwords may be output to cache.log if debugging is on.
+                 */
+                fprintf(stderr, "digest_pw_auth: ignoring invalid password for %s\n", user);
+                continue;
+            }
+            u = xcalloc(1, sizeof(*u));
+            if (realm) {
+                int len = strlen(user) + strlen(realm) + 2;
+                u->hash.key = malloc(len);
+                snprintf(u->hash.key, len, "%s:%s", user, realm);
+            } else {
+                u->hash.key = xstrdup(user);
+            }
+            if (ha1)
+                u->ha1 = xstrdup(ha1);
+            else
+                u->passwd = xstrdup(passwd);
+            hash_join(hash, &u->hash);
+        }
     }
     fclose(f);
 }
@@ -123,19 +123,19 @@ TextArguments(int argc, char **argv)
 {
     struct stat sb;
     if (argc == 2)
-	passwdfile = argv[1];
+        passwdfile = argv[1];
     if ((argc == 3) && !strcmp("-c", argv[1])) {
-	ha1mode = 1;
-	passwdfile = argv[2];
+        ha1mode = 1;
+        passwdfile = argv[2];
     }
     if (!passwdfile) {
-	fprintf(stderr, "Usage: digest_pw_auth [OPTIONS] <passwordfile>\n");
-	fprintf(stderr, "  -c   accept digest hashed passwords rather than plaintext in passwordfile\n");
-	exit(1);
+        fprintf(stderr, "Usage: digest_pw_auth [OPTIONS] <passwordfile>\n");
+        fprintf(stderr, "  -c   accept digest hashed passwords rather than plaintext in passwordfile\n");
+        exit(1);
     }
     if (stat(passwdfile, &sb) != 0) {
-	fprintf(stderr, "cannot stat %s\n", passwdfile);
-	exit(1);
+        fprintf(stderr, "cannot stat %s\n", passwdfile);
+        exit(1);
     }
 }
 
@@ -147,19 +147,19 @@ GetPassword(RequestData * requestData)
     char buf[256];
     int len;
     if (stat(passwdfile, &sb) == 0) {
-	if (sb.st_mtime != change_time) {
-	    read_passwd_file(passwdfile, ha1mode);
-	    change_time = sb.st_mtime;
-	}
+        if (sb.st_mtime != change_time) {
+            read_passwd_file(passwdfile, ha1mode);
+            change_time = sb.st_mtime;
+        }
     }
     if (!hash)
-	return NULL;
+        return NULL;
     len = snprintf(buf, sizeof(buf), "%s:%s", requestData->user, requestData->realm);
     if (len >= sizeof(buf))
-	return NULL;
+        return NULL;
     u = (user_data *) hash_lookup(hash, buf);
     if (u)
-	return u;
+        return u;
     u = (user_data *) hash_lookup(hash, requestData->user);
     return u;
 }
@@ -169,13 +169,13 @@ TextHHA1(RequestData * requestData)
 {
     const user_data *u = GetPassword(requestData);
     if (!u) {
-	requestData->error = -1;
-	return;
+        requestData->error = -1;
+        return;
     }
     if (u->ha1) {
-	xstrncpy(requestData->HHA1, u->ha1, sizeof(requestData->HHA1));
+        xstrncpy(requestData->HHA1, u->ha1, sizeof(requestData->HHA1));
     } else {
-	HASH HA1;
-	DigestCalcHA1("md5", requestData->user, requestData->realm, u->passwd, NULL, NULL, HA1, requestData->HHA1);
+        HASH HA1;
+        DigestCalcHA1("md5", requestData->user, requestData->realm, u->passwd, NULL, NULL, HA1, requestData->HHA1);
     }
 }

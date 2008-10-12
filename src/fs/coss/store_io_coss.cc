@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -226,7 +226,7 @@ CossSwapDir::openStoreIO(StoreEntry & e, StoreIOState::STFNCB * file_callback,
     } else {
         /* Do the allocation */
         /* this is the first time we've been called on a new sio
-         * read the whole object into memory, then return the 
+         * read the whole object into memory, then return the
          * requested amount
          */
         StoreFScoss::GetInstance().stats.open_mem_misses++;
@@ -320,7 +320,7 @@ CossState::read_(char *buf, size_t size, off_t offset, STRCB * callback, void *c
          * It was copied from memory in storeCossOpen()
          */
         ReadRequest::Pointer readRequest = new CossRead(ReadRequest(
-                                               (char *)readbuffer,st_size, 0), this);
+                    (char *)readbuffer,st_size, 0), this);
         SD->readCompleted(readbuffer, st_size, 0, readRequest);
     }
 }
@@ -617,9 +617,9 @@ CossState::~CossState()
 void
 CossMemBuf::describe(int level, int line)
 {
-     debugs(79, level, "membuf " << this << ", LC:" << std::setfill('0') <<  
-            std::setw(2) << lockcount << ", ST:" << 
-            std::setw(10) <<  (unsigned long) diskstart << ", FL:" << 
-            (flags.full ? 'F' : '.') << (flags.writing ? 'W' : '.'));
+    debugs(79, level, "membuf " << this << ", LC:" << std::setfill('0') <<
+           std::setw(2) << lockcount << ", ST:" <<
+           std::setw(10) <<  (unsigned long) diskstart << ", FL:" <<
+           (flags.full ? 'F' : '.') << (flags.writing ? 'W' : '.'));
 }
 

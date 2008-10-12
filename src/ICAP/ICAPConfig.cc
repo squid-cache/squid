@@ -18,12 +18,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -48,8 +48,8 @@
 ICAPConfig TheICAPConfig;
 
 ICAPConfig::ICAPConfig(): preview_enable(0), preview_size(0),
-    connect_timeout_raw(0), io_timeout_raw(0), reuse_connections(0),
-    client_username_header(NULL), client_username_encode(0)
+        connect_timeout_raw(0), io_timeout_raw(0), reuse_connections(0),
+        client_username_header(NULL), client_username_encode(0)
 {
 }
 
@@ -78,7 +78,7 @@ time_t ICAPConfig::io_timeout(bool) const
 {
     if (io_timeout_raw > 0)
         return io_timeout_raw; // explicitly configured
-    // TODO: provide a different default for an ICAP transaction that 
+    // TODO: provide a different default for an ICAP transaction that
     // can still be bypassed
-    return ::Config.Timeout.read; 
+    return ::Config.Timeout.read;
 }

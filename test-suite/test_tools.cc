@@ -29,8 +29,7 @@ _db_print(const char *format,...)
 {
 #else
 _db_print(va_alist)
-va_dcl
-{
+va_dcl {
     const char *format = NULL;
 #endif
 
@@ -116,8 +115,7 @@ fatalf(const char *fmt,...) {
 #else
 void
 fatalf(va_alist)
-va_dcl
-{
+va_dcl {
     va_list args;
     const char *fmt = NULL;
     va_start(args);
@@ -169,10 +167,10 @@ Debug::finishDebug() {
 
 void
 Debug::xassert(const char *msg, const char *file, int line) {
-	
+
     if (CurrentDebug) {
         *CurrentDebug << "assertion failed: " << file << ":" << line <<
-            ": \"" << msg << "\"";
+        ": \"" << msg << "\"";
     }
     abort();
 }

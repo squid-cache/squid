@@ -21,21 +21,22 @@
  *     - I/O (IOCB).
  */
 
- /*
-  * TODO: When there are no function-pointer-based callbacks left, all
-  * this complexity can be removed. Jobs that need comm services will just
-  * implement CommReader, CommWriter, etc. interfaces and receive calls
-  * using general (not comm-specific) AsyncCall code. For now, we have to
-  * allow the caller to create a callback that comm can modify to set
-  * parameters, which is not trivial when the caller type/kind is not
-  * known to comm and there are many kinds of parameters.
-  */
+/*
+ * TODO: When there are no function-pointer-based callbacks left, all
+ * this complexity can be removed. Jobs that need comm services will just
+ * implement CommReader, CommWriter, etc. interfaces and receive calls
+ * using general (not comm-specific) AsyncCall code. For now, we have to
+ * allow the caller to create a callback that comm can modify to set
+ * parameters, which is not trivial when the caller type/kind is not
+ * known to comm and there are many kinds of parameters.
+ */
 
 
 /* Comm*CbParams classes below handle callback parameters */
 
 // Maintains parameters common to all comm callbacks
-class CommCommonCbParams {
+class CommCommonCbParams
+{
 public:
     CommCommonCbParams(void *aData);
     CommCommonCbParams(const CommCommonCbParams &params);
@@ -43,7 +44,7 @@ public:
 
     /// adjust using the current Comm state; returns false to cancel the call
     // not virtual because callers know dialer type
-    bool syncWithComm() { return true; } 
+    bool syncWithComm() { return true; }
 
     void print(std::ostream &os) const;
 
@@ -55,11 +56,12 @@ public:
 
 private:
     // should not be needed and not yet implemented
-    CommCommonCbParams &operator =(const CommCommonCbParams &params); 
+    CommCommonCbParams &operator =(const CommCommonCbParams &params);
 };
 
 // accept parameters
-class CommAcceptCbParams: public CommCommonCbParams {
+class CommAcceptCbParams: public CommCommonCbParams
+{
 public:
     CommAcceptCbParams(void *aData);
 
@@ -71,7 +73,8 @@ public:
 };
 
 // connect parameters
-class CommConnectCbParams: public CommCommonCbParams {
+class CommConnectCbParams: public CommCommonCbParams
+{
 public:
     CommConnectCbParams(void *aData);
 
@@ -79,7 +82,8 @@ public:
 };
 
 // read/write (I/O) parameters
-class CommIoCbParams: public CommCommonCbParams {
+class CommIoCbParams: public CommCommonCbParams
+{
 public:
     CommIoCbParams(void *aData);
 
@@ -92,12 +96,14 @@ public:
 };
 
 // close parameters
-class CommCloseCbParams: public CommCommonCbParams {
+class CommCloseCbParams: public CommCommonCbParams
+{
 public:
     CommCloseCbParams(void *aData);
 };
 
-class CommTimeoutCbParams: public  CommCommonCbParams {
+class CommTimeoutCbParams: public  CommCommonCbParams
+{
 public:
     CommTimeoutCbParams(void *aData);
 };
@@ -105,7 +111,8 @@ public:
 // Interface to expose comm callback parameters of all comm dialers.
 // GetCommParams() uses this interface to access comm parameters.
 template <class Params_>
-class CommDialerParamsT {
+class CommDialerParamsT
+{
 public:
     typedef Params_ Params;
     CommDialerParamsT(const Params &io): params(io) {}
@@ -116,8 +123,9 @@ public:
 
 // Get comm params of an async comm call
 template <class Params>
-Params &GetCommParams(AsyncCall::Pointer &call) { 
-	typedef CommDialerParamsT<Params> DialerParams;
+Params &GetCommParams(AsyncCall::Pointer &call)
+{
+    typedef CommDialerParamsT<Params> DialerParams;
     DialerParams *dp = dynamic_cast<DialerParams*>(call->getDialer());
     assert(dp);
     return dp->params;
@@ -134,16 +142,21 @@ public:
     typedef void (C::*Method)(const Params &io);
 
     CommCbMemFunT(C *obj, Method meth): JobDialer(obj),
-        CommDialerParamsT<Params>(obj), object(obj), method(meth) {}
+            CommDialerParamsT<Params>(obj), object(obj), method(meth) {}
 
-    virtual bool canDial(AsyncCall &c) { return JobDialer::canDial(c) && 
-        this->params.syncWithComm(); }
+    virtual bool canDial(AsyncCall &c) {
+        return JobDialer::canDial(c) &&
+               this->params.syncWithComm();
+    }
 
     virtual void print(std::ostream &os) const {
-        os << '('; this->params.print(os); os << ')'; }
+        os << '(';
+        this->params.print(os);
+        os << ')';
+    }
 
 public:
-	C *object;
+    C *object;
     Method method;
 
 protected:
@@ -153,7 +166,7 @@ protected:
 
 // accept (IOACB) dialer
 class CommAcceptCbPtrFun: public CallDialer,
-    public CommDialerParamsT<CommAcceptCbParams>
+            public CommDialerParamsT<CommAcceptCbParams>
 {
 public:
     typedef CommAcceptCbParams Params;
@@ -169,7 +182,7 @@ public:
 
 // connect (CNCB) dialer
 class CommConnectCbPtrFun: public CallDialer,
-    public CommDialerParamsT<CommConnectCbParams>
+            public CommDialerParamsT<CommConnectCbParams>
 {
 public:
     typedef CommConnectCbParams Params;
@@ -186,7 +199,7 @@ public:
 
 // read/write (IOCB) dialer
 class CommIoCbPtrFun: public CallDialer,
-    public CommDialerParamsT<CommIoCbParams>
+            public CommDialerParamsT<CommIoCbParams>
 {
 public:
     typedef CommIoCbParams Params;
@@ -203,7 +216,7 @@ public:
 
 // close (PF) dialer
 class CommCloseCbPtrFun: public CallDialer,
-    public CommDialerParamsT<CommCloseCbParams>
+            public CommDialerParamsT<CommCloseCbParams>
 {
 public:
     typedef CommCloseCbParams Params;
@@ -218,7 +231,7 @@ public:
 };
 
 class CommTimeoutCbPtrFun:public CallDialer,
-    public CommDialerParamsT<CommTimeoutCbParams>
+            public CommDialerParamsT<CommTimeoutCbParams>
 {
 public:
     typedef CommTimeoutCbParams Params;
@@ -237,12 +250,13 @@ public:
 // TODO: Get rid of this class by moving canFire() to canDial() method
 // of dialers.
 template <class Dialer>
-class CommCbFunPtrCallT: public AsyncCall {
+class CommCbFunPtrCallT: public AsyncCall
+{
 public:
     typedef typename Dialer::Params Params;
 
     inline CommCbFunPtrCallT(int debugSection, int debugLevel,
-        const char *callName, const Dialer &aDialer);
+                             const char *callName, const Dialer &aDialer);
 
     virtual CallDialer* getDialer() { return &dialer; }
 
@@ -259,10 +273,10 @@ protected:
 template <class Dialer>
 inline
 CommCbFunPtrCallT<Dialer> *commCbCall(int debugSection, int debugLevel,
-    const char *callName, const Dialer &dialer)
+                                      const char *callName, const Dialer &dialer)
 {
     return new CommCbFunPtrCallT<Dialer>(debugSection, debugLevel, callName,
-        dialer);
+                                         dialer);
 }
 
 /* inlined implementation of templated methods */
@@ -271,7 +285,7 @@ CommCbFunPtrCallT<Dialer> *commCbCall(int debugSection, int debugLevel,
 
 template <class Dialer>
 CommCbFunPtrCallT<Dialer>::CommCbFunPtrCallT(int debugSection, int debugLevel,
-    const char *callName, const Dialer &aDialer): 
+        const char *callName, const Dialer &aDialer):
         AsyncCall(debugSection, debugLevel, callName),
         dialer(aDialer)
 {

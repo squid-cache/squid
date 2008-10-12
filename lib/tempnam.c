@@ -61,10 +61,10 @@ _tmpnam(void)
 {
     static const char digits[] =
 #if (L_tmpnam >= L_tmpmin + LONG_BIT / 4)
-    "0123456789abcdef";
+        "0123456789abcdef";
 #define TMP_BASE	16
 #else
-    "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-";
+        "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-";
 #define TMP_BASE	64
 #endif
     static unsigned long lastcount = 0;
@@ -74,42 +74,42 @@ _tmpnam(void)
     pid_t pid = getpid();
 
     if (sizeof(_tmp) - 1 != lengthof_tmp)
-	abort();		/* Consistency error. */
+        abort();		/* Consistency error. */
 
     for (;;) {
-	register int i = L_tmpnam;
-	register unsigned long c;
-	register unsigned int p;
+        register int i = L_tmpnam;
+        register unsigned long c;
+        register unsigned int p;
 
-	/* Build filename. (the hard way) */
-	s += i;
-	*s = '\0';
+        /* Build filename. (the hard way) */
+        s += i;
+        *s = '\0';
 
-	c = (count == TMP_MAX) ? 0 : ++count;
-	do {
-	    *--s = digits[c % TMP_BASE];
-	    c /= TMP_BASE;
-	} while (--i > L_tmpmin);
+        c = (count == TMP_MAX) ? 0 : ++count;
+        do {
+            *--s = digits[c % TMP_BASE];
+            c /= TMP_BASE;
+        } while (--i > L_tmpmin);
 
-	p = (unsigned int) pid;
-	do {
-	    *--s = digits[p % 10];
-	    p /= 10;
-	} while (--i > lengthof_tmp);
+        p = (unsigned int) pid;
+        do {
+            *--s = digits[p % 10];
+            p /= 10;
+        } while (--i > lengthof_tmp);
 
-	do {
-	    *--s = _tmp[--i];
-	} while (i > 0);
+        do {
+            *--s = _tmp[--i];
+        } while (i > 0);
 
-	/* Check that the file doesn't exist. */
-	if (access(s, 0) != 0)
-	    break;
+        /* Check that the file doesn't exist. */
+        if (access(s, 0) != 0)
+            break;
 
-	/* It exists; retry unless we tried them all. */
-	if (count == lastcount) {
-	    s = NULL;
-	    break;
-	}
+        /* It exists; retry unless we tried them all. */
+        if (count == lastcount) {
+            s = NULL;
+            break;
+        }
     }
 
     lastcount = count;
@@ -130,9 +130,9 @@ main()
     char *t;
     int n = 0;
     while ((t = tempnam(NULL, NULL))) {
-	printf("%s\n", t);
-	if (++n == 1000)
-	    break;
+        printf("%s\n", t);
+        if (++n == 1000)
+            break;
     }
     return 1;
 }

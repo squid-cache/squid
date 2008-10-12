@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -69,7 +69,7 @@ static void comm_poll_dns_incoming(void);
  * of incoming ICP, then we need to check these sockets more than
  * if we just have HTTP.
  *
- * The variables 'incoming_icp_interval' and 'incoming_http_interval' 
+ * The variables 'incoming_icp_interval' and 'incoming_http_interval'
  * determine how many normal I/O events to process before checking
  * incoming sockets again.  Note we store the incoming_interval
  * multipled by a factor of (2^INCOMING_FACTOR) to have some
@@ -90,7 +90,7 @@ static void comm_poll_dns_incoming(void);
  *  incoming_interval = incoming_interval + target_average - number_of_events_processed
  *
  * There are separate incoming_interval counters for both HTTP and ICP events
- * 
+ *
  * You can see the current values of the incoming_interval's, as well as
  * a histogram of 'incoming_events' by asking the cache manager
  * for 'comm_incoming', e.g.:
@@ -437,7 +437,7 @@ comm_select(int msec)
             continue;
 
         /* scan each socket but the accept socket. Poll this
-         * more frequently to minimize losses due to the 5 connect 
+         * more frequently to minimize losses due to the 5 connect
          * limit in SunOS */
         PROF_start(comm_handle_ready_fd);
 
@@ -480,7 +480,7 @@ comm_select(int msec)
                 else {
                     PROF_start(comm_read_handler);
                     F->read_handler = NULL;
-		    F->flags.read_pending = 0;
+                    F->flags.read_pending = 0;
                     hdl(fd, F->read_data);
                     PROF_stop(comm_read_handler);
                     statCounter.select_fds++;
@@ -522,7 +522,7 @@ comm_select(int msec)
                 debugs(5, 0, "WARNING: FD " << fd << " has handlers, but it's invalid.");
                 debugs(5, 0, "FD " << fd << " is a " << fdTypeStr[F->type]);
                 debugs(5, 0, "--> " << F->desc);
-		debugs(5, 0, "tmout:" << F->timeoutHandler << "read:" <<
+                debugs(5, 0, "tmout:" << F->timeoutHandler << "read:" <<
                        F->read_handler << " write:" << F->write_handler);
 
                 for (ch = F->closeHandler; ch != NULL; ch = ch->Next())
@@ -532,7 +532,7 @@ comm_select(int msec)
                     commCallCloseHandlers(fd);
                 } else if (F->timeoutHandler != NULL) {
                     debugs(5, 0, "comm_poll: Calling Timeout Handler");
-		    ScheduleCallHere(F->timeoutHandler);
+                    ScheduleCallHere(F->timeoutHandler);
                 }
 
                 F->closeHandler = NULL;
@@ -606,9 +606,9 @@ static void
 commPollRegisterWithCacheManager(void)
 {
     CacheManager::GetInstance()->
-        registerAction("comm_poll_incoming",
-                       "comm_incoming() stats",
-                       commIncomingStats, 0, 1);
+    registerAction("comm_poll_incoming",
+                   "comm_incoming() stats",
+                   commIncomingStats, 0, 1);
 }
 
 void

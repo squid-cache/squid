@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -43,7 +43,7 @@
 static OBJH eventDump;
 static const char *last_event_ran = NULL;
 
-// This AsyncCall dialer can be configured to check that the event cbdata is 
+// This AsyncCall dialer can be configured to check that the event cbdata is
 // valid before calling the event handler
 class EventDialer: public CallDialer
 {
@@ -66,14 +66,14 @@ private:
 };
 
 EventDialer::EventDialer(EVH *aHandler, void *anArg, bool lockedArg):
-    theHandler(aHandler), theArg(anArg), isLockedArg(lockedArg)
+        theHandler(aHandler), theArg(anArg), isLockedArg(lockedArg)
 {
     if (isLockedArg)
         (void)cbdataReference(theArg);
 }
 
 EventDialer::EventDialer(const EventDialer &d):
-    theHandler(d.theHandler), theArg(d.theArg), isLockedArg(d.isLockedArg)
+        theHandler(d.theHandler), theArg(d.theArg), isLockedArg(d.isLockedArg)
 {
     if (isLockedArg)
         (void)cbdataReference(theArg);
@@ -86,7 +86,8 @@ EventDialer::~EventDialer()
 }
 
 bool
-EventDialer::canDial(AsyncCall &call) {
+EventDialer::canDial(AsyncCall &call)
+{
     // TODO: add Parent::canDial() that always returns true
     //if (!Parent::canDial())
     //    return false;
@@ -108,9 +109,9 @@ EventDialer::print(std::ostream &os) const
 
 
 ev_entry::ev_entry(char const * name, EVH * func, void * arg, double when,
-    int weight, bool cbdata) : name(name), func(func), 
-    arg(cbdata ? cbdataReference(arg) : arg), when(when), weight(weight),
-    cbdata(cbdata)
+                   int weight, bool cbdata) : name(name), func(func),
+        arg(cbdata ? cbdataReference(arg) : arg), when(when), weight(weight),
+        cbdata(cbdata)
 {
 }
 
@@ -152,7 +153,7 @@ void
 eventInit(void)
 {
     CacheManager::GetInstance()->
-        registerAction("events", "Event Queue", eventDump, 0, 1);
+    registerAction("events", "Event Queue", eventDump, 0, 1);
 }
 
 static void
@@ -200,23 +201,23 @@ EventScheduler::cancel(EVH * func, void *arg)
 
         delete event;
 
-	if (arg)
-	    return;
-	/*
-	 * DPW 2007-04-12
-	 * Since this method may now delete multiple events (when
-	 * arg is NULL) it no longer returns after a deletion and
-	 * we have a potential NULL pointer problem.  If we just
-	 * deleted the last event in the list then *E is now equal
-	 * to NULL.  We need to break here or else we'll get a NULL
-	 * pointer dereference in the last clause of the for loop.
-	 */
-	if (NULL == *E)
-	    break;
+        if (arg)
+            return;
+        /*
+         * DPW 2007-04-12
+         * Since this method may now delete multiple events (when
+         * arg is NULL) it no longer returns after a deletion and
+         * we have a potential NULL pointer problem.  If we just
+         * deleted the last event in the list then *E is now equal
+         * to NULL.  We need to break here or else we'll get a NULL
+         * pointer dereference in the last clause of the for loop.
+         */
+        if (NULL == *E)
+            break;
     }
 
     if (arg)
-	debug_trap("eventDelete: event not found");
+        debug_trap("eventDelete: event not found");
 }
 
 int
@@ -255,19 +256,19 @@ EventScheduler::checkEvents(int timeout)
 
         /* XXX assumes event->name is static memory! */
         AsyncCall::Pointer call = asyncCall(41,5, event->name,
-            EventDialer(event->func, event->arg, event->cbdata));
+                                            EventDialer(event->func, event->arg, event->cbdata));
         ScheduleCallHere(call);
 
         last_event_ran = event->name; // XXX: move this to AsyncCallQueue
         const bool heavy = event->weight &&
-            (!event->cbdata || cbdataReferenceValid(event->arg));
+                           (!event->cbdata || cbdataReferenceValid(event->arg));
 
         tasks = event->next;
         delete event;
 
         // XXX: We may be called again during the same event loop iteration.
         // Is there a point in breaking now?
-        if (heavy) 
+        if (heavy)
             break; // do not dequeue events following a heavy event
     }
 

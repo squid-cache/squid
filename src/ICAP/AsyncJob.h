@@ -1,6 +1,6 @@
-  /*
-   * $Id: AsyncJob.h,v 1.4 2008/02/26 21:49:41 amosjeffries Exp $
-   */
+/*
+ * $Id: AsyncJob.h,v 1.4 2008/02/26 21:49:41 amosjeffries Exp $
+ */
 
 #ifndef SQUID_ASYNC_JOB_H
 #define SQUID_ASYNC_JOB_H
@@ -9,6 +9,7 @@
 
 
 #include "AsyncCall.h"
+#include "TextException.h"
 
 /**
  \defgroup AsyncJobAPI Async-Jobs API
@@ -17,7 +18,7 @@
  * "job", "task", or "logical processing thread" which receives asynchronous
  * calls.
  *
- * Implementations should wrap each method receiving an asynchronous call in 
+ * Implementations should wrap each method receiving an asynchronous call in
  * a pair of macros: AsyncCallEnter and AsyncCallExit. These macros:
  *   - provide call debugging
  *   - trap exceptions and terminate the task if an exception occurs
@@ -29,8 +30,6 @@
  * processing code so that individual job classes do not have to wrap all
  * asynchronous calls.
  */
-
-class std::exception;
 
 /// \ingroup AsyncJobAPI
 class AsyncJob
@@ -104,7 +103,7 @@ protected:
 
 private:
     // not implemented and should not be needed
-    JobDialer &operator =(const JobDialer &); 
+    JobDialer &operator =(const JobDialer &);
 };
 
 #include "AsyncJobCalls.h"
@@ -112,7 +111,7 @@ private:
 template <class Dialer>
 bool
 CallJob(int debugSection, int debugLevel, const char *fileName, int fileLine,
-    const char *callName, const Dialer &dialer)
+        const char *callName, const Dialer &dialer)
 {
     AsyncCall::Pointer call = asyncCall(debugSection, debugLevel, callName, dialer);
     return ScheduleCall(fileName, fileLine, call);

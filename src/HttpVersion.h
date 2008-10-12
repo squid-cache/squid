@@ -19,12 +19,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -39,14 +39,12 @@ class HttpVersion
 {
 
 public:
-    HttpVersion()
-    {
+    HttpVersion() {
         major = 0;
         minor = 0;
     }
 
-    HttpVersion(unsigned int aMajor, unsigned int aMinor)
-    {
+    HttpVersion(unsigned int aMajor, unsigned int aMinor) {
         major = aMajor;
         minor = aMinor;
     }
@@ -54,8 +52,7 @@ public:
     unsigned int major;
     unsigned int minor;
 
-    bool operator==(const HttpVersion& that) const
-    {
+    bool operator==(const HttpVersion& that) const {
         if (this->major != that.major)
             return false;
 
@@ -65,8 +62,7 @@ public:
         return true;
     }
 
-    bool operator!=(const HttpVersion& that) const
-    {
+    bool operator!=(const HttpVersion& that) const {
         return ((this->major != that.major) || (this->minor != that.minor));
     }
 

@@ -11,10 +11,11 @@
 #include <libecap/common/forward.h>
 #include <libecap/common/memory.h>
 
-namespace Ecap {
+namespace Ecap
+{
 
 /* The eCAP service representative maintains information about a single eCAP
-   service that Squid communicates with. One eCAP module may register many 
+   service that Squid communicates with. One eCAP module may register many
    eCAP services. */
 
 class ServiceRep : public Adaptation::Service

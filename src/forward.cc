@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -268,7 +268,7 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
 
         /* If we need to transparently proxy the request
          * then we need the client source protocol, address and port */
-        if(request->flags.spoof_client_ip) {
+        if (request->flags.spoof_client_ip) {
             fwd->src = request->client_addr;
             // AYJ: do we need to pass on the transparent flag also?
         }
@@ -409,7 +409,7 @@ fwdPeerClosed(int fd, void *data)
 
 /*
  * FwdState::checkRetry
- * 
+ *
  * Return TRUE if the request SHOULD be retried.  This method is
  * called when the HTTP connection fails, or when the connection
  * is closed before server-side read the end of HTTP headers.
@@ -501,7 +501,8 @@ FwdState::serverClosed(int fd)
 }
 
 void
-FwdState::retryOrBail() {
+FwdState::retryOrBail()
+{
     if (!self) { // we have aborted before the server called us back
         debugs(17, 5, HERE << "not retrying because of earlier abort");
         // we will be destroyed when the server clears its Pointer to us
@@ -549,7 +550,7 @@ void
 FwdState::handleUnregisteredServerEnd()
 {
     debugs(17, 2, "handleUnregisteredServerEnd: self=" << self <<
-        " err=" << err << ' ' << entry->url());
+           " err=" << err << ' ' << entry->url());
     assert(server_fd < 0);
     retryOrBail();
 }
@@ -576,9 +577,9 @@ FwdState::negotiateSSL(int fd)
             return;
 
         default:
-             debugs(81, 1, "fwdNegotiateSSL: Error negotiating SSL connection on FD " << fd << 
-                    ": " << ERR_error_string(ERR_get_error(), NULL) << " (" << ssl_error << 
-                    "/" << ret << "/" << errno << ")");
+            debugs(81, 1, "fwdNegotiateSSL: Error negotiating SSL connection on FD " << fd <<
+                   ": " << ERR_error_string(ERR_get_error(), NULL) << " (" << ssl_error <<
+                   "/" << ret << "/" << errno << ")");
             ErrorState *anErr = errorCon(ERR_SECURE_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
 #ifdef EPROTO
 
@@ -750,7 +751,7 @@ FwdState::connectTimeout(int fd)
         anErr->xerrno = ETIMEDOUT;
         fail(anErr);
         /*
-         * This marks the peer DOWN ... 
+         * This marks the peer DOWN ...
          */
 
         if (servers)
@@ -807,11 +808,11 @@ FwdState::connectStart()
 
     request->flags.pinned = 0;
     if (fs->code == PINNED) {
-	ConnStateData *pinned_connection = request->pinnedConnection();
-	assert(pinned_connection);
+        ConnStateData *pinned_connection = request->pinnedConnection();
+        assert(pinned_connection);
         fd = pinned_connection->validatePinnedConnection(request, fs->_peer);
         if (fd >= 0) {
-	    pinned_connection->unpinConnection();
+            pinned_connection->unpinConnection();
 #if 0
             if (!fs->_peer)
                 fs->code = HIER_DIRECT;
@@ -825,13 +826,13 @@ FwdState::connectStart()
             connectDone(fd, COMM_OK, 0);
             return;
         }
-       /* Failure. Fall back on next path */
+        /* Failure. Fall back on next path */
         request->releasePinnedConnection();
         servers = fs->next;
         fwdServerFree(fs);
         connectStart();
         return;
-    }	
+    }
 
     fd = fwdPconnPool->pop(host, port, domain, client_addr, checkRetriable());
     if (fd >= 0) {
@@ -905,7 +906,7 @@ FwdState::connectStart()
     if (!fs->_peer && request->flags.spoof_client_ip) {
         // try to set the outgoing address using TPROXY v2
         // if it fails we abort any further TPROXY actions on this connection
-        if(IPInterceptor.SetTproxy2OutgoingAddr(int fd, const IPAddress &src) == -1) {
+        if (IPInterceptor.SetTproxy2OutgoingAddr(int fd, const IPAddress &src) == -1) {
             request->flags.spoof_client_ip = 0;
         }
     }
@@ -969,46 +970,37 @@ FwdState::dispatch()
      * remote server's TOS in the response to the client in case of a MISS.
      */
     fde * clientFde = &fd_table[client_fd];
-    if (clientFde)
-    {
-    	int tos = 1;
-    	int tos_len = sizeof(tos);
-    	clientFde->upstreamTOS = 0;
-        if (setsockopt(server_fd,SOL_IP,IP_RECVTOS,&tos,tos_len)==0)
-        {
-           unsigned char buf[512];
-           int len = 512;
-           if (getsockopt(server_fd,SOL_IP,IP_PKTOPTIONS,buf,(socklen_t*)&len) == 0)
-           {
-               /* Parse the PKTOPTIONS structure to locate the TOS data message
-                * prepared in the kernel by the ZPH incoming TCP TOS preserving
-                * patch.
-                */
-        	   unsigned char * p = buf;
-               while (p-buf < len)
-               {
-                  struct cmsghdr *o = (struct cmsghdr*)p;
-                  if (o->cmsg_len<=0)
-                     break;
-    
-                  if (o->cmsg_level == SOL_IP && o->cmsg_type == IP_TOS)
-                  {
-                	  clientFde->upstreamTOS = (unsigned char)(*(int*)CMSG_DATA(o));
-                	  break;
-                  }
-                  p += CMSG_LEN(o->cmsg_len);
-               }
-           }
-           else
-           {
-               debugs(33, 1, "ZPH: error in getsockopt(IP_PKTOPTIONS) on FD "<<server_fd<<" "<<xstrerror());
-           }
+    if (clientFde) {
+        int tos = 1;
+        int tos_len = sizeof(tos);
+        clientFde->upstreamTOS = 0;
+        if (setsockopt(server_fd,SOL_IP,IP_RECVTOS,&tos,tos_len)==0) {
+            unsigned char buf[512];
+            int len = 512;
+            if (getsockopt(server_fd,SOL_IP,IP_PKTOPTIONS,buf,(socklen_t*)&len) == 0) {
+                /* Parse the PKTOPTIONS structure to locate the TOS data message
+                 * prepared in the kernel by the ZPH incoming TCP TOS preserving
+                 * patch.
+                 */
+                unsigned char * p = buf;
+                while (p-buf < len) {
+                    struct cmsghdr *o = (struct cmsghdr*)p;
+                    if (o->cmsg_len<=0)
+                        break;
+
+                    if (o->cmsg_level == SOL_IP && o->cmsg_type == IP_TOS) {
+                        clientFde->upstreamTOS = (unsigned char)(*(int*)CMSG_DATA(o));
+                        break;
+                    }
+                    p += CMSG_LEN(o->cmsg_len);
+                }
+            } else {
+                debugs(33, 1, "ZPH: error in getsockopt(IP_PKTOPTIONS) on FD "<<server_fd<<" "<<xstrerror());
+            }
+        } else {
+            debugs(33, 1, "ZPH: error in setsockopt(IP_RECVTOS) on FD "<<server_fd<<" "<<xstrerror());
         }
-        else
-        {
-        	debugs(33, 1, "ZPH: error in setsockopt(IP_RECVTOS) on FD "<<server_fd<<" "<<xstrerror());
-        }
-    }    
+    }
 #endif
 
     if (servers && (p = servers->_peer)) {
@@ -1214,7 +1206,7 @@ void
 FwdState::RegisterWithCacheManager(void)
 {
     CacheManager::GetInstance()->
-         registerAction("forward", "Request Forwarding Statistics", fwdStats, 0, 1);
+    registerAction("forward", "Request Forwarding Statistics", fwdStats, 0, 1);
 }
 
 void
@@ -1244,6 +1236,21 @@ FwdState::serversFree(FwdServer ** FSVR)
     }
 }
 
+/** From Comment #5 by Henrik Nordstrom made at
+http://www.squid-cache.org/bugs/show_bug.cgi?id=2391 on 2008-09-19
+
+updateHierarchyInfo should be called each time a new path has been
+selected or when more information about the path is available (i.e. the
+server IP), and when it's called it needs to be given reasonable
+arguments describing the now selected path..
+
+It does not matter from a functional perspective if it gets called a few
+times more than what is really needed, but calling it too often may
+obviously hurt performance.
+
+\todo Current code looks fine, even if using !fs->_peer as condition
+instead of HIER_DIRECT would be clearer.
+*/
 // updates HierarchyLogEntry, guessing nextHop and its format
 void
 FwdState::updateHierarchyInfo()
@@ -1289,8 +1296,7 @@ aclMapAddr(acl_address * head, ACLChecklist * ch)
 
     IPAddress addr;
 
-    for (l = head; l; l = l->next)
-    {
+    for (l = head; l; l = l->next) {
         if (ch->matchAclListFast(l->aclList))
             return l->addr;
     }
@@ -1324,8 +1330,7 @@ getOutgoingAddr(HttpRequest * request)
     if (request && request->flags.spoof_client_ip)
         return request->client_addr;
 
-    if (request)
-    {
+    if (request) {
         ch.src_addr = request->client_addr;
         ch.my_addr = request->my_addr;
         ch.request = HTTPMSGLOCK(request);

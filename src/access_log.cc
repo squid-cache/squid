@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -61,38 +61,36 @@ static struct sockaddr_in mcast_miss_to;
 static void mcast_encode(unsigned int *, size_t, const unsigned int *);
 #endif
 
-const char *log_tags[] =
-    {
-        "NONE",
-        "TCP_HIT",
-        "TCP_MISS",
-        "TCP_REFRESH_UNMODIFIED",
-        "TCP_REFRESH_FAIL",
-        "TCP_REFRESH_MODIFIED",
-        "TCP_CLIENT_REFRESH_MISS",
-        "TCP_IMS_HIT",
-        "TCP_SWAPFAIL_MISS",
-        "TCP_NEGATIVE_HIT",
-        "TCP_MEM_HIT",
-        "TCP_DENIED",
-        "TCP_DENIED_REPLY",
-        "TCP_OFFLINE_HIT",
+const char *log_tags[] = {
+    "NONE",
+    "TCP_HIT",
+    "TCP_MISS",
+    "TCP_REFRESH_UNMODIFIED",
+    "TCP_REFRESH_FAIL",
+    "TCP_REFRESH_MODIFIED",
+    "TCP_CLIENT_REFRESH_MISS",
+    "TCP_IMS_HIT",
+    "TCP_SWAPFAIL_MISS",
+    "TCP_NEGATIVE_HIT",
+    "TCP_MEM_HIT",
+    "TCP_DENIED",
+    "TCP_DENIED_REPLY",
+    "TCP_OFFLINE_HIT",
 #if LOG_TCP_REDIRECTS
-        "TCP_REDIRECT",
+    "TCP_REDIRECT",
 #endif
-        "UDP_HIT",
-        "UDP_MISS",
-        "UDP_DENIED",
-        "UDP_INVALID",
-        "UDP_MISS_NOFETCH",
-        "ICP_QUERY",
-        "LOG_TYPE_MAX"
-    };
+    "UDP_HIT",
+    "UDP_MISS",
+    "UDP_DENIED",
+    "UDP_INVALID",
+    "UDP_MISS_NOFETCH",
+    "ICP_QUERY",
+    "LOG_TYPE_MAX"
+};
 
 #if FORW_VIA_DB
 
-typedef struct
-{
+typedef struct {
     hash_link hash;
     int n;
 } fvdb_entry;
@@ -148,7 +146,7 @@ log_quote(const char *header)
     buf = static_cast<char *>(xcalloc(1, (strlen(header) * 3) + 1));
     buf_cursor = buf;
     /*
-     * We escape: \x00-\x1F"#%;<>?{}|\\\\^~`\[\]\x7F-\xFF 
+     * We escape: \x00-\x1F"#%;<>?{}|\\\\^~`\[\]\x7F-\xFF
      * which is the default escape list for the CPAN Perl5 URI module
      * modulo the inclusion of space (x40) to make the raw logs a bit
      * more readable.
@@ -224,7 +222,7 @@ username_quote(const char *header)
     buf_cursor = buf;
     /*
      * We escape: space \x00-\x1F and space (0x40) and \x7F-\xFF
-     * to prevent garbage in the logs. CR and LF are also there just in case. 
+     * to prevent garbage in the logs. CR and LF are also there just in case.
      */
 
     while ((c = *(const unsigned char *) header++) != '\0') {
@@ -419,88 +417,86 @@ public:
     logformat_token *next;	/* todo: move from linked list to array */
 };
 
-struct logformat_token_table_entry
-{
+struct logformat_token_table_entry {
     const char *config;
     logformat_bcode_t token_type;
     int options;
 };
 
-struct logformat_token_table_entry logformat_token_table[] =
-    {
+struct logformat_token_table_entry logformat_token_table[] = {
 
-        {">a", LFT_CLIENT_IP_ADDRESS},
+    {">a", LFT_CLIENT_IP_ADDRESS},
 
-        { ">p", LFT_CLIENT_PORT},
-        {">A", LFT_CLIENT_FQDN},
+    { ">p", LFT_CLIENT_PORT},
+    {">A", LFT_CLIENT_FQDN},
 
-        /*{ "<a", LFT_SERVER_IP_ADDRESS }, */
-        /*{ "<p", LFT_SERVER_PORT }, */
-        {"<A", LFT_SERVER_IP_OR_PEER_NAME},
+    /*{ "<a", LFT_SERVER_IP_ADDRESS }, */
+    /*{ "<p", LFT_SERVER_PORT }, */
+    {"<A", LFT_SERVER_IP_OR_PEER_NAME},
 
-	/* {"oa", LFT_OUTGOING_IP}, */
-	/* {"ot", LFT_OUTGOING_TOS}, */
+    /* {"oa", LFT_OUTGOING_IP}, */
+    /* {"ot", LFT_OUTGOING_TOS}, */
 
-        {"la", LFT_LOCAL_IP},
-        {"lp", LFT_LOCAL_PORT},
-        /*{ "lA", LFT_LOCAL_NAME }, */
+    {"la", LFT_LOCAL_IP},
+    {"lp", LFT_LOCAL_PORT},
+    /*{ "lA", LFT_LOCAL_NAME }, */
 
-        {"ts", LFT_TIME_SECONDS_SINCE_EPOCH},
-        {"tu", LFT_TIME_SUBSECOND},
-        {"tl", LFT_TIME_LOCALTIME},
-        {"tg", LFT_TIME_GMT},
-        {"tr", LFT_TIME_TO_HANDLE_REQUEST},
+    {"ts", LFT_TIME_SECONDS_SINCE_EPOCH},
+    {"tu", LFT_TIME_SUBSECOND},
+    {"tl", LFT_TIME_LOCALTIME},
+    {"tg", LFT_TIME_GMT},
+    {"tr", LFT_TIME_TO_HANDLE_REQUEST},
 
-        {">h", LFT_REQUEST_HEADER},
-        {">h", LFT_REQUEST_ALL_HEADERS},
-        {"<h", LFT_REPLY_HEADER},
-        {"<h", LFT_REPLY_ALL_HEADERS},
+    {">h", LFT_REQUEST_HEADER},
+    {">h", LFT_REQUEST_ALL_HEADERS},
+    {"<h", LFT_REPLY_HEADER},
+    {"<h", LFT_REPLY_ALL_HEADERS},
 
-        {"un", LFT_USER_NAME},
-        {"ul", LFT_USER_LOGIN},
-        /*{ "ur", LFT_USER_REALM }, */
-        /*{ "us", LFT_USER_SCHEME }, */
-        {"ui", LFT_USER_IDENT},
-        {"ue", LFT_USER_EXTERNAL},
+    {"un", LFT_USER_NAME},
+    {"ul", LFT_USER_LOGIN},
+    /*{ "ur", LFT_USER_REALM }, */
+    /*{ "us", LFT_USER_SCHEME }, */
+    {"ui", LFT_USER_IDENT},
+    {"ue", LFT_USER_EXTERNAL},
 
-        {"Hs", LFT_HTTP_CODE},
-        /*{ "Ht", LFT_HTTP_STATUS }, */
+    {"Hs", LFT_HTTP_CODE},
+    /*{ "Ht", LFT_HTTP_STATUS }, */
 
-        {"Ss", LFT_SQUID_STATUS},
-        /*{ "Se", LFT_SQUID_ERROR }, */
-        {"Sh", LFT_SQUID_HIERARCHY},
+    {"Ss", LFT_SQUID_STATUS},
+    /*{ "Se", LFT_SQUID_ERROR }, */
+    {"Sh", LFT_SQUID_HIERARCHY},
 
-        {"mt", LFT_MIME_TYPE},
+    {"mt", LFT_MIME_TYPE},
 
-        {"rm", LFT_REQUEST_METHOD},
-        {"ru", LFT_REQUEST_URI},	/* doesn't include the query-string */
-        {"rp", LFT_REQUEST_URLPATH},	/* doesn't include the host */
-        /* { "rq", LFT_REQUEST_QUERY }, * /     / * the query-string, INCLUDING the leading ? */
-        {">v", LFT_REQUEST_VERSION},
-        {"rv", LFT_REQUEST_VERSION},
+    {"rm", LFT_REQUEST_METHOD},
+    {"ru", LFT_REQUEST_URI},	/* doesn't include the query-string */
+    {"rp", LFT_REQUEST_URLPATH},	/* doesn't include the host */
+    /* { "rq", LFT_REQUEST_QUERY }, * /     / * the query-string, INCLUDING the leading ? */
+    {">v", LFT_REQUEST_VERSION},
+    {"rv", LFT_REQUEST_VERSION},
 
-        { ">st", LFT_REQUEST_SIZE_TOTAL },
-        /*{ ">sl", LFT_REQUEST_SIZE_LINE }, * / / * the request line "GET ... " */
-        /*{ ">sh", LFT_REQUEST_SIZE_HEADERS }, */
-        /*{ ">sb", LFT_REQUEST_SIZE_BODY }, */
-        /*{ ">sB", LFT_REQUEST_SIZE_BODY_NO_TE }, */
+    { ">st", LFT_REQUEST_SIZE_TOTAL },
+    /*{ ">sl", LFT_REQUEST_SIZE_LINE }, * / / * the request line "GET ... " */
+    /*{ ">sh", LFT_REQUEST_SIZE_HEADERS }, */
+    /*{ ">sb", LFT_REQUEST_SIZE_BODY }, */
+    /*{ ">sB", LFT_REQUEST_SIZE_BODY_NO_TE }, */
 
-        {"<st", LFT_REPLY_SIZE_TOTAL},
-        {"<sH", LFT_REPLY_HIGHOFFSET},
-        {"<sS", LFT_REPLY_OBJECTSIZE},
-        /*{ "<sl", LFT_REPLY_SIZE_LINE }, * /   / * the reply line (protocol, code, text) */
-        /*{ "<sh", LFT_REPLY_SIZE_HEADERS }, */
-        /*{ "<sb", LFT_REPLY_SIZE_BODY }, */
-        /*{ "<sB", LFT_REPLY_SIZE_BODY_NO_TE }, */
+    {"<st", LFT_REPLY_SIZE_TOTAL},
+    {"<sH", LFT_REPLY_HIGHOFFSET},
+    {"<sS", LFT_REPLY_OBJECTSIZE},
+    /*{ "<sl", LFT_REPLY_SIZE_LINE }, * /   / * the reply line (protocol, code, text) */
+    /*{ "<sh", LFT_REPLY_SIZE_HEADERS }, */
+    /*{ "<sb", LFT_REPLY_SIZE_BODY }, */
+    /*{ "<sB", LFT_REPLY_SIZE_BODY_NO_TE }, */
 
-        {"et", LFT_TAG},
-        {"st", LFT_IO_SIZE_TOTAL},
-        {"ea", LFT_EXT_LOG},
+    {"et", LFT_TAG},
+    {"st", LFT_IO_SIZE_TOTAL},
+    {"ea", LFT_EXT_LOG},
 
-        {"%", LFT_PERCENT},
+    {"%", LFT_PERCENT},
 
-        {NULL, LFT_NONE}		/* this must be last */
-    };
+    {NULL, LFT_NONE}		/* this must be last */
+};
 
 static void
 accessLogCustom(AccessLogEntry * al, customlog * log)
@@ -551,11 +547,11 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             break;
 
         case LFT_CLIENT_PORT:
-	    if (al->request) {
-		outint = al->request->client_addr.GetPort();
-		doint = 1;
-	    }
-	    break;
+            if (al->request) {
+                outint = al->request->client_addr.GetPort();
+                doint = 1;
+            }
+            break;
 
             /* case LFT_SERVER_IP_ADDRESS: */
 
@@ -582,7 +578,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             break;
 
         case LFT_TIME_SECONDS_SINCE_EPOCH:
-	    // some platforms store time in 32-bit, some 64-bit...
+            // some platforms store time in 32-bit, some 64-bit...
             outoff = static_cast<int64_t>(current_time.tv_sec);
             dooff = 1;
             break;
@@ -596,25 +592,25 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
         case LFT_TIME_LOCALTIME:
 
         case LFT_TIME_GMT: {
-                const char *spec;
+            const char *spec;
 
-                struct tm *t;
-                spec = fmt->data.timespec;
+            struct tm *t;
+            spec = fmt->data.timespec;
 
-                if (!spec)
-                    spec = "%d/%b/%Y:%H:%M:%S";
+            if (!spec)
+                spec = "%d/%b/%Y:%H:%M:%S";
 
-                if (fmt->type == LFT_TIME_LOCALTIME)
-                    t = localtime(&squid_curtime);
-                else
-                    t = gmtime(&squid_curtime);
+            if (fmt->type == LFT_TIME_LOCALTIME)
+                t = localtime(&squid_curtime);
+            else
+                t = gmtime(&squid_curtime);
 
-                strftime(tmp, sizeof(tmp), spec, t);
+            strftime(tmp, sizeof(tmp), spec, t);
 
-                out = tmp;
-            }
+            out = tmp;
+        }
 
-            break;
+        break;
 
         case LFT_TIME_TO_HANDLE_REQUEST:
             outint = al->cache.msec;
@@ -764,10 +760,10 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             break;
 
         case LFT_REQUEST_URLPATH:
-	    if (al->request) {
-		out = al->request->urlpath.buf();
-		quote = 1;
-	    }
+            if (al->request) {
+                out = al->request->urlpath.buf();
+                quote = 1;
+            }
             break;
 
         case LFT_REQUEST_VERSION:
@@ -836,10 +832,10 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             break;
         }
 
-	if (dooff) {
+        if (dooff) {
             snprintf(tmp, sizeof(tmp), "%0*" PRId64, fmt->zero ? (int) fmt->width : 0, outoff);
             out = tmp;
-	    
+
         } else if (doint) {
             snprintf(tmp, sizeof(tmp), "%0*ld", fmt->zero ? (int) fmt->width : 0, outint);
             out = tmp;
@@ -931,7 +927,7 @@ accessLogGetNewLogFormatToken(logformat_token * lt, char *def, enum log_quote *q
         lt->data.string = cp;
 
         while (l > 0) {
-            switch(*cur) {
+            switch (*cur) {
 
             case '"':
 
@@ -1411,7 +1407,7 @@ accessLogLog(AccessLogEntry * al, ACLChecklist * checklist)
         xstrncpy(al->hier.host, dash_str, SQUIDHOSTNAMELEN);
 
     for (log = Config.Log.accesslogs; log; log = log->next) {
-        if(checklist && log->aclList && !checklist->matchAclListFast(log->aclList))
+        if (checklist && log->aclList && !checklist->matchAclListFast(log->aclList))
             continue;
 
         switch (log->type) {
@@ -1654,7 +1650,7 @@ fvdbRegisterWithCacheManager(void)
     CacheManager *manager=CacheManager::GetInstance();
     manager->registerAction("via_headers", "Via Request Headers", fvdbDumpVia, 0, 1);
     manager->registerAction("forw_headers", "X-Forwarded-For Request Headers",
-                           fvdbDumpForw, 0, 1);
+                            fvdbDumpForw, 0, 1);
 }
 
 static void

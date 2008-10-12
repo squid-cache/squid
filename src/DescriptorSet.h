@@ -9,7 +9,8 @@
     has constant overhead, which is smaller than log(n) of std::set.
 
 an unordered collection of unique descriptors with O(1) add/del/has ops */
-class DescriptorSet {
+class DescriptorSet
+{
 public:
     // for STL compatibility, should we decide to switch to std::set or similar
     typedef const int *const_iterator;
@@ -18,8 +19,10 @@ public:
     ~DescriptorSet();
 
     /// checks whether fd is in the set
-    bool has(const int fd) const { return 0 <= fd && fd < capacity_ &&
-        index_[fd] >= 0; }
+    bool has(const int fd) const {
+        return 0 <= fd && fd < capacity_ &&
+               index_[fd] >= 0;
+    }
 
     bool add(int fd); ///< adds if unique; returns true if added
     bool del(int fd); ///< deletes if there; returns true if deleted

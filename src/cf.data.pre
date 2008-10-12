@@ -737,7 +737,7 @@ DOC_END
 NAME: delay_pool_uses_indirect_client
 COMMENT: on|off
 TYPE: onoff
-IFDEF: FOLLOW_X_FORWARDED_FOR && DELAY_POOLS
+IFDEF: FOLLOW_X_FORWARDED_FOR DELAY_POOLS
 DEFAULT: on
 LOC: Config.onoff.delay_pool_uses_indirect_client
 DOC_START
@@ -968,6 +968,12 @@ DOC_START
 
 	If you set this parameter none (the default), there will be
 	no limit imposed.
+
+	Configuration Format is:
+		reply_body_max_size SIZE UNITS [acl ...]
+	ie.
+		reply_body_max_size 10 MB
+
 DOC_END
 
 COMMENT_START

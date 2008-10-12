@@ -8,8 +8,7 @@
 extern char **environ;
 
 /* aaaack but it's fast and const should make it shared text page. */
-const int pr2six[256] =
-{
+const int pr2six[256] = {
     64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
     64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 62, 64, 64, 64, 63,
     52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 64, 64, 64, 64, 64, 64, 64, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
@@ -35,7 +34,7 @@ uudecode(const char *bufcoded)
     /* Strip leading whitespace. */
 
     while (*bufcoded == ' ' || *bufcoded == '\t')
-	bufcoded++;
+        bufcoded++;
 
     /* Figure out how many characters are in the input buffer.
      * Allocate this many from the per-transaction pool for the result.
@@ -50,21 +49,21 @@ uudecode(const char *bufcoded)
     bufin = (const unsigned char *) bufcoded;
 
     while (nprbytes > 0) {
-	*(bufout++) =
-	    (unsigned char) (pr2six[*bufin] << 2 | pr2six[bufin[1]] >> 4);
-	*(bufout++) =
-	    (unsigned char) (pr2six[bufin[1]] << 4 | pr2six[bufin[2]] >> 2);
-	*(bufout++) =
-	    (unsigned char) (pr2six[bufin[2]] << 6 | pr2six[bufin[3]]);
-	bufin += 4;
-	nprbytes -= 4;
+        *(bufout++) =
+            (unsigned char) (pr2six[*bufin] << 2 | pr2six[bufin[1]] >> 4);
+        *(bufout++) =
+            (unsigned char) (pr2six[bufin[1]] << 4 | pr2six[bufin[2]] >> 2);
+        *(bufout++) =
+            (unsigned char) (pr2six[bufin[2]] << 6 | pr2six[bufin[3]]);
+        bufin += 4;
+        nprbytes -= 4;
     }
 
     if (nprbytes & 03) {
-	if (pr2six[bufin[-2]] > 63)
-	    nbytesdecoded -= 2;
-	else
-	    nbytesdecoded -= 1;
+        if (pr2six[bufin[-2]] > 63)
+            nbytesdecoded -= 2;
+        else
+            nbytesdecoded -= 1;
     }
     bufplain[nbytesdecoded] = '\0';
     return bufplain;

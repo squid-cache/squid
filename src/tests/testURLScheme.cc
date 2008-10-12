@@ -26,7 +26,7 @@ testHttpRequestMethod::testConstructCharStart()
 }
 
 /*
- * We can also parse precise ranges of characters 
+ * We can also parse precise ranges of characters
  */
 void
 testHttpRequestMethod::testConstructCharStartEnd()
@@ -113,7 +113,7 @@ testURLScheme::testConst_str()
 }
 
 /*
- * a URLScheme replaces protocol_t, so we should be able to test for equality on 
+ * a URLScheme replaces protocol_t, so we should be able to test for equality on
  * either the left or right hand side seamlessly.
  */
 void

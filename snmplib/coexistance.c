@@ -4,9 +4,9 @@
 /**********************************************************************
  *
  *           Copyright 1997 by Carnegie Mellon University
- * 
+ *
  *                       All Rights Reserved
- * 
+ *
  * Permission to use, copy, modify, and distribute this software and its
  * documentation for any purpose and without fee is hereby granted,
  * provided that the above copyright notice appear in all copies and that
@@ -14,7 +14,7 @@
  * supporting documentation, and that the name of CMU not be
  * used in advertising or publicity pertaining to distribution of the
  * software without specific, written prior permission.
- * 
+ *
  * CMU DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
  * ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
  * CMU BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR
@@ -22,9 +22,9 @@
  * WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
- * 
+ *
  * Author: Ryan Troll <ryan+@andrew.cmu.edu>
- * 
+ *
  **********************************************************************/
 
 #include "config.h"
@@ -96,7 +96,7 @@
  *   V2 PDUs from an ** MANAGER ** to V1 PDUs for an ** AGENT **
  *
  * We will never convert V1 information from a manager into V2 PDUs.  V1
- * requests are always honored by V2 agents, and the responses will be 
+ * requests are always honored by V2 agents, and the responses will be
  * valid V1 responses.  (I think. XXXXX)
  *
  */
@@ -112,19 +112,19 @@ snmp_coexist_V2toV1(struct snmp_pdu *PDU)
 #ifdef SNMP_PDU_SET
     case SNMP_PDU_SET:
 #endif
-	return (1);
-	break;
+        return (1);
+        break;
 
     case SNMP_PDU_GETBULK:
-	PDU->non_repeaters = 0;
-	PDU->max_repetitions = 0;
-	PDU->command = SNMP_PDU_GETNEXT;
-	return (1);
-	break;
+        PDU->non_repeaters = 0;
+        PDU->max_repetitions = 0;
+        PDU->command = SNMP_PDU_GETNEXT;
+        return (1);
+        break;
 
     default:
-	snmplib_debug(2, "Unable to translate PDU %d to SNMPv1!\n", PDU->command);
-	snmp_set_api_error(SNMPERR_PDU_TRANSLATION);
-	return (0);
+        snmplib_debug(2, "Unable to translate PDU %d to SNMPv1!\n", PDU->command);
+        snmp_set_api_error(SNMPERR_PDU_TRANSLATION);
+        return (0);
     }
 }

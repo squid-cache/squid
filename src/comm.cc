@@ -701,10 +701,10 @@ comm_openex(int sock_type,
          * limits the number of simultaneous clients */
 
         if (limitError(errno)) {
-            debugs(50, 1, "comm_open: socket failure: " << xstrerror());
+            debugs(50, DBG_IMPORTANT, "comm_open: socket failure: " << xstrerror());
             fdAdjustReserved();
         } else {
-            debugs(50, 0, "comm_open: socket failure: " << xstrerror());
+            debugs(50, DBG_CRITICAL, "comm_open: socket failure: " << xstrerror());
         }
 
         addr.FreeAddrInfo(AI);
@@ -965,7 +965,7 @@ ConnectStateData::commResetFD()
     nul.FreeAddrInfo(AI);
 
     if (fd2 < 0) {
-        debugs(5, 0, HERE << "socket: " << xstrerror());
+        debugs(5, DBG_CRITICAL, HERE << "WARNING: FD " << fd2 << " socket failed to allocate: " << xstrerror());
 
         if (ENFILE == errno || EMFILE == errno)
             fdAdjustReserved();
@@ -982,7 +982,7 @@ ConnectStateData::commResetFD()
 #endif
 
     if (dup2(fd2, fd) < 0) {
-        debugs(5, 0, HERE << "dup2: " << xstrerror());
+        debugs(5, DBG_CRITICAL, HERE << "WARNING: dup2(FD " << fd2 << ", FD " << fd << ") failed: " << xstrerror());
 
         if (ENFILE == errno || EMFILE == errno)
             fdAdjustReserved();

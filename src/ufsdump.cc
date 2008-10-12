@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -60,32 +60,30 @@ eventAdd(const char *name, EVH * func, void *arg, double when, int, bool cbdata)
 #endif
 /* end stub functions */
 
-struct MetaStd{
+struct MetaStd {
     time_t timestamp;
-     time_t lastref;
-     time_t expires;
-     time_t lastmod;
-     size_t swap_file_sz;
-     u_short refcount;
-     u_short flags;
+    time_t lastref;
+    time_t expires;
+    time_t lastmod;
+    size_t swap_file_sz;
+    u_short refcount;
+    u_short flags;
 };
 
-struct MetaStdLfs{
-     time_t timestamp;
-     time_t lastref;
-     time_t expires;
-     time_t lastmod;
-     uint64_t swap_file_sz;
-     u_short refcount;
-     u_short flags;
+struct MetaStdLfs {
+    time_t timestamp;
+    time_t lastref;
+    time_t expires;
+    time_t lastmod;
+    uint64_t swap_file_sz;
+    u_short refcount;
+    u_short flags;
 };
 
-struct DumpStoreMeta : public unary_function<StoreMeta, void>
-{
-    DumpStoreMeta(){}
+struct DumpStoreMeta : public unary_function<StoreMeta, void> {
+    DumpStoreMeta() {}
 
-    void operator()(StoreMeta const &x)
-    {
+    void operator()(StoreMeta const &x) {
         switch (x.getType()) {
 
         case STORE_META_KEY:
@@ -93,17 +91,17 @@ struct DumpStoreMeta : public unary_function<StoreMeta, void>
             break;
 
         case STORE_META_STD:
-	    std::cout << "STD, Size:" << ((struct MetaStd*)x.value)->swap_file_sz << 
-		 " Flags: 0x" << std::hex << ((struct MetaStd*)x.value)->flags << std::dec <<
-		 " Refcount: " << ((struct MetaStd*)x.value)->refcount <<
-		 std::endl;
+            std::cout << "STD, Size:" << ((struct MetaStd*)x.value)->swap_file_sz <<
+                      " Flags: 0x" << std::hex << ((struct MetaStd*)x.value)->flags << std::dec <<
+                      " Refcount: " << ((struct MetaStd*)x.value)->refcount <<
+                      std::endl;
             break;
 
         case STORE_META_STD_LFS:
-	     std::cout << "STD_LFS, Size: " << ((struct MetaStdLfs*)x.value)->swap_file_sz <<
-		  " Flags: 0x" << std::hex << ((struct MetaStdLfs*)x.value)->flags << std::dec <<
-		  " Refcount: " << ((struct MetaStdLfs*)x.value)->refcount <<
-		  std::endl;
+            std::cout << "STD_LFS, Size: " << ((struct MetaStdLfs*)x.value)->swap_file_sz <<
+                      " Flags: 0x" << std::hex << ((struct MetaStdLfs*)x.value)->flags << std::dec <<
+                      " Refcount: " << ((struct MetaStdLfs*)x.value)->refcount <<
+                      std::endl;
             break;
 
         case STORE_META_URL:
@@ -112,8 +110,8 @@ struct DumpStoreMeta : public unary_function<StoreMeta, void>
             break;
 
         default:
-	     std::cout << "Unknown store meta type: " << (int)x.getType() <<
-		  " of length " << x.length << std::endl;
+            std::cout << "Unknown store meta type: " << (int)x.getType() <<
+                      " of length " << x.length << std::endl;
             break;
         }
     }
@@ -125,8 +123,7 @@ main(int argc, char *argv[])
     int fd = -1;
     StoreMeta *metadata = NULL;
 
-    try
-    {
+    try {
         if (argc != 2)
             throw std::runtime_error("No filename provided");
 
@@ -162,8 +159,7 @@ main(int argc, char *argv[])
 
 
         return 0;
-    } catch (std::runtime_error error)
-    {
+    } catch (std::runtime_error error) {
         std::cout << "Failed : " << error.what() << std::endl;
 
         if (fd >= 0)

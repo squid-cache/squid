@@ -11,7 +11,8 @@ class RefCount;
 template <class Item>
 class Vector;
 
-namespace Adaptation {
+namespace Adaptation
+{
 
 class Service;
 class ServiceConfig;

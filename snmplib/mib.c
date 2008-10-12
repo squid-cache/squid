@@ -4,13 +4,13 @@
 
                       All Rights Reserved
 
-Permission to use, copy, modify, and distribute this software and its 
-documentation for any purpose and without fee is hereby granted, 
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in 
+both that copyright notice and this permission notice appear in
 supporting documentation, and that the name of CMU not be
 used in advertising or publicity pertaining to distribution of the
-software without specific, written prior permission.  
+software without specific, written prior permission.
 
 CMU DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
 ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
@@ -84,8 +84,7 @@ SOFTWARE.
 
 static struct snmp_mib_tree *get_symbol(oid *objid, int objidlen, struct snmp_mib_tree *subtree, char *buf);
 
-oid RFC1066_MIB[] =
-{1, 3, 6, 1, 2, 1};
+oid RFC1066_MIB[] = {1, 3, 6, 1, 2, 1};
 unsigned char RFC1066_MIB_text[] = ".iso.org.dod.internet.mgmt.mib";
 struct snmp_mib_tree *Mib;
 
@@ -93,29 +92,28 @@ void
 init_mib(char *file)
 {
     if (Mib != NULL)
-	return;
+        return;
 
     if (file != NULL)
-	Mib = read_mib(file);
+        Mib = read_mib(file);
 }
 
 
 static struct snmp_mib_tree *
-find_rfc1066_mib(struct snmp_mib_tree *root)
-{
+            find_rfc1066_mib(struct snmp_mib_tree *root) {
     oid *op = RFC1066_MIB;
     struct snmp_mib_tree *tp;
     int len;
 
     for (len = sizeof(RFC1066_MIB) / sizeof(oid); len; len--, op++) {
-	for (tp = root; tp; tp = tp->next_peer) {
-	    if (tp->subid == *op) {
-		root = tp->child_list;
-		break;
-	    }
-	}
-	if (tp == NULL)
-	    return NULL;
+        for (tp = root; tp; tp = tp->next_peer) {
+            if (tp->subid == *op) {
+                root = tp->child_list;
+                break;
+            }
+        }
+        if (tp == NULL)
+            return NULL;
     }
     return root;
 }
@@ -126,24 +124,24 @@ lc_cmp(const char *s1, const char *s2)
     char c1, c2;
 
     while (*s1 && *s2) {
-	if (xisupper(*s1))
-	    c1 = xtolower(*s1);
-	else
-	    c1 = *s1;
-	if (xisupper(*s2))
-	    c2 = xtolower(*s2);
-	else
-	    c2 = *s2;
-	if (c1 != c2)
-	    return ((c1 - c2) > 0 ? 1 : -1);
-	s1++;
-	s2++;
+        if (xisupper(*s1))
+            c1 = xtolower(*s1);
+        else
+            c1 = *s1;
+        if (xisupper(*s2))
+            c2 = xtolower(*s2);
+        else
+            c2 = *s2;
+        if (c1 != c2)
+            return ((c1 - c2) > 0 ? 1 : -1);
+        s1++;
+        s2++;
     }
 
     if (*s1)
-	return -1;
+        return -1;
     if (*s2)
-	return 1;
+        return 1;
     return 0;
 }
 
@@ -159,100 +157,100 @@ parse_subtree(struct snmp_mib_tree *subtree, char *input, oid *output, int *out_
      * in a row, i.e. "..".
      */
     if ((*input == '\0') ||
-	(*input == '.'))
-	return (0);
+            (*input == '.'))
+        return (0);
 
     if (xisdigit(*input)) {
-	/*
-	 * Read the number, then try to find it in the subtree.
-	 */
-	while (xisdigit(*input)) {
-	    subid *= 10;
-	    subid += *input++ - '0';
-	}
-	for (tp = subtree; tp; tp = tp->next_peer) {
-	    if (tp->subid == subid)
-		goto found;
-	}
-	tp = NULL;
+        /*
+         * Read the number, then try to find it in the subtree.
+         */
+        while (xisdigit(*input)) {
+            subid *= 10;
+            subid += *input++ - '0';
+        }
+        for (tp = subtree; tp; tp = tp->next_peer) {
+            if (tp->subid == subid)
+                goto found;
+        }
+        tp = NULL;
     } else {
-	/*
-	 * Read the name into a buffer.
-	 */
-	while ((*input != '\0') &&
-	    (*input != '.')) {
-	    *to++ = *input++;
-	}
-	*to = '\0';
+        /*
+         * Read the name into a buffer.
+         */
+        while ((*input != '\0') &&
+                (*input != '.')) {
+            *to++ = *input++;
+        }
+        *to = '\0';
 
-	/*
-	 * Find the name in the subtree;
-	 */
-	for (tp = subtree; tp; tp = tp->next_peer) {
-	    if (lc_cmp(tp->label, buf) == 0) {
-		subid = tp->subid;
-		goto found;
-	    }
-	}
+        /*
+         * Find the name in the subtree;
+         */
+        for (tp = subtree; tp; tp = tp->next_peer) {
+            if (lc_cmp(tp->label, buf) == 0) {
+                subid = tp->subid;
+                goto found;
+            }
+        }
 
-	/*
-	 * If we didn't find the entry, punt...
-	 */
-	if (tp == NULL) {
-	    snmplib_debug(0, "sub-identifier not found: %s\n", buf);
-	    return (0);
-	}
+        /*
+         * If we didn't find the entry, punt...
+         */
+        if (tp == NULL) {
+            snmplib_debug(0, "sub-identifier not found: %s\n", buf);
+            return (0);
+        }
     }
 
-  found:
+found:
     if (subid > (u_int) MAX_SUBID) {
-	snmplib_debug(0, "sub-identifier too large: %s\n", buf);
-	return (0);
+        snmplib_debug(0, "sub-identifier too large: %s\n", buf);
+        return (0);
     }
     if ((*out_len)-- <= 0) {
-	snmplib_debug(0, "object identifier too long\n");
-	return (0);
+        snmplib_debug(0, "object identifier too long\n");
+        return (0);
     }
     *output++ = subid;
 
     if (*input != '.')
-	return (1);
+        return (1);
     if ((*out_len =
-	    parse_subtree(tp ? tp->child_list : NULL, ++input, output, out_len)) == 0)
-	return (0);
+                parse_subtree(tp ? tp->child_list : NULL, ++input, output, out_len)) == 0)
+        return (0);
     return (++*out_len);
 }
 
 int
 read_objid(input, output, out_len)
-     char *input;
-     oid *output;
-     int *out_len;		/* number of subid's in "output" */
+char *input;
+oid *output;
+int *out_len;		/* number of subid's in "output" */
 {
     struct snmp_mib_tree *root = Mib;
     oid *op = output;
     int i;
 
     if (*input == '.')
-	input++;
+        input++;
     else {
-	root = find_rfc1066_mib(root);
-	for (i = 0; i < sizeof(RFC1066_MIB) / sizeof(oid); i++) {
-	    if ((*out_len)-- > 0)
-		*output++ = RFC1066_MIB[i];
-	    else {
-		snmplib_debug(0, "object identifier too long\n");
-		return (0);
-	    }
-	}
+        root = find_rfc1066_mib(root);
+        for (i = 0; i < sizeof(RFC1066_MIB) / sizeof(oid); i++) {
+            if ((*out_len)-- > 0)
+                *output++ = RFC1066_MIB[i];
+            else {
+                snmplib_debug(0, "object identifier too long\n");
+                return (0);
+            }
+        }
     }
 
     if (root == NULL) {
-	snmplib_debug(0, "Mib not initialized.\n");
-	return 0;
+        snmplib_debug(0, "Mib not initialized.\n");
+        return 0;
     }
     if ((*out_len = parse_subtree(root, input, output, out_len)) == 0)
-	return (0);
+        return (0);
     *out_len += output - op;
 
     return (1);
@@ -260,8 +258,8 @@ read_objid(input, output, out_len)
 
 void
 print_objid(objid, objidlen)
-     oid *objid;
-     int objidlen;		/* number of subidentifiers */
+oid *objid;
+int objidlen;		/* number of subidentifiers */
 {
     char buf[256];
     struct snmp_mib_tree *subtree = Mib;
@@ -274,9 +272,9 @@ print_objid(objid, objidlen)
 
 void
 sprint_objid(buf, objid, objidlen)
-     char *buf;
-     oid *objid;
-     int objidlen;		/* number of subidentifiers */
+char *buf;
+oid *objid;
+int objidlen;		/* number of subidentifiers */
 {
     struct snmp_mib_tree *subtree = Mib;
 
@@ -285,42 +283,42 @@ sprint_objid(buf, objid, objidlen)
 }
 
 static struct snmp_mib_tree *
-get_symbol(objid, objidlen, subtree, buf)
-     oid *objid;
-     int objidlen;
-     struct snmp_mib_tree *subtree;
-     char *buf;
+            get_symbol(objid, objidlen, subtree, buf)
+            oid *objid;
+int objidlen;
+struct snmp_mib_tree *subtree;
+char *buf;
 {
     struct snmp_mib_tree *return_tree = NULL;
 
     for (; subtree; subtree = subtree->next_peer) {
-	if (*objid == subtree->subid) {
-	    strcpy(buf, subtree->label);
-	    goto found;
-	}
+        if (*objid == subtree->subid) {
+            strcpy(buf, subtree->label);
+            goto found;
+        }
     }
 
     /* subtree not found */
     while (objidlen--) {	/* output rest of name, uninterpreted */
-	sprintf(buf, "%u.", *objid++);
-	while (*buf)
-	    buf++;
+        sprintf(buf, "%u.", *objid++);
+        while (*buf)
+            buf++;
     }
     *(buf - 1) = '\0';		/* remove trailing dot */
     return NULL;
 
-  found:
+found:
     if (objidlen > 1) {
-	while (*buf)
-	    buf++;
-	*buf++ = '.';
-	*buf = '\0';
-	return_tree = get_symbol(objid + 1, objidlen - 1, subtree->child_list, buf);
+        while (*buf)
+            buf++;
+        *buf++ = '.';
+        *buf = '\0';
+        return_tree = get_symbol(objid + 1, objidlen - 1, subtree->child_list, buf);
     }
     if (return_tree != NULL)
-	return return_tree;
+        return return_tree;
     else
-	return subtree;
+        return subtree;
 }
 
 void
@@ -329,5 +327,5 @@ print_oid_nums(oid * O, int len)
     int x;
 
     for (x = 0; x < len; x++)
-	printf(".%u", O[x]);
+        printf(".%u", O[x]);
 }

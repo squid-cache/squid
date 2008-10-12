@@ -19,7 +19,7 @@
  *	in advertising or publicity pertaining to distribution of the
  *	program without specific prior permission, and notice be given
  *	in supporting documentation that copying and distribution is by
- *	permission of Livingston Enterprises, Inc.   
+ *	permission of Livingston Enterprises, Inc.
  *
  *	Livingston Enterprises, Inc. makes no representations about
  *	the suitability of this software for any purpose.  It is
@@ -33,8 +33,8 @@
  */
 
 char util_sccsid[] =
-"@(#)util.c	1.5 Copyright 1992 Livingston Enterprises Inc\n"
-"		2.1 Copyright 1997 Cistron Internet Services B.V.";
+    "@(#)util.c	1.5 Copyright 1992 Livingston Enterprises Inc\n"
+    "		2.1 Copyright 1997 Cistron Internet Services B.V.";
 
 #include	"config.h"
 
@@ -81,33 +81,30 @@ char util_sccsid[] =
  */
 static int good_ipaddr(char *addr)
 {
-	int	dot_count;
-	int	digit_count;
+    int	dot_count;
+    int	digit_count;
 
-	dot_count = 0;
-	digit_count = 0;
-	while(*addr != '\0' && *addr != ' ') {
-		if(*addr == '.') {
-			dot_count++;
-			digit_count = 0;
-		}
-		else if(!isdigit(*addr)) {
-			dot_count = 5;
-		}
-		else {
-			digit_count++;
-			if(digit_count > 3) {
-				dot_count = 5;
-			}
-		}
-		addr++;
-	}
-	if(dot_count != 3) {
-		return(-1);
-	}
-	else {
-		return(0);
-	}
+    dot_count = 0;
+    digit_count = 0;
+    while (*addr != '\0' && *addr != ' ') {
+        if (*addr == '.') {
+            dot_count++;
+            digit_count = 0;
+        } else if (!isdigit(*addr)) {
+            dot_count = 5;
+        } else {
+            digit_count++;
+            if (digit_count > 3) {
+                dot_count = 5;
+            }
+        }
+        addr++;
+    }
+    if (dot_count != 3) {
+        return(-1);
+    } else {
+        return(0);
+    }
 }
 
 /*
@@ -116,37 +113,37 @@ static int good_ipaddr(char *addr)
  */
 static u_int32_t ipstr2long(char *ip_str)
 {
-	char	buf[6];
-	char	*ptr;
-	int	i;
-	int	count;
-	u_int32_t	ipaddr;
-	int	cur_byte;
+    char	buf[6];
+    char	*ptr;
+    int	i;
+    int	count;
+    u_int32_t	ipaddr;
+    int	cur_byte;
 
-	ipaddr = (u_int32_t)0;
-	for(i = 0;i < 4;i++) {
-		ptr = buf;
-		count = 0;
-		*ptr = '\0';
-		while(*ip_str != '.' && *ip_str != '\0' && count < 4) {
-			if(!isdigit(*ip_str)) {
-				return((u_int32_t)0);
-			}
-			*ptr++ = *ip_str++;
-			count++;
-		}
-		if(count >= 4 || count == 0) {
-			return((u_int32_t)0);
-		}
-		*ptr = '\0';
-		cur_byte = atoi(buf);
-		if(cur_byte < 0 || cur_byte > 255) {
-			return((u_int32_t)0);
-		}
-		ip_str++;
-		ipaddr = ipaddr << 8 | (u_int32_t)cur_byte;
-	}
-	return(ipaddr);
+    ipaddr = (u_int32_t)0;
+    for (i = 0;i < 4;i++) {
+        ptr = buf;
+        count = 0;
+        *ptr = '\0';
+        while (*ip_str != '.' && *ip_str != '\0' && count < 4) {
+            if (!isdigit(*ip_str)) {
+                return((u_int32_t)0);
+            }
+            *ptr++ = *ip_str++;
+            count++;
+        }
+        if (count >= 4 || count == 0) {
+            return((u_int32_t)0);
+        }
+        *ptr = '\0';
+        cur_byte = atoi(buf);
+        if (cur_byte < 0 || cur_byte > 255) {
+            return((u_int32_t)0);
+        }
+        ip_str++;
+        ipaddr = ipaddr << 8 | (u_int32_t)cur_byte;
+    }
+    return(ipaddr);
 }
 
 /*
@@ -155,23 +152,22 @@ static u_int32_t ipstr2long(char *ip_str)
  */
 u_int32_t get_ipaddr(char *host)
 {
-	struct hostent	*hp;
+    struct hostent	*hp;
 
-	if(good_ipaddr(host) == 0) {
-		return(ipstr2long(host));
-	}
-	else if((hp = gethostbyname(host)) == (struct hostent *)NULL) {
-		return((u_int32_t)0);
-	}
-	return(ntohl(*(u_int32_t *)hp->h_addr));
+    if (good_ipaddr(host) == 0) {
+        return(ipstr2long(host));
+    } else if ((hp = gethostbyname(host)) == (struct hostent *)NULL) {
+        return((u_int32_t)0);
+    }
+    return(ntohl(*(u_int32_t *)hp->h_addr));
 }
 
 
 void md5_calc(unsigned char *output, unsigned char *input, unsigned int inlen)
 {
-	SquidMD5_CTX	context;
+    SquidMD5_CTX	context;
 
-	SquidMD5Init(&context);
-	SquidMD5Update(&context, input, inlen);
-	SquidMD5Final(output, &context);
+    SquidMD5Init(&context);
+    SquidMD5Update(&context, input, inlen);
+    SquidMD5Final(output, &context);
 }

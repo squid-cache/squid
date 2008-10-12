@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -79,7 +79,7 @@ static int nwritefds;
  * of incoming ICP, then we need to check these sockets more than
  * if we just have HTTP.
  *
- * The variables 'incoming_icp_interval' and 'incoming_http_interval' 
+ * The variables 'incoming_icp_interval' and 'incoming_http_interval'
  * determine how many normal I/O events to process before checking
  * incoming sockets again.  Note we store the incoming_interval
  * multipled by a factor of (2^INCOMING_FACTOR) to have some
@@ -100,7 +100,7 @@ static int nwritefds;
  *  incoming_interval = incoming_interval + target_average - number_of_events_processed
  *
  * There are separate incoming_interval counters for both HTTP and ICP events
- * 
+ *
  * You can see the current values of the incoming_interval's, as well as
  * a histogram of 'incoming_events' by asking the cache manager
  * for 'comm_incoming', e.g.:
@@ -680,9 +680,9 @@ static void
 commSelectRegisterWithCacheManager(void)
 {
     CacheManager::GetInstance()->
-            registerAction("comm_select_incoming",
-                           "comm_incoming() stats",
-                           commIncomingStats, 0, 1);
+    registerAction("comm_select_incoming",
+                   "comm_incoming() stats",
+                   commIncomingStats, 0, 1);
 }
 
 void
@@ -704,7 +704,7 @@ comm_select_init(void)
  * and the server side of a cache fetch simultaneoulsy abort the
  * connection.  While I haven't really studied the code to figure out how
  * it happens, the snippet below may prevent the cache from exitting:
- * 
+ *
  * Call this from where the select loop fails.
  */
 static int
@@ -754,7 +754,7 @@ examine_select(fd_set * readfds, fd_set * writefds)
             commCallCloseHandlers(fd);
         } else if (F->timeoutHandler != NULL) {
             debugs(5, 0, "examine_select: Calling Timeout Handler");
-	    ScheduleCallHere(F->timeoutHandler);
+            ScheduleCallHere(F->timeoutHandler);
         }
 
         F->closeHandler = NULL;

@@ -295,38 +295,38 @@ testIPAddress::testBooleans()
     valLow.s_addr  = htonl(0xC0A8640C);
     valHigh.s_addr = htonl(0xC0A8640F);
 
-   /* test equality */
-   lhsIPA = valLow;
-   rhsIPA = valLow;
-   CPPUNIT_ASSERT( lhsIPA.matchIPAddr(rhsIPA) == 0 );
-   CPPUNIT_ASSERT(  ( lhsIPA == rhsIPA ) );
-   CPPUNIT_ASSERT( !( lhsIPA != rhsIPA ) );
-   CPPUNIT_ASSERT(  ( lhsIPA >= rhsIPA ) );
-   CPPUNIT_ASSERT( !( lhsIPA >  rhsIPA ) );
-   CPPUNIT_ASSERT(  ( lhsIPA <= rhsIPA ) );
-   CPPUNIT_ASSERT( !( lhsIPA <  rhsIPA ) );
+    /* test equality */
+    lhsIPA = valLow;
+    rhsIPA = valLow;
+    CPPUNIT_ASSERT( lhsIPA.matchIPAddr(rhsIPA) == 0 );
+    CPPUNIT_ASSERT(  ( lhsIPA == rhsIPA ) );
+    CPPUNIT_ASSERT( !( lhsIPA != rhsIPA ) );
+    CPPUNIT_ASSERT(  ( lhsIPA >= rhsIPA ) );
+    CPPUNIT_ASSERT( !( lhsIPA >  rhsIPA ) );
+    CPPUNIT_ASSERT(  ( lhsIPA <= rhsIPA ) );
+    CPPUNIT_ASSERT( !( lhsIPA <  rhsIPA ) );
 
-   /* test inequality (less than) */
-   lhsIPA = valLow;
-   rhsIPA = valHigh;
-   CPPUNIT_ASSERT( lhsIPA.matchIPAddr(rhsIPA) < 0 );
-   CPPUNIT_ASSERT( !( lhsIPA == rhsIPA ) );
-   CPPUNIT_ASSERT(  ( lhsIPA != rhsIPA ) );
-   CPPUNIT_ASSERT( !( lhsIPA >= rhsIPA ) );
-   CPPUNIT_ASSERT( !( lhsIPA >  rhsIPA ) );
-   CPPUNIT_ASSERT(  ( lhsIPA <= rhsIPA ) );
-   CPPUNIT_ASSERT(  ( lhsIPA <  rhsIPA ) );
+    /* test inequality (less than) */
+    lhsIPA = valLow;
+    rhsIPA = valHigh;
+    CPPUNIT_ASSERT( lhsIPA.matchIPAddr(rhsIPA) < 0 );
+    CPPUNIT_ASSERT( !( lhsIPA == rhsIPA ) );
+    CPPUNIT_ASSERT(  ( lhsIPA != rhsIPA ) );
+    CPPUNIT_ASSERT( !( lhsIPA >= rhsIPA ) );
+    CPPUNIT_ASSERT( !( lhsIPA >  rhsIPA ) );
+    CPPUNIT_ASSERT(  ( lhsIPA <= rhsIPA ) );
+    CPPUNIT_ASSERT(  ( lhsIPA <  rhsIPA ) );
 
-   /* test inequality (greater than) */
-   lhsIPA = valHigh;
-   rhsIPA = valLow;
-   CPPUNIT_ASSERT( lhsIPA.matchIPAddr(rhsIPA) > 0 );
-   CPPUNIT_ASSERT( !( lhsIPA == rhsIPA ) );
-   CPPUNIT_ASSERT(  ( lhsIPA != rhsIPA ) );
-   CPPUNIT_ASSERT(  ( lhsIPA >= rhsIPA ) );
-   CPPUNIT_ASSERT(  ( lhsIPA >  rhsIPA ) );
-   CPPUNIT_ASSERT( !( lhsIPA <= rhsIPA ) );
-   CPPUNIT_ASSERT( !( lhsIPA <  rhsIPA ) );
+    /* test inequality (greater than) */
+    lhsIPA = valHigh;
+    rhsIPA = valLow;
+    CPPUNIT_ASSERT( lhsIPA.matchIPAddr(rhsIPA) > 0 );
+    CPPUNIT_ASSERT( !( lhsIPA == rhsIPA ) );
+    CPPUNIT_ASSERT(  ( lhsIPA != rhsIPA ) );
+    CPPUNIT_ASSERT(  ( lhsIPA >= rhsIPA ) );
+    CPPUNIT_ASSERT(  ( lhsIPA >  rhsIPA ) );
+    CPPUNIT_ASSERT( !( lhsIPA <= rhsIPA ) );
+    CPPUNIT_ASSERT( !( lhsIPA <  rhsIPA ) );
 
 }
 
@@ -365,7 +365,8 @@ testIPAddress::testNtoA()
 void
 testIPAddress::testToURL_fromInAddr()
 {
-    char buf[MAX_IPSTRLEN]; buf[0] = '\0';
+    char buf[MAX_IPSTRLEN];
+    buf[0] = '\0';
     struct in_addr inval;
 
     inval.s_addr = htonl(0xC0A8640C);
@@ -534,8 +535,8 @@ testIPAddress::testMasking()
     anIPA.SetNoAddr();
     maskIPA.SetNoAddr();
 
-      /* IPv6 masks MUST be CIDR representations. */
-      /* however as with IPv4 they can technically be represented as a bitmask */
+    /* IPv6 masks MUST be CIDR representations. */
+    /* however as with IPv4 they can technically be represented as a bitmask */
     maskIPA = "ffff:ffff:fff0::";
     CPPUNIT_ASSERT( !maskIPA.IsAnyAddr() );
     CPPUNIT_ASSERT( !maskIPA.IsNoAddr() );
@@ -546,7 +547,7 @@ testIPAddress::testMasking()
     anIPA.SetNoAddr();
     maskIPA.SetNoAddr();
 
-      /* IPv4 masks represented in IPv6 as IPv4 bitmasks. */
+    /* IPv4 masks represented in IPv6 as IPv4 bitmasks. */
     maskIPA = "::ffff:ffff:f000";
     CPPUNIT_ASSERT( !maskIPA.IsAnyAddr() );
     CPPUNIT_ASSERT( !maskIPA.IsNoAddr() );
@@ -584,11 +585,11 @@ testIPAddress::testAddrInfo()
     unsigned int *p;
     p = (unsigned int*)expect;
     printf("\nSYS-ADDRINFO: %x %x %x %x %x %x ",
-		  p[0],p[1],p[2],p[3],p[4],p[5] );
+           p[0],p[1],p[2],p[3],p[4],p[5] );
 
     p = (unsigned int*)ipval;
     printf("\nSQD-ADDRINFO: %x %x %x %x %x %x ",
-		  p[0],p[1],p[2],p[3],p[4],p[5] );
+           p[0],p[1],p[2],p[3],p[4],p[5] );
     printf("\n");
 
     // check the addrinfo object core. (BUT not the two ptrs at the tail)
@@ -621,7 +622,7 @@ testIPAddress::testBugNullingDisplay()
     IPAddress anIPA = "192.168.100.12";
 
 
-        /* test stored values */
+    /* test stored values */
     CPPUNIT_ASSERT( !anIPA.IsAnyAddr() );
     CPPUNIT_ASSERT( !anIPA.IsNoAddr() );
     CPPUNIT_ASSERT( anIPA.IsIPv4() );
@@ -632,10 +633,10 @@ testIPAddress::testBugNullingDisplay()
     CPPUNIT_ASSERT( memcmp( &expectval, &outval, sizeof(struct in_addr)) == 0 );
 
 
-        /* POKE NtoA display function to see what it is doing */
+    /* POKE NtoA display function to see what it is doing */
     anIPA.NtoA(ntoabuf,MAX_IPSTRLEN);
     CPPUNIT_ASSERT( !anIPA.IsAnyAddr() );
-        /* test stored values */
+    /* test stored values */
     CPPUNIT_ASSERT( !anIPA.IsAnyAddr() );
     CPPUNIT_ASSERT( !anIPA.IsNoAddr() );
     CPPUNIT_ASSERT( anIPA.IsIPv4() );
@@ -647,10 +648,10 @@ testIPAddress::testBugNullingDisplay()
 
 
 
-        /* POKE ToHostname display function to see what it is doing */
+    /* POKE ToHostname display function to see what it is doing */
     anIPA.ToHostname(hostbuf,MAX_IPSTRLEN);
     CPPUNIT_ASSERT( !anIPA.IsAnyAddr() );
-        /* test stored values */
+    /* test stored values */
     CPPUNIT_ASSERT( !anIPA.IsAnyAddr() );
     CPPUNIT_ASSERT( !anIPA.IsNoAddr() );
     CPPUNIT_ASSERT( anIPA.IsIPv4() );
@@ -661,10 +662,10 @@ testIPAddress::testBugNullingDisplay()
     CPPUNIT_ASSERT( memcmp( &expectval, &outval, sizeof(struct in_addr)) == 0 );
 
 
-        /* POKE ToURL display function to see what it is doing */
+    /* POKE ToURL display function to see what it is doing */
     anIPA.ToURL(urlbuf,MAX_IPSTRLEN);
     CPPUNIT_ASSERT( !anIPA.IsAnyAddr() );
-        /* test stored values */
+    /* test stored values */
     CPPUNIT_ASSERT( !anIPA.IsAnyAddr() );
     CPPUNIT_ASSERT( !anIPA.IsNoAddr() );
     CPPUNIT_ASSERT( anIPA.IsIPv4() );

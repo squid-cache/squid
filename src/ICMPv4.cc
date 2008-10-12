@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -42,30 +42,30 @@
 #include "ICMPPinger.h"
 #include "Debug.h"
 
-const char *icmpPktStr[] =
-    {
-        "Echo Reply",
-        "ICMP 1",
-        "ICMP 2",
-        "Destination Unreachable",
-        "Source Quench",
-        "Redirect",
-        "ICMP 6",
-        "ICMP 7",
-        "Echo",
-        "ICMP 9",
-        "ICMP 10",
-        "Time Exceeded",
-        "Parameter Problem",
-        "Timestamp",
-        "Timestamp Reply",
-        "Info Request",
-        "Info Reply",
-        "Out of Range Type"
-    };
+const char *icmpPktStr[] = {
+    "Echo Reply",
+    "ICMP 1",
+    "ICMP 2",
+    "Destination Unreachable",
+    "Source Quench",
+    "Redirect",
+    "ICMP 6",
+    "ICMP 7",
+    "Echo",
+    "ICMP 9",
+    "ICMP 10",
+    "Time Exceeded",
+    "Parameter Problem",
+    "Timestamp",
+    "Timestamp Reply",
+    "Info Request",
+    "Info Reply",
+    "Out of Range Type"
+};
 
 ICMPv4::ICMPv4() : ICMP()
-{;
+{
+    ;
 }
 
 ICMPv4::~ICMPv4()
@@ -108,8 +108,7 @@ ICMPv4::SendEcho(IPAddress &to, int opcode, const char *payload, int len)
      * cevans - beware signed/unsigned issues in untrusted data from
      * the network!!
      */
-    if (len < 0)
-    {
+    if (len < 0) {
         len = 0;
     }
 
@@ -127,8 +126,7 @@ ICMPv4::SendEcho(IPAddress &to, int opcode, const char *payload, int len)
 
     icmp_pktsize += sizeof(struct timeval) + sizeof(char);
 
-    if (payload)
-    {
+    if (payload) {
         if (len > MAX_PAYLOAD)
             len = MAX_PAYLOAD;
 
@@ -146,13 +144,13 @@ ICMPv4::SendEcho(IPAddress &to, int opcode, const char *payload, int len)
     debugs(42, 2, HERE << "Send ICMP packet to " << to << ".");
 
     x = sendto(icmp_sock,
-           (const void *) pkt,
-           icmp_pktsize,
-           0,
-           S->ai_addr,
-           S->ai_addrlen);
+               (const void *) pkt,
+               icmp_pktsize,
+               0,
+               S->ai_addr,
+               S->ai_addrlen);
 
-    if(x < 0) {
+    if (x < 0) {
         debugs(42, 1, HERE << "Error sending to ICMP packet to " << to << ". ERR: " << xstrerror());
     }
 
@@ -172,7 +170,7 @@ ICMPv4::Recv(void)
     icmpEchoData *echo;
     static pingerReplyData preply;
 
-    if(icmp_sock < 0) {
+    if (icmp_sock < 0) {
         debugs(42, 0, HERE << "No socket! Recv() should not be called.");
         return;
     }

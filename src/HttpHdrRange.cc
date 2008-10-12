@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -69,7 +69,7 @@ int64_t const HttpHdrRangeSpec::UnknownPosition = -1;
  * Range-Spec
  */
 
-HttpHdrRangeSpec::HttpHdrRangeSpec() : offset(UnknownPosition), length(UnknownPosition){}
+HttpHdrRangeSpec::HttpHdrRangeSpec() : offset(UnknownPosition), length(UnknownPosition) {}
 
 /* parses range-spec and returns new object on success */
 HttpHdrRangeSpec *
@@ -158,12 +158,10 @@ HttpHdrRangeSpec::canonize(int64_t clen)
     outputInfo ("have");
     HttpRange object(0, clen);
 
-    if (!known_spec(offset))	/* suffix */
-    {
+    if (!known_spec(offset)) {	/* suffix */
         assert(known_spec(length));
         offset = object.intersection(HttpRange (clen - length, clen)).start;
-    } else if (!known_spec(length))		/* trailer */
-    {
+    } else if (!known_spec(length)) {	/* trailer */
         assert(known_spec(offset));
         HttpRange newRange = object.intersection(HttpRange (offset, clen));
         length = newRange.size();
@@ -343,7 +341,7 @@ HttpHdrRange::merge (Vector<HttpHdrRangeSpec *> &basis)
     /* reset old array */
     specs.clean();
     /* merge specs:
-     * take one spec from "goods" and merge it with specs from 
+     * take one spec from "goods" and merge it with specs from
      * "specs" (if any) until there is no overlap */
     iterator i = basis.begin();
 
@@ -383,9 +381,9 @@ HttpHdrRange::getCanonizedSpecs (Vector<HttpHdrRangeSpec *> &copy)
 
 /*
  * canonizes all range specs within a set preserving the order
- * returns true if the set is valid after canonization; 
- * the set is valid if 
- *   - all range specs are valid and 
+ * returns true if the set is valid after canonization;
+ * the set is valid if
+ *   - all range specs are valid and
  *   - there is at least one range spec
  */
 int
@@ -528,7 +526,7 @@ HttpHdrRange::lowestOffset(int64_t size) const
 /*
  * Return true if the first range offset is larger than the configured
  * limit.
- * Note that exceeding the limit (returning true) results in only 
+ * Note that exceeding the limit (returning true) results in only
  * grabbing the needed range elements from the origin.
  */
 bool
@@ -539,8 +537,8 @@ HttpHdrRange::offsetLimitExceeded() const
         return false;
 
     if (Config.rangeOffsetLimit == 0)
-	/* disabled */
-	return true;
+        /* disabled */
+        return true;
 
     if (-1 == Config.rangeOffsetLimit)
         /* forced */
