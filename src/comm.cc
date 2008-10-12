@@ -701,7 +701,7 @@ comm_openex(int sock_type,
          * limits the number of simultaneous clients */
 
         if (limitError(errno)) {
-            debugs(50, DBG_WARNING, "comm_open: socket failure: " << xstrerror());
+            debugs(50, DBG_IMPORTANT, "comm_open: socket failure: " << xstrerror());
             fdAdjustReserved();
         } else {
             debugs(50, DBG_CRITICAL, "comm_open: socket failure: " << xstrerror());
