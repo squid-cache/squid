@@ -1,7 +1,4 @@
-#!/bin/bash
-#
-# Would be used on squid-cache. But FreeBSD astyle version is too old.
-#!/usr/local/bin/bash
+#!/bin/sh
 #
 # A checker to recursively reformat all source files: .h .c .cc .cci
 # using a custom astyle formatter and to use MD5 to validate that
@@ -18,33 +15,34 @@ else
 	MD5="md5sum"
 fi
 
-ROOT="$1"
+ROOT=`bzr root`
 PWD=`pwd`
 for FILENAME in `ls -1`; do
 
-    if    test "${FILENAME: -2:2}" = ".h" \
-       || test "${FILENAME: -2:2}" = ".c" \
-       || test "${FILENAME: -3:3}" = ".cc" \
-       || test "${FILENAME: -4:4}" = ".cci" \
-    ; then
+    case ${FILENAME} in
+
+    *.h|*.c|*.cc|*.cci)
+
 	${ROOT}/scripts/formater.pl ${FILENAME}
 
 	if test -e $FILENAME -a -e "$FILENAME.astylebak"; then
-		md51=`cat  $FILENAME| tr -d "\n \t\r" | $MD5 | sed 's/  -//'`;
-		md52=`cat  $FILENAME.astylebak| tr -d "\n \t\r" | $MD5 | sed 's/  -//'`;
+		md51=`cat  $FILENAME| tr -d "\n \t\r" | $MD5`;
+		md52=`cat  $FILENAME.astylebak| tr -d "\n \t\r" | $MD5`;
 
 		if test "$md51" != "$md52" ; then
 			echo "File $PWD/$FILENAME not converted well";
+			mv $FILENAME $FILENAME.astylebad
+			mv $FILENAME.astylebak $FILENAME
 			exit 1;
 		fi
 		rm $FILENAME.astylebak
 		continue;
         fi
-    fi
+    esac
 
     if test -d $FILENAME ; then
 	cd $FILENAME
-	$ROOT/scripts/srcformat.sh "$ROOT"  || exit 1
+	$ROOT/scripts/srcformat.sh || exit 1
 	cd ..
     fi
 
