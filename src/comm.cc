@@ -778,8 +778,7 @@ comm_openex(int sock_type,
         comm_set_transparent(new_socket);
     }
 
-    /* only re-bind if given a valid routable address. */
-    if (!addr.IsAnyAddr() && !addr.IsNoAddr())
+    if (!addr.IsNoAddr())
     {
         if (commBind(new_socket, *AI) != COMM_OK) {
             comm_close(new_socket);
