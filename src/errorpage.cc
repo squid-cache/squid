@@ -190,7 +190,7 @@ errorInitialize(void)
 
     // look for and load stylesheet into global MemBuf for it.
     if(Config.errorStylesheet) {
-        char *temp = errorLoadText(Config.errorStylesheet);
+        char *temp = errorTryLoadText(Config.errorStylesheet,NULL);
         if(temp) {
             error_stylesheet.Printf("%s",temp);
             safe_free(temp);
@@ -281,7 +281,12 @@ errorTryLoadText(const char *page_name, const char *dir, bool silent)
     ssize_t len;
     MemBuf textbuf;
 
-    snprintf(path, sizeof(path), "%s/%s", dir, page_name);
+    // maybe received compound parts, maybe an absolute page_name and no dir
+    if(dir)
+        snprintf(path, sizeof(path), "%s/%s", dir, page_name);
+    else
+        snprintf(path, sizeof(path), "%s", page_name);
+
     fd = file_open(path, O_RDONLY | O_TEXT);
 
     if (fd < 0) {
