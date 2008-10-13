@@ -866,13 +866,13 @@ ErrorState::BuildHttpReply()
          */
         if(!Config.errorDirectory) {
             /* We 'negotiated' this ONLY from the Accept-Language. */
-            httpHeaderDelById(&rep->header, HDR_VARY);
-            httpHeaderPutStrf(&rep->header, HDR_VARY, "Accept-Language");
+            rep->header.delById(HDR_VARY);
+            rep->header.putStr(HDR_VARY, "Accept-Language");
         }
 
         /* add the Content-Language header according to RFC section 14.12 */
         if(err_language) {
-            httpHeaderPutStrf(&rep->header, HDR_CONTENT_LANGUAGE, "%s", err_language);
+            rep->header.putStr(HDR_CONTENT_LANGUAGE, err_language);
         }
         else
 #endif /* USE_ERROR_LOCALES */
@@ -880,7 +880,7 @@ ErrorState::BuildHttpReply()
             /* default templates are in English */
             /* language is known unless error_directory override used */
             if(!Config.errorDirectory)
-                httpHeaderPutStrf(&rep->header, HDR_CONTENT_LANGUAGE, "en");
+                rep->header.putStr(HDR_CONTENT_LANGUAGE, "en");
         }
 
         httpBodySet(&rep->body, content);
