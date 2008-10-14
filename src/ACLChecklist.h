@@ -35,6 +35,7 @@
 
 #include "typedefs.h"
 #include "client_side.h"
+#include "structs.h"
 
 class ExternalACLEntry;
 
@@ -127,6 +128,8 @@ public:
     IPAddress dst_addr;
 
     IPAddress my_addr;
+
+    struct peer *dst_peer;
 
     HttpRequest *request;
     /* for acls that look at reply data */
