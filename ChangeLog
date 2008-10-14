@@ -1,3 +1,12 @@
+Changes to squid-3.0.STABLE10 (14 Oct 2008):
+
+	- Bug 2391: Regression: bad assert in forwarding
+	- Bug 2447: Segfault on failed TCP DNS query
+	- Bug 2393: DNS requests getting stuck in idns queue
+	- Bug 2433: FTP PUT gives bad gateway
+	- Bug 2465: Limited DragonflyBSD support
+	- ... and other minor bugs and documentation
+
 Changes to squid-3.0.STABLE9 (9 Sep 2008):
 
 	- Policy Enforcement: COSS is unusable in 3.0
