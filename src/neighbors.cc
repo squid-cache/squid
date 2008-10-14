@@ -1380,7 +1380,7 @@ peerProbeConnect(peer * p)
     if (squid_curtime - p->stats.last_connect_probe == 0)
         return ret;/* don't probe to often */
 
-    IPAddress temp(getOutgoingAddr(NULL));
+    IPAddress temp(getOutgoingAddr(NULL,p));
 
     fd = comm_open(SOCK_STREAM, IPPROTO_TCP, temp, COMM_NONBLOCKING, p->host);
 
