@@ -167,6 +167,21 @@ AC_ARG_WITH(default-user,
 )
 AC_SUBST(CACHE_EFFECTIVE_USER)
 
+DEFAULT_LOG_DIR="$localstatedir/logs"
+AC_ARG_WITH(logdir,
+ [  --with-logdir=PATH Default location for squid logs. default: $DEFAULT_LOG_DIR],
+ [ case $withval in
+   yes|no)
+     AC_MSG_ERROR( --with-logdir requires a directory PATH. --with-logdir=PATH )
+     ;;
+   *)
+     DEFAULT_LOG_DIR="$withval"
+     ;;
+   esac
+ ]
+)
+AC_SUBST(DEFAULT_LOG_DIR)
+
 dnl Gerben Wierda <Gerben_Wierda@RnA.nl>
 case "$host" in
     mab-next-nextstep3)
