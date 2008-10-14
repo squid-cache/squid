@@ -1862,7 +1862,7 @@ AC_ARG_ENABLE(ipv6,
         AC_MSG_RESULT(yes)
         use_ipng=yes
       ],
-      [ AC_DEFINE(USE_IPV6,0,[0 == Disable support for IPv6])
+      [ AC_DEFINE(USE_IPV6,0,[Enable support for IPv6])
         AC_DEFINE(IPV6_SPECIAL_SPLITSTACK,0,[Enable support for IPv6 on split-stack implementations])
         AC_DEFINE(IPV6_SPECIAL_LOCALHOST,0,[Convert IPv4-localhost requests to IPv6. Default: Keep seperate.])
         AC_DEFINE(IPV6_SPECIAL_V4MAPPED,0,[Enable v4-mapping through v6 sockets])
@@ -1870,7 +1870,7 @@ AC_ARG_ENABLE(ipv6,
       ])
    )
 ],
-[ AC_DEFINE(USE_IPV6,0,[Disable support for IPv6])
+[ AC_DEFINE(USE_IPV6,0,[Enable support for IPv6])
   AC_DEFINE(IPV6_SPECIAL_SPLITSTACK,0,[Enable support for IPv6 on split-stack implementations])
   AC_DEFINE(IPV6_SPECIAL_LOCALHOST,0,[Convert IPv4-localhost requests to IPv6. Default: Keep seperate.])
   AC_DEFINE(IPV6_SPECIAL_V4MAPPED,0,[Enable v4-mapping through v6 sockets])
@@ -1879,32 +1879,29 @@ AC_ARG_ENABLE(ipv6,
 
 if test "$use_ipng" = "yes"; then
 
+dnl Check for IPv6 Windows Vista option
+dnl Also useful for other OS with hybrid-stack defaults turned OFF
+AC_DEFINE(IPV6_SPECIAL_V4MAPPED, 1, [Enable v4-mapping through v6 sockets])
+
 dnl Check for Windows XP option
 AC_MSG_CHECKING([for IPv6 split-stack requirement])
 AC_ARG_WITH(ipv6-split-stack,
   [  --with-ipv6-split-stack  Require IPv6 split-stack support. Requires IPv6 Support.],
-  [AC_DEFINE(IPV6_SPECIAL_SPLITSTACK, 1, [Enable support for IPv6 on split-stack implementations]) AC_MSG_RESULT(yes)],
+  [ AC_DEFINE(IPV6_SPECIAL_SPLITSTACK, 1, [Enable support for IPv6 on split-stack implementations])
+    AC_DEFINE(IPV6_SPECIAL_V4MAPPED, 0, [Enable v4-mapping through v6 sockets. Requires IPv6 hybrid-stack.])
+    AC_MSG_RESULT(yes)
+  ],
   [AC_DEFINE(IPV6_SPECIAL_SPLITSTACK, 0, [Enable support for IPv6 on split-stack implementations]) AC_MSG_RESULT(no)]
-)
-
-dnl Check for IPv6 Windows Vista option
-dnl Also useful for other OS
-AC_MSG_CHECKING([for IPv6 v4-mapping requirement])
-AC_ARG_WITH(ipv4-mapped,
-  [  --with-ipv4-mapped  Hybrid-Stack OS require Squid to do any v4-mapping. Requires IPv6 Support.],
-  [AC_DEFINE(IPV6_SPECIAL_V4MAPPED, 1, [Enable v4-mapping through v6 sockets]) AC_MSG_RESULT(yes)],
-  [AC_DEFINE(IPV6_SPECIAL_V4MAPPED, 0, [Enable v4-mapping through v6 sockets]) AC_MSG_RESULT(no)]
 )
 
 dnl Check for IPv6-pure option
 AC_MSG_CHECKING([for IPv6-Localhost requirement])
 AC_ARG_WITH(localhost-ipv6,
   [  --with-localhost-ipv6    Prefer IPv6 localhost address over IPv4. Requires IPv6 Support.
-                           Treats 127.0.0.1 and ::1 as identical and converts all inputs of to ::1
+                           Treats 127.0.0.1 and ::1 as identical and converts all inputs of localhost to ::1
                            This depends on Dual-Stack support in the OS and all applications
                            squid contacts via localhost being IPv6 enabled.
-                           Default: OFF. Treats these two IP as different, squid.conf must
-                           define both 127.0.0.1 and ::1 for the localhost ACL, etc. ],
+                           WARNING: This is an RFC violation!],
   [AC_DEFINE(IPV6_SPECIAL_LOCALHOST, 1, [Convert IPv4-localhost requests to IPv6. Default: keep seperate.]) AC_MSG_RESULT(yes)],
   [AC_DEFINE(IPV6_SPECIAL_LOCALHOST, 0, [Convert IPv4-localhost requests to IPv6. Default: Keep seperate.]) AC_MSG_RESULT(no)]
 )
@@ -1921,14 +1918,6 @@ AC_ARG_ENABLE(zph-qos,
       When enabled, Squid will alter TOS field of HIT responses for better QOS on intermediate routing/shaping devices.])
   fi
 ])
-
-dnl Optional CNAME-Recursion by Internal DNS engine
-AC_MSG_CHECKING([whether DNS CNAME recursion wanted])
-AC_ARG_WITH(dns-cname,
-  [  --with-dns-cname         Enable CNAME-Recursion in Internal DNS stub.],
-  [AC_DEFINE(DNS_CNAME, 1, [ 1 == Enable expermental CNAME recursion inside Squid DNS resolver stub]) AC_MSG_RESULT(yes)],
-  [AC_DEFINE(DNS_CNAME, 0, [ 0 == Disable expermental CNAME recursion inside Squid DNS resolver stub]) AC_MSG_RESULT(no)]
-)
 
 dnl Check whether this OS defines ss_len as a member of sockaddr_storage
 AC_CACHE_CHECK([for ss_len field in struct sockaddr_storage],
