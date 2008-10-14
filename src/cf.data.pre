@@ -518,6 +518,10 @@ DOC_START
 	  # cache_peer_access mycache.mydomain.net allow asexample
 	  # cache_peer_access mycache_mydomain.net deny all
 
+	acl aclname peername myPeer ...
+	  # match against a named cache_peer entry
+	  # set unique name= on cache_peer lines for reliable use.
+
 	acl aclname time [day-abbrevs] [h1:m1-h2:m2]
 	  #  day-abbrevs:
 	  #	S - Sunday
@@ -1360,6 +1364,12 @@ DOC_START
 
 	tcp_outgoing_address 2002::1 to_ipv6
 	tcp_outgoing_address 10.1.0.3 !to_ipv6
+
+	WARNING:
+	  'dst ipv6' bases its selection assuming DIRECT access.
+	  If peers are used the peername ACL are needed to select outgoing
+	  address which can link to the peer.
+
 DOC_END
 
 COMMENT_START
@@ -1766,7 +1776,7 @@ DOC_START
 		     use 'name=xxx' if you have multiple peers on the same
 		     host but different ports. This name can be used to
 		     differentiate the peers in cache_peer_access and similar
-		     directives.
+		     directives. Including the peername ACL type.
 
 		     use 'forceddomain=name' to forcibly set the Host header
 		     of requests forwarded to this peer. Useful in accelerator

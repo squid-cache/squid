@@ -365,6 +365,8 @@ squid_ACLSOURCES = \
 	ACLMyPort.h \
 	ACLMyPortName.cc \
 	ACLMyPortName.h \
+	ACLPeerName.cc \
+	ACLPeerName.h \
 	ACLProtocol.cc \
 	ACLProtocol.h \
 	ACLProtocolData.cc \
