@@ -4827,7 +4827,7 @@ DOC_START
 
 	Successful negotiations are not logged. Only failures
 	have meaning to indicate that Squid may need an upgrade
-	of is error page translations.
+	of its error page translations.
 DOC_END
 
 NAME: err_html_text
