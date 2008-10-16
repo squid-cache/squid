@@ -39,9 +39,6 @@
 #include "ACLStringData.h"
 #include "ACLChecklist.h"
 
-/* explicit template instantiation required for some systems */
-
-template class ACLStrategised<const char *>;
 
 ACL::Prototype ACLMyPortName::RegistryProtoype(&ACLMyPortName::RegistryEntry_, "myportname");
 

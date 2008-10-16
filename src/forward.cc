@@ -856,7 +856,7 @@ FwdState::connectStart()
 
 #endif
 
-    outgoing = getOutgoingAddr(request);
+    outgoing = getOutgoingAddr(request, fs->_peer);
 
     tos = getOutgoingTOS(request);
 
@@ -1322,12 +1322,14 @@ aclMapTOS(acl_tos * head, ACLChecklist * ch)
 }
 
 IPAddress
-getOutgoingAddr(HttpRequest * request)
+getOutgoingAddr(HttpRequest * request, struct peer *dst_peer)
 {
     ACLChecklist ch;
 
     if (request && request->flags.spoof_client_ip)
         return request->client_addr;
+
+    ch.dst_peer = dst_peer;
 
     if (request) {
         ch.src_addr = request->client_addr;
