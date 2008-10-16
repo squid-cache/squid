@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "fde.h"
 #include "SquidTime.h"
+#include "Debug.h"
 
 int default_read_method(int, char *, int);
 int default_write_method(int, const char *, int);
