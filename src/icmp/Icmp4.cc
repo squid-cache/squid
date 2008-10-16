@@ -38,8 +38,8 @@
 #if USE_ICMP
 
 #include "SquidTime.h"
-#include "ICMPv4.h"
-#include "ICMPPinger.h"
+#include "Icmp4.h"
+#include "IcmpPinger.h"
 #include "Debug.h"
 
 const char *icmpPktStr[] = {
@@ -63,18 +63,18 @@ const char *icmpPktStr[] = {
     "Out of Range Type"
 };
 
-ICMPv4::ICMPv4() : ICMP()
+Icmp4::Icmp4() : Icmp()
 {
     ;
 }
 
-ICMPv4::~ICMPv4()
+Icmp4::~Icmp4()
 {
     Close();
 }
 
 int
-ICMPv4::Open(void)
+Icmp4::Open(void)
 {
     icmp_sock = socket(PF_INET, SOCK_RAW, IPPROTO_ICMP);
 
@@ -90,7 +90,7 @@ ICMPv4::Open(void)
 }
 
 void
-ICMPv4::SendEcho(IPAddress &to, int opcode, const char *payload, int len)
+Icmp4::SendEcho(IPAddress &to, int opcode, const char *payload, int len)
 {
     int x;
     LOCAL_ARRAY(char, pkt, MAX_PKT4_SZ);
@@ -158,7 +158,7 @@ ICMPv4::SendEcho(IPAddress &to, int opcode, const char *payload, int len)
 }
 
 void
-ICMPv4::Recv(void)
+Icmp4::Recv(void)
 {
     int n;
     struct addrinfo *from = NULL;

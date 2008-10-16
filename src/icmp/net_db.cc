@@ -41,6 +41,7 @@
  */
 
 #include "squid.h"
+#include "icmp/net_db.h"
 #include "cbdata.h"
 #include "event.h"
 #include "CacheManager.h"
@@ -56,7 +57,7 @@
 #include "IPAddress.h"
 
 #if USE_ICMP
-#include "ICMPSquid.h"
+#include "icmp/IcmpSquid.h"
 #include "StoreClient.h"
 
 #define	NETDB_REQBUF_SZ	4096
@@ -1059,8 +1060,7 @@ netdbDump(StoreEntry * sentry)
     xfree(list);
 #else
 
-    storeAppendPrintf(sentry,
-                      "NETDB support not compiled into this Squid cache.\n");
+    storeAppendPrintf(sentry,"NETDB support not compiled into this Squid cache.\n");
 #endif
 }
 
@@ -1193,7 +1193,6 @@ netdbExchangeUpdatePeer(IPAddress &addr, peer * e, double rtt, double hops)
 }
 
 void
-
 netdbDeleteAddrNetwork(IPAddress &addr)
 {
 #if USE_ICMP
@@ -1205,9 +1204,9 @@ netdbDeleteAddrNetwork(IPAddress &addr)
     debugs(38, 3, "netdbDeleteAddrNetwork: " << n->network);
 
     netdbRelease(n);
-
 #endif
 }
+
 
 void
 netdbBinaryExchange(StoreEntry * s)

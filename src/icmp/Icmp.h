@@ -83,16 +83,16 @@ SQUIDCEXTERN int icmp_pkts_sent;
  * Child implementations define specific parts of these operations
  * using these methods as a naming and parameter template.
  *
- * ICMPSquid - implements the squid side of squid-pinger interface
- * ICMPPinger - implements the pinger side of the squid-pinger interface
- * ICMPv4 - implements pinger helper for ICMPv4
- * ICMPv6 - implements pinger helper for ICMPv6
+ * IcmpSquid - implements the squid side of squid-pinger interface
+ * IcmpPinger - implements the pinger side of the squid-pinger interface
+ * Icmpv4 - implements pinger helper for Icmpv4
+ * Icmpv6 - implements pinger helper for Icmpv6
  */
-class ICMP
+class Icmp
 {
 public:
-    ICMP();
-    virtual ~ICMP() {};
+    Icmp();
+    virtual ~Icmp() {};
 
     /// Start pinger helper and initiate control channel
     virtual int Open() =0;
