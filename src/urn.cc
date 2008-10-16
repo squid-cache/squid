@@ -42,6 +42,7 @@
 #include "MemBuf.h"
 #include "forward.h"
 #include "SquidTime.h"
+#include "icmp/net_db.h"
 
 #define	URN_REQBUF_SZ	4096
 
@@ -471,7 +472,6 @@ urnParseReply(const char *inbuf, const HttpRequestMethod& m)
     char *token;
     char *url;
     char *host;
-    int rtt;
     url_entry *list;
     url_entry *old;
     int n = 32;
@@ -496,16 +496,19 @@ urnParseReply(const char *inbuf, const HttpRequestMethod& m)
         if (NULL == host)
             continue;
 
-        rtt = netdbHostRtt(host);
+#if USE_ICMP
+        list[i].rtt = netdbHostRtt(host);
 
-        if (0 == rtt) {
+        if (0 == list[i].rtt) {
             debugs(52, 3, "urnParseReply: Pinging " << host);
             netdbPingSite(host);
         }
+#else
+        list[i].rtt = 0;
+#endif
 
         list[i].url = url;
         list[i].host = xstrdup(host);
-        list[i].rtt = rtt;
         list[i].flags.cached = storeGetPublic(url, m) ? 1 : 0;
         i++;
     }

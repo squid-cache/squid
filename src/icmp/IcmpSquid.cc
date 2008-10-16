@@ -33,12 +33,13 @@
  */
 
 #include "squid.h"
-#include "ICMPSquid.h"
+#include "icmp/IcmpSquid.h"
+#include "icmp/net_db.h"
 #include "comm.h"
 #include "SquidTime.h"
 
 // Instance global to be available in main() and elsewhere.
-ICMPSquid icmpEngine;
+IcmpSquid icmpEngine;
 
 #if USE_ICMP
 
@@ -54,12 +55,12 @@ static pid_t pid;
 #endif /* USE_ICMP */
 
 
-ICMPSquid::ICMPSquid() : ICMP()
+IcmpSquid::IcmpSquid() : Icmp()
 {
     ; // nothing new.
 }
 
-ICMPSquid::~ICMPSquid()
+IcmpSquid::~IcmpSquid()
 {
     Close();
 }
@@ -68,7 +69,7 @@ ICMPSquid::~ICMPSquid()
 #if USE_ICMP
 
 void
-ICMPSquid::SendEcho(IPAddress &to, int opcode, const char *payload, int len)
+IcmpSquid::SendEcho(IPAddress &to, int opcode, const char *payload, int len)
 {
     static pingerEchoData pecho;
     int x, slen;
@@ -127,7 +128,7 @@ ICMPSquid::SendEcho(IPAddress &to, int opcode, const char *payload, int len)
 }
 
 // static Callback to wrap the squid-side ICMP handler.
-// the ICMPSquid::Recv cannot be declared both static and virtual.
+// the IcmpSquid::Recv cannot be declared both static and virtual.
 static void
 icmpSquidRecv(int unused1, void *unused2)
 {
@@ -135,7 +136,7 @@ icmpSquidRecv(int unused1, void *unused2)
 }
 
 void
-ICMPSquid::Recv()
+IcmpSquid::Recv()
 {
     int n;
     static int fail_count = 0;
@@ -195,7 +196,7 @@ ICMPSquid::Recv()
 #endif /* USE_ICMP */
 
 void
-ICMPSquid::DomainPing(IPAddress &to, const char *domain)
+IcmpSquid::DomainPing(IPAddress &to, const char *domain)
 {
 #if USE_ICMP
     debugs(37, 4, HERE << "'" << domain << "' (" << to << ")");
@@ -204,7 +205,7 @@ ICMPSquid::DomainPing(IPAddress &to, const char *domain)
 }
 
 int
-ICMPSquid::Open(void)
+IcmpSquid::Open(void)
 {
 #if USE_ICMP
     const char *args[2];
@@ -270,7 +271,7 @@ ICMPSquid::Open(void)
 }
 
 void
-ICMPSquid::Close(void)
+IcmpSquid::Close(void)
 {
 #if USE_ICMP
 

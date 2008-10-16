@@ -48,8 +48,7 @@
 #include "pconn.h"
 #include "SquidTime.h"
 #include "Store.h"
-
-/* for IPInterceptor API */
+#include "icmp/net_db.h"
 #include "IPInterception.h"
 
 static PSC fwdStartCompleteWrapper;

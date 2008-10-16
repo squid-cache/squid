@@ -5,16 +5,16 @@
 
 #include <cppunit/TestAssert.h>
 
-#include "testICMP.h"
+#include "testIcmp.h"
 
-CPPUNIT_TEST_SUITE_REGISTRATION( testICMP );
+CPPUNIT_TEST_SUITE_REGISTRATION( testIcmp );
 
 #if USE_ICMP
 
 void
-testICMP::testChecksum()
+testIcmp::testChecksum()
 {
-    stubICMP icmp;
+    stubIcmp icmp;
     short unsigned int buf[10] = {1,2,3,4,5,6,7,8,9};
 
     // NULL data
@@ -40,9 +40,9 @@ testICMP::testChecksum()
 }
 
 void
-testICMP::testHops()
+testIcmp::testHops()
 {
-    stubICMP icmp;
+    stubIcmp icmp;
 
     /* test invalid -(under values) */
     // negative     : n > 33
