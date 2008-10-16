@@ -350,6 +350,8 @@ squid_ACLSOURCES = \
 	ACLMyPort.h \
 	ACLMyPortName.cc \
 	ACLMyPortName.h \
+	ACLPeerName.cc \
+	ACLPeerName.h \
 	ACLProtocol.cc \
 	ACLProtocol.h \
 	ACLProtocolData.cc \
@@ -1007,7 +1009,7 @@ DEFAULT_PREFIX		= $(prefix)
 DEFAULT_CONFIG_FILE     = $(sysconfdir)/squid.conf
 DEFAULT_MIME_TABLE	= $(sysconfdir)/mime.conf
 DEFAULT_DNSSERVER       = $(libexecdir)/`echo dnsserver | sed '$(transform);s/$$/$(EXEEXT)/'`
-DEFAULT_LOG_PREFIX	= $(localstatedir)/logs
+DEFAULT_LOG_PREFIX	= @DEFAULT_LOG_DIR@
 DEFAULT_CACHE_LOG       = $(DEFAULT_LOG_PREFIX)/cache.log
 DEFAULT_ACCESS_LOG      = $(DEFAULT_LOG_PREFIX)/access.log
 DEFAULT_STORE_LOG       = $(DEFAULT_LOG_PREFIX)/store.log

@@ -47,6 +47,7 @@
 #include <tchar.h>
 #endif
 #include <windows.h>
+#include <ntsecapi.h>
 #include <security.h>
 #include <sspi.h>
 

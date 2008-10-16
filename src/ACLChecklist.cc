@@ -358,6 +358,7 @@ ACLChecklist::operator delete (void *address)
 
 ACLChecklist::ACLChecklist() :
         accessList (NULL),
+        dst_peer(NULL),
         request (NULL),
         reply (NULL),
         auth_user_request (NULL),
