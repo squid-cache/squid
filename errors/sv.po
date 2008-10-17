@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-09-29 15:05+1300\n"
-"PO-Revision-Date: 2008-10-14 08:25+1300\n"
+"PO-Revision-Date: 2008-10-17 19:43+1300\n"
 "Last-Translator: Henrik Nordström <henrik@henriknordstrom.net>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -143,7 +143,6 @@ msgid "ERROR: Cache Manager Access Denied"
 msgstr "FEL: Tilltr&auml;de till Cachehanteraren Nekas"
 
 #: templates/ERR_FTP_PUT_ERROR:1
-#, fuzzy
 msgid "ERROR: FTP upload failed"
 msgstr "FEL: FTP uppladdning misslyckades"
 
@@ -267,9 +266,8 @@ msgid "Missing HTTP Identifier (HTTP/1.0)."
 msgstr "Avsaknad HTTP identifierare (HTTP/1.0)."
 
 #: templates/ERR_INVALID_REQ:7
-#, fuzzy
 msgid "Missing URL."
-msgstr "Avsaknad URL."
+msgstr "URL saknas."
 
 #: templates/ERR_INVALID_URL:9
 msgid "Missing hostname"
