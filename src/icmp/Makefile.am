@@ -8,7 +8,7 @@ AM_CFLAGS = @SQUID_CFLAGS@
 AM_CXXFLAGS = @SQUID_CXXFLAGS@
 DEFS = @DEFS@
 
-INCLUDES        = -I$(top_srcdir)/src @SQUID_CPPUNIT_INC@ -I$(top_builddir)/lib
+INCLUDES = -I$(top_srcdir)/src @SQUID_CPPUNIT_INC@ -I$(top_srcdir)/include -I$(top_builddir)/lib
 $(OBJS): $(top_srcdir)/include/version.h $(top_srcdir)/include/autoconf.h
 
 # TODO: get rid of this when config filename is no longer a global constant.
@@ -69,7 +69,7 @@ nodist_pinger_SOURCES = \
 pinger_LDFLAGS = $(LIBADD_DL)
 pinger_LDADD=\
 	libicmp-core.la \
-	libmiscutil.a
+	$(top_builddir)/lib/libmiscutil.a
 pinger_DEPENDENCIES= \
 	libicmp-core.la \
 	$(top_builddir)/lib/libmiscutil.a
@@ -96,7 +96,7 @@ TESTS= $(check_PROGRAMS)
 ## Special Universal .h dependency test script
 ## aborts if error encountered
 testHeaders: $(top_srcdir)/src/icmp/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "." || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/src/icmp/" || exit 1
 
 ## No such file...
 testHeaders.c:
@@ -109,7 +109,6 @@ testIcmp_SOURCES=\
 	Icmp.h \
 	testIcmp.h \
 	testIcmp.cc \
-	\
 	../tests/testMain.cc \
 	../SquidTime.h \
 	../time.cc \
@@ -120,7 +119,7 @@ testIcmp_LDADD=\
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
 	libicmp-core.la \
-	libmiscutil.a
+	$(top_builddir)/lib/libmiscutil.a
 testIcmp_DEPENDENCIES= @SQUID_CPPUNIT_LA@ \
 	libicmp-core.la \
 	$(top_builddir)/lib/libmiscutil.a
