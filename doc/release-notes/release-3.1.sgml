@@ -57,54 +57,57 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <p>We have decided, based on input from interested users to drop the Squid-2 terminology of
    (DEVEL, PRE, RC, and STABLE) from the release package names.
-These are replaced with a simpler 3-teir system based around the natural code development cycle.
+These are replaced with a simpler 3-tier system based around the natural code development cycle.
 
 <p>Daily generated snapshots of all current versions are provided as testing (old DEVEL) and bug-fix releases.
 These are numbered from their last release with a date appended.
-Snapshots generated from 3.HEAD and 2.HEAD continue to be highly volatile.
+Snapshots generated from 3.HEAD continue to be highly volatile.
 
 <p>Regular feature releases from Squid-3 will be branched out as sub-versions. Such as this Squid-3.1.
 
-<p>All this is previous policy you should be acustomed to. Now we get to the new numbering change.
+<p>All this is previous policy you should be accustomed to. Now we get to the new numbering change.
 
 <p>Initial branch packages will be generated with a 3.X.0.Z version as testing packages.
 Packages and Snapshots generated with these 3-dot numbers are expected to be relatively stable regarding feature behaviors.
-Suitable for testing but without any guarantees under production loads. This replaces both the old PRE and RC packages.
-If a large number of bugs are found several *.0.Z packages may be attempted before any is considered production-ready.
+Suitable for testing, but without any guarantees under production loads. This replaces both the old PRE and RC packages.
+
+<p>If a large number of bugs are found several *.0.Z packages may be attempted before any is considered production-ready.
 
 <p>When one of these Squid-3.X.0.Z packages passes our bug-free standards a 3.X.Y numbered release will be made.
-We can only hope enough testing has been done to consider these ready for production use.
+
+<p>We can only hope enough testing has been done to consider these ready for production use.
 As always we are fully dependent on people testing the previous packages and reporting all bugs.
 
-<p>In support of this process are several squid-dev process changes which have been worked out over the last year.
+<p>In support of all this are several squid-dev process changes which have been worked out over the last year.
 
 <itemize>
 <item>We no longer accept new features into branches.
      Those are reserved for the next feature release.
-     The cycle for major releases is hoped to be fast enough to suit peoples needs.
+     The cycle for major releases is hoped to be fast enough to suit some peoples needs for new features
+     and others need for stability in the branched releases.
 
 <item>We now audit and vote on all feature and major code additions.
      Requiring at least two sets of developer eyes on any new features before they are committed to 3.HEAD.
      Vastly reducing the number of bugs in all code.
 
 <item>We have implemented and continue to add more testing infrastructure.
-</itemize>     
+</itemize>
 
 
 <sect2>Minimal squid.conf improvements
 
 <p>squid.conf has undergone a facelift.
 
-<p>Don't worry few operational changes have been made.
+<p>Don't worry, few operational changes have been made.
 Older configs from are still expected to run in 3.1 with only the usual minor
 changes seen between major release. Details on those are listed below.
 
-<p>New users will be relieved to see a short 20-line or less squid.conf on clean installs.
+<p>New users will be relieved to see a short 32-line or less squid.conf on clean installs.
 Many of the options have reasonable defaults but had previously needed them explicitly configured!
 These are now proper built-in defaults and no longer need to be in squid.conf unless changed.
 
-<p>All of the option documentation has been offloaded to another file <em>squid.conf.docuemented</em> which
-contains a fully documented set of options previoulsy cluttering up squid.conf itself.
+<p>All of the option documentation has been offloaded to another file <em>squid.conf.documented</em> which
+contains a fully documented set of options previously cluttering up squid.conf itself.
 
 <p>Package maintainers are provided with a second file squid.conf.default which as always contains the default
 config options provided on a clean install.
@@ -114,7 +117,7 @@ config options provided on a clean install.
 
 <p>Squid 3.1 supports IPv6. To enable IPv6 support, use the ./configure --enable-ipv6 option
 
-<p>Details at <url url="http://wiki.squid-cache.org/Features/IPv6" name="The Squid wiki">
+<p>Details in <url url="http://wiki.squid-cache.org/Features/IPv6" name="The Squid wiki">
 
 <sect3>New Features for IPv6
 
@@ -168,7 +171,7 @@ config options provided on a clean install.
 
 <sect2>Error Page Localization
 
-<p>Details at <url url="http://wiki.squid-cache.org/Translations" name="The Squid wiki">
+<p>Details in <url url="http://wiki.squid-cache.org/Translations" name="The Squid wiki">
 
 <p>The error pages presented by squid may now be localized per-request to match the visitors local preferred language.
 
@@ -178,22 +181,22 @@ config options provided on a clean install.
 Updates can be downloaded from <url url="http://www.squid-cahch.org/Versions/langpack/" name="www.squid-cache.org/Versions/langpack/">
 
 <p>The squid developers are interested in making squid available in a wide variety of languages.
-   Contributions of new languages is encouraged.
+   Contribution of new languages is encouraged.
 
 
 <sect2>Connection Pinning (for NTLM Auth Passthrough)
+
+<p>Details in <url url="http://wiki.squid-cache.org/Features/ConnPinn" name="The Squid wiki">
 
 <p>Squid 3.1 includes the much asked for Connection Pinning feature from Squid 2.6.
 
 <p>This feature is often called 'NTLM Passthru' since it is a giant workaround which permits Web servers to use
 Microsoft NTLM Authentication instead of HTTP standard authentication through a web proxy.
 
-<p>Details at <url url="http://wiki.squid-cache.org/Features/ConnPinn" name="The Squid wiki">
-
 
 <sect2>Quality of Service (QoS) Flow support
 
-<p>Details at <url url="http://wiki.squid-cache.org/Features/QualityOfService" name="The Squid wiki">
+<p>Details in <url url="http://wiki.squid-cache.org/Features/QualityOfService" name="The Squid wiki">
 
 <p>Zero Penalty Hit created a patch to set QoS markers on outgoing traffic.
 
@@ -204,13 +207,13 @@ Microsoft NTLM Authentication instead of HTTP standard authentication through a 
 	<item>Allows any HTTP response towards clients will have the TOS value of the response coming from
 		the remote server masked with the value of zph_preserve_miss_tos_mask.
 		For this to work correctly, you will need to patch your linux kernel with the TOS preserving ZPH patch.
-		The kernel patch can be downloaded from http://zph.bratcheda.org
+		The kernel patch can be downloaded from <url url="http://zph.bratcheda.org" name="http://zph.bratcheda.org">
 	<item>Allows you to mask certain bits in the TOS received from the remote server,
 		before copying the value to the TOS send towards clients.
 </itemize>
 
 <sect3>Squid Configuration
-<p>Squid 3.1 needs to be configured with --enable-zph-qos for teh ZPH QoS conttols to be available.
+<p>Squid 3.1 needs to be configured with --enable-zph-qos for the ZPH QoS controls to be available.
 
 <p>The configuration options for 2.7 and 3.1 are based on different ZPH patches.
 The two releases configuration differs and is not at this point directly translatable.
@@ -226,7 +229,7 @@ The two releases configuration differs and is not at this point directly transla
 
 <sect2>SSL Bump (for HTTPS Filtering and Adaptation)
 
-<p>Details at <url url="http://wiki.squid-cache.org/Features/SslBump" name="The Squid wiki">
+<p>Details in <url url="http://wiki.squid-cache.org/Features/SslBump" name="The Squid wiki">
 
 <p>Squid-in-the-middle decryption and encryption of straight CONNECT and transparently redirected SSL traffic,
 using configurable client- and server-side certificates.
@@ -235,7 +238,7 @@ While decrypted, the traffic can be inspected using ICAP.
 
 <sect2>eCAP Adaptation Module support
 
-<p>Details at <url url="http://wiki.squid-cache.org/Features/eCAP" name="The Squid wiki">
+<p>Details in <url url="http://wiki.squid-cache.org/Features/eCAP" name="The Squid wiki">
 
 
 <sect>Windows support
@@ -329,7 +332,6 @@ format (CR+LF) and the full Windows path must be specified, for example:
 redirect_program c:/winnt/system32/cmd.exe /C c:/squid/libexec/redir.cmd</verb>
 <item>When Squid runs in command line mode, the launching user account must have administrative privilege on the system
 <item>"Start parameters" in the Windows 2000/XP/2003 Service applet cannot be used
-<item>Building with MinGW, when the configure option --enable-truncate is used, Squid cannot run on Windows NT, only Windows 2000 and later are supported
 </itemize>
 </descrip>
 
@@ -356,7 +358,6 @@ For the MinGW environment, the packages MSYS, MinGW and msysDTK must be installe
 OpenSSL: <url url="http://www.slproweb.com/products/Win32OpenSSL.html" name="Shining Light Productions Win32 OpenSSL"><newline>
 libcrypt: <url url="http://sourceforge.net/projects/mingwrep/" name="MinGW packages repository"><newline>
 db-1.85: <url url="http://tinycobol.org/download.html" name="TinyCOBOL download area"><newline>
-uudecode: <url url="http://unxutils.sourceforge.net/" name="Native Win32 ports of some GNU utilities"><newline><newline>
 When running configure, --disable-wccp and --disable-wccpv2 options should always specified to avoid compile errors.<newline>
 <itemize>
 <item>New configure options:<newline>
