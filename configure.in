@@ -3692,19 +3692,22 @@ AC_SUBST(PO2HTML)
 
 dnl Squid now has limited locale handling ...
 dnl on error pages
+use_errlocale=yes
 AC_ARG_ENABLE(auto-locale,
-[  --enable-auto-locale  This enables squid to lookup translated error pages
-                          based on the clients request headers. Without it squid
-                          is limited to a single language set in squid.conf],
-[ if test "$enableval" = "yes" ; then
-    echo "Enabling Multi-Language Support"
-    AC_DEFINE(USE_ERR_LOCALES,1,[Use multi-language support on error pages])
- else
-    echo "Disabling Multi-Language Support"
-    AC_DEFINE(USE_ERR_LOCALES,0,[Use multi-language support on error pages])
+	AC_HELP_STRING([--disable-auto-locale],
+			[This prevets Squid providing localized error pages based on the clients request headers.
+			 When disabled Squid requires explicit language configuration.]),
+[ if test "$enableval" = "no" ; then
+    use_errlocale=no
   fi
 ])
-
+if test "$use_errlocale" = "yes" ; then
+    echo "Enabling Multi-Language Support"
+    AC_DEFINE(USE_ERR_LOCALES,1,[Use multi-language support on error pages])
+else
+    echo "Disabling Multi-Language Support"
+    AC_DEFINE(USE_ERR_LOCALES,0,[Use multi-language support on error pages])
+fi
 
 dnl Need the debugging version of malloc if available
 XTRA_OBJS=''
@@ -3716,7 +3719,6 @@ if test "$ac_cv_lib_malloc_main" = "yes" ; then
 		XTRA_OBJS="$XTRA_OBJS /usr/lib/debug/mallocmap.o"
 	fi
 fi
-
 AC_SUBST(XTRA_OBJS)
 
 if test -z "$XTRA_LIBS"; then
