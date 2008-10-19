@@ -908,7 +908,7 @@ ErrorState::BuildContent()
     /** error_directory option in squid.conf overrides translations.
      * Otherwise locate the Accept-Language header
      */
-    if(!Config.errorDirectory && request->header.getList(HDR_ACCEPT_LANGUAGE, &hdr) ) {
+    if(!Config.errorDirectory && request && request->header.getList(HDR_ACCEPT_LANGUAGE, &hdr) ) {
 
         const char *buf = hdr.buf(); // raw header string for parsing
         int pos = 0; // current parsing position in header string
