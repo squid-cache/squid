@@ -1863,9 +1863,9 @@ AC_ARG_ENABLE(x_accelerator_vary,
 
 dnl Enable IPv6 support
 AC_MSG_CHECKING([whether to enable IPv6])
-use_ipng=no
+use_ipng=yes
 AC_ARG_ENABLE(ipv6,
-[  --enable-ipv6           Enable ipv6 support],
+	AC_HELP_STRING([--disable-ipv6],[Disable IPv6 support]),
 [ AC_MSG_RESULT(yes)
   AC_CACHE_CHECK([if PF_INET6 is available], $enableval,
     AC_TRY_RUN(
@@ -1883,19 +1883,13 @@ AC_ARG_ENABLE(ipv6,
         AC_MSG_RESULT(yes)
         use_ipng=yes
       ],
-      [ AC_DEFINE(USE_IPV6,0,[Enable support for IPv6])
-        AC_DEFINE(IPV6_SPECIAL_SPLITSTACK,0,[Enable support for IPv6 on split-stack implementations])
-        AC_DEFINE(IPV6_SPECIAL_LOCALHOST,0,[Convert IPv4-localhost requests to IPv6. Default: Keep seperate.])
-        AC_DEFINE(IPV6_SPECIAL_V4MAPPED,0,[Enable v4-mapping through v6 sockets])
-        AC_MSG_RESULT(no)
+      [ AC_MSG_RESULT(no)
+        use_ipng=no
       ])
    )
 ],
-[ AC_DEFINE(USE_IPV6,0,[Enable support for IPv6])
-  AC_DEFINE(IPV6_SPECIAL_SPLITSTACK,0,[Enable support for IPv6 on split-stack implementations])
-  AC_DEFINE(IPV6_SPECIAL_LOCALHOST,0,[Convert IPv4-localhost requests to IPv6. Default: Keep seperate.])
-  AC_DEFINE(IPV6_SPECIAL_V4MAPPED,0,[Enable v4-mapping through v6 sockets])
-  AC_MSG_RESULT(no)
+[ AC_MSG_RESULT(no)
+  use_ipng=no
 ])
 
 if test "$use_ipng" = "yes"; then
@@ -1907,7 +1901,7 @@ AC_DEFINE(IPV6_SPECIAL_V4MAPPED, 1, [Enable v4-mapping through v6 sockets])
 dnl Check for Windows XP option
 AC_MSG_CHECKING([for IPv6 split-stack requirement])
 AC_ARG_WITH(ipv6-split-stack,
-  [  --with-ipv6-split-stack  Require IPv6 split-stack support. Requires IPv6 Support.],
+	AC_HELP_STRING([--with-ipv6-split-stack],[Require IPv6 split-stack support. Requires IPv6 Support.]),
   [ AC_DEFINE(IPV6_SPECIAL_SPLITSTACK, 1, [Enable support for IPv6 on split-stack implementations])
     AC_DEFINE(IPV6_SPECIAL_V4MAPPED, 0, [Enable v4-mapping through v6 sockets. Requires IPv6 hybrid-stack.])
     AC_MSG_RESULT(yes)
@@ -1915,19 +1909,23 @@ AC_ARG_WITH(ipv6-split-stack,
   [AC_DEFINE(IPV6_SPECIAL_SPLITSTACK, 0, [Enable support for IPv6 on split-stack implementations]) AC_MSG_RESULT(no)]
 )
 
-dnl Check for IPv6-pure option
+dnl Check for IPv6-localhost option
 AC_MSG_CHECKING([for IPv6-Localhost requirement])
 AC_ARG_WITH(localhost-ipv6,
-  [  --with-localhost-ipv6    Prefer IPv6 localhost address over IPv4. Requires IPv6 Support.
-                           Treats 127.0.0.1 and ::1 as identical and converts all inputs of localhost to ::1
-                           This depends on Dual-Stack support in the OS and all applications
-                           squid contacts via localhost being IPv6 enabled.
-                           WARNING: This is an RFC violation!],
+  AC_HELP_STRING([--with-localhost-ipv6], [ WARNING: This is an RFC violation!][
+		Treat 127.0.0.1 and ::1 as identical and convert all inputs of localhost to ::1
+		This depends on IPv6 support and all applications squid contacts via localhost being IPv6 enabled.]),
   [AC_DEFINE(IPV6_SPECIAL_LOCALHOST, 1, [Convert IPv4-localhost requests to IPv6. Default: keep seperate.]) AC_MSG_RESULT(yes)],
   [AC_DEFINE(IPV6_SPECIAL_LOCALHOST, 0, [Convert IPv4-localhost requests to IPv6. Default: Keep seperate.]) AC_MSG_RESULT(no)]
 )
 
-# end IPv6-only options
+else
+  # NP: semi-silent failure as IPv4-only mode is perfectly usable on this system.
+  echo "WARNING: IPv6 is not available on this system."
+  AC_DEFINE(USE_IPV6,0,[Enable support for IPv6])
+  AC_DEFINE(IPV6_SPECIAL_SPLITSTACK,0,[Enable support for IPv6 on split-stack implementations])
+  AC_DEFINE(IPV6_SPECIAL_LOCALHOST,0,[Convert IPv4-localhost requests to IPv6. Default: Keep seperate.])
+  AC_DEFINE(IPV6_SPECIAL_V4MAPPED,0,[Enable v4-mapping through v6 sockets])
 fi
 
 AC_ARG_ENABLE(zph-qos,
