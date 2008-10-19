@@ -783,7 +783,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             break;
 
         case LFT_REQUEST_SIZE_TOTAL:
-            outint = al->cache.requestSize;
+            outoff = al->cache.requestSize;
             dooff = 1;
             break;
 
