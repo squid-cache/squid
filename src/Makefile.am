@@ -219,7 +219,6 @@ INCLUDES	+= @SQUID_CPPUNIT_INC@
 EXTRA_PROGRAMS = \
 	DiskIO/DiskDaemon/diskd \
 	unlinkd \
-	icmp/pinger \
 	dnsserver \
 	recv-announce \
 	tests/testUfs \
