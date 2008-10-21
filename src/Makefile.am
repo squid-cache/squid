@@ -1006,6 +1006,7 @@ DEFAULT_HTTP_PORT	= @CACHE_HTTP_PORT@
 DEFAULT_ICP_PORT	= @CACHE_ICP_PORT@
 DEFAULT_PREFIX		= $(prefix)
 DEFAULT_CONFIG_FILE     = $(sysconfdir)/squid.conf
+DEFAULT_CONFIG_DIR	= $(sysconfdir)
 DEFAULT_MIME_TABLE	= $(sysconfdir)/mime.conf
 DEFAULT_DNSSERVER       = $(libexecdir)/`echo dnsserver | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_LOG_PREFIX	= @DEFAULT_LOG_DIR@
@@ -1079,6 +1080,7 @@ cf.data: cf.data.pre Makefile
 	s%@DEFAULT_ICON_DIR@%$(DEFAULT_ICON_DIR)%g;\
 	s%@DEFAULT_MIB_PATH@%$(DEFAULT_MIB_PATH)%g;\
 	s%@DEFAULT_ERROR_DIR@%$(DEFAULT_ERROR_DIR)%g;\
+	s%@DEFAULT_CONFIG_DIR@%$(DEFAULT_CONFIG_DIR)%g;\
 	s%@DEFAULT_PREFIX@%$(DEFAULT_PREFIX)%g;\
 	s%@DEFAULT_HOSTS@%$(DEFAULT_HOSTS)%g;\
 	s%@[V]ERSION@%$(VERSION)%g;"\
