@@ -866,8 +866,6 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, IPAddr
     MemBuf mb;
     Packer p;
     ssize_t pktlen;
-    char *host;
-    char cto_buf[128];
     memset(&stuff, '\0', sizeof(stuff));
     stuff.op = HTCP_TST;
     stuff.rr = RR_RESPONSE;
@@ -909,13 +907,14 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, IPAddr
         hdr.reset();
 
 #if USE_ICMP
-        if ((host = urlHostname(spec->uri))) {
+        if (char *host = urlHostname(spec->uri)) {
 	    int rtt = 0;
 	    int hops = 0;
             int samp = 0;
             netdbHostData(host, &samp, &rtt, &hops);
 
             if (rtt || hops) {
+                char cto_buf[128];
                 snprintf(cto_buf, 128, "%s %d %f %d",
                          host, samp, 0.001 * rtt, hops);
                 hdr.putExt("Cache-to-Origin", cto_buf);
