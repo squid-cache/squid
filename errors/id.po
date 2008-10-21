@@ -8,13 +8,13 @@ msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-09-29 15:05+1300\n"
-"PO-Revision-Date: 2008-07-28 18:47+0000\n"
-"Last-Translator: Hasbinur <Unknown>\n"
+"PO-Revision-Date: 2008-10-22 00:37+1300\n"
+"Last-Translator: Ramdhani Fathurrohman <kontak@ramdhani.net>\n"
 "Language-Team: Indonesian <id@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Launchpad (build Unknown)\n"
+"X-Generator: Pootle 1.1.0\n"
 "X-Launchpad-Export-Date: 2008-07-31 11:24+0000\n"
 
 #: templates/ERR_INVALID_REQ:4
@@ -22,22 +22,28 @@ msgid ""
 "<b>Invalid Request</b> error was encountered while trying to process the "
 "request:"
 msgstr ""
+"<b>Cacat Meminta</b> kesalahan ditemukan sedangkan mencoba mengolah "
+"permintaan:"
 
 #: templates/ERR_INVALID_RESP:4
 msgid ""
 "<b>Invalid Response</b> error was encountered while trying to process the "
 "request:"
 msgstr ""
+"<b>Cacat Jawaban</b> kesalahan ditemukan sedangkan mencoba mengolah "
+"permintaan:"
 
 #: templates/ERR_READ_TIMEOUT:7
 msgid ""
 "A Timeout occurred while waiting to read data from the network.  The network "
 "or server may be down or congested.  Please retry your request."
 msgstr ""
+"Timeout terjadi ketika menunggu untuk membaca data dari jaringan. Jaringan "
+"atau server mungkin mati atau tersumbat. Coba coba lagi permintaan anda."
 
 #: templates/ERR_URN_RESOLVE:3
 msgid "A URL for the requested URN could not be retrieved"
-msgstr ""
+msgstr "URL untuk URN yang diminta tidak bisa didapatkan kembali"
 
 #: templates/ERR_ACCESS_DENIED:5
 msgid "Access Denied."
@@ -49,34 +55,44 @@ msgid ""
 "this time.  Please contact your service provider if you feel this is "
 "incorrect."
 msgstr ""
+"Akses kontrol konfigurasi mencegah permintaan Anda tidak diizinkan untuk "
+"saat ini. Silahkan hubungi operator servis jika Anda merasa ini tidak benar."
 
 #: templates/ERR_FTP_FORBIDDEN:4
 msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
+"terjadi kegagalan otentikasi FTP ketika mencoba untuk mengambil URL: <a "
+"href=\"%U\">%U</a>"
 
 #: templates/ERR_FTP_FAILURE:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
 msgstr ""
+"terjadi kesalahan Protokol FTP ketika mencoba untuk mengambil URL: <a "
+"href=\"%U\">%U</a>"
 
 #: templates/ERR_ICAP_FAILURE:10
 msgid "An Illegal response was received from the ICAP server."
-msgstr ""
+msgstr "Sebuah tanggapan Illegal diterima dari ICAP server."
 
 #: templates/ERR_READ_ERROR:7
 msgid ""
 "An error condition occurred while reading data from the network.  Please "
 "retry your request."
 msgstr ""
+"Kondisi kesalahan terjadi sedangkan membaca data dari jaringan. Silahkan "
+"coba lagi permintaan anda."
 
 #: templates/ERR_WRITE_ERROR:7
 msgid ""
 "An error condition occurred while writing to the network.  Please retry your "
 "request."
 msgstr ""
+"Kondisi kesalahan terjadi ketika sedang menulis kepada jaringan. Silahkan "
+"coba lagi permintaan anda."
 
 #: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
 msgid "Cache Access Denied."
@@ -85,11 +101,11 @@ msgstr "Akses Cache Ditolak"
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:3
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:5
 msgid "Cache Manager Access Denied."
-msgstr ""
+msgstr "Cache manager Akses ditolak."
 
 #: templates/ERR_URN_RESOLVE:5
 msgid "Cannot Resolve URN"
-msgstr ""
+msgstr "Tidak dapat menyelesaikan URN"
 
 #: templates/ERR_LIFETIME_EXP:5
 msgid "Connection Lifetime Expired"
