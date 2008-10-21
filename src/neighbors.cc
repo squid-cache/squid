@@ -47,6 +47,7 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "IPAddress.h"
+#include "icmp/net_db.h"
 
 /* count mcast group peers every 15 minutes */
 #define MCAST_COUNT_RATE 900
@@ -1278,9 +1279,12 @@ peerDNSConfigure(const ipcache_addrs * ia, void *data)
     if (p->type == PEER_MULTICAST)
         peerCountMcastPeersSchedule(p, 10);
 
+#if USE_ICMP
     if (p->type != PEER_MULTICAST)
         if (!p->options.no_netdb_exchange)
             eventAddIsh("netdbExchangeStart", netdbExchangeStart, p, 30.0, 1);
+#endif
+
 }
 
 static void
@@ -1380,7 +1384,7 @@ peerProbeConnect(peer * p)
     if (squid_curtime - p->stats.last_connect_probe == 0)
         return ret;/* don't probe to often */
 
-    IPAddress temp(getOutgoingAddr(NULL));
+    IPAddress temp(getOutgoingAddr(NULL,p));
 
     fd = comm_open(SOCK_STREAM, IPPROTO_TCP, temp, COMM_NONBLOCKING, p->host);
 

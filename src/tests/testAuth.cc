@@ -11,10 +11,18 @@
 CPPUNIT_TEST_SUITE_REGISTRATION( testAuth );
 CPPUNIT_TEST_SUITE_REGISTRATION( testAuthConfig );
 CPPUNIT_TEST_SUITE_REGISTRATION( testAuthUserRequest );
+#ifdef HAVE_AUTH_MODULE_BASIC
 CPPUNIT_TEST_SUITE_REGISTRATION( testAuthBasicUserRequest );
+#endif
+#ifdef HAVE_AUTH_MODULE_DIGEST
 CPPUNIT_TEST_SUITE_REGISTRATION( testAuthDigestUserRequest );
+#endif
+#ifdef HAVE_AUTH_MODULE_NTLM
 CPPUNIT_TEST_SUITE_REGISTRATION( testAuthNTLMUserRequest );
+#endif
+#ifdef HAVE_AUTH_MODULE_NEGOTIATE
 CPPUNIT_TEST_SUITE_REGISTRATION( testAuthNegotiateUserRequest );
+#endif
 
 /* Instantiate all auth framework types */
 void
@@ -60,7 +68,8 @@ getConfig(char const *type_str)
         AuthScheme *theScheme;
 
         if ((theScheme = AuthScheme::Find(type_str)) == NULL) {
-            fatalf("Unknown authentication scheme '%s'.\n", type_str);
+            return NULL;
+            //fatalf("Unknown authentication scheme '%s'.\n", type_str);
         }
 
         config.push_back(theScheme->createConfig());
@@ -121,8 +130,16 @@ fake_auth_setup()
         {"negotiate", negotiate_parms, 1}
     };
 
-    for (unsigned scheme=0; scheme < 4; scheme++)
-        setup_scheme(getConfig(params[scheme].name), params[scheme].params, params[scheme].paramlength);
+    for (unsigned scheme=0; scheme < 4; scheme++) {
+        AuthConfig *schemeConfig;
+        schemeConfig = getConfig(params[scheme].name);
+        if (schemeConfig != NULL)
+            setup_scheme (schemeConfig, params[scheme].params, 
+                params[scheme].paramlength);
+		else
+            fprintf(stderr,"Skipping unknown authentication scheme '%s'.\n", 
+                params[scheme].name);
+    }
 
     authenticateInit(&config);
 
@@ -163,6 +180,7 @@ testAuthUserRequest::scheme()
     }
 }
 
+#ifdef HAVE_AUTH_MODULE_BASIC
 #include "auth/basic/auth_basic.h"
 /* AuthBasicUserRequest::AuthBasicUserRequest works
  */
@@ -186,7 +204,9 @@ testAuthBasicUserRequest::username()
     CPPUNIT_ASSERT_EQUAL(0, strcmp("John", temp->username()));
     delete temp;
 }
+#endif /* HAVE_AUTH_MODULE_BASIC */
 
+#ifdef HAVE_AUTH_MODULE_DIGEST
 #include "auth/digest/auth_digest.h"
 /* AuthDigestUserRequest::AuthDigestUserRequest works
  */
@@ -210,7 +230,9 @@ testAuthDigestUserRequest::username()
     CPPUNIT_ASSERT_EQUAL(0, strcmp("John", temp->username()));
     delete temp;
 }
+#endif /* HAVE_AUTH_MODULE_DIGEST */
 
+#ifdef HAVE_AUTH_MODULE_NTLM
 #include "auth/ntlm/auth_ntlm.h"
 /* AuthNTLMUserRequest::AuthNTLMUserRequest works
  */
@@ -234,7 +256,9 @@ testAuthNTLMUserRequest::username()
     CPPUNIT_ASSERT_EQUAL(0, strcmp("John", temp->username()));
     delete temp;
 }
+#endif /* HAVE_AUTH_MODULE_NTLM */
 
+#ifdef HAVE_AUTH_MODULE_NEGOTIATE
 #include "auth/negotiate/auth_negotiate.h"
 /* AuthNegotiateUserRequest::AuthNegotiateUserRequest works
  */
@@ -258,3 +282,5 @@ testAuthNegotiateUserRequest::username()
     CPPUNIT_ASSERT_EQUAL(0, strcmp("John", temp->username()));
     delete temp;
 }
+
+#endif /* HAVE_AUTH_MODULE_NEGOTIATE */

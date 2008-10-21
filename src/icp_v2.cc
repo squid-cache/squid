@@ -49,6 +49,7 @@
 #include "SquidTime.h"
 #include "SwapDir.h"
 #include "IPAddress.h"
+#include "icmp/net_db.h"
 
 /// \ingroup ServerProtocolICPInternal2
 static void icpLogIcp(const IPAddress &, log_type, int, const char *, int);
@@ -151,10 +152,12 @@ ICP2State::created(StoreEntry *newEntry)
     if (icpCheckUdpHit(entry, request)) {
         codeToSend = ICP_HIT;
     } else {
+#if USE_ICMP
         if (Config.onoff.test_reachability && rtt == 0) {
             if ((rtt = netdbHostRtt(request->GetHost())) == 0)
                 netdbPingSite(request->GetHost());
         }
+#endif /* USE_ICMP */
 
         if (icpGetCommonOpcode() != ICP_ERR)
             codeToSend = icpGetCommonOpcode();
@@ -461,7 +464,7 @@ doV2Query(int fd, IPAddress &from, char *buf, icp_common_t header)
         HTTPMSGUNLOCK(icp_request);
         return;
     }
-
+#if USE_ICMP
     if (header.flags & ICP_FLAG_SRC_RTT) {
         rtt = netdbHostRtt(icp_request->GetHost());
         int hops = netdbHostHops(icp_request->GetHost());
@@ -470,6 +473,7 @@ doV2Query(int fd, IPAddress &from, char *buf, icp_common_t header)
         if (rtt)
             flags |= ICP_FLAG_SRC_RTT;
     }
+#endif /* USE_ICMP */
 
     /* The peer is allowed to use this cache */
     ICP2State *state = new ICP2State (header, icp_request);

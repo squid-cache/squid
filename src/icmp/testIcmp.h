@@ -3,15 +3,15 @@
 
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "ICMP.h"
+#include "Icmp.h"
 
 #if USE_ICMP
 
-class stubICMP : public ICMP
+class stubIcmp : public Icmp
 {
 public:
-    stubICMP() {};
-    virtual ~stubICMP() {};
+    stubIcmp() {};
+    virtual ~stubIcmp() {};
     virtual int Open() { return 0; };
     virtual void Close() {};
 
@@ -31,9 +31,9 @@ public:
 /**
  * test the ICMP base class.
  */
-class testICMP : public CPPUNIT_NS::TestFixture
+class testIcmp : public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testICMP );
+    CPPUNIT_TEST_SUITE( testIcmp );
 #if USE_ICMP
     CPPUNIT_TEST( testChecksum );
     CPPUNIT_TEST( testHops );

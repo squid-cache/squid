@@ -1,8 +1,7 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.0.RC1 release notes</title>
+<title>Squid 3.0.STABLE10 release notes</title>
 <author>Squid Developers</author>
-<date>$Id: release-3.0.sgml,v 1.31 2007/12/14 05:34:16 amosjeffries Exp $</date>
 
 <abstract>
 This document contains the release notes for version 3.0 of Squid.
@@ -14,20 +13,19 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.0.RC1 for pre-release testing.
+The Squid Team are pleased to announce the release of Squid-3.0.STABLE10.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.0/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
-A large number of the show-stopper bugs have been fixed along with general improvements to the ICAP support.
-While this release is not deemed ready for production use, we believe it is ready for wider testing by the community.
+A large number of the show-stopper bugs have been fixed along with general improvements to the ICAP support and additional Languages.
 
 We welcome feedback and bug reports. If you find a bug, please see <url url="http://wiki.squid-cache.org/SquidFaq/TroubleShooting#head-7067fc0034ce967e67911becaabb8c95a34d576d"> for how to submit a report with a stack trace.
 
 <sect>Known issues
 <p>
-Although this release is deemed good enough for testing in many setups, please note the existence of <url url="http://www.squid-cache.org/bugs/buglist.cgi?query_format=advanced&amp;short_desc_type=allwordssubstr&amp;short_desc=&amp;target_milestone=3.0&amp;long_desc_type=allwordssubstr&amp;long_desc=&amp;bug_file_loc_type=allwordssubstr&amp;bug_file_loc=&amp;status_whiteboard_type=allwordssubstr&amp;status_whiteboard=&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;emailtype1=substring&amp;email1=&amp;emailtype2=substring&amp;email2=&amp;bugidtype=include&amp;bug_id=&amp;votes=&amp;chfieldfrom=&amp;chfieldto=Now&amp;chfieldvalue=&amp;cmdtype=doit&amp;order=bugs.bug_severity&amp;field0-0-0=noop&amp;type0-0-0=noop&amp;value0-0-0=" name="open bugs against Squid-3.0">.
+Although this release is deemed good enough for use in many setups, please note the existence of <url url="http://www.squid-cache.org/bugs/buglist.cgi?query_format=advanced&amp;short_desc_type=allwordssubstr&amp;short_desc=&amp;target_milestone=3.0&amp;long_desc_type=allwordssubstr&amp;long_desc=&amp;bug_file_loc_type=allwordssubstr&amp;bug_file_loc=&amp;status_whiteboard_type=allwordssubstr&amp;status_whiteboard=&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;emailtype1=substring&amp;email1=&amp;emailtype2=substring&amp;email2=&amp;bugidtype=include&amp;bug_id=&amp;votes=&amp;chfieldfrom=&amp;chfieldto=Now&amp;chfieldvalue=&amp;cmdtype=doit&amp;order=bugs.bug_severity&amp;field0-0-0=noop&amp;type0-0-0=noop&amp;value0-0-0=" name="open bugs against Squid-3.0">.
 
-<sect>Changes since earlier releases of Squid-3.0
+<sect>Changes since earlier STABLE releases of Squid-3.0
 <p>
 The 3.0 change history can be <url url="http://www.squid-cache.org/Versions/v3/3.0/changesets/" name="viewed here">.
 
@@ -85,7 +83,7 @@ to perform some simple XML based processing, offloading the final page assembly 
 <sect1>2.6 features not found in Squid-3.0
 <p>
 Some of the features found in Squid-2.6 is not available in Squid-3.
-Some has been dropped as they are not needed. Some has not yet been forward-ported to Squid-3 and may appear in a later release.
+Some have been dropped as they are not needed. Some have not yet been forward-ported to Squid-3 and may appear in a later release.
 
 <itemize>
 	<item>refresh_stale_hit option. Not yet ported.
@@ -94,7 +92,6 @@ Some has been dropped as they are not needed. Some has not yet been forward-port
 	<item>Mapping of server error messages. Not yet ported.
 	<item>http_access2 access directive. Not yet ported.
 	<item>Location header rewrites. Not yet ported.
-	<item>umask directive. Not yet ported.
 	<item>wais_relay. Feature dropped as it's equivalent to cache_peer + cache_peer_access.
 	<item>urlgroup. Not yet ported.
 	<item>collapsed forwarding. Not yet ported.
@@ -459,7 +456,7 @@ If set to 1 and the ICAP server cannot be reached, the request will go
 through without being processed by an ICAP server
 service_url = icap://servername:port/service
 
-Note: reqmod_precache and respmod_postcache is not yet implemented
+Note: reqmod_postcache and respmod_postcache is not yet implemented
 
 Example:
 icap_service service_1 reqmod_precache 0 icap://icap1.mydomain.net:1344/reqmod
@@ -510,6 +507,37 @@ The 'httpready' filter delays delivering new connections
 to Squid until a full HTTP request has been received.
 See the accf_http(9) man page.
 	</verb>
+
+	<tag>include</tag>
+	<p>New option to import entire secondary configuration files into squid.conf.
+	<verb>
+	Squid will follow the files immediately and insert all their content
+	as if it was at that position in squid.conf. As per squid.conf some
+	options are order-specific within the config as a whole.
+
+	A few layers of include are allowed, but too many are confusing and
+	squid will enforce an include depth of 16 files.
+
+	Syntax:
+		include /path/to/file1 /path/to/file2
+	</verb>
+
+	<tag>acl myportname</tag>
+	<p>New acl type myportname, matching the name of the http(s)_port where the request was accepted
+	<verb>
+        acl aclname myportname 3128 ...         # http(s)_port name
+	</verb>
+
+	<tag>umask</tag>
+	<p>Ported from 2.6. Behaviour identical.
+	<verb>
+	Minimum umask which should be enforced while the proxy
+	is running, in addition to the umask set at startup.
+
+	For a traditional octal representation of umasks, start
+        your value with 0.
+	</verb>
+
 </descrip>
 
 
@@ -573,10 +601,6 @@ See the accf_http(9) man page.
 	</verb>
 	<p>Removed options:
 	<verb>
-    userhash, not yet ported to Squid-3
-
-    sourcehash, not yet ported to Squid-2
-
     monitorurl, monitorsize etc, not yet ported to Squid-3
 
     connection-auth=, not yet ported to Squid-3
@@ -586,7 +610,7 @@ See the accf_http(9) man page.
 	<verb>
     no-store, replaces the older read-only option
 
-    min-size, not yet portedto Squid-3
+    min-size, not yet ported to Squid-3
 	</verb>
 	<p>COSS file system:
 	<verb>
@@ -647,7 +671,9 @@ See the accf_http(9) man page.
     ensures that the client will receive an updated version
     if one is available.
 	</verb>
+
 	<tag>acl</tag>
+	<p>The 'all' ACL is now provided as a built-in. Warnings will be displayed if any attempt is made to redefine it.
 	<p>New types:
 	<verb>
     acl aclname http_status 200 301 500- 400-403 ...     # status code in reply
@@ -661,6 +687,7 @@ See the accf_http(9) man page.
 	# match against the urlgroup as indicated by redirectors
 
 	</verb>
+
 	<tag>short_icon_urls</tag>
 	<p>New default:
 	<verb>
@@ -713,13 +740,6 @@ See the accf_http(9) man page.
     &lt;sS     Upstream object size
 	</verb>
 
-	<p>Removed format tags:
-	<verb>
-    &gt;st     Request size including HTTP headers, not yet ported to Squid-3.
-
-    st      Request+Reply size including HTTP headers, not yet ported to Squid-3.
-	</verb>
-
 	<tag>reply_body_max_size</tag>
 	<p>Syntax changed:
 	<verb>
@@ -729,6 +749,11 @@ See the accf_http(9) man page.
 
 	<tag>url_rewrite_program</tag>
 	<p>No urlgroup support in either requests or responese
+
+	<tag>auth_param</tag>
+	<p>fake_auth helper for NTLM now accepts the '-S' parameter to strip NTLM domain off the username string.
+	   This is useful for class 4 Delay Pools in Squid 3.x
+
 </descrip>
 
 
@@ -758,8 +783,6 @@ See the accf_http(9) man page.
 	<tag>location_rewrite_*</tag>
 	<p>Not yet ported to Squid-3.
 	<tag>refresh_stale_hit</tag>
-	<p>Not yet ported to Squid-3.
-	<tag>umask</tag>
 	<p>Not yet ported to Squid-3.
 	<tag>wais_relay_*</tag>
 	<p>equivalent to cache_peer + cache_peer_access.

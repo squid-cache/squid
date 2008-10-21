@@ -42,11 +42,15 @@
 #include "ACLDomainData.h"
 
 /*
- *  moved template instantiation into ACLStrategized.cc from
- *  ACLHTTPRepHeader.cc and ACLHTTPReqHeader.cc to compile on
- *  Mac OSX 10.5 Leopard, this corrects a duplicate symbol error
+ *  moved template instantiation into ACLStrategized.cc
+ *  to compile on Mac OSX 10.5 Leopard.
+ *  This corrects a duplicate symbol error
  */
 
 /* explicit template instantiation required for some systems */
 
+/* ACLHTTPRepHeader + ACLHTTPReqHeader */
 template class ACLStrategised<HttpHeader*>;
+
+/* ACLMyPortName + ACLMyPeerName */
+template class ACLStrategised<const char *>;
