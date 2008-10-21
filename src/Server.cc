@@ -92,7 +92,7 @@ ServerStateData::swanSong()
 {
     // get rid of our piping obligations
     if (requestBodySource != NULL)
-        requestBodySource->clearConsumer();
+        stopConsumingFrom(requestBodySource);
 
 #if USE_ADAPTATION
     cleanAdaptation();
