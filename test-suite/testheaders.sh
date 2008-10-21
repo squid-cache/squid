@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # test all header files (.h) for dependancy issues.
 #

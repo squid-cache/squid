@@ -1,5 +1,21 @@
-Changes to squid-3.HEAD (current):
+Changes to squid-3.1.0.1 (16 Oct 2008):
 
+	- peername ACL added for matching against a named peer destination
+	- configure option --with-logdir= added to select log files location
+	- squid_kerb_auth helper updated to 1.0.3 release
+	- Bug #740: allow external acl's to use reply headers in format
+	- Bug #2379: obsolete dns_testnames option
+	- Code test infrastructure expanded to configuration testing
+	- Policy changes to negative_ttl, cache deny QUERY, refresh_pattern
+	  to bring their defaults up to RFC requirements.
+	- Large increase in RFC 2616 standard compliance (ongoing)
+	- squid.conf cleanups for minimal config
+	- Connection Pinning ported from 2.6 for NTLM passthru authentication
+	- eCAP internal adaptation module support
+	- Localization of error pages
+	- Added semi-automatic documentation of source code
+	- Added TE chunked encoding decoder to workaround broken HTTP/1.1 servers
+	- HTCP improvements ported from 2.7 adding HTCP CLR requests
 	- IPv6 (Internet Protocol version 6) support
 	- ICMPv6 (Internet Control Message Protocol version 6) support
 	- FTP agent now supports EPSV/EPRT commands
@@ -9,14 +25,70 @@ Changes to squid-3.HEAD (current):
 	- SslBump: Squid-in-the-middle decryption and encryption of straight
 	  CONNECT and transparently redirected SSL traffic, using configurable
 	  client- and server-side certificates. While decrypted, the traffic
-	  can be expected using ICAP.
-	- TPROXY version 4 support now included.
+	  can be inspected using ICAP.
+	- TPROXY version 4.1 support now included.
 	- IPFW and Netfilter interception methods may now both be built in one binary.
 	- ZPH Quality of Service patch now integrated
 	- Null store now fully obsoleted and removed
 	- Unknown request methods all supported
 	- Follow_x_forwarder_for ported from 2.6
-	- Follow XFF extensions added
+	- Bug #2223: Follow XFF extensions added
+
+Changes to squid-3.0.STABLE10 (14 Oct 2008):
+
+	- Bug 2391: Regression: bad assert in forwarding
+	- Bug 2447: Segfault on failed TCP DNS query
+	- Bug 2393: DNS requests getting stuck in idns queue
+	- Bug 2433: FTP PUT gives bad gateway
+	- Bug 2465: Limited DragonflyBSD support
+	- ... and other minor bugs and documentation
+
+Changes to squid-3.0.STABLE9 (9 Sep 2008):
+
+	- Policy Enforcement: COSS is unusable in 3.0
+	- Port from 3.1: Language Pack compatibility
+	- Port from 2.6: Windows Support Notes
+	- Fix several minor regressions:
+	    HTCP stats reporting
+	    cachemgr delay pool config
+	    CARP build error
+	- Bug 2340: uudecode dependency for icons removed
+	- Bug 2352: no_check.pl ntlm challenge fix
+	- Bug 2426: buffer increase for kerberos auth fields
+	- Bug 2427: squid_ldap_group codes fix
+	- Bug 2437: peer name now shown in access.log
+	- Add sane display of unsupported method errors
+	- ... and various other code cleanups
+
+Changes to squid-3.0.STABLE8 (18 Jul 2008):
+
+	- Port from 2.6: Support for cachemgr sub-actions
+	- Port from 2.6: userhash peer selection method
+	- Port from 2.6: sourcehash peer selection method
+	- Bug 2376: round-robin balancing fixes
+	- Bug 2388: acl documentation cleanup
+	- Bug 2365: cachemgr.cgi HTML output encoding
+	- Bug 2301: Regression: Log format size options
+	- Bug 2396: Correct the opening of PF device file.
+	- Bug 2400: ICAP accept mechanism
+	- Bug 2411: Regression: fakeauth_auth crashes
+	- Many fixes to the Windows support (not complete yet).
+	- Boost error pages HTML standards.
+	- Fixes several issues on 64-bit systems
+	- Fixes several issues on older or stricter compilers
+	- Linux-2.6.24/2.6.25 netfilter_ipv4.h __u32 workaround
+	- Update Release Notes: 'all' ACL is built-in since 3.0.STABLE1
+
+Changes to squid-3.0.STABLE7 (22 Jun 2008):
+
+	- Fix several ASN issues
+	- Fix SNMP reporting of counters
+	- Fix round-robin algorithms
+	- GCC 4.3 support
+	- Netfilter v1.4.0 bug workaround
+	- Bugs 2350 and 2323: memory issues
+	- Bugs 2384, 951, 1566: ESI assertions
+	- Various minor debug and documentation cleanups
 
 Changes to squid-3.0.STABLE6 (20 May 2008):
  

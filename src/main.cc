@@ -68,7 +68,8 @@
 #include "SwapDir.h"
 #include "forward.h"
 #include "MemPool.h"
-#include "ICMPSquid.h"
+#include "icmp/IcmpSquid.h"
+#include "icmp/net_db.h"
 #include "TextException.h"
 
 #if USE_LOADABLE_MODULES

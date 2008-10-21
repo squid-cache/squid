@@ -651,10 +651,8 @@ ConnStateData::~ConnStateData()
 
     cbdataReferenceDone(port);
 
-    if (bodyPipe != NULL) {
-        bodyPipe->clearProducer(false);
-        bodyPipe = NULL; // refcounted
-    }
+    if (bodyPipe != NULL)
+        stopProducingFor(bodyPipe, false);
 }
 
 /**

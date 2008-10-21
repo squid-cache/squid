@@ -41,6 +41,7 @@
 #include "MemBuf.h"
 #include "SquidTime.h"
 #include "wordlist.h"
+#include "icmp/net_db.h"
 
 /* called when we "miss" on an internal object;
  * generate known dynamic objects,
@@ -60,7 +61,7 @@ internalStart(HttpRequest * request, StoreEntry * entry)
         const char *msgbuf = "This cache is currently building its digest.\n";
 #else
 
-        const char *msgbuf = "This cache does not suport Cache Digests.\n";
+        const char *msgbuf = "This cache does not support Cache Digests.\n";
 #endif
 
         HttpVersion version(1, 0);
