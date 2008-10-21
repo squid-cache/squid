@@ -4830,6 +4830,16 @@ DOC_START
 	of its error page translations.
 DOC_END
 
+NAME: err_page_stylesheet
+TYPE: string
+LOC: Config.errorStylesheet
+DEFAULT: @DEFAULT_CONFIG_DIR@/errorpage.css
+DOC_START
+	CSS Stylesheet to pattern the display of Squid default error pages.
+
+	For information on CSS see http://www.w3.org/Style/CSS/
+DOC_END
+
 NAME: err_html_text
 TYPE: eol
 LOC: Config.errHtmlText
