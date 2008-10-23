@@ -760,7 +760,7 @@ fi
 
 AM_CONDITIONAL(USE_ICAP_CLIENT, false)
 AC_ARG_ENABLE(icap-client,
-              AC_HELP_STRING([--enable-icap-client],[Enable the ICAP client.]),
+  AC_HELP_STRING([--enable-icap-client],[Enable the ICAP client.]),
 	      use_icap_client=$enableval, use_icap_client=no)
 if test "$use_icap_client" = "yes" ; then
   AC_DEFINE(ICAP_CLIENT,1,[Enable ICAP client features in Squid])
@@ -776,10 +776,8 @@ AC_SUBST(ICAP_LIBS)
 use_ecap=1
 AC_MSG_CHECKING(whether to support eCAP)
 AC_ARG_ENABLE(ecap,
-        AC_HELP_STRING(
-            [--enable-ecap],
-            [support loadable content adaptation modules])
-    ,
+  AC_HELP_STRING([--enable-ecap],
+                 [support loadable content adaptation modules]),
     [
         case "${enableval}" in
             yes) use_ecap=yes ;;
@@ -851,7 +849,8 @@ dnl   fi
 dnl ])     
 
 AC_ARG_ENABLE(useragent-log,
-[  --enable-useragent-log  Enable logging of User-Agent header],
+  AC_HELP_STRING([--enable-useragent-log],
+                 [Enable logging of User-Agent header]),
 [ if test "$enableval" = "yes" ; then
     echo "User-Agent logging enabled"
     AC_DEFINE(USE_USERAGENT_LOG,1,[If you want to log User-Agent request header values, define this.
@@ -861,7 +860,7 @@ AC_ARG_ENABLE(useragent-log,
 ])
 
 AC_ARG_ENABLE(referer-log,
-[  --enable-referer-log    Enable logging of Referer header],
+  AC_HELP_STRING([--enable-referer-log],[Enable logging of Referer header]),
 [ if test "$enableval" = "yes" ; then
     echo "Referer logging enabled"
     AC_DEFINE(USE_REFERER_LOG,1,[If you want to log Referer request header values, define this.
@@ -872,7 +871,7 @@ AC_ARG_ENABLE(referer-log,
 
 USE_WCCP=1
 AC_ARG_ENABLE(wccp,  
-[  --disable-wccp          Disable Web Cache Coordination Protocol],
+  AC_HELP_STRING([--disable-wccp],[Disable Web Cache Coordination Protocol]),
 [ if test "$enableval" = "no" ; then
     echo "Web Cache Coordination Protocol disabled"
     USE_WCCP=0
@@ -884,7 +883,8 @@ fi
 
 USE_WCCPv2=1
 AC_ARG_ENABLE(wccpv2,
-[  --disable-wccpv2        Disable Web Cache Coordination V2 Protocol],
+  AC_HELP_STRING([--disable-wccpv2],
+                 [Disable Web Cache Coordination V2 Protocol]),
 [ if test "$enableval" = "no" ; then
     echo "Web Cache Coordination V2 Protocol disabled"
     USE_WCCPv2=0
@@ -895,8 +895,7 @@ if test $USE_WCCPv2 = 1; then
 fi
 
 AC_ARG_ENABLE(kill-parent-hack,
-[  --enable-kill-parent-hack
-                          Kill parent on shutdown],
+  AC_HELP_STRING([--enable-kill-parent-hack],[Kill parent on shutdown]),
 [ if test "$enableval" = "yes" ; then
     echo "Kill parent on shutdown"
     AC_DEFINE(KILL_PARENT_OPT,1,[A dangerous feature which causes Squid to kill its parent process
@@ -907,7 +906,7 @@ AC_ARG_ENABLE(kill-parent-hack,
 
 USE_SNMP=true
 AC_ARG_ENABLE(snmp,
-[  --disable-snmp          Disable SNMP monitoring support],
+  AC_HELP_STRING([--disable-snmp],[Disable SNMP monitoring support]),
 [ if test "$enableval" = "no" ; then
     echo "SNMP monitoring disabled"
     USE_SNMP=
@@ -923,8 +922,9 @@ AC_SUBST(SNMPLIB)
 AC_SUBST(makesnmplib)
 
 AC_ARG_ENABLE(cachemgr-hostname,
-[  --enable-cachemgr-hostname[=hostname]
-                          Make cachemgr.cgi default to this host],
+  AC_HELP_STRING([--enable-cachemgr-hostname=hostname],
+                 [Make cachemgr.cgi default to this host.
+                  If unspecified, uses the name of the build-host]),
 [  case $enableval in
    yes)
        AC_DEFINE(CACHEMGR_HOSTNAME,[getfullhostname()],
@@ -943,7 +943,8 @@ AC_ARG_ENABLE(cachemgr-hostname,
 
 AM_CONDITIONAL(ENABLE_ARP_ACL, false)
 AC_ARG_ENABLE(arp-acl,
-[  --enable-arp-acl        Enable use of ARP ACL lists (ether address)],
+  AC_HELP_STRING([--enable-arp-acl],
+                 [Enable use of ARP ACL lists (ether address)]),
 [  if test "$enableval" = "yes" ; then
      echo "ARP ACL lists enabled (ether address)"
      case "$host" in
@@ -976,7 +977,7 @@ AC_ARG_ENABLE(arp-acl,
 USE_HTCP=true
 AM_CONDITIONAL(ENABLE_HTCP, false)
 AC_ARG_ENABLE(htcp,
-[  --disable-htcp          Disable HTCP protocol support],
+  AC_HELP_STRING([--disable-htcp],[Disable HTCP protocol support]),
 [ if test "$enableval" = "no" ; then
     echo "HTCP support disabled"
   fi
@@ -991,7 +992,7 @@ AM_CONDITIONAL(ENABLE_SSL, false)
 
 dnl Default is to use OpenSSL when available
 AC_ARG_ENABLE(ssl,
-[  --enable-ssl            Enable ssl gatewaying support using OpenSSL],
+  AC_HELP_STRING([--enable-ssl],[Enable ssl gatewaying support using OpenSSL]),
 [ if test "$enableval" != "no"; then
     echo "SSL gatewaying using OpenSSL enabled"
     AC_DEFINE(USE_SSL,1,[Define this to include code for SSL encryption.])
@@ -1011,11 +1012,11 @@ AC_ARG_ENABLE(ssl,
 
 dnl User may specify OpenSSL is needed from a non-standard location
 AC_ARG_WITH(openssl,
-[  --with-openssl[=prefix]
-                          Compile with the OpenSSL libraries. The path to
-			  the OpenSSL development libraries and headers
-			  installation can be specified if outside of the
-			  system standard directories],
+  AC_HELP_STRING([--with-openssl{=prefix}],
+                 [Compile with the OpenSSL libraries. The path to
+                  the OpenSSL development libraries and headers
+                  installation can be specified if outside of the
+                  system standard directories]),
 [ 
   case "$with_openssl" in
   yes)
@@ -1050,7 +1051,7 @@ AC_SUBST(SSLLIB)
 
 
 AC_ARG_ENABLE(forw-via-db,
-[  --enable-forw-via-db    Enable Forw/Via database],
+  AC_HELP_STRING([--enable-forw-via-db],[Enable Forw/Via database]),
 [ if test "$enableval" = "yes" ; then
     echo "FORW-VIA enabled"
     AC_DEFINE(FORW_VIA_DB,1,[Enable Forw/Via database])
@@ -1058,8 +1059,9 @@ AC_ARG_ENABLE(forw-via-db,
 ])
 
 AC_ARG_ENABLE(cache-digests,
-[  --enable-cache-digests  Use Cache Digests
-                          see http://wiki.squid-cache.org/SquidFaq/CacheDigests],
+  AC_HELP_STRING([--enable-cache-digests],
+                 [Use Cache Digests.
+                  See http://wiki.squid-cache.org/SquidFaq/CacheDigests]),
 [ if test "$enableval" = "yes" ; then
     echo "USE_CACHE_DIGESTS enabled"
     AC_DEFINE(USE_CACHE_DIGESTS,1,[Use Cache Digests for locating objects in neighbor caches.  This code is still semi-experimental.])
@@ -1068,7 +1070,8 @@ AC_ARG_ENABLE(cache-digests,
 
 dnl Size of COSS memory buffer
 AC_ARG_WITH(coss-membuf-size,
-[  --with-coss-membuf-size COSS membuf size (default 1048576 bytes) ],
+  AC_HELP_STRING([--with-coss-membuf-size=size],
+                 [COSS membuf size (default 1048576 bytes)]),
 [  if test -n "$withval" -a "x$withval" != "xno" ; then
       echo "Setting COSS membuf size to $with_coss_membuf_size bytes"
       AC_DEFINE_UNQUOTED(COSS_MEMBUF_SZ, $with_coss_membuf_size,[Define if you want to set the COSS membuf size])
@@ -1080,8 +1083,7 @@ dnl check for netio plugin stuff
 dnl Enable poll()
 disable_poll=
 AC_ARG_ENABLE(poll,
-[  --disable-poll          Disable poll() support. ],
-
+  AC_HELP_STRING([--disable-poll],[Disable poll(2) support.]),
 [
   case "$enableval" in
   yes)
@@ -1098,8 +1100,7 @@ AC_ARG_ENABLE(poll,
 dnl Enable select()
 disable_select=
 AC_ARG_ENABLE(select,
-[  --disable-select        Disable select() support. ],
-
+  AC_HELP_STRING([--disable-select],[Disable select(2) support.]),
 [
   case "$enableval" in
   yes)
@@ -1117,8 +1118,7 @@ dnl Enable kqueue()
 dnl kqueue support is still experiemntal and unstable. Not enabled by default.
 disable_kqueue=true
 AC_ARG_ENABLE(kqueue,
-[  --enable-kqueue         Enable kqueue() support (experimental).],
-
+  AC_HELP_STRING([--enable-kqueue],[Enable kqueue(2) support (experimental).]),
 [
   case "$enableval" in
   yes)
@@ -1135,8 +1135,7 @@ esac
 dnl Enable epoll()
 disable_epoll=
 AC_ARG_ENABLE(epoll,
-[  --disable-epoll         Disable Linux epoll() support.],
-
+  AC_HELP_STRING([--disable-epoll],[Disable Linux epoll(2) support.]),
 [
   case "$enableval" in
   yes)
