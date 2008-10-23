@@ -388,7 +388,7 @@ AC_ARG_ENABLE(storeio,
   yes)
 	for dir in $srcdir/src/fs/*; do
 	    module="`basename $dir`"
-	    if test -d "$dir" && test "$module" != CVS; then
+	    if test -d "$dir" && test "$module" != CVS && test "$module" != coss; then
 		STORE_MODULES="$STORE_MODULES $module"
 	    fi
 	done
