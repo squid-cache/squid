@@ -383,11 +383,9 @@ AC_ARG_ENABLE(xmalloc-statistics,
 ])
 
 AC_ARG_ENABLE(async-io,
-[  --enable-async-io[=N_THREADS]
-                          Shorthand for
-                          --with-aufs-threads=N_THREADS
-                          --with-pthreads
-                          --enable-storeio=ufs,aufs],
+  AC_HELP_STRING([--enable-async-io[=N_THREADS]],
+                 [Shorthand for --with-aufs-threads=N_THREADS --with-pthreads
+                  --enable-storeio=ufs,aufs]),
 [ case $enableval in
   yes)
 	with_pthreads="yes"
@@ -404,9 +402,8 @@ AC_ARG_ENABLE(async-io,
 ])
 
 AC_ARG_WITH(aufs-threads,
-[  --with-aufs-threads=N_THREADS
-                          Tune the number of worker threads for the aufs object
-                          store.],
+  AC_HELP_STRING([--with-aufs-threads=N_THREADS],
+	               [Tune the number of worker threads for the aufs object store.]),
 [ case $withval in
   [[0-9]]*)
     aufs_io_threads=$withval
@@ -423,30 +420,30 @@ if test "$aufs_io_threads"; then
 fi
 
 AC_ARG_WITH(pthreads,
-[  --with-pthreads         Use POSIX Threads])
+  AC_HELP_STRING([--with-pthreads],[Use POSIX Threads]))
 if test "$with_pthreads" = "yes"; then
     echo "With pthreads"
 fi
 
 AC_ARG_WITH(aio,
-[  --with-aio              Use POSIX AIO])
+  AC_HELP_STRING([--with-aio],[Use POSIX AIO]))
 if test "$with_aio" = "yes"; then
     echo "With aio"
 fi
 
 AC_ARG_WITH(dl,
-[  --with-dl               Use dynamic linking])
+  AC_HELP_STRING([--with-dl],[Use dynamic linking]))
 if test "$with_dl" = "yes"; then
     echo "With dl"
 fi
 
 AC_ARG_ENABLE(storeio,
-[  --enable-storeio=\"list of modules\"
-                          Build support for the list of store I/O modules.
-                          The default is only to build the "ufs" module.
-                          See src/fs for a list of available modules, or
-                          Programmers Guide section <not yet written>
-                          for details on how to build your custom store module],
+  AC_HELP_STRING([--enable-storeio=\"list of modules\"],
+                 [Build support for the list of store I/O modules.
+                  The default is only to build the "ufs" module.
+                  See src/fs for a list of available modules, or
+                  Programmers Guide section <not yet written>
+                  for details on how to build your custom store module]),
 [ case $enableval in
   yes)
 	for dir in $srcdir/src/fs/*; do
@@ -548,12 +545,12 @@ AC_SUBST(STORE_LINKOBJS)
 AC_SUBST(STORE_TESTS)
 
 AC_ARG_ENABLE(disk-io,
-[  --enable-disk-io=\"list of modules\"
-                          Build support for the list of disk I/O modules.
-                          The default is only to build the "Blocking" module.
-                          See src/DiskIO for a list of available modules, or
-                          Programmers Guide section <not yet written>
-                          for details on how to build your custom disk module],
+  AC_HELP_STRING([--enable-disk-io=\"list of modules\"],
+                 [Build support for the list of disk I/O modules.
+                  The default is only to build the "Blocking" module.
+                  See src/DiskIO for a list of available modules, or
+                  Programmers Guide section <not yet written>
+                  for details on how to build your custom disk module]),
 [ case $enableval in
   yes)
 	for dir in $srcdir/src/DiskIO/*; do
@@ -677,12 +674,12 @@ AM_CONDITIONAL([USE_AIOPS_WIN32], [test "$USE_AIOPS_WIN32" = 1])
 AM_CONDITIONAL([USE_AIO_WIN32], [test "$USE_AIO_WIN32" = 1])
 
 AC_ARG_ENABLE(removal-policies,
-[  --enable-removal-policies=\"list of policies\"
-                          Build support for the list of removal policies.
-                          The default is only to build the "lru" module.
-                          See src/repl for a list of available modules, or
-                          Programmers Guide section 9.9 for details on how
-			  to build your custom policy],
+  AC_HELP_STRING([--enable-removal-policies=\"list of policies\"],
+                 [Build support for the list of removal policies.
+                  The default is only to build the "lru" module.
+                  See src/repl for a list of available modules, or
+                  Programmers Guide section 9.9 for details on how
+                  to build your custom policy]),
 [ case $enableval in
   yes)
 	for dir in $srcdir/src/repl/*; do
@@ -731,7 +728,8 @@ AC_ARG_ENABLE(icmp,
 
 AM_CONDITIONAL(USE_DELAY_POOLS, false)
 AC_ARG_ENABLE(delay-pools,
-[  --enable-delay-pools    Enable delay pools to limit bandwidth usage],
+  AC_HELP_STRING([--enable-delay-pools],
+                 [Enable delay pools to limit bandwidth usage]),
 [ if test "$enableval" = "yes" ; then
     echo "Delay pools enabled"
     AC_DEFINE([DELAY_POOLS],1,[Traffic management via "delay pools".])
@@ -744,7 +742,13 @@ use_adaptation=no
 
 AM_CONDITIONAL(USE_ESI, false)
 AC_ARG_ENABLE(esi,
-              AC_HELP_STRING([--enable-esi],[Enable ESI for accelerators. Requires libexpat. Enabling ESI will cause squid to follow the Edge Acceleration Specification (www.esi.org). This causes squid to IGNORE client Cache-Control headers. DO NOT use this in a squid configured as a web proxy, ONLY use it in a squid configured for webserver acceleration.]),
+  AC_HELP_STRING([--enable-esi],
+                 [Enable ESI for accelerators. Requires libexpat.
+                  Enabling ESI will cause squid to follow the
+                  Edge Acceleration Specification (www.esi.org).
+                  This causes squid to IGNORE client Cache-Control headers.
+                  DO NOT use this in a squid configured as a web proxy, 
+                  ONLY use it in a squid configured for webserver acceleration.]),
 	      use_esi=$enableval, use_esi=no)
 if test "$use_esi" = "yes" ; then
   AC_DEFINE(USE_SQUID_ESI,1,[Compile the ESI processor and Surrogate header support])
