@@ -41,11 +41,10 @@ CXXFLAGS="-DDEFAULT_SQUID_CONFIG_DIR=\\\"$sysconfdir\\\" $CXXFLAGS"
 use_loadable_modules=1
 AC_MSG_CHECKING(whether to use loadable modules)
 AC_ARG_ENABLE(loadable-modules,
-    [
         AC_HELP_STRING(
             [--disable-loadable-modules],
             [do not support loadable modules])
-    ],
+    ,
     [
         case "${enableval}" in
             yes) use_loadable_modules=yes ;;
@@ -161,15 +160,16 @@ AC_DEFINE_UNQUOTED(SQUID_CONFIGURE_OPTIONS, "$ac_configure_args", [configure com
 
 CACHE_EFFECTIVE_USER="nobody"
 AC_ARG_WITH(default-user,
- [  --with-default-user=USER System user account for squid permissions.
-                         default: nobody],
+  AC_HELP_STRING([--with-default-user=USER],
+                 [System user account for squid permissions. Default: nobody]),
  [ CACHE_EFFECTIVE_USER="$withval" ]
 )
 AC_SUBST(CACHE_EFFECTIVE_USER)
 
 DEFAULT_LOG_DIR="$localstatedir/logs"
 AC_ARG_WITH(logdir,
- [  --with-logdir=PATH Default location for squid logs. default: $DEFAULT_LOG_DIR],
+  AC_HELP_STRING([--with-logdir=PATH],
+                 [Default location for squid logs. default: $DEFAULT_LOG_DIR]),
  [ case $withval in
    yes|no)
      AC_MSG_ERROR( --with-logdir requires a directory PATH. --with-logdir=PATH )
@@ -292,22 +292,24 @@ if test -z "$PRESET_LDFLAGS"; then
 fi
 
 AC_ARG_ENABLE(gnuregex,
-[  --enable-gnuregex       Compile GNUregex.  Unless you have reason to use this
-                          option, you should not enable it.  This library file
-                          is usually only required on Windows and very old
-                          Unix boxes which do not have their own regex library
-                          built in.],
+  AC_HELP_STRING([--enable-gnuregex],
+                 [Compile GNUregex.  Unless you have reason to use 
+                 this option, you should not enable it.
+                 This library file is usually only required on Windows and 
+                 very old Unix boxes which do not have their own regex 
+                 library built in.]),
 [USE_GNUREGEX=$enableval])
 
 SquidInline="yes"
 
 AC_ARG_ENABLE(optimizations,
-[  --disable-optimizations Don't compile Squid with compiler optimizations enabled.
-                          Optimization is good for production builds, but not
-                          good for debugging. During development, use
-                          --disable-optimizations to reduce compilation times
-                          and allow easier debugging. This option implicitly
-                          also enabled --disable-inline],
+  AC_HELP_STRING([--disable-optimizations],
+                 [Don't compile Squid with compiler optimizations enabled.
+                  Optimization is good for production builds, but not
+                  good for debugging. During development, use
+                  --disable-optimizations to reduce compilation times
+                  and allow easier debugging. This option implicitly
+                  also enabled --disable-inline]),
 [ if test "$enableval" = "no" ; then
 	echo "Disabling compiler optimizations (-O flag)"
 	CFLAGS="`echo $CFLAGS | sed -e 's/-O[[0-9]]*//'`"
@@ -317,15 +319,16 @@ AC_ARG_ENABLE(optimizations,
 ])
 
 AC_ARG_ENABLE(inline,
-[  --disable-inline        Don't compile trivial methods as inline. Squid
-                          is coded with much of the code able to be inlined.
-                          Inlining is good for production builds, but not
-                          good for development. During development, use
-                          --disable-inline to reduce compilation times and
-                          allow incremental builds to be quick. For
-                          production builds, or load tests, use
-                          --enable-inline to have squid make all trivial
-                          methods inlinable by the compiler.],
+  AC_HELP_STRING([--disable-inline],
+                 [Don't compile trivial methods as inline. Squid
+                  is coded with much of the code able to be inlined.
+                  Inlining is good for production builds, but not
+                  good for development. During development, use
+                  --disable-inline to reduce compilation times and
+                  allow incremental builds to be quick. For
+                  production builds, or load tests, use
+                  --enable-inline to have squid make all trivial
+                  methods inlinable by the compiler.]),
 [ if test "$enableval" = "no" ; then
      SquidInline="no"
    fi
@@ -340,7 +343,8 @@ else
 fi
 
 AC_ARG_ENABLE(debug-cbdata,
-[  --enable-debug-cbdata   Provide some debug information in cbdata],
+  AC_HELP_STRING([--enable-debug-cbdata],
+                 [Provide some debug information in cbdata]),
 [ if test "$enableval" = "yes" ; then
     echo "cbdata debugging enabled"
     AC_DEFINE(CBDATA_DEBUG,1,[Enable for cbdata debug information])
@@ -370,8 +374,8 @@ dnl   fi
 dnl ])
 
 AC_ARG_ENABLE(xmalloc-statistics,
-[  --enable-xmalloc-statistics
-                          Show malloc statistics in status page],
+  AC_HELP_STRING([--enable-xmalloc-statistics],
+                 [Show malloc statistics in status page]),
 [ if test "$enableval" = "yes" ; then
     echo "Malloc statistics enabled"
     AC_DEFINE(XMALLOC_STATISTICS,1,[Define to have malloc statistics])
@@ -768,11 +772,10 @@ AC_SUBST(ICAP_LIBS)
 use_ecap=1
 AC_MSG_CHECKING(whether to support eCAP)
 AC_ARG_ENABLE(ecap,
-    [
         AC_HELP_STRING(
             [--enable-ecap],
             [support loadable content adaptation modules])
-    ],
+    ,
     [
         case "${enableval}" in
             yes) use_ecap=yes ;;
