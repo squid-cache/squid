@@ -718,7 +718,7 @@ AC_SUBST(REPL_LIBS)
 
 AM_CONDITIONAL(ENABLE_PINGER, false)
 AC_ARG_ENABLE(icmp,
-	AC_HELP_STRING([--enable-icmp],[Enable ICMP pinging and Network Measurement]),
+  AC_HELP_STRING([--enable-icmp],[Enable ICMP pinging and Network Measurement]),
 [ if test "$enableval" = "yes" ; then
     echo "ICMP enabled"
     AC_DEFINE(USE_ICMP,1,[Define to use Squid's ICMP and Network Measurement features (highly recommended!)])
@@ -1153,9 +1153,9 @@ esac
 dnl Disable HTTP violations
 http_violations=1
 AC_ARG_ENABLE(http-violations,
-[  --disable-http-violations
-                          This allows you to remove code which is known to
-                          violate the HTTP protocol specification.],
+  AC_HELP_STRING([--disable-http-violations],
+                 [This allows you to remove code which is known to
+                  violate the HTTP protocol specification.]),
 [ if test "$enableval" = "no" ; then
     echo "Disabling HTTP Violations"
     http_violations=0
@@ -1169,9 +1169,9 @@ fi
 
 dnl Enable IPFW Transparent Proxy
 AC_ARG_ENABLE(ipfw-transparent,
-[  --enable-ipfw-transparent
-                          Enable Transparent Proxy support for systems
-                          using FreeBSD IPFW style redirection.],
+  AC_HELP_STRING([--enable-ipfw-transparent],
+                 [Enable Transparent Proxy support for systems
+                  using FreeBSD IPFW style redirection.]),
 [ if test "$enableval" = "yes" ; then
 	echo "IPFW Transparent Proxy enabled"
 	AC_DEFINE(IPFW_TRANSPARENT,1,[Enable support for Transparent Proxy on systems using FreeBSD IPFW address redirection.])
@@ -1183,9 +1183,9 @@ AC_ARG_ENABLE(ipfw-transparent,
 
 dnl Enable IP-Filter Transparent Proxy
 AC_ARG_ENABLE(ipf-transparent,
-[  --enable-ipf-transparent
-                          Enable Transparent Proxy support for systems
-                          using IP-Filter network address redirection.],
+  AC_HELP_STRING([--enable-ipf-transparent],
+                 [Enable Transparent Proxy support for systems
+                  using IP-Filter network address redirection.]),
 [ if test "$enableval" = "yes" ; then
 	echo "IP-Filter Transparent Proxy enabled"
 	AC_DEFINE(IPF_TRANSPARENT,1,[Enable support for Transparent Proxy on systems using IP-Filter address redirection. This provides "masquerading" support for non Linux system.])
@@ -1197,9 +1197,9 @@ AC_ARG_ENABLE(ipf-transparent,
 
 dnl Enable PF Transparent Proxy
 AC_ARG_ENABLE(pf-transparent,
-[  --enable-pf-transparent
-                          Enable Transparent Proxy support for systems
-                          using PF network address redirection.],
+  AC_HELP_STRING([--enable-pf-transparent],
+                 [Enable Transparent Proxy support for systems
+                  using PF network address redirection.]),
 [ if test "$enableval" = "yes" ; then
 	echo "PF Transparent Proxy enabled"
 	AC_DEFINE(PF_TRANSPARENT,1,[Enable support for Transparent Proxy on systems using PF address redirection. This provides "masquerading" support for OpenBSD.])
@@ -1211,8 +1211,8 @@ AC_ARG_ENABLE(pf-transparent,
 
 dnl Enable Linux Netfilter Transparent Proxy
 AC_ARG_ENABLE(linux-netfilter,
-[  --enable-linux-netfilter
-                          Enable Transparent Proxy support for Linux (Netfilter) systems.],
+  AC_HELP_STRING([--enable-linux-netfilter],
+                 [Enable Transparent Proxy support for Linux (Netfilter)]),
 [ if test "$enableval" = "yes" ; then
 	echo "Linux (Netfilter) Transparent Proxy enabled"
 	AC_DEFINE(LINUX_NETFILTER,1,[Enable support for Transparent Proxy on Linux (Netfilter) systems])
