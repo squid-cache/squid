@@ -3,31 +3,32 @@ msgstr ""
 "Project-Id-Version: squid 3.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-09-29 15:05+1300\n"
-"PO-Revision-Date: 2008-09-29 00:08+1200\n"
-"Last-Translator: Amos Jeffries <squid3@treenet.co.nz>\n"
+"PO-Revision-Date: 2008-10-23 10:12+0000\n"
+"Last-Translator: Mr.Lodar <Unknown>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Pootle 1.1.0\n"
+"X-Launchpad-Export-Date: 2008-10-23 10:16+0000\n"
+"X-Generator: Launchpad (build Unknown)\n"
 
 #: templates/ERR_INVALID_REQ:4
 msgid ""
 "<b>Invalid Request</b> error was encountered while trying to process the "
 "request:"
-msgstr "<b>无效请求</b>发送请求过程中遇到错误"
+msgstr "<b>非法请求</b> 尝试处理请求是发生错误:"
 
 #: templates/ERR_INVALID_RESP:4
 msgid ""
 "<b>Invalid Response</b> error was encountered while trying to process the "
 "request:"
-msgstr ""
+msgstr "<b>非法响应</b> 尝试处理请求时发生错误:"
 
 #: templates/ERR_READ_TIMEOUT:7
 msgid ""
 "A Timeout occurred while waiting to read data from the network.  The network "
 "or server may be down or congested.  Please retry your request."
-msgstr ""
+msgstr "等待从网络读取数据时发生超时。 网络或服务器下线或拥挤。  请重新发送你的请求。"
 
 #: templates/ERR_URN_RESOLVE:3
 msgid "A URL for the requested URN could not be retrieved"
@@ -52,8 +53,8 @@ msgstr ""
 
 #: templates/ERR_FTP_FAILURE:4
 msgid ""
-"An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
-"\">%U</a>"
+"An FTP protocol error occurred while trying to retrieve the URL: <a "
+"href=\"%U\">%U</a>"
 msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:10
@@ -266,8 +267,8 @@ msgstr ""
 #: templates/ERR_CACHE_ACCESS_DENIED:7
 msgid ""
 "Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
-"have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
-"chpasswd.cgi\">change</a> your default password."
+"have difficulties authenticating yourself or <a href=\"http://%h/cgi-"
+"bin/chpasswd.cgi\">change</a> your default password."
 msgstr ""
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
@@ -352,7 +353,8 @@ msgid "The ESI processor returned:"
 msgstr ""
 
 #: templates/ERR_FTP_UNAVAILABLE:4
-msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
+msgid ""
+"The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr ""
 
 #: templates/ERR_INVALID_RESP:5
@@ -392,7 +394,8 @@ msgid ""
 msgstr ""
 
 #: templates/ERR_CONNECT_FAIL:7
-msgid "The remote host or network may be down.  Please try the request again."
+msgid ""
+"The remote host or network may be down.  Please try the request again."
 msgstr ""
 
 #: templates/ERR_TOO_BIG:5

@@ -17,7 +17,7 @@ TRANSLATIONS = \
 	cs \
 	da \
 	de \
-	en en-au en-gb \
+	en en-au en-gb en-nz en-us \
 	es \
 	fr \
 	id \
