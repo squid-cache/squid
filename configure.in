@@ -1595,11 +1595,11 @@ if test -n "$AUTH_MODULE_negotiate"; then
 	NEGOTIATE_AUTH_HELPERS="all"
 fi
 AC_ARG_ENABLE(negotiate-auth-helpers,
-[  --enable-negotiate-auth-helpers=\"list of helpers\"
-                          This option selects which proxy_auth negotiate helpers
-                          to build and install as part of the normal build 
-                          process. For a list of available helpers see
-                          the helpers/negotiate_auth directory.],
+  AC_HELP_STRING([--enable-negotiate-auth-helpers="list of helpers"],
+                 [This option selects which proxy_auth negotiate helpers
+                  to build and install as part of the normal build 
+                  process. For a list of available helpers see
+                  the helpers/negotiate_auth directory.]),
 [ case "$enableval" in
   yes) 
 	NEGOTIATE_AUTH_HELPERS="all"
@@ -1647,11 +1647,11 @@ if test -n "$AUTH_MODULE_digest"; then
 	DIGEST_AUTH_HELPERS=all
 fi
 AC_ARG_ENABLE(digest-auth-helpers,
-[  --enable-digest-auth-helpers=\"list of helpers\"
-                          This option selects which digest scheme authentication
-                          helpers to build and install as part of the normal build
-                          process. For a list of available helpers see the
-                          helpers/digest_auth directory.],
+  AC_HELP_STRING([--enable-digest-auth-helpers="list of helpers"],
+                 [This option selects which digest scheme authentication
+                  helpers to build and install as part of the normal build
+                  process. For a list of available helpers see the
+                  helpers/digest_auth directory.]),
 [ case "$enableval" in
   yes)
 	DIGEST_AUTH_HELPERS="all"
@@ -1687,9 +1687,10 @@ AC_SUBST(DIGEST_AUTH_HELPERS)
 
 dnl Enable "NTLM fail open"
 AC_ARG_ENABLE(ntlm-fail-open,
-[  --enable-ntlm-fail-open Enable NTLM fail open, where a helper that fails one of the
-                          Authentication steps can allow squid to still authenticate
-                          the user.],
+  AC_HELP_STRING([--enable-ntlm-fail-open],
+                 [Enable NTLM fail open, where a helper that fails one of the
+                  Authentication steps can allow squid to still authenticate
+                  the user.]),
 [ if test "$enableval" = "yes" ; then
     AC_DEFINE(NTLM_FAIL_OPEN,1,[Define if NTLM is allowed to fail gracefully when a helper has problems. WARNING: This has security implications. DO NOT enable unless you KNOW you need it.])
   fi
@@ -1698,11 +1699,11 @@ AC_ARG_ENABLE(ntlm-fail-open,
 dnl Select external_acl helpers to build
 EXTERNAL_ACL_HELPERS=all
 AC_ARG_ENABLE(external-acl-helpers,
-[  --enable-external-acl-helpers=\"list of helpers\"
-                          This option selects which external_acl helpers to
-                          build and install as part of the normal build
-                          process. For a list of available helpers see the
-                          helpers/external_acl directory.],
+  AC_HELP_STRING([--enable-external-acl-helpers="list of helpers"],
+                 [This option selects which external_acl helpers to
+                  build and install as part of the normal build
+                  process. For a list of available helpers see the
+                  helpers/external_acl directory.]),
 [ case "$enableval" in
   yes)
 	EXTERNAL_ACL_HELPERS=all
@@ -1737,7 +1738,8 @@ fi
 AC_SUBST(EXTERNAL_ACL_HELPERS)
 
 AC_ARG_WITH(valgrind-debug,
-[  --with-valgrind-debug  Include debug instrumentation for use with valgrind],
+  AC_HELP_STRING([--with-valgrind-debug],
+                 [Include debug instrumentation for use with valgrind]),
 [ case $withval in
   yes)
 	valgrind=1
@@ -1758,10 +1760,11 @@ AC_ARG_WITH(valgrind-debug,
 
 dnl Disable "memPools" code
 AC_ARG_ENABLE(mempools,
-[  --disable-mempools      Disable memPools. Note that this option now simply sets the
-			  default behaviour. Specific classes can override this at runtime, and
-			  only lib/MemPool.c needs to be altered to change the squid-wide 
-			  default for all classes.],
+  AC_HELP_STRING([--disable-mempools],
+                 [Disable memPools. Note that this option now simply sets the
+			      default behaviour. Specific classes can override this at runtime, and
+			      only lib/MemPool.c needs to be altered to change the squid-wide 
+			      default for all classes.]),
 [ if test "$enableval" = "no" ; then
     echo "memPools disabled"
     AC_DEFINE(DISABLE_POOLS, 1, [Define if you have problems with memPools and want to disable Pools])
@@ -1774,8 +1777,9 @@ AC_ARG_ENABLE(mempools,
 
 dnl Enable WIN32 Service compile mode
 AC_ARG_ENABLE(win32-service,
-[  --enable-win32-service  Compile Squid as a WIN32 Service
-                          Works only on Windows NT and Windows 2000 Platforms.],
+  AC_HELP_STRING([--enable-win32-service],
+                 [Compile Squid as a WIN32 Service.
+                  Works only on MS-Windows platforms (NT and up).]),
 [ if test "$enableval" = "yes" ; then
     echo "Enabling WIN32 run service mode"
     AC_DEFINE(USE_WIN32_SERVICE,1,[Define Windows NT & Windows 2000 run service mode])
@@ -1802,7 +1806,7 @@ fi
 
 dnl Disable "unlinkd" code
 AC_ARG_ENABLE(unlinkd,
-[  --disable-unlinkd       Do not use unlinkd],
+  AC_HELP_STRING([--disable-unlinkd],[Do not use unlinkd]),
 [ if test "$enableval" = "no" ; then
     use_unlinkd=no
   else
@@ -1824,7 +1828,8 @@ fi
 
 dnl Enable backtraces on fatal errors
 AC_ARG_ENABLE(stacktraces,
-[  --enable-stacktraces    Enable automatic call backtrace on fatal errors],
+  AC_HELP_STRING([--enable-stacktraces],
+                 [Enable automatic call backtrace on fatal errors]),
 [ if test "$enableval" = "yes" ; then
     echo "Enabling automatic stack backtraces on fatal errors"
     AC_DEFINE(PRINT_STACK_TRACE, 1,[Print stacktraces on fatal errors])
@@ -1834,17 +1839,14 @@ AC_ARG_ENABLE(stacktraces,
 AM_CONDITIONAL(ENABLE_XPROF_STATS, false)
 dnl Enable USE_XPROF_STATS
 AC_ARG_ENABLE(cpu-profiling,
-[  --enable-cpu-profiling
-                          This option allows you to see which internal functions
-                          in Squid are consuming how much CPU. Compiles in probes
-                          that measure time spent in probed functions. Needs
-                          source modifications to add new probes. This is meant
-                          for developers to assist in performance optimisations
-                          of Squid internal functions.
-                          If you are not developer and not interested in the stats
-                          you shouldn't enable this, as overhead added, although
-                          small, is still overhead. See lib/Profiler.c for more.
-                          ],
+  AC_HELP_STRING([--enable-cpu-profiling],
+                 [Enable instrumentation to try and understand how CPU power 
+                  is spent by squid, by enabling specific probes in selected
+                  functions. New probes can only be added by modifying the source code.
+                  It is meant to help developers in optimizing performance
+                  of Squid internal functions.
+                  If you are not developer you shouldn't enable this, 
+                  as it slows squid down somewhat. See lib/Profiler.c for more details.]),
 [ if test "$enableval" = "yes" ; then
     echo "Enabling cpu-profiling"
     AC_DEFINE(USE_XPROF_STATS, 1,[Define to enable CPU profiling within Squid])
@@ -1854,12 +1856,12 @@ AC_ARG_ENABLE(cpu-profiling,
 
 dnl Enable X-Accelerator-Vary for Vary support within an accelerator setup
 AC_ARG_ENABLE(x_accelerator_vary,
-[  --enable-x-accelerator-vary
-                          Enable support for the X-Accelerator-Vary
-                          HTTP header. Can be used to indicate
-                          variance within an accelerator setup.
-                          Typically used together with other code
-                          that adds custom HTTP headers to the requests.],
+  AC_HELP_STRING([--enable-x-accelerator-vary],
+                 [Enable support for the X-Accelerator-Vary
+                  HTTP header. Can be used to indicate
+                  variance within an accelerator setup.
+                  Typically used together with other code
+                  that adds custom HTTP headers to the requests.]),
 [ if test "$enableval" = "yes" ; then
     echo "Enabling support for X-Accelerator-Vary"
     AC_DEFINE(X_ACCELERATOR_VARY, 1, [Enable support for the X-Accelerator-Vary HTTP header])
@@ -1906,7 +1908,8 @@ AC_DEFINE(IPV6_SPECIAL_V4MAPPED, 1, [Enable v4-mapping through v6 sockets])
 dnl Check for Windows XP option
 AC_MSG_CHECKING([for IPv6 split-stack requirement])
 AC_ARG_WITH(ipv6-split-stack,
-	AC_HELP_STRING([--with-ipv6-split-stack],[Require IPv6 split-stack support. Requires IPv6 Support.]),
+	AC_HELP_STRING([--with-ipv6-split-stack],
+                   [Require IPv6 split-stack support. Requires IPv6 Support.]),
   [ AC_DEFINE(IPV6_SPECIAL_SPLITSTACK, 1, [Enable support for IPv6 on split-stack implementations])
     AC_DEFINE(IPV6_SPECIAL_V4MAPPED, 0, [Enable v4-mapping through v6 sockets. Requires IPv6 hybrid-stack.])
     AC_MSG_RESULT(yes)
@@ -1917,9 +1920,11 @@ AC_ARG_WITH(ipv6-split-stack,
 dnl Check for IPv6-localhost option
 AC_MSG_CHECKING([for IPv6-Localhost requirement])
 AC_ARG_WITH(localhost-ipv6,
-  AC_HELP_STRING([--with-localhost-ipv6], [ WARNING: This is an RFC violation!][
+  AC_HELP_STRING([--with-localhost-ipv6], 
+        [WARNING: This is an RFC violation!
 		Treat 127.0.0.1 and ::1 as identical and convert all inputs of localhost to ::1
-		This depends on IPv6 support and all applications squid contacts via localhost being IPv6 enabled.]),
+		This depends on IPv6 support and all applications squid contacts 
+        via localhost being IPv6 enabled.]),
   [AC_DEFINE(IPV6_SPECIAL_LOCALHOST, 1, [Convert IPv4-localhost requests to IPv6. Default: keep seperate.]) AC_MSG_RESULT(yes)],
   [AC_DEFINE(IPV6_SPECIAL_LOCALHOST, 0, [Convert IPv4-localhost requests to IPv6. Default: Keep seperate.]) AC_MSG_RESULT(no)]
 )
@@ -1934,7 +1939,7 @@ else
 fi
 
 AC_ARG_ENABLE(zph-qos,
-[  --enable-zph-qos        Enable ZPH QOS support],
+  AC_HELP_STRING([--enable-zph-qos],[Enable ZPH QOS support]),
 [ if test "$enableval" = "yes" ; then
     echo "ZPH QOS enabled"
     AC_DEFINE(USE_ZPH_QOS,1,
@@ -2000,8 +2005,8 @@ fi
 
 
 AC_ARG_WITH(filedescriptors,
-[  --with-filedescriptors=NUMBER
-                          Force squid to support NUMBER filedescriptors],
+  AC_HELP_STRING([--with-filedescriptors=NUMBER],
+                 [Force squid to support NUMBER filedescriptors]),
 [ 
   case ${withval} in
     [[0-9]]*)
