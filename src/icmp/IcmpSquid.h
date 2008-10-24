@@ -1,5 +1,5 @@
 /*
- * $Id: ICMPPinger.h,v 1.1 2007/12/14 23:11:45 amosjeffries Exp $
+ * $Id: ICMPSquid.h,v 1.1 2007/12/14 23:11:45 amosjeffries Exp $
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels, Amos Jeffries
@@ -31,53 +31,39 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#ifndef _INCLUDE_ICMPPINGER_H
-#define _INCLUDE_ICMPPINGER_H
+#ifndef _INCLUDE_ICMPSQUID_H
+#define _INCLUDE_ICMPSQUID_H
 
 #include "config.h"
-#include "ICMP.h"
+#include "Icmp.h"
+#include "IPAddress.h"
 
 /**
- * Implements the interface to squid for ICMP operations
+ * Implements a non-blocking pseudo-ICMP engine for squid internally.
+ *
+ * Rather than doing all the work itself it passes each request off to
+ * an external pinger helper and returns results form that helper to squid.
+ *
+ * Provides ECHO-REQUEST, ECHO-REPLY in a protocol-neutral manner.
  */
-class ICMPPinger : public ICMP
+class IcmpSquid : public Icmp
 {
 public:
-    ICMPPinger();
-    virtual ~ICMPPinger();
+    IcmpSquid();
+    virtual ~IcmpSquid();
 
-    /// Start and initiate control channel to squid
     virtual int Open();
-
-    /// Shutdown pinger helper and control channel
     virtual void Close();
 
+    void DomainPing(IPAddress &to, const char *domain);
+
 #if USE_ICMP
-
-    /// Send ICMP results back to squid.
-    void SendResult(pingerReplyData &preply, int len);
-
-    /// Handle ICMP requests from squid, passing to helpers.
+    virtual void SendEcho(IPAddress &to, int opcode, const char* payload=NULL, int len=0);
     virtual void Recv(void);
-
-private:
-    // unused in ICMPPinger
-    virtual void SendEcho(IPAddress &to, int opcode, const char *payload, int len) {};
-
-    /**
-     * Control channel(s) to squid.
-     * May be STDIN/STDOUT pipes or an IP socket depending on the OS
-     */
-    int socket_from_squid;
-    int socket_to_squid;
-#endif /* USE_ICMP */
+#endif
 };
 
-#if USE_ICMP
+// global engine within squid.
+SQUIDCEXTERN IcmpSquid icmpEngine;
 
-/// pinger helper contains one of these as a global object.
-SQUIDCEXTERN ICMPPinger control;
-
-#endif
-
-#endif
+#endif /* _INCLUDE_ICMPSQUID_H */

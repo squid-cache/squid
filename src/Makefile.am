@@ -34,7 +34,7 @@ LOADABLE_MODULES_SOURCES = \
 TESTS=$(check_PROGRAMS)
 check_PROGRAMS=
 
-SUBDIRS		= fs repl auth
+SUBDIRS		= fs repl auth icmp
 
 if USE_ADAPTATION
 SUBDIRS += adaptation
@@ -141,20 +141,6 @@ UNLINKDSOURCE =
 UNLINKD = 
 endif
 
-if ENABLE_PINGER
-PINGER = pinger
-else
-PINGER = 
-endif
-
-# Squid Internal ICMP sources
-ICMPSOURCE = \
-	ICMP.h \
-	icmp.cc \
-	ICMPConfig.h \
-	ICMPSquid.h \
-	ICMPSquid.cc
-
 SSL_ALL_SOURCE = \
 	ACLCertificateData.cc \
 	ACLCertificateData.h  \
@@ -233,7 +219,6 @@ INCLUDES	+= @SQUID_CPPUNIT_INC@
 EXTRA_PROGRAMS = \
 	DiskIO/DiskDaemon/diskd \
 	unlinkd \
-	pinger \
 	dnsserver \
 	recv-announce \
 	tests/testUfs \
@@ -254,7 +239,6 @@ bin_PROGRAMS =
 
 
 libexec_PROGRAMS = \
-	$(PINGER) \
 	$(DNSSERVER) \
 	@DISK_PROGRAMS@ \
 	$(UNLINKD)
@@ -563,7 +547,6 @@ squid_SOURCES = \
 	HttpRequestMethod.cc \
 	HttpRequestMethod.h \
 	HttpVersion.h \
-	$(ICMPSOURCE) \
 	ICP.h \
 	icp_v2.cc \
 	icp_v3.cc \
@@ -586,7 +569,6 @@ squid_SOURCES = \
 	mime.cc \
 	multicast.cc \
 	neighbors.cc \
-	net_db.cc \
 	Packer.cc \
 	Packer.h \
 	Parsing.cc \
@@ -700,6 +682,7 @@ nodist_squid_SOURCES = \
 squid_LDADD = \
 	libsquid.la \
 	libauth.la \
+	icmp/libicmp.la icmp/libicmp-core.la \
 	-L../lib \
 	@XTRA_OBJS@ \
 	@DISK_LINKOBJS@ \
@@ -741,22 +724,6 @@ endif
 
 
 unlinkd_SOURCES = unlinkd_daemon.cc SquidNew.cc
-
-## NP: the pinger contains the squid-external helper code
-##     $(ICMPSOURCE) contains the interface bit to go inside squid
-pinger_SOURCES = \
-	ICMP.h \
-	icmp.cc \
-	ICMPPinger.h \
-	ICMPPinger.cc \
-	ICMPv4.h \
-	ICMPv4.cc \
-	ICMPv6.h \
-	ICMPv6.cc \
-	pinger.cc \
-	debug.cc \
-	time.cc \
-	SquidNew.cc 
 
 dnsserver_SOURCES = dnsserver.cc SquidNew.cc
 recv_announce_SOURCES = recv-announce.cc SquidNew.cc
@@ -869,7 +836,6 @@ ufsdump_SOURCES = \
 	HttpReply.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
-	$(ICMPSOURCE) \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IDENT_SOURCE) \
@@ -888,7 +854,6 @@ ufsdump_SOURCES = \
 	mime.cc \
 	multicast.cc \
 	neighbors.cc \
-	net_db.cc \
 	Packer.cc \
 	Parsing.cc \
 	$(XPROF_STATS_SOURCE) \
@@ -940,6 +905,7 @@ ufsdump_SOURCES = \
 ufsdump_LDADD = \
 	libsquid.la \
 	libauth.la \
+	icmp/libicmp.la icmp/libicmp-core.la \
 	-L../lib \
 	@XTRA_OBJS@ \
 	@REPL_OBJS@ \
@@ -968,9 +934,6 @@ nodist_ufsdump_SOURCES = \
 	cf_parser.h \
 	globals.cc \
 	string_arrays.c
-
-nodist_pinger_SOURCES = \
-	globals.cc
 
 BUILT_SOURCES = \
 	cf_gen_defines.h \
@@ -1158,19 +1121,6 @@ uninstall-local:
 DISTCLEANFILES = cf_gen_defines.h cf.data cf_parser.h squid.conf.default squid.conf.documented \
 	globals.cc string_arrays.c repl_modules.cc 
 
-##install-pinger:
-##	@f=$(PINGER_EXE); \
-##	if test -f $(libexecdir)/$$f; then \
-##		echo $(MV) $(libexecdir)/$$f $(libexecdir)/-$$f; \
-##		$(MV) $(libexecdir)/$$f $(libexecdir)/-$$f; \
-##	fi; \
-##	echo $(INSTALL_SUID) $$f $(libexecdir); \
-##	$(INSTALL_SUID) $$f $(libexecdir) || exit 1; \
-##	if test -f $(libexecdir)/-$$f; then \
-##		echo $(RM) -f $(libexecdir)/-$$f; \
-##		$(RM) -f $(libexecdir)/-$$f; \
-##	fi
-
 # stock tools for unit tests - library independent versions of dlink_list 
 # etc.
 # globals.cc is needed by test_tools.cc
@@ -1194,7 +1144,6 @@ check_PROGRAMS+= tests/testAuth \
 	tests/testEventLoop \
 	tests/test_http_range \
 	tests/testHttpRequest \
-	tests/testICMP \
 	tests/testStore \
 	tests/testString \
 	tests/testURL \
@@ -1428,7 +1377,6 @@ tests_testCacheManager_SOURCES = \
 	HttpMsg.cc \
 	HttpReply.cc \
 	HttpStatusLine.cc \
-	$(ICMPSOURCE) \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IDENT_SOURCE) \
@@ -1444,7 +1392,6 @@ tests_testCacheManager_SOURCES = \
 	MemObject.cc \
 	mime.cc \
 	neighbors.cc \
-	net_db.cc \
 	Packer.cc \
 	Parsing.cc \
 	pconn.cc \
@@ -1501,6 +1448,7 @@ nodist_tests_testCacheManager_SOURCES = \
 tests_testCacheManager_LDADD = \
 	libsquid.la \
 	libauth.la \
+	icmp/libicmp.la icmp/libicmp-core.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
 	@REGEXLIB@ \
@@ -1602,7 +1550,6 @@ tests_testEvent_SOURCES = \
 	HttpMsg.cc \
 	HttpReply.cc \
 	HttpStatusLine.cc \
-	$(ICMPSOURCE) \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IDENT_SOURCE) \
@@ -1618,7 +1565,6 @@ tests_testEvent_SOURCES = \
 	MemObject.cc \
 	mime.cc \
 	neighbors.cc \
-	net_db.cc \
 	Packer.cc \
 	Parsing.cc \
 	pconn.cc \
@@ -1674,6 +1620,7 @@ nodist_tests_testEvent_SOURCES = \
 tests_testEvent_LDADD = \
 	libsquid.la \
 	libauth.la \
+	icmp/libicmp.la icmp/libicmp-core.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
 	@REGEXLIB@ \
@@ -1759,7 +1706,6 @@ tests_testEventLoop_SOURCES = \
 	HttpMsg.cc \
 	HttpReply.cc \
 	HttpStatusLine.cc \
-	$(ICMPSOURCE) \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IDENT_SOURCE) \
@@ -1775,7 +1721,6 @@ tests_testEventLoop_SOURCES = \
 	MemObject.cc \
 	mime.cc \
 	neighbors.cc \
-	net_db.cc \
 	Packer.cc \
 	Parsing.cc \
 	pconn.cc \
@@ -1831,6 +1776,7 @@ nodist_tests_testEventLoop_SOURCES = \
 tests_testEventLoop_LDADD = \
 	libsquid.la \
 	libauth.la \
+	icmp/libicmp.la icmp/libicmp-core.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
 	@REGEXLIB@ \
@@ -1907,7 +1853,6 @@ tests_test_http_range_SOURCES = \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	HttpStatusLine.cc \
-	$(ICMPSOURCE) \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IDENT_SOURCE) \
@@ -1923,7 +1868,6 @@ tests_test_http_range_SOURCES = \
 	mime.cc \
 	multicast.cc \
 	neighbors.cc \
-	net_db.cc \
 	Parsing.cc \
 	peer_digest.cc \
 	peer_select.cc \
@@ -1983,6 +1927,7 @@ nodist_tests_test_http_range_SOURCES = \
 tests_test_http_range_LDADD = \
 	libsquid.la \
 	libauth.la \
+	icmp/libicmp.la icmp/libicmp-core.la \
 	@REPL_OBJS@ \
 	@STORE_OBJS@ \
 	${ADAPTATION_LIBS} \
@@ -2068,7 +2013,6 @@ tests_testHttpRequest_SOURCES = \
 	HttpMsg.cc \
 	HttpReply.cc \
 	HttpStatusLine.cc \
-	$(ICMPSOURCE) \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IDENT_SOURCE) \
@@ -2084,7 +2028,6 @@ tests_testHttpRequest_SOURCES = \
 	MemObject.cc \
 	mime.cc \
 	neighbors.cc \
-	net_db.cc \
 	Packer.cc \
 	Parsing.cc \
 	pconn.cc \
@@ -2141,6 +2084,7 @@ nodist_tests_testHttpRequest_SOURCES = \
 tests_testHttpRequest_LDADD = \
 	libsquid.la \
 	libauth.la \
+	icmp/libicmp.la icmp/libicmp-core.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
 	@REGEXLIB@ \
@@ -2154,25 +2098,6 @@ tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 tests_testHttpRequest_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
 	@SQUID_CPPUNIT_LA@
-
-## Tests of the ICMP base module.
-# Its used by pinger so SHOULD NOT require more dependancies! :-(
-tests_testICMP_SOURCES=\
-	ICMP.h \
-	icmp.cc \
-	tests/testICMP.h \
-	tests/testICMP.cc \
-	tests/testMain.cc \
-	SquidTime.h \
-	time.cc \
-	$(TESTSOURCES)
-tests_testICMP_LDFLAGS = $(LIBADD_DL)
-tests_testICMP_LDADD=\
-	@SQUID_CPPUNIT_LIBS@ \
-	@SQUID_CPPUNIT_LA@ \
-	-L../lib -lmiscutil
-tests_testICMP_DEPENDENCIES= @SQUID_CPPUNIT_LA@ \
-	$(top_builddir)/lib/libmiscutil.a
 
 # TODO:mime.cc drags in HttpReply.cc
 # delay pools need client_side_request.cc
@@ -2435,7 +2360,6 @@ tests_testURL_SOURCES = \
 	HttpMsg.cc \
 	HttpReply.cc \
 	HttpStatusLine.cc \
-	$(ICMPSOURCE) \
 	icp_v2.cc \
 	icp_v3.cc \
 	$(IDENT_SOURCE) \
@@ -2451,7 +2375,6 @@ tests_testURL_SOURCES = \
 	MemObject.cc \
 	mime.cc \
 	neighbors.cc \
-	net_db.cc \
 	Packer.cc \
 	Parsing.cc \
 	pconn.cc \
@@ -2505,6 +2428,7 @@ nodist_tests_testURL_SOURCES = \
 tests_testURL_LDADD = \
 	libsquid.la \
 	libauth.la \
+	icmp/libicmp.la icmp/libicmp-core.la \
 	@REGEXLIB@ \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \

@@ -111,10 +111,10 @@ libsspwin32_a_SOURCES = \
 INCLUDES	= -I$(top_builddir)/include -I$(top_srcdir)/include @SQUID_CPPUNIT_INC@
 ##FIXME - set these in configure.in and reuse
 
-TESTS=$(check_PROGRAMS)
 check_PROGRAMS= \
 	testHeaders \
 	tests/testAll
+TESTS=$(check_PROGRAMS)
 
 ## Special Universal .h dependency test script
 ## aborts if error encountered

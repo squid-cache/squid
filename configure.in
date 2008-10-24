@@ -717,12 +717,10 @@ AC_SUBST(REPL_LIBS)
 
 AM_CONDITIONAL(ENABLE_PINGER, false)
 AC_ARG_ENABLE(icmp,
-[  --enable-icmp           Enable ICMP pinging],
+	AC_HELP_STRING([--enable-icmp],[Enable ICMP pinging and Network Measurement]),
 [ if test "$enableval" = "yes" ; then
     echo "ICMP enabled"
-    AC_DEFINE(USE_ICMP,1,
-    [ Defined this to use Squid's ICMP features (highly recommended!)
-      When USE_ICMP is defined, Squid will send ICMP pings to origin server sites.])
+    AC_DEFINE(USE_ICMP,1,[Define to use Squid's ICMP and Network Measurement features (highly recommended!)])
     AM_CONDITIONAL(ENABLE_PINGER, true)
   fi
 ])
@@ -3759,6 +3757,7 @@ AC_CONFIG_FILES([\
 	src/auth/Makefile \
 	src/adaptation/Makefile \
 	src/ICAP/Makefile \
+	src/icmp/Makefile \
 	src/eCAP/Makefile \
 	contrib/Makefile \
 	snmplib/Makefile \

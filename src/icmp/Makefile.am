@@ -1,0 +1,125 @@
+#
+#  Makefile for the Squid ICMP and Network Measurement API
+#
+
+# Housekeeping, shared by all Squid Makefiles.
+# TODO: make this set by configure?
+AM_CFLAGS = @SQUID_CFLAGS@
+AM_CXXFLAGS = @SQUID_CXXFLAGS@
+DEFS = @DEFS@
+
+INCLUDES = -I$(top_srcdir)/src @SQUID_CPPUNIT_INC@ -I$(top_srcdir)/include -I$(top_builddir)/lib
+$(OBJS): $(top_srcdir)/include/version.h $(top_srcdir)/include/autoconf.h
+
+# TODO: get rid of this when config filename is no longer a global constant.
+#	its only here so the testIcmp will link .
+DEFS += -DDEFAULT_CONFIG_FILE=NULL
+
+
+
+# ICMP Specific Configurations
+
+if ENABLE_PINGER
+PINGER = pinger
+else
+PINGER =
+endif
+
+EXTRA_PROGRAMS = \
+	pinger \
+	testIcmp
+
+libexec_PROGRAMS = $(PINGER)
+
+noinst_LTLIBRARIES = libicmp-core.la libicmp.la
+
+# ICMP API definition ...
+libicmp_core_la_SOURCES = \
+	Icmp.h \
+	Icmp.cc
+
+# Squid Internal ICMP helper interface
+libicmp_la_SOURCES = \
+	IcmpConfig.h \
+	IcmpSquid.h \
+	IcmpSquid.cc \
+	net_db.h \
+	net_db.cc
+
+# ICMP lookup helper
+pinger_SOURCES = \
+	IcmpPinger.h \
+	IcmpPinger.cc \
+	Icmp4.h \
+	Icmp4.cc \
+	Icmp6.h \
+	Icmp6.cc \
+	pinger.cc
+
+# depends on these but install/dist is done elsewhere.
+# TODO: remove when these are cleaned up in their own way.
+nodist_pinger_SOURCES = \
+	Icmp.h \
+	../debug.cc \
+	../time.cc \
+	../SquidConfig.cc \
+	../SquidNew.cc \
+	../globals.cc
+
+pinger_LDFLAGS = $(LIBADD_DL)
+pinger_LDADD=\
+	libicmp-core.la \
+	$(top_builddir)/lib/libmiscutil.a
+pinger_DEPENDENCIES= \
+	libicmp-core.la \
+	$(top_builddir)/lib/libmiscutil.a
+
+
+
+##install-pinger:
+##	@f=$(PINGER_EXE); \
+##	if test -f $(libexecdir)/$$f; then \
+##		echo $(MV) $(libexecdir)/$$f $(libexecdir)/-$$f; \
+##		$(MV) $(libexecdir)/$$f $(libexecdir)/-$$f; \
+##	fi; \
+##	echo $(INSTALL_SUID) $$f $(libexecdir); \
+##	$(INSTALL_SUID) $$f $(libexecdir) || exit 1; \
+##	if test -f $(libexecdir)/-$$f; then \
+##		echo $(RM) -f $(libexecdir)/-$$f; \
+##		$(RM) -f $(libexecdir)/-$$f; \
+##	fi
+
+
+check_PROGRAMS= testIcmp testHeaders
+TESTS= $(check_PROGRAMS)
+
+## Special Universal .h dependency test script
+## aborts if error encountered
+testHeaders: $(top_srcdir)/src/icmp/*.h
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/src/icmp/" || exit 1
+
+## No such file...
+testHeaders.c:
+	touch testHeaders.c
+
+
+## Tests of the ICMP base module.
+# Its used by pinger so SHOULD NOT require more dependancies! :-(
+testIcmp_SOURCES=\
+	Icmp.h \
+	testIcmp.h \
+	testIcmp.cc \
+	../tests/testMain.cc \
+	../SquidTime.h \
+	../time.cc \
+	../../test-suite/test_tools.cc \
+	../globals.cc
+testIcmp_LDFLAGS = $(LIBADD_DL)
+testIcmp_LDADD=\
+	@SQUID_CPPUNIT_LIBS@ \
+	@SQUID_CPPUNIT_LA@ \
+	libicmp-core.la \
+	$(top_builddir)/lib/libmiscutil.a
+testIcmp_DEPENDENCIES= @SQUID_CPPUNIT_LA@ \
+	libicmp-core.la \
+	$(top_builddir)/lib/libmiscutil.a
