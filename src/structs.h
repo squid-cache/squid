@@ -552,6 +552,7 @@ struct SquidConfig
     char *errorDefaultLanguage;
     int errorLogMissingLanguages;
 #endif
+    char *errorStylesheet;
 
     struct
     {

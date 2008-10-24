@@ -9,6 +9,8 @@ errordir = $(datadir)/errors
 ##dist-hook eveything
 
 DEFAULT_ERROR_DIR	= $(errordir)
+DEFAULT_STYLESHEET	= $(sysconfdir)/errorpage.css
+
 
 # List of automated translations possible:
 TRANSLATIONS = \
@@ -70,7 +72,15 @@ install-data-local:
 			$(INSTALL_DATA) $$f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; \
 		done; \
 	  fi \
-	done
+	done; \
+        $(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET).default; \
+        @if test -f $(DESTDIR)$(DEFAULT_STYLESHEET) ; then \
+                echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_STYLESHEET)" ; \
+        else \
+                echo "$(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET)"; \
+                $(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET); \
+        fi
+
 
 uninstall-local:
 	@ for l in $(LANGUAGES); do \
@@ -84,7 +94,8 @@ uninstall-local:
 	        	rm -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; \
 		done; \
 	  fi \
-	done
+	done; \
+	rm -f $(DESTDIR)$(DEFAULT_STYLESHEET).default
 
 # undocumented hack.  You can use this target to create multi-lingual
 # error pages.  For example:
@@ -130,7 +141,8 @@ dist-hook:
 		cp -p $(srcdir)/$$lang/ERR_*  $(distdir)/$$lang \
 		  || exit 1; \
 	  fi; \
-	done
+	done; \
+	cp $(srcdir)/errorpage.css  $(distdir)/errorpage.css
 
 translate:
 	@ if test "$(PO2HTML)" != "" ; then \
