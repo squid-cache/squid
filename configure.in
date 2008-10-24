@@ -1865,9 +1865,17 @@ dnl Enable IPv6 support
 AC_MSG_CHECKING([whether to enable IPv6])
 use_ipng=yes
 AC_ARG_ENABLE(ipv6,
-	AC_HELP_STRING([--disable-ipv6],[Disable IPv6 support]),
-[ AC_MSG_RESULT(yes)
-  AC_CACHE_CHECK([if PF_INET6 is available], $enableval,
+  AC_HELP_STRING([--disable-ipv6],[Disable IPv6 support]),
+[ if test "x$enableval" = "xyes" ; then
+    AC_MSG_RESULT(yes)
+  else
+    AC_MSG_RESULT(no)
+    use_ipng=no
+  fi
+],[AC_MSG_RESULT(yes)])
+
+if test "$use_ipng" = "yes"; then
+  AC_CACHE_CHECK([if PF_INET6 is available], $use_ipng,
     AC_TRY_RUN(
       [ /* PF_INET6 available check */
 #       include <sys/types.h>
@@ -1879,20 +1887,18 @@ AC_ARG_ENABLE(ipv6,
             exit(0);
         }
       ],
-      [ AC_DEFINE(USE_IPV6,1,[Enable support for IPv6 ])
-        AC_MSG_RESULT(yes)
+      [ AC_MSG_RESULT(yes)
         use_ipng=yes
       ],
       [ AC_MSG_RESULT(no)
         use_ipng=no
       ])
    )
-],
-[ AC_MSG_RESULT(no)
-  use_ipng=no
-])
+fi
 
 if test "$use_ipng" = "yes"; then
+
+AC_DEFINE(USE_IPV6,1,[Enable support for IPv6 ])
 
 dnl Check for IPv6 Windows Vista option
 dnl Also useful for other OS with hybrid-stack defaults turned OFF
