@@ -1227,13 +1227,14 @@ buildmodel=""
 needlargefiles=
 
 AC_ARG_WITH(large-files,
-[  --with-large-files      Enable support for large files (logs etc).],
+  AC_HELP_STRING([--with-large-files],[Enable support for large files (logs etc).]),
 [ if test "x$withval" = "xyes"; then
 	needlargefiles=1
   fi
 ])
 
 dnl UNIX Build environment
+dnl AC_HELP_STRING is not suited here because it doesn't allow to specify newlines
 AC_ARG_WITH(build-environment,
 [  --with-build-environment=model
                           The build environment to use. Normally one of
@@ -1333,8 +1334,9 @@ esac
 
 dnl Enable Linux transparent proxy support for obsolete TPROXY
 AC_ARG_ENABLE(linux-tproxy,
-[  --enable-linux-tproxy
-			  Enable real Transparent Proxy support for Netfilter TPROXY (version 2).],
+  AC_HELP_STRING([--enable-linux-tproxy],
+			     [Enable real Transparent Proxy support for Netfilter TPROXY 
+                  (version 2).]),
 [ if test "$enableval" = "yes" ; then
 	echo "Linux Netfilter/TPROXY v2 enabled"
 	AC_DEFINE(LINUX_TPROXY2, 1, [Enable real Transparent Proxy support for Netfilter TPROXY v2.])
@@ -1351,11 +1353,11 @@ AC_ARG_ENABLE(linux-tproxy,
 AM_CONDITIONAL(MAKE_LEAKFINDER, false)
 dnl Enable Leak Finding Functions
 AC_ARG_ENABLE(leakfinder,
-[  --enable-leakfinder
-                          Enable Leak Finding code.  Enabling this alone
-                          does nothing; you also have to modify the source
-			  code to use the leak finding functions.  Probably
-			  Useful for hackers only.],
+  AC_HELP_STRING([--enable-leakfinder],
+                 [Enable Leak Finding code.  Enabling this alone
+                  does nothing; you also have to modify the source
+			      code to use the leak finding functions.  Probably
+			      Useful for hackers only.]),
 [ if test "$enableval" = "yes" ; then
 	echo "Leak-Finding enabled"
 	AC_DEFINE(USE_LEAKFINDER,1,[Enable code for assisting in finding memory leaks.  Hacker stuff only.])
@@ -1366,11 +1368,11 @@ AC_ARG_ENABLE(leakfinder,
 
 follow_xff=1
 AC_ARG_ENABLE(follow-x-forwarded-for,
-[  --enable-follow-x-forwarded-for
-                          Enable support for following the X-Forwarded-For
-                          HTTP header to try to find the IP address of the
-                          original or indirect client when a request has
-                          been forwarded through other proxies.],
+  AC_HELP_STRING([--enable-follow-x-forwarded-for],
+                 [Enable support for following the X-Forwarded-For
+                 HTTP header to try to find the IP address of the
+                 original or indirect client when a request has
+                 been forwarded through other proxies.]),
 [ if test "$enableval" = "yes" ; then
     echo "follow X-Forwarded-For enabled"
     follow_xff=1
@@ -1384,9 +1386,8 @@ fi
 
 use_ident=1
 AC_ARG_ENABLE(ident-lookups,
-[  --disable-ident-lookups
-                          This allows you to remove code that performs
-                          Ident (RFC 931) lookups.],
+  AC_HELP_STRING([--disable-ident-lookups],
+                 [This allows you to remove code that performs Ident (RFC 931) lookups.]),
 [ if test "$enableval" = "no" ; then
     echo "Disabling Ident Lookups"
     use_ident=0
@@ -1403,9 +1404,9 @@ fi
 AM_CONDITIONAL(USE_DNSSERVER, false)
 use_dnsserver=
 AC_ARG_ENABLE(internal-dns,
-[  --disable-internal-dns  This prevents Squid from directly sending and
-                          receiving DNS messages, and instead enables the
-                          old external 'dnsserver' processes.],
+  AC_HELP_STRING([--disable-internal-dns],
+                 [Prevents Squid from directly sending and receiving DNS messages, 
+                  and instead enables the old external 'dnsserver' processes.]),
 [ if test "$enableval" = "no" ; then
     echo "Disabling Internal DNS queries"
     use_dnsserver="yes"
@@ -1418,9 +1419,9 @@ fi
 
 dnl Select Default hosts file location
 AC_ARG_ENABLE(default-hostsfile,
-[  --enable-default-hostsfile=path
-                          Select default location for hosts file.
-                          See hosts_file directive in squid.conf for details],
+  AC_HELP_STRING([--enable-default-hostsfile=path],
+                 [Select default location for hosts file.
+                  See hosts_file directive in squid.conf for details]),
 [
     if test "$enableval" != "none" ; then
     	if test -f $enableval; then
@@ -1438,13 +1439,13 @@ AC_SUBST(OPT_DEFAULT_HOSTS)
 
 dnl Select auth schemes modules to build
 AC_ARG_ENABLE(auth,
-[  --enable-auth=\"list of auth scheme modules\"
-                          Build support for the list of authentication schemes.
-                          The default is to build support for the Basic scheme.
-                          See src/auth for a list of available modules, or
-                          Programmers Guide section authentication schemes
-                          for details on how to build your custom auth scheme
-                          module],
+  AC_HELP_STRING([--enable-auth="list of auth scheme modules"],
+                 [Build support for the list of authentication schemes.
+                  The default is to build support for the Basic scheme.
+                  See src/auth for a list of available modules, or
+                  Programmers Guide section authentication schemes
+                  for details on how to build your custom auth scheme
+                  module]),
 [ case $enableval in
   yes)
         for dir in $srcdir/src/auth/*; do
@@ -1500,11 +1501,11 @@ if test -n "$AUTH_MODULE_basic"; then
 	BASIC_AUTH_HELPERS="all"
 fi
 AC_ARG_ENABLE(basic-auth-helpers,
-[  --enable-basic-auth-helpers=\"list of helpers\"
-                          This option selects which basic scheme proxy_auth
-                          helpers to build and install as part of the normal 
-                          build process. For a list of available
-                          helpers see the helpers/basic_auth directory.],
+  AC_HELP_STRING([--enable-basic-auth-helpers="list of helpers"],
+                 [This option selects which basic scheme proxy_auth
+                  helpers to build and install as part of the normal 
+                  build process. For a list of available
+                  helpers see the helpers/basic_auth directory.]),
 [ case "$enableval" in
   yes)
 	BASIC_AUTH_HELPERS="all"
@@ -1551,11 +1552,11 @@ if test -n "$AUTH_MODULE_ntlm"; then
 	NTLM_AUTH_HELPERS="all"
 fi
 AC_ARG_ENABLE(ntlm-auth-helpers,
-[  --enable-ntlm-auth-helpers=\"list of helpers\"
-                          This option selects which proxy_auth ntlm helpers
-                          to build and install as part of the normal build 
-                          process. For a list of available helpers see
-                          the helpers/ntlm_auth directory.],
+  AC_HELP_STRING([--enable-ntlm-auth-helpers="list of helpers"],
+                [This option selects which proxy_auth ntlm helpers
+                 to build and install as part of the normal build 
+                 process. For a list of available helpers see
+                 the helpers/ntlm_auth directory.]),
 [ case "$enableval" in
   yes) 
 	NTLM_AUTH_HELPERS="all"
