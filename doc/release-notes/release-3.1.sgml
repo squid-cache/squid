@@ -30,9 +30,7 @@ Although this release is deemed good enough for use in many setups, please note 
 <p>
 The 3.1 change history can be <url url="http://www.squid-cache.org/Versions/v3/3.1/changesets/" name="viewed here">.
 
-<sect>Changes since Squid-3.0
-
-<sect1>Major new features
+<sect>Major new features sinceSsquid-3.0
 <p>
 Squid 3.1 represents a new feature release above 3.0.
 
@@ -51,7 +49,7 @@ The most important of these new features are:
 
 Most user-facing changes are reflected in squid.conf (see below).
 
-<sect2>New Version Numbering System
+<sect1>New Version Numbering System
 
 <p>Begining with 3.1 the Squid Developers are trialling a new release numbering system.
 
@@ -94,7 +92,7 @@ As always we are fully dependent on people testing the previous packages and rep
 </itemize>
 
 
-<sect2>Minimal squid.conf improvements
+<sect1>Minimal squid.conf improvements
 
 <p>squid.conf has undergone a facelift.
 
@@ -113,13 +111,12 @@ contains a fully documented set of options previously cluttering up squid.conf i
 config options provided on a clean install.
 
 
-<sect2>Internet Protocol version 6 (IPv6)
+<sect1>Internet Protocol version 6 (IPv6)
 
-<p>Squid 3.1 supports IPv6. To enable IPv6 support, use the ./configure --enable-ipv6 option
+<p>Squid 3.1 supports IPv6.
+   Details in <url url="http://wiki.squid-cache.org/Features/IPv6" name="The Squid wiki">
 
-<p>Details in <url url="http://wiki.squid-cache.org/Features/IPv6" name="The Squid wiki">
-
-<sect3>New Features for IPv6
+<sect2>New Features for IPv6
 
 <p>Squid handles localhost values seperately. For the purpose of ACLs and also external
  connections ::1 is considered a seperate IP from 127.0.0.1. This means all ACL which
@@ -138,7 +135,7 @@ config options provided on a clean install.
  software which hard coded the MIB paths needs to be upgraded for this Squid release.
 
 
-<sect3>Limitations of IPv6 Support
+<sect2>Limitations of IPv6 Support
 
 <p>Specify a specific tcp_outgoing_address and the clients who match its ACL are limited
  to the IPv4 or IPv6 network that address belongs to. They are not permitted over the
@@ -169,13 +166,13 @@ config options provided on a clean install.
    with the RADIUS server. A new helper will be needed for IPv6 RADIUS protocol.
 
 
-<sect2>Error Page Localization
+<sect1>Error Page Localization
 
 <p>Details in <url url="http://wiki.squid-cache.org/Translations" name="The Squid wiki">
 
 <p>The error pages presented by squid may now be localized per-request to match the visitors local preferred language.
 
-<p>Squid needs to be build with the --enable-auto-locale option. And the error_directory option in squid.conf needs to be removed.
+<p>The error_directory option in squid.conf needs to be removed.
 
 <p>For best coverage of languages, using the latest language pack of error files is recommended.
 Updates can be downloaded from <url url="http://www.squid-cahch.org/Versions/langpack/" name="www.squid-cache.org/Versions/langpack/">
@@ -184,7 +181,7 @@ Updates can be downloaded from <url url="http://www.squid-cahch.org/Versions/lan
    Contribution of new languages is encouraged.
 
 
-<sect2>Connection Pinning (for NTLM Auth Passthrough)
+<sect1>Connection Pinning (for NTLM Auth Passthrough)
 
 <p>Details in <url url="http://wiki.squid-cache.org/Features/ConnPinn" name="The Squid wiki">
 
@@ -194,7 +191,7 @@ Updates can be downloaded from <url url="http://www.squid-cahch.org/Versions/lan
 Microsoft NTLM Authentication instead of HTTP standard authentication through a web proxy.
 
 
-<sect2>Quality of Service (QoS) Flow support
+<sect1>Quality of Service (QoS) Flow support
 
 <p>Details in <url url="http://wiki.squid-cache.org/Features/QualityOfService" name="The Squid wiki">
 
@@ -212,7 +209,7 @@ Microsoft NTLM Authentication instead of HTTP standard authentication through a 
 		before copying the value to the TOS send towards clients.
 </itemize>
 
-<sect3>Squid Configuration
+<sect2>Squid Configuration
 <p>Squid 3.1 needs to be configured with --enable-zph-qos for the ZPH QoS controls to be available.
 
 <p>The configuration options for 2.7 and 3.1 are based on different ZPH patches.
@@ -227,7 +224,7 @@ The two releases configuration differs and is not at this point directly transla
 </itemize>
 
 
-<sect2>SSL Bump (for HTTPS Filtering and Adaptation)
+<sect1>SSL Bump (for HTTPS Filtering and Adaptation)
 
 <p>Details in <url url="http://wiki.squid-cache.org/Features/SslBump" name="The Squid wiki">
 
@@ -236,7 +233,7 @@ using configurable client- and server-side certificates.
 While decrypted, the traffic can be inspected using ICAP.
 
 
-<sect2>eCAP Adaptation Module support
+<sect1>eCAP Adaptation Module support
 
 <p>Details in <url url="http://wiki.squid-cache.org/Features/eCAP" name="The Squid wiki">
 
@@ -426,7 +423,7 @@ ScriptAlias /squid/cgi-bin/ "c:/squid/libexec/"
 </descrip>
 
 
-<sect1>Changes to squid.conf
+<sect>Changes to squid.conf since Squid-3.0
 <p>
 There have been changes to Squid's configuration file since Squid-3.0.
 
@@ -441,7 +438,7 @@ This section gives a thorough account of those changes in three categories:
 <p>
 
 
-<sect2>New tags<label id="newtags">
+<sect1>New tags<label id="newtags">
 <p>
 <descrip>
 	<tag>acl_uses_indirect_client</tag>
@@ -772,7 +769,7 @@ NOCOMMENT_START
 
 </descrip>
 
-<sect2>Changes to existing tags<label id="modifiedtags">
+<sect1>Changes to existing tags<label id="modifiedtags">
 <p>
 <descrip>
 	<tag>acl dst ipv6</tag>
@@ -1009,7 +1006,7 @@ refresh_pattern .              0       20%     4320
 </descrip>
 
 
-<sect2>Removed tags<label id="removedtags">
+<sect1>Removed tags<label id="removedtags">
 <p>
 <descrip>
 
@@ -1028,7 +1025,7 @@ refresh_pattern .              0       20%     4320
 </descrip>
 
 
-<sect1>Changes to ./configure Options
+<sect>Changes to ./configure Options since Squid-3.0
 <p>
 There have been some changes to Squid's build configuration since Squid-3.0.
 
@@ -1037,31 +1034,26 @@ This section gives an account of those changes in three categories:
 <itemize>
 	<item><ref id="newoptions" name="New options">
 	<item><ref id="modifiedoptions" name="Changes to existing options">
-	<item><ref id="notportedoptions" name="Not yet available options">
 	<item><ref id="removedoptions" name="Removed options">
 </itemize>
 <p>
 
 
-<sect2>New options<label id="newoptions">
+<sect1>New options<label id="newoptions">
 
 <p>
 <descrip>
 	<tag>--enable-ipv6</tag>
-	<p>Buildwith IPv6 support. The default is to build without.</p>
+	<p>Buildwith IPv6 support. The default is to build with IPv6.</p>
 
 	<tag>--with-localhost-ipv6</tag>
 	<p>Build support for squid to map all 127.0.0.1 traffic onto ::1.
            The default is to build with 127.0.0.1 and ::1 being considered seperate IP.
-           see the IPv6 details above for a better description. 
+           see the IPv6 details above for a better description.
         </p>
 
         <tag>--with-ipv6-split-stack</tag>
         <p>Enable special additions for IPv6 support in Windows XP.
-           see the IPv6 details above for a better description.</p>
-
-	<tag>--with-ipv4-mapped</tag>
-	<p>Enable special additions for IPv6 support in Windows Vista.
            see the IPv6 details above for a better description.</p>
 
         <tag>--with-dns-cname</tag>
@@ -1080,7 +1072,7 @@ This section gives an account of those changes in three categories:
 </descrip>
 </p>
 
-<sect2>Changes to existing options<label id="modifiedoptions">
+<sect1>Changes to existing options<label id="modifiedoptions">
 
 <p>
 <descrip>
@@ -1098,11 +1090,36 @@ This section gives an account of those changes in three categories:
 </descrip>
 </p>
 
-<sect2>Not yet available options<label id="notportedoptions">
+<sect1>Removed options<label id="removedoptions">
 
-<p>These configure options have not yet been ported to Squid-3. If you need something to do then
-porting one of these from Squid-2 to Squid-3 is most welcome.
+<p>The following configure options have been removed.
 
+<descrip>
+	<tag>--enable-linux-tproxy</tag>
+	<p>Replaced by --enable-linux-tproxy2 to make way for differences in TPROXY v2 and v4 support.</p>
+	<tag>--enable-default-err-language</tag>
+	<p>Replaced by error_default_language squid.conf option</p>
+	<tag>--enable-err-languages</tag>
+	<p>Removed.</p>
+</descrip>
+
+
+<sect>Regressions since Squid-2.6
+
+<p>Some squid.conf and ./configure options which were available in Squid 2.6 are no longer
+   or not yet available in Squid-3.1
+
+<p>Some options are listed as <em>Not Yet Ported</em>
+   If you need something to do then porting one of these from Squid-2 to Squid-3 is most welcome.
+
+<sect1>Missing and Removed squid.conf Options
+<descrip>
+	<tag></tag>
+	<p>
+
+</descrip>
+
+<sect1>Missing and Removed ./configure Options
 <descrip>
 	<tag>--enable-devpoll</tag>
 	<p>Support for Solaris /dev/poll</p>
@@ -1115,17 +1132,27 @@ porting one of these from Squid-2 to Squid-3 is most welcome.
 	client IP address</p>
 </descrip>
 
-<sect2>Removed options<label id="removedoptions">
 
-<p>The following configure options have been removed.
+<sect>Regressions since Squid-2.7
 
+<p>Some squid.conf and ./configure options which were available in Squid 2.7 are no longer
+   or not yet available in Squid-3.1
+
+<p>Some options are listed as <em>Not Yet Ported</em>
+   If you need something to do then porting one of these from Squid-2 to Squid-3 is most welcome.
+
+<sect1>Missing and Removed squid.conf Options
 <descrip>
-	<tag>--enable-linux-tproxy</tag>
-	<p>Replaced by --enable-linux-tproxy2 to make way for differences in TPROXY v2 and v4 support.</p>
-	<tag>--enable-default-err-language</tag>
-	<p>Replaced by error_default_language squid.conf option</p>
-	<tag>--enable-err-languages</tag>
-	<p>Removed.</p>
+	<tag></tag>
+	<p>
+
+</descrip>
+
+<sect1>Missing and Removed ./configure Options
+<descrip>
+	<tag></tag>
+	<p>
+
 </descrip>
 
 </article>
