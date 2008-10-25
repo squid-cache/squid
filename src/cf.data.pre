@@ -2806,6 +2806,12 @@ DOC_START
 	The number of requests each redirector helper can handle in
 	parallel. Defaults to 0 which indicates the redirector
 	is a old-style single threaded redirector.
+
+	When this directive is set to a value >= 1 then the protocol
+	used to communicate with the helper is modified to include
+	a request ID in front of the request/response. The request
+	ID from the request must be echoed back with the response
+	to that request.
 DOC_END
 
 NAME: url_rewrite_host_header redirect_rewrites_host_header
