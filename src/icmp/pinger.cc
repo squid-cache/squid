@@ -68,9 +68,9 @@
 
 #if USE_ICMP
 
-#include "ICMPv4.h"
-#include "ICMPv6.h"
-#include "ICMPPinger.h"
+#include "Icmp4.h"
+#include "Icmp6.h"
+#include "IcmpPinger.h"
 
 #ifdef _SQUID_MSWIN_
 
@@ -107,10 +107,10 @@ Win32__WSAFDIsSet(int fd, fd_set FAR * set)
 #endif	/* _SQUID_MSWIN_ */
 
 // ICMP Engines are declared global here so they can call each other easily.
-ICMPPinger control;
-ICMPv4 icmp4;
+IcmpPinger control;
+Icmp4 icmp4;
 #if USE_IPV6
-ICMPv6 icmp6;
+Icmp6 icmp6;
 #endif
 
 int icmp_pkts_sent = 0;

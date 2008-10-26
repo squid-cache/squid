@@ -32,11 +32,11 @@
  *
  */
 #include "squid.h"
-#include "ICMP.h"
+#include "Icmp.h"
 #include "SquidTime.h"
 #include "Debug.h"
 
-ICMP::ICMP()
+Icmp::Icmp()
 {
 #if USE_ICMP
     icmp_sock = -1;
@@ -45,7 +45,7 @@ ICMP::ICMP()
 }
 
 void
-ICMP::Close()
+Icmp::Close()
 {
 #if USE_ICMP
     if (icmp_sock > 0)
@@ -58,7 +58,7 @@ ICMP::Close()
 #if USE_ICMP
 
 int
-ICMP::CheckSum(unsigned short *ptr, int size)
+Icmp::CheckSum(unsigned short *ptr, int size)
 {
     long sum;
     unsigned short oddbyte;
@@ -86,7 +86,7 @@ ICMP::CheckSum(unsigned short *ptr, int size)
 }
 
 int
-ICMP::ipHops(int ttl)
+Icmp::ipHops(int ttl)
 {
     if (ttl < 33)
         return 33 - ttl;
@@ -107,7 +107,7 @@ ICMP::ipHops(int ttl)
 }
 
 void
-ICMP::Log(const IPAddress &addr, const u_int8_t type, const char* pkt_str, const int rtt, const int hops)
+Icmp::Log(const IPAddress &addr, const u_int8_t type, const char* pkt_str, const int rtt, const int hops)
 {
     debugs(42, 2, "pingerLog: " << std::setw(9) << current_time.tv_sec  <<
            "." << std::setfill('0') << std::setw(6) <<

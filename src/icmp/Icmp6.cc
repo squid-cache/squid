@@ -39,8 +39,8 @@
 
 #include "SquidTime.h"
 #include "Debug.h"
-#include "ICMPv6.h"
-#include "ICMPPinger.h"
+#include "Icmp6.h"
+#include "IcmpPinger.h"
 
 // Some system headers are only neeed internally here.
 // They should not be included via the header.
@@ -49,7 +49,7 @@
 #include <netinet/ip6.h>
 #endif
 
-// ICMPv6 OP-Codes
+// Icmp6 OP-Codes
 // see http://www.iana.org/assignments/icmpv6-parameters
 // NP: LowPktStr is for codes 0-127
 static const char *icmp6LowPktStr[] = {
@@ -103,18 +103,18 @@ static const char *icmp6HighPktStr[] = {
     "ICMP 160"
 };
 
-ICMPv6::ICMPv6() : ICMP()
+Icmp6::Icmp6() : Icmp()
 {
     ; // nothing new.
 }
 
-ICMPv6::~ICMPv6()
+Icmp6::~Icmp6()
 {
     Close();
 }
 
 int
-ICMPv6::Open(void)
+Icmp6::Open(void)
 {
     icmp_sock = socket(PF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
 
@@ -124,16 +124,16 @@ ICMPv6::Open(void)
     }
 
     icmp_ident = getpid() & 0xffff;
-    debugs(42, 1, "pinger: ICMPv6 socket opened");
+    debugs(42, 1, "pinger: Icmp6 socket opened");
 
     return icmp_sock;
 }
 
 /**
- * Generates an RFC 4443 ICMPv6 ECHO Packet and sends into the network.
+ * Generates an RFC 4443 Icmp6 ECHO Packet and sends into the network.
  */
 void
-ICMPv6::SendEcho(IPAddress &to, int opcode, const char *payload, int len)
+Icmp6::SendEcho(IPAddress &to, int opcode, const char *payload, int len)
 {
     int x;
     LOCAL_ARRAY(char, pkt, MAX_PKT6_SZ);
@@ -153,7 +153,7 @@ ICMPv6::SendEcho(IPAddress &to, int opcode, const char *payload, int len)
         len = 0;
     }
 
-    // Construct ICMPv6 ECHO header
+    // Construct Icmp6 ECHO header
     icmp->icmp6_type = ICMP6_ECHO_REQUEST;
     icmp->icmp6_code = 0;
     icmp->icmp6_cksum = 0;
@@ -163,7 +163,7 @@ ICMPv6::SendEcho(IPAddress &to, int opcode, const char *payload, int len)
     icmp6_pktsize = sizeof(struct icmp6_hdr);
 
 
-    // Fill ICMPv6 ECHO data content
+    // Fill Icmp6 ECHO data content
     echo = (icmpEchoData *) (pkt + sizeof(icmp6_hdr));
     echo->opcode = (unsigned char) opcode;
     memcpy(&echo->tv, &current_time, sizeof(struct timeval));
@@ -186,7 +186,7 @@ ICMPv6::SendEcho(IPAddress &to, int opcode, const char *payload, int len)
 
     assert(icmp6_pktsize <= MAX_PKT6_SZ);
 
-    debugs(42, 5, HERE << "Send ICMPv6 packet to " << to << ".");
+    debugs(42, 5, HERE << "Send Icmp6 packet to " << to << ".");
 
     x = sendto(icmp_sock,
                (const void *) pkt,
@@ -204,10 +204,10 @@ ICMPv6::SendEcho(IPAddress &to, int opcode, const char *payload, int len)
 }
 
 /**
- * Reads an RFC 4443 ICMPv6 ECHO-REPLY Packet from the network.
+ * Reads an RFC 4443 Icmp6 ECHO-REPLY Packet from the network.
  */
 void
-ICMPv6::Recv(void)
+Icmp6::Recv(void)
 {
     int n;
     struct addrinfo *from = NULL;
@@ -299,7 +299,7 @@ ICMPv6::Recv(void)
     }
 
     if (icmp6->icmp6_id != icmp_ident) {
-        debugs(42, 8, HERE << "dropping ICMPv6 read. IDENT check failed. ident=='" << icmp_ident << "'=='" << icmp6->icmp6_id << "'");
+        debugs(42, 8, HERE << "dropping Icmp6 read. IDENT check failed. ident=='" << icmp_ident << "'=='" << icmp6->icmp6_id << "'");
         return;
     }
 

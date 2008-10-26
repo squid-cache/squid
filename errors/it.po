@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-09-29 15:05+1300\n"
-"PO-Revision-Date: 2008-08-08 21:04+1200\n"
+"PO-Revision-Date: 2008-10-17 20:45+1300\n"
 "Last-Translator: Francesco Chemolli <kinkie@squid-cache.org>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -392,7 +392,6 @@ msgid "Squid sent the following FTP command:"
 msgstr "Il comando FTP inviato da Squid era:"
 
 #: templates/ERR_DNS_FAIL:6
-#, fuzzy
 msgid "The DNS server returned:"
 msgstr "Il processo dnsserver ha risposto:"
 
