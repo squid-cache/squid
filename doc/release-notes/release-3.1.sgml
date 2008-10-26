@@ -22,17 +22,15 @@ While this release is not deemed ready for production use, we believe it is read
 
 We welcome feedback and bug reports. If you find a bug, please see <url url="http://wiki.squid-cache.org/SquidFaq/TroubleShooting#head-7067fc0034ce967e67911becaabb8c95a34d576d"> for how to submit a report with a stack trace.
 
-<sect>Known issues
+<sect1>Known issues
 <p>
 Although this release is deemed good enough for use in many setups, please note the existence of <url url="http://www.squid-cache.org/bugs/buglist.cgi?query_format=advanced&amp;short_desc_type=allwordssubstr&amp;short_desc=&amp;target_milestone=3.1&amp;long_desc_type=allwordssubstr&amp;long_desc=&amp;bug_file_loc_type=allwordssubstr&amp;bug_file_loc=&amp;status_whiteboard_type=allwordssubstr&amp;status_whiteboard=&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;emailtype1=substring&amp;email1=&amp;emailtype2=substring&amp;email2=&amp;bugidtype=include&amp;bug_id=&amp;votes=&amp;chfieldfrom=&amp;chfieldto=Now&amp;chfieldvalue=&amp;cmdtype=doit&amp;order=bugs.bug_severity&amp;field0-0-0=noop&amp;type0-0-0=noop&amp;value0-0-0=" name="open bugs against Squid-3.1">.
 
-<sect>Changes since earlier releases of Squid-3.1
+<sect1>Changes since earlier releases of Squid-3.1
 <p>
 The 3.1 change history can be <url url="http://www.squid-cache.org/Versions/v3/3.1/changesets/" name="viewed here">.
 
-<sect>Changes since Squid-3.0
-
-<sect1>Major new features
+<sect>Major new features since Squid-3.0
 <p>
 Squid 3.1 represents a new feature release above 3.0.
 
@@ -51,7 +49,7 @@ The most important of these new features are:
 
 Most user-facing changes are reflected in squid.conf (see below).
 
-<sect2>New Version Numbering System
+<sect1>New Version Numbering System
 
 <p>Begining with 3.1 the Squid Developers are trialling a new release numbering system.
 
@@ -94,7 +92,7 @@ As always we are fully dependent on people testing the previous packages and rep
 </itemize>
 
 
-<sect2>Minimal squid.conf improvements
+<sect1>Minimal squid.conf improvements
 
 <p>squid.conf has undergone a facelift.
 
@@ -113,13 +111,12 @@ contains a fully documented set of options previously cluttering up squid.conf i
 config options provided on a clean install.
 
 
-<sect2>Internet Protocol version 6 (IPv6)
+<sect1>Internet Protocol version 6 (IPv6)
 
-<p>Squid 3.1 supports IPv6. To enable IPv6 support, use the ./configure --enable-ipv6 option
+<p>Squid 3.1 supports IPv6.
+   Details in <url url="http://wiki.squid-cache.org/Features/IPv6" name="The Squid wiki">
 
-<p>Details in <url url="http://wiki.squid-cache.org/Features/IPv6" name="The Squid wiki">
-
-<sect3>New Features for IPv6
+<sect2>New Features for IPv6
 
 <p>Squid handles localhost values seperately. For the purpose of ACLs and also external
  connections ::1 is considered a seperate IP from 127.0.0.1. This means all ACL which
@@ -138,7 +135,7 @@ config options provided on a clean install.
  software which hard coded the MIB paths needs to be upgraded for this Squid release.
 
 
-<sect3>Limitations of IPv6 Support
+<sect2>Limitations of IPv6 Support
 
 <p>Specify a specific tcp_outgoing_address and the clients who match its ACL are limited
  to the IPv4 or IPv6 network that address belongs to. They are not permitted over the
@@ -169,13 +166,13 @@ config options provided on a clean install.
    with the RADIUS server. A new helper will be needed for IPv6 RADIUS protocol.
 
 
-<sect2>Error Page Localization
+<sect1>Error Page Localization
 
 <p>Details in <url url="http://wiki.squid-cache.org/Translations" name="The Squid wiki">
 
 <p>The error pages presented by squid may now be localized per-request to match the visitors local preferred language.
 
-<p>Squid needs to be build with the --enable-auto-locale option. And the error_directory option in squid.conf needs to be removed.
+<p>The error_directory option in squid.conf needs to be removed.
 
 <p>For best coverage of languages, using the latest language pack of error files is recommended.
 Updates can be downloaded from <url url="http://www.squid-cahch.org/Versions/langpack/" name="www.squid-cache.org/Versions/langpack/">
@@ -184,7 +181,7 @@ Updates can be downloaded from <url url="http://www.squid-cahch.org/Versions/lan
    Contribution of new languages is encouraged.
 
 
-<sect2>Connection Pinning (for NTLM Auth Passthrough)
+<sect1>Connection Pinning (for NTLM Auth Passthrough)
 
 <p>Details in <url url="http://wiki.squid-cache.org/Features/ConnPinn" name="The Squid wiki">
 
@@ -194,7 +191,7 @@ Updates can be downloaded from <url url="http://www.squid-cahch.org/Versions/lan
 Microsoft NTLM Authentication instead of HTTP standard authentication through a web proxy.
 
 
-<sect2>Quality of Service (QoS) Flow support
+<sect1>Quality of Service (QoS) Flow support
 
 <p>Details in <url url="http://wiki.squid-cache.org/Features/QualityOfService" name="The Squid wiki">
 
@@ -212,7 +209,7 @@ Microsoft NTLM Authentication instead of HTTP standard authentication through a 
 		before copying the value to the TOS send towards clients.
 </itemize>
 
-<sect3>Squid Configuration
+<sect2>Squid Configuration
 <p>Squid 3.1 needs to be configured with --enable-zph-qos for the ZPH QoS controls to be available.
 
 <p>The configuration options for 2.7 and 3.1 are based on different ZPH patches.
@@ -227,7 +224,7 @@ The two releases configuration differs and is not at this point directly transla
 </itemize>
 
 
-<sect2>SSL Bump (for HTTPS Filtering and Adaptation)
+<sect1>SSL Bump (for HTTPS Filtering and Adaptation)
 
 <p>Details in <url url="http://wiki.squid-cache.org/Features/SslBump" name="The Squid wiki">
 
@@ -236,7 +233,7 @@ using configurable client- and server-side certificates.
 While decrypted, the traffic can be inspected using ICAP.
 
 
-<sect2>eCAP Adaptation Module support
+<sect1>eCAP Adaptation Module support
 
 <p>Details in <url url="http://wiki.squid-cache.org/Features/eCAP" name="The Squid wiki">
 
@@ -246,76 +243,71 @@ While decrypted, the traffic can be inspected using ICAP.
 or can be compiled in Windows native mode using the MinGW + MSYS development environment. Windows NT 4 SP4 and later are supported.<newline>
 On Windows 2000 and later the service is configured to use the Windows Service Recovery option
 restarting automatically after 60 seconds.
-<descrip>
 
-<tag>Usage</tag>
+<sect1>Usage
 
-Some new command line options were added for the Windows service support:<newline>
+<p>Some new command line options were added for the Windows service support:<newline>
 
-The service installation is made with -i command line switch, it's possible to use -f switch at
+<p>The service installation is made with -i command line switch, it's possible to use -f switch at
 the same time for specify a different config-file settings for the Squid Service that will be
 stored on the Windows Registry.
 
-A new -n switch specify the Windows Service Name, so multiple Squid instance are allowed.
+<p>A new -n switch specify the Windows Service Name, so multiple Squid instance are allowed.
 <em/"Squid"/ is the default when the switch is not used.
 
-So, to install the service, the syntax is: 
+<p>So, to install the service, the syntax is: 
 
 <verb>squid -i [-f file] [-n name]</verb>
 
-Service uninstallation is made with -r command line switch with the appropriate -n switch.
+<p>Service uninstallation is made with -r command line switch with the appropriate -n switch.
 
-The -k switch family must be used with the appropriate -f and -n switches, so the syntax is: 
+<p>The -k switch family must be used with the appropriate -f and -n switches, so the syntax is: 
 
 <verb>squid -k command [-f file] -n service-name</verb>
 where <em/service-name/ is the name specified with -n options at service install time.
 
-To use the Squid original command line, the new -O switch must be used ONCE, the syntax is: 
+<p>To use the Squid original command line, the new -O switch must be used ONCE, the syntax is: 
 
 <verb>squid -O cmdline [-n service-name]</verb>
-If multiple service command line options must be specified, use quote. The -n switch is
+<p>If multiple service command line options must be specified, use quote. The -n switch is
 needed only when a non default service name is in use.
 
-Don't use the "Start parameters" in the Windows 2000/XP/2003 Service applet: they are
+<p>Don't use the "Start parameters" in the Windows 2000/XP/2003 Service applet: they are
 specific to Windows services functionality and Squid is not designed for understand they.
 
-In the following example the command line of the "squidsvc" Squid service is set to "-D -u 3130": 
+<p>In the following example the command line of the "squidsvc" Squid service is set to "-D -u 3130": 
 
 <verb>squid -O "-D -u 3130" -n squidsvc</verb>
-</descrip>
 
-<descrip>
-<tag>PSAPI.DLL (Process Status Helper) Considerations</tag>
+<sect1>PSAPI.DLL (Process Status Helper) Considerations
 
-The process status helper functions make it easier for you to obtain information about
+<p>The process status helper functions make it easier for you to obtain information about
 processes and device drivers running on Microsoft® Windows NT®/Windows® 2000. These
 functions are available in PSAPI.DLL, which is distributed in the Microsoft® Platform
 Software Development Kit (SDK). The same information is generally available through the
 performance data in the registry, but it is more difficult to get to it. PSAPI.DLL is
 freely redistributable.
 
-PSAPI.DLL is available only on Windows NT, 2000, XP and 2003. The implementation in Squid is
+<p>PSAPI.DLL is available only on Windows NT, 2000, XP and 2003. The implementation in Squid is
 aware of this, and try to use it only on the right platform.
 
-On Windows NT PSAPI.DLL can be found as component of many applications, if you need it,
+<p>On Windows NT PSAPI.DLL can be found as component of many applications, if you need it,
 you can find it on Windows NT Resource KIT. If you have problem, it can be
 downloaded from here:
 <url url="http://download.microsoft.com/download/platformsdk/Redist/4.0.1371.1/NT4/EN-US/psinst.EXE" name="http://download.microsoft.com/download/platformsdk/Redist/4.0.1371.1/NT4/EN-US/psinst.EXE">
 
-On Windows 2000 and later it is available installing the Windows Support Tools, located on the
+<p>On Windows 2000 and later it is available installing the Windows Support Tools, located on the
 Support\Tools folder of the installation Windows CD-ROM.
-</descrip>
 
-<descrip>
-<tag>Registry DNS lookup</tag>
-On Windows platforms, if no value is specified in the <em/dns_nameservers/ option on
+<sect1>Registry DNS lookup
+
+<p>On Windows platforms, if no value is specified in the <em/dns_nameservers/ option on
 squid.conf or in the /etc/resolv.conf file, the list of DNS name servers are
 taken from the Windows registry, both static and dynamic DHCP configurations
 are supported.
-</descrip>
 
-<descrip>
-<tag>Compatibility Notes</tag>
+<sect1>Compatibility Notes
+<p>
 <itemize>
 <item>It's recommended to use '/' char in Squid paths instead of '\'
 <item>Paths with spaces (like 'C:\Programs Files\Squid) are NOT supported by Squid
@@ -333,10 +325,10 @@ redirect_program c:/winnt/system32/cmd.exe /C c:/squid/libexec/redir.cmd</verb>
 <item>When Squid runs in command line mode, the launching user account must have administrative privilege on the system
 <item>"Start parameters" in the Windows 2000/XP/2003 Service applet cannot be used
 </itemize>
-</descrip>
 
-<descrip>
-<tag>Known Limitations</tag>
+
+<sect1>Known Limitations
+<p>
 <itemize>
 <item>Squid features not operational:<newline>
 <itemize>
@@ -348,11 +340,10 @@ redirect_program c:/winnt/system32/cmd.exe /C c:/squid/libexec/redir.cmd</verb>
 <item>Some external helpers may not work.
 <item>File Descriptors number hard-limited to 2048 when building with MinGW.
 </itemize>
-</descrip>
 
-<descrip>
-<tag>Building Squid on Windows</tag>
-A reasonably recent release of <url url="http://www.cygwin.com/" name="Cygwin"> or <url url="http://www.mingw.org/" name="MinGW"> is needed.<newline>
+<sect1>Building Squid on Windows
+
+<p>A reasonably recent release of <url url="http://www.cygwin.com/" name="Cygwin"> or <url url="http://www.mingw.org/" name="MinGW"> is needed.<newline>
 The usage of the Cygwin environment is very similar to other Unix/Linux environments, and -devel version of libraries must be installed.<newline>
 For the MinGW environment, the packages MSYS, MinGW and msysDTK must be installed. Some additional libraries and tools must be downloaded separately:<newline><newline>
 OpenSSL: <url url="http://www.slproweb.com/products/Win32OpenSSL.html" name="Shining Light Productions Win32 OpenSSL"><newline>
@@ -387,11 +378,8 @@ Before build Squid with SSL support, some operations are needed (in the followin
 <item>Rename C:\MinGW\lib\ssleay32.a to C:\MinGW\lib\libssleay32.a<newline>
 </itemize>
 
-</descrip>
-
-<descrip>
-<tag>Using cache manager on Windows:</tag>
-On Windows, cache manager (cachemgr.cgi) can be used with Microsoft IIS or Apache.<newline>
+<sect1>Using cache manager on Windows:
+<p>On Windows, cache manager (cachemgr.cgi) can be used with Microsoft IIS or Apache.<newline>
 Some specific configuration could be needed:<newline>
 <itemize>
 <item>IIS 6 (Windows 2003):<newline>
@@ -423,10 +411,9 @@ ScriptAlias /squid/cgi-bin/ "c:/squid/libexec/"
 </verb>
 </itemize>
 </itemize>
-</descrip>
 
 
-<sect1>Changes to squid.conf
+<sect>Changes to squid.conf since Squid-3.0
 <p>
 There have been changes to Squid's configuration file since Squid-3.0.
 
@@ -437,11 +424,10 @@ This section gives a thorough account of those changes in three categories:
 	<item><ref id="modifiedtags" name="Changes to existing tags">
 	<item><ref id="removedtags" name="Removed tags">
 </itemize>
-
 <p>
 
 
-<sect2>New tags<label id="newtags">
+<sect1>New tags<label id="newtags">
 <p>
 <descrip>
 	<tag>acl_uses_indirect_client</tag>
@@ -772,7 +758,7 @@ NOCOMMENT_START
 
 </descrip>
 
-<sect2>Changes to existing tags<label id="modifiedtags">
+<sect1>Changes to existing tags<label id="modifiedtags">
 <p>
 <descrip>
 	<tag>acl dst ipv6</tag>
@@ -783,7 +769,7 @@ NOCOMMENT_START
 
 	<tag>acl myportname peername</tag>
 	<p>New acl type myportname, matching the name of the http(s)_port where the request was accepted.
-	   New acl type peername, matching against a named cache_peer entry where the request will be attempted first.
+	<p>New acl type peername, matching against a named cache_peer entry where the request will be attempted first.
 	   NP: peername currently is limited to only match the first peer possible.
         <verb>
         acl aclname myportname 3128 ...         # http(s)_port name
@@ -810,9 +796,9 @@ NOCOMMENT_START
 	   Replaced by new refresh_pattern instead.
 
 	<tag>cache_dir</tag>
-	<p>Default changed from 100MB on-disk UFS cache to 256MB in-memory cache.
+	<p>Default changed to 256MB in-memory cache.
 	   see cache_mem and maximum_object_size_in_memory for size parameters.
-	   'null' storage type dropped.
+	<p>'null' storage type dropped. In-memory cache is always present. Remove all cache_dir options to prevent on-disk caching.
 
 	<tag>cache_mem</tag>
 	<p>Default size increased to 256MB.
@@ -846,7 +832,7 @@ NOCOMMENT_START
 
 	<tag>error_directory</tag>
 	<p>Now an optional entry in squid.conf. If present it will force all visitors to receive the error pages
-	contained in the directory it points at. If absent error page localization will be given a chance.
+	contained in the directory it points at. If absent, error page localization will be given a chance.
 	<verb>
         If you wish to create your own versions of the default
         error files to customize them to suit your company COPY
@@ -855,15 +841,6 @@ NOCOMMENT_START
 
         WARNING: This option will disable multi-language support
                  on error pages if used.
-
-        The squid developers are interested in making squid available in
-        a wide variety of languages. If you are making translations for a
-        language that Squid does not currently provide please consider
-        contributing your translation back to the project.
-        http://wiki.squid-cache.org/Translations
-
-        The squid developers working on translations are happy to supply drop-in
-        translated error files in exchange for any new language contributions.
 	</verb>
 
         <tag>external_acl_type</tag>
@@ -947,21 +924,19 @@ NOCOMMENT_START
 	<p>Default size limit increased to 512KB.
 
 	<tag>negative_ttl</tag>
-	<p>New default to prevent negative-caching of failure messages unless explicitly
+	<p>New default of 0 seconds. To prevent negative-caching of failure messages unless explicitly
 	   permitted by the message generating web server.
-	   This is an RFC 1616 violation and now requires --enable-http-violations
-	   to even be usable.
+	<p>Changing this is an RFC 2616 violation and now requires --enable-http-violations
 
 	<tag>refresh_pattern</tag>
 	<p>New set of basic patterns. These should always be listed after any custom ptterns.
 	   They ensure RFC compliance with certain protocol and request handling in the absence
 	   of accurate Cache-Control: and Expires: information.
 	<verb>
-refresh_pattern ^ftp:          1440    20%     10080
-refresh_pattern ^gopher:       1440    0%      1440
-refresh_pattern (cgi-bin|\?)   0       0%      0
-refresh_pattern -i (/cgi-bin/|\?) 0    0%      0
-refresh_pattern .              0       20%     4320
+refresh_pattern ^ftp:             1440   20%    10080
+refresh_pattern ^gopher:          1440    0%     1440
+refresh_pattern -i (/cgi-bin/|\?)    0    0%        0
+refresh_pattern .                    0   20%     4320
 	</verb>
 
 	<tag>reply_header_max_size</tag>
@@ -1009,12 +984,13 @@ refresh_pattern .              0       20%     4320
 </descrip>
 
 
-<sect2>Removed tags<label id="removedtags">
+<sect1>Removed tags<label id="removedtags">
 <p>
 <descrip>
 
 	<tag>dns_testnames</tag>
-	<p>Obsolete. This feature is no longer relevant to modern networks and causes boot problems.</p>
+	<p>Obsolete. This feature is no longer relevant to modern networks and was causing boot problems.
+	   The -D command line option used previously to suppress these tests is also obsolete.
 
 	<tag>extension_methods</tag>
 	<p>Obsolete. All possible methods are now accepted and handled properly.</p>
@@ -1028,7 +1004,7 @@ refresh_pattern .              0       20%     4320
 </descrip>
 
 
-<sect1>Changes to ./configure Options
+<sect>Changes to ./configure options since Squid-3.0
 <p>
 There have been some changes to Squid's build configuration since Squid-3.0.
 
@@ -1037,95 +1013,323 @@ This section gives an account of those changes in three categories:
 <itemize>
 	<item><ref id="newoptions" name="New options">
 	<item><ref id="modifiedoptions" name="Changes to existing options">
-	<item><ref id="notportedoptions" name="Not yet available options">
 	<item><ref id="removedoptions" name="Removed options">
 </itemize>
-<p>
 
 
-<sect2>New options<label id="newoptions">
-
+<sect1>New options<label id="newoptions">
 <p>
 <descrip>
-	<tag>--enable-ipv6</tag>
-	<p>Buildwith IPv6 support. The default is to build without.</p>
+	<tag>--enable-ecap</tag>
+	<p>Build with support for loadable content adaptation modules.
+	   Cannot be used with --disable-loadable-modules.
 
-	<tag>--with-localhost-ipv6</tag>
-	<p>Build support for squid to map all 127.0.0.1 traffic onto ::1.
-           The default is to build with 127.0.0.1 and ::1 being considered seperate IP.
-           see the IPv6 details above for a better description. 
-        </p>
+	<tag>--enable-follow-x-forwarded-for</tag>
+	<p>Support following the X-Forwarded-For HTTP header for determining the
+	   original or indirect client when a request has been forwarded through other
+	   proxies.
 
-        <tag>--with-ipv6-split-stack</tag>
-        <p>Enable special additions for IPv6 support in Windows XP.
-           see the IPv6 details above for a better description.</p>
+	<tag>--enable-zph-qos</tag>
+	<p>Build with support for ZPH Quality of Service controls
 
-	<tag>--with-ipv4-mapped</tag>
-	<p>Enable special additions for IPv6 support in Windows Vista.
-           see the IPv6 details above for a better description.</p>
+	<tag>--disable-auto-locale</tag>
+	<p>Disable error page localization for visitors.
+	<p>error_directory option is required if this option is used.
+
+	<tag>--disable-ipv6</tag>
+	<p>Build without IPv6 support. The default is to auto-detect system capabilities
+	   and build with IPv6 when possible.
+
+	<tag>--disable-loadable-modules</tag>
+	<p>Build without support for loadable modules.
 
         <tag>--with-dns-cname</tag>
         <p>Enable CNAME recursion within the Internal DNS resolver stub squid uses.
            This has no effect on the external DNS helper.
-           Please note this extension is still experimental and may encounter problems.
+        <p>Please note this extension is still experimental and may encounter problems.
 	   To see if it is actually needed you can run squid without it for a period and
 	   check the CNAME-Only Requests statistics squid maintains.
-	   If it produces ongoing serious problems the external helper may be needed
+	<p>If it produces ongoing serious problems the external helper may be needed
 	   but please report the bugs anyway.
-        </p>
 
-	<tag>--enable-auto-locale</tag>
-	<p>Enable error page localization for visitors.</p>
+	<tag>--with-localhost-ipv6</tag>
+	<p>Build support for squid to map all 127.0.0.1 traffic onto ::1.
+           The default is to build with 127.0.0.1 and ::1 being considered seperate IP.
+           see the IPv6 details above for a better description.
+	<p>WARNING: This is an RFC violation. Use is discouraged.
+
+	<tag>--with-logdir=PATH</tag>
+	<p>Allow build-time configuration of Default location for squid logs.
+
+        <tag>--with-ipv6-split-stack</tag>
+        <p>Enable special additions for IPv6 support in Windows XP.
+           see the IPv6 details above for a better description.
+
+	<tag>--with-po2html=PATH</tag>
+	<p>Absolute path to po2html executable.
+	   Default is to automatically detect the binary.
 
 </descrip>
-</p>
 
-<sect2>Changes to existing options<label id="modifiedoptions">
-
+<sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
-	<tag>--disable-internl-dns</tag>
-	<p>Better support for Linux using the external DNS helper.
-           The helper will compile and work with dns_nameservers on more variants of Linux than previously.</p>
+	<tag>--enable-shared[=PKGS]</tag>
+	<p>Default changed to yes.
 
 	<tag>--enable-linux-netfilter</tag>
 	<p>This option now enables support for all three netfilter interception targets.
-        Adding TPROXY version 4+ support to squid through the TPROXY target.
-	This options requires a linux kernel 2.6.25 or later for embeded netfilter TPROXY targets.
-	Older REDIRECT and DNAT targets work as before on HTTP ports marked 'intercept'.
-	</p>
+	<p>Adding TPROXY version 4+ support to squid through the netfilter TPROXY target.
+	   This options requires a linux kernel 2.6.25 or later for embeded netfilter TPROXY targets.
+	<p>Older REDIRECT and DNAT targets work as before on HTTP ports marked 'intercept'.
+
+	<tag>--enable-linux-tproxy</tag>
+	<p>Deprecated. Remains only to support old TPROXY version 2.2 installations.
+
+	<tag>--disable-internl-dns</tag>
+	<p>Better support for Linux using the external DNS helper.
+           The helper will now compile and work with dns_nameservers on more variants of Linux than previously.
 
 </descrip>
 </p>
 
-<sect2>Not yet available options<label id="notportedoptions">
-
-<p>These configure options have not yet been ported to Squid-3. If you need something to do then
-porting one of these from Squid-2 to Squid-3 is most welcome.
-
+<sect1>Removed options<label id="removedoptions">
+<p>
 <descrip>
-	<tag>--enable-devpoll</tag>
-	<p>Support for Solaris /dev/poll</p>
+	<tag>--enable-default-err-language</tag>
+	<p>Replaced by error_default_language squid.conf option
 
-	<tag>--enable-select-simple</tag>
-	<p>Basic POSIX select() loop without any binary fd_set optimizations.</p>
+	<tag>--enable-err-languages</tag>
+	<p>Removed. All languages used now for error page localization.
 
-	<tag>--enable-follow-x-forwarded-for</tag>
-	<p>Support following the X-Forwarded-For HTTP header for determining the
-	client IP address</p>
+	<tag>--disable-carp</tag>
+	<p>Removed. CARP is required by several peering algoithms. Disabling is not useful.
 </descrip>
 
-<sect2>Removed options<label id="removedoptions">
 
-<p>The following configure options have been removed.
+<sect>Options Removed since Squid-2
 
+<p>Some squid.conf and ./configure options which were available in Squid-2.6 and Squid-2.7 are made obsolete in Squid-3.1.
+
+<sect1>Removed squid.conf options since Squid-2.7
+<p>
 <descrip>
-	<tag>--enable-linux-tproxy</tag>
-	<p>Replaced by --enable-linux-tproxy2 to make way for differences in TPROXY v2 and v4 support.</p>
-	<tag>--enable-default-err-language</tag>
-	<p>Replaced by error_default_language squid.conf option</p>
-	<tag>--enable-err-languages</tag>
-	<p>Removed.</p>
+	<tag>auth_param</tag>
+	<p><em>blankpassword</em> option for basic scheme removed.
+
+	<tag>external_acl_type</tag>
+	<p>Format tag <em>%{Header}</em> replaced by <em>%>{Header}</em>
+	<p>Format tag <em>%{Header:member}</em> replaced by <em>%>{Header:member}</em>
+
+	<tag>header_access</tag>
+	<p>Replaced by <em>request_header_access</em> and <em>reply_header_access</em>
+
+	<tag>http_port</tag>
+	<p><em>no-connection-auth</em> replaced by <em>connection-auth=[on|off]</em>. Default is ON.
+	<p><em>tcpkeepalive=</em> replaced by <em>keepalive=</em>
+	<p><em>transparent</em> option replaced by <em>intercept</em>
+
+	<tag>httpd_accel_no_pmtu_disc</tag>
+	<p>Replaced by <em>http_port disable-pmtu-discovery=</em> option
+
+	<tag>redirector_bypass</tag>
+	<p>Replaced by <em>url_rewrite_bypass</em>
+
+	<tag>zph_local</tag>
+	<p>Replaced by <em>zph_tos_local</em>
+
+	<tag>zph_mode</tag>
+	<p>Obsolete.
+
+	<tag>zph_option</tag>
+	<p>Obsolete.
+
+	<tag>zph_parent</tag>
+	<p>Replaced by <em>zph_tos_peer</em> and <em>zph_tos_parent</em>
+
+	<tag>zph_sibling</tag>
+	<p>Replaced by <em>zph_tos_peer</em>
+
+</descrip>
+
+<sect1>Removed squid.conf options since Squid-2.6
+<p>
+<descrip>
+	<tag>cache_dir</tag>
+	<p><em>read-only</em> option replaced by <em>no-store</em>.
+
+</descrip>
+
+<sect1>Removed ./configure options since Squid-2.7
+<p>
+<descrip>
+	<tag>--enable-coss-aio-ops</tag>
+	<p>Obsolete.
+
+	<tag>--enable-devpoll</tag>
+	<p>Replaced by automatic detection.
+
+	<tag>--enable-dlmalloc=LIB</tag>
+	<p>Obsolete.
+
+	<tag>--enable-epoll</tag>
+	<p>Replaced by automatic detection.
+
+	<tag>--enable-forward-log</tag>
+	<p>Obsolete.
+
+	<tag>--enable-heap-replacement</tag>
+	<p>Obsolete.
+
+	<tag>--enable-htcp</tag>
+	<p>Obsolete. Enabled by default.
+
+	<tag>--enable-large-cache-files</tag>
+	<p>Obsolete.
+
+	<tag>--enable-mempool-debug</tag>
+	<p>Obsolete.
+
+	<tag>--enable-multicast-miss</tag>
+	<p>Obsolete.
+
+	<tag>--enable-poll</tag>
+	<p>Replaced by automatic detection.
+
+	<tag>--enable-select</tag>
+	<p>Replaced by automatic detection.
+
+	<tag>--enable-select-simple</tag>
+	<p>Replaced by automatic detection.
+
+	<tag>--enable-snmp</tag>
+	<p>Obsolete. Enabled by default.
+
+	<tag>--enable-truncate</tag>
+	<p>Obsolete.
+
+	<tag>--disable-kqueue</tag>
+	<p>Obsolete. Disabled by default.
+
+</descrip>
+
+
+<sect>Regressions since Squid-2.7
+
+<p>Some squid.conf and ./configure options which were available in Squid-2.7 are not yet available in Squid-3.1
+
+<p>If you need something to do then porting one of these from Squid-2 to Squid-3 is most welcome.
+
+<sect1>Missing squid.conf options available in Squid-2.7
+<p>
+<descrip>
+	<tag>acl</tag>
+	<p><em>urllogin</em> option
+	<p><em>urlgroup</em> option
+
+	<tag>auth_param</tag>
+	<p><em>concurrency</em> option
+
+	<tag>authenticate_ip_shortcircuit_access</tag>
+
+	<tag>authenticate_ip_shortcircuit_ttl</tag>
+
+	<tag>broken_vary_encoding</tag>
+
+	<tag>cache_dir</tag>
+	<p><em>min-size</em> option
+	<p><em>COSS</em> storage type is lacking stability fixes.
+	<p>COSS <em>overwrite-percent=</em> option
+	<p>COSS <em>max-stripe-waste=</em> option
+	<p>COSS <em>membufs=</em> option
+	<p>COSS <em>maxfullbufs=</em> option
+
+	<tag>cache_peer</tag>
+	<p><em>monitorinterval=</em>
+	<p><em>monitorsize=</em>
+	<p><em>monitortimeout=</em>
+	<p><em>monitorurl=</em>
+	<p><em>multicast-siblings</em>
+	<p><em>idle=</em>
+	<p><em>http11</em>
+
+	<tag>cache_vary</tag>
+
+	<tag>clientside_tos</tag>
+
+	<tag>collapsed_forwarding</tag>
+
+	<tag>error_map</tag>
+
+	<tag>external_acl_type</tag>
+	<p><em>%ACL</em>
+	<p><em>%DATA</em>
+
+	<tag>external_refresh_check</tag>
+
+	<tag>http_access2</tag>
+
+	<tag>http_port</tag>
+	<p><em>act-as-origin</em>
+	<p><em>allow-direct</em>
+	<p><em>http11</em>
+	<p><em>urlgroup=</em>
+
+	<tag>ignore_expect_100</tag>
+
+	<tag>ignore_ims_on_miss</tag>
+
+	<tag>incoming_rate</tag>
+
+	<tag>location_rewrite_access</tag>
+
+	<tag>location_rewrite_children</tag>
+
+	<tag>location_rewrite_concurrency</tag>
+
+	<tag>location_rewrite_program</tag>
+
+	<tag>logfile_daemon</tag>
+
+	<tag>logformat</tag>
+	<p><em>%oa</em>
+	<p><em>%sn</em>
+
+	<tag>max_filedescriptors / max_filedesc</tag>
+
+	<tag>max_stale</tag>
+
+	<tag>refresh_pattern</tag>
+	<p><em>stale-while-revalidate=</em>
+	<p><em>ignore-stale-while-revalidate=</em>
+	<p><em>max-stale=</em>
+	<p><em>negative-ttl=</em>
+
+	<tag>refresh_stale_hit</tag>
+
+	<tag>server_http11</tag>
+
+	<tag>storeurl_access</tag>
+
+	<tag>storeurl_rewrite_children</tag>
+
+	<tag>storeurl_rewrite_concurrency</tag>
+
+	<tag>storeurl_rewrite_program</tag>
+	
+	<tag>update_headers</tag>
+
+	<tag>upgrade_http0.9</tag>
+
+	<tag>zero_buffers</tag>
+
+</descrip>
+
+<sect1>Missing ./configure options available in Squid-2.7
+<p>
+<descrip>
+	<tag>--without-system-md5</tag>
+
 </descrip>
 
 </article>
