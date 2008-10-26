@@ -3,13 +3,13 @@ msgstr ""
 "Project-Id-Version: squid 3.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-09-29 15:05+1300\n"
-"PO-Revision-Date: 2008-10-23 10:12+0000\n"
+"PO-Revision-Date: 2008-10-24 02:32+0000\n"
 "Last-Translator: Mr.Lodar <Unknown>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Launchpad-Export-Date: 2008-10-23 10:16+0000\n"
+"X-Launchpad-Export-Date: 2008-10-25 14:12+0000\n"
 "X-Generator: Launchpad (build Unknown)\n"
 
 #: templates/ERR_INVALID_REQ:4
@@ -36,7 +36,7 @@ msgstr ""
 
 #: templates/ERR_ACCESS_DENIED:5
 msgid "Access Denied."
-msgstr ""
+msgstr "访问被拒绝。"
 
 #: templates/ERR_ACCESS_DENIED:6
 msgid ""
@@ -49,13 +49,13 @@ msgstr ""
 msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
-msgstr ""
+msgstr "尝试获取 URL: <a href=\"%U\">%U</a> 时发生一个FTP认证错误"
 
 #: templates/ERR_FTP_FAILURE:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
-msgstr ""
+msgstr "尝试获取该URL:<a href=\"%U\">%U</a>时发生一个FTP协议错误"
 
 #: templates/ERR_ICAP_FAILURE:10
 msgid "An Illegal response was received from the ICAP server."
@@ -75,28 +75,28 @@ msgstr ""
 
 #: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
 msgid "Cache Access Denied."
-msgstr ""
+msgstr "缓存访问被拒绝。"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:3
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:5
 msgid "Cache Manager Access Denied."
-msgstr ""
+msgstr "缓存管理访问被拒绝。"
 
 #: templates/ERR_URN_RESOLVE:5
 msgid "Cannot Resolve URN"
-msgstr ""
+msgstr "不能解析 URN"
 
 #: templates/ERR_LIFETIME_EXP:5
 msgid "Connection Lifetime Expired"
-msgstr ""
+msgstr "连接已过期"
 
 #: templates/ERR_CONNECT_FAIL:5
 msgid "Connection to %I failed."
-msgstr ""
+msgstr "连接到 %I 失败。"
 
 #: templates/ERR_INVALID_REQ:10
 msgid "Content-Length missing for POST or PUT requests."
-msgstr ""
+msgstr "POST 或 PUT 请求中丢失内容长度(Content-Length)。"
 
 #: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
@@ -114,19 +114,19 @@ msgstr ""
 #: templates/ERR_UNSUP_REQ:2 templates/ERR_URN_RESOLVE:2
 #: templates/ERR_WRITE_ERROR:2 templates/ERR_ZERO_SIZE_OBJECT:2
 msgid "ERROR"
-msgstr ""
+msgstr "错误"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:1
 msgid "ERROR: Cache Access Denied"
-msgstr ""
+msgstr "错误: 缓存访问被拒绝"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:1
 msgid "ERROR: Cache Manager Access Denied"
-msgstr ""
+msgstr "错误: 缓存管理访问被拒绝"
 
 #: templates/ERR_FTP_PUT_ERROR:1
 msgid "ERROR: FTP upload failed"
-msgstr ""
+msgstr "错误: FTP上传失败"
 
 #: templates/ERR_ACCESS_DENIED:1 templates/ERR_CANNOT_FORWARD:1
 #: templates/ERR_CONNECT_FAIL:1 templates/ERR_DNS_FAIL:1 templates/ERR_ESI:1
@@ -142,11 +142,11 @@ msgstr ""
 #: templates/ERR_TOO_BIG:1 templates/ERR_UNSUP_REQ:1
 #: templates/ERR_WRITE_ERROR:1 templates/ERR_ZERO_SIZE_OBJECT:1
 msgid "ERROR: The requested URL could not be retrieved"
-msgstr ""
+msgstr "错误: 不能获取请求的 URL"
 
 #: templates/ERR_URN_RESOLVE:1
 msgid "ERROR: The requested URN not be retrieved"
-msgstr ""
+msgstr "错误: 没有获取到请求的 URN"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
@@ -154,19 +154,19 @@ msgstr ""
 
 #: templates/ERR_FTP_PUT_CREATED:1
 msgid "FTP PUT Successful: File Created"
-msgstr ""
+msgstr "FTP PUT 成功: 文件已创建"
 
 #: templates/ERR_FTP_PUT_MODIFIED:1
 msgid "FTP PUT Successful: File updated"
-msgstr ""
+msgstr "FTP PUT 成功: 文件已更新"
 
 #: templates/ERR_FTP_PUT_ERROR:3
 msgid "FTP PUT/upload failed"
-msgstr ""
+msgstr "FTP PUT/上传失败"
 
 #: templates/ERR_FTP_DISABLED:5
 msgid "FTP is Disabled"
-msgstr ""
+msgstr "FTP 被禁用"
 
 #: templates/ERR_SECURE_CONNECT_FAIL:5
 msgid "Failed to establish a secure connection to %I"
@@ -174,7 +174,7 @@ msgstr ""
 
 #: templates/ERR_FTP_PUT_CREATED:3
 msgid "File created"
-msgstr ""
+msgstr "文件已创建"
 
 #: templates/ERR_FTP_PUT_MODIFIED:3
 msgid "File updated"
