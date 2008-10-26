@@ -6,7 +6,9 @@
 tmp="${1}"
 if test -e ./test-suite/buildtests/os-${tmp}.opts ; then
 	echo "TESTING: ${tmp}"
-	./test-suite/buildtest.sh ./test-suite/buildtests/os-${tmp}
+	rm -f -r btos${tmp} && mkdir btos${tmp} && cd btos${tmp}
+	../test-suite/buildtest.sh ../test-suite/buildtests/os-${tmp}
+	cd ..
 fi
 
 #
@@ -18,8 +20,11 @@ fi
 #
 
 for f in `ls -1 ./test-suite/buildtests/layer*.opts` ; do
+	layer=`echo "${f}" | grep -o -E "layer-[0-9]*-[^\.]*"`
+	rm -f -r btl${layer} && mkdir btl${layer} && cd btl${layer}
 	arg=`echo "${f}" | sed s/\\.opts//`
 	echo "TESTING: ${arg}"
-	./test-suite/buildtest.sh "${arg}" ||
+	../test-suite/buildtest.sh ".${arg}" ||
 	( grep -E "^ERROR|\ error:\ " buildtest_*.log && exit 1 )
+	cd ..
 done
