@@ -35,7 +35,7 @@
 #define _INCLUDE_ICMPV4_H
 
 #include "config.h"
-#include "ICMP.h"
+#include "Icmp.h"
 #include "IPAddress.h"
 
 #if HAVE_NETINET_IN_SYSTM_H
@@ -162,11 +162,11 @@ typedef struct icmphdr {
  * Class partially implementing RFC 792 - ICMP for IP version 4.
  * Provides ECHO-REQUEST, ECHO-REPLY (secion 4.1)
  */
-class ICMPv4 : public ICMP
+class Icmp4 : public Icmp
 {
 public:
-    ICMPv4();
-    virtual ~ICMPv4();
+    Icmp4();
+    virtual ~Icmp4();
 
     virtual int Open();
 
@@ -179,7 +179,7 @@ public:
 #if USE_ICMP
 
 /// pinger helper contains one of these as a global object.
-SQUIDCEXTERN ICMPv4 icmp4;
+SQUIDCEXTERN Icmp4 icmp4;
 
 #endif /* USE_ICMP && SQUID_HELPER */
 

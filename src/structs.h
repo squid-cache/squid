@@ -130,7 +130,7 @@ struct relist
 #endif
 
 #if USE_ICMP
-#include "ICMPConfig.h"
+#include "icmp/IcmpConfig.h"
 #endif
 
 /* forward decl for SquidConfig, see RemovalPolicy.h */
@@ -259,7 +259,7 @@ struct SquidConfig
 #endif
 
 #if USE_ICMP
-    ICMPConfig pinger;
+    IcmpConfig pinger;
 #endif
 
     char *as_whois_server;
@@ -552,6 +552,7 @@ struct SquidConfig
     char *errorDefaultLanguage;
     int errorLogMissingLanguages;
 #endif
+    char *errorStylesheet;
 
     struct
     {

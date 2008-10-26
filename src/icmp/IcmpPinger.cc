@@ -39,19 +39,19 @@
 #if USE_ICMP
 
 #include "SquidTime.h"
-#include "ICMPPinger.h"
-#include "ICMPv4.h"
-#include "ICMPv6.h"
+#include "IcmpPinger.h"
+#include "Icmp4.h"
+#include "Icmp6.h"
 #include "Debug.h"
 
-ICMPPinger::ICMPPinger() : ICMP()
+IcmpPinger::IcmpPinger() : Icmp()
 {
     // these start invalid. Setup properly in Open()
     socket_from_squid = -1;
     socket_to_squid = -1;
 }
 
-ICMPPinger::~ICMPPinger()
+IcmpPinger::~IcmpPinger()
 {
     Close();
 }
@@ -66,7 +66,7 @@ Win32SockCleanup(void)
 #endif
 
 int
-ICMPPinger::Open(void)
+IcmpPinger::Open(void)
 {
 #ifdef _SQUID_MSWIN_
 
@@ -160,7 +160,7 @@ ICMPPinger::Open(void)
 }
 
 void
-ICMPPinger::Close(void)
+IcmpPinger::Close(void)
 {
 #ifdef _SQUID_MSWIN_
 
@@ -177,7 +177,7 @@ ICMPPinger::Close(void)
 }
 
 void
-ICMPPinger::Recv(void)
+IcmpPinger::Recv(void)
 {
     static pingerEchoData pecho;
     int n;
@@ -232,7 +232,7 @@ ICMPPinger::Recv(void)
 }
 
 void
-ICMPPinger::SendResult(pingerReplyData &preply, int len)
+IcmpPinger::SendResult(pingerReplyData &preply, int len)
 {
     debugs(42, 2, HERE << "return result to squid. len=" << len);
 

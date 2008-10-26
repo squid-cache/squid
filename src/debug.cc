@@ -40,7 +40,7 @@
 
 int Debug::Levels[MAX_DEBUG_SECTIONS];
 int Debug::level;
-
+FILE *debug_log = NULL;
 static char *debug_log_file = NULL;
 static int Ctx_Lock = 0;
 static const char *debugLogTime(void);
