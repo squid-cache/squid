@@ -19,7 +19,7 @@ TRANSLATIONS = \
 	cs \
 	da \
 	de \
-	en en-au en-gb \
+	en en-au en-gb en-nz en-us \
 	es \
 	fr \
 	id \
@@ -73,12 +73,12 @@ install-data-local:
 		done; \
 	  fi \
 	done; \
-        $(INSTALL_DATA) $(srcdir)/errorpage.css $(DEFAULT_STYLESHEET).default; \
-        @if test -f $(DEFAULT_STYLESHEET) ; then \
-                echo "$@ will not overwrite existing $(DEFAULT_STYLESHEET)" ; \
+        $(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET).default; \
+        @if test -f $(DESTDIR)$(DEFAULT_STYLESHEET) ; then \
+                echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_STYLESHEET)" ; \
         else \
-                echo "$(INSTALL_DATA) $(srcdir)/errorpage.css $(DEFAULT_STYLESHEET)"; \
-                $(INSTALL_DATA) $(srcdir)/errorpage.css $(DEFAULT_STYLESHEET); \
+                echo "$(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET)"; \
+                $(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET); \
         fi
 
 
@@ -95,7 +95,7 @@ uninstall-local:
 		done; \
 	  fi \
 	done; \
-	rm -f $(DEFAULT_STYLESHEET).default
+	rm -f $(DESTDIR)$(DEFAULT_STYLESHEET).default
 
 # undocumented hack.  You can use this target to create multi-lingual
 # error pages.  For example:

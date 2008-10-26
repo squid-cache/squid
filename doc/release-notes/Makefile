@@ -13,10 +13,10 @@ $(DOC).ps: $(DOC).sgml
 	linuxdoc -B txt --filter $<
 
 %.html: %.sgml
-	linuxdoc -B html --split=0 $<
+	linuxdoc -B html -T 2 --split=0 $<
 
 %.man: %.sgml
-	linuxdoc -B txt -m $(DOC)
+	linuxdoc -B txt -T 2 -m $(DOC)
 
 clean:
 	rm -f *.html

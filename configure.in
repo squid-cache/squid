@@ -1863,9 +1863,17 @@ dnl Enable IPv6 support
 AC_MSG_CHECKING([whether to enable IPv6])
 use_ipng=yes
 AC_ARG_ENABLE(ipv6,
-	AC_HELP_STRING([--disable-ipv6],[Disable IPv6 support]),
-[ AC_MSG_RESULT(yes)
-  AC_CACHE_CHECK([if PF_INET6 is available], $enableval,
+  AC_HELP_STRING([--disable-ipv6],[Disable IPv6 support]),
+[ if test "x$enableval" = "xyes" ; then
+    AC_MSG_RESULT(yes)
+  else
+    AC_MSG_RESULT(no)
+    use_ipng=no
+  fi
+],[AC_MSG_RESULT(yes)])
+
+if test "$use_ipng" = "yes"; then
+  AC_CACHE_CHECK([if PF_INET6 is available], $use_ipng,
     AC_TRY_RUN(
       [ /* PF_INET6 available check */
 #       include <sys/types.h>
@@ -1877,20 +1885,18 @@ AC_ARG_ENABLE(ipv6,
             exit(0);
         }
       ],
-      [ AC_DEFINE(USE_IPV6,1,[Enable support for IPv6 ])
-        AC_MSG_RESULT(yes)
+      [ AC_MSG_RESULT(yes)
         use_ipng=yes
       ],
       [ AC_MSG_RESULT(no)
         use_ipng=no
       ])
    )
-],
-[ AC_MSG_RESULT(no)
-  use_ipng=no
-])
+fi
 
 if test "$use_ipng" = "yes"; then
+
+AC_DEFINE(USE_IPV6,1,[Enable support for IPv6 ])
 
 dnl Check for IPv6 Windows Vista option
 dnl Also useful for other OS with hybrid-stack defaults turned OFF
@@ -1991,10 +1997,21 @@ else
         AC_DEFINE(HAVE_SIN6_LEN_IN_SAI, 0, [Does struct sockaddr_in6 have sin6_len? 1: Yes, 0: No])
 fi
 
-
+dnl --with-maxfd present for compatibility with Squid-2.
+dnl undocumented in ./configure --help  to encourage using the Squid-3 directive.
+AC_ARG_WITH(maxfd,,
+[ 
+  case ${withval} in
+    [[0-9]]*)
+      squid_filedescriptors_num=$withval
+      ;;
+    *)
+      AC_MSG_ERROR(--with-maxfd expects a numeric argument)
+      ;;
+    esac
+])
 AC_ARG_WITH(filedescriptors,
-[  --with-filedescriptors=NUMBER
-                          Force squid to support NUMBER filedescriptors],
+  AC_HELP_STRING([--with-filedescriptors=NUMBER],[Force squid to support NUMBER filedescriptors]),
 [ 
   case ${withval} in
     [[0-9]]*)
