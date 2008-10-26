@@ -34,6 +34,9 @@
  */
 
 #include "squid.h"
+
+#if USE_SQUID_ESI
+
 #include "ESIExpatParser.h"
 
 RegisterESIParser("expat", ESIExpatParser);
@@ -104,3 +107,5 @@ ESIExpatParser::errorString() const
 {
     return XML_ErrorString(XML_GetErrorCode(myParser()));
 }
+
+#endif /* USE_SQUID_ESI */

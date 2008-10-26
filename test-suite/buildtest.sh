@@ -32,8 +32,7 @@ make -k distclean || echo "distclean done. errors are unwanted but okay here."
 # above command currently encounters dependancy problems on cleanup.
 #
 rm -f -r src/fs/aufs/.deps src/fs/diskd/.deps &&
-	./bootstrap.sh &&
-	./configure --silent ${OPTS} 2>&1 &&
+	../configure --silent ${OPTS} 2>&1 &&
 	make check 2>&1 &&
 	make 2>&1
 
