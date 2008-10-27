@@ -249,6 +249,8 @@ with the RADIUS server. A new helper will be needed for IPv6 RADIUS protocol.</P
 <P>Details in 
 <A HREF="http://wiki.squid-cache.org/Translations">The Squid wiki</A></P>
 
+<H3>Localization</H3>
+
 <P>The error pages presented by squid may now be localized per-request to match the visitors local preferred language.</P>
 
 <P>The error_directory option in squid.conf needs to be removed.</P>
@@ -259,6 +261,15 @@ Updates can be downloaded from
 
 <P>The squid developers are interested in making squid available in a wide variety of languages.
 Contribution of new languages is encouraged.</P>
+
+<H3>CSS Stylesheet controls</H3>
+
+<P>To further enhance the visitor experience all new translations have embeded CSS hooks for scalable per-site localization of the display.</P>
+
+<P>CSS display is controlled by updating the errorpage.css file installed into Squids configuration directory
+or the <EM>err_page_stylesheet</EM> option in squid.conf.</P>
+
+<P>Custom error pages can also embed the CSS content by adding the <EM>%l</EM> tag to their headers.</P>
 
 
 <H2><A NAME="ss2.5">2.5</A> <A HREF="#toc2.5">Connection Pinning (for NTLM Auth Passthrough)</A>
@@ -701,6 +712,9 @@ Squid will follow a policy of prefering IPv6 links, keeping the IPv4 only as a s
         
 </PRE>
 </P>
+
+<DT><B>err_page_stylesheet</B><DD>
+<P>New option to configure location for CSS stylesheet controlling error page display.</P>
 
 <DT><B>error_default_language</B><DD>
 <P>New option to replace the old configure option --enable-default-err-language
@@ -1328,7 +1342,7 @@ This options requires a linux kernel 2.6.25 or later for embeded netfilter TPROX
 <DT><B>--enable-linux-tproxy</B><DD>
 <P>Deprecated. Remains only to support old TPROXY version 2.2 installations.</P>
 
-<DT><B>--enable-ntm-auth-helpers</B><DD>
+<DT><B>--enable-ntlm-auth-helpers</B><DD>
 <P>Helper previously built by <EM>SMB</EM> is now built by <EM>smb_lm</EM>.
 It also has a new squid.conf name for usage, see <EM>auth_param</EM> above for details.</P>
 
