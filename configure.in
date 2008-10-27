@@ -3797,8 +3797,8 @@ AC_CONFIG_FILES([\
 	helpers/ntlm_auth/Makefile \
 	helpers/ntlm_auth/fakeauth/Makefile \
 	helpers/ntlm_auth/no_check/Makefile \
-	helpers/ntlm_auth/SMB/Makefile \
-	helpers/ntlm_auth/SMB/smbval/Makefile \
+	helpers/ntlm_auth/smb_lm/Makefile \
+	helpers/ntlm_auth/smb_lm/smbval/Makefile \
 	helpers/ntlm_auth/mswin_sspi/Makefile \
 	helpers/negotiate_auth/Makefile \
 	helpers/negotiate_auth/mswin_sspi/Makefile \
