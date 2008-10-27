@@ -31,7 +31,14 @@ tmpdir=${TMPDIR:-${PWD}}/${name}-mkrelease
 rm -rf $name.tar.gz $tmpdir
 trap "rm -rf $tmpdir" 0
 
-bzr export $tmpdir $BZRROOT/$module/tags/$tag || exit 1
+# AYJ 2008-03-31: add the named tag for use below.
+bzr tag $tag
+bzr export -r tag:$tag $tmpdir || exit 1
+#
+# AYJ: 2008-03-31: initial export attempt dies on 'not a branch' error.
+# bzr export $tmpdir $BZRROOT/$module/tags/$tag || exit 1
+#
+#bzr export $tmpdir $BZRROOT/$module/tags/$tag || exit 1
 if [ ! -f $tmpdir/configure ]; then
 	echo "ERROR! Tag $tag not found in $module"
 fi
