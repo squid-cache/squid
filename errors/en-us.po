@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-09-29 15:05+1300\n"
+"POT-Creation-Date: 2008-10-27 17:13+1300\n"
 "PO-Revision-Date: 2008-08-07 16:23+1200\n"
 "Last-Translator: Amos Jeffries <squid3@treenet.co.nz>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -141,6 +141,7 @@ msgid "ERROR: Cache Manager Access Denied"
 msgstr "ERROR: Cache Manager Access Denied"
 
 #: templates/ERR_FTP_PUT_ERROR:1
+#, fuzzy
 msgid "ERROR: FTP upload failed"
 msgstr "ERROR: FTP upload failed"
 
@@ -173,7 +174,8 @@ msgid "FTP PUT Successful: File Created"
 msgstr "FTP PUT Successful: File Created"
 
 #: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File updated"
+#, fuzzy
+msgid "FTP PUT Successful: File Updated"
 msgstr "FTP PUT Successful: File updated"
 
 #: templates/ERR_FTP_PUT_ERROR:3

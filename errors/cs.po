@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-09-29 15:05+1300\n"
+"POT-Creation-Date: 2008-10-27 17:13+1300\n"
 "PO-Revision-Date: 2008-09-29 00:23+1200\n"
 "Last-Translator: Amos Jeffries <squid3@treenet.co.nz>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -137,6 +137,7 @@ msgid "ERROR: Cache Manager Access Denied"
 msgstr "CHYBA: Přístup ke správci cache odepřen"
 
 #: templates/ERR_FTP_PUT_ERROR:1
+#, fuzzy
 msgid "ERROR: FTP upload failed"
 msgstr "CHYBA: Selhalo nahrávání na FTP"
 
@@ -169,7 +170,8 @@ msgid "FTP PUT Successful: File Created"
 msgstr "FTP PUT uspěl: soubor vytvořen"
 
 #: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File updated"
+#, fuzzy
+msgid "FTP PUT Successful: File Updated"
 msgstr "FTP PUT uspěl: soubor aktualizován"
 
 #: templates/ERR_FTP_PUT_ERROR:3
