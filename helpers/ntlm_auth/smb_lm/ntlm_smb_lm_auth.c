@@ -14,10 +14,9 @@
  *
  */
 
-
 #include "config.h"
 #include "ntlmauth.h"
-#include "ntlm.h"
+#include "ntlm_smb_lm_auth.h"
 #include "squid_endian.h"
 #include "util.h"
 #include "smbval/smblib-common.h"

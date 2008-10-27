@@ -15,7 +15,7 @@
 
 typedef unsigned char uchar;
 
-#include "ntlm.h"
+#include "ntlm_smb_lm_auth.h"
 #include "util.h"		/* from Squid */
 #include "valid.h"
 #include "smbencrypt.h"
