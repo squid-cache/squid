@@ -4,9 +4,13 @@
 <title>ERROR: The requested URL could not be retrieved</title>
 <style type="text/css"><!-- %l --></style>
 </head><body>
+<div id="titles">
 <h1>ERROR</h1>
 <h2>The requested URL could not be retrieved</h2>
+</div>
 <hr>
+
+<div id="content">
 <p>The following error was encountered while trying to retrieve the URL: <a href="%U">%U</a></p>
 
 <blockquote id="error">
@@ -21,8 +25,12 @@
 <p>This means that the surrogate was not able to process the ESI template. Please report this error to the webmaster.</p>
 
 <p>Your webmaster is <a href="mailto:%w">%w</a>.</p>
-
 <br>
+</div>
+
 <hr>
-<div id="footer">Generated %T by %h (%s)</div>
+<div id="footer">
+<p>Generated %T by %h (%s)</p>
+<!-- %c -->
+</div>
 </body></html>

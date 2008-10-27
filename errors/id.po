@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-09-29 15:05+1300\n"
+"POT-Creation-Date: 2008-10-27 17:13+1300\n"
 "PO-Revision-Date: 2008-10-22 00:37+1300\n"
 "Last-Translator: Ramdhani Fathurrohman <kontak@ramdhani.net>\n"
 "Language-Team: Indonesian <id@li.org>\n"
@@ -63,16 +63,16 @@ msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"terjadi kegagalan otentikasi FTP ketika mencoba untuk mengambil URL: <a "
-"href=\"%U\">%U</a>"
+"terjadi kegagalan otentikasi FTP ketika mencoba untuk mengambil URL: <a href="
+"\"%U\">%U</a>"
 
 #: templates/ERR_FTP_FAILURE:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
 msgstr ""
-"terjadi kesalahan Protokol FTP ketika mencoba untuk mengambil URL: <a "
-"href=\"%U\">%U</a>"
+"terjadi kesalahan Protokol FTP ketika mencoba untuk mengambil URL: <a href="
+"\"%U\">%U</a>"
 
 #: templates/ERR_ICAP_FAILURE:10
 msgid "An Illegal response was received from the ICAP server."
@@ -178,7 +178,7 @@ msgid "FTP PUT Successful: File Created"
 msgstr ""
 
 #: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File updated"
+msgid "FTP PUT Successful: File Updated"
 msgstr ""
 
 #: templates/ERR_FTP_PUT_ERROR:3

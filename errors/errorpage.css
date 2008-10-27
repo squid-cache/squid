@@ -1,49 +1,56 @@
+/* Stylesheet for Squid Error pages */
 
-// page basics
+/* Page basics */
 html body {
-    background-color:#ffffff;
-    font-family:verdana,sans-serif
+	background-color: #ffffff;
+	font-family: verdana,sans-serif;
 }
 
-// initial title
-h1 {
+/* Page displayed title area */
+#titles {
 }
 
-// page sub-title
-h2 {
+/* initial title */
+#titles h1 {
+}
+#titles h2 {
 }
 
-// general text
+/* special event: FTP success page titles */
+#titles ftpsuccess {
+	background-color:#00ff00;
+	width:100%;
+}
+
+/* Page displayed body content area */
+#content {
+}
+
+/* General text */
 p {
 }
 
-// error brief description
+/* error brief description */
 #error p {
 }
 
-// some data which may have caused the prblem
+/* some data which may have caused the problem */
 #data {
 }
 
-// the error message received from the system or other software
+/* the error message received from the system or other software */
 #sysmsg {
 }
 
-
 pre {
-    font-family:sans-serif
+    font-family:sans-serif;
 }
 
-// horizontal lines
+/* horizontal lines */
 hr {
 }
 
-// page footer
+/* page displayed footer area */
 #footer {
-}
-
-// special event: FTP success page titles
-ftpsuccess {
-   background-color:#00ff00;
-   width:100%
+	width: 100%;
 }

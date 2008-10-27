@@ -5,9 +5,13 @@
 <style type="text/css"><!-- %l --></style>
 </head>
 <body>
+<div id="titles">
 <h1>ERROR</h1>
 <h2>Cache Access Denied.</h2>
+</div>
 <hr>
+
+<div id="content">
 <p>The following error was encountered while trying to retrieve the URL: <a href="%U">%U</a></p>
 
 <blockquote id="error">
@@ -19,6 +23,11 @@
 <p>Please contact the <a href="mailto:%w%W">cache administrator</a> if you have difficulties authenticating yourself or <a href="http://%h/cgi-bin/chpasswd.cgi">change</a> your default password.</p>
 
 <br>
+</div>
+
 <hr> 
-<div id="footer">Generated %T by %h (%s)</div>
+<div id="footer">
+<p>Generated %T by %h (%s)</p>
+<!-- %c -->
+</div>
 </body></html>
