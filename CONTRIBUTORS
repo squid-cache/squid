@@ -1,110 +1,144 @@
 Special thanks go to people who have volunteered their time, effort,
 and ideas to make this software available.
 
-	Henrik Nordstrom <hno@squid-cache.org>
-	Mark Treacy <mark@aone.com.au>
-	Daniel O'Callaghan <danny@miriworld.its.unimelb.EDU.AU>
-	George Michaelson <ggm@connect.com.au>
-	Taavi Talvik <taavi@uninet.ee>
-	Luke Howard <lukeh@vurt.schnet.edu.au>
-	Assar Westerlund <assar@pdc.kth.se>
-	James R Grinter <jrg@demon.net>
-	Shigechika Aikawa <shige@luck.imasy.or.jp>
-	Russell Vincent <vincent@ucthpx.uct.ac.za>
-	Edward Moy <moy@parc.xerox.com>
-	Jean-Francois Micouleau <Jean-Francois.Micouleau@utc.fr>
-	Ansgar Hockmann <Ansgar.Hockmann@hrz.uni-dortmund.de>
-	Joe Ramey <ramey@jello.csc.ti.com>
-	Kolics Bertold <bertold@tohotom.vein.hu>
-	Doug Urner <dlu@bsdi.com>
-	Markus Gyger <mgyger@itr.ch>
-	Richard Huveneers <Richard.Huveneers@hekkihek.hacom.nl>
-	Markus Stumpf <maex@Space.NET>
-	Wojtek Sylwestrzak <W.Sylwestrzak@icm.edu.pl>
-	Brian Denehy <B-Denehy@adfa.oz.au>
-	David Luyer <luyer@ucs.uwa.edu.au>
-	Carson Gaspar (carson@lehman.com, carson@cs.columbia.edu)
-	Pete Bentley <pete@demon.net>
-	Alexander B. Demenshin <aldem@barnet.kharkov.ua>
-	Tony Lorimer <tlorimer@au.mdis.com>
-	Igor Vinokurov <igor@cs.ibank.ru>
-	Russell Street <r.street@auckland.ac.nz>
-	Cord Beermann <cord@cc.fh-lippe.de>
-	Stephen R. van den Berg <srb@cuci.nl>
-	Jon Thackray <jrmt@uk.gdscorp.com>
-	John Saunders <johns@rd.scitec.com.au>
-	Endre Balint Nagy <bne@CareNet.hu>
-	Geoff Keating <Geoff.Keating@anu.edu.au>
-	Arjan de Vet <Arjan.deVet@adv.IAEhv.nl>
-	Mike Groeneweg <mikeg@scorpion.murdoch.edu.au>
-	Michael Mansour <mic@shell.gnxs.com.au>
-	Ralph Loader <loader@maths.ox.ac.uk>
-	Miguel A.L. Paraz <map@iphil.net>
-	Jonathan Larmour <JLarmour@origin-at.co.uk>
-	Andres Kroonmaa <andre@ml.ee>
-	Stewart Forster <slf@connect.com.au>
-	Anthony Baxter <arb@connect.com.au>
-	Martin Hamilton <martin@mrrl.lut.ac.uk>
-	Ed Knowles <ed@fatboy.geog.unsw.edu.au>
-	Neil Murray <neil@aone.com.au>
-	Jonathan Larmour <JLarmour@origin-at.co.uk>
-	Andreas Lamprecht <Andreas.Lamprecht@siemens.at>
-	Ron Gomes <rrg@ny.ubs.com>
-	Jan Niehusmann <jan@anduin.gondor.mcs.de>
-	Taketo Kabe <kabe@shiratori.riec.tohoku.ac.jp>
-	Mukaigawa Shin'ichi <shin@nff.ncl.omron.co.jp>
-	Lutz Donnerhacke <lutz@iks-jena.de>
-	Gerben Wierda <Gerben_Wierda@RnA.nl>
-	Oskar Pearson <oskar@is.co.za>
-	Michael O'Reilly <michael@metal.iinet.net.au>
-	Max Okumoto <okumoto@ucsd.edu>
-	Pierre-Louis BRENAC <brenacp@esiee.fr>
-	Wesha <wesha@iname.com>
-	Masashi Fujita <objectx@bandit.co.jp>
-	Michael Pelletier <mikep@comshare.com>
-	Pedro Lineu Orso <orso@pop.hsbcbamerindus.com.br>
-	Hide Nagaoka <hide@cc.meisei-u.ac.jp>
-	Kostas Anagnostakis <kanag@csi.forth.gr>
-	Eric Stern <estern@logisense.com>
-	Michael Lupp <mike@nemesis.saar.de>
-	Niall Doherty <ndoherty@eei.ericsson.se>
-	Pedro Ribeiro <pribeiro@isel.pt>
-	John Dilley <jad@hpl.hp.com>
-	Adrian Chadd <adrian@creative.net.au>
-	Robert Collins <robertc@robertcollins.net>
-	Brian Degenhardt <bmd@mp3.com>
-	Evan Jones <ejones@uwaterloo.ca>
-	Scott Schram <scott@schram.net>
-	Francesco Chemolli <kinkie@kinkie.it>
-	Georgy Salnikov <sge@nmr.nioch.nsc.ru>
-	Glenn Chisholm <glenn@ircache.net>
-	Alex Rousskov <rousskov@ircache.net>
-	Sergio Rabellino <rabellino@di.unito.it>
-	Ian Turner <vectro@pipeline.com>
-	Moez Mahfoudh <moez.mahfoudh@imag.fr>
-	Guido Serassio <serassio@squid-cache.org>
-	Andrey Shorin <tolsty@tushino.com>
-	Miquel van Smoorenburg <miquels@cistron.nl>
-	Brian <hiryuu@envisiongames.net>
-	Ian Castle <ian.castle@coldcomfortfarm.net>
-	Brad Smith <brad@comstyle.com>
-	Jerry Murdock <jmurdock@itraktech.com>
-	Glen Gibb <grg@ridley.unimelb.edu.au>
-	Flavio Pescuma <flavio@marasystems.com>
-	Leeann Bent <lbent@cs.ucsd.edu>
-	Bruce Murphy <pack-squid@rattus.net>
-	Przemek Czerkas <pczerkas@mgmnet.pl>
-	Francis Daly <francis@daoine.org>
-	Joachim Bauch <jojo@fistofbenztown.de>
-	Thomas Ristic <thr@bootet.net>
-	Gonzalo Arana <gonzalo.arana@gmail.com>
-	Doug Dixon <doug.dixon@gmail.com>
-	Steven Wilton <swilton@q-net.net.au>
-	Reuben Farrelly <reuben@reub.net>
-	Felix Meschberger <felix.meschberger@day.com>
-	Mark Bergsma <mark@nedworks.org>
-	Tim Starling <tstarling@wikimedia.org>
-	Tsantilas Christos <chtsanti@users.sourceforge.net>
-	Axel Westerhold <ml.awesterhold@dts.de>
-
-	Duane Wessels <wessels@squid-cache.org>
+    Adrian Chadd <adrian@creative.net.au>
+    Gonzalo Arana <gonzalo.arana@gmail.com>
+    Alexander B. Demenshin <aldem@barnet.kharkov.ua>
+    Alexander Lukyanov <lav@yar.ru>
+    Alexey Veselovsky <alexey.veselovsky@eykontech.com>
+    Alex Rousskov <rousskov@measurement-factory.com>
+    Alter <alter@alter.org.ua>
+    Amos Jeffries <squid3@treenet.co.nz>
+    Andreas Lamprecht <Andreas.Lamprecht@siemens.at>
+    Andres Kroonmaa <andre@ml.ee>
+    Andrey Shorin <tolsty@tushino.com>
+    Ansgar Hockmann <Ansgar.Hockmann@hrz.uni-dortmund.de>
+    Anthony Baxter <arb@connect.com.au>
+    Arjan de Vet <Arjan.deVet@adv.IAEhv.nl>
+    Arthur Tumanyan <arthurtumanyan@yahoo.com>
+    Assar Westerlund <assar@pdc.kth.se>
+    Automatic source maintenance <squidadm@squid-cache.org>
+    Axel Westerhold <ml.awesterhold@dts.de>
+    Benno Rice <benno@squid-cache.org>
+    Bojan Smojver <bojan@rexursive.com>
+    Brad Smith <brad@comstyle.com>
+    Brian Degenhardt <bmd@mp3.com>
+    Brian Denehy <B-Denehy@adfa.oz.au>
+    Brian <hiryuu@envisiongames.net>
+    Bruce Murphy <pack-squid@rattus.net>
+    Carson Gaspar (carson@lehman.com, carson@cs.columbia.edu)
+    Christos Tsantilas <chtsanti@users.sourceforge.net>
+    Cord Beermann <cord@cc.fh-lippe.de>
+    Daniel O'Callaghan <danny@miriworld.its.unimelb.EDU.AU>
+    David Luyer <luyer@ucs.uwa.edu.au>
+    Dmitry Kurochkin
+    Doug Dixon <doug.dixon@gmail.com>
+    Doug Urner <dlu@bsdi.com>
+    Duane Wessels <wessels@squid-cache.org>
+    Ed Knowles <ed@fatboy.geog.unsw.edu.au>
+    Edward Moy <moy@parc.xerox.com>
+    Emilio Casbas <ecasbas@unav.es>
+    Endre Balint Nagy <bne@CareNet.hu>
+    Eric Stern <estern@logisense.com>
+    Eugene Gladchenko <eugene@donpac.ru>
+    Evan Jones <ejones@uwaterloo.ca>
+    Felix Meschberger <felix.meschberger@day.com>
+    Finn Thain <fthain@telegraphics.com.au>
+    Flavio Pescuma <flavio@marasystems.com>
+    Francesco Chemolli <kinkie@squid-cache.org>
+    Francis Daly <francis@daoine.org>
+    Francois Cami <fcami@winsoft.fr>
+    Frank Balluffi
+    Geoff Keating <Geoff.Keating@anu.edu.au>
+    George Michaelson <ggm@connect.com.au>
+    Georgy Salnikov <sge@nmr.nioch.nsc.ru>
+    Gerben Wierda <Gerben_Wierda@RnA.nl>
+    Glen Gibb <grg@ridley.unimelb.edu.au>
+    Glenn Chisholm <glenn@ircache.net>
+    Golub Mikhail
+    Gonzalo Arana <gonzalo.arana@gmail.com>
+    Guido Serassio <guido.serassio@acmeconsulting.it>
+    Hasso Tepper <hasso@estpak.ee>
+    Henrik Nordstrom <henrik@henriknordstrom.net>
+    Hide Nagaoka <hide@cc.meisei-u.ac.jp>
+    Ian Castle <ian.castle@coldcomfortfarm.net>
+    Ian Turner <vectro@pipeline.com>
+    Igor Vinokurov <igor@cs.ibank.ru>
+    James R Grinter <jrg@demon.net>
+    Jan Niehusmann <jan@anduin.gondor.mcs.de>
+    Jean-Francois Micouleau <Jean-Francois.Micouleau@utc.fr>
+    Jerry Murdock <jmurdock@itraktech.com>
+    Joachim Bauch <jojo@fistofbenztown.de>
+    Joe Ramey <ramey@jello.csc.ti.com>
+    John Dilley <jad@hpl.hp.com>
+    John Saunders <johns@rd.scitec.com.au>
+    Jonathan Larmour <JLarmour@origin-at.co.uk>
+    Jon Thackray <jrmt@uk.gdscorp.com>
+    Joshua Root <josh+squid@root.id.au>
+    JPP <jpp1@frws.com>
+    Klaubert Herr <klaubert@gmail.com>
+    Klaus Singvogel <kssingvo@suse.de>
+    Kolics Bertold <bertold@tohotom.vein.hu>
+    Kostas Anagnostakis <kanag@csi.forth.gr>
+    Leeann Bent <lbent@cs.ucsd.edu>
+    Luigi Gangitano <luigi@debian.org>
+    Luke Howard <lukeh@vurt.schnet.edu.au>
+    Lutz Donnerhacke <lutz@iks-jena.de>
+    Manu Garg <manugarg@gmail.com>
+    Marin Stavrev <mstavrev@gmail.com>
+    Mark Bergsma <mark@nedworks.org>
+    Mark Nottingham <mnot@pobox.com>
+    Mark Treacy <mark@aone.com.au>
+    Markus Gyger <mgyger@itr.ch>
+    Markus Moeller <huaraz@moeller.plus.com>
+    Markus Stumpf <maex@Space.NET>
+    Martin Hamilton <martin@mrrl.lut.ac.uk>
+    Masashi Fujita <objectx@bandit.co.jp>
+    Massimo Zito <zmax.linkedin at gmail dot com>
+    Max Okumoto <okumoto@ucsd.edu>
+    Michael Lupp <mike@nemesis.saar.de>
+    Michael Mansour <mic@shell.gnxs.com.au>
+    Michael O'Reilly <michael@metal.iinet.net.au>
+    Michael Pelletier <mikep@comshare.com>
+    Miguel A.L. Paraz <map@iphil.net>
+    Mike Groeneweg <mikeg@scorpion.murdoch.edu.au>
+    Mike Mitchell <Mike.Mitchell@sas.com>
+    Mikio Kishi <mkishi@104.net>
+    Miquel van Smoorenburg <miquels@cistron.nl>
+    Moez Mahfoudh <moez.mahfoudh@imag.fr>
+    Mukaigawa Shin'ichi <shin@nff.ncl.omron.co.jp>
+    Neil Murray <neil@aone.com.au>
+    Niall Doherty <ndoherty@eei.ericsson.se>
+    Oskar Pearson <oskar@is.co.za>
+    Pawel Worach <pawel.worach@gmail.com>
+    Pedro Lineu Orso <orso@pop.hsbcbamerindus.com.br>
+    Pedro Ribeiro <pribeiro@isel.pt>
+    Pete Bentley <pete@demon.net>
+    Peter Hidas <peter.hidas@safeland.hu>
+    Pierangelo Masarati <ando@sys-net.it>
+    Pierre-Louis BRENAC <brenacp@esiee.fr>
+    Przemek Czerkas <pczerkas@mgmnet.pl>
+    Rafael Martinez <rmartine@fdi.ucm.es>
+    Ralph Loader <loader@maths.ox.ac.uk>
+    Reuben Farrelly <reuben@reub.net>
+    Richard Huveneers <Richard.Huveneers@hekkihek.hacom.nl>
+    Robert Collins <robertc@robertcollins.net>
+    Ron Gomes <rrg@ny.ubs.com>
+    Russell Street <r.street@auckland.ac.nz>
+    Russell Vincent <vincent@ucthpx.uct.ac.za>
+    Scott Schram <scott@schram.net>
+    Sergio Rabellino <rabellino@di.unito.it>
+    Shigechika Aikawa <shige@luck.imasy.or.jp>
+    Stephen R. van den Berg <srb@cuci.nl>
+    Steve Bennett <S.Bennett@lancaster.ac.uk>
+    Steven Wilton <swilton@q-net.net.au>
+    Stewart Forster <slf@connect.com.au>
+    Taavi Talvik <taavi@uninet.ee>
+    Taketo Kabe <kabe@shiratori.riec.tohoku.ac.jp>
+    Thomas-Martin Seck <tmseck@netcologne.de>
+    Thomas Ristic <thr@bootet.net>
+    Tim Starling <tstarling@wikimedia.org>
+    Tony Lorimer <tlorimer@au.mdis.com>
+    Vitaliy Matytsyn (main) <vm@if.bank.gov.ua>
+    Wesha <wesha@iname.com>
+    Wojtek Sylwestrzak <W.Sylwestrzak@icm.edu.pl>
