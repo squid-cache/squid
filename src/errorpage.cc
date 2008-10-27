@@ -308,9 +308,6 @@ errorTryLoadText(const char *page_name, const char *dir, bool silent)
 
     file_close(fd);
 
-    if (strstr(textbuf.buf, "%s") == NULL)
-        textbuf.append("%S", 2);	/* add signature */
-
     /* Shrink memory size down to exact size. MemBuf has a tencendy
      * to be rather large..
      */

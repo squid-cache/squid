@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-09-29 15:05+1300\n"
+"POT-Creation-Date: 2008-10-27 17:13+1300\n"
 "PO-Revision-Date: 2008-10-17 19:43+1300\n"
 "Last-Translator: Henrik Nordström <henrik@henriknordstrom.net>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,16 +16,16 @@ msgid ""
 "<b>Invalid Request</b> error was encountered while trying to process the "
 "request:"
 msgstr ""
-"<b>Felaktig F&ouml;rfr&aring;an</b> fel p&aring;tr&auml;ffades n&auml;r f&ouml;rfr&aring;gan "
-"skulle behandlas:"
+"<b>Felaktig F&ouml;rfr&aring;an</b> fel p&aring;tr&auml;ffades n&auml;r "
+"f&ouml;rfr&aring;gan skulle behandlas:"
 
 #: templates/ERR_INVALID_RESP:4
 msgid ""
 "<b>Invalid Response</b> error was encountered while trying to process the "
 "request:"
 msgstr ""
-"<b>Felaktigt Svarsmeddelande</b> fel p&aring;tr&auml;ffades n&auml;r f&ouml;rfr&aring;gan "
-"skulle behandlas:"
+"<b>Felaktigt Svarsmeddelande</b> fel p&aring;tr&auml;ffades n&auml;r f&ouml;"
+"rfr&aring;gan skulle behandlas:"
 
 #: templates/ERR_READ_TIMEOUT:7
 msgid ""
@@ -143,6 +143,7 @@ msgid "ERROR: Cache Manager Access Denied"
 msgstr "FEL: Tilltr&auml;de till Cachehanteraren Nekas"
 
 #: templates/ERR_FTP_PUT_ERROR:1
+#, fuzzy
 msgid "ERROR: FTP upload failed"
 msgstr "FEL: FTP uppladdning misslyckades"
 
@@ -175,7 +176,8 @@ msgid "FTP PUT Successful: File Created"
 msgstr "FTP PUT lyckades: Filen Skapades"
 
 #: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File updated"
+#, fuzzy
+msgid "FTP PUT Successful: File Updated"
 msgstr "FTP PUT lyckades: Filen uppdaterades"
 
 #: templates/ERR_FTP_PUT_ERROR:3
@@ -236,8 +238,8 @@ msgid ""
 "If you are making a GET request, then the item you are trying to download is "
 "too large."
 msgstr ""
-"Ifall du utf&ouml;rde en GET beg&auml;ran, s&aring; &auml;r svaret du "
-"f&ouml;rs&ouml;ker ladda ned f&ouml;r stort."
+"Ifall du utf&ouml;rde en GET beg&auml;ran, s&aring; &auml;r svaret du f&ouml;"
+"rs&ouml;ker ladda ned f&ouml;r stort."
 
 #: templates/ERR_TOO_BIG:6
 msgid ""
@@ -375,8 +377,8 @@ msgid ""
 "Squid has terminated the request because it has exceeded the maximum "
 "connection lifetime."
 msgstr ""
-"Squid har avbrutit beg&auml;ran p&aring; grund av att den har "
-"&ouml;verskridikt den till&aring;tna livstiden f&ouml;r en anslutning."
+"Squid har avbrutit beg&auml;ran p&aring; grund av att den har &ouml;"
+"verskridikt den till&aring;tna livstiden f&ouml;r en anslutning."
 
 #: templates/ERR_SOCKET_FAILURE:7
 msgid ""
@@ -437,13 +439,17 @@ msgstr "F&ouml;ljande URL kunde inte h&auml;mtas: <a href=\"%U\">%U</a>"
 msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
-msgstr "F&ouml;ljande fel p&aring;tr&auml;ffades vid h&auml;mtning av URL: <a href=\"%U\">%U</a>"
+msgstr ""
+"F&ouml;ljande fel p&aring;tr&auml;ffades vid h&auml;mtning av URL: <a href="
+"\"%U\">%U</a>"
 
 #: templates/ERR_URN_RESOLVE:4
 msgid ""
 "The following error was encountered while trying to retrieve the URN: <a "
 "href=\"%U\">%U</a>"
-msgstr "F&ouml;ljande fel p&aring;tr&auml;ffades vid h&auml;mtning av URN: <a href=\"%U\">%U</a>"
+msgstr ""
+"F&ouml;ljande fel p&aring;tr&auml;ffades vid h&auml;mtning av URN: <a href="
+"\"%U\">%U</a>"
 
 #: templates/ERR_CONNECT_FAIL:7
 msgid "The remote host or network may be down.  Please try the request again."
@@ -534,9 +540,9 @@ msgid ""
 "This means that the FTP server may not have permission or space to store the "
 "file. Check the path, permissions, diskspace and try again."
 msgstr ""
-"Detta betyder att r&auml;ttighet eller utrymme saknas p&aring; FTP servern f&ouml;r att "
-"lagra filen. Kontrollera s&ouml;kv&auml;g, r&auml;ttigheter och diskutrymme och f&ouml;rs&ouml;k "
-"igen."
+"Detta betyder att r&auml;ttighet eller utrymme saknas p&aring; FTP servern "
+"f&ouml;r att lagra filen. Kontrollera s&ouml;kv&auml;g, r&auml;ttigheter och "
+"diskutrymme och f&ouml;rs&ouml;k igen."
 
 #: templates/ERR_DNS_FAIL:7
 msgid ""
@@ -571,11 +577,11 @@ msgid ""
 "host does not support secure connections, or the proxy is not satisfied with "
 "the host security credentials."
 msgstr ""
-"Denna proxy server och kontaktad server misslyckades med att f&ouml;rhandla fram "
-"en accepterbar s&auml;kerhetsinst&auml;llning f&ouml;r hanteringen av din beg&auml;ran. Det &auml;r "
-"m&ouml;jligt att kontaktad server inte st&ouml;djer s&auml;kra anslutningar, eller att "
-"proxy servern inte r n&ouml;jd med de s&auml;kerhets alternativ eller certifikat som "
-"presenterades av servern."
+"Denna proxy server och kontaktad server misslyckades med att f&ouml;rhandla "
+"fram en accepterbar s&auml;kerhetsinst&auml;llning f&ouml;r hanteringen av "
+"din beg&auml;ran. Det &auml;r m&ouml;jligt att kontaktad server inte st&ouml;"
+"djer s&auml;kra anslutningar, eller att proxy servern inte r n&ouml;jd med "
+"de s&auml;kerhets alternativ eller certifikat som presenterades av servern."
 
 #: templates/ERR_CANNOT_FORWARD:6
 msgid ""
@@ -614,8 +620,8 @@ msgstr ""
 #: templates/ERR_FTP_PUT_ERROR:4
 msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
 msgstr ""
-"Vid f&ouml;rs&ouml;ket att utföra PUT till f&ouml;ljande URL: <a "
-"href=\"%U\">%U</a>"
+"Vid f&ouml;rs&ouml;ket att utföra PUT till f&ouml;ljande URL: <a href=\"%U\">"
+"%U</a>"
 
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
@@ -628,9 +634,9 @@ msgid ""
 "revalidation prohibited by the <q>only-if-cached</q> directive."
 msgstr ""
 "Du har beg&auml;rt ett dokument med <q>only-if-cached</q> cache kontroll "
-"direktivet. Dokumentet &aring;terfanns inte i cache databasen, "
-"<em>eller</em> det kr&auml;vs en uppdatering av cache databasen, men "
-"f&ouml;rhindras av <q>only-if-cached</q> direktivet."
+"direktivet. Dokumentet &aring;terfanns inte i cache databasen, <em>eller</"
+"em> det kr&auml;vs en uppdatering av cache databasen, men f&ouml;rhindras av "
+"<q>only-if-cached</q> direktivet."
 
 #: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
 #: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
