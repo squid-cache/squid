@@ -170,6 +170,8 @@ config options provided on a clean install.
 
 <p>Details in <url url="http://wiki.squid-cache.org/Translations" name="The Squid wiki">
 
+<sect2>Localization
+
 <p>The error pages presented by squid may now be localized per-request to match the visitors local preferred language.
 
 <p>The error_directory option in squid.conf needs to be removed.
@@ -179,6 +181,15 @@ Updates can be downloaded from <url url="http://www.squid-cahch.org/Versions/lan
 
 <p>The squid developers are interested in making squid available in a wide variety of languages.
    Contribution of new languages is encouraged.
+
+<sect2>CSS Stylesheet controls
+
+<p>To further enhance the visitor experience all new translations have embeded CSS hooks for scalable per-site localization of the display.
+
+<p>CSS display is controlled by updating the errorpage.css file installed into Squids configuration directory
+   or the <em>err_page_stylesheet</em> option in squid.conf.
+
+<p>Custom error pages can also embed the CSS content by adding the <em>%l</em> tag to their headers.
 
 
 <sect1>Connection Pinning (for NTLM Auth Passthrough)
@@ -544,6 +555,9 @@ This section gives a thorough account of those changes in three categories:
 	      ecap_service service_1 reqmod_precache 0 ecap://filters-R-us/leakDetector?on_error=block
 	      ecap_service service_2 respmod_precache 1 icap://filters-R-us/virusFilter?config=/etc/vf.cfg
 	</verb>
+
+	<tag>err_page_stylesheet</tag>
+	<p>New option to configure location for CSS stylesheet controlling error page display.
 
         <tag>error_default_language</tag>
         <p>New option to replace the old configure option --enable-default-err-language
@@ -1095,7 +1109,7 @@ This section gives an account of those changes in three categories:
 	<tag>--enable-linux-tproxy</tag>
 	<p>Deprecated. Remains only to support old TPROXY version 2.2 installations.
 
-	<tag>--enable-ntm-auth-helpers</tag>
+	<tag>--enable-ntlm-auth-helpers</tag>
 	<p>Helper previously built by <em>SMB</em> is now built by <em>smb_lm</em>.
 	   It also has a new squid.conf name for usage, see <em>auth_param</em> above for details.
 
