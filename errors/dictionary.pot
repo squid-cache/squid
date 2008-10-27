@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-09-29 15:05+1300\n"
+"POT-Creation-Date: 2008-10-27 17:13+1300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -157,7 +157,7 @@ msgid "FTP PUT Successful: File Created"
 msgstr ""
 
 #: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File updated"
+msgid "FTP PUT Successful: File Updated"
 msgstr ""
 
 #: templates/ERR_FTP_PUT_ERROR:3

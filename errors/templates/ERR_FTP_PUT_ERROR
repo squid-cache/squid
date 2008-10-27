@@ -4,9 +4,13 @@
 <title>ERROR: FTP upload failed</title>
 <style type="text/css"><!-- %l --></style>
 </head><body>
+<div id="titles">
 <h1>ERROR</h1>
 <h2>FTP PUT/upload failed</h2>
+</div>
 <hr>
+
+<div id="content">
 <p>While trying to PUT the following URL: <a href="%U">%U</a></p>
 
 <p>Squid sent the following FTP command:</p>
@@ -22,8 +26,12 @@
 <p>This means that the FTP server may not have permission or space to store the file. Check the path, permissions, diskspace and try again.</p>
 
 <p>Your cache administrator is <a href="mailto:%w%W">%w</a>.</p>
-
 <br>
+</div>
+
 <hr>
-<div id="footer">Generated %T by %h (%s)</div>
+<div id="footer">
+<p>Generated %T by %h (%s)</p>
+<!-- %c -->
+</div>
 </body></html>
