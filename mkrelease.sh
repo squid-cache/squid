@@ -39,11 +39,12 @@ bzr export -r tag:$tag $tmpdir || exit 1
 # bzr export $tmpdir $BZRROOT/$module/tags/$tag || exit 1
 #
 #bzr export $tmpdir $BZRROOT/$module/tags/$tag || exit 1
-if [ ! -f $tmpdir/configure ]; then
+if [ ! -f $tmpdir/bootstrap.sh ]; then
 	echo "ERROR! Tag $tag not found in $module"
 fi
 
 cd $tmpdir
+./bootstrap.sh
 eval `grep "^ *VERSION=" configure | sed -e 's/-BZR//'`
 eval `grep "^ *PACKAGE=" configure`
 if [ ${name} != ${PACKAGE}-${VERSION} ]; then
