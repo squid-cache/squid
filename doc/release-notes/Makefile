@@ -1,5 +1,7 @@
 all: release-3.1.html
 
+DOC= release-3.1
+
 $(DOC).ps: $(DOC).sgml
 	linuxdoc -B latex -o ps $(DOC)
 
@@ -12,8 +14,9 @@ $(DOC).ps: $(DOC).sgml
 %.txt: %.sgml
 	linuxdoc -B txt --filter $<
 
-%.html: %.sgml
+$(DOC).html: $(DOC).sgml
 	linuxdoc -B html -T 2 --split=0 $<
+	perl -i -p -e "s%$(DOC).html%%" $(DOC).html
 
 %.man: %.sgml
 	linuxdoc -B txt -T 2 -m $(DOC)
