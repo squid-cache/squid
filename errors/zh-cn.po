@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid 3.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-09-29 15:05+1300\n"
+"POT-Creation-Date: 2008-10-27 17:13+1300\n"
 "PO-Revision-Date: 2008-10-24 02:32+0000\n"
 "Last-Translator: Mr.Lodar <Unknown>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -28,7 +28,8 @@ msgstr "<b>非法响应</b> 尝试处理请求时发生错误:"
 msgid ""
 "A Timeout occurred while waiting to read data from the network.  The network "
 "or server may be down or congested.  Please retry your request."
-msgstr "等待从网络读取数据时发生超时。 网络或服务器下线或拥挤。  请重新发送你的请求。"
+msgstr ""
+"等待从网络读取数据时发生超时。 网络或服务器下线或拥挤。  请重新发送你的请求。"
 
 #: templates/ERR_URN_RESOLVE:3
 msgid "A URL for the requested URN could not be retrieved"
@@ -53,8 +54,8 @@ msgstr "尝试获取 URL: <a href=\"%U\">%U</a> 时发生一个FTP认证错误"
 
 #: templates/ERR_FTP_FAILURE:4
 msgid ""
-"An FTP protocol error occurred while trying to retrieve the URL: <a "
-"href=\"%U\">%U</a>"
+"An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
+"\">%U</a>"
 msgstr "尝试获取该URL:<a href=\"%U\">%U</a>时发生一个FTP协议错误"
 
 #: templates/ERR_ICAP_FAILURE:10
@@ -125,6 +126,7 @@ msgid "ERROR: Cache Manager Access Denied"
 msgstr "错误: 缓存管理访问被拒绝"
 
 #: templates/ERR_FTP_PUT_ERROR:1
+#, fuzzy
 msgid "ERROR: FTP upload failed"
 msgstr "错误: FTP上传失败"
 
@@ -157,7 +159,8 @@ msgid "FTP PUT Successful: File Created"
 msgstr "FTP PUT 成功: 文件已创建"
 
 #: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File updated"
+#, fuzzy
+msgid "FTP PUT Successful: File Updated"
 msgstr "FTP PUT 成功: 文件已更新"
 
 #: templates/ERR_FTP_PUT_ERROR:3
@@ -267,8 +270,8 @@ msgstr ""
 #: templates/ERR_CACHE_ACCESS_DENIED:7
 msgid ""
 "Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
-"have difficulties authenticating yourself or <a href=\"http://%h/cgi-"
-"bin/chpasswd.cgi\">change</a> your default password."
+"have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
+"chpasswd.cgi\">change</a> your default password."
 msgstr ""
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
@@ -353,8 +356,7 @@ msgid "The ESI processor returned:"
 msgstr ""
 
 #: templates/ERR_FTP_UNAVAILABLE:4
-msgid ""
-"The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
+msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr ""
 
 #: templates/ERR_INVALID_RESP:5
@@ -394,8 +396,7 @@ msgid ""
 msgstr ""
 
 #: templates/ERR_CONNECT_FAIL:7
-msgid ""
-"The remote host or network may be down.  Please try the request again."
+msgid "The remote host or network may be down.  Please try the request again."
 msgstr ""
 
 #: templates/ERR_TOO_BIG:5

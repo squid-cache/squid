@@ -4,9 +4,13 @@
 <title>ERROR: The requested URL could not be retrieved</title>
 <style type="text/css"><!-- %l --></style>
 </head><body>
+<div id="titles">
 <h1>ERROR</h1>
 <h2>The requested URL could not be retrieved</h2>
+</div>
 <hr>
+
+<div id="content">
 <p>The following error was encountered while trying to retrieve the URL: <a href="%U">%U</a></p>
 
 <blockquote id="error">
@@ -18,8 +22,12 @@
 <p>This proxy and the remote host failed to negotiate a mutually acceptable security settings for handling your request. It is possible that the remote host does not support secure connections, or the proxy is not satisfied with the host security credentials.</p>
 
 <p>Your cache administrator is <a href="mailto:%w%W">%w</a>.</p>
-
 <br>
+</div>
+
 <hr>
-<div id="footer">Generated %T by %h (%s)</div>
+<div id="footer">
+<p>Generated %T by %h (%s)</p>
+<!-- %c -->
+</div>
 </body></html>

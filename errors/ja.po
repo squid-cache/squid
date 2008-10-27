@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-09-29 15:05+1300\n"
+"POT-Creation-Date: 2008-10-27 17:13+1300\n"
 "PO-Revision-Date: 2008-10-22 00:11+1300\n"
 "Last-Translator: Takahiro Kambe <taca@back-street.net>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -78,13 +78,17 @@ msgstr "ICAPサーバから不正な応答がありました。"
 msgid ""
 "An error condition occurred while reading data from the network.  Please "
 "retry your request."
-msgstr "ネットワークからデータを受信している間にエラーが発生しました。再度、リクエストしてください。"
+msgstr ""
+"ネットワークからデータを受信している間にエラーが発生しました。再度、リクエス"
+"トしてください。"
 
 #: templates/ERR_WRITE_ERROR:7
 msgid ""
 "An error condition occurred while writing to the network.  Please retry your "
 "request."
-msgstr "ネットワークにデータを送信している間にエラーが発生しました。再度リクエストしてください。"
+msgstr ""
+"ネットワークにデータを送信している間にエラーが発生しました。再度リクエストし"
+"てください。"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
 msgid "Cache Access Denied."
@@ -138,6 +142,7 @@ msgid "ERROR: Cache Manager Access Denied"
 msgstr "エラー: キャッシュ・マネージャにアクセスを拒否されました。"
 
 #: templates/ERR_FTP_PUT_ERROR:1
+#, fuzzy
 msgid "ERROR: FTP upload failed"
 msgstr "エラー: FTPのアップロードに失敗しました。"
 
@@ -170,7 +175,8 @@ msgid "FTP PUT Successful: File Created"
 msgstr "FTPのPUTに成功: ファイルを作成しました。"
 
 #: templates/ERR_FTP_PUT_MODIFIED:1
-msgid "FTP PUT Successful: File updated"
+#, fuzzy
+msgid "FTP PUT Successful: File Updated"
 msgstr "FTPのPUTに成功: ファイルを更新しました。"
 
 #: templates/ERR_FTP_PUT_ERROR:3
