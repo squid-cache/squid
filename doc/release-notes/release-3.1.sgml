@@ -776,6 +776,15 @@ NOCOMMENT_START
 	acl aclname peername myPeer ...		# cache_peer ... name=myPeer
 	</verb>
 
+	<tag>auth_param ntlm</tag>
+	<p>The helper binary bundled with Squid under the name <em>ntlm_auth</em> has been renamed to accurately reflect
+	   its real behavior and to prevent confusion with the more useful Samba helper using the same name.
+	<p>Despite being used for NTLM, the helper does not in fact provide true NTLM function. What it does provide is
+	   SMB LanManager authentication through the NTLM interface without the need for a domain controller. Thus the 
+	   new name is <em>ntlm_smb_lm_auth</em>.
+	<p>WARNING: due to the name clash with Samba helper, admin should be careful to only update their squid.conf if the
+	   squid bundled binary is used and needed. If the Samba helper is in use, the squid.conf should not be altered.
+
         <tag>balance_on_multiple_ip</tag>
         <p>The previous default behavour (rotate per-request) of this setting causes failover clashes with IPv6 built-in mechanisms.
            It has thus been turned off by default. Making the 'best choice' IP continue in use for any hostname until it encounters a connection failure and failover drops to the next known IP.
@@ -1085,6 +1094,10 @@ This section gives an account of those changes in three categories:
 
 	<tag>--enable-linux-tproxy</tag>
 	<p>Deprecated. Remains only to support old TPROXY version 2.2 installations.
+
+	<tag>--enable-ntm-auth-helpers</tag>
+	<p>Helper previously built by <em>SMB</em> is now built by <em>smb_lm</em>.
+	   It also has a new squid.conf name for usage, see <em>auth_param</em> above for details.
 
 	<tag>--disable-internl-dns</tag>
 	<p>Better support for Linux using the external DNS helper.
