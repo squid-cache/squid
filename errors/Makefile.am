@@ -151,8 +151,8 @@ translate:
 		mkdir $$lang; \
 		cd $$lang; \
 		echo -n "Translate '$$lang' ..."; \
-		for f in `ls -1 ../templates`; do \
-			$(PO2HTML) --progress=none -i ../$$lang.po -t ../templates/$$f >$$f || exit 1; \
+		for f in `ls -1 ../$(srcdir)/templates`; do \
+			$(PO2HTML) --progress=none -i ../$(srcdir)/$$lang.po -t ../$(srcdir)/templates/$$f >$$f || exit 1; \
 		done; \
 		echo "done."; \
 		cd ..; \
