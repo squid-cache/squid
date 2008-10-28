@@ -3,6 +3,12 @@
 #  Run specific build tests for a given OS environment.
 #
 
+cleanup="no"
+if test "${1}" = "--cleanup" ; then
+	cleanup="yes"
+	shift
+fi
+
 tmp="${1}"
 if test -e ./test-suite/buildtests/os-${tmp}.opts ; then
 	echo "TESTING: ${tmp}"
@@ -27,4 +33,8 @@ for f in `ls -1 ./test-suite/buildtests/layer*.opts` ; do
 	../test-suite/buildtest.sh ".${arg}" ||
 	( grep -E "^ERROR|\ error:\ |No\ such" buildtest_*.log && exit 1 )
 	cd ..
+	if test "${cleanup}" = "yes" ; then
+		echo "REMOVE: btl${layer}"
+		rm -f -r btl${layer}
+	fi
 done
