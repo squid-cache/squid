@@ -2696,9 +2696,8 @@ DOC_START
 	default is 5 minutes.  Note that this is different from
 	negative caching of DNS lookups.
 
-	WARNING: Doing this VIOLATES the HTTP standard.  Enabling
-	this feature could make you liable for problems which it
-	causes.
+	WARNING: This setting VIOLATES RFC 2616 when non-zero.
+	If you have problems with eror pages caching, set to '0 seconds'
 DOC_END
 
 NAME: positive_dns_ttl
