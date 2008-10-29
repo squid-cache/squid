@@ -44,7 +44,7 @@ g/${VERSION}-[A-Z]*/ s//${VERSION}-${date}/
 w
 EOS
 
-./test-build.sh --cleanup || exit 1
+./test-builds.sh --cleanup || exit 1
 ./configure --silent
 make -s dist-all
 
