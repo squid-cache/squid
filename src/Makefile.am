@@ -978,7 +978,7 @@ libBlocking_a_SOURCES = \
 		DiskIO/Blocking/BlockingFile.h \
 		DiskIO/Blocking/BlockingIOStrategy.cc \
 		DiskIO/Blocking/BlockingIOStrategy.h \
-		DiskIO/Blocking/BlockingDiskIOModule.cc \ 
+		DiskIO/Blocking/BlockingDiskIOModule.cc \
 		DiskIO/Blocking/BlockingDiskIOModule.h 
 
 libDiskDaemon_a_SOURCES = \
