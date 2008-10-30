@@ -1396,6 +1396,9 @@ The helper will now compile and work with dns_nameservers on more variants of Li
 <DT><B>httpd_accel_no_pmtu_disc</B><DD>
 <P>Replaced by <EM>http_port disable-pmtu-discovery=</EM> option</P>
 
+<DT><B>incoming_rate</B><DD>
+<P>Obsolete.</P>
+
 <DT><B>redirector_bypass</B><DD>
 <P>Replaced by <EM>url_rewrite_bypass</EM></P>
 
@@ -1500,7 +1503,7 @@ The helper will now compile and work with dns_nameservers on more variants of Li
 <P><EM>urllogin</EM> option</P>
 <P><EM>urlgroup</EM> option</P>
 
-<DT><B>auth_param</B><DD>
+<DT><B>auth_param digest</B><DD>
 <P><EM>concurrency</EM> option</P>
 
 <DT><B>authenticate_ip_shortcircuit_access</B><DD>
@@ -1535,8 +1538,8 @@ The helper will now compile and work with dns_nameservers on more variants of Li
 <DT><B>error_map</B><DD>
 
 <DT><B>external_acl_type</B><DD>
-<P><EM>%ACL</EM></P>
-<P><EM>%DATA</EM></P>
+<P><EM>%ACL</EM> format tag</P>
+<P><EM>%DATA</EM> format tag</P>
 
 <DT><B>external_refresh_check</B><DD>
 
@@ -1552,8 +1555,6 @@ The helper will now compile and work with dns_nameservers on more variants of Li
 
 <DT><B>ignore_ims_on_miss</B><DD>
 
-<DT><B>incoming_rate</B><DD>
-
 <DT><B>location_rewrite_access</B><DD>
 
 <DT><B>location_rewrite_children</B><DD>
@@ -1565,8 +1566,8 @@ The helper will now compile and work with dns_nameservers on more variants of Li
 <DT><B>logfile_daemon</B><DD>
 
 <DT><B>logformat</B><DD>
-<P><EM>%oa</EM></P>
-<P><EM>%sn</EM></P>
+<P><EM>%oa</EM> tag</P>
+<P><EM>%sn</EM> tag</P>
 
 <DT><B>max_filedescriptors / max_filedesc</B><DD>
 
