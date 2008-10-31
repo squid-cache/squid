@@ -975,18 +975,13 @@ DEFAULT: None bypassed.
 <P>
 <DL>
 <DT><B>acl dst ipv6</B><DD>
-<P>New preset content - ipv6 - available as a preset type in the src and dst ACL matching all of the public IPv6 network space.
-<PRE>
-        acl aclname dst ipv6
-        
-</PRE>
-</P>
-
-<DT><B>acl myportname peername</B><DD>
-<P>New acl type myportname, matching the name of the http(s)_port where the request was accepted.</P>
+<P>New preset content <EM>ipv6</EM> available as a preset type in the src and dst ACL matching all of the public IPv6 network space.</P>
+<P>New acl type myportname, matching the name of the http_port or https_port where the request was accepted.</P>
 <P>New acl type peername, matching against a named cache_peer entry where the request will be attempted first.
 NP: peername currently is limited to only match the first peer possible.
 <PRE>
+        acl aclname dst ipv6                    # request for IPv6-enabled site
+        acl aclname src ipv6                    # request from IPv6 address
         acl aclname myportname 3128 ...         # http(s)_port name
         acl aclname peername myPeer ...         # cache_peer ... name=myPeer
         
@@ -1121,11 +1116,9 @@ format, so all helpers will need to be checked and converted to cope with such i
 </PRE>
 </P>
 
-<DT><B>http_port transparent</B><DD>
+<DT><B>http_port transparent intercept sslbump connection-auth[=on|off]</B><DD>
 <P>Option 'transparent' is being deprecated in favour of 'intercept' which more clearly identifies what the option does.
 For now option 'tproxy' remains with old behaviour meaning fully-invisible proxy using TPROXY support.</P>
-
-<DT><B>http(s)_port intercept sslbump connection-auth[=on|off]</B><DD>
 <P>New port options
 <PRE>
            intercept    Rename of old 'transparent' option to indicate proper functionality.
@@ -1159,6 +1152,9 @@ For now option 'tproxy' remains with old behaviour meaning fully-invisible proxy
         
 </PRE>
 </P>
+
+<DT><B>https_port intercept sslbump connection-auth[=on|off]</B><DD>
+<P>New port options. see http_port.</P>
 
 <DT><B>maximum_object_size_in_memory</B><DD>
 <P>Default size limit increased to 512KB.</P>
