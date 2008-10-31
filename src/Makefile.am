@@ -978,6 +978,7 @@ libBlocking_a_SOURCES = \
 		DiskIO/Blocking/BlockingFile.h \
 		DiskIO/Blocking/BlockingIOStrategy.cc \
 		DiskIO/Blocking/BlockingIOStrategy.h \
+		DiskIO/Blocking/BlockingDiskIOModule.cc \
 		DiskIO/Blocking/BlockingDiskIOModule.h 
 
 libDiskDaemon_a_SOURCES = \
@@ -986,6 +987,7 @@ libDiskDaemon_a_SOURCES = \
 		DiskIO/DiskDaemon/DiskdIOStrategy.cc \
 		DiskIO/DiskDaemon/DiskdIOStrategy.h \
 		DiskIO/DiskDaemon/diomsg.h \
+		DiskIO/DiskDaemon/DiskDaemonDiskIOModule.cc \
 		DiskIO/DiskDaemon/DiskDaemonDiskIOModule.h
 
 libDiskThreads_a_SOURCES = \
@@ -994,6 +996,7 @@ libDiskThreads_a_SOURCES = \
 		DiskIO/DiskThreads/DiskThreads.h \
 		DiskIO/DiskThreads/DiskThreadsDiskFile.cc \
 		DiskIO/DiskThreads/DiskThreadsDiskFile.h \
+		DiskIO/DiskThreads/DiskThreadsDiskIOModule.cc \
 		DiskIO/DiskThreads/DiskThreadsDiskIOModule.h \
 		DiskIO/DiskThreads/DiskThreadsIOStrategy.cc \
 		DiskIO/DiskThreads/DiskThreadsIOStrategy.h
@@ -2231,7 +2234,6 @@ SWAP_TEST_SOURCES = \
 
 SWAP_TEST_LDADD = \
 	libauth.la \
-	DiskIO/Blocking/BlockingDiskIOModule.o \
 	repl/lru/store_repl_lru.o \
 	@REGEXLIB@ \
 	@STORE_LINKOBJS@ \
@@ -2242,7 +2244,6 @@ SWAP_TEST_LDADD = \
 	@SQUID_CPPUNIT_LIBS@
 SWAP_TEST_DS =\
 	$(top_builddir)/lib/libmiscutil.a \
-	DiskIO/Blocking/BlockingDiskIOModule.o \
 	repl/lru/store_repl_lru.o \
 	repl_modules.o \
 	@DISK_LIBS@ \
