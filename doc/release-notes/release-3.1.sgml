@@ -776,16 +776,13 @@ NOCOMMENT_START
 <p>
 <descrip>
 	<tag>acl dst ipv6</tag>
-	<p>New preset content - ipv6 - available as a preset type in the src and dst ACL matching all of the public IPv6 network space.
-        <verb>
-	acl aclname dst ipv6
-        </verb>
-
-	<tag>acl myportname peername</tag>
-	<p>New acl type myportname, matching the name of the http(s)_port where the request was accepted.
+	<p>New preset content <em>ipv6</em> available as a preset type in the src and dst ACL matching all of the public IPv6 network space.
+	<p>New acl type myportname, matching the name of the http_port or https_port where the request was accepted.
 	<p>New acl type peername, matching against a named cache_peer entry where the request will be attempted first.
 	   NP: peername currently is limited to only match the first peer possible.
         <verb>
+	acl aclname dst ipv6			# request for IPv6-enabled site
+	acl aclname src ipv6			# request from IPv6 address
         acl aclname myportname 3128 ...         # http(s)_port name
 	acl aclname peername myPeer ...		# cache_peer ... name=myPeer
 	</verb>
@@ -906,11 +903,9 @@ NOCOMMENT_START
 	X-Forwarded-For entries, and place itself as the sole entry.
 	</verb>
 
-	<tag>http_port transparent</tag>
+	<tag>http_port transparent intercept sslbump connection-auth[=on|off]</tag>
 	<p>Option 'transparent' is being deprecated in favour of 'intercept' which more clearly identifies what the option does.
 	For now option 'tproxy' remains with old behaviour meaning fully-invisible proxy using TPROXY support.</p>
-
-	<tag>http(s)_port intercept sslbump connection-auth[=on|off]</tag>
 	<p>New port options
         <verb>
            intercept    Rename of old 'transparent' option to indicate proper functionality.
@@ -942,6 +937,9 @@ NOCOMMENT_START
 	                The ssl_bump option is required to fully enable
 	                the SslBump feature.
         </verb>
+
+	<tag>https_port intercept sslbump connection-auth[=on|off]</tag>
+	<p>New port options. see http_port.
 
 	<tag>maximum_object_size_in_memory</tag>
 	<p>Default size limit increased to 512KB.
@@ -1159,6 +1157,9 @@ This section gives an account of those changes in three categories:
 	<tag>httpd_accel_no_pmtu_disc</tag>
 	<p>Replaced by <em>http_port disable-pmtu-discovery=</em> option
 
+	<tag>incoming_rate</tag>
+	<p>Obsolete.
+
 	<tag>redirector_bypass</tag>
 	<p>Replaced by <em>url_rewrite_bypass</em>
 
@@ -1254,7 +1255,7 @@ This section gives an account of those changes in three categories:
 	<p><em>urllogin</em> option
 	<p><em>urlgroup</em> option
 
-	<tag>auth_param</tag>
+	<tag>auth_param digest</tag>
 	<p><em>concurrency</em> option
 
 	<tag>authenticate_ip_shortcircuit_access</tag>
@@ -1289,8 +1290,8 @@ This section gives an account of those changes in three categories:
 	<tag>error_map</tag>
 
 	<tag>external_acl_type</tag>
-	<p><em>%ACL</em>
-	<p><em>%DATA</em>
+	<p><em>%ACL</em> format tag
+	<p><em>%DATA</em> format tag
 
 	<tag>external_refresh_check</tag>
 
@@ -1306,8 +1307,6 @@ This section gives an account of those changes in three categories:
 
 	<tag>ignore_ims_on_miss</tag>
 
-	<tag>incoming_rate</tag>
-
 	<tag>location_rewrite_access</tag>
 
 	<tag>location_rewrite_children</tag>
@@ -1319,8 +1318,8 @@ This section gives an account of those changes in three categories:
 	<tag>logfile_daemon</tag>
 
 	<tag>logformat</tag>
-	<p><em>%oa</em>
-	<p><em>%sn</em>
+	<p><em>%oa</em> tag
+	<p><em>%sn</em> tag
 
 	<tag>max_filedescriptors / max_filedesc</tag>
 

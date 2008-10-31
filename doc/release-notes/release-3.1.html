@@ -975,18 +975,13 @@ DEFAULT: None bypassed.
 <P>
 <DL>
 <DT><B>acl dst ipv6</B><DD>
-<P>New preset content - ipv6 - available as a preset type in the src and dst ACL matching all of the public IPv6 network space.
-<PRE>
-        acl aclname dst ipv6
-        
-</PRE>
-</P>
-
-<DT><B>acl myportname peername</B><DD>
-<P>New acl type myportname, matching the name of the http(s)_port where the request was accepted.</P>
+<P>New preset content <EM>ipv6</EM> available as a preset type in the src and dst ACL matching all of the public IPv6 network space.</P>
+<P>New acl type myportname, matching the name of the http_port or https_port where the request was accepted.</P>
 <P>New acl type peername, matching against a named cache_peer entry where the request will be attempted first.
 NP: peername currently is limited to only match the first peer possible.
 <PRE>
+        acl aclname dst ipv6                    # request for IPv6-enabled site
+        acl aclname src ipv6                    # request from IPv6 address
         acl aclname myportname 3128 ...         # http(s)_port name
         acl aclname peername myPeer ...         # cache_peer ... name=myPeer
         
@@ -1121,11 +1116,9 @@ format, so all helpers will need to be checked and converted to cope with such i
 </PRE>
 </P>
 
-<DT><B>http_port transparent</B><DD>
+<DT><B>http_port transparent intercept sslbump connection-auth[=on|off]</B><DD>
 <P>Option 'transparent' is being deprecated in favour of 'intercept' which more clearly identifies what the option does.
 For now option 'tproxy' remains with old behaviour meaning fully-invisible proxy using TPROXY support.</P>
-
-<DT><B>http(s)_port intercept sslbump connection-auth[=on|off]</B><DD>
 <P>New port options
 <PRE>
            intercept    Rename of old 'transparent' option to indicate proper functionality.
@@ -1159,6 +1152,9 @@ For now option 'tproxy' remains with old behaviour meaning fully-invisible proxy
         
 </PRE>
 </P>
+
+<DT><B>https_port intercept sslbump connection-auth[=on|off]</B><DD>
+<P>New port options. see http_port.</P>
 
 <DT><B>maximum_object_size_in_memory</B><DD>
 <P>Default size limit increased to 512KB.</P>
@@ -1396,6 +1392,9 @@ The helper will now compile and work with dns_nameservers on more variants of Li
 <DT><B>httpd_accel_no_pmtu_disc</B><DD>
 <P>Replaced by <EM>http_port disable-pmtu-discovery=</EM> option</P>
 
+<DT><B>incoming_rate</B><DD>
+<P>Obsolete.</P>
+
 <DT><B>redirector_bypass</B><DD>
 <P>Replaced by <EM>url_rewrite_bypass</EM></P>
 
@@ -1500,7 +1499,7 @@ The helper will now compile and work with dns_nameservers on more variants of Li
 <P><EM>urllogin</EM> option</P>
 <P><EM>urlgroup</EM> option</P>
 
-<DT><B>auth_param</B><DD>
+<DT><B>auth_param digest</B><DD>
 <P><EM>concurrency</EM> option</P>
 
 <DT><B>authenticate_ip_shortcircuit_access</B><DD>
@@ -1535,8 +1534,8 @@ The helper will now compile and work with dns_nameservers on more variants of Li
 <DT><B>error_map</B><DD>
 
 <DT><B>external_acl_type</B><DD>
-<P><EM>%ACL</EM></P>
-<P><EM>%DATA</EM></P>
+<P><EM>%ACL</EM> format tag</P>
+<P><EM>%DATA</EM> format tag</P>
 
 <DT><B>external_refresh_check</B><DD>
 
@@ -1552,8 +1551,6 @@ The helper will now compile and work with dns_nameservers on more variants of Li
 
 <DT><B>ignore_ims_on_miss</B><DD>
 
-<DT><B>incoming_rate</B><DD>
-
 <DT><B>location_rewrite_access</B><DD>
 
 <DT><B>location_rewrite_children</B><DD>
@@ -1565,8 +1562,8 @@ The helper will now compile and work with dns_nameservers on more variants of Li
 <DT><B>logfile_daemon</B><DD>
 
 <DT><B>logformat</B><DD>
-<P><EM>%oa</EM></P>
-<P><EM>%sn</EM></P>
+<P><EM>%oa</EM> tag</P>
+<P><EM>%sn</EM> tag</P>
 
 <DT><B>max_filedescriptors / max_filedesc</B><DD>
 
