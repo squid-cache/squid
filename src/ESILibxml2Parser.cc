@@ -38,14 +38,10 @@
  */
 
 #include "squid.h"
+
+#if USE_SQUID_ESI
+
 #include "ESILibxml2Parser.h"
-
-#ifdef sprintf
-// ugly, but needed to use correct sprintf function below
-#undef sprintf
-#endif
-
-#include <stdio.h>
 
 // the global document that will store the resolved entity
 // definitions
@@ -99,7 +95,7 @@ xmlEntityPtr esi_getEntitySAXFunc(void * ctx,  const xmlChar * name)
 
         if (ent != NULL) {
             char tmp[32];
-            sprintf(tmp, "&#%d;", ent->value);
+            snprintf(tmp, 32, "&#%d;", ent->value);
             res = xmlAddDocEntity(entity_doc, (const xmlChar *)name, XML_INTERNAL_GENERAL_ENTITY, NULL, NULL, (const xmlChar *)tmp);
         }
     }
@@ -154,3 +150,5 @@ ESILibxml2Parser::errorString() const
 
     return error->message;
 }
+
+#endif /* USE_SQUID_ESI */

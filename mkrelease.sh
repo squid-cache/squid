@@ -20,9 +20,9 @@ RELEASE_TIME=`date +%s`
 #
 # check that $rev has the right syntax
 #
-checkrev=`expr $rev : '\([0-9]\.[0-9]\.[A-Z0-9]*\)'`
+checkrev=`expr $rev : '\([0-9]\.[0-9]\.[0-9\.]*\)'`
 if test "$rev" != "$checkrev" ; then
-	echo "revision '$rev' has incorrect syntax.  Should be like '3.0.STABLE1'"
+	echo "revision '$rev' has incorrect syntax.  Should be like '3.1.0.1'"
 	exit 1;
 fi
 
@@ -31,12 +31,20 @@ tmpdir=${TMPDIR:-${PWD}}/${name}-mkrelease
 rm -rf $name.tar.gz $tmpdir
 trap "rm -rf $tmpdir" 0
 
-bzr export $tmpdir $BZRROOT/$module/tags/$tag || exit 1
-if [ ! -f $tmpdir/configure ]; then
+# AYJ 2008-03-31: add the named tag for use below.
+bzr tag $tag
+bzr export -r tag:$tag $tmpdir || exit 1
+#
+# AYJ: 2008-03-31: initial export attempt dies on 'not a branch' error.
+# bzr export $tmpdir $BZRROOT/$module/tags/$tag || exit 1
+#
+#bzr export $tmpdir $BZRROOT/$module/tags/$tag || exit 1
+if [ ! -f $tmpdir/bootstrap.sh ]; then
 	echo "ERROR! Tag $tag not found in $module"
 fi
 
 cd $tmpdir
+./bootstrap.sh
 eval `grep "^ *VERSION=" configure | sed -e 's/-BZR//'`
 eval `grep "^ *PACKAGE=" configure`
 if [ ${name} != ${PACKAGE}-${VERSION} ]; then
