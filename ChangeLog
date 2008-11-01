@@ -1,5 +1,7 @@
-Changes to squid-3.1.0.1 (16 Oct 2008):
 
+Changes to squid-3.1.0.1 (27 Oct 2008):
+
+	- Bundled ntlm_auth helper renamed (see Release Notes before changing anything)
 	- peername ACL added for matching against a named peer destination
 	- configure option --with-logdir= added to select log files location
 	- squid_kerb_auth helper updated to 1.0.3 release
@@ -7,12 +9,12 @@ Changes to squid-3.1.0.1 (16 Oct 2008):
 	- Bug #2379: obsolete dns_testnames option
 	- Code test infrastructure expanded to configuration testing
 	- Policy changes to negative_ttl, cache deny QUERY, refresh_pattern
-	  to bring their defaults up to RFC requirements.
+	  to bring their defaults up to RFC 2616 requirements.
 	- Large increase in RFC 2616 standard compliance (ongoing)
 	- squid.conf cleanups for minimal config
 	- Connection Pinning ported from 2.6 for NTLM passthru authentication
 	- eCAP internal adaptation module support
-	- Localization of error pages
+	- Localization and CSS display control of error pages
 	- Added semi-automatic documentation of source code
 	- Added TE chunked encoding decoder to workaround broken HTTP/1.1 servers
 	- HTCP improvements ported from 2.7 adding HTCP CLR requests
@@ -26,13 +28,14 @@ Changes to squid-3.1.0.1 (16 Oct 2008):
 	  CONNECT and transparently redirected SSL traffic, using configurable
 	  client- and server-side certificates. While decrypted, the traffic
 	  can be inspected using ICAP.
-	- TPROXY version 4.1 support now included.
+	- TPROXY version 4.1 support
 	- IPFW and Netfilter interception methods may now both be built in one binary.
 	- ZPH Quality of Service patch now integrated
 	- Null store now fully obsoleted and removed
 	- Unknown request methods all supported
 	- Follow_x_forwarder_for ported from 2.6
 	- Bug #2223: Follow XFF extensions added
+	- ... and many code and documentation cleanups
 
 Changes to squid-3.0.STABLE10 (14 Oct 2008):
 

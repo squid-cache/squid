@@ -58,7 +58,7 @@ dnsStats(StoreEntry * sentry)
 static void
 dnsRegisterWithCacheManager(void)
 {
-    CacheManager::GetInstance->
+    CacheManager::GetInstance()->
     registerAction("dns", "Dnsserver Statistics", dnsStats, 0, 1);
 }
 

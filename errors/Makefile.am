@@ -73,13 +73,13 @@ install-data-local:
 		done; \
 	  fi \
 	done; \
-        $(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET).default; \
-        @if test -f $(DESTDIR)$(DEFAULT_STYLESHEET) ; then \
-                echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_STYLESHEET)" ; \
-        else \
-                echo "$(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET)"; \
-                $(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET); \
-        fi
+	$(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET).default; \
+	if test -f $(DESTDIR)$(DEFAULT_STYLESHEET) ; then \
+		echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_STYLESHEET)" ; \
+	else \
+		echo "$(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET)"; \
+		$(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET); \
+	fi
 
 
 uninstall-local:
@@ -151,8 +151,8 @@ translate:
 		mkdir $$lang; \
 		cd $$lang; \
 		echo -n "Translate '$$lang' ..."; \
-		for f in `ls -1 ../templates`; do \
-			$(PO2HTML) --progress=none -i ../$$lang.po -t ../templates/$$f >$$f || exit 1; \
+		for f in `ls -1 ../$(srcdir)/templates`; do \
+			$(PO2HTML) --progress=none -i ../$(srcdir)/$$lang.po -t ../$(srcdir)/templates/$$f >$$f || exit 1; \
 		done; \
 		echo "done."; \
 		cd ..; \

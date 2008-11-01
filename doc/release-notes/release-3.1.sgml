@@ -170,6 +170,8 @@ config options provided on a clean install.
 
 <p>Details in <url url="http://wiki.squid-cache.org/Translations" name="The Squid wiki">
 
+<sect2>Localization
+
 <p>The error pages presented by squid may now be localized per-request to match the visitors local preferred language.
 
 <p>The error_directory option in squid.conf needs to be removed.
@@ -179,6 +181,15 @@ Updates can be downloaded from <url url="http://www.squid-cahch.org/Versions/lan
 
 <p>The squid developers are interested in making squid available in a wide variety of languages.
    Contribution of new languages is encouraged.
+
+<sect2>CSS Stylesheet controls
+
+<p>To further enhance the visitor experience all new translations have embeded CSS hooks for scalable per-site localization of the display.
+
+<p>CSS display is controlled by updating the errorpage.css file installed into Squids configuration directory
+   or the <em>err_page_stylesheet</em> option in squid.conf.
+
+<p>Custom error pages can also embed the CSS content by adding the <em>%l</em> tag to their headers.
 
 
 <sect1>Connection Pinning (for NTLM Auth Passthrough)
@@ -545,6 +556,9 @@ This section gives a thorough account of those changes in three categories:
 	      ecap_service service_2 respmod_precache 1 icap://filters-R-us/virusFilter?config=/etc/vf.cfg
 	</verb>
 
+	<tag>err_page_stylesheet</tag>
+	<p>New option to configure location for CSS stylesheet controlling error page display.
+
         <tag>error_default_language</tag>
         <p>New option to replace the old configure option --enable-default-err-language
 	   New translations can be downloaded from http://www.squid-cache.org/Versions/langpack/
@@ -762,19 +776,25 @@ NOCOMMENT_START
 <p>
 <descrip>
 	<tag>acl dst ipv6</tag>
-	<p>New preset content - ipv6 - available as a preset type in the src and dst ACL matching all of the public IPv6 network space.
-        <verb>
-	acl aclname dst ipv6
-        </verb>
-
-	<tag>acl myportname peername</tag>
-	<p>New acl type myportname, matching the name of the http(s)_port where the request was accepted.
+	<p>New preset content <em>ipv6</em> available as a preset type in the src and dst ACL matching all of the public IPv6 network space.
+	<p>New acl type myportname, matching the name of the http_port or https_port where the request was accepted.
 	<p>New acl type peername, matching against a named cache_peer entry where the request will be attempted first.
 	   NP: peername currently is limited to only match the first peer possible.
         <verb>
+	acl aclname dst ipv6			# request for IPv6-enabled site
+	acl aclname src ipv6			# request from IPv6 address
         acl aclname myportname 3128 ...         # http(s)_port name
 	acl aclname peername myPeer ...		# cache_peer ... name=myPeer
 	</verb>
+
+	<tag>auth_param ntlm</tag>
+	<p>The helper binary bundled with Squid under the name <em>ntlm_auth</em> has been renamed to accurately reflect
+	   its real behavior and to prevent confusion with the more useful Samba helper using the same name.
+	<p>Despite being used for NTLM, the helper does not in fact provide true NTLM function. What it does provide is
+	   SMB LanManager authentication through the NTLM interface without the need for a domain controller. Thus the 
+	   new name is <em>ntlm_smb_lm_auth</em>.
+	<p>WARNING: due to the name clash with Samba helper, admin should be careful to only update their squid.conf if the
+	   squid bundled binary is used and needed. If the Samba helper is in use, the squid.conf should not be altered.
 
         <tag>balance_on_multiple_ip</tag>
         <p>The previous default behavour (rotate per-request) of this setting causes failover clashes with IPv6 built-in mechanisms.
@@ -883,11 +903,9 @@ NOCOMMENT_START
 	X-Forwarded-For entries, and place itself as the sole entry.
 	</verb>
 
-	<tag>http_port transparent</tag>
+	<tag>http_port transparent intercept sslbump connection-auth[=on|off]</tag>
 	<p>Option 'transparent' is being deprecated in favour of 'intercept' which more clearly identifies what the option does.
 	For now option 'tproxy' remains with old behaviour meaning fully-invisible proxy using TPROXY support.</p>
-
-	<tag>http(s)_port intercept sslbump connection-auth[=on|off]</tag>
 	<p>New port options
         <verb>
            intercept    Rename of old 'transparent' option to indicate proper functionality.
@@ -919,6 +937,9 @@ NOCOMMENT_START
 	                The ssl_bump option is required to fully enable
 	                the SslBump feature.
         </verb>
+
+	<tag>https_port intercept sslbump connection-auth[=on|off]</tag>
+	<p>New port options. see http_port.
 
 	<tag>maximum_object_size_in_memory</tag>
 	<p>Default size limit increased to 512KB.
@@ -1086,6 +1107,10 @@ This section gives an account of those changes in three categories:
 	<tag>--enable-linux-tproxy</tag>
 	<p>Deprecated. Remains only to support old TPROXY version 2.2 installations.
 
+	<tag>--enable-ntlm-auth-helpers</tag>
+	<p>Helper previously built by <em>SMB</em> is now built by <em>smb_lm</em>.
+	   It also has a new squid.conf name for usage, see <em>auth_param</em> above for details.
+
 	<tag>--disable-internl-dns</tag>
 	<p>Better support for Linux using the external DNS helper.
            The helper will now compile and work with dns_nameservers on more variants of Linux than previously.
@@ -1131,6 +1156,9 @@ This section gives an account of those changes in three categories:
 
 	<tag>httpd_accel_no_pmtu_disc</tag>
 	<p>Replaced by <em>http_port disable-pmtu-discovery=</em> option
+
+	<tag>incoming_rate</tag>
+	<p>Obsolete.
 
 	<tag>redirector_bypass</tag>
 	<p>Replaced by <em>url_rewrite_bypass</em>
@@ -1227,7 +1255,7 @@ This section gives an account of those changes in three categories:
 	<p><em>urllogin</em> option
 	<p><em>urlgroup</em> option
 
-	<tag>auth_param</tag>
+	<tag>auth_param digest</tag>
 	<p><em>concurrency</em> option
 
 	<tag>authenticate_ip_shortcircuit_access</tag>
@@ -1262,8 +1290,8 @@ This section gives an account of those changes in three categories:
 	<tag>error_map</tag>
 
 	<tag>external_acl_type</tag>
-	<p><em>%ACL</em>
-	<p><em>%DATA</em>
+	<p><em>%ACL</em> format tag
+	<p><em>%DATA</em> format tag
 
 	<tag>external_refresh_check</tag>
 
@@ -1279,8 +1307,6 @@ This section gives an account of those changes in three categories:
 
 	<tag>ignore_ims_on_miss</tag>
 
-	<tag>incoming_rate</tag>
-
 	<tag>location_rewrite_access</tag>
 
 	<tag>location_rewrite_children</tag>
@@ -1292,8 +1318,8 @@ This section gives an account of those changes in three categories:
 	<tag>logfile_daemon</tag>
 
 	<tag>logformat</tag>
-	<p><em>%oa</em>
-	<p><em>%sn</em>
+	<p><em>%oa</em> tag
+	<p><em>%sn</em> tag
 
 	<tag>max_filedescriptors / max_filedesc</tag>
 
