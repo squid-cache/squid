@@ -72,8 +72,8 @@
  * UPDATE: OpenBSD 4.3 has the same.
  */
 #if USE_IPV6 && ( defined(_SQUID_FREEBSD_) || defined(_SQUID_OPENBSD_) )
-#define s6_addr8  __u6_addr.__u6_addr8
-#define s6_addr16 __u6_addr.__u6_addr16
+//#define s6_addr8  __u6_addr.__u6_addr8
+//#define s6_addr16 __u6_addr.__u6_addr16
 #define s6_addr32 __u6_addr.__u6_addr32
 #endif
 
@@ -82,6 +82,12 @@
 #define IPV6_V6ONLY		27 // from OpenBSD 4.3 headers. (NP: does not match non-BSD OS values)
 #endif
 
+/* Bug 2500: Solaris 10/11 require s6_addr* defines. */
+#if USE_IPV6 && defined(_SQUID_SOLARIS_)
+//#define s6_addr8   _S6_un._S6_u8
+//#define s6_addr16  _S6_un._S6_u16
+#define s6_addr32  _S6_un._S6_u32
+#endif
 
 /// Length of buffer that needs to be allocated to old a null-terminated IP-string
 // Yuck. But there are still structures that need it to be an 'integer constant'.

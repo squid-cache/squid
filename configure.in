@@ -1875,6 +1875,15 @@ AC_ARG_ENABLE(ipv6,
 ],[AC_MSG_RESULT(yes)])
 
 if test "$use_ipng" = "yes"; then
+  SAVED_LIBS="$LIBS"
+  dnl Solaris 10/11 requires  -lsocket
+  case "$host" in
+    *-solaris*)
+      LIBS="$LIBS -lsocket"
+      ;;
+    *)
+      ;;
+  esac
   AC_CACHE_CHECK([if PF_INET6 is available], $use_ipng,
     AC_TRY_RUN(
       [ /* PF_INET6 available check */
@@ -1889,11 +1898,13 @@ if test "$use_ipng" = "yes"; then
       ],
       [ AC_MSG_RESULT(yes)
         use_ipng=yes
+        SAVED_LIBS="$LIBS"
       ],
       [ AC_MSG_RESULT(no)
         use_ipng=no
       ])
    )
+   LIBS="$SAVED_LIBS"
 fi
 
 if test "$use_ipng" = "yes"; then
