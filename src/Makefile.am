@@ -2234,7 +2234,6 @@ SWAP_TEST_SOURCES = \
 
 SWAP_TEST_LDADD = \
 	libauth.la \
-	repl/lru/store_repl_lru.o \
 	@REGEXLIB@ \
 	@STORE_LINKOBJS@ \
 	@STORE_OBJS@ \
@@ -2244,7 +2243,6 @@ SWAP_TEST_LDADD = \
 	@SQUID_CPPUNIT_LIBS@
 SWAP_TEST_DS =\
 	$(top_builddir)/lib/libmiscutil.a \
-	repl/lru/store_repl_lru.o \
 	repl_modules.o \
 	@DISK_LIBS@ \
 	@STORE_LINKOBJS@ \
