@@ -23692,6 +23692,14 @@ fi
 
 
 if test "$use_ipng" = "yes"; then
+  SAVED_LIBS="$LIBS"
+    case "$host" in
+    *-solaris*)
+      LIBS="$LIBS -lsocket"
+      ;;
+    *)
+      ;;
+  esac
   { echo "$as_me:$LINENO: checking if PF_INET6 is available" >&5
 echo $ECHO_N "checking if PF_INET6 is available... $ECHO_C" >&6; }
 if { as_var=$use_ipng; eval "test \"\${$as_var+set}\" = set"; }; then
@@ -23744,6 +23752,7 @@ eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
    { echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6; }
         use_ipng=yes
+        SAVED_LIBS="$LIBS"
 
 else
   echo "$as_me: program exited with status $ac_status" >&5
@@ -23765,6 +23774,7 @@ fi
 ac_res=`eval echo '${'$use_ipng'}'`
 	       { echo "$as_me:$LINENO: result: $ac_res" >&5
 echo "${ECHO_T}$ac_res" >&6; }
+   LIBS="$SAVED_LIBS"
 fi
 
 if test "$use_ipng" = "yes"; then
