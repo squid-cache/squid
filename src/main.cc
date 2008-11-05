@@ -1,3 +1,4 @@
+#error
 /*
  * $Id: main.cc,v 1.459 2008/02/26 21:49:35 amosjeffries Exp $
  *
