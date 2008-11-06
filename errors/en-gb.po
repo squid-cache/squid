@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: squid 3.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-11-07 02:13+1300\n"
-"PO-Revision-Date: 2008-10-27 17:17+1300\n"
+"PO-Revision-Date: 2008-11-07 02:20+1300\n"
 "Last-Translator: Amos Jeffries <squid3@treenet.co.nz>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "MIME-Version: 1.0\n"
@@ -14,7 +14,7 @@ msgstr ""
 
 #: templates/ERR_FTP_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
-msgstr ""
+msgstr "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
 
 #: templates/ERR_INVALID_REQ:4
 msgid ""
@@ -121,7 +121,7 @@ msgstr "Content-Length missing for POST or PUT requests."
 
 #: templates/ERR_FTP_LISTING:3
 msgid "Directory Content:"
-msgstr ""
+msgstr "Directory Content:"
 
 #: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
@@ -179,15 +179,15 @@ msgstr "ESI Processing failed."
 
 #: templates/ERR_FTP_LISTING:4
 msgid "FTP Directory Listing"
-msgstr ""
+msgstr "FTP Directory Listing"
 
 #: templates/ERR_FTP_LISTING:1
 msgid "FTP Directory: %U"
-msgstr ""
+msgstr "FTP Directory: %U"
 
 #: templates/ERR_FTP_LISTING:2
 msgid "FTP Directory: <a href=\"/\">%U</a>/"
-msgstr ""
+msgstr "FTP Directory: <a href=\"/\">%U</a>/"
 
 #: templates/ERR_FTP_PUT_CREATED:1
 msgid "FTP PUT Successful: File Created"
@@ -309,7 +309,7 @@ msgstr "Operation successful"
 
 #: templates/ERR_FTP_LISTING:5
 msgid "Parent Directory"
-msgstr ""
+msgstr "Parent Directory"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:7
 msgid ""
