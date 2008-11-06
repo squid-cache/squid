@@ -1156,9 +1156,13 @@ check_PROGRAMS+= tests/testAuth \
 
 ## Special Universal .h dependency test script
 ## aborts if error encountered
-testHeaders: $(top_srcdir)/src/*.h $(top_srcdir)/src/DiskIO/*.h
+testHeaders: $(top_srcdir)/src/*.h $(top_srcdir)/src/DiskIO/*.h $(top_srcdir)/src/DiskIO/*/*.h
 	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "." || exit 1
 	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "DiskIO" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "DiskIO/AIO" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "DiskIO/Blocking" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "DiskIO/DiskDaemon" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "DiskIO/DiskThreads" || exit 1
 ## src/repl/ has no .h files and its own makefile.
 
 ## No such file...
