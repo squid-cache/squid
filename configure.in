@@ -556,16 +556,20 @@ AC_ARG_ENABLE(disk-io,
 		DISK_MODULES="$DISK_MODULES $module"
 	    fi
 	done
+	AC_DEFINE(USE_DISKIO,1,[DiskIO modules are expected to be available.])
   	;;
   no)
+	AC_DEFINE(USE_DISKIO,0,[DiskIO modules are expected to be available.])
   	;;
   *)
 	DISK_MODULES="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
+	AC_DEFINE(USE_DISKIO,1,[DiskIO modules are expected to be available.])
 	;;
   esac
 ],
 [ if test -z "$DISK_MODULES"; then
     DISK_MODULES="Blocking"
+    AC_DEFINE(USE_DISKIO,1,[DiskIO modules are expected to be available.])
   fi
 ])
 if test -n "$DISK_MODULES"; then
