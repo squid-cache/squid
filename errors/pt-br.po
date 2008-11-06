@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-11-07 02:13+1300\n"
-"PO-Revision-Date: 2008-10-31 05:38+1300\n"
+"PO-Revision-Date: 2008-11-07 05:17+1300\n"
 "Last-Translator: Aecio F. Neto <aecioneto@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <pt_BR@li.org>\n"
 "MIME-Version: 1.0\n"
@@ -19,7 +19,7 @@ msgstr ""
 
 #: templates/ERR_FTP_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
-msgstr ""
+msgstr "<a href=\"../\">Diretório pai</a> (<a href=\"/\">Diretório raiz</a>)"
 
 #: templates/ERR_INVALID_REQ:4
 msgid ""
@@ -124,7 +124,7 @@ msgstr "Content-Length faltando para requisições POST ou PUT."
 
 #: templates/ERR_FTP_LISTING:3
 msgid "Directory Content:"
-msgstr ""
+msgstr "Conteúdo do diretório:"
 
 #: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
@@ -153,7 +153,6 @@ msgid "ERROR: Cache Manager Access Denied"
 msgstr "ERRO: Acesso ao gerenciador de cache negado"
 
 #: templates/ERR_FTP_PUT_ERROR:1
-#, fuzzy
 msgid "ERROR: FTP upload failed"
 msgstr "ERRO: upload via FTP falhou"
 
@@ -183,22 +182,21 @@ msgstr "O processamento de ESI falhou."
 
 #: templates/ERR_FTP_LISTING:4
 msgid "FTP Directory Listing"
-msgstr ""
+msgstr "Listagem do diretório FTP"
 
 #: templates/ERR_FTP_LISTING:1
 msgid "FTP Directory: %U"
-msgstr ""
+msgstr "Diretório FTP: %U"
 
 #: templates/ERR_FTP_LISTING:2
 msgid "FTP Directory: <a href=\"/\">%U</a>/"
-msgstr ""
+msgstr "Diretório FTP: <a href=\"/\">%U</a>/"
 
 #: templates/ERR_FTP_PUT_CREATED:1
 msgid "FTP PUT Successful: File Created"
 msgstr "FTP - PUT bem sucedido: Arquivo Criado"
 
 #: templates/ERR_FTP_PUT_MODIFIED:1
-#, fuzzy
 msgid "FTP PUT Successful: File Updated"
 msgstr "FTP - PUT bem sucedido: Arquivo Atualizado"
 
@@ -315,7 +313,7 @@ msgstr "Operação bem sucedida"
 
 #: templates/ERR_FTP_LISTING:5
 msgid "Parent Directory"
-msgstr ""
+msgstr "Diretório pai"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:7
 msgid ""
