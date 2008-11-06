@@ -657,7 +657,10 @@ ErrorState::Convert(char token)
 
     case 'g':
         /* FTP SERVER MESSAGE */
-        wordlistCat(ftp.server_msg, &mb);
+        if(ftp.server_msg)
+            wordlistCat(ftp.server_msg, &mb);
+        else if(ftp.listing)
+            mb.append(ftp.listing);
 
         break;
 
@@ -808,6 +811,8 @@ ErrorState::Convert(char token)
     case 'z':
         if (dnsserver_msg)
             p = dnsserver_msg;
+        else if (ftp.cwd_msg)
+            p = ftp.cwd_msg;
         else
             p = "[unknown]";
 
