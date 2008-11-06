@@ -109,6 +109,8 @@ Some have been dropped as they are not needed. Some have not yet been forward-po
 	<p>The requested object was cached but STALE. The IMS query returned the new content.
 </descrip>
 <p>See <url url="http://www.squid-cache.org/Doc/FAQ/FAQ-6.html#ss6.7"> for a definition of all log types.
+
+
 <sect>Windows support
 <P>This Squid version can run on Windows as a system service using the Cygwin emulation environment, 
 or can be compiled in Windows native mode using the MinGW + MSYS development environment. Windows NT 4 SP4 and later are supported.<newline>
@@ -297,24 +299,19 @@ ScriptAlias /squid/cgi-bin/ "c:/squid/libexec/"
 
 
 
-<sect1>Changes to squid.conf
-<p>
-There have been many changes to Squid's configuration file since Squid-2.6.
+<sect>Changes to squid.conf since Squid-2.6
+<p>There have been many changes to Squid's configuration file since Squid-2.6.
 
-This section gives a thorough account of those changes in three categories:
+<p>This section gives a detailed account of those changes in three categories:
 
 <itemize>
 	<item><ref id="newtags" name="New tags">
 	<item><ref id="modifiedtags" name="Changes to existing tags">
 	<item><ref id="removedtags" name="Removed tags">
 </itemize>
-
 <p>
 
-
-
-<sect2>New tags<label id="newtags">
-
+<sect1>New tags<label id="newtags">
 <p>
 <descrip>
 	<tag>minimum_icp_query_timeout (msec)</tag>
@@ -329,6 +326,7 @@ value.  Do NOT use this option to always use a fixed (instead
 of a dynamic) timeout value. To set a fixed timeout see the
 'icp_query_timeout' directive.
 	</verb>
+
 	<tag>background_ping_rate</tag>
 	<verb>
 Default: 10 seconds
@@ -541,7 +539,7 @@ See the accf_http(9) man page.
 </descrip>
 
 
-<sect2>Changes to existing tags<label id="modifiedtags">
+<sect1>Changes to existing tags<label id="modifiedtags">
 <p>
 <descrip>
 	<tag>http_port</tag>
@@ -561,17 +559,7 @@ See the accf_http(9) man page.
     certain clients sporadically hang or never complete requests set
     disable-pmtu-discovery option to 'transparent'.
 	</verb>
-	<p>Removed options:
-	<verb>
-    urlgroup=, not yet ported to Squid-3.
-    
-    no-connection-auth, not yet ported to Squid-3.
-        </verb>	
-	<tag> https_port</tag>
-	<p>Removed options:
-	<verb>
-    urlgroup=, not yet ported to Squid-3.
-	</verb>
+
 	<tag>cache_peer</tag>
 	<p>New options:
 	<verb>
@@ -597,43 +585,16 @@ See the accf_http(9) man page.
      frequency of each parent being based on the round trip
      time. Closer parents are used more often.
      Usually used for background-ping parents.
-
 	</verb>
-	<p>Removed options:
-	<verb>
-    monitorurl, monitorsize etc, not yet ported to Squid-3
 
-    connection-auth=, not yet ported to Squid-3
-	</verb>
 	<tag>cache_dir</tag>
-	<p>Common options
-	<verb>
-    no-store, replaces the older read-only option
+	<p>Common options <em>no-store</em>, replaces the older <em>read-only</em> option
 
-    min-size, not yet ported to Squid-3
-	</verb>
-	<p>COSS file system:
-	<verb>
-    The coss file store is experimental, and still lacks much
-    of the functionality found in 2.6.
-
-    overwrite-percent=n, not yet ported to Squid-3.
-
-    max-stripe-waste=n, not yet ported to Squid-3.
-
-    membufs=n, not yet ported to Squid-3.
-
-    maxfullbufs=n, not yet ported to Squid-3.
-	</verb>
 	<tag>auth_param</tag>
 	<p>Removed Basic auth option
 	<verb>
     blankpasswor, not yet ported to squid-3.
     auth_param basic concurrency 0
-	</verb>
-	<p>Removed digest options:
-	<verb>
-    concurrency, not yet ported to Squid-3.
 	</verb>
 
 	<tag>external_acl_type</tag>
@@ -642,12 +603,6 @@ See the accf_http(9) man page.
     %URI          Requested URI
 
     %PATH         Requested URL path
-	</verb>
-	<P>Removed format specifications:
-	<verb>
-    %ACL, not yet ported to Squid-3
-
-    %DATA, not yet ported to Squid-3
 	</verb>
 	<p>New result keywords:
 	<verb>
@@ -677,15 +632,6 @@ See the accf_http(9) man page.
 	<p>New types:
 	<verb>
     acl aclname http_status 200 301 500- 400-403 ...     # status code in reply
-
-	</verb>
-	<p>Removed types:
-	<verb>
-    acl aclname urllogin [-i] [^a-zA-Z0-9] ...      # regex matching on URL login field
-
-    acl urlgroup group1 ...
-	# match against the urlgroup as indicated by redirectors
-
 	</verb>
 
 	<tag>short_icon_urls</tag>
@@ -748,7 +694,7 @@ See the accf_http(9) man page.
 	<p>allow/deny no longer used.
 
 	<tag>url_rewrite_program</tag>
-	<p>No urlgroup support in either requests or responese
+	<p>No urlgroup support in either requests or response
 
 	<tag>auth_param</tag>
 	<p>fake_auth helper for NTLM now accepts the '-S' parameter to strip NTLM domain off the username string.
@@ -756,55 +702,35 @@ See the accf_http(9) man page.
 
 </descrip>
 
-
-
-
-<sect2>Removed tags<label id="removedtags">
+<sect1>Removed tags<label id="removedtags">
 <p>
 <descrip>
-	<tag>broken_vary_encoding</tag>
-	<p>Not yet ported to Squid-3.
-	<tag>cache_vary</tag>
-	<p>Not yet ported to Squid-3.
-	<tag>collapsed_forwarding</tag>
-	<p>Not yet ported to Squid-3.
-	<tag>follow_x_forwarded_for</tag>
-	<p>Not yet ported to Squid-3.
-	<tag>*_uses_indirect_client</tag>
-	<p>Not yet ported to Squid-3.
-	<tag>error_map</tag>
-	<p>Not yet ported to Squid-3.
 	<tag>header_access</tag>
 	<p>This has been replaced by request_header_access and reply_header_access
-	<tag>http_access2</tag>
-	<p>Not yet ported to Squid-3.
+
 	<tag>httpd_accel_no_pmtu_disc</tag>
 	<p>Replaced by disable-pmtu-discovery http_port option
-	<tag>location_rewrite_*</tag>
-	<p>Not yet ported to Squid-3.
-	<tag>refresh_stale_hit</tag>
-	<p>Not yet ported to Squid-3.
+
 	<tag>wais_relay_*</tag>
 	<p>equivalent to cache_peer + cache_peer_access.
+
 </descrip>
 
 
-<sect1>Changes to ./configure Options
-<p>
-There have been some changes to Squid's build configuration since Squid-2.6.
+<sect>Changes to ./configure Options since Squid-2.6
+<p>There have been some changes to Squid's build configuration since Squid-2.6.
 
-This section gives an account of those changes in three categories:
+<p>This section gives an account of those changes in three categories:
 
 <itemize>
 	<item><ref id="newoptions" name="New options">
 	<item><ref id="modifiedoptions" name="Changes to existing options">
-	<item><ref id="notportedoptions" name="Not yet available options">
 	<item><ref id="removedoptions" name="Removed options">
 </itemize>
 <p>
 
 
-<sect2>New options<label id="newoptions">
+<sect1>New options<label id="newoptions">
 
 <p>
 <descrip>
@@ -915,7 +841,7 @@ This section gives an account of those changes in three categories:
 </descrip>
 </p>
 
-<sect2>Changes to existing options<label id="modifiedoptions">
+<sect1>Changes to existing options<label id="modifiedoptions">
 
 <p>
 <descrip>
@@ -959,24 +885,8 @@ This section gives an account of those changes in three categories:
 </descrip>
 </p>
 
-<sect2>Not yet available options<label id="notportedoptions">
 
-<p>These configure options have not yet been ported to Squid-3. If you need something to do then
-porting one of these from Squid-2 to Squid-3 is most welcome.
-
-<descrip>
-	<tag>--enable-devpoll</tag>
-	<p>Support for Solaris /dev/poll</p>
-
-	<tag>--enable-select-simple</tag>
-	<p>Basic POSIX select() loop without any binary fd_set optimizations.</p>
-
-	<tag>--enable-follow-x-forwarded-for</tag>
-	<p>Support following the X-Forwarded-For HTTP header for determining the
-	client IP address</p>
-</descrip>
-
-<sect2>Removed options<label id="removedoptions">
+<sect1>Removed options<label id="removedoptions">
 
 <p>The following configure options have been removed.
 
@@ -995,6 +905,171 @@ porting one of these from Squid-2 to Squid-3 is most welcome.
 	<p>Now enabled by default. Configure option was redundant and therefore removed.
 	<tag>--enable-truncate</tag>
 	<p>Known to cause race conditions where cache objects may get corrupted, and this for at most a marginal performance improvement. Removed.</p>
+
+</descrip>
+
+
+<sect>Regressions since Squid-2.7
+
+<p>Some squid.conf and ./configure options which were available in Squid-2.7 are not yet available in Squid-3.0
+
+<p>If you need something to do then porting one of these from Squid-2 to Squid-3 is most welcome.
+
+<sect1>Missing squid.conf options available in Squid-2.7
+<p>
+<descrip>
+	<tag>acl</tag>
+	<p><em>urllogin</em> option not yet ported from 2.6
+	<p><em>urlgroup</em> option not yet ported from 2.6
+
+	<tag>acl_uses_indirect_client</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>auth_param digest</tag>
+	<p><em>concurrency</em> option not yet ported from Squid-2
+
+	<tag>authenticate_ip_shortcircuit_access</tag>
+	<p>Not yet ported from 2.7
+
+	<tag>authenticate_ip_shortcircuit_ttl</tag>
+	<p>Not yet ported from 2.7
+
+	<tag>broken_vary_encoding</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>cache_dir</tag>
+	<p><em>min-size</em> option not yet ported from Squid-2
+	<p><em>COSS</em> storage type is lacking stability fixes from 2.6
+	<p>COSS <em>overwrite-percent=</em> option not yet ported from 2.6
+	<p>COSS <em>max-stripe-waste=</em> option not yet ported from 2.6
+	<p>COSS <em>membufs=</em> option not yet ported from 2.6
+	<p>COSS <em>maxfullbufs=</em> option not yet ported from 2.6
+
+	<tag>cache_peer</tag>
+	<p><em>multicast-siblings</em> not yet ported from 2.7
+	<p><em>idle=</em> not yet ported from 2.7
+	<p><em>http11</em> not yet ported from 2.7
+	<p><em>connection-auth=</em> not yet ported from 2.6
+	<p><em>monitorinterval=</em> not yet ported from 2.6
+	<p><em>monitorsize=</em> not yet ported from 2.6
+	<p><em>monitortimeout=</em> not yet ported from 2.6
+	<p><em>monitorurl=</em> not yet ported from 2.6
+
+	<tag>cache_vary</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>collapsed_forwarding</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>delay_pool_uses_indirect_client</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>error_map</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>external_acl_type</tag>
+	<p><em>%ACL</em> format tag not yet ported from 2.6
+	<p><em>%DATA</em> format tag not yet ported from 2.6
+
+	<tag>external_refresh_check</tag>
+	<p>Not yet ported from 2.7
+
+	<tag>follow_x_forwarded_for</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>http_access2</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>http_port</tag>
+	<p><em>act-as-origin</em> not yet ported from 2.7
+	<p><em>allow-direct</em> not yet ported from 2.7
+	<p><em>http11</em> not yet ported from 2.7
+	<p><em>urlgroup=</em> not yet ported from 2.6
+	<p><em>no-connection-auth</em> not yet ported from 2.6
+
+	<tag>ignore_expect_100</tag>
+	<p>Not yet ported from 2.7
+
+	<tag>ignore_ims_on_miss</tag>
+	<p>Not yet ported from 2.7
+
+	<tag>location_rewrite_access</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>location_rewrite_children</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>location_rewrite_concurrency</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>location_rewrite_program</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>log_uses_indirect_client</tag>
+	<p>Not yet ported from 2.6
+
+	<tag>logfile_daemon</tag>
+	<p>Not yet ported from 2.7
+
+	<tag>logformat</tag>
+	<p><em>%oa</em> tag not yet ported from 2.7
+	<p><em>%sn</em> tag not yet ported from 2.7
+
+	<tag>max_filedescriptors</tag>
+	<p>Not yet ported from 2.7
+
+	<tag>max_stale</tag>
+	<p>Not yet ported from 2.7
+
+	<tag>refresh_pattern</tag>
+	<p><em>stale-while-revalidate=</em> not yet ported from 2.7
+	<p><em>ignore-stale-while-revalidate=</em> not yet ported from 2.7
+	<p><em>max-stale=</em> not yet ported from 2.7
+	<p><em>negative-ttl=</em> not yet ported from 2.7
+
+	<tag>refresh_stale_hit</tag>
+	<p>Not yet ported from 2.7
+
+	<tag>server_http11</tag>
+	<p>Not yet ported from 2.7
+
+	<tag>storeurl_access</tag>
+	<p>Not yet ported from 2.7
+
+	<tag>storeurl_rewrite_children</tag>
+	<p>Not yet ported from 2.7
+
+	<tag>storeurl_rewrite_concurrency</tag>
+	<p>Not yet ported from 2.7
+
+	<tag>storeurl_rewrite_program</tag>
+	<p>Not yet ported from 2.7
+	
+	<tag>update_headers</tag>
+	<p>Not yet ported from 2.7
+
+	<tag>upgrade_http0.9</tag>
+	<p>Not yet ported from 2.7
+
+	<tag>zero_buffers</tag>
+	<p>Not yet ported from 2.7
+
+</descrip>
+
+<sect1>Missing ./configure options available in Squid-2.7
+<p>
+<descrip>
+	<tag>--enable-devpoll</tag>
+	<p>Support for Solaris /dev/poll</p>
+
+	<tag>--enable-select-simple</tag>
+	<p>Basic POSIX select() loop without any binary fd_set optimizations.</p>
+
+	<tag>--enable-follow-x-forwarded-for</tag>
+	<p>Support following the X-Forwarded-For HTTP header for determining the
+	client IP address</p>
+
+	<tag>--without-system-md5</tag>
 
 </descrip>
 
