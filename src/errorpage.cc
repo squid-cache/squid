@@ -812,7 +812,7 @@ ErrorState::Convert(char token)
         if (dnsserver_msg)
             p = dnsserver_msg;
         else if (ftp.cwd_msg)
-            wordlistCat(ftp.cwd_msg, &mb);
+            p = ftp.cwd_msg;
         else
             p = "[unknown]";
 
