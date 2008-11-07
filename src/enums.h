@@ -98,6 +98,7 @@ typedef enum {
     ERR_ESI,                    /* Failure to perform ESI processing */
     ERR_INVALID_RESP,
     ERR_ICAP_FAILURE,
+    ERR_FTP_LISTING,		/* Display of FTP remote directory */
     ERR_MAX
 } err_type;
 
