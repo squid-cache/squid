@@ -53,6 +53,7 @@
 #include "wordlist.h"
 #include "SquidTime.h"
 #include "URLScheme.h"
+#include "SquidString.h"
 
 /**
  \defgroup ServerProtocolFTPInternal Server-Side FTP Internals
@@ -170,7 +171,7 @@ public:
     int64_t restarted_offset;
     char *proxy_host;
     size_t list_width;
-    wordlist *cwd_message;
+    String cwd_message;
     char *old_request;
     char *old_reply;
     char *old_filepath;
@@ -492,8 +493,7 @@ FtpStateData::~FtpStateData()
     if (ctrl.message)
         wordlistDestroy(&ctrl.message);
 
-    if (cwd_message)
-        wordlistDestroy(&cwd_message);
+    cwd_message.clean();
 
     safe_free(ctrl.last_reply);
 
@@ -1241,7 +1241,7 @@ FtpStateData::processReplyBody()
     if (flags.isdir) {
 
         flags.listing = 1;
-        safe_delete(listing);
+        listing.reset();
         parseListing();
         return;
 
@@ -1721,7 +1721,11 @@ FtpStateData::handleControlReply()
     /* Copy the rest of the message to cwd_message to be printed in
      * error messages
      */
-    wordlistAddWl(&cwd_message, ctrl.message);
+    cwd_message.append('\n');
+    for (wordlist *w = ctrl.message; w; w = w->next) {
+        cwd_message.append(' ');
+        cwd_message.append(w->key);
+    }
 
     debugs(9, 3, HERE << "state=" << state << ", code=" << ctrl.replycode);
 
@@ -1990,13 +1994,13 @@ ftpReadCwd(FtpStateData * ftpState)
     if (code >= 200 && code < 300) {
         /* CWD OK */
         ftpState->unhack();
+
         /* Reset cwd_message to only include the last message */
-
-        if (ftpState->cwd_message)
-            wordlistDestroy(&ftpState->cwd_message);
-
-        ftpState->cwd_message = ftpState->ctrl.message;
-
+        ftpState->cwd_message.reset("");
+        for (wordlist *w = ftpState->ctrl.message; w; w = w->next) {
+            ftpState->cwd_message.append(' ');
+            ftpState->cwd_message.append(w->key);
+        }
         ftpState->ctrl.message = NULL;
 
         /* Continue to traverse the path */
@@ -3378,7 +3382,7 @@ FtpStateData::failedErrorMessage(err_type error, int xerrno)
 
     if(error == ERR_FTP_LISTING) {
         err->ftp.listing = &listing;
-        err->ftp.cwd_msg = cwd_message;
+        err->ftp.cwd_msg = xstrdup(html_quote(cwd_message.buf()));
     }
     else {
         err->ftp.server_msg = ctrl.message;
