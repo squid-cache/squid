@@ -107,13 +107,12 @@ struct _ftp_flags
     bool dir_slash;
     bool root_dir;
     bool no_dotdot;
-    bool html_header_sent;
     bool binary;
     bool try_slash_hack;
     bool put;
     bool put_mkdir;
     bool listformat_unknown;
-    bool listing_started;
+    bool listing;
     bool completed_forwarding;
 };
 
@@ -567,9 +566,6 @@ FtpStateData::ftpTimeout(const CommTimeoutCbParams &io)
 void
 FtpStateData::listingFinish()
 {
-    debugs(9,3,HERE);
-    entry->buffer();
-/*
 
 // TODO: figure out what this means and how to show it ...
 
@@ -580,7 +576,6 @@ FtpStateData::listingFinish()
         const char *path = flags.dir_slash ? filepath : ".";
         printfReplyBody("<A HREF=\"%s/\">[As extended directory]</A>\n", rfc1738_escape_part(path));
     }
-*/
 }
 #endif /* DEAD_CODE */
 
@@ -850,28 +845,6 @@ found:
         ftpListPartsFree(&p);	/* cleanup */
 
     return p;
-}
-
-/// \ingroup ServerProtocolFTPInternal
-static const char *
-dots_fill(size_t len)
-{
-    static char buf[256];
-    size_t i = 0;
-
-    if (len > Config.Ftp.list_width) {
-        memset(buf, ' ', 256);
-        buf[0] = '\n';
-        buf[Config.Ftp.list_width + 4] = '\0';
-        return buf;
-    }
-
-    for (i = len; i < Config.Ftp.list_width; i++)
-        buf[i - len] = (i % 2) ? '.' : ' ';
-
-    buf[i - len] = '\0';
-
-    return buf;
 }
 
 MemBuf *
@@ -1207,7 +1180,7 @@ FtpStateData::dataRead(const CommIoCbParams &io)
 
             maybeReadVirginBody();
         } else {
-            if (!flags.http_header_sent && !fwd->ftpPasvFailed() && flags.pasv_supported) {
+            if (!flags.http_header_sent && !fwd->ftpPasvFailed() && flags.pasv_supported && !flags.listing) {
                 fwd->dontRetry(false);	/* this is a retryable error */
                 fwd->ftpPasvFailed(true);
             }
@@ -1267,28 +1240,12 @@ FtpStateData::processReplyBody()
 
     if (flags.isdir) {
 
-/*
-// TODO: do we still need this in header?
-    if (flags.need_base_href)
-        printfReplyBody("<BASE HREF=\"%s\">\n", html_quote(base_href.buf()));
-*/
-
-        if (cwd_message) {
-            String tmp;
-            for (wordlist *w = cwd_message; w; w = w->next) {
-                tmp.append(html_quote(w->key));
-                tmp.append("\n");
-            }
-           err_message = xstrdup(tmp.buf());
-        }
-
-        flags.html_header_sent = 1;
-
+        flags.listing = 1;
+        safe_delete(listing);
         parseListing();
         return;
 
-    } else 
-    if (const int csize = data.readBuf->contentSize()) {
+    } else if (const int csize = data.readBuf->contentSize()) {
         writeReplyBody(data.readBuf->content(), csize);
         debugs(9, 5, HERE << "consuming " << csize << " bytes of readBuf");
         data.readBuf->consume(csize);
@@ -3190,7 +3147,7 @@ ftpReadTransferDone(FtpStateData * ftpState)
     if (code == 226 || code == 250) {
         /* Connection closed; retrieval done. */
 
-        if (ftpState->flags.html_header_sent)
+        if (ftpState->flags.listing)
             ftpState->failed(ERR_FTP_LISTING, 0);
         ftpSendQuit(ftpState);
     } else {			/* != 226 */
@@ -3421,12 +3378,12 @@ FtpStateData::failedErrorMessage(err_type error, int xerrno)
 
     if(error == ERR_FTP_LISTING) {
         err->ftp.listing = &listing;
+        err->ftp.cwd_msg = cwd_message;
     }
     else {
         err->ftp.server_msg = ctrl.message;
         ctrl.message = NULL;
     }
-
 
     if (old_request)
         command = old_request;
