@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: squid 3.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-11-07 02:13+1300\n"
-"PO-Revision-Date: 2008-08-23 18:07+1200\n"
+"PO-Revision-Date: 2008-11-07 17:17+1300\n"
 "Last-Translator: Morten S. Nielsen <mortensn@geocities.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "MIME-Version: 1.0\n"
@@ -188,7 +188,6 @@ msgid "FTP PUT Successful: File Created"
 msgstr "FTP PUT Lykkedes: Fil Oprettet"
 
 #: templates/ERR_FTP_PUT_MODIFIED:1
-#, fuzzy
 msgid "FTP PUT Successful: File Updated"
 msgstr "FTP PUT Lykkedes: Fil Opdateret"
 

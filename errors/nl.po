@@ -151,7 +151,6 @@ msgid "ERROR: Cache Manager Access Denied"
 msgstr "FOUT: Cache Manager toegang niet toegestaan"
 
 #: templates/ERR_FTP_PUT_ERROR:1
-#, fuzzy
 msgid "ERROR: FTP upload failed"
 msgstr "FOUT: FTP upload mislukt"
 
@@ -196,9 +195,8 @@ msgid "FTP PUT Successful: File Created"
 msgstr "FTP PUT Succesvol: Bestand aangemaakt"
 
 #: templates/ERR_FTP_PUT_MODIFIED:1
-#, fuzzy
 msgid "FTP PUT Successful: File Updated"
-msgstr "FTP PUT Succesvol: Bestand vernieuwd"
+msgstr "FTP PUT Succesvol: Bestand Vernieuwd"
 
 #: templates/ERR_FTP_PUT_ERROR:3
 msgid "FTP PUT/upload failed"
@@ -418,9 +416,8 @@ msgid "Squid sent the following FTP command:"
 msgstr "Squid stuurde de volgende FTP opdracht:"
 
 #: templates/ERR_DNS_FAIL:6
-#, fuzzy
 msgid "The DNS server returned:"
-msgstr "De dnsserver gaf als antwoord:"
+msgstr "De DNS server gaf als antwoord:"
 
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
