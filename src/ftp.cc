@@ -176,7 +176,7 @@ public:
     char *old_reply;
     char *old_filepath;
     char typecode;
-    MemBuf listing;
+    MemBuf listing;		///< FTP directory listing in HTML format.
 
     // \todo: optimize ctrl and data structs member order, to minimize size
     /// FTP control channel info; the channel is opened once per transaction
@@ -218,8 +218,8 @@ public:
     void scheduleReadControlReply(int);
     void handleControlReply();
     void readStor();
-    char *htmlifyListEntry(const char *line);
     void parseListing();
+    MemBuf *htmlifyListEntry(const char *line);
     void dataComplete();
     void dataRead(const CommIoCbParams &io);
     int checkAuth(const HttpHeader * req_hdr);
@@ -563,11 +563,6 @@ FtpStateData::ftpTimeout(const CommTimeoutCbParams &io)
     /* failed() closes ctrl.fd and frees ftpState */
 }
 
-void
-FtpStateData::listingStart()
-{
-}
-
 #if DEAD_CODE // obsoleted by ERR_FTP_LISTING template.
 void
 FtpStateData::listingFinish()
@@ -893,10 +888,11 @@ FtpStateData::htmlifyListEntry(const char *line)
     MemBuf *html;
     char prefix[2048];
     ftpListParts *parts;
-    *icon = *href = *text = *size = *chdir = *view = *download = *link = *html = '\0';
+    *icon = *href = *text = *size = *chdir = *view = *download = *link = '\0';
 
     if (strlen(line) > 1024) {
-        html->Printf("<tr><td colspan="5">%s</td></tr>\n", line);
+        html = new MemBuf();
+        html->Printf("<tr><td colspan=\"5\">%s</td></tr>\n", line);
         return html;
     }
 
@@ -925,13 +921,6 @@ FtpStateData::htmlifyListEntry(const char *line)
     parts->size += 1023;
     parts->size >>= 10;
     parts->showname = xstrdup(parts->name);
-
-    if (!Config.Ftp.list_wrap) {
-        if (strlen(parts->showname) > width - 1) {
-            *(parts->showname + width - 1) = '>';
-            *(parts->showname + width - 0) = '\0';
-        }
-    }
 
     /* {icon} {text} . . . {date}{size}{chdir}{view}{download}{link}\n  */
     xstrncpy(href, rfc1738_escape_part(parts->name), 2048);
@@ -1002,8 +991,8 @@ FtpStateData::htmlifyListEntry(const char *line)
     html->Printf("<tr class=\"entry\">"
              "<td class=\"icon\"><a href=\"%s%s\">%s</a></td>"
              "<td class=\"filename\"><a href=\"%s%s\">%s</a></td>"
-             "<td class="date">%s</td>"
-             "<td class="size\">%s</td>"
+             "<td class=\"date\">%s</td>"
+             "<td class=\"size\">%s</td>"
              "<td class=\"actions\">%s%s%s%s</td>"
              "</tr>\n",
              prefix, href, icon,
@@ -1024,7 +1013,7 @@ FtpStateData::parseListing()
     char *end;
     char *line;
     char *s;
-    char *t;
+    MemBuf *t;
     size_t linelen;
     size_t usable;
     StoreEntry *e = entry;
