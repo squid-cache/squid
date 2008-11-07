@@ -66,6 +66,16 @@ pre {
     font-family:sans-serif;
 }
 
+/* special event: FTP directory listing */
+#ftplisting tr.entry td.icon,td.filename,td.size,td.date {
+    border-bottom: groove;
+}
+#ftplisting td.size {
+    width: 50px;
+    text-align: right;
+    padding-right: 5px;
+}
+
 /* horizontal lines */
 hr {
 	margin: 0;

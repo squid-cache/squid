@@ -27,6 +27,7 @@ TRANSLATIONS = \
 	ja \
 	nl \
 	pt-br \
+	ru \
 	sv \
 	uk \
 	zh-cn
@@ -48,8 +49,6 @@ LANGUAGES	= \
 		Polish \
 		Portuguese \
 		Romanian \
-		Russian-1251 \
-		Russian-koi8-r \
 		Serbian \
 		Simplify_Chinese \
 		Slovak \
