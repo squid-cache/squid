@@ -134,7 +134,6 @@ msgid "ERROR: Cache Manager Access Denied"
 msgstr "错误: 缓存管理访问被拒绝"
 
 #: templates/ERR_FTP_PUT_ERROR:1
-#, fuzzy
 msgid "ERROR: FTP upload failed"
 msgstr "错误: FTP上传失败"
 
@@ -179,7 +178,6 @@ msgid "FTP PUT Successful: File Created"
 msgstr "FTP PUT 成功: 文件已创建"
 
 #: templates/ERR_FTP_PUT_MODIFIED:1
-#, fuzzy
 msgid "FTP PUT Successful: File Updated"
 msgstr "FTP PUT 成功: 文件已更新"
 
