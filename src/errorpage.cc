@@ -660,7 +660,7 @@ ErrorState::Convert(char token)
         if(ftp.server_msg)
             wordlistCat(ftp.server_msg, &mb);
         else if(ftp.listing)
-            mb.append(ftp.listing);
+            mb.append(ftp.listing->content(), ftp.listing->contentSize());
 
         break;
 
