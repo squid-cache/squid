@@ -1107,7 +1107,7 @@ void IPAddress::GetSockAddr(struct sockaddr_storage &addr, const int family) con
         /* not all OS have this field, BUT when they do it can be a problem if set wrong */
         addr.ss_len = htons(sizeof(struct sockaddr_in6));
 #elif HAVE_SIN6_LEN_IN_SAI
-        sin->sin6_len = htons(sizeof(struct sockaddr_in6));
+        ((struct sockaddr_in6*)&addr)->sin6_len = htons(sizeof(struct sockaddr_in6));
 #endif
     } else if ( family == AF_INET || (family == AF_UNSPEC && IsIPv4()) ) {
         sin = (struct sockaddr_in*)&addr;
@@ -1162,6 +1162,12 @@ void IPAddress::GetSockAddr(struct sockaddr_in &buf) const {
     }
 
 #endif
+
+#if HAVE_SIN_LEN_IN_SAI
+    /* not all OS have this field, BUT when they do it can be a problem if set wrong */
+    buf.sin_len = htons(sizeof(struct sockaddr_in));
+#endif
+
 }
 
 #if USE_IPV6
@@ -1170,6 +1176,11 @@ void IPAddress::GetSockAddr(struct sockaddr_in6 &buf) const {
     memcpy(&buf, &m_SocketAddr, sizeof(struct sockaddr_in6));
     /* maintain address family. It may have changed inside us. */
     buf.sin6_family = AF_INET6;
+
+#if HAVE_SIN6_LEN_IN_SAI
+    /* not all OS have this field, BUT when they do it can be a problem if set wrong */
+    buf.sin6_len = htons(sizeof(struct sockaddr_in6));
+#endif
 }
 
 #endif
