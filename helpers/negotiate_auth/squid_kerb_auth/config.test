@@ -1,6 +1,6 @@
 #!/bin/sh
 # Don't build without gssapi.h
 if test -f /usr/include/gssapi/gssapi.h || test -f  /usr/include/gssapi.h ; then
-       exit 1
+       exit 0
 fi
-exit 0
+exit 1
