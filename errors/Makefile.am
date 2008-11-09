@@ -123,22 +123,22 @@ addlang: all
 	fi
 
 dist-hook:
-	for lang in $(LANGUAGES); do \
-	  if test -d $(srcdir)/$$lang ; then \
-	    test -d $(distdir)/$$lang \
-	    || mkdir $(distdir)/$$lang \
-	    || exit 1; \
-	    cp -p $(srcdir)/$$lang/ERR_*  $(distdir)/$$lang \
-	      || exit 1; \
-	  fi; \
-	done; \
-	$(MAKE) translate; \
-	for lang in $(TRANSLATIONS); do \
+	for lang in $(LANGUAGES) templates; do \
 	  if test -d $(srcdir)/$$lang ; then \
 		test -d $(distdir)/$$lang \
 		  || mkdir $(distdir)/$$lang \
 		  || exit 1; \
 		cp -p $(srcdir)/$$lang/ERR_*  $(distdir)/$$lang \
+		  || exit 1; \
+	  fi; \
+	done; \
+	$(MAKE) translate; \
+	for lang in $(TRANSLATIONS); do \
+	  if test -d $$lang ; then \
+		test -d $(distdir)/$$lang \
+		  || mkdir $(distdir)/$$lang \
+		  || exit 1; \
+		cp -p $$lang/ERR_*  $(distdir)/$$lang \
 		  || exit 1; \
 	  fi; \
 	done; \
