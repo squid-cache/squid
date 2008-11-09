@@ -1252,102 +1252,126 @@ This section gives an account of those changes in three categories:
 <p>
 <descrip>
 	<tag>acl</tag>
-	<p><em>urllogin</em> option
-	<p><em>urlgroup</em> option
+	<p><em>urllogin</em> option not yet ported from 2.6
+	<p><em>urlgroup</em> option not yet ported from 2.6
 
 	<tag>auth_param digest</tag>
-	<p><em>concurrency</em> option
+	<p><em>concurrency</em> option not yet ported from Squid-2
 
 	<tag>authenticate_ip_shortcircuit_access</tag>
+	<p>Not yet ported from 2.7
 
 	<tag>authenticate_ip_shortcircuit_ttl</tag>
+	<p>Not yet ported from 2.7
 
 	<tag>broken_vary_encoding</tag>
+	<p>Not yet ported from 2.6
 
 	<tag>cache_dir</tag>
-	<p><em>min-size</em> option
-	<p><em>COSS</em> storage type is lacking stability fixes.
-	<p>COSS <em>overwrite-percent=</em> option
-	<p>COSS <em>max-stripe-waste=</em> option
-	<p>COSS <em>membufs=</em> option
-	<p>COSS <em>maxfullbufs=</em> option
+	<p><em>min-size</em> option not yet ported from Squid-2
+	<p><em>COSS</em> storage type is lacking stability fixes from 2.6
+	<p>COSS <em>overwrite-percent=</em> option not yet ported from 2.6
+	<p>COSS <em>max-stripe-waste=</em> option not yet ported from 2.6
+	<p>COSS <em>membufs=</em> option not yet ported from 2.6
+	<p>COSS <em>maxfullbufs=</em> option not yet ported from 2.6
 
 	<tag>cache_peer</tag>
-	<p><em>monitorinterval=</em>
-	<p><em>monitorsize=</em>
-	<p><em>monitortimeout=</em>
-	<p><em>monitorurl=</em>
-	<p><em>multicast-siblings</em>
-	<p><em>idle=</em>
-	<p><em>http11</em>
+	<p><em>multicast-siblings</em> not yet ported from 2.7
+	<p><em>idle=</em> not yet ported from 2.7
+	<p><em>http11</em> not yet ported from 2.7
+	<p><em>monitorinterval=</em> not yet ported from 2.6
+	<p><em>monitorsize=</em> not yet ported from 2.6
+	<p><em>monitortimeout=</em> not yet ported from 2.6
+	<p><em>monitorurl=</em> not yet ported from 2.6
 
 	<tag>cache_vary</tag>
-
-	<tag>clientside_tos</tag>
+	<p>Not yet ported from 2.6
 
 	<tag>collapsed_forwarding</tag>
+	<p>Not yet ported from 2.6
 
 	<tag>error_map</tag>
+	<p>Not yet ported from 2.6
 
 	<tag>external_acl_type</tag>
-	<p><em>%ACL</em> format tag
-	<p><em>%DATA</em> format tag
+	<p><em>%ACL</em> format tag not yet ported from 2.6
+	<p><em>%DATA</em> format tag not yet ported from 2.6
 
 	<tag>external_refresh_check</tag>
+	<p>Not yet ported from 2.7
 
 	<tag>http_access2</tag>
+	<p>Not yet ported from 2.6
 
 	<tag>http_port</tag>
-	<p><em>act-as-origin</em>
-	<p><em>allow-direct</em>
-	<p><em>http11</em>
-	<p><em>urlgroup=</em>
+	<p><em>act-as-origin</em> not yet ported from 2.7
+	<p><em>allow-direct</em> not yet ported from 2.7
+	<p><em>http11</em> not yet ported from 2.7
+	<p><em>urlgroup=</em> not yet ported from 2.6
 
 	<tag>ignore_expect_100</tag>
+	<p>Not yet ported from 2.7
 
 	<tag>ignore_ims_on_miss</tag>
+	<p>Not yet ported from 2.7
 
 	<tag>location_rewrite_access</tag>
+	<p>Not yet ported from 2.6
 
 	<tag>location_rewrite_children</tag>
+	<p>Not yet ported from 2.6
 
 	<tag>location_rewrite_concurrency</tag>
+	<p>Not yet ported from 2.6
 
 	<tag>location_rewrite_program</tag>
+	<p>Not yet ported from 2.6
 
 	<tag>logfile_daemon</tag>
+	<p>Not yet ported from 2.7
 
 	<tag>logformat</tag>
-	<p><em>%oa</em> tag
-	<p><em>%sn</em> tag
+	<p><em>%oa</em> tag not yet ported from 2.7
+	<p><em>%sn</em> tag not yet ported from 2.7
 
-	<tag>max_filedescriptors / max_filedesc</tag>
+	<tag>max_filedescriptors</tag>
+	<p>Not yet ported from 2.7
 
 	<tag>max_stale</tag>
+	<p>Not yet ported from 2.7
 
 	<tag>refresh_pattern</tag>
-	<p><em>stale-while-revalidate=</em>
-	<p><em>ignore-stale-while-revalidate=</em>
-	<p><em>max-stale=</em>
-	<p><em>negative-ttl=</em>
+	<p><em>stale-while-revalidate=</em> not yet ported from 2.7
+	<p><em>ignore-stale-while-revalidate=</em> not yet ported from 2.7
+	<p><em>max-stale=</em> not yet ported from 2.7
+	<p><em>negative-ttl=</em> not yet ported from 2.7
 
 	<tag>refresh_stale_hit</tag>
+	<p>Not yet ported from 2.7
 
 	<tag>server_http11</tag>
+	<p>Not yet ported from 2.7
 
 	<tag>storeurl_access</tag>
+	<p>Not yet ported from 2.7
 
 	<tag>storeurl_rewrite_children</tag>
+	<p>Not yet ported from 2.7
 
 	<tag>storeurl_rewrite_concurrency</tag>
+	<p>Not yet ported from 2.7
 
 	<tag>storeurl_rewrite_program</tag>
+	<p>Not yet ported from 2.7
 	
 	<tag>update_headers</tag>
+	<p>Not yet ported from 2.7
 
 	<tag>upgrade_http0.9</tag>
+	<p>Not yet ported from 2.7
 
 	<tag>zero_buffers</tag>
+	<p>Not yet ported from 2.7
 
 </descrip>
 
