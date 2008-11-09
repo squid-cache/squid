@@ -3638,7 +3638,7 @@ if test "$ac_cv_have_res_ext_nsaddr_list" = "yes" ; then
   AC_DEFINE(_SQUID_RES_NSADDR6_COUNT,ns6count,[Nameserver Counter for IPv6 _res_ext])
 fi
 
-if test "$_SQUID_RES_NSADDR6_LIST" == ""; then
+if test "$_SQUID_RES_NSADDR6_LIST" = ""; then
 AC_CACHE_CHECK(for _res._u._ext.nsaddrs, ac_cv_have_res_ext_nsaddrs,
 AC_TRY_COMPILE([
 #if HAVE_SYS_TYPES_H
@@ -3692,7 +3692,7 @@ if test $ac_cv_have_res_nsaddr_list = "yes" ; then
   AC_DEFINE(_SQUID_RES_NSADDR_COUNT,_res.nscount,[Nameserver counter for IPv4 _res])
 fi
 
-if test "$_SQUID_RES_NSADDR_LIST" == ""; then
+if test "$_SQUID_RES_NSADDR_LIST" = ""; then
 AC_CACHE_CHECK(for _res.ns_list, ac_cv_have_res_ns_list,
 AC_TRY_COMPILE([
 #if HAVE_SYS_TYPES_H
