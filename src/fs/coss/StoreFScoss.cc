@@ -1,4 +1,4 @@
-
+#error COSS Support is not stable yet in Squid-3. Please do not use.
 /*
  * $Id: StoreFScoss.cc,v 1.7 2006/09/03 21:05:21 hno Exp $
  *
