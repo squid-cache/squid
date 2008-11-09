@@ -1,0 +1,35 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>FTP Directory: %U</title>
+<style type="text/css"><!-- %l --></style>
+</head><body>
+<div id="titles">
+<h2>FTP Directory: <a href="/">%U</a>/</h2>
+</div>
+<hr>
+
+<div id="content">
+<p>Directory Content:</p>
+
+<blockquote id="data">
+<pre>%z</pre>
+</blockquote>
+
+<table id="ftplisting" summary="FTP Directory Listing">
+<tr>
+<th><a href="../"><img border="0" src="/squid-internal-static/icons/anthony-dirup.gif" alt="Parent Directory"></a></th>
+<th nowrap="nowrap"><a href="../">Parent Directory</a> (<a href="/">Root Directory</a>)</th>
+</tr>
+
+%g
+
+</table>
+</div>
+
+<hr>
+<div id="footer">
+<p>Generated %T by %h (%s)</p>
+<!-- %c -->
+</div>
+</body></html>
