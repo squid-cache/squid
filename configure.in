@@ -552,16 +552,20 @@ AC_ARG_ENABLE(disk-io,
 		DISK_MODULES="$DISK_MODULES $module"
 	    fi
 	done
+	AC_DEFINE(USE_DISKIO,1,[DiskIO modules are expected to be available.])
   	;;
   no)
+	AC_DEFINE(USE_DISKIO,0,[DiskIO modules are expected to be available.])
   	;;
   *)
 	DISK_MODULES="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
+	AC_DEFINE(USE_DISKIO,1,[DiskIO modules are expected to be available.])
 	;;
   esac
 ],
 [ if test -z "$DISK_MODULES"; then
     DISK_MODULES="Blocking"
+    AC_DEFINE(USE_DISKIO,1,[DiskIO modules are expected to be available.])
   fi
 ])
 if test -n "$DISK_MODULES"; then
@@ -666,6 +670,11 @@ AC_SUBST(DISK_LINKOBJS)
 AM_CONDITIONAL([USE_AIOPS_WIN32], [test "$USE_AIOPS_WIN32" = 1])
 AM_CONDITIONAL([USE_AIO_WIN32], [test "$USE_AIO_WIN32" = 1])
 
+
+dnl At lest one removal policy is always needed.
+dnl 'lru' removal policy is currently hard-coded by name for tests
+dnl so we must set it as default.
+REPL_POLICIES="lru"
 AC_ARG_ENABLE(removal-policies,
   AC_HELP_STRING([--enable-removal-policies="list of policies"],
                  [Build support for the list of removal policies.
@@ -677,7 +686,7 @@ AC_ARG_ENABLE(removal-policies,
   yes)
 	for dir in $srcdir/src/repl/*; do
 	    module="`basename $dir`"
-	    if test -d "$dir" && test "$module" != CVS; then
+	    if test -d "$dir" && test "$module" != CVS && test "$module" != "lru"; then
 		REPL_POLICIES="$REPL_POLICIES $module"
 	    fi
 	done
@@ -688,10 +697,6 @@ AC_ARG_ENABLE(removal-policies,
  	REPL_POLICIES="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
 	;;
   esac
-],
-[ if test -z "$REPL_POLICIES"; then
-    REPL_POLICIES="lru"
-  fi
 ])
 if test -n "$REPL_POLICIES"; then
     for module in $REPL_POLICIES; do

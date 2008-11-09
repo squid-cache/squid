@@ -29,5 +29,9 @@ void
 testDiskIO::testFindDefault()
 {
     DiskIOModule * module = DiskIOModule::FindDefault();
+#if USE_DISKIO
     CPPUNIT_ASSERT(module != NULL);
+#else
+    CPPUNIT_ASSERT(module == NULL);
+#endif
 }
