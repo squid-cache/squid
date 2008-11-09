@@ -2147,6 +2147,10 @@ DOC_START
 
 	The coss store type:
 
+	NP: COSS filesystem in Squid-3 has been deemed too unstable for
+	    production use and has thus been removed from this release.
+	    We hope that it can be made usable again soon.
+
 	block-size=n defines the "block size" for COSS cache_dir's.
 	Squid uses file numbers as block numbers.  Since file numbers
 	are limited to 24 bits, the block size determines the maximum
