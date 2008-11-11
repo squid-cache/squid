@@ -1,4 +1,3 @@
-#error COSS Support is not stable yet in Squid-3. Please do not use.
 #ifndef __COSS_H__
 #define __COSS_H__
 
