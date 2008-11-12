@@ -65,7 +65,7 @@ httpStatusLineSet(HttpStatusLine * sline, HttpVersion version, http_status statu
     sline->reason = reason;
 }
 
-/* parse a 0-terminating buffer and fill internal structures; returns true on success */
+/** write HTTP version and status structures into a Packer buffer for output as HTTP status line. */
 void
 httpStatusLinePackInto(const HttpStatusLine * sline, Packer * p)
 {
