@@ -15,8 +15,8 @@ dnl
 dnl Process this file with autoconf to produce a configure script.
 
 
-AC_INIT([squid_kerb_auth],[1.0.3],[markus_moeller@compuserve.com])
-AM_INIT_AUTOMAKE(squid_kerb_auth,1.0.3)
+AC_INIT([squid_kerb_auth],[1.0.5],[markus_moeller@compuserve.com])
+AM_INIT_AUTOMAKE(squid_kerb_auth,1.0.5)
 
 AC_PROG_CC
 AC_PROG_CPP
@@ -312,6 +312,11 @@ if test "$enable_arg" = "no"; then
   esac
 fi
 
+if test "$ac_cv_header_gssapi_h" = "no" -a "$ac_cv_header_gssapi_gssapi_h" = "no"; then
+        echo "GSSAPI headers are required to compile squid_kerb_auth"
+        echo "Please install gssapi headers and then re-run configure"
+        exit 1
+fi
 
 old_LIBS=$LIBS
 AC_CACHE_CHECK([for SPNEGO support],ac_cv_have_spnego,[
@@ -441,6 +446,8 @@ AH_BOTTOM([
 #include <gssapi/gssapi.h>
 #elif defined(HAVE_GSSAPI_H)
 #include <gssapi.h>
+#else
+#error "GSSAPI header required"
 #endif
 #define gss_nt_service_name GSS_C_NT_HOSTBASED_SERVICE
 #else
@@ -449,6 +456,8 @@ AH_BOTTOM([
 #include <gssapi/gssapi.h>
 #elif defined(HAVE_GSSAPI_H)
 #include <gssapi.h>
+#else
+#error "GSSAPI header required"
 #endif
 #ifdef HAVE_GSSAPI_GSSAPI_EXT_H
 #include <gssapi/gssapi_ext.h>
@@ -459,6 +468,8 @@ AH_BOTTOM([
 #include <gssapi/gssapi.h>
 #elif defined(HAVE_GSSAPI_H)
 #include <gssapi.h>
+#else
+#error "GSSAPI header required"
 #endif
 #ifdef HAVE_GSSAPI_GSSAPI_KRB5_H
 #include <gssapi/gssapi_krb5.h>
