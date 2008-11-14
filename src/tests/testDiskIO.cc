@@ -32,8 +32,10 @@ testDiskIO::testFindDefault()
 {
     DiskIOModule * module = DiskIOModule::FindDefault();
 #if USE_DISKIO
+    /* enabled. we expect at least ONE */
     CPPUNIT_ASSERT(module != NULL);
 #else
+    /* disabled. we don't expect ANY */
     CPPUNIT_ASSERT(module == NULL);
 #endif
 }
