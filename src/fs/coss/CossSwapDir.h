@@ -1,4 +1,3 @@
-#error COSS Support is not stable yet in Squid-3. Please do not use.
 #ifndef __COSSSWAPDIR_H__
 #define __COSSSWAPDIR_H__
 

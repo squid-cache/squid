@@ -1,3 +1,11 @@
+Changes to squid-3.1.0.2 (9 Nov 2008):
+
+	- Bug 2516: error page templates not properly installed
+	- Bug 2500: Solaris build issues
+	- Fixes FreeBSD build issues
+	- Release Notes completed
+	- Languages: new Russian, Japanese, Chinese, and general updates
+	- ... and other minor fixes
 
 Changes to squid-3.1.0.1 (27 Oct 2008):
 

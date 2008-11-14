@@ -1,15 +1,27 @@
 EXTRA_DIST = configure README NEWS ChangeLog AUTHORS INSTALL
 SUBDIRS = 
 
-bin_PROGRAMS = squid_kerb_auth squid_kerb_auth_test
+bin_PROGRAMS = squid_kerb_auth squid_kerb_auth_test negotiate_kerb_auth negotiate_kerb_auth_test
+
+SPNEGO_SOURCE= \
+	spnegohelp/derparse.c \
+	spnegohelp/derparse.h \
+	spnegohelp/spnego.c \
+	spnegohelp/spnego.h \
+	spnegohelp/spnegohelp.c \
+	spnegohelp/spnegohelp.h \
+	spnegohelp/spnegoparse.c \
+	spnegohelp/spnegoparse.h
+
+EXTRA_DIST += $(SPNEGO_SOURCE)
 
 if HAVE_SPNEGO
-squid_kerb_auth_SOURCES = squid_kerb_auth.c base64.c
-squid_kerb_auth_test_SOURCES = squid_kerb_auth_test.c base64.c
+squid_kerb_auth_SOURCES = squid_kerb_auth.c base64.c base64.h
+squid_kerb_auth_test_SOURCES = squid_kerb_auth_test.c base64.c base64.h
 else
-squid_kerb_auth_SOURCES = squid_kerb_auth.c base64.c spnegohelp/derparse.c  spnegohelp/spnego.c  spnegohelp/spnegohelp.c  spnegohelp/spnegoparse.c
+squid_kerb_auth_SOURCES = squid_kerb_auth.c base64.c base64.h $(SPNEGO_SOURCE)
 INCLUDES = -Ispnegohelp 
-squid_kerb_auth_test_SOURCES = squid_kerb_auth_test.c base64.c
+squid_kerb_auth_test_SOURCES = squid_kerb_auth_test.c base64.c base64.h
 endif
 
 
@@ -17,3 +29,11 @@ squid_kerb_auth_LDFLAGS =
 squid_kerb_auth_LDADD =
 squid_kerb_auth_test_LDFLAGS = 
 squid_kerb_auth_test_LDADD =
+
+negotiate_kerb_auth: squid_kerb_auth
+	cp squid_kerb_auth negotiate_kerb_auth
+
+negotiate_kerb_auth_test: squid_kerb_auth_test
+	cp squid_kerb_auth_test negotiate_kerb_auth_test
+
+
