@@ -50,8 +50,13 @@ public:
     static void SetupAllModules();
     static void ModuleAdd(DiskIOModule &);
     static void FreeAllModules();
+
+    /** Poke all compiled modules for self-setup */
+    static void PokeAllModules();
+
     static DiskIOModule *Find(char const *type);
-    /* find *any* usable disk module. This will look for the 'best'
+
+    /** Find *any* usable disk module. This will look for the 'best'
      * available module for this system.
      */
     static DiskIOModule *FindDefault();
