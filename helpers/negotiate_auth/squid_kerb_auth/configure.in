@@ -15,8 +15,9 @@ dnl
 dnl Process this file with autoconf to produce a configure script.
 
 
-AC_INIT([squid_kerb_auth],[1.0.3],[markus_moeller@compuserve.com])
-AM_INIT_AUTOMAKE(squid_kerb_auth,1.0.3)
+AC_INIT([squid_kerb_auth],[1.0.5],[markus_moeller@compuserve.com])
+AM_INIT_AUTOMAKE(squid_kerb_auth,1.0.5)
+AC_CONFIG_SRCDIR([squid_kerb_auth.c])
 
 AC_PROG_CC
 AC_PROG_CPP
@@ -312,6 +313,11 @@ if test "$enable_arg" = "no"; then
   esac
 fi
 
+if test "$ac_cv_header_gssapi_h" = "no" -a "$ac_cv_header_gssapi_gssapi_h" = "no"; then
+        echo "GSSAPI headers are required to compile squid_kerb_auth"
+        echo "Please install gssapi headers and then re-run configure"
+        exit 1
+fi
 
 old_LIBS=$LIBS
 AC_CACHE_CHECK([for SPNEGO support],ac_cv_have_spnego,[
@@ -374,38 +380,19 @@ LIBS=$old_LIBS
 
 AC_C_BIGENDIAN
 
-eval ac_p_include=$includedir
-CPPFLAGS="$CPPFLAGS -I$ac_p_include -I../../../include"
-AC_CACHE_CHECK([for SQUID],ac_cv_have_squid,[
-AC_TRY_RUN([
-#include <config.h>
-int main(int argc, char *argv[]) {
-#ifdef SQUID_CONFIG_H
-return 0;
-#else
-return 1;
-#endif
-}],
-  ac_cv_have_squid=yes,
-  ac_cv_have_squid=no)])
-eval ac_p_lib=$libdir
-LDFLAGS="$LDFLAGS -L../../../lib -L$ac_p_lib $w_flag$ac_p_lib$w_flag_2"
-if test x"$ac_cv_have_squid" = x"yes"; then
-  AC_DEFINE(HAVE_SQUID,1, [Define to 1 if you have SQUID])
-  AC_CHECK_HEADERS(getaddrinfo.h getnameinfo.h util.h)
-  AC_CHECK_DECLS([xgetaddrinfo], [], [], [[#include <getaddrinfo.h>]])
-  AC_CHECK_DECLS([xfreeaddrinfo], [], [], [[#include <getaddrinfo.h>]])
-  AC_CHECK_DECLS([xgai_strerror], [], [], [[#include <getaddrinfo.h>]])
-  AC_CHECK_DECLS([xgetnameinfo], [], [], [[#include <getnameinfo.h>]])
-  AC_CHECK_DECLS([xstrdup], [], [], [[#include <util.h>]])
-  AC_CHECK_DECLS([xmalloc], [], [], [[#include <util.h>]])
-  AC_CHECK_DECLS([xfree], [], [], [[#include <util.h>]])
-  AC_CHECK_LIB(m,main)
-  AC_CHECK_LIB(mw,main)
-  LIBS="-lmiscutil $LIBS"
-fi
+AC_CHECK_HEADERS( \
+	errno.h \
+	netdb.h \
+	stdio.h \
+	stdlib.h \
+	string.h \
+	sys/time.h\
+	time.h \
+	unistd.h \
+)
 
-AC_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADER(ska_config.h)
+
 AH_TOP([/*
  * -----------------------------------------------------------------------------
  *
@@ -435,12 +422,78 @@ AH_TOP([/*
  * -----------------------------------------------------------------------------
  */
 ])
+
+squid_dir=
+AC_ARG_WITH([squid],
+  AC_HELP_STRING([--with-squid=PATH],
+	[Special option for building bundled inside Squid. Do not define manually.]),
+  [ squid_dir=$withval ]
+)
+
+eval ac_p_include=$includedir
+CPPFLAGS="$CPPFLAGS -I$ac_p_include -I../../../ -I$squid_dir/include -I$squid_dir/src "
+AC_CACHE_CHECK([for SQUID at '$squid_dir' ],ac_cv_have_squid,[
+AC_TRY_RUN([
+#include <config.h>
+int main(int argc, char *argv[]) {
+#ifdef SQUID_CONFIG_H
+return 0;
+#else
+return 1;
+#endif
+}],
+  ac_cv_have_squid=yes,
+  ac_cv_have_squid=no)
+])
+eval ac_p_lib=$libdir
+LDFLAGS="$LDFLAGS -L../../../lib -L$ac_p_lib $w_flag$ac_p_lib$w_flag_2"
+if test "x$ac_cv_have_squid" = "xyes"; then
+  AC_DEFINE(HAVE_SQUID,1, [Define to 1 if you have SQUID])
+  AC_CHECK_HEADERS(getaddrinfo.h getnameinfo.h util.h)
+  AC_CHECK_DECLS([xgetaddrinfo], [], [], [[#include <getaddrinfo.h>]])
+  AC_CHECK_DECLS([xfreeaddrinfo], [], [], [[#include <getaddrinfo.h>]])
+  AC_CHECK_DECLS([xgai_strerror], [], [], [[#include <getaddrinfo.h>]])
+  AC_CHECK_DECLS([xgetnameinfo], [], [], [[#include <getnameinfo.h>]])
+  AC_CHECK_DECLS([xstrdup], [], [], [[#include <util.h>]])
+  AC_CHECK_DECLS([xmalloc], [], [], [[#include <util.h>]])
+  AC_CHECK_DECLS([xfree], [], [], [[#include <util.h>]])
+  AC_CHECK_LIB(m,main)
+  AC_CHECK_LIB(mw,main)
+  LIBS="-lmiscutil $LIBS"
+AH_TOP([ /* This is building inside Squid. We need their config as well. */
+/* bit of autoconf magic hack */
+#undef HAVE_SQUID
+
+#if HAVE_SQUID
+#include "config.h"
+#endif
+])
+AH_BOTTOM([
+/* Squid provides a few compat libraries */
+#ifdef HAVE_SQUID
+#ifdef HAVE_GETADDRINFO_H
+#include "getaddrinfo.h"
+#endif
+#ifdef HAVE_GETNAMEINFO_H
+#include "getnameinfo.h"
+#endif
+#ifdef HAVE_UTIL_H
+#include "util.h"
+#endif
+#endif /* HAVE_SQUID */
+])
+
+fi
+
+
 AH_BOTTOM([
 #ifdef HAVE_HEIMDAL_KERBEROS
 #ifdef HAVE_GSSAPI_GSSAPI_H
 #include <gssapi/gssapi.h>
 #elif defined(HAVE_GSSAPI_H)
 #include <gssapi.h>
+#else
+#error "GSSAPI header required"
 #endif
 #define gss_nt_service_name GSS_C_NT_HOSTBASED_SERVICE
 #else
@@ -449,6 +502,8 @@ AH_BOTTOM([
 #include <gssapi/gssapi.h>
 #elif defined(HAVE_GSSAPI_H)
 #include <gssapi.h>
+#else
+#error "GSSAPI header required"
 #endif
 #ifdef HAVE_GSSAPI_GSSAPI_EXT_H
 #include <gssapi/gssapi_ext.h>
@@ -459,6 +514,8 @@ AH_BOTTOM([
 #include <gssapi/gssapi.h>
 #elif defined(HAVE_GSSAPI_H)
 #include <gssapi.h>
+#else
+#error "GSSAPI header required"
 #endif
 #ifdef HAVE_GSSAPI_GSSAPI_KRB5_H
 #include <gssapi/gssapi_krb5.h>
@@ -496,6 +553,6 @@ done
 
 AC_OUTPUT(Makefile)
 
-echo "configure: updating config.h"
-sed -e "s/|MAIL|/"$PACKAGE_BUGREPORT"/" config.h > .config.h.tmp
-mv .config.h.tmp config.h
+echo "configure: updating ska_config.h"
+sed -e "s/|MAIL|/"$PACKAGE_BUGREPORT"/" ska_config.h > .ska_config.h.tmp
+mv .ska_config.h.tmp ska_config.h

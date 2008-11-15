@@ -8,6 +8,7 @@ config.sub
 configure
 helpers/negotiate_auth/squid_kerb_auth/depcomp
 helpers/negotiate_auth/squid_kerb_auth/missing
+helpers/negotiate_auth/squid_kerb_auth/ska_config.h.in
 install-sh
 ltmain.sh
 Makefile.in

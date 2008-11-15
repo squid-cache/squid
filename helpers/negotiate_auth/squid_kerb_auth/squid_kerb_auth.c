@@ -29,73 +29,31 @@
 /*
  * Hosted at http://sourceforge.net/projects/squidkerbauth
  */
+#include "ska_config.h"
+
+#if HAVE_STRING_H
 #include <string.h>
+#endif
+#if HAVE_STDIO_H
 #include <stdio.h>
+#endif
+#if HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
+#if HAVE_NETDB_H
 #include <netdb.h>
+#endif
+#if HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+#if HAVE_TIME_H
 #include <time.h>
+#endif
+#if HAVE_SYS_TIME_H
 #include <sys/time.h>
+#endif
 
-#include "config.h"
 
-#ifdef HAVE_SQUID
-#ifdef PACKAGE
-#undef PACKAGE
-#endif
-#ifdef PACKAGE_BUGREPORT
-#undef PACKAGE_BUGREPORT
-#endif
-#ifdef PACKAGE_NAME
-#undef PACKAGE_NAME
-#endif
-#ifdef PACKAGE_STRING
-#undef PACKAGE_STRING
-#endif
-#ifdef PACKAGE_TARNAME
-#undef PACKAGE_TARNAME
-#endif
-#ifdef PACKAGE_VERSION
-#undef PACKAGE_VERSION
-#endif
-#ifdef VERSION
-#undef VERSION
-#endif
-#ifdef HAVE_GETADDRINFO_H
-#include "getaddrinfo.h"
-#endif
-#ifdef HAVE_GETNAMEINFO_H
-#include "getnameinfo.h"
-#endif
-#ifdef HAVE_UTIL_H
-#include "util.h"
-#endif
-#ifdef PACKAGE
-#undef PACKAGE
-#endif
-#ifdef PACKAGE_BUGREPORT
-#undef PACKAGE_BUGREPORT
-#endif
-#ifdef PACKAGE_NAME
-#undef PACKAGE_NAME
-#endif
-#ifdef PACKAGE_STRING
-#undef PACKAGE_STRING
-#endif
-#ifdef PACKAGE_TARNAME
-#undef PACKAGE_TARNAME
-#endif
-#ifdef PACKAGE_VERSION
-#undef PACKAGE_VERSION
-#endif
-#ifdef VERSION
-#undef VERSION
-#endif
-/*
- * Reset varibles
- */
-#include "config.h"
-#endif
 #if !defined(HAVE_DECL_XGETADDRINFO) || !HAVE_DECL_XGETADDRINFO
 #define xgetaddrinfo    getaddrinfo
 #endif

@@ -34,6 +34,11 @@ dnl Pass squid.conf directory base location to code files as a compiler define
 CFLAGS="-DDEFAULT_SQUID_CONFIG_DIR=\\\"$sysconfdir\\\" $CFLAGS"
 CXXFLAGS="-DDEFAULT_SQUID_CONFIG_DIR=\\\"$sysconfdir\\\" $CXXFLAGS"
 
+dnl Make the squid top srcdir available to sub-packages as --with-squid=PATH
+new_configure_args="$ac_configure_args --with-squid=$ac_abs_confdir"
+ac_configure_args="$new_configure_args"
+
+
 use_loadable_modules=1
 AC_MSG_CHECKING(whether to use loadable modules)
 AC_ARG_ENABLE(loadable-modules,
