@@ -1986,6 +1986,7 @@ AC_CACHE_CHECK([for sin_len field in struct sockaddr_in],
         AC_TRY_COMPILE([
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
                 ],
                 [ struct sockaddr_in s; s.sin_len = 1; ],
                 [ ac_cv_have_sin_len_in_struct_sai="yes" ],
@@ -2004,6 +2005,7 @@ AC_CACHE_CHECK([for sin6_len field in struct sockaddr_in6],
         AC_TRY_COMPILE([
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
                 ],
                 [ struct sockaddr_in6 s; s.sin6_len = 1; ],
                 [ ac_cv_have_sin6_len_in_struct_sai="yes" ],

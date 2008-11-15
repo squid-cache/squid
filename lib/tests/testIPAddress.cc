@@ -91,6 +91,9 @@ testIPAddress::testSockAddrConstructor()
     insock.sin_family = AF_INET;
     insock.sin_port = htons(80);
     insock.sin_addr.s_addr = htonl(0xC0A8640C);
+#if HAVE_SIN_LEN_IN_SAI
+    insock.sin_len = sizeof(struct sockaddr_in);
+#endif
 
     IPAddress anIPA((const struct sockaddr_in)insock);
 
@@ -121,6 +124,9 @@ testIPAddress::testSockAddr6Constructor()
     insock.sin6_addr.s6_addr32[1] = htonl(0x00000000);
     insock.sin6_addr.s6_addr32[2] = htonl(0x0000FFFF);
     insock.sin6_addr.s6_addr32[3] = htonl(0xC0A8640C);
+#if HAVE_SIN6_LEN_IN_SAI
+    insock.sin6_len = sizeof(struct sockaddr_in6);
+#endif
 
     IPAddress anIPA((const struct sockaddr_in6)insock);
 
@@ -149,6 +155,9 @@ testIPAddress::testCopyConstructor()
     insock.sin_family = AF_INET;
     insock.sin_port = htons(80);
     insock.sin_addr.s_addr = htonl(0xC0A8640C);
+#if HAVE_SIN_LEN_IN_SAI
+    insock.sin_len = sizeof(struct sockaddr_in);
+#endif
 
     IPAddress inIPA(insock);
     IPAddress outIPA(inIPA);
@@ -402,6 +411,10 @@ testIPAddress::testToURL_fromSockAddr()
     sock.sin_addr.s_addr = htonl(0xC0A8640C);
     sock.sin_port = htons(80);
     sock.sin_family = AF_INET;
+#if HAVE_SIN_LEN_IN_SAI
+    sock.sin_len = sizeof(struct sockaddr_in);
+#endif
+
     IPAddress anIPA(sock);
     char buf[MAX_IPSTRLEN];
 
@@ -420,6 +433,9 @@ testIPAddress::testToURL_fromSockAddr()
     ip6val.sin6_addr.s6_addr32[3] = htonl(0xFFFFFFFF);
     ip6val.sin6_port = htons(80);
     ip6val.sin6_family = AF_INET6;
+#if HAVE_SIN6_LEN_IN_SAI
+    ip6val.sin6_len = sizeof(struct sockaddr_in6);
+#endif
 
     IPAddress bnIPA(ip6val);
 
@@ -581,16 +597,18 @@ testIPAddress::testAddrInfo()
 
     anIP.GetAddrInfo(ipval);
 
+#if 0
     /* display a byte-by-byte hex comparison of the addr cores */
     unsigned int *p;
     p = (unsigned int*)expect;
-    printf("\nSYS-ADDRINFO: %x %x %x %x %x %x ",
-           p[0],p[1],p[2],p[3],p[4],p[5] );
+    printf("\nSYS-ADDRINFO: %2x %2x %2x %2x %2x %2x",
+           p[0],p[1],p[2],p[3],p[4],p[5]);
 
     p = (unsigned int*)ipval;
-    printf("\nSQD-ADDRINFO: %x %x %x %x %x %x ",
+    printf("\nSQD-ADDRINFO: %2x %2x %2x %2x %2x %2x",
            p[0],p[1],p[2],p[3],p[4],p[5] );
     printf("\n");
+#endif /*0*/
 
     // check the addrinfo object core. (BUT not the two ptrs at the tail)
     // details
@@ -598,6 +616,61 @@ testIPAddress::testAddrInfo()
     CPPUNIT_ASSERT_EQUAL( expect->ai_family, ipval->ai_family );
     // check the sockaddr it points to.
     CPPUNIT_ASSERT_EQUAL( expect->ai_addrlen, ipval->ai_addrlen );
+
+#if 0
+    p = (unsigned int*)(expect->ai_addr);
+    printf("\nSYS-ADDR: (%d)  %x %x %x %x %x %x %x %x ...",
+            expect->ai_addrlen,
+           p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7] );
+
+    p = (unsigned int*)(ipval->ai_addr);
+    printf("\nSQD-ADDR: (%d) %x %x %x %x %x %x %x %x ...",
+            ipval->ai_addrlen,
+           p[0],p[1],p[2],p[3],p[4],p[5],p[6],p[7] );
+    printf("\n");
+#if HAVE_SS_LEN_IN_SS
+    printf("\nSYS SS_LEN=%d\nSQD SS_LEN=%d\n",((struct sockaddr_storage*)expect->ai_addr)->ss_len,
+           ((struct sockaddr_storage*)ipval->ai_addr)->ss_len );
+#endif
+#endif /*0*/
+
+#if USE_IPV6
+#if HAVE_SS_LEN_IN_SS
+    CPPUNIT_ASSERT_EQUAL( ((struct sockaddr_storage*)expect->ai_addr)->ss_len,
+                          ((struct sockaddr_storage*)ipval->ai_addr)->ss_len );
+    CPPUNIT_ASSERT_EQUAL( (socklen_t)((struct sockaddr_storage*)ipval->ai_addr)->ss_len, ipval->ai_addrlen );
+#endif
+#if HAVE_SIN6_LEN_IN_SAI
+    CPPUNIT_ASSERT_EQUAL( ((struct sockaddr_in6*)expect->ai_addr)->sin6_len,
+                          ((struct sockaddr_in6*)ipval->ai_addr)->sin6_len );
+    CPPUNIT_ASSERT_EQUAL( (socklen_t)((struct sockaddr_in6*)ipval->ai_addr)->sin6_len, ipval->ai_addrlen );
+#endif
+#if HAVE_SIN_LEN_IN_SAI
+    CPPUNIT_ASSERT_EQUAL( ((struct sockaddr_in*)expect->ai_addr)->sin_len,
+                          ((struct sockaddr_in*)ipval->ai_addr)->sin_len );
+    CPPUNIT_ASSERT_EQUAL( (socklen_t)((struct sockaddr_in*)ipval->ai_addr)->sin_len, ipval->ai_addrlen );
+#endif
+    CPPUNIT_ASSERT_EQUAL( ((struct sockaddr_in6*)expect->ai_addr)->sin6_family,
+                          ((struct sockaddr_in6*)ipval->ai_addr)->sin6_family );
+    CPPUNIT_ASSERT_EQUAL( ((struct sockaddr_in6*)expect->ai_addr)->sin6_port,
+                          ((struct sockaddr_in6*)ipval->ai_addr)->sin6_port );
+#else
+#if HAVE_SS_LEN_IN_SS
+    CPPUNIT_ASSERT_EQUAL( ((struct sockaddr_storage*)expect->ai_addr)->ss_len,
+                          ((struct sockaddr_storage*)ipval->ai_addr)->ss_len );
+    CPPUNIT_ASSERT_EQUAL( (socklen_t)((struct sockaddr_storage*)ipval->ai_addr)->ss_len, ipval->ai_addrlen );
+#endif
+#if HAVE_SIN_LEN_IN_SAI
+    CPPUNIT_ASSERT_EQUAL( ((struct sockaddr_in*)expect->ai_addr)->sin_len,
+                          ((struct sockaddr_in*)ipval->ai_addr)->sin_len );
+    CPPUNIT_ASSERT_EQUAL( (socklen_t)((struct sockaddr_in*)ipval->ai_addr)->sin_len, ipval->ai_addrlen );
+#endif
+    CPPUNIT_ASSERT_EQUAL( ((struct sockaddr_in*)expect->ai_addr)->sin_family,
+                          ((struct sockaddr_in*)ipval->ai_addr)->sin_family );
+    CPPUNIT_ASSERT_EQUAL( ((struct sockaddr_in*)expect->ai_addr)->sin_port,
+                          ((struct sockaddr_in*)ipval->ai_addr)->sin_port );
+#endif /* USE_IPV6 */
+
     CPPUNIT_ASSERT( memcmp( expect->ai_addr, ipval->ai_addr, expect->ai_addrlen ) == 0 );
 
     xfreeaddrinfo(expect);
