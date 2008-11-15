@@ -540,15 +540,17 @@ AC_SUBST(STORE_TESTS)
 AC_ARG_ENABLE(disk-io,
   AC_HELP_STRING([--enable-disk-io="list of modules"],
                  [Build support for the list of disk I/O modules.
-                  The default is only to build the "Blocking" module.
+                  If unset only the "Blocking" module will be built.
+                  Set without a value all available modules will be built.
                   See src/DiskIO for a list of available modules, or
-                  Programmers Guide section <not yet written>
+                  Programmers Guide section on DiskIO
                   for details on how to build your custom disk module]),
 [ case $enableval in
   yes)
 	for dir in $srcdir/src/DiskIO/*; do
 	    module="`basename $dir`"
 	    if test -d "$dir" && test "$module" != CVS; then
+		echo "Autodetected $module DiskIO module"
 		DISK_MODULES="$DISK_MODULES $module"
 	    fi
 	done
@@ -565,6 +567,7 @@ AC_ARG_ENABLE(disk-io,
 ],
 [ if test -z "$DISK_MODULES"; then
     DISK_MODULES="Blocking"
+    echo "Enabling Blocking DiskIO module (required default)"
     AC_DEFINE(USE_DISKIO,1,[DiskIO modules are expected to be available.])
   fi
 ])
@@ -579,6 +582,7 @@ if test -n "$DISK_MODULES"; then
     DISK_LIBS="lib`echo $DISK_MODULES|sed -e 's% %.a lib%g'`.a"
     DISK_LINKOBJS=
     for module in $DISK_MODULES; do
+        echo "Enabling $module DiskIO module"
         DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/${module}/${module}DiskIOModule.o"
     done
 fi
@@ -663,7 +667,7 @@ for fs in $DISK_MODULES none; do
 	;;
     esac
 done
-
+AC_SUBST(DISK_MODULES)
 AC_SUBST(DISK_LIBS)
 AC_SUBST(DISK_PROGRAMS)
 AC_SUBST(DISK_LINKOBJS)

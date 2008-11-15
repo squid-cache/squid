@@ -254,12 +254,6 @@ all_FSMODULES = \
 	fs/diskd/StoreFSdiskd.cc \
 	fs/ufs/StoreFSufs.cc
 
-all_DISKIOMODULES = \
-	DiskIO/AIO/AIODiskIOModule.cc \
-	DiskIO/Blocking/BlockingDiskIOModule.cc \
-	DiskIO/DiskDaemon/DiskDaemonDiskIOModule.cc \
-	DiskIO/DiskThreads/DiskThreadsDiskIOModule.cc
-
 DISKIO_SOURCE = \
 	DiskIO/DiskIOModule.cc \
 	DiskIO/ReadRequest.cc \
@@ -270,7 +264,12 @@ DISKIO_SOURCE = \
 	DiskIO/DiskIOStrategy.h \
 	DiskIO/IORequestor.h \
 	DiskIO/DiskIOModule.h \
-	DiskIO/ReadRequest.h
+	DiskIO/ReadRequest.h \
+	DiskIO/DiskIOModules_gen.cc
+
+DiskIO/DiskIOModules_gen.cc: Makefile
+	$(SHELL) $(srcdir)/DiskIO/modules.sh $(DISK_MODULES) > DiskIO/DiskIOModules_gen.cc
+
 
 all_AUTHMODULES = \
 	auth/basic/basicScheme.cc \
@@ -284,7 +283,6 @@ all_AUTHMODULES = \
 
 EXTRA_squid_SOURCES = \
 	$(all_FSMODULES) \
-	$(all_DISKIOMODULES) \
 	$(AIO_WIN32_ALL_SOURCES) \
 	$(all_AUTHMODULES) \
 	$(ARP_ACL_ALL_SOURCE) \
@@ -1124,7 +1122,7 @@ uninstall-local:
 #	fi
 
 DISTCLEANFILES = cf_gen_defines.h cf.data cf_parser.h squid.conf.default squid.conf.documented \
-	globals.cc string_arrays.c repl_modules.cc 
+	globals.cc string_arrays.c repl_modules.cc DiskIO/DiskIOModules_gen.cc
 
 # stock tools for unit tests - library independent versions of dlink_list 
 # etc.
@@ -1485,6 +1483,7 @@ tests_testDiskIO_LDADD= \
 	@SSLLIB@
 tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
 tests_testDiskIO_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
+	$(SWAP_TEST_DS) \
 	@SQUID_CPPUNIT_LA@
 
 ## Tests of the Even module.
