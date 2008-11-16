@@ -78,7 +78,7 @@
 
 #include "base64.h"
 #ifndef HAVE_SPNEGO
-#include "spnegohelp.h"
+#include "spnegohelp/spnegohelp.h"
 #endif
 
 #define PROGRAM "squid_kerb_auth"
