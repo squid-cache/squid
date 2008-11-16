@@ -144,7 +144,7 @@ dist-hook:
 	cp $(srcdir)/errorpage.css  $(distdir)/errorpage.css
 
 translate:
-	@ if test "$(PO2HTML)" != "" ; then \
+	@ if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no"; then \
 	  for lang in $(TRANSLATIONS); do \
 		test -d $$lang && rm -r $$lang; \
 		mkdir $$lang; \
