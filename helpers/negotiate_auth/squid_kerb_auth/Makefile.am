@@ -29,6 +29,8 @@ squid_kerb_auth_LDFLAGS =
 squid_kerb_auth_LDADD =
 squid_kerb_auth_test_LDFLAGS = 
 squid_kerb_auth_test_LDADD =
+negotiate_kerb_auth_SOURCES = 
+negotiate_kerb_auth_test_SOURCES = 
 
 negotiate_kerb_auth: squid_kerb_auth
 	cp squid_kerb_auth negotiate_kerb_auth
