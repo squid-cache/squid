@@ -35,7 +35,12 @@
 #define SQUID_CONFIG_H
 
 #include "autoconf.h"		/* For GNU autoconf variables */
+
+#if !defined(HAVE_SQUID)
+/* sub-packages define their own version details */
 #include "version.h"
+
+#endif
 
 /* To keep API definitions clear */
 #ifdef __cplusplus

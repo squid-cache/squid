@@ -51,6 +51,4 @@ private:
     static BlockingDiskIOModule Instance;
 };
 
-
-
 #endif /* SQUID_BLOCKINGDISKIOMODULE_H */

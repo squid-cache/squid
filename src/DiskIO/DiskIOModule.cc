@@ -1,6 +1,4 @@
-
 /*
- * $Id: DiskIOModule.cc,v 1.3 2006/09/14 00:51:10 robertc Exp $
  *
  * DEBUG: section 92    Storage File System
  * AUTHOR: Robert Collins
@@ -40,17 +38,20 @@
 Vector<DiskIOModule*> *DiskIOModule::_Modules = NULL;
 
 //DiskIOModule() : initialised (false) {}
+
 DiskIOModule::DiskIOModule()
 {
-    /* We cannot call
-     * ModuleAdd(*this);
-     * here as the virtual methods are not yet available
+    /** We cannot call ModuleAdd(*this)
+     * here as the virtual methods are not yet available.
+     * We leave that to PokeAllModules() later.
      */
 }
 
 void
 DiskIOModule::SetupAllModules()
 {
+    DiskIOModule::PokeAllModules();
+
     for (iterator i = GetModules().begin(); i != GetModules().end(); ++i)
         /* Call the FS to set up capabilities and initialize the FS driver */
         (*i)->init();
@@ -84,8 +85,8 @@ DiskIOModule::GetModules()
     return *_Modules;
 }
 
-/*
- * called when a graceful shutdown is to occur
+/**
+ * Called when a graceful shutdown is to occur
  * of each fs module.
  */
 void
@@ -111,7 +112,7 @@ DiskIOModule::Find(char const *type)
 DiskIOModule *
 DiskIOModule::FindDefault()
 {
-    /* Best IO options are in order: */
+    /** Best IO options are in order: */
     DiskIOModule * result;
     result = Find("DiskThreads");
     if (NULL == result)
@@ -122,4 +123,3 @@ DiskIOModule::FindDefault()
         result = Find("Blocking");
     return result;
 }
-
