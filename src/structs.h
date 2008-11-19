@@ -133,6 +133,10 @@ struct relist
 #include "icmp/IcmpConfig.h"
 #endif
 
+#if USE_ZPH_QOS
+#include "QosConfig.h"
+#endif
+
 /* forward decl for SquidConfig, see RemovalPolicy.h */
 
 class RemovalPolicySettings;
@@ -471,10 +475,6 @@ struct SquidConfig
         int log_uses_indirect_client;
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
-#if USE_ZPH_QOS
-        int zph_tos_parent;
-        int zph_preserve_miss_tos;
-#endif
         int WIN32_IpAddrChangeMonitor;
     } onoff;
 
@@ -631,11 +631,11 @@ struct SquidConfig
     int sleep_after_fork;	/* microseconds */
     time_t minimum_expiry_time;	/* seconds */
     external_acl *externalAclHelperList;
+
 #if USE_ZPH_QOS
-    int zph_tos_local;
-    int zph_tos_peer;
-    int zph_preserve_miss_tos_mask; 
+    QosConfig zph;
 #endif
+
 #if USE_SSL
 
     struct
