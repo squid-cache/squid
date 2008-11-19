@@ -61,10 +61,11 @@ pinger_SOURCES = \
 nodist_pinger_SOURCES = \
 	Icmp.h \
 	../debug.cc \
+	../globals.cc \
 	../time.cc \
 	../SquidConfig.cc \
 	../SquidNew.cc \
-	../globals.cc
+	../stubQosConfig.cc
 
 pinger_LDFLAGS = $(LIBADD_DL)
 pinger_LDADD=\

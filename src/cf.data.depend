@@ -38,6 +38,7 @@ logformat
 onoff
 peer
 peer_access		cache_peer acl
+QosConfig
 refreshpattern
 removalpolicy
 size_t
