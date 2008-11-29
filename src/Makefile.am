@@ -954,6 +954,7 @@ EXTRA_DIST = \
 	cf_gen_defines \
 	cf.data.pre \
 	cf.data.depend \
+	DiskIO/modules.sh \
 	mk-globals-c.pl \
 	mk-globals-c.awk \
 	mk-string-arrays.pl \
