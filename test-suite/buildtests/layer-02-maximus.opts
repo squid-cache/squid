@@ -23,6 +23,13 @@
 #   --with-po2html=PATH \
 #   --with-tags=TAGS \
 #
+#	Following features require special support from other optional packages.
+#	We can't test them automatically everywhere
+#
+#   --enable-ecap \
+#   --enable-win32-service \
+#   --with-localhost-ipv6 \
+#
 OPTS=" \
 	--enable-loadable-modules \
 	--enable-gnuregex \
@@ -38,7 +45,6 @@ OPTS=" \
 	--enable-delay-pools \
 	--enable-esi \
 	--enable-icap-client \
-	--enable-ecap \
 	--enable-useragent-log \
 	--enable-referer-log \
 	--enable-wccp \
@@ -74,7 +80,6 @@ OPTS=" \
 	--enable-ntlm-fail-open \
 	--enable-external-acl-helpers=all \
 	--enable-mempools \
-	--enable-win32-service \
 	--enable-unlinkd \
 	--enable-stacktraces \
 	--enable-cpu-profiling \
@@ -88,10 +93,8 @@ OPTS=" \
 	--with-dl \
 	--with-dns-cname \
 	--with-gnu-ld \
-	--with-ipv4-mapped \
 	--with-ipv6-split-stack \
 	--with-large-files \
-	--with-localhost-ipv6 \
 	--with-pic \
 	--with-pthreads \
 	--with-valgrind-debug \

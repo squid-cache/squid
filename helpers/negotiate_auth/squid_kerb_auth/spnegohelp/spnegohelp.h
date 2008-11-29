@@ -8,13 +8,13 @@
  */
 
 #ifndef SPNEGOHELP_H
-#define SPNEGOHELP_H
+#define SPNEGOHELP_H
 
 #ifdef __cplusplus
-extern "C"
+extern "C"
 {
 #endif
-
+
 #include <stddef.h>
 
     /* -----------------------------------------------------------------------------
@@ -53,8 +53,7 @@
                            size_t *               kerberosTokenLength);
 
 #ifdef __cplusplus
-}
+}
 #endif
-
+
 #endif /* SPNEGOHELP_H */
-
