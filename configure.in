@@ -815,7 +815,7 @@ then
     dnl eCAP support requires libecap
     AC_CHECK_LIB([ecap], [main],
         [ECAP_LIBS="-lecap"],
-        AC_MSG_FAILURE([eCAP support requires libecap library, but no usable library was found])
+        [AC_MSG_FAILURE([eCAP support requires libecap library, but no usable library was found])]
     )
 fi
 
