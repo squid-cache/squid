@@ -21,6 +21,7 @@ TRANSLATIONS = \
 	de \
 	en en-au en-gb en-nz en-us \
 	es \
+	et \
 	fr \
 	id \
 	it \
@@ -38,7 +39,6 @@ LANGUAGES	= \
 		Armenian \
 		Azerbaijani \
 		Czech \
-		Estonian \
 		Finnish \
 		Greek \
 		Hebrew \
