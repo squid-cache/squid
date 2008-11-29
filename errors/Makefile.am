@@ -29,6 +29,7 @@ TRANSLATIONS = \
 	nl \
 	pt-br \
 	ru \
+	sr \
 	sv \
 	uk \
 	zh-cn
