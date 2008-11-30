@@ -55,16 +55,18 @@
  */
 
 #include "squid.h"
+
+#if USE_KQUEUE
+
 #include "comm_kqueue.h"
 #include "CacheManager.h"
 #include "Store.h"
 #include "fde.h"
 #include "SquidTime.h"
 
-#ifdef USE_KQUEUE
-
+#if HAVE_SYS_EVENT_H
 #include <sys/event.h>
-
+#endif
 
 #define KE_LENGTH        128
 
