@@ -37,6 +37,8 @@ for f in `ls -1 ./test-suite/buildtests/layer*.opts` ; do
 	echo "TESTING: ${arg}"
 	../test-suite/buildtest.sh ".${arg}"
 	grep -E "${errors}" buildtest_*.log && exit 1
+	result=`tail -2 buildtest_*.log | head -1`
+	test "${result}" = "Build Successful." || ( tail -5 buildtest_*.log ; exit 1 )
 	cd ..
 	if test "${cleanup}" = "yes" ; then
 		echo "REMOVE: bt${layer}"
