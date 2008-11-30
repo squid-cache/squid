@@ -23,6 +23,20 @@
 #   --with-po2html=PATH \
 #   --with-tags=TAGS \
 #
+#	Following features require special support from other optional packages.
+#	We can't test them automatically everywhere
+#
+#   --enable-ecap \
+#   --enable-epoll \
+#   --enable-esi \
+#   --enable-win32-service \
+#   --with-localhost-ipv6 \
+#
+#	AYJ: these features have known bugs. They are optional so we don't block on them...
+#	We can't test them automatically everywhere
+#
+#	--enable-zph-qos \
+#
 OPTS=" \
 	--enable-loadable-modules \
 	--enable-gnuregex \
@@ -36,9 +50,7 @@ OPTS=" \
 	--enable-removal-policies \
 	--enable-icmp \
 	--enable-delay-pools \
-	--enable-esi \
 	--enable-icap-client \
-	--enable-ecap \
 	--enable-useragent-log \
 	--enable-referer-log \
 	--enable-wccp \
@@ -54,7 +66,6 @@ OPTS=" \
 	--enable-poll \
 	--enable-select \
 	--enable-kqueue \
-	--enable-epoll \
 	--enable-http-violations \
 	--enable-ipfw-transparent \
 	--enable-ipf-transparent \
@@ -74,13 +85,11 @@ OPTS=" \
 	--enable-ntlm-fail-open \
 	--enable-external-acl-helpers=all \
 	--enable-mempools \
-	--enable-win32-service \
 	--enable-unlinkd \
 	--enable-stacktraces \
 	--enable-cpu-profiling \
 	--enable-vary \
 	--enable-ipv6 \
-	--enable-zph-qos \
 	--enable-auto-locale \
  \
 	--with-aio \
@@ -88,10 +97,8 @@ OPTS=" \
 	--with-dl \
 	--with-dns-cname \
 	--with-gnu-ld \
-	--with-ipv4-mapped \
 	--with-ipv6-split-stack \
 	--with-large-files \
-	--with-localhost-ipv6 \
 	--with-pic \
 	--with-pthreads \
 	--with-valgrind-debug \
