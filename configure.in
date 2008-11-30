@@ -1143,10 +1143,15 @@ AC_ARG_ENABLE(kqueue,
   yes)
     echo "Forcing kqueue() to be enabled"
     SELECT_TYPE="kqueue"
+    AC_CHECK_HEADERS([sys/event.h],[],
+      [ AC_MSG_ERROR([kqueue support requires sys/event.h header file.]) ])
     ;;
   no)
     echo "Forcing kqueue() to be disabled"
     disable_kqueue=true
+  ;;
+  *)
+    AC_CHECK_HEADERS([sys/event.h])
   ;;
 esac
 ])
