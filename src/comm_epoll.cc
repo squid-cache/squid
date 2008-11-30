@@ -63,7 +63,9 @@
 
 #define DEBUG_EPOLL 0
 
+#if HAVE_SYS_EPOLL_H
 #include <sys/epoll.h>
+#endif
 
 static int kdpfd;
 static int max_poll_time = 1000;

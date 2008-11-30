@@ -459,7 +459,8 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, IPAddress &c)
 
     memset(&arpReq, '\0', sizeof(arpReq));
 
-    ipAddr.GetSockAddr(arpReq.arp_pa);
+    sa = (struct sockaddr_in*) &arpReq.arp_pa;
+    ipAddr.GetSockAddr(*sa);
 
     /* Query ARP table */
     mib[0] = CTL_NET;

@@ -9,13 +9,16 @@ if test "${1}" = "--cleanup" ; then
 	shift
 fi
 
+# Things to catch
+errors="^ERROR|\ error:|\ Error\ |No\ such|assertion\ failed|FAIL:"
+
 # Run a single test build by name
 tmp="${1}"
 if test -e ./test-suite/buildtests/${tmp}.opts ; then
 	echo "TESTING: ${tmp}"
 	rm -f -r bt${tmp} && mkdir bt${tmp} && cd bt${tmp}
 	../test-suite/buildtest.sh ../test-suite/buildtests/${tmp}
-	grep -E "^ERROR|\ error:\ |No\ such|assertion\ failed|FAIL:" buildtest_*.log && exit 1
+	grep -E "${errors}" buildtest_*.log && exit 1
 	cd ..
 	exit 0
 fi
@@ -33,7 +36,9 @@ for f in `ls -1 ./test-suite/buildtests/layer*.opts` ; do
 	arg=`echo "${f}" | sed s/\\.opts//`
 	echo "TESTING: ${arg}"
 	../test-suite/buildtest.sh ".${arg}"
-	grep -E "^ERROR|\ error:\ |No\ such|assertion\ failed|FAIL:" buildtest_*.log && exit 1
+	grep -E "${errors}" buildtest_*.log && exit 1
+	result=`tail -2 buildtest_*.log | head -1`
+	test "${result}" = "Build Successful." || ( tail -5 buildtest_*.log ; exit 1 )
 	cd ..
 	if test "${cleanup}" = "yes" ; then
 		echo "REMOVE: bt${layer}"
