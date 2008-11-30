@@ -465,15 +465,7 @@ AH_TOP([ /* This is building inside Squid. We need their config as well. */
 #undef HAVE_SQUID
 
 #if HAVE_SQUID
-#include "config.h"
- /* We want the Squid type and library definitions without the package ones */
-#undef VERSION
-#undef PACKAGE
-#undef PACKAGE_BUGREPORT
-#undef PACKAGE_NAME
-#undef PACKAGE_STRING
-#undef PACKAGE_TARNAME
-#undef PACKAGE_VERSION
+#include "squid_compat.h"
 #endif /* HAVE_SQUID */
 ])
 AH_BOTTOM([
