@@ -1254,7 +1254,10 @@ keepCapabilities(void)
 static void
 restoreCapabilities(int keep)
 {
-#if defined(_SQUID_LINUX_) && HAVE_SYS_CAPABILITY_H
+/* NP: keep these two if-endif separate. Non-Linux work perfectly well without Linux syscap support. */
+#if defined(_SQUID_LINUX_)
+
+#if HAVE_SYS_CAPABILITY_H
 #ifndef _LINUX_CAPABILITY_VERSION_1
 #define _LINUX_CAPABILITY_VERSION_1 _LINUX_CAPABILITY_VERSION
 #endif
@@ -1264,41 +1267,41 @@ restoreCapabilities(int keep)
     head->version = _LINUX_CAPABILITY_VERSION_1;
 
     if (capget(head, cap) != 0) {
-        debugs(50, 1, "Can't get current capabilities");
-        goto nocap;
+        debugs(50, DBG_IMPORTANT, "Can't get current capabilities");
     }
-
-    if (head->version != _LINUX_CAPABILITY_VERSION_1) {
-        debugs(50, 1, "Invalid capability version " << head->version << " (expected " << _LINUX_CAPABILITY_VERSION_1 << ")");
-        goto nocap;
+    else if (head->version != _LINUX_CAPABILITY_VERSION_1) {
+        debugs(50, DBG_IMPORTANT, "Invalid capability version " << head->version << " (expected " << _LINUX_CAPABILITY_VERSION_1 << ")");
     }
+    else {
 
-    head->pid = 0;
+        head->pid = 0;
 
-    cap->inheritable = 0;
-    cap->effective = (1 << CAP_NET_BIND_SERVICE);
+        cap->inheritable = 0;
+        cap->effective = (1 << CAP_NET_BIND_SERVICE);
 
-    if (IPInterceptor.TransparentActive()) {
-        cap->effective |= (1 << CAP_NET_ADMIN);
+        if (IPInterceptor.TransparentActive()) {
+            cap->effective |= (1 << CAP_NET_ADMIN);
 #if LINUX_TPROXY2
-        cap->effective |= (1 << CAP_NET_BROADCAST);
+            cap->effective |= (1 << CAP_NET_BROADCAST);
 #endif
+        }
+
+        if (!keep)
+            cap->permitted &= cap->effective;
+
+        if (capset(head, cap) != 0) {
+            IPInterceptor.StopTransparency("Error enabling needed capabilities.");
+        }
     }
 
-    if (!keep)
-        cap->permitted &= cap->effective;
-
-    if (capset(head, cap) != 0) {
-        IPInterceptor.StopTransparency("Error enabling needed capabilities.");
-    }
-
-nocap:
     xfree(head);
     xfree(cap);
 
-#else /* not defined(_SQUID_LINUX_) && HAVE_SYS_CAPABILITY_H */
+#else
     IPInterceptor.StopTransparency("Missing needed capability support.");
-#endif
+#endif /* HAVE_SYS_CAPABILITY_H */
+
+#endif /* !defined(_SQUID_LINUX_) */
 }
 
 void *
