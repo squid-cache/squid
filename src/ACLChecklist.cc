@@ -125,7 +125,7 @@ ACLChecklist::check()
     if (checking())
         return;
 
-    /* deny if no rules present */
+    /** Deny if no rules present. */
     currentAnswer(ACCESS_DENIED);
 
     if (callerGone()) {
@@ -133,11 +133,21 @@ ACLChecklist::check()
 	return;
     }
 
+    /** The ACL List should NEVER be NULL when calling this method.
+     * Always caller should check for NULL and handle appropriate to its needs first.
+     * We cannot select a sensible default for all callers here. */
+    if (accessList == NULL) {
+        debugs(28, 0, "SECURITY ERROR: ACL " << this << " checked with nothing to match against!!");
+        currentAnswer(ACCESS_DENIED);
+        checkCallback(currentAnswer());
+        return;
+    }
+
     /* NOTE: This holds a cbdata reference to the current access_list
      * entry, not the whole list.
      */
     while (accessList != NULL) {
-        /*
+        /** \par
          * If the _acl_access is no longer valid (i.e. its been
          * freed because of a reconfigure), then bail on this
          * access check.  For now, return ACCESS_DENIED.
@@ -158,9 +168,8 @@ ACLChecklist::check()
         }
 
         if (finished()) {
-            /*
-             * We are done.  Either the request
-             * is allowed, denied, requires authentication.
+            /** \par
+             * Either the request is allowed, denied, requires authentication.
              */
             debugs(28, 3, "ACLChecklist::check: " << this << " match found, calling back with " << currentAnswer());
             cbdataReferenceDone(accessList); /* A */
@@ -181,9 +190,8 @@ ACLChecklist::check()
         cbdataReferenceDone(A);
     }
 
-    /* dropped off the end of the list */
-    debugs(28, 3, "ACLChecklist::check: " << this <<
-           " NO match found, returning " <<
+    /** If dropped off the end of the list return inversion of last line allow/deny action. */
+    debugs(28, 3, HERE << this << " NO match found, returning " <<
            (currentAnswer() != ACCESS_DENIED ? ACCESS_DENIED : ACCESS_ALLOWED));
 
     checkCallback(currentAnswer() != ACCESS_DENIED ? ACCESS_DENIED : ACCESS_ALLOWED);
