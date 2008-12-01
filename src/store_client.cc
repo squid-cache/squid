@@ -145,8 +145,11 @@ store_client::callback(ssize_t sz, bool error)
 {
     StoreIOBuffer result(sz, 0 ,copyInto.data);
 
-    if (error) {
+    if (sz < 0) {
         result.flags.error = 1;
+        result.length = 0;
+    } else {
+        result.flags.error = error ? 1 : 0;
     }
 
     result.offset = cmp_offset;
