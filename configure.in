@@ -433,6 +433,7 @@ if test "$with_aio" = "yes"; then
     echo "With aio"
 fi
 
+
 AC_ARG_WITH(dl,
   AC_HELP_STRING([--with-dl],[Use dynamic linking]))
 if test "$with_dl" = "yes"; then
@@ -676,6 +677,17 @@ for fs in $DISK_MODULES none; do
 	;;
     esac
 done
+
+dnl Check for librt
+dnl We use AIO in the coss store
+if test "$with_aio" = "yes"; then
+    dnl On some systems POSIX AIO functions are in libaio
+    AC_CHECK_LIB(rt, aio_read,
+      [DISK_LIBS="$DISK_LIBS -lrt"],
+      AC_CHECK_LIB(aio, aio_read,[DISK_LIBS="$DISK_LIBS -laio"])
+    )
+fi
+
 AC_SUBST(DISK_MODULES)
 AC_SUBST(DISK_LIBS)
 AC_SUBST(DISK_PROGRAMS)
@@ -2701,13 +2713,6 @@ if test "$with_pthreads" = "yes"; then
     ;;
     esac
     AC_CHECK_LIB(pthread, main)
-fi
-
-dnl Check for librt
-dnl We use AIO in the coss store
-if test "$with_aio" = "yes"; then
-    dnl On some systems POSIX AIO functions are in libaio
-    AC_CHECK_LIB(rt, aio_read,,AC_CHECK_LIB(aio, aio_read))
 fi
 
 dnl -lintl is needed on SCO version 3.2v4.2 for strftime()
