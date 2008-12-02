@@ -970,7 +970,8 @@ libAIO_a_SOURCES = \
 		DiskIO/AIO/AIODiskFile.h \
 		DiskIO/AIO/AIODiskIOStrategy.cc \
 		DiskIO/AIO/AIODiskIOStrategy.h \
-		DiskIO/AIO/AIODiskIOModule.h 
+		DiskIO/AIO/AIODiskIOModule.cc \
+		DiskIO/AIO/AIODiskIOModule.h
 
 libBlocking_a_SOURCES = \
 		DiskIO/Blocking/BlockingFile.cc \
@@ -1476,14 +1477,16 @@ tests_testDiskIO_SOURCES= \
 	tests/testDiskIO.cc \
 	tests/testDiskIO.h \
 	tests/testMain.cc \
-	tests/stub_cache_manager.cc
+	tests/stub_cache_manager.cc \
+	tests/stub_CommIO.cc
 
 tests_testDiskIO_LDADD= \
+	@DISK_LIBS@ \
 	$(SWAP_TEST_LDADD) \
-	libsquid.la \
-	@SSLLIB@
+	SquidConfig.o
 tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
 tests_testDiskIO_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
+	@DISK_LIBS@ \
 	$(SWAP_TEST_DS) \
 	@SQUID_CPPUNIT_LA@
 
