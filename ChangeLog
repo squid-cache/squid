@@ -1,3 +1,11 @@
+Changes to squid-3.0.STABLE11-RC1 (3 Dec 2008):
+
+        - Removes patch causing cache of bad objects 
+        - Bug 2526: bad security default in ACLChecklist
+        - Fixes regression: access.log request size tag
+        - Fixes cache_peer forceddomainname=X option
+        - ... and many minor documentation cleanups
+
 Changes to squid-3.0.STABLE10 (14 Oct 2008):
 
 	- Bug 2391: Regression: bad assert in forwarding
