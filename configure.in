@@ -1189,7 +1189,7 @@ AC_ARG_ENABLE(epoll,
   ;;
 esac
 ])
-dnsl epoll requires sys/epoll.h and libepoll
+dnl epoll requires sys/epoll.h and libepoll
 if test -z "$disable_epoll"; then
   # Check for libepoll
   EPOLL_LIB=
