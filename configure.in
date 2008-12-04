@@ -468,18 +468,22 @@ AC_ARG_ENABLE(storeio,
   fi
 ])
 if test -n "$STORE_MODULES"; then
-    for module in $STORE_MODULES; do
-	if test -d $srcdir/src/fs/$module; then
-	    :
+    dnl ensure that all modules a) exist and b) only include once.
+    STORE_MODULES_FULL=$STORE_MODULES
+    STORE_MODULES=
+    STORE_LINKOBJS=
+    for module in $STORE_MODULES_FULL; do
+        have_mod=`echo "$STORE_MODULES" | grep "$module"`
+        if test "$have_mod" != ""; then
+	    echo "Removing duplicate $module from storeio"
+	elif test -d $srcdir/src/fs/$module; then
+	    STORE_MODULES="$STORE_MODULES $module"
+	    STORE_LINKOBJS="$STORE_LINKOBJS fs/${module}/StoreFS${module}.o"
 	else
 	    AC_MSG_ERROR(storeio $module does not exist)
 	fi
     done
     echo "Store modules built: $STORE_MODULES"
-    STORE_LINKOBJS=
-    for module in $STORE_MODULES; do
-        STORE_LINKOBJS="$STORE_LINKOBJS fs/${module}/StoreFS${module}.o"
-    done
 fi
 dnl remove all but diskd - its the only module that needs to recurse
 dnl into the sub directory

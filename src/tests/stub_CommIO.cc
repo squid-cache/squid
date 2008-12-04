@@ -1,6 +1,11 @@
 #include "squid.h"
 #include "CommIO.h"
 
+bool CommIO::Initialised = false;
+bool CommIO::DoneSignalled = false;
+int CommIO::DoneFD = -1;
+int CommIO::DoneReadFD = -1;
+
 void
 CommIO::ResetNotifications()
 {

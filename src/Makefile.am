@@ -1477,8 +1477,7 @@ tests_testDiskIO_SOURCES= \
 	tests/testDiskIO.cc \
 	tests/testDiskIO.h \
 	tests/testMain.cc \
-	tests/stub_cache_manager.cc \
-	tests/stub_CommIO.cc
+	tests/stub_cache_manager.cc
 
 tests_testDiskIO_LDADD= \
 	@DISK_LIBS@ \
@@ -2210,8 +2209,9 @@ tests_testString_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@SQUID_CPPUNIT_LA@
 
 SWAP_TEST_SOURCES = \
-	tests/stub_store_rebuild.cc \
 	tests/stub_internal.cc \
+	tests/stub_CommIO.cc \
+	tests/stub_store_rebuild.cc \
 	fd.cc \
 	disk.cc \
 	filemap.cc \
