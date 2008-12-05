@@ -7,7 +7,7 @@
 # Autotool versions preferred. To override either edit the script
 # to match the versions you want to use, or set the variables on
 # the command line like "env acver=.. amver=... ./bootstrap.sh"
-acversions="${acver:-2.61 2.59 2.57 2.53 2.52}"
+acversions="${acver:-2.62 2.61 2.59 2.57 2.53 2.52}"
 amversions="${amver:-1.10 1.9 1.7 1.6 1.5}"
 ltversions="${ltver:-1.5 1.4}"
 
