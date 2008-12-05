@@ -1148,18 +1148,21 @@ parseEtcHosts(void)
                 host = lt;
             }
 
-            if (ipcacheAddEntryFromHosts(host, addr) != 0)
-                goto skip;	/* invalid address, continuing is useless */
-
+            if (ipcacheAddEntryFromHosts(host, addr) != 0) {
+                /* invalid address, continuing is useless */
+                wordlistDestroy(&hosts);
+                hosts = NULL;
+                break;
+            }
             wordlistAdd(&hosts, host);
 
             lt = nt + 1;
         }
 
-        fqdncacheAddEntryFromHosts(addr, hosts);
-
-skip:
-        wordlistDestroy(&hosts);
+        if(hosts) {
+            fqdncacheAddEntryFromHosts(addr, hosts);
+            wordlistDestroy(&hosts);
+        }
     }
 
     fclose (fp);
