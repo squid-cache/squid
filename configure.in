@@ -805,17 +805,13 @@ then
     dnl eCAP support requires loadable modules, which are enabled by default
     if test "$use_loadable_modules" != "yes"
     then
-        AC_MSG_ERROR([
-            eCAP support requires loadable modules. Please do not use
-            --disable-loadable-modules with --enable-ecap.]);
+        AC_MSG_ERROR([eCAP support requires loadable modules. Please do not use --disable-loadable-modules with --enable-ecap.]);
     fi
 
     dnl eCAP support requires libecap
     AC_CHECK_LIB([ecap], [main],
         [ECAP_LIBS="-lecap"],
-        [AC_MSG_FAILURE([
-            eCAP support requires libecap library,
-            but no usable library was found])]
+        [AC_MSG_FAILURE([eCAP support requires libecap library, but no usable library was found])]
     )
 fi
 
