@@ -1,3 +1,18 @@
+Changes to squid-3.1.0.3 (5 Dec 2008):
+
+	- Regression Fix: StoreIOBuffer patch removed.
+	- Regression Fix: build issues with 3.1.0.2 bundle
+	- Security Bug 2526: default ALLOW when no list specified
+	- Bug 2525: encoding error on error pages
+	- Bug 2424: slow file descriptor leak
+	- Bug 2527: ICAP compile error on g++ 4.3.2
+	- Bug 2523: bad assertion left in from debug
+	- Bug 2395: FTP Auth errors and others not displayed
+	- Update squid_kerb_auth to 1.0.5
+	  with better Squid integration.
+	- Fix cache_peer forcedomainname= option
+	- ... and many other minor fixes
+
 Changes to squid-3.1.0.2 (9 Nov 2008):
 
 	- Bug 2516: error page templates not properly installed
