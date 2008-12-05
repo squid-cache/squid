@@ -429,6 +429,7 @@ if test "$with_aio" = "yes"; then
     echo "With aio"
 fi
 
+
 AC_ARG_WITH(dl,
   AC_HELP_STRING([--with-dl],[Use dynamic linking]))
 if test "$with_dl" = "yes"; then
@@ -463,18 +464,22 @@ AC_ARG_ENABLE(storeio,
   fi
 ])
 if test -n "$STORE_MODULES"; then
-    for module in $STORE_MODULES; do
-	if test -d $srcdir/src/fs/$module; then
-	    :
+    dnl ensure that all modules a) exist and b) only include once.
+    STORE_MODULES_FULL=$STORE_MODULES
+    STORE_MODULES=
+    STORE_LINKOBJS=
+    for module in $STORE_MODULES_FULL; do
+        have_mod=`echo "$STORE_MODULES" | grep "$module"`
+        if test "$have_mod" != ""; then
+	    echo "Removing duplicate $module from storeio"
+	elif test -d $srcdir/src/fs/$module; then
+	    STORE_MODULES="$STORE_MODULES $module"
+	    STORE_LINKOBJS="$STORE_LINKOBJS fs/${module}/StoreFS${module}.o"
 	else
 	    AC_MSG_ERROR(storeio $module does not exist)
 	fi
     done
     echo "Store modules built: $STORE_MODULES"
-    STORE_LINKOBJS=
-    for module in $STORE_MODULES; do
-        STORE_LINKOBJS="$STORE_LINKOBJS fs/${module}/StoreFS${module}.o"
-    done
 fi
 dnl remove all but diskd - its the only module that needs to recurse
 dnl into the sub directory
@@ -672,6 +677,17 @@ for fs in $DISK_MODULES none; do
 	;;
     esac
 done
+
+dnl Check for librt
+dnl We use AIO in the coss store
+if test "$with_aio" = "yes"; then
+    dnl On some systems POSIX AIO functions are in libaio
+    AC_CHECK_LIB(rt, aio_read,
+      [DISK_LIBS="$DISK_LIBS -lrt"],
+      AC_CHECK_LIB(aio, aio_read,[DISK_LIBS="$DISK_LIBS -laio"])
+    )
+fi
+
 AC_SUBST(DISK_MODULES)
 AC_SUBST(DISK_LIBS)
 AC_SUBST(DISK_PROGRAMS)
@@ -760,7 +776,19 @@ AC_ARG_ENABLE(esi,
 if test "$use_esi" = "yes" ; then
   AC_DEFINE(USE_SQUID_ESI,1,[Compile the ESI processor and Surrogate header support])
   AM_CONDITIONAL(USE_ESI, true)
+
+  dnl Perform configuration consistency checks for ESI
+  dnl ESI support requires libexpat
+  AC_CHECK_LIB([expat], [main],
+        [ESI_LIBS="-lexpat"],
+        [AC_MSG_FAILURE([ESI support requires libexpat library, but no usable library was found])]
+  )
+  AC_CHECK_LIB([xml2], [main],
+        [ESI_LIBS="-lxml2"],
+        [AC_MSG_FAILURE([ESI support requires libxml2 library, but no usable library was found])]
+  )
   XTRA_LIBS="$XTRA_LIBS -lexpat -lxml2"
+
 else
   AC_DEFINE(USE_SQUID_ESI,0,[Compile the ESI processor and Surrogate header support])
 fi
@@ -1127,10 +1155,15 @@ AC_ARG_ENABLE(kqueue,
   yes)
     echo "Forcing kqueue() to be enabled"
     SELECT_TYPE="kqueue"
+    AC_CHECK_HEADERS([sys/event.h],[],
+      [ AC_MSG_ERROR([kqueue support requires sys/event.h header file.]) ])
     ;;
   no)
     echo "Forcing kqueue() to be disabled"
     disable_kqueue=true
+  ;;
+  *)
+    AC_CHECK_HEADERS([sys/event.h])
   ;;
 esac
 ])
@@ -1144,6 +1177,11 @@ AC_ARG_ENABLE(epoll,
   yes)
     echo "Forcing epoll() to be enabled"
     SELECT_TYPE="epoll"
+    dnl epoll requires header file and library to be installed
+    AC_CHECK_HEADERS([sys/epoll.h],[],
+      [ AC_MSG_ERROR([required sys/epoll.h header file is missing.]) ])
+    AC_CHECK_LIB(epoll, epoll_ctl, [],
+      [ AC_MSG_ERROR([required libepoll library is missing.]) ])
     ;;
   no)
     echo "Forcing epoll() to be disabled"
@@ -1151,7 +1189,40 @@ AC_ARG_ENABLE(epoll,
   ;;
 esac
 ])
+dnl epoll requires sys/epoll.h and libepoll
+if test -z "$disable_epoll"; then
+  # Check for libepoll
+  EPOLL_LIB=
+  AC_CHECK_LIB(epoll, epoll_ctl, [EPOLL_LIBS="-lepoll"])
+  AC_SUBST(EPOLL_LIBS)
 
+  # Check for epoll_ctl, may need -lepoll
+  SAVED_LIBS="$LIBS"
+  LIBS="$LIBS $LIB_EPOLL"
+  AC_CHECK_FUNCS(epoll_ctl)
+  LIBS="$SAVED_LIBS"
+
+  AC_CHECK_HEADERS([sys/epoll.h])
+
+  dnl Verify that epoll really works
+  if test $ac_cv_func_epoll_ctl = yes; then
+    AC_CACHE_CHECK(if epoll works, ac_cv_epoll_works,
+      AC_TRY_RUN([
+#include <sys/epoll.h>
+#include <stdlib.h>
+#include <stdio.h>
+int main(int argc, char **argv)
+{
+    int fd = epoll_create(256);
+    if (fd < 0) {
+	perror("epoll_create:");
+	exit(1);
+    }
+    exit(0);
+}
+      ], [ac_cv_epoll_works=yes], [ac_cv_epoll_works=no]))
+  fi
+fi
 
 dnl Disable HTTP violations
 http_violations=1
@@ -1754,8 +1825,11 @@ AC_ARG_WITH(valgrind-debug,
 	;;
   esac
   if test $valgrind; then
-	AC_DEFINE(WITH_VALGRIND, 1, [Valgrind memory debugger support])
-	echo "Valgrind debug support enabled"
+    AC_CHECK_HEADERS(valgrind/memcheck.h,
+      [ AC_DEFINE(WITH_VALGRIND, 1, [Valgrind memory debugger support])
+	echo "Valgrind debug support enabled" ],
+      [ echo "Valgrind header not found. Valgrind support disabled." ]
+    )
   fi
 ])
 
@@ -2641,13 +2715,6 @@ if test "$with_pthreads" = "yes"; then
     AC_CHECK_LIB(pthread, main)
 fi
 
-dnl Check for librt
-dnl We use AIO in the coss store
-if test "$with_aio" = "yes"; then
-    dnl On some systems POSIX AIO functions are in libaio
-    AC_CHECK_LIB(rt, aio_read,,AC_CHECK_LIB(aio, aio_read))
-fi
-
 dnl -lintl is needed on SCO version 3.2v4.2 for strftime()
 dnl Robert Side <rside@aiinc.bc.ca>
 dnl Mon, 18 Jan 1999 17:48:00 GMT
@@ -2887,36 +2954,6 @@ SAVED_LIBS="$LIBS"
 LIBS="$LIBS $CRYPTLIB"
 AC_CHECK_FUNCS(crypt)
 LIBS="$SAVED_LIBS"
-
-# Check for libepoll
-EPOLL_LIB=
-AC_CHECK_LIB(epoll, epoll_ctl, [EPOLL_LIBS="-lepoll"])
-AC_SUBST(EPOLL_LIBS)
-
-# Check for epoll_ctl, may need -lepoll
-SAVED_LIBS="$LIBS"
-LIBS="$LIBS $LIB_EPOLL"
-AC_CHECK_FUNCS(epoll_ctl)
-LIBS="$SAVED_LIBS"
-
-dnl Verify that epoll really works
-if test $ac_cv_func_epoll_ctl = yes; then
-  AC_CACHE_CHECK(if epoll works, ac_cv_epoll_works,
-    AC_TRY_RUN([
-#include <sys/epoll.h>
-#include <stdlib.h>
-#include <stdio.h>
-int main(int argc, char **argv)
-{
-    int fd = epoll_create(256);
-    if (fd < 0) {
-	perror("epoll_create:");
-	exit(1);
-    }
-    exit(0);
-}
-    ], [ac_cv_epoll_works=yes], [ac_cv_epoll_works=no]))
-fi
 
 dnl Magic which checks whether we are forcing a type of comm loop we
 dnl are actually going to (ab)use

@@ -27,8 +27,16 @@
 #	We can't test them automatically everywhere
 #
 #   --enable-ecap \
+#   --enable-epoll \
+#   --enable-kqueue \
+#   --enable-esi \
 #   --enable-win32-service \
 #   --with-localhost-ipv6 \
+#
+#	AYJ: these features have known bugs. They are optional so we don't block on them...
+#	We can't test them automatically everywhere
+#
+#	--enable-zph-qos \
 #
 OPTS=" \
 	--enable-loadable-modules \
@@ -43,7 +51,6 @@ OPTS=" \
 	--enable-removal-policies \
 	--enable-icmp \
 	--enable-delay-pools \
-	--enable-esi \
 	--enable-icap-client \
 	--enable-useragent-log \
 	--enable-referer-log \
@@ -59,8 +66,6 @@ OPTS=" \
 	--enable-cache-digests \
 	--enable-poll \
 	--enable-select \
-	--enable-kqueue \
-	--enable-epoll \
 	--enable-http-violations \
 	--enable-ipfw-transparent \
 	--enable-ipf-transparent \
@@ -85,7 +90,6 @@ OPTS=" \
 	--enable-cpu-profiling \
 	--enable-vary \
 	--enable-ipv6 \
-	--enable-zph-qos \
 	--enable-auto-locale \
  \
 	--with-aio \
