@@ -1900,7 +1900,7 @@ parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * metho
             garbage[i] = ((hp->buf[i] < ' ' || hp->buf[i] > '~' )? '_': hp->buf[i]);
 
         /* XXX need a way to say "this many character length string" */
-        debugs(33, 1, "clientParseRequestMethod: Unsupported method: This is not a bug. see squid.conf extension_methods");
+        debugs(33, 1, "clientParseRequestMethod: Unsupported method attempted by " << inet_ntoa(conn->peer) << ": This is not a bug. see squid.conf extension_methods");
         debugs(33, 1, "clientParseRequestMethod: Unsupported method in request '" << garbage << "'");
 
         /* XXX where's the method set for this error? */
