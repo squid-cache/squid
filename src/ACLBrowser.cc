@@ -41,7 +41,6 @@
 
 /* explicit template instantiation required for some systems */
 
-template class ACLStrategised<char const *>;
 template class ACLRequestHeaderStrategy<HDR_USER_AGENT>;
 
 ACL::Prototype ACLBrowser::RegistryProtoype(&ACLBrowser::RegistryEntry_, "browser");
