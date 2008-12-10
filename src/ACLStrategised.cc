@@ -52,5 +52,5 @@
 /* ACLHTTPRepHeader + ACLHTTPReqHeader */
 template class ACLStrategised<HttpHeader*>;
 
-/* ACLMyPortName + ACLMyPeerName */
+/* ACLMyPortName + ACLMyPeerName + ACLBrowser */
 template class ACLStrategised<const char *>;
