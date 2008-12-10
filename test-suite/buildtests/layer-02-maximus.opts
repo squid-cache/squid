@@ -28,6 +28,7 @@
 #
 #   --enable-ecap \
 #   --enable-epoll \
+#   --enable-kqueue \
 #   --enable-esi \
 #   --enable-win32-service \
 #   --with-localhost-ipv6 \
@@ -65,7 +66,6 @@ OPTS=" \
 	--enable-cache-digests \
 	--enable-poll \
 	--enable-select \
-	--enable-kqueue \
 	--enable-http-violations \
 	--enable-ipfw-transparent \
 	--enable-ipf-transparent \

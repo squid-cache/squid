@@ -1818,7 +1818,7 @@ static void
 ftpReadPass(FtpStateData * ftpState)
 {
     int code = ftpState->ctrl.replycode;
-    debugs(9, 3, HERE);
+    debugs(9, 3, HERE << "code=" << code);
 
     if (code == 230) {
         ftpSendType(ftpState);
@@ -3288,7 +3288,11 @@ FtpStateData::hackShortcut(FTPSM * nextState)
 static void
 ftpFail(FtpStateData *ftpState)
 {
-    debugs(9, 3, HERE);
+    debugs(9, 6, HERE << "flags(" <<
+            (ftpState->flags.isdir?"IS_DIR,":"") <<
+            (ftpState->flags.try_slash_hack?"TRY_SLASH_HACK":"") << "), " <<
+            "mdtm=" << ftpState->mdtm << ", size=" << ftpState->theSize <<
+            "slashhack=" << (ftpState->request->urlpath.caseCmp("/%2f", 4)==0? "T":"F") );
 
     /* Try the / hack to support "Netscape" FTP URL's for retreiving files */
     if (!ftpState->flags.isdir &&	/* Not a directory */
@@ -3317,6 +3321,7 @@ ftpFail(FtpStateData *ftpState)
 void
 FtpStateData::failed(err_type error, int xerrno)
 {
+    debugs(9,3,HERE << "entry-null=" << (entry?entry->isEmpty():0) << ", entry=" << entry);
     if (entry->isEmpty())
         failedErrorMessage(error, xerrno);
 
