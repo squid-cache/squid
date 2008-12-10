@@ -335,9 +335,12 @@ FwdState::complete()
 
         startComplete(servers);
     } else {
-        debugs(17, 3, "fwdComplete: not re-forwarding status " << entry->getReply()->sline.status);
-        EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
-        entry->complete();
+        debugs(17, 3, "fwdComplete: server FD " << server_fd << " not re-forwarding status " << entry->getReply()->sline.status);
+        if (entry->isEmpty() && !err)
+        {
+            EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
+            entry->complete();
+        }
 
         if (server_fd < 0)
             completed();

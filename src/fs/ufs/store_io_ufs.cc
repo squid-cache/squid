@@ -338,7 +338,7 @@ UFSStoreState::readCompleted(const char *buf, int len, int errflag, RefCount<Rea
         callback(cbdata, read_buf, len, this);
     }
 
-    if (theFile != NULL && theFile->error())
+    if (flags.try_closing || (theFile != NULL && theFile->error()) )
         tryClosing();
 }
 
