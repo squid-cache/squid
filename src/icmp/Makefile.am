@@ -7,6 +7,7 @@
 AM_CFLAGS = @SQUID_CFLAGS@
 AM_CXXFLAGS = @SQUID_CXXFLAGS@
 DEFS = @DEFS@
+CLEANFILES = 
 
 INCLUDES = -I$(top_srcdir)/src @SQUID_CPPUNIT_INC@ -I$(top_srcdir)/include -I$(top_builddir)/lib
 $(OBJS): $(top_srcdir)/include/version.h $(top_srcdir)/include/autoconf.h
@@ -48,6 +49,7 @@ libicmp_la_SOURCES = \
 
 # ICMP lookup helper
 pinger_SOURCES = \
+	Icmp.h \
 	IcmpPinger.h \
 	IcmpPinger.cc \
 	Icmp4.h \
@@ -59,7 +61,6 @@ pinger_SOURCES = \
 # depends on these but install/dist is done elsewhere.
 # TODO: remove when these are cleaned up in their own way.
 nodist_pinger_SOURCES = \
-	Icmp.h \
 	../debug.cc \
 	../time.cc \
 	../SquidConfig.cc \
@@ -101,14 +102,16 @@ testHeaders: $(top_srcdir)/src/icmp/*.h
 ## No such file...
 testHeaders.c:
 	touch testHeaders.c
+CLEANFILES += testHeaders.c
 
 
 ## Tests of the ICMP base module.
 # Its used by pinger so SHOULD NOT require more dependancies! :-(
-testIcmp_SOURCES=\
+testIcmp_SOURCES = \
 	Icmp.h \
 	testIcmp.h \
-	testIcmp.cc \
+	testIcmp.cc
+nodist_testIcmp_SOURCES = \
 	../tests/testMain.cc \
 	../SquidTime.h \
 	../time.cc \
