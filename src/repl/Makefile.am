@@ -6,6 +6,7 @@
 AUTOMAKE_OPTIONS = subdir-objects
 AM_CFLAGS = @SQUID_CFLAGS@
 AM_CXXFLAGS = @SQUID_CXXFLAGS@
+CLEANFILES = 
 
 # No recursion is needed for the subdirs, we build from here. // @REPL_POLICIES@
 
@@ -30,3 +31,4 @@ testHeaders: $(top_srcdir)/src/repl/heap/*.h
 ## No such file...
 testHeaders.c:
 	touch testHeaders.c
+CLEANFILES += testHeaders.c
