@@ -96,6 +96,12 @@ commSetSelect(int fd, unsigned int type, PF * handler, void *client_data,
     /* all test code runs synchronously at the moment */
 }
 
+void
+comm_quick_poll_required()
+{
+  /* for tests ... ignore */
+}
+
 int
 ignoreErrno(int ierrno)
 {
@@ -108,6 +114,13 @@ commSetTimeout(int fd, int timeout, PF * handler, void *data)
 {
     fatal ("Not implemented");
     return -1;
+}
+
+int
+commSetNonBlocking(int fd)
+{
+    fatal ("Not implemented");
+    return COMM_ERROR;
 }
 
 int

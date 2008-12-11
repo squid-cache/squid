@@ -1,11 +1,11 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-11-07 02:13+1300\n"
-"PO-Revision-Date: 2008-11-02 01:15+1300\n"
+"POT-Creation-Date: 2008-11-14 20:01+1300\n"
+"PO-Revision-Date: 2008-11-22 02:18+1300\n"
 "Last-Translator: Takahiro Kambe <taca@back-street.net>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -14,6 +14,7 @@ msgstr ""
 #: templates/ERR_FTP_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
 msgstr ""
+"<a href=\"../\">親のディレクトリ</a> (<a href=\"/\">ルート・ディレクトリ</a>)"
 
 #: templates/ERR_INVALID_REQ:4
 msgid ""
@@ -121,7 +122,7 @@ msgstr "POSTまたはPUTのリクエストにContent-Lengthヘッダがありま
 
 #: templates/ERR_FTP_LISTING:3
 msgid "Directory Content:"
-msgstr ""
+msgstr "ディレクトリの内容:"
 
 #: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
@@ -180,15 +181,15 @@ msgstr "ESIの処理に失敗しました。"
 
 #: templates/ERR_FTP_LISTING:4
 msgid "FTP Directory Listing"
-msgstr ""
+msgstr "FTPのディレクトリの一覧"
 
 #: templates/ERR_FTP_LISTING:1
 msgid "FTP Directory: %U"
-msgstr ""
+msgstr "FTP ディレクトリ: %U"
 
 #: templates/ERR_FTP_LISTING:2
 msgid "FTP Directory: <a href=\"/\">%U</a>/"
-msgstr ""
+msgstr "FTP ディレクトリ: <a href=\"/\">%U</a>/"
 
 #: templates/ERR_FTP_PUT_CREATED:1
 msgid "FTP PUT Successful: File Created"
@@ -309,7 +310,7 @@ msgstr "操作に成功"
 
 #: templates/ERR_FTP_LISTING:5
 msgid "Parent Directory"
-msgstr ""
+msgstr "親のディレクトリ"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:7
 msgid ""
@@ -317,6 +318,9 @@ msgid ""
 "have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
 "chpasswd.cgi\">change</a> your default password."
 msgstr ""
+"あなた自身の認証やデフォルトのパスワードの<a href=\"http://%h/cgi-bin/"
+"chpasswd.cgi\">変更</a>困難な場合は、<a href=\"mailto:%w%W\">キャッシュの管理"
+"者</a>に連絡してください。"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
 msgid ""
@@ -325,75 +329,79 @@ msgid ""
 "administrator, read Squid documentation on cache manager interface and check "
 "cache log for more detailed error messages."
 msgstr ""
+"あなた自身の認証が困難な場合は、<a href=\"mailto:%w%W\">キャッシュの管理者</a>に連絡してください。または、あなた<em>自身</"
+"em>が管理者なら、キャッシュマネージャ・インターフェイスのSquidの文書を読んで、キャッシュのログにある詳細なエラーメッセージを確認してください。"
 
 #: templates/ERR_READ_ERROR:5
 msgid "Read Error"
-msgstr ""
+msgstr "読み込みエラー"
 
 #: templates/ERR_READ_TIMEOUT:5
 msgid "Read Timeout"
-msgstr ""
+msgstr "読み込みタイムアウト"
 
 #: templates/ERR_INVALID_REQ:9
 msgid "Request is too large."
-msgstr ""
+msgstr "リクエストが長すぎます。"
 
 #: templates/ERR_SOCKET_FAILURE:5
 msgid "Socket Failure"
-msgstr ""
+msgstr "ソケット作成に失敗"
 
 #: templates/ERR_INVALID_URL:6
 msgid "Some aspect of the requested URL is incorrect."
-msgstr ""
+msgstr "リクエストされたURLに不正な部分があります。"
 
 #: templates/ERR_ICAP_FAILURE:8 templates/ERR_INVALID_REQ:5
 #: templates/ERR_INVALID_URL:7
 msgid "Some possible problems are:"
-msgstr ""
+msgstr "ありそうな問題: "
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:6
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache manager "
 "until you have authenticated yourself."
-msgstr ""
+msgstr "申し訳ありませんが、あなた自身の認証を済ませるまで、このキャッシュマネージャに %U をリクエストすることは現在許可されていません。"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:6
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache until you "
 "have authenticated yourself."
-msgstr ""
+msgstr "申し訳ありませんが、あなた自身の認証を済ませるまで、このキャッシュに %U をリクエストすることは現在許可されていません。"
 
 #: templates/ERR_ZERO_SIZE_OBJECT:6
 msgid "Squid did not receive any data for this request."
-msgstr ""
+msgstr "このリクエストにに対してSquidは何もデータを受け取りませんでした。"
 
 #: templates/ERR_UNSUP_REQ:6
 msgid ""
 "Squid does not support all request methods for all access protocols. For "
 "example, you can not POST a Gopher request."
 msgstr ""
+"Squidはすべてのプロトコルに対して、すべてのリクエスト方式をサポートしているわけではありません。例えば、POSTをGopherのリクエストで行うこと"
+"はできません。"
 
 #: templates/ERR_LIFETIME_EXP:6
 msgid ""
 "Squid has terminated the request because it has exceeded the maximum "
 "connection lifetime."
-msgstr ""
+msgstr "最大の接続有効時間が過ぎたため、Squidはリクエストを終了しました。"
 
 #: templates/ERR_SOCKET_FAILURE:7
 msgid ""
 "Squid is unable to create a TCP socket, presumably due to excessive load. "
 "Please retry your request."
-msgstr ""
+msgstr "おそらく過大な負荷のため、SquidはTCPソケットを作成できませんでした。再度リクエストしてください。"
 
 #: templates/ERR_FTP_FAILURE:5 templates/ERR_FTP_FORBIDDEN:5
 #: templates/ERR_FTP_NOT_FOUND:5 templates/ERR_FTP_PUT_ERROR:5
 #: templates/ERR_FTP_UNAVAILABLE:5
 msgid "Squid sent the following FTP command:"
-msgstr ""
+msgstr "Squidは以下のFTPコマンドを送りました:"
 
 #: templates/ERR_DNS_FAIL:6
 msgid "The DNS server returned:"
-msgstr ""
+msgstr "DNSサーバの応答:"
 
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
@@ -613,4 +621,4 @@ msgstr ""
 
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
-msgstr ""
+msgstr "サイズがゼロの応答"

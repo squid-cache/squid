@@ -23,7 +23,7 @@ done
 msgcat ./pot/*.pot -s -o dictionary.pot.new &&
 	(
 	cat dictionary.pot.new | 
-	sed s/PACKAGE\ VERSION/squid\ 3\.0/ |
+	sed s/PACKAGE\ VERSION/Squid-3/ |
 	sed s/LANGUAGE\ \<LL\@li\.org\>/Squid\ Developers\ \<squid-dev\@squid-cache\.org\>/
 	) >dictionary.pot
 

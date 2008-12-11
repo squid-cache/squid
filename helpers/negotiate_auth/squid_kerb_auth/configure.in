@@ -313,12 +313,6 @@ if test "$enable_arg" = "no"; then
   esac
 fi
 
-if test "$ac_cv_header_gssapi_h" = "no" -a "$ac_cv_header_gssapi_gssapi_h" = "no"; then
-        echo "GSSAPI headers are required to compile squid_kerb_auth"
-        echo "Please install gssapi headers and then re-run configure"
-        exit 1
-fi
-
 old_LIBS=$LIBS
 AC_CACHE_CHECK([for SPNEGO support],ac_cv_have_spnego,[
   AC_TRY_RUN([

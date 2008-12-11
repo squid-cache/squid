@@ -21,6 +21,7 @@ TRANSLATIONS = \
 	de \
 	en en-au en-gb en-nz en-us \
 	es \
+	et \
 	fr \
 	id \
 	it \
@@ -28,6 +29,7 @@ TRANSLATIONS = \
 	nl \
 	pt-br \
 	ru \
+	sr \
 	sv \
 	uk \
 	zh-cn
@@ -38,7 +40,6 @@ LANGUAGES	= \
 		Armenian \
 		Azerbaijani \
 		Czech \
-		Estonian \
 		Finnish \
 		Greek \
 		Hebrew \
@@ -141,7 +142,7 @@ dist-hook:
 		  || exit 1; \
 	  fi; \
 	done; \
-	cp $(srcdir)/errorpage.css  $(distdir)/errorpage.css
+	cp -p $(srcdir)/errorpage.css  $(distdir)/errorpage.css
 
 translate:
 	@ if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no"; then \
