@@ -1328,6 +1328,8 @@ netdbExchangeStart(void *data)
     if (p->login)
         xstrncpy(ex->r->login, p->login, MAX_LOGIN_SZ);
 
+    urlCanonical(ex->r);
+
     FwdState::fwdStart(-1, ex->e, ex->r);
 
 #endif
