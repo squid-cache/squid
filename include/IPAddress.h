@@ -70,8 +70,9 @@
  *   kernel macros commented as being 'non-standard'.
  *   We need to use them, much nicer than the OS-provided __u*_*[]
  * UPDATE: OpenBSD 4.3 has the same.
+ * UPDATE: MacOSX has the same.
  */
-#if USE_IPV6 && ( defined(_SQUID_FREEBSD_) || defined(_SQUID_OPENBSD_) )
+#if USE_IPV6 && ( defined(_SQUID_FREEBSD_) || defined(_SQUID_OPENBSD_) || defined(_SQUID_APPLE_))
 //#define s6_addr8  __u6_addr.__u6_addr8
 //#define s6_addr16 __u6_addr.__u6_addr16
 #define s6_addr32 __u6_addr.__u6_addr32
