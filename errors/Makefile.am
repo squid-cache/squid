@@ -141,7 +141,7 @@ dist-hook:
 		  || exit 1; \
 	  fi; \
 	done; \
-	cp $(srcdir)/errorpage.css  $(distdir)/errorpage.css
+	cp -p $(srcdir)/errorpage.css  $(distdir)/errorpage.css
 
 translate:
 	@ if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no"; then \

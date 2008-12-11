@@ -1702,17 +1702,11 @@ if test -n "$NEGOTIATE_AUTH_HELPERS"; then
 	else
 	    AC_MSG_ERROR(Negotiate Auth helper $helper does not exist)
 	fi
-	# Kerberos helper has its own configure system
-	if test "$helper" = "squid_kerb_auth"; then
-	    AC_CONFIG_SUBDIRS(helpers/negotiate_auth/squid_kerb_auth)
-	else
-	    echo "ERROR: configure.in needs to be extended to support $helper!"
-	    exit 1
-	fi
     done
     echo "Negotiate auth helpers built: $NEGOTIATE_AUTH_HELPERS"
 fi
 AC_SUBST(NEGOTIATE_AUTH_HELPERS)
+AC_CONFIG_SUBDIRS(helpers/negotiate_auth/squid_kerb_auth)
 
 dnl Select digest auth scheme helpers to build
 if test -n "$AUTH_MODULE_digest"; then
