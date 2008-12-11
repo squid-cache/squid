@@ -5,9 +5,7 @@
 AUTOMAKE_OPTIONS = subdir-objects
 AM_CFLAGS = @SQUID_CFLAGS@
 AM_CXXFLAGS = @SQUID_CXXFLAGS@
-
-##DIST_SUBDIRS	= basic digest ntlm
-##SUBDIRS		= @AUTH_MODULES@
+CLEANFILES =
 
 EXTRA_LIBRARIES	= libbasic.a libdigest.a libntlm.a libnegotiate.a
 noinst_LIBRARIES	= @AUTH_LIBS@
@@ -34,3 +32,4 @@ testHeaders: $(top_srcdir)/src/auth/basic/*.h $(top_srcdir)/src/auth/digest/*.h 
 ## No such file...
 testHeaders.c:
 	touch testHeaders.c
+CLEANFILES += testHeaders.c

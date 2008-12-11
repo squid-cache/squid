@@ -1,5 +1,6 @@
 AM_CFLAGS = @SQUID_CFLAGS@
 AM_CXXFLAGS = @SQUID_CXXFLAGS@
+CLEANFILES =
 
 INCLUDES = \
 	-I$(top_builddir)/include \
@@ -40,3 +41,4 @@ testHeaders: $(top_srcdir)/src/adaptation/*.h
 ## No such file...
 testHeaders.c:
 	touch testHeaders.c
+CLEANFILES += testHeaders.c

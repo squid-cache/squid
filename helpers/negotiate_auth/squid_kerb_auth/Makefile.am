@@ -21,7 +21,7 @@ squid_kerb_auth_test_SOURCES = squid_kerb_auth_test.c base64.c base64.h squid_co
 else
 squid_kerb_auth_SOURCES = squid_kerb_auth.c base64.c base64.h $(SPNEGO_SOURCE) squid_compat.h
 INCLUDES = -Ispnegohelp 
-squid_kerb_auth_test_SOURCES = squid_kerb_auth_test.c base64.c base64.h squdi_compat.h
+squid_kerb_auth_test_SOURCES = squid_kerb_auth_test.c base64.c base64.h squid_compat.h
 endif
 
 
