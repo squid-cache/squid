@@ -66,7 +66,7 @@ nodist_pinger_SOURCES = \
 	../time.cc \
 	../SquidConfig.cc \
 	../SquidNew.cc \
-	../stubQosConfig.cc
+	../ip/stubQosConfig.cc
 
 pinger_LDFLAGS = $(LIBADD_DL)
 pinger_LDADD=\
