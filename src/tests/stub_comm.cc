@@ -99,7 +99,7 @@ commSetSelect(int fd, unsigned int type, PF * handler, void *client_data,
 void
 comm_quick_poll_required()
 {
-  /* for tests ... ignore */
+    /* for tests ... ignore */
 }
 
 int

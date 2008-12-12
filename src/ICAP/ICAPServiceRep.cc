@@ -39,11 +39,11 @@ ICAPServiceRep::setSelf(Pointer &aSelf)
 void
 ICAPServiceRep::finalize()
 {
-	Adaptation::Service::finalize();
+    Adaptation::Service::finalize();
     assert(self != NULL);
 
     // use /etc/services or default port if needed
-	const bool have_port = cfg().port >= 0;
+    const bool have_port = cfg().port >= 0;
     if (!have_port) {
         struct servent *serv = getservbyname("icap", "tcp");
 
@@ -67,25 +67,27 @@ void ICAPServiceRep::invalidate()
     // TODO: it would be nice to invalidate cbdata(this) when not destroyed
 }
 
-void ICAPServiceRep::noteFailure() {
+void ICAPServiceRep::noteFailure()
+{
     ++theSessionFailures;
-    debugs(93,4, theSessionFailures << " ICAPService failures, out of " << 
-        TheICAPConfig.service_failure_limit << " allowed " << status());
+    debugs(93,4, theSessionFailures << " ICAPService failures, out of " <<
+           TheICAPConfig.service_failure_limit << " allowed " << status());
 
     if (isSuspended)
         return;
 
     if (TheICAPConfig.service_failure_limit >= 0 &&
-        theSessionFailures > TheICAPConfig.service_failure_limit)
+            theSessionFailures > TheICAPConfig.service_failure_limit)
         suspend("too many failures");
 
     // TODO: Should bypass setting affect how much Squid tries to talk to
-    // the ICAP service that is currently unusable and is likely to remain 
-    // so for some time? The current code says "no". Perhaps the answer 
+    // the ICAP service that is currently unusable and is likely to remain
+    // so for some time? The current code says "no". Perhaps the answer
     // should be configurable.
 }
 
-void ICAPServiceRep::suspend(const char *reason) {
+void ICAPServiceRep::suspend(const char *reason)
+{
     if (isSuspended) {
         debugs(93,4, "keeping ICAPService suspended, also for " << reason);
     } else {
@@ -101,7 +103,8 @@ bool ICAPServiceRep::probed() const
     return theLastUpdate != 0;
 }
 
-bool ICAPServiceRep::hasOptions() const {
+bool ICAPServiceRep::hasOptions() const
+{
     return theOptions && theOptions->valid() && theOptions->fresh();
 }
 
@@ -183,8 +186,8 @@ void ICAPServiceRep::noteTimeToNotify()
 
     while (!theClients.empty()) {
         Client i = theClients.pop_back();
-		ScheduleCallHere(i.callback);
-		i.callback = 0;
+        ScheduleCallHere(i.callback);
+        i.callback = 0;
     }
 
     notifying = false;
@@ -195,7 +198,7 @@ void ICAPServiceRep::callWhenReady(AsyncCall::Pointer &cb)
     Must(cb!=NULL);
 
     debugs(93,5, HERE << "ICAPService is asked to call " << *cb <<
-        " when ready " << status());
+           " when ready " << status());
 
     Must(self != NULL);
     Must(!broken()); // we do not wait for a broken service
@@ -217,7 +220,7 @@ void ICAPServiceRep::callWhenReady(AsyncCall::Pointer &cb)
 void ICAPServiceRep::scheduleNotification()
 {
     debugs(93,7, "ICAPService will notify " << theClients.size() << " clients");
-     CallJobHere(93, 5, this, ICAPServiceRep::noteTimeToNotify);
+    CallJobHere(93, 5, this, ICAPServiceRep::noteTimeToNotify);
 }
 
 bool ICAPServiceRep::needNewOptions() const
@@ -247,7 +250,7 @@ void ICAPServiceRep::checkOptions()
 
     if (!theOptions->valid()) {
         debugs(93,1, "WARNING: Squid got an invalid ICAP OPTIONS response " <<
-            "from service " << cfg().uri << "; error: " << theOptions->error);
+               "from service " << cfg().uri << "; error: " << theOptions->error);
         return;
     }
 
@@ -290,7 +293,7 @@ void ICAPServiceRep::checkOptions()
         // TODO: If skew is negative, the option will be considered down
         // because of stale options. We should probably change this.
         debugs(93, 1, "ICAP service's clock is skewed by " << skew <<
-            " seconds: " << cfg().uri.buf());
+               " seconds: " << cfg().uri.buf());
     }
 }
 
@@ -301,9 +304,9 @@ void ICAPServiceRep::announceStatusChange(const char *downPhrase, bool important
 
     const char *what = cfg().bypass ? "optional" : "essential";
     const char *state = wasAnnouncedUp ? downPhrase : "up";
-    const int level = important ? 1 : 2;
+    const int level = important ? 1 :2;
     debugs(93,level, what << " ICAP service is " << state << ": " <<
-        cfg().uri << ' ' << status());
+           cfg().uri << ' ' << status());
 
     wasAnnouncedUp = !wasAnnouncedUp;
 }
@@ -320,16 +323,17 @@ void ICAPServiceRep::noteAdaptationAnswer(HttpMsg *msg)
 
     ICAPOptions *newOptions = NULL;
     if (HttpReply *r = dynamic_cast<HttpReply*>(msg)) {
-    	newOptions = new ICAPOptions;
-    	newOptions->configure(r);
+        newOptions = new ICAPOptions;
+        newOptions->configure(r);
     } else {
-    	debugs(93,1, "ICAPService got wrong options message " << status());
+        debugs(93,1, "ICAPService got wrong options message " << status());
     }
 
     handleNewOptions(newOptions);
 }
 
-void ICAPServiceRep::noteAdaptationQueryAbort(bool) {
+void ICAPServiceRep::noteAdaptationQueryAbort(bool)
+{
     Must(theOptionsFetcher);
     clearAdaptation(theOptionsFetcher);
 
@@ -374,9 +378,9 @@ void ICAPServiceRep::scheduleUpdate(time_t when)
     }
 
     debugs(93,7, HERE << "raw OPTIONS fetch at " << when << " or in " <<
-        (when - squid_curtime) << " sec");
+           (when - squid_curtime) << " sec");
     debugs(93,9, HERE << "last fetched at " << theLastUpdate << " or " <<
-        (squid_curtime - theLastUpdate) << " sec ago");
+           (squid_curtime - theLastUpdate) << " sec ago");
 
     /* adjust update time to prevent too-frequent updates */
 
@@ -423,7 +427,7 @@ ICAPServiceRep::optionsFetchTime() const
 
 Adaptation::Initiate *
 ICAPServiceRep::makeXactLauncher(Adaptation::Initiator *initiator,
-    HttpMsg *virgin, HttpRequest *cause)
+                                 HttpMsg *virgin, HttpRequest *cause)
 {
     return new ICAPModXactLauncher(initiator, virgin, cause, this);
 }
@@ -448,11 +452,11 @@ const char *ICAPServiceRep::status() const
         if (!theOptions)
             buf.append(",!opt", 5);
         else
-        if (!theOptions->valid())
-            buf.append(",!valid", 7);
-        else
-        if (!theOptions->fresh())
-            buf.append(",stale", 6);
+            if (!theOptions->valid())
+                buf.append(",!valid", 7);
+            else
+                if (!theOptions->fresh())
+                    buf.append(",stale", 6);
     }
 
     if (theOptionsFetcher)
