@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -87,8 +87,8 @@ IdleConnList::removeFD(int fd)
 {
     int index = findFDIndex(fd);
     if (index < 0) {
-	debugs(48, 0, "IdleConnList::removeFD: FD " << fd << " NOT FOUND!");
-	return;
+        debugs(48, 0, "IdleConnList::removeFD: FD " << fd << " NOT FOUND!");
+        return;
     }
     debugs(48, 3, "IdleConnList::removeFD: found FD " << fd << " at index " << index);
 
@@ -237,13 +237,11 @@ PconnPool::push(int fd, const char *host, u_short port, const char *domain, IPAd
     const char *aKey;
     LOCAL_ARRAY(char, desc, FD_DESC_SZ);
 
-    if (fdUsageHigh())
-    {
+    if (fdUsageHigh()) {
         debugs(48, 3, "PconnPool::push: Not many unused FDs");
         comm_close(fd);
         return;
-    } else if (shutting_down)
-    {
+    } else if (shutting_down) {
         comm_close(fd);
         return;
     }
@@ -252,8 +250,7 @@ PconnPool::push(int fd, const char *host, u_short port, const char *domain, IPAd
 
     list = (IdleConnList *) hash_lookup(table, aKey);
 
-    if (list == NULL)
-    {
+    if (list == NULL) {
         list = new IdleConnList(aKey, this);
         debugs(48, 3, "pconnNew: adding " << hashKeyStr(&list->hash));
         hash_join(table, &list->hash);
@@ -288,8 +285,7 @@ PconnPool::pop(const char *host, u_short port, const char *domain, IPAddress &cl
 
     int fd = list->findUseableFD(); // search from the end. skip pending reads.
 
-    if (fd >= 0)
-    {
+    if (fd >= 0) {
         list->clearHandlers(fd);
         list->removeFD(fd);	/* might delete list */
 
@@ -344,15 +340,15 @@ void
 PconnModule::registerWithCacheManager(void)
 {
     CacheManager::GetInstance()->
-        registerAction("pconn",
-                       "Persistent Connection Utilization Histograms",
-                       DumpWrapper, 0, 1);
+    registerAction("pconn",
+                   "Persistent Connection Utilization Histograms",
+                   DumpWrapper, 0, 1);
 }
 
 void
 
 PconnModule::add
-    (PconnPool *aPool)
+(PconnPool *aPool)
 {
     assert(poolCount < MAX_NUM_PCONN_POOLS);
     *(pools+poolCount) = aPool;

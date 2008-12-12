@@ -17,7 +17,7 @@ public:
 
 private:
     static ACLPeerNameStrategy Instance_;
-    ACLPeerNameStrategy(){}
+    ACLPeerNameStrategy() {}
 
     ACLPeerNameStrategy&operator=(ACLPeerNameStrategy const &);
 };

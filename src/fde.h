@@ -19,12 +19,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -44,7 +44,7 @@ class fde
 
 public:
     fde() { clear(); };
-    
+
     /// True if comm_close for this fd has been called
     bool closing() { return flags.close_request; }
 
@@ -65,20 +65,19 @@ public:
     char ipaddr[MAX_IPSTRLEN];            /* dotted decimal address of peer */
     char desc[FD_DESC_SZ];
 
-    struct
-    {
-	unsigned int open:1;
-	unsigned int close_request:1; // file_ or comm_close has been called
-	unsigned int write_daemon:1;
-	unsigned int socket_eof:1;
-	unsigned int nolinger:1;
-	unsigned int nonblocking:1;
-	unsigned int ipc:1;
-	unsigned int called_connect:1;
-	unsigned int nodelay:1;
-	unsigned int close_on_exec:1;
-	unsigned int read_pending:1;
-	unsigned int write_pending:1;
+    struct {
+        unsigned int open:1;
+        unsigned int close_request:1; // file_ or comm_close has been called
+        unsigned int write_daemon:1;
+        unsigned int socket_eof:1;
+        unsigned int nolinger:1;
+        unsigned int nonblocking:1;
+        unsigned int ipc:1;
+        unsigned int called_connect:1;
+        unsigned int nodelay:1;
+        unsigned int close_on_exec:1;
+        unsigned int read_pending:1;
+        unsigned int write_pending:1;
         unsigned int transparent:1;
     } flags;
 
@@ -109,7 +108,7 @@ public:
     SSL *ssl;
 #endif
 #ifdef _SQUID_MSWIN_
-    struct { 
+    struct {
         long handle;
     } win32;
 #endif
@@ -127,7 +126,7 @@ private:
         memset(this, 0, sizeof(fde));
         local_addr.SetEmpty(); // IPAddress likes to be setup nicely.
     }
-    
+
 };
 
 #endif /* SQUID_FDE_H */

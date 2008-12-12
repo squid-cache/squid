@@ -19,12 +19,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -66,14 +66,14 @@ class ICAPOptXact;
  * eventually retry to fetch its options in hope to bring the service up.
  *
  * A service that should no longer be used after Squid reconfiguration is
- * treated as if it does not have a fresh cached OPTIONS response. We do 
- * not try to fetch fresh options for such a service. It should be 
+ * treated as if it does not have a fresh cached OPTIONS response. We do
+ * not try to fetch fresh options for such a service. It should be
  * auto-destroyed by refcounting when no longer used.
  */
 
 
 class ICAPServiceRep : public RefCountable, public Adaptation::Service,
-    public Adaptation::Initiator
+            public Adaptation::Initiator
 {
 
 public:
@@ -101,7 +101,7 @@ public:
     bool allows204() const;
 
     void noteFailure(); // called by transactions to report service failure
-    
+
     //AsyncJob virtual methods
     virtual bool doneAll() const { return Adaptation::Initiator::doneAll() && false;}
 
@@ -116,8 +116,7 @@ public: // treat these as private, they are for callbacks only
 private:
     // stores Prepare() callback info
 
-    struct Client
-    {
+    struct Client {
         Pointer service; // one for each client to preserve service
         AsyncCall::Pointer callback;
     };

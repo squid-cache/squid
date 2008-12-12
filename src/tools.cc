@@ -1159,7 +1159,7 @@ parseEtcHosts(void)
             lt = nt + 1;
         }
 
-        if(hosts) {
+        if (hosts) {
             fqdncacheAddEntryFromHosts(addr, hosts);
             wordlistDestroy(&hosts);
         }
@@ -1257,7 +1257,7 @@ keepCapabilities(void)
 static void
 restoreCapabilities(int keep)
 {
-/* NP: keep these two if-endif separate. Non-Linux work perfectly well without Linux syscap support. */
+    /* NP: keep these two if-endif separate. Non-Linux work perfectly well without Linux syscap support. */
 #if defined(_SQUID_LINUX_)
 
 #if HAVE_SYS_CAPABILITY_H
@@ -1271,11 +1271,9 @@ restoreCapabilities(int keep)
 
     if (capget(head, cap) != 0) {
         debugs(50, DBG_IMPORTANT, "Can't get current capabilities");
-    }
-    else if (head->version != _LINUX_CAPABILITY_VERSION_1) {
+    } else if (head->version != _LINUX_CAPABILITY_VERSION_1) {
         debugs(50, DBG_IMPORTANT, "Invalid capability version " << head->version << " (expected " << _LINUX_CAPABILITY_VERSION_1 << ")");
-    }
-    else {
+    } else {
 
         head->pid = 0;
 

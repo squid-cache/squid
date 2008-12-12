@@ -12,14 +12,14 @@
 
 #include "config.h"
 
- /* We want the Squid type and library definitions without the package ones */
+/* We want the Squid type and library definitions without the package ones */
 #undef VERSION
 #undef PACKAGE
 #undef PACKAGE_BUGREPORT
-#undef PACKAGE_NAME  
-#undef PACKAGE_STRING 
-#undef PACKAGE_TARNAME 
-#undef PACKAGE_VERSION 
+#undef PACKAGE_NAME
+#undef PACKAGE_STRING
+#undef PACKAGE_TARNAME
+#undef PACKAGE_VERSION
 #endif /* HAVE_SQUID */
 
 #endif /* SQUID__HELPERS_NEGOTIATE_AUTH_SQUID_KERB_AUTH_SQUID_COMPAT_H */

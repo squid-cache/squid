@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -71,8 +71,7 @@ CBDATA_CLASS_INIT(ErrorState);
 /* local types */
 
 /// \ingroup ErrorPageInternal
-typedef struct
-{
+typedef struct {
     int id;
     char *page_name;
 } ErrorDynamicPageInfo;
@@ -85,28 +84,27 @@ typedef struct
  \note  hard coded error messages are not appended with %S
  *      automagically to give you more control on the format
  */
-static const struct
-{
+static const struct {
     int type;			/* and page_id */
     const char *text;
 }
 
 error_hard_text[] = {
 
-                        {
-                            ERR_SQUID_SIGNATURE,
-                            "\n<br>\n"
-                            "<hr>\n"
-                            "<div id=\"footer\">\n"
-                            "Generated %T by %h (%s)\n"
-                            "</div>\n"
-                            "</body></html>\n"
-                        },
-                        {
-                            TCP_RESET,
-                            "reset"
-                        }
-                    };
+    {
+        ERR_SQUID_SIGNATURE,
+        "\n<br>\n"
+        "<hr>\n"
+        "<div id=\"footer\">\n"
+        "Generated %T by %h (%s)\n"
+        "</div>\n"
+        "</body></html>\n"
+    },
+    {
+        TCP_RESET,
+        "reset"
+    }
+};
 
 /// \ingroup ErrorPageInternal
 static Vector<ErrorDynamicPageInfo *> ErrorDynamicPages;
@@ -189,9 +187,9 @@ errorInitialize(void)
     error_stylesheet.reset();
 
     // look for and load stylesheet into global MemBuf for it.
-    if(Config.errorStylesheet) {
+    if (Config.errorStylesheet) {
         char *temp = errorTryLoadText(Config.errorStylesheet,NULL);
-        if(temp) {
+        if (temp) {
             error_stylesheet.Printf("%s",temp);
             safe_free(temp);
         }
@@ -243,16 +241,16 @@ errorLoadText(const char *page_name)
     char *text = NULL;
 
     /** test error_directory configured location */
-    if(Config.errorDirectory)
+    if (Config.errorDirectory)
         text = errorTryLoadText(page_name, Config.errorDirectory);
 
 #if USE_ERR_LOCALES
     /** test error_default_language location */
-    if(!text && Config.errorDefaultLanguage) {
+    if (!text && Config.errorDefaultLanguage) {
         char dir[256];
         snprintf(dir,256,"%s/%s", DEFAULT_SQUID_ERROR_DIR, Config.errorDefaultLanguage);
         text = errorTryLoadText(page_name, dir);
-        if(!text) {
+        if (!text) {
             debugs(1, DBG_CRITICAL, "Unable to load default error language files. Reset to backups.");
         }
     }
@@ -282,7 +280,7 @@ errorTryLoadText(const char *page_name, const char *dir, bool silent)
     MemBuf textbuf;
 
     // maybe received compound parts, maybe an absolute page_name and no dir
-    if(dir)
+    if (dir)
         snprintf(path, sizeof(path), "%s/%s", dir, page_name);
     else
         snprintf(path, sizeof(path), "%s", page_name);
@@ -291,14 +289,14 @@ errorTryLoadText(const char *page_name, const char *dir, bool silent)
 
     if (fd < 0) {
         /* with dynamic locale negotiation we may see some failures before a success. */
-        if(!silent)
+        if (!silent)
             debugs(4, DBG_CRITICAL, HERE << "'" << path << "': " << xstrerror());
         return NULL;
     }
 
     textbuf.init();
 
-    while((len = FD_READ_METHOD(fd, buf, sizeof(buf))) > 0) {
+    while ((len = FD_READ_METHOD(fd, buf, sizeof(buf))) > 0) {
         textbuf.append(buf, len);
     }
 
@@ -506,7 +504,7 @@ errorStateFree(ErrorState * err)
     AUTHUSERREQUESTUNLOCK(err->auth_user_request, "errstate");
     safe_free(err->err_msg);
 #if USE_ERR_LOCALES
-    if(err->err_language != Config.errorDefaultLanguage)
+    if (err->err_language != Config.errorDefaultLanguage)
 #endif
         safe_free(err->err_language);
     cbdataFree(err);
@@ -885,22 +883,21 @@ ErrorState::BuildHttpReply()
          * We have even better reasons though:
          * see http://wiki.squid-cache.org/KnowledgeBase/VaryNotCaching
          */
-        if(!Config.errorDirectory) {
+        if (!Config.errorDirectory) {
             /* We 'negotiated' this ONLY from the Accept-Language. */
             rep->header.delById(HDR_VARY);
             rep->header.putStr(HDR_VARY, "Accept-Language");
         }
 
         /* add the Content-Language header according to RFC section 14.12 */
-        if(err_language) {
+        if (err_language) {
             rep->header.putStr(HDR_CONTENT_LANGUAGE, err_language);
-        }
-        else
+        } else
 #endif /* USE_ERROR_LOCALES */
         {
             /* default templates are in English */
             /* language is known unless error_directory override used */
-            if(!Config.errorDirectory)
+            if (!Config.errorDirectory)
                 rep->header.putStr(HDR_CONTENT_LANGUAGE, "en");
         }
 
@@ -929,7 +926,7 @@ ErrorState::BuildContent()
     /** error_directory option in squid.conf overrides translations.
      * Otherwise locate the Accept-Language header
      */
-    if(!Config.errorDirectory && request && request->header.getList(HDR_ACCEPT_LANGUAGE, &hdr) ) {
+    if (!Config.errorDirectory && request && request->header.getList(HDR_ACCEPT_LANGUAGE, &hdr) ) {
 
         const char *buf = hdr.buf(); // raw header string for parsing
         int pos = 0; // current parsing position in header string
@@ -944,16 +941,16 @@ ErrorState::BuildContent()
 
         debugs(4, 6, HERE << "Testing Header: '" << hdr << "'");
 
-        while( pos < hdr.size() ) {
+        while ( pos < hdr.size() ) {
 
-/*
- * Header value format:
- *  - sequence of whitespace delimited tags
- *  - each tag may suffix with ';'.* which we can ignore.
- *  - IFF a tag contains only two characters we can wildcard ANY translations matching: <it> '-'? .*
- *    with preference given to an exact match.
- */
-            while(pos < hdr.size() && buf[pos] != ';' && buf[pos] != ',' && !xisspace(buf[pos]) && dt < (dir+256) ) {
+            /*
+             * Header value format:
+             *  - sequence of whitespace delimited tags
+             *  - each tag may suffix with ';'.* which we can ignore.
+             *  - IFF a tag contains only two characters we can wildcard ANY translations matching: <it> '-'? .*
+             *    with preference given to an exact match.
+             */
+            while (pos < hdr.size() && buf[pos] != ';' && buf[pos] != ',' && !xisspace(buf[pos]) && dt < (dir+256) ) {
                 *dt++ = xtolower(buf[pos++]);
             }
             *dt++ = '\0'; // nul-terminated the filename content string before system use.
@@ -961,22 +958,21 @@ ErrorState::BuildContent()
             debugs(4, 9, HERE << "STATE: dt='" << dt << "', reset='" << reset << "', reset[1]='" << reset[1] << "', pos=" << pos << ", buf='" << &buf[pos] << "'");
 
             /* if we found anything we might use, try it. */
-            if(*reset != '\0') {
+            if (*reset != '\0') {
 
                 debugs(4, 6, HERE << "Found language '" << reset << "', testing for available template in: '" << dir << "'");
                 m = errorTryLoadText( err_type_str[page_id], dir, false);
 
-                if(m) {
+                if (m) {
                     /* store the language we found for the Content-Language reply header */
                     err_language = xstrdup(reset);
                     break;
-                }
-                else if(Config.errorLogMissingLanguages) {
+                } else if (Config.errorLogMissingLanguages) {
                     debugs(4, DBG_IMPORTANT, "WARNING: Error Pages Missing Language: " << reset);
                 }
 
 #if HAVE_GLOB
-                if( (dt - reset) == 2) {
+                if ( (dt - reset) == 2) {
                     /* TODO glob the error directory for sub-dirs matching: <tag> '-*'   */
                     /* use first result. */
                     debugs(4,2, HERE << "wildcard fallback errors not coded yet.");
@@ -987,8 +983,8 @@ ErrorState::BuildContent()
             dt = reset; // reset for next tag testing. we replace the failed name instead of cloning.
 
             // IFF we terminated the tag on ';' we need to skip the 'q=' bit to the next ',' or end.
-            while(pos < hdr.size() && buf[pos] != ',') pos++;
-            if(buf[pos] == ',') pos++;
+            while (pos < hdr.size() && buf[pos] != ',') pos++;
+            if (buf[pos] == ',') pos++;
         }
     }
 #endif /* USE_ERR_LOCALES */
@@ -997,10 +993,10 @@ ErrorState::BuildContent()
      * If client-specific error templates are not enabled or available.
      * fall back to the old style squid.conf settings.
      */
-    if(!m) {
+    if (!m) {
         m = error_text[page_id];
 #if USE_ERR_LOCALES
-        if(!Config.errorDirectory)
+        if (!Config.errorDirectory)
             err_language = Config.errorDefaultLanguage;
 #endif
         debugs(4, 2, HERE << "No existing error page language negotiated for " << errorPageName(page_id) << ". Using default error file.");
