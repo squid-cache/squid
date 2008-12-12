@@ -21,12 +21,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -104,9 +104,9 @@ HttpRequest::init()
 void
 HttpRequest::clean()
 {
-    // we used to assert that the pipe is NULL, but now the request only 
+    // we used to assert that the pipe is NULL, but now the request only
     // points to a pipe that is owned and initiated by another object.
-    body_pipe = NULL; 
+    body_pipe = NULL;
 
     AUTHUSERREQUESTUNLOCK(auth_user_request, "request");
 
@@ -128,8 +128,8 @@ HttpRequest::clean()
         range = NULL;
     }
 
-    if(pinned_connection)
-	cbdataReferenceDone(pinned_connection);
+    if (pinned_connection)
+        cbdataReferenceDone(pinned_connection);
 
     tag.clean();
 
@@ -166,20 +166,20 @@ HttpRequest::clone() const
     if (auth_user_request) {
         copy->auth_user_request = auth_user_request;
         AUTHUSERREQUESTLOCK(copy->auth_user_request, "HttpRequest::clone");
-	}
+    }
 
     copy->port = port;
     // urlPath handled in ctor
-	copy->canonical = canonical ? xstrdup(canonical) : NULL;
-    
+    copy->canonical = canonical ? xstrdup(canonical) : NULL;
+
     // This may be too conservative for the 204 No Content case
     // may eventually need cloneNullAdaptationImmune() for that.
     copy->flags = flags.cloneAdaptationImmune();
 
-	copy->range = range ? new HttpHdrRange(*range) : NULL;
-	copy->ims = ims;
-	copy->imslen = imslen;
-	copy->max_forwards = max_forwards;
+    copy->range = range ? new HttpHdrRange(*range) : NULL;
+    copy->ims = ims;
+    copy->imslen = imslen;
+    copy->max_forwards = max_forwards;
     copy->client_addr = client_addr;
     copy->my_addr = my_addr;
     copy->hier = hier; // Is it safe to copy? Should we?
@@ -188,7 +188,7 @@ HttpRequest::clone() const
 
     // XXX: what to do with copy->peer_login?
 
-	copy->lastmod = lastmod;
+    copy->lastmod = lastmod;
     copy->vary_headers = vary_headers ? xstrdup(vary_headers) : NULL;
     // XXX: what to do with copy->peer_domain?
 
@@ -400,7 +400,8 @@ request_flags::cloneAdaptationImmune() const
 }
 
 bool
-HttpRequest::bodyNibbled() const {
+HttpRequest::bodyNibbled() const
+{
     return body_pipe != NULL && body_pipe->consumedSize() > 0;
 }
 
@@ -498,9 +499,9 @@ HttpRequest::cacheable() const
      * The below looks questionable: what non HTTP protocols use connect,
      * trace, put and post? RC
      */
-    
+
     if (!method.isCacheble())
-    	return false;
+        return false;
 
     /*
      * XXX POST may be cached sometimes.. ignored
@@ -518,9 +519,9 @@ HttpRequest::cacheable() const
 bool HttpRequest::inheritProperties(const HttpMsg *aMsg)
 {
     const HttpRequest* aReq = dynamic_cast<const HttpRequest*>(aMsg);
-    if(!aReq)
-	return false;
-    
+    if (!aReq)
+        return false;
+
     client_addr = aReq->client_addr;
     my_addr = aReq->my_addr;
 
@@ -530,11 +531,11 @@ bool HttpRequest::inheritProperties(const HttpMsg *aMsg)
 
     if (aReq->auth_user_request) {
         auth_user_request = aReq->auth_user_request;
-	AUTHUSERREQUESTLOCK(auth_user_request, "inheritProperties");
+        AUTHUSERREQUESTLOCK(auth_user_request, "inheritProperties");
     }
 
-    if(aReq->pinned_connection) {
-	pinned_connection = cbdataReference(aReq->pinned_connection);
+    if (aReq->pinned_connection) {
+        pinned_connection = cbdataReference(aReq->pinned_connection);
     }
     return true;
 }

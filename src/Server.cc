@@ -20,12 +20,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -51,9 +51,9 @@ extern void purgeEntriesByUrl(HttpRequest * req, const char *url);
 
 ServerStateData::ServerStateData(FwdState *theFwdState): AsyncJob("ServerStateData"),requestSender(NULL)
 #if USE_ADAPTATION
-    , adaptedHeadSource(NULL)
-    , adaptationAccessCheckPending(false)
-    , startedAdaptation(false)
+        , adaptedHeadSource(NULL)
+        , adaptationAccessCheckPending(false)
+        , startedAdaptation(false)
 #endif
 {
     fwd = theFwdState;
@@ -82,8 +82,8 @@ ServerStateData::~ServerStateData()
     fwd = NULL; // refcounted
 
     if (responseBodyBuffer != NULL) {
-	delete responseBodyBuffer;
-	responseBodyBuffer = NULL;
+        delete responseBodyBuffer;
+        responseBodyBuffer = NULL;
     }
 }
 
@@ -115,34 +115,39 @@ ServerStateData::swanSong()
 
 
 HttpReply *
-ServerStateData::virginReply() {
+ServerStateData::virginReply()
+{
     assert(theVirginReply);
     return theVirginReply;
 }
 
 const HttpReply *
-ServerStateData::virginReply() const {
+ServerStateData::virginReply() const
+{
     assert(theVirginReply);
     return theVirginReply;
 }
 
 HttpReply *
-ServerStateData::setVirginReply(HttpReply *rep) {
+ServerStateData::setVirginReply(HttpReply *rep)
+{
     debugs(11,5, HERE << this << " setting virgin reply to " << rep);
     assert(!theVirginReply);
     assert(rep);
     theVirginReply = HTTPMSGLOCK(rep);
-	return theVirginReply;
+    return theVirginReply;
 }
 
 HttpReply *
-ServerStateData::finalReply() {
+ServerStateData::finalReply()
+{
     assert(theFinalReply);
     return theFinalReply;
 }
 
 HttpReply *
-ServerStateData::setFinalReply(HttpReply *rep) {
+ServerStateData::setFinalReply(HttpReply *rep)
+{
     debugs(11,5, HERE << this << " setting final reply to " << rep);
 
     assert(!theFinalReply);
@@ -172,7 +177,7 @@ ServerStateData::serverComplete()
         stopConsumingFrom(requestBodySource);
 
     if (responseBodyBuffer != NULL)
-	return;
+        return;
 
     serverComplete2();
 }
@@ -194,10 +199,11 @@ ServerStateData::serverComplete2()
     quitIfAllDone();
 }
 
-// When we are done talking to the primary server, we may be still talking 
+// When we are done talking to the primary server, we may be still talking
 // to the ICAP service. And vice versa. Here, we quit only if we are done
 // talking to both.
-void ServerStateData::quitIfAllDone() {
+void ServerStateData::quitIfAllDone()
+{
 #if USE_ADAPTATION
     if (!doneWithAdaptation()) {
         debugs(11,5, HERE << "transaction not done: still talking to ICAP");
@@ -217,7 +223,8 @@ void ServerStateData::quitIfAllDone() {
 
 // FTP side overloads this to work around multiple calls to fwd->complete
 void
-ServerStateData::completeForwarding() {
+ServerStateData::completeForwarding()
+{
     debugs(11,5, HERE << "completing forwarding for "  << fwd);
     assert(fwd != NULL);
     fwd->complete();
@@ -231,12 +238,12 @@ bool ServerStateData::startRequestBodyFlow()
     requestBodySource = r->body_pipe;
     if (requestBodySource->setConsumerIfNotLate(this)) {
         debugs(11,3, HERE << "expecting request body from " <<
-            requestBodySource->status());
+               requestBodySource->status());
         return true;
     }
 
     debugs(11,3, HERE << "aborting on partially consumed request body: " <<
-        requestBodySource->status());
+           requestBodySource->status());
     requestBodySource = NULL;
     return false;
 }
@@ -315,7 +322,8 @@ ServerStateData::handleRequestBodyProductionEnded()
 
 // called when we are done sending request body; kids extend this
 void
-ServerStateData::doneSendingRequestBody() {
+ServerStateData::doneSendingRequestBody()
+{
     debugs(9,3, HERE << "done sending request body");
     assert(requestBodySource != NULL);
     stopConsumingFrom(requestBodySource);
@@ -388,9 +396,9 @@ ServerStateData::sendMoreRequestBody()
     MemBuf buf;
     if (requestBodySource->getMoreData(buf)) {
         debugs(9,3, HERE << "will write " << buf.contentSize() << " request body bytes");
-	typedef CommCbMemFunT<ServerStateData, CommIoCbParams> Dialer;
-	requestSender = asyncCall(93,3, "ServerStateData::sentRequestBody",
-				  Dialer(this, &ServerStateData::sentRequestBody));
+        typedef CommCbMemFunT<ServerStateData, CommIoCbParams> Dialer;
+        requestSender = asyncCall(93,3, "ServerStateData::sentRequestBody",
+                                  Dialer(this, &ServerStateData::sentRequestBody));
         comm_write_mbuf(dataDescriptor(), &buf, requestSender);
     } else {
         debugs(9,3, HERE << "will wait for more request body bytes or eof");
@@ -432,13 +440,13 @@ static void
 purgeEntriesByHeader(HttpRequest *req, const char *reqUrl, HttpMsg *rep, http_hdr_type hdr)
 {
     const char *hdrUrl, *absUrl;
-    
+
     absUrl = NULL;
     hdrUrl = rep->header.getStr(hdr);
     if (hdrUrl == NULL) {
         return;
     }
-    
+
     /*
      * If the URL is relative, make it absolute so we can find it.
      * If it's absolute, make sure the host parts match to avoid DOS attacks
@@ -452,9 +460,9 @@ purgeEntriesByHeader(HttpRequest *req, const char *reqUrl, HttpMsg *rep, http_hd
     } else if (!sameUrlHosts(reqUrl, hdrUrl)) {
         return;
     }
-    
+
     purgeEntriesByUrl(req, hdrUrl);
-    
+
     if (absUrl != NULL) {
         safe_free(absUrl);
     }
@@ -464,28 +472,28 @@ purgeEntriesByHeader(HttpRequest *req, const char *reqUrl, HttpMsg *rep, http_hd
 void
 ServerStateData::maybePurgeOthers()
 {
-   // only some HTTP methods should purge matching cache entries
-   if (!request->method.purgesOthers())
-       return;
+    // only some HTTP methods should purge matching cache entries
+    if (!request->method.purgesOthers())
+        return;
 
-   // and probably only if the response was successful
-   if (theFinalReply->sline.status >= 400)
-       return;
+    // and probably only if the response was successful
+    if (theFinalReply->sline.status >= 400)
+        return;
 
-   // XXX: should we use originalRequest() here?
-   const char *reqUrl = urlCanonical(request);
-   debugs(88, 5, "maybe purging due to " << RequestMethodStr(request->method) << ' ' << reqUrl);
-   purgeEntriesByUrl(request, reqUrl);
-   purgeEntriesByHeader(request, reqUrl, theFinalReply, HDR_LOCATION);
-   purgeEntriesByHeader(request, reqUrl, theFinalReply, HDR_CONTENT_LOCATION);
+    // XXX: should we use originalRequest() here?
+    const char *reqUrl = urlCanonical(request);
+    debugs(88, 5, "maybe purging due to " << RequestMethodStr(request->method) << ' ' << reqUrl);
+    purgeEntriesByUrl(request, reqUrl);
+    purgeEntriesByHeader(request, reqUrl, theFinalReply, HDR_LOCATION);
+    purgeEntriesByHeader(request, reqUrl, theFinalReply, HDR_CONTENT_LOCATION);
 }
 
 // called (usually by kids) when we have final (possibly adapted) reply headers
 void
 ServerStateData::haveParsedReplyHeaders()
 {
-   Must(theFinalReply);
-   maybePurgeOthers();
+    Must(theFinalReply);
+    maybePurgeOthers();
 }
 
 HttpRequest *
@@ -516,26 +524,27 @@ ServerStateData::startAdaptation(Adaptation::ServicePointer service, HttpRequest
     // check whether we should be sending a body as well
     // start body pipe to feed ICAP transaction if needed
     assert(!virginBodyDestination);
-        HttpReply *vrep = virginReply();
+    HttpReply *vrep = virginReply();
     assert(!vrep->body_pipe);
     int64_t size = 0;
     if (vrep->expectingBody(cause->method, size) && size) {
         virginBodyDestination = new BodyPipe(this);
         vrep->body_pipe = virginBodyDestination;
-        debugs(93, 6, HERE << "will send virgin reply body to " << 
-            virginBodyDestination << "; size: " << size);
+        debugs(93, 6, HERE << "will send virgin reply body to " <<
+               virginBodyDestination << "; size: " << size);
         if (size > 0)
             virginBodyDestination->setBodySize(size);
     }
 
     adaptedHeadSource = initiateAdaptation(service->makeXactLauncher(
-        this, vrep, cause));
+                                               this, vrep, cause));
     return adaptedHeadSource != NULL;
 }
 
 // properly cleans up ICAP-related state
 // may be called multiple times
-void ServerStateData::cleanAdaptation() {
+void ServerStateData::cleanAdaptation()
+{
     debugs(11,5, HERE << "cleaning ICAP; ACL: " << adaptationAccessCheckPending);
 
     if (virginBodyDestination != NULL)
@@ -551,9 +560,10 @@ void ServerStateData::cleanAdaptation() {
 }
 
 bool
-ServerStateData::doneWithAdaptation() const {
+ServerStateData::doneWithAdaptation() const
+{
     return !adaptationAccessCheckPending &&
-        !virginBodyDestination && !adaptedHeadSource && !adaptedBodySource;
+           !virginBodyDestination && !adaptedHeadSource && !adaptedBodySource;
 }
 
 // sends virgin reply body to ICAP, buffering excesses if needed
@@ -585,7 +595,7 @@ ServerStateData::adaptVirginReplyBody(const char *data, ssize_t len)
             responseBodyBuffer = NULL;
         } else {
             responseBodyBuffer->consume(putSize);
-		}
+        }
         return;
     }
 
@@ -723,7 +733,7 @@ void
 ServerStateData::handleAdaptationAborted(bool bypassable)
 {
     debugs(11,5, HERE << "handleAdaptationAborted; bypassable: " << bypassable <<
-        ", entry empty: " << entry->isEmpty());
+           ", entry empty: " << entry->isEmpty());
 
     if (abortOnBadEntry("entry went bad while ICAP aborted"))
         return;
@@ -770,7 +780,7 @@ ServerStateData::adaptationAclCheckDone(Adaptation::ServicePointer service)
     if (!startedAdaptation) {
         // handle start failure for an essential ICAP service
         ErrorState *err = errorCon(ERR_ICAP_FAILURE,
-            HTTP_INTERNAL_SERVER_ERROR, originalRequest());
+                                   HTTP_INTERNAL_SERVER_ERROR, originalRequest());
         err->xerrno = errno;
         errorAppendEntry(entry, err);
         abortTransaction("ICAP start failure");
@@ -798,7 +808,7 @@ ServerStateData::sendBodyIsTooLargeError()
     abortTransaction("Virgin body too large.");
 }
 
-// TODO: when HttpStateData sends all errors to ICAP, 
+// TODO: when HttpStateData sends all errors to ICAP,
 // we should be able to move this at the end of setVirginReply().
 void
 ServerStateData::adaptOrFinalizeReply()
@@ -807,8 +817,8 @@ ServerStateData::adaptOrFinalizeReply()
     // TODO: merge with client side and return void to hide the on/off logic?
     // The callback can be called with a NULL service if adaptation is off.
     adaptationAccessCheckPending = Adaptation::AccessCheck::Start(
-        Adaptation::methodRespmod, Adaptation::pointPreCache,
-        request, virginReply(), adaptationAclCheckDoneWrapper, this);
+                                       Adaptation::methodRespmod, Adaptation::pointPreCache,
+                                       request, virginReply(), adaptationAclCheckDoneWrapper, this);
     if (adaptationAccessCheckPending)
         return;
 #endif
@@ -843,7 +853,7 @@ size_t ServerStateData::replyBodySpace(size_t space)
 {
 #if USE_ADAPTATION
     if (responseBodyBuffer) {
-	return 0;	// Stop reading if already overflowed waiting for ICAP to catch up
+        return 0;	// Stop reading if already overflowed waiting for ICAP to catch up
     }
 
     if (virginBodyDestination != NULL) {
@@ -863,7 +873,7 @@ size_t ServerStateData::replyBodySpace(size_t space)
             virginBodyDestination->buf().potentialSpaceSize();
 
         debugs(11,9, "ServerStateData may read up to min(" <<
-            adaptation_space << ", " << space << ") bytes");
+               adaptation_space << ", " << space << ") bytes");
 
         if (adaptation_space < space)
             space = adaptation_space;
