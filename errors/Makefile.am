@@ -50,7 +50,6 @@ LANGUAGES	= \
 		Polish \
 		Portuguese \
 		Romanian \
-		Serbian \
 		Simplify_Chinese \
 		Slovak \
 		Traditional_Chinese \
