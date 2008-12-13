@@ -44,7 +44,6 @@ LANGUAGES	= \
 		Greek \
 		Hebrew \
 		Hungarian \
-		Japanese \
 		Korean \
 		Lithuanian \
 		Polish \
