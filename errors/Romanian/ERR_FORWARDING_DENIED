@@ -1,26 +1,26 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
 <TITLE>EROARE: URL-ul cerut nu a putut fi citit</TITLE>
-<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>ERROR</H1>
 <H2>URL-ul cerut nu a putut fi citit</H2>
 <HR noshade size="1px">
 <P>
-În timp ce citeam URL-ul:
+Ăn timp ce citeam URL-ul:
 <A HREF="%U">%U</A>
 <P>
-Am întâlnit următoarea eroare:
+Am ĂŽntĂ˘lnit urmÄtoarea eroare:
 <UL>
 <LI>
 <STRONG>
-Înaintarea cererii este interzisă.
+Ănaintarea cererii este interzisÄ.
 </STRONG>
 </UL>
 
 <P>
-Acest cache nu va înainta cererea dumneavoastră din cauză că încearcă
-să stabilească o relaţie de echivalenţă. Poate că clientul %i este un
-cache care a fost configurat greşit.
+Acest cache nu va ĂŽnainta cererea dumneavoastrÄ din cauzÄ cÄ ĂŽncearcÄ
+sÄ stabileascÄ o relaĹŁie de echivalenĹŁÄ. Poate cÄ clientul %i este un
+cache care a fost configurat greĹit.
 </P>

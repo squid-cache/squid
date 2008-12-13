@@ -1,31 +1,31 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
-<TITLE>HATA: Cache Yönetici girişi yasak</TITLE>
-<META http-equiv="Content-Type" content="text/html;charset=iso-8859-9">
+<TITLE>HATA: Cache YÃ¶netici giriÅŸi yasak</TITLE>
+<META http-equiv="Content-Type" content="text/html;charset=utf-8">
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD>
 <BODY>
 <H1>HATA</H1>
-<H2>Cache Yönetici girişi yasak</H2>
+<H2>Cache YÃ¶netici giriÅŸi yasak</H2>
 <HR noshade size="1px">
 <P>
 <A HREF="%U">%U</A></P>
 <P>
-adresine ulaşırken aşağıdaki hata oluştu:
+adresine ulaÅŸÄ±rken aÅŸaÄŸÄ±daki hata oluÅŸtu:
 <UL>
 <LI>
 <STRONG>
-Cache Yönetici girişi yasak.
+Cache YÃ¶netici giriÅŸi yasak.
 </STRONG>
 </UL>
 </P>
-<P>Özür dilerim, istediğiniz:
+<P>Ã–zÃ¼r dilerim, istediÄŸiniz:
 <PRE>    %U</PRE>
-adresine bu cache yönetici girişinden bağlanamazsınız.
+adresine bu cache yÃ¶netici giriÅŸinden baÄŸlanamazsÄ±nÄ±z.
 </P>
-<P> Netscape 2.0 veya üstü, Microsoft Internet Exporer 3.0 veya üstü, 
-veya herhangi HTTP/1.1 uyumlu tarayıcı kullandığınıza emin olun. Eğer sorun devam 
-ediyor ise lütfen  <A HREF="mailto:%w%W"> cache yöneticisi </A> ile bağlantıya geçin
-Eğer <em>yönetici</em> siz iseniz Squid Yardım Sayfalarında Cache Yöneticisi giriş arayüzü
-ile ilgili kısımları tekrar okuyun ve Cache sunucusunun hata mesajlarını kontrol edin.
+<P> Netscape 2.0 veya Ã¼stÃ¼, Microsoft Internet Exporer 3.0 veya Ã¼stÃ¼, 
+veya herhangi HTTP/1.1 uyumlu tarayÄ±cÄ± kullandÄ±ÄŸÄ±nÄ±za emin olun. EÄŸer sorun devam 
+ediyor ise lÃ¼tfen  <A HREF="mailto:%w%W"> cache yÃ¶neticisi </A> ile baÄŸlantÄ±ya geÃ§in
+EÄŸer <em>yÃ¶netici</em> siz iseniz Squid YardÄ±m SayfalarÄ±nda Cache YÃ¶neticisi giriÅŸ arayÃ¼zÃ¼
+ile ilgili kÄ±sÄ±mlarÄ± tekrar okuyun ve Cache sunucusunun hata mesajlarÄ±nÄ± kontrol edin.
 </P>

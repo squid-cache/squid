@@ -1,24 +1,24 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
-<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=EUC-JP">
-<TITLE>���顼: �ꥯ�����Ȥ��줿 URL �ϼ����Ǥ��ޤ���Ǥ���</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+<TITLE>エラー: リクエストされた URL は取得できませんでした</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
-<H1>���顼</H1>
-<H2>�ꥯ�����Ȥ��줿 URL �ϼ����Ǥ��ޤ���Ǥ���</H2>
+<H1>エラー</H1>
+<H2>リクエストされた URL は取得できませんでした</H2>
 <HR noshade size="1px">
 <P>
-�ʲ��� URL ����������ݤˡ�FTP �ץ��ȥ��륨�顼��ȯ�����ޤ���:
+以下の URL を取得した際に，FTP プロトコルエラーが発生しました:
 <A HREF="%U">%U</A>
 <P>
-Squid �ϰʲ��� ftp ���ޥ�ɤ�����ޤ�����:
+Squid は以下の ftp コマンドを送りましたが:
 <blockquote><strong><pre>%f</pre></strong></blockquote>
-���Τ褦�ʷ�̤�������ޤ�����
+このような結果を受け取りました．
 <blockquote><strong><pre>%F</pre></strong></blockquote>
 <blockquote><strong><pre>%g</pre></strong></blockquote>
 <P>
-�����餯��FTP URL �����Хѥ��ȤʤäƤ������餫�⤷��ޤ���(�����
-RFC 1738 �˽��äƤ��ޤ���)���⤷���줬�����ʤ�С��ե������
-<A HREF="%B">%B</A> �ˤ��뤫�⤷��ޤ���
+おそらく，FTP URL が絶対パスとなっていたからかもしれません(これは
+RFC 1738 に従っていません)．もしこれが原因ならば，ファイルは
+<A HREF="%B">%B</A> にあるかもしれません．
 </P>
 

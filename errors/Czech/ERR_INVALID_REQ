@@ -1,19 +1,19 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-2"> 
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"> 
 <TITLE>CHYBA: Pozadovany dokument je nedostupny</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>CHYBA</H1>
-<H2>Požadovaný dokument je nedostupný</H2>
+<H2>PoĹžadovanĂ˝ dokument je nedostupnĂ˝</H2>
 <HR noshade size="1px">
 <P>
-Při provádění požadavku:
+PĹi provĂĄdÄnĂ­ poĹžadavku:
 <PRE>
 %R
 </PRE>
 <P>
-se objevila následující chyba:
+se objevila nĂĄsledujĂ­cĂ­ chyba:
 <UL>
 <LI>
 <STRONG>
@@ -22,13 +22,13 @@ Invalid Request.
 </UL>
 
 <P>
-Část HTTP požadavku je chybná:
+ÄĂĄst HTTP poĹžadavku je chybnĂĄ:
 <UL>
-<LI>Chybná nebo chybějící HTTP metoda (POST, GET)
-<LI>Chybějící URL
-<LI>Chybějící identifikátor HTTP (HTTP/1.0)
-<LI>Požadavek může být příliš velký
-<LI>Chybějící položka Content-Lenght pro požadavky POST a GET
-<LI>Chybný znak v hostname (podtržítko ??)
+<LI>ChybnĂĄ nebo chybÄjĂ­cĂ­ HTTP metoda (POST, GET)
+<LI>ChybÄjĂ­cĂ­ URL
+<LI>ChybÄjĂ­cĂ­ identifikĂĄtor HTTP (HTTP/1.0)
+<LI>PoĹžadavek mĹŻĹže bĂ˝t pĹĂ­liĹĄ velkĂ˝
+<LI>ChybÄjĂ­cĂ­ poloĹžka Content-Lenght pro poĹžadavky POST a GET
+<LI>ChybnĂ˝ znak v hostname (podtrĹžĂ­tko ??)
 </UL>
 </P>

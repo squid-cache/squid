@@ -1,32 +1,32 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
 <TITLE>EROARE: URL-ul cerut nu a putut fi citit</TITLE>
-<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>ERROR</H1>
 <H2>URL-ul cerut nu a putut fi citit</H2>
 <HR noshade size="1px">
 <P>
-În timp ce citeam URL-ul:
+Ăn timp ce citeam URL-ul:
 <A HREF="%U">%U</A>
 <P>
-Am întâlnit următoarea eroare:
+Am ĂŽntĂ˘lnit urmÄtoarea eroare:
 <UL>
 <LI>
 <STRONG>
-Cerere invalidă
+Cerere invalidÄ
 </STRONG>
 </UL>
 
 <P>
-Câteva aspecte ale cererii HTTP sunt invalide. Probleme posibile:
+CĂ˘teva aspecte ale cererii HTTP sunt invalide. Probleme posibile:
 <UL>
-<LI>Comanda din cerere lipseşte sau este necunoscută
-<LI>URL-ul lipseşte
-<LI>Lipseşte identificatorul HTTP (HTTP/1.0)
+<LI>Comanda din cerere lipseĹte sau este necunoscutÄ
+<LI>URL-ul lipseĹte
+<LI>LipseĹte identificatorul HTTP (HTTP/1.0)
 <LI>Cererea este prea mare
-<LI>Câmpul <B>Content-Length</B> lipseşte pentru cereri POST sau PUT
-<LI>Caracter(e) ilegal în numele calculatorului; underscore (_) nu este acceptat
+<LI>CĂ˘mpul <B>Content-Length</B> lipseĹte pentru cereri POST sau PUT
+<LI>Caracter(e) ilegal ĂŽn numele calculatorului; underscore (_) nu este acceptat
 </UL>
 </P>

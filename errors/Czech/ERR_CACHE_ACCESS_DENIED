@@ -1,18 +1,18 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-2">
-<TITLE>CHYBA: Pristup ke cache serveru zamítnut</TITLE>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<TITLE>CHYBA: Pristup ke cache serveru zamĂ­tnut</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD>
 <BODY>
 <H1>CHYBA</H1>
-<H2>Přístup ke cache serveru zamítnut</H2>
+<H2>PĹĂ­stup ke cache serveru zamĂ­tnut</H2>
 <HR noshade size="1px">
 <P>
-Při pokusu o přístup k:
+PĹi pokusu o pĹĂ­stup k:
 <A HREF="%U">%U</A>
 <P>
-se objevila následující chyba:
+se objevila nĂĄsledujĂ­cĂ­ chyba:
 <UL>
 <LI>
 <STRONG>
@@ -21,16 +21,16 @@ Cache Access Denied.
 </UL>
 </P>
 
-<P>Omlouváme se, ale přístup k:
+<P>OmlouvĂĄme se, ale pĹĂ­stup k:
 <PRE>    %U</PRE>
-je povolen až po autorizaci.
+je povolen aĹž po autorizaci.
 </P>
 
 <P>
 
-Pro úspěšnou autorizaci potřebujete prohlížeče NETSCAPE 2.0 a vyšší,
-Microsoft Internet Explorer 3.0 nebo prohlížeč podporující protokol
-HTTP/1.1. V případě problému se prosím obraťte na <A HREF="mailto:%w%W">cache
-administratora</a> nebo si změňte  
+Pro ĂşspÄĹĄnou autorizaci potĹebujete prohlĂ­ĹžeÄe NETSCAPE 2.0 a vyĹĄĹĄĂ­,
+Microsoft Internet Explorer 3.0 nebo prohlĂ­ĹžeÄ podporujĂ­cĂ­ protokol
+HTTP/1.1. V pĹĂ­padÄ problĂŠmu se prosĂ­m obraĹĽte na <A HREF="mailto:%w%W">cache
+administratora</a> nebo si zmÄĹte  
 <A HREF="http://%h/cgi-bin/chpasswd.cgi">heslo</a>.
 </P>

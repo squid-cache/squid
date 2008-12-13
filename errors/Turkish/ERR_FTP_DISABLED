@@ -1,21 +1,21 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
-<TITLE>HATA:  İstenilen URL'e ulaşılamadı</TITLE>
-<META http-equiv="Content-Type" content="text/html;charset=iso-8859-9">
+<TITLE>HATA:  Ä°stenilen URL'e ulaÅŸÄ±lamadÄ±</TITLE>
+<META http-equiv="Content-Type" content="text/html;charset=utf-8">
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>HATA</H1>
-<H2>İstenilen URL'e ulaşılamadı</H2>
+<H2>Ä°stenilen URL'e ulaÅŸÄ±lamadÄ±</H2>
 <HR noshade size="1px">
 <P>
 <A HREF="%U">%U</A>
 <P>
-adresine ulaşırken aşağıdaki hata oluştu:
+adresine ulaÅŸÄ±rken aÅŸaÄŸÄ±daki hata oluÅŸtu:
 <P>
 <UL>
 <LI>
 <STRONG>
-FTP şu anda kapalı.
+FTP ÅŸu anda kapalÄ±.
 </STRONG>
 </UL>
 <P>

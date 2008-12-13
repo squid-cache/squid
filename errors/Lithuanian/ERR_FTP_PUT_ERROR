@@ -1,5 +1,5 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1257">
+<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <TITLE>KLAIDA: FTP uploadas nepavyko</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD><BODY>
@@ -7,20 +7,20 @@
 <H2>FTP PUT/uploadas nepavyko</H2>
 <HR noshade size="1px">
 <P>
-Bandydamas pakrauti dokumentą:
+Bandydamas pakrauti dokumentÄ…:
 <A HREF="%U">%U</A>
 <P>
-Squid nusiuntė šią FTP komandą:
+Squid nusiuntÄ— Å¡iÄ… FTP komandÄ…:
 <PRE><STRONG>
         %f
 </STRONG></PRE>
-ir gavo tokį atsakymą:
+ir gavo tokÄÆ atsakymÄ…:
 <PRE><STRONG>
         %F
 </STRONG></PRE>
 <P>
-Tai reiškia:
+Tai reiÅ¡kia:
 <PRE>
-Patikrinkite kelią, teises, disko talpą ir pabandykite dar kartą.
+Patikrinkite keliÄ…, teises, disko talpÄ… ir pabandykite dar kartÄ….
 </PRE>
 </P>

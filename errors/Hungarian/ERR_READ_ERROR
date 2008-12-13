@@ -1,28 +1,28 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
-<TITLE>HIBA: A kért URL nem tölthető le</TITLE>
-<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
+<TITLE>HIBA: A kĂŠrt URL nem tĂślthetĹ le</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>HIBA</H1>
-<H2>A kért URL nem tölthető le</H2>
+<H2>A kĂŠrt URL nem tĂślthetĹ le</H2>
 <HR noshade size="1px">
 <P>
-Az alábbi URL letöltésekor:
+Az alĂĄbbi URL letĂśltĂŠsekor:
 <A HREF="%U">%U</A>
 <P>
-a következő hiba lépett fel:
+a kĂśvetkezĹ hiba lĂŠpett fel:
 <UL>
 <LI>
 <STRONG>
-Olvasási hiba
+OlvasĂĄsi hiba
 </STRONG>
 </UL>
 
 <P>
-A rendszer válasza:
+A rendszer vĂĄlasza:
 <PRE><I>    %E</I></PRE>
 
 <P>
-Hiba történt az adatok hálózatról való olvasásakor. Ismételje meg kérését!
+Hiba tĂśrtĂŠnt az adatok hĂĄlĂłzatrĂłl valĂł olvasĂĄsakor. IsmĂŠtelje meg kĂŠrĂŠsĂŠt!
 </P>

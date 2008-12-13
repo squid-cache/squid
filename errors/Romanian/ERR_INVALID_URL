@@ -1,17 +1,17 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
 <TITLE>EROARE: URL-ul cerut nu a putut fi citit</TITLE>
-<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>ERROR</H1>
 <H2>URL-ul cerut nu a putut fi citit</H2>
 <HR noshade size="1px">
 <P>
-În timp ce citeam URL-ul:
+Ăn timp ce citeam URL-ul:
 <A HREF="%U">%U</A>
 <P>
-Am întâlnit următoarea eroare:
+Am ĂŽntĂ˘lnit urmÄtoarea eroare:
 <UL>
 <LI>
 <STRONG>
@@ -20,11 +20,11 @@ URL invalid
 </UL>
 
 <P>
-Câteva aspecte ale URL-ului cerunt sunt incorecte. Probleme posibile:
+CĂ˘teva aspecte ale URL-ului cerunt sunt incorecte. Probleme posibile:
 <UL>
-<LI>Lipseşte sau este incorect protocolul de access (ar trebui să fie `http://' sau ceva similar)
-<LI>Lipseşte numele calculatorului
-<LI>Caracterul escape-dublu este ilegal în calea URL
-<LI>Caracter(e) ilegal în numele calculatorului; underscore (_) nu este acceptat
+<LI>LipseĹte sau este incorect protocolul de access (ar trebui sÄ fie `http://' sau ceva similar)
+<LI>LipseĹte numele calculatorului
+<LI>Caracterul escape-dublu este ilegal ĂŽn calea URL
+<LI>Caracter(e) ilegal ĂŽn numele calculatorului; underscore (_) nu este acceptat
 </UL>
 </P>
