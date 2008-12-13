@@ -43,7 +43,7 @@ ICAPOptions::TransferKind ICAPOptions::transferKind(const String &urlPath) const
         return xferIgnore;
 
     debugs(93,7, "ICAPOptions url " << urlPath << " matches no extensions; " <<
-        "using default: " << theTransfers.byDefault->name);
+           "using default: " << theTransfers.byDefault->name);
     return theTransfers.byDefault->kind;
 }
 
@@ -141,7 +141,7 @@ void ICAPOptions::cfgTransferList(const HttpHeader *h, TransferList &list)
     if (foundStar) {
         theTransfers.byDefault = &list;
         debugs(93,5, "ICAPOptions::cfgTransferList: " <<
-            "set default transfer to " << list.name);
+               "set default transfer to " << list.name);
     }
 
     list.report(5, "ICAPOptions::cfgTransferList: ");
@@ -151,18 +151,22 @@ void ICAPOptions::cfgTransferList(const HttpHeader *h, TransferList &list)
 /* ICAPOptions::TransferList */
 
 ICAPOptions::TransferList::TransferList(): extensions(NULL), name(NULL),
-    kind(xferNone) {
+        kind(xferNone)
+{
 };
 
-ICAPOptions::TransferList::~TransferList() {
+ICAPOptions::TransferList::~TransferList()
+{
     wordlistDestroy(&extensions);
 };
 
-void ICAPOptions::TransferList::add(const char *extension) {
+void ICAPOptions::TransferList::add(const char *extension)
+{
     wordlistAdd(&extensions, extension);
 };
 
-bool ICAPOptions::TransferList::matches(const String &urlPath) const {
+bool ICAPOptions::TransferList::matches(const String &urlPath) const
+{
     const int urlLen = urlPath.size();
     for (wordlist *e = extensions; e; e = e->next) {
         // optimize: store extension lengths
@@ -173,9 +177,9 @@ bool ICAPOptions::TransferList::matches(const String &urlPath) const {
             const int eOff = urlLen - eLen;
             // RFC 3507 examples imply that extensions come without leading '.'
             if (urlPath.buf()[eOff-1] == '.' &&
-                strcmp(urlPath.buf() + eOff, e->key) == 0) {
+                    strcmp(urlPath.buf() + eOff, e->key) == 0) {
                 debugs(93,7, "ICAPOptions url " << urlPath << " matches " <<
-                    name << " extension " << e->key);
+                       name << " extension " << e->key);
                 return true;
             }
         }
@@ -184,7 +188,8 @@ bool ICAPOptions::TransferList::matches(const String &urlPath) const {
     return false;
 }
 
-void ICAPOptions::TransferList::parse(const String &buf, bool &foundStar) {
+void ICAPOptions::TransferList::parse(const String &buf, bool &foundStar)
+{
     foundStar = false;
 
     const char *item;
@@ -198,7 +203,8 @@ void ICAPOptions::TransferList::parse(const String &buf, bool &foundStar) {
     }
 }
 
-void ICAPOptions::TransferList::report(int level, const char *prefix) const {
+void ICAPOptions::TransferList::report(int level, const char *prefix) const
+{
     if (extensions) {
         for (wordlist *e = extensions; e; e = e->next)
             debugs(93,level, prefix << name << ": " << e->key);

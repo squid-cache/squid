@@ -19,12 +19,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -72,7 +72,7 @@ private:
     int64_t theData; // combines expectation and size info to save RAM
 };
 
-// Virgin body may be used for two activities: (a) writing preview or prime 
+// Virgin body may be used for two activities: (a) writing preview or prime
 // body to the ICAP server and (b) sending the body back in the echo mode.
 // Both activities use the same BodyPipe and may be active at the same time.
 // This class is used to maintain the state of body writing or sending
@@ -274,15 +274,16 @@ private:
         bool doneWriting() const { return writing == writingReallyDone; }
 
         // will not use virgin.body_pipe
-        bool doneConsumingVirgin() const { return writing >= writingAlmostDone
-            && (sending == sendingAdapted || sending == sendingDone); }
+        bool doneConsumingVirgin() const {
+            return writing >= writingAlmostDone
+                   && (sending == sendingAdapted || sending == sendingDone);
+        }
 
         // parsed entire ICAP response from the ICAP server
         bool doneParsing() const { return parsing == psDone; }
 
         // is parsing ICAP or HTTP headers read from the ICAP server
-        bool parsingHeaders() const
-        {
+        bool parsingHeaders() const {
             return parsing == psIcapHeader ||
                    parsing == psHttpHeader;
         }
@@ -291,18 +292,20 @@ private:
 
         // measures ICAP request writing progress
         enum Writing { writingInit, writingConnect, writingHeaders,
-            writingPreview, writingPaused, writingPrime,
-            writingAlmostDone, // waiting for the last write() call to finish
-            writingReallyDone } writing;
+                       writingPreview, writingPaused, writingPrime,
+                       writingAlmostDone, // waiting for the last write() call to finish
+                       writingReallyDone
+                     } writing;
 
         enum Sending { sendingUndecided, sendingVirgin, sendingAdapted,
-                       sendingDone } sending;
+                       sendingDone
+                     } sending;
     } state;
 
     CBDATA_CLASS2(ICAPModXact);
 };
 
-// An ICAPLauncher that stores ICAPModXact construction info and 
+// An ICAPLauncher that stores ICAPModXact construction info and
 // creates ICAPModXact when needed
 class ICAPModXactLauncher: public ICAPLauncher
 {

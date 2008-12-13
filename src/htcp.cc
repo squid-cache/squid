@@ -908,8 +908,8 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, IPAddr
 
 #if USE_ICMP
         if (char *host = urlHostname(spec->uri)) {
-	    int rtt = 0;
-	    int hops = 0;
+            int rtt = 0;
+            int hops = 0;
             int samp = 0;
             netdbHostData(host, &samp, &rtt, &hops);
 

@@ -248,13 +248,12 @@ mimeGetEntry(const char *fn, int skip_encodings)
             /* Assume we matched /\.\w$/ and cut off the last extension */
             if ((t = strrchr(name, '.'))) {
                 *t = '\0';
-            }
-            else {
+            } else {
                 /* What? A encoding without a extension? */
                 m = NULL;
             }
         }
-    } while(t);
+    } while (t);
 
     xfree(name);
     return m;

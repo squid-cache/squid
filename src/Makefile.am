@@ -264,7 +264,9 @@ DISKIO_SOURCE = \
 	DiskIO/DiskIOStrategy.h \
 	DiskIO/IORequestor.h \
 	DiskIO/DiskIOModule.h \
-	DiskIO/ReadRequest.h \
+	DiskIO/ReadRequest.h
+
+DISKIO_GEN_SOURCE = \
 	DiskIO/DiskIOModules_gen.cc
 
 DiskIO/DiskIOModules_gen.cc: Makefile
@@ -672,6 +674,7 @@ noinst_HEADERS = ACLChecklist.cci \
 	SquidTime.h
 
 nodist_squid_SOURCES = \
+	$(DISKIO_GEN_SOURCE) \
 	repl_modules.cc \
 	cf_parser.h \
 	globals.cc \
@@ -1123,14 +1126,19 @@ uninstall-local:
 #		$(RM) -f $(DESTDIR)$(DEFAULT_CONFIG_FILE); \
 #	fi
 
-DISTCLEANFILES = cf_gen_defines.h cf.data cf_parser.h squid.conf.default squid.conf.documented \
-	globals.cc string_arrays.c repl_modules.cc DiskIO/DiskIOModules_gen.cc
+CLEANFILES = cf_gen_defines.h cf.data cf_parser.h squid.conf.default squid.conf.documented \
+	globals.cc string_arrays.c repl_modules.cc DiskIO/DiskIOModules_gen.cc \
+	test_tools.cc *.a
+
+test_tools.cc: $(top_srcdir)/test-suite/test_tools.cc
+	cp $(top_srcdir)/test-suite/test_tools.cc .
 
 # stock tools for unit tests - library independent versions of dlink_list 
 # etc.
-# globals.cc is needed by test_tools.cc
+# globals.cc is needed by test_tools.cc.
+# Neither of these should be disted from here.
 TESTSOURCES= \
-	../test-suite/test_tools.cc \
+	test_tools.cc \
 	globals.cc
 
 # sources needed by those tests that need event.cc; incomplete
@@ -1168,6 +1176,7 @@ testHeaders: $(top_srcdir)/src/*.h $(top_srcdir)/src/DiskIO/*.h $(top_srcdir)/sr
 ## No such file...
 testHeaders.c:
 	touch testHeaders.c
+CLEANFILES += testHeaders.c
 
 ### Template for new Unit Test Program
 ## - add tests/testX to check_PROGRAMS above.
@@ -1181,7 +1190,8 @@ testHeaders.c:
 #	tests/testX.cc \
 #	tests/testMain.cc \
 #	X.h \
-#	X.cc \
+#	X.cc
+#nodist_tests_testX_SOURCES=\
 #	$(TESTSOURCES)
 #tests_testX_LDFLAGS = $(LIBADD_DL)
 #tests_testX_LDADD=\
@@ -1191,7 +1201,8 @@ testHeaders.c:
 #tests_testX_DEPENDENCIES= @SQUID_CPPUNIT_LA@ \
 #	$(top_builddir)/lib/libmiscutil.a
 
-tests_testAuth_SOURCES= tests/testAuth.cc tests/testMain.cc  tests/testAuth.h $(TESTSOURCES) \
+tests_testAuth_SOURCES = \
+	tests/testAuth.cc tests/testMain.cc  tests/testAuth.h \
 	authenticate.cc \
 	ConfigParser.cc \
 	tests/stub_acl.cc tests/stub_cache_cf.cc \
@@ -1218,6 +1229,8 @@ tests_testAuth_SOURCES= tests/testAuth.cc tests/testMain.cc  tests/testAuth.h $(
 ##	helper.cc String.cc cbdata.cc HttpHeaderTools.cc store.cc cache_manager.cc \
 ##	HttpHeader.cc url.cc mem.cc HttpRequest.cc Packer.cc access_log.cc \
 ##	MemBuf.cc StatHist.cc logfile.cc
+nodist_tests_testAuth_SOURCES = \
+	$(TESTSOURCES)
 
 tests_testAuth_LDADD= \
 	libsquid.la \
@@ -1277,7 +1290,6 @@ tests_testACLMaxUserIP_SOURCES= \
 	stmem.cc \
 	String.cc \
 	$(TEST_CALL_SOURCES) \
-	$(TESTSOURCES) \
 	tests/stub_cache_cf.cc \
 	tests/stub_comm.cc \
 	tests/stub_DelayId.cc \
@@ -1291,6 +1303,8 @@ tests_testACLMaxUserIP_SOURCES= \
 	mem.cc \
 	MemBuf.cc \
 	wordlist.cc
+nodist_tests_testACLMaxUserIP_SOURCES= \
+	$(TESTSOURCES)
 tests_testACLMaxUserIP_LDADD= \
 	libsquid.la \
 	libauth.la \
@@ -1308,8 +1322,9 @@ tests_testBoilerplate_SOURCES = \
 	tests/testBoilerplate.cc \
 	tests/testMain.cc \
 	tests/testBoilerplate.h \
-	$(TESTSOURCES) \
 	time.cc
+nodist_tests_testBoilerplate_SOURCES = \
+	$(TESTSOURCES)
 tests_testBoilerplate_LDADD= \
 	-L../lib -lmiscutil \
 	@SQUID_CPPUNIT_LIBS@ \
@@ -1321,7 +1336,6 @@ tests_testBoilerplate_DEPENDENCIES = \
 ## Tests of the CacheManager module.
 tests_testCacheManager_SOURCES = \
 	debug.cc \
-	globals.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	mem.cc \
@@ -1452,6 +1466,7 @@ tests_testCacheManager_SOURCES = \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testCacheManager_SOURCES = \
+	globals.cc \
 	repl_modules.cc \
 	string_arrays.c
 tests_testCacheManager_LDADD = \
@@ -1472,14 +1487,15 @@ tests_testCacheManager_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
 	@SQUID_CPPUNIT_LA@
 
-tests_testDiskIO_SOURCES= \
+tests_testDiskIO_SOURCES = \
 	$(SWAP_TEST_SOURCES) \
 	tests/testDiskIO.cc \
 	tests/testDiskIO.h \
 	tests/testMain.cc \
 	tests/stub_cache_manager.cc
-
-tests_testDiskIO_LDADD= \
+nodist_tests_testDiskIO_SOURCES= \
+	$(SWAP_TEST_GEN_SOURCES)
+tests_testDiskIO_LDADD = \
 	@DISK_LIBS@ \
 	$(SWAP_TEST_LDADD) \
 	SquidConfig.o
@@ -1494,7 +1510,6 @@ tests_testEvent_SOURCES = \
 	debug.cc \
 	EventLoop.h \
 	EventLoop.cc \
-	globals.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	mem.cc \
@@ -1626,6 +1641,7 @@ tests_testEvent_SOURCES = \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testEvent_SOURCES = \
+	globals.cc \
 	repl_modules.cc \
 	string_arrays.c
 tests_testEvent_LDADD = \
@@ -1651,7 +1667,6 @@ tests_testEventLoop_SOURCES = \
 	debug.cc \
 	EventLoop.h \
 	EventLoop.cc \
-	globals.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	mem.cc \
@@ -1782,6 +1797,7 @@ tests_testEventLoop_SOURCES = \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testEventLoop_SOURCES = \
+	globals.cc \
 	repl_modules.cc \
 	string_arrays.c
 tests_testEventLoop_LDADD = \
@@ -1846,7 +1862,6 @@ tests_test_http_range_SOURCES = \
 	forward.cc \
 	fqdncache.cc \
 	ftp.cc \
-	globals.cc \
 	gopher.cc \
 	helper.cc \
 	$(HTCPSOURCE) \
@@ -1933,6 +1948,7 @@ tests_test_http_range_SOURCES = \
 	Packer.cc \
 	MemBuf.cc
 nodist_tests_test_http_range_SOURCES = \
+	globals.cc \
 	repl_modules.cc \
 	string_arrays.c
 tests_test_http_range_LDADD = \
@@ -1957,7 +1973,6 @@ tests_test_http_range_DEPENDENCIES = \
 ## Tests of the HttpRequest module.
 tests_testHttpRequest_SOURCES = \
 	debug.cc \
-	globals.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	mem.cc \
@@ -2090,6 +2105,7 @@ tests_testHttpRequest_SOURCES = \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testHttpRequest_SOURCES = \
+	globals.cc \
 	repl_modules.cc \
 	string_arrays.c
 tests_testHttpRequest_LDADD = \
@@ -2114,7 +2130,6 @@ tests_testHttpRequest_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 # delay pools need client_side_request.cc
 # store_key_md5 wants the method.
 STORE_TEST_SOURCES=\
-	$(TESTSOURCES) \
 	$(TEST_CALL_SOURCES) \
 	$(DELAY_POOL_SOURCE) \
 	CacheDigest.cc \
@@ -2126,7 +2141,6 @@ STORE_TEST_SOURCES=\
 	store.cc \
 	HttpRequestMethod.cc \
 	store_key_md5.cc \
-	string_arrays.c \
 	Parsing.cc \
 	ConfigOption.cc \
 	SwapDir.cc \
@@ -2154,6 +2168,10 @@ STORE_TEST_SOURCES=\
 	URLScheme.cc \
 	wordlist.cc
 
+STORE_TEST_GEN_SOURCES = \
+	$(TESTSOURCES) \
+	string_arrays.c
+
 ## why so many sources? well httpHeaderTools requites ACLChecklist & friends.
 ## first line - what we are testing.
 tests_testStore_SOURCES= \
@@ -2176,6 +2194,9 @@ tests_testStore_SOURCES= \
 	tests/stub_cache_manager.cc \
 	$(STORE_TEST_SOURCES)
 
+nodist_tests_testStore_SOURCES= \
+	$(STORE_TEST_GEN_SOURCES)
+
 tests_testStore_LDADD= \
 	libsquid.la \
 	libauth.la \
@@ -2188,17 +2209,17 @@ tests_testStore_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@SQUID_CPPUNIT_LA@
 
 # string needs mem.cc.
-tests_testString_SOURCES= \
+tests_testString_SOURCES = \
 	mem.cc \
 	String.cc \
 	tests/testMain.cc \
 	tests/testString.cc \
 	tests/testString.h \
 	tests/stub_cache_manager.cc \
-	$(TESTSOURCES) \
 	time.cc 
-
-tests_testString_LDADD= \
+nodist_tests_testString_SOURCES = \
+	$(TESTSOURCES)
+tests_testString_LDADD = \
 	libsquid.la \
 	-L../lib -lmiscutil \
 	@REGEXLIB@ \
@@ -2239,6 +2260,10 @@ SWAP_TEST_SOURCES = \
 	$(STORE_TEST_SOURCES) \
 	$(DISKIO_SOURCE)
 
+SWAP_TEST_GEN_SOURCES = \
+	$(STORE_TEST_GEN_SOURCES) \
+	$(DISKIO_GEN_SOURCE)
+
 SWAP_TEST_LDADD = \
 	libauth.la \
 	@REGEXLIB@ \
@@ -2257,12 +2282,15 @@ SWAP_TEST_DS =\
 	@REPL_OBJS@ \
 	@SQUID_CPPUNIT_LA@
 
-tests_testUfs_SOURCES= tests/testUfs.cc \
+tests_testUfs_SOURCES = \
+	tests/testUfs.cc \
 	tests/testMain.cc \
 	tests/testUfs.h \
 	tests/stub_cache_manager.cc \
 	$(SWAP_TEST_SOURCES)
-tests_testUfs_LDADD= \
+nodist_tests_testUfs_SOURCES = \
+	$(SWAP_TEST_GEN_SOURCES)
+tests_testUfs_LDADD = \
 	libsquid.la \
 	$(SWAP_TEST_LDADD) \
 	@SSLLIB@
@@ -2270,12 +2298,15 @@ tests_testUfs_LDFLAGS = $(LIBADD_DL)
 tests_testUfs_DEPENDENCIES = \
 	$(SWAP_TEST_DS)
 
-tests_testCoss_SOURCES= tests/testCoss.cc \
+tests_testCoss_SOURCES = \
+	tests/testCoss.cc \
 	tests/testMain.cc \
 	tests/testCoss.h \
 	tests/stub_cache_manager.cc \
 	$(SWAP_TEST_SOURCES)
-tests_testCoss_LDADD= \
+nodist_tests_testCoss_SOURCES = \
+	$(SWAP_TEST_GEN_SOURCES)
+tests_testCoss_LDADD = \
 	libsquid.la \
 	$(SWAP_TEST_LDADD) \
 	@SSLLIB@
@@ -2283,11 +2314,14 @@ tests_testCoss_LDFLAGS = $(LIBADD_DL)
 tests_testCoss_DEPENDENCIES = \
 	$(SWAP_TEST_DS)
 
-tests_testNull_SOURCES= tests/testNull.cc \
+tests_testNull_SOURCES = \
+	tests/testNull.cc \
 	tests/testMain.cc \
 	tests/testNull.h \
 	$(SWAP_TEST_SOURCES)
-tests_testNull_LDADD= \
+nodist_tests_testNull_SOURCES = \
+	$(SWAP_TEST_GEN_SOURCES)
+tests_testNull_LDADD = \
 	$(SWAP_TEST_LDADD) \
 	@SSLLIB@
 tests_testNull_LDFLAGS = $(LIBADD_DL)
@@ -2300,7 +2334,6 @@ tests_testURL_SOURCES = \
 	debug.cc \
 	url.cc \
 	URLScheme.cc \
-	globals.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
 	mem.cc \
@@ -2431,6 +2464,7 @@ tests_testURL_SOURCES = \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testURL_SOURCES = \
+	globals.cc \
 	repl_modules.cc \
 	string_arrays.c
 tests_testURL_LDADD = \

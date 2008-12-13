@@ -22,6 +22,7 @@ TESTS=$(check_PROGRAMS)
 ## No Such file...
 #testHeaders.c:
 #	touch testHeaders.c
+#CLEANFILES += testHeaders.c
 
 SUBDIRS		= 
 
