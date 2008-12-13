@@ -6,8 +6,7 @@
 AUTOMAKE_OPTIONS = subdir-objects
 AM_CFLAGS = @SQUID_CFLAGS@
 AM_CXXFLAGS = @SQUID_CXXFLAGS@
-
-##DIST_SUBDIRS	= coss ufs
+CLEANFILES = 
 
 EXTRA_LIBRARIES = libcoss.a libufs.a
 noinst_LIBRARIES = @STORE_LIBS@
@@ -46,6 +45,7 @@ testHeaders: $(top_srcdir)/src/fs/ufs/*.h $(top_srcdir)/src/fs/coss/*.h
 ## No such file...
 testHeaders.c:
 	touch testHeaders.c
+CLEANFILES += testHeaders.c
 
 ## targets below to emulate distributed makefiles
 coss/all: libcoss.a

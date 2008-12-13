@@ -29,13 +29,13 @@ ICAPXaction::ICAPXaction(const char *aTypeName, Adaptation::Initiator *anInitiat
         connector(NULL), reader(NULL), writer(NULL), closer(NULL)
 {
     debugs(93,3, typeName << " constructed, this=" << this <<
-        " [icapx" << id << ']'); // we should not call virtual status() here
+           " [icapx" << id << ']'); // we should not call virtual status() here
 }
 
 ICAPXaction::~ICAPXaction()
 {
     debugs(93,3, typeName << " destructed, this=" << this <<
-        " [icapx" << id << ']'); // we should not call virtual status() here
+           " [icapx" << id << ']'); // we should not call virtual status() here
 }
 
 ICAPServiceRep &
@@ -46,9 +46,10 @@ ICAPXaction::service()
     return *s;
 }
 
-void ICAPXaction::disableRetries() {
+void ICAPXaction::disableRetries()
+{
     debugs(93,5, typeName << (isRetriable ? " becomes" : " remains") <<
-        " final" << status());
+           " final" << status());
     isRetriable = false;
 }
 
@@ -86,15 +87,15 @@ void ICAPXaction::openConnection()
         dialer.params.flag = COMM_OK;
         // fake other parameters by copying from the existing connection
         connector = asyncCall(93,3, "ICAPXaction::noteCommConnected", dialer);
-	    ScheduleCallHere(connector);
+        ScheduleCallHere(connector);
         return;
     }
 
     disableRetries(); // we only retry pconn failures
 
     IPAddress outgoing;
-    connection = comm_open(SOCK_STREAM, 0, outgoing, 
-        COMM_NONBLOCKING, s.cfg().uri.buf());
+    connection = comm_open(SOCK_STREAM, 0, outgoing,
+                           COMM_NONBLOCKING, s.cfg().uri.buf());
 
     if (connection < 0)
         dieOnConnectionFailure(); // throws
@@ -104,19 +105,19 @@ void ICAPXaction::openConnection()
     // TODO: service bypass status may differ from that of a transaction
     typedef CommCbMemFunT<ICAPXaction, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  asyncCall(93, 5, "ICAPXaction::noteCommTimedout",
-			TimeoutDialer(this,&ICAPXaction::noteCommTimedout));
+                                      TimeoutDialer(this,&ICAPXaction::noteCommTimedout));
 
     commSetTimeout(connection, TheICAPConfig.connect_timeout(
-        service().cfg().bypass), timeoutCall);
+                       service().cfg().bypass), timeoutCall);
 
     typedef CommCbMemFunT<ICAPXaction, CommCloseCbParams> CloseDialer;
     closer =  asyncCall(93, 5, "ICAPXaction::noteCommClosed",
-			CloseDialer(this,&ICAPXaction::noteCommClosed));
+                        CloseDialer(this,&ICAPXaction::noteCommClosed));
     comm_add_close_handler(connection, closer);
 
     typedef CommCbMemFunT<ICAPXaction, CommConnectCbParams> ConnectDialer;
     connector = asyncCall(93,3, "ICAPXaction::noteCommConnected",
-        ConnectDialer(this, &ICAPXaction::noteCommConnected));
+                          ConnectDialer(this, &ICAPXaction::noteCommConnected));
     commConnectStart(connection, s.cfg().host.buf(), s.cfg().port, connector);
 }
 
@@ -153,10 +154,10 @@ void ICAPXaction::closeConnection()
         if (reuseConnection) {
             IPAddress client_addr;
             debugs(93,3, HERE << "pushing pconn" << status());
-	    AsyncCall::Pointer call = NULL;
-	    commSetTimeout(connection, -1, call);
+            AsyncCall::Pointer call = NULL;
+            commSetTimeout(connection, -1, call);
             icapPconnPool->push(connection, theService->cfg().host.buf(),
-                theService->cfg().port, NULL, client_addr);
+                                theService->cfg().port, NULL, client_addr);
             disableRetries();
         } else {
             debugs(93,3, HERE << "closing pconn" << status());
@@ -185,9 +186,10 @@ void ICAPXaction::noteCommConnected(const CommConnectCbParams &io)
     handleCommConnected();
 }
 
-void ICAPXaction::dieOnConnectionFailure() {
+void ICAPXaction::dieOnConnectionFailure()
+{
     debugs(93, 2, HERE << typeName <<
-        " failed to connect to " << service().cfg().uri);
+           " failed to connect to " << service().cfg().uri);
     theService->noteFailure();
     throw TexcHere("cannot connect to the ICAP service");
 }
@@ -197,7 +199,7 @@ void ICAPXaction::scheduleWrite(MemBuf &buf)
     // comm module will free the buffer
     typedef CommCbMemFunT<ICAPXaction, CommIoCbParams> Dialer;
     writer = asyncCall(93,3, "ICAPXaction::noteCommWrote",
-		       Dialer(this, &ICAPXaction::noteCommWrote));
+                       Dialer(this, &ICAPXaction::noteCommWrote));
 
     comm_write_mbuf(connection, &buf, writer);
     updateTimeout();
@@ -207,10 +209,10 @@ void ICAPXaction::noteCommWrote(const CommIoCbParams &io)
 {
     Must(writer != NULL);
     writer = NULL;
-    
+
     if (ignoreLastWrite) {
         // a hack due to comm inability to cancel a pending write
-        ignoreLastWrite = false; 
+        ignoreLastWrite = false;
         debugs(93, 7, HERE << "ignoring last write; status: " << io.flag);
     } else {
         Must(io.flag == COMM_OK);
@@ -228,14 +230,14 @@ void ICAPXaction::noteCommTimedout(const CommTimeoutCbParams &io)
 void ICAPXaction::handleCommTimedout()
 {
     debugs(93, 2, HERE << typeName << " failed: timeout with " <<
-        theService->cfg().methodStr() << " " <<
-        theService->cfg().uri.buf() << status());
+           theService->cfg().methodStr() << " " <<
+           theService->cfg().uri.buf() << status());
     reuseConnection = false;
     service().noteFailure();
 
     throw TexcHere(connector != NULL ?
-        "timed out while connecting to the ICAP service" :
-        "timed out while talking to the ICAP service");
+                   "timed out while connecting to the ICAP service" :
+                   "timed out while talking to the ICAP service");
 }
 
 // unexpected connection close while talking to the ICAP service
@@ -264,21 +266,22 @@ bool ICAPXaction::doneAll() const
     return !connector && !reader && !writer && Adaptation::Initiate::doneAll();
 }
 
-void ICAPXaction::updateTimeout() {
+void ICAPXaction::updateTimeout()
+{
     if (reader != NULL || writer != NULL) {
         // restart the timeout before each I/O
         // XXX: why does Config.Timeout lacks a write timeout?
         // TODO: service bypass status may differ from that of a transaction
-	    typedef CommCbMemFunT<ICAPXaction, CommTimeoutCbParams> TimeoutDialer;
-	    AsyncCall::Pointer call =  asyncCall(93, 5, "ICAPXaction::noteCommTimedout",
-				    TimeoutDialer(this,&ICAPXaction::noteCommTimedout));
+        typedef CommCbMemFunT<ICAPXaction, CommTimeoutCbParams> TimeoutDialer;
+        AsyncCall::Pointer call =  asyncCall(93, 5, "ICAPXaction::noteCommTimedout",
+                                             TimeoutDialer(this,&ICAPXaction::noteCommTimedout));
 
-        commSetTimeout(connection, 
-            TheICAPConfig.io_timeout(service().cfg().bypass), call);
+        commSetTimeout(connection,
+                       TheICAPConfig.io_timeout(service().cfg().bypass), call);
     } else {
         // clear timeout when there is no I/O
         // Do we need a lifetime timeout?
-	AsyncCall::Pointer call = NULL;
+        AsyncCall::Pointer call = NULL;
         commSetTimeout(connection, -1, call);
     }
 }
@@ -295,7 +298,7 @@ void ICAPXaction::scheduleRead()
      */
     typedef CommCbMemFunT<ICAPXaction, CommIoCbParams> Dialer;
     reader = asyncCall(93,3, "ICAPXaction::noteCommRead",
-		       Dialer(this, &ICAPXaction::noteCommRead));
+                       Dialer(this, &ICAPXaction::noteCommRead));
 
     comm_read(connection, commBuf, readBuf.spaceSize(), reader);
     updateTimeout();
@@ -375,8 +378,8 @@ bool ICAPXaction::doneWriting() const
 bool ICAPXaction::doneWithIo() const
 {
     return connection >= 0 && // or we could still be waiting to open it
-        !connector && !reader && !writer && // fast checks, some redundant
-        doneReading() && doneWriting();
+           !connector && !reader && !writer && // fast checks, some redundant
+           doneReading() && doneWriting();
 }
 
 // initiator aborted

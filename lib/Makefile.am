@@ -13,6 +13,7 @@ endif
 
 DIST_SUBDIRS += libTrie
 SUBDIRS      += libTrie
+CLEANFILES   =
 
 install: all
 install-strip: all
@@ -124,6 +125,7 @@ testHeaders: $(top_srcdir)/include/*.h
 ## No such file...
 testHeaders.c:
 	touch testHeaders.c
+CLEANFILES += testHeaders.c
 
 tests_testAll_SOURCES= \
 	tests/testArray.h \

@@ -18,12 +18,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -68,17 +68,15 @@ public:
     char reqbuf[HTTP_REQBUF_SZ];
     Pointer next;
 
-    struct
-    {
+    struct {
 
-unsigned deferred: 1; /* This is a pipelined request waiting for the current object to complete */
+        unsigned deferred:1; /* This is a pipelined request waiting for the current object to complete */
 
-unsigned parsed_ok: 1; /* Was this parsed correctly? */
+        unsigned parsed_ok:1; /* Was this parsed correctly? */
     } flags;
     bool mayUseConnection() const {return mayUseConnection_;}
 
-    void mayUseConnection(bool aBool)
-    {
+    void mayUseConnection(bool aBool) {
         mayUseConnection_ = aBool;
         debug (33,3)("ClientSocketContext::mayUseConnection: This %p marked %d\n",
                      this, aBool);
@@ -146,8 +144,7 @@ public:
 
     int fd;
 
-    struct In
-    {
+    struct In {
         In();
         ~In();
         char *addressToReadInto() const;
@@ -184,8 +181,7 @@ public:
     char rfc931[USER_IDENT_SZ];
     int nrequests;
 
-    struct
-    {
+    struct {
         bool readMoreRequests;
         bool swanSang; // XXX: temporary flag to check proper cleanup
     } flags;
@@ -196,8 +192,8 @@ public:
         bool pinned;             /* this connection was pinned */
         bool auth;               /* pinned for www authentication */
         struct peer *peer;             /* peer the connection goes via */
-	AsyncCall::Pointer closeHandler; /*The close handler for pinned server side connection*/
-     } pinning;
+        AsyncCall::Pointer closeHandler; /*The close handler for pinned server side connection*/
+    } pinning;
 
     http_port_list *port;
 
@@ -223,7 +219,7 @@ public:
     /**
      * Decorrelate the ConnStateData object from its pinned peer
      */
-    void unpinConnection();    
+    void unpinConnection();
     /**
      * Checks if there is pinning info if it is valid. It can close the server side connection
      * if pinned info is not valid.
