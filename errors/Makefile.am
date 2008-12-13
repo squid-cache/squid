@@ -31,6 +31,7 @@ TRANSLATIONS = \
 	ru \
 	sr \
 	sv \
+	tr \
 	uk \
 	zh-cn
 
@@ -51,8 +52,7 @@ LANGUAGES	= \
 		Romanian \
 		Simplify_Chinese \
 		Slovak \
-		Traditional_Chinese \
-		Turkish
+		Traditional_Chinese
 
 install-data-local: 
 	@for l in $(LANGUAGES); do \
