@@ -1,19 +1,19 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
-<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <TITLE>CHYBA: Pozadovany dokument je nedostupny</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>ERROR</H1>
-<H2>Požadovaný dokument je nedostupný</H2>
+<H2>PoĹžadovanĂ˝ dokument je nedostupnĂ˝</H2>
 <HR noshade size="1px">
 <P>
-Při provádění požadavku:
+PĹi provĂĄdÄnĂ­ poĹžadavku:
 <PRE>
 %R
 </PRE>
 <P>
-se objevila následující chyba:
+se objevila nĂĄsledujĂ­cĂ­ chyba:
 <UL>
 <LI>
 <STRONG>
@@ -22,6 +22,6 @@ Invalid Response
 </UL>
 
 <P>
-HTTP odpověď obdržená od vzdáleného serveru je nesrozumitelná či poškozená.
-Kontaktujte prosím správce vzdáleného serveru. Další informace Vám poskytne
-správce tohoto proxy serveru <A HREF="mailto:%w">%w</A>
+HTTP odpovÄÄ obdrĹženĂĄ od vzdĂĄlenĂŠho serveru je nesrozumitelnĂĄ Äi poĹĄkozenĂĄ.
+Kontaktujte prosĂ­m sprĂĄvce vzdĂĄlenĂŠho serveru. DalĹĄĂ­ informace VĂĄm poskytne
+sprĂĄvce tohoto proxy serveru <A HREF="mailto:%w">%w</A>

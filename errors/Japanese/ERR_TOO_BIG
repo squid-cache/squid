@@ -1,29 +1,29 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
-<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=EUC-JP">
-<TITLE>���顼: �ꥯ�����Ȥ��줿 URL �ϼ����Ǥ��ޤ���Ǥ���</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+<TITLE>エラー: リクエストされた URL は取得できませんでした</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>ERROR</H1>
-<H2>�ꥯ�����Ȥ��줿 URL �ϼ����Ǥ��ޤ���Ǥ���</H2>
+<H2>リクエストされた URL は取得できませんでした</H2>
 <HR noshade size="1px">
 <P>
-�ʲ��� URL ����������ݤ�:
+以下の URL を取得した際に:
 <A HREF="%U">%U</A>
 <P>
-���Υ��顼��ȯ�����ޤ���:
+次のエラーが発生しました:
 <UL>
 <LI>
 <STRONG>
-�ꥯ�����Ȥޤ��ϥ�ץ饤���礭�����ޤ���
+リクエストまたはリプライが大きすぎます。
 </STRONG>
 <P>
-POST��PUT�Υꥯ�����Ȥ򤷤Ƥ����ʤ顢���ʤ��Υꥯ�����Ȥ�����
-(���ʤ������åץ����ɤ��ߤ褦�Ȥ��Ƥ������)���礭�����ޤ���
-GET�Υꥯ�����Ȥ򤷤Ƥ����ʤ顢��ץ饤������(����������ɤ��褦
-�Ȥ��Ƥ������)���礭�����ޤ������������¤ϡ����Υ���å����
-���ѼԤˤ�äƲݤ���Ƥ��ޤ���
-���줬���顼���ȴ�����Ȥ���ľ�ܱ��ѼԤ�Ϣ�����Ʋ�������
+POSTかPUTのリクエストをしていたなら、あなたのリクエストの本体
+(あなたがアップロードを試みようとしていたもの)が大きすぎます。
+GETのリクエストをしていたなら、リプライの本体(ダウンロードしよう
+としていたもの)が大きすぎます。これらの制限は、このキャッシュの
+運用者によって課されています。
+これがエラーだと感じるときは直接運用者に連絡して下さい。
 </UL>
 <P>
-����å���δ����Ԥ�<A HREF="mailto:%w%W">%w</A>�Ǥ���
+キャッシュの管理者は<A HREF="mailto:%w%W">%w</A>です。

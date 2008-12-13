@@ -1,29 +1,29 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=big5">
-<TITLE>���~�G�ɮפW�ǥ���</TITLE>
+<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+<TITLE>錯誤：檔案上傳失敗</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
-<H1>���~</H1>
-<H2>�ɮ׶ǿ�W�ǡ]PUT�^����</H2>
+<H1>錯誤</H1>
+<H2>檔案傳輸上傳（PUT）失敗</H2>
 <HR noshade size="1px">
 <P>
-�����դW�ǡ]PUT�^�U�C��m�ɡG
+當嘗試上傳（PUT）下列位置時：
 <A HREF="%U">%U</A>
 <P>
-�֨����A�����z��e�X�U�C�ɮ׶ǿ�R�O�G
+快取伺服器替您轉送出下列檔案傳輸命令：
 <PRE><STRONG>
         %f
 </STRONG></PRE>
-�H�᦬��o�˪��T��
+隨後收到這樣的訊息
 <PRE><STRONG>
         %F
 </STRONG></PRE>
 <P>
-�o���ܡG
+這表示：
 <PRE>
 Check path, permissions, diskspace and try again.
 <BR>
-�бz�ˬd�W�Ǹ��|�A�W�Ǧ�m��Ū�g�v���A�i�ϥΪ��Ŷ�����A�դ@�M�C
+請您檢查上傳路徑，上傳位置的讀寫權限，可使用的空間之後再試一遍。
 </PRE>
 </P>
 

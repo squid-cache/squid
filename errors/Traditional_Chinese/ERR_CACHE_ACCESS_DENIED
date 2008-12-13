@@ -1,31 +1,31 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=big5">
-<TITLE>���~�G�����֨����A���s���Q�ڵ�</TITLE>
+<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+<TITLE>錯誤：網路快取伺服器存取被拒絕</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD>
 <BODY>
-<H1>���~</H1>
-<H2>�����֨����A���s���Q�ڵ�</H2>
+<H1>錯誤</H1>
+<H2>網路快取伺服器存取被拒絕</H2>
 <HR noshade size="1px">
 <P>
-�����նǦ^�U�������}�]URL�^�ɡG 
+當嘗試傳回下面的網址（URL）時： 
 <A HREF="%U">%U</A>
 <P>
-�o�ͤF�U�C�����~�G 
+發生了下列的錯誤： 
 <UL>
 <LI>
 <STRONG>
 Cache Access Denied.
 <LI>
-�֨����A���s���Q�ڵ�
+快取伺服器存取被拒絕
 </STRONG>
 </UL>
 </P>
 
 <P>
-��p�A�z���Q���\�z�L�ڭ̳o�Ӻ����֨����A���Ǧ^�U�C��m�G
+抱歉，您不被允許透過我們這個網路快取伺服器傳回下列位置：
 <BR>    %U<BR>
-���D�z�q�L�F�ڭ̪��������ҡC
+除非您通過了我們的身份驗證。
 </P>
 
 <P>
@@ -36,8 +36,8 @@ difficulties authenticating yourself or
 <A HREF="http://%h/cgi-bin/chpasswd.cgi">change</a> your default password.
 </P>
 <P>
-�z�ݭn�ϥ� Netscape version 2.0 �Χ�s�������A�άO�ϥ� Microsoft Internet 
-Explorer 3.0�A�άO�@�Ӭۮe HTTP/1.1 ���s�����Ӷi��u�@�C�p�G�z�b�������ҤW
-�o�ͧx���A�лP <A HREF="mailto:%w%W">�޲z��</a> �pô�C
-�άO<A HREF="http://%h/cgi-bin/chpasswd.cgi">���</a>�z���K�X�C
+您需要使用 Netscape version 2.0 或更新的版本，或是使用 Microsoft Internet 
+Explorer 3.0，或是一個相容 HTTP/1.1 的瀏覽器來進行工作。如果您在身份驗證上
+發生困難，請與 <A HREF="mailto:%w%W">管理者</a> 聯繫。
+或是<A HREF="http://%h/cgi-bin/chpasswd.cgi">更改</a>您的密碼。
 </P>

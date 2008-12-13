@@ -1,29 +1,29 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
 <TITLE>EROARE: URL-ul cerut nu a putut fi citit</TITLE>
-<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>ERROR</H1>
 <H2>URL-ul cerut nu a putut fi citit</H2>
 <HR noshade size="1px">
 <P>
-În timp ce citeam URL-ul:
+Ăn timp ce citeam URL-ul:
 <A HREF="%U">%U</A>
 <P>
-Am întâlnit următoarea eroare:
+Am ĂŽntĂ˘lnit urmÄtoarea eroare:
 <UL>
 <LI>
 <STRONG>
-Un document cu cale corectă de altfel nu a fost găsit în cache şi
-directiva <code>only-if-cached</code> (numai dacă este deja în cache)
-a fost specificată.
+Un document cu cale corectÄ de altfel nu a fost gÄsit ĂŽn cache Ĺi
+directiva <code>only-if-cached</code> (numai dacÄ este deja ĂŽn cache)
+a fost specificatÄ.
 </STRONG>
 </UL>
 
 <P>
-Aţi cerut un document cu directiva <code>only-if-cached</code>
-(numai dacă există deja în cache). Documentul nu a fost găsit în
-cache, <em>sau</em> a necesitat o revalidare, revalidare interzisă
+AĹŁi cerut un document cu directiva <code>only-if-cached</code>
+(numai dacÄ existÄ deja ĂŽn cache). Documentul nu a fost gÄsit ĂŽn
+cache, <em>sau</em> a necesitat o revalidare, revalidare interzisÄ
 de directiva<code>only-if-cached</code>.
 </P>

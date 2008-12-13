@@ -1,39 +1,39 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML>
 <HEAD>
-   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
-   <TITLE>BŁĄD: Żądany URL nie może zostać sprowadzony</TITLE>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+   <TITLE>BĹÄD: ĹťÄdany URL nie moĹźe zostaÄ sprowadzony</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD>
 <BODY>
 
 <H1>
-BŁĄD</H1>
+BĹÄD</H1>
 
 <H2>
-Żądany URL nie może zostać sprowadzony</H2>
+ĹťÄdany URL nie moĹźe zostaÄ sprowadzony</H2>
 
 <HR noshade size="1px">
 
 <P>Podczas sprowadzania URL-a: <A HREF="%U">%U</A>
 
-<P>wystąpił następujący błąd:
+<P>wystÄpiĹ nastÄpujÄcy bĹÄd:
 <UL>
 <LI>
-<B>błędny URL</B></LI>
+<B>bĹÄdny URL</B></LI>
 </UL>
-Niektóre części URL-a są błędne. Możliwe problemy to:
+NiektĂłre czÄĹci URL-a sÄ bĹÄdne. MoĹźliwe problemy to:
 <UL>
 <LI>
-Brak lub niewłaściwy protokół (should be `http://'' or similar)</LI>
+Brak lub niewĹaĹciwy protokĂłĹ (should be `http://'' or similar)</LI>
 
 <LI>
 Brak nazwy hosta</LI>
 
 <LI>
-podwójna sekwencja escape w ścieżce URL</LI>
+podwĂłjna sekwencja escape w ĹcieĹźce URL</LI>
 
 <LI>
-błędny znak w nazwie hosta; podkreślenia (underscores) są niedozwolone</LI>
+bĹÄdny znak w nazwie hosta; podkreĹlenia (underscores) sÄ niedozwolone</LI>
 </UL>
 

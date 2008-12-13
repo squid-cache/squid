@@ -1,28 +1,28 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
-<TITLE>EROARE: Trimiterea de fişier prin FTP a eşuat</TITLE>
-<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
+<TITLE>EROARE: Trimiterea de fiĹier prin FTP a eĹuat</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>ERROR</H1>
-<H2>Comanda FTP PUT/trimiterea a eşuat</H2>
+<H2>Comanda FTP PUT/trimiterea a eĹuat</H2>
 <HR noshade size="1px">
 <P>
-În timp ce făceam PUT la următorul URL:
+Ăn timp ce fÄceam PUT la urmÄtorul URL:
 <A HREF="%U">%U</A>
 <P>
-Squid a trimis următoarea comandă FTP:
+Squid a trimis urmÄtoarea comandÄ FTP:
 <PRE><STRONG>
         %f
 </STRONG></PRE>
-şi a primit următoarea replică
+Ĺi a primit urmÄtoarea replicÄ
 <PRE><STRONG>
         %F
 </STRONG></PRE>
 <P>
-Aceasta înseamnă că:
+Aceasta ĂŽnseamnÄ cÄ:
 <PRE>
-Verificaţi calea, drepturile, spaţiul liber şi
-încercaţi din nou.
+VerificaĹŁi calea, drepturile, spaĹŁiul liber Ĺi
+ĂŽncercaĹŁi din nou.
 </PRE>
 </P>

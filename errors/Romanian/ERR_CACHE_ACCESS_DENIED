@@ -1,17 +1,17 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
 <TITLE>EROARE: URL-ul cerut nu a putut fi citit</TITLE>
-<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>ERROR</H1>
 <H2>URL-ul cerut nu a putut fi citit</H2>
 <HR noshade size="1px">
 <P>
-În timp ce citeam URL-ul:
+Ăn timp ce citeam URL-ul:
 <A HREF="%U">%U</A>
 <P>
-Am întâlnit următoarea eroare:
+Am ĂŽntĂ˘lnit urmÄtoarea eroare:
 <UL>
 <LI>
 <STRONG>
@@ -20,15 +20,15 @@ Accesul la cache refuzat.
 </UL>
 </P>
 
-<P>Ne pare rău, dar nu sunteţi îndreptăţit să accesaţi:
+<P>Ne pare rÄu, dar nu sunteĹŁi ĂŽndreptÄĹŁit sÄ accesaĹŁi:
 <PRE>    %U</PRE>
-din acest cache pana cand nu v-aţi autenticat.
+din acest cache pana cand nu v-aĹŁi autenticat.
 </P>
 
 <P>
 Aveti nevoie de Netscape versiunea 2.0 sau mai mare, sau Microsoft
-Internet Explorer 3.0, sau un browser care cunoaşte HTTP/1.1 pentru
-a vă putea autentica. Vă rugăm contactaţi <A HREF="mailto:%w%W">
-administratorul cache-ului</a> daca aveţi dificultăţi în autentificare
-sau <A HREF="http://%h/cgi-bin/chpasswd.cgi">schimbaţi-vă</a> parola.
+Internet Explorer 3.0, sau un browser care cunoaĹte HTTP/1.1 pentru
+a vÄ putea autentica. VÄ rugÄm contactaĹŁi <A HREF="mailto:%w%W">
+administratorul cache-ului</a> daca aveĹŁi dificultÄĹŁi ĂŽn autentificare
+sau <A HREF="http://%h/cgi-bin/chpasswd.cgi">schimbaĹŁi-vÄ</a> parola.
 </P>

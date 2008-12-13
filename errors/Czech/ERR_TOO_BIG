@@ -1,16 +1,16 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-2"> 
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"> 
 <TITLE>CHYBA: Pozadovany dokument je nedostupny</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>CHYBA</H1>
-<H2>Požadovaný dokument je nedostupný</H2>
+<H2>PoĹžadovanĂ˝ dokument je nedostupnĂ˝</H2>
 <HR noshade size="1px">
-Při pokusu o přístup k:
+PĹi pokusu o pĹĂ­stup k:
 <A HREF="%U">%U</A>
 <P>
-se objevila následující chyba:
+se objevila nĂĄsledujĂ­cĂ­ chyba:
 <UL>
 <LI>
 <STRONG>
@@ -18,9 +18,9 @@ The request or reply is too large.
 </STRONG>
 </UL>
 <P>
-Při použití metody POST, PUT nebo GET byl požadovaný dokument příliš
-velký a překročil možný limit povolený k přenosu (pravděpodobně jste
-se snažili o posílání/příjem dokumentu na server nebo ze serveru).
-Tento limit byl nastaven administrátorem této cache. Pokud si myslíte,
-že je potřeba tyto limity změnit, <A HREF="mailto:%w%W">kontaktujte ho</a>.
+PĹi pouĹžitĂ­ metody POST, PUT nebo GET byl poĹžadovanĂ˝ dokument pĹĂ­liĹĄ
+velkĂ˝ a pĹekroÄil moĹžnĂ˝ limit povolenĂ˝ k pĹenosu (pravdÄpodobnÄ jste
+se snaĹžili o posĂ­lĂĄnĂ­/pĹĂ­jem dokumentu na server nebo ze serveru).
+Tento limit byl nastaven administrĂĄtorem tĂŠto cache. Pokud si myslĂ­te,
+Ĺže je potĹeba tyto limity zmÄnit, <A HREF="mailto:%w%W">kontaktujte ho</a>.
 </P>

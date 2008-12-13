@@ -1,24 +1,24 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=big5">
-<TITLE>¿ù»~¡G±ı³sµ²¤§ºô§}¡]URL¡^µLªk¥¿½Tªº¶Ç¦^</TITLE>
+<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+<TITLE>éŒ¯èª¤ï¼šæ¬²é€£çµä¹‹ç¶²å€ï¼ˆURLï¼‰ç„¡æ³•æ­£ç¢ºçš„å‚³å›</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
-<H1>¿ù»~</H1>
-<H2>±ı³sµ²¤§ºô§}¡]URL¡^µLªk¥¿½Tªº¶Ç¦^</H2>
+<H1>éŒ¯èª¤</H1>
+<H2>æ¬²é€£çµä¹‹ç¶²å€ï¼ˆURLï¼‰ç„¡æ³•æ­£ç¢ºçš„å‚³å›</H2>
 <HR noshade size="1px">
 <P>
-·í¹Á¸Õ¶Ç¦^¤U­±ªººô§}¡]URL¡^®É¡G
+ç•¶å˜—è©¦å‚³å›ä¸‹é¢çš„ç¶²å€ï¼ˆURLï¼‰æ™‚ï¼š
 <A HREF="%U">%U</A>
 <P>
-µo¥Í¤F¤U¦Cªº¿ù»~¡G
+ç™¼ç”Ÿäº†ä¸‹åˆ—çš„éŒ¯èª¤ï¼š
 <UL>
 <LI>
 <STRONG>
 Valid document was not found in the cache and <code>only-if-cached</code>
 directive was specified.
 <LI>
-±z­n¨Dªº¤å¥ó¨Ã¥¼¦s¦b©ó¥»§Ö¨ú¦øªA¾¹¤W¡A¦Ó¥B±z³]©w¤F<code>only-if-cached</code>
-«ü¥O¡C
+æ‚¨è¦æ±‚çš„æ–‡ä»¶ä¸¦æœªå­˜åœ¨æ–¼æœ¬å¿«å–ä¼ºæœå™¨ä¸Šï¼Œè€Œä¸”æ‚¨è¨­å®šäº†<code>only-if-cached</code>
+æŒ‡ä»¤ã€‚
 </STRONG>
 </UL>
 
@@ -28,6 +28,6 @@ You have issued a request with a <code>only-if-cached</code> cache control
 directive. The document was not found in the cache, <em>or</em> it required
 revalidation prohibited by <code>only-if-cached</code> directive.
 <BR>
-±z°e¥X¤F¤@­Ó¥]§t <code>only-if-cached</code> §Ö¨ú±±¨î«ü¥Oªº³sµ²­n¨D¡C¦Ó¤å¥ó¨Ã¥¼¦s¦b§Ö¨ú¦øªA¾¹¤¤¡A<em>©ÎªÌ</em>
-³o­Ó³s½u­n¨D³Q <code>only-if-cached</code> «ü¥O»{©w¬O¸T¥Îªº¡C
+æ‚¨é€å‡ºäº†ä¸€å€‹åŒ…å« <code>only-if-cached</code> å¿«å–æ§åˆ¶æŒ‡ä»¤çš„é€£çµè¦æ±‚ã€‚è€Œæ–‡ä»¶ä¸¦æœªå­˜åœ¨å¿«å–ä¼ºæœå™¨ä¸­ï¼Œ<em>æˆ–è€…</em>
+é€™å€‹é€£ç·šè¦æ±‚è¢« <code>only-if-cached</code> æŒ‡ä»¤èªå®šæ˜¯ç¦ç”¨çš„ã€‚
 </P>
