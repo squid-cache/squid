@@ -114,6 +114,8 @@ private:
     void writeServerDone(char *buf, size_t len, comm_err_t flag, int xerrno);
 };
 
+#define fd_closed(fd) (fd == -1 || fd_table[fd].closing())
+
 static const char *const conn_established = "HTTP/1.0 200 Connection established\r\n\r\n";
 
 static CNCB tunnelConnectDone;
@@ -309,16 +311,16 @@ TunnelStateData::copy (size_t len, comm_err_t errcode, int xerrno, Connection &f
     cbdataInternalLock(this);	/* ??? should be locked by the caller... */
 
     /* Bump the server connection timeout on any activity */
-    if (server.fd() != -1)
+    if (!fd_closed(server.fd()))
         commSetTimeout(server.fd(), Config.Timeout.read, tunnelTimeout, this);
 
     if (len < 0 || errcode)
         from.error (xerrno);
-    else if (len == 0 || to.fd() == -1) {
+    else if (len == 0 || fd_closed(to.fd())) {
         comm_close(from.fd());
         /* Only close the remote end if we've finished queueing data to it */
 
-        if (from.len == 0 && to.fd() != -1) {
+        if (from.len == 0 && !fd_closed(to.fd()) ) {
             comm_close(to.fd());
         }
     } else if (cbdataReferenceValid(this))
@@ -361,7 +363,7 @@ TunnelStateData::writeServerDone(char *buf, size_t len, comm_err_t flag, int xer
     client.dataSent(len);
 
     /* If the other end has closed, so should we */
-    if (client.fd() == -1) {
+    if (fd_closed(client.fd())) {
         comm_close(server.fd());
         return;
     }
@@ -418,7 +420,7 @@ TunnelStateData::writeClientDone(char *buf, size_t len, comm_err_t flag, int xer
     server.dataSent(len);
 
     /* If the other end has closed, so should we */
-    if (server.fd() == -1) {
+    if (fd_closed(server.fd())) {
         comm_close(client.fd());
         return;
     }
@@ -447,7 +449,7 @@ tunnelTimeout(int fd, void *data)
 void
 TunnelStateData::Connection::closeIfOpen()
 {
-    if (fd() != -1)
+    if (!fd_closed(fd()))
         comm_close(fd());
 }
 
@@ -537,10 +539,10 @@ tunnelErrorComplete(int fdnotused, void *data, size_t sizenotused)
     /* temporary lock to save our own feets (comm_close -> tunnelClientClosed -> Free) */
     cbdataInternalLock(tunnelState);
 
-    if (tunnelState->client.fd() > -1)
+    if (!fd_closed(tunnelState->client.fd()))
         comm_close(tunnelState->client.fd());
 
-    if (tunnelState->server.fd() > -1)
+    if (fd_closed(tunnelState->server.fd()))
         comm_close(tunnelState->server.fd());
 
     cbdataInternalUnlock(tunnelState);
@@ -795,7 +797,7 @@ TunnelStateData::Connection::fd(int const newFD)
 bool
 TunnelStateData::noConnections() const
 {
-    return (server.fd() == -1) && (client.fd() == -1);
+    return fd_closed(server.fd()) && fd_closed(client.fd());
 }
 
 #if DELAY_POOLS
