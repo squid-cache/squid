@@ -23,6 +23,7 @@ TRANSLATIONS = \
 	es \
 	et \
 	fr \
+	hy \
 	id \
 	it \
 	ja \
@@ -38,7 +39,6 @@ TRANSLATIONS = \
 # Legacy language contributions...
 #
 LANGUAGES	= \
-		Armenian \
 		Azerbaijani \
 		Czech \
 		Finnish \
