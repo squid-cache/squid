@@ -1,3 +1,10 @@
+Changes to squid-3.0.STABLE11 (24 Dec 2008):
+
+	- Bug 2424: filedescriptors being left unnecessary opened
+	- Bug 2545: fault passing ICAP filtered traffic to peers
+	- Bug 2227: Sefgaults in MemBuf::reset during idnsSendQuery
+	- .. and some minor admin and debug cleanups.
+
 Changes to squid-3.0.STABLE11-RC1 (3 Dec 2008):
 
         - Removes patch causing cache of bad objects 
