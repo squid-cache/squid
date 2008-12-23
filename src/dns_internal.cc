@@ -730,7 +730,9 @@ idnsVCClosed(int fd, void *data)
 {
     nsvc * vc = (nsvc *)data;
     delete vc->queue;
+    vc->queue = NULL;
     delete vc->msg;
+    vc->msg = NULL;
     nameservers[vc->ns].vc = NULL;
     cbdataFree(vc);
 }
@@ -781,6 +783,11 @@ idnsSendQueryVC(idns_query * q, int ns)
     if (!vc) {
         debugs(78, 1, "idnsSendQuery: Failed to initiate TCP connection to nameserver " << inet_ntoa(nameservers[ns].S.sin_addr) << "!");
         return;
+    }
+
+    if(vc->queue == NULL) {
+        vc->queue = new MemBuf;
+        vc->queue->init();
     }
 
     vc->queue->reset();
