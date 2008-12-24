@@ -34,7 +34,7 @@ LOADABLE_MODULES_SOURCES = \
 TESTS=$(check_PROGRAMS)
 check_PROGRAMS=
 
-SUBDIRS		= fs repl auth icmp
+SUBDIRS		= fs repl auth icmp ip
 
 if USE_ADAPTATION
 SUBDIRS += adaptation
@@ -243,7 +243,13 @@ libexec_PROGRAMS = \
 	@DISK_PROGRAMS@ \
 	$(UNLINKD)
 
-cf_gen_SOURCES = cf_gen.cc defines.h debug.cc time.cc
+cf_gen_SOURCES = \
+	cf_gen.cc \
+	defines.h \
+	debug.cc \
+	ip/stubQosConfig.cc \
+	time.cc
+
 nodist_cf_gen_SOURCES = globals.cc
 nodist_cf_gen_HEADER = cf_gen_defines.h
 cf_gen.$(OBJEXT): cf_gen_defines.h
@@ -422,7 +428,6 @@ libsquid_la_SOURCES = \
 	SquidConfig.cc \
         TextException.cc \
         TextException.h
-
 
 # authentication framework
 libauth_la_SOURCES = \
@@ -684,6 +689,7 @@ squid_LDADD = \
 	libsquid.la \
 	libauth.la \
 	icmp/libicmp.la icmp/libicmp-core.la \
+	ip/libip.la \
 	-L../lib \
 	@XTRA_OBJS@ \
 	@DISK_LINKOBJS@ \
@@ -864,6 +870,7 @@ ufsdump_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
 	protos.h \
+	ip/stubQosConfig.cc \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \
@@ -1210,6 +1217,7 @@ tests_testAuth_SOURCES = \
 	tests/stub_store.cc HttpHeaderTools.cc HttpHeader.cc acl.cc mem.cc \
 	MemBuf.cc HttpHdrContRange.cc Packer.cc ACLChecklist.cc HttpHdrCc.cc HttpHdrSc.cc \
 	HttpHdrScTarget.cc url.cc ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc \
+	ip/stubQosConfig.cc \
 	StatHist.cc HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
 	tests/stub_HttpRequest.cc tests/stub_DelayId.cc \
 	tests/stub_MemObject.cc mem_node.cc \
@@ -1286,6 +1294,7 @@ tests_testACLMaxUserIP_SOURCES= \
 	mem_node.cc \
 	Packer.cc \
 	Parsing.cc \
+	ip/stubQosConfig.cc \
 	StatHist.cc \
 	stmem.cc \
 	String.cc \
@@ -1422,6 +1431,7 @@ tests_testCacheManager_SOURCES = \
 	peer_select.cc \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
+	ip/stubQosConfig.cc \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \
@@ -1492,7 +1502,8 @@ tests_testDiskIO_SOURCES = \
 	tests/testDiskIO.cc \
 	tests/testDiskIO.h \
 	tests/testMain.cc \
-	tests/stub_cache_manager.cc
+	tests/stub_cache_manager.cc \
+	ip/stubQosConfig.cc
 nodist_tests_testDiskIO_SOURCES= \
 	$(SWAP_TEST_GEN_SOURCES)
 tests_testDiskIO_LDADD = \
@@ -1598,6 +1609,7 @@ tests_testEvent_SOURCES = \
 	peer_select.cc \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
+	ip/stubQosConfig.cc \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \
@@ -1754,6 +1766,7 @@ tests_testEventLoop_SOURCES = \
 	peer_select.cc \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
+	ip/stubQosConfig.cc \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \
@@ -1900,6 +1913,7 @@ tests_test_http_range_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
 	pconn.cc \
+	ip/stubQosConfig.cc \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \
@@ -2061,6 +2075,7 @@ tests_testHttpRequest_SOURCES = \
 	peer_select.cc \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
+	ip/stubQosConfig.cc \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \
@@ -2159,6 +2174,7 @@ STORE_TEST_SOURCES=\
 	HttpHdrScTarget.cc url.cc ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc \
 	StatHist.cc HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
 	tests/stub_HttpRequest.cc tests/stub_access_log.cc \
+	ip/stubQosConfig.cc \
 	refresh.cc \
 	tests/stub_store_client.cc \
 	tests/stub_tools.cc \
@@ -2209,14 +2225,16 @@ tests_testStore_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@SQUID_CPPUNIT_LA@
 
 # string needs mem.cc.
+# libsquid pulls in SquidConfig and children. stub them.
 tests_testString_SOURCES = \
 	mem.cc \
+	ip/stubQosConfig.cc \
 	String.cc \
 	tests/testMain.cc \
 	tests/testString.cc \
 	tests/testString.h \
 	tests/stub_cache_manager.cc \
-	time.cc 
+	time.cc
 nodist_tests_testString_SOURCES = \
 	$(TESTSOURCES)
 tests_testString_LDADD = \
@@ -2423,6 +2441,7 @@ tests_testURL_SOURCES = \
 	peer_select.cc \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
+	ip/stubQosConfig.cc \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \

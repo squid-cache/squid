@@ -1635,9 +1635,9 @@ clientReplyContext::doGetMoreData()
         assert(http->out.size == 0);
         assert(http->out.offset == 0);
 #if USE_ZPH_QOS
-        if (Config.zph_tos_local) {
-            debugs(33, 2, "ZPH Local hit, TOS="<<Config.zph_tos_local);
-            comm_set_tos(http->getConn()->fd,Config.zph_tos_local);
+        if (Config.zph.tos_local_hit) {
+            debugs(33, 2, "ZPH Local hit, TOS=" << Config.zph.tos_local_hit);
+            comm_set_tos(http->getConn()->fd, Config.zph.tos_local_hit);
         }
 #endif /* USE_ZPH_QOS */
         tempBuffer.offset = reqofs;
@@ -1915,13 +1915,14 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     if (reqofs==0 && !logTypeIsATcpHit(http->logType)) {
         assert(fd >= 0); // the beginning of this method implies fd may be -1
         int tos = 0;
-        if (Config.zph_tos_peer &&
-                (http->request->hier.code==SIBLING_HIT ||
-                 (Config.onoff.zph_tos_parent && http->request->hier.code==PARENT_HIT) ) ) {
-            tos = Config.zph_tos_peer;
-            debugs(33, 2, "ZPH: Peer hit with hier.code="<<http->request->hier.code<<", TOS="<<tos);
-        } else if (Config.onoff.zph_preserve_miss_tos && Config.zph_preserve_miss_tos_mask) {
-            tos = fd_table[fd].upstreamTOS & Config.zph_preserve_miss_tos_mask;
+        if (Config.zph.tos_sibling_hit && http->request->hier.code==SIBLING_HIT ) {
+            tos = Config.zph.tos_sibling_hit;
+            debugs(33, 2, "ZPH: Sibling Peer hit with hier.code=" << http->request->hier.code << ", TOS=" << tos);
+        } else if (Config.zph.tos_parent_hit && http->request->hier.code==PARENT_HIT) {
+            tos = Config.zph.tos_parent_hit;
+            debugs(33, 2, "ZPH: Parent Peer hit with hier.code=" << http->request->hier.code << ", TOS=" << tos);
+        } else if (Config.zph.preserve_miss_tos && Config.zph.preserve_miss_tos_mask) {
+            tos = fd_table[fd].upstreamTOS & Config.zph.preserve_miss_tos_mask;
             debugs(33, 2, "ZPH: Preserving TOS on miss, TOS="<<tos);
         }
         comm_set_tos(fd,tos);
