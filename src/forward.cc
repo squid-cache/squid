@@ -965,7 +965,9 @@ FwdState::dispatch()
 
     netdbPingSite(request->GetHost());
 
-#if USE_ZPH_QOS
+#if USE_ZPH_QOS && _SQUID_LINUX_
+    /* Bug 2537: This part of ZPH only applies to patched Linux kernels. */
+
     /* Retrieves remote server TOS value, and stores it as part of the
      * original client request FD object. It is later used to forward
      * remote server's TOS in the response to the client in case of a MISS.
