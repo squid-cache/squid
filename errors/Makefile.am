@@ -23,6 +23,7 @@ TRANSLATIONS = \
 	es \
 	et \
 	fr \
+	hy \
 	id \
 	it \
 	ja \
@@ -31,30 +32,27 @@ TRANSLATIONS = \
 	ru \
 	sr \
 	sv \
+	tr \
 	uk \
 	zh-cn
 
 # Legacy language contributions...
 #
 LANGUAGES	= \
-		Armenian \
 		Azerbaijani \
 		Czech \
 		Finnish \
 		Greek \
 		Hebrew \
 		Hungarian \
-		Japanese \
 		Korean \
 		Lithuanian \
 		Polish \
 		Portuguese \
 		Romanian \
-		Serbian \
 		Simplify_Chinese \
 		Slovak \
-		Traditional_Chinese \
-		Turkish
+		Traditional_Chinese
 
 install-data-local: 
 	@for l in $(LANGUAGES); do \
