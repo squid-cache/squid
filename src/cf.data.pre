@@ -1280,10 +1280,11 @@ DOC_START
 	parent-hit=0xFF		Value to mark hits from parent peers.
 
 
+	NOTE: 'miss' preserve feature is only possible on Linux at this time.
+
 	For the following to work correctly, you will need to patch your
 	linux kernel with the TOS preserving ZPH patch.
 	The kernel patch can be downloaded from http://zph.bratcheda.org
-
 
 	disable-preserve-miss
 		If set, any HTTP response towards clients will
