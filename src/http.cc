@@ -633,7 +633,8 @@ HttpStateData::keepaliveAccounting(HttpReply *reply)
         if (_peer)
             _peer->stats.n_keepalives_recv++;
 
-        if (Config.onoff.detect_broken_server_pconns && reply->bodySize(request->method) == -1) {
+	if (Config.onoff.detect_broken_server_pconns
+	&& reply->bodySize(request->method) == -1 && !flags.chunked) {
             debugs(11, 1, "keepaliveAccounting: Impossible keep-alive header from '" << entry->url() << "'" );
             // debugs(11, 2, "GOT HTTP REPLY HDR:\n---------\n" << readBuf->content() << "\n----------" );
             flags.keepalive_broken = 1;
@@ -1604,7 +1605,14 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         if (!cc)
             cc = httpHdrCcCreate();
 
-        if (!EBIT_TEST(cc->mask, CC_MAX_AGE)) {
+#if 0 /* see bug 2330 */
+        /* Set no-cache if determined needed but not found */
+        if (orig_request->flags.nocache)
+            EBIT_SET(cc->mask, CC_NO_CACHE);
+#endif
+
+	/* Add max-age only without no-cache */
+	if (!EBIT_TEST(cc->mask, CC_MAX_AGE) && !EBIT_TEST(cc->mask, CC_NO_CACHE)) {
             const char *url =
                 entry ? entry->url() : urlCanonical(orig_request);
             httpHdrCcSetMaxAge(cc, getMaxAge(url));
@@ -1612,10 +1620,6 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             if (request->urlpath.size())
                 assert(strstr(url, request->urlpath.buf()));
         }
-
-        /* Set no-cache if determined needed but not found */
-        if (orig_request->flags.nocache && !hdr_in->has(HDR_PRAGMA))
-            EBIT_SET(cc->mask, CC_NO_CACHE);
 
         /* Enforce sibling relations */
         if (flags.only_if_cached)
