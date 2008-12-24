@@ -915,55 +915,45 @@ DEFAULT: None bypassed.
 </PRE>
 </P>
 
-<DT><B>zph_preserve_miss_tos</B><DD>
+<DT><B>qos_flows local-hit= sibling-hit= parent-hit=</B><DD>
 <P>
 <PRE>
-        If set to on (default), any HTTP response towards clients will
-        have the TOS value of the response comming from the remote
-        server masked with the value of zph_preserve_miss_tos_mask.
-        For this to work correctly, you will need to patch your linux
-        kernel with the TOS preserving ZPH patch.
+        Allows you to select a TOS/DSCP value to mark outgoing
+        connections with, based on where the reply was sourced.
+
+        TOS values really only have local significance - so you should
+        know what you're specifying. For more information, see RFC2474,
+        RFC2475, and RFC3260.
+
+        The TOS/DSCP byte must be exactly that - octet value 0x00-0xFF.
+        Note that in practice often only values up to 0x3F are usable
+        as the two highest bits have been redefined for use by ECN
+        (RFC3168).
+
+        This setting is configured by setting the source TOS values:
+
+        local-hit=0xFF          Value to mark local cache hits.
+
+        sibling-hit=0xFF        Value to mark hits from sibling peers.
+
+        parent-hit=0xFF         Value to mark hits from parent peers.
+
+
+        NOTE: 'miss' preserve feature is only possible on Linux at this time.
+
+        For the following to work correctly, you will need to patch your
+        linux kernel with the TOS preserving ZPH patch.
         The kernel patch can be downloaded from http://zph.bratcheda.org
-        
-</PRE>
-</P>
 
-<DT><B>zph_preserve_miss_tos_mask</B><DD>
-<P>
-<PRE>
-        Allows you to mask certain bits in the TOS received from the
-        remote server, before copying the value to the TOS send towards
-        clients.
-        Default: 0xFF (255) (TOS from server is not changed).
-        
-</PRE>
-</P>
-
-<DT><B>zph_tos_local</B><DD>
-<P>
-<PRE>
-        Allows you to select a TOS/Diffserv value to mark local hits. Read above
-        (tcp_outgoing_tos) for details/requirements about TOS.
-        Default: 0 (disabled).
-        
-</PRE>
-</P>
-
-<DT><B>zph_tos_parent</B><DD>
-<P>
-<PRE>
-        Set this to off if you want only sibling hits to be marked.
-        If set to on (default), parent hits are being marked too.
-        
-</PRE>
-</P>
-
-<DT><B>zph_tos_peer</B><DD>
-<P>
-<PRE>
-        Allows you to select a TOS/Diffserv value to mark peer hits. Read above
-        (tcp_outgoing_tos) for details/requirements about TOS.
-        Default: 0 (disabled).
+        disable-preserve-miss
+                If set, any HTTP response towards clients will
+                have the TOS value of the response comming from the
+                remote server masked with the value of miss-mask.
+        miss-mask=0xFF
+                Allows you to mask certain bits in the TOS received from the
+                remote server, before copying the value to the TOS sent
+                towards clients.
+                Default: 0xFF (TOS from server is not changed).
         
 </PRE>
 </P>
@@ -1402,7 +1392,7 @@ The helper will now compile and work with dns_nameservers on more variants of Li
 <P>Replaced by <EM>url_rewrite_bypass</EM></P>
 
 <DT><B>zph_local</B><DD>
-<P>Replaced by <EM>zph_tos_local</EM></P>
+<P>Replaced by <EM>qos_flows local-hit=</EM></P>
 
 <DT><B>zph_mode</B><DD>
 <P>Obsolete.</P>
@@ -1411,10 +1401,10 @@ The helper will now compile and work with dns_nameservers on more variants of Li
 <P>Obsolete.</P>
 
 <DT><B>zph_parent</B><DD>
-<P>Replaced by <EM>zph_tos_peer</EM> and <EM>zph_tos_parent</EM></P>
+<P>Replaced by <EM>qos_flows parent-hit=</EM></P>
 
 <DT><B>zph_sibling</B><DD>
-<P>Replaced by <EM>zph_tos_peer</EM></P>
+<P>Replaced by <EM>qos_flows sibling-hit=</EM></P>
 
 </DL>
 </P>
