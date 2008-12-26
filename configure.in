@@ -688,6 +688,33 @@ if test "$with_aio" = "yes"; then
     )
 fi
 
+dnl Check for pthreads
+dnl We use pthreads when doing ASYNC I/O
+if test "$with_pthreads" = "yes"; then
+    SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT"
+    SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT"
+    case "$host" in
+    i386-unknown-freebsd*)
+        if test "$GCC" = "yes" ; then
+            if test -z "$PRESET_LDFLAGS"; then
+                LDFLAGS="$LDFLAGS -pthread"
+            fi
+        fi
+    ;;
+    *-solaris2.*)
+        if test "$GCC" = "yes" ; then
+	    SQUID_CFLAGS="$SQUID_CFLAGS -pthreads"
+	    SQUID_CXXFLAGS="$SQUID_CXXFLAGS -pthreads"
+	else
+	    SQUID_CFLAGS="$SQUID_CFLAGS -mt"
+	    SQUID_CXXFLAGS="$SQUID_CXXFLAGS -mt"
+        fi
+    ;;
+    esac
+    AC_CHECK_LIB(pthread, main,[DISK_LIBS="$DISK_LIBS -lpthread"],
+      [ AC_MSG_ERROR(pthread library required but cannot be found.) ])
+fi
+
 AC_SUBST(DISK_MODULES)
 AC_SUBST(DISK_LIBS)
 AC_SUBST(DISK_PROGRAMS)
@@ -2681,32 +2708,6 @@ AC_SUBST(CRYPTLIB)
 dnl Check for libdl, used by auth_modules/PAM
 if test "$with_dl" = "yes"; then
     AC_CHECK_LIB(dl, dlopen)
-fi
-
-dnl Check for pthreads
-dnl We use pthreads when doing ASYNC I/O
-if test "$with_pthreads" = "yes"; then
-    SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT"
-    SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT"
-    case "$host" in
-    i386-unknown-freebsd*)
-        if test "$GCC" = "yes" ; then
-            if test -z "$PRESET_LDFLAGS"; then
-                LDFLAGS="$LDFLAGS -pthread"
-            fi
-        fi
-    ;;
-    *-solaris2.*)
-        if test "$GCC" = "yes" ; then
-	    SQUID_CFLAGS="$SQUID_CFLAGS -pthreads"
-	    SQUID_CXXFLAGS="$SQUID_CXXFLAGS -pthreads"
-	else
-	    SQUID_CFLAGS="$SQUID_CFLAGS -mt"
-	    SQUID_CXXFLAGS="$SQUID_CXXFLAGS -mt"
-        fi
-    ;;
-    esac
-    AC_CHECK_LIB(pthread, main)
 fi
 
 dnl -lintl is needed on SCO version 3.2v4.2 for strftime()
