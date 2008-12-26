@@ -62,10 +62,11 @@ pinger_SOURCES = \
 # TODO: remove when these are cleaned up in their own way.
 nodist_pinger_SOURCES = \
 	../debug.cc \
+	../globals.cc \
 	../time.cc \
 	../SquidConfig.cc \
 	../SquidNew.cc \
-	../globals.cc
+	../ip/stubQosConfig.cc
 
 pinger_LDFLAGS = $(LIBADD_DL)
 pinger_LDADD=\

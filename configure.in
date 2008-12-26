@@ -3817,6 +3817,7 @@ AC_CONFIG_FILES([\
 	src/adaptation/Makefile \
 	src/ICAP/Makefile \
 	src/icmp/Makefile \
+	src/ip/Makefile \
 	src/eCAP/Makefile \
 	contrib/Makefile \
 	snmplib/Makefile \
