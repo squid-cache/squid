@@ -192,6 +192,8 @@ main(int argc, char *argv[])
     setgid(getgid());
     setuid(getuid());
 
+    last_check_time = squid_curtime;
+
     for (;;) {
         tv.tv_sec = PINGER_TIMEOUT;
         tv.tv_usec = 0;
