@@ -3,13 +3,15 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-11-14 20:01+1300\n"
-"PO-Revision-Date: 2008-11-14 05:14+1300\n"
+"PO-Revision-Date: 2008-12-19 05:28+1300\n"
 "Last-Translator: Constantin Rack <info@vigos.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
+"Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Pootle 1.1.0\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Pootle 1.2.0\n"
 
 #: templates/ERR_FTP_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
@@ -179,7 +181,6 @@ msgid "ESI Processing failed."
 msgstr "ESI-Verarbeitung fehlgeschlagen."
 
 #: templates/ERR_FTP_LISTING:4
-#, fuzzy
 msgid "FTP Directory Listing"
 msgstr "FTP Verzeichnis Auflistung"
 
