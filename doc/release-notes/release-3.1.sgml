@@ -211,9 +211,9 @@ Microsoft NTLM Authentication instead of HTTP standard authentication through a 
 <itemize>
 	<item>Allows you to select a TOS/Diffserv value to mark local hits.
 	<item>Allows you to select a TOS/Diffserv value to mark peer hits.
-	<item>Allows you to selectively set only sibling or sibling+parent requests
-	<item>Allows any HTTP response towards clients will have the TOS value of the response coming from
-		the remote server masked with the value of zph_preserve_miss_tos_mask.
+	<item>Allows you to selectively mark only sibling or parent requests
+	<item>Allows any HTTP response towards clients to have the TOS value of the response coming from
+		the remote server preserved.
 		For this to work correctly, you will need to patch your linux kernel with the TOS preserving ZPH patch.
 		The kernel patch can be downloaded from <url url="http://zph.bratcheda.org" name="http://zph.bratcheda.org">
 	<item>Allows you to mask certain bits in the TOS received from the remote server,
@@ -224,15 +224,18 @@ Microsoft NTLM Authentication instead of HTTP standard authentication through a 
 <p>Squid 3.1 needs to be configured with --enable-zph-qos for the ZPH QoS controls to be available.
 
 <p>The configuration options for 2.7 and 3.1 are based on different ZPH patches.
-The two releases configuration differs and is not at this point directly translatable.
+The two releases configuration differs and only the TOS mode settings are directly translatable.
 
 <itemize>
-<item><em>zph_tos_local</em>		Responses found as a HIT in the local cache
-<item><em>zph_tos_peer</em>		Responses found as a HIT on peer caches.
-<item><em>zph_tos_parent</em>		Qos to Sibling caches only or all peers.
-<item><em>zph_preserve_miss_tos</em>	Use the same ToS settings received by Squid from the remote server,
-					on the client connection. Requires a kernel patch.
+<item><em>qos_flows local-hit=0xff</em>		Responses found as a HIT in the local cache
+<item><em>qos_flows sibling-hit=0xff</em>	Responses found as a HIT in a sibling peer
+<item><em>qos_flows parent-hit=0xff</em>	Responses found as a HIT in a parent peer
 </itemize>
+
+<p>The lines above are spearated for documentation. qos_flows may be configured with all options on one line, or separated as shown.
+Also options may be repeated as many times as desired. Only the final configured value for any option will be used.
+
+<p>The legacy <b>Option</b> and <b>Priority</b> modes available in Squid-2.7 are no longer supported.
 
 
 <sect1>SSL Bump (for HTTPS Filtering and Adaptation)
@@ -731,42 +734,44 @@ NOCOMMENT_START
 	See also: sslproxy_flags and DONT_VERIFY_PEER.
 	</verb>
 
-	<tag>zph_preserve_miss_tos</tag>
+	<tag>qos_flows local-hit= sibling-hit= parent-hit=</tag>
 	<verb>
-	If set to on (default), any HTTP response towards clients will
-	have the TOS value of the response comming from the remote
-	server masked with the value of zph_preserve_miss_tos_mask.
-	For this to work correctly, you will need to patch your linux
-	kernel with the TOS preserving ZPH patch.
-	The kernel patch can be downloaded from http://zph.bratcheda.org
-	</verb>
+        Allows you to select a TOS/DSCP value to mark outgoing
+        connections with, based on where the reply was sourced.
 
-	<tag>zph_preserve_miss_tos_mask</tag>
-	<verb>
-	Allows you to mask certain bits in the TOS received from the
-	remote server, before copying the value to the TOS send towards
-	clients.
-	Default: 0xFF (255) (TOS from server is not changed).
-	</verb>
+        TOS values really only have local significance - so you should
+        know what you're specifying. For more information, see RFC2474,
+        RFC2475, and RFC3260.
 
-	<tag>zph_tos_local</tag>
-	<verb>
-	Allows you to select a TOS/Diffserv value to mark local hits. Read above
-	(tcp_outgoing_tos) for details/requirements about TOS.
-	Default: 0 (disabled).
-	</verb>
+        The TOS/DSCP byte must be exactly that - octet value 0x00-0xFF.
+        Note that in practice often only values up to 0x3F are usable
+        as the two highest bits have been redefined for use by ECN
+        (RFC3168).
 
-	<tag>zph_tos_parent</tag>
-	<verb>
-	Set this to off if you want only sibling hits to be marked.
-	If set to on (default), parent hits are being marked too.
-	</verb>
+        This setting is configured by setting the source TOS values:
 
-	<tag>zph_tos_peer</tag>
-	<verb>
-	Allows you to select a TOS/Diffserv value to mark peer hits. Read above
-	(tcp_outgoing_tos) for details/requirements about TOS.
-	Default: 0 (disabled).
+        local-hit=0xFF          Value to mark local cache hits.
+
+        sibling-hit=0xFF        Value to mark hits from sibling peers.
+
+        parent-hit=0xFF         Value to mark hits from parent peers.
+
+
+        NOTE: 'miss' preserve feature is only possible on Linux at this time.
+
+        For the following to work correctly, you will need to patch your
+        linux kernel with the TOS preserving ZPH patch.
+        The kernel patch can be downloaded from http://zph.bratcheda.org
+
+        disable-preserve-miss
+                If set, any HTTP response towards clients will
+                have the TOS value of the response comming from the
+                remote server masked with the value of miss-mask.
+        miss-mask=0xFF
+                Allows you to mask certain bits in the TOS received from the
+                remote server, before copying the value to the TOS sent
+                towards clients.
+                Default: 0xFF (TOS from server is not changed).
 	</verb>
 
 
@@ -1164,7 +1169,7 @@ This section gives an account of those changes in three categories:
 	<p>Replaced by <em>url_rewrite_bypass</em>
 
 	<tag>zph_local</tag>
-	<p>Replaced by <em>zph_tos_local</em>
+	<p>Replaced by <em>qos_flows local-hit=</em>
 
 	<tag>zph_mode</tag>
 	<p>Obsolete.
@@ -1173,10 +1178,10 @@ This section gives an account of those changes in three categories:
 	<p>Obsolete.
 
 	<tag>zph_parent</tag>
-	<p>Replaced by <em>zph_tos_peer</em> and <em>zph_tos_parent</em>
+	<p>Replaced by <em>qos_flows parent-hit=</em>
 
 	<tag>zph_sibling</tag>
-	<p>Replaced by <em>zph_tos_peer</em>
+	<p>Replaced by <em>qos_flows sibling-hit=</em>
 
 </descrip>
 

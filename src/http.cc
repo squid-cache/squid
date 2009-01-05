@@ -633,7 +633,8 @@ HttpStateData::keepaliveAccounting(HttpReply *reply)
         if (_peer)
             _peer->stats.n_keepalives_recv++;
 
-        if (Config.onoff.detect_broken_server_pconns && reply->bodySize(request->method) == -1) {
+	if (Config.onoff.detect_broken_server_pconns
+	&& reply->bodySize(request->method) == -1 && !flags.chunked) {
             debugs(11, 1, "keepaliveAccounting: Impossible keep-alive header from '" << entry->url() << "'" );
             // debugs(11, 2, "GOT HTTP REPLY HDR:\n---------\n" << readBuf->content() << "\n----------" );
             flags.keepalive_broken = 1;
@@ -948,7 +949,8 @@ HttpStateData::persistentConnStatus() const
     if (eof) // already reached EOF
         return COMPLETE_NONPERSISTENT_MSG;
 
-    /* In chunked responce we do not know the content length but we are absolutelly
+    /** \par
+     * In chunked response we do not know the content length but we are absolutely
      * sure about the end of response, so we are calling the statusIfComplete to
      * decide if we can be persistant
      */
@@ -963,7 +965,8 @@ HttpStateData::persistentConnStatus() const
     if (clen < 0)
         return INCOMPLETE_MSG;
 
-    /* If the body size is known, we must wait until we've gotten all of it. */
+    /** \par
+     * If the body size is known, we must wait until we've gotten all of it. */
     if (clen > 0) {
         // old technique:
         // if (entry->mem_obj->endOffset() < vrep->content_length + vrep->hdr_sz)
@@ -975,7 +978,8 @@ HttpStateData::persistentConnStatus() const
             return INCOMPLETE_MSG;
     }
 
-    /* If there is no message body or we got it all, we can be persistent */
+    /** \par
+     * If there is no message body or we got it all, we can be persistent */
     return statusIfComplete();
 }
 
@@ -1601,7 +1605,14 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         if (!cc)
             cc = httpHdrCcCreate();
 
-        if (!EBIT_TEST(cc->mask, CC_MAX_AGE)) {
+#if 0 /* see bug 2330 */
+        /* Set no-cache if determined needed but not found */
+        if (orig_request->flags.nocache)
+            EBIT_SET(cc->mask, CC_NO_CACHE);
+#endif
+
+	/* Add max-age only without no-cache */
+	if (!EBIT_TEST(cc->mask, CC_MAX_AGE) && !EBIT_TEST(cc->mask, CC_NO_CACHE)) {
             const char *url =
                 entry ? entry->url() : urlCanonical(orig_request);
             httpHdrCcSetMaxAge(cc, getMaxAge(url));
@@ -1609,10 +1620,6 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             if (request->urlpath.size())
                 assert(strstr(url, request->urlpath.buf()));
         }
-
-        /* Set no-cache if determined needed but not found */
-        if (orig_request->flags.nocache && !hdr_in->has(HDR_PRAGMA))
-            EBIT_SET(cc->mask, CC_NO_CACHE);
 
         /* Enforce sibling relations */
         if (flags.only_if_cached)
