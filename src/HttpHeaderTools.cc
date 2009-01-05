@@ -141,7 +141,7 @@ httpHeaderPutStrvf(HttpHeader * hdr, http_hdr_type id, const char *fmt, va_list 
 }
 
 
-/* wrapper arrounf PutContRange */
+/** wrapper arrounf PutContRange */
 void
 httpHeaderAddContRange(HttpHeader * hdr, HttpHdrRangeSpec spec, int64_t ent_len)
 {
@@ -153,7 +153,7 @@ httpHeaderAddContRange(HttpHeader * hdr, HttpHdrRangeSpec spec, int64_t ent_len)
 }
 
 
-/*
+/**
  * return true if a given directive is found in at least one of
  * the "connection" header-fields note: if HDR_PROXY_CONNECTION is
  * present we ignore HDR_CONNECTION.

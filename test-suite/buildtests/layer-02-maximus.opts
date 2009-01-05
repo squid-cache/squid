@@ -33,10 +33,6 @@
 #   --enable-win32-service \
 #   --with-localhost-ipv6 \
 #
-#	AYJ: these features have known bugs. They are optional so we don't block on them...
-#	We can't test them automatically everywhere
-#
-#	--enable-zph-qos \
 #
 OPTS=" \
 	--enable-loadable-modules \
@@ -91,6 +87,7 @@ OPTS=" \
 	--enable-vary \
 	--enable-ipv6 \
 	--enable-auto-locale \
+	--enable-zph-qos \
  \
 	--with-aio \
 	--with-build-environment=default \
