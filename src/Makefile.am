@@ -1502,8 +1502,7 @@ tests_testDiskIO_SOURCES = \
 	tests/testDiskIO.cc \
 	tests/testDiskIO.h \
 	tests/testMain.cc \
-	tests/stub_cache_manager.cc \
-	ip/stubQosConfig.cc
+	tests/stub_cache_manager.cc
 nodist_tests_testDiskIO_SOURCES= \
 	$(SWAP_TEST_GEN_SOURCES)
 tests_testDiskIO_LDADD = \

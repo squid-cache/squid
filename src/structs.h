@@ -125,7 +125,7 @@ struct relist {
 #endif
 
 #if USE_ZPH_QOS
-#include "QosConfig.h"
+#include "ip/QosConfig.h"
 #endif
 
 /* forward decl for SquidConfig, see RemovalPolicy.h */
