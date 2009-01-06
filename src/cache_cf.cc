@@ -47,7 +47,7 @@
 #include "Parsing.h"
 #include "MemBuf.h"
 #include "wordlist.h"
-#include "IPInterception.h"
+#include "ip/IpIntercept.h"
 
 #if HAVE_GLOB_H
 #include <glob.h>
@@ -2966,7 +2966,7 @@ parse_http_port_option(http_port_list * s, char *token)
 
     } else if (strcmp(token, "transparent") == 0 || strcmp(token, "intercept") == 0) {
         s->intercepted = 1;
-        IPInterceptor.StartInterception();
+        IpInterceptor.StartInterception();
         /* Log information regarding the port modes under interception. */
         debugs(3, DBG_IMPORTANT, "Starting Authentication on port " << s->s);
         debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (interception enabled)");
@@ -2985,7 +2985,7 @@ parse_http_port_option(http_port_list * s, char *token)
             self_destruct();
         }
         s->spoof_client_ip = 1;
-        IPInterceptor.StartTransparency();
+        IpInterceptor.StartTransparency();
         /* Log information regarding the port modes under transparency. */
         debugs(3, DBG_IMPORTANT, "Starting IP Spoofing on port " << s->s);
         debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (Ip spoofing enabled)");
