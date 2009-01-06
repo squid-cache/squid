@@ -421,8 +421,6 @@ libsquid_la_SOURCES = \
 	CommCalls.h \
 	DescriptorSet.cc \
 	DescriptorSet.h \
-	IPInterception.cc \
-	IPInterception.h \
         ICAP/AsyncJob.cc \
         ICAP/AsyncJob.h \
 	SquidConfig.cc \
@@ -749,6 +747,8 @@ recv_announce_SOURCES = recv-announce.cc SquidNew.cc
 ## client_db wants SNMP_SOURCE
 ## snmp_core wants ACLStringData
 ## SwapDir wants ConfigOption
+## tools.cc wants libip.la
+## client_side.cc wants libip.la
 ufsdump_SOURCES = \
 	debug.cc \
 	int.cc \
@@ -870,7 +870,6 @@ ufsdump_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
 	protos.h \
-	ip/stubQosConfig.cc \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \
@@ -914,6 +913,7 @@ ufsdump_LDADD = \
 	libsquid.la \
 	libauth.la \
 	icmp/libicmp.la icmp/libicmp-core.la \
+	ip/libip.la \
 	-L../lib \
 	@XTRA_OBJS@ \
 	@REPL_OBJS@ \
@@ -1431,7 +1431,6 @@ tests_testCacheManager_SOURCES = \
 	peer_select.cc \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
-	ip/stubQosConfig.cc \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \
@@ -1483,6 +1482,7 @@ tests_testCacheManager_LDADD = \
 	libsquid.la \
 	libauth.la \
 	icmp/libicmp.la icmp/libicmp-core.la \
+	ip/libip.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
 	@REGEXLIB@ \
@@ -1608,7 +1608,6 @@ tests_testEvent_SOURCES = \
 	peer_select.cc \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
-	ip/stubQosConfig.cc \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \
@@ -1659,6 +1658,7 @@ tests_testEvent_LDADD = \
 	libsquid.la \
 	libauth.la \
 	icmp/libicmp.la icmp/libicmp-core.la \
+	ip/libip.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
 	@REGEXLIB@ \
@@ -1765,7 +1765,6 @@ tests_testEventLoop_SOURCES = \
 	peer_select.cc \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
-	ip/stubQosConfig.cc \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \
@@ -1816,6 +1815,7 @@ tests_testEventLoop_LDADD = \
 	libsquid.la \
 	libauth.la \
 	icmp/libicmp.la icmp/libicmp-core.la \
+	ip/libip.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
 	@REGEXLIB@ \
@@ -1912,7 +1912,6 @@ tests_test_http_range_SOURCES = \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
 	pconn.cc \
-	ip/stubQosConfig.cc \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \
@@ -1968,6 +1967,7 @@ tests_test_http_range_LDADD = \
 	libsquid.la \
 	libauth.la \
 	icmp/libicmp.la icmp/libicmp-core.la \
+	ip/libip.la \
 	@REPL_OBJS@ \
 	@STORE_OBJS@ \
 	${ADAPTATION_LIBS} \
@@ -2074,7 +2074,6 @@ tests_testHttpRequest_SOURCES = \
 	peer_select.cc \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
-	ip/stubQosConfig.cc \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \
@@ -2126,6 +2125,7 @@ tests_testHttpRequest_LDADD = \
 	libsquid.la \
 	libauth.la \
 	icmp/libicmp.la icmp/libicmp-core.la \
+	ip/libip.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
 	@REGEXLIB@ \
@@ -2440,7 +2440,6 @@ tests_testURL_SOURCES = \
 	peer_select.cc \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
-	ip/stubQosConfig.cc \
 	redirect.cc \
 	referer.cc \
 	refresh.cc \
@@ -2489,6 +2488,7 @@ tests_testURL_LDADD = \
 	libsquid.la \
 	libauth.la \
 	icmp/libicmp.la icmp/libicmp-core.la \
+	ip/libip.la \
 	@REGEXLIB@ \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
