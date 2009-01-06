@@ -39,7 +39,7 @@
 #include "MemBuf.h"
 #include "wordlist.h"
 #include "SquidTime.h"
-#include "IPInterception.h"
+#include "ip/IpIntercept.h"
 
 #ifdef _SQUID_LINUX_
 #if HAVE_SYS_CAPABILITY_H
@@ -1249,7 +1249,7 @@ keepCapabilities(void)
 #if HAVE_PRCTL && defined(PR_SET_KEEPCAPS) && HAVE_SYS_CAPABILITY_H
 
     if (prctl(PR_SET_KEEPCAPS, 1, 0, 0, 0)) {
-        IPInterceptor.StopTransparency("capability setting has failed.");
+        IpInterceptor.StopTransparency("capability setting has failed.");
     }
 #endif
 }
@@ -1280,7 +1280,7 @@ restoreCapabilities(int keep)
         cap->inheritable = 0;
         cap->effective = (1 << CAP_NET_BIND_SERVICE);
 
-        if (IPInterceptor.TransparentActive()) {
+        if (IpInterceptor.TransparentActive()) {
             cap->effective |= (1 << CAP_NET_ADMIN);
 #if LINUX_TPROXY2
             cap->effective |= (1 << CAP_NET_BROADCAST);
@@ -1291,7 +1291,7 @@ restoreCapabilities(int keep)
             cap->permitted &= cap->effective;
 
         if (capset(head, cap) != 0) {
-            IPInterceptor.StopTransparency("Error enabling needed capabilities.");
+            IpInterceptor.StopTransparency("Error enabling needed capabilities.");
         }
     }
 
@@ -1299,7 +1299,7 @@ restoreCapabilities(int keep)
     xfree(cap);
 
 #else
-    IPInterceptor.StopTransparency("Missing needed capability support.");
+    IpInterceptor.StopTransparency("Missing needed capability support.");
 #endif /* HAVE_SYS_CAPABILITY_H */
 
 #endif /* !defined(_SQUID_LINUX_) */
