@@ -1,6 +1,4 @@
 /*
- * $Id: IPInterception.h,v 1.7 2007/12/14 23:11:45 amosjeffries Exp $
- *
  * DEBUG: section 89    NAT / IP Interception
  * AUTHOR: Robert Collins
  * AUTHOR: Amos Jeffries
@@ -15,18 +13,18 @@ class IPAddress;
 #include "SquidTime.h"
 
 /**
- \defgroup IPInterceptAPI IP Interception and Transparent Proxy API
+ \defgroup IpInterceptAPI IP Interception and Transparent Proxy API
  \ingroup SquidComponent
  \par
  * There is no formal state-machine for transparency and interception
  * instead there is this neutral API which other connection state machines
  * and the comm layer use to co-ordinate their own state for transparency.
  */
-class IPIntercept
+class IpIntercept
 {
 public:
-    IPIntercept() : transparent_active(0), intercept_active(0), last_reported(0) {};
-    ~IPIntercept() {};
+    IpIntercept() : transparent_active(0), intercept_active(0), last_reported(0) {};
+    ~IpIntercept() {};
 
     /** Perform NAT lookups */
     int NatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &client, IPAddress &dst);
@@ -107,7 +105,7 @@ private:
      \retval 0     Successfuly located the new address.
      \retval -1    An error occured during NAT lookups.
      */
-    int IPFWInterception(int fd, const IPAddress &me, IPAddress &client, int silent);
+    int IpfwInterception(int fd, const IPAddress &me, IPAddress &client, int silent);
 
 
     int transparent_active;
@@ -116,14 +114,14 @@ private:
 };
 
 #if LINUX_NETFILTER && !defined(IP_TRANSPARENT)
-/// \ingroup IPInterceptAPI
+/// \ingroup IpInterceptAPI
 #define IP_TRANSPARENT 19
 #endif
 
 /**
- \ingroup IPInterceptAPI
+ \ingroup IpInterceptAPI
  * Globally available instance of the IP Interception manager.
  */
-extern IPIntercept IPInterceptor;
+extern IpIntercept IpInterceptor;
 
 #endif /* SQUID_IPINTERCEPTION_H */
