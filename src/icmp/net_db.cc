@@ -1,6 +1,4 @@
 /*
- * $Id: net_db.cc,v 1.202 2008/01/07 17:12:28 hno Exp $
- *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
  *
@@ -54,7 +52,7 @@
 #include "forward.h"
 #include "SquidTime.h"
 #include "wordlist.h"
-#include "IpAddress.h"
+#include "ip/IpAddress.h"
 
 #if USE_ICMP
 #include "icmp/IcmpSquid.h"

@@ -1,7 +1,4 @@
-
 /*
- * $Id: helper.h,v 1.12 2008/02/26 21:49:34 amosjeffries Exp $
- *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?
  *
@@ -38,7 +35,7 @@
 
 #include "squid.h"
 #include "cbdata.h"
-#include "IpAddress.h"
+#include "ip/IpAddress.h"
 
 class helper_request;
 

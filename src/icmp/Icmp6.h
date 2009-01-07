@@ -1,6 +1,4 @@
 /*
- * $Id: ICMPv6.h,v 1.1 2007/12/14 23:11:45 amosjeffries Exp $
- *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels, Amos Jeffries
  *
@@ -39,7 +37,6 @@
 #if USE_IPV6
 
 #include "Icmp.h"
-#include "IpAddress.h"
 
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>

@@ -1,7 +1,4 @@
-
 /*
- * $Id: ACLARP.cc,v 1.29 2008/02/05 22:38:24 amosjeffries Exp $
- *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
  *
@@ -40,7 +37,7 @@
 #include <squid_windows.h>
 #endif
 #include "squid.h"
-#include "IpAddress.h"
+#include "ip/IpAddress.h"
 
 #ifdef _SQUID_WIN32_
 

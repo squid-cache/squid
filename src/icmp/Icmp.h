@@ -1,6 +1,4 @@
 /*
- * $Id: ICMP.h,v 1.1 2007/12/14 23:11:45 amosjeffries Exp $
- *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels, Amos Jeffries
  *
@@ -35,7 +33,7 @@
 #define _INCLUDE_ICMP_H
 
 #include "config.h"
-#include "IpAddress.h"
+#include "ip/IpAddress.h"
 
 #define PINGER_PAYLOAD_SZ	8192
 

@@ -1,7 +1,4 @@
 /*
- * $Id$
- *
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -37,7 +34,7 @@
 
 #include "ACL.h"
 #include "splay.h"
-#include "IpAddress.h"
+#include "ip/IpAddress.h"
 
 /// \ingroup ACLAPI
 class acl_ip_data

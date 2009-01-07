@@ -1,6 +1,4 @@
 /*
- * $Id: ICMPSquid.h,v 1.1 2007/12/14 23:11:45 amosjeffries Exp $
- *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels, Amos Jeffries
  *
@@ -36,7 +34,6 @@
 
 #include "config.h"
 #include "Icmp.h"
-#include "IpAddress.h"
 
 /**
  * Implements a non-blocking pseudo-ICMP engine for squid internally.

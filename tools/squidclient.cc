@@ -1,7 +1,4 @@
-
 /*
- * $Id: squidclient.cc,v 1.11 2008/02/26 21:49:46 amosjeffries Exp $
- *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
  *
@@ -86,7 +83,7 @@ using namespace Squid;
 #endif
 
 #include "util.h"
-#include "IpAddress.h"
+#include "ip/IpAddress.h"
 
 #ifndef BUFSIZ
 #define BUFSIZ		8192

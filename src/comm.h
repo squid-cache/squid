@@ -6,7 +6,7 @@
 #include "AsyncCall.h"
 #include "StoreIOBuffer.h"
 #include "Array.h"
-#include "IpAddress.h"
+#include "ip/IpAddress.h"
 
 #define COMMIO_FD_READCB(fd)    (&commfd_table[(fd)].readcb)
 #define COMMIO_FD_WRITECB(fd)   (&commfd_table[(fd)].writecb)

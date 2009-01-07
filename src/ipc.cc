@@ -1,7 +1,4 @@
-
 /*
- * $Id: ipc.cc,v 1.48 2008/02/13 00:01:47 rousskov Exp $
- *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels
  *
@@ -36,7 +33,7 @@
 #include "squid.h"
 #include "comm.h"
 #include "fde.h"
-#include "IpAddress.h"
+#include "ip/IpAddress.h"
 
 static const char *hello_string = "hi there\n";
 #define HELLO_BUF_SZ 32

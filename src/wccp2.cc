@@ -1,7 +1,4 @@
-
 /*
- * $Id: wccp2.cc,v 1.23 2008/02/09 03:48:05 swilton Exp $
- *
  * DEBUG: section 80    WCCP Support
  * AUTHOR: Steven Wilton
  *
@@ -39,7 +36,7 @@
 #include "Parsing.h"
 #include "Store.h"
 #include "SwapDir.h"
-#include "IpAddress.h"
+#include "ip/IpAddress.h"
 
 #if USE_WCCPv2
 #if HAVE_NETDB_H

@@ -1,8 +1,4 @@
-
 /*
- * $Id: fde.h,v 1.15 2008/02/12 23:22:13 rousskov Exp $
- *
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -35,7 +31,7 @@
 #define SQUID_FDE_H
 
 #include "comm.h"
-#include "IpAddress.h"
+#include "ip/IpAddress.h"
 
 class PconnPool;
 

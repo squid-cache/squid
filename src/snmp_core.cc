@@ -1,6 +1,4 @@
 /*
- * $Id: snmp_core.cc,v 1.82 2008/01/22 21:07:19 rousskov Exp $
- *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
  *
@@ -35,7 +33,7 @@
 #include "comm.h"
 #include "cache_snmp.h"
 #include "ACLChecklist.h"
-#include "IpAddress.h"
+#include "ip/IpAddress.h"
 
 #define SNMP_REQUEST_SIZE 4096
 #define MAX_PROTOSTAT 5

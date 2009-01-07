@@ -1,6 +1,4 @@
 /*
- * $Id: delay_pools.cc,v 1.51 2008/02/26 21:49:34 amosjeffries Exp $
- *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
  * Based upon original delay pools code by
@@ -66,7 +64,7 @@
 #include "DelayBucket.h"
 #include "DelayUser.h"
 #include "DelayTagged.h"
-#include "IpAddress.h"
+#include "ip/IpAddress.h"
 
 /// \ingroup DelayPoolsInternal
 long DelayPools::MemoryUsed = 0;

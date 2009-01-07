@@ -1,7 +1,4 @@
-
 /*
- * $Id: dnsserver.cc,v 1.74 2008/02/26 21:49:34 amosjeffries Exp $
- *
  * DEBUG: section 0     DNS Resolver
  * AUTHOR: Harvest Derived
  *
@@ -166,7 +163,7 @@ usage: dnsserver -Dhv -s nameserver
  \endverbatim
  */
 
-#include "IpAddress.h"
+#include "ip/IpAddress.h"
 
 #if LIBRESOLV_DNS_TTL_HACK
 /// \ingroup dnsserver

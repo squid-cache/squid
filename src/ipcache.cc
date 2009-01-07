@@ -1,7 +1,4 @@
-
 /*
- * $Id: ipcache.cc,v 1.269 2008/02/26 21:49:35 amosjeffries Exp $
- *
  * DEBUG: section 14    IP Cache
  * AUTHOR: Harvest Derived
  *
@@ -40,7 +37,7 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "wordlist.h"
-#include "IpAddress.h"
+#include "ip/IpAddress.h"
 
 /**
  \defgroup IPCacheAPI IP Cache API

@@ -1,7 +1,4 @@
-
 /*
- * $Id: PeerSelectState.h,v 1.3 2007/12/14 23:11:45 amosjeffries Exp $
- *
  * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,7 +35,7 @@
 
 #include "cbdata.h"
 #include "PingData.h"
-#include "IpAddress.h"
+#include "ip/IpAddress.h"
 
 class ps_state
 {
