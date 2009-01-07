@@ -55,9 +55,9 @@ int WIN32_pipe(int handles[2])
     int new_socket;
     fde *F = NULL;
 
-    IPAddress localhost;
-    IPAddress handle0;
-    IPAddress handle1;
+    IpAddress localhost;
+    IpAddress handle0;
+    IpAddress handle1;
     struct addrinfo *AI = NULL;
 
     localhost.SetLocalhost();

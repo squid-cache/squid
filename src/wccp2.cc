@@ -39,7 +39,7 @@
 #include "Parsing.h"
 #include "Store.h"
 #include "SwapDir.h"
-#include "IPAddress.h"
+#include "IpAddress.h"
 
 #if USE_WCCPv2
 #if HAVE_NETDB_H
@@ -630,7 +630,7 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
 void
 wccp2Init(void)
 {
-    IPAddress_list *s;
+    IpAddress_list *s;
     char *ptr;
     uint32_t service_flags;
 
@@ -1139,7 +1139,7 @@ wccp2HandleUdp(int sock, void *not_used)
     commSetSelect(sock, COMM_SELECT_READ, wccp2HandleUdp, NULL, 0);
 
     /* FIXME INET6 : drop conversion boundary */
-    IPAddress from_tmp;
+    IpAddress from_tmp;
 
     len = comm_udp_recvfrom(sock,
                             &wccp2_i_see_you,
@@ -1500,7 +1500,7 @@ wccp2HereIam(void *voidnotused)
 
     struct wccp2_mask_identity_info_t *wccp2_mask_identity_info_ptr;
 
-    IPAddress router;
+    IpAddress router;
 
     debugs(80, 6, "wccp2HereIam: Called");
 
@@ -1940,7 +1940,7 @@ wccp2AssignBuckets(void *voidnotused)
 
                 if (wccp2_numrouters > 1) {
                     /* FIXME INET6 : drop temp conversion */
-                    IPAddress tmp_rtr(router);
+                    IpAddress tmp_rtr(router);
                     comm_udp_sendto(theWccp2Connection,
                                     tmp_rtr,
                                     &wccp_packet,

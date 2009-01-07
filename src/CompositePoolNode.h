@@ -46,7 +46,7 @@
 #include "DelayPools.h"
 #include "DelayIdComposite.h"
 #include "CommRead.h"
-#include "IPAddress.h"
+#include "IpAddress.h"
 
 class StoreEntry;
 
@@ -78,7 +78,7 @@ public:
     public:
         CompositeSelectionDetails() {}
 
-        IPAddress src_addr;
+        IpAddress src_addr;
         AuthUserRequest *user;
         String tag;
     };

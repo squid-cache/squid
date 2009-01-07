@@ -771,10 +771,10 @@ FwdState::connectStart()
     int ctimeout;
     int ftimeout = Config.Timeout.forward - (squid_curtime - start_t);
 
-    IPAddress outgoing;
+    IpAddress outgoing;
     unsigned short tos;
 
-    IPAddress client_addr;
+    IpAddress client_addr;
     assert(fs);
     assert(server_fd == -1);
     debugs(17, 3, "fwdConnectStart: " << url);
@@ -903,7 +903,7 @@ FwdState::connectStart()
     if (!fs->_peer && request->flags.spoof_client_ip) {
         // try to set the outgoing address using TPROXY v2
         // if it fails we abort any further TPROXY actions on this connection
-        if (IpInterceptor.SetTproxy2OutgoingAddr(int fd, const IPAddress &src) == -1) {
+        if (IpInterceptor.SetTproxy2OutgoingAddr(int fd, const IpAddress &src) == -1) {
             request->flags.spoof_client_ip = 0;
         }
     }
@@ -1177,7 +1177,7 @@ FwdState::reforwardableStatus(http_status s)
 
 void
 
-FwdState::pconnPush(int fd, const char *host, int port, const char *domain, IPAddress &client_addr)
+FwdState::pconnPush(int fd, const char *host, int port, const char *domain, IpAddress &client_addr)
 {
     fwdPconnPool->push(fd, host, port, domain, client_addr);
 }
@@ -1288,12 +1288,12 @@ fwdServerFree(FwdServer * fs)
     memFree(fs, MEM_FWD_SERVER);
 }
 
-static IPAddress
+static IpAddress
 aclMapAddr(acl_address * head, ACLChecklist * ch)
 {
     acl_address *l;
 
-    IPAddress addr;
+    IpAddress addr;
 
     for (l = head; l; l = l->next) {
         if (ch->matchAclListFast(l->aclList))
@@ -1321,7 +1321,7 @@ aclMapTOS(acl_tos * head, ACLChecklist * ch)
     return 0;
 }
 
-IPAddress
+IpAddress
 getOutgoingAddr(HttpRequest * request, struct peer *dst_peer)
 {
     ACLChecklist ch;

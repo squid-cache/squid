@@ -37,7 +37,7 @@
 
 #include "ACL.h"
 #include "splay.h"
-#include "IPAddress.h"
+#include "IpAddress.h"
 
 /// \ingroup ACLAPI
 class acl_ip_data
@@ -50,20 +50,20 @@ public:
 
     acl_ip_data ();
 
-    acl_ip_data (IPAddress const &, IPAddress const &, IPAddress const &, acl_ip_data *);
+    acl_ip_data (IpAddress const &, IPAddress const &, IPAddress const &, acl_ip_data *);
     void toStr(char *buf, int len) const;
 
-    IPAddress addr1;
+    IpAddress addr1;
 
-    IPAddress addr2;
+    IpAddress addr2;
 
-    IPAddress mask; /**< \todo This should perhapse be stored as a CIDR range now instead of a full IP mask. */
+    IpAddress mask; /**< \todo This should perhapse be stored as a CIDR range now instead of a full IP mask. */
 
     acl_ip_data *next;		/**< used for parsing, not for storing */
 
 private:
 
-    static bool DecodeMask(const char *asc, IPAddress &mask, int string_format_type);
+    static bool DecodeMask(const char *asc, IpAddress &mask, int string_format_type);
 };
 
 MEMPROXY_CLASS_INLINE(acl_ip_data);
@@ -91,7 +91,7 @@ public:
 
 protected:
 
-    int match(IPAddress &);
+    int match(IpAddress &);
     IPSplay *data;
 
 private:

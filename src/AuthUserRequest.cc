@@ -200,7 +200,7 @@ AuthUserRequest::denyMessage(char const * const default_message)
 }
 
 static void
-authenticateAuthUserRequestSetIp(AuthUserRequest * auth_user_request, IPAddress &ipaddr)
+authenticateAuthUserRequestSetIp(AuthUserRequest * auth_user_request, IpAddress &ipaddr)
 {
     AuthUser *auth_user = auth_user_request->user();
 
@@ -211,7 +211,7 @@ authenticateAuthUserRequestSetIp(AuthUserRequest * auth_user_request, IPAddress 
 }
 
 void
-authenticateAuthUserRequestRemoveIp(AuthUserRequest * auth_user_request, IPAddress const &ipaddr)
+authenticateAuthUserRequestRemoveIp(AuthUserRequest * auth_user_request, IpAddress const &ipaddr)
 {
     AuthUser *auth_user = auth_user_request->user();
 
@@ -328,7 +328,7 @@ authTryGetUser (AuthUserRequest **auth_user_request, ConnStateData * conn, HttpR
  * Caller is responsible for locking and unlocking their *auth_user_request!
  */
 auth_acl_t
-AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, IPAddress &src_addr)
+AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, IpAddress &src_addr)
 {
     const char *proxy_auth;
     assert(headertype != 0);
@@ -503,7 +503,7 @@ AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_typ
 
 auth_acl_t
 
-AuthUserRequest::tryToAuthenticateAndSetAuthUser(AuthUserRequest ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, IPAddress &src_addr)
+AuthUserRequest::tryToAuthenticateAndSetAuthUser(AuthUserRequest ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, IpAddress &src_addr)
 {
     /* If we have already been called, return the cached value */
     AuthUserRequest *t = authTryGetUser (auth_user_request, conn, request);

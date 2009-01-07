@@ -37,10 +37,10 @@
 
 #include "ACLASN.h"
 #include "ACLStrategy.h"
-#include "IPAddress.h"
+#include "IpAddress.h"
 
 /// \ingroup ACLAPI
-class ACLDestinationASNStrategy : public ACLStrategy<IPAddress>
+class ACLDestinationASNStrategy : public ACLStrategy<IpAddress>
 {
 
 public:

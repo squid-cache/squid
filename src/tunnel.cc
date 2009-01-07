@@ -637,7 +637,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
     statCounter.server.all.requests++;
     statCounter.server.other.requests++;
     /* Create socket. */
-    IPAddress temp = getOutgoingAddr(request,NULL);
+    IpAddress temp = getOutgoingAddr(request,NULL);
     sock = comm_openex(SOCK_STREAM,
                        IPPROTO_TCP,
                        temp,

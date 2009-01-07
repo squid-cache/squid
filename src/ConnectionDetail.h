@@ -37,7 +37,7 @@
 #ifndef _SQUIDCONNECTIONDETAIL_H_
 #define _SQUIDCONNECTIONDETAIL_H_
 
-#include "IPAddress.h"
+#include "IpAddress.h"
 
 class ConnectionDetail
 {
@@ -46,9 +46,9 @@ public:
 
     ConnectionDetail();
 
-    IPAddress me;
+    IpAddress me;
 
-    IPAddress peer;
+    IpAddress peer;
 };
 
 #endif

@@ -166,7 +166,7 @@ static void connNoteUseOfBuffer(ConnStateData* conn, size_t byteCount);
 static int connKeepReadingIncompleteRequest(ConnStateData * conn);
 static void connCancelIncompleteRequests(ConnStateData * conn);
 
-static ConnStateData *connStateCreate(const IPAddress &peer, const IPAddress &me, int fd, http_port_list *port);
+static ConnStateData *connStateCreate(const IpAddress &peer, const IPAddress &me, int fd, http_port_list *port);
 
 
 int
@@ -2765,7 +2765,7 @@ okToAccept()
 }
 
 ConnStateData *
-connStateCreate(const IPAddress &peer, const IPAddress &me, int fd, http_port_list *port)
+connStateCreate(const IpAddress &peer, const IPAddress &me, int fd, http_port_list *port)
 {
     ConnStateData *result = new ConnStateData;
 
@@ -2778,7 +2778,7 @@ connStateCreate(const IPAddress &peer, const IPAddress &me, int fd, http_port_li
     result->port = cbdataReference(port);
 
     if (port->intercepted || port->spoof_client_ip) {
-        IPAddress client, dst;
+        IpAddress client, dst;
 
         if (IpInterceptor.NatLookup(fd, me, peer, client, dst) == 0) {
             result->me = client;

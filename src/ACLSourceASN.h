@@ -42,9 +42,9 @@
 class ACLChecklist;
 
 #include "ACLStrategy.h"
-#include "IPAddress.h"
+#include "IpAddress.h"
 
-class ACLSourceASNStrategy : public ACLStrategy<IPAddress>
+class ACLSourceASNStrategy : public ACLStrategy<IpAddress>
 {
 
 public:

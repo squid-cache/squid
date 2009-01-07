@@ -2329,7 +2329,7 @@ ftpReadEPSV(FtpStateData* ftpState)
     char h1, h2, h3, h4;
     int n;
     u_short port;
-    IPAddress ipa_remote;
+    IpAddress ipa_remote;
     int fd = ftpState->data.fd;
     char *buf;
     debugs(9, 3, HERE);
@@ -2442,7 +2442,7 @@ ftpReadEPSV(FtpStateData* ftpState)
 static void
 ftpSendPassive(FtpStateData * ftpState)
 {
-    IPAddress addr;
+    IpAddress addr;
     struct addrinfo *AI = NULL;
 
     /** Checks the server control channel is still available before running. */
@@ -2606,7 +2606,7 @@ ftpReadPasv(FtpStateData * ftpState)
     int p1, p2;
     int n;
     u_short port;
-    IPAddress ipa_remote;
+    IpAddress ipa_remote;
     int fd = ftpState->data.fd;
     char *buf;
     LOCAL_ARRAY(char, ipaddr, 1024);
@@ -2712,7 +2712,7 @@ ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
 {
     int fd;
 
-    IPAddress addr;
+    IpAddress addr;
     struct addrinfo *AI = NULL;
     int on = 1;
     int x = 0;
@@ -2778,7 +2778,7 @@ ftpSendPORT(FtpStateData * ftpState)
 {
     int fd;
 
-    IPAddress ipa;
+    IpAddress ipa;
     struct addrinfo *AI = NULL;
     unsigned char *addrptr;
     unsigned char *portptr;
@@ -2849,7 +2849,7 @@ static void
 ftpSendEPRT(FtpStateData * ftpState)
 {
     int fd;
-    IPAddress addr;
+    IpAddress addr;
     struct addrinfo *AI = NULL;
     char buf[MAX_IPSTRLEN];
 

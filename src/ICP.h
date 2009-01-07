@@ -68,7 +68,7 @@ struct _icp_common_t {
     _icp_common_t();
     _icp_common_t(char *buf, unsigned int len);
 
-    void handleReply(char *buf, IPAddress &from);
+    void handleReply(char *buf, IpAddress &from);
     static _icp_common_t *createMessage(icp_opcode opcode, int flags, const char *url, int reqnum, int pad);
     icp_opcode getOpCode() const;
 #endif
@@ -99,7 +99,7 @@ public:
     HttpRequest *request;
     int fd;
 
-    IPAddress from;
+    IpAddress from;
     char *url;
 };
 
@@ -107,7 +107,7 @@ public:
 
 /// \ingroup ServerProtocolICPAPI
 struct icpUdpData {
-    IPAddress address;
+    IpAddress address;
     void *msg;
     size_t len;
     icpUdpData *next;
@@ -122,25 +122,25 @@ struct icpUdpData {
 };
 
 /// \ingroup ServerProtocolICPAPI
-HttpRequest* icpGetRequest(char *url, int reqnum, int fd, IPAddress &from);
+HttpRequest* icpGetRequest(char *url, int reqnum, int fd, IpAddress &from);
 
 /// \ingroup ServerProtocolICPAPI
-int icpAccessAllowed(IPAddress &from, HttpRequest * icp_request);
+int icpAccessAllowed(IpAddress &from, HttpRequest * icp_request);
 
 /// \ingroup ServerProtocolICPAPI
-SQUIDCEXTERN void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pad, int fd, const IPAddress &from);
+SQUIDCEXTERN void icpCreateAndSend(icp_opcode, int flags, char const *url, int reqnum, int pad, int fd, const IpAddress &from);
 
 /// \ingroup ServerProtocolICPAPI
 extern icp_opcode icpGetCommonOpcode();
 
 /// \ingroup ServerProtocolICPAPI
-SQUIDCEXTERN int icpUdpSend(int, const IPAddress &, icp_common_t *, log_type, int);
+SQUIDCEXTERN int icpUdpSend(int, const IpAddress &, icp_common_t *, log_type, int);
 
 /// \ingroup ServerProtocolICPAPI
 SQUIDCEXTERN log_type icpLogFromICPCode(icp_opcode opcode);
 
 /// \ingroup ServerProtocolICPAPI
-void icpDenyAccess(IPAddress &from, char *url, int reqnum, int fd);
+void icpDenyAccess(IpAddress &from, char *url, int reqnum, int fd);
 
 /// \ingroup ServerProtocolICPAPI
 SQUIDCEXTERN PF icpHandleUdp;
@@ -149,7 +149,7 @@ SQUIDCEXTERN PF icpHandleUdp;
 SQUIDCEXTERN PF icpUdpSendQueue;
 
 /// \ingroup ServerProtocolICPAPI
-SQUIDCEXTERN void icpHandleIcpV3(int, IPAddress &, char *, int);
+SQUIDCEXTERN void icpHandleIcpV3(int, IpAddress &, char *, int);
 
 /// \ingroup ServerProtocolICPAPI
 SQUIDCEXTERN int icpCheckUdpHit(StoreEntry *, HttpRequest * request);

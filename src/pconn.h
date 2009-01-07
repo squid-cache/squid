@@ -57,7 +57,7 @@ private:
 };
 
 
-class IPAddress;
+class IpAddress;
 class StoreEntry;
 class IdleConnLimit;
 
@@ -72,15 +72,15 @@ public:
     PconnPool(const char *);
 
     void moduleInit();
-    void push(int fd, const char *host, u_short port, const char *domain, IPAddress &client_address);
-    int pop(const char *host, u_short port, const char *domain, IPAddress &client_address, bool retriable);
+    void push(int fd, const char *host, u_short port, const char *domain, IpAddress &client_address);
+    int pop(const char *host, u_short port, const char *domain, IpAddress &client_address, bool retriable);
     void count(int uses);
     void dumpHist(StoreEntry *e);
     void unlinkList(IdleConnList *list) const;
 
 private:
 
-    static const char *key(const char *host, u_short port, const char *domain, IPAddress &client_address);
+    static const char *key(const char *host, u_short port, const char *domain, IpAddress &client_address);
 
     int hist[PCONN_HIST_SZ];
     hash_table *table;
