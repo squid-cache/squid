@@ -74,7 +74,6 @@ libmiscutil_a_SOURCES = \
 	hash.c \
 	heap.c \
 	html_quote.c \
-	IPAddress.cc \
 	iso3307.c \
 	md5.c \
 	radix.c \
@@ -130,9 +129,6 @@ CLEANFILES += testHeaders.c
 tests_testAll_SOURCES= \
 	tests/testArray.h \
 	tests/testArray.cc \
-	tests/testIPAddress.h \
-	tests/testIPAddress.cc \
-	IPAddress.cc \
 	tests/testRFC1035.h \
 	tests/testRFC1035.cc \
 	tests/testMain.cc \
