@@ -8,7 +8,7 @@
 #include <string>
 
 #include "testIpAddress.h"
-#include "IpAddress.h"
+#include "ip/IpAddress.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testIpAddress );
 

@@ -1,7 +1,4 @@
-
 /*
- * $Id: comm.cc,v 1.447 2008/02/26 21:49:34 amosjeffries Exp $
- *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
  *
@@ -47,9 +44,9 @@
 #include "pconn.h"
 #include "SquidTime.h"
 #include "CommCalls.h"
-#include "IpAddress.h"
 #include "DescriptorSet.h"
 #include "icmp/net_db.h"
+#include "ip/IpAddress.h"
 #include "ip/IpIntercept.h"
 
 #if defined(_SQUID_CYGWIN_)

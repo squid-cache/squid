@@ -1,6 +1,4 @@
 /*
- * $Id: CompositePoolNode.h,v 1.10 2008/02/26 21:49:34 amosjeffries Exp $
- *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
  * Based upon original delay pools code by
@@ -46,7 +44,7 @@
 #include "DelayPools.h"
 #include "DelayIdComposite.h"
 #include "CommRead.h"
-#include "IpAddress.h"
+#include "ip/IpAddress.h"
 
 class StoreEntry;
 
@@ -88,5 +86,5 @@ protected:
     DeferredReadManager deferredReads;
 };
 
-#endif
+#endif /* DELAY_POOLS */
 #endif /* COMPOSITEPOOLNODE_H */

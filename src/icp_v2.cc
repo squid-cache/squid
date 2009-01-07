@@ -1,6 +1,4 @@
 /*
- * $Id: icp_v2.cc,v 1.103 2008/02/26 21:49:35 amosjeffries Exp $
- *
  * DEBUG: section 12    Internet Cache Protocol (ICP)
  * AUTHOR: Duane Wessels
  *
@@ -48,8 +46,8 @@
 #include "wordlist.h"
 #include "SquidTime.h"
 #include "SwapDir.h"
-#include "IpAddress.h"
 #include "icmp/net_db.h"
+#include "ip/IpAddress.h"
 
 /// \ingroup ServerProtocolICPInternal2
 static void icpLogIcp(const IpAddress &, log_type, int, const char *, int);

@@ -6,7 +6,7 @@
 class ErrorState;
 
 #include "comm.h"
-#include "IpAddress.h"
+#include "ip/IpAddress.h"
 
 class FwdServer
 {

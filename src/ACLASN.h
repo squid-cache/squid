@@ -1,7 +1,4 @@
 /*
- * $Id: ACLASN.h,v 1.10 2008/02/26 21:49:34 amosjeffries Exp $
- *
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -39,7 +36,7 @@
 #include "CbDataList.h"
 #include "ACLStrategised.h"
 #include "ACLChecklist.h"
-#include "IpAddress.h"
+#include "ip/IpAddress.h"
 
 SQUIDCEXTERN int asnMatchIp(CbDataList<int> *, IpAddress &);
 

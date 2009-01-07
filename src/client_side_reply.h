@@ -1,8 +1,4 @@
-
 /*
- * $Id: client_side_reply.h,v 1.21 2008/02/08 18:31:02 rousskov Exp $
- *
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -40,9 +36,9 @@
 #include "clientStream.h"
 #include "StoreClient.h"
 #include "client_side_request.h"
-#include "IpAddress.h"
 
 class ErrorState;
+class IpAddress;
 
 /* XXX make static method */
 

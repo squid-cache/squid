@@ -1,7 +1,4 @@
 /*
- * $Id: htcp.h,v 1.7 2008/02/26 21:49:35 amosjeffries Exp $
- *
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -34,8 +31,10 @@
 #define SQUID_HTCP_H
 
 #if USE_HTCP
+
 #include "HttpHeader.h"
-#include "IpAddress.h"
+
+class IpAddress;
 
 /// \ingroup ServerProtocolHTCP
 class HtcpReplyData

@@ -1,7 +1,4 @@
 /*
- * $Id: protos.h,v 1.557 2008/02/26 21:49:35 amosjeffries Exp $
- *
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -37,7 +34,7 @@
  */
 #include "Packer.h"
 /* for routines still in this file that take CacheManager parameters */
-#include "IpAddress.h"
+#include "ip/IpAddress.h"
 /* for parameters that still need these */
 #include "enums.h"
 /* some parameters stil need this */

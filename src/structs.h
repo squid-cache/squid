@@ -1,7 +1,4 @@
 /*
- * $Id: structs.h,v 1.575 2008/02/11 22:28:47 rousskov Exp $
- *
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *

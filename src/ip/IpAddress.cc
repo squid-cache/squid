@@ -35,7 +35,7 @@
  */
 
 #include "config.h"
-#include "IpAddress.h"
+#include "ip/IpAddress.h"
 #include "util.h"
 
 

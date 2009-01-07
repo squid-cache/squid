@@ -1,7 +1,4 @@
 /*
- * $Id: AccessLogEntry.h,v 1.9 2008/02/26 00:15:48 rousskov Exp $
- *
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -36,7 +33,7 @@
 #include "HttpVersion.h"
 #include "HttpRequestMethod.h"
 #include "HierarchyLogEntry.h"
-#include "IpAddress.h"
+#include "ip/IpAddress.h"
 #include "HttpRequestMethod.h"
 
 /* forward decls */

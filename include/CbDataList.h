@@ -1,7 +1,4 @@
 /*
- * $Id: List.h,v 1.8 2008/02/26 21:49:33 amosjeffries Exp $
- *
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
