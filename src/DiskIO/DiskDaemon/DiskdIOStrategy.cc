@@ -157,7 +157,7 @@ DiskdIOStrategy::init()
     char skey1[32];
     char skey2[32];
     char skey3[32];
-    IPAddress localhost;
+    IpAddress localhost;
 
     ikey = (getpid() << 10) + (instanceID << 2);
     ikey &= 0x7fffffff;
