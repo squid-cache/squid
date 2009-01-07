@@ -202,7 +202,7 @@ CBDATA_TYPE(IdentStateData);
  * start a TCP connection to the peer host on port 113
  */
 void
-identStart(IpAddress &me, IPAddress &my_peer, IDCB * callback, void *data)
+identStart(IpAddress &me, IpAddress &my_peer, IDCB * callback, void *data)
 {
     IdentStateData *state;
     int fd;

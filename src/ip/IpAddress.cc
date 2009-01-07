@@ -1,6 +1,4 @@
 /*
- * $Id: IpAddress.cc,v 1.4 2008/02/15 09:45:57 amosjeffries Exp $
- *
  * DEBUG: section 14   IP Storage and Handling
  * AUTHOR: Amos Jeffries
  *
@@ -106,12 +104,12 @@ static const unsigned int MAX_IP6_STRLEN = STRLEN_IP6R;
 	}
 #endif
 
-IpAddress::IPAddress()
+IpAddress::IpAddress()
 {
     SetEmpty();
 }
 
-IpAddress::~IPAddress()
+IpAddress::~IpAddress()
 {
     memset(this,0,sizeof(IpAddress));
 }
@@ -166,7 +164,7 @@ IpAddress::GetCIDR() const
     return len;
 }
 
-const int IpAddress::ApplyMask(IPAddress const &mask_addr)
+const int IpAddress::ApplyMask(IpAddress const &mask_addr)
 {
     uint32_t *p1 = (uint32_t*)(&m_SocketAddr.sin6_addr);
     uint32_t const *p2 = (uint32_t const *)(&mask_addr.m_SocketAddr.sin6_addr);
@@ -468,13 +466,13 @@ bool IpAddress::GetReverseString(char buf[MAX_IPSTRLEN], int show_type) const
     return false;
 }
 
-IpAddress& IPAddress::operator =(const IPAddress &s)
+IpAddress& IpAddress::operator =(const IPAddress &s)
 {
     memcpy(this, &s, sizeof(IpAddress));
     return *this;
 };
 
-IpAddress::IPAddress(const char*s)
+IpAddress::IpAddress(const char*s)
 {
     SetEmpty();
     operator=(s);
@@ -534,13 +532,13 @@ bool IpAddress::LookupHostIP(const char *s, bool nodns)
     return true;
 }
 
-IpAddress::IPAddress(struct sockaddr_in const &s)
+IpAddress::IpAddress(struct sockaddr_in const &s)
 {
     SetEmpty();
     operator=(s);
 };
 
-IpAddress& IPAddress::operator =(struct sockaddr_in const &s)
+IpAddress& IpAddress::operator =(struct sockaddr_in const &s)
 {
 #if USE_IPV6
     Map4to6((const in_addr)s.sin_addr, m_SocketAddr.sin6_addr);
@@ -557,7 +555,7 @@ IpAddress& IPAddress::operator =(struct sockaddr_in const &s)
     return *this;
 };
 
-IpAddress& IPAddress::operator =(const struct sockaddr_storage &s)
+IpAddress& IpAddress::operator =(const struct sockaddr_storage &s)
 {
 #if USE_IPV6
     /* some AF_* magic to tell socket types apart and what we need to do */
@@ -581,13 +579,13 @@ void IpAddress::check4Mapped()
 }
 
 #if USE_IPV6
-IpAddress::IPAddress(struct sockaddr_in6 const &s)
+IpAddress::IpAddress(struct sockaddr_in6 const &s)
 {
     SetEmpty();
     operator=(s);
 };
 
-IpAddress& IPAddress::operator =(struct sockaddr_in6 const &s)
+IpAddress& IpAddress::operator =(struct sockaddr_in6 const &s)
 {
     memcpy(&m_SocketAddr, &s, sizeof(struct sockaddr_in6));
 
@@ -598,13 +596,13 @@ IpAddress& IPAddress::operator =(struct sockaddr_in6 const &s)
 
 #endif
 
-IpAddress::IPAddress(struct in_addr const &s)
+IpAddress::IpAddress(struct in_addr const &s)
 {
     SetEmpty();
     operator=(s);
 };
 
-IpAddress& IPAddress::operator =(struct in_addr const &s)
+IpAddress& IpAddress::operator =(struct in_addr const &s)
 {
 #if USE_IPV6
     Map4to6((const in_addr)s, m_SocketAddr.sin6_addr);
@@ -624,13 +622,13 @@ IpAddress& IPAddress::operator =(struct in_addr const &s)
 
 #if USE_IPV6
 
-IpAddress::IPAddress(struct in6_addr const &s)
+IpAddress::IpAddress(struct in6_addr const &s)
 {
     SetEmpty();
     operator=(s);
 };
 
-IpAddress& IPAddress::operator =(struct in6_addr const &s)
+IpAddress& IpAddress::operator =(struct in6_addr const &s)
 {
 
     memcpy(&m_SocketAddr.sin6_addr, &s, sizeof(struct in6_addr));
@@ -644,19 +642,19 @@ IpAddress& IPAddress::operator =(struct in6_addr const &s)
 
 #endif
 
-IpAddress::IPAddress(const IPAddress &s)
+IpAddress::IpAddress(const IPAddress &s)
 {
     SetEmpty();
     operator=(s);
 }
 
-IpAddress::IPAddress(IPAddress *s)
+IpAddress::IpAddress(IPAddress *s)
 {
     SetEmpty();
     operator=(s);
 }
 
-IpAddress& IPAddress::operator =(IPAddress *s)
+IpAddress& IpAddress::operator =(IPAddress *s)
 {
     IpAddress *tmp = NULL;
     if (!s) return *this;
@@ -665,7 +663,7 @@ IpAddress& IPAddress::operator =(IPAddress *s)
     return operator=(*tmp);
 }
 
-IpAddress::IPAddress(const struct hostent &s)
+IpAddress::IpAddress(const struct hostent &s)
 {
     SetEmpty();
     operator=(s);
@@ -717,7 +715,7 @@ bool IpAddress::operator =(const struct hostent &s)
     return true;
 }
 
-IpAddress::IPAddress(const struct addrinfo &s)
+IpAddress::IpAddress(const struct addrinfo &s)
 {
     SetEmpty();
     operator=(s);
@@ -891,7 +889,7 @@ void IpAddress::FreeAddrInfo(struct addrinfo *&ai) const
     ai = NULL;
 }
 
-int IpAddress::matchIPAddr(const IPAddress &rhs) const
+int IpAddress::matchIPAddr(const IpAddress &rhs) const
 {
 #if USE_IPV6
     uint8_t *l = (uint8_t*)m_SocketAddr.sin6_addr.s6_addr;
@@ -916,17 +914,17 @@ int IpAddress::matchIPAddr(const IPAddress &rhs) const
     return 0;
 }
 
-bool IpAddress::operator ==(const IPAddress &s) const
+bool IpAddress::operator ==(const IpAddress &s) const
 {
     return (0 == matchIPAddr(s));
 }
 
-bool IpAddress::operator !=(const IPAddress &s) const
+bool IpAddress::operator !=(const IpAddress &s) const
 {
     return ! ( operator==(s) );
 }
 
-bool IpAddress::operator <=(const IPAddress &rhs) const
+bool IpAddress::operator <=(const IpAddress &rhs) const
 {
     if (IsAnyAddr() && !rhs.IsAnyAddr())
         return true;
@@ -934,7 +932,7 @@ bool IpAddress::operator <=(const IPAddress &rhs) const
     return (matchIPAddr(rhs) <= 0);
 }
 
-bool IpAddress::operator >=(const IPAddress &rhs) const
+bool IpAddress::operator >=(const IpAddress &rhs) const
 {
     if (IsNoAddr() && !rhs.IsNoAddr())
         return true;
@@ -942,7 +940,7 @@ bool IpAddress::operator >=(const IPAddress &rhs) const
     return ( matchIPAddr(rhs) >= 0);
 }
 
-bool IpAddress::operator >(const IPAddress &rhs) const
+bool IpAddress::operator >(const IpAddress &rhs) const
 {
     if (IsNoAddr() && !rhs.IsNoAddr())
         return true;
@@ -950,7 +948,7 @@ bool IpAddress::operator >(const IPAddress &rhs) const
     return ( matchIPAddr(rhs) > 0);
 }
 
-bool IpAddress::operator <(const IPAddress &rhs) const
+bool IpAddress::operator <(const IpAddress &rhs) const
 {
     if (IsNoAddr() && !rhs.IsNoAddr())
         return true;

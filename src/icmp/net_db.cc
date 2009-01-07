@@ -83,7 +83,7 @@ typedef struct {
 static hash_table *addr_table = NULL;
 static hash_table *host_table = NULL;
 
-IpAddress networkFromInaddr(const IPAddress &a);
+IpAddress networkFromInaddr(const IpAddress &a);
 static void netdbRelease(netdbEntry * n);
 
 static void netdbHashInsert(netdbEntry * n, IpAddress &addr);

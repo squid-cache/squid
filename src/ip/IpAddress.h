@@ -1,6 +1,4 @@
 /*
- * $Id: IpAddress.h,v 1.3 2008/02/05 22:39:42 amosjeffries Exp $
- *
  * DEBUG: section 14    IP Storage and Handling
  * AUTHOR: Amos Jeffries
  *
@@ -104,7 +102,7 @@ public:
     /** @name Constructors and Destructor */
     /*@{*/
     IpAddress();
-    IpAddress(const IPAddress &);
+    IpAddress(const IpAddress &);
 
     /**
      * This constructor takes its own copy of the object pointed to for memory-safe usage later.
@@ -113,7 +111,7 @@ public:
      \deprecated Use of pointers can be nasty. Consider this a last-resort.
      *           Prefer the by-reference (&) version instead.
      */
-    IpAddress(IPAddress *);
+    IpAddress(IpAddress *);
 
     IpAddress(const struct in_addr &);
 
@@ -134,8 +132,8 @@ public:
 
     /** @name Assignment Operators */
     /*@{*/
-    IpAddress& operator =(const IPAddress &s);
-    IpAddress& operator =(IPAddress *s);
+    IpAddress& operator =(const IpAddress &s);
+    IpAddress& operator =(IpAddress *s);
     IpAddress& operator =(struct sockaddr_in const &s);
     IpAddress& operator =(struct sockaddr_storage const &s);
     IpAddress& operator =(struct in_addr const &s);
@@ -321,7 +319,7 @@ public:
      *  Some situations may also require an actual call to the system getaddrinfo()
      *  to pull relevant OS details for the socket.
      \par
-     *  IpAddress allocated objects MUST be destructed by IPAddress::FreeAddrInfo
+     *  IpAddress allocated objects MUST be destructed by IpAddress::FreeAddrInfo
      *  System getaddrinfo() allocated objects MUST be freed with system freeaddrinfo()
      \par
      *  Some OS require that IPv4 addresses are pre-mapped by the client.

@@ -420,7 +420,7 @@ ipcacheParse(ipcache_entry *i, const char *inbuf)
     if (ipcount > 0) {
         int j, k;
 
-        i->addrs.in_addrs = (IpAddress *)xcalloc(ipcount, sizeof(IPAddress));
+        i->addrs.in_addrs = (IpAddress *)xcalloc(ipcount, sizeof(IpAddress));
         for (int l = 0; l < ipcount; l++)
             i->addrs.in_addrs[l].SetEmpty(); // perform same init actions as constructor would.
         i->addrs.bad_mask = (unsigned char *)xcalloc(ipcount, sizeof(unsigned char));
@@ -555,7 +555,7 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
         return 0;
     }
 
-    i->addrs.in_addrs = (IpAddress *)xcalloc(na, sizeof(IPAddress));
+    i->addrs.in_addrs = (IpAddress *)xcalloc(na, sizeof(IpAddress));
     for (int l = 0; l < na; l++)
         i->addrs.in_addrs[l].SetEmpty(); // perform same init actions as constructor would.
     i->addrs.bad_mask = (unsigned char *)xcalloc(na, sizeof(unsigned char));
@@ -780,7 +780,7 @@ ipcache_init(void)
     memset(&lru_list, '\0', sizeof(lru_list));
     memset(&static_addrs, '\0', sizeof(ipcache_addrs));
 
-    static_addrs.in_addrs = (IpAddress *)xcalloc(1, sizeof(IPAddress));
+    static_addrs.in_addrs = (IpAddress *)xcalloc(1, sizeof(IpAddress));
     static_addrs.in_addrs->SetEmpty(); // properly setup the IpAddress!
     static_addrs.bad_mask = (unsigned char *)xcalloc(1, sizeof(unsigned char));
     ipcache_high = (long) (((float) Config.ipcache.size *
@@ -1039,7 +1039,7 @@ ipcacheMergeIPLists(const IpAddress *aaddrs, const int alen,
     debugs(14, 5, "ipcacheMergeIPLists: Merge " << alen << "+" << blen << " into " << fc << " unique IPs.");
 
     // copy the old IPs into the new list buffer.
-    (*out) = (IpAddress*)xcalloc(fc, sizeof(IPAddress));
+    (*out) = (IpAddress*)xcalloc(fc, sizeof(IpAddress));
     outlen=0;
 
     assert(out != NULL);
@@ -1459,7 +1459,7 @@ ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
     i->addrs.cur = 0;
     i->addrs.badcount = 0;
 
-    i->addrs.in_addrs = (IpAddress *)xcalloc(1, sizeof(IPAddress));
+    i->addrs.in_addrs = (IpAddress *)xcalloc(1, sizeof(IpAddress));
     i->addrs.bad_mask = (unsigned char *)xcalloc(1, sizeof(unsigned char));
     i->addrs.in_addrs[0] = ip;
     i->addrs.bad_mask[0] = FALSE;

@@ -142,11 +142,11 @@ static void dump_denyinfo(StoreEntry * entry, const char *name, acl_deny_info_li
 static void free_denyinfo(acl_deny_info_list ** var);
 
 #if USE_WCCPv2
-static void parse_IpAddress_list(IPAddress_list **);
-static void dump_IpAddress_list(StoreEntry *, const char *, const IPAddress_list *);
-static void free_IpAddress_list(IPAddress_list **);
+static void parse_IpAddress_list(IpAddress_list **);
+static void dump_IpAddress_list(StoreEntry *, const char *, const IpAddress_list *);
+static void free_IpAddress_list(IpAddress_list **);
 #if CURRENTLY_UNUSED
-static int check_null_IpAddress_list(const IPAddress_list *);
+static int check_null_IpAddress_list(const IpAddress_list *);
 #endif /* CURRENTLY_UNUSED */
 #endif /* USE_WCCPv2 */
 
@@ -2750,7 +2750,7 @@ parseNeighborType(const char *s)
 
 #if USE_WCCPv2
 void
-parse_IpAddress_list_token(IPAddress_list ** head, char *token)
+parse_IpAddress_list_token(IpAddress_list ** head, char *token)
 {
     char *t;
     char *host;
@@ -2811,7 +2811,7 @@ parse_IpAddress_list_token(IPAddress_list ** head, char *token)
 }
 
 static void
-parse_IpAddress_list(IPAddress_list ** head)
+parse_IpAddress_list(IpAddress_list ** head)
 {
     char *token;
 
@@ -2821,7 +2821,7 @@ parse_IpAddress_list(IPAddress_list ** head)
 }
 
 static void
-dump_IpAddress_list(StoreEntry * e, const char *n, const IPAddress_list * s)
+dump_IpAddress_list(StoreEntry * e, const char *n, const IpAddress_list * s)
 {
     char ntoabuf[MAX_IPSTRLEN];
 
@@ -2834,7 +2834,7 @@ dump_IpAddress_list(StoreEntry * e, const char *n, const IPAddress_list * s)
 }
 
 static void
-free_IpAddress_list(IPAddress_list ** head)
+free_IpAddress_list(IpAddress_list ** head)
 {
     if (*head) delete *head;
     *head = NULL;

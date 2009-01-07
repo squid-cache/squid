@@ -76,7 +76,7 @@ SQUIDCEXTERN void parse_wordlist(wordlist ** list);
 SQUIDCEXTERN void requirePathnameExists(const char *name, const char *path);
 SQUIDCEXTERN void parse_time_t(time_t * var);
 
-SQUIDCEXTERN void parse_IpAddress_list_token(IPAddress_list **, char *);
+SQUIDCEXTERN void parse_IpAddress_list_token(IpAddress_list **, char *);
 
 
 /* client_side.c - FD related client side routines */
@@ -301,7 +301,7 @@ SQUIDCEXTERN void snmpDebugOid(int lvl, oid * Name, snint Len);
 SQUIDCEXTERN void addr2oid(IpAddress &addr, oid *Dest);
 SQUIDCEXTERN void oid2addr(oid *Dest, IpAddress &addr, u_int code);
 
-SQUIDCEXTERN IpAddress *client_entry(IPAddress *current);
+SQUIDCEXTERN IpAddress *client_entry(IpAddress *current);
 SQUIDCEXTERN variable_list *snmp_basicFn(variable_list *, snint *);
 SQUIDCEXTERN variable_list *snmp_confFn(variable_list *, snint *);
 SQUIDCEXTERN variable_list *snmp_sysFn(variable_list *, snint *);
