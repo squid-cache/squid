@@ -16,7 +16,7 @@ public:
     virtual void Close() {};
 
     /// Construct ECHO request
-    virtual void SendEcho(IPAddress &to, int opcode, const char *payload, int len) {};
+    virtual void SendEcho(IpAddress &to, int opcode, const char *payload, int len) {};
 
     /// Handle ICMP responses.
     virtual void Recv(void) {};

@@ -35,7 +35,7 @@
 #define _INCLUDE_ICMP_H
 
 #include "config.h"
-#include "IPAddress.h"
+#include "IpAddress.h"
 
 #define PINGER_PAYLOAD_SZ	8192
 
@@ -49,7 +49,7 @@
 
 /* This is a line-data format struct. DO NOT alter. */
 struct pingerEchoData {
-    IPAddress to;
+    IpAddress to;
     unsigned char opcode;
     int psize;
     char payload[PINGER_PAYLOAD_SZ];
@@ -57,7 +57,7 @@ struct pingerEchoData {
 
 /* This is a line-data format struct. DO NOT alter. */
 struct pingerReplyData {
-    IPAddress from;
+    IpAddress from;
     unsigned char opcode;
     int rtt;
     int hops;
@@ -111,7 +111,7 @@ public:
      *                Content longer than MAX_PAYLOAD will be truncated.
      \param len       Length of the payload in bytes if any is to be sent or 0.
      */
-    virtual void SendEcho(IPAddress &to, int opcode, const char *payload=NULL, int len=0) =0;
+    virtual void SendEcho(IpAddress &to, int opcode, const char *payload=NULL, int len=0) =0;
 
     /// Handle ICMP responses.
     virtual void Recv(void) =0;
@@ -139,7 +139,7 @@ protected:
     int ipHops(int ttl);
 
     /// Log the packet.
-    void Log(const IPAddress &addr, const u_int8_t type, const char* pkt_str, const int rtt, const int hops);
+    void Log(const IpAddress &addr, const u_int8_t type, const char* pkt_str, const int rtt, const int hops);
 
     /* no use wasting memory */
     int icmp_sock;

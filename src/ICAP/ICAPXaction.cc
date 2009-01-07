@@ -66,7 +66,7 @@ void ICAPXaction::start()
 // TODO: obey service-specific, OPTIONS-reported connection limit
 void ICAPXaction::openConnection()
 {
-    IPAddress client_addr;
+    IpAddress client_addr;
 
     Must(connection < 0);
 
@@ -94,7 +94,7 @@ void ICAPXaction::openConnection()
 
     disableRetries(); // we only retry pconn failures
 
-    IPAddress outgoing;
+    IpAddress outgoing;
     connection = comm_open(SOCK_STREAM, 0, outgoing,
                            COMM_NONBLOCKING, s.cfg().uri.buf());
 
@@ -153,7 +153,7 @@ void ICAPXaction::closeConnection()
         }
 
         if (reuseConnection) {
-            IPAddress client_addr;
+            IpAddress client_addr;
             debugs(93,3, HERE << "pushing pconn" << status());
             AsyncCall::Pointer call = NULL;
             commSetTimeout(connection, -1, call);

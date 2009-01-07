@@ -133,7 +133,7 @@ Icmp6::Open(void)
  * Generates an RFC 4443 Icmp6 ECHO Packet and sends into the network.
  */
 void
-Icmp6::SendEcho(IPAddress &to, int opcode, const char *payload, int len)
+Icmp6::SendEcho(IpAddress &to, int opcode, const char *payload, int len)
 {
     int x;
     LOCAL_ARRAY(char, pkt, MAX_PKT6_SZ);
