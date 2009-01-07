@@ -69,7 +69,7 @@ IcmpSquid::~IcmpSquid()
 #if USE_ICMP
 
 void
-IcmpSquid::SendEcho(IPAddress &to, int opcode, const char *payload, int len)
+IcmpSquid::SendEcho(IpAddress &to, int opcode, const char *payload, int len)
 {
     static pingerEchoData pecho;
     int x, slen;
@@ -141,7 +141,7 @@ IcmpSquid::Recv()
     int n;
     static int fail_count = 0;
     pingerReplyData preply;
-    static IPAddress F;
+    static IpAddress F;
 
     commSetSelect(icmp_sock, COMM_SELECT_READ, icmpSquidRecv, NULL, 0);
     memset(&preply, '\0', sizeof(pingerReplyData));
@@ -196,7 +196,7 @@ IcmpSquid::Recv()
 #endif /* USE_ICMP */
 
 void
-IcmpSquid::DomainPing(IPAddress &to, const char *domain)
+IcmpSquid::DomainPing(IpAddress &to, const char *domain)
 {
 #if USE_ICMP
     debugs(37, 4, HERE << "'" << domain << "' (" << to << ")");
@@ -211,7 +211,7 @@ IcmpSquid::Open(void)
     const char *args[2];
     int rfd;
     int wfd;
-    IPAddress localhost;
+    IpAddress localhost;
 
     /* User configured disabled. */
     if (!Config.pinger.enable) {

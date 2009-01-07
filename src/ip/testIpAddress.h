@@ -7,9 +7,9 @@
  * test the IP storage type
  */
 
-class testIPAddress : public CPPUNIT_NS::TestFixture
+class testIpAddress : public CPPUNIT_NS::TestFixture
 {
-    CPPUNIT_TEST_SUITE( testIPAddress );
+    CPPUNIT_TEST_SUITE( testIpAddress );
     CPPUNIT_TEST( testDefaults );
     CPPUNIT_TEST( testInAddrConstructor );
 #if USE_IPV6
