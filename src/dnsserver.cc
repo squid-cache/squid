@@ -166,7 +166,7 @@ usage: dnsserver -Dhv -s nameserver
  \endverbatim
  */
 
-#include "IPAddress.h"
+#include "IpAddress.h"
 
 #if LIBRESOLV_DNS_TTL_HACK
 /// \ingroup dnsserver
@@ -195,7 +195,7 @@ lookup(const char *buf)
     int ttl = 0;
     int retry = 0;
     unsigned int i = 0;
-    IPAddress ipa;
+    IpAddress ipa;
     char ntoabuf[MAX_IPSTRLEN];
     struct addrinfo hints;
     struct addrinfo *AI = NULL;
@@ -392,7 +392,7 @@ main(int argc, char *argv[])
 #endif
 #if HAVE_RES_INIT
 
-    IPAddress ipa;
+    IpAddress ipa;
     int opt_s = 0;
 #ifdef _SQUID_RES_NSADDR_LIST
 

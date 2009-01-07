@@ -377,7 +377,7 @@ extern "C"
 #include "profiling.h"
 #include "MemPool.h"
 
-#include "IPAddress.h"
+#include "IpAddress.h"
 
 #if !HAVE_TEMPNAM
 #include "tempnam.h"

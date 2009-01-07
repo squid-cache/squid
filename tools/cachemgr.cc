@@ -133,7 +133,7 @@ extern "C"
 
 #include "assert.h"
 #include "util.h"
-#include "IPAddress.h"
+#include "IpAddress.h"
 #include "getfullhostname.h"
 
 #ifndef DEFAULT_CACHEMGR_CONFIG
@@ -795,7 +795,7 @@ process_request(cachemgr_request * req)
 
     char ipbuf[MAX_IPSTRLEN];
     struct addrinfo *AI = NULL;
-    IPAddress S;
+    IpAddress S;
     int s;
     int l;
 

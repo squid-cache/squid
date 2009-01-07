@@ -178,7 +178,7 @@ IdleConnList::timeout(int fd, void *data)
 /* ========== PconnPool PRIVATE FUNCTIONS ============================================ */
 
 const char *
-PconnPool::key(const char *host, u_short port, const char *domain, IPAddress &client_address)
+PconnPool::key(const char *host, u_short port, const char *domain, IpAddress &client_address)
 {
     LOCAL_ARRAY(char, buf, SQUIDHOSTNAMELEN * 2 + 10);
     char ntoabuf[MAX_IPSTRLEN];
@@ -230,7 +230,7 @@ PconnPool::PconnPool(const char *aDescr) : table(NULL), descr(aDescr)
 }
 
 void
-PconnPool::push(int fd, const char *host, u_short port, const char *domain, IPAddress &client_address)
+PconnPool::push(int fd, const char *host, u_short port, const char *domain, IpAddress &client_address)
 {
 
     IdleConnList *list;
@@ -274,7 +274,7 @@ PconnPool::push(int fd, const char *host, u_short port, const char *domain, IPAd
  */
 int
 
-PconnPool::pop(const char *host, u_short port, const char *domain, IPAddress &client_address, bool isRetriable)
+PconnPool::pop(const char *host, u_short port, const char *domain, IpAddress &client_address, bool isRetriable)
 {
     IdleConnList *list;
     const char * aKey = key(host, port, domain, client_address);

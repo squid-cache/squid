@@ -122,8 +122,8 @@ extern "C"
 
     extern struct acl_deny_info_list *DenyInfoList;	/* NULL */
 
-//MOVED:icp_v2.cc    extern IPAddress theOutICPAddr;
-//MOVED:snmp_core.cc    extern IPAddress theOutSNMPAddr;
+//MOVED:icp_v2.cc    extern IpAddress theOutICPAddr;
+//MOVED:snmp_core.cc    extern IpAddress theOutSNMPAddr;
 
     extern struct timeval squid_start;
     extern int shutting_down;	/* 0 */

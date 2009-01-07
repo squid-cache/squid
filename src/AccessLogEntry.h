@@ -36,7 +36,7 @@
 #include "HttpVersion.h"
 #include "HttpRequestMethod.h"
 #include "HierarchyLogEntry.h"
-#include "IPAddress.h"
+#include "IpAddress.h"
 #include "HttpRequestMethod.h"
 
 /* forward decls */
@@ -92,7 +92,7 @@ public:
         {;
         }
 
-        IPAddress caddr;
+        IpAddress caddr;
         int64_t requestSize;
         int64_t replySize;
         int64_t highOffset;

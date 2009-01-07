@@ -38,7 +38,7 @@
 
 #include "squid.h"
 #include "cbdata.h"
-#include "IPAddress.h"
+#include "IpAddress.h"
 
 class helper_request;
 
@@ -65,7 +65,7 @@ struct _helper {
     int n_running;
     int n_active;
     int ipc_type;
-    IPAddress addr;
+    IpAddress addr;
     unsigned int concurrency;
     time_t last_queue_warn;
     time_t last_restart;
@@ -87,7 +87,7 @@ struct _helper_stateful {
     int n_running;
     int n_active;
     int ipc_type;
-    IPAddress addr;
+    IpAddress addr;
     MemAllocator *datapool;
     HLPSAVAIL *IsAvailable;
     HLPSONEQ *OnEmptyQueue;
@@ -105,7 +105,7 @@ struct _helper_stateful {
 struct _helper_server {
     int index;
     int pid;
-    IPAddress addr;
+    IpAddress addr;
     int rfd;
     int wfd;
     MemBuf *wqueue;
@@ -141,7 +141,7 @@ class helper_stateful_request;
 struct _helper_stateful_server {
     int index;
     int pid;
-    IPAddress addr;
+    IpAddress addr;
     int rfd;
     int wfd;
     /* MemBuf wqueue; */

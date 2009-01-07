@@ -38,7 +38,7 @@
 
 #include "squid.h"
 #include "cbdata.h"
-#include "IPAddress.h"
+#include "IpAddress.h"
 
 /**
  \defgroup ErrorPageAPI Error Pages API
@@ -125,7 +125,7 @@ public:
     char *dnsserver_msg;
     time_t ttl;
 
-    IPAddress src_addr;
+    IpAddress src_addr;
     char *redirect_url;
     ERCB *callback;
     void *callback_data;
