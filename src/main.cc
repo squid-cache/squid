@@ -247,7 +247,6 @@ usage(void)
 #endif
             "       -R        Do not set REUSEADDR on port.\n"
             "       -S        Double-check swap during rebuild.\n"
-            "       -V        Virtual host httpd-accelerator.\n"
             "       -X        Force full debugging.\n"
             "       -Y        Only return UDP_HIT or UDP_MISS_NOFETCH during fast reload.\n",
             APP_SHORTNAME, CACHE_HTTP_PORT, DefaultConfigFile, CACHE_ICP_PORT);
