@@ -118,7 +118,7 @@ IpIntercept::StopInterception(const char *str)
 }
 
 int
-IpIntercept::NetfilterInterception(int fd, const IpAddress &me, IPAddress &dst, int silent)
+IpIntercept::NetfilterInterception(int fd, const IpAddress &me, IpAddress &dst, int silent)
 {
 #if LINUX_NETFILTER
     struct addrinfo *lookup = NULL;
@@ -149,7 +149,7 @@ IpIntercept::NetfilterInterception(int fd, const IpAddress &me, IPAddress &dst, 
 }
 
 int
-IpIntercept::NetfilterTransparent(int fd, const IpAddress &me, IPAddress &client, int silent)
+IpIntercept::NetfilterTransparent(int fd, const IpAddress &me, IpAddress &client, int silent)
 {
 #if LINUX_NETFILTER
 
@@ -165,7 +165,7 @@ IpIntercept::NetfilterTransparent(int fd, const IpAddress &me, IPAddress &client
 }
 
 int
-IpIntercept::IpfwInterception(int fd, const IpAddress &me, IPAddress &dst, int silent)
+IpIntercept::IpfwInterception(int fd, const IpAddress &me, IpAddress &dst, int silent)
 {
 #if IPFW_TRANSPARENT
     struct addrinfo *lookup = NULL;
@@ -196,7 +196,7 @@ IpIntercept::IpfwInterception(int fd, const IpAddress &me, IPAddress &dst, int s
 }
 
 int
-IpIntercept::NatLookup(int fd, const IpAddress &me, const IPAddress &peer, IPAddress &client, IPAddress &dst)
+IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IPAddress &client, IPAddress &dst)
 {
 #if IPF_TRANSPARENT  /* --enable-ipf-transparent */
     client = me;
