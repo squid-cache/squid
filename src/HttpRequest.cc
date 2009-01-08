@@ -326,7 +326,7 @@ HttpRequest::prefixLen()
            header.len + 2;
 }
 
-/*
+/**
  * Returns true if HTTP allows us to pass this header on.  Does not
  * check anonymizer (aka header_access) configuration.
  */

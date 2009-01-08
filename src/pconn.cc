@@ -1,6 +1,5 @@
-
 /*
- * $Id: pconn.cc,v 1.55 2007/12/27 01:03:13 hno Exp $
+ * $Id$
  *
  * DEBUG: section 48    Persistent Connections
  * AUTHOR: Duane Wessels
@@ -180,18 +179,19 @@ IdleConnList::timeout(int fd, void *data)
 const char *
 PconnPool::key(const char *host, u_short port, const char *domain, IPAddress &client_address)
 {
-    LOCAL_ARRAY(char, buf, SQUIDHOSTNAMELEN * 2 + 10);
+    LOCAL_ARRAY(char, buf, SQUIDHOSTNAMELEN * 3 + 10);
     char ntoabuf[MAX_IPSTRLEN];
 
     if (domain && !client_address.IsAnyAddr())
-        snprintf(buf, SQUIDHOSTNAMELEN * 2 + 10, "%s:%d-%s/%s", host, (int) port, client_address.NtoA(ntoabuf,MAX_IPSTRLEN), domain);
+        snprintf(buf, SQUIDHOSTNAMELEN * 3 + 10, "%s:%d-%s/%s", host, (int) port, client_address.NtoA(ntoabuf,MAX_IPSTRLEN), domain);
     else if (domain && client_address.IsAnyAddr())
-        snprintf(buf, SQUIDHOSTNAMELEN * 2 + 10, "%s:%d/%s", host, (int) port, domain);
+        snprintf(buf, SQUIDHOSTNAMELEN * 3 + 10, "%s:%d/%s", host, (int) port, domain);
     else if ((!domain) && !client_address.IsAnyAddr())
-        snprintf(buf, SQUIDHOSTNAMELEN * 2 + 10, "%s:%d-%s", host, (int) port, client_address.NtoA(ntoabuf,MAX_IPSTRLEN));
+        snprintf(buf, SQUIDHOSTNAMELEN * 3 + 10, "%s:%d-%s", host, (int) port, client_address.NtoA(ntoabuf,MAX_IPSTRLEN));
     else
-        snprintf(buf, SQUIDHOSTNAMELEN * 2 + 10, "%s:%d", host, (int) port);
+        snprintf(buf, SQUIDHOSTNAMELEN * 3 + 10, "%s:%d", host, (int) port);
 
+    debugs(48,6,"PconnPool::key(" << host << "," << port << "," << domain << "," << client_address << "is {" << buf << "}" );
     return buf;
 }
 
@@ -212,6 +212,19 @@ PconnPool::dumpHist(StoreEntry * e)
             continue;
 
         storeAppendPrintf(e, "\t%4d  %9d\n", i, hist[i]);
+    }
+}
+
+void
+PconnPool::dumpHash(StoreEntry *e)
+{
+    int i;
+    hash_link *walker = NULL;
+    hash_table *hid = table;
+    hash_first(hid);
+
+    for (i = 0, walker = hid->next; walker; walker = hash_next(hid)) {
+        storeAppendPrintf(e, "\t item %5d: %s\n", i++, (char *)(walker->key));
     }
 }
 
@@ -243,6 +256,7 @@ PconnPool::push(int fd, const char *host, u_short port, const char *domain, IPAd
         return;
     } else if (shutting_down) {
         comm_close(fd);
+        debugs(48, 3, "PconnPool::push: Squid is shutting down. Refusing to do anything");
         return;
     }
 
@@ -252,8 +266,10 @@ PconnPool::push(int fd, const char *host, u_short port, const char *domain, IPAd
 
     if (list == NULL) {
         list = new IdleConnList(aKey, this);
-        debugs(48, 3, "pconnNew: adding " << hashKeyStr(&list->hash));
+        debugs(48, 3, "PconnPool::push: new IdleConnList for {" << hashKeyStr(&list->hash) << "}" );
         hash_join(table, &list->hash);
+    } else {
+        debugs(48, 3, "PconnPool::push: found IdleConnList for {" << hashKeyStr(&list->hash) << "}" );
     }
 
     list->push(fd);
@@ -264,7 +280,7 @@ PconnPool::push(int fd, const char *host, u_short port, const char *domain, IPAd
     debugs(48, 3, "PconnPool::push: pushed FD " << fd << " for " << aKey);
 }
 
-/*
+/**
  * Return a pconn fd for host:port if available and retriable.
  * Otherwise, return -1.
  *
@@ -273,15 +289,17 @@ PconnPool::push(int fd, const char *host, u_short port, const char *domain, IPAd
  * transactions create persistent connections but are not retriable.
  */
 int
-
 PconnPool::pop(const char *host, u_short port, const char *domain, IPAddress &client_address, bool isRetriable)
 {
-    IdleConnList *list;
     const char * aKey = key(host, port, domain, client_address);
-    list = (IdleConnList *)hash_lookup(table, aKey);
 
-    if (list == NULL)
+    IdleConnList *list = (IdleConnList *)hash_lookup(table, aKey);
+    if (list == NULL) {
+        debugs(48, 3, "PconnPool::pop: lookup for key {" << aKey << "} failed.");
         return -1;
+    } else { 
+        debugs(48, 3, "PconnPool::pop: found " << hashKeyStr(&list->hash) << (isRetriable?"(to use)":"(to kill)") );
+    }
 
     int fd = list->findUseableFD(); // search from the end. skip pending reads.
 
@@ -361,7 +379,10 @@ PconnModule::dump(StoreEntry *e)
     int i;
 
     for (i = 0; i < poolCount; i++) {
+        storeAppendPrintf(e, "\n Pool %d Stats\n", i);
         (*(pools+i))->dumpHist(e);
+        storeAppendPrintf(e, "\n Pool %d Hash Table\n",i);
+        (*(pools+i))->dumpHash(e);
     }
 }
 
