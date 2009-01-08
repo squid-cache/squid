@@ -76,6 +76,7 @@ public:
     int pop(const char *host, u_short port, const char *domain, IPAddress &client_address, bool retriable);
     void count(int uses);
     void dumpHist(StoreEntry *e);
+    void dumpHash(StoreEntry *e);
     void unlinkList(IdleConnList *list) const;
 
 private:
