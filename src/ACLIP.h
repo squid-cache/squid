@@ -47,7 +47,7 @@ public:
 
     acl_ip_data ();
 
-    acl_ip_data (IpAddress const &, IpAddress const &, IPAddress const &, acl_ip_data *);
+    acl_ip_data (IpAddress const &, IpAddress const &, IpAddress const &, acl_ip_data *);
     void toStr(char *buf, int len) const;
 
     IpAddress addr1;

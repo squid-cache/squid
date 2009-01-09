@@ -27,7 +27,7 @@ public:
     ~IpIntercept() {};
 
     /** Perform NAT lookups */
-    int NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IPAddress &client, IPAddress &dst);
+    int NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAddress &client, IpAddress &dst);
 
 #if LINUX_TPROXY2
     // only relevant to TPROXY v2 connections.

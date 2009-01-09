@@ -1,15 +1,13 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.2 2006/05/11 12:25:39 hno Exp $
-#
 #  Uncomment and customize the following to suit your needs:
 #
 
 
 AUTOMAKE_OPTIONS = subdir-objects
 
-INCLUDES        = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/lib/libTrie/include
+INCLUDES        = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/lib/libTrie/include -I$(top_srcdir)/src
 INCLUDES	+= @SQUID_CPPUNIT_INC@
 
 TESTS=$(check_PROGRAMS)
@@ -38,7 +36,7 @@ squidclient_SOURCES = squidclient.cc
 cachemgr__CGIEXT__SOURCES = cachemgr.cc
 cachemgr__CGIEXT__CXXFLAGS = -DDEFAULT_CACHEMGR_CONFIG=\"$(DEFAULT_CACHEMGR_CONFIG)\" $(AM_CXXFLAGS)
 
-LDADD = -L../lib -lmiscutil $(XTRA_LIBS)
+LDADD = ../src/ip/libip.la -L../lib -lmiscutil $(XTRA_LIBS)
 
 EXTRA_DIST = \
 	cachemgr.conf

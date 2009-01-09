@@ -462,4 +462,4 @@ ACLIP::match(IpAddress &clientip)
 
 acl_ip_data::acl_ip_data () :addr1(), addr2(), mask(), next (NULL) {}
 
-acl_ip_data::acl_ip_data (IpAddress const &anAddress1, IpAddress const &anAddress2, IPAddress const &aMask, acl_ip_data *aNext) : addr1(anAddress1), addr2(anAddress2), mask(aMask), next(aNext) {}
+acl_ip_data::acl_ip_data (IpAddress const &anAddress1, IpAddress const &anAddress2, IpAddress const &aMask, acl_ip_data *aNext) : addr1(anAddress1), addr2(anAddress2), mask(aMask), next(aNext) {}
