@@ -81,12 +81,10 @@
  * data flow.
  */
 
-#include "config.h"
 #include "squid.h"
 #include "client_side.h"
 #include "clientStream.h"
 #include "ProtoPort.h"
-#include "IPInterception.h"
 #include "AuthUserRequest.h"
 #include "Store.h"
 #include "comm.h"
@@ -94,6 +92,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ident.h"
+#include "ip/IpIntercept.h"
 #include "MemObject.h"
 #include "fde.h"
 #include "client_side_request.h"
@@ -2260,10 +2259,10 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
      * If transparent or interception mode is working clone the transparent and interception flags
      * from the port settings to the request.
      */
-    if (IPInterceptor.InterceptActive()) {
+    if (IpInterceptor.InterceptActive()) {
         request->flags.intercepted = http->flags.intercepted;
     }
-    if (IPInterceptor.TransparentActive()) {
+    if (IpInterceptor.TransparentActive()) {
         request->flags.spoof_client_ip = conn->port->spoof_client_ip;
     }
 
@@ -2781,7 +2780,7 @@ connStateCreate(const IPAddress &peer, const IPAddress &me, int fd, http_port_li
     if (port->intercepted || port->spoof_client_ip) {
         IPAddress client, dst;
 
-        if (IPInterceptor.NatLookup(fd, me, peer, client, dst) == 0) {
+        if (IpInterceptor.NatLookup(fd, me, peer, client, dst) == 0) {
             result->me = client;
             result->peer = dst;
             result->transparent(true);
