@@ -229,10 +229,10 @@ log_type &operator++ (log_type &aLogType)
     return aLogType;
 }
 
-
 void
 clientdbDump(StoreEntry * sentry)
 {
+    const char *name;
     ClientInfo *c;
     log_type l;
     int icp_total = 0;
@@ -244,7 +244,9 @@ clientdbDump(StoreEntry * sentry)
 
     while ((c = (ClientInfo *) hash_next(client_table))) {
         storeAppendPrintf(sentry, "Address: %s\n", hashKeyStr(&c->hash));
-        storeAppendPrintf(sentry, "Name:    %s\n", fqdnFromAddr(c->addr));
+        if( (name = fqdncache_gethostbyaddr(c->addr, 0)) ) {
+            storeAppendPrintf(sentry, "Name:    %s\n", name);
+        }
         storeAppendPrintf(sentry, "Currently established connections: %d\n",
                           c->n_established);
         storeAppendPrintf(sentry, "    ICP  Requests %d\n",

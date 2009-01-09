@@ -28,6 +28,7 @@ BEGIN {
 	define["USE_WCCP"]="--enable-wccp"
 	define["USE_WCCPv2"]="--enable-wccpv2"
 	define["USE_ZPH_QOS"]="--enable-zph-qos"
+	define["_SQUID_MSWIN_"]="MS Windows"
 }
 /^IFDEF:/ {
 	if (define[$2] != "")

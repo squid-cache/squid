@@ -1,7 +1,4 @@
-
 /*
- * $Id: forward.cc,v 1.175 2008/02/11 22:26:39 rousskov Exp $
- *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
  *
@@ -49,7 +46,7 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "icmp/net_db.h"
-#include "IPInterception.h"
+#include "ip/IpIntercept.h"
 
 static PSC fwdStartCompleteWrapper;
 static PF fwdServerClosedWrapper;
@@ -269,7 +266,6 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
          * then we need the client source protocol, address and port */
         if (request->flags.spoof_client_ip) {
             fwd->src = request->client_addr;
-            // AYJ: do we need to pass on the transparent flag also?
         }
 
         fwd->start(fwd);
@@ -771,7 +767,6 @@ FwdState::connectStart()
     FwdServer *fs = servers;
     const char *host;
     unsigned short port;
-    const char *domain = NULL;
     int ctimeout;
     int ftimeout = Config.Timeout.forward - (squid_curtime - start_t);
 
@@ -784,16 +779,9 @@ FwdState::connectStart()
     debugs(17, 3, "fwdConnectStart: " << url);
 
     if (fs->_peer) {
-        host = fs->_peer->host;
-        port = fs->_peer->http_port;
         ctimeout = fs->_peer->connect_timeout > 0 ? fs->_peer->connect_timeout
                    : Config.Timeout.peer_connect;
-
-        if (fs->_peer->options.originserver)
-            domain = request->GetHost();
     } else {
-        host = request->GetHost();
-        port = request->port;
         ctimeout = Config.Timeout.connect;
     }
 
@@ -835,7 +823,16 @@ FwdState::connectStart()
         return;
     }
 
-    fd = fwdPconnPool->pop(host, port, domain, client_addr, checkRetriable());
+    if(fs->_peer) {
+        host = fs->_peer->host;
+        port = fs->_peer->http_port;
+        fd = fwdPconnPool->pop(fs->_peer->name, fs->_peer->http_port, request->GetHost(), client_addr, checkRetriable());
+    }
+    else {
+        host = request->GetHost();
+        port = request->port;
+        fd = fwdPconnPool->pop(host, port, NULL, client_addr, checkRetriable());
+    }
     if (fd >= 0) {
         debugs(17, 3, "fwdConnectStart: reusing pconn FD " << fd);
         server_fd = fd;
@@ -907,7 +904,7 @@ FwdState::connectStart()
     if (!fs->_peer && request->flags.spoof_client_ip) {
         // try to set the outgoing address using TPROXY v2
         // if it fails we abort any further TPROXY actions on this connection
-        if (IPInterceptor.SetTproxy2OutgoingAddr(int fd, const IPAddress &src) == -1) {
+        if (IpInterceptor.SetTproxy2OutgoingAddr(int fd, const IPAddress &src) == -1) {
             request->flags.spoof_client_ip = 0;
         }
     }
@@ -1179,11 +1176,24 @@ FwdState::reforwardableStatus(http_status s)
     /* NOTREACHED */
 }
 
+/**
+ * Decide where details need to be gathered to correctly describe a persistent connection.
+ * What is needed:
+ * \item  host name of server at other end of this link (either peer or requested host)
+ * \item  port to which we connected the other end of this link (for peer or request)
+ * \item  domain for which the connection is supposed to be used
+ * \item  address of the client for which we made the connection
+ */
 void
-
-FwdState::pconnPush(int fd, const char *host, int port, const char *domain, IPAddress &client_addr)
+FwdState::pconnPush(int fd, const peer *_peer, const HttpRequest *req, const char *domain, IPAddress &client_addr)
 {
-    fwdPconnPool->push(fd, host, port, domain, client_addr);
+    if (_peer) {
+        fwdPconnPool->push(fd, _peer->name, _peer->http_port, domain, client_addr);
+    } else {
+        /* small performance improvement, using NULL for domain instead of listing it twice */
+        /* although this will leave a gap open for url-rewritten domains to share a link */
+        fwdPconnPool->push(fd, req->GetHost(), req->port, NULL, client_addr);
+    }
 }
 
 void

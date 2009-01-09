@@ -48,9 +48,9 @@
 #include "SquidTime.h"
 #include "CommCalls.h"
 #include "IPAddress.h"
-#include "IPInterception.h"
 #include "DescriptorSet.h"
 #include "icmp/net_db.h"
+#include "ip/IpIntercept.h"
 
 #if defined(_SQUID_CYGWIN_)
 #include <sys/ioctl.h>

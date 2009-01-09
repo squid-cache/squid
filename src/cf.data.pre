@@ -6017,6 +6017,7 @@ DOC_START
 DOC_END
 
 NAME: windows_ipaddrchangemonitor
+IFDEF: _SQUID_MSWIN_
 COMMENT: on|off
 TYPE: onoff
 DEFAULT: on

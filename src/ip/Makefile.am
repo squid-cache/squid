@@ -21,6 +21,8 @@ $(OBJS): $(top_srcdir)/include/version.h $(top_srcdir)/include/autoconf.h
 noinst_LTLIBRARIES = libip.la
 
 libip_la_SOURCES = \
+	IpIntercept.h \
+	IpIntercept.cc \
 	QosConfig.h \
 	QosConfig.cc
 
@@ -30,8 +32,8 @@ TESTS= $(check_PROGRAMS)
 
 ## Special Universal .h dependency test script
 ## aborts if error encountered
-testHeaders: $(top_srcdir)/src/icmp/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/src/icmp/" || exit 1
+testHeaders: $(top_srcdir)/src/ip/*.h
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/src/ip/" || exit 1
 
 ## No such file...
 testHeaders.c:
