@@ -466,7 +466,7 @@ bool IpAddress::GetReverseString(char buf[MAX_IPSTRLEN], int show_type) const
     return false;
 }
 
-IpAddress& IpAddress::operator =(const IPAddress &s)
+IpAddress& IpAddress::operator =(const IpAddress &s)
 {
     memcpy(this, &s, sizeof(IpAddress));
     return *this;
@@ -642,19 +642,19 @@ IpAddress& IpAddress::operator =(struct in6_addr const &s)
 
 #endif
 
-IpAddress::IpAddress(const IPAddress &s)
+IpAddress::IpAddress(const IpAddress &s)
 {
     SetEmpty();
     operator=(s);
 }
 
-IpAddress::IpAddress(IPAddress *s)
+IpAddress::IpAddress(IpAddress *s)
 {
     SetEmpty();
     operator=(s);
 }
 
-IpAddress& IpAddress::operator =(IPAddress *s)
+IpAddress& IpAddress::operator =(IpAddress *s)
 {
     IpAddress *tmp = NULL;
     if (!s) return *this;

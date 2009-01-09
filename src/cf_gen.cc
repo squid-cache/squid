@@ -1,7 +1,4 @@
-
 /*
- * $Id: cf_gen.cc,v 1.62 2007/09/17 20:21:23 hno Exp $
- *
  * DEBUG: none          Generate squid.conf.default and cf_parser.h
  * AUTHOR: Max Okumoto
  *
@@ -48,9 +45,19 @@
  *			 administrator.
  *****************************************************************************/
 
-#include "squid.h"
-#include "SquidTime.h"
+//#include "squid.h"
+#include "config.h"
+#include "assert.h"
+//#include "SquidTime.h"
 #include "cf_gen_defines.h"
+#include "util.h"
+
+#if HAVE_STRING_H
+#include <string.h>
+#endif
+#if HAVE_STRING_H
+#include <ctype.h>
+#endif
 
 #define MAX_LINE	1024	/* longest configuration line */
 #define _PATH_PARSER		"cf_parser.h"

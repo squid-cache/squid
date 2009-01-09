@@ -196,7 +196,7 @@ IpIntercept::IpfwInterception(int fd, const IpAddress &me, IpAddress &dst, int s
 }
 
 int
-IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IPAddress &client, IPAddress &dst)
+IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAddress &client, IpAddress &dst)
 {
 #if IPF_TRANSPARENT  /* --enable-ipf-transparent */
     client = me;
