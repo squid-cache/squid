@@ -1,6 +1,4 @@
 /*
- * $Id: IPInterception.cc,v 1.20 2008/02/05 22:38:24 amosjeffries Exp $
- *
  * DEBUG: section 89    NAT / IP Interception
  * AUTHOR: Robert Collins
  * AUTHOR: Amos Jeffries
@@ -33,13 +31,8 @@
  *
  */
 #include "config.h"
-#include "IPInterception.h"
+#include "IpIntercept.h"
 #include "fde.h"
-
-#if 0
-#include "squid.h"
-#include "clientStream.h"
-#endif
 
 #if IPF_TRANSPARENT
 
@@ -104,10 +97,10 @@
 
 
 // single global instance for access by other components.
-IPIntercept IPInterceptor;
+IpIntercept IpInterceptor;
 
 void
-IPIntercept::StopTransparency(const char *str)
+IpIntercept::StopTransparency(const char *str)
 {
     if (transparent_active) {
         debugs(89, DBG_IMPORTANT, "Stopping full transparency: " << str);
@@ -116,7 +109,7 @@ IPIntercept::StopTransparency(const char *str)
 }
 
 void
-IPIntercept::StopInterception(const char *str)
+IpIntercept::StopInterception(const char *str)
 {
     if (intercept_active) {
         debugs(89, DBG_IMPORTANT, "Stopping IP interception: " << str);
@@ -125,7 +118,7 @@ IPIntercept::StopInterception(const char *str)
 }
 
 int
-IPIntercept::NetfilterInterception(int fd, const IPAddress &me, IPAddress &dst, int silent)
+IpIntercept::NetfilterInterception(int fd, const IPAddress &me, IPAddress &dst, int silent)
 {
 #if LINUX_NETFILTER
     struct addrinfo *lookup = NULL;
@@ -156,7 +149,7 @@ IPIntercept::NetfilterInterception(int fd, const IPAddress &me, IPAddress &dst, 
 }
 
 int
-IPIntercept::NetfilterTransparent(int fd, const IPAddress &me, IPAddress &client, int silent)
+IpIntercept::NetfilterTransparent(int fd, const IPAddress &me, IPAddress &client, int silent)
 {
 #if LINUX_NETFILTER
 
@@ -172,7 +165,7 @@ IPIntercept::NetfilterTransparent(int fd, const IPAddress &me, IPAddress &client
 }
 
 int
-IPIntercept::IPFWInterception(int fd, const IPAddress &me, IPAddress &dst, int silent)
+IpIntercept::IpfwInterception(int fd, const IPAddress &me, IPAddress &dst, int silent)
 {
 #if IPFW_TRANSPARENT
     struct addrinfo *lookup = NULL;
@@ -203,7 +196,7 @@ IPIntercept::IPFWInterception(int fd, const IPAddress &me, IPAddress &dst, int s
 }
 
 int
-IPIntercept::NatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &client, IPAddress &dst)
+IpIntercept::NatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &client, IPAddress &dst)
 {
 #if IPF_TRANSPARENT  /* --enable-ipf-transparent */
     client = me;
@@ -329,7 +322,7 @@ IPIntercept::NatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAdd
 
     if (intercept_active) {
         if ( NetfilterInterception(fd, me, client, silent) == 0) return 0;
-        if ( IPFWInterception(fd, me, client, silent) == 0) return 0;
+        if ( IpfwInterception(fd, me, client, silent) == 0) return 0;
     }
     if (transparent_active) {
         if ( NetfilterTransparent(fd, me, dst, silent) == 0) return 0;
@@ -405,7 +398,7 @@ IPIntercept::NatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAdd
 }
 
 #if LINUX_TPROXY2
-IPIntercept::SetTproxy2OutgoingAddr(int fd, const IPAddress &src)
+IpIntercept::SetTproxy2OutgoingAddr(int fd, const IPAddress &src)
 {
     IPAddress addr;
     struct in_tproxy itp;

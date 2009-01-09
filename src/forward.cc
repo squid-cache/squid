@@ -1,7 +1,4 @@
-
 /*
- * $Id: forward.cc,v 1.175 2008/02/11 22:26:39 rousskov Exp $
- *
  * DEBUG: section 17    Request Forwarding
  * AUTHOR: Duane Wessels
  *
@@ -49,7 +46,7 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "icmp/net_db.h"
-#include "IPInterception.h"
+#include "ip/IpIntercept.h"
 
 static PSC fwdStartCompleteWrapper;
 static PF fwdServerClosedWrapper;
@@ -269,7 +266,6 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
          * then we need the client source protocol, address and port */
         if (request->flags.spoof_client_ip) {
             fwd->src = request->client_addr;
-            // AYJ: do we need to pass on the transparent flag also?
         }
 
         fwd->start(fwd);
@@ -907,7 +903,7 @@ FwdState::connectStart()
     if (!fs->_peer && request->flags.spoof_client_ip) {
         // try to set the outgoing address using TPROXY v2
         // if it fails we abort any further TPROXY actions on this connection
-        if (IPInterceptor.SetTproxy2OutgoingAddr(int fd, const IPAddress &src) == -1) {
+        if (IpInterceptor.SetTproxy2OutgoingAddr(int fd, const IPAddress &src) == -1) {
             request->flags.spoof_client_ip = 0;
         }
     }
