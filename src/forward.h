@@ -4,6 +4,7 @@
 /* forward decls */
 
 class ErrorState;
+class HttpRequest;
 
 #include "comm.h"
 #include "IPAddress.h"
@@ -43,7 +44,7 @@ public:
     bool checkRetry();
     bool checkRetriable();
     void dispatch();
-    void pconnPush(int fd, const char *host, int port, const char *domain, IPAddress &client_addr);
+    void pconnPush(int fd, const peer *_peer, const HttpRequest *req, const char *domain, IPAddress &client_addr);
 
     bool dontRetry() { return flags.dont_retry; }
 

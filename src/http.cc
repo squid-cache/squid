@@ -1283,13 +1283,8 @@ HttpStateData::processReplyBody()
             if (orig_request->pinnedConnection() && ispinned) {
                 orig_request->pinnedConnection()->pinConnection(fd, orig_request, _peer,
                         (request->flags.connection_auth != 0));
-            } else if (_peer) {
-                if (_peer->options.originserver)
-                    fwd->pconnPush(fd, _peer->name, orig_request->port, orig_request->GetHost(), client_addr);
-                else
-                    fwd->pconnPush(fd, _peer->name, _peer->http_port, NULL, client_addr);
             } else {
-                fwd->pconnPush(fd, request->GetHost(), request->port, NULL, client_addr);
+                fwd->pconnPush(fd, _peer, request, orig_request->GetHost(), client_addr);
             }
 
             fd = -1;
