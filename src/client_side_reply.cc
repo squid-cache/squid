@@ -400,8 +400,8 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
 extern "C" CSR clientGetMoreData;
 extern "C" CSD clientReplyDetach;
 
-/*
- * clientCacheHit should only be called until the HTTP reply headers
+/**
+ * clientReplyContext::cacheHit Should only be called until the HTTP reply headers
  * have been parsed.  Normally this should be a single call, but
  * it might take more than one.  As soon as we have the headers,
  * we hand off to clientSendMoreData, processExpired, or
@@ -411,12 +411,16 @@ void
 clientReplyContext::CacheHit(void *data, StoreIOBuffer result)
 {
     clientReplyContext *context = (clientReplyContext *)data;
-    context->cacheHit (result);
+    context->cacheHit(result);
 }
 
+/**
+ * Process a possible cache HIT.
+ */
 void
 clientReplyContext::cacheHit(StoreIOBuffer result)
 {
+    /** Ignore if the HIT object is being deleted. */
     if (deleting)
         return;
 
@@ -603,7 +607,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
     }
 }
 
-/*
+/**
  * Prepare to fetch the object as it's a cache miss of some kind.
  */
 void
@@ -613,11 +617,11 @@ clientReplyContext::processMiss()
     HttpRequest *r = http->request;
     ErrorState *err = NULL;
     debugs(88, 4, "clientProcessMiss: '" << RequestMethodStr(r->method) << " " << url << "'");
-    /*
+
+    /**
      * We might have a left-over StoreEntry from a failed cache hit
      * or IMS request.
      */
-
     if (http->storeEntry()) {
         if (EBIT_TEST(http->storeEntry()->flags, ENTRY_SPECIAL)) {
             debugs(88, 0, "clientProcessMiss: miss on a special object (" << url << ").");
@@ -628,22 +632,24 @@ clientReplyContext::processMiss()
         removeClientStoreReference(&sc, http);
     }
 
+    /** Check if its a PURGE request to be actioned. */
     if (r->method == METHOD_PURGE) {
         purgeRequest();
         return;
     }
 
+    /** Check if its an 'OTHER' request. Purge all cached entries if so and continue. */
     if (r->method == METHOD_OTHER) {
-        // invalidate all cache entries
         purgeAllCached();
     }
 
+    /** Check if 'only-if-cached' flag is set. Action if so. */
     if (http->onlyIfCached()) {
         processOnlyIfCachedMiss();
         return;
     }
 
-    /*
+    /**
      * Deny loops when running in accelerator/transproxy mode.
      */
     if (http->flags.accel && r->flags.loopdetect) {
@@ -672,16 +678,18 @@ clientReplyContext::processMiss()
             return;
         }
 
+        /** Check for internal requests. Update Protocol info if so. */
         if (http->flags.internal)
             r->protocol = PROTO_INTERNAL;
 
+        /** Start forwarding to get the new object from network */
         FwdState::fwdStart(http->getConn() != NULL ? http->getConn()->fd : -1,
                            http->storeEntry(),
                            r);
     }
 }
 
-/*
+/**
  * client issued a request with an only-if-cached cache-control directive;
  * we did not find a cached object that can be returned without
  *     contacting other servers;
@@ -1439,12 +1447,17 @@ clientReplyContext::identifyStoreObject()
     }
 }
 
+/**
+ * Check state of the current StoreEntry object.
+ * to see if we can determine the final status of the request.
+ */
 void
 clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 {
     StoreEntry *e = newEntry;
     HttpRequest *r = http->request;
 
+    /** \item  If the entry received isNull() then we ignore it. */
     if (e->isNull()) {
         http->storeEntry(NULL);
     } else {
@@ -1452,8 +1465,11 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
     }
 
     e = http->storeEntry();
-    /* Release IP-cache entries on reload */
 
+    /* Release IP-cache entries on reload */
+    /** \item If the request has no-cache flag set or some no_cache HACK in operation we
+      * 'invalidate' the cached IP entries for this request ???
+      */
     if (r->flags.nocache) {
 
 #if USE_DNSSERVERS
@@ -1492,14 +1508,15 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 #endif
 
     if (NULL == http->storeEntry()) {
-        /* this object isn't in the cache */
-        debugs(85, 3, "clientProcessRequest2: storeGet() MISS");
+        /** \item If no StoreEntry object is current assume this object isn't in the cache set MISS*/
+        debugs(85, 3, "clientProcessRequest2: StoreEntry is NULL -  MISS");
         http->logType = LOG_TCP_MISS;
         doGetMoreData();
         return;
     }
 
     if (Config.onoff.offline) {
+        /** \item If we are running in offline mode set to HIT */
         debugs(85, 3, "clientProcessRequest2: offline HIT");
         http->logType = LOG_TCP_HIT;
         doGetMoreData();
@@ -1507,7 +1524,8 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
     }
 
     if (http->redirect.status) {
-        /* force this to be a miss */
+        /** \item If redirection status is True force this to be a MISS */
+        debugs(85, 3, "clientProcessRequest2: redirectStatus forced StoreEntry to NULL -  MISS");
         http->storeEntry(NULL);
         http->logType = LOG_TCP_MISS;
         doGetMoreData();
@@ -1619,8 +1637,7 @@ clientReplyContext::doGetMoreData()
              * the method as GET.
              */
             http->storeEntry()->createMemObject(http->uri, http->log_uri);
-            http->storeEntry()->mem_obj->method =
-                http->request->method;
+            http->storeEntry()->mem_obj->method = http->request->method;
         }
 
         sc = storeClientListAdd(http->storeEntry(), this);
