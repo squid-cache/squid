@@ -42,7 +42,7 @@
 
 static hash_table *client_table = NULL;
 
-static ClientInfo *clientdbAdd(const IPAddress &addr);
+static ClientInfo *clientdbAdd(const IpAddress &addr);
 static FREE clientdbFreeItem;
 static void clientdbStartGC(void);
 static void clientdbScheduledGC(void *);
@@ -56,7 +56,7 @@ static int cleanup_removed;
 
 static ClientInfo *
 
-clientdbAdd(const IPAddress &addr)
+clientdbAdd(const IpAddress &addr)
 {
     ClientInfo *c;
     char *buf = new char[MAX_IPSTRLEN];
@@ -94,7 +94,7 @@ clientdbInit(void)
 }
 
 void
-clientdbUpdate(const IPAddress &addr, log_type ltype, protocol_t p, size_t size)
+clientdbUpdate(const IpAddress &addr, log_type ltype, protocol_t p, size_t size)
 {
     char key[MAX_IPSTRLEN];
     ClientInfo *c;
@@ -138,7 +138,7 @@ clientdbUpdate(const IPAddress &addr, log_type ltype, protocol_t p, size_t size)
  * -1.  To get the current value, simply call with delta = 0.
  */
 int
-clientdbEstablished(const IPAddress &addr, int delta)
+clientdbEstablished(const IpAddress &addr, int delta)
 {
     char key[MAX_IPSTRLEN];
     ClientInfo *c;
@@ -165,7 +165,7 @@ clientdbEstablished(const IPAddress &addr, int delta)
 #define CUTOFF_SECONDS 3600
 int
 
-clientdbCutoffDenied(const IPAddress &addr)
+clientdbCutoffDenied(const IpAddress &addr)
 {
     char key[MAX_IPSTRLEN];
     int NR;
@@ -384,8 +384,8 @@ clientdbStartGC(void)
 
 #if SQUID_SNMP
 
-IPAddress *
-client_entry(IPAddress *current)
+IpAddress *
+client_entry(IpAddress *current)
 {
     ClientInfo *c = NULL;
     char key[MAX_IPSTRLEN];

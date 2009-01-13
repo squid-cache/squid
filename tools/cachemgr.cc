@@ -1,6 +1,4 @@
 /*
- * $Id: cachemgr.cc,v 1.6 2007/12/14 23:11:53 amosjeffries Exp $
- *
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
  *
@@ -133,7 +131,7 @@ extern "C"
 
 #include "assert.h"
 #include "util.h"
-#include "IPAddress.h"
+#include "ip/IpAddress.h"
 #include "getfullhostname.h"
 
 #ifndef DEFAULT_CACHEMGR_CONFIG
@@ -795,7 +793,7 @@ process_request(cachemgr_request * req)
 
     char ipbuf[MAX_IPSTRLEN];
     struct addrinfo *AI = NULL;
-    IPAddress S;
+    IpAddress S;
     int s;
     int l;
 

@@ -7,7 +7,7 @@ class ErrorState;
 class HttpRequest;
 
 #include "comm.h"
-#include "IPAddress.h"
+#include "ip/IpAddress.h"
 
 class FwdServer
 {
@@ -44,7 +44,7 @@ public:
     bool checkRetry();
     bool checkRetriable();
     void dispatch();
-    void pconnPush(int fd, const peer *_peer, const HttpRequest *req, const char *domain, IPAddress &client_addr);
+    void pconnPush(int fd, const peer *_peer, const HttpRequest *req, const char *domain, IpAddress &client_addr);
 
     bool dontRetry() { return flags.dont_retry; }
 
@@ -100,7 +100,7 @@ private:
         unsigned int forward_completed:1;
     } flags;
 
-    IPAddress src; /* Client address for this connection. Needed for transparent operations. */
+    IpAddress src; /* Client address for this connection. Needed for transparent operations. */
 };
 
 #endif

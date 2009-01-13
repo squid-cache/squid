@@ -13,7 +13,7 @@ struct http_port_list {
 
     http_port_list *next;
 
-    IPAddress s;
+    IpAddress s;
     char *protocol;            /* protocol name */
     char *name;                /* visible name */
     char *defaultsite;         /* default web site */

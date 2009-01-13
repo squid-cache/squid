@@ -192,7 +192,7 @@ void
 unlinkdInit(void)
 {
     const char *args[2];
-    IPAddress localhost;
+    IpAddress localhost;
 
     args[0] = "(unlinkd)";
     args[1] = NULL;

@@ -90,7 +90,7 @@ Icmp4::Open(void)
 }
 
 void
-Icmp4::SendEcho(IPAddress &to, int opcode, const char *payload, int len)
+Icmp4::SendEcho(IpAddress &to, int opcode, const char *payload, int len)
 {
     int x;
     LOCAL_ARRAY(char, pkt, MAX_PKT4_SZ);

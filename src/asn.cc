@@ -59,9 +59,9 @@ class m_ADDR
 {
 public:
     uint8_t len;
-    IPAddress addr;
+    IpAddress addr;
 
-    m_ADDR() : len(sizeof(IPAddress)) {};
+    m_ADDR() : len(sizeof(IpAddress)) {};
 };
 
 /* END of definitions for radix tree entries */
@@ -126,7 +126,7 @@ static OBJH asnStats;
 /* PUBLIC */
 
 int
-asnMatchIp(CbDataList<int> *data, IPAddress &addr)
+asnMatchIp(CbDataList<int> *data, IpAddress &addr)
 {
     struct squid_radix_node *rn;
     as_info *e;
@@ -392,8 +392,8 @@ asnAddNet(char *as_string, int as_number)
     CbDataList<int> *q = NULL;
     as_info *asinfo = NULL;
 
-    IPAddress mask;
-    IPAddress addr;
+    IpAddress mask;
+    IpAddress addr;
     char *t;
     int bitl;
 
@@ -511,8 +511,8 @@ printRadixNode(struct squid_radix_node *rn, void *_sentry)
     CbDataList<int> *q;
     as_info *asinfo;
     char buf[MAX_IPSTRLEN];
-    IPAddress addr;
-    IPAddress mask;
+    IpAddress addr;
+    IpAddress mask;
 
     assert(e);
     assert(e->e_info);
@@ -540,7 +540,7 @@ ACLASN::~ACLASN()
 
 bool
 
-ACLASN::match(IPAddress toMatch)
+ACLASN::match(IpAddress toMatch)
 {
     return asnMatchIp(data, toMatch);
 }
@@ -583,7 +583,7 @@ ACLASN::parse()
     }
 }
 
-ACLData<IPAddress> *
+ACLData<IpAddress> *
 ACLASN::clone() const
 {
     if (data)
@@ -594,18 +594,18 @@ ACLASN::clone() const
 
 /* explicit template instantiation required for some systems */
 
-template class ACLStrategised<IPAddress>;
+template class ACLStrategised<IpAddress>;
 
 ACL::Prototype ACLASN::SourceRegistryProtoype(&ACLASN::SourceRegistryEntry_, "src_as");
 
-ACLStrategised<IPAddress> ACLASN::SourceRegistryEntry_(new ACLASN, ACLSourceASNStrategy::Instance(), "src_as");
+ACLStrategised<IpAddress> ACLASN::SourceRegistryEntry_(new ACLASN, ACLSourceASNStrategy::Instance(), "src_as");
 
 ACL::Prototype ACLASN::DestinationRegistryProtoype(&ACLASN::DestinationRegistryEntry_, "dst_as");
 
-ACLStrategised<IPAddress> ACLASN::DestinationRegistryEntry_(new ACLASN, ACLDestinationASNStrategy::Instance(), "dst_as");
+ACLStrategised<IpAddress> ACLASN::DestinationRegistryEntry_(new ACLASN, ACLDestinationASNStrategy::Instance(), "dst_as");
 
 int
-ACLSourceASNStrategy::match (ACLData<IPAddress> * &data, ACLChecklist *checklist)
+ACLSourceASNStrategy::match (ACLData<IpAddress> * &data, ACLChecklist *checklist)
 {
     return data->match(checklist->src_addr);
 }
@@ -638,7 +638,7 @@ ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLChecklist *chec
         debugs(28, 3, "asnMatchAcl: Can't yet compare '" << "unknown" /*name*/ << "' ACL for '" << checklist->request->GetHost() << "'");
         checklist->changeState (DestinationIPLookup::Instance());
     } else {
-        IPAddress noaddr;
+        IpAddress noaddr;
         noaddr.SetNoAddr();
         return data->match(noaddr);
     }

@@ -1,7 +1,4 @@
-
 /*
- * $Id: PeerSelectState.h,v 1.3 2007/12/14 23:11:45 amosjeffries Exp $
- *
  * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,7 +35,7 @@
 
 #include "cbdata.h"
 #include "PingData.h"
-#include "IPAddress.h"
+#include "ip/IpAddress.h"
 
 class ps_state
 {
@@ -55,16 +52,16 @@ public:
     void *callback_data;
     FwdServer *servers;
     /*
-     * Why are these IPAddress instead of peer *?  Because a
+     * Why are these IpAddress instead of peer *?  Because a
      * peer structure can become invalid during the peer selection
      * phase, specifically after a reconfigure.  Thus we need to lookup
      * the peer * based on the address when we are finally ready to
      * reference the peer structure.
      */
 
-    IPAddress first_parent_miss;
+    IpAddress first_parent_miss;
 
-    IPAddress closest_parent_miss;
+    IpAddress closest_parent_miss;
     /*
      * ->hit can be peer* because it should only be
      * accessed during the thread when it is set

@@ -1,7 +1,4 @@
 /*
- * $Id: ACLDestinationASN.h,v 1.4 2008/02/26 21:49:34 amosjeffries Exp $
- *
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -37,10 +34,10 @@
 
 #include "ACLASN.h"
 #include "ACLStrategy.h"
-#include "IPAddress.h"
+#include "ip/IpAddress.h"
 
 /// \ingroup ACLAPI
-class ACLDestinationASNStrategy : public ACLStrategy<IPAddress>
+class ACLDestinationASNStrategy : public ACLStrategy<IpAddress>
 {
 
 public:

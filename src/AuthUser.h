@@ -41,7 +41,7 @@ class AuthUserHashPointer;
 /* for auth_type_t */
 #include "enums.h"
 
-#include "IPAddress.h"
+#include "ip/IpAddress.h"
 #include "dlink.h"
 
 /**
@@ -85,8 +85,8 @@ public:
     _SQUID_INLINE_ char const *username() const;
     _SQUID_INLINE_ void username(char const *);
     void clearIp();
-    void removeIp(IPAddress);
-    void addIp(IPAddress);
+    void removeIp(IpAddress);
+    void addIp(IpAddress);
     _SQUID_INLINE_ void addRequest(AuthUserRequest *);
 
     void lock();
