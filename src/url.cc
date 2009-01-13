@@ -248,7 +248,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
 
         /* Then everything until first /; thats host (and port; which we'll look for here later) */
         /* bug 1881: If we don't get a "/" then we imply it was there */
-        for (dst = host; i < l && *src != '/' && src != '\0'; i++, src++, dst++) {
+        for (dst = host; i < l && *src != '/' && *src != '\0'; i++, src++, dst++) {
             *dst = *src;
         }
 
