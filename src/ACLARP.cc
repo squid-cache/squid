@@ -1,7 +1,4 @@
-
 /*
- * $Id: ACLARP.cc,v 1.29 2008/02/05 22:38:24 amosjeffries Exp $
- *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels
  *
@@ -40,13 +37,13 @@
 #include <squid_windows.h>
 #endif
 #include "squid.h"
-#include "IPAddress.h"
+#include "ip/IpAddress.h"
 
 #ifdef _SQUID_WIN32_
 
 struct arpreq {
 
-    IPAddress arp_pa;   /* protocol address */
+    IpAddress arp_pa;   /* protocol address */
 
     struct sockaddr arp_ha;   /* hardware address */
     int arp_flags;            /* flags */
@@ -84,7 +81,7 @@ struct arpreq {
 #endif
 static void aclParseArpList(SplayNode<acl_arp_data *> **curlist);
 static int decode_eth(const char *asc, char *eth);
-static int aclMatchArp(SplayNode<acl_arp_data *> **dataptr, IPAddress &c);
+static int aclMatchArp(SplayNode<acl_arp_data *> **dataptr, IpAddress &c);
 static SplayNode<acl_arp_data *>::SPLAYCMP aclArpCompare;
 static SplayNode<acl_arp_data *>::SPLAYWALKEE aclDumpArpListWalkee;
 
@@ -242,12 +239,12 @@ ACLARP::match(ACLChecklist *checklist)
 /* aclMatchArp */
 /***************/
 int
-aclMatchArp(SplayNode<acl_arp_data *> **dataptr, IPAddress &c)
+aclMatchArp(SplayNode<acl_arp_data *> **dataptr, IpAddress &c)
 {
     struct arpreq arpReq;
     struct sockaddr_in *sa = NULL;
 
-    IPAddress ipAddr = c;
+    IpAddress ipAddr = c;
 
 #if defined(_SQUID_LINUX_)
 

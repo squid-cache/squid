@@ -1,6 +1,4 @@
 /*
- * $Id: snmp_core.cc,v 1.82 2008/01/22 21:07:19 rousskov Exp $
- *
  * DEBUG: section 49    SNMP support
  * AUTHOR: Glenn Chisholm
  *
@@ -35,12 +33,12 @@
 #include "comm.h"
 #include "cache_snmp.h"
 #include "ACLChecklist.h"
-#include "IPAddress.h"
+#include "ip/IpAddress.h"
 
 #define SNMP_REQUEST_SIZE 4096
 #define MAX_PROTOSTAT 5
 
-IPAddress theOutSNMPAddr;
+IpAddress theOutSNMPAddr;
 
 typedef struct _mib_tree_entry mib_tree_entry;
 typedef oid *(instance_Fn) (oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn);
@@ -482,7 +480,7 @@ void
 snmpHandleUdp(int sock, void *not_used)
 {
     LOCAL_ARRAY(char, buf, SNMP_REQUEST_SIZE);
-    IPAddress from;
+    IpAddress from;
     snmp_request_t *snmp_rq;
     int len;
 
@@ -870,8 +868,8 @@ static oid *
 client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
 {
     oid *instance = NULL;
-    IPAddress laddr;
-    IPAddress *aux;
+    IpAddress laddr;
+    IpAddress *aux;
     int size = 0;
     int newshift = 0;
 
@@ -1105,7 +1103,7 @@ snmpSnmplibDebug(int lvl, char *buf)
    oid == 32.1.50.239.162.33.251.20.50.0.0.0.0.0.0.0.0.0.1
 */
 void
-addr2oid(IPAddress &addr, oid * Dest)
+addr2oid(IpAddress &addr, oid * Dest)
 {
     u_int i ;
     u_char *cp = NULL;
@@ -1145,7 +1143,7 @@ addr2oid(IPAddress &addr, oid * Dest)
    IPv6 adress : 20:01:32:ef:a2:21:fb:32:00:00:00:00:00:00:00:00:OO:01
 */
 void
-oid2addr(oid * id, IPAddress &addr, u_int size)
+oid2addr(oid * id, IpAddress &addr, u_int size)
 {
     struct in_addr iaddr;
     u_int i;

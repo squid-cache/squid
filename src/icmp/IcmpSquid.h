@@ -1,6 +1,4 @@
 /*
- * $Id: ICMPSquid.h,v 1.1 2007/12/14 23:11:45 amosjeffries Exp $
- *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels, Amos Jeffries
  *
@@ -36,7 +34,6 @@
 
 #include "config.h"
 #include "Icmp.h"
-#include "IPAddress.h"
 
 /**
  * Implements a non-blocking pseudo-ICMP engine for squid internally.
@@ -55,10 +52,10 @@ public:
     virtual int Open();
     virtual void Close();
 
-    void DomainPing(IPAddress &to, const char *domain);
+    void DomainPing(IpAddress &to, const char *domain);
 
 #if USE_ICMP
-    virtual void SendEcho(IPAddress &to, int opcode, const char* payload=NULL, int len=0);
+    virtual void SendEcho(IpAddress &to, int opcode, const char* payload=NULL, int len=0);
     virtual void Recv(void);
 #endif
 };

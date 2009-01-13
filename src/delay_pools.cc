@@ -1,6 +1,4 @@
 /*
- * $Id: delay_pools.cc,v 1.51 2008/02/26 21:49:34 amosjeffries Exp $
- *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
  * Based upon original delay pools code by
@@ -66,7 +64,7 @@
 #include "DelayBucket.h"
 #include "DelayUser.h"
 #include "DelayTagged.h"
-#include "IPAddress.h"
+#include "ip/IpAddress.h"
 
 /// \ingroup DelayPoolsInternal
 long DelayPools::MemoryUsed = 0;
@@ -161,7 +159,7 @@ protected:
 
     virtual char const *label() const = 0;
 
-    virtual unsigned int makeKey (IPAddress &src_addr) const = 0;
+    virtual unsigned int makeKey (IpAddress &src_addr) const = 0;
 
     DelaySpec spec;
 
@@ -193,7 +191,7 @@ public:
 protected:
     virtual char const *label() const {return "Individual";}
 
-    virtual unsigned int makeKey (IPAddress &src_addr) const;
+    virtual unsigned int makeKey (IpAddress &src_addr) const;
 
 };
 
@@ -208,7 +206,7 @@ public:
 protected:
     virtual char const *label() const {return "Network";}
 
-    virtual unsigned int makeKey (IPAddress &src_addr) const;
+    virtual unsigned int makeKey (IpAddress &src_addr) const;
 };
 
 /* don't use remote storage for these */
@@ -252,9 +250,9 @@ protected:
 
     virtual char const *label() const {return "Individual";}
 
-    virtual unsigned int makeKey (IPAddress &src_addr) const;
+    virtual unsigned int makeKey (IpAddress &src_addr) const;
 
-    unsigned char makeHostKey (IPAddress &src_addr) const;
+    unsigned char makeHostKey (IpAddress &src_addr) const;
 
     DelaySpec spec;
     VectorMap<unsigned char, ClassCBucket> buckets;
@@ -861,7 +859,7 @@ VectorPool::Id::bytesIn(int qty)
 }
 
 unsigned int
-IndividualPool::makeKey (IPAddress &src_addr) const
+IndividualPool::makeKey (IpAddress &src_addr) const
 {
     /* FIXME INET6 : IPv6 requires a 64-128 bit result from this function */
     if ( !src_addr.IsIPv4() )
@@ -888,7 +886,7 @@ ClassCNetPool::operator delete (void *address)
 }
 
 unsigned int
-ClassCNetPool::makeKey (IPAddress &src_addr) const
+ClassCNetPool::makeKey (IpAddress &src_addr) const
 {
     /* FIXME INET6 : IPv6 requires a 64-128 bit result from this function */
     if ( !src_addr.IsIPv4() )
@@ -962,7 +960,7 @@ ClassCHostPool::keyAllocated (unsigned char const key) const
 }
 
 unsigned char
-ClassCHostPool::makeHostKey (IPAddress &src_addr) const
+ClassCHostPool::makeHostKey (IpAddress &src_addr) const
 {
     /* FIXME INET6 : IPv6 requires a 64-128 bit result from this function */
     if ( !src_addr.IsIPv4() )
@@ -975,7 +973,7 @@ ClassCHostPool::makeHostKey (IPAddress &src_addr) const
 }
 
 unsigned int
-ClassCHostPool::makeKey (IPAddress &src_addr) const
+ClassCHostPool::makeKey (IpAddress &src_addr) const
 {
     /* FIXME INET6 : IPv6 requires a 64-128 bit result from this function */
     if ( !src_addr.IsIPv4() )

@@ -1,6 +1,4 @@
 /*
- * $Id: IPAddress.h,v 1.3 2008/02/05 22:39:42 amosjeffries Exp $
- *
  * DEBUG: section 14    IP Storage and Handling
  * AUTHOR: Amos Jeffries
  *
@@ -16,7 +14,7 @@
  *  developed and/or copyrighted by other sources.  Please see the
  *  CREDITS file for full details.
  *
- *  This IPAddress code is copyright (C) 2007 by Treehouse Networks Ltd
+ *  This IpAddress code is copyright (C) 2007 by Treehouse Networks Ltd
  *  of New Zealand. It is published and Lisenced as an extension of
  *  squid under the same conditions as the main squid application.
  *
@@ -97,14 +95,14 @@
 /**
  * Holds and manipulates IPv4, IPv6, and Socket Addresses.
  */
-class IPAddress
+class IpAddress
 {
 
 public:
     /** @name Constructors and Destructor */
     /*@{*/
-    IPAddress();
-    IPAddress(const IPAddress &);
+    IpAddress();
+    IpAddress(const IpAddress &);
 
     /**
      * This constructor takes its own copy of the object pointed to for memory-safe usage later.
@@ -113,35 +111,35 @@ public:
      \deprecated Use of pointers can be nasty. Consider this a last-resort.
      *           Prefer the by-reference (&) version instead.
      */
-    IPAddress(IPAddress *);
+    IpAddress(IpAddress *);
 
-    IPAddress(const struct in_addr &);
+    IpAddress(const struct in_addr &);
 
-    IPAddress(const struct sockaddr_in &);
+    IpAddress(const struct sockaddr_in &);
 #if USE_IPV6
 
-    IPAddress(const struct in6_addr &);
+    IpAddress(const struct in6_addr &);
 
-    IPAddress(const struct sockaddr_in6 &);
+    IpAddress(const struct sockaddr_in6 &);
 #endif
 
-    IPAddress(const struct hostent &);
-    IPAddress(const struct addrinfo &);
-    IPAddress(const char*);
+    IpAddress(const struct hostent &);
+    IpAddress(const struct addrinfo &);
+    IpAddress(const char*);
     /// Default destructor.
-    ~IPAddress();
+    ~IpAddress();
     /*@}*/
 
     /** @name Assignment Operators */
     /*@{*/
-    IPAddress& operator =(const IPAddress &s);
-    IPAddress& operator =(IPAddress *s);
-    IPAddress& operator =(struct sockaddr_in const &s);
-    IPAddress& operator =(struct sockaddr_storage const &s);
-    IPAddress& operator =(struct in_addr const &s);
+    IpAddress& operator =(const IpAddress &s);
+    IpAddress& operator =(IpAddress *s);
+    IpAddress& operator =(struct sockaddr_in const &s);
+    IpAddress& operator =(struct sockaddr_storage const &s);
+    IpAddress& operator =(struct in_addr const &s);
 #if USE_IPV6
-    IPAddress& operator =(struct in6_addr const &s);
-    IPAddress& operator =(struct sockaddr_in6 const &s);
+    IpAddress& operator =(struct in6_addr const &s);
+    IpAddress& operator =(struct sockaddr_in6 const &s);
 #endif
     bool operator =(const struct hostent &s);
     bool operator =(const struct addrinfo &s);
@@ -150,12 +148,12 @@ public:
 
     /** @name Boolean Operators */
     /*@{*/
-    bool operator ==(IPAddress const &s) const;
-    bool operator !=(IPAddress const &s) const;
-    bool operator >=(IPAddress const &rhs) const;
-    bool operator <=(IPAddress const &rhs) const;
-    bool operator >(IPAddress const &rhs) const;
-    bool operator <(IPAddress const &rhs) const;
+    bool operator ==(IpAddress const &s) const;
+    bool operator !=(IpAddress const &s) const;
+    bool operator >=(IpAddress const &rhs) const;
+    bool operator <=(IpAddress const &rhs) const;
+    bool operator >(IpAddress const &rhs) const;
+    bool operator <(IpAddress const &rhs) const;
 
 public:
     /* methods */
@@ -182,7 +180,7 @@ public:
     bool IsSockAddr() const;
 
     /** Content-neutral test for whether the specific IP case ANY_ADDR is stored.
-     *  This is the default content of a new undefined IPAddress object.
+     *  This is the default content of a new undefined IpAddress object.
      \retval true IPv4 0.0.0.0
      \retval true IPv6 ::
      \retval false anything else.
@@ -197,7 +195,7 @@ public:
     bool IsNoAddr() const;
 
     /** Content-neutral test for whether the specific IP case LOCALHOST is stored.
-     *  This is the default content of a new undefined IPAddress object.
+     *  This is the default content of a new undefined IpAddress object.
      \retval true IPv4 127.0.0.1
      \retval true IPv6 ::1
      \retval false anything else.
@@ -251,7 +249,7 @@ public:
     /** Apply a mask to the stored address.
      \param mask Netmask format to be bit-mask-AND'd over the stored address.
      */
-    const int ApplyMask(const IPAddress &mask);
+    const int ApplyMask(const IpAddress &mask);
 
     /** Apply a mask to the stored address.
      *  CIDR will be converted appropriate to map the stored content.
@@ -309,10 +307,10 @@ public:
      \retval  1  IP rhs is greater (numerically) than that stored.
      \retval -1  IP rhs is less (numerically) than that stored.
      */
-    int matchIPAddr(const IPAddress &rhs) const;
+    int matchIPAddr(const IpAddress &rhs) const;
 
     /**
-     *  Get RFC 3493 addrinfo structure from the IPAddress data
+     *  Get RFC 3493 addrinfo structure from the IpAddress data
      *  for protocol-neutral socket operations.
      *  Should be passed a NULL pointer of type struct addrinfo* it will
      *  allocate memory for the structures involved. (see FreeAddrInfo to clear).
@@ -321,7 +319,7 @@ public:
      *  Some situations may also require an actual call to the system getaddrinfo()
      *  to pull relevant OS details for the socket.
      \par
-     *  IPAddress allocated objects MUST be destructed by IPAddress::FreeAddrInfo
+     *  IpAddress allocated objects MUST be destructed by IpAddress::FreeAddrInfo
      *  System getaddrinfo() allocated objects MUST be freed with system freeaddrinfo()
      \par
      *  Some OS require that IPv4 addresses are pre-mapped by the client.
@@ -337,7 +335,7 @@ public:
 #endif
 
     /**
-     *  Equivalent to the sysem call freeaddrinfo() but for IPAddress allocated data
+     *  Equivalent to the sysem call freeaddrinfo() but for IpAddress allocated data
      */
     void FreeAddrInfo(struct addrinfo *&ai) const;
 
@@ -370,17 +368,17 @@ public:
 
     void GetSockAddr(struct sockaddr_storage &addr, const int family) const;
 
-    /// \deprecated Deprecated for public use. Use IPAddress::GetAddrInfo()
+    /// \deprecated Deprecated for public use. Use IpAddress::GetAddrInfo()
     void GetSockAddr(struct sockaddr_in &) const;
 
-    /// \deprecated Deprecated for public use. Use IPAddress::GetAddrInfo()
+    /// \deprecated Deprecated for public use. Use IpAddress::GetAddrInfo()
     bool GetInAddr(struct in_addr &) const; /* false if could not convert IPv6 down to IPv4 */
 #if USE_IPV6
 
-    /// \deprecated Deprecated for public use. Use IPAddress::GetAddrInfo()
+    /// \deprecated Deprecated for public use. Use IpAddress::GetAddrInfo()
     void GetSockAddr(struct sockaddr_in6 &) const;
 
-    /// \deprecated Deprecated for public use. Use IPAddress::GetAddrInfo()
+    /// \deprecated Deprecated for public use. Use IpAddress::GetAddrInfo()
     void GetInAddr(struct in6_addr &) const;
 #endif
 
@@ -415,7 +413,7 @@ private:
 
 
 inline std::ostream &
-operator << (std::ostream &os, const IPAddress &ipa)
+operator << (std::ostream &os, const IpAddress &ipa)
 {
     char buf[MAX_IPSTRLEN];
     os << ipa.ToURL(buf,MAX_IPSTRLEN);
@@ -423,14 +421,14 @@ operator << (std::ostream &os, const IPAddress &ipa)
 }
 
 // WAS _sockaddr_in_list in an earlier incarnation
-class IPAddress_list
+class IpAddress_list
 {
 public:
-    IPAddress_list() { next = NULL; };
-    ~IPAddress_list() { if (next) delete next; next = NULL; };
+    IpAddress_list() { next = NULL; };
+    ~IpAddress_list() { if (next) delete next; next = NULL; };
 
-    IPAddress s;
-    IPAddress_list *next;
+    IpAddress s;
+    IpAddress_list *next;
 };
 
 

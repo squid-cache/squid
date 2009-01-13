@@ -42,7 +42,7 @@ QosConfig
 refreshpattern
 removalpolicy
 size_t
-IPAddress_list
+IpAddress_list
 string
 string
 time_t

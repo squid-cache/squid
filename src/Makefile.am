@@ -1,8 +1,6 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.201 2008/02/26 00:19:29 rousskov Exp $
-#
 #  Uncomment and customize the following to suit your needs:
 #
 
@@ -247,11 +245,18 @@ cf_gen_SOURCES = \
 	cf_gen.cc \
 	defines.h \
 	debug.cc \
-	ip/stubQosConfig.cc \
 	time.cc
 
 nodist_cf_gen_SOURCES = globals.cc
 nodist_cf_gen_HEADER = cf_gen_defines.h
+cf_gen_LDADD= \
+	libsquid.la \
+	libauth.la \
+	ip/libip.la \
+	-L../lib -lmiscutil \
+	@XTRA_LIBS@ \
+	@EPOLL_LIBS@ \
+	@MINGW_LIBS@
 cf_gen.$(OBJEXT): cf_gen_defines.h
 
 all_FSMODULES = \
@@ -747,8 +752,8 @@ recv_announce_SOURCES = recv-announce.cc SquidNew.cc
 ## client_db wants SNMP_SOURCE
 ## snmp_core wants ACLStringData
 ## SwapDir wants ConfigOption
-## tools.cc wants libip.la
-## client_side.cc wants libip.la
+## tools.cc wants ip/libip.la
+## client_side.cc wants ip/libip.la
 ufsdump_SOURCES = \
 	debug.cc \
 	int.cc \
@@ -958,7 +963,7 @@ sysconf_DATA = \
 data_DATA = \
 	mib.txt
 
-LDADD = libsquid.la libauth.la -L../lib -lmiscutil @XTRA_LIBS@ @EPOLL_LIBS@ @MINGW_LIBS@
+LDADD = libsquid.la libauth.la ip/libip.la -L../lib -lmiscutil @XTRA_LIBS@ @EPOLL_LIBS@ @MINGW_LIBS@
 
 EXTRA_DIST = \
 	cf_gen_defines \
@@ -1217,7 +1222,6 @@ tests_testAuth_SOURCES = \
 	tests/stub_store.cc HttpHeaderTools.cc HttpHeader.cc acl.cc mem.cc \
 	MemBuf.cc HttpHdrContRange.cc Packer.cc ACLChecklist.cc HttpHdrCc.cc HttpHdrSc.cc \
 	HttpHdrScTarget.cc url.cc ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc \
-	ip/stubQosConfig.cc \
 	StatHist.cc HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
 	tests/stub_HttpRequest.cc tests/stub_DelayId.cc \
 	tests/stub_MemObject.cc mem_node.cc \
@@ -1243,6 +1247,7 @@ nodist_tests_testAuth_SOURCES = \
 tests_testAuth_LDADD= \
 	libsquid.la \
 	libauth.la \
+	ip/libip.la \
 	@AUTH_LINKOBJS@ @AUTH_OBJS@ \
 	-L../lib -lmiscutil \
 	@REGEXLIB@ \
@@ -1294,7 +1299,6 @@ tests_testACLMaxUserIP_SOURCES= \
 	mem_node.cc \
 	Packer.cc \
 	Parsing.cc \
-	ip/stubQosConfig.cc \
 	StatHist.cc \
 	stmem.cc \
 	String.cc \
@@ -1317,6 +1321,7 @@ nodist_tests_testACLMaxUserIP_SOURCES= \
 tests_testACLMaxUserIP_LDADD= \
 	libsquid.la \
 	libauth.la \
+	ip/libip.la \
 	-L../lib -lmiscutil \
 	@REGEXLIB@ \
 	@SQUID_CPPUNIT_LIBS@ \
@@ -1506,6 +1511,7 @@ tests_testDiskIO_SOURCES = \
 nodist_tests_testDiskIO_SOURCES= \
 	$(SWAP_TEST_GEN_SOURCES)
 tests_testDiskIO_LDADD = \
+	ip/libip.la \
 	@DISK_LIBS@ \
 	$(SWAP_TEST_LDADD) \
 	SquidConfig.o
@@ -2215,6 +2221,7 @@ nodist_tests_testStore_SOURCES= \
 tests_testStore_LDADD= \
 	libsquid.la \
 	libauth.la \
+	ip/libip.la \
 	-L../lib -lmiscutil \
 	@REGEXLIB@ \
 	@SQUID_CPPUNIT_LIBS@ \
@@ -2227,7 +2234,6 @@ tests_testStore_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 # libsquid pulls in SquidConfig and children. stub them.
 tests_testString_SOURCES = \
 	mem.cc \
-	ip/stubQosConfig.cc \
 	String.cc \
 	tests/testMain.cc \
 	tests/testString.cc \
@@ -2238,6 +2244,7 @@ nodist_tests_testString_SOURCES = \
 	$(TESTSOURCES)
 tests_testString_LDADD = \
 	libsquid.la \
+	ip/libip.la \
 	-L../lib -lmiscutil \
 	@REGEXLIB@ \
 	@SQUID_CPPUNIT_LIBS@ \
@@ -2309,6 +2316,7 @@ nodist_tests_testUfs_SOURCES = \
 	$(SWAP_TEST_GEN_SOURCES)
 tests_testUfs_LDADD = \
 	libsquid.la \
+	ip/libip.la \
 	$(SWAP_TEST_LDADD) \
 	@SSLLIB@
 tests_testUfs_LDFLAGS = $(LIBADD_DL)

@@ -1,7 +1,4 @@
 /*
- * $Id: ACLASN.h,v 1.10 2008/02/26 21:49:34 amosjeffries Exp $
- *
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -39,9 +36,9 @@
 #include "CbDataList.h"
 #include "ACLStrategised.h"
 #include "ACLChecklist.h"
-#include "IPAddress.h"
+#include "ip/IpAddress.h"
 
-SQUIDCEXTERN int asnMatchIp(CbDataList<int> *, IPAddress &);
+SQUIDCEXTERN int asnMatchIp(CbDataList<int> *, IpAddress &);
 
 /// \ingroup ACLAPI
 SQUIDCEXTERN void asnInit(void);
@@ -50,7 +47,7 @@ SQUIDCEXTERN void asnInit(void);
 SQUIDCEXTERN void asnFreeMemory(void);
 
 /// \ingroup ACLAPI
-class ACLASN : public ACLData<IPAddress>
+class ACLASN : public ACLData<IpAddress>
 {
 
 public:
@@ -58,18 +55,18 @@ public:
 
     virtual ~ACLASN();
 
-    virtual bool match(IPAddress);
+    virtual bool match(IpAddress);
     virtual wordlist *dump();
     virtual void parse();
     bool empty() const;
-    virtual ACLData<IPAddress> *clone() const;
+    virtual ACLData<IpAddress> *clone() const;
     virtual void prepareForUse();
 
 private:
     static ACL::Prototype SourceRegistryProtoype;
-    static ACLStrategised<IPAddress> SourceRegistryEntry_;
+    static ACLStrategised<IpAddress> SourceRegistryEntry_;
     static ACL::Prototype DestinationRegistryProtoype;
-    static ACLStrategised<IPAddress> DestinationRegistryEntry_;
+    static ACLStrategised<IpAddress> DestinationRegistryEntry_;
     CbDataList<int> *data;
 };
 

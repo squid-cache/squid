@@ -142,11 +142,11 @@ static void dump_denyinfo(StoreEntry * entry, const char *name, acl_deny_info_li
 static void free_denyinfo(acl_deny_info_list ** var);
 
 #if USE_WCCPv2
-static void parse_IPAddress_list(IPAddress_list **);
-static void dump_IPAddress_list(StoreEntry *, const char *, const IPAddress_list *);
-static void free_IPAddress_list(IPAddress_list **);
+static void parse_IpAddress_list(IpAddress_list **);
+static void dump_IpAddress_list(StoreEntry *, const char *, const IpAddress_list *);
+static void free_IpAddress_list(IpAddress_list **);
 #if CURRENTLY_UNUSED
-static int check_null_IPAddress_list(const IPAddress_list *);
+static int check_null_IpAddress_list(const IpAddress_list *);
 #endif /* CURRENTLY_UNUSED */
 #endif /* USE_WCCPv2 */
 
@@ -974,14 +974,14 @@ free_acl_access(acl_access ** head)
 }
 
 static void
-dump_address(StoreEntry * entry, const char *name, IPAddress &addr)
+dump_address(StoreEntry * entry, const char *name, IpAddress &addr)
 {
     char buf[MAX_IPSTRLEN];
     storeAppendPrintf(entry, "%s %s\n", name, addr.NtoA(buf,MAX_IPSTRLEN) );
 }
 
 static void
-parse_address(IPAddress *addr)
+parse_address(IpAddress *addr)
 {
     char *token = strtok(NULL, w_space);
 
@@ -1001,7 +1001,7 @@ parse_address(IPAddress *addr)
 }
 
 static void
-free_address(IPAddress *addr)
+free_address(IpAddress *addr)
 {
     addr->SetEmpty();
 }
@@ -2750,15 +2750,15 @@ parseNeighborType(const char *s)
 
 #if USE_WCCPv2
 void
-parse_IPAddress_list_token(IPAddress_list ** head, char *token)
+parse_IpAddress_list_token(IpAddress_list ** head, char *token)
 {
     char *t;
     char *host;
     char *tmp;
 
-    IPAddress ipa;
+    IpAddress ipa;
     unsigned short port;
-    IPAddress_list *s;
+    IpAddress_list *s;
 
     host = NULL;
     port = 0;
@@ -2804,24 +2804,24 @@ parse_IPAddress_list_token(IPAddress_list ** head, char *token)
     while (*head)
         head = &(*head)->next;
 
-    s = static_cast<IPAddress_list *>(xcalloc(1, sizeof(*s)));
+    s = static_cast<IpAddress_list *>(xcalloc(1, sizeof(*s)));
     s->s = ipa;
 
     *head = s;
 }
 
 static void
-parse_IPAddress_list(IPAddress_list ** head)
+parse_IpAddress_list(IpAddress_list ** head)
 {
     char *token;
 
     while ((token = strtok(NULL, w_space))) {
-        parse_IPAddress_list_token(head, token);
+        parse_IpAddress_list_token(head, token);
     }
 }
 
 static void
-dump_IPAddress_list(StoreEntry * e, const char *n, const IPAddress_list * s)
+dump_IpAddress_list(StoreEntry * e, const char *n, const IpAddress_list * s)
 {
     char ntoabuf[MAX_IPSTRLEN];
 
@@ -2834,7 +2834,7 @@ dump_IPAddress_list(StoreEntry * e, const char *n, const IPAddress_list * s)
 }
 
 static void
-free_IPAddress_list(IPAddress_list ** head)
+free_IpAddress_list(IpAddress_list ** head)
 {
     if (*head) delete *head;
     *head = NULL;
@@ -2845,7 +2845,7 @@ free_IPAddress_list(IPAddress_list ** head)
  * be used by icp_port and htcp_port
  */
 static int
-check_null_IPAddress_list(const IPAdress_list * s)
+check_null_IpAddress_list(const IPAdress_list * s)
 {
     return NULL == s;
 }

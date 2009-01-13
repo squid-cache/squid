@@ -133,7 +133,7 @@ struct _nsvc {
 };
 
 struct _ns {
-    IPAddress S;
+    IpAddress S;
     int nqueries;
     int nreplies;
     nsvc *vc;
@@ -176,7 +176,7 @@ static void idnsSendQuery(idns_query * q);
 static IOCB idnsReadVCHeader;
 static void idnsDoSendQueryVC(nsvc *vc);
 
-static int idnsFromKnownNameserver(IPAddress const &from);
+static int idnsFromKnownNameserver(IpAddress const &from);
 static idns_query *idnsFindQuery(unsigned short id);
 static void idnsGrokReply(const char *buf, size_t sz);
 static PF idnsRead;
@@ -187,7 +187,7 @@ static void idnsRcodeCount(int, int);
 static void
 idnsAddNameserver(const char *buf)
 {
-    IPAddress A;
+    IpAddress A;
 
     if (!(A = buf)) {
         debugs(78, 0, "WARNING: rejecting '" << buf << "' as a name server, because it is not a numeric IP address");
@@ -744,7 +744,7 @@ idnsInitVC(int ns)
     nameservers[ns].vc = vc;
     vc->ns = ns;
 
-    IPAddress addr;
+    IpAddress addr;
 
     if (!Config.Addrs.udp_outgoing.IsNoAddr())
         addr = Config.Addrs.udp_outgoing;
@@ -848,7 +848,7 @@ idnsSendQuery(idns_query * q)
 }
 
 static int
-idnsFromKnownNameserver(IPAddress const &from)
+idnsFromKnownNameserver(IpAddress const &from)
 {
     int i;
 
@@ -1124,7 +1124,7 @@ idnsRead(int fd, void *data)
     int max = INCOMING_DNS_MAX;
     static char rbuf[SQUID_UDP_SO_RCVBUF];
     int ns;
-    IPAddress from;
+    IpAddress from;
 
     debugs(78, 3, "idnsRead: starting with FD " << fd);
 
@@ -1135,7 +1135,7 @@ idnsRead(int fd, void *data)
      *  The cause of this is still unknown, however copying the data appears
      *  to allow it to be passed further without this erasure.
      */
-    IPAddress bugbypass;
+    IpAddress bugbypass;
 
     while (max--) {
         len = comm_udp_recvfrom(fd, rbuf, SQUID_UDP_SO_RCVBUF, 0, bugbypass);
@@ -1339,7 +1339,7 @@ idnsInit(void)
     if (DnsSocket < 0) {
         int port;
 
-        IPAddress addr;
+        IpAddress addr;
 
         if (!Config.Addrs.udp_outgoing.IsNoAddr())
             addr = Config.Addrs.udp_outgoing;
@@ -1520,7 +1520,7 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
 }
 
 void
-idnsPTRLookup(const IPAddress &addr, IDNSCB * callback, void *data)
+idnsPTRLookup(const IpAddress &addr, IDNSCB * callback, void *data)
 {
     idns_query *q;
 

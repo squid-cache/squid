@@ -64,7 +64,7 @@ CBDATA_CLASS_INIT(clientReplyContext);
 
 /* Local functions */
 extern "C" CSS clientReplyStatus;
-extern ErrorState *clientBuildError(err_type, http_status, char const *, IPAddress &, HttpRequest *);
+extern ErrorState *clientBuildError(err_type, http_status, char const *, IpAddress &, HttpRequest *);
 
 /* privates */
 
@@ -93,7 +93,7 @@ clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) : http 
 void
 clientReplyContext::setReplyToError(
     err_type err, http_status status, const HttpRequestMethod& method, char const *uri,
-    IPAddress &addr, HttpRequest * failedrequest, char *unparsedrequest,
+    IpAddress &addr, HttpRequest * failedrequest, char *unparsedrequest,
     AuthUserRequest * auth_user_request)
 {
     ErrorState *errstate =
@@ -1749,7 +1749,7 @@ clientReplyContext::next() const
 void
 clientReplyContext::sendBodyTooLargeError()
 {
-    IPAddress tmp_noaddr;
+    IpAddress tmp_noaddr;
     tmp_noaddr.SetNoAddr(); // TODO: make a global const
     ErrorState *err = clientBuildError(ERR_TOO_BIG, HTTP_FORBIDDEN, NULL,
                                        http->getConn() != NULL ? http->getConn()->peer : tmp_noaddr,
@@ -1817,7 +1817,7 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
         if (page_id == ERR_NONE)
             page_id = ERR_ACCESS_DENIED;
 
-        IPAddress tmp_noaddr;
+        IpAddress tmp_noaddr;
         tmp_noaddr.SetNoAddr();
         err = clientBuildError(page_id, HTTP_FORBIDDEN, NULL,
                                http->getConn() != NULL ? http->getConn()->peer : tmp_noaddr,
@@ -2051,7 +2051,7 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, request_flags f
 
 ErrorState *
 clientBuildError(err_type page_id, http_status status, char const *url,
-                 IPAddress &src_addr, HttpRequest * request)
+                 IpAddress &src_addr, HttpRequest * request)
 {
     ErrorState *err = errorCon(page_id, status, request);
     err->src_addr = src_addr;

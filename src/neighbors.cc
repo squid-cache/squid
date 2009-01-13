@@ -1,7 +1,4 @@
-
 /*
- * $Id: neighbors.cc,v 1.353 2008/02/11 22:44:50 rousskov Exp $
- *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
  *
@@ -46,8 +43,8 @@
 #include "PeerSelectState.h"
 #include "SquidTime.h"
 #include "Store.h"
-#include "IPAddress.h"
 #include "icmp/net_db.h"
+#include "ip/IpAddress.h"
 
 /* count mcast group peers every 15 minutes */
 #define MCAST_COUNT_RATE 900
@@ -69,7 +66,7 @@ static void peerCountMcastPeersStart(void *data);
 static void peerCountMcastPeersSchedule(peer * p, time_t when);
 static IRCB peerCountHandleIcpReply;
 
-static void neighborIgnoreNonPeer(const IPAddress &, icp_opcode);
+static void neighborIgnoreNonPeer(const IpAddress &, icp_opcode);
 static OBJH neighborDumpPeers;
 static OBJH neighborDumpNonPeers;
 static void dump_peers(StoreEntry * sentry, peer * peers);
@@ -97,7 +94,7 @@ neighborTypeStr(const peer * p)
 
 
 peer *
-whichPeer(const IPAddress &from)
+whichPeer(const IpAddress &from)
 {
     int j;
 
@@ -554,7 +551,7 @@ neighborsRegisterWithCacheManager()
 void
 neighbors_init(void)
 {
-    IPAddress nul;
+    IpAddress nul;
     struct addrinfo *AI = NULL;
     struct servent *sep = NULL;
     const char *me = getMyHostname();
@@ -964,7 +961,7 @@ neighborCountIgnored(peer * p)
 static peer *non_peers = NULL;
 
 static void
-neighborIgnoreNonPeer(const IPAddress &from, icp_opcode opcode)
+neighborIgnoreNonPeer(const IpAddress &from, icp_opcode opcode)
 {
     peer *np;
 
@@ -1024,7 +1021,7 @@ ignoreMulticastReply(peer * p, MemObject * mem)
  */
 void
 
-neighborsUdpAck(const cache_key * key, icp_common_t * header, const IPAddress &from)
+neighborsUdpAck(const cache_key * key, icp_common_t * header, const IpAddress &from)
 {
     peer *p = NULL;
     StoreEntry *entry;
@@ -1384,7 +1381,7 @@ peerProbeConnect(peer * p)
     if (squid_curtime - p->stats.last_connect_probe == 0)
         return ret;/* don't probe to often */
 
-    IPAddress temp(getOutgoingAddr(NULL,p));
+    IpAddress temp(getOutgoingAddr(NULL,p));
 
     fd = comm_open(SOCK_STREAM, IPPROTO_TCP, temp, COMM_NONBLOCKING, p->host);
 
@@ -1760,7 +1757,7 @@ dump_peers(StoreEntry * sentry, peer * peers)
 
 #if USE_HTCP
 void
-neighborsHtcpReply(const cache_key * key, htcpReplyData * htcp, const IPAddress &from)
+neighborsHtcpReply(const cache_key * key, htcpReplyData * htcp, const IpAddress &from)
 {
     StoreEntry *e = Store::Root().get(key);
     MemObject *mem = NULL;
