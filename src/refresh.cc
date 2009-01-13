@@ -139,14 +139,15 @@ refreshUncompiledPattern(const char *pat)
     return NULL;
 }
 
-/*
+/**
  * Calculate how stale the response is (or will be at the check_time).
  * Staleness calculation is based on the following: (1) response
  * expiration time, (2) age greater than configured maximum, (3)
  * last-modified factor, and (4) age less than configured minimum.
  *
- * If the response is fresh, return -1.  Otherwise return its
- * staleness.  NOTE return value of 0 means the response is stale.
+ * \retval -1  If the response is fresh.
+ * \retval >0  Otherwise return it's staleness.
+ * \retval 0   NOTE return value of 0 means the response is stale.
  *
  * The 'stale_flags' structure is used to tell the calling function
  * _why_ this response is fresh or stale.  Its used, for example,
@@ -156,8 +157,8 @@ refreshUncompiledPattern(const char *pat)
 static int
 refreshStaleness(const StoreEntry * entry, time_t check_time, time_t age, const refresh_t * R, stale_flags * sf)
 {
-    /*
-     * Check for an explicit expiration time.
+    /** \par
+     * Check for an explicit expiration time (Expires: header).
      */
 
     if (entry->expires > -1) {
@@ -177,7 +178,7 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, time_t age, const 
     }
 
     assert(age >= 0);
-    /*
+    /** \par
      * Use local heuristics to determine staleness.  Start with the
      * max age from the refresh_pattern rule.
      */
@@ -188,8 +189,8 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, time_t age, const 
         return (age - R->max);
     }
 
-    /*
-     * Try the last-modified factor algorithm.
+    /** \par
+     * Try the last-modified factor algorithm:  refresh_pattern n% percentage of Last-Modified: age.
      */
     if (entry->lastmod > -1 && entry->timestamp > entry->lastmod) {
         /*
@@ -208,8 +209,8 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, time_t age, const 
         }
     }
 
-    /*
-     * If we are here, staleness is determined by the refresh_pattern
+    /** \par
+     * Finally, if all else fails;  staleness is determined by the refresh_pattern
      * configured minimum age.
      */
     if (age < R->min) {
@@ -222,8 +223,9 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, time_t age, const 
     return (age - R->min);
 }
 
-/*  return 1 if the entry must be revalidated within delta seconds
- *         0 otherwise
+/**
+ * \retval 1 if the entry must be revalidated within delta seconds
+ * \retval 0 otherwise
  *
  *  note: request maybe null (e.g. for cache digests build)
  */
@@ -244,9 +246,11 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
     debugs(22, 3, "refreshCheck: '" << (uri ? uri : "<none>") << "'");
 
+    assert(age >= 0);
     if (check_time > entry->timestamp)
         age = check_time - entry->timestamp;
 
+    assert(age >= 0);
     R = uri ? refreshLimits(uri) : refreshUncompiledPattern(".");
 
     if (NULL == R)
@@ -254,6 +258,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
     memset(&sf, '\0', sizeof(sf));
 
+    assert(age >= 0);
     staleness = refreshStaleness(entry, check_time, age, R, &sf);
 
     debugs(22, 3, "Staleness = " << staleness);
