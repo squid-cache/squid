@@ -3542,16 +3542,20 @@ DOC_END
 NAME: half_closed_clients
 TYPE: onoff
 LOC: Config.onoff.half_closed_clients
-DEFAULT: on
+DEFAULT: off
 DOC_START
 	Some clients may shutdown the sending side of their TCP
 	connections, while leaving their receiving sides open.	Sometimes,
 	Squid can not tell the difference between a half-closed and a
-	fully-closed TCP connection.  By default, half-closed client
-	connections are kept open until a read(2) or write(2) on the
-	socket returns an error.  Change this option to 'off' and Squid
-	will immediately close client connections when read(2) returns
-	"no more data to read."
+	fully-closed TCP connection.
+
+	By default, Squid will immediately close client connections when
+	read(2) returns "no more data to read."
+
+	Change this option to 'off' and Squid will keep open connections
+	until a read(2) or write(2) on the socket returns an error.
+	This may show some benefits for reverse proxies. But if not
+	it is recommended to leave OFF.
 DOC_END
 
 NAME: pconn_timeout
