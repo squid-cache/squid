@@ -2,24 +2,22 @@
 
 SQUID-MIB DEFINITIONS ::= BEGIN
 --
--- $Id: mib.txt,v 1.32 2007/12/14 23:11:47 amosjeffries Exp $
+-- $Id$
 --
 
 IMPORTS
 	enterprises, Unsigned32, TimeTicks, Gauge32, Counter32,
-	MODULE-IDENTITY, OBJECT-TYPE
+	MODULE-IDENTITY, OBJECT-TYPE, Integer32
         	FROM SNMPv2-SMI
 
-	DisplayString
+	DisplayString, TEXTUAL-CONVENTION
         	FROM SNMPv2-TC
 
 	InetAddressType, InetAddress
         	FROM INET-ADDRESS-MIB;
 
-nlanr OBJECT IDENTIFIER ::= { enterprises 3495 }
-
 squid MODULE-IDENTITY
-    LAST-UPDATED "9708120000Z"
+    LAST-UPDATED "200812240200Z"
     ORGANIZATION "National Laboratory for Applied Network Research"
     CONTACT-INFO
             "        Squid Developers
@@ -28,23 +26,31 @@ squid MODULE-IDENTITY
     DESCRIPTION
 		"Squid MIB defined for the management of the Squid
 		proxy server. See http://www.squid-cache.org/."
-	
-    REVISION      "9708120000Z"
+
+    REVISION      "200812240200Z"
+    DESCRIPTION
+		"Corrected MIB strictness requirements. Mapped
+		valid port ranges"
+    
+    REVISION      "200712140000Z"
     DESCRIPTION
 		"Added support for IPv6 Technology."
-    REVISION      "9809220000Z"
-    DESCRIPTION
-		"Move to SMIv2. Prepare to split into proxy/squid."
+
     REVISION      "9901010000Z"
     DESCRIPTION
 		"Added objects and corrected asn.1 syntax and
 		descriptions."
+
+    REVISION      "9809220000Z"
+    DESCRIPTION
+		"Move to SMIv2. Prepare to split into proxy/squid."
+		
     ::= { nlanr 1 }
 
 --
 -- OID Assignments
 --
-
+	nlanr OBJECT IDENTIFIER ::= { enterprises 3495 }
 	cacheSystem	OBJECT IDENTIFIER ::= { squid 1 }
 	cacheConfig  	OBJECT IDENTIFIER ::= { squid 2 }
 	cachePerf	OBJECT IDENTIFIER ::= { squid 3 }
@@ -112,7 +118,7 @@ squid MODULE-IDENTITY
 
 	cacheLoggingFacility OBJECT-TYPE
 		SYNTAX DisplayString
-		ACCESS read-write
+		MAX-ACCESS read-write
 		STATUS current
 		DESCRIPTION
 			" Logging Facility. An informational string
@@ -419,7 +425,7 @@ squid MODULE-IDENTITY
 
 	cacheMedianSvcTable OBJECT-TYPE
                 SYNTAX SEQUENCE OF CacheMedianSvcEntry
-                MAX-ACCESS read-only
+                MAX-ACCESS not-accessible
                 STATUS current
                 DESCRIPTION
                         " CacheMedianSvcTable "
@@ -449,7 +455,7 @@ squid MODULE-IDENTITY
 	}
 
 	cacheMedianTime OBJECT-TYPE
-                SYNTAX Integer32
+                SYNTAX Integer32 (1|5|60)
                 MAX-ACCESS read-only
                 STATUS current
 		DESCRIPTION
@@ -709,7 +715,7 @@ squid MODULE-IDENTITY
 
 	cachePeerTable OBJECT-TYPE
 		SYNTAX SEQUENCE OF CachePeerEntry
-		MAX-ACCESS read-only
+		MAX-ACCESS not-accessible
 		STATUS current
 		DESCRIPTION
 			" This table contains an enumeration of
@@ -730,8 +736,8 @@ squid MODULE-IDENTITY
 	  cachePeerName		DisplayString,
 	  cachePeerAddressType  InetAddressType,
 	  cachePeerAddress      InetAddress,
-	  cachePeerPortHttp 	Integer32 (1..65535),
-	  cachePeerPortIcp	Integer32 (1..65535),
+	  cachePeerPortHttp 	ValidPort,
+	  cachePeerPortIcp	ValidPort,
 	  cachePeerType 	Integer32,
 	  cachePeerState	Integer32,
 	  cachePeerPingsSent	Counter32,
@@ -742,7 +748,15 @@ squid MODULE-IDENTITY
 	  cachePeerKeepAlSent	Counter32,
 	  cachePeerKeepAlRecv	Counter32
 	}
-
+	
+	ValidPort ::= TEXTUAL-CONVENTION
+             DISPLAY-HINT "d"
+             STATUS       current
+             DESCRIPTION
+				"A integer value from 1 to 65535 to indicate 
+				the appropriate port number for the connection."
+			SYNTAX       Integer32 (1..65535)
+	
 	CachePeerIndex ::= TEXTUAL-CONVENTION
              DISPLAY-HINT "d"
              STATUS       current
@@ -756,7 +770,7 @@ squid MODULE-IDENTITY
                network management system to the next
                re-initialization."
              SYNTAX       Integer32 (1..2147483647)
-        END
+
 
 
 	cachePeerIndex OBJECT-TYPE
@@ -814,7 +828,7 @@ squid MODULE-IDENTITY
 
 
 	cachePeerPortHttp OBJECT-TYPE
-                SYNTAX Integer32
+                SYNTAX ValidPort
                 MAX-ACCESS read-only
                 STATUS current
 		DESCRIPTION
@@ -822,7 +836,7 @@ squid MODULE-IDENTITY
         ::= { cachePeerEntry 5 }
 
 	cachePeerPortIcp OBJECT-TYPE
-                SYNTAX Integer32
+                SYNTAX ValidPort
                 MAX-ACCESS read-only
                 STATUS current
 		DESCRIPTION
@@ -832,7 +846,7 @@ squid MODULE-IDENTITY
 
 	cachePeerType OBJECT-TYPE
                 SYNTAX INTEGER
-                MAX-ACCESS not-accessible
+                MAX-ACCESS read-only
                 STATUS current
                 DESCRIPTION
                         " Peer Type "
@@ -909,8 +923,8 @@ squid MODULE-IDENTITY
 
         cacheClientTable OBJECT-TYPE
            SYNTAX  SEQUENCE OF CacheClientEntry
-           ACCESS  not-accessible
-           STATUS  mandatory
+           MAX-ACCESS  not-accessible
+           STATUS  current
            DESCRIPTION
                     "A list of cache client entries."
        	::= { cacheMesh 2 }
@@ -918,8 +932,8 @@ squid MODULE-IDENTITY
 
 	cacheClientEntry OBJECT-TYPE
            SYNTAX CacheClientEntry
-           ACCESS  not-accessible
-           STATUS  mandatory
+           MAX-ACCESS  not-accessible
+           STATUS  current
            DESCRIPTION
                     "An entry in cacheClientTable "
 	   INDEX { cacheClientAddressType, cacheClientAddress }
@@ -1033,7 +1047,7 @@ squid MODULE-IDENTITY
                 STATUS current
            	DESCRIPTION
                     " Amount of ICP hit traffic in KB "
-        ::= { cacheClientEntry 9 }
+        ::= { cacheClientEntry 10 }
 
 	-- end of cacheClientTable
 
