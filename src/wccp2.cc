@@ -922,10 +922,13 @@ wccp2Init(void)
         service_list_ptr->wccp_packet_size = ntohs(wccp2_here_i_am_header.length) + sizeof(wccp2_here_i_am_header);
 
         /* Add the event if everything initialised correctly */
+        debugs(80,3,"wccp2Init: scheduled 'HERE_I_AM' message to " << wccp2_numrouters << "routers.");
         if (wccp2_numrouters) {
             if (!eventFind(wccp2HereIam, NULL)) {
                 eventAdd("wccp2HereIam", wccp2HereIam, NULL, 1, 1);
             }
+            else
+                debugs(80,3,"wccp2Init: skip duplicate 'HERE_I_AM'.");
         }
 
         service_list_ptr = service_list_ptr->next;
