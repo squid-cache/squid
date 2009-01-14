@@ -12,6 +12,11 @@
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testIpAddress );
 
+/* so that we don't break POD dependency just for the test */
+struct timeval current_time;
+double current_dtime;
+time_t squid_curtime = 0;
+
 
 void
 testIpAddress::testDefaults()
