@@ -3,8 +3,8 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-11-14 20:01+1300\n"
-"PO-Revision-Date: 2009-01-09 22:09+1300\n"
-"Last-Translator: Profic' Ustiuzhanin <profic@gmail.com>\n"
+"PO-Revision-Date: 2009-01-11 13:25+0000\n"
+"Last-Translator: d.s.div <Unknown>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
@@ -119,7 +119,7 @@ msgstr "Упещенный Content-Length в POST или PUT запросе."
 
 #: templates/ERR_FTP_LISTING:3
 msgid "Directory Content:"
-msgstr ""
+msgstr "Содержимое директории:"
 
 #: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
@@ -177,15 +177,15 @@ msgstr "Обработка ESI не удалась."
 
 #: templates/ERR_FTP_LISTING:4
 msgid "FTP Directory Listing"
-msgstr ""
+msgstr "Список файлов в FTP директории"
 
 #: templates/ERR_FTP_LISTING:1
 msgid "FTP Directory: %U"
-msgstr ""
+msgstr "FTP директория: %U"
 
 #: templates/ERR_FTP_LISTING:2
 msgid "FTP Directory: <a href=\"/\">%U</a>/"
-msgstr ""
+msgstr "FTP директория: <a href=\"/\">%U</a>/"
 
 #: templates/ERR_FTP_PUT_CREATED:1
 msgid "FTP PUT Successful: File Created"
@@ -305,7 +305,7 @@ msgstr "Операция завершилась успешно"
 
 #: templates/ERR_FTP_LISTING:5
 msgid "Parent Directory"
-msgstr ""
+msgstr "Родительская директория"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:7
 msgid ""
