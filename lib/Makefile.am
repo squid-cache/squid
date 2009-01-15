@@ -108,7 +108,7 @@ libntlmauth_a_LIBADD = \
 libsspwin32_a_SOURCES = \
 	sspwin32.c
 
-INCLUDES	= -I$(top_builddir)/include -I$(top_srcdir)/include @SQUID_CPPUNIT_INC@
+INCLUDES	= -I$(top_builddir)/include -I$(top_srcdir)/include @SQUID_CPPUNIT_INC@ -I$(top_srcdir)/src
 ##FIXME - set these in configure.in and reuse
 
 check_PROGRAMS= \

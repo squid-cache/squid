@@ -3815,6 +3815,7 @@ AC_CONFIG_FILES([\
 	scripts/RunCache \
 	scripts/RunAccel \
 	src/Makefile \
+	src/compat/Makefile \
 	src/fs/Makefile \
 	src/repl/Makefile \
 	src/auth/Makefile \
