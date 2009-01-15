@@ -32,11 +32,6 @@
 #ifndef SQUID_H
 #define SQUID_H
 
-/*
- * On linux this must be defined to get PRId64 and friends
- */
-#define __STDC_FORMAT_MACROS
-
 #include "config.h"
 
 #ifdef _SQUID_MSWIN_
@@ -391,36 +386,6 @@ extern "C"
 #if !HAVE_INITGROUPS
 #include "initgroups.h"
 #endif
-
-#ifndef min
-
-template<class A>
-inline A const &
-min(A const & lhs, A const & rhs)
-{
-    if (rhs < lhs)
-        return rhs;
-
-    return lhs;
-}
-
-#endif
-
-#define XMIN(x,y) (min (x,y))
-#ifndef max
-template<class A>
-inline A const &
-max(A const & lhs, A const & rhs)
-{
-    if (rhs > lhs)
-        return rhs;
-
-    return lhs;
-}
-
-#endif
-
-#define XMAX(a,b) (max (a,b))
 
 #include "structs.h"
 #include "protos.h"
