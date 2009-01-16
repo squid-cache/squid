@@ -1516,7 +1516,7 @@ htcpInit(void)
     }
 }
 
-void
+int
 htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
 {
     cache_key *save_key;
@@ -1530,7 +1530,7 @@ htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
     http_state_flags flags;
 
     if (htcpInSocket < 0)
-        return;
+        return 0;
 
     old_squid_format = p->options.htcp_oldsquid;
     memset(&flags, '\0', sizeof(flags));
@@ -1555,7 +1555,7 @@ htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
     mb.clean();
     if (!pktlen) {
         debugs(31, 3, "htcpQuery: htcpBuildPacket() failed");
-        return;
+        return -1;
     }
 
     htcpSend(pkt, (int) pktlen, p->in_addr);
@@ -1565,6 +1565,8 @@ htcpQuery(StoreEntry * e, HttpRequest * req, peer * p)
     storeKeyCopy(save_key, (const cache_key *)e->key);
     queried_addr[stuff.msg_id % N_QUERIED_KEYS] = p->in_addr;
     debugs(31, 3, "htcpQuery: key (" << save_key << ") " << storeKeyText(save_key));
+
+    return 1;
 }
 
 /*
