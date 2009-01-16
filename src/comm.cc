@@ -1,7 +1,4 @@
-
 /*
- * $Id: comm.cc,v 1.447 2008/02/26 21:49:34 amosjeffries Exp $
- *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Harvest Derived
  *
@@ -47,9 +44,9 @@
 #include "pconn.h"
 #include "SquidTime.h"
 #include "CommCalls.h"
-#include "IPAddress.h"
 #include "DescriptorSet.h"
 #include "icmp/net_db.h"
+#include "ip/IpAddress.h"
 #include "ip/IpIntercept.h"
 
 #if defined(_SQUID_CYGWIN_)
@@ -209,10 +206,10 @@ public:
 // defaults given by client
     char *host;
     u_short default_port;
-    IPAddress default_addr;
+    IpAddress default_addr;
     // NP: CANNOT store the default addr:port together as it gets set/reset differently.
 
-    IPAddress S;
+    IpAddress S;
     AsyncCall::Pointer callback;
 
     int fd;
@@ -498,7 +495,7 @@ comm_read_cancel(int fd, AsyncCall::Pointer &callback)
  * synchronous wrapper around udp socket functions
  */
 int
-comm_udp_recvfrom(int fd, void *buf, size_t len, int flags, IPAddress &from)
+comm_udp_recvfrom(int fd, void *buf, size_t len, int flags, IpAddress &from)
 {
     statCounter.syscalls.sock.recvfroms++;
     int x = 0;
@@ -522,7 +519,7 @@ comm_udp_recvfrom(int fd, void *buf, size_t len, int flags, IPAddress &from)
 int
 comm_udp_recv(int fd, void *buf, size_t len, int flags)
 {
-    IPAddress nul;
+    IpAddress nul;
     return comm_udp_recvfrom(fd, buf, len, flags, nul);
 }
 
@@ -549,7 +546,7 @@ comm_has_incomplete_write(int fd)
 u_short
 comm_local_port(int fd)
 {
-    IPAddress temp;
+    IpAddress temp;
     struct addrinfo *addr = NULL;
     fde *F = &fd_table[fd];
 
@@ -607,7 +604,7 @@ commBind(int s, struct addrinfo &inaddr)
 int
 comm_open(int sock_type,
           int proto,
-          IPAddress &addr,
+          IpAddress &addr,
           int flags,
           const char *note)
 {
@@ -672,7 +669,7 @@ comm_set_transparent(int fd)
 int
 comm_openex(int sock_type,
             int proto,
-            IPAddress &addr,
+            IpAddress &addr,
             int flags,
             unsigned char TOS,
             const char *note)
@@ -940,7 +937,7 @@ int
 ConnectStateData::commResetFD()
 {
     struct addrinfo *AI = NULL;
-    IPAddress nul;
+    IpAddress nul;
     int new_family = AF_UNSPEC;
 
 // XXX: do we have to check this?
@@ -1189,7 +1186,7 @@ int commSetTimeout(int fd, int timeout, AsyncCall::Pointer &callback)
 }
 
 int
-comm_connect_addr(int sock, const IPAddress &address)
+comm_connect_addr(int sock, const IpAddress &address)
 {
     comm_err_t status = COMM_OK;
     fde *F = &fd_table[sock];
@@ -1608,7 +1605,7 @@ _comm_close(int fd, char const *file, int line)
 /* Send a udp datagram to specified TO_ADDR. */
 int
 comm_udp_sendto(int fd,
-                const IPAddress &to_addr,
+                const IpAddress &to_addr,
                 const void *buf,
                 int len)
 {

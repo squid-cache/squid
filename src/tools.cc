@@ -595,7 +595,7 @@ getMyHostname(void)
     LOCAL_ARRAY(char, host, SQUIDHOSTNAMELEN + 1);
     static int present = 0;
     struct addrinfo *AI = NULL;
-    IPAddress sa;
+    IpAddress sa;
 
     if (Config.visibleHostname != NULL)
         return Config.visibleHostname;

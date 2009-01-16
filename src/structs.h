@@ -1,7 +1,4 @@
 /*
- * $Id: structs.h,v 1.575 2008/02/11 22:28:47 rousskov Exp $
- *
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -73,7 +70,7 @@ struct _snmp_request_t {
     long reqid;
     int outlen;
 
-    IPAddress from;
+    IpAddress from;
 
     struct snmp_pdu *PDU;
     ACLChecklist *acl_checklist;
@@ -90,7 +87,7 @@ struct acl_address {
     acl_address *next;
     ACLList *aclList;
 
-    IPAddress addr;
+    IpAddress addr;
 };
 
 struct acl_tos {
@@ -223,18 +220,18 @@ struct SquidConfig {
 
     struct {
 
-        IPAddress router;
+        IpAddress router;
 
-        IPAddress address;
+        IpAddress address;
         int version;
     } Wccp;
 #endif
 #if USE_WCCPv2
 
     struct {
-        IPAddress_list *router;
+        IpAddress_list *router;
 
-        IPAddress address;
+        IpAddress address;
         int forwarding_method;
         int return_method;
         int assignment_method;
@@ -336,17 +333,17 @@ struct SquidConfig {
 
     struct {
 
-        IPAddress udp_incoming;
+        IpAddress udp_incoming;
 
-        IPAddress udp_outgoing;
+        IpAddress udp_outgoing;
 #if SQUID_SNMP
 
-        IPAddress snmp_incoming;
+        IpAddress snmp_incoming;
 
-        IPAddress snmp_outgoing;
+        IpAddress snmp_outgoing;
 #endif
         /* FIXME INET6 : this should really be a CIDR value */
-        IPAddress client_netmask;
+        IpAddress client_netmask;
     } Addrs;
     size_t tcpRcvBufsz;
     size_t udpMaxHitObjsz;
@@ -550,7 +547,7 @@ struct SquidConfig {
 
     struct {
 
-        IPAddress addr;
+        IpAddress addr;
         int ttl;
         unsigned short port;
         char *encode_key;
@@ -774,7 +771,7 @@ struct _http_state_flags {
 };
 
 struct _ipcache_addrs {
-    IPAddress *in_addrs;
+    IpAddress *in_addrs;
     unsigned char *bad_mask;
     unsigned char count;
     unsigned char cur;
@@ -816,7 +813,7 @@ struct peer {
     char *host;
     peer_t type;
 
-    IPAddress in_addr;
+    IpAddress in_addr;
 
     struct {
         int pings_sent;
@@ -906,7 +903,7 @@ struct peer {
 
     int tcp_up;			/* 0 if a connect() fails */
 
-    IPAddress addresses[10];
+    IpAddress addresses[10];
     int n_addresses;
     int rr_count;
     peer *next;
@@ -1263,7 +1260,7 @@ struct _HttpHeaderStat {
 struct _ClientInfo {
     hash_link hash;		/* must be first */
 
-    IPAddress addr;
+    IpAddress addr;
 
     struct {
         int result_hist[LOG_TYPE_MAX];

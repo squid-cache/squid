@@ -1,7 +1,4 @@
-
 /*
- * $Id: ipc.cc,v 1.48 2008/02/13 00:01:47 rousskov Exp $
- *
  * DEBUG: section 54    Interprocess Communication
  * AUTHOR: Duane Wessels
  *
@@ -36,7 +33,7 @@
 #include "squid.h"
 #include "comm.h"
 #include "fde.h"
-#include "IPAddress.h"
+#include "ip/IpAddress.h"
 
 static const char *hello_string = "hi there\n";
 #define HELLO_BUF_SZ 32
@@ -75,11 +72,11 @@ PutEnvironment()
 }
 
 pid_t
-ipcCreate(int type, const char *prog, const char *const args[], const char *name, IPAddress &local_addr, int *rfd, int *wfd, void **hIpc)
+ipcCreate(int type, const char *prog, const char *const args[], const char *name, IpAddress &local_addr, int *rfd, int *wfd, void **hIpc)
 {
     pid_t pid;
-    IPAddress ChS;
-    IPAddress PaS;
+    IpAddress ChS;
+    IpAddress PaS;
     struct addrinfo *AI = NULL;
     int crfd = -1;
     int prfd = -1;

@@ -1,8 +1,4 @@
-
 /*
- * $Id: fde.h,v 1.15 2008/02/12 23:22:13 rousskov Exp $
- *
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -35,7 +31,7 @@
 #define SQUID_FDE_H
 
 #include "comm.h"
-#include "IPAddress.h"
+#include "ip/IpAddress.h"
 
 class PconnPool;
 
@@ -59,7 +55,7 @@ public:
     unsigned int type;
     u_short remote_port;
 
-    IPAddress local_addr;
+    IpAddress local_addr;
     unsigned char tos;
     int sock_family;
     char ipaddr[MAX_IPSTRLEN];            /* dotted decimal address of peer */
@@ -124,7 +120,7 @@ private:
         halfClosedReader = NULL;
         // XXX: the following memset may corrupt or leak new or changed members
         memset(this, 0, sizeof(fde));
-        local_addr.SetEmpty(); // IPAddress likes to be setup nicely.
+        local_addr.SetEmpty(); // IpAddress likes to be setup nicely.
     }
 
 };

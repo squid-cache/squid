@@ -62,7 +62,7 @@ public:
 
 private:
     // unused in IcmpPinger
-    virtual void SendEcho(IPAddress &to, int opcode, const char *payload, int len) {};
+    virtual void SendEcho(IpAddress &to, int opcode, const char *payload, int len) {};
 
     /**
      * Control channel(s) to squid.

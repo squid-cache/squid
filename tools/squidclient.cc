@@ -1,7 +1,4 @@
-
 /*
- * $Id: squidclient.cc,v 1.11 2008/02/26 21:49:46 amosjeffries Exp $
- *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
  *
@@ -86,7 +83,7 @@ using namespace Squid;
 #endif
 
 #include "util.h"
-#include "IPAddress.h"
+#include "ip/IpAddress.h"
 
 #ifndef BUFSIZ
 #define BUFSIZ		8192
@@ -101,9 +98,9 @@ using namespace Squid;
 typedef void SIGHDLR(int sig);
 
 /* Local functions */
-static int client_comm_bind(int, const IPAddress &);
+static int client_comm_bind(int, const IpAddress &);
 
-static int client_comm_connect(int, const IPAddress &, struct timeval *);
+static int client_comm_connect(int, const IpAddress &, struct timeval *);
 static void usage(const char *progname);
 
 static int Now(struct timeval *);
@@ -169,7 +166,7 @@ main(int argc, char *argv[])
     int opt_noaccept = 0;
     int opt_verbose = 0;
     const char *hostname, *localhost;
-    IPAddress iaddr;
+    IpAddress iaddr;
     char url[BUFSIZ], msg[MESSAGELEN], buf[BUFSIZ];
     char extra_hdrs[HEADERLEN];
     const char *method = "GET";
@@ -612,7 +609,7 @@ main(int argc, char *argv[])
 }
 
 static int
-client_comm_bind(int sock, const IPAddress &addr) {
+client_comm_bind(int sock, const IpAddress &addr) {
 
     int res;
 
@@ -630,7 +627,7 @@ client_comm_bind(int sock, const IPAddress &addr) {
 }
 
 static int
-client_comm_connect(int sock, const IPAddress &addr, struct timeval *tvp) {
+client_comm_connect(int sock, const IpAddress &addr, struct timeval *tvp) {
     int res;
     static struct addrinfo *AI = NULL;
 

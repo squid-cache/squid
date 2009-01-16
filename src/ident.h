@@ -16,10 +16,10 @@
 
 #include "cbdata.h"
 
-class IPAddress;
+class IpAddress;
 
 /// \ingroup IdentAPI
-SQUIDCEXTERN void identStart(IPAddress &me, IPAddress &my_peer, IDCB * callback, void *cbdata);
+SQUIDCEXTERN void identStart(IpAddress &me, IpAddress &my_peer, IDCB * callback, void *cbdata);
 
 /// \ingroup IdentAPI
 SQUIDCEXTERN void identInit(void);

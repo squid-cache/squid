@@ -1,8 +1,4 @@
-
 /*
- * $Id: ACLSourceASN.h,v 1.3 2007/12/14 23:11:45 amosjeffries Exp $
- *
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -42,9 +38,9 @@
 class ACLChecklist;
 
 #include "ACLStrategy.h"
-#include "IPAddress.h"
+#include "ip/IpAddress.h"
 
-class ACLSourceASNStrategy : public ACLStrategy<IPAddress>
+class ACLSourceASNStrategy : public ACLStrategy<IpAddress>
 {
 
 public:

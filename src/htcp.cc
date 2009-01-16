@@ -152,7 +152,7 @@ public:
     void checkHit();
     void checkedHit(StoreEntry *e);
 
-    void setFrom (IPAddress &from);
+    void setFrom (IpAddress &from);
     void setDataHeader (htcpDataHeader *);
     char *method;
     char *uri;
@@ -163,7 +163,7 @@ public:
 private:
     HttpRequest *checkHitRequest;
 
-    IPAddress from; // was a ptr. return to such IFF needed. otherwise copy should do.
+    IpAddress from; // was a ptr. return to such IFF needed. otherwise copy should do.
     htcpDataHeader *dhdr;
 };
 
@@ -231,7 +231,7 @@ static int htcpOutSocket = -1;
 static u_int32_t queried_id[N_QUERIED_KEYS];
 static cache_key queried_keys[N_QUERIED_KEYS][SQUID_MD5_DIGEST_LENGTH];
 
-static IPAddress queried_addr[N_QUERIED_KEYS];
+static IpAddress queried_addr[N_QUERIED_KEYS];
 static MemAllocator *htcpDetailPool = NULL;
 
 static int old_squid_format = 0;
@@ -250,24 +250,24 @@ static ssize_t htcpBuildTstOpData(char *buf, size_t buflen, htcpStuff * stuff);
 static void htcpFreeSpecifier(htcpSpecifier * s);
 static void htcpFreeDetail(htcpDetail * s);
 
-static void htcpHandleMsg(char *buf, int sz, IPAddress &from);
+static void htcpHandleMsg(char *buf, int sz, IpAddress &from);
 
-static void htcpHandleMon(htcpDataHeader *, char *buf, int sz, IPAddress &from);
+static void htcpHandleMon(htcpDataHeader *, char *buf, int sz, IpAddress &from);
 
-static void htcpHandleNop(htcpDataHeader *, char *buf, int sz, IPAddress &from);
+static void htcpHandleNop(htcpDataHeader *, char *buf, int sz, IpAddress &from);
 
-static void htcpHandleSet(htcpDataHeader *, char *buf, int sz, IPAddress &from);
+static void htcpHandleSet(htcpDataHeader *, char *buf, int sz, IpAddress &from);
 
-static void htcpHandleTst(htcpDataHeader *, char *buf, int sz, IPAddress &from);
+static void htcpHandleTst(htcpDataHeader *, char *buf, int sz, IpAddress &from);
 static void htcpRecv(int fd, void *data);
 
-static void htcpSend(const char *buf, int len, IPAddress &to);
+static void htcpSend(const char *buf, int len, IpAddress &to);
 
-static void htcpTstReply(htcpDataHeader *, StoreEntry *, htcpSpecifier *, IPAddress &);
+static void htcpTstReply(htcpDataHeader *, StoreEntry *, htcpSpecifier *, IpAddress &);
 
-static void htcpHandleTstRequest(htcpDataHeader *, char *buf, int sz, IPAddress &from);
+static void htcpHandleTstRequest(htcpDataHeader *, char *buf, int sz, IpAddress &from);
 
-static void htcpHandleTstResponse(htcpDataHeader *, char *, int, IPAddress &);
+static void htcpHandleTstResponse(htcpDataHeader *, char *, int, IpAddress &);
 
 static void
 htcpHexdump(const char *tag, const char *s, int sz)
@@ -590,7 +590,7 @@ htcpBuildPacket(char *buf, size_t buflen, htcpStuff * stuff)
 
 static void
 
-htcpSend(const char *buf, int len, IPAddress &to)
+htcpSend(const char *buf, int len, IpAddress &to)
 {
     int x;
 
@@ -614,7 +614,7 @@ htcpSend(const char *buf, int len, IPAddress &to)
 
 void
 
-htcpSpecifier::setFrom (IPAddress &aSocket)
+htcpSpecifier::setFrom (IpAddress &aSocket)
 {
     from = aSocket;
 }
@@ -845,7 +845,7 @@ htcpUnpackDetail(char *buf, int sz)
 
 static int
 
-htcpAccessCheck(acl_access * acl, htcpSpecifier * s, IPAddress &from)
+htcpAccessCheck(acl_access * acl, htcpSpecifier * s, IpAddress &from)
 {
     ACLChecklist checklist;
     checklist.src_addr = from;
@@ -858,7 +858,7 @@ htcpAccessCheck(acl_access * acl, htcpSpecifier * s, IPAddress &from)
 }
 
 static void
-htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, IPAddress &from)
+htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, IpAddress &from)
 {
     htcpStuff stuff;
     static char pkt[8192];
@@ -946,7 +946,7 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, IPAddr
 
 static void
 
-htcpClrReply(htcpDataHeader * dhdr, int purgeSucceeded, IPAddress &from)
+htcpClrReply(htcpDataHeader * dhdr, int purgeSucceeded, IpAddress &from)
 {
     htcpStuff stuff;
     static char pkt[8192];
@@ -983,7 +983,7 @@ htcpClrReply(htcpDataHeader * dhdr, int purgeSucceeded, IPAddress &from)
 
 static void
 
-htcpHandleNop(htcpDataHeader * hdr, char *buf, int sz, IPAddress &from)
+htcpHandleNop(htcpDataHeader * hdr, char *buf, int sz, IpAddress &from)
 {
     debugs(31, 3, "htcpHandleNop: Unimplemented");
 }
@@ -1080,7 +1080,7 @@ htcpClrStore(const htcpSpecifier * s)
 
 static void
 
-htcpHandleTst(htcpDataHeader * hdr, char *buf, int sz, IPAddress &from)
+htcpHandleTst(htcpDataHeader * hdr, char *buf, int sz, IpAddress &from)
 {
     debugs(31, 3, "htcpHandleTst: sz = " << sz);
 
@@ -1095,12 +1095,12 @@ HtcpReplyData::HtcpReplyData() : hdr(hoHtcpReply)
 
 static void
 
-htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, IPAddress &from)
+htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, IpAddress &from)
 {
     htcpReplyData htcpReply;
     cache_key *key = NULL;
 
-    IPAddress *peer;
+    IpAddress *peer;
     htcpDetail *d = NULL;
     char *t;
 
@@ -1167,7 +1167,7 @@ htcpHandleTstResponse(htcpDataHeader * hdr, char *buf, int sz, IPAddress &from)
 
 static void
 
-htcpHandleTstRequest(htcpDataHeader * dhdr, char *buf, int sz, IPAddress &from)
+htcpHandleTstRequest(htcpDataHeader * dhdr, char *buf, int sz, IpAddress &from)
 {
     /* buf should be a SPECIFIER */
     htcpSpecifier *s;
@@ -1222,21 +1222,21 @@ htcpSpecifier::checkedHit(StoreEntry *e)
 
 static void
 
-htcpHandleMon(htcpDataHeader * hdr, char *buf, int sz, IPAddress &from)
+htcpHandleMon(htcpDataHeader * hdr, char *buf, int sz, IpAddress &from)
 {
     debugs(31, 3, "htcpHandleMon: Unimplemented");
 }
 
 static void
 
-htcpHandleSet(htcpDataHeader * hdr, char *buf, int sz, IPAddress &from)
+htcpHandleSet(htcpDataHeader * hdr, char *buf, int sz, IpAddress &from)
 {
     debugs(31, 3, "htcpHandleSet: Unimplemented");
 }
 
 static void
 
-htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, IPAddress &from)
+htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, IpAddress &from)
 {
     htcpSpecifier *s;
     /* buf[0/1] is reserved and reason */
@@ -1319,7 +1319,7 @@ htcpForwardClr(char *buf, int sz)
  * hands it off to other functions to break apart message-specific data.
  */
 static void
-htcpHandleMsg(char *buf, int sz, IPAddress &from)
+htcpHandleMsg(char *buf, int sz, IpAddress &from)
 {
     htcpHeader htcpHdr;
     htcpDataHeader hdr;
@@ -1439,7 +1439,7 @@ htcpRecv(int fd, void *data)
 {
     static char buf[8192];
     int len;
-    static IPAddress from;
+    static IpAddress from;
 
     /* Receive up to 8191 bytes, leaving room for a null */
 
@@ -1469,7 +1469,7 @@ htcpInit(void)
         return;
     }
 
-    IPAddress incomingAddr = Config.Addrs.udp_incoming;
+    IpAddress incomingAddr = Config.Addrs.udp_incoming;
     incomingAddr.SetPort(Config.Port.htcp);
 
     enter_suid();
@@ -1488,7 +1488,7 @@ htcpInit(void)
     debugs(31, 1, "Accepting HTCP messages on port " << Config.Port.htcp << ", FD " << htcpInSocket << ".");
 
     if (!Config.Addrs.udp_outgoing.IsNoAddr()) {
-        IPAddress outgoingAddr = Config.Addrs.udp_outgoing;
+        IpAddress outgoingAddr = Config.Addrs.udp_outgoing;
         outgoingAddr.SetPort(Config.Port.htcp);
 
         enter_suid();

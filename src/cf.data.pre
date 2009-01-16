@@ -4024,7 +4024,7 @@ DOC_START
 DOC_END
 
 NAME: wccp2_router
-TYPE: IPAddress_list
+TYPE: IpAddress_list
 LOC: Config.Wccp2.router
 DEFAULT: none
 IFDEF: USE_WCCPv2

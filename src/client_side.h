@@ -173,11 +173,11 @@ public:
      */
     ClientSocketContext::Pointer currentobject;
 
-    IPAddress peer;
+    IpAddress peer;
 
-    IPAddress me;
+    IpAddress me;
 
-    IPAddress log_addr;
+    IpAddress log_addr;
     char rfc931[USER_IDENT_SZ];
     int nrequests;
 

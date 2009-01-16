@@ -43,7 +43,7 @@ QosConfig::parseConfigLine()
 }
 
 void
-QosConfig::dumpConfigLine(StoreEntry * entry, const char *name) const
+QosConfig::dumpConfigLine(char *entry, const char *name) const
 {
     ; /* Not needed in stub */
 }
