@@ -1,4 +1,6 @@
 /*
+ * $Id$
+ *
  * DEBUG: section 0     WWW Client
  * AUTHOR: Harvest Derived
  *
@@ -130,7 +132,7 @@ usage(const char *progname)
 {
     fprintf(stderr,
             "Version: %s\n"
-            "Usage: %s [-arsv] [-i IMS] [-h remote host] [-l local host] [-p port] [-m method] [-t count] [-I ping-interval] [-H 'strings'] [-T timeout] url\n"
+            "Usage: %s [-arsv] [-i IMS] [-h remote host] [-l local host] [-p port] [-m method] [-t count] [-I ping-interval] [-H 'strings'] [-T timeout] [-j 'hostheader'] [-V version] url\n"
             "Options:\n"
             "    -P file      PUT request.\n"
             "    -a           Do NOT include Accept: header.\n"
@@ -140,6 +142,7 @@ usage(const char *progname)
             "    -i IMS       If-Modified-Since time (in Epoch seconds).\n"
             "    -h host      Retrieve URL from cache on hostname.  Default is localhost.\n"
             "    -l host      Specify a local IP address to bind to.  Default is none.\n"
+            "    -j hosthdr   Host header content\n"
             "    -p port      Port number of cache.  Default is %d.\n"
             "    -m method    Request method, default is GET.\n"
             "    -t count     Trace count cache-hops\n"
@@ -150,7 +153,8 @@ usage(const char *progname)
             "    -u user      Proxy authentication username\n"
             "    -w password  Proxy authentication password\n"
             "    -U user      WWW authentication username\n"
-            "    -W password  WWW authentication password\n",
+            "    -W password  WWW authentication password\n"
+            "    -V version   HTTP Version. Use '-' for HTTP/0.9 omitted case\n",
             VERSION, progname, CACHE_HTTP_PORT);
     exit(1);
 }
@@ -178,10 +182,12 @@ main(int argc, char *argv[])
     int i = 0, loops;
     long ping_int;
     long ping_min = 0, ping_max = 0, ping_sum = 0, ping_mean = 0;
-    char *proxy_user = NULL;
-    char *proxy_password = NULL;
-    char *www_user = NULL;
-    char *www_password = NULL;
+    const char *proxy_user = NULL;
+    const char *proxy_password = NULL;
+    const char *www_user = NULL;
+    const char *www_password = NULL;
+    const char *host = NULL;
+    const char *version = "1.0";
 
     /* set the defaults */
     hostname = "localhost";
@@ -203,7 +209,7 @@ main(int argc, char *argv[])
         if (url[0] == '-')
             usage(argv[0]);
 
-        while ((c = getopt(argc, argv, "ah:l:P:i:km:p:rsvt:g:p:I:H:T:u:U:w:W:?")) != -1)
+        while ((c = getopt(argc, argv, "ah:j:V:l:P:i:km:p:rsvt:g:p:I:H:T:u:U:w:W:?")) != -1)
             switch (c) {
 
             case 'a':
@@ -211,83 +217,74 @@ main(int argc, char *argv[])
                 break;
 
             case 'h':		/* remote host */
-
                 if (optarg != NULL)
                     hostname = optarg;
+                break;
 
+            case 'j':
+               host = optarg;
+               break;
+
+            case 'V':
+                if (optarg != NULL)
+                    version = optarg;
                 break;
 
             case 'l':		/* local host */
                 if (optarg != NULL)
                     localhost = optarg;
-
                 break;
 
             case 's':		/* silent */
                 to_stdout = 0;
-
                 break;
 
             case 'k':		/* backward compat */
                 keep_alive = 1;
-
                 break;
 
             case 'r':		/* reload */
                 reload = 1;
-
                 break;
 
             case 'p':		/* port number */
                 sscanf(optarg, "%d", &port);
-
                 if (port < 1)
                     port = CACHE_HTTP_PORT;	/* default */
-
                 break;
 
             case 'P':
                 put_file = xstrdup(optarg);
-
                 break;
 
             case 'i':		/* IMS */
                 ims = (time_t) atoi(optarg);
-
                 break;
 
             case 'm':
                 method = xstrdup(optarg);
-
                 break;
 
             case 't':
                 method = xstrdup("TRACE");
-
                 max_forwards = atoi(optarg);
-
                 break;
 
             case 'g':
                 ping = 1;
-
                 pcount = atoi(optarg);
-
                 to_stdout = 0;
-
                 break;
 
             case 'I':
                 if ((ping_int = atoi(optarg) * 1000) <= 0)
                     usage(argv[0]);
-
                 break;
 
             case 'H':
                 if (strlen(optarg)) {
                     char *t;
                     strncpy(extra_hdrs, optarg, sizeof(extra_hdrs));
-
                     while ((t = strstr(extra_hdrs, "\\n")))
                         *t = '\r', *(t + 1) = '\n';
                 }
@@ -354,7 +351,33 @@ main(int argc, char *argv[])
 
         fstat(put_fd, &sb);
     }
-    snprintf(msg, BUFSIZ, "%s %s HTTP/1.0\r\n", method, url);
+
+    if (!host) {
+       char *newhost = strstr(url, "://");
+       if (newhost) {
+           char *t;
+           newhost += 3;
+           newhost = strdup(newhost);
+           t = newhost + strcspn(newhost, "@/?");
+           if (*t == '@') {
+               newhost = t + 1;
+               t = newhost + strcspn(newhost, "@/?");
+           }
+           *t = '\0';
+           host = newhost;
+       }
+    }
+
+    if(version[0] == '-') {
+        snprintf(msg, BUFSIZ, "%s %s\r\n", method, url);
+    } else {
+        snprintf(msg, BUFSIZ, "%s %s HTTP/%s\r\n", method, url, version);
+    }
+
+    if (host) {
+        snprintf(buf, BUFSIZ, "Host: %s\r\n", method, url, version, host);
+        strcat(msg,buf);
+    }
 
     if (reload) {
         snprintf(buf, BUFSIZ, "Pragma: no-cache\r\n");
@@ -377,8 +400,8 @@ main(int argc, char *argv[])
         strcat(msg, buf);
     }
     if (proxy_user) {
-        char *user = proxy_user;
-        char *password = proxy_password;
+        const char *user = proxy_user;
+        const char *password = proxy_password;
 #if HAVE_GETPASS
 
         if (!password)
@@ -395,8 +418,8 @@ main(int argc, char *argv[])
         strcat(msg, buf);
     }
     if (www_user) {
-        char *user = www_user;
-        char *password = www_password;
+        const char *user = www_user;
+        const char *password = www_password;
 #if HAVE_GETPASS
 
         if (!password)
@@ -412,17 +435,25 @@ main(int argc, char *argv[])
         snprintf(buf, BUFSIZ, "Authorization: Basic %s\r\n", base64_encode(buf));
         strcat(msg, buf);
     }
-    if (keep_alive) {
-        if (port != 80)
-            snprintf(buf, BUFSIZ, "Proxy-Connection: keep-alive\r\n");
+
+    /* 1.0 & 1.1 might need Proxy-Connection: header */
+    if (version[0] == '1' && version[1] == '.' &&  version[2] >= '0' && version[2] <= '1') {
+        if (keep_alive) {
+            if (port != 80)
+                snprintf(buf, BUFSIZ, "Proxy-Connection: keep-alive\r\n");
+            else
+               strcat(msg, "Connection: keep-alive\r\n");
+       }
+     } else {
+        if (!keep_alive)
+            strcat(msg, "Connection: close\r\n");
         else
             snprintf(buf, BUFSIZ, "Connection: keep-alive\r\n");
-
-        strcat(msg, buf);
     }
-    strcat(msg, extra_hdrs);
-    snprintf(buf, BUFSIZ, "\r\n");
     strcat(msg, buf);
+
+    strcat(msg, extra_hdrs);
+    strcat(msg, "\r\n");
 
     if (opt_verbose)
         fprintf(stderr, "headers: '%s'\n", msg);
