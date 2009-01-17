@@ -604,23 +604,22 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
 
         case LFT_TIME_GMT: {
                 const char *spec;
-
                 struct tm *t;
                 spec = fmt->data.timespec;
 
-                if (!spec)
-                    spec = "%d/%b/%Y:%H:%M:%S";
-
-                if (fmt->type == LFT_TIME_LOCALTIME)
+                if (fmt->type == LFT_TIME_LOCALTIME) {
+                    if (!spec)
+                        spec = "%d/%b/%Y:%H:%M:%S %z";
                     t = localtime(&squid_curtime);
-                else
+                } else {
+                    if (!spec)
+                        spec = "%d/%b/%Y:%H:%M:%S";
                     t = gmtime(&squid_curtime);
+                }
 
                 strftime(tmp, sizeof(tmp), spec, t);
-
                 out = tmp;
             }
-
             break;
 
         case LFT_TIME_TO_HANDLE_REQUEST:
