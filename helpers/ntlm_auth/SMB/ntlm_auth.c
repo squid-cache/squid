@@ -317,8 +317,7 @@ manage_request()
 	    return;
 	    /* notreached */
 	case NTLM_CHALLENGE:
-	    SEND
-		("NA Got a challenge. We refuse to have our authority disputed");
+	    SEND("NA Got a challenge. We refuse to have our authority disputed");
 	    return;
 	    /* notreached */
 	case NTLM_AUTHENTICATE:
@@ -416,8 +415,10 @@ manage_request()
 			(ntlm_authenticate *) decoded, plen);
 		    return;
 		}
+                SEND("BH unknown internal error.");
+                return;
 	    }
-            assert(cred != NULL);
+
 	    lc(cred);		/* let's lowercase them for our convenience */
 	    SEND2("AF %s", cred);
 	    return;
