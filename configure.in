@@ -1210,11 +1210,12 @@ dnl   For gcc "-xarch=generic64" must be replaced with "-m64"
 dnl   The 'sun' define is needed by ipfilter includes, so we must remove "-Usun"
 	    *-solaris*)
     		if test "$GCC" = "yes"; then
-		    echo "Removing -Xa for gcc on $host"
+		    echo "Removing -Xa for gcc/g++ on $host"
 		    CFLAGS="`echo $CFLAGS | sed -e 's/-Xa//'`"
 		    CXXFLAGS="`echo $CXXFLAGS | sed -e 's/-Xa//'`"
-		    echo "Replacing -xarch=generic64 with -m64 for gcc on $host"
+		    echo "Replacing -xarch=generic64 with -m64 for gcc/g++ on $host"
 		    CFLAGS="`echo $CFLAGS | sed -e 's/-xarch=generic64/-m64/'`"
+		    CXXFLAGS="`echo $CXXFLAGS | sed -e 's/-xarch=generic64/-m64/'`"
 		    LDFLAGS="`echo $LDFLAGS | sed -e 's/-xarch=generic64//'`"
 		fi
 		echo "Removing -Usun on $host"
