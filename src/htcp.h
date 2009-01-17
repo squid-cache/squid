@@ -62,7 +62,22 @@ typedef class HtcpReplyData htcpReplyData;
 
 SQUIDCEXTERN void neighborsHtcpReply(const cache_key *, htcpReplyData *, const struct sockaddr_in *);
 SQUIDCEXTERN void htcpInit(void);
-SQUIDCEXTERN void htcpQuery(StoreEntry * e, HttpRequest * req, peer * p);
+
+/**
+ * \ingroup ServerProtocolHTCP
+ *
+ * Generate and Send an HTCP query to the specified peer.
+ *
+ * \param e
+ * \param req
+ * \param p
+ * \retval 1    Successfully sent request.
+ * \retval 0    Unable to send request at this time. HTCP may be shutting down or starting up.
+ * 		Don't wait for a reply or count in stats as sent.
+ * \retval -1   Error sending request.
+ */
+SQUIDCEXTERN int htcpQuery(StoreEntry * e, HttpRequest * req, peer * p);
+
 SQUIDCEXTERN void htcpSocketShutdown(void);
 SQUIDCEXTERN void htcpSocketClose(void);
 

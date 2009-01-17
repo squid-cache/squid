@@ -647,9 +647,6 @@ neighborsUdpPing(HttpRequest * request,
     if (Config.peers == NULL)
         return 0;
 
-    if (theOutIcpConnection < 0)
-        fatal("neighborsUdpPing: There is no ICP socket!");
-
     assert(entry->swap_status == SWAPOUT_NONE);
 
     mem->start_ping = current_time;
@@ -673,9 +670,6 @@ neighborsUdpPing(HttpRequest * request,
 
         debugs(15, 4, "neighborsUdpPing: pinging peer " << p->host << " for '" << url << "'");
 
-        if (p->type == PEER_MULTICAST)
-            mcastSetTtl(theOutIcpConnection, p->mcast.ttl);
-
         debugs(15, 3, "neighborsUdpPing: key = '" << entry->getMD5Text() << "'");
 
         debugs(15, 3, "neighborsUdpPing: reqnum = " << reqnum);
@@ -683,34 +677,42 @@ neighborsUdpPing(HttpRequest * request,
 #if USE_HTCP
 
         if (p->options.htcp) {
+            if (Config.Port.htcp <= 0) {
+                debugs(15, DBG_CRITICAL, "HTCP is disabled! Cannot send HTCP request to peer.");
+                continue;
+            }
+
             debugs(15, 3, "neighborsUdpPing: sending HTCP query");
-            htcpQuery(entry, request, p);
+            if (htcpQuery(entry, request, p) <= 0) continue; // unable to send.
         } else
 #endif
-            if (p->icp.port == echo_port) {
-                debugs(15, 4, "neighborsUdpPing: Looks like a dumb cache, send DECHO ping");
-                echo_hdr.reqnum = reqnum;
-                query = _icp_common_t::createMessage(ICP_DECHO, 0, url, reqnum, 0);
-                icpUdpSend(theOutIcpConnection,
-                           &p->in_addr,
-                           query,
-                           LOG_ICP_QUERY,
-                           0);
+        {
+            if (Config.Port.icp <= 0 || theOutIcpConnection <= 0) {
+                debugs(15, DBG_CRITICAL, "ICP is disabled! Cannot send ICP request to peer.");
+                continue;
             } else {
-                flags = 0;
 
-                if (Config.onoff.query_icmp)
-                    if (p->icp.version == ICP_VERSION_2)
-                        flags |= ICP_FLAG_SRC_RTT;
+                if (p->type == PEER_MULTICAST)
+                    mcastSetTtl(theOutIcpConnection, p->mcast.ttl);
 
-                query = _icp_common_t::createMessage(ICP_QUERY, flags, url, reqnum, 0);
+                if (p->icp.port == echo_port) {
+                    debugs(15, 4, "neighborsUdpPing: Looks like a dumb cache, send DECHO ping");
+                    echo_hdr.reqnum = reqnum;
+                    query = _icp_common_t::createMessage(ICP_DECHO, 0, url, reqnum, 0);
+                    icpUdpSend(theOutIcpConnection, &p->in_addr, query, LOG_ICP_QUERY, 0);
+                } else {
+                    flags = 0;
 
-                icpUdpSend(theOutIcpConnection,
-                           &p->in_addr,
-                           query,
-                           LOG_ICP_QUERY,
-                           0);
+                    if (Config.onoff.query_icmp)
+                        if (p->icp.version == ICP_VERSION_2)
+                            flags |= ICP_FLAG_SRC_RTT;
+
+                    query = _icp_common_t::createMessage(ICP_QUERY, flags, url, reqnum, 0);
+
+                    icpUdpSend(theOutIcpConnection, &p->in_addr, query, LOG_ICP_QUERY, 0);
+                }
             }
+        }
 
         queries_sent++;
 
