@@ -527,7 +527,8 @@ ClientHttpRequest::logRequest()
             checklist->reply = HTTPMSGLOCK(al.reply);
 
         if (!Config.accessList.log || checklist->fastCheck()) {
-            al.request = HTTPMSGLOCK(request);
+            if(request)
+                al.request = HTTPMSGLOCK(request);
             accessLogLog(&al, checklist);
             updateCounters();
 
