@@ -1,31 +1,31 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML>
 <HEAD>
-   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
-   <TITLE>BŁĄD: Nieudany FTP upload</TITLE>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+   <TITLE>BĹÄD: Nieudany FTP upload</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD>
 <BODY>
 
 <H1>
-BŁĄD</H1>
+BĹÄD</H1>
 
 <H2>
 Nieudany FTP PUT/upload</H2>
 
 <HR noshade size="1px">
 
-<P>Podczas próby przesłania URL-a: <A HREF="%U">%U</A> via FTP&nbsp;komendą
+<P>Podczas prĂłby przesĹania URL-a: <A HREF="%U">%U</A> via FTP&nbsp;komendÄ
 PUT
 
-<P>Squid wysłał następującą komendę FTP:
+<P>Squid wysĹaĹ nastÄpujÄcÄ komendÄ FTP:
 <PRE>
 <B>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; %f</B></PRE>
-i otrzymał odpowiedź
+i otrzymaĹ odpowiedĹş
 <PRE>
 <B>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; %F</B></PRE>
-Oznacz to, że:
-<PRE>należy sprwdzić ścieżkę, prawa dostępu, wolen miejsce na dysku</PRE>
+Oznacz to, Ĺźe:
+<PRE>naleĹźy sprwdziÄ ĹcieĹźkÄ, prawa dostÄpu, wolen miejsce na dysku</PRE>
 
-<PRE>i spróbować ponownie.</PRE>
+<PRE>i sprĂłbowaÄ ponownie.</PRE>
 

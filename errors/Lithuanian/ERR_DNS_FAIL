@@ -1,32 +1,32 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1257">
-<TITLE>KLAIDA: Puslapis nurodytu adresu negali būti atsiųstas</TITLE>
+<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+<TITLE>KLAIDA: Puslapis nurodytu adresu negali bÅ«ti atsiÅ³stas</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>KLAIDA</H1>
-<H2>Puslapis nurodytu adresu negali būti atsiųstas</H2>
+<H2>Puslapis nurodytu adresu negali bÅ«ti atsiÅ³stas</H2>
 <HR noshade size="1px">
 <P>
-Bandant atsiųsti puslapį:
+Bandant atsiÅ³sti puslapÄÆ:
 <A HREF="%U">%U</A>
 <P>
-Gautas klaidos pranešimas:
+Gautas klaidos praneÅ¡imas:
 <UL>
 <BLOCKQUOTE>
-Neįmanoma nustatyti <I>%H</I> serverio IP adreso
+NeÄÆmanoma nustatyti <I>%H</I> serverio IP adreso
 </BLOCKQUOTE>
 </UL>
 
 <P>
-DNS serveris atsakė:
+DNS serveris atsakÄ—:
 <BLOCKQUOTE>
 %z
 </BLOCKQUOTE>
 
 <P>
-Tai reiškia, kad:
+Tai reiÅ¡kia, kad:
 <PRE>
- Neįmanoma aptikti serverio nurodytu adresu. 
- Patikrinkite, ar teisingai įvedėte adresą. 
+ NeÄÆmanoma aptikti serverio nurodytu adresu. 
+ Patikrinkite, ar teisingai ÄÆvedÄ—te adresÄ…. 
 </PRE>
 </P>

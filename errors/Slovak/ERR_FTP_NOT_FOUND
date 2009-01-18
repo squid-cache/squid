@@ -1,23 +1,23 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-2">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <TITLE>CHYBA: Pozadovane URL je nedostupne</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>CHYBA</H1>
-<H2>Požadované URL je nedostupné</H2>
+<H2>PoĹžadovanĂŠ URL je nedostupnĂŠ</H2>
 <HR noshade size="1px">
 <P>
-Nasledovné URL je nedostupné:
+NasledovnĂŠ URL je nedostupnĂŠ:
 <A HREF="%U">%U</A>
 <P>
-Squid zaslal nasledujúci FTP príkaz:
+Squid zaslal nasledujĂşci FTP prĂ­kaz:
 <blockquote><strong><pre>%f</pre></strong></blockquote>
-a obdržal nasledovnú opoveď:
+a obdrĹžal nasledovnĂş opoveÄ:
 <blockquote><strong><pre>%F</pre></strong></blockquote>
 <blockquote><strong><pre>%g</pre></strong></blockquote>
 <P>
-To môže byť spôsobené uvedením absolútnej cesty v FTP URL (čo odporuje RFC
-1738). V tomto prípade by ste dokument mohli nájsť na <A HREF="%B">%B</A>.
+To mĂ´Ĺže byĹĽ spĂ´sobenĂŠ uvedenĂ­m absolĂştnej cesty v FTP URL (Äo odporuje RFC
+1738). V tomto prĂ­pade by ste dokument mohli nĂĄjsĹĽ na <A HREF="%B">%B</A>.
 </P>
 
