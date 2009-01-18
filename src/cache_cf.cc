@@ -2475,13 +2475,11 @@ free_time_t(time_t * var)
     *var = 0;
 }
 
-#if UNUSED_CODE
 static void
 dump_size_t(StoreEntry * entry, const char *name, size_t var)
 {
     storeAppendPrintf(entry, "%s %d\n", name, (int) var);
 }
-#endif
 
 static void
 dump_b_size_t(StoreEntry * entry, const char *name, size_t var)
@@ -2509,7 +2507,6 @@ dump_kb_int64_t(StoreEntry * entry, const char *name, int64_t var)
     storeAppendPrintf(entry, "%s %"PRId64" %s\n", name, var, B_KBYTES_STR);
 }
 
-#if UNUSED_CODE
 static void
 parse_size_t(size_t * var)
 {
@@ -2517,7 +2514,6 @@ parse_size_t(size_t * var)
     i = GetInteger();
     *var = (size_t) i;
 }
-#endif
 
 static void
 parse_b_size_t(size_t * var)
