@@ -1386,6 +1386,12 @@ AC_SUBST(AUTH_LIBS)
 AC_SUBST(AUTH_LINKOBJS)
 AC_SUBST(AUTH_OBJS)
 
+dnl bundled auth modules, in order to have handy defines for the cppunit testsuite
+test -n "$AUTH_MODULE_basic" && AC_DEFINE([HAVE_AUTH_MODULE_BASIC],1,[Basic auth module is built])
+test -n "$AUTH_MODULE_digest" && AC_DEFINE([HAVE_AUTH_MODULE_DIGEST],1,[Digest auth module is built])
+test -n "$AUTH_MODULE_ntlm" && AC_DEFINE([HAVE_AUTH_MODULE_NTLM],1,[NTLM auth module is built])
+test -n "$AUTH_MODULE_negotiate" && AC_DEFINE([HAVE_AUTH_MODULE_NEGOTIATE],1,[Negotiate auth module is built])
+
 dnl Select basic auth scheme helpers to build
 if test -n "$AUTH_MODULE_basic"; then
 	BASIC_AUTH_HELPERS="all"

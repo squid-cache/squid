@@ -2,6 +2,8 @@
 #ifndef SQUID_SRC_TEST_AUTH_H
 #define SQUID_SRC_TEST_AUTH_H
 
+#include "config.h"
+
 #include <cppunit/extensions/HelperMacros.h>
 
 /*
@@ -45,6 +47,7 @@ protected:
     void construction();
 };
 
+#ifdef HAVE_AUTH_MODULE_BASIC
 class testAuthBasicUserRequest : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( testAuthBasicUserRequest );
@@ -58,7 +61,9 @@ protected:
     void construction();
     void username();
 };
+#endif
 
+#ifdef HAVE_AUTH_MODULE_DIGEST
 class testAuthDigestUserRequest : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( testAuthDigestUserRequest );
@@ -72,7 +77,9 @@ protected:
     void construction();
     void username();
 };
+#endif
 
+#ifdef HAVE_AUTH_MODULE_NTLM
 class testAuthNTLMUserRequest : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( testAuthNTLMUserRequest );
@@ -86,7 +93,9 @@ protected:
     void construction();
     void username();
 };
+#endif
 
+#ifdef HAVE_AUTH_MODULE_NEGOTIATE
 class testAuthNegotiateUserRequest : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( testAuthNegotiateUserRequest );
@@ -100,6 +109,7 @@ protected:
     void construction();
     void username();
 };
+#endif
 
 #endif
 
