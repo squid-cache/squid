@@ -1,24 +1,24 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
-<TITLE>HIBA: A kért URL nem tölthető le</TITLE>
-<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
+<TITLE>HIBA: A kĂŠrt URL nem tĂślthetĹ le</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>HIBA</H1>
-<H2>A kért URL nem tölthető le</H2>
+<H2>A kĂŠrt URL nem tĂślthetĹ le</H2>
 <HR noshade size="1px">
 <P>
-Az alábbi URL nem tölthető le:
+Az alĂĄbbi URL nem tĂślthetĹ le:
 <A HREF="%U">%U</A>
 <P>
-A Squid az alábbi FTP parancsot küldte:
+A Squid az alĂĄbbi FTP parancsot kĂźldte:
 <blockquote><strong><pre>%f</pre></strong></blockquote>
-és ezt a választ kapta
+ĂŠs ezt a vĂĄlaszt kapta
 <blockquote><strong><pre>%F</pre></strong></blockquote>
 <blockquote><strong><pre>%g</pre></strong></blockquote>
 <P>
-A hibát lehet hogy az okozta, hogy az FTP URL abszolút elérési utat tartalmaz
-(ami nem felel meg az RFC 1738 előírásnak). Amennyiben ez a hiba oka, akkor 
-az állományt a <A HREF="%B">%B</A> címen lehet megtalálni.
+A hibĂĄt lehet hogy az okozta, hogy az FTP URL abszolĂşt elĂŠrĂŠsi utat tartalmaz
+(ami nem felel meg az RFC 1738 elĹĂ­rĂĄsnak). Amennyiben ez a hiba oka, akkor 
+az ĂĄllomĂĄnyt a <A HREF="%B">%B</A> cĂ­men lehet megtalĂĄlni.
 </P>
 

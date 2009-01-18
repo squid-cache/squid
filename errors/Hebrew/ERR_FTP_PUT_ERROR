@@ -1,28 +1,28 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
-<meta http-equiv="Content-Type" content="text/html; charset=windows-1255">
-<TITLE>שגיאה: העלאת קובץ ל-FTP נכשלה</TITLE>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<TITLE>׳©׳’׳™׳׳”: ׳”׳¢׳׳׳× ׳§׳•׳‘׳¥ ׳-FTP ׳ ׳›׳©׳׳”</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
 <div dir="rtl" align="right">
-<H1>שגיאה</H1>
-<H2>העלאת קובץ ל-FTP נכשלה</H2>
+<H1>׳©׳’׳™׳׳”</H1>
+<H2>׳”׳¢׳׳׳× ׳§׳•׳‘׳¥ ׳-FTP ׳ ׳›׳©׳׳”</H2>
 <HR noshade size="1px">
 <P>
-שגיאה כאשר ניסיתי לשלוח את:
+׳©׳’׳™׳׳” ׳›׳׳©׳¨ ׳ ׳™׳¡׳™׳×׳™ ׳׳©׳׳•׳— ׳׳×:
 <A HREF="%U">%U</A>
 <P>
-השרת שלח את פקודת ה-FTP הבאה:
+׳”׳©׳¨׳× ׳©׳׳— ׳׳× ׳₪׳§׳•׳“׳× ׳”-FTP ׳”׳‘׳׳”:
 <PRE><STRONG>
         %f
 </STRONG></PRE>
-וקיבל בתשובה:
+׳•׳§׳™׳‘׳ ׳‘׳×׳©׳•׳‘׳”:
 <PRE><STRONG>
         %F
 </STRONG></PRE>
 <P>
-זה אומר ש:
+׳–׳” ׳׳•׳׳¨ ׳©:
 <PRE>
-בדוק את הנתיב, ההרשאות, מקום בדיסק ונסה שוב.
+׳‘׳“׳•׳§ ׳׳× ׳”׳ ׳×׳™׳‘, ׳”׳”׳¨׳©׳׳•׳×, ׳׳§׳•׳ ׳‘׳“׳™׳¡׳§ ׳•׳ ׳¡׳” ׳©׳•׳‘.
 </PRE>
-<P>מנהל השרת הוא <A HREF="mailto:%w%W">%w</A>. 
+<P>׳׳ ׳”׳ ׳”׳©׳¨׳× ׳”׳•׳ <A HREF="mailto:%w%W">%w</A>. 

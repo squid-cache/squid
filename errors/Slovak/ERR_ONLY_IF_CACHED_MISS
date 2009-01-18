@@ -1,30 +1,30 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-2">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <TITLE>CHYBA: Pozadovany dokument je nedostupny</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>CHYBA</H1>
-<H2>Požadovaný dokument je nedostupný</H2>
+<H2>PoĹžadovanĂ˝ dokument je nedostupnĂ˝</H2>
 <HR noshade size="1px">
 <P>
-Pri pokuse o prístup k:
+Pri pokuse o prĂ­stup k:
 <A HREF="%U">%U</A>
 <P>
-došlo k nasledovnej chybe:
+doĹĄlo k nasledovnej chybe:
 <UL>
 <LI>
 <STRONG>
-Vami požadovaný dokument sa nenachádza v cachi pričom bola špecifikovaná
-direktíva <code>only-if-cached</code>.
+Vami poĹžadovanĂ˝ dokument sa nenachĂĄdza v cachi priÄom bola ĹĄpecifikovanĂĄ
+direktĂ­va <code>only-if-cached</code>.
 </STRONG>
 </UL>
 
 <P>
 
-Vyslali ste požiadavku s direktívou <code>only-if-cached</code> na riadenie
-činnosti cache. Požadovaný dokument nebol nájdený v cachi <em>alebo</em>
-tento dokument vyžaduje aktualizáciu pričom toto je direktívou
-<code>only-if-cached</code> obmedzené.
+Vyslali ste poĹžiadavku s direktĂ­vou <code>only-if-cached</code> na riadenie
+Äinnosti cache. PoĹžadovanĂ˝ dokument nebol nĂĄjdenĂ˝ v cachi <em>alebo</em>
+tento dokument vyĹžaduje aktualizĂĄciu priÄom toto je direktĂ­vou
+<code>only-if-cached</code> obmedzenĂŠ.
 
 </P>

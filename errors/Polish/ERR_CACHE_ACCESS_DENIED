@@ -1,32 +1,32 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML>
 <HEAD>
-   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
-   <TITLE>BŁĄD: Dostęp do serwera cache zabroniony</TITLE>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+   <TITLE>BĹÄD: DostÄp do serwera cache zabroniony</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD>
 <BODY>
 
 <H1>
-BŁĄD</H1>
+BĹÄD</H1>
 
 <H2>
-Dostęp do serwera cache zabroniony</H2>
+DostÄp do serwera cache zabroniony</H2>
 
 <HR noshade size="1px">
 
 <P>Podczas sprowadzania URL-a: <A HREF="%U">%U</A>
 
-<P>wystąpił następujący błąd:
+<P>wystÄpiĹ nastÄpujÄcy bĹÄd:
 <UL>
 <LI>
-<B>Dostęp do serwera cache zabroniony.</B></LI>
+<B>DostÄp do serwera cache zabroniony.</B></LI>
 </UL>
-Niestety, nie możesz sprowadzić:
+Niestety, nie moĹźesz sprowadziÄ:
 <PRE>&nbsp;&nbsp;&nbsp; %U</PRE>
-z tego serwera cache, dopóki nie dokonałeś autoryzacji.
+z tego serwera cache, dopĂłki nie dokonaĹeĹ autoryzacji.
 
-<P>Musisz używać Netscape 2.0 lub nowszej lub Microsoft Internet Explorer
-3.0 lub innej przeglądarki zgodnej z HTTP/1.1. Skontaktuj się z <A HREF="mailto:%w%W">administratorem
-serwera cache</A> jeśli masz trudności z autoryzacją lub <A HREF="http://%h/cgi-bin/chpasswd.cgi">zmień</A>&nbsp;
+<P>Musisz uĹźywaÄ Netscape 2.0 lub nowszej lub Microsoft Internet Explorer
+3.0 lub innej przeglÄdarki zgodnej z HTTP/1.1. Skontaktuj siÄ z <A HREF="mailto:%w%W">administratorem
+serwera cache</A> jeĹli masz trudnoĹci z autoryzacjÄ lub <A HREF="http://%h/cgi-bin/chpasswd.cgi">zmieĹ</A>&nbsp;
 haslo.

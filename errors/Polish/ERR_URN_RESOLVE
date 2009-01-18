@@ -1,25 +1,25 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML>
 <HEAD>
-   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
-   <TITLE>BŁĄD: Żądany URN nie może zostać sprowadzony</TITLE>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+   <TITLE>BĹÄD: ĹťÄdany URN nie moĹźe zostaÄ sprowadzony</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD>
 <BODY>
 
 <H1>
-BŁĄD</H1>
+BĹÄD</H1>
 
 <H2>
-URL dla żądanego URN nie może zostać sprowadzony</H2>
+URL dla ĹźÄdanego URN nie moĹźe zostaÄ sprowadzony</H2>
 
 <HR noshade size="1px">
 
 <P>Podzcas sprowadzania URN: <A HREF="%U">%U</A>
 
-<P>wystąpił następujący błąd:
+<P>wystÄpiĹ nastÄpujÄcy bĹÄd:
 <UL>
 <LI>
-<B>nie można zlokalizować&nbsp; URN</B></LI>
+<B>nie moĹźna zlokalizowaÄ&nbsp; URN</B></LI>
 </UL>
-Proszę nie spodziewać się zbyt wiele od URNów z %T :)
+ProszÄ nie spodziewaÄ siÄ zbyt wiele od URNĂłw z %T :)

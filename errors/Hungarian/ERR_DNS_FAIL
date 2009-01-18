@@ -1,23 +1,23 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
-<TITLE>HIBA: A kért URL nem tölthető le</TITLE>
-<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
+<TITLE>HIBA: A kĂŠrt URL nem tĂślthetĹ le</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
-<H2>HIBA: A kért URL nem tölthető le</H2>
+<H2>HIBA: A kĂŠrt URL nem tĂślthetĹ le</H2>
 <HR noshade size="1px">
 <P>
-Az alábbi URL letöltésekor:
+Az alĂĄbbi URL letĂśltĂŠsekor:
 <A HREF="%U">%U</A>
 <P>
-a következő hiba lépett fel:
+a kĂśvetkezĹ hiba lĂŠpett fel:
 <BLOCKQUOTE>
-A(z) <I>%H</I> szervernévhez nem lehet meghatározni az IP címet. 
+A(z) <I>%H</I> szervernĂŠvhez nem lehet meghatĂĄrozni az IP cĂ­met. 
 </BLOCKQUOTE>
 </UL>
 
 <P>
-A dnsserver válasza:
+A dnsserver vĂĄlasza:
 <BLOCKQUOTE>
 %z
 </BLOCKQUOTE>
@@ -25,8 +25,8 @@ A dnsserver válasza:
 <P>
 Ez azt jelenti, hogy:
 <PRE>
- A cache képtelen volt feloldani az URL-ben szereplő szerver nevét.
- Ellenőrizze a cím helyességét!
+ A cache kĂŠptelen volt feloldani az URL-ben szereplĹ szerver nevĂŠt.
+ EllenĹrizze a cĂ­m helyessĂŠgĂŠt!
 </PRE>
 </P>
 

@@ -1,22 +1,22 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=big5">
-<TITLE>¿ù»~¡F±ý³sµ²¤§ºô§}¡]URL¡^µLªk¥¿½Tªº¶Ç¦^</TITLE>
+<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+<TITLE>éŒ¯èª¤ï¼›æ¬²é€£çµä¹‹ç¶²å€ï¼ˆURLï¼‰ç„¡æ³•æ­£ç¢ºçš„å‚³å›ž</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
-<H1>¿ù»~</H1>
-<H2>±ý³sµ²¤§ºô§}¡]URL¡^µLªk¥¿½Tªº¶Ç¦^</H2>
+<H1>éŒ¯èª¤</H1>
+<H2>æ¬²é€£çµä¹‹ç¶²å€ï¼ˆURLï¼‰ç„¡æ³•æ­£ç¢ºçš„å‚³å›ž</H2>
 <HR noshade size="1px">
 <P>
-·í¹Á¸Õ¶Ç¦^¤U­±ªººô§}¡]URL¡^®É¡G
+ç•¶å˜—è©¦å‚³å›žä¸‹é¢çš„ç¶²å€ï¼ˆURLï¼‰æ™‚ï¼š
 <A HREF="%U">%U</A>
 <P>
-µo¥Í¤F¤U¦Cªº¿ù»~¡G
+ç™¼ç”Ÿäº†ä¸‹åˆ—çš„éŒ¯èª¤ï¼š
 <UL>
 <LI>
 <STRONG>
 Unable to forward this request at this time.
 <LI>
-¥Ø«eµLªk´À±zªººô¯¸³sµ²­n¨D¶i¦æÂà¦V°Ê§@
+ç›®å‰ç„¡æ³•æ›¿æ‚¨çš„ç¶²ç«™é€£çµè¦æ±‚é€²è¡Œè½‰å‘å‹•ä½œ
 </STRONG>
 </UL>
 
@@ -30,9 +30,9 @@ parent caches.  The most likely cause for this error is that:
 </UL>
 </P>
 <P>
-±zªº³sµ²­n¨DµLªk³QÂà¦V­ì©lºô¯¸¦øªA¾¹©Î¨ä¥Lªº¤W¼h§Ö¨ú¦øªA¾¹¡Aµo¥Í³o­Ó°ÝÃDªº³Ì¥i¯àªº­ì¦]¥i¯à¬O¡G
+æ‚¨çš„é€£çµè¦æ±‚ç„¡æ³•è¢«è½‰å‘åŽŸå§‹ç¶²ç«™ä¼ºæœå™¨æˆ–å…¶ä»–çš„ä¸Šå±¤å¿«å–ä¼ºæœå™¨ï¼Œç™¼ç”Ÿé€™å€‹å•é¡Œçš„æœ€å¯èƒ½çš„åŽŸå› å¯èƒ½æ˜¯ï¼š
 <UL>
-<LI>ºô¸ô§Ö¨ú¦øªA¾¹ºÞ²zªÌ¤£¤¹³\¥»¦øªA¾¹³w¦æª½±µ³sµ²­ì©lªººô­¶¦ì¸m¡A©Î¬O
-<LI>©Ò¦³¥»¦øªA¾¹³]©wªº¤W¼h¦øªA¾¹¥Ø«e³£¼È®ÉµLªk³sµ²¤W¡C
+<LI>ç¶²è·¯å¿«å–ä¼ºæœå™¨ç®¡ç†è€…ä¸å…è¨±æœ¬ä¼ºæœå™¨é€•è¡Œç›´æŽ¥é€£çµåŽŸå§‹çš„ç¶²é ä½ç½®ï¼Œæˆ–æ˜¯
+<LI>æ‰€æœ‰æœ¬ä¼ºæœå™¨è¨­å®šçš„ä¸Šå±¤ä¼ºæœå™¨ç›®å‰éƒ½æš«æ™‚ç„¡æ³•é€£çµä¸Šã€‚
 </UL>
 </P>

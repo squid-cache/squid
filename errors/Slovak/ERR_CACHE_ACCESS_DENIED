@@ -1,6 +1,6 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-2">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <TITLE>CHYBA: Cache Access Denied</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD>
@@ -9,10 +9,10 @@
 <H2>Cache Access Denied</H2>
 <HR noshade size="1px">
 <P>
-Pri pokuse o prístup k:
+Pri pokuse o prĂ­stup k:
 <A HREF="%U">%U</A>
 <P>
-došlo k nasledovnej chybe:
+doĹĄlo k nasledovnej chybe:
 <UL>
 <LI>
 <STRONG>
@@ -21,16 +21,16 @@ Cache Access Denied.
 </UL>
 </P>
 
-<P>Prepáčte, ale prístup k:
+<P>PrepĂĄÄte, ale prĂ­stup k:
 <PRE>    %U</PRE>
-je povolený až po autentifikácii.
+je povolenĂ˝ aĹž po autentifikĂĄcii.
 </P>
 
 <P>
-Na to, aby ste boli schopný sa autentifikovať potrebujete prehliadač
-Netscape verzia 2.0 alebo vyššiu, Microsoft Internet Explorer 3.0 alebo
-prehliadač podporujúci protokol HTTP/1.1. Ak máte problém pri
-autentifikácii, kontaktujte prosím <A HREF="mailto:%w%W">cache
-administrátora</A> alebo si
-<A HREF="http://%h/cgi-bin/chpasswd.cgi">zmeňte</A> Vaše implicitné heslo.
+Na to, aby ste boli schopnĂ˝ sa autentifikovaĹĽ potrebujete prehliadaÄ
+Netscape verzia 2.0 alebo vyĹĄĹĄiu, Microsoft Internet Explorer 3.0 alebo
+prehliadaÄ podporujĂşci protokol HTTP/1.1. Ak mĂĄte problĂŠm pri
+autentifikĂĄcii, kontaktujte prosĂ­m <A HREF="mailto:%w%W">cache
+administrĂĄtora</A> alebo si
+<A HREF="http://%h/cgi-bin/chpasswd.cgi">zmeĹte</A> VaĹĄe implicitnĂŠ heslo.
 </P>

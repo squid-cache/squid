@@ -1,17 +1,17 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-2">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <TITLE>CHYBA: Pozadovany dokument je nedostupny</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>CHYBA</H1>
-<H2>Požadovaný dokument je nedostupný</H2>
+<H2>PoĹžadovanĂ˝ dokument je nedostupnĂ˝</H2>
 <HR noshade size="1px">
 <P>
-Pri pokuse o prístup k:
+Pri pokuse o prĂ­stup k:
 <A HREF="%U">%U</A>
 <P>
-došlo k nasledovnej chybe:
+doĹĄlo k nasledovnej chybe:
 <UL>
 <LI>
 <STRONG>
@@ -20,7 +20,7 @@ Unsupported Request Method and Protocol
 </UL>
 
 <P>
-Squid nepodporuje všetky typy metód pri všetkých protokoloch. Napríklad: nie
-je možné použiť metódu POST pri službe Gopher.
+Squid nepodporuje vĹĄetky typy metĂłd pri vĹĄetkĂ˝ch protokoloch. NaprĂ­klad: nie
+je moĹžnĂŠ pouĹžiĹĽ metĂłdu POST pri sluĹžbe Gopher.
 </P>
 
