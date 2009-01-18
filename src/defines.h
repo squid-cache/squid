@@ -59,7 +59,6 @@
 /* Select types. */
 #define COMM_SELECT_READ   (0x1)
 #define COMM_SELECT_WRITE  (0x2)
-#define MAX_DEBUG_SECTIONS 100
 
 #define COMM_NONBLOCKING	0x01
 #define COMM_NOCLOEXEC		0x02
