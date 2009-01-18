@@ -22850,11 +22850,12 @@ default|"")
 	case "$host" in
 	    *-solaris*)
     		if test "$GCC" = "yes"; then
-		    echo "Removing -Xa for gcc on $host"
+		    echo "Removing -Xa for gcc/g++ on $host"
 		    CFLAGS="`echo $CFLAGS | sed -e 's/-Xa//'`"
 		    CXXFLAGS="`echo $CXXFLAGS | sed -e 's/-Xa//'`"
-		    echo "Replacing -xarch=generic64 with -m64 for gcc on $host"
+		    echo "Replacing -xarch=generic64 with -m64 for gcc/g++ on $host"
 		    CFLAGS="`echo $CFLAGS | sed -e 's/-xarch=generic64/-m64/'`"
+		    CXXFLAGS="`echo $CXXFLAGS | sed -e 's/-xarch=generic64/-m64/'`"
 		    LDFLAGS="`echo $LDFLAGS | sed -e 's/-xarch=generic64//'`"
 		fi
 		echo "Removing -Usun on $host"
@@ -23087,6 +23088,27 @@ done
 
 
 
+
+
+test -n "$AUTH_MODULE_basic" &&
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_AUTH_MODULE_BASIC 1
+_ACEOF
+
+test -n "$AUTH_MODULE_digest" &&
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_AUTH_MODULE_DIGEST 1
+_ACEOF
+
+test -n "$AUTH_MODULE_ntlm" &&
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_AUTH_MODULE_NTLM 1
+_ACEOF
+
+test -n "$AUTH_MODULE_negotiate" &&
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_AUTH_MODULE_NEGOTIATE 1
+_ACEOF
 
 
 if test -n "$AUTH_MODULE_basic"; then

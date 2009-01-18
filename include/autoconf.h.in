@@ -61,6 +61,18 @@
 /* Define to 1 if you have the <assert.h> header file. */
 #undef HAVE_ASSERT_H
 
+/* Basic auth module is built */
+#undef HAVE_AUTH_MODULE_BASIC
+
+/* Digest auth module is built */
+#undef HAVE_AUTH_MODULE_DIGEST
+
+/* Negotiate auth module is built */
+#undef HAVE_AUTH_MODULE_NEGOTIATE
+
+/* NTLM auth module is built */
+#undef HAVE_AUTH_MODULE_NTLM
+
 /* Define to 1 if you have the `backtrace_symbols_fd' function. */
 #undef HAVE_BACKTRACE_SYMBOLS_FD
 
