@@ -3,13 +3,14 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2008-11-14 20:01+1300\n"
-"PO-Revision-Date: 2009-01-16 23:37+1300\n"
-"Last-Translator: John 'Profic' Ustiuzhanin <profic@gmail.com>\n"
+"PO-Revision-Date: 2009-01-18 17:25+1300\n"
+"Last-Translator: Amos Jeffries <squid3@treenet.co.nz>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
+"Language: az\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Pootle 1.1.0\n"
+"X-Generator: Pootle 1.2.0\n"
 
 #: templates/ERR_FTP_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
@@ -19,29 +20,30 @@ msgstr ""
 msgid ""
 "<b>Invalid Request</b> error was encountered while trying to process the "
 "request:"
-msgstr "Ошибка <b>неверный запрос</b> при обработке запроса:"
+msgstr ""
 
 #: templates/ERR_INVALID_RESP:4
 msgid ""
 "<b>Invalid Response</b> error was encountered while trying to process the "
 "request:"
-msgstr "Ошибка <b>неверный ответ</b> при обработке запроса:"
+msgstr ""
 
 #: templates/ERR_READ_TIMEOUT:7
 msgid ""
 "A Timeout occurred while waiting to read data from the network.  The network "
 "or server may be down or congested.  Please retry your request."
 msgstr ""
-"Превышено время ожидания ответа во время чтения данных из сети. Сеть или "
-"сервер не работают либо перегружены. Пожалуйста, повторите запрос."
+"Məlumatlar şəbəkədən oxunan zaman gözləmə müddəti bitmişdir. Şəbəkə və ya "
+"server işləmir, yaxud həddən ziyadə yüklənmişdir. Xahiş edirik, sorğunu "
+"təkrar edin."
 
 #: templates/ERR_URN_RESOLVE:3
 msgid "A URL for the requested URN could not be retrieved"
-msgstr "URL для запрошенного URN не может быть получен"
+msgstr "Sorğulanan URN üçün URL ilə əlaqə yaradılmadı"
 
 #: templates/ERR_ACCESS_DENIED:5
 msgid "Access Denied."
-msgstr "В доступе отказано."
+msgstr "Giriş qadağandır."
 
 #: templates/ERR_ACCESS_DENIED:6
 msgid ""
@@ -49,74 +51,74 @@ msgid ""
 "this time.  Please contact your service provider if you feel this is "
 "incorrect."
 msgstr ""
-"Настройка контроля доступа не даёт возможности выполнить Ваш запрос в "
-"настоящее время. Пожалуйста, свяжитесь с Вашим поставщиком услуг Интернет, "
-"если Вы считаете это неправильным."
+"Hal-hazirda giriş nəzarəti qaydaları sorğunuzun cavablandırılmasına qadağa "
+"qoyur. Qadağanın düz olmadığı təqdirdə, xahiş edirik, İnternet servis "
+"xidmətçinizə müraciət edəsiniz."
 
 #: templates/ERR_FTP_FORBIDDEN:4
 msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"Произошла ошибка FTP идентификации при попытке получить URL (унифицированный "
-"указатель информационного ресурса): <a href=\"%U\">%U</a>"
+"URL ilə əlaqə zamanı FTP protokolu uzrə aşağıdakı səhv baş vermişdir: <a "
+"href=\"%U\">%U</a>"
 
 #: templates/ERR_FTP_FAILURE:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
 msgstr ""
-"Произошла ошибка FTP протокола при попытке получить следующий URL "
-"(унифицированный указатель информационного ресурса): <a href=\"%U\">%U</a>"
+"URL ilə əlaqə zamanı FTP protokolu uzrə aşağıdakı səhv baş vermişdir: <a "
+"href=\"%U\">%U</a>"
 
 #: templates/ERR_ICAP_FAILURE:10
 msgid "An Illegal response was received from the ICAP server."
-msgstr "Получен неверный ответ от ICAP сервера."
+msgstr ""
 
 #: templates/ERR_READ_ERROR:7
 msgid ""
 "An error condition occurred while reading data from the network.  Please "
 "retry your request."
 msgstr ""
-"При попытке чтения данных из сети произошла ошибка. Пожалуйста, повторите "
-"запрос."
+"Məlumatlar şəbəkədən oxunan zaman səhv baş vermişdir. Xahiş edirik, "
+"sorğunuzu təkrar edin."
 
 #: templates/ERR_WRITE_ERROR:7
 msgid ""
 "An error condition occurred while writing to the network.  Please retry your "
 "request."
 msgstr ""
-"При попытке записи данных в сеть произошла ошибка. Пожалуйста, повторите "
-"запрос."
+"İnformasiya şəbəkəyə ötürülərkən xəta olmuşdur.Xahiş edirik, sorğunu təkrar "
+"edin."
 
 #: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
 msgid "Cache Access Denied."
-msgstr "В доступе к кэшу отказано."
+msgstr "Keşdən istifadə qadağandır"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:3
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:5
 msgid "Cache Manager Access Denied."
-msgstr "В доступе к администратору кэша отказано."
+msgstr "Keş idarəetməsinə giriş qadağandır"
 
 #: templates/ERR_URN_RESOLVE:5
 msgid "Cannot Resolve URN"
-msgstr "Невозможно определить URN"
+msgstr "URN tapılmadı"
 
 #: templates/ERR_LIFETIME_EXP:5
 msgid "Connection Lifetime Expired"
-msgstr "Время жизни соединения истекло"
+msgstr "Qoşulma müddəti bitdi"
 
 #: templates/ERR_CONNECT_FAIL:5
 msgid "Connection to %I failed."
-msgstr "Соединение с %I не удалось"
+msgstr ""
 
 #: templates/ERR_INVALID_REQ:10
 msgid "Content-Length missing for POST or PUT requests."
-msgstr "Упещенный Content-Length в POST или PUT запросе."
+msgstr "POST və PUT sorğuları üçün Content-Length göstərilməmişdir"
 
 #: templates/ERR_FTP_LISTING:3
 msgid "Directory Content:"
-msgstr "Содержимое директории:"
+msgstr ""
 
 #: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
@@ -134,19 +136,19 @@ msgstr "Содержимое директории:"
 #: templates/ERR_UNSUP_REQ:2 templates/ERR_URN_RESOLVE:2
 #: templates/ERR_WRITE_ERROR:2 templates/ERR_ZERO_SIZE_OBJECT:2
 msgid "ERROR"
-msgstr "ОШИБКА"
+msgstr "SƏHV"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:1
 msgid "ERROR: Cache Access Denied"
-msgstr "ОШИБКА: В доступе к кешу отказано"
+msgstr "SƏHV: Keşdən istifadə qadağandır"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:1
 msgid "ERROR: Cache Manager Access Denied"
-msgstr "ОШИБКА: В доступе к администратору кеша отказано."
+msgstr "SƏHV: Keş idarəetməsinə giriş qadağandır"
 
 #: templates/ERR_FTP_PUT_ERROR:1
 msgid "ERROR: FTP upload failed"
-msgstr "ОШИБКА: Загрузка по FTP не удалась"
+msgstr "SƏHV: FTP yükləmə uğursuzluqla başa çatdı"
 
 #: templates/ERR_ACCESS_DENIED:1 templates/ERR_CANNOT_FORWARD:1
 #: templates/ERR_CONNECT_FAIL:1 templates/ERR_DNS_FAIL:1 templates/ERR_ESI:1
@@ -162,59 +164,59 @@ msgstr "ОШИБКА: Загрузка по FTP не удалась"
 #: templates/ERR_TOO_BIG:1 templates/ERR_UNSUP_REQ:1
 #: templates/ERR_WRITE_ERROR:1 templates/ERR_ZERO_SIZE_OBJECT:1
 msgid "ERROR: The requested URL could not be retrieved"
-msgstr "ОШИБКА: Запрошенный URL не может быть получен"
+msgstr "SƏHV: Sorğulanan URL ilə əlaqə yaradılmadı"
 
 #: templates/ERR_URN_RESOLVE:1
 msgid "ERROR: The requested URN not be retrieved"
-msgstr "ОШИБКА: Запрошенный URN не может быть получен"
+msgstr "SƏHV: Sorğulanan URN ilə əlaqə yaradılmadı"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
-msgstr "Обработка ESI не удалась."
+msgstr ""
 
 #: templates/ERR_FTP_LISTING:4
 msgid "FTP Directory Listing"
-msgstr "Список файлов в FTP директории"
+msgstr ""
 
 #: templates/ERR_FTP_LISTING:1
 msgid "FTP Directory: %U"
-msgstr "FTP директория: %U"
+msgstr ""
 
 #: templates/ERR_FTP_LISTING:2
 msgid "FTP Directory: <a href=\"/\">%U</a>/"
-msgstr "FTP директория: <a href=\"/\">%U</a>/"
+msgstr ""
 
 #: templates/ERR_FTP_PUT_CREATED:1
 msgid "FTP PUT Successful: File Created"
-msgstr "Операция FTP PUT завершилась успешно: файл создан"
+msgstr "FTP PUT müvəfəqiyyətlə başa çatdı: Fayl yarandı"
 
 #: templates/ERR_FTP_PUT_MODIFIED:1
 msgid "FTP PUT Successful: File Updated"
-msgstr "Операция FTP PUT завершилась успешно: файл обновлен"
+msgstr "FTP PUT müvəfəqiyyətlə başa çatdı: Fayl yeniləndi"
 
 #: templates/ERR_FTP_PUT_ERROR:3
 msgid "FTP PUT/upload failed"
-msgstr "Операция FTP PUT (загрузка) не удалась"
+msgstr "FTP yükləmə uğursuzluqla başa çatdı"
 
 #: templates/ERR_FTP_DISABLED:5
 msgid "FTP is Disabled"
-msgstr "FTP отключен"
+msgstr "FTP protokolu qadağandır"
 
 #: templates/ERR_SECURE_CONNECT_FAIL:5
 msgid "Failed to establish a secure connection to %I"
-msgstr "Не удалось установить безопасное соединение с %I"
+msgstr ""
 
 #: templates/ERR_FTP_PUT_CREATED:3
 msgid "File created"
-msgstr "Файл создан"
+msgstr "Fayl yarandı"
 
 #: templates/ERR_FTP_PUT_MODIFIED:3
 msgid "File updated"
-msgstr "Файл обновлен"
+msgstr "Fayl yeniləndi"
 
 #: templates/ERR_FORWARDING_DENIED:5
 msgid "Forwarding Denied."
-msgstr "В пересылке отказано"
+msgstr "Yönləndirmə qadağandır."
 
 #: templates/ERR_ACCESS_DENIED:8 templates/ERR_CACHE_ACCESS_DENIED:8
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:8 templates/ERR_CANNOT_FORWARD:8
@@ -238,71 +240,75 @@ msgstr ""
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
-msgstr "Не стоит ожидать чудес от URN-ов на %T :)"
+msgstr "%T texnologiyasından çox şey gözləməyə dəyməz :)"
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
-msgstr "Ошибка ICAP протокола."
+msgstr ""
 
 #: templates/ERR_TOO_BIG:7
+#, fuzzy
 msgid ""
 "If you are making a GET request, then the item you are trying to download is "
 "too large."
-msgstr "Если Вы делаете GET запрос, то скачиваемый объект слишком велик."
+msgstr ""
+"Əgər siz GET sorğusunu edirsinizsə, sizin yükləmək istədiyiniz fayl həddən "
+"ziyadə böyükdür."
 
 #: templates/ERR_TOO_BIG:6
 msgid ""
 "If you are making a POST or PUT request, then the item you are trying to "
 "upload is too large."
 msgstr ""
-"Если Вы делаете POST или PUT запросы, то закачиваемый объект слишком велик."
+"Əgər siz POST və ya PUT sorğusunu edirsinizsə, sizin göndərmək istədiniz "
+"fayl həddən ziyadə böyükdür."
 
 #: templates/ERR_INVALID_REQ:11 templates/ERR_INVALID_URL:11
 msgid "Illegal character in hostname; underscores are not allowed."
-msgstr "Недопустимый символ в имени (hostname), подчеркивания запрещены."
+msgstr "Server adında qadağan edilmiş simvol; altxətt yol verilməzdir."
 
 #: templates/ERR_INVALID_URL:10
 msgid "Illegal double-escape in the URL-Path"
-msgstr "Недопустимое двойное экранирование в пути URL (URL-Path)"
+msgstr ""
 
 #: templates/ERR_INVALID_URL:5
+#, fuzzy
 msgid "Invalid URL"
-msgstr "Неверный URL"
+msgstr "Səhv URL"
 
 #: templates/ERR_INVALID_REQ:8
 msgid "Missing HTTP Identifier (HTTP/1.0)."
-msgstr "Отсутствует HTTP идентификатор (HTTP/1.0)."
+msgstr "HTTP identifikator yoxdur (HTTP/1.0)."
 
 #: templates/ERR_INVALID_REQ:7
 msgid "Missing URL."
-msgstr "Отсутствует URL."
+msgstr "URL yoxdur."
 
 #: templates/ERR_INVALID_URL:9
 msgid "Missing hostname"
-msgstr "Отсутствует имя узла (hostname)"
+msgstr "Server adı yoxdur"
 
 #: templates/ERR_INVALID_URL:8
 msgid ""
 "Missing or incorrect access protocol (should be <q>http://</q> or similar)"
 msgstr ""
-"Отсутствет или неверено указан протокол (должен быть <q>http://</q> или "
-"похожий)"
+"Giriş protokol yoxdur və ya səhvdir (<q>http://</q> və ya oxşar olmalıdır)"
 
 #: templates/ERR_INVALID_REQ:6
 msgid "Missing or unknown request method."
-msgstr "Отсутствует или неизвестен метод запроса."
+msgstr "(GET, POST) sorğusunun metodu məlum deyil və ya umumiyyətlə yoxdur."
 
 #: templates/ERR_NO_RELAY:5
 msgid "No Wais Relay"
-msgstr "Wais Relay не определен"
+msgstr "Wais ötürücü təyin edilməmişdir"
 
 #: templates/ERR_FTP_PUT_CREATED:2 templates/ERR_FTP_PUT_MODIFIED:2
 msgid "Operation successful"
-msgstr "Операция завершилась успешно"
+msgstr "Əməliyyat müvəfəqiyyətlə başa çatdı"
 
 #: templates/ERR_FTP_LISTING:5
 msgid "Parent Directory"
-msgstr "Родительская директория"
+msgstr ""
 
 #: templates/ERR_CACHE_ACCESS_DENIED:7
 msgid ""
@@ -310,124 +316,135 @@ msgid ""
 "have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
 "chpasswd.cgi\">change</a> your default password."
 msgstr ""
-"Пожалуйста свяжитесь с <a href=\"mailto:%w%W\">администратором кэша</a>, если "
-"у Вас возникли проблемы с аутентификацией, либо <a href=\"http://%h/cgi-"
-"bin/chpasswd.cgi\">смените</a> Ваш пароль по умолчанию."
+"İdentifikasiya ilə çətinlik olduğu halda, xahiş edirik, <a "
+"href=\"mailto:%w%W\">KEŞİN sistem administratoru </a> ilə əlaqə saxlayın və ya "
+"<a href=\"http://%h/cgi-bin/chpasswd.cgi\">şifrənizi</a> dəyişdirin."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
+#, fuzzy
 msgid ""
 "Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
 "have difficulties authenticating yourself or, if you <em>are</em> the "
 "administrator, read Squid documentation on cache manager interface and check "
 "cache log for more detailed error messages."
 msgstr ""
-"Пожалуйста свяжитесь с <a href=\"mailto:%w%W\">администратором кэша</a>, "
-"если у Вас возникли проблемы с аутентификацией, если же <em>Вы "
-"администратор</em>, прочитайте документацию по интерфейсу управления кэшем и "
-"просмотрите лог-файл на предмет более детальных сообщений об ошибках."
+"İdentifikasiya ilə çətinlik olduğu halda, xahiş edirik, <a "
+"href=\"mailto:%w%W\">KEŞİN sistem administratoru</a> ilə əlaqə saxlayın və ya "
+"Siz administrator olduğunuz halda keş idarəetmə interfeysi ilə bağlı "
+"sənədləri oxuyun və keş jurnalını daha ətraflı səhv qeydləri üçün yoxlayın."
 
 #: templates/ERR_READ_ERROR:5
 msgid "Read Error"
-msgstr "Ошибка при чтении"
+msgstr "Oxunma səhvi"
 
 #: templates/ERR_READ_TIMEOUT:5
 msgid "Read Timeout"
-msgstr "Время ожидания при чтении истекло"
+msgstr "Gözləmə müddəti bitmişdir"
 
 #: templates/ERR_INVALID_REQ:9
 msgid "Request is too large."
-msgstr "Запрос слишком велик."
+msgstr "Sorğu həddən ziyadə böyükdür."
 
 #: templates/ERR_SOCKET_FAILURE:5
+#, fuzzy
 msgid "Socket Failure"
-msgstr "Ошибка сокета"
+msgstr "əlaqə xətası"
 
 #: templates/ERR_INVALID_URL:6
 msgid "Some aspect of the requested URL is incorrect."
-msgstr "Некоторые параметры URL неверны"
+msgstr "URL-nin bəzi aspektləri səhvdir."
 
 #: templates/ERR_ICAP_FAILURE:8 templates/ERR_INVALID_REQ:5
 #: templates/ERR_INVALID_URL:7
+#, fuzzy
 msgid "Some possible problems are:"
-msgstr "Возможные проблемы:"
+msgstr "Mümkün problemlər:"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:6
+#, fuzzy
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache manager "
 "until you have authenticated yourself."
 msgstr ""
-"Извините, Вы не можете запросить %U из системы управления кэша до тех пор, "
-"пока не пройдете идентификацию."
+"Üzr istəyirik, Siz aşağıdakı %U unvanına, keşdə identifikasiyanı "
+"keçməyəcəyiniz təqdirdə sorğu verə bilməzsiniz."
 
 #: templates/ERR_CACHE_ACCESS_DENIED:6
+#, fuzzy
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache until you "
 "have authenticated yourself."
 msgstr ""
-"Извините, Вы не можете запросить %U из этого кэша до тех пор, пока не "
-"пройдёте идентификацию."
+"Üzr istəyirik, Siz aşağıdakı %U unvanına, keşdə identifikasiyanı "
+"keçməyəcəyiniz təqdirdə sorğu verə bilməzsiniz."
 
 #: templates/ERR_ZERO_SIZE_OBJECT:6
 msgid "Squid did not receive any data for this request."
-msgstr "Squid не получил никаких данных в ответ на этот запрос."
+msgstr "Squid bu sorğu üçün heç bir məlumat almadı."
 
 #: templates/ERR_UNSUP_REQ:6
 msgid ""
 "Squid does not support all request methods for all access protocols. For "
 "example, you can not POST a Gopher request."
 msgstr ""
-"Squid не поддерживает все методы запросов для всех протоколов. К примеру, "
-"для Gopher протокола Вы не можете выполнять запрос POST."
+"Squid bütün sorğu metodları və bütün protokollardəstəkləmir. Məsələn, Gopher "
+"protokolu üzrə siz POST sorğu metodunu yerinə yetirə bilməzsiniz."
 
 #: templates/ERR_LIFETIME_EXP:6
+#, fuzzy
 msgid ""
 "Squid has terminated the request because it has exceeded the maximum "
 "connection lifetime."
 msgstr ""
-"Squid прервал запрос из-за превышения максимального времени соединения."
+"Squid Keş maksimum qoşulma müddəti həddini keçmə səbəbindən əlaqəni kəsdi."
 
 #: templates/ERR_SOCKET_FAILURE:7
+#, fuzzy
 msgid ""
 "Squid is unable to create a TCP socket, presumably due to excessive load. "
 "Please retry your request."
 msgstr ""
-"Squid не может создать TCP сокет, предположительно из-за большой нагрузки. "
-"Пожалуйста, повторите запрос."
+"Squid əlaqə yarada bilmir, mümkün səbəblərdən biri, server həddindən ziyadə "
+"yüklənmiş olmasıdır. Xahiş edirik,sorğunu təkrar edin."
 
 #: templates/ERR_FTP_FAILURE:5 templates/ERR_FTP_FORBIDDEN:5
 #: templates/ERR_FTP_NOT_FOUND:5 templates/ERR_FTP_PUT_ERROR:5
 #: templates/ERR_FTP_UNAVAILABLE:5
+#, fuzzy
 msgid "Squid sent the following FTP command:"
-msgstr "Squid послал следующую FTP комманду:"
+msgstr "Squid Keş FTP-nin növbəti əmrini göndərmişdir:"
 
 #: templates/ERR_DNS_FAIL:6
+#, fuzzy
 msgid "The DNS server returned:"
-msgstr "Сервер DNS ответил:"
+msgstr "Domen Adları serverindən gələn cavab:"
 
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
-msgstr "Обработчик ESI ответил:"
+msgstr ""
 
 #: templates/ERR_FTP_UNAVAILABLE:4
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
-msgstr "Сервер FTP слишком нагружен, чтобы получить URL: <a href=\"%U\">%U</a>"
+msgstr ""
+"URL ilə əlaqə zamanı FTP serverin həddən ziyadə yüklü olduğu məlum olub: <a "
+"href=\"%U\">%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
+#, fuzzy
 msgid ""
 "The HTTP Response message received from the contacted server could not be "
 "understood or was otherwise malformed. Please contact the site operator."
 msgstr ""
-"Ответ HTTP (HTTP Response message), полученный от сервера не может быть "
-"обработан или неверно сформирован. Пожалуйста, свяжитесь с оператором "
-"сервера."
+"Sorğu göndərilən serverdən gələn cavab anlaşılmazdı və ya dəyişdirilib. "
+"Səhifə operatoru ilə əlaqə yaradın."
 
 #: templates/ERR_ICAP_FAILURE:9
 msgid "The ICAP server is not reachable."
-msgstr "Сервер ICAP недоступен"
+msgstr ""
 
 #: templates/ERR_FTP_NOT_FOUND:4
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
-msgstr "Следующий URL не может быть получен: <a href=\"%U\">%U</a>"
+msgstr ""
 
 #: templates/ERR_ACCESS_DENIED:4 templates/ERR_CACHE_ACCESS_DENIED:4
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:4 templates/ERR_CANNOT_FORWARD:4
@@ -443,23 +460,22 @@ msgstr "Следующий URL не может быть получен: <a href=
 msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
-msgstr "При получении URL <a href=\"%U\">%U</a> произошла следующая ошибка"
+msgstr ""
 
 #: templates/ERR_URN_RESOLVE:4
 msgid ""
 "The following error was encountered while trying to retrieve the URN: <a "
 "href=\"%U\">%U</a>"
-msgstr "При получении URN: <a href=\"%U\">%U</a> произошла следующая ошибка"
+msgstr ""
 
 #: templates/ERR_CONNECT_FAIL:7
 msgid "The remote host or network may be down.  Please try the request again."
 msgstr ""
-"Удаленный узел или сеть могут быть недоступны. Пожалуйста, повторите запрос "
-"позже."
+"Hədəf server və ya şəbəkə cavab vermir. Xahiş edirik, sorğunu təkrarlayın."
 
 #: templates/ERR_TOO_BIG:5
 msgid "The request or reply is too large."
-msgstr "Запрос или ответ слишком велик."
+msgstr "Sorğu və ya cavab həddən ziyadə böyükdür."
 
 #: templates/ERR_ACCESS_DENIED:3 templates/ERR_CANNOT_FORWARD:3
 #: templates/ERR_CONNECT_FAIL:3 templates/ERR_DNS_FAIL:3 templates/ERR_ESI:3
@@ -475,27 +491,28 @@ msgstr "Запрос или ответ слишком велик."
 #: templates/ERR_TOO_BIG:3 templates/ERR_UNSUP_REQ:3
 #: templates/ERR_WRITE_ERROR:3 templates/ERR_ZERO_SIZE_OBJECT:3
 msgid "The requested URL could not be retrieved"
-msgstr "Запрошенный URL не может быть получен"
+msgstr "Sorğulanan URL ilə əlaqə yaradılmadı"
 
 #: templates/ERR_FTP_FAILURE:6 templates/ERR_FTP_FORBIDDEN:6
 #: templates/ERR_FTP_NOT_FOUND:6 templates/ERR_FTP_PUT_ERROR:6
 #: templates/ERR_FTP_UNAVAILABLE:6
 msgid "The server responded with:"
-msgstr "Сервер ответил:"
+msgstr ""
 
 #: templates/ERR_CONNECT_FAIL:6 templates/ERR_ICAP_FAILURE:6
 #: templates/ERR_READ_ERROR:6 templates/ERR_READ_TIMEOUT:6
 #: templates/ERR_SECURE_CONNECT_FAIL:6 templates/ERR_SOCKET_FAILURE:6
 #: templates/ERR_WRITE_ERROR:6
 msgid "The system returned: <i>%E</i>"
-msgstr "Система вернула: <i>%E</i>"
+msgstr "Sistemdən gələn cavab: <i>%E</i>"
 
 #: templates/ERR_NO_RELAY:6
 msgid ""
 "There is no WAIS Relay host defined for this Cache!  Yell at the "
 "administrator."
 msgstr ""
-"Для этого кэша не определен Wais Relay узел. Кричите на администратора."
+"Bu keş serveri üçün WAIS ötürücü təyin edilməyib. Administratora əlaqə "
+"saxlayın."
 
 #: templates/ERR_TOO_BIG:8
 msgid ""
@@ -503,20 +520,21 @@ msgid ""
 "operates this cache.  Please contact them directly if you feel this is an "
 "error."
 msgstr ""
-"Эти ограничения установлены вышим интернет провайдером, который управляет "
-"этим кэшем. Пожалуйста, свяжитесь с ними, если Вы считаете это неправильным."
+"Bu limitlər sizin keşi idarə edən Internet xidməti provayderi tərəfindən "
+"təyin olunmuşdur. Əgər bunun səhv olduğunu düşünürsünüzsə onlarla əlaqə "
+"saxlayın."
 
 #: templates/ERR_FTP_DISABLED:6
 msgid "This cache does not support FTP."
-msgstr "Этот кэш не поддерживает FTP."
+msgstr "Bu keş FTP protokolunu təmin etmir."
 
 #: templates/ERR_SHUTTING_DOWN:5
 msgid ""
 "This cache is in the process of shutting down and can not service your "
 "request at this time.  Please retry your request again soon."
 msgstr ""
-"Этот кэш в процессе завершения работы и не может выполнить Ваш запрос в "
-"настоящее время. Пожалуйста, повторите запрос через некторое время."
+"Keş hal-hazırda işini dayandırır və bu səbəbdən sizin sorğunuzu cavablandıra "
+"bilməyəcək. Xahiş edirik, sorğunuzu tezliklə bir daha təkrarlayın."
 
 #: templates/ERR_FORWARDING_DENIED:6
 msgid ""
@@ -524,28 +542,26 @@ msgid ""
 "sibling relationship.  Perhaps the client at %i is a cache which has been "
 "misconfigured."
 msgstr ""
-"Этот кэш не будет пересылать Ваш запрос по причине установки взаимоотношений "
-"типа sibling. Скорее всего клиент %i - неправильно сконфигурированный кэш."
+"Sibling tipli əlaqə yaratmaq cəhdinə görə keş sorğunuzu yönləndirməyəcəkdir. "
+"Güman ki, %i müştərisi tələblərə uyğun olmayan keşdir."
 
 #: templates/ERR_ICAP_FAILURE:7
 msgid "This means that some aspect of the ICAP communication failed."
-msgstr "Это означает, что некоторые аспекты ICAP связи неудались."
+msgstr ""
 
 #: templates/ERR_FTP_PUT_ERROR:7
 msgid ""
 "This means that the FTP server may not have permission or space to store the "
 "file. Check the path, permissions, diskspace and try again."
 msgstr ""
-"Это означает, что FTP сервер может не иметь прав или свободного места для "
-"хранения файла. Проверьте путь, права, свободное место и повторите снова."
 
 #: templates/ERR_DNS_FAIL:7
 msgid ""
 "This means that the cache was not able to resolve the hostname presented in "
 "the URL. Check if the address is correct."
 msgstr ""
-"Это означает, что кэш не смог преобразовать имя узла в URL. Проверьте адрес "
-"на правильность."
+"Bu o deməkdir ki keş URL-də göstərilmiş serveri təyin edə bilmir. Adresin "
+"düzgün yazıldığını yoxlayın."
 
 #: templates/ERR_ESI:7
 msgid ""
@@ -554,14 +570,15 @@ msgid ""
 msgstr ""
 
 #: templates/ERR_FTP_NOT_FOUND:7
+#, fuzzy
 msgid ""
 "This might be caused by an FTP URL with an absolute path (which does not "
 "comply with RFC 1738).  If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
-"Это может быть вызвано FTP URL c абсолютным путем (который не соответствует "
-"RFC 1738). Если эта причина верна, то файл можно найти на <a href=\"%B\">%B</"
-"a>."
+"Mümkün səbəblərdən biri sorğu zamanı istifadə olunan FTP adresin RFC 1738 "
+"standartlarına uyğun gəlməməsidir. Əgər səbəb budursa faylı <a "
+"href=\"%B\">%B</a> adresində tapa bilersiniz."
 
 #: templates/ERR_SECURE_CONNECT_FAIL:7
 msgid ""
@@ -570,50 +587,45 @@ msgid ""
 "host does not support secure connections, or the proxy is not satisfied with "
 "the host security credentials."
 msgstr ""
-"При обработке Вашего запроса этот кэш и удаленный узел не смогли выбрать "
-"взаимно удовлетворяющие настройки безопасности. Возможно удаленный узел не "
-"поддерживает безопасные соединения, или кэш не не удовлетворен аттестатом "
-"безопасности узла."
 
 #: templates/ERR_CANNOT_FORWARD:6
+#, fuzzy
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
 "caches.  The most likely cause for this error is that the cache "
 "administrator does not allow this cache to make direct connections to origin "
 "servers, and all configured parent caches are currently unreachable."
 msgstr ""
-"Этот запрос не может быть перенаправлен ни к первичному серверу, ни к "
-"родительским кэшам. Наиболее вероятная причина этой ошибки в том, что "
-"администратор запретил прямые соединения к первычным серверам, а все "
-"указанные родительские кэши в данный момент недоступны."
+"Sorğu hədəf serverə, və ya digər yuxarı səviyyəli keş serverələrə göndərilə "
+"bilməz.  Səhvin mümkün səbəbləri keş administratoru bu keşin hədəf "
+"serverləri birbaşa sorğulamasını qadağan etmişdir və ya bütün yuxarı "
+"səviyyəli keş-serverlər hal-hazırda əlçatmazdılar."
 
 #: templates/ERR_DNS_FAIL:5
 msgid "Unable to determine IP address from host name <q>%H</q>"
-msgstr "Невозможно определить IP адрес из имени узла <q>%H</q>"
+msgstr "Uzaqda yerləşən kompyuterin İP adresini təyin mumkun olmadı <q>%H</q>"
 
 #: templates/ERR_CANNOT_FORWARD:5
 msgid "Unable to forward this request at this time."
-msgstr "Невозможно перенаправить запрос в данное время."
+msgstr "Hal-hazırda sorğunuzu yönlədirmək mümkün deyildir."
 
 #: templates/ERR_UNSUP_REQ:5
 msgid "Unsupported Request Method and Protocol"
-msgstr "Неподдерживаемый метод запроса или протокол"
+msgstr "Dəstəklənməyən sorğu metodu və protokol"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS:5
 msgid ""
 "Valid document was not found in the cache and <q>only-if-cached</q> "
 "directive was specified."
-msgstr ""
-"Действительный документ не найден в кэше и указана деректива <q>only-if-"
-"cached</q>."
+msgstr "Obyekt keşdə tapılmadı və <q>only-if-cached</q> əmri təyin olunmuşdur."
 
 #: templates/ERR_FTP_PUT_ERROR:4
 msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr "При попытке PUT следующего URL: <a href=\"%U\">%U</a>"
+msgstr ""
 
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
-msgstr "Ошибка записи"
+msgstr "Yazma səhvi"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS:6
 msgid ""
@@ -621,9 +633,9 @@ msgid ""
 "directive. The document was not found in the cache, <em>or</em> it required "
 "revalidation prohibited by the <q>only-if-cached</q> directive."
 msgstr ""
-"Вы сделали запрос с директивой управления кэшем <q>only-if-cached</q>. "
-"Документ не был найден в кэше <em>или</em> он требует обновления, "
-"запрешенного директивой <q>only-if-cached</q>."
+"Siz <q>only-if-cached</cq> əmri ilə sorğu göndərmisiniz. Obyekt keşdə "
+"tapılmadı, <em>və ya</em> <q>only-if-cached</q> əmri ilə qadağan olunmuş "
+"obyektin yenilənməsi tələb olunur."
 
 #: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
 #: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
@@ -639,21 +651,22 @@ msgstr ""
 #: templates/ERR_TOO_BIG:9 templates/ERR_UNSUP_REQ:7
 #: templates/ERR_URN_RESOLVE:7 templates/ERR_WRITE_ERROR:8
 #: templates/ERR_ZERO_SIZE_OBJECT:7
+#, fuzzy
 msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
-msgstr "Администратор Вашего кэша: <a href=\"mailto:%w%W\">%w</a>."
+msgstr "Sizin keş administratorunuz <a href=\"%w%W\">%w</a>"
 
 #: templates/ERR_INVALID_RESP:6
+#, fuzzy
 msgid ""
 "Your cache administrator may be able to provide you with more details about "
 "the exact nature of the problem if needed."
 msgstr ""
-"Администратор вашего кэша, при необходимости, может предоставить Вам более "
-"подробную информацию о действительных причинах проблемы."
+"Tələb olunduğu halda keş administratoru sizə daha geniş məlumat verə bilər."
 
 #: templates/ERR_ESI:8
 msgid "Your webmaster is <a href=\"mailto:%w\">%w</a>."
-msgstr "Ваш вебмастер: <a href=\"mailto:%w\">%w</a>."
+msgstr ""
 
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
-msgstr "Пустой ответ (нулевой длины)"
+msgstr "Sıfır Uzunluqlu Cavab"
