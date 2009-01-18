@@ -14,6 +14,7 @@ DEFAULT_STYLESHEET	= $(sysconfdir)/errorpage.css
 
 # List of automated translations possible:
 TRANSLATIONS = \
+	az \
 	bg \
 	ca \
 	cs \
@@ -39,7 +40,6 @@ TRANSLATIONS = \
 # Legacy language contributions...
 #
 LANGUAGES	= \
-		Azerbaijani \
 		Finnish \
 		Greek \
 		Hebrew \
