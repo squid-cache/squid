@@ -1,6 +1,4 @@
 /*
- * $Id: ConnectionDetail.h,v 1.4 2007/12/14 23:11:45 amosjeffries Exp $
- *
  * DEBUG: section 5     Socket Functions
  * AUTHOR: Robert Collins
  *
@@ -37,7 +35,7 @@
 #ifndef _SQUIDCONNECTIONDETAIL_H_
 #define _SQUIDCONNECTIONDETAIL_H_
 
-#include "IPAddress.h"
+#include "ip/IpAddress.h"
 
 class ConnectionDetail
 {
@@ -46,9 +44,9 @@ public:
 
     ConnectionDetail();
 
-    IPAddress me;
+    IpAddress me;
 
-    IPAddress peer;
+    IpAddress peer;
 };
 
 #endif

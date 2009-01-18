@@ -516,7 +516,7 @@ fqdncacheHandleReply(void *data, rfc1035_rr * answers, int na, const char *error
  * 			and does not affect the FQDN cache.
  */
 void
-fqdncache_nbgethostbyaddr(IPAddress &addr, FQDNH * handler, void *handlerData)
+fqdncache_nbgethostbyaddr(IpAddress &addr, FQDNH * handler, void *handlerData)
 {
     fqdncache_entry *f = NULL;
     char name[MAX_IPSTRLEN];
@@ -634,7 +634,7 @@ fqdncache_init(void)
  *
  */
 const char *
-fqdncache_gethostbyaddr(IPAddress &addr, int flags)
+fqdncache_gethostbyaddr(IpAddress &addr, int flags)
 {
     char name[MAX_IPSTRLEN];
     fqdncache_entry *f = NULL;
@@ -736,7 +736,7 @@ dummy_handler(const char *bufnotused, void *datanotused)
 
 /// \ingroup FQDNCacheAPI
 const char *
-fqdnFromAddr(IPAddress &addr)
+fqdnFromAddr(IpAddress &addr)
 {
     const char *n;
     static char buf[MAX_IPSTRLEN];

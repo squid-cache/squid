@@ -1,7 +1,4 @@
-
 /*
- * $Id: neighbors.cc,v 1.353 2008/02/11 22:44:50 rousskov Exp $
- *
  * DEBUG: section 15    Neighbor Routines
  * AUTHOR: Harvest Derived
  *
@@ -46,8 +43,8 @@
 #include "PeerSelectState.h"
 #include "SquidTime.h"
 #include "Store.h"
-#include "IPAddress.h"
 #include "icmp/net_db.h"
+#include "ip/IpAddress.h"
 
 /* count mcast group peers every 15 minutes */
 #define MCAST_COUNT_RATE 900
@@ -69,7 +66,7 @@ static void peerCountMcastPeersStart(void *data);
 static void peerCountMcastPeersSchedule(peer * p, time_t when);
 static IRCB peerCountHandleIcpReply;
 
-static void neighborIgnoreNonPeer(const IPAddress &, icp_opcode);
+static void neighborIgnoreNonPeer(const IpAddress &, icp_opcode);
 static OBJH neighborDumpPeers;
 static OBJH neighborDumpNonPeers;
 static void dump_peers(StoreEntry * sentry, peer * peers);
@@ -97,7 +94,7 @@ neighborTypeStr(const peer * p)
 
 
 peer *
-whichPeer(const IPAddress &from)
+whichPeer(const IpAddress &from)
 {
     int j;
 
@@ -554,7 +551,7 @@ neighborsRegisterWithCacheManager()
 void
 neighbors_init(void)
 {
-    IPAddress nul;
+    IpAddress nul;
     struct addrinfo *AI = NULL;
     struct servent *sep = NULL;
     const char *me = getMyHostname();
@@ -638,9 +635,6 @@ neighborsUdpPing(HttpRequest * request,
     if (Config.peers == NULL)
         return 0;
 
-    if (theOutIcpConnection < 0)
-        fatal("neighborsUdpPing: There is no ICP socket!");
-
     assert(entry->swap_status == SWAPOUT_NONE);
 
     mem->start_ping = current_time;
@@ -664,43 +658,48 @@ neighborsUdpPing(HttpRequest * request,
 
         debugs(15, 4, "neighborsUdpPing: pinging peer " << p->host << " for '" << url << "'");
 
-        if (p->type == PEER_MULTICAST)
-            mcastSetTtl(theOutIcpConnection, p->mcast.ttl);
-
         debugs(15, 3, "neighborsUdpPing: key = '" << entry->getMD5Text() << "'");
 
         debugs(15, 3, "neighborsUdpPing: reqnum = " << reqnum);
 
 #if USE_HTCP
         if (p->options.htcp && !p->options.htcp_only_clr) {
+            if (Config.Port.htcp <= 0) {
+                debugs(15, DBG_CRITICAL, "HTCP is disabled! Cannot send HTCP request to peer.");
+                continue;
+            }
+
             debugs(15, 3, "neighborsUdpPing: sending HTCP query");
-            htcpQuery(entry, request, p);
+            if (htcpQuery(entry, request, p) <= 0) continue; // unable to send.
         } else
 #endif
-            if (p->icp.port == echo_port) {
-                debugs(15, 4, "neighborsUdpPing: Looks like a dumb cache, send DECHO ping");
-                echo_hdr.reqnum = reqnum;
-                query = _icp_common_t::createMessage(ICP_DECHO, 0, url, reqnum, 0);
-                icpUdpSend(theOutIcpConnection,
-                           p->in_addr,
-                           query,
-                           LOG_ICP_QUERY,
-                           0);
+        {
+            if (Config.Port.icp <= 0 || theOutIcpConnection <= 0) {
+                debugs(15, DBG_CRITICAL, "ICP is disabled! Cannot send ICP request to peer.");
+                continue;
             } else {
-                flags = 0;
 
-                if (Config.onoff.query_icmp)
-                    if (p->icp.version == ICP_VERSION_2)
-                        flags |= ICP_FLAG_SRC_RTT;
+                if (p->type == PEER_MULTICAST)
+                    mcastSetTtl(theOutIcpConnection, p->mcast.ttl);
 
-                query = _icp_common_t::createMessage(ICP_QUERY, flags, url, reqnum, 0);
+                if (p->icp.port == echo_port) {
+                    debugs(15, 4, "neighborsUdpPing: Looks like a dumb cache, send DECHO ping");
+                    echo_hdr.reqnum = reqnum;
+                    query = _icp_common_t::createMessage(ICP_DECHO, 0, url, reqnum, 0);
+                    icpUdpSend(theOutIcpConnection,p->in_addr,query,LOG_ICP_QUERY,0);
+                } else {
+                    flags = 0;
 
-                icpUdpSend(theOutIcpConnection,
-                           p->in_addr,
-                           query,
-                           LOG_ICP_QUERY,
-                           0);
+                    if (Config.onoff.query_icmp)
+                        if (p->icp.version == ICP_VERSION_2)
+                            flags |= ICP_FLAG_SRC_RTT;
+
+                    query = _icp_common_t::createMessage(ICP_QUERY, flags, url, reqnum, 0);
+
+                    icpUdpSend(theOutIcpConnection, p->in_addr, query, LOG_ICP_QUERY, 0);
+                }
             }
+        }
 
         queries_sent++;
 
@@ -964,7 +963,7 @@ neighborCountIgnored(peer * p)
 static peer *non_peers = NULL;
 
 static void
-neighborIgnoreNonPeer(const IPAddress &from, icp_opcode opcode)
+neighborIgnoreNonPeer(const IpAddress &from, icp_opcode opcode)
 {
     peer *np;
 
@@ -1024,7 +1023,7 @@ ignoreMulticastReply(peer * p, MemObject * mem)
  */
 void
 
-neighborsUdpAck(const cache_key * key, icp_common_t * header, const IPAddress &from)
+neighborsUdpAck(const cache_key * key, icp_common_t * header, const IpAddress &from)
 {
     peer *p = NULL;
     StoreEntry *entry;
@@ -1384,7 +1383,7 @@ peerProbeConnect(peer * p)
     if (squid_curtime - p->stats.last_connect_probe == 0)
         return ret;/* don't probe to often */
 
-    IPAddress temp(getOutgoingAddr(NULL,p));
+    IpAddress temp(getOutgoingAddr(NULL,p));
 
     fd = comm_open(SOCK_STREAM, IPPROTO_TCP, temp, COMM_NONBLOCKING, p->host);
 
@@ -1760,7 +1759,7 @@ dump_peers(StoreEntry * sentry, peer * peers)
 
 #if USE_HTCP
 void
-neighborsHtcpReply(const cache_key * key, htcpReplyData * htcp, const IPAddress &from)
+neighborsHtcpReply(const cache_key * key, htcpReplyData * htcp, const IpAddress &from)
 {
     StoreEntry *e = Store::Root().get(key);
     MemObject *mem = NULL;

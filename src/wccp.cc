@@ -59,7 +59,7 @@ struct wccp_here_i_am_t {
 };
 
 struct wccp_cache_entry_t {
-    IPAddress ip_addr;
+    IpAddress ip_addr;
     int revision;
     char hash[WCCP_HASH_SIZE];
     int reserved;
@@ -91,7 +91,7 @@ static int last_id;
 static int last_assign_buckets_change;
 static unsigned int number_caches;
 
-static IPAddress local_ip;
+static IpAddress local_ip;
 
 static PF wccpHandleUdp;
 static int wccpLowestIP(void);
@@ -203,7 +203,7 @@ static void
 wccpHandleUdp(int sock, void *not_used)
 {
 
-    IPAddress from;
+    IpAddress from;
     int len;
 
     debugs(80, 6, "wccpHandleUdp: Called.");

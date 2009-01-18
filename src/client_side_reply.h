@@ -1,8 +1,4 @@
-
 /*
- * $Id: client_side_reply.h,v 1.21 2008/02/08 18:31:02 rousskov Exp $
- *
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -40,9 +36,9 @@
 #include "clientStream.h"
 #include "StoreClient.h"
 #include "client_side_request.h"
-#include "IPAddress.h"
 
 class ErrorState;
+class IpAddress;
 
 /* XXX make static method */
 
@@ -76,7 +72,7 @@ public:
     int storeOKTransferDone() const;
     int storeNotOKTransferDone() const;
 
-    void setReplyToError(err_type, http_status, const HttpRequestMethod&, char const *, IPAddress &, HttpRequest *, char *, AuthUserRequest *);
+    void setReplyToError(err_type, http_status, const HttpRequestMethod&, char const *, IpAddress &, HttpRequest *, char *, AuthUserRequest *);
     void createStoreEntry(const HttpRequestMethod& m, request_flags flags);
     void removeStoreReference(store_client ** scp, StoreEntry ** ep);
     void removeClientStoreReference(store_client **scp, ClientHttpRequest *http);

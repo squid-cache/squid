@@ -127,7 +127,7 @@ acl_ip_data::toStr(char *buf, int len) const
 int
 aclIpAddrNetworkCompare(acl_ip_data * const &p, acl_ip_data * const &q)
 {
-    IPAddress A = p->addr1;
+    IpAddress A = p->addr1;
 
     /* apply netmask */
     A.ApplyMask(q->mask);
@@ -191,7 +191,7 @@ acl_ip_data::NetworkCompare(acl_ip_data * const & a, acl_ip_data * const &b)
  * This function should NOT be called if 'asc' is a hostname!
  */
 bool
-acl_ip_data::DecodeMask(const char *asc, IPAddress &mask, int ctype)
+acl_ip_data::DecodeMask(const char *asc, IpAddress &mask, int ctype)
 {
     char junk;
     int a1 = 0;
@@ -237,7 +237,7 @@ acl_ip_data::FactoryParse(const char *t)
     LOCAL_ARRAY(char, mask, 256);
     acl_ip_data *r = NULL;
     acl_ip_data **Q = NULL;
-    IPAddress temp;
+    IpAddress temp;
     char c;
     unsigned int changed;
     acl_ip_data *q = new acl_ip_data;
@@ -294,13 +294,13 @@ acl_ip_data::FactoryParse(const char *t)
         /*
          * Note, must use plain xgetaddrinfo() here because at startup
          * ipcache hasn't been initialized
-         * TODO: offload this to one of the IPAddress lookups.
+         * TODO: offload this to one of the IpAddress lookups.
          */
 
         debugs(28, 5, "aclIpParseIpData: Lookup Host/IP " << addr1);
         struct addrinfo *hp = NULL, *x = NULL;
         struct addrinfo hints;
-        IPAddress *prev_addr = NULL;
+        IpAddress *prev_addr = NULL;
 
         memset(&hints, 0, sizeof(struct addrinfo));
 
@@ -442,7 +442,7 @@ ACLIP::empty () const
 }
 
 int
-ACLIP::match(IPAddress &clientip)
+ACLIP::match(IpAddress &clientip)
 {
     static acl_ip_data ClientAddress;
     /*
@@ -462,4 +462,4 @@ ACLIP::match(IPAddress &clientip)
 
 acl_ip_data::acl_ip_data () :addr1(), addr2(), mask(), next (NULL) {}
 
-acl_ip_data::acl_ip_data (IPAddress const &anAddress1, IPAddress const &anAddress2, IPAddress const &aMask, acl_ip_data *aNext) : addr1(anAddress1), addr2(anAddress2), mask(aMask), next(aNext) {}
+acl_ip_data::acl_ip_data (IpAddress const &anAddress1, IpAddress const &anAddress2, IpAddress const &aMask, acl_ip_data *aNext) : addr1(anAddress1), addr2(anAddress2), mask(aMask), next(aNext) {}

@@ -1,6 +1,4 @@
 /*
- * $Id: net_db.cc,v 1.202 2008/01/07 17:12:28 hno Exp $
- *
  * DEBUG: section 38    Network Measurement Database
  * AUTHOR: Duane Wessels
  *
@@ -54,7 +52,7 @@
 #include "forward.h"
 #include "SquidTime.h"
 #include "wordlist.h"
-#include "IPAddress.h"
+#include "ip/IpAddress.h"
 
 #if USE_ICMP
 #include "icmp/IcmpSquid.h"
@@ -83,10 +81,10 @@ typedef struct {
 static hash_table *addr_table = NULL;
 static hash_table *host_table = NULL;
 
-IPAddress networkFromInaddr(const IPAddress &a);
+IpAddress networkFromInaddr(const IpAddress &a);
 static void netdbRelease(netdbEntry * n);
 
-static void netdbHashInsert(netdbEntry * n, IPAddress &addr);
+static void netdbHashInsert(netdbEntry * n, IpAddress &addr);
 static void netdbHashDelete(const char *key);
 static void netdbHostInsert(netdbEntry * n, const char *hostname);
 static void netdbHostDelete(const net_db_name * x);
@@ -111,7 +109,7 @@ static void netdbExchangeDone(void *);
 static wordlist *peer_names = NULL;
 
 static void
-netdbHashInsert(netdbEntry * n, IPAddress &addr)
+netdbHashInsert(netdbEntry * n, IpAddress &addr)
 {
     networkFromInaddr(addr).NtoA(n->network, MAX_IPSTRLEN);
     n->hash.key = n->network;
@@ -247,7 +245,7 @@ netdbPurgeLRU(void)
 }
 
 static netdbEntry *
-netdbLookupAddr(const IPAddress &addr)
+netdbLookupAddr(const IpAddress &addr)
 {
     netdbEntry *n;
     char *key = new char[MAX_IPSTRLEN];
@@ -257,7 +255,7 @@ netdbLookupAddr(const IPAddress &addr)
 }
 
 static netdbEntry *
-netdbAdd(IPAddress &addr)
+netdbAdd(IpAddress &addr)
 {
     netdbEntry *n;
 
@@ -275,7 +273,7 @@ netdbAdd(IPAddress &addr)
 static void
 netdbSendPing(const ipcache_addrs * ia, void *data)
 {
-    IPAddress addr;
+    IpAddress addr;
     char *hostname = NULL;
     static_cast<generic_cbdata *>(data)->unwrap(&hostname);
     netdbEntry *n;
@@ -340,10 +338,10 @@ netdbSendPing(const ipcache_addrs * ia, void *data)
     xfree(hostname);
 }
 
-IPAddress
-networkFromInaddr(const IPAddress &in)
+IpAddress
+networkFromInaddr(const IpAddress &in)
 {
-    IPAddress out;
+    IpAddress out;
 
     out = in;
 #if USE_IPV6
@@ -536,7 +534,7 @@ netdbReloadState(void)
     netdbEntry *n;
     netdbEntry N;
 
-    IPAddress addr;
+    IpAddress addr;
     int count = 0;
 
     struct timeval start = current_time;
@@ -677,7 +675,7 @@ netdbFreeNameEntry(void *data)
 static void
 netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 {
-    IPAddress addr;
+    IpAddress addr;
 
     netdbExchangeState *ex = (netdbExchangeState *)data;
     int rec_sz = 0;
@@ -937,7 +935,7 @@ netdbPingSite(const char *hostname)
 }
 
 void
-netdbHandlePingReply(const IPAddress &from, int hops, int rtt)
+netdbHandlePingReply(const IpAddress &from, int hops, int rtt)
 {
 #if USE_ICMP
     netdbEntry *n;
@@ -984,7 +982,7 @@ netdbFreeMemory(void)
 
 #if 0 // AYJ: Looks to be unused code.
 int
-netdbHops(IPAddress &addr)
+netdbHops(IpAddress &addr)
 {
 #if USE_ICMP
     netdbEntry *n = netdbLookupAddr(addr);
@@ -1151,7 +1149,7 @@ netdbUpdatePeer(HttpRequest * r, peer * e, int irtt, int ihops)
 }
 
 void
-netdbExchangeUpdatePeer(IPAddress &addr, peer * e, double rtt, double hops)
+netdbExchangeUpdatePeer(IpAddress &addr, peer * e, double rtt, double hops)
 {
 #if USE_ICMP
     netdbEntry *n;
@@ -1193,7 +1191,7 @@ netdbExchangeUpdatePeer(IPAddress &addr, peer * e, double rtt, double hops)
 }
 
 void
-netdbDeleteAddrNetwork(IPAddress &addr)
+netdbDeleteAddrNetwork(IpAddress &addr)
 {
 #if USE_ICMP
     netdbEntry *n = netdbLookupAddr(addr);
@@ -1214,7 +1212,7 @@ netdbBinaryExchange(StoreEntry * s)
     HttpReply *reply = new HttpReply;
 #if USE_ICMP
 
-    IPAddress addr;
+    IpAddress addr;
 
     netdbEntry *n;
     int i;
