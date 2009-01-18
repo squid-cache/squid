@@ -36,7 +36,6 @@
 
 #include "config.h"
 #include "Icmp.h"
-#include "IPAddress.h"
 
 #if HAVE_NETINET_IN_SYSTM_H
 #include <netinet/in_systm.h>
@@ -171,7 +170,7 @@ public:
     virtual int Open();
 
 #if USE_ICMP
-    virtual void SendEcho(IPAddress &, int, const char*, int);
+    virtual void SendEcho(IpAddress &, int, const char*, int);
     virtual void Recv(void);
 #endif
 };

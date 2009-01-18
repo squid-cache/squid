@@ -105,7 +105,7 @@ private:
     ConnStateData *pinned_connection;
 
 public:
-    IPAddress host_addr;
+    IpAddress host_addr;
 
     AuthUserRequest *auth_user_request;
 
@@ -125,13 +125,13 @@ public:
 
     int max_forwards;
 
-    IPAddress client_addr;
+    IpAddress client_addr;
 
 #if FOLLOW_X_FORWARDED_FOR
-    IPAddress indirect_client_addr;
+    IpAddress indirect_client_addr;
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
-    IPAddress my_addr;
+    IpAddress my_addr;
 
     HierarchyLogEntry hier;
 

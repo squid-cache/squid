@@ -1,7 +1,4 @@
-
 /*
- * $Id: squid.h,v 1.272 2008/02/26 21:49:35 amosjeffries Exp $
- *
  * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -377,7 +374,7 @@ extern "C"
 #include "profiling.h"
 #include "MemPool.h"
 
-#include "IPAddress.h"
+#include "ip/IpAddress.h"
 
 #if !HAVE_TEMPNAM
 #include "tempnam.h"

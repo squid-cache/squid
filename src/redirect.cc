@@ -48,7 +48,7 @@ typedef struct {
     void *data;
     char *orig_url;
 
-    IPAddress client_addr;
+    IpAddress client_addr;
     const char *client_ident;
     const char *method_s;
     RH *handler;

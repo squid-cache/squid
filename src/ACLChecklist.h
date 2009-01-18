@@ -123,11 +123,11 @@ public:
 
     const acl_access *accessList;
 
-    IPAddress src_addr;
+    IpAddress src_addr;
 
-    IPAddress dst_addr;
+    IpAddress dst_addr;
 
-    IPAddress my_addr;
+    IpAddress my_addr;
 
     struct peer *dst_peer;
 

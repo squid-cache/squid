@@ -1,6 +1,4 @@
 /*
- * $Id: errorpage.h,v 1.6 2008/02/26 21:49:34 amosjeffries Exp $
- *
  * DEBUG: section 4     Error Generation
  * AUTHOR: Duane Wessels
  *
@@ -38,7 +36,7 @@
 
 #include "squid.h"
 #include "cbdata.h"
-#include "IPAddress.h"
+#include "ip/IpAddress.h"
 
 /**
  \defgroup ErrorPageAPI Error Pages API
@@ -125,7 +123,7 @@ public:
     char *dnsserver_msg;
     time_t ttl;
 
-    IPAddress src_addr;
+    IpAddress src_addr;
     char *redirect_url;
     ERCB *callback;
     void *callback_data;

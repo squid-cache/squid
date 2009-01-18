@@ -56,7 +56,7 @@ public:
 
 /// \ingroup ServerProtocolICPInternal3
 static void
-doV3Query(int fd, IPAddress &from, char *buf, icp_common_t header)
+doV3Query(int fd, IpAddress &from, char *buf, icp_common_t header)
 {
     /* We have a valid packet */
     char *url = buf + sizeof(icp_common_t) + sizeof(u_int32_t);
@@ -109,7 +109,7 @@ ICP3State::created(StoreEntry *newEntry)
 /// \ingroup ServerProtocolICPInternal3
 /* Currently Harvest cached-2.x uses ICP_VERSION_3 */
 void
-icpHandleIcpV3(int fd, IPAddress&from, char *buf, int len)
+icpHandleIcpV3(int fd, IpAddress&from, char *buf, int len)
 {
     if (len <= 0) {
         debugs(12, 3, "icpHandleIcpV3: ICP message is too small");

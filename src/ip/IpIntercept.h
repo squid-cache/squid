@@ -7,7 +7,7 @@
 #ifndef SQUID_IPINTERCEPTION_H
 #define SQUID_IPINTERCEPTION_H
 
-class IPAddress;
+class IpAddress;
 
 /* for time_t */
 #include "SquidTime.h"
@@ -27,12 +27,12 @@ public:
     ~IpIntercept() {};
 
     /** Perform NAT lookups */
-    int NatLookup(int fd, const IPAddress &me, const IPAddress &peer, IPAddress &client, IPAddress &dst);
+    int NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAddress &client, IpAddress &dst);
 
 #if LINUX_TPROXY2
     // only relevant to TPROXY v2 connections.
     // which require the address be set specifically post-connect.
-    int SetTproxy2OutgoingAddr(int fd, const IPAddress &src);
+    int SetTproxy2OutgoingAddr(int fd, const IpAddress &src);
 #endif
 
     /**
@@ -87,7 +87,7 @@ private:
      \retval 0     Successfuly located the new address.
      \retval -1    An error occured during NAT lookups.
      */
-    int NetfilterInterception(int fd, const IPAddress &me, IPAddress &client, int silent);
+    int NetfilterInterception(int fd, const IpAddress &me, IpAddress &client, int silent);
 
     /**
      * perform Lookups on Netfilter fully-transparent interception targets (TPROXY).
@@ -96,7 +96,7 @@ private:
      \retval 0     Successfuly located the new address.
      \retval -1    An error occured during NAT lookups.
      */
-    int NetfilterTransparent(int fd, const IPAddress &me, IPAddress &dst, int silent);
+    int NetfilterTransparent(int fd, const IpAddress &me, IpAddress &dst, int silent);
 
     /**
      * perform Lookups on IPFW interception.
@@ -105,7 +105,7 @@ private:
      \retval 0     Successfuly located the new address.
      \retval -1    An error occured during NAT lookups.
      */
-    int IpfwInterception(int fd, const IPAddress &me, IPAddress &client, int silent);
+    int IpfwInterception(int fd, const IpAddress &me, IpAddress &client, int silent);
 
 
     int transparent_active;

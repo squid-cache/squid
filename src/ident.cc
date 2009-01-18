@@ -51,9 +51,9 @@ typedef struct _IdentStateData {
     hash_link hash;		/* must be first */
     int fd;			/* IDENT fd */
 
-    IPAddress me;
+    IpAddress me;
 
-    IPAddress my_peer;
+    IpAddress my_peer;
     IdentClient *clients;
     char buf[4096];
 } IdentStateData;
@@ -202,7 +202,7 @@ CBDATA_TYPE(IdentStateData);
  * start a TCP connection to the peer host on port 113
  */
 void
-identStart(IPAddress &me, IPAddress &my_peer, IDCB * callback, void *data)
+identStart(IpAddress &me, IpAddress &my_peer, IDCB * callback, void *data)
 {
     IdentStateData *state;
     int fd;

@@ -128,7 +128,7 @@ public:
         QUOTE_METHOD_URL
     } quote;
 
-    IPAddress local_addr;
+    IpAddress local_addr;
 };
 
 struct _external_acl_format {
