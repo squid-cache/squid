@@ -30,6 +30,7 @@ TRANSLATIONS = \
 	ja \
 	nl \
 	pt-br \
+	ro \
 	ru \
 	sr \
 	sv \
@@ -48,7 +49,6 @@ LANGUAGES	= \
 		Lithuanian \
 		Polish \
 		Portuguese \
-		Romanian \
 		Simplify_Chinese \
 		Slovak \
 		Traditional_Chinese
