@@ -23,6 +23,7 @@ TRANSLATIONS = \
 	en en-au en-gb en-nz en-us \
 	es \
 	et \
+	fi \
 	fr \
 	hy \
 	id \
@@ -41,7 +42,6 @@ TRANSLATIONS = \
 # Legacy language contributions...
 #
 LANGUAGES	= \
-		Finnish \
 		Greek \
 		Hebrew \
 		Hungarian \
