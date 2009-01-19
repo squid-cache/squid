@@ -1,4 +1,4 @@
-#include "squid.h"
+#include "config.h"
 #include <sstream>
 #include <cppunit/TestAssert.h>
 

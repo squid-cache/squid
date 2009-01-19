@@ -1,6 +1,5 @@
-
 /*
- * $Id: Mem.h,v 1.4.4.1 2008/02/26 00:15:55 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 13    High Level Memory Pool Management
  * AUTHOR: Harvest Derived
@@ -39,8 +38,11 @@
 /* forward decls */
 
 class CacheManager;
+class StoreEntry;
+class MemPoolStats;
+class MemPoolMeter;
 
-#include <iosfwd>
+#include <ostream>
 
 class Mem
 {

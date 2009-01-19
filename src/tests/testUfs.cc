@@ -1,4 +1,4 @@
-#include "squid.h"
+#include "config.h"
 #include <stdexcept>
 
 #include "testUfs.h"

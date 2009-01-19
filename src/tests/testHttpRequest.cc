@@ -1,4 +1,4 @@
-#include "squid.h"
+#include "config.h"
 #include <cppunit/TestAssert.h>
 
 #include "Mem.h"
