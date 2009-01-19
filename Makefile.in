@@ -772,6 +772,9 @@ dist-hook:
 install-pinger:
 	chown root $(DEFAULT_PINGER) 
 	chmod 4711 $(DEFAULT_PINGER)
+
+all-am:
+	@echo "Build Successful."
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
