@@ -326,6 +326,7 @@ HttpRequest::prefixLen()
            header.len + 2;
 }
 
+#if DEAD_CODE // 2009-01-20: inlined this with its ONLY caller (copyOneHeader...)
 /**
  * Returns true if HTTP allows us to pass this header on.  Does not
  * check anonymizer (aka header_access) configuration.
@@ -341,6 +342,7 @@ httpRequestHdrAllowed(const HttpHeaderEntry * e, String * strConn)
 
     return 1;
 }
+#endif
 
 /* sync this routine when you update HttpRequest struct */
 void
