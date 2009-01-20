@@ -182,7 +182,7 @@ httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive)
     return res;
 }
 
-/* returns true iff "m" is a member of the list */
+/** returns true iff "m" is a member of the list */
 int
 strListIsMember(const String * list, const char *m, char del)
 {
