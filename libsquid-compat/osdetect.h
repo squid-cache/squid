@@ -16,12 +16,12 @@
  */
 
 #if defined(__sun__) || defined(__sun)	/* SUN */
-#define _SQUID_SUN_
-#if defined(__SVR4)		/* SOLARIS */
-#define _SQUID_SOLARIS_
-#else /* SUNOS */
-#define _SQUID_SUNOS_
-#endif
+# define _SQUID_SUN_
+# if defined(__SVR4)		/* SOLARIS */
+#  define _SQUID_SOLARIS_
+# else /* SUNOS */
+#  define _SQUID_SUNOS_
+# endif
 
 #elif defined(__hpux)		/* HP-UX - SysV-like? */
 #define _SQUID_HPUX_
@@ -79,11 +79,6 @@
 
 #elif defined(__EMX__) || defined(OS2) || defined(__OS2__)
 #define _SQUID_OS2_
-/*
- *  FIXME: the os2 port of bash seems to have problems checking
- *  the return codes of programs in if statements.  These options
- *  need to be overridden.
- */
 
 #endif /* OS automatic detection */
 
