@@ -1,6 +1,6 @@
 #  Makefile for authentication modules in the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.6 2005/10/23 11:55:38 hno Exp $
+#  $Id$
 #
 AUTOMAKE_OPTIONS = subdir-objects
 AM_CFLAGS = @SQUID_CFLAGS@

@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_kqueue.cc,v 1.18 2008/01/07 16:22:06 hno Exp $
+ * $Id$
  *
  * DEBUG: section 5     Socket Functions
  *

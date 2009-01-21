@@ -1,5 +1,5 @@
 /*
- * $Id: EventLoop.h,v 1.4 2008/02/12 23:49:44 rousskov Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

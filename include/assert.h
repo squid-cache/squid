@@ -1,5 +1,5 @@
 /*
- * $Id: assert.h,v 1.3 2006/05/12 21:52:24 hno Exp $
+ * $Id$
  *
  * AUTHOR: Duane Wessels
  *

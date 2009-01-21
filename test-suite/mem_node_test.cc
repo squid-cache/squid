@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_node_test.cc,v 1.6 2004/08/30 03:29:03 robertc Exp $
+ * $Id$
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins

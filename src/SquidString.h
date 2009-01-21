@@ -1,5 +1,5 @@
 /*
- * $Id: SquidString.h,v 1.16 2008/02/11 23:01:23 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels

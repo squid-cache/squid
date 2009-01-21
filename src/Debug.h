@@ -1,5 +1,5 @@
 /*
- * $Id: Debug.h,v 1.13 2008/02/26 18:43:30 rousskov Exp $
+ * $Id$
  *
  * DEBUG: section 0     Debug Routines
  * AUTHOR: Harvest Derived

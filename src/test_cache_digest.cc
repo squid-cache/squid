@@ -1,6 +1,6 @@
 
 /*
- * $Id: test_cache_digest.cc,v 1.35 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id$
  *
  * AUTHOR: Alex Rousskov
  *

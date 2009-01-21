@@ -1,5 +1,5 @@
 /*
- * $Id: squid_endian.h,v 1.4 2004/12/21 16:17:58 hno Exp $
+ * $Id$
  *
  * AUTHOR: Alan Barrett
  *

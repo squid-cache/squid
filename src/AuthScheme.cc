@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthScheme.cc,v 1.2 2007/04/25 11:30:18 adrian Exp $
+ * $Id$
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins

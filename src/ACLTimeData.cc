@@ -1,5 +1,5 @@
 /*
- * $Id: ACLTimeData.cc,v 1.15 2007/04/30 16:56:09 wessels Exp $
+ * $Id$
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels

@@ -1,5 +1,5 @@
 /*
- * $Id: wordlist.h,v 1.1 2006/04/23 11:10:32 robertc Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

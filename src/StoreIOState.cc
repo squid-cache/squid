@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreIOState.cc,v 1.6 2007/04/25 11:30:18 adrian Exp $
+ * $Id$
  *
  * DEBUG: section 20    Swap Dir base object
  * AUTHOR: Robert Collins

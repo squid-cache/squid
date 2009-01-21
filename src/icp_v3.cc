@@ -1,5 +1,5 @@
 /*
- * $Id: icp_v3.cc,v 1.44 2008/02/26 21:49:35 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 12    Internet Cache Protocol (ICP)
  * AUTHOR: Duane Wessels

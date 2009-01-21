@@ -1,5 +1,5 @@
 /*
- * $Id: StoreFScoss.h,v 1.4 2008/02/26 21:49:43 amosjeffries Exp $
+ * $Id$
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------

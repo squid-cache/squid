@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.cc,v 1.44 2007/12/21 23:50:24 hno Exp $
+ * $Id$
  *
  * DEBUG: section 74    HTTP Message
  * AUTHOR: Alex Rousskov

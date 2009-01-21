@@ -1,5 +1,5 @@
 /*
- * $Id: tools.cc,v 1.281 2008/02/11 22:44:50 rousskov Exp $
+ * $Id$
  *
  * DEBUG: section 21    Misc Functions
  * AUTHOR: Harvest Derived

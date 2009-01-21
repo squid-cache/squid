@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.105 2008/01/20 19:46:35 serassio Exp $
+ * $Id$
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels

@@ -1,6 +1,6 @@
 
 /*
- * $Id: store.cc,v 1.620 2008/02/12 23:33:48 rousskov Exp $
+ * $Id$
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Harvest Derived

@@ -1,5 +1,5 @@
 /*
- * $Id: auth_basic.cc,v 1.53 2008/02/12 23:17:50 rousskov Exp $
+ * $Id$
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Duane Wessels

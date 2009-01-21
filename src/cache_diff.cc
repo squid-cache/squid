@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_diff.cc,v 1.21 2007/11/15 16:47:35 wessels Exp $
+ * $Id$
  *
  * AUTHOR: Alex Rousskov
  *

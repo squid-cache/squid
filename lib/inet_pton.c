@@ -13,7 +13,7 @@
  *
  *    28-Oct-2007: drop some dead code. now tested working without.
  *
- * Squid CVS $Id: inet_pton.c,v 1.1 2007/12/14 05:03:26 amosjeffries Exp $
+ * Squid CVS $Id$
  *
  *  Original License and code follows.
  */

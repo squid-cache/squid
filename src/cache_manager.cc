@@ -1,6 +1,6 @@
 
 /*
- * $Id: cache_manager.cc,v 1.49 2008/02/26 21:49:34 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 16    Cache Manager Objects
  * AUTHOR: Duane Wessels

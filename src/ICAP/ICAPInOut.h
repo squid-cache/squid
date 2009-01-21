@@ -1,6 +1,6 @@
 
 /*
- * $Id: ICAPInOut.h,v 1.1 2007/04/06 04:50:07 rousskov Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

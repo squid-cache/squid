@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLMethod.cc,v 1.4 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

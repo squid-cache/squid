@@ -1,6 +1,6 @@
 
 /*
- * $Id: unlinkd_daemon.cc,v 1.2 2008/02/26 21:49:35 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: -             Unlink Daemon
  * AUTHOR: Duane Wessels

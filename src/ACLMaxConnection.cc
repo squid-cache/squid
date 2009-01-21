@@ -1,5 +1,5 @@
 /*
- * $Id: ACLMaxConnection.cc,v 1.7 2007/04/28 22:26:37 hno Exp $
+ * $Id$
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels

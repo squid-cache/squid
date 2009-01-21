@@ -1,6 +1,6 @@
 #include "config.h"
 
-/* $Id: tcp-banger2.c,v 1.25 2006/09/26 12:31:11 hno Exp $ */
+/* $Id$
 
 /*
  * On some systems, FD_SETSIZE is set to something lower than the

@@ -1,5 +1,5 @@
 /*
- * $Id: auth_digest.cc,v 1.63 2008/02/12 23:17:51 rousskov Exp $
+ * $Id$
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR: Robert Collins

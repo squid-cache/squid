@@ -1,5 +1,5 @@
 /*
- * $Id: dlink.h,v 1.1 2006/04/22 13:07:36 robertc Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

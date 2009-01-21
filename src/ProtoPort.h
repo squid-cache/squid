@@ -1,5 +1,5 @@
 /*
- * $Id: ProtoPort.h,v 1.1 2008/02/11 22:24:39 rousskov Exp $
+ * $Id$
  */
 #ifndef SQUID_PROTO_PORT_H
 #define SQUID_PROTO_PORT_H

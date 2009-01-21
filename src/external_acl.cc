@@ -1,6 +1,6 @@
 
 /*
- * $Id: external_acl.cc,v 1.82 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 82    External ACL
  * AUTHOR: Henrik Nordstrom, MARA Systems AB
