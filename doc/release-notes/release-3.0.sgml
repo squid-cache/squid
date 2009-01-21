@@ -700,6 +700,9 @@ See the accf_http(9) man page.
 	<p>fake_auth helper for NTLM now accepts the '-S' parameter to strip NTLM domain off the username string.
 	   This is useful for class 4 Delay Pools in Squid 3.x
 
+	<tag>half_closed_clients</tag>
+	<p>New defaut vaue of OFF
+
 </descrip>
 
 <sect1>Removed tags<label id="removedtags">
