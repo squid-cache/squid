@@ -1,6 +1,6 @@
 
 /*
- * $Id: AsyncCallQueue.cc,v 1.1 2008/02/13 06:01:39 rousskov Exp $
+ * $Id$
  *
  * DEBUG: section 41    Event Processing
  *

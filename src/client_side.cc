@@ -1,5 +1,5 @@
 /*
- * $Id: client_side.cc,v 1.779 2008/02/26 21:49:34 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels

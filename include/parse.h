@@ -1,5 +1,5 @@
 /*
- * $Id: parse.h,v 1.12 2003/01/23 00:36:47 robertc Exp $
+ * $Id$
  */
 #ifndef SQUID_PARSE_H
 #define SQUID_PARSE_H

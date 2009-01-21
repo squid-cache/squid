@@ -1,6 +1,6 @@
 
 /*
- * $Id: peer_digest.cc,v 1.130 2008/01/07 17:12:28 hno Exp $
+ * $Id$
  *
  * DEBUG: section 72    Peer Digest Routines
  * AUTHOR: Alex Rousskov

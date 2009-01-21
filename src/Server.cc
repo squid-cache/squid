@@ -1,5 +1,5 @@
 /*
- * $Id: Server.cc,v 1.26 2008/02/18 22:51:21 rousskov Exp $
+ * $Id$
  *
  * DEBUG:
  * AUTHOR: Duane Wessels

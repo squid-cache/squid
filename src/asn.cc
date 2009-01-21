@@ -1,6 +1,6 @@
 
 /*
- * $Id: asn.cc,v 1.120 2008/02/26 21:49:34 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 53    AS Number handling
  * AUTHOR: Duane Wessels, Kostas Anagnostakis

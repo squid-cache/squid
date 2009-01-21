@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreFileSystem.cc,v 1.2 2006/05/29 00:15:01 robertc Exp $
+ * $Id$
  *
  * DEBUG: section 92    Storage File System
  * AUTHOR: Robert Collins

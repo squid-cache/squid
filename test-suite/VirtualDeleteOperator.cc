@@ -1,6 +1,6 @@
 
 /*
- * $Id: VirtualDeleteOperator.cc,v 1.2 2004/08/15 17:41:28 robertc Exp $
+ * $Id$
  *
  * AUTHOR: Robert Collins
  *

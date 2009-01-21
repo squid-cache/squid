@@ -1,6 +1,6 @@
 
 /*
- * $Id: LeakFinder.cc,v 1.6 2007/04/30 16:56:09 wessels Exp $
+ * $Id$
  *
  * DEBUG: section 45    Callback Data Registry
  * AUTHOR: Duane Wessels

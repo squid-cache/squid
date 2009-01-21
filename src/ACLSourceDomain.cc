@@ -1,5 +1,5 @@
 /*
- * $Id: ACLSourceDomain.cc,v 1.7 2007/12/14 23:11:45 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels

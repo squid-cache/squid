@@ -1,5 +1,5 @@
 /*
- * $Id: diskd.cc,v 1.8 2007/08/16 23:32:28 hno Exp $
+ * $Id$
  *
  * DEBUG: section --    External DISKD process implementation.
  * AUTHOR: Harvest Derived

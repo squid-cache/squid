@@ -1,5 +1,5 @@
 /*
- * $Id: SquidNew.h,v 1.1 2003/07/07 22:44:28 robertc Exp $
+ * $Id$
  *
  * AUTHOR: Harvest Derived
  *

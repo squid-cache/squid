@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIExpression.cc,v 1.5 2007/04/28 22:26:37 hno Exp $
+ * $Id$
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins

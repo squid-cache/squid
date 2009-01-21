@@ -1,5 +1,5 @@
 /*
- * $Id: PingData.h,v 1.1 2003/10/16 21:40:16 robertc Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

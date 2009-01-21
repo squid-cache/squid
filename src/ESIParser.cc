@@ -1,5 +1,5 @@
 /*
- * $Id: ESIParser.cc,v 1.8 2008/02/26 21:49:34 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins

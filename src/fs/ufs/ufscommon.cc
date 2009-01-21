@@ -1,5 +1,5 @@
 /*
- * $Id: ufscommon.cc,v 1.15 2007/11/15 16:47:38 wessels Exp $
+ * $Id$
  * vim: set et :
  *
  * DEBUG: section 47    Store Directory Routines

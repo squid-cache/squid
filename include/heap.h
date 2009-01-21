@@ -1,5 +1,5 @@
 /*
- * $Id: heap.h,v 1.6 2003/01/23 00:36:47 robertc Exp $
+ * $Id$
  *
  * AUTHOR: John Dilley, Hewlett Packard
  *

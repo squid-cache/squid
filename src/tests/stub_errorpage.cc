@@ -1,5 +1,5 @@
 /*
- * $Id: stub_errorpage.cc,v 1.3 2006/08/21 00:50:47 robertc Exp $
+ * $Id$
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Robert Collins

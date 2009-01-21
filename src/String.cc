@@ -1,6 +1,6 @@
 
 /*
- * $Id: String.cc,v 1.30 2008/01/23 23:08:58 rousskov Exp $
+ * $Id$
  *
  * DEBUG: section 67    String
  * AUTHOR: Duane Wessels

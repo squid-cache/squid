@@ -1,5 +1,5 @@
 /*
- * $Id: snmp_agent.cc,v 1.98 2007/12/27 01:58:19 hno Exp $
+ * $Id$
  *
  * DEBUG: section 49    SNMP Interface
  * AUTHOR: Kostas Anagnostakis

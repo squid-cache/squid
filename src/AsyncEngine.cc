@@ -1,6 +1,6 @@
 
 /*
- * $Id: AsyncEngine.cc,v 1.1 2006/08/12 01:43:10 robertc Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

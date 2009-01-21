@@ -13,7 +13,7 @@
  *    16-Aug-2007 : Altered configure checks
  *                  Un-hacked slightly to use system gethostbyname()
  *
- * Squid CVS $Id: getaddrinfo.h,v 1.1 2007/12/14 05:03:25 amosjeffries Exp $
+ * Squid CVS $Id$
  *
  *  Original License and code follows.
  */

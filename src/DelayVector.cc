@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayVector.cc,v 1.10 2007/04/28 22:26:37 hno Exp $
+ * $Id$
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>

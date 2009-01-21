@@ -1,6 +1,6 @@
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.15 2008/01/08 11:10:48 amosjeffries Exp $
+#  $Id$
 #
 
 AUTOMAKE_OPTIONS = subdir-objects

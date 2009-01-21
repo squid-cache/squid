@@ -1,5 +1,5 @@
 /*
- * $Id: time.cc,v 1.4 2007/12/14 23:11:48 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 21    Time Functions
  * AUTHOR: Harvest Derived

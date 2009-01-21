@@ -1,5 +1,5 @@
 /*
- * $Id: config.h,v 1.27 2008/01/07 15:47:08 hno Exp $
+ * $Id$
  *
  * AUTHOR: Duane Wessels
  *

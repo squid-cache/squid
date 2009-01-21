@@ -1,6 +1,6 @@
 
 /*
- * $Id: authenticate.cc,v 1.69 2008/02/26 21:49:34 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins

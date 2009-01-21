@@ -1,6 +1,6 @@
 
 /*
- * $Id: helper.cc,v 1.91 2007/12/14 23:11:46 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Harvest Derived?

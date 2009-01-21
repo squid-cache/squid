@@ -1,6 +1,6 @@
 
 /*
- * $Id: CommCalls.h,v 1.1 2008/02/12 22:58:29 rousskov Exp $
+ * $Id$
  */
 
 #ifndef SQUID_COMMCALLS_H

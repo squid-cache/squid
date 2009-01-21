@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_poll.cc,v 1.26 2008/02/12 23:02:13 rousskov Exp $
+ * $Id$
  *
  * DEBUG: section 5     Socket Functions
  *

@@ -1,5 +1,5 @@
 /*
- * $Id: ESIExpression.h,v 1.1 2003/07/14 14:15:55 robertc Exp $
+ * $Id$
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins

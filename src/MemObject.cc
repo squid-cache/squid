@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemObject.cc,v 1.33 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins

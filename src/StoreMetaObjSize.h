@@ -1,5 +1,5 @@
 /*
- * $Id: StoreMetaObjSize.h,v 1.1 2007/09/19 08:54:51 hno Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

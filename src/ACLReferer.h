@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLReferer.h,v 1.2 2003/02/21 22:50:04 robertc Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

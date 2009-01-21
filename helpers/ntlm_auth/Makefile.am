@@ -1,6 +1,6 @@
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.8 2005/10/30 21:48:22 serassio Exp $
+#  $Id$
 #
 
 DIST_SUBDIRS	= fakeauth no_check smb_lm mswin_sspi
