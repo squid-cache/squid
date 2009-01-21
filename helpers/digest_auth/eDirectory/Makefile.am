@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.1 2007/06/23 20:50:10 hno Exp $
+#  $Id$
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -13,7 +13,18 @@ digest_edir_auth_SOURCES = digest_pw_auth.c \
 	ldap_backend.h \
 	edir_ldapext.c \
 	edir_ldapext.h
-INCLUDES      = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
-		-I$(top_srcdir)/src/
 
-LDADD	= -L$(top_builddir)/lib -lmiscutil $(LIB_LDAP) $(LIB_LBER) $(CRYPTLIB) $(XTRA_LIBS) $(SSLLIB)
+INCLUDES = \
+	-I$(top_srcdir)/libsquid-compat \
+	-I. \
+	-I$(top_builddir)/include \
+	-I$(top_srcdir)/include
+
+LDADD = \
+	-L$(top_builddir)/libsquid-compat/libsquid-compat.la \
+	-L$(top_builddir)/lib -lmiscutil \
+	$(LIB_LDAP) \
+	$(LIB_LBER) \
+	$(CRYPTLIB) \
+	$(XTRA_LIBS) \
+	$(SSLLIB)

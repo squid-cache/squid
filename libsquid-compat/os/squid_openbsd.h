@@ -1,11 +1,11 @@
 #ifndef SQUID_CONFIG_H
-#include "squid.h"
+#include "config.h"
 #endif
 
-#ifndef SQUID_OS_HPUX_H
-#define SQUID_OS_PHUX_H
+#ifndef SQUID_OS_OPENBSD_H
+#define SQUID_OS_OPENBSD_H
 
-#ifdef _SQUID_HPUX_
+#ifdef _SQUID_OPENBSD_
 
 /****************************************************************************
  *--------------------------------------------------------------------------*
@@ -13,20 +13,13 @@
  *--------------------------------------------------------------------------*
  ****************************************************************************/
 
-
-#if !defined(HAVE_GETPAGESIZE)
-#define HAVE_GETPAGESIZE
-#define getpagesize( )   sysconf(_SC_PAGE_SIZE)
-#endif
-
 /*
- * getrusage(...) not available on some HPUX
+ * Don't allow inclusion of malloc.h
  */
-#if !HAVE_GETRUSAGE
-#define HAVE_GETRUSAGE 1
-#define getrusage(a, b)  syscall(SYS_GETRUSAGE, a, b)
+#ifdef HAVE_MALLOC_H
+#undef HAVE_MALLOC_H
 #endif
 
 
-#endif /* _SQUID_HPUX_ */
-#endif /* SQUID_OS_HPUX_H */
+#endif /* _SQUID_OPENBSD_ */
+#endif /* SQUID_OS_OPENBSD_H */

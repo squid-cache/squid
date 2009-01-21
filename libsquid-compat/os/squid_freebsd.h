@@ -1,11 +1,11 @@
 #ifndef SQUID_CONFIG_H
-#include "squid.h"
+#include "config.h"
 #endif
 
-#ifndef SQUID_OS_QNX_H
-#define SQUID_OS_QNX_H
+#ifndef SQUID_OS_FREEBSD_H
+#define SQUID_OS_FREEBSD_H
 
-#ifdef _SQUID_QNX_
+#ifdef _SQUID_FREEBSD_
 
 /****************************************************************************
  *--------------------------------------------------------------------------*
@@ -13,11 +13,19 @@
  *--------------------------------------------------------------------------*
  ****************************************************************************/
 
+
+#if USE_ASYNC_IO && defined(LINUXTHREADS)
+#define _SQUID_LINUX_THREADS_
+#endif
+
 /*
- * Requires unix.h header file
+ * Don't allow inclusion of malloc.h
  */
-#include <unix.h>
+#if defined(HAVE_MALLOC_H)
+#undef HAVE_MALLOC_H
+#endif
 
+#define _etext etext
 
-#endif /* _SQUID_QNX_ */
-#endif /* SQUID_OS_QNX_H */
+#endif /* _SQUID_FREEBSD_ */
+#endif /* SQUID_OS_FREEBSD_H */

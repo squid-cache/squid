@@ -186,26 +186,6 @@ using namespace Squid;
 #endif /* HAVE_POLL_H */
 #endif /* USE_POLL */
 
-/*
- * Filedescriptor limits in the different select loops
- *
- * NP: FreeBSD 7 defines FD_SETSIZE as unsigned but Squid needs
- *     it to be signed to compare it with signed values.
- *     Linux and others including FreeBSD <7, define it as signed.
- *     If this causes any issues please contact squid-dev@squid-cache.org
- */
-#if defined(USE_SELECT) || defined(USE_SELECT_WIN32)
-/* Limited by design */
-# define SQUID_MAXFD_LIMIT ((signed int)FD_SETSIZE)
-#elif defined(USE_POLL)
-/* Limited due to delay pools */
-# define SQUID_MAXFD_LIMIT ((signed int)FD_SETSIZE)
-#elif defined(USE_KQUEUE) || defined(USE_EPOLL)
-# define SQUID_FDSET_NOUSE 1
-#else
-# error Unknown select loop model!
-#endif
-
 
 /*
  * Trap unintentional use of fd_set. Must not be used outside the
@@ -219,35 +199,6 @@ using namespace Squid;
 # endif
 #endif
 
-#if defined(HAVE_STDARG_H)
-#include <stdarg.h>
-#define HAVE_STDARGS		/* let's hope that works everywhere (mj) */
-#define VA_LOCAL_DECL va_list ap;
-#define VA_START(f) va_start(ap, f)
-#define VA_SHIFT(v,t) ;		/* no-op for ANSI */
-#define VA_END va_end(ap)
-#else
-#if defined(HAVE_VARARGS_H)
-#include <varargs.h>
-#undef HAVE_STDARGS
-#define VA_LOCAL_DECL va_list ap;
-#define VA_START(f) va_start(ap)	/* f is ignored! */
-#define VA_SHIFT(v,t) v = va_arg(ap,t)
-#define VA_END va_end(ap)
-#else
-#error XX **NO VARARGS ** XX
-#endif
-#endif
-
-/* Make sure syslog goes after stdarg/varargs */
-#ifdef HAVE_SYSLOG_H
-#ifdef _SQUID_AIX_
-#define _XOPEN_EXTENDED_SOURCE
-#define _XOPEN_SOURCE_EXTENDED 1
-#endif
-#include <syslog.h>
-#endif
-
 #if HAVE_MATH_H
 #include <math.h>
 #endif
@@ -259,13 +210,6 @@ using namespace Squid;
 #define SQUID_MAXPATHLEN 256
 #ifndef MAXPATHLEN
 #define MAXPATHLEN SQUID_MAXPATHLEN
-#endif
-
-#if !HAVE_GETRUSAGE
-#if defined(_SQUID_HPUX_)
-#define HAVE_GETRUSAGE 1
-#define getrusage(a, b)  syscall(SYS_GETRUSAGE, a, b)
-#endif
 #endif
 
 #if !HAVE_STRUCT_RUSAGE
@@ -322,20 +266,6 @@ SQUIDCEXTERN size_t getpagesize(void);
 
 #if defined(_SQUID_NEXT_) && !defined(S_ISDIR)
 #define S_ISDIR(mode) (((mode) & (_S_IFMT)) == (_S_IFDIR))
-#endif
-
-#ifdef USE_GNUREGEX
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-#include "GNUregex.h"
-#ifdef __cplusplus
-}
-
-#endif
-#elif HAVE_REGEX_H
-#include <regex.h>
 #endif
 
 #include "md5.h"

@@ -1,6 +1,6 @@
 #  Makefile for authentication modules in the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.6 2005/10/23 11:55:38 hno Exp $
+#  $Id$
 #
 AUTOMAKE_OPTIONS = subdir-objects
 AM_CFLAGS = @SQUID_CFLAGS@
@@ -15,7 +15,11 @@ libdigest_a_SOURCES	= digest/auth_digest.cc digest/auth_digest.h
 libntlm_a_SOURCES	= ntlm/auth_ntlm.cc ntlm/auth_ntlm.h
 libnegotiate_a_SOURCES	= negotiate/auth_negotiate.cc negotiate/auth_negotiate.h negotiate/negotiateScheme.cc negotiate/negotiateScheme.h
 
-INCLUDES      = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
+INCLUDES = \
+	-I$(top_srcdir)/libsquid-compat \
+	-I. \
+	-I$(top_builddir)/include \
+	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src
 
 check_PROGRAMS= testHeaders

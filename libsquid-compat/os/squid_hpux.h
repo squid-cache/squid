@@ -1,11 +1,11 @@
 #ifndef SQUID_CONFIG_H
-#include "squid.h"
+#include "config.h"
 #endif
 
-#ifndef SQUID_OS_SUNOS_H
-#define SQUID_OS_SUNOS_H
+#ifndef SQUID_OS_HPUX_H
+#define SQUID_OS_PHUX_H
 
-#ifdef _SQUID_SUNOS_
+#ifdef _SQUID_HPUX_
 
 /****************************************************************************
  *--------------------------------------------------------------------------*
@@ -14,12 +14,19 @@
  ****************************************************************************/
 
 
+#if !defined(HAVE_GETPAGESIZE)
+#define HAVE_GETPAGESIZE
+#define getpagesize( )   sysconf(_SC_PAGE_SIZE)
+#endif
+
 /*
- * We assume O_NONBLOCK is broken, or does not exist, on SunOS.
+ * getrusage(...) not available on some HPUX
  */
-#define SQUID_NONBLOCK O_NDELAY
+#if !HAVE_GETRUSAGE
+#define HAVE_GETRUSAGE 1
+#define getrusage(a, b)  syscall(SYS_GETRUSAGE, a, b)
+#endif
 
 
-
-#endif /* _SQUID_SUNOS_ */
-#endif /* SQUID_OS_SUNOS_H */
+#endif /* _SQUID_HPUX_ */
+#endif /* SQUID_OS_HPUX_H */

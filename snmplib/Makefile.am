@@ -10,7 +10,7 @@ libsnmp_a_SOURCES  = asn1.c parse.c snmp_vars.c \
 	mib.c snmp_api_error.c   \
 	snmp_msg.c \
 	snmp_pdu.c  snmplib_debug.c
-INCLUDES	= -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/src
+INCLUDES	= -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/libsquid-compat
 
 VERSION		= 3.4
 DEFS		= -DSQUID_SNMP=1

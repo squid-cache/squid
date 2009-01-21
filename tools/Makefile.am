@@ -8,6 +8,7 @@
 AUTOMAKE_OPTIONS = subdir-objects
 
 INCLUDES        = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/lib/libTrie/include -I$(top_srcdir)/src
+INCLUDES	+= -I$(top_srcdir)/libsquid-compat
 INCLUDES	+= @SQUID_CPPUNIT_INC@
 
 TESTS=$(check_PROGRAMS)

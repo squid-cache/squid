@@ -1,11 +1,11 @@
 #ifndef SQUID_CONFIG_H
-#include "squid.h"
+#include "config.h"
 #endif
 
-#ifndef SQUID_OS_AIX_H
-#define SQUID_OS_AIX_H
+#ifndef SQUID_OS_QNX_H
+#define SQUID_OS_QNX_H
 
-#ifdef _SQUID_AIX_
+#ifdef _SQUID_QNX_
 
 /****************************************************************************
  *--------------------------------------------------------------------------*
@@ -13,15 +13,11 @@
  *--------------------------------------------------------------------------*
  ****************************************************************************/
 
-
 /*
- * Syslog facility on AIX requires some portability wrappers
+ * Requires unix.h header file
  */
-#ifdef HAVE_SYSLOG_H
-#define _XOPEN_EXTENDED_SOURCE
-#define _XOPEN_SOURCE_EXTENDED 1
-#endif
+#include <unix.h>
 
 
-#endif /* _SQUID_AIX_ */
-#endif /* SQUID_OS_AIX_H */
+#endif /* _SQUID_QNX_ */
+#endif /* SQUID_OS_QNX_H */
