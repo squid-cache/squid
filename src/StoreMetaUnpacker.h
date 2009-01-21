@@ -1,5 +1,5 @@
 /*
- * $Id: StoreMetaUnpacker.h,v 1.3 2008/01/07 17:12:28 hno Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

@@ -1,5 +1,5 @@
 /*
- * $Id: Packer.h,v 1.2 2006/05/03 14:04:44 robertc Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

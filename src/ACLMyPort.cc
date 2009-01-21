@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLMyPort.cc,v 1.3 2007/12/14 23:11:45 amosjeffries Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

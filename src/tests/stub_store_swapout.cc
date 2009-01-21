@@ -1,5 +1,5 @@
 /*
- * $Id: stub_store_swapout.cc,v 1.3 2007/04/17 23:05:20 wessels Exp $
+ * $Id$
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Robert Collins

@@ -1,6 +1,6 @@
 
 /*
- * $Id: htcp.cc,v 1.81 2008/02/26 21:49:34 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 31    Hypertext Caching Protocol
  * AUTHOR: Duane Wesssels

@@ -14,7 +14,7 @@
  *                      - use xinet_ntop instead of inet_ntop
  *                      - use SQUIDHOSTNAMELEN instead of MAXHOSTNAMELEN
  *
- * Squid CVS $Id: getnameinfo.c,v 1.1 2007/12/14 05:03:26 amosjeffries Exp $
+ * Squid CVS $Id$
  *
  *  Original License and code follows.
  */

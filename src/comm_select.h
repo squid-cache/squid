@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.h,v 1.1 2006/05/29 00:15:02 robertc Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

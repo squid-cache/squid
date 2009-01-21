@@ -1,6 +1,6 @@
 #error COSS Support is not stable yet in Squid-3. Please do not use.
 /*
- * $Id: store_dir_coss.cc,v 1.77 2007/11/15 16:47:36 wessels Exp $
+ * $Id$
  * vim: set et :
  *
  * DEBUG: section 47    Store COSS Directory Routines

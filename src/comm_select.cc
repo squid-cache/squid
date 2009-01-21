@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select.cc,v 1.85 2008/02/17 10:15:55 serassio Exp $
+ * $Id$
  *
  * DEBUG: section 5     Socket Functions
  *

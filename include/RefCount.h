@@ -1,6 +1,6 @@
 
 /*
- * $Id: RefCount.h,v 1.11 2007/04/25 11:30:15 adrian Exp $
+ * $Id$
  *
  * DEBUG: none          Refcount allocator
  * AUTHOR:  Robert Collins

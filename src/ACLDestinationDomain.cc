@@ -1,5 +1,5 @@
 /*
- * $Id: ACLDestinationDomain.cc,v 1.17 2008/01/22 20:34:43 rousskov Exp $
+ * $Id$
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels

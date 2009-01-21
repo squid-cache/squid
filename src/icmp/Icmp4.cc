@@ -1,5 +1,5 @@
 /*
- * $Id: ICMPv4.cc,v 1.2 2007/12/28 12:04:45 hno Exp $
+ * $Id$
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels, Amos Jeffries

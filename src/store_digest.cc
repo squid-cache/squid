@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_digest.cc,v 1.77 2008/01/07 17:12:28 hno Exp $
+ * $Id$
  *
  * DEBUG: section 71    Store Digest Manager
  * AUTHOR: Alex Rousskov

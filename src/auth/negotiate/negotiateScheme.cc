@@ -1,6 +1,6 @@
 
 /*
- * $Id: negotiateScheme.cc,v 1.1 2005/10/23 11:55:38 hno Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

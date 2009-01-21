@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.cc,v 1.547 2008/02/12 23:55:26 rousskov Exp $
+ * $Id$
  *
  * DEBUG: section 11    Hypertext Transfer Protocol (HTTP)
  * AUTHOR: Harvest Derived
@@ -1422,8 +1422,8 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     String strFwd;
     HttpHeaderPos pos = HttpHeaderInitPos;
     assert (hdr_out->owner == hoRequest);
-    /* append our IMS header */
 
+    /* append our IMS header */
     if (request->lastmod > -1)
         hdr_out->putTime(HDR_IF_MODIFIED_SINCE, request->lastmod);
 

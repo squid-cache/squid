@@ -1,6 +1,6 @@
 
 /*
- * $Id: EventLoop.cc,v 1.6 2008/02/12 23:49:44 rousskov Exp $
+ * $Id$
  *
  * DEBUG: section 1     Main Loop
  * AUTHOR: Harvest Derived

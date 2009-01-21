@@ -1,5 +1,5 @@
 /*
- * $Id: ACLUrl.cc,v 1.1 2003/02/17 07:01:34 robertc Exp $
+ * $Id$
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels

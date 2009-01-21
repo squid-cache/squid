@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir.cc,v 1.163 2007/09/28 00:22:38 hno Exp $
+ * $Id$
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels

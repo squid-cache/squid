@@ -1,28 +1,28 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML>
 <HEAD>
-   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
-   <TITLE>BŁĄD: Żądany URL nie może zostać sprowadzony</TITLE>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+   <TITLE>BĹÄD: ĹťÄdany URL nie moĹźe zostaÄ sprowadzony</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD>
 <BODY>
 
 <H1>
-BŁĄD</H1>
+BĹÄD</H1>
 
 <H2>
-Żądany URL nie może zostać sprowadzony</H2>
+ĹťÄdany URL nie moĹźe zostaÄ sprowadzony</H2>
 
 <HR noshade size="1px">
 
-<P>Podczas obsługi następującego żądania:
+<P>Podczas obsĹugi nastÄpujÄcego ĹźÄdania:
 <PRE>%R</PRE>
-wystąpił następujący błąd:
+wystÄpiĹ nastÄpujÄcy bĹÄd:
 <UL>
 <LI>
-<B>błędne żądanie</B></LI>
+<B>bĹÄdne ĹźÄdanie</B></LI>
 </UL>
-Niektóre części żądania HTTP mogą być błędne. Możliwe problemy to:
+NiektĂłre czÄĹci ĹźÄdania HTTP mogÄ byÄ bĹÄdne. MoĹźliwe problemy to:
 <UL>
 <LI>
 Brak lub nieznana metoda (GET, POST)</LI>
@@ -34,12 +34,12 @@ Brak URL-a</LI>
 Brak identyfikatora HTTP (HTTP/1.0)</LI>
 
 <LI>
-RZbyt duży rozmiar żądania</LI>
+RZbyt duĹźy rozmiar ĹźÄdania</LI>
 
 <LI>
 Brak pola Content-Length&nbsp; dla metod POST lub PUT</LI>
 
 <LI>
-Błędny znak w nazwie hosta; podkreślenia (underscores) są niedozwolone</LI>
+BĹÄdny znak w nazwie hosta; podkreĹlenia (underscores) sÄ niedozwolone</LI>
 </UL>
 

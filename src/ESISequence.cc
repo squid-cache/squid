@@ -1,5 +1,5 @@
 /*
- * $Id: ESISequence.cc,v 1.7 2008/01/20 19:46:35 serassio Exp $
+ * $Id$
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins

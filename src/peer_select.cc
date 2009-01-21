@@ -1,5 +1,5 @@
 /*
- * $Id: peer_select.cc,v 1.149 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 44    Peer Selection Algorithm
  * AUTHOR: Duane Wessels

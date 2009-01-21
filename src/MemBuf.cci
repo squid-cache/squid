@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemBuf.cci,v 1.3 2005/11/21 22:54:00 wessels Exp $
+ * $Id$
  *
  * DEBUG: section 59    auto-growing Memory Buffer with printf
  * AUTHOR: Robert Collins

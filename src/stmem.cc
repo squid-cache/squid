@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.cc,v 1.93 2007/12/27 01:58:19 hno Exp $
+ * $Id$
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Harvest Derived

@@ -30,7 +30,7 @@
  * ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
  * SOFTWARE.
  *
- * $Id: asn1.h,v 1.13 2003/01/23 00:36:47 robertc Exp $
+ * $Id$
  *
  **********************************************************************/
 

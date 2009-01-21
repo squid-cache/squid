@@ -1,5 +1,5 @@
 /*
- * $Id: stub_HttpRequest.cc,v 1.5 2008/01/20 08:54:33 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Robert Collins

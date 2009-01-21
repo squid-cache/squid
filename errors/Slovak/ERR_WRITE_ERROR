@@ -1,17 +1,17 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-2">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <TITLE>CHYBA: Pozadovany dokument je nedostupny</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>CHYBA</H1>
-<H2>Požadovaný dokument je nedostupný</H2>
+<H2>PoĹžadovanĂ˝ dokument je nedostupnĂ˝</H2>
 <HR noshade size="1px">
 <P>
-Pri pokuse o prístup k:
+Pri pokuse o prĂ­stup k:
 <A HREF="%U">%U</A>
 <P>
-došlo k nasledovnej chybe:
+doĹĄlo k nasledovnej chybe:
 <UL>
 <LI>
 <STRONG>
@@ -20,9 +20,9 @@ Write Error
 </UL>
 
 <P>
-Systém opovedal:
+SystĂŠm opovedal:
 <PRE><I>    %E</I></PRE>
 
 <P>
-Vyskytla sa chyba pri zápise do siete. Opakujte prosím Vašu požiadavku.
+Vyskytla sa chyba pri zĂĄpise do siete. Opakujte prosĂ­m VaĹĄu poĹžiadavku.
 </P>

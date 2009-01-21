@@ -1,5 +1,5 @@
 /*
- * $Id: sspwin32.h,v 1.2 2006/09/09 15:29:59 serassio Exp $
+ * $Id$
  *
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>
  * Based on previous work of Francesco Chemolli, Robert Collins and Andrew Doran

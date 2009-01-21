@@ -1,6 +1,6 @@
 
 /*
- * $Id: http.h,v 1.34 2008/02/12 23:55:26 rousskov Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

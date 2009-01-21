@@ -1,3 +1,6 @@
+/*
+ * $Id$
+ */
 #ifndef SQUID_CONFIG_H
 #include "config.h"
 #endif

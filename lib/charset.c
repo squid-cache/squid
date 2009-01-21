@@ -1,5 +1,5 @@
 /*
- * $Id: charset.c,v 1.1 2008/07/07 11:04:47 hno Exp $
+ * $Id$
  *
  * DEBUG:
  * AUTHOR: Henrik Nordstrom <henrik@henriknordstrom.net>

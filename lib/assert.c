@@ -1,6 +1,6 @@
 
 /*
- * $Id: assert.c,v 1.2 2006/05/11 19:59:07 hno Exp $
+ * $Id$
  *
  * AUTHOR: Henrik Nordstrom
  *

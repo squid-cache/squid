@@ -1,6 +1,6 @@
 
 /*
- * $Id: CacheDigest.cc,v 1.40 2007/11/15 16:47:35 wessels Exp $
+ * $Id$
  *
  * DEBUG: section 70    Cache Digest
  * AUTHOR: Alex Rousskov

@@ -1,25 +1,25 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
-<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=gb2312"> 
-<TITLE>´íÎó£ºÄúËùÇëÇóµÄÍøÖ·£¨URL£©ÎÞ·¨»ñÈ¡</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8"> 
+<TITLE>é”™è¯¯ï¼šæ‚¨æ‰€è¯·æ±‚çš„ç½‘å€ï¼ˆURLï¼‰æ— æ³•èŽ·å–</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
-<H1>´íÎó</H1>
-<H2>ÄúËùÇëÇóµÄÍøÖ·£¨URL£©ÎÞ·¨»ñÈ¡</H2>
+<H1>é”™è¯¯</H1>
+<H2>æ‚¨æ‰€è¯·æ±‚çš„ç½‘å€ï¼ˆURLï¼‰æ— æ³•èŽ·å–</H2>
 <HR noshade size="1px">
 <P>
-µ±³¢ÊÔ¶ÁÈ¡ÒÔÏÂÍøÖ·£¨URL£©Ê±£º
+å½“å°è¯•è¯»å–ä»¥ä¸‹ç½‘å€ï¼ˆURLï¼‰æ—¶ï¼š
 <A HREF="%U">%U</A>
 <P>
-·¢ÉúÁËÏÂÁÐµÄ´íÎó£º
+å‘ç”Ÿäº†ä¸‹åˆ—çš„é”™è¯¯ï¼š
 <UL>
 <LI>
 <STRONG>
 Valid document was not found in the cache and <code>only-if-cached</code>
 directive was specified.
 <BR>
-ÇëÇóµÄÎÄ¼þÔÚ±¾»º´æ·þÎñÆ÷ÉÏÎ´ÕÒµ½£¬¶øÄúÉè¶¨ÁË<code>only-if-cached</code>£¨Ö»¶ÁÈ¡»º´æ£©
-Ö¸Áî¡£
+è¯·æ±‚çš„æ–‡ä»¶åœ¨æœ¬ç¼“å­˜æœåŠ¡å™¨ä¸Šæœªæ‰¾åˆ°ï¼Œè€Œæ‚¨è®¾å®šäº†<code>only-if-cached</code>ï¼ˆåªè¯»å–ç¼“å­˜ï¼‰
+æŒ‡ä»¤ã€‚
 </STRONG>
 </UL>
 
@@ -29,8 +29,8 @@ You have issued a request with a <code>only-if-cached</code> cache control
 directive. The document was not found in the cache, <em>or</em> it required
 revalidation prohibited by <code>only-if-cached</code> directive.
 <BR>
-ÄúËÍ³öÁËÒ»¸ö°üº¬ <code>only-if-cached</code> £¨Ö»¶ÁÈ¡»º´æ£©»º´æ¿ØÖÆÖ¸ÁîµÄÁ¬½áÇëÇó¡£
-¶øËùÒªµÄÎÄ¼þ²¢Î´´æÔÚÓÚ±¾»º´æ·þÎñÆ÷ÖÐ£¬<em>»òÕß</em>Õâ¸öÁ¬½áÇëÇóÐèÒªË¢ÐÂÎÄ¼þ¶ø
-<code>only-if-cached</code> Ö¸Áî½ûÖ¹ÕâÃ´×ö¡£
+æ‚¨é€å‡ºäº†ä¸€ä¸ªåŒ…å« <code>only-if-cached</code> ï¼ˆåªè¯»å–ç¼“å­˜ï¼‰ç¼“å­˜æŽ§åˆ¶æŒ‡ä»¤çš„è¿žç»“è¯·æ±‚ã€‚
+è€Œæ‰€è¦çš„æ–‡ä»¶å¹¶æœªå­˜åœ¨äºŽæœ¬ç¼“å­˜æœåŠ¡å™¨ä¸­ï¼Œ<em>æˆ–è€…</em>è¿™ä¸ªè¿žç»“è¯·æ±‚éœ€è¦åˆ·æ–°æ–‡ä»¶è€Œ
+<code>only-if-cached</code> æŒ‡ä»¤ç¦æ­¢è¿™ä¹ˆåšã€‚
 </P>
-<P>±¾»º´æ·þÎñÆ÷¹ÜÀíÔ±£º<A HREF="mailto:%w%W">%w</A>
+<P>æœ¬ç¼“å­˜æœåŠ¡å™¨ç®¡ç†å‘˜ï¼š<A HREF="mailto:%w%W">%w</A>

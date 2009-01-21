@@ -1,16 +1,16 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1257">
-<TITLE>KLAIDA: Puslapis nurodytu adresu negali būti atsiųstas</TITLE>
+<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+<TITLE>KLAIDA: Puslapis nurodytu adresu negali bÅ«ti atsiÅ³stas</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>KLAIDA</H1>
-<H2>Puslapis nurodytu adresu negali būti atsiųstas</H2>
+<H2>Puslapis nurodytu adresu negali bÅ«ti atsiÅ³stas</H2>
 <HR noshade size="1px">
 <P>
-Bandant atsiųsti puslapį:
+Bandant atsiÅ³sti puslapÄÆ:
 <A HREF="%U">%U</A>
 <P>
-Gautas klaidos pranešimas:
+Gautas klaidos praneÅ¡imas:
 <UL>
 <LI>
 <STRONG>
@@ -19,10 +19,10 @@ Leistino skaitymo laiko pabaiga
 </UL>
 
 <P>
-Sistema atsakė:
+Sistema atsakÄ—:
 <PRE><I>    %E</I></PRE>
 
 <P>
-Klaida įvyko laukiant duomenų atsiuntimo iš tinklo. Tinklas arba serveris 
-gali būti atjungtas arba perkrautas. Prašome pakartoti užklausą.
+Klaida ÄÆvyko laukiant duomenÅ³ atsiuntimo iÅ¡ tinklo. Tinklas arba serveris 
+gali bÅ«ti atjungtas arba perkrautas. PraÅ¡ome pakartoti uÅ¾klausÄ….
 </P>

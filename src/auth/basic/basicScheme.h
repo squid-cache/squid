@@ -1,6 +1,6 @@
 
 /*
- * $Id: basicScheme.h,v 1.2 2008/02/26 21:49:41 amosjeffries Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

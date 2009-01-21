@@ -1,5 +1,5 @@
 /*
- * $Id: event.cc,v 1.52 2008/02/13 06:09:15 rousskov Exp $
+ * $Id$
  *
  * DEBUG: section 41    Event Processing
  * AUTHOR: Henrik Nordstrom

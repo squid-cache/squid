@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskIOModule.h,v 1.3 2006/09/14 00:51:10 robertc Exp $
+ * $Id$
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------

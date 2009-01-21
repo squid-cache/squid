@@ -1,5 +1,5 @@
 /*
- * $Id: ESIVar.h,v 1.2 2003/08/04 22:14:40 robertc Exp $
+ * $Id$
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins

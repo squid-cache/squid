@@ -1,4 +1,4 @@
-Squid 3.0.RC1 release notesSquid Developers$Id: release-3.0.man,v 1.1 2007/12/15 03:55:02 amosjeffries Exp $This document contains the release notes for version 3.0 of Squid.
+Squid 3.0.RC1 release notesSquid Developers$Id$
 Squid is a WWW Cache application developed by the National Laboratory
 for Applied Network Research and members of the Web Caching community.Notice
 
