@@ -7,16 +7,16 @@
 
 /*
  * From discussions it was chosen to push compat code as far down as possible.
- * That means we can eventually have a seperate libcompat for most
+ * That means we can have a seperate libsquid-compat for most
  *  compatability and portability hacks and resolutions.
  * 
  * This file is meant to collate all those hacks files together and
- * provide a simple include form them in the core squid headers
+ * provide a simple include for them in the core squid headers
  * (presently squid.h and config.h) 
  *
  * It should not be included directly in any of the squid sources.
  * If your code requires any symbols from here you should be importing
- * squid.h at the top line of your .cc or .h file.
+ * config.h/squid.h at the top line of your .cc or .h file.
  */
 
 
@@ -50,16 +50,20 @@
 /*****************************************************/
 
 #include "os/squid_aix.h"
+#include "os/squid_dragonfly.h"
 #include "os/squid_freebsd.h"
 #include "os/squid_hpux.h"
 #include "os/squid_linux.h"
 #include "os/squid_mswin.h"
 #include "os/squid_next.h"
 #include "os/squid_openbsd.h"
+#include "os/squid_os2.h"
 #include "os/squid_qnx.h"
 #include "os/squid_sgi.h"
 #include "os/squid_solaris.h"
+#include "os/squid_sunos.h"
 #include "os/squid_windows.h"
+
 
 /*****************************************************/
 /* portabilities shared between all platforms and    */
