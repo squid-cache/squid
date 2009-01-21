@@ -1,7 +1,7 @@
 #
 #  Makefile for the ip_user external_acl helper by Rodrigo Campos
 #
-#  $Id: Makefile.am,v 1.4 2004/08/14 22:54:52 hno Exp $
+#  $Id$
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -15,7 +15,6 @@ ip_user_check_SOURCES = \
 	main.c \
 	match.c
 
-
 EXTRA_DIST = \
 	example.conf \
 	example-deny_all_but.conf \
@@ -24,5 +23,13 @@ EXTRA_DIST = \
 
 # sysconf_DATA = 
 
-LDADD		= -L$(top_builddir)/lib -lmiscutil @XTRA_LIBS@
-INCLUDES	= -I. -I$(top_builddir)/include -I$(top_srcdir)/include
+INCLUDES = \
+	-I$(top_srcdir)/libsquid-compat \
+	-I. \
+	-I$(top_builddir)/include \
+	-I$(top_srcdir)/include
+
+LDADD = \
+	-L$(top_builddir)/libsquid-compat/libsquid-compat.la \
+	-L$(top_builddir)/lib -lmiscutil \
+	@XTRA_LIBS@

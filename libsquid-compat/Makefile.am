@@ -9,20 +9,23 @@ AM_CXXFLAGS = @SQUID_CXXFLAGS@
 DEFS = @DEFS@
 CLEANFILES = 
 
-INCLUDES = -I$(top_srcdir)/src @SQUID_CPPUNIT_INC@ -I$(top_srcdir)/include -I$(top_builddir)/lib
+INCLUDES = -I. -I$(top_srcdir)/src @SQUID_CPPUNIT_INC@ -I$(top_srcdir)/include -I$(top_builddir)/lib
 $(OBJS): $(top_srcdir)/include/version.h $(top_srcdir)/include/autoconf.h
 
 # Ideally this would be 100% inline functions and macro wrappers.
 
 # Port Specific Configurations
 
-noinst_LTLIBRARIES = libcompat.la
+noinst_LTLIBRARIES = libsquid-compat.la
 
-libcompat_la_SOURCES = \
+libsquid_compat_la_SOURCES = \
 	compat.h \
 	osdetect.h \
 	compat_shared.h \
+	gnuregex.h \
 	squid_fdsetsize.h \
+	squid_stdvarargs.h \
+	squid_valgrind.h \
 	\
 	os/squid_aix.h \
 	os/squid_freebsd.h \
@@ -37,7 +40,8 @@ libcompat_la_SOURCES = \
 	os/squid_sunos.h \
 	os/squid_windows.h \
 	\
-	compat.cc
+	compat.cc \
+	GnuRegex.c
 
 
 check_PROGRAMS= testHeaders
@@ -45,24 +49,11 @@ TESTS= $(check_PROGRAMS)
 
 ## Special Universal .h dependency test script
 ## aborts if error encountered
-testHeaders: $(top_srcdir)/src/compat/*.h $(top_srcdir)/src/compat/os/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/src/compat/" || exit 1
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/src/compat/os/" || exit 1
+testHeaders: $(top_srcdir)/libsquid-compat/*.h $(top_srcdir)/libsquid-compat/os/*.h
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/libsquid-compat/" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/libsquid-compat/os/" || exit 1
 
 ## No such file...
 testHeaders.c:
 	touch testHeaders.c
 CLEANFILES += testHeaders.c
-
-#
-#testIpAddress_SOURCES= \
-#	testIpAddress.cc \
-#	testIpAddress.h
-#nodist_testIpAddress_SOURCES= \
-#	../tests/testMain.cc
-#testIpAddress_LDADD= \
-#	libip.la \
-#	-L$(top_builddir)/lib -lmiscutil \
-#	@SQUID_CPPUNIT_LA@ \
-#	@SQUID_CPPUNIT_LIBS@
-#testIpAddress_LDFLAGS= $(LIBADD_DL)

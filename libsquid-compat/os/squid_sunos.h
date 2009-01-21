@@ -1,11 +1,11 @@
 #ifndef SQUID_CONFIG_H
-#include "squid.h"
+#include "config.h"
 #endif
 
-#ifndef SQUID_OS_OPENBSD_H
-#define SQUID_OS_OPENBSD_H
+#ifndef SQUID_OS_SUNOS_H
+#define SQUID_OS_SUNOS_H
 
-#ifdef _SQUID_OPENBSD_
+#ifdef _SQUID_SUNOS_
 
 /****************************************************************************
  *--------------------------------------------------------------------------*
@@ -13,13 +13,13 @@
  *--------------------------------------------------------------------------*
  ****************************************************************************/
 
+
 /*
- * Don't allow inclusion of malloc.h
+ * We assume O_NONBLOCK is broken, or does not exist, on SunOS.
  */
-#ifdef HAVE_MALLOC_H
-#undef HAVE_MALLOC_H
-#endif
+#define SQUID_NONBLOCK O_NDELAY
 
 
-#endif /* _SQUID_OPENBSD_ */
-#endif /* SQUID_OS_OPENBSD_H */
+
+#endif /* _SQUID_SUNOS_ */
+#endif /* SQUID_OS_SUNOS_H */

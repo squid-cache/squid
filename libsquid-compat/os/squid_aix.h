@@ -1,11 +1,11 @@
 #ifndef SQUID_CONFIG_H
-#include "squid.h"
+#include "config.h"
 #endif
 
-#ifndef SQUID_OS_FREEBSD_H
-#define SQUID_OS_FREEBSD_H
+#ifndef SQUID_OS_AIX_H
+#define SQUID_OS_AIX_H
 
-#ifdef _SQUID_FREEBSD_
+#ifdef _SQUID_AIX_
 
 /****************************************************************************
  *--------------------------------------------------------------------------*
@@ -14,18 +14,14 @@
  ****************************************************************************/
 
 
-#if USE_ASYNC_IO && defined(LINUXTHREADS)
-#define _SQUID_LINUX_THREADS_
-#endif
-
 /*
- * Don't allow inclusion of malloc.h
+ * Syslog facility on AIX requires some portability wrappers
  */
-#if defined(HAVE_MALLOC_H)
-#undef HAVE_MALLOC_H
+#ifdef HAVE_SYSLOG_H
+#define _XOPEN_EXTENDED_SOURCE
+#define _XOPEN_SOURCE_EXTENDED 1
 #endif
 
-#define _etext etext
 
-#endif /* _SQUID_FREEBSD_ */
-#endif /* SQUID_OS_FREEBSD_H */
+#endif /* _SQUID_AIX_ */
+#endif /* SQUID_OS_AIX_H */

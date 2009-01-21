@@ -32,7 +32,7 @@
  *
  */
 #ifndef SQUID_CONFIG_H
-#include "squid.h"
+#include "config.h"
 #endif
 
 #ifndef SQUID_OS_MSWIN_H

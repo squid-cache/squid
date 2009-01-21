@@ -1,7 +1,3 @@
-/*
- * $Id: GNUregex.c,v 1.22 2007/12/14 23:11:44 amosjeffries Exp $
- */
-
 /* Extended regular expression matching and search library,
  * version 0.12.
  * (Implements POSIX draft P10003.2/D11.2, except for
@@ -33,6 +29,8 @@
 #endif
 
 #include "config.h"
+
+#if USE_GNUREGEX /* only if squid needs it. Usually not */
 
 #if !HAVE_ALLOCA
 #define REGEX_MALLOC 1
@@ -104,7 +102,7 @@ init_syntax_once(void)
 
 
 /* Get the interface, including the syntax bits.  */
-#include "GNUregex.h"
+#include "GnuRegex.h"
 
 /* Compile a fastmap for the compiled pattern in BUFFER; used to
  * accelerate searches.  Return 0 if successful and -2 if was an
@@ -2362,10 +2360,14 @@ typedef struct {
  * the pattern buffer.
  *
  * Returns 0 if we succeed, -2 if an internal error.   */
-
+#ifdef STDC_HEADERS
+int
+re_compile_fastmap(struct re_pattern_buffer *bufp)
+#else
 int
 re_compile_fastmap(bufp)
 struct re_pattern_buffer *bufp;
+#endif
 {
     int j, k;
     fail_stack_type fail_stack;
@@ -4401,6 +4403,7 @@ regex_t *preg;
         free(preg->translate);
     preg->translate = NULL;
 }
+#endif /* USE_GNUREGEX */
 
 /*
  * Local variables:

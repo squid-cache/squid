@@ -24,14 +24,14 @@
 /* Define the _SQUID_TYPE_ based on a guess of the OS */
 /* NP: this MUST come first within compat.h           */
 /******************************************************/
-#include "compat/osdetect.h"
+#include "osdetect.h"
 
 
 /*****************************************************/
 /* FDSETSIZE is messy and needs to be done before    */
 /* sys/types.h are defined.                          */
 /*****************************************************/
-#include "compat/squid_fdsetsize.h"
+#include "squid_fdsetsize.h"
 
 
 /*****************************************************/
@@ -68,7 +68,7 @@
 
 #include "compat_shared.h"
 #include "squid_stdvarargs.h"
-#include "compat/assert.h"
+#include "assert.h"
 
 /*****************************************************/
 /* component-specific portabilities                  */
@@ -85,7 +85,7 @@
  * Default is to use a system provided one, but the bundle
  * may be used instead with explicit configuration.
  */
-#include "compat/GnuRegex.h"
+#include "GnuRegex.h"
 
 
 #endif /* _SQUID_COMPAT_H */

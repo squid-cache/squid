@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.10 2003/01/23 00:35:26 robertc Exp $
+#  $Id$
 #
 #  Uncomment and customize the following to suit your needs:
 #
@@ -27,9 +27,12 @@ EXTRA_DIST = \
 sysconf_DATA = \
 	msntauth.conf.default
 
-LDADD = -L$(top_builddir)/lib -lmiscutil $(XTRA_LIBS)
+LDADD = -L$(top_builddir)/lib -lmiscutil $(XTRA_LIBS) -L$(top_builddir)/libsquid-compat/libsquid-compat.la
 
-INCLUDES      = -I$(top_srcdir)/include
+INCLUDES = \
+	-I$(top_srcdir)/libsquid-compat \
+	-I$(top_srcdir)/include \
+	-I$(top_srcdir)/src
 
 confload.o: confload.c
 	$(COMPILE) -DSYSCONFDIR=\"$(sysconfdir)\" -c $(srcdir)/confload.c -o $@
@@ -41,5 +44,3 @@ install-data-local:
 		echo "$(INSTALL_DATA) $(srcdir)/msntauth.conf.default $(DESTDIR)$(sysconfdir)/msntauth.conf" ; \
 		$(INSTALL_DATA) $(srcdir)/msntauth.conf.default $(DESTDIR)$(sysconfdir)/msntauth.conf ; \
 	fi
-
-	

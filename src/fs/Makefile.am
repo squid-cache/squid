@@ -1,6 +1,6 @@
 #  Makefile for storage modules in the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.15 2008/01/08 11:10:48 amosjeffries Exp $
+#  $Id$
 #
 
 AUTOMAKE_OPTIONS = subdir-objects
@@ -28,7 +28,11 @@ EXTRA_DIST = \
 	coss/StoreFScoss.h \
 	ufs/StoreFSufs.h
 
-INCLUDES      = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
+INCLUDES = \
+	-I$(top_srcdir)/libsquid-compat \
+	-I. \
+	-I$(top_builddir)/include \
+	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src
 
 check_PROGRAMS=testHeaders

@@ -22,5 +22,9 @@ libeCAP_la_SOURCES = \
 	\
 	Registry.h
 
-INCLUDES = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
+INCLUDES = \
+	-I$(top_srcdir)/libsquid-compat \
+	-I. \
+	-I$(top_builddir)/include \
+	-I$(top_srcdir)/include \
         -I$(top_srcdir)/src
