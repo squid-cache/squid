@@ -1,6 +1,6 @@
 
 /*
- * $Id: util.c,v 1.98 2007/12/06 02:37:15 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG:
  * AUTHOR: Harvest Derived

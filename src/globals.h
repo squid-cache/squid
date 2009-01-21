@@ -1,5 +1,5 @@
 /*
- * $Id: globals.h,v 1.143 2008/02/11 22:36:52 rousskov Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

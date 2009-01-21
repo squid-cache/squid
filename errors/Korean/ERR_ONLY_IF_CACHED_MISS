@@ -1,27 +1,27 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
-<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=EUC-KR">
-<TITLE>¿¡·¯: ¿äÃ»µÈ URLÀ» °¡Á®¿Ã ¼ö ¾ø½À´Ï´Ù.</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+<TITLE>ì—ëŸ¬: ìš”ì²­ëœ URLì„ ê°€ì ¸ì˜¬ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
-<H1>¿¡·¯</H1>
-<H2>¿äÃ»µÈ URLÀ» °¡Á®¿Ã ¼ö ¾ø½À´Ï´Ù.</H2>
+<H1>ì—ëŸ¬</H1>
+<H2>ìš”ì²­ëœ URLì„ ê°€ì ¸ì˜¬ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.</H2>
 <HR noshade size="1px">
 <P>
-´ÙÀ½ URLÀ» Ã³¸® ÇÏ´ø Áß:
+ë‹¤ìŒ URLì„ ì²˜ë¦¬ í•˜ë˜ ì¤‘:
 <A HREF="%U">%U</A>
 <P>
-¾Æ·¡¿Í °°Àº ¿¡·¯°¡ ¹ß»ýÇß½À´Ï´Ù:
+ì•„ëž˜ì™€ ê°™ì€ ì—ëŸ¬ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤:
 <UL>
 <LI>
 <STRONG>
-Ä³½¬¿¡ À¯È¿ÇÑ ¹®¼­°¡ ¾ø°í <code>only-if-cached</code>°¡ ÁöÁ¤µÇ¾ú½À´Ï´Ù.
+ìºì‰¬ì— ìœ íš¨í•œ ë¬¸ì„œê°€ ì—†ê³  <code>only-if-cached</code>ê°€ ì§€ì •ë˜ì—ˆìŠµë‹ˆë‹¤.
 </STRONG>
 </UL>
 
 <P>
 
-<code>only-if-cached</code>°¡ ÁöÁ¤µÇ¾î ¹®¼­°¡ ¿äÃ»µÇ¾ú½À´Ï´Ù.
-¿äÃ»µÈ ¹®¼­°¡ Ä³½¬¿¡ ¾ø°Å³ª, <em>È¤Àº</em> ÀçÈ®ÀÎÀ» ÇØ¾ß ÇÕ´Ï´Ù. 
+<code>only-if-cached</code>ê°€ ì§€ì •ë˜ì–´ ë¬¸ì„œê°€ ìš”ì²­ë˜ì—ˆìŠµë‹ˆë‹¤.
+ìš”ì²­ëœ ë¬¸ì„œê°€ ìºì‰¬ì— ì—†ê±°ë‚˜, <em>í˜¹ì€</em> ìž¬í™•ì¸ì„ í•´ì•¼ í•©ë‹ˆë‹¤. 
 
 </P>

@@ -1,30 +1,30 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
-<TITLE>HIBA: A kért URL nem tölthető le</TITLE>
-<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2"></HEAD>
+<TITLE>HIBA: A kĂŠrt URL nem tĂślthetĹ le</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8"></HEAD>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>HIBA</H1>
-<H2>A kért URL nem tölthető le</H2>
+<H2>A kĂŠrt URL nem tĂślthetĹ le</H2>
 <HR noshade size="1px">
 <P>
-Az alábbi URL letöltésekor:
+Az alĂĄbbi URL letĂśltĂŠsekor:
 <A HREF="%U">%U</A>
 <P>
-a következő hiba lépett fel:
+a kĂśvetkezĹ hiba lĂŠpett fel:
 <UL>
 <LI>
 <STRONG>
-A kérés vagy a válasz túl nagy méretű.
+A kĂŠrĂŠs vagy a vĂĄlasz tĂşl nagy mĂŠretĹą.
 </STRONG>
 <P>
-POST vagy PUT kérés esetén a kérés törzse (az az anyag
-amit feltöltene) túl nagy méretű. Ha GET típusú
-kérésről van szó, akkor a válasz törzse (az az anyag amit éppen
-letöltene) túl nagy méretű. A cache-t működtető Internet 
-szolgáltató vezette be ezeket a korlátozásokat. Kérjük, forduljon
-közvetlenül szolgáltatójához amennyiben a szerver helytelen
-beállításában látja a hiba okát.
+POST vagy PUT kĂŠrĂŠs esetĂŠn a kĂŠrĂŠs tĂśrzse (az az anyag
+amit feltĂśltene) tĂşl nagy mĂŠretĹą. Ha GET tĂ­pusĂş
+kĂŠrĂŠsrĹl van szĂł, akkor a vĂĄlasz tĂśrzse (az az anyag amit ĂŠppen
+letĂśltene) tĂşl nagy mĂŠretĹą. A cache-t mĹąkĂśdtetĹ Internet 
+szolgĂĄltatĂł vezette be ezeket a korlĂĄtozĂĄsokat. KĂŠrjĂźk, forduljon
+kĂśzvetlenĂźl szolgĂĄltatĂłjĂĄhoz amennyiben a szerver helytelen
+beĂĄllĂ­tĂĄsĂĄban lĂĄtja a hiba okĂĄt.
 </UL>
 <P>
-A cache adminisztrátora: <A HREF="mailto:%w%W">%w</A>.
+A cache adminisztrĂĄtora: <A HREF="mailto:%w%W">%w</A>.

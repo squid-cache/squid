@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.cc,v 1.38 2008/02/26 21:49:35 amosjeffries Exp $
+ * $Id$
  *
  * AUTHOR: Benno Rice
  * DEBUG: section 83    SSL accelerator support

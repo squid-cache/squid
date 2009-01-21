@@ -1,5 +1,5 @@
 /*
- * $Id: ACLStrategised.cc,v 1.2 2008/02/06 04:05:38 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels

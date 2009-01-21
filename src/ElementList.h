@@ -1,5 +1,5 @@
 /*
- * $Id: ElementList.h,v 1.1 2003/03/10 04:56:36 robertc Exp $
+ * $Id$
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins

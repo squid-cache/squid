@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIExpatParser.cc,v 1.4 2005/07/03 15:25:08 serassio Exp $
+ * $Id$
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins

@@ -1,6 +1,6 @@
 
 /*
- * $Id: hash.c,v 1.18 2005/07/03 15:25:07 serassio Exp $
+ * $Id$
  *
  * DEBUG: section 0     Hash Tables
  * AUTHOR: Harvest Derived

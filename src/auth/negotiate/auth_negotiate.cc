@@ -1,5 +1,5 @@
 /*
- * $Id: auth_negotiate.cc,v 1.30 2008/02/26 21:49:43 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 29    Negotiate Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli

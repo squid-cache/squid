@@ -1,5 +1,5 @@
 /*
- * $Id: stub_client_side_request.cc,v 1.1 2006/04/25 07:13:34 robertc Exp $
+ * $Id$
  *
  * AUTHOR: Robert Collins
  *

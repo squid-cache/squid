@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESI.h,v 1.1 2003/03/10 04:56:35 robertc Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

@@ -1,5 +1,5 @@
 /*
- * $Id: SwapDir.h,v 1.15 2007/09/28 00:22:37 hno Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

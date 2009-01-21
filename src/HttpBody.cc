@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpBody.cc,v 1.25 2007/04/20 07:29:47 wessels Exp $
+ * $Id$
  *
  * DEBUG: section 56    HTTP Message Body
  * AUTHOR: Alex Rousskov

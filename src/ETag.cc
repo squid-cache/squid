@@ -1,6 +1,6 @@
 
 /*
- * $Id: ETag.cc,v 1.10 2003/02/21 22:50:05 robertc Exp $
+ * $Id$
  *
  * DEBUG: none          ETag parsing support
  * AUTHOR: Alex Rousskov

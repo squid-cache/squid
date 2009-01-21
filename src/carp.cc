@@ -1,6 +1,6 @@
 
 /*
- * $Id: carp.cc,v 1.27 2008/01/14 12:13:49 hno Exp $
+ * $Id$
  *
  * DEBUG: section 39    Cache Array Routing Protocol
  * AUTHOR: Henrik Nordstrom

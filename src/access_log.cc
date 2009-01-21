@@ -1,5 +1,5 @@
 /*
- * $Id: access_log.cc,v 1.130 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 46    Access Log
  * AUTHOR: Duane Wessels

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpReply.cc,v 1.100 2008/02/08 18:27:59 rousskov Exp $
+ * $Id$
  *
  * DEBUG: section 58    HTTP Reply (Response)
  * AUTHOR: Alex Rousskov

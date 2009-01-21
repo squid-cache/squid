@@ -1,6 +1,6 @@
 
 /*
- * $Id: ConfigParser.cc,v 1.3 2007/04/28 22:26:37 hno Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

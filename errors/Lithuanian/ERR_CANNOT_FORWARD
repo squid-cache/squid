@@ -1,29 +1,29 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1257">
-<TITLE>KLAIDA: Puslapis nurodytu adresu negali būti atsiųstas</TITLE>
+<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+<TITLE>KLAIDA: Puslapis nurodytu adresu negali bÅ«ti atsiÅ³stas</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>KLAIDA</H1>
-<H2>Puslapis nurodytu adresu negali būti atsiųstas</H2>
+<H2>Puslapis nurodytu adresu negali bÅ«ti atsiÅ³stas</H2>
 <HR noshade size="1px">
 <P>
-Bandant atsiųsti puslapį:
+Bandant atsiÅ³sti puslapÄÆ:
 <A HREF="%U">%U</A>
 <P>
-Gautas klaidos pranešimas:
+Gautas klaidos praneÅ¡imas:
 <UL>
 <LI>
 <STRONG>
-Šiuo metu negaliu persiųsti užklausos.
+Å iuo metu negaliu persiÅ³sti uÅ¾klausos.
 </STRONG>
 </UL>
 
 <P>
-Užklausa negali būti persiųsta į pagrindinį serverį arba kurį nors 
-pagalbinį proxy serverį. Pagrindinės tokios klaidos priežastys yra šios:
+UÅ¾klausa negali bÅ«ti persiÅ³sta ÄÆ pagrindinÄÆ serverÄÆ arba kurÄÆ nors 
+pagalbinÄÆ proxy serverÄÆ. PagrindinÄ—s tokios klaidos prieÅ¾astys yra Å¡ios:
 <UL>
-<LI>Proxy administratorius neleidžia serveriui kurti tiesioginių 
-    susijungimų su serveriais, ir
-<LI>Visi pagalbiniai proxy serveriai šiuo metu yra nepasiekiami.
+<LI>Proxy administratorius neleidÅ¾ia serveriui kurti tiesioginiÅ³ 
+    susijungimÅ³ su serveriais, ir
+<LI>Visi pagalbiniai proxy serveriai Å¡iuo metu yra nepasiekiami.
 </UL>
 </P>

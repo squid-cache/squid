@@ -3,7 +3,7 @@
 /*
  * Reconstructed from KAME getnameinfo.c (in lib/)
  *
- * $Id: getnameinfo.h,v 1.1 2007/12/14 05:03:25 amosjeffries Exp $
+ * $Id$
  */
 
 #include "config.h"

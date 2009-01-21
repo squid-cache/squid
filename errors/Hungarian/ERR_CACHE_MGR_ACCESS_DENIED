@@ -1,38 +1,38 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
-<TITLE>HIBA: Cache vezérlőpult hozzáférés megtagadva</TITLE>
-<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
+<TITLE>HIBA: Cache vezĂŠrlĹpult hozzĂĄfĂŠrĂŠs megtagadva</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD>
 <BODY>
 <H1>HIBA</H1>
-<H2>Cache vezérlőpult hozzáférés megtagadva</H2>
+<H2>Cache vezĂŠrlĹpult hozzĂĄfĂŠrĂŠs megtagadva</H2>
 <HR noshade size="1px">
 <P>
-Az alábbi URL letöltésekor:
+Az alĂĄbbi URL letĂśltĂŠsekor:
 <A HREF="%U">%U</A>
 <P>
-a következő hiba lépett fel:
+a kĂśvetkezĹ hiba lĂŠpett fel:
 <UL>
 <LI>
 <STRONG>
-Cache vezérlőpult hozzáférés megtagadva.
+Cache vezĂŠrlĹpult hozzĂĄfĂŠrĂŠs megtagadva.
 </STRONG>
 </UL>
 </P>
 
 <P>
-Sajnos az alábbi URL-t nem töltheti le cache szerverünktől
+Sajnos az alĂĄbbi URL-t nem tĂśltheti le cache szerverĂźnktĹl
 <PRE>    %U</PRE>
-amíg nem jelentkezik be rendszerünkbe.
+amĂ­g nem jelentkezik be rendszerĂźnkbe.
 </P>
 
 <P>
-Netscape 2.0 (vagy magasabb verziószámú) vagy Microsoft Internet Explorer 3.0 vagy
-egyéb HTTP/1.1 kompatibilis böngésző segítségével jelentkezhet be rendszerünkbe.
-Kérjük, forduljon a <A HREF="mailto:%w%W">cache adminisztrátorhoz</a> amennyiben nem 
-sikerül bejelentkeznie vagy ha <em>Ön</em> a cache adminisztrátor, olvassa el alaposan
-a Squid dokumentáció cache vezérlőpulttal kapcsolatos fejezetét és ellenőrizze a cache
-naplóállományát, ha részletesebb hibaüzenetekre van szüksége a probléma felderítéséhez.
+Netscape 2.0 (vagy magasabb verziĂłszĂĄmĂş) vagy Microsoft Internet Explorer 3.0 vagy
+egyĂŠb HTTP/1.1 kompatibilis bĂśngĂŠszĹ segĂ­tsĂŠgĂŠvel jelentkezhet be rendszerĂźnkbe.
+KĂŠrjĂźk, forduljon a <A HREF="mailto:%w%W">cache adminisztrĂĄtorhoz</a> amennyiben nem 
+sikerĂźl bejelentkeznie vagy ha <em>Ăn</em> a cache adminisztrĂĄtor, olvassa el alaposan
+a Squid dokumentĂĄciĂł cache vezĂŠrlĹpulttal kapcsolatos fejezetĂŠt ĂŠs ellenĹrizze a cache
+naplĂłĂĄllomĂĄnyĂĄt, ha rĂŠszletesebb hibaĂźzenetekre van szĂźksĂŠge a problĂŠma felderĂ­tĂŠsĂŠhez.
 </P>
 

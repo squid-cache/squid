@@ -1,11 +1,11 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-2">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <TITLE>CHYBA: Pozadovany dokument je nedostupny</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>CHYBA</H1>
-<H2>Požadovaný dokument je nedostupný</H2>
+<H2>PoĹžadovanĂ˝ dokument je nedostupnĂ˝</H2>
 <HR noshade size="1px">
 <P>
 While trying to process the request:
@@ -13,7 +13,7 @@ While trying to process the request:
 %R
 </PRE>
 <P>
-došlo k nasledovnej chybe:
+doĹĄlo k nasledovnej chybe:
 <UL>
 <LI>
 <STRONG>
@@ -22,13 +22,13 @@ Invalid Request
 </UL>
 
 <P>
-Časť HTTP požiadavky nie je chybná. Možné problémy"
+ÄasĹĽ HTTP poĹžiadavky nie je chybnĂĄ. MoĹžnĂŠ problĂŠmy"
 <UL>
-<LI>Chýbajúca alebo neznáma metóda (POST, GET)
-<LI>Chýbajúce URL
-<LI>Chýbajúci identifikátor HTTP (HTTP/1.0)
-<LI>Požiadavka je príliš dlhá
-<LI>Chýbajúca položka Content-Length pre požiadavky POST or PUT
-<LI>Zakázaný znak v názve serveru; podtrhovník nie je povolený
+<LI>ChĂ˝bajĂşca alebo neznĂĄma metĂłda (POST, GET)
+<LI>ChĂ˝bajĂşce URL
+<LI>ChĂ˝bajĂşci identifikĂĄtor HTTP (HTTP/1.0)
+<LI>PoĹžiadavka je prĂ­liĹĄ dlhĂĄ
+<LI>ChĂ˝bajĂşca poloĹžka Content-Length pre poĹžiadavky POST or PUT
+<LI>ZakĂĄzanĂ˝ znak v nĂĄzve serveru; podtrhovnĂ­k nie je povolenĂ˝
 </UL>
 </P>

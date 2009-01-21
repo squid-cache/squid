@@ -1,5 +1,5 @@
 /*
- * $Id: test_tools.cc,v 1.11 2008/02/26 18:52:54 rousskov Exp $
+ * $Id$
  */
 
 // XXX: This file is made of large pieces of src/debug.cc and src/tools.cc

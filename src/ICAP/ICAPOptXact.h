@@ -1,5 +1,5 @@
 /*
- * $Id: ICAPOptXact.h,v 1.6 2007/05/08 16:32:11 rousskov Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

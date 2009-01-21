@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc1738.cc,v 1.1 2003/04/22 01:37:44 robertc Exp $
+ * $Id$
  *
  * DEBUG: section xx    RFC 1738 string [un]escaping
  * AUTHOR:  Robert Collins

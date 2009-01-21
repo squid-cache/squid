@@ -1,5 +1,5 @@
 /*
- * $Id: ACLChecklist.cc,v 1.46 2008/02/12 23:29:25 rousskov Exp $
+ * $Id$
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels

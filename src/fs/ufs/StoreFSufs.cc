@@ -1,5 +1,5 @@
 /*
- * $Id: StoreFSufs.cc,v 1.2 2004/12/20 16:30:45 robertc Exp $
+ * $Id$
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Robert Collins

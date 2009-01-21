@@ -1,5 +1,5 @@
 /*
- * $Id: stub_MemObject.cc,v 1.8 2007/08/14 02:14:44 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Robert Collins

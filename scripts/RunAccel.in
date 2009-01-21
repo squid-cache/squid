@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-#  $Id: RunAccel.in,v 1.7 2003/01/23 00:37:06 robertc Exp $
+#  $Id$
 
 # enable HTTP requests on port 80
 port="-a 80"

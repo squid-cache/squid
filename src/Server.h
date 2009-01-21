@@ -1,6 +1,6 @@
 
 /*
- * $Id: Server.h,v 1.13 2008/02/12 23:55:26 rousskov Exp $
+ * $Id$
  *
  * AUTHOR: Duane Wessels
  *

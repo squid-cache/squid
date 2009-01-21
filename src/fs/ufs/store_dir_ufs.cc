@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_dir_ufs.cc,v 1.87 2007/12/02 07:19:58 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Duane Wessels

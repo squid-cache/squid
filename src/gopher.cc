@@ -1,6 +1,6 @@
 
 /*
- * $Id: gopher.cc,v 1.211 2008/02/26 21:49:34 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 10    Gopher
  * AUTHOR: Harvest Derived

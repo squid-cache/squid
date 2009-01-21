@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_repl_heap.cc,v 1.25 2007/04/30 16:56:19 wessels Exp $
+ * $Id$
  *
  * DEBUG: section 81    Store HEAP Removal Policies
  * AUTHOR: Henrik Nordstrom

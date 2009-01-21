@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMetaURL.cc,v 1.5 2007/04/28 22:26:37 hno Exp $
+ * $Id$
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  * AUTHOR: Kostas Anagnostakis

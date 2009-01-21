@@ -1,5 +1,5 @@
 /*
- * $Id: stub_store.cc,v 1.3 2007/04/21 07:14:20 wessels Exp $
+ * $Id$
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Robert Collins

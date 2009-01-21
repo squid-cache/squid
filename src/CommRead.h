@@ -1,6 +1,6 @@
 
 /*
- * $Id: CommRead.h,v 1.9 2008/02/12 23:51:37 rousskov Exp $
+ * $Id$
  *
  * DEBUG: section 5     Comms
  * AUTHOR: Robert Collins <robertc@squid-cache.org>

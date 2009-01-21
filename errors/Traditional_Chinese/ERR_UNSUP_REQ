@@ -1,22 +1,22 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=big5">
-<TITLE>¿ù»~¡G±ý³sµ²¤§ºô§}¡]URL¡^µLªk¥¿½Tªº¶Ç¦^</TITLE>
+<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+<TITLE>éŒ¯èª¤ï¼šæ¬²é€£çµä¹‹ç¶²å€ï¼ˆURLï¼‰ç„¡æ³•æ­£ç¢ºçš„å‚³å›ž</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
-<H1>¿ù»~</H1>
-<H2>±ý³sµ²¤§ºô§}¡]URL¡^µLªk¥¿½Tªº¶Ç¦^</H2>
+<H1>éŒ¯èª¤</H1>
+<H2>æ¬²é€£çµä¹‹ç¶²å€ï¼ˆURLï¼‰ç„¡æ³•æ­£ç¢ºçš„å‚³å›ž</H2>
 <HR noshade size="1px">
 <P>
-·í¹Á¸Õ¶Ç¦^¤U­±ªººô§}¡]URL¡^®É¡G
+ç•¶å˜—è©¦å‚³å›žä¸‹é¢çš„ç¶²å€ï¼ˆURLï¼‰æ™‚ï¼š
 <A HREF="%U">%U</A>
 <P>
-µo¥Í¤F¤U¦Cªº¿ù»~¡G
+ç™¼ç”Ÿäº†ä¸‹åˆ—çš„éŒ¯èª¤ï¼š
 <UL>
 <LI>
 <STRONG>
 Unsupported Request Method and Protocol
 <LI>
-©|¥¼¤ä´©ªº­n¨D¤è¦¡©Î³q°T¨ó©w
+å°šæœªæ”¯æ´çš„è¦æ±‚æ–¹å¼æˆ–é€šè¨Šå”å®š
 </STRONG>
 </UL>
 
@@ -24,7 +24,7 @@ Unsupported Request Method and Protocol
 Squid does not support all request methods for all access protocols.
 For example, you can not POST a Gopher request.
 <BR>
-¦]¬° Squid ¡]ºô¸ô§Ö¨úµ{¦¡¡^¨Ã¥¼¤ä´©©Ò¦³ªº³sµ²­n¨D¤è¦¡¦b¦U¦¡³q°T¨ó©w¤W¡C
-¤ñ¦p»¡¡A§A¤£¯à­n¨D¤@­Ó GOPHER ªº POST ³sµ²­n¨D¡C
+å› ç‚º Squid ï¼ˆç¶²è·¯å¿«å–ç¨‹å¼ï¼‰ä¸¦æœªæ”¯æ´æ‰€æœ‰çš„é€£çµè¦æ±‚æ–¹å¼åœ¨å„å¼é€šè¨Šå”å®šä¸Šã€‚
+æ¯”å¦‚èªªï¼Œä½ ä¸èƒ½è¦æ±‚ä¸€å€‹ GOPHER çš„ POST é€£çµè¦æ±‚ã€‚
 </P>
 

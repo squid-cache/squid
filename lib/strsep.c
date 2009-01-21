@@ -1,5 +1,5 @@
 /*
- * $Id: strsep.c,v 1.1 2006/07/02 19:27:17 serassio Exp $
+ * $Id$
  */
 
 /* Copyright (C) 2004 Free Software Foundation, Inc.

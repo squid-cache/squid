@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthUserRequest.h,v 1.9 2008/02/26 21:49:34 amosjeffries Exp $
+ * $Id$
  *
  * DO NOT MODIFY NEXT 2 LINES:
  * arch-tag: 674533af-8b21-4641-b71a-74c4639072a0

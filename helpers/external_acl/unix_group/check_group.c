@@ -1,5 +1,5 @@
 /*
- * $Id: check_group.c,v 1.7 2007/04/06 12:15:45 serassio Exp $
+ * $Id$
  *
  * This is a helper for the external ACL interface for Squid Cache
  * Copyright (C) 2002 Rodrigo Albani de Campos (rodrigo@geekbunker.org)

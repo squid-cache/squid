@@ -1,5 +1,5 @@
 /*
- * $Id: AsyncCall.cc,v 1.4 2008/02/26 21:49:34 amosjeffries Exp $
+ * $Id$
  */
 
 #include "squid.h"

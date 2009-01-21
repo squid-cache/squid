@@ -1,27 +1,27 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML>
 <HEAD>
-   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
-   <TITLE>BŁĄD: Żądany URL nie może zostać sprowadzony</TITLE>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+   <TITLE>BĹÄD: ĹťÄdany URL nie moĹźe zostaÄ sprowadzony</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD>
 <BODY>
 
 <H1>
-BŁĄD</H1>
+BĹÄD</H1>
 
 <H2>
-Żądany URL nie może zostać sprowadzony</H2>
+ĹťÄdany URL nie moĹźe zostaÄ sprowadzony</H2>
 
 <HR noshade size="1px">
 
-<P>Wystąpił błąd protokołu&nbsp; FTP podczas sprowadznia URL-a: <A HREF="%U">%U</A>
+<P>WystÄpiĹ bĹÄd protokoĹu&nbsp; FTP podczas sprowadznia URL-a: <A HREF="%U">%U</A>
 
-<P>Squid wysłał następującą komendę FTP:
+<P>Squid wysĹaĹ nastÄpujÄcÄ komendÄ FTP:
 <BLOCKQUOTE>
 <PRE><B>%f</B></PRE>
 </BLOCKQUOTE>
-i otrzymał odpowiedź
+i otrzymaĹ odpowiedĹş
 <BLOCKQUOTE>
 <PRE><B>%F</B></PRE>
 </BLOCKQUOTE>
@@ -29,6 +29,6 @@ i otrzymał odpowiedź
 <BLOCKQUOTE>
 <PRE><B>%g</B></PRE>
 </BLOCKQUOTE>
-Przyczyną mogł być FTP URL z podaną bezwzględną ścieżką (co nie jest zgodne
-z&nbsp; RFC 1738). Jeśli rzeczywiście tak było, to plik może być znaleziony
+PrzyczynÄ mogĹ byÄ FTP URL z podanÄ bezwzglÄdnÄ ĹcieĹźkÄ (co nie jest zgodne
+z&nbsp; RFC 1738). JeĹli rzeczywiĹcie tak byĹo, to plik moĹźe byÄ znaleziony
 tu: <A HREF="%B">%B</A>.

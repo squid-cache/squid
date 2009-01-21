@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_io_coss.cc,v 1.33 2007/08/13 17:20:56 hno Exp $
+ * $Id$
  *
  * DEBUG: section 79    Storage Manager COSS Interface
  * AUTHOR: Eric Stern

@@ -1,5 +1,5 @@
 /*
- * $Id: stub_DelayId.cc,v 1.1 2006/04/18 12:46:13 robertc Exp $
+ * $Id$
  *
  * DEBUG: section 20    Storage Manager
  * AUTHOR: Robert Collins

@@ -1,6 +1,6 @@
 
 /*
- * $Id: URLScheme.h,v 1.2 2006/05/10 23:40:38 wessels Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
