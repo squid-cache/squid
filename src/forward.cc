@@ -527,6 +527,10 @@ FwdState::retryOrBail()
             }
         }
 
+        /* Ditch error page if it was created before.
+         * A new one will be created if there's another problem */
+        err = NULL;
+
         /* use eventAdd to break potential call sequence loops and to slow things down a little */
         eventAdd("fwdConnectStart", fwdConnectStartWrapper, this, originserver ? 0.05 : 0.005, 0);
 
