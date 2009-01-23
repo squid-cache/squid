@@ -142,7 +142,7 @@ dist-hook:
 	cp -p $(srcdir)/errorpage.css  $(distdir)/errorpage.css
 
 translate:
-	@ if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no"; then \
+	@ if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no" && test "$(PO2HTML)" != "off"; then \
 	  for lang in $(TRANSLATIONS); do \
 		test -d $$lang && rm -r $$lang; \
 		mkdir $$lang; \
@@ -155,7 +155,11 @@ translate:
 		cd ..; \
 	  done; \
 	else \
-	  echo "WARNING: Translation toolkit was not detected."; \
+	  if test "$(PO2HTML)" = "off" ; then \
+	    echo "WARNING: Translation is disabled."; \
+	  else \
+	    echo "WARNING: Translation toolkit was not detected."; \
+	  fi; \
 	  echo "A drop-in bundle of pre-translated files is available from"; \
 	  echo "http://www.squid-cache.org/Versions/langpack/"; \
 	fi
