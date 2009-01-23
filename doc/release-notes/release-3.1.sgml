@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.1.0.3 release notes</title>
+<title>Squid 3.1.0.4 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.1.0.3 for testing.
+The Squid Team are pleased to announce the release of Squid-3.1.0.4 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.1/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -235,7 +235,7 @@ The two releases configuration differs and only the TOS mode settings are direct
 <p>The lines above are spearated for documentation. qos_flows may be configured with all options on one line, or separated as shown.
 Also options may be repeated as many times as desired. Only the final configured value for any option will be used.
 
-<p>The legacy <b>Option</b> and <b>Priority</b> modes available in Squid-2.7 are no longer supported.
+<p>The legacy <em>Option</em> and <em>Priority</em> modes available in Squid-2.7 are no longer supported.
 
 
 <sect1>SSL Bump (for HTTPS Filtering and Adaptation)

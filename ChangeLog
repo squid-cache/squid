@@ -1,3 +1,20 @@
+Changes to squid-3.1.0.4 (23 Jan 2008):
+
+	- Regression Fix: Bug 2558: rollback bug 2395 fix.
+	- Bug 2555: Fixes to SNMP-MIB
+	- Bug 2550: assertion comm.cc:350 !fd_table[fd].closing()
+	- Bug 2547,2548: OSX compile errors (duplicate symbols and IPv6)
+	- Bug 2508: comm.cc:2035 assertion fd_table[fd].closing()
+	- Bug 2330: allow keep-alive+chunked; don't add max-age for no-cache
+	- Polish ZPH configuration interface
+	- Several Language Conversions to new auto-negotiate
+	- Port from 2.7: squidclient -V and -j options for HTTP/1.1 and 0.9 testing
+	- Fix: Pconn not being used when they should.
+	- Fix: Fix pinger immediate shutdowns
+	- Fix: Untangle CacheManager reports from log_fqdn
+	- ... and all bugs fixed for 3.0.STABLE12
+	- ... and many code polish and optimization fixes.
+
 Changes to squid-3.1.0.3 (5 Dec 2008):
 
 	- Regression Fix: StoreIOBuffer patch removed.
