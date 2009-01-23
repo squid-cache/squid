@@ -1,17 +1,17 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
-<meta charset=gb2312">
-<TITLE>´íÎó£ºÄúËùÇëÇóµÄÍøÖ·£¨URL£©ÎÞ·¨»ñÈ¡</TITLE>
+<meta charset=utf-8">
+<TITLE>é”™è¯¯ï¼šæ‚¨æ‰€è¯·æ±‚çš„ç½‘å€ï¼ˆURLï¼‰æ— æ³•èŽ·å–</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD><BODY>
-<H1>´íÎó</H1>
-<H2>ÄúËùÇëÇóµÄÍøÖ·£¨URL£©ÎÞ·¨»ñÈ¡</H2>
+<H1>é”™è¯¯</H1>
+<H2>æ‚¨æ‰€è¯·æ±‚çš„ç½‘å€ï¼ˆURLï¼‰æ— æ³•èŽ·å–</H2>
 <HR noshade size="1px">
 <P>
-µ±³¢ÊÔ¶ÁÈ¡ÒÔÏÂÍøÖ·£¨URL£©Ê±£º
+å½“å°è¯•è¯»å–ä»¥ä¸‹ç½‘å€ï¼ˆURLï¼‰æ—¶ï¼š
 <A HREF="%U">%U</A>
 <P>
-·¢ÉúÁËÏÂÁÐµÄ´íÎó£º
+å‘ç”Ÿäº†ä¸‹åˆ—çš„é”™è¯¯ï¼š
 <UL>
 <LI>
 <STRONG>
@@ -20,11 +20,11 @@
 </UL>
 
 <P>
-ÏµÍ³»ØÓ¦ÒÔÏÂÐÅÏ¢£º
+ç³»ç»Ÿå›žåº”ä»¥ä¸‹ä¿¡æ¯ï¼š
 <PRE><I>    %E</I></PRE>
 
 <P>
-Õâ±íÊ¾£º
+è¿™è¡¨ç¤ºï¼š
 <PRE>
     @LONG_DESCRIPTION@
 </PRE>

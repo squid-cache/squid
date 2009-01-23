@@ -1,26 +1,26 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML>
 <HEAD>
-   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-2">
-   <TITLE>BŁĄD: Żądany URL nie może zostać sprowadzony</TITLE>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+   <TITLE>BĹÄD: ĹťÄdany URL nie moĹźe zostaÄ sprowadzony</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD>
 <BODY>
 
 <H1>
-BŁĄD</H1>
+BĹÄD</H1>
 
 <H2>
-Żądany URL nie może zostać sprowadzony</H2>
+ĹťÄdany URL nie moĹźe zostaÄ sprowadzony</H2>
 
 <HR noshade size="1px">
 <BR>Podczas sprowadzania URL-a: <A HREF="%U">%U</A>
 
-<P>wystąpił następujący błąd:
+<P>wystÄpiĹ nastÄpujÄcy bĹÄd:
 <UL>
 <LI>
-<B>Przekazanie żądania zabronione.</B></LI>
+<B>Przekazanie ĹźÄdania zabronione.</B></LI>
 </UL>
-Ten serwer cache nie przekaże Twojego żądania ponieważ wymusza ono relację
-typu sibling. Być może klient %i jest błędnie skonfigurowanym serwerem
+Ten serwer cache nie przekaĹźe Twojego ĹźÄdania poniewaĹź wymusza ono relacjÄ
+typu sibling. ByÄ moĹźe klient %i jest bĹÄdnie skonfigurowanym serwerem
 cache.

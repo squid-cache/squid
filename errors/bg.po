@@ -1,19 +1,21 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: squid 3.0\n"
+"Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-11-07 02:13+1300\n"
-"PO-Revision-Date: 2008-10-01 01:06+1200\n"
+"POT-Creation-Date: 2008-11-14 20:01+1300\n"
+"PO-Revision-Date: 2008-12-28 01:38+1300\n"
 "Last-Translator: Evgeni Gechev <etg@setcom.bg>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
+"Language: bg\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Pootle 1.1.0\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Pootle 1.2.0\n"
 
 #: templates/ERR_FTP_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
-msgstr ""
+msgstr "<a href=\"../\">Горна директория</a> (<a href=\"/\">Главна директория</a>)"
 
 #: templates/ERR_INVALID_REQ:4
 msgid ""
@@ -121,7 +123,7 @@ msgstr "Липсващо поле Content-Length за заявка от тип P
 
 #: templates/ERR_FTP_LISTING:3
 msgid "Directory Content:"
-msgstr ""
+msgstr "Съдържание на директорията:"
 
 #: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
@@ -150,7 +152,6 @@ msgid "ERROR: Cache Manager Access Denied"
 msgstr "ГРЕШКА: Отказан достъп до кеш мениджъра."
 
 #: templates/ERR_FTP_PUT_ERROR:1
-#, fuzzy
 msgid "ERROR: FTP upload failed"
 msgstr "ГРЕШКА: Неуспешен опит за качване на файл."
 
@@ -180,24 +181,23 @@ msgstr "Неуспешна обработка на ESI заявка."
 
 #: templates/ERR_FTP_LISTING:4
 msgid "FTP Directory Listing"
-msgstr ""
+msgstr "Извличане съдържанието на директорията"
 
 #: templates/ERR_FTP_LISTING:1
 msgid "FTP Directory: %U"
-msgstr ""
+msgstr "FTP директория: %U"
 
 #: templates/ERR_FTP_LISTING:2
 msgid "FTP Directory: <a href=\"/\">%U</a>/"
-msgstr ""
+msgstr "FTP директория: <a href=\"/\">%U</a>/"
 
 #: templates/ERR_FTP_PUT_CREATED:1
 msgid "FTP PUT Successful: File Created"
 msgstr "Файлът е създаден успешно."
 
 #: templates/ERR_FTP_PUT_MODIFIED:1
-#, fuzzy
 msgid "FTP PUT Successful: File Updated"
-msgstr "Файлът е обновен успешно."
+msgstr "FTP PUT заявката е успешна: файлът е обновен"
 
 #: templates/ERR_FTP_PUT_ERROR:3
 msgid "FTP PUT/upload failed"
@@ -314,7 +314,7 @@ msgstr "Операцията е успешна."
 
 #: templates/ERR_FTP_LISTING:5
 msgid "Parent Directory"
-msgstr ""
+msgstr "Горна директория"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:7
 msgid ""

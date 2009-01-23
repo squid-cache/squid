@@ -1,15 +1,17 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: squid 3.0\n"
+"Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-11-07 02:13+1300\n"
-"PO-Revision-Date: 2008-09-29 00:23+1200\n"
-"Last-Translator: <kavol@seznam.cz>\n"
+"POT-Creation-Date: 2008-11-14 20:01+1300\n"
+"PO-Revision-Date: 2009-01-15 14:26+1300\n"
+"Last-Translator: Radek Malcic <malcic@sdc.bno.cdrail.cz>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
+"Language: cs\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Pootle 1.1.0\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+"X-Generator: Pootle 1.2.0\n"
 
 #: templates/ERR_FTP_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
@@ -240,31 +242,40 @@ msgstr ""
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
-msgstr ""
+msgstr "Hey, neočekáváte příliš mnoho od URN na %T :)"
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
 msgstr ""
 
 #: templates/ERR_TOO_BIG:7
+#, fuzzy
 msgid ""
 "If you are making a GET request, then the item you are trying to download is "
 "too large."
 msgstr ""
+"Při použití metody GET byl požadovaný dokument přílišvelký a překročil možný "
+"limit povolený k přenosu (pravděpodobně jstese snažili o posílání/příjem "
+"dokumentu na server nebo ze serveru)."
 
 #: templates/ERR_TOO_BIG:6
+#, fuzzy
 msgid ""
 "If you are making a POST or PUT request, then the item you are trying to "
 "upload is too large."
 msgstr ""
+"Při použití metody POST, PUT byl požadovaný dokument přílišvelký a překročil "
+"možný limit povolený k přenosu (pravděpodobně jstese snažili o "
+"posílání/příjem dokumentu na server nebo ze serveru)."
 
 #: templates/ERR_INVALID_REQ:11 templates/ERR_INVALID_URL:11
+#, fuzzy
 msgid "Illegal character in hostname; underscores are not allowed."
-msgstr ""
+msgstr "Chybný znak v hostname (podtržítko ??)"
 
 #: templates/ERR_INVALID_URL:10
 msgid "Illegal double-escape in the URL-Path"
-msgstr ""
+msgstr "Chybný double-escape v URL cestě"
 
 #: templates/ERR_INVALID_URL:5
 msgid "Invalid URL"
@@ -272,24 +283,25 @@ msgstr ""
 
 #: templates/ERR_INVALID_REQ:8
 msgid "Missing HTTP Identifier (HTTP/1.0)."
-msgstr ""
+msgstr "Chybějící identifikátor HTTP (HTTP/1.0)."
 
 #: templates/ERR_INVALID_REQ:7
 msgid "Missing URL."
-msgstr ""
+msgstr "Chybějící URL."
 
 #: templates/ERR_INVALID_URL:9
 msgid "Missing hostname"
-msgstr ""
+msgstr "Chybějící hostname"
 
 #: templates/ERR_INVALID_URL:8
+#, fuzzy
 msgid ""
 "Missing or incorrect access protocol (should be <q>http://</q> or similar)"
-msgstr ""
+msgstr "Chybný nebo chybějící protokol (<q>http://</q>)"
 
 #: templates/ERR_INVALID_REQ:6
 msgid "Missing or unknown request method."
-msgstr ""
+msgstr "Chybná nebo chybějící HTTP metoda (POST, GET)"
 
 #: templates/ERR_NO_RELAY:5
 msgid "No Wais Relay"
@@ -297,7 +309,7 @@ msgstr ""
 
 #: templates/ERR_FTP_PUT_CREATED:2 templates/ERR_FTP_PUT_MODIFIED:2
 msgid "Operation successful"
-msgstr ""
+msgstr "Operace proběhla úspěšně"
 
 #: templates/ERR_FTP_LISTING:5
 msgid "Parent Directory"
@@ -309,6 +321,9 @@ msgid ""
 "have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
 "chpasswd.cgi\">change</a> your default password."
 msgstr ""
+"V případě problému se prosím obraťte na <a href=\"mailto:%w%W\">cache "
+"administratora</a> nebo si změňte <a href=\"http://%h/cgi-"
+"bin/chpasswd.cgi\">heslo</a>."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
 msgid ""
@@ -328,7 +343,7 @@ msgstr ""
 
 #: templates/ERR_INVALID_REQ:9
 msgid "Request is too large."
-msgstr ""
+msgstr "Požadavek může být příliš velký"
 
 #: templates/ERR_SOCKET_FAILURE:5
 msgid "Socket Failure"
@@ -336,78 +351,94 @@ msgstr ""
 
 #: templates/ERR_INVALID_URL:6
 msgid "Some aspect of the requested URL is incorrect."
-msgstr ""
+msgstr "Některá část URL je chybná."
 
 #: templates/ERR_ICAP_FAILURE:8 templates/ERR_INVALID_REQ:5
 #: templates/ERR_INVALID_URL:7
+#, fuzzy
 msgid "Some possible problems are:"
-msgstr ""
+msgstr "Možné problémy:"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:6
+#, fuzzy
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache manager "
 "until you have authenticated yourself."
-msgstr ""
+msgstr "Dokument %U je dostupný pouze po Vaší autorizaci."
 
 #: templates/ERR_CACHE_ACCESS_DENIED:6
+#, fuzzy
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache until you "
 "have authenticated yourself."
-msgstr ""
+msgstr "Omlouváme se, ale přístup k %U je povolen až po autorizaci."
 
 #: templates/ERR_ZERO_SIZE_OBJECT:6
 msgid "Squid did not receive any data for this request."
-msgstr ""
+msgstr "Squid neobdržel v odpovědi na tento dotaz žádná data."
 
 #: templates/ERR_UNSUP_REQ:6
 msgid ""
 "Squid does not support all request methods for all access protocols. For "
 "example, you can not POST a Gopher request."
 msgstr ""
+"Squid nepodporuje všechny typy metod u všech protokolů. Např. není možno "
+"použit metodu POST u služby GOPHER."
 
 #: templates/ERR_LIFETIME_EXP:6
 msgid ""
 "Squid has terminated the request because it has exceeded the maximum "
 "connection lifetime."
 msgstr ""
+"Squid stornoval požadavek z důvodu překročení maximální délky trvání "
+"spojení."
 
 #: templates/ERR_SOCKET_FAILURE:7
 msgid ""
 "Squid is unable to create a TCP socket, presumably due to excessive load. "
 "Please retry your request."
 msgstr ""
+"Squid nemohl vytvořit TCP socket pravděpodobně v důsledku přetížení. "
+"Opakujte prosím Váš požadavek."
 
 #: templates/ERR_FTP_FAILURE:5 templates/ERR_FTP_FORBIDDEN:5
 #: templates/ERR_FTP_NOT_FOUND:5 templates/ERR_FTP_PUT_ERROR:5
 #: templates/ERR_FTP_UNAVAILABLE:5
 msgid "Squid sent the following FTP command:"
-msgstr ""
+msgstr "odeslal Squid následující FTP příkaz:"
 
 #: templates/ERR_DNS_FAIL:6
 msgid "The DNS server returned:"
-msgstr ""
+msgstr "DNS server odpověděl:"
 
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
 msgstr ""
 
 #: templates/ERR_FTP_UNAVAILABLE:4
+#, fuzzy
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr ""
+"FTP server je přetížen a nemůže poslat nasledující dokument: <a "
+"href=\"%U\">%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
+#, fuzzy
 msgid ""
 "The HTTP Response message received from the contacted server could not be "
 "understood or was otherwise malformed. Please contact the site operator."
 msgstr ""
+"HTTP odpověď obdržená od vzdáleného serveru je nesrozumitelná či poškozená. "
+"Kontaktujte prosím správce vzdáleného serveru."
 
 #: templates/ERR_ICAP_FAILURE:9
 msgid "The ICAP server is not reachable."
 msgstr ""
 
 #: templates/ERR_FTP_NOT_FOUND:4
+#, fuzzy
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
-msgstr ""
+msgstr "Požadovaný dokument na adrese: <a href=\"%U\">%U</a> nebyl nalezen."
 
 #: templates/ERR_ACCESS_DENIED:4 templates/ERR_CACHE_ACCESS_DENIED:4
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:4 templates/ERR_CANNOT_FORWARD:4
@@ -433,7 +464,7 @@ msgstr ""
 
 #: templates/ERR_CONNECT_FAIL:7
 msgid "The remote host or network may be down.  Please try the request again."
-msgstr ""
+msgstr "Vzdálený systém nebo síť jsou nedostupné. Zkuste to znova."
 
 #: templates/ERR_TOO_BIG:5
 msgid "The request or reply is too large."
@@ -453,7 +484,7 @@ msgstr ""
 #: templates/ERR_TOO_BIG:3 templates/ERR_UNSUP_REQ:3
 #: templates/ERR_WRITE_ERROR:3 templates/ERR_ZERO_SIZE_OBJECT:3
 msgid "The requested URL could not be retrieved"
-msgstr ""
+msgstr "Požadovaný dokument je nedostupný"
 
 #: templates/ERR_FTP_FAILURE:6 templates/ERR_FTP_FORBIDDEN:6
 #: templates/ERR_FTP_NOT_FOUND:6 templates/ERR_FTP_PUT_ERROR:6
@@ -466,13 +497,13 @@ msgstr ""
 #: templates/ERR_SECURE_CONNECT_FAIL:6 templates/ERR_SOCKET_FAILURE:6
 #: templates/ERR_WRITE_ERROR:6
 msgid "The system returned: <i>%E</i>"
-msgstr ""
+msgstr "Vzdálený systém odpověděl: <i>%E</i>"
 
 #: templates/ERR_NO_RELAY:6
 msgid ""
 "There is no WAIS Relay host defined for this Cache!  Yell at the "
 "administrator."
-msgstr ""
+msgstr "Cache server nemá definovaný WAIS Relay! Vyhubujte administratorovi."
 
 #: templates/ERR_TOO_BIG:8
 msgid ""
@@ -480,16 +511,20 @@ msgid ""
 "operates this cache.  Please contact them directly if you feel this is an "
 "error."
 msgstr ""
+"Tento limit byl nastaven administrátorem této cache. Pokud si myslíte, že je "
+"potřeba tyto limity změnit, kontaktujte ho."
 
 #: templates/ERR_FTP_DISABLED:6
 msgid "This cache does not support FTP."
-msgstr ""
+msgstr "Tento cache server nepodporuje protokol FTP."
 
 #: templates/ERR_SHUTTING_DOWN:5
 msgid ""
 "This cache is in the process of shutting down and can not service your "
 "request at this time.  Please retry your request again soon."
 msgstr ""
+"Tento cache server je právě restartován a nemůže obsloužit Váš požadavek. "
+"Zkuste to za chvíli znova."
 
 #: templates/ERR_FORWARDING_DENIED:6
 msgid ""
@@ -497,6 +532,9 @@ msgid ""
 "sibling relationship.  Perhaps the client at %i is a cache which has been "
 "misconfigured."
 msgstr ""
+"Cache server nepřesměruje Váš požadavek, protože to nedovolují vztahy v "
+"hierarchické struktuře cache serverů. %i je pravděpodobně chybně "
+"nakonfigurovaný cache server."
 
 #: templates/ERR_ICAP_FAILURE:7
 msgid "This means that some aspect of the ICAP communication failed."
@@ -509,10 +547,13 @@ msgid ""
 msgstr ""
 
 #: templates/ERR_DNS_FAIL:7
+#, fuzzy
 msgid ""
 "This means that the cache was not able to resolve the hostname presented in "
 "the URL. Check if the address is correct."
 msgstr ""
+"To znamená že cache server nebyl schopen získat adresu serveru uvedeného v "
+"URL. Zkontrolujte prosím adresu."
 
 #: templates/ERR_ESI:7
 msgid ""
@@ -526,6 +567,8 @@ msgid ""
 "comply with RFC 1738).  If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
+"To může být zapříčiněno použitím absolutní cesty v FTP URL (což odporuje RFC "
+"1738).  V tomto případě může být dokument nalezen na <a href=\"%B\">%B</a>."
 
 #: templates/ERR_SECURE_CONNECT_FAIL:7
 msgid ""
@@ -536,16 +579,20 @@ msgid ""
 msgstr ""
 
 #: templates/ERR_CANNOT_FORWARD:6
+#, fuzzy
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
 "caches.  The most likely cause for this error is that the cache "
 "administrator does not allow this cache to make direct connections to origin "
 "servers, and all configured parent caches are currently unreachable."
 msgstr ""
+"Požadavek nemůže být přesměrován k dotazovanému serveru nebo nadřazeným "
+"cache serverům. Příčinou může být Administrátor zakázal přímý přístup k "
+"dotazovaným serverům Všechny nadřazené cache servery jsou nedostupné."
 
 #: templates/ERR_DNS_FAIL:5
 msgid "Unable to determine IP address from host name <q>%H</q>"
-msgstr ""
+msgstr "Jméno serveru není možno převést na IP adresu. <q>%H</q>"
 
 #: templates/ERR_CANNOT_FORWARD:5
 msgid "Unable to forward this request at this time."
@@ -560,10 +607,12 @@ msgid ""
 "Valid document was not found in the cache and <q>only-if-cached</q> "
 "directive was specified."
 msgstr ""
+"Požadovaný dokument se nenachází v cachi, přičemž byla specifikována "
+"direktiva <q>only-if-cached</q>."
 
 #: templates/ERR_FTP_PUT_ERROR:4
 msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr ""
+msgstr "Při pokusu o PUT následujícího URL: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"

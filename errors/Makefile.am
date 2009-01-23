@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 #
-# $Id: Makefile.am,v 1.16 2008/02/24 12:10:30 hno Exp $
+# $Id$
 #
 
 errordir = $(datadir)/errors
@@ -14,6 +14,7 @@ DEFAULT_STYLESHEET	= $(sysconfdir)/errorpage.css
 
 # List of automated translations possible:
 TRANSLATIONS = \
+	az \
 	bg \
 	ca \
 	cs \
@@ -21,39 +22,36 @@ TRANSLATIONS = \
 	de \
 	en en-au en-gb en-nz en-us \
 	es \
+	et \
+	fi \
 	fr \
+	hy \
 	id \
 	it \
 	ja \
 	nl \
 	pt-br \
+	ro \
 	ru \
+	sr \
 	sv \
+	tr \
 	uk \
 	zh-cn
 
 # Legacy language contributions...
 #
 LANGUAGES	= \
-		Armenian \
-		Azerbaijani \
-		Czech \
-		Estonian \
-		Finnish \
 		Greek \
 		Hebrew \
 		Hungarian \
-		Japanese \
 		Korean \
 		Lithuanian \
 		Polish \
 		Portuguese \
-		Romanian \
-		Serbian \
 		Simplify_Chinese \
 		Slovak \
-		Traditional_Chinese \
-		Turkish
+		Traditional_Chinese
 
 install-data-local: 
 	@for l in $(LANGUAGES); do \

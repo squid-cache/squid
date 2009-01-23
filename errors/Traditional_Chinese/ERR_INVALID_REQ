@@ -1,43 +1,43 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=big5">
-<TITLE>¿ù»~¡G±ý³sµ²¤§ºô§}¡]URL¡^µLªk¥¿½Tªº¶Ç¦^</TITLE>
+<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+<TITLE>éŒ¯èª¤ï¼šæ¬²é€£çµä¹‹ç¶²å€ï¼ˆURLï¼‰ç„¡æ³•æ­£ç¢ºçš„å‚³å›ž</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
-<H1>¿ù»~</H1>
-<H2>±ý³sµ²¤§ºô§}¡]URL¡^µLªk¥¿½Tªº¶Ç¦^</H2>
+<H1>éŒ¯èª¤</H1>
+<H2>æ¬²é€£çµä¹‹ç¶²å€ï¼ˆURLï¼‰ç„¡æ³•æ­£ç¢ºçš„å‚³å›ž</H2>
 <HR noshade size="1px">
 <P>
-·í¹Á¸Õ¶i¦æ±z©Ò­n¨Dªº¤U¦Cµ{§Ç®É¡G
+ç•¶å˜—è©¦é€²è¡Œæ‚¨æ‰€è¦æ±‚çš„ä¸‹åˆ—ç¨‹åºæ™‚ï¼š
 <PRE>
 %R
 </PRE>
 <P>
-µo¥Í¤F¤U¦Cªº¿ù»~¡G
+ç™¼ç”Ÿäº†ä¸‹åˆ—çš„éŒ¯èª¤ï¼š
 <UL>
 <LI>
 <STRONG>
 Invalid Request
 <LI>
-¤£¥¿½Tªº­n¨D
+ä¸æ­£ç¢ºçš„è¦æ±‚
 </STRONG>
 </UL>
 
 <P>
 Some aspect of the HTTP Request is invalid.  Possible problems:
 <BR>
-µo¥Í¤F¤@¨Ç¤£¥¿½Tªº HTTP ­n¨D¡C¥i¯à¬O¤U¦Cªº°ÝÃD¡G
+ç™¼ç”Ÿäº†ä¸€äº›ä¸æ­£ç¢ºçš„ HTTP è¦æ±‚ã€‚å¯èƒ½æ˜¯ä¸‹åˆ—çš„å•é¡Œï¼š
 <UL>
 <LI>Missing or unknown request method
-<BR>­n¨D¤è¦¡¿ò¥¢©Î¬O¥¼ª¾
+<BR>è¦æ±‚æ–¹å¼éºå¤±æˆ–æ˜¯æœªçŸ¥
 <LI>Missing URL
-<BR>ºô¯¸¦ì¸m¿ò¥¢
+<BR>ç¶²ç«™ä½ç½®éºå¤±
 <LI>Missing HTTP Identifier (HTTP/1.0)
-<BR>HTTP ¼Ð·Çªº«Å§i¿ò¥¢¡]HTTP/1.0¡^
+<BR>HTTP æ¨™æº–çš„å®£å‘Šéºå¤±ï¼ˆHTTP/1.0ï¼‰
 <LI>Request is too large
-<BR>­n¨D©R¥O¹Lªø
+<BR>è¦æ±‚å‘½ä»¤éŽé•·
 <LI>Content-Length missing for POST or PUT requests
-<BR>¯Ê¤Ö POST ©Î PUT ­n¨D
+<BR>ç¼ºå°‘ POST æˆ– PUT è¦æ±‚
 <LI>Illegal character in hostname; underscores are not allowed
-<BR>±ý³sµ²ªº¥D¾÷¦WºÙ¥]§t¤£¦Xªkªº¦r¤¸¡F©³½u³o­Ó¦r¤¸¬O¤£³Q¤¹³\¦s¦bªº¡C
+<BR>æ¬²é€£çµçš„ä¸»æ©Ÿåç¨±åŒ…å«ä¸åˆæ³•çš„å­—å…ƒï¼›åº•ç·šé€™å€‹å­—å…ƒæ˜¯ä¸è¢«å…è¨±å­˜åœ¨çš„ã€‚
 </UL>
 </P>

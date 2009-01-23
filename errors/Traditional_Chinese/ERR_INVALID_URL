@@ -1,37 +1,37 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=big5">
-<TITLE>¿ù»~¡G±ý³sµ²¤§ºô§}¡]URL¡^µLªk¥¿½Tªº¶Ç¦^</TITLE>
+<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+<TITLE>éŒ¯èª¤ï¼šæ¬²é€£çµä¹‹ç¶²å€ï¼ˆURLï¼‰ç„¡æ³•æ­£ç¢ºçš„å‚³å›ž</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
-<H1>¿ù»~</H1>
-<H2>±ý³sµ²¤§ºô§}¡]URL¡^µLªk¥¿½Tªº¶Ç¦^</H2>
+<H1>éŒ¯èª¤</H1>
+<H2>æ¬²é€£çµä¹‹ç¶²å€ï¼ˆURLï¼‰ç„¡æ³•æ­£ç¢ºçš„å‚³å›ž</H2>
 <HR noshade size="1px">
 <P>
-·í¹Á¸Õ¶Ç¦^¤U­±ªººô§}¡]URL¡^®É¡G
+ç•¶å˜—è©¦å‚³å›žä¸‹é¢çš„ç¶²å€ï¼ˆURLï¼‰æ™‚ï¼š
 <A HREF="%U">%U</A>
 <P>
-µo¥Í¤F¤U¦Cªº¿ù»~¡G
+ç™¼ç”Ÿäº†ä¸‹åˆ—çš„éŒ¯èª¤ï¼š
 <UL>
 <LI>
 <STRONG>
 Invalid URL
 <LI>
-¤£¥¿½Tªº¦ì¸m
+ä¸æ­£ç¢ºçš„ä½ç½®
 </STRONG>
 </UL>
 
 <P>
 Some aspect of the requested URL is incorrect.  Possible problems:
 <BR>
-±ý³sµ²ªº¦ì¸m¦³¤@¨Ç¤£¥¿½T¡C¥i¯à¬O¦]¬°¤U¦C°ÝÃD¡G
+æ¬²é€£çµçš„ä½ç½®æœ‰ä¸€äº›ä¸æ­£ç¢ºã€‚å¯èƒ½æ˜¯å› ç‚ºä¸‹åˆ—å•é¡Œï¼š
 <UL>
 <LI>Missing or incorrect access protocol (should be `http://'' or similar)
-<BR>¯Ê¤Ö©Î¤£¥¿½Tªº³q°T¨ó©w«Å§i¡]À³¸Ó¬O `http://''©Î¬OÃþ¦üªº¶}ÀY¡^
+<BR>ç¼ºå°‘æˆ–ä¸æ­£ç¢ºçš„é€šè¨Šå”å®šå®£å‘Šï¼ˆæ‡‰è©²æ˜¯ `http://''æˆ–æ˜¯é¡žä¼¼çš„é–‹é ­ï¼‰
 <LI>Missing hostname
-<BR>¯Ê¤Ö±ý³sµ²ªº¥D¾÷¦WºÙ
+<BR>ç¼ºå°‘æ¬²é€£çµçš„ä¸»æ©Ÿåç¨±
 <LI>Illegal double-escape in the URL-Path
-<BR>¤£¦Xªkªººô¯¸³sµ²¸ô®|¡]¯Ê¤Ö `//''¡^
+<BR>ä¸åˆæ³•çš„ç¶²ç«™é€£çµè·¯å¾‘ï¼ˆç¼ºå°‘ `//''ï¼‰
 <LI>Illegal character in hostname; underscores are not allowed
-<BR>¤£¦Xªkªº¦r¤¸¦s¦b©ó±ý³sµ²ªº¥D¾÷¦WºÙ¤¤¡F©³½u³o­Ó¦r¤¸¬O¤£³Q¤¹³\ªº
+<BR>ä¸åˆæ³•çš„å­—å…ƒå­˜åœ¨æ–¼æ¬²é€£çµçš„ä¸»æ©Ÿåç¨±ä¸­ï¼›åº•ç·šé€™å€‹å­—å…ƒæ˜¯ä¸è¢«å…è¨±çš„
 </UL>
 </P>

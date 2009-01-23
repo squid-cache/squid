@@ -1,27 +1,27 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1257">
-<TITLE>KLAIDA: Puslapis nurodytu adresu negali būti atsiųstas</TITLE>
+<HTML><HEAD><META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
+<TITLE>KLAIDA: Puslapis nurodytu adresu negali bÅ«ti atsiÅ³stas</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff; font-family:verdana,sans-serif}--></STYLE>
 </HEAD><BODY>
 <H1>KLAIDA</H1>
-<H2>Puslapis nurodytu adresu negali būti atsiųstas</H2>
+<H2>Puslapis nurodytu adresu negali bÅ«ti atsiÅ³stas</H2>
 <HR noshade size="1px">
 <P>
-Bandant atsiųsti puslapį:
+Bandant atsiÅ³sti puslapÄÆ:
 <A HREF="%U">%U</A>
 <P>
-Gautas klaidos pranešimas:
+Gautas klaidos praneÅ¡imas:
 <UL>
 <LI>
 <STRONG>
-Užklausa arba atsakymas yra per dideli.
+UÅ¾klausa arba atsakymas yra per dideli.
 </STRONG>
 <P>
-Jei jūs vykdote POST arba PUT užklausą, jūsų užklausos dydis
-(tai, ką jūs bandote nusiųsti) yra per didelis.  Jei jūs vykdote
-GET užklausą, atsakymo dydis (tai, ką jūs bandote atsisiųsti)
-yra per didelis.  Šie apribojimai yra uždėti jūsų Interneto
-tiekėjo.  Prašome kreiptis į savo administratorių arba Interneto
-tiekėją, jei manote, kad tai neteisinga.
+Jei jÅ«s vykdote POST arba PUT uÅ¾klausÄ…, jÅ«sÅ³ uÅ¾klausos dydis
+(tai, kÄ… jÅ«s bandote nusiÅ³sti) yra per didelis.  Jei jÅ«s vykdote
+GET uÅ¾klausÄ…, atsakymo dydis (tai, kÄ… jÅ«s bandote atsisiÅ³sti)
+yra per didelis.  Å ie apribojimai yra uÅ¾dÄ—ti jÅ«sÅ³ Interneto
+tiekÄ—jo.  PraÅ¡ome kreiptis ÄÆ savo administratoriÅ³ arba Interneto
+tiekÄ—jÄ…, jei manote, kad tai neteisinga.
 </UL>
 </P>

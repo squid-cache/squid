@@ -1,45 +1,45 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <HTML><HEAD>
-<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=gb2312"> 
-<TITLE>´íÎó£ºÄúËùÇëÇóµÄÍøÖ·£¨URL£©ÎÞ·¨»ñÈ¡</TITLE>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8"> 
+<TITLE>é”™è¯¯ï¼šæ‚¨æ‰€è¯·æ±‚çš„ç½‘å€ï¼ˆURLï¼‰æ— æ³•èŽ·å–</TITLE>
 <STYLE type="text/css"><!--BODY{background-color:#ffffff;font-family:verdana,sans-serif}PRE{font-family:sans-serif}--></STYLE>
 </HEAD><BODY>
-<H1>´íÎó</H1>
-<H2>ÄúËùÇëÇóµÄÍøÖ·£¨URL£©ÎÞ·¨»ñÈ¡</H2>
+<H1>é”™è¯¯</H1>
+<H2>æ‚¨æ‰€è¯·æ±‚çš„ç½‘å€ï¼ˆURLï¼‰æ— æ³•èŽ·å–</H2>
 <HR noshade size="1px">
 <P>
-µ±³¢ÊÔ½øÐÐÒÔÏÂÇëÇóÊ±£º
+å½“å°è¯•è¿›è¡Œä»¥ä¸‹è¯·æ±‚æ—¶ï¼š
 <PRE>
 %R
 </PRE>
 <P>
-·¢ÉúÁËÏÂÁÐµÄ´íÎó£º
+å‘ç”Ÿäº†ä¸‹åˆ—çš„é”™è¯¯ï¼š
 <UL>
 <LI>
 <STRONG>
 Invalid Request
 <BR>
-ÎÞÐ§µÄÇëÇó
+æ— æ•ˆçš„è¯·æ±‚
 </STRONG>
 </UL>
 
 <P>
 Some aspect of the HTTP Request is invalid.  Possible problems:
 <BR>
-HTTP ÇëÇóµÄÄ³Ð©·½ÃæÊÇÎÞÐ§µÄ¡£¿ÉÄÜÊÇÏÂÁÐÎÊÌâ£º
+HTTP è¯·æ±‚çš„æŸäº›æ–¹é¢æ˜¯æ— æ•ˆçš„ã€‚å¯èƒ½æ˜¯ä¸‹åˆ—é—®é¢˜ï¼š
 <UL>
 <LI>Missing or unknown request method
-<BR>È±ÉÙÇëÇó·½Ê½»òÎ´ÖªµÄÇëÇó·½Ê½
+<BR>ç¼ºå°‘è¯·æ±‚æ–¹å¼æˆ–æœªçŸ¥çš„è¯·æ±‚æ–¹å¼
 <LI>Missing URL
-<BR>È±ÉÙÍøÖ·
+<BR>ç¼ºå°‘ç½‘å€
 <LI>Missing HTTP Identifier (HTTP/1.0)
-<BR>È±ÉÙ HTTP ±êÊ¶£¨HTTP/1.0£©
+<BR>ç¼ºå°‘ HTTP æ ‡è¯†ï¼ˆHTTP/1.0ï¼‰
 <LI>Request is too large
-<BR>ÇëÇóÃüÁî¹ý³¤
+<BR>è¯·æ±‚å‘½ä»¤è¿‡é•¿
 <LI>Content-Length missing for POST or PUT requests
-<BR>POST »ò PUT ÇëÇóÈ±ÉÙÄÚÈÝ³¤¶È
+<BR>POST æˆ– PUT è¯·æ±‚ç¼ºå°‘å†…å®¹é•¿åº¦
 <LI>Illegal character in hostname; underscores are not allowed
-<BR>Ö÷»úÃû³ÆÖÐ°üº¬²»ºÏ·¨µÄ×Ö·û£»ÏÂ»®ÏßÊÇ²»ÔÊÐíµÄ¡£
+<BR>ä¸»æœºåç§°ä¸­åŒ…å«ä¸åˆæ³•çš„å­—ç¬¦ï¼›ä¸‹åˆ’çº¿æ˜¯ä¸å…è®¸çš„ã€‚
 </UL>
 </P>
-<P>±¾»º´æ·þÎñÆ÷¹ÜÀíÔ±£º<A HREF="mailto:%w%W">%w</A>. 
+<P>æœ¬ç¼“å­˜æœåŠ¡å™¨ç®¡ç†å‘˜ï¼š<A HREF="mailto:%w%W">%w</A>. 
