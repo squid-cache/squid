@@ -2845,7 +2845,7 @@ free_IpAddress_list(IpAddress_list ** head)
  * be used by icp_port and htcp_port
  */
 static int
-check_null_IpAddress_list(const IPAdress_list * s)
+check_null_IpAddress_list(const IpAddress_list * s)
 {
     return NULL == s;
 }
