@@ -247,9 +247,6 @@ bool IpAddress::IsIPv4() const
 #if USE_IPV6
 
     return IsAnyAddr() || IsNoAddr() ||
-#if IPV6_SPECIAL_LOCALHOST
-           IsLocalhost() ||
-#endif
            ( m_SocketAddr.sin6_addr.s6_addr32[0] == htonl(0x00000000) &&
              m_SocketAddr.sin6_addr.s6_addr32[1] == htonl(0x00000000) &&
              m_SocketAddr.sin6_addr.s6_addr32[2] == htonl(0x0000FFFF)
@@ -265,9 +262,6 @@ bool IpAddress::IsIPv6() const
 #if USE_IPV6
 
     return IsAnyAddr() || IsNoAddr() ||
-#if IPV6_SPECIAL_LOCALHOST
-           IsLocalhost() ||
-#endif
            !( m_SocketAddr.sin6_addr.s6_addr32[0] == htonl(0x00000000) &&
               m_SocketAddr.sin6_addr.s6_addr32[1] == htonl(0x00000000) &&
               m_SocketAddr.sin6_addr.s6_addr32[2] == htonl(0x0000FFFF)
@@ -311,13 +305,11 @@ bool IpAddress::SetIPv4()
 {
 #if USE_IPV6
 
-#if !IPV6_SPECIAL_LOCALHOST
     if ( IsLocalhost() ) {
         m_SocketAddr.sin6_addr.s6_addr32[2] = htonl(0xffff);
         m_SocketAddr.sin6_addr.s6_addr32[3] = htonl(0x7F000001);
         return true;
     }
-#endif
 
     if ( IsAnyAddr() ) {
         m_SocketAddr.sin6_addr.s6_addr32[2] = htonl(0xffff);
@@ -342,15 +334,12 @@ bool IpAddress::IsLocalhost() const
                   && m_SocketAddr.sin6_addr.s6_addr32[2] == 0
                   && m_SocketAddr.sin6_addr.s6_addr32[3] == htonl(0x1)
               )
-#if !IPV6_SPECIAL_LOCALHOST
               ||
               (   m_SocketAddr.sin6_addr.s6_addr32[0] == 0
                   && m_SocketAddr.sin6_addr.s6_addr32[1] == 0
                   && m_SocketAddr.sin6_addr.s6_addr32[2] == htonl(0xffff)
                   && m_SocketAddr.sin6_addr.s6_addr32[3] == htonl(0x7F000001)
-              )
-#endif
-              ;
+              );
 #else
 
     return (htonl(0x7F000001) == m_SocketAddr.sin_addr.s_addr);
@@ -1173,14 +1162,6 @@ void IpAddress::Map4to6(const struct in_addr &in, struct in6_addr &out) const {
         out.s6_addr32[2] = 0xFFFFFFFF;
         out.s6_addr32[3] = 0xFFFFFFFF;
 
-#if IPV6_SPECIAL_LOCALHOST
-    } else if ( in.s_addr == htonl(0x7F000001)) {
-        /* LOCALHOST */
-
-        memset(&out, 0, sizeof(struct in6_addr));
-        out.s6_addr32[3] = htonl(0x1);
-#endif
-
     } else {
         /* general */
 
@@ -1197,15 +1178,6 @@ void IpAddress::Map6to4(const struct in6_addr &in, struct in_addr &out) const {
 
     memset(&out, 0, sizeof(struct in_addr));
     out.s_addr = in.s6_addr32[3];
-
-#if IPV6_SPECIAL_LOCALHOST
-    /* LOCALHOST */
-
-    if ( IsLocalhost() ) {
-        out.s_addr = htonl(0x7F000001);
-    }
-#endif
-
 }
 
 #endif

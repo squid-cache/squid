@@ -329,9 +329,6 @@ parse_externalAclHelper(external_acl ** list)
             /* INET6: allow admin to configure some helpers explicitly to
                       bind to IPv4/v6 localhost port. */
         } else if (strcmp(token, "ipv4") == 0) {
-#if IPV6_SPECIAL_LOCALHOST
-            debugs(3, 0, "WARNING: --with-localhost-ipv6 conflicts with external ACL helper to using IPv4: " << a->name );
-#endif
             if ( !a->local_addr.SetIPv4() ) {
                 debugs(3, 0, "WARNING: Error converting " << a->local_addr << " to IPv4 in " << a->name );
             }
