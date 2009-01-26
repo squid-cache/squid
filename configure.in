@@ -1991,15 +1991,14 @@ if test "$use_ipng" = "yes"; then
       ;;
   esac
   AC_CACHE_CHECK([if PF_INET6 is available], $use_ipng,
-    AC_TRY_RUN(
-      [ /* PF_INET6 available check */
+    AC_TRY_RUN([ /* PF_INET6 available check */
 #       include <sys/types.h>
 #       include <sys/socket.h>
-        void main() {
+        int main() {
           if (socket(PF_INET6, SOCK_STREAM, 0) < 0)
-            exit(1);
+            return 1;
           else
-            exit(0);
+            return 0;
         }
       ],
       [ AC_MSG_RESULT(yes)
@@ -2044,6 +2043,26 @@ AC_ARG_WITH(localhost-ipv6,
   [AC_DEFINE(IPV6_SPECIAL_LOCALHOST, 1, [Convert IPv4-localhost requests to IPv6. Default: keep seperate.]) AC_MSG_RESULT(yes)],
   [AC_DEFINE(IPV6_SPECIAL_LOCALHOST, 0, [Convert IPv4-localhost requests to IPv6. Default: Keep seperate.]) AC_MSG_RESULT(no)]
 )
+
+dnl Check whether this OS defines sin6_len as a member of sockaddr_in6 as a backup to ss_len
+AC_CACHE_CHECK([for sin6_len field in struct sockaddr_in6],
+                ac_cv_have_sin6_len_in_struct_sai, [
+        AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+                ],
+                [ struct sockaddr_in6 s; s.sin6_len = 1; ],
+                [ ac_cv_have_sin6_len_in_struct_sai="yes" ],
+                [ ac_cv_have_sin6_len_in_struct_sai="no" ]
+        )
+])
+if test "x$ac_cv_have_sin6_len_in_struct_sai" = "xyes" ; then
+        AC_DEFINE(HAVE_SIN6_LEN_IN_SAI, 1, [Does struct sockaddr_in6 have sin6_len? 1: Yes, 0: No])
+else
+        AC_DEFINE(HAVE_SIN6_LEN_IN_SAI, 0, [Does struct sockaddr_in6 have sin6_len? 1: Yes, 0: No])
+fi
+
 
 else
   # NP: semi-silent failure as IPv4-only mode is perfectly usable on this system.
@@ -2100,25 +2119,6 @@ if test "x$ac_cv_have_sin_len_in_struct_sai" = "xyes" ; then
         AC_DEFINE(HAVE_SIN_LEN_IN_SAI, 1, [Does struct sockaddr_in have sin_len? 1: Yes, 0: No])
 else
         AC_DEFINE(HAVE_SIN_LEN_IN_SAI, 0, [Does struct sockaddr_in have sin_len? 1: Yes, 0: No])
-fi
-
-dnl Check whether this OS defines sin6_len as a member of sockaddr_in6 as a backup to ss_len
-AC_CACHE_CHECK([for sin6_len field in struct sockaddr_in6],
-                ac_cv_have_sin6_len_in_struct_sai, [
-        AC_TRY_COMPILE([
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-                ],
-                [ struct sockaddr_in6 s; s.sin6_len = 1; ],
-                [ ac_cv_have_sin6_len_in_struct_sai="yes" ],
-                [ ac_cv_have_sin6_len_in_struct_sai="no" ]
-        )
-])
-if test "x$ac_cv_have_sin6_len_in_struct_sai" = "xyes" ; then
-        AC_DEFINE(HAVE_SIN6_LEN_IN_SAI, 1, [Does struct sockaddr_in6 have sin6_len? 1: Yes, 0: No])
-else
-        AC_DEFINE(HAVE_SIN6_LEN_IN_SAI, 0, [Does struct sockaddr_in6 have sin6_len? 1: Yes, 0: No])
 fi
 
 dnl --with-maxfd present for compatibility with Squid-2.
