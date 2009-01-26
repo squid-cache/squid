@@ -2738,7 +2738,7 @@ SAVED_LIBS="$LIBS"; LIBS="$LIBS -ldb"
 #elif HAVE_DB_H
 #include <db.h>
 #endif],
-    [dbopen((void *)0L, 0, 0, DB_HASH, (void *)0L)],
+    [dbopen("", 0, 0, DB_HASH, (void *)0L)],
     ac_cv_dbopen_libdb="yes",
     ac_cv_dbopen_libdb="no")
 LIBS="$SAVED_LIBS"
