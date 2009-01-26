@@ -26,8 +26,8 @@ fi
 dnl Check for GNU cc
 AC_PROG_CC
 AM_PROG_CC_C_O
-AC_LANG_C
 AC_PROG_CXX
+AC_LANG_CPLUSPLUS
 AC_CANONICAL_HOST
 
 dnl Make location configure settings available to the code
