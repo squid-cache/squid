@@ -3760,7 +3760,6 @@ fi
 
 dnl Squid now has .po translation capability, given the right toolkit
 AX_WITH_PROG([PO2HTML],[po2html])
-AC_SUBST(PO2HTML)
 
 dnl Squid now has limited locale handling ...
 dnl on error pages
@@ -3780,7 +3779,10 @@ if test "$use_errlocale" = "yes" ; then
 else
     echo "Disabling Multi-Language Support"
     AC_DEFINE(USE_ERR_LOCALES,0,[Use multi-language support on error pages])
+    dnl So we don't want to even attempt translation if its forcibly disabled.
+    PO2HTML="off"
 fi
+AC_SUBST(PO2HTML)
 
 dnl Need the debugging version of malloc if available
 XTRA_OBJS=''
