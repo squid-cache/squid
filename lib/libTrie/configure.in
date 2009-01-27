@@ -5,26 +5,47 @@ AM_CONFIG_HEADER([config.h])
 AC_CONFIG_AUX_DIR(cfgaux)
 
 SquidInline="yes"
+
+AC_ARG_ENABLE(optimizations,
+  AC_HELP_STRING([--disable-optimizations],
+                 [Don't compile Squid with compiler optimizations enabled.
+                  Optimization is good for production builds, but not
+                  good for debugging. During development, use
+                  --disable-optimizations to reduce compilation times
+                  and allow easier debugging. This option implicitly
+                  also enabled --disable-inline]),
+[ if test "$enableval" = "no" ; then
+        AC_MSG_NOTICE([Disabling compiler optimizations (-O flag)])
+        CFLAGS="`echo $CFLAGS | sed -e 's/-O[[0-9]]*//'`"
+        CXXFLAGS="`echo $CXXFLAGS | sed -e 's/-O[[0-9]]*//'`"
+        SquidInline="no"
+  fi
+])
+
 AC_ARG_ENABLE(inline,
-                          [  --disable-inline        Don't compile trivial methods as inline. Squid
-                             is coded with much of the code able to be inlined.<                             Inlining is good for production builds, but not
-                             good for development. During development, use
-                             --disable-inline to reduce compilation times and
-                             allow incremental builds to be quick. For
-                             production builds, or load tests, use
-                             --enable-inline to have squid make all trivial
-                             methods inlinable by the compiler.],
-   [ if test "$enableval" = "no" ; then
-       SquidInline="no"
-     fi
-  ])
+  AC_HELP_STRING([--disable-inline],
+                 [Don't compile trivial methods as inline. Squid
+                  is coded with much of the code able to be inlined.
+                  Inlining is good for production builds, but not
+                  good for development. During development, use
+                  --disable-inline to reduce compilation times and
+                  allow incremental builds to be quick. For
+                  production builds, or load tests, use
+                  --enable-inline to have squid make all trivial
+                  methods inlinable by the compiler.]),
+[ if test "$enableval" = "no" ; then
+     SquidInline="no"
+   fi
+])
 
 if test "$SquidInline" = "yes" ; then
-  AC_DEFINE(_SQUID_INLINE_, inline, [Keyword used by squid for inlining methods])
-  AC_DEFINE(_USE_INLINE_,, [Include inline methods into header file])
+    AC_DEFINE(_SQUID_INLINE_, inline, [Keyword used by squid for inlining methods])
+    AC_DEFINE(_USE_INLINE_,, [Include inline methods into header file])
 else
-  AC_DEFINE(_SQUID_INLINE_,, [Keyword used by squid for inlining methods])
+    AC_MSG_NOTICE([Inlining optimization disabled])
+    AC_DEFINE(_SQUID_INLINE_,, [Keyword used by squid for inlining methods])
 fi
+
 
 # Checks for programs.
 AC_PROG_CXX
