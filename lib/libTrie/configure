@@ -731,6 +731,7 @@ LTLIBOBJS'
 ac_subst_files=''
 ac_user_opts='
 enable_option_checking
+enable_optimizations
 enable_inline
 enable_dependency_tracking
 enable_maintainer_mode
@@ -1373,14 +1374,21 @@ Optional Features:
   --disable-option-checking  ignore unrecognized --enable/--with options
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
-  --disable-inline        Don't compile trivial methods as inline. Squid
-                             is coded with much of the code able to be inlined.<                             Inlining is good for production builds, but not
-                             good for development. During development, use
-                             --disable-inline to reduce compilation times and
-                             allow incremental builds to be quick. For
-                             production builds, or load tests, use
-                             --enable-inline to have squid make all trivial
-                             methods inlinable by the compiler.
+  --disable-optimizations Don't compile Squid with compiler optimizations
+                          enabled. Optimization is good for production builds,
+                          but not good for debugging. During development, use
+                          --disable-optimizations to reduce compilation times
+                          and allow easier debugging. This option implicitly
+                          also enabled --disable-inline
+  --disable-inline        Don't compile trivial methods as inline. Squid is
+                          coded with much of the code able to be inlined.
+                          Inlining is good for production builds, but not good
+                          for development. During development, use
+                          --disable-inline to reduce compilation times and
+                          allow incremental builds to be quick. For production
+                          builds, or load tests, use --enable-inline to have
+                          squid make all trivial methods inlinable by the
+                          compiler.
   --disable-dependency-tracking  speeds up one-time build
   --enable-dependency-tracking   do not reject slow dependency extractors
   --enable-maintainer-mode  enable make rules and dependencies not useful
@@ -1880,11 +1888,25 @@ ac_configure="$SHELL $ac_aux_dir/configure"  # Please don't use this var.
 
 
 SquidInline="yes"
+
+# Check whether --enable-optimizations was given.
+if test "${enable_optimizations+set}" = set; then
+  enableval=$enable_optimizations;  if test "$enableval" = "no" ; then
+        { $as_echo "$as_me:$LINENO: Disabling compiler optimizations (-O flag)" >&5
+$as_echo "$as_me: Disabling compiler optimizations (-O flag)" >&6;}
+        CFLAGS="`echo $CFLAGS | sed -e 's/-O[0-9]*//'`"
+        CXXFLAGS="`echo $CXXFLAGS | sed -e 's/-O[0-9]*//'`"
+        SquidInline="no"
+  fi
+
+fi
+
+
 # Check whether --enable-inline was given.
 if test "${enable_inline+set}" = set; then
   enableval=$enable_inline;  if test "$enableval" = "no" ; then
-       SquidInline="no"
-     fi
+     SquidInline="no"
+   fi
 
 fi
 
@@ -1901,12 +1923,15 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
 else
+    { $as_echo "$as_me:$LINENO: Inlining optimization disabled" >&5
+$as_echo "$as_me: Inlining optimization disabled" >&6;}
 
 cat >>confdefs.h <<\_ACEOF
 #define _SQUID_INLINE_ /**/
 _ACEOF
 
 fi
+
 
 # Checks for programs.
 ac_ext=cpp
