@@ -919,7 +919,7 @@ ufsdump_LDADD = \
 	libauth.la \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	ip/libip.la \
-	-L../lib \
+	-L../lib -lmiscutil \
 	@XTRA_OBJS@ \
 	@REPL_OBJS@ \
 	@STORE_OBJS@ \
@@ -929,7 +929,6 @@ ufsdump_LDADD = \
 	@SNMPLIB@ \
 	${ADAPTATION_LIBS} \
 	@SSLLIB@ \
-	-lmiscutil \
 	@XTRA_LIBS@ \
 	@EPOLL_LIBS@ \
 	@MINGW_LIBS@ 
