@@ -24,6 +24,10 @@
 #include "TrieNode.h"
 #include "TrieCharTransform.h"
 
+#ifndef _USE_INLINE_
+#include "Trie.cci"
+#endif
+
 Trie::Trie (TrieCharTransform *aTransform) : head (0) , transform (aTransform)
 {}
 
@@ -76,7 +80,3 @@ extern "C" int TrieAdd (void *aTrie, char const *aString, size_t theLength, void
     return ((Trie *)aTrie)->add
            (aString, theLength, privatedata);
 }
-
-#ifndef _USE_INLINE_
-#include "Trie.cci"
-#endif

@@ -82,8 +82,7 @@ public:
     * present or cannot be added.
     */
 
-    bool add
-        (char const *, size_t, void *);
+    bool add(char const *, size_t, void *);
 
 private:
     TrieNode *head;

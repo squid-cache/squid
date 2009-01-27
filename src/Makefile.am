@@ -887,7 +887,7 @@ ufsdump_SOURCES = \
 ufsdump_LDADD = \
 	libsquid.la \
 	libauth.la \
-	-L../lib \
+	-L../lib -lmiscutil \
 	@XTRA_OBJS@ \
 	@REPL_OBJS@ \
 	@STORE_OBJS@ \
@@ -897,7 +897,6 @@ ufsdump_LDADD = \
 	@SNMPLIB@ \
 	@ICAP_LIBS@ \
 	@SSLLIB@ \
-	-lmiscutil \
 	@XTRA_LIBS@ \
 	@EPOLL_LIBS@ \
 	@MINGW_LIBS@ 
