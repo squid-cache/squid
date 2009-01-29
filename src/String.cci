@@ -49,7 +49,29 @@ String::size() const
 }
 
 char const *
-String::buf() const
+String::unsafeBuf() const
+{
+    return buf_;
+}
+
+bool String::defined() const
+{
+    return buf_!=NULL;
+}
+
+bool String::undefined() const
+{
+    return buf_==NULL;
+}
+
+char const *
+String::rawBuf() const
+{
+    return buf_;
+}
+
+char const *
+String::termedBuf() const
 {
     return buf_;
 }
@@ -65,19 +87,19 @@ String::operator [](unsigned int pos)
 const char *
 String::pos(char const *aString) const
 {
-    return strstr(buf(), aString);
+    return strstr(unsafeBuf(), aString);
 }
 
 const char *
 String::pos(char const ch) const
 {
-    return strchr(buf(), ch);
+    return strchr(unsafeBuf(), ch);
 }
 
 const char *
 String::rpos(char const ch) const
 {
-    return strrchr(buf(), (ch));
+    return strrchr(unsafeBuf(), (ch));
 }
 
 int
@@ -94,7 +116,7 @@ String::cmp (char const *aString) const
     if (aString == NULL || aString[0] == '\0')
         return 1;
 
-    return strcmp(buf(), aString);
+    return strcmp(unsafeBuf(), aString);
 }
 
 int
@@ -114,7 +136,7 @@ String::cmp (char const *aString, size_t count) const
     if (aString == NULL || aString[0] == '\0')
         return 1;
 
-    return strncmp(buf(), aString, count);
+    return strncmp(unsafeBuf(), aString, count);
 }
 
 int
@@ -131,19 +153,19 @@ String::cmp (String const &aString) const
     if (aString.size() == 0)
         return 1;
 
-    return strcmp(buf(), aString.buf());
+    return strcmp(unsafeBuf(), aString.unsafeBuf());
 }
 
 int
 String::caseCmp(char const *aString) const
 {
-    return strcasecmp(buf(), aString);
+    return strcasecmp(unsafeBuf(), aString);
 }
 
 int
 String::caseCmp(char const *aString, size_t count) const
 {
-    return strncasecmp(buf(), aString, count);
+    return strncasecmp(unsafeBuf(), aString, count);
 }
 
 void
@@ -179,6 +201,6 @@ String::cutPointer(char const *loc)
 std::ostream &
 operator<<(std::ostream& os, String const &aString)
 {
-    os << aString.buf();
+    os << aString.unsafeBuf();
     return os;
 }

@@ -81,7 +81,7 @@ String::operator = (String const &old)
 {
     clean(); // TODO: optimize to avoid cleaning the buffer we can use
     if (old.size() > 0)
-        allocAndFill(old.buf(), old.size());
+        allocAndFill(old.unsafeBuf(), old.size());
     return *this;
 }
 
@@ -128,7 +128,7 @@ String::allocAndFill(const char *str, int len)
 String::String (String const &old) : size_(0), len_(0), buf_(NULL)
 {
     if (old.size() > 0)
-        allocAndFill(old.buf(), old.size());
+        allocAndFill(old.unsafeBuf(), old.size());
 #if DEBUGSTRINGS
 
     StringRegistry::Instance().add(this);
@@ -141,7 +141,7 @@ String::clean()
     PROF_start(StringClean);
     assert(this);
 
-    if (buf())
+    if (unsafeBuf())
         memFreeString(size_, buf_);
 
     len_ = 0;
@@ -188,7 +188,7 @@ String::append(const char *str, int len)
         snew.allocBuffer(snew.len_ + 1);
 
         if (len_)
-            xmemcpy(snew.buf_, buf(), len_);
+            xmemcpy(snew.buf_, unsafeBuf(), len_);
 
         if (len)
             xmemcpy(snew.buf_ + len_, str, len);
@@ -219,7 +219,7 @@ String::append (char chr)
 void
 String::append(String const &old)
 {
-    append (old.buf(), old.len_);
+    append (old.unsafeBuf(), old.len_);
 }
 
 void
@@ -237,7 +237,7 @@ String::absorb(String &old)
 void
 String::stat(StoreEntry *entry) const
 {
-    storeAppendPrintf(entry, "%p : %d/%d \"%s\"\n",this,len_, size_, buf());
+    storeAppendPrintf(entry, "%p : %d/%d \"%s\"\n",this,len_, size_, unsafeBuf());
 }
 
 StringRegistry &

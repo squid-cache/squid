@@ -174,10 +174,10 @@ UrnState::getHost (String &urlpath)
 
     if ((t = urlpath.pos(':')) != NULL) {
         urlpath.set(t, '\0');
-        result = xstrdup(urlpath.buf());
+        result = xstrdup(urlpath.unsafeBuf());
         urlpath.set(t, ':');
     } else {
-        result = xstrdup(urlpath.buf());
+        result = xstrdup(urlpath.unsafeBuf());
     }
 
     return result;
@@ -186,7 +186,7 @@ UrnState::getHost (String &urlpath)
 bool
 UrnState::RequestNeedsMenu(HttpRequest *r)
 {
-    return strncasecmp(r->urlpath.buf(), "menu.", 5) == 0;
+    return strncasecmp(r->urlpath.unsafeBuf(), "menu.", 5) == 0;
 }
 
 void
@@ -202,7 +202,7 @@ UrnState::createUriResRequest (String &uri)
 {
     LOCAL_ARRAY(char, local_urlres, 4096);
     char *host = getHost (uri);
-    snprintf(local_urlres, 4096, "http://%s/uri-res/N2L?urn:%s", host, uri.buf());
+    snprintf(local_urlres, 4096, "http://%s/uri-res/N2L?urn:%s", host, uri.unsafeBuf());
     safe_free (host);
     safe_free (urlres);
     urlres = xstrdup (local_urlres);
@@ -213,7 +213,7 @@ void
 UrnState::setUriResFromRequest(HttpRequest *r)
 {
     if (RequestNeedsMenu(r)) {
-        updateRequestURL(r, r->urlpath.buf() + 5);
+        updateRequestURL(r, r->urlpath.unsafeBuf() + 5);
         flags.force_menu = 1;
     }
 

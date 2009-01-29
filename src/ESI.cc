@@ -1578,7 +1578,7 @@ esiLiteral::process (int dovars)
         /* Ensure variable state is clean */
 
         while (temp.getRaw()) {
-            varState->feedData(temp->buf,temp->len);
+            varState->feedData(temp->unsafeBuf,temp->len);
             temp = temp->next;
         }
 

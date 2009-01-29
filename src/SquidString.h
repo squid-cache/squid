@@ -98,7 +98,26 @@ public:
     _SQUID_INLINE_ char &operator [](unsigned int pos);
 
     _SQUID_INLINE_ int size() const;
-    _SQUID_INLINE_ char const * buf() const;
+    _SQUID_INLINE_ char const * unsafeBuf() const;
+
+    /**
+     * \retval true the String has some contents
+     */
+    _SQUID_INLINE_ bool defined() const;
+    /**
+     * \retval true the String does not hold any contents
+     */
+    _SQUID_INLINE_ bool undefined() const;
+    /**
+     * Returns a raw pointer to the underlying backing store. The caller has been
+     * verified not to make any assumptions about null-termination
+     */
+    _SQUID_INLINE_ char const * rawBuf() const;
+    /**
+     * Returns a raw pointer to the underlying backing store.
+     * The caller requires it to be null-terminated.
+     */
+    _SQUID_INLINE_ char const * termedBuf() const;
     void limitInit(const char *str, int len); // TODO: rename to assign()
     void clean();
     void reset(char const *str);

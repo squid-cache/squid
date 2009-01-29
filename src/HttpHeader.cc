@@ -461,7 +461,7 @@ HttpHeader::update (HttpHeader const *fresh, HttpHeaderMask const *denied_mask)
         if (e->id != HDR_OTHER)
             delById(e->id);
         else
-            delByName(e->name.buf());
+            delByName(e->name.unsafeBuf());
     }
 
     pos = HttpHeaderInitPos;
@@ -578,7 +578,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
         }
 
         if (e->id == HDR_CONTENT_LENGTH && (e2 = findEntry(e->id)) != NULL) {
-            if (e->value.cmp(e2->value.buf()) != 0) {
+            if (e->value.cmp(e2->value.unsafeBuf()) != 0) {
                 int64_t l1, l2;
                 debugs(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2,
                        "WARNING: found two conflicting content-length headers in {" << getStringPrefix(header_start, header_end) << "}");
@@ -588,12 +588,12 @@ HttpHeader::parse(const char *header_start, const char *header_end)
                     goto reset;
                 }
 
-                if (!httpHeaderParseOffset(e->value.buf(), &l1)) {
-                    debugs(55, 1, "WARNING: Unparseable content-length '" << e->value.buf() << "'");
+                if (!httpHeaderParseOffset(e->value.unsafeBuf(), &l1)) {
+                    debugs(55, 1, "WARNING: Unparseable content-length '" << e->value.unsafeBuf() << "'");
                     delete e;
                     continue;
-                } else if (!httpHeaderParseOffset(e2->value.buf(), &l2)) {
-                    debugs(55, 1, "WARNING: Unparseable content-length '" << e2->value.buf() << "'");
+                } else if (!httpHeaderParseOffset(e2->value.unsafeBuf(), &l2)) {
+                    debugs(55, 1, "WARNING: Unparseable content-length '" << e2->value.unsafeBuf() << "'");
                     delById(e2->id);
                 } else if (l1 > l2) {
                     delById(e2->id);
@@ -615,7 +615,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
             }
         }
 
-        if (e->id == HDR_OTHER && stringHasWhitespace(e->name.buf())) {
+        if (e->id == HDR_OTHER && stringHasWhitespace(e->name.unsafeBuf())) {
             debugs(55, Config.onoff.relaxed_header_parser <= 0 ? 1 : 2,
                    "WARNING: found whitespace in HTTP header name {" <<
                    getStringPrefix(field_start, field_end) << "}");
@@ -875,7 +875,7 @@ HttpHeader::getList(http_hdr_type id, String *s) const
 
     while ((e = getEntry(&pos))) {
         if (e->id == id)
-            strListAdd(s, e->value.buf(), ',');
+            strListAdd(s, e->value.unsafeBuf(), ',');
     }
 
     /*
@@ -909,7 +909,7 @@ HttpHeader::getList(http_hdr_type id) const
 
     while ((e = getEntry(&pos))) {
         if (e->id == id)
-            strListAdd(&s, e->value.buf(), ',');
+            strListAdd(&s, e->value.unsafeBuf(), ',');
     }
 
     /*
@@ -964,7 +964,7 @@ HttpHeader::getByName(const char *name) const
     /* Sorry, an unknown header name. Do linear search */
     while ((e = getEntry(&pos))) {
         if (e->id == HDR_OTHER && e->name.caseCmp(name) == 0) {
-            strListAdd(&result, e->value.buf(), ',');
+            strListAdd(&result, e->value.unsafeBuf(), ',');
         }
     }
 
@@ -1209,7 +1209,7 @@ HttpHeader::getTime(http_hdr_type id) const
     assert(Headers[id].type == ftDate_1123);	/* must be of an appropriate type */
 
     if ((e = findEntry(id))) {
-        value = parse_rfc1123(e->value.buf());
+        value = parse_rfc1123(e->value.unsafeBuf());
         httpHeaderNoteParsedEntry(e->id, e->value, value < 0);
     }
 
@@ -1226,7 +1226,7 @@ HttpHeader::getStr(http_hdr_type id) const
 
     if ((e = findEntry(id))) {
         httpHeaderNoteParsedEntry(e->id, e->value, 0);	/* no errors are possible */
-        return e->value.buf();
+        return e->value.unsafeBuf();
     }
 
     return NULL;
@@ -1242,7 +1242,7 @@ HttpHeader::getLastStr(http_hdr_type id) const
 
     if ((e = findLastEntry(id))) {
         httpHeaderNoteParsedEntry(e->id, e->value, 0);	/* no errors are possible */
-        return e->value.buf();
+        return e->value.unsafeBuf();
     }
 
     return NULL;
@@ -1322,7 +1322,7 @@ HttpHeader::getContRange() const
     HttpHeaderEntry *e;
 
     if ((e = findEntry(HDR_CONTENT_RANGE))) {
-        cr = httpHdrContRangeParseCreate(e->value.buf());
+        cr = httpHdrContRangeParseCreate(e->value.unsafeBuf());
         httpHeaderNoteParsedEntry(e->id, e->value, !cr);
     }
 
@@ -1367,7 +1367,7 @@ HttpHeader::getETag(http_hdr_type id) const
     assert(Headers[id].type == ftETag);		/* must be of an appropriate type */
 
     if ((e = findEntry(id)))
-        etagParseInit(&etag, e->value.buf());
+        etagParseInit(&etag, e->value.unsafeBuf());
 
     return etag;
 }
@@ -1381,7 +1381,7 @@ HttpHeader::getTimeOrTag(http_hdr_type id) const
     memset(&tot, 0, sizeof(tot));
 
     if ((e = findEntry(id))) {
-        const char *str = e->value.buf();
+        const char *str = e->value.unsafeBuf();
         /* try as an ETag */
 
         if (etagParseInit(&tot.tag, str)) {
@@ -1417,13 +1417,13 @@ HttpHeaderEntry::HttpHeaderEntry(http_hdr_type anId, const char *aName, const ch
 
     Headers[id].stat.aliveCount++;
 
-    debugs(55, 9, "created HttpHeaderEntry " << this << ": '" << name.buf() << " : " << value.buf());
+    debugs(55, 9, "created HttpHeaderEntry " << this << ": '" << name.unsafeBuf() << " : " << value.unsafeBuf());
 }
 
 HttpHeaderEntry::~HttpHeaderEntry()
 {
     assert_eid(id);
-    debugs(55, 9, "destroying entry " << this << ": '" << name.buf() << ": " << value.buf() << "'");
+    debugs(55, 9, "destroying entry " << this << ": '" << name.unsafeBuf() << ": " << value.unsafeBuf() << "'");
     /* clean name if needed */
 
     if (id == HDR_OTHER)
@@ -1503,7 +1503,7 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
 
     if (field_end - value_start > 65534) {
         /* String must be LESS THAN 64K and it adds a terminating NULL */
-        debugs(55, 1, "WARNING: ignoring '" << name.buf() << "' header of " << (field_end - value_start) << " bytes");
+        debugs(55, 1, "WARNING: ignoring '" << name.unsafeBuf() << "' header of " << (field_end - value_start) << " bytes");
 
         if (id == HDR_OTHER)
             name.clean();
@@ -1518,24 +1518,24 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
 
     Headers[id].stat.aliveCount++;
 
-    debugs(55, 9, "parsed HttpHeaderEntry: '" << name.buf() << ": " << value.buf() << "'");
+    debugs(55, 9, "parsed HttpHeaderEntry: '" << name.unsafeBuf() << ": " << value.unsafeBuf() << "'");
 
-    return new HttpHeaderEntry(id, name.buf(), value.buf());
+    return new HttpHeaderEntry(id, name.unsafeBuf(), value.unsafeBuf());
 }
 
 HttpHeaderEntry *
 HttpHeaderEntry::clone() const
 {
-    return new HttpHeaderEntry(id, name.buf(), value.buf());
+    return new HttpHeaderEntry(id, name.unsafeBuf(), value.unsafeBuf());
 }
 
 void
 HttpHeaderEntry::packInto(Packer * p) const
 {
     assert(p);
-    packerAppend(p, name.buf(), name.size());
+    packerAppend(p, name.unsafeBuf(), name.size());
     packerAppend(p, ": ", 2);
-    packerAppend(p, value.buf(), value.size());
+    packerAppend(p, value.unsafeBuf(), value.size());
     packerAppend(p, "\r\n", 2);
 }
 
@@ -1545,7 +1545,7 @@ HttpHeaderEntry::getInt() const
     assert_eid (id);
     assert (Headers[id].type == ftInt);
     int val = -1;
-    int ok = httpHeaderParseInt(value.buf(), &val);
+    int ok = httpHeaderParseInt(value.unsafeBuf(), &val);
     httpHeaderNoteParsedEntry(id, value, !ok);
     /* XXX: Should we check ok - ie
      * return ok ? -1 : value;
@@ -1559,7 +1559,7 @@ HttpHeaderEntry::getInt64() const
     assert_eid (id);
     assert (Headers[id].type == ftInt64);
     int64_t val = -1;
-    int ok = httpHeaderParseOffset(value.buf(), &val);
+    int ok = httpHeaderParseOffset(value.unsafeBuf(), &val);
     httpHeaderNoteParsedEntry(id, value, !ok);
     /* XXX: Should we check ok - ie
      * return ok ? -1 : value;
@@ -1574,7 +1574,7 @@ httpHeaderNoteParsedEntry(http_hdr_type id, String const &context, int error)
 
     if (error) {
         Headers[id].stat.errCount++;
-        debugs(55, 2, "cannot parse hdr field: '" << Headers[id].name.buf() << ": " << context.buf() << "'");
+        debugs(55, 2, "cannot parse hdr field: '" << Headers[id].name.unsafeBuf() << ": " << context.unsafeBuf() << "'");
     }
 }
 
@@ -1591,7 +1591,7 @@ httpHeaderFieldStatDumper(StoreEntry * sentry, int idx, double val, double size,
 {
     const int id = (int) val;
     const int valid_id = id >= 0 && id < HDR_ENUM_END;
-    const char *name = valid_id ? Headers[id].name.buf() : "INVALID";
+    const char *name = valid_id ? Headers[id].name.unsafeBuf() : "INVALID";
     int visible = count > 0;
     /* for entries with zero count, list only those that belong to current type of message */
 
@@ -1669,7 +1669,7 @@ httpHeaderStoreReport(StoreEntry * e)
     for (ht = (http_hdr_type)0; ht < HDR_ENUM_END; ++ht) {
         HttpHeaderFieldInfo *f = Headers + ht;
         storeAppendPrintf(e, "%2d\t %-25s\t %5d\t %6.3f\t %6.3f\n",
-                          f->id, f->name.buf(), f->stat.aliveCount,
+                          f->id, f->name.unsafeBuf(), f->stat.aliveCount,
                           xpercent(f->stat.errCount, f->stat.parsCount),
                           xpercent(f->stat.repCount, f->stat.seenCount));
     }
@@ -1690,7 +1690,7 @@ httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo * i
         if (name_len >= 0 && name_len != info[i].name.size())
             continue;
 
-        if (!strncasecmp(name, info[i].name.buf(),
+        if (!strncasecmp(name, info[i].name.unsafeBuf(),
                          name_len < 0 ? info[i].name.size() + 1 : name_len))
             return info[i].id;
     }
@@ -1715,7 +1715,7 @@ httpHeaderNameById(int id)
 
     assert(id >= 0 && id < HDR_ENUM_END);
 
-    return Headers[id].name.buf();
+    return Headers[id].name.unsafeBuf();
 }
 
 int
@@ -1804,7 +1804,7 @@ HttpHeader::removeConnectionHeaderEntries()
 
         int headers_deleted = 0;
         while ((e = getEntry(&pos))) {
-            if (strListIsMember(&strConnection, e->name.buf(), ','))
+            if (strListIsMember(&strConnection, e->name.unsafeBuf(), ','))
                 delAt(pos, headers_deleted);
         }
         if (headers_deleted)
