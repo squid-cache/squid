@@ -426,7 +426,7 @@ clientFollowXForwardedForCheck(int answer, void *data)
         const char *asciiaddr;
         int l;
         struct in_addr addr;
-        p = request->x_forwarded_for_iterator.buf();
+        p = request->x_forwarded_for_iterator.unsafeBuf();
         l = request->x_forwarded_for_iterator.size();
 
         /*
@@ -851,7 +851,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
             int may_pin = 0;
             while ((e = req_hdr->getEntry(&pos))) {
                 if (e->id == HDR_AUTHORIZATION || e->id == HDR_PROXY_AUTHORIZATION) {
-                    const char *value = e->value.buf();
+                    const char *value = e->value.unsafeBuf();
                     if (strncasecmp(value, "NTLM ", 5) == 0
                             ||
                             strncasecmp(value, "Negotiate ", 10) == 0
@@ -892,7 +892,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         }
 
 #if FORW_VIA_DB
-        fvdbCountVia(s.buf());
+        fvdbCountVia(s.unsafeBuf());
 
 #endif
 
@@ -918,7 +918,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 
     if (req_hdr->has(HDR_X_FORWARDED_FOR)) {
         String s = req_hdr->getList(HDR_X_FORWARDED_FOR);
-        fvdbCountForw(s.buf());
+        fvdbCountForw(s.unsafeBuf());
         s.clean();
     }
 
@@ -1387,13 +1387,13 @@ ClientHttpRequest::noteMoreBodyDataAvailable(BodyPipe::Pointer)
     assert(request_satisfaction_mode);
     assert(adaptedBodySource != NULL);
 
-    if (const size_t contentSize = adaptedBodySource->buf().contentSize()) {
+    if (const size_t contentSize = adaptedBodySource->unsafeBuf().contentSize()) {
         BodyPipeCheckout bpc(*adaptedBodySource);
-        const StoreIOBuffer ioBuf(&bpc.buf, request_satisfaction_offset);
+        const StoreIOBuffer ioBuf(&bpc.unsafeBuf, request_satisfaction_offset);
         storeEntry()->write(ioBuf);
         // assume can write everything
         request_satisfaction_offset += contentSize;
-        bpc.buf.consume(contentSize);
+        bpc.unsafeBuf.consume(contentSize);
         bpc.checkIn();
     }
 

@@ -1653,8 +1653,8 @@ statClientRequests(StoreEntry * s)
 
         if (http->request->auth_user_request)
             p = http->request->auth_user_request->username();
-        else if (http->request->extacl_user.buf() != NULL) {
-            p = http->request->extacl_user.buf();
+        else if (http->request->extacl_user.unsafeBuf() != NULL) {
+            p = http->request->extacl_user.unsafeBuf();
         }
 
         if (!p && (conn != NULL && conn->rfc931[0]))

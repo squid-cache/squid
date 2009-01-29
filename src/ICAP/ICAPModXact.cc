@@ -1040,11 +1040,11 @@ void ICAPModXact::makeRequestHeaders(MemBuf &buf)
     // as ICAP headers.
     if (virgin.header->header.has(HDR_PROXY_AUTHENTICATE))
         buf.Printf("Proxy-Authenticate: %s\r\n",
-                   virgin.header->header.getByName("Proxy-Authenticate").buf());
+                   virgin.header->header.getByName("Proxy-Authenticate").unsafeBuf());
 
     if (virgin.header->header.has(HDR_PROXY_AUTHORIZATION))
         buf.Printf("Proxy-Authorization: %s\r\n",
-                   virgin.header->header.getByName("Proxy-Authorization").buf());
+                   virgin.header->header.getByName("Proxy-Authorization").unsafeBuf());
 
     buf.Printf("Encapsulated: ");
 
@@ -1107,7 +1107,7 @@ void ICAPModXact::makeRequestHeaders(MemBuf &buf)
     if (TheICAPConfig.send_client_username && request)
         makeUsernameHeader(request, buf);
 
-    // fprintf(stderr, "%s\n", buf.content());
+    // fprintf(stderr, "%s\n", unsafeBuf.content());
 
     buf.append(ICAP::crlf, 2); // terminate ICAP header
 
@@ -1268,7 +1268,7 @@ void ICAPModXact::finishNullOrEmptyBodyPreview(MemBuf &buf)
     Must(!preview.ad());
 
     // do not add last-chunk because our Encapsulated header says null-body
-    // addLastRequestChunk(buf);
+    // addLastRequestChunk(unsafeBuf);
     preview.wrote(0, true);
 
     Must(preview.done());
@@ -1376,7 +1376,7 @@ void ICAPModXact::estimateVirginBody()
         Must(virgin.body_pipe->setConsumerIfNotLate(this));
 
         // make sure TheBackupLimit is in-sync with the buffer size
-        Must(TheBackupLimit <= static_cast<size_t>(msg->body_pipe->buf().max_capacity));
+        Must(TheBackupLimit <= static_cast<size_t>(msg->body_pipe->unsafeBuf().max_capacity));
     } else {
         debugs(93, 6, "ICAPModXact does not expect virgin body");
         Must(msg->body_pipe == NULL);

@@ -439,7 +439,7 @@ urlCanonical(HttpRequest * request)
         return request->canonical;
 
     if (request->protocol == PROTO_URN) {
-        snprintf(urlbuf, MAX_URL, "urn:%s", request->urlpath.buf());
+        snprintf(urlbuf, MAX_URL, "urn:%s", request->urlpath.unsafeBuf());
     } else {
 /// \todo AYJ: this could use "if..else and method == METHOD_CONNECT" easier.
         switch (request->method.id()) {
@@ -460,7 +460,7 @@ urlCanonical(HttpRequest * request)
                      *request->login ? "@" : null_string,
                      request->GetHost(),
                      portbuf,
-                     request->urlpath.buf());
+                     request->urlpath.unsafeBuf());
 
             break;
         }
@@ -482,7 +482,7 @@ urlCanonicalClean(const HttpRequest * request)
     char *t;
 
     if (request->protocol == PROTO_URN) {
-        snprintf(buf, MAX_URL, "urn:%s", request->urlpath.buf());
+        snprintf(buf, MAX_URL, "urn:%s", request->urlpath.unsafeBuf());
     } else {
 /// \todo AYJ: this could use "if..else and method == METHOD_CONNECT" easier.
         switch (request->method.id()) {
@@ -515,7 +515,7 @@ urlCanonicalClean(const HttpRequest * request)
                      loginbuf,
                      request->GetHost(),
                      portbuf,
-                     request->urlpath.buf());
+                     request->urlpath.unsafeBuf());
             /*
              * strip arguments AFTER a question-mark
              */
@@ -584,7 +584,7 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
     char *urlbuf = (char *)xmalloc(MAX_URL * sizeof(char));
 
     if (req->protocol == PROTO_URN) {
-        snprintf(urlbuf, MAX_URL, "urn:%s", req->urlpath.buf());
+        snprintf(urlbuf, MAX_URL, "urn:%s", req->urlpath.unsafeBuf());
         return (urlbuf);
     }
 
@@ -610,7 +610,7 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
     if (relUrl[0] == '/') {
         strncpy(&urlbuf[urllen], relUrl, MAX_URL - urllen - 1);
     } else {
-        const char *path = req->urlpath.buf();
+        const char *path = req->urlpath.unsafeBuf();
         const char *last_slash = strrchr(path, '/');
 
         if (last_slash == NULL) {
