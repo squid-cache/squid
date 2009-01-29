@@ -39,7 +39,7 @@ Ecap::HeaderRep::value(const Name &name) const
     const String value = squidId == HDR_OTHER ?
                          theHeader.getByName(name.image().c_str()) :
                          theHeader.getStrOrList(squidId);
-    return Value::FromTempString(value.unsafeBuf());
+    return Value::FromTempString(value.termedBuf());
 }
 
 void
