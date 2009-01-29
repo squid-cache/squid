@@ -87,19 +87,19 @@ String::operator [](unsigned int pos)
 const char *
 String::pos(char const *aString) const
 {
-    return strstr(unsafeBuf(), aString);
+    return strstr(termedBuf(), aString);
 }
 
 const char *
 String::pos(char const ch) const
 {
-    return strchr(unsafeBuf(), ch);
+    return strchr(termedBuf(), ch);
 }
 
 const char *
 String::rpos(char const ch) const
 {
-    return strrchr(unsafeBuf(), (ch));
+    return strrchr(termedBuf(), (ch));
 }
 
 int
@@ -116,7 +116,7 @@ String::cmp (char const *aString) const
     if (aString == NULL || aString[0] == '\0')
         return 1;
 
-    return strcmp(unsafeBuf(), aString);
+    return strcmp(termedBuf(), aString);
 }
 
 int
@@ -136,7 +136,7 @@ String::cmp (char const *aString, size_t count) const
     if (aString == NULL || aString[0] == '\0')
         return 1;
 
-    return strncmp(unsafeBuf(), aString, count);
+    return strncmp(termedBuf(), aString, count);
 }
 
 int
@@ -153,19 +153,19 @@ String::cmp (String const &aString) const
     if (aString.size() == 0)
         return 1;
 
-    return strcmp(unsafeBuf(), aString.unsafeBuf());
+    return strcmp(termedBuf(), aString.termedBuf());
 }
 
 int
 String::caseCmp(char const *aString) const
 {
-    return strcasecmp(unsafeBuf(), aString);
+    return strcasecmp(termedBuf(), aString);
 }
 
 int
 String::caseCmp(char const *aString, size_t count) const
 {
-    return strncasecmp(unsafeBuf(), aString, count);
+    return strncasecmp(termedBuf(), aString, count);
 }
 
 void
@@ -201,6 +201,6 @@ String::cutPointer(char const *loc)
 std::ostream &
 operator<<(std::ostream& os, String const &aString)
 {
-    os << aString.unsafeBuf();
+    os.write(aString.rawBuf(),aString.size());
     return os;
 }
