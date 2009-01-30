@@ -280,7 +280,7 @@ void ICAPServiceRep::checkOptions()
             debugs(93,1, "WARNING: Squid is configured to use ICAP method " <<
                    cfg().methodStr() <<
                    " for service " << cfg().uri.unsafeBuf() <<
-                   " but OPTIONS response declares the methods are " << method_list.unsafeBuf());
+                   " but OPTIONS response declares the methods are " << method_list);
         }
     }
 

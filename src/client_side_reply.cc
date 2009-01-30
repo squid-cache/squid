@@ -1291,7 +1291,7 @@ clientReplyContext::buildReplyHeader()
         int connection_auth_blocked = 0;
         while ((e = hdr->getEntry(&pos))) {
             if (e->id == HDR_WWW_AUTHENTICATE) {
-                const char *value = e->value.unsafeBuf();
+                const char *value = e->value.rawBuf();
 
                 if ((strncasecmp(value, "NTLM", 4) == 0 &&
                         (value[4] == '\0' || value[4] == ' '))
@@ -1391,7 +1391,7 @@ clientReplyContext::buildReplyHeader()
                  ThisCache);
         strListAdd(&strVia, bbuf, ',');
         hdr->delById(HDR_VIA);
-        hdr->putStr(HDR_VIA, strVia.unsafeBuf());
+        hdr->putStr(HDR_VIA, strVia.termedBuf());
     }
     /* Signal keep-alive if needed */
     hdr->putStr(http->flags.accel ? HDR_CONNECTION : HDR_PROXY_CONNECTION,
