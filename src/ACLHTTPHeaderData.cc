@@ -63,18 +63,18 @@ ACLHTTPHeaderData::match(HttpHeader* hdr)
     if (hdr == NULL)
         return false;
 
-    debugs(28, 3, "aclHeaderData::match: checking '" << hdrName.unsafeBuf() << "'");
+    debugs(28, 3, "aclHeaderData::match: checking '" << hdrName << "'");
 
-    String value = hdrId != HDR_BAD_HDR ? hdr->getStrOrList(hdrId) : hdr->getByName(hdrName.unsafeBuf());
+    String value = hdrId != HDR_BAD_HDR ? hdr->getStrOrList(hdrId) : hdr->getByName(hdrName.termedBuf());
 
-    return regex_rule->match(value.unsafeBuf());
+    return regex_rule->match(value.termedBuf());
 }
 
 wordlist *
 ACLHTTPHeaderData::dump()
 {
     wordlist *W = NULL;
-    wordlistAdd(&W, hdrName.unsafeBuf());
+    wordlistAdd(&W, hdrName.termedBuf());
     wordlist * regex_dump = regex_rule->dump();
     wordlistAddWl(&W, regex_dump);
     wordlistDestroy(&regex_dump);
@@ -87,14 +87,14 @@ ACLHTTPHeaderData::parse()
     char* t = strtokFile();
     assert (t != NULL);
     hdrName = t;
-    hdrId = httpHeaderIdByNameDef(hdrName.unsafeBuf(), strlen(hdrName.unsafeBuf()));
+    hdrId = httpHeaderIdByNameDef(hdrName.rawBuf(), hdrName.size());
     regex_rule->parse();
 }
 
 bool
 ACLHTTPHeaderData::empty() const
 {
-    return (hdrId == HDR_BAD_HDR && !hdrName.unsafeBuf()) || regex_rule->empty();
+    return (hdrId == HDR_BAD_HDR && hdrName.undefined()) || regex_rule->empty();
 }
 
 ACLData<HttpHeader*> *

@@ -464,7 +464,7 @@ clientPrepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry * aLogE
     aLogEntry->http.version = request->http_ver;
     aLogEntry->hier = request->hier;
     aLogEntry->cache.requestSize += request->content_length;
-    aLogEntry->cache.extuser = request->extacl_user.unsafeBuf();
+    aLogEntry->cache.extuser = request->extacl_user.termedBuf();
 
     if (request->auth_user_request) {
 
@@ -486,7 +486,7 @@ ClientHttpRequest::logRequest()
 
         if (al.reply) {
             al.http.code = al.reply->sline.status;
-            al.http.content_type = al.reply->content_type.unsafeBuf();
+            al.http.content_type = al.reply->content_type.termedBuf();
         } else if (loggingEntry() && loggingEntry()->mem_obj) {
             al.http.code = loggingEntry()->mem_obj->getReply()->sline.status;
             al.http.content_type = loggingEntry()->mem_obj->getReply()->content_type.unsafeBuf();
@@ -852,7 +852,7 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
 static void
 clientPackTermBound(String boundary, MemBuf * mb)
 {
-    mb->Printf("\r\n--%s--\r\n", boundary.unsafeBuf());
+    mb->Printf("\r\n--%.*s--\r\n", boundary.size(), boundary.rawBuf());
     debugs(33, 6, "clientPackTermBound: buf offset: " << mb->size);
 }
 
@@ -866,10 +866,9 @@ clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String 
     assert(spec);
 
     /* put boundary */
-    debugs(33, 5, "clientPackRangeHdr: appending boundary: " <<
-           boundary.unsafeBuf());
+    debugs(33, 5, "clientPackRangeHdr: appending boundary: " << boundary);
     /* rfc2046 requires to _prepend_ boundary with <crlf>! */
-    mb->Printf("\r\n--%s\r\n", boundary.unsafeBuf());
+    mb->Printf("\r\n--%.*s\r\n", boundary.size(), boundary.rawBuf());
 
     /* stuff the header with required entries and pack it */
 
@@ -2271,7 +2270,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         request->flags.spoof_client_ip = conn->port->spoof_client_ip;
     }
 
-    if (internalCheck(request->urlpath.unsafeBuf())) {
+    if (internalCheck(request->urlpath.termedBuf())) {
         if (internalHostnameIs(request->GetHost()) &&
                 request->port == getMyPort()) {
             http->flags.internal = 1;

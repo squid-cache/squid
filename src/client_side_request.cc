@@ -851,7 +851,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
             int may_pin = 0;
             while ((e = req_hdr->getEntry(&pos))) {
                 if (e->id == HDR_AUTHORIZATION || e->id == HDR_PROXY_AUTHORIZATION) {
-                    const char *value = e->value.unsafeBuf();
+                    const char *value = e->value.rawBuf();
                     if (strncasecmp(value, "NTLM ", 5) == 0
                             ||
                             strncasecmp(value, "Negotiate ", 10) == 0
