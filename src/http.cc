@@ -93,7 +93,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"),
         const char *url;
 
         if (_peer->options.originserver)
-            url = orig_request->urlpath.unsafeBuf();
+            url = orig_request->urlpath.termedBuf();
         else
             url = entry->url();
 
@@ -578,7 +578,7 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
         strListAdd(&vstr, name, ',');
         hdr = request->header.getByName(name);
         safe_free(name);
-        value = hdr.unsafeBuf();
+        value = hdr.termedBuf();
 
         if (value) {
             value = rfc1738_escape_part(value);
@@ -603,7 +603,7 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
         strListAdd(&vstr, name, ',');
         hdr = request->header.getByName(name);
         safe_free(name);
-        value = hdr.unsafeBuf();
+        value = hdr.termedBuf();
 
         if (value) {
             value = rfc1738_escape_part(value);
@@ -618,8 +618,8 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
     vary.clean();
 #endif
 
-    debugs(11, 3, "httpMakeVaryMark: " << vstr.unsafeBuf());
-    return vstr.unsafeBuf();
+    debugs(11, 3, "httpMakeVaryMark: " << vstr);
+    return vstr.termedBuf();
 }
 
 void
@@ -791,7 +791,7 @@ bool HttpStateData::peerSupportsConnectionPinning() const
 
     header = hdr->getStrOrList(HDR_PROXY_SUPPORT);
     /* XXX This ought to be done in a case-insensitive manner */
-    rc = (strstr(header.unsafeBuf(), "Session-Based-Authentication") != NULL);
+    rc = (strstr(header.termedBuf(), "Session-Based-Authentication") != NULL);
 
     return rc;
 }
@@ -988,11 +988,11 @@ HttpStateData::persistentConnStatus() const
  */
 /*
 void
-HttpStateData::ReadReplyWrapper(int fd, char *unsafeBuf, size_t len, comm_err_t flag, int xerrno, void *data)
+HttpStateData::ReadReplyWrapper(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     HttpStateData *httpState = static_cast<HttpStateData *>(data);
     assert (fd == httpState->fd);
-    // assert(unsafeBuf == readBuf->content());
+    // assert(buf == readBuf->content());
     PROF_start(HttpStateData_readReply);
     httpState->readReply (len, flag, xerrno);
     PROF_stop(HttpStateData_readReply);
@@ -1072,8 +1072,8 @@ HttpStateData::readReply (const CommIoCbParams &io)
     if (!flags.headers_parsed && len > 0 && fd_table[fd].uses > 1) {
         /* Skip whitespace between replies */
 
-        while (len > 0 && xisspace(*unsafeBuf))
-            xmemmove(unsafeBuf, unsafeBuf + 1, len--);
+        while (len > 0 && xisspace(*buf))
+            xmemmove(buf, buf + 1, len--);
 
         if (len == 0) {
             /* Continue to read... */
@@ -1454,7 +1454,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
                  orig_request->http_ver.major,
                  orig_request->http_ver.minor, ThisCache);
         strListAdd(&strVia, bbuf, ',');
-        hdr_out->putStr(HDR_VIA, strVia.unsafeBuf());
+        hdr_out->putStr(HDR_VIA, strVia.termedBuf());
         strVia.clean();
     }
 
@@ -1465,7 +1465,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         snprintf(bbuf, BBUF_SZ, "%s=\"Surrogate/1.0 ESI/1.0\"",
                  Config.Accel.surrogate_id);
         strListAdd(&strSurrogate, bbuf, ',');
-        hdr_out->putStr(HDR_SURROGATE_CAPABILITY, strSurrogate.unsafeBuf());
+        hdr_out->putStr(HDR_SURROGATE_CAPABILITY, strSurrogate.termedBuf());
     }
 #endif
 
@@ -1495,7 +1495,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
                 strFwd = orig_request->client_addr.NtoA(ntoabuf, MAX_IPSTRLEN);
         }
         if (strFwd.size() > 0)
-            hdr_out->putStr(HDR_X_FORWARDED_FOR, strFwd.unsafeBuf());
+            hdr_out->putStr(HDR_X_FORWARDED_FOR, strFwd.termedBuf());
     }
     /** If set to DELETE - do not copy through. */
     strFwd.clean();
@@ -1531,7 +1531,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             const char *username = "-";
 
             if (orig_request->extacl_user.size())
-                username = orig_request->extacl_user.unsafeBuf();
+                username = orig_request->extacl_user.termedBuf();
             else if (orig_request->auth_user_request)
                 username = orig_request->auth_user_request->username();
 
@@ -1542,7 +1542,11 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         } else if (strcmp(orig_request->peer_login, "PASS") == 0) {
             if (orig_request->extacl_user.size() && orig_request->extacl_passwd.size()) {
                 char loginbuf[256];
-                snprintf(loginbuf, sizeof(loginbuf), "%s:%s", orig_request->extacl_user.unsafeBuf(), orig_request->extacl_passwd.unsafeBuf());
+                snprintf(loginbuf, sizeof(loginbuf), "%.*s:%.*s",
+                    orig_request->extacl_user.size(),
+                    orig_request->extacl_user.rawBuf(),
+                    orig_request->extacl_passwd.size(),
+                    orig_request->extacl_passwd.rawBuf());
                 httpHeaderPutStrf(hdr_out, HDR_PROXY_AUTHORIZATION, "Basic %s",
                                   base64_encode(loginbuf));
             }
@@ -1569,7 +1573,11 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
                 hdr_out->putStr(HDR_AUTHORIZATION, auth);
             } else if (orig_request->extacl_user.size() && orig_request->extacl_passwd.size()) {
                 char loginbuf[256];
-                snprintf(loginbuf, sizeof(loginbuf), "%s:%s", orig_request->extacl_user.unsafeBuf(), orig_request->extacl_passwd.unsafeBuf());
+                snprintf(loginbuf, sizeof(loginbuf), "%.*s:%.*s",
+                    orig_request->extacl_user.size(),
+                    orig_request->extacl_user.rawBuf(),
+                    orig_request->extacl_passwd.size(),
+                    orig_request->extacl_passwd.rawBuf());
                 httpHeaderPutStrf(hdr_out, HDR_AUTHORIZATION, "Basic %s",
                                   base64_encode(loginbuf));
             }
