@@ -53,7 +53,6 @@
 #include <stdio.h>
 #endif
 
-#include "heap.h"
 #include "util.h"
 
 /*
