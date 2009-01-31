@@ -1029,8 +1029,8 @@ void ICAPModXact::makeRequestHeaders(MemBuf &buf)
      * XXX These should use HttpHdr interfaces instead of Printfs
      */
     const Adaptation::ServiceConfig &s = service().cfg();
-    buf.Printf("%s %s ICAP/1.0\r\n", s.methodStr(), s.uri.buf());
-    buf.Printf("Host: %s:%d\r\n", s.host.buf(), s.port);
+    buf.Printf("%s %.*s ICAP/1.0\r\n", s.methodStr(), s.uri.size(), s.uri.rawBuf());
+    buf.Printf("Host: %.*s:%d\r\n", s.host.size(), s.host.rawBuf(), s.port);
     buf.Printf("Date: %s\r\n", mkrfc1123(squid_curtime));
 
     if (!TheICAPConfig.reuse_connections)
@@ -1380,7 +1380,7 @@ void ICAPModXact::estimateVirginBody()
         Must(virgin.body_pipe->setConsumerIfNotLate(this));
 
         // make sure TheBackupLimit is in-sync with the buffer size
-        Must(TheBackupLimit <= static_cast<size_t>(msg->body_pipe->unsafeBuf().max_capacity));
+        Must(TheBackupLimit <= static_cast<size_t>(msg->body_pipe->buf().max_capacity));
     } else {
         debugs(93, 6, "ICAPModXact does not expect virgin body");
         Must(msg->body_pipe == NULL);
