@@ -1589,7 +1589,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             if (orig_request->auth_user_request)
                 username = orig_request->auth_user_request->username();
             else if (orig_request->extacl_user.size())
-                username = orig_request->extacl_user.unsafeBuf();
+                username = orig_request->extacl_user.termedBuf();
 
             snprintf(loginbuf, sizeof(loginbuf), "%s%s", username, orig_request->peer_login + 1);
 
@@ -1621,7 +1621,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             httpHdrCcSetMaxAge(cc, getMaxAge(url));
 
             if (request->urlpath.size())
-                assert(strstr(url, request->urlpath.unsafeBuf()));
+                assert(strstr(url, request->urlpath.termedBuf()));
         }
 
         /* Enforce sibling relations */
@@ -1658,10 +1658,10 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 void
 copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, String strConnection, HttpRequest * request, HttpRequest * orig_request, HttpHeader * hdr_out, int we_do_ranges, http_state_flags flags)
 {
-    debugs(11, 5, "httpBuildRequestHeader: " << e->name.unsafeBuf() << ": " << e->value.unsafeBuf());
+    debugs(11, 5, "httpBuildRequestHeader: " << e->name << ": " << e->value );
 
     if (!httpRequestHdrAllowed(e, &strConnection)) {
-        debugs(11, 2, "'" << e->name.unsafeBuf() << "' header denied by anonymize_headers configuration");
+        debugs(11, 2, "'" << e->name << "' header denied by anonymize_headers configuration");
         return;
     }
 
@@ -1822,7 +1822,7 @@ HttpStateData::buildRequestPrefix(HttpRequest * request,
     HttpVersion httpver(1, 0);
     mb->Printf("%s %s HTTP/%d.%d\r\n",
                RequestMethodStr(request->method),
-               request->urlpath.size() ? request->urlpath.unsafeBuf() : "/",
+               request->urlpath.size() ? request->urlpath.termedBuf() : "/",
                httpver.major,httpver.minor);
     /* build and pack headers */
     {
