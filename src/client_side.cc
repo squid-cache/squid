@@ -2274,7 +2274,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         if (internalHostnameIs(request->GetHost()) &&
                 request->port == getMyPort()) {
             http->flags.internal = 1;
-        } else if (Config.onoff.global_internal_static && internalStaticCheck(request->urlpath.unsafeBuf())) {
+        } else if (Config.onoff.global_internal_static && internalStaticCheck(request->urlpath.termedBuf())) {
             request->SetHost(internalHostname());
             request->port = getMyPort();
             http->flags.internal = 1;
