@@ -445,14 +445,16 @@ HttpParserRequestLen(HttpParser *hp)
 }
 #endif
 
-/*
+/**
  * Attempt to parse the request line.
  *
  * This will set the values in hmsg that it determines. One may end up
  * with a partially-parsed buffer; the return value tells you whether
  * the values are valid or not.
  *
- * @return 1 if parsed correctly, 0 if more is needed, -1 if error
+ * \retval	1 if parsed correctly
+ * \retval	0 if more is needed
+ * \retval	-1 if error
  *
  * TODO:
  *   * have it indicate "error" and "not enough" as two separate conditions!
@@ -463,7 +465,7 @@ HttpParserParseReqLine(HttpParser *hmsg)
 {
     int i = 0;
     int retcode = 0;
-    int maj = -1, min = -1;
+    unsigned int maj = 0, min = 9;
     int last_whitespace = -1, line_end = -1;
 
     debugs(74, 5, "httpParserParseReqLine: parsing " << hmsg->buf);
@@ -607,8 +609,6 @@ HttpParserParseReqLine(HttpParser *hmsg)
      * Rightio - we have all the schtuff. Return true; we've got enough.
      */
     retcode = 1;
-    assert(maj != -1);
-    assert(min != -1);
 
 finish:
     hmsg->v_maj = maj;
