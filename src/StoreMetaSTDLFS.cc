@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMetaSTDLFS.cc,v 1.1 2007/08/13 17:22:30 hno Exp $
+ * $Id$
  *
  * DEBUG: section 20    Storage Manager Swapfile Metadata
  *

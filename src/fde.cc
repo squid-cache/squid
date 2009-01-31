@@ -1,6 +1,6 @@
 
 /*
- * $Id: fde.cc,v 1.8 2008/02/12 23:22:13 rousskov Exp $
+ * $Id$
  *
  * DEBUG: none          FDE
  * AUTHOR: Robert Collins

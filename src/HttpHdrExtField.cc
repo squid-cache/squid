@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrExtField.cc,v 1.12 2003/03/06 11:51:55 robertc Exp $
+ * $Id$
  *
  * DEBUG: section 69    HTTP Header: Extension Field
  * AUTHOR: Alex Rousskov

@@ -1,5 +1,5 @@
 /*
- * $Id: squid_mswin.h,v 1.10 2008/02/26 21:49:33 amosjeffries Exp $
+ * $Id$
  *
  * AUTHOR: Andrey Shorin <tolsty@tushino.com>
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>

@@ -1,5 +1,5 @@
 /*
- * $Id: StoreMetaURL.h,v 1.5 2008/02/26 21:49:34 amosjeffries Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

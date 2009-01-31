@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskThreadsIOStrategy.h,v 1.5 2007/04/12 23:51:57 wessels Exp $
+ * $Id$
  *
  * DEBUG: section 79    Squid-side Disk I/O functions.
  * AUTHOR: Robert Collins

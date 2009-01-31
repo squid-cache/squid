@@ -1,5 +1,5 @@
 /*
- * $Id: HttpHeaderMask.h,v 1.1 2006/04/22 13:08:39 robertc Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

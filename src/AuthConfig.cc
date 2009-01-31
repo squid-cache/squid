@@ -1,6 +1,6 @@
 
 /*
- * $Id: AuthConfig.cc,v 1.4 2007/05/09 09:07:38 wessels Exp $
+ * $Id$
  *
  * DEBUG: section 29    Authenticator
  * AUTHOR:  Robert Collins

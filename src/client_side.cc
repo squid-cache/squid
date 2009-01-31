@@ -1,5 +1,5 @@
 /*
- * $Id: client_side.cc,v 1.779 2008/02/26 21:49:34 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 33    Client-side Routines
  * AUTHOR: Duane Wessels
@@ -1551,8 +1551,12 @@ ClientSocketContext::socketState()
 
             // did we get at least what we expected, based on range specs?
 
-            if (bytesSent == bytesExpected) // got everything
-                return STREAM_COMPLETE;
+            if (bytesSent == bytesExpected) { // got everything
+                if (http->request->flags.proxy_keepalive)
+                    return STREAM_COMPLETE;
+                else
+                    return STREAM_UNPLANNED_COMPLETE;
+            }
 
             // The logic below is not clear: If we got more than we
             // expected why would persistency matter? Should not this

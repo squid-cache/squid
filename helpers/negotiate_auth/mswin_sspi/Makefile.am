@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.2 2005/11/01 08:57:13 serassio Exp $
+#  $Id$
 #
 
 libexec_PROGRAMS = mswin_negotiate_auth

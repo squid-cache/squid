@@ -1,6 +1,6 @@
 
 /*
- * $Id: digestScheme.cc,v 1.1 2004/08/30 03:29:00 robertc Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

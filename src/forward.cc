@@ -332,10 +332,8 @@ FwdState::complete()
         startComplete(servers);
     } else {
         debugs(17, 3, "fwdComplete: server FD " << server_fd << " not re-forwarding status " << entry->getReply()->sline.status);
-        if (entry->isEmpty() && !err) {
-            EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
-            entry->complete();
-        }
+        EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
+        entry->complete();
 
         if (server_fd < 0)
             completed();
@@ -528,6 +526,10 @@ FwdState::retryOrBail()
                 originserver = 0;
             }
         }
+
+        /* Ditch error page if it was created before.
+         * A new one will be created if there's another problem */
+        err = NULL;
 
         /* use eventAdd to break potential call sequence loops and to slow things down a little */
         eventAdd("fwdConnectStart", fwdConnectStartWrapper, this, originserver ? 0.05 : 0.005, 0);

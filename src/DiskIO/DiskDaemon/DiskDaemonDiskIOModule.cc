@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskDaemonDiskIOModule.cc,v 1.4 2007/04/12 19:37:24 wessels Exp $
+ * $Id$
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------

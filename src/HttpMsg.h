@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpMsg.h,v 1.17 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

@@ -12,7 +12,7 @@
  *
  *    06-Oct-2007 : Various fixes to allow the build on MinGW
  *
- * Squid CVS $Id: getaddrinfo.c,v 1.1 2007/12/14 05:03:26 amosjeffries Exp $
+ * Squid CVS $Id$
  *
  *  Original License and code follows.
  */

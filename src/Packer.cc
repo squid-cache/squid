@@ -1,6 +1,6 @@
 
 /*
- * $Id: Packer.cc,v 1.21 2007/04/21 07:14:13 wessels Exp $
+ * $Id$
  *
  * DEBUG: section 60    Packer: A uniform interface to store-like modules
  * AUTHOR: Alex Rousskov

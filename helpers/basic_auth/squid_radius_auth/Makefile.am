@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid LDAP authentication helper
 #
-#  $Id: Makefile.am,v 1.2 2007/11/20 14:34:17 hno Exp $
+#  $Id$
 #
 #  Uncomment and customize the following to suit your needs:
 #

@@ -1,5 +1,5 @@
 /*
- * $Id: ESILibxml2Parser.cc,v 1.3 2005/07/03 15:25:08 serassio Exp $
+ * $Id$
  *
  * AUTHOR: Joachim Bauch (mail@joachim-bauch.de)
  *

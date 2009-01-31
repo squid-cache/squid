@@ -1,5 +1,5 @@
 /*
- * $Id: ACLSslErrorData.cc,v 1.1 2008/02/11 22:24:39 rousskov Exp $
+ * $Id$
  */
 
 #include "squid.h"

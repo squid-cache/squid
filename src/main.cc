@@ -1,5 +1,5 @@
 /*
- * $Id: main.cc,v 1.459 2008/02/26 21:49:35 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 1     Startup and Main Loop
  * AUTHOR: Harvest Derived

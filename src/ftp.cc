@@ -1,5 +1,5 @@
 /*
- * $Id: ftp.cc,v 1.446 2008/02/26 21:49:34 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 9     File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived

@@ -1,6 +1,6 @@
 
 /*
- * $Id: MemPool.cc,v 1.12 2008/02/07 02:51:13 adrian Exp $
+ * $Id$
  *
  * DEBUG: section 63    Low Level Memory Pool Management
  * AUTHOR: Alex Rousskov, Andres Kroonmaa, Robert Collins

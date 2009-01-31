@@ -1,6 +1,6 @@
 
 /*
- * $Id: debug.cc,v 1.2 2003/07/08 22:38:50 robertc Exp $
+ * $Id$
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins

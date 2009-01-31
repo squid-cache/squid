@@ -1,5 +1,5 @@
 /*
- * $Id: ntlm.h,v 1.9 2006/08/28 09:06:41 serassio Exp $
+ * $Id$
  *
  * AUTHOR: Andrew Doran <ad@interlude.eu.org>
  *

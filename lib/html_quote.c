@@ -1,5 +1,5 @@
 /*
- * $Id: html_quote.c,v 1.6 2007/12/06 02:37:15 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG:
  * AUTHOR: Robert Collins

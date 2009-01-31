@@ -1,6 +1,6 @@
 
 /*
- * $Id: syntheticoperators.cc,v 1.1 2003/07/10 01:31:51 robertc Exp $
+ * $Id$
  *
  * AUTHOR: Robert Collins
  *

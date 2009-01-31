@@ -1,5 +1,5 @@
 /*
- * $Id: MemPoolTest.cc,v 1.6 2006/09/03 21:05:22 hno Exp $
+ * $Id$
  *
  * AUTHOR: Robert Collins
  *

@@ -1,6 +1,6 @@
 
 /*
- * $Id: Parsing.cc,v 1.4 2007/08/13 17:20:51 hno Exp $
+ * $Id$
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived

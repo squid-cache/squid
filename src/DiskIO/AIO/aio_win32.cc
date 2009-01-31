@@ -1,6 +1,6 @@
 
 /*
- * $Id: aio_win32.cc,v 1.3 2007/04/28 22:26:40 hno Exp $
+ * $Id$
  *
  * DEBUG: section 81    aio_xxx() POSIX emulation on Windows
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>

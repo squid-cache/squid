@@ -1,5 +1,5 @@
 /*
- * $Id: CommonPool.h,v 1.6 2008/02/26 21:49:34 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>

@@ -1,7 +1,7 @@
 #
 #  Makefile for the Squid Object Cache server
 #
-#  $Id: Makefile.am,v 1.1 2005/10/30 21:48:22 serassio Exp $
+#  $Id$
 #
 
 libexec_PROGRAMS = mswin_ntlm_auth

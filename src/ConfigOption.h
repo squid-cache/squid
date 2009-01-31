@@ -1,5 +1,5 @@
 /*
- * $Id: ConfigOption.h,v 1.1 2004/12/20 16:30:32 robertc Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

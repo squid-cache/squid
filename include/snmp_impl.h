@@ -1,5 +1,5 @@
 /*
- * $Id: snmp_impl.h,v 1.15 2003/01/23 00:36:48 robertc Exp $
+ * $Id$
  */
 #ifndef SQUID_SNMP_IMPL_H
 #define SQUID_SNMP_IMPL_H

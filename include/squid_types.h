@@ -1,5 +1,5 @@
 /*
- * $Id: squid_types.h,v 1.9 2007/08/14 19:17:43 serassio Exp $
+ * $Id$
  *
  * * * * * * * * Legal stuff * * * * * * *
  *

@@ -1,6 +1,6 @@
 
 /*
- * $Id: rfc3596.c,v 1.1 2007/12/14 04:42:24 amosjeffries Exp $
+ * $Id$
  *
  * Low level DNS protocol routines
  * AUTHOR: Amos Jeffries, Rafael Martinez Torres

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrRange.cc,v 1.45 2007/08/13 17:20:51 hno Exp $
+ * $Id$
  *
  * DEBUG: section 64    HTTP Range Header
  * AUTHOR: Alex Rousskov

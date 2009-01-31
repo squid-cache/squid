@@ -1,6 +1,6 @@
 
 /*
- * $Id: Range.h,v 1.8 2007/08/13 17:20:50 hno Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

@@ -1,5 +1,5 @@
 /*
- * $Id: ident.cc,v 1.78 2007/12/14 23:11:47 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 30    Ident (RFC 931)
  * AUTHOR: Duane Wessels

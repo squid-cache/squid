@@ -14,7 +14,7 @@
 
 
 /*
- * $Id: rfc2617.h,v 1.5 2003/01/23 00:36:47 robertc Exp $
+ * $Id$
  *
  * DEBUG:
  * AUTHOR: RFC 2617 & Robert Collins

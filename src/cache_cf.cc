@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.544 2008/03/04 12:00:36 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived
@@ -2845,7 +2845,7 @@ free_IpAddress_list(IpAddress_list ** head)
  * be used by icp_port and htcp_port
  */
 static int
-check_null_IpAddress_list(const IPAdress_list * s)
+check_null_IpAddress_list(const IpAddress_list * s)
 {
     return NULL == s;
 }
@@ -3463,6 +3463,7 @@ free_logformat(logformat ** definitions)
     while (*definitions) {
         logformat *format = *definitions;
         *definitions = format->next;
+        safe_free(format->name);
         accessLogFreeLogFormat(&format->format);
         xfree(format);
     }

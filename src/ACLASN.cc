@@ -1,5 +1,5 @@
 /*
- * $Id: ACLASN.cc,v 1.2 2003/02/25 12:16:55 robertc Exp $
+ * $Id$
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Robert Collins

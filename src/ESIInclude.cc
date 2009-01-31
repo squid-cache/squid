@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIInclude.cc,v 1.17 2008/02/12 23:52:28 rousskov Exp $
+ * $Id$
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins

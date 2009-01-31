@@ -1,5 +1,5 @@
 /*
- * $Id: ESIElement.h,v 1.4 2003/08/04 22:14:40 robertc Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

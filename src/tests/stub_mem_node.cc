@@ -1,5 +1,5 @@
 /*
- * $Id: stub_mem_node.cc,v 1.2 2008/02/26 21:49:45 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Robert Collins

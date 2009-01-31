@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpHdrScTarget.cc,v 1.4 2007/05/29 13:31:37 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 90    HTTP Cache Control Header
  * AUTHOR: Alex Rousskov

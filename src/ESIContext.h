@@ -1,5 +1,5 @@
 /*
- * $Id: ESIContext.h,v 1.5 2008/01/07 17:10:22 hno Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

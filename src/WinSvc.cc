@@ -1,6 +1,6 @@
 
 /*
- * $Id: WinSvc.cc,v 1.6 2008/02/17 19:30:12 serassio Exp $
+ * $Id$
  *
  * Windows support
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>

@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpRequestMethod.cc,v 1.7 2008/02/12 00:05:11 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 73    HTTP Request
  * AUTHOR: Duane Wessels
