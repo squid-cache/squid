@@ -134,6 +134,7 @@ public:
     _SQUID_INLINE_ int cmp (String const &) const;
     _SQUID_INLINE_ int caseCmp (char const *) const;
     _SQUID_INLINE_ int caseCmp (char const *, size_t count) const;
+    _SQUID_INLINE_ int caseCmp (String const &) const;
 
     /** \deprecated Use assignment to [] position instead.
      *              ie   str[0] = 'h';

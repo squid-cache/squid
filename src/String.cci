@@ -168,6 +168,13 @@ String::caseCmp(char const *aString, size_t count) const
     return strncasecmp(termedBuf(), aString, count);
 }
 
+int
+String::caseCmp(const String &str) const
+{
+    return caseCmp(str.rawBuf(),str.size());
+}
+
+
 void
 String::set(char const *loc, char const ch)
 {
