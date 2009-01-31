@@ -14,6 +14,7 @@ DEFAULT_STYLESHEET	= $(sysconfdir)/errorpage.css
 
 # List of automated translations possible:
 TRANSLATIONS = \
+	ar \
 	az \
 	bg \
 	ca \
