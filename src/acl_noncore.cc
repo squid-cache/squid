@@ -1,5 +1,5 @@
 /*
- * $Id: acl_noncore.cc,v 1.6 2007/09/01 05:56:37 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels

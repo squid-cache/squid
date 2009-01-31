@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreSearch.h,v 1.1 2005/01/03 16:08:25 robertc Exp $
+ * $Id$
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------

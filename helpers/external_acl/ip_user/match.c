@@ -1,4 +1,4 @@
-/* $Id: match.c,v 1.3 2007/07/19 03:36:12 hno Exp $
+/* $Id$
 * Copyright (C) 2002 Rodrigo Campos
 *
 * This program is free software; you can redistribute it and/or modify

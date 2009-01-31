@@ -1,6 +1,6 @@
 
 /*
- * $Id: dns_internal.cc,v 1.105 2008/01/20 19:46:35 serassio Exp $
+ * $Id$
  *
  * DEBUG: section 78    DNS lookups; interacts with lib/rfc1035.c
  * AUTHOR: Duane Wessels
@@ -40,6 +40,7 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "comm.h"
+#include "fde.h"
 #include "MemBuf.h"
 
 #include "wordlist.h"
@@ -676,6 +677,9 @@ idnsSentQueryVC(int fd, char *buf, size_t size, comm_err_t flag, int xerrno, voi
 
     if (flag == COMM_ERR_CLOSING)
         return;
+    
+    if (fd_table[fd].closing())
+	return;
 
     if (flag != COMM_OK || size <= 0) {
         comm_close(fd);
@@ -1353,6 +1357,19 @@ idnsInit(void)
                               "DNS Socket");
 
         debugs(78, 2, "idnsInit: attempt open DNS socket to: " << addr);
+
+#if USE_IPV6
+        if ( DnsSocket < 0 && addr.IsIPv6() && addr.SetIPv4() ) {
+            /* attempt to open this IPv4-only. */
+            DnsSocket = comm_open(SOCK_DGRAM,
+                                  IPPROTO_UDP,
+                                  addr,
+                                  COMM_NONBLOCKING,
+                                  "DNS Socket");
+
+            debugs(78, 2, "idnsInit: attempt open DNS socket to: " << addr);
+        }
+#endif
 
         if (DnsSocket < 0)
             fatal("Could not create a DNS socket");

@@ -1,5 +1,5 @@
 /*
- * $Id: aiops_win32.cc,v 1.5 2007/08/16 23:32:28 hno Exp $
+ * $Id$
  *
  * DEBUG: section 43    Windows AIOPS
  * AUTHOR: Stewart Forster <slf@connect.com.au>

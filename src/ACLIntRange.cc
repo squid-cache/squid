@@ -1,5 +1,5 @@
 /*
- * $Id: ACLIntRange.cc,v 1.11 2008/02/26 21:49:34 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Robert Collins

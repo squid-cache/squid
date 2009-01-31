@@ -1,5 +1,5 @@
 /*
- * $Id: GNUregex.h,v 1.9 2003/08/03 22:53:47 hno Exp $
+ * $Id$
  */
 #ifndef SQUID_REGEXP_LIBRARY_H
 #define SQUID_REGEXP_LIBRARY_H

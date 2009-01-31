@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLProtocol.cc,v 1.3 2003/10/20 12:33:01 robertc Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLTime.h,v 1.3 2003/02/25 12:22:34 robertc Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

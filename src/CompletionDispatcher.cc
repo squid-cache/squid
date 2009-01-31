@@ -1,6 +1,6 @@
 
 /*
- * $Id: CompletionDispatcher.cc,v 1.1 2006/08/07 02:28:22 robertc Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayId.cc,v 1.25 2008/01/20 19:46:35 serassio Exp $
+ * $Id$
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>

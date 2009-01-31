@@ -1,5 +1,5 @@
 /*
- * $Id: acl.cc,v 1.325 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels

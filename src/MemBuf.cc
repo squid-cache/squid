@@ -1,5 +1,5 @@
 /*
- * $Id: MemBuf.cc,v 1.43 2008/02/26 21:49:34 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 59    auto-growing Memory Buffer with printf
  * AUTHOR: Alex Rousskov

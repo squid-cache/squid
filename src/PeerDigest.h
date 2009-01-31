@@ -1,6 +1,6 @@
 
 /*
- * $Id: PeerDigest.h,v 1.4 2007/09/21 11:41:52 amosjeffries Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

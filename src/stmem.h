@@ -1,6 +1,6 @@
 
 /*
- * $Id: stmem.h,v 1.10 2007/08/13 17:20:51 hno Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

@@ -1,5 +1,5 @@
 /*
- * $Id: ESISegment.h,v 1.4 2006/08/21 00:50:40 robertc Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

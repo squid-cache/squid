@@ -1,5 +1,5 @@
 /*
- * $Id: pinger.cc,v 1.62 2008/02/26 21:49:35 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 42    ICMP Pinger program
  * AUTHOR: Duane Wessels

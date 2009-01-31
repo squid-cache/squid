@@ -1,5 +1,5 @@
 /*
- * $Id: referer.cc,v 1.10 2007/12/18 11:34:27 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 40    Referer Logging
  * AUTHOR: Joe Ramey <ramey@csc.ti.com> (useragent)

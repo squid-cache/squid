@@ -1,6 +1,6 @@
 
 /*
- * $Id: AIODiskIOStrategy.cc,v 1.3 2005/12/26 11:35:22 serassio Exp $
+ * $Id$
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------

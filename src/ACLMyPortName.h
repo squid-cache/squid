@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLMyPortName.h,v 1.1 2008/01/14 13:19:48 hno Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

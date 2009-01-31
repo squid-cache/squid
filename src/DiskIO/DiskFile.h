@@ -1,5 +1,5 @@
 /*
- * $Id: DiskFile.h,v 1.2 2008/02/26 21:49:38 amosjeffries Exp $
+ * $Id$
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------

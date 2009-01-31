@@ -1,6 +1,6 @@
 
 /*
- * $Id: heap.c,v 1.10 2005/07/03 15:25:07 serassio Exp $
+ * $Id$
  *
  * AUTHOR: John Dilley, Hewlett Packard
  *
@@ -53,7 +53,6 @@
 #include <stdio.h>
 #endif
 
-#include "heap.h"
 #include "util.h"
 
 /*

@@ -1,6 +1,6 @@
 
 /*
- * $Id: WriteRequest.cc,v 1.1 2004/12/20 16:30:38 robertc Exp $
+ * $Id$
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------

@@ -1,6 +1,6 @@
 
 /*
- * $Id: disk.cc,v 1.173 2007/04/30 16:56:09 wessels Exp $
+ * $Id$
  *
  * DEBUG: section 6     Disk I/O Routines
  * AUTHOR: Harvest Derived

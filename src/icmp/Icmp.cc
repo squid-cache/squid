@@ -1,5 +1,5 @@
 /*
- * $Id: icmp.cc,v 1.94 2007/12/14 23:11:47 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 37    ICMP Routines
  * AUTHOR: Duane Wessels, Amos Jeffries

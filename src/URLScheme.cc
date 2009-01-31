@@ -1,6 +1,6 @@
 
 /*
- * $Id: URLScheme.cc,v 1.1 2006/05/08 23:38:33 robertc Exp $
+ * $Id$
  *
  * DEBUG: section 23    URL Scheme parsing
  * AUTHOR: Robert Collins

@@ -26,7 +26,7 @@
  *
  * Author: Ryan Troll <ryan+@andrew.cmu.edu>
  *
- * $Id: snmp_api_error.h,v 1.5 2003/01/23 00:36:47 robertc Exp $
+ * $Id$
  *
  ***************************************************************************/
 

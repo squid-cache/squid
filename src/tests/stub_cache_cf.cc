@@ -1,5 +1,5 @@
 /*
- * $Id: stub_cache_cf.cc,v 1.4 2007/04/06 12:15:52 serassio Exp $
+ * $Id$
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Robert Collins

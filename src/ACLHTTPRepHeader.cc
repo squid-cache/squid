@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLHTTPRepHeader.cc,v 1.2 2008/02/06 04:05:38 amosjeffries Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

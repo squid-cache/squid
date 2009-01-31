@@ -1,6 +1,6 @@
 
 /*
- * $Id: Profiler.c,v 1.7 2007/04/25 11:30:16 adrian Exp $
+ * $Id$
  *
  * DEBUG: section 81    CPU Profiling Routines
  * AUTHOR: Andres Kroonmaa, Sep.2000

@@ -1,5 +1,5 @@
 /*
- * $Id: pam_auth.c,v 1.17 2007/07/19 03:36:05 hno Exp $
+ * $Id$
  *
  * PAM authenticator module for Squid.
  * Copyright (C) 1999,2002,2003 Henrik Nordstrom <hno@squid-cache.org>

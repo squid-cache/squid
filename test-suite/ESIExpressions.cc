@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIExpressions.cc,v 1.1 2003/07/14 14:16:12 robertc Exp $
+ * $Id$
  *
  * DEBUG: section 86		ESI Expressions
  * AUTHOR:  Robert Collins

@@ -1,5 +1,5 @@
 /*
- * $Id: stub_stat.cc,v 1.1 2004/08/30 03:29:02 robertc Exp $
+ * $Id$
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Robert Collins

@@ -1,6 +1,6 @@
 
 /*
- * $Id: int.cc,v 1.3 2005/01/06 13:16:39 serassio Exp $
+ * $Id$
  *
  * DEBUG: section 21    Integer functions
  * AUTHOR: Harvest Derived

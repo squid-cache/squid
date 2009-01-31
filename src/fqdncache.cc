@@ -1,5 +1,5 @@
 /*
- * $Id: fqdncache.cc,v 1.178 2008/02/26 21:49:34 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 35    FQDN Cache
  * AUTHOR: Harvest Derived

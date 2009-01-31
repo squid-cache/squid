@@ -1,5 +1,5 @@
 /*
- * $Id: rfc1035.h,v 1.20 2008/01/11 03:49:20 amosjeffries Exp $
+ * $Id$
  *
  * AUTHOR: Duane Wessels
  *

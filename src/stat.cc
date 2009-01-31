@@ -1,5 +1,5 @@
 /*
- * $Id: stat.cc,v 1.414 2008/02/12 23:58:47 rousskov Exp $
+ * $Id$
  *
  * DEBUG: section 18    Cache Manager Statistics
  * AUTHOR: Harvest Derived

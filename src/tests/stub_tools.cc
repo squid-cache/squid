@@ -1,5 +1,5 @@
 /*
- * $Id: stub_tools.cc,v 1.3 2006/09/14 20:13:23 serassio Exp $
+ * $Id$
  *
  * AUTHOR: Robert Collins
  *

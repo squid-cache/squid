@@ -1,5 +1,5 @@
 /*
- * $Id: stub_access_log.cc,v 1.1 2006/04/18 12:46:13 robertc Exp $
+ * $Id$
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Robert Collins

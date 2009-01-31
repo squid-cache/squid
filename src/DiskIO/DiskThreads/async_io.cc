@@ -1,6 +1,6 @@
 
 /*
- * $Id: async_io.cc,v 1.5 2007/08/16 23:32:28 hno Exp $
+ * $Id$
  *
  * DEBUG: section 32    Asynchronous Disk I/O
  * AUTHOR: Pete Bentley <pete@demon.net>

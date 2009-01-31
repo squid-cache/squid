@@ -1,5 +1,5 @@
 /*
- * $Id: splay.cc,v 1.8 2006/04/25 10:40:29 serassio Exp $
+ * $Id$
  *
  * based on ftp://ftp.cs.cmu.edu/user/sleator/splaying/top-down-splay.c
  * http://bobo.link.cs.cmu.edu/cgi-bin/splay/splay-cgi.pl

@@ -1,5 +1,5 @@
 /*
- * $Id: StoreMeta.h,v 1.3 2003/08/04 22:14:41 robertc Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

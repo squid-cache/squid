@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_key_md5.cc,v 1.38 2008/02/03 10:00:30 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 20    Storage Manager MD5 Cache Keys
  * AUTHOR: Duane Wessels

@@ -1,5 +1,5 @@
 /*
- * $Id: DiskdIOStrategy.cc,v 1.13 2008/02/26 21:49:40 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 79    Squid-side DISKD I/O functions.
  * AUTHOR: Duane Wessels

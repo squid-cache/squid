@@ -1,6 +1,6 @@
 
 /*
- * $Id: multicast.cc,v 1.13 2007/12/14 23:11:47 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 7     Multicast
  * AUTHOR: Martin Hamilton

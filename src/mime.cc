@@ -1,6 +1,6 @@
 
 /*
- * $Id: mime.cc,v 1.132 2007/08/13 17:20:51 hno Exp $
+ * $Id$
  *
  * DEBUG: section 25    MIME Parsing
  * AUTHOR: Harvest Derived
@@ -226,10 +226,11 @@ static mimeEntry *
 mimeGetEntry(const char *fn, int skip_encodings)
 {
     mimeEntry *m;
-    char *t = NULL;
+    char *t;
     char *name = xstrdup(fn);
 
     do {
+        t = NULL;
 
         for (m = MimeTable; m; m = m->next) {
             if (regexec(&m->compiled_pattern, name, 0, 0, 0) == 0)

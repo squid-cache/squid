@@ -1,5 +1,5 @@
 /*
- * $Id: stub_acl.cc,v 1.1 2004/08/30 03:29:02 robertc Exp $
+ * $Id$
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Robert Collins

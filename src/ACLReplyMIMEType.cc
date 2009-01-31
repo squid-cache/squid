@@ -1,5 +1,5 @@
 /*
- * $Id: ACLReplyMIMEType.cc,v 1.2 2003/10/20 12:33:01 robertc Exp $
+ * $Id$
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels

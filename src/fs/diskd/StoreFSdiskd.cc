@@ -1,5 +1,5 @@
 /*
- * $Id: StoreFSdiskd.cc,v 1.3 2008/02/26 21:49:44 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Robert Collins

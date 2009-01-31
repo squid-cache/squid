@@ -1,6 +1,6 @@
 
 /*
- * $Id: store_repl_lru.cc,v 1.22 2007/04/25 11:30:19 adrian Exp $
+ * $Id$
  *
  * DEBUG: none          LRU Removal Policy
  * AUTHOR: Henrik Nordstrom

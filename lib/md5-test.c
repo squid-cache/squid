@@ -1,5 +1,5 @@
 /*
- * $Id: md5-test.c,v 1.4 2007/11/15 09:18:05 amosjeffries Exp $
+ * $Id$
  */
 
 /*

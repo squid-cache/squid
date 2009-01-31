@@ -1,5 +1,5 @@
 /*
- * $Id: rfc3596.h,v 1.1 2007/12/14 04:42:23 amosjeffries Exp $
+ * $Id$
  *
  * AUTHOR: Amos Jeffries, Rafael Martinez Torres
  *

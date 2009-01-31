@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIAssign.cc,v 1.8 2008/01/20 20:20:21 serassio Exp $
+ * $Id$
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins

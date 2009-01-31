@@ -1,6 +1,6 @@
 
 /*
- * $Id: internal.cc,v 1.48 2007/12/14 23:11:47 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 76    Internal Squid Object handling
  * AUTHOR: Duane, Alex, Henrik
