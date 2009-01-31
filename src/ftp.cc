@@ -1574,7 +1574,7 @@ FtpStateData::start()
     checkUrlpath();
     buildTitleUrl();
     debugs(9, 5, HERE << "host=" << request->GetHost() << ", path=" <<
-           request->urlpath.unsafeBuf() << ", user=" << user << ", passwd=" <<
+           request->urlpath << ", user=" << user << ", passwd=" <<
            password);
 
     state = BEGIN;
@@ -2025,7 +2025,7 @@ ftpSendType(FtpStateData * ftpState)
             mode = 'A';
         } else {
             t = ftpState->request->urlpath.rpos('/');
-            filename = t ? t + 1 : ftpState->request->urlpath.unsafeBuf();
+            filename = t ? t + 1 : ftpState->request->urlpath.termedBuf();
             mode = mimeGetTransferMode(filename);
         }
 
@@ -2054,7 +2054,7 @@ ftpReadType(FtpStateData * ftpState)
     debugs(9, 3, HERE);
 
     if (code == 200) {
-        p = path = xstrdup(ftpState->request->urlpath.unsafeBuf());
+        p = path = xstrdup(ftpState->request->urlpath.termedBuf());
 
         if (*p == '/')
             p++;
@@ -2308,7 +2308,7 @@ ftpReadSize(FtpStateData * ftpState)
         if (ftpState->theSize == 0) {
             debugs(9, 2, "SIZE reported " <<
                    ftpState->ctrl.last_reply << " on " <<
-                   ftpState->title_url.unsafeBuf());
+                   ftpState->title_url);
             ftpState->theSize = -1;
         }
     } else if (code < 0) {
@@ -3396,7 +3396,7 @@ ftpTrySlashHack(FtpStateData * ftpState)
     safe_free(ftpState->filepath);
 
     /* Build the new path (urlpath begins with /) */
-    path = xstrdup(ftpState->request->urlpath.unsafeBuf());
+    path = xstrdup(ftpState->request->urlpath.termedBuf());
 
     rfc1738_unescape(path);
 
@@ -3640,7 +3640,7 @@ FtpStateData::appendSuccessHeader()
 
     e->buffer();	/* released when done processing current data payload */
 
-    filename = (t = urlpath.rpos('/')) ? t + 1 : urlpath.unsafeBuf();
+    filename = (t = urlpath.rpos('/')) ? t + 1 : urlpath.termedBuf();
 
     if (flags.isdir) {
         mime_type = "text/html";
@@ -3753,12 +3753,12 @@ ftpUrlWith2f(HttpRequest * request)
     if (request->protocol != PROTO_FTP)
         return NULL;
 
-    if ( !strncmp(request->urlpath.unsafeBuf(), "/", 1) ) {
+    if ( request->urlpath[0]=='/' ) {
         newbuf.append(request->urlpath);
         request->urlpath.absorb(newbuf);
         safe_free(request->canonical);
-    } else if ( !strncmp(request->urlpath.unsafeBuf(), "%2f", 3) ) {
-        newbuf.append(request->urlpath.unsafeBuf() +1);
+    } else if ( !strncmp(request->urlpath.termedBuf(), "%2f", 3) ) {
+        newbuf.append(request->urlpath.rawBuf() +1, request->urlpath.size()-1);
         request->urlpath.absorb(newbuf);
         safe_free(request->canonical);
     }

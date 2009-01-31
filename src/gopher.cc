@@ -277,7 +277,7 @@ gopherMimeCreate(GopherStateData * gopherState)
 static void
 gopher_request_parse(const HttpRequest * req, char *type_id, char *request)
 {
-    const char *path = req->urlpath.unsafeBuf();
+    const char *path = req->urlpath.termedBuf();
 
     if (request)
         request[0] = '\0';
@@ -751,7 +751,7 @@ gopherToHTML(GopherStateData * gopherState, char *inbuf, int len)
     }				/* while loop */
 
     if (outbuf.size() > 0) {
-        entry->append(outbuf.unsafeBuf(), outbuf.size());
+        entry->append(outbuf.rawBuf(), outbuf.size());
         /* now let start sending stuff to client */
         entry->flush();
     }
