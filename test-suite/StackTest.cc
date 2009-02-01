@@ -1,6 +1,6 @@
 
 /*
- * $Id: StackTest.cc,v 1.1 2003/07/14 10:36:44 robertc Exp $
+ * $Id$
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins

@@ -1,5 +1,5 @@
 /*
- * $Id: cache_cf.cc,v 1.544 2008/03/04 12:00:36 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 3     Configuration File Parsing
  * AUTHOR: Harvest Derived

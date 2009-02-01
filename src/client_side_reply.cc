@@ -1,5 +1,5 @@
 /*
- * $Id: client_side_reply.cc,v 1.154 2008/02/16 17:42:27 rousskov Exp $
+ * $Id$
  *
  * DEBUG: section 88    Client-side Reply Routines
  * AUTHOR: Robert Collins (Originally Duane Wessels in client_side.c)

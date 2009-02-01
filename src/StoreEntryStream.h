@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreEntryStream.h,v 1.5 2007/08/14 10:09:23 serassio Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

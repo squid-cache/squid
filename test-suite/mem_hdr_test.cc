@@ -1,6 +1,6 @@
 
 /*
- * $Id: mem_hdr_test.cc,v 1.6 2007/08/15 04:08:30 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 19    Store Memory Primitives
  * AUTHOR: Robert Collins

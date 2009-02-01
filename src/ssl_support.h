@@ -1,6 +1,6 @@
 
 /*
- * $Id: ssl_support.h,v 1.15 2008/02/26 21:49:35 amosjeffries Exp $
+ * $Id$
  *
  * AUTHOR: Benno Rice
  *

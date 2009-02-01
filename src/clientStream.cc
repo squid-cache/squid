@@ -1,6 +1,6 @@
 
 /*
- * $Id: clientStream.cc,v 1.14 2008/02/26 21:49:34 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 87    Client-side Stream routines.
  * AUTHOR: Robert Collins

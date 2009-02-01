@@ -1,6 +1,6 @@
 
 /*
- * $Id: RemovalPolicy.h,v 1.1 2006/08/21 00:50:41 robertc Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

@@ -1,6 +1,6 @@
 
 /*
- * $Id: whois.cc,v 1.45 2007/05/29 13:31:41 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 75    WHOIS protocol
  * AUTHOR: Duane Wessels, Kostas Anagnostakis

@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIContext.cc,v 1.4 2008/01/20 19:46:35 serassio Exp $
+ * $Id$
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins

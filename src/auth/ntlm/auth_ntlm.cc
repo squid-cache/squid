@@ -1,5 +1,5 @@
 /*
- * $Id: auth_ntlm.cc,v 1.79 2008/02/12 23:17:53 rousskov Exp $
+ * $Id$
  *
  * DEBUG: section 29    NTLM Authenticator
  * AUTHOR: Robert Collins, Henrik Nordstrom, Francesco Chemolli

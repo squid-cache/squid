@@ -10,7 +10,7 @@ use File::Basename;
 #
 # Henrik Nordstrom <henrik@henriknordstrom.net>
 #
-# $Id: split-cf.data.pre.pl,v 1.2 2007/09/25 22:18:13 hno Exp $
+# $Id$
 
 #
 # The template file is reasonably simple to parse. There's a number of

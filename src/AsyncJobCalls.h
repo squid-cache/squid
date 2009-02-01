@@ -1,6 +1,6 @@
 
 /*
- * $Id: AsyncJobCalls.h,v 1.1 2008/02/13 05:51:55 rousskov Exp $
+ * $Id$
  */
 
 #ifndef SQUID_ASYNCJOBCALLS_H

@@ -1,5 +1,5 @@
 /*
- * $Id: stub_store_client.cc,v 1.4 2007/08/17 00:56:40 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Robert Collins

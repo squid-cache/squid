@@ -1,5 +1,5 @@
 /*
- * $Id: HttpRequestMethod.h,v 1.12 2008/02/26 00:16:47 rousskov Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

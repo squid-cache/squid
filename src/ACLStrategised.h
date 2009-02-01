@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLStrategised.h,v 1.11 2006/09/03 21:05:20 hno Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

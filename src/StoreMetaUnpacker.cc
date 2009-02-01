@@ -1,6 +1,6 @@
 
 /*
- * $Id: StoreMetaUnpacker.cc,v 1.7 2008/01/07 17:12:28 hno Exp $
+ * $Id$
  *
  * DEBUG: section 20    Storage Manager Swapfile Unpacker
  * AUTHOR: Robert Collins

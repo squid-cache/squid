@@ -1,6 +1,6 @@
 
 /*
- * $Id: send-announce.cc,v 1.69 2007/12/14 23:11:48 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 27    Cache Announcer
  * AUTHOR: Duane Wessels

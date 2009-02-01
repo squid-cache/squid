@@ -1,6 +1,6 @@
 
 /*
- * $Id: refcount.cc,v 1.4 2003/08/04 22:14:58 robertc Exp $
+ * $Id$
  *
  * DEBUG: section xx    Refcount allocator
  * AUTHOR:  Robert Collins

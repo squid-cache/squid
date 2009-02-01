@@ -1,6 +1,6 @@
 
 /*
- * $Id: client_side_request.h,v 1.37 2008/02/12 23:07:52 rousskov Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

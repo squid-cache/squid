@@ -1,5 +1,5 @@
 /*
- * $Id: win32.cc,v 1.27 2008/01/20 17:13:22 serassio Exp $
+ * $Id$
  *
  * Windows support
  * AUTHOR: Guido Serassio <serassio@squid-cache.org>

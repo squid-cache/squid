@@ -1,5 +1,5 @@
 /*
- * $Id: ipc_win32.cc,v 1.5 2007/12/14 23:11:47 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 54    Windows Interprocess Communication
  * AUTHOR: Andrey Shorin <tolsty@tushino.com>

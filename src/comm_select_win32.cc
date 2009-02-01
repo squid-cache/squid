@@ -1,6 +1,6 @@
 
 /*
- * $Id: comm_select_win32.cc,v 1.8 2008/02/24 12:59:08 serassio Exp $
+ * $Id$
  *
  * DEBUG: section 5     Socket Functions
  *

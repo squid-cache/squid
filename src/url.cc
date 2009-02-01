@@ -1,6 +1,6 @@
 
 /*
- * $Id: url.cc,v 1.165 2008/02/03 10:00:30 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 23    URL Parsing
  * AUTHOR: Duane Wessels

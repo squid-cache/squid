@@ -1,5 +1,5 @@
 /*
- * $Id: ESIInclude.h,v 1.4 2008/02/26 21:49:34 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins

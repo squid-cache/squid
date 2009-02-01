@@ -1,6 +1,6 @@
 
 /*
- * $Id: HttpVersion.h,v 1.3 2004/12/11 22:07:31 hno Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

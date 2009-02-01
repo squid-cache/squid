@@ -1,5 +1,5 @@
 /*
- * $Id: tempnam.c,v 1.11 2003/01/23 00:37:02 robertc Exp $
+ * $Id$
  */
 
 /* A reasonably functional tmpnam. */

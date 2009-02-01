@@ -1,6 +1,6 @@
 
 /*
- * $Id: DiskThreadsDiskIOModule.cc,v 1.2 2006/05/29 00:15:03 robertc Exp $
+ * $Id$
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------

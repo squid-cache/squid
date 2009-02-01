@@ -1,5 +1,5 @@
 /*
- * $Id: ChunkedCodingParser.h,v 1.1 2007/12/26 22:33:32 hno Exp $
+ * $Id$
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------

@@ -1,5 +1,5 @@
 /*
- * $Id: logfile.cc,v 1.25 2007/11/13 23:25:34 rousskov Exp $
+ * $Id$
  *
  * DEBUG: section 50    Log file handling
  * AUTHOR: Duane Wessels

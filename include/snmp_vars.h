@@ -25,7 +25,7 @@
  *
  * Author: Ryan Troll <ryan+@andrew.cmu.edu>
  *
- * $Id: snmp_vars.h,v 1.14 2007/12/14 23:11:44 amosjeffries Exp $
+ * $Id$
  *
  **********************************************************************/
 

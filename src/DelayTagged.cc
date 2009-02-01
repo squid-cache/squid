@@ -1,6 +1,6 @@
 
 /*
- * $Id: DelayTagged.cc,v 1.7 2007/05/29 13:31:36 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 77    Delay Pools
  * AUTHOR: Robert Collins <robertc@squid-cache.org>

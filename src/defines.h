@@ -1,5 +1,5 @@
 /*
- * $Id: defines.h,v 1.123 2007/12/14 23:11:46 amosjeffries Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

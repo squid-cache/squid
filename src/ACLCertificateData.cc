@@ -1,5 +1,5 @@
 /*
- * $Id: ACLCertificateData.cc,v 1.9 2006/04/23 14:28:06 serassio Exp $
+ * $Id$
  *
  * DEBUG: section 28    Access Control
  * AUTHOR: Duane Wessels

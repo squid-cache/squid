@@ -1,6 +1,6 @@
 
 /*
- * $Id: ESIVarState.cc,v 1.10 2007/05/29 13:31:37 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 86    ESI processing
  * AUTHOR: Robert Collins

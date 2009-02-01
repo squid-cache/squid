@@ -1,5 +1,5 @@
 /*
- * $Id: store_log.cc,v 1.37 2008/01/20 08:54:28 amosjeffries Exp $
+ * $Id$
  *
  * DEBUG: section 20    Storage Manager Logging Functions
  * AUTHOR: Duane Wessels

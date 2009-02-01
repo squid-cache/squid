@@ -1,5 +1,5 @@
 /*
- * $Id: stub_stmem.cc,v 1.1 2005/01/03 16:08:27 robertc Exp $
+ * $Id$
  *
  * DEBUG: section 84    Helper process maintenance
  * AUTHOR: Robert Collins

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# $Id: smb_auth.pl,v 1.5 2003/05/17 17:13:05 hno Exp $
+# $Id$
 
 #if you define this, debugging output will be printed to STDERR.
 #$debug=1;

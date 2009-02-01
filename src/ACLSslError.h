@@ -1,6 +1,6 @@
 
 /*
- * $Id: ACLSslError.h,v 1.1 2008/02/11 22:24:39 rousskov Exp $
+ * $Id$
  */
 
 #ifndef SQUID_ACLSSL_ERROR_H

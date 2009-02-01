@@ -1,5 +1,5 @@
 /*
- * $Id: Array.h,v 1.25 2007/11/26 13:09:54 hno Exp $
+ * $Id$
  *
  * AUTHOR: Alex Rousskov
  *
