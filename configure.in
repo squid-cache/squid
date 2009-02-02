@@ -2029,18 +2029,6 @@ AC_ARG_WITH(ipv6-split-stack,
   [AC_DEFINE(IPV6_SPECIAL_SPLITSTACK, 0, [Enable support for IPv6 on split-stack implementations]) AC_MSG_RESULT(no)]
 )
 
-dnl Check for IPv6-localhost option
-AC_MSG_CHECKING([for IPv6-Localhost requirement])
-AC_ARG_WITH(localhost-ipv6,
-  AC_HELP_STRING([--with-localhost-ipv6], 
-        [WARNING: This is an RFC violation! 
-		Treat 127.0.0.1 and ::1 as identical and convert all inputs of localhost to ::1. 
-		This depends on IPv6 support and all applications squid contacts 
-		via localhost being IPv6 enabled.]),
-  [AC_DEFINE(IPV6_SPECIAL_LOCALHOST, 1, [Convert IPv4-localhost requests to IPv6. Default: keep seperate.]) AC_MSG_RESULT(yes)],
-  [AC_DEFINE(IPV6_SPECIAL_LOCALHOST, 0, [Convert IPv4-localhost requests to IPv6. Default: Keep seperate.]) AC_MSG_RESULT(no)]
-)
-
 dnl Check whether this OS defines sin6_len as a member of sockaddr_in6 as a backup to ss_len
 AC_CACHE_CHECK([for sin6_len field in struct sockaddr_in6],
                 ac_cv_have_sin6_len_in_struct_sai, [
@@ -2066,7 +2054,6 @@ else
   AC_MSG_WARN([IPv6 is not available on this system.])
   AC_DEFINE(USE_IPV6,0,[Enable support for IPv6])
   AC_DEFINE(IPV6_SPECIAL_SPLITSTACK,0,[Enable support for IPv6 on split-stack implementations])
-  AC_DEFINE(IPV6_SPECIAL_LOCALHOST,0,[Convert IPv4-localhost requests to IPv6. Default: Keep seperate.])
   AC_DEFINE(IPV6_SPECIAL_V4MAPPED,0,[Enable v4-mapping through v6 sockets])
 fi
 
