@@ -463,7 +463,7 @@ HttpParserParseReqLine(HttpParser *hmsg)
 {
 	int i = 0;
 	int retcode = 0;
-	unsigned int maj = 0, min = 9;
+	unsigned int maj = 0, min = 0;
 	int last_whitespace = -1, line_end = -1;
 
         debugs(74, 5, "httpParserParseReqLine: parsing " << hmsg->buf);
@@ -568,10 +568,14 @@ HttpParserParseReqLine(HttpParser *hmsg)
 
 			/* next should be 1 or more digits */
 			maj = 0;
-			for (; i < hmsg->req_end && (isdigit(hmsg->buf[i])); i++) {
+			for (; i < hmsg->req_end && (isdigit(hmsg->buf[i])) && maj < 65536; i++) {
 				maj = maj * 10;
 				maj = maj + (hmsg->buf[i]) - '0';
 			}
+                        if (maj >= 65536) {
+                            retcode = -1;
+                            goto finish;
+                        }
 			if (i >= hmsg->req_end) {
 				retcode = 0;
 				goto finish;
@@ -590,10 +594,14 @@ HttpParserParseReqLine(HttpParser *hmsg)
 			/* next should be one or more digits */
 			i++;
 			min = 0;
-			for (; i < hmsg->req_end && (isdigit(hmsg->buf[i])); i++) {
+			for (; i < hmsg->req_end && (isdigit(hmsg->buf[i])) && min < 65536; i++) {
 				min = min * 10;
 				min = min + (hmsg->buf[i]) - '0';
 			}
+                        if (min >= 65536) {
+                            retcode = -1;
+                            goto finish;
+                        }
 
 			/* Find whitespace, end of version */
 			hmsg->v_end = i;
