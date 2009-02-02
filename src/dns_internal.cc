@@ -40,6 +40,7 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "comm.h"
+#include "fde.h"
 #include "MemBuf.h"
 
 #include "wordlist.h"
@@ -676,6 +677,9 @@ idnsSentQueryVC(int fd, char *buf, size_t size, comm_err_t flag, int xerrno, voi
 
     if (flag == COMM_ERR_CLOSING)
         return;
+    
+    if (fd_table[fd].closing())
+	return;
 
     if (flag != COMM_OK || size <= 0) {
         comm_close(fd);
