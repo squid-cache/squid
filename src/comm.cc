@@ -1690,8 +1690,11 @@ comm_remove_close_handler(int fd, PF * handler, void *data)
         if (call->dialer.handler == handler && params.data == data)
             break;		/* This is our handler */
     }
-    assert(p != NULL);
-    p->cancel("comm_remove_close_handler");
+
+    // comm_close removes all close handlers so our handler may be gone
+    if (p != NULL)
+        p->cancel("comm_remove_close_handler");
+    // TODO: should we remove the handler from the close handlers list?
 }
 
 // remove method-based close handler
@@ -1699,14 +1702,17 @@ void
 comm_remove_close_handler(int fd, AsyncCall::Pointer &call)
 {
     assert (isOpen(fd));
-    /* Find handler in list */
     debugs(5, 5, "comm_remove_close_handler: FD " << fd << ", AsyncCall=" << call);
 
+    // comm_close removes all close handlers so our handler may be gone
+    // TODO: should we remove the handler from the close handlers list?
+#if 0
     // Check to see if really exist  the given AsyncCall in comm_close handlers
     // TODO: optimize: this slow code is only needed for the assert() below
     AsyncCall::Pointer p;
     for (p = fd_table[fd].closeHandler; p != NULL && p != call; p = p->Next());
     assert(p == call);
+#endif
 
     call->cancel("comm_remove_close_handler");
 }
