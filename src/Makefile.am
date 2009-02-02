@@ -1022,9 +1022,9 @@ DiskIO_DiskDaemon_diskd_LDADD = $(top_builddir)/lib/libmiscutil.a @XTRA_LIBS@
 DEFAULT_HTTP_PORT	= @CACHE_HTTP_PORT@
 DEFAULT_ICP_PORT	= @CACHE_ICP_PORT@
 DEFAULT_PREFIX		= $(prefix)
-DEFAULT_CONFIG_FILE     = $(sysconfdir)/squid.conf
 DEFAULT_CONFIG_DIR	= $(sysconfdir)
-DEFAULT_MIME_TABLE	= $(sysconfdir)/mime.conf
+DEFAULT_CONFIG_FILE     = $(DEFAULT_CONFIG_DIR)/squid.conf
+DEFAULT_MIME_TABLE	= $(DEFAULT_CONFIG_DIR)/mime.conf
 DEFAULT_DNSSERVER       = $(libexecdir)/`echo dnsserver | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_LOG_PREFIX	= @DEFAULT_LOG_DIR@
 DEFAULT_CACHE_LOG       = $(DEFAULT_LOG_PREFIX)/cache.log
@@ -1041,7 +1041,8 @@ DEFAULT_ERROR_DIR	= $(datadir)/errors
 DEFAULT_MIB_PATH	= $(datadir)/mib.txt
 DEFAULT_HOSTS		= @OPT_DEFAULT_HOSTS@
 
-DEFS = @DEFS@ -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\"
+# Make location configure settings available to the code
+DEFS = @DEFS@ -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\" -DDEFAULT_SQUID_DATA_DIR=\"$(datadir)\" -DDEFAULT_SQUID_CONFIG_DIR=\"$(sysconfdir)\"
 
 $(OBJS): $(top_srcdir)/include/version.h ../include/autoconf.h
 
