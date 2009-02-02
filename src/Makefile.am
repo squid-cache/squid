@@ -391,6 +391,8 @@ squid_ACLSOURCES = \
 	ACLStrategy.h \
 	ACLStringData.cc \
 	ACLStringData.h \
+	ACLTag.cc \
+	ACLTag.h \
 	ACLTime.cc \
 	ACLTime.h \
 	ACLTimeData.cc \
