@@ -51,7 +51,7 @@
  * the current aging factor for the heap.
  */
 typedef unsigned long heap_mutex_t;
-typedef void *heap_t;
+typedef void * heap_t;
 typedef double heap_key;
 typedef heap_key heap_key_func(heap_t, heap_key);
 
@@ -103,7 +103,7 @@ SQUIDCEXTERN void delete_heap(heap *);
  * should be done with this data structure (especially modifying it!)  The
  * heap does not assume ownership of the data passed to it.
  */
-SQUIDCEXTERN heap_node *heap_insert(heap *, heap_t dat);
+SQUIDCEXTERN heap_node *heap_insert(heap *hp, heap_t dat);
 
 /*
  * Delete a node out of a heap.  Returns the heap data from the deleted
