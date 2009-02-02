@@ -1951,7 +1951,7 @@ AC_ARG_ENABLE(cpu-profiling,
 ])
 
 dnl Enable X-Accelerator-Vary for Vary support within an accelerator setup
-AC_ARG_ENABLE(x_accelerator_vary,
+AC_ARG_ENABLE(x-accelerator-vary,
   AC_HELP_STRING([--enable-x-accelerator-vary],
                  [Enable support for the X-Accelerator-Vary
                   HTTP header. Can be used to indicate
