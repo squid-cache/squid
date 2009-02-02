@@ -463,7 +463,7 @@ HttpParserParseReqLine(HttpParser *hmsg)
 {
 	int i = 0;
 	int retcode = 0;
-	int maj = -1, min = -1;
+	unsigned int maj = 0, min = 9;
 	int last_whitespace = -1, line_end = -1;
 
         debugs(74, 5, "httpParserParseReqLine: parsing " << hmsg->buf);
@@ -605,8 +605,6 @@ HttpParserParseReqLine(HttpParser *hmsg)
 	 * Rightio - we have all the schtuff. Return true; we've got enough.
 	 */
 	retcode = 1;
-	assert(maj != -1);
-	assert(min != -1);
 
 finish:
 	hmsg->v_maj = maj;
