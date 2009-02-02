@@ -1551,12 +1551,8 @@ ClientSocketContext::socketState()
 
             // did we get at least what we expected, based on range specs?
 
-            if (bytesSent == bytesExpected) { // got everything
-                if (http->request->flags.proxy_keepalive)
-                    return STREAM_COMPLETE;
-                else
-                    return STREAM_UNPLANNED_COMPLETE;
-            }
+            if (bytesSent == bytesExpected) // got everything
+                return STREAM_COMPLETE;
 
             // The logic below is not clear: If we got more than we
             // expected why would persistency matter? Should not this
