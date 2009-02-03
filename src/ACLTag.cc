@@ -42,9 +42,9 @@
 
 /* explicit template instantiation required for some systems */
 
-ACL::Prototype ACLTag::RegistryProtoype(&ACLTag::RegistryEntry_, "myportname");
+ACL::Prototype ACLTag::RegistryProtoype(&ACLTag::RegistryEntry_, "tag");
 
-ACLStrategised<const char *> ACLTag::RegistryEntry_(new ACLStringData, ACLTagStrategy::Instance(), "myportname");
+ACLStrategised<const char *> ACLTag::RegistryEntry_(new ACLStringData, ACLTagStrategy::Instance(), "tag");
 
 int
 ACLTagStrategy::match (ACLData<MatchType> * &data, ACLChecklist *checklist)
