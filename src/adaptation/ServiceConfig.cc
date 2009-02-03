@@ -67,6 +67,7 @@ Adaptation::ServiceConfig::parse()
 
     method = parseMethod(method_point);
     point = parseVectPoint(method_point);
+    safe_free(method_point);
 
     debugs(3, 5, HERE << cfg_filename << ':' << config_lineno << ": " <<
            "service_configConfig is " << methodStr() << "_" << vectPointStr());
