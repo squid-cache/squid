@@ -1301,34 +1301,18 @@ FtpStateData::dataRead(const CommIoCbParams &io)
 
     assert(io.fd == data.fd);
 
-#if DELAY_POOLS
-
-    DelayId delayId = entry->mem_obj->mostBytesAllowed();
-
-#endif
-
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
         abortTransaction("entry aborted during dataRead");
         return;
     }
 
     if (io.flag == COMM_OK && io.size > 0) {
-#if DELAY_POOLS
-        delayId.bytesIn(io.size);
-#endif
-
-    }
-
-
-    if (io.flag == COMM_OK && io.size > 0) {
         debugs(9,5,HERE << "appended " << io.size << " bytes to readBuf");
         data.readBuf->appended(io.size);
 #if DELAY_POOLS
-
         DelayId delayId = entry->mem_obj->mostBytesAllowed();
         delayId.bytesIn(io.size);
 #endif
-
         IOStats.Ftp.reads++;
 
         for (j = io.size - 1, bin = 0; j; bin++)
