@@ -3215,7 +3215,7 @@ DOC_START
 	By default, Squid will immediately close client connections when
 	read(2) returns "no more data to read."
 
-	Change this option to 'off' and Squid will keep open connections
+	Change this option to 'on' and Squid will keep open connections
 	until a read(2) or write(2) on the socket returns an error.
 	This may show some benefits for reverse proxies. But if not
 	it is recommended to leave OFF.
