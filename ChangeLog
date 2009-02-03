@@ -1,4 +1,19 @@
-Changes to squid-3.1.0.4 (23 Jan 2008):
+Changes to squid-3.1.0.5 (03 Feb 2009):
+
+	- Bug 2583: Fixed issue in content adaptation
+	- Bug 2576: Make translate target obey --disable-auto-locale
+	- Bug 2571: Add DNS failover to use IPv4-only listen when IPv6 fails.
+	- Bug 2563: 99+% CPU Usage on FTP URL
+	- Bug 2505, 2524, 2558: fixed several issues on connection handling
+	- Fix several issues in request parsing
+	- Fix memory leak from logformat parsing
+	- Fix various ESI build errors
+	- Make configure tests use C++ instead of C
+	- Drop special localhost conversion RFC violation.
+	- Add Language: Arabic
+	- ... and various documentation and code polish
+
+Changes to squid-3.1.0.4 (23 Jan 2009):
 
 	- Regression Fix: Bug 2558: rollback bug 2395 fix.
 	- Bug 2555: Fixes to SNMP-MIB
