@@ -685,6 +685,10 @@ mainReconfigureStart(void)
     idnsShutdown();
 #endif
 
+#if USE_ADAPTATION
+    Adaptation::Config::DestroyConfig();
+#endif
+
     redirectShutdown();
     authenticateShutdown();
     externalAclShutdown();
@@ -1666,6 +1670,11 @@ SquidShutdown()
 
     releaseServerSockets();
     commCloseAllSockets();
+
+#if USE_ADAPTATION
+    Adaptation::Config::DestroyConfig();
+#endif
+
 #if DELAY_POOLS
 
     DelayPools::FreePools();
