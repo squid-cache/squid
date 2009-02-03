@@ -167,19 +167,15 @@ char *
 UrnState::getHost (String &urlpath)
 {
     char * result;
-    char const *t;
+    size_t p;
 
-    /* FIXME: this appears to be parsing the URL. *very* badly. */
-    /* FIXME: a proper encapsulated URI/URL type needs to clear this up. */
-
-    if ((t = urlpath.pos(':')) != NULL) {
-        urlpath.set(t, '\0');
-        result = xstrdup(urlpath.unsafeBuf());
-        urlpath.set(t, ':');
+    /** FIXME: this appears to be parsing the URL. *very* badly. */
+    /*   a proper encapsulated URI/URL type needs to clear this up. */
+    if ((p=urlpath.find(':')) != std::string::npos) {
+        result=xstrndup(urlpath.rawBuf(),p-1);
     } else {
-        result = xstrdup(urlpath.unsafeBuf());
+        result = xstrndup(urlpath.rawBuf(),urlpath.size());
     }
-
     return result;
 }
 

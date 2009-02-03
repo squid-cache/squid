@@ -76,7 +76,7 @@ String::termedBuf() const
     return buf_;
 }
 
-char&
+char
 String::operator [](unsigned int pos)
 {
     assert(pos < size_);
@@ -94,6 +94,16 @@ const char *
 String::pos(char const ch) const
 {
     return strchr(termedBuf(), ch);
+}
+
+size_t
+String::find(char const ch) const
+{
+    const char *c;
+    c=pos(ch);
+    if (c==NULL)
+        return std::string::npos;
+    return c-rawBuf();
 }
 
 const char *

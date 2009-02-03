@@ -177,7 +177,7 @@ HttpRequestMethod::image() const
         return RequestMethodStr[theMethod];
     } else {
         if (theImage.size()>0) {
-            return theImage.unsafeBuf();
+            return theImage.termedBuf();
         } else {
             return "METHOD_OTHER";
         }

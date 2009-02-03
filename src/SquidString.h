@@ -95,7 +95,7 @@ public:
      * Retrieve a single character in the string.
      \param pos	Position of character to retrieve.
      */
-    _SQUID_INLINE_ char &operator [](unsigned int pos);
+    _SQUID_INLINE_ char operator [](unsigned int pos);
 
     _SQUID_INLINE_ int size() const;
     _SQUID_INLINE_ char const * unsafeBuf() const;
@@ -128,6 +128,9 @@ public:
     void absorb(String &old);
     _SQUID_INLINE_ const char * pos(char const *) const;
     _SQUID_INLINE_ const char * pos(char const ch) const;
+    ///offset from string start of the first occurrence of ch
+    /// returns std::string::npos if ch is not found
+    _SQUID_INLINE_ size_t find(char const ch) const;
     _SQUID_INLINE_ const char * rpos(char const ch) const;
     _SQUID_INLINE_ int cmp (char const *) const;
     _SQUID_INLINE_ int cmp (char const *, size_t count) const;
