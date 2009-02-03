@@ -137,8 +137,8 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
 
     if (http->request->auth_user_request)
         r->client_ident = http->request->auth_user_request->username();
-    else if (http->request->extacl_user.unsafeBuf() != NULL) {
-        r->client_ident = http->request->extacl_user.unsafeBuf();
+    else if (http->request->extacl_user.defined()) {
+        r->client_ident = http->request->extacl_user.termedBuf();
     }
 
     if (!r->client_ident && (conn != NULL && conn->rfc931[0]))

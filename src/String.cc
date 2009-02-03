@@ -188,7 +188,7 @@ String::append(const char *str, int len)
         snew.allocBuffer(snew.len_ + 1);
 
         if (len_)
-            xmemcpy(snew.buf_, unsafeBuf(), len_);
+            xmemcpy(snew.buf_, rawBuf(), len_);
 
         if (len)
             xmemcpy(snew.buf_ + len_, str, len);
