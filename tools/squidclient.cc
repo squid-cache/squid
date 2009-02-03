@@ -375,7 +375,7 @@ main(int argc, char *argv[])
     }
 
     if (host) {
-        snprintf(buf, BUFSIZ, "Host: %s\r\n", method, url, version, host);
+        snprintf(buf, BUFSIZ, "Host: %s\r\n", host);
         strcat(msg,buf);
     }
 
