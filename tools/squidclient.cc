@@ -433,7 +433,7 @@ main(int argc, char *argv[])
 	/* HTTP/1.0 may need keep-alive */
 	if (strcmp(version, "1.0") == 0) {
 	    if (keep_alive) {
-		if (strchr(url, ':')
+		if (strchr(url, ':'))
 		    snprintf(buf, BUFSIZ, "Proxy-Connection: keep-alive\r\n");
 		else
 		    strcat(msg, "Connection: keep-alive\r\n");
