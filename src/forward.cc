@@ -194,14 +194,15 @@ FwdState::~FwdState()
 void
 FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
 {
-    /*
+    /** \note
      * client_addr == no_addr indicates this is an "internal" request
      * from peer_digest.c, asn.c, netdb.c, etc and should always
      * be allowed.  yuck, I know.
      */
 
-    if ( !request->client_addr.IsNoAddr() && request->protocol != PROTO_INTERNAL && request->protocol != PROTO_CACHEOBJ) {
-        /*
+    if ( Config.accessList.miss && !request->client_addr.IsNoAddr() &&
+         request->protocol != PROTO_INTERNAL && request->protocol != PROTO_CACHEOBJ) {
+        /**
          * Check if this host is allowed to fetch MISSES from us (miss_access)
          */
         ACLChecklist ch;
@@ -1312,7 +1313,7 @@ aclMapAddr(acl_address * head, ACLChecklist * ch)
     IpAddress addr;
 
     for (l = head; l; l = l->next) {
-        if (ch->matchAclListFast(l->aclList))
+        if (!l->aclList || ch->matchAclListFast(l->aclList))
             return l->addr;
     }
 
@@ -1330,7 +1331,7 @@ aclMapTOS(acl_tos * head, ACLChecklist * ch)
     acl_tos *l;
 
     for (l = head; l; l = l->next) {
-        if (ch->matchAclListFast(l->aclList))
+        if (!l->aclList || ch->matchAclListFast(l->aclList))
             return l->tos;
     }
 
@@ -1344,6 +1345,10 @@ getOutgoingAddr(HttpRequest * request, struct peer *dst_peer)
 
     if (request && request->flags.spoof_client_ip)
         return request->client_addr;
+
+    if (!Config.accessList.outgoing_address) {
+        return IpAddress(); // anything will do.
+    }
 
     ch.dst_peer = dst_peer;
 

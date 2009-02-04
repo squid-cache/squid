@@ -511,6 +511,7 @@ mimeFreeMemory(void)
         safe_free(m->icon);
         safe_free(m->content_encoding);
         regfree(&m->compiled_pattern);
+        m->theIcon._free();
         delete m;
     }
 
