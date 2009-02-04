@@ -509,8 +509,13 @@ ClientRequestContext::clientAccessCheck()
     }
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
-    acl_checklist = clientAclChecklistCreate(Config.accessList.http, http);
-    acl_checklist->nonBlockingCheck(clientAccessCheckDoneWrapper, this);
+    if (Config.accessList.http) {
+        acl_checklist = clientAclChecklistCreate(Config.accessList.http, http);
+        acl_checklist->nonBlockingCheck(clientAccessCheckDoneWrapper, this);
+    } else {
+        debugs(0, DBG_CRITICAL, "No http_access configuration found. This will block ALL traffic");
+        clientAccessCheckDone(ACCESS_DENIED);
+    }
 }
 
 void
@@ -1022,11 +1027,19 @@ ClientRequestContext::clientRedirectDone(char *result)
     http->doCallouts();
 }
 
+/** Test cache allow/deny configuration
+ *  Sets flags.cachable=1 if caching is not denied.
+ */
 void
 ClientRequestContext::checkNoCache()
 {
-    acl_checklist = clientAclChecklistCreate(Config.accessList.noCache, http);
-    acl_checklist->nonBlockingCheck(checkNoCacheDoneWrapper, this);
+    if (Config.accessList.noCache) {
+        acl_checklist = clientAclChecklistCreate(Config.accessList.noCache, http);
+        acl_checklist->nonBlockingCheck(checkNoCacheDoneWrapper, this);
+    } else {
+        /* unless otherwise specified, we try to cache. */
+        checkNoCacheDone(1);
+    }
 }
 
 static void

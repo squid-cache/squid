@@ -33,12 +33,14 @@
 #ifndef SQUID_ACLCHECKLIST_H
 #define SQUID_ACLCHECKLIST_H
 
-#include "typedefs.h"
-#include "client_side.h"
-#include "structs.h"
+//#include "typedefs.h"
+//#include "client_side.h"
+//#include "structs.h"
 
+#include "ACL.h"
+
+class AuthUserRequest;
 class ExternalACLEntry;
-
 class ConnStateData;
 
 /// \ingroup ACLAPI
@@ -86,40 +88,100 @@ public:
     };
 
 
+public: /* operators */
     void *operator new(size_t);
     void operator delete(void *);
 
     ACLChecklist();
     ~ACLChecklist();
-    /* To cause link failures if assignment attempted */
+    /** NP: To cause link failures if assignment attempted */
     ACLChecklist (ACLChecklist const &);
+    /** NP: To cause link failures if assignment attempted */
     ACLChecklist &operator=(ACLChecklist const &);
 
-    void nonBlockingCheck(PF * callback, void *callback_data);
-    int fastCheck();
-    void checkCallback(allow_t answer);
-    void preCheck();
-    _SQUID_INLINE_ bool matchAclListFast(const ACLList * list);
-    ConnStateData * conn();
-    int fd() const; // uses conn() if available
+public: /* API methods */
 
-    // set either conn or FD
+    /**
+     * Trigger off a non-blocking access check for a set of *_access options..
+     * The callback specified will be called with true/false
+     * when the results of the ACL tests are known.
+     */
+    void nonBlockingCheck(PF * callback, void *callback_data);
+
+    /**
+     * Trigger a blocking access check for a set of *_access options.
+     * 
+     * ACLs which cannot be satisfied directly from available data are ignored.
+     * This means any proxy_auth, external_acl, DNS lookups, Ident lookups etc
+     * which have not already been performed and cached will not be checked.
+     *
+     * If there is no access list to check the default is to return DENIED.
+     * However callers should perform their own check and default based on local
+     * knowledge of the ACL usage rather than depend on this default.
+     * That will also save on work setting up ACLChecklist fields for a no-op.
+     * 
+     * \retval  1/true    Access Allowed
+     * \retval 0/false    Access Denied
+     */
+    int fastCheck();
+
+    /**
+     * Trigger a blocking access check for a single ACL line (a AND b AND c).
+     * 
+     * ACLs which cannot be satisfied directly from available data are ignored.
+     * This means any proxy_auth, external_acl, DNS lookups, Ident lookups etc
+     * which have not already been performed and cached will not be checked.
+     * 
+     * \retval  1/true    Access Allowed
+     * \retval 0/false    Access Denied
+     */
+    _SQUID_INLINE_ bool matchAclListFast(const ACLList * list);
+
+    /**
+     * Attempt to check the current checklist against current data.
+     * This is the core routine behind all ACL test routines.
+     * As much as possible of current tests are performed immediately
+     * and the result is maybe delayed to wait for async lookups.
+     *
+     * When all tests are done callback is presented with one of:
+     * \item ACCESS_ALLOWED     Access explicitly Allowed
+     * \item ACCESS_DENIED      Access explicitly Denied
+     */
+    void check();
+
+    ConnStateData * conn() const;
+
+    /// uses conn() if available
+    int fd() const;
+
+    /// set either conn
     void conn(ConnStateData *);
+    /// set FD
     void fd(int aDescriptor);
+
+/* Accessors used by internal ACL stuff */
 
     int authenticated();
 
     bool asyncInProgress() const;
     void asyncInProgress(bool const);
+
     bool finished() const;
     void markFinished();
-    void check();
+
     allow_t const & currentAnswer() const;
     void currentAnswer(allow_t const);
+
+    void changeState(AsyncState *);
+    AsyncState *asyncState() const;
+
+private: /* NP: only used internally */
+
+    void checkCallback(allow_t answer);
     void checkAccessList();
     void checkForAsync();
-    void changeState (AsyncState *);
-    AsyncState *asyncState() const;
+
+public: /* checklist available data */
 
     const acl_access *accessList;
 
@@ -132,6 +194,7 @@ public:
     struct peer *dst_peer;
 
     HttpRequest *request;
+
     /* for acls that look at reply data */
     HttpReply *reply;
     char rfc931[USER_IDENT_SZ];
@@ -148,17 +211,20 @@ public:
     PF *callback;
     void *callback_data;
     ExternalACLEntry *extacl_entry;
+
     bool destinationDomainChecked() const;
     void markDestinationDomainChecked();
     bool sourceDomainChecked() const;
     void markSourceDomainChecked();
 
-private:
+private: /* internal methods */
+    void preCheck();
     void matchAclList(const ACLList * list, bool const fast);
     void matchAclListSlow(const ACLList * list);
     CBDATA_CLASS(ACLChecklist);
-    ConnStateData * conn_;	/* hack for ident and NTLM */
-    int fd_; // may be available when conn_ is not
+
+    ConnStateData * conn_;          /**< hack for ident and NTLM */
+    int fd_;                        /**< may be available when conn_ is not */
     bool async_;
     bool finished_;
     allow_t allow_;

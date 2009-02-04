@@ -613,9 +613,10 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
      * be allowed.  yuck, I know.
      */
 
-    if (!request->client_addr.IsNoAddr()) {
+    if (!request->client_addr.IsNoAddr() && Config.accessList.miss) {
         /*
          * Check if this host is allowed to fetch MISSES from us (miss_access)
+         * default is to allow.
          */
         ACLChecklist ch;
         ch.src_addr = request->client_addr;

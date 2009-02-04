@@ -532,7 +532,9 @@ snmpDecodePacket(snmp_request_t * rq)
     rq->session.Version = SNMP_VERSION_1;
     Community = snmp_parse(&rq->session, PDU, buf, len);
 
-    if (Community) {
+    /* Check if we have explicit permission to access SNMP data.
+     * default (set above) is to deny all */
+    if (Community && Config.accessList.snmp) {
         ACLChecklist checklist;
         checklist.accessList = cbdataReference(Config.accessList.snmp);
         checklist.src_addr = rq->from;

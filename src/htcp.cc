@@ -844,9 +844,12 @@ htcpUnpackDetail(char *buf, int sz)
 }
 
 static int
-
 htcpAccessCheck(acl_access * acl, htcpSpecifier * s, IpAddress &from)
 {
+    /* default deny if no access list present */
+    if (!acl)
+        return 0;
+
     ACLChecklist checklist;
     checklist.src_addr = from;
     checklist.my_addr.SetNoAddr();
