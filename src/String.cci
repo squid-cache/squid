@@ -77,7 +77,7 @@ String::termedBuf() const
 }
 
 char
-String::operator [](unsigned int pos)
+String::operator [](unsigned int pos) const
 {
     assert(pos < size_);
 

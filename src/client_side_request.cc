@@ -1400,13 +1400,13 @@ ClientHttpRequest::noteMoreBodyDataAvailable(BodyPipe::Pointer)
     assert(request_satisfaction_mode);
     assert(adaptedBodySource != NULL);
 
-    if (const size_t contentSize = adaptedBodySource->unsafeBuf().contentSize()) {
+    if (const size_t contentSize = adaptedBodySource->buf().contentSize()) {
         BodyPipeCheckout bpc(*adaptedBodySource);
-        const StoreIOBuffer ioBuf(&bpc.unsafeBuf, request_satisfaction_offset);
+        const StoreIOBuffer ioBuf(&bpc.buf, request_satisfaction_offset);
         storeEntry()->write(ioBuf);
         // assume can write everything
         request_satisfaction_offset += contentSize;
-        bpc.unsafeBuf.consume(contentSize);
+        bpc.buf.consume(contentSize);
         bpc.checkIn();
     }
 
