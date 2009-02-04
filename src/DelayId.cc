@@ -106,6 +106,14 @@ DelayId::DelayClient(ClientHttpRequest * http)
     }
 
     for (pool = 0; pool < DelayPools::pools(); pool++) {
+
+        /* pools require explicit 'allow' to assign a client into them */
+        if (!DelayPools::delay_data[pool].access) {
+            debugs(77, DBG_IMPORTANT, "delay_pool " << pool <<
+                   " has no delay_access configured. This means that no clients will ever use it.");
+            continue;
+        }
+
         ACLChecklist ch;
 #if FOLLOW_X_FORWARDED_FOR
         if (Config.onoff.delay_pool_uses_indirect_client)
@@ -124,8 +132,8 @@ DelayId::DelayClient(ClientHttpRequest * http)
 
         /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
 
-        if (DelayPools::delay_data[pool].theComposite().getRaw() &&
-                ch.fastCheck()) {
+        if (DelayPools::delay_data[pool].theComposite().getRaw() && ch.fastCheck()) {
+
             DelayId result (pool + 1);
             CompositePoolNode::CompositeSelectionDetails details;
             details.src_addr = ch.src_addr;
