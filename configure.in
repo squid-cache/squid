@@ -27,14 +27,6 @@ AC_PROG_CXX
 AC_LANG_CPLUSPLUS
 AC_CANONICAL_HOST
 
-dnl Make location configure settings available to the code
-dnl Pass squid data directory (icons, errors etc)  base location to code files as a compiler define
-CFLAGS="-DDEFAULT_SQUID_DATA_DIR=\\\"$datadir\\\" $CFLAGS"
-CXXFLAGS="-DDEFAULT_SQUID_DATA_DIR=\\\"$datadir\\\" $CXXFLAGS"
-dnl Pass squid.conf directory base location to code files as a compiler define
-CFLAGS="-DDEFAULT_SQUID_CONFIG_DIR=\\\"$sysconfdir\\\" $CFLAGS"
-CXXFLAGS="-DDEFAULT_SQUID_CONFIG_DIR=\\\"$sysconfdir\\\" $CXXFLAGS"
-
 dnl Make the squid top srcdir available to sub-packages as --with-squid=PATH
 new_configure_args="$ac_configure_args --with-squid=$ac_abs_confdir"
 ac_configure_args="$new_configure_args"
