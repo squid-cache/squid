@@ -1758,8 +1758,10 @@ clientReplyContext::sendBodyTooLargeError()
 void
 clientReplyContext::processReplyAccess ()
 {
+    /* NP: this should probably soft-fail to a zero-sized-reply error ?? */
     assert(reply);
-    /* Dont't block our own responses or HTTP status messages */
+
+    /** Don't block our own responses or HTTP status messages */
     if (http->logType == LOG_TCP_DENIED ||
             http->logType == LOG_TCP_DENIED_REPLY ||
             alwaysAllowResponse(reply->sline.status)) {
@@ -1768,6 +1770,7 @@ clientReplyContext::processReplyAccess ()
         return;
     }
 
+    /** Check for reply to big error */
     if (reply->expectedBodyTooLarge(*http->request)) {
         sendBodyTooLargeError();
         return;
@@ -1775,11 +1778,13 @@ clientReplyContext::processReplyAccess ()
 
     headers_sz = reply->hdr_sz;
 
+    /** check for absent access controls (permit by default) */
     if (!Config.accessList.reply) {
         processReplyAccessResult(1);
         return;
     }
 
+    /** Process http_reply_access lists */
     ACLChecklist *replyChecklist;
     replyChecklist = clientAclChecklistCreate(Config.accessList.reply, http);
     replyChecklist->reply = HTTPMSGLOCK(reply);
