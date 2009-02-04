@@ -95,7 +95,7 @@ public:
      * Retrieve a single character in the string.
      \param pos	Position of character to retrieve.
      */
-    _SQUID_INLINE_ char operator [](unsigned int pos);
+    _SQUID_INLINE_ char operator [](unsigned int pos) const;
 
     _SQUID_INLINE_ int size() const;
     _SQUID_INLINE_ char const * unsafeBuf() const;
