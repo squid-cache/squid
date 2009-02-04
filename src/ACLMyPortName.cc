@@ -39,6 +39,9 @@
 #include "ACLStringData.h"
 #include "ACLChecklist.h"
 
+/* for ConnStateData */
+#include "client_side.h"
+
 
 ACL::Prototype ACLMyPortName::RegistryProtoype(&ACLMyPortName::RegistryEntry_, "myportname");
 

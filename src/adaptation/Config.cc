@@ -162,6 +162,19 @@ Adaptation::Config::FreeAccess()
 }
 
 void
+Adaptation::Config::DestroyConfig()
+{
+    FreeAccess();
+    FreeServiceSet();
+
+    // invalidate each service so that it can be deleted when refcount=0
+    while (!AllServices().empty()) {
+        AllServices().back()->invalidate();
+        AllServices().pop_back();
+    }
+}
+
+void
 Adaptation::Config::DumpAccess(StoreEntry *entry, const char *name)
 {
     LOCAL_ARRAY(char, nom, 64);
@@ -182,14 +195,6 @@ Adaptation::Config::Config()
 // with global arrays shared by those individual configs
 Adaptation::Config::~Config()
 {
-    FreeAccess();
-    FreeServiceSet();
-
-    // invalidate each service so that it can be deleted when refcount=0
-    while (!AllServices().empty()) {
-        AllServices().back()->invalidate();
-        AllServices().pop_back();
-    }
-
+    Adaptation::Config::DestroyConfig();
     freeService();
 }

@@ -365,14 +365,10 @@ parse_externalAclHelper(external_acl ** list)
             // deprecated. but assume the old configs all referred to request headers.
             debugs(82, DBG_IMPORTANT, "WARNING: external_acl_type format %{...} is being replaced by %>{...} for : " << token);
             parse_header_token(format, (token+2), _external_acl_format::EXT_ACL_HEADER_REQUEST);
-        }
-
-        if (strncmp(token, "%>{", 3) == 0) {
+        } else if (strncmp(token, "%>{", 3) == 0) {
             parse_header_token(format, (token+3), _external_acl_format::EXT_ACL_HEADER_REQUEST);
-        }
-        if (strncmp(token, "%<{", 3) == 0) {
+        } else if (strncmp(token, "%<{", 3) == 0) {
             parse_header_token(format, (token+3), _external_acl_format::EXT_ACL_HEADER_REPLY);
-
         } else if (strcmp(token, "%LOGIN") == 0) {
             format->type = _external_acl_format::EXT_ACL_LOGIN;
             a->require_auth = true;
@@ -411,10 +407,10 @@ parse_externalAclHelper(external_acl ** list)
             format->type = _external_acl_format::EXT_ACL_USER_CERT_RAW;
         else if (strcmp(token, "%USER_CERTCHAIN") == 0)
             format->type = _external_acl_format::EXT_ACL_USER_CERTCHAIN_RAW;
-        else if (strncmp(token, "%USER_CERT_", 11)) {
+        else if (strncmp(token, "%USER_CERT_", 11) == 0) {
             format->type = _external_acl_format::EXT_ACL_USER_CERT;
             format->header = xstrdup(token + 11);
-        } else if (strncmp(token, "%CA_CERT_", 11)) {
+        } else if (strncmp(token, "%CA_CERT_", 11) == 0) {
             format->type = _external_acl_format::EXT_ACL_USER_CERT;
             format->header = xstrdup(token + 11);
         }
