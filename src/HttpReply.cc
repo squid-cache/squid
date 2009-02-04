@@ -543,7 +543,8 @@ HttpReply::calcMaxBodySize(HttpRequest& request)
     ch.reply = HTTPMSGLOCK(this); // XXX: this lock makes method non-const
     ch.request = HTTPMSGLOCK(&request);
     for (acl_size_t *l = Config.ReplyBodySize; l; l = l -> next) {
-        if (ch.matchAclListFast(l->aclList)) {
+        /* if there is no ACL list or if the ACLs listed match use this size value */
+        if (!l->aclList || ch.matchAclListFast(l->aclList)) {
             debugs(58, 4, HERE << "bodySizeMax=" << bodySizeMax);
             bodySizeMax = l->size; // may be -1
             break;

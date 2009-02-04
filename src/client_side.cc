@@ -2856,19 +2856,16 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
 
 #if USE_IDENT
 
-    ACLChecklist identChecklist;
+    if (Config.accessList.identLookup) {
+        ACLChecklist identChecklist;
+        identChecklist.src_addr = details->peer;
+        identChecklist.my_addr = details->me;
+        identChecklist.accessList = cbdataReference(Config.accessList.identLookup);
 
-    identChecklist.src_addr = details->peer;
-
-    identChecklist.my_addr = details->me;
-
-    identChecklist.accessList = cbdataReference(Config.accessList.identLookup);
-
-    /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
-
-    if (identChecklist.fastCheck())
-        identStart(details->me, details->peer, clientIdentDone, connState);
-
+        /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
+        if (identChecklist.fastCheck())
+            identStart(details->me, details->peer, clientIdentDone, connState);
+    }
 #endif
 
     if (s->tcp_keepalive.enabled) {
@@ -3074,18 +3071,16 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
 
 #if USE_IDENT
 
-    ACLChecklist identChecklist;
+    if (Config.accessList.identLookup) {
+        ACLChecklist identChecklist;
+        identChecklist.src_addr = details->peer;
+        identChecklist.my_addr = details->me;
+        identChecklist.accessList = cbdataReference(Config.accessList.identLookup);
 
-    identChecklist.src_addr = details->peer;
-
-    identChecklist.my_addr = details->me;
-
-    identChecklist.accessList = cbdataReference(Config.accessList.identLookup);
-
-    /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
-
-    if (identChecklist.fastCheck())
-        identStart(details->me, details->peer, clientIdentDone, connState);
+        /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
+        if (identChecklist.fastCheck())
+            identStart(details->me, details->peer, clientIdentDone, connState);
+    }
 
 #endif
 
