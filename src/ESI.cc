@@ -1578,7 +1578,7 @@ esiLiteral::process (int dovars)
         /* Ensure variable state is clean */
 
         while (temp.getRaw()) {
-            varState->feedData(temp->unsafeBuf,temp->len);
+            varState->feedData(temp->buf,temp->len);
             temp = temp->next;
         }
 
@@ -2430,7 +2430,7 @@ esiEnableProcessing (HttpReply *rep)
              */
             return 0;
 
-        if (strstr (sctusable->content.buf(), "ESI/1.0"))
+        if (strstr (sctusable->content.unsafeBuf(), "ESI/1.0"))
             rv = 1;
 
         httpHdrScTargetDestroy (sctusable);
