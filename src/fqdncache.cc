@@ -639,7 +639,10 @@ fqdncache_gethostbyaddr(IpAddress &addr, int flags)
     char name[MAX_IPSTRLEN];
     fqdncache_entry *f = NULL;
 
-    assert(!addr.IsAnyAddr() && !addr.IsNoAddr());
+    if (addr.IsAnyAddr() || addr.IsNoAddr()) {
+        return NULL;
+    }
+
     addr.NtoA(name,MAX_IPSTRLEN);
     FqdncacheStats.requests++;
     f = fqdncache_get(name);
