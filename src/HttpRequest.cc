@@ -150,7 +150,7 @@ HttpRequest::reset()
 HttpRequest *
 HttpRequest::clone() const
 {
-    HttpRequest *copy = new HttpRequest(method, protocol, urlpath.buf());
+    HttpRequest *copy = new HttpRequest(method, protocol, urlpath.termedBuf());
     // TODO: move common cloning clone to Msg::copyTo() or copy ctor
     copy->header.append(&header);
     copy->hdrCacheInit();
@@ -298,8 +298,8 @@ HttpRequest::pack(Packer * p)
 {
     assert(p);
     /* pack request-line */
-    packerPrintf(p, "%s %s HTTP/1.0\r\n",
-                 RequestMethodStr(method), urlpath.buf());
+    packerPrintf(p, "%s %.*s HTTP/1.0\r\n",
+                 RequestMethodStr(method), urlpath.size(), urlpath.rawBuf());
     /* headers */
     header.packInto(p);
     /* trailer */
@@ -336,7 +336,7 @@ httpRequestHdrAllowed(const HttpHeaderEntry * e, String * strConn)
     assert(e);
     /* check connection header */
 
-    if (strConn && strListIsMember(strConn, e->name.buf(), ','))
+    if (strConn && strListIsMember(strConn, e->name.termedBuf(), ','))
         return 0;
 
     return 1;
@@ -411,7 +411,7 @@ const char *HttpRequest::packableURI(bool full_uri) const
         return urlCanonical((HttpRequest*)this);
 
     if (urlpath.size())
-        return urlpath.buf();
+        return urlpath.termedBuf();
 
     return "/";
 }

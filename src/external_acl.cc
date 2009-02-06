@@ -753,7 +753,7 @@ aclMatchExternal(external_acl_data *acl, ACLChecklist * ch)
 
     external_acl_cache_touch(acl->def, entry);
     result = entry->result;
-    external_acl_message = entry->message.buf();
+    external_acl_message = entry->message.unsafeBuf();
 
     debugs(82, 2, "aclMatchExternal: " << acl->def->name << " = " << result);
 
@@ -881,7 +881,7 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
             break;
 
         case _external_acl_format::EXT_ACL_PATH:
-            str = request->urlpath.buf();
+            str = request->urlpath.termedBuf();
             break;
 
         case _external_acl_format::EXT_ACL_METHOD:
@@ -890,49 +890,49 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
 
         case _external_acl_format::EXT_ACL_HEADER_REQUEST:
             sb = request->header.getByName(format->header);
-            str = sb.buf();
+            str = sb.termedBuf();
             break;
 
         case _external_acl_format::EXT_ACL_HEADER_REQUEST_ID:
             sb = request->header.getStrOrList(format->header_id);
-            str = sb.buf();
+            str = sb.termedBuf();
             break;
 
         case _external_acl_format::EXT_ACL_HEADER_REQUEST_MEMBER:
             sb = request->header.getByNameListMember(format->header, format->member, format->separator);
-            str = sb.buf();
+            str = sb.termedBuf();
             break;
 
         case _external_acl_format::EXT_ACL_HEADER_REQUEST_ID_MEMBER:
             sb = request->header.getListMember(format->header_id, format->member, format->separator);
-            str = sb.buf();
+            str = sb.termedBuf();
             break;
 
         case _external_acl_format::EXT_ACL_HEADER_REPLY:
             if (reply) {
                 sb = reply->header.getByName(format->header);
-                str = sb.buf();
+                str = sb.termedBuf();
             }
             break;
 
         case _external_acl_format::EXT_ACL_HEADER_REPLY_ID:
             if (reply) {
                 sb = reply->header.getStrOrList(format->header_id);
-                str = sb.buf();
+                str = sb.termedBuf();
             }
             break;
 
         case _external_acl_format::EXT_ACL_HEADER_REPLY_MEMBER:
             if (reply) {
                 sb = reply->header.getByNameListMember(format->header, format->member, format->separator);
-                str = sb.buf();
+                str = sb.termedBuf();
             }
             break;
 
         case _external_acl_format::EXT_ACL_HEADER_REPLY_ID_MEMBER:
             if (reply) {
                 sb = reply->header.getListMember(format->header_id, format->member, format->separator);
-                str = sb.buf();
+                str = sb.termedBuf();
             }
             break;
 #if USE_SSL
@@ -983,7 +983,7 @@ makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
 #endif
 
         case _external_acl_format::EXT_ACL_EXT_USER:
-            str = request->extacl_user.buf();
+            str = request->extacl_user.termedBuf();
             break;
 
         case _external_acl_format::EXT_ACL_UNKNOWN:
@@ -1332,8 +1332,8 @@ ACLExternal::ExternalAclLookup(ACLChecklist * ch, ACLExternal * me, EAH * callba
         if (entry != NULL) {
             debugs(82, 4, "externalAclLookup: entry = { date=" <<
                    (long unsigned int) entry->date << ", result=" <<
-                   entry->result << ", user=" << entry->user.buf() << " tag=" <<
-                   entry->tag.buf() << " log=" << entry->log.buf() << " }");
+                   entry->result << ", user=" << entry->user << " tag=" <<
+                   entry->tag << " log=" << entry->log << " }");
 
         }
 

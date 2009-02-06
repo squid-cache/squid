@@ -464,7 +464,7 @@ clientPrepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry * aLogE
     aLogEntry->http.version = request->http_ver;
     aLogEntry->hier = request->hier;
     aLogEntry->cache.requestSize += request->content_length;
-    aLogEntry->cache.extuser = request->extacl_user.buf();
+    aLogEntry->cache.extuser = request->extacl_user.termedBuf();
 
     if (request->auth_user_request) {
 
@@ -486,10 +486,10 @@ ClientHttpRequest::logRequest()
 
         if (al.reply) {
             al.http.code = al.reply->sline.status;
-            al.http.content_type = al.reply->content_type.buf();
+            al.http.content_type = al.reply->content_type.termedBuf();
         } else if (loggingEntry() && loggingEntry()->mem_obj) {
             al.http.code = loggingEntry()->mem_obj->getReply()->sline.status;
-            al.http.content_type = loggingEntry()->mem_obj->getReply()->content_type.buf();
+            al.http.content_type = loggingEntry()->mem_obj->getReply()->content_type.unsafeBuf();
         }
 
         debugs(33, 9, "clientLogRequest: http.code='" << al.http.code << "'");
@@ -852,7 +852,7 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
 static void
 clientPackTermBound(String boundary, MemBuf * mb)
 {
-    mb->Printf("\r\n--%s--\r\n", boundary.buf());
+    mb->Printf("\r\n--%.*s--\r\n", boundary.size(), boundary.rawBuf());
     debugs(33, 6, "clientPackTermBound: buf offset: " << mb->size);
 }
 
@@ -866,10 +866,9 @@ clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String 
     assert(spec);
 
     /* put boundary */
-    debugs(33, 5, "clientPackRangeHdr: appending boundary: " <<
-           boundary.buf());
+    debugs(33, 5, "clientPackRangeHdr: appending boundary: " << boundary);
     /* rfc2046 requires to _prepend_ boundary with <crlf>! */
-    mb->Printf("\r\n--%s\r\n", boundary.buf());
+    mb->Printf("\r\n--%.*s\r\n", boundary.size(), boundary.rawBuf());
 
     /* stuff the header with required entries and pack it */
 
@@ -891,7 +890,7 @@ clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String 
 }
 
 /**
- * extracts a "range" from *buf and appends them to mb, updating
+ * extracts a "range" from *unsafeBuf and appends them to mb, updating
  * all offsets and such.
  */
 void
@@ -1170,7 +1169,7 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
             hdr->delById(HDR_CONTENT_TYPE);
             httpHeaderPutStrf(hdr, HDR_CONTENT_TYPE,
                               "multipart/byteranges; boundary=\"%s\"",
-                              http->range_iter.boundary.buf());
+                              http->range_iter.boundary.unsafeBuf());
             /* Content-Length is not required in multipart responses
              * but it is always nice to have one */
             actual_clen = http->mRangeCLen();
@@ -1924,7 +1923,7 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
         req_sz = HttpParserReqSz(hp);
     }
 
-    /* We know the whole request is in hp->buf now */
+    /* We know the whole request is in hp->unsafeBuf now */
 
     assert(req_sz <= (size_t) hp->bufsiz);
 
@@ -2271,11 +2270,11 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         request->flags.spoof_client_ip = conn->port->spoof_client_ip;
     }
 
-    if (internalCheck(request->urlpath.buf())) {
+    if (internalCheck(request->urlpath.termedBuf())) {
         if (internalHostnameIs(request->GetHost()) &&
                 request->port == getMyPort()) {
             http->flags.internal = 1;
-        } else if (Config.onoff.global_internal_static && internalStaticCheck(request->urlpath.buf())) {
+        } else if (Config.onoff.global_internal_static && internalStaticCheck(request->urlpath.termedBuf())) {
             request->SetHost(internalHostname());
             request->port = getMyPort();
             http->flags.internal = 1;
@@ -2623,7 +2622,7 @@ ConnStateData::handleReadData(char *buf, size_t size)
 }
 
 /**
- * called when new request body data has been buffered in in.buf
+ * called when new request body data has been buffered in in.unsafeBuf
  * may close the connection if we were closing and piped everything out
  */
 void

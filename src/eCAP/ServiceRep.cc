@@ -56,7 +56,7 @@ bool Ecap::ServiceRep::up() const
 bool Ecap::ServiceRep::wantsUrl(const String &urlPath) const
 {
     Must(up());
-    return theService->wantsUrl(urlPath.buf());
+    return theService->wantsUrl(urlPath.termedBuf());
 }
 
 Adaptation::Initiate *

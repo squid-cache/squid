@@ -47,7 +47,7 @@ ACLStrategised<char const *> ACLUrlPath::RegistryEntry_(new ACLRegexData, ACLUrl
 int
 ACLUrlPathStrategy::match (ACLData<char const *> * &data, ACLChecklist *checklist)
 {
-    char *esc_buf = xstrdup(checklist->request->urlpath.buf());
+    char *esc_buf = xstrdup(checklist->request->urlpath.termedBuf());
     rfc1738_unescape(esc_buf);
     int result = data->match(esc_buf);
     safe_free(esc_buf);

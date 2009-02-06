@@ -86,7 +86,7 @@ storeLog(int tag, const StoreEntry * e)
                       (int) reply->date,
                       (int) reply->last_modified,
                       (int) reply->expires,
-                      reply->content_type.size() ? reply->content_type.buf() : "unknown",
+                      reply->content_type.size() ? reply->content_type.unsafeBuf() : "unknown",
                       reply->content_length,
                       e->contentLen(),
                       RequestMethodStr(mem->method),
