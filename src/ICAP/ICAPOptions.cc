@@ -124,8 +124,8 @@ void ICAPOptions::cfgIntHeader(const HttpHeader *h, const char *fname, int &valu
 {
     const String s = h->getByName(fname);
 
-    if (s.size() && xisdigit(*s.buf()))
-        value = atoi(s.buf());
+    if (s.size() && xisdigit(*s.termedBuf()))
+        value = atoi(s.termedBuf());
     else
         value = -1;
 
@@ -176,8 +176,8 @@ bool ICAPOptions::TransferList::matches(const String &urlPath) const
         if (eLen < urlLen) {
             const int eOff = urlLen - eLen;
             // RFC 3507 examples imply that extensions come without leading '.'
-            if (urlPath.buf()[eOff-1] == '.' &&
-                    strcmp(urlPath.buf() + eOff, e->key) == 0) {
+            if (urlPath[eOff-1] == '.' &&
+                    strcmp(urlPath.termedBuf() + eOff, e->key) == 0) {
                 debugs(93,7, "ICAPOptions url " << urlPath << " matches " <<
                        name << " extension " << e->key);
                 return true;

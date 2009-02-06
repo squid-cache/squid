@@ -68,8 +68,8 @@ Adaptation::Config::dumpService(StoreEntry *entry, const char *name) const
     typedef Services::iterator SCI;
     for (SCI i = AllServices().begin(); i != AllServices().end(); ++i) {
         const ServiceConfig &cfg = (*i)->cfg();
-        storeAppendPrintf(entry, "%s %s_%s %s %d %s\n", name, cfg.key.buf(),
-                          cfg.methodStr(), cfg.vectPointStr(), cfg.bypass, cfg.uri.buf());
+        storeAppendPrintf(entry, "%s %.*s_%s %s %d %.*s\n", name, cfg.key.size(), cfg.key.rawBuf(),
+                          cfg.methodStr(), cfg.vectPointStr(), cfg.bypass, cfg.uri.size(), cfg.uri.rawBuf());
     }
 }
 
@@ -141,7 +141,7 @@ Adaptation::Config::DumpServiceSet(StoreEntry *entry, const char *name)
 {
     typedef Groups::iterator GI;
     for (GI i = AllGroups().begin(); i != AllGroups().end(); ++i)
-        storeAppendPrintf(entry, "%s %s\n", name, (*i)->id.buf());
+        storeAppendPrintf(entry, "%s %s\n", name, (*i)->id.unsafeBuf());
 }
 
 void
@@ -181,7 +181,7 @@ Adaptation::Config::DumpAccess(StoreEntry *entry, const char *name)
 
     typedef AccessRules::iterator CI;
     for (CI i = AllRules().begin(); i != AllRules().end(); ++i) {
-        snprintf(nom, 64, "%s %s", name, (*i)->groupId.buf());
+        snprintf(nom, 64, "%s %s", name, (*i)->groupId.unsafeBuf());
         dump_acl_access(entry, nom, (*i)->acl);
     }
 }
