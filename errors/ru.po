@@ -2,16 +2,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-11-14 20:01+1300\n"
+"POT-Creation-Date: 2009-02-06 01:30+1300\n"
 "PO-Revision-Date: 2009-01-16 23:37+1300\n"
 "Last-Translator: John 'Profic' Ustiuzhanin <profic@gmail.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
-"Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
-"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Language: ru\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%"
+"10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Generator: Pootle 1.2.0\n"
 
 #: templates/ERR_FTP_LISTING:6
@@ -134,8 +134,9 @@ msgstr "Содержимое директории:"
 #: templates/ERR_READ_ERROR:2 templates/ERR_READ_TIMEOUT:2
 #: templates/ERR_SECURE_CONNECT_FAIL:2 templates/ERR_SHUTTING_DOWN:2
 #: templates/ERR_SOCKET_FAILURE:2 templates/ERR_TOO_BIG:2
-#: templates/ERR_UNSUP_REQ:2 templates/ERR_URN_RESOLVE:2
-#: templates/ERR_WRITE_ERROR:2 templates/ERR_ZERO_SIZE_OBJECT:2
+#: templates/ERR_UNSUP_HTTPVERSION:2 templates/ERR_UNSUP_REQ:2
+#: templates/ERR_URN_RESOLVE:2 templates/ERR_WRITE_ERROR:2
+#: templates/ERR_ZERO_SIZE_OBJECT:2
 msgid "ERROR"
 msgstr "ОШИБКА"
 
@@ -162,8 +163,9 @@ msgstr "ОШИБКА: Загрузка по FTP не удалась"
 #: templates/ERR_ONLY_IF_CACHED_MISS:1 templates/ERR_READ_ERROR:1
 #: templates/ERR_READ_TIMEOUT:1 templates/ERR_SECURE_CONNECT_FAIL:1
 #: templates/ERR_SHUTTING_DOWN:1 templates/ERR_SOCKET_FAILURE:1
-#: templates/ERR_TOO_BIG:1 templates/ERR_UNSUP_REQ:1
-#: templates/ERR_WRITE_ERROR:1 templates/ERR_ZERO_SIZE_OBJECT:1
+#: templates/ERR_TOO_BIG:1 templates/ERR_UNSUP_HTTPVERSION:1
+#: templates/ERR_UNSUP_REQ:1 templates/ERR_WRITE_ERROR:1
+#: templates/ERR_ZERO_SIZE_OBJECT:1
 msgid "ERROR: The requested URL could not be retrieved"
 msgstr "ОШИБКА: Запрошенный URL не может быть получен"
 
@@ -233,9 +235,9 @@ msgstr "В пересылке отказано"
 #: templates/ERR_ONLY_IF_CACHED_MISS:8 templates/ERR_READ_ERROR:9
 #: templates/ERR_READ_TIMEOUT:9 templates/ERR_SECURE_CONNECT_FAIL:9
 #: templates/ERR_SHUTTING_DOWN:7 templates/ERR_SOCKET_FAILURE:9
-#: templates/ERR_TOO_BIG:10 templates/ERR_UNSUP_REQ:8
-#: templates/ERR_URN_RESOLVE:8 templates/ERR_WRITE_ERROR:9
-#: templates/ERR_ZERO_SIZE_OBJECT:8
+#: templates/ERR_TOO_BIG:10 templates/ERR_UNSUP_HTTPVERSION:8
+#: templates/ERR_UNSUP_REQ:8 templates/ERR_URN_RESOLVE:8
+#: templates/ERR_WRITE_ERROR:9 templates/ERR_ZERO_SIZE_OBJECT:8
 msgid "Generated %T by %h (%s)"
 msgstr "Создано %T на %h (%s)"
 
@@ -313,8 +315,8 @@ msgid ""
 "have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
 "chpasswd.cgi\">change</a> your default password."
 msgstr ""
-"Пожалуйста свяжитесь с <a href=\"mailto:%w%W\">администратором кэша</a>, если "
-"у Вас возникли проблемы с аутентификацией, либо <a href=\"http://%h/cgi-"
+"Пожалуйста свяжитесь с <a href=\"mailto:%w%W\">администратором кэша</a>, "
+"если у Вас возникли проблемы с аутентификацией, либо <a href=\"http://%h/cgi-"
 "bin/chpasswd.cgi\">смените</a> Ваш пароль по умолчанию."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
@@ -441,8 +443,9 @@ msgstr "Следующий URL не может быть получен: <a href=
 #: templates/ERR_ONLY_IF_CACHED_MISS:4 templates/ERR_READ_ERROR:4
 #: templates/ERR_READ_TIMEOUT:4 templates/ERR_SECURE_CONNECT_FAIL:4
 #: templates/ERR_SHUTTING_DOWN:4 templates/ERR_SOCKET_FAILURE:4
-#: templates/ERR_TOO_BIG:4 templates/ERR_UNSUP_REQ:4
-#: templates/ERR_WRITE_ERROR:4 templates/ERR_ZERO_SIZE_OBJECT:4
+#: templates/ERR_TOO_BIG:4 templates/ERR_UNSUP_HTTPVERSION:4
+#: templates/ERR_UNSUP_REQ:4 templates/ERR_WRITE_ERROR:4
+#: templates/ERR_ZERO_SIZE_OBJECT:4
 msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
@@ -508,6 +511,10 @@ msgid ""
 msgstr ""
 "Эти ограничения установлены вышим интернет провайдером, который управляет "
 "этим кэшем. Пожалуйста, свяжитесь с ними, если Вы считаете это неправильным."
+
+#: templates/ERR_UNSUP_HTTPVERSION:6
+msgid "This Squid does not accept the HTTP version you are attempting to use."
+msgstr ""
 
 #: templates/ERR_FTP_DISABLED:6
 msgid "This cache does not support FTP."
@@ -598,6 +605,10 @@ msgstr "Невозможно определить IP адрес из имени 
 msgid "Unable to forward this request at this time."
 msgstr "Невозможно перенаправить запрос в данное время."
 
+#: templates/ERR_UNSUP_HTTPVERSION:3 templates/ERR_UNSUP_HTTPVERSION:5
+msgid "Unsupported HTTP version"
+msgstr ""
+
 #: templates/ERR_UNSUP_REQ:5
 msgid "Unsupported Request Method and Protocol"
 msgstr "Неподдерживаемый метод запроса или протокол"
@@ -639,9 +650,9 @@ msgstr ""
 #: templates/ERR_ONLY_IF_CACHED_MISS:7 templates/ERR_READ_ERROR:8
 #: templates/ERR_READ_TIMEOUT:8 templates/ERR_SECURE_CONNECT_FAIL:8
 #: templates/ERR_SHUTTING_DOWN:6 templates/ERR_SOCKET_FAILURE:8
-#: templates/ERR_TOO_BIG:9 templates/ERR_UNSUP_REQ:7
-#: templates/ERR_URN_RESOLVE:7 templates/ERR_WRITE_ERROR:8
-#: templates/ERR_ZERO_SIZE_OBJECT:7
+#: templates/ERR_TOO_BIG:9 templates/ERR_UNSUP_HTTPVERSION:7
+#: templates/ERR_UNSUP_REQ:7 templates/ERR_URN_RESOLVE:7
+#: templates/ERR_WRITE_ERROR:8 templates/ERR_ZERO_SIZE_OBJECT:7
 msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
 msgstr "Администратор Вашего кэша: <a href=\"mailto:%w%W\">%w</a>."
 

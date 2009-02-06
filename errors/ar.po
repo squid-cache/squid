@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: squid\n"
-"Report-Msgid-Bugs-To: FULL NAME <EMAIL@ADDRESS>\n"
-"POT-Creation-Date: 2008-11-14 20:01+1300\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2009-02-06 01:30+1300\n"
 "PO-Revision-Date: 2009-01-27 20:36+0000\n"
 "Last-Translator: MaXeR <Unknown>\n"
 "Language-Team: Arabic <ar@li.org>\n"
@@ -18,8 +18,7 @@ msgstr ""
 "X-Generator: Launchpad (build Unknown)\n"
 
 #: templates/ERR_FTP_LISTING:6
-msgid ""
-"<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
+msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
 msgstr ""
 
 #: templates/ERR_INVALID_REQ:4
@@ -63,8 +62,8 @@ msgstr ""
 
 #: templates/ERR_FTP_FAILURE:4
 msgid ""
-"An FTP protocol error occurred while trying to retrieve the URL: <a "
-"href=\"%U\">%U</a>"
+"An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
+"\">%U</a>"
 msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:10
@@ -125,8 +124,9 @@ msgstr ""
 #: templates/ERR_READ_ERROR:2 templates/ERR_READ_TIMEOUT:2
 #: templates/ERR_SECURE_CONNECT_FAIL:2 templates/ERR_SHUTTING_DOWN:2
 #: templates/ERR_SOCKET_FAILURE:2 templates/ERR_TOO_BIG:2
-#: templates/ERR_UNSUP_REQ:2 templates/ERR_URN_RESOLVE:2
-#: templates/ERR_WRITE_ERROR:2 templates/ERR_ZERO_SIZE_OBJECT:2
+#: templates/ERR_UNSUP_HTTPVERSION:2 templates/ERR_UNSUP_REQ:2
+#: templates/ERR_URN_RESOLVE:2 templates/ERR_WRITE_ERROR:2
+#: templates/ERR_ZERO_SIZE_OBJECT:2
 msgid "ERROR"
 msgstr "خطأ"
 
@@ -153,8 +153,9 @@ msgstr ""
 #: templates/ERR_ONLY_IF_CACHED_MISS:1 templates/ERR_READ_ERROR:1
 #: templates/ERR_READ_TIMEOUT:1 templates/ERR_SECURE_CONNECT_FAIL:1
 #: templates/ERR_SHUTTING_DOWN:1 templates/ERR_SOCKET_FAILURE:1
-#: templates/ERR_TOO_BIG:1 templates/ERR_UNSUP_REQ:1
-#: templates/ERR_WRITE_ERROR:1 templates/ERR_ZERO_SIZE_OBJECT:1
+#: templates/ERR_TOO_BIG:1 templates/ERR_UNSUP_HTTPVERSION:1
+#: templates/ERR_UNSUP_REQ:1 templates/ERR_WRITE_ERROR:1
+#: templates/ERR_ZERO_SIZE_OBJECT:1
 msgid "ERROR: The requested URL could not be retrieved"
 msgstr ""
 
@@ -224,9 +225,9 @@ msgstr ""
 #: templates/ERR_ONLY_IF_CACHED_MISS:8 templates/ERR_READ_ERROR:9
 #: templates/ERR_READ_TIMEOUT:9 templates/ERR_SECURE_CONNECT_FAIL:9
 #: templates/ERR_SHUTTING_DOWN:7 templates/ERR_SOCKET_FAILURE:9
-#: templates/ERR_TOO_BIG:10 templates/ERR_UNSUP_REQ:8
-#: templates/ERR_URN_RESOLVE:8 templates/ERR_WRITE_ERROR:9
-#: templates/ERR_ZERO_SIZE_OBJECT:8
+#: templates/ERR_TOO_BIG:10 templates/ERR_UNSUP_HTTPVERSION:8
+#: templates/ERR_UNSUP_REQ:8 templates/ERR_URN_RESOLVE:8
+#: templates/ERR_WRITE_ERROR:9 templates/ERR_ZERO_SIZE_OBJECT:8
 msgid "Generated %T by %h (%s)"
 msgstr ""
 
@@ -298,8 +299,8 @@ msgstr ""
 #: templates/ERR_CACHE_ACCESS_DENIED:7
 msgid ""
 "Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
-"have difficulties authenticating yourself or <a href=\"http://%h/cgi-"
-"bin/chpasswd.cgi\">change</a> your default password."
+"have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
+"chpasswd.cgi\">change</a> your default password."
 msgstr ""
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
@@ -384,8 +385,7 @@ msgid "The ESI processor returned:"
 msgstr ""
 
 #: templates/ERR_FTP_UNAVAILABLE:4
-msgid ""
-"The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
+msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr ""
 
 #: templates/ERR_INVALID_RESP:5
@@ -411,8 +411,9 @@ msgstr ""
 #: templates/ERR_ONLY_IF_CACHED_MISS:4 templates/ERR_READ_ERROR:4
 #: templates/ERR_READ_TIMEOUT:4 templates/ERR_SECURE_CONNECT_FAIL:4
 #: templates/ERR_SHUTTING_DOWN:4 templates/ERR_SOCKET_FAILURE:4
-#: templates/ERR_TOO_BIG:4 templates/ERR_UNSUP_REQ:4
-#: templates/ERR_WRITE_ERROR:4 templates/ERR_ZERO_SIZE_OBJECT:4
+#: templates/ERR_TOO_BIG:4 templates/ERR_UNSUP_HTTPVERSION:4
+#: templates/ERR_UNSUP_REQ:4 templates/ERR_WRITE_ERROR:4
+#: templates/ERR_ZERO_SIZE_OBJECT:4
 msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
@@ -425,8 +426,7 @@ msgid ""
 msgstr ""
 
 #: templates/ERR_CONNECT_FAIL:7
-msgid ""
-"The remote host or network may be down.  Please try the request again."
+msgid "The remote host or network may be down.  Please try the request again."
 msgstr ""
 
 #: templates/ERR_TOO_BIG:5
@@ -473,6 +473,10 @@ msgid ""
 "These limits have been established by the Internet Service Provider who "
 "operates this cache.  Please contact them directly if you feel this is an "
 "error."
+msgstr ""
+
+#: templates/ERR_UNSUP_HTTPVERSION:6
+msgid "This Squid does not accept the HTTP version you are attempting to use."
 msgstr ""
 
 #: templates/ERR_FTP_DISABLED:6
@@ -545,6 +549,10 @@ msgstr ""
 msgid "Unable to forward this request at this time."
 msgstr ""
 
+#: templates/ERR_UNSUP_HTTPVERSION:3 templates/ERR_UNSUP_HTTPVERSION:5
+msgid "Unsupported HTTP version"
+msgstr ""
+
 #: templates/ERR_UNSUP_REQ:5
 msgid "Unsupported Request Method and Protocol"
 msgstr ""
@@ -581,9 +589,9 @@ msgstr ""
 #: templates/ERR_ONLY_IF_CACHED_MISS:7 templates/ERR_READ_ERROR:8
 #: templates/ERR_READ_TIMEOUT:8 templates/ERR_SECURE_CONNECT_FAIL:8
 #: templates/ERR_SHUTTING_DOWN:6 templates/ERR_SOCKET_FAILURE:8
-#: templates/ERR_TOO_BIG:9 templates/ERR_UNSUP_REQ:7
-#: templates/ERR_URN_RESOLVE:7 templates/ERR_WRITE_ERROR:8
-#: templates/ERR_ZERO_SIZE_OBJECT:7
+#: templates/ERR_TOO_BIG:9 templates/ERR_UNSUP_HTTPVERSION:7
+#: templates/ERR_UNSUP_REQ:7 templates/ERR_URN_RESOLVE:7
+#: templates/ERR_WRITE_ERROR:8 templates/ERR_ZERO_SIZE_OBJECT:7
 msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
 msgstr ""
 

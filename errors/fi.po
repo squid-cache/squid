@@ -2,14 +2,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-11-14 20:01+1300\n"
+"POT-Creation-Date: 2009-02-06 01:30+1300\n"
 "PO-Revision-Date: 2009-01-19 17:55+1300\n"
 "Last-Translator: Panu H_llfors <panupa@iki.fi>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
-"Language: fi\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: fi\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Pootle 1.2.0\n"
 
@@ -65,8 +65,8 @@ msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
 msgstr ""
-"Tapahtui FTP-protokollavirhe yritettäessä hakea URL-osoitetta: <a "
-"href=\"%U\">%U</a>"
+"Tapahtui FTP-protokollavirhe yritettäessä hakea URL-osoitetta: <a href=\"%U"
+"\">%U</a>"
 
 #: templates/ERR_ICAP_FAILURE:10
 msgid "An Illegal response was received from the ICAP server."
@@ -82,7 +82,8 @@ msgstr "On ilmennyt virhetila luettaessa tietoa verkosta. Uusi hakupyyntösi."
 msgid ""
 "An error condition occurred while writing to the network.  Please retry your "
 "request."
-msgstr "Kirjoitettaessa tietoa verkkoon ilmeni virhetilanne. Uusi hakupyyntösi."
+msgstr ""
+"Kirjoitettaessa tietoa verkkoon ilmeni virhetilanne. Uusi hakupyyntösi."
 
 #: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
 msgid "Cache Access Denied."
@@ -126,8 +127,9 @@ msgstr ""
 #: templates/ERR_READ_ERROR:2 templates/ERR_READ_TIMEOUT:2
 #: templates/ERR_SECURE_CONNECT_FAIL:2 templates/ERR_SHUTTING_DOWN:2
 #: templates/ERR_SOCKET_FAILURE:2 templates/ERR_TOO_BIG:2
-#: templates/ERR_UNSUP_REQ:2 templates/ERR_URN_RESOLVE:2
-#: templates/ERR_WRITE_ERROR:2 templates/ERR_ZERO_SIZE_OBJECT:2
+#: templates/ERR_UNSUP_HTTPVERSION:2 templates/ERR_UNSUP_REQ:2
+#: templates/ERR_URN_RESOLVE:2 templates/ERR_WRITE_ERROR:2
+#: templates/ERR_ZERO_SIZE_OBJECT:2
 msgid "ERROR"
 msgstr "VIRHE"
 
@@ -154,8 +156,9 @@ msgstr "VIRHE: FTP lähetys epäonnistui"
 #: templates/ERR_ONLY_IF_CACHED_MISS:1 templates/ERR_READ_ERROR:1
 #: templates/ERR_READ_TIMEOUT:1 templates/ERR_SECURE_CONNECT_FAIL:1
 #: templates/ERR_SHUTTING_DOWN:1 templates/ERR_SOCKET_FAILURE:1
-#: templates/ERR_TOO_BIG:1 templates/ERR_UNSUP_REQ:1
-#: templates/ERR_WRITE_ERROR:1 templates/ERR_ZERO_SIZE_OBJECT:1
+#: templates/ERR_TOO_BIG:1 templates/ERR_UNSUP_HTTPVERSION:1
+#: templates/ERR_UNSUP_REQ:1 templates/ERR_WRITE_ERROR:1
+#: templates/ERR_ZERO_SIZE_OBJECT:1
 msgid "ERROR: The requested URL could not be retrieved"
 msgstr "VIRHE: Pyydettyä URL-osoitetta ei voitu hakea"
 
@@ -225,9 +228,9 @@ msgstr "Edelleenohjaus evätty."
 #: templates/ERR_ONLY_IF_CACHED_MISS:8 templates/ERR_READ_ERROR:9
 #: templates/ERR_READ_TIMEOUT:9 templates/ERR_SECURE_CONNECT_FAIL:9
 #: templates/ERR_SHUTTING_DOWN:7 templates/ERR_SOCKET_FAILURE:9
-#: templates/ERR_TOO_BIG:10 templates/ERR_UNSUP_REQ:8
-#: templates/ERR_URN_RESOLVE:8 templates/ERR_WRITE_ERROR:9
-#: templates/ERR_ZERO_SIZE_OBJECT:8
+#: templates/ERR_TOO_BIG:10 templates/ERR_UNSUP_HTTPVERSION:8
+#: templates/ERR_UNSUP_REQ:8 templates/ERR_URN_RESOLVE:8
+#: templates/ERR_WRITE_ERROR:9 templates/ERR_ZERO_SIZE_OBJECT:8
 msgid "Generated %T by %h (%s)"
 msgstr ""
 
@@ -305,8 +308,8 @@ msgid ""
 "chpasswd.cgi\">change</a> your default password."
 msgstr ""
 "Jos sinulla on hankaluuksia hekilöllisyytesi todentamisessa, ota yhteyttä <a "
-"href=\"mailto:%w%W\">välityspalvelimen ylläpitoon</a> tai <a href=\"http://%h"
-"/cgi-bin/chpasswd.cgi\">vaihda</a> oletussalasanasi."
+"href=\"mailto:%w%W\">välityspalvelimen ylläpitoon</a> tai <a href=\"http://%"
+"h/cgi-bin/chpasswd.cgi\">vaihda</a> oletussalasanasi."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
 msgid ""
@@ -316,9 +319,9 @@ msgid ""
 "cache log for more detailed error messages."
 msgstr ""
 "Jos sinulla on hankaluuksia hekilöllisyytesi osoittamisessa, ota yhteyttä <a "
-"href=\"mailto:%w%W\">välityspalvelimen ylläpitoon</a> tai jos sinä "
-"<em>olet</em> ylläpitäjä, lue Squidin dokumentaatiosta välityspalvelimen "
-"hallinnan käyttöliittymästä ja tarkista välityspalvelimen lokista tarkemmat "
+"href=\"mailto:%w%W\">välityspalvelimen ylläpitoon</a> tai jos sinä <em>olet</"
+"em> ylläpitäjä, lue Squidin dokumentaatiosta välityspalvelimen hallinnan "
+"käyttöliittymästä ja tarkista välityspalvelimen lokista tarkemmat "
 "virheilmoitukset."
 
 #: templates/ERR_READ_ERROR:5
@@ -434,8 +437,9 @@ msgstr ""
 #: templates/ERR_ONLY_IF_CACHED_MISS:4 templates/ERR_READ_ERROR:4
 #: templates/ERR_READ_TIMEOUT:4 templates/ERR_SECURE_CONNECT_FAIL:4
 #: templates/ERR_SHUTTING_DOWN:4 templates/ERR_SOCKET_FAILURE:4
-#: templates/ERR_TOO_BIG:4 templates/ERR_UNSUP_REQ:4
-#: templates/ERR_WRITE_ERROR:4 templates/ERR_ZERO_SIZE_OBJECT:4
+#: templates/ERR_TOO_BIG:4 templates/ERR_UNSUP_HTTPVERSION:4
+#: templates/ERR_UNSUP_REQ:4 templates/ERR_WRITE_ERROR:4
+#: templates/ERR_ZERO_SIZE_OBJECT:4
 msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
@@ -497,6 +501,10 @@ msgid ""
 "These limits have been established by the Internet Service Provider who "
 "operates this cache.  Please contact them directly if you feel this is an "
 "error."
+msgstr ""
+
+#: templates/ERR_UNSUP_HTTPVERSION:6
+msgid "This Squid does not accept the HTTP version you are attempting to use."
 msgstr ""
 
 #: templates/ERR_FTP_DISABLED:6
@@ -579,6 +587,10 @@ msgstr "Nimelle <q>%H</q> ei voitu määrittää IP-osoitetta."
 msgid "Unable to forward this request at this time."
 msgstr "Pyyntöä ei voitu edelleenohjata."
 
+#: templates/ERR_UNSUP_HTTPVERSION:3 templates/ERR_UNSUP_HTTPVERSION:5
+msgid "Unsupported HTTP version"
+msgstr ""
+
 #: templates/ERR_UNSUP_REQ:5
 msgid "Unsupported Request Method and Protocol"
 msgstr "Hakupyynnon tyyppi ja yhteyskäytäntö ei tuettu"
@@ -589,8 +601,8 @@ msgid ""
 "Valid document was not found in the cache and <q>only-if-cached</q> "
 "directive was specified."
 msgstr ""
-"Sopivaa dokumenttia ei löytynyt välityspalvelimesta, ja pyynnössäsi oli <q"
-">only-if-cached</q> (vain välityspalvelimesta) -määritys. "
+"Sopivaa dokumenttia ei löytynyt välityspalvelimesta, ja pyynnössäsi oli "
+"<q>only-if-cached</q> (vain välityspalvelimesta) -määritys. "
 
 #: templates/ERR_FTP_PUT_ERROR:4
 msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
@@ -623,9 +635,9 @@ msgstr ""
 #: templates/ERR_ONLY_IF_CACHED_MISS:7 templates/ERR_READ_ERROR:8
 #: templates/ERR_READ_TIMEOUT:8 templates/ERR_SECURE_CONNECT_FAIL:8
 #: templates/ERR_SHUTTING_DOWN:6 templates/ERR_SOCKET_FAILURE:8
-#: templates/ERR_TOO_BIG:9 templates/ERR_UNSUP_REQ:7
-#: templates/ERR_URN_RESOLVE:7 templates/ERR_WRITE_ERROR:8
-#: templates/ERR_ZERO_SIZE_OBJECT:7
+#: templates/ERR_TOO_BIG:9 templates/ERR_UNSUP_HTTPVERSION:7
+#: templates/ERR_UNSUP_REQ:7 templates/ERR_URN_RESOLVE:7
+#: templates/ERR_WRITE_ERROR:8 templates/ERR_ZERO_SIZE_OBJECT:7
 #, fuzzy
 msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
 msgstr "Välityspalvelintasi ylläpitää <a href=\"mailto:%w%W\">%w</a>."
