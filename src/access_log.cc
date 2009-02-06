@@ -625,7 +625,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             if (al->request)
                 sb = al->request->header.getByName(fmt->data.header.header);
 
-            out = sb.unsafeBuf();
+            out = sb.termedBuf();
 
             quote = 1;
 
@@ -635,7 +635,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             if (al->reply)
                 sb = al->reply->header.getByName(fmt->data.header.header);
 
-            out = sb.unsafeBuf();
+            out = sb.termedBuf();
 
             quote = 1;
 
@@ -645,7 +645,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             if (al->request)
                 sb = al->request->header.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator);
 
-            out = sb.unsafeBuf();
+            out = sb.termedBuf();
 
             quote = 1;
 
@@ -655,7 +655,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             if (al->reply)
                 sb = al->reply->header.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator);
 
-            out = sb.unsafeBuf();
+            out = sb.termedBuf();
 
             quote = 1;
 
@@ -764,7 +764,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
 
         case LFT_REQUEST_URLPATH:
             if (al->request) {
-                out = al->request->urlpath.unsafeBuf();
+                out = al->request->urlpath.termedBuf();
                 quote = 1;
             }
             break;
@@ -810,7 +810,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
 
         case LFT_TAG:
             if (al->request)
-                out = al->request->tag.unsafeBuf();
+                out = al->request->tag.termedBuf();
 
             quote = 1;
 
@@ -823,7 +823,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
 
         case LFT_EXT_LOG:
             if (al->request)
-                out = al->request->extacl_log.unsafeBuf();
+                out = al->request->extacl_log.termedBuf();
 
             quote = 1;
 
