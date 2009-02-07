@@ -13,7 +13,7 @@ digest_pw_auth_SOURCES = digest_pw_auth.c \
 	text_backend.h
 
 INCLUDES = \
-	-I$(top_srcdir)/libsquid-compat \
+	-I$(top_srcdir) \
 	-I. \
 	-I$(top_builddir)/include \
 	-I$(top_srcdir)/include

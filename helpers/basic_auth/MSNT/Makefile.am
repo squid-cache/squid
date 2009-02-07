@@ -30,7 +30,7 @@ sysconf_DATA = \
 LDADD = -L$(top_builddir)/lib -lmiscutil $(XTRA_LIBS) -L$(top_builddir)/libsquid-compat/libsquid-compat.la
 
 INCLUDES = \
-	-I$(top_srcdir)/libsquid-compat \
+	-I$(top_srcdir) \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src
 

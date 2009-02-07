@@ -12,7 +12,7 @@ libexec_PROGRAMS = mswin_check_lm_group
 mswin_check_lm_group_SOURCES = win32_check_group.c win32_check_group.h
 
 INCLUDES = \
-	-I$(top_srcdir)/libsquid-compat \
+	-I$(top_srcdir) \
 	-I$(top_builddir)/include \
 	-I$(top_srcdir)/include
 

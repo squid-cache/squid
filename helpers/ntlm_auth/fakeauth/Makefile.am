@@ -10,7 +10,7 @@ libexec_PROGRAMS = fakeauth_auth
 fakeauth_auth_SOURCES	= fakeauth_auth.c ntlm.h
 
 INCLUDES = \
-	-I$(top_srcdir)/libsquid-compat \
+	-I$(top_srcdir) \
 	-I. \
 	-I$(top_builddir)/include \
 	-I$(top_srcdir)/include

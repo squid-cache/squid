@@ -9,7 +9,8 @@ AUTOMAKE_OPTIONS = subdir-objects
 AM_CFLAGS = @SQUID_CFLAGS@
 AM_CXXFLAGS = @SQUID_CXXFLAGS@
 
-INCLUDES = -I$(top_srcdir)/libsquid-compat \
+INCLUDES = \
+	-I$(top_srcdir) \
 	-I. \
 	-I$(top_builddir)/include \
 	-I$(top_srcdir)/include \

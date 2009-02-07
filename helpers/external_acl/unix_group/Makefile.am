@@ -12,7 +12,7 @@ EXTRA_DIST			= squid_unix_group.8
 squid_unix_group_SOURCES	= check_group.c
 
 INCLUDES = \
-	-I$(top_srcdir)/libsquid-compat \
+	-I$(top_srcdir) \
 	-I. \
 	-I$(top_builddir)/include \
 	-I$(top_srcdir)/include

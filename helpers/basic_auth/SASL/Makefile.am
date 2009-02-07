@@ -9,7 +9,7 @@
 libexec_PROGRAMS	= sasl_auth
 
 INCLUDES = \
-	-I$(top_srcdir)/libsquid-compat \
+	-I$(top_srcdir) \
 	-I$(top_srcdir)/include
 
 LDADD = \

@@ -9,7 +9,7 @@ libexec_PROGRAMS = yp_auth
 yp_auth_SOURCES	= yp_auth.c nis_support.h nis_support.c
 
 INCLUDES = \
-	-I$(top_srcdir)/libsquid-compat \
+	-I$(top_srcdir) \
 	-I$(top_srcdir)/include
 
 LDADD = \

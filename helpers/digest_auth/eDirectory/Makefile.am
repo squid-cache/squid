@@ -15,7 +15,7 @@ digest_edir_auth_SOURCES = digest_pw_auth.c \
 	edir_ldapext.h
 
 INCLUDES = \
-	-I$(top_srcdir)/libsquid-compat \
+	-I$(top_srcdir) \
 	-I. \
 	-I$(top_builddir)/include \
 	-I$(top_srcdir)/include
