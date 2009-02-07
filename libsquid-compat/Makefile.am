@@ -28,23 +28,23 @@ libsquid_compat_la_SOURCES = \
 	compat.h \
 	osdetect.h \
 	compat_shared.h \
+	fdsetsize.h \
 	gnuregex.h \
-	squid_fdsetsize.h \
-	squid_stdvarargs.h \
-	squid_valgrind.h \
+	stdvarargs.h \
+	valgrind.h \
 	\
-	os/squid_aix.h \
-	os/squid_freebsd.h \
-	os/squid_hpux.h \
-	os/squid_linux.h \
-	os/squid_mswin.h \
-	os/squid_next.h \
-	os/squid_openbsd.h \
-	os/squid_qnx.h \
-	os/squid_sgi.h \
-	os/squid_solaris.h \
-	os/squid_sunos.h \
-	os/squid_windows.h \
+	os/aix.h \
+	os/freebsd.h \
+	os/hpux.h \
+	os/linux.h \
+	os/mswin.h \
+	os/next.h \
+	os/openbsd.h \
+	os/qnx.h \
+	os/sgi.h \
+	os/solaris.h \
+	os/sunos.h \
+	os/windows.h \
 	\
 	compat.cc \
 	GnuRegex.c
