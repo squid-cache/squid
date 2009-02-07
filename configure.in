@@ -3049,6 +3049,7 @@ dnl
 AC_CACHE_CHECK(if va_copy is implemented, ac_cv_func_va_copy,
   AC_TRY_RUN([
       #include <stdarg.h>
+      #include <stdlib.h>
       void f (int i, ...) {
          va_list args1, args2;
          va_start (args1, i);
@@ -3073,6 +3074,7 @@ dnl
 AC_CACHE_CHECK(if __va_copy is implemented, ac_cv_func___va_copy,
   AC_TRY_RUN([
       #include <stdarg.h>
+      #include <stdlib.h>
       void f (int i, ...) {
          va_list args1, args2;
          va_start (args1, i);
@@ -3236,6 +3238,9 @@ AC_TRY_RUN([
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#if HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
 #if HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
@@ -3281,6 +3286,7 @@ else
   AC_TRY_RUN([
 #include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include <sys/time.h>	/* needed on FreeBSD */
 #include <sys/param.h>
 #include <sys/resource.h>
