@@ -12,7 +12,7 @@ libexec_PROGRAMS = mswin_check_ad_group
 mswin_check_ad_group_SOURCES = mswin_check_ad_group.c mswin_check_ad_group.h
 
 INCLUDES = \
-	-I$(top_srcdir)/libsquid-compat \
+	-I$(top_srcdir) \
 	-I$(top_srcdir)/include
 
 LDADD = \

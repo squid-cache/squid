@@ -16,7 +16,7 @@ libntlm_a_SOURCES	= ntlm/auth_ntlm.cc ntlm/auth_ntlm.h
 libnegotiate_a_SOURCES	= negotiate/auth_negotiate.cc negotiate/auth_negotiate.h negotiate/negotiateScheme.cc negotiate/negotiateScheme.h
 
 INCLUDES = \
-	-I$(top_srcdir)/libsquid-compat \
+	-I$(top_srcdir) \
 	-I. \
 	-I$(top_builddir)/include \
 	-I$(top_srcdir)/include \

@@ -12,7 +12,7 @@ EXTRA_DIST			= squid_ldap_group.8
 squid_ldap_group_SOURCES	= squid_ldap_group.c
 
 INCLUDES = \
-	-I$(top_srcdir)/libsquid-compat \
+	-I$(top_srcdir) \
 	-I. \
 	-I$(top_builddir)/include \
 	-I$(top_srcdir)/include

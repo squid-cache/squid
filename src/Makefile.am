@@ -211,7 +211,7 @@ noinst_LIBRARIES = @DISK_LIBS@
 noinst_LTLIBRARIES = libsquid.la libauth.la
 
 INCLUDES = \
-	-I$(top_srcdir)/libsquid-compat \
+	-I$(top_srcdir) \
 	-I$(top_srcdir)/src \
 	-I$(top_builddir)/include \
 	-I$(top_srcdir)/include \

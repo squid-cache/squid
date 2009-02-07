@@ -11,7 +11,7 @@ EXTRA_DIST		= pam_auth.8
 libexec_PROGRAMS	= pam_auth
 
 INCLUDES = \
-	-I$(top_srcdir)/libsquid-compat \
+	-I$(top_srcdir) \
 	-I$(top_srcdir)/include
 
 LDADD = \

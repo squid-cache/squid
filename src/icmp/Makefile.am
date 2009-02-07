@@ -10,7 +10,7 @@ DEFS = @DEFS@
 CLEANFILES = 
 
 INCLUDES = \
-	-I$(top_srcdir)/libsquid-compat \
+	-I$(top_srcdir) \
 	-I$(top_srcdir)/src \
 	-I$(top_srcdir)/include \
 	-I$(top_builddir)/lib \

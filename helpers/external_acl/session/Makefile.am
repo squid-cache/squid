@@ -12,7 +12,7 @@ EXTRA_DIST			= squid_session.8
 squid_session_SOURCES		= squid_session.c
 
 INCLUDES = \
-	-I$(top_srcdir)/libsquid-compat \
+	-I$(top_srcdir) \
 	-I. \
 	-I$(top_builddir)/include \
 	-I$(top_srcdir)/include

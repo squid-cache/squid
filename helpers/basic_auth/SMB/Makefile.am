@@ -23,7 +23,7 @@ smb_auth_CFLAGS = -DSAMBAPREFIX=\"$(SAMBAPREFIX)\" -DHELPERSCRIPT=\"$(SMB_AUTH_H
 EXTRA_DIST = smb_auth.sh COPYING-2.0
 
 INCLUDES = \
-	-I$(top_srcdir)/libsquid-compat \
+	-I$(top_srcdir) \
 	-I$(top_srcdir)/include
 
 LDADD = \

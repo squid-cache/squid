@@ -9,7 +9,7 @@ libexec_PROGRAMS = mswin_ntlm_auth
 mswin_ntlm_auth_SOURCES = libntlmssp.c ntlm_auth.c ntlm.h
 
 INCLUDES = \
-	-I$(top_srcdir)/libsquid-compat \
+	-I$(top_srcdir) \
 	-I. \
 	-I$(top_builddir)/include \
 	-I$(top_srcdir)/include

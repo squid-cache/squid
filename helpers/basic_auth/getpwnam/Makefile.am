@@ -12,7 +12,7 @@ libexec_PROGRAMS = getpwname_auth
 getpwname_auth_SOURCES = getpwnam_auth.c 
 
 INCLUDES = \
-	-I$(top_srcdir)/libsquid-compat \
+	-I$(top_srcdir) \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src
 
