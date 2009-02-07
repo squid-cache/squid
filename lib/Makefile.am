@@ -105,7 +105,11 @@ libntlmauth_a_LIBADD = \
 libsspwin32_a_SOURCES = \
 	sspwin32.c
 
-INCLUDES	= -I$(top_builddir)/include -I$(top_srcdir)/include @SQUID_CPPUNIT_INC@ -I$(top_srcdir)/libsquid-compat
+INCLUDES = \
+	-I$(top_srcdir) \
+	-I$(top_builddir)/include \
+	-I$(top_srcdir)/include \
+	@SQUID_CPPUNIT_INC@
 ##FIXME - set these in configure.in and reuse
 
 check_PROGRAMS= \
