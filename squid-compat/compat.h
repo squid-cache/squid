@@ -7,7 +7,7 @@
 
 /*
  * From discussions it was chosen to push compat code as far down as possible.
- * That means we can have a seperate libsquid-compat for most
+ * That means we can have a seperate squid-compat for most
  *  compatability and portability hacks and resolutions.
  * 
  * This file is meant to collate all those hacks files together and
@@ -24,14 +24,14 @@
 /* Define the _SQUID_TYPE_ based on a guess of the OS */
 /* NP: this MUST come first within compat.h           */
 /******************************************************/
-#include "libsquid-compat/osdetect.h"
+#include "squid-compat/osdetect.h"
 
 
 /*****************************************************/
 /* FDSETSIZE is messy and needs to be done before    */
 /* sys/types.h are defined.                          */
 /*****************************************************/
-#include "libsquid-compat/fdsetsize.h"
+#include "squid-compat/fdsetsize.h"
 
 
 /*****************************************************/
@@ -49,20 +49,20 @@
 /* OS-macro wrapping should be done inside the OS .h */
 /*****************************************************/
 
-#include "libsquid-compat/os/aix.h"
-#include "libsquid-compat/os/dragonfly.h"
-#include "libsquid-compat/os/freebsd.h"
-#include "libsquid-compat/os/hpux.h"
-#include "libsquid-compat/os/linux.h"
-#include "libsquid-compat/os/mswin.h"
-#include "libsquid-compat/os/next.h"
-#include "libsquid-compat/os/openbsd.h"
-#include "libsquid-compat/os/os2.h"
-#include "libsquid-compat/os/qnx.h"
-#include "libsquid-compat/os/sgi.h"
-#include "libsquid-compat/os/solaris.h"
-#include "libsquid-compat/os/sunos.h"
-#include "libsquid-compat/os/windows.h"
+#include "squid-compat/os/aix.h"
+#include "squid-compat/os/dragonfly.h"
+#include "squid-compat/os/freebsd.h"
+#include "squid-compat/os/hpux.h"
+#include "squid-compat/os/linux.h"
+#include "squid-compat/os/mswin.h"
+#include "squid-compat/os/next.h"
+#include "squid-compat/os/openbsd.h"
+#include "squid-compat/os/os2.h"
+#include "squid-compat/os/qnx.h"
+#include "squid-compat/os/sgi.h"
+#include "squid-compat/os/solaris.h"
+#include "squid-compat/os/sunos.h"
+#include "squid-compat/os/windows.h"
 
 
 /*****************************************************/
@@ -70,16 +70,16 @@
 /* components as found to be needed                  */
 /*****************************************************/
 
-#include "libsquid-compat/compat_shared.h"
-#include "libsquid-compat/stdvarargs.h"
-#include "libsquid-compat/assert.h"
+#include "squid-compat/compat_shared.h"
+#include "squid-compat/stdvarargs.h"
+#include "squid-compat/assert.h"
 
 /*****************************************************/
 /* component-specific portabilities                  */
 /*****************************************************/
 
 /* Valgrind API macros changed between two versions squid supports */
-#include "libsquid-compat/valgrind.h"
+#include "squid-compat/valgrind.h"
 
 /* Endian functions are usualy handled by the OS but not always. */
 #include "squid_endian.h"
@@ -89,7 +89,7 @@
  * Default is to use a system provided one, but the bundle
  * may be used instead with explicit configuration.
  */
-#include "libsquid-compat/GnuRegex.h"
+#include "squid-compat/GnuRegex.h"
 
 
 #endif /* _SQUID_COMPAT_H */

@@ -3810,7 +3810,7 @@ rm -f core
 
 AC_CONFIG_FILES([\
 	Makefile \
-	libsquid-compat/Makefile \
+	squid-compat/Makefile \
 	lib/Makefile \
 	scripts/Makefile \
 	scripts/RunCache \

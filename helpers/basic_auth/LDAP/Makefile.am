@@ -12,7 +12,7 @@ EXTRA_DIST		= squid_ldap_auth.8
 squid_ldap_auth_SOURCES	= squid_ldap_auth.c
 
 LDADD = \
-	-L$(top_builddir)/libsquid-compat/libcompat.la \
+	-L$(top_builddir)/squid-compat/libcompat.la \
 	-L$(top_builddir)/lib -lmiscutil \
 	$(LIB_LDAP) \
 	$(LIB_LBER) \
