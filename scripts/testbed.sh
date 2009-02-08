@@ -8,9 +8,9 @@
 	echo ""
 
 # system details
-	echo -n "SYSTEM: " && /bin/uname -rsim
-	echo -n "DATE: " && /bin/date
-	echo -n "SQUID: " && (bzr info | grep "public branch")
+	echo -n "SYSTEM: " && uname -rsim
+	echo -n "DATE:   " && date
+	echo -n "SQUID:" && (bzr info | grep "public branch")
 
 # build results
 	bzr update
