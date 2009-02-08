@@ -22,9 +22,9 @@ $(OBJS): $(top_srcdir)/include/version.h $(top_srcdir)/include/autoconf.h
 
 # Port Specific Configurations
 
-noinst_LTLIBRARIES = libsquid-compat.la
+noinst_LTLIBRARIES = libcompat.la
 
-libsquid_compat_la_SOURCES = \
+libcompat_la_SOURCES = \
 	compat.h \
 	osdetect.h \
 	compat_shared.h \
