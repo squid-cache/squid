@@ -93,7 +93,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"),
         const char *url;
 
         if (_peer->options.originserver)
-            url = orig_request->urlpath.buf();
+            url = orig_request->urlpath.termedBuf();
         else
             url = entry->url();
 
@@ -578,7 +578,7 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
         strListAdd(&vstr, name, ',');
         hdr = request->header.getByName(name);
         safe_free(name);
-        value = hdr.buf();
+        value = hdr.termedBuf();
 
         if (value) {
             value = rfc1738_escape_part(value);
@@ -603,7 +603,7 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
         strListAdd(&vstr, name, ',');
         hdr = request->header.getByName(name);
         safe_free(name);
-        value = hdr.buf();
+        value = hdr.termedBuf();
 
         if (value) {
             value = rfc1738_escape_part(value);
@@ -618,8 +618,8 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
     vary.clean();
 #endif
 
-    debugs(11, 3, "httpMakeVaryMark: " << vstr.buf());
-    return vstr.buf();
+    debugs(11, 3, "httpMakeVaryMark: " << vstr);
+    return vstr.termedBuf();
 }
 
 void
@@ -791,7 +791,7 @@ bool HttpStateData::peerSupportsConnectionPinning() const
 
     header = hdr->getStrOrList(HDR_PROXY_SUPPORT);
     /* XXX This ought to be done in a case-insensitive manner */
-    rc = (strstr(header.buf(), "Session-Based-Authentication") != NULL);
+    rc = (strstr(header.termedBuf(), "Session-Based-Authentication") != NULL);
 
     return rc;
 }
@@ -1454,7 +1454,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
                  orig_request->http_ver.major,
                  orig_request->http_ver.minor, ThisCache);
         strListAdd(&strVia, bbuf, ',');
-        hdr_out->putStr(HDR_VIA, strVia.buf());
+        hdr_out->putStr(HDR_VIA, strVia.termedBuf());
         strVia.clean();
     }
 
@@ -1465,7 +1465,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         snprintf(bbuf, BBUF_SZ, "%s=\"Surrogate/1.0 ESI/1.0\"",
                  Config.Accel.surrogate_id);
         strListAdd(&strSurrogate, bbuf, ',');
-        hdr_out->putStr(HDR_SURROGATE_CAPABILITY, strSurrogate.buf());
+        hdr_out->putStr(HDR_SURROGATE_CAPABILITY, strSurrogate.termedBuf());
     }
 #endif
 
@@ -1495,7 +1495,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
                 strFwd = orig_request->client_addr.NtoA(ntoabuf, MAX_IPSTRLEN);
         }
         if (strFwd.size() > 0)
-            hdr_out->putStr(HDR_X_FORWARDED_FOR, strFwd.buf());
+            hdr_out->putStr(HDR_X_FORWARDED_FOR, strFwd.termedBuf());
     }
     /** If set to DELETE - do not copy through. */
     strFwd.clean();
@@ -1531,7 +1531,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             const char *username = "-";
 
             if (orig_request->extacl_user.size())
-                username = orig_request->extacl_user.buf();
+                username = orig_request->extacl_user.termedBuf();
             else if (orig_request->auth_user_request)
                 username = orig_request->auth_user_request->username();
 
@@ -1542,7 +1542,11 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         } else if (strcmp(orig_request->peer_login, "PASS") == 0) {
             if (orig_request->extacl_user.size() && orig_request->extacl_passwd.size()) {
                 char loginbuf[256];
-                snprintf(loginbuf, sizeof(loginbuf), "%s:%s", orig_request->extacl_user.buf(), orig_request->extacl_passwd.buf());
+                snprintf(loginbuf, sizeof(loginbuf), "%.*s:%.*s",
+                    orig_request->extacl_user.size(),
+                    orig_request->extacl_user.rawBuf(),
+                    orig_request->extacl_passwd.size(),
+                    orig_request->extacl_passwd.rawBuf());
                 httpHeaderPutStrf(hdr_out, HDR_PROXY_AUTHORIZATION, "Basic %s",
                                   base64_encode(loginbuf));
             }
@@ -1569,7 +1573,11 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
                 hdr_out->putStr(HDR_AUTHORIZATION, auth);
             } else if (orig_request->extacl_user.size() && orig_request->extacl_passwd.size()) {
                 char loginbuf[256];
-                snprintf(loginbuf, sizeof(loginbuf), "%s:%s", orig_request->extacl_user.buf(), orig_request->extacl_passwd.buf());
+                snprintf(loginbuf, sizeof(loginbuf), "%.*s:%.*s",
+                    orig_request->extacl_user.size(),
+                    orig_request->extacl_user.rawBuf(),
+                    orig_request->extacl_passwd.size(),
+                    orig_request->extacl_passwd.rawBuf());
                 httpHeaderPutStrf(hdr_out, HDR_AUTHORIZATION, "Basic %s",
                                   base64_encode(loginbuf));
             }
@@ -1581,7 +1589,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             if (orig_request->auth_user_request)
                 username = orig_request->auth_user_request->username();
             else if (orig_request->extacl_user.size())
-                username = orig_request->extacl_user.buf();
+                username = orig_request->extacl_user.termedBuf();
 
             snprintf(loginbuf, sizeof(loginbuf), "%s%s", username, orig_request->peer_login + 1);
 
@@ -1613,7 +1621,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             httpHdrCcSetMaxAge(cc, getMaxAge(url));
 
             if (request->urlpath.size())
-                assert(strstr(url, request->urlpath.buf()));
+                assert(strstr(url, request->urlpath.termedBuf()));
         }
 
         /* Enforce sibling relations */
@@ -1650,10 +1658,10 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
 void
 copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, String strConnection, HttpRequest * request, HttpRequest * orig_request, HttpHeader * hdr_out, int we_do_ranges, http_state_flags flags)
 {
-    debugs(11, 5, "httpBuildRequestHeader: " << e->name.buf() << ": " << e->value.buf());
+    debugs(11, 5, "httpBuildRequestHeader: " << e->name << ": " << e->value );
 
     if (!httpRequestHdrAllowed(e, &strConnection)) {
-        debugs(11, 2, "'" << e->name.buf() << "' header denied by anonymize_headers configuration");
+        debugs(11, 2, "'" << e->name << "' header denied by anonymize_headers configuration");
         return;
     }
 
@@ -1814,7 +1822,7 @@ HttpStateData::buildRequestPrefix(HttpRequest * request,
     HttpVersion httpver(1, 0);
     mb->Printf("%s %s HTTP/%d.%d\r\n",
                RequestMethodStr(request->method),
-               request->urlpath.size() ? request->urlpath.buf() : "/",
+               request->urlpath.size() ? request->urlpath.termedBuf() : "/",
                httpver.major,httpver.minor);
     /* build and pack headers */
     {

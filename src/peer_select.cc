@@ -290,18 +290,21 @@ peerSelectFoo(ps_state * ps)
     HttpRequest *request = ps->request;
     debugs(44, 3, "peerSelectFoo: '" << RequestMethodStr(request->method) << " " << request->GetHost() << "'");
 
+    /** If we don't known whether DIRECT is permitted ... */
     if (ps->direct == DIRECT_UNKNOWN) {
         if (ps->always_direct == 0 && Config.accessList.AlwaysDirect) {
+            /** check always_direct; */
             ps->acl_checklist = aclChecklistCreate(
                                     Config.accessList.AlwaysDirect,
                                     request,
                                     NULL);		/* ident */
-            ps->acl_checklist->nonBlockingCheck(peerCheckAlwaysDirectDone,
-                                                ps);
+            ps->acl_checklist->nonBlockingCheck(peerCheckAlwaysDirectDone, ps);
             return;
         } else if (ps->always_direct > 0) {
+            /** if always_direct says YES, do that. */
             ps->direct = DIRECT_YES;
         } else if (ps->never_direct == 0 && Config.accessList.NeverDirect) {
+            /** check never_direct; */
             ps->acl_checklist = aclChecklistCreate(
                                     Config.accessList.NeverDirect,
                                     request,
@@ -310,10 +313,13 @@ peerSelectFoo(ps_state * ps)
                                                 ps);
             return;
         } else if (ps->never_direct > 0) {
+            /** if always_direct says NO, do that. */
             ps->direct = DIRECT_NO;
         } else if (request->flags.accelerated) {
+            /** if we are accelerating, direct is not an option. */
             ps->direct = DIRECT_NO;
         } else if (request->flags.loopdetect) {
+            /** if we are in a forwarding-loop, direct is not an option. */
             ps->direct = DIRECT_YES;
         } else if (peerCheckNetdbDirect(ps)) {
             ps->direct = DIRECT_YES;

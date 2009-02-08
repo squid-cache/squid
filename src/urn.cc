@@ -167,26 +167,22 @@ char *
 UrnState::getHost (String &urlpath)
 {
     char * result;
-    char const *t;
+    size_t p;
 
-    /* FIXME: this appears to be parsing the URL. *very* badly. */
-    /* FIXME: a proper encapsulated URI/URL type needs to clear this up. */
-
-    if ((t = urlpath.pos(':')) != NULL) {
-        urlpath.set(t, '\0');
-        result = xstrdup(urlpath.buf());
-        urlpath.set(t, ':');
+    /** FIXME: this appears to be parsing the URL. *very* badly. */
+    /*   a proper encapsulated URI/URL type needs to clear this up. */
+    if ((p=urlpath.find(':')) != std::string::npos) {
+        result=xstrndup(urlpath.rawBuf(),p-1);
     } else {
-        result = xstrdup(urlpath.buf());
+        result = xstrndup(urlpath.rawBuf(),urlpath.size());
     }
-
     return result;
 }
 
 bool
 UrnState::RequestNeedsMenu(HttpRequest *r)
 {
-    return strncasecmp(r->urlpath.buf(), "menu.", 5) == 0;
+    return strncasecmp(r->urlpath.unsafeBuf(), "menu.", 5) == 0;
 }
 
 void
@@ -202,7 +198,7 @@ UrnState::createUriResRequest (String &uri)
 {
     LOCAL_ARRAY(char, local_urlres, 4096);
     char *host = getHost (uri);
-    snprintf(local_urlres, 4096, "http://%s/uri-res/N2L?urn:%s", host, uri.buf());
+    snprintf(local_urlres, 4096, "http://%s/uri-res/N2L?urn:%s", host, uri.unsafeBuf());
     safe_free (host);
     safe_free (urlres);
     urlres = xstrdup (local_urlres);
@@ -213,7 +209,7 @@ void
 UrnState::setUriResFromRequest(HttpRequest *r)
 {
     if (RequestNeedsMenu(r)) {
-        updateRequestURL(r, r->urlpath.buf() + 5);
+        updateRequestURL(r, r->urlpath.unsafeBuf() + 5);
         flags.force_menu = 1;
     }
 

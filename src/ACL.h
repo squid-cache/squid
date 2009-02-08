@@ -141,6 +141,13 @@ public:
 };
 
 /// \ingroup ACLAPI
+typedef enum {
+    ACCESS_DENIED,
+    ACCESS_ALLOWED,
+    ACCESS_REQ_PROXY_AUTH
+} allow_t;
+
+/// \ingroup ACLAPI
 class acl_access
 {
 

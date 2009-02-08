@@ -63,10 +63,11 @@ Adaptation::ServiceConfig::parse()
     ConfigParser::ParseString(&uri);
 
     debugs(3, 5, HERE << cfg_filename << ':' << config_lineno << ": " <<
-           key.buf() << " " << method_point << " " << bypass);
+           key << " " << method_point << " " << bypass);
 
     method = parseMethod(method_point);
     point = parseVectPoint(method_point);
+    safe_free(method_point);
 
     debugs(3, 5, HERE << cfg_filename << ':' << config_lineno << ": " <<
            "service_configConfig is " << methodStr() << "_" << vectPointStr());
@@ -76,14 +77,14 @@ Adaptation::ServiceConfig::parse()
     // extract scheme and use it as the service_configConfig protocol
     const char *schemeSuffix = "://";
     if (const char *schemeEnd = uri.pos(schemeSuffix))
-        protocol.limitInit(uri.buf(), schemeEnd - uri.buf());
+        protocol.limitInit(uri.rawBuf(), schemeEnd - uri.rawBuf()); //substring
     debugs(3, 5, HERE << cfg_filename << ':' << config_lineno << ": " <<
            "service protocol is " << protocol);
     if (!protocol.size())
         return false;
 
     // skip scheme
-    const char *s = uri.buf() + protocol.size() + strlen(schemeSuffix);
+    const char *s = uri.termedBuf() + protocol.size() + strlen(schemeSuffix);
 
     const char *e;
 

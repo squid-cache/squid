@@ -76,7 +76,7 @@ void ICAPXaction::openConnection()
         disableRetries(); // this will also safely drain pconn pool
 
     // TODO: check whether NULL domain is appropriate here
-    connection = icapPconnPool->pop(s.cfg().host.buf(), s.cfg().port, NULL, client_addr, isRetriable);
+    connection = icapPconnPool->pop(s.cfg().host.unsafeBuf(), s.cfg().port, NULL, client_addr, isRetriable);
     if (connection >= 0) {
         debugs(93,3, HERE << "reused pconn FD " << connection);
 
@@ -96,12 +96,12 @@ void ICAPXaction::openConnection()
 
     IpAddress outgoing;
     connection = comm_open(SOCK_STREAM, 0, outgoing,
-                           COMM_NONBLOCKING, s.cfg().uri.buf());
+                           COMM_NONBLOCKING, s.cfg().uri.unsafeBuf());
 
     if (connection < 0)
         dieOnConnectionFailure(); // throws
 
-    debugs(93,3, typeName << " opens connection to " << s.cfg().host.buf() << ":" << s.cfg().port);
+    debugs(93,3, typeName << " opens connection to " << s.cfg().host.unsafeBuf() << ":" << s.cfg().port);
 
     // TODO: service bypass status may differ from that of a transaction
     typedef CommCbMemFunT<ICAPXaction, CommTimeoutCbParams> TimeoutDialer;
@@ -119,7 +119,7 @@ void ICAPXaction::openConnection()
     typedef CommCbMemFunT<ICAPXaction, CommConnectCbParams> ConnectDialer;
     connector = asyncCall(93,3, "ICAPXaction::noteCommConnected",
                           ConnectDialer(this, &ICAPXaction::noteCommConnected));
-    commConnectStart(connection, s.cfg().host.buf(), s.cfg().port, connector);
+    commConnectStart(connection, s.cfg().host.unsafeBuf(), s.cfg().port, connector);
 }
 
 /*
@@ -157,7 +157,7 @@ void ICAPXaction::closeConnection()
             debugs(93,3, HERE << "pushing pconn" << status());
             AsyncCall::Pointer call = NULL;
             commSetTimeout(connection, -1, call);
-            icapPconnPool->push(connection, theService->cfg().host.buf(),
+            icapPconnPool->push(connection, theService->cfg().host.unsafeBuf(),
                                 theService->cfg().port, NULL, client_addr);
             disableRetries();
         } else {
@@ -232,7 +232,7 @@ void ICAPXaction::handleCommTimedout()
 {
     debugs(93, 2, HERE << typeName << " failed: timeout with " <<
            theService->cfg().methodStr() << " " <<
-           theService->cfg().uri.buf() << status());
+           theService->cfg().uri.unsafeBuf() << status());
     reuseConnection = false;
     service().noteFailure();
 
@@ -295,7 +295,7 @@ void ICAPXaction::scheduleRead()
 
     /*
      * See comments in ICAPXaction.h about why we use commBuf
-     * here instead of reading directly into readBuf.buf.
+     * here instead of reading directly into readBuf.unsafeBuf.
      */
     typedef CommCbMemFunT<ICAPXaction, CommIoCbParams> Dialer;
     reader = asyncCall(93,3, "ICAPXaction::noteCommRead",
@@ -320,7 +320,7 @@ void ICAPXaction::noteCommRead(const CommIoCbParams &io)
 
     /*
      * See comments in ICAPXaction.h about why we use commBuf
-     * here instead of reading directly into readBuf.buf.
+     * here instead of reading directly into readBuf.unsafeBuf.
      */
 
     if (io.size > 0) {

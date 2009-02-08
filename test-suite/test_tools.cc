@@ -31,39 +31,16 @@ static void
 _db_print_stderr(const char *format, va_list args);
 
 void
-#if STDC_HEADERS
 _db_print(const char *format,...)
 {
-#else
-_db_print(va_alist)
-va_dcl {
-    const char *format = NULL;
-#endif
-
     LOCAL_ARRAY(char, f, BUFSIZ);
     va_list args1;
-#if STDC_HEADERS
-
     va_list args2;
     va_list args3;
-#else
-#define args2 args1
-#define args3 args1
-#endif
-
-#if STDC_HEADERS
 
     va_start(args1, format);
-
     va_start(args2, format);
-
     va_start(args3, format);
-
-#else
-
-    format = va_arg(args1, const char *);
-
-#endif
 
     snprintf(f, BUFSIZ, "%s| %s",
              "stub time", //debugLogTime(squid_curtime),
@@ -72,14 +49,8 @@ va_dcl {
     _db_print_stderr(f, args2);
 
     va_end(args1);
-
-#if STDC_HEADERS
-
     va_end(args2);
-
     va_end(args3);
-
-#endif
 }
 
 static void
@@ -114,21 +85,10 @@ fatalvf(const char *fmt, va_list args) {
 }
 
 /* printf-style interface for fatal */
-#if STDC_HEADERS
 void
 fatalf(const char *fmt,...) {
     va_list args;
     va_start(args, fmt);
-#else
-void
-fatalf(va_alist)
-va_dcl {
-    va_list args;
-    const char *fmt = NULL;
-    va_start(args);
-    fmt = va_arg(args, char *);
-#endif
-
     fatalvf(fmt, args);
     va_end(args);
 }

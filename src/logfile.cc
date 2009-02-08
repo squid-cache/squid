@@ -257,27 +257,13 @@ logfileWrite(Logfile * lf, void *buf, size_t len)
 }
 
 void
-#if STDC_HEADERS
 logfilePrintf(Logfile * lf, const char *fmt,...)
-#else
-logfilePrintf(va_alist)
-va_dcl
-#endif
 {
     va_list args;
     char buf[8192];
     int s;
-#if STDC_HEADERS
 
     va_start(args, fmt);
-#else
-
-    Logfile *lf;
-    const char *fmt;
-    va_start(args);
-    lf = va_arg(args, Logfile *);
-    fmt = va_arg(args, char *);
-#endif
 
     s = vsnprintf(buf, 8192, fmt, args);
 

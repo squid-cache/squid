@@ -1291,7 +1291,7 @@ clientReplyContext::buildReplyHeader()
         int connection_auth_blocked = 0;
         while ((e = hdr->getEntry(&pos))) {
             if (e->id == HDR_WWW_AUTHENTICATE) {
-                const char *value = e->value.buf();
+                const char *value = e->value.rawBuf();
 
                 if ((strncasecmp(value, "NTLM", 4) == 0 &&
                         (value[4] == '\0' || value[4] == ' '))
@@ -1391,7 +1391,7 @@ clientReplyContext::buildReplyHeader()
                  ThisCache);
         strListAdd(&strVia, bbuf, ',');
         hdr->delById(HDR_VIA);
-        hdr->putStr(HDR_VIA, strVia.buf());
+        hdr->putStr(HDR_VIA, strVia.termedBuf());
     }
     /* Signal keep-alive if needed */
     hdr->putStr(http->flags.accel ? HDR_CONNECTION : HDR_PROXY_CONNECTION,
@@ -1671,7 +1671,7 @@ clientReplyDetach(clientStreamNode * node, ClientHttpRequest * http)
 }
 
 /*
- * accepts chunk of a http message in buf, parses prefix, filters headers and
+ * accepts chunk of a http message in unsafeBuf, parses prefix, filters headers and
  * such, writes processed message to the message recipient
  */
 void
@@ -1758,8 +1758,10 @@ clientReplyContext::sendBodyTooLargeError()
 void
 clientReplyContext::processReplyAccess ()
 {
+    /* NP: this should probably soft-fail to a zero-sized-reply error ?? */
     assert(reply);
-    /* Dont't block our own responses or HTTP status messages */
+
+    /** Don't block our own responses or HTTP status messages */
     if (http->logType == LOG_TCP_DENIED ||
             http->logType == LOG_TCP_DENIED_REPLY ||
             alwaysAllowResponse(reply->sline.status)) {
@@ -1768,6 +1770,7 @@ clientReplyContext::processReplyAccess ()
         return;
     }
 
+    /** Check for reply to big error */
     if (reply->expectedBodyTooLarge(*http->request)) {
         sendBodyTooLargeError();
         return;
@@ -1775,11 +1778,13 @@ clientReplyContext::processReplyAccess ()
 
     headers_sz = reply->hdr_sz;
 
+    /** check for absent access controls (permit by default) */
     if (!Config.accessList.reply) {
         processReplyAccessResult(1);
         return;
     }
 
+    /** Process http_reply_access lists */
     ACLChecklist *replyChecklist;
     replyChecklist = clientAclChecklistCreate(Config.accessList.reply, http);
     replyChecklist->reply = HTTPMSGLOCK(reply);
