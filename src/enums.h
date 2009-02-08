@@ -350,12 +350,6 @@ typedef enum {
 } clientStream_status_t;
 
 typedef enum {
-    ACCESS_DENIED,
-    ACCESS_ALLOWED,
-    ACCESS_REQ_PROXY_AUTH
-} allow_t;
-
-typedef enum {
     AUTH_ACL_CHALLENGE = -2,
     AUTH_ACL_HELPER = -1,
     AUTH_ACL_CANNOT_AUTHENTICATE = 0,
