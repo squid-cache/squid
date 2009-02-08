@@ -109,7 +109,7 @@ ESICustomParser::parse(char const *dataToParse, size_t const lengthOfData, bool 
     }
 
     size_t openESITags (0);
-    char const *currentPos = content.buf();
+    char const *currentPos = content.unsafeBuf();
     size_t remainingCount = content.size();
     char const *tag = NULL;
 
@@ -302,7 +302,7 @@ char const *
 ESICustomParser::errorString() const
 {
     if (error.size())
-        return error.buf();
+        return error.unsafeBuf();
     else
         return "Parsing error strings not implemented";
 }

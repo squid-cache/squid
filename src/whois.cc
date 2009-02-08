@@ -98,7 +98,7 @@ whoisStart(FwdState * fwd)
 
     buf = (char *)xmalloc(l);
 
-    snprintf(buf, l, "%s\r\n", p->request->urlpath.buf() + 1);
+    snprintf(buf, l, "%s\r\n", p->request->urlpath.unsafeBuf() + 1);
 
     comm_write(fd, buf, strlen(buf), whoisWriteComplete, p, NULL);
     comm_read(fd, p->buf, BUFSIZ, whoisReadReply, p);
