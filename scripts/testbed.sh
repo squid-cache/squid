@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# cron Preparation Needed:
+# 	cd ~/squid-3 && /bin/sh ./scripts/testbed.sh <machine-name> <your-email>
+#
+
 (
 # report email headers
 	echo "To: noc@squid-cache.org"
@@ -13,7 +17,7 @@
 	echo -n "SQUID:" && (bzr info | grep "public branch")
 
 # build results
-	bzr update
+	bzr update 2>&1
 	./bootstrap.sh
 	./test-builds.sh
 
