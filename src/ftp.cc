@@ -1237,34 +1237,18 @@ FtpStateData::dataRead(int fd, char *buf, size_t len, comm_err_t errflag, int xe
 
     assert(fd == data.fd);
 
-#if DELAY_POOLS
-
-    DelayId delayId = entry->mem_obj->mostBytesAllowed();
-
-#endif
-
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
         abortTransaction("entry aborted during dataRead");
         return;
     }
 
     if (errflag == COMM_OK && len > 0) {
-#if DELAY_POOLS
-        delayId.bytesIn(len);
-#endif
-
-    }
-
-
-    if (errflag == COMM_OK && len > 0) {
         debugs(9,5,HERE << "appended " << len << " bytes to readBuf");
         data.readBuf->appended(len);
 #if DELAY_POOLS
-
         DelayId delayId = entry->mem_obj->mostBytesAllowed();
         delayId.bytesIn(len);
 #endif
-
         IOStats.Ftp.reads++;
 
         for (j = len - 1, bin = 0; j; bin++)
