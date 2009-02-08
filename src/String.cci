@@ -184,15 +184,6 @@ String::caseCmp(const String &str) const
     return caseCmp(str.rawBuf(),str.size());
 }
 
-
-void
-String::set(char const *loc, char const ch)
-{
-    if (loc < buf_ || loc > (buf_ + size_) ) return;
-
-    buf_[loc-buf_] = ch;
-}
-
 void
 String::cut(size_t newLength)
 {
