@@ -851,25 +851,10 @@ StoreEntry::append(char const *buf, int len)
 
 
 void
-#if STDC_HEADERS
 storeAppendPrintf(StoreEntry * e, const char *fmt,...)
-#else
-storeAppendPrintf(va_alist)
-va_dcl
-#endif
 {
-#if STDC_HEADERS
     va_list args;
     va_start(args, fmt);
-#else
-
-    va_list args;
-    StoreEntry *e = NULL;
-    const char *fmt = NULL;
-    va_start(args);
-    e = va_arg(args, StoreEntry *);
-    fmt = va_arg(args, char *);
-#endif
 
     storeAppendVPrintf(e, fmt, args);
     va_end(args);
