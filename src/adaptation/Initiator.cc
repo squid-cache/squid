@@ -24,7 +24,7 @@ Adaptation::Initiator::clearAdaptation(Initiate *&x)
 void
 Adaptation::Initiator::announceInitiatorAbort(Initiate *&x)
 {
-    if (x) {
+    if (x && cbdataReferenceValid(x)) {
         CallJobHere(93, 5, x, Initiate::noteInitiatorAborted);
         clearAdaptation(x);
     }

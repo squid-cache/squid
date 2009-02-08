@@ -251,14 +251,14 @@ HttpHdrRange::parseInit(const String * range_spec)
     int count = 0;
     assert(this && range_spec);
     ++ParsedCount;
-    debugs(64, 8, "parsing range field: '" << range_spec->buf() << "'");
+    debugs(64, 8, "parsing range field: '" << range_spec << "'");
     /* check range type */
 
     if (range_spec->caseCmp("bytes=", 6))
         return 0;
 
     /* skip "bytes="; hack! */
-    pos = range_spec->buf() + 6;
+    pos = range_spec->termedBuf() + 6;
 
     /* iterate through comma separated list */
     while (strListGetItem(range_spec, ',', &item, &ilen, &pos)) {

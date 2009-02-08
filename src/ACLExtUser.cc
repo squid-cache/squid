@@ -79,7 +79,7 @@ int
 ACLExtUser::match(ACLChecklist *checklist)
 {
     if (checklist->request->extacl_user.size()) {
-        return data->match(checklist->request->extacl_user.buf());
+        return data->match(checklist->request->extacl_user.unsafeBuf());
     } else {
         return -1;
     }

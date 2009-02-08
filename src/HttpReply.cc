@@ -281,7 +281,7 @@ HttpReply::validatorsMatch(HttpReply const * otherRep) const
 
     two = otherRep->header.getStrOrList(HDR_ETAG);
 
-    if (!one.buf() || !two.buf() || strcasecmp (one.buf(), two.buf())) {
+    if (one.undefined() || two.undefined() || one.caseCmp(two)!=0 ) {
         one.clean();
         two.clean();
         return 0;
@@ -295,7 +295,7 @@ HttpReply::validatorsMatch(HttpReply const * otherRep) const
 
     two = otherRep->header.getStrOrList(HDR_CONTENT_MD5);
 
-    if (!one.buf() || !two.buf() || strcasecmp (one.buf(), two.buf())) {
+    if (one.undefined() || two.undefined() || one.caseCmp(two) != 0 ) {
         one.clean();
         two.clean();
         return 0;
@@ -440,7 +440,7 @@ HttpReply::bodySize(const HttpRequestMethod& method) const
 bool HttpReply::sanityCheckStartLine(MemBuf *buf, http_status *error)
 {
     if (buf->contentSize() >= protoPrefix.size() && protoPrefix.cmp(buf->content(), protoPrefix.size()) != 0) {
-        debugs(58, 3, "HttpReply::sanityCheckStartLine: missing protocol prefix (" << protoPrefix.buf() << ") in '" << buf->content() << "'");
+        debugs(58, 3, "HttpReply::sanityCheckStartLine: missing protocol prefix (" << protoPrefix << ") in '" << buf->content() << "'");
         *error = HTTP_INVALID_HEADER;
         return false;
     }
@@ -543,7 +543,8 @@ HttpReply::calcMaxBodySize(HttpRequest& request)
     ch.reply = HTTPMSGLOCK(this); // XXX: this lock makes method non-const
     ch.request = HTTPMSGLOCK(&request);
     for (acl_size_t *l = Config.ReplyBodySize; l; l = l -> next) {
-        if (ch.matchAclListFast(l->aclList)) {
+        /* if there is no ACL list or if the ACLs listed match use this size value */
+        if (!l->aclList || ch.matchAclListFast(l->aclList)) {
             debugs(58, 4, HERE << "bodySizeMax=" << bodySizeMax);
             bodySizeMax = l->size; // may be -1
             break;

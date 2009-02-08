@@ -419,7 +419,7 @@ ACLChecklist::~ACLChecklist()
 
 
 ConnStateData *
-ACLChecklist::conn()
+ACLChecklist::conn() const
 {
     return  conn_;
 }
@@ -480,6 +480,11 @@ ACLChecklist::asyncState() const
     return state_;
 }
 
+/**
+ * Kick off a non-blocking (slow) ACL access list test
+ *
+ * NP: this should probably be made Async now.
+ */
 void
 ACLChecklist::nonBlockingCheck(PF * callback_, void *callback_data_)
 {

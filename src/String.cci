@@ -49,13 +49,35 @@ String::size() const
 }
 
 char const *
-String::buf() const
+String::unsafeBuf() const
 {
     return buf_;
 }
 
-char&
-String::operator [](unsigned int pos)
+bool String::defined() const
+{
+    return buf_!=NULL;
+}
+
+bool String::undefined() const
+{
+    return buf_==NULL;
+}
+
+char const *
+String::rawBuf() const
+{
+    return buf_;
+}
+
+char const *
+String::termedBuf() const
+{
+    return buf_;
+}
+
+char
+String::operator [](unsigned int pos) const
 {
     assert(pos < size_);
 
@@ -65,19 +87,29 @@ String::operator [](unsigned int pos)
 const char *
 String::pos(char const *aString) const
 {
-    return strstr(buf(), aString);
+    return strstr(termedBuf(), aString);
 }
 
 const char *
 String::pos(char const ch) const
 {
-    return strchr(buf(), ch);
+    return strchr(termedBuf(), ch);
+}
+
+size_t
+String::find(char const ch) const
+{
+    const char *c;
+    c=pos(ch);
+    if (c==NULL)
+        return std::string::npos;
+    return c-rawBuf();
 }
 
 const char *
 String::rpos(char const ch) const
 {
-    return strrchr(buf(), (ch));
+    return strrchr(termedBuf(), (ch));
 }
 
 int
@@ -94,7 +126,7 @@ String::cmp (char const *aString) const
     if (aString == NULL || aString[0] == '\0')
         return 1;
 
-    return strcmp(buf(), aString);
+    return strcmp(termedBuf(), aString);
 }
 
 int
@@ -114,7 +146,7 @@ String::cmp (char const *aString, size_t count) const
     if (aString == NULL || aString[0] == '\0')
         return 1;
 
-    return strncmp(buf(), aString, count);
+    return strncmp(termedBuf(), aString, count);
 }
 
 int
@@ -131,20 +163,27 @@ String::cmp (String const &aString) const
     if (aString.size() == 0)
         return 1;
 
-    return strcmp(buf(), aString.buf());
+    return strcmp(termedBuf(), aString.termedBuf());
 }
 
 int
 String::caseCmp(char const *aString) const
 {
-    return strcasecmp(buf(), aString);
+    return strcasecmp(termedBuf(), aString);
 }
 
 int
 String::caseCmp(char const *aString, size_t count) const
 {
-    return strncasecmp(buf(), aString, count);
+    return strncasecmp(termedBuf(), aString, count);
 }
+
+int
+String::caseCmp(const String &str) const
+{
+    return caseCmp(str.rawBuf(),str.size());
+}
+
 
 void
 String::set(char const *loc, char const ch)
@@ -179,6 +218,6 @@ String::cutPointer(char const *loc)
 std::ostream &
 operator<<(std::ostream& os, String const &aString)
 {
-    os << aString.buf();
+    os.write(aString.rawBuf(),aString.size());
     return os;
 }
