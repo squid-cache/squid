@@ -140,11 +140,6 @@ public:
     _SQUID_INLINE_ int caseCmp (String const &) const;
 
     /** \deprecated Use assignment to [] position instead.
-     *              ie   str[0] = 'h';
-     */
-    _SQUID_INLINE_ void set(char const *loc, char const ch);
-
-    /** \deprecated Use assignment to [] position instead.
      *              ie   str[newLength] = '\0';
      */
     _SQUID_INLINE_ void cut(size_t newLength);
