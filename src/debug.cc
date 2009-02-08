@@ -57,29 +57,16 @@ static void _db_print_file(const char *format, va_list args);
 #ifdef _SQUID_MSWIN_
 SQUIDCEXTERN LPCRITICAL_SECTION dbg_mutex;
 typedef BOOL (WINAPI * PFInitializeCriticalSectionAndSpinCount) (LPCRITICAL_SECTION, DWORD);
-
 #endif
 
 void
-#if STDC_HEADERS
 _db_print(const char *format,...)
 {
-#else
-_db_print(va_alist)
-va_dcl {
-    const char *format = NULL;
-#endif
-
     LOCAL_ARRAY(char, f, BUFSIZ);
     va_list args1;
-#if STDC_HEADERS
-
     va_list args2;
     va_list args3;
-#else
-#define args2 args1
-#define args3 args1
-#endif
+
 #ifdef _SQUID_MSWIN_
     /* Multiple WIN32 threads may call this simultaneously */
 
@@ -112,53 +99,33 @@ va_dcl {
 
     EnterCriticalSection(dbg_mutex);
 #endif
-    /* give a chance to context-based debugging to print current context */
 
+    /* give a chance to context-based debugging to print current context */
     if (!Ctx_Lock)
         ctx_print();
 
-#if STDC_HEADERS
-
     va_start(args1, format);
-
     va_start(args2, format);
-
     va_start(args3, format);
-
-#else
-
-    format = va_arg(args1, const char *);
-
-#endif
 
     snprintf(f, BUFSIZ, "%s| %s",
              debugLogTime(),
              format);
 
     _db_print_file(f, args1);
-
     _db_print_stderr(f, args2);
 
 #if HAVE_SYSLOG
-
     _db_print_syslog(format, args3);
-
 #endif
+
 #ifdef _SQUID_MSWIN_
-
     LeaveCriticalSection(dbg_mutex);
-
 #endif
 
     va_end(args1);
-
-#if STDC_HEADERS
-
     va_end(args2);
-
     va_end(args3);
-
-#endif
 }
 
 static void
