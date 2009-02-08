@@ -16,7 +16,7 @@ INCLUDES = \
 	-I$(srcdir)/smbval
 
 LDADD = \
-	-L$(top_builddir)/libsquid-compat/libcompat.la \
+	-L$(top_builddir)/squid-compat/libcompat.la \
 	-L$(top_builddir)/lib -lntlmauth -lmiscutil \
 	smbval/libsmbvalid.a \
 	$(CRYPTLIB) \

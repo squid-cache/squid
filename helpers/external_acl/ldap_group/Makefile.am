@@ -18,7 +18,7 @@ INCLUDES = \
 	-I$(top_srcdir)/include
 
 LDADD = \
-	-L$(top_builddir)/libsquid-compat/libcompat.la \
+	-L$(top_builddir)/squid-compat/libcompat.la \
 	-L$(top_builddir)/lib -lmiscutil \
 	$(LIB_LDAP) \
 	$(LIB_LBER) \

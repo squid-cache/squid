@@ -55,7 +55,7 @@
  *--------------------------------------------------------------------------*
  ****************************************************************************/
 
-#include "libsquid-compat/compat.h"
+#include "squid-compat/compat.h"
 
 #ifdef USE_POSIX_REGEX
 #ifndef USE_RE_SYNTAX
