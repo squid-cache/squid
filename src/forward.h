@@ -5,6 +5,7 @@
 
 class CacheManager;
 class ErrorState;
+class HttpRequest;
 
 #include "comm.h"
 
@@ -44,7 +45,7 @@ public:
     bool checkRetry();
     bool checkRetriable();
     void dispatch();
-    void pconnPush(int fd, const char *host, int port, const char *domain, struct IN_ADDR *client_addr);
+    void pconnPush(int fd, const peer *_peer, const HttpRequest *req, const char *domain, struct in_addr *client_addr);
 
     bool dontRetry() { return flags.dont_retry; }
 

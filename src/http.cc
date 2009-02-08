@@ -1167,6 +1167,7 @@ HttpStateData::processReplyBody()
 
             comm_remove_close_handler(fd, httpStateFree, this);
             fwd->unregister(fd);
+
 #if LINUX_TPROXY
 
             if (orig_request->flags.tproxy)
@@ -1174,14 +1175,7 @@ HttpStateData::processReplyBody()
 
 #endif
 
-            if (_peer) {
-                if (_peer->options.originserver)
-                    fwd->pconnPush(fd, _peer->name, orig_request->port, orig_request->host, client_addr);
-                else
-                    fwd->pconnPush(fd, _peer->name, _peer->http_port, NULL, client_addr);
-            } else {
-                fwd->pconnPush(fd, request->host, request->port, NULL, client_addr);
-            }
+            fwd->pconnPush(fd, _peer, request, orig_request->host, client_addr);
 
             fd = -1;
 
