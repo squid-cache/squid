@@ -440,7 +440,7 @@ urlCanonical(HttpRequest * request)
 
     if (request->protocol == PROTO_URN) {
         snprintf(urlbuf, MAX_URL, "urn:%.*s",
-            request->urlpath.size(),
+            request->urlpath.psize(),
             request->urlpath.rawBuf());
     } else {
 /// \todo AYJ: this could use "if..else and method == METHOD_CONNECT" easier.
@@ -462,7 +462,7 @@ urlCanonical(HttpRequest * request)
                      *request->login ? "@" : null_string,
                      request->GetHost(),
                      portbuf,
-                     request->urlpath.size(),
+                     request->urlpath.psize(),
                      request->urlpath.rawBuf());
 
             break;
@@ -486,7 +486,7 @@ urlCanonicalClean(const HttpRequest * request)
 
     if (request->protocol == PROTO_URN) {
         snprintf(buf, MAX_URL, "urn:%.*s",
-            request->urlpath.size(), request->urlpath.rawBuf());
+            request->urlpath.psize(), request->urlpath.rawBuf());
     } else {
 /// \todo AYJ: this could use "if..else and method == METHOD_CONNECT" easier.
         switch (request->method.id()) {
@@ -519,7 +519,7 @@ urlCanonicalClean(const HttpRequest * request)
                      loginbuf,
                      request->GetHost(),
                      portbuf,
-                     request->urlpath.size(),
+                     request->urlpath.psize(),
                      request->urlpath.rawBuf());
             /*
              * strip arguments AFTER a question-mark
@@ -590,7 +590,7 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
 
     if (req->protocol == PROTO_URN) {
         snprintf(urlbuf, MAX_URL, "urn:%.*s",
-            req->urlpath.size(),
+            req->urlpath.psize(),
             req->urlpath.rawBuf());
         return (urlbuf);
     }

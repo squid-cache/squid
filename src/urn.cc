@@ -201,7 +201,7 @@ UrnState::createUriResRequest (String &uri)
 {
     LOCAL_ARRAY(char, local_urlres, 4096);
     char *host = getHost (uri);
-    snprintf(local_urlres, 4096, "http://%s/uri-res/N2L?urn:%.*s", host, uri.size(), uri.rawBuf());
+    snprintf(local_urlres, 4096, "http://%s/uri-res/N2L?urn:%.*s", host, uri.psize(), uri.rawBuf());
     safe_free (host);
     safe_free (urlres);
     urlres = xstrdup (local_urlres);

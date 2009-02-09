@@ -258,7 +258,7 @@ httpHdrScTargetPackInto(const HttpHdrScTarget * sc, Packer * p)
 
             /* print option name */
             packerPrintf(p, (pcount ? ", %.*s" : "%.*s"),
-                ScFieldsInfo[flag].name.size(),
+                ScFieldsInfo[flag].name.psize(),
                 ScFieldsInfo[flag].name.rawBuf());
 
             /* handle options with values */
@@ -267,14 +267,14 @@ httpHdrScTargetPackInto(const HttpHdrScTarget * sc, Packer * p)
                 packerPrintf(p, "=%d", (int) sc->max_age);
 
             if (flag == SC_CONTENT)
-                packerPrintf(p, "=\"%.*s\"", sc->content.size(), sc->content.rawBuf());
+                packerPrintf(p, "=\"%.*s\"", sc->content.psize(), sc->content.rawBuf());
 
             pcount++;
         }
     }
 
     if (sc->target.size())
-        packerPrintf (p, ";%.*s", sc->target.size(), sc->target.rawBuf());
+        packerPrintf (p, ";%.*s", sc->target.psize(), sc->target.rawBuf());
 }
 
 void

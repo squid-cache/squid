@@ -14,6 +14,8 @@ class testString : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testCmpDefault );
     CPPUNIT_TEST( testCmpEmptyString );
     CPPUNIT_TEST( testCmpNotEmptyDefault );
+    CPPUNIT_TEST( testSubstr );
+
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -23,6 +25,7 @@ protected:
     void testCmpDefault();
     void testCmpEmptyString();
     void testCmpNotEmptyDefault();
+    void testSubstr();
 };
 
 #endif

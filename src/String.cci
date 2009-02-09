@@ -34,6 +34,16 @@
 
 #include "assert.h"
 #include <cstring>
+#include "squid.h"
+
+#ifdef HAVE_STDINT_H
+#include <stdint.h> //for INT_MAX
+#else /* HAVE_STDINT_H */
+#ifndef INT_MAX
+#define INT_MAX 1<<31 //hack but a safe bet
+#endif /* INT_MAX */
+#endif /* HAVE_STDINT_H */
+
 
 String::String() : size_(0), len_(0), buf_ (NULL)
 {
@@ -42,10 +52,17 @@ String::String() : size_(0), len_(0), buf_ (NULL)
 #endif
 }
 
-int
+size_t
 String::size() const
 {
     return len_;
+}
+
+int
+String::psize() const
+{
+    Must(size() < INT_MAX);
+    return size();
 }
 
 char const *
@@ -111,6 +128,17 @@ String::rpos(char const ch) const
 {
     return strrchr(termedBuf(), (ch));
 }
+
+size_t
+String::rfind(char const ch) const
+{
+    const char *c;
+    c=rpos(ch);
+    if (c==NULL)
+        return std::string::npos;
+    return c-rawBuf();
+}
+
 
 int
 String::cmp (char const *aString) const
@@ -182,6 +210,15 @@ int
 String::caseCmp(const String &str) const
 {
     return caseCmp(str.rawBuf(),str.size());
+}
+
+
+void
+String::set(char const *loc, char const ch)
+{
+    if (loc < buf_ || loc > (buf_ + size_) ) return;
+
+    buf_[loc-buf_] = ch;
 }
 
 void
