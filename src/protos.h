@@ -101,11 +101,7 @@ SQUIDCEXTERN void _db_set_syslog(const char *facility);
 SQUIDCEXTERN void _db_init(const char *logfile, const char *options);
 SQUIDCEXTERN void _db_rotate_log(void);
 
-#if STDC_HEADERS
 SQUIDCEXTERN void _db_print(const char *,...) PRINTF_FORMAT_ARG1;
-#else
-SQUIDCEXTERN void _db_print();
-#endif
 
 /* packs, then prints an object using debug() */
 SQUIDCEXTERN void debugObj(int section, int level, const char *label, void *obj, ObjPackMethod pm);
@@ -270,12 +266,8 @@ SQUIDCEXTERN int strListGetItem(const String * str, char del, const char **item,
 SQUIDCEXTERN const char *getStringPrefix(const char *str, const char *end);
 SQUIDCEXTERN int httpHeaderParseInt(const char *start, int *val);
 SQUIDCEXTERN int httpHeaderParseOffset(const char *start, int64_t * off);
-#if STDC_HEADERS
 SQUIDCEXTERN void
 httpHeaderPutStrf(HttpHeader * hdr, http_hdr_type id, const char *fmt,...) PRINTF_FORMAT_ARG3;
-#else
-SQUIDCEXTERN void httpHeaderPutStrf();
-#endif
 
 
 /* Http Header */
@@ -566,12 +558,7 @@ SQUIDCEXTERN const char *uniqueHostname(void);
 SQUIDCEXTERN void safeunlink(const char *path, int quiet);
 SQUIDCEXTERN void death(int sig);
 SQUIDCEXTERN void fatal(const char *message);
-#if STDC_HEADERS
-SQUIDCEXTERN void
-fatalf(const char *fmt,...) PRINTF_FORMAT_ARG1;
-#else
-SQUIDCEXTERN void fatalf();
-#endif
+SQUIDCEXTERN void fatalf(const char *fmt,...) PRINTF_FORMAT_ARG1;
 SQUIDCEXTERN void fatal_dump(const char *message);
 SQUIDCEXTERN void sigusr2_handle(int sig);
 SQUIDCEXTERN void sig_child(int sig);
@@ -720,12 +707,7 @@ SQUIDCEXTERN void logfileClose(Logfile * lf);
 SQUIDCEXTERN void logfileRotate(Logfile * lf);
 SQUIDCEXTERN void logfileWrite(Logfile * lf, void *buf, size_t len);
 SQUIDCEXTERN void logfileFlush(Logfile * lf);
-#if STDC_HEADERS
-SQUIDCEXTERN void
-logfilePrintf(Logfile * lf, const char *fmt,...) PRINTF_FORMAT_ARG2;
-#else
-SQUIDCEXTERN void logfilePrintf(va_alist);
-#endif
+SQUIDCEXTERN void logfilePrintf(Logfile * lf, const char *fmt,...) PRINTF_FORMAT_ARG2;
 
 /*
  * prototypes for system functions missing from system includes

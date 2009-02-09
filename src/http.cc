@@ -72,8 +72,8 @@ CBDATA_CLASS_INIT(HttpStateData);
 static const char *const crlf = "\r\n";
 
 static void httpMaybeRemovePublic(StoreEntry *, http_status);
-static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, String strConnection, HttpRequest * request, HttpRequest * orig_request,
-        HttpHeader * hdr_out, int we_do_ranges, http_state_flags);
+static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, const String strConnection, HttpRequest * request, const HttpRequest * orig_request,
+        HttpHeader * hdr_out, const int we_do_ranges, const http_state_flags);
 
 HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"), ServerStateData(theFwdState),
         lastChunk(0), header_bytes_read(0), reply_bytes_read(0), httpChunkDecoder(NULL)
@@ -93,7 +93,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"),
         const char *url;
 
         if (_peer->options.originserver)
-            url = orig_request->urlpath.buf();
+            url = orig_request->urlpath.termedBuf();
         else
             url = entry->url();
 
@@ -578,7 +578,7 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
         strListAdd(&vstr, name, ',');
         hdr = request->header.getByName(name);
         safe_free(name);
-        value = hdr.buf();
+        value = hdr.termedBuf();
 
         if (value) {
             value = rfc1738_escape_part(value);
@@ -603,7 +603,7 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
         strListAdd(&vstr, name, ',');
         hdr = request->header.getByName(name);
         safe_free(name);
-        value = hdr.buf();
+        value = hdr.termedBuf();
 
         if (value) {
             value = rfc1738_escape_part(value);
@@ -618,8 +618,8 @@ httpMakeVaryMark(HttpRequest * request, HttpReply const * reply)
     vary.clean();
 #endif
 
-    debugs(11, 3, "httpMakeVaryMark: " << vstr.buf());
-    return vstr.buf();
+    debugs(11, 3, "httpMakeVaryMark: " << vstr);
+    return vstr.termedBuf();
 }
 
 void
@@ -791,7 +791,7 @@ bool HttpStateData::peerSupportsConnectionPinning() const
 
     header = hdr->getStrOrList(HDR_PROXY_SUPPORT);
     /* XXX This ought to be done in a case-insensitive manner */
-    rc = (strstr(header.buf(), "Session-Based-Authentication") != NULL);
+    rc = (strstr(header.termedBuf(), "Session-Based-Authentication") != NULL);
 
     return rc;
 }
@@ -1454,7 +1454,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
                  orig_request->http_ver.major,
                  orig_request->http_ver.minor, ThisCache);
         strListAdd(&strVia, bbuf, ',');
-        hdr_out->putStr(HDR_VIA, strVia.buf());
+        hdr_out->putStr(HDR_VIA, strVia.termedBuf());
         strVia.clean();
     }
 
@@ -1465,7 +1465,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         snprintf(bbuf, BBUF_SZ, "%s=\"Surrogate/1.0 ESI/1.0\"",
                  Config.Accel.surrogate_id);
         strListAdd(&strSurrogate, bbuf, ',');
-        hdr_out->putStr(HDR_SURROGATE_CAPABILITY, strSurrogate.buf());
+        hdr_out->putStr(HDR_SURROGATE_CAPABILITY, strSurrogate.termedBuf());
     }
 #endif
 
@@ -1495,7 +1495,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
                 strFwd = orig_request->client_addr.NtoA(ntoabuf, MAX_IPSTRLEN);
         }
         if (strFwd.size() > 0)
-            hdr_out->putStr(HDR_X_FORWARDED_FOR, strFwd.buf());
+            hdr_out->putStr(HDR_X_FORWARDED_FOR, strFwd.termedBuf());
     }
     /** If set to DELETE - do not copy through. */
     strFwd.clean();
@@ -1531,7 +1531,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             const char *username = "-";
 
             if (orig_request->extacl_user.size())
-                username = orig_request->extacl_user.buf();
+                username = orig_request->extacl_user.termedBuf();
             else if (orig_request->auth_user_request)
                 username = orig_request->auth_user_request->username();
 
@@ -1542,7 +1542,11 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         } else if (strcmp(orig_request->peer_login, "PASS") == 0) {
             if (orig_request->extacl_user.size() && orig_request->extacl_passwd.size()) {
                 char loginbuf[256];
-                snprintf(loginbuf, sizeof(loginbuf), "%s:%s", orig_request->extacl_user.buf(), orig_request->extacl_passwd.buf());
+                snprintf(loginbuf, sizeof(loginbuf), "%.*s:%.*s",
+                    orig_request->extacl_user.size(),
+                    orig_request->extacl_user.rawBuf(),
+                    orig_request->extacl_passwd.size(),
+                    orig_request->extacl_passwd.rawBuf());
                 httpHeaderPutStrf(hdr_out, HDR_PROXY_AUTHORIZATION, "Basic %s",
                                   base64_encode(loginbuf));
             }
@@ -1569,7 +1573,11 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
                 hdr_out->putStr(HDR_AUTHORIZATION, auth);
             } else if (orig_request->extacl_user.size() && orig_request->extacl_passwd.size()) {
                 char loginbuf[256];
-                snprintf(loginbuf, sizeof(loginbuf), "%s:%s", orig_request->extacl_user.buf(), orig_request->extacl_passwd.buf());
+                snprintf(loginbuf, sizeof(loginbuf), "%.*s:%.*s",
+                    orig_request->extacl_user.size(),
+                    orig_request->extacl_user.rawBuf(),
+                    orig_request->extacl_passwd.size(),
+                    orig_request->extacl_passwd.rawBuf());
                 httpHeaderPutStrf(hdr_out, HDR_AUTHORIZATION, "Basic %s",
                                   base64_encode(loginbuf));
             }
@@ -1581,7 +1589,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             if (orig_request->auth_user_request)
                 username = orig_request->auth_user_request->username();
             else if (orig_request->extacl_user.size())
-                username = orig_request->extacl_user.buf();
+                username = orig_request->extacl_user.termedBuf();
 
             snprintf(loginbuf, sizeof(loginbuf), "%s%s", username, orig_request->peer_login + 1);
 
@@ -1613,7 +1621,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             httpHdrCcSetMaxAge(cc, getMaxAge(url));
 
             if (request->urlpath.size())
-                assert(strstr(url, request->urlpath.buf()));
+                assert(strstr(url, request->urlpath.termedBuf()));
         }
 
         /* Enforce sibling relations */
@@ -1647,20 +1655,22 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     strConnection.clean();
 }
 
+/**
+ * Decides whether a particular header may be cloned from the received Clients request
+ * to our outgoing fetch request.
+ */
 void
-copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, String strConnection, HttpRequest * request, HttpRequest * orig_request, HttpHeader * hdr_out, int we_do_ranges, http_state_flags flags)
+copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, const String strConnection, HttpRequest * request, const HttpRequest * orig_request, HttpHeader * hdr_out, const int we_do_ranges, const http_state_flags flags)
 {
-    debugs(11, 5, "httpBuildRequestHeader: " << e->name.buf() << ": " << e->value.buf());
-
-    if (!httpRequestHdrAllowed(e, &strConnection)) {
-        debugs(11, 2, "'" << e->name.buf() << "' header denied by anonymize_headers configuration");
-        return;
-    }
+    debugs(11, 5, "httpBuildRequestHeader: " << e->name << ": " << e->value );
 
     switch (e->id) {
 
+/** \title RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid should not pass on. */
+
     case HDR_PROXY_AUTHORIZATION:
-        /* Only pass on proxy authentication to peers for which
+        /** \par Proxy-Authorization:
+         * Only pass on proxy authentication to peers for which
          * authentication forwarding is explicitly enabled
          */
 
@@ -1672,16 +1682,31 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
 
         break;
 
+/** \title RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid does not pass on. */
+
+    case HDR_CONNECTION:          /** \par Connection: */
+    case HDR_TE:                  /** \par TE: */
+    case HDR_KEEP_ALIVE:          /** \par Keep-Alive: */
+    case HDR_PROXY_AUTHENTICATE:  /** \par Proxy-Authenticate: */
+    case HDR_TRAILERS:            /** \par Trailers: */
+    case HDR_UPGRADE:             /** \par Upgrade: */
+    case HDR_TRANSFER_ENCODING:   /** \par Transfer-Encoding: */
+        break;
+
+
+/** \title OTHER headers I haven't bothered to track down yet. */
+
     case HDR_AUTHORIZATION:
-        /* Pass on WWW authentication */
+        /** \par WWW-Authorization:
+         * Pass on WWW authentication */
 
         if (!flags.originpeer) {
             hdr_out->addEntry(e->clone());
         } else {
-            /* In accelerators, only forward authentication if enabled
+            /** \note In accelerators, only forward authentication if enabled
+             * by login=PASS or login=PROXYPASS
              * (see also below for proxy->server authentication)
              */
-
             if (orig_request->peer_login &&
                     (strcmp(orig_request->peer_login, "PASS") == 0 ||
                      strcmp(orig_request->peer_login, "PROXYPASS") == 0)) {
@@ -1692,7 +1717,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
         break;
 
     case HDR_HOST:
-        /*
+        /** \par Host:
          * Normally Squid rewrites the Host: header.
          * However, there is one case when we don't: If the URL
          * went through our redirector and the admin configured
@@ -1717,8 +1742,9 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
         break;
 
     case HDR_IF_MODIFIED_SINCE:
-        /* append unless we added our own;
-         * note: at most one client's ims header can pass through */
+        /** \par If-Modified-Since:
+	 * append unless we added our own;
+         * \note at most one client's ims header can pass through */
 
         if (!hdr_out->has(HDR_IF_MODIFIED_SINCE))
             hdr_out->addEntry(e->clone());
@@ -1726,6 +1752,8 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
         break;
 
     case HDR_MAX_FORWARDS:
+        /** \par Max-Forwards:
+         * pass only on TRACE requests */
         if (orig_request->method == METHOD_TRACE) {
             const int hops = e->getInt();
 
@@ -1736,7 +1764,9 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
         break;
 
     case HDR_VIA:
-        /* If Via is disabled then forward any received header as-is */
+        /** \par Via:
+         * If Via is disabled then forward any received header as-is.
+         * Otherwise leave for explicit updated addition later. */
 
         if (!Config.onoff.via)
             hdr_out->addEntry(e->clone());
@@ -1748,6 +1778,8 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
     case HDR_IF_RANGE:
 
     case HDR_REQUEST_RANGE:
+        /** \par Range:, If-Range:, Request-Range:
+         * Only pass if we accept ranges */
         if (!we_do_ranges)
             hdr_out->addEntry(e->clone());
 
@@ -1755,22 +1787,32 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
 
     case HDR_PROXY_CONNECTION:
 
-    case HDR_CONNECTION:
-
     case HDR_X_FORWARDED_FOR:
 
     case HDR_CACHE_CONTROL:
-        /* append these after the loop if needed */
+        /** \par Proxy-Connaction:, X-Forwarded-For:, Cache-Control:
+         * handled specially by Squid, so leave off for now.
+         * append these after the loop if needed */
         break;
 
     case HDR_FRONT_END_HTTPS:
+        /** \par Front-End-Https:
+         * Pass thru only if peer is configured with front-end-https */
         if (!flags.front_end_https)
             hdr_out->addEntry(e->clone());
 
         break;
 
     default:
-        /* pass on all other header fields */
+        /** \par default.
+         * pass on all other header fields
+         * which are NOT listed by the special Connection: header. */
+
+        if (strConnection.size()>0 && strListIsMember(&strConnection, e->name.buf(), ',')) {
+            debugs(11, 2, "'" << e->name << "' header cropped by Connection: definition");
+            return;
+        }
+
         hdr_out->addEntry(e->clone());
     }
 }
@@ -1814,7 +1856,7 @@ HttpStateData::buildRequestPrefix(HttpRequest * request,
     HttpVersion httpver(1, 0);
     mb->Printf("%s %s HTTP/%d.%d\r\n",
                RequestMethodStr(request->method),
-               request->urlpath.size() ? request->urlpath.buf() : "/",
+               request->urlpath.size() ? request->urlpath.termedBuf() : "/",
                httpver.major,httpver.minor);
     /* build and pack headers */
     {

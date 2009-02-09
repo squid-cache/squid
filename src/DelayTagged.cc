@@ -77,7 +77,7 @@ int
 DelayTaggedCmp(DelayTaggedBucket::Pointer const &left, DelayTaggedBucket::Pointer const &right)
 {
     /* for rate limiting, case insensitive */
-    return left->tag.caseCmp(right->tag.buf());
+    return left->tag.caseCmp(right->tag.unsafeBuf());
 }
 
 void
@@ -195,7 +195,7 @@ DelayTaggedBucket::~DelayTaggedBucket()
 void
 DelayTaggedBucket::stats (StoreEntry *entry) const
 {
-    storeAppendPrintf(entry, " %s:", tag.buf());
+    storeAppendPrintf(entry, " %s:", tag.unsafeBuf());
     theBucket.stats (entry);
 }
 

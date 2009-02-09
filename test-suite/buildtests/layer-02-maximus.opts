@@ -85,6 +85,7 @@ OPTS=" \
 	--enable-stacktraces \
 	--enable-cpu-profiling \
 	--enable-vary \
+	--enable-x-accelerator-vary \
 	--enable-ipv6 \
 	--enable-auto-locale \
 	--enable-zph-qos \

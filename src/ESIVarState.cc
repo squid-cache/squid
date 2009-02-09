@@ -317,7 +317,7 @@ ESIVarState::ESIVarState (HttpHeader const *aHeader, char const *uri)
 void
 ESIVarState::removeVariable (String const &name)
 {
-    Variable *candidate = static_cast <Variable *>(variables.find (name.buf(), name.size()));
+    Variable *candidate = static_cast <Variable *>(variables.find (name.rawBuf(), name.size()));
 
     if (candidate) {
         /* XXX: remove me */
@@ -434,7 +434,7 @@ ESIVariableCookie::eval (ESIVarState &state, char const *subref, char const *fou
             String S = state.header().getListMember (HDR_COOKIE, subref, ';');
 
             if (S.size())
-                ESISegment::ListAppend (state.getOutput(), S.buf(), S.size());
+                ESISegment::ListAppend (state.getOutput(), S.rawBuf(), S.size());
             else if (found_default)
                 ESISegment::ListAppend (state.getOutput(), found_default, strlen (found_default));
         }
@@ -468,7 +468,7 @@ ESIVariableLanguage::eval (ESIVarState &state, char const *subref, char const *f
     if (state.header().has(HDR_ACCEPT_LANGUAGE)) {
         if (!subref) {
             String S (state.header().getList (HDR_ACCEPT_LANGUAGE));
-            ESISegment::ListAppend (state.getOutput(), S.buf(), S.size());
+            ESISegment::ListAppend (state.getOutput(), S.rawBuf(), S.size());
         } else {
             if (state.header().hasListMember (HDR_ACCEPT_LANGUAGE, subref, ',')) {
                 s = "true";
@@ -884,7 +884,7 @@ ESIVarState::buildVary (HttpReply *rep)
 
     String strVary (rep->header.getList (HDR_VARY));
 
-    if (!strVary.size() || strVary.buf()[0] != '*') {
+    if (!strVary.size() || strVary[0] != '*') {
         rep->header.putStr (HDR_VARY, tempstr);
     }
 }

@@ -426,7 +426,7 @@ clientFollowXForwardedForCheck(int answer, void *data)
         const char *asciiaddr;
         int l;
         struct in_addr addr;
-        p = request->x_forwarded_for_iterator.buf();
+        p = request->x_forwarded_for_iterator.unsafeBuf();
         l = request->x_forwarded_for_iterator.size();
 
         /*
@@ -509,8 +509,13 @@ ClientRequestContext::clientAccessCheck()
     }
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
-    acl_checklist = clientAclChecklistCreate(Config.accessList.http, http);
-    acl_checklist->nonBlockingCheck(clientAccessCheckDoneWrapper, this);
+    if (Config.accessList.http) {
+        acl_checklist = clientAclChecklistCreate(Config.accessList.http, http);
+        acl_checklist->nonBlockingCheck(clientAccessCheckDoneWrapper, this);
+    } else {
+        debugs(0, DBG_CRITICAL, "No http_access configuration found. This will block ALL traffic");
+        clientAccessCheckDone(ACCESS_DENIED);
+    }
 }
 
 void
@@ -851,7 +856,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
             int may_pin = 0;
             while ((e = req_hdr->getEntry(&pos))) {
                 if (e->id == HDR_AUTHORIZATION || e->id == HDR_PROXY_AUTHORIZATION) {
-                    const char *value = e->value.buf();
+                    const char *value = e->value.rawBuf();
                     if (strncasecmp(value, "NTLM ", 5) == 0
                             ||
                             strncasecmp(value, "Negotiate ", 10) == 0
@@ -892,7 +897,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         }
 
 #if FORW_VIA_DB
-        fvdbCountVia(s.buf());
+        fvdbCountVia(s.unsafeBuf());
 
 #endif
 
@@ -918,7 +923,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 
     if (req_hdr->has(HDR_X_FORWARDED_FOR)) {
         String s = req_hdr->getList(HDR_X_FORWARDED_FOR);
-        fvdbCountForw(s.buf());
+        fvdbCountForw(s.unsafeBuf());
         s.clean();
     }
 
@@ -1022,11 +1027,19 @@ ClientRequestContext::clientRedirectDone(char *result)
     http->doCallouts();
 }
 
+/** Test cache allow/deny configuration
+ *  Sets flags.cachable=1 if caching is not denied.
+ */
 void
 ClientRequestContext::checkNoCache()
 {
-    acl_checklist = clientAclChecklistCreate(Config.accessList.noCache, http);
-    acl_checklist->nonBlockingCheck(checkNoCacheDoneWrapper, this);
+    if (Config.accessList.noCache) {
+        acl_checklist = clientAclChecklistCreate(Config.accessList.noCache, http);
+        acl_checklist->nonBlockingCheck(checkNoCacheDoneWrapper, this);
+    } else {
+        /* unless otherwise specified, we try to cache. */
+        checkNoCacheDone(1);
+    }
 }
 
 static void
