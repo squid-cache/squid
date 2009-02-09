@@ -58,13 +58,8 @@ struct _mib_tree_entry {
 mib_tree_entry *mib_tree_head;
 mib_tree_entry *mib_tree_last;
 
-#if STDC_HEADERS
 static mib_tree_entry *snmpAddNode(oid * name, int len, oid_ParseFn * parsefunction, instance_Fn * instancefunction, int children,...);
 static oid *snmpCreateOid(int length,...);
-#else
-static mib_tree_entry *snmpAddNode();
-static oid *snmpCreateOid();
-#endif
 SQUIDCEXTERN void (*snmplib_debug_hook) (int, char *);
 static oid *static_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn);
 static oid *time_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn);
@@ -984,33 +979,12 @@ snmpTreeEntry(oid entry, snint len, mib_tree_entry * current)
  * Adds a node to the MIB tree structure and adds the appropriate children
  */
 static mib_tree_entry *
-#if STDC_HEADERS
 snmpAddNode(oid * name, int len, oid_ParseFn * parsefunction, instance_Fn * instancefunction, int children,...)
-#else
-snmpAddNode(va_alist)
-va_dcl
-#endif
 {
-#if STDC_HEADERS
     va_list args;
     int loop;
     mib_tree_entry *entry = NULL;
     va_start(args, children);
-#else
-
-    va_list args;
-    oid *name = NULL;
-    int len = 0, children = 0, loop;
-    oid_ParseFn *parsefunction = NULL;
-    instance_Fn *instancefunction = NULL;
-    mib_tree_entry *entry = NULL;
-    va_start(args);
-    name = va_arg(args, oid *);
-    len = va_arg(args, int);
-    parsefunction = va_arg(args, oid_ParseFn *);
-    instancefunction = va_arg(args, instance_Fn *);
-    children = va_arg(args, int);
-#endif
 
     debugs(49, 6, "snmpAddNode: Children : " << children << ", Oid : ");
     snmpDebugOid(6, name, len);
@@ -1040,26 +1014,12 @@ va_dcl
  * Returns the list of parameters in an oid
  */
 static oid *
-#if STDC_HEADERS
 snmpCreateOid(int length,...)
-#else
-snmpCreateOid(va_alist)
-va_dcl
-#endif
 {
-#if STDC_HEADERS
     va_list args;
     oid *new_oid;
     int loop;
     va_start(args, length);
-#else
-
-    va_list args;
-    int length = 0, loop;
-    oid *new_oid;
-    va_start(args);
-    length va_arg(args, int);
-#endif
 
     new_oid = (oid *)xmalloc(sizeof(oid) * length);
 

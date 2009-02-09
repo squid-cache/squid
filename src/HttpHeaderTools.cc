@@ -103,27 +103,10 @@ httpHeaderCalcMask(HttpHeaderMask * mask, http_hdr_type http_hdr_type_enums[], s
 
 /* same as httpHeaderPutStr, but formats the string using snprintf first */
 void
-#if STDC_HEADERS
 httpHeaderPutStrf(HttpHeader * hdr, http_hdr_type id, const char *fmt,...)
-#else
-httpHeaderPutStrf(va_alist)
-va_dcl
-#endif
 {
-#if STDC_HEADERS
     va_list args;
     va_start(args, fmt);
-#else
-
-    va_list args;
-    HttpHeader *hdr = NULL;
-    http_hdr_type id = HDR_ENUM_END;
-    const char *fmt = NULL;
-    va_start(args);
-    hdr = va_arg(args, HttpHeader *);
-    id = va_arg(args, http_hdr_type);
-    fmt = va_arg(args, char *);
-#endif
 
     httpHeaderPutStrvf(hdr, id, fmt, args);
     va_end(args);
