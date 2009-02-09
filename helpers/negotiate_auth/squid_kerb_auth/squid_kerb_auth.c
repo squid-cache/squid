@@ -115,7 +115,7 @@ char *gethost_name(void) {
   }
 
   freeaddrinfo(hres);
-  hostname[MAXHOSTNAMELEN]='\0';
+  hostname[MAXHOSTNAMELEN-1]='\0';
   return(strdup(hostname));
 }
 
