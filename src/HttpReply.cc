@@ -439,7 +439,7 @@ HttpReply::bodySize(const HttpRequestMethod& method) const
 
 bool HttpReply::sanityCheckStartLine(MemBuf *buf, http_status *error)
 {
-    if (buf->contentSize() >= protoPrefix.size() && protoPrefix.cmp(buf->content(), protoPrefix.size()) != 0) {
+    if (buf->contentSize() >= protoPrefix.psize() && protoPrefix.cmp(buf->content(), protoPrefix.size()) != 0) { //hack
         debugs(58, 3, "HttpReply::sanityCheckStartLine: missing protocol prefix (" << protoPrefix << ") in '" << buf->content() << "'");
         *error = HTTP_INVALID_HEADER;
         return false;

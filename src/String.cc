@@ -233,6 +233,19 @@ String::absorb(String &old)
     old.len_ = 0;
 }
 
+String
+String::substr(size_t from, size_t to) const
+{
+    Must(from >= 0 && from < size());
+    Must(to > 0 && to <= size());
+    Must(to > from);
+
+    String rv;
+    rv.limitInit(rawBuf()+from,to-from);
+    return rv;
+}
+
+
 #if DEBUGSTRINGS
 void
 String::stat(StoreEntry *entry) const
@@ -411,6 +424,7 @@ checkNullString(const char *p)
 {
     return p ? p : "(NULL)";
 }
+
 
 #ifndef _USE_INLINE_
 #include "String.cci"

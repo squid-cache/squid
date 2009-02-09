@@ -929,7 +929,7 @@ ErrorState::BuildContent()
     if (!Config.errorDirectory && request && request->header.getList(HDR_ACCEPT_LANGUAGE, &hdr) ) {
 
         const char *unsafeBuf = hdr.unsafeBuf(); // raw header string for parsing
-        int pos = 0; // current parsing position in header string
+        size_t pos = 0; // current parsing position in header string
         char *reset = NULL; // where to reset the p pointer for each new tag file
         char *dt = NULL;
 

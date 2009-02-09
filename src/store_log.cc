@@ -52,6 +52,8 @@ static OBJH storeLogTagsHist;
 
 static Logfile *storelog = NULL;
 
+static const String str_unknown="unknown";
+
 void
 storeLog(int tag, const StoreEntry * e)
 {
@@ -75,7 +77,10 @@ storeLog(int tag, const StoreEntry * e)
          * Because if we print it before the swap file number, it'll break
          * the existing log format.
          */
-        logfilePrintf(storelog, "%9d.%03d %-7s %02d %08X %s %4d %9d %9d %9d %s %"PRId64"/%"PRId64" %s %s\n",
+
+        String ctype=(reply->content_type.size() ? reply->content_type.termedBuf() : str_unknown);
+
+        logfilePrintf(storelog, "%9d.%03d %-7s %02d %08X %s %4d %9d %9d %9d %.*s %"PRId64"/%"PRId64" %s %s\n",
                       (int) current_time.tv_sec,
                       (int) current_time.tv_usec / 1000,
                       storeLogTags[tag],
@@ -86,7 +91,7 @@ storeLog(int tag, const StoreEntry * e)
                       (int) reply->date,
                       (int) reply->last_modified,
                       (int) reply->expires,
-                      reply->content_type.size() ? reply->content_type.unsafeBuf() : "unknown",
+                      ctype.psize(), ctype.rawBuf(),
                       reply->content_length,
                       e->contentLen(),
                       RequestMethodStr(mem->method),

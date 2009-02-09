@@ -36,6 +36,8 @@
 #define SQUID_STRING_H
 
 #include "config.h"
+#include "TextException.h"
+
 
 /** todo checks to wrap this include properly */
 #include <ostream>
@@ -97,7 +99,10 @@ public:
      */
     _SQUID_INLINE_ char operator [](unsigned int pos) const;
 
-    _SQUID_INLINE_ int size() const;
+    _SQUID_INLINE_ size_t size() const;
+    /// variant of size() suited to be used for printf-alikes.
+    /// throws when size() > MAXINT
+    _SQUID_INLINE_ int psize() const;
     _SQUID_INLINE_ char const * unsafeBuf() const;
 
     /**
@@ -132,6 +137,7 @@ public:
     /// returns std::string::npos if ch is not found
     _SQUID_INLINE_ size_t find(char const ch) const;
     _SQUID_INLINE_ const char * rpos(char const ch) const;
+    _SQUID_INLINE_ size_t rfind(char const ch) const;
     _SQUID_INLINE_ int cmp (char const *) const;
     _SQUID_INLINE_ int cmp (char const *, size_t count) const;
     _SQUID_INLINE_ int cmp (String const &) const;
@@ -139,15 +145,13 @@ public:
     _SQUID_INLINE_ int caseCmp (char const *, size_t count) const;
     _SQUID_INLINE_ int caseCmp (String const &) const;
 
+    String substr(size_t from, size_t to) const;
+
     /** \deprecated Use assignment to [] position instead.
      *              ie   str[newLength] = '\0';
      */
     _SQUID_INLINE_ void cut(size_t newLength);
 
-    /** \deprecated Use assignment to [] position instead.
-     *              ie   str[newLength] = '\0';
-     */
-    _SQUID_INLINE_ void cutPointer(char const *loc);
 
 #if DEBUGSTRINGS
 
@@ -163,11 +167,15 @@ private:
     void setBuffer(char *buf, size_t sz);
 
     /* never reference these directly! */
-    unsigned short int size_; /* buffer size; 64K limit */
+    size_t size_; /* buffer size; 64K limit */
 
-    unsigned short int len_;  /* current length  */
+    size_t len_;  /* current length  */
 
     char *buf_;
+
+    _SQUID_INLINE_ void set(char const *loc, char const ch);
+    _SQUID_INLINE_ void cutPointer(char const *loc);
+
 };
 
 _SQUID_INLINE_ std::ostream & operator<<(std::ostream& os, String const &aString);

@@ -1445,16 +1445,17 @@ FtpStateData::checkAuth(const HttpHeader * req_hdr)
     return 0;			/* different username */
 }
 
+static const String str_type_eq("type=");
 void
 FtpStateData::checkUrlpath()
 {
     int l;
-    const char *t;
+    size_t t;
 
-    if ((t = request->urlpath.rpos(';')) != NULL) {
-        if (strncasecmp(t + 1, "type=", 5) == 0) {
-            typecode = (char) xtoupper(*(t + 6));
-            request->urlpath.cutPointer(t);
+    if ((t = request->urlpath.rfind(';')) != std::string::npos) {
+        if (request->urlpath.substr(t+1,t+1+str_type_eq.size())==str_type_eq) {
+            typecode = (char)xtoupper(request->urlpath[t+str_type_eq.size()+1]);
+            request->urlpath.cut(t);
         }
     }
 

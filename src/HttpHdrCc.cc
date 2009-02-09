@@ -236,7 +236,7 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
 
             /* print option name */
             packerPrintf(p, (pcount ? ", %.*s" : "%.*s"),
-                CcFieldsInfo[flag].name.size(),
+                CcFieldsInfo[flag].name.psize(),
                 CcFieldsInfo[flag].name.rawBuf());
 
             /* handle options with values */
@@ -254,9 +254,9 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
         }
     }
 
-    if (cc->other.size())
+    if (cc->other.size() != 0)
         packerPrintf(p, (pcount ? ", %.*s" : "%.*s"),
-            cc->other.size(), cc->other.rawBuf());
+            cc->other.psize(), cc->other.rawBuf());
 }
 
 /* negative max_age will clean old max_Age setting */
