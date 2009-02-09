@@ -1808,7 +1808,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
          * pass on all other header fields
          * which are NOT listed by the special Connection: header. */
 
-        if (strConnection.size()>0 && strListIsMember(&strConnection, e->name.buf(), ',')) {
+        if (strConnection.size()>0 && strListIsMember(&strConnection, e->name.unsafeBuf(), ',')) {
             debugs(11, 2, "'" << e->name << "' header cropped by Connection: definition");
             return;
         }
