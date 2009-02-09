@@ -55,7 +55,7 @@ TESTS= $(check_PROGRAMS)
 
 ## Special Universal .h dependency test script
 ## aborts if error encountered
-testHeaders: $(top_srcdir)/squid-compat/*.h $(top_srcdir)/libsquid-compat/os/*.h
+testHeaders: $(top_srcdir)/squid-compat/*.h $(top_srcdir)/squid-compat/os/*.h
 	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/squid-compat/" || exit 1
 	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/squid-compat/os/" || exit 1
 
