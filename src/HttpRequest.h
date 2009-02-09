@@ -40,8 +40,7 @@
 #include "HttpRequestMethod.h"
 
 /*  Http Request */
-extern int httpRequestHdrAllowed(const HttpHeaderEntry * e, String * strConnection);
-extern int httpRequestHdrAllowedByName(http_hdr_type id);
+//DEAD?: extern int httpRequestHdrAllowedByName(http_hdr_type id);
 extern void httpRequestPack(void *obj, Packer *p);
 
 
