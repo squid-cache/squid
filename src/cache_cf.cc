@@ -1885,6 +1885,27 @@ free_peer(peer ** P)
 
     while ((p = *P) != NULL) {
         *P = p->next;
+
+         safe_free(p->host);
+         safe_free(p->name);
+         safe_free(p->login);
+#if USE_CACHE_DIGESTS
+         safe_free(p->digest_url);
+#endif
+         safe_free(p->domain);
+#if USE_SSL
+         safe_free(p->sslcert);
+         safe_free(p->sslkey);
+         safe_free(p->ssloptions);
+         safe_free(p->sslcipher);
+         safe_free(p->sslcapath);
+         safe_free(p->sslcafile);
+         safe_free(p->sslflags);
+         safe_free(p->ssldomain);
+	 if (p->sslContext)
+	     SSL_CTX_free(p->sslContext);
+#endif
+
 #if USE_CACHE_DIGESTS
 
         cbdataReferenceDone(p->digest);
@@ -2845,7 +2866,7 @@ free_IpAddress_list(IpAddress_list ** head)
  * be used by icp_port and htcp_port
  */
 static int
-check_null_IpAddress_list(const IPAdress_list * s)
+check_null_IpAddress_list(const IpAddress_list * s)
 {
     return NULL == s;
 }
@@ -3276,6 +3297,9 @@ void
 configFreeMemory(void)
 {
     free_all();
+#if USE_SSL
+    SSL_CTX_free(Config.ssl_client.sslContext);
+#endif
 }
 
 void
@@ -3463,6 +3487,7 @@ free_logformat(logformat ** definitions)
     while (*definitions) {
         logformat *format = *definitions;
         *definitions = format->next;
+        safe_free(format->name);
         accessLogFreeLogFormat(&format->format);
         xfree(format);
     }

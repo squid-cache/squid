@@ -19,4 +19,4 @@ INCLUDES = \
 
 LDADD = \
 	-L$(top_builddir)/squid-compat/libcompat.la \
-	$(LIB_DB)
+	@LIB_DB@

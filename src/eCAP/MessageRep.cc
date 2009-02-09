@@ -39,7 +39,7 @@ Ecap::HeaderRep::value(const Name &name) const
     const String value = squidId == HDR_OTHER ?
                          theHeader.getByName(name.image().c_str()) :
                          theHeader.getStrOrList(squidId);
-    return Value::FromTempString(value.buf());
+    return Value::FromTempString(value.termedBuf());
 }
 
 void
@@ -192,7 +192,7 @@ Ecap::RequestLineRep::uri(const Area &aUri)
 Ecap::RequestLineRep::Area
 Ecap::RequestLineRep::uri() const
 {
-    return Area::FromTempBuffer(theMessage.urlpath.buf(),
+    return Area::FromTempBuffer(theMessage.urlpath.unsafeBuf(),
                                 theMessage.urlpath.size());
 }
 
