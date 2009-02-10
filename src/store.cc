@@ -689,16 +689,16 @@ StoreEntry::setPublicKey()
 
             if (vary.size()) {
                 /* Again, we own this structure layout */
-                rep->header.putStr(HDR_VARY, vary.buf());
+                rep->header.putStr(HDR_VARY, vary.termedBuf());
                 vary.clean();
             }
 
 #if X_ACCELERATOR_VARY
             vary = mem_obj->getReply()->header.getList(HDR_X_ACCELERATOR_VARY);
 
-            if (vary.buf()) {
+            if (vary.unsafeBuf()) {
                 /* Again, we own this structure layout */
-                rep->header.putStr(HDR_X_ACCELERATOR_VARY, vary.buf());
+                rep->header.putStr(HDR_X_ACCELERATOR_VARY, vary.unsafeBuf());
                 vary.clean();
             }
 
@@ -851,25 +851,10 @@ StoreEntry::append(char const *buf, int len)
 
 
 void
-#if STDC_HEADERS
 storeAppendPrintf(StoreEntry * e, const char *fmt,...)
-#else
-storeAppendPrintf(va_alist)
-va_dcl
-#endif
 {
-#if STDC_HEADERS
     va_list args;
     va_start(args, fmt);
-#else
-
-    va_list args;
-    StoreEntry *e = NULL;
-    const char *fmt = NULL;
-    va_start(args);
-    e = va_arg(args, StoreEntry *);
-    fmt = va_arg(args, char *);
-#endif
 
     storeAppendVPrintf(e, fmt, args);
     va_end(args);

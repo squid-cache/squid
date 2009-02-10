@@ -51,7 +51,7 @@ void
 internalStart(HttpRequest * request, StoreEntry * entry)
 {
     ErrorState *err;
-    const char *upath = request->urlpath.buf();
+    const char *upath = request->urlpath.termedBuf();
     debugs(76, 3, "internalStart: " << request->client_addr << " requesting '" << upath << "'");
 
     if (0 == strcmp(upath, "/squid-internal-dynamic/netdb")) {

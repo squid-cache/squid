@@ -134,13 +134,13 @@ httpHdrCcParseInit(HttpHdrCc * cc, const String * str)
                 CcFieldsInfo, CC_ENUM_END);
 
         if (type < 0) {
-            debugs(65, 2, "hdr cc: unknown cache-directive: near '" << item << "' in '" << str->buf() << "'");
+            debugs(65, 2, "hdr cc: unknown cache-directive: near '" << item << "' in '" << str << "'");
             type = CC_OTHER;
         }
 
         if (EBIT_TEST(cc->mask, type)) {
             if (type != CC_OTHER)
-                debugs(65, 2, "hdr cc: ignoring duplicate cache-directive: near '" << item << "' in '" << str->buf() << "'");
+                debugs(65, 2, "hdr cc: ignoring duplicate cache-directive: near '" << item << "' in '" << str << "'");
 
             CcFieldsInfo[type].stat.repCount++;
 
@@ -205,7 +205,7 @@ httpHdrCcDestroy(HttpHdrCc * cc)
 {
     assert(cc);
 
-    if (cc->other.buf())
+    if (cc->other.defined())
         cc->other.clean();
 
     memFree(cc, MEM_HTTP_HDR_CC);
@@ -235,7 +235,9 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
         if (EBIT_TEST(cc->mask, flag) && flag != CC_OTHER) {
 
             /* print option name */
-            packerPrintf(p, (pcount ? ", %s" : "%s"), CcFieldsInfo[flag].name.buf());
+            packerPrintf(p, (pcount ? ", %.*s" : "%.*s"),
+                CcFieldsInfo[flag].name.size(),
+                CcFieldsInfo[flag].name.rawBuf());
 
             /* handle options with values */
 
@@ -253,7 +255,8 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
     }
 
     if (cc->other.size())
-        packerPrintf(p, (pcount ? ", %s" : "%s"), cc->other.buf());
+        packerPrintf(p, (pcount ? ", %.*s" : "%.*s"),
+            cc->other.size(), cc->other.rawBuf());
 }
 
 /* negative max_age will clean old max_Age setting */
@@ -299,7 +302,7 @@ httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, double size, int c
     extern const HttpHeaderStat *dump_stat;	/* argh! */
     const int id = (int) val;
     const int valid_id = id >= 0 && id < CC_ENUM_END;
-    const char *name = valid_id ? CcFieldsInfo[id].name.buf() : "INVALID";
+    const char *name = valid_id ? CcFieldsInfo[id].name.termedBuf() : "INVALID";
 
     if (count || valid_id)
         storeAppendPrintf(sentry, "%2d\t %-20s\t %5d\t %6.2f\n",

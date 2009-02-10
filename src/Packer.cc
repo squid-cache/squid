@@ -167,24 +167,11 @@ packerAppend(Packer * p, const char *buf, int sz)
     p->append(p->real_handler, buf, sz);
 }
 
-#if STDC_HEADERS
 void
 packerPrintf(Packer * p, const char *fmt,...)
 {
     va_list args;
     va_start(args, fmt);
-#else
-void
-packerPrintf(va_alist)
-va_dcl {
-    va_list args;
-    Packer *p = NULL;
-    const char *fmt = NULL;
-    int sz = 0;
-    va_start(args);
-    p = va_arg(args, Packer *);
-    fmt = va_arg(args, char *);
-#endif
 
     assert(p);
     assert(p->real_handler && p->packer_vprintf);

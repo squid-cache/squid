@@ -238,14 +238,18 @@ PconnPool::PconnPool(const char *aDescr) : table(NULL), descr(aDescr)
     for (i = 0; i < PCONN_HIST_SZ; i++)
         hist[i] = 0;
 
-    PconnModule::GetInstance()->add
-    (this);
+    PconnModule::GetInstance()->add(this);
+}
+
+PconnPool::~PconnPool()
+{
+    descr = NULL;
+    hashFreeMemory(table);
 }
 
 void
 PconnPool::push(int fd, const char *host, u_short port, const char *domain, IpAddress &client_address)
 {
-
     IdleConnList *list;
     const char *aKey;
     LOCAL_ARRAY(char, desc, FD_DESC_SZ);
