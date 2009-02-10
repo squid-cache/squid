@@ -95,10 +95,29 @@ public:
      * Retrieve a single character in the string.
      \param pos	Position of character to retrieve.
      */
-    _SQUID_INLINE_ char &operator [](unsigned int pos);
+    _SQUID_INLINE_ char operator [](unsigned int pos) const;
 
     _SQUID_INLINE_ int size() const;
-    _SQUID_INLINE_ char const * buf() const;
+    _SQUID_INLINE_ char const * unsafeBuf() const;
+
+    /**
+     * \retval true the String has some contents
+     */
+    _SQUID_INLINE_ bool defined() const;
+    /**
+     * \retval true the String does not hold any contents
+     */
+    _SQUID_INLINE_ bool undefined() const;
+    /**
+     * Returns a raw pointer to the underlying backing store. The caller has been
+     * verified not to make any assumptions about null-termination
+     */
+    _SQUID_INLINE_ char const * rawBuf() const;
+    /**
+     * Returns a raw pointer to the underlying backing store.
+     * The caller requires it to be null-terminated.
+     */
+    _SQUID_INLINE_ char const * termedBuf() const;
     void limitInit(const char *str, int len); // TODO: rename to assign()
     void clean();
     void reset(char const *str);
@@ -109,12 +128,16 @@ public:
     void absorb(String &old);
     _SQUID_INLINE_ const char * pos(char const *) const;
     _SQUID_INLINE_ const char * pos(char const ch) const;
+    ///offset from string start of the first occurrence of ch
+    /// returns std::string::npos if ch is not found
+    _SQUID_INLINE_ size_t find(char const ch) const;
     _SQUID_INLINE_ const char * rpos(char const ch) const;
     _SQUID_INLINE_ int cmp (char const *) const;
     _SQUID_INLINE_ int cmp (char const *, size_t count) const;
     _SQUID_INLINE_ int cmp (String const &) const;
     _SQUID_INLINE_ int caseCmp (char const *) const;
     _SQUID_INLINE_ int caseCmp (char const *, size_t count) const;
+    _SQUID_INLINE_ int caseCmp (String const &) const;
 
     /** \deprecated Use assignment to [] position instead.
      *              ie   str[0] = 'h';

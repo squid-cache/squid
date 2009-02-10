@@ -89,7 +89,7 @@ ESIAssign::evaluateVariable()
     variable = NULL;
 
     if (unevaluatedVariable.size()) {
-        varState->feedData(unevaluatedVariable.buf(), unevaluatedVariable.size());
+        varState->feedData(unevaluatedVariable.unsafeBuf(), unevaluatedVariable.size());
         char const *result = varState->extractChar ();
 
         /* Consider activating this, when we want to evaluate variables to a
@@ -123,7 +123,7 @@ ESIAssign::process (int dovars)
     if (!value)
         return ESI_PROCESS_COMPLETE;
 
-    varState->addVariable (name.buf(), name.size(), value);
+    varState->addVariable (name.unsafeBuf(), name.size(), value);
 
     value = NULL;
 
@@ -194,7 +194,7 @@ void
 ESIVariableExpression::eval (ESIVarState &state, char const *subref, char const *defaultOnEmpty) const
 {
     /* XXX: Implement evaluation of the expression */
-    ESISegment::ListAppend (state.getOutput(), expression.buf(), expression.size());
+    ESISegment::ListAppend (state.getOutput(), expression.unsafeBuf(), expression.size());
 }
 
 #endif /* USE_SQUID_ESI == 1 */
