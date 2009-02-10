@@ -52,13 +52,16 @@ static OBJH storeLogTagsHist;
 
 static Logfile *storelog = NULL;
 
-static const String str_unknown="unknown";
+static String str_unknown;
 
 void
 storeLog(int tag, const StoreEntry * e)
 {
     MemObject *mem = e->mem_obj;
     HttpReply const *reply;
+
+    if (str_unknown.undefined())
+        str_unknown="unknown"; //hack. Delay initialization as string doesn't support global variables..
 
     if (NULL == storelog)
         return;

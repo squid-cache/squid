@@ -1445,12 +1445,15 @@ FtpStateData::checkAuth(const HttpHeader * req_hdr)
     return 0;			/* different username */
 }
 
-static const String str_type_eq("type=");
+static String str_type_eq;
 void
 FtpStateData::checkUrlpath()
 {
     int l;
     size_t t;
+
+    if (str_type_eq.undefined()) //hack. String doesn't support global-static
+        str_type_eq="type=";
 
     if ((t = request->urlpath.rfind(';')) != std::string::npos) {
         if (request->urlpath.substr(t+1,t+1+str_type_eq.size())==str_type_eq) {
