@@ -52,7 +52,7 @@ String::String() : size_(0), len_(0), buf_ (NULL)
 #endif
 }
 
-size_t
+String::size_type
 String::size() const
 {
     return len_;
@@ -113,7 +113,7 @@ String::pos(char const ch) const
     return strchr(termedBuf(), ch);
 }
 
-size_t
+String::size_type
 String::find(char const ch) const
 {
     const char *c;
@@ -129,7 +129,7 @@ String::rpos(char const ch) const
     return strrchr(termedBuf(), (ch));
 }
 
-size_t
+String::size_type
 String::rfind(char const ch) const
 {
     const char *c;
@@ -158,7 +158,7 @@ String::cmp (char const *aString) const
 }
 
 int
-String::cmp (char const *aString, size_t count) const
+String::cmp (char const *aString, String::size_type count) const
 {
     /* always the same at length 0 */
 
@@ -201,7 +201,7 @@ String::caseCmp(char const *aString) const
 }
 
 int
-String::caseCmp(char const *aString, size_t count) const
+String::caseCmp(char const *aString, String::size_type count) const
 {
     return strncasecmp(termedBuf(), aString, count);
 }
@@ -222,7 +222,7 @@ String::set(char const *loc, char const ch)
 }
 
 void
-String::cut(size_t newLength)
+String::cut(String::size_type newLength)
 {
     if (newLength < 0 || newLength > len_) return;
 

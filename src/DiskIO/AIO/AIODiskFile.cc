@@ -87,10 +87,9 @@ AIODiskFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
 {
     /* Simulate async calls */
 #ifdef _SQUID_WIN32_
-    fd = aio_open(path.unsafeBuf(), flags);
+    fd = aio_open(path.termedBuf(), flags);
 #else
-
-    fd = file_open(path.unsafeBuf() , flags);
+    fd = file_open(path.termedBuf() , flags);
 #endif
 
     ioRequestor = callback;
