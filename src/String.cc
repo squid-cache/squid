@@ -39,7 +39,7 @@
 // low-level buffer allocation,
 // does not free old buffer and does not adjust or look at len_
 void
-String::allocBuffer(size_t sz)
+String::allocBuffer(String::size_type sz)
 {
     PROF_start(StringInitBuf);
     assert (undefined());
@@ -51,7 +51,7 @@ String::allocBuffer(size_t sz)
 // low-level buffer assignment
 // does not free old buffer and does not adjust or look at len_
 void
-String::setBuffer(char *aBuf, size_t aSize)
+String::setBuffer(char *aBuf, String::size_type aSize)
 {
     assert(undefined());
     assert(aSize < 65536);
@@ -234,7 +234,7 @@ String::absorb(String &old)
 }
 
 String
-String::substr(size_t from, size_t to) const
+String::substr(String::size_type from, String::size_type to) const
 {
     Must(from >= 0 && from < size());
     Must(to > 0 && to <= size());
@@ -292,7 +292,7 @@ StringRegistry::remove
 
 StringRegistry StringRegistry::Instance_;
 
-extern size_t memStringCount();
+extern String::size_type memStringCount();
 
 void
 StringRegistry::Stat(StoreEntry *entry)

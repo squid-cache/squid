@@ -88,6 +88,8 @@ public:
     String (String const &);
     ~String();
 
+    typedef unsigned int size_type; //storage size intentionally unspecified
+
     String &operator =(char const *);
     String &operator =(String const &);
     bool operator ==(String const &) const;
@@ -99,7 +101,7 @@ public:
      */
     _SQUID_INLINE_ char operator [](unsigned int pos) const;
 
-    _SQUID_INLINE_ size_t size() const;
+    _SQUID_INLINE_ size_type size() const;
     /// variant of size() suited to be used for printf-alikes.
     /// throws when size() > MAXINT
     _SQUID_INLINE_ int psize() const;
@@ -135,22 +137,22 @@ public:
     _SQUID_INLINE_ const char * pos(char const ch) const;
     ///offset from string start of the first occurrence of ch
     /// returns std::string::npos if ch is not found
-    _SQUID_INLINE_ size_t find(char const ch) const;
+    _SQUID_INLINE_ size_type find(char const ch) const;
     _SQUID_INLINE_ const char * rpos(char const ch) const;
-    _SQUID_INLINE_ size_t rfind(char const ch) const;
+    _SQUID_INLINE_ size_type rfind(char const ch) const;
     _SQUID_INLINE_ int cmp (char const *) const;
-    _SQUID_INLINE_ int cmp (char const *, size_t count) const;
+    _SQUID_INLINE_ int cmp (char const *, size_type count) const;
     _SQUID_INLINE_ int cmp (String const &) const;
     _SQUID_INLINE_ int caseCmp (char const *) const;
-    _SQUID_INLINE_ int caseCmp (char const *, size_t count) const;
+    _SQUID_INLINE_ int caseCmp (char const *, size_type count) const;
     _SQUID_INLINE_ int caseCmp (String const &) const;
 
-    String substr(size_t from, size_t to) const;
+    String substr(size_type from, size_type to) const;
 
     /** \deprecated Use assignment to [] position instead.
      *              ie   str[newLength] = '\0';
      */
-    _SQUID_INLINE_ void cut(size_t newLength);
+    _SQUID_INLINE_ void cut(size_type newLength);
 
 
 #if DEBUGSTRINGS
@@ -163,13 +165,13 @@ public:
 
 private:
     void allocAndFill(const char *str, int len);
-    void allocBuffer(size_t sz);
-    void setBuffer(char *buf, size_t sz);
+    void allocBuffer(size_type sz);
+    void setBuffer(char *buf, size_type sz);
 
     /* never reference these directly! */
-    size_t size_; /* buffer size; 64K limit */
+    size_type size_; /* buffer size; 64K limit */
 
-    size_t len_;  /* current length  */
+    size_type len_;  /* current length  */
 
     char *buf_;
 
