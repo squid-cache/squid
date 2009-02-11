@@ -295,7 +295,7 @@ void ICAPXaction::scheduleRead()
 
     /*
      * See comments in ICAPXaction.h about why we use commBuf
-     * here instead of reading directly into readBuf.unsafeBuf.
+     * here instead of reading directly into readBuf.buf.
      */
     typedef CommCbMemFunT<ICAPXaction, CommIoCbParams> Dialer;
     reader = asyncCall(93,3, "ICAPXaction::noteCommRead",
@@ -320,7 +320,7 @@ void ICAPXaction::noteCommRead(const CommIoCbParams &io)
 
     /*
      * See comments in ICAPXaction.h about why we use commBuf
-     * here instead of reading directly into readBuf.unsafeBuf.
+     * here instead of reading directly into readBuf.buf.
      */
 
     if (io.size > 0) {

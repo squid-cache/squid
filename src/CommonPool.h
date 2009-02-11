@@ -59,7 +59,7 @@ public:
     void *operator new(size_t);
     void operator delete (void *);
     static CommonPool *Factory (unsigned char _class, CompositePoolNode::Pointer&);
-    char const* theClassTypeLabel() const {return typeLabel.unsafeBuf();}
+    char const* theClassTypeLabel() const {return typeLabel.termedBuf();}
 
 protected:
     CommonPool();

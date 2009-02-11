@@ -231,7 +231,7 @@ peerDigestSetCheck(PeerDigest * pd, time_t delay)
 {
     eventAdd("peerDigestCheck", peerDigestCheck, pd, (double) delay, 1);
     pd->times.next_check = squid_curtime + delay;
-    debugs(72, 3, "peerDigestSetCheck: will check peer " << pd->host.unsafeBuf() << " in " << delay << " secs");
+    debugs(72, 3, "peerDigestSetCheck: will check peer " << pd->host << " in " << delay << " secs");
 }
 
 /*
@@ -241,10 +241,10 @@ void
 peerDigestNotePeerGone(PeerDigest * pd)
 {
     if (pd->flags.requested) {
-        debugs(72, 2, "peerDigest: peer " << pd->host.unsafeBuf() << " gone, will destroy after fetch.");
+        debugs(72, 2, "peerDigest: peer " << pd->host << " gone, will destroy after fetch.");
         /* do nothing now, the fetching chain will notice and take action */
     } else {
-        debugs(72, 2, "peerDigest: peer " << pd->host.unsafeBuf() << " is gone, destroying now.");
+        debugs(72, 2, "peerDigest: peer " << pd->host << " is gone, destroying now.");
         peerDigestDestroy(pd);
     }
 }

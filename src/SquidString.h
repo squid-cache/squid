@@ -40,6 +40,12 @@
 /** todo checks to wrap this include properly */
 #include <ostream>
 
+/* squid string placeholder (for printf) */
+#ifndef SQUIDSTRINGPH
+#define SQUIDSTRINGPH "%.*s"
+#define SQUIDSTRINGPRINT(s) s.psize(),s.rawBuf()
+#endif /* SQUIDSTRINGPH */
+
 
 #define DEBUGSTRINGS 0
 #if DEBUGSTRINGS

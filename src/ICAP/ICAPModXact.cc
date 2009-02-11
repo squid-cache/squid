@@ -1111,7 +1111,7 @@ void ICAPModXact::makeRequestHeaders(MemBuf &buf)
     if (TheICAPConfig.send_client_username && request)
         makeUsernameHeader(request, buf);
 
-    // fprintf(stderr, "%s\n", unsafeBuf.content());
+    // fprintf(stderr, "%s\n", buf.content());
 
     buf.append(ICAP::crlf, 2); // terminate ICAP header
 
@@ -1272,7 +1272,7 @@ void ICAPModXact::finishNullOrEmptyBodyPreview(MemBuf &buf)
     Must(!preview.ad());
 
     // do not add last-chunk because our Encapsulated header says null-body
-    // addLastRequestChunk(unsafeBuf);
+    // addLastRequestChunk(buf);
     preview.wrote(0, true);
 
     Must(preview.done());
