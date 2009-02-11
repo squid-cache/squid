@@ -10,7 +10,7 @@
 
 int Adaptation::AccessRule::LastId = 0;
 
-Adaptation::AccessRule::AccessRule(): id(++LastId), acl(NULL)
+Adaptation::AccessRule::AccessRule(const String &aGroupId): id(++LastId), groupId(aGroupId), acl(NULL)
 {
 }
 
@@ -22,7 +22,6 @@ Adaptation::AccessRule::~AccessRule()
 void
 Adaptation::AccessRule::parse(ConfigParser &parser)
 {
-    ConfigParser::ParseString(&groupId);
     aclParseAccessLine(parser, &acl);
 }
 
@@ -66,6 +65,18 @@ Adaptation::FindRule(const AccessRule::Id &id)
     typedef AccessRules::iterator ARI;
     for (ARI i = AllRules().begin(); i != AllRules().end(); ++i) {
         if ((*i)->id == id)
+            return *i;
+    }
+
+    return NULL;
+}
+
+Adaptation::AccessRule *
+Adaptation::FindRuleByGroupId(const String &groupId)
+{
+    typedef AccessRules::iterator ARI;
+    for (ARI i = AllRules().begin(); i != AllRules().end(); ++i) {
+        if ((*i)->groupId == groupId)
             return *i;
     }
 
