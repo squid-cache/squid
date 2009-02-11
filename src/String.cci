@@ -58,13 +58,6 @@ String::size() const
     return len_;
 }
 
-int
-String::psize() const
-{
-    Must(size() < INT_MAX);
-    return size();
-}
-
 char const *
 String::unsafeBuf() const
 {

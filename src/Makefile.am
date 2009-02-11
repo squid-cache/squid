@@ -1512,6 +1512,7 @@ nodist_tests_testDiskIO_SOURCES= \
 	$(SWAP_TEST_GEN_SOURCES)
 tests_testDiskIO_LDADD = \
 	ip/libip.la \
+	libsquid.la \
 	@DISK_LIBS@ \
 	$(SWAP_TEST_LDADD) \
 	SquidConfig.o

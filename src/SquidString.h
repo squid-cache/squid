@@ -36,8 +36,6 @@
 #define SQUID_STRING_H
 
 #include "config.h"
-#include "TextException.h"
-
 
 /** todo checks to wrap this include properly */
 #include <ostream>
@@ -104,7 +102,7 @@ public:
     _SQUID_INLINE_ size_type size() const;
     /// variant of size() suited to be used for printf-alikes.
     /// throws when size() > MAXINT
-    _SQUID_INLINE_ int psize() const;
+    int psize() const;
     _SQUID_INLINE_ char const * unsafeBuf() const;
 
     /**
