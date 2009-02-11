@@ -853,7 +853,7 @@ gopherReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void
         do_next_read = 0;
     } else if (len == 0) {
         /* Connection closed; retrieval done. */
-        /* flush the rest of data in temp unsafeBuf if there is one. */
+        /* flush the rest of data in temp buf if there is one. */
 
         if (gopherState->conversion != gopher_ds::NORMAL)
             gopherEndHTML(gopherState);
