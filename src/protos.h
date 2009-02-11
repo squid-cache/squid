@@ -179,6 +179,7 @@ class FwdState;
 SQUIDCEXTERN void ftpStart(FwdState *);
 
 class HttpRequest;
+class HttpReply;
 
 /// \ingroup ServerProtocolFTPAPI
 SQUIDCEXTERN const char *ftpUrlWith2f(HttpRequest *);

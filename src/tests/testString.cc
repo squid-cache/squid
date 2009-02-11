@@ -65,5 +65,5 @@ void testString::testSubstr()
     String s("0123456789");
     String check=s.substr(3,5);
     String ref("34");
-    CPPUNIT_ASSERT(s1 == ref);
+    CPPUNIT_ASSERT(check == ref);
 }

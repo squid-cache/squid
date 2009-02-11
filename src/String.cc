@@ -35,6 +35,15 @@
 
 #include "squid.h"
 #include "Store.h"
+#include "TextException.h"
+
+int
+String::psize() const
+{
+    Must(size() < INT_MAX);
+    return size();
+}
+
 
 // low-level buffer allocation,
 // does not free old buffer and does not adjust or look at len_
