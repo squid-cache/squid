@@ -15,7 +15,7 @@ namespace Adaptation
 class AccessRule
 {
 public:
-    AccessRule();
+    AccessRule(const String &groupId);
     ~AccessRule();
 
     void parse(ConfigParser &parser);
@@ -37,6 +37,7 @@ private:
 typedef Vector<Adaptation::AccessRule*> AccessRules;
 extern AccessRules &AllRules();
 extern AccessRule *FindRule(const AccessRule::Id &id);
+extern AccessRule *FindRuleByGroupId(const String &groupId);
 
 } // namespace Adaptation
 
