@@ -93,6 +93,7 @@ public:
     ~String();
 
     typedef size_t size_type; //storage size intentionally unspecified
+    const static size_type npos = std::string::npos;
 
     String &operator =(char const *);
     String &operator =(String const &);
@@ -139,7 +140,7 @@ public:
     _SQUID_INLINE_ const char * pos(char const *) const;
     _SQUID_INLINE_ const char * pos(char const ch) const;
     ///offset from string start of the first occurrence of ch
-    /// returns std::string::npos if ch is not found
+    /// returns String::npos if ch is not found
     _SQUID_INLINE_ size_type find(char const ch) const;
     _SQUID_INLINE_ const char * rpos(char const ch) const;
     _SQUID_INLINE_ size_type rfind(char const ch) const;

@@ -144,7 +144,7 @@ Adaptation::Config::DumpServiceSet(StoreEntry *entry, const char *name)
 {
     typedef Groups::iterator GI;
     for (GI i = AllGroups().begin(); i != AllGroups().end(); ++i)
-        storeAppendPrintf(entry, "%s %.*s\n", name, (*i)->id.psize(), (*i)->id.rawBuf());
+        storeAppendPrintf(entry, "%s " SQUIDSTRINGPH "\n", name, SQUIDSTRINGPRINT((*i)->id));
 }
 
 void
@@ -184,7 +184,7 @@ Adaptation::Config::DumpAccess(StoreEntry *entry, const char *name)
 
     typedef AccessRules::iterator CI;
     for (CI i = AllRules().begin(); i != AllRules().end(); ++i) {
-        snprintf(nom, 64, "%s %.*s", name, (*i)->groupId.psize(), (*i)->groupId.rawBuf());
+        snprintf(nom, 64, "%s " SQUIDSTRINGPH, name, SQUIDSTRINGPRINT((*i)->groupId));
         dump_acl_access(entry, nom, (*i)->acl);
     }
 }
