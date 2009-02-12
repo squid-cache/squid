@@ -92,7 +92,7 @@ public:
     String (String const &);
     ~String();
 
-    typedef unsigned int size_type; //storage size intentionally unspecified
+    typedef size_t size_type; //storage size intentionally unspecified
 
     String &operator =(char const *);
     String &operator =(String const &);
@@ -109,7 +109,6 @@ public:
     /// variant of size() suited to be used for printf-alikes.
     /// throws when size() > MAXINT
     int psize() const;
-    _SQUID_INLINE_ char const * unsafeBuf() const;
 
     /**
      * \retval true the String has some contents
