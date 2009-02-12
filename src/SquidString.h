@@ -137,13 +137,14 @@ public:
     void append(char const);
     void append (String const &);
     void absorb(String &old);
-    _SQUID_INLINE_ const char * pos(char const *) const;
-    _SQUID_INLINE_ const char * pos(char const ch) const;
+    const char * pos(char const *aString) const;
+    const char * pos(char const ch) const;
     ///offset from string start of the first occurrence of ch
     /// returns String::npos if ch is not found
-    _SQUID_INLINE_ size_type find(char const ch) const;
-    _SQUID_INLINE_ const char * rpos(char const ch) const;
-    _SQUID_INLINE_ size_type rfind(char const ch) const;
+    size_type find(char const ch) const;
+    size_type find(char const *aString) const;
+    const char * rpos(char const ch) const;
+    size_type rfind(char const ch) const;
     _SQUID_INLINE_ int cmp (char const *) const;
     _SQUID_INLINE_ int cmp (char const *, size_type count) const;
     _SQUID_INLINE_ int cmp (String const &) const;

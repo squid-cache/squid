@@ -434,6 +434,55 @@ checkNullString(const char *p)
     return p ? p : "(NULL)";
 }
 
+const char *
+String::pos(char const *aString) const
+{
+    return strstr(termedBuf(), aString);
+}
+
+const char *
+String::pos(char const ch) const
+{
+    return strchr(termedBuf(), ch);
+}
+
+const char *
+String::rpos(char const ch) const
+{
+    return strrchr(termedBuf(), (ch));
+}
+
+String::size_type
+String::find(char const ch) const
+{
+    const char *c;
+    c=pos(ch);
+    if (c==NULL)
+        return npos;
+    return c-rawBuf();
+}
+
+String::size_type
+String::find(char const *aString) const
+{
+    const char *c;
+    c=pos(aString);
+    if (c==NULL)
+        return npos;
+    return c-rawBuf();
+}
+
+String::size_type
+String::rfind(char const ch) const
+{
+    const char *c;
+    c=rpos(ch);
+    if (c==NULL)
+        return npos;
+    return c-rawBuf();
+}
+
+
 
 #ifndef _USE_INLINE_
 #include "String.cci"
