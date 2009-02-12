@@ -88,44 +88,6 @@ String::operator [](unsigned int pos) const
     return buf_[pos];
 }
 
-const char *
-String::pos(char const *aString) const
-{
-    return strstr(termedBuf(), aString);
-}
-
-const char *
-String::pos(char const ch) const
-{
-    return strchr(termedBuf(), ch);
-}
-
-String::size_type
-String::find(char const ch) const
-{
-    const char *c;
-    c=pos(ch);
-    if (c==NULL)
-        return npos;
-    return c-rawBuf();
-}
-
-const char *
-String::rpos(char const ch) const
-{
-    return strrchr(termedBuf(), (ch));
-}
-
-String::size_type
-String::rfind(char const ch) const
-{
-    const char *c;
-    c=rpos(ch);
-    if (c==NULL)
-        return npos;
-    return c-rawBuf();
-}
-
 
 int
 String::cmp (char const *aString) const

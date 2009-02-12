@@ -3746,7 +3746,7 @@ ftpUrlWith2f(HttpRequest * request)
         request->urlpath.absorb(newbuf);
         safe_free(request->canonical);
     } else if ( !strncmp(request->urlpath.termedBuf(), "%2f", 3) ) {
-        newbuf.append(request->urlpath.rawBuf() +1, request->urlpath.size()-1);
+        newbuf.append(request->urlpath.substr(1,request->urlpath.size()));
         request->urlpath.absorb(newbuf);
         safe_free(request->canonical);
     }

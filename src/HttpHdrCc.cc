@@ -235,9 +235,8 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
         if (EBIT_TEST(cc->mask, flag) && flag != CC_OTHER) {
 
             /* print option name */
-            packerPrintf(p, (pcount ? ", %.*s" : "%.*s"),
-                CcFieldsInfo[flag].name.psize(),
-                CcFieldsInfo[flag].name.rawBuf());
+            packerPrintf(p, (pcount ? ", " SQUIDSTRINGPH : SQUIDSTRINGPH),
+                SQUIDSTRINGPRINT(CcFieldsInfo[flag].name));
 
             /* handle options with values */
 
@@ -255,8 +254,8 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
     }
 
     if (cc->other.size() != 0)
-        packerPrintf(p, (pcount ? ", %.*s" : "%.*s"),
-            cc->other.psize(), cc->other.rawBuf());
+        packerPrintf(p, (pcount ? ", " SQUIDSTRINGPH : SQUIDSTRINGPH),
+            SQUIDSTRINGPRINT(cc->other));
 }
 
 /* negative max_age will clean old max_Age setting */
