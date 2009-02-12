@@ -106,7 +106,7 @@ String::find(char const ch) const
     const char *c;
     c=pos(ch);
     if (c==NULL)
-        return std::string::npos;
+        return npos;
     return c-rawBuf();
 }
 
@@ -122,7 +122,7 @@ String::rfind(char const ch) const
     const char *c;
     c=rpos(ch);
     if (c==NULL)
-        return std::string::npos;
+        return npos;
     return c-rawBuf();
 }
 

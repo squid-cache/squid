@@ -1455,7 +1455,7 @@ FtpStateData::checkUrlpath()
     if (str_type_eq.undefined()) //hack. String doesn't support global-static
         str_type_eq="type=";
 
-    if ((t = request->urlpath.rfind(';')) != std::string::npos) {
+    if ((t = request->urlpath.rfind(';')) != String::npos) {
         if (request->urlpath.substr(t+1,t+1+str_type_eq.size())==str_type_eq) {
             typecode = (char)xtoupper(request->urlpath[t+str_type_eq.size()+1]);
             request->urlpath.cut(t);
