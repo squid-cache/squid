@@ -58,12 +58,6 @@ String::size() const
     return len_;
 }
 
-char const *
-String::unsafeBuf() const
-{
-    return buf_;
-}
-
 bool String::defined() const
 {
     return buf_!=NULL;
