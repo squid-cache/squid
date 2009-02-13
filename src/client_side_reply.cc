@@ -93,7 +93,7 @@ clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) : http 
 void
 clientReplyContext::setReplyToError(
     err_type err, http_status status, const HttpRequestMethod& method, char const *uri,
-    IpAddress &addr, HttpRequest * failedrequest, char *unparsedrequest,
+    IpAddress &addr, HttpRequest * failedrequest, const char *unparsedrequest,
     AuthUserRequest * auth_user_request)
 {
     ErrorState *errstate =
