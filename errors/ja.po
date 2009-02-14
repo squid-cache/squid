@@ -2,14 +2,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2008-11-14 20:01+1300\n"
+"POT-Creation-Date: 2009-02-06 01:30+1300\n"
 "PO-Revision-Date: 2009-01-16 23:39+1300\n"
 "Last-Translator: Takahiro Kambe <taca@back-street.net>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
-"Language: ja\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: ja\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Pootle 1.2.0\n"
 
@@ -139,8 +139,9 @@ msgstr "ディレクトリの内容:"
 #: templates/ERR_READ_ERROR:2 templates/ERR_READ_TIMEOUT:2
 #: templates/ERR_SECURE_CONNECT_FAIL:2 templates/ERR_SHUTTING_DOWN:2
 #: templates/ERR_SOCKET_FAILURE:2 templates/ERR_TOO_BIG:2
-#: templates/ERR_UNSUP_REQ:2 templates/ERR_URN_RESOLVE:2
-#: templates/ERR_WRITE_ERROR:2 templates/ERR_ZERO_SIZE_OBJECT:2
+#: templates/ERR_UNSUP_HTTPVERSION:2 templates/ERR_UNSUP_REQ:2
+#: templates/ERR_URN_RESOLVE:2 templates/ERR_WRITE_ERROR:2
+#: templates/ERR_ZERO_SIZE_OBJECT:2
 msgid "ERROR"
 msgstr "エラー"
 
@@ -167,8 +168,9 @@ msgstr "エラー: FTP アップロードは失敗しました"
 #: templates/ERR_ONLY_IF_CACHED_MISS:1 templates/ERR_READ_ERROR:1
 #: templates/ERR_READ_TIMEOUT:1 templates/ERR_SECURE_CONNECT_FAIL:1
 #: templates/ERR_SHUTTING_DOWN:1 templates/ERR_SOCKET_FAILURE:1
-#: templates/ERR_TOO_BIG:1 templates/ERR_UNSUP_REQ:1
-#: templates/ERR_WRITE_ERROR:1 templates/ERR_ZERO_SIZE_OBJECT:1
+#: templates/ERR_TOO_BIG:1 templates/ERR_UNSUP_HTTPVERSION:1
+#: templates/ERR_UNSUP_REQ:1 templates/ERR_WRITE_ERROR:1
+#: templates/ERR_ZERO_SIZE_OBJECT:1
 msgid "ERROR: The requested URL could not be retrieved"
 msgstr "エラー: 要求されたURLからデータを取り出せませんでした。"
 
@@ -239,9 +241,9 @@ msgstr "転送は拒否されました。"
 #: templates/ERR_ONLY_IF_CACHED_MISS:8 templates/ERR_READ_ERROR:9
 #: templates/ERR_READ_TIMEOUT:9 templates/ERR_SECURE_CONNECT_FAIL:9
 #: templates/ERR_SHUTTING_DOWN:7 templates/ERR_SOCKET_FAILURE:9
-#: templates/ERR_TOO_BIG:10 templates/ERR_UNSUP_REQ:8
-#: templates/ERR_URN_RESOLVE:8 templates/ERR_WRITE_ERROR:9
-#: templates/ERR_ZERO_SIZE_OBJECT:8
+#: templates/ERR_TOO_BIG:10 templates/ERR_UNSUP_HTTPVERSION:8
+#: templates/ERR_UNSUP_REQ:8 templates/ERR_URN_RESOLVE:8
+#: templates/ERR_WRITE_ERROR:9 templates/ERR_ZERO_SIZE_OBJECT:8
 msgid "Generated %T by %h (%s)"
 msgstr "%h (%s)が%Tに生成しました。"
 
@@ -330,8 +332,10 @@ msgid ""
 "administrator, read Squid documentation on cache manager interface and check "
 "cache log for more detailed error messages."
 msgstr ""
-"あなた自身の認証が困難な場合は、<a href=\"mailto:%w%W\">キャッシュの管理者</a>に連絡してください。または、あなた<em>自身</"
-"em>が管理者なら、キャッシュマネージャ・インターフェイスのSquidの文書を読んで、キャッシュのログにある詳細なエラーメッセージを確認してください。"
+"あなた自身の認証が困難な場合は、<a href=\"mailto:%w%W\">キャッシュの管理者</"
+"a>に連絡してください。または、あなた<em>自身</em>が管理者なら、キャッシュマ"
+"ネージャ・インターフェイスのSquidの文書を読んで、キャッシュのログにある詳細な"
+"エラーメッセージを確認してください。"
 
 #: templates/ERR_READ_ERROR:5
 msgid "Read Error"
@@ -362,13 +366,17 @@ msgstr "ありそうな問題: "
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache manager "
 "until you have authenticated yourself."
-msgstr "申し訳ありませんが、あなた自身の認証を済ませるまで、このキャッシュマネージャに %U をリクエストすることは現在許可されていません。"
+msgstr ""
+"申し訳ありませんが、あなた自身の認証を済ませるまで、このキャッシュマネージャ"
+"に %U をリクエストすることは現在許可されていません。"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:6
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache until you "
 "have authenticated yourself."
-msgstr "申し訳ありませんが、あなた自身の認証を済ませるまで、このキャッシュに %U をリクエストすることは現在許可されていません。"
+msgstr ""
+"申し訳ありませんが、あなた自身の認証を済ませるまで、このキャッシュに %U をリ"
+"クエストすることは現在許可されていません。"
 
 #: templates/ERR_ZERO_SIZE_OBJECT:6
 msgid "Squid did not receive any data for this request."
@@ -379,8 +387,8 @@ msgid ""
 "Squid does not support all request methods for all access protocols. For "
 "example, you can not POST a Gopher request."
 msgstr ""
-"Squidはすべてのプロトコルに対して、すべてのリクエスト方式をサポートしているわけではありません。例えば、POSTをGopherのリクエストで行うこと"
-"はできません。"
+"Squidはすべてのプロトコルに対して、すべてのリクエスト方式をサポートしているわ"
+"けではありません。例えば、POSTをGopherのリクエストで行うことはできません。"
 
 #: templates/ERR_LIFETIME_EXP:6
 msgid ""
@@ -392,7 +400,9 @@ msgstr "最大の接続有効時間が過ぎたため、Squidはリクエスト�
 msgid ""
 "Squid is unable to create a TCP socket, presumably due to excessive load. "
 "Please retry your request."
-msgstr "おそらく過大な負荷のため、SquidはTCPソケットを作成できませんでした。再度リクエストしてください。"
+msgstr ""
+"おそらく過大な負荷のため、SquidはTCPソケットを作成できませんでした。再度リク"
+"エストしてください。"
 
 #: templates/ERR_FTP_FAILURE:5 templates/ERR_FTP_FORBIDDEN:5
 #: templates/ERR_FTP_NOT_FOUND:5 templates/ERR_FTP_PUT_ERROR:5
@@ -410,7 +420,9 @@ msgstr ""
 
 #: templates/ERR_FTP_UNAVAILABLE:4
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
-msgstr "以下のURLを取得しようとしているとき、FTPサーバの負荷が高すぎました: <a href=\"%U\">%U</a>"
+msgstr ""
+"以下のURLを取得しようとしているとき、FTPサーバの負荷が高すぎました: <a href="
+"\"%U\">%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
 msgid ""
@@ -435,8 +447,9 @@ msgstr "以下のURLを取得できませんでした: <a href=\"%U\">%U</a>"
 #: templates/ERR_ONLY_IF_CACHED_MISS:4 templates/ERR_READ_ERROR:4
 #: templates/ERR_READ_TIMEOUT:4 templates/ERR_SECURE_CONNECT_FAIL:4
 #: templates/ERR_SHUTTING_DOWN:4 templates/ERR_SOCKET_FAILURE:4
-#: templates/ERR_TOO_BIG:4 templates/ERR_UNSUP_REQ:4
-#: templates/ERR_WRITE_ERROR:4 templates/ERR_ZERO_SIZE_OBJECT:4
+#: templates/ERR_TOO_BIG:4 templates/ERR_UNSUP_HTTPVERSION:4
+#: templates/ERR_UNSUP_REQ:4 templates/ERR_WRITE_ERROR:4
+#: templates/ERR_ZERO_SIZE_OBJECT:4
 msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
@@ -450,7 +463,9 @@ msgstr ""
 
 #: templates/ERR_CONNECT_FAIL:7
 msgid "The remote host or network may be down.  Please try the request again."
-msgstr "接続先のホストもしくはネットワークが稼働していません．しばらく待ってからもう一度試して下さい．"
+msgstr ""
+"接続先のホストもしくはネットワークが稼働していません．しばらく待ってからもう"
+"一度試して下さい．"
 
 #: templates/ERR_TOO_BIG:5
 msgid "The request or reply is too large."
@@ -497,7 +512,13 @@ msgid ""
 "These limits have been established by the Internet Service Provider who "
 "operates this cache.  Please contact them directly if you feel this is an "
 "error."
-msgstr "これらの制限は、このキャッシュの運用者によって課されています。これがエラーだと感じるときは直接運用者に連絡して下さい。"
+msgstr ""
+"これらの制限は、このキャッシュの運用者によって課されています。これがエラーだ"
+"と感じるときは直接運用者に連絡して下さい。"
+
+#: templates/ERR_UNSUP_HTTPVERSION:6
+msgid "This Squid does not accept the HTTP version you are attempting to use."
+msgstr ""
 
 #: templates/ERR_FTP_DISABLED:6
 msgid "This cache does not support FTP."
@@ -507,7 +528,9 @@ msgstr "キャッシュは FTP をサポートしていません．"
 msgid ""
 "This cache is in the process of shutting down and can not service your "
 "request at this time.  Please retry your request again soon."
-msgstr "このキャッシュは稼働停止の処理に入っていて、現在あなたのリクエストへのサービスを提供できません。後で再度リクエストしてください．"
+msgstr ""
+"このキャッシュは稼働停止の処理に入っていて、現在あなたのリクエストへのサービ"
+"スを提供できません。後で再度リクエストしてください．"
 
 #: templates/ERR_FORWARDING_DENIED:6
 msgid ""
@@ -515,8 +538,9 @@ msgid ""
 "sibling relationship.  Perhaps the client at %i is a cache which has been "
 "misconfigured."
 msgstr ""
-"キャッシュ間における関係を強制的に兄弟関係となるようにしているため，キャッシュはあなたのリクエストを転送できませんでした．%i "
-"のキャッシュが誤った設定となっているかもしれません．"
+"キャッシュ間における関係を強制的に兄弟関係となるようにしているため，キャッ"
+"シュはあなたのリクエストを転送できませんでした．%i のキャッシュが誤った設定と"
+"なっているかもしれません．"
 
 #: templates/ERR_ICAP_FAILURE:7
 msgid "This means that some aspect of the ICAP communication failed."
@@ -535,8 +559,8 @@ msgid ""
 "This means that the cache was not able to resolve the hostname presented in "
 "the URL. Check if the address is correct."
 msgstr ""
-"この意味は次の通りですキャッシュは URL 中のホスト名から IP address を調べることができませんでした． "
-"アドレスが間違っていないか確認してください．"
+"この意味は次の通りですキャッシュは URL 中のホスト名から IP address を調べるこ"
+"とができませんでした． アドレスが間違っていないか確認してください．"
 
 #: templates/ERR_ESI:7
 msgid ""
@@ -550,8 +574,9 @@ msgid ""
 "comply with RFC 1738).  If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
-"これは(RFC 1738に従っていない)絶対パスを含んだFTPのURLによる可能性があります。その場合に該当するなら、ファイルは<a "
-"href=\"%B\">%B</a>に見つかるかもしれません。"
+"これは(RFC 1738に従っていない)絶対パスを含んだFTPのURLによる可能性がありま"
+"す。その場合に該当するなら、ファイルは<a href=\"%B\">%B</a>に見つかるかもしれ"
+"ません。"
 
 #: templates/ERR_SECURE_CONNECT_FAIL:7
 msgid ""
@@ -569,8 +594,10 @@ msgid ""
 "administrator does not allow this cache to make direct connections to origin "
 "servers, and all configured parent caches are currently unreachable."
 msgstr ""
-"あなたのリクエストは，元のサーバもしくは他の親キャッシュサーバへ転送できません．これは次の理由により発生したと考えられますキャッシュ管理者が元のサーバに"
-"直接接続しないように設定した． 設定されている全ての親キャッシュサーバへ現在到達できない．"
+"あなたのリクエストは，元のサーバもしくは他の親キャッシュサーバへ転送できませ"
+"ん．これは次の理由により発生したと考えられますキャッシュ管理者が元のサーバに"
+"直接接続しないように設定した． 設定されている全ての親キャッシュサーバへ現在到"
+"達できない．"
 
 #: templates/ERR_DNS_FAIL:5
 msgid "Unable to determine IP address from host name <q>%H</q>"
@@ -580,6 +607,10 @@ msgstr "以下のホスト名の IP address を調べられません．<q>%H</q>
 msgid "Unable to forward this request at this time."
 msgstr "現在，リクエストの転送はできません．"
 
+#: templates/ERR_UNSUP_HTTPVERSION:3 templates/ERR_UNSUP_HTTPVERSION:5
+msgid "Unsupported HTTP version"
+msgstr ""
+
 #: templates/ERR_UNSUP_REQ:5
 msgid "Unsupported Request Method and Protocol"
 msgstr "サポートされていないリクエスト/プロトコルです．"
@@ -588,7 +619,9 @@ msgstr "サポートされていないリクエスト/プロトコルです．"
 msgid ""
 "Valid document was not found in the cache and <q>only-if-cached</q> "
 "directive was specified."
-msgstr "<q>only-if-cached</q> の指定がありましたが，その文書がキャッシュに存在していません．"
+msgstr ""
+"<q>only-if-cached</q> の指定がありましたが，その文書がキャッシュに存在してい"
+"ません．"
 
 #: templates/ERR_FTP_PUT_ERROR:4
 msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
@@ -604,9 +637,10 @@ msgid ""
 "directive. The document was not found in the cache, <em>or</em> it required "
 "revalidation prohibited by the <q>only-if-cached</q> directive."
 msgstr ""
-"キャッシュへの <q>only-if-cached</q> "
-"つきリクエストがありましたが，この文書はキャッシュに存在していないか，<em>あるいは</em>すでにキャッシュにはあるが(<q>only-if-"
-"cached</q> によって禁止されている)この文書が更新されているかどうかの再確認が必要です．"
+"キャッシュへの <q>only-if-cached</q> つきリクエストがありましたが，この文書は"
+"キャッシュに存在していないか，<em>あるいは</em>すでにキャッシュにはあるが"
+"(<q>only-if-cached</q> によって禁止されている)この文書が更新されているかどう"
+"かの再確認が必要です．"
 
 #: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
 #: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
@@ -619,9 +653,9 @@ msgstr ""
 #: templates/ERR_ONLY_IF_CACHED_MISS:7 templates/ERR_READ_ERROR:8
 #: templates/ERR_READ_TIMEOUT:8 templates/ERR_SECURE_CONNECT_FAIL:8
 #: templates/ERR_SHUTTING_DOWN:6 templates/ERR_SOCKET_FAILURE:8
-#: templates/ERR_TOO_BIG:9 templates/ERR_UNSUP_REQ:7
-#: templates/ERR_URN_RESOLVE:7 templates/ERR_WRITE_ERROR:8
-#: templates/ERR_ZERO_SIZE_OBJECT:7
+#: templates/ERR_TOO_BIG:9 templates/ERR_UNSUP_HTTPVERSION:7
+#: templates/ERR_UNSUP_REQ:7 templates/ERR_URN_RESOLVE:7
+#: templates/ERR_WRITE_ERROR:8 templates/ERR_ZERO_SIZE_OBJECT:7
 msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
 msgstr ""
 

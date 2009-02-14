@@ -2242,6 +2242,23 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         goto finish;
     }
 
+    /* RFC 2616 section 10.5.6 : handle unsupported HTTP versions cleanly. */
+    /* We currently only accept 0.9, 1.0, 1.1 */
+    if ( (http_ver.major == 0 && http_ver.minor != 9) ||
+         (http_ver.major == 1 && http_ver.minor > 1 ) ||
+         (http_ver.major > 1) ) {
+
+        clientStreamNode *node = context->getClientReplyContext();
+        debugs(33, 5, "Unsupported HTTP version discovered. :\n" << HttpParserHdrBuf(hp));
+        clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+        assert (repContext);
+        repContext->setReplyToError(ERR_UNSUP_HTTPVERSION, HTTP_HTTP_VERSION_NOT_SUPPORTED, method, http->uri, conn->peer, NULL, HttpParserHdrBuf(hp), NULL);
+        assert(context->http->out.offset == 0);
+        context->pullData();
+        conn->flags.readMoreRequests = false;
+        goto finish;
+    }
+
     /* compile headers */
     /* we should skip request line! */
     /* XXX should actually know the damned buffer size here */
