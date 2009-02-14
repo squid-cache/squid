@@ -3790,7 +3790,7 @@ rm -f core
 
 AC_CONFIG_FILES([\
 	Makefile \
-	squid-compat/Makefile \
+	compat/Makefile \
 	lib/Makefile \
 	scripts/Makefile \
 	scripts/RunCache \

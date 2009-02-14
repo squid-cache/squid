@@ -27,7 +27,7 @@ EXTRA_DIST = \
 sysconf_DATA = \
 	msntauth.conf.default
 
-LDADD = -L$(top_builddir)/lib -lmiscutil $(XTRA_LIBS) -L$(top_builddir)/squid-compat/libcompat.la
+LDADD = -L$(top_builddir)/lib -lmiscutil $(XTRA_LIBS) -L$(top_builddir)/compat/libcompat.la
 
 INCLUDES = \
 	-I$(top_srcdir) \
