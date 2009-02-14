@@ -17,7 +17,7 @@ INCLUDES = \
 	-I$(top_srcdir)/src
 
 LDADD = \
-	-L$(top_builddir)/squid-compat/libcompat.la \
+	-L$(top_builddir)/compat/libcompat.la \
 	-L$(top_builddir)/lib -lmiscutil \
 	$(top_builddir)/src/globals.o \
 	$(top_builddir)/src/time.o
