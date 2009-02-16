@@ -27,7 +27,6 @@ class Config
 {
 public:
     static void Finalize(bool enable);
-    static void DestroyConfig();
 
     static void ParseServiceSet(void);
     static void FreeServiceSet(void);
