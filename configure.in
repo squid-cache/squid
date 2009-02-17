@@ -2190,10 +2190,10 @@ AC_PATH_PROG(RM, rm, $FALSE)
 AC_PATH_PROG(MV, mv, $FALSE)
 AC_PATH_PROG(MKDIR, mkdir, $FALSE)
 AC_PATH_PROG(LN, ln, cp)
-AC_PATH_PROG(PERL, perl, none)
 dnl automake handles this AC_PATH_PROG(MAKEDEPEND, makedepend, $TRUE)
-AC_PATH_PROG(AR, ar, $FALSE)
+AC_PROG_EGREP
 
+AC_PATH_PROG(PERL, perl, none)
 if test "$ac_cv_path_PERL" = "none"; then
   AC_MSG_FAILURE([Perl is required to compile Squid. Please install Perl and then re-run configure ])
 fi
@@ -2206,6 +2206,7 @@ case "$host" in
 esac
 
 dnl set $(AR)
+AC_PATH_PROG(AR, ar, $FALSE)
 AR_R="$AR r"
 case "$host" in
 	*-next-nextstep3)
