@@ -153,11 +153,11 @@ Adaptation::Config::ParseAccess(ConfigParser &parser)
     String groupId;
     ConfigParser::ParseString(&groupId);
     AccessRule *r;
-    if (!(r=FindRuleByGroupId(groupId)))
+    if (!(r=FindRuleByGroupId(groupId))) {
 	r = new AccessRule(groupId);
-
+	AllRules().push_back(r);
+    }
     r->parse(parser);
-    AllRules().push_back(r);
 }
 
 void
@@ -166,19 +166,6 @@ Adaptation::Config::FreeAccess()
     while (!AllRules().empty()) {
         delete AllRules().back();
         AllRules().pop_back();
-    }
-}
-
-void
-Adaptation::Config::DestroyConfig()
-{
-    FreeAccess();
-    FreeServiceSet();
-
-    // invalidate each service so that it can be deleted when refcount=0
-    while (!AllServices().empty()) {
-        AllServices().back()->invalidate();
-        AllServices().pop_back();
     }
 }
 
@@ -203,6 +190,14 @@ Adaptation::Config::Config()
 // with global arrays shared by those individual configs
 Adaptation::Config::~Config()
 {
-    Adaptation::Config::DestroyConfig();
+    FreeAccess();
+    FreeServiceSet();
+
+    // invalidate each service so that it can be deleted when refcount=0
+    while (!AllServices().empty()) {
+        AllServices().back()->invalidate();
+        AllServices().pop_back();
+    }
+
     freeService();
 }
