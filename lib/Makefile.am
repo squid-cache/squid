@@ -89,7 +89,6 @@ libmiscutil_a_SOURCES = \
 	stub_memaccount.c \
 	util.c \
 	uudecode.c \
-	assert.c \
 	xusleep.c \
 	$(XPROF_STATS_SOURCE) \
 	$(WIN32SRC)
@@ -135,7 +134,7 @@ tests_testAll_SOURCES= \
 	tests/testMain.cc \
 	$(XPROF_STATS_SOURCE) \
 	$(WIN32SRC) \
-	util.c assert.c
+	util.c
 
 tests_testAll_LDADD= @SQUID_CPPUNIT_LA@ @SQUID_CPPUNIT_LIBS@
 

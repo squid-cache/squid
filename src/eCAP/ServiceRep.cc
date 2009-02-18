@@ -1,7 +1,6 @@
 #include "squid.h"
 #include <libecap/adapter/service.h>
 #include "TextException.h"
-#include "assert.h"
 #include "eCAP/ServiceRep.h"
 #include "eCAP/XactionRep.h"
 

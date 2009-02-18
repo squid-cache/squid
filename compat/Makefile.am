@@ -25,11 +25,12 @@ $(OBJS): $(top_srcdir)/include/version.h $(top_srcdir)/include/autoconf.h
 noinst_LTLIBRARIES = libcompat.la
 
 libcompat_la_SOURCES = \
+	assert.h \
 	compat.h \
-	osdetect.h \
 	compat_shared.h \
 	fdsetsize.h \
 	gnuregex.h \
+	osdetect.h \
 	stdvarargs.h \
 	valgrind.h \
 	\
@@ -46,6 +47,7 @@ libcompat_la_SOURCES = \
 	os/sunos.h \
 	os/windows.h \
 	\
+	assert.cc \
 	compat.cc \
 	GnuRegex.c
 
