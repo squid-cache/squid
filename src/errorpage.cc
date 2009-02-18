@@ -942,7 +942,6 @@ ErrorState::BuildContent()
      */
     if (!Config.errorDirectory && request && request->header.getList(HDR_ACCEPT_LANGUAGE, &hdr) ) {
 
-        const char *raw_hdr = hdr.termedBuf(); // raw header string for parsing
         size_t pos = 0; // current parsing position in header string
         char *reset = NULL; // where to reset the p pointer for each new tag file
         char *dt = NULL;
@@ -964,12 +963,12 @@ ErrorState::BuildContent()
              *  - IFF a tag contains only two characters we can wildcard ANY translations matching: <it> '-'? .*
              *    with preference given to an exact match.
              */
-            while (pos < hdr.size() && raw_hdr[pos] != ';' && raw_hdr[pos] != ',' && !xisspace(raw_hdr[pos]) && dt < (dir+256) ) {
-                *dt++ = xtolower(raw_hdr[pos++]);
+            while (pos < hdr.size() && hdr[pos] != ';' && hdr[pos] != ',' && !xisspace(hdr[pos]) && dt < (dir+256) ) {
+                *dt++ = xtolower(hdr[pos++]);
             }
             *dt++ = '\0'; // nul-terminated the filename content string before system use.
 
-            debugs(4, 9, HERE << "STATE: dt='" << dt << "', reset='" << reset << "', reset[1]='" << reset[1] << "', pos=" << pos << ", buf='" << &raw_hdr[pos] << "'");
+            debugs(4, 9, HERE << "STATE: dt='" << dt << "', reset='" << reset << "', reset[1]='" << reset[1] << "', pos=" << pos << ", buf='" << hdr.substr(pos,hdr.size()) << "'");
 
             /* if we found anything we might use, try it. */
             if (*reset != '\0') {
@@ -997,8 +996,8 @@ ErrorState::BuildContent()
             dt = reset; // reset for next tag testing. we replace the failed name instead of cloning.
 
             // IFF we terminated the tag on ';' we need to skip the 'q=' bit to the next ',' or end.
-            while (pos < hdr.size() && raw_hdr[pos] != ',') pos++;
-            if (raw_hdr[pos] == ',') pos++;
+            while (pos < hdr.size() && hdr[pos] != ',') pos++;
+            if (hdr[pos] == ',') pos++;
         }
     }
 #endif /* USE_ERR_LOCALES */

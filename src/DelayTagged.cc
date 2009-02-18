@@ -195,7 +195,7 @@ DelayTaggedBucket::~DelayTaggedBucket()
 void
 DelayTaggedBucket::stats (StoreEntry *entry) const
 {
-    storeAppendPrintf(entry, " " SQUIDSTRINGPH , SQUIDSTRINGPRINT(tag));
+    storeAppendPrintf(entry, " :" SQUIDSTRINGPH , SQUIDSTRINGPRINT(tag));
     theBucket.stats (entry);
 }
 

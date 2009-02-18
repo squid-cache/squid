@@ -32,9 +32,9 @@
  *
  */
 
+#include "config.h"
 #include "assert.h"
 #include <cstring>
-#include "squid.h"
 
 #ifdef HAVE_STDINT_H
 #include <stdint.h> //for INT_MAX

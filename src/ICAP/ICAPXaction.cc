@@ -148,12 +148,14 @@ void ICAPXaction::closeConnection()
         cancelRead(); // may not work
 
         if (reuseConnection && !doneWithIo()) {
+            //status() adds leading spaces.
             debugs(93,5, HERE << "not reusing pconn due to pending I/O" << status());
             reuseConnection = false;
         }
 
         if (reuseConnection) {
             IpAddress client_addr;
+            //status() adds leading spaces.
             debugs(93,3, HERE << "pushing pconn" << status());
             AsyncCall::Pointer call = NULL;
             commSetTimeout(connection, -1, call);
@@ -161,6 +163,7 @@ void ICAPXaction::closeConnection()
                                 theService->cfg().port, NULL, client_addr);
             disableRetries();
         } else {
+            //status() adds leading spaces.
             debugs(93,3, HERE << "closing pconn" << status());
             // comm_close will clear timeout
             comm_close(connection);
