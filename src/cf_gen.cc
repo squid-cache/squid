@@ -47,7 +47,6 @@
 
 //#include "squid.h"
 #include "config.h"
-#include "assert.h"
 //#include "SquidTime.h"
 #include "cf_gen_defines.h"
 #include "util.h"

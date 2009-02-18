@@ -9,9 +9,21 @@ AUTOMAKE_OPTIONS = subdir-objects
 AM_CFLAGS = @SQUID_CFLAGS@
 AM_CXXFLAGS = @SQUID_CXXFLAGS@
 
-INCLUDES        = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/src
+INCLUDES = \
+	-I$(top_srcdir) \
+	-I. \
+	-I$(top_builddir)/include \
+	-I$(top_srcdir)/include \
+	-I$(top_srcdir)/src
+
+LDADD = \
+	$(top_builddir)/compat/libcompat.la \
+	-L$(top_builddir)/lib -lmiscutil \
+	$(top_builddir)/src/globals.o \
+	$(top_builddir)/src/time.o
 
 EXTRA_PROGRAMS = mem_node_test membanger splay tcp-banger2 rfc1738
+
 EXTRA_DIST = testheaders.sh
 
 ESI_ALL_TESTS = \
@@ -50,7 +62,6 @@ check_PROGRAMS= debug \
 		VirtualDeleteOperator
 
 
-LDADD =$(top_builddir)/src/globals.o $(top_builddir)/src/time.o -L$(top_builddir)/lib -lmiscutil
 tcp_banger2_LDADD = -L$(top_builddir)/lib -lmiscutil
 DEBUG_SOURCE = test_tools.cc
 debug_SOURCES = debug.cc $(DEBUG_SOURCE)

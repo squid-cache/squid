@@ -1,9 +1,13 @@
 # makefile for smblib
 
-INCLUDES      = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
-		-I$(top_srcdir)/src/
+INCLUDES = \
+	-I$(top_srcdir) \
+	-I. \
+	-I$(top_builddir)/include \
+	-I$(top_srcdir)/include
 
 noinst_LIBRARIES = libsmbvalid.a
+
 libsmbvalid_a_SOURCES = valid.c session.c rfcnb-util.c rfcnb-io.c \
 	smblib-util.c smblib.c smbencrypt.c smbdes.c md4.c byteorder.h \
 	rfcnb-error.h  rfcnb-util.h  smbencrypt.h     smblib.h        valid.h \

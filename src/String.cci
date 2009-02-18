@@ -32,7 +32,7 @@
  *
  */
 
-#include "assert.h"
+#include "config.h"
 #include <cstring>
 
 String::String() : size_(0), len_(0), buf_ (NULL)
