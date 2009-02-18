@@ -25,8 +25,12 @@ fi
 
 #
 # empty all the existing code, reconfigure and builds test code
-
-make -k distclean || echo "distclean done. errors are unwanted but okay here."
+# but skip if we have no files to remove.
+# AYJ: 1 because we already created the build log
+FILECOUNT=`ls -1 | grep -c .`
+if test "$FILECOUNT" != "1" ; then
+  make -k distclean || echo "distclean done. errors are unwanted but okay here."
+fi
 
 #
 # above command currently encounters dependancy problems on cleanup.

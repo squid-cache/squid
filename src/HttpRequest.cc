@@ -326,22 +326,6 @@ HttpRequest::prefixLen()
            header.len + 2;
 }
 
-/**
- * Returns true if HTTP allows us to pass this header on.  Does not
- * check anonymizer (aka header_access) configuration.
- */
-int
-httpRequestHdrAllowed(const HttpHeaderEntry * e, String * strConn)
-{
-    assert(e);
-    /* check connection header */
-
-    if (strConn && strListIsMember(strConn, e->name.termedBuf(), ','))
-        return 0;
-
-    return 1;
-}
-
 /* sync this routine when you update HttpRequest struct */
 void
 HttpRequest::hdrCacheInit()
