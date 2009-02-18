@@ -98,6 +98,7 @@ typedef enum {
     ERR_ESI,                    /* Failure to perform ESI processing */
     ERR_INVALID_RESP,
     ERR_ICAP_FAILURE,
+    ERR_UNSUP_HTTPVERSION,     /* HTTP version is not supported */
     ERR_MAX
 } err_type;
 

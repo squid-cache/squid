@@ -430,8 +430,9 @@ info_get_mallstat(int size, int number, int oldnum, void *data)
 {
     StoreEntry *sentry = (StoreEntry *)data;
 
+// format: "%12s %15s %6s %12s\n","Alloc Size","Count","Delta","Alloc/sec"
     if (number > 0)
-        storeAppendPrintf(sentry, "%d\t %d\t %d\t %.1f\n", size, number, number - oldnum, xdiv((number - oldnum), xm_deltat));
+        storeAppendPrintf(sentry, "%12d %15d %6d %.1f\n", size, number, number - oldnum, xdiv((number - oldnum), xm_deltat));
 }
 
 #endif
@@ -752,7 +753,7 @@ info_get(StoreEntry * sentry)
     xm_deltat = current_dtime - xm_time;
     xm_time = current_dtime;
     storeAppendPrintf(sentry, "\nMemory allocation statistics\n");
-    storeAppendPrintf(sentry, "Allocation Size\t Alloc Count\t Alloc Delta\t Allocs/sec \n");
+    storeAppendPrintf(sentry, "%12s %15s %6s %12s\n","Alloc Size","Count","Delta","Alloc/sec");
     malloc_statistics(info_get_mallstat, sentry);
 #endif
 }

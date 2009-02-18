@@ -14,7 +14,7 @@
 # system details
 	echo -n "SYSTEM: " && uname -rsim
 	echo -n "DATE:   " && date
-	echo -n "SQUID:" && (bzr info | grep "public branch")
+	echo -n "SQUID:" && (bzr info | grep "checkout of branch")
 
 # build results
 	bzr update 2>&1
