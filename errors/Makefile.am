@@ -30,6 +30,7 @@ TRANSLATIONS = \
 	id \
 	it \
 	ja \
+	lv \
 	nl \
 	pt-br \
 	ro \

@@ -7,18 +7,20 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-02-06 01:30+1300\n"
-"PO-Revision-Date: 2008-09-29 00:16+1200\n"
-"Last-Translator: Amos Jeffries <squid3@treenet.co.nz>\n"
+"POT-Creation-Date: 2009-02-18 18:05+1300\n"
+"PO-Revision-Date: 2009-02-10 12:40+0000\n"
+"Last-Translator: Félix Gómez <Unknown>\n"
 "Language-Team: Spanish <es@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Pootle 1.1.0\n"
+"X-Launchpad-Export-Date: 2009-02-18 03:40+0000\n"
+"X-Generator: Launchpad (build Unknown)\n"
 
 #: templates/ERR_FTP_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
 msgstr ""
+"<a href=\"../\">Directorio superior</a> (<a href=\"/\">Directorio Raiz</a>)"
 
 #: templates/ERR_INVALID_REQ:4
 msgid ""
@@ -126,7 +128,7 @@ msgstr "Falta Content-Length en las peticiones POST o PUT"
 
 #: templates/ERR_FTP_LISTING:3
 msgid "Directory Content:"
-msgstr ""
+msgstr "Contenido del Directorio:"
 
 #: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
@@ -156,7 +158,6 @@ msgid "ERROR: Cache Manager Access Denied"
 msgstr "ERROR: Acceso Denegado al Cach&eacute; Manager"
 
 #: templates/ERR_FTP_PUT_ERROR:1
-#, fuzzy
 msgid "ERROR: FTP upload failed"
 msgstr "ERROR: falla en envio FTP"
 
@@ -183,28 +184,27 @@ msgstr "ERROR: El URN solicitado no se ha podido conseguir"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
-msgstr ""
+msgstr "El procesado ESI falló"
 
 #: templates/ERR_FTP_LISTING:4
 msgid "FTP Directory Listing"
-msgstr ""
+msgstr "Listado del directorio FTP"
 
 #: templates/ERR_FTP_LISTING:1
 msgid "FTP Directory: %U"
-msgstr ""
+msgstr "Directorio FTP: %U"
 
 #: templates/ERR_FTP_LISTING:2
 msgid "FTP Directory: <a href=\"/\">%U</a>/"
-msgstr ""
+msgstr "Directorio FTP: <a href=\"/\">%U</a>/"
 
 #: templates/ERR_FTP_PUT_CREATED:1
 msgid "FTP PUT Successful: File Created"
-msgstr "FTP PUT Exitoso: Archivo Creado"
+msgstr "FTP PUT Correcto: Archivo Creado"
 
 #: templates/ERR_FTP_PUT_MODIFIED:1
-#, fuzzy
 msgid "FTP PUT Successful: File Updated"
-msgstr "FTP PUT Exitoso: Archivo actualizado"
+msgstr "FTP PUT Correcto: Archivo actualizado"
 
 #: templates/ERR_FTP_PUT_ERROR:3
 msgid "FTP PUT/upload failed"
@@ -216,7 +216,7 @@ msgstr "Servicio FTP deshabilitado"
 
 #: templates/ERR_SECURE_CONNECT_FAIL:5
 msgid "Failed to establish a secure connection to %I"
-msgstr ""
+msgstr "No se ha podido establecer una conexión segura con %I"
 
 #: templates/ERR_FTP_PUT_CREATED:3
 msgid "File created"
@@ -255,9 +255,8 @@ msgid "Hey, don't expect too much from URNs on %T :)"
 msgstr "Hey, no espere mucho de URNs en %T :)"
 
 #: templates/ERR_ICAP_FAILURE:5
-#, fuzzy
 msgid "ICAP protocol error."
-msgstr "Error de protocolo ICAP"
+msgstr "Error de protocolo ICAP."
 
 #: templates/ERR_TOO_BIG:7
 msgid ""
@@ -324,7 +323,7 @@ msgstr "Operación éxitoso"
 
 #: templates/ERR_FTP_LISTING:5
 msgid "Parent Directory"
-msgstr ""
+msgstr "Directorio superior"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:7
 msgid ""
@@ -426,17 +425,18 @@ msgid "Squid sent the following FTP command:"
 msgstr "Squid ha enviado el siguiente comando FTP:"
 
 #: templates/ERR_DNS_FAIL:6
-#, fuzzy
 msgid "The DNS server returned:"
 msgstr "El servidor DNS devolvió:"
 
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
-msgstr ""
+msgstr "El procesador ESI devolvió:"
 
 #: templates/ERR_FTP_UNAVAILABLE:4
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr ""
+"El servidor FTP estaba demasiado ocupado para recuperar la URL: <a href=\"%U"
+"\">%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
 msgid ""
@@ -471,12 +471,16 @@ msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
+"Se encontró el siguiente error al intentar recuperar la dirección URL: <a "
+"href=\"%U\">%U</a>"
 
 #: templates/ERR_URN_RESOLVE:4
 msgid ""
 "The following error was encountered while trying to retrieve the URN: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
+"Se encontró el siguiente error al intentar recuperar la dirección URN: <a "
+"href=\"%U\">%U</a>"
 
 #: templates/ERR_CONNECT_FAIL:7
 msgid "The remote host or network may be down.  Please try the request again."
@@ -563,13 +567,16 @@ msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:7
 msgid "This means that some aspect of the ICAP communication failed."
-msgstr ""
+msgstr "Esto significa que falló algún aspecto de la comunicación ICAP."
 
 #: templates/ERR_FTP_PUT_ERROR:7
 msgid ""
 "This means that the FTP server may not have permission or space to store the "
 "file. Check the path, permissions, diskspace and try again."
 msgstr ""
+"Esto significa que el servidor FTP puede que no tenga permiso o espacio para "
+"almacenar el archivo. Compruebe la ruta, permisos, espacio en disco y vuelva "
+"a intentarlo."
 
 #: templates/ERR_DNS_FAIL:7
 msgid ""
@@ -585,6 +592,8 @@ msgid ""
 "This means that the surrogate was not able to process the ESI template. "
 "Please report this error to the webmaster."
 msgstr ""
+"Esto significa que el sustituto no fue capaz de procesar la plantilla ESI. "
+"Por favor, informe de este error al administrador web."
 
 #: templates/ERR_FTP_NOT_FOUND:7
 msgid ""
@@ -603,6 +612,10 @@ msgid ""
 "host does not support secure connections, or the proxy is not satisfied with "
 "the host security credentials."
 msgstr ""
+"Este proxy y el host remoto no han podido negociar una confguración de "
+"seguridad aceptable mutua para manejar su solicitud. Es posible que el host "
+"remoto sea incompatible con conexiones seguras, o el proxy no esté "
+"satisfecho con las credenciales de seguridad del host."
 
 #: templates/ERR_CANNOT_FORWARD:6
 msgid ""
@@ -692,7 +705,7 @@ msgstr ""
 
 #: templates/ERR_ESI:8
 msgid "Your webmaster is <a href=\"mailto:%w\">%w</a>."
-msgstr ""
+msgstr "Su administrador web es <a href=\"mailto:%w\">%w</a>."
 
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
