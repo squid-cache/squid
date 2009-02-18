@@ -104,9 +104,8 @@ init_syntax_once(void)
 
 #define SYNTAX(c) re_syntax_table[c]
 
-
 /* Get the interface, including the syntax bits.  */
-#include "GnuRegex.h"
+#include "compat/GnuRegex.h"
 
 /* Compile a fastmap for the compiled pattern in BUFFER; used to
  * accelerate searches.  Return 0 if successful and -2 if was an
