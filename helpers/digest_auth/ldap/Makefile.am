@@ -19,7 +19,7 @@ INCLUDES = \
 	-I$(top_srcdir)/include
 
 LDADD = \
-	-L$(top_builddir)/compat/libcompat.la \
+	$(top_builddir)/compat/libcompat.la \
 	-L$(top_builddir)/lib -lmiscutil \
 	$(LIB_LDAP) \
 	$(LIB_LBER) \
