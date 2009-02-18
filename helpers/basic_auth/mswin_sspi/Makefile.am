@@ -12,7 +12,7 @@ libexec_PROGRAMS = mswin_auth
 mswin_auth_SOURCES = mswin_auth.c valid.c valid.h
 
 LDADD = \
-	-L$(top_builddir)/compat/libcompat.la \
+	$(top_builddir)/compat/libcompat.la \
 	-L$(top_builddir)/lib -lmiscutil \
 	-lnetapi32 -ladvapi32 -lsspwin32 \
 	$(XTRA_LIBS)
