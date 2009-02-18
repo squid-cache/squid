@@ -753,7 +753,7 @@ aclMatchExternal(external_acl_data *acl, ACLChecklist * ch)
 
     external_acl_cache_touch(acl->def, entry);
     result = entry->result;
-    external_acl_message = entry->message.unsafeBuf();
+    external_acl_message = entry->message.termedBuf();
 
     debugs(82, 2, "aclMatchExternal: " << acl->def->name << " = " << result);
 

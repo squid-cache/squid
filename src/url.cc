@@ -439,9 +439,8 @@ urlCanonical(HttpRequest * request)
         return request->canonical;
 
     if (request->protocol == PROTO_URN) {
-        snprintf(urlbuf, MAX_URL, "urn:%.*s",
-            request->urlpath.size(),
-            request->urlpath.rawBuf());
+        snprintf(urlbuf, MAX_URL, "urn:" SQUIDSTRINGPH,
+            SQUIDSTRINGPRINT(request->urlpath));
     } else {
 /// \todo AYJ: this could use "if..else and method == METHOD_CONNECT" easier.
         switch (request->method.id()) {
@@ -456,14 +455,13 @@ urlCanonical(HttpRequest * request)
             if (request->port != urlDefaultPort(request->protocol))
                 snprintf(portbuf, 32, ":%d", request->port);
 
-            snprintf(urlbuf, MAX_URL, "%s://%s%s%s%s%.*s",
+            snprintf(urlbuf, MAX_URL, "%s://%s%s%s%s" SQUIDSTRINGPH,
                      ProtocolStr[request->protocol],
                      request->login,
                      *request->login ? "@" : null_string,
                      request->GetHost(),
                      portbuf,
-                     request->urlpath.size(),
-                     request->urlpath.rawBuf());
+                     SQUIDSTRINGPRINT(request->urlpath));
 
             break;
         }
@@ -485,8 +483,8 @@ urlCanonicalClean(const HttpRequest * request)
     char *t;
 
     if (request->protocol == PROTO_URN) {
-        snprintf(buf, MAX_URL, "urn:%.*s",
-            request->urlpath.size(), request->urlpath.rawBuf());
+        snprintf(buf, MAX_URL, "urn:" SQUIDSTRINGPH,
+            SQUIDSTRINGPRINT(request->urlpath));
     } else {
 /// \todo AYJ: this could use "if..else and method == METHOD_CONNECT" easier.
         switch (request->method.id()) {
@@ -514,13 +512,12 @@ urlCanonicalClean(const HttpRequest * request)
                 strcat(loginbuf, "@");
             }
 
-            snprintf(buf, MAX_URL, "%s://%s%s%s%.*s",
+            snprintf(buf, MAX_URL, "%s://%s%s%s" SQUIDSTRINGPH,
                      ProtocolStr[request->protocol],
                      loginbuf,
                      request->GetHost(),
                      portbuf,
-                     request->urlpath.size(),
-                     request->urlpath.rawBuf());
+                     SQUIDSTRINGPRINT(request->urlpath));
             /*
              * strip arguments AFTER a question-mark
              */
@@ -589,9 +586,8 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
     char *urlbuf = (char *)xmalloc(MAX_URL * sizeof(char));
 
     if (req->protocol == PROTO_URN) {
-        snprintf(urlbuf, MAX_URL, "urn:%.*s",
-            req->urlpath.size(),
-            req->urlpath.rawBuf());
+        snprintf(urlbuf, MAX_URL, "urn:" SQUIDSTRINGPH,
+            SQUIDSTRINGPRINT(req->urlpath));
         return (urlbuf);
     }
 

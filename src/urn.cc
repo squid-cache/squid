@@ -57,7 +57,7 @@ public:
     char *getHost (String &urlpath);
     void setUriResFromRequest(HttpRequest *);
     bool RequestNeedsMenu(HttpRequest *r);
-    void updateRequestURL(HttpRequest *r, char const *newPath);
+    void updateRequestURL(HttpRequest *r, char const *newPath, const size_t newPath_len);
     void createUriResRequest (String &uri);
 
     virtual ~UrnState();
@@ -171,7 +171,7 @@ UrnState::getHost (String &urlpath)
 
     /** FIXME: this appears to be parsing the URL. *very* badly. */
     /*   a proper encapsulated URI/URL type needs to clear this up. */
-    if ((p=urlpath.find(':')) != std::string::npos) {
+    if ((p=urlpath.find(':')) != String::npos) {
         result=xstrndup(urlpath.rawBuf(),p-1);
     } else {
         result = xstrndup(urlpath.rawBuf(),urlpath.size());
@@ -182,13 +182,16 @@ UrnState::getHost (String &urlpath)
 bool
 UrnState::RequestNeedsMenu(HttpRequest *r)
 {
-    return strncasecmp(r->urlpath.unsafeBuf(), "menu.", 5) == 0;
+    if (r->urlpath.size() < 5)
+        return false;
+    //now we're sure it's long enough
+    return strncasecmp(r->urlpath.rawBuf(), "menu.", 5) == 0;
 }
 
 void
-UrnState::updateRequestURL(HttpRequest *r, char const *newPath)
+UrnState::updateRequestURL(HttpRequest *r, char const *newPath, const size_t newPath_len)
 {
-    char *new_path = xstrdup (newPath);
+    char *new_path = xstrndup (newPath, newPath_len);
     r->urlpath = new_path;
     xfree(new_path);
 }
@@ -198,7 +201,8 @@ UrnState::createUriResRequest (String &uri)
 {
     LOCAL_ARRAY(char, local_urlres, 4096);
     char *host = getHost (uri);
-    snprintf(local_urlres, 4096, "http://%s/uri-res/N2L?urn:%s", host, uri.unsafeBuf());
+    snprintf(local_urlres, 4096, "http://%s/uri-res/N2L?urn:" SQUIDSTRINGPH,
+        host, SQUIDSTRINGPRINT(uri));
     safe_free (host);
     safe_free (urlres);
     urlres = xstrdup (local_urlres);
@@ -209,7 +213,7 @@ void
 UrnState::setUriResFromRequest(HttpRequest *r)
 {
     if (RequestNeedsMenu(r)) {
-        updateRequestURL(r, r->urlpath.unsafeBuf() + 5);
+        updateRequestURL(r, r->urlpath.rawBuf() + 5, r->urlpath.size() - 5 );
         flags.force_menu = 1;
     }
 

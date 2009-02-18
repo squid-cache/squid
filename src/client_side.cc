@@ -489,7 +489,7 @@ ClientHttpRequest::logRequest()
             al.http.content_type = al.reply->content_type.termedBuf();
         } else if (loggingEntry() && loggingEntry()->mem_obj) {
             al.http.code = loggingEntry()->mem_obj->getReply()->sline.status;
-            al.http.content_type = loggingEntry()->mem_obj->getReply()->content_type.unsafeBuf();
+            al.http.content_type = loggingEntry()->mem_obj->getReply()->content_type.termedBuf();
         }
 
         debugs(33, 9, "clientLogRequest: http.code='" << al.http.code << "'");
@@ -852,7 +852,7 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
 static void
 clientPackTermBound(String boundary, MemBuf * mb)
 {
-    mb->Printf("\r\n--%.*s--\r\n", boundary.size(), boundary.rawBuf());
+    mb->Printf("\r\n--" SQUIDSTRINGPH "--\r\n", SQUIDSTRINGPRINT(boundary));
     debugs(33, 6, "clientPackTermBound: buf offset: " << mb->size);
 }
 
@@ -868,7 +868,7 @@ clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String 
     /* put boundary */
     debugs(33, 5, "clientPackRangeHdr: appending boundary: " << boundary);
     /* rfc2046 requires to _prepend_ boundary with <crlf>! */
-    mb->Printf("\r\n--%.*s\r\n", boundary.size(), boundary.rawBuf());
+    mb->Printf("\r\n--" SQUIDSTRINGPH "\r\n", SQUIDSTRINGPRINT(boundary));
 
     /* stuff the header with required entries and pack it */
 
@@ -890,7 +890,7 @@ clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String 
 }
 
 /**
- * extracts a "range" from *unsafeBuf and appends them to mb, updating
+ * extracts a "range" from *buf and appends them to mb, updating
  * all offsets and such.
  */
 void
@@ -1168,8 +1168,8 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
             /* delete old Content-Type, add ours */
             hdr->delById(HDR_CONTENT_TYPE);
             httpHeaderPutStrf(hdr, HDR_CONTENT_TYPE,
-                              "multipart/byteranges; boundary=\"%s\"",
-                              http->range_iter.boundary.unsafeBuf());
+                              "multipart/byteranges; boundary=\"" SQUIDSTRINGPH "\"",
+                              SQUIDSTRINGPRINT(http->range_iter.boundary));
             /* Content-Length is not required in multipart responses
              * but it is always nice to have one */
             actual_clen = http->mRangeCLen();
@@ -1923,7 +1923,7 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
         req_sz = HttpParserReqSz(hp);
     }
 
-    /* We know the whole request is in hp->unsafeBuf now */
+    /* We know the whole request is in hp->buf now */
 
     assert(req_sz <= (size_t) hp->bufsiz);
 
@@ -2639,7 +2639,7 @@ ConnStateData::handleReadData(char *buf, size_t size)
 }
 
 /**
- * called when new request body data has been buffered in in.unsafeBuf
+ * called when new request body data has been buffered in in.buf
  * may close the connection if we were closing and piped everything out
  */
 void

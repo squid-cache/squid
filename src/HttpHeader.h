@@ -33,11 +33,20 @@
 #ifndef SQUID_HTTPHEADER_H
 #define SQUID_HTTPHEADER_H
 
-
 /* because we pass a spec by value */
 #include "HttpHeaderRange.h"
 /* HttpHeader holds a HttpHeaderMask */
 #include "HttpHeaderMask.h"
+
+
+/* class forward declarations */
+class HttpVersion;
+class HttpHdrContRange;
+class HttpHdrCc;
+class HttpHdrSc;
+class HttpHdrRange;
+class String;
+
 
 /* constant attributes of http header fields */
 
@@ -149,13 +158,6 @@ struct _HttpHeaderFieldAttrs {
     field_type type;
 };
 
-class HttpVersion;
-
-class HttpHdrContRange;
-
-class HttpHdrCc;
-
-class HttpHdrSc;
 
 /** Iteration for headers; use HttpHeaderPos as opaque type, do not interpret */
 typedef ssize_t HttpHeaderPos;

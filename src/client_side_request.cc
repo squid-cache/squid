@@ -426,7 +426,7 @@ clientFollowXForwardedForCheck(int answer, void *data)
         const char *asciiaddr;
         int l;
         struct in_addr addr;
-        p = request->x_forwarded_for_iterator.unsafeBuf();
+        p = request->x_forwarded_for_iterator.termedBuf();
         l = request->x_forwarded_for_iterator.size();
 
         /*
@@ -897,7 +897,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         }
 
 #if FORW_VIA_DB
-        fvdbCountVia(s.unsafeBuf());
+        fvdbCountVia(s.termedBuf());
 
 #endif
 
@@ -923,7 +923,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 
     if (req_hdr->has(HDR_X_FORWARDED_FOR)) {
         String s = req_hdr->getList(HDR_X_FORWARDED_FOR);
-        fvdbCountForw(s.unsafeBuf());
+        fvdbCountForw(s.termedBuf());
         s.clean();
     }
 
