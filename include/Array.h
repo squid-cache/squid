@@ -41,7 +41,7 @@
 #include "util.h"
 
 /* users of this template also need assert() */
-#include "assert.h"
+#include "compat/assert.h"
 
 /* iterator support */
 
