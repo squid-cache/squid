@@ -35,11 +35,20 @@
 
 #include "squid.h"
 #include "Store.h"
+#include "TextException.h"
+
+int
+String::psize() const
+{
+    Must(size() < INT_MAX);
+    return size();
+}
+
 
 // low-level buffer allocation,
 // does not free old buffer and does not adjust or look at len_
 void
-String::allocBuffer(size_t sz)
+String::allocBuffer(String::size_type sz)
 {
     PROF_start(StringInitBuf);
     assert (undefined());
@@ -51,7 +60,7 @@ String::allocBuffer(size_t sz)
 // low-level buffer assignment
 // does not free old buffer and does not adjust or look at len_
 void
-String::setBuffer(char *aBuf, size_t aSize)
+String::setBuffer(char *aBuf, String::size_type aSize)
 {
     assert(undefined());
     assert(aSize < 65536);
@@ -233,6 +242,19 @@ String::absorb(String &old)
     old.len_ = 0;
 }
 
+String
+String::substr(String::size_type from, String::size_type to) const
+{
+    Must(from >= 0 && from < size());
+    Must(to > 0 && to <= size());
+    Must(to > from);
+
+    String rv;
+    rv.limitInit(rawBuf()+from,to-from);
+    return rv;
+}
+
+
 #if DEBUGSTRINGS
 void
 String::stat(StoreEntry *entry) const
@@ -279,7 +301,7 @@ StringRegistry::remove
 
 StringRegistry StringRegistry::Instance_;
 
-extern size_t memStringCount();
+extern String::size_type memStringCount();
 
 void
 StringRegistry::Stat(StoreEntry *entry)
@@ -411,6 +433,56 @@ checkNullString(const char *p)
 {
     return p ? p : "(NULL)";
 }
+
+const char *
+String::pos(char const *aString) const
+{
+    return strstr(termedBuf(), aString);
+}
+
+const char *
+String::pos(char const ch) const
+{
+    return strchr(termedBuf(), ch);
+}
+
+const char *
+String::rpos(char const ch) const
+{
+    return strrchr(termedBuf(), (ch));
+}
+
+String::size_type
+String::find(char const ch) const
+{
+    const char *c;
+    c=pos(ch);
+    if (c==NULL)
+        return npos;
+    return c-rawBuf();
+}
+
+String::size_type
+String::find(char const *aString) const
+{
+    const char *c;
+    c=pos(aString);
+    if (c==NULL)
+        return npos;
+    return c-rawBuf();
+}
+
+String::size_type
+String::rfind(char const ch) const
+{
+    const char *c;
+    c=rpos(ch);
+    if (c==NULL)
+        return npos;
+    return c-rawBuf();
+}
+
+
 
 #ifndef _USE_INLINE_
 #include "String.cci"

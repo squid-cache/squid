@@ -556,9 +556,16 @@ ErrorState::Dump(MemBuf * mb)
 
     if (NULL != request) {
         Packer p;
-        str.Printf("%s %s HTTP/%d.%d\n",
+        String urlpath_or_slash;
+
+        if (request->urlpath.size() != 0)
+            urlpath_or_slash = request->urlpath;
+        else
+            urlpath_or_slash = "/";
+
+        str.Printf("%s " SQUIDSTRINGPH " HTTP/%d.%d\n",
                    RequestMethodStr(request->method),
-                   request->urlpath.size() ? request->urlpath.unsafeBuf() : "/",
+                   SQUIDSTRINGPRINT(urlpath_or_slash),
                    request->http_ver.major, request->http_ver.minor);
         packerToMemInit(&p, &str);
         request->header.packInto(&p);
@@ -734,9 +741,16 @@ ErrorState::Convert(char token)
 
         if (NULL != request) {
             Packer p;
-            mb.Printf("%s %s HTTP/%d.%d\n",
+            String urlpath_or_slash;
+
+            if (request->urlpath.size() != 0)
+                urlpath_or_slash = request->urlpath;
+            else
+                urlpath_or_slash = "/";
+
+            mb.Printf("%s " SQUIDSTRINGPH " HTTP/%d.%d\n",
                       RequestMethodStr(request->method),
-                      request->urlpath.size() ? request->urlpath.unsafeBuf() : "/",
+                      SQUIDSTRINGPRINT(urlpath_or_slash),
                       request->http_ver.major, request->http_ver.minor);
             packerToMemInit(&p, &mb);
             request->header.packInto(&p);
@@ -928,8 +942,7 @@ ErrorState::BuildContent()
      */
     if (!Config.errorDirectory && request && request->header.getList(HDR_ACCEPT_LANGUAGE, &hdr) ) {
 
-        const char *unsafeBuf = hdr.unsafeBuf(); // raw header string for parsing
-        int pos = 0; // current parsing position in header string
+        size_t pos = 0; // current parsing position in header string
         char *reset = NULL; // where to reset the p pointer for each new tag file
         char *dt = NULL;
 
@@ -950,12 +963,12 @@ ErrorState::BuildContent()
              *  - IFF a tag contains only two characters we can wildcard ANY translations matching: <it> '-'? .*
              *    with preference given to an exact match.
              */
-            while (pos < hdr.size() && unsafeBuf[pos] != ';' && unsafeBuf[pos] != ',' && !xisspace(unsafeBuf[pos]) && dt < (dir+256) ) {
-                *dt++ = xtolower(unsafeBuf[pos++]);
+            while (pos < hdr.size() && hdr[pos] != ';' && hdr[pos] != ',' && !xisspace(hdr[pos]) && dt < (dir+256) ) {
+                *dt++ = xtolower(hdr[pos++]);
             }
             *dt++ = '\0'; // nul-terminated the filename content string before system use.
 
-            debugs(4, 9, HERE << "STATE: dt='" << dt << "', reset='" << reset << "', reset[1]='" << reset[1] << "', pos=" << pos << ", buf='" << &unsafeBuf[pos] << "'");
+            debugs(4, 9, HERE << "STATE: dt='" << dt << "', reset='" << reset << "', reset[1]='" << reset[1] << "', pos=" << pos << ", buf='" << hdr.substr(pos,hdr.size()) << "'");
 
             /* if we found anything we might use, try it. */
             if (*reset != '\0') {
@@ -983,8 +996,8 @@ ErrorState::BuildContent()
             dt = reset; // reset for next tag testing. we replace the failed name instead of cloning.
 
             // IFF we terminated the tag on ';' we need to skip the 'q=' bit to the next ',' or end.
-            while (pos < hdr.size() && unsafeBuf[pos] != ',') pos++;
-            if (unsafeBuf[pos] == ',') pos++;
+            while (pos < hdr.size() && hdr[pos] != ',') pos++;
+            if (hdr[pos] == ',') pos++;
         }
     }
 #endif /* USE_ERR_LOCALES */

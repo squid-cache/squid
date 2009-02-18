@@ -2430,7 +2430,7 @@ esiEnableProcessing (HttpReply *rep)
              */
             return 0;
 
-        if (strstr (sctusable->content.unsafeBuf(), "ESI/1.0"))
+        if (sctusable->content.pos("ESI/1.0") != NULL)
             rv = 1;
 
         httpHdrScTargetDestroy (sctusable);

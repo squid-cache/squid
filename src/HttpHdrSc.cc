@@ -257,9 +257,8 @@ httpHdrScTargetPackInto(const HttpHdrScTarget * sc, Packer * p)
         if (EBIT_TEST(sc->mask, flag) && flag != SC_OTHER) {
 
             /* print option name */
-            packerPrintf(p, (pcount ? ", %.*s" : "%.*s"),
-                ScFieldsInfo[flag].name.size(),
-                ScFieldsInfo[flag].name.rawBuf());
+            packerPrintf(p, (pcount ? ", " SQUIDSTRINGPH : SQUIDSTRINGPH),
+                SQUIDSTRINGPRINT(ScFieldsInfo[flag].name));
 
             /* handle options with values */
 
@@ -267,14 +266,14 @@ httpHdrScTargetPackInto(const HttpHdrScTarget * sc, Packer * p)
                 packerPrintf(p, "=%d", (int) sc->max_age);
 
             if (flag == SC_CONTENT)
-                packerPrintf(p, "=\"%.*s\"", sc->content.size(), sc->content.rawBuf());
+                packerPrintf(p, "=\"" SQUIDSTRINGPH "\"", SQUIDSTRINGPRINT(sc->content));
 
             pcount++;
         }
     }
 
     if (sc->target.size())
-        packerPrintf (p, ";%.*s", sc->target.size(), sc->target.rawBuf());
+        packerPrintf (p, ";" SQUIDSTRINGPH, SQUIDSTRINGPRINT(sc->target));
 }
 
 void
