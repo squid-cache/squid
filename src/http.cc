@@ -72,8 +72,8 @@ CBDATA_CLASS_INIT(HttpStateData);
 static const char *const crlf = "\r\n";
 
 static void httpMaybeRemovePublic(StoreEntry *, http_status);
-static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, String strConnection, HttpRequest * request, HttpRequest * orig_request,
-        HttpHeader * hdr_out, int we_do_ranges, http_state_flags);
+static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, const String strConnection, HttpRequest * request, const HttpRequest * orig_request,
+        HttpHeader * hdr_out, const int we_do_ranges, const http_state_flags);
 
 HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"), ServerStateData(theFwdState),
         lastChunk(0), header_bytes_read(0), reply_bytes_read(0), httpChunkDecoder(NULL)
@@ -1655,20 +1655,22 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     strConnection.clean();
 }
 
+/**
+ * Decides whether a particular header may be cloned from the received Clients request
+ * to our outgoing fetch request.
+ */
 void
-copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, String strConnection, HttpRequest * request, HttpRequest * orig_request, HttpHeader * hdr_out, int we_do_ranges, http_state_flags flags)
+copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, const String strConnection, HttpRequest * request, const HttpRequest * orig_request, HttpHeader * hdr_out, const int we_do_ranges, const http_state_flags flags)
 {
     debugs(11, 5, "httpBuildRequestHeader: " << e->name << ": " << e->value );
 
-    if (!httpRequestHdrAllowed(e, &strConnection)) {
-        debugs(11, 2, "'" << e->name << "' header denied by anonymize_headers configuration");
-        return;
-    }
-
     switch (e->id) {
 
+/** \title RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid should not pass on. */
+
     case HDR_PROXY_AUTHORIZATION:
-        /* Only pass on proxy authentication to peers for which
+        /** \par Proxy-Authorization:
+         * Only pass on proxy authentication to peers for which
          * authentication forwarding is explicitly enabled
          */
 
@@ -1680,16 +1682,31 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
 
         break;
 
+/** \title RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid does not pass on. */
+
+    case HDR_CONNECTION:          /** \par Connection: */
+    case HDR_TE:                  /** \par TE: */
+    case HDR_KEEP_ALIVE:          /** \par Keep-Alive: */
+    case HDR_PROXY_AUTHENTICATE:  /** \par Proxy-Authenticate: */
+    case HDR_TRAILERS:            /** \par Trailers: */
+    case HDR_UPGRADE:             /** \par Upgrade: */
+    case HDR_TRANSFER_ENCODING:   /** \par Transfer-Encoding: */
+        break;
+
+
+/** \title OTHER headers I haven't bothered to track down yet. */
+
     case HDR_AUTHORIZATION:
-        /* Pass on WWW authentication */
+        /** \par WWW-Authorization:
+         * Pass on WWW authentication */
 
         if (!flags.originpeer) {
             hdr_out->addEntry(e->clone());
         } else {
-            /* In accelerators, only forward authentication if enabled
+            /** \note In accelerators, only forward authentication if enabled
+             * by login=PASS or login=PROXYPASS
              * (see also below for proxy->server authentication)
              */
-
             if (orig_request->peer_login &&
                     (strcmp(orig_request->peer_login, "PASS") == 0 ||
                      strcmp(orig_request->peer_login, "PROXYPASS") == 0)) {
@@ -1700,7 +1717,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
         break;
 
     case HDR_HOST:
-        /*
+        /** \par Host:
          * Normally Squid rewrites the Host: header.
          * However, there is one case when we don't: If the URL
          * went through our redirector and the admin configured
@@ -1725,8 +1742,9 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
         break;
 
     case HDR_IF_MODIFIED_SINCE:
-        /* append unless we added our own;
-         * note: at most one client's ims header can pass through */
+        /** \par If-Modified-Since:
+	 * append unless we added our own;
+         * \note at most one client's ims header can pass through */
 
         if (!hdr_out->has(HDR_IF_MODIFIED_SINCE))
             hdr_out->addEntry(e->clone());
@@ -1734,6 +1752,8 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
         break;
 
     case HDR_MAX_FORWARDS:
+        /** \par Max-Forwards:
+         * pass only on TRACE requests */
         if (orig_request->method == METHOD_TRACE) {
             const int hops = e->getInt();
 
@@ -1744,7 +1764,9 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
         break;
 
     case HDR_VIA:
-        /* If Via is disabled then forward any received header as-is */
+        /** \par Via:
+         * If Via is disabled then forward any received header as-is.
+         * Otherwise leave for explicit updated addition later. */
 
         if (!Config.onoff.via)
             hdr_out->addEntry(e->clone());
@@ -1756,6 +1778,8 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
     case HDR_IF_RANGE:
 
     case HDR_REQUEST_RANGE:
+        /** \par Range:, If-Range:, Request-Range:
+         * Only pass if we accept ranges */
         if (!we_do_ranges)
             hdr_out->addEntry(e->clone());
 
@@ -1763,22 +1787,32 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
 
     case HDR_PROXY_CONNECTION:
 
-    case HDR_CONNECTION:
-
     case HDR_X_FORWARDED_FOR:
 
     case HDR_CACHE_CONTROL:
-        /* append these after the loop if needed */
+        /** \par Proxy-Connaction:, X-Forwarded-For:, Cache-Control:
+         * handled specially by Squid, so leave off for now.
+         * append these after the loop if needed */
         break;
 
     case HDR_FRONT_END_HTTPS:
+        /** \par Front-End-Https:
+         * Pass thru only if peer is configured with front-end-https */
         if (!flags.front_end_https)
             hdr_out->addEntry(e->clone());
 
         break;
 
     default:
-        /* pass on all other header fields */
+        /** \par default.
+         * pass on all other header fields
+         * which are NOT listed by the special Connection: header. */
+
+        if (strConnection.size()>0 && strListIsMember(&strConnection, e->name.unsafeBuf(), ',')) {
+            debugs(11, 2, "'" << e->name << "' header cropped by Connection: definition");
+            return;
+        }
+
         hdr_out->addEntry(e->clone());
     }
 }
