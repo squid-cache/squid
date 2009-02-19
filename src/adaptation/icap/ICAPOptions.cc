@@ -1,9 +1,9 @@
 #include "squid.h"
 #include "wordlist.h"
 #include "HttpReply.h"
-#include "ICAPOptions.h"
+#include "adaptation/icap/ICAPOptions.h"
 #include "TextException.h"
-#include "ICAPConfig.h"
+#include "adaptation/icap/ICAPConfig.h"
 #include "SquidTime.h"
 
 extern ICAPConfig TheICAPConfig;

@@ -37,7 +37,7 @@
 #include "comm.h"
 #include "CommCalls.h"
 #include "MemBuf.h"
-#include "ICAPServiceRep.h"
+#include "adaptation/icap/ICAPServiceRep.h"
 #include "adaptation/Initiate.h"
 
 class HttpMsg;

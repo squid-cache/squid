@@ -2,8 +2,8 @@
 #include <libecap/adapter/service.h>
 #include <libecap/common/names.h>
 #include "TextException.h"
-#include "eCAP/ServiceRep.h"
-#include "eCAP/Host.h"
+#include "adaptation/ecap/ServiceRep.h"
+#include "adaptation/ecap/Host.h"
 
 const libecap::Name Ecap::protocolInternal("internal", libecap::Name::NextId());
 const libecap::Name Ecap::protocolCacheObj("cache_object", libecap::Name::NextId());

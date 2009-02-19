@@ -1,6 +1,6 @@
+
 /*
  * $Id$
- *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -28,55 +28,57 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ *
+ * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ICAPOPTXACT_H
-#define SQUID_ICAPOPTXACT_H
+#include "squid.h"
 
-#include "ICAPXaction.h"
-#include "ICAPLauncher.h"
+#include "ConfigParser.h"
+#include "ACL.h"
+#include "Store.h"
+#include "Array.h"	// really Vector
+#include "adaptation/icap/ICAPConfig.h"
+#include "adaptation/icap/ICAPServiceRep.h"
+#include "HttpRequest.h"
+#include "HttpReply.h"
+#include "ACLChecklist.h"
+#include "wordlist.h"
 
-class ICAPOptions;
+ICAPConfig TheICAPConfig;
 
-
-/* ICAPOptXact sends an ICAP OPTIONS request to the ICAP service,
- * parses the ICAP response, and sends it to the initiator. A NULL response
- * means the ICAP service could not be contacted or did not return any
- * valid response. */
-
-class ICAPOptXact: public ICAPXaction
+ICAPConfig::ICAPConfig(): preview_enable(0), preview_size(0),
+        connect_timeout_raw(0), io_timeout_raw(0), reuse_connections(0),
+        client_username_header(NULL), client_username_encode(0)
 {
+}
 
-public:
-    ICAPOptXact(Adaptation::Initiator *anInitiator, ICAPServiceRep::Pointer &aService);
-
-protected:
-    virtual void start();
-    virtual void handleCommConnected();
-    virtual void handleCommWrote(size_t size);
-    virtual void handleCommRead(size_t size);
-
-    void makeRequest(MemBuf &buf);
-    HttpMsg *parseResponse();
-
-    void startReading();
-
-private:
-    CBDATA_CLASS2(ICAPOptXact);
-};
-
-// An ICAPLauncher that stores ICAPOptXact construction info and
-// creates ICAPOptXact when needed
-class ICAPOptXactLauncher: public ICAPLauncher
+ICAPConfig::~ICAPConfig()
 {
-public:
-    ICAPOptXactLauncher(Adaptation::Initiator *anInitiator, Adaptation::ServicePointer aService);
+    // TODO: delete client_username_header?
+}
 
-protected:
-    virtual ICAPXaction *createXaction();
+Adaptation::ServicePointer
+ICAPConfig::createService(const Adaptation::ServiceConfig &cfg)
+{
+    ICAPServiceRep::Pointer s = new ICAPServiceRep(cfg);
+    s->setSelf(s);
+    return s.getRaw();
+}
 
-private:
-    CBDATA_CLASS2(ICAPOptXactLauncher);
-};
+time_t ICAPConfig::connect_timeout(bool bypassable) const
+{
+    if (connect_timeout_raw > 0)
+        return connect_timeout_raw; // explicitly configured
 
-#endif /* SQUID_ICAPOPTXACT_H */
+    return bypassable ? ::Config.Timeout.peer_connect : ::Config.Timeout.connect;
+}
+
+time_t ICAPConfig::io_timeout(bool) const
+{
+    if (io_timeout_raw > 0)
+        return io_timeout_raw; // explicitly configured
+    // TODO: provide a different default for an ICAP transaction that
+    // can still be bypassed
+    return ::Config.Timeout.read;
+}

@@ -1,4 +1,4 @@
 #include "squid.h"
-#include "ICAPElements.h"
+#include "adaptation/icap/ICAPElements.h"
 
 // TODO: remove this file?

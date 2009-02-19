@@ -38,7 +38,7 @@
 #include "adaptation/Service.h"
 #include "adaptation/forward.h"
 #include "adaptation/Initiator.h"
-#include "ICAPElements.h"
+#include "adaptation/icap/ICAPElements.h"
 
 class ICAPOptions;
 class ICAPOptXact;

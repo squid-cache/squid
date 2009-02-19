@@ -36,7 +36,7 @@
 
 #include "adaptation/Initiator.h"
 #include "adaptation/Initiate.h"
-#include "ICAP/ICAPServiceRep.h"
+#include "adaptation/icap/ICAPServiceRep.h"
 
 /*
  * The ICAP Launcher starts an ICAP transaction. If the transaction fails

@@ -5,12 +5,12 @@
 #include "squid.h"
 #include "TextException.h"
 #include "HttpReply.h"
-#include "ICAPServiceRep.h"
-#include "ICAPOptions.h"
-#include "ICAPOptXact.h"
+#include "adaptation/icap/ICAPServiceRep.h"
+#include "adaptation/icap/ICAPOptions.h"
+#include "adaptation/icap/ICAPOptXact.h"
 #include "ConfigParser.h"
-#include "ICAPConfig.h"
-#include "ICAPModXact.h"
+#include "adaptation/icap/ICAPConfig.h"
+#include "adaptation/icap/ICAPModXact.h"
 #include "SquidTime.h"
 
 CBDATA_CLASS_INIT(ICAPServiceRep);

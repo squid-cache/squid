@@ -69,7 +69,7 @@ static void parse_adaptation_access_type();
 #endif
 
 #if ICAP_CLIENT
-#include "ICAP/ICAPConfig.h"
+#include "adaptation/icap/ICAPConfig.h"
 
 static void parse_icap_service_type(ICAPConfig *);
 static void dump_icap_service_type(StoreEntry *, const char *, const ICAPConfig &);
@@ -80,7 +80,7 @@ static void parse_icap_access_type();
 #endif
 
 #if USE_ECAP
-#include "eCAP/Config.h"
+#include "adaptation/ecap/Config.h"
 static void parse_ecap_service_type(Ecap::Config *);
 static void dump_ecap_service_type(StoreEntry *, const char *, const Ecap::Config &);
 static void free_ecap_service_type(Ecap::Config *);

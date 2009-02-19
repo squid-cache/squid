@@ -35,9 +35,9 @@
 #define SQUID_ICAPMODXACT_H
 
 #include "BodyPipe.h"
-#include "ICAPXaction.h"
-#include "ICAPInOut.h"
-#include "ICAPLauncher.h"
+#include "adaptation/icap/ICAPXaction.h"
+#include "adaptation/icap/ICAPInOut.h"
+#include "adaptation/icap/ICAPLauncher.h"
 
 /*
  * ICAPModXact implements ICAP REQMOD and RESPMOD transaction using
