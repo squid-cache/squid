@@ -5,9 +5,9 @@
 #include "squid.h"
 #include "TextException.h"
 #include "HttpMsg.h"
-#include "ICAPLauncher.h"
-#include "ICAPXaction.h"
-#include "ICAPServiceRep.h"
+#include "adaptation/icap/ICAPLauncher.h"
+#include "adaptation/icap/ICAPXaction.h"
+#include "adaptation/icap/ICAPServiceRep.h"
 
 
 ICAPLauncher::ICAPLauncher(const char *aTypeName,

@@ -1,5 +1,5 @@
 #include "squid.h"
-#include "ICAPClient.h"
+#include "adaptation/icap/ICAPClient.h"
 
 void ICAPInitModule()
 {

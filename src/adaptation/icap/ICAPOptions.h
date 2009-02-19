@@ -35,7 +35,7 @@
 #define SQUID_ICAPOPTIONS_H
 
 #include "squid.h"
-#include "ICAPServiceRep.h"
+#include "adaptation/icap/ICAPServiceRep.h"
 
 class wordlist;
 

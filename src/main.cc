@@ -77,10 +77,10 @@
 #endif
 
 #if ICAP_CLIENT
-#include "ICAP/ICAPConfig.h"
+#include "adaptation/icap/ICAPConfig.h"
 #endif
 #if USE_ECAP
-#include "eCAP/Config.h"
+#include "adaptation/ecap/Config.h"
 #endif
 #if USE_ADAPTATION
 #include "adaptation/Config.h"

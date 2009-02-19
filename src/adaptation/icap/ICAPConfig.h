@@ -39,7 +39,7 @@
 #include "event.h"
 #include "AsyncCall.h"
 #include "adaptation/Config.h"
-#include "ICAPServiceRep.h"
+#include "adaptation/icap/ICAPServiceRep.h"
 
 class acl_access;
 

@@ -6,8 +6,8 @@
 #include "comm.h"
 #include "HttpReply.h"
 
-#include "ICAPOptXact.h"
-#include "ICAPOptions.h"
+#include "adaptation/icap/ICAPOptXact.h"
+#include "adaptation/icap/ICAPOptions.h"
 #include "TextException.h"
 
 CBDATA_CLASS_INIT(ICAPOptXact);
