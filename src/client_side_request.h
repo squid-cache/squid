@@ -41,7 +41,7 @@
 #include "client_side.h"
 #include "AccessLogEntry.h"
 #include "dlink.h"
-#include "ICAP/AsyncJob.h"
+#include "base/AsyncJob.h"
 
 #if USE_ADAPTATION
 #include "adaptation/forward.h"
