@@ -2495,6 +2495,7 @@ DeferredReadManager::flushReads() {
     reads = deferredReads;
     deferredReads = ListContainer<DeferredRead>();
 
+    // XXX: For fairness this SHOULD randomize the order
     while (!reads.empty()) {
         DeferredRead aRead = popHead(reads);
         kickARead(aRead);

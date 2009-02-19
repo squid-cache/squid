@@ -115,11 +115,7 @@ CompositePoolNode::delayRead(DeferredRead const &aRead)
 void
 CompositePoolNode::kickReads()
 {
-    /* we only start one, because delay pools may have **many** attached connections,
-     * and kicking them all off would be chaotic.
-     * This may need to be reviewed.
-     */
-    deferredReads.kickReads(1);
+    deferredReads.kickReads(-1);
 }
 
 #endif
