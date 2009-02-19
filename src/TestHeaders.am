@@ -1,8 +1,7 @@
-# Test ./*.h files in a directory using test-suite/testheaders.sh
+## Test ./*.h files in a directory using test-suite/testheaders.sh
 
-# TODO: include in src/Common.am when all testHeaders users are the same.
+## TODO: include in src/Common.am when all testHeaders users are the same.
 
-check_PROGRAMS += testHeaders
 TESTS += testHeaders
 
 ## .h dependency test script
@@ -10,7 +9,4 @@ TESTS += testHeaders
 testHeaders: $(srcdir)/*.h
 	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(srcdir)/" || exit 1
 
-## No such file...
-testHeaders.c:
-	touch testHeaders.c
-CLEANFILES += testHeaders.c
+.PHONY: testHeaders
