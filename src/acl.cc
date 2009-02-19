@@ -33,19 +33,12 @@
  */
 #include "config.h"
 
-#if 0
-#include "squid.h"
-#include "HttpRequest.h"
-#endif
-
 #include "ACL.h"
 #include "ACLChecklist.h"
 #include "ConfigParser.h"
 #include "dlink.h"
 /* for special-case PURGE test */
 #include "HttpRequestMethod.h"
-/* for Vector<> Instances */
-#include "assert.h"
 
 const char *AclMatchedName = NULL;
 

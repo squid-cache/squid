@@ -9,7 +9,13 @@ AM_CXXFLAGS = @SQUID_CXXFLAGS@
 DEFS = @DEFS@
 CLEANFILES = 
 
-INCLUDES = -I$(top_srcdir)/src @SQUID_CPPUNIT_INC@ -I$(top_srcdir)/include -I$(top_builddir)/lib
+INCLUDES = \
+	-I$(top_srcdir) \
+	-I$(top_srcdir)/include \
+	-I$(top_builddir)/lib \
+	-I$(top_srcdir)/src \
+	@SQUID_CPPUNIT_INC@ 
+
 $(OBJS): $(top_srcdir)/include/version.h $(top_srcdir)/include/autoconf.h
 
 
@@ -46,6 +52,7 @@ testIpAddress_SOURCES= \
 nodist_testIpAddress_SOURCES= \
 	../tests/testMain.cc
 testIpAddress_LDADD= \
+	$(top_builddir)/compat/libcompat.la \
 	libip.la \
 	-L$(top_builddir)/lib -lmiscutil \
 	@SQUID_CPPUNIT_LA@ \

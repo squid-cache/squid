@@ -3,7 +3,6 @@
 #include <libecap/common/delay.h>
 #include <libecap/adapter/xaction.h>
 #include "TextException.h"
-#include "assert.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "eCAP/XactionRep.h"

@@ -1,10 +1,31 @@
 /*
  * $Id$
  */
+#ifndef SQUID_CONFIG_H
+#include "config.h"
+#endif
+
 #ifndef SQUID_REGEXP_LIBRARY_H
 #define SQUID_REGEXP_LIBRARY_H
 
-#include "config.h"
+#if !USE_GNUREGEX /* try the system one by default */
+
+/* POSIX says that <sys/types.h> must be included (by the caller) before
+ * <regex.h>.  */
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#if HAVE_REGEX_H
+#include <regex.h>
+#endif
+
+
+#else  /* USE_GNUREGEX */
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 /* Definitions for data structures and routines for the regular
  * expression library, version 0.12.
@@ -405,6 +426,11 @@ extern size_t regerror
               size_t errbuf_size));
 extern void regfree _RE_ARGS((regex_t * preg));
 
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* USE_GNUREGEX */
 #endif /* SQUID_REGEXP_LIBRARY_H */
 
 /*

@@ -13,7 +13,18 @@ digest_edir_auth_SOURCES = digest_pw_auth.c \
 	ldap_backend.h \
 	edir_ldapext.c \
 	edir_ldapext.h
-INCLUDES      = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
-		-I$(top_srcdir)/src/
 
-LDADD	= -L$(top_builddir)/lib -lmiscutil $(LIB_LDAP) $(LIB_LBER) $(CRYPTLIB) $(XTRA_LIBS) $(SSLLIB)
+INCLUDES = \
+	-I$(top_srcdir) \
+	-I. \
+	-I$(top_builddir)/include \
+	-I$(top_srcdir)/include
+
+LDADD = \
+	$(top_builddir)/compat/libcompat.la \
+	-L$(top_builddir)/lib -lmiscutil \
+	$(LIB_LDAP) \
+	$(LIB_LBER) \
+	$(CRYPTLIB) \
+	$(XTRA_LIBS) \
+	$(SSLLIB)

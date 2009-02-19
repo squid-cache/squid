@@ -16,7 +16,11 @@ noinst_LIBRARIES = @REPL_LIBS@
 liblru_a_SOURCES = lru/store_repl_lru.cc
 libheap_a_SOURCES = heap/store_heap_replacement.h heap/store_heap_replacement.cc heap/store_repl_heap.cc
 
-INCLUDES      = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
+INCLUDES = \
+	-I$(top_srcdir) \
+	-I. \
+	-I$(top_builddir)/include \
+	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src
 
 check_PROGRAMS= testHeaders
