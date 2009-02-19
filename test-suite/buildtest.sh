@@ -11,6 +11,14 @@ dist="${1}"
 # Figure out where to log the test output
 log=`echo "${dist}" | sed s/..test-suite.buildtests.//g `
 
+#if we are on Linux, let's try parallelizing
+pjobs="" #default
+if [ -e /proc/cpuinfo ]; then
+    ncpus=`grep '^processor' /proc/cpuinfo | tail -1|awk '{print $3}'`
+    ncpus=`expr $ncpus + 1`
+    pjobs="-j$ncpus"
+fi
+
 # ... and send everything there...
 {
 
@@ -37,8 +45,8 @@ fi
 #
 rm -f -r src/fs/aufs/.deps src/fs/diskd/.deps &&
 	../configure --silent ${OPTS} 2>&1 &&
-	make check 2>&1 &&
-	make 2>&1
+	make $pjobs check 2>&1 &&
+	make $pjobs 2>&1
 
 } 2>&1 > ./buildtest_${log}.log
 
