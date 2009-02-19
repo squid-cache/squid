@@ -357,10 +357,10 @@ parse_externalAclHelper(external_acl ** list)
             format->type = _external_acl_format::EXT_ACL_USER_CERT_RAW;
         else if (strcmp(token, "%USER_CERTCHAIN") == 0)
             format->type = _external_acl_format::EXT_ACL_USER_CERTCHAIN_RAW;
-        else if (strncmp(token, "%USER_CERT_", 11)) {
+        else if (strncmp(token, "%USER_CERT_", 11) == 0) {
             format->type = _external_acl_format::EXT_ACL_USER_CERT;
             format->header = xstrdup(token + 11);
-        } else if (strncmp(token, "%CA_CERT_", 11)) {
+        } else if (strncmp(token, "%CA_CERT_", 11) == 0) {
             format->type = _external_acl_format::EXT_ACL_USER_CERT;
             format->header = xstrdup(token + 11);
         }

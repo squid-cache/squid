@@ -405,8 +405,8 @@ DOC_START
 	  %USER_CERTCHAIN SSL User certificate chain in PEM format
 	  %USER_CERT_xx	SSL User certificate subject attribute xx
 	  %USER_CA_xx	SSL User certificate issuer attribute xx
-	  %{Header}	HTTP request header
-	  %{Hdr:member}	HTTP request header list member
+	  %{Header}	HTTP request header "Header"
+	  %{Hdr:member}	HTTP request header "Hdr" list member "member"
 	  %{Hdr:;member}
 	  		HTTP request header list member using ; as
 	  		list separator. ; can be any non-alphanumeric
