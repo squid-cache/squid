@@ -29,18 +29,19 @@ libcompat_la_SOURCES = \
 	compat.h \
 	compat_shared.h \
 	fdsetsize.h \
-	gnuregex.h \
 	osdetect.h \
 	stdvarargs.h \
 	valgrind.h \
 	\
 	os/aix.h \
+	os/dragonfly.h \
 	os/freebsd.h \
 	os/hpux.h \
 	os/linux.h \
 	os/mswin.h \
 	os/next.h \
 	os/openbsd.h \
+	os/os2.h \
 	os/qnx.h \
 	os/sgi.h \
 	os/solaris.h \
@@ -49,6 +50,7 @@ libcompat_la_SOURCES = \
 	\
 	assert.cc \
 	compat.cc \
+	GnuRegex.h \
 	GnuRegex.c
 
 
