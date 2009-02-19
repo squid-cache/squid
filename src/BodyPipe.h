@@ -4,7 +4,7 @@
 
 #include "MemBuf.h"
 #include "AsyncCall.h"
-#include "ICAP/AsyncJob.h"
+#include "base/AsyncJob.h"
 
 class BodyPipe;
 
