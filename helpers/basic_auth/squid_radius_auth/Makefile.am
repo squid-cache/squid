@@ -15,5 +15,12 @@ squid_radius_auth_SOURCES = \
 			radius-util.c \
 			radius-util.h
 
-LDADD			= -L$(top_builddir)/lib -lmiscutil $(SSLLIB) $(XTRA_LIBS)
-INCLUDES		= -I$(top_srcdir)/include
+INCLUDES = \
+	-I$(top_srcdir) \
+	-I$(top_srcdir)/include
+
+LDADD = \
+	$(top_builddir)/compat/libcompat.la \
+	-L$(top_builddir)/lib -lmiscutil \
+	$(SSLLIB) \
+	$(XTRA_LIBS)

@@ -33,7 +33,6 @@
  */
 
 #include "config.h"
-#include "assert.h"
 #include <cstring>
 
 #ifdef HAVE_STDINT_H

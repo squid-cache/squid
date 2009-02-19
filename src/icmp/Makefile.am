@@ -9,7 +9,13 @@ AM_CXXFLAGS = @SQUID_CXXFLAGS@
 DEFS = @DEFS@
 CLEANFILES = 
 
-INCLUDES = -I$(top_srcdir)/src @SQUID_CPPUNIT_INC@ -I$(top_srcdir)/include -I$(top_builddir)/lib
+INCLUDES = \
+	-I$(top_srcdir) \
+	-I$(top_srcdir)/src \
+	-I$(top_srcdir)/include \
+	-I$(top_builddir)/lib \
+	@SQUID_CPPUNIT_INC@
+
 $(OBJS): $(top_srcdir)/include/version.h $(top_srcdir)/include/autoconf.h
 
 # TODO: get rid of this when config filename is no longer a global constant.

@@ -3,6 +3,7 @@ AM_CXXFLAGS = @SQUID_CXXFLAGS@
 CLEANFILES =
 
 INCLUDES = \
+	-I$(top_srcdir) \
 	-I$(top_builddir)/include \
 	-I$(top_srcdir)/include \
         -I$(top_srcdir)/src

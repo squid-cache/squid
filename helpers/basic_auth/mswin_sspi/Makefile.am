@@ -11,9 +11,15 @@ libexec_PROGRAMS = mswin_auth
 
 mswin_auth_SOURCES = mswin_auth.c valid.c valid.h
 
-LDADD	= -L$(top_builddir)/lib -lnetapi32 -ladvapi32 -lsspwin32 \
-          -lmiscutil $(XTRA_LIBS)
+LDADD = \
+	$(top_builddir)/compat/libcompat.la \
+	-L$(top_builddir)/lib -lmiscutil \
+	-lnetapi32 -ladvapi32 -lsspwin32 \
+	$(XTRA_LIBS)
 
-INCLUDES = -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/src
+INCLUDES = \
+	-I$(top_srcdir) \
+	-I$(top_builddir)/include \
+	-I$(top_srcdir)/include
 
 EXTRA_DIST = readme.txt
