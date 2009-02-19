@@ -1,5 +1,5 @@
 
-include $(top_srcdir)/src/common.am
+include $(top_srcdir)/src/Common.am
 
 noinst_LTLIBRARIES = libbase.la
 
