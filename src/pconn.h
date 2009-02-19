@@ -46,6 +46,7 @@ class PconnPool
 
 public:
     PconnPool(const char *);
+    ~PconnPool();
 
     void moduleInit();
     void push(int fd, const char *host, u_short port, const char *domain, struct IN_ADDR *client_address);
