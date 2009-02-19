@@ -2190,13 +2190,13 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
     /* compile headers */
     /* we should skip request line! */
     /* XXX should actually know the damned buffer size here */
-    if (!request->parseHeader(HttpParserHdrBuf(hp), HttpParserHdrSz(hp))) {
+    if (http_ver.major >= 1 && !request->parseHeader(HttpParserHdrBuf(hp), HttpParserHdrSz(hp))) {
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 5, "Failed to parse request headers:\n" << HttpParserHdrBuf(hp));
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
         repContext->setReplyToError(
-            ERR_INVALID_URL, HTTP_BAD_REQUEST, method, http->uri,
+            ERR_INVALID_REQ, HTTP_BAD_REQUEST, method, http->uri,
             &conn->peer.sin_addr, NULL, NULL, NULL);
         assert(context->http->out.offset == 0);
         context->pullData();
