@@ -548,9 +548,12 @@ fqdncache_gethostbyaddr(struct IN_ADDR addr, int flags)
 {
     char *name = inet_ntoa(addr);
     fqdncache_entry *f = NULL;
+    struct in_addr ip;
 
-    struct IN_ADDR ip;
-    assert(name);
+    if(!name) {
+        return NULL;
+    }
+
     FqdncacheStats.requests++;
     f = fqdncache_get(name);
 
