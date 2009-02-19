@@ -147,7 +147,7 @@ AuthNegotiateConfig::parse(AuthConfig * scheme, int n_configured, char *param_st
 
         parse_wordlist(&authenticate);
 
-        requirePathnameExists("authparam negotiate program", authenticate->key);
+        requirePathnameExists("auth_param negotiate program", authenticate->key);
     } else if (strcasecmp(param_str, "children") == 0) {
         parse_int(&authenticateChildren);
     } else if (strcasecmp(param_str, "keep_alive") == 0) {

@@ -141,7 +141,7 @@ AuthNTLMConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
 
         parse_wordlist(&authenticate);
 
-        requirePathnameExists("authparam ntlm program", authenticate->key);
+        requirePathnameExists("auth_param ntlm program", authenticate->key);
     } else if (strcasecmp(param_str, "children") == 0) {
         parse_int(&authenticateChildren);
     } else if (strcasecmp(param_str, "keep_alive") == 0) {

@@ -933,7 +933,7 @@ AuthDigestConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
 
         parse_wordlist(&authenticate);
 
-        requirePathnameExists("authparam digest program", authenticate->key);
+        requirePathnameExists("auth_param digest program", authenticate->key);
     } else if (strcasecmp(param_str, "children") == 0) {
         parse_int(&authenticateChildren);
     } else if (strcasecmp(param_str, "realm") == 0) {
