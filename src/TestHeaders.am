@@ -7,6 +7,6 @@ TESTS += testHeaders
 ## .h dependency test script
 ## aborts build process on errors; XXX: even with "make -k"
 testHeaders: $(srcdir)/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(srcdir)/" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(srcdir)" || exit 1
 
 .PHONY: testHeaders
