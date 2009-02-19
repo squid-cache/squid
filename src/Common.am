@@ -8,8 +8,10 @@ AM_CFLAGS = @SQUID_CFLAGS@
 AM_CXXFLAGS = @SQUID_CXXFLAGS@
 DEFS = @DEFS@
 
-# so that others can always use += for this variable
+# so that others can always use += for these variables
 CLEANFILES =
+check_PROGRAMS = 
+TESTS =
 
 INCLUDES = \
 	-I$(top_srcdir) \
@@ -22,16 +24,3 @@ INCLUDES = \
 # XXX: Do we really need this? Does auto-dependency tracking work?
 # XXX: And should not autoconf be in $(top_builddir)?
 $(OBJS): $(top_srcdir)/include/version.h $(top_srcdir)/include/autoconf.h
-
-check_PROGRAMS = testHeaders
-TESTS = $(check_PROGRAMS)
-
-## Special Universal .h dependency test script
-## aborts build process on errors
-testHeaders: $(srcdir)/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(srcdir)/" || exit 1
-
-## No such file...
-testHeaders.c:
-	touch testHeaders.c
-CLEANFILES += testHeaders.c
