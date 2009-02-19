@@ -2,7 +2,7 @@
 #define SQUID_ADAPTATION__INITIATE_H
 
 #include "AsyncCall.h"
-#include "ICAP/AsyncJob.h"
+#include "base/AsyncJob.h"
 #include "adaptation/forward.h"
 
 class HttpMsg;

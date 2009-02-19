@@ -6,7 +6,7 @@
 #ifndef SQUID_ASYNCJOBCALLS_H
 #define SQUID_ASYNCJOBCALLS_H
 
-#include "ICAP/AsyncJob.h"
+#include "base/AsyncJob.h"
 
 /*
  * *MemFunT are member function (i.e., class method) wrappers. They store
