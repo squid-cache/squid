@@ -17,10 +17,9 @@ INCLUDES = \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src \
-	-I$(top_builddir)/lib \
+	-I$(top_builddir)/include \
 	@SQUID_CPPUNIT_INC@
 
 ## make all compiled sources depend on generated files
 ## XXX: Do we really need this? Does auto-dependency tracking work?
-## XXX: And should not autoconf be in $(top_builddir)?
-$(OBJS): $(top_srcdir)/include/version.h $(top_srcdir)/include/autoconf.h
+$(OBJS): $(top_srcdir)/include/version.h $(top_builddir)/include/autoconf.h
