@@ -32,7 +32,7 @@ LOADABLE_MODULES_SOURCES = \
 TESTS=$(check_PROGRAMS)
 check_PROGRAMS=
 
-SUBDIRS	= base fs repl auth icmp ip
+SUBDIRS	= base fs repl auth ip icmp
 
 if USE_ADAPTATION
 SUBDIRS += adaptation
