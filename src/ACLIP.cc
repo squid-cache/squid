@@ -132,6 +132,9 @@ aclIpAddrNetworkCompare(acl_ip_data * const &p, acl_ip_data * const &q)
     /* apply netmask */
     A.ApplyMask(q->mask);
 
+    debugs(28,9, "aclIpAddrNetworkCompare: compare: " << p->addr1 << "/" << q->mask << " (" << A << ")  vs " <<
+                 q->addr1 << "-" << q->addr2 << "/" << q->mask);
+
     if (q->addr2.IsAnyAddr()) {       /* single address check */
 
         return A.matchIPAddr( q->addr1 );
