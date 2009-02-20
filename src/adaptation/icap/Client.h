@@ -36,7 +36,15 @@
 
 // ICAP-related things needed by code unaware of ICAP internals.
 
-extern void ICAPInitModule();
-extern void ICAPCleanModule();
+
+namespace Adaptation {
+namespace Icap {
+
+extern void InitModule();
+extern void CleanModule();
+
+
+} // namespace Icap
+} // namespace Adaptation
 
 #endif /* SQUID_ICAPCLIENT_H */

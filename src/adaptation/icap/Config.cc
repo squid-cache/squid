@@ -2,7 +2,6 @@
 /*
  * $Id$
  *
- *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -33,44 +32,53 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ICAPCONFIG_H
-#define SQUID_ICAPCONFIG_H
+#include "squid.h"
 
-#include "event.h"
-#include "AsyncCall.h"
-#include "adaptation/Config.h"
-#include "adaptation/icap/ICAPServiceRep.h"
+#include "ConfigParser.h"
+#include "ACL.h"
+#include "Store.h"
+#include "Array.h"	// really Vector
+#include "adaptation/icap/Config.h"
+#include "adaptation/icap/ServiceRep.h"
+#include "HttpRequest.h"
+#include "HttpReply.h"
+#include "ACLChecklist.h"
+#include "wordlist.h"
 
-class acl_access;
+Adaptation::Icap::Config Adaptation::Icap::TheConfig;
 
-class ConfigParser;
-
-class ICAPConfig: public Adaptation::Config
+Adaptation::Icap::Config::Config(): preview_enable(0), preview_size(0),
+        connect_timeout_raw(0), io_timeout_raw(0), reuse_connections(0),
+        client_username_header(NULL), client_username_encode(0)
 {
+}
 
-public:
-    int default_options_ttl;
-    int preview_enable;
-    int preview_size;
-    time_t connect_timeout_raw;
-    time_t io_timeout_raw;
-    int reuse_connections;
-    char* client_username_header;
-    int client_username_encode;
+Adaptation::Icap::Config::~Config()
+{
+    // TODO: delete client_username_header?
+}
 
-    ICAPConfig();
-    ~ICAPConfig();
+Adaptation::ServicePointer
+Adaptation::Icap::Config::createService(const Adaptation::ServiceConfig &cfg)
+{
+    Adaptation::Icap::ServiceRep::Pointer s = new Adaptation::Icap::ServiceRep(cfg);
+    s->setSelf(s);
+    return s.getRaw();
+}
 
-    time_t connect_timeout(bool bypassable) const;
-    time_t io_timeout(bool bypassable) const;
+time_t Adaptation::Icap::Config::connect_timeout(bool bypassable) const
+{
+    if (connect_timeout_raw > 0)
+        return connect_timeout_raw; // explicitly configured
 
-private:
-    ICAPConfig(const ICAPConfig &); // not implemented
-    ICAPConfig &operator =(const ICAPConfig &); // not implemented
+    return bypassable ? ::Config.Timeout.peer_connect : ::Config.Timeout.connect;
+}
 
-    virtual Adaptation::ServicePointer createService(const Adaptation::ServiceConfig &cfg);
-};
-
-extern ICAPConfig TheICAPConfig;
-
-#endif /* SQUID_ICAPCONFIG_H */
+time_t Adaptation::Icap::Config::io_timeout(bool) const
+{
+    if (io_timeout_raw > 0)
+        return io_timeout_raw; // explicitly configured
+    // TODO: provide a different default for an ICAP transaction that
+    // can still be bypassed
+    return ::Config.Timeout.read;
+}

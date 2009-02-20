@@ -43,15 +43,19 @@
 // as the "cause". ICAP transactions use this class to store virgin
 // and adapted HTTP messages.
 
-class ICAPInOut
+
+namespace Adaptation {
+namespace Icap {
+
+class InOut
 {
 
 public:
     typedef HttpMsg Header;
 
-    ICAPInOut(): header(0), cause(0) {}
+    InOut(): header(0), cause(0) {}
 
-    ~ICAPInOut() {
+    ~InOut() {
         HTTPMSGUNLOCK(cause);
         HTTPMSGUNLOCK(header);
     }
@@ -83,5 +87,9 @@ public:
 };
 
 // TODO: s/Header/Message/i ?
+
+
+} // namespace Icap
+} // namespace Adaptation
 
 #endif /* SQUID_ICAPINOUT_H */
