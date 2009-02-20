@@ -378,6 +378,7 @@ extern cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, in
 
 /// \ingroup CBDATAAPI
 #define CBDATA_CLASS_INIT(type) cbdata_type type::CBDATA_##type = CBDATA_UNKNOWN
+#define CBDATA_NAMESPACED_CLASS_INIT(namespace, type) cbdata_type namespace::type::CBDATA_##type = CBDATA_UNKNOWN
 
 /**
  \ingroup CBDATAAPI
