@@ -5,12 +5,12 @@
 #include "squid.h"
 #include "TextException.h"
 #include "HttpMsg.h"
-#include "adaptation/icap/ICAPLauncher.h"
-#include "adaptation/icap/ICAPXaction.h"
-#include "adaptation/icap/ICAPServiceRep.h"
+#include "adaptation/icap/Launcher.h"
+#include "adaptation/icap/Xaction.h"
+#include "adaptation/icap/ServiceRep.h"
 
 
-ICAPLauncher::ICAPLauncher(const char *aTypeName,
+Adaptation::Icap::Launcher::Launcher(const char *aTypeName,
                            Adaptation::Initiator *anInitiator, Adaptation::ServicePointer &aService):
         AsyncJob(aTypeName),
         Adaptation::Initiate(aTypeName, anInitiator, aService),
@@ -18,12 +18,12 @@ ICAPLauncher::ICAPLauncher(const char *aTypeName,
 {
 }
 
-ICAPLauncher::~ICAPLauncher()
+Adaptation::Icap::Launcher::~Launcher()
 {
     assert(!theXaction);
 }
 
-void ICAPLauncher::start()
+void Adaptation::Icap::Launcher::start()
 {
     Adaptation::Initiate::start();
 
@@ -31,27 +31,27 @@ void ICAPLauncher::start()
     launchXaction(false);
 }
 
-void ICAPLauncher::launchXaction(bool final)
+void Adaptation::Icap::Launcher::launchXaction(bool final)
 {
     Must(!theXaction);
     ++theLaunches;
     debugs(93,4, HERE << "launching xaction #" << theLaunches);
-    ICAPXaction *x = createXaction();
+    Adaptation::Icap::Xaction *x = createXaction();
     if (final)
         x->disableRetries();
     theXaction = initiateAdaptation(x);
     Must(theXaction);
 }
 
-void ICAPLauncher::noteAdaptationAnswer(HttpMsg *message)
+void Adaptation::Icap::Launcher::noteAdaptationAnswer(HttpMsg *message)
 {
     sendAnswer(message);
     clearAdaptation(theXaction);
     Must(done());
-    debugs(93,3, HERE << "ICAPLauncher::noteAdaptationAnswer exiting ");
+    debugs(93,3, HERE << "Adaptation::Icap::Launcher::noteAdaptationAnswer exiting ");
 }
 
-void ICAPLauncher::noteInitiatorAborted()
+void Adaptation::Icap::Launcher::noteInitiatorAborted()
 {
 
     announceInitiatorAbort(theXaction); // propogate to the transaction
@@ -60,7 +60,7 @@ void ICAPLauncher::noteInitiatorAborted()
 
 }
 
-void ICAPLauncher::noteAdaptationQueryAbort(bool final)
+void Adaptation::Icap::Launcher::noteAdaptationQueryAbort(bool final)
 {
     clearAdaptation(theXaction);
 
@@ -75,12 +75,12 @@ void ICAPLauncher::noteAdaptationQueryAbort(bool final)
 
 }
 
-bool ICAPLauncher::doneAll() const
+bool Adaptation::Icap::Launcher::doneAll() const
 {
     return (!theInitiator || !theXaction) && Adaptation::Initiate::doneAll();
 }
 
-void ICAPLauncher::swanSong()
+void Adaptation::Icap::Launcher::swanSong()
 {
     if (theInitiator)
         tellQueryAborted(!service().cfg().bypass);

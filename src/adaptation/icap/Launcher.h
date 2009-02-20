@@ -36,7 +36,7 @@
 
 #include "adaptation/Initiator.h"
 #include "adaptation/Initiate.h"
-#include "adaptation/icap/ICAPServiceRep.h"
+#include "adaptation/icap/ServiceRep.h"
 
 /*
  * The ICAP Launcher starts an ICAP transaction. If the transaction fails
@@ -58,16 +58,20 @@
  * ICAP transactions.
  */
 
-class ICAPXaction;
 
-// Note: ICAPInitiate must be the first parent for cbdata to work. We use
-// a temporary ICAPInitaitorHolder/toCbdata hacks and do not call cbdata
+namespace Adaptation {
+namespace Icap {
+
+class Xaction;
+
+// Note: Initiate must be the first parent for cbdata to work. We use
+// a temporary InitaitorHolder/toCbdata hacks and do not call cbdata
 // operations on the initiator directly.
-class ICAPLauncher: public Adaptation::Initiate, public Adaptation::Initiator
+class Launcher: public Adaptation::Initiate, public Adaptation::Initiator
 {
 public:
-    ICAPLauncher(const char *aTypeName, Adaptation::Initiator *anInitiator, Adaptation::ServicePointer &aService);
-    virtual ~ICAPLauncher();
+    Launcher(const char *aTypeName, Adaptation::Initiator *anInitiator, Adaptation::ServicePointer &aService);
+    virtual ~Launcher();
 
     // Adaptation::Initiate: asynchronous communication with the initiator
     void noteInitiatorAborted();
@@ -83,12 +87,16 @@ protected:
     virtual void swanSong();
 
     // creates the right ICAP transaction using stored configuration params
-    virtual ICAPXaction *createXaction() = 0;
+    virtual Xaction *createXaction() = 0;
 
     void launchXaction(bool final);
 
     Adaptation::Initiate *theXaction; // current ICAP transaction
     int theLaunches; // the number of transaction launches
 };
+
+
+} // namespace Icap
+} // namespace Adaptation
 
 #endif /* SQUID_ICAPLAUNCHER_H */

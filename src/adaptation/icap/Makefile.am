@@ -4,22 +4,22 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libicap.la
 
 libicap_la_SOURCES = \
-	ICAPClient.cc \
-	ICAPClient.h \
-	ICAPInOut.h \
-	ICAPConfig.cc \
-	ICAPConfig.h \
-	ICAPElements.cc \
-	ICAPElements.h \
-	ICAPOptions.cc \
-	ICAPOptions.h \
-	ICAPServiceRep.cc \
-	ICAPServiceRep.h \
-	ICAPLauncher.cc \
-	ICAPLauncher.h \
-	ICAPOptXact.cc \
-	ICAPOptXact.h \
-	ICAPXaction.cc \
-	ICAPXaction.h \
-	ICAPModXact.cc \
-	ICAPModXact.h
+	Client.cc \
+	Client.h \
+	InOut.h \
+	Config.cc \
+	Config.h \
+	Elements.cc \
+	Elements.h \
+	Options.cc \
+	Options.h \
+	ServiceRep.cc \
+	ServiceRep.h \
+	Launcher.cc \
+	Launcher.h \
+	OptXact.cc \
+	OptXact.h \
+	Xaction.cc \
+	Xaction.h \
+	ModXact.cc \
+	ModXact.h

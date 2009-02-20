@@ -37,28 +37,31 @@
 #include "comm.h"
 #include "CommCalls.h"
 #include "MemBuf.h"
-#include "adaptation/icap/ICAPServiceRep.h"
+#include "adaptation/icap/ServiceRep.h"
 #include "adaptation/Initiate.h"
 
 class HttpMsg;
 class CommConnectCbParams;
 
+namespace Adaptation {
+namespace Icap {
+
 /*
  * The ICAP Xaction implements common tasks for ICAP OPTIONS, REQMOD, and
- * RESPMOD transactions. It is started by an ICAPInitiator. It terminates
+ * RESPMOD transactions. It is started by an Initiator. It terminates
  * on its own, when done. Transactions communicate with Initiator using
  * asynchronous messages because a transaction or Initiator may be gone at
  * any time.
  */
 
-// Note: ICAPXaction must be the first parent for object-unaware cbdata to work
+// Note: Xaction must be the first parent for object-unaware cbdata to work
 
-class ICAPXaction: public Adaptation::Initiate
+class Xaction: public Adaptation::Initiate
 {
 
 public:
-    ICAPXaction(const char *aTypeName, Adaptation::Initiator *anInitiator, ICAPServiceRep::Pointer &aService);
-    virtual ~ICAPXaction();
+    Xaction(const char *aTypeName, Adaptation::Initiator *anInitiator, ServiceRep::Pointer &aService);
+    virtual ~Xaction();
 
     void disableRetries();
 
@@ -112,7 +115,7 @@ protected:
     // custom end-of-call checks
     virtual void callEnd();
 
-    ICAPServiceRep &service();
+    ServiceRep &service();
 
 protected:
     int connection;     // FD of the ICAP server connection
@@ -145,7 +148,11 @@ protected:
     AsyncCall::Pointer closer;
 
 private:
-    //CBDATA_CLASS2(ICAPXaction);
+    //CBDATA_CLASS2(Xaction);
 };
+
+
+} // namespace Icap
+} // namespace Adaptation
 
 #endif /* SQUID_ICAPXACTION_H */

@@ -1,3 +1,4 @@
+
 /*
  * $Id$
  *
@@ -28,55 +29,56 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ *
+ * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ICAPOPTXACT_H
-#define SQUID_ICAPOPTXACT_H
+#ifndef SQUID_ICAPCONFIG_H
+#define SQUID_ICAPCONFIG_H
 
-#include "adaptation/icap/ICAPXaction.h"
-#include "adaptation/icap/ICAPLauncher.h"
+#include "event.h"
+#include "AsyncCall.h"
+#include "adaptation/Config.h"
+#include "adaptation/icap/ServiceRep.h"
 
-class ICAPOptions;
 
+namespace Adaptation {
+namespace Icap {
 
-/* ICAPOptXact sends an ICAP OPTIONS request to the ICAP service,
- * parses the ICAP response, and sends it to the initiator. A NULL response
- * means the ICAP service could not be contacted or did not return any
- * valid response. */
+class acl_access;
 
-class ICAPOptXact: public ICAPXaction
+class ConfigParser;
+
+class Config: public Adaptation::Config
 {
 
 public:
-    ICAPOptXact(Adaptation::Initiator *anInitiator, ICAPServiceRep::Pointer &aService);
+    int default_options_ttl;
+    int preview_enable;
+    int preview_size;
+    time_t connect_timeout_raw;
+    time_t io_timeout_raw;
+    int reuse_connections;
+    char* client_username_header;
+    int client_username_encode;
 
-protected:
-    virtual void start();
-    virtual void handleCommConnected();
-    virtual void handleCommWrote(size_t size);
-    virtual void handleCommRead(size_t size);
+    Config();
+    ~Config();
 
-    void makeRequest(MemBuf &buf);
-    HttpMsg *parseResponse();
-
-    void startReading();
-
-private:
-    CBDATA_CLASS2(ICAPOptXact);
-};
-
-// An ICAPLauncher that stores ICAPOptXact construction info and
-// creates ICAPOptXact when needed
-class ICAPOptXactLauncher: public ICAPLauncher
-{
-public:
-    ICAPOptXactLauncher(Adaptation::Initiator *anInitiator, Adaptation::ServicePointer aService);
-
-protected:
-    virtual ICAPXaction *createXaction();
+    time_t connect_timeout(bool bypassable) const;
+    time_t io_timeout(bool bypassable) const;
 
 private:
-    CBDATA_CLASS2(ICAPOptXactLauncher);
+    Config(const Config &); // not implemented
+    Config &operator =(const Config &); // not implemented
+
+    virtual Adaptation::ServicePointer createService(const Adaptation::ServiceConfig &cfg);
 };
 
-#endif /* SQUID_ICAPOPTXACT_H */
+extern Config TheConfig;
+
+
+} // namespace Icap
+} // namespace Adaptation
+
+#endif /* SQUID_ICAPCONFIG_H */

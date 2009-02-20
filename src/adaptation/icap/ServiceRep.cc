@@ -5,39 +5,39 @@
 #include "squid.h"
 #include "TextException.h"
 #include "HttpReply.h"
-#include "adaptation/icap/ICAPServiceRep.h"
-#include "adaptation/icap/ICAPOptions.h"
-#include "adaptation/icap/ICAPOptXact.h"
+#include "adaptation/icap/ServiceRep.h"
+#include "adaptation/icap/Options.h"
+#include "adaptation/icap/OptXact.h"
 #include "ConfigParser.h"
-#include "adaptation/icap/ICAPConfig.h"
-#include "adaptation/icap/ICAPModXact.h"
+#include "adaptation/icap/Config.h"
+#include "adaptation/icap/ModXact.h"
 #include "SquidTime.h"
 
-CBDATA_CLASS_INIT(ICAPServiceRep);
+CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, ServiceRep);
 
-ICAPServiceRep::ICAPServiceRep(const Adaptation::ServiceConfig &cfg):
-        AsyncJob("ICAPServiceRep"), Adaptation::Service(cfg),
+Adaptation::Icap::ServiceRep::ServiceRep(const Adaptation::ServiceConfig &cfg):
+        AsyncJob("Adaptation::Icap::ServiceRep"), Adaptation::Service(cfg),
         theOptions(NULL), theOptionsFetcher(0), theLastUpdate(0),
         theSessionFailures(0), isSuspended(0), notifying(false),
         updateScheduled(false), self(NULL),
         wasAnnouncedUp(true) // do not announce an "up" service at startup
 {}
 
-ICAPServiceRep::~ICAPServiceRep()
+Adaptation::Icap::ServiceRep::~ServiceRep()
 {
     Must(!theOptionsFetcher);
     changeOptions(0);
 }
 
 void
-ICAPServiceRep::setSelf(Pointer &aSelf)
+Adaptation::Icap::ServiceRep::setSelf(Pointer &aSelf)
 {
     assert(!self && aSelf != NULL);
     self = aSelf;
 }
 
 void
-ICAPServiceRep::finalize()
+Adaptation::Icap::ServiceRep::finalize()
 {
     Adaptation::Service::finalize();
     assert(self != NULL);
@@ -55,7 +55,7 @@ ICAPServiceRep::finalize()
     }
 }
 
-void ICAPServiceRep::invalidate()
+void Adaptation::Icap::ServiceRep::invalidate()
 {
     assert(self != NULL);
     Pointer savedSelf = self; // to prevent destruction when we nullify self
@@ -67,17 +67,17 @@ void ICAPServiceRep::invalidate()
     // TODO: it would be nice to invalidate cbdata(this) when not destroyed
 }
 
-void ICAPServiceRep::noteFailure()
+void Adaptation::Icap::ServiceRep::noteFailure()
 {
     ++theSessionFailures;
-    debugs(93,4, theSessionFailures << " ICAPService failures, out of " <<
-           TheICAPConfig.service_failure_limit << " allowed " << status());
+    debugs(93,4, theSessionFailures << " Adaptation::Icap::Service failures, out of " <<
+           TheConfig.service_failure_limit << " allowed " << status());
 
     if (isSuspended)
         return;
 
-    if (TheICAPConfig.service_failure_limit >= 0 &&
-            theSessionFailures > TheICAPConfig.service_failure_limit)
+    if (TheConfig.service_failure_limit >= 0 &&
+            theSessionFailures > TheConfig.service_failure_limit)
         suspend("too many failures");
 
     // TODO: Should bypass setting affect how much Squid tries to talk to
@@ -86,47 +86,47 @@ void ICAPServiceRep::noteFailure()
     // should be configurable.
 }
 
-void ICAPServiceRep::suspend(const char *reason)
+void Adaptation::Icap::ServiceRep::suspend(const char *reason)
 {
     if (isSuspended) {
-        debugs(93,4, "keeping ICAPService suspended, also for " << reason);
+        debugs(93,4, "keeping Adaptation::Icap::Service suspended, also for " << reason);
     } else {
         isSuspended = reason;
-        debugs(93,1, "suspending ICAPService for " << reason);
-        scheduleUpdate(squid_curtime + TheICAPConfig.service_revival_delay);
+        debugs(93,1, "suspending Adaptation::Icap::Service for " << reason);
+        scheduleUpdate(squid_curtime + TheConfig.service_revival_delay);
         announceStatusChange("suspended", true);
     }
 }
 
-bool ICAPServiceRep::probed() const
+bool Adaptation::Icap::ServiceRep::probed() const
 {
     return theLastUpdate != 0;
 }
 
-bool ICAPServiceRep::hasOptions() const
+bool Adaptation::Icap::ServiceRep::hasOptions() const
 {
     return theOptions && theOptions->valid() && theOptions->fresh();
 }
 
-bool ICAPServiceRep::up() const
+bool Adaptation::Icap::ServiceRep::up() const
 {
     return self != NULL && !isSuspended && hasOptions();
 }
 
-bool ICAPServiceRep::wantsUrl(const String &urlPath) const
+bool Adaptation::Icap::ServiceRep::wantsUrl(const String &urlPath) const
 {
     Must(hasOptions());
-    return theOptions->transferKind(urlPath) != ICAPOptions::xferIgnore;
+    return theOptions->transferKind(urlPath) != Adaptation::Icap::Options::xferIgnore;
 }
 
-bool ICAPServiceRep::wantsPreview(const String &urlPath, size_t &wantedSize) const
+bool Adaptation::Icap::ServiceRep::wantsPreview(const String &urlPath, size_t &wantedSize) const
 {
     Must(hasOptions());
 
     if (theOptions->preview < 0)
         return false;
 
-    if (theOptions->transferKind(urlPath) != ICAPOptions::xferPreview)
+    if (theOptions->transferKind(urlPath) != Adaptation::Icap::Options::xferPreview)
         return false;
 
     wantedSize = theOptions->preview;
@@ -134,7 +134,7 @@ bool ICAPServiceRep::wantsPreview(const String &urlPath, size_t &wantedSize) con
     return true;
 }
 
-bool ICAPServiceRep::allows204() const
+bool Adaptation::Icap::ServiceRep::allows204() const
 {
     Must(hasOptions());
     return true; // in the future, we may have ACLs to prevent 204s
@@ -142,42 +142,42 @@ bool ICAPServiceRep::allows204() const
 
 
 static
-void ICAPServiceRep_noteTimeToUpdate(void *data)
+void ServiceRep_noteTimeToUpdate(void *data)
 {
-    ICAPServiceRep *service = static_cast<ICAPServiceRep*>(data);
+    Adaptation::Icap::ServiceRep *service = static_cast<Adaptation::Icap::ServiceRep*>(data);
     Must(service);
     service->noteTimeToUpdate();
 }
 
-void ICAPServiceRep::noteTimeToUpdate()
+void Adaptation::Icap::ServiceRep::noteTimeToUpdate()
 {
     if (self != NULL)
         updateScheduled = false;
 
     if (!self || theOptionsFetcher) {
-        debugs(93,5, "ICAPService ignores options update " << status());
+        debugs(93,5, "Adaptation::Icap::Service ignores options update " << status());
         return;
     }
 
-    debugs(93,5, "ICAPService performs a regular options update " << status());
+    debugs(93,5, "Adaptation::Icap::Service performs a regular options update " << status());
     startGettingOptions();
 }
 
 #if 0
 static
-void ICAPServiceRep_noteTimeToNotify(void *data)
+void Adaptation::Icap::ServiceRep_noteTimeToNotify(void *data)
 {
-    ICAPServiceRep *service = static_cast<ICAPServiceRep*>(data);
+    Adaptation::Icap::ServiceRep *service = static_cast<Adaptation::Icap::ServiceRep*>(data);
     Must(service);
     service->noteTimeToNotify();
 }
 #endif
 
-void ICAPServiceRep::noteTimeToNotify()
+void Adaptation::Icap::ServiceRep::noteTimeToNotify()
 {
     Must(!notifying);
     notifying = true;
-    debugs(93,7, "ICAPService notifies " << theClients.size() << " clients " <<
+    debugs(93,7, "Adaptation::Icap::Service notifies " << theClients.size() << " clients " <<
            status());
 
     // note: we must notify even if we are invalidated
@@ -193,11 +193,11 @@ void ICAPServiceRep::noteTimeToNotify()
     notifying = false;
 }
 
-void ICAPServiceRep::callWhenReady(AsyncCall::Pointer &cb)
+void Adaptation::Icap::ServiceRep::callWhenReady(AsyncCall::Pointer &cb)
 {
     Must(cb!=NULL);
 
-    debugs(93,5, HERE << "ICAPService is asked to call " << *cb <<
+    debugs(93,5, HERE << "Adaptation::Icap::Service is asked to call " << *cb <<
            " when ready " << status());
 
     Must(self != NULL);
@@ -217,20 +217,20 @@ void ICAPServiceRep::callWhenReady(AsyncCall::Pointer &cb)
         scheduleNotification();
 }
 
-void ICAPServiceRep::scheduleNotification()
+void Adaptation::Icap::ServiceRep::scheduleNotification()
 {
-    debugs(93,7, "ICAPService will notify " << theClients.size() << " clients");
-    CallJobHere(93, 5, this, ICAPServiceRep::noteTimeToNotify);
+    debugs(93,7, "Adaptation::Icap::Service will notify " << theClients.size() << " clients");
+    CallJobHere(93, 5, this, Adaptation::Icap::ServiceRep::noteTimeToNotify);
 }
 
-bool ICAPServiceRep::needNewOptions() const
+bool Adaptation::Icap::ServiceRep::needNewOptions() const
 {
     return self != NULL && !up();
 }
 
-void ICAPServiceRep::changeOptions(ICAPOptions *newOptions)
+void Adaptation::Icap::ServiceRep::changeOptions(Adaptation::Icap::Options *newOptions)
 {
-    debugs(93,8, "ICAPService changes options from " << theOptions << " to " <<
+    debugs(93,8, "Adaptation::Icap::Service changes options from " << theOptions << " to " <<
            newOptions << ' ' << status());
 
     delete theOptions;
@@ -243,7 +243,7 @@ void ICAPServiceRep::changeOptions(ICAPOptions *newOptions)
     announceStatusChange("down after an options fetch failure", true);
 }
 
-void ICAPServiceRep::checkOptions()
+void Adaptation::Icap::ServiceRep::checkOptions()
 {
     if (theOptions == NULL)
         return;
@@ -297,7 +297,7 @@ void ICAPServiceRep::checkOptions()
     }
 }
 
-void ICAPServiceRep::announceStatusChange(const char *downPhrase, bool important) const
+void Adaptation::Icap::ServiceRep::announceStatusChange(const char *downPhrase, bool important) const
 {
     if (wasAnnouncedUp == up()) // no significant changes to announce
         return;
@@ -312,68 +312,68 @@ void ICAPServiceRep::announceStatusChange(const char *downPhrase, bool important
 }
 
 // we are receiving ICAP OPTIONS response headers here or NULL on failures
-void ICAPServiceRep::noteAdaptationAnswer(HttpMsg *msg)
+void Adaptation::Icap::ServiceRep::noteAdaptationAnswer(HttpMsg *msg)
 {
     Must(theOptionsFetcher);
     clearAdaptation(theOptionsFetcher);
 
     Must(msg);
 
-    debugs(93,5, "ICAPService is interpreting new options " << status());
+    debugs(93,5, "Adaptation::Icap::Service is interpreting new options " << status());
 
-    ICAPOptions *newOptions = NULL;
+    Adaptation::Icap::Options *newOptions = NULL;
     if (HttpReply *r = dynamic_cast<HttpReply*>(msg)) {
-        newOptions = new ICAPOptions;
+        newOptions = new Adaptation::Icap::Options;
         newOptions->configure(r);
     } else {
-        debugs(93,1, "ICAPService got wrong options message " << status());
+        debugs(93,1, "Adaptation::Icap::Service got wrong options message " << status());
     }
 
     handleNewOptions(newOptions);
 }
 
-void ICAPServiceRep::noteAdaptationQueryAbort(bool)
+void Adaptation::Icap::ServiceRep::noteAdaptationQueryAbort(bool)
 {
     Must(theOptionsFetcher);
     clearAdaptation(theOptionsFetcher);
 
-    debugs(93,3, "ICAPService failed to fetch options " << status());
+    debugs(93,3, "Adaptation::Icap::Service failed to fetch options " << status());
     handleNewOptions(0);
 }
 
-void ICAPServiceRep::handleNewOptions(ICAPOptions *newOptions)
+void Adaptation::Icap::ServiceRep::handleNewOptions(Adaptation::Icap::Options *newOptions)
 {
     // new options may be NULL
     changeOptions(newOptions);
 
-    debugs(93,3, "ICAPService got new options and is now " << status());
+    debugs(93,3, "Adaptation::Icap::Service got new options and is now " << status());
 
     scheduleUpdate(optionsFetchTime());
     scheduleNotification();
 }
 
-void ICAPServiceRep::startGettingOptions()
+void Adaptation::Icap::ServiceRep::startGettingOptions()
 {
     Must(!theOptionsFetcher);
-    debugs(93,6, "ICAPService will get new options " << status());
+    debugs(93,6, "Adaptation::Icap::Service will get new options " << status());
 
     // XXX: second "this" is "self"; this works but may stop if API changes
-    theOptionsFetcher = initiateAdaptation(new ICAPOptXactLauncher(this, this));
+    theOptionsFetcher = initiateAdaptation(new Adaptation::Icap::OptXactLauncher(this, this));
     Must(theOptionsFetcher);
-    // TODO: timeout in case ICAPOptXact never calls us back?
+    // TODO: timeout in case Adaptation::Icap::OptXact never calls us back?
     // Such a timeout should probably be a generic AsyncStart feature.
 }
 
-void ICAPServiceRep::scheduleUpdate(time_t when)
+void Adaptation::Icap::ServiceRep::scheduleUpdate(time_t when)
 {
     if (updateScheduled) {
-        debugs(93,7, "ICAPService reschedules update");
+        debugs(93,7, "Adaptation::Icap::Service reschedules update");
         // XXX: check whether the event is there because AR saw
         // an unreproducible eventDelete assertion on 2007/06/18
-        if (eventFind(&ICAPServiceRep_noteTimeToUpdate, this))
-            eventDelete(&ICAPServiceRep_noteTimeToUpdate, this);
+        if (eventFind(&ServiceRep_noteTimeToUpdate, this))
+            eventDelete(&ServiceRep_noteTimeToUpdate, this);
         else
-            debugs(93,1, "XXX: ICAPService lost an update event.");
+            debugs(93,1, "XXX: Adaptation::Icap::Service lost an update event.");
         updateScheduled = false;
     }
 
@@ -387,33 +387,33 @@ void ICAPServiceRep::scheduleUpdate(time_t when)
     if (when < squid_curtime)
         when = squid_curtime;
 
-    // XXX: move hard-coded constants from here to TheICAPConfig
+    // XXX: move hard-coded constants from here to Adaptation::Icap::TheConfig
     const int minUpdateGap = 30; // seconds
     if (when < theLastUpdate + minUpdateGap)
         when = theLastUpdate + minUpdateGap;
 
     const int delay = when - squid_curtime;
-    debugs(93,5, "ICAPService will fetch OPTIONS in " << delay << " sec");
+    debugs(93,5, "Adaptation::Icap::Service will fetch OPTIONS in " << delay << " sec");
 
-    eventAdd("ICAPServiceRep::noteTimeToUpdate",
-             &ICAPServiceRep_noteTimeToUpdate, this, delay, 0, true);
+    eventAdd("Adaptation::Icap::ServiceRep::noteTimeToUpdate",
+             &ServiceRep_noteTimeToUpdate, this, delay, 0, true);
     updateScheduled = true;
 }
 
 // returns absolute time when OPTIONS should be fetched
 time_t
-ICAPServiceRep::optionsFetchTime() const
+Adaptation::Icap::ServiceRep::optionsFetchTime() const
 {
     if (theOptions && theOptions->valid()) {
         const time_t expire = theOptions->expire();
-        debugs(93,7, "ICAPService options expire on " << expire << " >= " << squid_curtime);
+        debugs(93,7, "Adaptation::Icap::Service options expire on " << expire << " >= " << squid_curtime);
 
         // conservative estimate of how long the OPTIONS transaction will take
-        // XXX: move hard-coded constants from here to TheICAPConfig
+        // XXX: move hard-coded constants from here to Adaptation::Icap::TheConfig
         const int expectedWait = 20; // seconds
 
         // Unknown or invalid (too small) expiration times should not happen.
-        // ICAPOptions should use the default TTL, and ICAP servers should not
+        // Adaptation::Icap::Options should use the default TTL, and ICAP servers should not
         // send invalid TTLs, but bugs and attacks happen.
         if (expire < expectedWait)
             return squid_curtime;
@@ -422,18 +422,18 @@ ICAPServiceRep::optionsFetchTime() const
     }
 
     // use revival delay as "expiration" time for a service w/o valid options
-    return squid_curtime + TheICAPConfig.service_revival_delay;
+    return squid_curtime + TheConfig.service_revival_delay;
 }
 
 Adaptation::Initiate *
-ICAPServiceRep::makeXactLauncher(Adaptation::Initiator *initiator,
+Adaptation::Icap::ServiceRep::makeXactLauncher(Adaptation::Initiator *initiator,
                                  HttpMsg *virgin, HttpRequest *cause)
 {
-    return new ICAPModXactLauncher(initiator, virgin, cause, this);
+    return new Adaptation::Icap::ModXactLauncher(initiator, virgin, cause, this);
 }
 
 // returns a temporary string depicting service status, for debugging
-const char *ICAPServiceRep::status() const
+const char *Adaptation::Icap::ServiceRep::status() const
 {
     static MemBuf buf;
 

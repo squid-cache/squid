@@ -77,7 +77,7 @@
 #endif
 
 #if ICAP_CLIENT
-#include "adaptation/icap/ICAPConfig.h"
+#include "adaptation/icap/Config.h"
 #endif
 #if USE_ECAP
 #include "adaptation/ecap/Config.h"
@@ -1050,8 +1050,8 @@ mainInitialize(void)
     // We can remove this dependency on specific adaptation mechanisms
     // if we create a generic Registry of such mechanisms. Should we?
 #if ICAP_CLIENT
-    TheICAPConfig.finalize();
-    enableAdaptation = TheICAPConfig.onoff || enableAdaptation;
+    Adaptation::Icap::TheConfig.finalize();
+    enableAdaptation = Adaptation::Icap::TheConfig.onoff || enableAdaptation;
 #endif
 #if USE_ECAP
     Ecap::TheConfig.finalize(); // must be after we load modules
