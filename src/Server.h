@@ -37,7 +37,7 @@
 #include "StoreIOBuffer.h"
 #include "forward.h"
 #include "BodyPipe.h"
-#include "ICAP/AsyncJob.h"
+#include "base/AsyncJob.h"
 #include "CommCalls.h"
 
 #if USE_ADAPTATION

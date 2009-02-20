@@ -32,7 +32,7 @@ LOADABLE_MODULES_SOURCES = \
 TESTS=$(check_PROGRAMS)
 check_PROGRAMS=
 
-SUBDIRS		= fs repl auth icmp ip
+SUBDIRS	= base fs repl auth ip icmp
 
 if USE_ADAPTATION
 SUBDIRS += adaptation
@@ -210,6 +210,13 @@ EXTRA_LIBRARIES = libAIO.a libBlocking.a libDiskDaemon.a libDiskThreads.a
 noinst_LIBRARIES = @DISK_LIBS@
 noinst_LTLIBRARIES = libsquid.la libauth.la
 
+# libraries used by many targets
+COMMON_LIBS = \
+	libsquid.la \
+	libauth.la \
+	base/libbase.la \
+	ip/libip.la
+
 INCLUDES = \
 	-I$(top_srcdir) \
 	-I$(top_srcdir)/src \
@@ -247,18 +254,10 @@ libexec_PROGRAMS = \
 	@DISK_PROGRAMS@ \
 	$(UNLINKD)
 
-cf_gen_SOURCES = \
-	cf_gen.cc \
-	defines.h \
-	debug.cc \
-	time.cc
-
-nodist_cf_gen_SOURCES = globals.cc
+cf_gen_SOURCES = cf_gen.cc
 nodist_cf_gen_HEADER = cf_gen_defines.h
 cf_gen_LDADD= \
-	libsquid.la \
-	libauth.la \
-	ip/libip.la \
+	../compat/libcompat.la \
 	-L../lib -lmiscutil \
 	@XTRA_LIBS@ \
 	@EPOLL_LIBS@ \
@@ -432,8 +431,6 @@ libsquid_la_SOURCES = \
 	CommCalls.h \
 	DescriptorSet.cc \
 	DescriptorSet.h \
-        ICAP/AsyncJob.cc \
-        ICAP/AsyncJob.h \
 	SquidConfig.cc \
         TextException.cc \
         TextException.h
@@ -695,10 +692,8 @@ nodist_squid_SOURCES = \
 	string_arrays.c
 
 squid_LDADD = \
-	libsquid.la \
-	libauth.la \
+	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
-	ip/libip.la \
 	-L../lib \
 	@XTRA_OBJS@ \
 	@DISK_LINKOBJS@ \
@@ -921,10 +916,8 @@ ufsdump_SOURCES = \
 	wordlist.cc \
 	$(WIN32_SOURCE)
 ufsdump_LDADD = \
-	libsquid.la \
-	libauth.la \
+	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
-	ip/libip.la \
 	@XTRA_OBJS@ \
 	@REPL_OBJS@ \
 	@STORE_OBJS@ \
@@ -968,7 +961,7 @@ sysconf_DATA = \
 data_DATA = \
 	mib.txt
 
-LDADD = libsquid.la libauth.la ip/libip.la -L../lib -lmiscutil @XTRA_LIBS@ @EPOLL_LIBS@ @MINGW_LIBS@
+LDADD = $(COMMON_LIBS) -L../lib -lmiscutil @XTRA_LIBS@ @EPOLL_LIBS@ @MINGW_LIBS@
 
 EXTRA_DIST = \
 	cf_gen_defines \
@@ -1251,9 +1244,7 @@ nodist_tests_testAuth_SOURCES = \
 	$(TESTSOURCES)
 
 tests_testAuth_LDADD= \
-	libsquid.la \
-	libauth.la \
-	ip/libip.la \
+	$(COMMON_LIBS) \
 	@AUTH_LINKOBJS@ @AUTH_OBJS@ \
 	-L../lib -lmiscutil \
 	@REGEXLIB@ \
@@ -1325,9 +1316,7 @@ tests_testACLMaxUserIP_SOURCES= \
 nodist_tests_testACLMaxUserIP_SOURCES= \
 	$(TESTSOURCES)
 tests_testACLMaxUserIP_LDADD= \
-	libsquid.la \
-	libauth.la \
-	ip/libip.la \
+	$(COMMON_LIBS) \
 	-L../lib -lmiscutil \
 	@REGEXLIB@ \
 	@SQUID_CPPUNIT_LIBS@ \
@@ -1490,10 +1479,8 @@ nodist_tests_testCacheManager_SOURCES = \
 	repl_modules.cc \
 	string_arrays.c
 tests_testCacheManager_LDADD = \
-	libsquid.la \
-	libauth.la \
+	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
-	ip/libip.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
 	@REGEXLIB@ \
@@ -1517,8 +1504,7 @@ tests_testDiskIO_SOURCES = \
 nodist_tests_testDiskIO_SOURCES= \
 	$(SWAP_TEST_GEN_SOURCES)
 tests_testDiskIO_LDADD = \
-	ip/libip.la \
-	libsquid.la \
+	$(COMMON_LIBS) \
 	@DISK_LIBS@ \
 	$(SWAP_TEST_LDADD) \
 	SquidConfig.o
@@ -1668,10 +1654,8 @@ nodist_tests_testEvent_SOURCES = \
 	repl_modules.cc \
 	string_arrays.c
 tests_testEvent_LDADD = \
-	libsquid.la \
-	libauth.la \
+	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
-	ip/libip.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
 	@REGEXLIB@ \
@@ -1825,10 +1809,8 @@ nodist_tests_testEventLoop_SOURCES = \
 	repl_modules.cc \
 	string_arrays.c
 tests_testEventLoop_LDADD = \
-	libsquid.la \
-	libauth.la \
+	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
-	ip/libip.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
 	@REGEXLIB@ \
@@ -1977,10 +1959,8 @@ nodist_tests_test_http_range_SOURCES = \
 	repl_modules.cc \
 	string_arrays.c
 tests_test_http_range_LDADD = \
-	libsquid.la \
-	libauth.la \
+	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
-	ip/libip.la \
 	@REPL_OBJS@ \
 	@STORE_OBJS@ \
 	${ADAPTATION_LIBS} \
@@ -2135,10 +2115,8 @@ nodist_tests_testHttpRequest_SOURCES = \
 	repl_modules.cc \
 	string_arrays.c
 tests_testHttpRequest_LDADD = \
-	libsquid.la \
-	libauth.la \
+	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
-	ip/libip.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
 	@REGEXLIB@ \
@@ -2226,9 +2204,7 @@ nodist_tests_testStore_SOURCES= \
 	$(STORE_TEST_GEN_SOURCES)
 
 tests_testStore_LDADD= \
-	libsquid.la \
-	libauth.la \
-	ip/libip.la \
+	$(COMMON_LIBS) \
 	-L../lib -lmiscutil \
 	@REGEXLIB@ \
 	@SQUID_CPPUNIT_LIBS@ \
@@ -2250,8 +2226,7 @@ tests_testString_SOURCES = \
 nodist_tests_testString_SOURCES = \
 	$(TESTSOURCES)
 tests_testString_LDADD = \
-	libsquid.la \
-	ip/libip.la \
+	$(COMMON_LIBS) \
 	-L../lib -lmiscutil \
 	@REGEXLIB@ \
 	@SQUID_CPPUNIT_LIBS@ \
@@ -2296,7 +2271,6 @@ SWAP_TEST_GEN_SOURCES = \
 	$(DISKIO_GEN_SOURCE)
 
 SWAP_TEST_LDADD = \
-	libauth.la \
 	@REGEXLIB@ \
 	@STORE_LINKOBJS@ \
 	@STORE_OBJS@ \
@@ -2322,8 +2296,7 @@ tests_testUfs_SOURCES = \
 nodist_tests_testUfs_SOURCES = \
 	$(SWAP_TEST_GEN_SOURCES)
 tests_testUfs_LDADD = \
-	libsquid.la \
-	ip/libip.la \
+	$(COMMON_LIBS) \
 	$(SWAP_TEST_LDADD) \
 	@SSLLIB@
 tests_testUfs_LDFLAGS = $(LIBADD_DL)
@@ -2500,10 +2473,8 @@ nodist_tests_testURL_SOURCES = \
 	repl_modules.cc \
 	string_arrays.c
 tests_testURL_LDADD = \
-	libsquid.la \
-	libauth.la \
+	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
-	ip/libip.la \
 	@REGEXLIB@ \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \

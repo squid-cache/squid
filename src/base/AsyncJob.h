@@ -5,9 +5,6 @@
 #ifndef SQUID_ASYNC_JOB_H
 #define SQUID_ASYNC_JOB_H
 
-/// \todo move src/ICAP/AsyncJob.* to src/
-
-
 #include "AsyncCall.h"
 #include "TextException.h"
 
