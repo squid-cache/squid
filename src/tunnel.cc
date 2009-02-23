@@ -263,8 +263,8 @@ TunnelStateData::Connection::error(int const xerrno)
     if (xerrno == COMM_ERR_CLOSING)
         return;
 
-    debugs(50, debugLevelForError(xerrno), "tunnelReadServer: FD " << fd() <<
-           ": read failure: " << xstrerror());
+    debugs(50, debugLevelForError(xerrno), "TunnelStateData::Connection::error: FD " << fd() <<
+           ": read/write failure: " << xstrerror());
 
     if (!ignoreErrno(xerrno))
         comm_close(fd());
