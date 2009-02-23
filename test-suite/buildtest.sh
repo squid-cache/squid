@@ -7,16 +7,11 @@
 #
 
 dist="${1}"
-
-# Figure out where to log the test output
-log=`echo "${dist}" | sed s/..test-suite.buildtests.//g `
-
-# ... and send everything there...
-{
+base="`dirname $0`"
 
 if test -e ${dist%%.opts}.opts ; then
 	echo "BUILD: ${dist%%.opts}.opts"
-	. ./${dist%%.opts}.opts
+	. ${dist%%.opts}.opts
 else
 	echo "BUILD: DEFAULT"
 	OPTS=""
@@ -36,10 +31,8 @@ fi
 # above command currently encounters dependancy problems on cleanup.
 #
 rm -f -r src/fs/aufs/.deps src/fs/diskd/.deps &&
-	../configure --silent ${OPTS} 2>&1 &&
+	$base/../configure --silent ${OPTS} 2>&1 &&
 	make check 2>&1 &&
 	make 2>&1
-
-} 2>&1 > ./buildtest_${log}.log
 
 # do not build any of the install's ...
