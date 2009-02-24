@@ -41,14 +41,14 @@
  * See acl.c for access control and client_side.c for auditing */
 
 #include "squid.h"
-#include "AuthUserRequest.h"
-#include "AuthUser.h"
+#include "auth/UserRequest.h"
+#include "auth/User.h"
 /*#include "authenticate.h"
 #include "ACL.h"
 #include "client_side.h"
 */
-#include "AuthConfig.h"
-#include "AuthScheme.h"
+#include "auth/Config.h"
+#include "auth/Scheme.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 

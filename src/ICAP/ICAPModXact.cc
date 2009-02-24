@@ -14,7 +14,7 @@
 #include "ICAPClient.h"
 #include "ChunkedCodingParser.h"
 #include "TextException.h"
-#include "AuthUserRequest.h"
+#include "auth/UserRequest.h"
 #include "ICAPConfig.h"
 #include "SquidTime.h"
 

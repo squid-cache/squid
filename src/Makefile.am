@@ -208,12 +208,12 @@ AM_CXXFLAGS = @SQUID_CXXFLAGS@
 
 EXTRA_LIBRARIES = libAIO.a libBlocking.a libDiskDaemon.a libDiskThreads.a
 noinst_LIBRARIES = @DISK_LIBS@
-noinst_LTLIBRARIES = libsquid.la libauth.la
+noinst_LTLIBRARIES = libsquid.la
 
 # libraries used by many targets
 COMMON_LIBS = \
 	libsquid.la \
-	libauth.la \
+	auth/libauth.a \
 	base/libbase.la \
 	ip/libip.la
 
@@ -288,16 +288,6 @@ DISKIO_GEN_SOURCE = \
 DiskIO/DiskIOModules_gen.cc: Makefile
 	$(SHELL) $(srcdir)/DiskIO/modules.sh $(DISK_MODULES) > DiskIO/DiskIOModules_gen.cc
 
-
-all_AUTHMODULES = \
-	auth/basic/basicScheme.cc \
-	auth/basic/basicScheme.h \
-	auth/digest/digestScheme.cc \
-	auth/digest/digestScheme.h \
-	auth/ntlm/ntlmScheme.cc \
-	auth/ntlm/ntlmScheme.h \
-	auth/negotiate/negotiateScheme.cc \
-	auth/negotiate/negotiateScheme.h 
 
 EXTRA_squid_SOURCES = \
 	$(all_FSMODULES) \
@@ -434,15 +424,6 @@ libsquid_la_SOURCES = \
 	SquidConfig.cc \
         TextException.cc \
         TextException.h
-
-# authentication framework
-libauth_la_SOURCES = \
-	AuthConfig.cc \
-	AuthConfig.h \
-	AuthScheme.cc \
-	AuthScheme.h \
-	AuthUser.cc \
-	AuthUserRequest.cc
 
 squid_SOURCES = \
 	access_log.cc \
@@ -672,9 +653,6 @@ squid_SOURCES = \
 	$(WINSVC_SOURCE)
 
 noinst_HEADERS = ACLChecklist.cci \
-	AuthUser.cci \
-	AuthUser.h \
-	AuthUserRequest.h \
 	client_side_request.cci \
 	MemBuf.cci \
 	MemBuf.h \
@@ -701,8 +679,7 @@ squid_LDADD = \
 	@STORE_LINKOBJS@ \
 	@STORE_OBJS@ \
 	@DISK_LIBS@ \
-	@AUTH_LINKOBJS@ \
-	@AUTH_OBJS@ \
+	@AUTH_LIBS_TO_ADD@ \
 	@CRYPTLIB@ \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
@@ -718,8 +695,7 @@ squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@DISK_LIBS@ \
 	@DISK_LINKOBJS@ \
 	@REPL_OBJS@ \
-	@AUTH_LINKOBJS@ \
-	@AUTH_OBJS@
+	@AUTH_LIBS_TO_ADD@
 
 if USE_LOADABLE_MODULES
 squid_SOURCES += $(LOADABLE_MODULES_SOURCES)
@@ -921,7 +897,7 @@ ufsdump_LDADD = \
 	@XTRA_OBJS@ \
 	@REPL_OBJS@ \
 	@STORE_OBJS@ \
-	@AUTH_OBJS@ \
+	@AUTH_LIBS_TO_ADD@ \
 	@CRYPTLIB@ \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
@@ -937,8 +913,7 @@ ufsdump_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@DISK_LIBS@ \
 	@DISK_LINKOBJS@ \
 	@REPL_OBJS@ \
-	@AUTH_LINKOBJS@ \
-	@AUTH_OBJS@
+	@AUTH_LIBS_TO_ADD@
 
 nodist_ufsdump_SOURCES = \
 	repl_modules.cc \
@@ -1245,15 +1220,14 @@ nodist_tests_testAuth_SOURCES = \
 
 tests_testAuth_LDADD= \
 	$(COMMON_LIBS) \
-	@AUTH_LINKOBJS@ @AUTH_OBJS@ \
+	@AUTH_LIBS_TO_ADD@ \
 	-L../lib -lmiscutil \
 	@REGEXLIB@ \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SSLLIB@
 tests_testAuth_LDFLAGS = $(LIBADD_DL)
 tests_testAuth_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
-	@AUTH_LINKOBJS@ \
-	@AUTH_OBJS@ \
+	@AUTH_LIBS_TO_ADD@ \
 	@SQUID_CPPUNIT_LA@
 
 ## Tests for the ACLMaxUserIP class

@@ -42,7 +42,7 @@
 #include "errorpage.h"
 #include "MemBuf.h"
 #include "http.h"
-#include "AuthUserRequest.h"
+#include "auth/UserRequest.h"
 #include "Store.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
