@@ -36,7 +36,7 @@
 
 #include "squid.h"
 #include "HttpRequest.h"
-#include "AuthUserRequest.h"
+#include "auth/UserRequest.h"
 #include "HttpHeaderRange.h"
 #include "MemBuf.h"
 #include "Store.h"

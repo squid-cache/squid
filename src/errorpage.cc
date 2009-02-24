@@ -35,7 +35,7 @@
 #include "config.h"
 
 #include "errorpage.h"
-#include "AuthUserRequest.h"
+#include "auth/UserRequest.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "HttpReply.h"

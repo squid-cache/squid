@@ -36,7 +36,7 @@
 
 #include "squid.h"
 #include "ACLMaxUserIP.h"
-#include "AuthUserRequest.h"
+#include "auth/UserRequest.h"
 #include "authenticate.h"
 #include "wordlist.h"
 #include "ConfigParser.h"

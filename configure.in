@@ -1563,19 +1563,22 @@ if test -n "$AUTH_MODULES"; then
 	eval AUTH_MODULE_${module}=yes
     done
     AC_MSG_NOTICE([Auth scheme modules built: $AUTH_MODULES])
-    AUTH_OBJS="auth/lib`echo $AUTH_MODULES|sed -e 's% %.a auth/lib%g'`.a"
-    AUTH_LIBS="`echo $AUTH_OBJS|sed -e 's%auth/%%g'`"
 else
     AC_MSG_WARN([Auth scheme modules built: None])
 fi
-AUTH_LINKOBJS=
+dnl Authentication libraries to build
+dnl This list will not be needed when each auth library has its own Makefile
+AUTH_LIBS_TO_BUILD=
+dnl Authentication libraries to link authenticating executables with.
+dnl These are the same as AUTH_LIBS_TO_BUILD, but with a path
+AUTH_LIBS_TO_ADD=
 for module in $AUTH_MODULES; do
-  AUTH_LINKOBJS="$AUTH_LINKOBJS auth/${module}/${module}Scheme.o"
+    AUTH_LIBS_TO_BUILD="$AUTH_LIBS_TO_BUILD lib${module}.a"
+    AUTH_LIBS_TO_ADD="$AUTH_LIBS_TO_ADD auth/lib${module}.a"
 done
 AC_SUBST(AUTH_MODULES)
-AC_SUBST(AUTH_LIBS)
-AC_SUBST(AUTH_LINKOBJS)
-AC_SUBST(AUTH_OBJS)
+AC_SUBST(AUTH_LIBS_TO_ADD)
+AC_SUBST(AUTH_LIBS_TO_BUILD)
 
 dnl bundled auth modules, in order to have handy defines for the cppunit testsuite
 test -n "$AUTH_MODULE_basic" && AC_DEFINE([HAVE_AUTH_MODULE_BASIC],1,[Basic auth module is built])
