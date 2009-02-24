@@ -8,13 +8,13 @@ msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2009-02-18 18:05+1300\n"
-"PO-Revision-Date: 2009-02-17 12:49+0000\n"
+"PO-Revision-Date: 2009-02-19 09:51+0000\n"
 "Last-Translator: Arnis Rukis <Rukicc@apollo.lv>\n"
 "Language-Team: Latvian <lv@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Launchpad-Export-Date: 2009-02-18 03:36+0000\n"
+"X-Launchpad-Export-Date: 2009-02-22 03:08+0000\n"
 "X-Generator: Launchpad (build Unknown)\n"
 
 #: templates/ERR_FTP_LISTING:6
@@ -172,11 +172,11 @@ msgstr "Kļūda: FTP augšupielāde nav atļauta"
 #: templates/ERR_UNSUP_REQ:1 templates/ERR_WRITE_ERROR:1
 #: templates/ERR_ZERO_SIZE_OBJECT:1
 msgid "ERROR: The requested URL could not be retrieved"
-msgstr ""
+msgstr "KĻŪDA: Pieprasītā adrese nav atrodama"
 
 #: templates/ERR_URN_RESOLVE:1
 msgid "ERROR: The requested URN not be retrieved"
-msgstr ""
+msgstr "KĻŪDA: Pieprasītā adrese nav atrodama"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
@@ -248,7 +248,7 @@ msgstr "Ģenerēts %T by %h (%s)"
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
-msgstr ""
+msgstr "Hi, neiaizraujies par daudz ar %T :)"
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
@@ -272,11 +272,11 @@ msgstr ""
 
 #: templates/ERR_INVALID_REQ:11 templates/ERR_INVALID_URL:11
 msgid "Illegal character in hostname; underscores are not allowed."
-msgstr ""
+msgstr "Neatļauts simbols adresē. Pasvītrojuma rakstzīme nav atļauta."
 
 #: templates/ERR_INVALID_URL:10
 msgid "Illegal double-escape in the URL-Path"
-msgstr ""
+msgstr "Adresē ir divas atsoļa rakstzīmes, kas ir aizliegtas"
 
 #: templates/ERR_INVALID_URL:5
 msgid "Invalid URL"
@@ -284,32 +284,34 @@ msgstr "Nepareizs URL"
 
 #: templates/ERR_INVALID_REQ:8
 msgid "Missing HTTP Identifier (HTTP/1.0)."
-msgstr ""
+msgstr "pietrūkst HTTP identifikators (HTTP/1.0)."
 
 #: templates/ERR_INVALID_REQ:7
 msgid "Missing URL."
-msgstr ""
+msgstr "Pazudis URL."
 
 #: templates/ERR_INVALID_URL:9
 msgid "Missing hostname"
-msgstr ""
+msgstr "Nav saimniekdatora vārda"
 
 #: templates/ERR_INVALID_URL:8
 msgid ""
 "Missing or incorrect access protocol (should be <q>http://</q> or similar)"
 msgstr ""
+"Nav vai ir nekorekts pieejas protokols (jābūt <q>http://</q> vai kam "
+"līdzīgam)"
 
 #: templates/ERR_INVALID_REQ:6
 msgid "Missing or unknown request method."
-msgstr ""
+msgstr "Nav vai ir nezināma pieprasījuma metode."
 
 #: templates/ERR_NO_RELAY:5
 msgid "No Wais Relay"
-msgstr ""
+msgstr "Nav WAIS retranslācija"
 
 #: templates/ERR_FTP_PUT_CREATED:2 templates/ERR_FTP_PUT_MODIFIED:2
 msgid "Operation successful"
-msgstr ""
+msgstr "Operācija veiksmīga"
 
 #: templates/ERR_FTP_LISTING:5
 msgid "Parent Directory"
@@ -321,6 +323,9 @@ msgid ""
 "have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
 "chpasswd.cgi\">change</a> your default password."
 msgstr ""
+"Lūdzu sazinieties <a href=\"mailto:%w%W\">kešatmiņas administratoru</a>, ja "
+"Jums ir problēmas ar autentifikāciju vai <a href=\"http://%h/cgi-bin/"
+"chpasswd.cgi\">nomainiet</a> Jūsu paroli."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
 msgid ""
@@ -340,7 +345,7 @@ msgstr "Lasīšanas kļūda"
 
 #: templates/ERR_READ_TIMEOUT:5
 msgid "Read Timeout"
-msgstr ""
+msgstr "Lasīšanas noildze"
 
 #: templates/ERR_INVALID_REQ:9
 msgid "Request is too large."
@@ -348,11 +353,11 @@ msgstr "Pieprasījums ir par lielu."
 
 #: templates/ERR_SOCKET_FAILURE:5
 msgid "Socket Failure"
-msgstr ""
+msgstr "Savienojuma kļūda"
 
 #: templates/ERR_INVALID_URL:6
 msgid "Some aspect of the requested URL is incorrect."
-msgstr ""
+msgstr "dažas nianses pieprasītajā adresē ir nekorektas."
 
 #: templates/ERR_ICAP_FAILURE:8 templates/ERR_INVALID_REQ:5
 #: templates/ERR_INVALID_URL:7
@@ -364,12 +369,16 @@ msgid ""
 "Sorry, you are not currently allowed to request %U from this cache manager "
 "until you have authenticated yourself."
 msgstr ""
+"Atvainojiet, Pirms Jūs neesiet autorizējies nav atļauts pieprasīt %U no "
+"kešatmiņas pārvaldnieka."
 
 #: templates/ERR_CACHE_ACCESS_DENIED:6
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache until you "
 "have authenticated yourself."
 msgstr ""
+"Atvainojiet, Jums nav atļauts pieprasīt %U no kešatmiņas pirms neesat "
+"autentificējies."
 
 #: templates/ERR_ZERO_SIZE_OBJECT:6
 msgid "Squid did not receive any data for this request."
@@ -394,6 +403,8 @@ msgid ""
 "Squid is unable to create a TCP socket, presumably due to excessive load. "
 "Please retry your request."
 msgstr ""
+"Squid nevar izveidot TCP soketu, iespējams dēļ lielās slodzes. Lūdzu "
+"atkārtojiet Jūsu pieprasījumu."
 
 #: templates/ERR_FTP_FAILURE:5 templates/ERR_FTP_FORBIDDEN:5
 #: templates/ERR_FTP_NOT_FOUND:5 templates/ERR_FTP_PUT_ERROR:5
@@ -425,7 +436,7 @@ msgstr "ICAP serveris nav pieejams."
 
 #: templates/ERR_FTP_NOT_FOUND:4
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
-msgstr ""
+msgstr "Nevar atvērt sekojošu adresi: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_ACCESS_DENIED:4 templates/ERR_CACHE_ACCESS_DENIED:4
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:4 templates/ERR_CANNOT_FORWARD:4
@@ -443,12 +454,14 @@ msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
+"Iestājusies sekojoša kļūda mēģinot atvērt adresi: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_URN_RESOLVE:4
 msgid ""
 "The following error was encountered while trying to retrieve the URN: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
+"Iestājusies sekojoša kļūda mēģinot atvērt adresi: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_CONNECT_FAIL:7
 msgid "The remote host or network may be down.  Please try the request again."
@@ -472,7 +485,7 @@ msgstr "Pieprasījums vai atbilde ir par lielu."
 #: templates/ERR_TOO_BIG:3 templates/ERR_UNSUP_REQ:3
 #: templates/ERR_WRITE_ERROR:3 templates/ERR_ZERO_SIZE_OBJECT:3
 msgid "The requested URL could not be retrieved"
-msgstr ""
+msgstr "Nevar atvērt pieprasīto adresi."
 
 #: templates/ERR_FTP_FAILURE:6 templates/ERR_FTP_FORBIDDEN:6
 #: templates/ERR_FTP_NOT_FOUND:6 templates/ERR_FTP_PUT_ERROR:6
@@ -492,6 +505,8 @@ msgid ""
 "There is no WAIS Relay host defined for this Cache!  Yell at the "
 "administrator."
 msgstr ""
+"Šai kešatmiņai nav definēta WAIS retranslācija. Griezieties pie "
+"administratora."
 
 #: templates/ERR_TOO_BIG:8
 msgid ""
@@ -504,7 +519,7 @@ msgstr ""
 
 #: templates/ERR_UNSUP_HTTPVERSION:6
 msgid "This Squid does not accept the HTTP version you are attempting to use."
-msgstr ""
+msgstr "Šis Squid neatbalsta HTTP versiju, kuru Jūs mēģiniet lietot."
 
 #: templates/ERR_FTP_DISABLED:6
 msgid "This cache does not support FTP."
@@ -515,6 +530,8 @@ msgid ""
 "This cache is in the process of shutting down and can not service your "
 "request at this time.  Please retry your request again soon."
 msgstr ""
+"Šī kešatmiņa ir izslēgšanās procesā un nevar šobrīd apkalpot Jūsu "
+"pieprasījumu. Lūdzu atkārtojiet Jūsu pieprasījumu nedaudz vēlāk."
 
 #: templates/ERR_FORWARDING_DENIED:6
 msgid ""
@@ -525,19 +542,23 @@ msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:7
 msgid "This means that some aspect of the ICAP communication failed."
-msgstr ""
+msgstr "Tas nozīmē, ka ir problēmas ar ICAP komunikācijas niansēm."
 
 #: templates/ERR_FTP_PUT_ERROR:7
 msgid ""
 "This means that the FTP server may not have permission or space to store the "
 "file. Check the path, permissions, diskspace and try again."
 msgstr ""
+"Tas nozīmē, ka FTP serverim nav tiesības vai vieta lai saglabātu datni. "
+"Pārbaudiet ceļu, tiesības, brīvo vietu un mēģiniet vēlreiz."
 
 #: templates/ERR_DNS_FAIL:7
 msgid ""
 "This means that the cache was not able to resolve the hostname presented in "
 "the URL. Check if the address is correct."
 msgstr ""
+"Tas nozīmē, ka kešatmiņa nevar atrast adresē ietverto saimniekdatora vārdu. "
+"Pārbaudiet vai adrese ir korekta."
 
 #: templates/ERR_ESI:7
 msgid ""
@@ -551,6 +572,8 @@ msgid ""
 "comply with RFC 1738).  If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
+"Šo var izsaukt FTP adrese ar absolūto ceļu (kas nav saderīgs RFC 1738).  Ja "
+"šis ir iemesls, tad datne ir atrodama uz <a href=\"%B\">%B</a>."
 
 #: templates/ERR_SECURE_CONNECT_FAIL:7
 msgid ""
@@ -574,29 +597,31 @@ msgstr "Nevar nosakidrot IP adresi no saimniekdatora vārda<q>%H</q>"
 
 #: templates/ERR_CANNOT_FORWARD:5
 msgid "Unable to forward this request at this time."
-msgstr ""
+msgstr "Šobrīda nav iespējams pārsūtīt šo pieprasījumu."
 
 #: templates/ERR_UNSUP_HTTPVERSION:3 templates/ERR_UNSUP_HTTPVERSION:5
 msgid "Unsupported HTTP version"
-msgstr ""
+msgstr "Neatbalstīta HTTP versija"
 
 #: templates/ERR_UNSUP_REQ:5
 msgid "Unsupported Request Method and Protocol"
-msgstr ""
+msgstr "Neatbalstīta pieprasījuma metode un protokols"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS:5
 msgid ""
 "Valid document was not found in the cache and <q>only-if-cached</q> "
 "directive was specified."
 msgstr ""
+"Kešatmiņā nav atrasts derīgs dokuments un tiek piemērota direktīva <q>only-"
+"if-cached</q> ."
 
 #: templates/ERR_FTP_PUT_ERROR:4
 msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr ""
+msgstr "Mēģinot izpildīt operāciju PUT sekojošā adresē: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
-msgstr ""
+msgstr "Rakstīšanas kļūda"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS:6
 msgid ""
@@ -627,11 +652,13 @@ msgid ""
 "Your cache administrator may be able to provide you with more details about "
 "the exact nature of the problem if needed."
 msgstr ""
+"Ja nepieciešams, Jūsu kešatmiņas administrators Jums var precīzāk izklāstīt "
+"problēmas detaļas."
 
 #: templates/ERR_ESI:8
 msgid "Your webmaster is <a href=\"mailto:%w\">%w</a>."
-msgstr ""
+msgstr "Jūsu tīmekļa pārzinis ir <a href=\"mailto:%w\">%w</a>."
 
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
-msgstr ""
+msgstr "Nulles izmēra atbilde"
