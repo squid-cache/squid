@@ -264,12 +264,6 @@ cf_gen_LDADD= \
 	@MINGW_LIBS@
 cf_gen.$(OBJEXT): cf_gen_defines.h
 
-all_FSMODULES = \
-	fs/aufs/StoreFSaufs.cc \
-	fs/coss/StoreFScoss.cc \
-	fs/diskd/StoreFSdiskd.cc \
-	fs/ufs/StoreFSufs.cc
-
 DISKIO_SOURCE = \
 	DiskIO/DiskIOModule.cc \
 	DiskIO/ReadRequest.cc \
@@ -290,7 +284,6 @@ DiskIO/DiskIOModules_gen.cc: Makefile
 
 
 EXTRA_squid_SOURCES = \
-	$(all_FSMODULES) \
 	$(AIO_WIN32_ALL_SOURCES) \
 	$(all_AUTHMODULES) \
 	$(ARP_ACL_ALL_SOURCE) \
@@ -676,8 +669,7 @@ squid_LDADD = \
 	@XTRA_OBJS@ \
 	@DISK_LINKOBJS@ \
 	@REPL_OBJS@ \
-	@STORE_LINKOBJS@ \
-	@STORE_OBJS@ \
+	@STORE_LIBS_TO_ADD@ \
 	@DISK_LIBS@ \
 	@AUTH_LIBS_TO_ADD@ \
 	@CRYPTLIB@ \
@@ -690,8 +682,7 @@ squid_LDADD = \
 	@EPOLL_LIBS@ \
 	@MINGW_LIBS@ 
 squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
-	@STORE_OBJS@ \
-	@STORE_LINKOBJS@ \
+	@STORE_LIBS_TO_ADD@ \
 	@DISK_LIBS@ \
 	@DISK_LINKOBJS@ \
 	@REPL_OBJS@ \
@@ -896,7 +887,7 @@ ufsdump_LDADD = \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	@XTRA_OBJS@ \
 	@REPL_OBJS@ \
-	@STORE_OBJS@ \
+	@STORE_LIBS_TO_ADD@ \
 	@AUTH_LIBS_TO_ADD@ \
 	@CRYPTLIB@ \
 	@REGEXLIB@ \
@@ -908,8 +899,7 @@ ufsdump_LDADD = \
 	@EPOLL_LIBS@ \
 	@MINGW_LIBS@ 
 ufsdump_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
-	@STORE_OBJS@ \
-	@STORE_LINKOBJS@ \
+	@STORE_LIBS_TO_ADD@ \
 	@DISK_LIBS@ \
 	@DISK_LINKOBJS@ \
 	@REPL_OBJS@ \
@@ -1936,7 +1926,7 @@ tests_test_http_range_LDADD = \
 	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	@REPL_OBJS@ \
-	@STORE_OBJS@ \
+	@STORE_LIBS_TO_ADD@ \
 	${ADAPTATION_LIBS} \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
@@ -2138,7 +2128,6 @@ STORE_TEST_SOURCES=\
 	HttpHdrScTarget.cc url.cc ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc \
 	StatHist.cc HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
 	tests/stub_HttpRequest.cc tests/stub_access_log.cc \
-	ip/stubQosConfig.cc \
 	refresh.cc \
 	tests/stub_store_client.cc \
 	tests/stub_tools.cc \
@@ -2246,8 +2235,7 @@ SWAP_TEST_GEN_SOURCES = \
 
 SWAP_TEST_LDADD = \
 	@REGEXLIB@ \
-	@STORE_LINKOBJS@ \
-	@STORE_OBJS@ \
+	@STORE_LIBS_TO_ADD@ \
 	@REPL_OBJS@ \
 	@DISK_LIBS@ \
 	-L../lib -lmiscutil \
@@ -2256,8 +2244,7 @@ SWAP_TEST_DS =\
 	$(top_builddir)/lib/libmiscutil.a \
 	repl_modules.o \
 	@DISK_LIBS@ \
-	@STORE_LINKOBJS@ \
-	@STORE_OBJS@ \
+	@STORE_LIBS_TO_ADD@ \
 	@REPL_OBJS@ \
 	@SQUID_CPPUNIT_LA@
 
