@@ -1240,7 +1240,7 @@ SquidMain(int argc, char **argv)
     setUmask(Config.umask);
     if (-1 == opt_send_signal)
         if (checkRunningPid())
-            exit(1);
+            exit(0);
 
 #if TEST_ACCESS
 
@@ -1396,8 +1396,13 @@ sendSignal(void)
             exit(1);
         }
     } else {
-        fprintf(stderr, "%s: ERROR: No running copy\n", APP_SHORTNAME);
-        exit(1);
+        if (opt_send_signal != SIGTERM) {
+            fprintf(stderr, "%s: ERROR: No running copy\n", APP_SHORTNAME);
+            exit(1);
+        } else {
+            fprintf(stderr, "%s: No running copy\n", APP_SHORTNAME);
+            exit(0);
+        }
     }
 
     /* signal successfully sent */

@@ -1971,34 +1971,38 @@ httpStart(FwdState *fwd)
 void
 HttpStateData::doneSendingRequestBody()
 {
-    ACLChecklist ch;
     debugs(11,5, HERE << "doneSendingRequestBody: FD " << fd);
+
+#if HTTP_VIOLATIONS
+    ACLChecklist ch;
     ch.request = HTTPMSGLOCK(request);
 
-    if (Config.accessList.brokenPosts)
+    if (Config.accessList.brokenPosts) {
         ch.accessList = cbdataReference(Config.accessList.brokenPosts);
+        /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
 
-    /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
-
-    if (!Config.accessList.brokenPosts) {
-        debugs(11, 5, "doneSendingRequestBody: No brokenPosts list");
-        CommIoCbParams io(NULL);
-        io.fd=fd;
-        io.flag=COMM_OK;
-        sendComplete(io);
-    } else if (!ch.fastCheck()) {
-        debugs(11, 5, "doneSendingRequestBody: didn't match brokenPosts");
-        CommIoCbParams io(NULL);
-        io.fd=fd;
-        io.flag=COMM_OK;
-        sendComplete(io);
-    } else {
-        debugs(11, 2, "doneSendingRequestBody: matched brokenPosts");
-        typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
-        Dialer dialer(this, &HttpStateData::sendComplete);
-        AsyncCall::Pointer call= asyncCall(11,5, "HttpStateData::SendComplete", dialer);
-        comm_write(fd, "\r\n", 2, call);
+        if (!ch.fastCheck()) {
+            debugs(11, 5, "doneSendingRequestBody: didn't match brokenPosts");
+            CommIoCbParams io(NULL);
+            io.fd=fd;
+            io.flag=COMM_OK;
+            sendComplete(io);
+        } else {
+            debugs(11, 2, "doneSendingRequestBody: matched brokenPosts");
+            typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
+            Dialer dialer(this, &HttpStateData::sendComplete);
+            AsyncCall::Pointer call= asyncCall(11,5, "HttpStateData::SendComplete", dialer);
+            comm_write(fd, "\r\n", 2, call);
+        }
+        return;
     }
+    debugs(11, 5, "doneSendingRequestBody: No brokenPosts list");
+#endif /* HTTP_VIOLATIONS */
+
+    CommIoCbParams io(NULL);
+    io.fd=fd;
+    io.flag=COMM_OK;
+    sendComplete(io);
 }
 
 // more origin request body data is available
