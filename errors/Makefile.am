@@ -21,6 +21,7 @@ TRANSLATIONS = \
 	cs \
 	da \
 	de \
+	el \
 	en en-au en-gb en-nz en-us \
 	es \
 	et \
@@ -44,7 +45,6 @@ TRANSLATIONS = \
 # Legacy language contributions...
 #
 LANGUAGES	= \
-		Greek \
 		Hebrew \
 		Hungarian \
 		Korean \
