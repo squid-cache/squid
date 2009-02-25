@@ -88,7 +88,7 @@ uninstall-local:
 		done; \
 	done; \
 	for l in $(TRANSLATIONS) templates; do \
-	  if test -d $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; then \
+	  if test -d $(srcdir)/$$l; then \
 		for f in $(srcdir)/$$l/ERR_*; do \
 	        	rm -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; \
 		done; \
@@ -148,13 +148,11 @@ translate:
 	  for lang in $(TRANSLATIONS); do \
 		test -d $$lang && rm -r $$lang; \
 		mkdir $$lang; \
-		cd $$lang; \
 		echo -n "Translate '$$lang' ..."; \
-		for f in `ls -1 ../$(srcdir)/templates`; do \
-			$(PO2HTML) --progress=none -i ../$(srcdir)/$$lang.po -t ../$(srcdir)/templates/$$f >$$f || exit 1; \
+		for f in `ls -1 $(srcdir)/templates`; do \
+			$(PO2HTML) --progress=none -i $(srcdir)/$$lang.po -t $(srcdir)/templates/$$f >$$lang/$$f || exit 1; \
 		done; \
 		echo "done."; \
-		cd ..; \
 	  done; \
 	else \
 	  if test "$(PO2HTML)" = "off" ; then \
