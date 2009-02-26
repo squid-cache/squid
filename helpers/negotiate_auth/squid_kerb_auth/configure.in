@@ -425,7 +425,7 @@ AC_ARG_WITH([squid],
 )
 
 eval ac_p_include=$includedir
-CPPFLAGS="$CPPFLAGS -I$ac_p_include -I../../../ -I../../../include/ -I$squid_dir/include -I$squid_dir/src "
+CPPFLAGS="$CPPFLAGS -I$ac_p_include -I../../../ -I../../../include/ -I$squid_dir/include -I$squid_dir/src -I$squid_dir"
 AC_CACHE_CHECK([for SQUID at '$squid_dir' ],ac_cv_have_squid,[
 AC_TRY_RUN([
 #include <config.h>
