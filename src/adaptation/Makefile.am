@@ -1,15 +1,20 @@
-AM_CFLAGS = @SQUID_CFLAGS@
-AM_CXXFLAGS = @SQUID_CXXFLAGS@
-CLEANFILES =
+include $(top_srcdir)/src/Common.am
+include $(top_srcdir)/src/TestHeaders.am
 
-INCLUDES = \
-	-I$(top_srcdir) \
-	-I$(top_builddir)/include \
-	-I$(top_srcdir)/include \
-        -I$(top_srcdir)/src
+## make a list of directories for configured adaptation schemes
+SUBDIRS =
+
+if USE_ICAP_CLIENT
+SUBDIRS += icap
+endif
+
+if USE_ECAP
+SUBDIRS += ecap
+endif
 
 noinst_LTLIBRARIES = libadaptation.la
 
+## start with the code shared among all adaptation schemes
 libadaptation_la_SOURCES = \
 	AccessCheck.cc \
 	AccessCheck.h \
@@ -33,13 +38,6 @@ libadaptation_la_SOURCES = \
 	ServiceGroups.cc \
 	ServiceGroups.h
 
-check_PROGRAMS = testHeaders
+# add libraries for specific adaptation schemes
+libadaptation_la_LIBADD = @ECAP_LIBS@ @ICAP_LIBS@
 
-## test .h correctness
-testHeaders: $(top_srcdir)/src/adaptation/*.h
-	$(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "." || exit 1
-
-## No such file...
-testHeaders.c:
-	touch testHeaders.c
-CLEANFILES += testHeaders.c

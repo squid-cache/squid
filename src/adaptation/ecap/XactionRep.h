@@ -10,7 +10,7 @@
 #include "adaptation/Initiate.h"
 #include "adaptation/Service.h"
 #include "adaptation/Message.h"
-#include "eCAP/MessageRep.h"
+#include "adaptation/ecap/MessageRep.h"
 #include <libecap/common/forward.h>
 #include <libecap/common/memory.h>
 #include <libecap/host/xaction.h>

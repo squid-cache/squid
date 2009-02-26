@@ -2,8 +2,8 @@
 #include <libecap/adapter/service.h>
 #include <libecap/common/names.h>
 #include "TextException.h"
-#include "eCAP/ServiceRep.h"
-#include "eCAP/Host.h"
+#include "adaptation/ecap/ServiceRep.h"
+#include "adaptation/ecap/Host.h"
 
 const libecap::Name Ecap::protocolInternal("internal", libecap::Name::NextId());
 const libecap::Name Ecap::protocolCacheObj("cache_object", libecap::Name::NextId());
@@ -63,7 +63,7 @@ Ecap::Host::noteService(const libecap::weak_ptr<libecap::adapter::Service> &weak
         }
     }
 
-    debugs(93,5, "Found " << found << " ecap_service configs for " <<
+    debugs(93,5, HERE << "Found " << found << " ecap_service configs for " <<
            shared->uri());
     if (!found) {
         debugs(93,1, "Warning: ignoring loaded eCAP module service without " <<

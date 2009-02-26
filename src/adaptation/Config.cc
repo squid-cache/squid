@@ -82,7 +82,7 @@ Adaptation::Config::finalize()
     // create service reps from service configs
     typedef Vector<ServiceConfig*>::const_iterator VISCI;
     const Vector<ServiceConfig*> &configs = serviceConfigs;
-    debugs(93,3, "Found " << configs.size() << " service configs.");
+    debugs(93,3, HERE << "Found " << configs.size() << " service configs.");
     for (VISCI i = configs.begin(); i != configs.end(); ++i) {
         const ServiceConfig &cfg = **i;
         if (FindService(cfg.key) != NULL) {
@@ -95,7 +95,7 @@ Adaptation::Config::finalize()
             AllServices().push_back(s);
     }
 
-    debugs(93,3, "Created " << configs.size() <<
+    debugs(93,3, HERE << "Created " << configs.size() <<
            " message adaptation services.");
 }
 
@@ -108,7 +108,7 @@ FinalizeEach(Collection &collection, const char *label)
     for (CI i = collection.begin(); i != collection.end(); ++i)
         (*i)->finalize();
 
-    debugs(93,2, "Initialized " << collection.size() << ' ' << label);
+    debugs(93,2, HERE << "Initialized " << collection.size() << ' ' << label);
 }
 
 void
