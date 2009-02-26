@@ -35,9 +35,9 @@
 #define SQUID_ICAPMODXACT_H
 
 #include "BodyPipe.h"
-#include "ICAPXaction.h"
-#include "ICAPInOut.h"
-#include "ICAPLauncher.h"
+#include "adaptation/icap/Xaction.h"
+#include "adaptation/icap/InOut.h"
+#include "adaptation/icap/Launcher.h"
 
 /*
  * ICAPModXact implements ICAP REQMOD and RESPMOD transaction using
@@ -51,6 +51,9 @@
 
 
 class ChunkedCodingParser;
+
+namespace Adaptation {
+namespace Icap {
 
 // estimated future presence and size of something (e.g., HTTP body)
 
@@ -104,11 +107,11 @@ private:
 
 // maintains preview-related sizes
 
-class ICAPPreview
+class Preview
 {
 
 public:
-    ICAPPreview();            // disabled
+    Preview();            // disabled
     void enable(size_t anAd); // enabled with advertised size
     bool enabled() const;
 
@@ -127,11 +130,11 @@ private:
     enum State { stDisabled, stWriting, stIeof, stDone } theState;
 };
 
-class ICAPModXact: public ICAPXaction, public BodyProducer, public BodyConsumer
+class ModXact: public Xaction, public BodyProducer, public BodyConsumer
 {
 
 public:
-    ICAPModXact(Adaptation::Initiator *anInitiator, HttpMsg *virginHeader, HttpRequest *virginCause, ICAPServiceRep::Pointer &s);
+    ModXact(Adaptation::Initiator *anInitiator, HttpMsg *virginHeader, HttpRequest *virginCause, ServiceRep::Pointer &s);
 
     // BodyProducer methods
     virtual void noteMoreBodySpaceAvailable(BodyPipe::Pointer);
@@ -153,8 +156,8 @@ public:
     void noteServiceReady();
 
 public:
-    ICAPInOut virgin;
-    ICAPInOut adapted;
+    InOut virgin;
+    InOut adapted;
 
 protected:
     // bypasses exceptions if needed and possible
@@ -253,7 +256,7 @@ private:
     VirginBodyAct virginBodyWriting; // virgin body writing state
     VirginBodyAct virginBodySending;  // virgin body sending state
     uint64_t virginConsumed;        // virgin data consumed so far
-    ICAPPreview preview; // use for creating (writing) the preview
+    Preview preview; // use for creating (writing) the preview
 
     ChunkedCodingParser *bodyParser; // ICAP response body parser
 
@@ -302,23 +305,27 @@ private:
                      } sending;
     } state;
 
-    CBDATA_CLASS2(ICAPModXact);
+    CBDATA_CLASS2(ModXact);
 };
 
-// An ICAPLauncher that stores ICAPModXact construction info and
-// creates ICAPModXact when needed
-class ICAPModXactLauncher: public ICAPLauncher
+// An Launcher that stores ModXact construction info and
+// creates ModXact when needed
+class ModXactLauncher: public Launcher
 {
 public:
-    ICAPModXactLauncher(Adaptation::Initiator *anInitiator, HttpMsg *virginHeader, HttpRequest *virginCause, Adaptation::ServicePointer s);
+    ModXactLauncher(Adaptation::Initiator *anInitiator, HttpMsg *virginHeader, HttpRequest *virginCause, Adaptation::ServicePointer s);
 
 protected:
-    virtual ICAPXaction *createXaction();
+    virtual Xaction *createXaction();
 
-    ICAPInOut virgin;
+    InOut virgin;
 
 private:
-    CBDATA_CLASS2(ICAPModXactLauncher);
+    CBDATA_CLASS2(ModXactLauncher);
 };
+
+
+} // namespace Icap
+} // namespace Adaptation
 
 #endif /* SQUID_ICAPMOD_XACT_H */

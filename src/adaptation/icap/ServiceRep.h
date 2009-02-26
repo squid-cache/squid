@@ -38,10 +38,14 @@
 #include "adaptation/Service.h"
 #include "adaptation/forward.h"
 #include "adaptation/Initiator.h"
-#include "ICAPElements.h"
+#include "adaptation/icap/Elements.h"
 
-class ICAPOptions;
-class ICAPOptXact;
+
+namespace Adaptation {
+namespace Icap {
+
+class Options;
+class OptXact;
 
 /* The ICAP service representative maintains information about a single ICAP
    service that Squid communicates with. The representative initiates OPTIONS
@@ -72,18 +76,18 @@ class ICAPOptXact;
  */
 
 
-class ICAPServiceRep : public RefCountable, public Adaptation::Service,
+class ServiceRep : public RefCountable, public Adaptation::Service,
             public Adaptation::Initiator
 {
 
 public:
-    typedef RefCount<ICAPServiceRep> Pointer;
+    typedef RefCount<ServiceRep> Pointer;
 
 public:
-    ICAPServiceRep(const Adaptation::ServiceConfig &config);
-    virtual ~ICAPServiceRep();
+    ServiceRep(const Adaptation::ServiceConfig &config);
+    virtual ~ServiceRep();
 
-    void setSelf(Pointer &aSelf); // needs self pointer for ICAPOptXact
+    void setSelf(Pointer &aSelf); // needs self pointer for OptXact
     virtual void finalize();
 
     void invalidate(); // call when the service is no longer needed or valid
@@ -124,7 +128,7 @@ private:
     typedef Vector<Client> Clients;
     Clients theClients; // all clients waiting for a call back
 
-    ICAPOptions *theOptions;
+    Options *theOptions;
     Adaptation::Initiate *theOptionsFetcher; // pending ICAP OPTIONS transaction
     time_t theLastUpdate; // time the options were last updated
 
@@ -149,8 +153,8 @@ private:
     void scheduleNotification();
 
     void startGettingOptions();
-    void handleNewOptions(ICAPOptions *newOptions);
-    void changeOptions(ICAPOptions *newOptions);
+    void handleNewOptions(Options *newOptions);
+    void changeOptions(Options *newOptions);
     void checkOptions();
 
     void announceStatusChange(const char *downPhrase, bool important) const;
@@ -159,7 +163,11 @@ private:
 
     Pointer self;
     mutable bool wasAnnouncedUp; // prevent sequential same-state announcements
-    CBDATA_CLASS2(ICAPServiceRep);
+    CBDATA_CLASS2(ServiceRep);
 };
+
+
+} // namespace Icap
+} // namespace Adaptation
 
 #endif /* SQUID_ICAPSERVICEREP_H */

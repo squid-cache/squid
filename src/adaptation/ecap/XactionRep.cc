@@ -5,11 +5,9 @@
 #include "TextException.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
-#include "eCAP/XactionRep.h"
+#include "adaptation/ecap/XactionRep.h"
 
-// CBDATA_CLASS_INIT(Ecap::XactionRep);
-// TODO: add CBDATA_NAMESPACED_CLASS_INIT(namespace, classname)
-cbdata_type Ecap::XactionRep::CBDATA_XactionRep = CBDATA_UNKNOWN;
+CBDATA_NAMESPACED_CLASS_INIT(Ecap::XactionRep, XactionRep);
 
 
 Ecap::XactionRep::XactionRep(Adaptation::Initiator *anInitiator,

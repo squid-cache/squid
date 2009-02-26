@@ -1,3 +1,4 @@
+
 /*
  * $Id$
  *
@@ -30,53 +31,36 @@
  *
  */
 
-#ifndef SQUID_ICAPOPTXACT_H
-#define SQUID_ICAPOPTXACT_H
+#ifndef SQUID_ICAPELEMENTS_H
+#define SQUID_ICAPELEMENTS_H
 
-#include "ICAPXaction.h"
-#include "ICAPLauncher.h"
+#include "adaptation/Elements.h"
 
-class ICAPOptions;
+// ICAP-related things shared by many ICAP classes
 
 
-/* ICAPOptXact sends an ICAP OPTIONS request to the ICAP service,
- * parses the ICAP response, and sends it to the initiator. A NULL response
- * means the ICAP service could not be contacted or did not return any
- * valid response. */
+namespace Adaptation {
+namespace Icap {
 
-class ICAPOptXact: public ICAPXaction
+namespace ICAP
 {
+using Adaptation::Method;
+using Adaptation::methodNone;
+using Adaptation::methodRespmod;
+using Adaptation::methodReqmod;
 
-public:
-    ICAPOptXact(Adaptation::Initiator *anInitiator, ICAPServiceRep::Pointer &aService);
+using Adaptation::VectPoint;
+using Adaptation::pointNone;
+using Adaptation::pointPreCache;
+using Adaptation::pointPostCache;
 
-protected:
-    virtual void start();
-    virtual void handleCommConnected();
-    virtual void handleCommWrote(size_t size);
-    virtual void handleCommRead(size_t size);
+using Adaptation::crlf;
+using Adaptation::methodStr;
+using Adaptation::vectPointStr;
+}
 
-    void makeRequest(MemBuf &buf);
-    HttpMsg *parseResponse();
 
-    void startReading();
+} // namespace Icap
+} // namespace Adaptation
 
-private:
-    CBDATA_CLASS2(ICAPOptXact);
-};
-
-// An ICAPLauncher that stores ICAPOptXact construction info and
-// creates ICAPOptXact when needed
-class ICAPOptXactLauncher: public ICAPLauncher
-{
-public:
-    ICAPOptXactLauncher(Adaptation::Initiator *anInitiator, Adaptation::ServicePointer aService);
-
-protected:
-    virtual ICAPXaction *createXaction();
-
-private:
-    CBDATA_CLASS2(ICAPOptXactLauncher);
-};
-
-#endif /* SQUID_ICAPOPTXACT_H */
+#endif /* SQUID_ICAPCLIENT_H */
