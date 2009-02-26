@@ -63,7 +63,7 @@ Ecap::Host::noteService(const libecap::weak_ptr<libecap::adapter::Service> &weak
         }
     }
 
-    debugs(93,5, "Found " << found << " ecap_service configs for " <<
+    debugs(93,5, HERE << "Found " << found << " ecap_service configs for " <<
            shared->uri());
     if (!found) {
         debugs(93,1, "Warning: ignoring loaded eCAP module service without " <<

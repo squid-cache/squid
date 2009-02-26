@@ -17,7 +17,7 @@ void Ecap::ServiceRep::noteService(const AdapterService &s)
 {
     Must(s != NULL);
     theService = s;
-    debugs(93,7, "Matched loaded and configured eCAP services: " <<
+    debugs(93,7, HERE << "matched loaded and configured eCAP services: " <<
            s->uri() << ' ' << cfg().key << "\n");
 }
 

@@ -70,7 +70,7 @@ void Adaptation::Icap::ServiceRep::invalidate()
 void Adaptation::Icap::ServiceRep::noteFailure()
 {
     ++theSessionFailures;
-    debugs(93,4, theSessionFailures << " Adaptation::Icap::Service failures, out of " <<
+    debugs(93,4, HERE << " failure " << theSessionFailures << " out of " <<
            TheConfig.service_failure_limit << " allowed " << status());
 
     if (isSuspended)
@@ -89,10 +89,10 @@ void Adaptation::Icap::ServiceRep::noteFailure()
 void Adaptation::Icap::ServiceRep::suspend(const char *reason)
 {
     if (isSuspended) {
-        debugs(93,4, "keeping Adaptation::Icap::Service suspended, also for " << reason);
+        debugs(93,4, HERE << "keeping suspended, also for " << reason);
     } else {
         isSuspended = reason;
-        debugs(93,1, "suspending Adaptation::Icap::Service for " << reason);
+        debugs(93,1, "suspending ICAP service for " << reason);
         scheduleUpdate(squid_curtime + TheConfig.service_revival_delay);
         announceStatusChange("suspended", true);
     }
@@ -155,11 +155,11 @@ void Adaptation::Icap::ServiceRep::noteTimeToUpdate()
         updateScheduled = false;
 
     if (!self || theOptionsFetcher) {
-        debugs(93,5, "Adaptation::Icap::Service ignores options update " << status());
+        debugs(93,5, HERE << "ignores options update " << status());
         return;
     }
 
-    debugs(93,5, "Adaptation::Icap::Service performs a regular options update " << status());
+    debugs(93,5, HERE << "performs a regular options update " << status());
     startGettingOptions();
 }
 
@@ -177,7 +177,7 @@ void Adaptation::Icap::ServiceRep::noteTimeToNotify()
 {
     Must(!notifying);
     notifying = true;
-    debugs(93,7, "Adaptation::Icap::Service notifies " << theClients.size() << " clients " <<
+    debugs(93,7, HERE << "notifies " << theClients.size() << " clients " <<
            status());
 
     // note: we must notify even if we are invalidated
@@ -219,7 +219,7 @@ void Adaptation::Icap::ServiceRep::callWhenReady(AsyncCall::Pointer &cb)
 
 void Adaptation::Icap::ServiceRep::scheduleNotification()
 {
-    debugs(93,7, "Adaptation::Icap::Service will notify " << theClients.size() << " clients");
+    debugs(93,7, HERE << "will notify " << theClients.size() << " clients");
     CallJobHere(93, 5, this, Adaptation::Icap::ServiceRep::noteTimeToNotify);
 }
 
@@ -230,7 +230,7 @@ bool Adaptation::Icap::ServiceRep::needNewOptions() const
 
 void Adaptation::Icap::ServiceRep::changeOptions(Adaptation::Icap::Options *newOptions)
 {
-    debugs(93,8, "Adaptation::Icap::Service changes options from " << theOptions << " to " <<
+    debugs(93,8, HERE << "changes options from " << theOptions << " to " <<
            newOptions << ' ' << status());
 
     delete theOptions;
@@ -319,14 +319,14 @@ void Adaptation::Icap::ServiceRep::noteAdaptationAnswer(HttpMsg *msg)
 
     Must(msg);
 
-    debugs(93,5, "Adaptation::Icap::Service is interpreting new options " << status());
+    debugs(93,5, HERE << "is interpreting new options " << status());
 
     Adaptation::Icap::Options *newOptions = NULL;
     if (HttpReply *r = dynamic_cast<HttpReply*>(msg)) {
         newOptions = new Adaptation::Icap::Options;
         newOptions->configure(r);
     } else {
-        debugs(93,1, "Adaptation::Icap::Service got wrong options message " << status());
+        debugs(93,1, "ICAP service got wrong options message " << status());
     }
 
     handleNewOptions(newOptions);
@@ -337,7 +337,7 @@ void Adaptation::Icap::ServiceRep::noteAdaptationQueryAbort(bool)
     Must(theOptionsFetcher);
     clearAdaptation(theOptionsFetcher);
 
-    debugs(93,3, "Adaptation::Icap::Service failed to fetch options " << status());
+    debugs(93,3, HERE << "failed to fetch options " << status());
     handleNewOptions(0);
 }
 
@@ -346,7 +346,7 @@ void Adaptation::Icap::ServiceRep::handleNewOptions(Adaptation::Icap::Options *n
     // new options may be NULL
     changeOptions(newOptions);
 
-    debugs(93,3, "Adaptation::Icap::Service got new options and is now " << status());
+    debugs(93,3, HERE << "got new options and is now " << status());
 
     scheduleUpdate(optionsFetchTime());
     scheduleNotification();
@@ -355,7 +355,7 @@ void Adaptation::Icap::ServiceRep::handleNewOptions(Adaptation::Icap::Options *n
 void Adaptation::Icap::ServiceRep::startGettingOptions()
 {
     Must(!theOptionsFetcher);
-    debugs(93,6, "Adaptation::Icap::Service will get new options " << status());
+    debugs(93,6, HERE << "will get new options " << status());
 
     // XXX: second "this" is "self"; this works but may stop if API changes
     theOptionsFetcher = initiateAdaptation(new Adaptation::Icap::OptXactLauncher(this, this));
@@ -367,13 +367,13 @@ void Adaptation::Icap::ServiceRep::startGettingOptions()
 void Adaptation::Icap::ServiceRep::scheduleUpdate(time_t when)
 {
     if (updateScheduled) {
-        debugs(93,7, "Adaptation::Icap::Service reschedules update");
+        debugs(93,7, HERE << "reschedules update");
         // XXX: check whether the event is there because AR saw
         // an unreproducible eventDelete assertion on 2007/06/18
         if (eventFind(&ServiceRep_noteTimeToUpdate, this))
             eventDelete(&ServiceRep_noteTimeToUpdate, this);
         else
-            debugs(93,1, "XXX: Adaptation::Icap::Service lost an update event.");
+            debugs(93,1, "XXX: ICAP service lost an update event.");
         updateScheduled = false;
     }
 
@@ -393,7 +393,7 @@ void Adaptation::Icap::ServiceRep::scheduleUpdate(time_t when)
         when = theLastUpdate + minUpdateGap;
 
     const int delay = when - squid_curtime;
-    debugs(93,5, "Adaptation::Icap::Service will fetch OPTIONS in " << delay << " sec");
+    debugs(93,5, HERE << "will fetch OPTIONS in " << delay << " sec");
 
     eventAdd("Adaptation::Icap::ServiceRep::noteTimeToUpdate",
              &ServiceRep_noteTimeToUpdate, this, delay, 0, true);
@@ -406,7 +406,7 @@ Adaptation::Icap::ServiceRep::optionsFetchTime() const
 {
     if (theOptions && theOptions->valid()) {
         const time_t expire = theOptions->expire();
-        debugs(93,7, "Adaptation::Icap::Service options expire on " << expire << " >= " << squid_curtime);
+        debugs(93,7, HERE << "options expire on " << expire << " >= " << squid_curtime);
 
         // conservative estimate of how long the OPTIONS transaction will take
         // XXX: move hard-coded constants from here to Adaptation::Icap::TheConfig
