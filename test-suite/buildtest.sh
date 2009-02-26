@@ -7,16 +7,19 @@
 #
 
 dist="${1}"
+base="`dirname $0`"
 
-# Figure out where to log the test output
-log=`echo "${dist}" | sed s/..test-suite.buildtests.//g `
-
-# ... and send everything there...
-{
+#if we are on Linux, let's try parallelizing
+pjobs="" #default
+if [ -e /proc/cpuinfo ]; then
+    ncpus=`grep '^processor' /proc/cpuinfo | tail -1|awk '{print $3}'`
+    ncpus=`expr $ncpus + 1`
+    pjobs="-j$ncpus"
+fi
 
 if test -e ${dist%%.opts}.opts ; then
 	echo "BUILD: ${dist%%.opts}.opts"
-	. ./${dist%%.opts}.opts
+	. ${dist%%.opts}.opts
 else
 	echo "BUILD: DEFAULT"
 	OPTS=""
@@ -26,9 +29,8 @@ fi
 #
 # empty all the existing code, reconfigure and builds test code
 # but skip if we have no files to remove.
-# AYJ: 1 because we already created the build log
 FILECOUNT=`ls -1 | grep -c .`
-if test "$FILECOUNT" != "1" ; then
+if test "$FILECOUNT" != "0" ; then
   make -k distclean || echo "distclean done. errors are unwanted but okay here."
 fi
 
@@ -36,10 +38,8 @@ fi
 # above command currently encounters dependancy problems on cleanup.
 #
 rm -f -r src/fs/aufs/.deps src/fs/diskd/.deps &&
-	../configure --silent ${OPTS} 2>&1 &&
-	make check 2>&1 &&
-	make 2>&1
-
-} 2>&1 > ./buildtest_${log}.log
+	$base/../configure --silent ${OPTS} 2>&1 &&
+	make ${pjobs} check 2>&1 &&
+	make ${pjobs} 2>&1
 
 # do not build any of the install's ...

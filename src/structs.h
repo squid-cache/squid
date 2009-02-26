@@ -462,8 +462,9 @@ struct SquidConfig {
 
         acl_access *snmp;
 #endif
-
+#if HTTP_VIOLATIONS
         acl_access *brokenPosts;
+#endif
 #if USE_IDENT
 
         acl_access *identLookup;
