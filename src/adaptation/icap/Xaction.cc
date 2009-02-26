@@ -130,7 +130,7 @@ void Adaptation::Icap::Xaction::openConnection()
 void
 Adaptation::Icap::Xaction::reusedConnection(void *data)
 {
-    debugs(93, 5, "Adaptation::Icap::Xaction::reusedConnection");
+    debugs(93, 5, HERE << "reused connection");
     Adaptation::Icap::Xaction *x = (Adaptation::Icap::Xaction*)data;
     x->noteCommConnected(COMM_OK);
 }

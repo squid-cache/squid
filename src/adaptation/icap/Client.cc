@@ -3,7 +3,7 @@
 
 void Adaptation::Icap::InitModule()
 {
-    debugs(93,2, "ICAP Client module enabled.");
+    debugs(93,2, HERE << "module enabled.");
 }
 
 void Adaptation::Icap::CleanModule()

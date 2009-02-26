@@ -34,7 +34,7 @@ void Adaptation::Icap::OptXact::handleCommConnected()
     MemBuf requestBuf;
     requestBuf.init();
     makeRequest(requestBuf);
-    debugs(93, 9, "Adaptation::Icap::OptXact request " << status() << ":\n" <<
+    debugs(93, 9, HERE << "request " << status() << ":\n" <<
            (requestBuf.terminate(), requestBuf.content()));
 
     scheduleWrite(requestBuf);
@@ -52,7 +52,7 @@ void Adaptation::Icap::OptXact::makeRequest(MemBuf &buf)
 
 void Adaptation::Icap::OptXact::handleCommWrote(size_t size)
 {
-    debugs(93, 9, "Adaptation::Icap::OptXact finished writing " << size <<
+    debugs(93, 9, HERE << "finished writing " << size <<
            "-byte request " << status());
 }
 

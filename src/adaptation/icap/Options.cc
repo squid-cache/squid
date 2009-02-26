@@ -42,7 +42,7 @@ Adaptation::Icap::Options::TransferKind Adaptation::Icap::Options::transferKind(
     if (theTransfers.ignore.matches(urlPath))
         return xferIgnore;
 
-    debugs(93,7, "Adaptation::Icap::Options url " << urlPath << " matches no extensions; " <<
+    debugs(93,7, HERE << "url " << urlPath << " matches no extensions; " <<
            "using default: " << theTransfers.byDefault->name);
     return theTransfers.byDefault->kind;
 }
@@ -129,7 +129,7 @@ void Adaptation::Icap::Options::cfgIntHeader(const HttpHeader *h, const char *fn
     else
         value = -1;
 
-    debugs(93,5, "Adaptation::Icap::Options::cfgIntHeader " << fname << ": " << value);
+    debugs(93,5, HERE << "int header: " << fname << ": " << value);
 }
 
 void Adaptation::Icap::Options::cfgTransferList(const HttpHeader *h, TransferList &list)
@@ -140,8 +140,7 @@ void Adaptation::Icap::Options::cfgTransferList(const HttpHeader *h, TransferLis
 
     if (foundStar) {
         theTransfers.byDefault = &list;
-        debugs(93,5, "Adaptation::Icap::Options::cfgTransferList: " <<
-               "set default transfer to " << list.name);
+        debugs(93,5, HERE << "set default transfer to " << list.name);
     }
 
     list.report(5, "Adaptation::Icap::Options::cfgTransferList: ");
@@ -178,13 +177,13 @@ bool Adaptation::Icap::Options::TransferList::matches(const String &urlPath) con
             // RFC 3507 examples imply that extensions come without leading '.'
             if (urlPath[eOff-1] == '.' &&
                     strcmp(urlPath.termedBuf() + eOff, e->key) == 0) {
-                debugs(93,7, "Adaptation::Icap::Options url " << urlPath << " matches " <<
+                debugs(93,7, HERE << "url " << urlPath << " matches " <<
                        name << " extension " << e->key);
                 return true;
             }
         }
     }
-    debugs(93,8, "Adaptation::Icap::Options url " << urlPath << " matches no " << name << " extensions");
+    debugs(93,8, HERE << "url " << urlPath << " matches no " << name << " extensions");
     return false;
 }
 
