@@ -3242,8 +3242,9 @@ DOC_START
 	when requested by a HTTP/1.0 client. This option
 	enables Squid to ignore such expiry times until
 	HTTP/1.1 is fully implemented.
-	WARNING: This may eventually cause some varying
-	objects not intended for caching to get cached.
+
+	WARNING: If turned on this may eventually cause some
+	varying objects not intended for caching to get cached.
 DOC_END
 
 NAME: request_entities
