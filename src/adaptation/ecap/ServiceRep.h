@@ -11,8 +11,8 @@
 #include <libecap/common/forward.h>
 #include <libecap/common/memory.h>
 
-namespace Ecap
-{
+namespace Adaptation {
+namespace Ecap {
 
 /* The eCAP service representative maintains information about a single eCAP
    service that Squid communicates with. One eCAP module may register many
@@ -50,5 +50,6 @@ private:
 };
 
 } // namespace Ecap
+} // namespace Adaptation
 
 #endif /* SQUID_ECAP_SERVICE_REP_H */

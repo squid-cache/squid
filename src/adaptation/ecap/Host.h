@@ -8,8 +8,8 @@
 
 #include <libecap/host/host.h>
 
-namespace Ecap
-{
+namespace Adaptation {
+namespace Ecap {
 
 // Squid wrapper, providing host application functionality to eCAP services.
 class Host : public libecap::host::Host
@@ -37,5 +37,6 @@ extern const libecap::Name protocolHtcp;
 #endif
 
 } // namespace Ecap
+} // namespace Adaptation
 
 #endif /* SQUID_ECAP_HOST_H */
