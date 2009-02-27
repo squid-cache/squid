@@ -16,8 +16,8 @@
 #include <libecap/host/xaction.h>
 #include <libecap/adapter/xaction.h>
 
-namespace Ecap
-{
+namespace Adaptation {
+namespace Ecap {
 
 /* The eCAP xaction representative maintains information about a single eCAP
    xaction that Squid communicates with. One eCAP module may register many
@@ -97,5 +97,6 @@ private:
 };
 
 } // namespace Ecap
+} // namespace Adaptation
 
 #endif /* SQUID_ECAP_XACTION_REP_H */

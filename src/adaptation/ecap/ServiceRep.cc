@@ -4,16 +4,16 @@
 #include "adaptation/ecap/ServiceRep.h"
 #include "adaptation/ecap/XactionRep.h"
 
-Ecap::ServiceRep::ServiceRep(const Adaptation::ServiceConfig &cfg):
-        /*AsyncJob("Ecap::ServiceRep"),*/ Adaptation::Service(cfg)
+Adaptation::Ecap::ServiceRep::ServiceRep(const Adaptation::ServiceConfig &cfg):
+        /*AsyncJob("Adaptation::Ecap::ServiceRep"),*/ Adaptation::Service(cfg)
 {
 }
 
-Ecap::ServiceRep::~ServiceRep()
+Adaptation::Ecap::ServiceRep::~ServiceRep()
 {
 }
 
-void Ecap::ServiceRep::noteService(const AdapterService &s)
+void Adaptation::Ecap::ServiceRep::noteService(const AdapterService &s)
 {
     Must(s != NULL);
     theService = s;
@@ -21,19 +21,19 @@ void Ecap::ServiceRep::noteService(const AdapterService &s)
            s->uri() << ' ' << cfg().key << "\n");
 }
 
-void Ecap::ServiceRep::invalidate()
+void Adaptation::Ecap::ServiceRep::invalidate()
 {
     theService->retire();
     theService.reset();
 }
 
-void Ecap::ServiceRep::noteFailure()
+void Adaptation::Ecap::ServiceRep::noteFailure()
 {
     assert(false); // XXX: should this be ICAP-specific?
 }
 
 void
-Ecap::ServiceRep::finalize()
+Adaptation::Ecap::ServiceRep::finalize()
 {
     Adaptation::Service::finalize();
     if (!theService) {
@@ -42,24 +42,24 @@ Ecap::ServiceRep::finalize()
     }
 }
 
-bool Ecap::ServiceRep::probed() const
+bool Adaptation::Ecap::ServiceRep::probed() const
 {
     return true; // we "probe" the adapter in finalize().
 }
 
-bool Ecap::ServiceRep::up() const
+bool Adaptation::Ecap::ServiceRep::up() const
 {
     return theService != NULL;
 }
 
-bool Ecap::ServiceRep::wantsUrl(const String &urlPath) const
+bool Adaptation::Ecap::ServiceRep::wantsUrl(const String &urlPath) const
 {
     Must(up());
     return theService->wantsUrl(urlPath.termedBuf());
 }
 
 Adaptation::Initiate *
-Ecap::ServiceRep::makeXactLauncher(Adaptation::Initiator *initiator,
+Adaptation::Ecap::ServiceRep::makeXactLauncher(Adaptation::Initiator *initiator,
                                    HttpMsg *virgin, HttpRequest *cause)
 {
     Must(up());
@@ -70,7 +70,7 @@ Ecap::ServiceRep::makeXactLauncher(Adaptation::Initiator *initiator,
 }
 
 // returns a temporary string depicting service status, for debugging
-const char *Ecap::ServiceRep::status() const
+const char *Adaptation::Ecap::ServiceRep::status() const
 {
     assert(false); // move generic stuff from ICAP to Adaptation
     // add theService->status()?

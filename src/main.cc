@@ -1054,8 +1054,8 @@ mainInitialize(void)
     enableAdaptation = Adaptation::Icap::TheConfig.onoff || enableAdaptation;
 #endif
 #if USE_ECAP
-    Ecap::TheConfig.finalize(); // must be after we load modules
-    enableAdaptation = Ecap::TheConfig.onoff || enableAdaptation;
+    Adaptation::Ecap::TheConfig.finalize(); // must be after we load modules
+    enableAdaptation = Adaptation::Ecap::TheConfig.onoff || enableAdaptation;
 #endif
     // must be the last adaptation-related finalize
     Adaptation::Config::Finalize(enableAdaptation);
