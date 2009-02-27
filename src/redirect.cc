@@ -34,7 +34,7 @@
  */
 
 #include "squid.h"
-#include "AuthUserRequest.h"
+#include "auth/UserRequest.h"
 #include "CacheManager.h"
 #include "Store.h"
 #include "fde.h"

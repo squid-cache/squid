@@ -40,7 +40,7 @@
 #include "authenticate.h"
 #include "ACLProxyAuth.h"
 #include "client_side.h"
-#include "AuthUserRequest.h"
+#include "auth/UserRequest.h"
 
 int
 ACLChecklist::authenticated()
