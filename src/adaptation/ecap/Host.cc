@@ -5,14 +5,14 @@
 #include "adaptation/ecap/ServiceRep.h"
 #include "adaptation/ecap/Host.h"
 
-const libecap::Name Ecap::protocolInternal("internal", libecap::Name::NextId());
-const libecap::Name Ecap::protocolCacheObj("cache_object", libecap::Name::NextId());
-const libecap::Name Ecap::protocolIcp("ICP", libecap::Name::NextId());
+const libecap::Name Adaptation::Ecap::protocolInternal("internal", libecap::Name::NextId());
+const libecap::Name Adaptation::Ecap::protocolCacheObj("cache_object", libecap::Name::NextId());
+const libecap::Name Adaptation::Ecap::protocolIcp("ICP", libecap::Name::NextId());
 #if USE_HTCP
-const libecap::Name Ecap::protocolHtcp("Htcp", libecap::Name::NextId());
+const libecap::Name Adaptation::Ecap::protocolHtcp("Htcp", libecap::Name::NextId());
 #endif
 
-Ecap::Host::Host()
+Adaptation::Ecap::Host::Host()
 {
     // assign our host-specific IDs to well-known names
     libecap::headerReferer.assignHostId(HDR_REFERER);
@@ -33,19 +33,19 @@ Ecap::Host::Host()
 }
 
 std::string
-Ecap::Host::uri() const
+Adaptation::Ecap::Host::uri() const
 {
     return "ecap://squid-cache.org/ecap/hosts/squid";
 }
 
 void
-Ecap::Host::describe(std::ostream &os) const
+Adaptation::Ecap::Host::describe(std::ostream &os) const
 {
     os << PACKAGE_NAME << " v" << PACKAGE_VERSION;
 }
 
 void
-Ecap::Host::noteService(const libecap::weak_ptr<libecap::adapter::Service> &weak)
+Adaptation::Ecap::Host::noteService(const libecap::weak_ptr<libecap::adapter::Service> &weak)
 {
     // Many ecap_service lines may use the same service URI. Find each
     // matching service rep, make sure it is an eCAP rep,
@@ -87,7 +87,7 @@ SquidLogLevel(libecap::LogVerbosity lv)
 }
 
 std::ostream *
-Ecap::Host::openDebug(libecap::LogVerbosity lv)
+Adaptation::Ecap::Host::openDebug(libecap::LogVerbosity lv)
 {
     const int squidLevel = SquidLogLevel(lv);
     const int squidSection = 93; // XXX: this should be a global constant
@@ -99,7 +99,7 @@ Ecap::Host::openDebug(libecap::LogVerbosity lv)
 }
 
 void
-Ecap::Host::closeDebug(std::ostream *debug)
+Adaptation::Ecap::Host::closeDebug(std::ostream *debug)
 {
     if (debug)
         Debug::finishDebug();

@@ -81,9 +81,9 @@ static void parse_icap_access_type();
 
 #if USE_ECAP
 #include "adaptation/ecap/Config.h"
-static void parse_ecap_service_type(Ecap::Config *);
-static void dump_ecap_service_type(StoreEntry *, const char *, const Ecap::Config &);
-static void free_ecap_service_type(Ecap::Config *);
+static void parse_ecap_service_type(Adaptation::Ecap::Config *);
+static void dump_ecap_service_type(StoreEntry *, const char *, const Adaptation::Ecap::Config &);
+static void free_ecap_service_type(Adaptation::Ecap::Config *);
 #endif
 
 CBDATA_TYPE(peer);
@@ -3547,19 +3547,19 @@ parse_icap_access_type()
 #if USE_ECAP
 
 static void
-parse_ecap_service_type(Ecap::Config * cfg)
+parse_ecap_service_type(Adaptation::Ecap::Config * cfg)
 {
     cfg->parseService();
 }
 
 static void
-free_ecap_service_type(Ecap::Config * cfg)
+free_ecap_service_type(Adaptation::Ecap::Config * cfg)
 {
     cfg->freeService();
 }
 
 static void
-dump_ecap_service_type(StoreEntry * entry, const char *name, const Ecap::Config &cfg)
+dump_ecap_service_type(StoreEntry * entry, const char *name, const Adaptation::Ecap::Config &cfg)
 {
     cfg.dumpService(entry, name);
 }

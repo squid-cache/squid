@@ -16,13 +16,13 @@
 
 /* HeaderRep */
 
-Ecap::HeaderRep::HeaderRep(HttpMsg &aMessage): theHeader(aMessage.header),
+Adaptation::Ecap::HeaderRep::HeaderRep(HttpMsg &aMessage): theHeader(aMessage.header),
         theMessage(aMessage)
 {
 }
 
 bool
-Ecap::HeaderRep::hasAny(const Name &name) const
+Adaptation::Ecap::HeaderRep::hasAny(const Name &name) const
 {
     const http_hdr_type squidId = TranslateHeaderId(name);
     // XXX: optimize to remove getByName: we do not need the value here
@@ -31,8 +31,8 @@ Ecap::HeaderRep::hasAny(const Name &name) const
            (bool)theHeader.has(squidId);
 }
 
-Ecap::HeaderRep::Value
-Ecap::HeaderRep::value(const Name &name) const
+Adaptation::Ecap::HeaderRep::Value
+Adaptation::Ecap::HeaderRep::value(const Name &name) const
 {
     const http_hdr_type squidId = TranslateHeaderId(name);
     const String value = squidId == HDR_OTHER ?
@@ -42,7 +42,7 @@ Ecap::HeaderRep::value(const Name &name) const
 }
 
 void
-Ecap::HeaderRep::add(const Name &name, const Value &value)
+Adaptation::Ecap::HeaderRep::add(const Name &name, const Value &value)
 {
     const http_hdr_type squidId = TranslateHeaderId(name); // HDR_OTHER OK
     HttpHeaderEntry *e = new HttpHeaderEntry(squidId, name.image().c_str(),
@@ -51,7 +51,7 @@ Ecap::HeaderRep::add(const Name &name, const Value &value)
 }
 
 void
-Ecap::HeaderRep::removeAny(const Name &name)
+Adaptation::Ecap::HeaderRep::removeAny(const Name &name)
 {
     const http_hdr_type squidId = TranslateHeaderId(name);
     if (squidId == HDR_OTHER)
@@ -61,7 +61,7 @@ Ecap::HeaderRep::removeAny(const Name &name)
 }
 
 libecap::Area
-Ecap::HeaderRep::image() const
+Adaptation::Ecap::HeaderRep::image() const
 {
     MemBuf mb;
     mb.init();
@@ -75,7 +75,7 @@ Ecap::HeaderRep::image() const
 
 // throws on failures
 void
-Ecap::HeaderRep::parse(const Area &buf)
+Adaptation::Ecap::HeaderRep::parse(const Area &buf)
 {
     MemBuf mb;
     mb.init();
@@ -85,7 +85,7 @@ Ecap::HeaderRep::parse(const Area &buf)
 }
 
 http_hdr_type
-Ecap::HeaderRep::TranslateHeaderId(const Name &name)
+Adaptation::Ecap::HeaderRep::TranslateHeaderId(const Name &name)
 {
     if (name.assignedHostId())
         return static_cast<http_hdr_type>(name.hostId());
@@ -95,26 +95,26 @@ Ecap::HeaderRep::TranslateHeaderId(const Name &name)
 
 /* FirstLineRep */
 
-Ecap::FirstLineRep::FirstLineRep(HttpMsg &aMessage): theMessage(aMessage)
+Adaptation::Ecap::FirstLineRep::FirstLineRep(HttpMsg &aMessage): theMessage(aMessage)
 {
 }
 
 libecap::Version
-Ecap::FirstLineRep::version() const
+Adaptation::Ecap::FirstLineRep::version() const
 {
     return libecap::Version(theMessage.http_ver.major,
                             theMessage.http_ver.minor);
 }
 
 void
-Ecap::FirstLineRep::version(const libecap::Version &aVersion)
+Adaptation::Ecap::FirstLineRep::version(const libecap::Version &aVersion)
 {
     theMessage.http_ver.major = aVersion.majr;
     theMessage.http_ver.minor = aVersion.minr;
 }
 
 libecap::Name
-Ecap::FirstLineRep::protocol() const
+Adaptation::Ecap::FirstLineRep::protocol() const
 {
     // TODO: optimize?
     switch (theMessage.protocol) {
@@ -154,14 +154,14 @@ Ecap::FirstLineRep::protocol() const
 }
 
 void
-Ecap::FirstLineRep::protocol(const Name &p)
+Adaptation::Ecap::FirstLineRep::protocol(const Name &p)
 {
     // TODO: what happens if we fail to translate some protocol?
     theMessage.protocol = TranslateProtocolId(p);
 }
 
 protocol_t
-Ecap::FirstLineRep::TranslateProtocolId(const Name &name)
+Adaptation::Ecap::FirstLineRep::TranslateProtocolId(const Name &name)
 {
     if (name.assignedHostId())
         return static_cast<protocol_t>(name.hostId());
@@ -171,13 +171,13 @@ Ecap::FirstLineRep::TranslateProtocolId(const Name &name)
 
 /* RequestHeaderRep */
 
-Ecap::RequestLineRep::RequestLineRep(HttpRequest &aMessage):
+Adaptation::Ecap::RequestLineRep::RequestLineRep(HttpRequest &aMessage):
         FirstLineRep(aMessage), theMessage(aMessage)
 {
 }
 
 void
-Ecap::RequestLineRep::uri(const Area &aUri)
+Adaptation::Ecap::RequestLineRep::uri(const Area &aUri)
 {
     // TODO: if method is not set, urlPath will assume it is not connect;
     // Can we change urlParse API to remove the method parameter?
@@ -188,15 +188,15 @@ Ecap::RequestLineRep::uri(const Area &aUri)
     Must(ok);
 }
 
-Ecap::RequestLineRep::Area
-Ecap::RequestLineRep::uri() const
+Adaptation::Ecap::RequestLineRep::Area
+Adaptation::Ecap::RequestLineRep::uri() const
 {
     return Area::FromTempBuffer(theMessage.urlpath.rawBuf(),
                                 theMessage.urlpath.size());
 }
 
 void
-Ecap::RequestLineRep::method(const Name &aMethod)
+Adaptation::Ecap::RequestLineRep::method(const Name &aMethod)
 {
     if (aMethod.assignedHostId()) {
         const int id = aMethod.hostId();
@@ -210,8 +210,8 @@ Ecap::RequestLineRep::method(const Name &aMethod)
     }
 }
 
-Ecap::RequestLineRep::Name
-Ecap::RequestLineRep::method() const
+Adaptation::Ecap::RequestLineRep::Name
+Adaptation::Ecap::RequestLineRep::method() const
 {
     switch (theMessage.method.id()) {
     case METHOD_GET:
@@ -234,25 +234,25 @@ Ecap::RequestLineRep::method() const
 }
 
 libecap::Version
-Ecap::RequestLineRep::version() const
+Adaptation::Ecap::RequestLineRep::version() const
 {
     return FirstLineRep::version();
 }
 
 void
-Ecap::RequestLineRep::version(const libecap::Version &aVersion)
+Adaptation::Ecap::RequestLineRep::version(const libecap::Version &aVersion)
 {
     FirstLineRep::version(aVersion);
 }
 
 libecap::Name
-Ecap::RequestLineRep::protocol() const
+Adaptation::Ecap::RequestLineRep::protocol() const
 {
     return FirstLineRep::protocol();
 }
 
 void
-Ecap::RequestLineRep::protocol(const Name &p)
+Adaptation::Ecap::RequestLineRep::protocol(const Name &p)
 {
     FirstLineRep::protocol(p);
 }
@@ -260,79 +260,79 @@ Ecap::RequestLineRep::protocol(const Name &p)
 
 /* ReplyHeaderRep */
 
-Ecap::StatusLineRep::StatusLineRep(HttpReply &aMessage):
+Adaptation::Ecap::StatusLineRep::StatusLineRep(HttpReply &aMessage):
         FirstLineRep(aMessage), theMessage(aMessage)
 {
 }
 
 void
-Ecap::StatusLineRep::statusCode(int code)
+Adaptation::Ecap::StatusLineRep::statusCode(int code)
 {
     // TODO: why is .status a enum? Do we not support unknown statuses?
     theMessage.sline.status = static_cast<http_status>(code);
 }
 
 int
-Ecap::StatusLineRep::statusCode() const
+Adaptation::Ecap::StatusLineRep::statusCode() const
 {
     // TODO: see statusCode(code) TODO above
     return static_cast<int>(theMessage.sline.status);
 }
 
 void
-Ecap::StatusLineRep::reasonPhrase(const Area &)
+Adaptation::Ecap::StatusLineRep::reasonPhrase(const Area &)
 {
     // Squid does not support custom reason phrases
     theMessage.sline.reason = NULL;
 }
 
-Ecap::StatusLineRep::Area
-Ecap::StatusLineRep::reasonPhrase() const
+Adaptation::Ecap::StatusLineRep::Area
+Adaptation::Ecap::StatusLineRep::reasonPhrase() const
 {
     return theMessage.sline.reason ?
            Area::FromTempString(std::string(theMessage.sline.reason)) : Area();
 }
 
 libecap::Version
-Ecap::StatusLineRep::version() const
+Adaptation::Ecap::StatusLineRep::version() const
 {
     return FirstLineRep::version();
 }
 
 void
-Ecap::StatusLineRep::version(const libecap::Version &aVersion)
+Adaptation::Ecap::StatusLineRep::version(const libecap::Version &aVersion)
 {
     FirstLineRep::version(aVersion);
 }
 
 libecap::Name
-Ecap::StatusLineRep::protocol() const
+Adaptation::Ecap::StatusLineRep::protocol() const
 {
     return FirstLineRep::protocol();
 }
 
 void
-Ecap::StatusLineRep::protocol(const Name &p)
+Adaptation::Ecap::StatusLineRep::protocol(const Name &p)
 {
     FirstLineRep::protocol(p);
 }
 
 /* BodyRep */
 
-Ecap::BodyRep::BodyRep(const BodyPipe::Pointer &aBody): theBody(aBody)
+Adaptation::Ecap::BodyRep::BodyRep(const BodyPipe::Pointer &aBody): theBody(aBody)
 {
 }
 
 void
-Ecap::BodyRep::tie(const BodyPipe::Pointer &aBody)
+Adaptation::Ecap::BodyRep::tie(const BodyPipe::Pointer &aBody)
 {
     Must(!theBody);
     Must(aBody != NULL);
     theBody = aBody;
 }
 
-Ecap::BodyRep::BodySize
-Ecap::BodyRep::bodySize() const
+Adaptation::Ecap::BodyRep::BodySize
+Adaptation::Ecap::BodyRep::bodySize() const
 {
     return !theBody ? BodySize() : BodySize(theBody->bodySize());
 }
@@ -340,7 +340,7 @@ Ecap::BodyRep::bodySize() const
 
 /* MessageRep */
 
-Ecap::MessageRep::MessageRep(HttpMsg *rawHeader):
+Adaptation::Ecap::MessageRep::MessageRep(HttpMsg *rawHeader):
         theMessage(rawHeader), theFirstLineRep(NULL),
         theHeaderRep(NULL), theBodyRep(NULL)
 {
@@ -360,7 +360,7 @@ Ecap::MessageRep::MessageRep(HttpMsg *rawHeader):
         theBodyRep = new BodyRep(theMessage.body_pipe);
 }
 
-Ecap::MessageRep::~MessageRep()
+Adaptation::Ecap::MessageRep::~MessageRep()
 {
     delete theBodyRep;
     delete theHeaderRep;
@@ -368,7 +368,7 @@ Ecap::MessageRep::~MessageRep()
 }
 
 libecap::shared_ptr<libecap::Message>
-Ecap::MessageRep::clone() const
+Adaptation::Ecap::MessageRep::clone() const
 {
     HttpMsg *hdr = theMessage.header->clone();
     hdr->body_pipe = NULL; // if any; TODO: remove pipe cloning from ::clone?
@@ -382,37 +382,37 @@ Ecap::MessageRep::clone() const
 }
 
 libecap::FirstLine &
-Ecap::MessageRep::firstLine()
+Adaptation::Ecap::MessageRep::firstLine()
 {
     return *theFirstLineRep;
 }
 
 const libecap::FirstLine &
-Ecap::MessageRep::firstLine() const
+Adaptation::Ecap::MessageRep::firstLine() const
 {
     return *theFirstLineRep;
 }
 
 libecap::Header &
-Ecap::MessageRep::header()
+Adaptation::Ecap::MessageRep::header()
 {
     return *theHeaderRep;
 }
 
 const libecap::Header &
-Ecap::MessageRep::header() const
+Adaptation::Ecap::MessageRep::header() const
 {
     return *theHeaderRep;
 }
 
 libecap::Body *
-Ecap::MessageRep::body()
+Adaptation::Ecap::MessageRep::body()
 {
     return theBodyRep;
 }
 
 void
-Ecap::MessageRep::addBody()
+Adaptation::Ecap::MessageRep::addBody()
 {
     Must(!theBodyRep);
     Must(!theMessage.body_pipe); // set in tieBody()
@@ -420,7 +420,7 @@ Ecap::MessageRep::addBody()
 }
 
 void
-Ecap::MessageRep::tieBody(Ecap::XactionRep *x)
+Adaptation::Ecap::MessageRep::tieBody(Adaptation::Ecap::XactionRep *x)
 {
     Must(theBodyRep != NULL); // addBody must be called first
     Must(!theMessage.header->body_pipe);
@@ -430,7 +430,7 @@ Ecap::MessageRep::tieBody(Ecap::XactionRep *x)
     theBodyRep->tie(theMessage.body_pipe);
 }
 
-const libecap::Body *Ecap::MessageRep::body() const
+const libecap::Body *Adaptation::Ecap::MessageRep::body() const
 {
     return theBodyRep;
 }
