@@ -7,14 +7,14 @@
 #include "HttpReply.h"
 #include "adaptation/ecap/XactionRep.h"
 
-CBDATA_NAMESPACED_CLASS_INIT(Ecap::XactionRep, XactionRep);
+CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Ecap::XactionRep, XactionRep);
 
 
-Ecap::XactionRep::XactionRep(Adaptation::Initiator *anInitiator,
+Adaptation::Ecap::XactionRep::XactionRep(Adaptation::Initiator *anInitiator,
                              HttpMsg *virginHeader, HttpRequest *virginCause,
                              const Adaptation::ServicePointer &aService):
-        AsyncJob("Ecap::XactionRep"),
-        Adaptation::Initiate("Ecap::XactionRep", anInitiator, aService),
+        AsyncJob("Adaptation::Ecap::XactionRep"),
+        Adaptation::Initiate("Adaptation::Ecap::XactionRep", anInitiator, aService),
         theVirginRep(virginHeader), theCauseRep(NULL),
         proxyingVb(opUndecided), proxyingAb(opUndecided), canAccessVb(false)
 {
@@ -22,7 +22,7 @@ Ecap::XactionRep::XactionRep(Adaptation::Initiator *anInitiator,
         theCauseRep = new MessageRep(virginCause);
 }
 
-Ecap::XactionRep::~XactionRep()
+Adaptation::Ecap::XactionRep::~XactionRep()
 {
     assert(!theMaster);
     delete theCauseRep;
@@ -30,7 +30,7 @@ Ecap::XactionRep::~XactionRep()
 }
 
 void
-Ecap::XactionRep::master(const AdapterXaction &x)
+Adaptation::Ecap::XactionRep::master(const AdapterXaction &x)
 {
     Must(!theMaster);
     Must(x != NULL);
@@ -38,7 +38,7 @@ Ecap::XactionRep::master(const AdapterXaction &x)
 }
 
 void
-Ecap::XactionRep::start()
+Adaptation::Ecap::XactionRep::start()
 {
     Must(theMaster);
 
@@ -51,7 +51,7 @@ Ecap::XactionRep::start()
 }
 
 void
-Ecap::XactionRep::swanSong()
+Adaptation::Ecap::XactionRep::swanSong()
 {
     // clear body_pipes, if any
     // this code does not maintain proxying* and canAccessVb states; should it?
@@ -77,27 +77,27 @@ Ecap::XactionRep::swanSong()
 }
 
 libecap::Message &
-Ecap::XactionRep::virgin()
+Adaptation::Ecap::XactionRep::virgin()
 {
     return theVirginRep;
 }
 
 const libecap::Message &
-Ecap::XactionRep::cause()
+Adaptation::Ecap::XactionRep::cause()
 {
     Must(theCauseRep != NULL);
     return *theCauseRep;
 }
 
 libecap::Message &
-Ecap::XactionRep::adapted()
+Adaptation::Ecap::XactionRep::adapted()
 {
     Must(theAnswerRep != NULL);
     return *theAnswerRep;
 }
 
 Adaptation::Message &
-Ecap::XactionRep::answer()
+Adaptation::Ecap::XactionRep::answer()
 {
     MessageRep *rep = dynamic_cast<MessageRep*>(theAnswerRep.get());
     Must(rep);
@@ -105,7 +105,7 @@ Ecap::XactionRep::answer()
 }
 
 void
-Ecap::XactionRep::terminateMaster()
+Adaptation::Ecap::XactionRep::terminateMaster()
 {
     if (theMaster) {
         AdapterXaction x = theMaster;
@@ -115,7 +115,7 @@ Ecap::XactionRep::terminateMaster()
 }
 
 bool
-Ecap::XactionRep::doneAll() const
+Adaptation::Ecap::XactionRep::doneAll() const
 {
     return proxyingVb >= opComplete && proxyingAb >= opComplete &&
            Adaptation::Initiate::doneAll();
@@ -123,7 +123,7 @@ Ecap::XactionRep::doneAll() const
 
 // stops receiving virgin and enables auto-consumption
 void
-Ecap::XactionRep::dropVirgin(const char *reason)
+Adaptation::Ecap::XactionRep::dropVirgin(const char *reason)
 {
     debugs(93,4, HERE << "because " << reason << "; status:" << status());
     Must(proxyingVb = opOn);
@@ -140,7 +140,7 @@ Ecap::XactionRep::dropVirgin(const char *reason)
 }
 
 void
-Ecap::XactionRep::useVirgin()
+Adaptation::Ecap::XactionRep::useVirgin()
 {
     debugs(93,3, HERE << status());
     Must(proxyingAb == opUndecided);
@@ -170,7 +170,7 @@ Ecap::XactionRep::useVirgin()
 }
 
 void
-Ecap::XactionRep::useAdapted(const libecap::shared_ptr<libecap::Message> &m)
+Adaptation::Ecap::XactionRep::useAdapted(const libecap::shared_ptr<libecap::Message> &m)
 {
     debugs(93,3, HERE << status());
     Must(m);
@@ -197,7 +197,7 @@ Ecap::XactionRep::useAdapted(const libecap::shared_ptr<libecap::Message> &m)
 }
 
 void
-Ecap::XactionRep::vbDiscard()
+Adaptation::Ecap::XactionRep::vbDiscard()
 {
     Must(proxyingVb == opUndecided);
     // if adapter does not need vb, we do not need to send it
@@ -206,7 +206,7 @@ Ecap::XactionRep::vbDiscard()
 }
 
 void
-Ecap::XactionRep::vbMake()
+Adaptation::Ecap::XactionRep::vbMake()
 {
     Must(proxyingVb == opUndecided);
     BodyPipePointer &p = theVirginRep.raw().body_pipe;
@@ -216,7 +216,7 @@ Ecap::XactionRep::vbMake()
 }
 
 void
-Ecap::XactionRep::vbStopMaking()
+Adaptation::Ecap::XactionRep::vbStopMaking()
 {
     // if adapter does not need vb, we do not need to receive it
     if (proxyingVb == opOn)
@@ -225,7 +225,7 @@ Ecap::XactionRep::vbStopMaking()
 }
 
 void
-Ecap::XactionRep::vbMakeMore()
+Adaptation::Ecap::XactionRep::vbMakeMore()
 {
     Must(proxyingVb == opOn); // cannot make more if done proxying
     // we cannot guarantee more vb, but we can check that there is a chance
@@ -233,7 +233,7 @@ Ecap::XactionRep::vbMakeMore()
 }
 
 libecap::Area
-Ecap::XactionRep::vbContent(libecap::size_type o, libecap::size_type s)
+Adaptation::Ecap::XactionRep::vbContent(libecap::size_type o, libecap::size_type s)
 {
     Must(canAccessVb);
     // We may not be proxyingVb yet. It should be OK, but see vbContentShift().
@@ -258,7 +258,7 @@ Ecap::XactionRep::vbContent(libecap::size_type o, libecap::size_type s)
 }
 
 void
-Ecap::XactionRep::vbContentShift(libecap::size_type n)
+Adaptation::Ecap::XactionRep::vbContentShift(libecap::size_type n)
 {
     Must(canAccessVb);
     // We may not be proxyingVb yet. It should be OK now, but if BodyPipe
@@ -273,7 +273,7 @@ Ecap::XactionRep::vbContentShift(libecap::size_type n)
 }
 
 void
-Ecap::XactionRep::noteAbContentDone(bool atEnd)
+Adaptation::Ecap::XactionRep::noteAbContentDone(bool atEnd)
 {
     Must(proxyingAb == opOn);
     stopProducingFor(answer().body_pipe, atEnd);
@@ -281,7 +281,7 @@ Ecap::XactionRep::noteAbContentDone(bool atEnd)
 }
 
 void
-Ecap::XactionRep::noteAbContentAvailable()
+Adaptation::Ecap::XactionRep::noteAbContentAvailable()
 {
     Must(proxyingAb == opOn);
     moveAbContent();
@@ -289,7 +289,7 @@ Ecap::XactionRep::noteAbContentAvailable()
 
 #if 0 /* XXX: implement */
 void
-Ecap::XactionRep::setAdaptedBodySize(const libecap::BodySize &size)
+Adaptation::Ecap::XactionRep::setAdaptedBodySize(const libecap::BodySize &size)
 {
     Must(answer().body_pipe != NULL);
     if (size.known())
@@ -299,7 +299,7 @@ Ecap::XactionRep::setAdaptedBodySize(const libecap::BodySize &size)
 #endif
 
 void
-Ecap::XactionRep::adaptationDelayed(const libecap::Delay &d)
+Adaptation::Ecap::XactionRep::adaptationDelayed(const libecap::Delay &d)
 {
     debugs(93,3, HERE << "adapter needs time: " <<
            d.state << '/' << d.progress);
@@ -307,27 +307,27 @@ Ecap::XactionRep::adaptationDelayed(const libecap::Delay &d)
 }
 
 void
-Ecap::XactionRep::adaptationAborted()
+Adaptation::Ecap::XactionRep::adaptationAborted()
 {
     tellQueryAborted(true); // should eCAP support retries?
     mustStop("adaptationAborted");
 }
 
 bool
-Ecap::XactionRep::callable() const
+Adaptation::Ecap::XactionRep::callable() const
 {
     return !done();
 }
 
 void
-Ecap::XactionRep::noteMoreBodySpaceAvailable(RefCount<BodyPipe> bp)
+Adaptation::Ecap::XactionRep::noteMoreBodySpaceAvailable(RefCount<BodyPipe> bp)
 {
     Must(proxyingAb == opOn);
     moveAbContent();
 }
 
 void
-Ecap::XactionRep::noteBodyConsumerAborted(RefCount<BodyPipe> bp)
+Adaptation::Ecap::XactionRep::noteBodyConsumerAborted(RefCount<BodyPipe> bp)
 {
     Must(proxyingAb == opOn);
     stopProducingFor(answer().body_pipe, false);
@@ -337,7 +337,7 @@ Ecap::XactionRep::noteBodyConsumerAborted(RefCount<BodyPipe> bp)
 }
 
 void
-Ecap::XactionRep::noteMoreBodyDataAvailable(RefCount<BodyPipe> bp)
+Adaptation::Ecap::XactionRep::noteMoreBodyDataAvailable(RefCount<BodyPipe> bp)
 {
     Must(proxyingVb == opOn);
     Must(theMaster);
@@ -345,7 +345,7 @@ Ecap::XactionRep::noteMoreBodyDataAvailable(RefCount<BodyPipe> bp)
 }
 
 void
-Ecap::XactionRep::noteBodyProductionEnded(RefCount<BodyPipe> bp)
+Adaptation::Ecap::XactionRep::noteBodyProductionEnded(RefCount<BodyPipe> bp)
 {
     Must(proxyingVb == opOn);
     Must(theMaster);
@@ -354,7 +354,7 @@ Ecap::XactionRep::noteBodyProductionEnded(RefCount<BodyPipe> bp)
 }
 
 void
-Ecap::XactionRep::noteBodyProducerAborted(RefCount<BodyPipe> bp)
+Adaptation::Ecap::XactionRep::noteBodyProducerAborted(RefCount<BodyPipe> bp)
 {
     Must(proxyingVb == opOn);
     Must(theMaster);
@@ -363,14 +363,14 @@ Ecap::XactionRep::noteBodyProducerAborted(RefCount<BodyPipe> bp)
 }
 
 void
-Ecap::XactionRep::noteInitiatorAborted()
+Adaptation::Ecap::XactionRep::noteInitiatorAborted()
 {
     mustStop("initiator aborted");
 }
 
 // get content from the adapter and put it into the adapted pipe
 void
-Ecap::XactionRep::moveAbContent()
+Adaptation::Ecap::XactionRep::moveAbContent()
 {
     Must(proxyingAb == opOn);
     const libecap::Area c = theMaster->abContent(0, libecap::nsize);
@@ -380,7 +380,7 @@ Ecap::XactionRep::moveAbContent()
 }
 
 const char *
-Ecap::XactionRep::status() const
+Adaptation::Ecap::XactionRep::status() const
 {
     static MemBuf buf;
     buf.reset();

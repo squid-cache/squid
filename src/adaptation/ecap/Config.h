@@ -9,8 +9,8 @@
 
 #include "adaptation/Config.h"
 
-namespace Ecap
-{
+namespace Adaptation {
+namespace Ecap {
 
 class Config: public Adaptation::Config
 {
@@ -31,5 +31,6 @@ private:
 extern Config TheConfig;
 
 } // namespace Ecap
+} // namespace Adaptation
 
 #endif /* SQUID_ECAP_CONFIG_H */

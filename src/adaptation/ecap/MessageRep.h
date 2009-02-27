@@ -19,8 +19,8 @@ class HttpMsg;
 class HttpRequest;
 class HttpReply;
 
-namespace Ecap
-{
+namespace Adaptation {
+namespace Ecap {
 
 class XactionRep;
 
@@ -172,6 +172,7 @@ private:
     BodyRep *theBodyRep; // body wrapper
 };
 
-} // namespace Ecap;
+} // namespace Ecap
+} // namespace Adaptation
 
 #endif /* SQUID__E_CAP__MESSAGE_REP_H */
