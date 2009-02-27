@@ -3,7 +3,7 @@
  * $Id$
  *
  * DEBUG: section 29    Authenticator
- * AUTHOR: Robert Collins
+ * AUTHOR:  Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -31,65 +31,51 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
- * Copyright (c) 2004, Robert Collins <robertc@squid-cache.org>
  */
 
 #include "squid.h"
-#include "AuthScheme.h"
-#include "authenticate.h"
-#include "AuthConfig.h"
+#include "auth/Config.h"
+#include "auth/UserRequest.h"
 
-Vector<AuthScheme*> *AuthScheme::_Schemes = NULL;
-
-void
-AuthScheme::AddScheme(AuthScheme &instance)
+/* Get Auth User: Return a filled out auth_user structure for the given
+ * Proxy Auth (or Auth) header. It may be a cached Auth User or a new
+ * Unauthenticated structure. The structure is given an inital lock here.
+ * It may also be NULL reflecting that no user could be created.
+ */
+AuthUserRequest *
+AuthConfig::CreateAuthUser(const char *proxy_auth)
 {
-    iterator i = GetSchemes().begin();
+    assert(proxy_auth != NULL);
+    debugs(29, 9, "AuthConfig::CreateAuthUser: header = '" << proxy_auth << "'");
 
-    while (i != GetSchemes().end()) {
-        assert(strcmp((*i)->type(), instance.type()) != 0);
-        ++i;
+    AuthConfig *config = Find(proxy_auth);
+
+    if (config == NULL || !config->active()) {
+        debugs(29, 1, "AuthConfig::CreateAuthUser: Unsupported or unconfigured/inactive proxy-auth scheme, '" << proxy_auth << "'");
+        return NULL;
     }
 
-    GetSchemes().push_back (&instance);
+    AuthUserRequest *result = config->decode (proxy_auth);
+
+    /*
+     * DPW 2007-05-08
+     * Do not lock the AuthUserRequest on the caller's behalf.
+     * Callers must manage their own locks.
+     */
+    return result;
 }
 
-AuthScheme *
-AuthScheme::Find(const char *typestr)
+AuthConfig *
+AuthConfig::Find(const char *proxy_auth)
 {
-    for (iterator i = GetSchemes().begin(); i != GetSchemes().end(); ++i) {
-        if (strcmp ((*i)->type(), typestr) == 0)
+    for (authConfig::iterator  i = Config.authConfiguration.begin(); i != Config.authConfiguration.end(); ++i)
+        if (strncasecmp(proxy_auth, (*i)->type(), strlen((*i)->type())) == 0)
             return *i;
-    }
 
     return NULL;
 }
 
-Vector<AuthScheme *> const &
-AuthScheme::Schemes()
-{
-    return GetSchemes();
-}
-
-Vector<AuthScheme*> &
-AuthScheme::GetSchemes()
-{
-    if (!_Schemes)
-        _Schemes = new Vector<AuthScheme *>;
-
-    return *_Schemes;
-}
-
-/*
- * called when a graceful shutdown is to occur
- * of each scheme module.
- */
+/* Default behaviour is to expose nothing */
 void
-AuthScheme::FreeAll()
-{
-    while (GetSchemes().size()) {
-        AuthScheme *scheme = GetSchemes().back();
-        GetSchemes().pop_back();
-        scheme->done();
-    }
-}
+AuthConfig::registerWithCacheManager(void)
+{}

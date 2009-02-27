@@ -9,4 +9,10 @@ TESTS += testHeaders
 testHeaders: $(srcdir)/*.h
 	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(srcdir)" || exit 1
 
+## XXX: this is only needed because testheaders.sh creates a dummy file called
+## testHeaders and distclean does not know about it.
+## Remove when testheaders.sh and its users are fixed.
+CLEANFILES += testHeaders
+
+
 .PHONY: testHeaders

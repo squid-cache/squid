@@ -14,7 +14,7 @@
 #include "adaptation/icap/Client.h"
 #include "ChunkedCodingParser.h"
 #include "TextException.h"
-#include "AuthUserRequest.h"
+#include "auth/UserRequest.h"
 #include "adaptation/icap/Config.h"
 #include "SquidTime.h"
 

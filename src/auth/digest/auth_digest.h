@@ -7,9 +7,9 @@
 #define __AUTH_DIGEST_H__
 #include "rfc2617.h"
 #include "authenticate.h"
-#include "AuthUser.h"
-#include "AuthUserRequest.h"
-#include "AuthConfig.h"
+#include "auth/User.h"
+#include "auth/UserRequest.h"
+#include "auth/Config.h"
 #include "helper.h"
 
 /* Generic */

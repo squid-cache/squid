@@ -41,9 +41,9 @@
 #include "authenticate.h"
 #include "ACL.h"
 #include "client_side.h"
-#include "AuthConfig.h"
-#include "AuthScheme.h"
-#include "AuthUser.h"
+#include "auth/Config.h"
+#include "auth/Scheme.h"
+#include "auth/User.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 
