@@ -34,7 +34,7 @@
 #ifndef SQUID_NEGOTIATESCHEME_H
 #define SQUID_NEGOTIATESCHEME_H
 
-#include "AuthScheme.h"
+#include "auth/Scheme.h"
 
 /// \ingroup AuthSchemeAPI
 /// \ingroup AuthAPI

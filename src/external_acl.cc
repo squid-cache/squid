@@ -44,7 +44,7 @@
 #include "CacheManager.h"
 #include "ExternalACL.h"
 #include "ExternalACLEntry.h"
-#include "AuthUserRequest.h"
+#include "auth/UserRequest.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "fde.h"

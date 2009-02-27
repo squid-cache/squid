@@ -34,16 +34,16 @@
  */
 
 #include "squid.h"
-#include "AuthUser.h"
-#include "AuthUserRequest.h"
-#include "AuthConfig.h"
+#include "auth/User.h"
+#include "auth/UserRequest.h"
+#include "auth/Config.h"
 #include "authenticate.h"
 #include "ACL.h"
 #include "event.h"
 #include "SquidTime.h"
 
 #ifndef _USE_INLINE_
-#include "AuthUser.cci"
+#include "auth/User.cci"
 #endif
 
 // This should be converted into a pooled type. Does not need to be cbdata

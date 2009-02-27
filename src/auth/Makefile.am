@@ -1,37 +1,59 @@
-#  Makefile for authentication modules in the Squid Object Cache server
-#
-#  $Id$
-#
-AUTOMAKE_OPTIONS = subdir-objects
-AM_CFLAGS = @SQUID_CFLAGS@
-AM_CXXFLAGS = @SQUID_CXXFLAGS@
-CLEANFILES =
+include $(top_srcdir)/src/Common.am
 
 EXTRA_LIBRARIES	= libbasic.a libdigest.a libntlm.a libnegotiate.a
-noinst_LIBRARIES	= @AUTH_LIBS@
+noinst_LIBRARIES = libauth.a @AUTH_LIBS_TO_BUILD@
 
-libbasic_a_SOURCES	= basic/auth_basic.cc basic/auth_basic.h
-libdigest_a_SOURCES	= digest/auth_digest.cc digest/auth_digest.h
-libntlm_a_SOURCES	= ntlm/auth_ntlm.cc ntlm/auth_ntlm.h
-libnegotiate_a_SOURCES	= negotiate/auth_negotiate.cc negotiate/auth_negotiate.h negotiate/negotiateScheme.cc negotiate/negotiateScheme.h
+## authentication framework; this library is always built
+## TODO: use libtool and add @AUTH_LIBS_TO_BUILD@ to libauth.la
+libauth_a_SOURCES = \
+	Config.cc \
+	Config.h \
+	Scheme.cc \
+	Scheme.h \
+	User.h \
+	User.cci \
+	User.cc \
+	UserRequest.h \
+	UserRequest.cc
 
-INCLUDES = \
-	-I$(top_srcdir) \
-	-I. \
-	-I$(top_builddir)/include \
-	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/src
+libbasic_a_SOURCES = \
+	basic/basicScheme.cc \
+	basic/basicScheme.h \
+	basic/auth_basic.cc \
+	basic/auth_basic.h
 
-check_PROGRAMS= testHeaders
+libdigest_a_SOURCES = \
+	digest/digestScheme.cc \
+	digest/digestScheme.h \
+	digest/auth_digest.cc \
+	digest/auth_digest.h
+
+libntlm_a_SOURCES = \
+	ntlm/ntlmScheme.cc \
+	ntlm/ntlmScheme.h \
+	ntlm/auth_ntlm.cc \
+	ntlm/auth_ntlm.h
+
+libnegotiate_a_SOURCES = \
+	negotiate/negotiateScheme.cc \
+	negotiate/negotiateScheme.h \
+	negotiate/auth_negotiate.cc \
+	negotiate/auth_negotiate.h
+
+# TODO: fix #include statements so that this is not needed
+INCLUDES += -I.
+
+
+check_PROGRAMS += testHeaders
 
 ## Special Universal .h dependency test script
 ## aborts if error encountered
-testHeaders: $(top_srcdir)/src/auth/basic/*.h $(top_srcdir)/src/auth/digest/*.h $(top_srcdir)/src/auth/ntlm/*.h $(top_srcdir)/src/auth/negotiate/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "basic" || exit 1
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "digest" || exit 1
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "ntlm" || exit 1
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "negotiate" || exit 1
-## ./ has no .h files
+testHeaders: $(top_srcdir)/src/auth/*.h $(top_srcdir)/src/auth/basic/*.h $(top_srcdir)/src/auth/digest/*.h $(top_srcdir)/src/auth/ntlm/*.h $(top_srcdir)/src/auth/negotiate/*.h
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/src/auth/" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/src/auth/basic" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/src/auth/digest" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/src/auth/ntlm" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/src/auth/negotiate" || exit 1
 
 ## No such file...
 testHeaders.c:
