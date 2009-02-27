@@ -1,8 +1,8 @@
 #include "squid.h"
 #include <libecap/adapter/service.h>
 #include "TextException.h"
-#include "eCAP/ServiceRep.h"
-#include "eCAP/XactionRep.h"
+#include "adaptation/ecap/ServiceRep.h"
+#include "adaptation/ecap/XactionRep.h"
 
 Ecap::ServiceRep::ServiceRep(const Adaptation::ServiceConfig &cfg):
         /*AsyncJob("Ecap::ServiceRep"),*/ Adaptation::Service(cfg)
@@ -17,7 +17,7 @@ void Ecap::ServiceRep::noteService(const AdapterService &s)
 {
     Must(s != NULL);
     theService = s;
-    debugs(93,7, "Matched loaded and configured eCAP services: " <<
+    debugs(93,7, HERE << "matched loaded and configured eCAP services: " <<
            s->uri() << ' ' << cfg().key << "\n");
 }
 

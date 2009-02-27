@@ -51,10 +51,14 @@ buildtest() {
     grep -E "${errors}" $log && exit 1
     if test "${cleanup}" = "yes" ; then
 	echo "REMOVE: ${btlayer}"
-	rm -f -r ${btlayer} $log
+	rm -f -r ${btlayer}
     fi
     result=`tail -2 $log | head -1`
     test "${result}" = "Build Successful." || ( tail -5 $log ; exit 1 )
+    if test "${cleanup}" = "yes" ; then
+	echo "REMOVE: ${log}"
+	rm -f -r $log
+    fi
 }
 
 # Run a single test build by name or opts file

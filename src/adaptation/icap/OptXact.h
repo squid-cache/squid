@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -31,28 +30,61 @@
  *
  */
 
-#ifndef SQUID_ICAPELEMENTS_H
-#define SQUID_ICAPELEMENTS_H
+#ifndef SQUID_ICAPOPTXACT_H
+#define SQUID_ICAPOPTXACT_H
 
-#include "adaptation/Elements.h"
+#include "adaptation/icap/Xaction.h"
+#include "adaptation/icap/Launcher.h"
 
-// ICAP-related things shared by many ICAP classes
 
-namespace ICAP
+namespace Adaptation {
+namespace Icap {
+
+class Adaptation::Icap::Options;
+
+
+/* OptXact sends an ICAP OPTIONS request to the ICAP service,
+ * parses the ICAP response, and sends it to the initiator. A NULL response
+ * means the ICAP service could not be contacted or did not return any
+ * valid response. */
+
+class OptXact: public Xaction
 {
-using Adaptation::Method;
-using Adaptation::methodNone;
-using Adaptation::methodRespmod;
-using Adaptation::methodReqmod;
 
-using Adaptation::VectPoint;
-using Adaptation::pointNone;
-using Adaptation::pointPreCache;
-using Adaptation::pointPostCache;
+public:
+    OptXact(Adaptation::Initiator *anInitiator, ServiceRep::Pointer &aService);
 
-using Adaptation::crlf;
-using Adaptation::methodStr;
-using Adaptation::vectPointStr;
-}
+protected:
+    virtual void start();
+    virtual void handleCommConnected();
+    virtual void handleCommWrote(size_t size);
+    virtual void handleCommRead(size_t size);
 
-#endif /* SQUID_ICAPCLIENT_H */
+    void makeRequest(MemBuf &buf);
+    HttpMsg *parseResponse();
+
+    void startReading();
+
+private:
+    CBDATA_CLASS2(OptXact);
+};
+
+// An Launcher that stores OptXact construction info and
+// creates OptXact when needed
+class OptXactLauncher: public Launcher
+{
+public:
+    OptXactLauncher(Adaptation::Initiator *anInitiator, Adaptation::ServicePointer aService);
+
+protected:
+    virtual Xaction *createXaction();
+
+private:
+    CBDATA_CLASS2(OptXactLauncher);
+};
+
+
+} // namespace Icap
+} // namespace Adaptation
+
+#endif /* SQUID_ICAPOPTXACT_H */

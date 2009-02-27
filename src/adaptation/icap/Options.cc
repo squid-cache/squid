@@ -1,14 +1,14 @@
 #include "squid.h"
 #include "wordlist.h"
 #include "HttpReply.h"
-#include "ICAPOptions.h"
+#include "adaptation/icap/Options.h"
 #include "TextException.h"
-#include "ICAPConfig.h"
+#include "adaptation/icap/Config.h"
 #include "SquidTime.h"
 
-extern ICAPConfig TheICAPConfig;
+extern Adaptation::Icap::Config Adaptation::Icap::TheConfig;
 
-ICAPOptions::ICAPOptions(): error("unconfigured"),
+Adaptation::Icap::Options::Options(): error("unconfigured"),
         max_connections(-1), allow204(false),
         preview(-1), theTTL(-1)
 {
@@ -24,14 +24,14 @@ ICAPOptions::ICAPOptions(): error("unconfigured"),
     theTransfers.byDefault = &theTransfers.complete;
 }
 
-ICAPOptions::~ICAPOptions()
+Adaptation::Icap::Options::~Options()
 {
 }
 
 // future optimization note: this method is called by ICAP ACL code at least
 // twice for each HTTP message to see if the message should be ignored. For any
 // non-ignored HTTP message, ICAP calls to check whether a preview is needed.
-ICAPOptions::TransferKind ICAPOptions::transferKind(const String &urlPath) const
+Adaptation::Icap::Options::TransferKind Adaptation::Icap::Options::transferKind(const String &urlPath) const
 {
     if (theTransfers.preview.matches(urlPath))
         return xferPreview;
@@ -42,34 +42,34 @@ ICAPOptions::TransferKind ICAPOptions::transferKind(const String &urlPath) const
     if (theTransfers.ignore.matches(urlPath))
         return xferIgnore;
 
-    debugs(93,7, "ICAPOptions url " << urlPath << " matches no extensions; " <<
+    debugs(93,7, HERE << "url " << urlPath << " matches no extensions; " <<
            "using default: " << theTransfers.byDefault->name);
     return theTransfers.byDefault->kind;
 }
 
-bool ICAPOptions::valid() const
+bool Adaptation::Icap::Options::valid() const
 {
     return !error;
 }
 
-bool ICAPOptions::fresh() const
+bool Adaptation::Icap::Options::fresh() const
 {
     return squid_curtime <= expire();
 }
 
-int ICAPOptions::ttl() const
+int Adaptation::Icap::Options::ttl() const
 {
     Must(valid());
-    return theTTL >= 0 ? theTTL : TheICAPConfig.default_options_ttl;
+    return theTTL >= 0 ? theTTL : TheConfig.default_options_ttl;
 }
 
-time_t ICAPOptions::expire() const
+time_t Adaptation::Icap::Options::expire() const
 {
     Must(valid());
     return theTimestamp + ttl();
 }
 
-void ICAPOptions::configure(const HttpReply *reply)
+void Adaptation::Icap::Options::configure(const HttpReply *reply)
 {
     error = NULL; // reset initial "unconfigured" value (or an old error?)
 
@@ -113,14 +113,14 @@ void ICAPOptions::configure(const HttpReply *reply)
     cfgTransferList(h, theTransfers.complete);
 }
 
-void ICAPOptions::cfgMethod(ICAP::Method m)
+void Adaptation::Icap::Options::cfgMethod(ICAP::Method m)
 {
     Must(m != ICAP::methodNone);
     methods += m;
 }
 
 // TODO: HttpHeader should provide a general method for this type of conversion
-void ICAPOptions::cfgIntHeader(const HttpHeader *h, const char *fname, int &value)
+void Adaptation::Icap::Options::cfgIntHeader(const HttpHeader *h, const char *fname, int &value)
 {
     const String s = h->getByName(fname);
 
@@ -129,10 +129,10 @@ void ICAPOptions::cfgIntHeader(const HttpHeader *h, const char *fname, int &valu
     else
         value = -1;
 
-    debugs(93,5, "ICAPOptions::cfgIntHeader " << fname << ": " << value);
+    debugs(93,5, HERE << "int header: " << fname << ": " << value);
 }
 
-void ICAPOptions::cfgTransferList(const HttpHeader *h, TransferList &list)
+void Adaptation::Icap::Options::cfgTransferList(const HttpHeader *h, TransferList &list)
 {
     const String buf = h->getByName(list.name);
     bool foundStar = false;
@@ -140,32 +140,31 @@ void ICAPOptions::cfgTransferList(const HttpHeader *h, TransferList &list)
 
     if (foundStar) {
         theTransfers.byDefault = &list;
-        debugs(93,5, "ICAPOptions::cfgTransferList: " <<
-               "set default transfer to " << list.name);
+        debugs(93,5, HERE << "set default transfer to " << list.name);
     }
 
-    list.report(5, "ICAPOptions::cfgTransferList: ");
+    list.report(5, "Adaptation::Icap::Options::cfgTransferList: ");
 }
 
 
-/* ICAPOptions::TransferList */
+/* Adaptation::Icap::Options::TransferList */
 
-ICAPOptions::TransferList::TransferList(): extensions(NULL), name(NULL),
+Adaptation::Icap::Options::TransferList::TransferList(): extensions(NULL), name(NULL),
         kind(xferNone)
 {
 };
 
-ICAPOptions::TransferList::~TransferList()
+Adaptation::Icap::Options::TransferList::~TransferList()
 {
     wordlistDestroy(&extensions);
 };
 
-void ICAPOptions::TransferList::add(const char *extension)
+void Adaptation::Icap::Options::TransferList::add(const char *extension)
 {
     wordlistAdd(&extensions, extension);
 };
 
-bool ICAPOptions::TransferList::matches(const String &urlPath) const
+bool Adaptation::Icap::Options::TransferList::matches(const String &urlPath) const
 {
     const int urlLen = urlPath.size();
     for (wordlist *e = extensions; e; e = e->next) {
@@ -178,17 +177,17 @@ bool ICAPOptions::TransferList::matches(const String &urlPath) const
             // RFC 3507 examples imply that extensions come without leading '.'
             if (urlPath[eOff-1] == '.' &&
                     strcmp(urlPath.termedBuf() + eOff, e->key) == 0) {
-                debugs(93,7, "ICAPOptions url " << urlPath << " matches " <<
+                debugs(93,7, HERE << "url " << urlPath << " matches " <<
                        name << " extension " << e->key);
                 return true;
             }
         }
     }
-    debugs(93,8, "ICAPOptions url " << urlPath << " matches no " << name << " extensions");
+    debugs(93,8, HERE << "url " << urlPath << " matches no " << name << " extensions");
     return false;
 }
 
-void ICAPOptions::TransferList::parse(const String &buf, bool &foundStar)
+void Adaptation::Icap::Options::TransferList::parse(const String &buf, bool &foundStar)
 {
     foundStar = false;
 
@@ -203,7 +202,7 @@ void ICAPOptions::TransferList::parse(const String &buf, bool &foundStar)
     }
 }
 
-void ICAPOptions::TransferList::report(int level, const char *prefix) const
+void Adaptation::Icap::Options::TransferList::report(int level, const char *prefix) const
 {
     if (extensions) {
         for (wordlist *e = extensions; e; e = e->next)

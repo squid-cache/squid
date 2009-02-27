@@ -6,9 +6,9 @@
 #include "squid.h"
 
 #include <libecap/common/registry.h>
-#include "eCAP/Host.h"
-#include "eCAP/ServiceRep.h"
-#include "eCAP/Config.h"
+#include "adaptation/ecap/Host.h"
+#include "adaptation/ecap/ServiceRep.h"
+#include "adaptation/ecap/Config.h"
 
 Ecap::Config Ecap::TheConfig;
 

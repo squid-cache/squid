@@ -38,35 +38,35 @@
 #include "ACL.h"
 #include "Store.h"
 #include "Array.h"	// really Vector
-#include "ICAPConfig.h"
-#include "ICAPServiceRep.h"
+#include "adaptation/icap/Config.h"
+#include "adaptation/icap/ServiceRep.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "ACLChecklist.h"
 #include "wordlist.h"
 
-ICAPConfig TheICAPConfig;
+Adaptation::Icap::Config Adaptation::Icap::TheConfig;
 
-ICAPConfig::ICAPConfig(): preview_enable(0), preview_size(0),
+Adaptation::Icap::Config::Config(): preview_enable(0), preview_size(0),
         connect_timeout_raw(0), io_timeout_raw(0), reuse_connections(0),
         client_username_header(NULL), client_username_encode(0)
 {
 }
 
-ICAPConfig::~ICAPConfig()
+Adaptation::Icap::Config::~Config()
 {
     // TODO: delete client_username_header?
 }
 
 Adaptation::ServicePointer
-ICAPConfig::createService(const Adaptation::ServiceConfig &cfg)
+Adaptation::Icap::Config::createService(const Adaptation::ServiceConfig &cfg)
 {
-    ICAPServiceRep::Pointer s = new ICAPServiceRep(cfg);
+    Adaptation::Icap::ServiceRep::Pointer s = new Adaptation::Icap::ServiceRep(cfg);
     s->setSelf(s);
     return s.getRaw();
 }
 
-time_t ICAPConfig::connect_timeout(bool bypassable) const
+time_t Adaptation::Icap::Config::connect_timeout(bool bypassable) const
 {
     if (connect_timeout_raw > 0)
         return connect_timeout_raw; // explicitly configured
@@ -74,7 +74,7 @@ time_t ICAPConfig::connect_timeout(bool bypassable) const
     return bypassable ? ::Config.Timeout.peer_connect : ::Config.Timeout.connect;
 }
 
-time_t ICAPConfig::io_timeout(bool) const
+time_t Adaptation::Icap::Config::io_timeout(bool) const
 {
     if (io_timeout_raw > 0)
         return io_timeout_raw; // explicitly configured
