@@ -34,7 +34,7 @@
 #ifndef SQUID_BASICSCHEME_H
 #define SQUID_BASICSCHEME_H
 
-#include "AuthScheme.h"
+#include "auth/Scheme.h"
 
 /// \ingroup AuthAPI
 /// \ingroup AuthSchemeAPI

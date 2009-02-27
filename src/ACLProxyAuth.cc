@@ -42,8 +42,8 @@
 #include "ACLRegexData.h"
 #include "client_side.h"
 #include "HttpRequest.h"
-#include "AuthUser.h"
-#include "AuthUserRequest.h"
+#include "auth/User.h"
+#include "auth/UserRequest.h"
 
 ACLProxyAuth::~ACLProxyAuth()
 {
