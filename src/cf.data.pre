@@ -126,6 +126,12 @@ DOC_START
 
 	auth_param basic program @DEFAULT_PREFIX@/libexec/ncsa_auth @DEFAULT_PREFIX@/etc/passwd
 
+	"utf8" on|off
+	HTTP uses iso-latin-1 as characterset, while some authentication
+	backends such as LDAP expects UTF-8. If this is set to on Squid will
+	translate the HTTP iso-latin-1 charset to UTF-8 before sending the
+	username & password to the helper.
+
 	"children" numberofchildren
 	The number of authenticator processes to spawn. If you start too few
 	Squid will have to wait for them to process a backlog of credential
@@ -187,6 +193,12 @@ DOC_START
 	something like
 
 	auth_param digest program @DEFAULT_PREFIX@/bin/digest_auth_pw @DEFAULT_PREFIX@/etc/digpass
+
+	"utf8" on|off
+	HTTP uses iso-latin-1 as characterset, while some authentication
+	backends such as LDAP expects UTF-8. If this is set to on Squid will
+	translate the HTTP iso-latin-1 charset to UTF-8 before sending the
+	username & password to the helper.
 
 	"children" numberofchildren
 	The number of authenticator processes to spawn (no default).
