@@ -29,48 +29,67 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
- *
- * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ICAPCONFIG_H
-#define SQUID_ICAPCONFIG_H
+#ifndef SQUID_ICAPINOUT_H
+#define SQUID_ICAPINOUT_H
 
-#include "event.h"
-#include "AsyncCall.h"
-#include "adaptation/Config.h"
-#include "ICAPServiceRep.h"
+#include "HttpMsg.h"
+#include "HttpRequest.h"
+#include "HttpReply.h"
 
-class acl_access;
+// IcapInOut manages a pointer to the HTTP message being worked on.
+// For HTTP responses, request header information is also available
+// as the "cause". ICAP transactions use this class to store virgin
+// and adapted HTTP messages.
 
-class ConfigParser;
 
-class ICAPConfig: public Adaptation::Config
+namespace Adaptation {
+namespace Icap {
+
+class InOut
 {
 
 public:
-    int default_options_ttl;
-    int preview_enable;
-    int preview_size;
-    time_t connect_timeout_raw;
-    time_t io_timeout_raw;
-    int reuse_connections;
-    char* client_username_header;
-    int client_username_encode;
+    typedef HttpMsg Header;
 
-    ICAPConfig();
-    ~ICAPConfig();
+    InOut(): header(0), cause(0) {}
 
-    time_t connect_timeout(bool bypassable) const;
-    time_t io_timeout(bool bypassable) const;
+    ~InOut() {
+        HTTPMSGUNLOCK(cause);
+        HTTPMSGUNLOCK(header);
+    }
 
-private:
-    ICAPConfig(const ICAPConfig &); // not implemented
-    ICAPConfig &operator =(const ICAPConfig &); // not implemented
+    void setCause(HttpRequest *r) {
+        if (r) {
+            HTTPMSGUNLOCK(cause);
+            cause = HTTPMSGLOCK(r);
+        } else {
+            assert(!cause);
+        }
+    }
 
-    virtual Adaptation::ServicePointer createService(const Adaptation::ServiceConfig &cfg);
+    void setHeader(Header *h) {
+        HTTPMSGUNLOCK(header);
+        header = HTTPMSGLOCK(h);
+        body_pipe = header->body_pipe;
+    }
+
+public:
+    // virgin or adapted message being worked on
+    Header *header;   // parsed HTTP status/request line and headers
+
+    // HTTP request header for HTTP responses (the cause of the response)
+    HttpRequest *cause;
+
+    // Copy of header->body_pipe, in case somebody moves the original.
+    BodyPipe::Pointer body_pipe;
 };
 
-extern ICAPConfig TheICAPConfig;
+// TODO: s/Header/Message/i ?
 
-#endif /* SQUID_ICAPCONFIG_H */
+
+} // namespace Icap
+} // namespace Adaptation
+
+#endif /* SQUID_ICAPINOUT_H */

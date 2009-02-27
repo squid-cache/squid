@@ -35,23 +35,26 @@
 #define SQUID_ICAPOPTIONS_H
 
 #include "squid.h"
-#include "ICAPServiceRep.h"
+#include "adaptation/icap/ServiceRep.h"
 
 class wordlist;
+
+namespace Adaptation {
+namespace Icap {
 
 /* Maintains options supported by a given ICAP service.
  * See RFC 3507, Section "4.10.2 OPTIONS Response". */
 
-class ICAPOptions
+class Options
 {
 
 public:
-    typedef void GetCallback(void *data, ICAPOptions *options);
-    static void Get(ICAPServiceRep::Pointer &service, GetCallback *cb, void *data);
+    typedef void GetCallback(void *data, Options *options);
+    static void Get(ServiceRep::Pointer &service, GetCallback *cb, void *data);
 
 public:
-    ICAPOptions();
-    ~ICAPOptions();
+    Options();
+    ~Options();
 
     void configure(const HttpReply *reply);
 
@@ -117,5 +120,9 @@ private:
 };
 
 
+
+
+} // namespace Icap
+} // namespace Adaptation
 
 #endif /* SQUID_ICAPOPTIONS_H */

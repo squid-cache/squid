@@ -38,15 +38,7 @@ if USE_ADAPTATION
 SUBDIRS += adaptation
 endif
 
-if USE_ICAP_CLIENT
-SUBDIRS += ICAP
-endif
-
-if USE_ECAP
-SUBDIRS += eCAP
-endif
-
-ADAPTATION_LIBS = @ECAP_LIBS@ @ICAP_LIBS@ @ADAPTATION_LIBS@
+ADAPTATION_LIBS = @ADAPTATION_LIBS@
 
 DELAY_POOL_ALL_SOURCE = \
 	CommonPool.h \
@@ -1091,16 +1083,8 @@ install-data-local: install-sysconfDATA install-dataDATA
 	$(mkinstalldirs) $(DESTDIR)$(DEFAULT_LOG_PREFIX)
 
 uninstall-local:
-	@if test -f $(DESTDIR)$(DEFAULT_MIME_TABLE) ; then \
-		echo "rm -f $(DESTDIR)$(DEFAULT_MIME_TABLE)"; \
-		$(RM) -f $(DESTDIR)$(DEFAULT_MIME_TABLE); \
-	fi
-
-# Don't automatically uninstall config files
-#	@if test -f $(DESTDIR)$(DEFAULT_CONFIG_FILE) ; then \
-#		echo "rm -f $(DESTDIR)$(DEFAULT_CONFIG_FILE)"; \
-#		$(RM) -f $(DESTDIR)$(DEFAULT_CONFIG_FILE); \
-#	fi
+	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh $(RM) $(DESTDIR)$(DEFAULT_MIME_TABLE)
+	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh $(RM) $(DESTDIR)$(DEFAULT_CONFIG_FILE)
 
 CLEANFILES = cf_gen_defines.h cf.data cf_parser.h squid.conf.default squid.conf.documented \
 	globals.cc string_arrays.c repl_modules.cc DiskIO/DiskIOModules_gen.cc \
