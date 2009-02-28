@@ -18,10 +18,6 @@ html body {
 	color: #1e1e1e;
 }
 
-/* Language Specific Basics */
-body
-:lang(fa) { direction: rtl; font-size: 100%; font-family: Tahoma, Roya, sans-serif; float: right; }
-
 /* Page displayed title area */
 #titles {
 	margin-left: 15px;
