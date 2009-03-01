@@ -792,8 +792,10 @@ NOCOMMENT_START
 	acl aclname peername myPeer ...		# cache_peer ... name=myPeer
 	</verb>
 
-	<tag>auth_param ntlm</tag>
-	<p>The helper binary bundled with Squid under the name <em>ntlm_auth</em> has been renamed to accurately reflect
+	<tag>auth_param ntlm, basic, digest</tag>
+	<p>BASIC, DIGEST:  New parameter option <em>utf8 on|off</em> to permit helpers to selectively process UTF-8 characters even though
+	   HTTP accepts only ISO-8859-1.</p>
+	<p>NTLM: The helper binary bundled with Squid under the name <em>ntlm_auth</em> has been renamed to accurately reflect
 	   its real behavior and to prevent confusion with the more useful Samba helper using the same name.
 	<p>Despite being used for NTLM, the helper does not in fact provide true NTLM function. What it does provide is
 	   SMB LanManager authentication through the NTLM interface without the need for a domain controller. Thus the 
