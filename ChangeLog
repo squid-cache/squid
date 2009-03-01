@@ -92,6 +92,39 @@ Changes to squid-3.1.0.1 (27 Oct 2008):
 	- Bug #2223: Follow XFF extensions added
 	- ... and many code and documentation cleanups
 
+Changes to squid-3.0.STABLE13 (03 Feb 2009):
+
+	- Fix several issues in request parsing
+	- Fix memory leak from logformat parsing
+	- Fix various ESI build errors
+	- ... and some documentation updates
+
+Changes to squid-3.0.STABLE12 (21 Jan 2009):
+
+       - Bug 2533: Solaris (sparc) 64-bit build breaks with gcc/g++
+       - Bug 2542: ICAP filters break download resume
+       - Bug 2556: HTCP fails without icp_port
+       - Bug 2564: logformat '%tl' field not working as advertised
+       - Port from 3.1: TestBed basic build consistency checks
+       - Policy: Change half_closed_clients default to off
+       - Policy: Removed -V command line option, deprecated by 2.6
+       - ... and several other minor code cleanups
+
+Changes to squid-3.0.STABLE11 (24 Dec 2008):
+
+       - Bug 2424: filedescriptors being left unnecessary opened
+       - Bug 2545: fault passing ICAP filtered traffic to peers
+       - Bug 2227: Sefgaults in MemBuf::reset during idnsSendQuery
+       - ... and some minor admin and debug cleanups.
+
+Changes to squid-3.0.STABLE11-RC1 (3 Dec 2008):
+
+        - Removes patch causing cache of bad objects
+        - Bug 2526: bad security default in ACLChecklist
+        - Fixes regression: access.log request size tag
+        - Fixes cache_peer forceddomainname=X option
+        - ... and many minor documentation cleanups
+
 Changes to squid-3.0.STABLE10 (14 Oct 2008):
 
 	- Bug 2391: Regression: bad assert in forwarding
