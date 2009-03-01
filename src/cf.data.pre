@@ -3173,6 +3173,7 @@ DOC_START
 DOC_END
 
 NAME: broken_posts
+IFDEF: HTTP_VIOLATIONS
 TYPE: acl_access
 DEFAULT: none
 LOC: Config.accessList.brokenPosts
