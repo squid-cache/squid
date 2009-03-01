@@ -2,7 +2,7 @@ dnl  Configuration input file for Squid
 dnl
 dnl  $Id$
 dnl
-AC_INIT(Squid Web Proxy, 3.1.0.5-BZR, http://www.squid-cache.org/bugs/, squid)
+AC_INIT(Squid Web Proxy, 3.1.0.6-BZR, http://www.squid-cache.org/bugs/, squid)
 AC_PREREQ(2.52)
 AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
