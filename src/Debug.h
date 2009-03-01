@@ -34,6 +34,12 @@
 #ifndef SQUID_DEBUG_H
 #define SQUID_DEBUG_H
 
+/* NP: done without pre-requisite config.h  */
+/*     because we only define with it here. */
+#if HAVE_LIBGEN_H  
+#include <libgen.h>
+#endif
+
 #include <iostream>
 #undef assert
 #include <sstream>
