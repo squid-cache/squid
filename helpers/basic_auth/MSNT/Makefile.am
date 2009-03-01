@@ -6,6 +6,7 @@
 #  Uncomment and customize the following to suit your needs:
 #
 
+MSNTAUTH_CONF = $(sysconfdir)/msntauth.conf
 
 libexec_PROGRAMS = msnt_auth
 
@@ -35,11 +36,13 @@ confload.o: confload.c
 	$(COMPILE) -DSYSCONFDIR=\"$(sysconfdir)\" -c $(srcdir)/confload.c -o $@
 
 install-data-local:
-	@if test -f $(DESTDIR)$(sysconfdir)/msntauth.conf ; then \
-		echo "$@ will not overwrite existing $(DESTDIR)$(sysconfdir)/msntauth.conf" ; \
+	@if test -f $(DESTDIR)$(MSNTAUTH_CONF) ; then \
+		echo "$@ will not overwrite existing $(DESTDIR)$(MSNTAUTH_CONF)" ; \
 	else \
-		echo "$(INSTALL_DATA) $(srcdir)/msntauth.conf.default $(DESTDIR)$(sysconfdir)/msntauth.conf" ; \
-		$(INSTALL_DATA) $(srcdir)/msntauth.conf.default $(DESTDIR)$(sysconfdir)/msntauth.conf ; \
+		echo "$(INSTALL_DATA) $(srcdir)/msntauth.conf.default $(DESTDIR)$(MSNTAUTH_CONF)" ; \
+		$(INSTALL_DATA) $(srcdir)/msntauth.conf.default $(DESTDIR)$(MSNTAUTH_CONF) ; \
 	fi
 
-	
+uninstall-local:
+	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh $(RM) $(DESTDIR)$(MSNTAUTH_CONF)
+	$(RM) -f $(DESTDIR)$(MSNTAUTH_CONF).default

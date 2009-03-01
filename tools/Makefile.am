@@ -53,12 +53,8 @@ install-data-local:
 	fi
 
 uninstall-local:
-
-# Don't automatically uninstall config files
-#	@if test -f $(DESTDIR)$(DEFAULT_CONFIG_FILE) ; then \
-#		echo "rm -f $(DESTDIR)$(DEFAULT_CONFIG_FILE)"; \
-#		$(RM) -f $(DESTDIR)$(DEFAULT_CONFIG_FILE); \
-#	fi
+	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh $(RM) $(DESTDIR)$(DEFAULT_CACHEMGR_CONFIG)
+	$(RM) -f $(DESTDIR)$(DEFAULT_CACHEMGR_CONFIG).default
 
 DISTCLEANFILES = 
 
