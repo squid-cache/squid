@@ -1,3 +1,18 @@
+Changes to squid-3.1.0.6 (01 Mar 2009):
+
+	- Regresion Fix: Support HTTP/0.9 in accelerator mode
+	- Bug 2601: Hack. Convert IPv4 netmasks to CIDR in IPv6-enabled mode
+	- Bug 2593: Compile errors on Solaris 10
+	- Bug 2591: adaptation_access does not work
+	- Bug 2588: coredump in rDNS lookup
+	- Bug 2526: default ALLOW when no list specified.
+	- Bug 2287: Send a 505 on requests with unsupported HTTP versions
+	- Bug 419: Hop by Hop headers MUST NOT be forwarded
+	- Fix external_acl_type handling of SSL certificate details
+	- Obsolete: dependency on nss_common.h and nss.h
+	- Support libtool2
+	- ... and various documentation and code polish
+
 Changes to squid-3.1.0.5 (03 Feb 2009):
 
 	- Bug 2583: Fixed issue in content adaptation
