@@ -189,6 +189,7 @@ int
 strListIsSubstr(const String * list, const char *s, char del)
 {
     assert(list && del);
+    return (list->find(s) != String::npos);
 
     /** \note
      * Note: the original code with a loop is broken because it uses strstr()
