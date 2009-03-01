@@ -701,7 +701,7 @@ See the accf_http(9) man page.
 	   This is useful for class 4 Delay Pools in Squid 3.x
 
 	<tag>half_closed_clients</tag>
-	<p>New defaut vaue of OFF
+	<p>New default value of OFF
 
 </descrip>
 
