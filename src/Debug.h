@@ -94,7 +94,7 @@ extern FILE *debug_log;
  *
  * debugs(1,2, HERE << "some message");
  */
-#define HERE __FILE__<<"("<<__LINE__<<") "<<__FUNCTION__<<": "
+#define HERE basename(__FILE__)<<"("<<__LINE__<<") "<<__FUNCTION__<<": "
 
 /*
  * MYNAME is for use at debug levels 0 and 1 where HERE is too messy.
