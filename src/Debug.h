@@ -92,9 +92,20 @@ extern FILE *debug_log;
 /*
  * HERE is a macro that you can use like this:
  *
- * debugs(1,1, HERE << "some message");
+ * debugs(1,2, HERE << "some message");
  */
-#define HERE __FILE__<<"("<<__LINE__<<") "<<__FUNCTION__<<": "
+#define HERE basename(__FILE__)<<"("<<__LINE__<<") "<<__FUNCTION__<<": "
+
+/*
+ * MYNAME is for use at debug levels 0 and 1 where HERE is too messy.
+ *
+ * debugs(1,1, MYNAME << "WARNING: some message");
+ */
+#ifdef __PRETTY_FUNCTION__
+#define MYNAME __PRETTY_FUNCTION__ << " "
+#else
+#define MYNAME __FUNCTION__ << " "
+#endif
 
 /* some uint8_t do not like streaming control-chars (values 0-31, 127+) */
 inline std::ostream& operator <<(std::ostream &os, const uint8_t d)
