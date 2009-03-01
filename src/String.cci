@@ -35,6 +35,15 @@
 #include "assert.h"
 #include <cstring>
 
+#ifdef HAVE_STDINT_H
+#include <stdint.h> //for INT_MAX
+#else /* HAVE_STDINT_H */
+#ifndef INT_MAX
+#define INT_MAX 1<<31 //hack but a safe bet
+#endif /* INT_MAX */
+#endif /* HAVE_STDINT_H */
+
+
 String::String() : size_(0), len_(0), buf_ (NULL)
 {
 #if DEBUGSTRINGS
@@ -42,16 +51,10 @@ String::String() : size_(0), len_(0), buf_ (NULL)
 #endif
 }
 
-int
+String::size_type
 String::size() const
 {
     return len_;
-}
-
-char const *
-String::unsafeBuf() const
-{
-    return buf_;
 }
 
 bool String::defined() const
@@ -84,33 +87,6 @@ String::operator [](unsigned int pos) const
     return buf_[pos];
 }
 
-const char *
-String::pos(char const *aString) const
-{
-    return strstr(termedBuf(), aString);
-}
-
-const char *
-String::pos(char const ch) const
-{
-    return strchr(termedBuf(), ch);
-}
-
-size_t
-String::find(char const ch) const
-{
-    const char *c;
-    c=pos(ch);
-    if (c==NULL)
-        return std::string::npos;
-    return c-rawBuf();
-}
-
-const char *
-String::rpos(char const ch) const
-{
-    return strrchr(termedBuf(), (ch));
-}
 
 int
 String::cmp (char const *aString) const
@@ -130,7 +106,7 @@ String::cmp (char const *aString) const
 }
 
 int
-String::cmp (char const *aString, size_t count) const
+String::cmp (char const *aString, String::size_type count) const
 {
     /* always the same at length 0 */
 
@@ -173,7 +149,7 @@ String::caseCmp(char const *aString) const
 }
 
 int
-String::caseCmp(char const *aString, size_t count) const
+String::caseCmp(char const *aString, String::size_type count) const
 {
     return strncasecmp(termedBuf(), aString, count);
 }
@@ -194,7 +170,7 @@ String::set(char const *loc, char const ch)
 }
 
 void
-String::cut(size_t newLength)
+String::cut(String::size_type newLength)
 {
     if (newLength < 0 || newLength > len_) return;
 

@@ -192,7 +192,7 @@ Ecap::RequestLineRep::uri(const Area &aUri)
 Ecap::RequestLineRep::Area
 Ecap::RequestLineRep::uri() const
 {
-    return Area::FromTempBuffer(theMessage.urlpath.unsafeBuf(),
+    return Area::FromTempBuffer(theMessage.urlpath.rawBuf(),
                                 theMessage.urlpath.size());
 }
 

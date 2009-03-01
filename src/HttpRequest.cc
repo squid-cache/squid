@@ -298,8 +298,8 @@ HttpRequest::pack(Packer * p)
 {
     assert(p);
     /* pack request-line */
-    packerPrintf(p, "%s %.*s HTTP/1.0\r\n",
-                 RequestMethodStr(method), urlpath.size(), urlpath.rawBuf());
+    packerPrintf(p, "%s " SQUIDSTRINGPH " HTTP/1.0\r\n",
+                 RequestMethodStr(method), SQUIDSTRINGPRINT(urlpath));
     /* headers */
     header.packInto(p);
     /* trailer */

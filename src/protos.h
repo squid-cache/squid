@@ -179,6 +179,7 @@ class FwdState;
 SQUIDCEXTERN void ftpStart(FwdState *);
 
 class HttpRequest;
+class HttpReply;
 
 /// \ingroup ServerProtocolFTPAPI
 SQUIDCEXTERN const char *ftpUrlWith2f(HttpRequest *);
@@ -255,7 +256,7 @@ SQUIDCEXTERN void httpHdrCcStatDumper(StoreEntry * sentry, int idx, double val, 
 class HttpHeaderFieldInfo;
 SQUIDCEXTERN HttpHeaderFieldInfo *httpHeaderBuildFieldsInfo(const HttpHeaderFieldAttrs * attrs, int count);
 SQUIDCEXTERN void httpHeaderDestroyFieldsInfo(HttpHeaderFieldInfo * info, int count);
-SQUIDCEXTERN http_hdr_type httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo * attrs, int end);
+SQUIDCEXTERN http_hdr_type httpHeaderIdByName(const char *name, size_t name_len, const HttpHeaderFieldInfo * attrs, int end);
 SQUIDCEXTERN http_hdr_type httpHeaderIdByNameDef(const char *name, int name_len);
 SQUIDCEXTERN const char *httpHeaderNameById(int id);
 SQUIDCEXTERN int httpHeaderHasConnDir(const HttpHeader * hdr, const char *directive);

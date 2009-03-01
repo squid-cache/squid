@@ -279,7 +279,7 @@ void ICAPServiceRep::checkOptions()
         if (!method_found) {
             debugs(93,1, "WARNING: Squid is configured to use ICAP method " <<
                    cfg().methodStr() <<
-                   " for service " << cfg().uri.unsafeBuf() <<
+                   " for service " << cfg().uri <<
                    " but OPTIONS response declares the methods are " << method_list);
         }
     }
@@ -293,7 +293,7 @@ void ICAPServiceRep::checkOptions()
         // TODO: If skew is negative, the option will be considered down
         // because of stale options. We should probably change this.
         debugs(93, 1, "ICAP service's clock is skewed by " << skew <<
-               " seconds: " << cfg().uri.unsafeBuf());
+               " seconds: " << cfg().uri);
     }
 }
 

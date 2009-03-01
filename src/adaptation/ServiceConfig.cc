@@ -75,11 +75,13 @@ Adaptation::ServiceConfig::parse()
 
     // extract scheme and use it as the service_configConfig protocol
     const char *schemeSuffix = "://";
-    if (const char *schemeEnd = uri.pos(schemeSuffix))
-        protocol.limitInit(uri.rawBuf(), schemeEnd - uri.rawBuf()); //substring
+    if (const String::size_type schemeEnd=uri.find(schemeSuffix))
+        protocol=uri.substr(0,schemeEnd-1);
+
     debugs(3, 5, HERE << cfg_filename << ':' << config_lineno << ": " <<
            "service protocol is " << protocol);
-    if (!protocol.size())
+
+    if (protocol.size() == 0)
         return false;
 
     // skip scheme

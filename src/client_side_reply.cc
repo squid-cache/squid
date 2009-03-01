@@ -1671,7 +1671,7 @@ clientReplyDetach(clientStreamNode * node, ClientHttpRequest * http)
 }
 
 /*
- * accepts chunk of a http message in unsafeBuf, parses prefix, filters headers and
+ * accepts chunk of a http message in buf, parses prefix, filters headers and
  * such, writes processed message to the message recipient
  */
 void

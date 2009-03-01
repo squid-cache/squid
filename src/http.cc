@@ -1542,11 +1542,9 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         } else if (strcmp(orig_request->peer_login, "PASS") == 0) {
             if (orig_request->extacl_user.size() && orig_request->extacl_passwd.size()) {
                 char loginbuf[256];
-                snprintf(loginbuf, sizeof(loginbuf), "%.*s:%.*s",
-                    orig_request->extacl_user.size(),
-                    orig_request->extacl_user.rawBuf(),
-                    orig_request->extacl_passwd.size(),
-                    orig_request->extacl_passwd.rawBuf());
+                snprintf(loginbuf, sizeof(loginbuf), SQUIDSTRINGPH ":" SQUIDSTRINGPH,
+                    SQUIDSTRINGPRINT(orig_request->extacl_user),
+                    SQUIDSTRINGPRINT(orig_request->extacl_passwd));
                 httpHeaderPutStrf(hdr_out, HDR_PROXY_AUTHORIZATION, "Basic %s",
                                   base64_encode(loginbuf));
             }
@@ -1573,11 +1571,9 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
                 hdr_out->putStr(HDR_AUTHORIZATION, auth);
             } else if (orig_request->extacl_user.size() && orig_request->extacl_passwd.size()) {
                 char loginbuf[256];
-                snprintf(loginbuf, sizeof(loginbuf), "%.*s:%.*s",
-                    orig_request->extacl_user.size(),
-                    orig_request->extacl_user.rawBuf(),
-                    orig_request->extacl_passwd.size(),
-                    orig_request->extacl_passwd.rawBuf());
+                snprintf(loginbuf, sizeof(loginbuf), SQUIDSTRINGPH ":" SQUIDSTRINGPH,
+                    SQUIDSTRINGPRINT(orig_request->extacl_user),
+                    SQUIDSTRINGPRINT(orig_request->extacl_passwd));
                 httpHeaderPutStrf(hdr_out, HDR_AUTHORIZATION, "Basic %s",
                                   base64_encode(loginbuf));
             }
@@ -1808,7 +1804,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
          * pass on all other header fields
          * which are NOT listed by the special Connection: header. */
 
-        if (strConnection.size()>0 && strListIsMember(&strConnection, e->name.unsafeBuf(), ',')) {
+        if (strConnection.size()>0 && strListIsMember(&strConnection, e->name.termedBuf(), ',')) {
             debugs(11, 2, "'" << e->name << "' header cropped by Connection: definition");
             return;
         }
