@@ -51,7 +51,6 @@ LANGUAGES	= \
 		Lithuanian \
 		Polish \
 		Portuguese \
-		Simplify_Chinese \
 		Slovak \
 		Traditional_Chinese
 
