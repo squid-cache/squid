@@ -34,12 +34,6 @@
 #ifndef SQUID_DEBUG_H
 #define SQUID_DEBUG_H
 
-/* NP: done without pre-requisite config.h  */
-/*     because we only define with it here. */
-#if HAVE_LIBGEN_H  
-#include <libgen.h>
-#endif
-
 #include <iostream>
 #undef assert
 #include <sstream>
@@ -100,7 +94,7 @@ extern FILE *debug_log;
  *
  * debugs(1,2, HERE << "some message");
  */
-#define HERE basename(__FILE__)<<"("<<__LINE__<<") "<<__FUNCTION__<<": "
+#define HERE __FILE__<<"("<<__LINE__<<") "<<__FUNCTION__<<": "
 
 /*
  * MYNAME is for use at debug levels 0 and 1 where HERE is too messy.

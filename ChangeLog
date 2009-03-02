@@ -1,6 +1,7 @@
-Changes to squid-3.1.0.6 (01 Mar 2009):
+Changes to squid-3.1.0.6 (02 Mar 2009):
 
 	- Regresion Fix: Support HTTP/0.9 in accelerator mode
+	- Regression bug 2608: Build broken by Linux basename() implementation.
 	- Bug 2601: Hack. Convert IPv4 netmasks to CIDR in IPv6-enabled mode
 	- Bug 2593: Compile errors on Solaris 10
 	- Bug 2591: adaptation_access does not work
