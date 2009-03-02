@@ -437,18 +437,24 @@ checkNullString(const char *p)
 const char *
 String::pos(char const *aString) const
 {
+    if (undefined())
+        return NULL;
     return strstr(termedBuf(), aString);
 }
 
 const char *
 String::pos(char const ch) const
 {
+    if (undefined())
+        return NULL;
     return strchr(termedBuf(), ch);
 }
 
 const char *
 String::rpos(char const ch) const
 {
+    if (undefined())
+        return NULL;
     return strrchr(termedBuf(), (ch));
 }
 
