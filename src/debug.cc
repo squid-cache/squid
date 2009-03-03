@@ -31,6 +31,12 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+
+/* Anyone moving the src/Debug.cc file MUST record its new location here,
+ * or there will be issues in the debugging statements, possibly fatal!
+ */
+#define RELATIVE_PATH_TO_DEBUG_CC "src/debug.cc"
+
 #include "config.h"
 #include "Debug.h"
 #include "SquidTime.h"
@@ -746,3 +752,18 @@ Debug::xassert(const char *msg, const char *file, int line) {
 }
 
 std::ostringstream (*Debug::CurrentDebug)(NULL);
+
+static const size_t BuildPrefixInit()
+{
+    //leave immediately if misconfigured. Unfortunately not possible to detect at build
+    const char *file=__FILE__;
+    const char *rptdcc=RELATIVE_PATH_TO_DEBUG_CC;
+    assert(strstr(file,rptdcc)!=NULL);
+    return strlen(file)-strlen(rptdcc);
+}
+static const size_t BuildPrefixLength=BuildPrefixInit();
+const char* SkipBuildPrefix(const char* path)
+{
+    return path+BuildPrefixLength;
+}
+
