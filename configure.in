@@ -668,6 +668,10 @@ fi
 
 dnl Check for pthreads
 dnl We use pthreads when doing ASYNC I/O
+dnl
+dnl TODO: this needs to be re-coded to handle more systems and better
+dnl REF: http://www.openldap.org/lists/openldap-bugs/200006/msg00070.html
+dnl REF: http://autoconf-archive.cryp.to/acx_pthread.html
 if test "$with_pthreads" = "yes"; then
     SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT"
     SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT"
@@ -683,14 +687,25 @@ if test "$with_pthreads" = "yes"; then
         if test "$GCC" = "yes" ; then
 	    SQUID_CFLAGS="$SQUID_CFLAGS -pthreads"
 	    SQUID_CXXFLAGS="$SQUID_CXXFLAGS -pthreads"
+            AC_CHECK_LIB(pthread, main,[DISK_LIBS="$DISK_LIBS -lpthread"],
+              [ AC_MSG_ERROR(pthread library required but cannot be found.) ])
 	else
-	    SQUID_CFLAGS="$SQUID_CFLAGS -mt"
-	    SQUID_CXXFLAGS="$SQUID_CXXFLAGS -mt"
+dnl test for -lpthread first. libc version is a stub apparently on Solaris.
+	    SQUID_CFLAGS="$SQUID_CFLAGS -lpthread"
+	    SQUID_CXXFLAGS="$SQUID_CXXFLAGS -lpthread"
+            AC_CHECK_LIB(pthread, main,[DISK_LIBS="$DISK_LIBS -lpthread"],
+              [ SQUID_CFLAGS="$SQUID_CFLAGS -lpthread -mt"
+	        SQUID_CXXFLAGS="$SQUID_CXXFLAGS -lpthread -mt"
+                AC_CHECK_LIB(pthread, main,[DISK_LIBS="$DISK_LIBS -lpthread"],
+                  [ AC_MSG_ERROR(pthread library required but cannot be found.) ])
+            ])
         fi
     ;;
+    *)
+      AC_CHECK_LIB(pthread, main,[DISK_LIBS="$DISK_LIBS -lpthread"],
+        [ AC_MSG_ERROR(pthread library required but cannot be found.) ])
+    ;;
     esac
-    AC_CHECK_LIB(pthread, main,[DISK_LIBS="$DISK_LIBS -lpthread"],
-      [ AC_MSG_ERROR(pthread library required but cannot be found.) ])
 fi
 
 AC_SUBST(DISK_MODULES)
