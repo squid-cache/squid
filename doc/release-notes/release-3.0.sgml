@@ -591,10 +591,9 @@ See the accf_http(9) man page.
 	<p>Common options <em>no-store</em>, replaces the older <em>read-only</em> option
 
 	<tag>auth_param</tag>
-	<p>Removed Basic auth option
+	<p>Removed Basic auth options:
 	<verb>
     blankpasswor, not yet ported to squid-3.
-    auth_param basic concurrency 0
 	</verb>
 
 	<tag>external_acl_type</tag>
