@@ -55,155 +55,16 @@
  *--------------------------------------------------------------------------*
  ****************************************************************************/
 
+#include "compat/compat.h"
+
 #ifdef USE_POSIX_REGEX
 #ifndef USE_RE_SYNTAX
 #define USE_RE_SYNTAX	REG_EXTENDED	/* default Syntax */
 #endif
 #endif
 
-/* define the _SQUID_TYPE_ based on a guess of the OS */
-#if defined(__sun__) || defined(__sun)	/* SUN */
-#define _SQUID_SUN_
-#if defined(__SVR4)		/* SOLARIS */
-#define _SQUID_SOLARIS_
-#else /* SUNOS */
-#define _SQUID_SUNOS_
-#endif
-
-#elif defined(__hpux)		/* HP-UX - SysV-like? */
-#define _SQUID_HPUX_
-#define _SQUID_SYSV_
-
-#elif defined(__osf__)		/* OSF/1 */
-#define _SQUID_OSF_
-
-#elif defined(__ultrix)		/* Ultrix */
-#define _SQUID_ULTRIX_
-
-#elif defined(_AIX)		/* AIX */
-#define _SQUID_AIX_
-
-#elif defined(__linux__)	/* Linux */
-#define _SQUID_LINUX_
-#if USE_ASYNC_IO
-#define _SQUID_LINUX_THREADS_
-#endif
-
-#elif defined(__FreeBSD__)	/* FreeBSD */
-#define _SQUID_FREEBSD_
-#if USE_ASYNC_IO && defined(LINUXTHREADS)
-#define _SQUID_LINUX_THREADS_
-#endif
-
-#elif defined(__sgi__)	|| defined(sgi) || defined(__sgi)	/* SGI */
-#define _SQUID_SGI_
-#if !defined(_SVR4_SOURCE)
-#define _SVR4_SOURCE		/* for tempnam(3) */
-#endif
-#if USE_ASYNC_IO
-#define _ABI_SOURCE
-#endif /* USE_ASYNC_IO */
-
-#elif defined(__NeXT__)
-#define _SQUID_NEXT_
-
-#elif defined(__bsdi__)
-#define _SQUID_BSDI_		/* BSD/OS */
-
-#elif defined(__NetBSD__)
-#define _SQUID_NETBSD_
-
-#elif defined(__OpenBSD__)
-#define _SQUID_OPENBSD_
-
-#elif defined(__DragonFly__)
-#define _SQUID_DRAGONFLY_
-
-#elif defined(__CYGWIN32__)  || defined(__CYGWIN__)
-#define _SQUID_CYGWIN_
-#define _SQUID_WIN32_
-
-#elif defined(WIN32) || defined(WINNT) || defined(__WIN32__) || defined(__WIN32)
-#define _SQUID_MSWIN_
-#define _SQUID_WIN32_
-#include "squid_mswin.h"
-
-#elif defined(__APPLE__)
-#define _SQUID_APPLE_
-
-#elif defined(sony_news) && defined(__svr4)
-#define _SQUID_NEWSOS6_
-
-#elif defined(__EMX__) || defined(OS2) || defined(__OS2__)
-#define _SQUID_OS2_
-/*
-*  FIXME: the os2 port of bash seems to have problems checking
-*  the return codes of programs in if statements.  These options
-*  need to be overridden.
-*/
-#endif
-
-/* FD_SETSIZE must be redefined before including sys/types.h */
-
-/*
- * On some systems, FD_SETSIZE is set to something lower than the
- * actual number of files which can be opened.  IRIX is one case,
- * NetBSD is another.  So here we increase FD_SETSIZE to our
- * configure-discovered maximum *before* any system includes.
- */
-#define CHANGE_FD_SETSIZE 1
-
-/*
- * Cannot increase FD_SETSIZE on Linux, but we can increase __FD_SETSIZE
- * with glibc 2.2 (or later? remains to be seen). We do this by including
- * bits/types.h which defines __FD_SETSIZE first, then we redefine
- * __FD_SETSIZE. Ofcourse a user program may NEVER include bits/whatever.h
- * directly, so this is a dirty hack!
- */
-#if defined(_SQUID_LINUX_)
-#undef CHANGE_FD_SETSIZE
-#define CHANGE_FD_SETSIZE 0
-#include <features.h>
-#if (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 2)
-#if SQUID_MAXFD > DEFAULT_FD_SETSIZE
-#include <bits/types.h>
-#undef __FD_SETSIZE
-#define __FD_SETSIZE SQUID_MAXFD
-#endif
-#endif
-#endif
-
-/*
- * Cannot increase FD_SETSIZE on FreeBSD before 2.2.0, causes select(2)
- * to return EINVAL.
- * --Marian Durkovic <marian@svf.stuba.sk>
- * --Peter Wemm <peter@spinner.DIALix.COM>
- */
-#if defined(_SQUID_FREEBSD_)
-#include <osreldate.h>
-#if __FreeBSD_version < 220000
-#undef CHANGE_FD_SETSIZE
-#define CHANGE_FD_SETSIZE 0
-#endif
-#endif
-
-/*
- * Trying to redefine CHANGE_FD_SETSIZE causes a slew of warnings
- * on Mac OS X Server.
- */
-#if defined(_SQUID_APPLE_)
-#undef CHANGE_FD_SETSIZE
-#define CHANGE_FD_SETSIZE 0
-#endif
-
-/* Increase FD_SETSIZE if SQUID_MAXFD is bigger */
-#if CHANGE_FD_SETSIZE && SQUID_MAXFD > DEFAULT_FD_SETSIZE
-#define FD_SETSIZE SQUID_MAXFD
-#endif
 
 /* Typedefs for missing entries on a system */
-
-#include "squid_types.h"
 
 /* int8_t */
 #ifndef HAVE_INT8_T
@@ -318,40 +179,6 @@ typedef int socklen_t;
 typedef long mtyp_t;
 #endif
 
-/*
- * On Solaris 9 x86, gcc may includes a "fixed" set of old system include files
- * that is incompatible with the updated Solaris header files.
- */
-#if defined(_SQUID_SOLARIS_) && (defined(i386) || defined(__i386))
-#ifndef HAVE_PAD128_T
-typedef union {
-    long double	_q;
-    int32_t		_l[4];
-} pad128_t;
-#endif
-#ifndef HAVE_UPAD128_T
-typedef union {
-    long double	_q;
-    uint32_t	_l[4];
-} upad128_t;
-#endif
-#endif
-
-/*
- * Don't allow inclusion of malloc.h on FreeBSD, Next and OpenBSD
- */
-#if defined(HAVE_MALLOC_H) && (defined(_SQUID_FREEBSD_) || defined(_SQUID_NEXT_) || defined(_SQUID_OPENBSD_) || defined(_SQUID_DRAGONFLY_))
-#undef HAVE_MALLOC_H
-#endif
-
-/*
- * res_init() is just a macro re-definition of __res_init on Linux (Debian/Ubuntu)
- */
-#if !defined(HAVE_RES_INIT) && defined(HAVE___RES_INIT) && !defined(res_init)
-#define res_init  __res_init
-#define HAVE_RES_INIT  HAVE___RES_INIT
-#endif
-
 #if !defined(CACHEMGR_HOSTNAME)
 #define CACHEMGR_HOSTNAME ""
 #else
@@ -434,33 +261,6 @@ typedef union {
 #elif XMALLOC_TRACE
 #define LEAK_CHECK_MODE 1
 #endif
-
-/*
- * valgrind debug support
- */
-#if WITH_VALGRIND
-#include <valgrind/memcheck.h>
-/* A little glue for older valgrind version prior to 3.2.0 */
-#ifndef VALGRIND_MAKE_MEM_NOACCESS
-#define VALGRIND_MAKE_MEM_NOACCESS VALGRIND_MAKE_NOACCESS
-#define VALGRIND_MAKE_MEM_UNDEFINED VALGRIND_MAKE_WRITABLE
-#define VALGRIND_MAKE_MEM_DEFINED VALGRIND_MAKE_READABLE
-#define VALGRIND_CHECK_MEM_IS_ADDRESSABLE VALGRIND_CHECK_WRITABLE
-#else
-#undef VALGRIND_MAKE_NOACCESS
-#undef VALGRIND_MAKE_WRITABLE
-#undef VALGRIND_MAKE_READABLE
-#endif
-#else
-#define VALGRIND_MAKE_MEM_NOACCESS(a,b) (0)
-#define VALGRIND_MAKE_MEM_UNDEFINED(a,b) (0)
-#define VALGRIND_MAKE_MEM_DEFINED(a,b) (0)
-#define VALGRIND_CHECK_MEM_IS_ADDRESSABLE(a,b) (0)
-#define VALGRIND_CHECK_MEM_IS_DEFINED(a,b) (0)
-#define VALGRIND_MALLOCLIKE_BLOCK(a,b,c,d)
-#define VALGRIND_FREELIKE_BLOCK(a,b)
-#define RUNNING_ON_VALGRIND 0
-#endif /* WITH_VALGRIND */
 
 
 /*

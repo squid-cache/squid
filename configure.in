@@ -84,7 +84,7 @@ AC_PROG_RANLIB
 
 CRYPTLIB=''
 REGEXLIB=''	# -lregex
-LIBREGEX=''	# libregex.a
+# LIBREGEX=''	# libregex.a
 
 dnl find out the exe extension for this platform. If it's not empty, use it for CGI's as well.
 AC_EXEEXT
@@ -280,15 +280,6 @@ if test -z "$PRESET_LDFLAGS"; then
 	esac
     fi
 fi
-
-AC_ARG_ENABLE(gnuregex,
-  AC_HELP_STRING([--enable-gnuregex],
-                 [Compile GNUregex.  Unless you have reason to use 
-                 this option, you should not enable it.
-                 This library file is usually only required on Windows and 
-                 very old Unix boxes which do not have their own regex 
-                 library built in.]),
-[USE_GNUREGEX=$enableval])
 
 SquidInline="yes"
 
@@ -3199,6 +3190,14 @@ if test "$LINUX_TPROXY2" ; then
     fi
 fi
 
+AC_ARG_ENABLE(gnuregex,
+  AC_HELP_STRING([--enable-gnuregex],
+                 [Compile GNUregex.  Unless you have reason to use 
+                 this option, you should not enable it.
+                 This library file is usually only required on Windows and 
+                 very old Unix boxes which do not have their own regex 
+                 library built in.]),
+[USE_GNUREGEX=$enableval])
 if test -z "$USE_GNUREGEX" ; then
     case "$host" in
     *-sun-solaris2.[[0-4]])
@@ -3222,12 +3221,12 @@ fi
 fi
 AC_MSG_RESULT($USE_GNUREGEX)
 if test "$USE_GNUREGEX" = "yes"; then
-	REGEXLIB="-lregex"
-	LIBREGEX="libregex.a"
+	# override system regex with ours. Not good. But what was asked for.
+	REGEXLIB=""
 	AC_DEFINE(USE_GNUREGEX,1,[Define if we should use GNU regex])
 fi
 AC_SUBST(REGEXLIB)
-AC_SUBST(LIBREGEX)
+#AC_SUBST(LIBREGEX)
 
 dnl Not cached since people are likely to tune this
 AC_MSG_CHECKING(Default FD_SETSIZE value)
@@ -3788,6 +3787,7 @@ rm -f core
 
 AC_CONFIG_FILES([\
 	Makefile \
+	compat/Makefile \
 	lib/Makefile \
 	scripts/Makefile \
 	scripts/RunCache \

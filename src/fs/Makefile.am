@@ -28,7 +28,11 @@ EXTRA_DIST = \
 	coss/StoreFScoss.h \
 	ufs/StoreFSufs.h
 
-INCLUDES      = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
+INCLUDES = \
+	-I$(top_srcdir) \
+	-I. \
+	-I$(top_builddir)/include \
+	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src
 
 check_PROGRAMS=testHeaders

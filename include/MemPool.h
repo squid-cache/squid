@@ -21,7 +21,6 @@
  */
 
 #include "config.h"
-#include "assert.h"
 #include "util.h"
 
 #include "memMeter.h"

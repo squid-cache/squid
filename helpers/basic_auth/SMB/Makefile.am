@@ -22,6 +22,11 @@ libexec_PROGRAMS = smb_auth
 smb_auth_CFLAGS = -DSAMBAPREFIX=\"$(SAMBAPREFIX)\" -DHELPERSCRIPT=\"$(SMB_AUTH_HELPER_PATH)\"
 EXTRA_DIST = smb_auth.sh COPYING-2.0
 
-LDADD	= -L$(top_builddir)/lib -lmiscutil $(XTRA_LIBS)
+INCLUDES = \
+	-I$(top_srcdir) \
+	-I$(top_srcdir)/include
 
-INCLUDES	= -I$(top_srcdir)/include
+LDADD = \
+	$(top_builddir)/compat/libcompat.la \
+	-L$(top_builddir)/lib -lmiscutil \
+	$(XTRA_LIBS)

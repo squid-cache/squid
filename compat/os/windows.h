@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * AUTHOR: Duane Wessels
+ * AUTHOR: Guido Serassio <serassio@squid-cache.org>
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -30,18 +30,24 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-#ifndef SQUID_ASSERT_H
-#define SQUID_ASSERT_H
-
+#ifndef SQUID_CONFIG_H
 #include "config.h"
-
-#if defined(NODEBUG)
-#define assert(EX) ((void)0)
-#elif STDC_HEADERS
-#define assert(EX)  ((EX)?((void)0):xassert( # EX , __FILE__, __LINE__))
-#else
-#define assert(EX)  ((EX)?((void)0):xassert("EX", __FILE__, __LINE__))
 #endif
-SQUIDCEXTERN void xassert(const char *, const char *, int);
 
+#ifndef SQUID_OS_WINDOWS_H
+#define SQUID_OS_WINDOWS_H
+
+#ifdef _SQUID_WIN32_
+
+#ifndef ACL
+#define ACL WindowsACL
+#define _MSWIN_ACL_WAS_NOT_DEFINED 1
 #endif
+#include <windows.h>
+#if _MSWIN_ACL_WAS_NOT_DEFINED
+#undef ACL
+#undef _MSWIN_ACL_WAS_NOT_DEFINED
+#endif
+
+#endif /* _SQUID_WIN32_ */
+#endif /* SQUID_OS_WINDOWS_H */

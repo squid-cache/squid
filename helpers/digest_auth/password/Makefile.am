@@ -11,7 +11,16 @@ digest_pw_auth_SOURCES = digest_pw_auth.c \
 	digest_common.h \
 	text_backend.c \
 	text_backend.h
-INCLUDES      = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
-		-I$(top_srcdir)/src/
 
-LDADD	= -L$(top_builddir)/lib -lmiscutil $(CRYPTLIB) $(XTRA_LIBS) $(SSLLIB)
+INCLUDES = \
+	-I$(top_srcdir) \
+	-I. \
+	-I$(top_builddir)/include \
+	-I$(top_srcdir)/include
+
+LDADD = \
+	$(top_builddir)/compat/libcompat.la \
+	-L$(top_builddir)/lib -lmiscutil \
+	$(CRYPTLIB) \
+	$(XTRA_LIBS) \
+	$(SSLLIB)
