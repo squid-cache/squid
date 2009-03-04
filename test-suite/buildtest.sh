@@ -39,7 +39,7 @@ fi
 #
 rm -f -r src/fs/aufs/.deps src/fs/diskd/.deps &&
 	$base/../configure --silent ${OPTS} 2>&1 &&
-	make ${pjobs} distcheck 2>&1 &&
+	make ${pjobs} check 2>&1 &&
 	make ${pjobs} 2>&1
 
 # do not build any of the install's ...
