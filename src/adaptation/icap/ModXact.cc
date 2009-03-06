@@ -208,7 +208,7 @@ void Adaptation::Icap::ModXact::writePreviewBody()
     Must(virgin.body_pipe != NULL);
 
     const size_t sizeMax = (size_t)virgin.body_pipe->buf().contentSize();
-    const size_t size = XMIN(preview.debt(), sizeMax);
+    const size_t size = min(preview.debt(), sizeMax);
     writeSomeBody("preview body", size);
 
     // change state once preview is written
@@ -249,7 +249,7 @@ void Adaptation::Icap::ModXact::writeSomeBody(const char *label, size_t size)
     writeBuf.init(); // note: we assume that last-chunk will fit
 
     const size_t writableSize = virginContentSize(virginBodyWriting);
-    const size_t chunkSize = XMIN(writableSize, size);
+    const size_t chunkSize = min(writableSize, size);
 
     if (chunkSize) {
         debugs(93, 7, HERE << "will write " << chunkSize <<
@@ -368,10 +368,10 @@ void Adaptation::Icap::ModXact::virginConsume()
            " from " << virgin.body_pipe->status());
 
     if (virginBodyWriting.active())
-        offset = XMIN(virginBodyWriting.offset(), offset);
+        offset = min(virginBodyWriting.offset(), offset);
 
     if (virginBodySending.active())
-        offset = XMIN(virginBodySending.offset(), offset);
+        offset = min(virginBodySending.offset(), offset);
 
     Must(virginConsumed <= offset && offset <= end);
 
@@ -1201,13 +1201,13 @@ void Adaptation::Icap::ModXact::decideOnPreview()
     Must(wantedSize >= 0);
 
     // cannot preview more than we can backup
-    size_t ad = XMIN(wantedSize, TheBackupLimit);
+    size_t ad = min(wantedSize, TheBackupLimit);
 
     if (!virginBody.expected())
         ad = 0;
     else
         if (virginBody.knownSize())
-            ad = XMIN(static_cast<uint64_t>(ad), virginBody.size()); // not more than we have
+            ad = min(static_cast<uint64_t>(ad), virginBody.size()); // not more than we have
 
     debugs(93, 5, HERE << "should offer " << ad << "-byte preview " <<
            "(service wanted " << wantedSize << ")");
