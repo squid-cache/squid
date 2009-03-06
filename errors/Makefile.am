@@ -138,7 +138,7 @@ dist-hook: translate
 		test -d $(distdir)/$$lang \
 		  || mkdir $(distdir)/$$lang \
 		  || exit 1; \
-		cp -p $$lang/ERR_*  $(distdir)/$$lang \
+		cp -p $(top_builddir)/errors/$$lang/ERR_*  $(distdir)/$$lang \
 		  || exit 1; \
 	  fi; \
 	done; \
@@ -151,11 +151,11 @@ translate:
 	fi; \
 	if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no" && test "$(PO2HTML)" != "off" && test -f $(top_srcdir)/errors/en.po; then \
 	  for lang in $(TRANSLATIONS); do \
-		test -d $(distdir)/$$lang && $(RM) -r $(distdir)/$$lang; \
-		mkdir $(distdir)/$$lang; \
+		test -d $(top_builddir)/$$lang && $(RM) -r $(top_builddir)/$$lang; \
+		mkdir $(top_builddir)/$$lang; \
 		echo -n "Translate '$$lang' ..."; \
 		for f in `ls -1 $(top_srcdir)/errors/templates`; do \
-			$(PO2HTML) --progress=none -i $(top_srcdir)/errors/$$lang.po -t $(top_srcdir)/errors/templates/$$f >$(distdir)/$$lang/$$f || exit 1; \
+			$(PO2HTML) --progress=none -i $(top_srcdir)/errors/$$lang.po -t $(top_srcdir)/errors/templates/$$f >$(top_builddir)/$$lang/$$f || exit 1; \
 		done; \
 		echo "done."; \
 	  done; \
