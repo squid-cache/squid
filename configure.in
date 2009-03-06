@@ -2244,7 +2244,6 @@ AC_CHECK_HEADERS( \
 	ip_nat.h \
 	ipl.h \
 	libc.h \
-	libgen.h \
 	limits.h \
 	malloc.h \
 	math.h \
