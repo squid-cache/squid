@@ -70,7 +70,7 @@ template<class C>
 Range<C>
 Range<C>::intersection (Range const &rhs) const
 {
-    Range<C> result (XMAX(start, rhs.start), XMIN(end, rhs.end));
+    Range<C> result (max(start, rhs.start), min(end, rhs.end));
     return result;
 }
 
