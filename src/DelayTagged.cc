@@ -40,7 +40,6 @@
 #if DELAY_POOLS
 #include "squid.h"
 #include "DelayTagged.h"
-#include "authenticate.h"
 #include "NullDelayId.h"
 #include "Store.h"
 
