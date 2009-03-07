@@ -25,6 +25,7 @@ TRANSLATIONS = \
 	en en-au en-gb en-nz en-us \
 	es \
 	et \
+	fa \
 	fi \
 	fr \
 	hy \
@@ -40,6 +41,7 @@ TRANSLATIONS = \
 	sv \
 	tr \
 	uk \
+	uz \
 	zh-cn
 
 # Legacy language contributions...
@@ -151,11 +153,11 @@ translate:
 	fi; \
 	if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no" && test "$(PO2HTML)" != "off" && test -f $(top_srcdir)/errors/en.po; then \
 	  for lang in $(TRANSLATIONS); do \
-		test -d $(top_builddir)/$$lang && $(RM) -r $(top_builddir)/$$lang; \
-		mkdir $(top_builddir)/$$lang; \
+		test -d $(top_builddir)/errors/$$lang && $(RM) -r $(top_builddir)/errors/$$lang; \
+		mkdir $(top_builddir)/errors/$$lang || exit 1; \
 		echo -n "Translate '$$lang' ..."; \
 		for f in `ls -1 $(top_srcdir)/errors/templates`; do \
-			$(PO2HTML) --progress=none -i $(top_srcdir)/errors/$$lang.po -t $(top_srcdir)/errors/templates/$$f >$(top_builddir)/$$lang/$$f || exit 1; \
+			$(PO2HTML) --progress=none -i $(top_srcdir)/errors/$$lang.po -t $(top_srcdir)/errors/templates/$$f >$(top_builddir)/errors/$$lang/$$f || exit 1; \
 		done; \
 		echo "done."; \
 	  done; \
