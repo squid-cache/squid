@@ -1,0 +1,25 @@
+## Settings common to many Squid Makefiles
+
+## This file should be included first in all src/subdir/Makefile.am
+## so it must not contain stuff specific to or bad for some subdirectories.
+
+## TODO: make this set by configure?
+AM_CFLAGS = @SQUID_CFLAGS@
+AM_CXXFLAGS = @SQUID_CXXFLAGS@
+DEFS = @DEFS@
+
+## so that others can always use += for these variables
+CLEANFILES =
+check_PROGRAMS = 
+TESTS =
+
+INCLUDES = \
+	-I$(top_srcdir) \
+	-I$(top_srcdir)/include \
+	-I$(top_srcdir)/src \
+	-I$(top_builddir)/include \
+	@SQUID_CPPUNIT_INC@
+
+## make all compiled sources depend on generated files
+## XXX: Do we really need this? Does auto-dependency tracking work?
+$(OBJS): $(top_srcdir)/include/version.h $(top_builddir)/include/autoconf.h
