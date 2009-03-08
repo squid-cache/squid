@@ -34,9 +34,9 @@
 
 #ifndef SQUID_ACLPROXYAUTH_H
 #define SQUID_ACLPROXYAUTH_H
-#include "ACL.h"
-#include "ACLData.h"
-#include "ACLChecklist.h"
+#include "acl/Acl.h"
+#include "acl/Data.h"
+#include "acl/Checklist.h"
 
 class ProxyAuthLookup : public ACLChecklist::AsyncState
 {
