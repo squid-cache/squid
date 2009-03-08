@@ -46,7 +46,7 @@
 #include "HttpRequest.h"
 #include "forward.h"
 #include "clientStream.h"
-#include "AuthUserRequest.h"
+#include "auth/UserRequest.h"
 #if USE_SQUID_ESI
 #include "ESI.h"
 #endif

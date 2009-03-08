@@ -45,7 +45,7 @@
 #include "squid.h"
 #include "clientStream.h"
 #include "client_side_request.h"
-#include "AuthUserRequest.h"
+#include "auth/UserRequest.h"
 #include "HttpRequest.h"
 #include "ProtoPort.h"
 #include "ACLChecklist.h"

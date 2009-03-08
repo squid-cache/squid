@@ -3,9 +3,9 @@
 #include "squid.h"
 #include "testAuth.h"
 #include "authenticate.h"
-#include "AuthUserRequest.h"
-#include "AuthScheme.h"
-#include "AuthConfig.h"
+#include "auth/UserRequest.h"
+#include "auth/Scheme.h"
+#include "auth/Config.h"
 #include "Mem.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testAuth );

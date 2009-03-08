@@ -112,7 +112,7 @@ private:
 };
 
 #ifdef _USE_INLINE_
-#include "AuthUser.cci"
+#include "auth/User.cci"
 #endif
 
 #endif /* SQUID_AUTHUSER_H */

@@ -85,7 +85,7 @@
 #include "client_side.h"
 #include "clientStream.h"
 #include "ProtoPort.h"
-#include "AuthUserRequest.h"
+#include "auth/UserRequest.h"
 #include "Store.h"
 #include "comm.h"
 #include "HttpHdrContRange.h"

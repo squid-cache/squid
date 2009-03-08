@@ -450,14 +450,12 @@ if test -n "$STORE_MODULES"; then
     dnl ensure that all modules a) exist and b) only include once.
     STORE_MODULES_FULL=$STORE_MODULES
     STORE_MODULES=
-    STORE_LINKOBJS=
     for module in $STORE_MODULES_FULL; do
         have_mod=`echo "$STORE_MODULES" | grep "$module"`
         if test "$have_mod" != ""; then
 	    AC_MSG_NOTICE([Removing duplicate $module from storeio])
 	elif test -d $srcdir/src/fs/$module; then
 	    STORE_MODULES="$STORE_MODULES $module"
-	    STORE_LINKOBJS="$STORE_LINKOBJS fs/${module}/StoreFS${module}.o"
 	else
 	    AC_MSG_ERROR(storeio $module does not exist)
 	fi
@@ -498,36 +496,30 @@ for fs in $STORE_MODULES none; do
 	STORE_TESTS="$STORE_TESTS tests/testUfs$EXEEXT"
     esac
 done
-STORE_OBJS=
-STORE_LIBS=
-dnl We have 'fake' modules - aufs and diskd - legacy.
-for fs in $STORE_MODULES; do
-    case "$fs" in
-    diskd);;
-    aufs);;
-    *)
-      STORE_OBJS="$STORE_OBJS fs/lib${fs}.a"
-      STORE_LIBS="$STORE_LIBS lib${fs}.a"
-      ;;
-    esac
-done
 
 if test -z "$UFS_FOUND" && test -n "$NEED_UFS"; then
     AC_MSG_NOTICE([Adding UFS, as it contains core logic for diskd and aufs])
-    STORE_OBJS="$STORE_OBJS fs/libufs.a"
-    STORE_LIBS="$STORE_LIBS libufs.a"
     STORE_MODULES="$STORE_MODULES ufs"
-    STORE_LINKOBJS="$STORE_LINKOBJS fs/ufs/StoreFSufs.o"
     dnl
     dnl Automake om MinGW needs explicit exe extension
     dnl for STORE_TESTS substition
     dnl
     STORE_TESTS="$STORE_TESTS tests/testUfs$EXEEXT"
 fi
-  
-AC_SUBST(STORE_OBJS)
-AC_SUBST(STORE_LIBS)
-AC_SUBST(STORE_LINKOBJS)
+
+dnl got final STORE_MODULES, build library lists
+dnl This list will not be needed when each fs library has its own Makefile
+STORE_LIBS_TO_BUILD=
+dnl File system libraries to link executables with.
+dnl These are the same as STORE_LIBS_TO_BUILD, but with a path
+STORE_LIBS_TO_ADD=
+for fs in $STORE_MODULES; do
+    STORE_LIBS_TO_BUILD="$STORE_LIBS_TO_BUILD lib${fs}.a"
+    STORE_LIBS_TO_ADD="$STORE_LIBS_TO_ADD fs/lib${fs}.a"
+done
+
+AC_SUBST(STORE_LIBS_TO_BUILD)
+AC_SUBST(STORE_LIBS_TO_ADD)
 AC_SUBST(STORE_TESTS)
 
 AC_ARG_ENABLE(disk-io,
@@ -1560,19 +1552,22 @@ if test -n "$AUTH_MODULES"; then
 	eval AUTH_MODULE_${module}=yes
     done
     AC_MSG_NOTICE([Auth scheme modules built: $AUTH_MODULES])
-    AUTH_OBJS="auth/lib`echo $AUTH_MODULES|sed -e 's% %.a auth/lib%g'`.a"
-    AUTH_LIBS="`echo $AUTH_OBJS|sed -e 's%auth/%%g'`"
 else
     AC_MSG_WARN([Auth scheme modules built: None])
 fi
-AUTH_LINKOBJS=
+dnl Authentication libraries to build
+dnl This list will not be needed when each auth library has its own Makefile
+AUTH_LIBS_TO_BUILD=
+dnl Authentication libraries to link authenticating executables with.
+dnl These are the same as AUTH_LIBS_TO_BUILD, but with a path
+AUTH_LIBS_TO_ADD=
 for module in $AUTH_MODULES; do
-  AUTH_LINKOBJS="$AUTH_LINKOBJS auth/${module}/${module}Scheme.o"
+    AUTH_LIBS_TO_BUILD="$AUTH_LIBS_TO_BUILD lib${module}.a"
+    AUTH_LIBS_TO_ADD="$AUTH_LIBS_TO_ADD auth/lib${module}.a"
 done
 AC_SUBST(AUTH_MODULES)
-AC_SUBST(AUTH_LIBS)
-AC_SUBST(AUTH_LINKOBJS)
-AC_SUBST(AUTH_OBJS)
+AC_SUBST(AUTH_LIBS_TO_ADD)
+AC_SUBST(AUTH_LIBS_TO_BUILD)
 
 dnl bundled auth modules, in order to have handy defines for the cppunit testsuite
 test -n "$AUTH_MODULE_basic" && AC_DEFINE([HAVE_AUTH_MODULE_BASIC],1,[Basic auth module is built])
