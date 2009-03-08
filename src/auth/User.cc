@@ -37,8 +37,9 @@
 #include "auth/User.h"
 #include "auth/UserRequest.h"
 #include "auth/Config.h"
-#include "authenticate.h"
-#include "ACL.h"
+#include "auth/Gadgets.h"
+#include "acl/Acl.h"
+#include "acl/Gadgets.h"
 #include "event.h"
 #include "SquidTime.h"
 

@@ -39,7 +39,7 @@
 
 #include "squid.h"
 #include "auth_basic.h"
-#include "authenticate.h"
+#include "auth/Gadgets.h"
 #include "CacheManager.h"
 #include "Store.h"
 #include "HttpReply.h"
