@@ -33,12 +33,10 @@
  */
 #include "config.h"
 
-#include "ACL.h"
-#include "ACLChecklist.h"
+#include "acl/Acl.h"
+#include "acl/Checklist.h"
 #include "ConfigParser.h"
 #include "dlink.h"
-/* for special-case PURGE test */
-#include "HttpRequestMethod.h"
 
 const char *AclMatchedName = NULL;
 
@@ -278,12 +276,12 @@ ACL::checklistMatches(ACLChecklist *checklist)
 {
     int rv;
 
-    if (NULL == checklist->request && requiresRequest()) {
+    if (!checklist->hasRequest() && requiresRequest()) {
         debugs(28, 1, "ACL::checklistMatches WARNING: '" << name << "' ACL is used but there is no HTTP request -- not matching.");
         return 0;
     }
 
-    if (NULL == checklist->reply && requiresReply()) {
+    if (!checklist->hasReply() && requiresReply()) {
         debugs(28, 1, "ACL::checklistMatches WARNING: '" << name << "' ACL is used but there is no HTTP reply -- not matching.");
         return 0;
     }
@@ -319,35 +317,6 @@ ACL::~ACL()
 {
     debugs(28, 3, "ACL::~ACL: '" << cfgline << "'");
     safe_free(cfgline);
-}
-
-#include "ACLStrategised.h"
-bool
-acl_access::containsPURGE() const
-{
-    acl_access const *a = this;
-    ACLList *b;
-
-    debugs(28, 6, "acl_access::containsPURGE: invoked for '" << cfgline << "'");
-
-    for (; a; a = a->next) {
-        for (b = a->aclList; b; b = b->next) {
-            ACLStrategised<HttpRequestMethod> *tempAcl = dynamic_cast<ACLStrategised<HttpRequestMethod> *>(b->_acl);
-
-            if (!tempAcl) {
-                debugs(28, 7, "acl_access::containsPURGE: can't create tempAcl");
-                continue;
-            }
-
-            if (tempAcl->match(METHOD_PURGE)) {
-                debugs(28, 6, "acl_access::containsPURGE:   returning true");
-                return true;
-            }
-        }
-    }
-
-    debugs(28, 6, "acl_access::containsPURGE:   returning false");
-    return false;
 }
 
 /* to be split into separate files in the future */

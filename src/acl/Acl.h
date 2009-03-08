@@ -38,46 +38,9 @@
 #include "Array.h"
 #include "cbdata.h"
 #include "dlink.h"
-/**
- \todo FIXME: finish splitting out the dependencies here
- *	- typedefs should not be needed to parse this.
- */
-#include "typedefs.h"
 
 class ConfigParser;
-
-/* acl.c */
-
-/// \ingroup ACLAPI
-SQUIDCEXTERN void aclDestroyAccessList(acl_access **list);
-/// \ingroup ACLAPI
-SQUIDCEXTERN void aclDestroyAcls(ACL **);
-/// \ingroup ACLAPI
-SQUIDCEXTERN void aclDestroyAclList(ACLList **);
-/// \ingroup ACLAPI
-SQUIDCEXTERN void aclParseAccessLine(ConfigParser &parser, acl_access **);
-/// \ingroup ACLAPI
-SQUIDCEXTERN void aclParseAclList(ConfigParser &parser, ACLList **);
-/// \ingroup ACLAPI
-SQUIDCEXTERN int aclIsProxyAuth(const char *name);
-/// \ingroup ACLAPI
-SQUIDCEXTERN err_type aclGetDenyInfoPage(acl_deny_info_list ** head, const char *name, int redirect_allowed);
-
-/// \ingroup ACLAPI
-SQUIDCEXTERN void aclParseDenyInfoLine(struct acl_deny_info_list **);
-
-/// \ingroup ACLAPI
-SQUIDCEXTERN void aclDestroyDenyInfoList(struct acl_deny_info_list **);
-/// \ingroup ACLAPI
-SQUIDCEXTERN wordlist *aclDumpGeneric(const ACL *);
-/// \ingroup ACLAPI
-SQUIDCEXTERN void aclCacheMatchFlush(dlink_list * cache);
-/// \ingroup ACLAPI
-extern void dump_acl_access(StoreEntry * entry, const char *name, acl_access * head);
-/// \ingroup ACLAPI
-int aclPurgeMethodInUse(acl_access * a);
-/// \ingroup ACLAPI
-extern const char *AclMatchedName;	/* NULL */
+class ACLChecklist;
 
 /// \ingroup ACLAPI
 class ACL
@@ -154,7 +117,6 @@ class acl_access
 public:
     void *operator new(size_t);
     void operator delete(void *);
-    bool containsPURGE() const;
     allow_t allow;
     ACLList *aclList;
     char *cfgline;
@@ -193,5 +155,9 @@ public:
 };
 
 MEMPROXY_CLASS_INLINE(acl_proxy_auth_match_cache);
+
+
+/// \ingroup ACLAPI
+extern const char *AclMatchedName;	/* NULL */
 
 #endif /* SQUID_ACL_H */
