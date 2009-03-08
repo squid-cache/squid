@@ -21,6 +21,7 @@ TRANSLATIONS = \
 	cs \
 	da \
 	de \
+	el \
 	en en-au en-gb en-nz en-us \
 	es \
 	et \
@@ -30,6 +31,7 @@ TRANSLATIONS = \
 	id \
 	it \
 	ja \
+	lv \
 	nl \
 	pt-br \
 	ro \
@@ -43,14 +45,12 @@ TRANSLATIONS = \
 # Legacy language contributions...
 #
 LANGUAGES	= \
-		Greek \
 		Hebrew \
 		Hungarian \
 		Korean \
 		Lithuanian \
 		Polish \
 		Portuguese \
-		Simplify_Chinese \
 		Slovak \
 		Traditional_Chinese
 

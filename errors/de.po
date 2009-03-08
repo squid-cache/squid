@@ -2,14 +2,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-02-06 01:30+1300\n"
-"PO-Revision-Date: 2008-12-19 05:28+1300\n"
-"Last-Translator: Constantin Rack <info@vigos.com>\n"
+"POT-Creation-Date: 2009-02-18 18:05+1300\n"
+"PO-Revision-Date: 2009-02-20 10:46+1300\n"
+"Last-Translator: Robert Förster <Dessa@gmake.de>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
+"Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Pootle 1.2.0\n"
 
@@ -526,7 +526,7 @@ msgstr ""
 
 #: templates/ERR_UNSUP_HTTPVERSION:6
 msgid "This Squid does not accept the HTTP version you are attempting to use."
-msgstr ""
+msgstr "Dieser Squid akzeptiert die angeforderte HTTP Version nicht."
 
 #: templates/ERR_FTP_DISABLED:6
 msgid "This cache does not support FTP."
@@ -624,7 +624,7 @@ msgstr "Kann die Anfrage zurzeit nicht weiterleiten."
 
 #: templates/ERR_UNSUP_HTTPVERSION:3 templates/ERR_UNSUP_HTTPVERSION:5
 msgid "Unsupported HTTP version"
-msgstr ""
+msgstr "Nicht unterstützte HTTP Version"
 
 #: templates/ERR_UNSUP_REQ:5
 msgid "Unsupported Request Method and Protocol"

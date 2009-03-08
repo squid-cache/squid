@@ -2,15 +2,17 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-02-06 01:30+1300\n"
-"PO-Revision-Date: 2008-10-24 02:32+0000\n"
-"Last-Translator: Mr.Lodar <Unknown>\n"
+"POT-Creation-Date: 2009-02-18 18:05+1300\n"
+"PO-Revision-Date: 2009-03-03 01:06+1300\n"
+"Last-Translator: Wang DaQing <wdq@bigfoot.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
+"Language: zh_CN\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Pootle 1.2.0\n"
 "X-Launchpad-Export-Date: 2008-10-25 14:12+0000\n"
-"X-Generator: Launchpad (build Unknown)\n"
 
 #: templates/ERR_FTP_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
@@ -37,7 +39,7 @@ msgstr ""
 
 #: templates/ERR_URN_RESOLVE:3
 msgid "A URL for the requested URN could not be retrieved"
-msgstr ""
+msgstr "URN 中的一个网址（URL）无法获取"
 
 #: templates/ERR_ACCESS_DENIED:5
 msgid "Access Denied."
@@ -48,7 +50,7 @@ msgid ""
 "Access control configuration prevents your request from being allowed at "
 "this time.  Please contact your service provider if you feel this is "
 "incorrect."
-msgstr ""
+msgstr "当前的存取控制设定禁止您的请求被接受，如果您觉得这是错误的，请与您网路服务的提供者联系。"
 
 #: templates/ERR_FTP_FORBIDDEN:4
 msgid ""
@@ -70,13 +72,13 @@ msgstr ""
 msgid ""
 "An error condition occurred while reading data from the network.  Please "
 "retry your request."
-msgstr ""
+msgstr "正在通过网络读取数据时发生了错误，请重新尝试。"
 
 #: templates/ERR_WRITE_ERROR:7
 msgid ""
 "An error condition occurred while writing to the network.  Please retry your "
 "request."
-msgstr ""
+msgstr "通过网络写入数据时发生了错误，请重新尝试。"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
 msgid "Cache Access Denied."
@@ -201,11 +203,11 @@ msgstr "文件已创建"
 
 #: templates/ERR_FTP_PUT_MODIFIED:3
 msgid "File updated"
-msgstr ""
+msgstr "文件已更新"
 
 #: templates/ERR_FORWARDING_DENIED:5
 msgid "Forwarding Denied."
-msgstr ""
+msgstr "拒绝转送"
 
 #: templates/ERR_ACCESS_DENIED:8 templates/ERR_CACHE_ACCESS_DENIED:8
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:8 templates/ERR_CANNOT_FORWARD:8
@@ -229,64 +231,66 @@ msgstr ""
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
-msgstr ""
+msgstr "抱歉！您不能对 %T 上的 URNs 期待太多 :)"
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
 msgstr ""
 
 #: templates/ERR_TOO_BIG:7
+#, fuzzy
 msgid ""
 "If you are making a GET request, then the item you are trying to download is "
 "too large."
-msgstr ""
+msgstr "如果您正在进行 GET 请求，则响应的内容太长。"
 
 #: templates/ERR_TOO_BIG:6
+#, fuzzy
 msgid ""
 "If you are making a POST or PUT request, then the item you are trying to "
 "upload is too large."
-msgstr ""
+msgstr "如果您正在进行 POST 或 PUT 请求，则您请求传送的内容太大（可能您正在上传文件）。"
 
 #: templates/ERR_INVALID_REQ:11 templates/ERR_INVALID_URL:11
 msgid "Illegal character in hostname; underscores are not allowed."
-msgstr ""
+msgstr "主机名称中包含不合法的字符；下划线是不允许的。"
 
 #: templates/ERR_INVALID_URL:10
 msgid "Illegal double-escape in the URL-Path"
-msgstr ""
+msgstr "网址路径中有不合法双重转义符"
 
 #: templates/ERR_INVALID_URL:5
 msgid "Invalid URL"
-msgstr ""
+msgstr "无效的网址"
 
 #: templates/ERR_INVALID_REQ:8
 msgid "Missing HTTP Identifier (HTTP/1.0)."
-msgstr ""
+msgstr "缺少 HTTP 标识(HTTP/1.0)"
 
 #: templates/ERR_INVALID_REQ:7
 msgid "Missing URL."
-msgstr ""
+msgstr "缺少网址"
 
 #: templates/ERR_INVALID_URL:9
 msgid "Missing hostname"
-msgstr ""
+msgstr "缺少欲连结的主机名称"
 
 #: templates/ERR_INVALID_URL:8
 msgid ""
 "Missing or incorrect access protocol (should be <q>http://</q> or similar)"
-msgstr ""
+msgstr "缺少或不正确的通讯协议（应该如 <q>http://</q>或类似的开头） "
 
 #: templates/ERR_INVALID_REQ:6
 msgid "Missing or unknown request method."
-msgstr ""
+msgstr "缺少请求方式或未知的请求方式"
 
 #: templates/ERR_NO_RELAY:5
 msgid "No Wais Relay"
-msgstr ""
+msgstr "无 Wais 中继"
 
 #: templates/ERR_FTP_PUT_CREATED:2 templates/ERR_FTP_PUT_MODIFIED:2
 msgid "Operation successful"
-msgstr ""
+msgstr "操作成功"
 
 #: templates/ERR_FTP_LISTING:5
 msgid "Parent Directory"
@@ -298,6 +302,8 @@ msgid ""
 "have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
 "chpasswd.cgi\">change</a> your default password."
 msgstr ""
+"如果您在身份验证上 发生困难，请与 <a href=\"mailto:%w%W\">管理者</a> 联系。 或是<a href=\"http://%h"
+"/cgi-bin/chpasswd.cgi\">更改</a>您的密码。"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
 msgid ""
@@ -306,22 +312,25 @@ msgid ""
 "administrator, read Squid documentation on cache manager interface and check "
 "cache log for more detailed error messages."
 msgstr ""
+"如果您是在身份验证上发生问题，请先确定您有权对缓存使用管理器。或是与<a href=\"mailto:%w%"
+"W\">管理者</a>联系。如果您<em>就是</em>管理者，请详细阅读 Squid 所附文件中与 cache manager 有关部份或检查 "
+"cache log 以便得到更详尽的细节。"
 
 #: templates/ERR_READ_ERROR:5
 msgid "Read Error"
-msgstr ""
+msgstr "读取错误"
 
 #: templates/ERR_READ_TIMEOUT:5
 msgid "Read Timeout"
-msgstr ""
+msgstr "读取超时"
 
 #: templates/ERR_INVALID_REQ:9
 msgid "Request is too large."
-msgstr ""
+msgstr "请求命令过长"
 
 #: templates/ERR_SOCKET_FAILURE:5
 msgid "Socket Failure"
-msgstr ""
+msgstr "Socket 建立失败"
 
 #: templates/ERR_INVALID_URL:6
 msgid "Some aspect of the requested URL is incorrect."
@@ -333,56 +342,60 @@ msgid "Some possible problems are:"
 msgstr ""
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:6
+#, fuzzy
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache manager "
 "until you have authenticated yourself."
-msgstr ""
+msgstr "抱歉，您不被允许通过本缓存管理器访问以下位置 %U 除非您通过我们的身份验证。"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:6
+#, fuzzy
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache until you "
 "have authenticated yourself."
-msgstr ""
+msgstr "抱歉，您不被允许通过本网络缓存服务器访问下列位置 %U 除非您通过了我们的身份验证。"
 
 #: templates/ERR_ZERO_SIZE_OBJECT:6
 msgid "Squid did not receive any data for this request."
-msgstr ""
+msgstr "本缓存服务器从被连接的服务器上没有收到任何数据。"
 
 #: templates/ERR_UNSUP_REQ:6
 msgid ""
 "Squid does not support all request methods for all access protocols. For "
 "example, you can not POST a Gopher request."
-msgstr ""
+msgstr "Squid （缓存服务器）不能对所有的存取协议支持所有的请求方式。比如说，你不能对 GOPHER 进行一个 POST 请求。"
 
 #: templates/ERR_LIFETIME_EXP:6
 msgid ""
 "Squid has terminated the request because it has exceeded the maximum "
 "connection lifetime."
-msgstr ""
+msgstr "缓存服务器已终止您的连接请求，因为已经超过了最大连接等待时间。"
 
 #: templates/ERR_SOCKET_FAILURE:7
 msgid ""
 "Squid is unable to create a TCP socket, presumably due to excessive load. "
 "Please retry your request."
-msgstr ""
+msgstr "Squid （缓存服务器）无法建立 TCP socket（无法向系统申请建立新的网络连接），可能是因为负荷过重，请重新尝试。"
 
 #: templates/ERR_FTP_FAILURE:5 templates/ERR_FTP_FORBIDDEN:5
 #: templates/ERR_FTP_NOT_FOUND:5 templates/ERR_FTP_PUT_ERROR:5
 #: templates/ERR_FTP_UNAVAILABLE:5
 msgid "Squid sent the following FTP command:"
-msgstr ""
+msgstr "本缓存服务器发出以下 FTP 命令："
 
 #: templates/ERR_DNS_FAIL:6
+#, fuzzy
 msgid "The DNS server returned:"
-msgstr ""
+msgstr "域名服务器返回以下讯息："
 
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
 msgstr ""
 
 #: templates/ERR_FTP_UNAVAILABLE:4
+#, fuzzy
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
-msgstr ""
+msgstr "当尝试读取以下网址（URL）时 FTP 服务器过忙： <a href=\"%U\">%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
 msgid ""
@@ -395,8 +408,9 @@ msgid "The ICAP server is not reachable."
 msgstr ""
 
 #: templates/ERR_FTP_NOT_FOUND:4
+#, fuzzy
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
-msgstr ""
+msgstr "以下网址无法读取： <a href=\"%U\">%U</a>"
 
 #: templates/ERR_ACCESS_DENIED:4 templates/ERR_CACHE_ACCESS_DENIED:4
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:4 templates/ERR_CANNOT_FORWARD:4
@@ -419,15 +433,15 @@ msgstr ""
 msgid ""
 "The following error was encountered while trying to retrieve the URN: <a "
 "href=\"%U\">%U</a>"
-msgstr ""
+msgstr "当尝试读取以下 URN 时： <a href=\"%U\">%U</a>"
 
 #: templates/ERR_CONNECT_FAIL:7
 msgid "The remote host or network may be down.  Please try the request again."
-msgstr ""
+msgstr "您要连结的网络服务器或网络可能发生故障。请稍后再试。"
 
 #: templates/ERR_TOO_BIG:5
 msgid "The request or reply is too large."
-msgstr ""
+msgstr "请求或响应太大"
 
 #: templates/ERR_ACCESS_DENIED:3 templates/ERR_CANNOT_FORWARD:3
 #: templates/ERR_CONNECT_FAIL:3 templates/ERR_DNS_FAIL:3 templates/ERR_ESI:3
@@ -443,7 +457,7 @@ msgstr ""
 #: templates/ERR_TOO_BIG:3 templates/ERR_UNSUP_REQ:3
 #: templates/ERR_WRITE_ERROR:3 templates/ERR_ZERO_SIZE_OBJECT:3
 msgid "The requested URL could not be retrieved"
-msgstr ""
+msgstr "您所请求的网址（URL）无法获取"
 
 #: templates/ERR_FTP_FAILURE:6 templates/ERR_FTP_FORBIDDEN:6
 #: templates/ERR_FTP_NOT_FOUND:6 templates/ERR_FTP_PUT_ERROR:6
@@ -456,20 +470,21 @@ msgstr ""
 #: templates/ERR_SECURE_CONNECT_FAIL:6 templates/ERR_SOCKET_FAILURE:6
 #: templates/ERR_WRITE_ERROR:6
 msgid "The system returned: <i>%E</i>"
-msgstr ""
+msgstr "系统返回以下内容：<i>%E</i>"
 
 #: templates/ERR_NO_RELAY:6
 msgid ""
 "There is no WAIS Relay host defined for this Cache!  Yell at the "
 "administrator."
-msgstr ""
+msgstr "本缓存服务器没有设定 WAIS 中继主机！如有疑问请与缓存服务器管理员联系。"
 
 #: templates/ERR_TOO_BIG:8
+#, fuzzy
 msgid ""
 "These limits have been established by the Internet Service Provider who "
 "operates this cache.  Please contact them directly if you feel this is an "
 "error."
-msgstr ""
+msgstr "这些长度限制由操作本缓存服务器的服务提供者制定。如果您觉得这是错误的，请与他们直接联系。"
 
 #: templates/ERR_UNSUP_HTTPVERSION:6
 msgid "This Squid does not accept the HTTP version you are attempting to use."
@@ -477,20 +492,20 @@ msgstr ""
 
 #: templates/ERR_FTP_DISABLED:6
 msgid "This cache does not support FTP."
-msgstr ""
+msgstr "本缓存服务器未开放文件传输服务。"
 
 #: templates/ERR_SHUTTING_DOWN:5
 msgid ""
 "This cache is in the process of shutting down and can not service your "
 "request at this time.  Please retry your request again soon."
-msgstr ""
+msgstr "本缓存服务器正在关闭，暂时无法为您服务。请稍侯再试。"
 
 #: templates/ERR_FORWARDING_DENIED:6
 msgid ""
 "This cache will not forward your request because it is trying to enforce a "
 "sibling relationship.  Perhaps the client at %i is a cache which has been "
 "misconfigured."
-msgstr ""
+msgstr "本缓存服务器无法转送您的请求，也许您是通过一个并未被本缓存服务器设定为允许存取的缓存服务器 %i 来访问的。"
 
 #: templates/ERR_ICAP_FAILURE:7
 msgid "This means that some aspect of the ICAP communication failed."
@@ -503,10 +518,11 @@ msgid ""
 msgstr ""
 
 #: templates/ERR_DNS_FAIL:7
+#, fuzzy
 msgid ""
 "This means that the cache was not able to resolve the hostname presented in "
 "the URL. Check if the address is correct."
-msgstr ""
+msgstr "这表示 缓存服务器无法解析您输入网址（URL）中的主机名称， 请检查该名称是否正确。"
 
 #: templates/ERR_ESI:7
 msgid ""
@@ -520,6 +536,8 @@ msgid ""
 "comply with RFC 1738).  If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
+"这可能是由于 FTP 网址（URL）中包含了绝对路径所致（不符合 RFC1738）。如果真的是这样，文件可以从<a href=\"%B\">%"
+"B</a>位置找到。"
 
 #: templates/ERR_SECURE_CONNECT_FAIL:7
 msgid ""
@@ -530,20 +548,24 @@ msgid ""
 msgstr ""
 
 #: templates/ERR_CANNOT_FORWARD:6
+#, fuzzy
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
 "caches.  The most likely cause for this error is that the cache "
 "administrator does not allow this cache to make direct connections to origin "
 "servers, and all configured parent caches are currently unreachable."
 msgstr ""
+"您的请求无法被转送到原始网络服务器或其他的上层缓存服务器，发生这个问题最可能的原因是缓存服务器管理员不允许本服务器与原始网络服务器直接连结，而 "
+"所有本服务器指定的上层缓存服务器都暂时无法连结。"
 
 #: templates/ERR_DNS_FAIL:5
+#, fuzzy
 msgid "Unable to determine IP address from host name <q>%H</q>"
-msgstr ""
+msgstr "无法将您输入的主机名称 <q>%H</q>转换成 IP 地址"
 
 #: templates/ERR_CANNOT_FORWARD:5
 msgid "Unable to forward this request at this time."
-msgstr ""
+msgstr "目前无法将您的请求进行转送操作"
 
 #: templates/ERR_UNSUP_HTTPVERSION:3 templates/ERR_UNSUP_HTTPVERSION:5
 msgid "Unsupported HTTP version"
@@ -551,21 +573,21 @@ msgstr ""
 
 #: templates/ERR_UNSUP_REQ:5
 msgid "Unsupported Request Method and Protocol"
-msgstr ""
+msgstr "不支持的请求方式和协议"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS:5
 msgid ""
 "Valid document was not found in the cache and <q>only-if-cached</q> "
 "directive was specified."
-msgstr ""
+msgstr "请求的文件在本缓存服务器上未找到，而您设定了<q>only-if-cached</q>（只读取缓存）指令。"
 
 #: templates/ERR_FTP_PUT_ERROR:4
 msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr ""
+msgstr "当尝试上传（PUT）到以下位置时： <a href=\"%U\">%U</a>"
 
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
-msgstr ""
+msgstr "写入错误"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS:6
 msgid ""
@@ -573,6 +595,9 @@ msgid ""
 "directive. The document was not found in the cache, <em>or</em> it required "
 "revalidation prohibited by the <q>only-if-cached</q> directive."
 msgstr ""
+"您送出了一个包含 <q>only-if-cached</q> "
+"（只读取缓存）缓存控制指令的连结请求。而所要的文件并未存在于本缓存服务器中，<em>或者</em>这个连结请求需要刷新文件而 <q>only-if-"
+"cached</q> 指令禁止这么做。 "
 
 #: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
 #: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
@@ -603,4 +628,4 @@ msgstr ""
 
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
-msgstr ""
+msgstr "响应内容长度为零"
