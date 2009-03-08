@@ -45,18 +45,25 @@ buildtest() {
 	if test -e $top/test-suite/buildtest.sh ; then
 		$top/test-suite/buildtest.sh $opts
 	elif test -e ../$top/test-suite/buildtest.sh ; then
-		../$top/test-suite/buildtest.sh $opts
+		../$top/test-suite/buildtest.sh ../$opts
 	fi
     } 2>&1 | logtee $log
+    grep -E "BUILD" ${log}
     grep -E "${errors}" $log && exit 1
     if test "${cleanup}" = "yes" ; then
-	echo "REMOVE: ${btlayer}"
+	echo "REMOVE DATA: ${btlayer}"
 	rm -f -r ${btlayer}
     fi
     result=`tail -2 $log | head -1`
-    test "${result}" = "Build Successful." || ( tail -5 $log ; exit 1 )
+    if test "${result}" = "Build Successful." ; then
+        echo "${result}"
+    else
+        echo "Build Failed:"
+        tail -5 $log
+        exit 1
+    fi
     if test "${cleanup}" = "yes" ; then
-	echo "REMOVE: ${log}"
+	echo "REMOVE LOG: ${log}"
 	rm -f -r $log
     fi
 }
