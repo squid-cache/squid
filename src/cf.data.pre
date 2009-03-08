@@ -5132,7 +5132,7 @@ NAME: icap_enable
 TYPE: onoff
 IFDEF: ICAP_CLIENT
 COMMENT: on|off
-LOC: TheICAPConfig.onoff
+LOC: Adaptation::Icap::TheConfig.onoff
 DEFAULT: off
 DOC_START
 	If you want to enable the ICAP module support, set this to on.
@@ -5141,7 +5141,7 @@ DOC_END
 NAME: icap_connect_timeout
 TYPE: time_t
 DEFAULT: none
-LOC: TheICAPConfig.connect_timeout_raw
+LOC: Adaptation::Icap::TheConfig.connect_timeout_raw
 IFDEF: ICAP_CLIENT
 DOC_START
 	This parameter specifies how long to wait for the TCP connect to
@@ -5157,7 +5157,7 @@ NAME: icap_io_timeout
 COMMENT: time-units
 TYPE: time_t
 DEFAULT: none
-LOC: TheICAPConfig.io_timeout_raw
+LOC: Adaptation::Icap::TheConfig.io_timeout_raw
 IFDEF: ICAP_CLIENT
 DOC_START
 	This parameter specifies how long to wait for an I/O activity on
@@ -5171,7 +5171,7 @@ DOC_END
 NAME: icap_service_failure_limit
 TYPE: int
 IFDEF: ICAP_CLIENT
-LOC: TheICAPConfig.service_failure_limit
+LOC: Adaptation::Icap::TheConfig.service_failure_limit
 DEFAULT: 10
 DOC_START
 	The limit specifies the number of failures that Squid tolerates
@@ -5189,7 +5189,7 @@ DOC_END
 NAME: icap_service_revival_delay
 TYPE: int
 IFDEF: ICAP_CLIENT
-LOC: TheICAPConfig.service_revival_delay
+LOC: Adaptation::Icap::TheConfig.service_revival_delay
 DEFAULT: 180
 DOC_START
 	The delay specifies the number of seconds to wait after an ICAP
@@ -5205,7 +5205,7 @@ NAME: icap_preview_enable
 TYPE: onoff
 IFDEF: ICAP_CLIENT
 COMMENT: on|off
-LOC: TheICAPConfig.preview_enable
+LOC: Adaptation::Icap::TheConfig.preview_enable
 DEFAULT: on
 DOC_START
 	The ICAP Preview feature allows the ICAP server to handle the
@@ -5226,7 +5226,7 @@ DOC_END
 NAME: icap_preview_size
 TYPE: int
 IFDEF: ICAP_CLIENT
-LOC: TheICAPConfig.preview_size
+LOC: Adaptation::Icap::TheConfig.preview_size
 DEFAULT: -1
 DOC_START
 	The default size of preview data to be sent to the ICAP server.
@@ -5237,7 +5237,7 @@ DOC_END
 NAME: icap_default_options_ttl
 TYPE: int
 IFDEF: ICAP_CLIENT
-LOC: TheICAPConfig.default_options_ttl
+LOC: Adaptation::Icap::TheConfig.default_options_ttl
 DEFAULT: 60
 DOC_START
 	The default TTL value for ICAP OPTIONS responses that don't have
@@ -5248,7 +5248,7 @@ NAME: icap_persistent_connections
 TYPE: onoff
 IFDEF: ICAP_CLIENT
 COMMENT: on|off
-LOC: TheICAPConfig.reuse_connections
+LOC: Adaptation::Icap::TheConfig.reuse_connections
 DEFAULT: on
 DOC_START
 	Whether or not Squid should use persistent connections to
@@ -5259,7 +5259,7 @@ NAME: icap_send_client_ip
 TYPE: onoff
 IFDEF: ICAP_CLIENT
 COMMENT: on|off
-LOC: TheICAPConfig.send_client_ip
+LOC: Adaptation::Icap::TheConfig.send_client_ip
 DEFAULT: off
 DOC_START
 	This adds the header "X-Client-IP" to ICAP requests.
@@ -5269,7 +5269,7 @@ NAME: icap_send_client_username
 TYPE: onoff
 IFDEF: ICAP_CLIENT
 COMMENT: on|off
-LOC: TheICAPConfig.send_client_username
+LOC: Adaptation::Icap::TheConfig.send_client_username
 DEFAULT: off
 DOC_START
 	This sends authenticated HTTP client username (if available) to
@@ -5281,7 +5281,7 @@ DOC_END
 NAME: icap_client_username_header
 TYPE: string
 IFDEF: ICAP_CLIENT
-LOC: TheICAPConfig.client_username_header
+LOC: Adaptation::Icap::TheConfig.client_username_header
 DEFAULT: X-Client-Username
 DOC_START
 	ICAP request header name to use for send_client_username.
@@ -5291,7 +5291,7 @@ NAME: icap_client_username_encode
 TYPE: onoff
 IFDEF: ICAP_CLIENT
 COMMENT: on|off
-LOC: TheICAPConfig.client_username_encode
+LOC: Adaptation::Icap::TheConfig.client_username_encode
 DEFAULT: off
 DOC_START
 	Whether to base64 encode the authenticated client username.
@@ -5300,7 +5300,7 @@ DOC_END
 NAME: icap_service
 TYPE: icap_service_type
 IFDEF: ICAP_CLIENT
-LOC: TheICAPConfig
+LOC: Adaptation::Icap::TheConfig
 DEFAULT: none
 DOC_START
 	Defines a single ICAP service
@@ -5363,7 +5363,7 @@ NAME: ecap_enable
 TYPE: onoff
 IFDEF: USE_ECAP
 COMMENT: on|off
-LOC: Ecap::TheConfig.onoff
+LOC: Adaptation::Ecap::TheConfig.onoff
 DEFAULT: off
 DOC_START
 	Controls whether eCAP support is enabled.
@@ -5372,7 +5372,7 @@ DOC_END
 NAME: ecap_service
 TYPE: ecap_service_type
 IFDEF: USE_ECAP
-LOC: Ecap::TheConfig
+LOC: Adaptation::Ecap::TheConfig
 DEFAULT: none
 DOC_START
 	Defines a single eCAP service

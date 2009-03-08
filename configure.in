@@ -810,7 +810,7 @@ AC_ARG_ENABLE(icap-client,
 if test "$use_icap_client" = "yes" ; then
   AC_DEFINE(ICAP_CLIENT,1,[Enable ICAP client features in Squid])
   AM_CONDITIONAL(USE_ICAP_CLIENT, true)
-  ICAP_LIBS="ICAP/libicap.la"
+  ICAP_LIBS="icap/libicap.la"
   use_adaptation=yes
 else
   AC_DEFINE(ICAP_CLIENT,0,[Enable ICAP client features in Squid])
@@ -857,7 +857,7 @@ AM_CONDITIONAL(USE_ECAP, test $use_ecap = yes)
 if test $use_ecap = yes;
 then
     AC_DEFINE(USE_ECAP,1,[Enable eCAP support])
-    ECAP_LIBS="eCAP/libeCAP.la $ECAP_LIBS"
+    ECAP_LIBS="ecap/libecap.la $ECAP_LIBS"
     use_adaptation=yes
 else
     AC_DEFINE(USE_ECAP,0,[Disable eCAP support])
@@ -3798,10 +3798,10 @@ AC_CONFIG_FILES([\
 	src/repl/Makefile \
 	src/auth/Makefile \
 	src/adaptation/Makefile \
-	src/ICAP/Makefile \
+	src/adaptation/icap/Makefile \
+	src/adaptation/ecap/Makefile \
 	src/icmp/Makefile \
 	src/ip/Makefile \
-	src/eCAP/Makefile \
 	contrib/Makefile \
 	snmplib/Makefile \
 	icons/Makefile \

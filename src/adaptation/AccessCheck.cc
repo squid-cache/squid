@@ -52,7 +52,7 @@ Adaptation::AccessCheck::AccessCheck(Method aMethod,
 
     acl_checklist = NULL;
 
-    debugs(93, 5, "AccessCheck constructed for " << methodStr(method) << " " << vectPointStr(point));
+    debugs(93, 5, HERE << "AccessCheck constructed for " << methodStr(method) << " " << vectPointStr(point));
 }
 
 Adaptation::AccessCheck::~AccessCheck()
@@ -70,7 +70,7 @@ Adaptation::AccessCheck::~AccessCheck()
 void
 Adaptation::AccessCheck::check()
 {
-    debugs(93, 4, "Adaptation::AccessCheck::check");
+    debugs(93, 4, HERE << "start checking");
 
     typedef AccessRules::iterator ARI;
     for (ARI i = AllRules().begin(); i != AllRules().end(); ++i) {
@@ -84,7 +84,7 @@ Adaptation::AccessCheck::check()
         AccessRule *r = *i;
         ServicePointer service = findBestService(*r, false);
         if (service != NULL) {
-            debugs(93, 5, "Adaptation::AccessCheck::check: rule '" << r->id << "' has candidate service '" << service->cfg().key << "'");
+            debugs(93, 5, HERE << "check: rule '" << r->id << "' has candidate service '" << service->cfg().key << "'");
             candidates += r->id;
         }
     }
@@ -100,7 +100,7 @@ Adaptation::AccessCheck::check()
 void
 Adaptation::AccessCheck::checkCandidates()
 {
-    debugs(93, 4, "Adaptation::AccessCheck has " << candidates.size() << " rules");
+    debugs(93, 4, HERE << "has " << candidates.size() << " rules");
 
     while (!candidates.empty()) {
         if (AccessRule *r = FindRule(topCandidate())) {
@@ -116,14 +116,14 @@ Adaptation::AccessCheck::checkCandidates()
     }
 
     // when there are no canidates, fake answer 1
-    debugs(93, 4, "Adaptation::AccessCheck::check: NO candidates left");
+    debugs(93, 4, HERE << "NO candidates left");
     noteAnswer(1);
 }
 
 void
 Adaptation::AccessCheck::AccessCheckCallbackWrapper(int answer, void *data)
 {
-    debugs(93, 8, "AccessCheckCallbackWrapper: answer=" << answer);
+    debugs(93, 8, HERE << "callback answer=" << answer);
     AccessCheck *ac = (AccessCheck*)data;
 
     /** \todo AYJ 2008-06-12: If answer == ACCESS_REQ_PROXY_AUTH
@@ -156,7 +156,7 @@ Adaptation::AccessCheck::noteAnswer(int answer)
 void
 Adaptation::AccessCheck::do_callback()
 {
-    debugs(93, 3, "Adaptation::AccessCheck::do_callback");
+    debugs(93, 3, HERE);
 
     if (candidates.size())
         debugs(93, 3, HERE << "was checking rule" << topCandidate());

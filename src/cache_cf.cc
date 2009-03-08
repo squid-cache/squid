@@ -69,21 +69,21 @@ static void parse_adaptation_access_type();
 #endif
 
 #if ICAP_CLIENT
-#include "ICAP/ICAPConfig.h"
+#include "adaptation/icap/Config.h"
 
-static void parse_icap_service_type(ICAPConfig *);
-static void dump_icap_service_type(StoreEntry *, const char *, const ICAPConfig &);
-static void free_icap_service_type(ICAPConfig *);
+static void parse_icap_service_type(Adaptation::Icap::Config *);
+static void dump_icap_service_type(StoreEntry *, const char *, const Adaptation::Icap::Config &);
+static void free_icap_service_type(Adaptation::Icap::Config *);
 static void parse_icap_class_type();
 static void parse_icap_access_type();
 
 #endif
 
 #if USE_ECAP
-#include "eCAP/Config.h"
-static void parse_ecap_service_type(Ecap::Config *);
-static void dump_ecap_service_type(StoreEntry *, const char *, const Ecap::Config &);
-static void free_ecap_service_type(Ecap::Config *);
+#include "adaptation/ecap/Config.h"
+static void parse_ecap_service_type(Adaptation::Ecap::Config *);
+static void dump_ecap_service_type(StoreEntry *, const char *, const Adaptation::Ecap::Config &);
+static void free_ecap_service_type(Adaptation::Ecap::Config *);
 #endif
 
 CBDATA_TYPE(peer);
@@ -3508,19 +3508,19 @@ parse_adaptation_access_type()
 #if ICAP_CLIENT
 
 static void
-parse_icap_service_type(ICAPConfig * cfg)
+parse_icap_service_type(Adaptation::Icap::Config * cfg)
 {
     cfg->parseService();
 }
 
 static void
-free_icap_service_type(ICAPConfig * cfg)
+free_icap_service_type(Adaptation::Icap::Config * cfg)
 {
     cfg->freeService();
 }
 
 static void
-dump_icap_service_type(StoreEntry * entry, const char *name, const ICAPConfig &cfg)
+dump_icap_service_type(StoreEntry * entry, const char *name, const Adaptation::Icap::Config &cfg)
 {
     cfg.dumpService(entry, name);
 }
@@ -3547,19 +3547,19 @@ parse_icap_access_type()
 #if USE_ECAP
 
 static void
-parse_ecap_service_type(Ecap::Config * cfg)
+parse_ecap_service_type(Adaptation::Ecap::Config * cfg)
 {
     cfg->parseService();
 }
 
 static void
-free_ecap_service_type(Ecap::Config * cfg)
+free_ecap_service_type(Adaptation::Ecap::Config * cfg)
 {
     cfg->freeService();
 }
 
 static void
-dump_ecap_service_type(StoreEntry * entry, const char *name, const Ecap::Config &cfg)
+dump_ecap_service_type(StoreEntry * entry, const char *name, const Adaptation::Ecap::Config &cfg)
 {
     cfg.dumpService(entry, name);
 }
