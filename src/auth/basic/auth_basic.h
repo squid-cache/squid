@@ -5,7 +5,7 @@
 
 #ifndef __AUTH_BASIC_H__
 #define __AUTH_BASIC_H__
-#include "authenticate.h"
+#include "auth/Gadgets.h"
 #include "auth/User.h"
 #include "auth/UserRequest.h"
 #include "auth/Config.h"

@@ -4,7 +4,7 @@
 #include <stdexcept>
 
 #include "testACLMaxUserIP.h"
-#include "ACLMaxUserIP.h"
+#include "auth/AclMaxUserIp.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testACLMaxUserIP );
 
