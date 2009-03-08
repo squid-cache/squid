@@ -35,9 +35,10 @@
  */
 
 #include "squid.h"
-#include "ACLMaxUserIP.h"
+#include "acl/FilledChecklist.h"
+#include "auth/Acl.h"
+#include "auth/AclMaxUserIp.h"
 #include "auth/UserRequest.h"
-#include "authenticate.h"
 #include "wordlist.h"
 #include "ConfigParser.h"
 
@@ -152,11 +153,12 @@ ACLMaxUserIP::match(AuthUserRequest * auth_user_request,
 }
 
 int
-ACLMaxUserIP::match(ACLChecklist *checklist)
+ACLMaxUserIP::match(ACLChecklist *cl)
 {
+    ACLFilledChecklist *checklist = Filled(cl);
     int ti;
 
-    if ((ti = checklist->authenticated()) != 1)
+    if ((ti = AuthenticateAcl(checklist)) != 1)
         return ti;
 
     ti = match(checklist->auth_user_request, checklist->src_addr);

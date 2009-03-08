@@ -39,7 +39,7 @@
 #include "fde.h"
 #include "comm.h"
 #include "client_side_request.h"
-#include "ACLChecklist.h"
+#include "acl/FilledChecklist.h"
 #if DELAY_POOLS
 #include "DelayId.h"
 #endif
@@ -618,12 +618,9 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
          * Check if this host is allowed to fetch MISSES from us (miss_access)
          * default is to allow.
          */
-        ACLChecklist ch;
+        ACLFilledChecklist ch(Config.accessList.miss, request, NULL);
         ch.src_addr = request->client_addr;
         ch.my_addr = request->my_addr;
-        ch.request = HTTPMSGLOCK(request);
-        ch.accessList = cbdataReference(Config.accessList.miss);
-        /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
         answer = ch.fastCheck();
 
         if (answer == 0) {

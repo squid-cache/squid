@@ -34,27 +34,29 @@
  */
 
 #include "squid.h"
-#include "ACLSourceIP.h"
-#include "ACLChecklist.h"
+#include "acl/MyIp.h"
+#include "acl/FilledChecklist.h"
 
 char const *
-ACLSourceIP::typeString() const
+ACLMyIP::typeString() const
 {
-    return "src";
+    return "myip";
 }
 
 int
-ACLSourceIP::match(ACLChecklist *checklist)
+ACLMyIP::match(ACLChecklist *checklist)
 {
-    return ACLIP::match(checklist->src_addr);
+    return ACLIP::match (Filled(checklist)->my_addr);
 }
 
-ACL::Prototype ACLSourceIP::RegistryProtoype(&ACLSourceIP::RegistryEntry_, "src");
+ACL::Prototype ACLMyIP::RegistryProtoype(&ACLMyIP::RegistryEntry(), "myip");
 
-ACLSourceIP ACLSourceIP::RegistryEntry_;
+ACLMyIP ACLMyIP::RegistryEntry_;
+
+ACLMyIP const &ACLMyIP::RegistryEntry() {return RegistryEntry_;}
 
 ACL *
-ACLSourceIP::clone() const
+ACLMyIP::clone() const
 {
-    return new ACLSourceIP(*this);
+    return new ACLMyIP(*this);
 }
