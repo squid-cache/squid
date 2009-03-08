@@ -30,10 +30,12 @@
  *
  */
 
-#ifndef SQUID_AUTHENTICATE_H
-#define SQUID_AUTHENTICATE_H
+#ifndef SQUID_AUTH_GADGETS_H
+#define SQUID_AUTH_GADGETS_H
 
-#include "client_side.h"
+#include "hash.h"
+#include "MemPool.h"
+#include "typedefs.h" /* for authConfig */
 
 class AuthUser;
 
@@ -65,6 +67,7 @@ MEMPROXY_CLASS_INLINE(AuthUserHashPointer);
 
 class ConnStateData;
 class AuthScheme;
+class StoreEntry;
 
 /**
  \ingroup AuthAPI
@@ -98,4 +101,4 @@ extern void authenticateUserCacheRestart(void);
 /// \ingroup AuthAPI
 extern void authenticateOnCloseConnection(ConnStateData * conn);
 
-#endif /* SQUID_AUTHENTICATE_H */
+#endif /* SQUID_AUTH_GADGETS_H */
