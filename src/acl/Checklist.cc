@@ -34,78 +34,7 @@
  */
 
 #include "squid.h"
-#include "ACLChecklist.h"
-#include "HttpRequest.h"
-#include "HttpReply.h"
-#include "authenticate.h"
-#include "ACLProxyAuth.h"
-#include "client_side.h"
-#include "auth/UserRequest.h"
-
-int
-ACLChecklist::authenticated()
-{
-    http_hdr_type headertype;
-
-    if (NULL == request) {
-        fatal ("requiresRequest SHOULD have been true for this ACL!!");
-        return 0;
-    } else if (request->flags.accelerated) {
-        /* WWW authorization on accelerated requests */
-        headertype = HDR_AUTHORIZATION;
-    } else if (request->flags.intercepted || request->flags.spoof_client_ip) {
-        debugs(28, DBG_IMPORTANT, HERE << " authentication not applicable on intercepted requests.");
-        return -1;
-    } else {
-        /* Proxy authorization on proxy requests */
-        headertype = HDR_PROXY_AUTHORIZATION;
-    }
-
-    /* get authed here */
-    /* Note: this fills in auth_user_request when applicable */
-    /*
-     * DPW 2007-05-08
-     * tryToAuthenticateAndSetAuthUser used to try to lock and
-     * unlock auth_user_request on our behalf, but it was too
-     * ugly and hard to follow.  Now we do our own locking here.
-     *
-     * I'm not sure what tryToAuthenticateAndSetAuthUser does when
-     * auth_user_request is set before calling.  I'm tempted to
-     * unlock and set it to NULL, but it seems safer to save the
-     * pointer before calling and unlock it afterwards.  If the
-     * pointer doesn't change then its a no-op.
-     */
-    AuthUserRequest *old_auth_user_request = auth_user_request;
-    auth_acl_t result = AuthUserRequest::tryToAuthenticateAndSetAuthUser (&auth_user_request, headertype, request, conn(), src_addr);
-    if (auth_user_request)
-        AUTHUSERREQUESTLOCK(auth_user_request, "ACLChecklist");
-    AUTHUSERREQUESTUNLOCK(old_auth_user_request, "old ACLChecklist");
-    switch (result) {
-
-    case AUTH_ACL_CANNOT_AUTHENTICATE:
-        debugs(28, 4, "aclMatchAcl: returning  0 user authenticated but not authorised.");
-        return 0;
-
-    case AUTH_AUTHENTICATED:
-
-        return 1;
-        break;
-
-    case AUTH_ACL_HELPER:
-        debugs(28, 4, "aclMatchAcl: returning 0 sending credentials to helper.");
-        changeState (ProxyAuthLookup::Instance());
-        return 0;
-
-    case AUTH_ACL_CHALLENGE:
-        debugs(28, 4, "aclMatchAcl: returning 0 sending authentication challenge.");
-        changeState (ProxyAuthNeeded::Instance());
-        return 0;
-
-    default:
-        fatal("unexpected authenticateAuthenticate reply\n");
-        return 0;
-    }
-}
+#include "acl/Checklist.h"
 
 allow_t const &
 ACLChecklist::currentAnswer() const
@@ -249,29 +178,14 @@ ACLChecklist::checkForAsync()
     asyncState()->checkForAsync(this);
 }
 
+// ACLFilledChecklist overwrites this to unclock something before we
+// "delete this"
 void
 ACLChecklist::checkCallback(allow_t answer)
 {
     PF *callback_;
     void *cbdata_;
     debugs(28, 3, "ACLChecklist::checkCallback: " << this << " answer=" << answer);
-
-    /* During reconfigure, we can end up not finishing call
-     * sequences into the auth code */
-
-    if (auth_user_request) {
-        /* the checklist lock */
-        AUTHUSERREQUESTUNLOCK(auth_user_request, "ACLChecklist");
-        /* it might have been connection based */
-        assert(conn() != NULL);
-        /*
-         * DPW 2007-05-08
-         * yuck, this make me uncomfortable.  why do this here?
-         * ConnStateData will do its own unlocking.
-         */
-        AUTHUSERREQUESTUNLOCK(conn()->auth_user_request, "conn via ACLChecklist");
-        conn()->auth_type = AUTH_BROKEN;
-    }
 
     callback_ = callback;
     callback = NULL;
@@ -346,103 +260,27 @@ ACLChecklist::matchAclList(const ACLList * head, bool const fast)
     PROF_stop(aclMatchAclList);
 }
 
-CBDATA_CLASS_INIT(ACLChecklist);
-
-void *
-ACLChecklist::operator new (size_t size)
-{
-    assert (size == sizeof(ACLChecklist));
-    CBDATA_INIT_TYPE(ACLChecklist);
-    ACLChecklist *result = cbdataAlloc(ACLChecklist);
-    return result;
-}
-
-void
-ACLChecklist::operator delete (void *address)
-{
-    ACLChecklist *t = static_cast<ACLChecklist *>(address);
-    cbdataFree(t);
-}
-
 ACLChecklist::ACLChecklist() :
         accessList (NULL),
-        dst_peer(NULL),
-        request (NULL),
-        reply (NULL),
-        auth_user_request (NULL),
-#if SQUID_SNMP
-        snmp_community(NULL),
-#endif
-#if USE_SSL
-        ssl_error(0),
-#endif
         callback (NULL),
         callback_data (NULL),
-        extacl_entry (NULL),
-        conn_(NULL),
-        fd_(-1),
         async_(false),
         finished_(false),
         allow_(ACCESS_DENIED),
         state_(NullState::Instance()),
-        destinationDomainChecked_(false),
-        sourceDomainChecked_(false),
         lastACLResult_(false)
 {
-    my_addr.SetEmpty();
-    src_addr.SetEmpty();
-    dst_addr.SetEmpty();
-    rfc931[0] = '\0';
 }
 
 ACLChecklist::~ACLChecklist()
 {
     assert (!asyncInProgress());
 
-    if (extacl_entry)
-        cbdataReferenceDone(extacl_entry);
-
-    HTTPMSGUNLOCK(request);
-
-    HTTPMSGUNLOCK(reply);
-
-    // no auth_user_request in builds without any Authentication configured
-    if (auth_user_request)
-        AUTHUSERREQUESTUNLOCK(auth_user_request, "ACLChecklist destructor");
-
-    cbdataReferenceDone(conn_);
-
     cbdataReferenceDone(accessList);
 
     debugs(28, 4, "ACLChecklist::~ACLChecklist: destroyed " << this);
 }
 
-
-ConnStateData *
-ACLChecklist::conn() const
-{
-    return  conn_;
-}
-
-void
-ACLChecklist::conn(ConnStateData *aConn)
-{
-    assert (conn() == NULL);
-    conn_ = cbdataReference(aConn);
-}
-
-int
-ACLChecklist::fd() const
-{
-    return conn_ != NULL ? conn_->fd : fd_;
-}
-
-void
-ACLChecklist::fd(int aDescriptor)
-{
-    assert(!conn() || conn()->fd == aDescriptor);
-    fd_ = aDescriptor;
-}
 
 void
 ACLChecklist::AsyncState::changeState (ACLChecklist *checklist, AsyncState *newState) const
@@ -533,32 +371,6 @@ ACLChecklist::fastCheck()
 
 
 bool
-ACLChecklist::destinationDomainChecked() const
-{
-    return destinationDomainChecked_;
-}
-
-void
-ACLChecklist::markDestinationDomainChecked()
-{
-    assert (!finished() && !destinationDomainChecked());
-    destinationDomainChecked_ = true;
-}
-
-bool
-ACLChecklist::sourceDomainChecked() const
-{
-    return sourceDomainChecked_;
-}
-
-void
-ACLChecklist::markSourceDomainChecked()
-{
-    assert (!finished() && !sourceDomainChecked());
-    sourceDomainChecked_ = true;
-}
-
-bool
 ACLChecklist::checking() const
 {
     return checking_;
@@ -570,58 +382,17 @@ ACLChecklist::checking (bool const newValue)
     checking_ = newValue;
 }
 
-/*
- * Any ACLChecklist created by aclChecklistCreate() must eventually be
- * freed by ACLChecklist::operator delete().  There are two common cases:
- *
- * A) Using aclCheckFast():  The caller creates the ACLChecklist using
- *    aclChecklistCreate(), checks it using aclCheckFast(), and frees it
- *    using aclChecklistFree().
- *
- * B) Using aclNBCheck() and callbacks: The caller creates the
- *    ACLChecklist using aclChecklistCreate(), and passes it to
- *    aclNBCheck().  Control eventually passes to ACLChecklist::checkCallback(),
- *    which will invoke the callback function as requested by the
- *    original caller of aclNBCheck().  This callback function must
- *    *not* invoke aclChecklistFree().  After the callback function
- *    returns, ACLChecklist::checkCallback() will free the ACLChecklist using
- *    aclChecklistFree().
- */
-ACLChecklist *
-aclChecklistCreate(const acl_access * A, HttpRequest * request, const char *ident)
-{
-    // TODO: make this a constructor? On-stack creation uses the same code.
-    ACLChecklist *checklist = new ACLChecklist;
-
-    if (A)
-        checklist->accessList = cbdataReference(A);
-
-    if (request != NULL) {
-        checklist->request = HTTPMSGLOCK(request);
-#if FOLLOW_X_FORWARDED_FOR
-        if (Config.onoff.acl_uses_indirect_client)
-            checklist->src_addr = request->indirect_client_addr;
-        else
-#endif /* FOLLOW_X_FORWARDED_FOR */
-            checklist->src_addr = request->client_addr;
-        checklist->my_addr = request->my_addr;
-    }
-
-#if USE_IDENT
-    if (ident)
-        xstrncpy(checklist->rfc931, ident, USER_IDENT_SZ);
-
-#endif
-
-    return checklist;
-}
-
 bool
 ACLChecklist::callerGone()
 {
     return !cbdataReferenceValid(callback_data);
 }
 
-#ifndef _USE_INLINE_
-#include "ACLChecklist.cci"
-#endif
+bool
+ACLChecklist::matchAclListFast(const ACLList * list)
+{
+    matchAclList(list, true);
+    return finished();
+}
+
+

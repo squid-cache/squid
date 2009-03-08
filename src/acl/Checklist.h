@@ -33,17 +33,13 @@
 #ifndef SQUID_ACLCHECKLIST_H
 #define SQUID_ACLCHECKLIST_H
 
-//#include "typedefs.h"
-//#include "client_side.h"
-//#include "structs.h"
+#include "acl/Acl.h"
 
-#include "ACL.h"
-
-class AuthUserRequest;
-class ExternalACLEntry;
-class ConnStateData;
-
-/// \ingroup ACLAPI
+/** \ingroup ACLAPI
+    Base class for maintaining Squid and transaction state for access checks.
+	Provides basic ACL checking methods. Its only child, ACLFilledChecklist,
+	keeps the actual state data. The split is necessary to avoid exposing
+    all ACL-related code to virtually Squid data types. */
 class ACLChecklist
 {
 
@@ -88,18 +84,9 @@ public:
     };
 
 
-public: /* operators */
-    void *operator new(size_t);
-    void operator delete(void *);
-
+public:
     ACLChecklist();
-    ~ACLChecklist();
-    /** NP: To cause link failures if assignment attempted */
-    ACLChecklist (ACLChecklist const &);
-    /** NP: To cause link failures if assignment attempted */
-    ACLChecklist &operator=(ACLChecklist const &);
-
-public: /* API methods */
+    virtual ~ACLChecklist();
 
     /**
      * Trigger off a non-blocking access check for a set of *_access options..
@@ -135,7 +122,7 @@ public: /* API methods */
      * \retval  1/true    Access Allowed
      * \retval 0/false    Access Denied
      */
-    _SQUID_INLINE_ bool matchAclListFast(const ACLList * list);
+    bool matchAclListFast(const ACLList * list);
 
     /**
      * Attempt to check the current checklist against current data.
@@ -149,20 +136,6 @@ public: /* API methods */
      */
     void check();
 
-    ConnStateData * conn() const;
-
-    /// uses conn() if available
-    int fd() const;
-
-    /// set either conn
-    void conn(ConnStateData *);
-    /// set FD
-    void fd(int aDescriptor);
-
-/* Accessors used by internal ACL stuff */
-
-    int authenticated();
-
     bool asyncInProgress() const;
     void asyncInProgress(bool const);
 
@@ -175,62 +148,33 @@ public: /* API methods */
     void changeState(AsyncState *);
     AsyncState *asyncState() const;
 
-private: /* NP: only used internally */
+	// XXX: ACLs that need request or reply have to use ACLFilledChecklist and
+	// should do their own checks so that we do not have to povide these two
+    // for ACL::checklistMatches to use
+	virtual bool hasRequest() const = 0;
+	virtual bool hasReply() const = 0;
 
-    void checkCallback(allow_t answer);
+private:
+    virtual void checkCallback(allow_t answer);
     void checkAccessList();
     void checkForAsync();
 
-public: /* checklist available data */
-
+public:
     const acl_access *accessList;
-
-    IpAddress src_addr;
-
-    IpAddress dst_addr;
-
-    IpAddress my_addr;
-
-    struct peer *dst_peer;
-
-    HttpRequest *request;
-
-    /* for acls that look at reply data */
-    HttpReply *reply;
-    char rfc931[USER_IDENT_SZ];
-    AuthUserRequest *auth_user_request;
-#if SQUID_SNMP
-
-    char *snmp_community;
-#endif
-
-#if USE_SSL
-    int ssl_error;
-#endif
 
     PF *callback;
     void *callback_data;
-    ExternalACLEntry *extacl_entry;
-
-    bool destinationDomainChecked() const;
-    void markDestinationDomainChecked();
-    bool sourceDomainChecked() const;
-    void markSourceDomainChecked();
 
 private: /* internal methods */
     void preCheck();
     void matchAclList(const ACLList * list, bool const fast);
     void matchAclListSlow(const ACLList * list);
-    CBDATA_CLASS(ACLChecklist);
 
-    ConnStateData * conn_;          /**< hack for ident and NTLM */
-    int fd_;                        /**< may be available when conn_ is not */
     bool async_;
     bool finished_;
     allow_t allow_;
     AsyncState *state_;
-    bool destinationDomainChecked_;
-    bool sourceDomainChecked_;
+
     bool checking_;
     bool checking() const;
     void checking (bool const);
@@ -243,14 +187,5 @@ public:
 
     bool lastACLResult() const { return lastACLResult_; }
 };
-
-/// \ingroup ACLAPI
-SQUIDCEXTERN ACLChecklist *aclChecklistCreate(const acl_access *,
-        HttpRequest *,
-        const char *ident);
-
-#ifdef _USE_INLINE_
-#include "ACLChecklist.cci"
-#endif
 
 #endif /* SQUID_ACLCHECKLIST_H */
