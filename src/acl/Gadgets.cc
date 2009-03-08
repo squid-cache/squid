@@ -39,8 +39,10 @@
  */
 
 #include "squid.h"
-#include "ACL.h"
-#include "ACLChecklist.h"
+#include "acl/Acl.h"
+#include "acl/Checklist.h"
+#include "acl/Strategised.h"
+#include "acl/Gadgets.h"
 #include "ConfigParser.h"
 #include "errorpage.h"
 #include "HttpRequest.h"
@@ -318,5 +320,26 @@ aclDestroyDenyInfoList(acl_deny_info_list ** list)
 int
 aclPurgeMethodInUse(acl_access * a)
 {
-    return a->containsPURGE();
+    ACLList *b;
+
+    debugs(28, 6, "aclPurgeMethodInUse: invoked for '" << a->cfgline << "'");
+
+    for (; a; a = a->next) {
+        for (b = a->aclList; b; b = b->next) {
+            ACLStrategised<HttpRequestMethod> *tempAcl = dynamic_cast<ACLStrategised<HttpRequestMethod> *>(b->_acl);
+
+            if (!tempAcl) {
+                debugs(28, 7, "aclPurgeMethodInUse: can't create tempAcl");
+                continue;
+            }
+
+            if (tempAcl->match(METHOD_PURGE)) {
+                debugs(28, 6, "aclPurgeMethodInUse: returning true");
+                return true;
+            }
+        }
+    }
+
+    debugs(28, 6, "aclPurgeMethodInUse: returning false");
+    return false;
 }
