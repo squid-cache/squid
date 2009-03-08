@@ -30,33 +30,97 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
 #include "squid.h"
-#include "ACLMyIP.h"
-#include "ACLChecklist.h"
+#include "acl/FilledChecklist.h"
+#include "acl/MaxConnection.h"
+#include "wordlist.h"
+
+ACL::Prototype ACLMaxConnection::RegistryProtoype(&ACLMaxConnection::RegistryEntry_, "maxconn");
+
+ACLMaxConnection ACLMaxConnection::RegistryEntry_("maxconn");
+
+ACL *
+ACLMaxConnection::clone() const
+{
+    return new ACLMaxConnection(*this);
+}
+
+ACLMaxConnection::ACLMaxConnection (char const *theClass) : class_ (theClass), limit(-1)
+{}
+
+ACLMaxConnection::ACLMaxConnection (ACLMaxConnection const & old) :class_ (old.class_), limit (old.limit)
+{}
+
+ACLMaxConnection::~ACLMaxConnection()
+{}
 
 char const *
-ACLMyIP::typeString() const
+ACLMaxConnection::typeString() const
 {
-    return "myip";
+    return class_;
+}
+
+bool
+ACLMaxConnection::empty () const
+{
+    return false;
+}
+
+bool
+ACLMaxConnection::valid () const
+{
+    return limit > 0;
+}
+
+void
+ACLMaxConnection::parse()
+{
+    char *t = strtokFile();
+
+    if (!t)
+        return;
+
+    limit = (atoi (t));
+
+    /* suck out file contents */
+
+    while ((t = strtokFile())) {
+        limit = 0;
+    }
 }
 
 int
-ACLMyIP::match(ACLChecklist *checklist)
+ACLMaxConnection::match(ACLChecklist *checklist)
 {
-    return ACLIP::match (checklist->my_addr);
+    return clientdbEstablished(Filled(checklist)->src_addr, 0) > limit ? 1 : 0;
 }
 
-ACL::Prototype ACLMyIP::RegistryProtoype(&ACLMyIP::RegistryEntry(), "myip");
-
-ACLMyIP ACLMyIP::RegistryEntry_;
-
-ACLMyIP const &ACLMyIP::RegistryEntry() {return RegistryEntry_;}
-
-ACL *
-ACLMyIP::clone() const
+wordlist *
+ACLMaxConnection::dump() const
 {
-    return new ACLMyIP(*this);
+    if (!limit)
+        return NULL;
+
+    wordlist *W = NULL;
+
+    char buf[32];
+
+    snprintf(buf, sizeof(buf), "%d", limit);
+
+    wordlistAdd(&W, buf);
+
+    return W;
+}
+
+void
+ACLMaxConnection::prepareForUse()
+{
+    if (0 != Config.onoff.client_db)
+        return;
+
+    debugs(22, 0, "WARNING: 'maxconn' ACL (" << name << ") won't work with client_db disabled");
 }

@@ -1,8 +1,7 @@
+
 /*
  * $Id$
  *
- * DEBUG: section 28    Access Control
- * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -34,23 +33,38 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#include "squid.h"
-#include "ACLStrategised.h"
-#include "authenticate.h"
-#include "ACLChecklist.h"
-#include "ACLRegexData.h"
-#include "ACLDomainData.h"
+#ifndef SQUID_ACLTIME_H
+#define SQUID_ACLTIME_H
+#include "acl/Acl.h"
+#include "acl/Data.h"
+#include "acl/Strategised.h"
 
-/*
- *  moved template instantiation into ACLStrategized.cc
- *  to compile on Mac OSX 10.5 Leopard.
- *  This corrects a duplicate symbol error
- */
+class ACLChecklist; // XXX: we do not need it
 
-/* explicit template instantiation required for some systems */
+class ACLTimeStrategy : public ACLStrategy<time_t>
+{
 
-/* ACLHTTPRepHeader + ACLHTTPReqHeader */
-template class ACLStrategised<HttpHeader*>;
+public:
+    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
+    static ACLTimeStrategy *Instance();
+    /* Not implemented to prevent copies of the instance. */
+    /* Not private to prevent brain dead g+++ warnings about
+     * private constructors with no friends */
+    ACLTimeStrategy(ACLTimeStrategy const &);
 
-/* ACLMyPortName + ACLMyPeerName + ACLBrowser */
-template class ACLStrategised<const char *>;
+private:
+    static ACLTimeStrategy Instance_;
+    ACLTimeStrategy() {}
+
+    ACLTimeStrategy&operator=(ACLTimeStrategy const &);
+};
+
+class ACLTime
+{
+
+public:
+    static ACL::Prototype RegistryProtoype;
+    static ACLStrategised<time_t> RegistryEntry_;
+};
+
+#endif /* SQUID_ACLTIME_H */

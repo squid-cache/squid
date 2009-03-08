@@ -35,9 +35,10 @@
 
 #ifndef SQUID_ACLSTRATEGISED_H
 #define SQUID_ACLSTRATEGISED_H
-#include "ACL.h"
-#include "ACLData.h"
-#include "ACLStrategy.h"
+#include "acl/Acl.h"
+#include "acl/Data.h"
+#include "acl/Strategy.h"
+#include "acl/FilledChecklist.h"
 
 template <class M>
 
@@ -147,8 +148,10 @@ ACLStrategised<MatchType>::empty() const
 
 template <class MatchType>
 int
-ACLStrategised<MatchType>::match(ACLChecklist *checklist)
+ACLStrategised<MatchType>::match(ACLChecklist *cl)
 {
+	ACLFilledChecklist *checklist = dynamic_cast<ACLFilledChecklist*>(cl);
+	assert(checklist);
     return matcher->match(data, checklist);
 }
 

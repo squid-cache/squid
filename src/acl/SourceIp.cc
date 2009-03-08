@@ -30,96 +30,31 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
- *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
 #include "squid.h"
-#include "ACLMaxConnection.h"
-#include "wordlist.h"
-
-ACL::Prototype ACLMaxConnection::RegistryProtoype(&ACLMaxConnection::RegistryEntry_, "maxconn");
-
-ACLMaxConnection ACLMaxConnection::RegistryEntry_("maxconn");
-
-ACL *
-ACLMaxConnection::clone() const
-{
-    return new ACLMaxConnection(*this);
-}
-
-ACLMaxConnection::ACLMaxConnection (char const *theClass) : class_ (theClass), limit(-1)
-{}
-
-ACLMaxConnection::ACLMaxConnection (ACLMaxConnection const & old) :class_ (old.class_), limit (old.limit)
-{}
-
-ACLMaxConnection::~ACLMaxConnection()
-{}
+#include "acl/SourceIp.h"
+#include "acl/FilledChecklist.h"
 
 char const *
-ACLMaxConnection::typeString() const
+ACLSourceIP::typeString() const
 {
-    return class_;
-}
-
-bool
-ACLMaxConnection::empty () const
-{
-    return false;
-}
-
-bool
-ACLMaxConnection::valid () const
-{
-    return limit > 0;
-}
-
-void
-ACLMaxConnection::parse()
-{
-    char *t = strtokFile();
-
-    if (!t)
-        return;
-
-    limit = (atoi (t));
-
-    /* suck out file contents */
-
-    while ((t = strtokFile())) {
-        limit = 0;
-    }
+    return "src";
 }
 
 int
-ACLMaxConnection::match(ACLChecklist *checklist)
+ACLSourceIP::match(ACLChecklist *checklist)
 {
-    return (clientdbEstablished(checklist->src_addr, 0) > limit ? 1 : 0);
+    return ACLIP::match(Filled(checklist)->src_addr);
 }
 
-wordlist *
-ACLMaxConnection::dump() const
+ACL::Prototype ACLSourceIP::RegistryProtoype(&ACLSourceIP::RegistryEntry_, "src");
+
+ACLSourceIP ACLSourceIP::RegistryEntry_;
+
+ACL *
+ACLSourceIP::clone() const
 {
-    if (!limit)
-        return NULL;
-
-    wordlist *W = NULL;
-
-    char buf[32];
-
-    snprintf(buf, sizeof(buf), "%d", limit);
-
-    wordlistAdd(&W, buf);
-
-    return W;
-}
-
-void
-ACLMaxConnection::prepareForUse()
-{
-    if (0 != Config.onoff.client_db)
-        return;
-
-    debugs(22, 0, "WARNING: 'maxconn' ACL (" << name << ") won't work with client_db disabled");
+    return new ACLSourceIP(*this);
 }

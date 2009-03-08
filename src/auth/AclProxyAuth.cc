@@ -35,13 +35,14 @@
  */
 
 #include "squid.h"
-#include "ACLProxyAuth.h"
-#include "authenticate.h"
-#include "ACLChecklist.h"
-#include "ACLUserData.h"
-#include "ACLRegexData.h"
+#include "auth/AclProxyAuth.h"
+#include "auth/Gadgets.h"
+#include "acl/FilledChecklist.h"
+#include "acl/UserData.h"
+#include "acl/RegexData.h"
 #include "client_side.h"
 #include "HttpRequest.h"
+#include "auth/Acl.h"
 #include "auth/User.h"
 #include "auth/UserRequest.h"
 
@@ -80,7 +81,7 @@ ACLProxyAuth::match(ACLChecklist *checklist)
 {
     int ti;
 
-    if ((ti = checklist->authenticated()) != 1)
+    if ((ti = AuthenticateAcl(checklist)) != 1)
         return ti;
 
     ti = matchProxyAuth(checklist);
@@ -133,8 +134,10 @@ ProxyAuthLookup::Instance()
 }
 
 void
-ProxyAuthLookup::checkForAsync(ACLChecklist *checklist)const
+ProxyAuthLookup::checkForAsync(ACLChecklist *cl)const
 {
+    ACLFilledChecklist *checklist = Filled(cl);
+
     checklist->asyncInProgress(true);
     debugs(28, 3, "ACLChecklist::checkForAsync: checking password via authenticator");
 
@@ -150,7 +153,8 @@ ProxyAuthLookup::checkForAsync(ACLChecklist *checklist)const
 void
 ProxyAuthLookup::LookupDone(void *data, char *result)
 {
-    ACLChecklist *checklist = (ACLChecklist *)data;
+    ACLFilledChecklist *checklist = Filled(static_cast<ACLChecklist*>(data));
+
     assert (checklist->asyncState() == ProxyAuthLookup::Instance());
 
     if (result != NULL)
@@ -198,8 +202,9 @@ ACLProxyAuth::clone() const
 }
 
 int
-ACLProxyAuth::matchForCache(ACLChecklist *checklist)
+ACLProxyAuth::matchForCache(ACLChecklist *cl)
 {
+    ACLFilledChecklist *checklist = Filled(cl);
     assert (checklist->auth_user_request);
     return data->match(checklist->auth_user_request->username());
 }
@@ -209,8 +214,9 @@ ACLProxyAuth::matchForCache(ACLChecklist *checklist)
  * 1 : Authorisation OK. (Matched)
  */
 int
-ACLProxyAuth::matchProxyAuth(ACLChecklist *checklist)
+ACLProxyAuth::matchProxyAuth(ACLChecklist *cl)
 {
+    ACLFilledChecklist *checklist = Filled(cl);
     checkAuthForCaching(checklist);
     /* check to see if we have matched the user-acl before */
     int result = cacheMatchAcl(&checklist->auth_user_request->user()->
@@ -224,7 +230,7 @@ ACLProxyAuth::checkAuthForCaching(ACLChecklist *checklist)const
 {
     /* for completeness */
     /* consistent parameters ? */
-    assert(authenticateUserAuthenticated(checklist->auth_user_request));
+    assert(authenticateUserAuthenticated(Filled(checklist)->auth_user_request));
     /* this check completed */
 }
 

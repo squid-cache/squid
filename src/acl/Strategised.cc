@@ -1,6 +1,8 @@
 /*
  * $Id$
  *
+ * DEBUG: section 28    Access Control
+ * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -32,52 +34,19 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLMAXUSERIP_H
-#define SQUID_ACLMAXUSERIP_H
+#include "squid.h"
+#include "acl/Strategised.h"
 
-#include "ACL.h"
-#include "ACLChecklist.h"
+/*
+ *  moved template instantiation into ACLStrategized.cc
+ *  to compile on Mac OSX 10.5 Leopard.
+ *  This corrects a duplicate symbol error
+ */
 
-/// \ingroup ACLAPI
-class ACLMaxUserIP : public ACL
-{
+/* explicit template instantiation required for some systems */
 
-public:
-    MEMPROXY_CLASS(ACLMaxUserIP);
+/* XXX: move to ACLHTTPRepHeader or ACLHTTPReqHeader */
+template class ACLStrategised<HttpHeader*>;
 
-    ACLMaxUserIP(char const *);
-    ACLMaxUserIP(ACLMaxUserIP const &);
-    ~ACLMaxUserIP();
-    ACLMaxUserIP&operator=(ACLMaxUserIP const &);
-
-    virtual ACL *clone()const;
-    virtual char const *typeString() const;
-    virtual void parse();
-    virtual int match(ACLChecklist *checklist);
-    virtual wordlist *dump() const;
-    virtual bool empty () const;
-    virtual bool valid () const;
-    virtual bool requiresRequest() const {return true;}
-
-    int getMaximum() const {return maximum;}
-
-    int getStrict() const {return flags.strict;}
-
-private:
-    static Prototype RegistryProtoype;
-    static ACLMaxUserIP RegistryEntry_;
-
-    int match(AuthUserRequest *, IpAddress const &);
-    char const *class_;
-    int maximum;
-
-    struct Flags {
-        Flags() : strict(0) {}
-
-        unsigned int strict:1;
-    } flags;
-};
-
-MEMPROXY_CLASS_INLINE(ACLMaxUserIP)          /**DOCS_NOSEMI*/
-
-#endif /* SQUID_ACLMAXUSERIP_H */
+/* ACLMyPortName + ACLMyPeerName + ACLBrowser */
+template class ACLStrategised<const char *>;

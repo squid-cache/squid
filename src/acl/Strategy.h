@@ -35,10 +35,10 @@
 
 #ifndef SQUID_ACLSTRATEGY_H
 #define SQUID_ACLSTRATEGY_H
-#include "ACL.h"
-#include "ACLData.h"
 
-/* Perhaps this should live in ACL? */
+#include "acl/Data.h"
+
+class ACLFilledChecklist;
 
 template<class M>
 
@@ -47,7 +47,7 @@ class ACLStrategy
 
 public:
     typedef M MatchType;
-    virtual int match (ACLData<M> * &, ACLChecklist *) = 0;
+    virtual int match (ACLData<M> * &, ACLFilledChecklist *) = 0;
     virtual bool requiresRequest() const {return false;}
 
     virtual bool requiresReply() const {return false;}

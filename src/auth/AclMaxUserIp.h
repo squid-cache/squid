@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -33,37 +32,54 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLTIME_H
-#define SQUID_ACLTIME_H
-#include "ACL.h"
-#include "ACLData.h"
-#include "ACLChecklist.h"
-#include "ACLStrategised.h"
+#ifndef SQUID_ACLMAXUSERIP_H
+#define SQUID_ACLMAXUSERIP_H
 
-class ACLTimeStrategy : public ACLStrategy<time_t>
+#include "acl/Acl.h"
+#include "acl/Checklist.h"
+
+class AuthUserRequest;
+
+/// \ingroup ACLAPI
+class ACLMaxUserIP : public ACL
 {
 
 public:
-    virtual int match (ACLData<MatchType> * &, ACLChecklist *);
-    static ACLTimeStrategy *Instance();
-    /* Not implemented to prevent copies of the instance. */
-    /* Not private to prevent brain dead g+++ warnings about
-     * private constructors with no friends */
-    ACLTimeStrategy(ACLTimeStrategy const &);
+    MEMPROXY_CLASS(ACLMaxUserIP);
+
+    ACLMaxUserIP(char const *);
+    ACLMaxUserIP(ACLMaxUserIP const &);
+    ~ACLMaxUserIP();
+    ACLMaxUserIP&operator=(ACLMaxUserIP const &);
+
+    virtual ACL *clone()const;
+    virtual char const *typeString() const;
+    virtual void parse();
+    virtual int match(ACLChecklist *checklist);
+    virtual wordlist *dump() const;
+    virtual bool empty () const;
+    virtual bool valid () const;
+    virtual bool requiresRequest() const {return true;}
+
+    int getMaximum() const {return maximum;}
+
+    int getStrict() const {return flags.strict;}
 
 private:
-    static ACLTimeStrategy Instance_;
-    ACLTimeStrategy() {}
+    static Prototype RegistryProtoype;
+    static ACLMaxUserIP RegistryEntry_;
 
-    ACLTimeStrategy&operator=(ACLTimeStrategy const &);
+    int match(AuthUserRequest *, IpAddress const &);
+    char const *class_;
+    int maximum;
+
+    struct Flags {
+        Flags() : strict(0) {}
+
+        unsigned int strict:1;
+    } flags;
 };
 
-class ACLTime
-{
+MEMPROXY_CLASS_INLINE(ACLMaxUserIP)          /**DOCS_NOSEMI*/
 
-public:
-    static ACL::Prototype RegistryProtoype;
-    static ACLStrategised<time_t> RegistryEntry_;
-};
-
-#endif /* SQUID_ACLTIME_H */
+#endif /* SQUID_ACLMAXUSERIP_H */

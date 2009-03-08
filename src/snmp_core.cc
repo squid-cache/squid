@@ -32,7 +32,7 @@
 #include "squid.h"
 #include "comm.h"
 #include "cache_snmp.h"
-#include "ACLChecklist.h"
+#include "acl/FilledChecklist.h"
 #include "ip/IpAddress.h"
 
 #define SNMP_REQUEST_SIZE 4096
@@ -530,11 +530,9 @@ snmpDecodePacket(snmp_request_t * rq)
     /* Check if we have explicit permission to access SNMP data.
      * default (set above) is to deny all */
     if (Community && Config.accessList.snmp) {
-        ACLChecklist checklist;
-        checklist.accessList = cbdataReference(Config.accessList.snmp);
+        ACLFilledChecklist checklist(Config.accessList.snmp, NULL, NULL);
         checklist.src_addr = rq->from;
         checklist.snmp_community = (char *) Community;
-        /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
         allow = checklist.fastCheck();
     }
 
@@ -1136,15 +1134,15 @@ oid2addr(oid * id, IpAddress &addr, u_int size)
 }
 
 /* SNMP checklists */
-#include "ACLStrategy.h"
-#include "ACLStrategised.h"
-#include "ACLStringData.h"
+#include "acl/Strategy.h"
+#include "acl/Strategised.h"
+#include "acl/StringData.h"
 
 class ACLSNMPCommunityStrategy : public ACLStrategy<char const *>
 {
 
 public:
-    virtual int match (ACLData<MatchType> * &, ACLChecklist *);
+    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
     static ACLSNMPCommunityStrategy *Instance();
     /* Not implemented to prevent copies of the instance. */
     /* Not private to prevent brain dead g+++ warnings about
@@ -1170,7 +1168,7 @@ ACL::Prototype ACLSNMPCommunity::RegistryProtoype(&ACLSNMPCommunity::RegistryEnt
 ACLStrategised<char const *> ACLSNMPCommunity::RegistryEntry_(new ACLStringData, ACLSNMPCommunityStrategy::Instance(), "snmp_community");
 
 int
-ACLSNMPCommunityStrategy::match (ACLData<MatchType> * &data, ACLChecklist *checklist)
+ACLSNMPCommunityStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
     return data->match (checklist->snmp_community);
 }

@@ -50,7 +50,7 @@
 #include "HttpHdrContRange.h"
 #include "HttpHdrSc.h"
 #include "HttpHdrScTarget.h"
-#include "ACLChecklist.h"
+#include "acl/FilledChecklist.h"
 #include "fde.h"
 #if DELAY_POOLS
 #include "DelayPools.h"
@@ -1974,13 +1974,8 @@ HttpStateData::doneSendingRequestBody()
     debugs(11,5, HERE << "doneSendingRequestBody: FD " << fd);
 
 #if HTTP_VIOLATIONS
-    ACLChecklist ch;
-    ch.request = HTTPMSGLOCK(request);
-
     if (Config.accessList.brokenPosts) {
-        ch.accessList = cbdataReference(Config.accessList.brokenPosts);
-        /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
-
+		ACLFilledChecklist ch(Config.accessList.brokenPosts, request, NULL);
         if (!ch.fastCheck()) {
             debugs(11, 5, "doneSendingRequestBody: didn't match brokenPosts");
             CommIoCbParams io(NULL);

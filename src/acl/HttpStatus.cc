@@ -40,7 +40,8 @@
 #endif
 #include "squid.h"
 
-#include "ACLHTTPStatus.h"
+#include "acl/HttpStatus.h"
+#include "acl/FilledChecklist.h"
 #include "HttpReply.h"
 #include "wordlist.h"
 
@@ -161,7 +162,7 @@ aclParseHTTPStatusList(SplayNode<acl_httpstatus_data *> **curlist)
 int
 ACLHTTPStatus::match(ACLChecklist *checklist)
 {
-    return aclMatchHTTPStatus(&data, checklist->reply->sline.status);
+    return aclMatchHTTPStatus(&data, Filled(checklist)->reply->sline.status);
 }
 
 int

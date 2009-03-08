@@ -35,10 +35,10 @@
  */
 
 #include "squid.h"
-#include "ACLDestinationDomain.h"
-#include "ACLChecklist.h"
-#include "ACLRegexData.h"
-#include "ACLDomainData.h"
+#include "acl/DestinationDomain.h"
+#include "acl/Checklist.h"
+#include "acl/RegexData.h"
+#include "acl/DomainData.h"
 #include "HttpRequest.h"
 
 DestinationDomainLookup DestinationDomainLookup::instance_;
@@ -50,8 +50,9 @@ DestinationDomainLookup::Instance()
 }
 
 void
-DestinationDomainLookup::checkForAsync(ACLChecklist *checklist) const
+DestinationDomainLookup::checkForAsync(ACLChecklist *cl) const
 {
+	ACLFilledChecklist *checklist = Filled(cl);
     checklist->asyncInProgress(true);
     fqdncache_nbgethostbyaddr(checklist->dst_addr, LookupDone, checklist);
 }
@@ -64,7 +65,7 @@ DestinationDomainLookup::LookupDone(const char *fqdn, void *data)
 
     checklist->asyncInProgress(false);
     checklist->changeState (ACLChecklist::NullState::Instance());
-    checklist->markDestinationDomainChecked();
+    Filled(checklist)->markDestinationDomainChecked();
     checklist->check();
 }
 
@@ -74,7 +75,7 @@ ACL::Prototype ACLDestinationDomain::RegexRegistryProtoype(&ACLDestinationDomain
 ACLStrategised<char const *> ACLDestinationDomain::RegexRegistryEntry_(new ACLRegexData,ACLDestinationDomainStrategy::Instance() ,"dstdom_regex");
 
 int
-ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLChecklist *checklist)
+ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
     assert(checklist != NULL && checklist->request != NULL);
 

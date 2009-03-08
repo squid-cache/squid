@@ -34,8 +34,8 @@
  */
 
 #include "squid.h"
-#include "ACLDestinationIP.h"
-#include "ACLChecklist.h"
+#include "acl/DestinationIp.h"
+#include "acl/FilledChecklist.h"
 #include "HttpRequest.h"
 
 char const *
@@ -45,8 +45,9 @@ ACLDestinationIP::typeString() const
 }
 
 int
-ACLDestinationIP::match(ACLChecklist *checklist)
+ACLDestinationIP::match(ACLChecklist *cl)
 {
+	ACLFilledChecklist *checklist = Filled(cl);
     const ipcache_addrs *ia = ipcache_gethostbyname(checklist->request->GetHost(), IP_LOOKUP_IF_MISS);
 
     if (ia) {
@@ -77,8 +78,9 @@ DestinationIPLookup::Instance()
 }
 
 void
-DestinationIPLookup::checkForAsync(ACLChecklist *checklist)const
+DestinationIPLookup::checkForAsync(ACLChecklist *cl)const
 {
+	ACLFilledChecklist *checklist = Filled(cl);
     checklist->asyncInProgress(true);
     ipcache_nbgethostbyname(checklist->request->GetHost(), LookupDone, checklist);
 }
@@ -88,7 +90,7 @@ DestinationIPLookup::LookupDone(const ipcache_addrs * ia, void *data)
 {
     ACLChecklist *checklist = (ACLChecklist *)data;
     assert (checklist->asyncState() == DestinationIPLookup::Instance());
-    checklist->request->flags.destinationIPLookupCompleted();
+    Filled(checklist)->request->flags.destinationIPLookupCompleted();
     checklist->asyncInProgress(false);
     checklist->changeState (ACLChecklist::NullState::Instance());
     checklist->check();
