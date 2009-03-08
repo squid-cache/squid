@@ -2,10 +2,9 @@
 #include "structs.h"
 
 #include "ConfigParser.h"
-#include "ACL.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
-#include "ACLChecklist.h"
+#include "acl/FilledChecklist.h"
 #include "adaptation/Service.h"
 #include "adaptation/ServiceGroups.h"
 #include "adaptation/AccessRule.h"
@@ -106,7 +105,7 @@ Adaptation::AccessCheck::checkCandidates()
         if (AccessRule *r = FindRule(topCandidate())) {
             /* BUG 2526: what to do when r->acl is empty?? */
             // XXX: we do not have access to conn->rfc931 here.
-            acl_checklist = aclChecklistCreate(r->acl, req, dash_str);
+            acl_checklist = new ACLFilledChecklist(r->acl, req, dash_str);
             acl_checklist->reply = rep ? HTTPMSGLOCK(rep) : NULL;
             acl_checklist->nonBlockingCheck(AccessCheckCallbackWrapper, this);
             return;
