@@ -3,17 +3,14 @@
 #  $Id$
 #
 
+SUBDIRS = libTrie
+
 if USE_LOADABLE_MODULES
-DIST_SUBDIRS = libLtdl
-SUBDIRS      = libLtdl
-else
-DIST_SUBDIRS =
-SUBDIRS      =
+SUBDIRS += libLtdl
 endif
 
-DIST_SUBDIRS += libTrie
-SUBDIRS      += libTrie
-CLEANFILES   =
+CLEANFILES =
+
 
 install: all
 install-strip: all
