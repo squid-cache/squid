@@ -1,11 +1,10 @@
 include $(top_srcdir)/src/Common.am
 
-EXTRA_LIBRARIES	= libbasic.a libdigest.a libntlm.a libnegotiate.a
-noinst_LIBRARIES = libauth.a @AUTH_LIBS_TO_BUILD@
+noinst_LTLIBRARIES = libauth.la libacls.la @AUTH_LIBS_TO_BUILD@
+EXTRA_LTLIBRARIES = libbasic.la libdigest.la libntlm.la libnegotiate.la
 
 ## authentication framework; this library is always built
-## TODO: use libtool and add @AUTH_LIBS_TO_BUILD@ to libauth.la
-libauth_a_SOURCES = \
+libauth_la_SOURCES = \
 	Config.cc \
 	Config.h \
 	Scheme.cc \
@@ -14,27 +13,43 @@ libauth_a_SOURCES = \
 	User.cci \
 	User.cc \
 	UserRequest.h \
-	UserRequest.cc
+	UserRequest.cc \
+	Gadgets.cc \
+	Gadgets.h
 
-libbasic_a_SOURCES = \
+libauth_la_LIBADD = @AUTH_LIBS_TO_BUILD@
+libauth_la_DEPENDENCIES = @AUTH_LIBS_TO_BUILD@
+
+## authentication-dependent ACLs and authentication code they share
+libacls_la_SOURCES = \
+	Acl.cc \
+	Acl.h \
+	\
+	AclMaxUserIp.cc \
+	AclMaxUserIp.h \
+	AclProxyAuth.cc \
+	AclProxyAuth.h	
+
+
+libbasic_la_SOURCES = \
 	basic/basicScheme.cc \
 	basic/basicScheme.h \
 	basic/auth_basic.cc \
 	basic/auth_basic.h
 
-libdigest_a_SOURCES = \
+libdigest_la_SOURCES = \
 	digest/digestScheme.cc \
 	digest/digestScheme.h \
 	digest/auth_digest.cc \
 	digest/auth_digest.h
 
-libntlm_a_SOURCES = \
+libntlm_la_SOURCES = \
 	ntlm/ntlmScheme.cc \
 	ntlm/ntlmScheme.h \
 	ntlm/auth_ntlm.cc \
 	ntlm/auth_ntlm.h
 
-libnegotiate_a_SOURCES = \
+libnegotiate_la_SOURCES = \
 	negotiate/negotiateScheme.cc \
 	negotiate/negotiateScheme.h \
 	negotiate/auth_negotiate.cc \
