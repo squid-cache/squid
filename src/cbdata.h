@@ -232,7 +232,7 @@
  * are added runtime
  */
 typedef enum {
-    CBDATA_UNKNOWN = 0,
+    CBDATA_UNKNOWN = 0
 } cbdata_type;
 
 /// \ingroup CBDATAAPI

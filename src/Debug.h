@@ -80,6 +80,10 @@ private:
 
 extern FILE *debug_log;
 
+const size_t BuildPrefixInit();
+const char * SkipBuildPrefix(const char* path);
+
+
 /* Debug stream */
 #define debugs(SECTION, LEVEL, CONTENT) \
    do { \
@@ -94,7 +98,7 @@ extern FILE *debug_log;
  *
  * debugs(1,2, HERE << "some message");
  */
-#define HERE __FILE__<<"("<<__LINE__<<") "<<__FUNCTION__<<": "
+#define HERE SkipBuildPrefix(__FILE__)<<"("<<__LINE__<<") "<<__FUNCTION__<<": "
 
 /*
  * MYNAME is for use at debug levels 0 and 1 where HERE is too messy.
