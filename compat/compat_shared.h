@@ -94,10 +94,8 @@ struct rusage
 #endif /* !HAVE_STRUCT_RUSAGE */
 
 
-/* templates require C++ */
-#ifdef __cplusplus
-
 #ifndef min
+#ifdef __cplusplus
 /**
  * min() comparison may not always be provided.
  * Squid bundles this template for when its needed.
@@ -111,10 +109,14 @@ min(A const & lhs, A const & rhs)
         return rhs;
     return lhs;
 }
-#endif
-#define XMIN(x,y) (min (x,y))
+#else /* !__cplusplus */
+/* for non-C++ we are stuck with the < and ? operator */
+#define min(a,b) ((a) < (b) ? (a) : (b))
+#endif /* __cplusplus */
+#endif /* min */
 
 #ifndef max
+#ifdef __cplusplus
 /**
  * max() comparison may not always be provided.
  * Squid bundles this template for when its needed.
@@ -128,10 +130,11 @@ max(A const & lhs, A const & rhs)
         return rhs;
     return lhs;
 }
-#endif
-#define XMAX(a,b) (max (a,b))
-
+#else /* !__cplusplus */
+/* for non-C++ we are stuck with the < and ? operator */
+#define max(a,b) ((a) < (b) ? (b) : (a))
 #endif /* __cplusplus */
+#endif /* max */
 
 /**
  * tempnam() not provided by all systems

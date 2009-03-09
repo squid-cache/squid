@@ -91,8 +91,8 @@ void ChunkedCodingParser::parseChunkBody()
 {
     Must(theLeftBodySize > 0); // Should, really
 
-    const size_t availSize = XMIN(theLeftBodySize, (uint64_t)theIn->contentSize());
-    const size_t safeSize = XMIN(availSize, (size_t)theOut->potentialSpaceSize());
+    const size_t availSize = min(theLeftBodySize, (uint64_t)theIn->contentSize());
+    const size_t safeSize = min(availSize, (size_t)theOut->potentialSpaceSize());
 
     doNeedMoreData = availSize < theLeftBodySize;
     // and we may also need more space
