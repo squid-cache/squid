@@ -1,11 +1,14 @@
 #!/bin/sh
 #
-#  Run specific build tests for a given OS environment.
+#  Run all or some build tests for a given OS environment.
 #
 top=`dirname $0`
 
+globalResult=0
+
 cleanup="no"
 verbose="no"
+keepGoing="no"
 while [ $# -ge 1 ]; do
     case "$1" in
     --cleanup)
@@ -16,14 +19,15 @@ while [ $# -ge 1 ]; do
 	verbose="yes"
 	shift
 	;;
+    --keep-going)
+	keepGoing="yes"
+	shift
+	;;
     *)
     	break
 	;;
     esac
 done
-
-# Things to catch
-errors="^ERROR|\ error:|\ Error\ |No\ such|assertion\ failed|FAIL:"
 
 logtee() {
     if [ $verbose = yes ]; then
@@ -41,52 +45,93 @@ buildtest() {
     echo "TESTING: ${layer}"
     rm -f -r ${btlayer} && mkdir ${btlayer}
     {
+	result=255
 	cd ${btlayer}
 	if test -e $top/test-suite/buildtest.sh ; then
 		$top/test-suite/buildtest.sh $opts
+		result=$?
 	elif test -e ../$top/test-suite/buildtest.sh ; then
 		../$top/test-suite/buildtest.sh ../$opts
+		result=$?
+	else
+		echo "Error: cannot find $top/test-suite/buildtest.sh script"
+		result=1
 	fi
+	# log the result for the outer script to notice
+	echo "buildtest.sh result is $result";
     } 2>&1 | logtee $log
+
+    result=1 # failure by default
+    if grep -q '^buildtest.sh result is 0$' $log; then
+	result=0
+    fi
+
     grep -E "BUILD" ${log}
-    grep -E "${errors}" $log && exit 1
+
+    # logged strings to treat as errors
+    errors="^ERROR|\ error:|\ Error\ |No\ such|assertion\ failed|FAIL:"
+    if grep -E "${errors}" $log; then
+	# Possible errors detected.
+	# Let's be conservative and assume those were real errors.
+	if test $result -eq 0; then
+	    echo "Internal error: failed test with a successful result code"
+	    result=1
+	# else we already know that there was an error
+	fi
+    fi
+
     if test "${cleanup}" = "yes" ; then
 	echo "REMOVE DATA: ${btlayer}"
 	rm -f -r ${btlayer}
     fi
-    result=`tail -2 $log | head -1`
-    if test "${result}" = "Build Successful." ; then
-        echo "${result}"
+
+    if test $result -eq 0; then
+	# successful execution
+	if test "$verbose" = yes; then
+	    echo 'Build OK.'
+	fi
     else
-        echo "Build Failed:"
+        echo "Build Failed ($result):"
         tail -5 $log
-        exit 1
+	globalResult=1
     fi
+
     if test "${cleanup}" = "yes" ; then
 	echo "REMOVE LOG: ${log}"
 	rm -f -r $log
     fi
 }
 
-# Run a single test build by name or opts file
-if [ -e "$1" ]; then 
-
-	buildtest $1
-	exit 0
-fi
-tmp=`basename "${1}" .opts`
-if test -e $top/test-suite/buildtests/${tmp}.opts ; then
-	buildtest $top/test-suite/buildtests/${tmp}.opts
-	exit 0
+# decide what tests to run, $* contains test spec names or filenames
+# use all knows specs if $* is empty
+if test -n "$*" -a "$*" != all; then
+    tests="$*"
+else
+    tests=`ls -1 $top/test-suite/buildtests/layer*.opts`
 fi
 
-#
-#  Run specific tests for each combination of configure-time
-#  Options.
-#
-#  These layers are constructed from detailed knowledge of
-#  component dependencies.
-#
-for f in `ls -1 $top/test-suite/buildtests/layer*.opts` ; do
-	buildtest $f
+for t in $tests; do
+    if test -e "$t"; then 
+	# A configuration file
+        cfg="$t"
+    elif test -e "$top/test-suite/buildtests/${t}.opts"; then
+	# A well-known configuration name
+	cfg="$top/test-suite/buildtests/${t}.opts"
+    else
+	echo "Error: Unknown test specs '$t'"
+	cfg=''
+	globalResult=1
+    fi
+
+    # run the test, if any
+    if test -n "$cfg"; then
+	buildtest $cfg
+    fi
+
+    # quit on errors unless we should $keepGoing
+    if test $globalResult -ne 0 -a $keepGoing != yes; then
+	exit $globalResult
+    fi
 done
+
+exit $globalResult
