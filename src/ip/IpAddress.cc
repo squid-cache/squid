@@ -208,6 +208,12 @@ bool IpAddress::ApplyMask(const unsigned int cidr, int mtype)
     if (cidr > 32 && mtype == AF_INET)
         return false;
 
+    if (cidr == 0) {
+        /* CIDR /0 is NoAddr regardless of the IPv4/IPv6 protocol */
+        SetNoAddr();
+        return true;
+    }
+
     clearbits = (uint8_t)( (mtype==AF_INET6?128:32) -cidr);
 
     // short-cut
@@ -978,9 +984,9 @@ char* IpAddress::NtoA(char* buf, const unsigned int blen, int force) const
     /* thats okay, our default is known */
     if ( IsAnyAddr() ) {
 #if USE_IPV6
-        memcpy(buf,"::\0", xmin(3,blen));
+        memcpy(buf,"::\0", min((const unsigned int)3,blen));
 #else
-        memcpy(buf,"0.0.0.0\0", xmin(8,blen));
+        memcpy(buf,"0.0.0.0\0", min((const unsigned int)8,blen));
 #endif
         return buf;
     }
@@ -991,7 +997,7 @@ char* IpAddress::NtoA(char* buf, const unsigned int blen, int force) const
     /* However IPv4 CAN. */
     if ( force == AF_INET && !IsIPv4() ) {
         if ( IsIPv6() ) {
-            memcpy(buf, "{!IPv4}\0", xmin(8,blen));
+            memcpy(buf, "{!IPv4}\0", min((const unsigned int)8,blen));
         }
         return buf;
     }
@@ -1015,7 +1021,7 @@ char* IpAddress::NtoA(char* buf, const unsigned int blen, int force) const
                force << "). accepted={" << AF_UNSPEC << "," << AF_INET << "," << AF_INET6 << "}");
         fprintf(stderr,"WARNING: Corrupt IP Address details OR required to display in unknown format (%d). accepted={%d,%d,%d} ",
                 force, AF_UNSPEC, AF_INET, AF_INET6);
-        memcpy(buf,"dead:beef::\0", xmin(13,blen));
+        memcpy(buf,"dead:beef::\0", min((const unsigned int)13,blen));
         assert(false);
     }
 

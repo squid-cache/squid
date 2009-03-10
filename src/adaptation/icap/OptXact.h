@@ -40,9 +40,6 @@
 namespace Adaptation {
 namespace Icap {
 
-class Adaptation::Icap::Options;
-
-
 /* OptXact sends an ICAP OPTIONS request to the ICAP service,
  * parses the ICAP response, and sends it to the initiator. A NULL response
  * means the ICAP service could not be contacted or did not return any

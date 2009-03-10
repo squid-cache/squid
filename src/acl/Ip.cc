@@ -266,6 +266,7 @@ acl_ip_data::FactoryParse(const char *t)
 
     /* Special ACL RHS "all" matches entire Internet */
     if (strcasecmp(t, "all") == 0) {
+        debugs(28, 9, "aclIpParseIpData: magic 'all' found.");
         q->addr1.SetAnyAddr();
         q->addr2.SetEmpty();
         q->mask.SetAnyAddr();
@@ -275,39 +276,51 @@ acl_ip_data::FactoryParse(const char *t)
 #if USE_IPV6
     /* Special ACL RHS "ipv6" matches IPv6-Unicast Internet */
     if (strcasecmp(t, "ipv6") == 0) {
+        debugs(28, 9, "aclIpParseIpData: magic 'ipv6' found.");
         t = "2000::/3";
+        /* AYJ: due to the nature os IPv6 this will not always work,
+         *      we may need to turn recursive to catch all the valid v6 sub-nets. */
     }
 #endif
 
 // IPv4
     if (sscanf(t, SCAN_ACL1_4, addr1, addr2, mask) == 3) {
+        debugs(28, 9, "aclIpParseIpData: '" << t << "' matched: SCAN1-v4: " << SCAN_ACL1_4);
         iptype=AF_INET;
     } else if (sscanf(t, SCAN_ACL2_4, addr1, addr2, &c) >= 2) {
+        debugs(28, 9, "aclIpParseIpData: '" << t << "' matched: SCAN2-v4: " << SCAN_ACL2_4);
         mask[0] = '\0';
         iptype=AF_INET;
     } else if (sscanf(t, SCAN_ACL3_4, addr1, mask) == 2) {
+        debugs(28, 9, "aclIpParseIpData: '" << t << "' matched: SCAN3-v4: " << SCAN_ACL3_4);
         addr2[0] = '\0';
         iptype=AF_INET;
     } else if (sscanf(t, SCAN_ACL4_4, addr1,&c) == 2) {
+        debugs(28, 9, "aclIpParseIpData: '" << t << "' matched: SCAN4-v4: " << SCAN_ACL4_4);
         addr2[0] = '\0';
         mask[0] = '\0';
         iptype=AF_INET;
 
 // IPv6
     } else if (sscanf(t, SCAN_ACL1_6, addr1, addr2, mask) == 3) {
+        debugs(28, 9, "aclIpParseIpData: '" << t << "' matched: SCAN1-v4: " << SCAN_ACL1_6);
         iptype=AF_INET6;
     } else if (sscanf(t, SCAN_ACL2_6, addr1, addr2, &c) >= 2) {
+        debugs(28, 9, "aclIpParseIpData: '" << t << "' matched: SCAN2-v4: " << SCAN_ACL2_6);
         mask[0] = '\0';
         iptype=AF_INET6;
     } else if (sscanf(t, SCAN_ACL3_6, addr1, mask) == 2) {
+        debugs(28, 9, "aclIpParseIpData: '" << t << "' matched: SCAN3-v4: " << SCAN_ACL3_6);
         addr2[0] = '\0';
         iptype=AF_INET6;
     } else if (sscanf(t, SCAN_ACL4_6, addr1, mask) == 2) {
+        debugs(28, 9, "aclIpParseIpData: '" << t << "' matched: SCAN4-v4: " << SCAN_ACL4_6);
         addr2[0] = '\0';
         iptype=AF_INET6;
 
 // Neither
     } else if (sscanf(t, "%[^/]/%s", addr1, mask) == 2) {
+        debugs(28, 9, "aclIpParseIpData: '" << t << "' matched: non-IP pattern: %[^/]/%s");
         addr2[0] = '\0';
     } else if (sscanf(t, "%s", addr1) == 1) {
         /*
@@ -419,6 +432,8 @@ acl_ip_data::FactoryParse(const char *t)
 
     if (changed)
         debugs(28, 0, "aclIpParseIpData: WARNING: Netmask masks away part of the specified IP in '" << t << "'");
+
+    debugs(28,9, HERE << "Parsed: " << q->addr1 << "-" << q->addr2 << "/" << q->mask << "(/" << q->mask.GetCIDR() <<")");
 
     /* 1.2.3.4/255.255.255.0  --> 1.2.3.0 */
     /* Same as IPv6 (not so trivial to depict) */

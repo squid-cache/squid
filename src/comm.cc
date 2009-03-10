@@ -1909,7 +1909,7 @@ comm_init(void) {
     /* Keep a few file descriptors free so that we don't run out of FD's
      * after accepting a client but before it opens a socket or a file.
      * Since Squid_MaxFD can be as high as several thousand, don't waste them */
-    RESERVED_FD = XMIN(100, Squid_MaxFD / 4);
+    RESERVED_FD = min(100, Squid_MaxFD / 4);
 
     conn_close_pool = memPoolCreate("close_handler", sizeof(close_handler));
 
