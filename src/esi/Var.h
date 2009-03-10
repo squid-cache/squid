@@ -1,6 +1,8 @@
 /*
  * $Id$
  *
+ * DEBUG: section 86    ESI processing
+ * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -28,42 +30,27 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ESIEXPATPARSER_H
-#define SQUID_ESIEXPATPARSER_H
+#ifndef SQUID_ESIVAR_H
+#define SQUID_ESIVAR_H
 
-#if USE_SQUID_ESI
+#include "squid.h"
+#include "esi/Element.h"
+#include "esi/Sequence.h"
 
-#include "ESIParser.h"
-#include "expat.h"
+/* esiVar */
 
-class ESIExpatParser : public ESIParser
+class ESIVar:public esiSequence
 {
 
 public:
-    ESIExpatParser(ESIParserClient *);
-    ~ESIExpatParser();
-
-    /** \retval true	on success */
-    bool parse(char const *dataToParse, size_t const lengthOfData, bool const endOfStream);
-
-    long int lineNumber() const;
-    char const * errorString() const;
-
-private:
-    ESI_PARSER_TYPE;
-    /** our parser */
-    mutable XML_Parser p;
-    static void Start(void *data, const XML_Char *el, const char **attr);
-    static void End(void *data, const XML_Char *el);
-    static void Default (void *data, const XML_Char *s, int len);
-    static void Comment (void *data, const XML_Char *s);
-    XML_Parser &myParser() const {return p;}
-
-    ESIParserClient *theClient;
+    //    void *operator new (size_t byteCount);
+    //    void operator delete (void *address);
+    ESIVar(esiTreeParentPtr aParent) : esiSequence (aParent) {
+        flags.dovars = 1;
+    }
 };
 
-#endif /* USE_SQUID_ESI */
-
-#endif /* SQUID_ESIEXPATPARSER_H */
+#endif /* SQUID_ESIVAR_H */

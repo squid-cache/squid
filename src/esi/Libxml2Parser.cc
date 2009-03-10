@@ -41,7 +41,7 @@
 
 #if USE_SQUID_ESI
 
-#include "ESILibxml2Parser.h"
+#include "esi/Libxml2Parser.h"
 
 // the global document that will store the resolved entity
 // definitions

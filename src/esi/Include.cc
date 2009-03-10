@@ -41,8 +41,8 @@
  */
 #if (USE_SQUID_ESI == 1)
 
-#include "ESIInclude.h"
-#include "ESIVarState.h"
+#include "esi/Include.h"
+#include "esi/VarState.h"
 #include "client_side_request.h"
 #include "HttpReply.h"
 
