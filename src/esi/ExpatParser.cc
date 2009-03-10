@@ -37,7 +37,7 @@
 
 #if USE_SQUID_ESI
 
-#include "ESIExpatParser.h"
+#include "esi/ExpatParser.h"
 
 RegisterESIParser("expat", ESIExpatParser);
 

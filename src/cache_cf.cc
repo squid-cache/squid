@@ -57,7 +57,7 @@
 #include "snmp.h"
 #endif
 #if USE_SQUID_ESI
-#include "ESIParser.h"
+#include "esi/Parser.h"
 #endif
 
 #if USE_ADAPTATION

@@ -40,6 +40,13 @@ endif
 
 ADAPTATION_LIBS = @ADAPTATION_LIBS@
 
+if USE_ESI
+SUBDIRS += esi
+ESI_LIBS = esi/libesi.la
+else
+ESI_LIBS = 
+endif
+
 DELAY_POOL_ALL_SOURCE = \
 	CommonPool.h \
 	CompositePoolNode.h \
@@ -68,43 +75,6 @@ if USE_DELAY_POOLS
 DELAY_POOL_SOURCE = $(DELAY_POOL_ALL_SOURCE)
 else
 DELAY_POOL_SOURCE = 
-endif
-
-ESI_ALL_SOURCE = \
-	ElementList.h \
-	ESI.cc \
-	ESI.h \
-	ESIAssign.cc \
-	ESIAssign.h \
-	ESIAttempt.h \
-	ESIContext.cc \
-	ESIContext.h \
-	ESICustomParser.cc \
-	ESICustomParser.h \
-	ESIElement.h \
-	ESIExcept.h \
-	ESIExpatParser.cc \
-	ESIExpatParser.h \
-	ESIExpression.cc \
-	ESIExpression.h \
-	ESIInclude.cc \
-	ESIInclude.h \
-	ESILiteral.h \
-	ESILibxml2Parser.cc \
-	ESILibxml2Parser.h \
-	ESIParser.cc \
-	ESIParser.h \
-	ESISegment.cc \
-	ESISegment.h \
-	ESISequence.cc \
-	ESISequence.h \
-	ESIVar.h \
-	ESIVarState.cc \
-	ESIVarState.h
-if USE_ESI
-  ESI_SOURCE = $(ESI_ALL_SOURCE)
-else
-  ESI_SOURCE = 
 endif
 
 if ENABLE_XPROF_STATS
@@ -277,7 +247,6 @@ EXTRA_squid_SOURCES = \
 	ipc.cc \
 	ipc_win32.cc \
 	$(IDENT_ALL_SOURCE) \
-	$(ESI_ALL_SOURCE) \
 	ProfStats.cc \
 	LeakFinder.cc \
 	LeakFinder.h \
@@ -370,7 +339,6 @@ squid_SOURCES = \
 	enums.h \
 	errorpage.cc \
 	errorpage.h \
-	$(ESI_SOURCE) \
 	ETag.cc \
 	event.cc \
 	event.h \
@@ -565,6 +533,7 @@ squid_LDADD = \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	${ADAPTATION_LIBS} \
+	${ESI_LIBS} \
 	@SSLLIB@ \
 	-lmiscutil \
 	@XTRA_LIBS@ \
@@ -1064,7 +1033,6 @@ tests_testCacheManager_SOURCES = \
 	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
-	$(ESI_SOURCE) \
 	ETag.cc \
 	external_acl.cc \
 	ExternalACLEntry.cc \
@@ -1162,6 +1130,7 @@ tests_testCacheManager_LDADD = \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
+	${ESI_LIBS} \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
@@ -1233,7 +1202,6 @@ tests_testEvent_SOURCES = \
 	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
-	$(ESI_SOURCE) \
 	ETag.cc \
 	external_acl.cc \
 	ExternalACLEntry.cc \
@@ -1330,6 +1298,7 @@ tests_testEvent_LDADD = \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
+	${ESI_LIBS} \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
@@ -1380,7 +1349,6 @@ tests_testEventLoop_SOURCES = \
 	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
-	$(ESI_SOURCE) \
 	ETag.cc \
 	external_acl.cc \
 	ExternalACLEntry.cc \
@@ -1477,6 +1445,7 @@ tests_testEventLoop_LDADD = \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
+	${ESI_LIBS} \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
@@ -1516,7 +1485,6 @@ tests_test_http_range_SOURCES = \
 	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
-	$(ESI_SOURCE) \
 	ETag.cc \
 	external_acl.cc \
 	ExternalACLEntry.cc \
@@ -1620,6 +1588,7 @@ tests_test_http_range_LDADD = \
 	@REPL_OBJS@ \
 	@STORE_LIBS_TO_ADD@ \
 	${ADAPTATION_LIBS} \
+	${ESI_LIBS} \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
@@ -1669,7 +1638,6 @@ tests_testHttpRequest_SOURCES = \
 	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
-	$(ESI_SOURCE) \
 	ETag.cc \
 	external_acl.cc \
 	ExternalACLEntry.cc \
@@ -1767,6 +1735,7 @@ tests_testHttpRequest_LDADD = \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
+	${ESI_LIBS} \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
@@ -2018,7 +1987,6 @@ tests_testURL_SOURCES = \
 	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
-	$(ESI_SOURCE) \
 	ETag.cc \
 	external_acl.cc \
 	ExternalACLEntry.cc \
@@ -2114,6 +2082,7 @@ tests_testURL_LDADD = \
 	@REGEXLIB@ \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
+	${ESI_LIBS} \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
 	@SQUID_CPPUNIT_LIBS@ \

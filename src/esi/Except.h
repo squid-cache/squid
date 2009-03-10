@@ -33,40 +33,22 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ESILITERAL_H
-#define SQUID_ESILITERAL_H
+#ifndef SQUID_ESIEXCEPT_H
+#define SQUID_ESIEXCEPT_H
 
 #include "squid.h"
-#include "ESIElement.h"
+#include "esi/Element.h"
+#include "esi/Sequence.h"
 
-class ESIContext;
-/* esiLiteral */
+/* esiExcept */
 
-struct esiLiteral : public ESIElement {
-    MEMPROXY_CLASS(esiLiteral);
+class esiExcept : public esiSequence
+{
 
-    esiLiteral(ESISegment::Pointer);
-    esiLiteral(ESIContext *, const char *s, int len);
-    ~esiLiteral();
-
-    void render(ESISegment::Pointer);
-    esiProcessResult_t process (int dovars);
-    Pointer makeCacheable() const;
-    Pointer makeUsable(esiTreeParentPtr, ESIVarState &) const;
-    /* optimise copies away later */
-    ESISegment::Pointer buffer;
-
-    struct {
-        int donevars:1;
-    } flags;
-
-    ESIVarState *varState;
-    void finish();
-
-private:
-    esiLiteral(esiLiteral const &);
+public:
+    //    void *operator new (size_t byteCount);
+    //    void operator delete (void *address);
+    esiExcept(esiTreeParentPtr aParent) : esiSequence (aParent) {}
 };
 
-MEMPROXY_CLASS_INLINE(esiLiteral)          /**DOCS_NOSEMI*/
-
-#endif /* SQUID_ESILITERAL_H */
+#endif /* SQUID_ESIEXCEPT_H */

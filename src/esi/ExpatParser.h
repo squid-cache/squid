@@ -1,8 +1,6 @@
 /*
  * $Id$
  *
- * DEBUG: section 86    ESI processing
- * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -30,38 +28,42 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
- * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ELEMENTLIST_H
-#define SQUID_ELEMENTLIST_H
+#ifndef SQUID_ESIEXPATPARSER_H
+#define SQUID_ESIEXPATPARSER_H
 
-#include "squid.h"
-#include "ESIElement.h"
+#if USE_SQUID_ESI
 
-class ElementList
+#include "esi/Parser.h"
+#include "expat.h"
+
+class ESIExpatParser : public ESIParser
 {
 
 public:
-    ElementList();
-    ~ElementList();
+    ESIExpatParser(ESIParserClient *);
+    ~ESIExpatParser();
 
-    ESIElement::Pointer &operator[](int);
-    ESIElement::Pointer const &operator[](int)const;
-    ESIElement::Pointer * elements; /* unprocessed or rendered nodes */
-    void pop_front (size_t const);
-    void push_back(ESIElement::Pointer &);
-    size_t size() const;
-    void setNULL (int start, int end);
+    /** \retval true	on success */
+    bool parse(char const *dataToParse, size_t const lengthOfData, bool const endOfStream);
 
-    int allocedcount;
-    size_t allocedsize;
-    int elementcount;
+    long int lineNumber() const;
+    char const * errorString() const;
 
 private:
-    ElementList(ElementList const &);
-    ElementList &operator=(ElementList const&);
+    ESI_PARSER_TYPE;
+    /** our parser */
+    mutable XML_Parser p;
+    static void Start(void *data, const XML_Char *el, const char **attr);
+    static void End(void *data, const XML_Char *el);
+    static void Default (void *data, const XML_Char *s, int len);
+    static void Comment (void *data, const XML_Char *s);
+    XML_Parser &myParser() const {return p;}
+
+    ESIParserClient *theClient;
 };
 
+#endif /* USE_SQUID_ESI */
 
-#endif /* SQUID_ELEMENTLIST_H */
+#endif /* SQUID_ESIEXPATPARSER_H */

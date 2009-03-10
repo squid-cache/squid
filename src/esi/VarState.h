@@ -34,7 +34,7 @@
 #ifndef SQUID_ESIVARSTATE_H
 #define SQUID_ESIVARSTATE_H
 
-#include "ESISegment.h"
+#include "esi/Segment.h"
 #include "Trie.h"
 #include "Array.h"
 #include "HttpHeader.h"
