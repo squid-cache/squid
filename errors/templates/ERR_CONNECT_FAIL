@@ -2,7 +2,13 @@
 <html><head>
 <meta http-equiv="Content-Type" CONTENT="text/html; charset=utf-8">
 <title>ERROR: The requested URL could not be retrieved</title>
-<style type="text/css"><!-- %l --></style>
+<style type="text/css"><!-- 
+ %l
+
+body
+:lang(fa) { direction: rtl; font-size: 100%; font-family: Tahoma, Roya, sans-serif; float: right; }
+
+ --></style>
 </head><body>
 <div id="titles">
 <h1>ERROR</h1>

@@ -140,7 +140,7 @@ mem_hdr::writeAvailable(mem_node *aNode, int64_t location, size_t amount, char c
 
     /* these two can go I think */
     assert (location - aNode->nodeBuffer.offset == (int64_t)aNode->nodeBuffer.length);
-    size_t copyLen = XMIN (amount, aNode->space());
+    size_t copyLen = min(amount, aNode->space());
 
     xmemcpy(aNode->nodeBuffer.data + aNode->nodeBuffer.length, source, copyLen);
 
@@ -216,7 +216,7 @@ mem_hdr::copyAvailable(mem_node *aNode, int64_t location, size_t amount, char *t
 
     size_t copyOffset = location - aNode->nodeBuffer.offset;
 
-    size_t copyLen = XMIN (amount, aNode->nodeBuffer.length - copyOffset);
+    size_t copyLen = min(amount, aNode->nodeBuffer.length - copyOffset);
 
     xmemcpy(target, aNode->nodeBuffer.data + copyOffset, copyLen);
 

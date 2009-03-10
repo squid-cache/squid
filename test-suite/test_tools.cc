@@ -234,3 +234,9 @@ ctx_enter(const char *descr) {
 
 void
 ctx_exit(Ctx ctx) {}
+
+// for debugs()
+const char* SkipBuildPrefix(const char* path)
+{
+    return path;
+}

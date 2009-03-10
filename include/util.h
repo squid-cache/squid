@@ -146,13 +146,6 @@ SQUIDCEXTERN const char *xint64toa(int64_t num);
 SQUIDCEXTERN double drand48(void);
 #endif
 
-#ifndef xmax
-#define xmax(a,b) ((a) < (b) ? (b) : (a))
-#endif
-#ifndef xmin
-#define xmin(a,b) ((a) < (b) ? (a) : (b))
-#endif
-
 typedef struct {
     size_t count;
     size_t bytes;

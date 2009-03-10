@@ -2,7 +2,13 @@
 <html><head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>FTP PUT Successful: File Created</title>
-<style type="text/css"><!-- %l --></style>
+<style type="text/css"><!-- 
+ %l
+
+body
+:lang(fa) { direction: rtl; font-size: 100%; font-family: Tahoma, Roya, sans-serif; float: right; }
+
+ --></style>
 </head><body>
 <div id="titles">
 <h1 id="ftpsuccess">Operation successful</h1>

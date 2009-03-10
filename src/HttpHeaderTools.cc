@@ -189,7 +189,7 @@ int
 strListIsSubstr(const String * list, const char *s, char del)
 {
     assert(list && del);
-    return list->pos(s) != 0;
+    return (list->find(s) != String::npos);
 
     /** \note
      * Note: the original code with a loop is broken because it uses strstr()
@@ -359,7 +359,7 @@ httpHeaderParseQuotedString (const char *start, String *val)
 
 /**
  * Checks the anonymizer (header_access) configuration.
- * 
+ *
  * \retval 0    Header is explicitly blocked for removal
  * \retval 1    Header is explicitly allowed
  * \retval 1    Header has been replaced, the current version can be used.

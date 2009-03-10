@@ -789,7 +789,7 @@ ClientSocketContext::lengthToSend(Range<int64_t> const &available)
     if (available.start < http->range_iter.currentSpec()->offset)
         return 0;
 
-    return XMIN(http->range_iter.debt(), (int64_t)maximum);
+    return min(http->range_iter.debt(), (int64_t)maximum);
 }
 
 void
