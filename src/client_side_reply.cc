@@ -52,8 +52,8 @@
 #endif
 #include "MemObject.h"
 #include "fde.h"
-#include "ACLChecklist.h"
-#include "ACL.h"
+#include "acl/FilledChecklist.h"
+#include "acl/Gadgets.h"
 #if DELAY_POOLS
 #include "DelayPools.h"
 #endif
@@ -1785,8 +1785,8 @@ clientReplyContext::processReplyAccess ()
     }
 
     /** Process http_reply_access lists */
-    ACLChecklist *replyChecklist;
-    replyChecklist = clientAclChecklistCreate(Config.accessList.reply, http);
+    ACLFilledChecklist *replyChecklist =
+        clientAclChecklistCreate(Config.accessList.reply, http);
     replyChecklist->reply = HTTPMSGLOCK(reply);
     replyChecklist->nonBlockingCheck(ProcessReplyAccessResult, this);
 }

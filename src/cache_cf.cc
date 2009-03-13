@@ -33,7 +33,6 @@
  */
 
 #include "squid.h"
-#include "authenticate.h"
 #include "ProtoPort.h"
 #include "HttpRequestMethod.h"
 #include "auth/Config.h"
@@ -42,7 +41,8 @@
 #include "Store.h"
 #include "SwapDir.h"
 #include "ConfigParser.h"
-#include "ACL.h"
+#include "acl/Acl.h"
+#include "acl/Gadgets.h"
 #include "StoreFileSystem.h"
 #include "Parsing.h"
 #include "MemBuf.h"

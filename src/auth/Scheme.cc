@@ -36,7 +36,7 @@
 
 #include "squid.h"
 #include "auth/Scheme.h"
-#include "authenticate.h"
+#include "auth/Gadgets.h"
 #include "auth/Config.h"
 
 Vector<AuthScheme*> *AuthScheme::_Schemes = NULL;

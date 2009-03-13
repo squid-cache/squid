@@ -96,7 +96,7 @@
 #include "MemObject.h"
 #include "fde.h"
 #include "client_side_request.h"
-#include "ACLChecklist.h"
+#include "acl/FilledChecklist.h"
 #include "ConnectionDetail.h"
 #include "client_side_reply.h"
 #include "ClientRequestContext.h"
@@ -527,7 +527,7 @@ ClientHttpRequest::logRequest()
 
 #endif
 
-        ACLChecklist *checklist = clientAclChecklistCreate(Config.accessList.log, this);
+        ACLFilledChecklist *checklist = clientAclChecklistCreate(Config.accessList.log, this);
 
         if (al.reply)
             checklist->reply = HTTPMSGLOCK(al.reply);
@@ -2874,12 +2874,9 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
 #if USE_IDENT
 
     if (Config.accessList.identLookup) {
-        ACLChecklist identChecklist;
+        ACLFilledChecklist identChecklist(Config.accessList.identLookup, NULL, NULL);
         identChecklist.src_addr = details->peer;
         identChecklist.my_addr = details->me;
-        identChecklist.accessList = cbdataReference(Config.accessList.identLookup);
-
-        /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
         if (identChecklist.fastCheck())
             identStart(details->me, details->peer, clientIdentDone, connState);
     }
@@ -3089,12 +3086,9 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
 #if USE_IDENT
 
     if (Config.accessList.identLookup) {
-        ACLChecklist identChecklist;
+        ACLFilledChecklist identChecklist(Config.accessList.identLookup, NULL, NULL);
         identChecklist.src_addr = details->peer;
         identChecklist.my_addr = details->me;
-        identChecklist.accessList = cbdataReference(Config.accessList.identLookup);
-
-        /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
         if (identChecklist.fastCheck())
             identStart(details->me, details->peer, clientIdentDone, connState);
     }
@@ -3345,12 +3339,12 @@ varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
     }
 }
 
-ACLChecklist *
+ACLFilledChecklist *
 clientAclChecklistCreate(const acl_access * acl, ClientHttpRequest * http)
 {
-    ACLChecklist *ch;
     ConnStateData * conn = http->getConn();
-    ch = aclChecklistCreate(acl, http->request, cbdataReferenceValid(conn) && conn != NULL ? conn->rfc931 : dash_str);
+    ACLFilledChecklist *ch = new ACLFilledChecklist(acl, http->request,
+        cbdataReferenceValid(conn) && conn != NULL ? conn->rfc931 : dash_str);
 
     /*
      * hack for ident ACL. It needs to get full addresses, and a place to store
@@ -3365,7 +3359,7 @@ clientAclChecklistCreate(const acl_access * acl, ClientHttpRequest * http)
      */
 
     if (conn != NULL)
-        ch->conn(conn);	/* unreferenced in acl.cc */
+        ch->conn(conn);	/* unreferenced in FilledCheckList.cc */
 
     return ch;
 }

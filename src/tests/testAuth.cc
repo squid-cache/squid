@@ -2,7 +2,7 @@
 
 #include "squid.h"
 #include "testAuth.h"
-#include "authenticate.h"
+#include "auth/Gadgets.h"
 #include "auth/UserRequest.h"
 #include "auth/Scheme.h"
 #include "auth/Config.h"

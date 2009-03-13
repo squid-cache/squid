@@ -39,7 +39,7 @@
 // Store.h Required by configuration directives parsing/dumping only
 #include "Store.h"
 
-#include "ACLChecklist.h"
+#include "acl/Checklist.h"
 
 #include "HttpReply.h"
 #include "HttpRequest.h"

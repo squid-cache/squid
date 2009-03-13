@@ -39,11 +39,11 @@
 #include "HttpRequest.h"
 #include "StoreClient.h"
 #include "Store.h"
-#include "ACL.h"
-#include "ACLASN.h"
-#include "ACLSourceASN.h"
-#include "ACLDestinationASN.h"
-#include "ACLDestinationIP.h"
+#include "acl/Acl.h"
+#include "acl/Asn.h"
+#include "acl/SourceAsn.h"
+#include "acl/DestinationAsn.h"
+#include "acl/DestinationIp.h"
 #include "HttpReply.h"
 #include "forward.h"
 #include "wordlist.h"
@@ -605,7 +605,7 @@ ACL::Prototype ACLASN::DestinationRegistryProtoype(&ACLASN::DestinationRegistryE
 ACLStrategised<IpAddress> ACLASN::DestinationRegistryEntry_(new ACLASN, ACLDestinationASNStrategy::Instance(), "dst_as");
 
 int
-ACLSourceASNStrategy::match (ACLData<IpAddress> * &data, ACLChecklist *checklist)
+ACLSourceASNStrategy::match (ACLData<IpAddress> * &data, ACLFilledChecklist *checklist)
 {
     return data->match(checklist->src_addr);
 }
@@ -620,7 +620,7 @@ ACLSourceASNStrategy ACLSourceASNStrategy::Instance_;
 
 
 int
-ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLChecklist *checklist)
+ACLDestinationASNStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
     const ipcache_addrs *ia = ipcache_gethostbyname(checklist->request->GetHost(), IP_LOOKUP_IF_MISS);
 
