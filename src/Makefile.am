@@ -42,7 +42,9 @@ ADAPTATION_LIBS = @ADAPTATION_LIBS@
 
 if USE_ESI
 SUBDIRS += esi
-ESI_LIBS = esi/libesi.la
+ESI_LIBS = \
+	esi/libesi.la \
+	$(top_builddir)/lib/libTrie/src/libTrie.a
 else
 ESI_LIBS = 
 endif
@@ -173,7 +175,6 @@ INCLUDES = \
 	-I$(top_srcdir)/src \
 	-I$(top_builddir)/include \
 	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/lib/libTrie/include \
 	-I$(top_builddir)/lib \
 	-I$(top_srcdir)/lib \
 	@SQUID_CPPUNIT_INC@
