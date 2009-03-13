@@ -35,7 +35,7 @@
  **********************************************************************/
 
 #ifndef EIGHTBIT_SUBIDS
-typedef u_int8_t oid;
+typedef u_int oid;
 #define MAX_SUBID   0xFFFFFFFF
 #else
 typedef u_char oid;

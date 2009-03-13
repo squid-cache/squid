@@ -35,36 +35,36 @@ logtee() {
 
 buildtest() {
     opts=$1
-    layer=`basename $opts .opts`
-    btlayer="bt$layer"
+    layer=`basename ${opts} .opts`
+    btlayer="bt${layer}"
     log=${btlayer}.log
     echo "TESTING: ${layer}"
     rm -f -r ${btlayer} && mkdir ${btlayer}
     {
 	cd ${btlayer}
 	if test -e $top/test-suite/buildtest.sh ; then
-		$top/test-suite/buildtest.sh $opts
-	elif test -e ../$top/test-suite/buildtest.sh ; then
-		../$top/test-suite/buildtest.sh ../$opts
+		$top/test-suite/buildtest.sh ${opts} 2>&1
+	elif test -e ../${top}/test-suite/buildtest.sh ; then
+		../${top}/test-suite/buildtest.sh ../${opts} 2>&1
 	fi
-    } 2>&1 | logtee $log
+    } 2>&1 | logtee ${log}
     grep -E "BUILD" ${log}
-    grep -E "${errors}" $log && exit 1
+    grep -E "${errors}" ${log}
     if test "${cleanup}" = "yes" ; then
 	echo "REMOVE DATA: ${btlayer}"
 	rm -f -r ${btlayer}
     fi
-    result=`tail -2 $log | head -1`
+    result=`tail -1 ${log}`
     if test "${result}" = "Build Successful." ; then
         echo "${result}"
     else
         echo "Build Failed:"
-        tail -5 $log
+        tail -2 ${log}
         exit 1
     fi
     if test "${cleanup}" = "yes" ; then
 	echo "REMOVE LOG: ${log}"
-	rm -f -r $log
+	rm -f -r ${log}
     fi
 }
 
@@ -74,9 +74,9 @@ if [ -e "$1" ]; then
 	buildtest $1
 	exit 0
 fi
-tmp=`basename "${1}" .opts`
+tmp=`basename "$1" .opts`
 if test -e $top/test-suite/buildtests/${tmp}.opts ; then
-	buildtest $top/test-suite/buildtests/${tmp}.opts
+	buildtest ${top}/test-suite/buildtests/${tmp}.opts
 	exit 0
 fi
 
@@ -87,6 +87,6 @@ fi
 #  These layers are constructed from detailed knowledge of
 #  component dependencies.
 #
-for f in `ls -1 $top/test-suite/buildtests/layer*.opts` ; do
-	buildtest $f
+for f in `ls -1 ${top}/test-suite/buildtests/layer*.opts` ; do
+	buildtest ${f}
 done
