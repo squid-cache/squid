@@ -208,6 +208,12 @@ bool IpAddress::ApplyMask(const unsigned int cidr, int mtype)
     if (cidr > 32 && mtype == AF_INET)
         return false;
 
+    if (cidr == 0) {
+        /* CIDR /0 is NoAddr regardless of the IPv4/IPv6 protocol */
+        SetNoAddr();
+        return true;
+    }
+
     clearbits = (uint8_t)( (mtype==AF_INET6?128:32) -cidr);
 
     // short-cut
