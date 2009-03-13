@@ -34,7 +34,7 @@
 #ifndef SQUID_EXTERNALACL_H
 #define SQUID_EXTERNALACL_H
 
-#include "ACLChecklist.h"
+#include "acl/Checklist.h"
 
 class external_acl;
 
@@ -53,7 +53,7 @@ private:
 /** \todo CLEANUP: kill this typedef. */
 typedef struct _external_acl_data external_acl_data;
 
-#include "ACL.h"
+#include "acl/Acl.h"
 
 class ACLExternal : public ACL
 {
