@@ -32,8 +32,8 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLSOURCEDOMAIN_H
-#define SQUID_ACLSOURCEDOMAIN_H
+#ifndef SQUID_ACLDESTINATIONDOMAIN_H
+#define SQUID_ACLDESTINATIONDOMAIN_H
 
 #include "acl/Acl.h"
 #include "acl/Data.h"
@@ -87,4 +87,4 @@ private:
     static ACLStrategised<char const *> RegexRegistryEntry_;
 };
 
-#endif /* SQUID_ACLSOURCEDOMAIN_H */
+#endif /* SQUID_ACLDESTINATIONDOMAIN_H */
