@@ -49,9 +49,7 @@ ACLSourceIP::match(ACLChecklist *checklist)
     return ACLIP::match(Filled(checklist)->src_addr);
 }
 
-ACL::Prototype ACLSourceIP::RegistryProtoype(&ACLSourceIP::RegistryEntry_, "src");
 
-ACLSourceIP ACLSourceIP::RegistryEntry_;
 
 ACL *
 ACLSourceIP::clone() const

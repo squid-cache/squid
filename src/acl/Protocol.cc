@@ -43,9 +43,7 @@
 
 template class ACLStrategised<protocol_t>;
 
-ACL::Prototype ACLProtocol::RegistryProtoype(&ACLProtocol::RegistryEntry_, "proto");
 
-ACLStrategised<protocol_t> ACLProtocol::RegistryEntry_(new ACLProtocolData, ACLProtocolStrategy::Instance(), "proto");
 
 int
 ACLProtocolStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)

@@ -42,9 +42,7 @@
 
 template class ACLStrategised<int>;
 
-ACL::Prototype ACLMyPort::RegistryProtoype(&ACLMyPort::RegistryEntry_, "myport");
 
-ACLStrategised<int> ACLMyPort::RegistryEntry_(new ACLIntRange, ACLMyPortStrategy::Instance(), "myport");
 
 int
 ACLMyPortStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)

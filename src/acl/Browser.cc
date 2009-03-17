@@ -43,6 +43,4 @@
 
 template class ACLRequestHeaderStrategy<HDR_USER_AGENT>;
 
-ACL::Prototype ACLBrowser::RegistryProtoype(&ACLBrowser::RegistryEntry_, "browser");
 
-ACLStrategised<char const *> ACLBrowser::RegistryEntry_(new ACLRegexData, ACLRequestHeaderStrategy<HDR_USER_AGENT>::Instance(), "browser");
