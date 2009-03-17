@@ -47,7 +47,7 @@
 #include "squid.h"
 #include "DelayId.h"
 #include "client_side_request.h"
-#include "ACLChecklist.h"
+#include "acl/FilledChecklist.h"
 #include "DelayPools.h"
 #include "DelayPool.h"
 #include "HttpRequest.h"
@@ -114,7 +114,7 @@ DelayId::DelayClient(ClientHttpRequest * http)
             continue;
         }
 
-        ACLChecklist ch;
+        ACLFilledChecklist ch(DelayPools::delay_data[pool].access, r, NULL);
 #if FOLLOW_X_FORWARDED_FOR
         if (Config.onoff.delay_pool_uses_indirect_client)
             ch.src_addr = r->indirect_client_addr;
@@ -125,12 +125,6 @@ DelayId::DelayClient(ClientHttpRequest * http)
 
         if (http->getConn() != NULL)
             ch.conn(http->getConn());
-
-        ch.request = HTTPMSGLOCK(r);
-
-        ch.accessList = cbdataReference(DelayPools::delay_data[pool].access);
-
-        /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
 
         if (DelayPools::delay_data[pool].theComposite().getRaw() && ch.fastCheck()) {
 

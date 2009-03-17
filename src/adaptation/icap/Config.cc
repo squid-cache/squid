@@ -35,14 +35,12 @@
 #include "squid.h"
 
 #include "ConfigParser.h"
-#include "ACL.h"
 #include "Store.h"
 #include "Array.h"	// really Vector
 #include "adaptation/icap/Config.h"
 #include "adaptation/icap/ServiceRep.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
-#include "ACLChecklist.h"
 #include "wordlist.h"
 
 Adaptation::Icap::Config Adaptation::Icap::TheConfig;

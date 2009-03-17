@@ -48,15 +48,16 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "fde.h"
-#include "ACLChecklist.h"
-#include "ACL.h"
+#include "acl/FilledChecklist.h"
+#include "acl/Acl.h"
 #if USE_IDENT
-#include "ACLIdent.h"
+#include "acl/Ident.h"
 #endif
 #include "client_side.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
-#include "authenticate.h"
+#include "auth/Acl.h"
+#include "auth/Gadgets.h"
 #include "helper.h"
 #include "MemBuf.h"
 #include "URLScheme.h"
@@ -71,7 +72,7 @@
 
 typedef struct _external_acl_format external_acl_format;
 
-static char *makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data);
+static char *makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data);
 static void external_acl_cache_delete(external_acl * def, external_acl_entry * entry);
 static int external_acl_entry_expired(external_acl * def, external_acl_entry * entry);
 static int external_acl_grace_expired(external_acl * def, external_acl_entry * entry);
@@ -677,9 +678,7 @@ ACLExternal::~ACLExternal()
 }
 
 static int
-aclMatchExternal(external_acl_data *acl, ACLChecklist * ch);
-static int
-aclMatchExternal(external_acl_data *acl, ACLChecklist * ch)
+aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
 {
     int result;
     external_acl_entry *entry;
@@ -705,7 +704,7 @@ aclMatchExternal(external_acl_data *acl, ACLChecklist * ch)
             int ti;
             /* Make sure the user is authenticated */
 
-            if ((ti = ch->authenticated()) != 1) {
+            if ((ti = AuthenticateAcl(ch)) != 1) {
                 debugs(82, 2, "aclMatchExternal: " << acl->def->name << " user not authenticated (" << ti << ")");
                 return ti;
             }
@@ -777,7 +776,7 @@ aclMatchExternal(external_acl_data *acl, ACLChecklist * ch)
 int
 ACLExternal::match(ACLChecklist *checklist)
 {
-    return aclMatchExternal (data, checklist);
+    return aclMatchExternal (data, Filled(checklist));
 }
 
 wordlist *
@@ -811,7 +810,7 @@ external_acl_cache_touch(external_acl * def, external_acl_entry * entry)
 }
 
 static char *
-makeExternalAclKey(ACLChecklist * ch, external_acl_data * acl_data)
+makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
 {
     static MemBuf mb;
     char buf[256];
@@ -1216,7 +1215,7 @@ externalAclHandleReply(void *data, char *reply)
 }
 
 void
-ACLExternal::ExternalAclLookup(ACLChecklist * ch, ACLExternal * me, EAH * callback, void *callback_data)
+ACLExternal::ExternalAclLookup(ACLChecklist *checklist, ACLExternal * me, EAH * callback, void *callback_data)
 {
     MemBuf buf;
     external_acl_data *acl = me->data;
@@ -1226,11 +1225,12 @@ ACLExternal::ExternalAclLookup(ACLChecklist * ch, ACLExternal * me, EAH * callba
     externalAclState *oldstate = NULL;
     bool graceful = 0;
 
+    ACLFilledChecklist *ch = Filled(checklist);
     if (acl->def->require_auth) {
         int ti;
         /* Make sure the user is authenticated */
 
-        if ((ti = ch->authenticated()) != 1) {
+        if ((ti = AuthenticateAcl(ch)) != 1) {
             debugs(82, 1, "externalAclLookup: " << acl->def->name <<
                    " user authentication failure (" << ti << ", ch=" << ch << ")");
             callback(callback_data, NULL);
@@ -1434,7 +1434,7 @@ ExternalACLLookup::checkForAsync(ACLChecklist *checklist)const
 void
 ExternalACLLookup::LookupDone(void *data, void *result)
 {
-    ACLChecklist *checklist = (ACLChecklist *)data;
+    ACLFilledChecklist *checklist = Filled(static_cast<ACLChecklist*>(data));
     checklist->extacl_entry = cbdataReference((external_acl_entry *)result);
     checklist->asyncInProgress(false);
     checklist->changeState (ACLChecklist::NullState::Instance());

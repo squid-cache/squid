@@ -35,8 +35,8 @@
 
 #include "squid.h"
 #include "htcp.h"
-#include "ACLChecklist.h"
-#include "ACL.h"
+#include "acl/FilledChecklist.h"
+#include "acl/Acl.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StoreClient.h"
@@ -850,12 +850,9 @@ htcpAccessCheck(acl_access * acl, htcpSpecifier * s, IpAddress &from)
     if (!acl)
         return 0;
 
-    ACLChecklist checklist;
+    ACLFilledChecklist checklist(acl, s->request, NULL);
     checklist.src_addr = from;
     checklist.my_addr.SetNoAddr();
-    checklist.request = HTTPMSGLOCK(s->request);
-    checklist.accessList = cbdataReference(acl);
-    /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
     int result = checklist.fastCheck();
     return result;
 }

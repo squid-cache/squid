@@ -39,8 +39,8 @@ logtee() {
 
 buildtest() {
     opts=$1
-    layer=`basename $opts .opts`
-    btlayer="bt$layer"
+    layer=`basename ${opts} .opts`
+    btlayer="bt${layer}"
     log=${btlayer}.log
     echo "TESTING: ${layer}"
     rm -f -r ${btlayer} && mkdir ${btlayer}
@@ -48,37 +48,29 @@ buildtest() {
 	result=255
 	cd ${btlayer}
 	if test -e $top/test-suite/buildtest.sh ; then
-		$top/test-suite/buildtest.sh $opts
-		result=$?
+	    $top/test-suite/buildtest.sh ${opts} 2>&1
+	    result=$?
 	elif test -e ../$top/test-suite/buildtest.sh ; then
-		../$top/test-suite/buildtest.sh ../$opts
-		result=$?
+	    ../$top/test-suite/buildtest.sh ../${opts} 2>&1
+	    result=$?
 	else
-		echo "Error: cannot find $top/test-suite/buildtest.sh script"
-		result=1
+	    echo "Error: cannot find $top/test-suite/buildtest.sh script"
+	    result=1
 	fi
+
 	# log the result for the outer script to notice
 	echo "buildtest.sh result is $result";
-    } 2>&1 | logtee $log
+    } 2>&1 | logtee ${log}
 
     result=1 # failure by default
-    if grep -q '^buildtest.sh result is 0$' $log; then
+    if grep -q '^buildtest.sh result is 0$' ${log}; then
 	result=0
     fi
 
     grep -E "BUILD" ${log}
 
-    # logged strings to treat as errors
     errors="^ERROR|\ error:|\ Error\ |No\ such|assertion\ failed|FAIL:"
-    if grep -E "${errors}" $log; then
-	# Possible errors detected.
-	# Let's be conservative and assume those were real errors.
-	if test $result -eq 0; then
-	    echo "Internal error: failed test with a successful result code"
-	    result=1
-	# else we already know that there was an error
-	fi
-    fi
+    grep -E "${errors}" ${log}
 
     if test "${cleanup}" = "yes" ; then
 	echo "REMOVE DATA: ${btlayer}"
@@ -92,13 +84,13 @@ buildtest() {
 	fi
     else
         echo "Build Failed ($result):"
-        tail -5 $log
+        tail -5 ${log}
 	globalResult=1
     fi
 
     if test "${cleanup}" = "yes" ; then
 	echo "REMOVE LOG: ${log}"
-	rm -f -r $log
+	rm -f -r ${log}
     fi
 }
 

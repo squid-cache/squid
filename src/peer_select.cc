@@ -38,7 +38,7 @@
 #include "Store.h"
 #include "ICP.h"
 #include "HttpRequest.h"
-#include "ACLChecklist.h"
+#include "acl/FilledChecklist.h"
 #include "htcp.h"
 #include "forward.h"
 #include "SquidTime.h"
@@ -294,7 +294,7 @@ peerSelectFoo(ps_state * ps)
     if (ps->direct == DIRECT_UNKNOWN) {
         if (ps->always_direct == 0 && Config.accessList.AlwaysDirect) {
             /** check always_direct; */
-            ps->acl_checklist = aclChecklistCreate(
+            ps->acl_checklist = new ACLFilledChecklist(
                                     Config.accessList.AlwaysDirect,
                                     request,
                                     NULL);		/* ident */
@@ -305,7 +305,7 @@ peerSelectFoo(ps_state * ps)
             ps->direct = DIRECT_YES;
         } else if (ps->never_direct == 0 && Config.accessList.NeverDirect) {
             /** check never_direct; */
-            ps->acl_checklist = aclChecklistCreate(
+            ps->acl_checklist = new ACLFilledChecklist(
                                     Config.accessList.NeverDirect,
                                     request,
                                     NULL);		/* ident */

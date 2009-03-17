@@ -33,7 +33,6 @@
  */
 
 #include "squid.h"
-#include "authenticate.h"
 #include "fde.h"
 
 static void logfileWriteWrapper(Logfile * lf, const void *buf, size_t len);

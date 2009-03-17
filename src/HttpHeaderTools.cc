@@ -36,7 +36,7 @@
 #include "squid.h"
 #include "HttpHeader.h"
 #include "HttpHdrContRange.h"
-#include "ACLChecklist.h"
+#include "acl/FilledChecklist.h"
 #include "MemBuf.h"
 
 static void httpHeaderPutStrvf(HttpHeader * hdr, http_hdr_type id, const char *fmt, va_list vargs);
@@ -372,7 +372,6 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, int req_or_rep)
 
     /* check with anonymizer tables */
     header_mangler *hm;
-    ACLChecklist *checklist;
     assert(e);
 
     if (ROR_REQUEST == req_or_rep) {
@@ -389,9 +388,9 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, int req_or_rep)
         return 1;
     }
 
-    checklist = aclChecklistCreate(hm->access_list, request, NULL);
+    ACLFilledChecklist checklist(hm->access_list, request, NULL);
 
-    if (checklist->fastCheck()) {
+    if (checklist.fastCheck()) {
         /* aclCheckFast returns true for allow. */
         retval = 1;
     } else if (NULL == hm->replacement) {
@@ -406,7 +405,6 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, int req_or_rep)
         retval = 1;
     }
 
-    delete checklist;
     return retval;
 }
 

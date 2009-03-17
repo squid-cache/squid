@@ -2,7 +2,7 @@
 #include "structs.h"
 
 #include "ConfigParser.h"
-#include "ACL.h"
+#include "acl/Gadgets.h"
 #include "adaptation/AccessRule.h"
 #include "adaptation/Service.h"
 #include "adaptation/ServiceGroups.h"
