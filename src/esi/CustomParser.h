@@ -54,8 +54,9 @@ public:
     long int lineNumber() const;
     char const * errorString() const;
 
+    EsiParserDeclaration;
+
 private:
-    ESI_PARSER_TYPE;
     static Trie *SearchTrie;
     static Trie *GetTrie();
     enum ESITAG_t {

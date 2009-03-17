@@ -36,7 +36,7 @@
 #if USE_SQUID_ESI
 
 #include "esi/Parser.h"
-#include "expat.h"
+#include <expat.h>
 
 class ESIExpatParser : public ESIParser
 {
@@ -51,8 +51,9 @@ public:
     long int lineNumber() const;
     char const * errorString() const;
 
+    EsiParserDeclaration;
+
 private:
-    ESI_PARSER_TYPE;
     /** our parser */
     mutable XML_Parser p;
     static void Start(void *data, const XML_Char *el, const char **attr);
