@@ -43,9 +43,7 @@
 #include "client_side.h"
 
 
-ACL::Prototype ACLMyPortName::RegistryProtoype(&ACLMyPortName::RegistryEntry_, "myportname");
 
-ACLStrategised<const char *> ACLMyPortName::RegistryEntry_(new ACLStringData, ACLMyPortNameStrategy::Instance(), "myportname");
 
 int
 ACLMyPortNameStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)

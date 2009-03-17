@@ -40,9 +40,6 @@
 #include "acl/RegexData.h"
 #include "HttpRequest.h"
 
-ACL::Prototype ACLUrlPath::LegacyRegistryProtoype(&ACLUrlPath::RegistryEntry_, "pattern");
-ACL::Prototype ACLUrlPath::RegistryProtoype(&ACLUrlPath::RegistryEntry_, "urlpath_regex");
-ACLStrategised<char const *> ACLUrlPath::RegistryEntry_(new ACLRegexData, ACLUrlPathStrategy::Instance(), "urlpath_regex");
 
 int
 ACLUrlPathStrategy::match (ACLData<char const *> * &data, ACLFilledChecklist *checklist)
