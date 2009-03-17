@@ -39,8 +39,6 @@
 #include "acl/Checklist.h"
 #include "acl/RegexData.h"
 
-ACL::Prototype ACLUrl::RegistryProtoype(&ACLUrl::RegistryEntry_, "url_regex");
-ACLStrategised<char const *> ACLUrl::RegistryEntry_(new ACLRegexData, ACLUrlStrategy::Instance(), "url_regex");
 
 int
 ACLUrlStrategy::match (ACLData<char const *> * &data, ACLFilledChecklist *checklist)

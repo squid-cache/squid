@@ -43,6 +43,4 @@
 
 template class ACLRequestHeaderStrategy<HDR_REFERER>;
 
-ACL::Prototype ACLReferer::RegistryProtoype(&ACLReferer::RegistryEntry_, "referer_regex");
 
-ACLStrategised<char const *> ACLReferer::RegistryEntry_(new ACLRegexData, ACLRequestHeaderStrategy<HDR_REFERER>::Instance(), "referer_regex");

@@ -96,9 +96,7 @@ DestinationIPLookup::LookupDone(const ipcache_addrs * ia, void *data)
     checklist->check();
 }
 
-ACL::Prototype ACLDestinationIP::RegistryProtoype(&ACLDestinationIP::RegistryEntry_, "dst");
 
-ACLDestinationIP ACLDestinationIP::RegistryEntry_;
 
 ACL *
 ACLDestinationIP::clone() const

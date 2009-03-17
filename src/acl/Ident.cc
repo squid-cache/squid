@@ -110,10 +110,6 @@ ACLIdent::clone() const
     return new ACLIdent(*this);
 }
 
-ACL::Prototype ACLIdent::UserRegistryProtoype(&ACLIdent::UserRegistryEntry_, "ident");
-ACLIdent ACLIdent::UserRegistryEntry_(new ACLUserData, "ident");
-ACL::Prototype ACLIdent::RegexRegistryProtoype(&ACLIdent::RegexRegistryEntry_, "ident_regex" );
-ACLIdent ACLIdent::RegexRegistryEntry_(new ACLRegexData, "ident_regex");
 
 IdentLookup IdentLookup::instance_;
 

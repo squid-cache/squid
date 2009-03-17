@@ -39,9 +39,7 @@
 #include "acl/Checklist.h"
 #include "HttpReply.h"
 
-ACL::Prototype ACLHTTPRepHeader::RegistryProtoype(&ACLHTTPRepHeader::RegistryEntry_, "rep_header");
 
-ACLStrategised<HttpHeader*> ACLHTTPRepHeader::RegistryEntry_(new ACLHTTPHeaderData, ACLHTTPRepHeaderStrategy::Instance(), "rep_header");
 
 int
 ACLHTTPRepHeaderStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
