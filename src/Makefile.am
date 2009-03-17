@@ -245,6 +245,9 @@ cf_gen_LDADD= \
 	@MINGW_LIBS@
 cf_gen.$(OBJEXT): cf_gen_defines.h
 
+
+ACL_REGISTRATION_SOURCES = AclRegs.cc
+
 DISKIO_SOURCE = \
 	DiskIO/DiskIOModule.cc \
 	DiskIO/ReadRequest.cc \
@@ -316,6 +319,7 @@ libsquid_la_SOURCES = \
         TextException.h
 
 squid_SOURCES = \
+	$(ACL_REGISTRATION_SOURCES) \
 	access_log.cc \
 	AccessLogEntry.h \
 	asn.cc \
