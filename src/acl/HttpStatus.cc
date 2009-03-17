@@ -84,9 +84,7 @@ int acl_httpstatus_data::compare(acl_httpstatus_data* const& a, acl_httpstatus_d
     return ret;
 }
 
-ACL::Prototype ACLHTTPStatus::RegistryProtoype(&ACLHTTPStatus::RegistryEntry_, "http_status");
 
-ACLHTTPStatus ACLHTTPStatus::RegistryEntry_("http_status");
 
 ACL *
 ACLHTTPStatus::clone() const

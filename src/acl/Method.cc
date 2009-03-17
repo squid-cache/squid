@@ -43,9 +43,7 @@
 
 template class ACLStrategised<HttpRequestMethod>;
 
-ACL::Prototype ACLMethod::RegistryProtoype(&ACLMethod::RegistryEntry_, "method");
 
-ACLStrategised<HttpRequestMethod> ACLMethod::RegistryEntry_(new ACLMethodData, ACLMethodStrategy::Instance(), "method");
 
 int
 ACLMethodStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)

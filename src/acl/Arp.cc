@@ -86,9 +86,7 @@ static int aclMatchArp(SplayNode<acl_arp_data *> **dataptr, IpAddress &c);
 static SplayNode<acl_arp_data *>::SPLAYCMP aclArpCompare;
 static SplayNode<acl_arp_data *>::SPLAYWALKEE aclDumpArpListWalkee;
 
-ACL::Prototype ACLARP::RegistryProtoype(&ACLARP::RegistryEntry_, "arp");
 
-ACLARP ACLARP::RegistryEntry_("arp");
 
 ACL *
 ACLARP::clone() const

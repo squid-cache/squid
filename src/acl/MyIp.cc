@@ -49,11 +49,8 @@ ACLMyIP::match(ACLChecklist *checklist)
     return ACLIP::match (Filled(checklist)->my_addr);
 }
 
-ACL::Prototype ACLMyIP::RegistryProtoype(&ACLMyIP::RegistryEntry(), "myip");
 
-ACLMyIP ACLMyIP::RegistryEntry_;
 
-ACLMyIP const &ACLMyIP::RegistryEntry() {return RegistryEntry_;}
 
 ACL *
 ACLMyIP::clone() const
