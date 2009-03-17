@@ -8,18 +8,17 @@ msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: FULL NAME <EMAIL@ADDRESS>\n"
 "POT-Creation-Date: 2009-02-18 18:05+1300\n"
-"PO-Revision-Date: 2009-02-27 13:19+0000\n"
+"PO-Revision-Date: 2009-03-14 16:45+0000\n"
 "Last-Translator: Akmal Xushvaqov <akmalxster@gmail.com>\n"
 "Language-Team: Uzbek <uz@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Launchpad-Export-Date: 2009-03-01 10:12+0000\n"
+"X-Launchpad-Export-Date: 2009-03-17 09:16+0000\n"
 "X-Generator: Launchpad (build Unknown)\n"
 
 #: templates/ERR_FTP_LISTING:6
-msgid ""
-"<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
+msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
 msgstr ""
 "<a href=\"../\">Асосий директория</a> (<a href=\"/\">Root Directory</a>)"
 
@@ -33,17 +32,20 @@ msgstr "<b>Яроқсиз Сўров</b> сўров бажарилаётган �
 msgid ""
 "<b>Invalid Response</b> error was encountered while trying to process the "
 "request:"
-msgstr ""
+msgstr "<b>Яроқсиз жавоб</b> хатолик сўров жараёнида яратилди :"
 
 #: templates/ERR_READ_TIMEOUT:7
 msgid ""
 "A Timeout occurred while waiting to read data from the network.  The network "
 "or server may be down or congested.  Please retry your request."
 msgstr ""
+"Тармоқдан маълумотлар ўқиш учун кутилаётганда узилиш рўй берди. Тармоқ ёки "
+"сервер ўчирилган ёки ўчириб-ёқилган бўлиши мумкин .  Илтимос, сўровингизни "
+"қайта киритинг."
 
 #: templates/ERR_URN_RESOLVE:3
 msgid "A URL for the requested URN could not be retrieved"
-msgstr ""
+msgstr "Сўралган URN учун URL топилмади"
 
 #: templates/ERR_ACCESS_DENIED:5
 msgid "Access Denied."
@@ -64,8 +66,8 @@ msgstr ""
 
 #: templates/ERR_FTP_FAILURE:4
 msgid ""
-"An FTP protocol error occurred while trying to retrieve the URL: <a "
-"href=\"%U\">%U</a>"
+"An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
+"\">%U</a>"
 msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:10
@@ -91,7 +93,7 @@ msgstr ""
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:3
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:5
 msgid "Cache Manager Access Denied."
-msgstr ""
+msgstr "Кеш бошқарувчиси рухсат бермади."
 
 #: templates/ERR_URN_RESOLVE:5
 msgid "Cannot Resolve URN"
@@ -99,7 +101,7 @@ msgstr ""
 
 #: templates/ERR_LIFETIME_EXP:5
 msgid "Connection Lifetime Expired"
-msgstr ""
+msgstr "Уланиш вақти ўтиб кетди"
 
 #: templates/ERR_CONNECT_FAIL:5
 msgid "Connection to %I failed."
@@ -111,7 +113,7 @@ msgstr ""
 
 #: templates/ERR_FTP_LISTING:3
 msgid "Directory Content:"
-msgstr ""
+msgstr "Директория таркиби:"
 
 #: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
@@ -134,15 +136,15 @@ msgstr "ХАТО"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:1
 msgid "ERROR: Cache Access Denied"
-msgstr ""
+msgstr "ХАТО: Кеш рухсат бермади"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:1
 msgid "ERROR: Cache Manager Access Denied"
-msgstr ""
+msgstr "ХАТО: Кеш бошқарувчи рухсат бермади"
 
 #: templates/ERR_FTP_PUT_ERROR:1
 msgid "ERROR: FTP upload failed"
-msgstr ""
+msgstr "ХАТО: FTP'га юклаш муваффақиятсиз якунланди"
 
 #: templates/ERR_ACCESS_DENIED:1 templates/ERR_CANNOT_FORWARD:1
 #: templates/ERR_CONNECT_FAIL:1 templates/ERR_DNS_FAIL:1 templates/ERR_ESI:1
@@ -159,31 +161,31 @@ msgstr ""
 #: templates/ERR_UNSUP_REQ:1 templates/ERR_WRITE_ERROR:1
 #: templates/ERR_ZERO_SIZE_OBJECT:1
 msgid "ERROR: The requested URL could not be retrieved"
-msgstr ""
+msgstr "ХАТО: Сўралган URL топилмади."
 
 #: templates/ERR_URN_RESOLVE:1
 msgid "ERROR: The requested URN not be retrieved"
-msgstr ""
+msgstr "Хато: Сўралган URN топилмади"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
-msgstr ""
+msgstr "ESI жараёни муваффақиятсиз якунланди."
 
 #: templates/ERR_FTP_LISTING:4
 msgid "FTP Directory Listing"
-msgstr ""
+msgstr "FTP Директория рўйхатланмоқда"
 
 #: templates/ERR_FTP_LISTING:1
 msgid "FTP Directory: %U"
-msgstr ""
+msgstr "FTP Директория: %U"
 
 #: templates/ERR_FTP_LISTING:2
 msgid "FTP Directory: <a href=\"/\">%U</a>/"
-msgstr ""
+msgstr "FTP Директория: <a href=\"/\">%U</a>/"
 
 #: templates/ERR_FTP_PUT_CREATED:1
 msgid "FTP PUT Successful: File Created"
-msgstr ""
+msgstr "FTP PUT Муваффақиятли: Файл яратилди"
 
 #: templates/ERR_FTP_PUT_MODIFIED:1
 msgid "FTP PUT Successful: File Updated"
@@ -195,23 +197,23 @@ msgstr "FTP PUT/юклаш муваффақиятсиз якунланди"
 
 #: templates/ERR_FTP_DISABLED:5
 msgid "FTP is Disabled"
-msgstr ""
+msgstr "FTP ўчирилган"
 
 #: templates/ERR_SECURE_CONNECT_FAIL:5
 msgid "Failed to establish a secure connection to %I"
-msgstr ""
+msgstr "%I'га хавфсизлик уланиш ўрнатиш муваффақиятсиз якунланди"
 
 #: templates/ERR_FTP_PUT_CREATED:3
 msgid "File created"
-msgstr ""
+msgstr "Файл яратилди"
 
 #: templates/ERR_FTP_PUT_MODIFIED:3
 msgid "File updated"
-msgstr ""
+msgstr "Файл янгиланди"
 
 #: templates/ERR_FORWARDING_DENIED:5
 msgid "Forwarding Denied."
-msgstr ""
+msgstr "Узатиш рад қилинди."
 
 #: templates/ERR_ACCESS_DENIED:8 templates/ERR_CACHE_ACCESS_DENIED:8
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:8 templates/ERR_CANNOT_FORWARD:8
@@ -231,21 +233,21 @@ msgstr ""
 #: templates/ERR_UNSUP_REQ:8 templates/ERR_URN_RESOLVE:8
 #: templates/ERR_WRITE_ERROR:9 templates/ERR_ZERO_SIZE_OBJECT:8
 msgid "Generated %T by %h (%s)"
-msgstr ""
+msgstr "%h (%s) томонидан  %T яратилган"
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
-msgstr ""
+msgstr "Эй, %T'даги URN'лардан кўп кутманг  :)"
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
-msgstr ""
+msgstr "ICAP протоколда хатолик."
 
 #: templates/ERR_TOO_BIG:7
 msgid ""
 "If you are making a GET request, then the item you are trying to download is "
 "too large."
-msgstr ""
+msgstr "Агарда сиз"
 
 #: templates/ERR_TOO_BIG:6
 msgid ""
@@ -263,7 +265,7 @@ msgstr ""
 
 #: templates/ERR_INVALID_URL:5
 msgid "Invalid URL"
-msgstr ""
+msgstr "Яроқсиз URL"
 
 #: templates/ERR_INVALID_REQ:8
 msgid "Missing HTTP Identifier (HTTP/1.0)."
@@ -275,16 +277,18 @@ msgstr ""
 
 #: templates/ERR_INVALID_URL:9
 msgid "Missing hostname"
-msgstr ""
+msgstr "Йўқолган ҳост номи"
 
 #: templates/ERR_INVALID_URL:8
 msgid ""
 "Missing or incorrect access protocol (should be <q>http://</q> or similar)"
 msgstr ""
+"Йўқолган ёки хато рухсат бериш протоколи (<q>http://</q> бўлиши керак ёки "
+"шунга ўхшаш)"
 
 #: templates/ERR_INVALID_REQ:6
 msgid "Missing or unknown request method."
-msgstr ""
+msgstr "Йўқолган ёки номаълум сўраш методи"
 
 #: templates/ERR_NO_RELAY:5
 msgid "No Wais Relay"
@@ -292,18 +296,21 @@ msgstr ""
 
 #: templates/ERR_FTP_PUT_CREATED:2 templates/ERR_FTP_PUT_MODIFIED:2
 msgid "Operation successful"
-msgstr ""
+msgstr "Операция муваффақиятли"
 
 #: templates/ERR_FTP_LISTING:5
 msgid "Parent Directory"
-msgstr ""
+msgstr "Асосий директория"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:7
 msgid ""
 "Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
-"have difficulties authenticating yourself or <a href=\"http://%h/cgi-"
-"bin/chpasswd.cgi\">change</a> your default password."
+"have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
+"chpasswd.cgi\">change</a> your default password."
 msgstr ""
+"</a> Агар сиз тасдиқдан ўтишда ёки андоза махфий сўзингизни <a href=\"http://"
+"%h/cgi-bin/chpasswd.cgi\">ўзгартиришда</a>қийналаётган бўлсангиз,  марҳамат, "
+"<a href=\"mailto:%w%W\">кеш адмнистратори билан боғланинг."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
 msgid ""
@@ -312,6 +319,10 @@ msgid ""
 "administrator, read Squid documentation on cache manager interface and check "
 "cache log for more detailed error messages."
 msgstr ""
+"Агарда тасдиқдан ўтишда қийналаётган бўлсангиз <a href=\"mailto:%w%W\">кеш "
+"администратори</a> билан боғланинг. Агарда <em>сиз</em> администратор "
+"бўлсангиз, Squid кеш бошқарувчи интерфейсидаги қўлланмаларни ўқинг ва кеш "
+"журналидаги хато хабарларини батафсил текшириб кўринг."
 
 #: templates/ERR_READ_ERROR:5
 msgid "Read Error"
@@ -319,7 +330,7 @@ msgstr "Ўқишда хато"
 
 #: templates/ERR_READ_TIMEOUT:5
 msgid "Read Timeout"
-msgstr ""
+msgstr "Узилишни ўқиш"
 
 #: templates/ERR_INVALID_REQ:9
 msgid "Request is too large."
@@ -327,32 +338,36 @@ msgstr "Сўров жуда катта."
 
 #: templates/ERR_SOCKET_FAILURE:5
 msgid "Socket Failure"
-msgstr ""
+msgstr "Сокет яроқсиз"
 
 #: templates/ERR_INVALID_URL:6
 msgid "Some aspect of the requested URL is incorrect."
-msgstr ""
+msgstr "Баъзи сўралган URL'лар хато."
 
 #: templates/ERR_ICAP_FAILURE:8 templates/ERR_INVALID_REQ:5
 #: templates/ERR_INVALID_URL:7
 msgid "Some possible problems are:"
-msgstr ""
+msgstr "Баъзи бўлиши мумкин бўлган муаммолар:"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:6
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache manager "
 "until you have authenticated yourself."
 msgstr ""
+"Кечирасиз, сизнинг %U сўровингизга ушбу кеш бошқарувчи томонидан тасдиқдан "
+"ўтмагунингизча рухсат берилмайди."
 
 #: templates/ERR_CACHE_ACCESS_DENIED:6
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache until you "
 "have authenticated yourself."
 msgstr ""
+"Кечирасиз, сизнинг %U сўровингизга ушбу кеш томонидан тасдиқдан "
+"ўтмагунингизча рухсат берилмайди."
 
 #: templates/ERR_ZERO_SIZE_OBJECT:6
 msgid "Squid did not receive any data for this request."
-msgstr ""
+msgstr "Squid ушбу сўров учун ҳеч қандай маълумот топа олмади"
 
 #: templates/ERR_UNSUP_REQ:6
 msgid ""
@@ -365,6 +380,7 @@ msgid ""
 "Squid has terminated the request because it has exceeded the maximum "
 "connection lifetime."
 msgstr ""
+"Squid сўровингизни бекор қилди, чунки энг юқори уланиш жараёни кетмоқда."
 
 #: templates/ERR_SOCKET_FAILURE:7
 msgid ""
@@ -376,20 +392,19 @@ msgstr ""
 #: templates/ERR_FTP_NOT_FOUND:5 templates/ERR_FTP_PUT_ERROR:5
 #: templates/ERR_FTP_UNAVAILABLE:5
 msgid "Squid sent the following FTP command:"
-msgstr ""
+msgstr "Squid қуйидаги FTP буйруғини жўнатди:"
 
 #: templates/ERR_DNS_FAIL:6
 msgid "The DNS server returned:"
-msgstr ""
+msgstr "DNS сервер қайтарди:"
 
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
-msgstr ""
+msgstr "ESI процессор қайтарди:"
 
 #: templates/ERR_FTP_UNAVAILABLE:4
-msgid ""
-"The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
-msgstr ""
+msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
+msgstr "FTP URL: <a href=\"%U\">%U</a>ни етказиб бериш учун жуда банд."
 
 #: templates/ERR_INVALID_RESP:5
 msgid ""
@@ -429,9 +444,10 @@ msgid ""
 msgstr ""
 
 #: templates/ERR_CONNECT_FAIL:7
-msgid ""
-"The remote host or network may be down.  Please try the request again."
+msgid "The remote host or network may be down.  Please try the request again."
 msgstr ""
+"Масофадаги ҳост ёки тармоқ ўчирилган бўлиши мумкин. Илтимос, суровингизни "
+"қайтадан киритиб, уриниб кўринг."
 
 #: templates/ERR_TOO_BIG:5
 msgid "The request or reply is too large."
@@ -451,7 +467,7 @@ msgstr ""
 #: templates/ERR_TOO_BIG:3 templates/ERR_UNSUP_REQ:3
 #: templates/ERR_WRITE_ERROR:3 templates/ERR_ZERO_SIZE_OBJECT:3
 msgid "The requested URL could not be retrieved"
-msgstr ""
+msgstr "Сўралган URL топилмади"
 
 #: templates/ERR_FTP_FAILURE:6 templates/ERR_FTP_FORBIDDEN:6
 #: templates/ERR_FTP_NOT_FOUND:6 templates/ERR_FTP_PUT_ERROR:6
@@ -464,7 +480,7 @@ msgstr ""
 #: templates/ERR_SECURE_CONNECT_FAIL:6 templates/ERR_SOCKET_FAILURE:6
 #: templates/ERR_WRITE_ERROR:6
 msgid "The system returned: <i>%E</i>"
-msgstr ""
+msgstr "Тизим қайтарди: <i>%E</i>"
 
 #: templates/ERR_NO_RELAY:6
 msgid ""
@@ -480,13 +496,14 @@ msgid ""
 msgstr ""
 
 #: templates/ERR_UNSUP_HTTPVERSION:6
-msgid ""
-"This Squid does not accept the HTTP version you are attempting to use."
+msgid "This Squid does not accept the HTTP version you are attempting to use."
 msgstr ""
+"Ушбу Squid версияси сиз ишлатмоқчи бўлаётган HTTP версияси билан мос "
+"келмайди."
 
 #: templates/ERR_FTP_DISABLED:6
 msgid "This cache does not support FTP."
-msgstr ""
+msgstr "Ушбу кеш FTP'ни қўллаб-қувватлай олмайди."
 
 #: templates/ERR_SHUTTING_DOWN:5
 msgid ""
