@@ -39,8 +39,6 @@
 #include "acl/Checklist.h"
 #include "HttpRequest.h"
 
-ACL::Prototype ACLUrlPort::RegistryProtoype(&ACLUrlPort::RegistryEntry_, "port");
-ACLStrategised<int> ACLUrlPort::RegistryEntry_(new ACLIntRange, ACLUrlPortStrategy::Instance(), "port");
 
 int
 ACLUrlPortStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)

@@ -39,8 +39,6 @@
 #include "acl/TimeData.h"
 #include "SquidTime.h"
 
-ACL::Prototype ACLTime::RegistryProtoype(&ACLTime::RegistryEntry_, "time");
-ACLStrategised<time_t> ACLTime::RegistryEntry_(new ACLTimeData, ACLTimeStrategy::Instance(), "time");
 
 int
 ACLTimeStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)

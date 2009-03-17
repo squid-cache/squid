@@ -103,7 +103,3 @@ ACLExtUser::clone() const
     return new ACLExtUser(*this);
 }
 
-ACL::Prototype ACLExtUser::UserRegistryProtoype(&ACLExtUser::UserRegistryEntry_, "ext_user");
-ACLExtUser ACLExtUser::UserRegistryEntry_(new ACLUserData, "ext_user");
-ACL::Prototype ACLExtUser::RegexRegistryProtoype(&ACLExtUser::RegexRegistryEntry_, "ext_user_regex" );
-ACLExtUser ACLExtUser::RegexRegistryEntry_(new ACLRegexData, "ext_user_regex");
