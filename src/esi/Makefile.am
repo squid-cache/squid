@@ -25,6 +25,8 @@ libesi_la_SOURCES = \
 	Literal.h \
 	Libxml2Parser.cc \
 	Libxml2Parser.h \
+	Module.cc \
+	Module.h \
 	Parser.cc \
 	Parser.h \
 	Segment.cc \
