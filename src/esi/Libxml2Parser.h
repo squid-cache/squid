@@ -70,8 +70,9 @@ public:
 
     ESIParserClient *getClient() { return theClient; }
 
+    EsiParserDeclaration;
+
 private:
-    ESI_PARSER_TYPE;
     mutable xmlParserCtxtPtr parser; /* our parser */
 
     ESIParserClient *theClient;

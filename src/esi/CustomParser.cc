@@ -41,7 +41,7 @@
 
 Trie *ESICustomParser::SearchTrie=NULL;
 
-RegisterESIParser("custom", ESICustomParser);
+EsiParserDefinition(ESICustomParser);
 
 Trie *
 ESICustomParser::GetTrie()
