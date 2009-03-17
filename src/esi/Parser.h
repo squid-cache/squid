@@ -52,6 +52,7 @@ public:
 class ESIParser : public RefCountable
 {
 public:
+    class Register;
     typedef RefCount<ESIParser> Pointer;
 
     static void registerParser(const char *name, Pointer (*new_func)(ESIParserClient *aClient));
@@ -70,8 +71,6 @@ public:
 protected:
     ESIParser() {};
 
-    class Register;
-
 private:
     static Register *Parser;
     static Register *Parsers;
@@ -83,26 +82,21 @@ class ESIParser::Register
 {
 
 public:
-    Register(const char *_name, ESIParser::Pointer (*_newParser)(ESIParserClient *aClient)) : name(_name), newParser(_newParser) {
-        this->next = ESIParser::Parsers;
-        ESIParser::Parsers = this;
-    }
+    Register(const char *_name, ESIParser::Pointer (*_newParser)(ESIParserClient *aClient));
+    ~Register();
 
     const char *name;
     ESIParser::Pointer (*newParser)(ESIParserClient *aClient);
     Register * next;
 };
 
-#define RegisterESIParser(name, ThisClass) \
-    ESIParser::Register ThisClass::thisParser(name, &NewParser); \
+#define EsiParserDefinition(ThisClass) \
     ESIParser::Pointer ThisClass::NewParser(ESIParserClient *aClient) \
     { \
 	return new ThisClass (aClient); \
     }
 
-#define ESI_PARSER_TYPE \
-    static ESIParser::Pointer NewParser(ESIParserClient *aClient); \
-    static ESIParser::Register thisParser
-
+#define EsiParserDeclaration \
+    static ESIParser::Pointer NewParser(ESIParserClient *aClient)
 
 #endif /* SQUID_ESIPARSER_H */

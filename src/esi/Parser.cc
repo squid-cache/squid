@@ -54,3 +54,14 @@ ESIParser::NewParser(ESIParserClient *aClient)
 
     return (Parser->newParser)(aClient);
 }
+
+ESIParser::Register::Register(const char *_name, ESIParser::Pointer (*_newParser)(ESIParserClient *aClient)) : name(_name), newParser(_newParser) {
+    this->next = ESIParser::Parsers;
+    ESIParser::Parsers = this;
+}
+
+ESIParser::Register::~Register() {
+    // TODO: support random-order deregistration
+    assert(ESIParser::Parsers == this);
+    ESIParser::Parsers = next;
+}
