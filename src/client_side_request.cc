@@ -48,8 +48,8 @@
 #include "auth/UserRequest.h"
 #include "HttpRequest.h"
 #include "ProtoPort.h"
-#include "ACLChecklist.h"
-#include "ACL.h"
+#include "acl/FilledChecklist.h"
+#include "acl/Gadgets.h"
 #include "client_side.h"
 #include "client_side_reply.h"
 #include "Store.h"
@@ -1113,12 +1113,9 @@ ClientHttpRequest::sslBumpNeeded() const
 
     debugs(85, 5, HERE << "SslBump possible, checking ACL");
 
-    ACLChecklist check;
+    ACLFilledChecklist check(Config.accessList.ssl_bump, request, NULL);
     check.src_addr = request->client_addr;
     check.my_addr = request->my_addr;
-    check.request = HTTPMSGLOCK(request);
-    check.accessList = cbdataReference(Config.accessList.ssl_bump);
-    /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
     return check.fastCheck() == 1;
 }
 
@@ -1285,10 +1282,9 @@ ClientHttpRequest::doCallouts()
     if (!calloutContext->clientside_tos_done) {
         calloutContext->clientside_tos_done = true;
         if (getConn() != NULL) {
-            ACLChecklist ch;
+            ACLFilledChecklist ch(NULL, request, NULL);
             ch.src_addr = request->client_addr;
             ch.my_addr = request->my_addr;
-            ch.request = HTTPMSGLOCK(request);
             int tos = aclMapTOS(Config.accessList.clientside_tos, &ch);
             if (tos)
                 comm_set_tos(getConn()->fd, tos);

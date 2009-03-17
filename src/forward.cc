@@ -33,8 +33,8 @@
 
 #include "squid.h"
 #include "forward.h"
-#include "ACLChecklist.h"
-#include "ACL.h"
+#include "acl/FilledChecklist.h"
+#include "acl/Gadgets.h"
 #include "CacheManager.h"
 #include "event.h"
 #include "errorpage.h"
@@ -205,12 +205,9 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
         /**
          * Check if this host is allowed to fetch MISSES from us (miss_access)
          */
-        ACLChecklist ch;
+        ACLFilledChecklist ch(Config.accessList.miss, request, NULL);
         ch.src_addr = request->client_addr;
         ch.my_addr = request->my_addr;
-        ch.request = HTTPMSGLOCK(request);
-        ch.accessList = cbdataReference(Config.accessList.miss);
-        /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
         int answer = ch.fastCheck();
 
         if (answer == 0) {
@@ -664,7 +661,7 @@ FwdState::initiateSSL()
     // Create the ACL check list now, while we have access to more info.
     // The list is used in ssl_verify_cb() and is freed in ssl_free().
     if (acl_access *acl = Config.ssl_client.cert_error) {
-        ACLChecklist *check = aclChecklistCreate(acl, request, dash_str);
+        ACLFilledChecklist *check = new ACLFilledChecklist(acl, request, dash_str);
         check->fd(fd);
         SSL_set_ex_data(ssl, ssl_ex_index_cert_error_check, check);
     }
@@ -1341,8 +1338,6 @@ aclMapTOS(acl_tos * head, ACLChecklist * ch)
 IpAddress
 getOutgoingAddr(HttpRequest * request, struct peer *dst_peer)
 {
-    ACLChecklist ch;
-
     if (request && request->flags.spoof_client_ip)
         return request->client_addr;
 
@@ -1350,12 +1345,12 @@ getOutgoingAddr(HttpRequest * request, struct peer *dst_peer)
         return IpAddress(); // anything will do.
     }
 
+    ACLFilledChecklist ch(NULL, request, NULL);
     ch.dst_peer = dst_peer;
 
     if (request) {
         ch.src_addr = request->client_addr;
         ch.my_addr = request->my_addr;
-        ch.request = HTTPMSGLOCK(request);
     }
 
     return aclMapAddr(Config.accessList.outgoing_address, &ch);
@@ -1364,12 +1359,11 @@ getOutgoingAddr(HttpRequest * request, struct peer *dst_peer)
 unsigned long
 getOutgoingTOS(HttpRequest * request)
 {
-    ACLChecklist ch;
+    ACLFilledChecklist ch(NULL, request, NULL);
 
     if (request) {
         ch.src_addr = request->client_addr;
         ch.my_addr = request->my_addr;
-        ch.request = HTTPMSGLOCK(request);
     }
 
     return aclMapTOS(Config.accessList.outgoing_tos, &ch);

@@ -7,6 +7,7 @@
 
 class HttpRequest;
 class HttpReply;
+class ACLFilledChecklist;
 
 namespace Adaptation
 {
@@ -35,7 +36,7 @@ private:
     HttpReply *rep;
     AccessCheckCallback *callback;
     void *callback_data;
-    ACLChecklist *acl_checklist;
+    ACLFilledChecklist *acl_checklist;
 
     typedef int Candidate;
     typedef Vector<Candidate> Candidates;

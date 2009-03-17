@@ -41,7 +41,8 @@
 #if DELAY_POOLS
 #include "DelayPool.h"
 #include "CommonPool.h"
-#include "ACL.h"
+#include "acl/Acl.h"
+#include "acl/Gadgets.h"
 #include "Store.h"
 
 DelayPool::DelayPool() : pool (NULL), access (NULL)

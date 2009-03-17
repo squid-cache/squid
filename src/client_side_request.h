@@ -187,7 +187,9 @@ private:
 
 /* client http based routines */
 SQUIDCEXTERN char *clientConstructTraceEcho(ClientHttpRequest *);
-SQUIDCEXTERN ACLChecklist *clientAclChecklistCreate(const acl_access * acl,ClientHttpRequest * http);
+
+class ACLFilledChecklist;
+SQUIDCEXTERN ACLFilledChecklist *clientAclChecklistCreate(const acl_access * acl,ClientHttpRequest * http);
 SQUIDCEXTERN int clientHttpRequestStatus(int fd, ClientHttpRequest const *http);
 SQUIDCEXTERN void clientAccessCheck(ClientHttpRequest *);
 

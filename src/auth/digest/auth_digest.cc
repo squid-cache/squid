@@ -40,7 +40,7 @@
 #include "squid.h"
 #include "rfc2617.h"
 #include "auth_digest.h"
-#include "authenticate.h"
+#include "auth/Gadgets.h"
 #include "event.h"
 #include "CacheManager.h"
 #include "Store.h"
