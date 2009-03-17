@@ -88,7 +88,7 @@ buildtest() {
     if test $result -eq 0; then
 	# successful execution
 	if test "$verbose" = yes; then
-	    echo 'Build OK.'
+	    echo "Build OK. Global result is $globalResult."
 	fi
     else
         echo "Build Failed ($result):"
@@ -102,8 +102,8 @@ buildtest() {
     fi
 }
 
-# decide what tests to run, $* contains test spec names or filenames
-# use all knows specs if $* is empty
+# Decide what tests to run, $* contains test spec names or filenames.
+# Use all knows specs if $* is empty or a special macro called 'all'.
 if test -n "$*" -a "$*" != all; then
     tests="$*"
 else
