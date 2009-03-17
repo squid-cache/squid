@@ -67,6 +67,8 @@ buildtest() {
 	result=0
     fi
 
+    # Display BUILD parameters to double check that we are building the
+    # with the right parameters. TODO: Make less noisy.
     grep -E "BUILD" ${log}
 
     errors="^ERROR|\ error:|\ Error\ |No\ such|assertion\ failed|FAIL:"
@@ -83,7 +85,7 @@ buildtest() {
 	    echo "Build OK. Global result is $globalResult."
 	fi
     else
-        echo "Build Failed ($result):"
+        echo "Build Failed. Last log lines are:"
         tail -5 ${log}
 	globalResult=1
     fi
