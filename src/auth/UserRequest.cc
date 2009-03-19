@@ -43,8 +43,8 @@
 #include "squid.h"
 #include "auth/UserRequest.h"
 #include "auth/User.h"
-/*#include "authenticate.h"
-#include "ACL.h"
+/*#include "auth/Gadgets.h"
+#include "acl/Acl.h"
 #include "client_side.h"
 */
 #include "auth/Config.h"

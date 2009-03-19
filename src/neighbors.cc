@@ -32,7 +32,7 @@
 
 #include "squid.h"
 #include "ProtoPort.h"
-#include "ACLChecklist.h"
+#include "acl/FilledChecklist.h"
 #include "event.h"
 #include "CacheManager.h"
 #include "htcp.h"
@@ -175,17 +175,9 @@ peerAllowedToUse(const peer * p, HttpRequest * request)
     if (p->access == NULL)
         return do_ping;
 
-    ACLChecklist checklist;
-
+    ACLFilledChecklist checklist(p->access, request, NULL);
     checklist.src_addr = request->client_addr;
-
     checklist.my_addr = request->my_addr;
-
-    checklist.request = HTTPMSGLOCK(request);
-
-    checklist.accessList = cbdataReference(p->access);
-
-    /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
 
 #if 0 && USE_IDENT
     /*

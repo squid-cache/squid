@@ -34,7 +34,7 @@
 #include "structs.h"
 
 #include "ConfigParser.h"
-#include "ACL.h"
+#include "acl/Gadgets.h"
 #include "Store.h"
 #include "Array.h"    // really Vector
 #include "adaptation/Config.h"

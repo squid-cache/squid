@@ -1558,15 +1558,10 @@ fi
 dnl Authentication libraries to build
 dnl This list will not be needed when each auth library has its own Makefile
 AUTH_LIBS_TO_BUILD=
-dnl Authentication libraries to link authenticating executables with.
-dnl These are the same as AUTH_LIBS_TO_BUILD, but with a path
-AUTH_LIBS_TO_ADD=
 for module in $AUTH_MODULES; do
-    AUTH_LIBS_TO_BUILD="$AUTH_LIBS_TO_BUILD lib${module}.a"
-    AUTH_LIBS_TO_ADD="$AUTH_LIBS_TO_ADD auth/lib${module}.a"
+    AUTH_LIBS_TO_BUILD="$AUTH_LIBS_TO_BUILD lib${module}.la"
 done
 AC_SUBST(AUTH_MODULES)
-AC_SUBST(AUTH_LIBS_TO_ADD)
 AC_SUBST(AUTH_LIBS_TO_BUILD)
 
 dnl bundled auth modules, in order to have handy defines for the cppunit testsuite
@@ -3789,6 +3784,7 @@ AC_CONFIG_FILES([\
 	scripts/RunAccel \
 	src/Makefile \
 	src/base/Makefile \
+	src/acl/Makefile \
 	src/fs/Makefile \
 	src/repl/Makefile \
 	src/auth/Makefile \
