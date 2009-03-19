@@ -46,6 +46,14 @@ static const char *error_string[19] = {
     "WRONGTYPE",
     "WRONGLENGTH",
     "WRONGENCODING",
+
+/* 0xA */"UNDEFINED",
+/* 0xb */"UNDEFINED",
+/* 0xC */"UNDEFINED",
+/* 0xD */"UNDEFINED",
+/* 0xE */"UNDEFINED",
+/* 0xF */"UNDEFINED",
+
     "WRONGVALUE",
     "NOCREATION",
     "INCONSISTENTVALUE",
