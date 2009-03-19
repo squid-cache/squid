@@ -651,10 +651,8 @@ IpAddress::IpAddress(IpAddress *s)
 
 IpAddress& IpAddress::operator =(IpAddress *s)
 {
-    IpAddress *tmp = NULL;
     if (!s) return *this;
-    tmp = dynamic_cast<IpAddress*>(s);
-    if (!tmp) return *this;
+    IpAddress *tmp = static_cast<IpAddress*>(s);
     return operator=(*tmp);
 }
 
