@@ -40,7 +40,7 @@
  */
 #if (USE_SQUID_ESI == 1)
 
-#include "ESIContext.h"
+#include "esi/Context.h"
 #include "Store.h"
 #include "client_side_request.h"
 

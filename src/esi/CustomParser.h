@@ -1,8 +1,6 @@
 /*
  * $Id$
  *
- * DEBUG: section 86    ESI processing
- * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -30,25 +28,50 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
- * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
+#ifndef SQUID_ESICUSTOMPARSER_H
+#define SQUID_ESICUSTOMPARSER_H
 
-#ifndef SQUID_ESIEXCEPT_H
-#define SQUID_ESIEXCEPT_H
+class Trie;
 
-#include "squid.h"
-#include "ESIElement.h"
-#include "ESISequence.h"
+/* inherits from */
+#include "esi/Parser.h"
 
-/* esiExcept */
+/* for String variables */
+#include "SquidString.h"
 
-class esiExcept : public esiSequence
+/**
+ \ingroup ESIAPI
+ */
+class ESICustomParser : public ESIParser
 {
 
 public:
-    //    void *operator new (size_t byteCount);
-    //    void operator delete (void *address);
-    esiExcept(esiTreeParentPtr aParent) : esiSequence (aParent) {}
+    ESICustomParser(ESIParserClient *);
+    ~ESICustomParser();
+    /* true on success */
+    bool parse(char const *dataToParse, size_t const lengthOfData, bool const endOfStream);
+    long int lineNumber() const;
+    char const * errorString() const;
+
+    EsiParserDeclaration;
+
+private:
+    static Trie *SearchTrie;
+    static Trie *GetTrie();
+    enum ESITAG_t {
+        ESITAG=1,
+        ESIENDTAG=2,
+        ESICOMMENT=3
+    };
+
+    char const *findTag(char const *a, size_t b);
+    ESIParserClient *theClient;
+    String error;
+    /* cheap n dirty - buffer it all */
+    String content;
+    /* TODO: make a class of this type code */
+    ESITAG_t lastTag;
 };
 
-#endif /* SQUID_ESIEXCEPT_H */
+#endif /* SQUID_ESICUSTOMPARSER_H */

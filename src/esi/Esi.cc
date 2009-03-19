@@ -38,22 +38,22 @@
  */
 #if (USE_SQUID_ESI == 1)
 
-#include "ESI.h"
+#include "esi/Esi.h"
 #include "clientStream.h"
 #include "client_side_request.h"
 #include "errorpage.h"
-#include "ESISegment.h"
-#include "ESIElement.h"
-#include "ESIContext.h"
+#include "esi/Segment.h"
+#include "esi/Element.h"
+#include "esi/Context.h"
 #include "HttpHdrSc.h"
 #include "HttpHdrScTarget.h"
 #include "HttpReply.h"
-#include "ESIAttempt.h"
-#include "ESIExcept.h"
+#include "esi/Attempt.h"
+#include "esi/Except.h"
 #include "client_side.h"
-#include "ESIVarState.h"
-#include "ESIAssign.h"
-#include "ESIExpression.h"
+#include "esi/VarState.h"
+#include "esi/Assign.h"
+#include "esi/Expression.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
 #include "ip/IpAddress.h"
@@ -116,11 +116,11 @@ struct esiComment : public ESIElement {
 
 MEMPROXY_CLASS_INLINE(esiComment)		/**DOCS_NOSEMI*/
 
-#include "ESILiteral.h"
+#include "esi/Literal.h"
 
-#include "ESISequence.h"
+#include "esi/Sequence.h"
 
-#include "ESIInclude.h"
+#include "esi/Include.h"
 
 /* esiRemove */
 
@@ -181,7 +181,7 @@ private:
 
 MEMPROXY_CLASS_INLINE(esiTry)		/**DOCS_NOSEMI*/
 
-#include "ESIVar.h"
+#include "esi/Var.h"
 
 /* esiChoose */
 

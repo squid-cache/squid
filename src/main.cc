@@ -86,6 +86,10 @@
 #include "adaptation/Config.h"
 #endif
 
+#if USE_SQUID_ESI
+#include "esi/Module.h"
+#endif
+
 #if USE_WIN32_SERVICE
 
 #include "squid_windows.h"
@@ -1061,6 +1065,9 @@ mainInitialize(void)
     Adaptation::Config::Finalize(enableAdaptation);
 #endif
 
+#if USE_SQUID_ESI
+    Esi::Init();
+#endif
 
     debugs(1, 1, "Ready to serve requests.");
 
@@ -1671,6 +1678,11 @@ SquidShutdown()
 
     releaseServerSockets();
     commCloseAllSockets();
+
+#if USE_SQUID_ESI
+    Esi::Clean();
+#endif
+
 #if DELAY_POOLS
 
     DelayPools::FreePools();
