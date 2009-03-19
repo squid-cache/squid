@@ -48,7 +48,7 @@
 #include "clientStream.h"
 #include "auth/UserRequest.h"
 #if USE_SQUID_ESI
-#include "ESI.h"
+#include "esi/Esi.h"
 #endif
 #include "MemObject.h"
 #include "fde.h"

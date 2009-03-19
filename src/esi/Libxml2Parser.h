@@ -1,8 +1,7 @@
 /*
  * $Id$
  *
- * DEBUG: section 86    ESI processing
- * AUTHOR: Robert Collins
+ * AUTHOR: Joachim Bauch (mail@joachim-bauch.de)
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -30,38 +29,55 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
- * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ELEMENTLIST_H
-#define SQUID_ELEMENTLIST_H
+/*
+ * The ESI Libxml2 parser is Copyright (c) 2004 by Joachim Bauch
+ * http://www.joachim-bauch.de
+ * mail@joachim-bauch.de
+ */
 
-#include "squid.h"
-#include "ESIElement.h"
+#ifndef SQUID_ESILIBXML2PARSER_H
+#define SQUID_ESILIBXML2PARSER_H
 
-class ElementList
+#if USE_SQUID_ESI
+
+#include "esi/Parser.h"
+// workaround for definition of "free" that prevents include of
+// parser.h from libxml2 without errors
+#ifdef free
+#define OLD_FREE free
+#undef free
+#endif
+#include <libxml/parser.h>
+#include <libxml/HTMLparser.h>
+#include <libxml/HTMLtree.h>
+
+#ifdef OLD_FREE
+#define free OLD_FREE
+#endif
+
+class ESILibxml2Parser : public ESIParser
 {
 
 public:
-    ElementList();
-    ~ElementList();
+    ESILibxml2Parser(ESIParserClient *);
+    ~ESILibxml2Parser();
+    /* true on success */
+    bool parse(char const *dataToParse, size_t const lengthOfData, bool const endOfStream);
+    long int lineNumber() const;
+    char const * errorString() const;
 
-    ESIElement::Pointer &operator[](int);
-    ESIElement::Pointer const &operator[](int)const;
-    ESIElement::Pointer * elements; /* unprocessed or rendered nodes */
-    void pop_front (size_t const);
-    void push_back(ESIElement::Pointer &);
-    size_t size() const;
-    void setNULL (int start, int end);
+    ESIParserClient *getClient() { return theClient; }
 
-    int allocedcount;
-    size_t allocedsize;
-    int elementcount;
+    EsiParserDeclaration;
 
 private:
-    ElementList(ElementList const &);
-    ElementList &operator=(ElementList const&);
+    mutable xmlParserCtxtPtr parser; /* our parser */
+
+    ESIParserClient *theClient;
 };
 
+#endif /* USE_SQUID_ESI */
 
-#endif /* SQUID_ELEMENTLIST_H */
+#endif /* SQUID_ESILIBXML2PARSER_H */

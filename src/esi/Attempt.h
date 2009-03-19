@@ -37,8 +37,8 @@
 #define SQUID_ESIATTEMPT_H
 
 #include "squid.h"
-#include "ESIElement.h"
-#include "ESISequence.h"
+#include "esi/Element.h"
+#include "esi/Sequence.h"
 
 /* esiAttempt */
 

@@ -33,60 +33,63 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ESIASSIGN_H
-#define SQUID_ESIASSIGN_H
+#ifndef SQUID_ESISEQUENCE_H
+#define SQUID_ESISEQUENCE_H
 
 #include "squid.h"
-#include "ESIElement.h"
-#include "SquidString.h"
-#include "ESIVarState.h"
+#include "esi/Element.h"
+#include "esi/ElementList.h"
 
-/* ESIVariableExpression */
-/* This is a variable that is itself and expression */
+/* esiSequence */
 
-class ESIVariableExpression : public ESIVarState::Variable
+class esiSequence : public ESIElement
 {
 
 public:
-    ~ESIVariableExpression();
-    ESIVariableExpression (String const &value);
-    virtual void eval (ESIVarState &state, char const *, char const *) const;
+    MEMPROXY_CLASS(esiSequence);
 
-private:
-    String expression;
-};
+    esiSequence(esiTreeParentPtr, bool = false);
+    ~esiSequence();
 
-/* ESIAssign */
-
-class ESIContext;
-
-class ESIAssign : public ESIElement
-{
-
-public:
-    MEMPROXY_CLASS(ESIAssign);
-    ESIAssign (esiTreeParentPtr, int, const char **, ESIContext *);
-    ESIAssign (ESIAssign const &);
-    ESIAssign &operator=(ESIAssign const &);
-    ~ESIAssign();
-    esiProcessResult_t process (int dovars);
     void render(ESISegment::Pointer);
-    bool addElement(ESIElement::Pointer);
-    void provideData (ESISegment::Pointer data, ESIElement * source);
+    bool addElement (ESIElement::Pointer);
+    esiProcessResult_t process (int dovars);
+    void provideData (ESISegment::Pointer, ESIElement*);
+    bool mayFail () const;
+    void wontFail();
+    void fail(ESIElement *, char const *anError = NULL);
+    void makeCachableElements(esiSequence const &old);
     Pointer makeCacheable() const;
+    void makeUsableElements(esiSequence const &old, ESIVarState &);
     Pointer makeUsable(esiTreeParentPtr, ESIVarState &) const;
+
+    ElementList elements; /* unprocessed or rendered nodes */
+    size_t processedcount;
+
+    struct {
+        int dovars:1; /* for esiVar */
+    } flags;
     void finish();
 
-private:
-    void evaluateVariable();
+protected:
+    esiSequence(esiSequence const &);
     esiTreeParentPtr parent;
-    ESIVarState *varState;
-    String name;
-    ESIVariableExpression * value;
-    ESIElement::Pointer variable;
-    String unevaluatedVariable;
+
+private:
+    int elementIndex (ESIElement::Pointer anElement) const;
+    bool mayFail_;
+    bool failed;
+    esiProcessResult_t processOne(int, size_t);
+    bool const provideIncrementalData;
+    bool processing;
+    esiProcessResult_t processingResult;
+    size_t nextElementToProcess_;
+    size_t nextElementToProcess() const;
+    void nextElementToProcess(size_t const &);
+    bool finishedProcessing() const;
+    void processStep(int dovars);
 };
 
-MEMPROXY_CLASS_INLINE(ESIAssign)          /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(esiSequence)          /**DOCS_NOSEMI*/
 
-#endif /* SQUID_ESIASSIGN_H */
+#endif /* SQUID_ESISEQUENCE_H */

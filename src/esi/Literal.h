@@ -1,7 +1,8 @@
 /*
  * $Id$
  *
- * AUTHOR: Joachim Bauch (mail@joachim-bauch.de)
+ * DEBUG: section 86    ESI processing
+ * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -29,54 +30,43 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-/*
- * The ESI Libxml2 parser is Copyright (c) 2004 by Joachim Bauch
- * http://www.joachim-bauch.de
- * mail@joachim-bauch.de
- */
+#ifndef SQUID_ESILITERAL_H
+#define SQUID_ESILITERAL_H
 
-#ifndef SQUID_ESILIBXML2PARSER_H
-#define SQUID_ESILIBXML2PARSER_H
+#include "squid.h"
+#include "esi/Element.h"
 
-#if USE_SQUID_ESI
+class ESIContext;
+/* esiLiteral */
 
-#include "ESIParser.h"
-// workaround for definition of "free" that prevents include of
-// parser.h from libxml2 without errors
-#ifdef free
-#define OLD_FREE free
-#undef free
-#endif
-#include <libxml/parser.h>
-#include <libxml/HTMLparser.h>
-#include <libxml/HTMLtree.h>
+struct esiLiteral : public ESIElement {
+    MEMPROXY_CLASS(esiLiteral);
 
-#ifdef OLD_FREE
-#define free OLD_FREE
-#endif
+    esiLiteral(ESISegment::Pointer);
+    esiLiteral(ESIContext *, const char *s, int len);
+    ~esiLiteral();
 
-class ESILibxml2Parser : public ESIParser
-{
+    void render(ESISegment::Pointer);
+    esiProcessResult_t process (int dovars);
+    Pointer makeCacheable() const;
+    Pointer makeUsable(esiTreeParentPtr, ESIVarState &) const;
+    /* optimise copies away later */
+    ESISegment::Pointer buffer;
 
-public:
-    ESILibxml2Parser(ESIParserClient *);
-    ~ESILibxml2Parser();
-    /* true on success */
-    bool parse(char const *dataToParse, size_t const lengthOfData, bool const endOfStream);
-    long int lineNumber() const;
-    char const * errorString() const;
+    struct {
+        int donevars:1;
+    } flags;
 
-    ESIParserClient *getClient() { return theClient; }
+    ESIVarState *varState;
+    void finish();
 
 private:
-    ESI_PARSER_TYPE;
-    mutable xmlParserCtxtPtr parser; /* our parser */
-
-    ESIParserClient *theClient;
+    esiLiteral(esiLiteral const &);
 };
 
-#endif /* USE_SQUID_ESI */
+MEMPROXY_CLASS_INLINE(esiLiteral)          /**DOCS_NOSEMI*/
 
-#endif /* SQUID_ESILIBXML2PARSER_H */
+#endif /* SQUID_ESILITERAL_H */

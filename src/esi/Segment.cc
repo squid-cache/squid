@@ -34,7 +34,7 @@
  */
 
 #include "squid.h"
-#include "ESISegment.h"
+#include "esi/Segment.h"
 #include "SquidString.h"
 
 CBDATA_TYPE(ESISegment);

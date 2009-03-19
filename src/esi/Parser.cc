@@ -1,6 +1,8 @@
 /*
  * $Id$
  *
+ * DEBUG: section 86    ESI processing
+ * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -20,7 +22,7 @@
  *  (at your option) any later version.
  *
  *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ;  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
@@ -30,40 +32,36 @@
  *
  */
 
-#ifndef SQUID_ESIEXPATPARSER_H
-#define SQUID_ESIEXPATPARSER_H
+#include "squid.h"
+#include "esi/Parser.h"
 
-#if USE_SQUID_ESI
+char *ESIParser::Type = NULL;
+ESIParser::Register *ESIParser::Parsers = NULL;
+ESIParser::Register *ESIParser::Parser = NULL;
 
-#include "ESIParser.h"
-#include "expat.h"
-
-class ESIExpatParser : public ESIParser
+ESIParser::Pointer
+ESIParser::NewParser(ESIParserClient *aClient)
 {
+    if (Parser == NULL) {
+        Parser = Parsers;
 
-public:
-    ESIExpatParser(ESIParserClient *);
-    ~ESIExpatParser();
+        while (Parser != NULL && strcasecmp(Parser->name, Type) != 0)
+            Parser = Parser->next;
 
-    /** \retval true	on success */
-    bool parse(char const *dataToParse, size_t const lengthOfData, bool const endOfStream);
+        if (Parser == NULL)
+            fatal ("Unknown ESI Parser type");
+    }
 
-    long int lineNumber() const;
-    char const * errorString() const;
+    return (Parser->newParser)(aClient);
+}
 
-private:
-    ESI_PARSER_TYPE;
-    /** our parser */
-    mutable XML_Parser p;
-    static void Start(void *data, const XML_Char *el, const char **attr);
-    static void End(void *data, const XML_Char *el);
-    static void Default (void *data, const XML_Char *s, int len);
-    static void Comment (void *data, const XML_Char *s);
-    XML_Parser &myParser() const {return p;}
+ESIParser::Register::Register(const char *_name, ESIParser::Pointer (*_newParser)(ESIParserClient *aClient)) : name(_name), newParser(_newParser) {
+    this->next = ESIParser::Parsers;
+    ESIParser::Parsers = this;
+}
 
-    ESIParserClient *theClient;
-};
-
-#endif /* USE_SQUID_ESI */
-
-#endif /* SQUID_ESIEXPATPARSER_H */
+ESIParser::Register::~Register() {
+    // TODO: support random-order deregistration
+    assert(ESIParser::Parsers == this);
+    ESIParser::Parsers = next;
+}
