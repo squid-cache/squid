@@ -39,9 +39,7 @@
 #include "acl/MaxConnection.h"
 #include "wordlist.h"
 
-ACL::Prototype ACLMaxConnection::RegistryProtoype(&ACLMaxConnection::RegistryEntry_, "maxconn");
 
-ACLMaxConnection ACLMaxConnection::RegistryEntry_("maxconn");
 
 ACL *
 ACLMaxConnection::clone() const

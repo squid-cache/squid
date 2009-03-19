@@ -67,10 +67,6 @@ SourceDomainLookup::LookupDone(const char *fqdn, void *data)
     checklist->check();
 }
 
-ACL::Prototype ACLSourceDomain::LiteralRegistryProtoype(&ACLSourceDomain::LiteralRegistryEntry_, "srcdomain");
-ACLStrategised<char const *> ACLSourceDomain::LiteralRegistryEntry_(new ACLDomainData, ACLSourceDomainStrategy::Instance(), "srcdomain");
-ACL::Prototype ACLSourceDomain::RegexRegistryProtoype(&ACLSourceDomain::RegexRegistryEntry_, "srcdom_regex");
-ACLStrategised<char const *> ACLSourceDomain::RegexRegistryEntry_(new ACLRegexData,ACLSourceDomainStrategy::Instance() ,"srcdom_regex");
 
 int
 ACLSourceDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
