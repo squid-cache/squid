@@ -649,13 +649,6 @@ IpAddress::IpAddress(IpAddress *s)
     operator=(s);
 }
 
-IpAddress& IpAddress::operator =(IpAddress *s)
-{
-    if (!s) return *this;
-    IpAddress *tmp = static_cast<IpAddress*>(s);
-    return operator=(*tmp);
-}
-
 IpAddress::IpAddress(const struct hostent &s)
 {
     SetEmpty();
