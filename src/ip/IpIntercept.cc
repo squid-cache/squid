@@ -294,6 +294,60 @@ IpIntercept::IpfInterception(int fd, const IpAddress &me, IpAddress &dst, int si
     return -1;
 }
 
+int
+IpIntercept::PfInterception(int fd, IpAddress &client, IpAddress &dst, int silent)
+{
+#if PF_TRANSPARENT  /* --enable-pf-transparent */
+
+    struct pfioc_natlook nl;
+    static int pffd = -1;
+
+    if (pffd < 0)
+        pffd = open("/dev/pf", O_RDONLY);
+
+    if (pffd < 0) {
+        if (!silent) {
+            debugs(89, 1, HERE << "PF open failed: " << xstrerror());
+            last_reported = squid_curtime;
+        }
+        return -1;
+    }
+
+    memset(&nl, 0, sizeof(struct pfioc_natlook));
+    dst.GetInAddr(nl.saddr.v4);
+    nl.sport = htons(dst.GetPort());
+
+    client.GetInAddr(nl.daddr.v4);
+    nl.dport = htons(client.GetPort());
+
+    nl.af = AF_INET;
+    nl.proto = IPPROTO_TCP;
+    nl.direction = PF_OUT;
+
+    if (ioctl(pffd, DIOCNATLOOK, &nl)) {
+        if (errno != ENOENT) {
+            if (!silent) {
+                debugs(89, 1, "clientNatLookup: PF lookup failed: ioctl(DIOCNATLOOK)");
+                last_reported = squid_curtime;
+            }
+            close(pffd);
+            pffd = -1;
+        }
+    } else {
+        int natted = (client != nl.rdaddr.v4);
+        client = nl.rdaddr.v4;
+        client.SetPort(ntohs(nl.rdport));
+
+        if (natted)
+            return 0;
+    }
+
+    debugs(89, 9, HERE << "address: client= " << client << ", dst= " << dst);
+
+#endif /* --enable-pf-transparent */
+    return -1;
+}
+
 
 int
 IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAddress &client, IpAddress &dst)
@@ -301,7 +355,8 @@ IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAdd
   /* --enable-linux-netfilter    */
   /* --enable-ipfw-transparent   */
   /* --enable-ipf-transparent    */
-#if IPF_TRANSPARENT || LINUX_NETFILTER || IPFW_TRANSPARENT
+  /* --enable-pf-transparent     */
+#if IPF_TRANSPARENT || LINUX_NETFILTER || IPFW_TRANSPARENT || PF_TRANSPARENT
 
     /* Netfilter and IPFW share almost identical lookup methods for their NAT tables.
      * This allows us to perform a nice clean failover sequence for them.
@@ -325,78 +380,17 @@ IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAdd
         if ( IpfInterception(fd, me, client, silent) == 0) return 0;
         if ( NetfilterInterception(fd, me, client, silent) == 0) return 0;
         if ( IpfwInterception(fd, me, client, silent) == 0) return 0;
+        if ( PfInterception(fd, client, dst, silent) == 0) return 0;
     }
     if (transparent_active) {
         if ( NetfilterTransparent(fd, me, dst, silent) == 0) return 0;
     }
 
-    return -1;
-
-#elif PF_TRANSPARENT  /* --enable-pf-transparent */
-
-    struct pfioc_natlook nl;
-    static int pffd = -1;
-
-    if ( !me.IsIPv4() ) return -1;
-    if ( !peer.IsIPv4() ) return -1;
-
-    if (pffd < 0)
-        pffd = open("/dev/pf", O_RDONLY);
-
-    if (pffd < 0) {
-        if (squid_curtime - last_reported > 60) {
-            debugs(89, 1, "clientNatLookup: PF open failed: " << xstrerror());
-            last_reported = squid_curtime;
-        }
-
-        return -1;
-
-    }
-
-    client.SetEmpty();
-
-    memset(&nl, 0, sizeof(struct pfioc_natlook));
-    peer.GetInAddr(nl.saddr.v4);
-    nl.sport = htons(peer.GetPort());
-
-    me.GetInAddr(nl.daddr.v4);
-    nl.dport = htons(me.GetPort());
-
-    nl.af = AF_INET;
-    nl.proto = IPPROTO_TCP;
-    nl.direction = PF_OUT;
-
-    if (ioctl(pffd, DIOCNATLOOK, &nl)) {
-        if (errno != ENOENT) {
-            if (squid_curtime - last_reported > 60) {
-                debugs(89, 1, "clientNatLookup: PF lookup failed: ioctl(DIOCNATLOOK)");
-                last_reported = squid_curtime;
-            }
-
-            close(pffd);
-            pffd = -1;
-        }
-
-        return -1;
-    } else {
-        int natted = (me != nl.rdaddr.v4);
-        client = nl.rdaddr.v4;
-        client.SetPort(ntohs(nl.rdport));
-
-        if (natted)
-            return 0;
-        else
-            return -1;
-    }
-
-
 #else /* none of the transparent options configured */
-
     debugs(89, 1, "WARNING: transparent proxying not supported");
-    return -1;
-
 #endif
 
+    return -1;
 }
 
 #if LINUX_TPROXY2
