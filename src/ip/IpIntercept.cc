@@ -160,6 +160,8 @@ IpIntercept::NetfilterTransparent(int fd, const IpAddress &me, IpAddress &client
         client.SetPort(0); // allow random outgoing port to prevent address clashes
         return 0;
     }
+
+    debugs(89, 9, HERE << "address: me= " << me << ", dst= " << dst);
 #endif
     return -1;
 }
@@ -196,22 +198,15 @@ IpIntercept::IpfwInterception(int fd, const IpAddress &me, IpAddress &dst, int s
 }
 
 int
-IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAddress &client, IpAddress &dst)
+IpIntercept::IpfInterception(int fd, const IpAddress &me, IpAddress &dst, int silent)
 {
 #if IPF_TRANSPARENT  /* --enable-ipf-transparent */
-    client = me;
-    if ( !me.IsIPv4() ) return -1;
-    if ( !peer.IsIPv4() ) return -1;
 
 #if defined(IPFILTER_VERSION) && (IPFILTER_VERSION >= 4000027)
-
     struct ipfobj obj;
 #else
-
     static int siocgnatl_cmd = SIOCGNATL & 0xff;
-
 #endif
-
     struct natlookup natLookup;
     static int natfd = -1;
     int x;
@@ -226,7 +221,7 @@ IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAdd
 #endif
 
     natLookup.nl_inport = htons(me.GetPort());
-    natLookup.nl_outport = htons(peer.GetPort());
+    natLookup.nl_outport = htons(dst.GetPort());
     me.GetInAddr(natLookup.nl_inip);
     peer.GetInAddr(natLookup.nl_outip);
     natLookup.nl_flags = IPN_TCP;
@@ -235,20 +230,17 @@ IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAdd
         int save_errno;
         enter_suid();
 #ifdef IPNAT_NAME
-
         natfd = open(IPNAT_NAME, O_RDONLY, 0);
 #else
-
         natfd = open(IPL_NAT, O_RDONLY, 0);
 #endif
-
         save_errno = errno;
         leave_suid();
         errno = save_errno;
     }
 
     if (natfd < 0) {
-        if (squid_curtime - last_reported > 60) {
+        if (!silent) {
             debugs(89, 1, "clientNatLookup: NAT open failed: " << xstrerror());
             last_reported = squid_curtime;
             return -1;
@@ -257,7 +249,6 @@ IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAdd
 
 #if defined(IPFILTER_VERSION) && (IPFILTER_VERSION >= 4000027)
     x = ioctl(natfd, SIOCGNATL, &obj);
-
 #else
     /*
     * IP-Filter changed the type for SIOCGNATL between
@@ -267,7 +258,6 @@ IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAdd
     * this seems simpler.
     */
     if (63 == siocgnatl_cmd) {
-
         struct natlookup *nlp = &natLookup;
         x = ioctl(natfd, SIOCGNATL, &nlp);
     } else {
@@ -277,7 +267,7 @@ IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAdd
 #endif
     if (x < 0) {
         if (errno != ESRCH) {
-            if (squid_curtime - last_reported > 60) {
+            if (!silent) {
                 debugs(89, 1, "clientNatLookup: NAT lookup failed: ioctl(SIOCGNATL)");
                 last_reported = squid_curtime;
             }
@@ -290,17 +280,28 @@ IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAdd
     } else {
         if (me != natLookup.nl_realip) {
             client = natLookup.nl_realip;
-
             client.SetPort(ntohs(natLookup.nl_realport));
         }
         // else. we already copied it.
 
+        debugs(89, 9, HERE << "address: me= " << me << ", dst= " << dst);
         return 0;
     }
 
+    debugs(89, 9, HERE << "address: me= " << me << ", dst= " << dst);
+
+#endif /* --enable-ipf-transparent */
+    return -1;
+}
 
 
-#elif LINUX_NETFILTER || IPFW_TRANSPARENT /* --enable-linux-netfilter OR --enable-ipfw-transparent */
+int
+IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAddress &client, IpAddress &dst)
+{
+  /* --enable-linux-netfilter    */
+  /* --enable-ipfw-transparent   */
+  /* --enable-ipf-transparent    */
+#if IPF_TRANSPARENT || LINUX_NETFILTER || IPFW_TRANSPARENT
 
     /* Netfilter and IPFW share almost identical lookup methods for their NAT tables.
      * This allows us to perform a nice clean failover sequence for them.
@@ -321,6 +322,7 @@ IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAdd
 #endif
 
     if (intercept_active) {
+        if ( IpfInterception(fd, me, client, silent) == 0) return 0;
         if ( NetfilterInterception(fd, me, client, silent) == 0) return 0;
         if ( IpfwInterception(fd, me, client, silent) == 0) return 0;
     }
