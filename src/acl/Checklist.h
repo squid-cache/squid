@@ -154,8 +154,9 @@ public:
 	virtual bool hasRequest() const = 0;
 	virtual bool hasReply() const = 0;
 
-private:
+protected:
     virtual void checkCallback(allow_t answer);
+private:
     void checkAccessList();
     void checkForAsync();
 
