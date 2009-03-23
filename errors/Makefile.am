@@ -25,6 +25,7 @@ TRANSLATIONS = \
 	en en-au en-gb en-nz en-us \
 	es \
 	et \
+	fa \
 	fi \
 	fr \
 	hy \
@@ -40,6 +41,7 @@ TRANSLATIONS = \
 	sv \
 	tr \
 	uk \
+	uz \
 	zh-cn
 
 # Legacy language contributions...
