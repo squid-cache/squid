@@ -123,7 +123,7 @@ private:
      \retval 0     Successfuly located the new address.
      \retval -1    An error occured during NAT lookups.
      */
-    int PfInterception(int fd, IpAddress &client, IpAddress &client, int silent);
+    int PfInterception(int fd, IpAddress &client, IpAddress &dst, int silent);
 
 
     int transparent_active;

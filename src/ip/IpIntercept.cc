@@ -161,7 +161,7 @@ IpIntercept::NetfilterTransparent(int fd, const IpAddress &me, IpAddress &client
         return 0;
     }
 
-    debugs(89, 9, HERE << "address: me= " << me << ", dst= " << dst);
+    debugs(89, 9, HERE << "address: (dst)me= " << me << ", client= " << client);
 #endif
     return -1;
 }
