@@ -223,7 +223,7 @@ IpIntercept::IpfInterception(int fd, const IpAddress &me, IpAddress &dst, int si
     natLookup.nl_inport = htons(me.GetPort());
     natLookup.nl_outport = htons(dst.GetPort());
     me.GetInAddr(natLookup.nl_inip);
-    peer.GetInAddr(natLookup.nl_outip);
+    dst.GetInAddr(natLookup.nl_outip);
     natLookup.nl_flags = IPN_TCP;
 
     if (natfd < 0) {
@@ -279,8 +279,8 @@ IpIntercept::IpfInterception(int fd, const IpAddress &me, IpAddress &dst, int si
         return -1;
     } else {
         if (me != natLookup.nl_realip) {
-            client = natLookup.nl_realip;
-            client.SetPort(ntohs(natLookup.nl_realport));
+            me = natLookup.nl_realip;
+            me.SetPort(ntohs(natLookup.nl_realport));
         }
         // else. we already copied it.
 
