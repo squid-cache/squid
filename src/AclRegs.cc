@@ -62,6 +62,9 @@
 #include "acl/UrlPath.h"
 #include "acl/UrlPort.h"
 #include "acl/UserData.h"
+#include "auth/AclProxyAuth.h"
+#include "auth/AclMaxUserIp.h"
+
 
 ACL::Prototype ACLBrowser::RegistryProtoype(&ACLBrowser::RegistryEntry_, "browser");
 ACLStrategised<char const *> ACLBrowser::RegistryEntry_(new ACLRegexData, ACLRequestHeaderStrategy<HDR_USER_AGENT>::Instance(), "browser");
@@ -139,4 +142,10 @@ ACLStrategised<int> ACLUrlPort::RegistryEntry_(new ACLIntRange, ACLUrlPortStrate
 #endif
 
 
+ACL::Prototype ACLProxyAuth::UserRegistryProtoype(&ACLProxyAuth::UserRegistryEntry_, "proxy_auth");
+ACLProxyAuth ACLProxyAuth::UserRegistryEntry_(new ACLUserData, "proxy_auth");
+ACL::Prototype ACLProxyAuth::RegexRegistryProtoype(&ACLProxyAuth::RegexRegistryEntry_, "proxy_auth_regex" );
+ACLProxyAuth ACLProxyAuth::RegexRegistryEntry_(new ACLRegexData, "proxy_auth_regex");
 
+ACL::Prototype ACLMaxUserIP::RegistryProtoype(&ACLMaxUserIP::RegistryEntry_, "max_user_ip");
+ACLMaxUserIP ACLMaxUserIP::RegistryEntry_("max_user_ip");
