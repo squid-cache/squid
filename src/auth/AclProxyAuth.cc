@@ -190,11 +190,6 @@ ProxyAuthNeeded::checkForAsync(ACLChecklist *checklist) const
     checklist->markFinished();
 }
 
-ACL::Prototype ACLProxyAuth::UserRegistryProtoype(&ACLProxyAuth::UserRegistryEntry_, "proxy_auth");
-ACLProxyAuth ACLProxyAuth::UserRegistryEntry_(new ACLUserData, "proxy_auth");
-ACL::Prototype ACLProxyAuth::RegexRegistryProtoype(&ACLProxyAuth::RegexRegistryEntry_, "proxy_auth_regex" );
-ACLProxyAuth ACLProxyAuth::RegexRegistryEntry_(new ACLRegexData, "proxy_auth_regex");
-
 ACL *
 ACLProxyAuth::clone() const
 {
