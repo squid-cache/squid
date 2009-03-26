@@ -408,9 +408,9 @@ comm_select(int msec)
 
         for (;;) {
             PROF_start(comm_poll_normal);
-            statCounter.syscalls.selects++;
+            ++statCounter.syscalls.selects;
             num = poll(pfds, nfds, msec);
-            statCounter.select_loops++;
+            ++statCounter.select_loops;
             PROF_stop(comm_poll_normal);
 
             if (num >= 0 || npending >= 0)
