@@ -71,7 +71,7 @@ buildtest() {
     # with the right parameters. TODO: Make less noisy.
     grep -E "BUILD" ${log}
 
-    errors="^ERROR|\ error:|\ Error\ |No\ such|assertion\ failed|FAIL:"
+    errors="^ERROR|\ error:|\ Error\ |No\ such|assertion\ failed|FAIL:|:\ undefined"
     grep -E "${errors}" ${log}
 
     if test "${cleanup}" = "yes" ; then
