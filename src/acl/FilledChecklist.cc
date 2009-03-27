@@ -97,7 +97,7 @@ ACLFilledChecklist::checkCallback(allow_t answer)
         conn()->auth_type = AUTH_BROKEN;
     }
 
-	ACLFilledChecklist::checkCallback(answer); // may delete us
+	ACLChecklist::checkCallback(answer); // may delete us
 }
 
 
