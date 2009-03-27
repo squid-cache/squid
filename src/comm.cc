@@ -1549,7 +1549,7 @@ _comm_close(int fd, char const *file, int line)
         return;
 
     /* XXX: is this obsolete behind F->closing() ? */
-    if ( (shutting_down || restarting) && (!F->flags.open || F->type == FD_FILE))
+    if ( (shutting_down || reconfiguring) && (!F->flags.open || F->type == FD_FILE))
         return;
 
     /* The following fails because ipc.c is doing calls to pipe() to create sockets! */
