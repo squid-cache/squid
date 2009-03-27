@@ -24,7 +24,7 @@
 #include "acl/HttpRepHeader.h"
 #include "acl/HttpReqHeader.h"
 #include "acl/HttpStatus.h"
-#ifdef USE_IDENT
+#if USE_IDENT
 #include "acl/Ident.h"
 #endif
 #include "acl/IntRange.h"
@@ -134,7 +134,7 @@ ACLStrategised<int> ACLUrlPort::RegistryEntry_(new ACLIntRange, ACLUrlPortStrate
     ACLARP ACLARP::RegistryEntry_("arp");
 #endif
 
-#ifdef USE_IDENT
+#if USE_IDENT
     ACL::Prototype ACLIdent::UserRegistryProtoype(&ACLIdent::UserRegistryEntry_, "ident");
     ACLIdent ACLIdent::UserRegistryEntry_(new ACLUserData, "ident");
     ACL::Prototype ACLIdent::RegexRegistryProtoype(&ACLIdent::RegexRegistryEntry_, "ident_regex" );
