@@ -217,7 +217,7 @@ cf_gen_LDADD= \
 cf_gen.$(OBJEXT): cf_gen_defines.h
 
 
-ACL_REGISTRATION_SOURCES = AclRegs.cc
+ACL_REGISTRATION_SOURCES = AclRegs.cc AuthReg.cc
 
 DISKIO_SOURCE = \
 	DiskIO/DiskIOModule.cc \
