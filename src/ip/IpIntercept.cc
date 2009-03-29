@@ -198,7 +198,7 @@ IpIntercept::IpfwInterception(int fd, const IpAddress &me, IpAddress &dst, int s
 }
 
 int
-IpIntercept::IpfInterception(int fd, const IpAddress &me, IpAddress &dst, int silent)
+IpIntercept::IpfInterception(int fd, IpAddress &me, IpAddress &dst, int silent)
 {
 #if IPF_TRANSPARENT  /* --enable-ipf-transparent */
 
