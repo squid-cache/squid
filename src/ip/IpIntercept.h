@@ -114,7 +114,7 @@ private:
      \retval 0     Successfuly located the new address.
      \retval -1    An error occured during NAT lookups.
      */
-    int IpfInterception(int fd, const IpAddress &me, IpAddress &client, int silent);
+    int IpfInterception(int fd, IpAddress &me, IpAddress &client, int silent);
 
     /**
      * perform Lookups on PF interception.
