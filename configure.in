@@ -3791,6 +3791,7 @@ AC_CONFIG_FILES([\
 	src/adaptation/Makefile \
 	src/adaptation/icap/Makefile \
 	src/adaptation/ecap/Makefile \
+	src/esi/Makefile \
 	src/icmp/Makefile \
 	src/ip/Makefile \
 	contrib/Makefile \

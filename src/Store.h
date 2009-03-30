@@ -50,7 +50,7 @@
 #include "RemovalPolicy.h"
 
 #if USE_SQUID_ESI
-#include "ESIElement.h"
+#include "esi/Element.h"
 #endif
 
 class AsyncCall;

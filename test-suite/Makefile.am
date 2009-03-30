@@ -66,7 +66,7 @@ tcp_banger2_LDADD = -L$(top_builddir)/lib -lmiscutil
 DEBUG_SOURCE = test_tools.cc
 debug_SOURCES = debug.cc $(DEBUG_SOURCE)
 ESIExpressions_SOURCES = ESIExpressions.cc $(DEBUG_SOURCE)
-ESIExpressions_LDADD = $(top_builddir)/src/ESIExpression.o \
+ESIExpressions_LDADD = $(top_builddir)/src/esi/Expression.o \
 		$(LDADD)
 mem_node_test_SOURCES = mem_node_test.cc
 mem_node_test_LDADD = $(top_builddir)/src/mem_node.o $(LDADD)

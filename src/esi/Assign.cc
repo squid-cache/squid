@@ -40,9 +40,9 @@
  */
 #if (USE_SQUID_ESI == 1)
 
-#include "ESIAssign.h"
-#include "ESIContext.h"
-#include "ESISequence.h"
+#include "esi/Assign.h"
+#include "esi/Context.h"
+#include "esi/Sequence.h"
 
 ESIAssign::~ESIAssign()
 {
