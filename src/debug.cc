@@ -751,16 +751,15 @@ std::ostringstream (*Debug::CurrentDebug)(NULL);
 const size_t
 BuildPrefixInit()
 {
-
-    /* Anyone moving the src/Debug.cc file MUST record its new location here,
-     * or there will be issues in the debugging statements, possibly fatal!
-     */
-
+    // XXX: This must be kept in sync with the actual debug.cc location
     const char *ThisFileNameTail = "src/debug.cc";
 
-    //leave immediately if misconfigured. Unfortunately not possible to detect at build
     const char *file=__FILE__;
-    assert(strstr(file,ThisFileNameTail)!=NULL);
+
+    // Disable heuristic if it does not work.
+    if (!strstr(file, ThisFileNameTail))
+		return 0;
+
     return strlen(file)-strlen(ThisFileNameTail);
 }
 
