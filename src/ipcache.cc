@@ -1333,7 +1333,7 @@ ipcacheMarkBadAddr(const char *name, IpAddress &addr)
     if (!ia->bad_mask[k]) {
         ia->bad_mask[k] = TRUE;
         ia->badcount++;
-        i->expires = XMIN(squid_curtime + XMAX((time_t)60, Config.negativeDnsTtl), i->expires);
+        i->expires = min(squid_curtime + max((time_t)60, Config.negativeDnsTtl), i->expires);
         debugs(14, 2, "ipcacheMarkBadAddr: " << name << " " << addr );
     }
 

@@ -310,12 +310,12 @@ fdAdjustReserved(void)
     /*
      * Calculate a new reserve, based on current usage and a small extra
      */
-    newReserve = Squid_MaxFD - Number_FD + XMIN(25, Squid_MaxFD / 16);
+    newReserve = Squid_MaxFD - Number_FD + min(25, Squid_MaxFD / 16);
 
     if (newReserve <= RESERVED_FD)
         return;
 
-    x = Squid_MaxFD - 20 - XMIN(25, Squid_MaxFD / 16);
+    x = Squid_MaxFD - 20 - min(25, Squid_MaxFD / 16);
 
     if (newReserve > x) {
         /* perhaps this should be fatal()? -DW */
@@ -323,7 +323,7 @@ fdAdjustReserved(void)
         newReserve = x;
     }
 
-    if (Squid_MaxFD - newReserve < XMIN(256, Squid_MaxFD / 2))
+    if (Squid_MaxFD - newReserve < min(256, Squid_MaxFD / 2))
         fatalf("Too few filedescriptors available in the system (%d usable of %d).\n", Squid_MaxFD - newReserve, Squid_MaxFD);
 
     debugs(51, 0, "Reserved FD adjusted from " << RESERVED_FD << " to " << newReserve << " due to failures");

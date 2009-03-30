@@ -157,8 +157,6 @@ make_challenge(char *domain, char *domain_controller)
     return ntlm_make_challenge(my_domain, my_domain_controller, (char *)challenge, NONCE_LEN);
 }
 
-#define min(A,B) (A<B?A:B)
-
 int ntlm_errno;
 #define MAX_USERNAME_LEN 255
 #define MAX_DOMAIN_LEN 255

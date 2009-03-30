@@ -204,10 +204,10 @@ size_t
 BodyPipe::putMoreData(const char *buf, size_t size)
 {
     if (bodySizeKnown())
-        size = XMIN((uint64_t)size, unproducedSize());
+        size = min((uint64_t)size, unproducedSize());
 
     const size_t spaceSize = static_cast<size_t>(theBuf.potentialSpaceSize());
-    if ((size = XMIN(size, spaceSize))) {
+    if ((size = min(size, spaceSize))) {
         theBuf.append(buf, size);
         postAppend(size);
         return size;
@@ -269,7 +269,7 @@ BodyPipe::getMoreData(MemBuf &buf)
 
     if (buf.isNull())
         buf.init();
-    const size_t size = XMIN(theBuf.contentSize(), buf.potentialSpaceSize());
+    const size_t size = min(theBuf.contentSize(), buf.potentialSpaceSize());
     buf.append(theBuf.content(), size);
     theBuf.consume(size);
     postConsume(size);
