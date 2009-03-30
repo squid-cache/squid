@@ -229,7 +229,7 @@ ACLFilledChecklist::markSourceDomainChecked()
  *    *not* delete the list.  After the callback function returns,
  *    checkCallback() will delete the list (i.e., self).
  */
-ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *request, const char *ident):
+ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_request, const char *ident):
     dst_peer(NULL),
     request(NULL),
     reply(NULL),
@@ -255,8 +255,8 @@ ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *request
     if (A)
         accessList = cbdataReference(A);
 
-    if (request != NULL) {
-        request = HTTPMSGLOCK(request);
+    if (http_request != NULL) {
+        request = HTTPMSGLOCK(http_request);
 #if FOLLOW_X_FORWARDED_FOR
         if (Config.onoff.acl_uses_indirect_client)
             src_addr = request->indirect_client_addr;
