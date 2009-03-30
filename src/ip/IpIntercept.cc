@@ -139,7 +139,7 @@ IpIntercept::NetfilterInterception(int fd, const IpAddress &me, IpAddress &dst, 
     dst.FreeAddrInfo(lookup);
 
     if (me != dst) {
-        debugs(89, 5, HERE << "address: " << dst);
+        debugs(89, 5, HERE << "address NAT: me= " << me << ", dst= " << dst);
         return 0;
     }
 
@@ -158,10 +158,11 @@ IpIntercept::NetfilterTransparent(int fd, const IpAddress &me, IpAddress &client
      */
     if (fd_table[fd].flags.transparent) {
         client.SetPort(0); // allow random outgoing port to prevent address clashes
+        debugs(89, 5, HERE << "address TPROXY: me= " << me << ", client= " << client);
         return 0;
     }
 
-    debugs(89, 9, HERE << "address: (dst)me= " << me << ", client= " << client);
+    debugs(89, 9, HERE << "address: me= " << me << ", client= " << client);
 #endif
     return -1;
 }
@@ -188,7 +189,7 @@ IpIntercept::IpfwInterception(int fd, const IpAddress &me, IpAddress &dst, int s
     dst.FreeAddrInfo(lookup);
 
     if (me != dst) {
-        debugs(89, 5, HERE << "address: " << dst);
+        debugs(89, 5, HERE << "address NAT: me= " << me << ", dst= " << dst);
         return 0;
     }
 
@@ -198,7 +199,7 @@ IpIntercept::IpfwInterception(int fd, const IpAddress &me, IpAddress &dst, int s
 }
 
 int
-IpIntercept::IpfInterception(int fd, IpAddress &me, IpAddress &dst, int silent)
+IpIntercept::IpfInterception(int fd, const IpAddress &me, IpAddress &client, IpAddress &dst, int silent)
 {
 #if IPF_TRANSPARENT  /* --enable-ipf-transparent */
 
@@ -241,7 +242,7 @@ IpIntercept::IpfInterception(int fd, IpAddress &me, IpAddress &dst, int silent)
 
     if (natfd < 0) {
         if (!silent) {
-            debugs(89, 1, "clientNatLookup: NAT open failed: " << xstrerror());
+            debugs(89, DBG_IMPORTANT, HERE << "NAT open failed: " << xstrerror());
             last_reported = squid_curtime;
             return -1;
         }
@@ -268,7 +269,7 @@ IpIntercept::IpfInterception(int fd, IpAddress &me, IpAddress &dst, int silent)
     if (x < 0) {
         if (errno != ESRCH) {
             if (!silent) {
-                debugs(89, 1, "clientNatLookup: NAT lookup failed: ioctl(SIOCGNATL)");
+                debugs(89, DBG_IMPORTANT, HERE << "NAT lookup failed: ioctl(SIOCGNATL)");
                 last_reported = squid_curtime;
             }
 
@@ -278,24 +279,24 @@ IpIntercept::IpfInterception(int fd, IpAddress &me, IpAddress &dst, int silent)
 
         return -1;
     } else {
-        if (me != natLookup.nl_realip) {
-            me = natLookup.nl_realip;
-            me.SetPort(ntohs(natLookup.nl_realport));
+        if (client != natLookup.nl_realip) {
+            client = natLookup.nl_realip;
+            client.SetPort(ntohs(natLookup.nl_realport));
         }
         // else. we already copied it.
 
-        debugs(89, 9, HERE << "address: me= " << me << ", dst= " << dst);
+        debugs(89, 5, HERE << "address NAT: me= " << me << ", client= " << client << ", dst= " << dst);
         return 0;
     }
 
-    debugs(89, 9, HERE << "address: me= " << me << ", dst= " << dst);
+    debugs(89, 9, HERE << "address: me= " << me << ", client= " << client << ", dst= " << dst);
 
 #endif /* --enable-ipf-transparent */
     return -1;
 }
 
 int
-IpIntercept::PfInterception(int fd, IpAddress &client, IpAddress &dst, int silent)
+IpIntercept::PfInterception(int fd, const IpAddress &me, IpAddress &client, IpAddress &dst, int silent)
 {
 #if PF_TRANSPARENT  /* --enable-pf-transparent */
 
@@ -307,7 +308,7 @@ IpIntercept::PfInterception(int fd, IpAddress &client, IpAddress &dst, int silen
 
     if (pffd < 0) {
         if (!silent) {
-            debugs(89, 1, HERE << "PF open failed: " << xstrerror());
+            debugs(89, DBG_IMPORTANT, HERE << "PF open failed: " << xstrerror());
             last_reported = squid_curtime;
         }
         return -1;
@@ -317,8 +318,8 @@ IpIntercept::PfInterception(int fd, IpAddress &client, IpAddress &dst, int silen
     dst.GetInAddr(nl.saddr.v4);
     nl.sport = htons(dst.GetPort());
 
-    client.GetInAddr(nl.daddr.v4);
-    nl.dport = htons(client.GetPort());
+    me.GetInAddr(nl.daddr.v4);
+    nl.dport = htons(me.GetPort());
 
     nl.af = AF_INET;
     nl.proto = IPPROTO_TCP;
@@ -327,7 +328,7 @@ IpIntercept::PfInterception(int fd, IpAddress &client, IpAddress &dst, int silen
     if (ioctl(pffd, DIOCNATLOOK, &nl)) {
         if (errno != ENOENT) {
             if (!silent) {
-                debugs(89, 1, "clientNatLookup: PF lookup failed: ioctl(DIOCNATLOOK)");
+                debugs(89, DBG_IMPORTANT, HERE << "PF lookup failed: ioctl(DIOCNATLOOK)");
                 last_reported = squid_curtime;
             }
             close(pffd);
@@ -338,11 +339,13 @@ IpIntercept::PfInterception(int fd, IpAddress &client, IpAddress &dst, int silen
         client = nl.rdaddr.v4;
         client.SetPort(ntohs(nl.rdport));
 
-        if (natted)
+        if (natted) {
+            debugs(89, 5, HERE << "address NAT: me= " << me << ", client= " << client << ", dst= " << dst);
             return 0;
+        }
     }
 
-    debugs(89, 9, HERE << "address: client= " << client << ", dst= " << dst);
+    debugs(89, 9, HERE << "address: me= " << me << ", client= " << client << ", dst= " << dst);
 
 #endif /* --enable-pf-transparent */
     return -1;
@@ -358,10 +361,6 @@ IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAdd
   /* --enable-pf-transparent     */
 #if IPF_TRANSPARENT || LINUX_NETFILTER || IPFW_TRANSPARENT || PF_TRANSPARENT
 
-    /* Netfilter and IPFW share almost identical lookup methods for their NAT tables.
-     * This allows us to perform a nice clean failover sequence for them.
-     */
-
     client = me;
     dst = peer;
 
@@ -376,18 +375,24 @@ IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAdd
     int silent = 0;
 #endif
 
+    debugs(89, 5, HERE << "address BEGIN: me= " << me << ", client= " << client <<
+           ", dst= " << dst << ", peer= " << peer);
+
     if (intercept_active) {
-        if ( IpfInterception(fd, me, client, silent) == 0) return 0;
+        /* NAT methods that use sock-opts to return client address */
         if ( NetfilterInterception(fd, me, client, silent) == 0) return 0;
         if ( IpfwInterception(fd, me, client, silent) == 0) return 0;
-        if ( PfInterception(fd, client, dst, silent) == 0) return 0;
+
+        /* NAT methods that use ioctl to return client address AND destination address */
+        if ( PfInterception(fd, me, client, dst, silent) == 0) return 0;
+        if ( IpfInterception(fd, me, client, dst, silent) == 0) return 0;
     }
     if (transparent_active) {
         if ( NetfilterTransparent(fd, me, dst, silent) == 0) return 0;
     }
 
 #else /* none of the transparent options configured */
-    debugs(89, 1, "WARNING: transparent proxying not supported");
+    debugs(89, DBG_IMPORTANT, "WARNING: transparent proxying not supported");
 #endif
 
     return -1;
