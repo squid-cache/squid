@@ -168,7 +168,8 @@ COMMON_LIBS = \
 	auth/libauth.la \
 	acl/libapi.la \
 	base/libbase.la \
-	ip/libip.la
+	ip/libip.la \
+	fs/libfs.la
 
 INCLUDES = \
 	-I$(top_srcdir) \
@@ -532,7 +533,6 @@ squid_LDADD = \
 	@XTRA_OBJS@ \
 	@DISK_LINKOBJS@ \
 	@REPL_OBJS@ \
-	@STORE_LIBS_TO_ADD@ \
 	@DISK_LIBS@ \
 	@CRYPTLIB@ \
 	@REGEXLIB@ \
@@ -545,7 +545,6 @@ squid_LDADD = \
 	@EPOLL_LIBS@ \
 	@MINGW_LIBS@ 
 squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
-	@STORE_LIBS_TO_ADD@ \
 	@DISK_LIBS@ \
 	@DISK_LINKOBJS@ \
 	@REPL_OBJS@ \
@@ -613,7 +612,6 @@ ufsdump_LDADD = \
 	$(COMMON_LIBS) \
 	@XTRA_OBJS@ \
 	@REPL_OBJS@ \
-	@STORE_LIBS_TO_ADD@ \
 	@CRYPTLIB@ \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
@@ -623,7 +621,7 @@ ufsdump_LDADD = \
 	@EPOLL_LIBS@ \
 	@MINGW_LIBS@ 
 ufsdump_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
-	@STORE_LIBS_TO_ADD@ \
+	$(COMMON_LIBS) \
 	@DISK_LIBS@ \
 	@DISK_LINKOBJS@ \
 	@REPL_OBJS@
@@ -1595,7 +1593,6 @@ tests_test_http_range_LDADD = \
 	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	@REPL_OBJS@ \
-	@STORE_LIBS_TO_ADD@ \
 	${ADAPTATION_LIBS} \
 	${ESI_LIBS} \
 	@REGEXLIB@ \
@@ -1895,7 +1892,7 @@ SWAP_TEST_GEN_SOURCES = \
 
 SWAP_TEST_LDADD = \
 	@REGEXLIB@ \
-	@STORE_LIBS_TO_ADD@ \
+	$(COMMON_LIBS) \
 	@REPL_OBJS@ \
 	@DISK_LIBS@ \
 	-L../lib -lmiscutil \
@@ -1905,7 +1902,7 @@ SWAP_TEST_DS =\
 	$(top_builddir)/lib/libmiscutil.a \
 	repl_modules.o \
 	@DISK_LIBS@ \
-	@STORE_LIBS_TO_ADD@ \
+	$(COMMON_LIBS) \
 	@REPL_OBJS@ \
 	@SQUID_CPPUNIT_LA@
 

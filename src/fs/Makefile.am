@@ -1,20 +1,17 @@
 include $(top_srcdir)/src/Common.am
 
-EXTRA_LIBRARIES = libaufs.a libdiskd.a libcoss.a libufs.a
-noinst_LIBRARIES = @STORE_LIBS_TO_BUILD@
-
-## TODO: add libfs -- file system framework; this library is always built
-## TODO: use libtool and add @STORE_LIBS_TO_BUILD@ to libfs.la
+EXTRA_LTLIBRARIES = libaufs.la libdiskd.la libcoss.la libufs.la
+noinst_LTLIBRARIES =  @STORE_LIBS_TO_BUILD@ libfs.la
 
 # aufs is a "fake" legacy store
-libaufs_a_SOURCES = \
+libaufs_la_SOURCES = \
 	aufs/StoreFSaufs.cc
 
 # diskd is a "fake" legacy store
-libdiskd_a_SOURCES = \
+libdiskd_la_SOURCES = \
 	diskd/StoreFSdiskd.cc
 
-libcoss_a_SOURCES = \
+libcoss_la_SOURCES = \
 	coss/StoreFScoss.h \
 	coss/StoreFScoss.cc \
 	coss/store_coss.h \
@@ -22,7 +19,7 @@ libcoss_a_SOURCES = \
 	coss/store_dir_coss.cc \
 	coss/CossSwapDir.h
 
-libufs_a_SOURCES = \
+libufs_la_SOURCES = \
 	ufs/StoreFSufs.h \
 	ufs/StoreFSufs.cc \
 	ufs/store_dir_ufs.cc \
@@ -31,6 +28,9 @@ libufs_a_SOURCES = \
 	ufs/ufscommon.cc \
 	ufs/ufscommon.h 
 
+libfs_la_SOURCES = Module.cc Module.h
+libfs_la_LIBADD =  @STORE_LIBS_TO_BUILD@
+libfs_la_DEPENDENCIES = @STORE_LIBS_TO_BUILD@
 
 EXTRA_DIST = \
 	coss/coss-notes.txt
@@ -56,7 +56,7 @@ testHeaders.c:
 CLEANFILES += testHeaders.c
 
 ## targets below to emulate distributed makefiles
-coss/all: libcoss.a
+coss/all: libcoss.la
 coss/clean: clean
-ufs/all: libufs.a
+ufs/all: libufs.la
 ufs/clean: clean
