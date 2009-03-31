@@ -204,6 +204,6 @@ protected:
     virtual bool inheritProperties(const HttpMsg *aMsg);
 };
 
-MEMPROXY_CLASS_INLINE(HttpRequest)          /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(HttpRequest);
 
 #endif /* SQUID_HTTPREQUEST_H */

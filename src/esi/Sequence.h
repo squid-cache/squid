@@ -90,6 +90,6 @@ private:
     void processStep(int dovars);
 };
 
-MEMPROXY_CLASS_INLINE(esiSequence)          /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(esiSequence);
 
 #endif /* SQUID_ESISEQUENCE_H */

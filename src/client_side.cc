@@ -35,7 +35,7 @@
 /**
  \defgroup ClientSide Client-Side Logics
  *
- \subsection cserrors Errors and client side
+ \section cserrors Errors and client side
  *
  \par Problem the first:
  * the store entry is no longer authoritative on the
@@ -60,7 +60,7 @@
  * stream calls occur. Then we simply read as normal.
  *
  *
- \subsection pconn_logic Persistent connection logic:
+ \section pconn_logic Persistent connection logic:
  *
  \par
  * requests (httpClientRequest structs) get added to the connection

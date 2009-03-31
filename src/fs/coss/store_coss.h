@@ -86,7 +86,7 @@ public:
     CossSwapDir *SD;
 };
 
-MEMPROXY_CLASS_INLINE(CossState)	/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(CossState);
 
 /// \ingroup COSS
 typedef struct _cossindex CossIndexNode;

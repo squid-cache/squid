@@ -114,7 +114,7 @@ struct esiComment : public ESIElement {
     void finish();
 };
 
-MEMPROXY_CLASS_INLINE(esiComment)		/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(esiComment);
 
 #include "esi/Literal.h"
 
@@ -179,7 +179,7 @@ private:
     esiProcessResult_t bestAttemptRV() const;
 };
 
-MEMPROXY_CLASS_INLINE(esiTry)		/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(esiTry);
 
 #include "esi/Var.h"
 
@@ -215,7 +215,7 @@ private:
     void selectElement();
 };
 
-MEMPROXY_CLASS_INLINE(esiChoose)		/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(esiChoose);
 
 /* esiWhen */
 
@@ -238,7 +238,7 @@ private:
     void evaluate();
 };
 
-MEMPROXY_CLASS_INLINE(esiWhen)		/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(esiWhen);
 
 /* esiOtherwise */
 

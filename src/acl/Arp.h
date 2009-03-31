@@ -70,6 +70,6 @@ protected:
     char const *class_;
 };
 
-MEMPROXY_CLASS_INLINE(ACLARP)	/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(ACLARP);
 
 #endif /* SQUID_ACLARP_H */

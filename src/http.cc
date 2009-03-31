@@ -1662,7 +1662,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
 
     switch (e->id) {
 
-/** \title RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid should not pass on. */
+/** \par RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid should not pass on. */
 
     case HDR_PROXY_AUTHORIZATION:
         /** \par Proxy-Authorization:
@@ -1678,7 +1678,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
 
         break;
 
-/** \title RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid does not pass on. */
+/** \par RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid does not pass on. */
 
     case HDR_CONNECTION:          /** \par Connection: */
     case HDR_TE:                  /** \par TE: */
@@ -1690,7 +1690,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
         break;
 
 
-/** \title OTHER headers I haven't bothered to track down yet. */
+/** \par OTHER headers I haven't bothered to track down yet. */
 
     case HDR_AUTHORIZATION:
         /** \par WWW-Authorization:

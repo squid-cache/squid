@@ -1179,10 +1179,10 @@ FwdState::reforwardableStatus(http_status s)
 /**
  * Decide where details need to be gathered to correctly describe a persistent connection.
  * What is needed:
- * \item  host name of server at other end of this link (either peer or requested host)
- * \item  port to which we connected the other end of this link (for peer or request)
- * \item  domain for which the connection is supposed to be used
- * \item  address of the client for which we made the connection
+ *  -  host name of server at other end of this link (either peer or requested host)
+ *  -  port to which we connected the other end of this link (for peer or request)
+ *  -  domain for which the connection is supposed to be used
+ *  -  address of the client for which we made the connection
  */
 void
 FwdState::pconnPush(int fd, const peer *_peer, const HttpRequest *req, const char *domain, IpAddress &client_addr)

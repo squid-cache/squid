@@ -81,7 +81,7 @@
 /**
  * If we don't have getrusage() then we create a fake structure
  * with only the fields Squid cares about.  This just makes the
- * source code cleaner, so we don't need lots of #ifdefs in other
+ * source code cleaner, so we don't need lots of ifdefs in other
  * places
  */
 struct rusage

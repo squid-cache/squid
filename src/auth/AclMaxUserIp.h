@@ -80,6 +80,6 @@ private:
     } flags;
 };
 
-MEMPROXY_CLASS_INLINE(ACLMaxUserIP)          /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(ACLMaxUserIP);
 
 #endif /* SQUID_ACLMAXUSERIP_H */
