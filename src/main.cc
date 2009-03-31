@@ -90,6 +90,8 @@
 #include "esi/Module.h"
 #endif
 
+#include "fs/Module.h"
+
 #if USE_WIN32_SERVICE
 
 #include "squid_windows.h"
@@ -1226,6 +1228,9 @@ SquidMain(int argc, char **argv)
         Mem::Init();
 
         storeFsInit();		/* required for config parsing */
+
+        /* TODO: call the FS::Clean() in shutdown to do Fs cleanups */
+	Fs::Init();
 
         /* May not be needed for parsing, have not audited for such */
         DiskIOModule::SetupAllModules();

@@ -33,6 +33,8 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
+/* TODO: remove this file as unused */
+
 #if 0
 #include "StoreFileSystem.h"
 #include "DiskIO/DiskIOModule.h"
@@ -48,5 +50,5 @@
  \ingroup FileSystems, UFS
  */
 
-/// \ingroup diskd
-static StoreFSufs<UFSSwapDir> DiskdInstance("DiskDaemon", "diskd");
+/* Unused variable: */
+StoreFSufs<UFSSwapDir> *DiskdInstance_foo = NULL;
