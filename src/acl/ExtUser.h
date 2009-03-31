@@ -68,6 +68,6 @@ private:
     char const *type_;
 };
 
-MEMPROXY_CLASS_INLINE(ACLExtUser)          /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(ACLExtUser);
 
 #endif /* SQUID_EXTUSER_H */

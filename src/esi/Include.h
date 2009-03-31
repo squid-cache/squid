@@ -104,6 +104,6 @@ private:
     void prepareRequestHeaders(HttpHeader &tempheaders, ESIVarState *vars);
 };
 
-MEMPROXY_CLASS_INLINE(ESIInclude)          /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(ESIInclude);
 
 #endif /* SQUID_ESIINCLUDE_H */

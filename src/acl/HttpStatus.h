@@ -76,6 +76,6 @@ protected:
     char const *class_;
 };
 
-MEMPROXY_CLASS_INLINE(ACLHTTPStatus)          /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(ACLHTTPStatus);
 
 #endif /* SQUID_ACLHTTPSTATUS_H */

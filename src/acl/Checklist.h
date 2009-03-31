@@ -131,8 +131,8 @@ public:
      * and the result is maybe delayed to wait for async lookups.
      *
      * When all tests are done callback is presented with one of:
-     * \item ACCESS_ALLOWED     Access explicitly Allowed
-     * \item ACCESS_DENIED      Access explicitly Denied
+     *  - ACCESS_ALLOWED     Access explicitly Allowed
+     *  - ACCESS_DENIED      Access explicitly Denied
      */
     void check();
 

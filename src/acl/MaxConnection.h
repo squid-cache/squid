@@ -66,6 +66,6 @@ protected:
     int limit;
 };
 
-MEMPROXY_CLASS_INLINE(ACLMaxConnection)          /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(ACLMaxConnection);
 
 #endif /* SQUID_ACLMAXCONNECTION_H */

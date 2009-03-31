@@ -61,7 +61,7 @@ public:
     unsigned int write_pending:1;
 };
 
-MEMPROXY_CLASS_INLINE(mem_node)		/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(mem_node);
 
 inline std::ostream &
 operator << (std::ostream &os, mem_node &aNode)

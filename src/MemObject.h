@@ -147,7 +147,7 @@ private:
     DeferredReadManager deferredReads;
 };
 
-MEMPROXY_CLASS_INLINE(MemObject)          /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(MemObject);
 
 /** global current memory removal policy */
 extern RemovalPolicy *mem_policy;

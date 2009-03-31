@@ -67,6 +67,6 @@ private:
     static ACLDestinationIP RegistryEntry_;
 };
 
-MEMPROXY_CLASS_INLINE(ACLDestinationIP)          /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(ACLDestinationIP);
 
 #endif /* SQUID_ACLDESTINATIONIP_H */

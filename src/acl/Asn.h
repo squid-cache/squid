@@ -70,6 +70,6 @@ private:
     CbDataList<int> *data;
 };
 
-MEMPROXY_CLASS_INLINE(ACLASN)          /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(ACLASN);
 
 #endif /* SQUID_ACLASN_H */
