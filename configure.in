@@ -1940,8 +1940,6 @@ AC_CHECK_HEADERS( \
 	stdint.h \
 	inttypes.h \
 	grp.h \
-	nss_common.h \
-	nss.h \
 	db.h \
 	db_185.h \
 	sys/capability.h
