@@ -102,19 +102,16 @@ logfileOpen(const char *path, size_t bufsz, int fatal_flag)
 
         if (path[6] != '\0') {
             path += 7;
-            char* delim = strchr(path, '.');
-
-	    if (!delim)
-		delim = strchr(path, '|');
-
-            if (delim != NULL)
-                *delim = '\0';
-
-            lf->syslog_priority = syslog_ntoa(path);
-
-            if (delim != NULL)
-                lf->syslog_priority |= syslog_ntoa(delim+1);
-
+	    char *priority = xstrdup(path);
+	    char *facility = (char *) strchr(priority, '.');
+	    if (!facility)
+		facility = (char *) strchr(priority, '|');
+	    if (facility) {
+		*facility++ = '\0';
+		lf->syslog_priority |= syslog_ntoa(facility);
+	    }
+	    lf->syslog_priority |= syslog_ntoa(priority);
+	    xfree(priority);
             if (0 == (lf->syslog_priority & PRIORITY_MASK))
                 lf->syslog_priority |= LOG_INFO;
         }
