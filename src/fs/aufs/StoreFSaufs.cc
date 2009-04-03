@@ -32,6 +32,9 @@
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
+
+/* TODO: remove this file as unused */ 
+
 #include "config.h"
 
 #if 0
@@ -50,5 +53,5 @@
  \ingroup UFS, FileSystems
  */
 
-/// \ingroup AUFS
-static StoreFSufs<UFSSwapDir> AufsInstance("DiskThreads", "aufs");
+/* Unused variable: */
+StoreFSufs<UFSSwapDir> *AufsInstance_foo = NULL;

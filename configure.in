@@ -507,6 +507,12 @@ if test -z "$UFS_FOUND" && test -n "$NEED_UFS"; then
     STORE_TESTS="$STORE_TESTS tests/testUfs$EXEEXT"
 fi
 
+AH_TEMPLATE(HAVE_FS_UFS, "Define to 1 if ufs filesystem module is build")
+AH_TEMPLATE(HAVE_FS_AUFS, "Define to 1 if aufs filesystem module is build")
+AH_TEMPLATE(HAVE_FS_DISKD, "Define to 1 if diskd filesystem module is build")
+AH_TEMPLATE(HAVE_FS_COSS, "Define to 1 if coss filesystem module is build")
+
+
 dnl got final STORE_MODULES, build library lists
 dnl This list will not be needed when each fs library has its own Makefile
 STORE_LIBS_TO_BUILD=
@@ -514,8 +520,10 @@ dnl File system libraries to link executables with.
 dnl These are the same as STORE_LIBS_TO_BUILD, but with a path
 STORE_LIBS_TO_ADD=
 for fs in $STORE_MODULES; do
-    STORE_LIBS_TO_BUILD="$STORE_LIBS_TO_BUILD lib${fs}.a"
-    STORE_LIBS_TO_ADD="$STORE_LIBS_TO_ADD fs/lib${fs}.a"
+    STORE_LIBS_TO_BUILD="$STORE_LIBS_TO_BUILD lib${fs}.la"
+    STORE_LIBS_TO_ADD="$STORE_LIBS_TO_ADD fs/lib${fs}.la"
+    HAVE_FS_TYPE=HAVE_FS_`echo $fs | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'` 
+    AC_DEFINE_UNQUOTED($HAVE_FS_TYPE, 1)
 done
 
 AC_SUBST(STORE_LIBS_TO_BUILD)
