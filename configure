@@ -25024,8 +25024,6 @@ fi
 
 
 
-
-
 for ac_header in \
 	arpa/inet.h \
 	arpa/nameser.h \
@@ -25104,8 +25102,6 @@ for ac_header in \
 	stdint.h \
 	inttypes.h \
 	grp.h \
-	nss_common.h \
-	nss.h \
 	db.h \
 	db_185.h \
 	sys/capability.h

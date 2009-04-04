@@ -393,12 +393,6 @@
 /* Define to 1 if you have the <net/pfvar.h> header file. */
 #undef HAVE_NET_PFVAR_H
 
-/* Define to 1 if you have the <nss_common.h> header file. */
-#undef HAVE_NSS_COMMON_H
-
-/* Define to 1 if you have the <nss.h> header file. */
-#undef HAVE_NSS_H
-
 /* off_t is defined by the system headers */
 #undef HAVE_OFF_T
 
