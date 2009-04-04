@@ -203,6 +203,7 @@ redirect_program c:/winnt/system32/cmd.exe /C c:/squid/libexec/redir.cmd</verb>
 <item>When Squid runs in command line mode, the launching user account must have administrative privilege on the system
 <item>"Start parameters" in the Windows 2000/XP/2003 Service applet cannot be used
 <item>Building with MinGW, when the configure option --enable-truncate is used, Squid cannot run on Windows NT, only Windows 2000 and later are supported
+<item>On Windows Vista and later, User Account Control (UAC) must be disabled before running service installation
 </itemize>
 </descrip>
 
