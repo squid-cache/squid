@@ -611,10 +611,8 @@ configDoConfigure(void)
 
 #endif
 
-    // we have reconfigured and in the process disabled any need for PURGE.
-    // turn it off now.
-    if(Config2.onoff.enable_purge == 2)
-        Config2.onoff.enable_purge = 0;
+    if (aclPurgeMethodInUse(Config.accessList.http))
+        Config2.onoff.enable_purge = 1;
 
     Config2.onoff.mangle_request_headers = httpReqHdrManglersConfigured();
 
