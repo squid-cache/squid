@@ -378,6 +378,11 @@ IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAdd
     debugs(89, 5, HERE << "address BEGIN: me= " << me << ", client= " << client <<
            ", dst= " << dst << ", peer= " << peer);
 
+    /* NP: try TPROXY first, its much quieter than NAT when non-matching */
+    if (transparent_active) {
+        if ( NetfilterTransparent(fd, me, dst, silent) == 0) return 0;
+    }
+
     if (intercept_active) {
         /* NAT methods that use sock-opts to return client address */
         if ( NetfilterInterception(fd, me, client, silent) == 0) return 0;
@@ -386,9 +391,6 @@ IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAdd
         /* NAT methods that use ioctl to return client address AND destination address */
         if ( PfInterception(fd, me, client, dst, silent) == 0) return 0;
         if ( IpfInterception(fd, me, client, dst, silent) == 0) return 0;
-    }
-    if (transparent_active) {
-        if ( NetfilterTransparent(fd, me, dst, silent) == 0) return 0;
     }
 
 #else /* none of the transparent options configured */
