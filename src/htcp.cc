@@ -167,7 +167,7 @@ private:
     htcpDataHeader *dhdr;
 };
 
-MEMPROXY_CLASS_INLINE(htcpSpecifier)		/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(htcpSpecifier);
 
 struct _htcpDetail {
     char *resp_hdrs;

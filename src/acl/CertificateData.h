@@ -65,6 +65,6 @@ private:
     SSLGETATTRIBUTE *sslAttributeCall;
 };
 
-MEMPROXY_CLASS_INLINE(ACLCertificateData)          /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(ACLCertificateData);
 
 #endif /* SQUID_ACLCERTIFICATEDATA_H */

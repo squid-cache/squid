@@ -253,7 +253,7 @@ public:
     Vector<HttpHeaderEntry *> entries;		/**< parsed fields in raw format */
     HttpHeaderMask mask;	/**< bit set <=> entry present */
     http_hdr_owner_type owner;	/**< request or reply */
-    int len;			/**< length when packed, not counting terminating '\0' */
+    int len;			/**< length when packed, not counting terminating null-byte */
 
 protected:
     /** \deprecated Public access replaced by removeHopByHopEntries() */

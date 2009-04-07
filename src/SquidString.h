@@ -154,18 +154,11 @@ public:
 
     String substr(size_type from, size_type to) const;
 
-    /** \deprecated Use assignment to [] position instead.
-     *              ie   str[newLength] = '\0';
-     */
     _SQUID_INLINE_ void cut(size_type newLength);
 
-
 #if DEBUGSTRINGS
-
     void stat (StoreEntry *) const;
-
 #endif
-
 
 
 private:

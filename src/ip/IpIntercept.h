@@ -83,7 +83,12 @@ private:
     /**
      * perform Lookups on Netfilter interception targets (REDIRECT, DNAT).
      *
-     \param silent[in]   0 if errors are to be displayed. 1 if errors are to be hidden.
+     \param silent   0 if errors are to be displayed. 1 if errors are to be hidden.
+     \param fd       FD for the current TCP connection being tested.
+     \param me       IP address Squid received the connection on
+     \param client   IP address from which Squid received the connection.
+     *               May be updated by the NAT table information.
+     *               Default is the same value as the me IP address.
      \retval 0     Successfuly located the new address.
      \retval -1    An error occured during NAT lookups.
      */
@@ -92,7 +97,12 @@ private:
     /**
      * perform Lookups on Netfilter fully-transparent interception targets (TPROXY).
      *
-     \param silent[in]   0 if errors are to be displayed. 1 if errors are to be hidden.
+     \param silent   0 if errors are to be displayed. 1 if errors are to be hidden.
+     \param fd       FD for the current TCP connection being tested.
+     \param me       IP address Squid received the connection on
+     \param dst      IP address to which the request was made.
+     *               expected to be updated from the NAT table information.
+     *               Default is the same value as the peer IP address sent to NatLookup().
      \retval 0     Successfuly located the new address.
      \retval -1    An error occured during NAT lookups.
      */
@@ -101,12 +111,16 @@ private:
     /**
      * perform Lookups on IPFW interception.
      *
-     \param silent[in]   0 if errors are to be displayed. 1 if errors are to be hidden.
+     \param silent   0 if errors are to be displayed. 1 if errors are to be hidden.
+     \param fd       FD for the current TCP connection being tested.
+     \param me       IP address Squid received the connection on
+     \param client   IP address from which Squid received the connection.
+     *               May be updated by the NAT table information.
+     *               Default is the same value as the me IP address.
      \retval 0     Successfuly located the new address.
      \retval -1    An error occured during NAT lookups.
      */
     int IpfwInterception(int fd, const IpAddress &me, IpAddress &client, int silent);
-
 
     int transparent_active;
     int intercept_active;

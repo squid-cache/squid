@@ -223,11 +223,11 @@ public:
     void SetAnyAddr();
 
     /// Set object to contain the specific IP case NO_ADDR (format-neutral).
-    /// see \link IsNoAddr() for more detail.
+    /// see IsNoAddr() for more detail.
     void SetNoAddr();
 
     /// Set object to contain the specific IP case LOCALHOST (format-neutral).
-    /// see \link IsLocalhost() for more detail.
+    /// see IsLocalhost() for more detail.
     void SetLocalhost();
 
     /// Fast reset of the stored content to what would be after default constructor.
@@ -297,10 +297,11 @@ public:
      *  The buffer sent MUST be allocated large enough to hold the resulting string.
      *  Name truncation will occur if buf does not have enough space.
      *  The constant MAX_IPSTRLEN is defined to provide for sizing arrays correctly.
-     \param show_format may be one of: AF_INET, AF_INET6 for the format of rDNS string wanted.
-     \param buf buffer to receive the text string output.
+     \param show_type  may be one of: AF_INET, AF_INET6 for the format of rDNS string wanted.
+     *                 AF_UNSPEC the default displays the IP in its most advanced native form.
+     \param buf        buffer to receive the text string output.
      */
-    bool GetReverseString(char buf[], int show_format = AF_UNSPEC) const;
+    bool GetReverseString(char buf[MAX_IPSTRLEN], int show_type = AF_UNSPEC) const;
 
     /** Test how two IP relate to each other.
      \retval  0  IP are equal
@@ -385,13 +386,13 @@ public:
 private:
     /* Conversion for dual-type internals */
 
-    bool GetReverseString4(char buf[], const struct in_addr &) const;
+    bool GetReverseString4(char buf[MAX_IPSTRLEN], const struct in_addr &dat) const;
 
     void check4Mapped();
 
 #if USE_IPV6
 
-    bool GetReverseString6(char buf[], const struct in6_addr &) const;
+    bool GetReverseString6(char buf[MAX_IPSTRLEN], const struct in6_addr &dat) const;
 
     void Map4to6(const struct in_addr &src, struct in6_addr &dest) const;
 

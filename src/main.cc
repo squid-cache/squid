@@ -262,8 +262,8 @@ usage(void)
 /**
  * Parse the parameters received via command line interface.
  *
- \param argc[in]   Number of options received on command line
- \param argv[in]   List of parameters received on command line
+ \param argc   Number of options received on command line
+ \param argv   List of parameters received on command line
  */
 static void
 mainParseOptions(int argc, char *argv[])

@@ -40,7 +40,7 @@
 /**
  \defgroup CacheManagerAPI Cache Manager API
  \ingroup Components
-
+ * 
  \defgroup CacheManagerInternal Cache Manager intenal API (not for public use)
  \ingroup CacheManagerAPI
  */

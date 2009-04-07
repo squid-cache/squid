@@ -63,7 +63,7 @@ public:
     int64_t length;
 };
 
-MEMPROXY_CLASS_INLINE(HttpHdrRangeSpec)          /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(HttpHdrRangeSpec);
 
 /**
  * There may be more than one byte range specified in the request.
@@ -113,7 +113,7 @@ private:
     int64_t clen;
 };
 
-MEMPROXY_CLASS_INLINE(HttpHdrRange)          /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(HttpHdrRange);
 
 /**
  * Data for iterating thru range specs
