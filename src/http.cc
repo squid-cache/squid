@@ -633,8 +633,8 @@ HttpStateData::keepaliveAccounting(HttpReply *reply)
         if (_peer)
             _peer->stats.n_keepalives_recv++;
 
-	if (Config.onoff.detect_broken_server_pconns
-	&& reply->bodySize(request->method) == -1 && !flags.chunked) {
+        if (Config.onoff.detect_broken_server_pconns
+                && reply->bodySize(request->method) == -1 && !flags.chunked) {
             debugs(11, 1, "keepaliveAccounting: Impossible keep-alive header from '" << entry->url() << "'" );
             // debugs(11, 2, "GOT HTTP REPLY HDR:\n---------\n" << readBuf->content() << "\n----------" );
             flags.keepalive_broken = 1;
@@ -1543,8 +1543,8 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             if (orig_request->extacl_user.size() && orig_request->extacl_passwd.size()) {
                 char loginbuf[256];
                 snprintf(loginbuf, sizeof(loginbuf), SQUIDSTRINGPH ":" SQUIDSTRINGPH,
-                    SQUIDSTRINGPRINT(orig_request->extacl_user),
-                    SQUIDSTRINGPRINT(orig_request->extacl_passwd));
+                         SQUIDSTRINGPRINT(orig_request->extacl_user),
+                         SQUIDSTRINGPRINT(orig_request->extacl_passwd));
                 httpHeaderPutStrf(hdr_out, HDR_PROXY_AUTHORIZATION, "Basic %s",
                                   base64_encode(loginbuf));
             }
@@ -1572,8 +1572,8 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             } else if (orig_request->extacl_user.size() && orig_request->extacl_passwd.size()) {
                 char loginbuf[256];
                 snprintf(loginbuf, sizeof(loginbuf), SQUIDSTRINGPH ":" SQUIDSTRINGPH,
-                    SQUIDSTRINGPRINT(orig_request->extacl_user),
-                    SQUIDSTRINGPRINT(orig_request->extacl_passwd));
+                         SQUIDSTRINGPRINT(orig_request->extacl_user),
+                         SQUIDSTRINGPRINT(orig_request->extacl_passwd));
                 httpHeaderPutStrf(hdr_out, HDR_AUTHORIZATION, "Basic %s",
                                   base64_encode(loginbuf));
             }
@@ -1610,8 +1610,8 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             EBIT_SET(cc->mask, CC_NO_CACHE);
 #endif
 
-	/* Add max-age only without no-cache */
-	if (!EBIT_TEST(cc->mask, CC_MAX_AGE) && !EBIT_TEST(cc->mask, CC_NO_CACHE)) {
+        /* Add max-age only without no-cache */
+        if (!EBIT_TEST(cc->mask, CC_MAX_AGE) && !EBIT_TEST(cc->mask, CC_NO_CACHE)) {
             const char *url =
                 entry ? entry->url() : urlCanonical(orig_request);
             httpHdrCcSetMaxAge(cc, getMaxAge(url));
@@ -1662,7 +1662,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
 
     switch (e->id) {
 
-/** \par RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid should not pass on. */
+        /** \par RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid should not pass on. */
 
     case HDR_PROXY_AUTHORIZATION:
         /** \par Proxy-Authorization:
@@ -1678,7 +1678,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
 
         break;
 
-/** \par RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid does not pass on. */
+        /** \par RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid does not pass on. */
 
     case HDR_CONNECTION:          /** \par Connection: */
     case HDR_TE:                  /** \par TE: */
@@ -1690,7 +1690,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
         break;
 
 
-/** \par OTHER headers I haven't bothered to track down yet. */
+        /** \par OTHER headers I haven't bothered to track down yet. */
 
     case HDR_AUTHORIZATION:
         /** \par WWW-Authorization:
@@ -1739,7 +1739,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
 
     case HDR_IF_MODIFIED_SINCE:
         /** \par If-Modified-Since:
-	 * append unless we added our own;
+        * append unless we added our own;
          * \note at most one client's ims header can pass through */
 
         if (!hdr_out->has(HDR_IF_MODIFIED_SINCE))
@@ -1975,7 +1975,7 @@ HttpStateData::doneSendingRequestBody()
 
 #if HTTP_VIOLATIONS
     if (Config.accessList.brokenPosts) {
-		ACLFilledChecklist ch(Config.accessList.brokenPosts, request, NULL);
+        ACLFilledChecklist ch(Config.accessList.brokenPosts, request, NULL);
         if (!ch.fastCheck()) {
             debugs(11, 5, "doneSendingRequestBody: didn't match brokenPosts");
             CommIoCbParams io(NULL);

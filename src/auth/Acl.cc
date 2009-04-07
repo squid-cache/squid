@@ -12,8 +12,8 @@
 int
 AuthenticateAcl(ACLChecklist *ch)
 {
-	ACLFilledChecklist *checklist = Filled(ch);
-	HttpRequest *request = checklist->request;
+    ACLFilledChecklist *checklist = Filled(ch);
+    HttpRequest *request = checklist->request;
     http_hdr_type headertype;
 
     if (NULL == request) {
@@ -46,8 +46,8 @@ AuthenticateAcl(ACLChecklist *ch)
      */
     AuthUserRequest *old_auth_user_request = checklist->auth_user_request;
     const auth_acl_t result = AuthUserRequest::tryToAuthenticateAndSetAuthUser(
-        &checklist->auth_user_request, headertype, request, 
-        checklist->conn(), checklist->src_addr);
+                                  &checklist->auth_user_request, headertype, request,
+                                  checklist->conn(), checklist->src_addr);
     if (checklist->auth_user_request)
         AUTHUSERREQUESTLOCK(checklist->auth_user_request, "ACLAuth::authenticated");
     AUTHUSERREQUESTUNLOCK(old_auth_user_request, "old ACLAuth");

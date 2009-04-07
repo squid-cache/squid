@@ -52,7 +52,8 @@
 
 class ChunkedCodingParser;
 
-namespace Adaptation {
+namespace Adaptation
+{
 namespace Icap {
 
 // estimated future presence and size of something (e.g., HTTP body)

@@ -1357,24 +1357,19 @@ clientReplyContext::buildReplyHeader()
     if (!Config.onoff.error_pconns && reply->sline.status >= 400 && !request->flags.must_keepalive) {
         debugs(33, 3, "clientBuildReplyHeader: Error, don't keep-alive");
         request->flags.proxy_keepalive = 0;
-    }
-    else if (!Config.onoff.client_pconns && !request->flags.must_keepalive) {
+    } else if (!Config.onoff.client_pconns && !request->flags.must_keepalive) {
         debugs(33, 2, "clientBuildReplyHeader: Connection Keep-Alive not requested by admin or client");
         request->flags.proxy_keepalive = 0;
-    }
-    else if (request->flags.proxy_keepalive && shutting_down) {
+    } else if (request->flags.proxy_keepalive && shutting_down) {
         debugs(88, 3, "clientBuildReplyHeader: Shutting down, don't keep-alive.");
         request->flags.proxy_keepalive = 0;
-    }
-    else if (request->flags.connection_auth && !reply->keep_alive) {
+    } else if (request->flags.connection_auth && !reply->keep_alive) {
         debugs(33, 2, "clientBuildReplyHeader: Connection oriented auth but server side non-persistent");
         request->flags.proxy_keepalive = 0;
-    }
-    else if (reply->bodySize(request->method) < 0) {
+    } else if (reply->bodySize(request->method) < 0) {
         debugs(88, 3, "clientBuildReplyHeader: can't keep-alive, unknown body size" );
         request->flags.proxy_keepalive = 0;
-    }
-    else if (fdUsageHigh()&& !request->flags.must_keepalive) {
+    } else if (fdUsageHigh()&& !request->flags.must_keepalive) {
         debugs(88, 3, "clientBuildReplyHeader: Not many unused FDs, can't keep-alive");
         request->flags.proxy_keepalive = 0;
     }
@@ -1703,7 +1698,7 @@ void
 clientReplyContext::sendStreamError(StoreIOBuffer const &result)
 {
     /** call clientWriteComplete so the client socket gets closed
-     * 
+     *
      * We call into the stream, because we don't know that there is a
      * client socket!
      */

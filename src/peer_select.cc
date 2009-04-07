@@ -295,9 +295,9 @@ peerSelectFoo(ps_state * ps)
         if (ps->always_direct == 0 && Config.accessList.AlwaysDirect) {
             /** check always_direct; */
             ps->acl_checklist = new ACLFilledChecklist(
-                                    Config.accessList.AlwaysDirect,
-                                    request,
-                                    NULL);		/* ident */
+                Config.accessList.AlwaysDirect,
+                request,
+                NULL);		/* ident */
             ps->acl_checklist->nonBlockingCheck(peerCheckAlwaysDirectDone, ps);
             return;
         } else if (ps->always_direct > 0) {
@@ -306,9 +306,9 @@ peerSelectFoo(ps_state * ps)
         } else if (ps->never_direct == 0 && Config.accessList.NeverDirect) {
             /** check never_direct; */
             ps->acl_checklist = new ACLFilledChecklist(
-                                    Config.accessList.NeverDirect,
-                                    request,
-                                    NULL);		/* ident */
+                Config.accessList.NeverDirect,
+                request,
+                NULL);		/* ident */
             ps->acl_checklist->nonBlockingCheck(peerCheckNeverDirectDone,
                                                 ps);
             return;

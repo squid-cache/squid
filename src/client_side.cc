@@ -533,7 +533,7 @@ ClientHttpRequest::logRequest()
             checklist->reply = HTTPMSGLOCK(al.reply);
 
         if (!Config.accessList.log || checklist->fastCheck()) {
-            if(request)
+            if (request)
                 al.request = HTTPMSGLOCK(request);
             accessLogLog(&al, checklist);
             updateCounters();
@@ -2245,8 +2245,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     /* RFC 2616 section 10.5.6 : handle unsupported HTTP versions cleanly. */
     /* We currently only accept 0.9, 1.0, 1.1 */
     if ( (http_ver.major == 0 && http_ver.minor != 9) ||
-         (http_ver.major == 1 && http_ver.minor > 1 ) ||
-         (http_ver.major > 1) ) {
+            (http_ver.major == 1 && http_ver.minor > 1 ) ||
+            (http_ver.major > 1) ) {
 
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 5, "Unsupported HTTP version discovered. :\n" << HttpParserHdrBuf(hp));
@@ -3344,7 +3344,7 @@ clientAclChecklistCreate(const acl_access * acl, ClientHttpRequest * http)
 {
     ConnStateData * conn = http->getConn();
     ACLFilledChecklist *ch = new ACLFilledChecklist(acl, http->request,
-        cbdataReferenceValid(conn) && conn != NULL ? conn->rfc931 : dash_str);
+            cbdataReferenceValid(conn) && conn != NULL ? conn->rfc931 : dash_str);
 
     /*
      * hack for ident ACL. It needs to get full addresses, and a place to store

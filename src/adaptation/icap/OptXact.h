@@ -37,7 +37,8 @@
 #include "adaptation/icap/Launcher.h"
 
 
-namespace Adaptation {
+namespace Adaptation
+{
 namespace Icap {
 
 /* OptXact sends an ICAP OPTIONS request to the ICAP service,

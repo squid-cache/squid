@@ -11,8 +11,8 @@ CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Ecap::XactionRep, XactionRep);
 
 
 Adaptation::Ecap::XactionRep::XactionRep(Adaptation::Initiator *anInitiator,
-                             HttpMsg *virginHeader, HttpRequest *virginCause,
-                             const Adaptation::ServicePointer &aService):
+        HttpMsg *virginHeader, HttpRequest *virginCause,
+        const Adaptation::ServicePointer &aService):
         AsyncJob("Adaptation::Ecap::XactionRep"),
         Adaptation::Initiate("Adaptation::Ecap::XactionRep", anInitiator, aService),
         theVirginRep(virginHeader), theCauseRep(NULL),

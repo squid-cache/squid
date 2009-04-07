@@ -69,10 +69,10 @@ Adaptation::Config::dumpService(StoreEntry *entry, const char *name) const
     for (SCI i = AllServices().begin(); i != AllServices().end(); ++i) {
         const ServiceConfig &cfg = (*i)->cfg();
         storeAppendPrintf(entry, "%s " SQUIDSTRINGPH "_%s %s %d " SQUIDSTRINGPH "\n",
-            name,
-            SQUIDSTRINGPRINT(cfg.key),
-            cfg.methodStr(), cfg.vectPointStr(), cfg.bypass,
-            SQUIDSTRINGPRINT(cfg.uri));
+                          name,
+                          SQUIDSTRINGPRINT(cfg.key),
+                          cfg.methodStr(), cfg.vectPointStr(), cfg.bypass,
+                          SQUIDSTRINGPRINT(cfg.uri));
     }
 }
 
@@ -154,8 +154,8 @@ Adaptation::Config::ParseAccess(ConfigParser &parser)
     ConfigParser::ParseString(&groupId);
     AccessRule *r;
     if (!(r=FindRuleByGroupId(groupId))) {
-	r = new AccessRule(groupId);
-	AllRules().push_back(r);
+        r = new AccessRule(groupId);
+        AllRules().push_back(r);
     }
     r->parse(parser);
 }

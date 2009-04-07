@@ -384,7 +384,7 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, int req_or_rep)
     }
 
     /* mangler or checklist went away. default allow */
-    if(!hm || !hm->access_list) {
+    if (!hm || !hm->access_list) {
         return 1;
     }
 

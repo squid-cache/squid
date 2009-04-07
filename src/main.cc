@@ -1230,7 +1230,7 @@ SquidMain(int argc, char **argv)
         storeFsInit();		/* required for config parsing */
 
         /* TODO: call the FS::Clean() in shutdown to do Fs cleanups */
-	Fs::Init();
+        Fs::Init();
 
         /* May not be needed for parsing, have not audited for such */
         DiskIOModule::SetupAllModules();

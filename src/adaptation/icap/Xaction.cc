@@ -84,7 +84,7 @@ void Adaptation::Icap::Xaction::openConnection()
         // TODO: can we sync call Adaptation::Icap::Xaction::noteCommConnected here instead?
         typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommConnectCbParams> Dialer;
         Dialer dialer(this, &Adaptation::Icap::Xaction::noteCommConnected);
-	dialer.params.fd = connection;
+        dialer.params.fd = connection;
         dialer.params.flag = COMM_OK;
         // fake other parameters by copying from the existing connection
         connector = asyncCall(93,3, "Adaptation::Icap::Xaction::noteCommConnected", dialer);
