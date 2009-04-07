@@ -225,7 +225,7 @@ aclParseArpList(SplayNode<acl_arp_data *> **curlist)
 int
 ACLARP::match(ACLChecklist *cl)
 {
-	ACLFilledChecklist *checklist = Filled(cl);
+    ACLFilledChecklist *checklist = Filled(cl);
 
     /* IPv6 does not do ARP */
     if (!checklist->src_addr.IsIPv4()) {

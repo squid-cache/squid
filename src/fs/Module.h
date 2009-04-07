@@ -1,10 +1,11 @@
 #ifndef SQUID_FS_MODULE_H
 #define SQUID_FS_MODULE_H
 
-namespace Fs {
+namespace Fs
+{
 
-    extern void Init();
-    extern void Clean();
+extern void Init();
+extern void Clean();
 
 }; // namespace Fs
 

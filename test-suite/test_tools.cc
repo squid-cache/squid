@@ -54,7 +54,8 @@ _db_print(const char *format,...)
 }
 
 static void
-_db_print_stderr(const char *format, va_list args) {
+_db_print_stderr(const char *format, va_list args)
+{
     /* FIXME? */
     // if (opt_debug_stderr < Debug::level)
 
@@ -65,20 +66,23 @@ _db_print_stderr(const char *format, va_list args) {
 }
 
 void
-fatal_dump(const char *message) {
+fatal_dump(const char *message)
+{
     debug (0,0) ("Fatal: %s",message);
     exit (1);
 }
 
 void
-fatal(const char *message) {
+fatal(const char *message)
+{
     debug (0,0) ("Fatal: %s",message);
     exit (1);
 }
 
 /* used by fatalf */
 static void
-fatalvf(const char *fmt, va_list args) {
+fatalvf(const char *fmt, va_list args)
+{
     static char fatal_str[BUFSIZ];
     vsnprintf(fatal_str, sizeof(fatal_str), fmt, args);
     fatal(fatal_str);
@@ -86,7 +90,8 @@ fatalvf(const char *fmt, va_list args) {
 
 /* printf-style interface for fatal */
 void
-fatalf(const char *fmt,...) {
+fatalf(const char *fmt,...)
+{
     va_list args;
     va_start(args, fmt);
     fatalvf(fmt, args);
@@ -94,14 +99,16 @@ fatalf(const char *fmt,...) {
 }
 
 void
-debug_trap(const char *message) {
+debug_trap(const char *message)
+{
     fatal(message);
 }
 
 int Debug::TheDepth = 0;
 
 std::ostream &
-Debug::getDebugOut() {
+Debug::getDebugOut()
+{
     assert(TheDepth >= 0);
     ++TheDepth;
     if (TheDepth > 1) {
@@ -118,7 +125,8 @@ Debug::getDebugOut() {
 }
 
 void
-Debug::finishDebug() {
+Debug::finishDebug()
+{
     assert(TheDepth >= 0);
     assert(CurrentDebug);
     if (TheDepth > 1) {
@@ -133,7 +141,8 @@ Debug::finishDebug() {
 }
 
 void
-Debug::xassert(const char *msg, const char *file, int line) {
+Debug::xassert(const char *msg, const char *file, int line)
+{
 
     if (CurrentDebug) {
         *CurrentDebug << "assertion failed: " << file << ":" << line <<
@@ -147,7 +156,8 @@ std::ostringstream *Debug::CurrentDebug (NULL);
 MemAllocator *dlink_node_pool = NULL;
 
 dlink_node *
-dlinkNodeNew() {
+dlinkNodeNew()
+{
     if (dlink_node_pool == NULL)
         dlink_node_pool = memPoolCreate("Dlink list nodes", sizeof(dlink_node));
 
@@ -157,7 +167,8 @@ dlinkNodeNew() {
 
 /* the node needs to be unlinked FIRST */
 void
-dlinkNodeDelete(dlink_node * m) {
+dlinkNodeDelete(dlink_node * m)
+{
     if (m == NULL)
         return;
 
@@ -165,7 +176,8 @@ dlinkNodeDelete(dlink_node * m) {
 }
 
 void
-dlinkAdd(void *data, dlink_node * m, dlink_list * list) {
+dlinkAdd(void *data, dlink_node * m, dlink_list * list)
+{
     m->data = data;
     m->prev = NULL;
     m->next = list->head;
@@ -180,7 +192,8 @@ dlinkAdd(void *data, dlink_node * m, dlink_list * list) {
 }
 
 void
-dlinkAddAfter(void *data, dlink_node * m, dlink_node * n, dlink_list * list) {
+dlinkAddAfter(void *data, dlink_node * m, dlink_node * n, dlink_list * list)
+{
     m->data = data;
     m->prev = n;
     m->next = n->next;
@@ -196,7 +209,8 @@ dlinkAddAfter(void *data, dlink_node * m, dlink_node * n, dlink_list * list) {
 }
 
 void
-dlinkAddTail(void *data, dlink_node * m, dlink_list * list) {
+dlinkAddTail(void *data, dlink_node * m, dlink_list * list)
+{
     m->data = data;
     m->next = NULL;
     m->prev = list->tail;
@@ -211,7 +225,8 @@ dlinkAddTail(void *data, dlink_node * m, dlink_list * list) {
 }
 
 void
-dlinkDelete(dlink_node * m, dlink_list * list) {
+dlinkDelete(dlink_node * m, dlink_list * list)
+{
     if (m->next)
         m->next->prev = m->prev;
 
@@ -228,7 +243,8 @@ dlinkDelete(dlink_node * m, dlink_list * list) {
 }
 
 Ctx
-ctx_enter(const char *descr) {
+ctx_enter(const char *descr)
+{
     return 0;
 }
 

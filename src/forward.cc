@@ -201,7 +201,7 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
      */
 
     if ( Config.accessList.miss && !request->client_addr.IsNoAddr() &&
-         request->protocol != PROTO_INTERNAL && request->protocol != PROTO_CACHEOBJ) {
+            request->protocol != PROTO_INTERNAL && request->protocol != PROTO_CACHEOBJ) {
         /**
          * Check if this host is allowed to fetch MISSES from us (miss_access)
          */
@@ -823,12 +823,11 @@ FwdState::connectStart()
         return;
     }
 
-    if(fs->_peer) {
+    if (fs->_peer) {
         host = fs->_peer->host;
         port = fs->_peer->http_port;
         fd = fwdPconnPool->pop(fs->_peer->name, fs->_peer->http_port, request->GetHost(), client_addr, checkRetriable());
-    }
-    else {
+    } else {
         host = request->GetHost();
         port = request->port;
         fd = fwdPconnPool->pop(host, port, NULL, client_addr, checkRetriable());

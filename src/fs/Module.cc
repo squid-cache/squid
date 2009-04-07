@@ -23,16 +23,17 @@ static StoreFSufs<UFSSwapDir> *DiskdInstance;
 #endif
 
 /* TODO: Modify coss code to:
- * (a) remove the StoreFScoss::GetInstance method, 
- * (b) declare the StoreFScoss::stats  as static and 
- * (c) merge the StoreFScoss::stat() method with the static 
+ * (a) remove the StoreFScoss::GetInstance method,
+ * (b) declare the StoreFScoss::stats  as static and
+ * (c) merge the StoreFScoss::stat() method with the static
  *     StoreFScoss::Stats() */
 #ifdef HAVE_FS_COSS
-    StoreFScoss &CossInstance = StoreFScoss::GetInstance();
+StoreFScoss &CossInstance = StoreFScoss::GetInstance();
 #endif
 
 
-void Fs::Init() {
+void Fs::Init()
+{
 
 #ifdef HAVE_FS_UFS
     UfsInstance = new StoreFSufs<UFSSwapDir>("Blocking", "ufs");
@@ -50,7 +51,8 @@ void Fs::Init() {
 }
 
 
-void Fs::Clean() {
+void Fs::Clean()
+{
 #ifdef HAVE_FS_UFS
     delete UfsInstance;
 #endif

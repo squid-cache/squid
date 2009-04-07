@@ -38,7 +38,7 @@ Adaptation::Icap::ModXact::State::State()
 }
 
 Adaptation::Icap::ModXact::ModXact(Adaptation::Initiator *anInitiator, HttpMsg *virginHeader,
-                         HttpRequest *virginCause, Adaptation::Icap::ServiceRep::Pointer &aService):
+                                   HttpRequest *virginCause, Adaptation::Icap::ServiceRep::Pointer &aService):
         AsyncJob("Adaptation::Icap::ModXact"),
         Adaptation::Icap::Xaction("Adaptation::Icap::ModXact", anInitiator, aService),
         icapReply(NULL),
@@ -575,7 +575,7 @@ void Adaptation::Icap::ModXact::callException(const std::exception &e)
 
     try {
         debugs(93, 3, HERE << "bypassing " << inCall << " exception: " <<
-            e.what() << ' ' << status());
+               e.what() << ' ' << status());
         bypassFailure();
     } catch (const std::exception &bypassE) {
         Adaptation::Icap::Xaction::callException(bypassE);

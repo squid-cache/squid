@@ -9,7 +9,8 @@
 
 #include "adaptation/Config.h"
 
-namespace Adaptation {
+namespace Adaptation
+{
 namespace Ecap {
 
 class Config: public Adaptation::Config

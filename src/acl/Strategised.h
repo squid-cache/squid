@@ -150,8 +150,8 @@ template <class MatchType>
 int
 ACLStrategised<MatchType>::match(ACLChecklist *cl)
 {
-	ACLFilledChecklist *checklist = dynamic_cast<ACLFilledChecklist*>(cl);
-	assert(checklist);
+    ACLFilledChecklist *checklist = dynamic_cast<ACLFilledChecklist*>(cl);
+    assert(checklist);
     return matcher->match(data, checklist);
 }
 

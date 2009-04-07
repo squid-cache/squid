@@ -33,7 +33,7 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-/* TODO: remove this file as unused */ 
+/* TODO: remove this file as unused */
 
 #include "config.h"
 

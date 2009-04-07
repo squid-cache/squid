@@ -133,7 +133,7 @@ aclIpAddrNetworkCompare(acl_ip_data * const &p, acl_ip_data * const &q)
     A.ApplyMask(q->mask);
 
     debugs(28,9, "aclIpAddrNetworkCompare: compare: " << p->addr1 << "/" << q->mask << " (" << A << ")  vs " <<
-                 q->addr1 << "-" << q->addr2 << "/" << q->mask);
+           q->addr1 << "-" << q->addr2 << "/" << q->mask);
 
     if (q->addr2.IsAnyAddr()) {       /* single address check */
 
@@ -219,7 +219,7 @@ acl_ip_data::DecodeMask(const char *asc, IpAddress &mask, int ctype)
 #if USE_IPV6
         /* HACK: IPv4 netmasks don't cleanly map to IPv6 masks. */
         debugs(28, DBG_IMPORTANT, "WARNING: Netmasks are deprecated. Please use CIDR masks instead.");
-        if(mask.IsIPv4()) {
+        if (mask.IsIPv4()) {
             /* locate what CIDR mask was _probably_ meant to be in its native protocol format. */
             /* this will completely crap out with a security fail-open if the admin is playing mask tricks */
             /* however, thats their fault, and we do warn. see bug 2601 for the effects if we don't do this. */
