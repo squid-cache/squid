@@ -505,7 +505,8 @@ fatalf(const char *fmt,...)
 
 /* used by fatalf */
 static void
-fatalvf(const char *fmt, va_list args) {
+fatalvf(const char *fmt, va_list args)
+{
     static char fatal_str[BUFSIZ];
     vsnprintf(fatal_str, sizeof(fatal_str), fmt, args);
     fatal(fatal_str);
@@ -513,7 +514,8 @@ fatalvf(const char *fmt, va_list args) {
 
 /* fatal with dumping core */
 void
-fatal_dump(const char *message) {
+fatal_dump(const char *message)
+{
     failure_notify = NULL;
     releaseServerSockets();
 
@@ -536,7 +538,8 @@ fatal_dump(const char *message) {
 }
 
 void
-debug_trap(const char *message) {
+debug_trap(const char *message)
+{
     if (!opt_catch_signals)
         fatal_dump(message);
 
@@ -544,7 +547,8 @@ debug_trap(const char *message) {
 }
 
 void
-sig_child(int sig) {
+sig_child(int sig)
+{
 #ifndef _SQUID_MSWIN_
 #ifdef _SQUID_NEXT_
     union wait status;

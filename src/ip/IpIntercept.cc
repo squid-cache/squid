@@ -355,10 +355,10 @@ IpIntercept::PfInterception(int fd, const IpAddress &me, IpAddress &client, IpAd
 int
 IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAddress &client, IpAddress &dst)
 {
-  /* --enable-linux-netfilter    */
-  /* --enable-ipfw-transparent   */
-  /* --enable-ipf-transparent    */
-  /* --enable-pf-transparent     */
+    /* --enable-linux-netfilter    */
+    /* --enable-ipfw-transparent   */
+    /* --enable-ipf-transparent    */
+    /* --enable-pf-transparent     */
 #if IPF_TRANSPARENT || LINUX_NETFILTER || IPFW_TRANSPARENT || PF_TRANSPARENT
 
     client = me;

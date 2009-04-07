@@ -97,7 +97,7 @@ public:
 
     /**
      * Trigger a blocking access check for a set of *_access options.
-     * 
+     *
      * ACLs which cannot be satisfied directly from available data are ignored.
      * This means any proxy_auth, external_acl, DNS lookups, Ident lookups etc
      * which have not already been performed and cached will not be checked.
@@ -106,7 +106,7 @@ public:
      * However callers should perform their own check and default based on local
      * knowledge of the ACL usage rather than depend on this default.
      * That will also save on work setting up ACLChecklist fields for a no-op.
-     * 
+     *
      * \retval  1/true    Access Allowed
      * \retval 0/false    Access Denied
      */
@@ -114,11 +114,11 @@ public:
 
     /**
      * Trigger a blocking access check for a single ACL line (a AND b AND c).
-     * 
+     *
      * ACLs which cannot be satisfied directly from available data are ignored.
      * This means any proxy_auth, external_acl, DNS lookups, Ident lookups etc
      * which have not already been performed and cached will not be checked.
-     * 
+     *
      * \retval  1/true    Access Allowed
      * \retval 0/false    Access Denied
      */
@@ -148,11 +148,11 @@ public:
     void changeState(AsyncState *);
     AsyncState *asyncState() const;
 
-	// XXX: ACLs that need request or reply have to use ACLFilledChecklist and
-	// should do their own checks so that we do not have to povide these two
+    // XXX: ACLs that need request or reply have to use ACLFilledChecklist and
+    // should do their own checks so that we do not have to povide these two
     // for ACL::checklistMatches to use
-	virtual bool hasRequest() const = 0;
-	virtual bool hasReply() const = 0;
+    virtual bool hasRequest() const = 0;
+    virtual bool hasReply() const = 0;
 
 protected:
     virtual void checkCallback(allow_t answer);

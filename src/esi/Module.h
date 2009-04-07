@@ -1,10 +1,11 @@
 #ifndef SQUID_ESI_MODULE_H
 #define SQUID_ESI_MODULE_H
 
-namespace Esi {
+namespace Esi
+{
 
-    extern void Init();
-    extern void Clean();
+extern void Init();
+extern void Clean();
 
 }; // namespace Esi
 

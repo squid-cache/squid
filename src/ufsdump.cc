@@ -59,7 +59,7 @@ storeAppendPrintf(StoreEntry * e, const char *fmt,...)
     va_list args;
     va_start(args, fmt);
 
-	assert(false);
+    assert(false);
 
     va_end(args);
 }
@@ -68,7 +68,7 @@ storeAppendPrintf(StoreEntry * e, const char *fmt,...)
 CacheManager*
 CacheManager::GetInstance()
 {
-	assert(false);
+    assert(false);
     return NULL;
 }
 

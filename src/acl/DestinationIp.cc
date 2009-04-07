@@ -47,7 +47,7 @@ ACLDestinationIP::typeString() const
 int
 ACLDestinationIP::match(ACLChecklist *cl)
 {
-	ACLFilledChecklist *checklist = Filled(cl);
+    ACLFilledChecklist *checklist = Filled(cl);
     const ipcache_addrs *ia = ipcache_gethostbyname(checklist->request->GetHost(), IP_LOOKUP_IF_MISS);
 
     if (ia) {
@@ -80,7 +80,7 @@ DestinationIPLookup::Instance()
 void
 DestinationIPLookup::checkForAsync(ACLChecklist *cl)const
 {
-	ACLFilledChecklist *checklist = Filled(cl);
+    ACLFilledChecklist *checklist = Filled(cl);
     checklist->asyncInProgress(true);
     ipcache_nbgethostbyname(checklist->request->GetHost(), LookupDone, checklist);
 }

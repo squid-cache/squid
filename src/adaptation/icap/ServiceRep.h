@@ -41,7 +41,8 @@
 #include "adaptation/icap/Elements.h"
 
 
-namespace Adaptation {
+namespace Adaptation
+{
 namespace Icap {
 
 class Options;

@@ -60,7 +60,7 @@ bool Adaptation::Ecap::ServiceRep::wantsUrl(const String &urlPath) const
 
 Adaptation::Initiate *
 Adaptation::Ecap::ServiceRep::makeXactLauncher(Adaptation::Initiator *initiator,
-                                   HttpMsg *virgin, HttpRequest *cause)
+        HttpMsg *virgin, HttpRequest *cause)
 {
     Must(up());
     XactionRep *rep = new XactionRep(initiator, virgin, cause, Pointer(this));

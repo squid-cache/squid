@@ -59,7 +59,8 @@
  */
 
 
-namespace Adaptation {
+namespace Adaptation
+{
 namespace Icap {
 
 class Xaction;

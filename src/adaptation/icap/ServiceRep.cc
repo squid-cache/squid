@@ -427,7 +427,7 @@ Adaptation::Icap::ServiceRep::optionsFetchTime() const
 
 Adaptation::Initiate *
 Adaptation::Icap::ServiceRep::makeXactLauncher(Adaptation::Initiator *initiator,
-                                 HttpMsg *virgin, HttpRequest *cause)
+        HttpMsg *virgin, HttpRequest *cause)
 {
     return new Adaptation::Icap::ModXactLauncher(initiator, virgin, cause, this);
 }

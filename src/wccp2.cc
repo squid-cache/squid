@@ -204,7 +204,7 @@ struct wccp2_cache_identity_info_t {
 //    uint16_t bits;
 //#define WCCP2_HASH_ASSIGNMENT_DATA  0x0
 
-/* 5.7.2 Hash Assignment Data Element */
+    /* 5.7.2 Hash Assignment Data Element */
     char buckets[32]; /* Draft indicates 8x 32-bit buckets but it's just a mask so doesn't matter how we define. */
     uint16_t weight;
     uint16_t status;
@@ -243,18 +243,18 @@ struct wccp2_cache_mask_identity_info_t {
     uint16_t bits;
 #define WCCP2_MASK_ASSIGNMENT_DATA  (0x1 <<14)
 
-/* Sect 5.7.2 Mask Assignment Data Element
- *
- * NP: draft specifies a variable-length set of keys here.
- *     the following fields only matche the special case Squid sends outbound (single-cache).
- */
-     uint32_t mask_element_count;
+    /* Sect 5.7.2 Mask Assignment Data Element
+     *
+     * NP: draft specifies a variable-length set of keys here.
+     *     the following fields only matche the special case Squid sends outbound (single-cache).
+     */
+    uint32_t mask_element_count;
 
-/* Sect 5.7.6 Mask/Value Set Element */
-/* special case: single mask element. no values. */
+    /* Sect 5.7.6 Mask/Value Set Element */
+    /* special case: single mask element. no values. */
     struct wccp2_mask_element_t mask;
 
-/* Sect 5.7.2 Mask Assignment Data Element */
+    /* Sect 5.7.2 Mask Assignment Data Element */
     uint16_t weight;
     uint16_t status;
 };
@@ -333,13 +333,13 @@ static struct wccp2_capability_element_t wccp2_capability_element;
 /* capability values */
 #define WCCP2_METHOD_GRE		0x00000001
 #define WCCP2_METHOD_L2			0x00000002
- /* when type=WCCP2_CAPABILITY_FORWARDING_METHOD */
+/* when type=WCCP2_CAPABILITY_FORWARDING_METHOD */
 #define WCCP2_FORWARDING_METHOD_GRE	WCCP2_METHOD_GRE
 #define WCCP2_FORWARDING_METHOD_L2	WCCP2_METHOD_L2
- /* when type=WCCP2_CAPABILITY_ASSIGNMENT_METHOD */
+/* when type=WCCP2_CAPABILITY_ASSIGNMENT_METHOD */
 #define WCCP2_ASSIGNMENT_METHOD_HASH	0x00000001
 #define WCCP2_ASSIGNMENT_METHOD_MASK	0x00000002
- /* when type=WCCP2_CAPABILITY_RETURN_METHOD */
+/* when type=WCCP2_CAPABILITY_RETURN_METHOD */
 #define WCCP2_PACKET_RETURN_METHOD_GRE	WCCP2_METHOD_GRE
 #define WCCP2_PACKET_RETURN_METHOD_L2	WCCP2_METHOD_L2
 
@@ -964,8 +964,7 @@ wccp2Init(void)
         if (wccp2_numrouters) {
             if (!eventFind(wccp2HereIam, NULL)) {
                 eventAdd("wccp2HereIam", wccp2HereIam, NULL, 1, 1);
-            }
-            else
+            } else
                 debugs(80,3,"wccp2Init: skip duplicate 'HERE_I_AM'.");
         }
 
@@ -1214,7 +1213,7 @@ wccp2HandleUdp(int sock, void *not_used)
     /* Go through the data structure */
     while (data_length > offset) {
 
-	char *data = wccp2_i_see_you.data;
+        char *data = wccp2_i_see_you.data;
 
         header = (struct wccp2_item_header_t *) &data[offset];
 
@@ -1435,7 +1434,7 @@ wccp2HandleUdp(int sock, void *not_used)
 
         for (num_caches = 0; num_caches < (int) ntohl(tmp); num_caches++) {
             /* Get a copy of the ip */
-	   memset(&cache_address, 0, sizeof(cache_address)); // Make GCC happy
+            memset(&cache_address, 0, sizeof(cache_address)); // Make GCC happy
 
             switch (Config.Wccp2.assignment_method) {
 

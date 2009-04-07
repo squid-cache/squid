@@ -236,7 +236,7 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
 
             /* print option name */
             packerPrintf(p, (pcount ? ", " SQUIDSTRINGPH : SQUIDSTRINGPH),
-                SQUIDSTRINGPRINT(CcFieldsInfo[flag].name));
+                         SQUIDSTRINGPRINT(CcFieldsInfo[flag].name));
 
             /* handle options with values */
 
@@ -255,7 +255,7 @@ httpHdrCcPackInto(const HttpHdrCc * cc, Packer * p)
 
     if (cc->other.size() != 0)
         packerPrintf(p, (pcount ? ", " SQUIDSTRINGPH : SQUIDSTRINGPH),
-            SQUIDSTRINGPRINT(cc->other));
+                     SQUIDSTRINGPRINT(cc->other));
 }
 
 /* negative max_age will clean old max_Age setting */

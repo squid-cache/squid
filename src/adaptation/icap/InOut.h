@@ -44,7 +44,8 @@
 // and adapted HTTP messages.
 
 
-namespace Adaptation {
+namespace Adaptation
+{
 namespace Icap {
 
 class InOut

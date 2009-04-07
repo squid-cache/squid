@@ -15,14 +15,14 @@
 #if defined(i386) || defined(__i386)
 #ifndef HAVE_PAD128_T
 typedef union {
-	long double	_q;
-	int32_t		_l[4];
+    long double	_q;
+    int32_t		_l[4];
 } pad128_t;
 #endif
 #ifndef HAVE_UPAD128_T
 typedef union {
-	long double	_q;
-	uint32_t	_l[4];
+    long double	_q;
+    uint32_t	_l[4];
 } upad128_t;
 #endif
 #endif
@@ -39,7 +39,7 @@ SQUIDCEXTERN int getrusage(int, struct rusage *);
  */
 SQUIDCEXTERN int getpagesize(void);
 #if !defined(_XPG4_2) && !(defined(__EXTENSIONS__) || \
-        (!defined(_POSIX_C_SOURCE) && !defined(_XOPEN_SOURCE)))
+(!defined(_POSIX_C_SOURCE) && !defined(_XOPEN_SOURCE)))
 SQUIDCEXTERN int gethostname(char *, int);
 #endif
 

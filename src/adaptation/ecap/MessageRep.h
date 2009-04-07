@@ -19,7 +19,8 @@ class HttpMsg;
 class HttpRequest;
 class HttpReply;
 
-namespace Adaptation {
+namespace Adaptation
+{
 namespace Ecap {
 
 class XactionRep;
