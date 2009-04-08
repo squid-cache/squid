@@ -1,6 +1,16 @@
+Changes to squid-3.1.0.7 (08 Apr 2009):
+
+	- Fix: several issues with ident
+	- Add several language translations
+	- Upgrade code testing infrastructure
+	- Migrate much code to build as internal libraries
+	- Support gcc 4.4
+	- Support doxygen 1.5.8
+	- ... and much code polish to make things read easier
+
 Changes to squid-3.1.0.6 (02 Mar 2009):
 
-	- Regresion Fix: Support HTTP/0.9 in accelerator mode
+	- Regression Fix: Support HTTP/0.9 in accelerator mode
 	- Regression bug 2608: Build broken by Linux basename() implementation.
 	- Bug 2601: Hack. Convert IPv4 netmasks to CIDR in IPv6-enabled mode
 	- Bug 2593: Compile errors on Solaris 10
