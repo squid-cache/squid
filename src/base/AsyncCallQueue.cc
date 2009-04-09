@@ -6,8 +6,8 @@
  *
  */
 
-#include "AsyncCallQueue.h"
-#include "AsyncCall.h"
+#include "base/AsyncCallQueue.h"
+#include "base/AsyncCall.h"
 
 AsyncCallQueue *AsyncCallQueue::TheInstance = 0;
 

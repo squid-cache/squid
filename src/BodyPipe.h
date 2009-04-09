@@ -3,7 +3,7 @@
 #define SQUID_BODY_PIPE_H
 
 #include "MemBuf.h"
-#include "AsyncCall.h"
+#include "base/AsyncCall.h"
 #include "base/AsyncJob.h"
 
 class BodyPipe;
