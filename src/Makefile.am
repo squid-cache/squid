@@ -294,11 +294,6 @@ squid_SOURCES = \
 	access_log.cc \
 	AccessLogEntry.h \
 	asn.cc \
-	AsyncCallQueue.cc \
-	AsyncCallQueue.h \
-	AsyncCall.cc \
-	AsyncCall.h \
-	AsyncJobCalls.h \
 	AsyncEngine.cc \
 	AsyncEngine.h \
 	cache_cf.cc \
@@ -829,9 +824,7 @@ TESTSOURCES= \
 
 # sources needed by those tests that need event.cc; incomplete
 TEST_CALL_SOURCES = \
-	event.cc \
-	AsyncCallQueue.cc \
-	AsyncCall.cc
+	event.cc
 
 
 check_PROGRAMS+= tests/testAuth \

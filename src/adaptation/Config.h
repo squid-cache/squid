@@ -2,7 +2,7 @@
 #define SQUID_ADAPTATION__CONFIG_H
 
 #include "event.h"
-#include "AsyncCall.h"
+#include "base/AsyncCall.h"
 #include "adaptation/Elements.h"
 
 class acl_access;

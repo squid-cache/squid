@@ -5,7 +5,7 @@
 #ifndef SQUID_ASYNC_JOB_H
 #define SQUID_ASYNC_JOB_H
 
-#include "AsyncCall.h"
+#include "base/AsyncCall.h"
 #include "TextException.h"
 
 /**
@@ -103,7 +103,7 @@ private:
     JobDialer &operator =(const JobDialer &);
 };
 
-#include "AsyncJobCalls.h"
+#include "base/AsyncJobCalls.h"
 
 template <class Dialer>
 bool
