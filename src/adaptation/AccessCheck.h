@@ -1,12 +1,13 @@
 #ifndef SQUID_ADAPTATION__ACCESS_CHECK_H
 #define SQUID_ADAPTATION__ACCESS_CHECK_H
 
-#include "ICAP/AsyncJob.h"
+#include "base/AsyncJob.h"
 #include "adaptation/Elements.h"
 #include "adaptation/forward.h"
 
 class HttpRequest;
 class HttpReply;
+class ACLFilledChecklist;
 
 namespace Adaptation
 {
@@ -35,7 +36,7 @@ private:
     HttpReply *rep;
     AccessCheckCallback *callback;
     void *callback_data;
-    ACLChecklist *acl_checklist;
+    ACLFilledChecklist *acl_checklist;
 
     typedef int Candidate;
     typedef Vector<Candidate> Candidates;

@@ -47,7 +47,6 @@
 
 //#include "squid.h"
 #include "config.h"
-#include "assert.h"
 //#include "SquidTime.h"
 #include "cf_gen_defines.h"
 #include "util.h"
@@ -664,7 +663,6 @@ gen_parse(Entry * head, FILE * fp)
             "parse_line(char *buff)\n"
             "{\n"
             "\tchar\t*token;\n"
-            "\tdebugs(0, 10, \"parse_line: \" << buff << \"\\n\" );\n"
             "\tif ((token = strtok(buff, w_space)) == NULL) \n"
             "\t\treturn 1;\t/* ignore empty lines */\n"
            );

@@ -34,12 +34,12 @@
  */
 
 #include "squid.h"
-#include "AuthUserRequest.h"
+#include "auth/UserRequest.h"
 #include "CacheManager.h"
 #include "Store.h"
 #include "fde.h"
 #include "client_side_request.h"
-#include "ACLChecklist.h"
+#include "acl/Checklist.h"
 #include "HttpRequest.h"
 #include "client_side.h"
 #include "helper.h"

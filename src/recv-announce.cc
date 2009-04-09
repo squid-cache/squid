@@ -114,6 +114,8 @@ main(int argc, char *argv[])
     dup(1);
 
 
+    IPAddress ipa;
+    chat tmp[MAX_HOSTNAMELEN];
     for (;;) {
         memset(buf, '\0', RECV_BUF_SIZE);
         memset(&R, '\0', len = sizeof(R));
@@ -125,9 +127,10 @@ main(int argc, char *argv[])
 
         xmemcpy(ip, &R.sin_addr.s_addr, 4);
         hp = gethostbyaddr(ip, 4, AF_INET);
+        ipa = R.sin_addr;
         printf("==============================================================================\n");
         printf("Received from %s [%s]\n",
-               inet_ntoa(R.sin_addr),
+               ipa.NtoA(tmp,MAX_HOSTNAMELEN),
                (hp && hp->h_name) ? hp->h_name : "Unknown");
         fputs(buf, stdout);
         fflush(stdout);

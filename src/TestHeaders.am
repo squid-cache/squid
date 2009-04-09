@@ -1,0 +1,18 @@
+## Test ./*.h files in a directory using test-suite/testheaders.sh
+
+## TODO: include in src/Common.am when all testHeaders users are the same.
+
+TESTS += testHeaders
+
+## .h dependency test script
+## aborts build process on errors; XXX: even with "make -k"
+testHeaders: $(srcdir)/*.h
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(srcdir)" || exit 1
+
+## XXX: this is only needed because testheaders.sh creates a dummy file called
+## testHeaders and distclean does not know about it.
+## Remove when testheaders.sh and its users are fixed.
+CLEANFILES += testHeaders
+
+
+.PHONY: testHeaders

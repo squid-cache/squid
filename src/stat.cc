@@ -35,7 +35,7 @@
 #include "squid.h"
 #include "event.h"
 #include "StoreClient.h"
-#include "AuthUserRequest.h"
+#include "auth/UserRequest.h"
 #include "CacheManager.h"
 #include "Store.h"
 #include "HttpRequest.h"

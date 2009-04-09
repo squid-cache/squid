@@ -34,7 +34,7 @@
 #ifndef SQUID_DIGESTSCHEME_H
 #define SQUID_DIGESTSCHEME_H
 
-#include "AuthScheme.h"
+#include "auth/Scheme.h"
 
 /// \ingroup AuthSchemeAPI
 /// \ingroup AuthAPI

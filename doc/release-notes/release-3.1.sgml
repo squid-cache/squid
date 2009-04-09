@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.1.0.2 release notes</title>
+<title>Squid 3.1.0.7 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.1.0.2 for testing.
+The Squid Team are pleased to announce the release of Squid-3.1.0.7 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.1/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -235,7 +235,7 @@ The two releases configuration differs and only the TOS mode settings are direct
 <p>The lines above are spearated for documentation. qos_flows may be configured with all options on one line, or separated as shown.
 Also options may be repeated as many times as desired. Only the final configured value for any option will be used.
 
-<p>The legacy <b>Option</b> and <b>Priority</b> modes available in Squid-2.7 are no longer supported.
+<p>The legacy <em>Option</em> and <em>Priority</em> modes available in Squid-2.7 are no longer supported.
 
 
 <sect1>SSL Bump (for HTTPS Filtering and Adaptation)
@@ -338,6 +338,7 @@ format (CR+LF) and the full Windows path must be specified, for example:
 redirect_program c:/winnt/system32/cmd.exe /C c:/squid/libexec/redir.cmd</verb>
 <item>When Squid runs in command line mode, the launching user account must have administrative privilege on the system
 <item>"Start parameters" in the Windows 2000/XP/2003 Service applet cannot be used
+<item>On Windows Vista and later, User Account Control (UAC) must be disabled before running service installation
 </itemize>
 
 
@@ -792,8 +793,10 @@ NOCOMMENT_START
 	acl aclname peername myPeer ...		# cache_peer ... name=myPeer
 	</verb>
 
-	<tag>auth_param ntlm</tag>
-	<p>The helper binary bundled with Squid under the name <em>ntlm_auth</em> has been renamed to accurately reflect
+	<tag>auth_param ntlm, basic, digest</tag>
+	<p>BASIC, DIGEST:  New parameter option <em>utf8 on|off</em> to permit helpers to selectively process UTF-8 characters even though
+	   HTTP accepts only ISO-8859-1.</p>
+	<p>NTLM: The helper binary bundled with Squid under the name <em>ntlm_auth</em> has been renamed to accurately reflect
 	   its real behavior and to prevent confusion with the more useful Samba helper using the same name.
 	<p>Despite being used for NTLM, the helper does not in fact provide true NTLM function. What it does provide is
 	   SMB LanManager authentication through the NTLM interface without the need for a domain controller. Thus the 

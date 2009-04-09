@@ -34,7 +34,7 @@
 #include "structs.h"
 
 #include "ConfigParser.h"
-#include "ACL.h"
+#include "acl/Gadgets.h"
 #include "Store.h"
 #include "Array.h"    // really Vector
 #include "adaptation/Config.h"
@@ -68,8 +68,11 @@ Adaptation::Config::dumpService(StoreEntry *entry, const char *name) const
     typedef Services::iterator SCI;
     for (SCI i = AllServices().begin(); i != AllServices().end(); ++i) {
         const ServiceConfig &cfg = (*i)->cfg();
-        storeAppendPrintf(entry, "%s %.*s_%s %s %d %.*s\n", name, cfg.key.size(), cfg.key.rawBuf(),
-                          cfg.methodStr(), cfg.vectPointStr(), cfg.bypass, cfg.uri.size(), cfg.uri.rawBuf());
+        storeAppendPrintf(entry, "%s " SQUIDSTRINGPH "_%s %s %d " SQUIDSTRINGPH "\n",
+                          name,
+                          SQUIDSTRINGPRINT(cfg.key),
+                          cfg.methodStr(), cfg.vectPointStr(), cfg.bypass,
+                          SQUIDSTRINGPRINT(cfg.uri));
     }
 }
 
@@ -79,7 +82,7 @@ Adaptation::Config::finalize()
     // create service reps from service configs
     typedef Vector<ServiceConfig*>::const_iterator VISCI;
     const Vector<ServiceConfig*> &configs = serviceConfigs;
-    debugs(93,3, "Found " << configs.size() << " service configs.");
+    debugs(93,3, HERE << "Found " << configs.size() << " service configs.");
     for (VISCI i = configs.begin(); i != configs.end(); ++i) {
         const ServiceConfig &cfg = **i;
         if (FindService(cfg.key) != NULL) {
@@ -92,7 +95,7 @@ Adaptation::Config::finalize()
             AllServices().push_back(s);
     }
 
-    debugs(93,3, "Created " << configs.size() <<
+    debugs(93,3, HERE << "Created " << configs.size() <<
            " message adaptation services.");
 }
 
@@ -105,7 +108,7 @@ FinalizeEach(Collection &collection, const char *label)
     for (CI i = collection.begin(); i != collection.end(); ++i)
         (*i)->finalize();
 
-    debugs(93,2, "Initialized " << collection.size() << ' ' << label);
+    debugs(93,2, HERE << "Initialized " << collection.size() << ' ' << label);
 }
 
 void
@@ -141,7 +144,7 @@ Adaptation::Config::DumpServiceSet(StoreEntry *entry, const char *name)
 {
     typedef Groups::iterator GI;
     for (GI i = AllGroups().begin(); i != AllGroups().end(); ++i)
-        storeAppendPrintf(entry, "%s %s\n", name, (*i)->id.unsafeBuf());
+        storeAppendPrintf(entry, "%s " SQUIDSTRINGPH "\n", name, SQUIDSTRINGPRINT((*i)->id));
 }
 
 void
@@ -151,8 +154,8 @@ Adaptation::Config::ParseAccess(ConfigParser &parser)
     ConfigParser::ParseString(&groupId);
     AccessRule *r;
     if (!(r=FindRuleByGroupId(groupId))) {
-	r = new AccessRule(groupId);
-	AllRules().push_back(r);
+        r = new AccessRule(groupId);
+        AllRules().push_back(r);
     }
     r->parse(parser);
 }
@@ -173,7 +176,7 @@ Adaptation::Config::DumpAccess(StoreEntry *entry, const char *name)
 
     typedef AccessRules::iterator CI;
     for (CI i = AllRules().begin(); i != AllRules().end(); ++i) {
-        snprintf(nom, 64, "%s %s", name, (*i)->groupId.unsafeBuf());
+        snprintf(nom, 64, "%s " SQUIDSTRINGPH, name, SQUIDSTRINGPRINT((*i)->groupId));
         dump_acl_access(entry, nom, (*i)->acl);
     }
 }

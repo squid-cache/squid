@@ -31,6 +31,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+
 #include "config.h"
 #include "Debug.h"
 #include "SquidTime.h"
@@ -129,7 +130,8 @@ _db_print(const char *format,...)
 }
 
 static void
-_db_print_file(const char *format, va_list args) {
+_db_print_file(const char *format, va_list args)
+{
     if (debug_log == NULL)
         return;
 
@@ -144,7 +146,8 @@ _db_print_file(const char *format, va_list args) {
 }
 
 static void
-_db_print_stderr(const char *format, va_list args) {
+_db_print_stderr(const char *format, va_list args)
+{
     if (opt_debug_stderr < Debug::level)
         return;
 
@@ -156,7 +159,8 @@ _db_print_stderr(const char *format, va_list args) {
 
 #if HAVE_SYSLOG
 static void
-_db_print_syslog(const char *format, va_list args) {
+_db_print_syslog(const char *format, va_list args)
+{
     LOCAL_ARRAY(char, tmpbuf, BUFSIZ);
     /* level 0,1 go to syslog */
 
@@ -178,7 +182,8 @@ _db_print_syslog(const char *format, va_list args) {
 #endif /* HAVE_SYSLOG */
 
 static void
-debugArg(const char *arg) {
+debugArg(const char *arg)
+{
     int s = 0;
     int l = 0;
     int i;
@@ -214,7 +219,8 @@ debugArg(const char *arg) {
 }
 
 static void
-debugOpenLog(const char *logfile) {
+debugOpenLog(const char *logfile)
+{
     if (logfile == NULL) {
         debug_log = stderr;
         return;
@@ -362,7 +368,8 @@ syslog_facility_names[] = {
 #endif
 
 void
-_db_set_syslog(const char *facility) {
+_db_set_syslog(const char *facility)
+{
     opt_syslog_enable = 1;
 #ifdef LOG_LOCAL4
 #ifdef LOG_DAEMON
@@ -398,7 +405,8 @@ _db_set_syslog(const char *facility) {
 #endif
 
 void
-Debug::parseOptions(char const *options) {
+Debug::parseOptions(char const *options)
+{
     int i;
     char *p = NULL;
     char *s = NULL;
@@ -422,7 +430,8 @@ Debug::parseOptions(char const *options) {
 }
 
 void
-_db_init(const char *logfile, const char *options) {
+_db_init(const char *logfile, const char *options)
+{
     Debug::parseOptions(options);
 
     debugOpenLog(logfile);
@@ -437,7 +446,8 @@ _db_init(const char *logfile, const char *options) {
 }
 
 void
-_db_rotate_log(void) {
+_db_rotate_log(void)
+{
     int i;
     LOCAL_ARRAY(char, from, MAXPATHLEN);
     LOCAL_ARRAY(char, to, MAXPATHLEN);
@@ -506,7 +516,8 @@ _db_rotate_log(void) {
 }
 
 static const char *
-debugLogTime(void) {
+debugLogTime(void)
+{
 
     time_t t = getCurrentTime();
 
@@ -532,7 +543,8 @@ debugLogTime(void) {
 }
 
 void
-xassert(const char *msg, const char *file, int line) {
+xassert(const char *msg, const char *file, int line)
+{
     debugs(0, 0, "assertion failed: " << file << ":" << line << ": \"" << msg << "\"");
 
     if (!shutting_down)
@@ -634,7 +646,8 @@ static const char *ctx_get_descr(Ctx ctx);
 
 
 Ctx
-ctx_enter(const char *descr) {
+ctx_enter(const char *descr)
+{
     Ctx_Current_Level++;
 
     if (Ctx_Current_Level <= CTX_MAX_LEVEL)
@@ -649,7 +662,8 @@ ctx_enter(const char *descr) {
 }
 
 void
-ctx_exit(Ctx ctx) {
+ctx_exit(Ctx ctx)
+{
     assert(ctx >= 0);
     Ctx_Current_Level = (ctx >= 0) ? ctx - 1 : -1;
 
@@ -662,7 +676,8 @@ ctx_exit(Ctx ctx) {
  * info for deducing the current execution stack
  */
 static void
-ctx_print(void) {
+ctx_print(void)
+{
     /* lock so _db_print will not call us recursively */
     Ctx_Lock++;
     /* ok, user saw [0,Ctx_Reported_Level] descriptions */
@@ -692,7 +707,8 @@ ctx_print(void) {
 
 /* checks for nulls and overflows */
 static const char *
-ctx_get_descr(Ctx ctx) {
+ctx_get_descr(Ctx ctx)
+{
     if (ctx < 0 || ctx > CTX_MAX_LEVEL)
         return "<lost>";
 
@@ -702,7 +718,8 @@ ctx_get_descr(Ctx ctx) {
 int Debug::TheDepth = 0;
 
 std::ostream &
-Debug::getDebugOut() {
+Debug::getDebugOut()
+{
     assert(TheDepth >= 0);
     ++TheDepth;
     if (TheDepth > 1) {
@@ -719,7 +736,8 @@ Debug::getDebugOut() {
 }
 
 void
-Debug::finishDebug() {
+Debug::finishDebug()
+{
     assert(TheDepth >= 0);
     assert(CurrentDebug);
     if (TheDepth > 1) {
@@ -736,7 +754,8 @@ Debug::finishDebug() {
 // Hack: replaces global ::xassert() to debug debugging assertions
 // Relies on assert macro calling xassert() without a specific scope.
 void
-Debug::xassert(const char *msg, const char *file, int line) {
+Debug::xassert(const char *msg, const char *file, int line)
+{
 
     if (CurrentDebug) {
         *CurrentDebug << "assertion failed: " << file << ":" << line <<
@@ -746,3 +765,26 @@ Debug::xassert(const char *msg, const char *file, int line) {
 }
 
 std::ostringstream (*Debug::CurrentDebug)(NULL);
+
+const size_t
+BuildPrefixInit()
+{
+    // XXX: This must be kept in sync with the actual debug.cc location
+    const char *ThisFileNameTail = "src/debug.cc";
+
+    const char *file=__FILE__;
+
+    // Disable heuristic if it does not work.
+    if (!strstr(file, ThisFileNameTail))
+        return 0;
+
+    return strlen(file)-strlen(ThisFileNameTail);
+}
+
+const char*
+SkipBuildPrefix(const char* path)
+{
+    static const size_t BuildPrefixLength = BuildPrefixInit();
+
+    return path+BuildPrefixLength;
+}

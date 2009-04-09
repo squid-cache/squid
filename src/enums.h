@@ -521,7 +521,8 @@ enum {
     _WIN_OS_WIN2K,
     _WIN_OS_WINXP,
     _WIN_OS_WINNET,
-    _WIN_OS_WINLON
+    _WIN_OS_WINLON,
+    _WIN_OS_WIN7
 };
 
 #endif
@@ -548,7 +549,7 @@ enum {
  */
 typedef enum {
     HTCP_CLR_PURGE,
-    HTCP_CLR_INVALIDATION,
+    HTCP_CLR_INVALIDATION
 } htcp_clr_reason;
 #endif
 

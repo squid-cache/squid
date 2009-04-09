@@ -301,7 +301,7 @@ PconnPool::pop(const char *host, u_short port, const char *domain, IpAddress &cl
     if (list == NULL) {
         debugs(48, 3, "PconnPool::pop: lookup for key {" << aKey << "} failed.");
         return -1;
-    } else { 
+    } else {
         debugs(48, 3, "PconnPool::pop: found " << hashKeyStr(&list->hash) << (isRetriable?"(to use)":"(to kill)") );
     }
 

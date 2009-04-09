@@ -40,8 +40,8 @@
 #include "comm.h"
 #include "ICP.h"
 #include "HttpRequest.h"
-#include "ACLChecklist.h"
-#include "ACL.h"
+#include "acl/FilledChecklist.h"
+#include "acl/Acl.h"
 #include "AccessLogEntry.h"
 #include "wordlist.h"
 #include "SquidTime.h"
@@ -409,12 +409,9 @@ icpAccessAllowed(IpAddress &from, HttpRequest * icp_request)
     if (!Config.accessList.icp)
         return 0;
 
-    ACLChecklist checklist;
+    ACLFilledChecklist checklist(Config.accessList.icp, icp_request, NULL);
     checklist.src_addr = from;
     checklist.my_addr.SetNoAddr();
-    checklist.request = HTTPMSGLOCK(icp_request);
-    checklist.accessList = cbdataReference(Config.accessList.icp);
-    /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
     int result = checklist.fastCheck();
     return result;
 }

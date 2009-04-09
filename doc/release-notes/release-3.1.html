@@ -1,11 +1,11 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
 <HEAD>
- <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.50">
- <TITLE>Squid 3.1.0.2 release notes</TITLE>
+ <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.21">
+ <TITLE>Squid 3.1.0.7 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.1.0.2 release notes</H1>
+<H1>Squid 3.1.0.7 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -80,7 +80,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.1.0.2 for testing.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.1.0.7 for testing.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.1/">http://www.squid-cache.org/Versions/v3/3.1/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -323,7 +323,7 @@ The two releases configuration differs and only the TOS mode settings are direct
 <P>The lines above are spearated for documentation. qos_flows may be configured with all options on one line, or separated as shown.
 Also options may be repeated as many times as desired. Only the final configured value for any option will be used.</P>
 
-<P>The legacy Option and Priority modes available in Squid-2.7 are no longer supported.</P>
+<P>The legacy <EM>Option</EM> and <EM>Priority</EM> modes available in Squid-2.7 are no longer supported.</P>
 
 
 <H2><A NAME="ss2.7">2.7</A> <A HREF="#toc2.7">SSL Bump (for HTTPS Filtering and Adaptation)</A>
@@ -454,6 +454,7 @@ redirect_program c:/winnt/system32/cmd.exe /C c:/squid/libexec/redir.cmd
 </LI>
 <LI>When Squid runs in command line mode, the launching user account must have administrative privilege on the system</LI>
 <LI>"Start parameters" in the Windows 2000/XP/2003 Service applet cannot be used</LI>
+<LI>On Windows Vista and later, User Account Control (UAC) must be disabled before running service installation</LI>
 </UL>
 </P>
 
@@ -981,8 +982,10 @@ NP: peername currently is limited to only match the first peer possible.
 </PRE>
 </P>
 
-<DT><B>auth_param ntlm</B><DD>
-<P>The helper binary bundled with Squid under the name <EM>ntlm_auth</EM> has been renamed to accurately reflect
+<DT><B>auth_param ntlm, basic, digest</B><DD>
+<P>BASIC, DIGEST:  New parameter option <EM>utf8 on|off</EM> to permit helpers to selectively process UTF-8 characters even though
+HTTP accepts only ISO-8859-1.</P>
+<P>NTLM: The helper binary bundled with Squid under the name <EM>ntlm_auth</EM> has been renamed to accurately reflect
 its real behavior and to prevent confusion with the more useful Samba helper using the same name.</P>
 <P>Despite being used for NTLM, the helper does not in fact provide true NTLM function. What it does provide is
 SMB LanManager authentication through the NTLM interface without the need for a domain controller. Thus the 

@@ -39,7 +39,7 @@
 #include "HttpReply.h"
 #include "HttpHdrContRange.h"
 #include "HttpHdrSc.h"
-#include "ACLChecklist.h"
+#include "acl/FilledChecklist.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
 
@@ -439,7 +439,8 @@ HttpReply::bodySize(const HttpRequestMethod& method) const
 
 bool HttpReply::sanityCheckStartLine(MemBuf *buf, http_status *error)
 {
-    if (buf->contentSize() >= protoPrefix.size() && protoPrefix.cmp(buf->content(), protoPrefix.size()) != 0) {
+    //hack warning: using psize instead of size here due to type mismatches with MemBuf.
+    if (buf->contentSize() >= protoPrefix.psize() && protoPrefix.cmp(buf->content(), protoPrefix.size()) != 0) {
         debugs(58, 3, "HttpReply::sanityCheckStartLine: missing protocol prefix (" << protoPrefix << ") in '" << buf->content() << "'");
         *error = HTTP_INVALID_HEADER;
         return false;
@@ -537,11 +538,10 @@ HttpReply::calcMaxBodySize(HttpRequest& request)
         return;
     bodySizeMax = -1;
 
-    ACLChecklist ch;
+    ACLFilledChecklist ch(NULL, &request, NULL);
     ch.src_addr = request.client_addr;
     ch.my_addr = request.my_addr;
     ch.reply = HTTPMSGLOCK(this); // XXX: this lock makes method non-const
-    ch.request = HTTPMSGLOCK(&request);
     for (acl_size_t *l = Config.ReplyBodySize; l; l = l -> next) {
         /* if there is no ACL list or if the ACLs listed match use this size value */
         if (!l->aclList || ch.matchAclListFast(l->aclList)) {

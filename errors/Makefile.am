@@ -83,18 +83,21 @@ install-data-local:
 
 
 uninstall-local:
-	@ for l in $(LANGUAGES); do \
-		for f in $(srcdir)/$$l/ERR_*; do \
-	        	rm -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; \
+	@ for l in $(LANGUAGES) templates; do \
+		for f in $(top_srcdir)/errors/$$l/ERR_*; do \
+	        	$(RM) $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; \
 		done; \
 	done; \
-	for l in $(TRANSLATIONS) templates; do \
-	  if test -d $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; then \
-		for f in $(srcdir)/$$l/ERR_*; do \
-	        	rm -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; \
+	for l in $(TRANSLATIONS); do \
+	  if test -d $(srcdir)/errors/$$l; then \
+		for f in $(srcdir)/errors/$$l/ERR_*; do \
+			if test -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; then \
+		        	$(RM) $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; \
+			fi; \
 		done; \
 	  fi \
-	done; \
+	done;
+	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh $(RM) $(DESTDIR)$(DEFAULT_STYLESHEET)
 	rm -f $(DESTDIR)$(DEFAULT_STYLESHEET).default
 
 # undocumented hack.  You can use this target to create multi-lingual
@@ -122,7 +125,7 @@ addlang: all
 	fi \
 	fi
 
-dist-hook:
+dist-hook: translate
 	for lang in $(LANGUAGES) templates; do \
 	  if test -d $(srcdir)/$$lang ; then \
 		test -d $(distdir)/$$lang \
@@ -132,30 +135,31 @@ dist-hook:
 		  || exit 1; \
 	  fi; \
 	done; \
-	$(MAKE) translate; \
 	for lang in $(TRANSLATIONS); do \
 	  if test -d $$lang ; then \
 		test -d $(distdir)/$$lang \
 		  || mkdir $(distdir)/$$lang \
 		  || exit 1; \
-		cp -p $$lang/ERR_*  $(distdir)/$$lang \
+		cp -p $(top_builddir)/errors/$$lang/ERR_*  $(distdir)/$$lang \
 		  || exit 1; \
 	  fi; \
 	done; \
 	cp -p $(srcdir)/errorpage.css  $(distdir)/errorpage.css
 
 translate:
-	@ if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no" && test "$(PO2HTML)" != "off"; then \
+	@if ! test -f $(top_srcdir)/errors/en.po; then \
+	  echo "Translation is not currently possible."; \
+	  exit 0; \
+	fi; \
+	if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no" && test "$(PO2HTML)" != "off" && test -f $(top_srcdir)/errors/en.po; then \
 	  for lang in $(TRANSLATIONS); do \
-		test -d $$lang && rm -r $$lang; \
-		mkdir $$lang; \
-		cd $$lang; \
+		test -d $(top_builddir)/errors/$$lang && $(RM) -r $(top_builddir)/errors/$$lang; \
+		mkdir $(top_builddir)/errors/$$lang || exit 1; \
 		echo -n "Translate '$$lang' ..."; \
-		for f in `ls -1 ../$(srcdir)/templates`; do \
-			$(PO2HTML) --progress=none -i ../$(srcdir)/$$lang.po -t ../$(srcdir)/templates/$$f >$$f || exit 1; \
+		for f in `ls -1 $(top_srcdir)/errors/templates`; do \
+			$(PO2HTML) --progress=none -i $(top_srcdir)/errors/$$lang.po -t $(top_srcdir)/errors/templates/$$f >$(top_builddir)/errors/$$lang/$$f || exit 1; \
 		done; \
 		echo "done."; \
-		cd ..; \
 	  done; \
 	else \
 	  if test "$(PO2HTML)" = "off" ; then \
@@ -167,5 +171,4 @@ translate:
 	  echo "http://www.squid-cache.org/Versions/langpack/"; \
 	fi
 
-all:
-	$(MAKE) translate
+all: translate

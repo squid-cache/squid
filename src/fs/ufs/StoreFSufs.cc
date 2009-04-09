@@ -33,6 +33,8 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
+/*TODO: remove this file as unused*/
+
 #if 0
 #include "StoreFileSystem.h"
 #endif
@@ -46,5 +48,5 @@
 /** \todo FIXME: break UFSSwapDir out so we don't build all the extras */
 #include "fs/ufs/ufscommon.h"
 
-static StoreFSufs<UFSSwapDir> UfsInstance("Blocking", "ufs");
-
+/* Unused variable: */
+StoreFSufs<UFSSwapDir> *UfsInstance_foo = NULL;

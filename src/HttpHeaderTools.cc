@@ -36,7 +36,7 @@
 #include "squid.h"
 #include "HttpHeader.h"
 #include "HttpHdrContRange.h"
-#include "ACLChecklist.h"
+#include "acl/FilledChecklist.h"
 #include "MemBuf.h"
 
 static void httpHeaderPutStrvf(HttpHeader * hdr, http_hdr_type id, const char *fmt, va_list vargs);
@@ -189,7 +189,7 @@ int
 strListIsSubstr(const String * list, const char *s, char del)
 {
     assert(list && del);
-    return list->pos(s) != 0;
+    return (list->find(s) != String::npos);
 
     /** \note
      * Note: the original code with a loop is broken because it uses strstr()
@@ -359,7 +359,7 @@ httpHeaderParseQuotedString (const char *start, String *val)
 
 /**
  * Checks the anonymizer (header_access) configuration.
- * 
+ *
  * \retval 0    Header is explicitly blocked for removal
  * \retval 1    Header is explicitly allowed
  * \retval 1    Header has been replaced, the current version can be used.
@@ -372,7 +372,6 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, int req_or_rep)
 
     /* check with anonymizer tables */
     header_mangler *hm;
-    ACLChecklist *checklist;
     assert(e);
 
     if (ROR_REQUEST == req_or_rep) {
@@ -385,13 +384,13 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, int req_or_rep)
     }
 
     /* mangler or checklist went away. default allow */
-    if(!hm || !hm->access_list) {
+    if (!hm || !hm->access_list) {
         return 1;
     }
 
-    checklist = aclChecklistCreate(hm->access_list, request, NULL);
+    ACLFilledChecklist checklist(hm->access_list, request, NULL);
 
-    if (checklist->fastCheck()) {
+    if (checklist.fastCheck()) {
         /* aclCheckFast returns true for allow. */
         retval = 1;
     } else if (NULL == hm->replacement) {
@@ -406,7 +405,6 @@ httpHdrMangle(HttpHeaderEntry * e, HttpRequest * request, int req_or_rep)
         retval = 1;
     }
 
-    delete checklist;
     return retval;
 }
 

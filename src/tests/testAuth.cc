@@ -2,10 +2,10 @@
 
 #include "squid.h"
 #include "testAuth.h"
-#include "authenticate.h"
-#include "AuthUserRequest.h"
-#include "AuthScheme.h"
-#include "AuthConfig.h"
+#include "auth/Gadgets.h"
+#include "auth/UserRequest.h"
+#include "auth/Scheme.h"
+#include "auth/Config.h"
 #include "Mem.h"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testAuth );
@@ -135,7 +135,7 @@ fake_auth_setup()
         schemeConfig = getConfig(params[scheme].name);
         if (schemeConfig != NULL)
             setup_scheme(schemeConfig, params[scheme].params,
-                          params[scheme].paramlength);
+                         params[scheme].paramlength);
         else
             fprintf(stderr,"Skipping unknown authentication scheme '%s'.\n",
                     params[scheme].name);

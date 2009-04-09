@@ -50,7 +50,7 @@
 #include "RemovalPolicy.h"
 
 #if USE_SQUID_ESI
-#include "ESIElement.h"
+#include "esi/Element.h"
 #endif
 
 class AsyncCall;
@@ -264,12 +264,10 @@ public:
     virtual void diskFull();
 
     /** Retrieve a store entry from the store */
-    virtual StoreEntry * get
-    (const cache_key *) = 0;
+    virtual StoreEntry * get(const cache_key *) = 0;
 
     /** \todo imeplement the async version */
-    virtual void get
-    (String const key , STOREGETCLIENT callback, void *cbdata) = 0;
+    virtual void get(String const key , STOREGETCLIENT callback, void *cbdata) = 0;
 
     /* prepare the store for use. The store need not be usable immediately,
      * it should respond to readable() and writable() with true as soon

@@ -33,11 +33,20 @@
 #ifndef SQUID_HTTPHEADER_H
 #define SQUID_HTTPHEADER_H
 
-
 /* because we pass a spec by value */
 #include "HttpHeaderRange.h"
 /* HttpHeader holds a HttpHeaderMask */
 #include "HttpHeaderMask.h"
+
+
+/* class forward declarations */
+class HttpVersion;
+class HttpHdrContRange;
+class HttpHdrCc;
+class HttpHdrSc;
+class HttpHdrRange;
+class String;
+
 
 /* constant attributes of http header fields */
 
@@ -55,6 +64,7 @@ typedef enum {
     HDR_CACHE_CONTROL,
     HDR_CONNECTION,
     HDR_CONTENT_BASE,
+    HDR_CONTENT_DISPOSITION,
     HDR_CONTENT_ENCODING,
     HDR_CONTENT_LANGUAGE,
     HDR_CONTENT_LENGTH,
@@ -149,13 +159,6 @@ struct _HttpHeaderFieldAttrs {
     field_type type;
 };
 
-class HttpVersion;
-
-class HttpHdrContRange;
-
-class HttpHdrCc;
-
-class HttpHdrSc;
 
 /** Iteration for headers; use HttpHeaderPos as opaque type, do not interpret */
 typedef ssize_t HttpHeaderPos;
@@ -251,7 +254,7 @@ public:
     Vector<HttpHeaderEntry *> entries;		/**< parsed fields in raw format */
     HttpHeaderMask mask;	/**< bit set <=> entry present */
     http_hdr_owner_type owner;	/**< request or reply */
-    int len;			/**< length when packed, not counting terminating '\0' */
+    int len;			/**< length when packed, not counting terminating null-byte */
 
 protected:
     /** \deprecated Public access replaced by removeHopByHopEntries() */

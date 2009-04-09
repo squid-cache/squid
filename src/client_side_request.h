@@ -41,7 +41,7 @@
 #include "client_side.h"
 #include "AccessLogEntry.h"
 #include "dlink.h"
-#include "ICAP/AsyncJob.h"
+#include "base/AsyncJob.h"
 
 #if USE_ADAPTATION
 #include "adaptation/forward.h"
@@ -187,7 +187,9 @@ private:
 
 /* client http based routines */
 SQUIDCEXTERN char *clientConstructTraceEcho(ClientHttpRequest *);
-SQUIDCEXTERN ACLChecklist *clientAclChecklistCreate(const acl_access * acl,ClientHttpRequest * http);
+
+class ACLFilledChecklist;
+SQUIDCEXTERN ACLFilledChecklist *clientAclChecklistCreate(const acl_access * acl,ClientHttpRequest * http);
 SQUIDCEXTERN int clientHttpRequestStatus(int fd, ClientHttpRequest const *http);
 SQUIDCEXTERN void clientAccessCheck(ClientHttpRequest *);
 

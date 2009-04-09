@@ -129,7 +129,6 @@ extern "C"
 }
 #endif
 
-#include "assert.h"
 #include "util.h"
 #include "ip/IpAddress.h"
 #include "getfullhostname.h"

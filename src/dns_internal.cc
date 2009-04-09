@@ -484,6 +484,8 @@ idnsParseWIN32Registry(void)
     case _WIN_OS_WINNET:
 
     case _WIN_OS_WINLON:
+
+    case _WIN_OS_WIN7:
         /* get nameservers from the Windows 2000 registry */
         /* search all interfaces for DNS server addresses */
 
@@ -677,9 +679,9 @@ idnsSentQueryVC(int fd, char *buf, size_t size, comm_err_t flag, int xerrno, voi
 
     if (flag == COMM_ERR_CLOSING)
         return;
-    
+
     if (fd_table[fd].closing())
-	return;
+        return;
 
     if (flag != COMM_OK || size <= 0) {
         comm_close(fd);

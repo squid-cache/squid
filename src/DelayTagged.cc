@@ -40,7 +40,6 @@
 #if DELAY_POOLS
 #include "squid.h"
 #include "DelayTagged.h"
-#include "authenticate.h"
 #include "NullDelayId.h"
 #include "Store.h"
 
@@ -77,7 +76,7 @@ int
 DelayTaggedCmp(DelayTaggedBucket::Pointer const &left, DelayTaggedBucket::Pointer const &right)
 {
     /* for rate limiting, case insensitive */
-    return left->tag.caseCmp(right->tag.unsafeBuf());
+    return left->tag.caseCmp(right->tag);
 }
 
 void
@@ -195,7 +194,7 @@ DelayTaggedBucket::~DelayTaggedBucket()
 void
 DelayTaggedBucket::stats (StoreEntry *entry) const
 {
-    storeAppendPrintf(entry, " %s:", tag.unsafeBuf());
+    storeAppendPrintf(entry, " :" SQUIDSTRINGPH , SQUIDSTRINGPRINT(tag));
     theBucket.stats (entry);
 }
 

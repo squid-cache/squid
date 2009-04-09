@@ -3,17 +3,18 @@
 #  $Id$
 #
 
+SUBDIRS =
+
 if USE_LOADABLE_MODULES
-DIST_SUBDIRS = libLtdl
-SUBDIRS      = libLtdl
-else
-DIST_SUBDIRS =
-SUBDIRS      =
+SUBDIRS += libLtdl
 endif
 
-DIST_SUBDIRS += libTrie
-SUBDIRS      += libTrie
-CLEANFILES   =
+if USE_ESI
+SUBDIRS += libTrie
+endif
+
+CLEANFILES =
+
 
 install: all
 install-strip: all
@@ -47,13 +48,12 @@ WIN32SRC=
 endif
 
 EXTRA_LIBRARIES = \
-	libregex.a \
 	libsspwin32.a
 noinst_LIBRARIES = \
 	libmiscutil.a \
 	libntlmauth.a \
-	$(LIBSSPWIN32) \
-	@LIBREGEX@
+	$(LIBSSPWIN32)
+
 #
 # dirent.c, encrypt.c and getopt.c are needed for native Windows support.
 #
@@ -90,17 +90,12 @@ libmiscutil_a_SOURCES = \
 	stub_memaccount.c \
 	util.c \
 	uudecode.c \
-	assert.c \
 	xusleep.c \
 	$(XPROF_STATS_SOURCE) \
 	$(WIN32SRC)
-libmiscutil_a_LIBADD = \
-	libTrie/src/Trie.o \
-	libTrie/src/TrieNode.o \
-	@LIBOBJS@
+libmiscutil_a_LIBADD = @LIBOBJS@
+
 # $(top_srcdir)/include/version.h should be a dependency
-libregex_a_SOURCES = \
-	GNUregex.c
 libntlmauth_a_SOURCES = \
 	ntlmauth.c
 libntlmauth_a_LIBADD = \
@@ -108,7 +103,11 @@ libntlmauth_a_LIBADD = \
 libsspwin32_a_SOURCES = \
 	sspwin32.c
 
-INCLUDES	= -I$(top_builddir)/include -I$(top_srcdir)/include @SQUID_CPPUNIT_INC@
+INCLUDES = \
+	-I$(top_srcdir) \
+	-I$(top_builddir)/include \
+	-I$(top_srcdir)/include \
+	@SQUID_CPPUNIT_INC@
 ##FIXME - set these in configure.in and reuse
 
 check_PROGRAMS= \
@@ -134,7 +133,7 @@ tests_testAll_SOURCES= \
 	tests/testMain.cc \
 	$(XPROF_STATS_SOURCE) \
 	$(WIN32SRC) \
-	util.c assert.c
+	util.c
 
 tests_testAll_LDADD= @SQUID_CPPUNIT_LA@ @SQUID_CPPUNIT_LIBS@
 

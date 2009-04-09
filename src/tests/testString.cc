@@ -59,3 +59,11 @@ testString::testCmpNotEmptyDefault()
     CPPUNIT_ASSERT(right.cmp("foo") < 0);
     CPPUNIT_ASSERT(right.cmp("foo", 1) < 0);
 }
+
+void testString::testSubstr()
+{
+    String s("0123456789");
+    String check=s.substr(3,5);
+    String ref("34");
+    CPPUNIT_ASSERT(check == ref);
+}

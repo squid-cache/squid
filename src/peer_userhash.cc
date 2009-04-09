@@ -38,7 +38,7 @@
 #include "CacheManager.h"
 #include "Store.h"
 #include "HttpRequest.h"
-#include "AuthUserRequest.h"
+#include "auth/UserRequest.h"
 
 #define ROTATE_LEFT(x, n) (((x) << (n)) | ((x) >> (32-(n))))
 

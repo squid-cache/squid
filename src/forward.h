@@ -103,4 +103,4 @@ private:
     IpAddress src; /* Client address for this connection. Needed for transparent operations. */
 };
 
-#endif
+#endif /* SQUID_FORWARD_H */

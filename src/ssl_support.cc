@@ -41,7 +41,7 @@
 #if USE_SSL
 
 #include "fde.h"
-#include "ACLChecklist.h"
+#include "acl/FilledChecklist.h"
 
 /**
  \defgroup ServerProtocolSSLInternal Server-Side SSL Internals
@@ -182,7 +182,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
                 debugs(83, 2, "SQUID_X509_V_ERR_DOMAIN_MISMATCH: Certificate " << buffer << " does not match domainname " << server);
                 ok = 0;
                 if (check)
-                    check->ssl_error = SQUID_X509_V_ERR_DOMAIN_MISMATCH;
+                    Filled(check)->ssl_error = SQUID_X509_V_ERR_DOMAIN_MISMATCH;
             }
         }
     } else {
@@ -216,7 +216,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
         }
 
         if (check)
-            check->ssl_error = ctx->error;
+            Filled(check)->ssl_error = ctx->error;
     }
 
     if (!ok && check) {

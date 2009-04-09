@@ -1,7 +1,7 @@
 #
-# Minimal configuration options.
-# - Everthing that can be disabled is
-# - Everyhing that can be done without is 
+# All configuration options that can be enabled are enabled,
+# XXX: with the exception of those that depend on the environment.
+# TODO: Add environment-specific tests to enable more options.
 #
 # The options for this level can be easily generated semi-automatically from configure.in by:
 #	grep -E "^AC_ARG_ENABLE" ./configure.in | grep -o -E "[0-9a-z\-]+[,]" | grep -o -E "[^,]+" >disable.opts
@@ -24,7 +24,8 @@
 #   --with-tags=TAGS \
 #
 #	Following features require special support from other optional packages.
-#	We can't test them automatically everywhere
+#	We can't test them automatically everywhere without detecting those
+#	optional packages first.
 #
 #   --enable-ecap \
 #   --enable-epoll \

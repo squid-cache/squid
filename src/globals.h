@@ -70,7 +70,6 @@ extern "C"
     extern const char *const version_string;	/* VERSION */
 //MOVED:versions.h:APP_FULLNAME    extern const char *const full_appname_string;	/* PACKAGE "/" VERSION */
     extern const char *const appname_string;	/* PACKAGE */
-    extern const char *const w_space;	/* " \t\n\r" */
     extern char const * visible_appname_string; /* NULL */
     extern const char *fdTypeStr[];
     extern const char *hier_strings[];

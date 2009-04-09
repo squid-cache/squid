@@ -45,11 +45,11 @@
 #include "squid.h"
 #include "clientStream.h"
 #include "client_side_request.h"
-#include "AuthUserRequest.h"
+#include "auth/UserRequest.h"
 #include "HttpRequest.h"
 #include "ProtoPort.h"
-#include "ACLChecklist.h"
-#include "ACL.h"
+#include "acl/FilledChecklist.h"
+#include "acl/Gadgets.h"
 #include "client_side.h"
 #include "client_side_reply.h"
 #include "Store.h"
@@ -426,7 +426,7 @@ clientFollowXForwardedForCheck(int answer, void *data)
         const char *asciiaddr;
         int l;
         struct in_addr addr;
-        p = request->x_forwarded_for_iterator.unsafeBuf();
+        p = request->x_forwarded_for_iterator.termedBuf();
         l = request->x_forwarded_for_iterator.size();
 
         /*
@@ -897,7 +897,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         }
 
 #if FORW_VIA_DB
-        fvdbCountVia(s.unsafeBuf());
+        fvdbCountVia(s.termedBuf());
 
 #endif
 
@@ -923,13 +923,13 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
 
     if (req_hdr->has(HDR_X_FORWARDED_FOR)) {
         String s = req_hdr->getList(HDR_X_FORWARDED_FOR);
-        fvdbCountForw(s.unsafeBuf());
+        fvdbCountForw(s.termedBuf());
         s.clean();
     }
 
 #endif
-    if (request->method == METHOD_TRACE) {
-        request->max_forwards = req_hdr->getInt(HDR_MAX_FORWARDS);
+    if (request->method == METHOD_TRACE || request->method == METHOD_OPTIONS) {
+        request->max_forwards = req_hdr->getInt64(HDR_MAX_FORWARDS);
     }
 
     request->flags.cachable = http->request->cacheable();
@@ -1113,12 +1113,9 @@ ClientHttpRequest::sslBumpNeeded() const
 
     debugs(85, 5, HERE << "SslBump possible, checking ACL");
 
-    ACLChecklist check;
+    ACLFilledChecklist check(Config.accessList.ssl_bump, request, NULL);
     check.src_addr = request->client_addr;
     check.my_addr = request->my_addr;
-    check.request = HTTPMSGLOCK(request);
-    check.accessList = cbdataReference(Config.accessList.ssl_bump);
-    /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
     return check.fastCheck() == 1;
 }
 
@@ -1285,10 +1282,9 @@ ClientHttpRequest::doCallouts()
     if (!calloutContext->clientside_tos_done) {
         calloutContext->clientside_tos_done = true;
         if (getConn() != NULL) {
-            ACLChecklist ch;
+            ACLFilledChecklist ch(NULL, request, NULL);
             ch.src_addr = request->client_addr;
             ch.my_addr = request->my_addr;
-            ch.request = HTTPMSGLOCK(request);
             int tos = aclMapTOS(Config.accessList.clientside_tos, &ch);
             if (tos)
                 comm_set_tos(getConn()->fd, tos);
