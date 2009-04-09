@@ -37,7 +37,7 @@
 #define SQUID_ICAPCONFIG_H
 
 #include "event.h"
-#include "AsyncCall.h"
+#include "base/AsyncCall.h"
 #include "adaptation/Config.h"
 #include "adaptation/icap/ServiceRep.h"
 

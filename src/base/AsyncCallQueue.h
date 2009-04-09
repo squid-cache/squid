@@ -8,7 +8,7 @@
 #define SQUID_ASYNCCALLQUEUE_H
 
 #include "squid.h"
-#include "AsyncCall.h"
+#include "base/AsyncCall.h"
 
 //class AsyncCall;
 
