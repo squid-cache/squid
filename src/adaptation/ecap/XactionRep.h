@@ -16,7 +16,8 @@
 #include <libecap/host/xaction.h>
 #include <libecap/adapter/xaction.h>
 
-namespace Adaptation {
+namespace Adaptation
+{
 namespace Ecap {
 
 /* The eCAP xaction representative maintains information about a single eCAP

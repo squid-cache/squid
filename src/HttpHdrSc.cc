@@ -258,7 +258,7 @@ httpHdrScTargetPackInto(const HttpHdrScTarget * sc, Packer * p)
 
             /* print option name */
             packerPrintf(p, (pcount ? ", " SQUIDSTRINGPH : SQUIDSTRINGPH),
-                SQUIDSTRINGPRINT(ScFieldsInfo[flag].name));
+                         SQUIDSTRINGPRINT(ScFieldsInfo[flag].name));
 
             /* handle options with values */
 

@@ -62,6 +62,6 @@ private:
     ACLTimeData *next;
 };
 
-MEMPROXY_CLASS_INLINE(ACLTimeData)          /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(ACLTimeData);
 
 #endif /* SQUID_ACLTIMEDATA_H */

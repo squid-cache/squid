@@ -364,8 +364,10 @@ DiskThreadsDiskFile::writeDone(int rvfd, int errflag, size_t len, RefCount<Write
     --loop_detect;
 }
 
+/** \cond AUTODOCS-IGNORE */
 template <class RT>
 cbdata_type IoResult<RT>::CBDATA_IoResult = CBDATA_UNKNOWN;
+/** \endcond */
 
 template<class RT>
 void *

@@ -1,6 +1,8 @@
 /*
  * $Id$
  *
+ * DEBUG: section 86    ESI processing
+ * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -28,49 +30,38 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
-#ifndef SQUID_ESICUSTOMPARSER_H
-#define SQUID_ESICUSTOMPARSER_H
 
-class Trie;
+#ifndef SQUID_ELEMENTLIST_H
+#define SQUID_ELEMENTLIST_H
 
-/* inherits from */
-#include "ESIParser.h"
+#include "squid.h"
+#include "esi/Element.h"
 
-/* for String variables */
-#include "SquidString.h"
-
-/**
- \ingroup ESIAPI
- */
-class ESICustomParser : public ESIParser
+class ElementList
 {
 
 public:
-    ESICustomParser(ESIParserClient *);
-    ~ESICustomParser();
-    /* true on success */
-    bool parse(char const *dataToParse, size_t const lengthOfData, bool const endOfStream);
-    long int lineNumber() const;
-    char const * errorString() const;
+    ElementList();
+    ~ElementList();
+
+    ESIElement::Pointer &operator[](int);
+    ESIElement::Pointer const &operator[](int)const;
+    ESIElement::Pointer * elements; /* unprocessed or rendered nodes */
+    void pop_front (size_t const);
+    void push_back(ESIElement::Pointer &);
+    size_t size() const;
+    void setNULL (int start, int end);
+
+    int allocedcount;
+    size_t allocedsize;
+    int elementcount;
 
 private:
-    ESI_PARSER_TYPE;
-    static Trie *SearchTrie;
-    static Trie *GetTrie();
-    enum ESITAG_t {
-        ESITAG=1,
-        ESIENDTAG=2,
-        ESICOMMENT=3
-    };
-
-    char const *findTag(char const *a, size_t b);
-    ESIParserClient *theClient;
-    String error;
-    /* cheap n dirty - buffer it all */
-    String content;
-    /* TODO: make a class of this type code */
-    ESITAG_t lastTag;
+    ElementList(ElementList const &);
+    ElementList &operator=(ElementList const&);
 };
 
-#endif /* SQUID_ESICUSTOMPARSER_H */
+
+#endif /* SQUID_ELEMENTLIST_H */

@@ -37,7 +37,7 @@
 #define SQUID_ESILITERAL_H
 
 #include "squid.h"
-#include "ESIElement.h"
+#include "esi/Element.h"
 
 class ESIContext;
 /* esiLiteral */
@@ -67,6 +67,6 @@ private:
     esiLiteral(esiLiteral const &);
 };
 
-MEMPROXY_CLASS_INLINE(esiLiteral)          /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(esiLiteral);
 
 #endif /* SQUID_ESILITERAL_H */

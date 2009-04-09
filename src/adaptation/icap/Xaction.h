@@ -43,7 +43,8 @@
 class HttpMsg;
 class CommConnectCbParams;
 
-namespace Adaptation {
+namespace Adaptation
+{
 namespace Icap {
 
 /*

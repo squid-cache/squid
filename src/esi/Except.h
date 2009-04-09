@@ -22,7 +22,7 @@
  *  (at your option) any later version.
  *
  *  This program is distributed in the hope that it will be useful,
- ;  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
@@ -30,27 +30,25 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
+ * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
+#ifndef SQUID_ESIEXCEPT_H
+#define SQUID_ESIEXCEPT_H
+
 #include "squid.h"
-#include "ESIParser.h"
+#include "esi/Element.h"
+#include "esi/Sequence.h"
 
-char *ESIParser::Type = NULL;
-ESIParser::Register *ESIParser::Parsers = NULL;
-ESIParser::Register *ESIParser::Parser = NULL;
+/* esiExcept */
 
-ESIParser::Pointer
-ESIParser::NewParser(ESIParserClient *aClient)
+class esiExcept : public esiSequence
 {
-    if (Parser == NULL) {
-        Parser = Parsers;
 
-        while (Parser != NULL && strcasecmp(Parser->name, Type) != 0)
-            Parser = Parser->next;
+public:
+    //    void *operator new (size_t byteCount);
+    //    void operator delete (void *address);
+    esiExcept(esiTreeParentPtr aParent) : esiSequence (aParent) {}
+};
 
-        if (Parser == NULL)
-            fatal ("Unknown ESI Parser type");
-    }
-
-    return (Parser->newParser)(aClient);
-}
+#endif /* SQUID_ESIEXCEPT_H */

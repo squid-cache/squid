@@ -56,6 +56,6 @@ public:
     SplayNode<char *> *domains;
 };
 
-MEMPROXY_CLASS_INLINE(ACLDomainData)          /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(ACLDomainData);
 
 #endif /* SQUID_ACLDOMAINDATA_H */

@@ -57,7 +57,7 @@
 #include "snmp.h"
 #endif
 #if USE_SQUID_ESI
-#include "ESIParser.h"
+#include "esi/Parser.h"
 #endif
 
 #if USE_ADAPTATION
@@ -1515,7 +1515,7 @@ parse_cachedir(SquidConfig::_cacheSwap * swap)
     }
 
     /* new cache_dir */
-    if(swap->n_configured > 63) {
+    if (swap->n_configured > 63) {
         /* 7 bits, signed */
         debugs(3, DBG_CRITICAL, "WARNING: There is a fixed maximum of 63 cache_dir entries Squid can handle.");
         debugs(3, DBG_CRITICAL, "WARNING: '" << path_str << "' is one to many.");

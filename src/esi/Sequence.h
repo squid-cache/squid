@@ -33,77 +33,63 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ESIINCLUDE_H
-#define SQUID_ESIINCLUDE_H
+#ifndef SQUID_ESISEQUENCE_H
+#define SQUID_ESISEQUENCE_H
 
 #include "squid.h"
-#include "ESISegment.h"
-#include "ESIElement.h"
-#include "ESIContext.h"
+#include "esi/Element.h"
+#include "esi/ElementList.h"
 
-class ESIInclude;
-typedef RefCount<ESIInclude> ESIIncludePtr;
+/* esiSequence */
 
-class ESIStreamContext : public RefCountable
+class esiSequence : public ESIElement
 {
 
 public:
-    typedef RefCount<ESIStreamContext> Pointer;
-    void *operator new(size_t);
-    void operator delete(void *);
-    ESIStreamContext();
-    ~ESIStreamContext();
-    void freeResources();
-    int finished;
-    ESIIncludePtr include;
-    ESISegment::Pointer localbuffer;
-    ESISegment::Pointer buffer;
+    MEMPROXY_CLASS(esiSequence);
 
-private:
-    CBDATA_CLASS(ESIStreamContext);
-};
+    esiSequence(esiTreeParentPtr, bool = false);
+    ~esiSequence();
 
-/* ESIInclude */
-
-class ESIInclude : public ESIElement
-{
-
-public:
-    MEMPROXY_CLASS(ESIInclude);
-
-    ESIInclude(esiTreeParentPtr, int attributes, const char **attr, ESIContext *);
-    ~ESIInclude();
     void render(ESISegment::Pointer);
+    bool addElement (ESIElement::Pointer);
     esiProcessResult_t process (int dovars);
+    void provideData (ESISegment::Pointer, ESIElement*);
+    bool mayFail () const;
+    void wontFail();
+    void fail(ESIElement *, char const *anError = NULL);
+    void makeCachableElements(esiSequence const &old);
     Pointer makeCacheable() const;
+    void makeUsableElements(esiSequence const &old, ESIVarState &);
     Pointer makeUsable(esiTreeParentPtr, ESIVarState &) const;
-    void subRequestDone (ESIStreamContext::Pointer, bool);
+
+    ElementList elements; /* unprocessed or rendered nodes */
+    size_t processedcount;
 
     struct {
-        int onerrorcontinue:1; /* on error return zero data */
-        int failed:1; /* Failed to process completely */
-        int finished:1; /* Finished getting subrequest data */
+        int dovars:1; /* for esiVar */
     } flags;
-    ESIStreamContext::Pointer src;
-    ESIStreamContext::Pointer alt;
-    ESISegment::Pointer srccontent;
-    ESISegment::Pointer altcontent;
-    ESIVarState *varState;
-    char *srcurl, *alturl;
-    void fail(ESIStreamContext::Pointer);
     void finish();
 
-private:
-    void Start (ESIStreamContext::Pointer, char const *, ESIVarState *);
+protected:
+    esiSequence(esiSequence const &);
     esiTreeParentPtr parent;
-    void start();
-    bool started;
-    bool sent;
-    ESIInclude(ESIInclude const &);
-    bool dataNeeded() const;
-    void prepareRequestHeaders(HttpHeader &tempheaders, ESIVarState *vars);
+
+private:
+    int elementIndex (ESIElement::Pointer anElement) const;
+    bool mayFail_;
+    bool failed;
+    esiProcessResult_t processOne(int, size_t);
+    bool const provideIncrementalData;
+    bool processing;
+    esiProcessResult_t processingResult;
+    size_t nextElementToProcess_;
+    size_t nextElementToProcess() const;
+    void nextElementToProcess(size_t const &);
+    bool finishedProcessing() const;
+    void processStep(int dovars);
 };
 
-MEMPROXY_CLASS_INLINE(ESIInclude)          /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(esiSequence);
 
-#endif /* SQUID_ESIINCLUDE_H */
+#endif /* SQUID_ESISEQUENCE_H */

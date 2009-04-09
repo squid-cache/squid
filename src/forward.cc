@@ -201,7 +201,7 @@ FwdState::fwdStart(int client_fd, StoreEntry *entry, HttpRequest *request)
      */
 
     if ( Config.accessList.miss && !request->client_addr.IsNoAddr() &&
-         request->protocol != PROTO_INTERNAL && request->protocol != PROTO_CACHEOBJ) {
+            request->protocol != PROTO_INTERNAL && request->protocol != PROTO_CACHEOBJ) {
         /**
          * Check if this host is allowed to fetch MISSES from us (miss_access)
          */
@@ -823,12 +823,11 @@ FwdState::connectStart()
         return;
     }
 
-    if(fs->_peer) {
+    if (fs->_peer) {
         host = fs->_peer->host;
         port = fs->_peer->http_port;
         fd = fwdPconnPool->pop(fs->_peer->name, fs->_peer->http_port, request->GetHost(), client_addr, checkRetriable());
-    }
-    else {
+    } else {
         host = request->GetHost();
         port = request->port;
         fd = fwdPconnPool->pop(host, port, NULL, client_addr, checkRetriable());
@@ -1179,10 +1178,10 @@ FwdState::reforwardableStatus(http_status s)
 /**
  * Decide where details need to be gathered to correctly describe a persistent connection.
  * What is needed:
- * \item  host name of server at other end of this link (either peer or requested host)
- * \item  port to which we connected the other end of this link (for peer or request)
- * \item  domain for which the connection is supposed to be used
- * \item  address of the client for which we made the connection
+ *  -  host name of server at other end of this link (either peer or requested host)
+ *  -  port to which we connected the other end of this link (for peer or request)
+ *  -  domain for which the connection is supposed to be used
+ *  -  address of the client for which we made the connection
  */
 void
 FwdState::pconnPush(int fd, const peer *_peer, const HttpRequest *req, const char *domain, IpAddress &client_addr)

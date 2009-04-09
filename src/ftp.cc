@@ -2504,10 +2504,10 @@ ftpSendPassive(FtpStateData * ftpState)
     /** \par
       * Send EPSV (ALL,2,1) or PASV on the control channel.
       *
-      \item EPSV ALL  is used if enabled.
-      \item EPSV 2    is used if ALL is disabled and IPv6 is available.
-      \item EPSV 1    is used if EPSV 2 (IPv6) fails or is not available.
-      \item PASV      is used if EPSV 1 fails.
+      *  - EPSV ALL  is used if enabled.
+      *  - EPSV 2    is used if ALL is disabled and IPv6 is available.
+      *  - EPSV 1    is used if EPSV 2 (IPv6) fails or is not available.
+      *  - PASV      is used if EPSV 1 fails.
       */
     switch (ftpState->state) {
     case SENT_EPSV_1: /* EPSV options exhausted. Try PASV now. */

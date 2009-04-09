@@ -37,9 +37,9 @@
 
 #if USE_SQUID_ESI
 
-#include "ESIExpatParser.h"
+#include "esi/ExpatParser.h"
 
-RegisterESIParser("expat", ESIExpatParser);
+EsiParserDefinition(ESIExpatParser);
 
 ESIExpatParser::ESIExpatParser(ESIParserClient *aClient) : theClient (aClient)
 {

@@ -34,7 +34,7 @@
  */
 
 #include "squid.h"
-#include "ESIExpression.h"
+#include "esi/Expression.h"
 
 int
 main ()

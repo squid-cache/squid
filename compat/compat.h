@@ -9,10 +9,10 @@
  * From discussions it was chosen to push compat code as far down as possible.
  * That means we can have a seperate compat for most
  *  compatability and portability hacks and resolutions.
- * 
+ *
  * This file is meant to collate all those hacks files together and
  * provide a simple include for them in the core squid headers
- * (presently squid.h and config.h) 
+ * (presently squid.h and config.h)
  *
  * It should not be included directly in any of the squid sources.
  * If your code requires any symbols from here you should be importing

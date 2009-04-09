@@ -6,7 +6,7 @@
 */
 
 #include "acl/Acl.h"
-#ifdef ENABLE_ARP_ACL
+#ifdef USE_ARP_ACL
 #include "acl/Arp.h"
 #endif
 #include "acl/Asn.h"
@@ -24,7 +24,7 @@
 #include "acl/HttpRepHeader.h"
 #include "acl/HttpReqHeader.h"
 #include "acl/HttpStatus.h"
-#ifdef ENABLE_IDENT
+#if USE_IDENT
 #include "acl/Ident.h"
 #endif
 #include "acl/IntRange.h"
@@ -47,7 +47,7 @@
 #include "acl/SourceAsn.h"
 #include "acl/SourceDomain.h"
 #include "acl/SourceIp.h"
-#ifdef ENABLE_SSL
+#ifdef USE_SSL
 #include "acl/SslErrorData.h"
 #include "acl/SslError.h"
 #include "acl/CertificateData.h"
@@ -62,6 +62,9 @@
 #include "acl/UrlPath.h"
 #include "acl/UrlPort.h"
 #include "acl/UserData.h"
+#include "auth/AclProxyAuth.h"
+#include "auth/AclMaxUserIp.h"
+
 
 ACL::Prototype ACLBrowser::RegistryProtoype(&ACLBrowser::RegistryEntry_, "browser");
 ACLStrategised<char const *> ACLBrowser::RegistryEntry_(new ACLRegexData, ACLRequestHeaderStrategy<HDR_USER_AGENT>::Instance(), "browser");
@@ -117,26 +120,32 @@ ACLStrategised<char const *> ACLUrlPath::RegistryEntry_(new ACLRegexData, ACLUrl
 ACL::Prototype ACLUrlPort::RegistryProtoype(&ACLUrlPort::RegistryEntry_, "port");
 ACLStrategised<int> ACLUrlPort::RegistryEntry_(new ACLIntRange, ACLUrlPortStrategy::Instance(), "port");
 
-#ifdef ENABLE_SSL
-    ACL::Prototype ACLSslError::RegistryProtoype(&ACLSslError::RegistryEntry_, "ssl_error");
-    ACLStrategised<int> ACLSslError::RegistryEntry_(new ACLSslErrorData, ACLSslErrorStrategy::Instance(), "ssl_error");
-    ACL::Prototype ACLCertificate::UserRegistryProtoype(&ACLCertificate::UserRegistryEntry_, "user_cert");
-    ACLStrategised<SSL *> ACLCertificate::UserRegistryEntry_(new ACLCertificateData (sslGetUserAttribute), ACLCertificateStrategy::Instance(), "user_cert");
-    ACL::Prototype ACLCertificate::CARegistryProtoype(&ACLCertificate::CARegistryEntry_, "ca_cert");
-    ACLStrategised<SSL *> ACLCertificate::CARegistryEntry_(new ACLCertificateData (sslGetCAAttribute), ACLCertificateStrategy::Instance(), "ca_cert");
+#ifdef USE_SSL
+ACL::Prototype ACLSslError::RegistryProtoype(&ACLSslError::RegistryEntry_, "ssl_error");
+ACLStrategised<int> ACLSslError::RegistryEntry_(new ACLSslErrorData, ACLSslErrorStrategy::Instance(), "ssl_error");
+ACL::Prototype ACLCertificate::UserRegistryProtoype(&ACLCertificate::UserRegistryEntry_, "user_cert");
+ACLStrategised<SSL *> ACLCertificate::UserRegistryEntry_(new ACLCertificateData (sslGetUserAttribute), ACLCertificateStrategy::Instance(), "user_cert");
+ACL::Prototype ACLCertificate::CARegistryProtoype(&ACLCertificate::CARegistryEntry_, "ca_cert");
+ACLStrategised<SSL *> ACLCertificate::CARegistryEntry_(new ACLCertificateData (sslGetCAAttribute), ACLCertificateStrategy::Instance(), "ca_cert");
 #endif
 
-#ifdef ENABLE_ARP_ACL
-    ACL::Prototype ACLARP::RegistryProtoype(&ACLARP::RegistryEntry_, "arp");
-    ACLARP ACLARP::RegistryEntry_("arp");
+#ifdef USE_ARP_ACL
+ACL::Prototype ACLARP::RegistryProtoype(&ACLARP::RegistryEntry_, "arp");
+ACLARP ACLARP::RegistryEntry_("arp");
 #endif
 
-#ifdef ENABLE_IDENT
-    ACL::Prototype ACLIdent::UserRegistryProtoype(&ACLIdent::UserRegistryEntry_, "ident");
-    ACLIdent ACLIdent::UserRegistryEntry_(new ACLUserData, "ident");
-    ACL::Prototype ACLIdent::RegexRegistryProtoype(&ACLIdent::RegexRegistryEntry_, "ident_regex" );
-    ACLIdent ACLIdent::RegexRegistryEntry_(new ACLRegexData, "ident_regex");
+#if USE_IDENT
+ACL::Prototype ACLIdent::UserRegistryProtoype(&ACLIdent::UserRegistryEntry_, "ident");
+ACLIdent ACLIdent::UserRegistryEntry_(new ACLUserData, "ident");
+ACL::Prototype ACLIdent::RegexRegistryProtoype(&ACLIdent::RegexRegistryEntry_, "ident_regex" );
+ACLIdent ACLIdent::RegexRegistryEntry_(new ACLRegexData, "ident_regex");
 #endif
 
 
+ACL::Prototype ACLProxyAuth::UserRegistryProtoype(&ACLProxyAuth::UserRegistryEntry_, "proxy_auth");
+ACLProxyAuth ACLProxyAuth::UserRegistryEntry_(new ACLUserData, "proxy_auth");
+ACL::Prototype ACLProxyAuth::RegexRegistryProtoype(&ACLProxyAuth::RegexRegistryEntry_, "proxy_auth_regex" );
+ACLProxyAuth ACLProxyAuth::RegexRegistryEntry_(new ACLRegexData, "proxy_auth_regex");
 
+ACL::Prototype ACLMaxUserIP::RegistryProtoype(&ACLMaxUserIP::RegistryEntry_, "max_user_ip");
+ACLMaxUserIP ACLMaxUserIP::RegistryEntry_("max_user_ip");

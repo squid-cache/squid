@@ -1,4 +1,3 @@
-
 dnl  Configuration input file for Squid
 dnl
 dnl  $Id$
@@ -510,6 +509,12 @@ if test -z "$UFS_FOUND" && test -n "$NEED_UFS"; then
     STORE_TESTS="$STORE_TESTS tests/testUfs$EXEEXT"
 fi
 
+AH_TEMPLATE(HAVE_FS_UFS, "Define to 1 if ufs filesystem module is build")
+AH_TEMPLATE(HAVE_FS_AUFS, "Define to 1 if aufs filesystem module is build")
+AH_TEMPLATE(HAVE_FS_DISKD, "Define to 1 if diskd filesystem module is build")
+AH_TEMPLATE(HAVE_FS_COSS, "Define to 1 if coss filesystem module is build")
+
+
 dnl got final STORE_MODULES, build library lists
 dnl This list will not be needed when each fs library has its own Makefile
 STORE_LIBS_TO_BUILD=
@@ -517,8 +522,10 @@ dnl File system libraries to link executables with.
 dnl These are the same as STORE_LIBS_TO_BUILD, but with a path
 STORE_LIBS_TO_ADD=
 for fs in $STORE_MODULES; do
-    STORE_LIBS_TO_BUILD="$STORE_LIBS_TO_BUILD lib${fs}.a"
-    STORE_LIBS_TO_ADD="$STORE_LIBS_TO_ADD fs/lib${fs}.a"
+    STORE_LIBS_TO_BUILD="$STORE_LIBS_TO_BUILD lib${fs}.la"
+    STORE_LIBS_TO_ADD="$STORE_LIBS_TO_ADD fs/lib${fs}.la"
+    HAVE_FS_TYPE=HAVE_FS_`echo $fs | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'` 
+    AC_DEFINE_UNQUOTED($HAVE_FS_TYPE, 1)
 done
 
 AC_SUBST(STORE_LIBS_TO_BUILD)
@@ -3573,45 +3580,6 @@ AC_TRY_LINK(extern int _dns_ttl_;,return _dns_ttl_;,
 AC_DEFINE(LIBRESOLV_DNS_TTL_HACK,1,[If libresolv.a has been hacked to export _dns_ttl_])],
 AC_MSG_RESULT(no))
 
-AC_MSG_CHECKING(if inet_ntoa() actually works)
-AC_TRY_RUN([
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-main ()
-{
-	FILE *fp;
-	struct in_addr in;
-	in.s_addr = inet_addr("1.2.3.4");
-	fp = fopen("conftestval", "w"); 
-	fprintf (fp, "%s\n", inet_ntoa(in));
-	exit(0);
-}
-],
-INET_NTOA_RESULT=`cat conftestval`,
-INET_NTOA_RESULT="broken",
-INET_NTOA_RESULT="broken")
-if test "$INET_NTOA_RESULT" = "1.2.3.4" ; then
-	AC_MSG_RESULT("yes")
-else
-	AC_MSG_RESULT("no")
-	case "$host_os" in
-	mingw|mingw32)
-	  AC_MSG_NOTICE([Using Win32 resolver instead.])
-	  ;;
-	*)
-	  AC_MSG_NOTICE([Will use our own inet_ntoa().])
-	  AC_LIBOBJ(inet_ntoa)
-#	  AC_MSG_WARN([This looks bad, and probably prevents Squid from working.])
-#	  AC_MSG_WARN([If you're on IRIX and using GCC 2.8, you probably need])
-#	  AC_MSG_WARN([to use the IRIX C compiler instead.])
-#	  sleep 10
-	  ;;
-	esac
-fi
-
 if test "$ac_cv_header_sys_statvfs_h" = "yes" ; then
 AC_MSG_CHECKING(for working statvfs() interface)
 AC_TRY_COMPILE([
@@ -3808,6 +3776,7 @@ AC_CONFIG_FILES([\
 	src/adaptation/Makefile \
 	src/adaptation/icap/Makefile \
 	src/adaptation/ecap/Makefile \
+	src/esi/Makefile \
 	src/icmp/Makefile \
 	src/ip/Makefile \
 	contrib/Makefile \

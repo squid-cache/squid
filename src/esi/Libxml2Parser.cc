@@ -41,13 +41,13 @@
 
 #if USE_SQUID_ESI
 
-#include "ESILibxml2Parser.h"
+#include "esi/Libxml2Parser.h"
 
 // the global document that will store the resolved entity
 // definitions
 static htmlDocPtr entity_doc = NULL;
 
-RegisterESIParser("libxml2", ESILibxml2Parser);
+EsiParserDefinition(ESILibxml2Parser);
 
 // the SAX callback functions
 void esi_startElementSAXFunc(void * ctx, const xmlChar * name, const xmlChar ** atts)

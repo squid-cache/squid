@@ -12,7 +12,9 @@
 #include "adaptation/AccessCheck.h"
 
 
+/** \cond AUTODOCS-IGNORE */
 cbdata_type Adaptation::AccessCheck::CBDATA_AccessCheck = CBDATA_UNKNOWN;
+/** \endcond */
 
 bool
 Adaptation::AccessCheck::Start(Method method, VectPoint vp,

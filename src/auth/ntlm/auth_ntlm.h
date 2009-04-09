@@ -43,7 +43,7 @@ public:
     dlink_list proxy_auth_list;
 };
 
-MEMPROXY_CLASS_INLINE(NTLMUser)		/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(NTLMUser);
 
 typedef class NTLMUser ntlm_user_t;
 
@@ -92,7 +92,7 @@ private:
     NTLMUser * _theUser;
 };
 
-MEMPROXY_CLASS_INLINE(AuthNTLMUserRequest)		/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(AuthNTLMUserRequest);
 
 /* configuration runtime data */
 

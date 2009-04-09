@@ -407,8 +407,8 @@ peerClearRRStart(void)
 /**
  * Called whenever the round-robin counters need to be reset to a sane state.
  * So far those times are:
- \item On startup and reconfigure - to set the counters to sane initial settings.
- \item When a peer has revived from dead, to prevent the revived peer being
+ *  - On startup and reconfigure - to set the counters to sane initial settings.
+ *  -  When a peer has revived from dead, to prevent the revived peer being
  *     flooded with requests which it has 'missed' during the down period.
  */
 void

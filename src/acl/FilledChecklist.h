@@ -17,7 +17,7 @@ public:
     void operator delete(void *);
 
     ACLFilledChecklist();
-	ACLFilledChecklist(const acl_access *, HttpRequest *, const char *ident);
+    ACLFilledChecklist(const acl_access *, HttpRequest *, const char *ident);
     ~ACLFilledChecklist();
 
 public:

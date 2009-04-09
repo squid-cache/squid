@@ -96,6 +96,6 @@ private:
     char const *type_;
 };
 
-MEMPROXY_CLASS_INLINE(ACLProxyAuth)          /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(ACLProxyAuth);
 
 #endif /* SQUID_ACLPROXYAUTH_H */

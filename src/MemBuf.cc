@@ -287,7 +287,8 @@ MemBuf::Printf(const char *fmt,...)
  * vPrintf for other printf()'s to use; calls vsnprintf, extends buf if needed
  */
 void
-MemBuf::vPrintf(const char *fmt, va_list vargs) {
+MemBuf::vPrintf(const char *fmt, va_list vargs)
+{
 #ifdef VA_COPY
     va_list ap;
 #endif
@@ -345,7 +346,8 @@ MemBuf::vPrintf(const char *fmt, va_list vargs) {
  \retval free() function to be used.
  */
 FREE *
-MemBuf::freeFunc() {
+MemBuf::freeFunc()
+{
     FREE *ff;
     assert(buf);
     assert(!stolen);	/* not frozen */
@@ -359,7 +361,8 @@ MemBuf::freeFunc() {
  * Grows (doubles) internal buffer to satisfy required minimal capacity
  */
 void
-MemBuf::grow(mb_size_t min_cap) {
+MemBuf::grow(mb_size_t min_cap)
+{
     size_t new_cap;
     size_t buf_cap;
 
@@ -403,7 +406,8 @@ MemBuf::grow(mb_size_t min_cap) {
  * Puts report on MemBuf _module_ usage into mb
  */
 void
-memBufReport(MemBuf * mb) {
+memBufReport(MemBuf * mb)
+{
     assert(mb);
     mb->Printf("memBufReport is not yet implemented @?@\n");
 }
