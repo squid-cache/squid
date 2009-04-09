@@ -122,6 +122,24 @@ private:
      */
     int IpfwInterception(int fd, const IpAddress &me, IpAddress &client, int silent);
 
+    /**
+     * perform Lookups on IPF interception.
+     *
+     \param silent[in]   0 if errors are to be displayed. 1 if errors are to be hidden.
+     \retval 0     Successfuly located the new address.
+     \retval -1    An error occured during NAT lookups.
+     */
+    int IpfInterception(int fd, const IpAddress &me, IpAddress &client, IpAddress &dst, int silent);
+
+    /**
+     * perform Lookups on PF interception.
+     *
+     \param silent[in]   0 if errors are to be displayed. 1 if errors are to be hidden.
+     \retval 0     Successfuly located the new address.
+     \retval -1    An error occured during NAT lookups.
+     */
+    int PfInterception(int fd, const IpAddress &me, IpAddress &client, IpAddress &dst, int silent);
+
     int transparent_active;
     int intercept_active;
     time_t last_reported; /**< Time of last error report. Throttles NAT error display to 1 per minute */
