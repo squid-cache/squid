@@ -31,6 +31,9 @@
  */
 
 #include "squid.h"
+
+#if USE_WCCPv2
+
 #include "comm.h"
 #include "event.h"
 #include "Parsing.h"
@@ -38,7 +41,6 @@
 #include "SwapDir.h"
 #include "ip/IpAddress.h"
 
-#if USE_WCCPv2
 #if HAVE_NETDB_H
 #include <netdb.h>
 #endif
@@ -55,68 +57,6 @@ static EVH wccp2HereIam;
 static EVH wccp2AssignBuckets;
 
 /* KDW WCCP V2 */
-#define WCCP2_HERE_I_AM		10
-#define WCCP2_I_SEE_YOU		11
-#define WCCP2_REDIRECT_ASSIGN		12
-#define WCCP2_REMOVAL_QUERY		13
-
-#define WCCP2_VERSION			0x200
-
-#define WCCP2_SECURITY_INFO		0
-#define WCCP2_NO_SECURITY		0
-#define WCCP2_MD5_SECURITY		1
-
-#define WCCP2_SERVICE_INFO		1
-#define WCCP2_SERVICE_STANDARD		0
-#define WCCP2_SERVICE_DYNAMIC		1
-#define WCCP2_SERVICE_ID_HTTP		0x00
-
-#define WCCP2_SERVICE_SRC_IP_HASH	0x1
-#define WCCP2_SERVICE_DST_IP_HASH	0x2
-#define WCCP2_SERVICE_SRC_PORT_HASH	0x4
-#define WCCP2_SERVICE_DST_PORT_HASH	0x8
-#define WCCP2_SERVICE_PORTS_DEFINED	0x10
-#define WCCP2_SERVICE_PORTS_SOURCE	0x20
-#define WCCP2_SERVICE_SRC_IP_ALT_HASH	0x100
-#define WCCP2_SERVICE_DST_IP_ALT_HASH	0x200
-#define WCCP2_SERVICE_SRC_PORT_ALT_HASH	0x400
-#define WCCP2_SERVICE_DST_PORT_ALT_HASH	0x800
-
-#define WCCP2_ROUTER_ID_INFO		2
-
-#define WCCP2_WC_ID_INFO		3
-
-#define WCCP2_RTR_VIEW_INFO		4
-
-#define WCCP2_WC_VIEW_INFO		5
-
-#define WCCP2_REDIRECT_ASSIGNMENT	6
-
-#define WCCP2_QUERY_INFO		7
-
-#define WCCP2_CAPABILITY_INFO		8
-
-#define WCCP2_ALT_ASSIGNMENT		13
-
-#define WCCP2_ASSIGN_MAP		14
-
-#define WCCP2_COMMAND_EXTENSION		15
-
-#define WCCP2_CAPABILITY_FORWARDING_METHOD	0x01
-#define WCCP2_CAPABILITY_ASSIGNMENT_METHOD	0x02
-#define WCCP2_CAPABILITY_RETURN_METHOD		0x03
-
-#define WCCP2_METHOD_GRE		0x00000001
-#define WCCP2_METHOD_L2			0x00000002
-
-#define WCCP2_FORWARDING_METHOD_GRE	WCCP2_METHOD_GRE
-#define WCCP2_FORWARDING_METHOD_L2	WCCP2_METHOD_L2
-
-#define WCCP2_ASSIGNMENT_METHOD_HASH	0x00000001
-#define WCCP2_ASSIGNMENT_METHOD_MASK	0x00000002
-
-#define WCCP2_PACKET_RETURN_METHOD_GRE	WCCP2_METHOD_GRE
-#define WCCP2_PACKET_RETURN_METHOD_L2	WCCP2_METHOD_L2
 
 #define WCCP2_HASH_ASSIGNMENT		0x00
 #define WCCP2_MASK_ASSIGNMENT		0x01
@@ -128,26 +68,76 @@ static EVH wccp2AssignBuckets;
 #define	WCCP2_NUMPORTS	8
 #define	WCCP2_PASSWORD_LEN	8
 
-/* WCCP v2 packet header */
 
-/// \interface WCCPv2_Protocol
-struct wccp2_here_i_am_header_t {
-    uint32_t type;
-    uint16_t version;
+/* WCCPv2 Pakcet format structures */
+/* Defined in draft-wilson-wccp-v2-12-oct-2001.txt */
+
+
+/** \interface WCCPv2_Protocol
+ * Generic header struct
+ */
+struct wccp2_item_header_t {
+    uint16_t type;
     uint16_t length;
 };
 
-static struct wccp2_here_i_am_header_t wccp2_here_i_am_header;
+/* item type values */
+#define WCCP2_SECURITY_INFO		0
+#define WCCP2_SERVICE_INFO		1
+#define WCCP2_ROUTER_ID_INFO		2
+#define WCCP2_WC_ID_INFO		3
+#define WCCP2_RTR_VIEW_INFO		4
+#define WCCP2_WC_VIEW_INFO		5
+#define WCCP2_REDIRECT_ASSIGNMENT	6
+#define WCCP2_QUERY_INFO		7
+#define WCCP2_CAPABILITY_INFO		8
+#define WCCP2_ALT_ASSIGNMENT		13
+#define WCCP2_ASSIGN_MAP		14
+#define WCCP2_COMMAND_EXTENSION		15
 
-/* Security struct for the "no security" option */
 
+
+/** \interface WCCPv2_Protocol
+ * Sect 5.5  WCCP Message Header
+ */
+struct wccp2_message_header_t {
+    uint32_t type;
+    uint16_t version;
+#define WCCP2_VERSION          0x200
+
+    uint16_t length;
+};
+static struct wccp2_message_header_t wccp2_here_i_am_header;
+
+/* message types */
+#define WCCP2_HERE_I_AM           10
+#define WCCP2_I_SEE_YOU           11
+#define WCCP2_REDIRECT_ASSIGN     12
+#define WCCP2_REMOVAL_QUERY       13
+
+
+/** \interface WCCPv2_Protocol
+ * Sect 5.6.1 Security Info Component
+ *
+ * Basic security Header. Matches "no security" case exactly.
+ */
 struct wccp2_security_none_t {
     uint16_t security_type;
     uint16_t security_length;
     uint32_t security_option;
 };
 
-/// \interface WCCPv2_Protocol
+/* security options */
+#define WCCP2_NO_SECURITY		0
+#define WCCP2_MD5_SECURITY		1
+
+
+/** \interface WCCPv2_Protocol
+ * Sect 5.6.1 Security Info Component
+ *
+ * Extended security section. Matches "MD5 security" type exactly.
+ * Including the security header.
+ */
 struct wccp2_security_md5_t {
     uint16_t security_type;
     uint16_t security_length;
@@ -157,7 +147,9 @@ struct wccp2_security_md5_t {
 
 /* Service info struct */
 
-/// \interface WCCPv2_Protocol
+/** \interface WCCPv2_Protocol
+ * Sect 5.6.2 Service Info Component
+ */
 struct wccp2_service_info_t {
     uint16_t service_type;
     uint16_t service_length;
@@ -175,20 +167,52 @@ struct wccp2_service_info_t {
     uint16_t port6;
     uint16_t port7;
 };
+/* services */
+#define WCCP2_SERVICE_STANDARD		0
+#define WCCP2_SERVICE_DYNAMIC		1
 
-/// \interface WCCPv2_Protocol
+/* service IDs */
+#define WCCP2_SERVICE_ID_HTTP		0x00
+
+/* service flags */
+#define WCCP2_SERVICE_SRC_IP_HASH	0x1
+#define WCCP2_SERVICE_DST_IP_HASH	0x2
+#define WCCP2_SERVICE_SRC_PORT_HASH	0x4
+#define WCCP2_SERVICE_DST_PORT_HASH	0x8
+#define WCCP2_SERVICE_PORTS_DEFINED	0x10
+#define WCCP2_SERVICE_PORTS_SOURCE	0x20
+#define WCCP2_SERVICE_SRC_IP_ALT_HASH	0x100
+#define WCCP2_SERVICE_DST_IP_ALT_HASH	0x200
+#define WCCP2_SERVICE_SRC_PORT_ALT_HASH	0x400
+#define WCCP2_SERVICE_DST_PORT_ALT_HASH	0x800
+
+
+/* TODO the following structures need to be re-defined for correct full operation.
+ wccp2_cache_identity_element needs to be merged as a sub-struct of
+ wccp2_identity_info_t (identity_type);  which frees up the identifty info
+ structures so mask_assigment_data_element can become variable length
+ and cope with multiple fail-over caches hanging off one router.
+ */
+
+/** \interface WCCPv2_Protocol
+ * Sect 5.7.2 Web-Cache Identity Element
+ */
 struct wccp2_cache_identity_info_t {
     struct in_addr addr;
     uint16_t hash_revision;
     char bits[2];
-    char buckets[32];
+//    uint16_t bits;
+//#define WCCP2_HASH_ASSIGNMENT_DATA  0x0
+
+/* 5.7.2 Hash Assignment Data Element */
+    char buckets[32]; /* Draft indicates 8x 32-bit buckets but it's just a mask so doesn't matter how we define. */
     uint16_t weight;
     uint16_t status;
 };
 
-/* Web Cache identity info */
-
-/// \interface WCCPv2_Protocol
+/** \interface WCCPv2_Protocol
+ * Sect 5.6.4 Web-Cache Identity Info Component
+ */
 struct wccp2_identity_info_t {
     uint16_t cache_identity_type;
     uint16_t cache_identity_length;
@@ -198,22 +222,46 @@ struct wccp2_identity_info_t {
 
 static struct wccp2_identity_info_t wccp2_identity_info;
 
-/// \interface WCCPv2_Protocol
-struct wccp2_cache_mask_identity_info_t {
-    struct in_addr addr;
-    uint32_t num1;
-    uint32_t num2;
+/** \interface WCCPv2_Protocol
+ * Sect 5.7.7 Mask Element
+ */
+struct wccp2_mask_element_t {
     uint32_t source_ip_mask;
     uint32_t dest_ip_mask;
     uint16_t source_port_mask;
     uint16_t dest_port_mask;
-    uint32_t num3;
-    uint32_t num4;
+    uint32_t number_values;
 };
 
-/* Web Cache identity info */
 
-/// \interface WCCPv2_Protocol
+/** \interface WCCPv2_Protocol
+ * Sect 5.7.2 Web-Cache Identity Element
+ */
+struct wccp2_cache_mask_identity_info_t {
+    struct in_addr addr;
+    uint16_t hash_revision;
+    uint16_t bits;
+#define WCCP2_MASK_ASSIGNMENT_DATA  (0x1 <<14)
+
+/* Sect 5.7.2 Mask Assignment Data Element
+ *
+ * NP: draft specifies a variable-length set of keys here.
+ *     the following fields only matche the special case Squid sends outbound (single-cache).
+ */
+     uint32_t mask_element_count;
+
+/* Sect 5.7.6 Mask/Value Set Element */
+/* special case: single mask element. no values. */
+    struct wccp2_mask_element_t mask;
+
+/* Sect 5.7.2 Mask Assignment Data Element */
+    uint16_t weight;
+    uint16_t status;
+};
+
+/** \interface WCCPv2_Protocol
+ * Sect 5.6.4 Web-Cache Identity Info Component
+ */
 struct wccp2_mask_identity_info_t {
     uint16_t cache_identity_type;
     uint16_t cache_identity_length;
@@ -223,9 +271,12 @@ struct wccp2_mask_identity_info_t {
 
 static struct wccp2_mask_identity_info_t wccp2_mask_identity_info;
 
-/* View header */
-
-/// \interface WCCPv2_Protocol
+/** \interface WCCPv2_Protocol
+ * Sect 5.6.5 Router View Info Component
+ * Sect 5.6.6 Web Cache View Info Component
+ *
+ * first three fields. (shared by both view components)
+ */
 struct wccp2_cache_view_header_t {
     uint16_t cache_view_type;
     uint16_t cache_view_length;
@@ -234,9 +285,8 @@ struct wccp2_cache_view_header_t {
 
 static struct wccp2_cache_view_header_t wccp2_cache_view_header;
 
-/* View info */
-
 /// \interface WCCPv2_Protocol
+/* NP: special-case 5.6.5 or 5.6.6 * View Info when no routers or caches are advertised? */
 struct wccp2_cache_view_info_t {
     uint32_t num_routers;
     uint32_t num_caches;
@@ -244,9 +294,9 @@ struct wccp2_cache_view_info_t {
 
 static struct wccp2_cache_view_info_t wccp2_cache_view_info;
 
-/* Router ID element */
-
-/// \interface WCCPv2_Protocol
+/** \interface WCCPv2_Protocol
+ * Sect 5.7.1 Router ID Element
+ */
 struct wccp2_router_id_element_t {
     struct in_addr router_address;
     uint32_t received_id;
@@ -254,49 +304,50 @@ struct wccp2_router_id_element_t {
 
 static struct wccp2_router_id_element_t wccp2_router_id_element;
 
-/* Capability info header */
-
-/// \interface WCCpv2_Protocol
+/** \interface WCCpv2_Protocol
+ * Sect 5.6.9 Capabilities Info Component
+ */
 struct wccp2_capability_info_header_t {
     uint16_t capability_info_type;
     uint16_t capability_info_length;
+    /* dynamic length capabilities list */
 };
 
 static struct wccp2_capability_info_header_t wccp2_capability_info_header;
 
-/* Capability element header */
-
-/// \interface WCCPv2_Protocol
-struct wccp2_capability_element_header_t {
-    uint16_t capability_type;
-    uint16_t capability_length;
-};
-
-/* Capability element */
-
-/// \interface WCCPv2_Protocol
+/** \interface WCCPv2_Protocol
+ * 5.7.5 Capability Element
+ */
 struct wccp2_capability_element_t {
     uint16_t capability_type;
     uint16_t capability_length;
     uint32_t capability_value;
 };
-
 static struct wccp2_capability_element_t wccp2_capability_element;
 
-/* Mask Element */
+/* capability types */
+#define WCCP2_CAPABILITY_FORWARDING_METHOD	0x01
+#define WCCP2_CAPABILITY_ASSIGNMENT_METHOD	0x02
+#define WCCP2_CAPABILITY_RETURN_METHOD		0x03
 
-/// \interface WCCPv2_Protocol
-struct wccp2_mask_element_t {
-    uint32_t source_ip_mask;
-    uint32_t dest_ip_mask;
-    uint16_t source_port_mask;
-    uint16_t dest_port_mask;
-    uint32_t number_values;
-};
+/* capability values */
+#define WCCP2_METHOD_GRE		0x00000001
+#define WCCP2_METHOD_L2			0x00000002
+ /* when type=WCCP2_CAPABILITY_FORWARDING_METHOD */
+#define WCCP2_FORWARDING_METHOD_GRE	WCCP2_METHOD_GRE
+#define WCCP2_FORWARDING_METHOD_L2	WCCP2_METHOD_L2
+ /* when type=WCCP2_CAPABILITY_ASSIGNMENT_METHOD */
+#define WCCP2_ASSIGNMENT_METHOD_HASH	0x00000001
+#define WCCP2_ASSIGNMENT_METHOD_MASK	0x00000002
+ /* when type=WCCP2_CAPABILITY_RETURN_METHOD */
+#define WCCP2_PACKET_RETURN_METHOD_GRE	WCCP2_METHOD_GRE
+#define WCCP2_PACKET_RETURN_METHOD_L2	WCCP2_METHOD_L2
 
-/* Value Element */
 
-/// \interface WCCPv2_Protocol
+
+/** \interface WCCPv2_Protocol
+ * 5.7.8 Value Element
+ */
 struct wccp2_value_element_t {
     uint32_t source_ip_value;
     uint32_t dest_ip_value;
@@ -308,7 +359,9 @@ struct wccp2_value_element_t {
 
 /* RECEIVED PACKET STRUCTURE */
 
-/// \interface WCCPv2_Protocol
+/** \interface WCCPv2_Protocol
+ * 5.2 'I See You' Message
+ */
 struct wccp2_i_see_you_t {
     uint32_t type;
     uint16_t version;
@@ -318,26 +371,20 @@ struct wccp2_i_see_you_t {
 
 static struct wccp2_i_see_you_t wccp2_i_see_you;
 
-/* Router ID element */
-
-/// \interface WCCPv2_Protocol
+/** \interface WCCPv2_Protocol
+ * 5.7.4 Router Assignment Element
+ */
 struct wccp2_router_assign_element_t {
     struct in_addr router_address;
     uint32_t received_id;
     uint32_t change_number;
 };
 
-/* Generic header struct */
-
-/// \interface WCCPv2_Protocol
-struct wccp2_item_header_t {
-    uint16_t type;
-    uint16_t length;
-};
-
 /* Router identity struct */
 
-/// \interface WCCPv2_Protocol
+/** \interface WCCPv2_Protocol
+ * 5.6.3 Router Identity Info Component (partial)
+ */
 struct router_identity_info_t {
 
     struct wccp2_item_header_t header;
@@ -346,11 +393,15 @@ struct router_identity_info_t {
 
     struct in_addr router_address;
     uint32_t number_caches;
+    /* dynamic list of cache IP addresses */
 };
 
 /* The received packet for a mask assignment is unusual */
 
-/// \interface WCCPv2_Protocol
+/** \interface WCCPv2_Protocol
+ * Sect 5.7.7 Mask Element  ???
+ * see code below. apparently the supposed IP address at position num1 can be equal to 3.
+ */
 struct cache_mask_info_t {
     struct in_addr addr;
     uint32_t num1;
@@ -358,23 +409,22 @@ struct cache_mask_info_t {
     uint32_t num3;
 };
 
-/* assigment key */
-
-/// \interface WCCPv2_Protocol
+/** \interface WCCPv2_Protocol
+ * 5.7.3 Assignment Key Element
+ */
 struct assignment_key_t {
     struct in_addr master_ip;
     uint32_t master_number;
 };
 
-/* Router view of WCCP */
-
-/// \interface WCCPv2_Protocol
+/** \interface WCCPv2_Protocol
+ * 5.6.5 Router View Info Component (first three fields)
+ */
 struct router_view_t {
-
     struct wccp2_item_header_t header;
     uint32_t change_number;
-
     struct assignment_key_t assignment_key;
+    /* dynamic lists of routers and caches elided */
 };
 
 /* Lists used to keep track of caches, routers and services */
@@ -434,7 +484,8 @@ static struct wccp2_service_list_t *wccp2_service_list_head = NULL;
 
 int empty_portlist[WCCP2_NUMPORTS] = {0, 0, 0, 0, 0, 0, 0, 0};
 
-/* END WCCP V2 */
+/* END WCCP V2 PROTOCL TYPES DEFINITION */
+
 void wccp2_add_service_list(int service, int service_id, int service_priority,
                             int service_proto, int service_flags, int ports[], int security_type, char *password);
 static void wccp2SortCacheList(struct wccp2_cache_list_t *head);
@@ -745,36 +796,26 @@ wccp2Init(void)
             wccp2_mask_identity_info.cache_identity_type = htons(WCCP2_WC_ID_INFO);
             wccp2_mask_identity_info.cache_identity_length = htons(sizeof(wccp2_mask_identity_info.cache_identity));
             memset(&wccp2_mask_identity_info.cache_identity.addr, '\0', sizeof(struct in_addr));
-            wccp2_mask_identity_info.cache_identity.num1 = htonl(2);
-            wccp2_mask_identity_info.cache_identity.num2 = htonl(1);
+            wccp2_mask_identity_info.cache_identity.bits = WCCP2_MASK_ASSIGNMENT_DATA; // num1 = htonl(2);
+            wccp2_mask_identity_info.cache_identity.mask_element_count = htonl(1);
             service_flags = ntohl(service_list_ptr->service_info->service_flags);
 
+            memset(&wccp2_mask_identity_info.cache_identity.mask, 0, sizeof(struct wccp2_mask_element_t));
+
             if ((service_flags & WCCP2_SERVICE_SRC_IP_HASH) || (service_flags & WCCP2_SERVICE_SRC_IP_ALT_HASH)) {
-                wccp2_mask_identity_info.cache_identity.source_ip_mask = htonl(0x00001741);
-                wccp2_mask_identity_info.cache_identity.dest_ip_mask = 0;
-                wccp2_mask_identity_info.cache_identity.source_port_mask = 0;
-                wccp2_mask_identity_info.cache_identity.dest_port_mask = 0;
+                wccp2_mask_identity_info.cache_identity.mask.source_ip_mask = htonl(0x00001741);
             } else if ((service_list_ptr->info.service == WCCP2_SERVICE_STANDARD) || (service_flags & WCCP2_SERVICE_DST_IP_HASH) || (service_flags & WCCP2_SERVICE_DST_IP_ALT_HASH)) {
-                wccp2_mask_identity_info.cache_identity.source_ip_mask = 0;
-                wccp2_mask_identity_info.cache_identity.dest_ip_mask = htonl(0x00001741);
-                wccp2_mask_identity_info.cache_identity.source_port_mask = 0;
-                wccp2_mask_identity_info.cache_identity.dest_port_mask = 0;
+                wccp2_mask_identity_info.cache_identity.mask.dest_ip_mask = htonl(0x00001741);
             } else if ((service_flags & WCCP2_SERVICE_SRC_PORT_HASH) || (service_flags & WCCP2_SERVICE_SRC_PORT_ALT_HASH)) {
-                wccp2_mask_identity_info.cache_identity.source_ip_mask = 0;
-                wccp2_mask_identity_info.cache_identity.dest_ip_mask = 0;
-                wccp2_mask_identity_info.cache_identity.source_port_mask = htons(0x1741);
-                wccp2_mask_identity_info.cache_identity.dest_port_mask = 0;
+                wccp2_mask_identity_info.cache_identity.mask.source_port_mask = htons(0x1741);
             } else if ((service_flags & WCCP2_SERVICE_DST_PORT_HASH) || (service_flags & WCCP2_SERVICE_DST_PORT_ALT_HASH)) {
-                wccp2_mask_identity_info.cache_identity.source_ip_mask = 0;
-                wccp2_mask_identity_info.cache_identity.dest_ip_mask = 0;
-                wccp2_mask_identity_info.cache_identity.source_port_mask = 0;
-                wccp2_mask_identity_info.cache_identity.dest_port_mask = htons(0x1741);
+                wccp2_mask_identity_info.cache_identity.mask.dest_port_mask = htons(0x1741);
             } else {
                 fatalf("Unknown service hash method\n");
             }
 
-            wccp2_mask_identity_info.cache_identity.num3 = 0;
-            wccp2_mask_identity_info.cache_identity.num4 = 0;
+            wccp2_mask_identity_info.cache_identity.weight = 0;
+            wccp2_mask_identity_info.cache_identity.status = 0;
 
             xmemcpy(ptr, &wccp2_mask_identity_info, sizeof(struct wccp2_mask_identity_info_t));
             service_list_ptr->wccp2_identity_info_ptr = ptr;
@@ -1350,7 +1391,7 @@ wccp2HandleUdp(int sock, void *not_used)
                 debugs(80, 1, "Unknown capability type in WCCPv2 Packet (" << ntohs(router_capability_element->capability_type) << ").");
             }
 
-            router_capability_element = (struct wccp2_capability_element_t *) (((char *) router_capability_element) + sizeof(struct wccp2_capability_element_header_t) + ntohs(router_capability_element->capability_length));
+            router_capability_element = (struct wccp2_capability_element_t *) (((char *) router_capability_element) + sizeof(struct wccp2_item_header_t) + ntohs(router_capability_element->capability_length));
         }
     }
 
@@ -1596,7 +1637,7 @@ wccp2AssignBuckets(void *voidnotused)
 
     /* Packet segments */
 
-    struct wccp2_here_i_am_header_t *main_header;
+    struct wccp2_message_header_t *main_header;
 
     struct wccp2_security_md5_t *security = NULL;
     /* service from service struct */
@@ -1631,7 +1672,7 @@ wccp2AssignBuckets(void *voidnotused)
     /* Start main header - fill in length later */
     offset = 0;
 
-    main_header = (struct wccp2_here_i_am_header_t *) &wccp_packet[offset];
+    main_header = (struct wccp2_message_header_t *) &wccp_packet[offset];
     main_header->type = htonl(WCCP2_REDIRECT_ASSIGN);
     main_header->version = htons(WCCP2_VERSION);
 
@@ -1649,7 +1690,7 @@ wccp2AssignBuckets(void *voidnotused)
 
         /* reset the offset */
 
-        offset = sizeof(struct wccp2_here_i_am_header_t);
+        offset = sizeof(struct wccp2_message_header_t);
 
         /* build packet header from hereIam packet */
         /* Security info */
@@ -1926,7 +1967,7 @@ wccp2AssignBuckets(void *voidnotused)
 
             /* finish length */
 
-            main_header->length = htons(offset - sizeof(struct wccp2_here_i_am_header_t));
+            main_header->length = htons(offset - sizeof(struct wccp2_message_header_t));
 
             /* set the destination address */
             router.sin_addr = router_list_ptr->router_sendto_address;
