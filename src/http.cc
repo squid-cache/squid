@@ -42,7 +42,7 @@
 #include "errorpage.h"
 #include "MemBuf.h"
 #include "http.h"
-#include "AuthUserRequest.h"
+#include "auth/UserRequest.h"
 #include "Store.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
@@ -50,7 +50,7 @@
 #include "HttpHdrContRange.h"
 #include "HttpHdrSc.h"
 #include "HttpHdrScTarget.h"
-#include "ACLChecklist.h"
+#include "acl/FilledChecklist.h"
 #include "fde.h"
 #if DELAY_POOLS
 #include "DelayPools.h"
@@ -633,8 +633,8 @@ HttpStateData::keepaliveAccounting(HttpReply *reply)
         if (_peer)
             _peer->stats.n_keepalives_recv++;
 
-	if (Config.onoff.detect_broken_server_pconns
-	&& reply->bodySize(request->method) == -1 && !flags.chunked) {
+        if (Config.onoff.detect_broken_server_pconns
+                && reply->bodySize(request->method) == -1 && !flags.chunked) {
             debugs(11, 1, "keepaliveAccounting: Impossible keep-alive header from '" << entry->url() << "'" );
             // debugs(11, 2, "GOT HTTP REPLY HDR:\n---------\n" << readBuf->content() << "\n----------" );
             flags.keepalive_broken = 1;
@@ -1542,11 +1542,9 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         } else if (strcmp(orig_request->peer_login, "PASS") == 0) {
             if (orig_request->extacl_user.size() && orig_request->extacl_passwd.size()) {
                 char loginbuf[256];
-                snprintf(loginbuf, sizeof(loginbuf), "%.*s:%.*s",
-                    orig_request->extacl_user.size(),
-                    orig_request->extacl_user.rawBuf(),
-                    orig_request->extacl_passwd.size(),
-                    orig_request->extacl_passwd.rawBuf());
+                snprintf(loginbuf, sizeof(loginbuf), SQUIDSTRINGPH ":" SQUIDSTRINGPH,
+                         SQUIDSTRINGPRINT(orig_request->extacl_user),
+                         SQUIDSTRINGPRINT(orig_request->extacl_passwd));
                 httpHeaderPutStrf(hdr_out, HDR_PROXY_AUTHORIZATION, "Basic %s",
                                   base64_encode(loginbuf));
             }
@@ -1573,11 +1571,9 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
                 hdr_out->putStr(HDR_AUTHORIZATION, auth);
             } else if (orig_request->extacl_user.size() && orig_request->extacl_passwd.size()) {
                 char loginbuf[256];
-                snprintf(loginbuf, sizeof(loginbuf), "%.*s:%.*s",
-                    orig_request->extacl_user.size(),
-                    orig_request->extacl_user.rawBuf(),
-                    orig_request->extacl_passwd.size(),
-                    orig_request->extacl_passwd.rawBuf());
+                snprintf(loginbuf, sizeof(loginbuf), SQUIDSTRINGPH ":" SQUIDSTRINGPH,
+                         SQUIDSTRINGPRINT(orig_request->extacl_user),
+                         SQUIDSTRINGPRINT(orig_request->extacl_passwd));
                 httpHeaderPutStrf(hdr_out, HDR_AUTHORIZATION, "Basic %s",
                                   base64_encode(loginbuf));
             }
@@ -1614,8 +1610,8 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             EBIT_SET(cc->mask, CC_NO_CACHE);
 #endif
 
-	/* Add max-age only without no-cache */
-	if (!EBIT_TEST(cc->mask, CC_MAX_AGE) && !EBIT_TEST(cc->mask, CC_NO_CACHE)) {
+        /* Add max-age only without no-cache */
+        if (!EBIT_TEST(cc->mask, CC_MAX_AGE) && !EBIT_TEST(cc->mask, CC_NO_CACHE)) {
             const char *url =
                 entry ? entry->url() : urlCanonical(orig_request);
             httpHdrCcSetMaxAge(cc, getMaxAge(url));
@@ -1666,7 +1662,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
 
     switch (e->id) {
 
-/** \title RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid should not pass on. */
+        /** \par RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid should not pass on. */
 
     case HDR_PROXY_AUTHORIZATION:
         /** \par Proxy-Authorization:
@@ -1682,7 +1678,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
 
         break;
 
-/** \title RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid does not pass on. */
+        /** \par RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid does not pass on. */
 
     case HDR_CONNECTION:          /** \par Connection: */
     case HDR_TE:                  /** \par TE: */
@@ -1694,7 +1690,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
         break;
 
 
-/** \title OTHER headers I haven't bothered to track down yet. */
+        /** \par OTHER headers I haven't bothered to track down yet. */
 
     case HDR_AUTHORIZATION:
         /** \par WWW-Authorization:
@@ -1743,7 +1739,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
 
     case HDR_IF_MODIFIED_SINCE:
         /** \par If-Modified-Since:
-	 * append unless we added our own;
+        * append unless we added our own;
          * \note at most one client's ims header can pass through */
 
         if (!hdr_out->has(HDR_IF_MODIFIED_SINCE))
@@ -1753,12 +1749,12 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
 
     case HDR_MAX_FORWARDS:
         /** \par Max-Forwards:
-         * pass only on TRACE requests */
-        if (orig_request->method == METHOD_TRACE) {
-            const int hops = e->getInt();
+         * pass only on TRACE or OPTIONS requests */
+        if (orig_request->method == METHOD_TRACE || orig_request->method == METHOD_OPTIONS) {
+            const int64_t hops = e->getInt64();
 
             if (hops > 0)
-                hdr_out->putInt(HDR_MAX_FORWARDS, hops - 1);
+                hdr_out->putInt64(HDR_MAX_FORWARDS, hops - 1);
         }
 
         break;
@@ -1808,7 +1804,7 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
          * pass on all other header fields
          * which are NOT listed by the special Connection: header. */
 
-        if (strConnection.size()>0 && strListIsMember(&strConnection, e->name.unsafeBuf(), ',')) {
+        if (strConnection.size()>0 && strListIsMember(&strConnection, e->name.termedBuf(), ',')) {
             debugs(11, 2, "'" << e->name << "' header cropped by Connection: definition");
             return;
         }
@@ -1975,34 +1971,33 @@ httpStart(FwdState *fwd)
 void
 HttpStateData::doneSendingRequestBody()
 {
-    ACLChecklist ch;
     debugs(11,5, HERE << "doneSendingRequestBody: FD " << fd);
-    ch.request = HTTPMSGLOCK(request);
 
-    if (Config.accessList.brokenPosts)
-        ch.accessList = cbdataReference(Config.accessList.brokenPosts);
-
-    /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
-
-    if (!Config.accessList.brokenPosts) {
-        debugs(11, 5, "doneSendingRequestBody: No brokenPosts list");
-        CommIoCbParams io(NULL);
-        io.fd=fd;
-        io.flag=COMM_OK;
-        sendComplete(io);
-    } else if (!ch.fastCheck()) {
-        debugs(11, 5, "doneSendingRequestBody: didn't match brokenPosts");
-        CommIoCbParams io(NULL);
-        io.fd=fd;
-        io.flag=COMM_OK;
-        sendComplete(io);
-    } else {
-        debugs(11, 2, "doneSendingRequestBody: matched brokenPosts");
-        typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
-        Dialer dialer(this, &HttpStateData::sendComplete);
-        AsyncCall::Pointer call= asyncCall(11,5, "HttpStateData::SendComplete", dialer);
-        comm_write(fd, "\r\n", 2, call);
+#if HTTP_VIOLATIONS
+    if (Config.accessList.brokenPosts) {
+        ACLFilledChecklist ch(Config.accessList.brokenPosts, request, NULL);
+        if (!ch.fastCheck()) {
+            debugs(11, 5, "doneSendingRequestBody: didn't match brokenPosts");
+            CommIoCbParams io(NULL);
+            io.fd=fd;
+            io.flag=COMM_OK;
+            sendComplete(io);
+        } else {
+            debugs(11, 2, "doneSendingRequestBody: matched brokenPosts");
+            typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
+            Dialer dialer(this, &HttpStateData::sendComplete);
+            AsyncCall::Pointer call= asyncCall(11,5, "HttpStateData::SendComplete", dialer);
+            comm_write(fd, "\r\n", 2, call);
+        }
+        return;
     }
+    debugs(11, 5, "doneSendingRequestBody: No brokenPosts list");
+#endif /* HTTP_VIOLATIONS */
+
+    CommIoCbParams io(NULL);
+    io.fd=fd;
+    io.flag=COMM_OK;
+    sendComplete(io);
 }
 
 // more origin request body data is available

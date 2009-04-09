@@ -5,10 +5,10 @@
 
 #ifndef __AUTH_BASIC_H__
 #define __AUTH_BASIC_H__
-#include "authenticate.h"
-#include "AuthUser.h"
-#include "AuthUserRequest.h"
-#include "AuthConfig.h"
+#include "auth/Gadgets.h"
+#include "auth/User.h"
+#include "auth/UserRequest.h"
+#include "auth/Config.h"
 #include "helper.h"
 
 #define DefaultAuthenticateChildrenMax  32	/* 32 processes */
@@ -76,7 +76,7 @@ private:
     char const *httpAuthHeader;
 };
 
-MEMPROXY_CLASS_INLINE(BasicUser) /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(BasicUser);
 
 typedef class BasicUser basic_data;
 
@@ -105,7 +105,7 @@ private:
     BasicUser *_theUser;
 };
 
-MEMPROXY_CLASS_INLINE(AuthBasicUserRequest)  /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(AuthBasicUserRequest);
 
 /* configuration runtime data */
 

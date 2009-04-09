@@ -15,7 +15,6 @@ ip_user_check_SOURCES = \
 	main.c \
 	match.c
 
-
 EXTRA_DIST = \
 	example.conf \
 	example-deny_all_but.conf \
@@ -24,5 +23,13 @@ EXTRA_DIST = \
 
 # sysconf_DATA = 
 
-LDADD		= -L$(top_builddir)/lib -lmiscutil @XTRA_LIBS@
-INCLUDES	= -I. -I$(top_builddir)/include -I$(top_srcdir)/include
+INCLUDES = \
+	-I$(top_srcdir) \
+	-I. \
+	-I$(top_builddir)/include \
+	-I$(top_srcdir)/include
+
+LDADD = \
+	$(top_builddir)/compat/libcompat.la \
+	-L$(top_builddir)/lib -lmiscutil \
+	@XTRA_LIBS@

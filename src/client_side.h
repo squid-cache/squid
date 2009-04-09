@@ -37,7 +37,7 @@
 #include "StoreIOBuffer.h"
 #include "BodyPipe.h"
 #include "RefCount.h"
-#include "ICAP/AsyncJob.h"
+#include "base/AsyncJob.h"
 #include "CommCalls.h"
 
 class ConnStateData;

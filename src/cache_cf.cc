@@ -33,16 +33,16 @@
  */
 
 #include "squid.h"
-#include "authenticate.h"
 #include "ProtoPort.h"
 #include "HttpRequestMethod.h"
-#include "AuthConfig.h"
-#include "AuthScheme.h"
+#include "auth/Config.h"
+#include "auth/Scheme.h"
 #include "CacheManager.h"
 #include "Store.h"
 #include "SwapDir.h"
 #include "ConfigParser.h"
-#include "ACL.h"
+#include "acl/Acl.h"
+#include "acl/Gadgets.h"
 #include "StoreFileSystem.h"
 #include "Parsing.h"
 #include "MemBuf.h"
@@ -57,7 +57,7 @@
 #include "snmp.h"
 #endif
 #if USE_SQUID_ESI
-#include "ESIParser.h"
+#include "esi/Parser.h"
 #endif
 
 #if USE_ADAPTATION
@@ -69,21 +69,21 @@ static void parse_adaptation_access_type();
 #endif
 
 #if ICAP_CLIENT
-#include "ICAP/ICAPConfig.h"
+#include "adaptation/icap/Config.h"
 
-static void parse_icap_service_type(ICAPConfig *);
-static void dump_icap_service_type(StoreEntry *, const char *, const ICAPConfig &);
-static void free_icap_service_type(ICAPConfig *);
+static void parse_icap_service_type(Adaptation::Icap::Config *);
+static void dump_icap_service_type(StoreEntry *, const char *, const Adaptation::Icap::Config &);
+static void free_icap_service_type(Adaptation::Icap::Config *);
 static void parse_icap_class_type();
 static void parse_icap_access_type();
 
 #endif
 
 #if USE_ECAP
-#include "eCAP/Config.h"
-static void parse_ecap_service_type(Ecap::Config *);
-static void dump_ecap_service_type(StoreEntry *, const char *, const Ecap::Config &);
-static void free_ecap_service_type(Ecap::Config *);
+#include "adaptation/ecap/Config.h"
+static void parse_ecap_service_type(Adaptation::Ecap::Config *);
+static void dump_ecap_service_type(StoreEntry *, const char *, const Adaptation::Ecap::Config &);
+static void free_ecap_service_type(Adaptation::Ecap::Config *);
 #endif
 
 CBDATA_TYPE(peer);
@@ -888,7 +888,7 @@ parseBytesUnits(const char *unit)
     if (!strncasecmp(unit, B_GBYTES_STR, strlen(B_GBYTES_STR)))
         return 1 << 30;
 
-    debugs(3, 1, "parseBytesUnits: unknown bytes unit '" << unit << "'");
+    debugs(3, DBG_CRITICAL, "WARNING: Unknown bytes unit '" << unit << "'");
 
     return 0;
 }
@@ -1490,8 +1490,7 @@ parse_cachedir(SquidConfig::_cacheSwap * swap)
     for (i = 0; i < swap->n_configured; i++) {
         assert (swap->swapDirs[i].getRaw());
 
-        if ((strcasecmp(path_str, dynamic_cast<SwapDir *>(swap->swapDirs[i].getRaw())->path)
-            ) == 0) {
+        if ((strcasecmp(path_str, dynamic_cast<SwapDir *>(swap->swapDirs[i].getRaw())->path)) == 0) {
             /* this is specific to on-fs Stores. The right
              * way to handle this is probably to have a mapping
              * from paths to stores, and have on-fs stores
@@ -1516,7 +1515,13 @@ parse_cachedir(SquidConfig::_cacheSwap * swap)
     }
 
     /* new cache_dir */
-    assert(swap->n_configured < 63);	/* 7 bits, signed */
+    if (swap->n_configured > 63) {
+        /* 7 bits, signed */
+        debugs(3, DBG_CRITICAL, "WARNING: There is a fixed maximum of 63 cache_dir entries Squid can handle.");
+        debugs(3, DBG_CRITICAL, "WARNING: '" << path_str << "' is one to many.");
+        self_destruct();
+        return;
+    }
 
     allocate_new_swapdir(swap);
 
@@ -1885,27 +1890,6 @@ free_peer(peer ** P)
 
     while ((p = *P) != NULL) {
         *P = p->next;
-
-         safe_free(p->host);
-         safe_free(p->name);
-         safe_free(p->login);
-#if USE_CACHE_DIGESTS
-         safe_free(p->digest_url);
-#endif
-         safe_free(p->domain);
-#if USE_SSL
-         safe_free(p->sslcert);
-         safe_free(p->sslkey);
-         safe_free(p->ssloptions);
-         safe_free(p->sslcipher);
-         safe_free(p->sslcapath);
-         safe_free(p->sslcafile);
-         safe_free(p->sslflags);
-         safe_free(p->ssldomain);
-	 if (p->sslContext)
-	     SSL_CTX_free(p->sslContext);
-#endif
-
 #if USE_CACHE_DIGESTS
 
         cbdataReferenceDone(p->digest);
@@ -3297,9 +3281,6 @@ void
 configFreeMemory(void)
 {
     free_all();
-#if USE_SSL
-    SSL_CTX_free(Config.ssl_client.sslContext);
-#endif
 }
 
 void
@@ -3532,19 +3513,19 @@ parse_adaptation_access_type()
 #if ICAP_CLIENT
 
 static void
-parse_icap_service_type(ICAPConfig * cfg)
+parse_icap_service_type(Adaptation::Icap::Config * cfg)
 {
     cfg->parseService();
 }
 
 static void
-free_icap_service_type(ICAPConfig * cfg)
+free_icap_service_type(Adaptation::Icap::Config * cfg)
 {
     cfg->freeService();
 }
 
 static void
-dump_icap_service_type(StoreEntry * entry, const char *name, const ICAPConfig &cfg)
+dump_icap_service_type(StoreEntry * entry, const char *name, const Adaptation::Icap::Config &cfg)
 {
     cfg.dumpService(entry, name);
 }
@@ -3571,19 +3552,19 @@ parse_icap_access_type()
 #if USE_ECAP
 
 static void
-parse_ecap_service_type(Ecap::Config * cfg)
+parse_ecap_service_type(Adaptation::Ecap::Config * cfg)
 {
     cfg->parseService();
 }
 
 static void
-free_ecap_service_type(Ecap::Config * cfg)
+free_ecap_service_type(Adaptation::Ecap::Config * cfg)
 {
     cfg->freeService();
 }
 
 static void
-dump_ecap_service_type(StoreEntry * entry, const char *name, const Ecap::Config &cfg)
+dump_ecap_service_type(StoreEntry * entry, const char *name, const Adaptation::Ecap::Config &cfg)
 {
     cfg.dumpService(entry, name);
 }

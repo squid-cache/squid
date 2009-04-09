@@ -1,43 +1,51 @@
-#  Makefile for storage modules in the Squid Object Cache server
-#
-#  $Id$
-#
+include $(top_srcdir)/src/Common.am
 
-AUTOMAKE_OPTIONS = subdir-objects
-AM_CFLAGS = @SQUID_CFLAGS@
-AM_CXXFLAGS = @SQUID_CXXFLAGS@
-CLEANFILES = 
+EXTRA_LTLIBRARIES = libaufs.la libdiskd.la libcoss.la libufs.la
+noinst_LTLIBRARIES =  @STORE_LIBS_TO_BUILD@ libfs.la
 
-EXTRA_LIBRARIES = libcoss.a libufs.a
-noinst_LIBRARIES = @STORE_LIBS@
+# aufs is a "fake" legacy store
+libaufs_la_SOURCES = \
+	aufs/StoreFSaufs.cc
 
-libcoss_a_SOURCES = \
+# diskd is a "fake" legacy store
+libdiskd_la_SOURCES = \
+	diskd/StoreFSdiskd.cc
+
+libcoss_la_SOURCES = \
+	coss/StoreFScoss.h \
+	coss/StoreFScoss.cc \
 	coss/store_coss.h \
 	coss/store_io_coss.cc \
 	coss/store_dir_coss.cc \
 	coss/CossSwapDir.h
 
-libufs_a_SOURCES = ufs/store_dir_ufs.cc ufs/store_io_ufs.cc \
+libufs_la_SOURCES = \
+	ufs/StoreFSufs.h \
+	ufs/StoreFSufs.cc \
+	ufs/store_dir_ufs.cc \
+	ufs/store_io_ufs.cc \
 	ufs/ufscommon.cci \
 	ufs/ufscommon.cc \
 	ufs/ufscommon.h 
 
+libfs_la_SOURCES = Module.cc Module.h
+libfs_la_LIBADD =  @STORE_LIBS_TO_BUILD@
+libfs_la_DEPENDENCIES = @STORE_LIBS_TO_BUILD@
 
 EXTRA_DIST = \
-	coss/coss-notes.txt \
-	coss/StoreFScoss.h \
-	ufs/StoreFSufs.h
+	coss/coss-notes.txt
 
-INCLUDES      = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
-	-I$(top_srcdir)/src
+# TODO: fix #include statements so that this is not needed
+INCLUDES += -I.
 
-check_PROGRAMS=testHeaders
+
+check_PROGRAMS += testHeaders
 
 ## Special Universal .h dependency test script
 ## aborts if error encountered
 testHeaders: $(top_srcdir)/src/fs/ufs/*.h $(top_srcdir)/src/fs/coss/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "ufs" || exit 1
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "coss" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/src/fs/ufs" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/src/fs/coss" || exit 1
 ## diskd/ has no .h files
 ## aufs/ has no .h files
 ## ./ has no .h files
@@ -48,7 +56,7 @@ testHeaders.c:
 CLEANFILES += testHeaders.c
 
 ## targets below to emulate distributed makefiles
-coss/all: libcoss.a
+coss/all: libcoss.la
 coss/clean: clean
-ufs/all: libufs.a
+ufs/all: libufs.la
 ufs/clean: clean

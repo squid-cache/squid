@@ -1,9 +1,8 @@
 #ifndef SQUID_SRC_TEST_URL_H
 #define SQUID_SRC_TEST_URL_H
 
-#include <cppunit/extensions/HelperMacros.h>
-
 #include "Icmp.h"
+#include <cppunit/extensions/HelperMacros.h>
 
 #if USE_ICMP
 

@@ -161,7 +161,7 @@ public:
     unsigned char key[SQUID_MD5_DIGEST_LENGTH];
 };
 
-MEMPROXY_CLASS_INLINE(StoreSwapLogData)		/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(StoreSwapLogData);
 
 /// \ingroup FileFormatSwapStateAPI
 class StoreSwapLogHeader

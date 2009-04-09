@@ -122,7 +122,7 @@ public:
 
     int imslen;
 
-    int max_forwards;
+    int64_t max_forwards;
 
     IpAddress client_addr;
 
@@ -204,6 +204,6 @@ protected:
     virtual bool inheritProperties(const HttpMsg *aMsg);
 };
 
-MEMPROXY_CLASS_INLINE(HttpRequest)          /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(HttpRequest);
 
 #endif /* SQUID_HTTPREQUEST_H */

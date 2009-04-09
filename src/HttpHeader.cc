@@ -83,6 +83,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     {"Cache-Control", HDR_CACHE_CONTROL, ftPCc},
     {"Connection", HDR_CONNECTION, ftStr},
     {"Content-Base", HDR_CONTENT_BASE, ftStr},
+    {"Content-Disposition", HDR_CONTENT_DISPOSITION, ftStr},  /* for now */
     {"Content-Encoding", HDR_CONTENT_ENCODING, ftStr},
     {"Content-Language", HDR_CONTENT_LANGUAGE, ftStr},
     {"Content-Length", HDR_CONTENT_LENGTH, ftInt64},
@@ -1683,7 +1684,7 @@ httpHeaderStoreReport(StoreEntry * e)
 }
 
 http_hdr_type
-httpHeaderIdByName(const char *name, int name_len, const HttpHeaderFieldInfo * info, int end)
+httpHeaderIdByName(const char *name, size_t name_len, const HttpHeaderFieldInfo * info, int end)
 {
     int i;
 

@@ -1548,7 +1548,8 @@ _comm_close(int fd, char const *file, int line)
     if (F->closing())
         return;
 
-    if (shutting_down && (!F->flags.open || F->type == FD_FILE))
+    /* XXX: is this obsolete behind F->closing() ? */
+    if ( (shutting_down || reconfiguring) && (!F->flags.open || F->type == FD_FILE))
         return;
 
     /* The following fails because ipc.c is doing calls to pipe() to create sockets! */
@@ -1909,7 +1910,7 @@ comm_init(void) {
     /* Keep a few file descriptors free so that we don't run out of FD's
      * after accepting a client but before it opens a socket or a file.
      * Since Squid_MaxFD can be as high as several thousand, don't waste them */
-    RESERVED_FD = XMIN(100, Squid_MaxFD / 4);
+    RESERVED_FD = min(100, Squid_MaxFD / 4);
 
     conn_close_pool = memPoolCreate("close_handler", sizeof(close_handler));
 
@@ -2565,8 +2566,8 @@ DeferredReadManager::kickARead(DeferredRead const &aRead) {
     if (aRead.cancelled)
         return;
 
-    if(aRead.theRead.fd>=0 && fd_table[aRead.theRead.fd].closing())
-	return;
+    if (aRead.theRead.fd>=0 && fd_table[aRead.theRead.fd].closing())
+        return;
 
     debugs(5, 3, "Kicking deferred read on FD " << aRead.theRead.fd);
 

@@ -39,7 +39,7 @@
 
 #include "squid.h"
 #include "auth_basic.h"
-#include "authenticate.h"
+#include "auth/Gadgets.h"
 #include "CacheManager.h"
 #include "Store.h"
 #include "HttpReply.h"
@@ -143,9 +143,8 @@ int
 AuthBasicUserRequest::authenticated() const
 {
     BasicUser const *basic_auth = dynamic_cast<BasicUser const *>(user());
-    assert (basic_auth != NULL);
 
-    if (basic_auth->authenticated())
+    if (basic_auth && basic_auth->authenticated())
         return 1;
 
     return 0;

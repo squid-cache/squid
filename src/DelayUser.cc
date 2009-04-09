@@ -40,8 +40,8 @@
 #if DELAY_POOLS
 #include "squid.h"
 #include "DelayUser.h"
-#include "AuthUserRequest.h"
-#include "AuthUser.h"
+#include "auth/UserRequest.h"
+#include "auth/User.h"
 #include "NullDelayId.h"
 #include "Store.h"
 

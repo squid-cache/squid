@@ -11,6 +11,12 @@ man_MANS 			= squid_session.8
 EXTRA_DIST			= squid_session.8
 squid_session_SOURCES		= squid_session.c
 
-LDADD = @LIB_DB@
+INCLUDES = \
+	-I$(top_srcdir) \
+	-I. \
+	-I$(top_builddir)/include \
+	-I$(top_srcdir)/include
 
-INCLUDES	= -I. -I$(top_builddir)/include -I$(top_srcdir)/include
+LDADD = \
+	$(top_builddir)/compat/libcompat.la \
+	@LIB_DB@

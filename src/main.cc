@@ -34,7 +34,7 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
-#include "authenticate.h"
+#include "auth/Gadgets.h"
 #include "ConfigParser.h"
 #include "errorpage.h"
 #include "event.h"
@@ -46,8 +46,8 @@
 #include "HttpReply.h"
 #include "pconn.h"
 #include "Mem.h"
-#include "ACLASN.h"
-#include "ACL.h"
+#include "acl/Asn.h"
+#include "acl/Acl.h"
 #include "htcp.h"
 #include "StoreFileSystem.h"
 #include "DiskIO/DiskIOModule.h"
@@ -77,14 +77,20 @@
 #endif
 
 #if ICAP_CLIENT
-#include "ICAP/ICAPConfig.h"
+#include "adaptation/icap/Config.h"
 #endif
 #if USE_ECAP
-#include "eCAP/Config.h"
+#include "adaptation/ecap/Config.h"
 #endif
 #if USE_ADAPTATION
 #include "adaptation/Config.h"
 #endif
+
+#if USE_SQUID_ESI
+#include "esi/Module.h"
+#endif
+
+#include "fs/Module.h"
 
 #if USE_WIN32_SERVICE
 
@@ -256,8 +262,8 @@ usage(void)
 /**
  * Parse the parameters received via command line interface.
  *
- \param argc[in]   Number of options received on command line
- \param argv[in]   List of parameters received on command line
+ \param argc   Number of options received on command line
+ \param argv   List of parameters received on command line
  */
 static void
 mainParseOptions(int argc, char *argv[])
@@ -1050,17 +1056,20 @@ mainInitialize(void)
     // We can remove this dependency on specific adaptation mechanisms
     // if we create a generic Registry of such mechanisms. Should we?
 #if ICAP_CLIENT
-    TheICAPConfig.finalize();
-    enableAdaptation = TheICAPConfig.onoff || enableAdaptation;
+    Adaptation::Icap::TheConfig.finalize();
+    enableAdaptation = Adaptation::Icap::TheConfig.onoff || enableAdaptation;
 #endif
 #if USE_ECAP
-    Ecap::TheConfig.finalize(); // must be after we load modules
-    enableAdaptation = Ecap::TheConfig.onoff || enableAdaptation;
+    Adaptation::Ecap::TheConfig.finalize(); // must be after we load modules
+    enableAdaptation = Adaptation::Ecap::TheConfig.onoff || enableAdaptation;
 #endif
     // must be the last adaptation-related finalize
     Adaptation::Config::Finalize(enableAdaptation);
 #endif
 
+#if USE_SQUID_ESI
+    Esi::Init();
+#endif
 
     debugs(1, 1, "Ready to serve requests.");
 
@@ -1220,6 +1229,9 @@ SquidMain(int argc, char **argv)
 
         storeFsInit();		/* required for config parsing */
 
+        /* TODO: call the FS::Clean() in shutdown to do Fs cleanups */
+        Fs::Init();
+
         /* May not be needed for parsing, have not audited for such */
         DiskIOModule::SetupAllModules();
 
@@ -1240,7 +1252,7 @@ SquidMain(int argc, char **argv)
     setUmask(Config.umask);
     if (-1 == opt_send_signal)
         if (checkRunningPid())
-            exit(1);
+            exit(0);
 
 #if TEST_ACCESS
 
@@ -1396,8 +1408,13 @@ sendSignal(void)
             exit(1);
         }
     } else {
-        fprintf(stderr, "%s: ERROR: No running copy\n", APP_SHORTNAME);
-        exit(1);
+        if (opt_send_signal != SIGTERM) {
+            fprintf(stderr, "%s: ERROR: No running copy\n", APP_SHORTNAME);
+            exit(1);
+        } else {
+            fprintf(stderr, "%s: No running copy\n", APP_SHORTNAME);
+            exit(0);
+        }
     }
 
     /* signal successfully sent */
@@ -1666,6 +1683,11 @@ SquidShutdown()
 
     releaseServerSockets();
     commCloseAllSockets();
+
+#if USE_SQUID_ESI
+    Esi::Clean();
+#endif
+
 #if DELAY_POOLS
 
     DelayPools::FreePools();

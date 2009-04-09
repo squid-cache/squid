@@ -36,7 +36,7 @@
 
 #include "squid.h"
 #include "HttpRequest.h"
-#include "AuthUserRequest.h"
+#include "auth/UserRequest.h"
 #include "HttpHeaderRange.h"
 #include "MemBuf.h"
 #include "Store.h"
@@ -298,8 +298,8 @@ HttpRequest::pack(Packer * p)
 {
     assert(p);
     /* pack request-line */
-    packerPrintf(p, "%s %.*s HTTP/1.0\r\n",
-                 RequestMethodStr(method), urlpath.size(), urlpath.rawBuf());
+    packerPrintf(p, "%s " SQUIDSTRINGPH " HTTP/1.0\r\n",
+                 RequestMethodStr(method), SQUIDSTRINGPRINT(urlpath));
     /* headers */
     header.packInto(p);
     /* trailer */

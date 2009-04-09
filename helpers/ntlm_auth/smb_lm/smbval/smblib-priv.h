@@ -32,7 +32,9 @@
 
 #include "byteorder.h"		/* Hmmm ... hot good */
 
-#define max(a,b) (a < b ? b : a)
+#ifndef max
+#define max(a,b) ((a) < (b) ? (b) : (a))
+#endif
 
 #define SMB_DEF_IDF 0x424D53FF	/* "\377SMB" */
 

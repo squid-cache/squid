@@ -32,21 +32,22 @@ LOADABLE_MODULES_SOURCES = \
 TESTS=$(check_PROGRAMS)
 check_PROGRAMS=
 
-SUBDIRS		= fs repl auth icmp ip
+SUBDIRS	= base acl fs repl auth ip icmp
 
 if USE_ADAPTATION
 SUBDIRS += adaptation
 endif
 
-if USE_ICAP_CLIENT
-SUBDIRS += ICAP
-endif
+ADAPTATION_LIBS = @ADAPTATION_LIBS@
 
-if USE_ECAP
-SUBDIRS += eCAP
+if USE_ESI
+SUBDIRS += esi
+ESI_LIBS = \
+	esi/libesi.la \
+	$(top_builddir)/lib/libTrie/src/libTrie.a
+else
+ESI_LIBS = 
 endif
-
-ADAPTATION_LIBS = @ECAP_LIBS@ @ICAP_LIBS@ @ADAPTATION_LIBS@
 
 DELAY_POOL_ALL_SOURCE = \
 	CommonPool.h \
@@ -78,43 +79,6 @@ else
 DELAY_POOL_SOURCE = 
 endif
 
-ESI_ALL_SOURCE = \
-	ElementList.h \
-	ESI.cc \
-	ESI.h \
-	ESIAssign.cc \
-	ESIAssign.h \
-	ESIAttempt.h \
-	ESIContext.cc \
-	ESIContext.h \
-	ESICustomParser.cc \
-	ESICustomParser.h \
-	ESIElement.h \
-	ESIExcept.h \
-	ESIExpatParser.cc \
-	ESIExpatParser.h \
-	ESIExpression.cc \
-	ESIExpression.h \
-	ESIInclude.cc \
-	ESIInclude.h \
-	ESILiteral.h \
-	ESILibxml2Parser.cc \
-	ESILibxml2Parser.h \
-	ESIParser.cc \
-	ESIParser.h \
-	ESISegment.cc \
-	ESISegment.h \
-	ESISequence.cc \
-	ESISequence.h \
-	ESIVar.h \
-	ESIVarState.cc \
-	ESIVarState.h
-if USE_ESI
-  ESI_SOURCE = $(ESI_ALL_SOURCE)
-else
-  ESI_SOURCE = 
-endif
-
 if ENABLE_XPROF_STATS
 XPROF_STATS_SOURCE = ProfStats.cc
 else
@@ -140,14 +104,6 @@ UNLINKD =
 endif
 
 SSL_ALL_SOURCE = \
-	ACLCertificateData.cc \
-	ACLCertificateData.h  \
-	ACLCertificate.cc \
-	ACLCertificate.h  \
-	ACLSslError.cc \
-	ACLSslError.h \
-	ACLSslErrorData.cc \
-	ACLSslErrorData.h \
 	ssl_support.cc \
 	ssl_support.h
 
@@ -189,18 +145,11 @@ else
 AIOPS_SOURCE = DiskIO/DiskThreads/aiops.cc
 endif
 
-IDENT_ALL_SOURCE = ACLIdent.cc ACLIdent.h ident.cc ident.h
+IDENT_ALL_SOURCE = ident.cc ident.h
 if ENABLE_IDENT
 IDENT_SOURCE = $(IDENT_ALL_SOURCE)
 else
 IDENT_SOURCE =
-endif
-
-ARP_ACL_ALL_SOURCE = ACLARP.cc ACLARP.h
-if ENABLE_ARP_ACL
-ARP_ACL_SOURCE = $(ARP_ACL_ALL_SOURCE)
-else
-ARP_ACL_SOURCE =
 endif
 
 AM_CFLAGS = @SQUID_CFLAGS@
@@ -208,11 +157,28 @@ AM_CXXFLAGS = @SQUID_CXXFLAGS@
 
 EXTRA_LIBRARIES = libAIO.a libBlocking.a libDiskDaemon.a libDiskThreads.a
 noinst_LIBRARIES = @DISK_LIBS@
-noinst_LTLIBRARIES = libsquid.la libauth.la
+noinst_LTLIBRARIES = libsquid.la
 
-INCLUDES        = -I. -I$(srcdir) -I$(top_builddir)/include -I$(top_srcdir)/include -I$(top_srcdir)/lib/libTrie/include
-INCLUDES        += -I$(top_builddir)/lib -I$(top_srcdir)/lib
-INCLUDES	+= @SQUID_CPPUNIT_INC@
+# libraries used by many targets
+COMMON_LIBS = \
+	libsquid.la \
+	auth/libacls.la \
+	acl/libacls.la \
+	acl/libstate.la \
+	auth/libauth.la \
+	acl/libapi.la \
+	base/libbase.la \
+	ip/libip.la \
+	fs/libfs.la
+
+INCLUDES = \
+	-I$(top_srcdir) \
+	-I$(top_srcdir)/src \
+	-I$(top_builddir)/include \
+	-I$(top_srcdir)/include \
+	-I$(top_builddir)/lib \
+	-I$(top_srcdir)/lib \
+	@SQUID_CPPUNIT_INC@
 
 EXTRA_PROGRAMS = \
 	DiskIO/DiskDaemon/diskd \
@@ -241,29 +207,18 @@ libexec_PROGRAMS = \
 	@DISK_PROGRAMS@ \
 	$(UNLINKD)
 
-cf_gen_SOURCES = \
-	cf_gen.cc \
-	defines.h \
-	debug.cc \
-	time.cc
-
-nodist_cf_gen_SOURCES = globals.cc
+cf_gen_SOURCES = cf_gen.cc
 nodist_cf_gen_HEADER = cf_gen_defines.h
 cf_gen_LDADD= \
-	libsquid.la \
-	libauth.la \
-	ip/libip.la \
+	../compat/libcompat.la \
 	-L../lib -lmiscutil \
 	@XTRA_LIBS@ \
 	@EPOLL_LIBS@ \
 	@MINGW_LIBS@
 cf_gen.$(OBJEXT): cf_gen_defines.h
 
-all_FSMODULES = \
-	fs/aufs/StoreFSaufs.cc \
-	fs/coss/StoreFScoss.cc \
-	fs/diskd/StoreFSdiskd.cc \
-	fs/ufs/StoreFSufs.cc
+
+ACL_REGISTRATION_SOURCES = AclRegs.cc AuthReg.cc
 
 DISKIO_SOURCE = \
 	DiskIO/DiskIOModule.cc \
@@ -284,21 +239,9 @@ DiskIO/DiskIOModules_gen.cc: Makefile
 	$(SHELL) $(srcdir)/DiskIO/modules.sh $(DISK_MODULES) > DiskIO/DiskIOModules_gen.cc
 
 
-all_AUTHMODULES = \
-	auth/basic/basicScheme.cc \
-	auth/basic/basicScheme.h \
-	auth/digest/digestScheme.cc \
-	auth/digest/digestScheme.h \
-	auth/ntlm/ntlmScheme.cc \
-	auth/ntlm/ntlmScheme.h \
-	auth/negotiate/negotiateScheme.cc \
-	auth/negotiate/negotiateScheme.h 
-
 EXTRA_squid_SOURCES = \
-	$(all_FSMODULES) \
 	$(AIO_WIN32_ALL_SOURCES) \
 	$(all_AUTHMODULES) \
-	$(ARP_ACL_ALL_SOURCE) \
 	ConfigOption.h \
 	$(DELAY_POOL_ALL_SOURCE) \
 	dns.cc \
@@ -309,7 +252,6 @@ EXTRA_squid_SOURCES = \
 	ipc.cc \
 	ipc_win32.cc \
 	$(IDENT_ALL_SOURCE) \
-	$(ESI_ALL_SOURCE) \
 	ProfStats.cc \
 	LeakFinder.cc \
 	LeakFinder.h \
@@ -320,89 +262,6 @@ EXTRA_squid_SOURCES = \
 	$(LOADABLE_MODULES_SOURCES) \
 	DiskIO/DiskThreads/aiops.cc \
 	DiskIO/DiskThreads/aiops_win32.cc
-
-squid_ACLSOURCES = \
-	$(ARP_ACL_SOURCE) \
-	ACLASN.cc \
-	ACLASN.h \
-	ACLDestinationASN.h \
-	ACLSourceASN.h \
-	ACLBrowser.cc \
-	ACLBrowser.h \
-	ACLData.h \
-	ACLDestinationDomain.cc \
-	ACLDestinationDomain.h \
-	ACLDestinationIP.cc \
-	ACLDestinationIP.h \
-	ACLDomainData.h \
-	ACLDomainData.cc \
-	ACLExtUser.h \
-	ACLExtUser.cc \
-	ACLHTTPHeaderData.h \
-	ACLHTTPHeaderData.cc \
-	ACLHTTPStatus.h \
-	ACLHTTPStatus.cc \
-	ACLIntRange.cc \
-	ACLIntRange.h \
-	ACLIP.cc \
-	ACLIP.h \
-	ACLMaxConnection.cc \
-	ACLMaxConnection.h \
-	ACLMaxUserIP.cc \
-	ACLMaxUserIP.h \
-	ACLMethod.cc \
-	ACLMethod.h \
-	ACLMethodData.cc \
-	ACLMethodData.h \
-	ACLMyIP.cc \
-	ACLMyIP.h \
-	ACLMyPort.cc \
-	ACLMyPort.h \
-	ACLMyPortName.cc \
-	ACLMyPortName.h \
-	ACLPeerName.cc \
-	ACLPeerName.h \
-	ACLProtocol.cc \
-	ACLProtocol.h \
-	ACLProtocolData.cc \
-	ACLProtocolData.h \
-	ACLProxyAuth.cc \
-	ACLProxyAuth.h \
-	ACLReferer.cc \
-	ACLReferer.h \
-	ACLRegexData.cc \
-	ACLRegexData.h \
-	ACLReplyHeaderStrategy.h \
-	ACLReplyMIMEType.cc \
-	ACLReplyMIMEType.h \
-	ACLHTTPRepHeader.cc \
-	ACLHTTPRepHeader.h \
-	ACLHTTPReqHeader.cc \
-	ACLHTTPReqHeader.h \
-	ACLRequestHeaderStrategy.h \
-	ACLRequestMIMEType.cc \
-	ACLRequestMIMEType.h \
-	ACLSourceDomain.cc \
-	ACLSourceDomain.h \
-	ACLSourceIP.cc \
-	ACLSourceIP.h \
-	ACLStrategised.cc \
-	ACLStrategised.h \
-	ACLStrategy.h \
-	ACLStringData.cc \
-	ACLStringData.h \
-	ACLTime.cc \
-	ACLTime.h \
-	ACLTimeData.cc \
-	ACLTimeData.h \
-	ACLUrl.cc \
-	ACLUrl.h \
-	ACLUrlPath.cc \
-	ACLUrlPath.h \
-	ACLUrlPort.cc \
-	ACLUrlPort.h \
-	ACLUserData.cc \
-	ACLUserData.h 
 
 squid_COMMSOURCES = \
 	comm_select.cc \
@@ -426,30 +285,14 @@ libsquid_la_SOURCES = \
 	CommCalls.h \
 	DescriptorSet.cc \
 	DescriptorSet.h \
-        ICAP/AsyncJob.cc \
-        ICAP/AsyncJob.h \
 	SquidConfig.cc \
         TextException.cc \
         TextException.h
 
-# authentication framework
-libauth_la_SOURCES = \
-	AuthConfig.cc \
-	AuthConfig.h \
-	AuthScheme.cc \
-	AuthScheme.h \
-	AuthUser.cc \
-	AuthUserRequest.cc
-
 squid_SOURCES = \
+	$(ACL_REGISTRATION_SOURCES) \
 	access_log.cc \
 	AccessLogEntry.h \
-	acl.cc \
-	acl_noncore.cc \
-	ACL.h \
-	ACLChecklist.cc \
-	ACLChecklist.h \
-	$(squid_ACLSOURCES) \
 	asn.cc \
 	AsyncCallQueue.cc \
 	AsyncCallQueue.h \
@@ -458,8 +301,6 @@ squid_SOURCES = \
 	AsyncJobCalls.h \
 	AsyncEngine.cc \
 	AsyncEngine.h \
-	authenticate.cc \
-	authenticate.h \
 	cache_cf.cc \
 	ProtoPort.cc \
 	ProtoPort.h \
@@ -503,7 +344,7 @@ squid_SOURCES = \
 	$(DNSSOURCE) \
 	enums.h \
 	errorpage.cc \
-	$(ESI_SOURCE) \
+	errorpage.h \
 	ETag.cc \
 	event.cc \
 	event.h \
@@ -668,10 +509,7 @@ squid_SOURCES = \
 	$(WIN32_SOURCE) \
 	$(WINSVC_SOURCE)
 
-noinst_HEADERS = ACLChecklist.cci \
-	AuthUser.cci \
-	AuthUser.h \
-	AuthUserRequest.h \
+noinst_HEADERS = \
 	client_side_request.cci \
 	MemBuf.cci \
 	MemBuf.h \
@@ -689,36 +527,31 @@ nodist_squid_SOURCES = \
 	string_arrays.c
 
 squid_LDADD = \
-	libsquid.la \
-	libauth.la \
+	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
-	ip/libip.la \
 	-L../lib \
 	@XTRA_OBJS@ \
 	@DISK_LINKOBJS@ \
 	@REPL_OBJS@ \
-	@STORE_LINKOBJS@ \
-	@STORE_OBJS@ \
 	@DISK_LIBS@ \
-	@AUTH_LINKOBJS@ \
-	@AUTH_OBJS@ \
 	@CRYPTLIB@ \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	${ADAPTATION_LIBS} \
+	${ESI_LIBS} \
 	@SSLLIB@ \
 	-lmiscutil \
 	@XTRA_LIBS@ \
 	@EPOLL_LIBS@ \
 	@MINGW_LIBS@ 
 squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
-	@STORE_OBJS@ \
-	@STORE_LINKOBJS@ \
 	@DISK_LIBS@ \
 	@DISK_LINKOBJS@ \
 	@REPL_OBJS@ \
-	@AUTH_LINKOBJS@ \
-	@AUTH_OBJS@
+	@SNMPLIB@ \
+	${ADAPTATION_LIBS} \
+	${ESI_LIBS} \
+	$(COMMON_LIBS)
 
 if USE_LOADABLE_MODULES
 squid_SOURCES += $(LOADABLE_MODULES_SOURCES)
@@ -769,183 +602,32 @@ ufsdump_SOURCES = \
 	String.cc \
 	time.cc \
 	ufsdump.cc \
-	url.cc \
-	AsyncCallQueue.cc \
-	AsyncCallQueue.h \
-	AsyncCall.cc \
-	AsyncCall.h \
-	BodyPipe.cc \
-	BodyPipe.h \
-	ConfigParser.cc \
-	store.cc \
-	StoreFileSystem.cc \
-	StoreSwapLogData.cc \
-	StoreSwapLogData.h \
-	access_log.cc \
-	acl.cc \
-	acl_noncore.cc \
-	ACLChecklist.cc \
-	ACLProxyAuth.cc \
-	ACLUserData.cc \
-	ACLRegexData.cc \
-	ACLStringData.cc \
-	authenticate.cc \
-	cache_cf.cc \
-	ProtoPort.cc \
-	ProtoPort.h \
-	cache_manager.cc \
-	CacheDigest.cc \
-	carp.cc \
-	cbdata.cc \
-	ChunkedCodingParser.cc \
-	ChunkedCodingParser.h \
-	client_db.cc \
-	client_side.cc \
-	client_side_reply.cc \
-	client_side_request.cc \
-	client_side_request.h \
-	clientStream.cc \
-	clientStream.h \
-	CommIO.h \
-	$(squid_COMMSOURCES) \
-	ConfigOption.cc \
-	defines.h \
-	$(DELAY_POOL_SOURCE) \
-	disk.cc \
 	dlink.h \
 	dlink.cc \
-	$(DNSSOURCE) \
-	enums.h \
-	errorpage.cc \
-	errorpage.h \
-	$(ESI_SOURCE) \
-	ETag.cc \
-	event.cc \
-	external_acl.cc \
-	ExternalACLEntry.cc \
-	fd.cc \
-	fde.cc \
-	fde.h \
-	filemap.cc \
-	forward.cc \
-	forward.h \
-	fqdncache.cc \
-	ftp.cc \
-	gopher.cc \
-	helper.cc \
-	$(HTCPSOURCE) \
-	http.cc \
-	HttpStatusLine.cc \
-	HttpHdrCc.cc \
-	HttpHdrRange.cc \
-	HttpHdrSc.cc \
-	HttpHdrScTarget.cc \
-	HttpHdrContRange.cc \
-	HttpHeader.cc \
-	HttpHeaderTools.cc \
-	HttpBody.cc \
-	HttpMsg.cc \
-	HttpReply.cc \
-	HttpRequest.cc \
 	HttpRequestMethod.cc \
-	icp_v2.cc \
-	icp_v3.cc \
-	$(IDENT_SOURCE) \
-	internal.cc \
-	$(IPC_SOURCE) \
-	ipcache.cc \
-	$(LEAKFINDERSOURCE) \
-        list.cc \
-	logfile.cc \
-	mem_node.cc \
-	mem_node.h \
-	Mem.h \
-	MemBuf.cc \
-	MemObject.cc \
-	MemObject.h \
-	mime.cc \
-	multicast.cc \
-	neighbors.cc \
-	Packer.cc \
-	Parsing.cc \
-	$(XPROF_STATS_SOURCE) \
-	pconn.cc \
-	peer_digest.cc \
-	peer_select.cc \
-	peer_sourcehash.cc \
-	peer_userhash.cc \
-	protos.h \
-	redirect.cc \
-	referer.cc \
-	refresh.cc \
 	RemovalPolicy.cc \
-	send-announce.cc \
-	$(SNMP_SOURCE) \
 	squid.h \
-	$(SSL_SOURCE) \
-	tunnel.cc \
-	Server.cc \
-	SquidNew.cc \
-	stat.cc \
-	StatHist.cc \
-	stmem.cc \
-	store_io.cc \
-	StoreIOBuffer.h \
-	StoreIOState.cc \
-	store_client.cc \
-	StoreClient.h \
-	store_digest.cc \
-	store_dir.cc \
-	store_log.cc \
-	store_rebuild.cc \
-	store_swapin.cc \
-	store_swapmeta.cc \
-	store_swapout.cc \
-	structs.h \
-	SwapDir.cc \
-	tools.cc \
-	typedefs.h \
-	$(UNLINKDSOURCE) \
-	URLScheme.cc \
-	urn.cc \
-	useragent.cc \
-	wccp.cc \
-	wccp2.cc \
-	whois.cc \
-	wordlist.cc \
 	$(WIN32_SOURCE)
 ufsdump_LDADD = \
-	libsquid.la \
-	libauth.la \
-	icmp/libicmp.la icmp/libicmp-core.la \
-	ip/libip.la \
+	$(COMMON_LIBS) \
 	@XTRA_OBJS@ \
 	@REPL_OBJS@ \
-	@STORE_OBJS@ \
-	@AUTH_OBJS@ \
 	@CRYPTLIB@ \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
-	${ADAPTATION_LIBS} \
 	@SSLLIB@ \
 	-L$(top_builddir)/lib -lmiscutil \
 	@XTRA_LIBS@ \
 	@EPOLL_LIBS@ \
 	@MINGW_LIBS@ 
 ufsdump_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
-	@STORE_OBJS@ \
-	@STORE_LINKOBJS@ \
+	$(COMMON_LIBS) \
 	@DISK_LIBS@ \
 	@DISK_LINKOBJS@ \
-	@REPL_OBJS@ \
-	@AUTH_LINKOBJS@ \
-	@AUTH_OBJS@
+	@REPL_OBJS@
 
 nodist_ufsdump_SOURCES = \
-	repl_modules.cc \
-	cf_parser.h \
-	globals.cc \
-	string_arrays.c
+	globals.cc
 
 BUILT_SOURCES = \
 	cf_gen_defines.h \
@@ -962,7 +644,7 @@ sysconf_DATA = \
 data_DATA = \
 	mib.txt
 
-LDADD = libsquid.la libauth.la ip/libip.la -L../lib -lmiscutil @XTRA_LIBS@ @EPOLL_LIBS@ @MINGW_LIBS@
+LDADD = $(COMMON_LIBS) -L../lib -lmiscutil @XTRA_LIBS@ @EPOLL_LIBS@ @MINGW_LIBS@
 
 EXTRA_DIST = \
 	cf_gen_defines \
@@ -1127,16 +809,8 @@ install-data-local: install-sysconfDATA install-dataDATA
 	$(mkinstalldirs) $(DESTDIR)$(DEFAULT_LOG_PREFIX)
 
 uninstall-local:
-	@if test -f $(DESTDIR)$(DEFAULT_MIME_TABLE) ; then \
-		echo "rm -f $(DESTDIR)$(DEFAULT_MIME_TABLE)"; \
-		$(RM) -f $(DESTDIR)$(DEFAULT_MIME_TABLE); \
-	fi
-
-# Don't automatically uninstall config files
-#	@if test -f $(DESTDIR)$(DEFAULT_CONFIG_FILE) ; then \
-#		echo "rm -f $(DESTDIR)$(DEFAULT_CONFIG_FILE)"; \
-#		$(RM) -f $(DESTDIR)$(DEFAULT_CONFIG_FILE); \
-#	fi
+	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh $(RM) $(DESTDIR)$(DEFAULT_MIME_TABLE)
+	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh $(RM) $(DESTDIR)$(DEFAULT_CONFIG_FILE)
 
 CLEANFILES = cf_gen_defines.h cf.data cf_parser.h squid.conf.default squid.conf.documented \
 	globals.cc string_arrays.c repl_modules.cc DiskIO/DiskIOModules_gen.cc \
@@ -1215,13 +889,12 @@ CLEANFILES += testHeaders.c
 
 tests_testAuth_SOURCES = \
 	tests/testAuth.cc tests/testMain.cc  tests/testAuth.h \
-	authenticate.cc \
 	ConfigParser.cc \
 	tests/stub_acl.cc tests/stub_cache_cf.cc \
 	tests/stub_helper.cc cbdata.cc String.cc \
-	tests/stub_store.cc HttpHeaderTools.cc HttpHeader.cc acl.cc mem.cc \
-	MemBuf.cc HttpHdrContRange.cc Packer.cc ACLChecklist.cc HttpHdrCc.cc HttpHdrSc.cc \
-	HttpHdrScTarget.cc url.cc ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc \
+	tests/stub_store.cc HttpHeaderTools.cc HttpHeader.cc mem.cc \
+	MemBuf.cc HttpHdrContRange.cc Packer.cc HttpHdrCc.cc HttpHdrSc.cc \
+	HttpHdrScTarget.cc url.cc \
 	StatHist.cc HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
 	tests/stub_HttpRequest.cc tests/stub_DelayId.cc \
 	tests/stub_MemObject.cc mem_node.cc \
@@ -1245,26 +918,20 @@ nodist_tests_testAuth_SOURCES = \
 	$(TESTSOURCES)
 
 tests_testAuth_LDADD= \
-	libsquid.la \
-	libauth.la \
-	ip/libip.la \
-	@AUTH_LINKOBJS@ @AUTH_OBJS@ \
+	$(COMMON_LIBS) \
 	-L../lib -lmiscutil \
 	@REGEXLIB@ \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SSLLIB@
 tests_testAuth_LDFLAGS = $(LIBADD_DL)
 tests_testAuth_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
-	@AUTH_LINKOBJS@ \
-	@AUTH_OBJS@ \
 	@SQUID_CPPUNIT_LA@
 
 ## Tests for the ACLMaxUserIP class
 ## acl needs wordlist. wordlist needs MemBug
 ## MemBuf needs mem, MemBuf needs event,
 ## event needs cbdata.
-## ACLMaxUserUP needs authenticate.cc
-## authenticate.cc needs libauth.la
+## ACLMaxUserUP needs libauth.la
 ## ACLMaxUserIP needs ACLChecklist
 ## AuthUser request needs HttpHeader, which brings in 
 ##	ETag.cc \
@@ -1279,13 +946,6 @@ tests_testAuth_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 ##	StatHist.cc \
 ##	String.cc \
 tests_testACLMaxUserIP_SOURCES= \
-	acl.cc \
-	ACLChecklist.cc \
-	ACLMaxUserIP.cc \
-	ACLProxyAuth.cc \
-	ACLRegexData.cc \
-	ACLUserData.cc \
-	authenticate.cc \
 	cbdata.cc \
 	ConfigParser.cc \
 	ETag.cc \
@@ -1319,9 +979,7 @@ tests_testACLMaxUserIP_SOURCES= \
 nodist_tests_testACLMaxUserIP_SOURCES= \
 	$(TESTSOURCES)
 tests_testACLMaxUserIP_LDADD= \
-	libsquid.la \
-	libauth.la \
-	ip/libip.la \
+	$(COMMON_LIBS) \
 	-L../lib -lmiscutil \
 	@REGEXLIB@ \
 	@SQUID_CPPUNIT_LIBS@ \
@@ -1359,14 +1017,6 @@ tests_testCacheManager_SOURCES = \
 	tests/testMain.cc \
 	time.cc \
 	access_log.cc \
-	acl.cc \
-	acl_noncore.cc \
-	ACLChecklist.cc \
-	ACLProxyAuth.cc \
-	ACLStringData.cc \
-	ACLRegexData.cc \
-	ACLUserData.cc \
-	authenticate.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
 	cache_cf.cc \
@@ -1390,7 +1040,6 @@ tests_testCacheManager_SOURCES = \
 	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
-	$(ESI_SOURCE) \
 	ETag.cc \
 	external_acl.cc \
 	ExternalACLEntry.cc \
@@ -1484,12 +1133,11 @@ nodist_tests_testCacheManager_SOURCES = \
 	repl_modules.cc \
 	string_arrays.c
 tests_testCacheManager_LDADD = \
-	libsquid.la \
-	libauth.la \
+	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
-	ip/libip.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
+	${ESI_LIBS} \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
@@ -1511,10 +1159,11 @@ tests_testDiskIO_SOURCES = \
 nodist_tests_testDiskIO_SOURCES= \
 	$(SWAP_TEST_GEN_SOURCES)
 tests_testDiskIO_LDADD = \
-	ip/libip.la \
-	@DISK_LIBS@ \
 	$(SWAP_TEST_LDADD) \
+	@DISK_LIBS@ \
+	$(COMMON_LIBS) \
 	SquidConfig.o
+
 tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
 tests_testDiskIO_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@DISK_LIBS@ \
@@ -1537,14 +1186,6 @@ tests_testEvent_SOURCES = \
 	tests/testMain.cc \
 	time.cc \
 	access_log.cc \
-	acl.cc \
-	acl_noncore.cc \
-	ACLChecklist.cc \
-	ACLProxyAuth.cc \
-	ACLStringData.cc \
-	ACLRegexData.cc \
-	ACLUserData.cc \
-	authenticate.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
 	cache_cf.cc \
@@ -1568,7 +1209,6 @@ tests_testEvent_SOURCES = \
 	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
-	$(ESI_SOURCE) \
 	ETag.cc \
 	external_acl.cc \
 	ExternalACLEntry.cc \
@@ -1661,12 +1301,11 @@ nodist_tests_testEvent_SOURCES = \
 	repl_modules.cc \
 	string_arrays.c
 tests_testEvent_LDADD = \
-	libsquid.la \
-	libauth.la \
+	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
-	ip/libip.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
+	${ESI_LIBS} \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
@@ -1694,14 +1333,6 @@ tests_testEventLoop_SOURCES = \
 	tests/testMain.cc \
 	time.cc \
 	access_log.cc \
-	acl.cc \
-	acl_noncore.cc \
-	ACLChecklist.cc \
-	ACLProxyAuth.cc \
-	ACLStringData.cc \
-	ACLRegexData.cc \
-	ACLUserData.cc \
-	authenticate.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
 	cache_cf.cc \
@@ -1725,7 +1356,6 @@ tests_testEventLoop_SOURCES = \
 	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
-	$(ESI_SOURCE) \
 	ETag.cc \
 	external_acl.cc \
 	ExternalACLEntry.cc \
@@ -1818,12 +1448,11 @@ nodist_tests_testEventLoop_SOURCES = \
 	repl_modules.cc \
 	string_arrays.c
 tests_testEventLoop_LDADD = \
-	libsquid.la \
-	libauth.la \
+	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
-	ip/libip.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
+	${ESI_LIBS} \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
@@ -1839,14 +1468,6 @@ tests_testEventLoop_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 tests_test_http_range_SOURCES = \
 	tests/test_http_range.cc \
 	access_log.cc \
-	acl.cc \
-	acl_noncore.cc \
-	ACLChecklist.cc \
-	ACLProxyAuth.cc \
-	ACLStringData.cc \
-	ACLRegexData.cc \
-	ACLUserData.cc \
-	authenticate.cc \
 	BodyPipe.cc \
 	cache_cf.cc \
 	ProtoPort.cc \
@@ -1871,7 +1492,6 @@ tests_test_http_range_SOURCES = \
 	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
-	$(ESI_SOURCE) \
 	ETag.cc \
 	external_acl.cc \
 	ExternalACLEntry.cc \
@@ -1970,13 +1590,11 @@ nodist_tests_test_http_range_SOURCES = \
 	repl_modules.cc \
 	string_arrays.c
 tests_test_http_range_LDADD = \
-	libsquid.la \
-	libauth.la \
+	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
-	ip/libip.la \
 	@REPL_OBJS@ \
-	@STORE_OBJS@ \
 	${ADAPTATION_LIBS} \
+	${ESI_LIBS} \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
@@ -2003,14 +1621,6 @@ tests_testHttpRequest_SOURCES = \
 	tests/testMain.cc \
 	time.cc \
 	access_log.cc \
-	acl.cc \
-	acl_noncore.cc \
-	ACLChecklist.cc \
-	ACLProxyAuth.cc \
-	ACLStringData.cc \
-	ACLRegexData.cc \
-	ACLUserData.cc \
-	authenticate.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
 	cache_cf.cc \
@@ -2034,7 +1644,6 @@ tests_testHttpRequest_SOURCES = \
 	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
-	$(ESI_SOURCE) \
 	ETag.cc \
 	external_acl.cc \
 	ExternalACLEntry.cc \
@@ -2128,12 +1737,11 @@ nodist_tests_testHttpRequest_SOURCES = \
 	repl_modules.cc \
 	string_arrays.c
 tests_testHttpRequest_LDADD = \
-	libsquid.la \
-	libauth.la \
+	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
-	ip/libip.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
+	${ESI_LIBS} \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
@@ -2164,7 +1772,6 @@ STORE_TEST_SOURCES=\
 	Parsing.cc \
 	ConfigOption.cc \
 	SwapDir.cc \
-	authenticate.cc \
 	tests/stub_acl.cc tests/stub_cache_cf.cc \
 	tests/stub_helper.cc cbdata.cc String.cc \
 	tests/stub_comm.cc \
@@ -2173,13 +1780,11 @@ STORE_TEST_SOURCES=\
 	mem_node.cc \
 	stmem.cc \
 	tests/stub_mime.cc \
-	HttpHeaderTools.cc HttpHeader.cc acl.cc mem.cc \
-	acl_noncore.cc \
-	MemBuf.cc HttpHdrContRange.cc Packer.cc ACLChecklist.cc HttpHdrCc.cc HttpHdrSc.cc \
-	HttpHdrScTarget.cc url.cc ACLProxyAuth.cc ACLRegexData.cc ACLUserData.cc \
+	HttpHeaderTools.cc HttpHeader.cc mem.cc \
+	MemBuf.cc HttpHdrContRange.cc Packer.cc HttpHdrCc.cc HttpHdrSc.cc \
+	HttpHdrScTarget.cc url.cc \
 	StatHist.cc HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
 	tests/stub_HttpRequest.cc tests/stub_access_log.cc \
-	ip/stubQosConfig.cc \
 	refresh.cc \
 	tests/stub_store_client.cc \
 	tests/stub_tools.cc \
@@ -2219,9 +1824,7 @@ nodist_tests_testStore_SOURCES= \
 	$(STORE_TEST_GEN_SOURCES)
 
 tests_testStore_LDADD= \
-	libsquid.la \
-	libauth.la \
-	ip/libip.la \
+	$(COMMON_LIBS) \
 	-L../lib -lmiscutil \
 	@REGEXLIB@ \
 	@SQUID_CPPUNIT_LIBS@ \
@@ -2243,8 +1846,7 @@ tests_testString_SOURCES = \
 nodist_tests_testString_SOURCES = \
 	$(TESTSOURCES)
 tests_testString_LDADD = \
-	libsquid.la \
-	ip/libip.la \
+	$(COMMON_LIBS) \
 	-L../lib -lmiscutil \
 	@REGEXLIB@ \
 	@SQUID_CPPUNIT_LIBS@ \
@@ -2289,20 +1891,18 @@ SWAP_TEST_GEN_SOURCES = \
 	$(DISKIO_GEN_SOURCE)
 
 SWAP_TEST_LDADD = \
-	libauth.la \
 	@REGEXLIB@ \
-	@STORE_LINKOBJS@ \
-	@STORE_OBJS@ \
+	$(COMMON_LIBS) \
 	@REPL_OBJS@ \
 	@DISK_LIBS@ \
 	-L../lib -lmiscutil \
+	acl/libapi.la \
 	@SQUID_CPPUNIT_LIBS@
 SWAP_TEST_DS =\
 	$(top_builddir)/lib/libmiscutil.a \
 	repl_modules.o \
 	@DISK_LIBS@ \
-	@STORE_LINKOBJS@ \
-	@STORE_OBJS@ \
+	$(COMMON_LIBS) \
 	@REPL_OBJS@ \
 	@SQUID_CPPUNIT_LA@
 
@@ -2315,9 +1915,8 @@ tests_testUfs_SOURCES = \
 nodist_tests_testUfs_SOURCES = \
 	$(SWAP_TEST_GEN_SOURCES)
 tests_testUfs_LDADD = \
-	libsquid.la \
-	ip/libip.la \
 	$(SWAP_TEST_LDADD) \
+	$(COMMON_LIBS) \
 	@SSLLIB@
 tests_testUfs_LDFLAGS = $(LIBADD_DL)
 tests_testUfs_DEPENDENCIES = \
@@ -2371,14 +1970,6 @@ tests_testURL_SOURCES = \
 	tests/testMain.cc \
 	time.cc \
 	access_log.cc \
-	acl.cc \
-	acl_noncore.cc \
-	ACLChecklist.cc \
-	ACLProxyAuth.cc \
-	ACLStringData.cc \
-	ACLRegexData.cc \
-	ACLUserData.cc \
-	authenticate.cc \
 	BodyPipe.cc \
 	cache_manager.cc \
 	cache_cf.cc \
@@ -2402,7 +1993,6 @@ tests_testURL_SOURCES = \
 	dlink.cc \
 	$(DNSSOURCE) \
 	errorpage.cc \
-	$(ESI_SOURCE) \
 	ETag.cc \
 	external_acl.cc \
 	ExternalACLEntry.cc \
@@ -2493,13 +2083,12 @@ nodist_tests_testURL_SOURCES = \
 	repl_modules.cc \
 	string_arrays.c
 tests_testURL_LDADD = \
-	libsquid.la \
-	libauth.la \
+	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
-	ip/libip.la \
 	@REGEXLIB@ \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
+	${ESI_LIBS} \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
 	@SQUID_CPPUNIT_LIBS@ \

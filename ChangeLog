@@ -1,3 +1,75 @@
+Changes to squid-3.1.0.7 (08 Apr 2009):
+
+	- Fix: several issues with ident
+	- Add several language translations
+	- Upgrade code testing infrastructure
+	- Migrate much code to build as internal libraries
+	- Support gcc 4.4
+	- Support doxygen 1.5.8
+	- ... and much code polish to make things read easier
+
+Changes to squid-3.1.0.6 (01 Mar 2009):
+
+	- Regression Fix: Support HTTP/0.9 in accelerator mode
+	- Bug 2601: Hack. Convert IPv4 netmasks to CIDR in IPv6-enabled mode
+	- Bug 2593: Compile errors on Solaris 10
+	- Bug 2591: adaptation_access does not work
+	- Bug 2588: coredump in rDNS lookup
+	- Bug 2526: default ALLOW when no list specified.
+	- Bug 2287: Send a 505 on requests with unsupported HTTP versions
+	- Bug 419: Hop by Hop headers MUST NOT be forwarded
+	- Fix external_acl_type handling of SSL certificate details
+	- Obsolete: dependency on nss_common.h and nss.h
+	- Support libtool2
+	- ... and various documentation and code polish
+
+Changes to squid-3.1.0.5 (03 Feb 2009):
+
+	- Bug 2583: Fixed issue in content adaptation
+	- Bug 2576: Make translate target obey --disable-auto-locale
+	- Bug 2571: Add DNS failover to use IPv4-only listen when IPv6 fails.
+	- Bug 2563: 99+% CPU Usage on FTP URL
+	- Bug 2505, 2524, 2558: fixed several issues on connection handling
+	- Fix several issues in request parsing
+	- Fix memory leak from logformat parsing
+	- Fix various ESI build errors
+	- Make configure tests use C++ instead of C
+	- Drop special localhost conversion RFC violation.
+	- Add Language: Arabic
+	- ... and various documentation and code polish
+
+Changes to squid-3.1.0.4 (23 Jan 2009):
+
+	- Regression Fix: Bug 2558: rollback bug 2395 fix.
+	- Bug 2555: Fixes to SNMP-MIB
+	- Bug 2550: assertion comm.cc:350 !fd_table[fd].closing()
+	- Bug 2547,2548: OSX compile errors (duplicate symbols and IPv6)
+	- Bug 2508: comm.cc:2035 assertion fd_table[fd].closing()
+	- Bug 2330: allow keep-alive+chunked; don't add max-age for no-cache
+	- Polish ZPH configuration interface
+	- Several Language Conversions to new auto-negotiate
+	- Port from 2.7: squidclient -V and -j options for HTTP/1.1 and 0.9 testing
+	- Fix: Pconn not being used when they should.
+	- Fix: Fix pinger immediate shutdowns
+	- Fix: Untangle CacheManager reports from log_fqdn
+	- ... and all bugs fixed for 3.0.STABLE12
+	- ... and many code polish and optimization fixes.
+
+Changes to squid-3.1.0.3 (5 Dec 2008):
+
+	- Regression Fix: StoreIOBuffer patch removed.
+	- Regression Fix: build issues with 3.1.0.2 bundle
+	- Security Bug 2526: default ALLOW when no list specified
+	- Bug 2525: encoding error on error pages
+	- Bug 2424: slow file descriptor leak
+	- Bug 2527: ICAP compile error on g++ 4.3.2
+	- Bug 2523: bad assertion left in from debug
+	- Bug 2395: FTP Auth errors and others not displayed
+	- Update squid_kerb_auth to 1.0.5
+	  with better Squid integration.
+	- Fix cache_peer forcedomainname= option
+	- ... and many other minor fixes
+
 Changes to squid-3.1.0.2 (9 Nov 2008):
 
 	- Bug 2516: error page templates not properly installed
@@ -44,6 +116,39 @@ Changes to squid-3.1.0.1 (27 Oct 2008):
 	- Follow_x_forwarder_for ported from 2.6
 	- Bug #2223: Follow XFF extensions added
 	- ... and many code and documentation cleanups
+
+Changes to squid-3.0.STABLE13 (03 Feb 2009):
+
+	- Fix several issues in request parsing
+	- Fix memory leak from logformat parsing
+	- Fix various ESI build errors
+	- ... and some documentation updates
+
+Changes to squid-3.0.STABLE12 (21 Jan 2009):
+
+       - Bug 2533: Solaris (sparc) 64-bit build breaks with gcc/g++
+       - Bug 2542: ICAP filters break download resume
+       - Bug 2556: HTCP fails without icp_port
+       - Bug 2564: logformat '%tl' field not working as advertised
+       - Port from 3.1: TestBed basic build consistency checks
+       - Policy: Change half_closed_clients default to off
+       - Policy: Removed -V command line option, deprecated by 2.6
+       - ... and several other minor code cleanups
+
+Changes to squid-3.0.STABLE11 (24 Dec 2008):
+
+       - Bug 2424: filedescriptors being left unnecessary opened
+       - Bug 2545: fault passing ICAP filtered traffic to peers
+       - Bug 2227: Sefgaults in MemBuf::reset during idnsSendQuery
+       - ... and some minor admin and debug cleanups.
+
+Changes to squid-3.0.STABLE11-RC1 (3 Dec 2008):
+
+        - Removes patch causing cache of bad objects
+        - Bug 2526: bad security default in ACLChecklist
+        - Fixes regression: access.log request size tag
+        - Fixes cache_peer forceddomainname=X option
+        - ... and many minor documentation cleanups
 
 Changes to squid-3.0.STABLE10 (14 Oct 2008):
 

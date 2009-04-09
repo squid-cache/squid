@@ -35,7 +35,7 @@
 /**
  \defgroup ClientSide Client-Side Logics
  *
- \subsection cserrors Errors and client side
+ \section cserrors Errors and client side
  *
  \par Problem the first:
  * the store entry is no longer authoritative on the
@@ -60,7 +60,7 @@
  * stream calls occur. Then we simply read as normal.
  *
  *
- \subsection pconn_logic Persistent connection logic:
+ \section pconn_logic Persistent connection logic:
  *
  \par
  * requests (httpClientRequest structs) get added to the connection
@@ -85,7 +85,7 @@
 #include "client_side.h"
 #include "clientStream.h"
 #include "ProtoPort.h"
-#include "AuthUserRequest.h"
+#include "auth/UserRequest.h"
 #include "Store.h"
 #include "comm.h"
 #include "HttpHdrContRange.h"
@@ -96,7 +96,7 @@
 #include "MemObject.h"
 #include "fde.h"
 #include "client_side_request.h"
-#include "ACLChecklist.h"
+#include "acl/FilledChecklist.h"
 #include "ConnectionDetail.h"
 #include "client_side_reply.h"
 #include "ClientRequestContext.h"
@@ -489,7 +489,7 @@ ClientHttpRequest::logRequest()
             al.http.content_type = al.reply->content_type.termedBuf();
         } else if (loggingEntry() && loggingEntry()->mem_obj) {
             al.http.code = loggingEntry()->mem_obj->getReply()->sline.status;
-            al.http.content_type = loggingEntry()->mem_obj->getReply()->content_type.unsafeBuf();
+            al.http.content_type = loggingEntry()->mem_obj->getReply()->content_type.termedBuf();
         }
 
         debugs(33, 9, "clientLogRequest: http.code='" << al.http.code << "'");
@@ -527,13 +527,13 @@ ClientHttpRequest::logRequest()
 
 #endif
 
-        ACLChecklist *checklist = clientAclChecklistCreate(Config.accessList.log, this);
+        ACLFilledChecklist *checklist = clientAclChecklistCreate(Config.accessList.log, this);
 
         if (al.reply)
             checklist->reply = HTTPMSGLOCK(al.reply);
 
         if (!Config.accessList.log || checklist->fastCheck()) {
-            if(request)
+            if (request)
                 al.request = HTTPMSGLOCK(request);
             accessLogLog(&al, checklist);
             updateCounters();
@@ -789,7 +789,7 @@ ClientSocketContext::lengthToSend(Range<int64_t> const &available)
     if (available.start < http->range_iter.currentSpec()->offset)
         return 0;
 
-    return XMIN(http->range_iter.debt(), (int64_t)maximum);
+    return min(http->range_iter.debt(), (int64_t)maximum);
 }
 
 void
@@ -852,7 +852,7 @@ ClientSocketContext::sendBody(HttpReply * rep, StoreIOBuffer bodyData)
 static void
 clientPackTermBound(String boundary, MemBuf * mb)
 {
-    mb->Printf("\r\n--%.*s--\r\n", boundary.size(), boundary.rawBuf());
+    mb->Printf("\r\n--" SQUIDSTRINGPH "--\r\n", SQUIDSTRINGPRINT(boundary));
     debugs(33, 6, "clientPackTermBound: buf offset: " << mb->size);
 }
 
@@ -868,7 +868,7 @@ clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String 
     /* put boundary */
     debugs(33, 5, "clientPackRangeHdr: appending boundary: " << boundary);
     /* rfc2046 requires to _prepend_ boundary with <crlf>! */
-    mb->Printf("\r\n--%.*s\r\n", boundary.size(), boundary.rawBuf());
+    mb->Printf("\r\n--" SQUIDSTRINGPH "\r\n", SQUIDSTRINGPRINT(boundary));
 
     /* stuff the header with required entries and pack it */
 
@@ -890,7 +890,7 @@ clientPackRangeHdr(const HttpReply * rep, const HttpHdrRangeSpec * spec, String 
 }
 
 /**
- * extracts a "range" from *unsafeBuf and appends them to mb, updating
+ * extracts a "range" from *buf and appends them to mb, updating
  * all offsets and such.
  */
 void
@@ -1168,8 +1168,8 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
             /* delete old Content-Type, add ours */
             hdr->delById(HDR_CONTENT_TYPE);
             httpHeaderPutStrf(hdr, HDR_CONTENT_TYPE,
-                              "multipart/byteranges; boundary=\"%s\"",
-                              http->range_iter.boundary.unsafeBuf());
+                              "multipart/byteranges; boundary=\"" SQUIDSTRINGPH "\"",
+                              SQUIDSTRINGPRINT(http->range_iter.boundary));
             /* Content-Length is not required in multipart responses
              * but it is always nice to have one */
             actual_clen = http->mRangeCLen();
@@ -1923,7 +1923,7 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
         req_sz = HttpParserReqSz(hp);
     }
 
-    /* We know the whole request is in hp->unsafeBuf now */
+    /* We know the whole request is in hp->buf now */
 
     assert(req_sz <= (size_t) hp->bufsiz);
 
@@ -2245,8 +2245,8 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     /* RFC 2616 section 10.5.6 : handle unsupported HTTP versions cleanly. */
     /* We currently only accept 0.9, 1.0, 1.1 */
     if ( (http_ver.major == 0 && http_ver.minor != 9) ||
-         (http_ver.major == 1 && http_ver.minor > 1 ) ||
-         (http_ver.major > 1) ) {
+            (http_ver.major == 1 && http_ver.minor > 1 ) ||
+            (http_ver.major > 1) ) {
 
         clientStreamNode *node = context->getClientReplyContext();
         debugs(33, 5, "Unsupported HTTP version discovered. :\n" << HttpParserHdrBuf(hp));
@@ -2639,7 +2639,7 @@ ConnStateData::handleReadData(char *buf, size_t size)
 }
 
 /**
- * called when new request body data has been buffered in in.unsafeBuf
+ * called when new request body data has been buffered in in.buf
  * may close the connection if we were closing and piped everything out
  */
 void
@@ -2874,12 +2874,9 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
 #if USE_IDENT
 
     if (Config.accessList.identLookup) {
-        ACLChecklist identChecklist;
+        ACLFilledChecklist identChecklist(Config.accessList.identLookup, NULL, NULL);
         identChecklist.src_addr = details->peer;
         identChecklist.my_addr = details->me;
-        identChecklist.accessList = cbdataReference(Config.accessList.identLookup);
-
-        /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
         if (identChecklist.fastCheck())
             identStart(details->me, details->peer, clientIdentDone, connState);
     }
@@ -3089,12 +3086,9 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
 #if USE_IDENT
 
     if (Config.accessList.identLookup) {
-        ACLChecklist identChecklist;
+        ACLFilledChecklist identChecklist(Config.accessList.identLookup, NULL, NULL);
         identChecklist.src_addr = details->peer;
         identChecklist.my_addr = details->me;
-        identChecklist.accessList = cbdataReference(Config.accessList.identLookup);
-
-        /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
         if (identChecklist.fastCheck())
             identStart(details->me, details->peer, clientIdentDone, connState);
     }
@@ -3345,12 +3339,12 @@ varyEvaluateMatch(StoreEntry * entry, HttpRequest * request)
     }
 }
 
-ACLChecklist *
+ACLFilledChecklist *
 clientAclChecklistCreate(const acl_access * acl, ClientHttpRequest * http)
 {
-    ACLChecklist *ch;
     ConnStateData * conn = http->getConn();
-    ch = aclChecklistCreate(acl, http->request, cbdataReferenceValid(conn) && conn != NULL ? conn->rfc931 : dash_str);
+    ACLFilledChecklist *ch = new ACLFilledChecklist(acl, http->request,
+            cbdataReferenceValid(conn) && conn != NULL ? conn->rfc931 : dash_str);
 
     /*
      * hack for ident ACL. It needs to get full addresses, and a place to store
@@ -3365,7 +3359,7 @@ clientAclChecklistCreate(const acl_access * acl, ClientHttpRequest * http)
      */
 
     if (conn != NULL)
-        ch->conn(conn);	/* unreferenced in acl.cc */
+        ch->conn(conn);	/* unreferenced in FilledCheckList.cc */
 
     return ch;
 }

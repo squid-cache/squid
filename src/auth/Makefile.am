@@ -1,33 +1,74 @@
-#  Makefile for authentication modules in the Squid Object Cache server
-#
-#  $Id$
-#
-AUTOMAKE_OPTIONS = subdir-objects
-AM_CFLAGS = @SQUID_CFLAGS@
-AM_CXXFLAGS = @SQUID_CXXFLAGS@
-CLEANFILES =
+include $(top_srcdir)/src/Common.am
 
-EXTRA_LIBRARIES	= libbasic.a libdigest.a libntlm.a libnegotiate.a
-noinst_LIBRARIES	= @AUTH_LIBS@
+noinst_LTLIBRARIES = libauth.la libacls.la @AUTH_LIBS_TO_BUILD@
+EXTRA_LTLIBRARIES = libbasic.la libdigest.la libntlm.la libnegotiate.la
 
-libbasic_a_SOURCES	= basic/auth_basic.cc basic/auth_basic.h
-libdigest_a_SOURCES	= digest/auth_digest.cc digest/auth_digest.h
-libntlm_a_SOURCES	= ntlm/auth_ntlm.cc ntlm/auth_ntlm.h
-libnegotiate_a_SOURCES	= negotiate/auth_negotiate.cc negotiate/auth_negotiate.h negotiate/negotiateScheme.cc negotiate/negotiateScheme.h
+## authentication framework; this library is always built
+libauth_la_SOURCES = \
+	Config.cc \
+	Config.h \
+	Scheme.cc \
+	Scheme.h \
+	User.h \
+	User.cci \
+	User.cc \
+	UserRequest.h \
+	UserRequest.cc \
+	Gadgets.cc \
+	Gadgets.h
 
-INCLUDES      = -I. -I$(top_builddir)/include -I$(top_srcdir)/include \
-	-I$(top_srcdir)/src
+libauth_la_LIBADD = @AUTH_LIBS_TO_BUILD@
+libauth_la_DEPENDENCIES = @AUTH_LIBS_TO_BUILD@
 
-check_PROGRAMS= testHeaders
+## authentication-dependent ACLs and authentication code they share
+libacls_la_SOURCES = \
+	Acl.cc \
+	Acl.h \
+	\
+	AclMaxUserIp.cc \
+	AclMaxUserIp.h \
+	AclProxyAuth.cc \
+	AclProxyAuth.h	
+
+
+libbasic_la_SOURCES = \
+	basic/basicScheme.cc \
+	basic/basicScheme.h \
+	basic/auth_basic.cc \
+	basic/auth_basic.h
+
+libdigest_la_SOURCES = \
+	digest/digestScheme.cc \
+	digest/digestScheme.h \
+	digest/auth_digest.cc \
+	digest/auth_digest.h
+
+libntlm_la_SOURCES = \
+	ntlm/ntlmScheme.cc \
+	ntlm/ntlmScheme.h \
+	ntlm/auth_ntlm.cc \
+	ntlm/auth_ntlm.h
+
+libnegotiate_la_SOURCES = \
+	negotiate/negotiateScheme.cc \
+	negotiate/negotiateScheme.h \
+	negotiate/auth_negotiate.cc \
+	negotiate/auth_negotiate.h
+
+# TODO: fix #include statements so that this is not needed
+INCLUDES += -I.
+
+
+check_PROGRAMS += testHeaders
 
 ## Special Universal .h dependency test script
 ## aborts if error encountered
-testHeaders: $(top_srcdir)/src/auth/basic/*.h $(top_srcdir)/src/auth/digest/*.h $(top_srcdir)/src/auth/ntlm/*.h $(top_srcdir)/src/auth/negotiate/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "basic" || exit 1
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "digest" || exit 1
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "ntlm" || exit 1
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "negotiate" || exit 1
-## ./ has no .h files
+testHeaders: $(top_srcdir)/src/auth/*.h $(top_srcdir)/src/auth/basic/*.h $(top_srcdir)/src/auth/digest/*.h $(top_srcdir)/src/auth/ntlm/*.h $(top_srcdir)/src/auth/negotiate/*.h
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/src/auth/" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/src/auth/basic" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/src/auth/digest" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/src/auth/ntlm" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/src/auth/negotiate" || exit 1
 
 ## No such file...
 testHeaders.c:

@@ -5,10 +5,10 @@
 
 #ifndef __AUTH_NTLM_H__
 #define __AUTH_NTLM_H__
-#include "authenticate.h"
-#include "AuthUser.h"
-#include "AuthUserRequest.h"
-#include "AuthConfig.h"
+#include "auth/Gadgets.h"
+#include "auth/User.h"
+#include "auth/UserRequest.h"
+#include "auth/Config.h"
 #include "helper.h"
 
 #define DefaultAuthenticateChildrenMax  32	/* 32 processes */
@@ -43,7 +43,7 @@ public:
     dlink_list proxy_auth_list;
 };
 
-MEMPROXY_CLASS_INLINE(NTLMUser)		/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(NTLMUser);
 
 typedef class NTLMUser ntlm_user_t;
 
@@ -92,7 +92,7 @@ private:
     NTLMUser * _theUser;
 };
 
-MEMPROXY_CLASS_INLINE(AuthNTLMUserRequest)		/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(AuthNTLMUserRequest);
 
 /* configuration runtime data */
 

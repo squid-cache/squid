@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.0.STABLE10 release notes</title>
+<title>Squid 3.0.STABLE13 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.0.STABLE10.
+The Squid Team are pleased to announce the release of Squid-3.0.STABLE13.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.0/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -203,6 +203,7 @@ redirect_program c:/winnt/system32/cmd.exe /C c:/squid/libexec/redir.cmd</verb>
 <item>When Squid runs in command line mode, the launching user account must have administrative privilege on the system
 <item>"Start parameters" in the Windows 2000/XP/2003 Service applet cannot be used
 <item>Building with MinGW, when the configure option --enable-truncate is used, Squid cannot run on Windows NT, only Windows 2000 and later are supported
+<item>On Windows Vista and later, User Account Control (UAC) must be disabled before running service installation
 </itemize>
 </descrip>
 
@@ -699,6 +700,9 @@ See the accf_http(9) man page.
 	<tag>auth_param</tag>
 	<p>fake_auth helper for NTLM now accepts the '-S' parameter to strip NTLM domain off the username string.
 	   This is useful for class 4 Delay Pools in Squid 3.x
+
+	<tag>half_closed_clients</tag>
+	<p>New default value of OFF
 
 </descrip>
 

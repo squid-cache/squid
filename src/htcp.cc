@@ -35,8 +35,8 @@
 
 #include "squid.h"
 #include "htcp.h"
-#include "ACLChecklist.h"
-#include "ACL.h"
+#include "acl/FilledChecklist.h"
+#include "acl/Acl.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "StoreClient.h"
@@ -167,7 +167,7 @@ private:
     htcpDataHeader *dhdr;
 };
 
-MEMPROXY_CLASS_INLINE(htcpSpecifier)		/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(htcpSpecifier);
 
 struct _htcpDetail {
     char *resp_hdrs;
@@ -850,12 +850,9 @@ htcpAccessCheck(acl_access * acl, htcpSpecifier * s, IpAddress &from)
     if (!acl)
         return 0;
 
-    ACLChecklist checklist;
+    ACLFilledChecklist checklist(acl, s->request, NULL);
     checklist.src_addr = from;
     checklist.my_addr.SetNoAddr();
-    checklist.request = HTTPMSGLOCK(s->request);
-    checklist.accessList = cbdataReference(acl);
-    /* cbdataReferenceDone() happens in either fastCheck() or ~ACLCheckList */
     int result = checklist.fastCheck();
     return result;
 }
@@ -884,19 +881,20 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, IpAddr
         stuff.S.uri = spec->uri;
         stuff.S.version = spec->version;
         stuff.S.req_hdrs = spec->req_hdrs;
-        hdr.putInt(HDR_AGE,
-                   e->timestamp <= squid_curtime ?
-                   squid_curtime - e->timestamp : 0);
+        if (e)
+            hdr.putInt(HDR_AGE, (e->timestamp <= squid_curtime ? (squid_curtime - e->timestamp) : 0) );
+        else
+            hdr.putInt(HDR_AGE, 0);
         hdr.packInto(&p);
         stuff.D.resp_hdrs = xstrdup(mb.buf);
         debugs(31, 3, "htcpTstReply: resp_hdrs = {" << stuff.D.resp_hdrs << "}");
         mb.reset();
         hdr.reset();
 
-        if (e->expires > -1)
+        if (e && e->expires > -1)
             hdr.putTime(HDR_EXPIRES, e->expires);
 
-        if (e->lastmod > -1)
+        if (e && e->lastmod > -1)
             hdr.putTime(HDR_LAST_MODIFIED, e->lastmod);
 
         hdr.packInto(&p);

@@ -87,10 +87,9 @@ AIODiskFile::open(int flags, mode_t mode, RefCount<IORequestor> callback)
 {
     /* Simulate async calls */
 #ifdef _SQUID_WIN32_
-    fd = aio_open(path.unsafeBuf(), flags);
+    fd = aio_open(path.termedBuf(), flags);
 #else
-
-    fd = file_open(path.unsafeBuf() , flags);
+    fd = file_open(path.termedBuf() , flags);
 #endif
 
     ioRequestor = callback;
@@ -130,7 +129,7 @@ AIODiskFile::read(ReadRequest *request)
         fatal("Aiee! out of aiocb slots! - FIXME and wrap file_read\n");
         debugs(79, 1, "WARNING: out of aiocb slots!");
         /* fall back to blocking method */
-        //        file_read(fd, request->unsafeBuf, request->len, request->offset, callback, data);
+        //        file_read(fd, request->buf, request->len, request->offset, callback, data);
         return;
     }
 
@@ -167,7 +166,7 @@ AIODiskFile::read(ReadRequest *request)
         fatalf("Aiee! aio_read() returned error (%d)  FIXME and wrap file_read !\n", errno);
         debugs(79, 1, "WARNING: aio_read() returned error: " << xstrerror());
         /* fall back to blocking method */
-        //        file_read(fd, request->unsafeBuf, request->len, request->offset, callback, data);
+        //        file_read(fd, request->buf, request->len, request->offset, callback, data);
     }
 
 }
@@ -188,7 +187,7 @@ AIODiskFile::write(WriteRequest *request)
         fatal("Aiee! out of aiocb slots FIXME and wrap file_write !\n");
         debugs(79, 1, "WARNING: out of aiocb slots!");
         /* fall back to blocking method */
-        //        file_write(fd, offset, unsafeBuf, len, callback, data, freefunc);
+        //        file_write(fd, offset, buf, len, callback, data, freefunc);
         return;
     }
 
@@ -225,7 +224,7 @@ AIODiskFile::write(WriteRequest *request)
         fatalf("Aiee! aio_write() returned error (%d) FIXME and wrap file_write !\n", errno);
         debugs(79, 1, "WARNING: aio_write() returned error: " << xstrerror());
         /* fall back to blocking method */
-        //       file_write(fd, offset, unsafeBuf, len, callback, data, freefunc);
+        //       file_write(fd, offset, buf, len, callback, data, freefunc);
     }
 }
 

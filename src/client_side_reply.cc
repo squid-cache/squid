@@ -46,14 +46,14 @@
 #include "HttpRequest.h"
 #include "forward.h"
 #include "clientStream.h"
-#include "AuthUserRequest.h"
+#include "auth/UserRequest.h"
 #if USE_SQUID_ESI
-#include "ESI.h"
+#include "esi/Esi.h"
 #endif
 #include "MemObject.h"
 #include "fde.h"
-#include "ACLChecklist.h"
-#include "ACL.h"
+#include "acl/FilledChecklist.h"
+#include "acl/Gadgets.h"
 #if DELAY_POOLS
 #include "DelayPools.h"
 #endif
@@ -1357,24 +1357,19 @@ clientReplyContext::buildReplyHeader()
     if (!Config.onoff.error_pconns && reply->sline.status >= 400 && !request->flags.must_keepalive) {
         debugs(33, 3, "clientBuildReplyHeader: Error, don't keep-alive");
         request->flags.proxy_keepalive = 0;
-    }
-    else if (!Config.onoff.client_pconns && !request->flags.must_keepalive) {
+    } else if (!Config.onoff.client_pconns && !request->flags.must_keepalive) {
         debugs(33, 2, "clientBuildReplyHeader: Connection Keep-Alive not requested by admin or client");
         request->flags.proxy_keepalive = 0;
-    }
-    else if (request->flags.proxy_keepalive && shutting_down) {
+    } else if (request->flags.proxy_keepalive && shutting_down) {
         debugs(88, 3, "clientBuildReplyHeader: Shutting down, don't keep-alive.");
         request->flags.proxy_keepalive = 0;
-    }
-    else if (request->flags.connection_auth && !reply->keep_alive) {
+    } else if (request->flags.connection_auth && !reply->keep_alive) {
         debugs(33, 2, "clientBuildReplyHeader: Connection oriented auth but server side non-persistent");
         request->flags.proxy_keepalive = 0;
-    }
-    else if (reply->bodySize(request->method) < 0) {
+    } else if (reply->bodySize(request->method) < 0) {
         debugs(88, 3, "clientBuildReplyHeader: can't keep-alive, unknown body size" );
         request->flags.proxy_keepalive = 0;
-    }
-    else if (fdUsageHigh()&& !request->flags.must_keepalive) {
+    } else if (fdUsageHigh()&& !request->flags.must_keepalive) {
         debugs(88, 3, "clientBuildReplyHeader: Not many unused FDs, can't keep-alive");
         request->flags.proxy_keepalive = 0;
     }
@@ -1452,7 +1447,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
     StoreEntry *e = newEntry;
     HttpRequest *r = http->request;
 
-    /** \item  If the entry received isNull() then we ignore it. */
+    /** \li If the entry received isNull() then we ignore it. */
     if (e->isNull()) {
         http->storeEntry(NULL);
     } else {
@@ -1462,7 +1457,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
     e = http->storeEntry();
 
     /* Release IP-cache entries on reload */
-    /** \item If the request has no-cache flag set or some no_cache HACK in operation we
+    /** \li If the request has no-cache flag set or some no_cache HACK in operation we
       * 'invalidate' the cached IP entries for this request ???
       */
     if (r->flags.nocache) {
@@ -1503,7 +1498,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 #endif
 
     if (NULL == http->storeEntry()) {
-        /** \item If no StoreEntry object is current assume this object isn't in the cache set MISS*/
+        /** \li If no StoreEntry object is current assume this object isn't in the cache set MISS*/
         debugs(85, 3, "clientProcessRequest2: StoreEntry is NULL -  MISS");
         http->logType = LOG_TCP_MISS;
         doGetMoreData();
@@ -1511,7 +1506,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
     }
 
     if (Config.onoff.offline) {
-        /** \item If we are running in offline mode set to HIT */
+        /** \li If we are running in offline mode set to HIT */
         debugs(85, 3, "clientProcessRequest2: offline HIT");
         http->logType = LOG_TCP_HIT;
         doGetMoreData();
@@ -1519,7 +1514,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
     }
 
     if (http->redirect.status) {
-        /** \item If redirection status is True force this to be a MISS */
+        /** \li If redirection status is True force this to be a MISS */
         debugs(85, 3, "clientProcessRequest2: redirectStatus forced StoreEntry to NULL -  MISS");
         http->storeEntry(NULL);
         http->logType = LOG_TCP_MISS;
@@ -1536,7 +1531,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
     }
 
     if (EBIT_TEST(e->flags, ENTRY_SPECIAL)) {
-        /* Special entries are always hits, no matter what the client says */
+        /* \li Special entries are always hits, no matter what the client says */
         debugs(85, 3, "clientProcessRequest2: ENTRY_SPECIAL HIT");
         http->logType = LOG_TCP_HIT;
         doGetMoreData();
@@ -1556,13 +1551,14 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
     doGetMoreData();
 }
 
-/* Request more data from the store for the client Stream
+/**
+ * Request more data from the store for the client Stream
  * This is *the* entry point to this module.
  *
  * Preconditions:
- * This is the head of the list.
- * There is at least one more node.
- * data context is not null
+ *  - This is the head of the list.
+ *  - There is at least one more node.
+ *  - Data context is not null
  */
 void
 clientGetMoreData(clientStreamNode * aNode, ClientHttpRequest * http)
@@ -1598,6 +1594,8 @@ clientGetMoreData(clientStreamNode * aNode, ClientHttpRequest * http)
         context->purgeRequest();
         return;
     }
+
+    /* TODO: handle OPTIONS request on max_forwards == 0 as well */
 
     if (context->http->request->method == METHOD_TRACE) {
         if (context->http->request->max_forwards == 0) {
@@ -1662,16 +1660,16 @@ clientReplyContext::doGetMoreData()
     }
 }
 
-/* the next node has removed itself from the stream. */
+/** The next node has removed itself from the stream. */
 void
 clientReplyDetach(clientStreamNode * node, ClientHttpRequest * http)
 {
-    /* detach from the stream */
+    /** detach from the stream */
     clientStreamDetach(node, http);
 }
 
-/*
- * accepts chunk of a http message in unsafeBuf, parses prefix, filters headers and
+/**
+ * Accepts chunk of a http message in buf, parses prefix, filters headers and
  * such, writes processed message to the message recipient
  */
 void
@@ -1701,8 +1699,9 @@ clientReplyContext::errorInStream(StoreIOBuffer const &result, size_t const &siz
 void
 clientReplyContext::sendStreamError(StoreIOBuffer const &result)
 {
-    /* call clientWriteComplete so the client socket gets closed */
-    /* We call into the stream, because we don't know that there is a
+    /** call clientWriteComplete so the client socket gets closed
+     *
+     * We call into the stream, because we don't know that there is a
      * client socket!
      */
     debugs(88, 5, "clientReplyContext::sendStreamError: A stream error has occured, marking as complete and sending no data.");
@@ -1785,8 +1784,8 @@ clientReplyContext::processReplyAccess ()
     }
 
     /** Process http_reply_access lists */
-    ACLChecklist *replyChecklist;
-    replyChecklist = clientAclChecklistCreate(Config.accessList.reply, http);
+    ACLFilledChecklist *replyChecklist =
+        clientAclChecklistCreate(Config.accessList.reply, http);
     replyChecklist->reply = HTTPMSGLOCK(reply);
     replyChecklist->nonBlockingCheck(ProcessReplyAccessResult, this);
 }

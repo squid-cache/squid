@@ -5,10 +5,10 @@
 
 #ifndef __AUTH_NEGOTIATE_H__
 #define __AUTH_NEGOTIATE_H__
-#include "authenticate.h"
-#include "AuthUser.h"
-#include "AuthUserRequest.h"
-#include "AuthConfig.h"
+#include "auth/Gadgets.h"
+#include "auth/User.h"
+#include "auth/UserRequest.h"
+#include "auth/Config.h"
 #include "helper.h"
 
 /**
