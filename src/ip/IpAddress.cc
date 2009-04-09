@@ -646,16 +646,8 @@ IpAddress::IpAddress(const IpAddress &s)
 IpAddress::IpAddress(IpAddress *s)
 {
     SetEmpty();
-    operator=(s);
-}
-
-IpAddress& IpAddress::operator =(IpAddress *s)
-{
-    IpAddress *tmp = NULL;
-    if (!s) return *this;
-    tmp = dynamic_cast<IpAddress*>(s);
-    if (!tmp) return *this;
-    return operator=(*tmp);
+    if (s)
+	memcpy(this, s, sizeof(IpAddress));
 }
 
 IpAddress::IpAddress(const struct hostent &s)

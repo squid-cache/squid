@@ -133,7 +133,6 @@ public:
     /** @name Assignment Operators */
     /*@{*/
     IpAddress& operator =(const IpAddress &s);
-    IpAddress& operator =(IpAddress *s);
     IpAddress& operator =(struct sockaddr_in const &s);
     IpAddress& operator =(struct sockaddr_storage const &s);
     IpAddress& operator =(struct in_addr const &s);
