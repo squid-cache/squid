@@ -6,8 +6,8 @@
 #include "cbdata.h"
 #include "MemBuf.h"
 #include "TextException.h"
-#include "AsyncJob.h"
-#include "AsyncCall.h"
+#include "base/AsyncJob.h"
+#include "base/AsyncCall.h"
 
 
 unsigned int AsyncJob::TheLastId = 0;
