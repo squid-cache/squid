@@ -33,22 +33,60 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ESIEXCEPT_H
-#define SQUID_ESIEXCEPT_H
+#ifndef SQUID_ESIASSIGN_H
+#define SQUID_ESIASSIGN_H
 
 #include "squid.h"
-#include "ESIElement.h"
-#include "ESISequence.h"
+#include "esi/Element.h"
+#include "SquidString.h"
+#include "esi/VarState.h"
 
-/* esiExcept */
+/* ESIVariableExpression */
+/* This is a variable that is itself and expression */
 
-class esiExcept : public esiSequence
+class ESIVariableExpression : public ESIVarState::Variable
 {
 
 public:
-    //    void *operator new (size_t byteCount);
-    //    void operator delete (void *address);
-    esiExcept(esiTreeParentPtr aParent) : esiSequence (aParent) {}
+    ~ESIVariableExpression();
+    ESIVariableExpression (String const &value);
+    virtual void eval (ESIVarState &state, char const *, char const *) const;
+
+private:
+    String expression;
 };
 
-#endif /* SQUID_ESIEXCEPT_H */
+/* ESIAssign */
+
+class ESIContext;
+
+class ESIAssign : public ESIElement
+{
+
+public:
+    MEMPROXY_CLASS(ESIAssign);
+    ESIAssign (esiTreeParentPtr, int, const char **, ESIContext *);
+    ESIAssign (ESIAssign const &);
+    ESIAssign &operator=(ESIAssign const &);
+    ~ESIAssign();
+    esiProcessResult_t process (int dovars);
+    void render(ESISegment::Pointer);
+    bool addElement(ESIElement::Pointer);
+    void provideData (ESISegment::Pointer data, ESIElement * source);
+    Pointer makeCacheable() const;
+    Pointer makeUsable(esiTreeParentPtr, ESIVarState &) const;
+    void finish();
+
+private:
+    void evaluateVariable();
+    esiTreeParentPtr parent;
+    ESIVarState *varState;
+    String name;
+    ESIVariableExpression * value;
+    ESIElement::Pointer variable;
+    String unevaluatedVariable;
+};
+
+MEMPROXY_CLASS_INLINE(ESIAssign);
+
+#endif /* SQUID_ESIASSIGN_H */

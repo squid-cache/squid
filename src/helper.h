@@ -187,7 +187,7 @@ public:
     struct timeval dispatch_time;
 };
 
-MEMPROXY_CLASS_INLINE(helper_request)		/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(helper_request);
 
 class helper_stateful_request
 {
@@ -200,7 +200,7 @@ public:
     void *data;
 };
 
-MEMPROXY_CLASS_INLINE(helper_stateful_request)		/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(helper_stateful_request);
 
 /* helper.c */
 SQUIDCEXTERN void helperOpenServers(helper * hlp);

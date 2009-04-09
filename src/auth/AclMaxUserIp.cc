@@ -42,10 +42,6 @@
 #include "wordlist.h"
 #include "ConfigParser.h"
 
-ACL::Prototype ACLMaxUserIP::RegistryProtoype(&ACLMaxUserIP::RegistryEntry_, "max_user_ip");
-
-ACLMaxUserIP ACLMaxUserIP::RegistryEntry_("max_user_ip");
-
 ACL *
 ACLMaxUserIP::clone() const
 {

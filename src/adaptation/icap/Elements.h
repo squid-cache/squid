@@ -39,11 +39,11 @@
 // ICAP-related things shared by many ICAP classes
 
 
-namespace Adaptation {
+namespace Adaptation
+{
 namespace Icap {
 
-namespace ICAP
-{
+namespace ICAP {
 using Adaptation::Method;
 using Adaptation::methodNone;
 using Adaptation::methodRespmod;

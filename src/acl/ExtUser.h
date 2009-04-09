@@ -32,8 +32,8 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLIDENT_H
-#define SQUID_ACLIDENT_H
+#ifndef SQUID_EXTUSER_H
+#define SQUID_EXTUSER_H
 
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
@@ -68,6 +68,6 @@ private:
     char const *type_;
 };
 
-MEMPROXY_CLASS_INLINE(ACLExtUser)          /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(ACLExtUser);
 
-#endif /* SQUID_ACLIDENT_H */
+#endif /* SQUID_EXTUSER_H */

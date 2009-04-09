@@ -51,6 +51,6 @@ private:
     static ACLSourceIP RegistryEntry_;
 };
 
-MEMPROXY_CLASS_INLINE(ACLSourceIP)          /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(ACLSourceIP);
 
 #endif /* SQUID_ACLSOURCEIP_H */

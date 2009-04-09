@@ -121,7 +121,7 @@ X::saidFubar()
 \endverbatim
 
 \par	Alternatively
-	when a state or other context-dependant object is returned the \b \return
+	when a state or other context-dependant object is returned the \b \\return
 	tag is used. It is followed by a description of the object and ideally its
 	content.
 
@@ -130,8 +130,8 @@ X::saidFubar()
 
 \par	Simple functions
 	do not exactly need a detailed description of their operation.
-	The \link PARAM input parameters \endlink and \link RETVAL Return \endlink
-	value should be enough for any developer to understand the function.
+	The \ref PARAM and \ref RETVAL 
+	should be enough for any developer to understand the function.
 
 \par	Long or Complex Functions
 	do however need some commenting.
@@ -144,7 +144,7 @@ X::saidFubar()
 \par
 	Each of these design blocks inside the function should be given a comment
 	indicating what they do. The comments should begin with
-	\verbatim /** \par \endverbatim
+	\verbatim /** \\par \endverbatim
 	The resulting function description will then contain a paragraph on each of the
 	blocks in the order they occur in the function.
 

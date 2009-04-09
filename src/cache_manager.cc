@@ -43,11 +43,6 @@
 #include "wordlist.h"
 #include "Debug.h"
 
-/**
- \defgroup CacheManagerInternal Cache Manager Internals
- \ingroup CacheManagerAPI
- */
-
 /// \ingroup CacheManagerInternal
 #define MGR_PASSWD_SZ 128
 

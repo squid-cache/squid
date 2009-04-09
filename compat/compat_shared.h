@@ -8,7 +8,7 @@
 /*
  * This file contains all the compatibility and portability hacks
  * Which are general-case and shared between all OS and support programs.
- * 
+ *
  * If an OS-specific hack is needed there are per-OS files for that in
  * the os/ sub-directory here.
  *
@@ -54,7 +54,7 @@
 
 /*
  * Filedescriptor limits in the different select loops
- * 
+ *
  * NP: FreeBSD 7 defines FD_SETSIZE as unsigned but Squid needs
  *     it to be signed to compare it with signed values.
  *     Linux and others including FreeBSD <7, define it as signed.
@@ -81,11 +81,10 @@
 /**
  * If we don't have getrusage() then we create a fake structure
  * with only the fields Squid cares about.  This just makes the
- * source code cleaner, so we don't need lots of #ifdefs in other
+ * source code cleaner, so we don't need lots of ifdefs in other
  * places
  */
-struct rusage
-{
+struct rusage {
     struct timeval ru_stime;
     struct timeval ru_utime;
     int ru_maxrss;

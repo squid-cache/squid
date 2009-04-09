@@ -3,10 +3,14 @@
 #  $Id$
 #
 
-SUBDIRS = libTrie
+SUBDIRS =
 
 if USE_LOADABLE_MODULES
 SUBDIRS += libLtdl
+endif
+
+if USE_ESI
+SUBDIRS += libTrie
 endif
 
 CLEANFILES =
@@ -89,10 +93,8 @@ libmiscutil_a_SOURCES = \
 	xusleep.c \
 	$(XPROF_STATS_SOURCE) \
 	$(WIN32SRC)
-libmiscutil_a_LIBADD = \
-	libTrie/src/Trie.o \
-	libTrie/src/TrieNode.o \
-	@LIBOBJS@
+libmiscutil_a_LIBADD = @LIBOBJS@
+
 # $(top_srcdir)/include/version.h should be a dependency
 libntlmauth_a_SOURCES = \
 	ntlmauth.c

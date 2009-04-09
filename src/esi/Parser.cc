@@ -22,7 +22,7 @@
  *  (at your option) any later version.
  *
  *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ ;  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
@@ -30,22 +30,40 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
- * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ESIATTEMPT_H
-#define SQUID_ESIATTEMPT_H
-
 #include "squid.h"
-#include "ESIElement.h"
-#include "ESISequence.h"
+#include "esi/Parser.h"
 
-/* esiAttempt */
+char *ESIParser::Type = NULL;
+ESIParser::Register *ESIParser::Parsers = NULL;
+ESIParser::Register *ESIParser::Parser = NULL;
 
-struct esiAttempt : public esiSequence {
-    //    void *operator new (size_t byteCount);
-    //    void operator delete (void *address);
-    esiAttempt(esiTreeParentPtr aParent) : esiSequence (aParent) {}
-};
+ESIParser::Pointer
+ESIParser::NewParser(ESIParserClient *aClient)
+{
+    if (Parser == NULL) {
+        Parser = Parsers;
 
-#endif /* SQUID_ESIATTEMPT_H */
+        while (Parser != NULL && strcasecmp(Parser->name, Type) != 0)
+            Parser = Parser->next;
+
+        if (Parser == NULL)
+            fatal ("Unknown ESI Parser type");
+    }
+
+    return (Parser->newParser)(aClient);
+}
+
+ESIParser::Register::Register(const char *_name, ESIParser::Pointer (*_newParser)(ESIParserClient *aClient)) : name(_name), newParser(_newParser)
+{
+    this->next = ESIParser::Parsers;
+    ESIParser::Parsers = this;
+}
+
+ESIParser::Register::~Register()
+{
+    // TODO: support random-order deregistration
+    assert(ESIParser::Parsers == this);
+    ESIParser::Parsers = next;
+}

@@ -40,7 +40,9 @@
 #include "Parsing.h"
 
 /* explicit instantiation required for some systems */
+/** \cond AUTODOCS-IGNORE */
 template cbdata_type CbDataList< Range<int> >::CBDATA_CbDataList;
+/** \endcond */
 
 void
 ACLIntRange::parse()

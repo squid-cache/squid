@@ -60,6 +60,6 @@ public:
     } flags;
 };
 
-MEMPROXY_CLASS_INLINE(ACLUserData)          /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(ACLUserData);
 
 #endif /* SQUID_ACLUSERDATA_H */

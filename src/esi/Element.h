@@ -34,7 +34,7 @@
 #define SQUID_ESIELEMENT_H
 
 #include "RefCount.h"
-#include "ESISegment.h"
+#include "esi/Segment.h"
 
 typedef enum {
     ESI_PROCESS_COMPLETE = 0,

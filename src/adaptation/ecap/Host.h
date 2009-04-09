@@ -8,7 +8,8 @@
 
 #include <libecap/host/host.h>
 
-namespace Adaptation {
+namespace Adaptation
+{
 namespace Ecap {
 
 // Squid wrapper, providing host application functionality to eCAP services.

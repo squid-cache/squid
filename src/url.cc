@@ -440,7 +440,7 @@ urlCanonical(HttpRequest * request)
 
     if (request->protocol == PROTO_URN) {
         snprintf(urlbuf, MAX_URL, "urn:" SQUIDSTRINGPH,
-            SQUIDSTRINGPRINT(request->urlpath));
+                 SQUIDSTRINGPRINT(request->urlpath));
     } else {
 /// \todo AYJ: this could use "if..else and method == METHOD_CONNECT" easier.
         switch (request->method.id()) {
@@ -484,7 +484,7 @@ urlCanonicalClean(const HttpRequest * request)
 
     if (request->protocol == PROTO_URN) {
         snprintf(buf, MAX_URL, "urn:" SQUIDSTRINGPH,
-            SQUIDSTRINGPRINT(request->urlpath));
+                 SQUIDSTRINGPRINT(request->urlpath));
     } else {
 /// \todo AYJ: this could use "if..else and method == METHOD_CONNECT" easier.
         switch (request->method.id()) {
@@ -587,7 +587,7 @@ urlMakeAbsolute(const HttpRequest * req, const char *relUrl)
 
     if (req->protocol == PROTO_URN) {
         snprintf(urlbuf, MAX_URL, "urn:" SQUIDSTRINGPH,
-            SQUIDSTRINGPRINT(req->urlpath));
+                 SQUIDSTRINGPRINT(req->urlpath));
         return (urlbuf);
     }
 

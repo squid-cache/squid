@@ -29,41 +29,49 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+#ifndef SQUID_ESICUSTOMPARSER_H
+#define SQUID_ESICUSTOMPARSER_H
 
-#ifndef SQUID_ESIEXPATPARSER_H
-#define SQUID_ESIEXPATPARSER_H
+class Trie;
 
-#if USE_SQUID_ESI
+/* inherits from */
+#include "esi/Parser.h"
 
-#include "ESIParser.h"
-#include "expat.h"
+/* for String variables */
+#include "SquidString.h"
 
-class ESIExpatParser : public ESIParser
+/**
+ \ingroup ESIAPI
+ */
+class ESICustomParser : public ESIParser
 {
 
 public:
-    ESIExpatParser(ESIParserClient *);
-    ~ESIExpatParser();
-
-    /** \retval true	on success */
+    ESICustomParser(ESIParserClient *);
+    ~ESICustomParser();
+    /* true on success */
     bool parse(char const *dataToParse, size_t const lengthOfData, bool const endOfStream);
-
     long int lineNumber() const;
     char const * errorString() const;
 
-private:
-    ESI_PARSER_TYPE;
-    /** our parser */
-    mutable XML_Parser p;
-    static void Start(void *data, const XML_Char *el, const char **attr);
-    static void End(void *data, const XML_Char *el);
-    static void Default (void *data, const XML_Char *s, int len);
-    static void Comment (void *data, const XML_Char *s);
-    XML_Parser &myParser() const {return p;}
+    EsiParserDeclaration;
 
+private:
+    static Trie *SearchTrie;
+    static Trie *GetTrie();
+    enum ESITAG_t {
+        ESITAG=1,
+        ESIENDTAG=2,
+        ESICOMMENT=3
+    };
+
+    char const *findTag(char const *a, size_t b);
     ESIParserClient *theClient;
+    String error;
+    /* cheap n dirty - buffer it all */
+    String content;
+    /* TODO: make a class of this type code */
+    ESITAG_t lastTag;
 };
 
-#endif /* USE_SQUID_ESI */
-
-#endif /* SQUID_ESIEXPATPARSER_H */
+#endif /* SQUID_ESICUSTOMPARSER_H */

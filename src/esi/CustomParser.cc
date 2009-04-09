@@ -34,14 +34,14 @@
  */
 
 #include "squid.h"
-#include "ESICustomParser.h"
+#include "esi/CustomParser.h"
 #include "Trie.h"
 #include "TrieCharTransform.h"
 #include "Array.h"
 
 Trie *ESICustomParser::SearchTrie=NULL;
 
-RegisterESIParser("custom", ESICustomParser);
+EsiParserDefinition(ESICustomParser);
 
 Trie *
 ESICustomParser::GetTrie()

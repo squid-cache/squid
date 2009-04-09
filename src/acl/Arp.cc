@@ -148,12 +148,12 @@ ACLARP::empty () const
  */
 
 /**
- * Decode an ascii representation (asc) of an ethernet adress.
+ * Decode an ascii representation (asc) of an ethernet address.
  *
- \param asc[in]    ASCII representation of an ethernet (MAC) address
- \param eth[out]   Binary representation of the ethernet address
- \retval 0	Conversion to binary failed. Invalid address
- \retval 1	Conversion completed successfully
+ * \param asc   ASCII representation of an ethernet (MAC) address
+ * \param eth   Binary representation of the ethernet address
+ * \retval 0	Conversion to binary failed. Invalid address
+ * \retval 1	Conversion completed successfully
  */
 static int
 decode_eth(const char *asc, char *eth)
@@ -225,7 +225,7 @@ aclParseArpList(SplayNode<acl_arp_data *> **curlist)
 int
 ACLARP::match(ACLChecklist *cl)
 {
-	ACLFilledChecklist *checklist = Filled(cl);
+    ACLFilledChecklist *checklist = Filled(cl);
 
     /* IPv6 does not do ARP */
     if (!checklist->src_addr.IsIPv4()) {

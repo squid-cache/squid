@@ -33,60 +33,77 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ESIASSIGN_H
-#define SQUID_ESIASSIGN_H
+#ifndef SQUID_ESIINCLUDE_H
+#define SQUID_ESIINCLUDE_H
 
 #include "squid.h"
-#include "ESIElement.h"
-#include "SquidString.h"
-#include "ESIVarState.h"
+#include "esi/Segment.h"
+#include "esi/Element.h"
+#include "esi/Context.h"
 
-/* ESIVariableExpression */
-/* This is a variable that is itself and expression */
+class ESIInclude;
+typedef RefCount<ESIInclude> ESIIncludePtr;
 
-class ESIVariableExpression : public ESIVarState::Variable
+class ESIStreamContext : public RefCountable
 {
 
 public:
-    ~ESIVariableExpression();
-    ESIVariableExpression (String const &value);
-    virtual void eval (ESIVarState &state, char const *, char const *) const;
+    typedef RefCount<ESIStreamContext> Pointer;
+    void *operator new(size_t);
+    void operator delete(void *);
+    ESIStreamContext();
+    ~ESIStreamContext();
+    void freeResources();
+    int finished;
+    ESIIncludePtr include;
+    ESISegment::Pointer localbuffer;
+    ESISegment::Pointer buffer;
 
 private:
-    String expression;
+    CBDATA_CLASS(ESIStreamContext);
 };
 
-/* ESIAssign */
+/* ESIInclude */
 
-class ESIContext;
-
-class ESIAssign : public ESIElement
+class ESIInclude : public ESIElement
 {
 
 public:
-    MEMPROXY_CLASS(ESIAssign);
-    ESIAssign (esiTreeParentPtr, int, const char **, ESIContext *);
-    ESIAssign (ESIAssign const &);
-    ESIAssign &operator=(ESIAssign const &);
-    ~ESIAssign();
-    esiProcessResult_t process (int dovars);
+    MEMPROXY_CLASS(ESIInclude);
+
+    ESIInclude(esiTreeParentPtr, int attributes, const char **attr, ESIContext *);
+    ~ESIInclude();
     void render(ESISegment::Pointer);
-    bool addElement(ESIElement::Pointer);
-    void provideData (ESISegment::Pointer data, ESIElement * source);
+    esiProcessResult_t process (int dovars);
     Pointer makeCacheable() const;
     Pointer makeUsable(esiTreeParentPtr, ESIVarState &) const;
+    void subRequestDone (ESIStreamContext::Pointer, bool);
+
+    struct {
+        int onerrorcontinue:1; /* on error return zero data */
+        int failed:1; /* Failed to process completely */
+        int finished:1; /* Finished getting subrequest data */
+    } flags;
+    ESIStreamContext::Pointer src;
+    ESIStreamContext::Pointer alt;
+    ESISegment::Pointer srccontent;
+    ESISegment::Pointer altcontent;
+    ESIVarState *varState;
+    char *srcurl, *alturl;
+    void fail(ESIStreamContext::Pointer);
     void finish();
 
 private:
-    void evaluateVariable();
+    void Start (ESIStreamContext::Pointer, char const *, ESIVarState *);
     esiTreeParentPtr parent;
-    ESIVarState *varState;
-    String name;
-    ESIVariableExpression * value;
-    ESIElement::Pointer variable;
-    String unevaluatedVariable;
+    void start();
+    bool started;
+    bool sent;
+    ESIInclude(ESIInclude const &);
+    bool dataNeeded() const;
+    void prepareRequestHeaders(HttpHeader &tempheaders, ESIVarState *vars);
 };
 
-MEMPROXY_CLASS_INLINE(ESIAssign)          /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(ESIInclude);
 
-#endif /* SQUID_ESIASSIGN_H */
+#endif /* SQUID_ESIINCLUDE_H */

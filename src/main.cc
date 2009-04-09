@@ -86,6 +86,12 @@
 #include "adaptation/Config.h"
 #endif
 
+#if USE_SQUID_ESI
+#include "esi/Module.h"
+#endif
+
+#include "fs/Module.h"
+
 #if USE_WIN32_SERVICE
 
 #include "squid_windows.h"
@@ -256,8 +262,8 @@ usage(void)
 /**
  * Parse the parameters received via command line interface.
  *
- \param argc[in]   Number of options received on command line
- \param argv[in]   List of parameters received on command line
+ \param argc   Number of options received on command line
+ \param argv   List of parameters received on command line
  */
 static void
 mainParseOptions(int argc, char *argv[])
@@ -1061,6 +1067,9 @@ mainInitialize(void)
     Adaptation::Config::Finalize(enableAdaptation);
 #endif
 
+#if USE_SQUID_ESI
+    Esi::Init();
+#endif
 
     debugs(1, 1, "Ready to serve requests.");
 
@@ -1219,6 +1228,9 @@ SquidMain(int argc, char **argv)
         Mem::Init();
 
         storeFsInit();		/* required for config parsing */
+
+        /* TODO: call the FS::Clean() in shutdown to do Fs cleanups */
+        Fs::Init();
 
         /* May not be needed for parsing, have not audited for such */
         DiskIOModule::SetupAllModules();
@@ -1671,6 +1683,11 @@ SquidShutdown()
 
     releaseServerSockets();
     commCloseAllSockets();
+
+#if USE_SQUID_ESI
+    Esi::Clean();
+#endif
+
 #if DELAY_POOLS
 
     DelayPools::FreePools();

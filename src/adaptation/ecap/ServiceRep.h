@@ -11,7 +11,8 @@
 #include <libecap/common/forward.h>
 #include <libecap/common/memory.h>
 
-namespace Adaptation {
+namespace Adaptation
+{
 namespace Ecap {
 
 /* The eCAP service representative maintains information about a single eCAP

@@ -97,7 +97,7 @@ ACLFilledChecklist::checkCallback(allow_t answer)
         conn()->auth_type = AUTH_BROKEN;
     }
 
-	ACLFilledChecklist::checkCallback(answer); // may delete us
+    ACLChecklist::checkCallback(answer); // may delete us
 }
 
 
@@ -229,34 +229,34 @@ ACLFilledChecklist::markSourceDomainChecked()
  *    *not* delete the list.  After the callback function returns,
  *    checkCallback() will delete the list (i.e., self).
  */
-ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *request, const char *ident):
-    dst_peer(NULL),
-    request(NULL),
-    reply(NULL),
-    auth_user_request(NULL),
+ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_request, const char *ident):
+        dst_peer(NULL),
+        request(NULL),
+        reply(NULL),
+        auth_user_request(NULL),
 #if SQUID_SNMP
-    snmp_community(NULL),
+        snmp_community(NULL),
 #endif
 #if USE_SSL
-    ssl_error(0),
+        ssl_error(0),
 #endif
-    extacl_entry (NULL),
-    conn_(NULL),
-    fd_(-1),
-    destinationDomainChecked_(false),
-    sourceDomainChecked_(false)
+        extacl_entry (NULL),
+        conn_(NULL),
+        fd_(-1),
+        destinationDomainChecked_(false),
+        sourceDomainChecked_(false)
 {
     my_addr.SetEmpty();
     src_addr.SetEmpty();
     dst_addr.SetEmpty();
     rfc931[0] = '\0';
-    
+
     // cbdataReferenceDone() is in either fastCheck() or the destructor
     if (A)
         accessList = cbdataReference(A);
 
-    if (request != NULL) {
-        request = HTTPMSGLOCK(request);
+    if (http_request != NULL) {
+        request = HTTPMSGLOCK(http_request);
 #if FOLLOW_X_FORWARDED_FOR
         if (Config.onoff.acl_uses_indirect_client)
             src_addr = request->indirect_client_addr;

@@ -105,7 +105,7 @@ private:
     CredentialsState credentials_ok;
 };
 
-MEMPROXY_CLASS_INLINE(AuthDigestUserRequest)		/**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(AuthDigestUserRequest);
 
 /* data to be encoded into the nonce's b64 representation */
 

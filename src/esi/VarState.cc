@@ -35,7 +35,7 @@
  */
 
 #include "squid.h"
-#include "ESIVarState.h"
+#include "esi/VarState.h"
 #include "HttpReply.h"
 
 CBDATA_TYPE (ESIVarState);

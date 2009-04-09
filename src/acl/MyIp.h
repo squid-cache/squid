@@ -54,6 +54,6 @@ private:
     static ACLMyIP RegistryEntry_;
 };
 
-MEMPROXY_CLASS_INLINE(ACLMyIP)          /**DOCS_NOSEMI*/
+MEMPROXY_CLASS_INLINE(ACLMyIP);
 
 #endif /* SQUID_ACLMYIP_H */

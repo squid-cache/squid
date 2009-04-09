@@ -42,7 +42,8 @@
 #include "adaptation/icap/ServiceRep.h"
 
 
-namespace Adaptation {
+namespace Adaptation
+{
 namespace Icap {
 
 class acl_access;
