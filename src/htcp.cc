@@ -902,19 +902,20 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, struct
         stuff.S.uri = spec->uri;
         stuff.S.version = spec->version;
         stuff.S.req_hdrs = spec->req_hdrs;
-        hdr.putInt(HDR_AGE,
-                   e->timestamp <= squid_curtime ?
-                   squid_curtime - e->timestamp : 0);
+        if(e)
+            hdr.putInt(HDR_AGE, (e->timestamp <= squid_curtime ? (squid_curtime - e->timestamp) : 0) );
+        else
+            hdr.putInt(HDR_AGE, 0);
         hdr.packInto(&p);
         stuff.D.resp_hdrs = xstrdup(mb.buf);
         debugs(31, 3, "htcpTstReply: resp_hdrs = {" << stuff.D.resp_hdrs << "}");
         mb.reset();
         hdr.reset();
 
-        if (e->expires > -1)
+        if (e && e->expires > -1)
             hdr.putTime(HDR_EXPIRES, e->expires);
 
-        if (e->lastmod > -1)
+        if (e && e->lastmod > -1)
             hdr.putTime(HDR_LAST_MODIFIED, e->lastmod);
 
         hdr.packInto(&p);

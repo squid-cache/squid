@@ -44,6 +44,7 @@
 #define SNMP_ERR_WRONGTYPE           (0x7)
 #define SNMP_ERR_WRONGLENGTH         (0x8)
 #define SNMP_ERR_WRONGENCODING       (0x9)
+/* 0x0A - 0x0F undefined */
 #define SNMP_ERR_WRONGVALUE          (0x10)
 #define SNMP_ERR_NOCREATION          (0x11)
 #define SNMP_ERR_INCONSISTENTVALUE   (0x12)

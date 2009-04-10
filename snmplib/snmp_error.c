@@ -33,8 +33,8 @@
 #include "snmp_error.h"
 
 
-static const char *error_string[19] =
-{
+static const char *error_string[25] = {
+    /* 0x00 - 0x05 */
     "No Error",
     "Response message would have been too large.",
     "There is no such variable name in this MIB.",
@@ -42,11 +42,21 @@ static const char *error_string[19] =
     "This variable is read only",
     "A general failure occured",
 
-  /* SNMPv2 Errors */
+    /* 0x06 - 0x09 */
     "NOACCESS",
     "WRONGTYPE",
     "WRONGLENGTH",
     "WRONGENCODING",
+
+    /* 0x0A - 0x0F */
+    "UNDEFINED",
+    "UNDEFINED",
+    "UNDEFINED",
+    "UNDEFINED",
+    "UNDEFINED",
+    "UNDEFINED",
+
+    /* 0x10 - 0x18 */
     "WRONGVALUE",
     "NOCREATION",
     "INCONSISTENTVALUE",

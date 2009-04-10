@@ -94,6 +94,11 @@ CvtBin(const HASHHEX Hex, HASH Bin)
 	else
 	    Bin[i / 2] |= n;
     }
+/* FIXME: Coverity detects the below as dead code.
+  Why? :: right here i == 32 
+    which means the first step of the for loop makes i==16
+    and cannot be < HASHLEN (which is also 16)
+*/
     for (i = i / 2; i < HASHLEN; i++) {
 	Bin[i] = '\0';
     }
