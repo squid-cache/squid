@@ -167,6 +167,10 @@ httpStatusString(http_status status)
         p = "Partial Content";
         break;
 
+    case HTTP_MULTI_STATUS:
+        p = "Multi-Status";
+        break;
+
     case HTTP_MULTIPLE_CHOICES:
         p = "Multiple Choices";
         break;
