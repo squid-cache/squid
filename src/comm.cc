@@ -1513,7 +1513,8 @@ _comm_close(int fd, char const *file, int line)
     if (F->flags.closing)
         return;
 
-    if (shutting_down && (!F->flags.open || F->type == FD_FILE))
+    /* XXX: is this obsolete behind F->closing() ? */
+    if ( (shutting_down || reconfiguring) && (!F->flags.open || F->type == FD_FILE))
         return;
 
     assert(F->flags.open);
