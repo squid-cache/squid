@@ -1094,6 +1094,9 @@ This section gives an account of those changes in three categories:
         <p>Enable special additions for IPv6 support in Windows XP.
            see the IPv6 details above for a better description.
 
+	<tag>--with-pidfile=PATH</tag>
+	<p>Allow build-time configuration of Default location and name of squid.pid file.
+
 	<tag>--with-po2html=PATH</tag>
 	<p>Absolute path to po2html executable.
 	   Default is to automatically detect the binary.
