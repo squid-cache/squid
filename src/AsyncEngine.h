@@ -57,7 +57,7 @@ public:
          */
         EVENT_IDLE = -1,
         /* some error has occured in this engine */
-        EVENT_ERROR = -2,
+        EVENT_ERROR = -2
     };
 
     virtual ~AsyncEngine() {}
