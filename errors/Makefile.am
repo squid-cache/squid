@@ -147,7 +147,7 @@ dist-hook: translate
 	cp -p $(srcdir)/errorpage.css  $(distdir)/errorpage.css
 
 translate:
-	@if test -f $(top_srcdir)/errors/en.po; then \
+	@if ! test -f $(top_srcdir)/errors/en.po; then \
 	  echo "Translation is not currently possible."; \
 	  exit 0; \
 	fi; \
