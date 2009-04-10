@@ -485,6 +485,8 @@ idnsParseWIN32Registry(void)
     case _WIN_OS_WINNET:
 
     case _WIN_OS_WINLON:
+
+    case _WIN_OS_WIN7:
         /* get nameservers from the Windows 2000 registry */
         /* search all interfaces for DNS server addresses */
 

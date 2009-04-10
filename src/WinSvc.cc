@@ -347,7 +347,21 @@ GetOSVersion()
 		WIN32_OS_string = xstrdup("Windows Server 2008");
 	    return _WIN_OS_WINLON;
 	}
-	break;
+	if ((osvi.dwMajorVersion == 6) && (osvi.dwMinorVersion == 1)) {
+	    if (osvi.wProductType == VER_NT_WORKSTATION)
+		WIN32_OS_string = xstrdup("Windows 7");
+	    else
+		WIN32_OS_string = xstrdup("Windows Server 2008 R2");
+	    return _WIN_OS_WIN7;
+	}
+	if (((osvi.dwMajorVersion > 6)) || ((osvi.dwMajorVersion == 6) && (osvi.dwMinorVersion > 1))) {
+	    if (osvi.wProductType == VER_NT_WORKSTATION)
+		WIN32_OS_string = xstrdup("Unknown Windows version, assuming Windows 7 capabilities");
+	    else
+		WIN32_OS_string = xstrdup("Unknown Windows version, assuming Windows Server 2008 R2 capabilities");
+	    return _WIN_OS_WIN7;
+	}
+        break;
     case VER_PLATFORM_WIN32_WINDOWS:
 	if ((osvi.dwMajorVersion == 4) && (osvi.dwMinorVersion == 0)) {
 	    WIN32_OS_string = xstrdup("Windows 95");
