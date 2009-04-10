@@ -110,10 +110,8 @@ int WIN32_getrusage(int who, struct rusage *usage)
 {
 #if HAVE_WIN32_PSAPI
 
-    if ((WIN32_OS_version == _WIN_OS_WINNT) || (WIN32_OS_version == _WIN_OS_WIN2K)
-            || (WIN32_OS_version == _WIN_OS_WINXP) || (WIN32_OS_version == _WIN_OS_WINNET))
-    {
-        /* On Windows NT/2000 call PSAPI.DLL for process Memory */
+    if (WIN32_OS_version >= _WIN_OS_WINNT) {
+        /* On Windows NT and later call PSAPI.DLL for process Memory */
         /* informations -- Guido Serassio                       */
         HANDLE hProcess;
         PROCESS_MEMORY_COUNTERS pmc;
