@@ -96,7 +96,7 @@ public:
 
     int imslen;
 
-    int max_forwards;
+    int64_t max_forwards;
 
     /* these in_addr's could probably be sockaddr_in's */
 

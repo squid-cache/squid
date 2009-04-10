@@ -1584,11 +1584,12 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, St
         break;
 
     case HDR_MAX_FORWARDS:
-        if (orig_request->method == METHOD_TRACE) {
-            const int hops = e->getInt();
+        /* pass only on TRACE or OPTIONS requests */
+        if (orig_request->method == METHOD_TRACE || orig_request->method == METHOD_OPTIONS) {
+            const int64_t hops = e->getInt64();
 
             if (hops > 0)
-                hdr_out->putInt(HDR_MAX_FORWARDS, hops - 1);
+                hdr_out->putInt64(HDR_MAX_FORWARDS, hops - 1);
         }
 
         break;
