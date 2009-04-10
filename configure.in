@@ -173,6 +173,22 @@ AC_ARG_WITH(logdir,
 )
 AC_SUBST(DEFAULT_LOG_DIR)
 
+DEFAULT_PIDFILE="$localstatedir/squid.pid"
+AC_ARG_WITH(pidfile,
+  AC_HELP_STRING([--with-pidfile=PATH],
+                 Default location for squid PID file. default: $DEFAULT_PIDFILE),
+ [ case $withval in
+   yes|no)
+     AC_MSG_ERROR( --with-pidfile requires a file PATH. --with-pidfile=PATH )
+     ;;
+   *)
+     DEFAULT_PIDFILE="$withval"
+     ;;
+   esac
+ ]
+)
+AC_SUBST(DEFAULT_PIDFILE)
+
 dnl Gerben Wierda <Gerben_Wierda@RnA.nl>
 case "$host" in
     mab-next-nextstep3)
