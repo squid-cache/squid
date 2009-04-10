@@ -82,12 +82,10 @@ static int WIN32_argc;
 static char ** WIN32_argv;
 static char * WIN32_module_name;
 
-#define VENDOR "GNU"
+#define VENDOR "squid-cache.org"
 static char VENDORString[] = VENDOR;
-#define SOFTWARENAME "Squid"
+#define SOFTWARENAME PACKAGE_NAME
 static char SOFTWARENAMEString[] = SOFTWARENAME;
-#define WIN32_VERSION "3.0"
-static char WIN32_VERSIONString[] = WIN32_VERSION;
 #define SOFTWARE "SOFTWARE"
 static char SOFTWAREString[] = SOFTWARE;
 #define COMMANDLINE "CommandLine"
@@ -103,14 +101,13 @@ static SC_ACTION Squid_SCAction[] = { { SC_ACTION_RESTART, 60000 } };
 static char Squid_ServiceDescriptionString[] = SOFTWARENAME " " VERSION " WWW Proxy Server";
 static SERVICE_DESCRIPTION Squid_ServiceDescription = { Squid_ServiceDescriptionString };
 static SERVICE_FAILURE_ACTIONS Squid_ServiceFailureActions = { INFINITE, NULL, NULL, 1, Squid_SCAction };
-static char REGKEY[256]=SOFTWARE"\\"VENDOR"\\"SOFTWARENAME"\\"WIN32_VERSION"\\";
+static char REGKEY[256]=SOFTWARE"\\"VENDOR"\\"SOFTWARENAME"\\";
 static char *keys[] = {
     SOFTWAREString,	    /* key[0] */
     VENDORString,	    /* key[1] */
     SOFTWARENAMEString,   /* key[2] */
-    WIN32_VERSIONString,  /* key[3] */
-    NULL,	    /* key[4] */
-    NULL	    /* key[5] */
+    NULL,	    /* key[3] */
+    NULL	    /* key[4] */
 };
 #endif
 
