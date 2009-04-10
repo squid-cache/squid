@@ -381,13 +381,9 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     for (x = 3; x < SQUID_MAXFD; x++)
         close(x);
 
-    if (opt_no_daemon) {
-        squid_signal(SIGINT, SIG_IGN, SA_RESETHAND);
-        squid_signal(SIGHUP, SIG_IGN, SA_RESETHAND);
-    }
-
 #if HAVE_SETSID
-    setsid();
+    if (opt_no_daemon)
+	setsid();
 #endif
 
     execvp(prog, (char *const *) args);
