@@ -873,7 +873,7 @@ parseBytesUnits(const char *unit)
     if (!strncasecmp(unit, B_GBYTES_STR, strlen(B_GBYTES_STR)))
         return 1 << 30;
 
-    debugs(3, 1, "parseBytesUnits: unknown bytes unit '" << unit << "'");
+    debugs(3, DBG_CRITICAL, "WARNING: Unknown bytes unit '" << unit << "'");
 
     return 0;
 }
