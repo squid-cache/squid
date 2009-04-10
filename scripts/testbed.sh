@@ -19,6 +19,6 @@
 # build results
 	bzr update 2>&1
 	./bootstrap.sh
-	./test-builds.sh
+	./test-builds.sh --cleanup
 
 ) | /usr/sbin/sendmail -t
