@@ -122,7 +122,7 @@ public:
 
     int imslen;
 
-    int max_forwards;
+    int64_t max_forwards;
 
     IpAddress client_addr;
 
