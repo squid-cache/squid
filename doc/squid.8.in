@@ -6,7 +6,7 @@ squid \- proxy caching server
 .SH SYNOPSIS
 .B squid
 [
-.B \-dhisrvzCDFNRVYX
+.B \-dhisrvzCFNRSVYX
 ] [
 .BI \-l " facility"
 ] [
@@ -26,10 +26,10 @@ squid \- proxy caching server
 .SH DESCRIPTION
 .B squid
 is a high-performance proxy caching server for web clients,
-supporting FTP, gopher, and HTTP data objects.  Unlike traditional
-caching software, 
+supporting FTP, gopher, ICAP, ICP, HTCP and HTTP data objects.
+Unlike traditional caching software, 
 .B squid
-handles all requests in a single, non-blocking, I/O-driven process.
+handles all requests in a single, non-blocking process.
 .PP
 .B squid
 keeps meta data and especially hot objects cached in RAM, 
@@ -37,20 +37,18 @@ caches DNS lookups, supports non-blocking DNS lookups, and implements
 negative caching of failed requests.
 .PP
 .B squid
-supports SSL, extensive access controls, and full request 
-logging.  By using the lightweight Internet Cache Protocol, 
-.B squid
+supports SSL, extensive access controls, and full request logging. 
+By using the lightweight Internet Cache Protocols ICP, HTCP or CARP, 
+.B squid 
 caches can be arranged in a hierarchy or mesh for additional 
 bandwidth savings.
 .PP
 .B squid
-consists of a main server program squid, a Domain Name System
-lookup program dnsserver, some optional programs for rewriting
-requests and performing authentication, and some management and client
+consists of a main server program squid, some optional programs for 
+custom processing and authentication, and some management and client
 tools.  When squid starts up, it spawns a configurable number of
-dnsserver processes, each of which can perform a single, blocking
-Domain Name System (DNS) lookup.  This reduces the amount of time the
-cache waits for DNS lookups.
+helper processes, each of which can perform parallel lookups.
+This reduces the amount of time the cache waits for results.
 .PP
 .B squid
 is derived from the ARPA-funded Harvest Project 
@@ -60,11 +58,14 @@ This manual page only lists the command line arguments.  For details
 on how to configure
 .B squid
 see the file 
-.BI @DEFAULT_CONFIG_FILE@,
-the Squid FAQ and the documentation at the
+.BI @DEFAULT_CONFIG_FILE@.documented,
+the Squid wiki FAQ and examples at
+http://wiki.squid-cache.org/ ,
+or the configuration manual on the
 .B squid
-home page http://www.squid-cache.org
+home page http://www.squid-cache.org/Doc/config/
 .PP
+
 .SH OPTIONS
 .IP "-a port"
 Specify HTTP port number where Squid should listen for requests, in addition
@@ -92,31 +93,33 @@ Specify Windows Service name to use for service operations, default is:
 .IP -r
 Remove a Windows Service (see -n option).
 .IP -s
-Enable logging to syslog.
+Enable logging to syslog. Also configurable in
+.BI @DEFAULT_CONFIG_FILE@
 .IP "-l facility"
 Use specified syslog facility. implies -s
 .IP "-u port"
 Specify ICP port number (default: 3130), disable with 0.
 .IP -v
-Print version.
+Print version and build details.
 .IP -z
 Create swap directories
 .IP -C
 Do not catch fatal signals.
-.IP -D
-Disable initial DNS tests.
 .IP -F
 Don't serve any requests until store is rebuilt.
-.IP "-O options"
-Set Windows Service Command line options in Registry.
 .IP -N
 No daemon mode.
+.IP "-O options"
+Set Windows Service Command line options in Registry.
 .IP -R
 Do not set REUSEADDR on port.
+.IP "-S"
+Double-check swap during rebuild.
 .IP -X
 Force full debugging.
 .IP -Y
-Only return UDP_HIT or UDP_MISS_NOFETCH during fast reload.   
+Only return UDP_HIT or UDP_MISS_NOFETCH during fast reload.
+
 .SH FILES
 .I @DEFAULT_CONFIG_FILE@
 .RS
@@ -127,11 +130,37 @@ to work.  For example, the default configuration does not
 allow access from any browser.
 .RE
 
-.I @DEFAULT_CONFIG_FILE@.default
+.I *.default files
 .RS
 Reference copy of the configuration file. Always kept up to date with
-the version of Squid you are using. Use this to look up configuration
-syntax after upgrading.
+the version of Squid you are using. Use this to look up the default
+configuration settings and syntax after upgrading.
+.RE
+
+.I @DEFAULT_CONFIG_FILE@.documented
+.RS
+Reference copy of the configuration file. Always kept up to date with
+the version of Squid you are using. Use this to read the documentation
+for configuration options available in your build of Squid. The online
+configuration manual is also available for a full reference of options.
+.BR see http://www.squid-cache.org/Doc/config/
+.RE
+
+.I cachemgr.conf
+.RS
+The main configuration file for the web cachemgr.cgi tools.
+.RE
+
+.I msntauth.conf
+.RS
+The main configuration file for the Sample MSNT authenticator.
+.RE
+
+.I errorpage.css
+.RS
+CSS Stylesheet to control the display of generated error pages.
+Use this to set any company branding you need, it will apply to every
+Language Squid provides error pages for.
 .RE
 
 .I @DEFAULT_MIME_TABLE@ (mime_table)
@@ -139,9 +168,11 @@ syntax after upgrading.
 MIME type mappings for FTP gatewaying
 .RE
 
-.I @DEFAULT_ERROR_DIR@ (error_directory)
+.I @DEFAULT_ERROR_DIR@
 .RS
-Error page templates
+Location of
+.B squid 
+error pages and templates.
 .RE
 
 .SH SEE ALSO
@@ -152,7 +183,8 @@ Error page templates
 .BR squid_session "(8), "
 .BR squid_unix_group "(8), "
 .br
-.B The Squid FAQ
+.B The Squid FAQ wiki http://wiki.squid-cache.org/SquidFaq
+.B The Squid Configuration Manual http://www.squid-cache.org/Doc/config/
 
 
 
