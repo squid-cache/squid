@@ -1,11 +1,11 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
 <HEAD>
- <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.50">
- <TITLE>Squid 3.0.STABLE13 release notes</TITLE>
+ <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.21">
+ <TITLE>Squid 3.0.STABLE14 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.0.STABLE13 release notes</H1>
+<H1>Squid 3.0.STABLE14 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -15,7 +15,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1. Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.0.STABLE13.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.0.STABLE14.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.0/">http://www.squid-cache.org/Versions/v3/3.0/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -227,6 +227,7 @@ redirect_program c:/winnt/system32/cmd.exe /C c:/squid/libexec/redir.cmd
 <LI>When Squid runs in command line mode, the launching user account must have administrative privilege on the system</LI>
 <LI>"Start parameters" in the Windows 2000/XP/2003 Service applet cannot be used</LI>
 <LI>Building with MinGW, when the configure option --enable-truncate is used, Squid cannot run on Windows NT, only Windows 2000 and later are supported</LI>
+<LI>On Windows Vista and later, User Account Control (UAC) must be disabled before running service installation</LI>
 </UL>
 </P>
 </DL>
@@ -713,10 +714,9 @@ See the accf_http(9) man page.
 <P>Common options <EM>no-store</EM>, replaces the older <EM>read-only</EM> option</P>
 
 <DT><B>auth_param</B><DD>
-<P>Removed Basic auth option
+<P>Removed Basic auth options:
 <PRE>
     blankpasswor, not yet ported to squid-3.
-    auth_param basic concurrency 0
         
 </PRE>
 </P>
@@ -847,7 +847,7 @@ See the accf_http(9) man page.
 This is useful for class 4 Delay Pools in Squid 3.x</P>
 
 <DT><B>half_closed_clients</B><DD>
-<P>New defaut vaue of OFF</P>
+<P>New default value of OFF</P>
 
 </DL>
 </P>

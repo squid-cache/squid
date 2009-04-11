@@ -1,3 +1,23 @@
+Changes to squid-3.0.STABLE14 (11 Apr 2009):
+
+	- Regression Fix: HTTP/0.9 in accelerator mode
+	- Bug 1232: cache_dir parameter limited to only 63 entries
+	- Bug 1868: support HTTP 207 status
+	- Bug 2518: assertion failure on restart/reconfigure
+	- Bug 2588: coredump in rDNS lookup
+	- Bug 2595: Out of bounds memory write in squid_kerb_auth
+	- Bug 2599: Idempotent start
+	- Bug 2605: Prevent setsid() on helpers in daemon mode
+	- Fix external_acl_type option parsing
+	- Fix delay pools counters on FTP
+	- Fix several issues with ident (some remain)
+	- Fix performance issues with persistent connections
+	- Fix performance issues with delay pools
+	- Fix forwarding of OPTIONS requests
+	- Add support for HTTP 1.1 Content-Disposition header
+	- Add support for Windows 7, Windows Server 2008 R2 and later
+	- ... and many small documentation updates
+
 Changes to squid-3.0.STABLE13 (03 Feb 2009):
 
 	- Fix several issues in request parsing
