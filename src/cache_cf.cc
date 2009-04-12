@@ -403,7 +403,7 @@ parseConfigFile(const char *file_name)
     if (!Config.chroot_dir) {
         leave_suid();
         setUmask(Config.umask);
-        _db_init(Config.Log.log, Config.debugOptions);
+        _db_init(Debug::cache_log, Debug::debugOptions);
         enter_suid();
     }
 
@@ -493,9 +493,6 @@ configDoConfigure(void)
         Config.appendDomainLen = strlen(Config.appendDomain);
     else
         Config.appendDomainLen = 0;
-
-    safe_free(debug_options)
-    debug_options = xstrdup(Config.debugOptions);
 
     if (Config.retry.maxtries > 10)
         fatal("maximum_single_addr_tries cannot be larger than 10");
