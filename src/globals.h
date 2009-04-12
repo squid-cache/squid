@@ -58,7 +58,6 @@ extern "C"
     extern const char *dns_error_message;	/* NULL */
     extern const char *log_tags[];
     extern char tmp_error_buf[ERROR_BUF_SZ];
-    extern char *volatile debug_options;	/* NULL */
     extern char ThisCache[RFC2181_MAXHOSTNAMELEN << 1];
     extern char ThisCache2[RFC2181_MAXHOSTNAMELEN << 1];
     extern char config_input_line[BUFSIZ];
@@ -93,14 +92,9 @@ extern "C"
 //DEAD    extern int icmp_sock;		/* -1 */
     extern int neighbors_do_private_keys;	/* 1 */
     extern int opt_catch_signals;	/* 1 */
-    extern int opt_debug_stderr;	/* -1 */
     extern int opt_foreground_rebuild;	/* 0 */
     extern char *opt_forwarded_for;	/* NULL */
     extern int opt_reload_hit_only;	/* 0 */
-#if HAVE_SYSLOG
-
-    extern int opt_syslog_enable;	/* 0 */
-#endif
 
     extern int opt_udp_hit_obj;	/* 0 */
     extern int opt_create_swap_dirs;	/* 0 */

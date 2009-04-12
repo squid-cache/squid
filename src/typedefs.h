@@ -235,9 +235,6 @@ typedef void StatHistBinDumper(StoreEntry *, int idx, double val, double size, i
 /* MD5 cache keys */
 typedef unsigned char cache_key;
 
-/* context-based debugging, the actual type is subject to change */
-typedef int Ctx;
-
 /* in case we want to change it later */
 typedef ssize_t mb_size_t;
 

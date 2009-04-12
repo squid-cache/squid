@@ -248,7 +248,6 @@ struct SquidConfig {
     char *as_whois_server;
 
     struct {
-        char *log;
         char *store;
         char *swap;
 #if USE_USERAGENT_LOG
@@ -314,7 +313,6 @@ struct SquidConfig {
     } Accel;
     char *appendDomain;
     size_t appendDomainLen;
-    char *debugOptions;
     char *pidFilename;
     char *netdbFilename;
     char *mimeTablePathname;
@@ -436,7 +434,6 @@ struct SquidConfig {
         int httpd_suppress_version_string;
         int global_internal_static;
         int dns_require_A;
-        int debug_override_X;
 
 #if FOLLOW_X_FORWARDED_FOR
         int acl_uses_indirect_client;
