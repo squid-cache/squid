@@ -1474,7 +1474,7 @@ htcpInit(void)
     incomingAddr.SetPort(Config.Port.htcp);
 
     enter_suid();
-    htcpInSocket = comm_open(SOCK_DGRAM,
+    htcpInSocket = comm_open_listener(SOCK_DGRAM,
                              IPPROTO_UDP,
                              incomingAddr,
                              COMM_NONBLOCKING,
@@ -1493,7 +1493,7 @@ htcpInit(void)
         outgoingAddr.SetPort(Config.Port.htcp);
 
         enter_suid();
-        htcpOutSocket = comm_open(SOCK_DGRAM,
+        htcpOutSocket = comm_open_listener(SOCK_DGRAM,
                                   IPPROTO_UDP,
                                   outgoingAddr,
                                   COMM_NONBLOCKING,

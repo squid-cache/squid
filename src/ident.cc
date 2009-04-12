@@ -220,7 +220,7 @@ identStart(IpAddress &me, IpAddress &my_peer, IDCB * callback, void *data)
         return;
     }
 
-    fd = comm_open(SOCK_STREAM,
+    fd = comm_open_listener(SOCK_STREAM,
                    IPPROTO_TCP,
                    me,
                    COMM_NONBLOCKING,
