@@ -106,7 +106,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] =
         {"Last-Modified", HDR_LAST_MODIFIED, ftDate_1123},
         {"Link", HDR_LINK, ftStr},
         {"Location", HDR_LOCATION, ftStr},
-        {"Max-Forwards", HDR_MAX_FORWARDS, ftInt},
+        {"Max-Forwards", HDR_MAX_FORWARDS, ftInt64},
         {"Mime-Version", HDR_MIME_VERSION, ftStr},	/* for now */
         {"Pragma", HDR_PRAGMA, ftStr},
         {"Proxy-Authenticate", HDR_PROXY_AUTHENTICATE, ftStr},
