@@ -469,7 +469,7 @@ errorSend(int fd, ErrorState * err)
  * to the client socket.
  *
  \note If there is a callback, the callback is responsible for
- *     closeing the FD, otherwise we do it ourseves.
+ *     closing the FD, otherwise we do it ourselves.
  */
 static void
 errorSendComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, int xerrno, void *data)
@@ -546,7 +546,7 @@ ErrorState::Dump(MemBuf * mb)
     /* - IP stuff */
     str.Printf("ClientIP: %s\r\n", src_addr.NtoA(ntoabuf,MAX_IPSTRLEN));
 
-    if (request && request->hier.host) {
+    if (request && request->hier.host[0] != '\0') {
         str.Printf("ServerIP: %s\r\n", request->hier.host);
     }
 
@@ -668,12 +668,11 @@ ErrorState::Convert(char token)
 
     case 'h':
         mb.Printf("%s", getMyHostname());
-
         break;
 
     case 'H':
         if (request) {
-            if (request->hier.host)
+            if (request->hier.host[0] != '\0') // if non-empty string.
                 p = request->hier.host;
             else
                 p = request->GetHost();
@@ -688,9 +687,9 @@ ErrorState::Convert(char token)
         break;
 
     case 'I':
-        if (request && request->hier.host) {
+        if (request && request->hier.host[0] != '\0') // if non-empty string
             mb.Printf("%s", request->hier.host);
-        } else
+        else
             p = "[unknown]";
 
         break;
@@ -795,7 +794,9 @@ ErrorState::Convert(char token)
         break;
 
     case 'U':
-        p = request ? urlCanonicalClean(request) : url ? url : "[no URL]";
+        /* Using the fake-https version of canonical so error pages see https:// */
+        /* even when the url-path cannot be shown as more than '*' */
+        p = request ? urlCanonicalFakeHttps(request) : url ? url : "[no URL]";
         break;
 
     case 'u':
