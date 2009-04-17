@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -42,6 +41,11 @@
 #include "wordlist.h"
 
 #define HELPER_MAX_ARGS 64
+
+/* size of helper read buffer (maximum?). no reason given for this size */
+/* though it has been seen to be too short for some requests */
+/* it is dynamic, so increasng should not have side effects */
+#define BUF_8KB	8192
 
 static IOCB helperHandleRead;
 static IOCB helperStatefulHandleRead;
@@ -147,7 +151,7 @@ helperOpenServers(helper * hlp)
         srv->addr = hlp->addr;
         srv->rfd = rfd;
         srv->wfd = wfd;
-        srv->rbuf = (char *)memAllocBuf(8192, &srv->rbuf_sz);
+        srv->rbuf = (char *)memAllocBuf(BUF_8KB, &srv->rbuf_sz);
         srv->wqueue = new MemBuf;
         srv->roffset = 0;
         srv->requests = (helper_request **)xcalloc(hlp->concurrency ? hlp->concurrency : 1, sizeof(*srv->requests));
@@ -261,7 +265,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
         srv->addr = hlp->addr;
         srv->rfd = rfd;
         srv->wfd = wfd;
-        srv->rbuf = (char *)memAllocBuf(8192, &srv->rbuf_sz);
+        srv->rbuf = (char *)memAllocBuf(BUF_8KB, &srv->rbuf_sz);
         srv->roffset = 0;
         srv->parent = cbdataReference(hlp);
 
@@ -288,7 +292,6 @@ helperStatefulOpenServers(statefulhelper * hlp)
         comm_add_close_handler(rfd, helperStatefulServerFree, srv);
 
         comm_read(srv->rfd, srv->rbuf, srv->rbuf_sz - 1, helperStatefulHandleRead, srv);
-
     }
 
     hlp->last_restart = squid_curtime;
