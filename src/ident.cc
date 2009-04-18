@@ -220,9 +220,12 @@ identStart(IpAddress &me, IpAddress &my_peer, IDCB * callback, void *data)
         return;
     }
 
+    IpAddress addr = me;
+    addr.SetPort(0); // NP: use random port for secure outbound to IDENT_PORT
+
     fd = comm_open_listener(SOCK_STREAM,
                    IPPROTO_TCP,
-                   me,
+                   addr,
                    COMM_NONBLOCKING,
                    "ident");
 
