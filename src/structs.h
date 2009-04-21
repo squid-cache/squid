@@ -1255,28 +1255,6 @@ struct _HttpHeaderStat {
 };
 
 
-struct _ClientInfo {
-    hash_link hash;		/* must be first */
-
-    IpAddress addr;
-
-    struct {
-        int result_hist[LOG_TYPE_MAX];
-        int n_requests;
-        kb_t kbytes_in;
-        kb_t kbytes_out;
-        kb_t hit_kbytes_out;
-    } Http, Icp;
-
-    struct {
-        time_t time;
-        int n_req;
-        int n_denied;
-    } cutoff;
-    int n_established;		/* number of current established connections */
-    time_t last_seen;
-};
-
 struct _CacheDigest {
     /* public, read-only */
     char *mask;			/* bit mask */

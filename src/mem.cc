@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -40,6 +39,7 @@
 
 #include "event.h"
 #include "CacheManager.h"
+#include "ClientInfo.h"
 #include "Mem.h"
 #include "memMeter.h"
 #include "Store.h"
