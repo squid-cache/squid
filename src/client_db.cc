@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -36,6 +35,7 @@
 #include "squid.h"
 #include "event.h"
 #include "CacheManager.h"
+#include "ClientInfo.h"
 #include "SquidTime.h"
 #include "Store.h"
 
