@@ -6,15 +6,14 @@
 #  Uncomment and customize the following to suit your needs:
 #
 
+include $(top_srcdir)/src/Common.am
 
 libexec_PROGRAMS = getpwname_auth
 
 getpwname_auth_SOURCES = getpwnam_auth.c 
 
-INCLUDES = \
-	-I$(top_srcdir) \
-	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/src
+## we need our local files too (but avoid -I. at all costs)
+INCLUDES += -I$(srcdir)
 
 LDADD = \
 	$(top_builddir)/compat/libcompat.la \
