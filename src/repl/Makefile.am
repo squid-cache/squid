@@ -3,10 +3,12 @@
 #  $Id$
 #
 
+include $(top_srcdir)/src/Common.am
+
+## we need our local files too (but avoid -I. at all costs)
+INCLUDES += -I$(srcdir)
+
 AUTOMAKE_OPTIONS = subdir-objects
-AM_CFLAGS = @SQUID_CFLAGS@
-AM_CXXFLAGS = @SQUID_CXXFLAGS@
-CLEANFILES = 
 
 # No recursion is needed for the subdirs, we build from here. // @REPL_POLICIES@
 
@@ -16,14 +18,8 @@ noinst_LIBRARIES = @REPL_LIBS@
 liblru_a_SOURCES = lru/store_repl_lru.cc
 libheap_a_SOURCES = heap/store_heap_replacement.h heap/store_heap_replacement.cc heap/store_repl_heap.cc
 
-INCLUDES = \
-	-I$(top_srcdir) \
-	-I. \
-	-I$(top_builddir)/include \
-	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/src
-
-check_PROGRAMS= testHeaders
+## Until such time as we have a makefile in src/repl/heap etc.
+check_PROGRAMS += testHeaders
 
 ## Special Universal .h dependency test script
 ## aborts if error encountered
@@ -32,7 +28,5 @@ testHeaders: $(top_srcdir)/src/repl/heap/*.h
 ## ./ has no .h files.
 ## ./lru/ has no .h files.
 
-## No such file...
-testHeaders.c:
-	touch testHeaders.c
-CLEANFILES += testHeaders.c
+CLEANFILES += testHeaders
+.PHONY: testHeaders

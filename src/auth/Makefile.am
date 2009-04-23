@@ -1,5 +1,8 @@
 include $(top_srcdir)/src/Common.am
 
+## we need our local files too (but avoid -I. at all costs)
+INCLUDES += -I$(srcdir)
+
 noinst_LTLIBRARIES = libauth.la libacls.la @AUTH_LIBS_TO_BUILD@
 EXTRA_LTLIBRARIES = libbasic.la libdigest.la libntlm.la libnegotiate.la
 
@@ -55,9 +58,6 @@ libnegotiate_la_SOURCES = \
 	negotiate/auth_negotiate.cc \
 	negotiate/auth_negotiate.h
 
-# TODO: fix #include statements so that this is not needed
-INCLUDES += -I.
-
 
 check_PROGRAMS += testHeaders
 
@@ -70,7 +70,5 @@ testHeaders: $(top_srcdir)/src/auth/*.h $(top_srcdir)/src/auth/basic/*.h $(top_s
 	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/src/auth/ntlm" || exit 1
 	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/src/auth/negotiate" || exit 1
 
-## No such file...
-testHeaders.c:
-	touch testHeaders.c
 CLEANFILES += testHeaders.c
+.PHONY: testHeaders
