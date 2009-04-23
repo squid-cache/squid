@@ -10,7 +10,7 @@
 #
 cc="${1}"
 
-if [ "${2}" == "" ]; then
+if test "${2}" = ""; then
 	dir="."
 else
 	dir="${2}"
