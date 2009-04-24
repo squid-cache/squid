@@ -29,6 +29,19 @@
 
 #include "rfcnb.h"
 
+/* local functions */
+char * SMB_DOSTimToStr(int DOS_time);
+char * SMB_AtrToStr(int attribs, BOOL verbose);
+int SMB_Get_Tree_MBS(SMB_Tree_Handle tree);
+int SMB_Get_Max_Buf_Siz(SMB_Handle_Type Con_Handle);
+int SMB_Get_Protocol_IDX(SMB_Handle_Type Con_Handle);
+int SMB_Get_Protocol(SMB_Handle_Type Con_Handle);
+int SMB_Figure_Protocol(char const *dialects[], int prot_index);
+int SMB_TreeDisconnect(SMB_Tree_Handle Tree_Handle, BOOL discard);
+// int SMB_Get_Last_Error(void);
+int SMB_Get_Last_SMB_Err(void);
+
+
 /* global data structures */
 
 static int SMB_Types[] = {SMB_P_Core,
@@ -46,7 +59,7 @@ static int SMB_Types[] = {SMB_P_Core,
                           -1
                          };
 
-static char *SMB_Prots[] = {"PC NETWORK PROGRAM 1.0",
+static char const *SMB_Prots[] = {"PC NETWORK PROGRAM 1.0",
                             "MICROSOFT NETWORKS 1.03",
                             "MICROSOFT NETWORKS 3.0",
                             "DOS LANMAN1.0",
@@ -62,7 +75,7 @@ static char *SMB_Prots[] = {"PC NETWORK PROGRAM 1.0",
                            };
 
 /* Print out an SMB pkt in all its gory detail ... */
-
+#if 0 // DEAD CODE
 void
 SMB_Print_Pkt(FILE fd, RFCNB_Pkt * pkt, BOOL command, int Offset, int Len)
 {
@@ -79,6 +92,7 @@ SMB_Print_Pkt(FILE fd, RFCNB_Pkt * pkt, BOOL command, int Offset, int Len)
     /* etc                                                 */
 
 }
+#endif /* 0 */
 
 /* Convert a DOS Date_Time to a local host type date time for printing */
 
@@ -105,10 +119,11 @@ SMB_DOSTimToStr(int DOS_time)
 
 }
 
-/* Convert an attribute byte/word etc to a string ... We return a pointer
+/**
+ * Convert an attribute byte/word etc to a string ... We return a pointer
  * to a static string which we guarantee is long enough. If verbose is
- * true, we print out long form of strings ...                            */
-
+ * true, we print out long form of strings ...
+ */
 char *
 SMB_AtrToStr(int attribs, BOOL verbose)
 {
@@ -138,8 +153,7 @@ SMB_AtrToStr(int attribs, BOOL verbose)
 
 }
 
-/* Pick up the Max Buffer Size from the Tree Structure ... */
-
+/** Pick up the Max Buffer Size from the Tree Structure ... */
 int
 SMB_Get_Tree_MBS(SMB_Tree_Handle tree)
 {
@@ -150,8 +164,7 @@ SMB_Get_Tree_MBS(SMB_Tree_Handle tree)
     }
 }
 
-/* Pick up the Max buffer size */
-
+/** Pick up the Max buffer size */
 int
 SMB_Get_Max_Buf_Siz(SMB_Handle_Type Con_Handle)
 {
@@ -162,8 +175,8 @@ SMB_Get_Max_Buf_Siz(SMB_Handle_Type Con_Handle)
     }
 
 }
-/* Pickup the protocol index from the connection structure                 */
 
+/* Pickup the protocol index from the connection structure                 */
 int
 SMB_Get_Protocol_IDX(SMB_Handle_Type Con_Handle)
 {
@@ -175,8 +188,7 @@ SMB_Get_Protocol_IDX(SMB_Handle_Type Con_Handle)
 
 }
 
-/* Pick up the protocol from the connection structure                       */
-
+/** Pick up the protocol from the connection structure                       */
 int
 SMB_Get_Protocol(SMB_Handle_Type Con_Handle)
 {
@@ -188,12 +200,13 @@ SMB_Get_Protocol(SMB_Handle_Type Con_Handle)
 
 }
 
-/* Figure out what protocol was accepted, given the list of dialect strings */
-/* We offered, and the index back from the server. We allow for a user      */
-/* supplied list, and assume that it is a subset of our list                */
-
+/**
+ * Figure out what protocol was accepted, given the list of dialect strings
+ * We offered, and the index back from the server. We allow for a user
+ * supplied list, and assume that it is a subset of our list
+ */
 int
-SMB_Figure_Protocol(char *dialects[], int prot_index)
+SMB_Figure_Protocol(char const *dialects[], int prot_index)
 {
     int i;
 
@@ -226,7 +239,7 @@ SMB_Figure_Protocol(char *dialects[], int prot_index)
 /* none acceptible, and our return value is 0 if ok, <0 if problems       */
 
 int
-SMB_Negotiate(SMB_Handle_Type Con_Handle, char *Prots[])
+SMB_Negotiate(SMB_Handle_Type Con_Handle, char const *Prots[])
 {
     struct RFCNB_Pkt *pkt;
     int prots_len, i, pkt_len, prot, alloc_len;
@@ -237,9 +250,7 @@ SMB_Negotiate(SMB_Handle_Type Con_Handle, char *Prots[])
     prots_len = 0;
 
     for (i = 0; Prots[i] != NULL; i++) {
-
         prots_len = prots_len + strlen(Prots[i]) + 2;	/* Account for null etc */
-
     }
 
     /* The -1 accounts for the one byte smb_buf we have because some systems */
@@ -251,25 +262,19 @@ SMB_Negotiate(SMB_Handle_Type Con_Handle, char *Prots[])
     /* Which is a problem, because the encryption key len eec may be long   */
 
     if (pkt_len < (SMB_hdr_wct_offset + (19 * 2) + 40)) {
-
         alloc_len = SMB_hdr_wct_offset + (19 * 2) + 40;
-
     } else {
-
         alloc_len = pkt_len;
-
     }
 
     pkt = (struct RFCNB_Pkt *) RFCNB_Alloc_Pkt(alloc_len);
 
     if (pkt == NULL) {
-
         SMBlib_errno = SMBlibE_NoSpace;
         return (SMBlibE_BAD);
-
     }
-    /* Now plug in the bits we need */
 
+    /* Now plug in the bits we need */
     memset(SMB_Hdr(pkt), 0, SMB_negp_len);
     SIVAL(SMB_Hdr(pkt), SMB_hdr_idf_offset, SMB_DEF_IDF);	/* Plunk in IDF */
     *(SMB_Hdr(pkt) + SMB_hdr_com_offset) = SMBnegprot;
@@ -278,7 +283,6 @@ SMB_Negotiate(SMB_Handle_Type Con_Handle, char *Prots[])
     SSVAL(SMB_Hdr(pkt), SMB_hdr_mid_offset, Con_Handle->mid);
     SSVAL(SMB_Hdr(pkt), SMB_hdr_uid_offset, Con_Handle->uid);
     *(SMB_Hdr(pkt) + SMB_hdr_wct_offset) = 0;
-
     SSVAL(SMB_Hdr(pkt), SMB_negp_bcc_offset, prots_len);
 
     /* Now copy the prot strings in with the right stuff */
@@ -286,82 +290,65 @@ SMB_Negotiate(SMB_Handle_Type Con_Handle, char *Prots[])
     p = (char *) (SMB_Hdr(pkt) + SMB_negp_buf_offset);
 
     for (i = 0; Prots[i] != NULL; i++) {
-
         *p = SMBdialectID;
         strcpy(p + 1, Prots[i]);
         p = p + strlen(Prots[i]) + 2;	/* Adjust len of p for null plus dialectID */
-
     }
 
     /* Now send the packet and sit back ... */
-
     if (RFCNB_Send(Con_Handle->Trans_Connect, pkt, pkt_len) < 0) {
-
-
 #ifdef DEBUG
         fprintf(stderr, "Error sending negotiate protocol\n");
 #endif
-
         RFCNB_Free_Pkt(pkt);
         SMBlib_errno = -SMBlibE_SendFailed;	/* Failed, check lower layer errno */
         return (SMBlibE_BAD);
-
     }
+
     /* Now get the response ... */
-
     if (RFCNB_Recv(Con_Handle->Trans_Connect, pkt, alloc_len) < 0) {
-
 #ifdef DEBUG
         fprintf(stderr, "Error receiving response to negotiate\n");
 #endif
-
         RFCNB_Free_Pkt(pkt);
         SMBlib_errno = -SMBlibE_RecvFailed;	/* Failed, check lower layer errno */
         return (SMBlibE_BAD);
-
     }
-    if (CVAL(SMB_Hdr(pkt), SMB_hdr_rcls_offset) != SMBC_SUCCESS) {	/* Process error */
 
+    if (CVAL(SMB_Hdr(pkt), SMB_hdr_rcls_offset) != SMBC_SUCCESS) {	/* Process error */
 #ifdef DEBUG
         fprintf(stderr, "SMB_Negotiate failed with errorclass = %i, Error Code = %i\n",
                 CVAL(SMB_Hdr(pkt), SMB_hdr_rcls_offset),
                 SVAL(SMB_Hdr(pkt), SMB_hdr_err_offset));
 #endif
-
         SMBlib_SMB_Error = IVAL(SMB_Hdr(pkt), SMB_hdr_rcls_offset);
         RFCNB_Free_Pkt(pkt);
         SMBlib_errno = SMBlibE_Remote;
         return (SMBlibE_BAD);
-
     }
-    if (SVAL(SMB_Hdr(pkt), SMB_negrCP_idx_offset) == 0xFFFF) {
 
+    if (SVAL(SMB_Hdr(pkt), SMB_negrCP_idx_offset) == 0xFFFF) {
 #ifdef DEBUG
         fprintf(stderr, "None of our protocols was accepted ... ");
 #endif
-
         RFCNB_Free_Pkt(pkt);
         SMBlib_errno = SMBlibE_NegNoProt;
         return (SMBlibE_BAD);
-
     }
+
     /* Now, unpack the info from the response, if any and evaluate the proto */
     /* selected. We must make sure it is one we like ...                     */
-
     Con_Handle->prot_IDX = prot = SVAL(SMB_Hdr(pkt), SMB_negrCP_idx_offset);
     Con_Handle->protocol = SMB_Figure_Protocol(Prots, prot);
 
     if (Con_Handle->protocol == SMB_P_Unknown) {	/* No good ... */
-
         RFCNB_Free_Pkt(pkt);
         SMBlib_errno = SMBlibE_ProtUnknown;
         return (SMBlibE_BAD);
-
     }
     switch (CVAL(SMB_Hdr(pkt), SMB_hdr_wct_offset)) {
 
     case 0x01:			/* No more info ... */
-
         break;
 
     case 13:			/* Up to and including LanMan 2.1 */
@@ -385,7 +372,6 @@ SMB_Negotiate(SMB_Handle_Type Con_Handle, char *Prots[])
         p = (SMB_Hdr(pkt) + SMB_negrLM_buf_offset + Con_Handle->Encrypt_Key_Len);
 
         strncpy(p, Con_Handle->Svr_PDom, sizeof(Con_Handle->Svr_PDom) - 1);
-
         break;
 
     case 17:			/* NT LM 0.12 and LN LM 1.0 */
@@ -459,7 +445,7 @@ SMB_TreeConnect(SMB_Handle_Type Con_Handle,
                 SMB_Tree_Handle Tree_Handle,
                 char *path,
                 char *password,
-                char *device)
+                char const *device)
 {
     struct RFCNB_Pkt *pkt;
     int param_len, pkt_len;
@@ -730,9 +716,9 @@ SMB_Get_Last_Error()
 
 }
 
-/* Pick up the last error returned in an SMB packet          */
-/* We will need macros to extract error class and error code */
-
+/** Pick up the last error returned in an SMB packet
+ * We will need macros to extract error class and error code
+ */
 int
 SMB_Get_Last_SMB_Err()
 {
@@ -745,7 +731,7 @@ SMB_Get_Last_SMB_Err()
 
 /* Keep this table in sync with the message codes in smblib-common.h */
 
-static char *SMBlib_Error_Messages[] = {
+static char const *SMBlib_Error_Messages[] = {
 
     "Request completed sucessfully.",
     "Server returned a non-zero SMB Error Class and Code.",

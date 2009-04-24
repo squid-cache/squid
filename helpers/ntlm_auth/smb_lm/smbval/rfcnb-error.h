@@ -48,7 +48,7 @@
 #define RFCNBE_Timeout       16	/* IO Timed out                          */
 
 /* Text strings for the error responses                                 */
-extern char *RFCNB_Error_Strings[];
+extern char const *RFCNB_Error_Strings[];
 /*
  * static char *RFCNB_Error_Strings[] = {
  *

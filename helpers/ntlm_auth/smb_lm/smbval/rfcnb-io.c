@@ -32,18 +32,22 @@
 #include <sys/signal.h>
 #include <string.h>
 
-int RFCNB_Timeout = 0;		/* Timeout in seconds ... */
+/* local functions */
+void rfcnb_alarm(int sig);
+int RFCNB_Set_Timeout(int seconds);
+int RFCNB_Discard_Rest(struct RFCNB_Con *con, int len);
+
+/* local globals */
+
+int RFCNB_Timeout = 0;		/**< Timeout in seconds ... */
 
 void
 rfcnb_alarm(int sig)
 {
-
     fprintf(stderr, "IO Timed out ...\n");
-
 }
 
-/* Set timeout value and setup signal handling */
-
+/** Set timeout value and setup signal handling */
 int
 RFCNB_Set_Timeout(int seconds)
 {
@@ -79,9 +83,9 @@ RFCNB_Set_Timeout(int seconds)
 
 }
 
-/* Discard the rest of an incoming packet as we do not have space for it
- * in the buffer we allocated or were passed ...                         */
-
+/** Discard the rest of an incoming packet as we do not have space for it
+ * in the buffer we allocated or were passed ...
+ */
 int
 RFCNB_Discard_Rest(struct RFCNB_Con *con, int len)
 {
@@ -122,14 +126,13 @@ RFCNB_Discard_Rest(struct RFCNB_Con *con, int len)
 }
 
 
-/* Send an RFCNB packet to the connection.
+/** Send an RFCNB packet to the connection.
  *
  * We just send each of the blocks linked together ...
  *
  * If we can, try to send it as one iovec ...
  *
  */
-
 int
 RFCNB_Put_Pkt(struct RFCNB_Con *con, struct RFCNB_Pkt *pkt, int len)
 {
@@ -212,14 +215,12 @@ RFCNB_Put_Pkt(struct RFCNB_Con *con, struct RFCNB_Pkt *pkt, int len)
 
 }
 
-/* Read an RFCNB packet off the connection.
+/** Read an RFCNB packet off the connection.
  *
  * We read the first 4 bytes, that tells us the length, then read the
  * rest. We should implement a timeout, but we don't just yet
  *
  */
-
-
 int
 RFCNB_Get_Pkt(struct RFCNB_Con *con, struct RFCNB_Pkt *pkt, int len)
 {

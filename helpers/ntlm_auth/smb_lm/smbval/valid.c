@@ -22,13 +22,13 @@ int
 Valid_User(char *username, char *password, char *server, char *backup, char *domain)
 {
     int pass_is_precrypted_p = 0;
-    char *SMB_Prots[] = {
+    char const *SMB_Prots[] = {
         /*              "PC NETWORK PROGRAM 1.0", */
         /*              "MICROSOFT NETWORKS 1.03", */
         /*              "MICROSOFT NETWORKS 3.0", */
-        (char*)"LANMAN1.0",
-        (char*)"LM1.2X002",
-        (char*)"Samba",
+        "LANMAN1.0",
+        "LM1.2X002",
+        "Samba",
         /*              "NT LM 0.12", */
         /*              "NT LANMAN 1.0", */
         NULL
@@ -63,13 +63,13 @@ Valid_User(char *username, char *password, char *server, char *backup, char *dom
 void *
 NTLM_Connect(char *server, char *backup, char *domain, char *nonce)
 {
-    char *SMB_Prots[] = {
+    char const *SMB_Prots[] = {
         /*              "PC NETWORK PROGRAM 1.0", */
         /*              "MICROSOFT NETWORKS 1.03", */
         /*              "MICROSOFT NETWORKS 3.0", */
-        (char*)"LANMAN1.0",
-        (char*)"LM1.2X002",
-        (char*)"Samba",
+        "LANMAN1.0",
+        "LM1.2X002",
+        "Samba",
         /*              "NT LM 0.12", */
         /*              "NT LANMAN 1.0", */
         NULL

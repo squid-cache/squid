@@ -26,9 +26,10 @@
 
 /* these are part of rfcnb-priv.h and smblib-priv.h */
 extern int SMB_Get_Error_Msg(int msg, char *msgbuf, int len);
-extern int SMB_Get_Last_Error();
-extern int SMB_Get_Last_SMB_Err();
-extern int RFCNB_Get_Last_Error();
+extern int SMB_Get_Last_Error(void);
+extern int SMB_Get_Last_SMB_Err(void);
+extern int RFCNB_Get_Last_Error(void);
+
 
 #include <errno.h>
 
@@ -52,6 +53,14 @@ extern int RFCNB_Get_Last_Error();
 #ifdef HAVE_ASSERT_H
 #include <assert.h>
 #endif
+
+/* local functions */
+void send_bh_or_ld(char const *bhmessage, ntlm_authenticate * failedauth, int authlen);
+void usage(void);
+void process_options(int argc, char *argv[]);
+const char * obtain_challenge(void);
+void manage_request(void);
+
 
 #ifdef DEBUG
 char error_messages_buffer[BUFFER_SIZE];
@@ -101,7 +110,7 @@ lc(char *string)
 
 
 void
-send_bh_or_ld(char *bhmessage, ntlm_authenticate * failedauth, int authlen)
+send_bh_or_ld(char const *bhmessage, ntlm_authenticate * failedauth, int authlen)
 {
 #ifdef NTLM_FAIL_OPEN
     char *creds = NULL;
@@ -228,7 +237,8 @@ process_options(int argc, char *argv[])
     last_dc->next = controllers;	/* close the queue, now it's circular */
 }
 
-/* tries connecting to the domain controllers in the "controllers" ring,
+/**
+ * tries connecting to the domain controllers in the "controllers" ring,
  * with failover if the adequate option is specified.
  */
 const char *

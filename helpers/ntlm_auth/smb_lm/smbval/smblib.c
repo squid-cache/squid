@@ -40,6 +40,14 @@ int SMBlib_SMB_Error;
 
 #include <signal.h>
 
+/* local functions */
+int SMB_Term(void);
+SMB_Handle_Type SMB_Create_Con_Handle(void);
+int SMBlib_Set_Sock_NoDelay(SMB_Handle_Type Con_Handle, BOOL yn);
+SMB_Handle_Type SMB_Connect_Server(SMB_Handle_Type Con_Handle, char *server, char *NTdomain);
+SMB_Handle_Type SMB_Connect(SMB_Handle_Type Con_Handle, SMB_Tree_Handle * tree, char *service, char *username, char *password);
+
+
 /* #define DEBUG */
 
 SMB_State_Types SMBlib_State;
@@ -79,38 +87,28 @@ SMB_Term()
 
 }
 
-/* SMB_Create: Create a connection structure and return for later use */
-/* We have other helper routines to set variables                     */
-
+/**
+ * SMB_Create: Create a connection structure and return for later use 
+ * We have other helper routines to set variables
+ */
 SMB_Handle_Type
 SMB_Create_Con_Handle()
 {
-
     SMBlib_errno = SMBlibE_NotImpl;
     return (NULL);
-
 }
 
 int
 SMBlib_Set_Sock_NoDelay(SMB_Handle_Type Con_Handle, BOOL yn)
 {
-
-
     if (RFCNB_Set_Sock_NoDelay(Con_Handle->Trans_Connect, yn) < 0) {
-
-#ifdef DEBUG
-#endif
-
         fprintf(stderr, "Setting no-delay on TCP socket failed ...\n");
-
     }
     return (0);
-
 }
 
 /* SMB_Connect_Server: Connect to a server, but don't negotiate protocol */
 /* or anything else ...                                                  */
-
 SMB_Handle_Type
 SMB_Connect_Server(SMB_Handle_Type Con_Handle,
                    char *server, char *NTdomain)
@@ -210,7 +208,7 @@ SMB_Connect_Server(SMB_Handle_Type Con_Handle,
 /* If Con_Handle == NULL then create a handle and connect, otherwise  */
 /* use the handle passed                                              */
 
-char *SMB_Prots_Restrict[] = {"PC NETWORK PROGRAM 1.0",
+char const *SMB_Prots_Restrict[] = {"PC NETWORK PROGRAM 1.0",
                               NULL
                              };
 
@@ -303,22 +301,18 @@ SMB_Connect(SMB_Handle_Type Con_Handle,
         return NULL;
 
     }
-    /* Now, negotiate the protocol */
 
+    /* Now, negotiate the protocol */
     if (SMB_Negotiate(con, SMB_Prots_Restrict) < 0) {
 
         /* Hmmm what should we do here ... We have a connection, but could not
          * negotiate ...                                                      */
-
         return NULL;
-
     }
+
     /* Now connect to the service ... */
-
     if ((*tree = SMB_TreeConnect(con, NULL, service, password, "A:")) == NULL) {
-
         return NULL;
-
     }
     return (con);
 
