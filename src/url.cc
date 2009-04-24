@@ -470,7 +470,7 @@ urlCanonical(HttpRequest * request)
     return (request->canonical = xstrdup(urlbuf));
 }
 
-/** \todo AYJ: Performance: This is an *almost* duplicate of urlCanoncical. But elides the query-string.
+/** \todo AYJ: Performance: This is an *almost* duplicate of urlCanonical. But elides the query-string.
  *        After copying it on in the first place! Would be less code to merge the two with a flag parameter.
  *        and never copy the query-string part in the first place
  */
@@ -535,6 +535,28 @@ urlCanonicalClean(const HttpRequest * request)
 
     return buf;
 }
+
+/**
+ * Yet another alternative to urlCanonical.
+ * This one addes the https:// parts to METHOD_CONNECT URL
+ * for use in error page outputs.
+ * Luckily we can leverage the others instead of duplicating.
+ */
+const char *
+urlCanonicalFakeHttps(const HttpRequest * request)
+{
+    LOCAL_ARRAY(char, buf, MAX_URL);
+
+    // method CONNECT and port HTTPS
+    if(request->method == METHOD_CONNECT && request->port == 443) {
+        snprintf(buf, MAX_URL, "https://%s/*", request->GetHost());
+        return buf;
+    }
+
+    // else do the normal complete canonical thing.
+    return urlCanonicalClean(request);
+}
+
 
 /*
  * Test if a URL is relative.
