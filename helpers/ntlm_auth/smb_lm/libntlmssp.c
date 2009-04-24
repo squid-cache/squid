@@ -42,7 +42,7 @@ SMB_Handle_Type SMB_Connect_Server(SMB_Handle_Type Con_Handle, char *server, cha
 
 /* this one is reallllly haackiish. We really should be using anything from smblib-priv.h
  */
-static char *SMB_Prots[] = {"PC NETWORK PROGRAM 1.0",
+static char const *SMB_Prots[] = {"PC NETWORK PROGRAM 1.0",
                             "MICROSOFT NETWORKS 1.03",
                             "MICROSOFT NETWORKS 3.0",
                             "DOS LANMAN1.0",

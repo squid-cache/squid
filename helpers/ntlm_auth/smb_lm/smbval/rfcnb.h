@@ -23,11 +23,15 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#ifndef SMB_LM_SMBVAL_RFCNB_H
+#define SMB_LM_SMBVAL_RFCNB_H
+
 /* Error responses */
 
 #include "rfcnb-error.h"
 #include "rfcnb-common.h"
 #include "smblib-priv.h"
+#include "rfcnb-priv.h"
 
 /* Defines we need */
 
@@ -35,21 +39,22 @@
 
 /* Definition of routines we define */
 
-void *RFCNB_Call(char *Called_Name, char *Calling_Name, char *Called_Address,
-                 int port);
+extern void *RFCNB_Call(char *Called_Name, char *Calling_Name, char *Called_Address, int port);
 
-int RFCNB_Send(void *Con_Handle, struct RFCNB_Pkt *Data, int Length);
+extern int RFCNB_Send(struct RFCNB_Con *Con_Handle, struct RFCNB_Pkt *Data, int Length);
 
-int RFCNB_Recv(void *Con_Handle, struct RFCNB_Pkt *Data, int Length);
+extern int RFCNB_Recv(void *Con_Handle, struct RFCNB_Pkt *Data, int Length);
 
-int RFCNB_Hangup(void *con_Handle);
+extern int RFCNB_Hangup(struct RFCNB_Con *con_Handle);
 
-void *RFCNB_Listen();
+extern void *RFCNB_Listen(void);
 
-void RFCNB_Get_Error(char *buffer, int buf_len);
+extern void RFCNB_Get_Error(char *buffer, int buf_len);
 
-struct RFCNB_Pkt *RFCNB_Alloc_Pkt(int n);
+extern struct RFCNB_Pkt *RFCNB_Alloc_Pkt(int n);
 
-void RFCNB_Free_Pkt(struct RFCNB_Pkt *pkt);
+extern void RFCNB_Free_Pkt(struct RFCNB_Pkt *pkt);
 
-int RFCNB_Set_Sock_NoDelay(void *con_Handle, BOOL yn);
+extern int RFCNB_Set_Sock_NoDelay(struct RFCNB_Con *con_Handle, BOOL yn);
+
+#endif /* SMB_LM_SMBVAL_RFCNB_H */

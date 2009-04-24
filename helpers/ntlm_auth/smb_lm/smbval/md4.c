@@ -26,6 +26,7 @@
  */
 #include <string.h>
 #include "std-defines.h"	/* for the types */
+#include "md4.h"
 
 static uint32 A, B, C, D;
 

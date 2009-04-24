@@ -35,10 +35,19 @@ int RFCNB_saved_errno = 0;
 #include "rfcnb-priv.h"
 #include "rfcnb-util.h"
 #include "rfcnb-io.h"
+#include "rfcnb.h"
+
+
+/* local functions */
+
+int RFCNB_Get_Last_Error(void);
+int RFCNB_Get_Last_Errno(void);
+void RFCNB_Get_Error_Msg(int code, char *msg_buf, int len);
+void RFCNB_Register_Print_Routine(void (*fn) ());
 
 /* global data structures */
 
-char *RFCNB_Error_Strings[] = {
+char const * RFCNB_Error_Strings[] = {
 
     "RFCNBE_OK: Routine completed successfully.",
     "RFCNBE_NoSpace: No space available for a malloc call.",
