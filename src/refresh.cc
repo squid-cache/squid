@@ -109,7 +109,7 @@ refreshCounts[rcCount];
 
 static const refresh_t *refreshUncompiledPattern(const char *);
 static OBJH refreshStats;
-static int refreshStaleness(const StoreEntry *, time_t, time_t, const refresh_t *, stale_flags *);
+static int refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, const refresh_t * R, stale_flags * sf);
 
 static refresh_t DefaultRefresh;
 
@@ -155,12 +155,11 @@ refreshUncompiledPattern(const char *pat)
  * times.
  */
 static int
-refreshStaleness(const StoreEntry * entry, time_t check_time, time_t age, const refresh_t * R, stale_flags * sf)
+refreshStaleness(const StoreEntry * entry, time_t check_time, const time_t age, const refresh_t * R, stale_flags * sf)
 {
     /** \par
      * Check for an explicit expiration time (Expires: header).
      */
-
     if (entry->expires > -1) {
         sf->expires = true;
 
@@ -177,12 +176,10 @@ refreshStaleness(const StoreEntry * entry, time_t check_time, time_t age, const 
         }
     }
 
-    assert(age >= 0);
     /** \par
      * Use local heuristics to determine staleness.  Start with the
      * max age from the refresh_pattern rule.
      */
-
     if (age > R->max) {
         debugs(22, 3, "STALE: age " << age << " > max " << R->max << " ");
         sf->max = true;
@@ -246,11 +243,12 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
     debugs(22, 3, "refreshCheck: '" << (uri ? uri : "<none>") << "'");
 
-    assert(age >= 0);
     if (check_time > entry->timestamp)
         age = check_time - entry->timestamp;
 
+    // FIXME: what to do when age < 0 or counter overflow?
     assert(age >= 0);
+
     R = uri ? refreshLimits(uri) : refreshUncompiledPattern(".");
 
     if (NULL == R)
@@ -258,7 +256,6 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
     memset(&sf, '\0', sizeof(sf));
 
-    assert(age >= 0);
     staleness = refreshStaleness(entry, check_time, age, R, &sf);
 
     debugs(22, 3, "Staleness = " << staleness);
