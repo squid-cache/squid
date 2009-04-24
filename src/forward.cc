@@ -860,11 +860,12 @@ FwdState::connectStart()
 
     debugs(17, 3, "fwdConnectStart: got outgoing addr " << outgoing << ", tos " << tos);
 
+    int flags = COMM_NONBLOCKING;
     if (request->flags.spoof_client_ip) {
-        fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, outgoing, (COMM_NONBLOCKING|COMM_TRANSPARENT), tos, url);
-    } else {
-        fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, outgoing, COMM_NONBLOCKING, tos, url);
+        flags |= COMM_TRANSPARENT;
     }
+
+    fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, outgoing, flags, tos, url);
 
     debugs(17, 3, "fwdConnectStart: got TCP FD " << fd);
 

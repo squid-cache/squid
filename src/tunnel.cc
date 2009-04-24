@@ -636,10 +636,14 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
     statCounter.server.other.requests++;
     /* Create socket. */
     IpAddress temp = getOutgoingAddr(request,NULL);
+    int flags = COMM_NONBLOCKING;
+    if (request->flags.spoof_client_ip) {
+        flags |= COMM_TRANSPARENT;
+    }
     sock = comm_openex(SOCK_STREAM,
                        IPPROTO_TCP,
                        temp,
-                       COMM_NONBLOCKING,
+                       flags,
                        getOutgoingTOS(request),
                        url);
 
