@@ -3171,9 +3171,9 @@ clientHttpConnectionsOpen(void)
         enter_suid();
 
         if (s->spoof_client_ip) {
-            fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, s->s, (COMM_NONBLOCKING|COMM_TRANSPARENT), 0, "HTTP Socket");
+            fd = comm_open_listener(SOCK_STREAM, IPPROTO_TCP, s->s, (COMM_NONBLOCKING|COMM_TRANSPARENT), "HTTP Socket");
         } else {
-            fd = comm_open(SOCK_STREAM, IPPROTO_TCP, s->s, COMM_NONBLOCKING, "HTTP Socket");
+            fd = comm_open_listener(SOCK_STREAM, IPPROTO_TCP, s->s, COMM_NONBLOCKING, "HTTP Socket");
         }
 
         leave_suid();
@@ -3225,7 +3225,7 @@ clientHttpsConnectionsOpen(void)
         }
 
         enter_suid();
-        fd = comm_open(SOCK_STREAM,
+        fd = comm_open_listener(SOCK_STREAM,
                        IPPROTO_TCP,
                        s->http.s,
                        COMM_NONBLOCKING, "HTTPS Socket");

@@ -995,7 +995,7 @@ wccp2ConnectionOpen(void)
     }
 
     Config.Wccp2.address.SetPort(WCCP_PORT);
-    theWccp2Connection = comm_open(SOCK_DGRAM,
+    theWccp2Connection = comm_open_listener(SOCK_DGRAM,
                                    0,
                                    Config.Wccp2.address,
                                    COMM_NONBLOCKING,

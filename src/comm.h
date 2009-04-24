@@ -55,6 +55,23 @@ SQUIDCEXTERN void comm_exit(void);
 
 SQUIDCEXTERN int comm_open(int, int, IpAddress &, int, const char *note);
 
+/**
+ * Open a port specially bound for listening or sending through a specific port.
+ * This is a wrapper providing IPv4/IPv6 failover around comm_openex().
+ * Please use for all listening sockets and bind() outbound sockets.
+ *
+ * It will open a socket bound for:
+ *  - IPv4 if IPv6 is disabled or address is IPv4-native.
+ *  - IPv6 if address is IPv6-native
+ *  - IPv6 dual-stack mode if able to open [::]
+ *
+ * When an open performs failover it update the given address to feedback
+ * the new IPv4-only status of the socket. Further displays of the IP
+ * (in debugs or cachemgr) will occur in Native IPv4 format.
+ * A reconfigure is needed to reset the stored IP in most cases and attempt a port re-open.
+ */
+SQUIDCEXTERN int comm_open_listener(int sock_type, int proto, IpAddress &addr, int flags, const char *note);
+
 SQUIDCEXTERN int comm_openex(int, int, IpAddress &, int, unsigned char TOS, const char *);
 SQUIDCEXTERN u_short comm_local_port(int fd);
 SQUIDCEXTERN int comm_set_tos(int fd, int tos);
