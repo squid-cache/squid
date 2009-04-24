@@ -735,7 +735,7 @@ char *
 xstrdup(const char *s)
 {
     size_t sz;
-    void *p;
+    char *p;
     PROF_start(xstrdup);
 
     if (s == NULL) {
@@ -751,7 +751,7 @@ xstrdup(const char *s)
     /* copy string, including terminating character */
     sz = strlen(s) + 1;
 
-    p = memcpy(xmalloc(sz), s, sz);
+    p = memcpy((char *)xmalloc(sz), s, sz);
 
     PROF_stop(xstrdup);
 
@@ -765,7 +765,7 @@ char *
 xstrndup(const char *s, size_t n)
 {
     size_t sz;
-    void *p;
+    char *p;
     PROF_start(xstrndup);
     assert(s != NULL);
     assert(n);
@@ -774,7 +774,7 @@ xstrndup(const char *s, size_t n)
     if (sz > n)
         sz = n;
 
-    p = xstrncpy(xmalloc(sz), s, sz);
+    p = xstrncpy((char *)xmalloc(sz), s, sz);
 
     PROF_stop(xstrndup);
 
