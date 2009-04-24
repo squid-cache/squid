@@ -2247,6 +2247,7 @@ AC_CHECK_HEADERS( \
 	libc.h \
 	libgen.h \
 	limits.h \
+	machine/byte_swap.h \
 	malloc.h \
 	math.h \
 	memory.h \
