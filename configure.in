@@ -1972,6 +1972,7 @@ AC_CHECK_HEADERS( \
 	netinet/ip_icmp.h\
 	netinet/ipl.h \
 	netinet/ip_nat.h\
+	net/pf/pfvar.h \
 	net/pfvar.h \
 	sys/mount.h\
 	resolv.h,,,SQUID_BSDNET_INCLUDES)
@@ -2841,7 +2842,7 @@ dnl PF support requires a header file.
 if test "$PF_TRANSPARENT" ; then
     AC_MSG_CHECKING(if PF header file is installed)
     # hold on to your hats...
-    if test "$ac_cv_header_net_pfvar_h" = "yes"; then
+    if test "$ac_cv_header_net_pfvar_h" = "yes" || test "$ac_cv_header_net_pf_pfvar_h" = "yes"; then
         PF_TRANSPARENT="yes"
         AC_DEFINE(PF_TRANSPARENT, 1)
     else

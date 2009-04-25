@@ -81,7 +81,12 @@
 #include <sys/fcntl.h>
 #include <net/if.h>
 #include <netinet/in.h>
+#ifdef HAVE_NET_PF_PFVAR_H
+#include <net/pf/pfvar.h>
+#endif /* HAVE_NET_PF_PFVAR_H */
+#ifdef HAVE_NET_PFVAR_H
 #include <net/pfvar.h>
+#endif /* HAVE_NET_PFVAR_H */
 #endif
 
 #if LINUX_NETFILTER
