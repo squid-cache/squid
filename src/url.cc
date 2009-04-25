@@ -449,7 +449,7 @@ urlCanonicalFakeHttps(const HttpRequest * request)
 
     // method CONNECT and port HTTPS
     if(request->method == METHOD_CONNECT && request->port == 443) {
-        snprintf(buf, MAX_URL, "https://%s/*", request->GetHost());
+        snprintf(buf, MAX_URL, "https://%s/*", request->host);
         return buf;
     }
 

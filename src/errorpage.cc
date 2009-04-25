@@ -690,7 +690,7 @@ errorConvert(char token, ErrorState * err)
     case 'I':
         if (r && r->hier.host[0] != '\0') // if non-empty string
             mb.Printf("%s", r->hier.host);
-        } else
+        else
             p = "[unknown]";
 
         break;
