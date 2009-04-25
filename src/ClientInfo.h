@@ -2,6 +2,9 @@
 #define SQUID__SRC_CLIENTINFO_H
 
 #include "ip/IpAddress.h"
+#include "hash.h"
+#include "enums.h"
+#include "typedefs.h"
 
 class ClientInfo {
 public:
