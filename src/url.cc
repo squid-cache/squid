@@ -436,6 +436,28 @@ urlCanonicalClean(const HttpRequest * request)
     return buf;
 }
 
+/**
+ * Yet another alternative to urlCanonical.
+ * This one addes the https:// parts to METHOD_CONNECT URL
+ * for use in error page outputs.
+ * Luckily we can leverage the others instead of duplicating.
+ */
+const char *
+urlCanonicalFakeHttps(const HttpRequest * request)
+{
+    LOCAL_ARRAY(char, buf, MAX_URL);
+
+    // method CONNECT and port HTTPS
+    if(request->method == METHOD_CONNECT && request->port == 443) {
+        snprintf(buf, MAX_URL, "https://%s/*", request->GetHost());
+        return buf;
+    }
+
+    // else do the normal complete canonical thing.
+    return urlCanonicalClean(request);
+}
+
+
 /*
  * matchDomainName() compares a hostname with a domainname according
  * to the following rules:

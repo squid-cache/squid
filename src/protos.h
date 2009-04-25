@@ -630,12 +630,13 @@ SQUIDCEXTERN protocol_t urlParseProtocol(const char *, const char *e = NULL);
 SQUIDCEXTERN void urlInitialize(void);
 SQUIDCEXTERN HttpRequest *urlParse(method_t, char *, HttpRequest *request = NULL);
 SQUIDCEXTERN const char *urlCanonical(HttpRequest *);
+SQUIDCEXTERN char *urlCanonicalClean(const HttpRequest *);
+SQUIDCEXTERN const char *urlCanonicalFakeHttps(const HttpRequest * request);
 SQUIDCEXTERN char *urlRInternal(const char *host, u_short port, const char *dir, const char *name);
 SQUIDCEXTERN char *urlInternal(const char *dir, const char *name);
 SQUIDCEXTERN int matchDomainName(const char *host, const char *domain);
 SQUIDCEXTERN int urlCheckRequest(const HttpRequest *);
 SQUIDCEXTERN int urlDefaultPort(protocol_t p);
-SQUIDCEXTERN char *urlCanonicalClean(const HttpRequest *);
 SQUIDCEXTERN char *urlHostname(const char *url);
 SQUIDCEXTERN void urlExtMethodConfigure(void);
 
