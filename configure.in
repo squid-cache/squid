@@ -1883,6 +1883,7 @@ AC_CHECK_HEADERS( \
 	ipl.h \
 	libc.h \
 	limits.h \
+	machine/byte_swap.h \
 	malloc.h \
 	math.h \
 	memory.h \

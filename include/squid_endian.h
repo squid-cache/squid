@@ -68,9 +68,12 @@
 #if HAVE_BYTESWAP_H
 #  include <byteswap.h>
 #endif /* HAVE_BYTESWAP_H */
+#ifdef HAVE_MACHINE_BYTE_SWAP_H
+#  include <machine/byte_swap.h>
+#endif	/* HAVE_MACHINE_BYTE_SWAP_H */
 #if HAVE_SYS_BSWAP_H
 #  include <sys/bswap.h>
-#endif /* HAVE_MACHINE_BSWAP_H */
+#endif /* HAVE_SYS_BSWAP_H */
 #if HAVE_SYS_ENDIAN_H
 #  include <sys/endian.h>
 #endif /* HAVE_SYS_ENDIAN_H */
