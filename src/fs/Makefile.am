@@ -39,7 +39,14 @@ EXTRA_DIST = \
 INCLUDES += -I$(srcdir)
 
 
-check_PROGRAMS += testHeaders
+## targets below to emulate distributed makefiles
+coss/all: libcoss.la
+coss/clean: clean
+ufs/all: libufs.la
+ufs/clean: clean
+
+
+TESTS += testHeaders
 
 ## Special Universal .h dependency test script
 ## aborts if error encountered
@@ -50,13 +57,6 @@ testHeaders: $(top_srcdir)/src/fs/ufs/*.h $(top_srcdir)/src/fs/coss/*.h
 ## aufs/ has no .h files
 ## ./ has no .h files
 
-## No such file...
-testHeaders.c:
-	touch testHeaders.c
-CLEANFILES += testHeaders.c
+CLEANFILES += testHeaders
 
-## targets below to emulate distributed makefiles
-coss/all: libcoss.la
-coss/clean: clean
-ufs/all: libufs.la
-ufs/clean: clean
+.PHONY: testHeaders
