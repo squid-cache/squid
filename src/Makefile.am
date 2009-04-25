@@ -831,22 +831,6 @@ check_PROGRAMS+= tests/testAuth \
 	tests/testURL \
 	@STORE_TESTS@
 
-## Special Universal .h dependency test script
-## aborts if error encountered
-testHeaders: $(top_srcdir)/src/*.h $(top_srcdir)/src/DiskIO/*.h $(top_srcdir)/src/DiskIO/*/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "." || exit 1
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "DiskIO" || exit 1
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "DiskIO/AIO" || exit 1
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "DiskIO/Blocking" || exit 1
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "DiskIO/DiskDaemon" || exit 1
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "DiskIO/DiskThreads" || exit 1
-## src/repl/ has no .h files and its own makefile.
-
-## No such file...
-testHeaders.c:
-	touch testHeaders.c
-CLEANFILES += testHeaders.c
-
 ### Template for new Unit Test Program
 ## - add tests/testX to check_PROGRAMS above.
 ## - copy template below and substitue X for class name
@@ -2082,3 +2066,21 @@ tests_testURL_LDFLAGS = $(LIBADD_DL)
 tests_testURL_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
 	@SQUID_CPPUNIT_LA@
+
+
+TESTS += testHeaders
+
+## Special Universal .h dependency test script
+## aborts if error encountered
+testHeaders: $(top_srcdir)/src/*.h $(top_srcdir)/src/DiskIO/*.h $(top_srcdir)/src/DiskIO/*/*.h
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "." || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "DiskIO" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "DiskIO/AIO" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "DiskIO/Blocking" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "DiskIO/DiskDaemon" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "DiskIO/DiskThreads" || exit 1
+## src/repl/ has no .h files and its own makefile.
+
+CLEANFILES += testHeaders
+.PHONY: testHeaders
+
