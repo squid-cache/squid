@@ -98,7 +98,14 @@ helperOpenServers(helper * hlp)
     else
         shortname = xstrdup(progname);
 
-    debugs(84, 1, "helperOpenServers: Starting " << hlp->n_to_start << " '" << shortname << "' processes");
+    /* dont ever start more than hlp->n_to_start processes. */
+    int need_new = hlp->n_to_start - hlp->n_running;
+
+    debugs(84, 1, "helperOpenServers: Starting " << need_new << "/" << hlp->n_to_start << " '" << shortname << "' processes");
+
+    if(need_new < 1) {
+        debugs(84, 1, "helperOpenServers: No '" << shortname << "' processes needed.");
+    }
 
     procname = (char *)xmalloc(strlen(shortname) + 3);
 
@@ -113,7 +120,7 @@ helperOpenServers(helper * hlp)
 
     assert(nargs <= HELPER_MAX_ARGS);
 
-    for (k = 0; k < hlp->n_to_start; k++) {
+    for (k = 0; k < need_new; k++) {
         getCurrentTime();
         rfd = wfd = -1;
         pid = ipcCreate(hlp->ipc_type,
@@ -195,7 +202,14 @@ helperStatefulOpenServers(statefulhelper * hlp)
     else
         shortname = xstrdup(progname);
 
-    debugs(84, 1, "helperStatefulOpenServers: Starting " << hlp->n_to_start << " '" << shortname << "' processes");
+    /* dont ever start more than hlp->n_to_start processes. */
+    int need_new = hlp->n_to_start - hlp->n_running;
+
+    debugs(84, 1, "helperOpenServers: Starting " << need_new << "/" << hlp->n_to_start << " '" << shortname << "' processes");
+
+    if(need_new < 1) {
+        debugs(84, 1, "helperStatefulOpenServers: No '" << shortname << "' processes needed.");
+    }
 
     char *procname = (char *)xmalloc(strlen(shortname) + 3);
 
@@ -210,7 +224,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
 
     assert(nargs <= HELPER_MAX_ARGS);
 
-    for (int k = 0; k < hlp->n_to_start; k++) {
+    for (int k = 0; k < need_new; k++) {
         getCurrentTime();
 	int rfd = -1;
 	int wfd = -1;
