@@ -50,9 +50,9 @@ TESTS += testHeaders
 
 ## Special Universal .h dependency test script
 ## aborts if error encountered
-testHeaders: $(top_srcdir)/src/fs/ufs/*.h $(top_srcdir)/src/fs/coss/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/src/fs/ufs" || exit 1
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/src/fs/coss" || exit 1
+testHeaders: $(srcdir)/ufs/*.h $(srcdir)/coss/*.h
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(srcdir)/ufs" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(srcdir)/coss" || exit 1
 ## diskd/ has no .h files
 ## aufs/ has no .h files
 ## ./ has no .h files
