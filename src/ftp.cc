@@ -130,7 +130,6 @@ public:
     char *filepath;
     char *dirpath;
     int64_t restart_offset;
-    int64_t restarted_offset;
     char *proxy_host;
     size_t list_width;
     wordlist *cwd_message;
@@ -201,6 +200,8 @@ public:
     void processHeadResponse();
     void processReplyBody();
     void writeCommand(const char *buf);
+    void setCurrentOffset(int64_t offset) { currentOffset = offset; }
+    int64_t getCurrentOffset() const { return currentOffset; }
 
     static PF ftpSocketClosed;
     static CNCB ftpPasvCallback;
@@ -2727,7 +2728,7 @@ ftpReadRest(FtpStateData * ftpState)
     assert(ftpState->restart_offset > 0);
 
     if (code == 350) {
-        ftpState->restarted_offset = ftpState->restart_offset;
+	ftpState->setCurrentOffset(ftpState->restart_offset);
         ftpSendRetr(ftpState);
     } else if (code > 0) {
         debugs(9, 3, "ftpReadRest: REST not supported");
@@ -2972,7 +2973,7 @@ void
 FtpStateData::hackShortcut(FTPSM * nextState)
 {
     /* Clear some unwanted state */
-    restarted_offset = 0;
+    setCurrentOffset(0);
     restart_offset = 0;
     /* Save old error message & some state info */
 
@@ -3205,11 +3206,11 @@ FtpStateData::appendSuccessHeader()
     /* set standard stuff */
 
     HttpVersion version(1, 0);
-    if (0 == restarted_offset) {
+    if (0 == getCurrentOffset()) {
         /* Full reply */
         reply->setHeaders(version, HTTP_OK, "Gatewaying",
                           mime_type, theSize, mdtm, -2);
-    } else if (theSize < restarted_offset) {
+    } else if (theSize < getCurrentOffset()) {
 	/*
 	 * DPW 2007-05-04
 	 * offset should not be larger than theSize.  We should
@@ -3217,7 +3218,7 @@ FtpStateData::appendSuccessHeader()
 	 * send REST if we know the theSize and if it is less than theSize.
 	 */
 	debugs(0,0,HERE << "Whoops! " <<
-		" restarted_offset=" << restarted_offset <<
+		" restarted_offset=" << getCurrentOffset() <<
 		", but theSize=" << theSize <<
 		".  assuming full content response");
         reply->setHeaders(version, HTTP_OK, "Gatewaying",
@@ -3225,10 +3226,10 @@ FtpStateData::appendSuccessHeader()
     } else {
         /* Partial reply */
         HttpHdrRangeSpec range_spec;
-        range_spec.offset = restarted_offset;
-        range_spec.length = theSize - restarted_offset;
+        range_spec.offset = getCurrentOffset();
+        range_spec.length = theSize - getCurrentOffset();
         reply->setHeaders(version, HTTP_PARTIAL_CONTENT, "Gatewaying",
-                          mime_type, theSize - restarted_offset, mdtm, -2);
+                          mime_type, theSize - getCurrentOffset(), mdtm, -2);
         httpHeaderAddContRange(&reply->header, range_spec, theSize);
     }
 
@@ -3252,7 +3253,7 @@ FtpStateData::haveParsedReplyHeaders()
          * Authenticated requests can't be cached.
          */
         e->release();
-    } else if (EBIT_TEST(e->flags, ENTRY_CACHABLE) && !restarted_offset) {
+    } else if (EBIT_TEST(e->flags, ENTRY_CACHABLE) && !getCurrentOffset()) {
         e->setPublicKey();
     } else {
         e->release();
