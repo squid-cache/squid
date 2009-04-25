@@ -25364,16 +25364,20 @@ done
 
 
 
+
+
 for ac_header in \
 	net/if.h \
-	net/pfvar.h \
 	netinet/if_ether.h\
+	netinet/in.h \
 	netinet/ip.h\
 	netinet/ip_compat.h\
+	netinet/ip_fil_compat.h\
 	netinet/ip_fil.h\
 	netinet/ip_icmp.h\
-	netinet/ip_nat.h\
 	netinet/ipl.h \
+	netinet/ip_nat.h\
+	net/pfvar.h \
 	sys/mount.h\
 	resolv.h
 do
