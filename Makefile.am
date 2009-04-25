@@ -40,8 +40,8 @@ EXTRA_DIST = \
 	bootstrap.sh
 
 install-pinger:
-	chown root $(DEFAULT_PINGER) 
-	chmod 4711 $(DEFAULT_PINGER)
+	chown root $(DESTDIR)$(DEFAULT_PINGER)
+	chmod 4711 $(DESTDIR)$(DEFAULT_PINGER)
 
 all-am:
 	@echo "Build Successful."
