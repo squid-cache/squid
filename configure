@@ -25024,6 +25024,7 @@ fi
 
 
 
+
 for ac_header in \
 	arpa/inet.h \
 	arpa/nameser.h \
@@ -25046,6 +25047,7 @@ for ac_header in \
 	ipl.h \
 	libc.h \
 	limits.h \
+	machine/byte_swap.h \
 	malloc.h \
 	math.h \
 	memory.h \
@@ -25366,6 +25368,7 @@ done
 
 
 
+
 for ac_header in \
 	net/if.h \
 	netinet/if_ether.h\
@@ -25377,6 +25380,7 @@ for ac_header in \
 	netinet/ip_icmp.h\
 	netinet/ipl.h \
 	netinet/ip_nat.h\
+	net/pf/pfvar.h \
 	net/pfvar.h \
 	sys/mount.h\
 	resolv.h
@@ -45916,7 +45920,7 @@ if test "$PF_TRANSPARENT" ; then
     { $as_echo "$as_me:$LINENO: checking if PF header file is installed" >&5
 $as_echo_n "checking if PF header file is installed... " >&6; }
     # hold on to your hats...
-    if test "$ac_cv_header_net_pfvar_h" = "yes"; then
+    if test "$ac_cv_header_net_pfvar_h" = "yes" || test "$ac_cv_header_net_pf_pfvar_h" = "yes"; then
         PF_TRANSPARENT="yes"
         cat >>confdefs.h <<\_ACEOF
 #define PF_TRANSPARENT 1
