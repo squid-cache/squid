@@ -1,10 +1,14 @@
 #ifndef __ASYNC_IO_H__
 #define __ASYNC_IO_H__
+
 #ifdef _SQUID_WIN32_
 #include "aio_win32.h"
 #else
 #include <aio.h>
 #endif
+
+/* for FREE* */
+#include "typedefs.h"
 
 #define MAX_ASYNCOP		128
 
