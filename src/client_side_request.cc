@@ -260,6 +260,7 @@ ClientHttpRequest::~ClientHttpRequest()
     freeResources();
 
 #if USE_ADAPTATION
+    assert(cbdataReferenceValid(virginHeadSource));
     announceInitiatorAbort(virginHeadSource);
 
     if (adaptedBodySource != NULL)
