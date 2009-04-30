@@ -1249,8 +1249,7 @@ if test -z "$disable_epoll"; then
   LIBS="$SAVED_LIBS"
 
   dnl epoll requires sys/epoll.h
-  AC_CHECK_HEADERS([sys/epoll.h],[],
-      [ AC_MSG_ERROR([required sys/epoll.h header file is missing.]) ])
+  AC_CHECK_HEADERS([sys/epoll.h])
 
   dnl Verify that epoll really works
   if test $ac_cv_func_epoll_ctl = yes; then
