@@ -452,11 +452,13 @@ manage_request()
 int
 main(int argc, char *argv[])
 {
-
     debug("ntlm_auth build " __DATE__ ", " __TIME__ " starting up...\n");
 #ifdef DEBUG
     debug("changing dir to /tmp\n");
-    chdir("/tmp");
+    if (chdir("/tmp") != 0) {
+        debug("ERROR: (%d) failed.\n",errno);
+        return 2;
+    }
 #endif
 
     my_program_name = argv[0];
