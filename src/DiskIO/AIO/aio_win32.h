@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -35,6 +34,8 @@
 #ifndef __WIN32_AIO_H__
 #define __WIN32_AIO_H__
 
+#include "config.h"
+
 #ifdef _SQUID_CYGWIN_
 #include "squid_windows.h"
 #endif
@@ -44,6 +45,7 @@ typedef int64_t	off64_t;
 #endif
 
 #ifdef _SQUID_MSWIN_
+
 union sigval {
     int sival_int; /* integer value */
     void *sival_ptr; /* pointer value */
@@ -55,7 +57,7 @@ struct sigevent {
     union sigval sigev_value; /* signal value */
 };
 
-#endif
+// #endif
 
 struct aiocb64 {
     int aio_fildes; /* file descriptor */
@@ -104,4 +106,5 @@ int aio_error64(const struct aiocb64 *);
 int aio_open(const char *, int);
 void aio_close(int);
 
-#endif
+#endif /* _SQUID_MSWIN_ */
+#endif /* __WIN32_AIO_H__ */

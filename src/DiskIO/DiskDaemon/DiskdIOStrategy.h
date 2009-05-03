@@ -36,6 +36,8 @@
 #ifndef __STORE_DISKDIOSTRATEGY_H__
 #define __STORE_DISKDIOSTRATEGY_H__
 
+#include "config.h"
+
 struct diomsg;
 
 /// \ingroup diskd
