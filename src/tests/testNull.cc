@@ -1,6 +1,4 @@
 #include "squid.h"
-#include <stdexcept>
-
 #include "testNull.h"
 #include "Store.h"
 #include "SwapDir.h"
@@ -13,6 +11,10 @@
 #include "HttpReply.h"
 #include "StoreFileSystem.h"
 #include "testStoreSupport.h"
+
+#if HAVE_STDEXCEPT
+#include <stdexcept>
+#endif
 
 #define TESTDIR "testNull__testNullSearch"
 
