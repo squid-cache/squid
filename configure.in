@@ -1196,6 +1196,7 @@ esac
 
 dnl Enable epoll()
 disable_epoll=
+force_epoll="no"
 AC_ARG_ENABLE(epoll,
   AC_HELP_STRING([--disable-epoll],[Disable Linux epoll(2) support.]),
 [
@@ -1203,11 +1204,7 @@ AC_ARG_ENABLE(epoll,
   yes)
     AC_MSG_WARN([Forcing epoll() to be enabled])
     SELECT_TYPE="epoll"
-    dnl epoll requires header file and library to be installed
-    AC_CHECK_HEADERS([sys/epoll.h],[],
-      [ AC_MSG_ERROR([required sys/epoll.h header file is missing.]) ])
-    AC_CHECK_LIB(epoll, epoll_ctl, [],
-      [ AC_MSG_ERROR([required libepoll library is missing.]) ])
+    force_epoll="yes"
     ;;
   no)
     AC_MSG_WARN([Forcing epoll() to be disabled])
@@ -1215,19 +1212,26 @@ AC_ARG_ENABLE(epoll,
   ;;
 esac
 ])
-dnl epoll requires sys/epoll.h and libepoll
+dnl auto-detect and verify epoll header and library present and working
 if test -z "$disable_epoll"; then
+
   # Check for libepoll
   EPOLL_LIB=
   AC_CHECK_LIB(epoll, epoll_ctl, [EPOLL_LIBS="-lepoll"])
   AC_SUBST(EPOLL_LIBS)
 
+  dnl on some systems it is provided by libc
+  dnl not to worry, the working test below will catch them
+  dnl and we don't want to force additional libraries
+
+
   # Check for epoll_ctl, may need -lepoll
   SAVED_LIBS="$LIBS"
-  LIBS="$LIBS $LIB_EPOLL"
+  LIBS="$LIBS $EPOLL_LIBS"
   AC_CHECK_FUNCS(epoll_ctl)
   LIBS="$SAVED_LIBS"
 
+  dnl epoll requires sys/epoll.h
   AC_CHECK_HEADERS([sys/epoll.h])
 
   dnl Verify that epoll really works
@@ -1247,6 +1251,10 @@ int main(int argc, char **argv)
     exit(0);
 }
       ], [ac_cv_epoll_works=yes], [ac_cv_epoll_works=no]))
+  fi
+
+  if test "$force_epoll" = "yes" && test "$ac_cv_epoll_works" = "no" ; then
+    AC_MSG_ERROR([Epoll does not work. Force-enabling it is not going to help.])
   fi
 fi
 
