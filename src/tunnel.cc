@@ -258,11 +258,8 @@ TunnelStateData::Connection::error(int const xerrno)
     /* XXX fixme xstrerror and xerrno... */
     errno = xerrno;
 
-    if (xerrno == COMM_ERR_CLOSING)
-        return;
-
-    debugs(50, debugLevelForError(xerrno), "tunnelReadServer: FD " << fd() << 
-           ": read failure: " << xstrerror());
+    debugs(50, debugLevelForError(xerrno), "TunnelStateData::Connection::error: FD " << fd() <<
+           ": read/write failure: " << xstrerror());
 
     if (!ignoreErrno(xerrno))
         comm_close(fd());
@@ -343,6 +340,9 @@ TunnelStateData::writeServerDone(char *buf, size_t len, comm_err_t flag, int xer
 {
     debugs(26, 3, "tunnelWriteServer: FD " << server.fd() << ", " << len << " bytes written");
 
+    if(flag == COMM_ERR_CLOSING)
+        return;
+
     /* Error? */
     if (len < 0 || flag != COMM_OK) {
         server.error(xerrno); // may call comm_close
@@ -400,6 +400,9 @@ void
 TunnelStateData::writeClientDone(char *buf, size_t len, comm_err_t flag, int xerrno)
 {
     debugs(26, 3, "tunnelWriteClient: FD " << client.fd() << ", " << len << " bytes written");
+
+    if(flag == COMM_ERR_CLOSING)
+        return;
 
     /* Error? */
     if (len < 0 || flag != COMM_OK) {
