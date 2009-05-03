@@ -185,7 +185,7 @@ DOC_START
 	If you want to use a digest authenticator, set this line to
 	something like
 
-	auth_param digest program @DEFAULT_PREFIX@/bin/digest_auth_pw @DEFAULT_PREFIX@/etc/digpass
+	auth_param digest program @DEFAULT_PREFIX@/bin/digest_pw_auth @DEFAULT_PREFIX@/etc/digpass
 
 	"children" numberofchildren
 	The number of authenticator processes to spawn (no default).
