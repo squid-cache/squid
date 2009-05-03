@@ -442,6 +442,8 @@ _db_init(const char *logfile, const char *options)
 
 #endif /* HAVE_SYSLOG */
 
+    /* Pre-Init TZ env, see bug #2656 */
+    tzset();
 }
 
 void
