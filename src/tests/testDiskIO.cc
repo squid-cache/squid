@@ -1,8 +1,6 @@
 #define SQUID_UNIT_TEST 1
 
 #include "squid.h"
-#include <stdexcept>
-
 #include "testDiskIO.h"
 #include "Store.h"
 #include "SwapDir.h"
@@ -17,6 +15,10 @@
 #include "HttpReply.h"
 #include "StoreFileSystem.h"
 #include "testStoreSupport.h"
+
+#if HAVE_STDEXCEPT
+#include <stdexcept>
+#endif
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testDiskIO );
 

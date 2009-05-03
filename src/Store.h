@@ -38,10 +38,6 @@
  */
 
 #include "squid.h"
-
-/// \todo protect the 'ostream' file includes via configure file tests as per squid conventions.
-#include <ostream>
-
 #include "StoreIOBuffer.h"
 #include "Range.h"
 #include "RefCount.h"
@@ -52,6 +48,11 @@
 #if USE_SQUID_ESI
 #include "esi/Element.h"
 #endif
+
+#if HAVE_OSTREAM
+#include <ostream>
+#endif
+
 
 class AsyncCall;
 class StoreClient;

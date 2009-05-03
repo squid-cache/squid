@@ -34,12 +34,15 @@
 #ifndef SQUID_MEM
 #define SQUID_MEM
 
+#include "config.h"
+
+#if HAVE_OSTREAM
+#include <ostream>
+#endif
+
 class StoreEntry;
 class MemPoolStats;
 class MemPoolMeter;
-
-/** \todo CLEANUP: protection to wrap this system include */
-#include <ostream>
 
 class Mem
 {

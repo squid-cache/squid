@@ -43,8 +43,8 @@
 #include "DiskIO/DiskIOModule.h"
 #include "Parsing.h"
 #include "SquidTime.h"
-
 #include "SwapDir.h"
+
 int UFSSwapDir::NumberOfUFSDirs = 0;
 int *UFSSwapDir::UFSDirToGlobalDirMapping = NULL;
 

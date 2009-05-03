@@ -1,10 +1,14 @@
 #ifndef __ASYNC_IO_H__
 #define __ASYNC_IO_H__
 
+#include "config.h"
+
 #ifdef _SQUID_WIN32_
 #include "aio_win32.h"
 #else
+#if HAVE_AIO_H
 #include <aio.h>
+#endif
 #endif
 
 /* for FREE* */

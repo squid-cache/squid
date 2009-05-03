@@ -1,13 +1,15 @@
 #define SQUID_UNIT_TEST 1
 
 #include "squid.h"
-#include <sstream>
 #include <cppunit/TestAssert.h>
 
 #include "Mem.h"
 #include "testHttpRequestMethod.h"
 #include "HttpRequestMethod.h"
 
+#if HAVE_SSTREAM
+#include <sstream>
+#endif
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testHttpRequestMethod );
 

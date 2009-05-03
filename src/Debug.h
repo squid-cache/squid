@@ -34,13 +34,23 @@
 #ifndef SQUID_DEBUG_H
 #define SQUID_DEBUG_H
 
+#include "config.h"
+
+#if HAVE_IOSTREAM
 #include <iostream>
+#endif
+
 #undef assert
+#if HAVE_SSTREAM
 #include <sstream>
+#endif
+#if HAVE_IOMANIP
 #include <iomanip>
-#if defined assert
+#endif
+#if defined(assert)
 #undef assert
 #endif
+
 #if PURIFY
 #define assert(EX) ((void)0)
 #elif defined(NODEBUG)

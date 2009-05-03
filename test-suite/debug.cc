@@ -37,7 +37,6 @@
 #include "squid.h"
 #include "stmem.h"
 #include "mem_node.h"
-#include <iostream>
 
 class StreamTest
 {
