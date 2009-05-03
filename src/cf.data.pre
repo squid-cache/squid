@@ -192,7 +192,7 @@ DOC_START
 	If you want to use a digest authenticator, set this line to
 	something like
 
-	auth_param digest program @DEFAULT_PREFIX@/bin/digest_auth_pw @DEFAULT_PREFIX@/etc/digpass
+	auth_param digest program @DEFAULT_PREFIX@/bin/digest_pw_auth @DEFAULT_PREFIX@/etc/digpass
 
 	"utf8" on|off
 	HTTP uses iso-latin-1 as characterset, while some authentication
