@@ -118,6 +118,19 @@ Changes to squid-3.1.0.1 (27 Oct 2008):
 	- Bug #2223: Follow XFF extensions added
 	- ... and many code and documentation cleanups
 
+Changes to squid-3.0.STABLE15 (06 May 2009):
+
+	- Regression Bug 2635: Incorrect Max-Forwards header type
+	- Bug 2652: 'Success' error on CONNECT requests
+	- Bug 2625: IDENT receiving errors
+	- Bug 2610: ipfilter support detection
+	- Bug 2578: FTP download resume failure
+	- Bug 2536: %H on HTTPS error pages
+	- Bug 2491: assertion "age >= 0"
+	- Bug 2276: too many NTLM helpers running
+	- Endian system and compiler fixes provided by the NetBSD project
+	- documentation fixes provided by the Debian project
+
 Changes to squid-3.0.STABLE14 (11 Apr 2009):
 
 	- Regression Fix: HTTP/0.9 in accelerator mode
