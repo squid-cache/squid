@@ -306,8 +306,10 @@ squid_SOURCES = \
 	client_side_reply.h \
 	client_side_request.cc \
 	client_side_request.h \
+	ClientInfo.h \
 	BodyPipe.cc \
 	BodyPipe.h \
+	ClientInfo.h \
 	ClientRequestContext.h \
 	clientStream.cc \
 	clientStream.h \
@@ -574,7 +576,9 @@ recv_announce_SOURCES = recv-announce.cc SquidNew.cc
 ## SwapDir wants ConfigOption
 ## tools.cc wants ip/libip.la
 ## client_side.cc wants ip/libip.la
+## mem.cc wants ClientInfo.h
 ufsdump_SOURCES = \
+	ClientInfo.h \
 	debug.cc \
 	int.cc \
 	mem.cc \
@@ -859,7 +863,7 @@ tests_testAuth_SOURCES = \
 	ConfigParser.cc \
 	tests/stub_acl.cc tests/stub_cache_cf.cc \
 	tests/stub_helper.cc cbdata.cc String.cc \
-	tests/stub_store.cc HttpHeaderTools.cc HttpHeader.cc mem.cc \
+	tests/stub_store.cc HttpHeaderTools.cc HttpHeader.cc mem.cc ClientInfo.h \
 	MemBuf.cc HttpHdrContRange.cc Packer.cc HttpHdrCc.cc HttpHdrSc.cc \
 	HttpHdrScTarget.cc url.cc \
 	StatHist.cc HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
@@ -914,6 +918,7 @@ tests_testAuth_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 ##	String.cc \
 tests_testACLMaxUserIP_SOURCES= \
 	cbdata.cc \
+	ClientInfo.h \
 	ConfigParser.cc \
 	ETag.cc \
 	HttpHeader.cc \
@@ -997,6 +1002,7 @@ tests_testCacheManager_SOURCES = \
 	client_side.cc \
 	client_side_reply.cc \
 	client_side_request.cc \
+	ClientInfo.h \
 	clientStream.cc \
 	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
@@ -1166,6 +1172,7 @@ tests_testEvent_SOURCES = \
 	client_side.cc \
 	client_side_reply.cc \
 	client_side_request.cc \
+	ClientInfo.h \
 	clientStream.cc \
 	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
@@ -1313,6 +1320,7 @@ tests_testEventLoop_SOURCES = \
 	client_side.cc \
 	client_side_reply.cc \
 	client_side_request.cc \
+	ClientInfo.h \
 	clientStream.cc \
 	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
@@ -1448,6 +1456,7 @@ tests_test_http_range_SOURCES = \
 	client_side.cc \
 	client_side_reply.cc \
 	client_side_request.cc \
+	ClientInfo.h \
 	clientStream.cc \
 	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
@@ -1601,6 +1610,7 @@ tests_testHttpRequest_SOURCES = \
 	client_side.cc \
 	client_side_reply.cc \
 	client_side_request.cc \
+	ClientInfo.h \
 	clientStream.cc \
 	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
@@ -1747,7 +1757,7 @@ STORE_TEST_SOURCES=\
 	mem_node.cc \
 	stmem.cc \
 	tests/stub_mime.cc \
-	HttpHeaderTools.cc HttpHeader.cc mem.cc \
+	HttpHeaderTools.cc HttpHeader.cc mem.cc  ClientInfo.h \
 	MemBuf.cc HttpHdrContRange.cc Packer.cc HttpHdrCc.cc HttpHdrSc.cc \
 	HttpHdrScTarget.cc url.cc \
 	StatHist.cc HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
@@ -1800,9 +1810,11 @@ tests_testStore_LDFLAGS = $(LIBADD_DL)
 tests_testStore_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@SQUID_CPPUNIT_LA@
 
-# string needs mem.cc.
-# libsquid pulls in SquidConfig and children. stub them.
+## string needs mem.cc.
+## mem.cc needs ClientInfo.h
+## libsquid pulls in SquidConfig and children. stub them.
 tests_testString_SOURCES = \
+	ClientInfo.h \
 	mem.cc \
 	String.cc \
 	tests/testMain.cc \
@@ -1950,6 +1962,7 @@ tests_testURL_SOURCES = \
 	client_side.cc \
 	client_side_reply.cc \
 	client_side_request.cc \
+	ClientInfo.h \
 	clientStream.cc \
 	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
