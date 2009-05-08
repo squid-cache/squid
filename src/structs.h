@@ -929,6 +929,7 @@ struct peer {
 
     char *login;		/* Proxy authorization */
     time_t connect_timeout;
+    int connect_fail_limit;
     int max_conn;
     char *domain;		/* Forced domain */
 #if USE_SSL
