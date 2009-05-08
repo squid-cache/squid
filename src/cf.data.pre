@@ -1941,6 +1941,15 @@ DOC_START
 	instead of to your parents.
 DOC_END
 
+NAME: forward_max_tries
+DEFAULT: 10
+TYPE: int
+LOC: Config.forward_max_tries
+DOC_START
+	Controls how many different forward paths Squid will try
+	before giving up. See also forward_timeout.
+DOC_END
+
 NAME: hierarchy_stoplist
 TYPE: wordlist
 DEFAULT: none
