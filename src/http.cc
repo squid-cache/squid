@@ -56,6 +56,16 @@
 #include "DelayPools.h"
 #endif
 #include "SquidTime.h"
+#include "TextException.h"
+
+#define SQUID_ENTER_THROWING_CODE() try {
+#define SQUID_EXIT_THROWING_CODE(status) \
+  	status = true; \
+    } \
+    catch (const TextException &e) { \
+	debugs (11, 1, "Exception error:" << e.message); \
+	status = false; \
+    }  
 
 CBDATA_CLASS_INIT(HttpStateData);
 
@@ -68,7 +78,7 @@ static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeader
         HttpHeader * hdr_out, int we_do_ranges, http_state_flags);
 
 HttpStateData::HttpStateData(FwdState *theFwdState) : ServerStateData(theFwdState),
-        header_bytes_read(0), reply_bytes_read(0)
+		       lastChunk(0), header_bytes_read(0), reply_bytes_read(0), httpChunkDecoder(NULL)
 {
     debugs(11,5,HERE << "HttpStateData " << this << " created");
     ignoreCacheControl = false;
@@ -119,7 +129,6 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : ServerStateData(theFwdStat
         entry->setNoDelay(_peer->options.no_delay);
 
 #endif
-
     }
 
     /*
@@ -138,6 +147,9 @@ HttpStateData::~HttpStateData()
         readBuf->clean();
 
     delete readBuf;
+
+    if(httpChunkDecoder)
+	delete httpChunkDecoder;
 
     HTTPMSGUNLOCK(orig_request);
 
@@ -735,6 +747,12 @@ HttpStateData::processReplyHeader()
 	 readBuf->consume(header_bytes_read);
     }
 
+    flags.chunked = 0;
+    if (newrep->header.hasListMember(HDR_TRANSFER_ENCODING, "chunked", ',')) {
+	 flags.chunked = 1;
+	 httpChunkDecoder = new ChunkedCodingParser;
+    }
+
     HttpReply *vrep = setVirginReply(newrep);
     flags.headers_parsed = 1;
 
@@ -898,6 +916,13 @@ HttpStateData::persistentConnStatus() const
 
     if (eof) // already reached EOF
         return COMPLETE_NONPERSISTENT_MSG;
+
+    /* In chunked responce we do not know the content length but we are absolutelly 
+     * sure about the end of response, so we are calling the statusIfComplete to
+     * decide if we can be persistant 
+     */
+    if (lastChunk && flags.chunked)
+	return statusIfComplete();
 
     const int64_t clen = vrep->bodySize(request->method);
 
@@ -1098,10 +1123,31 @@ HttpStateData::writeReplyBody()
 {
     const char *data = readBuf->content();
     int len = readBuf->contentSize();
-
     addVirginReplyBody(data, len);
     readBuf->consume(len);
+}
 
+bool
+HttpStateData::decodeAndWriteReplyBody()
+{
+    const char *data = NULL;
+    int len;
+    bool status = false;
+    assert(flags.chunked);
+    assert(httpChunkDecoder);
+    SQUID_ENTER_THROWING_CODE();
+    MemBuf decodedData;
+    decodedData.init();
+    const bool done = httpChunkDecoder->parse(readBuf,&decodedData);
+    len = decodedData.contentSize();
+    data=decodedData.content();
+    addVirginReplyBody(data, len);
+    if (done) {
+        lastChunk = 1;
+        flags.do_next_read = 0;
+    }
+    SQUID_EXIT_THROWING_CODE(status);
+    return status;
 }
 
 /*
@@ -1134,7 +1180,15 @@ HttpStateData::processReplyBody()
      * That means header content has been removed from readBuf and
      * it contains only body data.
      */
-    writeReplyBody();
+    if(flags.chunked){
+	if(!decodeAndWriteReplyBody()){
+	    flags.do_next_read = 0;
+	    serverComplete();
+	    return;
+	}
+    }
+    else
+	writeReplyBody();
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
         /*

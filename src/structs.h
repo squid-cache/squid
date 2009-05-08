@@ -924,6 +924,8 @@ unsigned int do_next_read:
 
 unsigned int consume_body_data:
     1;
+
+unsigned int chunked:1;
 };
 
 struct _ipcache_addrs
