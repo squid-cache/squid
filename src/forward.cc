@@ -1095,7 +1095,7 @@ FwdState::reforward()
         return 0;
     }
 
-    if (n_tries > 9)
+    if (n_tries > Config.forward_max_tries)
         return 0;
 
     if (origin_tries > 1)

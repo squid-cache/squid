@@ -444,6 +444,8 @@ struct SquidConfig {
         int WIN32_IpAddrChangeMonitor;
     } onoff;
 
+    int forward_max_tries;
+
     class ACL *aclList;
 
     struct {
