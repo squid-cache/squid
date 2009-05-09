@@ -76,6 +76,10 @@
 #include "MemBuf.h"
 #include "SquidTime.h"
 
+#if ICAP_CLIENT   
+#include "ICAP/ChunkedCodingParser.h"
+#endif
+
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
 #endif
@@ -1820,6 +1824,17 @@ prepareTransparentURL(ConnStateData::Pointer & conn, ClientHttpRequest *http, ch
     }
 }
 
+// Temporary hack helper: determine whether the request is chunked, expensive
+static bool
+isChunkedRequest(const HttpParser *hp) {
+    HttpRequest request;
+    if (!request.parseHeader(HttpParserHdrBuf(hp), HttpParserHdrSz(hp)))
+        return false;
+
+    return request.header.has(HDR_TRANSFER_ENCODING) &&
+        request.header.hasListMember(HDR_TRANSFER_ENCODING, "chunked", ',');
+}
+
 /*
  *  parseHttpRequest()
  * 
@@ -1832,7 +1847,6 @@ prepareTransparentURL(ConnStateData::Pointer & conn, ClientHttpRequest *http, ch
 static ClientSocketContext *
 parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * method_p, HttpVersion *http_ver)
 {
-    char *url = NULL;
     char *req_hdr = NULL;
     char *end;
     size_t req_sz;
@@ -1908,17 +1922,6 @@ parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * metho
         return parseHttpRequestAbort(conn, "error:unsupported-request-method");
     }
 
-    /* set url */
-    /*
-     * XXX this should eventually not use a malloc'ed buffer; the transformation code
-     * below needs to be modified to not expect a mutable nul-terminated string.
-     */
-    url = (char *)xmalloc(hp->u_end - hp->u_start + 16);
-
-    memcpy(url, hp->buf + hp->u_start, hp->u_end - hp->u_start + 1);
-
-    url[hp->u_end - hp->u_start + 1] = '\0';
-
     /*
      * Process headers after request line
      * TODO: Use httpRequestParse here.
@@ -1938,13 +1941,47 @@ parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * metho
      */
     if ( squid_strnstr(req_hdr, "\r\r\n", req_sz) ) {
         debugs(33, 1, "WARNING: suspicious HTTP request contains double CR");
-        xfree(url);
         return parseHttpRequestAbort(conn, "error:double-CR");
     }
 
     debugs(33, 3, "parseHttpRequest: prefix_sz = " <<
            (int) HttpParserRequestLen(hp) << ", req_line_sz = " <<
            HttpParserReqSz(hp));
+
+    // Temporary hack: We might receive a chunked body from a broken HTTP/1.1
+    // client that sends chunked requests to HTTP/1.0 Squid. If the request
+    // might have a chunked body, parse the headers early to look for the
+    // "Transfer-Encoding: chunked" header. If we find it, wait until the
+    // entire body is available so that we can set the content length and
+    // forward the request without chunks. The primary reason for this is
+    // to avoid forwarding a chunked request because the server side lacks
+    // logic to determine when it is valid to do so. The secondary reason
+    // is that we should not send chunked requests if we cannot handle 
+    // chunked responses and Squid v3.0 cannot.
+    // FUTURE_CODE_TO_SUPPORT_CHUNKED_REQUESTS below will replace this hack.
+    if (hp->v_min == 1 && hp->v_maj == 1 && // broken client, may send chunks
+#if ICAP_CLIENT   
+        Config.maxChunkedRequestBodySize > 0 && // configured to dechunk
+#else
+        false && // ICAP required for v3.0 because of ICAP/ChunkedCodingParser
+#endif
+        (*method_p == METHOD_PUT || *method_p == METHOD_POST)) {
+
+        // check only once per request because isChunkedRequest is expensive
+        if (conn->in.dechunkingState == ConnStateData::chunkUnknown) {
+            if (isChunkedRequest(hp))
+                conn->startDechunkingRequest(hp);
+            else
+                conn->in.dechunkingState = ConnStateData::chunkNone;
+        }
+
+        if (conn->in.dechunkingState == ConnStateData::chunkParsing) {
+            if (conn->parseRequestChunks(hp)) // parses newly read chunks
+                return NULL; // wait for more data
+            debugs(33, 5, HERE << "Got complete chunked request or err.");
+            assert(conn->in.dechunkingState != ConnStateData::chunkParsing);
+        }
+    }
 
     /* Ok, all headers are received */
     http = new ClientHttpRequest(conn);
@@ -1961,6 +1998,17 @@ parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * metho
                      clientSocketDetach, newClient, tempBuffer);
 
     debugs(33, 5, "parseHttpRequest: Request Header is\n" <<(hp->buf) + hp->hdr_start);
+
+    /* set url */
+    /*
+     * XXX this should eventually not use a malloc'ed buffer; the transformation code
+     * below needs to be modified to not expect a mutable nul-terminated string.
+     */
+    char *url = (char *)xmalloc(hp->u_end - hp->u_start + 16);
+
+    memcpy(url, hp->buf + hp->u_start, hp->u_end - hp->u_start + 1);
+
+    url[hp->u_end - hp->u_start + 1] = '\0';
 
 #if THIS_VIOLATES_HTTP_SPECS_ON_URL_TRANSFORMATION
 
@@ -2099,6 +2147,11 @@ connNoteUseOfBuffer(ConnStateData* conn, size_t byteCount)
 int
 connKeepReadingIncompleteRequest(ConnStateData::Pointer & conn)
 {
+    // when we read chunked requests, the entire body is buffered
+    // XXX: this check ignores header size and its limits.
+    if (conn->in.dechunkingState == ConnStateData::chunkParsing)
+        return conn->in.notYetUsed < Config.maxChunkedRequestBodySize;
+
     return conn->in.notYetUsed >= Config.maxRequestHeaderSize ? 0 : 1;
 }
 
@@ -2108,8 +2161,13 @@ connCancelIncompleteRequests(ConnStateData::Pointer & conn)
     ClientSocketContext *context = parseHttpRequestAbort(conn, "error:request-too-large");
     clientStreamNode *node = context->getClientReplyContext();
     assert(!connKeepReadingIncompleteRequest(conn));
-    debugs(33, 1, "Request header is too large (" << conn->in.notYetUsed << " bytes)");
-    debugs(33, 1, "Config 'request_header_max_size'= " << Config.maxRequestHeaderSize << " bytes.");
+    if (conn->in.dechunkingState == ConnStateData::chunkParsing) {
+        debugs(33, 1, "Chunked request is too large (" << conn->in.notYetUsed << " bytes)");
+        debugs(33, 1, "Config 'chunked_request_body_max_size'= " << Config.maxChunkedRequestBodySize << " bytes.");
+    } else {
+        debugs(33, 1, "Request header is too large (" << conn->in.notYetUsed << " bytes)");
+        debugs(33, 1, "Config 'request_header_max_size'= " << Config.maxRequestHeaderSize << " bytes.");
+    }
     clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
     assert (repContext);
     repContext->setReplyToError(ERR_TOO_BIG,
@@ -2155,6 +2213,9 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
     ClientHttpRequest *http = context->http;
     HttpRequest *request = NULL;
     bool notedUseOfBuffer = false;
+    bool tePresent = false;
+    bool deChunked = false;
+    bool unsupportedTe = false;
 
     /* We have an initial client stream in place should it be needed */
     /* setup our private context */
@@ -2238,8 +2299,17 @@ clientProcessRequest(ConnStateData::Pointer &conn, HttpParser *hp, ClientSocketC
     request->my_port = ntohs(conn->me.sin_port);
     request->http_ver = http_ver;
 
-    if (!urlCheckRequest(request) ||
-            request->header.has(HDR_TRANSFER_ENCODING)) {
+    tePresent = request->header.has(HDR_TRANSFER_ENCODING);
+    deChunked = conn->in.dechunkingState == ConnStateData::chunkReady;
+    if (deChunked) {
+        assert(tePresent);
+        request->setContentLength(conn->in.dechunked.contentSize());
+        request->header.delById(HDR_TRANSFER_ENCODING);
+        conn->finishDechunkingRequest(hp);
+    }
+
+    unsupportedTe = tePresent && !deChunked;
+    if (!urlCheckRequest(request) || unsupportedTe) {
         clientStreamNode *node = context->getClientReplyContext();
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
@@ -2569,13 +2639,74 @@ ConnStateData::handleRequestBodyData()
 {
     assert(bodyPipe != NULL);
 
-    if (const size_t putSize = bodyPipe->putMoreData(in.buf, in.notYetUsed))
+    size_t putSize = 0;    
+
+#if FUTURE_CODE_TO_SUPPORT_CHUNKED_REQUESTS
+   // The code below works, in principle, but we cannot do dechunking 
+   // on-the-fly because that would mean sending chunked requests to
+   // the next hop. Squid lacks logic to determine which servers can
+   // receive chunk requests. Squid v3.0 code cannot even handle chunked
+   // responses which we may encourage by sending chunked requests.
+   // The error generation code probably needs more work.
+    if (in.bodyParser) { // chunked body
+        debugs(33,5, HERE << "handling chunked request body for FD " << fd);
+        bool malformedChunks = false;
+
+        MemBuf raw; // ChunkedCodingParser only works with MemBufs
+        raw.init(in.notYetUsed, in.notYetUsed);
+        raw.append(in.buf, in.notYetUsed);
+        try { // the parser will throw on errors
+            const mb_size_t wasContentSize = raw.contentSize();
+            BodyPipeCheckout bpc(*bodyPipe);
+            const bool parsed = in.bodyParser->parse(&raw, &bpc.buf);
+            bpc.checkIn();
+            putSize = wasContentSize - raw.contentSize();
+
+            if (parsed) {
+                stopProducingFor(bodyPipe, true); // this makes bodySize known
+            } else {
+                // parser needy state must imply body pipe needy state
+                if (in.bodyParser->needsMoreData() &&
+                    !bodyPipe->mayNeedMoreData())
+                    malformedChunks = true;
+                // XXX: if bodyParser->needsMoreSpace, how can we guarantee it?
+            }
+        } catch (...) { // XXX: be more specific
+            malformedChunks = true;
+        }
+
+        if (malformedChunks) {
+            if (bodyPipe != NULL)
+                stopProducingFor(bodyPipe, false);
+
+            ClientSocketContext::Pointer context = getCurrentContext();
+            if (!context->http->out.offset) {
+                clientStreamNode *node = context->getClientReplyContext();
+                clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+                assert (repContext);
+                repContext->setReplyToError(ERR_INVALID_REQ, HTTP_BAD_REQUEST,
+                    METHOD_NONE, NULL, &peer.sin_addr,
+                    NULL, NULL, NULL);
+                context->pullData();
+            }
+            flags.readMoreRequests = false;
+            return; // XXX: is that sufficient to generate an error?
+        }
+    } else // identity encoding 
+#endif
+    {
+        debugs(33,5, HERE << "handling plain request body for FD " << fd);
+        putSize = bodyPipe->putMoreData(in.buf, in.notYetUsed);
+        if (!bodyPipe->mayNeedMoreData()) {
+            // BodyPipe will clear us automagically when we produced everything
+            bodyPipe = NULL;
+        }
+    }
+
+    if (putSize > 0)
         connNoteUseOfBuffer(this, putSize);
 
-    if (!bodyPipe->mayNeedMoreData()) {
-        // BodyPipe will clear us automagically when we produced everything
-        bodyPipe = NULL;
-
+    if (!bodyPipe) {
         debugs(33,5, HERE << "produced entire request body for FD " << fd);
 
         if (closing()) {
@@ -3281,17 +3412,129 @@ ConnStateData::startClosing(const char *reason)
     bodyPipe->enableAutoConsumption();
 }
 
+// initialize dechunking state
+void
+ConnStateData::startDechunkingRequest(HttpParser *hp)
+{
+    debugs(33, 5, HERE << "start dechunking at " << HttpParserRequestLen(hp));
+    assert(in.dechunkingState == chunkUnknown);
+    assert(!in.bodyParser);
+#if ICAP_CLIENT
+    in.bodyParser = new ChunkedCodingParser;
+#endif
+    in.chunkedSeen = HttpParserRequestLen(hp); // skip headers when dechunking
+    in.chunked.init();  // TODO: should we have a smaller-than-default limit?
+    in.dechunked.init();
+    in.dechunkingState = chunkParsing;
+}
+
+// put parsed content into input buffer and clean up
+void
+ConnStateData::finishDechunkingRequest(HttpParser *hp)
+{
+    debugs(33, 5, HERE << "finish dechunking; content: " << in.dechunked.contentSize());
+
+    assert(in.dechunkingState == chunkReady);
+    assert(in.bodyParser); 
+#if ICAP_CLIENT
+    delete in.bodyParser;
+#endif
+    in.bodyParser = NULL;
+
+    const mb_size_t headerSize = HttpParserRequestLen(hp);
+
+    // dechunking cannot make data bigger
+    assert(headerSize + in.dechunked.contentSize() + in.chunked.contentSize()
+        <= static_cast<mb_size_t>(in.notYetUsed));
+    assert(in.notYetUsed <= in.allocatedSize);
+
+    // copy dechunked content
+    char *end = in.buf + headerSize;
+    xmemmove(end, in.dechunked.content(), in.dechunked.contentSize());
+    end += in.dechunked.contentSize();
+
+    // copy post-chunks leftovers, if any, caused by request pipelining?
+    if (in.chunked.contentSize()) {
+        xmemmove(end, in.chunked.content(), in.chunked.contentSize());
+        end += in.chunked.contentSize();
+    }
+
+    in.notYetUsed = end - in.buf;
+
+    in.chunked.clean();
+    in.dechunked.clean();
+    in.dechunkingState = chunkUnknown;
+}
+
+// parse newly read request chunks and buffer them for finishDechunkingRequest
+// returns true iff needs more data
+bool
+ConnStateData::parseRequestChunks(HttpParser *)
+{
+#if ICAP_CLIENT   
+    debugs(33,5, HERE << "parsing chunked request body at " <<
+        in.chunkedSeen << " < " << in.notYetUsed);
+    assert(in.bodyParser);
+    assert(in.dechunkingState == chunkParsing);
+
+    assert(in.chunkedSeen <= in.notYetUsed);
+    const mb_size_t fresh = in.notYetUsed - in.chunkedSeen;
+
+    // be safe: count some chunked coding metadata towards the total body size
+    if (fresh + in.dechunked.contentSize() > Config.maxChunkedRequestBodySize) {
+        debugs(33,3, HERE << "chunked body (" << fresh << " + " <<
+            in.dechunked.contentSize() << " may exceed " <<
+            "chunked_request_body_max_size=" <<
+            Config.maxChunkedRequestBodySize);
+        in.dechunkingState = chunkError;
+        return false;
+    }
+        
+    if (fresh > in.chunked.potentialSpaceSize()) {
+        // should not happen if Config.maxChunkedRequestBodySize is reasonable
+        debugs(33,1, HERE << "request_body_max_size exceeds chunked buffer " <<
+            "size: " << fresh << " + " << in.chunked.contentSize() << " > " <<
+            in.chunked.potentialSpaceSize() << " with " <<
+            "chunked_request_body_max_size=" <<
+            Config.maxChunkedRequestBodySize);
+        in.dechunkingState = chunkError;
+        return false;
+    }
+    in.chunked.append(in.buf + in.chunkedSeen, fresh);
+    in.chunkedSeen += fresh;
+
+    try { // the parser will throw on errors
+        if (in.bodyParser->parse(&in.chunked, &in.dechunked))
+            in.dechunkingState = chunkReady; // successfully parsed all chunks
+        else
+            return true; // need more, keep the same state
+    } catch (...) {
+        debugs(33,3, HERE << "chunk parsing error");
+        in.dechunkingState = chunkError;
+    }
+#endif
+    return false; // error, unsupported, or done
+}
+
 char *
 ConnStateData::In::addressToReadInto() const
 {
     return buf + notYetUsed;
 }
 
-ConnStateData::In::In() : buf (NULL), notYetUsed (0), allocatedSize (0)
+ConnStateData::In::In() : bodyParser(NULL),
+    buf (NULL), notYetUsed (0), allocatedSize (0),
+    dechunkingState(ConnStateData::chunkUnknown)
 {}
 
 ConnStateData::In::~In()
 {
     if (allocatedSize)
         memFreeBuf(allocatedSize, buf);
+    if (bodyParser)
+#if ICAP_CLIENT   
+        delete bodyParser; // TODO: pool
+#else
+        assert(false); // chunked requests are only supported if ICAP is
+#endif
 }
