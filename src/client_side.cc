@@ -75,10 +75,7 @@
 #include "ClientRequestContext.h"
 #include "MemBuf.h"
 #include "SquidTime.h"
-
-#if ICAP_CLIENT   
-#include "ICAP/ChunkedCodingParser.h"
-#endif
+#include "ChunkedCodingParser.h"
 
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
@@ -1955,16 +1952,10 @@ parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * metho
     // entire body is available so that we can set the content length and
     // forward the request without chunks. The primary reason for this is
     // to avoid forwarding a chunked request because the server side lacks
-    // logic to determine when it is valid to do so. The secondary reason
-    // is that we should not send chunked requests if we cannot handle 
-    // chunked responses and Squid v3.0 cannot.
+    // logic to determine when it is valid to do so.
     // FUTURE_CODE_TO_SUPPORT_CHUNKED_REQUESTS below will replace this hack.
     if (hp->v_min == 1 && hp->v_maj == 1 && // broken client, may send chunks
-#if ICAP_CLIENT   
         Config.maxChunkedRequestBodySize > 0 && // configured to dechunk
-#else
-        false && // ICAP required for v3.0 because of ICAP/ChunkedCodingParser
-#endif
         (*method_p == METHOD_PUT || *method_p == METHOD_POST)) {
 
         // check only once per request because isChunkedRequest is expensive
@@ -2645,8 +2636,7 @@ ConnStateData::handleRequestBodyData()
    // The code below works, in principle, but we cannot do dechunking 
    // on-the-fly because that would mean sending chunked requests to
    // the next hop. Squid lacks logic to determine which servers can
-   // receive chunk requests. Squid v3.0 code cannot even handle chunked
-   // responses which we may encourage by sending chunked requests.
+   // receive chunk requests.
    // The error generation code probably needs more work.
     if (in.bodyParser) { // chunked body
         debugs(33,5, HERE << "handling chunked request body for FD " << fd);
@@ -3419,9 +3409,7 @@ ConnStateData::startDechunkingRequest(HttpParser *hp)
     debugs(33, 5, HERE << "start dechunking at " << HttpParserRequestLen(hp));
     assert(in.dechunkingState == chunkUnknown);
     assert(!in.bodyParser);
-#if ICAP_CLIENT
     in.bodyParser = new ChunkedCodingParser;
-#endif
     in.chunkedSeen = HttpParserRequestLen(hp); // skip headers when dechunking
     in.chunked.init();  // TODO: should we have a smaller-than-default limit?
     in.dechunked.init();
@@ -3436,9 +3424,7 @@ ConnStateData::finishDechunkingRequest(HttpParser *hp)
 
     assert(in.dechunkingState == chunkReady);
     assert(in.bodyParser); 
-#if ICAP_CLIENT
     delete in.bodyParser;
-#endif
     in.bodyParser = NULL;
 
     const mb_size_t headerSize = HttpParserRequestLen(hp);
@@ -3471,7 +3457,6 @@ ConnStateData::finishDechunkingRequest(HttpParser *hp)
 bool
 ConnStateData::parseRequestChunks(HttpParser *)
 {
-#if ICAP_CLIENT   
     debugs(33,5, HERE << "parsing chunked request body at " <<
         in.chunkedSeen << " < " << in.notYetUsed);
     assert(in.bodyParser);
@@ -3512,7 +3497,6 @@ ConnStateData::parseRequestChunks(HttpParser *)
         debugs(33,3, HERE << "chunk parsing error");
         in.dechunkingState = chunkError;
     }
-#endif
     return false; // error, unsupported, or done
 }
 
@@ -3532,9 +3516,5 @@ ConnStateData::In::~In()
     if (allocatedSize)
         memFreeBuf(allocatedSize, buf);
     if (bodyParser)
-#if ICAP_CLIENT   
         delete bodyParser; // TODO: pool
-#else
-        assert(false); // chunked requests are only supported if ICAP is
-#endif
 }

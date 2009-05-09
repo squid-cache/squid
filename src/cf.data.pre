@@ -2851,8 +2851,6 @@ DOC_START
 	Request dechunking feature and this option in particular are a
 	temporary hack. When chunking requests and responses are fully
 	supported, there will be no need to buffer a chunked request.
-	Dechunking requires ICAP support in Squid v3.0 but not in later
-	versions (see --enable-icap-client configure option).
 DOC_END
 
 NAME: broken_posts
