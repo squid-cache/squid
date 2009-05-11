@@ -38,12 +38,6 @@
 #include "acl/IntRange.h"
 #include "acl/Checklist.h"
 
-/* explicit template instantiation required for some systems */
-
-template class ACLStrategised<int>;
-
-
-
 int
 ACLMyPortStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
