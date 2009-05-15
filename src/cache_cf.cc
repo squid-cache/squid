@@ -583,6 +583,13 @@ configDoConfigure(void)
         }
 
         for (R = Config.Refresh; R; R = R->next) {
+             if (!R->flags.ignore_must_revalidate)
+                 continue;
+             debugs(22, 1, "WARNING: use of 'ignore-must-revalidate' in 'refresh_pattern' violates HTTP");
+             break;
+        }
+
+        for (R = Config.Refresh; R; R = R->next) {
             if (!R->flags.ignore_private)
                 continue;
 
@@ -2211,6 +2218,9 @@ dump_refreshpattern(StoreEntry * entry, const char *name, refresh_t * head)
         if (head->flags.ignore_no_store)
             storeAppendPrintf(entry, " ignore-no-store");
 
+        if (head->flags.ignore_must_revalidate)
+            storeAppendPrintf(entry, " ignore-must-revalidate");
+
         if (head->flags.ignore_private)
             storeAppendPrintf(entry, " ignore-private");
 
@@ -2242,6 +2252,7 @@ parse_refreshpattern(refresh_t ** head)
     int ignore_reload = 0;
     int ignore_no_cache = 0;
     int ignore_no_store = 0;
+    int ignore_must_revalidate = 0;
     int ignore_private = 0;
     int ignore_auth = 0;
 #endif
@@ -2298,6 +2309,8 @@ parse_refreshpattern(refresh_t ** head)
             ignore_no_cache = 1;
         else if (!strcmp(token, "ignore-no-store"))
             ignore_no_store = 1;
+        else if (!strcmp(token, "ignore-must-revalidate"))
+            ignore_must_revalidate = 1;
         else if (!strcmp(token, "ignore-private"))
             ignore_private = 1;
         else if (!strcmp(token, "ignore-auth"))
@@ -2358,6 +2371,9 @@ parse_refreshpattern(refresh_t ** head)
 
     if (ignore_no_store)
         t->flags.ignore_no_store = 1;
+
+    if (ignore_must_revalidate)
+        t->flags.ignore_must_revalidate = 1;
 
     if (ignore_private)
         t->flags.ignore_private = 1;

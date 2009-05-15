@@ -958,7 +958,14 @@ NOCOMMENT_START
 	<p>Changing this is an RFC 2616 violation and now requires --enable-http-violations
 
 	<tag>refresh_pattern</tag>
-	<p>New set of basic patterns. These should always be listed after any custom ptterns.
+	<p>New option 'ignore-must-revalidate'.
+	<verb>
+	ignore-must-revalidate ignores any ``Cache-Control: must-revalidate``
+	headers received from a server. Doing this VIOLATES
+	the HTTP standard. Enabling this feature could make you
+	liable for problems which it causes.
+	</verb>
+	<p>New set of basic patterns. These should always be listed after any custom patterns.
 	   They ensure RFC compliance with certain protocol and request handling in the absence
 	   of accurate Cache-Control: and Expires: information.
 	<verb>
