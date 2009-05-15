@@ -648,6 +648,10 @@ This section gives a thorough account of those changes in three categories:
 	Requires ftp_passive to be ON (default)
 	</verb>
 
+	<tag>forward_max_tries</tag>
+	<p>Controls how many different forward paths Squid will try
+	before giving up. Default: 10
+
 	<tag>include</tag>
 	<p>New option to import entire secondary configuration files into squid.conf.
 	<verb>
