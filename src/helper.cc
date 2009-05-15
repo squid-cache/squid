@@ -1548,6 +1548,7 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
                     && !srv->deferred_requests) {
                 int wfd = srv->wfd;
                 srv->wfd = -1;
+                srv->flags.closing=1;
                 comm_close(wfd);
             } else {
                 if (srv->queue.head)
