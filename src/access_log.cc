@@ -1403,6 +1403,8 @@ accessLogLog(AccessLogEntry * al, ACLChecklist * checklist)
 
     if (al->icp.opcode)
         al->_private.method_str = icp_opcode_str[al->icp.opcode];
+    else if (al->htcp.opcode)
+        al->_private.method_str = al->htcp.opcode;
     else
         al->_private.method_str = RequestMethodStr(al->http.method);
 

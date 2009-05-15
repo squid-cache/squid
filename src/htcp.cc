@@ -45,6 +45,7 @@
 #include "MemBuf.h"
 #include "http.h"
 #include "icmp/net_db.h"
+#include "AccessLogEntry.h"
 
 typedef struct _Countstr Countstr;
 
@@ -252,6 +253,7 @@ static void htcpFreeDetail(htcpDetail * s);
 
 static void htcpHandleMsg(char *buf, int sz, IpAddress &from);
 
+static void htcpLogHtcp(IpAddress &, int, log_type, const char *);
 static void htcpHandleMon(htcpDataHeader *, char *buf, int sz, IpAddress &from);
 
 static void htcpHandleNop(htcpDataHeader *, char *buf, int sz, IpAddress &from);
@@ -259,6 +261,7 @@ static void htcpHandleNop(htcpDataHeader *, char *buf, int sz, IpAddress &from);
 static void htcpHandleSet(htcpDataHeader *, char *buf, int sz, IpAddress &from);
 
 static void htcpHandleTst(htcpDataHeader *, char *buf, int sz, IpAddress &from);
+
 static void htcpRecv(int fd, void *data);
 
 static void htcpSend(const char *buf, int len, IpAddress &to);
@@ -1184,23 +1187,26 @@ htcpHandleTstRequest(htcpDataHeader * dhdr, char *buf, int sz, IpAddress &from)
     /* s is a new object */
     s = htcpUnpackSpecifier(buf, sz);
 
-    s->setFrom (from);
+    s->setFrom(from);
 
-    s->setDataHeader (dhdr);
+    s->setDataHeader(dhdr);
 
     if (NULL == s) {
         debugs(31, 2, "htcpHandleTstRequest: htcpUnpackSpecifier failed");
+        htcpLogHtcp(from, dhdr->opcode, LOG_UDP_INVALID, dash_str);
         return;
     }
 
     if (!s->request) {
         debugs(31, 2, "htcpHandleTstRequest: failed to parse request");
+        htcpLogHtcp(from, dhdr->opcode, LOG_UDP_INVALID, dash_str);
         htcpFreeSpecifier(s);
         return;
     }
 
     if (!htcpAccessCheck(Config.accessList.htcp, s, from)) {
         debugs(31, 2, "htcpHandleTstRequest: Access denied");
+        htcpLogHtcp(from, dhdr->opcode, LOG_UDP_DENIED, s->uri);
         htcpFreeSpecifier(s);
         return;
     }
@@ -1213,10 +1219,13 @@ htcpHandleTstRequest(htcpDataHeader * dhdr, char *buf, int sz, IpAddress &from)
 void
 htcpSpecifier::checkedHit(StoreEntry *e)
 {
-    if (e)
+    if (e) {
         htcpTstReply(dhdr, e, this, from);		/* hit */
-    else
+        htcpLogHtcp(from, dhdr->opcode, LOG_UDP_HIT, uri);
+    } else {
         htcpTstReply(dhdr, NULL, NULL, from);	/* cache miss */
+        htcpLogHtcp(from, dhdr->opcode, LOG_UDP_MISS, uri);
+    }
 
     htcpFreeSpecifier(this);
 }
@@ -1236,7 +1245,6 @@ htcpHandleSet(htcpDataHeader * hdr, char *buf, int sz, IpAddress &from)
 }
 
 static void
-
 htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, IpAddress &from)
 {
     htcpSpecifier *s;
@@ -1250,6 +1258,7 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, IpAddress &from)
 
     if (sz == 0) {
         debugs(31, 4, "htcpHandleClr: nothing to do");
+        htcpLogHtcp(from, hdr->opcode, LOG_UDP_INVALID, dash_str);
         return;
     }
 
@@ -1257,11 +1266,13 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, IpAddress &from)
 
     if (NULL == s) {
         debugs(31, 3, "htcpHandleClr: htcpUnpackSpecifier failed");
+        htcpLogHtcp(from, hdr->opcode, LOG_UDP_INVALID, dash_str);
         return;
     }
 
     if (!htcpAccessCheck(Config.accessList.htcp_clr, s, from)) {
         debugs(31, 2, "htcpHandleClr: Access denied");
+        htcpLogHtcp(from, hdr->opcode, LOG_UDP_DENIED, s->uri);
         htcpFreeSpecifier(s);
         return;
     }
@@ -1277,10 +1288,12 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, IpAddress &from)
 
     case 1:
         htcpClrReply(hdr, 1, from);	/* hit */
+        htcpLogHtcp(from, hdr->opcode, LOG_UDP_HIT, s->uri);
         break;
 
     case 0:
         htcpClrReply(hdr, 0, from);	/* miss */
+        htcpLogHtcp(from, hdr->opcode, LOG_UDP_MISS, s->uri);
         break;
 
     default:
@@ -1688,4 +1701,20 @@ htcpSocketClose(void)
         comm_close(htcpOutSocket);
         htcpOutSocket = -1;
     }
+}
+
+static void
+htcpLogHtcp(IpAddress &caddr, int opcode, log_type logcode, const char *url)
+{
+    AccessLogEntry al;
+    if (LOG_TAG_NONE == logcode)
+	return;
+    if (!Config.onoff.log_udp)
+	return;
+    al.htcp.opcode = htcpOpcodeStr[opcode];
+    al.url = url;
+    al.cache.caddr = caddr;
+    al.cache.code = logcode;
+    al.cache.msec = 0;
+    accessLogLog(&al, NULL);
 }

@@ -69,6 +69,13 @@ public:
         icp_opcode opcode;
     } icp;
 
+    class HtcpDetails {
+    public:
+        HtcpDetails() : opcode(NULL) {};
+
+        const char *opcode;
+    } htcp;
+
     class CacheDetails
     {
 

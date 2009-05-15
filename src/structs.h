@@ -840,8 +840,8 @@ struct peer {
         int counts[ICP_END+1];
         u_short port;
     } icp;
-#if USE_HTCP
 
+#if USE_HTCP
     struct {
         double version;
         int counts[2];
