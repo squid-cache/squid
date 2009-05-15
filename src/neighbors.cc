@@ -1255,7 +1255,7 @@ peerDNSConfigure(const ipcache_addrs * ia, void *data)
         return;
     }
 
-    p->tcp_up = PEER_TCP_MAGIC_COUNT;
+    p->tcp_up = p->connect_fail_limit;
 
     for (j = 0; j < (int) ia->count && j < PEER_MAX_ADDRESSES; j++) {
         p->addresses[j] = ia->in_addrs[j];
@@ -1330,12 +1330,12 @@ peerConnectSucceded(peer * p)
 {
     if (!p->tcp_up) {
         debugs(15, 2, "TCP connection to " << p->host << "/" << p->http_port << " succeded");
-        p->tcp_up = PEER_TCP_MAGIC_COUNT; // NP: so peerAlive(p) works properly.
+        p->tcp_up = p->connect_fail_limit; // NP: so peerAlive(p) works properly.
         peerAlive(p);
         if (!p->n_addresses)
             ipcache_nbgethostbyname(p->host, peerDNSConfigure, p);
     } else
-        p->tcp_up = PEER_TCP_MAGIC_COUNT;
+        p->tcp_up = p->connect_fail_limit;
 }
 
 /// called by Comm when test_fd is closed while connect is in progress
@@ -1610,6 +1610,9 @@ dump_peer_options(StoreEntry * sentry, peer * p)
 
     if (p->connect_timeout > 0)
         storeAppendPrintf(sentry, " connect-timeout=%d", (int) p->connect_timeout);
+
+    if (p->connect_fail_limit != PEER_TCP_MAGIC_COUNT)
+        storeAppendPrintf(sentry, " connect-fail-limit=%d", p->connect_fail_limit);
 
 #if USE_CACHE_DIGESTS
 

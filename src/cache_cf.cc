@@ -1780,8 +1780,9 @@ parse_peer(peer ** head)
             rfc1738_unescape(p->login);
         } else if (!strncasecmp(token, "connect-timeout=", 16)) {
             p->connect_timeout = xatoi(token + 16);
+        } else if (!strncasecmp(token, "connect-fail-limit=", 19)) {
+            p->connect_fail_limit = xatoi(token + 19);
 #if USE_CACHE_DIGESTS
-
         } else if (!strncasecmp(token, "digest-url=", 11)) {
             p->digest_url = xstrdup(token + 11);
 #endif
@@ -1863,6 +1864,9 @@ parse_peer(peer ** head)
 
     if (p->weight < 1)
         p->weight = 1;
+
+    if (p->connect_fail_limit < 1)
+        p->connect_fail_limit = 1;
 
     p->icp.version = ICP_VERSION_CURRENT;
 

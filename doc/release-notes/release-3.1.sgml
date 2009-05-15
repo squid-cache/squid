@@ -835,7 +835,7 @@ NOCOMMENT_START
 	<tag>cache_mem</tag>
 	<p>Default size increased to 256MB.
 
-	<tag>cache_peer htcp-no-clr htcp-no-purge-clr htcp-only-clr htcp-forward-clr connection-auth[=on|off|auto]</tag>
+	<tag>cache_peer htcp-no-clr htcp-no-purge-clr htcp-only-clr htcp-forward-clr connection-auth[=on|off|auto] connect-fail-limit=N</tag>
 	<p>New Options.
 	<verb>
 	use 'htcp-no-clr' to send HTCP to the neighbor but without
@@ -857,6 +857,10 @@ NOCOMMENT_START
 	and any such challenges received from there should be
 	ignored. Default is 'auto' to automatically determine the
 	status of the peer.
+
+	use 'connect-fail-limit=nn' to specify how many times
+	connecting to a peer must fail before it is marked as
+	down. Default is 10.
 	</verb>
 
 	<tag>cache_store_log</tag>
