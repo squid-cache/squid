@@ -45,6 +45,11 @@
  * up with a different answer to the one above)
  */
 
+#include "smbdes.h"
+
+/* local functions */
+void cred_hash1(unsigned char *out, unsigned char *in, unsigned char *key);
+void cred_hash2(unsigned char *out, unsigned char *in, unsigned char *key);
 
 
 static int perm1[56] = {57, 49, 41, 33, 25, 17, 9,

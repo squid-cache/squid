@@ -23,8 +23,13 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-int RFCNB_Put_Pkt(struct RFCNB_Con *con, struct RFCNB_Pkt *pkt, int len);
+#ifndef _SMB_LM_SMBVAL_RFCNB_IO_H
+#define _SMB_LM_SMBVAL_RFCNB_IO_H
 
-int RFCNB_Get_Pkt(struct RFCNB_Con *con, struct RFCNB_Pkt *pkt, int len);
+extern int RFCNB_Put_Pkt(struct RFCNB_Con *con, struct RFCNB_Pkt *pkt, int len);
 
-void RFCNB_Free_Pkt(struct RFCNB_Pkt *pkt);
+extern int RFCNB_Get_Pkt(struct RFCNB_Con *con, struct RFCNB_Pkt *pkt, int len);
+
+extern void RFCNB_Free_Pkt(struct RFCNB_Pkt *pkt);
+
+#endif /* _SMB_LM_SMBVAL_RFCNB_IO_H */
