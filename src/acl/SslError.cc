@@ -8,12 +8,6 @@
 #include "acl/SslErrorData.h"
 #include "acl/Checklist.h"
 
-/* explicit template instantiation required for some systems */
-
-template class ACLStrategised<int>;
-
-
-
 int
 ACLSslErrorStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
