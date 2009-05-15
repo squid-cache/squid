@@ -118,6 +118,11 @@ Changes to squid-3.1.0.1 (27 Oct 2008):
 	- Bug #2223: Follow XFF extensions added
 	- ... and many code and documentation cleanups
 
+Changes to squid-3.0.STABLE16-RC1 (16 May 2009):
+
+	- Bug 1148 Ported from 3.1: Chunked Transfer Encoding
+	- Bug 2648: NTLM helpers not shutting down when deferred
+
 Changes to squid-3.0.STABLE15 (06 May 2009):
 
 	- Regression Bug 2635: Incorrect Max-Forwards header type
