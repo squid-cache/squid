@@ -285,7 +285,6 @@ squid_SOURCES = \
 	$(ACL_REGISTRATION_SOURCES) \
 	access_log.cc \
 	AccessLogEntry.h \
-	asn.cc \
 	AsyncEngine.cc \
 	AsyncEngine.h \
 	cache_cf.cc \
