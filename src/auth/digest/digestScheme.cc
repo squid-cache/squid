@@ -36,7 +36,9 @@
 AuthScheme &
 digestScheme::GetInstance()
 {
-    return _instance;
+    if (_instance == NULL)
+        _instance = new digestScheme();
+    return *_instance;
 }
 
 digestScheme::digestScheme()
@@ -50,4 +52,4 @@ digestScheme::type () const
     return "digest";
 }
 
-digestScheme digestScheme::_instance;
+digestScheme *digestScheme::_instance = NULL;

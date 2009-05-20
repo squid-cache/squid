@@ -36,7 +36,9 @@
 AuthScheme &
 ntlmScheme::GetInstance()
 {
-    return _instance;
+    if (_instance == NULL)
+        _instance = new ntlmScheme();
+    return *_instance;
 }
 
 ntlmScheme::ntlmScheme()
@@ -50,4 +52,4 @@ ntlmScheme::type () const
     return "ntlm";
 }
 
-ntlmScheme ntlmScheme::_instance;
+ntlmScheme *ntlmScheme::_instance = NULL;
