@@ -36,7 +36,9 @@
 AuthScheme &
 negotiateScheme::GetInstance()
 {
-    return _instance;
+    if (_instance == NULL)
+        _instance = new negotiateScheme();
+    return *_instance;
 }
 
 negotiateScheme::negotiateScheme()
@@ -50,4 +52,4 @@ negotiateScheme::type () const
     return "negotiate";
 }
 
-negotiateScheme negotiateScheme::_instance;
+negotiateScheme *negotiateScheme::_instance = NULL;

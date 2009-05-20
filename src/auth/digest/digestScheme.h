@@ -55,7 +55,7 @@ public:
     digestScheme &operator=(digestScheme const &);
 
 private:
-    static digestScheme _instance;
+    static digestScheme *_instance;
 };
 
 #endif /* SQUID_DIGESTSCHEME_H */

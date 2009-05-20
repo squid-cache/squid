@@ -55,7 +55,7 @@ public:
     negotiateScheme &operator=(negotiateScheme const &);
 
 private:
-    static negotiateScheme _instance;
+    static negotiateScheme *_instance;
 };
 
 #endif /* SQUID_negotiateSCHEME_H */
