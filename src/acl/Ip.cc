@@ -188,7 +188,7 @@ acl_ip_data::NetworkCompare(acl_ip_data * const & a, acl_ip_data * const &b)
     return ret;
 }
 
-/*
+/**
  * Decode an ascii representation (asc) of a IP netmask address or CIDR,
  * and place resulting information in mask.
  * This function should NOT be called if 'asc' is a hostname!
