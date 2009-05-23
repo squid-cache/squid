@@ -13,7 +13,6 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "X-Generator: Pootle 1.2.0\n"
 
-# I haven't changed anything in the translation, I'm just checking that the submit button works.
 #: templates/ERR_FTP_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
 msgstr "<a href=\"../\">Répertoire Parent</a> (<a href=\"/\">Répertoire Racine</a>)"
