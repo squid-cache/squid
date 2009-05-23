@@ -312,7 +312,8 @@ hashFreeItems(hash_table * hid, HASHFREE * free_func)
 void
 hashFreeMemory(hash_table * hid)
 {
-    assert(hid != NULL);
+    if(hid == NULL)
+        return;
     if (hid->buckets)
 	xfree(hid->buckets);
     xfree(hid);
