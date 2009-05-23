@@ -751,7 +751,8 @@ xstrdup(const char *s)
     /* copy string, including terminating character */
     sz = strlen(s) + 1;
 
-    p = memcpy((char *)xmalloc(sz), s, sz);
+    p = (char *)xmalloc(sz);
+    memcpy(p, s, sz);
 
     PROF_stop(xstrdup);
 
