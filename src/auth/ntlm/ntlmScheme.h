@@ -55,7 +55,7 @@ public:
     ntlmScheme &operator=(ntlmScheme const &);
 
 private:
-    static ntlmScheme _instance;
+    static ntlmScheme *_instance;
 };
 
 #endif /* SQUID_ntlmSCHEME_H */

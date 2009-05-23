@@ -55,7 +55,7 @@ public:
     basicScheme &operator=(basicScheme const &);
 
 private:
-    static basicScheme _instance;
+    static basicScheme *_instance;
 };
 
 #endif /* SQUID_BASICSCHEME_H */

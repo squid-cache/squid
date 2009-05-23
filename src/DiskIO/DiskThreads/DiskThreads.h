@@ -7,6 +7,10 @@
 #ifndef __DISKTHREADS_H__
 #define __DISKTHREADS_H__
 
+#include "config.h"
+#include "dlink.h"
+#include "typedefs.h"
+
 #ifdef AUFS_IO_THREADS
 #define NUMTHREADS AUFS_IO_THREADS
 #else

@@ -192,7 +192,7 @@ DOC_START
 	If you want to use a digest authenticator, set this line to
 	something like
 
-	auth_param digest program @DEFAULT_PREFIX@/bin/digest_auth_pw @DEFAULT_PREFIX@/etc/digpass
+	auth_param digest program @DEFAULT_PREFIX@/bin/digest_pw_auth @DEFAULT_PREFIX@/etc/digpass
 
 	"utf8" on|off
 	HTTP uses iso-latin-1 as characterset, while some authentication
@@ -1602,6 +1602,7 @@ DOC_START
 		     no-delay
 		     login=user:password | PASS | *:password
 		     connect-timeout=nn
+		     connect-fail-limit=nn
 		     digest-url=url
 		     allow-miss
 		     max-conn=n
@@ -1726,6 +1727,10 @@ DOC_START
 		     use 'connect-timeout=nn' to specify a peer
 		     specific connect timeout (also see the
 		     peer_connect_timeout directive)
+
+		     use 'connect-fail-limit=nn' to specify how many times
+		     connecting to a peer must fail before it is marked as
+		     down. Default is 10.
 
 		     use 'digest-url=url' to tell Squid to fetch the cache
 		     digest (if digests are enabled) for this host from
@@ -1939,6 +1944,15 @@ DOC_START
 	your time between requests is greater than this timeout, you
 	will see a lot of requests sent DIRECT to origin servers
 	instead of to your parents.
+DOC_END
+
+NAME: forward_max_tries
+DEFAULT: 10
+TYPE: int
+LOC: Config.forward_max_tries
+DOC_START
+	Controls how many different forward paths Squid will try
+	before giving up. See also forward_timeout.
 DOC_END
 
 NAME: hierarchy_stoplist
@@ -2382,17 +2396,6 @@ DOC_START
 	logging will also not be accounted for in performance counters.
 DOC_END
 
-NAME: cache_log
-TYPE: string
-DEFAULT: none
-DEFAULT_IF_NONE: @DEFAULT_CACHE_LOG@
-LOC: Config.Log.log
-DOC_START
-	Cache logging file. This is where general information about
-	your cache's behavior goes. You can increase the amount of data
-	logged to this file with the "debug_options" tag below.
-DOC_END
-
 NAME: cache_store_log
 TYPE: string
 DEFAULT: none
@@ -2460,6 +2463,9 @@ DOC_START
 	purposes, so -k rotate uses another signal.  It is best to get
 	in the habit of using 'squid -k rotate' instead of 'kill -USR1
 	<pid>'.
+
+	Note, from Squid-3.1 this option has no effect on the cache.log,
+	that log can be rotated separately by using debug_options
 DOC_END
 
 NAME: emulate_httpd_log
@@ -2541,19 +2547,6 @@ DOC_START
 	A filename to write the process-id to.  To disable, enter "none".
 DOC_END
 
-NAME: debug_options
-TYPE: eol
-DEFAULT: ALL,1
-LOC: Config.debugOptions
-DOC_START
-	Logging options are set as section,level where each source file
-	is assigned a unique section.  Lower levels result in less
-	output,  Full debugging (level 9) can result in a very large
-	log file, so be careful.  The magic word "ALL" sets debugging
-	levels for all sections.  We recommend normally running with
-	"ALL,1".
-DOC_END
-
 NAME: log_fqdn
 COMMENT: on|off
 TYPE: onoff
@@ -2620,6 +2613,58 @@ DOC_START
 	A filename where Squid stores it's netdb state between restarts.
 	To disable, enter "none".
 DOC_END
+
+COMMENT_START
+ OPTIONS FOR TROUBLESHOOTING
+ -----------------------------------------------------------------------------
+COMMENT_END
+
+NAME: cache_log
+TYPE: string
+DEFAULT: none
+DEFAULT_IF_NONE: @DEFAULT_CACHE_LOG@
+LOC: Debug::cache_log
+DOC_START
+	Cache logging file. This is where general information about
+	your cache's behavior goes. You can increase the amount of data
+	logged to this file and how often its rotated with "debug_options"
+DOC_END
+
+NAME: debug_options
+TYPE: eol
+DEFAULT: rotate=1 ALL,1
+LOC: Debug::debugOptions
+DOC_START
+	Logging options are set as section,level where each source file
+	is assigned a unique section.  Lower levels result in less
+	output,  Full debugging (level 9) can result in a very large
+	log file, so be careful.
+
+	The magic word "ALL" sets debugging levels for all sections.
+	We recommend normally running with "ALL,1".
+
+	The rotate= option can be increased to keep more of these logs.
+	For most uses a single log should be enough to monitor current
+	events affecting Squid.
+DOC_END
+
+NAME: coredump_dir
+TYPE: string
+LOC: Config.coredump_dir
+DEFAULT: none
+DEFAULT_IF_NONE: none
+DOC_START
+	By default Squid leaves core files in the directory from where
+	it was started. If you set 'coredump_dir' to a directory
+	that exists, Squid will chdir() to that directory at startup
+	and coredump files will be left there.
+
+NOCOMMENT_START
+# Leave coredumps in the first cache dir
+coredump_dir @DEFAULT_SWAP_DIR@
+NOCOMMENT_END
+DOC_END
+
 
 COMMENT_START
  OPTIONS FOR FTP GATEWAYING
@@ -2904,6 +2949,7 @@ DOC_START
 		 ignore-reload
 		 ignore-no-cache
 		 ignore-no-store
+		 ignore-must-revalidate
 		 ignore-private
 		 ignore-auth
 		 refresh-ims
@@ -2913,6 +2959,11 @@ DOC_START
 		Expires: header or Cache-Control: max-age). Doing this
 		VIOLATES the HTTP standard.  Enabling this feature
 		could make you liable for problems which it causes.
+
+		Note: override-expire does not enforce staleness - it only extends
+		freshness / min. If the server returns a Expires time which
+		is longer than your max time, Squid will still consider
+		the object fresh for that period of time.
 
 		override-lastmod enforces min age even on objects
 		that were modified recently.
@@ -2934,6 +2985,11 @@ DOC_START
 		send it anyway.
 
 		ignore-no-store ignores any ``Cache-control: no-store''
+		headers received from a server. Doing this VIOLATES
+		the HTTP standard. Enabling this feature could make you
+		liable for problems which it causes.
+
+		ignore-must-revalidate ignores any ``Cache-Control: must-revalidate``
 		headers received from a server. Doing this VIOLATES
 		the HTTP standard. Enabling this feature could make you
 		liable for problems which it causes.
@@ -5934,23 +5990,6 @@ DOC_START
 	chop:	The request is allowed and the URI is chopped at the
 		first whitespace.  This might also be considered a
 		violation.
-DOC_END
-
-NAME: coredump_dir
-TYPE: string
-LOC: Config.coredump_dir
-DEFAULT: none
-DEFAULT_IF_NONE: none
-DOC_START
-	By default Squid leaves core files in the directory from where
-	it was started. If you set 'coredump_dir' to a directory
-	that exists, Squid will chdir() to that directory at startup
-	and coredump files will be left there.
-
-NOCOMMENT_START
-# Leave coredumps in the first cache dir
-coredump_dir @DEFAULT_SWAP_DIR@
-NOCOMMENT_END
 DOC_END
 
 NAME: chroot

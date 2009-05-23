@@ -419,7 +419,7 @@ sigusr2_handle(int sig)
         state = 1;
     } else {
 #ifndef MEM_GEN_TRACE
-        Debug::parseOptions(Config.debugOptions);
+        Debug::parseOptions(Debug::debugOptions);
 #else
 
         log_trace_init("/tmp/squid.alloc");
@@ -444,7 +444,7 @@ fatal_common(const char *message)
 
     fprintf(debug_log, "FATAL: %s\n", message);
 
-    if (opt_debug_stderr > 0 && debug_log != stderr)
+    if (Debug::log_stderr > 0 && debug_log != stderr)
         fprintf(stderr, "FATAL: %s\n", message);
 
     fprintf(debug_log, "Squid Cache (Version %s): Terminated abnormally.\n",

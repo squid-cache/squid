@@ -4,15 +4,14 @@
 #  $Id$
 #
 
+include $(top_srcdir)/src/Common.am
+
 libexec_PROGRAMS = mswin_ntlm_auth
 
 mswin_ntlm_auth_SOURCES = libntlmssp.c ntlm_auth.c ntlm.h
 
-INCLUDES = \
-	-I$(top_srcdir) \
-	-I. \
-	-I$(top_builddir)/include \
-	-I$(top_srcdir)/include
+## we need our local files too (but avoid -I. at all costs)
+INCLUDES += -I$(srcdir)
 
 LDADD = \
 	$(top_builddir)/compat/libcompat.la \

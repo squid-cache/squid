@@ -286,21 +286,21 @@ if test "$enable_arg" = "no"; then
   AC_CHECK_PROG(ac_krb5_config,krb5-config,yes,no)
   case $sys in
            Linux) rpm -q heimdal-lib >/dev/null 2>&1
-                  if test $? == 0 ; then
+                  if test $? = 0 ; then
                     check_heimdal
 		  else 
 		    check_mit
                   fi 
                   ;;
            AIX)   lslpp -L krb5.client.rte >/dev/null 2>&1
-                  if test $? == 0 ; then
+                  if test $? = 0 ; then
                     check_nas
 		  else 
 		    check_mit
                   fi
                   ;;
            SunOS) pkginfo SUNWgss >/dev/null 2>&1
-                  if test $? == 0 ; then
+                  if test $? = 0 ; then
                     check_seam
 		  else 
 		    check_mit

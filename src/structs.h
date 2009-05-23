@@ -248,7 +248,6 @@ struct SquidConfig {
     char *as_whois_server;
 
     struct {
-        char *log;
         char *store;
         char *swap;
 #if USE_USERAGENT_LOG
@@ -314,7 +313,6 @@ struct SquidConfig {
     } Accel;
     char *appendDomain;
     size_t appendDomainLen;
-    char *debugOptions;
     char *pidFilename;
     char *netdbFilename;
     char *mimeTablePathname;
@@ -436,7 +434,6 @@ struct SquidConfig {
         int httpd_suppress_version_string;
         int global_internal_static;
         int dns_require_A;
-        int debug_override_X;
 
 #if FOLLOW_X_FORWARDED_FOR
         int acl_uses_indirect_client;
@@ -446,6 +443,8 @@ struct SquidConfig {
 
         int WIN32_IpAddrChangeMonitor;
     } onoff;
+
+    int forward_max_tries;
 
     class ACL *aclList;
 
@@ -838,8 +837,8 @@ struct peer {
         int counts[ICP_END+1];
         u_short port;
     } icp;
-#if USE_HTCP
 
+#if USE_HTCP
     struct {
         double version;
         int counts[2];
@@ -930,6 +929,7 @@ struct peer {
 
     char *login;		/* Proxy authorization */
     time_t connect_timeout;
+    int connect_fail_limit;
     int max_conn;
     char *domain;		/* Forced domain */
 #if USE_SSL
@@ -1086,6 +1086,7 @@ struct _refresh_t {
         unsigned int ignore_reload:1;
         unsigned int ignore_no_cache:1;
         unsigned int ignore_no_store:1;
+        unsigned int ignore_must_revalidate:1;
         unsigned int ignore_private:1;
         unsigned int ignore_auth:1;
 #endif
@@ -1257,28 +1258,6 @@ struct _HttpHeaderStat {
     int busyDestroyedCount;
 };
 
-
-struct _ClientInfo {
-    hash_link hash;		/* must be first */
-
-    IpAddress addr;
-
-    struct {
-        int result_hist[LOG_TYPE_MAX];
-        int n_requests;
-        kb_t kbytes_in;
-        kb_t kbytes_out;
-        kb_t hit_kbytes_out;
-    } Http, Icp;
-
-    struct {
-        time_t time;
-        int n_req;
-        int n_denied;
-    } cutoff;
-    int n_established;		/* number of current established connections */
-    time_t last_seen;
-};
 
 struct _CacheDigest {
     /* public, read-only */

@@ -6,6 +6,8 @@
 #  Uncomment and customize the following to suit your needs:
 #
 
+include $(top_srcdir)/src/Common.am
+
 MSNTAUTH_CONF = $(sysconfdir)/msntauth.conf
 
 libexec_PROGRAMS = msnt_auth
@@ -30,10 +32,8 @@ sysconf_DATA = \
 
 LDADD = -L$(top_builddir)/lib -lmiscutil $(XTRA_LIBS) $(top_builddir)/compat/libcompat.la
 
-INCLUDES = \
-	-I$(top_srcdir) \
-	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/src
+## we need our local files too (but avoid -I. at all costs)
+INCLUDES += -I$(srcdir)
 
 confload.o: confload.c
 	$(COMPILE) -DSYSCONFDIR=\"$(sysconfdir)\" -c $(srcdir)/confload.c -o $@

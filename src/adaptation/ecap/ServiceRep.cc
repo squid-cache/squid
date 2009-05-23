@@ -36,7 +36,10 @@ void
 Adaptation::Ecap::ServiceRep::finalize()
 {
     Adaptation::Service::finalize();
-    if (!theService) {
+    if (theService) {
+        debugs(93,3, HERE << "starting eCAP service: " << theService->uri());
+        theService->start();
+    } else {
         debugs(93,1, "Warning: configured ecap_service was not loaded: " <<
                cfg().uri);
     }

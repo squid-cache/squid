@@ -4,6 +4,7 @@
 #  Uncomment and customize the following to suit your needs:
 #
 
+include $(top_srcdir)/src/Common.am
 
 AUTOMAKE_OPTIONS = subdir-objects
 if USE_DNSSERVER
@@ -28,9 +29,6 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModule.cc \
 	LoadableModules.h \
 	LoadableModules.cc
-
-TESTS=$(check_PROGRAMS)
-check_PROGRAMS=
 
 SUBDIRS	= base acl fs repl auth ip icmp
 
@@ -152,9 +150,6 @@ else
 IDENT_SOURCE =
 endif
 
-AM_CFLAGS = @SQUID_CFLAGS@
-AM_CXXFLAGS = @SQUID_CXXFLAGS@
-
 EXTRA_LIBRARIES = libAIO.a libBlocking.a libDiskDaemon.a libDiskThreads.a
 noinst_LIBRARIES = @DISK_LIBS@
 noinst_LTLIBRARIES = libsquid.la
@@ -171,14 +166,8 @@ COMMON_LIBS = \
 	ip/libip.la \
 	fs/libfs.la
 
-INCLUDES = \
-	-I$(top_srcdir) \
-	-I$(top_srcdir)/src \
-	-I$(top_builddir)/include \
-	-I$(top_srcdir)/include \
-	-I$(top_builddir)/lib \
-	-I$(top_srcdir)/lib \
-	@SQUID_CPPUNIT_INC@
+## Loadable Modules needs lib/libLtdl stuff
+INCLUDES += -I$(top_srcdir)/lib
 
 EXTRA_PROGRAMS = \
 	DiskIO/DiskDaemon/diskd \
@@ -216,6 +205,9 @@ cf_gen_LDADD= \
 	@EPOLL_LIBS@ \
 	@MINGW_LIBS@
 cf_gen.$(OBJEXT): cf_gen_defines.h
+
+## cf_gen.cc needs src/cf_gen_defines.h
+INCLUDES += -I$(top_builddir)/src
 
 
 ACL_REGISTRATION_SOURCES = AclRegs.cc AuthReg.cc
@@ -293,12 +285,6 @@ squid_SOURCES = \
 	$(ACL_REGISTRATION_SOURCES) \
 	access_log.cc \
 	AccessLogEntry.h \
-	asn.cc \
-	AsyncCallQueue.cc \
-	AsyncCallQueue.h \
-	AsyncCall.cc \
-	AsyncCall.h \
-	AsyncJobCalls.h \
 	AsyncEngine.cc \
 	AsyncEngine.h \
 	cache_cf.cc \
@@ -319,8 +305,10 @@ squid_SOURCES = \
 	client_side_reply.h \
 	client_side_request.cc \
 	client_side_request.h \
+	ClientInfo.h \
 	BodyPipe.cc \
 	BodyPipe.h \
+	ClientInfo.h \
 	ClientRequestContext.h \
 	clientStream.cc \
 	clientStream.h \
@@ -587,7 +575,9 @@ recv_announce_SOURCES = recv-announce.cc SquidNew.cc
 ## SwapDir wants ConfigOption
 ## tools.cc wants ip/libip.la
 ## client_side.cc wants ip/libip.la
+## mem.cc wants ClientInfo.h
 ufsdump_SOURCES = \
+	ClientInfo.h \
 	debug.cc \
 	int.cc \
 	mem.cc \
@@ -712,7 +702,7 @@ DEFAULT_LOG_PREFIX	= @DEFAULT_LOG_DIR@
 DEFAULT_CACHE_LOG       = $(DEFAULT_LOG_PREFIX)/cache.log
 DEFAULT_ACCESS_LOG      = $(DEFAULT_LOG_PREFIX)/access.log
 DEFAULT_STORE_LOG       = $(DEFAULT_LOG_PREFIX)/store.log
-DEFAULT_PID_FILE        = $(DEFAULT_LOG_PREFIX)/squid.pid
+DEFAULT_PID_FILE        = @DEFAULT_PIDFILE@
 DEFAULT_NETDB_FILE      = $(DEFAULT_LOG_PREFIX)/netdb.state
 DEFAULT_SWAP_DIR        = $(localstatedir)/cache
 DEFAULT_PINGER		= $(libexecdir)/`echo pinger | sed '$(transform);s/$$/$(EXEEXT)/'`
@@ -724,9 +714,7 @@ DEFAULT_MIB_PATH	= $(datadir)/mib.txt
 DEFAULT_HOSTS		= @OPT_DEFAULT_HOSTS@
 
 # Make location configure settings available to the code
-DEFS = @DEFS@ -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\" -DDEFAULT_SQUID_DATA_DIR=\"$(datadir)\" -DDEFAULT_SQUID_CONFIG_DIR=\"$(sysconfdir)\"
-
-$(OBJS): $(top_srcdir)/include/version.h ../include/autoconf.h
+DEFS += -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\" -DDEFAULT_SQUID_DATA_DIR=\"$(datadir)\" -DDEFAULT_SQUID_CONFIG_DIR=\"$(sysconfdir)\"
 
 snmp_core.o snmp_agent.o: ../snmplib/libsnmp.a $(top_srcdir)/include/cache_snmp.h
 
@@ -812,7 +800,7 @@ uninstall-local:
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh $(RM) $(DESTDIR)$(DEFAULT_MIME_TABLE)
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh $(RM) $(DESTDIR)$(DEFAULT_CONFIG_FILE)
 
-CLEANFILES = cf_gen_defines.h cf.data cf_parser.h squid.conf.default squid.conf.documented \
+CLEANFILES += cf_gen_defines.h cf.data cf_parser.h squid.conf.default squid.conf.documented \
 	globals.cc string_arrays.c repl_modules.cc DiskIO/DiskIOModules_gen.cc \
 	test_tools.cc *.a
 
@@ -829,9 +817,7 @@ TESTSOURCES= \
 
 # sources needed by those tests that need event.cc; incomplete
 TEST_CALL_SOURCES = \
-	event.cc \
-	AsyncCallQueue.cc \
-	AsyncCall.cc
+	event.cc
 
 
 check_PROGRAMS+= tests/testAuth \
@@ -847,22 +833,6 @@ check_PROGRAMS+= tests/testAuth \
 	tests/testString \
 	tests/testURL \
 	@STORE_TESTS@
-
-## Special Universal .h dependency test script
-## aborts if error encountered
-testHeaders: $(top_srcdir)/src/*.h $(top_srcdir)/src/DiskIO/*.h $(top_srcdir)/src/DiskIO/*/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "." || exit 1
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "DiskIO" || exit 1
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "DiskIO/AIO" || exit 1
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "DiskIO/Blocking" || exit 1
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "DiskIO/DiskDaemon" || exit 1
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "DiskIO/DiskThreads" || exit 1
-## src/repl/ has no .h files and its own makefile.
-
-## No such file...
-testHeaders.c:
-	touch testHeaders.c
-CLEANFILES += testHeaders.c
 
 ### Template for new Unit Test Program
 ## - add tests/testX to check_PROGRAMS above.
@@ -892,7 +862,7 @@ tests_testAuth_SOURCES = \
 	ConfigParser.cc \
 	tests/stub_acl.cc tests/stub_cache_cf.cc \
 	tests/stub_helper.cc cbdata.cc String.cc \
-	tests/stub_store.cc HttpHeaderTools.cc HttpHeader.cc mem.cc \
+	tests/stub_store.cc HttpHeaderTools.cc HttpHeader.cc mem.cc ClientInfo.h \
 	MemBuf.cc HttpHdrContRange.cc Packer.cc HttpHdrCc.cc HttpHdrSc.cc \
 	HttpHdrScTarget.cc url.cc \
 	StatHist.cc HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
@@ -947,6 +917,7 @@ tests_testAuth_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 ##	String.cc \
 tests_testACLMaxUserIP_SOURCES= \
 	cbdata.cc \
+	ClientInfo.h \
 	ConfigParser.cc \
 	ETag.cc \
 	HttpHeader.cc \
@@ -1030,6 +1001,7 @@ tests_testCacheManager_SOURCES = \
 	client_side.cc \
 	client_side_reply.cc \
 	client_side_request.cc \
+	ClientInfo.h \
 	clientStream.cc \
 	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
@@ -1199,6 +1171,7 @@ tests_testEvent_SOURCES = \
 	client_side.cc \
 	client_side_reply.cc \
 	client_side_request.cc \
+	ClientInfo.h \
 	clientStream.cc \
 	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
@@ -1346,6 +1319,7 @@ tests_testEventLoop_SOURCES = \
 	client_side.cc \
 	client_side_reply.cc \
 	client_side_request.cc \
+	ClientInfo.h \
 	clientStream.cc \
 	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
@@ -1481,6 +1455,7 @@ tests_test_http_range_SOURCES = \
 	client_side.cc \
 	client_side_reply.cc \
 	client_side_request.cc \
+	ClientInfo.h \
 	clientStream.cc \
 	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
@@ -1634,6 +1609,7 @@ tests_testHttpRequest_SOURCES = \
 	client_side.cc \
 	client_side_reply.cc \
 	client_side_request.cc \
+	ClientInfo.h \
 	clientStream.cc \
 	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
@@ -1780,7 +1756,7 @@ STORE_TEST_SOURCES=\
 	mem_node.cc \
 	stmem.cc \
 	tests/stub_mime.cc \
-	HttpHeaderTools.cc HttpHeader.cc mem.cc \
+	HttpHeaderTools.cc HttpHeader.cc mem.cc  ClientInfo.h \
 	MemBuf.cc HttpHdrContRange.cc Packer.cc HttpHdrCc.cc HttpHdrSc.cc \
 	HttpHdrScTarget.cc url.cc \
 	StatHist.cc HttpHdrRange.cc ETag.cc tests/stub_errorpage.cc \
@@ -1833,9 +1809,11 @@ tests_testStore_LDFLAGS = $(LIBADD_DL)
 tests_testStore_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@SQUID_CPPUNIT_LA@
 
-# string needs mem.cc.
-# libsquid pulls in SquidConfig and children. stub them.
+## string needs mem.cc.
+## mem.cc needs ClientInfo.h
+## libsquid pulls in SquidConfig and children. stub them.
 tests_testString_SOURCES = \
+	ClientInfo.h \
 	mem.cc \
 	String.cc \
 	tests/testMain.cc \
@@ -1983,6 +1961,7 @@ tests_testURL_SOURCES = \
 	client_side.cc \
 	client_side_reply.cc \
 	client_side_request.cc \
+	ClientInfo.h \
 	clientStream.cc \
 	$(squid_COMMSOURCES) \
 	ConfigOption.cc \
@@ -2099,3 +2078,21 @@ tests_testURL_LDFLAGS = $(LIBADD_DL)
 tests_testURL_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
 	@SQUID_CPPUNIT_LA@
+
+
+TESTS += testHeaders
+
+## Special Universal .h dependency test script
+## aborts if error encountered
+testHeaders: $(srcdir)/*.h $(srcdir)/DiskIO/*.h $(srcdir)/DiskIO/*/*.h
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(srcdir)" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(srcdir)/DiskIO" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(srcdir)/DiskIO/AIO" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(srcdir)/DiskIO/Blocking" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(srcdir)/DiskIO/DiskDaemon" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(srcdir)/DiskIO/DiskThreads" || exit 1
+## src/repl/ has no .h files and its own makefile.
+
+CLEANFILES += testHeaders
+.PHONY: testHeaders
+

@@ -4,17 +4,12 @@
 #  $Id$
 #
 
+include $(top_srcdir)/src/Common.am
+
 AUTOMAKE_OPTIONS = subdir-objects
 
-AM_CFLAGS = @SQUID_CFLAGS@
-AM_CXXFLAGS = @SQUID_CXXFLAGS@
-
-INCLUDES = \
-	-I$(top_srcdir) \
-	-I. \
-	-I$(top_builddir)/include \
-	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/src
+## we need our local files too (but avoid -I. at all costs)
+INCLUDES += -I$(srcdir)
 
 LDADD = \
 	$(top_builddir)/compat/libcompat.la \
@@ -36,7 +31,7 @@ else
 endif
 
 ## Sort by dependencies - test lowest layers first
-TESTS = debug \
+TESTS += debug \
 	syntheticoperators \
 	VirtualDeleteOperator \
 	StackTest \
@@ -49,7 +44,7 @@ TESTS = debug \
 	$(ESI_TESTS)
 
 ## Sort by alpha - any build failures are significant.
-check_PROGRAMS= debug \
+check_PROGRAMS += debug \
 		$(ESI_TESTS) \
 		MemPoolTest\
 		mem_node_test\

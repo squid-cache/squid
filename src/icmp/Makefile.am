@@ -1,22 +1,6 @@
-#
-#  Makefile for the Squid ICMP and Network Measurement API
-#
 
-# Housekeeping, shared by all Squid Makefiles.
-# TODO: make this set by configure?
-AM_CFLAGS = @SQUID_CFLAGS@
-AM_CXXFLAGS = @SQUID_CXXFLAGS@
-DEFS = @DEFS@
-CLEANFILES = 
-
-INCLUDES = \
-	-I$(top_srcdir) \
-	-I$(top_srcdir)/src \
-	-I$(top_srcdir)/include \
-	-I$(top_builddir)/lib \
-	@SQUID_CPPUNIT_INC@
-
-$(OBJS): $(top_srcdir)/include/version.h $(top_srcdir)/include/autoconf.h
+include $(top_srcdir)/src/Common.am
+include $(top_srcdir)/src/TestHeaders.am
 
 # TODO: get rid of this when config filename is no longer a global constant.
 #	its only here so the testIcmp will link .
@@ -67,11 +51,11 @@ pinger_SOURCES = \
 # depends on these but install/dist is done elsewhere.
 # TODO: remove when these are cleaned up in their own way.
 nodist_pinger_SOURCES = \
-	../debug.cc \
-	../globals.cc \
-	../time.cc \
-	../SquidConfig.cc \
-	../SquidNew.cc
+	$(top_srcdir)/src/debug.cc \
+	$(top_builddir)/src/globals.cc \
+	$(top_srcdir)/src/time.cc \
+	$(top_srcdir)/src/SquidConfig.cc \
+	$(top_srcdir)/src/SquidNew.cc
 
 pinger_LDFLAGS = $(LIBADD_DL)
 pinger_LDADD=\
@@ -98,19 +82,8 @@ pinger_DEPENDENCIES= \
 ##	fi
 
 
-check_PROGRAMS= testIcmp testHeaders
-TESTS= $(check_PROGRAMS)
-
-## Special Universal .h dependency test script
-## aborts if error encountered
-testHeaders: $(top_srcdir)/src/icmp/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/src/icmp/" || exit 1
-
-## No such file...
-testHeaders.c:
-	touch testHeaders.c
-CLEANFILES += testHeaders.c
-
+check_PROGRAMS += testIcmp
+TESTS += testIcmp
 
 ## Tests of the ICMP base module.
 # Its used by pinger so SHOULD NOT require more dependancies! :-(
@@ -119,11 +92,11 @@ testIcmp_SOURCES = \
 	testIcmp.h \
 	testIcmp.cc
 nodist_testIcmp_SOURCES = \
-	../tests/testMain.cc \
-	../SquidTime.h \
-	../time.cc \
-	../../test-suite/test_tools.cc \
-	../globals.cc
+	$(top_srcdir)/src/tests/testMain.cc \
+	$(top_srcdir)/src/SquidTime.h \
+	$(top_srcdir)/src/time.cc \
+	$(top_srcdir)/test-suite/test_tools.cc \
+	$(top_builddir)/src/globals.cc
 testIcmp_LDFLAGS = $(LIBADD_DL)
 testIcmp_LDADD=\
 	@SQUID_CPPUNIT_LIBS@ \

@@ -23,6 +23,9 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#ifndef _SMB_LM_SMBVAL_RFCNB_COMMON_H
+#define _SMB_LM_SMBVAL_RFCNB_COMMON_H
+
 /* A data structure we need */
 
 typedef struct RFCNB_Pkt {
@@ -32,3 +35,5 @@ typedef struct RFCNB_Pkt {
     struct RFCNB_Pkt *next;
 
 } RFCNB_Pkt;
+
+#endif /* _SMB_LM_SMBVAL_RFCNB_COMMON_H */

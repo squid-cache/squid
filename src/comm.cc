@@ -611,6 +611,31 @@ comm_open(int sock_type,
     return comm_openex(sock_type, proto, addr, flags, 0, note);
 }
 
+int
+comm_open_listener(int sock_type,
+          int proto,
+          IpAddress &addr,
+          int flags,
+          const char *note)
+{
+    int sock = -1;
+
+    /* attempt native enabled port. */
+    sock = comm_openex(sock_type, proto, addr, flags, 0, note);
+
+#if USE_IPV6
+    /* under IPv6 there is the possibility IPv6 is present but disabled. */
+    /* try again as IPv4-native */
+    if ( sock < 0 && addr.IsIPv6() && addr.SetIPv4() ) {
+        /* attempt to open this IPv4-only. */
+        sock = comm_openex(sock_type, proto, addr, flags, 0, note);
+        debugs(50, 2, HERE << "attempt open " << note << " socket on: " << addr);
+    }
+#endif
+
+    return sock;
+}
+
 static bool
 limitError(int const anErrno)
 {

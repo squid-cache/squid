@@ -35,28 +35,28 @@ libfs_la_DEPENDENCIES = @STORE_LIBS_TO_BUILD@
 EXTRA_DIST = \
 	coss/coss-notes.txt
 
-# TODO: fix #include statements so that this is not needed
-INCLUDES += -I.
+## we need our local files too (but avoid -I. at all costs)
+INCLUDES += -I$(srcdir)
 
-
-check_PROGRAMS += testHeaders
-
-## Special Universal .h dependency test script
-## aborts if error encountered
-testHeaders: $(top_srcdir)/src/fs/ufs/*.h $(top_srcdir)/src/fs/coss/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/src/fs/ufs" || exit 1
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/src/fs/coss" || exit 1
-## diskd/ has no .h files
-## aufs/ has no .h files
-## ./ has no .h files
-
-## No such file...
-testHeaders.c:
-	touch testHeaders.c
-CLEANFILES += testHeaders.c
 
 ## targets below to emulate distributed makefiles
 coss/all: libcoss.la
 coss/clean: clean
 ufs/all: libufs.la
 ufs/clean: clean
+
+
+TESTS += testHeaders
+
+## Special Universal .h dependency test script
+## aborts if error encountered
+testHeaders: $(srcdir)/ufs/*.h $(srcdir)/coss/*.h
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(srcdir)/ufs" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(srcdir)/coss" || exit 1
+## diskd/ has no .h files
+## aufs/ has no .h files
+## ./ has no .h files
+
+CLEANFILES += testHeaders
+
+.PHONY: testHeaders

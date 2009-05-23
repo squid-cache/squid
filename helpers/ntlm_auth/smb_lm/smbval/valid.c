@@ -1,18 +1,28 @@
 #include "config.h"
+
+#if HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+#if HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+#if HAVE_SYSLOG_H
 #include <syslog.h>
+#endif
+#if HAVE_STRING_H
 #include <string.h>
+#endif
+
 #include "smblib-priv.h"
 #include "valid.h"
 
 SMB_Handle_Type SMB_Connect_Server(void *, char *, char *);
 
 int
-Valid_User(char *USERNAME, char *PASSWORD, char *SERVER, char *BACKUP, char *DOMAIN)
+Valid_User(char *username, char *password, char *server, char *backup, char *domain)
 {
     int pass_is_precrypted_p = 0;
-    char *SMB_Prots[] = {
+    char const *SMB_Prots[] = {
         /*              "PC NETWORK PROGRAM 1.0", */
         /*              "MICROSOFT NETWORKS 1.03", */
         /*              "MICROSOFT NETWORKS 3.0", */
@@ -26,9 +36,9 @@ Valid_User(char *USERNAME, char *PASSWORD, char *SERVER, char *BACKUP, char *DOM
     SMB_Handle_Type con;
 
     SMB_Init();
-    con = SMB_Connect_Server(NULL, SERVER, DOMAIN);
+    con = SMB_Connect_Server(NULL, server, domain);
     if (con == NULL) {		/* Error ... */
-        con = SMB_Connect_Server(NULL, BACKUP, DOMAIN);
+        con = SMB_Connect_Server(NULL, backup, domain);
         if (con == NULL) {
             return (NTV_SERVER_ERROR);
         }
@@ -42,7 +52,7 @@ Valid_User(char *USERNAME, char *PASSWORD, char *SERVER, char *BACKUP, char *DOM
         SMB_Discon(con, 0);
         return (NTV_PROTOCOL_ERROR);
     }
-    if (SMB_Logon_Server(con, USERNAME, PASSWORD, DOMAIN, pass_is_precrypted_p) < 0) {
+    if (SMB_Logon_Server(con, username, password, domain, pass_is_precrypted_p) < 0) {
         SMB_Discon(con, 0);
         return (NTV_LOGON_ERROR);
     }
@@ -51,9 +61,9 @@ Valid_User(char *USERNAME, char *PASSWORD, char *SERVER, char *BACKUP, char *DOM
 }
 
 void *
-NTLM_Connect(char *SERVER, char *BACKUP, char *DOMAIN, char *nonce)
+NTLM_Connect(char *server, char *backup, char *domain, char *nonce)
 {
-    char *SMB_Prots[] = {
+    char const *SMB_Prots[] = {
         /*              "PC NETWORK PROGRAM 1.0", */
         /*              "MICROSOFT NETWORKS 1.03", */
         /*              "MICROSOFT NETWORKS 3.0", */
@@ -67,9 +77,9 @@ NTLM_Connect(char *SERVER, char *BACKUP, char *DOMAIN, char *nonce)
     SMB_Handle_Type con;
 
     SMB_Init();
-    con = SMB_Connect_Server(NULL, SERVER, DOMAIN);
+    con = SMB_Connect_Server(NULL, server, domain);
     if (con == NULL) {		/* Error ... */
-        con = SMB_Connect_Server(NULL, BACKUP, DOMAIN);
+        con = SMB_Connect_Server(NULL, backup, domain);
         if (con == NULL) {
             return (NULL);
         }
@@ -89,11 +99,11 @@ NTLM_Connect(char *SERVER, char *BACKUP, char *DOMAIN, char *nonce)
 }
 
 int
-NTLM_Auth(void *handle, char *USERNAME, char *PASSWORD, int flag)
+NTLM_Auth(void *handle, char *username, char *password, int flag)
 {
     SMB_Handle_Type con = handle;
 
-    if (SMB_Logon_Server(con, USERNAME, PASSWORD, NULL, flag) < 0) {
+    if (SMB_Logon_Server(con, username, password, NULL, flag) < 0) {
         return (NTV_LOGON_ERROR);
     }
     return (NTV_NO_ERROR);

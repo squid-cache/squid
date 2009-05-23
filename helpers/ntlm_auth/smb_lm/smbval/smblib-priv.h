@@ -500,7 +500,7 @@ typedef enum {
 /* We must make it possible for callers to specify these ... */
 
 #if 0
-extern char *SMB_Prots[];
+extern char const *SMB_Prots[];
 
 /*
  * static char *SMB_Prots[] = {"PC NETWORK PROGRAM 1.0",
@@ -637,19 +637,19 @@ extern int SMBlib_errno;
 extern int SMBlib_SMB_Error;	/* last Error             */
 #endif
 
-SMB_Tree_Handle SMB_TreeConnect(SMB_Handle_Type con, SMB_Tree_Handle tree,
-                                char *path, char *password, char *dev);
+extern SMB_Tree_Handle SMB_TreeConnect(SMB_Handle_Type con, SMB_Tree_Handle tree,
+                                char *path, char *password, char const *dev);
 
-int SMB_Init();
-void SMB_Get_My_Name(char *name, int len);
-int SMB_Negotiate(SMB_Handle_Type Con_Handle, char *Prots[]);
-int SMB_Discon(SMB_Handle_Type Con_Handle, BOOL KeepHandle);
+extern int SMB_Init(void);
+extern void SMB_Get_My_Name(char *name, int len);
+extern int SMB_Negotiate(SMB_Handle_Type Con_Handle, char const *Prots[]);
+extern int SMB_Discon(SMB_Handle_Type Con_Handle, BOOL KeepHandle);
 
-int SMB_Logon_Server(SMB_Handle_Type Con_Handle, char *UserName,
+extern int SMB_Logon_Server(SMB_Handle_Type Con_Handle, char *UserName,
                      char *PassWord, char *UserDomain, int precrypted);
 
-int SMB_Get_Error_Msg(int msg, char *msgbuf, int len);
+extern int SMB_Get_Error_Msg(int msg, char *msgbuf, int len);
 
-int SMB_Get_Last_Error();
+extern int SMB_Get_Last_Error(void);
 
 #endif /* __SMBLIB_PRIV_H__ */

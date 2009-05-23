@@ -648,6 +648,10 @@ This section gives a thorough account of those changes in three categories:
 	Requires ftp_passive to be ON (default)
 	</verb>
 
+	<tag>forward_max_tries</tag>
+	<p>Controls how many different forward paths Squid will try
+	before giving up. Default: 10
+
 	<tag>include</tag>
 	<p>New option to import entire secondary configuration files into squid.conf.
 	<verb>
@@ -831,7 +835,7 @@ NOCOMMENT_START
 	<tag>cache_mem</tag>
 	<p>Default size increased to 256MB.
 
-	<tag>cache_peer htcp-no-clr htcp-no-purge-clr htcp-only-clr htcp-forward-clr connection-auth[=on|off|auto]</tag>
+	<tag>cache_peer htcp-no-clr htcp-no-purge-clr htcp-only-clr htcp-forward-clr connection-auth[=on|off|auto] connect-fail-limit=N</tag>
 	<p>New Options.
 	<verb>
 	use 'htcp-no-clr' to send HTCP to the neighbor but without
@@ -853,6 +857,10 @@ NOCOMMENT_START
 	and any such challenges received from there should be
 	ignored. Default is 'auto' to automatically determine the
 	status of the peer.
+
+	use 'connect-fail-limit=nn' to specify how many times
+	connecting to a peer must fail before it is marked as
+	down. Default is 10.
 	</verb>
 
 	<tag>cache_store_log</tag>
@@ -870,6 +878,10 @@ NOCOMMENT_START
         WARNING: This option will disable multi-language support
                  on error pages if used.
 	</verb>
+
+	<tag>debug_options rotate=</tag>
+	<p>New parameter rotate=N to control number of cache.log rotations independent of other logs.
+
 
         <tag>external_acl_type</tag>
         <p>New options 'ipv4' and 'ipv6' are added to set the IPv4/v6 protocol between squid and its helpers.
@@ -949,6 +961,9 @@ NOCOMMENT_START
 	<tag>https_port intercept sslbump connection-auth[=on|off]</tag>
 	<p>New port options. see http_port.
 
+	<tag>logfile_rotate</tag>
+	<p>No longer controls cache.log rotation. Use debug_options rotate=N instead.
+
 	<tag>maximum_object_size_in_memory</tag>
 	<p>Default size limit increased to 512KB.
 
@@ -958,7 +973,14 @@ NOCOMMENT_START
 	<p>Changing this is an RFC 2616 violation and now requires --enable-http-violations
 
 	<tag>refresh_pattern</tag>
-	<p>New set of basic patterns. These should always be listed after any custom ptterns.
+	<p>New option 'ignore-must-revalidate'.
+	<verb>
+	ignore-must-revalidate ignores any ``Cache-Control: must-revalidate``
+	headers received from a server. Doing this VIOLATES
+	the HTTP standard. Enabling this feature could make you
+	liable for problems which it causes.
+	</verb>
+	<p>New set of basic patterns. These should always be listed after any custom patterns.
 	   They ensure RFC compliance with certain protocol and request handling in the absence
 	   of accurate Cache-Control: and Expires: information.
 	<verb>
@@ -1008,7 +1030,6 @@ refresh_pattern .                    0   20%     4320
 	<tag>wccp2_return_method gre l2</tag>
 	<p>Method names now accepted. Replacing the old magic numbers.
 	   '1' becomes 'gre' and '2' becomes 'l2'
-
 
 </descrip>
 
@@ -1093,6 +1114,9 @@ This section gives an account of those changes in three categories:
         <tag>--with-ipv6-split-stack</tag>
         <p>Enable special additions for IPv6 support in Windows XP.
            see the IPv6 details above for a better description.
+
+	<tag>--with-pidfile=PATH</tag>
+	<p>Allow build-time configuration of Default location and name of squid.pid file.
 
 	<tag>--with-po2html=PATH</tag>
 	<p>Absolute path to po2html executable.
