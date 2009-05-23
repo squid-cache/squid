@@ -1,11 +1,11 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
 <HEAD>
- <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.21">
- <TITLE>Squid 3.1.0.7 release notes</TITLE>
+ <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.50">
+ <TITLE>Squid 3.1.0.8 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.1.0.7 release notes</H1>
+<H1>Squid 3.1.0.8 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -80,7 +80,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.1.0.7 for testing.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.1.0.8 for testing.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.1/">http://www.squid-cache.org/Versions/v3/3.1/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -814,6 +814,10 @@ New translations can be downloaded from http://www.squid-cache.org/Versions/lang
 </PRE>
 </P>
 
+<DT><B>forward_max_tries</B><DD>
+<P>Controls how many different forward paths Squid will try
+before giving up. Default: 10</P>
+
 <DT><B>include</B><DD>
 <P>New option to import entire secondary configuration files into squid.conf.
 <PRE>
@@ -1022,7 +1026,7 @@ see cache_mem and maximum_object_size_in_memory for size parameters.</P>
 <DT><B>cache_mem</B><DD>
 <P>Default size increased to 256MB.</P>
 
-<DT><B>cache_peer htcp-no-clr htcp-no-purge-clr htcp-only-clr htcp-forward-clr connection-auth[=on|off|auto]</B><DD>
+<DT><B>cache_peer htcp-no-clr htcp-no-purge-clr htcp-only-clr htcp-forward-clr connection-auth[=on|off|auto] connect-fail-limit=N</B><DD>
 <P>New Options.
 <PRE>
         use 'htcp-no-clr' to send HTCP to the neighbor but without
@@ -1044,6 +1048,10 @@ see cache_mem and maximum_object_size_in_memory for size parameters.</P>
         and any such challenges received from there should be
         ignored. Default is 'auto' to automatically determine the
         status of the peer.
+
+        use 'connect-fail-limit=nn' to specify how many times
+        connecting to a peer must fail before it is marked as
+        down. Default is 10.
         
 </PRE>
 </P>
@@ -1161,7 +1169,16 @@ permitted by the message generating web server.</P>
 <P>Changing this is an RFC 2616 violation and now requires --enable-http-violations</P>
 
 <DT><B>refresh_pattern</B><DD>
-<P>New set of basic patterns. These should always be listed after any custom ptterns.
+<P>New option 'ignore-must-revalidate'.
+<PRE>
+        ignore-must-revalidate ignores any ``Cache-Control: must-revalidate``
+        headers received from a server. Doing this VIOLATES
+        the HTTP standard. Enabling this feature could make you
+        liable for problems which it causes.
+        
+</PRE>
+</P>
+<P>New set of basic patterns. These should always be listed after any custom patterns.
 They ensure RFC compliance with certain protocol and request handling in the absence
 of accurate Cache-Control: and Expires: information.
 <PRE>
@@ -1309,6 +1326,9 @@ see the IPv6 details above for a better description.</P>
 <DT><B>--with-ipv6-split-stack</B><DD>
 <P>Enable special additions for IPv6 support in Windows XP.
 see the IPv6 details above for a better description.</P>
+
+<DT><B>--with-pidfile=PATH</B><DD>
+<P>Allow build-time configuration of Default location and name of squid.pid file.</P>
 
 <DT><B>--with-po2html=PATH</B><DD>
 <P>Absolute path to po2html executable.
