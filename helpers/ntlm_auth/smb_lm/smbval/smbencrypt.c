@@ -31,13 +31,18 @@
 #include "smblib-priv.h"
 #include "md4.h"
 #include "smbdes.h"
+
 #define uchar unsigned char
 extern int DEBUGLEVEL;
 
 #include "byteorder.h"
+#include "smbencrypt.h"
 
+/* local functions */
 char *StrnCpy(char *dest, char *src, int n);
 void strupper(char *s);
+void E_md4hash(uchar * passwd, uchar * p16);
+void nt_lm_owf_gen(char *pwd, char *nt_p16, char *p16);
 
 /*
  * This implements the X/Open SMB password encryption
@@ -91,10 +96,9 @@ _my_mbstowcs(int16 * dst, uchar * src, int len)
     return i;
 }
 
-/*
+/**
  * Creates the MD4 Hash of the users password in NT UNICODE.
  */
-
 void
 E_md4hash(uchar * passwd, uchar * p16)
 {
@@ -115,7 +119,6 @@ E_md4hash(uchar * passwd, uchar * p16)
 }
 
 /* Does the NT MD4 hash then des encryption. */
-
 void
 SMBNTencrypt(uchar * passwd, uchar * c8, uchar * p24)
 {
@@ -127,8 +130,7 @@ SMBNTencrypt(uchar * passwd, uchar * c8, uchar * p24)
     E_P24(p21, c8, p24);
 }
 
-/* Does both the NT and LM owfs of a user's password */
-
+/** Does both the NT and LM owfs of a user's password */
 void
 nt_lm_owf_gen(char *pwd, char *nt_p16, char *p16)
 {

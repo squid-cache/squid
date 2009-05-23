@@ -3,8 +3,8 @@
  */
 
 #include "squid.h"
-#include "AsyncCall.h"
-#include "AsyncCallQueue.h"
+#include "base/AsyncCall.h"
+#include "base/AsyncCallQueue.h"
 #include "cbdata.h"
 
 unsigned int AsyncCall::TheLastId = 0;

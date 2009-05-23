@@ -37,8 +37,11 @@
 #include "squid.h"
 #include "stmem.h"
 #include "mem_node.h"
-#include <iostream>
 #include "Generic.h"
+
+#if HAVE_IOSTREAM
+#include <iostream>
+#endif
 
 void
 testLowAndHigh()

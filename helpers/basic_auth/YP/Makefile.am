@@ -5,12 +5,13 @@
 #
 #
 
+include $(top_srcdir)/src/Common.am
+
 libexec_PROGRAMS = yp_auth
 yp_auth_SOURCES	= yp_auth.c nis_support.h nis_support.c
 
-INCLUDES = \
-	-I$(top_srcdir) \
-	-I$(top_srcdir)/include
+## we need our local files too (but avoid -I. at all costs)
+INCLUDES += -I$(srcdir)
 
 LDADD = \
 	$(top_builddir)/compat/libcompat.la \

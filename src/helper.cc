@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -42,6 +41,11 @@
 #include "wordlist.h"
 
 #define HELPER_MAX_ARGS 64
+
+/* size of helper read buffer (maximum?). no reason given for this size */
+/* though it has been seen to be too short for some requests */
+/* it is dynamic, so increasng should not have side effects */
+#define BUF_8KB	8192
 
 static IOCB helperHandleRead;
 static IOCB helperStatefulHandleRead;
@@ -98,7 +102,14 @@ helperOpenServers(helper * hlp)
     else
         shortname = xstrdup(progname);
 
-    debugs(84, 1, "helperOpenServers: Starting " << hlp->n_to_start << " '" << shortname << "' processes");
+    /* dont ever start more than hlp->n_to_start processes. */
+    int need_new = hlp->n_to_start - hlp->n_running;
+
+    debugs(84, 1, "helperOpenServers: Starting " << need_new << "/" << hlp->n_to_start << " '" << shortname << "' processes");
+
+    if(need_new < 1) {
+        debugs(84, 1, "helperOpenServers: No '" << shortname << "' processes needed.");
+    }
 
     procname = (char *)xmalloc(strlen(shortname) + 3);
 
@@ -113,7 +124,7 @@ helperOpenServers(helper * hlp)
 
     assert(nargs <= HELPER_MAX_ARGS);
 
-    for (k = 0; k < hlp->n_to_start; k++) {
+    for (k = 0; k < need_new; k++) {
         getCurrentTime();
         rfd = wfd = -1;
         pid = ipcCreate(hlp->ipc_type,
@@ -140,7 +151,7 @@ helperOpenServers(helper * hlp)
         srv->addr = hlp->addr;
         srv->rfd = rfd;
         srv->wfd = wfd;
-        srv->rbuf = (char *)memAllocBuf(8192, &srv->rbuf_sz);
+        srv->rbuf = (char *)memAllocBuf(BUF_8KB, &srv->rbuf_sz);
         srv->wqueue = new MemBuf;
         srv->roffset = 0;
         srv->requests = (helper_request **)xcalloc(hlp->concurrency ? hlp->concurrency : 1, sizeof(*srv->requests));
@@ -197,7 +208,14 @@ helperStatefulOpenServers(statefulhelper * hlp)
     else
         shortname = xstrdup(progname);
 
-    debugs(84, 1, "helperStatefulOpenServers: Starting " << hlp->n_to_start << " '" << shortname << "' processes");
+    /* dont ever start more than hlp->n_to_start processes. */
+    int need_new = hlp->n_to_start - hlp->n_running;
+
+    debugs(84, 1, "helperOpenServers: Starting " << need_new << "/" << hlp->n_to_start << " '" << shortname << "' processes");
+
+    if(need_new < 1) {
+        debugs(84, 1, "helperStatefulOpenServers: No '" << shortname << "' processes needed.");
+    }
 
     char *procname = (char *)xmalloc(strlen(shortname) + 3);
 
@@ -212,7 +230,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
 
     assert(nargs <= HELPER_MAX_ARGS);
 
-    for (int k = 0; k < hlp->n_to_start; k++) {
+    for (int k = 0; k < need_new; k++) {
         getCurrentTime();
         int rfd = -1;
         int wfd = -1;
@@ -247,7 +265,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
         srv->addr = hlp->addr;
         srv->rfd = rfd;
         srv->wfd = wfd;
-        srv->rbuf = (char *)memAllocBuf(8192, &srv->rbuf_sz);
+        srv->rbuf = (char *)memAllocBuf(BUF_8KB, &srv->rbuf_sz);
         srv->roffset = 0;
         srv->parent = cbdataReference(hlp);
 
@@ -274,7 +292,6 @@ helperStatefulOpenServers(statefulhelper * hlp)
         comm_add_close_handler(rfd, helperStatefulServerFree, srv);
 
         comm_read(srv->rfd, srv->rbuf, srv->rbuf_sz - 1, helperStatefulHandleRead, srv);
-
     }
 
     hlp->last_restart = squid_curtime;
@@ -1538,6 +1555,7 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
                     && !srv->deferred_requests) {
                 int wfd = srv->wfd;
                 srv->wfd = -1;
+                srv->flags.closing=1;
                 comm_close(wfd);
             } else {
                 if (srv->queue.head)

@@ -50,3 +50,6 @@ template class ACLStrategised<HttpHeader*>;
 
 /* ACLMyPortName + ACLMyPeerName + ACLBrowser */
 template class ACLStrategised<const char *>;
+
+/* ACLMyPort + ACLSslError */
+template class ACLStrategised<int>;

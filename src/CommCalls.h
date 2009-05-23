@@ -8,8 +8,8 @@
 
 #include "comm.h"
 #include "ConnectionDetail.h"
-#include "AsyncCall.h"
-#include "AsyncJobCalls.h"
+#include "base/AsyncCall.h"
+#include "base/AsyncJobCalls.h"
 
 /* CommCalls implement AsyncCall interface for comm_* callbacks.
  * The classes cover two call dialer kinds:

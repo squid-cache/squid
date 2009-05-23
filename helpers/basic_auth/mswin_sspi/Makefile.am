@@ -6,6 +6,7 @@
 #  Uncomment and customize the following to suit your needs:
 #
 
+include $(top_srcdir)/src/Common.am
 
 libexec_PROGRAMS = mswin_auth
 
@@ -17,9 +18,7 @@ LDADD = \
 	-lnetapi32 -ladvapi32 -lsspwin32 \
 	$(XTRA_LIBS)
 
-INCLUDES = \
-	-I$(top_srcdir) \
-	-I$(top_builddir)/include \
-	-I$(top_srcdir)/include
+## we need our local files too (but avoid -I. at all costs)
+INCLUDES += -I$(srcdir)
 
 EXTRA_DIST = readme.txt

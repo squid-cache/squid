@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -34,13 +33,18 @@
 #ifndef SQUID_RANGE_H
 #define SQUID_RANGE_H
 
+#include "config.h"
+
+#if HAVE_IOSFWD
 #include <iosfwd>
+#endif
+#if HAVE_OSTREAM
 #include <ostream>
+#endif
 
 /* represents [start, end) */
 
 template <class C>
-
 class Range
 {
 

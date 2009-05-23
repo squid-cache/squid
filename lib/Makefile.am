@@ -3,6 +3,8 @@
 #  $Id$
 #
 
+include $(top_srcdir)/src/Common.am
+
 SUBDIRS =
 
 if USE_LOADABLE_MODULES
@@ -13,14 +15,10 @@ if USE_ESI
 SUBDIRS += libTrie
 endif
 
-CLEANFILES =
-
 
 install: all
 install-strip: all
 
-AM_CFLAGS = @SQUID_CFLAGS@
-AM_CXXFLAGS = @SQUID_CXXFLAGS@
 
 if ENABLE_XPROF_STATS
 XPROF_STATS_SOURCE = Profiler.c
@@ -103,27 +101,10 @@ libntlmauth_a_LIBADD = \
 libsspwin32_a_SOURCES = \
 	sspwin32.c
 
-INCLUDES = \
-	-I$(top_srcdir) \
-	-I$(top_builddir)/include \
-	-I$(top_srcdir)/include \
-	@SQUID_CPPUNIT_INC@
-##FIXME - set these in configure.in and reuse
 
-check_PROGRAMS= \
-	testHeaders \
-	tests/testAll
-TESTS=$(check_PROGRAMS)
+TESTS += tests/testAll
 
-## Special Universal .h dependency test script
-## aborts if error encountered
-testHeaders: $(top_srcdir)/include/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/include" || exit 1
-
-## No such file...
-testHeaders.c:
-	touch testHeaders.c
-CLEANFILES += testHeaders.c
+check_PROGRAMS += tests/testAll
 
 tests_testAll_SOURCES= \
 	tests/testArray.h \
@@ -139,3 +120,12 @@ tests_testAll_LDADD= @SQUID_CPPUNIT_LA@ @SQUID_CPPUNIT_LIBS@
 
 tests_testAll_LDFLAGS = $(LIBADD_DL)
 
+
+## Special Universal .h dependency test script
+## aborts if error encountered
+testHeaders: $(top_srcdir)/include/*.h
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/include" || exit 1
+
+TESTS += testHeaders
+CLEANFILES += testHeaders
+.PHONY: testHeaders

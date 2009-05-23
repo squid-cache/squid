@@ -9,7 +9,7 @@ AC_PREREQ(2.52)
 AM_CONFIG_HEADER(include/autoconf.h)
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
-AM_INIT_AUTOMAKE([tar-ustar])
+AM_INIT_AUTOMAKE([tar-ustar nostdinc])
 AC_REVISION($Revision: 1.497 $)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
@@ -174,6 +174,22 @@ AC_ARG_WITH(logdir,
  ]
 )
 AC_SUBST(DEFAULT_LOG_DIR)
+
+DEFAULT_PIDFILE="$localstatedir/squid.pid"
+AC_ARG_WITH(pidfile,
+  AC_HELP_STRING([--with-pidfile=PATH],
+                 Default location for squid PID file. default: $DEFAULT_PIDFILE),
+ [ case $withval in
+   yes|no)
+     AC_MSG_ERROR( --with-pidfile requires a file PATH. --with-pidfile=PATH )
+     ;;
+   *)
+     DEFAULT_PIDFILE="$withval"
+     ;;
+   esac
+ ]
+)
+AC_SUBST(DEFAULT_PIDFILE)
 
 dnl Gerben Wierda <Gerben_Wierda@RnA.nl>
 case "$host" in
@@ -1197,6 +1213,7 @@ esac
 
 dnl Enable epoll()
 disable_epoll=
+force_epoll="no"
 AC_ARG_ENABLE(epoll,
   AC_HELP_STRING([--disable-epoll],[Disable Linux epoll(2) support.]),
 [
@@ -1204,11 +1221,7 @@ AC_ARG_ENABLE(epoll,
   yes)
     AC_MSG_WARN([Forcing epoll() to be enabled])
     SELECT_TYPE="epoll"
-    dnl epoll requires header file and library to be installed
-    AC_CHECK_HEADERS([sys/epoll.h],[],
-      [ AC_MSG_ERROR([required sys/epoll.h header file is missing.]) ])
-    AC_CHECK_LIB(epoll, epoll_ctl, [],
-      [ AC_MSG_ERROR([required libepoll library is missing.]) ])
+    force_epoll="yes"
     ;;
   no)
     AC_MSG_WARN([Forcing epoll() to be disabled])
@@ -1216,19 +1229,26 @@ AC_ARG_ENABLE(epoll,
   ;;
 esac
 ])
-dnl epoll requires sys/epoll.h and libepoll
+dnl auto-detect and verify epoll header and library present and working
 if test -z "$disable_epoll"; then
+
   # Check for libepoll
   EPOLL_LIB=
   AC_CHECK_LIB(epoll, epoll_ctl, [EPOLL_LIBS="-lepoll"])
   AC_SUBST(EPOLL_LIBS)
 
+  dnl on some systems it is provided by libc
+  dnl not to worry, the working test below will catch them
+  dnl and we don't want to force additional libraries
+
+
   # Check for epoll_ctl, may need -lepoll
   SAVED_LIBS="$LIBS"
-  LIBS="$LIBS $LIB_EPOLL"
+  LIBS="$LIBS $EPOLL_LIBS"
   AC_CHECK_FUNCS(epoll_ctl)
   LIBS="$SAVED_LIBS"
 
+  dnl epoll requires sys/epoll.h
   AC_CHECK_HEADERS([sys/epoll.h])
 
   dnl Verify that epoll really works
@@ -1248,6 +1268,10 @@ int main(int argc, char **argv)
     exit(0);
 }
       ], [ac_cv_epoll_works=yes], [ac_cv_epoll_works=no]))
+  fi
+
+  if test "$force_epoll" = "yes" && test "$ac_cv_epoll_works" = "no" ; then
+    AC_MSG_ERROR([Epoll does not work. Force-enabling it is not going to help.])
   fi
 fi
 
@@ -2192,10 +2216,14 @@ AC_PROG_LN_S
 AC_PATH_PROG(SH, sh, /bin/sh)
 AC_PATH_PROG(FALSE, false, /usr/bin/false)
 AC_PATH_PROG(TRUE, true, /usr/bin/true)
-AC_PATH_PROG(RM, rm, $FALSE)
 AC_PATH_PROG(MV, mv, $FALSE)
 AC_PATH_PROG(MKDIR, mkdir, $FALSE)
 AC_PATH_PROG(LN, ln, cp)
+
+AC_PATH_PROG(RM, rm, $FALSE)
+dnl Libtool 2.2.6 requires: rm -f
+RM="$RM -f"
+
 dnl automake handles this AC_PATH_PROG(MAKEDEPEND, makedepend, $TRUE)
 AC_PROG_EGREP
 
@@ -2226,11 +2254,14 @@ AC_HEADER_DIRENT
 AC_HEADER_STDC
 
 AC_CHECK_HEADERS( \
+	aio.h \
 	arpa/inet.h \
 	arpa/nameser.h \
 	assert.h \
 	bstring.h \
+	cassert \
 	crypt.h \
+	cstring \
 	ctype.h \
 	errno.h \
 	execinfo.h \
@@ -2240,6 +2271,9 @@ AC_CHECK_HEADERS( \
 	glob.h \
 	gnumalloc.h \
 	grp.h \
+	iosfwd \
+	iomanip \
+	iostream \
 	ip_compat.h \
 	ip_fil_compat.h \
 	ip_fil.h \
@@ -2247,6 +2281,7 @@ AC_CHECK_HEADERS( \
 	ipl.h \
 	libc.h \
 	limits.h \
+	machine/byte_swap.h \
 	malloc.h \
 	math.h \
 	memory.h \
@@ -2260,6 +2295,7 @@ AC_CHECK_HEADERS( \
 	openssl/ssl.h \
 	netinet/tcp.h \
 	openssl/engine.h \
+	ostream \
 	paths.h \
 	poll.h \
 	pwd.h \
@@ -2267,10 +2303,13 @@ AC_CHECK_HEADERS( \
 	regex.h \
 	sched.h \
 	signal.h \
+	sstream \
 	stdarg.h \
 	stddef.h \
+	stdexcept \
 	stdio.h \
 	stdlib.h \
+	string \
 	string.h \
 	strings.h \
 	sys/bitypes.h \
@@ -2329,13 +2368,16 @@ AC_CHECK_HEADERS( \
 	net/if.h \
 	netinet/if_ether.h\
 	netinet/icmp6.h \
+	netinet/in.h \
 	netinet/ip.h \
 	netinet/ip6.h \
 	netinet/ip_compat.h\
+	netinet/ip_fil_compat.h\
 	netinet/ip_fil.h\
 	netinet/ip_icmp.h \
-	netinet/ip_nat.h\
 	netinet/ipl.h \
+	netinet/ip_nat.h\
+	net/pf/pfvar.h \
 	net/pfvar.h \
 	sys/mount.h\
 	resolv.h \
@@ -3147,7 +3189,7 @@ dnl PF support requires a header file.
 if test "$PF_TRANSPARENT" ; then
     AC_MSG_CHECKING(if PF header file is installed)
     # hold on to your hats...
-    if test "$ac_cv_header_net_pfvar_h" = "yes"; then
+    if test "$ac_cv_header_net_pfvar_h" = "yes" || test "$ac_cv_header_net_pf_pfvar_h" = "yes"; then
         PF_TRANSPARENT="yes"
         AC_DEFINE(PF_TRANSPARENT, 1)
     else

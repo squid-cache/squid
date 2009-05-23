@@ -34,13 +34,23 @@
 #ifndef SQUID_DEBUG_H
 #define SQUID_DEBUG_H
 
+#include "config.h"
+
+#if HAVE_IOSTREAM
 #include <iostream>
+#endif
+
 #undef assert
+#if HAVE_SSTREAM
 #include <sstream>
+#endif
+#if HAVE_IOMANIP
 #include <iomanip>
-#if defined assert
+#endif
+#if defined(assert)
 #undef assert
 #endif
+
 #if PURIFY
 #define assert(EX) ((void)0)
 #elif defined(NODEBUG)
@@ -50,6 +60,9 @@
 #else
 #define assert(EX)  ((EX)?((void)0):xassert("EX", __FILE__, __LINE__))
 #endif
+
+/* context-based debugging, the actual type is subject to change */
+typedef int Ctx;
 
 /* defined debug section limits */
 #define MAX_DEBUG_SECTIONS 100
@@ -64,8 +77,15 @@ class Debug
 {
 
 public:
+    static char *debugOptions;
+    static char *cache_log;
+    static int rotateNumber;
     static int Levels[MAX_DEBUG_SECTIONS];
     static int level;
+    static int override_X;
+    static int log_stderr;
+    static bool log_syslog;
+
     static std::ostream &getDebugOut();
     static void finishDebug();
     static void parseOptions(char const *);

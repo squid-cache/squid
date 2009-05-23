@@ -8,7 +8,9 @@
 #include "Store.h"
 #include "StoreEntryStream.h"
 
+#if HAVE_IOMANIP
 #include <iomanip>
+#endif
 
 #include <cppunit/TestAssert.h>
 

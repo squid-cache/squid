@@ -1,14 +1,26 @@
 #include "config.h"
-
-#include <stdexcept>
-#include <cstring>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <string>
-
 #include "testIpAddress.h"
 #include "ip/IpAddress.h"
+
+#if HAVE_CSTRING
+#include <cstring>
+#endif
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+#if HAVE_ARPA_INET_H
+#include <arpa/inet.h>
+#endif
+#if HAVE_NETDB_H
+#include <netdb.h>
+#endif
+#if HAVE_STRING
+#include <string>
+#endif
+#if HAVE_STDEXCEPT
+#include <stdexcept>
+#endif
+
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testIpAddress );
 

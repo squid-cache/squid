@@ -36,7 +36,9 @@
 AuthScheme &
 basicScheme::GetInstance()
 {
-    return _instance;
+    if (_instance == NULL)
+        _instance = new basicScheme();
+    return *_instance;
 }
 
 basicScheme::basicScheme()
@@ -50,4 +52,4 @@ basicScheme::type () const
     return "basic";
 }
 
-basicScheme basicScheme::_instance;
+basicScheme *basicScheme::_instance = NULL;

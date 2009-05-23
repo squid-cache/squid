@@ -6,6 +6,8 @@
 #  Uncomment and customize the following to suit your needs:
 #
 
+include $(top_srcdir)/src/Common.am
+
 # SAMBAPREFIX must point to the directory where Samba has been installed.
 # By default, Samba is installed in /usr/local/samba. If you changed this
 # by using the --prefix option when configuring Samba, you need to change
@@ -22,9 +24,8 @@ libexec_PROGRAMS = smb_auth
 smb_auth_CFLAGS = -DSAMBAPREFIX=\"$(SAMBAPREFIX)\" -DHELPERSCRIPT=\"$(SMB_AUTH_HELPER_PATH)\"
 EXTRA_DIST = smb_auth.sh COPYING-2.0
 
-INCLUDES = \
-	-I$(top_srcdir) \
-	-I$(top_srcdir)/include
+## we need our local files too (but avoid -I. at all costs)
+INCLUDES += -I$(srcdir)
 
 LDADD = \
 	$(top_builddir)/compat/libcompat.la \
