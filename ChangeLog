@@ -331,6 +331,26 @@ Changes to squid-3.0.STABLE1 (13 Dec 2007):
 	- And a lot more. Most features from Squid-2.6 is supported, but not
 	  all. See the release notes for details.
 
+
+Squid-2 ChangeLog of versions fully ported to Squid-3 follows.
+
+Changes to squid-2.6.STABLE22 (19 October 2008)
+
+	- Bug #2396: Correct the opening of the PF device file.
+	- Make --with-large-files and --with-build-envirnment=default play
+	  nice together
+	- Workaround for Linux-2.6.24 & 2.6.25 netfiler_ipv4.h include header
+	  __u32 problem
+	- Make dns_nameserver work when using --disable-internal-dns on glibc
+	  based systems
+	- Bug #2426: Increase negotiate auth token buffer size
+	- Bug #2427: squid_ldap_group -h reports the old % codes for -f
+	- Bug #2477: swap.state permission issues if crashing during "squid -k
+	  reconfigure"
+	- Windows port: Fix build error using latest MinGW runtime.
+
+
+
 Older ChangeLog follows. The sections relating to Squid-2.6 is not entirely
 authorative for this release and mirrored here for reference only.
 
@@ -347,7 +367,7 @@ authorative for this release and mirrored here for reference only.
 	- the mailto links on Squid's ERR pages now contain data about the
 	  occurred error by default, so that the email will contain this data in
 	  its body. This feature can be disabled via the email_err_data directive.
-	  (Clemens Löser)
+	  (Clemens L?ser)
 	- COSS now uses a file called stripe and the path in squid.conf is the
 	  directory this is placed in. Additionally squid -z will create the
 	  COSS swapfile.
