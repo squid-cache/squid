@@ -1,3 +1,26 @@
+Changes to squid-3.1.0.8 (24 May 2009):
+
+	- Bug 2656: Pinger dies with general protection fault
+	- Bug 2650: configure requires epoll_ctl in libepoll when --enable-epoll used
+	- Bug 2648: Authentificator processes deferring and don't shutdown.
+	- Bug 2645: allow squid to ignore must-revalidate
+	- Bug 2644: auth scheme initialization is broken
+	- Bug 2632: Make number of reforwarding tries configurable
+	- Bug 2628: --with-pidfile=PATH option to override DEFAULT_PID_FILE
+	- Bug 2627: HTCP Logging
+	- Bug 2615: Call libecap::adapter::Service::start() when finalizing config.
+	- Bug 2589: SNMP returning no data - wrong oid decoded
+	- Bug 2571: Squid with IPv6 fails to start on kernel without IPv6
+	- Bug 2559: Problem parsing /0 and /0.0.0.0
+	- Bug 2404: WCCP in mask mode is broken
+	- ... also all bugs closed by 3.0.STABLE14, 3.0.STABLE15, 3.0.STABLE16-RC1
+	- Complete Interception multiple NAT support
+	- Add Content-Disposition to the known headers list.
+	- Make PEER_TCP_MAGIC_COUNT configurable
+	- Fix pinger install location
+	- Enable TPROXY v4 spoofing of CONNECT requests
+	- ... and much documentation and code polishing
+
 Changes to squid-3.1.0.7 (08 Apr 2009):
 
 	- Fix: several issues with ident
