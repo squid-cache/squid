@@ -73,10 +73,13 @@ main(int argc, char **argv)
     if ((Read_denyusers() == 1) || (Read_allowusers() == 1)) {
 	while (1) {
 	    memset(wstr, '\0', sizeof(wstr));
-	    fgets(wstr, 255, stdin);
+            if (fgets(wstr, 255, stdin) == NULL)
+                break;
 	    puts("ERR");
 	}
+        return 1;
     }
+
     /*
      * Make Check_forchange() the handle for HUP signals.
      * Don't use alarms any more. I don't think it was very
@@ -98,7 +101,9 @@ main(int argc, char **argv)
 	}
 	if (err) {
 	    syslog(LOG_WARNING, "oversized message");
-	    goto error;
+	    puts("ERR");
+            err = 0;
+            continue;
 	}
 
 	/*
@@ -114,8 +119,8 @@ main(int argc, char **argv)
 	}
 	/* Check for invalid or blank entries */
 	if ((username[0] == '\0') || (password[0] == '\0')) {
-	    puts("ERR");
-	    continue;
+            puts("ERR");
+            continue;
 	}
 	Checktimer();		/* Check if the user lists have changed */
 
@@ -133,10 +138,9 @@ main(int argc, char **argv)
 	    puts("OK");
 	else {
 	    syslog(LOG_INFO, "'%s' login failed", username);
-error:
-	    puts("ERR");
+            puts("ERR");
 	}
-	err = 0;
+        err = 0;
     }
 
     return 0;
