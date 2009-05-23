@@ -29,7 +29,8 @@ ACLSslErrorData::match(ssl_error_t toFind)
 
 /* explicit instantiation required for some systems */
 /** \cond AUTODOCS-IGNORE */
-template cbdata_type CbDataList<ssl_error_t>::CBDATA_CbDataList;
+// AYJ: 2009-05-20 : Removing. clashes with template <int> instantiation for other ACLs.
+// template cbdata_type CbDataList<ssl_error_t>::CBDATA_CbDataList;
 /** \endcond */
 
 wordlist *
