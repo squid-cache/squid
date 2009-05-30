@@ -194,13 +194,18 @@ using namespace Squid;
 
 /*
  * Filedescriptor limits in the different select loops
+ * 
+ * NP: FreeBSD 7 defines FD_SETSIZE as unsigned but Squid needs
+ *     it to be signed to compare it with signed values.
+ *     Linux and others including FreeBSD <7, define it as signed.
+ *     If this causes any issues please contact squid-dev@squid-cache.org
  */
 #if defined(USE_SELECT) || defined(USE_SELECT_WIN32)
 /* Limited by design */
-# define SQUID_MAXFD_LIMIT FD_SETSIZE
+# define SQUID_MAXFD_LIMIT    ((signed int)FD_SETSIZE)
 #elif defined(USE_POLL)
 /* Limited due to delay pools */
-# define SQUID_MAXFD_LIMIT FD_SETSIZE
+# define SQUID_MAXFD_LIMIT ((signed int)FD_SETSIZE)
 #elif defined(USE_KQUEUE) || defined(USE_EPOLL)
 # define SQUID_FDSET_NOUSE 1
 #else
