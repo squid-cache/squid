@@ -35,22 +35,16 @@
  */
 
 #include "squid.h"
-#include "ACLTag.h"
-#include "ACLStringData.h"
-#include "ACLChecklist.h"
+#include "acl/Tag.h"
+#include "acl/StringData.h"
+#include "acl/Checklist.h"
 #include "HttpRequest.h"
 
-/* explicit template instantiation required for some systems */
-
-ACL::Prototype ACLTag::RegistryProtoype(&ACLTag::RegistryEntry_, "tag");
-
-ACLStrategised<const char *> ACLTag::RegistryEntry_(new ACLStringData, ACLTagStrategy::Instance(), "tag");
-
 int
-ACLTagStrategy::match (ACLData<MatchType> * &data, ACLChecklist *checklist)
+ACLTagStrategy::match (ACLData<MatchType> * &data, ACLFilledChecklist *checklist)
 {
     if (checklist->conn() != NULL)
-	return data->match (checklist->request->tag.buf());
+	return data->match (checklist->request->tag.termedBuf());
     return 0;
 }
 
