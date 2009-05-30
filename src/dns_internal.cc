@@ -791,10 +791,7 @@ idnsSendQueryVC(idns_query * q, int ns)
 static void
 idnsSendQuery(idns_query * q)
 {
-    int x;
-    int ns;
-
-    if (DnsSocket < 0) {
+    if (DnsSocketA < 0 && DnsSocketB < 0) {
         debugs(78, 1, "WARNING: idnsSendQuery: Can't send query, no DNS socket!");
         return;
     }
@@ -808,28 +805,49 @@ idnsSendQuery(idns_query * q)
 
     assert(q->lru.prev == NULL);
 
+    int x = -1, y = -1;
+    int ns;
+
     do {
         ns = q->nsends % nns;
 
         if (q->need_vc) {
             idnsSendQueryVC(q, ns);
-            x = 0;
+            x = y = 0;
         } else {
-            x = comm_udp_sendto(DnsSocket, nameservers[ns].S, q->buf, q->sz);
+#if IPV6_SPECIAL_SPLITSTACK
+            if (nameservers[ns].S.IsIPv6() && DnsSocketB > 0)
+                y = comm_udp_sendto(DnsSocketB, nameservers[ns].S, q->buf, q->sz);
+            else
+#endif
+                x = comm_udp_sendto(DnsSocketA, nameservers[ns].S, q->buf, q->sz);
         }
 
         q->nsends++;
 
         q->queue_t = q->sent_t = current_time;
 
+#if IPV6_SPECIAL_SPLITSTACK
+        if (y < 0 && nameservers[ns].S.IsIPv6())
+            debugs(50, 1, "idnsSendQuery: FD " << DnsSocketB << ": sendto: " << xstrerror());
+        if (x < 0 && nameservers[ns].S.IsIPv4())
+#else
         if (x < 0)
-            debugs(50, 1, "idnsSendQuery: FD " << DnsSocket << ": sendto: " << xstrerror());
+#endif
+            debugs(50, 1, "idnsSendQuery: FD " << DnsSocketA << ": sendto: " << xstrerror());
 
-    } while ( x<0 && q->nsends % nns != 0);
+    } while ( (x<0 && y<0) && q->nsends % nns != 0);
+
+#if IPV6_SPECIAL_SPLITSTACK
+    if (y >= 0) {
+        fd_bytes(DnsSocketB, y, FD_WRITE);
+        commSetSelect(DnsSocketB, COMM_SELECT_READ, idnsRead, NULL, 0);
+    }
+#endif
 
     if (x >= 0) {
-        fd_bytes(DnsSocket, x, FD_WRITE);
-        commSetSelect(DnsSocket, COMM_SELECT_READ, idnsRead, NULL, 0);
+        fd_bytes(DnsSocketA, x, FD_WRITE);
+        commSetSelect(DnsSocketA, COMM_SELECT_READ, idnsRead, NULL, 0);
     }
 
     nameservers[ns].nqueries++;
@@ -1153,7 +1171,13 @@ idnsRead(int fd, void *data)
             break;
         }
 
-        fd_bytes(DnsSocket, len, FD_READ);
+#if IPV6_SPECIAL_SPLITSTACK
+        if ( from.IsIPv6() )
+            fd_bytes(DnsSocketB, len, FD_READ);
+        else
+#endif
+            fd_bytes(DnsSocketA, len, FD_READ);
+
         assert(N);
         (*N)++;
 
@@ -1179,8 +1203,14 @@ idnsRead(int fd, void *data)
         idnsGrokReply(rbuf, len);
     }
 
-    if (lru_list.head)
-        commSetSelect(DnsSocket, COMM_SELECT_READ, idnsRead, NULL, 0);
+    if (lru_list.head) {
+#if IPV6_SPECIAL_SPLITSTACK
+        if ( from.IsIPv6() )
+            commSetSelect(DnsSocketB, COMM_SELECT_READ, idnsRead, NULL, 0);
+        else
+#endif
+            commSetSelect(DnsSocketA, COMM_SELECT_READ, idnsRead, NULL, 0);
+    }
 }
 
 static void
@@ -1327,7 +1357,7 @@ idnsInit(void)
     CBDATA_INIT_TYPE(nsvc);
     CBDATA_INIT_TYPE(idns_query);
 
-    if (DnsSocket < 0) {
+    if (DnsSocketA < 0 && DnsSocketB < 0) {
         int port;
 
         IpAddress addr; // since we don't want to alter Config.Addrs.udp_* and dont have one of our own.
@@ -1338,21 +1368,44 @@ idnsInit(void)
             addr = Config.Addrs.udp_incoming;
 
         debugs(78, 2, "idnsInit: attempt open DNS socket to: " << addr);
-        DnsSocket = comm_open_listener(SOCK_DGRAM,
-                              IPPROTO_UDP,
-                              addr,
-                              COMM_NONBLOCKING,
-                              "DNS Socket");
+#if IPV6_SPECIAL_SPLITSTACK
+        if ( addr.IsAnyAddr() || addr.IsIPv6() )
+            DnsSocketB = comm_open_listener(SOCK_DGRAM,
+                                  IPPROTO_UDP,
+                                  addr,
+                                  COMM_NONBLOCKING,
+                                  "DNS Socket v6");
 
-        if (DnsSocket < 0)
+        if ( addr.IsAnyAddr() || addr.IsIPv4() )
+            DnsSocketA = comm_open_listener(SOCK_DGRAM,
+                                  IPPROTO_UDP,
+                                  addr,
+                                  COMM_NONBLOCKING,
+                                  "DNS Socket v4");
+#else
+            DnsSocketA = comm_open_listener(SOCK_DGRAM,
+                                  IPPROTO_UDP,
+                                  addr,
+                                  COMM_NONBLOCKING,
+                                  "DNS Socket");
+#endif
+
+        if (DnsSocketA < 0 && DnsSocketB < 0)
             fatal("Could not create a DNS socket");
 
         /* Ouch... we can't call functions using debug from a debug
          * statement. Doing so messes up the internal Debug::level
          */
-        port = comm_local_port(DnsSocket);
-
-        debugs(78, 1, "DNS Socket created at " << addr << ", FD " << DnsSocket);
+#if IPV6_SPECIAL_SPLITSTACK
+        if(DnsSocketB >= 0) {
+            port = comm_local_port(DnsSocketB);
+            debugs(78, 1, "DNS Socket created at " << addr << ", FD " << DnsSocketB);
+        }
+#endif
+        if(DnsSocketA >= 0) {
+            port = comm_local_port(DnsSocketA);
+            debugs(78, 1, "DNS Socket created at " << addr << ", FD " << DnsSocketA);
+        }
     }
 
     assert(0 == nns);
@@ -1397,12 +1450,20 @@ idnsInit(void)
 void
 idnsShutdown(void)
 {
-    if (DnsSocket < 0)
+    if (DnsSocketA < 0 && DnsSocketB < 0)
         return;
 
-    comm_close(DnsSocket);
+    if(DnsSocketA >= 0 ) {
+        comm_close(DnsSocketA);
+        DnsSocketA = -1;
+    }
 
-    DnsSocket = -1;
+#if IPV6_SPECIAL_SPLITSTACK
+    if(DnsSocketA >= 0 ) {
+        comm_close(DnsSocketB);
+        DnsSocketB = -1;
+    }
+#endif
 
     for (int i = 0; i < nns; i++) {
         if (nsvc *vc = nameservers[i].vc) {
@@ -1412,7 +1473,6 @@ idnsShutdown(void)
     }
 
     idnsFreeNameservers();
-
     idnsFreeSearchpath();
 }
 
