@@ -1,6 +1,5 @@
-
 /*
- * $Id: ACLTag.h,v 1.1.2.1 2008/02/27 10:06:42 amosjeffries Exp $
+ * $Id$
  *
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -34,16 +33,17 @@
  * Copyright (c) 2009, Henrik Nordstrom <henrik@henriknordstrom.net>
  */
 
-#ifndef SQUID_ACLMYPORTNAME_H
-#define SQUID_ACLMYPORTNAME_H
-#include "ACLStrategy.h"
-#include "ACLStrategised.h"
+#ifndef SQUID_ACLTAG_H
+#define SQUID_ACLTAG_H
+
+#include "acl/Strategy.h"
+#include "acl/Strategised.h"
 
 class ACLTagStrategy : public ACLStrategy<const char *>
 {
 
 public:
-    virtual int match (ACLData<MatchType> * &, ACLChecklist *);
+    virtual int match (ACLData<MatchType> * &, ACLFilledChecklist *);
     static ACLTagStrategy *Instance();
     /* Not implemented to prevent copies of the instance. */
     /* Not private to prevent brain dead g+++ warnings about
