@@ -56,6 +56,7 @@
 #include "acl/Strategised.h"
 #include "acl/Strategy.h"
 #include "acl/StringData.h"
+#include "acl/Tag.h"
 #include "acl/TimeData.h"
 #include "acl/Time.h"
 #include "acl/Url.h"
@@ -149,3 +150,6 @@ ACLProxyAuth ACLProxyAuth::RegexRegistryEntry_(new ACLRegexData, "proxy_auth_reg
 
 ACL::Prototype ACLMaxUserIP::RegistryProtoype(&ACLMaxUserIP::RegistryEntry_, "max_user_ip");
 ACLMaxUserIP ACLMaxUserIP::RegistryEntry_("max_user_ip");
+
+ACL::Prototype ACLTag::RegistryProtoype(&ACLTag::RegistryEntry_, "tag");
+ACLStrategised<const char *> ACLTag::RegistryEntry_(new ACLStringData, ACLTagStrategy::Instance(), "tag");
