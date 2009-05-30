@@ -2626,17 +2626,12 @@ case "$host_os" in
     save_LIBS="$LIBS"
     for curlib in ws2_32 wsock32; do
 	LIBS="$LIBS -l$curlib"
-	AC_TRY_LINK([
-			char __attribute__((stdcall)) socket(int,int,int);
-			char __attribute__((stdcall)) select(int,int,int,int,int);
-			char __attribute__((stdcall)) closesocket(int);
-			char __attribute__((stdcall)) gethostname(int,int);
-			],
+	AC_TRY_LINK([#include <winsock.h>],
 			[
-			socket(1,2,3);
-			select(1,2,3,4,5);
-			closesocket(1);
-			gethostname(1,2);
+			socket(0,0,0);
+			select(0,NULL,NULL,NULL,NULL);
+			closesocket(0);
+			gethostname(NULL,0);
 			],
 			have_winsock=yes, have_winsock=no)
 
