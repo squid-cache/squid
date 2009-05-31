@@ -1098,7 +1098,7 @@ DOC_START
 	   name=	Specifies a internal name for the port. Defaults to
 			the port specification (port or addr:port)
 
-	   keepalive[=idle,interval,timeout]
+	   tcpkeepalive[=idle,interval,timeout]
 			Enable TCP keepalive probes of idle connections
 			idle is the initial time before TCP starts probing
 			the connection, interval how often to probe, and
