@@ -49,6 +49,14 @@
 #endif
 #endif
 
+/* Some MinGW version defines min() and max() as macros
+   causing the fail of the build process. The following
+   #define will disable that definition
+ */
+#if defined(__GNUC__)
+#define NOMINMAX
+#endif
+
 #if defined _FILE_OFFSET_BITS && _FILE_OFFSET_BITS == 64
 # define __USE_FILE_OFFSET64	1
 #endif
@@ -719,50 +727,6 @@ struct rusage {
 };
 
 #undef ACL
-
-
-/** \cond AUTODOCS-IGNORE */
-using namespace Squid;
-/** \endcond */
-
-
-/* win32lib.c */
-SQUIDCEXTERN int chroot (const char *);
-SQUIDCEXTERN int ftruncate(int, off_t);
-#ifndef HAVE_GETTIMEOFDAY
-SQUIDCEXTERN int gettimeofday(struct timeval * ,void *);
-#endif
-SQUIDCEXTERN int kill(pid_t, int);
-SQUIDCEXTERN int statfs(const char *, struct statfs *);
-SQUIDCEXTERN int truncate(const char *, off_t);
-SQUIDCEXTERN const char * wsastrerror(int);
-SQUIDCEXTERN struct passwd *getpwnam(char *);
-SQUIDCEXTERN struct group *getgrnam(char *);
-SQUIDCEXTERN uid_t geteuid(void);
-SQUIDCEXTERN uid_t getuid(void);
-SQUIDCEXTERN int setuid(uid_t);
-SQUIDCEXTERN int seteuid(uid_t);
-SQUIDCEXTERN gid_t getgid(void);
-SQUIDCEXTERN gid_t getegid(void);
-SQUIDCEXTERN int setgid(gid_t);
-SQUIDCEXTERN int setegid(gid_t);
-SQUIDCEXTERN const char *WIN32_strerror(int);
-SQUIDCEXTERN void WIN32_maperror(unsigned long);
-
-// Moved in from squid.h and other duplicates.
-// BUT was already included up the top there with a wrapped conditional.
-// that may need checking....
-//#include <io.h>
-
-/* Windows may lack getpagesize() prototype */
-// Moved in from squid.h
-// NP: there may be a header include needed before this to prevent duplicate-definitions
-//     if that is true it will need including here as part of the hack.
-//     if not then this comment can be dropped.
-#if !defined(getpagesize)
-SQUIDCEXTERN size_t getpagesize(void);
-#endif
-
 
 #endif /* _SQUID_WIN32_ */
 #endif /* SQUID_OS_MSWIN_H */

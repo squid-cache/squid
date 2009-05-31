@@ -517,6 +517,7 @@ nodist_squid_SOURCES = \
 squid_LDADD = \
 	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
+        ../compat/libcompat.la \
 	-L../lib \
 	@XTRA_OBJS@ \
 	@DISK_LINKOBJS@ \
