@@ -3449,9 +3449,11 @@ main ()
 	WSAStartup(2, &wsaData);
 #endif
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) exit(1);
-        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &val, &len) < 0) exit(1);
 #if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&val, &len) < 0) exit(1);
 	WSACleanup();
+#else
+        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &val, &len) < 0) exit(1);
 #endif
 	if (val<=0) exit(1);
         fp = fopen("conftestval", "w");
@@ -3492,9 +3494,11 @@ main ()
 	WSAStartup(2, &wsaData);
 #endif
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) exit(1);
-        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &val, &len) < 0) exit(1);
 #if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&val, &len) < 0) exit(1);
 	WSACleanup();
+#else
+        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &val, &len) < 0) exit(1);
 #endif
 	if (val <= 0) exit(1);
 	fp = fopen("conftestval", "w"); 
@@ -3535,9 +3539,11 @@ main ()
 	WSAStartup(2, &wsaData);
 #endif
 	if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) exit(1);
-        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &val, &len) < 0) exit(1);
 #if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&val, &len) < 0) exit(1);
 	WSACleanup();
+#else
+        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &val, &len) < 0) exit(1);
 #endif
 	if (val <= 0) exit(1);
 	fp = fopen("conftestval", "w"); 
@@ -3582,9 +3588,11 @@ main ()
 	WSAStartup(2, &wsaData);
 #endif
 	if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) exit(1);
-        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &val, &len) < 0) exit(1);
 #if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&val, &len) < 0) exit(1);
 	WSACleanup();
+#else
+        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &val, &len) < 0) exit(1);
 #endif
 	if (val <= 0) exit(1);
 	fp = fopen("conftestval", "w"); 
