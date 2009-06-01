@@ -51,7 +51,7 @@
 #include "acl/FilledChecklist.h"
 #include "acl/Acl.h"
 #if USE_IDENT
-#include "acl/AclIdent.h"
+#include "ident/AclIdent.h"
 #endif
 #include "client_side.h"
 #include "HttpRequest.h"

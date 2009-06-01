@@ -33,9 +33,15 @@
  */
 
 #include "squid.h"
-#include "ident.h"
+
+#if USE_IDENT
+
 #include "comm.h"
+#include "ident/Config.h"
+#include "ident/Ident.h"
 #include "MemBuf.h"
+
+namespace Ident {
 
 #define IDENT_PORT 113
 #define IDENT_KEY_SZ 50
@@ -58,17 +64,23 @@ typedef struct _IdentStateData {
     char buf[4096];
 } IdentStateData;
 
-static IOCB identReadReply;
-static PF identClose;
-static PF identTimeout;
-static CNCB identConnectDone;
+// TODO: make these all a series of Async jobs. They are self-contained callbacks now.
+static IOCB ReadReply;
+static PF Close;
+static PF Timeout;
+static CNCB ConnectDone;
 static hash_table *ident_hash = NULL;
-static void identClientAdd(IdentStateData *, IDCB *, void *);
+static void ClientAdd(IdentStateData * state, IDCB * callback, void *callback_data);
+static void identCallback(IdentStateData * state, char *result);
+
+}; // namespace Ident
+
+Ident::IdentConfig Ident::TheConfig;
 
 /**** PRIVATE FUNCTIONS ****/
 
 static void
-identCallback(IdentStateData * state, char *result)
+Ident::identCallback(IdentStateData * state, char *result)
 {
     IdentClient *client;
 
@@ -87,7 +99,7 @@ identCallback(IdentStateData * state, char *result)
 }
 
 static void
-identClose(int fdnotused, void *data)
+Ident::Close(int fdnotused, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
     identCallback(state, NULL);
@@ -98,7 +110,7 @@ identClose(int fdnotused, void *data)
 }
 
 static void
-identTimeout(int fd, void *data)
+Ident::Timeout(int fd, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
     debugs(30, 3, "identTimeout: FD " << fd << ", " << state->my_peer);
@@ -107,7 +119,7 @@ identTimeout(int fd, void *data)
 }
 
 static void
-identConnectDone(int fd, comm_err_t status, int xerrno, void *data)
+Ident::ConnectDone(int fd, comm_err_t status, int xerrno, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
     IdentClient *c;
@@ -138,12 +150,12 @@ identConnectDone(int fd, comm_err_t status, int xerrno, void *data)
               state->my_peer.GetPort(),
               state->me.GetPort());
     comm_write_mbuf(fd, &mb, NULL, state);
-    comm_read(fd, state->buf, BUFSIZ, identReadReply, state);
-    commSetTimeout(fd, Config.Timeout.ident, identTimeout, state);
+    comm_read(fd, state->buf, BUFSIZ, Ident::ReadReply, state);
+    commSetTimeout(fd, Ident::TheConfig.timeout, Ident::Timeout, state);
 }
 
 static void
-identReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
+Ident::ReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
     char *ident = NULL;
@@ -174,16 +186,15 @@ identReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void 
     if (strstr(buf, "USERID")) {
         if ((ident = strrchr(buf, ':'))) {
             while (xisspace(*++ident));
-            identCallback(state, ident);
+            Ident::identCallback(state, ident);
         }
     }
 
     comm_close(fd);
 }
 
-
 static void
-identClientAdd(IdentStateData * state, IDCB * callback, void *callback_data)
+Ident::ClientAdd(IdentStateData * state, IDCB * callback, void *callback_data)
 {
     IdentClient *c = (IdentClient *)xcalloc(1, sizeof(*c));
     IdentClient **C;
@@ -202,7 +213,7 @@ CBDATA_TYPE(IdentStateData);
  * start a TCP connection to the peer host on port 113
  */
 void
-identStart(IpAddress &me, IpAddress &my_peer, IDCB * callback, void *data)
+Ident::Start(IpAddress &me, IpAddress &my_peer, IDCB * callback, void *data)
 {
     IdentStateData *state;
     int fd;
@@ -215,8 +226,11 @@ identStart(IpAddress &me, IpAddress &my_peer, IDCB * callback, void *data)
     my_peer.ToURL(key2, IDENT_KEY_SZ);
     snprintf(key, IDENT_KEY_SZ, "%s,%s", key1, key2);
 
+    if (!ident_hash) {
+        Init();
+    }
     if ((state = (IdentStateData *)hash_lookup(ident_hash, key)) != NULL) {
-        identClientAdd(state, callback, data);
+        ClientAdd(state, callback, data);
         return;
     }
 
@@ -241,23 +255,25 @@ identStart(IpAddress &me, IpAddress &my_peer, IDCB * callback, void *data)
     state->fd = fd;
     state->me = me;
     state->my_peer = my_peer;
-    identClientAdd(state, callback, data);
+    ClientAdd(state, callback, data);
     hash_join(ident_hash, &state->hash);
-    comm_add_close_handler(fd,
-                           identClose,
-                           state);
-    commSetTimeout(fd, Config.Timeout.ident, identTimeout, state);
-    commConnectStart(fd,
-                     state->my_peer.NtoA(ntoabuf,MAX_IPSTRLEN),
-                     IDENT_PORT,
-                     identConnectDone,
-                     state);
+    comm_add_close_handler(fd, Ident::Close, state);
+    commSetTimeout(fd, Ident::TheConfig.timeout, Ident::Timeout, state);
+    state->my_peer.NtoA(ntoabuf,MAX_IPSTRLEN);
+    commConnectStart(fd, ntoabuf, IDENT_PORT, Ident::ConnectDone, state);
 }
 
 void
-identInit(void)
+Ident::Init(void)
 {
+    if(ident_hash) {
+        debugs(30, DBG_CRITICAL, "WARNING: Ident already initialized.");
+        return;
+    }
+
     ident_hash = hash_create((HASHCMP *) strcmp,
                              hashPrime(Squid_MaxFD / 8),
                              hash4);
 }
+
+#endif /* USE_IDENT */

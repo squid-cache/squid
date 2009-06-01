@@ -32,8 +32,12 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
-#ifndef SQUID_ACLIDENT_H
-#define SQUID_ACLIDENT_H
+#ifndef SQUID_IDENT_ACLIDENT_H
+#define SQUID_IDENT_ACLIDENT_H
+
+#include "config.h"
+
+#if USE_IDENT
 
 #include "acl/Checklist.h"
 
@@ -86,4 +90,5 @@ private:
 
 MEMPROXY_CLASS_INLINE(ACLIdent);
 
-#endif /* SQUID_ACLIDENT_H */
+#endif /* USE_IDENT */
+#endif /* SQUID_IDENT_ACLIDENT_H */

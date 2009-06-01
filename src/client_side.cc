@@ -91,7 +91,8 @@
 #include "HttpHdrContRange.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-#include "ident.h"
+#include "ident/Config.h"
+#include "ident/Ident.h"
 #include "ip/IpIntercept.h"
 #include "MemObject.h"
 #include "fde.h"
@@ -316,7 +317,6 @@ clientIdentDone(const char *ident, void *data)
     ConnStateData *conn = (ConnStateData *)data;
     xstrncpy(conn->rfc931, ident ? ident : dash_str, USER_IDENT_SZ);
 }
-
 #endif
 
 void
@@ -2872,13 +2872,12 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
     commSetTimeout(newfd, Config.Timeout.read, timeoutCall);
 
 #if USE_IDENT
-
-    if (Config.accessList.identLookup) {
-        ACLFilledChecklist identChecklist(Config.accessList.identLookup, NULL, NULL);
+    if (Ident::TheConfig.identLookup) {
+        ACLFilledChecklist identChecklist(Ident::TheConfig.identLookup, NULL, NULL);
         identChecklist.src_addr = details->peer;
         identChecklist.my_addr = details->me;
         if (identChecklist.fastCheck())
-            identStart(details->me, details->peer, clientIdentDone, connState);
+            Ident::Start(details->me, details->peer, clientIdentDone, connState);
     }
 #endif
 
@@ -3084,13 +3083,12 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
     commSetTimeout(newfd, Config.Timeout.request, timeoutCall);
 
 #if USE_IDENT
-
-    if (Config.accessList.identLookup) {
-        ACLFilledChecklist identChecklist(Config.accessList.identLookup, NULL, NULL);
+    if (Ident::TheConfig.identLookup) {
+        ACLFilledChecklist identChecklist(Ident::TheConfig.identLookup, NULL, NULL);
         identChecklist.src_addr = details->peer;
         identChecklist.my_addr = details->me;
         if (identChecklist.fastCheck())
-            identStart(details->me, details->peer, clientIdentDone, connState);
+            Ident::Start(details->me, details->peer, clientIdentDone, connState);
     }
 
 #endif
