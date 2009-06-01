@@ -47,6 +47,7 @@
 #include "Parsing.h"
 #include "MemBuf.h"
 #include "wordlist.h"
+#include "ident/Config.h"
 #include "ip/IpIntercept.h"
 
 #if HAVE_GLOB_H
