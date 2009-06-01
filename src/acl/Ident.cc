@@ -35,7 +35,7 @@
  */
 
 #include "squid.h"
-#include "acl/Ident.h"
+#include "acl/AclIdent.h"
 #include "acl/FilledChecklist.h"
 #include "acl/RegexData.h"
 #include "acl/UserData.h"

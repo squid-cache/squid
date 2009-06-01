@@ -133,7 +133,7 @@ endif
 EXTRA_libacls_la_SOURCES += $(ARP_ACLS)
 
 
-IDENT_ACLS = Ident.cc Ident.h
+IDENT_ACLS = Ident.cc AclIdent.h
 
 if ENABLE_IDENT
 libacls_la_SOURCES += $(IDENT_ACLS)

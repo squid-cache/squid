@@ -25,7 +25,7 @@
 #include "acl/HttpReqHeader.h"
 #include "acl/HttpStatus.h"
 #if USE_IDENT
-#include "acl/Ident.h"
+#include "acl/AclIdent.h"
 #endif
 #include "acl/IntRange.h"
 #include "acl/Ip.h"
