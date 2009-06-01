@@ -107,12 +107,15 @@ fde::DumpStats (StoreEntry *dumpEntry)
 char const *
 fde::remoteAddr() const
 {
-    LOCAL_ARRAY(char, buf, 32);
+    LOCAL_ARRAY(char, buf, MAX_IPSTRLEN );
 
     if (type != FD_SOCKET)
         return null_string;
 
-    snprintf(buf, 32, "%s.%d", ipaddr, (int) remote_port);
+    if ( *ipaddr )
+        snprintf( buf, MAX_IPSTRLEN, "%s:%d", ipaddr, (int)remote_port);
+    else
+        local_addr.ToURL(buf,MAX_IPSTRLEN); // ToHostname does not include port.
 
     return buf;
 }
