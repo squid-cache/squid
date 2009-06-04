@@ -86,6 +86,7 @@ fi
 cp -p $tmpdir/ChangeLog ${PACKAGE}-${VERSION}-${date}-ChangeLog.txt
 echo ${PACKAGE}-${VERSION}-${date}-ChangeLog.txt >>${tag}.out
 
+# Generate Configuration Manual HTML
 if [ -x $tmpdir/scripts/www/build-cfg-help.pl ]; then
 	make -C $tmpdir/src cf.data
 	mkdir -p $tmpdir/doc/cfgman
@@ -95,6 +96,21 @@ if [ -x $tmpdir/scripts/www/build-cfg-help.pl ]; then
 	$tmpdir/scripts/www/build-cfg-help.pl --version ${VERSION} -o ${PACKAGE}-${VERSION}-${date}-cfgman.html -f singlehtml $tmpdir/src/cf.data
 	gzip -f -9 ${PACKAGE}-${VERSION}-${date}-cfgman.html
 	echo ${PACKAGE}-${VERSION}-${date}-cfgman.html.gz >>${tag}.out
+fi
+
+# Collate Manual Pages and generate HTML versions
+if (groff --help); then
+	make -C $tmpdir/doc all
+	mkdir -p ${tmpdir}/doc/manuals
+	cp doc/*.8 ${tmpdir}/doc/manuals/
+        for f in `ls -1 helpers/*/*/*.8` ; do
+		cp $f ${tmpdir}/doc/manuals/
+	done
+        for f in `ls -1 ${tmpdir}/doc/manuals/*.8` ; do
+		cat ${f} | groff -E -Thtml -mandoc >${f}.html
+	done
+	sh -c "cd ${tmpdir}/doc/manuals && tar -zcf $PWD/${PACKAGE}-${VERSION}-${date}-manuals.tar.gz *"
+	echo ${PACKAGE}-${VERSION}-${date}-manuals.tar.gz >>${tag}.out
 fi
 
 # Generate language-pack tarballs
