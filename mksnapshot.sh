@@ -99,11 +99,11 @@ if [ -x $tmpdir/scripts/www/build-cfg-help.pl ]; then
 fi
 
 # Collate Manual Pages and generate HTML versions
-if (groff --help); then
-	make -C $tmpdir/doc all
+if (groff --help >/dev/null); then
+	make -C ${tmpdir}/doc all
 	mkdir -p ${tmpdir}/doc/manuals
-	cp doc/*.8 ${tmpdir}/doc/manuals/
-        for f in `ls -1 helpers/*/*/*.8` ; do
+	cp ${tmpdir}/doc/*.8 ${tmpdir}/doc/manuals/
+        for f in `ls -1 ${tmpdir}/helpers/*/*/*.8` ; do
 		cp $f ${tmpdir}/doc/manuals/
 	done
         for f in `ls -1 ${tmpdir}/doc/manuals/*.8` ; do
