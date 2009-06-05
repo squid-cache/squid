@@ -243,7 +243,9 @@ int
 aclMatchArp(SplayNode<acl_arp_data *> **dataptr, IpAddress &c)
 {
     struct arpreq arpReq;
+#if !defined(_SQUID_WIN32_)
     struct sockaddr_in *sa = NULL;
+#endif
 
     IpAddress ipAddr = c;
 
