@@ -1,7 +1,7 @@
 #ifndef SQUID_ADAPTATION__INITIATE_H
 #define SQUID_ADAPTATION__INITIATE_H
 
-#include "AsyncCall.h"
+#include "base/AsyncCall.h"
 #include "base/AsyncJob.h"
 #include "adaptation/forward.h"
 
