@@ -32,6 +32,7 @@ TRANSLATIONS = \
 	id \
 	it \
 	ja \
+	ko \
 	lv \
 	nl \
 	pt-br \
@@ -42,19 +43,17 @@ TRANSLATIONS = \
 	tr \
 	uk \
 	uz \
-	zh-cn
+	zh-cn zh-tw
 
 # Legacy language contributions...
 #
 LANGUAGES	= \
 		Hebrew \
 		Hungarian \
-		Korean \
 		Lithuanian \
 		Polish \
 		Portuguese \
-		Slovak \
-		Traditional_Chinese
+		Slovak
 
 install-data-local: 
 	@for l in $(LANGUAGES); do \
