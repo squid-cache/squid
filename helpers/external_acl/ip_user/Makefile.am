@@ -6,6 +6,11 @@
 #  Uncomment and customize the following to suit your needs:
 #
 
+include $(top_srcdir)/src/Common.am
+
+## we need our local files too (but avoid -I. at all costs)
+INCLUDES += -I$(srcdir)
+
 
 libexec_PROGRAMS = ip_user_check
 
@@ -20,14 +25,6 @@ EXTRA_DIST = \
 	example-deny_all_but.conf \
 	license \
 	README
-
-# sysconf_DATA = 
-
-INCLUDES = \
-	-I$(top_srcdir) \
-	-I. \
-	-I$(top_builddir)/include \
-	-I$(top_srcdir)/include
 
 LDADD = \
 	$(top_builddir)/compat/libcompat.la \

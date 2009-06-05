@@ -6,6 +6,8 @@
 #  Uncomment and customize the following to suit your needs:
 #
 
+include $(top_srcdir)/src/Common.am
+
 libexec_PROGRAMS	= ncsa_auth
 ncsa_auth_SOURCES	= ncsa_auth.c crypt_md5.c crypt_md5.h
 man_MANS 		= ncsa_auth.8
@@ -17,7 +19,5 @@ LDADD = \
 	$(XTRA_LIBS) \
 	$(SSLLIB)
 
-INCLUDES = \
-	-I$(top_srcdir) \
-	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/src
+## we need our local files too (but avoid -I. at all costs)
+INCLUDES += -I$(srcdir)

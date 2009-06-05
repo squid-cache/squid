@@ -35,8 +35,8 @@ libfs_la_DEPENDENCIES = @STORE_LIBS_TO_BUILD@
 EXTRA_DIST = \
 	coss/coss-notes.txt
 
-# TODO: fix #include statements so that this is not needed
-INCLUDES += -I.
+## we need our local files too (but avoid -I. at all costs)
+INCLUDES += -I$(srcdir)
 
 
 check_PROGRAMS += testHeaders

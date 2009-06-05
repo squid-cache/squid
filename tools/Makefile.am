@@ -4,30 +4,13 @@
 #  Uncomment and customize the following to suit your needs:
 #
 
+include $(top_srcdir)/src/Common.am
 
 AUTOMAKE_OPTIONS = subdir-objects
 
-INCLUDES = \
-	-I$(top_srcdir) \
-	-I. \
-	-I$(top_builddir)/include \
-	-I$(top_srcdir)/include \
-	-I$(top_srcdir)/src \
-	@SQUID_CPPUNIT_INC@
-#	-I$(top_srcdir)/lib/libTrie/include
-#	-I$(srcdir)
+## we need our local files too (but avoid -I. at all costs)
+INCLUDES += -I$(srcdir)
 
-TESTS=$(check_PROGRAMS)
-#check_PROGRAMS= testHeaders
-
-### Special Universal .h dependency test script
-#testHeaders: *.h
-# ./ has no .h files
-#
-## No Such file...
-#testHeaders.c:
-#	touch testHeaders.c
-#CLEANFILES += testHeaders.c
 
 SUBDIRS		= 
 

@@ -1,10 +1,10 @@
 # makefile for smblib
 
-INCLUDES = \
-	-I$(top_srcdir) \
-	-I. \
-	-I$(top_builddir)/include \
-	-I$(top_srcdir)/include
+include $(top_srcdir)/src/Common.am
+
+## we need our local files too (but avoid -I. at all costs)
+INCLUDES += -I$(srcdir)
+
 
 noinst_LIBRARIES = libsmbvalid.a
 

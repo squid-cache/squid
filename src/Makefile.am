@@ -4,6 +4,7 @@
 #  Uncomment and customize the following to suit your needs:
 #
 
+include $(top_srcdir)/src/Common.am
 
 AUTOMAKE_OPTIONS = subdir-objects
 if USE_DNSSERVER
@@ -28,9 +29,6 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModule.cc \
 	LoadableModules.h \
 	LoadableModules.cc
-
-TESTS=$(check_PROGRAMS)
-check_PROGRAMS=
 
 SUBDIRS	= base acl fs repl auth ip icmp
 
@@ -152,9 +150,6 @@ else
 IDENT_SOURCE =
 endif
 
-AM_CFLAGS = @SQUID_CFLAGS@
-AM_CXXFLAGS = @SQUID_CXXFLAGS@
-
 EXTRA_LIBRARIES = libAIO.a libBlocking.a libDiskDaemon.a libDiskThreads.a
 noinst_LIBRARIES = @DISK_LIBS@
 noinst_LTLIBRARIES = libsquid.la
@@ -171,14 +166,8 @@ COMMON_LIBS = \
 	ip/libip.la \
 	fs/libfs.la
 
-INCLUDES = \
-	-I$(top_srcdir) \
-	-I$(top_srcdir)/src \
-	-I$(top_builddir)/include \
-	-I$(top_srcdir)/include \
-	-I$(top_builddir)/lib \
-	-I$(top_srcdir)/lib \
-	@SQUID_CPPUNIT_INC@
+## Loadable Modules needs lib/libLtdl stuff
+INCLUDES += -I$(top_srcdir)/lib
 
 EXTRA_PROGRAMS = \
 	DiskIO/DiskDaemon/diskd \
@@ -216,6 +205,9 @@ cf_gen_LDADD= \
 	@EPOLL_LIBS@ \
 	@MINGW_LIBS@
 cf_gen.$(OBJEXT): cf_gen_defines.h
+
+## cf_gen.cc needs src/cf_gen_defines.h
+INCLUDES += -I$(top_builddir)/src
 
 
 ACL_REGISTRATION_SOURCES = AclRegs.cc AuthReg.cc
@@ -722,9 +714,7 @@ DEFAULT_MIB_PATH	= $(datadir)/mib.txt
 DEFAULT_HOSTS		= @OPT_DEFAULT_HOSTS@
 
 # Make location configure settings available to the code
-DEFS = @DEFS@ -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\" -DDEFAULT_SQUID_DATA_DIR=\"$(datadir)\" -DDEFAULT_SQUID_CONFIG_DIR=\"$(sysconfdir)\"
-
-$(OBJS): $(top_srcdir)/include/version.h ../include/autoconf.h
+DEFS += -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\" -DDEFAULT_SQUID_DATA_DIR=\"$(datadir)\" -DDEFAULT_SQUID_CONFIG_DIR=\"$(sysconfdir)\"
 
 snmp_core.o snmp_agent.o: ../snmplib/libsnmp.a $(top_srcdir)/include/cache_snmp.h
 
@@ -810,7 +800,7 @@ uninstall-local:
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh $(RM) $(DESTDIR)$(DEFAULT_MIME_TABLE)
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh $(RM) $(DESTDIR)$(DEFAULT_CONFIG_FILE)
 
-CLEANFILES = cf_gen_defines.h cf.data cf_parser.h squid.conf.default squid.conf.documented \
+CLEANFILES += cf_gen_defines.h cf.data cf_parser.h squid.conf.default squid.conf.documented \
 	globals.cc string_arrays.c repl_modules.cc DiskIO/DiskIOModules_gen.cc \
 	test_tools.cc *.a
 
