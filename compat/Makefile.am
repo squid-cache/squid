@@ -2,22 +2,8 @@
 #  Makefile for the Squid Portability Library
 #
 
-# Housekeeping, shared by all Squid Makefiles.
-# TODO: make this set by configure?
-AM_CFLAGS = @SQUID_CFLAGS@
-AM_CXXFLAGS = @SQUID_CXXFLAGS@
-DEFS = @DEFS@
-CLEANFILES = 
+include $(top_srcdir)/src/Common.am
 
-INCLUDES = \
-	-I$(top_srcdir) \
-	-I$(top_srcdir)/src \
-	-I$(top_srcdir)/include \
-	-I$(top_builddir)/include \
-	-I$(top_builddir)/lib \
-	@SQUID_CPPUNIT_INC@
-
-$(OBJS): $(top_srcdir)/include/version.h $(top_srcdir)/include/autoconf.h
 
 # Ideally this would be 100% inline functions and macro wrappers.
 
@@ -55,16 +41,16 @@ libcompat_la_SOURCES = \
 	GnuRegex.c
 
 
-check_PROGRAMS= testHeaders
-TESTS= $(check_PROGRAMS)
+# os/ subdir prevents us using src/TestHeaders.am
+#
+TESTS += testHeaders
 
 ## Special Universal .h dependency test script
 ## aborts if error encountered
-testHeaders: $(top_srcdir)/compat/*.h $(top_srcdir)/compat/os/*.h
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/compat/" || exit 1
-	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/compat/os/" || exit 1
+testHeaders: $(srcdir)/*.h $(srcdir)/os/*.h
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(srcdir)" || exit 1
+	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(srcdir)/os" || exit 1
 
-## No such file...
-testHeaders.c:
-	touch testHeaders.c
-CLEANFILES += testHeaders.c
+CLEANFILES += testHeaders
+
+.PHONY: testHeaders

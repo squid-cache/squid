@@ -59,7 +59,7 @@ libnegotiate_la_SOURCES = \
 	negotiate/auth_negotiate.h
 
 
-check_PROGRAMS += testHeaders
+TESTS += testHeaders
 
 ## Special Universal .h dependency test script
 ## aborts if error encountered
@@ -70,5 +70,5 @@ testHeaders: $(top_srcdir)/src/auth/*.h $(top_srcdir)/src/auth/basic/*.h $(top_s
 	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/src/auth/ntlm" || exit 1
 	$(SHELL) $(top_srcdir)/test-suite/testheaders.sh "$(CXXCOMPILE)" "$(top_srcdir)/src/auth/negotiate" || exit 1
 
-CLEANFILES += testHeaders.c
+CLEANFILES += testHeaders
 .PHONY: testHeaders
