@@ -34,12 +34,24 @@
 #include "config.h"
 #include "Debug.h"
 #include "SquidTime.h"
+#include "util.h"
 
-/* for Config */
-#include "structs.h"
+/* for shutting_down flag in xassert() */
+#include "globals.h"
 
+/* cope with no squid.h */
+#ifndef MAXPATHLEN
+#define MAXPATHLEN 256
+#endif
+
+char *Debug::debugOptions = NULL;
+int Debug::override_X = 0;
+int Debug::log_stderr = -1;
+bool Debug::log_syslog = false;
 int Debug::Levels[MAX_DEBUG_SECTIONS];
 int Debug::level;
+char *Debug::cache_log = NULL;
+int Debug::rotateNumber = -1;
 FILE *debug_log = NULL;
 static char *debug_log_file = NULL;
 static int Ctx_Lock = 0;
@@ -62,7 +74,7 @@ typedef BOOL (WINAPI * PFInitializeCriticalSectionAndSpinCount) (LPCRITICAL_SECT
 void
 _db_print(const char *format,...)
 {
-    LOCAL_ARRAY(char, f, BUFSIZ);
+    char f[BUFSIZ]; f[0]='\0';
     va_list args1;
     va_list args2;
     va_list args3;
@@ -139,15 +151,13 @@ _db_print_file(const char *format, va_list args)
         ctx_print();
 
     vfprintf(debug_log, format, args);
-
-//*AYJ:*/    if (!Config.onoff.buffered_logs)
     fflush(debug_log);
 }
 
 static void
 _db_print_stderr(const char *format, va_list args)
 {
-    if (opt_debug_stderr < Debug::level)
+    if (Debug::log_stderr < Debug::level)
         return;
 
     if (debug_log == stderr)
@@ -160,15 +170,15 @@ _db_print_stderr(const char *format, va_list args)
 static void
 _db_print_syslog(const char *format, va_list args)
 {
-    LOCAL_ARRAY(char, tmpbuf, BUFSIZ);
     /* level 0,1 go to syslog */
 
     if (Debug::level > 1)
         return;
 
-    if (0 == opt_syslog_enable)
+    if (!Debug::log_syslog)
         return;
 
+    char tmpbuf[BUFSIZ];
     tmpbuf[0] = '\0';
 
     vsnprintf(tmpbuf, BUFSIZ, format, args);
@@ -177,7 +187,6 @@ _db_print_syslog(const char *format, va_list args)
 
     syslog(Debug::level == 0 ? LOG_WARNING : LOG_NOTICE, "%s", tmpbuf);
 }
-
 #endif /* HAVE_SYSLOG */
 
 static void
@@ -187,12 +196,15 @@ debugArg(const char *arg)
     int l = 0;
     int i;
 
-    if (!strncasecmp(arg, "ALL", 3)) {
+    if (!strncasecmp(arg, "rotate=", 7)) {
+        arg += 7;
+        Debug::rotateNumber = atoi(arg);
+        return;
+    } else if (!strncasecmp(arg, "ALL", 3)) {
         s = -1;
         arg += 4;
     } else {
         s = atoi(arg);
-
         while (*arg && *arg++ != ',');
     }
 
@@ -369,7 +381,8 @@ syslog_facility_names[] = {
 void
 _db_set_syslog(const char *facility)
 {
-    opt_syslog_enable = 1;
+    Debug::log_syslog = true;
+
 #ifdef LOG_LOCAL4
 #ifdef LOG_DAEMON
 
@@ -377,7 +390,7 @@ _db_set_syslog(const char *facility)
 #else
 
     syslog_facility = LOG_LOCAL4;
-#endif
+#endif /* LOG_DAEMON */
 
     if (facility) {
 
@@ -398,7 +411,7 @@ _db_set_syslog(const char *facility)
     if (facility)
         fprintf(stderr, "syslog facility type not supported on your system\n");
 
-#endif
+#endif /* LOG_LOCAL4 */
 }
 
 #endif
@@ -410,7 +423,7 @@ Debug::parseOptions(char const *options)
     char *p = NULL;
     char *s = NULL;
 
-    if (Config.onoff.debug_override_X) {
+    if (override_X) {
         debugs(0, 9, "command-line -X overrides: " << options);
         return;
     }
@@ -437,7 +450,7 @@ _db_init(const char *logfile, const char *options)
 
 #if HAVE_SYSLOG && defined(LOG_LOCAL4)
 
-    if (opt_syslog_enable)
+    if (Debug::log_syslog)
         openlog(APP_SHORTNAME, LOG_PID | LOG_NDELAY | LOG_CONS, syslog_facility);
 
 #endif /* HAVE_SYSLOG */
@@ -449,24 +462,21 @@ _db_init(const char *logfile, const char *options)
 void
 _db_rotate_log(void)
 {
-    int i;
-    LOCAL_ARRAY(char, from, MAXPATHLEN);
-    LOCAL_ARRAY(char, to, MAXPATHLEN);
-#ifdef S_ISREG
-
-    struct stat sb;
-#endif
-
     if (debug_log_file == NULL)
         return;
 
 #ifdef S_ISREG
-
+    struct stat sb;
     if (stat(debug_log_file, &sb) == 0)
         if (S_ISREG(sb.st_mode) == 0)
             return;
-
 #endif
+
+    char from[MAXPATHLEN];
+    from[0] = '\0';
+
+    char to[MAXPATHLEN];
+    to[0] = '\0';
 
     /*
      * NOTE: we cannot use xrename here without having it in a
@@ -474,17 +484,14 @@ _db_rotate_log(void)
      * used everywhere debug.c is used.
      */
     /* Rotate numbers 0 through N up one */
-    for (i = Config.Log.rotateNumber; i > 1;) {
+    for (int i = Debug::rotateNumber; i > 1;) {
         i--;
         snprintf(from, MAXPATHLEN, "%s.%d", debug_log_file, i - 1);
         snprintf(to, MAXPATHLEN, "%s.%d", debug_log_file, i);
 #ifdef _SQUID_MSWIN_
-
         remove
         (to);
-
 #endif
-
         rename(from, to);
     }
 
@@ -495,25 +502,21 @@ _db_rotate_log(void)
 #ifdef _SQUID_MSWIN_
     if (debug_log != stderr)
         fclose(debug_log);
-
 #endif
     /* Rotate the current log to .0 */
-    if (Config.Log.rotateNumber > 0) {
+    if (Debug::rotateNumber > 0) {
         snprintf(to, MAXPATHLEN, "%s.%d", debug_log_file, 0);
 #ifdef _SQUID_MSWIN_
-
         remove
         (to);
-
 #endif
-
         rename(debug_log_file, to);
     }
 
     /* Close and reopen the log.  It may have been renamed "manually"
      * before HUP'ing us. */
     if (debug_log != stderr)
-        debugOpenLog(Config.Log.log);
+        debugOpenLog(Debug::cache_log);
 }
 
 static const char *

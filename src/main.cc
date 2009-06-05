@@ -329,8 +329,8 @@ mainParseOptions(int argc, char *argv[])
         case 'X':
             /** \par X
              * Force full debugging */
-            Debug::parseOptions("debug_options ALL,9");
-            Config.onoff.debug_override_X = 1;
+            Debug::parseOptions("rotate=0 ALL,9");
+            Debug::override_X = 1;
             sigusr2_handle(SIGUSR2);
             break;
 
@@ -357,8 +357,8 @@ mainParseOptions(int argc, char *argv[])
 
         case 'd':
             /** \par d
-             * Set global option opt_debug_stderr to the number given follwoign the option */
-            opt_debug_stderr = atoi(optarg);
+             * Set global option Debug::log_stderr to the number given follwoign the option */
+            Debug::log_stderr = atoi(optarg);
             break;
 
         case 'f':
@@ -525,11 +525,9 @@ mainParseOptions(int argc, char *argv[])
 
         case 'z':
             /** \par z
-             * Set global option opt_debug_stderr and opt_create_swap_dirs */
-            opt_debug_stderr = 1;
-
+             * Set global option Debug::log_stderr and opt_create_swap_dirs */
+            Debug::log_stderr = 1;
             opt_create_swap_dirs = 1;
-
             break;
 
         case 'h':
@@ -715,7 +713,7 @@ mainReconfigureFinish(void *)
     setUmask(Config.umask);
     Mem::Report();
     setEffectiveUser();
-    _db_init(Config.Log.log, Config.debugOptions);
+    _db_init(Debug::cache_log, Debug::debugOptions);
     ipcache_restart();		/* clear stuck entries */
     authenticateUserCacheRestart();	/* clear stuck ACL entries */
     fqdncache_restart();	/* sigh, fqdncache too */
@@ -871,9 +869,9 @@ mainInitialize(void)
     if (icpPortNumOverride != 1)
         Config.Port.icp = (u_short) icpPortNumOverride;
 
-    _db_init(Config.Log.log, Config.debugOptions);
+    _db_init(Debug::cache_log, Debug::debugOptions);
 
-    fd_open(fileno(debug_log), FD_LOG, Config.Log.log);
+    fd_open(fileno(debug_log), FD_LOG, Debug::cache_log);
 
 #if MEM_GEN_TRACE
 
@@ -1548,7 +1546,7 @@ watch_child(char *argv[])
 
     dup2(nullfd, 0);
 
-    if (opt_debug_stderr < 0) {
+    if (Debug::log_stderr < 0) {
         dup2(nullfd, 1);
         dup2(nullfd, 2);
     }

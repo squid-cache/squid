@@ -156,7 +156,7 @@ snmp_confFn(variable_list * Var, snint * ErrP)
     case CONF_LOG_FAC:
         Answer = snmp_var_new(Var->name, Var->name_length);
 
-        if (!(cp = Config.debugOptions))
+        if (!(cp = Debug::debugOptions))
             cp = "None";
 
         Answer->type = ASN_OCTET_STR;

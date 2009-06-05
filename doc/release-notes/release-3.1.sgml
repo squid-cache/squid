@@ -879,6 +879,10 @@ NOCOMMENT_START
                  on error pages if used.
 	</verb>
 
+	<tag>debug_options rotate=</tag>
+	<p>New parameter rotate=N to control number of cache.log rotations independent of other logs.
+
+
         <tag>external_acl_type</tag>
         <p>New options 'ipv4' and 'ipv6' are added to set the IPv4/v6 protocol between squid and its helpers.
            Please be aware of some limits to these options. These options only affet the transport protocol used
@@ -957,6 +961,9 @@ NOCOMMENT_START
 	<tag>https_port intercept sslbump connection-auth[=on|off]</tag>
 	<p>New port options. see http_port.
 
+	<tag>logfile_rotate</tag>
+	<p>No longer controls cache.log rotation. Use debug_options rotate=N instead.
+
 	<tag>maximum_object_size_in_memory</tag>
 	<p>Default size limit increased to 512KB.
 
@@ -1023,7 +1030,6 @@ refresh_pattern .                    0   20%     4320
 	<tag>wccp2_return_method gre l2</tag>
 	<p>Method names now accepted. Replacing the old magic numbers.
 	   '1' becomes 'gre' and '2' becomes 'l2'
-
 
 </descrip>
 

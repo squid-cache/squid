@@ -2242,6 +2242,7 @@ AC_CHECK_HEADERS( \
 	assert.h \
 	bstring.h \
 	crypt.h \
+	cstring \
 	ctype.h \
 	errno.h \
 	execinfo.h \

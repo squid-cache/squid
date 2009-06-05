@@ -165,8 +165,6 @@ typedef struct _storeSwapLogData storeSwapLogData;
 
 typedef struct _StatHist StatHist;
 
-typedef struct _ClientInfo ClientInfo;
-
 typedef struct _cd_guess_stats cd_guess_stats;
 
 typedef struct _CacheDigest CacheDigest;
@@ -234,9 +232,6 @@ typedef void StatHistBinDumper(StoreEntry *, int idx, double val, double size, i
 
 /* MD5 cache keys */
 typedef unsigned char cache_key;
-
-/* context-based debugging, the actual type is subject to change */
-typedef int Ctx;
 
 /* in case we want to change it later */
 typedef ssize_t mb_size_t;
