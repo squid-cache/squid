@@ -52,7 +52,7 @@ bool Debug::log_syslog = false;
 int Debug::Levels[MAX_DEBUG_SECTIONS];
 int Debug::level;
 char *Debug::cache_log = NULL;
-int Debug::rotateNumber = 1;
+int Debug::rotateNumber = -1;
 FILE *debug_log = NULL;
 static char *debug_log_file = NULL;
 static int Ctx_Lock = 0;
