@@ -30,7 +30,7 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.h \
 	LoadableModules.cc
 
-SUBDIRS	= base acl fs repl auth ip icmp
+SUBDIRS	= base acl fs repl auth ip icmp ident
 
 if USE_ADAPTATION
 SUBDIRS += adaptation
@@ -143,13 +143,6 @@ else
 AIOPS_SOURCE = DiskIO/DiskThreads/aiops.cc
 endif
 
-IDENT_ALL_SOURCE = ident.cc ident.h
-if ENABLE_IDENT
-IDENT_SOURCE = $(IDENT_ALL_SOURCE)
-else
-IDENT_SOURCE =
-endif
-
 EXTRA_LIBRARIES = libAIO.a libBlocking.a libDiskDaemon.a libDiskThreads.a
 noinst_LIBRARIES = @DISK_LIBS@
 noinst_LTLIBRARIES = libsquid.la
@@ -158,6 +151,7 @@ noinst_LTLIBRARIES = libsquid.la
 COMMON_LIBS = \
 	libsquid.la \
 	auth/libacls.la \
+	ident/libident.la \
 	acl/libacls.la \
 	acl/libstate.la \
 	auth/libauth.la \
@@ -243,7 +237,6 @@ EXTRA_squid_SOURCES = \
 	htcp.h \
 	ipc.cc \
 	ipc_win32.cc \
-	$(IDENT_ALL_SOURCE) \
 	ProfStats.cc \
 	LeakFinder.cc \
 	LeakFinder.h \
@@ -387,7 +380,6 @@ squid_SOURCES = \
 	ICP.h \
 	icp_v2.cc \
 	icp_v3.cc \
-	$(IDENT_SOURCE) \
 	int.cc \
 	internal.cc \
 	$(IPC_SOURCE) \
@@ -517,6 +509,7 @@ nodist_squid_SOURCES = \
 squid_LDADD = \
 	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
+        ../compat/libcompat.la \
 	-L../lib \
 	@XTRA_OBJS@ \
 	@DISK_LINKOBJS@ \
@@ -1037,7 +1030,6 @@ tests_testCacheManager_SOURCES = \
 	HttpStatusLine.cc \
 	icp_v2.cc \
 	icp_v3.cc \
-	$(IDENT_SOURCE) \
 	$(IPC_SOURCE) \
 	ipcache.cc \
 	int.cc \
@@ -1207,7 +1199,6 @@ tests_testEvent_SOURCES = \
 	HttpStatusLine.cc \
 	icp_v2.cc \
 	icp_v3.cc \
-	$(IDENT_SOURCE) \
 	$(IPC_SOURCE) \
 	ipcache.cc \
 	int.cc \
@@ -1355,7 +1346,6 @@ tests_testEventLoop_SOURCES = \
 	HttpStatusLine.cc \
 	icp_v2.cc \
 	icp_v3.cc \
-	$(IDENT_SOURCE) \
 	$(IPC_SOURCE) \
 	ipcache.cc \
 	int.cc \
@@ -1494,7 +1484,6 @@ tests_test_http_range_SOURCES = \
 	HttpStatusLine.cc \
 	icp_v2.cc \
 	icp_v3.cc \
-	$(IDENT_SOURCE) \
 	int.cc \
 	internal.cc \
 	$(IPC_SOURCE) \
@@ -1645,7 +1634,6 @@ tests_testHttpRequest_SOURCES = \
 	HttpStatusLine.cc \
 	icp_v2.cc \
 	icp_v3.cc \
-	$(IDENT_SOURCE) \
 	$(IPC_SOURCE) \
 	ipcache.cc \
 	int.cc \
@@ -1997,7 +1985,6 @@ tests_testURL_SOURCES = \
 	HttpStatusLine.cc \
 	icp_v2.cc \
 	icp_v3.cc \
-	$(IDENT_SOURCE) \
 	$(IPC_SOURCE) \
 	ipcache.cc \
 	int.cc \

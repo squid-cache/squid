@@ -37,6 +37,9 @@ make_snapshot()
     *-langpack.tar.gz)
 	type=-langpack.tar.gz
 	;;
+    *-manuals.tar.gz)
+	type=-manuals.tar.gz
+	;;
     *)
 	type=`echo $file | sed -e 's/.*\.tar\.gz/.tar.gz/' -e 's/.*\.tar\.bz2/.tar.bz2/' -e 's/.*\.patch/.patch/' -e 's/.*\.diff/.diff/' -e 's/.*-RELEASENOTES.html/-RELEASENOTES.html/' -e 's/^.*ChangeLog.txt$/-ChangeLog.txt/' -e 's/.*-cfgman/-cfgman/'`
     esac
@@ -72,6 +75,10 @@ make_snapshot()
     *-cfgman.html.gz)
 	rm -f $dst/cfgman.html.gz
 	ln -s $dst/$file $dst/cfgman.html.gz
+	;;
+    *-manuals.tar.gz)
+	mkdir -p $dst/manuals
+	tar -C $dst/manuals -zxf $dst/$file
 	;;
     esac
   done

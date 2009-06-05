@@ -88,6 +88,8 @@ libacls_la_SOURCES = \
 	SourceDomain.h \
 	SourceIp.cc \
 	SourceIp.h \
+	Tag.cc \
+	Tag.h \
 	Url.cc \
 	Url.h \
 	UrlPath.cc \
@@ -129,14 +131,3 @@ libacls_la_SOURCES += $(ARP_ACLS)
 endif
 
 EXTRA_libacls_la_SOURCES += $(ARP_ACLS)
-
-
-IDENT_ACLS = Ident.cc Ident.h
-
-if ENABLE_IDENT
-libacls_la_SOURCES += $(IDENT_ACLS)
-endif
-
-EXTRA_libacls_la_SOURCES += $(IDENT_ACLS)
-
-

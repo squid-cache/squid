@@ -257,11 +257,11 @@ dnl set squid required flags
 if test "$GCC" = "yes"; then
 dnl Guido Serassio (serassio@squid-cache.org) 20070811
 dnl Using the latest MinGW (gcc 3.4.5 + mingw-runtime 3.13) cannot build with
-dnl -Wmissing-prototypes -Wmissing-declarations
+dnl -Werror -Wmissing-prototypes -Wmissing-declarations
 dnl TODO: check if the problem will be present in any other newer MinGW release.
     case "$host_os" in
     mingw|mingw32)
-        SQUID_CFLAGS="-Werror -Wall -Wpointer-arith -Wwrite-strings -Wcomments"
+        SQUID_CFLAGS="-Wall -Wpointer-arith -Wwrite-strings -Wcomments"
 	;;
     *)
         SQUID_CFLAGS="-Werror -Wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments"
@@ -1520,10 +1520,8 @@ AC_ARG_ENABLE(ident-lookups,
 ])
 if test $use_ident = 1; then
     AC_DEFINE(USE_IDENT, 1,[Compile in support for Ident (RFC 931) lookups?  Enabled by default.])
-    AM_CONDITIONAL(ENABLE_IDENT, true)
 else
     AC_DEFINE(USE_IDENT, 0)
-    AM_CONDITIONAL(ENABLE_IDENT, false)
 fi
 
 AM_CONDITIONAL(USE_DNSSERVER, false)
@@ -2626,17 +2624,12 @@ case "$host_os" in
     save_LIBS="$LIBS"
     for curlib in ws2_32 wsock32; do
 	LIBS="$LIBS -l$curlib"
-	AC_TRY_LINK([
-			char __attribute__((stdcall)) socket(int,int,int);
-			char __attribute__((stdcall)) select(int,int,int,int,int);
-			char __attribute__((stdcall)) closesocket(int);
-			char __attribute__((stdcall)) gethostname(int,int);
-			],
+	AC_TRY_LINK([#include <winsock.h>],
 			[
-			socket(1,2,3);
-			select(1,2,3,4,5);
-			closesocket(1);
-			gethostname(1,2);
+			socket(0,0,0);
+			select(0,NULL,NULL,NULL,NULL);
+			closesocket(0);
+			gethostname(NULL,0);
 			],
 			have_winsock=yes, have_winsock=no)
 
@@ -3448,15 +3441,20 @@ AC_TRY_RUN([
 main ()
 {
 	FILE *fp;
-        int fd,val=0,len=sizeof(int);
+        int fd,val=0;
 #if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+        int len=sizeof(int);
 	WSADATA wsaData;
 	WSAStartup(2, &wsaData);
+#else
+        socklen_t len=sizeof(socklen_t);
 #endif
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) exit(1);
-        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &val, &len) < 0) exit(1);
 #if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&val, &len) < 0) exit(1);
 	WSACleanup();
+#else
+        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &val, &len) < 0) exit(1);
 #endif
 	if (val<=0) exit(1);
         fp = fopen("conftestval", "w");
@@ -3491,15 +3489,20 @@ AC_TRY_RUN([
 main ()
 {
 	FILE *fp;
-        int fd,val=0,len=sizeof(int);
+        int fd,val=0;
 #if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+        int len=sizeof(int);
 	WSADATA wsaData;
 	WSAStartup(2, &wsaData);
+#else
+        socklen_t len=sizeof(socklen_t);
 #endif
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) exit(1);
-        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &val, &len) < 0) exit(1);
 #if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&val, &len) < 0) exit(1);
 	WSACleanup();
+#else
+        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &val, &len) < 0) exit(1);
 #endif
 	if (val <= 0) exit(1);
 	fp = fopen("conftestval", "w"); 
@@ -3534,15 +3537,20 @@ AC_TRY_RUN([
 main ()
 {
 	FILE *fp;
-        int fd,val=0,len=sizeof(int);
+        int fd,val=0;
 #if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+        int len=sizeof(int);
 	WSADATA wsaData;
 	WSAStartup(2, &wsaData);
+#else
+        socklen_t len=sizeof(socklen_t);
 #endif
 	if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) exit(1);
-        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &val, &len) < 0) exit(1);
 #if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&val, &len) < 0) exit(1);
 	WSACleanup();
+#else
+        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &val, &len) < 0) exit(1);
 #endif
 	if (val <= 0) exit(1);
 	fp = fopen("conftestval", "w"); 
@@ -3581,15 +3589,20 @@ AC_TRY_RUN([
 main ()
 {
 	FILE *fp;
-        int fd,val=0,len=sizeof(int);
+        int fd,val=0;
 #if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+        int len=sizeof(int);
 	WSADATA wsaData;
 	WSAStartup(2, &wsaData);
+#else
+        socklen_t len=sizeof(socklen_t);
 #endif
 	if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) exit(1);
-        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &val, &len) < 0) exit(1);
 #if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&val, &len) < 0) exit(1);
 	WSACleanup();
+#else
+        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &val, &len) < 0) exit(1);
 #endif
 	if (val <= 0) exit(1);
 	fp = fopen("conftestval", "w"); 
@@ -3820,6 +3833,7 @@ AC_CONFIG_FILES([\
 	src/adaptation/ecap/Makefile \
 	src/esi/Makefile \
 	src/icmp/Makefile \
+	src/ident/Makefile \
 	src/ip/Makefile \
 	contrib/Makefile \
 	snmplib/Makefile \

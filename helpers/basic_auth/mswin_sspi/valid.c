@@ -125,7 +125,7 @@ Valid_User(char *UserName, char *Password, char *Group)
     int result = NTV_SERVER_ERROR;
     size_t i;
     char NTDomain[256];
-    char *domain_qualify;
+    char *domain_qualify = NULL;
     char DomainUser[256];
     char User[256];
 

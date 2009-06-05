@@ -24,9 +24,6 @@
 #include "acl/HttpRepHeader.h"
 #include "acl/HttpReqHeader.h"
 #include "acl/HttpStatus.h"
-#if USE_IDENT
-#include "acl/Ident.h"
-#endif
 #include "acl/IntRange.h"
 #include "acl/Ip.h"
 #include "acl/MaxConnection.h"
@@ -56,6 +53,7 @@
 #include "acl/Strategised.h"
 #include "acl/Strategy.h"
 #include "acl/StringData.h"
+#include "acl/Tag.h"
 #include "acl/TimeData.h"
 #include "acl/Time.h"
 #include "acl/Url.h"
@@ -64,6 +62,9 @@
 #include "acl/UserData.h"
 #include "auth/AclProxyAuth.h"
 #include "auth/AclMaxUserIp.h"
+#if USE_IDENT
+#include "ident/AclIdent.h"
+#endif
 
 
 ACL::Prototype ACLBrowser::RegistryProtoype(&ACLBrowser::RegistryEntry_, "browser");
@@ -149,3 +150,6 @@ ACLProxyAuth ACLProxyAuth::RegexRegistryEntry_(new ACLRegexData, "proxy_auth_reg
 
 ACL::Prototype ACLMaxUserIP::RegistryProtoype(&ACLMaxUserIP::RegistryEntry_, "max_user_ip");
 ACLMaxUserIP ACLMaxUserIP::RegistryEntry_("max_user_ip");
+
+ACL::Prototype ACLTag::RegistryProtoype(&ACLTag::RegistryEntry_, "tag");
+ACLStrategised<const char *> ACLTag::RegistryEntry_(new ACLStringData, ACLTagStrategy::Instance(), "tag");

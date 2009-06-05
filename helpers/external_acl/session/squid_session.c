@@ -39,6 +39,13 @@
 #if defined(HAVE_DB_185_H)
 #include <db_185.h>
 #elif defined(HAVE_DB_H)
+/* At this point all Bit Types are already defined, so we must 
+   protect from multiple type definition on platform where
+   __BIT_TYPES_DEFINED__ is not defined.
+ */
+#ifndef        __BIT_TYPES_DEFINED__
+#define        __BIT_TYPES_DEFINED__
+#endif
 #include <db.h>
 #else
 #include <db_185.h>

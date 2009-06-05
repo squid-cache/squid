@@ -173,10 +173,7 @@ struct SquidConfig {
         int icp_query_max;	/* msec */
         int icp_query_min;	/* msec */
         int mcast_icp_query;	/* msec */
-#if USE_IDENT
 
-        time_t ident;
-#endif
 #if !USE_DNSSERVERS
 
         time_t idns_retransmit;
@@ -464,11 +461,6 @@ struct SquidConfig {
 #if HTTP_VIOLATIONS
         acl_access *brokenPosts;
 #endif
-#if USE_IDENT
-
-        acl_access *identLookup;
-#endif
-
         acl_access *redirector;
         acl_access *reply;
         acl_address *outgoing_address;

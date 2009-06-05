@@ -82,6 +82,14 @@ CacheManager::GetInstance()
 void
 CacheManager::registerAction(char const * action, char const * desc, OBJH * handler, int pw_req_flag, int atomic) {}
 
+/* MinGW needs also a stub of death() */
+void
+death(int sig)
+{
+    std::cout << "Fatal: Signal " <<  sig;
+    exit (1);
+}
+
 
 /* end stub functions */
 

@@ -652,6 +652,9 @@ DOC_START
 	acl aclname ext_user_regex [-i] pattern ...
 	  # string match on username returned by external acl helper
 	  # use REQUIRED to accept any non-null user name.
+	  #
+	acl aclname tag tagvalue ...
+	  # string match on tag returned by external acl helper
 
 Examples:
 acl macaddress arp 09:00:2b:23:45:67
@@ -930,7 +933,7 @@ TYPE: acl_access
 IFDEF: USE_IDENT
 DEFAULT: none
 DEFAULT_IF_NONE: deny all
-LOC: Config.accessList.identLookup
+LOC: Ident::TheConfig.identLookup
 DOC_START
 	A list of ACL elements which, if matched, cause an ident
 	(RFC 931) lookup to be performed for this request.  For
@@ -942,11 +945,11 @@ DOC_START
 	To enable ident lookups for specific client addresses, you
 	can follow this example:
 
-	acl ident_aware_hosts src 198.168.1.0/255.255.255.0
+	acl ident_aware_hosts src 198.168.1.0/24
 	ident_lookup_access allow ident_aware_hosts
 	ident_lookup_access deny all
 
-	Only src type ACL checks are fully supported.  A src_domain
+	Only src type ACL checks are fully supported.  A srcdomain
 	ACL might work at times, but it will not always provide
 	the correct result.
 DOC_END
@@ -1095,7 +1098,7 @@ DOC_START
 	   name=	Specifies a internal name for the port. Defaults to
 			the port specification (port or addr:port)
 
-	   keepalive[=idle,interval,timeout]
+	   tcpkeepalive[=idle,interval,timeout]
 			Enable TCP keepalive probes of idle connections
 			idle is the initial time before TCP starts probing
 			the connection, interval how often to probe, and
@@ -1230,7 +1233,7 @@ DOC_START
 	tcp_outgoing_tos ds-field [!]aclname ...
 
 	Example where normal_service_net uses the TOS value 0x00
-	and normal_service_net uses 0x20
+	and good_service_net uses 0x20
 
 	acl normal_service_net src 10.0.0.0/255.255.255.0
 	acl good_service_net src 10.0.1.0/255.255.255.0
@@ -3640,7 +3643,7 @@ DOC_END
 NAME: ident_timeout
 TYPE: time_t
 IFDEF: USE_IDENT
-LOC: Config.Timeout.ident
+LOC: Ident::TheConfig.timeout
 DEFAULT: 10 seconds
 DOC_START
 	Maximum time to wait for IDENT lookups to complete.
