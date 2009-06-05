@@ -1,7 +1,4 @@
 #include "config.h"
-
-#include <stdexcept>
-
 #include "testUfs.h"
 #include "Store.h"
 #include "SwapDir.h"
@@ -12,6 +9,10 @@
 #include "HttpHeader.h"
 #include "HttpReply.h"
 #include "testStoreSupport.h"
+
+#if HAVE_STDEXCEPT
+#include <stdexcept>
+#endif
 
 #define TESTDIR "testUfs__testUfsSearch"
 

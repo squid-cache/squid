@@ -37,8 +37,9 @@
 
 #include "config.h"
 
-/** todo checks to wrap this include properly */
+#if HAVE_OSTREAM
 #include <ostream>
+#endif
 
 /* squid string placeholder (for printf) */
 #ifndef SQUIDSTRINGPH

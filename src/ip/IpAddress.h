@@ -59,9 +59,12 @@
 #include <netdb.h>
 #endif
 
+#if HAVE_IOSFWD
 #include <iosfwd>
+#endif
+#if HAVE_OSTREAM
 #include <ostream>
-
+#endif
 
 /* FreeBSD hack:
  *   This OS has at least one version that defines these as private

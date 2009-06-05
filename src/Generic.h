@@ -32,10 +32,11 @@
 #ifndef SQUID_GENERIC_H
 #define SQUID_GENERIC_H
 
-/** \todo CLEANUP: checks towrap this header properly */
-#include <ostream>
-
 #include "dlink.h"
+
+#if HAVE_OSTREAM
+#include <ostream>
+#endif
 
 template <class _Arg, class _Result>
 struct unary_function {

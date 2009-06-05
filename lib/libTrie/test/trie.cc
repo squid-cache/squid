@@ -19,7 +19,10 @@
 
 #include "Trie.h"
 #include "TrieCharTransform.h"
+
+#if HAVE_IOSTREAM
 #include <iostream>
+#endif
 
 bool
 CaseSensitiveCheck()

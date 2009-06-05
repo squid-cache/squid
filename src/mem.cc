@@ -33,10 +33,6 @@
  */
 
 #include "squid.h"
-
-#include <iomanip>
-#include <ostream>
-
 #include "event.h"
 #include "CacheManager.h"
 #include "ClientInfo.h"
@@ -46,6 +42,13 @@
 #include "StoreEntryStream.h"
 #include "MemBuf.h"
 #include "SquidTime.h"
+
+#if HAVE_IOMANIP
+#include <iomanip>
+#endif
+#if HAVE_OSTREAM
+#include <ostream>
+#endif
 
 /* module globals */
 
