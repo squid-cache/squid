@@ -32,6 +32,7 @@ TRANSLATIONS = \
 	id \
 	it \
 	ja \
+	ko \
 	lv \
 	nl \
 	pt-br \
@@ -49,7 +50,6 @@ TRANSLATIONS = \
 LANGUAGES	= \
 		Hebrew \
 		Hungarian \
-		Korean \
 		Lithuanian \
 		Polish \
 		Portuguese \
