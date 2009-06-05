@@ -652,6 +652,9 @@ DOC_START
 	acl aclname ext_user_regex [-i] pattern ...
 	  # string match on username returned by external acl helper
 	  # use REQUIRED to accept any non-null user name.
+	  #
+	acl aclname tag tagvalue ...
+	  # string match on tag returned by external acl helper
 
 Examples:
 acl macaddress arp 09:00:2b:23:45:67

@@ -785,9 +785,10 @@ NOCOMMENT_START
 <sect1>Changes to existing tags<label id="modifiedtags">
 <p>
 <descrip>
-	<tag>acl dst ipv6</tag>
+	<tag>acl</tag>
 	<p>New preset content <em>ipv6</em> available as a preset type in the src and dst ACL matching all of the public IPv6 network space.
 	<p>New acl type myportname, matching the name of the http_port or https_port where the request was accepted.
+	<p>New acl type tag, matching the tag= returned from the external_acl_type helper.
 	<p>New acl type peername, matching against a named cache_peer entry where the request will be attempted first.
 	   NP: peername currently is limited to only match the first peer possible.
         <verb>
@@ -795,6 +796,7 @@ NOCOMMENT_START
 	acl aclname src ipv6			# request from IPv6 address
         acl aclname myportname 3128 ...         # http(s)_port name
 	acl aclname peername myPeer ...		# cache_peer ... name=myPeer
+	acl aclname tag value ...		# tag= option from external ACL
 	</verb>
 
 	<tag>auth_param ntlm, basic, digest</tag>

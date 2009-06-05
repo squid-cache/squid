@@ -88,6 +88,8 @@ libacls_la_SOURCES = \
 	SourceDomain.h \
 	SourceIp.cc \
 	SourceIp.h \
+	Tag.cc \
+	Tag.h \
 	Url.cc \
 	Url.h \
 	UrlPath.cc \
