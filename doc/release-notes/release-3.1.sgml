@@ -1185,7 +1185,6 @@ This section gives an account of those changes in three categories:
 
 	<tag>http_port</tag>
 	<p><em>no-connection-auth</em> replaced by <em>connection-auth=[on|off]</em>. Default is ON.
-	<p><em>tcpkeepalive=</em> replaced by <em>keepalive=</em>
 	<p><em>transparent</em> option replaced by <em>intercept</em>
 
 	<tag>httpd_accel_no_pmtu_disc</tag>
