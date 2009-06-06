@@ -471,9 +471,9 @@ main(int argc, char **argv)
 	}
 	rfc1738_unescape(user);
 	if (strip_nt_domain) {
-	    char *u = strchr(user, '\\');
+	    char *u = strrchr(user, '\\');
 	    if (!u)
-		u = strchr(user, '/');
+		u = strrchr(user, '/');
 	    if (u && u[1])
 		user = u + 1;
 	}
