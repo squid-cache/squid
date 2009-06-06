@@ -2635,7 +2635,7 @@ DOC_END
 
 NAME: debug_options
 TYPE: eol
-DEFAULT: rotate=1 ALL,1
+DEFAULT: ALL,1
 LOC: Debug::debugOptions
 DOC_START
 	Logging options are set as section,level where each source file
@@ -2646,7 +2646,8 @@ DOC_START
 	The magic word "ALL" sets debugging levels for all sections.
 	We recommend normally running with "ALL,1".
 
-	The rotate= option can be increased to keep more of these logs.
+	The rotate=N option can be used to keep more or less of these logs
+	than would otherwise be kept by logfile_rotate.
 	For most uses a single log should be enough to monitor current
 	events affecting Squid.
 DOC_END
