@@ -1094,7 +1094,7 @@ mainInitialize(void)
 }
 
 /// unsafe main routine -- may throw
-static int SquidMain(int argc, char **argv);
+int SquidMain(int argc, char **argv);
 /// unsafe main routine wrapper to catch exceptions
 static int SquidMainSafe(int argc, char **argv);
 
@@ -1125,7 +1125,7 @@ SquidMainSafe(int argc, char **argv)
     return -1; // not reached
 }
 
-static int
+int
 SquidMain(int argc, char **argv)
 {
 #ifdef _SQUID_WIN32_

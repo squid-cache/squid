@@ -2610,17 +2610,12 @@ case "$host_os" in
     save_LIBS="$LIBS"
     for curlib in ws2_32 wsock32; do
 	LIBS="$LIBS -l$curlib"
-	AC_TRY_LINK([
-			char __attribute__((stdcall)) socket(int,int,int);
-			char __attribute__((stdcall)) select(int,int,int,int,int);
-			char __attribute__((stdcall)) closesocket(int);
-			char __attribute__((stdcall)) gethostname(int,int);
-			],
+	AC_TRY_LINK([#include <winsock.h>],
 			[
-			socket(1,2,3);
-			select(1,2,3,4,5);
-			closesocket(1);
-			gethostname(1,2);
+			socket(0,0,0);
+			select(0,NULL,NULL,NULL,NULL);
+			closesocket(0);
+			gethostname(NULL,0);
 			],
 			have_winsock=yes, have_winsock=no)
 
@@ -3438,9 +3433,11 @@ main ()
 	WSAStartup(2, &wsaData);
 #endif
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) exit(1);
-        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &val, &len) < 0) exit(1);
 #if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&val, &len) < 0) exit(1);
 	WSACleanup();
+#else
+        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &val, &len) < 0) exit(1);
 #endif
 	if (val<=0) exit(1);
         fp = fopen("conftestval", "w");
@@ -3481,9 +3478,11 @@ main ()
 	WSAStartup(2, &wsaData);
 #endif
 	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) exit(1);
-        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &val, &len) < 0) exit(1);
 #if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&val, &len) < 0) exit(1);
 	WSACleanup();
+#else
+        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &val, &len) < 0) exit(1);
 #endif
 	if (val <= 0) exit(1);
 	fp = fopen("conftestval", "w"); 
@@ -3524,9 +3523,11 @@ main ()
 	WSAStartup(2, &wsaData);
 #endif
 	if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) exit(1);
-        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &val, &len) < 0) exit(1);
 #if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&val, &len) < 0) exit(1);
 	WSACleanup();
+#else
+        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &val, &len) < 0) exit(1);
 #endif
 	if (val <= 0) exit(1);
 	fp = fopen("conftestval", "w"); 
@@ -3571,9 +3572,11 @@ main ()
 	WSAStartup(2, &wsaData);
 #endif
 	if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) exit(1);
-        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &val, &len) < 0) exit(1);
 #if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
+        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&val, &len) < 0) exit(1);
 	WSACleanup();
+#else
+        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &val, &len) < 0) exit(1);
 #endif
 	if (val <= 0) exit(1);
 	fp = fopen("conftestval", "w"); 
