@@ -84,7 +84,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] =
         {"Cache-Control", HDR_CACHE_CONTROL, ftPCc},
         {"Connection", HDR_CONNECTION, ftStr},
         {"Content-Base", HDR_CONTENT_BASE, ftStr},
-    {"Content-Disposition", HDR_CONTENT_DISPOSITION, ftStr},  /* for now */
+        {"Content-Disposition", HDR_CONTENT_DISPOSITION, ftStr},  /* for now */
         {"Content-Encoding", HDR_CONTENT_ENCODING, ftStr},
         {"Content-Language", HDR_CONTENT_LANGUAGE, ftStr},
         {"Content-Length", HDR_CONTENT_LENGTH, ftInt64},
@@ -124,6 +124,8 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] =
         {"Title", HDR_TITLE, ftStr},
         {"Trailers", HDR_TRAILERS, ftStr},
         {"Transfer-Encoding", HDR_TRANSFER_ENCODING, ftStr},
+        {"Translate", HDR_TRANSLATE, ftStr},	/* for now. may need to crop */
+        {"Unless-Modified-Since", HDR_UNLESS_MODIFIED_SINCE, ftStr},  /* for now ignore. may need to crop */
         {"Upgrade", HDR_UPGRADE, ftStr},	/* for now */
         {"User-Agent", HDR_USER_AGENT, ftStr},
         {"Vary", HDR_VARY, ftStr},	/* for now */

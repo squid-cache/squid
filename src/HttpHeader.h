@@ -98,6 +98,8 @@ typedef enum {
     HDR_TITLE,
     HDR_TRAILERS,
     HDR_TRANSFER_ENCODING,
+    HDR_TRANSLATE,             /* IIS custom header we may need to cut off */
+    HDR_UNLESS_MODIFIED_SINCE,             /* IIS custom header we may need to cut off */
     HDR_UPGRADE,
     HDR_USER_AGENT,
     HDR_VARY,
