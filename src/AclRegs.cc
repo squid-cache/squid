@@ -24,9 +24,6 @@
 #include "acl/HttpRepHeader.h"
 #include "acl/HttpReqHeader.h"
 #include "acl/HttpStatus.h"
-#if USE_IDENT
-#include "acl/Ident.h"
-#endif
 #include "acl/IntRange.h"
 #include "acl/Ip.h"
 #include "acl/MaxConnection.h"
@@ -65,6 +62,9 @@
 #include "acl/UserData.h"
 #include "auth/AclProxyAuth.h"
 #include "auth/AclMaxUserIp.h"
+#if USE_IDENT
+#include "ident/AclIdent.h"
+#endif
 
 
 ACL::Prototype ACLBrowser::RegistryProtoype(&ACLBrowser::RegistryEntry_, "browser");

@@ -1503,10 +1503,8 @@ AC_ARG_ENABLE(ident-lookups,
 ])
 if test $use_ident = 1; then
     AC_DEFINE(USE_IDENT, 1,[Compile in support for Ident (RFC 931) lookups?  Enabled by default.])
-    AM_CONDITIONAL(ENABLE_IDENT, true)
 else
     AC_DEFINE(USE_IDENT, 0)
-    AM_CONDITIONAL(ENABLE_IDENT, false)
 fi
 
 AM_CONDITIONAL(USE_DNSSERVER, false)
@@ -3807,6 +3805,7 @@ AC_CONFIG_FILES([\
 	src/adaptation/ecap/Makefile \
 	src/esi/Makefile \
 	src/icmp/Makefile \
+	src/ident/Makefile \
 	src/ip/Makefile \
 	contrib/Makefile \
 	snmplib/Makefile \

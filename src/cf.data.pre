@@ -933,7 +933,7 @@ TYPE: acl_access
 IFDEF: USE_IDENT
 DEFAULT: none
 DEFAULT_IF_NONE: deny all
-LOC: Config.accessList.identLookup
+LOC: Ident::TheConfig.identLookup
 DOC_START
 	A list of ACL elements which, if matched, cause an ident
 	(RFC 931) lookup to be performed for this request.  For
@@ -945,11 +945,11 @@ DOC_START
 	To enable ident lookups for specific client addresses, you
 	can follow this example:
 
-	acl ident_aware_hosts src 198.168.1.0/255.255.255.0
+	acl ident_aware_hosts src 198.168.1.0/24
 	ident_lookup_access allow ident_aware_hosts
 	ident_lookup_access deny all
 
-	Only src type ACL checks are fully supported.  A src_domain
+	Only src type ACL checks are fully supported.  A srcdomain
 	ACL might work at times, but it will not always provide
 	the correct result.
 DOC_END
@@ -3644,7 +3644,7 @@ DOC_END
 NAME: ident_timeout
 TYPE: time_t
 IFDEF: USE_IDENT
-LOC: Config.Timeout.ident
+LOC: Ident::TheConfig.timeout
 DEFAULT: 10 seconds
 DOC_START
 	Maximum time to wait for IDENT lookups to complete.

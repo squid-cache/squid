@@ -42,7 +42,7 @@
 #include "ExternalACL.h"
 #include "Store.h"
 #include "ICP.h"
-#include "ident.h"
+#include "ident/Ident.h"
 #include "HttpReply.h"
 #include "pconn.h"
 #include "Mem.h"
@@ -946,10 +946,9 @@ mainInitialize(void)
     accessLogInit();
 
 #if USE_IDENT
-
-    identInit();
-
+    Ident::Init();
 #endif
+
 #ifdef SQUID_SNMP
 
     snmpInit();

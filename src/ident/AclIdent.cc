@@ -35,12 +35,15 @@
  */
 
 #include "squid.h"
-#include "acl/Ident.h"
+
+#if USE_IDENT
+
 #include "acl/FilledChecklist.h"
 #include "acl/RegexData.h"
 #include "acl/UserData.h"
 #include "client_side.h"
-#include "ident.h"
+#include "ident/AclIdent.h"
+#include "ident/Ident.h"
 
 ACLIdent::~ACLIdent()
 {
@@ -70,7 +73,7 @@ void
 ACLIdent::parse()
 {
     if (!data) {
-        debugs(28, 3, "aclParseUserList: current is null. Creating");
+        debugs(28, 3, HERE << "current is null. Creating");
         data = new ACLUserData;
     }
 
@@ -86,7 +89,7 @@ ACLIdent::match(ACLChecklist *cl)
     } else if (checklist->conn() != NULL && checklist->conn()->rfc931[0]) {
         return data->match(checklist->conn()->rfc931);
     } else {
-        debugs(28, 3, "ACLIdent::match() - switching to ident lookup state");
+        debugs(28, 3, HERE << "switching to ident lookup state");
         checklist->changeState(IdentLookup::Instance());
         return 0;
     }
@@ -124,12 +127,11 @@ IdentLookup::checkForAsync(ACLChecklist *cl)const
 {
     ACLFilledChecklist *checklist = Filled(cl);
     if (checklist->conn() != NULL) {
-        debugs(28, 3, "IdentLookup::checkForAsync: Doing ident lookup" );
+        debugs(28, 3, HERE << "Doing ident lookup" );
         checklist->asyncInProgress(true);
-        identStart(checklist->conn()->me, checklist->conn()->peer,
-                   LookupDone, checklist);
+        Ident::Start(checklist->conn()->me, checklist->conn()->peer, LookupDone, checklist);
     } else {
-        debugs(28, 1, "IdentLookup::checkForAsync: Can't start ident lookup. No client connection" );
+        debugs(28, DBG_IMPORTANT, "IdentLookup::checkForAsync: Can't start ident lookup. No client connection" );
         checklist->currentAnswer(ACCESS_DENIED);
         checklist->markFinished();
     }
@@ -139,7 +141,7 @@ void
 IdentLookup::LookupDone(const char *ident, void *data)
 {
     ACLFilledChecklist *checklist = Filled(static_cast<ACLChecklist*>(data));
-    assert (checklist->asyncState() == IdentLookup::Instance());
+    assert(checklist->asyncState() == IdentLookup::Instance());
 
     if (ident) {
         xstrncpy(checklist->rfc931, ident, USER_IDENT_SZ);
@@ -155,8 +157,8 @@ IdentLookup::LookupDone(const char *ident, void *data)
         xstrncpy(checklist->conn()->rfc931, checklist->rfc931, USER_IDENT_SZ);
 
     checklist->asyncInProgress(false);
-
-    checklist->changeState (ACLChecklist::NullState::Instance());
-
+    checklist->changeState(ACLChecklist::NullState::Instance());
     checklist->check();
 }
+
+#endif /* USE_IDENT */
