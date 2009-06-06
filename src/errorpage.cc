@@ -860,7 +860,7 @@ errorBuildReply(ErrorState * err)
 
     if (strchr(name, ':')) {
         /* Redirection */
-        rep->setHeaders(version, HTTP_MOVED_TEMPORARILY, NULL, "text/html", 0, 0, squid_curtime);
+        rep->setHeaders(version, HTTP_MOVED_TEMPORARILY, NULL, "text/html", 0, 0, -1);
 
         if (err->request) {
             char *quoted_url = rfc1738_escape_part(urlCanonical(err->request));
@@ -870,7 +870,7 @@ errorBuildReply(ErrorState * err)
         httpHeaderPutStrf(&rep->header, HDR_X_SQUID_ERROR, "%d %s", err->httpStatus, "Access Denied");
     } else {
         MemBuf *content = errorBuildContent(err);
-        rep->setHeaders(version, err->httpStatus, NULL, "text/html", content->contentSize(), 0, squid_curtime);
+        rep->setHeaders(version, err->httpStatus, NULL, "text/html", content->contentSize(), 0, -1);
         /*
          * include some information for downstream caches. Implicit
          * replaceable content. This isn't quite sufficient. xerrno is not
