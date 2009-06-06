@@ -34,6 +34,7 @@ TRANSLATIONS = \
 	ja \
 	ko \
 	lv \
+	ms \
 	nl \
 	pt-br \
 	ro \
