@@ -99,7 +99,10 @@ libntlmauth_a_SOURCES = \
 libntlmauth_a_LIBADD = \
 	@LIBOBJS@
 libsspwin32_a_SOURCES = \
+	base64.c \
 	sspwin32.c
+libsspwin32_a_LIBADD = \
+	@LIBOBJS@
 
 
 TESTS += tests/testAll

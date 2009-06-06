@@ -255,11 +255,11 @@ dnl set squid required flags
 if test "$GCC" = "yes"; then
 dnl Guido Serassio (serassio@squid-cache.org) 20070811
 dnl Using the latest MinGW (gcc 3.4.5 + mingw-runtime 3.13) cannot build with
-dnl -Wmissing-prototypes -Wmissing-declarations
+dnl -Werror -Wmissing-prototypes -Wmissing-declarations
 dnl TODO: check if the problem will be present in any other newer MinGW release.
     case "$host_os" in
     mingw|mingw32)
-        SQUID_CFLAGS="-Werror -Wall -Wpointer-arith -Wwrite-strings -Wcomments"
+        SQUID_CFLAGS="-Wall -Wpointer-arith -Wwrite-strings -Wcomments"
 	;;
     *)
         SQUID_CFLAGS="-Werror -Wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments"
