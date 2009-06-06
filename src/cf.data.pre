@@ -1090,7 +1090,7 @@ DOC_START
 	tcp_outgoing_tos ds-field [!]aclname ...
 
 	Example where normal_service_net uses the TOS value 0x00
-	and normal_service_net uses 0x20
+	and good_service_net uses 0x20
 
 	acl normal_service_net src 10.0.0.0/255.255.255.0
 	acl good_service_net src 10.0.1.0/255.255.255.0
