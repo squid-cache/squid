@@ -1,0 +1,31 @@
+#!/bin/sh
+#
+# Configure options currently supported by MinGW environment
+#
+OPTS=" \
+	--prefix=c:/squid \
+	--enable-storeio="ufs,aufs" \
+	--enable-removal-policies="lru,heap" \
+	--enable-delay-pools \
+	--enable-cache-digests \
+	--enable-snmp \
+	--enable-htcp \
+	--enable-carp \
+	--enable-esi \
+	--enable-useragent-log \
+	--enable-referer-log \
+	--disable-wccp \
+	--disable-wccpv2 \
+	--enable-arp-acl \
+	--with-large-files \
+	--enable-icap-client \
+	--enable-forw-via-db \
+	--enable-icmp \
+	--enable-forw-via-db \
+	--enable-follow-x-forwarded-for \
+	--enable-cpu-profiling \
+	--enable-win32-service \
+	--enable-default-hostsfile=none \
+	--enable-auth="basic,ntlm,digest,negotiate" \
+	--enable-disk-io="Blocking,AIO,DiskThreads" \
+"
