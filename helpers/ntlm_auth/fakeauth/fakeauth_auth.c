@@ -159,6 +159,7 @@ ntlmMakeChallenge(struct ntlm_challenge *chal, int32_t flags)
 	(NEGOTIATE_UNICODE & flags ? NEGOTIATE_UNICODE : NEGOTIATE_ASCII)
 	);
     chal->hdr.type = htole32(NTLM_CHALLENGE);
+    chal->flags = flags;
     chal->unknown[6] = htole16(0x003a);
 
     d = (char *) chal + 48;
