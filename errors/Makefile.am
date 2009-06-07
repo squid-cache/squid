@@ -35,6 +35,7 @@ TRANSLATIONS = \
 	it \
 	ja \
 	ko \
+	lt \
 	lv \
 	ms \
 	nl \
@@ -51,7 +52,6 @@ TRANSLATIONS = \
 # Legacy language contributions...
 #
 LANGUAGES	= \
-		Lithuanian \
 		Polish \
 		Portuguese \
 		Slovak
