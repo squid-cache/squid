@@ -522,9 +522,7 @@ int WIN32_Subsystem_Init(int * argc, char *** argv)
             return 1;
 
         /* Register the service Handler function */
-        svcHandle =
-            RegisterServiceCtrlHandler(WIN32_Service_name,
-                                       WIN32_svcHandler);
+        svcHandle = RegisterServiceCtrlHandler(WIN32_Service_name, WIN32_svcHandler);
 
         if (svcHandle == 0)
             return 1;
@@ -542,17 +540,15 @@ int WIN32_Subsystem_Init(int * argc, char *** argv)
         safe_free(ConfigFile);
 
         /* get config file from Windows Registry */
-        if (RegOpenKey(HKEY_LOCAL_MACHINE, REGKEY, &hndKey) == ERROR_SUCCESS) {
+	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, REGKEY, 0, KEY_QUERY_VALUE, &hndKey) == ERROR_SUCCESS) {
             DWORD Type = 0;
             DWORD Size = 0;
             LONG Result;
-            Result =
-                RegQueryValueEx(hndKey, CONFIGFILE, NULL, &Type, NULL, &Size);
+            Result = RegQueryValueEx(hndKey, CONFIGFILE, NULL, &Type, NULL, &Size);
 
             if (Result == ERROR_SUCCESS && Size) {
                 ConfigFile = static_cast<char *>(xmalloc(Size));
-                RegQueryValueEx(hndKey, CONFIGFILE, NULL, &Type, (unsigned char *)ConfigFile,
-                                &Size);
+                RegQueryValueEx(hndKey, CONFIGFILE, NULL, &Type, (unsigned char *)ConfigFile, &Size);
             } else
                 ConfigFile = xstrdup(DefaultConfigFile);
 
@@ -560,13 +556,11 @@ int WIN32_Subsystem_Init(int * argc, char *** argv)
 
             Type = 0;
 
-            Result =
-                RegQueryValueEx(hndKey, COMMANDLINE, NULL, &Type, NULL, &Size);
+            Result = RegQueryValueEx(hndKey, COMMANDLINE, NULL, &Type, NULL, &Size);
 
             if (Result == ERROR_SUCCESS && Size) {
                 WIN32_Service_Command_Line = static_cast<char *>(xmalloc(Size));
-                RegQueryValueEx(hndKey, COMMANDLINE, NULL, &Type, (unsigned char *)WIN32_Service_Command_Line,
-                                &Size);
+                RegQueryValueEx(hndKey, COMMANDLINE, NULL, &Type, (unsigned char *)WIN32_Service_Command_Line, &Size);
             } else
                 WIN32_Service_Command_Line = xstrdup("");
 

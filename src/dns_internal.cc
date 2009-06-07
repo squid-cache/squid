@@ -58,6 +58,9 @@
 #ifndef USE_DNSSERVERS
 #ifdef _SQUID_WIN32_
 #include "squid_windows.h"
+#define REG_TCPIP_PARA_INTERFACES "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces"
+#define REG_TCPIP_PARA "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters"
+#define REG_VXD_MSTCP "SYSTEM\\CurrentControlSet\\Services\\VxD\\MSTCP"
 #endif
 #ifndef _PATH_RESCONF
 #define _PATH_RESCONF "/etc/resolv.conf"
@@ -374,32 +377,24 @@ idnsParseWIN32SearchList(const char * Separator)
     char *token;
     HKEY hndKey;
 
-    if (RegOpenKey(HKEY_LOCAL_MACHINE,
-                   "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters",
-                   &hndKey) == ERROR_SUCCESS) {
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_TCPIP_PARA, 0, KEY_QUERY_VALUE, &hndKey) == ERROR_SUCCESS) {
         DWORD Type = 0;
         DWORD Size = 0;
         LONG Result;
-	Result =
-	    RegQueryValueEx(hndKey, "Domain", NULL, &Type, NULL,
-	    &Size);
+	Result = RegQueryValueEx(hndKey, "Domain", NULL, &Type, NULL, &Size);
 
 	if (Result == ERROR_SUCCESS && Size) {
 	    t = (char *) xmalloc(Size);
-	    RegQueryValueEx(hndKey, "Domain", NULL, &Type, (LPBYTE) t,
-		&Size);
+            RegQueryValueEx(hndKey, "Domain", NULL, &Type, (LPBYTE) t, &Size);
 	    debugs(78, 1, "Adding domain " << t << " from Registry");
 	    idnsAddPathComponent(t);
 	    xfree(t);
 	}
-        Result =
-            RegQueryValueEx(hndKey, "SearchList", NULL, &Type, NULL,
-                            &Size);
+	Result = RegQueryValueEx(hndKey, "SearchList", NULL, &Type, NULL, &Size);
 
         if (Result == ERROR_SUCCESS && Size) {
             t = (char *) xmalloc(Size);
-            RegQueryValueEx(hndKey, "SearchList", NULL, &Type, (LPBYTE) t,
-                            &Size);
+	    RegQueryValueEx(hndKey, "SearchList", NULL, &Type, (LPBYTE) t, &Size);
             token = strtok(t, Separator);
 
             while (token) {
@@ -431,20 +426,15 @@ idnsParseWIN32Registry(void)
     case _WIN_OS_WINNT:
         /* get nameservers from the Windows NT registry */
 
-        if (RegOpenKey(HKEY_LOCAL_MACHINE,
-                       "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters",
-                       &hndKey) == ERROR_SUCCESS) {
+	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_TCPIP_PARA, 0, KEY_QUERY_VALUE, &hndKey) == ERROR_SUCCESS) {
             DWORD Type = 0;
             DWORD Size = 0;
             LONG Result;
-            Result =
-                RegQueryValueEx(hndKey, "DhcpNameServer", NULL, &Type, NULL,
-                                &Size);
+	    Result = RegQueryValueEx(hndKey, "DhcpNameServer", NULL, &Type, NULL, &Size);
 
             if (Result == ERROR_SUCCESS && Size) {
                 t = (char *) xmalloc(Size);
-                RegQueryValueEx(hndKey, "DhcpNameServer", NULL, &Type, (LPBYTE) t,
-                                &Size);
+                RegQueryValueEx(hndKey, "DhcpNameServer", NULL, &Type, (LPBYTE) t, &Size);
                 token = strtok(t, ", ");
 
                 while (token) {
@@ -455,8 +445,7 @@ idnsParseWIN32Registry(void)
 		xfree(t);
             }
 
-            Result =
-                RegQueryValueEx(hndKey, "NameServer", NULL, &Type, NULL, &Size);
+            Result = RegQueryValueEx(hndKey, "NameServer", NULL, &Type, NULL, &Size);
 
             if (Result == ERROR_SUCCESS && Size) {
                 t = (char *) xmalloc(Size);
@@ -490,64 +479,63 @@ idnsParseWIN32Registry(void)
         /* get nameservers from the Windows 2000 registry */
         /* search all interfaces for DNS server addresses */
 
-        if (RegOpenKey(HKEY_LOCAL_MACHINE,
-                       "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces",
-                       &hndKey) == ERROR_SUCCESS) {
+	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_TCPIP_PARA_INTERFACES, 0, KEY_READ, &hndKey) == ERROR_SUCCESS) {
             int i;
-            char keyname[255];
+	    int MaxSubkeyLen;
+	    DWORD InterfacesCount;
+	    char *keyname;
+	    FILETIME ftLastWriteTime;
 
-            for (i = 0; i < 10; i++) {
-                if (RegEnumKey(hndKey, i, (char *) &keyname,
-                               255) == ERROR_SUCCESS) {
-                    char newkeyname[255];
-                    strcpy(newkeyname,
-                           "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\");
-                    strcat(newkeyname, keyname);
+	    if (RegQueryInfoKey(hndKey, NULL, NULL, NULL, &InterfacesCount, &MaxSubkeyLen, NULL, NULL, NULL, NULL, NULL, NULL) == ERROR_SUCCESS) {
+		keyname = (char *) xmalloc(++MaxSubkeyLen);
+		for (i = 0; i < (int) InterfacesCount; i++) {
+		    int j;
+		    j = MaxSubkeyLen;
+		    if (RegEnumKeyEx(hndKey, i, keyname, &j, NULL, NULL, NULL, &ftLastWriteTime) == ERROR_SUCCESS) {
+			char *newkeyname;
+			newkeyname = (char *) xmalloc(sizeof(REG_TCPIP_PARA_INTERFACES) + j + 2);
+			strcpy(newkeyname, REG_TCPIP_PARA_INTERFACES);
+			strcat(newkeyname, "\\");
+			strcat(newkeyname, keyname);
+			if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, newkeyname, 0, KEY_QUERY_VALUE, &hndKey2) == ERROR_SUCCESS) {
+			    DWORD Type = 0;
+			    DWORD Size = 0;
+			    LONG Result;
+			    Result = RegQueryValueEx(hndKey2, "DhcpNameServer", NULL, &Type, NULL, &Size);
+			    if (Result == ERROR_SUCCESS && Size) {
+				t = (char *) xmalloc(Size);
+				RegQueryValueEx(hndKey2, "DhcpNameServer", NULL, &Type, t, &Size);
+				token = strtok(t, ", ");
+				while (token) {
+                                    debugs(78, 1, "Adding DHCP nameserver " << token << " from Registry");
+				    idnsAddNameserver(token);
+				    token = strtok(NULL, ", ");
+				}
+				xfree(t);
+ 			    }
 
-                    if (RegOpenKey(HKEY_LOCAL_MACHINE, newkeyname,
-                                   &hndKey2) == ERROR_SUCCESS) {
-                        DWORD Type = 0;
-                        DWORD Size = 0;
-                        LONG Result;
-                        Result =
-                            RegQueryValueEx(hndKey2, "DhcpNameServer", NULL,
-                                            &Type, NULL, &Size);
+			    Result = RegQueryValueEx(hndKey2, "NameServer", NULL, &Type, NULL, &Size);
+			    if (Result == ERROR_SUCCESS && Size) {
+				t = (char *) xmalloc(Size);
+				RegQueryValueEx(hndKey2, "NameServer", NULL, &Type, t, &Size);
+				token = strtok(t, ", ");
+				while (token) {
+				    debugs(78, 1, "Adding nameserver " << token << " from Registry");
+				    idnsAddNameserver(token);
+				    token = strtok(NULL, ", ");
+				}
 
-                        if (Result == ERROR_SUCCESS && Size) {
-                            t = (char *) xmalloc(Size);
-                            RegQueryValueEx(hndKey2, "DhcpNameServer", NULL,
-                                            &Type, (LPBYTE) t, &Size);
-                            token = strtok(t, ", ");
-
-                            while (token) {
-                                debugs(78, 1, "Adding DHCP nameserver " << token << " from Registry");
-                                idnsAddNameserver(token);
-                                token = strtok(NULL, ", ");
+				xfree(t);
                             }
-			    xfree(t);
+
+                            RegCloseKey(hndKey2);
                         }
 
-                        Result =
-                            RegQueryValueEx(hndKey2, "NameServer", NULL, &Type,
-                                            NULL, &Size);
-
-                        if (Result == ERROR_SUCCESS && Size) {
-                            t = (char *) xmalloc(Size);
-                            RegQueryValueEx(hndKey2, "NameServer", NULL, &Type,
-                                            (LPBYTE) t, &Size);
-                            token = strtok(t, ", ");
-
-                            while (token) {
-                                debugs(78, 1, "Adding nameserver " << token << " from Registry");
-                                idnsAddNameserver(token);
-                                token = strtok(NULL, ", ");
-                            }
-			    xfree(t);
-                        }
-
-                        RegCloseKey(hndKey2);
+			xfree(newkeyname);
                     }
                 }
+
+		xfree(keyname);
             }
 
             RegCloseKey(hndKey);
@@ -564,14 +552,11 @@ idnsParseWIN32Registry(void)
     case _WIN_OS_WINME:
         /* get nameservers from the Windows 9X registry */
 
-        if (RegOpenKey(HKEY_LOCAL_MACHINE,
-                       "SYSTEM\\CurrentControlSet\\Services\\VxD\\MSTCP",
-                       &hndKey) == ERROR_SUCCESS) {
+	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_VXD_MSTCP, 0, KEY_QUERY_VALUE, &hndKey) == ERROR_SUCCESS) {
             DWORD Type = 0;
             DWORD Size = 0;
             LONG Result;
-            Result =
-                RegQueryValueEx(hndKey, "NameServer", NULL, &Type, NULL, &Size);
+	    Result = RegQueryValueEx(hndKey, "NameServer", NULL, &Type, NULL, &Size);
 
             if (Result == ERROR_SUCCESS && Size) {
                 t = (char *) xmalloc(Size);
