@@ -29,6 +29,7 @@ TRANSLATIONS = \
 	fi \
 	fr \
 	he \
+	hu \
 	hy \
 	id \
 	it \
@@ -50,7 +51,6 @@ TRANSLATIONS = \
 # Legacy language contributions...
 #
 LANGUAGES	= \
-		Hungarian \
 		Lithuanian \
 		Polish \
 		Portuguese \
