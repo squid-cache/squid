@@ -481,15 +481,14 @@ idnsParseWIN32Registry(void)
 
 	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_TCPIP_PARA_INTERFACES, 0, KEY_READ, &hndKey) == ERROR_SUCCESS) {
             int i;
-	    int MaxSubkeyLen;
-	    DWORD InterfacesCount;
+	    DWORD MaxSubkeyLen, InterfacesCount;
 	    char *keyname;
 	    FILETIME ftLastWriteTime;
 
 	    if (RegQueryInfoKey(hndKey, NULL, NULL, NULL, &InterfacesCount, &MaxSubkeyLen, NULL, NULL, NULL, NULL, NULL, NULL) == ERROR_SUCCESS) {
 		keyname = (char *) xmalloc(++MaxSubkeyLen);
 		for (i = 0; i < (int) InterfacesCount; i++) {
-		    int j;
+		    DWORD j;
 		    j = MaxSubkeyLen;
 		    if (RegEnumKeyEx(hndKey, i, keyname, &j, NULL, NULL, NULL, &ftLastWriteTime) == ERROR_SUCCESS) {
 			char *newkeyname;
@@ -504,7 +503,7 @@ idnsParseWIN32Registry(void)
 			    Result = RegQueryValueEx(hndKey2, "DhcpNameServer", NULL, &Type, NULL, &Size);
 			    if (Result == ERROR_SUCCESS && Size) {
 				t = (char *) xmalloc(Size);
-				RegQueryValueEx(hndKey2, "DhcpNameServer", NULL, &Type, t, &Size);
+				RegQueryValueEx(hndKey2, "DhcpNameServer", NULL, &Type, (LPBYTE)t, &Size);
 				token = strtok(t, ", ");
 				while (token) {
                                     debugs(78, 1, "Adding DHCP nameserver " << token << " from Registry");
@@ -517,7 +516,7 @@ idnsParseWIN32Registry(void)
 			    Result = RegQueryValueEx(hndKey2, "NameServer", NULL, &Type, NULL, &Size);
 			    if (Result == ERROR_SUCCESS && Size) {
 				t = (char *) xmalloc(Size);
-				RegQueryValueEx(hndKey2, "NameServer", NULL, &Type, t, &Size);
+				RegQueryValueEx(hndKey2, "NameServer", NULL, &Type, (LPBYTE)t, &Size);
 				token = strtok(t, ", ");
 				while (token) {
 				    debugs(78, 1, "Adding nameserver " << token << " from Registry");
