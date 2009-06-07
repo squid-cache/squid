@@ -108,6 +108,7 @@
 #define MAXPASS		254
 #define MAXLINE         254
 
+static void md5_calc(uint8_t out[16], void *in, size_t len);
 
 static int i_send_buffer[2048];
 static int i_recv_buffer[2048];
@@ -126,7 +127,7 @@ static u_int32_t nas_ipaddr;
 static u_int32_t auth_ipaddr;
 static int retries = 30;
 
-char *progname = "squid_rad_auth";
+char progname[] = "squid_rad_auth";
 int debug_flag = 0;
 
 #ifdef _SQUID_MSWIN_
