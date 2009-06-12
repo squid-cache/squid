@@ -44,6 +44,7 @@ TRANSLATIONS = \
 	ru \
 	sr \
 	sv \
+	th \
 	tr \
 	uk \
 	uz \
