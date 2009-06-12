@@ -1,7 +1,7 @@
 EXTRA_DIST = configure README NEWS ChangeLog AUTHORS INSTALL
 SUBDIRS = 
 
-bin_PROGRAMS = squid_kerb_auth squid_kerb_auth_test negotiate_kerb_auth negotiate_kerb_auth_test
+libexec_PROGRAMS = squid_kerb_auth squid_kerb_auth_test negotiate_kerb_auth negotiate_kerb_auth_test
 
 SPNEGO_SOURCE= \
 	spnegohelp/derparse.c \
