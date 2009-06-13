@@ -39,6 +39,7 @@ TRANSLATIONS = \
 	lv \
 	ms \
 	nl \
+	pl \
 	pt-br \
 	ro \
 	ru \
@@ -53,7 +54,6 @@ TRANSLATIONS = \
 # Legacy language contributions...
 #
 LANGUAGES	= \
-		Polish \
 		Portuguese \
 		Slovak
 
