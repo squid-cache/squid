@@ -84,31 +84,6 @@ uninstall-local:
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_STYLESHEET)
 	rm -f $(DESTDIR)$(DEFAULT_STYLESHEET).default
 
-# undocumented hack.  You can use this target to create multi-lingual
-# error pages.  For example:
-#
-#	make ADDLANG=English DESTLANG=French addlang
-#
-# by Andres Kroonmaa <andre@mail.lbi.ee>
-#
-# UPDATE: this hack completely breaks HTML standards and with the addition
-#	  of language translations is now largely obsolete.
-#	  It will be removed without notice at some future date.
-#
-addlang: all
-	-@if test -d $(srcdir)/$(ADDLANG); then \
-	if test -d $(DEFAULT_ERROR_DIR)/$(DESTLANG); then \
-	cd $(srcdir)/$(ADDLANG)/ ; \
-	for f in ERR_*; do \
-		if test -f $(DEFAULT_ERROR_DIR)/$(DESTLANG)/$$f ; then \
-			echo "appending $(ADDLANG)/$$f"; \
-			echo "<HR>" >> $(DEFAULT_ERROR_DIR)/$(DESTLANG)/$$f ; \
-			cat $$f >> $(DEFAULT_ERROR_DIR)/$(DESTLANG)/$$f; \
-		fi; \
-	done; \
-	fi \
-	fi
-
 dist-hook: translate
 	for lang in $(TRANSLATIONS); do \
 	  if test -d $$lang ; then \
