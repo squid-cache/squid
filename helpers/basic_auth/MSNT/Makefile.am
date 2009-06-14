@@ -47,5 +47,5 @@ install-data-local:
 	fi
 
 uninstall-local:
-	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh $(RM) $(DESTDIR)$(MSNTAUTH_CONF)
+	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(MSNTAUTH_CONF)
 	$(RM) -f $(DESTDIR)$(MSNTAUTH_CONF).default

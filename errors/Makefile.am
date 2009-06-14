@@ -43,7 +43,7 @@ uninstall-local:
 		done; \
 	  fi \
 	done;
-	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh $(RM) $(DESTDIR)$(DEFAULT_STYLESHEET)
+	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_STYLESHEET)
 	rm -f $(DESTDIR)$(DEFAULT_STYLESHEET).default
 
 # undocumented hack.  You can use this target to create multi-lingual
