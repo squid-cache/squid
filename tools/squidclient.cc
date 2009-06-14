@@ -513,8 +513,8 @@ main(int argc, char *argv[])
 	while ((len = myread(conn, buf, sizeof(buf))) > 0) {
 	    fsize += len;
 
-	    if (to_stdout)
-		fwrite(buf, len, 1, stdout);
+            if (to_stdout && fwrite(buf, len, 1, stdout) != 1)
+                perror("client: ERROR writing to stdout");
 	}
 
 #ifdef _SQUID_MSWIN_
