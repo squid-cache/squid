@@ -380,7 +380,7 @@ idnsParseWIN32SearchList(const char * Separator)
         DWORD Type = 0;
         DWORD Size = 0;
         LONG Result;
-	Result = RegQueryValueEx(hndKey, "Domain", NULL, &Type, NULL, &Size);
+        Result = RegQueryValueEx(hndKey, "Domain", NULL, &Type, NULL, &Size);
 
         if (Result == ERROR_SUCCESS && Size) {
             t = (char *) xmalloc(Size);
@@ -389,11 +389,11 @@ idnsParseWIN32SearchList(const char * Separator)
             idnsAddPathComponent(t);
             xfree(t);
         }
-	Result = RegQueryValueEx(hndKey, "SearchList", NULL, &Type, NULL, &Size);
+        Result = RegQueryValueEx(hndKey, "SearchList", NULL, &Type, NULL, &Size);
 
         if (Result == ERROR_SUCCESS && Size) {
             t = (char *) xmalloc(Size);
-	    RegQueryValueEx(hndKey, "SearchList", NULL, &Type, (LPBYTE) t, &Size);
+            RegQueryValueEx(hndKey, "SearchList", NULL, &Type, (LPBYTE) t, &Size);
             token = strtok(t, Separator);
 
             while (token) {
@@ -425,11 +425,11 @@ idnsParseWIN32Registry(void)
     case _WIN_OS_WINNT:
         /* get nameservers from the Windows NT registry */
 
-	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_TCPIP_PARA, 0, KEY_QUERY_VALUE, &hndKey) == ERROR_SUCCESS) {
+        if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_TCPIP_PARA, 0, KEY_QUERY_VALUE, &hndKey) == ERROR_SUCCESS) {
             DWORD Type = 0;
             DWORD Size = 0;
             LONG Result;
-	    Result = RegQueryValueEx(hndKey, "DhcpNameServer", NULL, &Type, NULL, &Size);
+            Result = RegQueryValueEx(hndKey, "DhcpNameServer", NULL, &Type, NULL, &Size);
 
             if (Result == ERROR_SUCCESS && Size) {
                 t = (char *) xmalloc(Size);
@@ -478,62 +478,62 @@ idnsParseWIN32Registry(void)
         /* get nameservers from the Windows 2000 registry */
         /* search all interfaces for DNS server addresses */
 
-	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_TCPIP_PARA_INTERFACES, 0, KEY_READ, &hndKey) == ERROR_SUCCESS) {
+        if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_TCPIP_PARA_INTERFACES, 0, KEY_READ, &hndKey) == ERROR_SUCCESS) {
             int i;
-	    DWORD MaxSubkeyLen, InterfacesCount;
-	    char *keyname;
-	    FILETIME ftLastWriteTime;
+            DWORD MaxSubkeyLen, InterfacesCount;
+            char *keyname;
+            FILETIME ftLastWriteTime;
 
-	    if (RegQueryInfoKey(hndKey, NULL, NULL, NULL, &InterfacesCount, &MaxSubkeyLen, NULL, NULL, NULL, NULL, NULL, NULL) == ERROR_SUCCESS) {
-		keyname = (char *) xmalloc(++MaxSubkeyLen);
-		for (i = 0; i < (int) InterfacesCount; i++) {
-		    DWORD j;
-		    j = MaxSubkeyLen;
-		    if (RegEnumKeyEx(hndKey, i, keyname, &j, NULL, NULL, NULL, &ftLastWriteTime) == ERROR_SUCCESS) {
-			char *newkeyname;
-			newkeyname = (char *) xmalloc(sizeof(REG_TCPIP_PARA_INTERFACES) + j + 2);
-			strcpy(newkeyname, REG_TCPIP_PARA_INTERFACES);
-			strcat(newkeyname, "\\");
-			strcat(newkeyname, keyname);
-			if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, newkeyname, 0, KEY_QUERY_VALUE, &hndKey2) == ERROR_SUCCESS) {
-			    DWORD Type = 0;
-			    DWORD Size = 0;
-			    LONG Result;
-			    Result = RegQueryValueEx(hndKey2, "DhcpNameServer", NULL, &Type, NULL, &Size);
-			    if (Result == ERROR_SUCCESS && Size) {
-				t = (char *) xmalloc(Size);
-				RegQueryValueEx(hndKey2, "DhcpNameServer", NULL, &Type, (LPBYTE)t, &Size);
-				token = strtok(t, ", ");
-				while (token) {
+            if (RegQueryInfoKey(hndKey, NULL, NULL, NULL, &InterfacesCount, &MaxSubkeyLen, NULL, NULL, NULL, NULL, NULL, NULL) == ERROR_SUCCESS) {
+                keyname = (char *) xmalloc(++MaxSubkeyLen);
+                for (i = 0; i < (int) InterfacesCount; i++) {
+                    DWORD j;
+                    j = MaxSubkeyLen;
+                    if (RegEnumKeyEx(hndKey, i, keyname, &j, NULL, NULL, NULL, &ftLastWriteTime) == ERROR_SUCCESS) {
+                        char *newkeyname;
+                        newkeyname = (char *) xmalloc(sizeof(REG_TCPIP_PARA_INTERFACES) + j + 2);
+                        strcpy(newkeyname, REG_TCPIP_PARA_INTERFACES);
+                        strcat(newkeyname, "\\");
+                        strcat(newkeyname, keyname);
+                        if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, newkeyname, 0, KEY_QUERY_VALUE, &hndKey2) == ERROR_SUCCESS) {
+                            DWORD Type = 0;
+                            DWORD Size = 0;
+                            LONG Result;
+                            Result = RegQueryValueEx(hndKey2, "DhcpNameServer", NULL, &Type, NULL, &Size);
+                            if (Result == ERROR_SUCCESS && Size) {
+                                t = (char *) xmalloc(Size);
+                                RegQueryValueEx(hndKey2, "DhcpNameServer", NULL, &Type, (LPBYTE)t, &Size);
+                                token = strtok(t, ", ");
+                                while (token) {
                                     debugs(78, 1, "Adding DHCP nameserver " << token << " from Registry");
-				    idnsAddNameserver(token);
-				    token = strtok(NULL, ", ");
-				}
-				xfree(t);
- 			    }
+                                    idnsAddNameserver(token);
+                                    token = strtok(NULL, ", ");
+                                }
+                                xfree(t);
+                            }
 
-			    Result = RegQueryValueEx(hndKey2, "NameServer", NULL, &Type, NULL, &Size);
-			    if (Result == ERROR_SUCCESS && Size) {
-				t = (char *) xmalloc(Size);
-				RegQueryValueEx(hndKey2, "NameServer", NULL, &Type, (LPBYTE)t, &Size);
-				token = strtok(t, ", ");
-				while (token) {
-				    debugs(78, 1, "Adding nameserver " << token << " from Registry");
-				    idnsAddNameserver(token);
-				    token = strtok(NULL, ", ");
-				}
+                            Result = RegQueryValueEx(hndKey2, "NameServer", NULL, &Type, NULL, &Size);
+                            if (Result == ERROR_SUCCESS && Size) {
+                                t = (char *) xmalloc(Size);
+                                RegQueryValueEx(hndKey2, "NameServer", NULL, &Type, (LPBYTE)t, &Size);
+                                token = strtok(t, ", ");
+                                while (token) {
+                                    debugs(78, 1, "Adding nameserver " << token << " from Registry");
+                                    idnsAddNameserver(token);
+                                    token = strtok(NULL, ", ");
+                                }
 
-				xfree(t);
+                                xfree(t);
                             }
 
                             RegCloseKey(hndKey2);
                         }
 
-			xfree(newkeyname);
+                        xfree(newkeyname);
                     }
                 }
 
-		xfree(keyname);
+                xfree(keyname);
             }
 
             RegCloseKey(hndKey);
@@ -550,11 +550,11 @@ idnsParseWIN32Registry(void)
     case _WIN_OS_WINME:
         /* get nameservers from the Windows 9X registry */
 
-	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_VXD_MSTCP, 0, KEY_QUERY_VALUE, &hndKey) == ERROR_SUCCESS) {
+        if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_VXD_MSTCP, 0, KEY_QUERY_VALUE, &hndKey) == ERROR_SUCCESS) {
             DWORD Type = 0;
             DWORD Size = 0;
             LONG Result;
-	    Result = RegQueryValueEx(hndKey, "NameServer", NULL, &Type, NULL, &Size);
+            Result = RegQueryValueEx(hndKey, "NameServer", NULL, &Type, NULL, &Size);
 
             if (Result == ERROR_SUCCESS && Size) {
                 t = (char *) xmalloc(Size);
@@ -1370,23 +1370,23 @@ idnsInit(void)
 #if IPV6_SPECIAL_SPLITSTACK
         if ( addr.IsAnyAddr() || addr.IsIPv6() )
             DnsSocketB = comm_open_listener(SOCK_DGRAM,
-                                  IPPROTO_UDP,
-                                  addr,
-                                  COMM_NONBLOCKING,
-                                  "DNS Socket v6");
+                                            IPPROTO_UDP,
+                                            addr,
+                                            COMM_NONBLOCKING,
+                                            "DNS Socket v6");
 
         if ( addr.IsAnyAddr() || addr.IsIPv4() )
             DnsSocketA = comm_open_listener(SOCK_DGRAM,
-                                  IPPROTO_UDP,
-                                  addr,
-                                  COMM_NONBLOCKING,
-                                  "DNS Socket v4");
+                                            IPPROTO_UDP,
+                                            addr,
+                                            COMM_NONBLOCKING,
+                                            "DNS Socket v4");
 #else
-            DnsSocketA = comm_open_listener(SOCK_DGRAM,
-                                  IPPROTO_UDP,
-                                  addr,
-                                  COMM_NONBLOCKING,
-                                  "DNS Socket");
+        DnsSocketA = comm_open_listener(SOCK_DGRAM,
+                                        IPPROTO_UDP,
+                                        addr,
+                                        COMM_NONBLOCKING,
+                                        "DNS Socket");
 #endif
 
         if (DnsSocketA < 0 && DnsSocketB < 0)
@@ -1396,12 +1396,12 @@ idnsInit(void)
          * statement. Doing so messes up the internal Debug::level
          */
 #if IPV6_SPECIAL_SPLITSTACK
-        if(DnsSocketB >= 0) {
+        if (DnsSocketB >= 0) {
             port = comm_local_port(DnsSocketB);
             debugs(78, 1, "DNS Socket created at " << addr << ", FD " << DnsSocketB);
         }
 #endif
-        if(DnsSocketA >= 0) {
+        if (DnsSocketA >= 0) {
             port = comm_local_port(DnsSocketA);
             debugs(78, 1, "DNS Socket created at " << addr << ", FD " << DnsSocketA);
         }
@@ -1452,13 +1452,13 @@ idnsShutdown(void)
     if (DnsSocketA < 0 && DnsSocketB < 0)
         return;
 
-    if(DnsSocketA >= 0 ) {
+    if (DnsSocketA >= 0 ) {
         comm_close(DnsSocketA);
         DnsSocketA = -1;
     }
 
 #if IPV6_SPECIAL_SPLITSTACK
-    if(DnsSocketA >= 0 ) {
+    if (DnsSocketA >= 0 ) {
         comm_close(DnsSocketB);
         DnsSocketB = -1;
     }

@@ -3224,9 +3224,9 @@ clientHttpsConnectionsOpen(void)
 
         enter_suid();
         fd = comm_open_listener(SOCK_STREAM,
-                       IPPROTO_TCP,
-                       s->http.s,
-                       COMM_NONBLOCKING, "HTTPS Socket");
+                                IPPROTO_TCP,
+                                s->http.s,
+                                COMM_NONBLOCKING, "HTTPS Socket");
         leave_suid();
 
         if (fd < 0)

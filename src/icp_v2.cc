@@ -665,10 +665,10 @@ icpConnectionsOpen(void)
     addr = Config.Addrs.udp_incoming;
     addr.SetPort(port);
     theInIcpConnection = comm_open_listener(SOCK_DGRAM,
-                                   IPPROTO_UDP,
-                                   addr,
-                                   COMM_NONBLOCKING,
-                                   "ICP Socket");
+                                            IPPROTO_UDP,
+                                            addr,
+                                            COMM_NONBLOCKING,
+                                            "ICP Socket");
     leave_suid();
 
     if (theInIcpConnection < 0)
@@ -691,10 +691,10 @@ icpConnectionsOpen(void)
         enter_suid();
         addr.SetPort(port);
         theOutIcpConnection = comm_open_listener(SOCK_DGRAM,
-                                        IPPROTO_UDP,
-                                        addr,
-                                        COMM_NONBLOCKING,
-                                        "ICP Port");
+                              IPPROTO_UDP,
+                              addr,
+                              COMM_NONBLOCKING,
+                              "ICP Port");
         leave_suid();
 
         if (theOutIcpConnection < 0)
