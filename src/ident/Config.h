@@ -7,9 +7,11 @@
 
 #include "acl/Acl.h"
 
-namespace Ident {
+namespace Ident
+{
 
-class IdentConfig {
+class IdentConfig
+{
 public:
     acl_access *identLookup;
     time_t timeout;

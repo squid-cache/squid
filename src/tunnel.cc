@@ -342,7 +342,7 @@ TunnelStateData::writeServerDone(char *buf, size_t len, comm_err_t flag, int xer
 {
     debugs(26, 3, "tunnelWriteServer: FD " << server.fd() << ", " << len << " bytes written");
 
-    if(flag == COMM_ERR_CLOSING)
+    if (flag == COMM_ERR_CLOSING)
         return;
 
     /* Error? */
@@ -403,7 +403,7 @@ TunnelStateData::writeClientDone(char *buf, size_t len, comm_err_t flag, int xer
 {
     debugs(26, 3, "tunnelWriteClient: FD " << client.fd() << ", " << len << " bytes written");
 
-    if(flag == COMM_ERR_CLOSING)
+    if (flag == COMM_ERR_CLOSING)
         return;
 
     /* Error? */

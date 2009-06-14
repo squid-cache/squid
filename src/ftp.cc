@@ -534,7 +534,7 @@ FtpStateData::loginParser(const char *login, int escaped)
         *s = '\0';
 
         /* if there was a username part */
-        if(s > login) {
+        if (s > login) {
             xstrncpy(user, login, MAX_URL);
             if (escaped)
                 rfc1738_unescape(user);
@@ -548,8 +548,7 @@ FtpStateData::loginParser(const char *login, int escaped)
                 password_url = 1;
             }
         }
-    }
-    else if (login[0]) {
+    } else if (login[0]) {
         /* no password, just username */
         xstrncpy(user, login, MAX_URL);
         if (escaped)
@@ -3216,7 +3215,7 @@ ftpReadRest(FtpStateData * ftpState)
     assert(ftpState->restart_offset > 0);
 
     if (code == 350) {
-	ftpState->setCurrentOffset(ftpState->restart_offset);
+        ftpState->setCurrentOffset(ftpState->restart_offset);
         ftpSendRetr(ftpState);
     } else if (code > 0) {
         debugs(9, 3, HERE << "REST not supported");

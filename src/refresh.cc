@@ -273,9 +273,9 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 
     if (EBIT_TEST(entry->flags, ENTRY_REVALIDATE) && staleness > -1
 #if HTTP_VIOLATIONS
-        && !R->flags.ignore_must_revalidate
+            && !R->flags.ignore_must_revalidate
 #endif
-    ) {
+       ) {
         debugs(22, 3, "refreshCheck: YES: Must revalidate stale response");
         return STALE_MUST_REVALIDATE;
     }
