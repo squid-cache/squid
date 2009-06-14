@@ -994,14 +994,14 @@ HttpStateData::ReadReplyWrapper(int fd, char *buf, size_t len, comm_err_t flag, 
     assert (fd == httpState->fd);
     // assert(buf == readBuf->content());
     PROF_start(HttpStateData_readReply);
-    httpState->readReply (len, flag, xerrno);
+    httpState->readReply(len, flag, xerrno);
     PROF_stop(HttpStateData_readReply);
 }
 */
 
 /* XXX this function is too long! */
 void
-HttpStateData::readReply (const CommIoCbParams &io)
+HttpStateData::readReply(const CommIoCbParams &io)
 {
     int bin;
     int clen;
