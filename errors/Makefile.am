@@ -43,6 +43,7 @@ TRANSLATIONS = \
 	pt pt-br \
 	ro \
 	ru \
+	sk \
 	sr \
 	sv \
 	th \
@@ -51,19 +52,7 @@ TRANSLATIONS = \
 	uz \
 	zh-cn zh-tw
 
-# Legacy language contributions...
-#
-LANGUAGES	= \
-		Slovak
-
 install-data-local: 
-	@for l in $(LANGUAGES); do \
-		$(mkinstalldirs) $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l && \
-		for f in $(srcdir)/$$l/ERR_*; do \
-			echo "$(INSTALL_DATA) $$f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l"; \
-			$(INSTALL_DATA) $$f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; \
-		done; \
-	done; \
 	for l in $(TRANSLATIONS) templates; do \
 	  if test -d $(srcdir)/$$l; then \
 		$(mkinstalldirs) $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l && \
@@ -83,11 +72,6 @@ install-data-local:
 
 
 uninstall-local:
-	@ for l in $(LANGUAGES) templates; do \
-		for f in $(top_srcdir)/errors/$$l/ERR_*; do \
-	        	$(RM) $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; \
-		done; \
-	done; \
 	for l in $(TRANSLATIONS); do \
 	  if test -d $(srcdir)/errors/$$l; then \
 		for f in $(srcdir)/errors/$$l/ERR_*; do \
@@ -126,15 +110,6 @@ addlang: all
 	fi
 
 dist-hook: translate
-	for lang in $(LANGUAGES) templates; do \
-	  if test -d $(srcdir)/$$lang ; then \
-		test -d $(distdir)/$$lang \
-		  || mkdir $(distdir)/$$lang \
-		  || exit 1; \
-		cp -p $(srcdir)/$$lang/ERR_*  $(distdir)/$$lang \
-		  || exit 1; \
-	  fi; \
-	done; \
 	for lang in $(TRANSLATIONS); do \
 	  if test -d $$lang ; then \
 		test -d $(distdir)/$$lang \
