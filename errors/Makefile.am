@@ -11,46 +11,8 @@ errordir = $(datadir)/errors
 DEFAULT_ERROR_DIR	= $(errordir)
 DEFAULT_STYLESHEET	= $(sysconfdir)/errorpage.css
 
-
 # List of automated translations possible:
-TRANSLATIONS = \
-	ar \
-	az \
-	bg \
-	ca \
-	cs \
-	da \
-	de \
-	el \
-	en en-au en-gb en-nz en-us \
-	es \
-	et \
-	fa \
-	fi \
-	fr \
-	he \
-	hu \
-	hy \
-	id \
-	it \
-	ja \
-	ko \
-	lt \
-	lv \
-	ms \
-	nl \
-	pl \
-	pt pt-br \
-	ro \
-	ru \
-	sk \
-	sr \
-	sv \
-	th \
-	tr \
-	uk \
-	uz \
-	zh-cn zh-tw
+TRANSLATIONS=`ls -1 $(top_srcdir)/errors/*.po | grep -o -E "[a-z\-]+\.po" | sed s/.po//`
 
 install-data-local: 
 	for l in $(TRANSLATIONS) templates; do \
