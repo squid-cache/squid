@@ -11,59 +11,10 @@ errordir = $(datadir)/errors
 DEFAULT_ERROR_DIR	= $(errordir)
 DEFAULT_STYLESHEET	= $(sysconfdir)/errorpage.css
 
-
 # List of automated translations possible:
-TRANSLATIONS = \
-	ar \
-	az \
-	bg \
-	ca \
-	cs \
-	da \
-	de \
-	el \
-	en en-au en-gb en-nz en-us \
-	es \
-	et \
-	fa \
-	fi \
-	fr \
-	hy \
-	id \
-	it \
-	ja \
-	lv \
-	nl \
-	pt-br \
-	ro \
-	ru \
-	sr \
-	sv \
-	tr \
-	uk \
-	uz \
-	zh-cn
-
-# Legacy language contributions...
-#
-LANGUAGES	= \
-		Hebrew \
-		Hungarian \
-		Korean \
-		Lithuanian \
-		Polish \
-		Portuguese \
-		Slovak \
-		Traditional_Chinese
+TRANSLATIONS=`ls -1 $(top_srcdir)/errors/*.po | grep -o -E "[a-z\-]+\.po" | sed s/.po//`
 
 install-data-local: 
-	@for l in $(LANGUAGES); do \
-		$(mkinstalldirs) $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l && \
-		for f in $(srcdir)/$$l/ERR_*; do \
-			echo "$(INSTALL_DATA) $$f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l"; \
-			$(INSTALL_DATA) $$f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; \
-		done; \
-	done; \
 	for l in $(TRANSLATIONS) templates; do \
 	  if test -d $(srcdir)/$$l; then \
 		$(mkinstalldirs) $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l && \
@@ -83,11 +34,6 @@ install-data-local:
 
 
 uninstall-local:
-	@ for l in $(LANGUAGES) templates; do \
-		for f in $(top_srcdir)/errors/$$l/ERR_*; do \
-	        	$(RM) $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; \
-		done; \
-	done; \
 	for l in $(TRANSLATIONS); do \
 	  if test -d $(srcdir)/errors/$$l; then \
 		for f in $(srcdir)/errors/$$l/ERR_*; do \
@@ -126,15 +72,6 @@ addlang: all
 	fi
 
 dist-hook: translate
-	for lang in $(LANGUAGES) templates; do \
-	  if test -d $(srcdir)/$$lang ; then \
-		test -d $(distdir)/$$lang \
-		  || mkdir $(distdir)/$$lang \
-		  || exit 1; \
-		cp -p $(srcdir)/$$lang/ERR_*  $(distdir)/$$lang \
-		  || exit 1; \
-	  fi; \
-	done; \
 	for lang in $(TRANSLATIONS); do \
 	  if test -d $$lang ; then \
 		test -d $(distdir)/$$lang \

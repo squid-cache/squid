@@ -1,59 +1,50 @@
-# Dutch translation for squid
-# Copyright (c) 2008 Rosetta Contributors and Canonical Ltd 2008
-# This file is distributed under the same license as the squid package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2008.
-#
 msgid ""
 msgstr ""
-"Project-Id-Version: squid\n"
+"Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2009-06-14 18:15+1300\n"
-"PO-Revision-Date: 2009-03-22 09:28+1300\n"
-"Last-Translator: Rene Wijninga <r.wijninga@whine.nl>\n"
-"Language-Team: Dutch <nl@li.org>\n"
+"PO-Revision-Date: 2009-06-07 17:44+1300\n"
+"Last-Translator: Bertold Kolics <bertold@sztaki.hu>\n"
+"Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: nl\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Pootle 1.2.0\n"
+"Language: hu\n"
+"Plural-Forms: nplurals=2; plural=(n !=1);\n"
+"X-Generator: Pootle 1.2.1\n"
 
 #: templates/ERR_FTP_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
-msgstr "<a href=\"../\">Hogere Map</a> (<a href=\"/\">Hoofd Map</a>)"
+msgstr ""
 
 #: templates/ERR_INVALID_REQ:4
 msgid ""
 "<b>Invalid Request</b> error was encountered while trying to process the "
 "request:"
 msgstr ""
-"<b>Ongeldige Aanvraag</b> Er is een fout opgetreden tijdens het verwerken "
-"van:"
 
 #: templates/ERR_INVALID_RESP:4
 msgid ""
 "<b>Invalid Response</b> error was encountered while trying to process the "
 "request:"
 msgstr ""
-"<b>Onverwachte reactie</b> er is een fout opgetreden tijdens het uitvoeren "
-"van opdracht:"
 
 #: templates/ERR_READ_TIMEOUT:7
 msgid ""
 "A Timeout occurred while waiting to read data from the network.  The network "
 "or server may be down or congested.  Please retry your request."
 msgstr ""
-"Er is een timeout opgetreden tijdens het lezen van data van het netwerk.  "
-"Het netwerk of de server zijn niet beschikbaar of overbelast.  Probeer het "
-"opnieuw."
+"Időtúllépés történt mialatt az adatok hálózatról való olvasására várakozott "
+"a cache. A hálózat vagy a szerver nem elérhető vagy túlterhelt állapotban "
+"van. Ismételje meg kérését!"
 
 #: templates/ERR_URN_RESOLVE:3
 msgid "A URL for the requested URN could not be retrieved"
-msgstr "De gevraagde URN kon niet worden benaderd"
+msgstr "Az URN egy URL-je nem tölthető le"
 
 #: templates/ERR_ACCESS_DENIED:5
 msgid "Access Denied."
-msgstr "Toegang Geweigerd."
+msgstr "Hozzáférés megtagadva."
 
 #: templates/ERR_ACCESS_DENIED:6
 msgid ""
@@ -61,16 +52,16 @@ msgid ""
 "this time.  Please contact your service provider if you feel this is "
 "incorrect."
 msgstr ""
-"U heeft geen toegang tot de URL die u probeerde op te vragen van deze "
-"server.  Neem contact op met uw service provider als u denkt dat dit niet "
-"klopt."
+"A hozzáférési konfigurációban beállítottak alapján kérését jelenleg nem "
+"tudjuk teljesíteni. Kérjük, forduljon szolgáltatójához amennyiben a szerver "
+"helytelen beállításában látja a hiba okát."
 
 #: templates/ERR_FTP_FORBIDDEN:4
 msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"De FTP authenticatie is mislukt tijdens het openen van URL: <a href=\"%U\">%"
+"FTP autentikációs hiba történt az alábbi URL letöltésekor: <a href=\"%U\">%"
 "U</a>"
 
 #: templates/ERR_FTP_FAILURE:4
@@ -78,57 +69,53 @@ msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
 msgstr ""
-"Er is een FTP protocolfout opgetreden tijdens het ophalen van de URL: <a "
-"href=\"%U\">%U</a>"
+"FTP protokoll hiba történt az alábbi URL letöltésekor: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_ICAP_FAILURE:10
 msgid "An Illegal response was received from the ICAP server."
-msgstr "Er is een illegale reactie ontvangen van de ICAP server."
+msgstr ""
 
 #: templates/ERR_READ_ERROR:7
 msgid ""
 "An error condition occurred while reading data from the network.  Please "
 "retry your request."
 msgstr ""
-"Er is een fout opgetreden tijdens het lezen van data van het netwerk.  "
-"Probeer het opnieuw."
+"Hiba történt az adatok hálózatról való olvasásakor. Ismételje meg kérését!"
 
 #: templates/ERR_WRITE_ERROR:7
 msgid ""
 "An error condition occurred while writing to the network.  Please retry your "
 "request."
-msgstr ""
-"Er is een fout opgetreden tijdens het schrijven naar het netwerk.  Probeer "
-"het opnieuw."
+msgstr "Hiba történt az adatok hálózatra való írásakor. Ismételje meg kérését!"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
 msgid "Cache Access Denied."
-msgstr "Cache toegang niet toegestaan."
+msgstr "Cache hozzáférés megtagadva."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:3
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:5
 msgid "Cache Manager Access Denied."
-msgstr "Cache Manager toegang niet toegestaan."
+msgstr "Cache vezérlőpult hozzáférés megtagadva."
 
 #: templates/ERR_URN_RESOLVE:5
 msgid "Cannot Resolve URN"
-msgstr "Kan de URN niet herleiden"
+msgstr "Az URN-t nem lehet feloldani"
 
 #: templates/ERR_LIFETIME_EXP:5
 msgid "Connection Lifetime Expired"
-msgstr "De levensduur van de verbindings is verstreken"
+msgstr "Kapcsolat maximális időtartama lejárt"
 
 #: templates/ERR_CONNECT_FAIL:5
 msgid "Connection to %I failed."
-msgstr "Verbinding met %I mislukt."
+msgstr ""
 
 #: templates/ERR_INVALID_REQ:10
 msgid "Content-Length missing for POST or PUT requests."
-msgstr "De Content-Length ontbreekt voor het POST of PUT verzoek."
+msgstr "Content-Length hiányzik a POST vagy PUT kérésből"
 
 #: templates/ERR_FTP_LISTING:3
 msgid "Directory Content:"
-msgstr "Map Inhoud:"
+msgstr ""
 
 #: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
@@ -147,19 +134,19 @@ msgstr "Map Inhoud:"
 #: templates/ERR_URN_RESOLVE:2 templates/ERR_WRITE_ERROR:2
 #: templates/ERR_ZERO_SIZE_OBJECT:2
 msgid "ERROR"
-msgstr "FOUT"
+msgstr "HIBA"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:1
 msgid "ERROR: Cache Access Denied"
-msgstr "FOUT: Cache toegang niet toegestaan"
+msgstr "HIBA: Cache hozzáférés megtagadva"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:1
 msgid "ERROR: Cache Manager Access Denied"
-msgstr "FOUT: Cache Manager toegang niet toegestaan"
+msgstr "HIBA: Cache vezérlőpult hozzáférés megtagadva"
 
 #: templates/ERR_FTP_PUT_ERROR:1
 msgid "ERROR: FTP upload failed"
-msgstr "FOUT: FTP upload mislukt"
+msgstr "HIBA: FTP feltöltési hiba"
 
 #: templates/ERR_ACCESS_DENIED:1 templates/ERR_CANNOT_FORWARD:1
 #: templates/ERR_CONNECT_FAIL:1 templates/ERR_DNS_FAIL:1 templates/ERR_ESI:1
@@ -176,59 +163,59 @@ msgstr "FOUT: FTP upload mislukt"
 #: templates/ERR_UNSUP_REQ:1 templates/ERR_WRITE_ERROR:1
 #: templates/ERR_ZERO_SIZE_OBJECT:1
 msgid "ERROR: The requested URL could not be retrieved"
-msgstr "FOUT: De gevraagde URL kon niet worden opgehaald"
+msgstr "HIBA: A kért URL nem tölthető le"
 
 #: templates/ERR_URN_RESOLVE:1
 msgid "ERROR: The requested URN not be retrieved"
-msgstr "FOUT: De gevraagde URN kon niet worden opgehaald"
+msgstr "HIBA: A kért URN nem tölthető le"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
-msgstr "ESI processing mislukt."
+msgstr ""
 
 #: templates/ERR_FTP_LISTING:4
 msgid "FTP Directory Listing"
-msgstr "FTP Map Index"
+msgstr ""
 
 #: templates/ERR_FTP_LISTING:1
 msgid "FTP Directory: %U"
-msgstr "FTP Map: %U"
+msgstr ""
 
 #: templates/ERR_FTP_LISTING:2
 msgid "FTP Directory: <a href=\"/\">%U</a>/"
-msgstr "FTP Map: <a href=\"/\">%U</a>/"
+msgstr ""
 
 #: templates/ERR_FTP_PUT_CREATED:1
 msgid "FTP PUT Successful: File Created"
-msgstr "FTP PUT Succesvol: Bestand aangemaakt"
+msgstr "FTP PUT sikeresen megtörtént: az állományt létrehoztuk"
 
 #: templates/ERR_FTP_PUT_MODIFIED:1
 msgid "FTP PUT Successful: File Updated"
-msgstr "FTP PUT Succesvol: Bestand Vernieuwd"
+msgstr "FTP PUT sikeresen megtörtént: az állományt frissítettük"
 
 #: templates/ERR_FTP_PUT_ERROR:3
 msgid "FTP PUT/upload failed"
-msgstr "FTP PUT/upload mislukt"
+msgstr "FTP PUT/feltöltés hiba"
 
 #: templates/ERR_FTP_DISABLED:5
 msgid "FTP is Disabled"
-msgstr "FTP is uitgeschakeld"
+msgstr "FTP tiltás"
 
 #: templates/ERR_SECURE_CONNECT_FAIL:5
 msgid "Failed to establish a secure connection to %I"
-msgstr "Het opzetten van een beveiligde verbinding naar %I is mislukt"
+msgstr ""
 
 #: templates/ERR_FTP_PUT_CREATED:3
 msgid "File created"
-msgstr "Bestand aangemaakt"
+msgstr "Az állományt létrehoztuk"
 
 #: templates/ERR_FTP_PUT_MODIFIED:3
 msgid "File updated"
-msgstr "Bestand vernieuwd"
+msgstr "Az állomány frissítése megtörtént"
 
 #: templates/ERR_FORWARDING_DENIED:5
 msgid "Forwarding Denied."
-msgstr "Doorsturen niet toegestaan."
+msgstr "Kéréstovábbítás megtagadva."
 
 #: templates/ERR_ACCESS_DENIED:8 templates/ERR_CACHE_ACCESS_DENIED:8
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:8 templates/ERR_CANNOT_FORWARD:8
@@ -248,78 +235,83 @@ msgstr "Doorsturen niet toegestaan."
 #: templates/ERR_UNSUP_REQ:8 templates/ERR_URN_RESOLVE:8
 #: templates/ERR_WRITE_ERROR:9 templates/ERR_ZERO_SIZE_OBJECT:8
 msgid "Generated %T by %h (%s)"
-msgstr "Gegenereerd %T door %h (%s)"
+msgstr ""
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
-msgstr "Hmmm, verwacht niet teveel van URNs op %T :)"
+msgstr "Nem érdemes túl sokat várni a %T-n lévő URN-ektől :)"
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
-msgstr "ICAP protocol fout."
+msgstr ""
 
 #: templates/ERR_TOO_BIG:7
+#, fuzzy
 msgid ""
 "If you are making a GET request, then the item you are trying to download is "
 "too large."
 msgstr ""
-"Indien u een bestande probeerde te downloaden, dan was het bestand dat U "
-"probeert te ontvangen, te groot."
+"Ha GET típusú kérésről van szó, akkor a válasz törzse (az az anyag amit "
+"éppen letöltene) túl nagy méretű."
 
 #: templates/ERR_TOO_BIG:6
+#, fuzzy
 msgid ""
 "If you are making a POST or PUT request, then the item you are trying to "
 "upload is too large."
-msgstr "De POST of PUT opdracht die u heeft verstuurd is te groot."
+msgstr ""
+"POST vagy PUT kérés esetén a kérés törzse (az az anyag amit feltöltene) túl "
+"nagy méretű."
 
 #: templates/ERR_INVALID_REQ:11 templates/ERR_INVALID_URL:11
 msgid "Illegal character in hostname; underscores are not allowed."
 msgstr ""
-"Er staat een ongeldig teken in de hostnaam; het teken <q>_</q> is niet "
-"toegestaan."
+"A szervernévben nem megengedett karakter található; az aláhúzás karakter "
+"például ilyen"
 
 #: templates/ERR_INVALID_URL:10
 msgid "Illegal double-escape in the URL-Path"
-msgstr "Ongeldige <q>dubbele escape</q> in het URL pad"
+msgstr "Az URL elérési út részében dupla escape szekvencia található"
 
 #: templates/ERR_INVALID_URL:5
 msgid "Invalid URL"
-msgstr "Ongeldige URL"
+msgstr "Érvénytelen URL"
 
 #: templates/ERR_INVALID_REQ:8
 msgid "Missing HTTP Identifier (HTTP/1.0)."
-msgstr "Ontbrekende HTTP identificatie (HTTP/1.0)."
+msgstr "Hiányzó HTTP azonosító (HTTP/1.0)"
 
 #: templates/ERR_INVALID_REQ:7
 msgid "Missing URL."
-msgstr "Ontbrekende URL."
+msgstr "Hiányzó URL"
 
 #: templates/ERR_INVALID_URL:9
 msgid "Missing hostname"
-msgstr "Ontbrekende hostnaam"
+msgstr "Hiányzó szervernév"
 
 #: templates/ERR_INVALID_URL:8
 msgid ""
 "Missing or incorrect access protocol (should be <q>http://</q> or similar)"
 msgstr ""
-"Ontbrekend of onjuist toegangsprotocol (moet zijn <q>http://</q> of "
-"vergelijkbaar)"
+"Hiányzó vagy hibás elérési protokoll (<q>http://</q>-nek vagy valami "
+"hasonlónak kell lennie)"
 
 #: templates/ERR_INVALID_REQ:6
+#, fuzzy
 msgid "Missing or unknown request method."
-msgstr "Ontbrekende of onbekende verzoekmethode."
+msgstr "Hiányzó vagy nem létező kérési metódus (GET, POST)"
 
 #: templates/ERR_NO_RELAY:5
 msgid "No Wais Relay"
-msgstr "Geen WAIS Relay"
+msgstr "Nincs WAIS szerver"
 
 #: templates/ERR_FTP_PUT_CREATED:2 templates/ERR_FTP_PUT_MODIFIED:2
 msgid "Operation successful"
-msgstr "Bewerking succesvol"
+msgstr "Művelet sikeresen végrehajtva"
 
 #: templates/ERR_FTP_LISTING:5
 msgid "Parent Directory"
-msgstr "Hogere map"
+msgstr ""
 
 #: templates/ERR_CACHE_ACCESS_DENIED:7
 msgid ""
@@ -327,9 +319,9 @@ msgid ""
 "have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
 "chpasswd.cgi\">change</a> your default password."
 msgstr ""
-"Neem contact op met de <a href=\"mailto:%w%W\">cache beheerder</a> als u "
-"problemen heeft met authenticatie of <a href=\"http://%h/cgi-bin/chpasswd.cgi"
-"\">verander</a> hier uw standaard wachtwoord."
+"Kérjük, forduljon a <a href=\"mailto:%w%W\">cache adminisztrátorhoz</a> "
+"amennyiben nem sikerül bejelentkeznie vagy <a ref=\"http://%h/cgi-bin/"
+"chpasswd.cgi\">megváltoztatnia</a>eredetileg beállított jelszavát."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
 msgid ""
@@ -338,115 +330,117 @@ msgid ""
 "administrator, read Squid documentation on cache manager interface and check "
 "cache log for more detailed error messages."
 msgstr ""
-"Neem contact op met de <a href=\"mailto:%w%W\">cache beheerder</a> als u "
-"problemen heeft met authenticatie. Als <em>U</em> de beheerder bent, lees "
-"dan de Squid documentatie over de cache manager interface en lees de cache "
-"log voor meer gedetailleerde foutmeldingen."
+"Kérjük, forduljon a <a href=\"mailto:%w%W\">cache adminisztrátorhoz</a> "
+"amennyiben nem sikerül bejelentkeznie vagy ha <em>Ön</em> a cache "
+"adminisztrátor, olvassa el alaposana Squid dokumentáció cache vezérlőpulttal "
+"kapcsolatos fejezetét és ellenőrizze a cachenaplóállományát, ha részletesebb "
+"hibaüzenetekre van szüksége a probléma felderítéséhez."
 
 #: templates/ERR_READ_ERROR:5
 msgid "Read Error"
-msgstr "Leesfout"
+msgstr "Olvasási hiba"
 
 #: templates/ERR_READ_TIMEOUT:5
 msgid "Read Timeout"
-msgstr "Lees Timeout"
+msgstr "Olvasási időtúllépés"
 
 #: templates/ERR_INVALID_REQ:9
 msgid "Request is too large."
-msgstr "Het verzoek is te lang."
+msgstr "A kérés vagy a válasz túl nagy méretű."
 
 #: templates/ERR_SOCKET_FAILURE:5
 msgid "Socket Failure"
-msgstr "Socket Fout"
+msgstr "Socket hiba"
 
 #: templates/ERR_INVALID_URL:6
+#, fuzzy
 msgid "Some aspect of the requested URL is incorrect."
-msgstr "Een gedeelte van de gevraagde URL is ongeldig."
+msgstr "A megadott URL formátuma bizonyos szempontból nem megfelelő."
 
 #: templates/ERR_ICAP_FAILURE:8 templates/ERR_INVALID_REQ:5
 #: templates/ERR_INVALID_URL:7
+#, fuzzy
 msgid "Some possible problems are:"
-msgstr "Mogelijke problemen zijn:"
+msgstr "Lehetséges problémák:"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:6
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache manager "
 "until you have authenticated yourself."
 msgstr ""
-"Sorry, het is u momenteel niet toegestaan om %U op te vragen via deze cache "
-"manager totdat u zichzelf hebt geauthenticeerd."
+"Sajnos az alábbi URL-t nem töltheti le cache szerverünktől %U amíg nem "
+"jelentkezik be rendszerünkbe."
 
 #: templates/ERR_CACHE_ACCESS_DENIED:6
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache until you "
 "have authenticated yourself."
 msgstr ""
-"Sorry, het is u niet toegestaan om %U van deze cache op te vragen totdat u "
-"zich geidentificeerd hebt."
+"Sajnos az alábbi URL-t nem töltheti le cache szerverünktől %U amíg nem "
+"jelentkezik be rendszerünkbe."
 
 #: templates/ERR_ZERO_SIZE_OBJECT:6
 msgid "Squid did not receive any data for this request."
-msgstr "Squid ontving in het geheel geen data op dit verzoek."
+msgstr "A Squid nem kapott semmilyen választ a fenti kérésre."
 
 #: templates/ERR_UNSUP_REQ:6
 msgid ""
 "Squid does not support all request methods for all access protocols. For "
 "example, you can not POST a Gopher request."
 msgstr ""
-"Squid ondersteunt niet alle verzoekmethoden voor alle toegangsprotocollen. U "
-"kunt bijvoorbeeld geen Gopher verzoek POSTen."
+"A Squid nem támogat minden kérési metódust minden protokolltípushoz. Például "
+"nem lehet Gopher protokollhoz POST metódust alkalmazni."
 
 #: templates/ERR_LIFETIME_EXP:6
 msgid ""
 "Squid has terminated the request because it has exceeded the maximum "
 "connection lifetime."
 msgstr ""
-"Squid heeft het verzoek afgebroken omdat het de maximale "
-"verbindingslevensduur heeft overschreden."
+"A Squid megszakította a kérés kiszolgálását mivel a kérés feldolgozásának "
+"ideje a maximális kapcsolatfenntartás időtartamának értékét meghaladta."
 
 #: templates/ERR_SOCKET_FAILURE:7
 msgid ""
 "Squid is unable to create a TCP socket, presumably due to excessive load. "
 "Please retry your request."
 msgstr ""
-"Squid is niet in staat een TCP socket aan te maken, waarschijnlijk als "
-"gevolg van overbelasting. Probeer uw verzoek opnieuw."
+"A Squid nem tud TCP socket-et létrehozni, valószínűleg a nagy terheltség "
+"következtében. Ismételje meg kérését!"
 
 #: templates/ERR_FTP_FAILURE:5 templates/ERR_FTP_FORBIDDEN:5
 #: templates/ERR_FTP_NOT_FOUND:5 templates/ERR_FTP_PUT_ERROR:5
 #: templates/ERR_FTP_UNAVAILABLE:5
 msgid "Squid sent the following FTP command:"
-msgstr "Squid heeft de volgende FTP opdracht verstuurd:"
+msgstr "A Squid az alábbi FTP parancsot küldte:"
 
 #: templates/ERR_DNS_FAIL:6
+#, fuzzy
 msgid "The DNS server returned:"
-msgstr "De DNS server heeft geantwoord:"
+msgstr "A DNS server válasza:"
 
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
-msgstr "De ESI processor heeft geantwoord: "
+msgstr ""
 
 #: templates/ERR_FTP_UNAVAILABLE:4
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr ""
-"De FTP server was overbelast tijdens het opvragen van de URL: <a href=\"%U\">"
-"%U</a>"
+"Az FTP kiszolgáló túlterheltsége miatt az alábbi URL nem tölthető le: <a "
+"href=\"%U\">%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
 msgid ""
 "The HTTP Response message received from the contacted server could not be "
 "understood or was otherwise malformed. Please contact the site operator."
 msgstr ""
-"Het ontvangen HTTP bericht is niet begrepen of beschadigd. Neem contact op "
-"met de beheerder van de website die u probeert te bereiken."
 
 #: templates/ERR_ICAP_FAILURE:9
 msgid "The ICAP server is not reachable."
-msgstr "De ICAP server is onbereikbaar."
+msgstr ""
 
 #: templates/ERR_FTP_NOT_FOUND:4
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
-msgstr "De volgende URL kon niet worden opgehaald: <a href=\"%U\">%U</a>"
+msgstr "Az alábbi URL nem tölthető le: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_ACCESS_DENIED:4 templates/ERR_CACHE_ACCESS_DENIED:4
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:4 templates/ERR_CANNOT_FORWARD:4
@@ -464,26 +458,22 @@ msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"De volgende fout is opgetreden tijdens het ophalen van URL: <a href=\"%U\">%"
-"U</a>"
 
 #: templates/ERR_URN_RESOLVE:4
 msgid ""
 "The following error was encountered while trying to retrieve the URN: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"De volgende fout is opgetreden tijdens het ophalen van URN: <a href=\"%U\">%"
-"U</a>"
 
 #: templates/ERR_CONNECT_FAIL:7
 msgid "The remote host or network may be down.  Please try the request again."
 msgstr ""
-"De server of het netwerk dat u probeert te benaderen is onbereikbaar. "
-"Probeer het opnieuw."
+"A kiszolgáló szerver vagy az adott hálózat valószínűleg nem működik. Kérjük, "
+"ismételje meg kérését!"
 
 #: templates/ERR_TOO_BIG:5
 msgid "The request or reply is too large."
-msgstr "De aanvraag of het antwoord is te groot."
+msgstr "A kérés vagy a válasz túl nagy méretű."
 
 #: templates/ERR_ACCESS_DENIED:3 templates/ERR_CANNOT_FORWARD:3
 #: templates/ERR_CONNECT_FAIL:3 templates/ERR_DNS_FAIL:3 templates/ERR_ESI:3
@@ -499,28 +489,27 @@ msgstr "De aanvraag of het antwoord is te groot."
 #: templates/ERR_TOO_BIG:3 templates/ERR_UNSUP_REQ:3
 #: templates/ERR_WRITE_ERROR:3 templates/ERR_ZERO_SIZE_OBJECT:3
 msgid "The requested URL could not be retrieved"
-msgstr "De gevraagde URL kon niet worden opgehaald"
+msgstr "A kért URL nem tölthető le"
 
 #: templates/ERR_FTP_FAILURE:6 templates/ERR_FTP_FORBIDDEN:6
 #: templates/ERR_FTP_NOT_FOUND:6 templates/ERR_FTP_PUT_ERROR:6
 #: templates/ERR_FTP_UNAVAILABLE:6
 msgid "The server responded with:"
-msgstr "De server antwoordde met:"
+msgstr ""
 
 #: templates/ERR_CONNECT_FAIL:6 templates/ERR_ICAP_FAILURE:6
 #: templates/ERR_READ_ERROR:6 templates/ERR_READ_TIMEOUT:6
 #: templates/ERR_SECURE_CONNECT_FAIL:6 templates/ERR_SOCKET_FAILURE:6
 #: templates/ERR_WRITE_ERROR:6
 msgid "The system returned: <i>%E</i>"
-msgstr "Het systeem gaf als antwoord: <i>%E</i>"
+msgstr "A rendszer válasza: <i>%E</i>"
 
 #: templates/ERR_NO_RELAY:6
 msgid ""
 "There is no WAIS Relay host defined for this Cache!  Yell at the "
 "administrator."
 msgstr ""
-"Er is geen WAIS Relay host gedefinieerd voor deze Cache!  Neem contact op "
-"met de cachebeheerder."
+"Nincs a cache számára WAIS szerver megadva! Szóljon az adminisztrátornak."
 
 #: templates/ERR_TOO_BIG:8
 msgid ""
@@ -528,65 +517,61 @@ msgid ""
 "operates this cache.  Please contact them directly if you feel this is an "
 "error."
 msgstr ""
-"Deze grootte-beperkingen zijn ingesteld door de beheerder van deze cache.  "
-"Neem contact op met de beheerder van deze cache, wanneer U van mening bent "
-"dat deze beperking onjuist is."
+"A cache-t működtető Internet szolgáltató vezette be ezeket a korlátozásokat. "
+"Kérjük, forduljon közvetlenül szolgáltatójához amennyiben a szerver "
+"helytelen beállításában látja a hiba okát."
 
 #: templates/ERR_UNSUP_HTTPVERSION:6
 msgid "This Squid does not accept the HTTP version you are attempting to use."
 msgstr ""
-"Deze Squid proxy accepteert de HTTP versie die u probeert te gebruiken niet"
 
 #: templates/ERR_FTP_DISABLED:6
 msgid "This cache does not support FTP."
-msgstr "Deze cache ondersteunt geen FTP."
+msgstr "Ez a cache szerver nem szolgál ki FTP kéréseket."
 
 #: templates/ERR_SHUTTING_DOWN:5
 msgid ""
 "This cache is in the process of shutting down and can not service your "
 "request at this time.  Please retry your request again soon."
 msgstr ""
-"Deze cache is bezig met herstarten en kan daarom momenteel niet aan uw "
-"verzoek voldoen.  Probeer het later opnieuw."
+"A cache leállásra készül és ezért nem tudja kiszolgálni a kérését. Kérjük, "
+"rövid idő múlva ismételje meg kérését!"
 
 #: templates/ERR_FORWARDING_DENIED:6
+#, fuzzy
 msgid ""
 "This cache will not forward your request because it is trying to enforce a "
 "sibling relationship.  Perhaps the client at %i is a cache which has been "
 "misconfigured."
 msgstr ""
-"Deze cache zal uw verzoek niet doorsturen, omdat het een sibling relatie "
-"tracht te bewerkstelligen. Wellicht dat de client op %i een fout ingestelde "
-"cache is."
+"Ez a cache szerver nem továbbítja kérését mivel szomszédsági kapcsolatot "
+"szeretne kierőszakolni a klienstől. Feltehetőleg a kliens (%i) egy olyan "
+"cache szerver, amelyik félre lett konfigurálva."
 
 #: templates/ERR_ICAP_FAILURE:7
 msgid "This means that some aspect of the ICAP communication failed."
-msgstr "Dit betekent dat een onderdeel van de ICAP communicatie is mislukt."
+msgstr ""
 
 #: templates/ERR_FTP_PUT_ERROR:7
 msgid ""
 "This means that the FTP server may not have permission or space to store the "
 "file. Check the path, permissions, diskspace and try again."
 msgstr ""
-"Dit betekent dat de FTP server geen toegang of opslagcapaciteit heeft om het "
-"bestand op te slaan. Controleer het pad, de rechten en opslagcapaciteit en "
-"probeer het opnieuw."
 
 #: templates/ERR_DNS_FAIL:7
+#, fuzzy
 msgid ""
 "This means that the cache was not able to resolve the hostname presented in "
 "the URL. Check if the address is correct."
 msgstr ""
-"Dit betekent dat de cache niet in staat was om de hostnaam uit de URL te "
-"herleiden. Controleer of de naam klopt."
+"Ez azt jelenti, hogy A cache képtelen volt feloldani az URL-ben szereplő "
+"szerver nevét. Ellenőrizze a cím helyességét!"
 
 #: templates/ERR_ESI:7
 msgid ""
 "This means that the surrogate was not able to process the ESI template. "
 "Please report this error to the webmaster."
 msgstr ""
-"Dit betekent dat de vervanger niet in staat was om de ESI template te "
-"bewerken. Geef deze fout door aan de webmaster, asltublieft."
 
 #: templates/ERR_FTP_NOT_FOUND:7
 msgid ""
@@ -594,9 +579,9 @@ msgid ""
 "comply with RFC 1738).  If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
-"Dit kan veroorzaakt worden door een FTP URL met een absoluut pad (hetgeen "
-"niet in overeenstemming is met RFC 1738).  Als dit de oorzaak is, dan kan "
-"het bestand gevonden worden op <a href=\"%B\">%B</a>."
+"A hibát lehet hogy az okozta, hogy az FTP URL abszolút elérési utat "
+"tartalmaz (ami nem felel meg az RFC 1738 előírásnak). Amennyiben ez a hiba "
+"oka, akkor az állományt a <a href=\"%B\">%B</a> címen lehet megtalálni."
 
 #: templates/ERR_SECURE_CONNECT_FAIL:7
 msgid ""
@@ -605,56 +590,52 @@ msgid ""
 "host does not support secure connections, or the proxy is not satisfied with "
 "the host security credentials."
 msgstr ""
-"Deze proxy en de benaderde server hebben geen overeenstemming bereikt over "
-"de beveiling om uw aanvraag af te handelen. Het is mogelijk dat de benaderde "
-"server geen beveiligde verbindingen ondersteund of dat de proxy een te lage "
-"beveiliging heeft gedetecteerd."
 
 #: templates/ERR_CANNOT_FORWARD:6
+#, fuzzy
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
 "caches.  The most likely cause for this error is that the cache "
 "administrator does not allow this cache to make direct connections to origin "
 "servers, and all configured parent caches are currently unreachable."
 msgstr ""
-"Dit verzoek kon niet worden doorgestuurd naar de oorspronkelijke server of "
-"een van de parent caches.  De meest waarschijnlijke reden voor deze fout is "
-"dat de cache beheerder het deze cache niet toestaat met de oorspronkelijke "
-"server te praten, en alle ingestelde parent caches op dit moment "
-"onbereikbaar zijn."
+"A kérés nem továbbítható a forrás, illetve egyik szülő cache szerverhez sem. "
+"A hiba oka valószínűleg alábbiakban rejlik a cache adminisztrátor nem "
+"engedélyezi a forrás szerverekhez való közvetlen kapcsolat felépítését és "
+"egyik általunk használt szülő cache szerver sem érhető el jelenleg."
 
 #: templates/ERR_DNS_FAIL:5
+#, fuzzy
 msgid "Unable to determine IP address from host name <q>%H</q>"
-msgstr "Niet in staat om het IP adres te bepalen van server <q>%H</q>"
+msgstr "A(z) <q>%H</q> szervernévhez nem lehet meghatározni az IP címet."
 
 #: templates/ERR_CANNOT_FORWARD:5
 msgid "Unable to forward this request at this time."
-msgstr "Momenteel niet in staat dit verzoek door te sturen."
+msgstr "A kérést jelenleg nem lehet továbbítani."
 
 #: templates/ERR_UNSUP_HTTPVERSION:3 templates/ERR_UNSUP_HTTPVERSION:5
 msgid "Unsupported HTTP version"
-msgstr "Niet ondersteunde HTTP versie"
+msgstr ""
 
 #: templates/ERR_UNSUP_REQ:5
 msgid "Unsupported Request Method and Protocol"
-msgstr "Niet ondersteunde verzoekmethode of protocol"
+msgstr "Nem támogatott kérési metódus és protokoll"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS:5
 msgid ""
 "Valid document was not found in the cache and <q>only-if-cached</q> "
 "directive was specified."
 msgstr ""
-"Een geldig document werd niet gevonden in de cache, en de <q>only-if-cached</"
-"q> richtlijn was ingesteld."
+"A cache-ben érvényes dokumentum nem található és a kérésben <q>only-if-"
+"cached</q> direktíva volt beállítva."
 
 #: templates/ERR_FTP_PUT_ERROR:4
 msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr ""
-"Bij een poging om naar de volgende URL te schrijven: <a href=\"%U\">%U</a>"
+msgstr "Az alábbi URL-re történő PUT műveletnél: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
-msgstr "Schrijffout"
+msgstr "Írási hiba"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS:6
 msgid ""
@@ -662,10 +643,10 @@ msgid ""
 "directive. The document was not found in the cache, <em>or</em> it required "
 "revalidation prohibited by the <q>only-if-cached</q> directive."
 msgstr ""
-"U heeft een verzoek gedaan met een <q>only-if-cached</q> cachebeheer "
-"richtlijn. Het document werd niet gevonden in de cache <em>of</em> er was "
-"een herbevestiging nodig die niet werd toegestaan door de <q>only-if-cached</"
-"q> richtlijn."
+"Olyan kérést küldött el, amelyben <q>only-if-cached</q> cache vezérlő "
+"direktíva található. A dokumentum nincs a cache-ben <em>vagy</em> a "
+"dokumentum érvényesség-ellenőrzést igényelt volna, ezt azonban az <q>only-if-"
+"cached</q> direktíva megtiltotta."
 
 #: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
 #: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
@@ -682,20 +663,18 @@ msgstr ""
 #: templates/ERR_UNSUP_REQ:7 templates/ERR_URN_RESOLVE:7
 #: templates/ERR_WRITE_ERROR:8 templates/ERR_ZERO_SIZE_OBJECT:7
 msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
-msgstr "De beheerder van deze cache is <a href=\"mailto:%w%W\">%w</a>."
+msgstr ""
 
 #: templates/ERR_INVALID_RESP:6
 msgid ""
 "Your cache administrator may be able to provide you with more details about "
 "the exact nature of the problem if needed."
 msgstr ""
-"De cache beheerder kan u meer informatie verstrekken met betrekking tot de "
-"exacte reden van dit probleem."
 
 #: templates/ERR_ESI:8
 msgid "Your webmaster is <a href=\"mailto:%w\">%w</a>."
-msgstr "Uw cachebeheerder is <a href=\"mailto:%w\">%w</a>."
+msgstr ""
 
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
-msgstr "Antwoord is leeg"
+msgstr "Üres válasz"

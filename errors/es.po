@@ -7,14 +7,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-02-18 18:05+1300\n"
-"PO-Revision-Date: 2009-02-10 12:40+0000\n"
-"Last-Translator: Félix Gómez <Unknown>\n"
+"POT-Creation-Date: 2009-06-14 18:15+1300\n"
+"PO-Revision-Date: 2009-03-06 00:14+0000\n"
+"Last-Translator: juancarlospaco <juancarlospaco@hotmail.com>\n"
 "Language-Team: Spanish <es@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Launchpad-Export-Date: 2009-02-18 03:40+0000\n"
+"X-Launchpad-Export-Date: 2009-03-23 11:12+0000\n"
 "X-Generator: Launchpad (build Unknown)\n"
 
 #: templates/ERR_FTP_LISTING:6
@@ -541,7 +541,7 @@ msgstr ""
 
 #: templates/ERR_UNSUP_HTTPVERSION:6
 msgid "This Squid does not accept the HTTP version you are attempting to use."
-msgstr ""
+msgstr "Este Squid no acepta la version HTTP que tu estas pretendiendo usar."
 
 #: templates/ERR_FTP_DISABLED:6
 msgid "This cache does not support FTP."
@@ -643,7 +643,7 @@ msgstr "Imposibilidad de enviar la petici&oacute;n en este momento."
 
 #: templates/ERR_UNSUP_HTTPVERSION:3 templates/ERR_UNSUP_HTTPVERSION:5
 msgid "Unsupported HTTP version"
-msgstr ""
+msgstr "Version HTTP no soportada"
 
 #: templates/ERR_UNSUP_REQ:5
 msgid "Unsupported Request Method and Protocol"

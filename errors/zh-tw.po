@@ -1,59 +1,49 @@
-# Dutch translation for squid
-# Copyright (c) 2008 Rosetta Contributors and Canonical Ltd 2008
-# This file is distributed under the same license as the squid package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2008.
-#
 msgid ""
 msgstr ""
-"Project-Id-Version: squid\n"
+"Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2009-06-14 18:15+1300\n"
-"PO-Revision-Date: 2009-03-22 09:28+1300\n"
-"Last-Translator: Rene Wijninga <r.wijninga@whine.nl>\n"
-"Language-Team: Dutch <nl@li.org>\n"
+"PO-Revision-Date: 2009-06-05 16:09+1300\n"
+"Last-Translator: Erick C. Chang <erick@mail.thu.edu.tw>\n"
+"Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: nl\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Pootle 1.2.0\n"
+"Language: zh_TW\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Pootle 1.2.1\n"
 
 #: templates/ERR_FTP_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
-msgstr "<a href=\"../\">Hogere Map</a> (<a href=\"/\">Hoofd Map</a>)"
+msgstr ""
 
 #: templates/ERR_INVALID_REQ:4
 msgid ""
 "<b>Invalid Request</b> error was encountered while trying to process the "
 "request:"
 msgstr ""
-"<b>Ongeldige Aanvraag</b> Er is een fout opgetreden tijdens het verwerken "
-"van:"
 
 #: templates/ERR_INVALID_RESP:4
 msgid ""
 "<b>Invalid Response</b> error was encountered while trying to process the "
 "request:"
 msgstr ""
-"<b>Onverwachte reactie</b> er is een fout opgetreden tijdens het uitvoeren "
-"van opdracht:"
 
 #: templates/ERR_READ_TIMEOUT:7
 msgid ""
 "A Timeout occurred while waiting to read data from the network.  The network "
 "or server may be down or congested.  Please retry your request."
 msgstr ""
-"Er is een timeout opgetreden tijdens het lezen van data van het netwerk.  "
-"Het netwerk of de server zijn niet beschikbaar of overbelast.  Probeer het "
-"opnieuw."
+"當透過網路讀取資料時，超過了等待時限。這可能是因為網路或是欲連結的網站伺服器"
+"發生壅塞或損壞。請重新嘗試一遍您的連結要求。"
 
 #: templates/ERR_URN_RESOLVE:3
 msgid "A URL for the requested URN could not be retrieved"
-msgstr "De gevraagde URN kon niet worden benaderd"
+msgstr "URN 中的一個網址（URL）無法被傳回"
 
 #: templates/ERR_ACCESS_DENIED:5
 msgid "Access Denied."
-msgstr "Toegang Geweigerd."
+msgstr "存取被拒絕"
 
 #: templates/ERR_ACCESS_DENIED:6
 msgid ""
@@ -61,74 +51,67 @@ msgid ""
 "this time.  Please contact your service provider if you feel this is "
 "incorrect."
 msgstr ""
-"U heeft geen toegang tot de URL die u probeerde op te vragen van deze "
-"server.  Neem contact op met uw service provider als u denkt dat dit niet "
-"klopt."
+"欲連結之網站的存取控制設定目前禁止了您的連線要求，如果您覺得得到這樣的訊息並"
+"不正確，請與提供網路服務的管理者聯繫。"
 
 #: templates/ERR_FTP_FORBIDDEN:4
 msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"De FTP authenticatie is mislukt tijdens het openen van URL: <a href=\"%U\">%"
-"U</a>"
 
 #: templates/ERR_FTP_FAILURE:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
 msgstr ""
-"Er is een FTP protocolfout opgetreden tijdens het ophalen van de URL: <a "
-"href=\"%U\">%U</a>"
+"在嘗試傳回下面的網址（URL）時發生檔案傳輸通訊協定錯誤：<a href=\"%U\">%U</a>"
 
 #: templates/ERR_ICAP_FAILURE:10
 msgid "An Illegal response was received from the ICAP server."
-msgstr "Er is een illegale reactie ontvangen van de ICAP server."
+msgstr ""
 
 #: templates/ERR_READ_ERROR:7
 msgid ""
 "An error condition occurred while reading data from the network.  Please "
 "retry your request."
-msgstr ""
-"Er is een fout opgetreden tijdens het lezen van data van het netwerk.  "
-"Probeer het opnieuw."
+msgstr "正在透過網路讀取資料時發生了錯誤的情況，請再嘗試一遍您的連結要求。"
 
 #: templates/ERR_WRITE_ERROR:7
 msgid ""
 "An error condition occurred while writing to the network.  Please retry your "
 "request."
-msgstr ""
-"Er is een fout opgetreden tijdens het schrijven naar het netwerk.  Probeer "
-"het opnieuw."
+msgstr "正在透過網路寫入資料時發生了錯誤的情況，請重新嘗試一遍您的連結要求。"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
 msgid "Cache Access Denied."
-msgstr "Cache toegang niet toegestaan."
+msgstr "快取伺服器存取被拒絕"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:3
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:5
 msgid "Cache Manager Access Denied."
-msgstr "Cache Manager toegang niet toegestaan."
+msgstr "快取伺服器管理程式使用被拒"
 
 #: templates/ERR_URN_RESOLVE:5
 msgid "Cannot Resolve URN"
-msgstr "Kan de URN niet herleiden"
+msgstr "無法解譯 URN"
 
 #: templates/ERR_LIFETIME_EXP:5
 msgid "Connection Lifetime Expired"
-msgstr "De levensduur van de verbindings is verstreken"
+msgstr "超過連線等待時限"
 
 #: templates/ERR_CONNECT_FAIL:5
 msgid "Connection to %I failed."
-msgstr "Verbinding met %I mislukt."
+msgstr ""
 
 #: templates/ERR_INVALID_REQ:10
+#, fuzzy
 msgid "Content-Length missing for POST or PUT requests."
-msgstr "De Content-Length ontbreekt voor het POST of PUT verzoek."
+msgstr "Content-Length: 缺少 POST 或 PUT 要求 "
 
 #: templates/ERR_FTP_LISTING:3
 msgid "Directory Content:"
-msgstr "Map Inhoud:"
+msgstr ""
 
 #: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
@@ -147,19 +130,19 @@ msgstr "Map Inhoud:"
 #: templates/ERR_URN_RESOLVE:2 templates/ERR_WRITE_ERROR:2
 #: templates/ERR_ZERO_SIZE_OBJECT:2
 msgid "ERROR"
-msgstr "FOUT"
+msgstr "錯誤"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:1
 msgid "ERROR: Cache Access Denied"
-msgstr "FOUT: Cache toegang niet toegestaan"
+msgstr "錯誤: 網路快取伺服器存取被拒絕"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:1
 msgid "ERROR: Cache Manager Access Denied"
-msgstr "FOUT: Cache Manager toegang niet toegestaan"
+msgstr "錯誤: 使用快取伺服器管理程式被拒絕"
 
 #: templates/ERR_FTP_PUT_ERROR:1
 msgid "ERROR: FTP upload failed"
-msgstr "FOUT: FTP upload mislukt"
+msgstr "錯誤: 檔案傳輸上傳（PUT）失敗"
 
 #: templates/ERR_ACCESS_DENIED:1 templates/ERR_CANNOT_FORWARD:1
 #: templates/ERR_CONNECT_FAIL:1 templates/ERR_DNS_FAIL:1 templates/ERR_ESI:1
@@ -176,59 +159,59 @@ msgstr "FOUT: FTP upload mislukt"
 #: templates/ERR_UNSUP_REQ:1 templates/ERR_WRITE_ERROR:1
 #: templates/ERR_ZERO_SIZE_OBJECT:1
 msgid "ERROR: The requested URL could not be retrieved"
-msgstr "FOUT: De gevraagde URL kon niet worden opgehaald"
+msgstr "錯誤: 欲連結之網址（URL）無法正確的傳回"
 
 #: templates/ERR_URN_RESOLVE:1
 msgid "ERROR: The requested URN not be retrieved"
-msgstr "FOUT: De gevraagde URN kon niet worden opgehaald"
+msgstr "錯誤：欲連結之網址（URL）無法正確的傳回"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
-msgstr "ESI processing mislukt."
+msgstr ""
 
 #: templates/ERR_FTP_LISTING:4
 msgid "FTP Directory Listing"
-msgstr "FTP Map Index"
+msgstr ""
 
 #: templates/ERR_FTP_LISTING:1
 msgid "FTP Directory: %U"
-msgstr "FTP Map: %U"
+msgstr ""
 
 #: templates/ERR_FTP_LISTING:2
 msgid "FTP Directory: <a href=\"/\">%U</a>/"
-msgstr "FTP Map: <a href=\"/\">%U</a>/"
+msgstr ""
 
 #: templates/ERR_FTP_PUT_CREATED:1
 msgid "FTP PUT Successful: File Created"
-msgstr "FTP PUT Succesvol: Bestand aangemaakt"
+msgstr "檔案傳輸 PUT 指令成功完成：檔案已被建立"
 
 #: templates/ERR_FTP_PUT_MODIFIED:1
 msgid "FTP PUT Successful: File Updated"
-msgstr "FTP PUT Succesvol: Bestand Vernieuwd"
+msgstr "檔案傳輸 PUT 指令成功完成：檔案已被更新"
 
 #: templates/ERR_FTP_PUT_ERROR:3
 msgid "FTP PUT/upload failed"
-msgstr "FTP PUT/upload mislukt"
+msgstr "檔案傳輸上傳（PUT）失敗"
 
 #: templates/ERR_FTP_DISABLED:5
 msgid "FTP is Disabled"
-msgstr "FTP is uitgeschakeld"
+msgstr "禁止使用檔案傳輸"
 
 #: templates/ERR_SECURE_CONNECT_FAIL:5
 msgid "Failed to establish a secure connection to %I"
-msgstr "Het opzetten van een beveiligde verbinding naar %I is mislukt"
+msgstr ""
 
 #: templates/ERR_FTP_PUT_CREATED:3
 msgid "File created"
-msgstr "Bestand aangemaakt"
+msgstr "檔案已被成功地建立"
 
 #: templates/ERR_FTP_PUT_MODIFIED:3
 msgid "File updated"
-msgstr "Bestand vernieuwd"
+msgstr "檔案已被更新了"
 
 #: templates/ERR_FORWARDING_DENIED:5
 msgid "Forwarding Denied."
-msgstr "Doorsturen niet toegestaan."
+msgstr "轉送要求被拒"
 
 #: templates/ERR_ACCESS_DENIED:8 templates/ERR_CACHE_ACCESS_DENIED:8
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:8 templates/ERR_CANNOT_FORWARD:8
@@ -248,78 +231,72 @@ msgstr "Doorsturen niet toegestaan."
 #: templates/ERR_UNSUP_REQ:8 templates/ERR_URN_RESOLVE:8
 #: templates/ERR_WRITE_ERROR:9 templates/ERR_ZERO_SIZE_OBJECT:8
 msgid "Generated %T by %h (%s)"
-msgstr "Gegenereerd %T door %h (%s)"
+msgstr ""
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
-msgstr "Hmmm, verwacht niet teveel van URNs op %T :)"
+msgstr "抱歉！您不能對 URNs 在 %T 上期待太多 :) "
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
-msgstr "ICAP protocol fout."
+msgstr ""
 
 #: templates/ERR_TOO_BIG:7
 msgid ""
 "If you are making a GET request, then the item you are trying to download is "
 "too large."
 msgstr ""
-"Indien u een bestande probeerde te downloaden, dan was het bestand dat U "
-"probeert te ontvangen, te groot."
 
 #: templates/ERR_TOO_BIG:6
 msgid ""
 "If you are making a POST or PUT request, then the item you are trying to "
 "upload is too large."
-msgstr "De POST of PUT opdracht die u heeft verstuurd is te groot."
+msgstr ""
 
 #: templates/ERR_INVALID_REQ:11 templates/ERR_INVALID_URL:11
 msgid "Illegal character in hostname; underscores are not allowed."
-msgstr ""
-"Er staat een ongeldig teken in de hostnaam; het teken <q>_</q> is niet "
-"toegestaan."
+msgstr "欲連結的主機名稱包含不合法的字元；底線這個字元是不被允許存在的。"
 
 #: templates/ERR_INVALID_URL:10
 msgid "Illegal double-escape in the URL-Path"
-msgstr "Ongeldige <q>dubbele escape</q> in het URL pad"
+msgstr "不合法的網站連結路徑（缺少 <q>//</q>）"
 
 #: templates/ERR_INVALID_URL:5
 msgid "Invalid URL"
-msgstr "Ongeldige URL"
+msgstr "不正確的位置"
 
 #: templates/ERR_INVALID_REQ:8
 msgid "Missing HTTP Identifier (HTTP/1.0)."
-msgstr "Ontbrekende HTTP identificatie (HTTP/1.0)."
+msgstr "HTTP 標準的宣告遺失（HTTP/1.0）"
 
 #: templates/ERR_INVALID_REQ:7
 msgid "Missing URL."
-msgstr "Ontbrekende URL."
+msgstr "網站位置遺失"
 
 #: templates/ERR_INVALID_URL:9
 msgid "Missing hostname"
-msgstr "Ontbrekende hostnaam"
+msgstr "缺少欲連結的主機名稱"
 
 #: templates/ERR_INVALID_URL:8
 msgid ""
 "Missing or incorrect access protocol (should be <q>http://</q> or similar)"
-msgstr ""
-"Ontbrekend of onjuist toegangsprotocol (moet zijn <q>http://</q> of "
-"vergelijkbaar)"
+msgstr "缺少或不正確的通訊協定宣告（應該是  <q>http://</q> 或是類似的開頭） "
 
 #: templates/ERR_INVALID_REQ:6
 msgid "Missing or unknown request method."
-msgstr "Ontbrekende of onbekende verzoekmethode."
+msgstr "要求方式遺失或是未知"
 
 #: templates/ERR_NO_RELAY:5
 msgid "No Wais Relay"
-msgstr "Geen WAIS Relay"
+msgstr "不提供 Wais（廣域資訊伺服器）轉接"
 
 #: templates/ERR_FTP_PUT_CREATED:2 templates/ERR_FTP_PUT_MODIFIED:2
 msgid "Operation successful"
-msgstr "Bewerking succesvol"
+msgstr "所要求的指令成功地被完成"
 
 #: templates/ERR_FTP_LISTING:5
 msgid "Parent Directory"
-msgstr "Hogere map"
+msgstr ""
 
 #: templates/ERR_CACHE_ACCESS_DENIED:7
 msgid ""
@@ -327,9 +304,8 @@ msgid ""
 "have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
 "chpasswd.cgi\">change</a> your default password."
 msgstr ""
-"Neem contact op met de <a href=\"mailto:%w%W\">cache beheerder</a> als u "
-"problemen heeft met authenticatie of <a href=\"http://%h/cgi-bin/chpasswd.cgi"
-"\">verander</a> hier uw standaard wachtwoord."
+"如果您在身份驗證上發生困難，請與 <a href=\"mailto:%w%W\">管理者</a> 聯繫。或"
+"是<a href=\"http://%h/cgi-bin/chpasswd.cgi\">更改</a>您的密碼。"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
 msgid ""
@@ -338,115 +314,114 @@ msgid ""
 "administrator, read Squid documentation on cache manager interface and check "
 "cache log for more detailed error messages."
 msgstr ""
-"Neem contact op met de <a href=\"mailto:%w%W\">cache beheerder</a> als u "
-"problemen heeft met authenticatie. Als <em>U</em> de beheerder bent, lees "
-"dan de Squid documentatie over de cache manager interface en lees de cache "
-"log voor meer gedetailleerde foutmeldingen."
+"如果您是在身份驗證上發生問題，請先確定您有權對快取伺服器使用管理程式。或是與"
+"<a href=\"mailto:%w%W\">管理者</a>聯繫。如果您<em>就是</em>管理者，請詳細閱"
+"讀 Squid 所附文件中與cache manager 有關部份或檢查 cache log 以便得到更詳盡的"
+"細節。"
 
 #: templates/ERR_READ_ERROR:5
 msgid "Read Error"
-msgstr "Leesfout"
+msgstr "讀取錯誤"
 
 #: templates/ERR_READ_TIMEOUT:5
 msgid "Read Timeout"
-msgstr "Lees Timeout"
+msgstr "超過讀取時限"
 
 #: templates/ERR_INVALID_REQ:9
 msgid "Request is too large."
-msgstr "Het verzoek is te lang."
+msgstr "要求命令過長"
 
 #: templates/ERR_SOCKET_FAILURE:5
 msgid "Socket Failure"
-msgstr "Socket Fout"
+msgstr "Socket 建立失敗"
 
 #: templates/ERR_INVALID_URL:6
+#, fuzzy
 msgid "Some aspect of the requested URL is incorrect."
-msgstr "Een gedeelte van de gevraagde URL is ongeldig."
+msgstr "欲連結的位置有一些不正確。"
 
 #: templates/ERR_ICAP_FAILURE:8 templates/ERR_INVALID_REQ:5
 #: templates/ERR_INVALID_URL:7
+#, fuzzy
 msgid "Some possible problems are:"
-msgstr "Mogelijke problemen zijn:"
+msgstr "可能是因為下列問題："
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:6
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache manager "
 "until you have authenticated yourself."
 msgstr ""
-"Sorry, het is u momenteel niet toegestaan om %U op te vragen via deze cache "
-"manager totdat u zichzelf hebt geauthenticeerd."
+"抱歉，您不被允許透過我們這個快取伺服器管理程式傳回下列位置 %U 除非您通過我們"
+"的身份驗證。"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:6
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache until you "
 "have authenticated yourself."
 msgstr ""
-"Sorry, het is u niet toegestaan om %U van deze cache op te vragen totdat u "
-"zich geidentificeerd hebt."
+"抱歉，您不被允許透過我們這個網路快取伺服器傳回下列位置 %U 除非您通過了我們的"
+"身份驗證。"
 
 #: templates/ERR_ZERO_SIZE_OBJECT:6
 msgid "Squid did not receive any data for this request."
-msgstr "Squid ontving in het geheel geen data op dit verzoek."
+msgstr ""
+"您的此次連線要求，Squid（網路快取程式）並未自欲連結的網站伺服器接收到任何資"
+"料。"
 
 #: templates/ERR_UNSUP_REQ:6
 msgid ""
 "Squid does not support all request methods for all access protocols. For "
 "example, you can not POST a Gopher request."
 msgstr ""
-"Squid ondersteunt niet alle verzoekmethoden voor alle toegangsprotocollen. U "
-"kunt bijvoorbeeld geen Gopher verzoek POSTen."
+"因為 Squid （網路快取程式）並未支援所有的連結要求方式在各式通訊協定上。比如"
+"說，你不能要求一個 GOPHER 的 POST 連結要求。"
 
 #: templates/ERR_LIFETIME_EXP:6
 msgid ""
 "Squid has terminated the request because it has exceeded the maximum "
 "connection lifetime."
-msgstr ""
-"Squid heeft het verzoek afgebroken omdat het de maximale "
-"verbindingslevensduur heeft overschreden."
+msgstr "快取伺服器已終止您的連線要求，因為已經超過連線等待時限。"
 
 #: templates/ERR_SOCKET_FAILURE:7
 msgid ""
 "Squid is unable to create a TCP socket, presumably due to excessive load. "
 "Please retry your request."
 msgstr ""
-"Squid is niet in staat een TCP socket aan te maken, waarschijnlijk als "
-"gevolg van overbelasting. Probeer uw verzoek opnieuw."
+"Squid （網路快取程式）無法建立 TCP socket，可能是因為過重的負荷導致這個問題，"
+"請重新嘗試一遍您的連結要求。"
 
 #: templates/ERR_FTP_FAILURE:5 templates/ERR_FTP_FORBIDDEN:5
 #: templates/ERR_FTP_NOT_FOUND:5 templates/ERR_FTP_PUT_ERROR:5
 #: templates/ERR_FTP_UNAVAILABLE:5
 msgid "Squid sent the following FTP command:"
-msgstr "Squid heeft de volgende FTP opdracht verstuurd:"
+msgstr "Squid 伺服器替您送出下列檔案傳輸命令："
 
 #: templates/ERR_DNS_FAIL:6
+#, fuzzy
 msgid "The DNS server returned:"
-msgstr "De DNS server heeft geantwoord:"
+msgstr "領域名稱伺服器回應下列錯誤訊息："
 
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
-msgstr "De ESI processor heeft geantwoord: "
+msgstr ""
 
 #: templates/ERR_FTP_UNAVAILABLE:4
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr ""
-"De FTP server was overbelast tijdens het opvragen van de URL: <a href=\"%U\">"
-"%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
 msgid ""
 "The HTTP Response message received from the contacted server could not be "
 "understood or was otherwise malformed. Please contact the site operator."
 msgstr ""
-"Het ontvangen HTTP bericht is niet begrepen of beschadigd. Neem contact op "
-"met de beheerder van de website die u probeert te bereiken."
 
 #: templates/ERR_ICAP_FAILURE:9
 msgid "The ICAP server is not reachable."
-msgstr "De ICAP server is onbereikbaar."
+msgstr ""
 
 #: templates/ERR_FTP_NOT_FOUND:4
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
-msgstr "De volgende URL kon niet worden opgehaald: <a href=\"%U\">%U</a>"
+msgstr ""
 
 #: templates/ERR_ACCESS_DENIED:4 templates/ERR_CACHE_ACCESS_DENIED:4
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:4 templates/ERR_CANNOT_FORWARD:4
@@ -464,26 +439,20 @@ msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"De volgende fout is opgetreden tijdens het ophalen van URL: <a href=\"%U\">%"
-"U</a>"
 
 #: templates/ERR_URN_RESOLVE:4
 msgid ""
 "The following error was encountered while trying to retrieve the URN: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"De volgende fout is opgetreden tijdens het ophalen van URN: <a href=\"%U\">%"
-"U</a>"
 
 #: templates/ERR_CONNECT_FAIL:7
 msgid "The remote host or network may be down.  Please try the request again."
-msgstr ""
-"De server of het netwerk dat u probeert te benaderen is onbereikbaar. "
-"Probeer het opnieuw."
+msgstr "您欲連結的網站伺服器或是網路可能發生故障。請稍後再試。"
 
 #: templates/ERR_TOO_BIG:5
 msgid "The request or reply is too large."
-msgstr "De aanvraag of het antwoord is te groot."
+msgstr ""
 
 #: templates/ERR_ACCESS_DENIED:3 templates/ERR_CANNOT_FORWARD:3
 #: templates/ERR_CONNECT_FAIL:3 templates/ERR_DNS_FAIL:3 templates/ERR_ESI:3
@@ -499,28 +468,27 @@ msgstr "De aanvraag of het antwoord is te groot."
 #: templates/ERR_TOO_BIG:3 templates/ERR_UNSUP_REQ:3
 #: templates/ERR_WRITE_ERROR:3 templates/ERR_ZERO_SIZE_OBJECT:3
 msgid "The requested URL could not be retrieved"
-msgstr "De gevraagde URL kon niet worden opgehaald"
+msgstr "欲連結之網址（URL）無法正確的傳回"
 
 #: templates/ERR_FTP_FAILURE:6 templates/ERR_FTP_FORBIDDEN:6
 #: templates/ERR_FTP_NOT_FOUND:6 templates/ERR_FTP_PUT_ERROR:6
 #: templates/ERR_FTP_UNAVAILABLE:6
 msgid "The server responded with:"
-msgstr "De server antwoordde met:"
+msgstr ""
 
 #: templates/ERR_CONNECT_FAIL:6 templates/ERR_ICAP_FAILURE:6
 #: templates/ERR_READ_ERROR:6 templates/ERR_READ_TIMEOUT:6
 #: templates/ERR_SECURE_CONNECT_FAIL:6 templates/ERR_SOCKET_FAILURE:6
 #: templates/ERR_WRITE_ERROR:6
 msgid "The system returned: <i>%E</i>"
-msgstr "Het systeem gaf als antwoord: <i>%E</i>"
+msgstr "系統回應了下列錯誤訊息：<i>%E</i>"
 
 #: templates/ERR_NO_RELAY:6
 msgid ""
 "There is no WAIS Relay host defined for this Cache!  Yell at the "
 "administrator."
 msgstr ""
-"Er is geen WAIS Relay host gedefinieerd voor deze Cache!  Neem contact op "
-"met de cachebeheerder."
+"本快取伺服器未提供 WAIS 廣域資訊伺服器服務！如有疑問請洽快取伺服器管理者。"
 
 #: templates/ERR_TOO_BIG:8
 msgid ""
@@ -528,26 +496,22 @@ msgid ""
 "operates this cache.  Please contact them directly if you feel this is an "
 "error."
 msgstr ""
-"Deze grootte-beperkingen zijn ingesteld door de beheerder van deze cache.  "
-"Neem contact op met de beheerder van deze cache, wanneer U van mening bent "
-"dat deze beperking onjuist is."
 
 #: templates/ERR_UNSUP_HTTPVERSION:6
 msgid "This Squid does not accept the HTTP version you are attempting to use."
 msgstr ""
-"Deze Squid proxy accepteert de HTTP versie die u probeert te gebruiken niet"
 
 #: templates/ERR_FTP_DISABLED:6
 msgid "This cache does not support FTP."
-msgstr "Deze cache ondersteunt geen FTP."
+msgstr "本快取伺服器並未開放支援檔案傳輸服務。"
 
 #: templates/ERR_SHUTTING_DOWN:5
 msgid ""
 "This cache is in the process of shutting down and can not service your "
 "request at this time.  Please retry your request again soon."
 msgstr ""
-"Deze cache is bezig met herstarten en kan daarom momenteel niet aan uw "
-"verzoek voldoen.  Probeer het later opnieuw."
+"本網路快取伺服器目前正在進行關閉程序，暫時無法對您的連線要求提供服務。請稍待"
+"片刻重新嘗試連線。"
 
 #: templates/ERR_FORWARDING_DENIED:6
 msgid ""
@@ -555,38 +519,33 @@ msgid ""
 "sibling relationship.  Perhaps the client at %i is a cache which has been "
 "misconfigured."
 msgstr ""
-"Deze cache zal uw verzoek niet doorsturen, omdat het een sibling relatie "
-"tracht te bewerkstelligen. Wellicht dat de client op %i een fout ingestelde "
-"cache is."
+"本快取伺服器將無法替您轉向您的連線要求，也許是因為您所使用的快取伺服器（%i）"
+"並未被本快取伺服器設定為准許進行存取。"
 
 #: templates/ERR_ICAP_FAILURE:7
 msgid "This means that some aspect of the ICAP communication failed."
-msgstr "Dit betekent dat een onderdeel van de ICAP communicatie is mislukt."
+msgstr ""
 
 #: templates/ERR_FTP_PUT_ERROR:7
 msgid ""
 "This means that the FTP server may not have permission or space to store the "
 "file. Check the path, permissions, diskspace and try again."
 msgstr ""
-"Dit betekent dat de FTP server geen toegang of opslagcapaciteit heeft om het "
-"bestand op te slaan. Controleer het pad, de rechten en opslagcapaciteit en "
-"probeer het opnieuw."
 
 #: templates/ERR_DNS_FAIL:7
+#, fuzzy
 msgid ""
 "This means that the cache was not able to resolve the hostname presented in "
 "the URL. Check if the address is correct."
 msgstr ""
-"Dit betekent dat de cache niet in staat was om de hostnaam uit de URL te "
-"herleiden. Controleer of de naam klopt."
+" 網路快取伺服器沒有辦法正確轉譯您輸入的網站主機名稱，請檢查您輸入的網 址"
+"（URL）是正確的。"
 
 #: templates/ERR_ESI:7
 msgid ""
 "This means that the surrogate was not able to process the ESI template. "
 "Please report this error to the webmaster."
 msgstr ""
-"Dit betekent dat de vervanger niet in staat was om de ESI template te "
-"bewerken. Geef deze fout door aan de webmaster, asltublieft."
 
 #: templates/ERR_FTP_NOT_FOUND:7
 msgid ""
@@ -594,9 +553,6 @@ msgid ""
 "comply with RFC 1738).  If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
-"Dit kan veroorzaakt worden door een FTP URL met een absoluut pad (hetgeen "
-"niet in overeenstemming is met RFC 1738).  Als dit de oorzaak is, dan kan "
-"het bestand gevonden worden op <a href=\"%B\">%B</a>."
 
 #: templates/ERR_SECURE_CONNECT_FAIL:7
 msgid ""
@@ -605,56 +561,50 @@ msgid ""
 "host does not support secure connections, or the proxy is not satisfied with "
 "the host security credentials."
 msgstr ""
-"Deze proxy en de benaderde server hebben geen overeenstemming bereikt over "
-"de beveiling om uw aanvraag af te handelen. Het is mogelijk dat de benaderde "
-"server geen beveiligde verbindingen ondersteund of dat de proxy een te lage "
-"beveiliging heeft gedetecteerd."
 
 #: templates/ERR_CANNOT_FORWARD:6
+#, fuzzy
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
 "caches.  The most likely cause for this error is that the cache "
 "administrator does not allow this cache to make direct connections to origin "
 "servers, and all configured parent caches are currently unreachable."
 msgstr ""
-"Dit verzoek kon niet worden doorgestuurd naar de oorspronkelijke server of "
-"een van de parent caches.  De meest waarschijnlijke reden voor deze fout is "
-"dat de cache beheerder het deze cache niet toestaat met de oorspronkelijke "
-"server te praten, en alle ingestelde parent caches op dit moment "
-"onbereikbaar zijn."
+"您的連結要求無法被轉向原始網站伺服器或其他的上層快取伺服器，發生這個問題的最"
+"可能的原因可能是網路快取伺服器管理者不允許本伺服器逕行直接連結原始的網頁位"
+"置，或是 所有本伺服器設定的上層伺服器目前都暫時無法連結上。"
 
 #: templates/ERR_DNS_FAIL:5
 msgid "Unable to determine IP address from host name <q>%H</q>"
-msgstr "Niet in staat om het IP adres te bepalen van server <q>%H</q>"
+msgstr "無法將您輸入的網站主機位置轉譯成正確的 IP 位置 <q>%H</q>"
 
 #: templates/ERR_CANNOT_FORWARD:5
 msgid "Unable to forward this request at this time."
-msgstr "Momenteel niet in staat dit verzoek door te sturen."
+msgstr "目前無法替您的網站連結要求進行轉向動作"
 
 #: templates/ERR_UNSUP_HTTPVERSION:3 templates/ERR_UNSUP_HTTPVERSION:5
 msgid "Unsupported HTTP version"
-msgstr "Niet ondersteunde HTTP versie"
+msgstr ""
 
 #: templates/ERR_UNSUP_REQ:5
 msgid "Unsupported Request Method and Protocol"
-msgstr "Niet ondersteunde verzoekmethode of protocol"
+msgstr "尚未支援的要求方式或通訊協定"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS:5
 msgid ""
 "Valid document was not found in the cache and <q>only-if-cached</q> "
 "directive was specified."
 msgstr ""
-"Een geldig document werd niet gevonden in de cache, en de <q>only-if-cached</"
-"q> richtlijn was ingesteld."
+"您要求的文件並未存在於本快取伺服器上，而且您設定了 <q>only-if-cached</q> 指"
+"令。"
 
 #: templates/ERR_FTP_PUT_ERROR:4
 msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr ""
-"Bij een poging om naar de volgende URL te schrijven: <a href=\"%U\">%U</a>"
+msgstr "當嘗試上傳（PUT）下列位置時：<a href=\"%U\">%U</a>"
 
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
-msgstr "Schrijffout"
+msgstr "寫入錯誤"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS:6
 msgid ""
@@ -662,10 +612,9 @@ msgid ""
 "directive. The document was not found in the cache, <em>or</em> it required "
 "revalidation prohibited by the <q>only-if-cached</q> directive."
 msgstr ""
-"U heeft een verzoek gedaan met een <q>only-if-cached</q> cachebeheer "
-"richtlijn. Het document werd niet gevonden in de cache <em>of</em> er was "
-"een herbevestiging nodig die niet werd toegestaan door de <q>only-if-cached</"
-"q> richtlijn."
+"您送出了一個包含 <q>only-if-cached</q> 快取控制指令的連結要求。而文件並未存在"
+"快取伺服器中，<em>或者</em> 這個連線要求被 <q>only-if-cached</q> 指令認定是禁"
+"用的。"
 
 #: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
 #: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
@@ -682,20 +631,18 @@ msgstr ""
 #: templates/ERR_UNSUP_REQ:7 templates/ERR_URN_RESOLVE:7
 #: templates/ERR_WRITE_ERROR:8 templates/ERR_ZERO_SIZE_OBJECT:7
 msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
-msgstr "De beheerder van deze cache is <a href=\"mailto:%w%W\">%w</a>."
+msgstr ""
 
 #: templates/ERR_INVALID_RESP:6
 msgid ""
 "Your cache administrator may be able to provide you with more details about "
 "the exact nature of the problem if needed."
 msgstr ""
-"De cache beheerder kan u meer informatie verstrekken met betrekking tot de "
-"exacte reden van dit probleem."
 
 #: templates/ERR_ESI:8
 msgid "Your webmaster is <a href=\"mailto:%w\">%w</a>."
-msgstr "Uw cachebeheerder is <a href=\"mailto:%w\">%w</a>."
+msgstr ""
 
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
-msgstr "Antwoord is leeg"
+msgstr "大小為零的資料回應"
