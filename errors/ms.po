@@ -6,8 +6,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: squid\n"
-"Report-Msgid-Bugs-To: FULL NAME <EMAIL@ADDRESS>\n"
-"POT-Creation-Date: 2009-02-18 18:05+1300\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2009-06-14 18:15+1300\n"
 "PO-Revision-Date: 2009-06-05 23:33+0000\n"
 "Last-Translator: Mohamad Faizul bin Zulkifli <piju@mylinux.net.my>\n"
 "Language-Team: Malay <ms@li.org>\n"
@@ -18,10 +18,8 @@ msgstr ""
 "X-Generator: Launchpad (build Unknown)\n"
 
 #: templates/ERR_FTP_LISTING:6
-msgid ""
-"<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
-msgstr ""
-"<a href=\"../\">Direktori Utama</a> (<a href=\"/\">Root Directory</a>)"
+msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
+msgstr "<a href=\"../\">Direktori Utama</a> (<a href=\"/\">Root Directory</a>)"
 
 #: templates/ERR_INVALID_REQ:4
 msgid ""
@@ -69,8 +67,8 @@ msgstr ""
 
 #: templates/ERR_FTP_FAILURE:4
 msgid ""
-"An FTP protocol error occurred while trying to retrieve the URL: <a "
-"href=\"%U\">%U</a>"
+"An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
+"\">%U</a>"
 msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:10
@@ -88,8 +86,7 @@ msgstr ""
 msgid ""
 "An error condition occurred while writing to the network.  Please retry your "
 "request."
-msgstr ""
-"Keadaan yang salah dihadapi ketika menulis di rangkaian. Sila cuba lg"
+msgstr "Keadaan yang salah dihadapi ketika menulis di rangkaian. Sila cuba lg"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
 msgid "Cache Access Denied."
@@ -308,8 +305,8 @@ msgstr "Direktori Utama"
 #: templates/ERR_CACHE_ACCESS_DENIED:7
 msgid ""
 "Please contact the <a href=\"mailto:%w%W\">cache administrator</a> if you "
-"have difficulties authenticating yourself or <a href=\"http://%h/cgi-"
-"bin/chpasswd.cgi\">change</a> your default password."
+"have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
+"chpasswd.cgi\">change</a> your default password."
 msgstr ""
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
@@ -394,8 +391,7 @@ msgid "The ESI processor returned:"
 msgstr ""
 
 #: templates/ERR_FTP_UNAVAILABLE:4
-msgid ""
-"The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
+msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr ""
 
 #: templates/ERR_INVALID_RESP:5
@@ -436,8 +432,7 @@ msgid ""
 msgstr ""
 
 #: templates/ERR_CONNECT_FAIL:7
-msgid ""
-"The remote host or network may be down.  Please try the request again."
+msgid "The remote host or network may be down.  Please try the request again."
 msgstr ""
 
 #: templates/ERR_TOO_BIG:5
@@ -487,8 +482,7 @@ msgid ""
 msgstr ""
 
 #: templates/ERR_UNSUP_HTTPVERSION:6
-msgid ""
-"This Squid does not accept the HTTP version you are attempting to use."
+msgid "This Squid does not accept the HTTP version you are attempting to use."
 msgstr ""
 
 #: templates/ERR_FTP_DISABLED:6

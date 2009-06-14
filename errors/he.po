@@ -2,14 +2,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-02-18 18:05+1300\n"
+"POT-Creation-Date: 2009-06-14 18:15+1300\n"
 "PO-Revision-Date: 2009-06-07 15:11+1300\n"
 "Last-Translator: yoav <yoavb@zavit.net.il>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
-"Language: he\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: he\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Pootle 1.2.1\n"
 
@@ -58,13 +58,15 @@ msgstr ""
 msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
-msgstr "שגיאה בזיהוי משתמש FTP כאשר ניסיתי לגשת אל הכתובת: <a href=\"%U\">%U</a>"
+msgstr ""
+"שגיאה בזיהוי משתמש FTP כאשר ניסיתי לגשת אל הכתובת: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_FTP_FAILURE:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
-msgstr "קרתה שגיאת פרוטוקול FTP כאשר ניסיתי לגשת אל הכתובת: <a href=\"%U\">%U</a>"
+msgstr ""
+"קרתה שגיאת פרוטוקול FTP כאשר ניסיתי לגשת אל הכתובת: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_ICAP_FAILURE:10
 msgid "An Illegal response was received from the ICAP server."
@@ -407,7 +409,8 @@ msgstr ""
 
 #: templates/ERR_FTP_UNAVAILABLE:4
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
-msgstr "שרת ה-FTP היה עסוק מדי, כאשר ניסיתי לגשת אל הכתובת: <a href=\"%U\">%U</a>"
+msgstr ""
+"שרת ה-FTP היה עסוק מדי, כאשר ניסיתי לגשת אל הכתובת: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
 msgid ""
@@ -497,8 +500,8 @@ msgid ""
 "operates this cache.  Please contact them directly if you feel this is an "
 "error."
 msgstr ""
-"הגבלות אלו הוצבו ע\"י ספק האינטרנט אשר מתחזק שרת זה. אנא צור עמם רשק אם לדעתך "
-"זוהי טעות."
+"הגבלות אלו הוצבו ע\"י ספק האינטרנט אשר מתחזק שרת זה. אנא צור עמם רשק אם "
+"לדעתך זוהי טעות."
 
 #: templates/ERR_UNSUP_HTTPVERSION:6
 msgid "This Squid does not accept the HTTP version you are attempting to use."
@@ -512,7 +515,8 @@ msgstr "שרת זה אינו תוצך ב-FTP."
 msgid ""
 "This cache is in the process of shutting down and can not service your "
 "request at this time.  Please retry your request again soon."
-msgstr "השרת נמצא במצב של כיבוי ואינו יכול להשיב לבקשתך כעת. אנא נסה שוב בקרוב."
+msgstr ""
+"השרת נמצא במצב של כיבוי ואינו יכול להשיב לבקשתך כעת. אנא נסה שוב בקרוב."
 
 #: templates/ERR_FORWARDING_DENIED:6
 msgid ""
