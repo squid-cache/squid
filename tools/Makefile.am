@@ -47,7 +47,7 @@ install-data-local:
 	fi
 
 uninstall-local:
-	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh $(RM) $(DESTDIR)$(DEFAULT_CACHEMGR_CONFIG)
+	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_CACHEMGR_CONFIG)
 	$(RM) -f $(DESTDIR)$(DEFAULT_CACHEMGR_CONFIG).default
 
 DISTCLEANFILES = 

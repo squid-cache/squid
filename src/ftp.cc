@@ -246,6 +246,8 @@ public:
     void ftpAcceptDataConnection(const CommAcceptCbParams &io);
 
     static HttpReply *ftpAuthRequired(HttpRequest * request, const char *realm);
+    const char *ftpRealm(void);
+    void loginFailed(void);
     static wordlist *ftpParseControlReply(char *, size_t, int *, size_t *);
 
     // sending of the request body to the server
@@ -517,32 +519,44 @@ FtpStateData::~FtpStateData()
     fwd = NULL;	// refcounted
 }
 
+/**
+ * Parse a possible login username:password pair.
+ * Produces filled member varisbles user, password, password_url if anything found.
+ */
 void
 FtpStateData::loginParser(const char *login, int escaped)
 {
     char *s = NULL;
-    xstrncpy(user, login, MAX_URL);
+    debugs(9, 4, HERE << ": login='" << login << "', escaped=" << escaped);
+    debugs(9, 9, HERE << ": IN : login='" << login << "', escaped=" << escaped << ", user=" << user << ", password=" << password);
 
-    if ((s = strchr(user, ':'))) {
-        *s = 0;
-        xstrncpy(password, s + 1, MAX_URL);
+    if ((s = strchr(login, ':'))) {
+        *s = '\0';
 
-        if (escaped) {
-            rfc1738_unescape(password);
-            password_url = 1;
+        /* if there was a username part */
+        if(s > login) {
+            xstrncpy(user, login, MAX_URL);
+            if (escaped)
+                rfc1738_unescape(user);
         }
-    } else {
-        xstrncpy(password, null_string, MAX_URL);
+
+        /* if there was a password part */
+        if ( s[1] != '\0' ) {
+            xstrncpy(password, s + 1, MAX_URL);
+            if (escaped) {
+                rfc1738_unescape(password);
+                password_url = 1;
+            }
+        }
+    }
+    else if (login[0]) {
+        /* no password, just username */
+        xstrncpy(user, login, MAX_URL);
+        if (escaped)
+            rfc1738_unescape(user);
     }
 
-    if (escaped)
-        rfc1738_unescape(user);
-
-    if (!user[0])
-        xstrncpy(user, "anonymous", MAX_URL);
-
-    if (strcmp(user, "anonymous") == 0 && !password[0])
-        xstrncpy(password, Config.Ftp.anon_user, MAX_URL);
+    debugs(9, 9, HERE << ": OUT: login='" << login << "', escaped=" << escaped << ", user=" << user << ", password=" << password);
 }
 
 void
@@ -1410,39 +1424,53 @@ FtpStateData::processReplyBody()
 }
 
 /**
+ * Locates the FTP user:password login.
+ *
+ * Highest to lowest priority:
+ *  - Checks URL (ftp://user:pass@domain)
+ *  - Authorization: Basic header
+ *  - squid.conf anonymous-FTP settings (default: anonymous:Squid@).
+ *
+ * Special Case: A username-only may be provided in the URL and password in the HTTP headers.
+ *
  \retval 1	if we have everything needed to complete this request.
  \retval 0	if something is missing.
  */
 int
 FtpStateData::checkAuth(const HttpHeader * req_hdr)
 {
-    char *orig_user;
     const char *auth;
+
+    /* default username */
+    xstrncpy(user, "anonymous", MAX_URL);
+
+    /* Check HTTP Authorization: headers (better than defaults, but less than URL) */
+    if ( (auth = req_hdr->getAuth(HDR_AUTHORIZATION, "Basic")) ) {
+        flags.authenticated = 1;
+        loginParser(auth, FTP_LOGIN_NOT_ESCAPED);
+    }
+    /* we fail with authorization-required error later IFF the FTP server requests it */
+
+    /* Test URL login syntax. Overrides any headers received. */
     loginParser(request->login, FTP_LOGIN_ESCAPED);
 
+    /* name is missing. thats fatal. */
     if (!user[0])
-        return 1;		/* no name */
+        fatal("FTP login parsing destroyed username info");
 
-    if (password_url || password[0])
-        return 1;		/* passwd provided in URL */
+    /* name + password == success */
+    if (password[0])
+        return 1;
 
-    /* URL has name, but no passwd */
-    if (!(auth = req_hdr->getAuth(HDR_AUTHORIZATION, "Basic")))
-        return 0;		/* need auth header */
-
-    flags.authenticated = 1;
-
-    orig_user = xstrdup(user);
-
-    loginParser(auth, FTP_LOGIN_NOT_ESCAPED);
-
-    if (strcmp(orig_user, user) == 0) {
-        xfree(orig_user);
-        return 1;		/* same username */
+    /* Setup default FTP password settings */
+    /* this has to be done last so that we can have a no-password case above. */
+    if (!password[0]) {
+        if (strcmp(user, "anonymous") == 0)
+            xstrncpy(password, Config.Ftp.anon_user, MAX_URL);
+        else
+            xstrncpy(password, null_string, MAX_URL);
     }
 
-    xstrncpy(user, orig_user, sizeof(user));
-    xfree(orig_user);
     return 0;			/* different username */
 }
 
@@ -1540,23 +1568,10 @@ void
 FtpStateData::start()
 {
     if (!checkAuth(&request->header)) {
-        static char realm[8192];
-        /* This request is not fully authenticated */
-
-        if (request->port == 21) {
-            snprintf(realm, 8192, "ftp %s", user);
-        } else {
-            snprintf(realm, 8192, "ftp %s port %d",
-                     user, request->port);
-        }
-
         /* create appropriate reply */
-        HttpReply *reply = ftpAuthRequired(request, realm);
-
+        HttpReply *reply = ftpAuthRequired(request, ftpRealm());
         entry->replaceHttpReply(reply);
-
         serverComplete();
-
         return;
     }
 
@@ -1917,6 +1932,81 @@ ftpReadWelcome(FtpStateData * ftpState)
     }
 }
 
+/**
+ * Translate FTP login failure into HTTP error
+ * this is an attmpt to get the 407 message to show up outside Squid.
+ * its NOT a general failure. But a correct FTP response type.
+ */
+void
+FtpStateData::loginFailed()
+{
+    ErrorState *err = NULL;
+    const char *command, *reply;
+
+    if (state == SENT_USER || state == SENT_PASS) {
+        if (ctrl.replycode > 500) {
+            if (password_url)
+                err = errorCon(ERR_FTP_FORBIDDEN, HTTP_FORBIDDEN, fwd->request);
+            else
+                err = errorCon(ERR_FTP_FORBIDDEN, HTTP_UNAUTHORIZED, fwd->request);
+        } else if (ctrl.replycode == 421) {
+            err = errorCon(ERR_FTP_UNAVAILABLE, HTTP_SERVICE_UNAVAILABLE, fwd->request);
+        }
+    } else {
+        ftpFail(this);
+        return;
+    }
+
+    err->ftp.server_msg = ctrl.message;
+
+    ctrl.message = NULL;
+
+    if (old_request)
+        command = old_request;
+    else
+        command = ctrl.last_command;
+
+    if (command && strncmp(command, "PASS", 4) == 0)
+        command = "PASS <yourpassword>";
+
+    if (old_reply)
+        reply = old_reply;
+    else
+        reply = ctrl.last_reply;
+
+    if (command)
+        err->ftp.request = xstrdup(command);
+
+    if (reply)
+        err->ftp.reply = xstrdup(reply);
+
+
+    HttpReply *newrep = err->BuildHttpReply();
+    errorStateFree(err);
+    /* add Authenticate header */
+    newrep->header.putAuth("Basic", ftpRealm());
+
+    // add it to the store entry for response....
+    entry->replaceHttpReply(newrep);
+    serverComplete();
+}
+
+const char *
+FtpStateData::ftpRealm()
+{
+    static char realm[8192];
+
+    /* This request is not fully authenticated */
+    if (!request) {
+        snprintf(realm, 8192, "FTP %s unknown", user);
+    } else if (request->port == 21) {
+        snprintf(realm, 8192, "FTP %s %s", user, request->GetHost());
+    } else {
+        snprintf(realm, 8192, "FTP %s %s port %d", user, request->GetHost(), request->port);
+    }
+    return realm;
+}
+
 /// \ingroup ServerProtocolFTPInternal
 static void
 ftpSendUser(FtpStateData * ftpState)
@@ -1949,7 +2039,7 @@ ftpReadUser(FtpStateData * ftpState)
     } else if (code == 331) {
         ftpSendPass(ftpState);
     } else {
-        ftpFail(ftpState);
+        ftpState->loginFailed();
     }
 }
 
@@ -1976,7 +2066,7 @@ ftpReadPass(FtpStateData * ftpState)
     if (code == 230) {
         ftpSendType(ftpState);
     } else {
-        ftpFail(ftpState);
+        ftpState->loginFailed();
     }
 }
 
