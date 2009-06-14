@@ -344,20 +344,20 @@ GetOSVersion()
                 WIN32_OS_string = xstrdup("Windows Server 2008");
             return _WIN_OS_WINLON;
         }
-	if ((osvi.dwMajorVersion == 6) && (osvi.dwMinorVersion == 1)) {
-	    if (osvi.wProductType == VER_NT_WORKSTATION)
-		WIN32_OS_string = xstrdup("Windows 7");
-	    else
-		WIN32_OS_string = xstrdup("Windows Server 2008 R2");
-	    return _WIN_OS_WIN7;
-	}
-	if (((osvi.dwMajorVersion > 6)) || ((osvi.dwMajorVersion == 6) && (osvi.dwMinorVersion > 1))) {
-	    if (osvi.wProductType == VER_NT_WORKSTATION)
-		WIN32_OS_string = xstrdup("Unknown Windows version, assuming Windows 7 capabilities");
-	    else
-		WIN32_OS_string = xstrdup("Unknown Windows version, assuming Windows Server 2008 R2 capabilities");
-	    return _WIN_OS_WIN7;
-	}
+        if ((osvi.dwMajorVersion == 6) && (osvi.dwMinorVersion == 1)) {
+            if (osvi.wProductType == VER_NT_WORKSTATION)
+                WIN32_OS_string = xstrdup("Windows 7");
+            else
+                WIN32_OS_string = xstrdup("Windows Server 2008 R2");
+            return _WIN_OS_WIN7;
+        }
+        if (((osvi.dwMajorVersion > 6)) || ((osvi.dwMajorVersion == 6) && (osvi.dwMinorVersion > 1))) {
+            if (osvi.wProductType == VER_NT_WORKSTATION)
+                WIN32_OS_string = xstrdup("Unknown Windows version, assuming Windows 7 capabilities");
+            else
+                WIN32_OS_string = xstrdup("Unknown Windows version, assuming Windows Server 2008 R2 capabilities");
+            return _WIN_OS_WIN7;
+        }
         break;
     case VER_PLATFORM_WIN32_WINDOWS:
         if ((osvi.dwMajorVersion == 4) && (osvi.dwMinorVersion == 0)) {
@@ -537,7 +537,7 @@ int WIN32_Subsystem_Init(int * argc, char *** argv)
         safe_free(ConfigFile);
 
         /* get config file from Windows Registry */
-	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, REGKEY, 0, KEY_QUERY_VALUE, &hndKey) == ERROR_SUCCESS) {
+        if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, REGKEY, 0, KEY_QUERY_VALUE, &hndKey) == ERROR_SUCCESS) {
             DWORD Type = 0;
             DWORD Size = 0;
             LONG Result;

@@ -107,7 +107,7 @@ helperOpenServers(helper * hlp)
 
     debugs(84, 1, "helperOpenServers: Starting " << need_new << "/" << hlp->n_to_start << " '" << shortname << "' processes");
 
-    if(need_new < 1) {
+    if (need_new < 1) {
         debugs(84, 1, "helperOpenServers: No '" << shortname << "' processes needed.");
     }
 
@@ -213,7 +213,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
 
     debugs(84, 1, "helperOpenServers: Starting " << need_new << "/" << hlp->n_to_start << " '" << shortname << "' processes");
 
-    if(need_new < 1) {
+    if (need_new < 1) {
         debugs(84, 1, "helperStatefulOpenServers: No '" << shortname << "' processes needed.");
     }
 

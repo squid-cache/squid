@@ -17,7 +17,8 @@
 
 class IpAddress;
 
-namespace Ident {
+namespace Ident
+{
 
 /**
   \ingroup IdentAPI

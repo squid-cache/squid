@@ -585,10 +585,10 @@ configDoConfigure(void)
         }
 
         for (R = Config.Refresh; R; R = R->next) {
-             if (!R->flags.ignore_must_revalidate)
-                 continue;
-             debugs(22, 1, "WARNING: use of 'ignore-must-revalidate' in 'refresh_pattern' violates HTTP");
-             break;
+            if (!R->flags.ignore_must_revalidate)
+                continue;
+            debugs(22, 1, "WARNING: use of 'ignore-must-revalidate' in 'refresh_pattern' violates HTTP");
+            break;
         }
 
         for (R = Config.Refresh; R; R = R->next) {
@@ -1524,7 +1524,7 @@ parse_cachedir(SquidConfig::_cacheSwap * swap)
     }
 
     /* new cache_dir */
-    if(swap->n_configured > 63) {
+    if (swap->n_configured > 63) {
         /* 7 bits, signed */
         debugs(3, DBG_CRITICAL, "WARNING: There is a fixed maximum of 63 cache_dir entries Squid can handle.");
         debugs(3, DBG_CRITICAL, "WARNING: '" << path_str << "' is one to many.");

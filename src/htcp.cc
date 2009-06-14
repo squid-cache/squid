@@ -884,7 +884,7 @@ htcpTstReply(htcpDataHeader * dhdr, StoreEntry * e, htcpSpecifier * spec, IpAddr
         stuff.S.uri = spec->uri;
         stuff.S.version = spec->version;
         stuff.S.req_hdrs = spec->req_hdrs;
-        if(e)
+        if (e)
             hdr.putInt(HDR_AGE, (e->timestamp <= squid_curtime ? (squid_curtime - e->timestamp) : 0) );
         else
             hdr.putInt(HDR_AGE, 0);
@@ -1488,10 +1488,10 @@ htcpInit(void)
 
     enter_suid();
     htcpInSocket = comm_open_listener(SOCK_DGRAM,
-                             IPPROTO_UDP,
-                             incomingAddr,
-                             COMM_NONBLOCKING,
-                             "HTCP Socket");
+                                      IPPROTO_UDP,
+                                      incomingAddr,
+                                      COMM_NONBLOCKING,
+                                      "HTCP Socket");
     leave_suid();
 
     if (htcpInSocket < 0)
@@ -1507,10 +1507,10 @@ htcpInit(void)
 
         enter_suid();
         htcpOutSocket = comm_open_listener(SOCK_DGRAM,
-                                  IPPROTO_UDP,
-                                  outgoingAddr,
-                                  COMM_NONBLOCKING,
-                                  "Outgoing HTCP Socket");
+                                           IPPROTO_UDP,
+                                           outgoingAddr,
+                                           COMM_NONBLOCKING,
+                                           "Outgoing HTCP Socket");
         leave_suid();
 
         if (htcpOutSocket < 0)
@@ -1708,9 +1708,9 @@ htcpLogHtcp(IpAddress &caddr, int opcode, log_type logcode, const char *url)
 {
     AccessLogEntry al;
     if (LOG_TAG_NONE == logcode)
-	return;
+        return;
     if (!Config.onoff.log_udp)
-	return;
+        return;
     al.htcp.opcode = htcpOpcodeStr[opcode];
     al.url = url;
     al.cache.caddr = caddr;

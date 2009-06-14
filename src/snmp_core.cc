@@ -366,10 +366,10 @@ snmpConnectionOpen(void)
         Config.Addrs.snmp_incoming.SetPort(Config.Port.snmp);
         enter_suid();
         theInSnmpConnection = comm_open_listener(SOCK_DGRAM,
-                                        IPPROTO_UDP,
-                                        Config.Addrs.snmp_incoming,
-                                        COMM_NONBLOCKING,
-                                        "SNMP Port");
+                              IPPROTO_UDP,
+                              Config.Addrs.snmp_incoming,
+                              COMM_NONBLOCKING,
+                              "SNMP Port");
         leave_suid();
 
         if (theInSnmpConnection < 0)
@@ -383,10 +383,10 @@ snmpConnectionOpen(void)
             Config.Addrs.snmp_outgoing.SetPort(Config.Port.snmp);
             enter_suid();
             theOutSnmpConnection = comm_open_listener(SOCK_DGRAM,
-                                             IPPROTO_UDP,
-                                             Config.Addrs.snmp_outgoing,
-                                             COMM_NONBLOCKING,
-                                             "SNMP Port");
+                                   IPPROTO_UDP,
+                                   Config.Addrs.snmp_outgoing,
+                                   COMM_NONBLOCKING,
+                                   "SNMP Port");
             leave_suid();
 
             if (theOutSnmpConnection < 0)

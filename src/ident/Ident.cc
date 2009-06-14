@@ -41,7 +41,8 @@
 #include "ident/Ident.h"
 #include "MemBuf.h"
 
-namespace Ident {
+namespace Ident
+{
 
 #define IDENT_PORT 113
 #define IDENT_KEY_SZ 50
@@ -238,10 +239,10 @@ Ident::Start(IpAddress &me, IpAddress &my_peer, IDCB * callback, void *data)
     addr.SetPort(0); // NP: use random port for secure outbound to IDENT_PORT
 
     fd = comm_open_listener(SOCK_STREAM,
-                   IPPROTO_TCP,
-                   addr,
-                   COMM_NONBLOCKING,
-                   "ident");
+                            IPPROTO_TCP,
+                            addr,
+                            COMM_NONBLOCKING,
+                            "ident");
 
     if (fd == COMM_ERROR) {
         /* Failed to get a local socket */
@@ -266,7 +267,7 @@ Ident::Start(IpAddress &me, IpAddress &my_peer, IDCB * callback, void *data)
 void
 Ident::Init(void)
 {
-    if(ident_hash) {
+    if (ident_hash) {
         debugs(30, DBG_CRITICAL, "WARNING: Ident already initialized.");
         return;
     }

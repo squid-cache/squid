@@ -74,7 +74,8 @@ typedef BOOL (WINAPI * PFInitializeCriticalSectionAndSpinCount) (LPCRITICAL_SECT
 void
 _db_print(const char *format,...)
 {
-    char f[BUFSIZ]; f[0]='\0';
+    char f[BUFSIZ];
+    f[0]='\0';
     va_list args1;
     va_list args2;
     va_list args3;

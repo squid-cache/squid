@@ -613,10 +613,10 @@ comm_open(int sock_type,
 
 int
 comm_open_listener(int sock_type,
-          int proto,
-          IpAddress &addr,
-          int flags,
-          const char *note)
+                   int proto,
+                   IpAddress &addr,
+                   int flags,
+                   const char *note)
 {
     int sock = -1;
 

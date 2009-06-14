@@ -69,7 +69,8 @@ public:
         icp_opcode opcode;
     } icp;
 
-    class HtcpDetails {
+    class HtcpDetails
+    {
     public:
         HtcpDetails() : opcode(NULL) {};
 

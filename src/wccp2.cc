@@ -204,7 +204,7 @@ struct wccp2_cache_identity_info_t {
 //    uint16_t bits;
 //#define WCCP2_HASH_ASSIGNMENT_DATA  0x0
 
-/* 5.7.2 Hash Assignment Data Element */
+    /* 5.7.2 Hash Assignment Data Element */
     char buckets[32]; /* Draft indicates 8x 32-bit buckets but it's just a mask so doesn't matter how we define. */
     uint16_t weight;
     uint16_t status;
@@ -243,18 +243,18 @@ struct wccp2_cache_mask_identity_info_t {
     uint16_t bits;
 #define WCCP2_MASK_ASSIGNMENT_DATA  (0x1 <<14)
 
-/* Sect 5.7.2 Mask Assignment Data Element
- *
- * NP: draft specifies a variable-length set of keys here.
- *     the following fields only matche the special case Squid sends outbound (single-cache).
- */
-     uint32_t mask_element_count;
+    /* Sect 5.7.2 Mask Assignment Data Element
+     *
+     * NP: draft specifies a variable-length set of keys here.
+     *     the following fields only matche the special case Squid sends outbound (single-cache).
+     */
+    uint32_t mask_element_count;
 
-/* Sect 5.7.6 Mask/Value Set Element */
-/* special case: single mask element. no values. */
+    /* Sect 5.7.6 Mask/Value Set Element */
+    /* special case: single mask element. no values. */
     struct wccp2_mask_element_t mask;
 
-/* Sect 5.7.2 Mask Assignment Data Element */
+    /* Sect 5.7.2 Mask Assignment Data Element */
     uint16_t weight;
     uint16_t status;
 };
@@ -333,13 +333,13 @@ static struct wccp2_capability_element_t wccp2_capability_element;
 /* capability values */
 #define WCCP2_METHOD_GRE		0x00000001
 #define WCCP2_METHOD_L2			0x00000002
- /* when type=WCCP2_CAPABILITY_FORWARDING_METHOD */
+/* when type=WCCP2_CAPABILITY_FORWARDING_METHOD */
 #define WCCP2_FORWARDING_METHOD_GRE	WCCP2_METHOD_GRE
 #define WCCP2_FORWARDING_METHOD_L2	WCCP2_METHOD_L2
- /* when type=WCCP2_CAPABILITY_ASSIGNMENT_METHOD */
+/* when type=WCCP2_CAPABILITY_ASSIGNMENT_METHOD */
 #define WCCP2_ASSIGNMENT_METHOD_HASH	0x00000001
 #define WCCP2_ASSIGNMENT_METHOD_MASK	0x00000002
- /* when type=WCCP2_CAPABILITY_RETURN_METHOD */
+/* when type=WCCP2_CAPABILITY_RETURN_METHOD */
 #define WCCP2_PACKET_RETURN_METHOD_GRE	WCCP2_METHOD_GRE
 #define WCCP2_PACKET_RETURN_METHOD_L2	WCCP2_METHOD_L2
 
@@ -996,10 +996,10 @@ wccp2ConnectionOpen(void)
 
     Config.Wccp2.address.SetPort(WCCP_PORT);
     theWccp2Connection = comm_open_listener(SOCK_DGRAM,
-                                   0,
-                                   Config.Wccp2.address,
-                                   COMM_NONBLOCKING,
-                                   "WCCPv2 Socket");
+                                            0,
+                                            Config.Wccp2.address,
+                                            COMM_NONBLOCKING,
+                                            "WCCPv2 Socket");
 
     if (theWccp2Connection < 0)
         fatal("Cannot open WCCP Port");
