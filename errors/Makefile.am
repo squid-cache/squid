@@ -40,7 +40,7 @@ TRANSLATIONS = \
 	ms \
 	nl \
 	pl \
-	pt-br \
+	pt pt-br \
 	ro \
 	ru \
 	sr \
@@ -54,7 +54,6 @@ TRANSLATIONS = \
 # Legacy language contributions...
 #
 LANGUAGES	= \
-		Portuguese \
 		Slovak
 
 install-data-local: 
