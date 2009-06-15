@@ -24,6 +24,7 @@
 /*
  * Hosted at http://sourceforge.net/projects/squidkerbauth
  */
+#include "config.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,16 +51,26 @@
 
 #define PROGRAM "squid_kerb_auth"
 
-#ifdef HEIMDAL
-#include <gssapi.h>
-#define gss_nt_service_name GSS_C_NT_HOSTBASED_SERVICE
-#else
+#ifdef HAVE_HEIMDAL_KERBEROS
+#ifdef HAVE_GSSAPI_GSSAPI_H
 #include <gssapi/gssapi.h>
-#ifndef SOLARIS_11
-#include <gssapi/gssapi_generic.h>
-#else
-#define gss_nt_service_name GSS_C_NT_HOSTBASED_SERVICE
+#elif defined(HAVE_GSSAPI_H)
+#include <gssapi.h>
 #endif
+#define gss_nt_service_name GSS_C_NT_HOSTBASED_SERVICE
+#else
+#ifdef HAVE_GSSAPI_GSSAPI_H
+#include <gssapi/gssapi.h>
+#elif defined(HAVE_GSSAPI_H)
+#include <gssapi.h>
+#endif
+#ifdef HAVE_GSSAPI_GSSAPI_KRB5_H
+#include <gssapi/gssapi_krb5.h>
+#endif
+#ifdef HAVE_GSSAPI_GSSAPI_GENERIC_H
+#include <gssapi/gssapi_generic.h>
+#endif
+#define gss_nt_service_name GSS_C_NT_HOSTBASED_SERVICE
 #endif
 
 #include <krb5.h>
@@ -182,7 +193,7 @@ int main(int argc, char * const argv[])
   char *c;
   int length=0;
   static int err=0;
-  int opt, rc, debug=0, loging=0;
+  int opt, debug=0, loging=0;
   OM_uint32 ret_flags=0, spnego_flag=0;
   char *service_name=(char *)"HTTP",*host_name=NULL;
   char *token = NULL;
@@ -197,7 +208,10 @@ int main(int argc, char * const argv[])
   gss_buffer_desc 	input_token = GSS_C_EMPTY_BUFFER;
   gss_buffer_desc 	output_token = GSS_C_EMPTY_BUFFER;
   const unsigned char	*kerberosToken       = NULL;
+#ifndef HAVE_SPNEGO
+  int rc;
   size_t		kerberosTokenLength = 0;
+#endif
   const unsigned char	*spnegoToken         = NULL ;
   size_t		spnegoTokenLength   = 0;
 

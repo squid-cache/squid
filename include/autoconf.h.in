@@ -1,5 +1,8 @@
 /* include/autoconf.h.in.  Generated from configure.in by autoheader.  */
 
+/* Define if building universal (internal helper macro) */
+#undef AC_APPLE_UNIVERSAL_BUILD
+
 /* Defines how many threads aufs uses for I/O */
 #undef AUFS_IO_THREADS
 
@@ -115,6 +118,10 @@
 /* Define to 1 if you have the <db.h> header file. */
 #undef HAVE_DB_H
 
+/* Define to 1 if you have the declaration of `cygwin_conv_path', and to 0 if
+   you don't. */
+#undef HAVE_DECL_CYGWIN_CONV_PATH
+
 /* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
    */
 #undef HAVE_DIRENT_H
@@ -194,6 +201,21 @@
 /* Define to 1 if you have the <grp.h> header file. */
 #undef HAVE_GRP_H
 
+/* Define to 1 if you have the <gssapi/gssapi_generic.h> header file. */
+#undef HAVE_GSSAPI_GSSAPI_GENERIC_H
+
+/* Define to 1 if you have the <gssapi/gssapi.h> header file. */
+#undef HAVE_GSSAPI_GSSAPI_H
+
+/* Define to 1 if you have the <gssapi/gssapi_krb5.h> header file. */
+#undef HAVE_GSSAPI_GSSAPI_KRB5_H
+
+/* Define to 1 if you have the <gssapi.h> header file. */
+#undef HAVE_GSSAPI_H
+
+/* Define to 1 if you have Heimdal Kerberos */
+#undef HAVE_HEIMDAL_KERBEROS
+
 /* Define to 1 if you have the `htobe16' function. */
 #undef HAVE_HTOBE16
 
@@ -256,6 +278,9 @@
 
 /* Define to 1 if you have the `dl' library (-ldl). */
 #undef HAVE_LIBDL
+
+/* Define if libdlloader will be built on this platform */
+#undef HAVE_LIBDLLOADER
 
 /* Define to 1 if you have the `gnumalloc' library (-lgnumalloc). */
 #undef HAVE_LIBGNUMALLOC
@@ -335,6 +360,9 @@
 
 /* Define to 1 if you have the `memset' function. */
 #undef HAVE_MEMSET
+
+/* Define to 1 if you have MIT Kerberos */
+#undef HAVE_MIT_KERBEROS
 
 /* Define to 1 if you have the `mkstemp' function. */
 #undef HAVE_MKSTEMP
@@ -540,6 +568,9 @@
 
 /* socklen_t is defined by the system headers */
 #undef HAVE_SOCKLEN_T
+
+/* Define to 1 if you have SPNEGO support */
+#undef HAVE_SPNEGO
 
 /* Define to 1 if you have the `srand48' function. */
 #undef HAVE_SRAND48
@@ -796,6 +827,10 @@
 /* Enable real Transparent Proxy support for Netfilter TPROXY v2. */
 #undef LINUX_TPROXY2
 
+/* Define to the sub-directory in which libtool stores uninstalled libraries.
+   */
+#undef LT_OBJDIR
+
 /* If we need to declare sys_errlist[] as external */
 #undef NEED_SYS_ERRLIST
 
@@ -1022,11 +1057,15 @@
 #undef WITH_VALGRIND
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
-   significant byte first (like Motorola and SPARC, unlike Intel and VAX). */
+   significant byte first (like Motorola and SPARC, unlike Intel). */
+#if defined AC_APPLE_UNIVERSAL_BUILD
 #if defined __BIG_ENDIAN__
 # define WORDS_BIGENDIAN 1
-#elif ! defined __LITTLE_ENDIAN__
+# endif
+#else
+# ifndef WORDS_BIGENDIAN
 # undef WORDS_BIGENDIAN
+#endif
 #endif
 
 /* Define to have malloc statistics */

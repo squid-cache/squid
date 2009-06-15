@@ -22,6 +22,7 @@
 //
 /////////////////////////////////////////////////////////////
 
+#include "config.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <memory.h>
@@ -91,7 +92,7 @@ int ASNDerGetLength( unsigned char* pbLengthData, long nBoundaryLength, long* pn
             // Bump by 1 byte
             pbLengthData++;
 
-   #ifdef __LITTLE_ENDIAN__
+    #if defined(__LITTLE_ENDIAN__) || !defined(WORDS_BIGENDIAN)
 
             // There may be a cleaner way to do this, but for now, this seems to be
             // an easy way to do the transformation
@@ -503,7 +504,7 @@ int ASNDerWriteLength( unsigned char* pbData, long nLength )
       // Point to where we'll actually write the length
       pbData++;
 
-#ifdef __LITTLE_ENDIAN__
+#if defined(__LITTLE_ENDIAN__) || !defined(WORDS_BIGENDIAN)
 
       // There may be a cleaner way to do this, but for now, this seems to be
       // an easy way to do the transformation
