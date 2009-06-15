@@ -52,10 +52,17 @@ CONFIG_CLEAN_FILES =
 am__installdirs = "$(DESTDIR)$(libexecdir)"
 libexecPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
 PROGRAMS = $(libexec_PROGRAMS)
+am__squid_kerb_auth_SOURCES_DIST = squid_kerb_auth.c base64.c base64.h \
+	spnegohelp/derparse.c spnegohelp/derparse.h \
+	spnegohelp/Makefile spnegohelp/spnego.c spnegohelp/spnego.h \
+	spnegohelp/spnegohelp.c spnegohelp/spnegohelp.h \
+	spnegohelp/spnegoparse.c spnegohelp/spnegoparse.h
 am__objects_1 = squid_kerb_auth.$(OBJEXT) base64.$(OBJEXT)
 am__objects_2 = derparse.$(OBJEXT) spnego.$(OBJEXT) \
 	spnegohelp.$(OBJEXT) spnegoparse.$(OBJEXT)
-am_squid_kerb_auth_OBJECTS = $(am__objects_1) $(am__objects_2)
+@HAVE_SPNEGO_FALSE@am_squid_kerb_auth_OBJECTS = $(am__objects_1) \
+@HAVE_SPNEGO_FALSE@	$(am__objects_2)
+@HAVE_SPNEGO_TRUE@am_squid_kerb_auth_OBJECTS = $(am__objects_1)
 squid_kerb_auth_OBJECTS = $(am_squid_kerb_auth_OBJECTS)
 squid_kerb_auth_LDADD = $(LDADD)
 am__DEPENDENCIES_1 =
@@ -73,7 +80,7 @@ LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 SOURCES = $(squid_kerb_auth_SOURCES)
-DIST_SOURCES = $(squid_kerb_auth_SOURCES)
+DIST_SOURCES = $(am__squid_kerb_auth_SOURCES_DIST)
 ETAGS = etags
 CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
@@ -99,7 +106,7 @@ CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
 CGIEXT = @CGIEXT@
 CPP = @CPP@
-CPPFLAGS = $(KERBINC) -I$(srcdir)/spnegohelp -I.
+CPPFLAGS = @CPPFLAGS@
 CPPUNITCONFIG = @CPPUNITCONFIG@
 CRYPTLIB = @CRYPTLIB@
 CXX = @CXX@
@@ -134,6 +141,8 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+KRB5INCS = @KRB5INCS@
+KRB5LIBS = @KRB5LIBS@
 LDFLAGS = @LDFLAGS@
 LIBADD_DL = @LIBADD_DL@
 LIBOBJS = @LIBOBJS@
@@ -200,6 +209,7 @@ abs_top_srcdir = @abs_top_srcdir@
 ac_ct_CC = @ac_ct_CC@
 ac_ct_CXX = @ac_ct_CXX@
 ac_ct_F77 = @ac_ct_F77@
+ac_krb5_config = @ac_krb5_config@
 am__include = @am__include@
 am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
@@ -250,18 +260,16 @@ top_srcdir = @top_srcdir@
 SPNEGO = spnegohelp/derparse.c spnegohelp/derparse.h spnegohelp/Makefile spnegohelp/spnego.c spnegohelp/spnego.h spnegohelp/spnegohelp.c spnegohelp/spnegohelp.h spnegohelp/spnegoparse.c spnegohelp/spnegoparse.h
 SOURCE = squid_kerb_auth.c base64.c base64.h
 EXTRA_DIST = readme.txt do.sh
-squid_kerb_auth_SOURCES = $(SOURCE) $(SPNEGO)
+@HAVE_SPNEGO_FALSE@squid_kerb_auth_SOURCES = $(SOURCE) $(SPNEGO)
+@HAVE_SPNEGO_TRUE@squid_kerb_auth_SOURCES = $(SOURCE)
+AM_CPPFLAGS = $(KERBINCS) -I$(srcdir)/spnegohelp -I.
 #-I$(top_srcdir)/include -I$(top_srcdir)/src
 LDADD = $(KERBLIBS)
 #-L$(top_builddir)/lib -lmiscutil $(XTRA_LIBS)
 
-# HEIMDAL
-#KERBINC = -DHEIMDAL -I/usr/include/heimdal
-#KERBLIBS = -lgssapi -lkrb5 -lcom_err -lasn1 -lroken
-
 # MIT
-KERBINC = 
-KERBLIBS = -lgssapi_krb5 -lkrb5 -lcom_err
+KERBINCS = @KRB5INCS@
+KERBLIBS = @KRB5LIBS@
 all: all-am
 
 .SUFFIXES:
