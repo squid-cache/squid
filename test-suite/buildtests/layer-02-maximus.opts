@@ -32,7 +32,6 @@
 #   --enable-kqueue \
 #   --enable-esi \
 #   --enable-win32-service \
-#   --with-localhost-ipv6 \
 #
 #
 OPTS=" \
