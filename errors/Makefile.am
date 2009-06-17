@@ -30,7 +30,8 @@ install-data-local:
 	else \
 		echo "$(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET)"; \
 		$(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET); \
-	fi
+	fi \
+	$(SHELL) $(srcdir)/alias-link.sh "$(LN)" "$(RM)" "$(DESTDIR)$(DEFAULT_ERROR_DIR)" "$(srcdir)/aliases" || exit 1
 
 
 uninstall-local:
@@ -46,6 +47,11 @@ uninstall-local:
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_STYLESHEET)
 	rm -f $(DESTDIR)$(DEFAULT_STYLESHEET).default
 
+
+## Upgrade requires the new files to be pre-installed
+upgrade: install
+	$(SHELL) $(srcdir)/alias-link.sh "$(LN)" "$(RM)" "$(DESTDIR)$(DEFAULT_ERROR_DIR)" "$(srcdir)/alias-upgrade" || exit 1
+
 dist-hook: translate
 	for lang in $(TRANSLATIONS); do \
 	  if test -d $$lang ; then \
@@ -56,7 +62,9 @@ dist-hook: translate
 		  || exit 1; \
 	  fi; \
 	done; \
-	cp -p $(srcdir)/errorpage.css  $(distdir)/errorpage.css
+	for f in aliases alias-link.sh alias-upgrade $(DEFAULT_STYLESHEET); do \
+		cp -p $(srcdir)/$$f $(distdir)/`basename $$f`; \
+	done;
 
 translate:
 	@if ! test -f $(top_srcdir)/errors/en.po; then \
