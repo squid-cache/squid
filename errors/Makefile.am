@@ -62,7 +62,7 @@ dist-hook: translate
 		  || exit 1; \
 	  fi; \
 	done; \
-	for f in aliases alias-link.sh alias-upgrade $(DEFAULT_STYLESHEET); do \
+	for f in aliases alias-link.sh alias-upgrade errorpage.css; do \
 		cp -p $(srcdir)/$$f $(distdir)/`basename $$f`; \
 	done;
 
