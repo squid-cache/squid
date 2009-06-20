@@ -87,8 +87,6 @@ OPTS=" \
 	--without-large-files \
 	--without-valgrind-debug \
 	--without-ipv6-split-stack \
-	--without-ipv4-mapped \
-	--without-localhost-ipv6 \
 	--without-dns-cname \
 	--without-po2html \
 	"

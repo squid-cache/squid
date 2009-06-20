@@ -399,9 +399,7 @@ DOC_START
 	  protocol=2.5	Compatibility mode for Squid-2.5 external acl helpers
 	  ipv4 / ipv6	IP-mode used to communicate to this helper.
 			For compatability with older configurations and helpers
-			'ipv4' is the default unless --with-localhost-ipv6 is used.
-			--with-localhost-ipv6 changes the default to 'ipv6'.
-			SPECIAL NOTE: these options override --with-localhost-ipv6
+			the default is 'ipv4'.
 
 	FORMAT specifications
 
