@@ -30,7 +30,8 @@ install-data-local:
 	else \
 		echo "$(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET)"; \
 		$(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET); \
-	fi
+	fi \
+	$(SHELL) $(srcdir)/alias-link.sh "$(LN)" "$(RM)" "$(DESTDIR)$(DEFAULT_ERROR_DIR)" "$(srcdir)/aliases" || exit 1
 
 
 uninstall-local:
@@ -45,6 +46,10 @@ uninstall-local:
 	done;
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_STYLESHEET)
 	rm -f $(DESTDIR)$(DEFAULT_STYLESHEET).default
+
+## Upgrade requires the new files to be pre-installed
+upgrade: install
+	$(SHELL) $(srcdir)/alias-link.sh "$(LN)" "$(RM)" "$(DESTDIR)$(DEFAULT_ERROR_DIR)" "$(srcdir)/alias-upgrade" || exit 1
 
 # undocumented hack.  You can use this target to create multi-lingual
 # error pages.  For example:
@@ -81,7 +86,9 @@ dist-hook: translate
 		  || exit 1; \
 	  fi; \
 	done; \
-	cp -p $(srcdir)/errorpage.css  $(distdir)/errorpage.css
+	for f in aliases alias-link.sh alias-upgrade errorpage.css; do \
+		cp -p $(srcdir)/$$f $(distdir)/`basename $$f`; \
+	done;
 
 translate:
 	@if ! test -f $(top_srcdir)/errors/en.po; then \
