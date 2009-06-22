@@ -1183,7 +1183,9 @@ wccp2HandleUdp(int sock, void *not_used)
     /* Go through the data structure */
     while (data_length > offset) {
 
-        header = (struct wccp2_item_header_t *) &wccp2_i_see_you.data[offset];
+	char *data = wccp2_i_see_you.data;
+
+        header = (struct wccp2_item_header_t *) &data[offset];
 
         switch (ntohs(header->type)) {
 
@@ -1402,6 +1404,7 @@ wccp2HandleUdp(int sock, void *not_used)
 
         for (num_caches = 0; num_caches < (int) ntohl(tmp); num_caches++) {
             /* Get a copy of the ip */
+	   memset(&cache_address, 0, sizeof(cache_address)); // Make GCC happy
 
             switch (Config.Wccp2.assignment_method) {
 
