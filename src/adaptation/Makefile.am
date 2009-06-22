@@ -39,6 +39,6 @@ libadaptation_la_SOURCES = \
 	ServiceGroups.h
 
 # add libraries for specific adaptation schemes
-libadaptation_la_LIBADD = @ECAP_LIBS@ @ICAP_LIBS@
+libadaptation_la_LIBADD = @ECAP_LIBS@ @ECAPLIB@ @ICAP_LIBS@
 
 libadaptation_la_DEPENDENCIES = @ECAP_LIBS@ @ICAP_LIBS@
