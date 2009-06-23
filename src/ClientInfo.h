@@ -6,7 +6,8 @@
 #include "enums.h"
 #include "typedefs.h"
 
-class ClientInfo {
+class ClientInfo
+{
 public:
     hash_link hash;             /* must be first */
 

@@ -893,9 +893,7 @@ NOCOMMENT_START
         <verb>
           ipv4 / ipv6   IP-mode used to communicate to this helper.
                         For compatability with older configurations and helpers
-                        'ipv4' is the default unless --with-localhost-ipv6 is used.
-                        --with-localhost-ipv6 changes the default to 'ipv6'.
-                        SPECIAL NOTE: explicit use of these options override --with-localhost-ipv6
+                        the default is 'ipv4'.
         </verb>
 	<p>New header input format specifiers. To seperate Request and Reply headers when both passed back.
 	<verb>
@@ -1103,12 +1101,6 @@ This section gives an account of those changes in three categories:
 	   check the CNAME-Only Requests statistics squid maintains.
 	<p>If it produces ongoing serious problems the external helper may be needed
 	   but please report the bugs anyway.
-
-	<tag>--with-localhost-ipv6</tag>
-	<p>Build support for squid to map all 127.0.0.1 traffic onto ::1.
-           The default is to build with 127.0.0.1 and ::1 being considered seperate IP.
-           see the IPv6 details above for a better description.
-	<p>WARNING: This is an RFC violation. Use is discouraged.
 
 	<tag>--with-logdir=PATH</tag>
 	<p>Allow build-time configuration of Default location for squid logs.

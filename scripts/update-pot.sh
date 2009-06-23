@@ -3,9 +3,12 @@
 # Update the core errpages.pot file from the basic templates
 # Useful if any template has altered.
 #
-# To be run during maintenance from the squid errors/ directory
+# To be run during maintenance from the main squid directory
 #
 
+## Begin errors/ Updates.
+
+cd errors/
 # Make sure any existing temp stuff is gone from previous updates...
 rm -r -f ./pot
 rm -f errpages.pot.new
@@ -40,3 +43,7 @@ done
 # cleanup.
 rm -r -f ./pot
 rm -f errpages.pot.new
+cd ..
+## Done errors/ Updates
+
+## TODO: begin doc/manuals updates

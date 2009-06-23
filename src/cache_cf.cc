@@ -585,10 +585,10 @@ configDoConfigure(void)
         }
 
         for (R = Config.Refresh; R; R = R->next) {
-             if (!R->flags.ignore_must_revalidate)
-                 continue;
-             debugs(22, 1, "WARNING: use of 'ignore-must-revalidate' in 'refresh_pattern' violates HTTP");
-             break;
+            if (!R->flags.ignore_must_revalidate)
+                continue;
+            debugs(22, 1, "WARNING: use of 'ignore-must-revalidate' in 'refresh_pattern' violates HTTP");
+            break;
         }
 
         for (R = Config.Refresh; R; R = R->next) {

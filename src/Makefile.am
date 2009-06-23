@@ -149,6 +149,7 @@ noinst_LTLIBRARIES = libsquid.la
 
 # libraries used by many targets
 COMMON_LIBS = \
+	base/libbase.la \
 	libsquid.la \
 	auth/libacls.la \
 	ident/libident.la \
@@ -156,7 +157,6 @@ COMMON_LIBS = \
 	acl/libstate.la \
 	auth/libauth.la \
 	acl/libapi.la \
-	base/libbase.la \
 	ip/libip.la \
 	fs/libfs.la
 
@@ -569,11 +569,18 @@ recv_announce_SOURCES = recv-announce.cc SquidNew.cc
 ## tools.cc wants ip/libip.la
 ## client_side.cc wants ip/libip.la
 ## mem.cc wants ClientInfo.h
+## libbase.la wants cbdata.*
+## libbase.la wants MemBuf.*
 ufsdump_SOURCES = \
 	ClientInfo.h \
+	cbdata.h \
+	cbdata.cc \
 	debug.cc \
 	int.cc \
 	mem.cc \
+	MemBuf.cc \
+	MemBuf.cci \
+	MemBuf.h \
 	store_key_md5.cc \
 	StoreMeta.cc \
 	StoreMetaMD5.cc \
@@ -590,7 +597,8 @@ ufsdump_SOURCES = \
 	HttpRequestMethod.cc \
 	RemovalPolicy.cc \
 	squid.h \
-	$(WIN32_SOURCE)
+	$(WIN32_SOURCE) \
+	tests/stub_fd.cc
 ufsdump_LDADD = \
 	$(COMMON_LIBS) \
 	@XTRA_OBJS@ \

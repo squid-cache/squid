@@ -1,0 +1,33 @@
+# 3.0 Still published with the old language namings.
+# we leave these alone in case any are configured...
+az	Azerbaijani
+bg	Bulgarian
+ca	Catalan
+cz	Czech
+da	Danish
+de	German
+el	Greek
+en	English
+es	Spanish
+et	Estonian
+fi	Finnish
+fr	French
+he	Hebrew
+hu	Hungarian
+hy	Armenian
+it	Italian
+ja	Japanese
+ko	Korean
+lt	Lithuanian
+nl	Dutch
+po	Polish
+pt	Portuguese
+ro	Romanian
+ru	Russian-1251 Russian-koi8-r
+sk	Slovak
+sr	Serbian
+sv	Swedish
+tr	Turkish
+uk	Ukrainian-1251 Ukrainian-koi8-u Ukrainian-utf8
+zh-cn	Simplify_Chinese
+zh-tw	Traditional_Chinese

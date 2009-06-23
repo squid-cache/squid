@@ -537,7 +537,7 @@ int WIN32_Subsystem_Init(int * argc, char *** argv)
         safe_free(ConfigFile);
 
         /* get config file from Windows Registry */
-	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, REGKEY, 0, KEY_QUERY_VALUE, &hndKey) == ERROR_SUCCESS) {
+        if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, REGKEY, 0, KEY_QUERY_VALUE, &hndKey) == ERROR_SUCCESS) {
             DWORD Type = 0;
             DWORD Size = 0;
             LONG Result;

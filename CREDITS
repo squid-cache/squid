@@ -2,9 +2,35 @@ $Id$
 
 ==============================================================================
 
+SQUID Internet Object Cache  http://www.squid-cache.org
+--------------------------------------------------------
+
+  Squid is the result of efforts by numerous individuals from the
+  Internet community.  Development is led by Duane Wessels of the
+  National Laboratory for Applied Network Research and funded by
+  the National Science Foundation.
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
+  MA 02110-1301, USA.
+
+Squid is derived from the ``cached'' software from the ARPA-funded
+Harvest research project.  The Harvest home page is
+http://harvest.cs.colorado.edu/.
+
 Squid is originally derived from the Harvest Information Discovery and
-Access System and relicensed under the name Squid using the Gnu Public License.
-The original Harvest copyright text follows to acknowledge the origin:
+Access System.  The Harvest copyright text follows to acknowledge the origin:
 
 
 /*
@@ -92,6 +118,7 @@ Modified to work with strings instead of files.
 ==============================================================================
 
 snmplib/*:
+include/{asn1.h,parse.h,snmp*}:
 
 The SNMP library code is developed by Carnegie Mellon University.
 
@@ -318,18 +345,18 @@ static char sccsid[] = "@(#)getopt.c	8.3 (Berkeley) 4/27/95";
 
 ==============================================================================
 
-src/external_acl.c
+src/external_acl.c:
 
-Copyright (C) 2002 MARA Systems AB, Sweden <info@marasystems.com>
+ Copyright (C) 2002 MARA Systems AB, Sweden <info@marasystems.com>
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2, or (at your option)
-any later version.
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 2, or (at your option)
+ any later version.
 
 ==============================================================================
 
-helpers/external_acl/wbinfo_group/wbinfo_group.pl
+helpers/external_acl/wbinfo_group/wbinfo_group.pl:
 
  This program is put in the public domain by Jerry Murdock 
  <jmurdock@itraktech.com>. It is distributed in the hope that it will
@@ -338,9 +365,32 @@ helpers/external_acl/wbinfo_group/wbinfo_group.pl
 
 ==============================================================================
 
-include/IPAddress.h lib/IPAddress.cc
-include/rfc3596.h lib/rfc3596.cc
-src/ICMPv6.h src/ICMPv6.cc
+lib/libTrie/*:
+
+/*
+ * Copyright (c) 2002,2003 Robert Collins <rbtcollins@hotmail.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
+ *
+ */
+
+==============================================================================
+
+include/IPAddress.h lib/IPAddress.cc:
+include/rfc3596.h lib/rfc3596.cc:
+src/ICMPv6.h src/ICMPv6.cc:
 
  This code is copyright (C) 2007 by Treehouse Networks Ltd
  of New Zealand. It is published and Licensed as an extension of

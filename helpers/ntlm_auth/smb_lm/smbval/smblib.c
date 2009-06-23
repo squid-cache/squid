@@ -88,7 +88,7 @@ SMB_Term()
 }
 
 /**
- * SMB_Create: Create a connection structure and return for later use 
+ * SMB_Create: Create a connection structure and return for later use
  * We have other helper routines to set variables
  */
 SMB_Handle_Type
@@ -209,8 +209,8 @@ SMB_Connect_Server(SMB_Handle_Type Con_Handle,
 /* use the handle passed                                              */
 
 char const *SMB_Prots_Restrict[] = {"PC NETWORK PROGRAM 1.0",
-                              NULL
-                             };
+                                    NULL
+                                   };
 
 
 SMB_Handle_Type

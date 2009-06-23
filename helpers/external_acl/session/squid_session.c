@@ -36,7 +36,7 @@
 #include <getopt.h>
 #endif
 
-/* At this point all Bit Types are already defined, so we must 
+/* At this point all Bit Types are already defined, so we must
    protect from multiple type definition on platform where
    __BIT_TYPES_DEFINED__ is not defined.
  */
