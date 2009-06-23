@@ -60,19 +60,19 @@ static int SMB_Types[] = {SMB_P_Core,
                          };
 
 static char const *SMB_Prots[] = {"PC NETWORK PROGRAM 1.0",
-                            "MICROSOFT NETWORKS 1.03",
-                            "MICROSOFT NETWORKS 3.0",
-                            "DOS LANMAN1.0",
-                            "LANMAN1.0",
-                            "DOS LM1.2X002",
-                            "LM1.2X002",
-                            "DOS LANMAN2.1",
-                            "LANMAN2.1",
-                            "Samba",
-                            "NT LM 0.12",
-                            "NT LANMAN 1.0",
-                            NULL
-                           };
+                                  "MICROSOFT NETWORKS 1.03",
+                                  "MICROSOFT NETWORKS 3.0",
+                                  "DOS LANMAN1.0",
+                                  "LANMAN1.0",
+                                  "DOS LM1.2X002",
+                                  "LM1.2X002",
+                                  "DOS LANMAN2.1",
+                                  "LANMAN2.1",
+                                  "Samba",
+                                  "NT LM 0.12",
+                                  "NT LANMAN 1.0",
+                                  NULL
+                                 };
 
 /* Print out an SMB pkt in all its gory detail ... */
 #if 0 // DEAD CODE

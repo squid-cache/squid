@@ -871,6 +871,7 @@ AC_ARG_ENABLE(ecap,
 )
 
 dnl Perform configuration consistency checks for eCAP
+ECAPLIB=""
 if test $use_ecap = yes;
 then
     dnl eCAP support requires loadable modules, which are enabled by default
@@ -881,7 +882,7 @@ then
 
     dnl eCAP support requires libecap
     AC_CHECK_LIB([ecap], [main],
-        [ECAP_LIBS="-lecap"],
+        [ECAPLIB="-lecap"],
         [AC_MSG_FAILURE([eCAP support requires libecap library, but no usable library was found])]
     )
 fi
@@ -896,7 +897,10 @@ else
     AC_DEFINE(USE_ECAP,0,[Disable eCAP support])
     ECAP_LIBS=""
 fi
+dnl convenience library
 AC_SUBST(ECAP_LIBS)
+dnl -lecap if needed
+AC_SUBST(ECAPLIB)
 
 
 dnl enable adaptation if requested by specific adaptation mechanisms
@@ -2973,8 +2977,6 @@ AC_CHECK_FUNCS(\
 	srand48 \
 	srandom \
 	statfs \
-	strsep \
-	strtoll \
 	sysconf \
 	syslog \
 	timegm \
@@ -2989,6 +2991,8 @@ AC_REPLACE_FUNCS(\
 	getaddrinfo \
 	getnameinfo \
 	strerror \
+	strsep \
+	strtoll \
 	tempnam \
 )
 
@@ -3103,17 +3107,6 @@ if test "$ac_cv_func_strnstr" = "yes" ; then
   AC_DEFINE(HAVE_STRNSTR,1,[Yay! We have a working strnstr!])
 else
   AC_DEFINE(HAVE_STRNSTR,0,[Yay! A MacOS X brokenness. Its not good enough to know that strnstr() exists, because MacOSX 10.4 and earlier may have a buffer overrun.])
-fi
-
-
-AM_CONDITIONAL(NEED_OWN_STRSEP, false)
-if test "$ac_cv_func_strsep" = "no" ; then
-  AM_CONDITIONAL(NEED_OWN_STRSEP, true)
-fi
-
-AM_CONDITIONAL(NEED_OWN_STRTOLL, false)
-if test "$ac_cv_func_strtoll" = "no" ; then
-  AM_CONDITIONAL(NEED_OWN_STRTOLL, true)
 fi
 
 dnl
