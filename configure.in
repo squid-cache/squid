@@ -854,6 +854,7 @@ AC_ARG_ENABLE(ecap,
 )
 
 dnl Perform configuration consistency checks for eCAP
+ECAPLIB=""
 if test $use_ecap = yes;
 then
     dnl eCAP support requires loadable modules, which are enabled by default
@@ -864,7 +865,7 @@ then
 
     dnl eCAP support requires libecap
     AC_CHECK_LIB([ecap], [main],
-        [ECAP_LIBS="-lecap"],
+        [ECAPLIB="-lecap"],
         [AC_MSG_FAILURE([eCAP support requires libecap library, but no usable library was found])]
     )
 fi
@@ -879,7 +880,10 @@ else
     AC_DEFINE(USE_ECAP,0,[Disable eCAP support])
     ECAP_LIBS=""
 fi
+dnl convenience library
 AC_SUBST(ECAP_LIBS)
+dnl -lecap if needed
+AC_SUBST(ECAPLIB)
 
 
 dnl enable adaptation if requested by specific adaptation mechanisms
