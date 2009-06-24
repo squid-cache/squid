@@ -2651,8 +2651,6 @@ AC_CHECK_FUNCS(\
 	srand48 \
 	srandom \
 	statfs \
-	strsep \
-	strtoll \
 	sysconf \
 	syslog \
 	timegm \
@@ -2663,6 +2661,8 @@ AC_REPLACE_FUNCS(\
 	drand48 \
 	initgroups \
 	strerror \
+	strsep \
+	strtoll \
 	tempnam \
 )
 
@@ -2807,17 +2807,6 @@ if test "$ac_cv_func_strnstr" = "yes" ; then
   AC_DEFINE(HAVE_STRNSTR,1,[Yay! We have a working strnstr!])
 else
   AC_DEFINE(HAVE_STRNSTR,0,[Yay! A MacOS X brokenness. Its not good enough to know that strnstr() exists, because MacOSX 10.4 and earlier may have a buffer overrun.])
-fi
-
-
-AM_CONDITIONAL(NEED_OWN_STRSEP, false)
-if test "$ac_cv_func_strsep" = "no" ; then
-  AM_CONDITIONAL(NEED_OWN_STRSEP, true)
-fi
-
-AM_CONDITIONAL(NEED_OWN_STRTOLL, false)
-if test "$ac_cv_func_strtoll" = "no" ; then
-  AM_CONDITIONAL(NEED_OWN_STRTOLL, true)
 fi
 
 dnl

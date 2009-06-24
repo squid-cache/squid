@@ -18,17 +18,6 @@ else
 XPROF_STATS_SOURCE = 
 endif
 
-if NEED_OWN_STRSEP
-STRSEPSOURCE=strsep.c
-else
-STRSEPSOURCE=
-endif
-if NEED_OWN_STRTOLL
-STRTOLLSOURCE=strtoll.c
-else
-STRTOLLSOURCE=
-endif
-
 if ENABLE_WIN32SPECIFIC
 LIBSSPWIN32=libsspwin32.a
 WIN32SRC = win32lib.c
@@ -54,8 +43,6 @@ EXTRA_libmiscutil_a_SOURCES = \
 	getopt.c \
 	md5.c \
 	Profiler.c \
-	strsep.c \
-	strtoll.c \
 	win32lib.c
 libmiscutil_a_SOURCES = \
 	MemPool.cc \
@@ -75,8 +62,6 @@ libmiscutil_a_SOURCES = \
 	$(SNPRINTFSOURCE) \
 	Splay.cc \
 	strnstr.cc \
-	$(STRSEPSOURCE) \
-	$(STRTOLLSOURCE) \
 	stub_memaccount.c \
 	util.c \
 	uudecode.c \
