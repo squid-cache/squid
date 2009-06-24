@@ -1967,99 +1967,6 @@ AC_ARG_ENABLE(x-accelerator-vary,
   fi
 ])
 
-dnl Enable IPv6 support
-AC_MSG_CHECKING([whether to enable IPv6])
-use_ipng=yes
-AC_ARG_ENABLE(ipv6,
-  AC_HELP_STRING([--disable-ipv6],[Disable IPv6 support]),
-[ if test "x$enableval" = "xyes" ; then
-    AC_MSG_RESULT(yes)
-  else
-    AC_MSG_RESULT(no)
-    use_ipng=no
-  fi
-],[AC_MSG_RESULT(yes)])
-
-if test "$use_ipng" = "yes"; then
-  SAVED_LIBS="$LIBS"
-  dnl Solaris 10/11 requires  -lsocket
-  case "$host" in
-    *-solaris*)
-      LIBS="$LIBS -lsocket"
-      ;;
-    *)
-      ;;
-  esac
-  AC_CACHE_CHECK([if PF_INET6 is available], $use_ipng,
-    AC_TRY_RUN([ /* PF_INET6 available check */
-#       include <sys/types.h>
-#       include <sys/socket.h>
-        int main() {
-          if (socket(PF_INET6, SOCK_STREAM, 0) < 0)
-            return 1;
-          else
-            return 0;
-        }
-      ],
-      [ AC_MSG_RESULT(yes)
-        use_ipng=yes
-        SAVED_LIBS="$LIBS"
-      ],
-      [ AC_MSG_RESULT(no)
-        use_ipng=no
-      ])
-   )
-   LIBS="$SAVED_LIBS"
-fi
-
-if test "$use_ipng" = "yes"; then
-
-AC_DEFINE(USE_IPV6,1,[Enable support for IPv6 ])
-
-dnl Check for IPv6 Windows Vista option
-dnl Also useful for other OS with hybrid-stack defaults turned OFF
-AC_DEFINE(IPV6_SPECIAL_V4MAPPED, 1, [Enable v4-mapping through v6 sockets])
-
-dnl Check for Windows XP option
-AC_MSG_CHECKING([for IPv6 split-stack requirement])
-AC_ARG_WITH(ipv6-split-stack,
-  AC_HELP_STRING([--with-ipv6-split-stack],
-		 [Enable experimental split-stack support for Windows XP. Requires IPv6.]),
-  [ AC_DEFINE(IPV6_SPECIAL_SPLITSTACK, 1, [Enable support for IPv6 on split-stack implementations])
-    AC_DEFINE(IPV6_SPECIAL_V4MAPPED, 0, [Enable v4-mapping through v6 sockets. Requires IPv6 hybrid-stack.])
-    AC_MSG_RESULT(yes)
-  ],
-  [AC_DEFINE(IPV6_SPECIAL_SPLITSTACK, 0, [Enable support for IPv6 on split-stack implementations]) AC_MSG_RESULT(no)]
-)
-
-dnl Check whether this OS defines sin6_len as a member of sockaddr_in6 as a backup to ss_len
-AC_CACHE_CHECK([for sin6_len field in struct sockaddr_in6],
-                ac_cv_have_sin6_len_in_struct_sai, [
-        AC_TRY_COMPILE([
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-                ],
-                [ struct sockaddr_in6 s; s.sin6_len = 1; ],
-                [ ac_cv_have_sin6_len_in_struct_sai="yes" ],
-                [ ac_cv_have_sin6_len_in_struct_sai="no" ]
-        )
-])
-if test "x$ac_cv_have_sin6_len_in_struct_sai" = "xyes" ; then
-        AC_DEFINE(HAVE_SIN6_LEN_IN_SAI, 1, [Does struct sockaddr_in6 have sin6_len? 1: Yes, 0: No])
-else
-        AC_DEFINE(HAVE_SIN6_LEN_IN_SAI, 0, [Does struct sockaddr_in6 have sin6_len? 1: Yes, 0: No])
-fi
-
-
-else
-  # NP: semi-silent failure as IPv4-only mode is perfectly usable on this system.
-  AC_MSG_WARN([IPv6 is not available on this system.])
-  AC_DEFINE(USE_IPV6,0,[Enable support for IPv6])
-  AC_DEFINE(IPV6_SPECIAL_SPLITSTACK,0,[Enable support for IPv6 on split-stack implementations])
-  AC_DEFINE(IPV6_SPECIAL_V4MAPPED,0,[Enable v4-mapping through v6 sockets])
-fi
-
 AC_ARG_ENABLE(zph-qos,
   AC_HELP_STRING([--enable-zph-qos],[Enable ZPH QOS support]),
 [ if test "$enableval" = "yes" ; then
@@ -2069,44 +1976,6 @@ AC_ARG_ENABLE(zph-qos,
       When enabled, Squid will alter TOS field of HIT responses for better QOS on intermediate routing/shaping devices.])
   fi
 ])
-
-dnl Check whether this OS defines ss_len as a member of sockaddr_storage
-AC_CACHE_CHECK([for ss_len field in struct sockaddr_storage],
-		ac_cv_have_ss_len_in_struct_ss, [
-	AC_TRY_COMPILE([
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-		],
-		[ struct sockaddr_storage s; s.ss_len = 1; ],
-		[ ac_cv_have_ss_len_in_struct_ss="yes" ],
-		[ ac_cv_have_ss_len_in_struct_ss="no" ]
-	)
-])
-if test "x$ac_cv_have_ss_len_in_struct_ss" = "xyes" ; then
-	AC_DEFINE(HAVE_SS_LEN_IN_SS, 1, [Does struct sockaddr_storage have ss_len? 1: Yes, 0: No])
-else
-	AC_DEFINE(HAVE_SS_LEN_IN_SS, 0, [Does struct sockaddr_storage have ss_len? 1: Yes, 0: No])
-fi
-
-dnl Check whether this OS defines sin_len as a member of sockaddr_in as a backup to ss_len
-AC_CACHE_CHECK([for sin_len field in struct sockaddr_in],
-                ac_cv_have_sin_len_in_struct_sai, [
-        AC_TRY_COMPILE([
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-                ],
-                [ struct sockaddr_in s; s.sin_len = 1; ],
-                [ ac_cv_have_sin_len_in_struct_sai="yes" ],
-                [ ac_cv_have_sin_len_in_struct_sai="no" ]
-        )
-])
-if test "x$ac_cv_have_sin_len_in_struct_sai" = "xyes" ; then
-        AC_DEFINE(HAVE_SIN_LEN_IN_SAI, 1, [Does struct sockaddr_in have sin_len? 1: Yes, 0: No])
-else
-        AC_DEFINE(HAVE_SIN_LEN_IN_SAI, 0, [Does struct sockaddr_in have sin_len? 1: Yes, 0: No])
-fi
 
 dnl --with-maxfd present for compatibility with Squid-2.
 dnl undocumented in ./configure --help  to encourage using the Squid-3 directive.
@@ -2695,6 +2564,170 @@ mingw|mingw32)
 	AC_CHECK_LIB(m, main)
 	;;
 esac
+
+dnl Enable IPv6 support
+AC_MSG_CHECKING([whether to enable IPv6])
+use_ipng=yes
+AC_ARG_ENABLE(ipv6,
+  AC_HELP_STRING([--disable-ipv6],[Disable IPv6 support]),
+[ if test "x$enableval" = "xyes" ; then
+    AC_MSG_RESULT(yes)
+  else
+    AC_MSG_RESULT(no)
+    use_ipng=no
+  fi
+],[AC_MSG_RESULT(yes)])
+
+if test "$use_ipng" = "yes"; then
+  SAVED_LIBS="$LIBS"
+  dnl Solaris 10/11 requires  -lsocket
+  case "$host" in
+    *-solaris*)
+      LIBS="$LIBS -lsocket"
+      ;;
+    *)
+      ;;
+  esac
+  AC_CACHE_CHECK([if PF_INET6 is available], $use_ipng,
+    AC_TRY_RUN([ /* PF_INET6 available check */
+#       include <sys/types.h>
+#       include <sys/socket.h>
+        int main() {
+          if (socket(PF_INET6, SOCK_STREAM, 0) < 0)
+            return 1;
+          else
+            return 0;
+        }
+      ],
+      [ AC_MSG_RESULT(yes)
+        use_ipng=yes
+        SAVED_LIBS="$LIBS" ],
+      [ AC_MSG_RESULT(no)
+        use_ipng=no ])
+   )
+   LIBS="$SAVED_LIBS"
+fi
+
+if test "$use_ipng" = "yes"; then
+  AC_DEFINE(USE_IPV6,1,[Enable support for IPv6 ])
+  use_v4mapped=yes
+
+dnl Check for Windows XP option
+  AC_MSG_CHECKING([for IPv6 split-stack requirement])
+  AC_ARG_WITH(ipv6-split-stack,
+    AC_HELP_STRING([--with-ipv6-split-stack],
+		   [Enable experimental split-stack support for Windows XP. Requires IPv6.]),
+    [ use_v4mapped="no"
+      AC_MSG_RESULT(yes)],
+    [ AC_MSG_RESULT(no) ])
+
+dnl Check for IPv6 Windows Vista option
+dnl Also useful for other OS with hybrid-stack defaults turned OFF
+dnl But only usable if it actually works...
+  if test "$use_v4mapped" = "yes" ; then
+    AC_MSG_CHECKING([for IPv6 v4-mapping ability])
+    AC_TRY_RUN([ /* IPPROTO_V4MAPPED is usable check */
+#       include <sys/types.h>
+#       include <sys/socket.h>
+#	include <netinet/in.h>
+#if HAVE_NETINET_IN6_H
+#	include <netinet/in6.h>
+#endif
+        int main() {
+          int s = socket(PF_INET6, SOCK_STREAM, 0);
+          int tos = 0;
+          if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &tos, sizeof(int)) < 0)
+            return 1;
+          else
+            return 0;
+        }
+      ],
+      [ AC_MSG_RESULT(yes)
+        use_v4mapped=yes
+        AC_DEFINE(IPV6_SPECIAL_V4MAPPED, 1, [Enable v4-mapping through v6 sockets])
+      ],
+      [ AC_MSG_RESULT(no)
+        AC_DEFINE(IPV6_SPECIAL_V4MAPPED, 0, [Enable v4-mapping through v6 sockets])
+        use_v4mapped=no
+      ])
+  fi
+
+dnl if we can't defer v4-mapping to the OS we are forced to split-stack the FD table.
+  AC_MSG_CHECKING([for IPv6 stack type/mode])
+  if test "$use_v4mapped" = "yes"; then
+    AC_DEFINE(IPV6_SPECIAL_V4MAPPED, 1, [Enable v4-mapping through v6 sockets. Requires IPv6 hybrid-stack.])
+    AC_DEFINE(IPV6_SPECIAL_SPLITSTACK, 0, [Enable support for IPv6 on split-stack implementations])
+    AC_MSG_RESULT(mapping hybrid)
+  else
+    AC_DEFINE(IPV6_SPECIAL_V4MAPPED, 0, [Enable v4-mapping through v6 sockets. Requires IPv6 hybrid-stack.])
+    AC_DEFINE(IPV6_SPECIAL_SPLITSTACK, 1, [Enable support for IPv6 on split-stack implementations])
+    AC_MSG_RESULT(split-stack or BSD non-mapping dual-stack)
+  fi
+
+dnl Check whether this OS defines sin6_len as a member of sockaddr_in6 as a backup to ss_len
+AC_CACHE_CHECK([for sin6_len field in struct sockaddr_in6],
+                ac_cv_have_sin6_len_in_struct_sai, [
+        AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+                ],
+                [ struct sockaddr_in6 s; s.sin6_len = 1; ],
+                [ ac_cv_have_sin6_len_in_struct_sai="yes" ],
+                [ ac_cv_have_sin6_len_in_struct_sai="no" ]
+        )
+  ])
+  if test "x$ac_cv_have_sin6_len_in_struct_sai" = "xyes" ; then
+    AC_DEFINE(HAVE_SIN6_LEN_IN_SAI, 1, [Does struct sockaddr_in6 have sin6_len? 1: Yes, 0: No])
+  else
+    AC_DEFINE(HAVE_SIN6_LEN_IN_SAI, 0, [Does struct sockaddr_in6 have sin6_len? 1: Yes, 0: No])
+  fi
+
+else
+  # NP: semi-silent failure as IPv4-only mode is perfectly usable on this system.
+  AC_MSG_WARN([IPv6 is not available on this system.])
+  AC_DEFINE(USE_IPV6,0,[Enable support for IPv6])
+  AC_DEFINE(IPV6_SPECIAL_SPLITSTACK,0,[Enable support for IPv6 on split-stack implementations])
+  AC_DEFINE(IPV6_SPECIAL_V4MAPPED,0,[Enable v4-mapping through v6 sockets])
+fi
+
+dnl Check whether this OS defines ss_len as a member of sockaddr_storage
+AC_CACHE_CHECK([for ss_len field in struct sockaddr_storage],
+		ac_cv_have_ss_len_in_struct_ss, [
+	AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+		],
+		[ struct sockaddr_storage s; s.ss_len = 1; ],
+		[ ac_cv_have_ss_len_in_struct_ss="yes" ],
+		[ ac_cv_have_ss_len_in_struct_ss="no" ]
+	)
+])
+if test "x$ac_cv_have_ss_len_in_struct_ss" = "xyes" ; then
+	AC_DEFINE(HAVE_SS_LEN_IN_SS, 1, [Does struct sockaddr_storage have ss_len? 1: Yes, 0: No])
+else
+	AC_DEFINE(HAVE_SS_LEN_IN_SS, 0, [Does struct sockaddr_storage have ss_len? 1: Yes, 0: No])
+fi
+
+dnl Check whether this OS defines sin_len as a member of sockaddr_in as a backup to ss_len
+AC_CACHE_CHECK([for sin_len field in struct sockaddr_in],
+                ac_cv_have_sin_len_in_struct_sai, [
+        AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+                ],
+                [ struct sockaddr_in s; s.sin_len = 1; ],
+                [ ac_cv_have_sin_len_in_struct_sai="yes" ],
+                [ ac_cv_have_sin_len_in_struct_sai="no" ]
+        )
+])
+if test "x$ac_cv_have_sin_len_in_struct_sai" = "xyes" ; then
+        AC_DEFINE(HAVE_SIN_LEN_IN_SAI, 1, [Does struct sockaddr_in have sin_len? 1: Yes, 0: No])
+else
+        AC_DEFINE(HAVE_SIN_LEN_IN_SAI, 0, [Does struct sockaddr_in have sin_len? 1: Yes, 0: No])
+fi
 
 dnl Check for libcrypt
 dnl Some of our helpers use crypt(3) which may be in libc, or in
