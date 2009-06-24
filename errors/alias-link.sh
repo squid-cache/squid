@@ -5,7 +5,6 @@
 #
 # This file creates the authoritative ISO aliases.
 #
-# INPUT:   "$(LN)" "$(RM)" "$(DESTDIR)$(DEFAULT_ERROR_DIR)" "$(srcdir)/$@"
 
 LN="${1}"
 RM="${2}"
@@ -15,6 +14,11 @@ ALIASFILE="${4}"
 if ! test -f ${ALIASFILE} ; then
 	echo "FATAL: Alias file ${ALIASFILE} does not exist!"
 	exit 1
+fi
+
+if ! test -d ${DIR} ; then
+	echo "WARNING: Destination directory does not exist. Nothing to do."
+	exit 0
 fi
 
 # Parse the alias file
