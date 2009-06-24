@@ -3867,6 +3867,7 @@ AC_CONFIG_FILES([\
 	errors/Makefile \
 	test-suite/Makefile \
 	doc/Makefile \
+	doc/manuals/Makefile \
 	helpers/Makefile \
 	helpers/basic_auth/Makefile \
 	helpers/basic_auth/LDAP/Makefile \
