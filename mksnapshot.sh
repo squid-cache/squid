@@ -101,7 +101,6 @@ fi
 # Collate Manual Pages and generate HTML versions
 if (groff --help >/dev/null); then
 	make -C ${tmpdir}/doc all
-	mkdir -p ${tmpdir}/doc/manuals
 	cp ${tmpdir}/doc/*.8 ${tmpdir}/doc/manuals/
         for f in `ls -1 ${tmpdir}/helpers/*/*/*.8` ; do
 		cp $f ${tmpdir}/doc/manuals/
@@ -109,7 +108,7 @@ if (groff --help >/dev/null); then
         for f in `ls -1 ${tmpdir}/doc/manuals/*.8` ; do
 		cat ${f} | groff -E -Thtml -mandoc >${f}.html
 	done
-	sh -c "cd ${tmpdir}/doc/manuals && tar -zcf $PWD/${PACKAGE}-${VERSION}-${date}-manuals.tar.gz *"
+	sh -c "cd ${tmpdir}/doc/manuals && tar -zcf $PWD/${PACKAGE}-${VERSION}-${date}-manuals.tar.gz *.html *.8"
 	echo ${PACKAGE}-${VERSION}-${date}-manuals.tar.gz >>${tag}.out
 fi
 

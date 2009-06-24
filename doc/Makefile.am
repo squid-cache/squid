@@ -6,6 +6,8 @@
 #  Uncomment and customize the following to suit your needs:
 #
 
+SUBDIRS = manuals
+
 DEFAULT_CONFIG_FILE = $(sysconfdir)/squid.conf
 DEFAULT_CACHEMGR_CONFIG = $(sysconfdir)/cachemgr.conf
 DEFAULT_MIME_TABLE      = $(sysconfdir)/mime.conf
