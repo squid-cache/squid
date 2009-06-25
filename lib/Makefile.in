@@ -39,7 +39,8 @@ host_triplet = @host@
 check_PROGRAMS = tests/testAll$(EXEEXT)
 subdir = lib
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in drand48.c \
-	inet_ntoa.c initgroups.c strerror.c tempnam.c
+	inet_ntoa.c initgroups.c strerror.c strsep.c strtoll.c \
+	tempnam.c
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/acinclude.m4 \
 	$(top_srcdir)/configure.in
@@ -56,21 +57,18 @@ libmiscutil_a_DEPENDENCIES = libTrie/src/Trie.o libTrie/src/TrieNode.o \
 am__libmiscutil_a_SOURCES_DIST = MemPool.cc base64.c getfullhostname.c \
 	hash.c heap.c html_quote.c iso3307.c md5.c radix.c rfc1035.c \
 	rfc1123.c rfc1738.c rfc2617.c safe_inet_addr.c Splay.cc \
-	strnstr.cc strsep.c strtoll.c stub_memaccount.c util.c \
-	uudecode.c assert.c xusleep.c Profiler.c win32lib.c
-@NEED_OWN_STRSEP_TRUE@am__objects_1 = strsep.$(OBJEXT)
-@NEED_OWN_STRTOLL_TRUE@am__objects_2 = strtoll.$(OBJEXT)
-@ENABLE_XPROF_STATS_TRUE@am__objects_3 = Profiler.$(OBJEXT)
-@ENABLE_WIN32SPECIFIC_TRUE@am__objects_4 = win32lib.$(OBJEXT)
+	strnstr.cc stub_memaccount.c util.c uudecode.c assert.c \
+	xusleep.c Profiler.c win32lib.c
+@ENABLE_XPROF_STATS_TRUE@am__objects_1 = Profiler.$(OBJEXT)
+@ENABLE_WIN32SPECIFIC_TRUE@am__objects_2 = win32lib.$(OBJEXT)
 am_libmiscutil_a_OBJECTS = MemPool.$(OBJEXT) base64.$(OBJEXT) \
 	getfullhostname.$(OBJEXT) hash.$(OBJEXT) heap.$(OBJEXT) \
 	html_quote.$(OBJEXT) iso3307.$(OBJEXT) md5.$(OBJEXT) \
 	radix.$(OBJEXT) rfc1035.$(OBJEXT) rfc1123.$(OBJEXT) \
 	rfc1738.$(OBJEXT) rfc2617.$(OBJEXT) safe_inet_addr.$(OBJEXT) \
-	Splay.$(OBJEXT) strnstr.$(OBJEXT) $(am__objects_1) \
-	$(am__objects_2) stub_memaccount.$(OBJEXT) util.$(OBJEXT) \
-	uudecode.$(OBJEXT) assert.$(OBJEXT) xusleep.$(OBJEXT) \
-	$(am__objects_3) $(am__objects_4)
+	Splay.$(OBJEXT) strnstr.$(OBJEXT) stub_memaccount.$(OBJEXT) \
+	util.$(OBJEXT) uudecode.$(OBJEXT) assert.$(OBJEXT) \
+	xusleep.$(OBJEXT) $(am__objects_1) $(am__objects_2)
 libmiscutil_a_OBJECTS = $(am_libmiscutil_a_OBJECTS)
 libntlmauth_a_AR = $(AR) $(ARFLAGS)
 libntlmauth_a_DEPENDENCIES = @LIBOBJS@
@@ -87,7 +85,7 @@ libsspwin32_a_OBJECTS = $(am_libsspwin32_a_OBJECTS)
 am__tests_testAll_SOURCES_DIST = tests/testArray.cc tests/testMain.cc \
 	tests/testArray.h Profiler.c win32lib.c util.c assert.c
 am_tests_testAll_OBJECTS = testArray.$(OBJEXT) testMain.$(OBJEXT) \
-	$(am__objects_3) $(am__objects_4) util.$(OBJEXT) \
+	$(am__objects_1) $(am__objects_2) util.$(OBJEXT) \
 	assert.$(OBJEXT)
 tests_testAll_OBJECTS = $(am_tests_testAll_OBJECTS)
 tests_testAll_DEPENDENCIES =
@@ -314,10 +312,6 @@ AM_CFLAGS = @SQUID_CFLAGS@
 AM_CXXFLAGS = @SQUID_CXXFLAGS@
 @ENABLE_XPROF_STATS_FALSE@XPROF_STATS_SOURCE = 
 @ENABLE_XPROF_STATS_TRUE@XPROF_STATS_SOURCE = Profiler.c
-@NEED_OWN_STRSEP_FALSE@STRSEPSOURCE = 
-@NEED_OWN_STRSEP_TRUE@STRSEPSOURCE = strsep.c
-@NEED_OWN_STRTOLL_FALSE@STRTOLLSOURCE = 
-@NEED_OWN_STRTOLL_TRUE@STRTOLLSOURCE = strtoll.c
 @ENABLE_WIN32SPECIFIC_FALSE@LIBSSPWIN32 = 
 @ENABLE_WIN32SPECIFIC_TRUE@LIBSSPWIN32 = libsspwin32.a
 @ENABLE_WIN32SPECIFIC_FALSE@WIN32SRC = 
@@ -341,8 +335,6 @@ EXTRA_libmiscutil_a_SOURCES = \
 	getopt.c \
 	md5.c \
 	Profiler.c \
-	strsep.c \
-	strtoll.c \
 	win32lib.c
 
 libmiscutil_a_SOURCES = \
@@ -363,8 +355,6 @@ libmiscutil_a_SOURCES = \
 	$(SNPRINTFSOURCE) \
 	Splay.cc \
 	strnstr.cc \
-	$(STRSEPSOURCE) \
-	$(STRTOLLSOURCE) \
 	stub_memaccount.c \
 	util.c \
 	uudecode.c \
@@ -476,6 +466,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/inet_ntoa.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/initgroups.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/strerror.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/strsep.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/strtoll.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/tempnam.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/GNUregex.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MemPool.Po@am__quote@
@@ -501,8 +493,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/safe_inet_addr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sspwin32.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strnstr.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strsep.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strtoll.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/stub_memaccount.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testArray.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testMain.Po@am__quote@
