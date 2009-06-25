@@ -489,6 +489,7 @@ struct SquidConfig {
         char *anon_user;
         int passive;
         int epsv_all;
+        int epsv;
         int sanitycheck;
         int telnet;
     } Ftp;
