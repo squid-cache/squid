@@ -2728,7 +2728,25 @@ DOC_START
 	If you have any doubts about this option do not use it.
 	Squid will nicely attempt all other connection methods.
 
-	Requires ftp_passive to be ON (default)
+	Requires ftp_passive to be ON (default) for any effect.
+DOC_END
+
+NAME: ftp_epsv
+TYPE: onoff
+DEFAULT: on
+LOC: Config.Ftp.epsv
+DOC_START
+	FTP Protocol extensions permit the use of a special "EPSV" command.
+
+	NATs may be able to put the connection on a "fast path" through the
+	translator using EPSV, as the EPRT command will never be used and therefore,
+	translation of the data portion of the segments will never be needed.
+
+	Turning this OFF will prevent EPSV being attempted.
+	WARNING: Doing so will convert Squid back to the old behavior with all
+	the related problems with external NAT devices/layers.
+
+	Requires ftp_passive to be ON (default) for any effect.
 DOC_END
 
 NAME: ftp_sanitycheck

@@ -2617,7 +2617,10 @@ ftpSendPassive(FtpStateData * ftpState)
         break;
 
     default:
-        if (Config.Ftp.epsv_all) {
+        if (!Config.Ftp.epsv) {
+            snprintf(cbuf, 1024, "PASV\r\n");
+            ftpState->state = SENT_PASV;
+        } else if (Config.Ftp.epsv_all) {
             snprintf(cbuf, 1024, "EPSV ALL\r\n");
             ftpState->state = SENT_EPSV_ALL;
             /* block other non-EPSV connections being attempted */
