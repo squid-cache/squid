@@ -2,10 +2,10 @@
 <HTML>
 <HEAD>
  <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.50">
- <TITLE>Squid 3.1.0.8 release notes</TITLE>
+ <TITLE>Squid 3.1.0.9 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.1.0.8 release notes</H1>
+<H1>Squid 3.1.0.9 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -80,7 +80,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.1.0.8 for testing.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.1.0.9 for testing.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.1/">http://www.squid-cache.org/Versions/v3/3.1/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -793,6 +793,25 @@ New translations can be downloaded from http://www.squid-cache.org/Versions/lang
 </PRE>
 </P>
 
+<DT><B>ftp_epsv</B><DD>
+<P>
+<PRE>
+        FTP Protocol extensions permit the use of a special "EPSV" command.
+
+        NATs may be able to put the connection on a "fast path" through the
+        translator using EPSV, as the EPRT command will never be used and therefore,
+        translation of the data portion of the segments will never be needed.
+
+        Turning this OFF will prevent EPSV being attempted.
+
+        WARNING: Doing so will convert Squid back to the old behavior with all
+        the related problems with external NAT devices/layers.
+
+        Requires ftp_passive to be ON (default) for any effect.
+        
+</PRE>
+</P>
+
 <DT><B>ftp_epsv_all</B><DD>
 <P>
 <PRE>
@@ -972,9 +991,10 @@ DEFAULT: None bypassed.
 
 <P>
 <DL>
-<DT><B>acl dst ipv6</B><DD>
+<DT><B>acl</B><DD>
 <P>New preset content <EM>ipv6</EM> available as a preset type in the src and dst ACL matching all of the public IPv6 network space.</P>
 <P>New acl type myportname, matching the name of the http_port or https_port where the request was accepted.</P>
+<P>New acl type tag, matching the tag= returned from the external_acl_type helper.</P>
 <P>New acl type peername, matching against a named cache_peer entry where the request will be attempted first.
 NP: peername currently is limited to only match the first peer possible.
 <PRE>
@@ -982,6 +1002,7 @@ NP: peername currently is limited to only match the first peer possible.
         acl aclname src ipv6                    # request from IPv6 address
         acl aclname myportname 3128 ...         # http(s)_port name
         acl aclname peername myPeer ...         # cache_peer ... name=myPeer
+        acl aclname tag value ...               # tag= option from external ACL
         
 </PRE>
 </P>
@@ -1074,6 +1095,10 @@ contained in the directory it points at. If absent, error page localization will
 </PRE>
 </P>
 
+<DT><B>debug_options rotate=</B><DD>
+<P>New parameter rotate=N to control number of cache.log rotations independent of other logs.</P>
+
+
 <DT><B>external_acl_type</B><DD>
 <P>New options 'ipv4' and 'ipv6' are added to set the IPv4/v6 protocol between squid and its helpers.
 Please be aware of some limits to these options. These options only affet the transport protocol used
@@ -1082,9 +1107,7 @@ format, so all helpers will need to be checked and converted to cope with such i
 <PRE>
           ipv4 / ipv6   IP-mode used to communicate to this helper.
                         For compatability with older configurations and helpers
-                        'ipv4' is the default unless --with-localhost-ipv6 is used.
-                        --with-localhost-ipv6 changes the default to 'ipv6'.
-                        SPECIAL NOTE: explicit use of these options override --with-localhost-ipv6
+                        the default is 'ipv4'.
         
 </PRE>
 </P>
@@ -1160,6 +1183,9 @@ For now option 'tproxy' remains with old behaviour meaning fully-invisible proxy
 <DT><B>https_port intercept sslbump connection-auth[=on|off]</B><DD>
 <P>New port options. see http_port.</P>
 
+<DT><B>logfile_rotate</B><DD>
+<P>No longer controls cache.log rotation. Use debug_options rotate=N instead.</P>
+
 <DT><B>maximum_object_size_in_memory</B><DD>
 <P>Default size limit increased to 512KB.</P>
 
@@ -1232,7 +1258,6 @@ refresh_pattern .                    0   20%     4320
 <DT><B>wccp2_return_method gre l2</B><DD>
 <P>Method names now accepted. Replacing the old magic numbers.
 '1' becomes 'gre' and '2' becomes 'l2'</P>
-
 
 </DL>
 </P>
@@ -1313,12 +1338,6 @@ To see if it is actually needed you can run squid without it for a period and
 check the CNAME-Only Requests statistics squid maintains.</P>
 <P>If it produces ongoing serious problems the external helper may be needed
 but please report the bugs anyway.</P>
-
-<DT><B>--with-localhost-ipv6</B><DD>
-<P>Build support for squid to map all 127.0.0.1 traffic onto ::1.
-The default is to build with 127.0.0.1 and ::1 being considered seperate IP.
-see the IPv6 details above for a better description.</P>
-<P>WARNING: This is an RFC violation. Use is discouraged.</P>
 
 <DT><B>--with-logdir=PATH</B><DD>
 <P>Allow build-time configuration of Default location for squid logs.</P>
@@ -1402,7 +1421,6 @@ The helper will now compile and work with dns_nameservers on more variants of Li
 
 <DT><B>http_port</B><DD>
 <P><EM>no-connection-auth</EM> replaced by <EM>connection-auth=[on|off]</EM>. Default is ON.</P>
-<P><EM>tcpkeepalive=</EM> replaced by <EM>keepalive=</EM></P>
 <P><EM>transparent</EM> option replaced by <EM>intercept</EM></P>
 
 <DT><B>httpd_accel_no_pmtu_disc</B><DD>
