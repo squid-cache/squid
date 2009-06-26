@@ -1,3 +1,20 @@
+Changes to squid-3.1.0.9 (26 Jun 2009):
+
+	- Bug 2682: Add ftp_epsv control to disable EPSV support.
+	- Bug 2665: Detach automake system from using -I.
+	- Bug 2395: FTP auth errors not displayed
+	- ... also several changes and bugs closed in 3.0.STABLE16
+	- Port from 2.7: Show local address on listening sockets
+	- Add "tag" type acl matching tags set by external acl helpers.
+	- Adds Language alias linker/installer/upgrade scripts
+	- Support for GCC 4.4
+	- Fix false NAT lookup errors on Linux
+	- Fix many Windows port issues
+	- Fix squid_kerb_auth helepr install location
+	- Better detection of IPv6 stack types
+	- Updates Licensing information for Squid 3.1
+	- ... and many packaging portability build and install issues
+
 Changes to squid-3.1.0.8 (24 May 2009):
 
 	- Bug 2656: Pinger dies with general protection fault
