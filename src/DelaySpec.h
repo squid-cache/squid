@@ -32,6 +32,9 @@
 #ifndef SQUID_DELAYSPEC_H
 #define SQUID_DELAYSPEC_H
 
+/* for int64_t definition */
+#include "config.h"
+
 class StoreEntry;
 
 /// \ingroup DelyPoolsAPI
@@ -44,7 +47,7 @@ public:
     void dump(StoreEntry *) const;
     void parse();
     int restore_bps;
-    int max_bytes;
+    int64_t max_bytes;
 };
 
 #endif /* SQUID_DELAYSPEC_H */
