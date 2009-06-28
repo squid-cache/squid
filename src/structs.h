@@ -1190,7 +1190,7 @@ struct _StatCounters {
         int times_used;
     } netdb;
     int page_faults;
-    int select_loops;
+    unsigned long int select_loops;
     int select_fds;
     double select_time;
     double cputime;
