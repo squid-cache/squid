@@ -309,37 +309,3 @@ aclDestroyDenyInfoList(acl_deny_info_list ** list)
 
     *list = NULL;
 }
-
-/*
- * This function traverses all ACL elements referenced
- * by an access list (presumably 'http_access').   If
- * it finds a PURGE method ACL, then it returns TRUE,
- * otherwise FALSE.
- */
-/* XXX: refactor this more sensibly. perhaps have the parser detect it ? */
-int
-aclPurgeMethodInUse(acl_access * a)
-{
-    ACLList *b;
-
-    debugs(28, 6, "aclPurgeMethodInUse: invoked for '" << a->cfgline << "'");
-
-    for (; a; a = a->next) {
-        for (b = a->aclList; b; b = b->next) {
-            ACLStrategised<HttpRequestMethod> *tempAcl = dynamic_cast<ACLStrategised<HttpRequestMethod> *>(b->_acl);
-
-            if (!tempAcl) {
-                debugs(28, 7, "aclPurgeMethodInUse: can't create tempAcl");
-                continue;
-            }
-
-            if (tempAcl->match(METHOD_PURGE)) {
-                debugs(28, 6, "aclPurgeMethodInUse: returning true");
-                return true;
-            }
-        }
-    }
-
-    debugs(28, 6, "aclPurgeMethodInUse: returning false");
-    return false;
-}
