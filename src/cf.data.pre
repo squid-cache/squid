@@ -3172,11 +3172,16 @@ DOC_START
 	from making Squid fetch the whole object up to that point before
 	sending anything to the client.
 
+	A value of 0 causes Squid to never fetch more than the
+	client requested. (default)
+
 	A value of -1 causes Squid to always fetch the object from the
 	beginning so it may cache the result. (2.0 style)
 
-	A value of 0 causes Squid to never fetch more than the
-	client requested. (default)
+	NP: Using -1 here will override any quick_abort settings that may
+	    otherwise apply to the range request. The range request will
+	    be fully fetched from start to finish regardless of the client
+	    actions. This affects bandwidth usage.
 DOC_END
 
 NAME: minimum_expiry_time
