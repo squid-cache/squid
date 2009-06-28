@@ -709,7 +709,13 @@ mainReconfigureFinish(void *)
 
     errorClean();
     enter_suid();		/* root to read config file */
+
+    // we may have disabled the need for PURGE
+    if(Config2.onoff.enable_purge)
+        Config2.onoff.enable_purge = 2;
+
     parseConfigFile(ConfigFile);
+
     setUmask(Config.umask);
     Mem::Report();
     setEffectiveUser();
