@@ -159,7 +159,7 @@ protected:
 
     virtual char const *label() const = 0;
 
-    virtual unsigned int makeKey (IpAddress &src_addr) const = 0;
+    virtual unsigned int makeKey(IpAddress &src_addr) const = 0;
 
     DelaySpec spec;
 
@@ -186,13 +186,11 @@ class IndividualPool : public VectorPool
 
 public:
     void *operator new(size_t);
-    void operator delete (void *);
+    void operator delete(void *);
 
 protected:
     virtual char const *label() const {return "Individual";}
-
-    virtual unsigned int makeKey (IpAddress &src_addr) const;
-
+    virtual unsigned int makeKey(IpAddress &src_addr) const;
 };
 
 /// \ingroup DelayPoolsInternal
@@ -205,7 +203,6 @@ public:
 
 protected:
     virtual char const *label() const {return "Network";}
-
     virtual unsigned int makeKey (IpAddress &src_addr) const;
 };
 
@@ -293,10 +290,10 @@ CommonPool::operator new(size_t size)
 }
 
 void
-CommonPool::operator delete (void *address)
+CommonPool::operator delete(void *address)
 {
-    DelayPools::MemoryUsed -= sizeof (CommonPool);
-    ::operator delete (address);
+    DelayPools::MemoryUsed -= sizeof(CommonPool);
+    ::operator delete(address);
 }
 
 CommonPool *
@@ -322,7 +319,6 @@ CommonPool::Factory(unsigned char _class, CompositePoolNode::Pointer& compositeC
             temp->push_back (new Aggregate);
             temp->push_back(new IndividualPool);
         }
-
         break;
 
     case 3:
@@ -334,7 +330,6 @@ CommonPool::Factory(unsigned char _class, CompositePoolNode::Pointer& compositeC
             temp->push_back (new ClassCNetPool);
             temp->push_back (new ClassCHostPool);
         }
-
         break;
 
     case 4:
@@ -347,7 +342,6 @@ CommonPool::Factory(unsigned char _class, CompositePoolNode::Pointer& compositeC
             temp->push_back (new ClassCHostPool);
             temp->push_back (new DelayUser);
         }
-
         break;
 
     case 5:
@@ -504,7 +498,6 @@ Aggregate::parse()
 }
 
 DelayIdComposite::Pointer
-
 Aggregate::id(CompositeSelectionDetails &details)
 {
     if (rate()->restore_bps != -1)
@@ -800,7 +793,7 @@ unsigned char
 VectorMap<Key,Value>::findKeyIndex (Key const key) const
 {
     for (unsigned int index = 0; index < size(); ++index) {
-        assert (indexUsed (index));
+        assert(indexUsed(index));
 
         if (key_map[index] == key)
             return index;
@@ -811,20 +804,23 @@ VectorMap<Key,Value>::findKeyIndex (Key const key) const
 }
 
 DelayIdComposite::Pointer
-
 VectorPool::id(CompositeSelectionDetails &details)
 {
     if (rate()->restore_bps == -1)
         return new NullDelayId;
 
-    unsigned int key = makeKey (details.src_addr);
+    /* non-IPv4 are not able to provide IPv4-bitmask for this pool type key. */
+    if ( !details.src_addr.IsIPv4() )
+        return new NullDelayId;
 
-    if (keyAllocated (key))
-        return new Id (this, buckets.findKeyIndex(key));
+    unsigned int key = makeKey(details.src_addr);
+
+    if (keyAllocated(key))
+        return new Id(this, buckets.findKeyIndex(key));
 
     unsigned char const resultIndex = buckets.insert(key);
 
-    buckets.values[resultIndex].init (*rate());
+    buckets.values[resultIndex].init(*rate());
 
     return new Id(this, resultIndex);
 }
@@ -837,13 +833,13 @@ VectorPool::Id::operator new(size_t size)
 }
 
 void
-VectorPool::Id::operator delete (void *address)
+VectorPool::Id::operator delete(void *address)
 {
     DelayPools::MemoryUsed -= sizeof (Id);
     ::operator delete (address);
 }
 
-VectorPool::Id::Id (VectorPool::Pointer aPool, int anIndex) : theVector (aPool), theIndex (anIndex)
+VectorPool::Id::Id(VectorPool::Pointer aPool, int anIndex) : theVector (aPool), theIndex (anIndex)
 {}
 
 int
@@ -861,11 +857,10 @@ VectorPool::Id::bytesIn(int qty)
 unsigned int
 IndividualPool::makeKey (IpAddress &src_addr) const
 {
-    /* FIXME INET6 : IPv6 requires a 64-128 bit result from this function */
+    /* IPv4 required for this pool */
     if ( !src_addr.IsIPv4() )
         return 1;
 
-    /* Temporary bypass for IPv4-only */
     struct in_addr host;
     src_addr.GetInAddr(host);
     return (ntohl(host.s_addr) & 0xff);
@@ -888,11 +883,10 @@ ClassCNetPool::operator delete (void *address)
 unsigned int
 ClassCNetPool::makeKey (IpAddress &src_addr) const
 {
-    /* FIXME INET6 : IPv6 requires a 64-128 bit result from this function */
+    /* IPv4 required for this pool */
     if ( !src_addr.IsIPv4() )
         return 1;
 
-    /* Temporary bypass for IPv4-only */
     struct in_addr net;
     src_addr.GetInAddr(net);
     return ( (ntohl(net.s_addr) >> 8) & 0xff);
@@ -962,7 +956,7 @@ ClassCHostPool::keyAllocated (unsigned char const key) const
 unsigned char
 ClassCHostPool::makeHostKey (IpAddress &src_addr) const
 {
-    /* FIXME INET6 : IPv6 requires a 64-128 bit result from this function */
+    /* IPv4 required for this pool */
     if ( !src_addr.IsIPv4() )
         return 1;
 
@@ -975,21 +969,23 @@ ClassCHostPool::makeHostKey (IpAddress &src_addr) const
 unsigned int
 ClassCHostPool::makeKey (IpAddress &src_addr) const
 {
-    /* FIXME INET6 : IPv6 requires a 64-128 bit result from this function */
+    /* IPv4 required for this pool */
     if ( !src_addr.IsIPv4() )
         return 1;
 
-    /* Temporary bypass for IPv4-only */
     struct in_addr net;
     src_addr.GetInAddr(net);
     return ( (ntohl(net.s_addr) >> 8) & 0xff);
 }
 
 DelayIdComposite::Pointer
-
 ClassCHostPool::id(CompositeSelectionDetails &details)
 {
     if (rate()->restore_bps == -1)
+        return new NullDelayId;
+
+    /* non-IPv4 are not able to provide IPv4-bitmask for this pool type key. */
+    if ( !details.src_addr.IsIPv4() )
         return new NullDelayId;
 
     unsigned int key = makeKey (details.src_addr);
