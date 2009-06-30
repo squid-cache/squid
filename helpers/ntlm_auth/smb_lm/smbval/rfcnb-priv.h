@@ -28,8 +28,6 @@
 
 /* Defines we need */
 
-typedef unsigned short uint16;
-
 #define GLOBAL extern
 
 #include "rfcnb-error.h"
