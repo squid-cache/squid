@@ -32,6 +32,13 @@
 #include "rfcnb-io.h"
 #include <arpa/inet.h>
 
+#ifndef uint16
+#ifdef u_int16_t
+typedef u_int16_t uint16;
+#else
+typedef unsigned short uint16;
+#endif
+#endif
 
 extern void (*Prot_Print_Routine) ();	/* Pointer to protocol print routine */
 
