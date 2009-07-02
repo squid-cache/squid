@@ -1,5 +1,7 @@
 #!/bin/sh
 #
+MAKETEST="check installcheck uninstallcheck"
+#
 # Configure options currently used by Ubuntu Packaged Release
 #
 # This is to test any release build against what the package maintainers are seeing
@@ -13,13 +15,15 @@ OPTS=" \
 	--sysconfdir=/etc \
 	--localstatedir=/var \
 	--libexecdir="\${prefix}/lib/squid3" \
-	--disable-maintainer-mode \
-	--disable-dependency-tracking \
 	--srcdir=. \
 	--datadir=/usr/share/squid3 \
 	--sysconfdir=/etc/squid3 \
 	--mandir=/usr/share/man \
 	--with-cppunit-basedir=/usr \
+	--with-default-user=proxy \
+ \
+	--disable-maintainer-mode \
+	--disable-dependency-tracking \
 	--enable-inline \
 	--enable-async-io=8 \
 	--enable-storeio="ufs,aufs,coss,diskd,null" \
@@ -40,7 +44,6 @@ OPTS=" \
 	--enable-digest-auth-helpers="ldap,password" \
 	--enable-external-acl-helpers="ip_user,ldap_group,session,unix_group,wbinfo_group" \
 	--with-filedescriptors=65536 \
-	--with-default-user=proxy \
 	--enable-epoll \
 	--enable-linux-netfilter \
 "
