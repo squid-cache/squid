@@ -71,6 +71,7 @@ public:
     size_t read_sz;
     int header_bytes_read;	// to find end of response,
     int reply_bytes_read;	// without relying on StoreEntry
+    int body_bytes_truncated; // positive when we read more than we wanted
     MemBuf *readBuf;
     bool ignoreCacheControl;
     bool surrogateNoStore;
@@ -93,6 +94,7 @@ private:
     void checkDateSkew(HttpReply *);
 
     bool continueAfterParsingHeader();
+    void truncateVirginBody();
 
     virtual void haveParsedReplyHeaders();
     virtual void closeServer(); // end communication with the server

@@ -76,7 +76,8 @@ static void copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeader
         HttpHeader * hdr_out, const int we_do_ranges, const http_state_flags);
 
 HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"), ServerStateData(theFwdState),
-        lastChunk(0), header_bytes_read(0), reply_bytes_read(0), httpChunkDecoder(NULL)
+    lastChunk(0), header_bytes_read(0), reply_bytes_read(0),
+    body_bytes_truncated(0), httpChunkDecoder(NULL)
 {
     debugs(11,5,HERE << "HttpStateData " << this << " created");
     ignoreCacheControl = false;
@@ -976,6 +977,9 @@ HttpStateData::persistentConnStatus() const
 
         if (body_bytes_read < vrep->content_length)
             return INCOMPLETE_MSG;
+
+        if (body_bytes_truncated > 0) // already read more than needed
+            return COMPLETE_NONPERSISTENT_MSG; // disable pconns
     }
 
     /** \par
@@ -1160,6 +1164,33 @@ HttpStateData::continueAfterParsingHeader()
     return false; // quit on error
 }
 
+/** truncate what we read if we read too much so that writeReplyBody()
+    writes no more than what we should have read */
+void
+HttpStateData::truncateVirginBody()
+{
+    assert(flags.headers_parsed);
+
+    HttpReply *vrep = virginReply();
+    int64_t clen = -1;
+    if (!vrep->expectingBody(request->method, clen) || clen < 0)
+        return; // no body or a body of unknown size, including chunked
+
+    const int64_t body_bytes_read = reply_bytes_read - header_bytes_read;
+    if (body_bytes_read - body_bytes_truncated <= clen) 
+        return; // we did not read too much or already took care of the extras
+
+    if (const int64_t extras = body_bytes_read - body_bytes_truncated - clen) {
+        // server sent more that the advertised content length
+        debugs(11,5, HERE << "body_bytes_read=" << body_bytes_read << 
+            " clen=" << clen << '/' << vrep->content_length <<
+            " body_bytes_truncated=" << body_bytes_truncated << '+' << extras);
+
+        readBuf->truncate(extras);
+        body_bytes_truncated += extras;
+    }
+}
+
 /**
  * Call this when there is data from the origin server
  * which should be sent to either StoreEntry, or to ICAP...
@@ -1167,6 +1198,7 @@ HttpStateData::continueAfterParsingHeader()
 void
 HttpStateData::writeReplyBody()
 {
+    truncateVirginBody(); // if needed
     const char *data = readBuf->content();
     int len = readBuf->contentSize();
     addVirginReplyBody(data, len);
