@@ -85,6 +85,7 @@ public:
     void consume(mb_size_t sz);  // removes sz bytes, moving content left
     void append(const char *c, mb_size_t sz); // grows if needed and possible
     void appended(mb_size_t sz); // updates content size after external append
+    void truncate(mb_size_t sz);  // removes sz last bytes
 
     void terminate(); // zero-terminates the buffer w/o increasing contentSize
 
