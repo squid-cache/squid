@@ -1,2 +1,33 @@
-en	en-nz en-au en-gb en-uk en-ca
+ar	ar-ae ar-bh ar-dz ar-eg ar-iq ar-jo ar-kw ar-lb ar-ly ar-ma ar-om ar-qa ar-sa ar-sy ar-tn ar-ye
+az	az-az
+bg	bg-bg
+cs	cs-cz
+da	da-dk
+de	de-de
+el	el-gr
+en	en-au en-ca en-gb en-nz en-tt en-uk
+es	es-es es-pe
+et	et-ee
+fi	fi-fi
+fr	fr-fr
+he	he-il
+hu	hu-hu
+hy	hy-am
+id	id-id
+it	it-it
+ja	ja-jp
+ko	ko-kr
+lt	lt-lt
+lv	lv-lv
+ms	ms-my
+nl	nl-nl
+pl	pl-pl
+pt	pt-pt
+ro	ro-ro
 ru	ru-ru
+sk	sk-sk
+sr	sr-sp
+sv	sv-se
+th	th-th
+tr	tr-tr
+uk	uk-ua
