@@ -193,6 +193,7 @@ String::append(const char *str, int len)
     } else {
         // Create a temporary string and absorb it later.
         String snew;
+        assert(len_ + len < 65536); // otherwise snew.len_ overflows below
         snew.len_ = len_ + len;
         snew.allocBuffer(snew.len_ + 1);
 
