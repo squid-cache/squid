@@ -439,9 +439,9 @@ comm_select(int msec)
         for (;;) {
             poll_time.tv_sec = msec / 1000;
             poll_time.tv_usec = (msec % 1000) * 1000;
-            statCounter.syscalls.selects++;
+            ++statCounter.syscalls.selects;
             num = select(maxfd, &readfds, &writefds, &errfds, &poll_time);
-            statCounter.select_loops++;
+            ++statCounter.select_loops;
 
             if (num >= 0 || pending > 0)
                 break;

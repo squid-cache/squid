@@ -260,7 +260,7 @@ comm_select(int msec)
 
     for (;;) {
         num = kevent(kq, kqlst, kqoff, ke, KE_LENGTH, &poll_time);
-        statCounter.select_loops++;
+        ++statCounter.select_loops;
         kqoff = 0;
 
         if (num >= 0)
