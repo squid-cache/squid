@@ -16,7 +16,8 @@ Adaptation::Ecap::XactionRep::XactionRep(Adaptation::Initiator *anInitiator,
         AsyncJob("Adaptation::Ecap::XactionRep"),
         Adaptation::Initiate("Adaptation::Ecap::XactionRep", anInitiator, aService),
         theVirginRep(virginHeader), theCauseRep(NULL),
-        proxyingVb(opUndecided), proxyingAb(opUndecided), canAccessVb(false)
+        proxyingVb(opUndecided), proxyingAb(opUndecided), canAccessVb(false),
+        abProductionFinished(false), abProductionAtEnd(false)
 {
     if (virginCause)
         theCauseRep = new MessageRep(virginCause);
@@ -275,15 +276,17 @@ Adaptation::Ecap::XactionRep::vbContentShift(libecap::size_type n)
 void
 Adaptation::Ecap::XactionRep::noteAbContentDone(bool atEnd)
 {
-    Must(proxyingAb == opOn);
-    stopProducingFor(answer().body_pipe, atEnd);
-    proxyingAb = opComplete;
+    Must(proxyingAb == opOn && !abProductionFinished);
+    abProductionFinished = true;
+    abProductionAtEnd = atEnd; // store until ready to stop producing ourselves
+    debugs(93,5, HERE << "adapted body production ended");
+    moveAbContent();
 }
 
 void
 Adaptation::Ecap::XactionRep::noteAbContentAvailable()
 {
-    Must(proxyingAb == opOn);
+    Must(proxyingAb == opOn && !abProductionFinished);
     moveAbContent();
 }
 
@@ -374,9 +377,16 @@ Adaptation::Ecap::XactionRep::moveAbContent()
 {
     Must(proxyingAb == opOn);
     const libecap::Area c = theMaster->abContent(0, libecap::nsize);
-    debugs(93,5, HERE << " up to " << c.size << " bytes");
-    if (const size_t used = answer().body_pipe->putMoreData(c.start, c.size))
-        theMaster->abContentShift(used);
+    debugs(93,5, HERE << "up to " << c.size << " bytes");
+    if (c.size == 0 && abProductionFinished) { // no ab now and in the future
+        stopProducingFor(answer().body_pipe, abProductionAtEnd);
+        proxyingAb = opComplete;
+        debugs(93,5, HERE << "last adapted body data retrieved");
+    } else
+    if (c.size > 0) {
+        if (const size_t used = answer().body_pipe->putMoreData(c.start, c.size))
+            theMaster->abContentShift(used);
+    }
 }
 
 const char *
