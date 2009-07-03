@@ -39,8 +39,7 @@ fi
 # do not build any of the install's ...
 rm -f -r src/fs/aufs/.deps src/fs/diskd/.deps &&
 	$base/../configure --silent ${OPTS} 2>&1 &&
-	make ${pjobs} check 2>&1 &&
-	make ${pjobs} 2>&1
+	make ${pjobs} ${MAKETEST} 2>&1
 
 # Remember and then explicitly return the result of the last command
 # to the script caller. Probably not needed on most or all platforms.

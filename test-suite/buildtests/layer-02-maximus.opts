@@ -3,6 +3,11 @@
 # XXX: with the exception of those that depend on the environment.
 # TODO: Add environment-specific tests to enable more options.
 #
+#
+# Complete Check - everything is supposed to work at this level
+MAKETEST="distcheck"
+#
+#
 # The options for this level can be easily generated semi-automatically from configure.in by:
 #	grep -E "^AC_ARG_ENABLE" ./configure.in | grep -o -E "[0-9a-z\-]+[,]" | grep -o -E "[^,]+" >disable.opts
 # followed by insertion of '	--enable-' and '\' strings
