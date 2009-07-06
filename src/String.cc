@@ -173,6 +173,7 @@ String::append(const char *str, int len)
         len_ += len;
     } else {
         String snew;
+        assert(len_ + len < 65536); // otherwise snew.len_ overflows below
         snew.len_ = len_ + len;
         snew.initBuf(snew.len_ + 1);
 
