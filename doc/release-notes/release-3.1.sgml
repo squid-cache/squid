@@ -1109,6 +1109,12 @@ This section gives an account of those changes in three categories:
 	<tag>--disable-loadable-modules</tag>
 	<p>Build without support for loadable modules.
 
+	<tag>--disable-translation</tag>
+        <p>Prevent Squid generating localized error page templates and manuals.
+           Which is usually tried, but may not be needed.
+        <p>This is a development optimization for building from VCS when localization is
+           not needed. Has no effect on pre-translated source bundles.
+
         <tag>--with-dns-cname</tag>
         <p>Enable CNAME recursion within the Internal DNS resolver stub squid uses.
            This has no effect on the external DNS helper.

@@ -84,6 +84,7 @@ OPTS=" \
 	--disable-ipv6 \
 	--disable-zph-qos \
 	--disable-auto-locale \
+	--disable-translation \
  \
 	--without-pthreads \
 	--without-aio \
