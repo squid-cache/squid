@@ -1598,6 +1598,22 @@ dump_peer(StoreEntry * entry, const char *name, peer * p)
 }
 
 /**
+ * utility function to prevent getservbyname() being called with a numeric value
+ * on Windows at least it returns garage results.
+ */
+static bool
+isUnsignedNumeric(const char *str, size_t len)
+{
+    if (len < 1) return false;
+
+    for (; len >0 && *str; str++, len--) {
+        if (! isdigit(*str))
+            return false;
+    }
+    return true;
+}
+
+/**
  \param proto	'tcp' or 'udp' for protocol
  \returns       Port the named service is supposed to be listening on.
  */
@@ -1612,7 +1628,8 @@ GetService(const char *proto)
        return 0; /* NEVER REACHED */
     }
     /** Returns either the service port number from /etc/services */
-    port = getservbyname(token, proto);
+    if( !isUnsignedNumeric(token, strlen(token)) )
+        port = getservbyname(token, proto);
     if (port != NULL) {
         return ntohs((u_short)port->s_port);
     }
