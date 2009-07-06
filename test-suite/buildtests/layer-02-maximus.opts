@@ -93,6 +93,7 @@ OPTS=" \
 	--enable-x-accelerator-vary \
 	--enable-ipv6 \
 	--enable-auto-locale \
+	--enable-translation \
 	--enable-zph-qos \
  \
 	--with-aio \
