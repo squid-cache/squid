@@ -1047,10 +1047,19 @@ ESIContext::start(const char *el, const char **attr, size_t attrCount)
             assert (xstrncpy (pos, attr[i], sizeof(localbuf) + (pos - localbuf)));
             pos += strlen (pos);
             *pos++ = '=';
-            *pos++ = '\'';
-            assert (xstrncpy (pos, attr[i + 1], sizeof(localbuf) + (pos - localbuf)));
+            *pos++ = '\"';
+            const char *chPtr = attr[i + 1];
+            char ch;
+            while ((ch = *chPtr++) != '\0') {
+                if (ch == '\"') {
+                    assert( xstrncpy(pos, "&quot;", sizeof(localbuf) + (pos-localbuf)) );
+                    pos += 6;
+                } else {
+                    *(pos++) = ch;
+                }
+            }
             pos += strlen (pos);
-            *pos++ = '\'';
+            *pos++ = '\"';
         }
 
         *pos++ = '>';
