@@ -5,20 +5,27 @@
 
 errordir = $(datadir)/errors
 
-
 ##dist-hook eveything
 
 DEFAULT_ERROR_DIR	= $(errordir)
 DEFAULT_STYLESHEET	= $(sysconfdir)/errorpage.css
 
 # List of automated translations possible:
-TRANSLATIONS=`ls -1 $(top_srcdir)/errors/*.po | grep -o -E "[a-z\-]+\.po" | sed s/.po//`
+TRANSLATIONPO=`ls -1 $(top_srcdir)/errors/*.po | grep -o -E "[a-z\-]+\.po" | sed s/.po//`
+TRANSLATIONDIR=`ls -1 $(srcdir)/ $(builddir)/ | sed -e 's%$(srcdir)/%%' -e 's%$(builddir)/%%' -e 's%.po%%' `
 
-install-data-local: 
-	for l in $(TRANSLATIONS) templates; do \
+install-data-local: translate
+	for l in $(TRANSLATIONDIR) ; do \
 	  if test -d $(srcdir)/$$l; then \
 		$(mkinstalldirs) $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l && \
 		for f in $(srcdir)/$$l/ERR_*; do \
+			echo "$(INSTALL_DATA) $$f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l"; \
+			$(INSTALL_DATA) $$f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; \
+		done; \
+	  fi ; \
+	  if test -d $(builddir)/$$l; then \
+		$(mkinstalldirs) $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l && \
+		for f in $(builddir)/$$l/ERR_*; do \
 			echo "$(INSTALL_DATA) $$f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l"; \
 			$(INSTALL_DATA) $$f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; \
 		done; \
@@ -35,9 +42,16 @@ install-data-local:
 
 
 uninstall-local:
-	for l in $(TRANSLATIONS); do \
-	  if test -d $(srcdir)/errors/$$l; then \
-		for f in $(srcdir)/errors/$$l/ERR_*; do \
+	for l in $(TRANSLATIONDIR) ; do \
+	  if test -d $(srcdir)/$$l; then \
+		for f in $(srcdir)/$$l/ERR_*; do \
+			if test -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; then \
+		        	$(RM) $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; \
+			fi; \
+		done; \
+	  fi ; \
+	  if test -d $(builddir)/$$l; then \
+		for f in $(builddir)/$$l/ERR_*; do \
 			if test -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; then \
 		        	$(RM) $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; \
 			fi; \
@@ -53,7 +67,7 @@ upgrade: install
 	$(SHELL) $(srcdir)/alias-link.sh "$(LN)" "$(RM)" "$(DESTDIR)$(DEFAULT_ERROR_DIR)" "$(srcdir)/alias-upgrade" || exit 1 ;
 
 dist-hook: translate
-	for lang in $(TRANSLATIONS); do \
+	for lang in $(TRANSLATIONPO) templates; do \
 	  if test -d $$lang ; then \
 		test -d $(distdir)/$$lang \
 		  || mkdir $(distdir)/$$lang \
@@ -72,7 +86,7 @@ translate:
 	  exit 0; \
 	fi; \
 	if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no" && test "$(PO2HTML)" != "off" && test -f $(top_srcdir)/errors/en.po; then \
-	  for lang in $(TRANSLATIONS); do \
+	  for lang in $(TRANSLATIONPO); do \
 		test -d $(top_builddir)/errors/$$lang && $(RM) -r $(top_builddir)/errors/$$lang; \
 		mkdir $(top_builddir)/errors/$$lang || exit 1; \
 		echo -n "Translate '$$lang' ..."; \
