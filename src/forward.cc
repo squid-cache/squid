@@ -812,10 +812,12 @@ FwdState::connectStart()
             if (pinned_connection->pinnedAuth())
                 request->flags.auth = 1;
             comm_add_close_handler(fd, fwdServerClosedWrapper, this);
+            updateHierarchyInfo();
             connectDone(fd, COMM_OK, 0);
             return;
         }
         /* Failure. Fall back on next path */
+        debugs(17,2,HERE << " Pinned connection " << pinned_connection << " not valid. Releasing.");
         request->releasePinnedConnection();
         servers = fs->next;
         fwdServerFree(fs);
