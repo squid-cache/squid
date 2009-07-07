@@ -11,8 +11,8 @@ DEFAULT_ERROR_DIR	= $(errordir)
 DEFAULT_STYLESHEET	= $(sysconfdir)/errorpage.css
 
 # List of automated translations possible:
-TRANSLATIONPO=`ls -1 $(top_srcdir)/errors/*.po | grep -o -E "[a-z\-]+\.po" | sed s/.po//`
-TRANSLATIONDIR=`ls -1 $(srcdir)/ $(builddir)/ | sed -e 's%$(srcdir)/%%' -e 's%$(builddir)/%%' -e 's%.po%%' `
+TRANSLATIONPO=`ls -1 $(top_srcdir)/errors/*.po 2>/dev/null | grep -o -E "[a-z\-]+\.po" | sed s/.po//`
+TRANSLATIONDIR=`ls -1 $(srcdir)/ $(builddir)/ 2>/dev/null | sed -e 's%$(srcdir)/%%' -e 's%$(builddir)/%%' -e 's%.po%%' `
 
 install-data-local: translate
 	for l in $(TRANSLATIONDIR) ; do \
