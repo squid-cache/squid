@@ -14,7 +14,7 @@ DEFAULT_STYLESHEET	= $(sysconfdir)/errorpage.css
 TRANSLATIONPO=`ls -1 $(top_srcdir)/errors/*.po 2>/dev/null | grep -o -E "[a-z\-]+\.po" | sed s/.po//`
 TRANSLATIONDIR=`ls -1 $(srcdir)/ $(builddir)/ 2>/dev/null | sed -e 's%$(srcdir)/%%' -e 's%$(builddir)/%%' -e 's%.po%%' `
 
-install-data-local: translate
+install-data-local:
 	for l in $(TRANSLATIONDIR) ; do \
 	  if test -d $(srcdir)/$$l; then \
 		$(mkinstalldirs) $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l && \
