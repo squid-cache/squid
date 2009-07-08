@@ -1294,10 +1294,14 @@ clientReplyContext::buildReplyHeader()
      * NP: done after Age: to prevent ENTRY_SPECIAL double-handling this header.
      */
     if ( !hdr->has(HDR_DATE) ) {
-        if (http->storeEntry())
-            hdr->insertTime(HDR_DATE, http->storeEntry()->timestamp);
-        else
+        if (!http->storeEntry())
             hdr->insertTime(HDR_DATE, squid_curtime);
+        else if (http->storeEntry()->timestamp > 0)
+            hdr->insertTime(HDR_DATE, http->storeEntry()->timestamp);
+        else {
+            debugs(88,1,"WARNING: An error inside Squid has caused an HTTP reply without Date:. Please report this");
+            /* TODO: dump something useful about the problem */
+        }
     }
 
     /* Filter unproxyable authentication types */
