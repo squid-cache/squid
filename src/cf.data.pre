@@ -820,6 +820,7 @@ http_access deny CONNECT !SSL_ports
 # Adapt localnet in the ACL section to list your (internal) IP networks
 # from where browsing should be allowed
 http_access allow localnet
+http_access allow localhost
 
 # And finally deny all other access to this proxy
 http_access deny all
