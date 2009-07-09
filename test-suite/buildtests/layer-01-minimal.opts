@@ -4,8 +4,9 @@
 # - Everyhing that can be done without is 
 #
 #
-# Complete Check - everything MUST work at this level
-MAKETEST="distcheck"
+# Check - everything MUST work at this level
+# distcheck is not possible here since it drops our configure options...
+MAKETEST="check"
 #
 #
 # The options for this level can be easily generated semi-automatically from configure.in by:
