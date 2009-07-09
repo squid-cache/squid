@@ -31,14 +31,14 @@ fi
 FILECOUNT=`ls -1 | grep -c .`
 if test "${FILECOUNT}" != "0" ; then
   make -k distclean || echo "distclean done. errors are unwanted but okay here."
+  rm -f -r src/fs/aufs/.deps src/fs/diskd/.deps
 fi
 
 #
 # above command currently encounters dependancy problems on cleanup.
 #
 # do not build any of the install's ...
-rm -f -r src/fs/aufs/.deps src/fs/diskd/.deps &&
-	$base/../configure --silent ${OPTS} 2>&1 &&
+	$base/../configure ${OPTS} 2>&1 &&
 	make ${pjobs} ${MAKETEST} 2>&1
 
 # Remember and then explicitly return the result of the last command
