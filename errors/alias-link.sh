@@ -28,6 +28,12 @@ while read base aliases; do
 	if test "${base}" = "#" || test "${base}" = ""; then
 		continue;
 	fi
+	# ignore destination languages that do not exist. (no dead links)
+	if ! test -x ${DIR}/${base} ; then
+		echo "WARNING: ${base} translations do not exist. Nothing to do for: ${aliases}"
+		continue;
+	fi
+
 	# split aliases based on whitespace and create a symlink for each
 	# Remove and replace any pre-existing content/link
 	for alia in ${aliases}; do

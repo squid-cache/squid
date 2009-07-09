@@ -5,25 +5,34 @@
 
 errordir = $(datadir)/errors
 
-
 ##dist-hook eveything
 
 DEFAULT_ERROR_DIR	= $(errordir)
 DEFAULT_STYLESHEET	= $(sysconfdir)/errorpage.css
 
 # List of automated translations possible:
-TRANSLATIONS=`ls -1 $(top_srcdir)/errors/*.po | grep -o -E "[a-z\-]+\.po" | sed s/.po//`
+TRANSLATIONPO=`ls -1 $(top_srcdir)/errors/*.po | grep -o -E "[a-z\-]+\.po" | sed s/.po//`
+TRANSLATIONDIR=`ls -1 $(srcdir) $(builddir) | sed -e 's%$(srcdir)/%%' -e 's%$(builddir)/%%' -e 's%.po%%' `
 
-install-data-local: 
-	for l in $(TRANSLATIONS) templates; do \
+install-data-local:
+	for l in $(TRANSLATIONDIR) ; do \
+	  echo "Located $$l for install..."; \
 	  if test -d $(srcdir)/$$l; then \
 		$(mkinstalldirs) $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l && \
 		for f in $(srcdir)/$$l/ERR_*; do \
 			echo "$(INSTALL_DATA) $$f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l"; \
 			$(INSTALL_DATA) $$f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; \
 		done; \
+	  fi ; \
+	  if test -d $(builddir)/$$l; then \
+		$(mkinstalldirs) $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l && \
+		for f in $(builddir)/$$l/ERR_*; do \
+			echo "$(INSTALL_DATA) $$f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l"; \
+			$(INSTALL_DATA) $$f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; \
+		done; \
 	  fi \
 	done; \
+	$(INSTALL_DATA) $(srcdir)/TRANSLATORS $(DESTDIR)TRANSLATORS; \
 	$(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET).default; \
 	if test -f $(DESTDIR)$(DEFAULT_STYLESHEET) ; then \
 		echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_STYLESHEET)" ; \
@@ -35,9 +44,17 @@ install-data-local:
 
 
 uninstall-local:
-	for l in $(TRANSLATIONS); do \
-	  if test -d $(srcdir)/errors/$$l; then \
-		for f in $(srcdir)/errors/$$l/ERR_*; do \
+	for l in $(TRANSLATIONDIR) ; do \
+	  echo "Located $$l for uninstall ..."; \
+	  if test -d $(srcdir)/$$l; then \
+		for f in $(srcdir)/$$l/ERR_*; do \
+			if test -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; then \
+		        	$(RM) $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; \
+			fi; \
+		done; \
+	  fi ; \
+	  if test -d $(builddir)/$$l; then \
+		for f in $(builddir)/$$l/ERR_*; do \
 			if test -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; then \
 		        	$(RM) $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l/`basename $$f`; \
 			fi; \
@@ -46,6 +63,7 @@ uninstall-local:
 	done;
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_STYLESHEET)
 	rm -f $(DESTDIR)$(DEFAULT_STYLESHEET).default
+	rm -f $(DESTDIR)TRANSLATORS
 
 ## Upgrade requires the new files to be pre-installed
 upgrade: install
@@ -77,7 +95,7 @@ addlang: all
 	fi
 
 dist-hook: translate
-	for lang in $(TRANSLATIONS); do \
+	for lang in $(TRANSLATIONPO) templates; do \
 	  if test -d $$lang ; then \
 		test -d $(distdir)/$$lang \
 		  || mkdir $(distdir)/$$lang \
@@ -86,7 +104,7 @@ dist-hook: translate
 		  || exit 1; \
 	  fi; \
 	done; \
-	for f in aliases alias-link.sh alias-upgrade errorpage.css; do \
+	for f in aliases alias-link.sh alias-upgrade errorpage.css TRANSLATORS; do \
 		cp -p $(srcdir)/$$f $(distdir)/`basename $$f`; \
 	done;
 
@@ -96,7 +114,7 @@ translate:
 	  exit 0; \
 	fi; \
 	if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no" && test "$(PO2HTML)" != "off" && test -f $(top_srcdir)/errors/en.po; then \
-	  for lang in $(TRANSLATIONS); do \
+	  for lang in $(TRANSLATIONPO); do \
 		test -d $(top_builddir)/errors/$$lang && $(RM) -r $(top_builddir)/errors/$$lang; \
 		mkdir $(top_builddir)/errors/$$lang || exit 1; \
 		echo -n "Translate '$$lang' ..."; \
