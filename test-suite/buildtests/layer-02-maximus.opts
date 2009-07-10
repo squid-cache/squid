@@ -41,7 +41,7 @@ MAKETEST="check"
 #
 #
 OPTS=" \
-	--enable-loadable-modules \
+	--disable-loadable-modules \
 	--enable-gnuregex \
 	--enable-optimizations \
 	--enable-inline \
