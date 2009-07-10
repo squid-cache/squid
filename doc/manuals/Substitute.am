@@ -1,0 +1,14 @@
+
+## DEFAULT_MIME_TABLE      = $(sysconfdir)/mime.conf
+## DEFAULT_ERROR_DIR       = $(datadir)/errors
+
+SUBSTITUTE=sed "\
+	s%@DEFAULT_ERROR_DIR@%$(DEFAULT_ERROR_DIR)%g;\
+	s%@DEFAULT_MIME_TABLE@%$(DEFAULT_MIME_TABLE)%g;\
+	s%@""PACKAGE_STRING""@%$(PACKAGE_STRING)%g;\
+	s%@SYSCONFDIR@%$(sysconfdir)%g;\
+	"
+
+## Example of how to substitute:
+## squid.8: $(srcdir)/squid.8.in Makefile
+##	$(SUBSTITUTE) < $(srcdir)/squid.8.in > $@
