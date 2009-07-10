@@ -45,7 +45,7 @@ libexec_PROGRAMS = cachemgr$(CGIEXT)
 cachemgr__CGIEXT__SOURCES = cachemgr.cc
 cachemgr__CGIEXT__CXXFLAGS = -DDEFAULT_CACHEMGR_CONFIG=\"$(DEFAULT_CACHEMGR_CONFIG)\" $(AM_CXXFLAGS)
 
-EXTRA_DIST += cachemgr.conf cachemgr.cgi.8
+EXTRA_DIST += cachemgr.conf cachemgr.cgi.8 cachemgr.cgi.8.in
 CLEANFILES += cachemgr.cgi.8
 man_MANS += cachemgr.cgi.8
 
