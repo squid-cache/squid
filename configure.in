@@ -3776,8 +3776,23 @@ if test $ac_cv_have_res_ns_list = "yes" ; then
 fi
 fi
 
+dnl Squid will usually attempt to translate when packaging or building from VCS 
+use_translation="yes"
+AC_ARG_ENABLE(translation,
+ AC_HELP_STRING([--disable-translation],
+		[Prevent Squid generating localized error page templates and manuals.
+		 Which is usually tried, but may not be needed.])
+[ if test "$enableval" = "no" ; then
+    use_translation=no
+  fi
+])
 dnl Squid now has .po translation capability, given the right toolkit
-AX_WITH_PROG([PO2HTML],[po2html])
+if test "$use_translation" = "yes" ; then
+  AX_WITH_PROG([PO2HTML],[po2html])
+else
+  PO2HTML="off"
+fi
+AC_SUBST(PO2HTML)
 
 dnl Squid now has limited locale handling ...
 dnl on error pages
@@ -3797,10 +3812,7 @@ if test "$use_errlocale" = "yes" ; then
 else
     AC_MSG_WARN([Disabling Multi-Language Support])
     AC_DEFINE(USE_ERR_LOCALES,0,[Use multi-language support on error pages])
-    dnl So we don't want to even attempt translation if its forcibly disabled.
-    PO2HTML="off"
 fi
-AC_SUBST(PO2HTML)
 
 dnl Need the debugging version of malloc if available
 XTRA_OBJS=''
