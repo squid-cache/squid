@@ -5,7 +5,8 @@
 #
 #
 # Complete Check - everything is supposed to work at this level
-MAKETEST="distcheck"
+# distcheck is not possible since it drops our configure options...
+MAKETEST="check"
 #
 #
 # The options for this level can be easily generated semi-automatically from configure.in by:
