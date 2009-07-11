@@ -1854,6 +1854,48 @@ if test -n "$EXTERNAL_ACL_HELPERS"; then
 fi
 AC_SUBST(EXTERNAL_ACL_HELPERS)
 
+dnl Select url_rewrite helpers to build
+URL_REWRITE_HELPERS=all
+AC_ARG_ENABLE(url-rewrite-helpers,
+  AC_HELP_STRING([--enable-url-rewrite-helpers="list of helpers"],
+                 [This option selects which url_rewrite helpers to
+                  build and install as part of the normal build
+                  process. For a list of available helpers see the
+                  helpers/url_rewrite directory.]),
+[ case "$enableval" in
+  yes)
+	URL_REWRITE_HELPERS=all
+	;;
+  no)
+	URL_REWRITE_HELPERS=""
+	;;
+  *)
+ 	URL_REWRITE_HELPERS="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
+	;;
+  esac
+])
+if test "$URL_REWRITE_HELPERS" = "all" ; then
+	URL_REWRITE_HELPERS=""
+	for dir in $srcdir/helpers/url_rewrite/*; do
+	    helper="`basename $dir`"
+	    if test -f $dir/config.test && sh $dir/config.test "$@"; then
+		URL_REWRITE_HELPERS="$URL_REWRITE_HELPERS $helper"
+	    fi
+	done
+fi
+if test -n "$URL_REWRITE_HELPERS"; then
+    for helper in $URL_REWRITE_HELPERS; do
+	if test -f $srcdir/helpers/url_rewrite/$helper/Makefile.in; then
+		:
+	else
+		AC_MSG_ERROR(url_rewrite helper $helper does not exist)
+	fi
+    done
+    AC_MSG_NOTICE([url_rewrite helpers built: $URL_REWRITE_HELPERS])
+fi
+AC_SUBST(URL_REWRITE_HELPERS)
+
+
 AC_ARG_WITH(valgrind-debug,
   AC_HELP_STRING([--with-valgrind-debug],
                  [Include debug instrumentation for use with valgrind]),
@@ -3915,6 +3957,8 @@ AC_CONFIG_FILES([\
 	helpers/external_acl/wbinfo_group/Makefile \
 	helpers/external_acl/mswin_ad_group/Makefile \
 	helpers/external_acl/mswin_lm_group/Makefile \
+	helpers/url_rewrite/Makefile \
+	helpers/url_rewrite/fake/Makefile \
 	tools/Makefile
 ])
 
