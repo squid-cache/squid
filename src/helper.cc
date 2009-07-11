@@ -184,7 +184,7 @@ helperOpenServers(helper * hlp)
     helperKickQueue(hlp);
 }
 
-/*
+/**
  * DPW 2007-05-08
  *
  * helperStatefulOpenServers: create the stateful child helper processes
@@ -325,7 +325,8 @@ helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
     debugs(84, 9, "helperSubmit: " << buf);
 }
 
-/* lastserver = "server last used as part of a deferred or reserved
+/**
+ * lastserver = "server last used as part of a deferred or reserved
  * request sequence"
  */
 void
@@ -385,10 +386,8 @@ helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, v
     debugs(84, 9, "helperStatefulSubmit: placeholder: '" << r->placeholder << "', buf '" << buf << "'.");
 }
 
-/*
- * helperStatefulDefer
- *
- * find and add a deferred request to a helper
+/**
+ * find an available helper and add a deferred request to it
  */
 helper_stateful_server *
 helperStatefulDefer(statefulhelper * hlp)
@@ -458,11 +457,12 @@ helperStatefulDefer(statefulhelper * hlp)
     return rv;
 }
 
-void
-helperStatefulReset(helper_stateful_server * srv)
-/* puts this helper back in the queue. the calling app is required to
+/**
+ * puts this helper back in the queue. the calling app is required to
  * manage the state in the helper.
  */
+void
+helperStatefulReset(helper_stateful_server * srv)
 {
     statefulhelper *hlp = srv->parent;
     helper_stateful_request *r = srv->request;
@@ -491,7 +491,7 @@ helperStatefulReset(helper_stateful_server * srv)
     }
 }
 
-/*
+/**
  * DPW 2007-05-08
  *
  * helperStatefulReleaseServer tells the helper that whoever was
@@ -530,13 +530,16 @@ helperStatefulReleaseServer(helper_stateful_server * srv)
         srv->parent->OnEmptyQueue(srv->data);
 }
 
+/** return a pointer to the stateful routines data area */
 void *
 helperStatefulServerGetData(helper_stateful_server * srv)
-/* return a pointer to the stateful routines data area */
 {
     return srv->data;
 }
 
+/**
+ * Dump some stats about the helper states to a StoreEntry
+ */
 void
 helperStats(StoreEntry * sentry, helper * hlp, const char *label)
 {
