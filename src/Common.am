@@ -23,3 +23,7 @@ INCLUDES = \
 ## make all compiled sources depend on generated files
 ## XXX: Do we really need this? Does auto-dependency tracking work?
 $(OBJS): $(top_srcdir)/include/version.h $(top_builddir)/include/autoconf.h
+
+COMPAT_LIBS = \
+	-L$(top_builddir)/lib -lmiscutil \
+	$(top_builddir)/compat/libcompat.la
