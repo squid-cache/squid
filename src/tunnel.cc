@@ -553,11 +553,13 @@ tunnelErrorComplete(int fdnotused, void *data, size_t sizenotused)
 
 
 static void
-tunnelConnectDone(int fdnotused, comm_err_t status, int xerrno, void *data)
+tunnelConnectDone(int fdnotused, const DnsLookupDetails &dns, comm_err_t status, int xerrno, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     HttpRequest *request = tunnelState->request;
     ErrorState *err = NULL;
+
+    request->recordLookup(dns);
 
     if (tunnelState->servers->_peer)
         hierarchyNote(&tunnelState->request->hier, tunnelState->servers->code,
@@ -573,7 +575,7 @@ tunnelConnectDone(int fdnotused, comm_err_t status, int xerrno, void *data)
         debugs(26, 4, "tunnelConnect: Unknown host: " << tunnelState->host);
         err = errorCon(ERR_DNS_FAIL, HTTP_NOT_FOUND, request);
         *tunnelState->status_ptr = HTTP_NOT_FOUND;
-        err->dnsserver_msg = xstrdup(dns_error_message_safe());
+        err->dnsError = dns.error;
         err->callback = tunnelErrorComplete;
         err->callback_data = tunnelState;
         errorSend(tunnelState->client.fd(), err);

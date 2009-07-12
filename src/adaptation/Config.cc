@@ -41,9 +41,11 @@
 #include "adaptation/Service.h"
 #include "adaptation/AccessRule.h"
 #include "adaptation/ServiceGroups.h"
+#include "adaptation/History.h"
 
 
 bool Adaptation::Config::Enabled = false;
+char *Adaptation::Config::masterx_shared_name = NULL;
 
 void
 Adaptation::Config::parseService()
@@ -117,6 +119,7 @@ Adaptation::Config::Finalize(bool enabled)
     Enabled = enabled;
     debugs(93,1, "Adaptation support is " << (Enabled ? "on" : "off."));
 
+    History::Configure();
     FinalizeEach(AllServices(), "message adaptation services");
     FinalizeEach(AllGroups(), "message adaptation service groups");
     FinalizeEach(AllRules(), "message adaptation access rules");

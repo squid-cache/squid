@@ -41,6 +41,10 @@ public:
 public:
     static bool Enabled; // true if at least one adaptation mechanism is
 
+    // these are global squid.conf options, documented elsewhere
+    static char *masterx_shared_name; // global TODO: do we need TheConfig?
+    // Options below are accessed via Icap::TheConfig or Ecap::TheConfig
+    // TODO: move ICAP-specific options to Icap::Config and add TheConfig
     int onoff;
     int send_client_ip;
     int send_client_username;

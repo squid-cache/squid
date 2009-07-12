@@ -32,6 +32,7 @@ public:
 
     bool isThere(); // we have a valid initiator pointer
     Initiator *ptr(); // asserts isThere()
+    void *theCbdata() { return cbdata;}
 
 private:
     InitiatorHolder &operator =(const InitiatorHolder &anInitiator);
@@ -74,6 +75,10 @@ protected:
 
     InitiatorHolder theInitiator;
     ServicePointer theService;
+
+private:
+    Initiate(const Initiate &); // no definition
+    Initiate &operator =(const Initiate &); // no definition
 };
 
 } // namespace Adaptation

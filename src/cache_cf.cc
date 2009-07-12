@@ -3432,6 +3432,10 @@ parse_access_log(customlog ** logs)
         cl->type = CLF_SQUID;
     } else if (strcmp(logdef_name, "common") == 0) {
         cl->type = CLF_COMMON;
+#if ICAP_CLIENT
+    } else if (strcmp(logdef_name, "icap_squid") == 0) {
+        cl->type = CLF_ICAP_SQUID;
+#endif
     } else {
         debugs(3, 0, "Log format '" << logdef_name << "' is not defined");
         self_destruct();
@@ -3484,7 +3488,11 @@ dump_access_log(StoreEntry * entry, const char *name, customlog * logs)
         case CLF_COMMON:
             storeAppendPrintf(entry, "%s squid", log->filename);
             break;
-
+#if ICAP_CLIENT
+        case CLF_ICAP_SQUID:
+            storeAppendPrintf(entry, "%s icap_squid", log->filename);
+            break;
+#endif
         case CLF_AUTO:
 
             if (log->aclList)

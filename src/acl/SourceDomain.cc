@@ -39,6 +39,7 @@
 #include "acl/Checklist.h"
 #include "acl/RegexData.h"
 #include "acl/DomainData.h"
+#include "HttpRequest.h"
 
 SourceDomainLookup SourceDomainLookup::instance_;
 
@@ -56,14 +57,15 @@ SourceDomainLookup::checkForAsync(ACLChecklist *checklist) const
 }
 
 void
-SourceDomainLookup::LookupDone(const char *fqdn, void *data)
+SourceDomainLookup::LookupDone(const char *fqdn, const DnsLookupDetails &details, void *data)
 {
-    ACLChecklist *checklist = (ACLChecklist *)data;
+    ACLFilledChecklist *checklist = Filled((ACLChecklist*)data);
     assert (checklist->asyncState() == SourceDomainLookup::Instance());
 
     checklist->asyncInProgress(false);
     checklist->changeState (ACLChecklist::NullState::Instance());
-    Filled(checklist)->markSourceDomainChecked();
+    checklist->markSourceDomainChecked();
+    checklist->request->recordLookup(details);
     checklist->check();
 }
 

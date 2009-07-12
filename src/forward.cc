@@ -375,10 +375,10 @@ fwdNegotiateSSLWrapper(int fd, void *data)
 #endif
 
 static void
-fwdConnectDoneWrapper(int server_fd, comm_err_t status, int xerrno, void *data)
+fwdConnectDoneWrapper(int server_fd, const DnsLookupDetails &dns, comm_err_t status, int xerrno, void *data)
 {
     FwdState *fwd = (FwdState *) data;
-    fwd->connectDone(server_fd, status, xerrno);
+    fwd->connectDone(server_fd, dns, status, xerrno);
 }
 
 static void
@@ -675,10 +675,12 @@ FwdState::initiateSSL()
 #endif
 
 void
-FwdState::connectDone(int aServerFD, comm_err_t status, int xerrno)
+FwdState::connectDone(int aServerFD, const DnsLookupDetails &dns, comm_err_t status, int xerrno)
 {
     FwdServer *fs = servers;
     assert(server_fd == aServerFD);
+
+    request->recordLookup(dns);
 
     if (Config.onoff.log_ip_on_direct && status != COMM_ERR_DNS && fs->code == HIER_DIRECT)
         updateHierarchyInfo();
@@ -697,7 +699,7 @@ FwdState::connectDone(int aServerFD, comm_err_t status, int xerrno)
 
         ErrorState *anErr = errorCon(ERR_DNS_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
 
-        anErr->dnsserver_msg = xstrdup(dns_error_message_safe());
+        anErr->dnsError = dns.error;
 
         fail(anErr);
 
@@ -778,6 +780,9 @@ FwdState::connectStart()
     assert(server_fd == -1);
     debugs(17, 3, "fwdConnectStart: " << url);
 
+    if (n_tries == 0) // first attempt
+        request->hier.first_conn_start = current_time;
+
     if (fs->_peer) {
         ctimeout = fs->_peer->connect_timeout > 0 ? fs->_peer->connect_timeout
                    : Config.Timeout.peer_connect;
@@ -813,7 +818,7 @@ FwdState::connectStart()
                 request->flags.auth = 1;
             comm_add_close_handler(fd, fwdServerClosedWrapper, this);
             updateHierarchyInfo();
-            connectDone(fd, COMM_OK, 0);
+            connectDone(fd, DnsLookupDetails(), COMM_OK, 0);
             return;
         }
         /* Failure. Fall back on next path */

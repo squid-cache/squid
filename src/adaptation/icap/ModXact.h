@@ -167,6 +167,9 @@ protected:
 private:
     virtual void start();
 
+    /// locates the request, either as a cause or as a virgin message itself
+    const HttpRequest &virginRequest() const; // Must always be available
+
     void estimateVirginBody();
     void makeAdaptedBodyPipe(const char *what);
 
@@ -250,8 +253,7 @@ private:
     bool gotEncapsulated(const char *section) const;
     void checkConsuming();
 
-
-    HttpReply *icapReply;
+    virtual void finalizeLogInfo();
 
     SizedEstimate virginBody;
     VirginBodyAct virginBodyWriting; // virgin body writing state
@@ -262,6 +264,10 @@ private:
     ChunkedCodingParser *bodyParser; // ICAP response body parser
 
     bool canStartBypass; // enables bypass of transaction failures
+
+    uint64_t replyBodySize; ///< dechunked ICAP reply body size
+
+    int adaptHistoryId; ///< adaptation history slot reservation
 
     class State
     {
@@ -318,6 +324,11 @@ public:
 
 protected:
     virtual Xaction *createXaction();
+
+    virtual void swanSong();
+
+    /// starts or stops transaction accounting in ICAP history
+    void updateHistory(bool start);
 
     InOut virgin;
 

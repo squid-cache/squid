@@ -7,10 +7,16 @@
 #include "CommCalls.h"
 #include "HttpMsg.h"
 #include "adaptation/icap/Xaction.h"
+#include "adaptation/icap/Launcher.h"
 #include "adaptation/icap/Config.h"
 #include "TextException.h"
 #include "pconn.h"
+#include "HttpRequest.h"
+#include "HttpReply.h"
+#include "acl/FilledChecklist.h"
+#include "icap_log.h"
 #include "fde.h"
+#include "SquidTime.h"
 
 static PconnPool *icapPconnPool = new PconnPool("ICAP Servers");
 
@@ -20,22 +26,30 @@ static PconnPool *icapPconnPool = new PconnPool("ICAP Servers");
 Adaptation::Icap::Xaction::Xaction(const char *aTypeName, Adaptation::Initiator *anInitiator, Adaptation::Icap::ServiceRep::Pointer &aService):
         AsyncJob(aTypeName),
         Adaptation::Initiate(aTypeName, anInitiator, aService.getRaw()),
+        icapRequest(NULL),
+        icapReply(NULL),
+        attempts(0),
         connection(-1),
         commBuf(NULL), commBufSize(0),
         commEof(false),
         reuseConnection(true),
         isRetriable(true),
+        isRepeatable(true),
         ignoreLastWrite(false),
         connector(NULL), reader(NULL), writer(NULL), closer(NULL)
 {
     debugs(93,3, typeName << " constructed, this=" << this <<
            " [icapx" << id << ']'); // we should not call virtual status() here
+    icapRequest = HTTPMSGLOCK(new HttpRequest);
+    icap_tr_start = current_time;
 }
 
 Adaptation::Icap::Xaction::~Xaction()
 {
     debugs(93,3, typeName << " destructed, this=" << this <<
            " [icapx" << id << ']'); // we should not call virtual status() here
+    HTTPMSGUNLOCK(icapRequest);
+    HTTPMSGUNLOCK(icapReply);
 }
 
 Adaptation::Icap::ServiceRep &
@@ -48,9 +62,16 @@ Adaptation::Icap::Xaction::service()
 
 void Adaptation::Icap::Xaction::disableRetries()
 {
-    debugs(93,5, typeName << (isRetriable ? " becomes" : " remains") <<
-           " final" << status());
+    debugs(93,5, typeName << (isRetriable ? " from now on" : " still") <<
+           " cannot be retried " << status());
     isRetriable = false;
+}
+
+void Adaptation::Icap::Xaction::disableRepeats(const char *reason)
+{
+    debugs(93,5, typeName << (isRepeatable ? " from now on" : " still") <<
+           " cannot be repeated because " << reason << status());
+    isRepeatable = false;
 }
 
 void Adaptation::Icap::Xaction::start()
@@ -220,6 +241,7 @@ void Adaptation::Icap::Xaction::noteCommWrote(const CommIoCbParams &io)
         debugs(93, 7, HERE << "ignoring last write; status: " << io.flag);
     } else {
         Must(io.flag == COMM_OK);
+        al.icap.bytesSent += io.size;
         updateTimeout();
         handleCommWrote(io.size);
     }
@@ -255,6 +277,13 @@ void Adaptation::Icap::Xaction::handleCommClosed()
 {
     mustStop("ICAP service connection externally closed");
 }
+
+void Adaptation::Icap::Xaction::callException(const std::exception  &e)
+{
+    setOutcome(xoError);
+    Adaptation::Initiate::callException(e);
+}
+
 
 void Adaptation::Icap::Xaction::callEnd()
 {
@@ -316,6 +345,8 @@ void Adaptation::Icap::Xaction::noteCommRead(const CommIoCbParams &io)
 
     Must(io.flag == COMM_OK);
     Must(io.size >= 0);
+
+    al.icap.bytesRead+=io.size;
 
     updateTimeout();
 
@@ -397,6 +428,17 @@ void Adaptation::Icap::Xaction::noteInitiatorAborted()
 
 }
 
+void Adaptation::Icap::Xaction::setOutcome(const Adaptation::Icap::XactOutcome &xo)
+{
+    if (al.icap.outcome != xoUnknown) {
+        debugs(93, 3, HERE << "Warning: reseting outcome: from " <<
+            al.icap.outcome << " to " << xo);
+    } else {
+        debugs(93, 4, HERE << xo);
+    }
+    al.icap.outcome = xo;
+}
+
 // This 'last chance' method is called before a 'done' transaction is deleted.
 // It is wrong to call virtual methods from a destructor. Besides, this call
 // indicates that the transaction will terminate as planned.
@@ -413,9 +455,54 @@ void Adaptation::Icap::Xaction::swanSong()
         memFreeBuf(commBufSize, commBuf);
 
     if (theInitiator)
-        tellQueryAborted(!isRetriable);
+        tellQueryAborted();
+
+    maybeLog();
 
     Adaptation::Initiate::swanSong();
+}
+
+void Adaptation::Icap::Xaction::tellQueryAborted() {
+    Adaptation::Icap::Launcher *l = dynamic_cast<Adaptation::Icap::Launcher*>(theInitiator.ptr());
+    Adaptation::Icap::XactAbortInfo abortInfo(icapRequest, icapReply, retriable(), repeatable());
+    CallJob(91, 5, __FILE__, __LINE__, 
+            "Adaptation::Icap::Launcher::noteXactAbort",
+            XactAbortCall(l, &Adaptation::Icap::Launcher::noteXactAbort, abortInfo) );
+    clearInitiator();
+}
+
+
+void Adaptation::Icap::Xaction::maybeLog() {
+    if(IcapLogfileStatus == LOG_ENABLE)
+    {
+        ACLChecklist *checklist = new ACLFilledChecklist(::Config.accessList.icap, al.request, dash_str);
+        if (!::Config.accessList.icap || checklist->fastCheck()) {
+            finalizeLogInfo();
+            icapLogLog(&al, checklist);
+        }
+        accessLogFreeMemory(&al);
+        delete checklist;
+    }
+}
+
+void Adaptation::Icap::Xaction::finalizeLogInfo()
+{
+    //prepare log data
+    al.icp.opcode = ICP_INVALID;
+    
+    const Adaptation::Icap::ServiceRep &s = service();
+    al.icap.hostAddr = s.cfg().host.termedBuf();
+    al.icap.serviceName = s.cfg().key;
+    al.icap.reqUri = s.cfg().uri;
+    
+    al.icap.ioTime = tvSubMsec(icap_tio_start, icap_tio_finish);
+    al.icap.trTime = tvSubMsec(icap_tr_start, current_time);
+
+    al.icap.request = HTTPMSGLOCK(icapRequest);
+    if (icapReply) {
+        al.icap.reply = HTTPMSGLOCK(icapReply);
+        al.icap.resStatus = icapReply->sline.status;
+    }
 }
 
 // returns a temporary string depicting transaction status, for debugging

@@ -209,6 +209,7 @@ public:
     IpAddress default_addr;
     // NP: CANNOT store the default addr:port together as it gets set/reset differently.
 
+    DnsLookupDetails dns; ///< host lookup details
     IpAddress S;
     AsyncCall::Pointer callback;
 
@@ -876,19 +877,13 @@ commConnectStart(int fd, const char *host, u_short port, CNCB * callback, void *
 }
 
 static void
-commConnectDnsHandle(const ipcache_addrs * ia, void *data)
+commConnectDnsHandle(const ipcache_addrs *ia, const DnsLookupDetails &details, void *data)
 {
     ConnectStateData *cs = (ConnectStateData *)data;
+    cs->dns = details;
 
     if (ia == NULL) {
         debugs(5, 3, "commConnectDnsHandle: Unknown host: " << cs->host);
-
-        if (!dns_error_message) {
-            dns_error_message = "Unknown DNS error";
-            debugs(5, 1, "commConnectDnsHandle: Bad dns_error_message");
-        }
-
-        assert(dns_error_message != NULL);
         cs->callCallback(COMM_ERR_DNS, 0);
         return;
     }
@@ -918,6 +913,7 @@ ConnectStateData::callCallback(comm_err_t status, int xerrno)
     typedef CommConnectCbParams Params;
     Params &params = GetCommParams<Params>(callback);
     params.fd = fd;
+    params.dns = dns;
     params.flag = status;
     params.xerrno = xerrno;
     ScheduleCallHere(callback);

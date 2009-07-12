@@ -36,7 +36,9 @@ libadaptation_la_SOURCES = \
 	ServiceConfig.cc \
 	ServiceConfig.h \
 	ServiceGroups.cc \
-	ServiceGroups.h
+	ServiceGroups.h \
+	History.cc \
+	History.h 
 
 # add libraries for specific adaptation schemes
 libadaptation_la_LIBADD = @ECAP_LIBS@ @ECAPLIB@ @ICAP_LIBS@

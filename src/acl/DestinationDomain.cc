@@ -58,14 +58,15 @@ DestinationDomainLookup::checkForAsync(ACLChecklist *cl) const
 }
 
 void
-DestinationDomainLookup::LookupDone(const char *fqdn, void *data)
+DestinationDomainLookup::LookupDone(const char *fqdn, const DnsLookupDetails &details, void *data)
 {
-    ACLChecklist *checklist = (ACLChecklist *)data;
+    ACLFilledChecklist *checklist = Filled((ACLChecklist*)data);
     assert (checklist->asyncState() == DestinationDomainLookup::Instance());
 
     checklist->asyncInProgress(false);
     checklist->changeState (ACLChecklist::NullState::Instance());
-    Filled(checklist)->markDestinationDomainChecked();
+    checklist->markDestinationDomainChecked();
+    checklist->request->recordLookup(details);
     checklist->check();
 }
 
