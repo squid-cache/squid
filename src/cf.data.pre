@@ -1039,6 +1039,10 @@ DOC_START
 	   accel	Accelerator mode. Also needs at least one of
 			vhost / vport / defaultsite.
 
+	   allow-direct	Allow direct forwarding in accelerator mode. Normally
+			accelerated requests are denied direct forwarding as if
+			never_direct was used.
+
 	   defaultsite=domainname
 			What to use for the Host: header if it is not present
 			in a request. Determines what site (not origin server)

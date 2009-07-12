@@ -946,6 +946,10 @@ NOCOMMENT_START
         <verb>
            intercept    Rename of old 'transparent' option to indicate proper functionality.
 
+	   allow-direct	Allow direct forwarding in accelerator mode. Normally
+	                accelerated requests are denied direct forwarding as if
+	                never_direct was used.
+
 	   connection-auth[=on|off]
 	                use connection-auth=off to tell Squid to prevent
 	                forwarding Microsoft connection oriented authentication
@@ -1352,7 +1356,6 @@ This section gives an account of those changes in three categories:
 
 	<tag>http_port</tag>
 	<p><em>act-as-origin</em> not yet ported from 2.7
-	<p><em>allow-direct</em> not yet ported from 2.7
 	<p><em>http11</em> not yet ported from 2.7
 	<p><em>urlgroup=</em> not yet ported from 2.6
 
