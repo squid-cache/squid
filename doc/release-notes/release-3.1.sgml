@@ -1132,7 +1132,7 @@ This section gives an account of those changes in three categories:
 	<p>Allow build-time configuration of Default location for squid logs.
 
         <tag>--with-ipv6-split-stack</tag>
-        <p>Enable special additions for IPv6 support in Windows XP.
+        <p>Force enable special additions for IPv6 support in Windows XP and various BSD systems.
            see the IPv6 details above for a better description.
 
 	<tag>--with-pidfile=PATH</tag>
