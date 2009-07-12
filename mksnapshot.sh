@@ -102,6 +102,8 @@ fi
 if (groff --help >/dev/null); then
 	make -C ${tmpdir}/doc all
 	cp ${tmpdir}/doc/*.8 ${tmpdir}/doc/manuals/
+	cp ${tmpdir}/tools/*.8 ${tmpdir}/doc/manuals/
+	cp ${tmpdir}/tools/*.1 ${tmpdir}/doc/manuals/
         for f in `ls -1 ${tmpdir}/helpers/*/*/*.8` ; do
 		cp $f ${tmpdir}/doc/manuals/
 	done
