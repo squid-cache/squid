@@ -21,6 +21,7 @@ struct http_port_list {
     unsigned int intercepted:1;        /**< intercepting proxy port */
     unsigned int spoof_client_ip:1;    /**< spoof client ip if possible */
     unsigned int accel:1;              /**< HTTP accelerator */
+    unsigned int allow_direct:1;       /**< Allow direct forwarding in accelerator mode */
     unsigned int vhost:1;              /**< uses host header */
     unsigned int sslBump:1;            /**< intercepts CONNECT requests */
 

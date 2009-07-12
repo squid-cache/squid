@@ -2992,6 +2992,8 @@ parse_http_port_option(http_port_list * s, char *token)
         s->accel = 1;
     } else if (strcmp(token, "accel") == 0) {
         s->accel = 1;
+    } else if (strcmp(token, "allow-direct") == 0) {
+        s->allow_direct = 1;
     } else if (strcmp(token, "no-connection-auth") == 0) {
         s->connection_auth_disabled = true;
     } else if (strcmp(token, "connection-auth=off") == 0) {
