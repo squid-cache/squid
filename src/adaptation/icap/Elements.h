@@ -43,6 +43,7 @@ namespace Adaptation
 {
 namespace Icap {
 
+//TODO: remove the ICAP namespace
 namespace ICAP {
 using Adaptation::Method;
 using Adaptation::methodNone;
@@ -59,6 +60,13 @@ using Adaptation::methodStr;
 using Adaptation::vectPointStr;
 }
 
+typedef const char *XactOutcome; ///< transaction result for logging
+extern const XactOutcome xoUnknown; ///< initial value: outcome was not set
+extern const XactOutcome xoError; ///< all kinds of transaction errors
+extern const XactOutcome xoOpt; ///< OPTION transaction
+extern const XactOutcome xoEcho; ///< preserved virgin message (ICAP 204)
+extern const XactOutcome xoModified; ///< replaced virgin msg with adapted
+extern const XactOutcome xoSatisfied; ///< request satisfaction
 
 } // namespace Icap
 } // namespace Adaptation

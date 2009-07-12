@@ -92,6 +92,7 @@ private:
     typedef enum { opUndecided, opOn, opComplete, opNever } OperationState;
     OperationState proxyingVb; // delivering virgin body from core to adapter
     OperationState proxyingAb; // delivering adapted body from adapter to core
+    int adaptHistoryId;        ///< adaptation history slot reservation
     bool canAccessVb;          // virgin BodyPipe content is accessible
     bool abProductionFinished; // whether adapter has finished producing ab
     bool abProductionAtEnd;    // whether adapter produced a complete ab

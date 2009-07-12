@@ -183,6 +183,7 @@ struct SquidConfig {
     } Timeout;
     size_t maxRequestHeaderSize;
     int64_t maxRequestBodySize;
+    int64_t maxChunkedRequestBodySize;
     size_t maxReplyHeaderSize;
     acl_size_t *ReplyBodySize;
 
@@ -263,6 +264,10 @@ struct SquidConfig {
         logformat *logformats;
 
         customlog *accesslogs;
+
+#if ICAP_CLIENT        
+        customlog *icaplogs;
+#endif
 
         int rotateNumber;
     } Log;
@@ -479,6 +484,9 @@ struct SquidConfig {
         acl_access *followXFF;
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
+#if ICAP_CLIENT
+        acl_access* icap;
+#endif
     } accessList;
     acl_deny_info_list *denyInfoList;
     authConfig authConfiguration;

@@ -27,7 +27,8 @@ typedef enum {
 #endif
 } comm_err_t;
 
-typedef void CNCB(int fd, comm_err_t status, int xerrno, void *data);
+class DnsLookupDetails;
+typedef void CNCB(int fd, const DnsLookupDetails &dns, comm_err_t status, int xerrno, void *data);
 
 typedef void IOCB(int fd, char *, size_t size, comm_err_t flag, int xerrno, void *data);
 

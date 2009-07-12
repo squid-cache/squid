@@ -40,6 +40,9 @@
 #include "HttpHeaderRange.h"
 #include "MemBuf.h"
 #include "Store.h"
+#if ICAP_CLIENT
+#include "adaptation/icap/icap_log.h"
+#endif
 
 HttpRequest::HttpRequest() : HttpMsg(hoRequest)
 {
@@ -87,6 +90,7 @@ HttpRequest::init()
     my_addr.SetEmpty();
     body_pipe = NULL;
     // hier
+    dnsWait = -1;
     errType = ERR_NONE;
     peer_login = NULL;		// not allocated/deallocated by this class
     peer_domain = NULL;		// not allocated/deallocated by this class
@@ -99,6 +103,12 @@ HttpRequest::init()
 #if FOLLOW_X_FORWARDED_FOR
     indirect_client_addr.SetEmpty();
 #endif /* FOLLOW_X_FORWARDED_FOR */
+#if USE_ADAPTATION
+    adaptHistory_ = NULL;
+#endif
+#if ICAP_CLIENT
+    icapHistory_ = NULL;
+#endif
 }
 
 void
@@ -138,6 +148,13 @@ HttpRequest::clean()
     extacl_passwd.clean();
 
     extacl_log.clean();
+
+#if USE_ADAPTATION
+    adaptHistory_ = NULL;
+#endif
+#if ICAP_CLIENT
+    icapHistory_ = NULL;
+#endif
 }
 
 void
@@ -163,25 +180,14 @@ HttpRequest::clone() const
     strncpy(copy->host, host, sizeof(host)); // SQUIDHOSTNAMELEN
     copy->host_addr = host_addr;
 
-    if (auth_user_request) {
-        copy->auth_user_request = auth_user_request;
-        AUTHUSERREQUESTLOCK(copy->auth_user_request, "HttpRequest::clone");
-    }
-
     copy->port = port;
     // urlPath handled in ctor
     copy->canonical = canonical ? xstrdup(canonical) : NULL;
-
-    // This may be too conservative for the 204 No Content case
-    // may eventually need cloneNullAdaptationImmune() for that.
-    copy->flags = flags.cloneAdaptationImmune();
 
     copy->range = range ? new HttpHdrRange(*range) : NULL;
     copy->ims = ims;
     copy->imslen = imslen;
     copy->max_forwards = max_forwards;
-    copy->client_addr = client_addr;
-    copy->my_addr = my_addr;
     copy->hier = hier; // Is it safe to copy? Should we?
 
     copy->errType = errType;
@@ -196,6 +202,8 @@ HttpRequest::clone() const
     copy->extacl_user = extacl_user;
     copy->extacl_passwd = extacl_passwd;
     copy->extacl_log = extacl_log;
+
+    assert(copy->inheritProperties(this));
 
     return copy;
 }
@@ -356,6 +364,37 @@ request_flags::clearResetTCP()
     reset_tcp = 0;
 }
 
+#if ICAP_CLIENT
+Adaptation::Icap::History::Pointer 
+HttpRequest::icapHistory() const
+{
+    if (!icapHistory_) {
+        if ((LogfileStatus == LOG_ENABLE && alLogformatHasIcapToken) ||
+            IcapLogfileStatus == LOG_ENABLE) {
+            icapHistory_ = new Adaptation::Icap::History();
+            debugs(93,4, HERE << "made " << icapHistory_ << " for " << this);
+        }
+    }
+
+    return icapHistory_;
+}
+#endif
+
+#if USE_ADAPTATION
+Adaptation::History::Pointer 
+HttpRequest::adaptHistory() const
+{
+    if (!adaptHistory_) {
+        if (Adaptation::History::Enabled) {
+            adaptHistory_ = new Adaptation::History();
+            debugs(93,4, HERE << "made " << adaptHistory_ << " for " << this);
+        }
+    }
+
+    return adaptHistory_;
+}
+#endif
+
 bool
 HttpRequest::multipartRangeRequest() const
 {
@@ -509,6 +548,15 @@ bool HttpRequest::inheritProperties(const HttpMsg *aMsg)
     client_addr = aReq->client_addr;
     my_addr = aReq->my_addr;
 
+    dnsWait = aReq->dnsWait;
+
+#if USE_ADAPTATION
+    adaptHistory_ = aReq->adaptHistory();
+#endif
+#if ICAP_CLIENT
+    icapHistory_ = aReq->icapHistory();
+#endif
+
     // This may be too conservative for the 204 No Content case
     // may eventually need cloneNullAdaptationImmune() for that.
     flags = aReq->flags.cloneAdaptationImmune();
@@ -522,4 +570,14 @@ bool HttpRequest::inheritProperties(const HttpMsg *aMsg)
         pinned_connection = cbdataReference(aReq->pinned_connection);
     }
     return true;
+}
+
+void HttpRequest::recordLookup(const DnsLookupDetails &dns)
+{
+    if (dns.wait >= 0) { // known delay
+        if (dnsWait >= 0) // have recorded DNS wait before
+            dnsWait += dns.wait;
+        else
+            dnsWait = dns.wait;
+    }
 }

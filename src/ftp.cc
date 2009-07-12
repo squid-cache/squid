@@ -2787,10 +2787,11 @@ ftpReadPasv(FtpStateData * ftpState)
 }
 
 void
-FtpStateData::ftpPasvCallback(int fd, comm_err_t status, int xerrno, void *data)
+FtpStateData::ftpPasvCallback(int fd, const DnsLookupDetails &dns, comm_err_t status, int xerrno, void *data)
 {
     FtpStateData *ftpState = (FtpStateData *)data;
     debugs(9, 3, HERE);
+    ftpState->request->recordLookup(dns);
 
     if (status != COMM_OK) {
         debugs(9, 2, HERE << "Failed to connect. Retrying without PASV.");

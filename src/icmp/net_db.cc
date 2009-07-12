@@ -271,7 +271,7 @@ netdbAdd(IpAddress &addr)
 }
 
 static void
-netdbSendPing(const ipcache_addrs * ia, void *data)
+netdbSendPing(const ipcache_addrs *ia, const DnsLookupDetails &, void *data)
 {
     IpAddress addr;
     char *hostname = NULL;

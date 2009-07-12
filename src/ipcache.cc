@@ -77,9 +77,6 @@
  * the ipcache_high threshold.
  */
 
-/// \ingroup IPCacheAPI
-typedef struct _ipcache_entry ipcache_entry;
-
 /**
  \ingroup IPCacheAPI
  *
@@ -88,7 +85,8 @@ typedef struct _ipcache_entry ipcache_entry;
  * where structures of type ipcache_entry whose most
  * interesting members are:
  */
-struct _ipcache_entry {
+class ipcache_entry {
+public:
     hash_link hash;		/* must be first */
     time_t lastref;
     time_t expires;
@@ -108,6 +106,8 @@ struct _ipcache_entry {
         unsigned int negcached:1;
         unsigned int fromhosts:1;
     } flags;
+
+    int age() const; ///< time passed since request_time or -1 if unknown
 };
 
 /// \ingroup IPCacheInternal
@@ -160,6 +160,14 @@ static long ipcache_high = 200;
 #if LIBRESOLV_DNS_TTL_HACK
 extern int _dns_ttl_;
 #endif
+
+int
+ipcache_entry::age() const
+{
+    return request_time.tv_sec ? tvSubMsec(request_time, current_time) : -1;
+}
+
+
 
 /**
  \ingroup IPCacheInternal
@@ -324,7 +332,7 @@ ipcacheAddEntry(ipcache_entry * i)
  * walks down the pending list, calling handlers
  */
 static void
-ipcacheCallback(ipcache_entry * i)
+ipcacheCallback(ipcache_entry *i, int wait)
 {
     IPH *callback = i->handler;
     void *cbdata = NULL;
@@ -340,8 +348,8 @@ ipcacheCallback(ipcache_entry * i)
     i->handler = NULL;
 
     if (cbdataReferenceValidDone(i->handlerData, &cbdata)) {
-        dns_error_message = i->error_message;
-        callback(i->addrs.count ? &i->addrs : NULL, cbdata);
+        const DnsLookupDetails details(i->error_message, wait);
+        callback((i->addrs.count ? &i->addrs : NULL), details, cbdata);
     }
 
     ipcacheUnlockEntry(i);
@@ -646,8 +654,9 @@ ipcacheHandleReply(void *data, rfc1035_rr * answers, int na, const char *error_m
     ipcache_entry *i;
     static_cast<generic_cbdata *>(data)->unwrap(&i);
     IpcacheStats.replies++;
-    statHistCount(&statCounter.dns.svc_time,
-                  tvSubMsec(i->request_time, current_time));
+    const int age = i->age();
+    statHistCount(&statCounter.dns.svc_time, age);
+                  
 #if USE_DNSSERVERS
 
     done = ipcacheParse(i, reply);
@@ -661,7 +670,7 @@ ipcacheHandleReply(void *data, rfc1035_rr * answers, int na, const char *error_m
 
     {
         ipcacheAddEntry(i);
-        ipcacheCallback(i);
+        ipcacheCallback(i, age);
     }
 }
 
@@ -694,16 +703,16 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
     if (name == NULL || name[0] == '\0') {
         debugs(14, 4, "ipcache_nbgethostbyname: Invalid name!");
         IpcacheStats.invalid++;
-        dns_error_message = "Invalid hostname";
-        handler(NULL, handlerData);
+        const DnsLookupDetails details("Invalid hostname", -1); // error, no lookup
+        handler(NULL, details, handlerData);
         return;
     }
 
     if ((addrs = ipcacheCheckNumeric(name))) {
         debugs(14, 4, "ipcache_nbgethostbyname: BYPASS for '" << name << "' (already numeric)");
-        dns_error_message = NULL;
         IpcacheStats.numeric_hits++;
-        handler(addrs, handlerData);
+        const DnsLookupDetails details(NULL, -1); // no error, no lookup
+        handler(addrs, details, handlerData);
         return;
     }
 
@@ -729,7 +738,7 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
 
         i->handlerData = cbdataReference(handlerData);
 
-        ipcacheCallback(i);
+        ipcacheCallback(i, -1); // no lookup
 
         return;
     }
@@ -823,16 +832,16 @@ ipcache_gethostbyname(const char *name, int flags)
         i = NULL;
     } else if (i->flags.negcached) {
         IpcacheStats.negative_hits++;
-        dns_error_message = i->error_message;
+        // ignore i->error_message: the caller just checks IP cache presence
         return NULL;
     } else {
         IpcacheStats.hits++;
         i->lastref = squid_curtime;
-        dns_error_message = i->error_message;
+        // ignore i->error_message: the caller just checks IP cache presence
         return &i->addrs;
     }
 
-    dns_error_message = NULL;
+    /* no entry [any more] */
 
     if ((addrs = ipcacheCheckNumeric(name))) {
         IpcacheStats.numeric_hits++;
@@ -1064,7 +1073,7 @@ ipcacheMergeIPLists(const IpAddress *aaddrs, const int alen,
 /// \ingroup IPCacheInternal
 /// Callback.
 static void
-ipcacheHandleCnameRecurse(const ipcache_addrs *addrs, void *cbdata)
+ipcacheHandleCnameRecurse(const ipcache_addrs *addrs, const DnsLookupDetails &, void *cbdata)
 {
 #if DNS_CNAME
     ipcache_entry *i = NULL;
@@ -1159,7 +1168,7 @@ ipcacheHandleCnameRecurse(const ipcache_addrs *addrs, void *cbdata)
     /* finish the lookup we were doing on parent when we got side-tracked for CNAME loop */
     if (i->cname_wait == 0) {
         ipcacheAddEntry(i);
-        ipcacheCallback(i);
+        ipcacheCallback(i, i->age()); // age since i creation, includes CNAMEs
     }
     // else still more CNAME to be found.
 #endif /* DNS_CNAME */

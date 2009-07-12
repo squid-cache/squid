@@ -496,7 +496,6 @@ errorStateFree(ErrorState * err)
     HTTPMSGUNLOCK(err->request);
     safe_free(err->redirect_url);
     safe_free(err->url);
-    safe_free(err->dnsserver_msg);
     safe_free(err->request_hdrs);
     wordlistDestroy(&err->ftp.server_msg);
     safe_free(err->ftp.request);
@@ -536,9 +535,8 @@ ErrorState::Dump(MemBuf * mb)
     if (auth_user_request->denyMessage())
         str.Printf("Auth ErrMsg: %s\r\n", auth_user_request->denyMessage());
 
-    if (dnsserver_msg) {
-        str.Printf("DNS Server ErrMsg: %s\r\n", dnsserver_msg);
-    }
+    if (dnsError.size() > 0)
+        str.Printf("DNS ErrMsg: %s\r\n", dnsError.termedBuf());
 
     /* - TimeStamp */
     str.Printf("TimeStamp: %s\r\n\r\n", mkrfc1123(squid_curtime));
@@ -819,8 +817,8 @@ ErrorState::Convert(char token)
         break;
 
     case 'z':
-        if (dnsserver_msg)
-            p = dnsserver_msg;
+        if (dnsError.size() > 0)
+            p = dnsError.termedBuf();
         else
             p = "[unknown]";
 

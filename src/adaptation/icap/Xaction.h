@@ -39,6 +39,7 @@
 #include "MemBuf.h"
 #include "adaptation/icap/ServiceRep.h"
 #include "adaptation/Initiate.h"
+#include "AccessLogEntry.h"
 
 class HttpMsg;
 class CommConnectCbParams;
@@ -65,6 +66,9 @@ public:
     virtual ~Xaction();
 
     void disableRetries();
+    void disableRepeats(const char *reason);
+    bool retriable() const { return isRetriable; }
+    bool repeatable() const { return isRepeatable; }
 
     // comm handler wrappers, treat as private
     void noteCommConnected(const CommConnectCbParams &io);
@@ -72,6 +76,13 @@ public:
     void noteCommRead(const CommIoCbParams &io);
     void noteCommTimedout(const CommTimeoutCbParams &io);
     void noteCommClosed(const CommCloseCbParams &io);
+
+    // TODO: create these only when actually sending/receiving
+    HttpRequest *icapRequest; ///< sent (or at least created) ICAP request
+    HttpReply *icapReply; ///< received ICAP reply, if any
+
+    /// the number of times we tried to get to the service, including this time
+    int attempts;
 
 protected:
     virtual void start();
@@ -113,10 +124,19 @@ protected:
     // useful for debugging
     virtual bool fillVirginHttpHeader(MemBuf&) const;
 
-    // custom end-of-call checks
+    // custom exception handling and end-of-call checks
+    virtual void callException(const std::exception  &e);
     virtual void callEnd();
 
+    // logging
+    void setOutcome(const XactOutcome &xo);
+    virtual void finalizeLogInfo();
+
     ServiceRep &service();
+
+private:
+    void tellQueryAborted();
+    void maybeLog();
 
 protected:
     int connection;     // FD of the ICAP server connection
@@ -137,7 +157,8 @@ protected:
     size_t commBufSize;
     bool commEof;
     bool reuseConnection;
-    bool isRetriable;
+    bool isRetriable;  ///< can retry on persistent connection failures
+    bool isRepeatable; ///< can repeat if no or unsatisfactory response
     bool ignoreLastWrite;
 
     const char *stopReason;
@@ -147,6 +168,12 @@ protected:
     AsyncCall::Pointer reader;
     AsyncCall::Pointer writer;
     AsyncCall::Pointer closer;
+
+    AccessLogEntry al;
+
+    timeval icap_tr_start;     /*time when the ICAP transaction was created */
+    timeval icap_tio_start;    /*time when the first ICAP request byte was scheduled for sending*/
+    timeval icap_tio_finish;   /*time when the last byte of the ICAP responsewas received*/
 
 private:
     //CBDATA_CLASS2(Xaction);
