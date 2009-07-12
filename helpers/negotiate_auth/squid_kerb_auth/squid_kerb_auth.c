@@ -191,6 +191,7 @@ int main(int argc, char * const argv[])
 {
   char buf[MAX_AUTHTOKEN_LEN];
   char *c;
+  char *user=NULL;
   int length=0;
   static int err=0;
   int opt, debug=0, loging=0;
@@ -475,11 +476,20 @@ int main(int argc, char * const argv[])
 
       if (check_gss_err(major_status,minor_status,"gss_display_name()",debug,loging) )
 	goto cleanup;
-      fprintf(stdout, "AF %s %s\n",token,(char *)output_token.value);
+      user=malloc(output_token.length+1);
+      if (user == NULL) {
+        if (debug)
+          fprintf(stderr, "%s| %s: Not enough memory\n", LogTime(), PROGRAM);
+        fprintf(stdout, "BH Not enough memory\n");
+        goto cleanup;
+      }
+      memcpy(user,output_token.value,output_token.length);
+      user[output_token.length]='\0';
+      fprintf(stdout, "AF %s %s\n",token,user);
       if (debug)
-	fprintf(stderr, "%s| %s: AF %s %s\n", LogTime(), PROGRAM, token,(char *)output_token.value); 
+	fprintf(stderr, "%s| %s: AF %s %s\n", LogTime(), PROGRAM, token,user); 
       if (loging)
-	fprintf(stderr, "%s| %s: User %s authenticated\n", LogTime(), PROGRAM, (char *)output_token.value);
+	fprintf(stderr, "%s| %s: User %s authenticated\n", LogTime(), PROGRAM, user);
       goto cleanup;
     } else {
       if (check_gss_err(major_status,minor_status,"gss_accept_sec_context()",debug,loging) )
@@ -499,11 +509,20 @@ int main(int argc, char * const argv[])
       /* 
        *  Return dummy token AA. May need an extra return tag then AF
        */
-      fprintf(stdout, "AF %s %s\n","AA==",(char *)output_token.value);
+      user=malloc(output_token.length+1);
+      if (user == NULL) {
+        if (debug)
+          fprintf(stderr, "%s| %s: Not enough memory\n", LogTime(), PROGRAM);
+        fprintf(stdout, "BH Not enough memory\n");
+        goto cleanup;
+      }
+      memcpy(user,output_token.value,output_token.length);
+      user[output_token.length]='\0';
+      fprintf(stdout, "AF %s %s\n","AA==",user);
       if (debug)
-	fprintf(stderr, "%s| %s: AF %s %s\n", LogTime(), PROGRAM, "AA==", (char *)output_token.value);
+	fprintf(stderr, "%s| %s: AF %s %s\n", LogTime(), PROGRAM, "AA==", user);
       if (loging)
-	fprintf(stderr, "%s| %s: User %s authenticated\n", LogTime(), PROGRAM, (char *)output_token.value);
+	fprintf(stderr, "%s| %s: User %s authenticated\n", LogTime(), PROGRAM, user);
 
 cleanup:
       gss_release_buffer(&minor_status, &input_token);
@@ -527,6 +546,10 @@ cleanup:
       if (token) {
         free(token);
       	token=NULL;
+      }
+      if (user) {
+        free(user);
+      	user=NULL;
       }
       continue;            
     }
