@@ -93,13 +93,21 @@ typedef enum {
 
 /// \ingroup ServerProtocolFTPInternal
 struct _ftp_flags {
+
+    /* passive mode */
+    bool pasv_supported;  ///< PASV command is allowed
+    bool epsv_all_sent;   ///< EPSV ALL has been used. Must abort on failures.
+    bool pasv_only;
+
+    /* authentication */
+    bool authenticated;         ///< authentication success
+    bool tried_auth_anonymous;  ///< auth has tried to use anonymous credentials already.
+    bool tried_auth_nopass;     ///< auth tried username with no password already.
+
+    /* other */
     bool isdir;
-    bool pasv_supported;
-    bool epsv_all_sent;
     bool skip_whitespace;
     bool rest_supported;
-    bool pasv_only;
-    bool authenticated;
     bool http_header_sent;
     bool tried_nlst;
     bool need_base_href;
@@ -1432,6 +1440,9 @@ FtpStateData::processReplyBody()
  *
  * Special Case: A username-only may be provided in the URL and password in the HTTP headers.
  *
+ * TODO: we might be able to do something about locating username from other sources:
+ *       ie, external ACL user=* tag or ident lookup
+ *
  \retval 1	if we have everything needed to complete this request.
  \retval 0	if something is missing.
  */
@@ -1464,10 +1475,16 @@ FtpStateData::checkAuth(const HttpHeader * req_hdr)
     /* Setup default FTP password settings */
     /* this has to be done last so that we can have a no-password case above. */
     if (!password[0]) {
-        if (strcmp(user, "anonymous") == 0)
+        if (strcmp(user, "anonymous") == 0 && !flags.tried_auth_anonymous) {
             xstrncpy(password, Config.Ftp.anon_user, MAX_URL);
-        else
+            flags.tried_auth_anonymous=1;
+            return 1;
+        }
+        else if (!flags.tried_auth_nopass) {
             xstrncpy(password, null_string, MAX_URL);
+            flags.tried_auth_nopass=1;
+            return 1;
+        }
     }
 
     return 0;			/* different username */
