@@ -17,8 +17,8 @@
 Adaptation::Icap::Launcher::Launcher(const char *aTypeName,
                                      Adaptation::Initiator *anInitiator, Adaptation::ServicePointer &aService):
         AsyncJob(aTypeName),
-        Adaptation::Initiate(aTypeName, anInitiator, aService),
-        theXaction(0), theLaunches(0)
+        Adaptation::Initiate(aTypeName, anInitiator),
+        theService(aService), theXaction(0), theLaunches(0)
 {
 }
 
@@ -91,8 +91,8 @@ void Adaptation::Icap::Launcher::noteXactAbort(XactAbortInfo &info)
     } else {
         debugs(93,3, HERE << "cannot retry or repeat a failed transaction");
         clearAdaptation(theXaction);
-
-        Must(done()); // swanSong will notify the initiator
+        tellQueryAborted(false); // caller decides based on bypass, consumption
+        Must(done());
     }   
 }
 
@@ -104,7 +104,7 @@ bool Adaptation::Icap::Launcher::doneAll() const
 void Adaptation::Icap::Launcher::swanSong()
 {
     if (theInitiator)
-        tellQueryAborted(!service().cfg().bypass);
+        tellQueryAborted(true); // always final here because abnormal
 
     if (theXaction)
         clearAdaptation(theXaction);

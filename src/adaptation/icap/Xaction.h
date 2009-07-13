@@ -140,6 +140,7 @@ private:
 
 protected:
     int connection;     // FD of the ICAP server connection
+    Adaptation::Icap::ServiceRep::Pointer theService;
 
     /*
      * We have two read buffers.   We would prefer to read directly

@@ -25,11 +25,12 @@ static PconnPool *icapPconnPool = new PconnPool("ICAP Servers");
 
 Adaptation::Icap::Xaction::Xaction(const char *aTypeName, Adaptation::Initiator *anInitiator, Adaptation::Icap::ServiceRep::Pointer &aService):
         AsyncJob(aTypeName),
-        Adaptation::Initiate(aTypeName, anInitiator, aService.getRaw()),
+        Adaptation::Initiate(aTypeName, anInitiator),
         icapRequest(NULL),
         icapReply(NULL),
         attempts(0),
         connection(-1),
+        theService(aService),
         commBuf(NULL), commBufSize(0),
         commEof(false),
         reuseConnection(true),
@@ -55,9 +56,8 @@ Adaptation::Icap::Xaction::~Xaction()
 Adaptation::Icap::ServiceRep &
 Adaptation::Icap::Xaction::service()
 {
-    Adaptation::Icap::ServiceRep *s = dynamic_cast<Adaptation::Icap::ServiceRep*>(&Initiate::service());
-    Must(s);
-    return *s;
+    Must(theService != NULL);
+    return *theService;
 }
 
 void Adaptation::Icap::Xaction::disableRetries()

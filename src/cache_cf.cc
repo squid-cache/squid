@@ -65,6 +65,7 @@
 #include "adaptation/Config.h"
 
 static void parse_adaptation_service_set_type();
+static void parse_adaptation_service_chain_type();
 static void parse_adaptation_access_type();
 
 #endif
@@ -3550,6 +3551,12 @@ static void
 parse_adaptation_service_set_type()
 {
     Adaptation::Config::ParseServiceSet();
+}
+
+static void
+parse_adaptation_service_chain_type()
+{
+    Adaptation::Config::ParseServiceChain();
 }
 
 static void

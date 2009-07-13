@@ -6,6 +6,9 @@
 #include "adaptation/Config.h"
 #include "adaptation/History.h"
 
+/// impossible services value to identify unset theNextServices
+const static String TheNullServices(",null,");
+
 Adaptation::History::Entry::Entry(const String &sid, const timeval &when):
     service(sid), start(when), theRptm(-1), retried(false)
 {
@@ -29,6 +32,9 @@ int Adaptation::History::Entry::rptm()
     return theRptm;
 }
 
+
+Adaptation::History::History(): theNextServices(TheNullServices) {
+}
 
 int Adaptation::History::recordXactStart(const String &sid, const timeval &when, bool retrying)
 {
@@ -112,16 +118,21 @@ bool Adaptation::History::getXxRecord(String &name, String &value) const
     return true;
 }
 
-
-bool Adaptation::History::Enabled = false;
-
-void Adaptation::History::Configure()
+void Adaptation::History::updateNextServices(const String &services)
 {
-    const bool loggingNeedsUs = LogfileStatus == LOG_ENABLE &&
-        alLogformatHasAdaptToken;
+    if (theNextServices != TheNullServices)
+       debugs(93,3, HERE << "old services: " << theNextServices);
+    debugs(93,3, HERE << "new services: " << services);
+    Must(services != TheNullServices);
+    theNextServices = services;
+}
 
-    Enabled = Adaptation::Config::Enabled &&
-        (loggingNeedsUs || Adaptation::Config::masterx_shared_name);
+bool Adaptation::History::extractNextServices(String &value)
+{
+    if (theNextServices == TheNullServices)
+       return false;
 
-    // TODO: should we disable unneeded _parts_ of the history?
+    value = theNextServices;
+    theNextServices = TheNullServices; // prevents resetting the plan twice
+    return true;
 }

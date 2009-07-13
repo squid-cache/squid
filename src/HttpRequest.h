@@ -101,7 +101,9 @@ public:
 
 #if USE_ADAPTATION
     /// Returns possibly nil history, creating it if adapt. logging is enabled
-    Adaptation::History::Pointer adaptHistory() const;
+    Adaptation::History::Pointer adaptLogHistory() const;
+    /// Returns possibly nil history, creating it if requested
+    Adaptation::History::Pointer adaptHistory(bool createIfNone = false) const;
 #endif
 #if ICAP_CLIENT
     /// Returns possibly nil history, creating it if icap logging is enabled

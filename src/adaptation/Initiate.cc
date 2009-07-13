@@ -4,7 +4,6 @@
 
 #include "squid.h"
 #include "HttpMsg.h"
-#include "adaptation/Service.h"
 #include "adaptation/Initiator.h"
 #include "adaptation/Initiate.h"
 
@@ -30,11 +29,9 @@ public:
 
 /* Initiate */
 
-Adaptation::Initiate::Initiate(const char *aTypeName,
-                               Initiator *anInitiator, ServicePointer aService):
-        AsyncJob(aTypeName), theInitiator(anInitiator), theService(aService)
+Adaptation::Initiate::Initiate(const char *aTypeName, Initiator *anInitiator):
+    AsyncJob(aTypeName), theInitiator(anInitiator)
 {
-    assert(theService != NULL);
     assert(theInitiator);
 }
 
@@ -82,13 +79,6 @@ void Adaptation::Initiate::tellQueryAborted(bool final)
                      Initiator::noteAdaptationQueryAbort, final);
     }
     clearInitiator();
-}
-
-Adaptation::Service &
-Adaptation::Initiate::service()
-{
-    assert(theService != NULL);
-    return *theService;
 }
 
 const char *Adaptation::Initiate::status() const
