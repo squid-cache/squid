@@ -551,9 +551,6 @@ int main(int argc, char * const argv[])
             }
             memcpy(user,output_token.value,output_token.length);
             user[output_token.length]='\0';
-            if (norealm && (p=strchr(user,'@')) != NULL) {
-                *p='\0';
-            }
             fprintf(stdout, "AF %s %s\n","AA==",user);
             if (debug)
                 fprintf(stderr, "%s| %s: AF %s %s\n", LogTime(), PROGRAM, "AA==", user);
