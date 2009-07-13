@@ -382,17 +382,24 @@ HttpRequest::icapHistory() const
 
 #if USE_ADAPTATION
 Adaptation::History::Pointer 
-HttpRequest::adaptHistory() const
+HttpRequest::adaptHistory(bool createIfNone) const
 {
-    if (!adaptHistory_) {
-        if (Adaptation::History::Enabled) {
-            adaptHistory_ = new Adaptation::History();
-            debugs(93,4, HERE << "made " << adaptHistory_ << " for " << this);
-        }
+    if (!adaptHistory_ && createIfNone) {
+        adaptHistory_ = new Adaptation::History();
+        debugs(93,4, HERE << "made " << adaptHistory_ << " for " << this);
     }
 
     return adaptHistory_;
 }
+
+Adaptation::History::Pointer 
+HttpRequest::adaptLogHistory() const
+{
+    const bool loggingNeedsHistory = (LogfileStatus == LOG_ENABLE) &&
+        alLogformatHasAdaptToken; // TODO: make global to remove this method?
+    return HttpRequest::adaptHistory(loggingNeedsHistory);
+}
+
 #endif
 
 bool

@@ -229,7 +229,7 @@ private:
     void bypassFailure();
 
     void startSending();
-    void disableBypass(const char *reason);
+    void disableBypass(const char *reason, bool includeGroupBypass);
 
     void prepEchoing();
     void echoMore();
@@ -264,6 +264,7 @@ private:
     ChunkedCodingParser *bodyParser; // ICAP response body parser
 
     bool canStartBypass; // enables bypass of transaction failures
+    bool protectGroupBypass; // protects ServiceGroup-wide bypass of failures
 
     uint64_t replyBodySize; ///< dechunked ICAP reply body size
 

@@ -13,6 +13,8 @@ class History: public RefCountable {
 public:
     typedef RefCount<Adaptation::History> Pointer;
 
+    History();
+
     /// record the start of a xact, return xact history ID
     int recordXactStart(const String &serviceId, const timeval &when, bool retrying);
 
@@ -31,8 +33,11 @@ public:
     /// returns true and fills the record fields iff there is a db record
     bool getXxRecord(String &name, String &value) const;
 
-    static bool Enabled; ///< whether some configuration options require it
-    static void Configure(); ///< determines whether the history is needed
+    /// sets or resets next services for the Adaptation::Iterator to notice
+    void updateNextServices(const String &services);
+
+    /// returns true, fills the value, and resets iff next services were set
+    bool extractNextServices(String &value);
 
 private:
     /// single Xaction stats (i.e., a historical record entry)
@@ -60,6 +65,8 @@ private:
     // theXx* will become a map<string,string>, but we only support one record
     String theXxName; ///< name part of the cross-transactional database record
     String theXxValue; ///< value part of the cross-xactional database record
+
+    String theNextServices; ///< services Adaptation::Iterator must use next
 };
 
 } // namespace Adaptation
