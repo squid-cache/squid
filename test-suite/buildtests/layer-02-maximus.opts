@@ -6,7 +6,7 @@
 #
 # Complete Check - everything is supposed to work at this level
 # distcheck is not possible since it drops our configure options...
-MAKETEST="check"
+MAKETEST="distcheck"
 #
 #
 # The options for this level can be easily generated semi-automatically from configure.in by:
@@ -41,7 +41,7 @@ MAKETEST="check"
 #
 #
 OPTS=" \
-	--enable-loadable-modules \
+	--disable-loadable-modules \
 	--enable-gnuregex \
 	--enable-optimizations \
 	--enable-inline \
@@ -108,3 +108,8 @@ OPTS=" \
 	--with-pthreads \
 	--with-valgrind-debug \
 	"
+
+# Fix the distclean testing.
+export DISTCHECK_CONFIGURE_FLAGS="${OPTS}"
+
+
