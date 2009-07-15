@@ -1027,6 +1027,7 @@ unsigned int proxying:
     unsigned int connection_proxy_auth:1; /** Request wants connection oriented auth */
     unsigned int pinned:1;      /* Request sent on a pinned connection */
     unsigned int auth_sent:1;   /* Authentication forwarded */
+    unsigned int no_direct:1;	/* Deny direct forwarding unless overriden by always_direct. Used in accelerator mode */
 
     // When adding new flags, please update cloneAdaptationImmune() as needed.
 
