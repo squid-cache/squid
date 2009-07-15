@@ -502,10 +502,11 @@ AuthUserRequest::authenticate(AuthUserRequest ** auth_user_request, http_hdr_typ
 }
 
 auth_acl_t
+
 AuthUserRequest::tryToAuthenticateAndSetAuthUser(AuthUserRequest ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, IpAddress &src_addr)
 {
     /* If we have already been called, return the cached value */
-    AuthUserRequest *t = authTryGetUser(auth_user_request, conn, request);
+    AuthUserRequest *t = authTryGetUser (auth_user_request, conn, request);
 
     if (t && t->lastReply != AUTH_ACL_CANNOT_AUTHENTICATE
             && t->lastReply != AUTH_ACL_HELPER) {
@@ -522,14 +523,11 @@ AuthUserRequest::tryToAuthenticateAndSetAuthUser(AuthUserRequest ** auth_user_re
     /* ok, call the actual authenticator routine. */
     auth_acl_t result = authenticate(auth_user_request, headertype, request, conn, src_addr);
 
-    t = authTryGetUser(auth_user_request, conn, request);
+    t = authTryGetUser (auth_user_request, conn, request);
 
     if (t && result != AUTH_ACL_CANNOT_AUTHENTICATE &&
-            result != AUTH_ACL_HELPER) {
+            result != AUTH_ACL_HELPER)
         t->lastReply = result;
-        if (!*auth_user_request)
-            *auth_user_request = t;
-    }
 
     return result;
 }
