@@ -1,46 +1,107 @@
-.TH SQUIDCLIENT 1 "Mar 1998" "Squid Cache" "Debian Linux"
+.TH squidclient 1 "Squid Web Client Tool"
 .SH NAME
-squidclient -- client interface to the squid cache
+squidclient -- a simple HTTP web client
 .SH SYNOPSIS
 .B squidclient
-.RB [ \-r ]
-.RB [ \-s ]
+.RB [ \-arsv ]
+.RB [ \-g
+.IR count ]
+.RB [ \-h
+.IR remote\-host ]
+.RB [ \-H
+.IR 'string' ]
 .RB [ \-i
 .IR IMS ]
-.RB [ \-h
-.IR host ]
-.RB [ \-p
-.IR port ]
+.RB [ \-I
+.IR ping\-interval ]
+.RB [ \-j
+.IR 'Host\-header' ]
+.RB [ \-l
+.IR local\-host ]
 .RB [ \-m
 .IR method ]
+.RB [ \-p
+.IR port ]
+.RB [ \-P
+.IR file ]
+.RB [ \-t
+.IR count ]
+.RB [ \-T
+.IR timeout ]
+.RB [ \-u
+.IR proxy-user ]
+.RB [ \-U
+.IR www-user ]
+.RB [ \-V
+.IR version ]
+.RB [ \-w
+.IR proxy-password ]
+.RB [ \-W
+.IR www-password ]
 .B url
 .SH DESCRIPTION
-.B Squidclient
-is a command line interface to retrieve URLs through the squid object cache.
+.B squidclient
+is a tool providing a command line interface for retrieving URLs.
+Designed for testing any HTTP 0.9, 1.0, or 1.1 web server or proxy.
+This tool can be combined scripts to perform any basic HTTP operation.
+Some additional features for access to the 
+.B Squid
+proxy object cache and management information are provided.
 .SH OPTIONS
-.IP -r
-Force cache to reload URL.
-.IP -s
-Silent.  Do not print data to stdout.
-.IP "\-i \fItime\fP"
-If-Modified-Since time (in Epoch seconds).
+.IP "\-a"
+Do NOT include Accept: header.
+.IP "\-g \fIcount\fP"
+Ping mode, perform
+.I count
+iterations (0 to loop until interrupted).
 .IP "\-h \fIhost\fP"
 Retrieve URL from cache on hostname.  Default is localhost.
-.IP "\-p \fIport\fP"
-Port number of cache.  Default is 3128.
+.IP "\-H \fI'string'\fP"
+Extra headers to send. Use '\\n' for new lines.
+.IP "\-i \fItime\fP"
+If-Modified-Since time (in Epoch seconds).
+.IP "-I \fIinterval\fP"
+Ping interval in seconds (default 1 second).
+.IP "\-j \fIhosthdr\fP"
+Host header content
+.IP "\-l \fIhost\fP"
+Specify a local IP address to bind to.  Default is none.
 .IP "\-m \fImethod\fP"
 Request method, default is GET. Squid also supports a non-standard method
 called \fBPURGE\fP. You can use that to purge a specific URL from the cache.
 You need to have \fIpurge\fP access setup in squid.conf similar to
 \fImanager\fP access. Here is an example:
 .nf
-
       acl purge method PURGE
-      http_access deny  purge !localhost
+      http_access deny purge !localhost
 .fi
-
+.IP "\-p \fIport\fP"
+Port number of cache.  Default is 3128.
+.IP "\-P \fIfile"
+PUT request. Using the named file.
+.IP "\-r"
+Force cache to reload URL.
+.IP "\-s"
+Silent.  Do not print data to stdout.
+.IP "\-t \fIcount\fP"
+Trace count cache-hops
+.IP "\-T \fItimeout\fP"
+Timeout value (seconds) for read/write operations.
+.IP "\-u \fIuser\fP"
+Proxy authentication username
+.IP "\-U \fIuser\fP"
+WWW authentication username
+.IP "\-v"
+Verbose. Print outgoing message to stderr.
+.IP "\-w \fIpassword\fP"
+Proxy authentication password
+.IP "\-W \fIpassword\fP"
+WWW authentication password
+.IP "\-V \fIversion\fP"
+HTTP Version. Use '-' for HTTP/0.9 omitted case
 .SH SEE ALSO
-squid(8).
+.BR cachemgr.cgi "(8), "
+.BR squid "(8)"
 .SH AUTHOR
 Derived from Harvest. Further developed by by numerous individuals from
 the internet community. Development is led by Duane Wessels of the
