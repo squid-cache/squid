@@ -2616,17 +2616,17 @@ if test "$use_ipng" = "yes"; then
   AC_DEFINE(USE_IPV6,1,[Enable support for IPv6 ])
   use_v4mapped=yes
 
-dnl Check for Windows XP option
+dnl Check for forced split-stack mode
   AC_MSG_CHECKING([for IPv6 split-stack requirement])
   AC_ARG_WITH(ipv6-split-stack,
     AC_HELP_STRING([--with-ipv6-split-stack],
-		   [Enable experimental split-stack support for Windows XP. Requires IPv6.]),
+		   [Force-Enable experimental split-stack support for Windows XP and *BSD. Requires IPv6.]),
     [ use_v4mapped="no"
       AC_MSG_RESULT(yes)],
     [ AC_MSG_RESULT(no) ])
 
-dnl Check for IPv6 Windows Vista option
-dnl Also useful for other OS with hybrid-stack defaults turned OFF
+dnl Check for IPv6 v4-mapping availability
+dnl Useful for other OS with hybrid-stack defaults turned OFF
 dnl But only usable if it actually works...
   if test "$use_v4mapped" = "yes" ; then
     AC_MSG_CHECKING([for IPv6 v4-mapping ability])

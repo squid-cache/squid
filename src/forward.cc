@@ -853,7 +853,6 @@ FwdState::connectStart()
 
 #if URL_CHECKSUM_DEBUG
     entry->mem_obj->checkUrlChecksum();
-
 #endif
 
     outgoing = getOutgoingAddr(request, fs->_peer);
@@ -1262,9 +1261,6 @@ arguments describing the now selected path..
 It does not matter from a functional perspective if it gets called a few
 times more than what is really needed, but calling it too often may
 obviously hurt performance.
-
-\todo Current code looks fine, even if using !fs->_peer as condition
-instead of HIER_DIRECT would be clearer.
 */
 // updates HierarchyLogEntry, guessing nextHop and its format
 void
