@@ -1451,7 +1451,6 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     LOCAL_ARRAY(char, ntoabuf, MAX_IPSTRLEN);
     const HttpHeader *hdr_in = &orig_request->header;
     const HttpHeaderEntry *e = NULL;
-    String strFwd;
     HttpHeaderPos pos = HttpHeaderInitPos;
     assert (hdr_out->owner == hoRequest);
 
@@ -1501,24 +1500,35 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     }
 #endif
 
-    strFwd = hdr_in->getList(HDR_X_FORWARDED_FOR);
-
     /** \pre Handle X-Forwarded-For */
     if (strcmp(opt_forwarded_for, "delete") != 0) {
+
+        String strFwd = hdr_in->getList(HDR_X_FORWARDED_FOR);
+
+        if (strFwd.size() > 65536/2) {
+            // There is probably a forwarding loop with Via detection disabled.
+            // If we do nothing, String will assert on overflow soon.
+            // TODO: Terminate all transactions with huge XFF?
+            strFwd = "error";
+
+            static int warnedCount = 0;
+            if (warnedCount++ < 100) {
+                const char *url = entry ? entry->url() : urlCanonical(orig_request);
+                debugs(11, 1, "Warning: likely forwarding loop with " << url);
+            }
+        }
+
         if (strcmp(opt_forwarded_for, "on") == 0) {
             /** If set to ON - append client IP or 'unknown'. */
-            strFwd = hdr_in->getList(HDR_X_FORWARDED_FOR);
             if ( orig_request->client_addr.IsNoAddr() )
                 strListAdd(&strFwd, "unknown", ',');
             else
                 strListAdd(&strFwd, orig_request->client_addr.NtoA(ntoabuf, MAX_IPSTRLEN), ',');
         } else if (strcmp(opt_forwarded_for, "off") == 0) {
             /** If set to OFF - append 'unknown'. */
-            strFwd = hdr_in->getList(HDR_X_FORWARDED_FOR);
             strListAdd(&strFwd, "unknown", ',');
         } else if (strcmp(opt_forwarded_for, "transparent") == 0) {
             /** If set to TRANSPARENT - pass through unchanged. */
-            strFwd = hdr_in->getList(HDR_X_FORWARDED_FOR);
         } else if (strcmp(opt_forwarded_for, "truncate") == 0) {
             /** If set to TRUNCATE - drop existing list and replace with client IP or 'unknown'. */
             if ( orig_request->client_addr.IsNoAddr() )
@@ -1530,7 +1540,6 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             hdr_out->putStr(HDR_X_FORWARDED_FOR, strFwd.termedBuf());
     }
     /** If set to DELETE - do not copy through. */
-    strFwd.clean();
 
     /* append Host if not there already */
     if (!hdr_out->has(HDR_HOST)) {
