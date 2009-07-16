@@ -23,10 +23,8 @@ Adaptation::AccessCheck::Start(Method method, VectPoint vp,
 
     if (Config::Enabled) {
         // the new check will call the callback and delete self, eventually
-        AccessCheck *check = new AccessCheck(
-            ServiceFilter(method, vp, req, rep), cb, cbdata);
-        check->check();
-        return true;
+        return AsyncStart(new AccessCheck(
+            ServiceFilter(method, vp, req, rep), cb, cbdata));
     }
 
     debugs(83, 3, HERE << "adaptation off, skipping");
@@ -60,6 +58,12 @@ Adaptation::AccessCheck::~AccessCheck()
 #endif
     if (callback_data)
         cbdataReferenceDone(callback_data);
+}
+
+void
+Adaptation::AccessCheck::start() {
+	AsyncJob::start();
+	check();
 }
 
 /// Walk the access rules list to find rules with applicable service groups
