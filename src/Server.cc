@@ -801,6 +801,7 @@ ServerStateData::adaptOrFinalizeReply()
     adaptationAccessCheckPending = Adaptation::AccessCheck::Start(
                                        Adaptation::methodRespmod, Adaptation::pointPreCache,
                                        request, virginReply(), adaptationAclCheckDoneWrapper, this);
+    debugs(11,5, HERE << "adaptationAccessCheckPending=" << adaptationAccessCheckPending);
     if (adaptationAccessCheckPending)
         return;
 #endif
