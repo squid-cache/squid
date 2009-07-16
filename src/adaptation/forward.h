@@ -22,9 +22,12 @@ class Initiator;
 class AccessCheck;
 class AccessRule;
 class ServiceGroup;
+class ServicePlan;
+class ServiceFilter;
 class Message;
 
 typedef RefCount<Service> ServicePointer;
+typedef RefCount<ServiceGroup> ServiceGroupPointer;
 
 } // namespace Adaptation
 

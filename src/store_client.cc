@@ -769,6 +769,12 @@ CheckQuickAbort2(StoreEntry * entry)
         return 0;
     }
 
+    if ( Config.rangeOffsetLimit < 0 && mem->request && mem->request->range ) {
+        /* Don't abort if the admin has configured range_ofset -1 to download fully for caching. */
+        debugs(90, 3, "CheckQuickAbort2: NO admin configured range replies to full-download");
+        return 0;
+    }
+
     if (curlen > expectlen) {
         debugs(90, 3, "CheckQuickAbort2: YES bad content length");
         return 1;

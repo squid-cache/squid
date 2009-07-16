@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.1.0.8 release notes</title>
+<title>Squid 3.1.0.9 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.1.0.8 for testing.
+The Squid Team are pleased to announce the release of Squid-3.1.0.9 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.1/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -630,6 +630,22 @@ This section gives a thorough account of those changes in three categories:
 		follow_x_forwarded_for allow my_other_proxy
 	</verb>
 
+	<tag>ftp_epsv</tag>
+	<verb>
+	FTP Protocol extensions permit the use of a special "EPSV" command.
+
+	NATs may be able to put the connection on a "fast path" through the
+	translator using EPSV, as the EPRT command will never be used and therefore,
+	translation of the data portion of the segments will never be needed.
+
+	Turning this OFF will prevent EPSV being attempted.
+
+	WARNING: Doing so will convert Squid back to the old behavior with all
+	the related problems with external NAT devices/layers.
+
+	Requires ftp_passive to be ON (default) for any effect.
+	</verb>
+
 	<tag>ftp_epsv_all</tag>
 	<verb>
 	FTP Protocol extensions permit the use of a special "EPSV ALL" command.
@@ -930,6 +946,10 @@ NOCOMMENT_START
         <verb>
            intercept    Rename of old 'transparent' option to indicate proper functionality.
 
+	   allow-direct	Allow direct forwarding in accelerator mode. Normally
+	                accelerated requests are denied direct forwarding as if
+	                never_direct was used.
+
 	   connection-auth[=on|off]
 	                use connection-auth=off to tell Squid to prevent
 	                forwarding Microsoft connection oriented authentication
@@ -1093,6 +1113,12 @@ This section gives an account of those changes in three categories:
 	<tag>--disable-loadable-modules</tag>
 	<p>Build without support for loadable modules.
 
+	<tag>--disable-translation</tag>
+        <p>Prevent Squid generating localized error page templates and manuals.
+           Which is usually tried, but may not be needed.
+        <p>This is a development optimization for building from VCS when localization is
+           not needed. Has no effect on pre-translated source bundles.
+
         <tag>--with-dns-cname</tag>
         <p>Enable CNAME recursion within the Internal DNS resolver stub squid uses.
            This has no effect on the external DNS helper.
@@ -1106,7 +1132,7 @@ This section gives an account of those changes in three categories:
 	<p>Allow build-time configuration of Default location for squid logs.
 
         <tag>--with-ipv6-split-stack</tag>
-        <p>Enable special additions for IPv6 support in Windows XP.
+        <p>Force enable special additions for IPv6 support in Windows XP and various BSD systems.
            see the IPv6 details above for a better description.
 
 	<tag>--with-pidfile=PATH</tag>
@@ -1330,7 +1356,6 @@ This section gives an account of those changes in three categories:
 
 	<tag>http_port</tag>
 	<p><em>act-as-origin</em> not yet ported from 2.7
-	<p><em>allow-direct</em> not yet ported from 2.7
 	<p><em>http11</em> not yet ported from 2.7
 	<p><em>urlgroup=</em> not yet ported from 2.6
 

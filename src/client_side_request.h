@@ -159,7 +159,7 @@ public:
 #if USE_ADAPTATION
 
 public:
-    bool startAdaptation(Adaptation::ServicePointer);
+    void startAdaptation(const Adaptation::ServiceGroupPointer &g);
 
     // private but exposed for ClientRequestContext
     void handleAdaptationFailure(bool bypassable = false);

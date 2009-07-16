@@ -37,7 +37,5 @@ extern wordlist *aclDumpGeneric(const ACL *);
 extern void aclCacheMatchFlush(dlink_list * cache);
 /// \ingroup ACLAPI
 extern void dump_acl_access(StoreEntry * entry, const char *name, acl_access * head);
-/// \ingroup ACLAPI
-int aclPurgeMethodInUse(acl_access * a);
 
 #endif /* SQUID_ACL_GADGETS_H */

@@ -11,20 +11,10 @@ AUTOMAKE_OPTIONS = subdir-objects
 ## we need our local files too (but avoid -I. at all costs)
 INCLUDES += -I$(srcdir)
 
-
-SUBDIRS		= 
-
-bin_PROGRAMS = \
-	squidclient
-
-libexec_PROGRAMS = \
-	cachemgr$(CGIEXT)
-
-DEFAULT_CACHEMGR_CONFIG = $(sysconfdir)/cachemgr.conf
-
-squidclient_SOURCES = squidclient.cc
-cachemgr__CGIEXT__SOURCES = cachemgr.cc
-cachemgr__CGIEXT__CXXFLAGS = -DDEFAULT_CACHEMGR_CONFIG=\"$(DEFAULT_CACHEMGR_CONFIG)\" $(AM_CXXFLAGS)
+SUBDIRS = 
+EXTRA_DIST = 
+man_MANS = 
+DISTCLEANFILES = 
 
 LDADD = \
 	../compat/libcompat.la \
@@ -32,10 +22,39 @@ LDADD = \
 	-L../lib -lmiscutil \
 	$(XTRA_LIBS)
 
-EXTRA_DIST = \
-	cachemgr.conf
+include $(top_srcdir)/doc/manuals/Substitute.am
 
-$(OBJS): $(top_srcdir)/include/version.h ../include/autoconf.h
+
+## ##### squidclient  #####
+
+bin_PROGRAMS = squidclient
+
+squidclient_SOURCES = squidclient.cc
+
+EXTRA_DIST += squidclient.1
+man_MANS += squidclient.1
+
+
+
+## ##### cachemgr.cgi  #####
+
+DEFAULT_CACHEMGR_CONFIG = $(sysconfdir)/cachemgr.conf
+
+libexec_PROGRAMS = cachemgr$(CGIEXT)
+
+cachemgr__CGIEXT__SOURCES = cachemgr.cc
+cachemgr__CGIEXT__CXXFLAGS = -DDEFAULT_CACHEMGR_CONFIG=\"$(DEFAULT_CACHEMGR_CONFIG)\" $(AM_CXXFLAGS)
+
+EXTRA_DIST += cachemgr.conf cachemgr.cgi.8 cachemgr.cgi.8.in
+CLEANFILES += cachemgr.cgi.8
+man_MANS += cachemgr.cgi.8
+
+cachemgr.cgi.8: $(srcdir)/cachemgr.cgi.8.in Makefile
+	$(SUBSTITUTE) < $(srcdir)/cachemgr.cgi.8.in > $@
+
+
+
+## Shared
 
 install-data-local:
 	$(INSTALL_DATA) $(srcdir)/cachemgr.conf $(DESTDIR)$(DEFAULT_CACHEMGR_CONFIG).default
@@ -49,6 +68,3 @@ install-data-local:
 uninstall-local:
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_CACHEMGR_CONFIG)
 	$(RM) -f $(DESTDIR)$(DEFAULT_CACHEMGR_CONFIG).default
-
-DISTCLEANFILES = 
-

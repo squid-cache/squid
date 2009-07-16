@@ -15,6 +15,10 @@ DNSSOURCE = dns_internal.cc
 DNSSERVER =
 endif
 
+DNSSOURCE += \
+	DnsLookupDetails.h \
+	DnsLookupDetails.cc
+
 SNMP_ALL_SOURCE = \
 	snmp_core.cc \
 	snmp_agent.cc
@@ -233,6 +237,8 @@ EXTRA_squid_SOURCES = \
 	dns.cc \
 	dnsserver.cc \
 	dns_internal.cc \
+	DnsLookupDetails.cc \
+	DnsLookupDetails.h \
 	htcp.cc \
 	htcp.h \
 	ipc.cc \

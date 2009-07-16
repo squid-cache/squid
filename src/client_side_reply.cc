@@ -86,8 +86,9 @@ clientReplyContext::~clientReplyContext()
 clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) : http (cbdataReference(clientContext)), old_entry (NULL), old_sc(NULL), deleting(false)
 {}
 
-/* create an error in the store awaiting the client side to read it. */
-/* This may be better placed in the clientStream logic, but it has not been
+/** Create an error in the store awaiting the client side to read it.
+ *
+ * This may be better placed in the clientStream logic, but it has not been
  * relocated there yet
  */
 void
@@ -649,10 +650,9 @@ clientReplyContext::processMiss()
         return;
     }
 
-    /**
-     * Deny loops when running in accelerator/transproxy mode.
-     */
-    if (http->flags.accel && r->flags.loopdetect) {
+    /// Deny loops for accelerator and interceptor. TODO: deny in all modes?
+    if (r->flags.loopdetect &&
+        (http->flags.accel || http->flags.intercepted)) {
         http->al.http.code = HTTP_FORBIDDEN;
         err = clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL, http->getConn()->peer, http->request);
         createStoreEntry(r->method, request_flags());
@@ -1199,10 +1199,12 @@ clientReplyContext::alwaysAllowResponse(http_status sline) const
     return result;
 }
 
-/*
- * filters out unwanted entries from original reply header
- * adds extra entries if we have more info than origin server
- * adds Squid specific entries
+/**
+ * Generate the reply headers sent to client.
+ *
+ * Filters out unwanted entries and hop-by-hop from original reply header
+ * then adds extra entries if we have more info than origin server
+ * then adds Squid specific entries
  */
 void
 clientReplyContext::buildReplyHeader()
@@ -1228,6 +1230,7 @@ clientReplyContext::buildReplyHeader()
 
     //    if (request->range)
     //      clientBuildRangeHeader(http, reply);
+
     /*
      * Add a estimated Age header on cache hits.
      */
@@ -1249,11 +1252,14 @@ clientReplyContext::buildReplyHeader()
          * the objects age, so a Age: 0 header does not add any useful
          * information to the reply in any case.
          */
-
+#if DEAD_CODE
+        // XXX: realy useless? or is there a bug now that this is detatched from the below if-sequence ?
+        // looks like this pre-if was supposed to be the browser workaround...
         if (NULL == http->storeEntry())
             (void) 0;
         else if (http->storeEntry()->timestamp < 0)
             (void) 0;
+#endif
 
         if (EBIT_TEST(http->storeEntry()->flags, ENTRY_SPECIAL)) {
             hdr->delById(HDR_DATE);
@@ -1278,7 +1284,24 @@ clientReplyContext::buildReplyHeader()
                 hdr->putStr(HDR_WARNING, tempbuf);
             }
         }
+    }
 
+    /* RFC 2616: Section 14.18
+     *
+     * Add a Date: header if missing.
+     * We have access to a clock therefore are required to amend any shortcoming in servers.
+     *
+     * NP: done after Age: to prevent ENTRY_SPECIAL double-handling this header.
+     */
+    if ( !hdr->has(HDR_DATE) ) {
+        if (!http->storeEntry())
+            hdr->insertTime(HDR_DATE, squid_curtime);
+        else if (http->storeEntry()->timestamp > 0)
+            hdr->insertTime(HDR_DATE, http->storeEntry()->timestamp);
+        else {
+            debugs(88,1,"WARNING: An error inside Squid has caused an HTTP reply without Date:. Please report this");
+            /* TODO: dump something useful about the problem */
+        }
     }
 
     /* Filter unproxyable authentication types */

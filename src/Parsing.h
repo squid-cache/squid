@@ -42,7 +42,18 @@ extern double xatof(const char *token);
 extern int xatoi(const char *token);
 extern long xatol(const char *token);
 extern unsigned short xatos(const char *token);
+
+/**
+ * Parse a 64-bit integer value.
+ */
+extern int64_t GetInteger64(void);
+
+/**
+ * Parses an integer value.
+ * Uses a method that obeys hexadecimal 0xN syntax needed for certain bitmasks.
+ */
 extern int GetInteger(void);
+
 extern u_short GetShort(void);
 
 // on success, returns true and sets *p (if any) to the end of the integer

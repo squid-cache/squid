@@ -77,6 +77,10 @@ static SplayNode<DelayUserBucket::Pointer>::SPLAYCMP DelayUserCmp;
 int
 DelayUserCmp(DelayUserBucket::Pointer const &left, DelayUserBucket::Pointer const &right)
 {
+    /* Verify for re-currance of Bug 2127. either of these missing will crash strcasecmp() */
+    assert(left->authUser->username() != NULL);
+    assert(right->authUser->username() != NULL);
+
     /* for rate limiting, case insensitive */
     return strcasecmp(left->authUser->username(), right->authUser->username());
 }
@@ -147,9 +151,10 @@ DelayUser::parse()
 DelayIdComposite::Pointer
 DelayUser::id(CompositePoolNode::CompositeSelectionDetails &details)
 {
-    if (!details.user)
+    if (!details.user || !details.user->user() || !details.user->user()->username())
         return new NullDelayId;
 
+    debugs(77, 3, HERE << "Adding a slow-down for User '" << details.user->user()->username() << "'");
     return new Id(this, details.user->user());
 }
 

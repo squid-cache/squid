@@ -1,3 +1,20 @@
+Changes to squid-3.1.0.9 (26 Jun 2009):
+
+	- Bug 2682: Add ftp_epsv control to disable EPSV support.
+	- Bug 2665: Detach automake system from using -I.
+	- Bug 2395: FTP auth errors not displayed
+	- ... also several changes and bugs closed in 3.0.STABLE16
+	- Port from 2.7: Show local address on listening sockets
+	- Add "tag" type acl matching tags set by external acl helpers.
+	- Adds Language alias linker/installer/upgrade scripts
+	- Support for GCC 4.4
+	- Fix false NAT lookup errors on Linux
+	- Fix many Windows port issues
+	- Fix squid_kerb_auth helepr install location
+	- Better detection of IPv6 stack types
+	- Updates Licensing information for Squid 3.1
+	- ... and many packaging portability build and install issues
+
 Changes to squid-3.1.0.8 (24 May 2009):
 
 	- Bug 2656: Pinger dies with general protection fault
@@ -140,9 +157,23 @@ Changes to squid-3.1.0.1 (27 Oct 2008):
 	- Bug #2223: Follow XFF extensions added
 	- ... and many code and documentation cleanups
 
+Changes to squid-3.0.STABLE16 (15 Jun 2009):
+
+	- Bug 2672: cacheMemMaxSize 32-bit overflow during snmpwalk
+	- Bug 2481: Don't set expires: now in generated error responses
+	- Bug 2387: The calculation of the number of hash buckets correctly
+	- Fix infinite loop in MSNT auth helper
+	- Fix FD_SETSIZE on FreeBSD
+	- Fix stripping NT domain in squid_ldap_group
+	- Fix RADIUS auth helper build
+	- Add Translate: and Unless-Modified-Since: headers to known list
+	- Make fakeauth handle NTLMv2 better
+	- Better Kerberos support detection
+	- Several Widows port fixes
+
 Changes to squid-3.0.STABLE16-RC1 (16 May 2009):
 
-	- Bug 1148 Ported from 3.1: Chunked Transfer Encoding
+	- Bug 1148: Ported from 3.1: Chunked Transfer Encoding
 	- Bug 2648: NTLM helpers not shutting down when deferred
 
 Changes to squid-3.0.STABLE15 (06 May 2009):
