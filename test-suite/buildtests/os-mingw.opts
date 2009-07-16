@@ -1,5 +1,8 @@
 #!/bin/sh
 #
+MAKETEST="check installcheck uninstallcheck"
+#
+#
 # Configure options currently supported by MinGW environment
 #
 OPTS=" \

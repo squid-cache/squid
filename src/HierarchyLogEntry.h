@@ -56,6 +56,12 @@ public:
     struct timeval peer_select_start;
 
     struct timeval store_complete_stop;
+    
+    http_status peer_reply_status; ///< last HTTP status code received
+    timeval peer_http_request_sent; ///< last peer finished writing req
+    int64_t peer_response_time; ///< last peer response delay
+    timeval first_conn_start; ///< first connection use among all peers
+    int64_t total_response_time; ///< cumulative for all peers
 };
 
 extern void hierarchyNote(HierarchyLogEntry *, hier_code, const char *);

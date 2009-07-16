@@ -58,6 +58,9 @@ public:
     ///< produce a message copy, except for a few connection-specific settings
     virtual HttpMsg *clone() const = 0; ///< \todo rename: not a true copy?
 
+    /// [re]sets Content-Length header and cached value
+    void setContentLength(int64_t clen);
+
 public:
     HttpVersion http_ver;
 
@@ -109,7 +112,8 @@ protected:
 };
 
 /* Temporary parsing state; might turn into the replacement parser later on */
-struct _HttpParser {
+class HttpParser {
+public:
     char state;
     const char *buf;
     int bufsiz;
@@ -120,7 +124,6 @@ struct _HttpParser {
     int v_start, v_end;
     int v_maj, v_min;
 };
-typedef struct _HttpParser HttpParser;
 
 extern void HttpParserInit(HttpParser *, const char *buf, int len);
 extern int HttpParserParseReqLine(HttpParser *hp);

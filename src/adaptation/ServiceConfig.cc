@@ -7,7 +7,8 @@
 #include "adaptation/ServiceConfig.h"
 
 Adaptation::ServiceConfig::ServiceConfig():
-        port(-1), method(methodNone), point(pointNone), bypass(false)
+    port(-1), method(methodNone), point(pointNone),
+    bypass(false), routing(false)
 {}
 
 const char *
@@ -59,23 +60,85 @@ Adaptation::ServiceConfig::parse()
 
     ConfigParser::ParseString(&key);
     ConfigParser::ParseString(&method_point);
-    ConfigParser::ParseBool(&bypass);
-    ConfigParser::ParseString(&uri);
-
-    debugs(3, 5, HERE << cfg_filename << ':' << config_lineno << ": " <<
-           key << " " << method_point << " " << bypass);
-
     method = parseMethod(method_point);
     point = parseVectPoint(method_point);
 
-    debugs(3, 5, HERE << cfg_filename << ':' << config_lineno << ": " <<
-           "service_configConfig is " << methodStr() << "_" << vectPointStr());
+    // reset optional parameters in case we are reconfiguring
+    bypass = routing = false;
 
+    // handle optional service name=value parameters
+    const char *lastOption = NULL;
+    while (char *option = strtok(NULL, w_space)) {
+        if (strcmp(option, "0") == 0) { // backward compatibility
+            bypass = false;
+            continue;
+        }
+        if (strcmp(option, "1") == 0) { // backward compatibility
+            bypass = true;
+            continue;
+        }
+
+        const char *name = option;
+        char *value = strstr(option, "=");
+        if (!value) {
+            lastOption = option;
+            break;
+        }
+        *value = '\0'; // terminate option name
+        ++value; // skip '='
+
+        // TODO: warn if option is set twice?
+        bool grokked = false;
+        if (strcmp(name, "bypass") == 0)
+            grokked = grokBool(bypass, name, value);
+        else
+        if (strcmp(name, "routing") == 0)
+            grokked = grokBool(routing, name, value);
+        else {
+            debugs(3, 0, cfg_filename << ':' << config_lineno << ": " <<
+                "unknown adaptation service option: " << name << '=' << value);
+        }
+        if (!grokked)
+            return false;
+    }
+
+    // what is left must be the service URI
+    if (!grokUri(lastOption))
+        return false;
+
+    // there should be nothing else left
+    if (const char *tail = strtok(NULL, w_space)) {
+        debugs(3, 0, cfg_filename << ':' << config_lineno << ": " <<
+            "garbage after adaptation service URI: " << tail);
+        return false;
+    }
+
+    debugs(3,5, cfg_filename << ':' << config_lineno << ": " <<
+        "adaptation_service " << key << ' ' <<
+            methodStr() << "_" << vectPointStr() << ' ' <<
+            bypass << routing << ' ' <<
+            uri);
+
+    return true;
+}
+
+bool
+Adaptation::ServiceConfig::grokUri(const char *value)
+{
     // TODO: find core code that parses URLs and extracts various parts
+
+    if (!value || !*value) {
+        debugs(3, 0, HERE << cfg_filename << ':' << config_lineno << ": " <<
+               "empty adaptation service URI");
+        return false;
+    }
+
+    uri = value;
 
     // extract scheme and use it as the service_configConfig protocol
     const char *schemeSuffix = "://";
-    if (const String::size_type schemeEnd=uri.find(schemeSuffix))
+    const String::size_type schemeEnd = uri.find(schemeSuffix);
+    if (schemeEnd != String::npos)
         protocol=uri.substr(0,schemeEnd);
 
     debugs(3, 5, HERE << cfg_filename << ':' << config_lineno << ": " <<
@@ -138,10 +201,22 @@ Adaptation::ServiceConfig::parse()
     }
 
     resource.limitInit(s, len + 1);
+    return true;
+}
 
-    if ((bypass != 0) && (bypass != 1)) {
+
+bool
+Adaptation::ServiceConfig::grokBool(bool &var, const char *name, const char *value)
+{
+    if (!strcmp(value, "0") || !strcmp(value, "off"))
+        var = false;
+    else
+    if (!strcmp(value, "1") || !strcmp(value, "on"))
+        var = true;
+    else {
         debugs(3, 0, HERE << cfg_filename << ':' << config_lineno << ": " <<
-               "wrong bypass value; 0 or 1 expected: " << bypass);
+               "wrong value for boolean " << name << "; " <<
+               "'0', '1', 'on', or 'off' expected but got: " << value);
         return false;
     }
 

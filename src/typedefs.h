@@ -199,9 +199,10 @@ typedef void DCCB(int, int errflag, void *data);	/* disk close CB */
 typedef void DUCB(int errflag, void *data);	/* disk unlink CB */
 typedef void DTCB(int errflag, void *data);	/* disk trunc CB */
 
-typedef void FQDNH(const char *, void *);
+class DnsLookupDetails;
+typedef void FQDNH(const char *, const DnsLookupDetails &details, void *);
 typedef void IDCB(const char *ident, void *data);
-typedef void IPH(const ipcache_addrs *, void *);
+typedef void IPH(const ipcache_addrs *, const DnsLookupDetails &details, void *);
 typedef void IRCB(struct peer *, peer_t, protocol_t, void *, void *data);
 
 class FwdServer;

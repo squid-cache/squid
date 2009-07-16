@@ -120,7 +120,7 @@ public:
     char *url;
     int xerrno;
     u_short port;
-    char *dnsserver_msg;
+    String dnsError; ///< DNS lookup error message
     time_t ttl;
 
     IpAddress src_addr;

@@ -65,6 +65,7 @@
 #include "adaptation/Config.h"
 
 static void parse_adaptation_service_set_type();
+static void parse_adaptation_service_chain_type();
 static void parse_adaptation_access_type();
 
 #endif
@@ -620,8 +621,10 @@ configDoConfigure(void)
 
 #endif
 
-    if (aclPurgeMethodInUse(Config.accessList.http))
-        Config2.onoff.enable_purge = 1;
+    // we have reconfigured and in the process disabled any need for PURGE.
+    // turn it off now.
+    if(Config2.onoff.enable_purge == 2)
+        Config2.onoff.enable_purge = 0;
 
     Config2.onoff.mangle_request_headers = httpReqHdrManglersConfigured();
 
@@ -1614,6 +1617,22 @@ dump_peer(StoreEntry * entry, const char *name, peer * p)
 }
 
 /**
+ * utility function to prevent getservbyname() being called with a numeric value
+ * on Windows at least it returns garage results.
+ */
+static bool
+isUnsignedNumeric(const char *str, size_t len)
+{
+    if (len < 1) return false;
+
+    for (; len >0 && *str; str++, len--) {
+        if (! isdigit(*str))
+            return false;
+    }
+    return true;
+}
+
+/**
  \param proto	'tcp' or 'udp' for protocol
  \returns       Port the named service is supposed to be listening on.
  */
@@ -1628,7 +1647,8 @@ GetService(const char *proto)
         return 0; /* NEVER REACHED */
     }
     /** Returns either the service port number from /etc/services */
-    port = getservbyname(token, proto);
+    if( !isUnsignedNumeric(token, strlen(token)) )
+        port = getservbyname(token, proto);
     if (port != NULL) {
         return ntohs((u_short)port->s_port);
     }
@@ -2973,6 +2993,8 @@ parse_http_port_option(http_port_list * s, char *token)
         s->accel = 1;
     } else if (strcmp(token, "accel") == 0) {
         s->accel = 1;
+    } else if (strcmp(token, "allow-direct") == 0) {
+        s->allow_direct = 1;
     } else if (strcmp(token, "no-connection-auth") == 0) {
         s->connection_auth_disabled = true;
     } else if (strcmp(token, "connection-auth=off") == 0) {
@@ -3411,6 +3433,10 @@ parse_access_log(customlog ** logs)
         cl->type = CLF_SQUID;
     } else if (strcmp(logdef_name, "common") == 0) {
         cl->type = CLF_COMMON;
+#if ICAP_CLIENT
+    } else if (strcmp(logdef_name, "icap_squid") == 0) {
+        cl->type = CLF_ICAP_SQUID;
+#endif
     } else {
         debugs(3, 0, "Log format '" << logdef_name << "' is not defined");
         self_destruct();
@@ -3463,7 +3489,11 @@ dump_access_log(StoreEntry * entry, const char *name, customlog * logs)
         case CLF_COMMON:
             storeAppendPrintf(entry, "%s squid", log->filename);
             break;
-
+#if ICAP_CLIENT
+        case CLF_ICAP_SQUID:
+            storeAppendPrintf(entry, "%s icap_squid", log->filename);
+            break;
+#endif
         case CLF_AUTO:
 
             if (log->aclList)
@@ -3521,6 +3551,12 @@ static void
 parse_adaptation_service_set_type()
 {
     Adaptation::Config::ParseServiceSet();
+}
+
+static void
+parse_adaptation_service_chain_type()
+{
+    Adaptation::Config::ParseServiceChain();
 }
 
 static void

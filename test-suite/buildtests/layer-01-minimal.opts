@@ -3,6 +3,12 @@
 # - Everthing that can be disabled is
 # - Everyhing that can be done without is 
 #
+#
+# Check - everything MUST work at this level
+# distcheck is not possible here since it drops our configure options...
+MAKETEST="distcheck"
+#
+#
 # The options for this level can be easily generated semi-automatically from configure.in by:
 #	grep -E "^AC_ARG_ENABLE" ./configure.in | grep -o -E "[0-9a-z\-]+[,]" | grep -o -E "[^,]+" >disable.opts
 # followed by insertion of '	--disable-' and '\' strings
@@ -79,6 +85,7 @@ OPTS=" \
 	--disable-ipv6 \
 	--disable-zph-qos \
 	--disable-auto-locale \
+	--disable-translation \
  \
 	--without-pthreads \
 	--without-aio \
@@ -90,3 +97,6 @@ OPTS=" \
 	--without-dns-cname \
 	--without-po2html \
 	"
+
+# Fix the distclean testing.
+export DISTCHECK_CONFIGURE_FLAGS="${OPTS}"

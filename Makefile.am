@@ -40,6 +40,3 @@ EXTRA_DIST = \
 install-pinger:
 	chown root $(DESTDIR)$(DEFAULT_PINGER)
 	chmod 4711 $(DESTDIR)$(DEFAULT_PINGER)
-
-all-am:
-	@echo "Build Successful."

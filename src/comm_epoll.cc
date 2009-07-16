@@ -232,7 +232,7 @@ static void
 commIncomingStats(StoreEntry * sentry)
 {
     StatCounters *f = &statCounter;
-    storeAppendPrintf(sentry, "Total number of epoll(2) loops: %d\n", statCounter.select_loops);
+    storeAppendPrintf(sentry, "Total number of epoll(2) loops: %ld\n", statCounter.select_loops);
     storeAppendPrintf(sentry, "Histogram of returned filedescriptors\n");
     statHistDump(&f->select_fds_hist, sentry, statHistIntDumper);
 }
@@ -265,7 +265,7 @@ comm_select(int msec)
 
     for (;;) {
         num = epoll_wait(kdpfd, pevents, SQUID_MAXFD, msec);
-        statCounter.select_loops++;
+        ++statCounter.select_loops;
 
         if (num >= 0)
             break;

@@ -1,4 +1,4 @@
-.TH cachemgr.cgi 8 "@PACKAGE_STRING@"
+.TH cachemgr.cgi 8 "Squid Cache Manager CGI Web Interface"
 .\" Copyright and licensing information
 .\" goes here.
 .SH NAME
@@ -13,7 +13,7 @@ into the server.
 .SH FILES
 .I ./cachemgr.conf
 .br
-.I @DEFAULT_CACHEMGR_CONFIG@
+.I @SYSCONFDIR@/cachemgr.conf
 .RS
 The access configuration file defining which Squid servers may
 be managed via this cachemgr.cgi program. Each line specifies a
@@ -38,6 +38,7 @@ Configuration examples for many common web servers can be found in the
 Squid FAQ.
 .SH SEE ALSO
 .BR squid "(8)"
+.BR squidclient "(1)"
 .br
 .BR "The Squid FAQ" ", Chapter 9 The Cache Manager"
 .\" Could add the following sections:

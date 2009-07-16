@@ -101,21 +101,19 @@ fi
 # Collate Manual Pages and generate HTML versions
 if (groff --help >/dev/null); then
 	make -C ${tmpdir}/doc all
-	mkdir -p ${tmpdir}/doc/manuals
-	cp ${tmpdir}/doc/*.8 ${tmpdir}/doc/manuals/
-        for f in `ls -1 ${tmpdir}/helpers/*/*/*.8` ; do
+        for f in `ls -1 ${tmpdir}/helpers/*/*/*.8 ${tmpdir}/{doc,tools}/*.{1,8}` ; do
 		cp $f ${tmpdir}/doc/manuals/
 	done
         for f in `ls -1 ${tmpdir}/doc/manuals/*.8` ; do
 		cat ${f} | groff -E -Thtml -mandoc >${f}.html
 	done
-	sh -c "cd ${tmpdir}/doc/manuals && tar -zcf $PWD/${PACKAGE}-${VERSION}-${date}-manuals.tar.gz *"
+	sh -c "cd ${tmpdir}/doc/manuals && tar -zcf $PWD/${PACKAGE}-${VERSION}-${date}-manuals.tar.gz *.{html,1,8}"
 	echo ${PACKAGE}-${VERSION}-${date}-manuals.tar.gz >>${tag}.out
 fi
 
 # Generate language-pack tarballs
 # NP: Only to be done on HEAD branch.
 if test "${VERSION}" = "3.HEAD" ; then
-	sh -c "cd $tmpdir/errors && tar -zcf ${PWD}/${PACKAGE}-${VERSION}-${date}-langpack.tar.gz ./*/* ./alias* ./Makefile "
+	sh -c "cd $tmpdir/errors && tar -zcf ${PWD}/${PACKAGE}-${VERSION}-${date}-langpack.tar.gz ./*/* ./alias* ./TRANSLATORS "
 	echo ${PACKAGE}-${VERSION}-${date}-langpack.tar.gz >>${tag}.out
 fi

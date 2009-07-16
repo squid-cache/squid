@@ -3,6 +3,12 @@
 # XXX: with the exception of those that depend on the environment.
 # TODO: Add environment-specific tests to enable more options.
 #
+#
+# Complete Check - everything is supposed to work at this level
+# distcheck is not possible since it drops our configure options...
+MAKETEST="distcheck"
+#
+#
 # The options for this level can be easily generated semi-automatically from configure.in by:
 #	grep -E "^AC_ARG_ENABLE" ./configure.in | grep -o -E "[0-9a-z\-]+[,]" | grep -o -E "[^,]+" >disable.opts
 # followed by insertion of '	--enable-' and '\' strings
@@ -35,7 +41,7 @@
 #
 #
 OPTS=" \
-	--enable-loadable-modules \
+	--disable-loadable-modules \
 	--enable-gnuregex \
 	--enable-optimizations \
 	--enable-inline \
@@ -88,6 +94,7 @@ OPTS=" \
 	--enable-x-accelerator-vary \
 	--enable-ipv6 \
 	--enable-auto-locale \
+	--enable-translation \
 	--enable-zph-qos \
  \
 	--with-aio \
@@ -101,3 +108,8 @@ OPTS=" \
 	--with-pthreads \
 	--with-valgrind-debug \
 	"
+
+# Fix the distclean testing.
+export DISTCHECK_CONFIGURE_FLAGS="${OPTS}"
+
+

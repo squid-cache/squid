@@ -699,7 +699,7 @@ idnsDoSendQueryVC(nsvc *vc)
 }
 
 static void
-idnsInitVCConnected(int fd, comm_err_t status, int xerrno, void *data)
+idnsInitVCConnected(int fd, const DnsLookupDetails &, comm_err_t status, int xerrno, void *data)
 {
     nsvc * vc = (nsvc *)data;
 

@@ -1,0 +1,85 @@
+/**
+\defgroup Adaptation
+\ingroup Components
+ 
+
+\section Term Terminology
+
+- <b>Adaptation</b>: Message (header and/or body) inspection, recording, or
+  modification outside of Squid core functionality. These notes cover two
+  adaptation APIs: ICAP (RFC 3507) and eCAP (www.e-cap.org).
+
+- <b>Master transaction</b>: HTTP request and response sequence with the
+  addition of adaptation transactions such as ICAP and eCAP exchanges.
+
+- <b>Service</b>: Specific adaptation identified by a URI. For example, an
+  ICAP server may provide request filtering and virus monitoring services.
+
+- <b>Optional service</b>: An optional service or its adaptation results may
+  be completely ignored or bypassed if it helps keeping master transaction
+  alive.
+
+- <b>Optional transaction</b>: Adaptation transactions with optional services
+  may be called optional.
+
+- <b>Essential service</b>: A service that is not optional. If an essential
+  service fails (and there are no replacements), the master transaction must
+  fail.
+
+- <b>Essential transaction</b>: Adaptation transactions with essential
+  services may be called optional.
+
+- <b>Virgin</b>: Being sent or related to something being sent to the
+  adaptation service. In a service chain environment, only the first link
+  receives its virgin message from the master transaction.
+
+- <b>Adapted</b>: Being received or related to something being received from
+  the adaptation service. In a service chain environment, only the last link
+  sends the adapted message to the master transaction.
+
+
+\section ServiceGroups Service sets and chains
+
+Service sets and chains are implemented as ServiceGroup class kids. They are
+very similar in most code aspects. The primary external difference is that
+ServiceSet can "replace" a service and ServiceChain can find the "next"
+service.  The internal group maintenance code is implemented in ServiceGroup
+and is parametrized by the kids (see the allServicesSame member).
+
+If an ICAP service with the routing=1 option in squid.conf returns an ICAP
+X-Next-Services response header during a successful REQMOD or RESPMOD
+transaction, Squid abandones the original adaptation plan and forms a new
+adaptation chain consisting of services identified in the X-Next-Services
+header value (using a comma-separated list of adaptation service names from
+squid.conf).  The dynamically created chain is destroyed once the new plan is
+completed or replaced.
+
+
+\section Layers Adaptation layers
+
+Here is a typical adaptation code sequence:
+
+- Master caller (client- or server-side): Checks ACL and starts
+  Adaptation::Iterator for the ACL-selected ServiceGroup.
+
+- Adaptation::Iterator: Creates ServicePlan and executes it, launching one
+  service adaptation per step. Abandons the original plan and builds a dynamic
+  chain if requested by an eligible service. Aborts adaptations with the
+  number of steps exceeding adaptation_service_iteration_limit. This layer
+  focus is service set and chain support.
+
+- Transactions Launchers (Adaptation::Icap::Launcher and
+  Adaptation::Ecap::XactionRep). Start an ICAP or eCAP transaction(s). ICAP
+  Launcher retries or repeats ICAP transactions if needed.  ICAP retries or
+  repeats have a single-service scope and are invisible to
+  Adaptation::Iterator. See below for eCAP which lacks this layer.
+
+- Adaptation::Icap::ModXact and Adaptation::Ecap::XactionRep: Communicates
+  with ICAP or eCAP service to perform the actual adaptation. For optional
+  services, handles some failures by short-circuiting adaptation (i.e.,
+  cloning the virgin message).
+
+All of the above classes except master callers are Adaptation::Initiate kids.
+All of the above classes except transactions are Adaptation::Initiator kids.
+
+*/
