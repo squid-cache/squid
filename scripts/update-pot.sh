@@ -46,4 +46,24 @@ rm -f errpages.pot.new
 cd ..
 ## Done errors/ Updates
 
+
 ## TODO: begin doc/manuals updates
+
+cd doc/manuals/
+
+## TODO migrate all man files to doc/manuals
+
+## TODO po4a of all doc/manuals man files...
+
+
+#(
+#	cat manuals.pot.new | 
+#	sed s/PACKAGE\ VERSION/Squid-3/ |
+#	sed s/LANGUAGE\ \<LL\@li\.org\>/Squid\ Developers\ \<squid-dev\@squid-cache\.org\>/
+#) >manuals.pot
+
+
+# cleanup
+#rm -f manuals.pot.new
+cd ..
+## Done doc/manuals/ Update
