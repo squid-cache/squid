@@ -2,10 +2,10 @@
 <HTML>
 <HEAD>
  <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.50">
- <TITLE>Squid 3.1.0.9 release notes</TITLE>
+ <TITLE>Squid 3.1.0.10 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.1.0.9 release notes</H1>
+<H1>Squid 3.1.0.10 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -80,7 +80,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.1.0.9 for testing.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.1.0.10 for testing.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.1/">http://www.squid-cache.org/Versions/v3/3.1/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -1150,6 +1150,10 @@ For now option 'tproxy' remains with old behaviour meaning fully-invisible proxy
 <PRE>
            intercept    Rename of old 'transparent' option to indicate proper functionality.
 
+           allow-direct Allow direct forwarding in accelerator mode. Normally
+                        accelerated requests are denied direct forwarding as if
+                        never_direct was used.
+
            connection-auth[=on|off]
                         use connection-auth=off to tell Squid to prevent
                         forwarding Microsoft connection oriented authentication
@@ -1330,6 +1334,12 @@ and build with IPv6 when possible.</P>
 <DT><B>--disable-loadable-modules</B><DD>
 <P>Build without support for loadable modules.</P>
 
+<DT><B>--disable-translation</B><DD>
+<P>Prevent Squid generating localized error page templates and manuals.
+Which is usually tried, but may not be needed.</P>
+<P>This is a development optimization for building from VCS when localization is
+not needed. Has no effect on pre-translated source bundles.</P>
+
 <DT><B>--with-dns-cname</B><DD>
 <P>Enable CNAME recursion within the Internal DNS resolver stub squid uses.
 This has no effect on the external DNS helper.</P>
@@ -1343,7 +1353,7 @@ but please report the bugs anyway.</P>
 <P>Allow build-time configuration of Default location for squid logs.</P>
 
 <DT><B>--with-ipv6-split-stack</B><DD>
-<P>Enable special additions for IPv6 support in Windows XP.
+<P>Force enable special additions for IPv6 support in Windows XP and various BSD systems.
 see the IPv6 details above for a better description.</P>
 
 <DT><B>--with-pidfile=PATH</B><DD>
@@ -1583,7 +1593,6 @@ The helper will now compile and work with dns_nameservers on more variants of Li
 
 <DT><B>http_port</B><DD>
 <P><EM>act-as-origin</EM> not yet ported from 2.7</P>
-<P><EM>allow-direct</EM> not yet ported from 2.7</P>
 <P><EM>http11</EM> not yet ported from 2.7</P>
 <P><EM>urlgroup=</EM> not yet ported from 2.6</P>
 
