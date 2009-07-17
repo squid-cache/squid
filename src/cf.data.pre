@@ -1105,9 +1105,9 @@ DOC_START
 	   protocol=	Protocol to reconstruct accelerated requests with.
 			Defaults to http.
 
-	       connection-auth[=on|off]
-	                    use connection-auth=off to tell Squid to prevent 
-	                    forwarding Microsoft connection oriented authentication
+	   connection-auth[=on|off]
+	                use connection-auth=off to tell Squid to prevent 
+	                forwarding Microsoft connection oriented authentication
 			(NTLM, Negotiate and Kerberos)
 
 	   disable-pmtu-discovery=
@@ -1418,6 +1418,12 @@ DOC_START
 	  'dst ipv6' bases its selection assuming DIRECT access.
 	  If peers are used the peername ACL are needed to select outgoing
 	  address which can link to the peer.
+
+	  'dst ipv6' is a slow ACL. It will only work here if 'dst' is used
+	  previously in the http_access rules to locate the destination IP.
+	  Some more magic may be needed for that:
+	    http_access allow to_ipv6 !all
+	  (meaning, allow if to IPv6 but not from anywhere ;)
 
 DOC_END
 
