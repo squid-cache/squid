@@ -99,7 +99,7 @@ helperOpenServers(helper * hlp)
         shortname = xstrdup(progname);
 
     /* dont ever start more than hlp->n_to_start processes. */
-    int need_new = hlp->n_to_start - hlp->n_running;
+    int need_new = hlp->n_to_start - hlp->n_active;
 
     debugs(84, 1, "helperOpenServers: Starting " << need_new << "/" << hlp->n_to_start << " '" << shortname << "' processes");
 
@@ -203,7 +203,8 @@ helperStatefulOpenServers(statefulhelper * hlp)
         shortname = xstrdup(progname);
 
     /* dont ever start more than hlp->n_to_start processes. */
-    int need_new = hlp->n_to_start - hlp->n_running;
+    /* n_active are the helpers which have not been shut down. */
+    int need_new = hlp->n_to_start - hlp->n_active;
 
     debugs(84, 1, "helperOpenServers: Starting " << need_new << "/" << hlp->n_to_start << " '" << shortname << "' processes");
 
@@ -538,8 +539,8 @@ helperStats(StoreEntry * sentry, helper * hlp, const char *label)
 
     storeAppendPrintf(sentry, "program: %s\n",
                       hlp->cmdline->key);
-    storeAppendPrintf(sentry, "number running: %d of %d\n",
-                      hlp->n_running, hlp->n_to_start);
+    storeAppendPrintf(sentry, "number active: %d of %d (%d shutting down)\n",
+                      hlp->n_active, hlp->n_to_start, (hlp->n_running - hlp->n_active) );
     storeAppendPrintf(sentry, "requests sent: %d\n",
                       hlp->stats.requests);
     storeAppendPrintf(sentry, "replies received: %d\n",
@@ -580,7 +581,7 @@ helperStats(StoreEntry * sentry, helper * hlp, const char *label)
     storeAppendPrintf(sentry, "   B = BUSY\n");
     storeAppendPrintf(sentry, "   W = WRITING\n");
     storeAppendPrintf(sentry, "   C = CLOSING\n");
-    storeAppendPrintf(sentry, "   S = SHUTDOWN\n");
+    storeAppendPrintf(sentry, "   S = SHUTDOWN PENDING\n");
 }
 
 void
@@ -591,8 +592,8 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label
 
     storeAppendPrintf(sentry, "program: %s\n",
                       hlp->cmdline->key);
-    storeAppendPrintf(sentry, "number running: %d of %d\n",
-                      hlp->n_running, hlp->n_to_start);
+    storeAppendPrintf(sentry, "number active: %d of %d (%d shutting down)\n",
+                      hlp->n_active, hlp->n_to_start, (hlp->n_running - hlp->n_active) );
     storeAppendPrintf(sentry, "requests sent: %d\n",
                       hlp->stats.requests);
     storeAppendPrintf(sentry, "replies received: %d\n",
@@ -637,7 +638,7 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label
     storeAppendPrintf(sentry, "   B = BUSY\n");
     storeAppendPrintf(sentry, "   C = CLOSING\n");
     storeAppendPrintf(sentry, "   R = RESERVED or DEFERRED\n");
-    storeAppendPrintf(sentry, "   S = SHUTDOWN\n");
+    storeAppendPrintf(sentry, "   S = SHUTDOWN PENDING\n");
     storeAppendPrintf(sentry, "   P = PLACEHOLDER\n");
 }
 
@@ -664,7 +665,6 @@ helperShutdown(helper * hlp)
 
         hlp->n_active--;
         assert(hlp->n_active >= 0);
-
         srv->flags.shutdown = 1;	/* request it to shut itself down */
 
         if (srv->flags.closing) {
