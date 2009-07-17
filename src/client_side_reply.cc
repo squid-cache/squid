@@ -637,10 +637,9 @@ clientReplyContext::processMiss()
         return;
     }
 
-    /*
-     * Deny loops when running in accelerator/transproxy mode.
-     */
-    if (http->flags.accel && r->flags.loopdetect) {
+    /// Deny loops for accelerator and interceptor. TODO: deny in all modes?
+    if (r->flags.loopdetect &&
+        (http->flags.accel || http->flags.intercepted)) {
         http->al.http.code = HTTP_FORBIDDEN;
         err =
             clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL,
