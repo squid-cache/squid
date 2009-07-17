@@ -142,6 +142,9 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
 #if X_ACCELERATOR_VARY
     {"X-Accelerator-Vary", HDR_X_ACCELERATOR_VARY, ftStr},
 #endif
+#if USE_ADAPTATION
+    {"X-Next-Services", HDR_X_NEXT_SERVICES, ftStr},
+#endif
     {"Surrogate-Capability", HDR_SURROGATE_CAPABILITY, ftStr},
     {"Surrogate-Control", HDR_SURROGATE_CONTROL, ftPSc},
     {"Front-End-Https", HDR_FRONT_END_HTTPS, ftStr},
@@ -187,6 +190,9 @@ static http_hdr_type ListHeadersArr[] = {
 #if X_ACCELERATOR_VARY
     HDR_X_ACCELERATOR_VARY,
 #endif
+#if USE_ADAPTATION
+    HDR_X_NEXT_SERVICES,
+#endif
     HDR_SURROGATE_CAPABILITY,
     HDR_SURROGATE_CONTROL,
     HDR_X_FORWARDED_FOR
@@ -221,6 +227,9 @@ static http_hdr_type ReplyHeadersArr[] = {
     HDR_X_REQUEST_URI,
 #if X_ACCELERATOR_VARY
     HDR_X_ACCELERATOR_VARY,
+#endif
+#if USE_ADAPTATION
+    HDR_X_NEXT_SERVICES,
 #endif
     HDR_X_SQUID_ERROR,
     HDR_SURROGATE_CONTROL

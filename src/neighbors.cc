@@ -1230,7 +1230,7 @@ peerNoteDigestGone(peer * p)
 }
 
 static void
-peerDNSConfigure(const ipcache_addrs * ia, void *data)
+peerDNSConfigure(const ipcache_addrs *ia, const DnsLookupDetails &, void *data)
 {
     peer *p = (peer *)data;
 
@@ -1399,7 +1399,7 @@ peerProbeConnect(peer * p)
 }
 
 static void
-peerProbeConnectDone(int fd, comm_err_t status, int xerrno, void *data)
+peerProbeConnectDone(int fd, const DnsLookupDetails &, comm_err_t status, int xerrno, void *data)
 {
     peer *p = (peer*)data;
 

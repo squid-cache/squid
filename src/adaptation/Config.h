@@ -3,25 +3,14 @@
 
 #include "event.h"
 #include "base/AsyncCall.h"
+#include "adaptation/forward.h"
 #include "adaptation/Elements.h"
 
 class acl_access;
 class ConfigParser;
 
-template <class C>
-class RefCount;
-
 namespace Adaptation
 {
-
-class Service;
-class ServiceConfig;
-class Class;
-
-typedef RefCount<Service> ServicePointer;
-
-class ServiceGroup;
-class AccessRule;
 
 class Config
 {
@@ -29,8 +18,7 @@ public:
     static void Finalize(bool enable);
 
     static void ParseServiceSet(void);
-    static void FreeServiceSet(void);
-    static void DumpServiceSet(StoreEntry *, const char *);
+    static void ParseServiceChain(void);
 
     static void ParseAccess(ConfigParser &parser);
     static void FreeAccess(void);
@@ -41,6 +29,11 @@ public:
 public:
     static bool Enabled; // true if at least one adaptation mechanism is
 
+    // these are global squid.conf options, documented elsewhere
+    static char *masterx_shared_name; // global TODO: do we need TheConfig?
+    static int service_iteration_limit;
+    // Options below are accessed via Icap::TheConfig or Ecap::TheConfig
+    // TODO: move ICAP-specific options to Icap::Config and add TheConfig
     int onoff;
     int send_client_ip;
     int send_client_username;
@@ -56,7 +49,6 @@ public:
     void freeService(void);
     void dumpService(StoreEntry *, const char *) const;
     ServicePointer findService(const String&);
-    Class * findClass(const String& key);
 
     virtual void finalize();
 
@@ -65,6 +57,10 @@ private:
     Config &operator =(const Config &); // unsupported
 
     virtual ServicePointer createService(const ServiceConfig &cfg) = 0;
+
+    static void ParseServiceGroup(ServiceGroupPointer group);
+    static void FreeServiceGroups(void);
+    static void DumpServiceGroups(StoreEntry *, const char *);
 };
 
 } // namespace Adaptation

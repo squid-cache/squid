@@ -5,6 +5,7 @@
 #include "TextException.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
+#include "SquidTime.h"
 #include "adaptation/ecap/XactionRep.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Ecap::XactionRep, XactionRep);
@@ -14,9 +15,12 @@ Adaptation::Ecap::XactionRep::XactionRep(Adaptation::Initiator *anInitiator,
         HttpMsg *virginHeader, HttpRequest *virginCause,
         const Adaptation::ServicePointer &aService):
         AsyncJob("Adaptation::Ecap::XactionRep"),
-        Adaptation::Initiate("Adaptation::Ecap::XactionRep", anInitiator, aService),
+        Adaptation::Initiate("Adaptation::Ecap::XactionRep", anInitiator),
+        theService(aService),
         theVirginRep(virginHeader), theCauseRep(NULL),
-        proxyingVb(opUndecided), proxyingAb(opUndecided), canAccessVb(false),
+        proxyingVb(opUndecided), proxyingAb(opUndecided),
+        adaptHistoryId(-1),
+		canAccessVb(false),
         abProductionFinished(false), abProductionAtEnd(false)
 {
     if (virginCause)
@@ -38,6 +42,13 @@ Adaptation::Ecap::XactionRep::master(const AdapterXaction &x)
     theMaster = x;
 }
 
+Adaptation::Service &
+Adaptation::Ecap::XactionRep::service()
+{
+    Must(theService != NULL);
+    return *theService;
+}
+
 void
 Adaptation::Ecap::XactionRep::start()
 {
@@ -47,6 +58,15 @@ Adaptation::Ecap::XactionRep::start()
         canAccessVb = true; /// assumes nobody is consuming; \todo check
     else
         proxyingVb = opNever;
+
+    const HttpRequest *request = dynamic_cast<const HttpRequest*> (theCauseRep ?
+        theCauseRep->raw().header : theVirginRep.raw().header);
+    Must(request);
+    Adaptation::History::Pointer ah = request->adaptLogHistory();
+    if (ah != NULL) { 
+        // retrying=false because ecap never retries transactions
+        adaptHistoryId = ah->recordXactStart(service().cfg().key, current_time, false);
+    }
 
     theMaster->start();
 }
@@ -74,6 +94,14 @@ Adaptation::Ecap::XactionRep::swanSong()
     }
 
     terminateMaster();
+
+    const HttpRequest *request = dynamic_cast<const HttpRequest*>(theCauseRep ?
+        theCauseRep->raw().header : theVirginRep.raw().header);
+    Must(request);
+    Adaptation::History::Pointer ah = request->adaptLogHistory();
+    if (ah != NULL && adaptHistoryId >= 0)
+        ah->recordXactFinish(adaptHistoryId);
+
     Adaptation::Initiate::swanSong();
 }
 

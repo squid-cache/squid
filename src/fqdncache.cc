@@ -83,9 +83,6 @@
 /// \ingroup FQDNCacheInternal
 #define FQDN_HIGH_WATER      95
 
-/// \ingroup FQDNCacheAPI
-typedef struct _fqdncache_entry fqdncache_entry;
-
 /**
  \ingroup FQDNCacheAPI
  * The data structure used for storing name-address mappings
@@ -93,7 +90,8 @@ typedef struct _fqdncache_entry fqdncache_entry;
  * where structures of type fqdncache_entry whose most
  * interesting members are:
  */
-struct _fqdncache_entry {
+class fqdncache_entry {
+public:
     hash_link hash;		/* must be first */
     time_t lastref;
     time_t expires;
@@ -111,6 +109,8 @@ struct _fqdncache_entry {
         unsigned int negcached:1;
         unsigned int fromhosts:1;
     } flags;
+
+    int age() const; ///< time passed since request_time or -1 if unknown
 };
 
 /// \ingroup FQDNCacheInternal
@@ -134,7 +134,7 @@ static int fqdncacheParse(fqdncache_entry *, rfc1035_rr *, int, const char *erro
 #endif
 static void fqdncacheRelease(fqdncache_entry *);
 static fqdncache_entry *fqdncacheCreateEntry(const char *name);
-static void fqdncacheCallback(fqdncache_entry *);
+static void fqdncacheCallback(fqdncache_entry *, int wait);
 static fqdncache_entry *fqdncache_get(const char *);
 static FQDNH dummy_handler;
 static int fqdncacheExpiredEntry(const fqdncache_entry *);
@@ -151,6 +151,13 @@ static long fqdncache_low = 180;
 
 /// \ingroup FQDNCacheInternal
 static long fqdncache_high = 200;
+
+int
+fqdncache_entry::age() const
+{
+    return request_time.tv_sec ? tvSubMsec(request_time, current_time) : -1;
+}
+
 
 /**
  \ingroup FQDNCacheInternal
@@ -304,7 +311,7 @@ fqdncacheAddEntry(fqdncache_entry * f)
  * Walks down the pending list, calling handlers
  */
 static void
-fqdncacheCallback(fqdncache_entry * f)
+fqdncacheCallback(fqdncache_entry * f, int wait)
 {
     FQDNH *callback;
     void *cbdata;
@@ -320,8 +327,8 @@ fqdncacheCallback(fqdncache_entry * f)
     f->handler = NULL;
 
     if (cbdataReferenceValidDone(f->handlerData, &cbdata)) {
-        dns_error_message = f->error_message;
-        callback(f->name_count ? f->names[0] : NULL, cbdata);
+        const DnsLookupDetails details(f->error_message, wait);
+        callback(f->name_count ? f->names[0] : NULL, details, cbdata);
     }
 
     fqdncacheUnlockEntry(f);
@@ -490,8 +497,8 @@ fqdncacheHandleReply(void *data, rfc1035_rr * answers, int na, const char *error
     fqdncache_entry *f;
     static_cast<generic_cbdata *>(data)->unwrap(&f);
     n = ++FqdncacheStats.replies;
-    statHistCount(&statCounter.dns.svc_time,
-                  tvSubMsec(f->request_time, current_time));
+    const int age = f->age();
+    statHistCount(&statCounter.dns.svc_time, age);
 #if USE_DNSSERVERS
 
     fqdncacheParse(f, reply);
@@ -502,7 +509,7 @@ fqdncacheHandleReply(void *data, rfc1035_rr * answers, int na, const char *error
 
     fqdncacheAddEntry(f);
 
-    fqdncacheCallback(f);
+    fqdncacheCallback(f, age);
 }
 
 /**
@@ -528,8 +535,8 @@ fqdncache_nbgethostbyaddr(IpAddress &addr, FQDNH * handler, void *handlerData)
 
     if (name[0] == '\0') {
         debugs(35, 4, "fqdncache_nbgethostbyaddr: Invalid name!");
-        dns_error_message = "Invalid hostname";
-        handler(NULL, handlerData);
+        const DnsLookupDetails details("Invalid hostname", -1); // error, no lookup
+        handler(NULL, details, handlerData);
         return;
     }
 
@@ -555,7 +562,7 @@ fqdncache_nbgethostbyaddr(IpAddress &addr, FQDNH * handler, void *handlerData)
 
         f->handlerData = cbdataReference(handlerData);
 
-        fqdncacheCallback(f);
+        fqdncacheCallback(f, -1); // no lookup
 
         return;
     }
@@ -654,16 +661,16 @@ fqdncache_gethostbyaddr(IpAddress &addr, int flags)
         f = NULL;
     } else if (f->flags.negcached) {
         FqdncacheStats.negative_hits++;
-        dns_error_message = f->error_message;
+        // ignore f->error_message: the caller just checks FQDN cache presence
         return NULL;
     } else {
         FqdncacheStats.hits++;
         f->lastref = squid_curtime;
-        dns_error_message = f->error_message;
+        // ignore f->error_message: the caller just checks FQDN cache presence
         return f->names[0];
     }
 
-    dns_error_message = NULL;
+    /* no entry [any more] */
 
     FqdncacheStats.misses++;
 
@@ -732,7 +739,7 @@ fqdnStats(StoreEntry * sentry)
 
 /// \ingroup FQDNCacheInternal
 static void
-dummy_handler(const char *bufnotused, void *datanotused)
+dummy_handler(const char *, const DnsLookupDetails &, void *)
 {
     return;
 }
@@ -932,14 +939,3 @@ snmp_netFqdnFn(variable_list * Var, snint * ErrP)
 }
 
 #endif /*SQUID_SNMP */
-
-/// XXX: a hack to work around the missing DNS error info
-// see http://www.squid-cache.org/bugs/show_bug.cgi?id=2459
-const char *
-dns_error_message_safe()
-{
-    if (dns_error_message)
-        return dns_error_message;
-    debugs(35,DBG_IMPORTANT, "Internal error: lost DNS error info");
-    return "lost DNS error";
-}

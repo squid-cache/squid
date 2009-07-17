@@ -9,6 +9,8 @@
 #include "adaptation/icap/OptXact.h"
 #include "adaptation/icap/Options.h"
 #include "TextException.h"
+#include "SquidTime.h"
+#include "HttpRequest.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, OptXact);
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, OptXactLauncher);
@@ -36,7 +38,7 @@ void Adaptation::Icap::OptXact::handleCommConnected()
     makeRequest(requestBuf);
     debugs(93, 9, HERE << "request " << status() << ":\n" <<
            (requestBuf.terminate(), requestBuf.content()));
-
+    icap_tio_start = current_time;
     scheduleWrite(requestBuf);
 }
 
@@ -48,6 +50,10 @@ void Adaptation::Icap::OptXact::makeRequest(MemBuf &buf)
     const String host = s.cfg().host;
     buf.Printf("Host: " SQUIDSTRINGPH ":%d\r\n", SQUIDSTRINGPRINT(host), s.cfg().port);
     buf.append(ICAP::crlf, 2);
+
+    // XXX: HttpRequest cannot fully parse ICAP Request-Line
+    http_status status;
+    Must(icapRequest->parse(&buf, true, &status) > 0);
 }
 
 void Adaptation::Icap::OptXact::handleCommWrote(size_t size)
@@ -60,7 +66,10 @@ void Adaptation::Icap::OptXact::handleCommWrote(size_t size)
 void Adaptation::Icap::OptXact::handleCommRead(size_t)
 {
     if (HttpMsg *r = parseResponse()) {
+        icap_tio_finish = current_time;
+        setOutcome(xoOpt);
         sendAnswer(r);
+        icapReply = HTTPMSGLOCK(dynamic_cast<HttpReply*>(r));
         Must(done()); // there should be nothing else to do
         return;
     }
@@ -74,11 +83,11 @@ HttpMsg *Adaptation::Icap::OptXact::parseResponse()
            status());
     debugs(93, 5, HERE << "\n" << readBuf.content());
 
-    HttpReply *r = new HttpReply;
+    HttpReply *r = HTTPMSGLOCK(new HttpReply);
     r->protoPrefix = "ICAP/"; // TODO: make an IcapReply class?
 
     if (!parseHttpMsg(r)) { // throws on errors
-        delete r;
+        HTTPMSGUNLOCK(r);
         return 0;
     }
 
@@ -86,6 +95,18 @@ HttpMsg *Adaptation::Icap::OptXact::parseResponse()
         reuseConnection = false;
 
     return r;
+}
+
+void Adaptation::Icap::OptXact::swanSong()
+{
+    Adaptation::Icap::Xaction::swanSong();
+}
+
+void Adaptation::Icap::OptXact::finalizeLogInfo()
+{
+    //    al.cache.caddr = 0;
+    al.icap.reqMethod = Adaptation::methodOptions;
+    Adaptation::Icap::Xaction::finalizeLogInfo();
 }
 
 /* Adaptation::Icap::OptXactLauncher */

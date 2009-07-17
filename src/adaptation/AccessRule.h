@@ -22,7 +22,7 @@ public:
     void finalize();
 
     // service group consisting of one or more services
-    ServiceGroup *group();
+    ServiceGroupPointer group();
 
 public:
     typedef int Id;
