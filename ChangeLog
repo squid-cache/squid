@@ -1,3 +1,28 @@
+Changes to squid-3.1.0.10 (18 Jul 2009):
+
+	- Bug 2680: Regression Crash after rotate with no helpers running
+	- Bug 2695: Regression in WCCPv2 L2 mask assignment
+	- Bug 2707: Regression in FTP anonymous auth
+	- Bug 422, 2706: RFC 2616 Date header requirements
+	- Bug 1087: ESI processor not quoting attributes correctly.
+	- Bug 1338: File prefetches aborted despite range_offset
+	- Bug 2127: delay pools class 4 crashes with ntlm auth
+	- Bug 2092: select loop 32-bit call counter overflows
+	- Bug 2611: document fast/slow acl types
+	- Bug 2614: Potential loss of adapted body data from eCAP adapters
+	- Bug 2658: Missing TextException copy constructor
+	- Bug 2659: String length overflows on append, leading to segfaults
+	- Bug 2699: Build failure NTLM smb_lm helper
+	- Bug 2709: TRANSLATIONS not installed
+	- Bug 2710: squid_kerb_auth non-terminated string
+	- Delay pools 64-bit buckets and IPv6-polish
+	- Break forwarding loops for "transparent" or "intercept" http_ports.
+	- Add --disable-translation option to detatch .po from error negotiation
+	- Add squidclient man(1) page
+	- Add localhost to default permitted networks
+	- http_port allow-direct option to allow direct forwarding in accelerator mode
+	- ... and many testing infrastructure updates
+
 Changes to squid-3.1.0.9 (26 Jun 2009):
 
 	- Bug 2682: Add ftp_epsv control to disable EPSV support.
