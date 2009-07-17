@@ -1,6 +1,3 @@
-
-#
-# $Id$
 #
 # SQUID Web Proxy Cache		http://www.squid-cache.org/
 # ----------------------------------------------------------
@@ -106,8 +103,8 @@ DOC_START
 	proxy as the client then thinks it is talking to an origin server and
 	not the proxy. This is a limitation of bending the TCP/IP protocol to
 	transparently intercepting port 80, not a limitation in Squid.
-	Ports flagged 'transparent', 'intercept', or 'tproxy' have authentication
-	disabled.
+	Ports flagged 'transparent', 'intercept', or 'tproxy' have
+	authentication disabled.
 
 	=== Parameters for the basic scheme follow. ===
 
@@ -116,7 +113,8 @@ DOC_START
 	reads a line containing "username password" and replies "OK" or
 	"ERR" in an endless loop. "ERR" responses may optionally be followed
 	by a error description available as %m in the returned error page.
-	If you use an authenticator, make sure you have 1 acl of type proxy_auth.
+	If you use an authenticator, make sure you have 1 acl of type
+	proxy_auth.
 
 	By default, the basic authentication scheme is not used unless a
 	program is specified.
@@ -283,9 +281,9 @@ DOC_START
 	the Microsoft Internet Explorer or Mozilla Firefox browsers.
 	Its main purpose is to exchange credentials with the Squid proxy
 	using the Kerberos mechanisms.
-	If you use a Negotiate authenticator, make sure you have at least one acl
-	of type proxy_auth active.  By default, the negotiate authenticator_program
-	is not used.
+	If you use a Negotiate authenticator, make sure you have at least
+	one acl of type proxy_auth active. By default, the negotiate
+	authenticator_program is not used.
 	The only supported program for this role is the ntlm_auth
 	program distributed as part of Samba, version 4 or later.
 
@@ -493,33 +491,47 @@ DOC_START
 	By default, regular expressions are CASE-SENSITIVE.  To make
 	them case-insensitive, use the -i option.
 
+	Some acl types require suspending the current request in order
+	to access some external data source.
+	Those which do are marked with the tag [slow], those which
+	don't are marked as [fast].
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl
+	for further information
 
 	***** ACL TYPES AVAILABLE *****
 
-	acl aclname src ip-address/netmask ...		# clients IP address
-	acl aclname src addr1-addr2/netmask ...		# range of addresses
-	acl aclname dst ip-address/netmask ...		# URL host's IP address
-	acl aclname myip ip-address/netmask ...		# local socket IP address
+	acl aclname src ip-address/netmask ...	# clients IP address [fast]
+	acl aclname src addr1-addr2/netmask ...	# range of addresses [fast]
+	acl aclname dst ip-address/netmask ...	# URL host's IP address [slow]
+	acl aclname myip ip-address/netmask ...	# local socket IP address [fast]
 
 	acl aclname arp      mac-address ... (xx:xx:xx:xx:xx:xx notation)
 	  # The arp ACL requires the special configure option --enable-arp-acl.
 	  # Furthermore, the ARP ACL code is not portable to all operating systems.
-	  # It works on Linux, Solaris, Windows, FreeBSD, and some other *BSD variants.
+	  # It works on Linux, Solaris, Windows, FreeBSD, and some
+	  # other *BSD variants.
+	  # [fast]
 	  #
 	  # NOTE: Squid can only determine the MAC address for clients that are on
-	  # the same subnet. If the client is on a different subnet, then Squid cannot
-	  # find out its MAC address.
+	  # the same subnet. If the client is on a different subnet,
+	  # then Squid cannot find out its MAC address.
 
-	acl aclname srcdomain   .foo.com ...    	# reverse lookup, from client IP
-	acl aclname dstdomain   .foo.com ...    	# Destination server from URL
-	acl aclname srcdom_regex [-i] \.foo\.com ...	# regex matching client name
-	acl aclname dstdom_regex [-i] \.foo\.com ...	# regex matching server
+	acl aclname srcdomain   .foo.com ...
+	  # reverse lookup, from client IP [slow]
+	acl aclname dstdomain   .foo.com ...
+	  # Destination server from URL [slow]
+	acl aclname srcdom_regex [-i] \.foo\.com ...
+	  # regex matching client name [slow]
+	acl aclname dstdom_regex [-i] \.foo\.com ...
+	  # regex matching server [slow]
+	  #
 	  # For dstdomain and dstdom_regex a reverse lookup is tried if a IP
 	  # based URL is used and no match is found. The name "none" is used
 	  # if the reverse lookup fails.
 
 	acl aclname src_as number ...
 	acl aclname dst_as number ...
+	  # [fast]
 	  # Except for access control, AS numbers can be used for
 	  # routing of requests to specific caches. Here's an
 	  # example for routing all requests for AS#1241 and only
@@ -529,10 +541,12 @@ DOC_START
 	  # cache_peer_access mycache_mydomain.net deny all
 
 	acl aclname peername myPeer ...
+	  # [fast]
 	  # match against a named cache_peer entry
 	  # set unique name= on cache_peer lines for reliable use.
 
 	acl aclname time [day-abbrevs] [h1:m1-h2:m2]
+	  # [fast]
 	  #  day-abbrevs:
 	  #	S - Sunday
 	  #	M - Monday
@@ -543,36 +557,45 @@ DOC_START
 	  #	A - Saturday
 	  #  h1:m1 must be less than h2:m2
 
-	acl aclname url_regex [-i] ^http:// ...		# regex matching on whole URL
-	acl aclname urlpath_regex [-i] \.gif$ ...	# regex matching on URL path
+	acl aclname url_regex [-i] ^http:// ...
+	  # regex matching on whole URL [fast]
+	acl aclname urlpath_regex [-i] \.gif$ ...
+	  # regex matching on URL path [fast]
 
-	acl aclname port 80 70 21 ...
-	acl aclname port 0-1024 ...		# ranges allowed
-	acl aclname myport 3128 ...		# (local socket TCP port)
-	acl aclname myportname 3128 ...		# http(s)_port name
+	acl aclname port 80 70 21 0-1024...   # destination TCP port [fast]
+	                                      # ranges are alloed
+	acl aclname myport 3128 ...	          # local socket TCP port [fast]
+	acl aclname myportname 3128 ...       # http(s)_port name [fast]
 
-	acl aclname proto HTTP FTP ...
+	acl aclname proto HTTP FTP ...        # request protocol [fast]
+ 
+	acl aclname method GET POST ...       # HTTP request method [fast]
 
-	acl aclname method GET POST ...
-
-	acl aclname http_status 200 301 500- 400-403 ...     # status code in reply
+	acl aclname http_status 200 301 500- 400-403 ... 
+	  # status code in reply [fast]
 
 	acl aclname browser [-i] regexp ...
-	  # pattern match on User-Agent header (see also req_header below)
+	  # pattern match on User-Agent header (see also req_header below) [fast]
 
 	acl aclname referer_regex [-i] regexp ...
-	  # pattern match on Referer header
+	  # pattern match on Referer header [fast]
 	  # Referer is highly unreliable, so use with care
 
 	acl aclname ident username ...
 	acl aclname ident_regex [-i] pattern ...
-	  # string match on ident output.
+	  # string match on ident output [slow]
 	  # use REQUIRED to accept any non-null ident.
 
 	acl aclname proxy_auth [-i] username ...
 	acl aclname proxy_auth_regex [-i] pattern ...
-	  # list of valid usernames
+	  # perform http authentication challenge to the client and match against
+	  # supplied credentials [slow]
+	  #
+	  # takes a list of allowed usernames.
 	  # use REQUIRED to accept any valid username.
+	  #
+	  # Will use proxy authentication in forward-proxy scenarios, and plain
+	  # http authenticaiton in reverse-proxy scenarios
 	  #
 	  # NOTE: when a Proxy-Authentication header is sent but it is not
 	  # needed during ACL checking the username is NOT logged
@@ -587,19 +610,19 @@ DOC_START
 	  # to respond to proxy authentication.
 
 	acl aclname snmp_community string ...
-	  # A community string to limit access to your SNMP Agent
+	  # A community string to limit access to your SNMP Agent [fast]
 	  # Example:
 	  #
 	  #	acl snmppublic snmp_community public
 
 	acl aclname maxconn number
 	  # This will be matched when the client's IP address has
-	  # more than <number> HTTP connections established.
+	  # more than <number> HTTP connections established. [fast]
 
 	acl aclname max_user_ip [-s] number
 	  # This will be matched when the user attempts to log in from more
 	  # than <number> different ip addresses. The authenticate_ip_ttl
-	  # parameter controls the timeout on the ip entries.
+	  # parameter controls the timeout on the ip entries. [fast]
 	  # If -s is specified the limit is strict, denying browsing
 	  # from any further IP addresses until the ttl has expired. Without
 	  # -s Squid will just annoy the user by "randomly" denying requests.
@@ -612,19 +635,19 @@ DOC_START
 	acl aclname req_mime_type [-i] mime-type ...
 	  # regex match against the mime type of the request generated
 	  # by the client. Can be used to detect file upload or some
-	  # types HTTP tunneling requests.
+	  # types HTTP tunneling requests [fast]
 	  # NOTE: This does NOT match the reply. You cannot use this
 	  # to match the returned file type.
 
 	acl aclname req_header header-name [-i] any\.regex\.here
 	  # regex match against any of the known request headers.  May be
 	  # thought of as a superset of "browser", "referer" and "mime-type"
-	  # ACLs.
+	  # ACL [fast]
 
 	acl aclname rep_mime_type [-i] mime-type ...
 	  # regex match against the mime type of the reply received by
 	  # squid. Can be used to detect file download or some
-	  # types HTTP tunneling requests.
+	  # types HTTP tunneling requests. [fast]
 	  # NOTE: This has no effect in http_access rules. It only has
 	  # effect in rules that affect the reply data stream such as
 	  # http_reply_access.
@@ -632,27 +655,27 @@ DOC_START
 	acl aclname rep_header header-name [-i] any\.regex\.here
 	  # regex match against any of the known reply headers. May be
 	  # thought of as a superset of "browser", "referer" and "mime-type"
-	  # ACLs.
+	  # ACLs [fast]
 
 	acl aclname external class_name [arguments...]
 	  # external ACL lookup via a helper class defined by the
-	  # external_acl_type directive.
+	  # external_acl_type directive [slow]
 
 	acl aclname user_cert attribute values...
 	  # match against attributes in a user SSL certificate
-	  # attribute is one of DN/C/O/CN/L/ST
+	  # attribute is one of DN/C/O/CN/L/ST [fast]
 
 	acl aclname ca_cert attribute values...
 	  # match against attributes a users issuing CA SSL certificate
-	  # attribute is one of DN/C/O/CN/L/ST
+	  # attribute is one of DN/C/O/CN/L/ST [fast]
 
 	acl aclname ext_user username ...
 	acl aclname ext_user_regex [-i] pattern ...
-	  # string match on username returned by external acl helper
+	  # string match on username returned by external acl helper [slow]
 	  # use REQUIRED to accept any non-null user name.
-	  #
+
 	acl aclname tag tagvalue ...
-	  # string match on tag returned by external acl helper
+	  # string match on tag returned by external acl helper [slow]
 
 Examples:
 acl macaddress arp 09:00:2b:23:45:67
@@ -721,6 +744,9 @@ DOC_START
 	pools and logging, depending on the acl_uses_indirect_client,
 	delay_pool_uses_indirect_client and log_uses_indirect_client
 	options.
+
+	This clause only supports fast acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
 	SECURITY CONSIDERATIONS:
 
@@ -798,6 +824,9 @@ DOC_START
 	good idea to have an "deny all" or "allow all" entry at the end
 	of your access lists to avoid potential confusion.
 
+	This clause supports both fast and slow acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+
 NOCOMMENT_START
 #Recommended minimum configuration:
 #
@@ -842,6 +871,9 @@ DOC_START
 	If none of the access lines cause a match the opposite of the
 	last line will apply. Thus it is good practice to end the rules
 	with an "allow all" or "deny all" entry.
+
+	This clause supports both fast and slow acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
 NAME: icp_access
@@ -857,6 +889,8 @@ DOC_START
 
 	See http_access for details
 
+	This clause only supports fast acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 NOCOMMENT_START
 #Allow ICP queries from local networks only
 #icp_access allow localnet
@@ -882,6 +916,8 @@ DOC_START
 	deny all traffic. This default may cause problems with peers
 	using the htcp or htcp-oldsquid options.
 
+	This clause only supports fast acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 NOCOMMENT_START
 #Allow HTCP queries from local networks only
 #htcp_access allow localnet
@@ -903,6 +939,8 @@ DOC_START
 
 	See http_access for details
 
+	This clause only supports fast acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 #Allow HTCP CLR requests from trusted peers
 acl htcp_clr_peer src 172.16.1.2
 htcp_clr_access allow htcp_clr_peer
@@ -925,6 +963,9 @@ DOC_START
 
 	By default, allow all clients who passed the http_access rules
 	to fetch MISSES from us.
+
+	This clause only supports fast acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
 NAME: ident_lookup_access
@@ -951,6 +992,9 @@ DOC_START
 	Only src type ACL checks are fully supported.  A srcdomain
 	ACL might work at times, but it will not always provide
 	the correct result.
+
+	This clause only supports fast acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
 NAME: reply_body_max_size
@@ -1061,9 +1105,9 @@ DOC_START
 	   protocol=	Protocol to reconstruct accelerated requests with.
 			Defaults to http.
 
-           connection-auth[=on|off]
-                        use connection-auth=off to tell Squid to prevent 
-                        forwarding Microsoft connection oriented authentication
+	   connection-auth[=on|off]
+	                use connection-auth=off to tell Squid to prevent 
+	                forwarding Microsoft connection oriented authentication
 			(NTLM, Negotiate and Kerberos)
 
 	   disable-pmtu-discovery=
@@ -1082,7 +1126,7 @@ DOC_START
 			sporadically hang or never complete requests set
 			disable-pmtu-discovery option to 'transparent'.
 
-           sslBump 	Intercept each CONNECT request matching ssl_bump ACL,
+	   sslBump 	Intercept each CONNECT request matching ssl_bump ACL,
 			establish secure connection with the client and with
 			the server, decrypt HTTP messages as they pass through
 			Squid, and treat them as unencrypted HTTP messages,
@@ -1350,7 +1394,8 @@ DOC_START
 
         IPv6 Magic:
 
-	Squid is built with a capability of bridging the IPv4 and IPv6 internets.
+	Squid is built with a capability of bridging the IPv4 and IPv6 
+	internets.
 	tcp_outgoing_address as exampled above breaks this bridging by forcing
 	all outbound traffic through a certain IPv4 which may be on the wrong
 	side of the IPv4/IPv6 boundary.
@@ -1373,6 +1418,12 @@ DOC_START
 	  'dst ipv6' bases its selection assuming DIRECT access.
 	  If peers are used the peername ACL are needed to select outgoing
 	  address which can link to the peer.
+
+	  'dst ipv6' is a slow ACL. It will only work here if 'dst' is used
+	  previously in the http_access rules to locate the destination IP.
+	  Some more magic may be needed for that:
+	    http_access allow to_ipv6 !all
+	  (meaning, allow if to IPv6 but not from anywhere ;)
 
 DOC_END
 
@@ -1481,6 +1532,8 @@ DOC_START
 
 	See also: http_port sslBump
    
+	This clause only supports fast acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 NOCOMMENT_START
 # Example: Bump all requests except those originating from localhost and 
 # those going to webax.com or example.com sites.
@@ -1524,9 +1577,9 @@ DOC_START
 		sslproxy_cert_error allow BrokenServersAtTrustedIP
 		sslproxy_cert_error deny all
 
-	This option must use fast ACL expressions only. Expressions that use
-	external lookups or communication result in unpredictable behavior or
-	crashes.
+	This clause only supports fast acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+	Using slow acl types may result in server crashes
 
 	Without this option, all server certificate validation errors
 	terminate the transaction. Bypassing validation errors is dangerous
@@ -1628,7 +1681,7 @@ DOC_START
 		     sslcipher=...
 		     ssloptions=...
 		     front-end-https[=on|auto]
-                     connection-auth[=on|off|auto]
+		     connection-auth[=on|off|auto]
 
 		     use 'proxy-only' to specify objects fetched
 		     from this cache should not be saved locally.
@@ -1681,11 +1734,11 @@ DOC_START
 		     distributed among the parents based on the CARP load
 		     balancing hash function based on their weight.
 
-                     use 'userhash' to load-balance amongst a set of parents
-                     based on the client proxy_auth or ident username.
+		     use 'userhash' to load-balance amongst a set of parents
+		     based on the client proxy_auth or ident username.
 
-                     use 'sourcehash' to load-balance amongst a set of parents
-                     based on the client source ip.
+		     use 'sourcehash' to load-balance amongst a set of parents
+		     based on the client source ip.
 
 		     'multicast-responder' indicates the named peer
 		     is a member of a multicast group.  ICP queries will
@@ -1855,12 +1908,12 @@ DOC_START
 		     on this header. If set to auto the header will
 		     only be added if the request is forwarded as a https://
 		     URL.
-                     
-                     use connection-auth=off to tell Squid that this peer does
-                     not support Microsoft connection oriented authentication,
-                     and any such challenges received from there should be
-                     ignored. Default is auto to automatically determine the
-                     status of the peer.
+
+		     use connection-auth=off to tell Squid that this peer does
+		     not support Microsoft connection oriented authentication,
+		     and any such challenges received from there should be
+		     ignored. Default is auto to automatically determine the
+		     status of the peer.
 DOC_END
 
 NAME: cache_peer_domain cache_host_domain
@@ -2400,6 +2453,9 @@ DOC_START
 	This options allows you to control which requests gets logged
 	to access.log (see access_log directive). Requests denied for
 	logging will also not be accounted for in performance counters.
+
+	This clause only supports fast acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
 NAME: cache_store_log
@@ -2726,7 +2782,8 @@ DOC_START
 	translator, as the EPRT command will never be used and therefore,
 	translation of the data portion of the segments will never be needed.
 
-	When a client only expects to do two-way FTP transfers this may be useful.
+	When a client only expects to do two-way FTP transfers this may be
+	useful.
 	If squid finds that it must do a three-way FTP transfer after issuing
 	an EPSV ALL command, the FTP session will fail.
 
@@ -2744,8 +2801,9 @@ DOC_START
 	FTP Protocol extensions permit the use of a special "EPSV" command.
 
 	NATs may be able to put the connection on a "fast path" through the
-	translator using EPSV, as the EPRT command will never be used and therefore,
-	translation of the data portion of the segments will never be needed.
+	translator using EPSV, as the EPRT command will never be used
+	and therefore, translation of the data portion of the segments 
+	will never be needed.
 
 	Turning this OFF will prevent EPSV being attempted.
 	WARNING: Doing so will convert Squid back to the old behavior with all
@@ -2823,7 +2881,8 @@ LOC: Config.pinger.enable
 IFDEF: USE_ICMP
 DOC_START
 	Control whether the pinger is active at run-time.
-	Enables turning ICMP pinger on and off with a simple squid -k reconfigure.
+	Enables turning ICMP pinger on and off with a simple
+	squid -k reconfigure.
 DOC_END
 
 
@@ -2907,6 +2966,9 @@ DOC_START
 	If defined, this access list specifies which requests are
 	sent to the redirector processes.  By default all requests
 	are sent.
+
+	This clause supports both fast and slow acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
 NAME: url_rewrite_bypass redirector_bypass
@@ -2943,6 +3005,9 @@ DOC_START
 	matching the ACL should be allowed or denied into the cache.
 
 	Default is to allow all to be cached.
+
+	This clause supports both fast and slow acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
 NAME: refresh_pattern
@@ -3288,6 +3353,9 @@ DOC_START
 	  extra CRLF's after a POST request. To restate what is explicitly
 	  forbidden by the BNF, an HTTP/1.1 client must not preface or follow
 	  a request with an extra CRLF.
+
+	This clause only supports fast acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
 Example:
  acl buggy_server url_regex ^http://....
@@ -4472,6 +4540,8 @@ DOC_START
 
 	snmp_access allow|deny [!]aclname ...
 
+	This clause only supports fast acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 Example:
  snmp_access allow snmppublic localhost
  snmp_access deny all
@@ -5085,10 +5155,10 @@ DOC_START
 
 	NOTE: This directive is not related to caching. The replies
 	is cached as usual even if you use always_direct. To not cache
-	the replies see no_cache.
+	the replies see the 'cache' directive.
 
-	This option replaces some v1.1 options such as local_domain
-	and local_ip.
+	This clause supports both fast and slow acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
 NAME: never_direct
@@ -5119,8 +5189,8 @@ DOC_START
 		always_direct allow local-intranet
 		never_direct allow all
 
-	This option replaces some v1.1 options such as inside_firewall
-	and firewall_ip.
+	This clause supports both fast and slow acl types.
+	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 DOC_END
 
 COMMENT_START
