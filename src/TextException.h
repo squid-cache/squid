@@ -13,10 +13,14 @@ class TextException: public std::exception
 {
 
 public:
+    TextException();
     TextException(const char *aMessage, const char *aFileName = 0, int aLineNo = -1);
+    TextException(const TextException& right);
     virtual ~TextException() throw();
 
     virtual const char *what() const throw();
+
+	TextException& operator=(const TextException &right);
 
 public:
     char *message; // read-only

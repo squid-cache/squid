@@ -8,6 +8,7 @@
 
 #include "comm.h"
 #include "ConnectionDetail.h"
+#include "DnsLookupDetails.h"
 #include "base/AsyncCall.h"
 #include "base/AsyncJobCalls.h"
 
@@ -79,6 +80,11 @@ public:
     CommConnectCbParams(void *aData);
 
     bool syncWithComm(); // see CommCommonCbParams::syncWithComm
+
+    void print(std::ostream &os) const;
+
+public:
+    DnsLookupDetails dns;
 };
 
 // read/write (I/O) parameters

@@ -22,4 +22,8 @@ libicap_la_SOURCES = \
 	Xaction.cc \
 	Xaction.h \
 	ModXact.cc \
-	ModXact.h
+	ModXact.h \
+	icap_log.cc \
+	icap_log.h \
+	History.cc \
+	History.h

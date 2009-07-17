@@ -35,6 +35,9 @@
 #include "HierarchyLogEntry.h"
 #include "ip/IpAddress.h"
 #include "HttpRequestMethod.h"
+#if ICAP_CLIENT
+#include "adaptation/icap/Elements.h"
+#endif
 
 /* forward decls */
 class HttpReply;
@@ -84,6 +87,8 @@ public:
         CacheDetails() : caddr(),
                 requestSize(0),
                 replySize(0),
+                requestHeadersSize(0),
+                replyHeadersSize(0),
                 highOffset(0),
                 objectSize(0),
                 code (LOG_TAG_NONE),
@@ -100,6 +105,8 @@ public:
         IpAddress caddr;
         int64_t requestSize;
         int64_t replySize;
+        int requestHeadersSize; ///< received, including request line
+        int replyHeadersSize; ///< sent, including status line
         int64_t highOffset;
         int64_t objectSize;
         log_type code;
@@ -118,9 +125,17 @@ public:
     {
 
     public:
-        Headers() : request(NULL), reply(NULL) {}
+        Headers() : request(NULL),
+#if ICAP_CLIENT
+                    icap(NULL),
+#endif
+                    reply(NULL) {}
 
         char *request;
+
+#if ICAP_CLIENT
+        char * icap;    ///< last matching ICAP response header.
+#endif
         char *reply;
     } headers;
 
@@ -137,6 +152,41 @@ public:
     HierarchyLogEntry hier;
     HttpReply *reply;
     HttpRequest *request;
+
+#if ICAP_CLIENT
+    /** \brief This subclass holds log info for ICAP part of request
+     *  \todo Inner class declarations should be moved outside
+     */
+    class IcapLogEntry {
+    public:
+    IcapLogEntry():request(NULL),reply(NULL),outcome(Adaptation::Icap::xoUnknown),trTime(0),ioTime(0),resStatus(HTTP_STATUS_NONE){}
+
+        IpAddress hostAddr; ///< ICAP server IP address
+        String serviceName;        ///< ICAP service name
+        String reqUri;             ///< ICAP Request-URI
+        Adaptation::Icap::ICAP::Method reqMethod; ///< ICAP request method
+        int64_t bytesSent;       ///< number of bytes sent to ICAP server so far
+        int64_t bytesRead;       ///< number of bytes read from ICAP server so far
+        HttpRequest* request;    ///< ICAP request
+        HttpReply* reply;        ///< ICAP reply
+
+        Adaptation::Icap::XactOutcome outcome; ///< final transaction status
+        /** \brief Transaction response time.
+         * The timer starts when the ICAP transaction
+         *  is created and stops when the result of the transaction is logged
+         */
+        int trTime;
+        /** \brief Transaction I/O time.
+         * The timer starts when the first ICAP request
+         * byte is scheduled for sending and stops when the lastbyte of the 
+         * ICAP response is received.
+         */
+        int ioTime;
+        http_status resStatus;   ///< ICAP response status code
+        int processingTime;      ///< total ICAP processing time in milliseconds
+    }
+    icap;
+#endif
 };
 
 class ACLChecklist;
@@ -144,6 +194,7 @@ class StoreEntry;
 class logformat_token;
 
 /* Should be in 'AccessLog.h' as the driver */
+extern void accessLogLogTo(customlog* log, AccessLogEntry* al, ACLChecklist* checklist = NULL);
 extern void accessLogLog(AccessLogEntry *, ACLChecklist * checklist);
 extern void accessLogRotate(void);
 extern void accessLogClose(void);

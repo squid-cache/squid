@@ -200,8 +200,7 @@ struct wccp2_service_info_t {
 struct wccp2_cache_identity_info_t {
     struct in_addr addr;
     uint16_t hash_revision;
-    char bits[2];
-//    uint16_t bits;
+    uint16_t bits;
 //#define WCCP2_HASH_ASSIGNMENT_DATA  0x0
 
     /* 5.7.2 Hash Assignment Data Element */
@@ -241,7 +240,7 @@ struct wccp2_cache_mask_identity_info_t {
     struct in_addr addr;
     uint16_t hash_revision;
     uint16_t bits;
-#define WCCP2_MASK_ASSIGNMENT_DATA  (0x1 <<14)
+#define WCCP2_MASK_ASSIGNMENT_DATA  (0x2)
 
     /* Sect 5.7.2 Mask Assignment Data Element
      *
@@ -796,7 +795,7 @@ wccp2Init(void)
             wccp2_mask_identity_info.cache_identity_type = htons(WCCP2_WC_ID_INFO);
             wccp2_mask_identity_info.cache_identity_length = htons(sizeof(wccp2_mask_identity_info.cache_identity));
             memset(&wccp2_mask_identity_info.cache_identity.addr, '\0', sizeof(struct in_addr));
-            wccp2_mask_identity_info.cache_identity.bits = WCCP2_MASK_ASSIGNMENT_DATA; // num1 = htonl(2);
+            wccp2_mask_identity_info.cache_identity.bits = htons(WCCP2_MASK_ASSIGNMENT_DATA);
             wccp2_mask_identity_info.cache_identity.mask_element_count = htonl(1);
             service_flags = ntohl(service_list_ptr->service_info->service_flags);
 

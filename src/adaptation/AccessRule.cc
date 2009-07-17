@@ -32,7 +32,7 @@ Adaptation::AccessRule::finalize()
         debugs(93,7, HERE << "no service group: " << groupId);
         // try to add a one-service group
         if (FindService(groupId) != NULL) {
-            ServiceGroup *g = new SingleService(groupId);
+            ServiceGroupPointer g = new SingleService(groupId);
             g->finalize(); // explicit groups were finalized before rules
             AllGroups().push_back(g);
         }
@@ -44,7 +44,7 @@ Adaptation::AccessRule::finalize()
     }
 }
 
-Adaptation::ServiceGroup *
+Adaptation::ServiceGroupPointer
 Adaptation::AccessRule::group()
 {
     return FindGroup(groupId);

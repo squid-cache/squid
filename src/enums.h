@@ -533,6 +533,9 @@ typedef enum {
     CLF_CUSTOM,
     CLF_SQUID,
     CLF_COMMON,
+#if ICAP_CLIENT
+    CLF_ICAP_SQUID,
+#endif
     CLF_NONE
 } customlog_type;
 

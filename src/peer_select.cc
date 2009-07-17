@@ -315,7 +315,7 @@ peerSelectFoo(ps_state * ps)
         } else if (ps->never_direct > 0) {
             /** if always_direct says NO, do that. */
             ps->direct = DIRECT_NO;
-        } else if (request->flags.accelerated) {
+        } else if (request->flags.no_direct) {
             /** if we are accelerating, direct is not an option. */
             ps->direct = DIRECT_NO;
         } else if (request->flags.loopdetect) {

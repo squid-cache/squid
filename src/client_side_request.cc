@@ -59,12 +59,19 @@
 #include "SquidTime.h"
 #include "wordlist.h"
 #include "inet_pton.h"
+#include "fde.h"
 
 #if USE_ADAPTATION
 #include "adaptation/AccessCheck.h"
+#include "adaptation/Iterator.h"
 #include "adaptation/Service.h"
-static void adaptationAclCheckDoneWrapper(Adaptation::ServicePointer service, void *data);
+#if ICAP_CLIENT
+#include "adaptation/icap/History.h"
 #endif
+//static void adaptationAclCheckDoneWrapper(Adaptation::ServicePointer service, void *data);
+#endif
+
+
 
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
@@ -613,34 +620,45 @@ ClientRequestContext::clientAccessCheckDone(int answer)
 
 #if USE_ADAPTATION
 static void
-adaptationAclCheckDoneWrapper(Adaptation::ServicePointer service, void *data)
+adaptationAclCheckDoneWrapper(Adaptation::ServiceGroupPointer g, void *data)
 {
     ClientRequestContext *calloutContext = (ClientRequestContext *)data;
 
     if (!calloutContext->httpStateIsValid())
         return;
 
-    calloutContext->adaptationAclCheckDone(service);
+    calloutContext->adaptationAclCheckDone(g);
 }
 
 void
-ClientRequestContext::adaptationAclCheckDone(Adaptation::ServicePointer service)
+ClientRequestContext::adaptationAclCheckDone(Adaptation::ServiceGroupPointer g)
 {
     debugs(93,3,HERE << this << " adaptationAclCheckDone called");
     assert(http);
 
-    if (http->startAdaptation(service))
-        return;
+#if ICAP_CLIENT                                                                
+    Adaptation::Icap::History::Pointer ih = http->request->icapHistory();
+    if(ih != NULL)
+    {                                                                          
+        if (http->getConn() != NULL)
+        {
+            ih->rfc931 = http->getConn()->rfc931;
+#if USE_SSL                              
+            ih->ssluser = sslGetUserEmail(fd_table[http->getConn()->fd].ssl);
+#endif  
+        }
+        ih->log_uri = http->log_uri;
+        ih->req_sz = http->req_sz;
+    }
+#endif
 
-    if (!service || service->cfg().bypass) {
-        // handle ICAP start failure when no service was selected
-        // or where the selected service was optional
+    if (!g) {
+        debugs(85,3, HERE << "no adaptation needed");
         http->doCallouts();
         return;
     }
 
-    // handle start failure for an essential ICAP service
-    http->handleAdaptationFailure();
+    http->startAdaptation(g);
 }
 
 #endif
@@ -1301,6 +1319,12 @@ ClientHttpRequest::doCallouts()
 
     debugs(83, 3, HERE << "calling processRequest()");
     processRequest();
+
+#if ICAP_CLIENT
+    Adaptation::Icap::History::Pointer ih = request->icapHistory();
+    if (ih != NULL)
+        ih->logType = logType;
+#endif
 }
 
 #ifndef _USE_INLINE_
@@ -1308,29 +1332,19 @@ ClientHttpRequest::doCallouts()
 #endif
 
 #if USE_ADAPTATION
-/*
- * Initiate an ICAP transaction.  Return false on errors.
- * The caller must handle errors.
- */
-bool
-ClientHttpRequest::startAdaptation(Adaptation::ServicePointer service)
+/// Initiate an asynchronous adaptation transaction which will call us back.
+void
+ClientHttpRequest::startAdaptation(const Adaptation::ServiceGroupPointer &g)
 {
-    debugs(85, 3, HERE << this << " ClientHttpRequest::startAdaptation() called");
-    if (!service) {
-        debugs(85, 3, "ClientHttpRequest::startAdaptation fails: lack of service");
-        return false;
-    }
-    if (service->broken()) {
-        debugs(85, 3, "ClientHttpRequest::startAdaptation fails: broken service");
-        return false;
-    }
-
+    debugs(85, 3, HERE << "adaptation needed for " << this);
     assert(!virginHeadSource);
     assert(!adaptedBodySource);
-    virginHeadSource = initiateAdaptation(service->makeXactLauncher(
-                                              this, request, NULL));
+    virginHeadSource = initiateAdaptation(
+        new Adaptation::Iterator(this, request, NULL, g));
 
-    return virginHeadSource != NULL;
+    // we could try to guess whether we can bypass this adaptation 
+    // initiation failure, but it should not really happen
+    assert(virginHeadSource != NULL); // Must, really
 }
 
 void

@@ -63,7 +63,10 @@ protected:
 
     void startReading();
 
+    virtual void swanSong();
+
 private:
+    virtual void finalizeLogInfo();
     CBDATA_CLASS2(OptXact);
 };
 

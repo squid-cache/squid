@@ -37,7 +37,7 @@ public:
     bool reforwardableStatus(http_status s);
     void serverClosed(int fd);
     void connectStart();
-    void connectDone(int server_fd, comm_err_t status, int xerrno);
+    void connectDone(int server_fd, const DnsLookupDetails &dns, comm_err_t status, int xerrno);
     void connectTimeout(int fd);
     void initiateSSL();
     void negotiateSSL(int fd);

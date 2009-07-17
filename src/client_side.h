@@ -48,6 +48,9 @@ class clientStreamNode;
 
 class AuthUserRequest;
 
+class ChunkedCodingParser;
+class HttpParser;
+
 template <class T>
 class Range;
 
@@ -144,13 +147,22 @@ public:
 
     int fd;
 
+    /// chunk buffering and parsing algorithm state
+    typedef enum { chunkUnknown, chunkNone, chunkParsing, chunkReady, chunkError } DechunkingState;
+
     struct In {
         In();
         ~In();
         char *addressToReadInto() const;
+
+	ChunkedCodingParser *bodyParser; ///< parses chunked request body
+	MemBuf chunked; ///< contains unparsed raw (chunked) body data
+	MemBuf dechunked; ///< accumulates parsed (dechunked) content
         char *buf;
         size_t notYetUsed;
         size_t allocatedSize;
+	size_t chunkedSeen; ///< size of processed or ignored raw read data
+	DechunkingState dechunkingState; ///< request dechunking state
     } in;
 
     int64_t bodySizeLeft();
@@ -252,6 +264,10 @@ public:
 #else
     bool switchedToHttps() const { return false; }
 #endif
+
+    void startDechunkingRequest(HttpParser *hp);
+    bool parseRequestChunks(HttpParser *hp);
+    void finishDechunkingRequest(HttpParser *hp);
 
 private:
     int connReadWasError(comm_err_t flag, int size, int xerrno);

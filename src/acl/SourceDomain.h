@@ -67,7 +67,7 @@ public:
 
 private:
     static SourceDomainLookup instance_;
-    static void LookupDone(const char *, void *);
+    static void LookupDone(const char *, const DnsLookupDetails &, void *);
 };
 
 class ACLSourceDomain
