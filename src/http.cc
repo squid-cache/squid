@@ -1249,6 +1249,7 @@ HttpStateData::processReplyBody()
     }
 
 #if USE_ADAPTATION
+    debugs(11,5, HERE << "adaptationAccessCheckPending=" << adaptationAccessCheckPending);
     if (adaptationAccessCheckPending)
         return;
 
