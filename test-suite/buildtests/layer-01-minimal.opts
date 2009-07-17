@@ -6,7 +6,7 @@
 #
 # Check - everything MUST work at this level
 # distcheck is not possible here since it drops our configure options...
-MAKETEST="check"
+MAKETEST="distcheck"
 #
 #
 # The options for this level can be easily generated semi-automatically from configure.in by:
@@ -97,3 +97,6 @@ OPTS=" \
 	--without-dns-cname \
 	--without-po2html \
 	"
+
+# Fix the distclean testing.
+export DISTCHECK_CONFIGURE_FLAGS="${OPTS}"
