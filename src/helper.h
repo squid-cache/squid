@@ -58,9 +58,9 @@ struct _helper {
     dlink_list servers;
     dlink_list queue;
     const char *id_name;
-    int n_to_start;
-    int n_running;
-    int n_active;
+    int n_to_start;           ///< Configuration setting of how many helper children should be running
+    int n_running;            ///< Total helper children objects currently existing
+    int n_active;             ///< Count of helper children active (not shutting down)
     int ipc_type;
     IpAddress addr;
     unsigned int concurrency;
@@ -80,9 +80,9 @@ struct _helper_stateful {
     dlink_list servers;
     dlink_list queue;
     const char *id_name;
-    int n_to_start;
-    int n_running;
-    int n_active;
+    int n_to_start;           ///< Configuration setting of how many helper children should be running
+    int n_running;            ///< Total helper children objects currently existing
+    int n_active;             ///< Count of helper children active (not shutting down)
     int ipc_type;
     IpAddress addr;
     MemAllocator *datapool;
