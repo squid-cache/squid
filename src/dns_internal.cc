@@ -1366,22 +1366,29 @@ idnsInit(void)
         else
             addr = Config.Addrs.udp_incoming;
 
-        debugs(78, 2, "idnsInit: attempt open DNS socket to: " << addr);
 #if IPV6_SPECIAL_SPLITSTACK
-        if ( addr.IsAnyAddr() || addr.IsIPv6() )
+        IpAddress addr4 = addr;
+
+        if ( addr.IsAnyAddr() || addr.IsIPv6() ) {
+            debugs(78, 2, "idnsInit: attempt open DNS socket to: " << addr);
             DnsSocketB = comm_open_listener(SOCK_DGRAM,
                                             IPPROTO_UDP,
                                             addr,
                                             COMM_NONBLOCKING,
                                             "DNS Socket v6");
+        }
 
-        if ( addr.IsAnyAddr() || addr.IsIPv4() )
+        if ( addr.IsAnyAddr() || addr.IsIPv4() ) {
+            addr4.SetIPv4();
+            debugs(78, 2, "idnsInit: attempt open DNS socket to: " << addr4);
             DnsSocketA = comm_open_listener(SOCK_DGRAM,
                                             IPPROTO_UDP,
-                                            addr,
+                                            addr4,
                                             COMM_NONBLOCKING,
                                             "DNS Socket v4");
+        }
 #else
+        debugs(78, 2, "idnsInit: attempt open DNS socket to: " << addr);
         DnsSocketA = comm_open_listener(SOCK_DGRAM,
                                         IPPROTO_UDP,
                                         addr,
@@ -1403,7 +1410,7 @@ idnsInit(void)
 #endif
         if (DnsSocketA >= 0) {
             port = comm_local_port(DnsSocketA);
-            debugs(78, 1, "DNS Socket created at " << addr << ", FD " << DnsSocketA);
+            debugs(78, 1, "DNS Socket created at " << addr4 << ", FD " << DnsSocketA);
         }
     }
 
