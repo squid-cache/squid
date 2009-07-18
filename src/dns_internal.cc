@@ -1410,7 +1410,11 @@ idnsInit(void)
 #endif
         if (DnsSocketA >= 0) {
             port = comm_local_port(DnsSocketA);
+#if IPV6_SPECIAL_SPLITSTACK
             debugs(78, 1, "DNS Socket created at " << addr4 << ", FD " << DnsSocketA);
+#else
+            debugs(78, 1, "DNS Socket created at " << addr << ", FD " << DnsSocketA);
+#endif
         }
     }
 
