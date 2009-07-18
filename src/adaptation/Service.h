@@ -39,6 +39,8 @@ public:
     typedef void Callback(void *data, Pointer &service);
     void callWhenReady(Callback *cb, void *data);
 
+    bool wants(const ServiceFilter &filter) const;
+
     // the methods below can only be called on an up() service
     virtual bool wantsUrl(const String &urlPath) const = 0;
 

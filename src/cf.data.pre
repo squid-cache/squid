@@ -5636,27 +5636,63 @@ IFDEF: ICAP_CLIENT
 LOC: Adaptation::Icap::TheConfig
 DEFAULT: none
 DOC_START
-	Defines a single ICAP service
+	Defines a single ICAP service using the following format:
 
-	icap_service servicename vectoring_point bypass service_url
+	icap_service service_name vectoring_point [options] service_url
 
-	vectoring_point = reqmod_precache|reqmod_postcache|respmod_precache|respmod_postcache
+	service_name: ID
+		an opaque identifier which must be unique in squid.conf
+
+	vectoring_point: reqmod_precache|reqmod_postcache|respmod_precache|respmod_postcache
 		This specifies at which point of transaction processing the
 		ICAP service should be activated. *_postcache vectoring points
 		are not yet supported.
-	bypass = 1|0
-		If set to 1, the ICAP service is treated as optional. If the
-		service cannot be reached or malfunctions, Squid will try to
-		ignore any errors and process the message as if the service
-		was not enabled. No all ICAP errors can be bypassed.
-		If set to 0, the ICAP service is treated as essential and all
-		ICAP errors will result in an error page returned to the
-		HTTP client.
-	service_url = icap://servername:port/service
+
+	service_url: icap://servername:port/servicepath
+		ICAP server and service location.
+
+	ICAP does not allow a single service to handle both REQMOD and RESPMOD
+	transactions. Squid does not enforce that requirement. You can specify
+	services with the same service_url and different vectoring_points. You
+	can even specify multiple identical services as long as their
+	service_names differ.
+
+
+	Service options are separated by white space. ICAP services support
+	the following name=value options:
+
+	bypass=on|off|1|0
+		If set to 'on' or '1', the ICAP service is treated as
+		optional. If the service cannot be reached or malfunctions,
+		Squid will try to ignore any errors and process the message as
+		if the service was not enabled. No all ICAP errors can be
+		bypassed.  If set to 0, the ICAP service is treated as
+		essential and all ICAP errors will result in an error page
+		returned to the HTTP client.
+
+		Bypass is off by default: services are treated as essential.
+
+	routing=on|off|1|0
+		If set to 'on' or '1', the ICAP service is allowed to
+		dynamically change the current message adaptation plan by
+		returning a chain of services to be used next. The services
+		are specified using the X-Next-Services ICAP response header
+		value, formatted as a comma-separated list of service names.
+		Each named service should be configured in squid.conf and
+		should have the same method and vectoring point as the current
+		ICAP transaction.  Services violating these rules are ignored.
+		An empty X-Next-Services value results in an empty plan which
+		ends the current adaptation. 
+
+		Routing is not allowed by default: the ICAP X-Next-Services
+		response header is ignored.
+
+	Older icap_service format without optional named parameters is
+	deprecated but supported for backward compatibility.
 
 Example:
-icap_service service_1 reqmod_precache 0 icap://icap1.mydomain.net:1344/reqmod
-icap_service service_2 respmod_precache 0 icap://icap2.mydomain.net:1344/respmod
+icap_service svcBlocker reqmod_precache bypass=0 icap://icap1.mydomain.net:1344/reqmod
+icap_service svcLogger reqmod_precache routing=on icap://icap2.mydomain.net:1344/respmod
 DOC_END
 
 NAME: icap_class
@@ -5665,15 +5701,13 @@ IFDEF: ICAP_CLIENT
 LOC: none
 DEFAULT: none
 DOC_START
-	This depricated option was documented to define an ICAP service
+	This deprecated option was documented to define an ICAP service
 	chain, even though it actually defined a set of similar, redundant
 	services, and the chains were not supported. 
 
 	To define a set of redundant services, please use the
-	adaptation_service_set directive.
-
-	If you need adaptation service chains, patches or sponsorship
-	is welcome.
+	adaptation_service_set directive. For service chains, use
+	adaptation_service_chain.
 DOC_END
 
 NAME: icap_access
@@ -5682,7 +5716,7 @@ IFDEF: ICAP_CLIENT
 LOC: none
 DEFAULT: none
 DOC_START
-        This option is depricated. Please use adaptation_access, which
+	This option is deprecated. Please use adaptation_access, which
 	has the same ICAP functionality, but comes with better
 	documentation, and eCAP support.
 DOC_END
@@ -5755,22 +5789,79 @@ LOC: none
 DEFAULT: none
 DOC_START
 
-	Defines a named adaptation service set. The set is populated in
-	the order of adaptation_service_set directives in this file.
-	When adaptation ACLs are processed, the first and only the first
-	applicable adaptation service from the set will be used. Thus,
-	the set should group similar, redundant services, rather than a
-	chain of complementary services.
+	Configures an ordered set of similar, redundant services. This is
+	useful when hot standby or backup adaptation servers are available.
 
-	If you have a single adaptation service, you do not need to
-	define a set containing it because adaptation_access accepts
-	service names.
+	    adaptation_service_set set_name service_name1 service_name2 ...
 
-	See also: adaptation_access
+ 	The named services are used in the set declaration order. The first
+	applicable adaptation service from the set is used first. The next
+	applicable service is tried if and only if the transaction with the
+	previous service fails and the message waiting to be adapted is still
+	intact.
+
+	When adaptation starts, broken services are ignored as if they were
+	not a part of the set. A broken service is a down optional service.
+
+	The services in a set must be attached to the same vectoring point
+	(e.g., pre-cache) and use the same adaptation method (e.g., REQMOD).
+
+	If all services in a set are optional then adaptation failures are
+	bypassable. If all services in the set are essential, then a
+	transaction failure with one service may still be retried using
+	another service from the set, but when all services fail, the master
+	transaction fails as well.
+
+	A set may contain a mix of optional and essential services, but that
+	is likely to lead to surprising results because broken services become
+	ignored (see above), making previously bypassable failures fatal.
+	Technically, it is the bypassability of the last failed service that
+	matters.
+
+	See also: adaptation_access adaptation_service_chain
 
 Example:
 adaptation_service_set svcBlocker urlFilterPrimary urlFilterBackup
 adaptation service_set svcLogger loggerLocal loggerRemote
+DOC_END
+
+NAME: adaptation_service_chain
+TYPE: adaptation_service_chain_type
+IFDEF: USE_ADAPTATION
+LOC: none
+DEFAULT: none
+DOC_START
+
+	Configures a list of complementary services that will be applied
+	one-by-one, forming an adaptation chain or pipeline. This is useful
+	when Squid must perform different adaptations on the same message.
+
+	    adaptation_service_chain chain_name service_name1 svc_name2 ...
+
+ 	The named services are used in the chain declaration order. The first
+	applicable adaptation service from the chain is used first. The next
+	applicable service is applied to the successful adaptation results of
+	the previous service in the chain.
+
+	When adaptation starts, broken services are ignored as if they were
+	not a part of the chain. A broken service is a down optional service.
+
+	Request satisfaction terminates the adaptation chain because Squid
+	does not currently allow declaration of RESPMOD services at the
+	"reqmod_precache" vectoring point (see icap_service or ecap_service).
+
+	The services in a chain must be attached to the same vectoring point
+	(e.g., pre-cache) and use the same adaptation method (e.g., REQMOD).
+
+	A chain may contain a mix of optional and essential services. If an
+	essential adaptation fails (or the failure cannot be bypassed for
+	other reasons), the master transaction fails. Otherwise, the failure
+	is bypassed as if the failed adaptation service was not in the chain.
+
+	See also: adaptation_access adaptation_service_set
+
+Example:
+adaptation_service_chain svcRequest requestLogger urlFilter leakDetector
 DOC_END
 
 NAME: adaptation_access
@@ -5810,6 +5901,24 @@ DOC_START
 
 Example:
 adaptation_access service_1 allow all
+DOC_END
+
+NAME: adaptation_service_iteration_limit
+TYPE: int
+IFDEF: USE_ADAPTATION
+LOC: Adaptation::Config::service_iteration_limit
+DEFAULT: 16
+DOC_START
+	Limits the number of iterations allowed when applying adaptation
+	services to a message. If your longest adaptation set or chain
+	may have more than 16 services, increase the limit beyond its
+	default value of 16. If detecting infinite iteration loops sooner
+	is critical, make the iteration limit match the actual number
+	of services in your longest adaptation set or chain.
+
+	Infinite adaptation loops are most likely with routing services.
+
+	See also: icap_service routing=1
 DOC_END
 
 NAME: adaptation_masterx_shared_names

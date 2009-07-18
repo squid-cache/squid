@@ -15,7 +15,8 @@ Adaptation::Ecap::XactionRep::XactionRep(Adaptation::Initiator *anInitiator,
         HttpMsg *virginHeader, HttpRequest *virginCause,
         const Adaptation::ServicePointer &aService):
         AsyncJob("Adaptation::Ecap::XactionRep"),
-        Adaptation::Initiate("Adaptation::Ecap::XactionRep", anInitiator, aService),
+        Adaptation::Initiate("Adaptation::Ecap::XactionRep", anInitiator),
+        theService(aService),
         theVirginRep(virginHeader), theCauseRep(NULL),
         proxyingVb(opUndecided), proxyingAb(opUndecided),
         adaptHistoryId(-1),
@@ -41,6 +42,13 @@ Adaptation::Ecap::XactionRep::master(const AdapterXaction &x)
     theMaster = x;
 }
 
+Adaptation::Service &
+Adaptation::Ecap::XactionRep::service()
+{
+    Must(theService != NULL);
+    return *theService;
+}
+
 void
 Adaptation::Ecap::XactionRep::start()
 {
@@ -54,7 +62,7 @@ Adaptation::Ecap::XactionRep::start()
     const HttpRequest *request = dynamic_cast<const HttpRequest*> (theCauseRep ?
         theCauseRep->raw().header : theVirginRep.raw().header);
     Must(request);
-    Adaptation::History::Pointer ah = request->adaptHistory();
+    Adaptation::History::Pointer ah = request->adaptLogHistory();
     if (ah != NULL) { 
         // retrying=false because ecap never retries transactions
         adaptHistoryId = ah->recordXactStart(service().cfg().key, current_time, false);
@@ -90,7 +98,7 @@ Adaptation::Ecap::XactionRep::swanSong()
     const HttpRequest *request = dynamic_cast<const HttpRequest*>(theCauseRep ?
         theCauseRep->raw().header : theVirginRep.raw().header);
     Must(request);
-    Adaptation::History::Pointer ah = request->adaptHistory();
+    Adaptation::History::Pointer ah = request->adaptLogHistory();
     if (ah != NULL && adaptHistoryId >= 0)
         ah->recordXactFinish(adaptHistoryId);
 

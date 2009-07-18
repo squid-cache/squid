@@ -109,6 +109,7 @@ public:
     iterator end();
     const_iterator end () const;
     E& operator [] (unsigned i);
+    const E& operator [] (unsigned i) const;
 
     /* Do not change these, until the entry C struct is removed */
     size_t capacity;
@@ -341,6 +342,14 @@ Vector<E>::end() const
 template<class E>
 E &
 Vector<E>::operator [] (unsigned i)
+{
+    assert (size() > i);
+    return items[i];
+}
+
+template<class E>
+const E &
+Vector<E>::operator [] (unsigned i) const
 {
     assert (size() > i);
     return items[i];

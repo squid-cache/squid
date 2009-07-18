@@ -56,15 +56,13 @@ class Initiate: virtual public AsyncJob
 {
 
 public:
-    Initiate(const char *aTypeName, Initiator *anInitiator, ServicePointer aService);
+    Initiate(const char *aTypeName, Initiator *anInitiator);
     virtual ~Initiate();
 
     // communication with the initiator
     virtual void noteInitiatorAborted() = 0;
 
 protected:
-    Service &service();
-
     void sendAnswer(HttpMsg *msg); // send to the initiator
     void tellQueryAborted(bool final); // tell initiator
     void clearInitiator(); // used by noteInitiatorAborted; TODO: make private
@@ -74,7 +72,6 @@ protected:
     virtual const char *status() const; // for debugging
 
     InitiatorHolder theInitiator;
-    ServicePointer theService;
 
 private:
     Initiate(const Initiate &); // no definition

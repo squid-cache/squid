@@ -34,7 +34,7 @@ public:
 #if USE_ADAPTATION
 
     void adaptationAccessCheck();
-    void adaptationAclCheckDone(Adaptation::ServicePointer service);
+    void adaptationAclCheckDone(Adaptation::ServiceGroupPointer g);
 #endif
 
     ClientHttpRequest *http;

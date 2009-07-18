@@ -8,9 +8,9 @@
 
 #include "BodyPipe.h"
 #include "adaptation/Initiate.h"
-#include "adaptation/Service.h"
 #include "adaptation/Message.h"
 #include "adaptation/ecap/MessageRep.h"
+#include "adaptation/ecap/ServiceRep.h"
 #include <libecap/common/forward.h>
 #include <libecap/common/memory.h>
 #include <libecap/host/xaction.h>
@@ -72,6 +72,8 @@ public:
     virtual const char *status() const;
 
 protected:
+    Service &service();
+
     Adaptation::Message &answer();
 
     void dropVirgin(const char *reason);
@@ -82,6 +84,7 @@ protected:
 
 private:
     AdapterXaction theMaster; // the actual adaptation xaction we represent
+    Adaptation::ServicePointer theService; ///< xaction's adaptation service
 
     MessageRep theVirginRep;
     MessageRep *theCauseRep;

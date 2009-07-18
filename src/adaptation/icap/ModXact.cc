@@ -47,6 +47,7 @@ Adaptation::Icap::ModXact::ModXact(Adaptation::Initiator *anInitiator, HttpMsg *
         virginConsumed(0),
         bodyParser(NULL),
         canStartBypass(false), // too early
+        protectGroupBypass(true),
         replyBodySize(0),
         adaptHistoryId(-1)
 {
@@ -75,7 +76,7 @@ void Adaptation::Icap::ModXact::start()
     Adaptation::Icap::Xaction::start();
 
     // reserve an adaptation history slot (attempts are known at this time)
-    Adaptation::History::Pointer ah = virginRequest().adaptHistory();
+    Adaptation::History::Pointer ah = virginRequest().adaptLogHistory();
     if (ah != NULL)
         adaptHistoryId = ah->recordXactStart(service().cfg().key, icap_tr_start, attempts > 1);
 
@@ -356,7 +357,7 @@ const char *Adaptation::Icap::ModXact::virginContentData(const Adaptation::Icap:
 void Adaptation::Icap::ModXact::virginConsume()
 {
     debugs(93, 9, HERE << "consumption guards: " << !virgin.body_pipe << isRetriable <<
-           isRepeatable << canStartBypass);
+           isRepeatable << canStartBypass << protectGroupBypass);
 
     if (!virgin.body_pipe)
         return; // nothing to consume
@@ -365,7 +366,7 @@ void Adaptation::Icap::ModXact::virginConsume()
         return; // do not consume if we may have to retry later
 
     BodyPipe &bp = *virgin.body_pipe;
-    const bool wantToPostpone = isRepeatable || canStartBypass;
+    const bool wantToPostpone = isRepeatable || canStartBypass || protectGroupBypass;
 
     // Why > 2? HttpState does not use the last bytes in the buffer
     // because delayAwareRead() is arguably broken. See
@@ -403,7 +404,7 @@ void Adaptation::Icap::ModXact::virginConsume()
         virginConsumed += size;
         Must(!isRetriable); // or we should not be consuming
         disableRepeats("consumed content");
-        disableBypass("consumed content");
+        disableBypass("consumed content", true);
     }
 }
 
@@ -521,9 +522,9 @@ void Adaptation::Icap::ModXact::echoMore()
         debugs(93,5, HERE << "echoed " << size << " out of " << sizeMax <<
                " bytes");
         virginBodySending.progress(size);
-        virginConsume();
         disableRepeats("echoed content");
-        disableBypass("echoed content");
+        disableBypass("echoed content", true);
+        virginConsume();
     }
 
     if (virginBodyEndReached(virginBodySending)) {
@@ -610,7 +611,7 @@ void Adaptation::Icap::ModXact::callException(const std::exception &e)
 
 void Adaptation::Icap::ModXact::bypassFailure()
 {
-    disableBypass("already started to bypass");
+    disableBypass("already started to bypass", false);
 
     Must(!isRetriable); // or we should not be bypassing
     // TODO: should the same be enforced for isRepeatable? Check icap_repeat??
@@ -632,11 +633,15 @@ void Adaptation::Icap::ModXact::bypassFailure()
     }
 }
 
-void Adaptation::Icap::ModXact::disableBypass(const char *reason)
+void Adaptation::Icap::ModXact::disableBypass(const char *reason, bool includingGroupBypass)
 {
     if (canStartBypass) {
         debugs(93,7, HERE << "will never start bypass because " << reason);
         canStartBypass = false;
+    }
+    if (protectGroupBypass && includingGroupBypass) {
+        debugs(93,7, HERE << "not protecting group bypass because " << reason);
+        protectGroupBypass = false;
     }
 }
 
@@ -685,7 +690,7 @@ void Adaptation::Icap::ModXact::parseHeaders()
 void Adaptation::Icap::ModXact::startSending()
 {
     disableRepeats("sent headers");
-    disableBypass("sent headers");
+    disableBypass("sent headers", true);
     sendAnswer(adapted.header);
 
     if (state.sending == State::sendingVirgin)
@@ -737,13 +742,23 @@ void Adaptation::Icap::ModXact::parseIcapHead()
 
     // update the cross-transactional database if needed (all status codes!)
     if (const char *xxName = Adaptation::Config::masterx_shared_name) {
-        Adaptation::History::Pointer ah = request->adaptHistory();
+        Adaptation::History::Pointer ah = request->adaptHistory(true);
         if (ah != NULL) {
             const String val = icapReply->header.getByName(xxName);
             if (val.size() > 0) // XXX: HttpHeader lacks empty value detection
                 ah->updateXxRecord(xxName, val);
         }
     }
+
+    // update the adaptation plan if needed (all status codes!)
+    if (service().cfg().routing) {
+        String services;
+        if (icapReply->header.getList(HDR_X_NEXT_SERVICES, &services)) {
+            Adaptation::History::Pointer ah = request->adaptHistory(true);
+            if (ah != NULL)
+                ah->updateNextServices(services);
+        }
+    } // TODO: else warn (occasionally!) if we got HDR_X_NEXT_SERVICES
 
     // We need to store received ICAP headers for <icapLastHeader logformat option.
     // If we already have stored headers from previous ICAP transaction related to this
@@ -818,13 +833,14 @@ void Adaptation::Icap::ModXact::handle204NoContent()
 void Adaptation::Icap::ModXact::prepEchoing()
 {
     disableRepeats("preparing to echo content");
-    disableBypass("preparing to echo content");
+    disableBypass("preparing to echo content", true);
     setOutcome(xoEcho);
 
     // We want to clone the HTTP message, but we do not want
     // to copy some non-HTTP state parts that HttpMsg kids carry in them.
     // Thus, we cannot use a smart pointer, copy constructor, or equivalent.
     // Instead, we simply write the HTTP message and "clone" it by parsing.
+    // TODO: use HttpMsg::clone()!
 
     HttpMsg *oldHead = virgin.header;
     debugs(93, 7, HERE << "cloning virgin message " << oldHead);
@@ -838,8 +854,10 @@ void Adaptation::Icap::ModXact::prepEchoing()
     // allocate the adapted message and copy metainfo
     Must(!adapted.header);
     HttpMsg *newHead = NULL;
-    if (dynamic_cast<const HttpRequest*>(oldHead)) {
+    if (const HttpRequest *oldR = dynamic_cast<const HttpRequest*>(oldHead)) {
         HttpRequest *newR = new HttpRequest;
+        newR->canonical = oldR->canonical ?
+            xstrdup(oldR->canonical) : NULL; // parse() does not set it
         newHead = newR;
     } else if (dynamic_cast<const HttpReply*>(oldHead)) {
         HttpReply *newRep = new HttpReply;
@@ -936,6 +954,9 @@ bool Adaptation::Icap::ModXact::parseHead(HttpMsg *head)
         return false;
     }
 
+    if (HttpRequest *r = dynamic_cast<HttpRequest*>(head))
+        urlCanonical(r); // parse does not set HttpRequest::canonical
+
     debugs(93, 5, HERE << "parse success, consume " << head->hdr_sz << " bytes, return true");
     readBuf.consume(head->hdr_sz);
     return true;
@@ -976,7 +997,7 @@ void Adaptation::Icap::ModXact::parseBody()
     // TODO: do we really need this if we disable when sending headers?
     if (adapted.body_pipe->buf().contentSize() > 0) { // parsed something sometime
         disableRepeats("sent adapted content");
-        disableBypass("sent adapted content");
+        disableBypass("sent adapted content", true);
     }
 
     if (parsed) {
@@ -1076,7 +1097,7 @@ void Adaptation::Icap::ModXact::swanSong()
     stopSending(false);
 
     // update adaptation history if start was called and we reserved a slot
-    Adaptation::History::Pointer ah = virginRequest().adaptHistory();
+    Adaptation::History::Pointer ah = virginRequest().adaptLogHistory();
     if (ah != NULL && adaptHistoryId >= 0)
         ah->recordXactFinish(adaptHistoryId);
 
@@ -1173,7 +1194,7 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
 
     // share the cross-transactional database records if needed
     if (Adaptation::Config::masterx_shared_name) {
-        Adaptation::History::Pointer ah = request->adaptHistory();
+        Adaptation::History::Pointer ah = request->adaptHistory(true);
         if (ah != NULL) {
             String name, value;
             if (ah->getXxRecord(name, value)) {
@@ -1245,11 +1266,11 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
 
     buf.append(ICAP::crlf, 2); // terminate ICAP header
 
+    // fill icapRequest for logging
+    Must(icapRequest->parseCharBuf(buf.content(), buf.contentSize()));
+
     // start ICAP request body with encapsulated HTTP headers
     buf.append(httpBuf.content(), httpBuf.contentSize());
-
-    // TODO: write IcapRequest class?
-    icapRequest->parseHeader(buf.content(),buf.contentSize());
 
     httpBuf.clean();
 }
@@ -1276,7 +1297,8 @@ void Adaptation::Icap::ModXact::encapsulateHead(MemBuf &icapBuf, const char *sec
 
     if (const HttpRequest* old_request = dynamic_cast<const HttpRequest*>(head)) {
         HttpRequest* new_request = new HttpRequest;
-        urlParse(old_request->method, old_request->canonical,new_request);
+        assert(old_request->canonical);
+        urlParse(old_request->method, old_request->canonical, new_request);
         new_request->http_ver = old_request->http_ver;
         headClone = new_request;
     } else if (const HttpReply *old_reply = dynamic_cast<const HttpReply*>(head)) {
@@ -1441,6 +1463,9 @@ void Adaptation::Icap::ModXact::fillPendingStatus(MemBuf &buf) const
 
     if (canStartBypass)
         buf.append("Y", 1);
+
+    if (protectGroupBypass)
+        buf.append("G", 1);
 }
 
 void Adaptation::Icap::ModXact::fillDoneStatus(MemBuf &buf) const

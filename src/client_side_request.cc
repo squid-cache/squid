@@ -63,11 +63,12 @@
 
 #if USE_ADAPTATION
 #include "adaptation/AccessCheck.h"
+#include "adaptation/Iterator.h"
 #include "adaptation/Service.h"
 #if ICAP_CLIENT
 #include "adaptation/icap/History.h"
 #endif
-static void adaptationAclCheckDoneWrapper(Adaptation::ServicePointer service, void *data);
+//static void adaptationAclCheckDoneWrapper(Adaptation::ServicePointer service, void *data);
 #endif
 
 
@@ -619,18 +620,18 @@ ClientRequestContext::clientAccessCheckDone(int answer)
 
 #if USE_ADAPTATION
 static void
-adaptationAclCheckDoneWrapper(Adaptation::ServicePointer service, void *data)
+adaptationAclCheckDoneWrapper(Adaptation::ServiceGroupPointer g, void *data)
 {
     ClientRequestContext *calloutContext = (ClientRequestContext *)data;
 
     if (!calloutContext->httpStateIsValid())
         return;
 
-    calloutContext->adaptationAclCheckDone(service);
+    calloutContext->adaptationAclCheckDone(g);
 }
 
 void
-ClientRequestContext::adaptationAclCheckDone(Adaptation::ServicePointer service)
+ClientRequestContext::adaptationAclCheckDone(Adaptation::ServiceGroupPointer g)
 {
     debugs(93,3,HERE << this << " adaptationAclCheckDone called");
     assert(http);
@@ -651,18 +652,13 @@ ClientRequestContext::adaptationAclCheckDone(Adaptation::ServicePointer service)
     }
 #endif
 
-    if (http->startAdaptation(service))
-        return;
-
-    if (!service || service->cfg().bypass) {
-        // handle ICAP start failure when no service was selected
-        // or where the selected service was optional
+    if (!g) {
+        debugs(85,3, HERE << "no adaptation needed");
         http->doCallouts();
         return;
     }
 
-    // handle start failure for an essential ICAP service
-    http->handleAdaptationFailure();
+    http->startAdaptation(g);
 }
 
 #endif
@@ -1336,29 +1332,19 @@ ClientHttpRequest::doCallouts()
 #endif
 
 #if USE_ADAPTATION
-/*
- * Initiate an ICAP transaction.  Return false on errors.
- * The caller must handle errors.
- */
-bool
-ClientHttpRequest::startAdaptation(Adaptation::ServicePointer service)
+/// Initiate an asynchronous adaptation transaction which will call us back.
+void
+ClientHttpRequest::startAdaptation(const Adaptation::ServiceGroupPointer &g)
 {
-    debugs(85, 3, HERE << this << " ClientHttpRequest::startAdaptation() called");
-    if (!service) {
-        debugs(85, 3, "ClientHttpRequest::startAdaptation fails: lack of service");
-        return false;
-    }
-    if (service->broken()) {
-        debugs(85, 3, "ClientHttpRequest::startAdaptation fails: broken service");
-        return false;
-    }
-
+    debugs(85, 3, HERE << "adaptation needed for " << this);
     assert(!virginHeadSource);
     assert(!adaptedBodySource);
-    virginHeadSource = initiateAdaptation(service->makeXactLauncher(
-                                              this, request, NULL));
+    virginHeadSource = initiateAdaptation(
+        new Adaptation::Iterator(this, request, NULL, g));
 
-    return virginHeadSource != NULL;
+    // we could try to guess whether we can bypass this adaptation 
+    // initiation failure, but it should not really happen
+    assert(virginHeadSource != NULL); // Must, really
 }
 
 void

@@ -98,6 +98,7 @@ protected:
 
     void launchXaction(const char *xkind);
 
+    Adaptation::ServicePointer theService; ///< ICAP service for all launches
     Adaptation::Initiate *theXaction; ///< current ICAP transaction
     int theLaunches; // the number of transaction launches
 };
