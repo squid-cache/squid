@@ -120,7 +120,7 @@ Ident::Timeout(int fd, void *data)
 }
 
 static void
-Ident::ConnectDone(int fd, comm_err_t status, int xerrno, void *data)
+Ident::ConnectDone(int fd, const DnsLookupDetails &, comm_err_t status, int xerrno, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
     IdentClient *c;

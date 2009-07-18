@@ -2365,6 +2365,7 @@ DOC_START
 
 	Format codes:
 
+		%	a literal % character
 		>a	Client source IP address
 		>A	Client FQDN
 		>p	Client source port
@@ -2374,42 +2375,96 @@ DOC_START
 		ts	Seconds since epoch
 		tu	subsecond time (milliseconds)
 		tl	Local time. Optional strftime format argument
-			default %d/%b/%Y:%H:%M:%S %z
+				default %d/%b/%Y:%H:%M:%S %z
 		tg	GMT time. Optional strftime format argument
-			default %d/%b/%Y:%H:%M:%S %z
+				default %d/%b/%Y:%H:%M:%S %z
 		tr	Response time (milliseconds)
-		>h	Request header. Optional header name argument
-			on the format header[:[separator]element]
-		<h	Reply header. Optional header name argument
-			as for >h
-		un	User name
-		ul	User name from authentication
-		ui	User name from ident
-		us	User name from SSL
-		ue	User name from external acl helper
-		Hs	HTTP status code
-		Ss	Squid request status (TCP_MISS etc)
-		Sh	Squid hierarchy status (DEFAULT_PARENT etc)
-		mt	MIME content type
-		rm	Request method (GET/POST etc)
-		ru	Request URL
-		rp	Request URL-Path excluding hostname
-		rv	Request protocol version
-		et	Tag returned by external acl
-		ea	Log string returned by external acl
-		<st	Reply size including HTTP headers
-		>st	Request size including HTTP headers
-		st	Request+Reply size including HTTP headers
-		<sH	Reply high offset sent
-		<sS	Upstream object size
-		%	a literal % character
+		dt	Total time spent making DNS lookups (milliseconds)
+
+	HTTP cache related format codes:
+
+		[http::]>h	Request header. Optional header name argument
+				on the format header[:[separator]element]
+		[http::]<h	Reply header. Optional header name argument
+				as for >h
+		[http::]un	User name
+		[http::]ul	User name from authentication
+		[http::]ui	User name from ident
+		[http::]us	User name from SSL
+		[http::]ue	User name from external acl helper
+		[http::]>Hs	HTTP status code sent to the client
+		[http::]<Hs	HTTP status code received from the next hop
+		[http::]Ss	Squid request status (TCP_MISS etc)
+		[http::]Sh	Squid hierarchy status (DEFAULT_PARENT etc)
+		[http::]mt	MIME content type
+		[http::]rm	Request method (GET/POST etc)
+		[http::]ru	Request URL
+		[http::]rp	Request URL-Path excluding hostname
+		[http::]rv	Request protocol version
+		[http::]et	Tag returned by external acl
+		[http::]ea	Log string returned by external acl
+		[http::]<st	Sent reply size including HTTP headers
+		[http::]>st	Received request size including HTTP headers. In the
+				case of chunked requests the chunked encoding metadata
+				are not included
+		[http::]>sh	Received HTTP request headers size
+		[http::]<sh	Sent HTTP reply headers size
+		[http::]st	Request+Reply size including HTTP headers
+		[http::]<sH	Reply high offset sent
+		[http::]<sS	Upstream object size
+		[http::]<pt	Peer response time in milliseconds. The timer starts
+				when the last request byte is sent to the next hop
+				and stops when the last response byte is received.
+		[http::]<tt	Total server-side time in milliseconds. The timer 
+				starts with the first connect request (or write I/O)
+				sent to the first selected peer. The timer stops
+				with the last I/O with the last peer.
+
+	If ICAP is enabled, the following two codes become available (as
+	well as ICAP log codes documented with the icap_log option):
+
+		icap::tt        Total ICAP processing time for the HTTP
+				transaction. The timer ticks when ICAP
+				ACLs are checked and when ICAP
+				transaction is in progress.
+
+		icap::<last_h	The header of the last ICAP response
+				related to the HTTP transaction. Like
+				<h, accepts an optional header name
+				argument.  Will not change semantics
+				when multiple ICAP transactions per HTTP
+				transaction are supported.
+
+	If adaptation is enabled the following two codes become available:
+
+		adapt::sum_trs Summed adaptation transaction response
+				times recorded as a comma-separated list in
+				the order of transaction start time. Each time
+				value is recorded as an integer number,
+				representing response time of one or more
+				adaptation (ICAP or eCAP) transaction in
+				milliseconds.  When a failed transaction is
+				being retried or repeated, its time is not
+				logged individually but added to the
+				replacement (next) transaction. See also:
+				adapt::all_trs.
+
+		adapt::all_trs All adaptation transaction response times.
+				Same as adaptation_strs but response times of
+				individual transactions are never added
+				together. Instead, all transaction response
+				times are recorded individually.
+
+	You can prefix adapt::*_trs format codes with adaptation
+	service name in curly braces to record response time(s) specific
+	to that service. For example: %{my_service}adapt::sum_trs
 
 	The default formats available (which do not need re-defining) are:
 
-logformat squid %ts.%03tu %6tr %>a %Ss/%03Hs %<st %rm %ru %un %Sh/%<A %mt
-logformat squidmime %ts.%03tu %6tr %>a %Ss/%03Hs %<st %rm %ru %un %Sh/%<A %mt [%>h] [%<h]
-logformat common %>a %ui %un [%tl] "%rm %ru HTTP/%rv" %Hs %<st %Ss:%Sh
-logformat combined %>a %ui %un [%tl] "%rm %ru HTTP/%rv" %Hs %<st "%{Referer}>h" "%{User-Agent}>h" %Ss:%Sh
+logformat squid %ts.%03tu %6tr %>a %Ss/%03>Hs %<st %rm %ru %un %Sh/%<A %mt
+logformat squidmime %ts.%03tu %6tr %>a %Ss/%03>Hs %<st %rm %ru %un %Sh/%<A %mt [%>h] [%<h]
+logformat common %>a %ui %un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st %Ss:%Sh
+logformat combined %>a %ui %un [%tl] "%rm %ru HTTP/%rv" %>Hs %<st "%{Referer}>h" "%{User-Agent}>h" %Ss:%Sh
 DOC_END
 
 NAME: access_log cache_access_log
@@ -2444,6 +2499,88 @@ DOC_START
 		access_log @DEFAULT_ACCESS_LOG@ squid
 DOC_END
 
+NAME: icap_log
+TYPE: access_log
+IFDEF: ICAP_CLIENT
+LOC: Config.Log.icaplogs
+DEFAULT: none
+DOC_START
+	ICAP log files record ICAP transaction summaries, one line per
+	transaction.
+
+	The icap_log option format is:
+	icap_log <filepath> [<logformat name> [acl acl ...]]
+	icap_log none [acl acl ...]]
+	
+	Please see access_log option documentation for details. The two
+	kinds of logs share the overall configuration approach and many
+	features.
+
+	ICAP processing of a single HTTP message or transaction may
+	require multiple ICAP transactions.  In such cases, multiple
+	ICAP transaction log lines will correspond to a single access
+	log line.
+
+	ICAP log uses logformat codes that make sense for an ICAP
+	transaction. Header-related codes are applied to the HTTP header
+	embedded in an ICAP server response, with the following caveats:
+	For REQMOD, there is no HTTP response header unless the ICAP
+	server performed request satisfaction. For RESPMOD, the HTTP
+	request header is the header sent to the ICAP server. For
+	OPTIONS, there are no HTTP headers.
+
+	The following format codes are also available for ICAP logs:
+
+		icap::<A	ICAP server IP address. Similar to <A.
+
+		icap::<service_name	ICAP service name from the icap_service
+				option in Squid configuration file.
+
+		icap::ru	ICAP Request-URI. Similar to ru.
+
+		icap::rm	ICAP request method (REQMOD, RESPMOD, or 
+				OPTIONS). Similar to existing rm.
+
+		icap::>st	Bytes sent to the ICAP server (TCP payload
+				only; i.e., what Squid writes to the socket).
+
+		icap::<st	Bytes received from the ICAP server (TCP
+				payload only; i.e., what Squid reads from
+				the socket).
+
+		icap::tr 	Transaction response time (in
+				milliseconds).  The timer starts when
+				the ICAP transaction is created and
+				stops when the transaction is completed.
+				Similar to tr.
+
+		icap::tio	Transaction I/O time (in milliseconds). The
+				timer starts when the first ICAP request
+				byte is scheduled for sending. The timers
+				stops when the last byte of the ICAP response
+				is received.
+
+		icap::to 	Transaction outcome: ICAP_ERR* for all
+				transaction errors, ICAP_OPT for OPTION
+				transactions, ICAP_ECHO for 204
+				responses, ICAP_MOD for message
+				modification, and ICAP_SAT for request
+				satisfaction. Similar to Ss.
+
+		icap::Hs	ICAP response status code. Similar to Hs.
+
+		icap::>h	ICAP request header(s). Similar to >h.
+
+		icap::<h	ICAP response header(s). Similar to <h.
+
+	The default ICAP log format, which can be used without an explicit
+	definition, is called icap_squid:
+
+logformat icap_squid %ts.%03tu %6icap::tr %>a %icap::to/%03icap::Hs %icap::<size %icap::rm %icap::ru% %un -/%icap::<A -
+
+	See also: logformat, log_icap, and %icap::<last_h 
+DOC_END
+
 NAME: log_access
 TYPE: acl_access
 LOC: Config.accessList.log
@@ -2456,6 +2593,16 @@ DOC_START
 
 	This clause only supports fast acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
+DOC_END
+
+NAME: log_icap
+TYPE: acl_access
+IFDEF: ICAP_CLIENT
+LOC: Config.accessList.icap
+DEFAULT: none
+DOC_START
+	This options allows you to control which requests get logged
+	to icap.log. See the icap_log directive for ICAP log details.
 DOC_END
 
 NAME: cache_store_log
@@ -3333,6 +3480,33 @@ DOC_START
 	than this limit receives an "Invalid Request" error message.
 	If you set this parameter to a zero (the default), there will
 	be no limit imposed.
+DOC_END
+
+NAME: chunked_request_body_max_size
+COMMENT: (bytes)
+TYPE: b_int64_t
+DEFAULT: 64 KB
+LOC: Config.maxChunkedRequestBodySize
+DOC_START
+	A broken or confused HTTP/1.1 client may send a chunked HTTP
+	request to Squid. Squid does not have full support for that
+	feature yet. To cope with such requests, Squid buffers the
+	entire request and then dechunks request body to create a
+	plain HTTP/1.0 request with a known content length. The plain
+	request is then used by the rest of Squid code as usual.
+
+	The option value specifies the maximum size of the buffer used
+	to hold the request before the conversion. If the chunked
+	request size exceeds the specified limit, the conversion
+	fails, and the client receives an "unsupported request" error,
+	as if dechunking was disabled.
+
+	Dechunking is enabled by default. To disable conversion of
+	chunked requests, set the maximum to zero.
+
+	Request dechunking feature and this option in particular are a
+	temporary hack. When chunking requests and responses are fully
+	supported, there will be no need to buffer a chunked request.
 DOC_END
 
 NAME: broken_posts
@@ -5637,6 +5811,71 @@ DOC_START
 Example:
 adaptation_access service_1 allow all
 DOC_END
+
+NAME: adaptation_masterx_shared_names
+TYPE: string
+IFDEF: USE_ADAPTATION
+LOC: Adaptation::Config::masterx_shared_name
+DEFAULT: none
+DOC_START
+	For each master transaction (i.e., the HTTP request and response
+	sequence, including all related ICAP and eCAP exchanges), Squid
+	maintains a table of metadata. The table entries are (name, value)
+	pairs shared among eCAP and ICAP exchanges. The table is destroyed
+	with the master transaction.
+
+	This option specifies the table entry names that Squid must accept
+	from and forward to the adaptation transactions.
+
+	An ICAP REQMOD or RESPMOD transaction may set an entry in the 
+	shared table by returning an ICAP header field with a name 
+	specified in adaptation_masterx_shared_names. Squid will store 
+	and forward that ICAP header field to subsequent ICAP 
+	transactions within the same master transaction scope.
+
+	Only one shared entry name is supported at this time.
+
+Example:
+# share authentication information among ICAP services
+adaptation_masterx_shared_names X-Subscriber-ID
+DOC_END
+
+NAME: icap_retry
+TYPE: acl_access
+IFDEF: ICAP_CLIENT
+LOC: Adaptation::Icap::TheConfig.repeat
+DEFAULT: none
+DEFAULT_IF_NONE: deny all
+DOC_START
+	This ACL determines which retriable ICAP transactions are
+	retried. Transactions that received a complete ICAP response
+	and did not have to consume or produce HTTP bodies to receive
+	that response are usually retriable.
+
+	icap_retry allow|deny [!]aclname ...
+
+	Squid automatically retries some ICAP I/O timeouts and errors
+	due to persistent connection race conditions.
+
+	See also: icap_retry_limit
+DOC_END
+
+NAME: icap_retry_limit
+TYPE: int
+IFDEF: ICAP_CLIENT
+LOC: Adaptation::Icap::TheConfig.repeat_limit
+DEFAULT: 0
+DOC_START
+	Limits the number of retries allowed. When set to zero (default),
+	no retries are allowed.
+
+	Communication errors due to persistent connection race
+	conditions are unavoidable, automatically retried, and do not
+	count against this limit.
+
+	See also: icap_retry
+DOC_END
+
 
 COMMENT_START
  DNS OPTIONS

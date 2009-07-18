@@ -39,6 +39,7 @@
 #include "HttpReply.h"
 #include "TextException.h"
 #include "errorpage.h"
+#include "SquidTime.h"
 
 #if USE_ADAPTATION
 #include "adaptation/AccessCheck.h"
@@ -173,6 +174,10 @@ ServerStateData::serverComplete()
 
     completed = true;
 
+    HttpRequest *r = originalRequest();
+    r->hier.total_response_time = r->hier.first_conn_start.tv_sec ?
+        tvSubMsec(r->hier.first_conn_start, current_time) : -1;
+    
     if (requestBodySource != NULL)
         stopConsumingFrom(requestBodySource);
 

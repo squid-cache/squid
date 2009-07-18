@@ -67,6 +67,13 @@ CommConnectCbParams::syncWithComm()
     return true; // now we are in sync and can handle the call
 }
 
+void
+CommConnectCbParams::print(std::ostream &os) const
+{
+    CommCommonCbParams::print(os);
+    os << ", " << dns;
+}
+
 /* CommIoCbParams */
 
 CommIoCbParams::CommIoCbParams(void *aData): CommCommonCbParams(aData),
@@ -150,7 +157,7 @@ CommConnectCbPtrFun::CommConnectCbPtrFun(CNCB *aHandler,
 void
 CommConnectCbPtrFun::dial()
 {
-    handler(params.fd, params.flag, params.xerrno, params.data);
+    handler(params.fd, params.dns, params.flag, params.xerrno, params.data);
 }
 
 void

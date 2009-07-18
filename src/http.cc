@@ -87,6 +87,10 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"),
     readBuf->init(4096, SQUID_TCP_SO_RCVBUF);
     orig_request = HTTPMSGLOCK(fwd->request);
 
+    // reset peer response time stats for %<pt
+    orig_request->hier.peer_http_request_sent.tv_sec = 0;
+    orig_request->hier.peer_http_request_sent.tv_usec = 0;
+
     if (fwd->servers)
         _peer = fwd->servers->_peer;         /* might be NULL */
 
@@ -732,6 +736,8 @@ HttpStateData::processReplyHeader()
      * Parse the header and remove all referenced headers
      */
 
+    orig_request->hier.peer_reply_status = newrep->sline.status;
+
     ctx_exit(ctx);
 
 }
@@ -1064,6 +1070,11 @@ HttpStateData::readReply(const CommIoCbParams &io)
             clen >>= 1;
 
         IOStats.Http.read_hist[bin]++;
+
+        // update peer response time stats (%<pt)
+        const timeval &sent = orig_request->hier.peer_http_request_sent;
+        orig_request->hier.peer_response_time =
+            sent.tv_sec ? tvSubMsec(sent, current_time) : -1;
     }
 
     /** \par
@@ -1411,6 +1422,8 @@ HttpStateData::sendComplete(const CommIoCbParams &io)
     commSetTimeout(fd, Config.Timeout.read, timeoutCall);
 
     flags.request_sent = 1;
+    
+    orig_request->hier.peer_http_request_sent = current_time;
 }
 
 // Close the HTTP server connection. Used by serverComplete().

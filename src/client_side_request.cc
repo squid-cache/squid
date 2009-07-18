@@ -59,12 +59,18 @@
 #include "SquidTime.h"
 #include "wordlist.h"
 #include "inet_pton.h"
+#include "fde.h"
 
 #if USE_ADAPTATION
 #include "adaptation/AccessCheck.h"
 #include "adaptation/Service.h"
+#if ICAP_CLIENT
+#include "adaptation/icap/History.h"
+#endif
 static void adaptationAclCheckDoneWrapper(Adaptation::ServicePointer service, void *data);
 #endif
+
+
 
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
@@ -628,6 +634,22 @@ ClientRequestContext::adaptationAclCheckDone(Adaptation::ServicePointer service)
 {
     debugs(93,3,HERE << this << " adaptationAclCheckDone called");
     assert(http);
+
+#if ICAP_CLIENT                                                                
+    Adaptation::Icap::History::Pointer ih = http->request->icapHistory();
+    if(ih != NULL)
+    {                                                                          
+        if (http->getConn() != NULL)
+        {
+            ih->rfc931 = http->getConn()->rfc931;
+#if USE_SSL                              
+            ih->ssluser = sslGetUserEmail(fd_table[http->getConn()->fd].ssl);
+#endif  
+        }
+        ih->log_uri = http->log_uri;
+        ih->req_sz = http->req_sz;
+    }
+#endif
 
     if (http->startAdaptation(service))
         return;
@@ -1301,6 +1323,12 @@ ClientHttpRequest::doCallouts()
 
     debugs(83, 3, HERE << "calling processRequest()");
     processRequest();
+
+#if ICAP_CLIENT
+    Adaptation::Icap::History::Pointer ih = request->icapHistory();
+    if (ih != NULL)
+        ih->logType = logType;
+#endif
 }
 
 #ifndef _USE_INLINE_

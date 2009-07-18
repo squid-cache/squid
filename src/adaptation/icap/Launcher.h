@@ -64,6 +64,7 @@ namespace Adaptation
 namespace Icap {
 
 class Xaction;
+class XactAbortInfo;
 
 // Note: Initiate must be the first parent for cbdata to work. We use
 // a temporary InitaitorHolder/toCbdata hacks and do not call cbdata
@@ -79,6 +80,11 @@ public:
 
     // Adaptation::Initiator: asynchronous communication with the current transaction
     virtual void noteAdaptationAnswer(HttpMsg *message);
+    virtual void noteXactAbort(XactAbortInfo &info);
+
+private:
+    bool canRetry(XactAbortInfo &info) const; //< true if can retry in the case of persistent connection failures
+    bool canRepeat(XactAbortInfo &info) const; //< true if can repeat in the case of no or unsatisfactory response 
     virtual void noteAdaptationQueryAbort(bool final);
 
 protected:
@@ -90,14 +96,57 @@ protected:
     // creates the right ICAP transaction using stored configuration params
     virtual Xaction *createXaction() = 0;
 
-    void launchXaction(bool final);
+    void launchXaction(const char *xkind);
 
-    Adaptation::Initiate *theXaction; // current ICAP transaction
+    Adaptation::Initiate *theXaction; ///< current ICAP transaction
     int theLaunches; // the number of transaction launches
 };
 
+/// helper class to pass information about aborted ICAP requests to 
+/// the Adaptation::Icap::Launcher class
+class XactAbortInfo {
+public:
+    XactAbortInfo(HttpRequest *anIcapRequest, HttpReply *anIcapReply,
+                  bool beRetriable, bool beRepeatable);
+    XactAbortInfo(const XactAbortInfo &);
+    ~XactAbortInfo();
+
+    HttpRequest *icapRequest;
+    HttpReply *icapReply;
+    bool isRetriable;
+    bool isRepeatable;
+    
+private:
+    XactAbortInfo &operator =(const XactAbortInfo &); // undefined
+};
+
+/* required by UnaryMemFunT */
+inline std::ostream &operator << (std::ostream &os, Adaptation::Icap::XactAbortInfo info)
+{
+    // Nothing, it is unused
+    return os;
+}
+
+/// A Dialer class used to schedule the Adaptation::Icap::Launcher::noteXactAbort call
+class XactAbortCall: public UnaryMemFunT<Adaptation::Icap::Launcher, Adaptation::Icap::XactAbortInfo> {
+public:
+    typedef void (Adaptation::Icap::Launcher::*DialMethod)(Adaptation::Icap::XactAbortInfo &);
+    XactAbortCall(Adaptation::Icap::Launcher *launcer, DialMethod aMethod, 
+                  const Adaptation::Icap::XactAbortInfo &info):
+    UnaryMemFunT<Adaptation::Icap::Launcher, Adaptation::Icap::XactAbortInfo>(launcer, NULL, info),
+       dialMethod(aMethod)
+    {}
+    virtual void print(std::ostream &os) const {  os << '(' << "retriable:" << arg1.isRetriable << ", repeatable:" << arg1.isRepeatable << ')'; }
+
+public:
+    DialMethod dialMethod;
+    
+protected:
+    virtual void doDial() { (object->*dialMethod)(arg1); }
+};
 
 } // namespace Icap
 } // namespace Adaptation
+
 
 #endif /* SQUID_ICAPLAUNCHER_H */

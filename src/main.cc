@@ -34,6 +34,9 @@
 
 #include "squid.h"
 #include "AccessLogEntry.h"
+#if ICAP_CLIENT
+#include "adaptation/icap/icap_log.h"
+#endif
 #include "auth/Gadgets.h"
 #include "ConfigParser.h"
 #include "errorpage.h"
@@ -695,6 +698,9 @@ mainReconfigureStart(void)
     storeDirCloseSwapLogs();
     storeLogClose();
     accessLogClose();
+#if ICAP_CLIENT
+    icapLogClose();
+#endif
     useragentLogClose();
     refererCloseLog();
 
@@ -726,6 +732,9 @@ mainReconfigureFinish(void *)
     parseEtcHosts();
     errorInitialize();		/* reload error pages */
     accessLogInit();
+#if ICAP_CLIENT
+    icapLogOpen();
+#endif
     storeLogOpen();
     useragentOpenLog();
     refererOpenLog();
@@ -790,6 +799,9 @@ mainRotate(void)
     accessLogRotate();		/* access.log */
     useragentRotateLog();	/* useragent.log */
     refererRotateLog();		/* referer.log */
+#if ICAP_CLIENT
+    icapLogRotate();               /*icap.log*/
+#endif
 #if WIP_FWD_LOG
 
     fwdLogRotate();
@@ -950,6 +962,10 @@ mainInitialize(void)
     errorInitialize();
 
     accessLogInit();
+
+#if ICAP_CLIENT    
+    icapLogOpen();
+#endif
 
 #if USE_IDENT
     Ident::Init();

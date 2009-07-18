@@ -38,13 +38,28 @@
 #include "client_side.h"
 #include "HierarchyLogEntry.h"
 #include "HttpRequestMethod.h"
+#if USE_ADAPTATION
+#include "adaptation/History.h"
+#endif
+#if ICAP_CLIENT
+#include "adaptation/icap/History.h"
+#endif
 
 /*  Http Request */
 //DEAD?: extern int httpRequestHdrAllowedByName(http_hdr_type id);
 extern void httpRequestPack(void *obj, Packer *p);
 
+// TODO: Move these three to access_log.h or AccessLogEntry.h
+#if USE_ADAPTATION
+extern bool alLogformatHasAdaptToken;
+#endif
+#if ICAP_CLIENT
+extern bool alLogformatHasIcapToken;
+#endif
+extern int LogfileStatus;
 
 class HttpHdrRange;
+class DnsLookupDetails;
 
 class HttpRequest: public HttpMsg
 {
@@ -84,6 +99,17 @@ public:
     };
     inline const char* GetHost(void) const { return host; };
 
+#if USE_ADAPTATION
+    /// Returns possibly nil history, creating it if adapt. logging is enabled
+    Adaptation::History::Pointer adaptHistory() const;
+#endif
+#if ICAP_CLIENT
+    /// Returns possibly nil history, creating it if icap logging is enabled
+    Adaptation::Icap::History::Pointer icapHistory() const;
+#endif
+
+    void recordLookup(const DnsLookupDetails &detail);
+
 protected:
     void clean();
 
@@ -102,6 +128,13 @@ private:
      * request related objects
      */
     ConnStateData *pinned_connection;
+
+#if USE_ADAPTATION
+    mutable Adaptation::History::Pointer adaptHistory_; ///< per-HTTP transaction info
+#endif
+#if ICAP_CLIENT
+    mutable Adaptation::Icap::History::Pointer icapHistory_; ///< per-HTTP transaction info
+#endif
 
 public:
     IpAddress host_addr;
@@ -133,6 +166,8 @@ public:
     IpAddress my_addr;
 
     HierarchyLogEntry hier;
+
+    int dnsWait; ///< sum of DNS lookup delays in milliseconds, for %dt
 
     err_type errType;
 
