@@ -6,8 +6,9 @@ Changes to squid-3.1.0.10 (18 Jul 2009):
 	- Bug 422, 2706: RFC 2616 Date header requirements
 	- Bug 1087: ESI processor not quoting attributes correctly.
 	- Bug 1338: File prefetches aborted despite range_offset
-	- Bug 2127: delay pools class 4 crashes with ntlm auth
+	- Bug 2080: wbinfo_group.pl - false positive under certain conditions
 	- Bug 2092: select loop 32-bit call counter overflows
+	- Bug 2127: delay pools class 4 crashes with ntlm auth
 	- Bug 2611: document fast/slow acl types
 	- Bug 2614: Potential loss of adapted body data from eCAP adapters
 	- Bug 2658: Missing TextException copy constructor
