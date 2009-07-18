@@ -24,6 +24,7 @@ INCLUDES = \
 ## XXX: Do we really need this? Does auto-dependency tracking work?
 $(OBJS): $(top_srcdir)/include/version.h $(top_builddir)/include/autoconf.h
 
+## Because compatibility is almost universal. And the link order is important.
 COMPAT_LIBS = \
 	-L$(top_builddir)/lib -lmiscutil \
 	$(top_builddir)/compat/libcompat.la
