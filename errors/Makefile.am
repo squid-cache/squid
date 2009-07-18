@@ -33,6 +33,7 @@ install-data-local:
 	  fi \
 	done; \
 	$(INSTALL_DATA) $(srcdir)/TRANSLATORS $(DESTDIR)TRANSLATORS; \
+	$(INSTALL_DATA) $(srcdir)/COPYRIGHT $(DESTDIR)COPYRIGHT; \
 	$(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET).default; \
 	if test -f $(DESTDIR)$(DEFAULT_STYLESHEET) ; then \
 		echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_STYLESHEET)" ; \
@@ -64,7 +65,7 @@ uninstall-local:
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_STYLESHEET)
 	rm -f $(DESTDIR)$(DEFAULT_STYLESHEET).default
 	rm -f $(DESTDIR)TRANSLATORS
-
+	rm -f $(DESTDIR)COPYRIGHT
 
 ## Upgrade requires the new files to be pre-installed
 upgrade: install
@@ -80,7 +81,7 @@ dist-hook: translate
 		  || exit 1; \
 	  fi; \
 	done; \
-	for f in aliases alias-link.sh alias-upgrade errorpage.css TRANSLATORS; do \
+	for f in aliases alias-link.sh alias-upgrade errorpage.css TRANSLATORS COPYRIGHT; do \
 		cp -p $(srcdir)/$$f $(distdir)/`basename $$f`; \
 	done;
 
