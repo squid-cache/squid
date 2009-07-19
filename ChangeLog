@@ -1,3 +1,17 @@
+Changes to squid-3.1.0.11 (19 Jul 2009):
+
+	- Bug 2087: Support adaptation sets and chains
+	- Bug 2459: dns error message broken when error handling delayed
+	- Support ICAP Retry
+	- Support ICAP retries based on the ICAP responses status code
+	- Support logging ICAP
+	- Support logging total DNS wait time
+	- Support logging response times of adaptation transactions
+	- General logging enhancements
+	- Dynamically form chains based on ICAP X-Next-Services header
+	- Support cross-transactional ICAP header exchange
+	- ... and much adaptation polish and improvements
+
 Changes to squid-3.1.0.10 (18 Jul 2009):
 
 	- Bug 2680: Regression Crash after rotate with no helpers running
