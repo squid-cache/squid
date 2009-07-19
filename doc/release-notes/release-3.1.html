@@ -2,10 +2,10 @@
 <HTML>
 <HEAD>
  <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.50">
- <TITLE>Squid 3.1.0.10 release notes</TITLE>
+ <TITLE>Squid 3.1.0.11 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.1.0.10 release notes</H1>
+<H1>Squid 3.1.0.11 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -32,6 +32,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <LI><A NAME="toc2.6">2.6</A> <A HREF="#ss2.6">Quality of Service (QoS) Flow support</A>
 <LI><A NAME="toc2.7">2.7</A> <A HREF="#ss2.7">SSL Bump (for HTTPS Filtering and Adaptation)</A>
 <LI><A NAME="toc2.8">2.8</A> <A HREF="#ss2.8">eCAP Adaptation Module support</A>
+<LI><A NAME="toc2.9">2.9</A> <A HREF="#ss2.9">ICAP Bypass and Retry enhancements</A>
 </UL>
 <P>
 <H2><A NAME="toc3">3.</A> <A HREF="#s3">Windows support</A></H2>
@@ -80,7 +81,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.1.0.10 for testing.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.1.0.11 for testing.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.1/">http://www.squid-cache.org/Versions/v3/3.1/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -115,6 +116,7 @@ While this release is not deemed ready for production use, we believe it is read
 <LI>Quality of Service (QoS) Flow support</LI>
 <LI>SSL Bump (for HTTPS Filtering and Adaptation)</LI>
 <LI>eCAP Adaptation Module support</LI>
+<LI>ICAP Bypass and Retry enhancements</LI>
 </UL>
 </P>
 <P>Most user-facing changes are reflected in squid.conf (see below).</P>
@@ -342,6 +344,67 @@ While decrypted, the traffic can be inspected using ICAP.</P>
 
 <P>Details in 
 <A HREF="http://wiki.squid-cache.org/Features/eCAP">The Squid wiki</A></P>
+
+<H2><A NAME="ss2.9">2.9</A> <A HREF="#toc2.9">ICAP Bypass and Retry enhancements</A>
+</H2>
+
+<P>Details in 
+<A HREF="http://wiki.squid-cache.org/Features/ICAP">The Squid wiki</A></P>
+
+<P>ICAP is now extended with full bypass and dynamic chain routing to handle multiple
+adaptation services.</P>
+
+<H3>ICAP Adaptation Service Sets and Chains</H3>
+
+<P>An adaptation service set contains similar, interchangeable services. No more
+than one service is successfully applied. If one service is down or fails,
+Squid can use another service. Think "hot standby" or "spare" ICAP servers. </P>
+
+<P>Sets may seem similar to the existing "service bypass" feature, but they allow
+the failed adaptation to be retried and succeed if a replacement service is
+available. The services in a set may be all optional or all essential,
+depending on whether ignoring the entire set is acceptable. The mixture of
+optional and essential services in a set is supported, but yields results that
+may be difficult for a human to anticipate or interpret. Squid warns when it
+detects such a mixture.</P>
+
+<P>When performing adaptations with a set, failures at a service (optional or
+essential, does not matter) are retried with a different service if possible.
+If there are no more replacement services left to try, the failure is treated
+depending on whether the last service tried was optional or essential: Squid
+either tries to ignore the failure and proceed or terminates the master
+transaction.</P>
+
+<P>An adaptation chain is a list of different services applied one after another,
+forming an adaptation pipeline. Services in a chain may be optional or
+essential. When performing adaptations, failures at an optional service are
+ignored as if the service did not exist in the chain.</P>
+
+<P>Request satisfaction terminates the adaptation chain.</P>
+
+<P>When forming a set or chain for a given transaction, optional down services are ignored as if they did not exist.</P>
+
+<P>ICAP and eCAP services can be mixed and matched in an adaptation set or chain.</P>
+
+<H3>Dynamically form adaptation chains based on the ICAP X-Next-Services header.</H3>
+
+<P>If an ICAP service with the routing=1 option in squid.conf returns an ICAP
+X-Next-Services response header during a successful REQMOD or RESPMOD
+transaction, Squid abandons the original adaptation plan and forms a new
+adaptation chain consisting of services identified in the X-Next-Services
+header value (using a comma-separated list of adaptation service names from
+squid.conf).  The dynamically created chain is destroyed once the new plan is
+completed or replaced.</P>
+
+<P>This feature is useful when a custom adaptation service knows which other
+services are applicable to the message being adapted.</P>
+
+<P>Limit adaptation iterations to adaptation_service_iteration_limit to protect
+Squid from infinite adaptation loops caused by ICAP services constantly
+including themselves in the dynamic adaptation chain they request. When the
+limit is exceeded, the master transaction fails. The default limit of 16
+should be large enough to not require an explicit configuration in most
+environments yet may be small enough to limit side-effects of loops.</P>
 
 
 <H2><A NAME="s3">3.</A> <A HREF="#toc3">Windows support</A></H2>
@@ -627,8 +690,76 @@ Default: ON
 
         It is currently not possible to apply more than one adaptation
         service at the same vectoring point to the same HTTP transaction.
+        
+</PRE>
+</P>
 
-        See also: icap_service and ecap_service
+<DT><B>adaptation_masterx_shared_names</B><DD>
+<P>
+<PRE>
+        For each master transaction (i.e., the HTTP request and response
+        sequence, including all related ICAP and eCAP exchanges), Squid
+        maintains a table of metadata. The table entries are (name, value)
+        pairs shared among eCAP and ICAP exchanges. The table is destroyed
+        with the master transaction.
+
+        This option specifies the table entry names that Squid must accept
+        from and forward to the adaptation transactions.
+
+        An ICAP REQMOD or RESPMOD transaction may set an entry in the 
+        shared table by returning an ICAP header field with a name 
+        specified in adaptation_masterx_shared_names. Squid will store 
+        and forward that ICAP header field to subsequent ICAP 
+        transactions within the same master transaction scope.
+
+        Only one shared entry name is supported at this time.
+        
+</PRE>
+</P>
+
+<DT><B>adaptation_service_chain</B><DD>
+<P>
+<PRE>
+        Configures a list of complementary services that will be applied
+        one-by-one, forming an adaptation chain or pipeline. This is useful
+        when Squid must perform different adaptations on the same message.
+
+            adaptation_service_chain chain_name service_name1 svc_name2 ...
+
+        The named services are used in the chain declaration order. The first
+        applicable adaptation service from the chain is used first. The next
+        applicable service is applied to the successful adaptation results of
+        the previous service in the chain.
+
+        When adaptation starts, broken services are ignored as if they were
+        not a part of the chain. A broken service is a down optional service.
+
+        Request satisfaction terminates the adaptation chain because Squid
+        does not currently allow declaration of RESPMOD services at the
+        "reqmod_precache" vectoring point (see icap_service or ecap_service).
+
+        The services in a chain must be attached to the same vectoring point
+        (e.g., pre-cache) and use the same adaptation method (e.g., REQMOD).
+
+        A chain may contain a mix of optional and essential services. If an
+        essential adaptation fails (or the failure cannot be bypassed for
+        other reasons), the master transaction fails. Otherwise, the failure
+        is bypassed as if the failed adaptation service was not in the chain.
+        
+</PRE>
+</P>
+
+<DT><B>adaptation_service_iteration_limit</B><DD>
+<P>
+<PRE>
+        Limits the number of iterations allowed when applying adaptation
+        services to a message. If your longest adaptation set or chain
+        may have more than 16 services, increase the limit beyond its
+        default value of 16. If detecting infinite iteration loops sooner
+        is critical, make the iteration limit match the actual number
+        of services in your longest adaptation set or chain.
+
+        Infinite adaptation loops are most likely with routing services.
         
 </PRE>
 </P>
@@ -636,20 +767,60 @@ Default: ON
 <DT><B>adaptation_service_set</B><DD>
 <P>
 <PRE>
-        Defines a named adaptation service set. The set is populated in
-        the order of adaptation_service_set directives in this file.
-        When adaptation ACLs are processed, the first and only the first
-        applicable adaptation service from the set will be used. Thus,
-        the set should group similar, redundant services, rather than a
-        chain of complementary services.
+        Configures an ordered set of similar, redundant services. This is
+        useful when hot standby or backup adaptation servers are available.
 
-        If you have a single adaptation service, you do not need to
-        define a set containing it because adaptation_access accepts
-        service names.
+            adaptation_service_set set_name service_name1 service_name2 ...
 
-        Example:
-              adaptation_service_set svcBlocker urlFilterPrimary urlFilterBackup
-              adaptation service_set svcLogger loggerLocal loggerRemote
+        The named services are used in the set declaration order. The first
+        applicable adaptation service from the set is used first. The next
+        applicable service is tried if and only if the transaction with the
+        previous service fails and the message waiting to be adapted is still
+        intact.
+
+        When adaptation starts, broken services are ignored as if they were
+        not a part of the set. A broken service is a down optional service.
+
+        The services in a set must be attached to the same vectoring point
+        (e.g., pre-cache) and use the same adaptation method (e.g., REQMOD).
+
+        If all services in a set are optional then adaptation failures are
+        bypassable. If all services in the set are essential, then a
+        transaction failure with one service may still be retried using
+        another service from the set, but when all services fail, the master
+        transaction fails as well.
+
+        A set may contain a mix of optional and essential services, but that
+        is likely to lead to surprising results because broken services become
+        ignored (see above), making previously bypassable failures fatal.
+        Technically, it is the bypassability of the last failed service that
+        matters.
+        
+</PRE>
+</P>
+
+<DT><B>chunked_request_body_max_size</B><DD>
+<P>New option to enable handing of broken HTTP/1.1 clients sending chunk requests.
+<PRE>
+        A broken or confused HTTP/1.1 client may send a chunked HTTP
+        request to Squid. Squid does not have full support for that
+        feature yet. To cope with such requests, Squid buffers the
+        entire request and then dechunks request body to create a
+        plain HTTP/1.0 request with a known content length. The plain
+        request is then used by the rest of Squid code as usual.
+
+        The option value specifies the maximum size of the buffer used
+        to hold the request before the conversion. If the chunked
+        request size exceeds the specified limit, the conversion
+        fails, and the client receives an "unsupported request" error,
+        as if dechunking was disabled.
+
+        Dechunking is enabled by default. To disable conversion of
+        chunked requests, set the maximum to zero.
+
+        Request dechunking feature and this option in particular are a
+        temporary hack. When chunking requests and responses are fully
+        supported, there will be no need to buffer a chunked request.
         
 </PRE>
 </P>
@@ -837,6 +1008,112 @@ New translations can be downloaded from http://www.squid-cache.org/Versions/lang
 <P>Controls how many different forward paths Squid will try
 before giving up. Default: 10</P>
 
+<DT><B>icap_log</B><DD>
+<P>New option to write ICAP log files record ICAP transaction summaries, one line per
+transaction. Similar to access.log.
+<PRE>
+        The icap_log option format is:
+                icap_log &lt;filepath> [&lt;logformat name> [acl acl ...]]
+                icap_log none [acl acl ...]]
+        
+        Please see access_log option documentation for details. The two
+        kinds of logs share the overall configuration approach and many
+        features.
+
+        ICAP processing of a single HTTP message or transaction may
+        require multiple ICAP transactions.  In such cases, multiple
+        ICAP transaction log lines will correspond to a single access
+        log line.
+
+        ICAP log uses logformat codes that make sense for an ICAP
+        transaction. Header-related codes are applied to the HTTP header
+        embedded in an ICAP server response, with the following caveats:
+        For REQMOD, there is no HTTP response header unless the ICAP
+        server performed request satisfaction. For RESPMOD, the HTTP
+        request header is the header sent to the ICAP server. For
+        OPTIONS, there are no HTTP headers.
+
+        The following format codes are also available for ICAP logs:
+
+                icap::&lt;A     ICAP server IP address. Similar to &lt;A.
+
+                icap::&lt;service_name  ICAP service name from the icap_service
+                                option in Squid configuration file.
+
+                icap::ru        ICAP Request-URI. Similar to ru.
+
+                icap::rm        ICAP request method (REQMOD, RESPMOD, or 
+                                OPTIONS). Similar to existing rm.
+
+                icap::>st       Bytes sent to the ICAP server (TCP payload
+                                only; i.e., what Squid writes to the socket).
+
+                icap::&lt;st    Bytes received from the ICAP server (TCP
+                                payload only; i.e., what Squid reads from
+                                the socket).
+
+                icap::tr        Transaction response time (in
+                                milliseconds).  The timer starts when
+                                the ICAP transaction is created and
+                                stops when the transaction is completed.
+                                Similar to tr.
+
+                icap::tio       Transaction I/O time (in milliseconds). The
+                                timer starts when the first ICAP request
+                                byte is scheduled for sending. The timers
+                                stops when the last byte of the ICAP response
+                                is received.
+
+                icap::to        Transaction outcome: ICAP_ERR* for all
+                                transaction errors, ICAP_OPT for OPTION
+                                transactions, ICAP_ECHO for 204
+                                responses, ICAP_MOD for message
+                                modification, and ICAP_SAT for request
+                                satisfaction. Similar to Ss.
+
+                icap::Hs        ICAP response status code. Similar to Hs.
+
+                icap::>h        ICAP request header(s). Similar to >h.
+
+                icap::&lt;h     ICAP response header(s). Similar to &lt;h.
+
+        The default ICAP log format, which can be used without an explicit
+        definition, is called icap_squid:
+
+logformat icap_squid %ts.%03tu %6icap::tr %>a %icap::to/%03icap::Hs %icap::&lt;size %icap::rm %icap::ru% %un -/%icap::&lt;A -
+        
+</PRE>
+</P>
+
+<DT><B>icap_retry</B><DD>
+<P>New option to determine which retriable ICAP transactions are
+retried.
+<PRE>
+        Transactions that received a complete ICAP response
+        and did not have to consume or produce HTTP bodies to receive
+        that response are usually retriable.
+
+                icap_retry allow|deny [!]aclname ...
+
+        Squid automatically retries some ICAP I/O timeouts and errors
+        due to persistent connection race conditions.
+        
+</PRE>
+</P>
+
+<DT><B>icap_retry_limit</B><DD>
+<P>
+<PRE>
+        Limits the number of retries allowed. When set to zero (default),
+        no retries are allowed.
+
+        Communication errors due to persistent connection race
+        conditions are unavoidable, automatically retried, and do not
+        count against this limit.
+        
+</PRE>
+</P>
+
 <DT><B>include</B><DD>
 <P>New option to import entire secondary configuration files into squid.conf.
 <PRE>
@@ -859,6 +1136,15 @@ preloaded module(s).
 <PRE>
         Example:
               loadable_modules @DEFAULT_PREFIX@/lib/MinimalAdapter.so
+        
+</PRE>
+</P>
+
+<DT><B>log_icap aclname [aclname ...]</B><DD>
+<P>
+<PRE>
+        This options allows you to control which requests get logged
+        to icap.log. See the icap_log directive for ICAP log details.
         
 </PRE>
 </P>
@@ -933,8 +1219,6 @@ DEFAULT: None bypassed.
         terminate the transaction. Bypassing validation errors is dangerous
         because an error usually implies that the server cannot be trusted and
         the connection may be insecure.
-
-        See also: sslproxy_flags and DONT_VERIFY_PEER.
         
 </PRE>
 </P>
@@ -1187,8 +1471,101 @@ For now option 'tproxy' remains with old behaviour meaning fully-invisible proxy
 <DT><B>https_port intercept sslbump connection-auth[=on|off]</B><DD>
 <P>New port options. see http_port.</P>
 
+<DT><B>icap_service bypass=on|off|1|0 routing=on|off|1|0</B><DD>
+<P>New options 'bypass=' and 'routing='.
+<PRE>
+        bypass=on|off|1|0
+                If set to 'on' or '1', the ICAP service is treated as
+                optional. If the service cannot be reached or malfunctions,
+                Squid will try to ignore any errors and process the message as
+                if the service was not enabled. No all ICAP errors can be
+                bypassed.  If set to 0, the ICAP service is treated as
+                essential and all ICAP errors will result in an error page
+                returned to the HTTP client.
+
+                Bypass is off by default: services are treated as essential.
+
+        routing=on|off|1|0
+                If set to 'on' or '1', the ICAP service is allowed to
+                dynamically change the current message adaptation plan by
+                returning a chain of services to be used next. The services
+                are specified using the X-Next-Services ICAP response header
+                value, formatted as a comma-separated list of service names.
+                Each named service should be configured in squid.conf and
+                should have the same method and vectoring point as the current
+                ICAP transaction.  Services violating these rules are ignored.
+                An empty X-Next-Services value results in an empty plan which
+                ends the current adaptation. 
+
+                Routing is not allowed by default: the ICAP X-Next-Services
+                response header is ignored.
+        
+</PRE>
+</P>
+
 <DT><B>logfile_rotate</B><DD>
 <P>No longer controls cache.log rotation. Use debug_options rotate=N instead.</P>
+
+<DT><B>logformat</B><DD>
+<P>New log format tag sets %icap::* %adapt::* for adaptation information.
+%Hs tag deprecated and replaced by request/reply specific &gt;Hs and &lt;Hs
+HTTP request/reply format tags may now be optionally prefixed with http::.
+Old forms will be deprecated in some as yet undecided future release.
+<PRE>
+                dt              Total time spent making DNS lookups (milliseconds)
+
+                [http::]>Hs     HTTP status code sent to the client
+                [http::]&lt;Hs  HTTP status code received from the next hop
+                [http::]>sh     Received HTTP request headers size
+                [http::]&lt;sh  Sent HTTP reply headers size
+                [http::]&lt;pt  Peer response time in milliseconds. The timer starts
+                                when the last request byte is sent to the next hop
+                                and stops when the last response byte is received.
+                [http::]&lt;tt  Total server-side time in milliseconds. The timer 
+                                starts with the first connect request (or write I/O)
+                                sent to the first selected peer. The timer stops
+                                with the last I/O with the last peer.
+
+        If ICAP is enabled, the following two codes become available (as
+        well as ICAP log codes documented with the icap_log option):
+
+                icap::tt        Total ICAP processing time for the HTTP
+                                transaction. The timer ticks when ICAP
+                                ACLs are checked and when ICAP
+                                transaction is in progress.
+
+                icap::&lt;last_h        The header of the last ICAP response
+                                related to the HTTP transaction. Like
+                                &lt;h, accepts an optional header name
+                                argument.  Will not change semantics
+                                when multiple ICAP transactions per HTTP
+                                transaction are supported.
+
+        If adaptation is enabled the following two codes become available:
+
+                adapt::sum_trs Summed adaptation transaction response
+                                times recorded as a comma-separated list in
+                                the order of transaction start time. Each time
+                                value is recorded as an integer number,
+                                representing response time of one or more
+                                adaptation (ICAP or eCAP) transaction in
+                                milliseconds.  When a failed transaction is
+                                being retried or repeated, its time is not
+                                logged individually but added to the
+                                replacement (next) transaction.
+
+                adapt::all_trs All adaptation transaction response times.
+                                Same as adaptation_strs but response times of
+                                individual transactions are never added
+                                together. Instead, all transaction response
+                                times are recorded individually.
+
+        You can prefix adapt::*_trs format codes with adaptation
+        service name in curly braces to record response time(s) specific
+        to that service. For example: %{my_service}adapt::sum_trs
+        
+</PRE>
+</P>
 
 <DT><B>maximum_object_size_in_memory</B><DD>
 <P>Default size limit increased to 512KB.</P>
