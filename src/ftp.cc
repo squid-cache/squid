@@ -2447,9 +2447,13 @@ ftpReadEPSV(FtpStateData* ftpState)
         /* server response with list of supported methods   */
         /*   522 Network protocol not supported, use (1)    */
         /*   522 Network protocol not supported, use (1,2)  */
+        /* TODO: handle the (1,2) case. We might get it back after EPSV ALL 
+         * which means close data + control without self-destructing and re-open from scratch. */
         debugs(9, 5, HERE << "scanning: " << ftpState->ctrl.last_reply);
+        buf = ftpState->ctrl.last_reply;
+        while (buf != NULL && *buf != '\0' && *buf != '\n' && *buf != '(') ++buf;
+        if (buf != NULL && *buf == '\n') ++buf;
 
-        buf = ftpState->ctrl.last_reply + strcspn(ftpState->ctrl.last_reply, "(1,2)");
         if (buf == NULL || *buf == '\0') {
             /* handle broken server (RFC 2428 says MUST specify supported protocols in 522) */
             debugs(9, DBG_IMPORTANT, "Broken FTP Server at " << fd_table[ftpState->ctrl.fd].ipaddr << ". 522 error missing protocol negotiation hints");
@@ -2472,6 +2476,11 @@ ftpReadEPSV(FtpStateData* ftpState)
             ftpState->state = SENT_EPSV_1;
             ftpSendPassive(ftpState);
 #endif
+        }
+        else {
+            /* handle broken server (RFC 2428 says MUST specify supported protocols in 522) */
+            debugs(9, DBG_IMPORTANT, "WARNING: Server at " << fd_table[ftpState->ctrl.fd].ipaddr << " sent unknown protocol negotiation hint: " << buf);
+            ftpSendPassive(ftpState);
         }
         return;
     }
