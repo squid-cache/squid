@@ -76,6 +76,7 @@ buildtest() {
 
     if test "${cleanup}" = "yes" ; then
 	echo "REMOVE DATA: ${btlayer}"
+	chmod -R 777 ${btlayer}
 	rm -f -r ${btlayer}
     fi
 
@@ -86,7 +87,7 @@ buildtest() {
 	fi
     else
         echo "Build Failed. Last log lines are:"
-        tail -5 ${log}
+        tail -20 ${log}
 	globalResult=1
     fi
 
