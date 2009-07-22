@@ -53,20 +53,18 @@ cd ..
 cat doc/po4a.cnf >po4a.conf
 for f in `ls -1 helpers/*/*/*.8 doc/*.8.in tools/*.1 tools/*.8.in` ; do
 	echo "" >>po4a.conf
-	echo "[type: man] ${f}" >>po4a.conf
+	manp=`basename ${f}`
+	echo "[type: man] ${f} \$lang:doc/manuals/\$lang/${manp}" >>po4a.conf
 done
 
-## TODO po4a of all doc/manuals man files...
+## po4a conversion of all doc/manuals man files...
 po4a --no-translations --verbose po4a.conf
 
-#(
-#	cat manuals.pot.new | 
-#	sed s/PACKAGE\ VERSION/Squid-3/ |
-#	sed s/LANGUAGE\ \<LL\@li\.org\>/Squid\ Developers\ \<squid-dev\@squid-cache\.org\>/
-#) >manuals.pot
+(
+	cat doc/manuals/manuals.pot | 
+	sed s/PACKAGE\ VERSION/Squid-3/ |
+	sed s/LANGUAGE\ \<LL\@li\.org\>/Squid\ Developers\ \<squid-dev\@squid-cache\.org\>/
+) >doc/manuals/manuals.pot.tmp
+mv doc/manuals/manuals.pot.tmp doc/manuals/manuals.pot
 
-
-# cleanup
-#rm -f manuals.pot.new
-#rm -f po4a.conf
 ## Done doc/manuals/ Update
