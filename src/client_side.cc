@@ -1360,7 +1360,7 @@ ConnStateData::readNextRequest()
     /** Please don't do anything with the FD past here! */
 }
 
-void
+static void
 ClientSocketContextPushDeferredIfNeeded(ClientSocketContext::Pointer deferredRequest, ConnStateData * conn)
 {
     debugs(33, 2, "ClientSocketContextPushDeferredIfNeeded: FD " << conn->fd << " Sending next");
@@ -2222,7 +2222,7 @@ connKeepReadingIncompleteRequest(ConnStateData * conn)
     // when we read chunked requests, the entire body is buffered
     // XXX: this check ignores header size and its limits.
     if (conn->in.dechunkingState == ConnStateData::chunkParsing)
-        return conn->in.notYetUsed < Config.maxChunkedRequestBodySize;
+        return ((int64_t)conn->in.notYetUsed) < Config.maxChunkedRequestBodySize;
 
     return conn->in.notYetUsed >= Config.maxRequestHeaderSize ? 0 : 1;
 }
