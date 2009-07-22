@@ -50,6 +50,8 @@ sub check {
         $groupGID = `wbinfo -Y "$groupSID"`;
         chop $groupGID;
         &debug( "User:  -$user-\nGroup: -$group-\nSID:   -$groupSID-\nGID:   -$groupGID-");
+        return 'ERR' if($groupGID eq ""); # Verify if groupGID variable is empty.
+        return 'ERR' if(`wbinfo -r \Q$user\E` eq ""); # Verify if "wbinfo -r" command returns no value.
         return 'OK' if(`wbinfo -r \Q$user\E` =~ /^$groupGID$/m);
         return 'ERR';
 }
