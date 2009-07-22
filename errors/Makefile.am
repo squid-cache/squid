@@ -16,6 +16,7 @@ TRANSLATIONDIR=`ls -1 $(srcdir) $(builddir) | sed -e 's%$(srcdir)/%%' -e 's%$(bu
 
 ## TODO: prevent this loop installing everything twice when srcdir == builddir
 install-data-local:
+	$(mkinstalldirs) $(DESTDIR)$(DEFAULT_ERROR_DIR) ; \
 	for l in $(TRANSLATIONDIR) ; do \
 	  echo "Located $$l for install..."; \
 	  if test -d $(srcdir)/$$l; then \
