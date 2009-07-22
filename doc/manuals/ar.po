@@ -8,26 +8,26 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: FULL NAME <EMAIL@ADDRESS>\n"
 "POT-Creation-Date: 2009-06-07 21:20+1200\n"
-"PO-Revision-Date: 2009-06-10 14:58+0000\n"
-"Last-Translator: MaXeR <Unknown>\n"
+"PO-Revision-Date: 2009-07-22 09:45+0000\n"
+"Last-Translator: Amos Jeffries <Unknown>\n"
 "Language-Team: Arabic <ar@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Launchpad-Export-Date: 2009-06-14 06:48+0000\n"
+"X-Launchpad-Export-Date: 2009-07-22 09:52+0000\n"
 "X-Generator: Launchpad (build Unknown)\n"
 
 #. type: TH
 #: doc/cachemgr.cgi.8.in:1
 #, no-wrap
 msgid "cachemgr.cgi"
-msgstr ""
+msgstr "cachemgr.cgi"
 
 #. type: TH
 #: doc/cachemgr.cgi.8.in:1 doc/squid.8.in:1
 #, no-wrap
 msgid "@PACKAGE_STRING@"
-msgstr ""
+msgstr "@PACKAGE_STRING@"
 
 #. type: SH
 #: doc/cachemgr.cgi.8.in:4 doc/squid.8.in:4 helpers/basic_auth/NCSA/ncsa_auth.8:14 helpers/basic_auth/PAM/pam_auth.8:3 helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:3 helpers/external_acl/session/squid_session.8:3 helpers/external_acl/unix_group/squid_unix_group.8:3
@@ -49,13 +49,13 @@ msgstr ""
 #. type: Plain text
 #: doc/cachemgr.cgi.8.in:8
 msgid "B<http://your.server/cgi-bin/cachemgr.cgi>"
-msgstr ""
+msgstr "B<http://your.server/cgi-bin/cachemgr.cgi>"
 
 #. type: SH
 #: doc/cachemgr.cgi.8.in:8 doc/squid.8.in:26 helpers/basic_auth/NCSA/ncsa_auth.8:23 helpers/basic_auth/PAM/pam_auth.8:9 helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:13 helpers/external_acl/session/squid_session.8:9 helpers/external_acl/unix_group/squid_unix_group.8:9
 #, no-wrap
 msgid "DESCRIPTION"
-msgstr ""
+msgstr "وصف"
 
 #. type: Plain text
 #: doc/cachemgr.cgi.8.in:13
@@ -75,12 +75,12 @@ msgstr ""
 #. type: Plain text
 #: doc/cachemgr.cgi.8.in:15
 msgid "I<./cachemgr.conf>"
-msgstr ""
+msgstr "I<./cachemgr.conf>"
 
 #. type: Plain text
 #: doc/cachemgr.cgi.8.in:17
 msgid "I<@DEFAULT_CACHEMGR_CONFIG@>"
-msgstr ""
+msgstr "I<@DEFAULT_CACHEMGR_CONFIG@>"
 
 #. type: Plain text
 #: doc/cachemgr.cgi.8.in:22
@@ -131,12 +131,12 @@ msgstr ""
 #: doc/cachemgr.cgi.8.in:39 doc/squid.8.in:178 helpers/basic_auth/NCSA/ncsa_auth.8:35 helpers/basic_auth/PAM/pam_auth.8:89 helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:87 helpers/external_acl/session/squid_session.8:61 helpers/external_acl/unix_group/squid_unix_group.8:63
 #, no-wrap
 msgid "SEE ALSO"
-msgstr ""
+msgstr "قرآءه الكُل"
 
 #. type: Plain text
 #: doc/cachemgr.cgi.8.in:41
 msgid "B<squid>(8)"
-msgstr ""
+msgstr "B<squid>(8)"
 
 #. Could add the following sections:
 #. .SH ENVIRONMENT
@@ -225,7 +225,7 @@ msgstr ""
 #: doc/squid.8.in:69 helpers/basic_auth/NCSA/ncsa_auth.8:29
 #, no-wrap
 msgid "OPTIONS"
-msgstr ""
+msgstr "خيارات"
 
 #. type: IP
 #: doc/squid.8.in:70
@@ -271,7 +271,7 @@ msgstr ""
 #: doc/squid.8.in:82
 #, no-wrap
 msgid "-h"
-msgstr ""
+msgstr "-h"
 
 #. type: Plain text
 #: doc/squid.8.in:84
@@ -282,7 +282,7 @@ msgstr ""
 #: doc/squid.8.in:84
 #, no-wrap
 msgid "-i"
-msgstr ""
+msgstr "-i"
 
 #. type: Plain text
 #: doc/squid.8.in:86
@@ -295,6 +295,7 @@ msgstr ""
 msgid ""
 "-k reconfigure | rotate | shutdown | interrupt | kill | debug | check | parse"
 msgstr ""
+"-k reconfigure | rotate | shutdown | interrupt | kill | debug | check | parse"
 
 #. type: Plain text
 #: doc/squid.8.in:89
@@ -320,7 +321,7 @@ msgstr ""
 #: doc/squid.8.in:93
 #, no-wrap
 msgid "-r"
-msgstr ""
+msgstr "-r"
 
 #. type: Plain text
 #: doc/squid.8.in:95
@@ -331,7 +332,7 @@ msgstr ""
 #: doc/squid.8.in:95
 #, no-wrap
 msgid "-s"
-msgstr ""
+msgstr "-s"
 
 #. type: Plain text
 #: doc/squid.8.in:98
@@ -365,7 +366,7 @@ msgstr ""
 #: doc/squid.8.in:102
 #, no-wrap
 msgid "-v"
-msgstr ""
+msgstr "-v"
 
 #. type: Plain text
 #: doc/squid.8.in:104
@@ -376,7 +377,7 @@ msgstr ""
 #: doc/squid.8.in:104
 #, no-wrap
 msgid "-z"
-msgstr ""
+msgstr "-z"
 
 #. type: Plain text
 #: doc/squid.8.in:106
@@ -387,7 +388,7 @@ msgstr ""
 #: doc/squid.8.in:106
 #, no-wrap
 msgid "-C"
-msgstr ""
+msgstr "-C"
 
 #. type: Plain text
 #: doc/squid.8.in:108
@@ -398,7 +399,7 @@ msgstr ""
 #: doc/squid.8.in:108
 #, no-wrap
 msgid "-F"
-msgstr ""
+msgstr "-F"
 
 #. type: Plain text
 #: doc/squid.8.in:110
@@ -409,7 +410,7 @@ msgstr ""
 #: doc/squid.8.in:110
 #, no-wrap
 msgid "-N"
-msgstr ""
+msgstr "-N"
 
 #. type: Plain text
 #: doc/squid.8.in:112
@@ -431,7 +432,7 @@ msgstr ""
 #: doc/squid.8.in:114
 #, no-wrap
 msgid "-R"
-msgstr ""
+msgstr "-R"
 
 #. type: Plain text
 #: doc/squid.8.in:116
@@ -442,7 +443,7 @@ msgstr ""
 #: doc/squid.8.in:116
 #, no-wrap
 msgid "-S"
-msgstr ""
+msgstr "-S"
 
 #. type: Plain text
 #: doc/squid.8.in:118
@@ -453,7 +454,7 @@ msgstr ""
 #: doc/squid.8.in:118
 #, no-wrap
 msgid "-X"
-msgstr ""
+msgstr "-X"
 
 #. type: Plain text
 #: doc/squid.8.in:120
@@ -464,7 +465,7 @@ msgstr ""
 #: doc/squid.8.in:120
 #, no-wrap
 msgid "-Y"
-msgstr ""
+msgstr "-Y"
 
 #. type: Plain text
 #: doc/squid.8.in:122
@@ -474,7 +475,7 @@ msgstr ""
 #. type: Plain text
 #: doc/squid.8.in:125
 msgid "I<@DEFAULT_CONFIG_FILE@>"
-msgstr ""
+msgstr "I<@DEFAULT_CONFIG_FILE@>"
 
 #. type: Plain text
 #: doc/squid.8.in:131
@@ -487,7 +488,7 @@ msgstr ""
 #. type: Plain text
 #: doc/squid.8.in:134
 msgid "I<*.default files>"
-msgstr ""
+msgstr "I<*.default files>"
 
 #. type: Plain text
 #: doc/squid.8.in:138
@@ -500,7 +501,7 @@ msgstr ""
 #. type: Plain text
 #: doc/squid.8.in:141
 msgid "I<@DEFAULT_CONFIG_FILE@.documented>"
-msgstr ""
+msgstr "I<@DEFAULT_CONFIG_FILE@.documented>"
 
 #. type: Plain text
 #: doc/squid.8.in:147
@@ -515,7 +516,7 @@ msgstr ""
 #. type: Plain text
 #: doc/squid.8.in:150
 msgid "I<cachemgr.conf>"
-msgstr ""
+msgstr "I<cachemgr.conf>"
 
 #. type: Plain text
 #: doc/squid.8.in:152
@@ -525,7 +526,7 @@ msgstr ""
 #. type: Plain text
 #: doc/squid.8.in:155
 msgid "I<msntauth.conf>"
-msgstr ""
+msgstr "I<msntauth.conf>"
 
 #. type: Plain text
 #: doc/squid.8.in:157
@@ -535,7 +536,7 @@ msgstr ""
 #. type: Plain text
 #: doc/squid.8.in:160
 msgid "I<errorpage.css>"
-msgstr ""
+msgstr "I<errorpage.css>"
 
 #. type: Plain text
 #: doc/squid.8.in:164
@@ -548,7 +549,7 @@ msgstr ""
 #. type: Plain text
 #: doc/squid.8.in:167
 msgid "I<@DEFAULT_MIME_TABLE@ (mime_table)>"
-msgstr ""
+msgstr "I<@DEFAULT_MIME_TABLE@ (mime_table)>"
 
 #. type: Plain text
 #: doc/squid.8.in:169
@@ -558,7 +559,7 @@ msgstr ""
 #. type: Plain text
 #: doc/squid.8.in:172
 msgid "I<@DEFAULT_ERROR_DIR@>"
-msgstr ""
+msgstr "I<@DEFAULT_ERROR_DIR@>"
 
 #. type: Plain text
 #: doc/squid.8.in:176
@@ -571,6 +572,8 @@ msgid ""
 "B<cachemgr.cgi>(8), B<pam_auth>(8), B<squid_ldap_auth>(8), "
 "B<squid_ldap_group>(8), B<squid_session>(8), B<squid_unix_group>(8),"
 msgstr ""
+"B<cachemgr.cgi>(8), B<pam_auth>(8), B<squid_ldap_auth>(8), "
+"B<squid_ldap_group>(8), B<squid_session>(8), B<squid_unix_group>(8),"
 
 #. type: Plain text
 #: doc/squid.8.in:188
@@ -583,7 +586,7 @@ msgstr ""
 #: helpers/basic_auth/NCSA/ncsa_auth.8:13
 #, no-wrap
 msgid "ncsa_auth"
-msgstr ""
+msgstr "ncsa_auth"
 
 #. type: TH
 #: helpers/basic_auth/NCSA/ncsa_auth.8:13
@@ -607,7 +610,7 @@ msgstr ""
 #: helpers/basic_auth/NCSA/ncsa_auth.8:21
 #, no-wrap
 msgid "B<ncsa_auth> I<passwdfile> \n"
-msgstr ""
+msgstr "B<ncsa_auth> I<passwdfile> \n"
 
 #. type: Plain text
 #: helpers/basic_auth/NCSA/ncsa_auth.8:25
@@ -644,7 +647,7 @@ msgstr ""
 #. type: Plain text
 #: helpers/basic_auth/NCSA/ncsa_auth.8:33
 msgid "B<ncsa_auth> /etc/squid/squid.pass"
-msgstr ""
+msgstr "B<ncsa_auth> /etc/squid/squid.pass"
 
 #. type: Plain text
 #: helpers/basic_auth/NCSA/ncsa_auth.8:35
@@ -654,13 +657,13 @@ msgstr ""
 #. type: Plain text
 #: helpers/basic_auth/NCSA/ncsa_auth.8:37
 msgid "B<htpasswd>(1), B<squid>(8)"
-msgstr ""
+msgstr "B<htpasswd>(1), B<squid>(8)"
 
 #. type: SH
 #: helpers/basic_auth/NCSA/ncsa_auth.8:37 helpers/basic_auth/PAM/pam_auth.8:70 helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:65 helpers/external_acl/session/squid_session.8:47 helpers/external_acl/unix_group/squid_unix_group.8:41
 #, no-wrap
 msgid "AUTHOR"
-msgstr ""
+msgstr "ترخيص"
 
 #. type: Plain text
 #: helpers/basic_auth/NCSA/ncsa_auth.8:38
@@ -672,7 +675,7 @@ msgstr ""
 #: helpers/basic_auth/PAM/pam_auth.8:1
 #, no-wrap
 msgid "pam_auth"
-msgstr ""
+msgstr "pam_auth"
 
 #. type: TH
 #: helpers/basic_auth/PAM/pam_auth.8:1
@@ -694,7 +697,7 @@ msgstr ""
 #. type: Plain text
 #: helpers/basic_auth/PAM/pam_auth.8:8
 msgid "squid_pam_auth [-n \"service name\"] [-t TTL] [-o] [-1]"
-msgstr ""
+msgstr "squid_pam_auth [-n \"service name\"] [-t TTL] [-o] [-1]"
 
 #. type: Plain text
 #: helpers/basic_auth/PAM/pam_auth.8:13
@@ -707,7 +710,7 @@ msgstr ""
 #: helpers/basic_auth/PAM/pam_auth.8:14
 #, no-wrap
 msgid "B<-s >I<service-name>"
-msgstr ""
+msgstr "B<-s >I<service-name>"
 
 #. type: Plain text
 #: helpers/basic_auth/PAM/pam_auth.8:17
@@ -718,7 +721,7 @@ msgstr ""
 #: helpers/basic_auth/PAM/pam_auth.8:18
 #, no-wrap
 msgid "B<-t >I<TTL>"
-msgstr ""
+msgstr "B<-t >I<TTL>"
 
 #. type: Plain text
 #: helpers/basic_auth/PAM/pam_auth.8:26
@@ -735,7 +738,7 @@ msgstr ""
 #: helpers/basic_auth/PAM/pam_auth.8:27
 #, no-wrap
 msgid "B<-o>"
-msgstr ""
+msgstr "B<-o>"
 
 #. type: Plain text
 #: helpers/basic_auth/PAM/pam_auth.8:31
@@ -789,12 +792,12 @@ msgstr ""
 #. type: Plain text
 #: helpers/basic_auth/PAM/pam_auth.8:59
 msgid "B<chown root pam_auth>"
-msgstr ""
+msgstr "B<chown root pam_auth>"
 
 #. type: Plain text
 #: helpers/basic_auth/PAM/pam_auth.8:61
 msgid "B<chmod u+s pam_auth>"
-msgstr ""
+msgstr "B<chmod u+s pam_auth>"
 
 #. type: Plain text
 #: helpers/basic_auth/PAM/pam_auth.8:69
@@ -818,7 +821,7 @@ msgstr ""
 #: helpers/basic_auth/PAM/pam_auth.8:74
 #, no-wrap
 msgid "COPYRIGHT"
-msgstr ""
+msgstr "حقوق الطبع"
 
 #. type: Plain text
 #: helpers/basic_auth/PAM/pam_auth.8:77
@@ -844,7 +847,7 @@ msgstr ""
 #: helpers/basic_auth/PAM/pam_auth.8:83 helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:81 helpers/external_acl/session/squid_session.8:55 helpers/external_acl/unix_group/squid_unix_group.8:57
 #, no-wrap
 msgid "REPORTING BUGS"
-msgstr ""
+msgstr "تقرير عن ثغرة"
 
 #. type: Plain text
 #: helpers/basic_auth/PAM/pam_auth.8:88 helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:86 helpers/external_acl/session/squid_session.8:60
@@ -863,7 +866,7 @@ msgstr ""
 #: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:1
 #, no-wrap
 msgid "squid_radius_auth"
-msgstr ""
+msgstr "squid_radius_auth"
 
 #. type: TH
 #: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:1
@@ -1126,7 +1129,7 @@ msgstr ""
 #: helpers/external_acl/session/squid_session.8:26
 #, no-wrap
 msgid "B<-a>"
-msgstr ""
+msgstr "B<-a>"
 
 #. type: Plain text
 #: helpers/external_acl/session/squid_session.8:30
@@ -1153,21 +1156,23 @@ msgid ""
 "external_acl_type session ttl=300 negative_ttl=0 children=1 concurrency=200 "
 "%LOGIN /usr/local/squid/libexec/squid_session"
 msgstr ""
+"external_acl_type session ttl=300 negative_ttl=0 children=1 concurrency=200 "
+"%LOGIN /usr/local/squid/libexec/squid_session"
 
 #. type: Plain text
 #: helpers/external_acl/session/squid_session.8:41
 msgid "acl session external session"
-msgstr ""
+msgstr "acl session external session"
 
 #. type: Plain text
 #: helpers/external_acl/session/squid_session.8:43
 msgid "http_access deny !session"
-msgstr ""
+msgstr "http_access deny !session"
 
 #. type: Plain text
 #: helpers/external_acl/session/squid_session.8:45
 msgid "deny_info http://your.server/bannerpage?url=%s session"
-msgstr ""
+msgstr "deny_info http://your.server/bannerpage?url=%s session"
 
 #. type: Plain text
 #: helpers/external_acl/session/squid_session.8:47
@@ -1194,13 +1199,13 @@ msgstr ""
 #. type: Plain text
 #: helpers/external_acl/session/squid_session.8:62
 msgid "B<squid>(B<8>)"
-msgstr ""
+msgstr "B<squid>(B<8>)"
 
 #. type: TH
 #: helpers/external_acl/unix_group/squid_unix_group.8:1
 #, no-wrap
 msgid "squid_unix_group"
-msgstr ""
+msgstr "squid_unix_group"
 
 #. type: TH
 #: helpers/external_acl/unix_group/squid_unix_group.8:1
@@ -1246,7 +1251,7 @@ msgstr ""
 #: helpers/external_acl/unix_group/squid_unix_group.8:17
 #, no-wrap
 msgid "B<-p>"
-msgstr ""
+msgstr "B<-p>"
 
 #. type: Plain text
 #: helpers/external_acl/unix_group/squid_unix_group.8:20
@@ -1257,7 +1262,7 @@ msgstr ""
 #: helpers/external_acl/unix_group/squid_unix_group.8:21
 #, no-wrap
 msgid "B<-s>"
-msgstr ""
+msgstr "B<-s>"
 
 #. type: Plain text
 #: helpers/external_acl/unix_group/squid_unix_group.8:24
@@ -1268,7 +1273,7 @@ msgstr ""
 #: helpers/external_acl/unix_group/squid_unix_group.8:25
 #, no-wrap
 msgid "EXAMPLES"
-msgstr ""
+msgstr "أمثلة"
 
 #. type: Plain text
 #: helpers/external_acl/unix_group/squid_unix_group.8:29
