@@ -2621,6 +2621,7 @@ ftpSendPassive(FtpStateData * ftpState)
         if (addr.IsIPv4()) {
             snprintf(cbuf, 1024, "EPSV 1\r\n");
             ftpState->state = SENT_EPSV_1;
+            break;
         }
         else if (ftpState->flags.epsv_all_sent) {
             debugs(9, DBG_IMPORTANT, "FTP does not allow PASV method after 'EPSV ALL' has been sent.");
