@@ -1360,7 +1360,7 @@ ConnStateData::readNextRequest()
     /** Please don't do anything with the FD past here! */
 }
 
-void
+static void
 ClientSocketContextPushDeferredIfNeeded(ClientSocketContext::Pointer deferredRequest, ConnStateData * conn)
 {
     debugs(33, 2, "ClientSocketContextPushDeferredIfNeeded: FD " << conn->fd << " Sending next");
