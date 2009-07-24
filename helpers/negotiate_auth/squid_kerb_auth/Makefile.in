@@ -262,7 +262,7 @@ SOURCE = squid_kerb_auth.c base64.c base64.h
 EXTRA_DIST = readme.txt do.sh
 @HAVE_SPNEGO_FALSE@squid_kerb_auth_SOURCES = $(SOURCE) $(SPNEGO)
 @HAVE_SPNEGO_TRUE@squid_kerb_auth_SOURCES = $(SOURCE)
-AM_CPPFLAGS = $(KERBINCS) -I$(srcdir)/spnegohelp -I.
+INCLUDES = -I$(top_srcdir)/include $(KERBINCS) -I$(srcdir)/spnegohelp -I.
 #-I$(top_srcdir)/include -I$(top_srcdir)/src
 LDADD = $(KERBLIBS)
 #-L$(top_builddir)/lib -lmiscutil $(XTRA_LIBS)

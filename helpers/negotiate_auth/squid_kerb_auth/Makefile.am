@@ -16,7 +16,7 @@ else
 squid_kerb_auth_SOURCES = $(SOURCE) $(SPNEGO)
 endif
 
-AM_CPPFLAGS = $(KERBINCS) -I$(srcdir)/spnegohelp -I.
+INCLUDES = -I$(top_srcdir)/include $(KERBINCS) -I$(srcdir)/spnegohelp -I.
 #-I$(top_srcdir)/include -I$(top_srcdir)/src
 LDADD = $(KERBLIBS)
 #-L$(top_builddir)/lib -lmiscutil $(XTRA_LIBS)
