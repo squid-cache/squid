@@ -1937,7 +1937,7 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
         debugs(33, 5, "Incomplete request, waiting for end of request line");
         return NULL;
     }
-    else if ( hp->bufsiz >= Config.maxRequestHeaderSize && (req_sz = headersEnd(hp->buf, Config.maxRequestHeaderSize)) == 0) {
+    else if ( (size_t)hp->bufsiz >= Config.maxRequestHeaderSize && headersEnd(hp->buf, Config.maxRequestHeaderSize) == 0) {
         debugs(33, 5, "parseHttpRequest: Too large request");
         return parseHttpRequestAbort(conn, "error:request-too-large");
     }
