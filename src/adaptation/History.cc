@@ -7,7 +7,7 @@
 #include "adaptation/History.h"
 
 /// impossible services value to identify unset theNextServices
-const static String TheNullServices(",null,");
+const static char *TheNullServices = ",null,";
 
 Adaptation::History::Entry::Entry(const String &sid, const timeval &when):
     service(sid), start(when), theRptm(-1), retried(false)
@@ -33,7 +33,7 @@ int Adaptation::History::Entry::rptm()
 }
 
 
-Adaptation::History::History(): theNextServices(TheNullServices) {
+Adaptation::History::History(): theNextServices(String(TheNullServices)) {
 }
 
 int Adaptation::History::recordXactStart(const String &sid, const timeval &when, bool retrying)
@@ -120,19 +120,19 @@ bool Adaptation::History::getXxRecord(String &name, String &value) const
 
 void Adaptation::History::updateNextServices(const String &services)
 {
-    if (theNextServices != TheNullServices)
+    if (theNextServices != String(TheNullServices))
        debugs(93,3, HERE << "old services: " << theNextServices);
     debugs(93,3, HERE << "new services: " << services);
-    Must(services != TheNullServices);
+    Must(services != String(TheNullServices));
     theNextServices = services;
 }
 
 bool Adaptation::History::extractNextServices(String &value)
 {
-    if (theNextServices == TheNullServices)
+    if (theNextServices == String(TheNullServices))
        return false;
 
     value = theNextServices;
-    theNextServices = TheNullServices; // prevents resetting the plan twice
+    theNextServices = String(TheNullServices); // prevents resetting the plan twice
     return true;
 }
