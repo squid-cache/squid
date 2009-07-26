@@ -9,6 +9,13 @@
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testHttpRequest );
 
+/** wrapper for testing HttpRequest object private and protected functions */
+class PrivateHttpRequest : public HttpRequest
+{
+public:
+    bool doSanityCheckStartLine(MemBuf *b, const size_t h, http_status *e) { return sanityCheckStartLine(b,h,e); };
+};
+
 /* stub functions to link successfully */
 void
 shut_down(int)
@@ -26,6 +33,7 @@ void
 testHttpRequest::setUp()
 {
     Mem::Init();
+    httpHeaderInitModule();
 }
 
 /*
@@ -149,4 +157,61 @@ testHttpRequest::testIPv6HostColonBug()
     CPPUNIT_ASSERT_EQUAL(PROTO_HTTP, aRequest->protocol);
     CPPUNIT_ASSERT_EQUAL(String("http://2000:800::45/foo"), String(url));
     xfree(url);
+}
+
+void
+testHttpRequest::testSanityCheckStartLine()
+{
+    MemBuf input;
+    PrivateHttpRequest engine;
+    http_status error = HTTP_STATUS_NONE;
+    size_t hdr_len;
+    input.init();
+
+    // a valid request line
+    input.append("GET / HTTP/1.1\n\n", 16);
+    hdr_len = headersEnd(input.content(), input.contentSize());
+    CPPUNIT_ASSERT(engine.doSanityCheckStartLine(&input, hdr_len, &error) );
+    CPPUNIT_ASSERT_EQUAL(error, HTTP_STATUS_NONE);
+    input.reset();
+    error = HTTP_STATUS_NONE;
+
+    input.append("GET  /  HTTP/1.1\n\n", 18);
+    hdr_len = headersEnd(input.content(), input.contentSize());
+    CPPUNIT_ASSERT(engine.doSanityCheckStartLine(&input, hdr_len, &error) );
+    CPPUNIT_ASSERT_EQUAL(error, HTTP_STATUS_NONE);
+    input.reset();
+    error = HTTP_STATUS_NONE;
+
+    // strange but valid methods
+    input.append(". / HTTP/1.1\n\n", 14);
+    hdr_len = headersEnd(input.content(), input.contentSize());
+    CPPUNIT_ASSERT(engine.doSanityCheckStartLine(&input, hdr_len, &error) );
+    CPPUNIT_ASSERT_EQUAL(error, HTTP_STATUS_NONE);
+    input.reset();
+    error = HTTP_STATUS_NONE;
+
+    input.append("OPTIONS * HTTP/1.1\n\n", 20);
+    hdr_len = headersEnd(input.content(), input.contentSize());
+    CPPUNIT_ASSERT(engine.doSanityCheckStartLine(&input, hdr_len, &error) );
+    CPPUNIT_ASSERT_EQUAL(error, HTTP_STATUS_NONE);
+    input.reset();
+    error = HTTP_STATUS_NONE;
+
+// TODO no method
+
+// TODO binary code in method
+
+// TODO no URL
+
+// TODO no status (okay)
+
+// TODO non-HTTP protocol
+
+    input.append("      \n\n", 8);
+    hdr_len = headersEnd(input.content(), input.contentSize());
+    CPPUNIT_ASSERT(!engine.doSanityCheckStartLine(&input, hdr_len, &error) );
+    CPPUNIT_ASSERT_EQUAL(error, HTTP_INVALID_HEADER);
+    input.reset();
+    error = HTTP_STATUS_NONE;
 }
