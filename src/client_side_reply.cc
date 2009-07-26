@@ -1293,7 +1293,7 @@ clientReplyContext::buildReplyHeader()
         LOCAL_ARRAY(char, bbuf, MAX_URL + 32);
         String strVia;
        	hdr->getList(HDR_VIA, &strVia);
-        snprintf(bbuf, sizeof(bbuf), "%d.%d %s",
+        snprintf(bbuf, MAX_URL + 32, "%d.%d %s",
                  reply->sline.version.major,
                  reply->sline.version.minor,
                  ThisCache);
