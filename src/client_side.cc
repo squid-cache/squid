@@ -1855,6 +1855,17 @@ parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * metho
     /* pre-set these values to make aborting simpler */
     *method_p = METHOD_NONE;
 
+    /* NP: don't be tempted to move this down or remove again.
+     * It's the only DDoS protection old-String has against long URL */
+    if ( hp->bufsiz <= 0) {
+        debugs(33, 5, "Incomplete request, waiting for end of request line");
+        return NULL;
+    }
+    else if ( (size_t)hp->bufsiz >= Config.maxRequestHeaderSize && headersEnd(hp->buf, Config.maxRequestHeaderSize) == 0) {
+        debugs(33, 5, "parseHttpRequest: Too large request");
+        return parseHttpRequestAbort(conn, "error:request-too-large");
+    }
+
     /* Attempt to parse the first line; this'll define the method, url, version and header begin */
     r = HttpParserParseReqLine(hp);
 

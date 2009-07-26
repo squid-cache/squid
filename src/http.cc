@@ -85,7 +85,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : ServerStateData(theFwdStat
     surrogateNoStore = false;
     fd = fwd->server_fd;
     readBuf = new MemBuf;
-    readBuf->init(4096, SQUID_TCP_SO_RCVBUF);
+    readBuf->init();
     orig_request = HTTPMSGLOCK(fwd->request);
 
     if (fwd->servers)

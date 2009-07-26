@@ -189,6 +189,7 @@ bool HttpMsg::parse(MemBuf *buf, bool eof, http_status *error)
     if (res == 0) {
         debugs(58, 2, "HttpMsg::parse: strange, need more data near '" <<
                buf->content() << "'");
+        *error = HTTP_INVALID_HEADER;
         return false; // but this should not happen due to headersEnd() above
     }
 
