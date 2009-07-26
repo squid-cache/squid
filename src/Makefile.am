@@ -402,6 +402,7 @@ squid_SOURCES = \
 	MemObject.cc \
 	MemObject.h \
 	mime.cc \
+	mime_header.cc \
 	multicast.cc \
 	neighbors.cc \
 	Packer.cc \
@@ -835,6 +836,7 @@ check_PROGRAMS+= tests/testAuth \
 	tests/testEvent \
 	tests/testEventLoop \
 	tests/test_http_range \
+	tests/testHttpReply \
 	tests/testHttpRequest \
 	tests/testStore \
 	tests/testString \
@@ -866,6 +868,61 @@ TESTS += $(check_PROGRAMS)
 #	-L../lib -lmiscutil
 #tests_testX_DEPENDENCIES= @SQUID_CPPUNIT_LA@ \
 #	$(top_builddir)/lib/libmiscutil.a
+
+
+# - add other component .(h|cc) files needed to link and run tests
+tests_testHttpReply_SOURCES=\
+	tests/testHttpReply.h \
+	tests/testHttpReply.cc \
+	tests/testMain.cc \
+	cbdata.h \
+	cbdata.cc \
+	ETag.cc \
+	HttpBody.cc \
+	HttpHdrCc.cc \
+	HttpHdrContRange.h \
+	HttpHdrContRange.cc \
+	HttpHdrRange.cc \
+	HttpHdrSc.h \
+	HttpHdrSc.cc \
+	HttpHdrScTarget.h \
+	HttpHdrScTarget.cc \
+	HttpHeader.h \
+	HttpHeader.cc \
+	HttpHeaderMask.h \
+	HttpHeaderTools.cc \
+	HttpMsg.h \
+	HttpMsg.cc \
+	HttpReply.h \
+	HttpReply.cc \
+	HttpStatusLine.h \
+	HttpStatusLine.cc \
+	mem.cc \
+	MemBuf.h \
+	MemBuf.cc \
+	mime_header.cc \
+	Packer.h \
+	Packer.cc \
+	tests/stub_cache_manager.cc \
+	tests/stub_StatHist.cc \
+	tests/stub_store.cc \
+	SquidString.h \
+	String.cc \
+	SquidTime.h \
+	time.cc
+nodist_tests_testHttpReply_SOURCES=\
+	$(TESTSOURCES)
+tests_testHttpReply_LDFLAGS = $(LIBADD_DL)
+tests_testHttpReply_LDADD=\
+	acl/libapi.la \
+	acl/libstate.la \
+	auth/libauth.la \
+	ip/libip.la \
+	@SQUID_CPPUNIT_LIBS@ \
+	@SQUID_CPPUNIT_LA@ \
+	-L../lib -lmiscutil
+tests_testHttpReply_DEPENDENCIES= @SQUID_CPPUNIT_LA@ \
+	$(top_builddir)/lib/libmiscutil.a
 
 tests_testAuth_SOURCES = \
 	tests/testAuth.cc tests/testMain.cc  tests/testAuth.h \
@@ -1058,6 +1115,7 @@ tests_testCacheManager_SOURCES = \
 	MemBuf.cc \
 	MemObject.cc \
 	mime.cc \
+	mime_header.cc \
 	neighbors.cc \
 	Packer.cc \
 	Parsing.cc \
@@ -1227,6 +1285,7 @@ tests_testEvent_SOURCES = \
 	MemBuf.cc \
 	MemObject.cc \
 	mime.cc \
+	mime_header.cc \
 	neighbors.cc \
 	Packer.cc \
 	Parsing.cc \
@@ -1374,6 +1433,7 @@ tests_testEventLoop_SOURCES = \
 	MemBuf.cc \
 	MemObject.cc \
 	mime.cc \
+	mime_header.cc \
 	neighbors.cc \
 	Packer.cc \
 	Parsing.cc \
@@ -1511,6 +1571,7 @@ tests_test_http_range_SOURCES = \
 	mem_node.cc \
 	MemObject.cc \
 	mime.cc \
+	mime_header.cc \
 	multicast.cc \
 	neighbors.cc \
 	Parsing.cc \
@@ -1662,6 +1723,7 @@ tests_testHttpRequest_SOURCES = \
 	MemBuf.cc \
 	MemObject.cc \
 	mime.cc \
+	mime_header.cc \
 	neighbors.cc \
 	Packer.cc \
 	Parsing.cc \
@@ -2013,6 +2075,7 @@ tests_testURL_SOURCES = \
 	MemBuf.cc \
 	MemObject.cc \
 	mime.cc \
+	mime_header.cc \
 	neighbors.cc \
 	Packer.cc \
 	Parsing.cc \
