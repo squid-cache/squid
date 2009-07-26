@@ -443,11 +443,9 @@ HttpReply::bodySize(method_t method) const
 bool
 HttpReply::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status *error)
 {
-    // hack warning: using psize instead of size here due to type mismatches with MemBuf.
-
     // content is long enough to possibly hold a reply
     // 4 being magic size of a 3-digit number plus space delimiter
-    if ( buf->contentSize() < (protoPrefix.psize() + 4) ) {
+    if ( buf->contentSize() < (protoPrefix.size() + 4) ) {
         if (hdr_len > 0)
             *error = HTTP_INVALID_HEADER;
         return false;
@@ -461,13 +459,13 @@ HttpReply::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status *
     }
 
     // catch missing or negative status value (negative '-' is not a digit)
-    int pos = protoPrefix.psize();
+    int pos = protoPrefix.size();
 
     // skip arbitrary number of digits and a dot in the verion portion
     while ( pos <= buf->contentSize() && (*(buf->content()+pos) == '.' || xisdigit(*(buf->content()+pos)) ) ) ++pos;
 
     // catch missing version info
-    if (pos == protoPrefix.psize()) {
+    if (pos == protoPrefix.size()) {
         debugs(58, 3, "HttpReply::sanityCheckStartLine: missing protocol version numbers (ie. " << protoPrefix << "/1.0) in '" << buf->content() << "'");
         *error = HTTP_INVALID_HEADER;
         return false;
