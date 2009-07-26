@@ -200,6 +200,19 @@ Changes to squid-3.1.0.1 (27 Oct 2008):
 
 Changes to squid-3.0.STABLE16 (15 Jun 2009):
 
+	- Bug 2680 regression: Crash after rotate with no helpers running
+	- Bug 2710: squid_kerb_auth non-terminated string
+	- Bug 2679: strsep and strtoll detection failure
+	- Bug 2674: Remove limit on HTTP headers read.
+	- Bug 2659: String length overflows on append, leading to segfaults
+	- Bug 2620: Invalid HTTP response codes causes segfault
+	- Bug 2080: wbinfo_group.pl - false positive under certain conditions
+	- Bug 1087: ESI processor not quoting attributes correctly.
+	- Fix: issue with AUFS/UFS/DiskD writing objects to disk cache
+	- Several small build issues with previous release.
+
+Changes to squid-3.0.STABLE16 (15 Jun 2009):
+
 	- Bug 2672: cacheMemMaxSize 32-bit overflow during snmpwalk
 	- Bug 2481: Don't set expires: now in generated error responses
 	- Bug 2387: The calculation of the number of hash buckets correctly
