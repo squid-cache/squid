@@ -68,7 +68,7 @@ public:
      \retval false and sets *error to zero when needs more data
      \retval false and sets *error to a positive http_status code on error
      */
-    virtual bool sanityCheckStartLine(MemBuf *buf, http_status *error);
+    virtual bool sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status *error);
 
     /** \par public, readable; never update these or their .hdr equivalents directly */
     time_t date;

@@ -208,18 +208,29 @@ HttpRequest::clone() const
     return copy;
 }
 
+/**
+ * Checks the first line of an HTTP request is valid
+ * currently just checks the request method is present.
+ *
+ * NP: Other errors are left for detection later in the parse.
+ */
 bool
-HttpRequest::sanityCheckStartLine(MemBuf *buf, http_status *error)
+HttpRequest::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status *error)
 {
-    /**
-     * Just see if the request buffer starts with a known
-     * HTTP request method.  NOTE this whole function is somewhat
-     * superfluous and could just go away.
-     \todo AYJ: Check for safely removing this function. We now accept 'unknown' request methods in HTTP.
-     */
+    // content is long enough to possibly hold a reply
+    // 2 being magic size of a 1-byte request method plus space delimiter
+    if ( buf->contentSize() < 2 ) {
+        // this is ony a real error if the headers apparently complete.
+        if (hdr_len > 0) {
+            *error = HTTP_INVALID_HEADER;
+        }
+        return false;
+    }
 
+    /* See if the request buffer starts with a known HTTP request method. */
     if (HttpRequestMethod(buf->content(),NULL) == METHOD_NONE) {
         debugs(73, 3, "HttpRequest::sanityCheckStartLine: did not find HTTP request method");
+        *error = HTTP_INVALID_HEADER;
         return false;
     }
 

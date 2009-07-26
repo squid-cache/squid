@@ -437,11 +437,50 @@ HttpReply::bodySize(const HttpRequestMethod& method) const
     return content_length;
 }
 
-bool HttpReply::sanityCheckStartLine(MemBuf *buf, http_status *error)
+/**
+ * Checks the first line of an HTTP Reply is valid.
+ * currently only checks "HTTP/" exists.
+ *
+ * NP: not all error cases are detected yet. Some are left for detection later in parse.
+ */
+bool
+HttpReply::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status *error)
 {
-    //hack warning: using psize instead of size here due to type mismatches with MemBuf.
-    if (buf->contentSize() >= protoPrefix.psize() && protoPrefix.cmp(buf->content(), protoPrefix.size()) != 0) {
+    // hack warning: using psize instead of size here due to type mismatches with MemBuf.
+
+    // content is long enough to possibly hold a reply
+    // 4 being magic size of a 3-digit number plus space delimiter
+    if ( buf->contentSize() < (protoPrefix.psize() + 4) ) {
+        if (hdr_len > 0)
+            *error = HTTP_INVALID_HEADER;
+        return false;
+    }
+
+    // catch missing or mismatched protocol identifier
+    if (protoPrefix.cmp(buf->content(), protoPrefix.size()) != 0) {
         debugs(58, 3, "HttpReply::sanityCheckStartLine: missing protocol prefix (" << protoPrefix << ") in '" << buf->content() << "'");
+        *error = HTTP_INVALID_HEADER;
+        return false;
+    }
+
+    // catch missing or negative status value (negative '-' is not a digit)
+    int pos = protoPrefix.psize();
+
+    // skip arbitrary number of digits and a dot in the verion portion
+    while ( pos <= buf->contentSize() && (*(buf->content()+pos) == '.' || xisdigit(*(buf->content()+pos)) ) ) ++pos;
+
+    // catch missing version info
+    if (pos == protoPrefix.psize()) {
+        debugs(58, 3, "HttpReply::sanityCheckStartLine: missing protocol version numbers (ie. " << protoPrefix << "/1.0) in '" << buf->content() << "'");
+        *error = HTTP_INVALID_HEADER;
+        return false;
+    }
+
+    // skip arbitrary number of spaces...
+    while (pos <= buf->contentSize() && (char)*(buf->content()+pos) == ' ') ++pos;
+
+    if (!xisdigit(*(buf->content()+pos))) {
+        debugs(58, 3, "HttpReply::sanityCheckStartLine: missing or invalid status number in '" << buf->content() << "'");
         *error = HTTP_INVALID_HEADER;
         return false;
     }
