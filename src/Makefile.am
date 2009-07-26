@@ -841,6 +841,9 @@ check_PROGRAMS+= tests/testAuth \
 	tests/testURL \
 	@STORE_TESTS@
 
+## NP: required to run the above list. check_PROGRAMS only builds the binaries...
+TESTS += $(check_PROGRAMS)
+
 ### Template for new Unit Test Program
 ## - add tests/testX to check_PROGRAMS above.
 ## - copy template below and substitue X for class name
