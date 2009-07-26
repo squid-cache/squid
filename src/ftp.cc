@@ -532,9 +532,11 @@ FtpStateData::~FtpStateData()
  * Produces filled member varisbles user, password, password_url if anything found.
  */
 void
-FtpStateData::loginParser(const char *login, int escaped)
+FtpStateData::loginParser(const char *login_, int escaped)
 {
+    char *login = xstrdup(login_);
     char *s = NULL;
+
     debugs(9, 4, HERE << ": login='" << login << "', escaped=" << escaped);
     debugs(9, 9, HERE << ": IN : login='" << login << "', escaped=" << escaped << ", user=" << user << ", password=" << password);
 
@@ -564,6 +566,7 @@ FtpStateData::loginParser(const char *login, int escaped)
     }
 
     debugs(9, 9, HERE << ": OUT: login='" << login << "', escaped=" << escaped << ", user=" << user << ", password=" << password);
+    safe_free(login);
 }
 
 void
