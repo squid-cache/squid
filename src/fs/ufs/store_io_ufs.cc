@@ -363,17 +363,10 @@ UFSStoreState::writeCompleted(int errflag, size_t len, RefCount<WriteRequest> wr
     }
 
     /*
-     * DPW 2007-04-12
-     * I'm seeing disk files remain open under vanilla UFS storage
-     * because storeClose() gets called before the last write is
-     * complete.  I guess we have to check for the try_closing
-     * flag here.
+     * HNO 2009-07-24
+     * Kick any pending write/close operations alive
      */
-    if (flags.try_closing) {
-	debugs(72, 2, HERE << "UFSStoreState::writeCompleted" <<
-	    " flags.try_closing is set");
-	tryClosing();
-    }
+    drainWriteQueue();
 }
 
 void
