@@ -1,3 +1,12 @@
+Changes to squid-3.1.0.12 (27 Jul 2009):
+
+	- Bug 2716: Chunked request Signed/Unsigned build error
+	- Bug 2674: Remove limit on HTTP headers read.
+	- Bug 2620: Invalid HTTP response codes causes segfault
+	- Fix FTP EPSV negotiation parser.
+	- Fix Via string when leak checking is enabled (valgrind etc)
+	- ... and several documentation and testing additions
+
 Changes to squid-3.1.0.11 (19 Jul 2009):
 
 	- Bug 2087: Support adaptation sets and chains
@@ -198,7 +207,7 @@ Changes to squid-3.1.0.1 (27 Oct 2008):
 	- Bug #2223: Follow XFF extensions added
 	- ... and many code and documentation cleanups
 
-Changes to squid-3.0.STABLE16 (15 Jun 2009):
+Changes to squid-3.0.STABLE17 (27 Jul 2009):
 
 	- Bug 2680 regression: Crash after rotate with no helpers running
 	- Bug 2710: squid_kerb_auth non-terminated string
