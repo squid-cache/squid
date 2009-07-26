@@ -320,6 +320,8 @@ httpHeaderInitModule(void)
 
     httpHeaderCalcMask(&RequestHeadersMask, EntityHeadersArr, countof(EntityHeadersArr));
 
+    httpHeaderMaskInit(&HopByHopHeadersMask, 0);
+    
     httpHeaderCalcMask(&HopByHopHeadersMask, HopByHopHeadersArr, countof(HopByHopHeadersArr));
 
     /* init header stats */
