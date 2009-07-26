@@ -66,9 +66,9 @@ public:
     //virtual void unlock();  // only needed for debugging
 
     // returns true on success
-    // returns false and sets *error to zero when needs more data
+    // returns false and leaves *error unchanged when needs more data
     // returns false and sets *error to a positive http_status code on error
-    virtual bool sanityCheckStartLine(MemBuf *buf, http_status *error);
+    virtual bool sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status *error);
 
     /* public, readable; never update these or their .hdr equivalents directly */
     time_t date;
