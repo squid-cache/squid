@@ -474,7 +474,7 @@ store_client::fileRead()
 static void
 storeClientMemWriteComplete(void *data, StoreIOBuffer wroteBuffer)
 {
-	// Nothin to do here but callback is needed
+        // Nothin to do here but callback is needed
 }
 
 void
@@ -494,25 +494,25 @@ store_client::readBody(const char *buf, ssize_t len)
         if (!rep->parseCharBuf(copyInto.data, headersEnd(copyInto.data, len))) {
             debugs(90, 0, "Could not parse headers from on disk object");
         } else {
-	    parsed_header = 1;
-	}
+            parsed_header = 1;
+        }
     }
 
     const HttpReply *rep = entry->getReply();
     if (len > 0 && rep && entry->mem_obj->inmem_lo == 0 && entry->objectLen() <= (int64_t)Config.Store.maxInMemObjSize) {
-	/* Copy read data back into memory.
+        /* Copy read data back into memory.
          * but first we need to adjust offset.. some parts of the code
          * counts offset including headers, some parts count offset as
          * withing the body.. copyInto is including headers, but the mem
          * cache expects offset without headers (using negative for headers)
          * eventually not storing packed headers in memory at all.
          */
-	int64_t mem_offset = entry->mem_obj->endOffset() + rep->hdr_sz;
-	if ((copyInto.offset == mem_offset) || (parsed_header && mem_offset == rep->hdr_sz)) {
-	    StoreIOBuffer tmp = copyInto;
-	    tmp.offset -= rep->hdr_sz;
-	    entry->mem_obj->write(tmp, storeClientMemWriteComplete, this);
-	}
+        int64_t mem_offset = entry->mem_obj->endOffset() + rep->hdr_sz;
+        if ((copyInto.offset == mem_offset) || (parsed_header && mem_offset == rep->hdr_sz)) {
+            StoreIOBuffer tmp = copyInto;
+            tmp.offset -= rep->hdr_sz;
+            entry->mem_obj->write(tmp, storeClientMemWriteComplete, this);
+        }
     }
 
     callback(len);
@@ -622,7 +622,7 @@ store_client::readHeader(char const *buf, ssize_t len)
         debugs(90, 3, "storeClientReadHeader: copying " << copy_sz << " bytes of body");
         xmemmove(copyInto.data, copyInto.data + mem->swap_hdr_sz, copy_sz);
 
-	readBody(copyInto.data, copy_sz);
+        readBody(copyInto.data, copy_sz);
 
         return;
     }
