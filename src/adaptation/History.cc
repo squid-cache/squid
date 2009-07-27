@@ -33,7 +33,7 @@ int Adaptation::History::Entry::rptm()
 }
 
 
-Adaptation::History::History(): theNextServices(String(TheNullServices)) {
+Adaptation::History::History(): theNextServices(TheNullServices) {
 }
 
 int Adaptation::History::recordXactStart(const String &sid, const timeval &when, bool retrying)
@@ -120,19 +120,19 @@ bool Adaptation::History::getXxRecord(String &name, String &value) const
 
 void Adaptation::History::updateNextServices(const String &services)
 {
-    if (theNextServices != String(TheNullServices))
+    if (theNextServices != TheNullServices)
        debugs(93,3, HERE << "old services: " << theNextServices);
     debugs(93,3, HERE << "new services: " << services);
-    Must(services != String(TheNullServices));
+    Must(services != TheNullServices);
     theNextServices = services;
 }
 
 bool Adaptation::History::extractNextServices(String &value)
 {
-    if (theNextServices == String(TheNullServices))
+    if (theNextServices == TheNullServices)
        return false;
 
     value = theNextServices;
-    theNextServices = String(TheNullServices); // prevents resetting the plan twice
+    theNextServices = TheNullServices; // prevents resetting the plan twice
     return true;
 }
