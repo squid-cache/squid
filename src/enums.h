@@ -216,22 +216,22 @@ typedef enum _mem_status_t {
     IN_MEMORY
 } mem_status_t;
 
-enum {
+typedef enum {
     PING_NONE,
     PING_WAITING,
     PING_DONE
-};
+} ping_status_t;
 
-enum {
+typedef enum {
     STORE_OK,
     STORE_PENDING
-};
+} store_status_t;
 
-enum {
+typedef enum {
     SWAPOUT_NONE,
     SWAPOUT_WRITING,
     SWAPOUT_DONE
-};
+} swap_status_t;
 
 typedef enum {
     STORE_NON_CLIENT,
