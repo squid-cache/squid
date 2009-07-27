@@ -510,7 +510,7 @@ store_client::readBody(const char *buf, ssize_t len)
              * cache expects offset without headers (using negative for headers)
              * eventually not storing packed headers in memory at all.
              */
-            int64_t mem_offset = entry->mem_obj->endOffset() + rep->hdr_sz;
+            int64_t mem_offset = entry->mem_obj->endOffset();
             if ((copyInto.offset == mem_offset) || (parsed_header && mem_offset == rep->hdr_sz)) {
                 entry->mem_obj->write(StoreIOBuffer(len, copyInto.offset - rep->hdr_sz, copyInto.data), storeClientMemWriteComplete, this);
             }
