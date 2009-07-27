@@ -500,18 +500,20 @@ store_client::readBody(const char *buf, ssize_t len)
 
     const HttpReply *rep = entry->getReply();
     if (len > 0 && rep && entry->mem_obj->inmem_lo == 0 && entry->objectLen() <= (int64_t)Config.Store.maxInMemObjSize) {
-        /* Copy read data back into memory.
-         * but first we need to adjust offset.. some parts of the code
-         * counts offset including headers, some parts count offset as
-         * withing the body.. copyInto is including headers, but the mem
-         * cache expects offset without headers (using negative for headers)
-         * eventually not storing packed headers in memory at all.
-         */
-        int64_t mem_offset = entry->mem_obj->endOffset() + rep->hdr_sz;
-        if ((copyInto.offset == mem_offset) || (parsed_header && mem_offset == rep->hdr_sz)) {
-            StoreIOBuffer tmp = copyInto;
-            tmp.offset -= rep->hdr_sz;
-            entry->mem_obj->write(tmp, storeClientMemWriteComplete, this);
+        storeGetMemSpace(len);
+        // The above may start to free our object so we need to check again
+        if (entry->mem_obj->inmem_lo == 0) {
+            /* Copy read data back into memory.
+             * but first we need to adjust offset.. some parts of the code
+             * counts offset including headers, some parts count offset as
+             * withing the body.. copyInto is including headers, but the mem
+             * cache expects offset without headers (using negative for headers)
+             * eventually not storing packed headers in memory at all.
+             */
+            int64_t mem_offset = entry->mem_obj->endOffset() + rep->hdr_sz;
+            if ((copyInto.offset == mem_offset) || (parsed_header && mem_offset == rep->hdr_sz)) {
+                entry->mem_obj->write(StoreIOBuffer(len, copyInto.offset - rep->hdr_sz, copyInto.data), storeClientMemWriteComplete, this);
+            }
         }
     }
 

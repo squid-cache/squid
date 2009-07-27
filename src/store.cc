@@ -99,7 +99,6 @@ static storerepl_entry_t *storerepl_list = NULL;
 /*
  * local function prototypes
  */
-static void storeGetMemSpace(int);
 static int getKeyCounter(void);
 static OBJH storeCheckCachableStats;
 static EVH storeLateRelease;
@@ -1112,8 +1111,10 @@ StoreEntry::abort()
     unlock();       /* unlock */
 }
 
-/* Clear Memory storage to accommodate the given object len */
-static void
+/**
+ * Clear Memory storage to accommodate the given object len
+ */
+void
 storeGetMemSpace(int size)
 {
     PROF_start(storeGetMemSpace);
