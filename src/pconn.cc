@@ -191,7 +191,7 @@ PconnPool::key(const char *host, u_short port, const char *domain, IpAddress &cl
     else
         snprintf(buf, SQUIDHOSTNAMELEN * 3 + 10, "%s:%d", host, (int) port);
 
-    debugs(48,6,"PconnPool::key(" << host << "," << port << "," << domain << "," << client_address << "is {" << buf << "}" );
+    debugs(48,6,"PconnPool::key(" << (host?host:"(no host!)") << "," << port << "," << (domain?domain:"(no domain)") << "," << client_address << "is {" << buf << "}" );
     return buf;
 }
 
