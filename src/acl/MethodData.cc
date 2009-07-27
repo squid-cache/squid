@@ -40,6 +40,8 @@
 #include "HttpRequestMethod.h"
 #include "wordlist.h"
 
+int ACLMethodData::ThePurgeCount = 0;
+
 ACLMethodData::ACLMethodData() : values (NULL)
 {}
 
@@ -89,10 +91,8 @@ ACLMethodData::parse()
 
     for (Tail = &values; *Tail; Tail = &((*Tail)->next));
     while ((t = strtokFile())) {
-        if(strcmp(t, "PURGE") == 0) {
-            // we need to use PURGE, can't just blanket-deny it.
-            Config2.onoff.enable_purge = 1;
-        }
+        if(strcmp(t, "PURGE") == 0)
+            ++ThePurgeCount; // configuration code wants to know
         CbDataList<HttpRequestMethod> *q = new CbDataList<HttpRequestMethod> (HttpRequestMethod(t, NULL));
         *(Tail) = q;
         Tail = &q->next;
