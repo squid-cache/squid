@@ -313,11 +313,18 @@ StoreEntry::storeClientType() const
     if (store_status == STORE_OK) {
         /* the object has completed. */
 
-        if (mem_obj->inmem_lo == 0 && !isEmpty())
-            /* hot object */
-            return STORE_MEM_CLIENT;
-        else
-            return STORE_DISK_CLIENT;
+        if (mem_obj->inmem_lo == 0 && !isEmpty()) {
+	    if (swap_status == SWAPOUT_DONE) {
+		if (mem_obj->endOffset() == mem_obj->object_sz) {
+		    /* hot object fully swapped in */
+		    return STORE_MEM_CLIENT;
+		}
+	    } else {
+		/* Memory-only, or currently being swapped out */
+		return STORE_MEM_CLIENT;
+	    }
+	}
+	return STORE_DISK_CLIENT;
     }
 
     /* here and past, entry is STORE_PENDING */
