@@ -322,7 +322,8 @@ MemObject::policyLowestOffsetToKeep() const
     int64_t lowest_offset = lowestMemReaderOffset();
 
     if (endOffset() < lowest_offset ||
-            endOffset() - inmem_lo > (int64_t)Config.Store.maxInMemObjSize)
+            endOffset() - inmem_lo > (int64_t)Config.Store.maxInMemObjSize ||
+            !Config.onoff.memory_cache_first)
         return lowest_offset;
 
     return inmem_lo;
