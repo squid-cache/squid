@@ -50,9 +50,6 @@
 #include "wordlist.h"
 #include "SquidTime.h"
 
-static void
-authenticateNTLMReleaseServer(AuthUserRequest * auth_user_request);
-
 
 static void
 authenticateStateFree(authenticateStateData * r)
@@ -432,14 +429,14 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
         /* set these to now because this is either a new login from an
          * existing user or a new user */
         local_auth_user->expiretime = current_time.tv_sec;
-        authenticateNTLMReleaseServer(ntlm_request);
+        ntlm_request->releaseAuthServer();
         ntlm_request->auth_state = AUTHENTICATE_STATE_DONE;
     } else if (strncasecmp(reply, "NA ", 3) == 0) {
         /* authentication failure (wrong password, etc.) */
         auth_user_request->denyMessage(blob);
         ntlm_request->auth_state = AUTHENTICATE_STATE_FAILED;
         safe_free(ntlm_request->server_blob);
-        authenticateNTLMReleaseServer(ntlm_request);
+        ntlm_request->releaseAuthServer();
         result = S_HELPER_RELEASE;
         debugs(29, 4, "authenticateNTLMHandleReply: Failed validating user via NTLM. Error returned '" << blob << "'");
     } else if (strncasecmp(reply, "BH ", 3) == 0) {
@@ -451,7 +448,7 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
         auth_user_request->denyMessage(blob);
         ntlm_request->auth_state = AUTHENTICATE_STATE_FAILED;
         safe_free(ntlm_request->server_blob);
-        authenticateNTLMReleaseServer(ntlm_request);
+        ntlm_request->releaseAuthServer();
         result = S_HELPER_RELEASE;
         debugs(29, 1, "authenticateNTLMHandleReply: Error validating user via NTLM. Error returned '" << reply << "'");
     } else {
@@ -519,25 +516,20 @@ AuthNTLMUserRequest::module_start(RH * handler, void *data)
     helperStatefulSubmit(ntlmauthenticators, buf, authenticateNTLMHandleReply, r, authserver);
 }
 
-/* clear the NTLM helper of being reserved for future requests */
-static void
-authenticateNTLMReleaseServer(AuthUserRequest * auth_user_request)
+/**
+ * Atomic action: properly release the NTLM auth helpers which may have been reserved
+ * for this request connections use.
+ */
+void
+AuthNTLMUserRequest::releaseAuthServer()
 {
-    AuthNTLMUserRequest *ntlm_request;
-    assert(auth_user_request->user()->auth_type == AUTH_NTLM);
-    ntlm_request = dynamic_cast< AuthNTLMUserRequest *>(auth_user_request);
-    debugs(29, 9, "authenticateNTLMReleaseServer: releasing server '" << ntlm_request->authserver << "'");
-    /* is it possible for the server to be NULL? hno seems to think so.
-     * Let's see what happens, might segfault in helperStatefulReleaseServer
-     * if it does. I leave it like this not to cover possibly problematic
-     * code-paths. Kinkie */
-    /* DPW 2007-05-07
-     * yes, it is possible */
-    assert(ntlm_request != NULL);
-    if (ntlm_request->authserver) {
-        helperStatefulReleaseServer(ntlm_request->authserver);
-        ntlm_request->authserver = NULL;
+    if (authserver) {
+        debugs(29, 6, HERE << "releasing NTLM auth server '" << authserver << "'");
+	helperStatefulReleaseServer(authserver);
+	authserver = NULL;
     }
+    else
+        debugs(29, 6, HERE << "No NTLM auth server to release.");
 }
 
 /* clear any connection related authentication details */
@@ -553,8 +545,8 @@ AuthNTLMUserRequest::onConnectionClose(ConnStateData *conn)
         return;
     }
 
-    if (authserver != NULL)
-        authenticateNTLMReleaseServer(this);
+    // unlock / un-reserve the helpers
+    releaseAuthServer();
 
     /* unlock the connection based lock */
     debugs(29, 9, "AuthNTLMUserRequest::onConnectionClose: Unlocking auth_user from the connection '" << conn << "'.");
@@ -720,11 +712,8 @@ AuthNTLMUserRequest::~AuthNTLMUserRequest()
     safe_free(server_blob);
     safe_free(client_blob);
 
-    if (authserver != NULL) {
-        debugs(29, 9, "AuthNTLMUserRequest::~AuthNTLMUserRequest: releasing server '" << authserver << "'");
-        helperStatefulReleaseServer(authserver);
-        authserver = NULL;
-    }
+    releaseAuthServer();
+
     if (request) {
         HTTPMSGUNLOCK(request);
         request = NULL;
@@ -753,4 +742,3 @@ AuthNTLMUserRequest::connLastHeader()
 {
     return NULL;
 }
-

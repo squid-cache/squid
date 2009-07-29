@@ -84,6 +84,8 @@ public:
 
     /*we need to store the helper server between requests */
     helper_stateful_server *authserver;
+    void releaseAuthServer(void); ///< Release the authserver helper server properly.
+
     /* what connection is this associated with */
     /* ConnStateData * conn;*/
 
