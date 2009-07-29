@@ -499,7 +499,7 @@ store_client::readBody(const char *buf, ssize_t len)
     }
 
     const HttpReply *rep = entry->getReply();
-    if (len > 0 && rep && entry->mem_obj->inmem_lo == 0 && entry->objectLen() <= (int64_t)Config.Store.maxInMemObjSize) {
+    if (len > 0 && rep && entry->mem_obj->inmem_lo == 0 && entry->objectLen() <= (int64_t)Config.Store.maxInMemObjSize && Config.onoff.memory_cache_disk) {
         storeGetMemSpace(len);
         // The above may start to free our object so we need to check again
         if (entry->mem_obj->inmem_lo == 0) {
