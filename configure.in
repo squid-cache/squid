@@ -1902,13 +1902,16 @@ AC_PROG_LN_S
 AC_PATH_PROG(SH, sh, /bin/sh)
 AC_PATH_PROG(FALSE, false, /usr/bin/false)
 AC_PATH_PROG(TRUE, true, /usr/bin/true)
-AC_PATH_PROG(RM, rm, $FALSE)
 AC_PATH_PROG(MV, mv, $FALSE)
 AC_PATH_PROG(MKDIR, mkdir, $FALSE)
 AC_PATH_PROG(LN, ln, cp)
 AC_PATH_PROG(PERL, perl, none)
 dnl automake handles this AC_PATH_PROG(MAKEDEPEND, makedepend, $TRUE)
 AC_PATH_PROG(AR, ar, $FALSE)
+
+AC_PATH_PROG(RM, rm, $FALSE)
+dnl Libtool 2.2.6 requires: rm -f
+RM="$RM -f"
 
 if test "$ac_cv_path_PERL" = "none"; then
 	echo "Perl is required to compile Squid"
