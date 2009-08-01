@@ -68,8 +68,10 @@ public:
 
     virtual const char * connLastHeader();
 
-    /*we need to store the helper server between requests */
+    /* we need to store the helper server between requests */
     helper_stateful_server *authserver;
+    void releaseAuthServer(void); ///< Release authserver NTLM helpers properly when finished or abandoning.
+
     /* what connection is this associated with */
 //    ConnStateData * conn;
 

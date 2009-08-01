@@ -625,7 +625,7 @@ configDoConfigure(void)
 
     // we enable runtime PURGE checks if there is at least one PURGE method ACL
     // TODO: replace with a dedicated "purge" ACL option?
-    Config2.onoff.enable_purge = ACLMethodData::ThePurgeCount > 0;
+    Config2.onoff.enable_purge = (ACLMethodData::ThePurgeCount > 0);
 
     Config2.onoff.mangle_request_headers = httpReqHdrManglersConfigured();
 
