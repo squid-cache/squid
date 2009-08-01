@@ -446,8 +446,10 @@ HttpReply::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status *
     // content is long enough to possibly hold a reply
     // 4 being magic size of a 3-digit number plus space delimiter
     if ( buf->contentSize() < (protoPrefix.size() + 4) ) {
-        if (hdr_len > 0)
+        if (hdr_len > 0) {
+            debugs(58, 3, HERE << "Too small reply header (" << hdr_len << " bytes)");
             *error = HTTP_INVALID_HEADER;
+        }
         return false;
     }
 

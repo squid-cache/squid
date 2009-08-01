@@ -156,6 +156,7 @@ HttpRequest::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status
     if ( buf->contentSize() < 2 ) {
         // this is ony a real error if the headers apparently complete.
         if (hdr_len > 0) {
+            debugs(58, 3, HERE << "Too large request header (" << hdr_len << " bytes)");
             *error = HTTP_INVALID_HEADER;
         }
         return false;
