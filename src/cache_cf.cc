@@ -42,6 +42,7 @@
 #include "SwapDir.h"
 #include "ConfigParser.h"
 #include "acl/Acl.h"
+#include "acl/MethodData.h"
 #include "acl/Gadgets.h"
 #include "StoreFileSystem.h"
 #include "Parsing.h"
@@ -389,6 +390,7 @@ parseConfigFile(const char *file_name)
 
     configFreeMemory();
 
+    ACLMethodData::ThePurgeCount = 0;
     default_all();
 
     err_count = parseOneConfigFile(file_name, 0);
@@ -621,10 +623,9 @@ configDoConfigure(void)
 
 #endif
 
-    // we have reconfigured and in the process disabled any need for PURGE.
-    // turn it off now.
-    if(Config2.onoff.enable_purge == 2)
-        Config2.onoff.enable_purge = 0;
+    // we enable runtime PURGE checks if there is at least one PURGE method ACL
+    // TODO: replace with a dedicated "purge" ACL option?
+    Config2.onoff.enable_purge = (ACLMethodData::ThePurgeCount > 0);
 
     Config2.onoff.mangle_request_headers = httpReqHdrManglersConfigured();
 

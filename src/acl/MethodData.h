@@ -57,6 +57,8 @@ public:
     virtual ACLData<HttpRequestMethod> *clone() const;
 
     CbDataList<HttpRequestMethod> *values;
+
+    static int ThePurgeCount; ///< PURGE methods seen by parse()
 };
 
 MEMPROXY_CLASS_INLINE(ACLMethodData);
