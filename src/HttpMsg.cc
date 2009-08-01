@@ -243,7 +243,6 @@ HttpMsg::httpMsgParseStep(const char *buf, int len, int atEnd)
     const char **parse_end_ptr = &blk_end;
     assert(parse_start);
     assert(pstate < psParsed);
-    int retval;
 
     *parse_end_ptr = parse_start;
 
@@ -251,13 +250,13 @@ HttpMsg::httpMsgParseStep(const char *buf, int len, int atEnd)
 
     if (pstate == psReadyToParseStartLine) {
         if (!httpMsgIsolateStart(&parse_start, &blk_start, &blk_end)) {
-            retval = 0;
-            goto finish;
+            PROF_stop(HttpMsg_httpMsgParseStep);
+            return 0;
         }
 
         if (!parseFirstLine(blk_start, blk_end)) {
-            retval = httpMsgParseError();
-            goto finish;
+            PROF_stop(HttpMsg_httpMsgParseStep);
+            return httpMsgParseError();
         }
 
         *parse_end_ptr = parse_start;
@@ -278,13 +277,15 @@ HttpMsg::httpMsgParseStep(const char *buf, int len, int atEnd)
             if (atEnd) {
                 blk_start = parse_start, blk_end = blk_start + strlen(blk_start);
             } else {
-                retval = 0;
-                goto finish;
+                PROF_stop(HttpMsg_httpMsgParseStep);
+                return 0;
             }
         }
 
-        if (!header.parse(blk_start, blk_end))
+        if (!header.parse(blk_start, blk_end)) {
+            PROF_stop(HttpMsg_httpMsgParseStep);
             return httpMsgParseError();
+        }
 
         hdrCacheInit();
 
@@ -294,10 +295,9 @@ HttpMsg::httpMsgParseStep(const char *buf, int len, int atEnd)
 
         ++pstate;
     }
-    retval = 1;
-finish:
+
     PROF_stop(HttpMsg_httpMsgParseStep);
-    return retval;
+    return 1;
 }
 
 /* handy: resets and returns -1 */
