@@ -1682,6 +1682,7 @@ clientReplyContext::processReplyAccess ()
     }
 
     if (http->isReplyBodyTooLarge(reply->content_length)) {
+        http->logType = LOG_TCP_DENIED_REPLY;
         ErrorState *err =
             clientBuildError(ERR_TOO_BIG, HTTP_FORBIDDEN, NULL,
                              http->getConn() != NULL ? &http->getConn()->peer.sin_addr : &no_addr,
