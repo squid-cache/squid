@@ -211,7 +211,6 @@ SQUIDCEXTERN helper *helperCreate(const char *);
 SQUIDCEXTERN statefulhelper *helperStatefulCreate(const char *);
 SQUIDCEXTERN void helperFree(helper *);
 SQUIDCEXTERN void helperStatefulFree(statefulhelper *);
-SQUIDCEXTERN void helperStatefulReset(helper_stateful_server * srv);
 SQUIDCEXTERN void helperStatefulReleaseServer(helper_stateful_server * srv);
 SQUIDCEXTERN void *helperStatefulServerGetData(helper_stateful_server * srv);
 

@@ -362,34 +362,6 @@ helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, v
     debugs(84, 9, "helperStatefulSubmit: placeholder: '" << r->placeholder << "', buf '" << buf << "'.");
 }
 
-void
-helperStatefulReset(helper_stateful_server * srv)
-/* puts this helper back in the queue. the calling app is required to
- * manage the state in the helper.
- */
-{
-    statefulhelper *hlp = srv->parent;
-    helper_stateful_request *r = srv->request;
-
-    if (r != NULL) {
-        /* reset attempt DURING an outstaning request */
-        debugs(84, 1, "helperStatefulReset: RESET During request " << hlp->id_name << " ");
-        srv->flags.busy = 0;
-        srv->roffset = 0;
-        helperStatefulRequestFree(r);
-        srv->request = NULL;
-    }
-
-    srv->flags.busy = 0;
-
-    srv->flags.reserved = S_HELPER_FREE;
-
-    if ((srv->parent->OnEmptyQueue != NULL) && (srv->data))
-        srv->parent->OnEmptyQueue(srv->data);
-
-    helperStatefulServerKickQueue(srv);
-}
-
 /*
  * DPW 2007-05-08
  *
