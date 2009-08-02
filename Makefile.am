@@ -45,3 +45,14 @@ install-pinger:
 
 all-am:
 	@echo "Build Successful."
+
+## hack to insert the test first, before building recursive child directories
+check: have-cppunit check-recursive
+
+have-cppunit:
+	@if test "@SQUID_CPPUNIT_INC@@SQUID_CPPUNIT_LA@@SQUID_CPPUNIT_LIBS@" = "" ; then \
+		echo "FATAL: 'make check' requires cppunit and cppunit development packages. They do not appear to be installed." ; \
+		exit 1 ; \
+	fi
+
+.PHONY: have-cppunit
