@@ -152,7 +152,6 @@ struct _helper_stateful_server {
     struct timeval answer_time;
 
     dlink_node link;
-    dlink_list queue;
     statefulhelper *parent;
     helper_stateful_request *request;
 
@@ -167,10 +166,7 @@ struct _helper_stateful_server {
         int uses;
         int submits;
         int releases;
-        int deferbyfunc;
-        int deferbycb;
     } stats;
-    int deferred_requests;	/* current number of deferred requests */
     void *data;			/* State data used by the calling routines */
     void *hIpc;
 };
@@ -196,7 +192,7 @@ public:
     MEMPROXY_CLASS(helper_stateful_request);
     char *buf;
     HLPSCB *callback;
-    int placeholder;		/* if 1, this is a dummy request waiting for a stateful helper to become available for deferred requests.*/
+    int placeholder;		/* if 1, this is a dummy request waiting for a stateful helper to become available */
     void *data;
 };
 
@@ -215,10 +211,8 @@ SQUIDCEXTERN helper *helperCreate(const char *);
 SQUIDCEXTERN statefulhelper *helperStatefulCreate(const char *);
 SQUIDCEXTERN void helperFree(helper *);
 SQUIDCEXTERN void helperStatefulFree(statefulhelper *);
-SQUIDCEXTERN void helperStatefulReset(helper_stateful_server * srv);
 SQUIDCEXTERN void helperStatefulReleaseServer(helper_stateful_server * srv);
 SQUIDCEXTERN void *helperStatefulServerGetData(helper_stateful_server * srv);
-SQUIDCEXTERN helper_stateful_server *helperStatefulDefer(statefulhelper *);
 
 
 
