@@ -63,6 +63,7 @@ static void helperStatefulKickQueue(statefulhelper * hlp);
 static void helperRequestFree(helper_request * r);
 static void helperStatefulRequestFree(helper_stateful_request * r);
 static void StatefulEnqueue(statefulhelper * hlp, helper_stateful_request * r);
+static void helperStatefulServerKickQueue(helper_stateful_server * srv);
 static bool helperStartStats(StoreEntry *sentry, void *hlp, const char *label);
 
 
@@ -346,8 +347,8 @@ helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, v
 
     if ((buf != NULL) && lastserver) {
         debugs(84, 5, "StatefulSubmit with lastserver " << lastserver);
-	assert(lastserver->flags.reserved == S_HELPER_RESERVED;
-        asser(!(lastserver->request));
+        assert(lastserver->flags.reserved == S_HELPER_RESERVED);
+        assert(!(lastserver->request));
 
         debugs(84, 5, "StatefulSubmit dispatching");
         helperStatefulDispatch(lastserver, r);
@@ -1027,8 +1028,8 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
 
             case S_HELPER_RESERVE:	/* 'pin' this helper for the caller */
 
-		srv->flags.reserved = S_HELPER_RESERVED;
-		debugs(84, 5, "StatefulHandleRead: reserving " << hlp->id_name << " #" << srv->index + 1);
+        	srv->flags.reserved = S_HELPER_RESERVED;
+        	debugs(84, 5, "StatefulHandleRead: reserving " << hlp->id_name << " #" << srv->index + 1);
 
                 break;
 
@@ -1379,8 +1380,6 @@ helperStatefulKickQueue(statefulhelper * hlp)
 static void
 helperStatefulServerKickQueue(helper_stateful_server * srv)
 {
-    helper_stateful_request *r;
-
     if (!srv->flags.shutdown) {
         helperStatefulKickQueue(srv->parent);
     } else if (!srv->flags.closing && srv->flags.reserved == S_HELPER_FREE && !srv->flags.busy) {
