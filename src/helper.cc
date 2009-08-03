@@ -60,10 +60,10 @@ static void helperDispatch(helper_server * srv, helper_request * r);
 static void helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r);
 static void helperKickQueue(helper * hlp);
 static void helperStatefulKickQueue(statefulhelper * hlp);
+static void helperStatefulServerDone(helper_stateful_server * srv);
 static void helperRequestFree(helper_request * r);
 static void helperStatefulRequestFree(helper_stateful_request * r);
 static void StatefulEnqueue(statefulhelper * hlp, helper_stateful_request * r);
-static void helperStatefulServerKickQueue(helper_stateful_server * srv);
 static bool helperStartStats(StoreEntry *sentry, void *hlp, const char *label);
 
 
@@ -385,7 +385,7 @@ helperStatefulReleaseServer(helper_stateful_server * srv)
     if (srv->parent->OnEmptyQueue != NULL && srv->data)
         srv->parent->OnEmptyQueue(srv->data);
 
-    helperStatefulServerKickQueue(srv);
+    helperStatefulServerDone(srv);
 }
 
 void *
@@ -1052,7 +1052,7 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
                        tvSubMsec(srv->dispatch_time, current_time),
                        hlp->stats.replies, REDIRECT_AV_FACTOR);
 
-        helperStatefulServerKickQueue(srv);
+        helperStatefulServerDone(srv);
     }
 
     if (srv->rfd != -1)
@@ -1335,7 +1335,7 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
          * request to the helper which is why we test for the request*/
 
         if (srv->request == NULL)
-            helperStatefulServerKickQueue(srv);
+            helperStatefulServerDone(srv);
 
         return;
     }
@@ -1378,7 +1378,7 @@ helperStatefulKickQueue(statefulhelper * hlp)
 }
 
 static void
-helperStatefulServerKickQueue(helper_stateful_server * srv)
+helperStatefulServerDone(helper_stateful_server * srv)
 {
     if (!srv->flags.shutdown) {
         helperStatefulKickQueue(srv->parent);
