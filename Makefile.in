@@ -741,6 +741,16 @@ install-pinger:
 
 all-am:
 	@echo "Build Successful."
+
+check: have-cppunit check-recursive
+
+have-cppunit:
+	@if test "@SQUID_CPPUNIT_INC@@SQUID_CPPUNIT_LA@@SQUID_CPPUNIT_LIBS@" = "" ; then \
+		echo "FATAL: 'make check' requires cppunit and cppunit development packages. They do not appear to be installed." ; \
+		exit 1 ; \
+	fi
+
+.PHONY: have-cppunit
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
