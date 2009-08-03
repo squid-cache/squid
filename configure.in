@@ -1245,9 +1245,9 @@ int main(int argc, char **argv)
     int fd = epoll_create(256);
     if (fd < 0) {
 	perror("epoll_create:");
-	exit(1);
+	return 1;
     }
-    exit(0);
+    return 0;
 }
       ]])],[ac_cv_epoll_works=yes],[ac_cv_epoll_works=no],[]))
   fi
@@ -2006,7 +2006,6 @@ AC_ARG_WITH(cppunit-basedir,
 	SQUID_CPPUNIT_LIBS='$(SQUID_CPPUNIT_LA)'
     else
 	AC_MSG_ERROR(Cannot find cppunit at $withval)
-	exit 1
     fi
 ])
 AC_SUBST(SQUID_CPPUNIT_LIBS)
@@ -2560,7 +2559,7 @@ if test "$use_ipng" = "yes"; then
     AC_RUN_IFELSE([AC_LANG_SOURCE([[ /* PF_INET6 available check */
 #       include <sys/types.h>
 #       include <sys/socket.h>
-        int main() {
+        int main(int argc, char **argv) {
           if (socket(PF_INET6, SOCK_STREAM, 0) < 0)
             return 1;
           else
@@ -2598,7 +2597,7 @@ dnl But only usable if it actually works...
 #if HAVE_NETINET_IN6_H
 #	include <netinet/in6.h>
 #endif
-        int main() {
+        int main(int argc, char **argv) {
           int s = socket(PF_INET6, SOCK_STREAM, 0);
           int tos = 0;
           if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &tos, sizeof(int)) < 0)
@@ -3000,12 +2999,12 @@ dnl
 AC_CACHE_CHECK(if setresuid is implemented, ac_cv_func_setresuid,
   AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <stdlib.h>
-  int main() {
+  int main(int argc, char **argv) {
     if(setresuid(-1,-1,-1)) {
       perror("setresuid:");
-      exit(1);
+      return 1;
     }
-    exit(0);
+    return 0;
   }
   ]])],[ac_cv_func_setresuid="yes"],[ac_cv_func_setresuid="no"],[])
 )
@@ -3047,18 +3046,16 @@ AC_CACHE_CHECK(if va_copy is implemented, ac_cv_func_va_copy,
   AC_RUN_IFELSE([AC_LANG_SOURCE([[
       #include <stdarg.h>
       #include <stdlib.h>
-      void f (int i, ...) {
+      int f (int i, ...) {
          va_list args1, args2;
          va_start (args1, i);
          va_copy (args2, args1);
          if (va_arg (args2, int) != 42 || va_arg (args1, int) != 42)
-            exit (1);
+            return 1;
          va_end (args1); va_end (args2);
-      }
-      int main() {
-         f (0, 42);
          return 0;
       }
+      int main(int argc, char **argv) { return f (0, 42); }
       ]])],[ac_cv_func_va_copy="yes"],[ac_cv_func_va_copy="no"],[])
 )
 if test "$ac_cv_func_va_copy" = "yes" ; then
@@ -3072,18 +3069,16 @@ AC_CACHE_CHECK(if __va_copy is implemented, ac_cv_func___va_copy,
   AC_RUN_IFELSE([AC_LANG_SOURCE([[
       #include <stdarg.h>
       #include <stdlib.h>
-      void f (int i, ...) {
+      int f (int i, ...) {
          va_list args1, args2;
          va_start (args1, i);
          __va_copy (args2, args1);
          if (va_arg (args2, int) != 42 || va_arg (args1, int) != 42)
-            exit (1);
+            return 1;
          va_end (args1); va_end (args2);
-      }
-      int main() {
-         f (0, 42);
          return 0;
       }
+      int main(int argc, char **argv) { return f (0, 42); }
       ]])],[ac_cv_func___va_copy="yes"],[ac_cv_func___va_copy="no"],[])
 )
 if test "$ac_cv_func___va_copy" = "yes" ; then
@@ -3258,10 +3253,10 @@ AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
 #endif
-main() {
+int main(int argc, char **argv) {
 	FILE *fp = fopen("conftestval", "w");
 	fprintf (fp, "%d\n", FD_SETSIZE);
-	exit(0);
+	return 0;
 }
 ]])],[DEFAULT_FD_SETSIZE=`cat conftestval`],[DEFAULT_FD_SETSIZE=256],[DEFAULT_FD_SETSIZE=256])
 AC_MSG_RESULT($DEFAULT_FD_SETSIZE)
@@ -3289,7 +3284,7 @@ else
 #include <sys/time.h>	/* needed on FreeBSD */
 #include <sys/param.h>
 #include <sys/resource.h>
-main() {
+int main(int argc, char **argv) {
 	FILE *fp;
 	int i,j;
 #if defined(__CYGWIN32__) || defined (__CYGWIN__)
@@ -3342,7 +3337,7 @@ main() {
 #endif /* IF !DEF CYGWIN */
 	fp = fopen("conftestval", "w");
 	fprintf (fp, "%d\n", i & ~0x3F);
-	exit(0);
+	return 0;
 }
   ]])],[SQUID_MAXFD=`cat conftestval`],[SQUID_MAXFD=256],[SQUID_MAXFD=256])
   dnl Microsoft MSVCRT.DLL supports 2048 maximum FDs
@@ -3386,7 +3381,7 @@ AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
 #endif
-main ()
+int main(int argc, char **argv)
 {
 	FILE *fp;
         int fd,val=0;
@@ -3397,17 +3392,17 @@ main ()
 #else
         socklen_t len=sizeof(socklen_t);
 #endif
-	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) exit(1);
+	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) return 1;
 #if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
-        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&val, &len) < 0) exit(1);
+        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&val, &len) < 0) return 1;
 	WSACleanup();
 #else
-        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &val, &len) < 0) exit(1);
+        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &val, &len) < 0) return 1;
 #endif
-	if (val<=0) exit(1);
+	if (val<=0) return 1;
         fp = fopen("conftestval", "w");
         fprintf (fp, "%d\n", val);
-	exit(0);
+	return 0;
 }
 ]])],[SQUID_DETECT_UDP_SO_SNDBUF=`cat conftestval`],[SQUID_DETECT_UDP_SO_SNDBUF=16384],[SQUID_DETECT_UDP_SO_SNDBUF=16384])
 AC_MSG_RESULT($SQUID_DETECT_UDP_SO_SNDBUF)
@@ -3431,7 +3426,7 @@ AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
 #endif
-main ()
+int main(int argc, char **argv)
 {
 	FILE *fp;
         int fd,val=0;
@@ -3442,17 +3437,17 @@ main ()
 #else
         socklen_t len=sizeof(socklen_t);
 #endif
-	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) exit(1);
+	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) return 1;
 #if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
-        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&val, &len) < 0) exit(1);
+        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&val, &len) < 0) return 1;
 	WSACleanup();
 #else
-        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &val, &len) < 0) exit(1);
+        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &val, &len) < 0) return 1;
 #endif
-	if (val <= 0) exit(1);
+	if (val <= 0) return 1;
 	fp = fopen("conftestval", "w"); 
 	fprintf (fp, "%d\n", val);
-	exit(0);
+	return 0;
 }
 ]])],[SQUID_DETECT_UDP_SO_RCVBUF=`cat conftestval`],[SQUID_DETECT_UDP_SO_RCVBUF=16384],[SQUID_DETECT_UDP_SO_RCVBUF=16384])
 AC_MSG_RESULT($SQUID_DETECT_UDP_SO_RCVBUF)
@@ -3476,7 +3471,7 @@ AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
 #endif
-main ()
+int main(int argc, char **argv)
 {
 	FILE *fp;
         int fd,val=0;
@@ -3487,17 +3482,17 @@ main ()
 #else
         socklen_t len=sizeof(socklen_t);
 #endif
-	if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) exit(1);
+	if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) return 1;
 #if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
-        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&val, &len) < 0) exit(1);
+        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&val, &len) < 0) return 1;
 	WSACleanup();
 #else
-        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &val, &len) < 0) exit(1);
+        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &val, &len) < 0) return 1;
 #endif
-	if (val <= 0) exit(1);
+	if (val <= 0) return 1;
 	fp = fopen("conftestval", "w"); 
 	fprintf (fp, "%d\n", val);
-	exit(0);
+	return 0;
 }
 ]])],[SQUID_TCP_SO_SNDBUF=`cat conftestval`],[SQUID_TCP_SO_SNDBUF=16384],[SQUID_TCP_SO_SNDBUF=16384])
 AC_MSG_RESULT($SQUID_TCP_SO_SNDBUF)
@@ -3525,7 +3520,7 @@ AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
 #endif
-main ()
+int main(int argc, char **argv)
 {
 	FILE *fp;
         int fd,val=0;
@@ -3536,17 +3531,17 @@ main ()
 #else
         socklen_t len=sizeof(socklen_t);
 #endif
-	if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) exit(1);
+	if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) return 1;
 #if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
-        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&val, &len) < 0) exit(1);
+        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&val, &len) < 0) return 1;
 	WSACleanup();
 #else
-        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &val, &len) < 0) exit(1);
+        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &val, &len) < 0) return 1;
 #endif
-	if (val <= 0) exit(1);
+	if (val <= 0) return 1;
 	fp = fopen("conftestval", "w"); 
 	fprintf (fp, "%d\n", val);
-	exit(0);
+	return 0;
 }
 ]])],[SQUID_TCP_SO_RCVBUF=`cat conftestval`],[SQUID_TCP_SO_RCVBUF=16384],[SQUID_TCP_SO_RCVBUF=16384])
 AC_MSG_RESULT($SQUID_TCP_SO_RCVBUF)
