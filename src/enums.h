@@ -373,13 +373,6 @@ typedef enum {
     S_HELPER_RELEASE
 } stateful_helper_callback_t;
 
-/* stateful helper reservation info */
-typedef enum {
-    S_HELPER_FREE,		/* available for requests */
-    S_HELPER_RESERVED		/* in a reserved state - no active request, but state data in the helper shouldn't be disturbed */
-} stateful_helper_reserve_t;
-
-
 #if SQUID_SNMP
 enum {
     SNMP_C_VIEW,

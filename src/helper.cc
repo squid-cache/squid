@@ -254,7 +254,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
         helper_stateful_server *srv = cbdataAlloc(helper_stateful_server);
         srv->hIpc = hIpc;
         srv->pid = pid;
-        srv->flags.reserved = S_HELPER_FREE;
+        srv->flags.reserved = 0;
         srv->stats.submits = 0;
         srv->stats.releases = 0;
         srv->index = k;
@@ -347,7 +347,7 @@ helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, v
 
     if ((buf != NULL) && lastserver) {
         debugs(84, 5, "StatefulSubmit with lastserver " << lastserver);
-        assert(lastserver->flags.reserved == S_HELPER_RESERVED);
+        assert(lastserver->flags.reserved);
         assert(!(lastserver->request));
 
         debugs(84, 5, "StatefulSubmit dispatching");
@@ -368,20 +368,17 @@ helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, v
  *
  * helperStatefulReleaseServer tells the helper that whoever was
  * using it no longer needs its services.
- *
- * If the state is S_HELPER_RESERVED, then it should always
- * become S_HELPER_FREE.
  */
 void
 helperStatefulReleaseServer(helper_stateful_server * srv)
 {
     debugs(84, 3, HERE << "srv-" << srv->index << " flags.reserved = " << srv->flags.reserved);
-    if (srv->flags.reserved == S_HELPER_FREE)
+    if (!srv->flags.reserved)
         return;
 
     srv->stats.releases++;
 
-    srv->flags.reserved = S_HELPER_FREE;
+    srv->flags.reserved = 0;
     if (srv->parent->OnEmptyQueue != NULL && srv->data)
         srv->parent->OnEmptyQueue(srv->data);
 
@@ -488,7 +485,7 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label
                           srv->stats.uses,
                           srv->flags.busy ? 'B' : ' ',
                           srv->flags.closing ? 'C' : ' ',
-                          srv->flags.reserved == S_HELPER_RESERVED ? 'R' : ' ',
+                          srv->flags.reserved ? 'R' : ' ',
                           srv->flags.shutdown ? 'S' : ' ',
                           srv->request ? (srv->request->placeholder ? 'P' : ' ') : ' ',
                                   tt < 0.0 ? 0.0 : tt,
@@ -607,7 +604,7 @@ helperStatefulShutdown(statefulhelper * hlp)
             continue;
         }
 
-        if (srv->flags.reserved != S_HELPER_FREE) {
+        if (srv->flags.reserved) {
             if (shutting_down) {
                 debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index + 1 << " is RESERVED. Closing anyway.");
             }
@@ -1017,7 +1014,7 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
 
             case S_HELPER_RELEASE:	/* helper finished with */
 
-                srv->flags.reserved = S_HELPER_FREE;
+                srv->flags.reserved = 0;
 
                 if ((srv->parent->OnEmptyQueue != NULL) && (srv->data))
                     srv->parent->OnEmptyQueue(srv->data);
@@ -1028,7 +1025,7 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
 
             case S_HELPER_RESERVE:	/* 'pin' this helper for the caller */
 
-        	srv->flags.reserved = S_HELPER_RESERVED;
+        	srv->flags.reserved = 1;
         	debugs(84, 5, "StatefulHandleRead: reserving " << hlp->id_name << " #" << srv->index + 1);
 
                 break;
@@ -1206,7 +1203,7 @@ StatefulGetFirstAvailable(statefulhelper * hlp)
         if (srv->flags.busy)
             continue;
 
-        if (srv->flags.reserved == S_HELPER_RESERVED)
+        if (srv->flags.reserved)
             continue;
 
         if (srv->flags.shutdown)
@@ -1382,7 +1379,7 @@ helperStatefulServerDone(helper_stateful_server * srv)
 {
     if (!srv->flags.shutdown) {
         helperStatefulKickQueue(srv->parent);
-    } else if (!srv->flags.closing && srv->flags.reserved == S_HELPER_FREE && !srv->flags.busy) {
+    } else if (!srv->flags.closing && srv->flags.reserved && !srv->flags.busy) {
         int wfd = srv->wfd;
         srv->wfd = -1;
         if (srv->rfd == wfd)
