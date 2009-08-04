@@ -1417,7 +1417,7 @@ StoreEntry::keepInMemory() const
     if (mem_obj->inmem_lo != 0)
 	return 0;
 
-    if (!Config.onoff.memory_cache_first && refcount == 1)
+    if (!Config.onoff.memory_cache_first && swap_status == SWAPOUT_DONE && refcount == 1)
 	return 0;
 
     return 1;
