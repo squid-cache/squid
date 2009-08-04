@@ -2784,16 +2784,16 @@ parse_memcachemode(SquidConfig * config)
     if (!token)
 	self_destruct();
 
-    if (strcmp(token, "always")) {
+    if (strcmp(token, "always") == 0) {
 	Config.onoff.memory_cache_first = 1;
 	Config.onoff.memory_cache_disk = 1;
-    } else if (strcmp(token, "disk")) {
+    } else if (strcmp(token, "disk") == 0) {
 	Config.onoff.memory_cache_first = 0;
 	Config.onoff.memory_cache_disk = 1;
     } else if (strncmp(token, "net", 3) == 0) {
 	Config.onoff.memory_cache_first = 1;
 	Config.onoff.memory_cache_disk = 0;
-    } else if (strncmp(token, "none", 3) == 0) {
+    } else if (strcmp(token, "never") == 0) {
 	Config.onoff.memory_cache_first = 0;
 	Config.onoff.memory_cache_disk = 0;
     } else
