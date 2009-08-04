@@ -1,3 +1,13 @@
+Changes to squid-3.1.0.13 (04 Aug 2009):
+
+	- Bug 2723 regression: enable PURGE requests if PURGE method ACL is present.
+	- Fix one more internal profiler error
+	- Language Updates: Italian, Russian
+	- Language Updates: Add many more aliases
+	- Add Copyright document for errors/ content
+	- ... all bug fixes from 3.0.STABLE18
+	- ... and several code polishing cleanups
+
 Changes to squid-3.1.0.12 (27 Jul 2009):
 
 	- Bug 2716: Chunked request Signed/Unsigned build error
