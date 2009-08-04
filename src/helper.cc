@@ -481,15 +481,14 @@ helperStatefulReset(helper_stateful_server * srv)
 
     if (srv->queue.head) {
         srv->flags.reserved = S_HELPER_DEFERRED;
-        helperStatefulServerKickQueue(srv);
     } else {
         srv->flags.reserved = S_HELPER_FREE;
 
         if ((srv->parent->OnEmptyQueue != NULL) && (srv->data))
             srv->parent->OnEmptyQueue(srv->data);
-
-        helperStatefulKickQueue(hlp);
     }
+
+    helperStatefulServerKickQueue(srv);
 }
 
 /*
@@ -529,6 +528,8 @@ helperStatefulReleaseServer(helper_stateful_server * srv)
     srv->flags.reserved = S_HELPER_FREE;
     if (srv->parent->OnEmptyQueue != NULL && srv->data)
         srv->parent->OnEmptyQueue(srv->data);
+
+    helperStatefulServerKickQueue(srv);
 }
 
 void *
@@ -610,13 +611,13 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label
     storeAppendPrintf(sentry, "avg service time: %d msec\n",
                       hlp->stats.avg_svc_time);
     storeAppendPrintf(sentry, "\n");
-    storeAppendPrintf(sentry, "%7s\t%7s\t%7s\t%11s\t%20s\t%s\t%7s\t%7s\t%7s\n",
+    storeAppendPrintf(sentry, "%7s\t%7s\t%7s\t%11s\t%20s\t%6s\t%7s\t%7s\t%7s\n",
                       "#",
                       "FD",
                       "PID",
                       "# Requests",
                       "# Deferred Requests",
-                      "Flags",
+                      "Flags ",
                       "Time",
                       "Offset",
                       "Request");
@@ -625,7 +626,7 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label
         helper_stateful_server *srv = (helper_stateful_server *)link->data;
         double tt = 0.001 * tvSubMsec(srv->dispatch_time,
                                       srv->flags.busy ? current_time : srv->answer_time);
-        storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11d\t%20d\t%c%c%c%c%c\t%7.3f\t%7d\t%s\n",
+        storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11d\t%20d\t%c%c%c%c%c%c\t%7.3f\t%7d\t%s\n",
                           srv->index + 1,
                           srv->rfd,
                           srv->pid,
@@ -633,7 +634,8 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label
                           (int) srv->deferred_requests,
                           srv->flags.busy ? 'B' : ' ',
                           srv->flags.closing ? 'C' : ' ',
-                          srv->flags.reserved == S_HELPER_RESERVED ? 'R' : (srv->flags.reserved == S_HELPER_DEFERRED ? 'D' : ' '),
+                          srv->flags.reserved == S_HELPER_RESERVED ? 'R' : ' ',
+                          srv->flags.reserved == S_HELPER_DEFERRED ? 'D' : ' ',
                           srv->flags.shutdown ? 'S' : ' ',
                           srv->request ? (srv->request->placeholder ? 'P' : ' ') : ' ',
                                   tt < 0.0 ? 0.0 : tt,
@@ -644,7 +646,8 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label
     storeAppendPrintf(sentry, "\nFlags key:\n\n");
     storeAppendPrintf(sentry, "   B = BUSY\n");
     storeAppendPrintf(sentry, "   C = CLOSING\n");
-    storeAppendPrintf(sentry, "   R = RESERVED or DEFERRED\n");
+    storeAppendPrintf(sentry, "   D = DEFERRED\n");
+    storeAppendPrintf(sentry, "   R = RESERVED\n");
     storeAppendPrintf(sentry, "   S = SHUTDOWN PENDING\n");
     storeAppendPrintf(sentry, "   P = PLACEHOLDER\n");
 }
@@ -752,14 +755,24 @@ helperStatefulShutdown(statefulhelper * hlp)
             continue;
         }
 
-        if (srv->flags.reserved != S_HELPER_FREE) {
-            debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index + 1 << " is RESERVED.");
+        if (srv->flags.reserved == S_HELPER_DEFERRED) {
+            debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index + 1 << " is DEFERRED.");
             continue;
         }
 
         if (srv->deferred_requests) {
-            debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index + 1 << " has DEFERRED requests.");
+            debugs(84, 1, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index + 1 << " has DEFERRED requests but not DEFERRED!!");
             continue;
+        }
+
+        if (srv->flags.reserved == S_HELPER_RESERVED) {
+            if (shutting_down) {
+                debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index + 1 << " is RESERVED. Closing anyway.");
+            }
+            else {
+                debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index + 1 << " is RESERVED. Not Shutting Down Yet.");
+                continue;
+            }
         }
 
         srv->flags.closing = 1;
@@ -861,8 +874,6 @@ helperServerFree(int fd, void *data)
     if (!concurrency)
         concurrency = 1;
 
-    assert(srv->rfd == fd);
-
     if (srv->rbuf) {
         memFreeBuf(srv->rbuf_sz, srv->rbuf);
         srv->rbuf = NULL;
@@ -929,7 +940,6 @@ helperStatefulServerFree(int fd, void *data)
     helper_stateful_server *srv = (helper_stateful_server *)data;
     statefulhelper *hlp = srv->parent;
     helper_stateful_request *r;
-    assert(srv->rfd == fd);
 
     if (srv->rbuf) {
         memFreeBuf(srv->rbuf_sz, srv->rbuf);
@@ -996,7 +1006,6 @@ helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
     char *t = NULL;
     helper_server *srv = (helper_server *)data;
     helper *hlp = srv->parent;
-    assert(fd == srv->rfd);
     assert(cbdataReferenceValid(data));
 
     /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */
@@ -1004,6 +1013,8 @@ helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
     if (flag == COMM_ERR_CLOSING) {
         return;
     }
+
+    assert(fd == srv->rfd);
 
     debugs(84, 5, "helperHandleRead: " << len << " bytes from " << hlp->id_name << " #" << srv->index + 1);
 
@@ -1086,17 +1097,21 @@ helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
         srv->roffset -= (t - srv->rbuf);
         memmove(srv->rbuf, t, srv->roffset + 1);
 
-        if (srv->flags.shutdown) {
+        if (!srv->flags.shutdown) {
+            helperKickQueue(hlp);
+        } else if (!srv->flags.closing && !srv->stats.pending) {
             int wfd = srv->wfd;
             srv->wfd = -1;
+            if (srv->rfd == wfd)
+                srv->rfd = -1;
             srv->flags.closing=1;
             comm_close(wfd);
             return;
-        } else
-            helperKickQueue(hlp);
+        }
     }
 
-    comm_read(fd, srv->rbuf + srv->roffset, srv->rbuf_sz - srv->roffset - 1, helperHandleRead, srv);
+    if (srv->rfd != -1)
+        comm_read(fd, srv->rbuf + srv->roffset, srv->rbuf_sz - srv->roffset - 1, helperHandleRead, srv);
 }
 
 static void
@@ -1106,7 +1121,6 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
     helper_stateful_server *srv = (helper_stateful_server *)data;
     helper_stateful_request *r;
     statefulhelper *hlp = srv->parent;
-    assert(fd == srv->rfd);
     assert(cbdataReferenceValid(data));
 
     /* Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us */
@@ -1114,6 +1128,8 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
     if (flag == COMM_ERR_CLOSING) {
         return;
     }
+
+    assert(fd == srv->rfd);
 
     debugs(84, 5, "helperStatefulHandleRead: " << len << " bytes from " <<
            hlp->id_name << " #" << srv->index + 1);
@@ -1216,22 +1232,11 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
                        tvSubMsec(srv->dispatch_time, current_time),
                        hlp->stats.replies, REDIRECT_AV_FACTOR);
 
-        if (srv->flags.shutdown
-                && srv->flags.reserved == S_HELPER_FREE
-                && !srv->deferred_requests) {
-            int wfd = srv->wfd;
-            srv->wfd = -1;
-            srv->flags.closing=1;
-            comm_close(wfd);
-        } else {
-            if (srv->queue.head)
-                helperStatefulServerKickQueue(srv);
-            else
-                helperStatefulKickQueue(hlp);
-        }
+        helperStatefulServerKickQueue(srv);
     }
 
-    comm_read(srv->rfd, srv->rbuf + srv->roffset, srv->rbuf_sz - srv->roffset - 1,
+    if (srv->rfd != -1)
+        comm_read(srv->rfd, srv->rbuf + srv->roffset, srv->rbuf_sz - srv->roffset - 1,
               helperStatefulHandleRead, srv);
 }
 
@@ -1549,21 +1554,8 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
         /* and push the queue. Note that the callback may have submitted a new
          * request to the helper which is why we test for the request*/
 
-        if (srv->request == NULL) {
-            if (srv->flags.shutdown
-                    && srv->flags.reserved == S_HELPER_FREE
-                    && !srv->deferred_requests) {
-                int wfd = srv->wfd;
-                srv->wfd = -1;
-                srv->flags.closing=1;
-                comm_close(wfd);
-            } else {
-                if (srv->queue.head)
-                    helperStatefulServerKickQueue(srv);
-                else
-                    helperStatefulKickQueue(hlp);
-            }
-        }
+        if (srv->request == NULL)
+            helperStatefulServerKickQueue(srv);
 
         return;
     }
@@ -1610,8 +1602,22 @@ helperStatefulServerKickQueue(helper_stateful_server * srv)
 {
     helper_stateful_request *r;
 
-    if ((r = StatefulServerDequeue(srv)))
+    if ((r = StatefulServerDequeue(srv))) {
         helperStatefulDispatch(srv, r);
+        return;
+    }
+
+    if (!srv->flags.shutdown) {
+        helperStatefulKickQueue(srv->parent);
+    } else if (!srv->flags.closing && srv->flags.reserved == S_HELPER_FREE && !srv->flags.busy) {
+        int wfd = srv->wfd;
+        srv->wfd = -1;
+        if (srv->rfd == wfd)
+            srv->rfd = -1;
+        srv->flags.closing=1;
+        comm_close(wfd);
+        return;
+    }
 }
 
 static void
