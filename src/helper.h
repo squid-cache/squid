@@ -51,7 +51,7 @@ typedef struct _helper_flags helper_flags;
 
 typedef struct _helper_stateful_flags helper_stateful_flags;
 
-typedef stateful_helper_callback_t HLPSCB(void *, void *lastserver, char *buf);
+typedef void HLPSCB(void *, void *lastserver, char *buf);
 
 struct _helper {
     wordlist *cmdline;
