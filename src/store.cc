@@ -1839,11 +1839,11 @@ StoreEntry::trimMemory()
     if (mem_status == IN_MEMORY)
         return;
 
-    if (mem_obj->policyLowestOffsetToKeep() == 0)
-        /* Nothing to do */
-        return;
-
     if (!swapOutAble()) {
+	if (mem_obj->policyLowestOffsetToKeep(0) == 0) {
+	    /* Nothing to do */
+	    return;
+	}
         /*
          * Its not swap-able, and we're about to delete a chunk,
          * so we must make it PRIVATE.  This is tricky/ugly because

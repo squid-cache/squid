@@ -313,7 +313,7 @@ MemObject::objectBytesOnDisk() const
 }
 
 int64_t
-MemObject::policyLowestOffsetToKeep() const
+MemObject::policyLowestOffsetToKeep(bool swap) const
 {
     /*
      * Careful.  lowest_offset can be greater than endOffset(), such
@@ -323,7 +323,7 @@ MemObject::policyLowestOffsetToKeep() const
 
     if (endOffset() < lowest_offset ||
             endOffset() - inmem_lo > (int64_t)Config.Store.maxInMemObjSize ||
-            !Config.onoff.memory_cache_first)
+            (swap && !Config.onoff.memory_cache_first))
         return lowest_offset;
 
     return inmem_lo;
@@ -332,7 +332,7 @@ MemObject::policyLowestOffsetToKeep() const
 void
 MemObject::trimSwappable()
 {
-    int64_t new_mem_lo = policyLowestOffsetToKeep();
+    int64_t new_mem_lo = policyLowestOffsetToKeep(1);
     /*
      * We should only free up to what we know has been written
      * to disk, not what has been queued for writing.  Otherwise
@@ -357,7 +357,7 @@ MemObject::trimSwappable()
 void
 MemObject::trimUnSwappable()
 {
-    int64_t new_mem_lo = policyLowestOffsetToKeep();
+    int64_t new_mem_lo = policyLowestOffsetToKeep(0);
     assert (new_mem_lo > 0);
 
     data_hdr.freeDataUpto(new_mem_lo);
