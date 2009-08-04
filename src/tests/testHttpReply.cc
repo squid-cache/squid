@@ -129,8 +129,6 @@ testHttpReply::testSanityCheckFirstLine()
     input.reset();
     error = HTTP_STATUS_NONE;
 
-#if FUTURE
-
     // status line with no status
     input.append("HTTP/1.1 \n\n", 11);
     hdr_len = headersEnd(input.content(),input.contentSize());
@@ -178,6 +176,4 @@ testHttpReply::testSanityCheckFirstLine()
     CPPUNIT_ASSERT_EQUAL(error, HTTP_INVALID_HEADER);
     input.reset();
     error = HTTP_STATUS_NONE;
-#endif
-
 }
