@@ -1414,7 +1414,13 @@ StoreEntry::keepInMemory() const
     if (mem_obj->data_hdr.size() == 0)
         return 0;
 
-    return mem_obj->inmem_lo == 0;
+    if (mem_obj->inmem_lo != 0)
+	return 0;
+
+    if (!Config.onoff.memory_cache_first && refcount == 1)
+	return 0;
+
+    return 1;
 }
 
 int
