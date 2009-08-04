@@ -1,3 +1,14 @@
+Changes to squid-3.0.STABLE18 (04 Aug 2009):
+
+	- Bug 2728: regression: assertion failed: !eof
+	- Bug 2732: reply_body_max_size smaller than error page loops
+	            infinitely until out of memory
+	- Bug 2725: pconn failure if domain or client_address are unset
+	- Bug 2648: reserved helpers not shut down after reconfigure/rotate
+	- Bug 2462: make check should tell when cppunit is missing
+	- Remove excess messages about headers < minimum size
+	- Support Libtool 2.2.6
+
 Changes to squid-3.0.STABLE17 (27 Jul 2009):
 
 	- Bug 2680 regression: Crash after rotate with no helpers running

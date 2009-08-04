@@ -2,10 +2,10 @@
 <HTML>
 <HEAD>
  <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.50">
- <TITLE>Squid 3.0.STABLE17 release notes</TITLE>
+ <TITLE>Squid 3.0.STABLE18 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.0.STABLE17 release notes</H1>
+<H1>Squid 3.0.STABLE18 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -13,9 +13,54 @@
 Squid is a WWW Cache application developed by the National Laboratory
 for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
-<H2><A NAME="s1">1. Notice</A></H2>
+<P>
+<H2><A NAME="toc1">1.</A> <A HREF="#s1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.0.STABLE17.</P>
+<P>
+<H2><A NAME="toc2">2.</A> <A HREF="#s2">Known issues</A></H2>
+
+<P>
+<H2><A NAME="toc3">3.</A> <A HREF="#s3">Changes since earlier STABLE releases of Squid-3.0</A></H2>
+
+<P>
+<H2><A NAME="toc4">4.</A> <A HREF="#s4">Changes since Squid-2.6</A></H2>
+
+<UL>
+<LI><A NAME="toc4.1">4.1</A> <A HREF="#ss4.1">Major new features</A>
+<LI><A NAME="toc4.2">4.2</A> <A HREF="#ss4.2">2.6 features not found in Squid-3.0</A>
+<LI><A NAME="toc4.3">4.3</A> <A HREF="#ss4.3">Logging changes</A>
+</UL>
+<P>
+<H2><A NAME="toc5">5.</A> <A HREF="#s5">Windows support</A></H2>
+
+<P>
+<H2><A NAME="toc6">6.</A> <A HREF="#s6">Changes to squid.conf since Squid-2.6</A></H2>
+
+<UL>
+<LI><A NAME="toc6.1">6.1</A> <A HREF="#ss6.1">New tags</A>
+<LI><A NAME="toc6.2">6.2</A> <A HREF="#ss6.2">Changes to existing tags</A>
+<LI><A NAME="toc6.3">6.3</A> <A HREF="#ss6.3">Removed tags</A>
+</UL>
+<P>
+<H2><A NAME="toc7">7.</A> <A HREF="#s7">Changes to ./configure Options since Squid-2.6</A></H2>
+
+<UL>
+<LI><A NAME="toc7.1">7.1</A> <A HREF="#ss7.1">New options</A>
+<LI><A NAME="toc7.2">7.2</A> <A HREF="#ss7.2">Changes to existing options</A>
+<LI><A NAME="toc7.3">7.3</A> <A HREF="#ss7.3">Removed options</A>
+</UL>
+<P>
+<H2><A NAME="toc8">8.</A> <A HREF="#s8">Regressions since Squid-2.7</A></H2>
+
+<UL>
+<LI><A NAME="toc8.1">8.1</A> <A HREF="#ss8.1">Missing squid.conf options available in Squid-2.7</A>
+<LI><A NAME="toc8.2">8.2</A> <A HREF="#ss8.2">Missing ./configure options available in Squid-2.7</A>
+</UL>
+
+<HR>
+<H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
+
+<P>The Squid Team are pleased to announce the release of Squid-3.0.STABLE18.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.0/">http://www.squid-cache.org/Versions/v3/3.0/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -23,19 +68,19 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <P>We welcome feedback and bug reports. If you find a bug, please see 
 <A HREF="http://wiki.squid-cache.org/SquidFaq/TroubleShooting#head-7067fc0034ce967e67911becaabb8c95a34d576d">http://wiki.squid-cache.org/SquidFaq/TroubleShooting#head-7067fc0034ce967e67911becaabb8c95a34d576d</A> for how to submit a report with a stack trace.</P>
 
-<H2><A NAME="s2">2. Known issues</A></H2>
+<H2><A NAME="s2">2.</A> <A HREF="#toc2">Known issues</A></H2>
 
 <P>Although this release is deemed good enough for use in many setups, please note the existence of 
 <A HREF="http://www.squid-cache.org/bugs/buglist.cgi?query_format=advanced&amp;short_desc_type=allwordssubstr&amp;short_desc=&amp;target_milestone=3.0&amp;long_desc_type=allwordssubstr&amp;long_desc=&amp;bug_file_loc_type=allwordssubstr&amp;bug_file_loc=&amp;status_whiteboard_type=allwordssubstr&amp;status_whiteboard=&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;emailtype1=substring&amp;email1=&amp;emailtype2=substring&amp;email2=&amp;bugidtype=include&amp;bug_id=&amp;votes=&amp;chfieldfrom=&amp;chfieldto=Now&amp;chfieldvalue=&amp;cmdtype=doit&amp;order=bugs.bug_severity&amp;field0-0-0=noop&amp;type0-0-0=noop&amp;value0-0-0=">open bugs against Squid-3.0</A>.</P>
 
-<H2><A NAME="s3">3. Changes since earlier STABLE releases of Squid-3.0</A></H2>
+<H2><A NAME="s3">3.</A> <A HREF="#toc3">Changes since earlier STABLE releases of Squid-3.0</A></H2>
 
 <P>The 3.0 change history can be 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.0/changesets/">viewed here</A>.</P>
 
-<H2><A NAME="s4">4. Changes since Squid-2.6</A></H2>
+<H2><A NAME="s4">4.</A> <A HREF="#toc4">Changes since Squid-2.6</A></H2>
 
-<H2><A NAME="ss4.1">4.1 Major new features</A>
+<H2><A NAME="ss4.1">4.1</A> <A HREF="#toc4.1">Major new features</A>
 </H2>
 
 <P>Squid 3.0 represents a major rewrite of Squid and has a number of new features.</P>
@@ -87,7 +132,7 @@ to perform some simple XML based processing, offloading the final page assembly 
 <P>More information about ESI can be found from the ESI website 
 <A HREF="http://www.esi.org">http://www.esi.org</A></P>
 
-<H2><A NAME="ss4.2">4.2 2.6 features not found in Squid-3.0</A>
+<H2><A NAME="ss4.2">4.2</A> <A HREF="#toc4.2">2.6 features not found in Squid-3.0</A>
 </H2>
 
 <P>Some of the features found in Squid-2.6 is not available in Squid-3.
@@ -107,7 +152,7 @@ Some have been dropped as they are not needed. Some have not yet been forward-po
 </UL>
 </P>
 
-<H2><A NAME="ss4.3">4.3 Logging changes</A>
+<H2><A NAME="ss4.3">4.3</A> <A HREF="#toc4.3">Logging changes</A>
 </H2>
 
 <H3>access.log</H3>
@@ -125,7 +170,7 @@ Some have been dropped as they are not needed. Some have not yet been forward-po
 <A HREF="http://www.squid-cache.org/Doc/FAQ/FAQ-6.html#ss6.7">http://www.squid-cache.org/Doc/FAQ/FAQ-6.html#ss6.7</A> for a definition of all log types.</P>
 
 
-<H2><A NAME="s5">5. Windows support</A></H2>
+<H2><A NAME="s5">5.</A> <A HREF="#toc5">Windows support</A></H2>
 
 <P>This Squid version can run on Windows as a system service using the Cygwin emulation environment, 
 or can be compiled in Windows native mode using the MinGW + MSYS development environment. Windows NT 4 SP4 and later are supported.<BR>
@@ -348,7 +393,7 @@ ScriptAlias /squid/cgi-bin/ "c:/squid/libexec/"
 
 
 
-<H2><A NAME="s6">6. Changes to squid.conf since Squid-2.6</A></H2>
+<H2><A NAME="s6">6.</A> <A HREF="#toc6">Changes to squid.conf since Squid-2.6</A></H2>
 
 <P>There have been many changes to Squid's configuration file since Squid-2.6.</P>
 
@@ -365,7 +410,7 @@ ScriptAlias /squid/cgi-bin/ "c:/squid/libexec/"
 </P>
 
 
-<H2><A NAME="newtags"></A> <A NAME="ss6.1">6.1 New tags</A>
+<H2><A NAME="newtags"></A> <A NAME="ss6.1">6.1</A> <A HREF="#toc6.1">New tags</A>
 </H2>
 
 <P>
@@ -682,7 +727,7 @@ See the accf_http(9) man page.
 </P>
 
 
-<H2><A NAME="modifiedtags"></A> <A NAME="ss6.2">6.2 Changes to existing tags</A>
+<H2><A NAME="modifiedtags"></A> <A NAME="ss6.2">6.2</A> <A HREF="#toc6.2">Changes to existing tags</A>
 </H2>
 
 <P>
@@ -878,7 +923,7 @@ This is useful for class 4 Delay Pools in Squid 3.x</P>
 </DL>
 </P>
 
-<H2><A NAME="removedtags"></A> <A NAME="ss6.3">6.3 Removed tags</A>
+<H2><A NAME="removedtags"></A> <A NAME="ss6.3">6.3</A> <A HREF="#toc6.3">Removed tags</A>
 </H2>
 
 <P>
@@ -896,7 +941,7 @@ This is useful for class 4 Delay Pools in Squid 3.x</P>
 </P>
 
 
-<H2><A NAME="s7">7. Changes to ./configure Options since Squid-2.6</A></H2>
+<H2><A NAME="s7">7.</A> <A HREF="#toc7">Changes to ./configure Options since Squid-2.6</A></H2>
 
 <P>There have been some changes to Squid's build configuration since Squid-2.6.</P>
 
@@ -914,7 +959,7 @@ This is useful for class 4 Delay Pools in Squid 3.x</P>
 
 
 
-<H2><A NAME="newoptions"></A> <A NAME="ss7.1">7.1 New options</A>
+<H2><A NAME="newoptions"></A> <A NAME="ss7.1">7.1</A> <A HREF="#toc7.1">New options</A>
 </H2>
 
 <P>
@@ -1029,7 +1074,7 @@ if it is not installed on your system.</P>
 
 </DL>
 </P>
-<H2><A NAME="modifiedoptions"></A> <A NAME="ss7.2">7.2 Changes to existing options</A>
+<H2><A NAME="modifiedoptions"></A> <A NAME="ss7.2">7.2</A> <A HREF="#toc7.2">Changes to existing options</A>
 </H2>
 
 <P>
@@ -1073,7 +1118,7 @@ Automatic checks will enable best I/O loop method available.</P>
 
 </DL>
 </P>
-<H2><A NAME="removedoptions"></A> <A NAME="ss7.3">7.3 Removed options</A>
+<H2><A NAME="removedoptions"></A> <A NAME="ss7.3">7.3</A> <A HREF="#toc7.3">Removed options</A>
 </H2>
 
 <P>The following configure options have been removed.</P>
@@ -1098,13 +1143,13 @@ Automatic checks will enable best I/O loop method available.</P>
 </P>
 
 
-<H2><A NAME="s8">8. Regressions since Squid-2.7</A></H2>
+<H2><A NAME="s8">8.</A> <A HREF="#toc8">Regressions since Squid-2.7</A></H2>
 
 <P>Some squid.conf and ./configure options which were available in Squid-2.7 are not yet available in Squid-3.0</P>
 
 <P>If you need something to do then porting one of these from Squid-2 to Squid-3 is most welcome.</P>
 
-<H2><A NAME="ss8.1">8.1 Missing squid.conf options available in Squid-2.7</A>
+<H2><A NAME="ss8.1">8.1</A> <A HREF="#toc8.1">Missing squid.conf options available in Squid-2.7</A>
 </H2>
 
 <P>
@@ -1248,7 +1293,7 @@ Automatic checks will enable best I/O loop method available.</P>
 </DL>
 </P>
 
-<H2><A NAME="ss8.2">8.2 Missing ./configure options available in Squid-2.7</A>
+<H2><A NAME="ss8.2">8.2</A> <A HREF="#toc8.2">Missing ./configure options available in Squid-2.7</A>
 </H2>
 
 <P>
