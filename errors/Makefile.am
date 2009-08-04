@@ -10,11 +10,13 @@ errordir = $(datadir)/errors
 DEFAULT_ERROR_DIR	= $(errordir)
 DEFAULT_STYLESHEET	= $(sysconfdir)/errorpage.css
 
-# List of automated translations possible:
+## List of automated translations possible:
 TRANSLATIONPO=`ls -1 $(top_srcdir)/errors/*.po | grep -o -E "[a-z\-]+\.po" | sed s/.po//`
 TRANSLATIONDIR=`ls -1 $(srcdir) $(builddir) | sed -e 's%$(srcdir)/%%' -e 's%$(builddir)/%%' -e 's%.po%%' `
 
+## TODO: prevent this loop installing everything twice when srcdir == builddir
 install-data-local:
+	$(mkinstalldirs) $(DESTDIR)$(DEFAULT_ERROR_DIR) ; \
 	for l in $(TRANSLATIONDIR) ; do \
 	  echo "Located $$l for install..."; \
 	  if test -d $(srcdir)/$$l; then \
@@ -32,7 +34,8 @@ install-data-local:
 		done; \
 	  fi \
 	done; \
-	$(INSTALL_DATA) $(srcdir)/TRANSLATORS $(DESTDIR)TRANSLATORS; \
+	$(INSTALL_DATA) $(srcdir)/TRANSLATORS $(DESTDIR)$(DEFAULT_ERROR_DIR)/TRANSLATORS; \
+	$(INSTALL_DATA) $(srcdir)/COPYRIGHT $(DESTDIR)$(DEFAULT_ERROR_DIR)/COPYRIGHT; \
 	$(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET).default; \
 	if test -f $(DESTDIR)$(DEFAULT_STYLESHEET) ; then \
 		echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_STYLESHEET)" ; \
@@ -63,7 +66,8 @@ uninstall-local:
 	done;
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_STYLESHEET)
 	rm -f $(DESTDIR)$(DEFAULT_STYLESHEET).default
-	rm -f $(DESTDIR)TRANSLATORS
+	rm -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/TRANSLATORS
+	rm -f $(DESTDIR)$(DEFAULT_ERROR_DIR)/COPYRIGHT
 
 ## Upgrade requires the new files to be pre-installed
 upgrade: install
@@ -104,7 +108,7 @@ dist-hook: translate
 		  || exit 1; \
 	  fi; \
 	done; \
-	for f in aliases alias-link.sh alias-upgrade errorpage.css TRANSLATORS; do \
+	for f in aliases alias-link.sh alias-upgrade errorpage.css TRANSLATORS COPYRIGHT; do \
 		cp -p $(srcdir)/$$f $(distdir)/`basename $$f`; \
 	done;
 

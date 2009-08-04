@@ -5,8 +5,8 @@ cs	cs-cz
 da	da-dk
 de	de-de
 el	el-gr
-en	en-au en-ca en-gb en-nz en-tt en-uk
-es	es-es es-pe
+en	en-au en-ca en-gb en-in en-nz en-sg en-tt en-uk en-us en-za
+es	es-ar es-pe es-es
 et	et-ee
 fi	fi-fi
 fr	fr-fr
@@ -31,3 +31,5 @@ sv	sv-se
 th	th-th
 tr	tr-tr
 uk	uk-ua
+zh-tw	zh-hk zh-mo
+zh-cn	zh-sg
