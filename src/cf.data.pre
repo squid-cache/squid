@@ -1619,274 +1619,248 @@ DEFAULT: none
 LOC: Config.peers
 DOC_START
 	To specify other caches in a hierarchy, use the format:
-
+	
 		cache_peer hostname type http-port icp-port [options]
-
+	
 	For example,
-
+	
 	#                                        proxy  icp
 	#          hostname             type     port   port  options
 	#          -------------------- -------- ----- -----  -----------
-	cache_peer parent.foo.net       parent    3128  3130  proxy-only default
+	cache_peer parent.foo.net       parent    3128  3130  default
 	cache_peer sib1.foo.net         sibling   3128  3130  proxy-only
 	cache_peer sib2.foo.net         sibling   3128  3130  proxy-only
-
-	      type:  either 'parent', 'sibling', or 'multicast'.
-
-	proxy-port:  The port number where the cache listens for proxy
-		     requests.
-
-	  icp-port:  Used for querying neighbor caches about
-		     objects.  To have a non-ICP neighbor
-		     specify '0' for the ICP port.
-		NOTE: Also requires icp_port option enabled to send/receive
-		      requests via this method.
-
-	    options: proxy-only
-		     weight=n
-		     basetime=n
-		     ttl=n
-		     no-query
-		     background-ping
-		     default
-		     round-robin
-		     weighted-round-robin
-		     carp
-		     userhash
-		     sourcehash
-		     multicast-responder
-		     closest-only
-		     no-digest
-		     no-netdb-exchange
-		     no-delay
-		     login=user:password | PASS | *:password
-		     connect-timeout=nn
-		     connect-fail-limit=nn
-		     digest-url=url
-		     allow-miss
-		     max-conn=n
-		     htcp
-		     htcp-oldsquid
-		     htcp-no-clr
-		     htcp-no-purge-clr
-		     htcp-only-clr
-		     htcp-forward-clr
-		     originserver
-		     name=xxx
-		     forceddomain=name
-		     ssl
-		     sslcert=/path/to/ssl/certificate
-		     sslkey=/path/to/ssl/key
-		     sslversion=1|2|3|4
-		     sslcipher=...
-		     ssloptions=...
-		     front-end-https[=on|auto]
-		     connection-auth[=on|off|auto]
-
-		     use 'proxy-only' to specify objects fetched
-		     from this cache should not be saved locally.
-
-		     use 'weight=n' to affect the selection of a peer
-		     during any weighted peer-selection mechanisms.
-		     The weight must be an integer; default is 1,
-		     larger weights are favored more.
-		     This option does not affect parent selection if a peering
-		     protocol is not in use.
-
-		     use 'basetime=n' to specify a base amount to
-		     be subtracted from round trip times of parents.
-		     It is subtracted before division by weight in calculating
-		     which parent to fectch from. If the rtt is less than the
-		     base time the rtt is set to a minimal value.
-
-		     use 'ttl=n' to specify a IP multicast TTL to use
-		     when sending an ICP queries to this address.
-		     Only useful when sending to a multicast group.
-		     Because we don't accept ICP replies from random
-		     hosts, you must configure other group members as
-		     peers with the 'multicast-responder' option below.
-
-		     use 'no-query' to NOT send ICP queries to this
-		     neighbor.
-
-		     use 'background-ping' to only send ICP queries to this
-		     neighbor infrequently. This is used to keep the neighbor
-		     round trip time updated and is usually used in
-		     conjunction with weighted-round-robin.
-
-		     use 'default' if this is a parent cache which can
-		     be used as a "last-resort" if a peer cannot be located
-		     by any of the peer-selection mechanisms.
-		     If specified more than once, only the first is used.
-
-		     use 'round-robin' to define a set of parents which
-		     should be used in a round-robin fashion in the
-		     absence of any ICP queries.
-
-		     use 'weighted-round-robin' to define a set of parents
-		     which should be used in a round-robin fashion with the
-		     frequency of each parent being based on the round trip
-		     time. Closer parents are used more often.
-		     Usually used for background-ping parents.
-
-		     use 'carp' to define a set of parents which should
-		     be used as a CARP array. The requests will be
-		     distributed among the parents based on the CARP load
-		     balancing hash function based on their weight.
-
-		     use 'userhash' to load-balance amongst a set of parents
-		     based on the client proxy_auth or ident username.
-
-		     use 'sourcehash' to load-balance amongst a set of parents
-		     based on the client source ip.
-
-		     'multicast-responder' indicates the named peer
-		     is a member of a multicast group.  ICP queries will
-		     not be sent directly to the peer, but ICP replies
-		     will be accepted from it.
-
-		     'closest-only' indicates that, for ICP_OP_MISS
-		     replies, we'll only forward CLOSEST_PARENT_MISSes
-		     and never FIRST_PARENT_MISSes.
-
-		     use 'no-digest' to NOT request cache digests from
-		     this neighbor.
-
-		     'no-netdb-exchange' disables requesting ICMP
-		     RTT database (NetDB) from the neighbor.
-
-		     use 'no-delay' to prevent access to this neighbor
-		     from influencing the delay pools.
-
-		     use 'login=user:password' if this is a personal/workgroup
-		     proxy and your parent requires proxy authentication.
-		     Note: The string can include URL escapes (i.e. %20 for
-		     spaces). This also means % must be written as %%.
-
-		     use 'login=PASS' if users must authenticate against
-		     the upstream proxy or in the case of a reverse proxy
-		     configuration, the origin web server.  This will pass
-		     the users credentials as they are to the peer.
-		     This only works for the Basic HTTP authentication scheme.
-		     Note: To combine this with proxy_auth both proxies must
-		     share the same user database as HTTP only allows for
-		     a single login (one for proxy, one for origin server).
-		     Also be warned this will expose your users proxy
-		     password to the peer. USE WITH CAUTION
-
-		     use 'login=*:password' to pass the username to the
-		     upstream cache, but with a fixed password. This is meant
-		     to be used when the peer is in another administrative
-		     domain, but it is still needed to identify each user.
-		     The star can optionally be followed by some extra
-		     information which is added to the username. This can
-		     be used to identify this proxy to the peer, similar to
-		     the login=username:password option above.
-
-		     use 'connect-timeout=nn' to specify a peer
-		     specific connect timeout (also see the
-		     peer_connect_timeout directive)
-
-		     use 'connect-fail-limit=nn' to specify how many times
-		     connecting to a peer must fail before it is marked as
-		     down. Default is 10.
-
-		     use 'digest-url=url' to tell Squid to fetch the cache
-		     digest (if digests are enabled) for this host from
-		     the specified URL rather than the Squid default
-		     location.
-
-		     use 'allow-miss' to disable Squid's use of only-if-cached
-		     when forwarding requests to siblings. This is primarily
-		     useful when icp_hit_stale is used by the sibling. To
-		     extensive use of this option may result in forwarding
-		     loops, and you should avoid having two-way peerings
-		     with this option. (for example to deny peer usage on
-		     requests from peer by denying cache_peer_access if the
-		     source is a peer)
-
-		     use 'max-conn=n' to limit the amount of connections Squid
-		     may open to this peer.
-
-		     use 'htcp' to send HTCP, instead of ICP, queries
-		     to the neighbor.  You probably also want to
-		     set the "icp port" to 4827 instead of 3130.
-		     You MUST also set htcp_access expicitly. The default of
-		     deny all will prevent peer traffic.
-
-		     use 'htcp-oldsquid' to send HTCP to old Squid versions
-		     You MUST also set htcp_access expicitly. The default of
-		     deny all will prevent peer traffic.		     
-
-		     use 'htcp-no-clr' to send HTCP to the neighbor but without
-		     sending any CLR requests.  This cannot be used with
-		     htcp-only-clr.
-		
-		     use 'htcp-no-purge-clr' to send HTCP to the neighbor
-		     including CLRs but only when they do not result from
-		     PURGE requests.
-		
-		     use 'htcp-only-clr' to send HTCP to the neighbor but ONLY
-		     CLR requests.  This cannot be used with htcp-no-clr.
-		
-		     use 'htcp-forward-clr' to forward any HTCP CLR requests
-		     this proxy receives to the peer.
-
-		     'originserver' causes this parent peer to be contacted as
-		     a origin server. Meant to be used in accelerator setups.
-
-		     use 'name=xxx' if you have multiple peers on the same
-		     host but different ports. This name can be used to
-		     differentiate the peers in cache_peer_access and similar
-		     directives. Including the peername ACL type.
-
-		     use 'forceddomain=name' to forcibly set the Host header
-		     of requests forwarded to this peer. Useful in accelerator
-		     setups where the server (peer) expects a certain domain
-		     name and using redirectors to feed this domain name
-		     is not feasible.
-
-		     use 'ssl' to indicate connections to this peer should
-		     be SSL/TLS encrypted.
-
-		     use 'sslcert=/path/to/ssl/certificate' to specify a client
-		     SSL certificate to use when connecting to this peer.
-
-		     use 'sslkey=/path/to/ssl/key' to specify the private SSL
-		     key corresponding to sslcert above. If 'sslkey' is not
-		     specified 'sslcert' is assumed to reference a
-		     combined file containing both the certificate and the key.
-
-		     use sslversion=1|2|3|4 to specify the SSL version to use
-		     when connecting to this peer
-			1 = automatic (default)
-			2 = SSL v2 only
-			3 = SSL v3 only
-			4 = TLS v1 only
-
-		     use sslcipher=... to specify the list of valid SSL ciphers
-		     to use when connecting to this peer.
-
-		     use ssloptions=... to specify various SSL engine options:
-			NO_SSLv2  Disallow the use of SSLv2
-			NO_SSLv3  Disallow the use of SSLv3
-			NO_TLSv1  Disallow the use of TLSv1
-		     See src/ssl_support.c or the OpenSSL documentation for
-		     a more complete list.
-
-		     use sslcafile=... to specify a file containing
-		     additional CA certificates to use when verifying the
-		     peer certificate.
-
-		     use sslcapath=... to specify a directory containing
-		     additional CA certificates to use when verifying the
-		     peer certificate.
-
-		     use sslcrlfile=... to specify a certificate revocation
-		     list file to use when verifying the peer certificate.
-		     
-		     use sslflags=... to specify various flags modifying the
-		     SSL implementation:
+	cache_peer example.com          parent    80       0  no-query default
+	cache_peer cdn.example.com      sibling   3128     0  
+	
+	      type:	either 'parent', 'sibling', or 'multicast'.
+	
+	proxy-port:	The port number where the peer accept HTTP requests.
+			For other Squid proxies this is usually 3128
+			For web servers this is usually 80
+	
+	  icp-port:	Used for querying neighbor caches about objects.
+			Set to 0 if the peer does not support ICP or HTCP.
+			See ICP and HTCP options below for additional details.
+	
+	
+	==== ICP OPTIONS ====
+	
+	You MUST also set icp_port and icp_access explicitly when using these options.
+	The defaults will prevent peer traffic using ICP.
+	
+	
+	no-query	Disable ICP queries to this neighbor.
+	
+	multicast-responder
+			Indicates the named peer is a member of a multicast group.
+			ICP queries will not be sent directly to the peer, but ICP
+			replies will be accepted from it.
+	
+	closest-only	Indicates that, for ICP_OP_MISS replies, we'll only forward
+			CLOSEST_PARENT_MISSes and never FIRST_PARENT_MISSes.
+	
+	background-ping
+			To only send ICP queries to this neighbor infrequently.
+			This is used to keep the neighbor round trip time updated
+			and is usually used in conjunction with weighted-round-robin.
+	
+	
+	==== HTCP OPTIONS ====
+	
+	You MUST also set htcp_port and htcp_access explicitly when using these options.
+	The defaults will prevent peer traffic using HTCP.
+	
+	
+	htcp		Send HTCP, instead of ICP, queries to the neighbor.
+			You probably also want to set the "icp-port" to 4827
+			instead of 3130.
+	
+	htcp-oldsquid	Send HTCP to old Squid versions.
+	
+	htcp-no-clr	Send HTCP to the neighbor but without
+			sending any CLR requests.  This cannot be used with
+			htcp-only-clr.
+	
+	htcp-only-clr	Send HTCP to the neighbor but ONLY CLR requests.
+			This cannot be used with htcp-no-clr.
+	
+	htcp-no-purge-clr
+			Send HTCP to the neighbor including CLRs but only when
+			they do not result from PURGE requests.
+	
+	htcp-forward-clr
+			Forward any HTCP CLR requests this proxy receives to the peer.
+	
+	
+	==== PEER SELECTION METHODS ====
+	
+	The default peer selection method is ICP, with the first responding peer
+	being used as source. These options can be used for better load balancing.
+	
+	
+	default		This is a parent cache which can be used as a "last-resort"
+			if a peer cannot be located by any of the peer-selection methods.
+			If specified more than once, only the first is used.
+	
+	round-robin	Load-Balance parents which should be used in a round-robin
+			fashion in the absence of any ICP queries.
+			weight=N can be used to add bias.
+	
+	weighted-round-robin
+			Load-Balance parents which should be used in a round-robin
+			fashion with the frequency of each parent being based on the
+			round trip time. Closer parents are used more often.
+			Usually used for background-ping parents.
+			weight=N can be used to add bias.
+	
+	carp		Load-Balance parents which should be used as a CARP array.
+			The requests will be distributed among the parents based on the
+			CARP load balancing hash function based on their weight.
+	
+	userhash	Load-balance parents based on the client proxy_auth or ident username.
+	
+	sourcehash	Load-balance parents based on the client source IP.
+	
+	
+	==== PEER SELECTION OPTIONS ====
+	
+	weight=N	use to affect the selection of a peer during any weighted
+			peer-selection mechanisms.
+			The weight must be an integer; default is 1,
+			larger weights are favored more.
+			This option does not affect parent selection if a peering
+			protocol is not in use.
+	
+	basetime=N	Specify a base amount to be subtracted from round trip
+			times of parents.
+			It is subtracted before division by weight in calculating
+			which parent to fectch from. If the rtt is less than the
+			base time the rtt is set to a minimal value.
+	
+	ttl=N		Specify a IP multicast TTL to use when sending an ICP
+			queries to this address.
+			Only useful when sending to a multicast group.
+			Because we don't accept ICP replies from random
+			hosts, you must configure other group members as
+			peers with the 'multicast-responder' option.
+	
+	no-delay	To prevent access to this neighbor from influencing the
+			delay pools.
+	
+	digest-url=URL	Tell Squid to fetch the cache digest (if digests are
+			enabled) for this host from the specified URL rather
+			than the Squid default location.
+	
+	
+	==== ACCELERATOR / REVERSE-PROXY OPTIONS ====
+	
+	originserver	Causes this parent to be contacted as an origin server.
+			Meant to be used in accelerator setups when the peer
+			is a web server.
+	
+	forceddomain=name
+			Set the Host header of requests forwarded to this peer.
+			Useful in accelerator setups where the server (peer)
+			expects a certain domain name but clients may request
+			others. ie example.com or www.example.com
+	
+	no-digest	Disable request of cache digests.
+	
+	no-netdb-exchange
+			Disables requesting ICMP RTT database (NetDB).
+	
+	
+	==== AUTHENTICATION OPTIONS ====
+	
+	login=user:password
+			If this is a personal/workgroup proxy and your parent
+			requires proxy authentication.
+			
+			Note: The string can include URL escapes (i.e. %20 for
+			spaces). This also means % must be written as %%.
+	
+	login=PROXYPASS
+			Send login details received from client to this peer.
+			Authentication is not required, nor changed.
+			
+			Note: This will pass any form of authentication but
+			only Basic auth will work through a proxy unless the
+			connection-auth options are also used.
+	
+	login=PASS	Send login details received from client to this peer.
+			Authentication is not required by this option.
+			If there are no client-provided authentication headers
+			to pass on, but username and password are available
+			from either proxy login or an external ACL user= and
+			password= result tags they may be sent instead.
+			
+			Note: To combine this with proxy_auth both proxies must
+			share the same user database as HTTP only allows for
+			a single login (one for proxy, one for origin server).
+			Also be warned this will expose your users proxy
+			password to the peer. USE WITH CAUTION
+	
+	login=*:password
+			Send the username to the upstream cache, but with a
+			fixed password. This is meant to be used when the peer
+			is in another administrative domain, but it is still
+			needed to identify each user.
+			The star can optionally be followed by some extra
+			information which is added to the username. This can
+			be used to identify this proxy to the peer, similar to
+			the login=username:password option above.
+	
+	connection-auth=on|off
+			Tell Squid that this peer does or not support Microsoft
+			connection oriented authentication, and any such
+			challenges received from there should be ignored.
+			Default is auto to automatically determine the status
+			of the peer.
+	
+	
+	==== SSL / HTTPS / TLS OPTIONS ====
+	
+	ssl		Encrypt connections to this peer with SSL/TLS.
+	
+	sslcert=/path/to/ssl/certificate
+			A client SSL certificate to use when connecting to
+			this peer.
+	
+	sslkey=/path/to/ssl/key
+			The private SSL key corresponding to sslcert above.
+			If 'sslkey' is not specified 'sslcert' is assumed to
+			reference a combined file containing both the
+			certificate and the key.
+	
+	sslversion=1|2|3|4
+			The SSL version to use when connecting to this peer
+				1 = automatic (default)
+				2 = SSL v2 only
+				3 = SSL v3 only
+				4 = TLS v1 only
+	
+	sslcipher=...	The list of valid SSL ciphers to use when connecting
+			to this peer.
+	
+	ssloptions=... 	Specify various SSL engine options:
+				NO_SSLv2  Disallow the use of SSLv2
+				NO_SSLv3  Disallow the use of SSLv3
+				NO_TLSv1  Disallow the use of TLSv1
+			See src/ssl_support.c or the OpenSSL documentation for
+			a more complete list.
+	
+	sslcafile=... 	A file containing additional CA certificates to use
+			when verifying the peer certificate.
+	
+	sslcapath=...	A directory containing additional CA certificates to
+			use when verifying the peer certificate.
+	
+	sslcrlfile=... 	A certificate revocation list file to use when
+			verifying the peer certificate.
+	
+	sslflags=...	Specify various flags modifying the SSL implementation:
+	
 			DONT_VERIFY_PEER
 				Accept certificates even if they fail to
 				verify.
@@ -1896,24 +1870,51 @@ DOC_START
 			DONT_VERIFY_DOMAIN
 				Don't verify the peer certificate
 				matches the server name
-
-		     use ssldomain= to specify the peer name as advertised
-		     in it's certificate. Used for verifying the correctness
-		     of the received peer certificate. If not specified the
-		     peer hostname will be used.
-
-		     use front-end-https to enable the "Front-End-Https: On"
-		     header needed when using Squid as a SSL frontend in front
-		     of Microsoft OWA. See MS KB document Q307347 for details
-		     on this header. If set to auto the header will
-		     only be added if the request is forwarded as a https://
-		     URL.
-
-		     use connection-auth=off to tell Squid that this peer does
-		     not support Microsoft connection oriented authentication,
-		     and any such challenges received from there should be
-		     ignored. Default is auto to automatically determine the
-		     status of the peer.
+	
+	ssldomain= 	The peer name as advertised in it's certificate.
+			Used for verifying the correctness of the received peer
+			certificate. If not specified the peer hostname will be
+			used.
+	
+	front-end-https
+			Enable the "Front-End-Https: On" header needed when
+			using Squid as a SSL frontend in front of Microsoft OWA.
+			See MS KB document Q307347 for details on this header.
+			If set to auto the header will only be added if the
+			request is forwarded as a https:// URL.
+	
+	
+	==== GENERAL OPTIONS ====
+	
+	connect-timeout=N
+			A peer-specific connect timeout.
+			Also see the peer_connect_timeout directive.
+	
+	connect-fail-limit=N
+			How many times connecting to a peer must fail before
+			it is marked as down. Default is 10.
+	
+	allow-miss	Disable Squid's use of only-if-cached when forwarding
+			requests to siblings. This is primarily useful when
+			icp_hit_stale is used by the sibling. To extensive use
+			of this option may result in forwarding loops, and you
+			should avoid having two-way peerings with this option.
+			For example to deny peer usage on requests from peer
+			by denying cache_peer_access if the source is a peer.
+	
+	max-conn=N	Limit the amount of connections Squid may open to this
+			peer. see also 
+	
+	name=xxx	Unique name for the peer.
+			Required if you have multiple peers on the same host
+			but different ports.
+			This name can be used in cache_peer_access and similar
+			directives to dentify the peer.
+			Can be used by outgoing access controls through the
+			peername ACL type.
+	
+	proxy-only	objects fetched from the peer will not be stored locally.
+	
 DOC_END
 
 NAME: cache_peer_domain cache_host_domain
