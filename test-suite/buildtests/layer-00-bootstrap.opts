@@ -1,0 +1,14 @@
+## Special run - to be done before all others...
+#
+## locate the sources and go there...
+topb=`dirname $0`
+topc=`dirname ${topb}`
+cd ${topc}
+
+# echo "DEBUG: top=${top}"
+# echo "DEBUG: topB=${topb}"
+# echo "DEBUG: topC=${topc}"
+
+## Bootstrap the sources in case configure or makefiles changed.
+./bootstrap.sh
+exit $?
