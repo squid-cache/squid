@@ -27,5 +27,25 @@
 #endif
 
 
+/*
+ * sys/capability.h is only needed in Linux apparently.
+ *
+ * HACK: Ugly glue to get around linux header madness colliding with glibc
+ * NP: if you need to use the hack labeled MAYBE_DEAD please report to
+ *     the developers.
+ */
+#if HAVE_SYS_CAPABILITY_H
+
+#if MAYBE_DEAD
+#undef _POSIX_SOURCE
+#define _LINUX_TYPES_H
+#define _LINUX_FS_H
+typedef uint32_t __u32;
+#endif
+
+#include <sys/capability.h>
+#endif /* HAVE_SYS_CAPABILITY_H */
+
+
 #endif /* _SQUID_LINUX_ */
 #endif /* SQUID_OS_LINUX_H */
