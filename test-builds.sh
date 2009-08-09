@@ -43,6 +43,7 @@ buildtest() {
     btlayer="bt${layer}"
     log=${btlayer}.log
     echo "TESTING: ${layer}"
+    chmod -R 777 ${btlayer}
     rm -f -r ${btlayer} && mkdir ${btlayer}
     {
 	result=255
