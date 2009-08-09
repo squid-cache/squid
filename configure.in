@@ -2166,8 +2166,7 @@ AC_CHECK_HEADERS( \
 	inttypes.h \
 	grp.h \
 	db.h \
-	db_185.h \
-	sys/capability.h
+	db_185.h
 )
 
 AC_CHECK_HEADERS(
@@ -2433,6 +2432,17 @@ AC_CHECK_TYPE(socklen_t,AC_DEFINE(HAVE_SOCKLEN_T,1,[socklen_t is defined by the 
 #include <stdlib.h>
 #include <stddef.h>
 #endif])
+
+dnl Check for libcap1 breakage or libcap2 fixed
+AC_CHECK_HEADERS(sys/capability.h)
+libcap_broken=1
+AC_CACHE_CHECK([for operational libcap2], $libcap_broken,
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <sys/capability.h>]], [[
+                  capget(NULL, NULL);
+                  capset(NULL, NULL);
+                 ]])],[libcap_broken=0],[])
+)
+AC_DEFINE_UNQUOTED([LIBCAP_BROKEN],$libcap_broken,[if libcap2 is available and not clashing with libc])
 
 AC_CHECK_TYPE(mtyp_t,AC_DEFINE(HAVE_MTYP_T,1,[mtyp_t is defined by the system headers]),,[#include <sys/types.h>
 #include <sys/ipc.h>
