@@ -30,13 +30,11 @@
 /*
  * sys/capability.h is only needed in Linux apparently.
  *
- * HACK: Ugly glue to get around linux header madness colliding with glibc
- * NP: if you need to use the hack labeled MAYBE_DEAD please report to
- *     the developers.
+ * HACK: LIBCAP_BROKEN Ugly glue to get around linux header madness colliding with glibc
  */
 #if HAVE_SYS_CAPABILITY_H
 
-#if MAYBE_DEAD
+#if LIBCAP_BROKEN
 #undef _POSIX_SOURCE
 #define _LINUX_TYPES_H
 #define _LINUX_FS_H
