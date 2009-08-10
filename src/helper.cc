@@ -182,7 +182,7 @@ helperOpenServers(helper * hlp)
     helperKickQueue(hlp);
 }
 
-/*
+/**
  * DPW 2007-05-08
  *
  * helperStatefulOpenServers: create the stateful child helper processes
@@ -321,8 +321,7 @@ helperSubmit(helper * hlp, const char *buf, HLPCB * callback, void *data)
     debugs(84, 9, "helperSubmit: " << buf);
 }
 
-/* lastserver = "server last used as part of a reserved request sequence"
- */
+/// lastserver = "server last used as part of a reserved request sequence"
 void
 helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, void *data, helper_stateful_server * lastserver)
 {
@@ -363,7 +362,7 @@ helperStatefulSubmit(statefulhelper * hlp, const char *buf, HLPSCB * callback, v
     debugs(84, 9, "helperStatefulSubmit: placeholder: '" << r->placeholder << "', buf '" << buf << "'.");
 }
 
-/*
+/**
  * DPW 2007-05-08
  *
  * helperStatefulReleaseServer tells the helper that whoever was
@@ -385,13 +384,16 @@ helperStatefulReleaseServer(helper_stateful_server * srv)
     helperStatefulServerDone(srv);
 }
 
+/** return a pointer to the stateful routines data area */
 void *
 helperStatefulServerGetData(helper_stateful_server * srv)
-/* return a pointer to the stateful routines data area */
 {
     return srv->data;
 }
 
+/**
+ * Dump some stats about the helper states to a StoreEntry
+ */
 void
 helperStats(StoreEntry * sentry, helper * hlp, const char *label)
 {
@@ -476,8 +478,7 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label
 
     for (dlink_node *link = hlp->servers.head; link; link = link->next) {
         helper_stateful_server *srv = (helper_stateful_server *)link->data;
-        double tt = 0.001 * tvSubMsec(srv->dispatch_time,
-                                      srv->flags.busy ? current_time : srv->answer_time);
+        double tt = 0.001 * tvSubMsec(srv->dispatch_time, srv->flags.busy ? current_time : srv->answer_time);
         storeAppendPrintf(sentry, "%7d\t%7d\t%7d\t%11d\t%c%c%c%c%c\t%7.3f\t%7d\t%s\n",
                           srv->index + 1,
                           srv->rfd,
@@ -488,9 +489,9 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label
                           srv->flags.reserved ? 'R' : ' ',
                           srv->flags.shutdown ? 'S' : ' ',
                           srv->request ? (srv->request->placeholder ? 'P' : ' ') : ' ',
-                                  tt < 0.0 ? 0.0 : tt,
-                                  (int) srv->roffset,
-                                  srv->request ? log_quote(srv->request->buf) : "(none)");
+                          tt < 0.0 ? 0.0 : tt,
+                          (int) srv->roffset,
+                          srv->request ? log_quote(srv->request->buf) : "(none)");
     }
 
     storeAppendPrintf(sentry, "\nFlags key:\n\n");
