@@ -14,12 +14,16 @@
  * Origin: Id: crypt.c,v 1.3 1995/05/30 05:42:22 rgrimes Exp
  *
  */
-
-#include <string.h>
-#include <stdio.h>
 #include "config.h"
-#include "md5.h"
 
+#if HAVE_STRING_H
+#include <string.h>
+#endif
+#if HAVE_STDIO_H
+#include <stdio.h>
+#endif
+
+#include "md5.h"
 #include "crypt_md5.h"
 
 static unsigned char itoa64[] =	/* 0 ... 63 => ascii - 64 */
