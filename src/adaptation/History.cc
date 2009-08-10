@@ -7,7 +7,7 @@
 #include "adaptation/History.h"
 
 /// impossible services value to identify unset theNextServices
-const static String TheNullServices(",null,");
+const static char *TheNullServices = ",null,";
 
 Adaptation::History::Entry::Entry(const String &sid, const timeval &when):
     service(sid), start(when), theRptm(-1), retried(false)

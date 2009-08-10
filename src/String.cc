@@ -150,6 +150,7 @@ String::clean()
     PROF_start(StringClean);
     assert(this);
 
+    /* TODO if mempools has already closed this will FAIL!! */
     if (defined())
         memFreeString(size_, buf_);
 

@@ -1403,7 +1403,7 @@ clientReplyContext::buildReplyHeader()
         LOCAL_ARRAY(char, bbuf, MAX_URL + 32);
         String strVia;
         hdr->getList(HDR_VIA, &strVia);
-        snprintf(bbuf, sizeof(bbuf), "%d.%d %s",
+        snprintf(bbuf, MAX_URL + 32, "%d.%d %s",
                  reply->sline.version.major,
                  reply->sline.version.minor,
                  ThisCache);
@@ -1768,6 +1768,7 @@ clientReplyContext::sendBodyTooLargeError()
 {
     IpAddress tmp_noaddr;
     tmp_noaddr.SetNoAddr(); // TODO: make a global const
+    http->logType = LOG_TCP_DENIED_REPLY;
     ErrorState *err = clientBuildError(ERR_TOO_BIG, HTTP_FORBIDDEN, NULL,
                                        http->getConn() != NULL ? http->getConn()->peer : tmp_noaddr,
                                        http->request);

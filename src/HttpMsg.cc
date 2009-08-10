@@ -150,20 +150,27 @@ bool HttpMsg::parse(MemBuf *buf, bool eof, http_status *error)
     buf->terminate(); // does not affect content size
 
     // find the end of headers
-    // TODO: Remove? httpReplyParseStep() should do similar checks
     const size_t hdr_len = headersEnd(buf->content(), buf->contentSize());
+
+    // sanity check the start line to see if this is in fact an HTTP message
+    if (!sanityCheckStartLine(buf, hdr_len, error)) {
+        // NP: sanityCheck sets *error and sends debug warnings on syntax errors.
+        // if we have seen the connection close, this is an error too
+        if (eof && *error==HTTP_STATUS_NONE)
+            *error = HTTP_INVALID_HEADER;
+
+        return false;
+    }
 
     // TODO: move to httpReplyParseStep()
     if (hdr_len > Config.maxReplyHeaderSize || (hdr_len <= 0 && (size_t)buf->contentSize() > Config.maxReplyHeaderSize)) {
-        debugs(58, 1, "HttpMsg::parse: Too large reply header (" <<
-               hdr_len << " > " << Config.maxReplyHeaderSize);
+        debugs(58, 1, "HttpMsg::parse: Too large reply header (" << hdr_len << " > " << Config.maxReplyHeaderSize);
         *error = HTTP_HEADER_TOO_LARGE;
         return false;
     }
 
     if (hdr_len <= 0) {
-        debugs(58, 3, "HttpMsg::parse: failed to find end of headers " <<
-               "(eof: " << eof << ") in '" << buf->content() << "'");
+        debugs(58, 3, "HttpMsg::parse: failed to find end of headers (eof: " << eof << ") in '" << buf->content() << "'");
 
         if (eof) // iff we have seen the end, this is an error
             *error = HTTP_INVALID_HEADER;
@@ -171,30 +178,22 @@ bool HttpMsg::parse(MemBuf *buf, bool eof, http_status *error)
         return false;
     }
 
-    if (!sanityCheckStartLine(buf, error)) {
-        debugs(58,1, HERE << "first line of HTTP message is invalid");
-        *error = HTTP_INVALID_HEADER;
-        return false;
-    }
-
     const int res = httpMsgParseStep(buf->content(), buf->contentSize(), eof);
 
     if (res < 0) { // error
-        debugs(58, 3, "HttpMsg::parse: cannot parse isolated headers " <<
-               "in '" << buf->content() << "'");
+        debugs(58, 3, "HttpMsg::parse: cannot parse isolated headers in '" << buf->content() << "'");
         *error = HTTP_INVALID_HEADER;
         return false;
     }
 
     if (res == 0) {
-        debugs(58, 2, "HttpMsg::parse: strange, need more data near '" <<
-               buf->content() << "'");
+        debugs(58, 2, "HttpMsg::parse: strange, need more data near '" << buf->content() << "'");
+        *error = HTTP_INVALID_HEADER;
         return false; // but this should not happen due to headersEnd() above
     }
 
     assert(res > 0);
-    debugs(58, 9, "HttpMsg::parse success (" << hdr_len << " bytes) " <<
-           "near '" << buf->content() << "'");
+    debugs(58, 9, "HttpMsg::parse success (" << hdr_len << " bytes) near '" << buf->content() << "'");
 
     if (hdr_sz != (int)hdr_len) {
         debugs(58, 1, "internal HttpMsg::parse vs. headersEnd error: " <<
@@ -244,7 +243,6 @@ HttpMsg::httpMsgParseStep(const char *buf, int len, int atEnd)
     const char **parse_end_ptr = &blk_end;
     assert(parse_start);
     assert(pstate < psParsed);
-    int retval;
 
     *parse_end_ptr = parse_start;
 
@@ -252,13 +250,13 @@ HttpMsg::httpMsgParseStep(const char *buf, int len, int atEnd)
 
     if (pstate == psReadyToParseStartLine) {
         if (!httpMsgIsolateStart(&parse_start, &blk_start, &blk_end)) {
-            retval = 0;
-            goto finish;
+            PROF_stop(HttpMsg_httpMsgParseStep);
+            return 0;
         }
 
         if (!parseFirstLine(blk_start, blk_end)) {
-            retval = httpMsgParseError();
-            goto finish;
+            PROF_stop(HttpMsg_httpMsgParseStep);
+            return httpMsgParseError();
         }
 
         *parse_end_ptr = parse_start;
@@ -279,13 +277,15 @@ HttpMsg::httpMsgParseStep(const char *buf, int len, int atEnd)
             if (atEnd) {
                 blk_start = parse_start, blk_end = blk_start + strlen(blk_start);
             } else {
-                retval = 0;
-                goto finish;
+                PROF_stop(HttpMsg_httpMsgParseStep);
+                return 0;
             }
         }
 
-        if (!header.parse(blk_start, blk_end))
+        if (!header.parse(blk_start, blk_end)) {
+            PROF_stop(HttpMsg_httpMsgParseStep);
             return httpMsgParseError();
+        }
 
         hdrCacheInit();
 
@@ -295,10 +295,9 @@ HttpMsg::httpMsgParseStep(const char *buf, int len, int atEnd)
 
         ++pstate;
     }
-    retval = 1;
-finish:
+
     PROF_stop(HttpMsg_httpMsgParseStep);
-    return retval;
+    return 1;
 }
 
 /* handy: resets and returns -1 */
@@ -379,9 +378,8 @@ void HttpMsg::firstLineBuf(MemBuf& mb)
     packerClean(&p);
 }
 
-HttpMsg *
-
 // use HTTPMSGLOCK() instead of calling this directly
+HttpMsg *
 HttpMsg::_lock()
 {
     lock_count++;
