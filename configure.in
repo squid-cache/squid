@@ -2,9 +2,9 @@ dnl  Configuration input file for Squid
 dnl
 dnl  $Id$
 dnl
-AC_INIT(Squid Web Proxy, 3.1.0.13-BZR, http://www.squid-cache.org/bugs/, squid)
-AC_PREREQ(2.52)
-AM_CONFIG_HEADER(include/autoconf.h)
+AC_INIT([Squid Web Proxy],[3.1.0.13-BZR],[http://www.squid-cache.org/bugs/],[squid])
+AC_PREREQ(2.61)
+AC_CONFIG_HEADERS([include/autoconf.h])
 AC_CONFIG_AUX_DIR(cfgaux)
 AC_CONFIG_SRCDIR([src/main.cc])
 AM_INIT_AUTOMAKE([tar-ustar nostdinc])
@@ -24,7 +24,7 @@ dnl Check for GNU cc
 AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_CXX
-AC_LANG_CPLUSPLUS
+AC_LANG([C++])
 AC_CANONICAL_HOST
 
 dnl Make the squid top srcdir available to sub-packages as --with-squid=PATH
@@ -35,7 +35,7 @@ ac_configure_args="$new_configure_args"
 use_loadable_modules=1
 AC_MSG_CHECKING(whether to use loadable modules)
 AC_ARG_ENABLE(loadable-modules,
-    AC_HELP_STRING( [--disable-loadable-modules], [do not support loadable modules]) ,
+    AS_HELP_STRING([--disable-loadable-modules],[do not support loadable modules]) ,
     [
         case "${enableval}" in
             yes) use_loadable_modules=yes ;;
@@ -151,16 +151,14 @@ AC_DEFINE_UNQUOTED(SQUID_CONFIGURE_OPTIONS, "$ac_configure_args", [configure com
 
 CACHE_EFFECTIVE_USER="nobody"
 AC_ARG_WITH(default-user,
-  AC_HELP_STRING([--with-default-user=USER],
-                 [System user account for squid permissions. Default: nobody]),
+  AS_HELP_STRING([--with-default-user=USER],[System user account for squid permissions. Default: nobody]),
  [ CACHE_EFFECTIVE_USER="$withval" ]
 )
 AC_SUBST(CACHE_EFFECTIVE_USER)
 
 DEFAULT_LOG_DIR="$localstatedir/logs"
 AC_ARG_WITH(logdir,
-  AC_HELP_STRING([--with-logdir=PATH],
-                 Default location for squid logs. default: $DEFAULT_LOG_DIR),
+  AS_HELP_STRING([--with-logdir=PATH],[Default location for squid logs. default: $DEFAULT_LOG_DIR]),
  [ case $withval in
    yes|no)
      AC_MSG_ERROR( --with-logdir requires a directory PATH. --with-logdir=PATH )
@@ -175,8 +173,7 @@ AC_SUBST(DEFAULT_LOG_DIR)
 
 DEFAULT_PIDFILE="$localstatedir/squid.pid"
 AC_ARG_WITH(pidfile,
-  AC_HELP_STRING([--with-pidfile=PATH],
-                 Default location for squid PID file. default: $DEFAULT_PIDFILE),
+  AS_HELP_STRING([--with-pidfile=PATH],[Default location for squid PID file. default: $DEFAULT_PIDFILE]),
  [ case $withval in
    yes|no)
      AC_MSG_ERROR( --with-pidfile requires a file PATH. --with-pidfile=PATH )
@@ -300,8 +297,7 @@ fi
 SquidInline="yes"
 
 AC_ARG_ENABLE(optimizations,
-  AC_HELP_STRING([--disable-optimizations],
-                 [Don't compile Squid with compiler optimizations enabled.
+  AS_HELP_STRING([--disable-optimizations],[Don't compile Squid with compiler optimizations enabled.
                   Optimization is good for production builds, but not
                   good for debugging. During development, use
                   --disable-optimizations to reduce compilation times
@@ -316,8 +312,7 @@ AC_ARG_ENABLE(optimizations,
 ])
 
 AC_ARG_ENABLE(inline,
-  AC_HELP_STRING([--disable-inline],
-                 [Don't compile trivial methods as inline. Squid
+  AS_HELP_STRING([--disable-inline],[Don't compile trivial methods as inline. Squid
                   is coded with much of the code able to be inlined.
                   Inlining is good for production builds, but not
                   good for development. During development, use
@@ -340,13 +335,16 @@ else
 fi
 
 AC_ARG_ENABLE(debug-cbdata,
-  AC_HELP_STRING([--enable-debug-cbdata],
-                 [Provide some debug information in cbdata]),
+  AS_HELP_STRING([--enable-debug-cbdata],[Provide some debug information in cbdata]),
 [ if test "$enableval" = "yes" ; then
     AC_MSG_NOTICE([cbdata debugging enabled])
     AC_DEFINE(CBDATA_DEBUG,1,[Enable for cbdata debug information])
   fi
 ])
+
+dnl Nasty hack to get autoconf 2.64 on Linux to run.
+dnl all other uses of RUN_IFELSE are wrapped inside CACHE_CHECK which breaks on 2.64
+AC_RUN_IFELSE([AC_LANG_SOURCE([[ int main(int argc, char **argv) { return 0; } ]])],[],[],[])
 
 dnl This is a developer only option.. developers know how to set defines
 dnl
@@ -371,8 +369,7 @@ dnl   fi
 dnl ])
 
 AC_ARG_ENABLE(xmalloc-statistics,
-  AC_HELP_STRING([--enable-xmalloc-statistics],
-                 [Show malloc statistics in status page]),
+  AS_HELP_STRING([--enable-xmalloc-statistics],[Show malloc statistics in status page]),
 [ if test "$enableval" = "yes" ; then
     AC_MSG_NOTICE([malloc statistics enabled])
     AC_DEFINE(XMALLOC_STATISTICS,1,[Define to have malloc statistics])
@@ -380,8 +377,7 @@ AC_ARG_ENABLE(xmalloc-statistics,
 ])
 
 AC_ARG_ENABLE(async-io,
-  AC_HELP_STRING([--enable-async-io[=N_THREADS]],
-                 [Shorthand for "--with-aufs-threads=N_THREADS --with-pthreads
+  AS_HELP_STRING([--enable-async-io[=N_THREADS]],[Shorthand for "--with-aufs-threads=N_THREADS --with-pthreads
                   --enable-storeio=ufs,aufs"]),
 [ case $enableval in
   yes)
@@ -399,8 +395,7 @@ AC_ARG_ENABLE(async-io,
 ])
 
 AC_ARG_WITH(aufs-threads,
-  AC_HELP_STRING([--with-aufs-threads=N_THREADS],
-	               [Tune the number of worker threads for the aufs object store.]),
+  AS_HELP_STRING([--with-aufs-threads=N_THREADS],[Tune the number of worker threads for the aufs object store.]),
 [ case $withval in
   [[0-9]]*)
     aufs_io_threads=$withval
@@ -417,27 +412,26 @@ if test "$aufs_io_threads"; then
 fi
 
 AC_ARG_WITH(pthreads,
-  AC_HELP_STRING([--with-pthreads],[Use POSIX Threads]))
+  AS_HELP_STRING([--with-pthreads],[Use POSIX Threads]))
 if test "$with_pthreads" = "yes"; then
   AC_MSG_NOTICE([With pthreads])
 fi
 
 AC_ARG_WITH(aio,
-  AC_HELP_STRING([--with-aio],[Use POSIX AIO]))
+  AS_HELP_STRING([--with-aio],[Use POSIX AIO]))
 if test "$with_aio" = "yes"; then
   AC_MSG_NOTICE([With aio])
 fi
 
 
 AC_ARG_WITH(dl,
-  AC_HELP_STRING([--with-dl],[Use dynamic linking]))
+  AS_HELP_STRING([--with-dl],[Use dynamic linking]))
 if test "$with_dl" = "yes"; then
   AC_MSG_NOTICE([With dl])
 fi
 
 AC_ARG_ENABLE(storeio,
-  AC_HELP_STRING([--enable-storeio="list of modules"],
-                 [Build support for the list of store I/O modules.
+  AS_HELP_STRING([--enable-storeio="list of modules"],[Build support for the list of store I/O modules.
                   The default is only to build the "ufs" module.
                   See src/fs for a list of available modules, or
                   Programmers Guide section <not yet written>
@@ -547,8 +541,7 @@ AC_SUBST(STORE_LIBS_TO_ADD)
 AC_SUBST(STORE_TESTS)
 
 AC_ARG_ENABLE(disk-io,
-  AC_HELP_STRING([--enable-disk-io="list of modules"],
-                 [Build support for the list of disk I/O modules.
+  AS_HELP_STRING([--enable-disk-io="list of modules"],[Build support for the list of disk I/O modules.
                   If unset only the "Blocking" module will be built.
                   Set without a value all available modules will be built.
                   See src/DiskIO for a list of available modules, or
@@ -727,8 +720,7 @@ dnl 'lru' removal policy is currently hard-coded by name for tests
 dnl so we must set it as default.
 REPL_POLICIES="lru"
 AC_ARG_ENABLE(removal-policies,
-  AC_HELP_STRING([--enable-removal-policies="list of policies"],
-                 [Build support for the list of removal policies.
+  AS_HELP_STRING([--enable-removal-policies="list of policies"],[Build support for the list of removal policies.
                   The default is only to build the "lru" module.
                   See src/repl for a list of available modules, or
                   Programmers Guide section 9.9 for details on how
@@ -767,7 +759,7 @@ AC_SUBST(REPL_LIBS)
 
 AM_CONDITIONAL(ENABLE_PINGER, false)
 AC_ARG_ENABLE(icmp,
-  AC_HELP_STRING([--enable-icmp],[Enable ICMP pinging and Network Measurement]),
+  AS_HELP_STRING([--enable-icmp],[Enable ICMP pinging and Network Measurement]),
 [ if test "$enableval" = "yes" ; then
     AC_MSG_NOTICE([ICMP enabled])
     AC_DEFINE(USE_ICMP,1,[Define to use Squid's ICMP and Network Measurement features (highly recommended!)])
@@ -777,8 +769,7 @@ AC_ARG_ENABLE(icmp,
 
 AM_CONDITIONAL(USE_DELAY_POOLS, false)
 AC_ARG_ENABLE(delay-pools,
-  AC_HELP_STRING([--enable-delay-pools],
-                 [Enable delay pools to limit bandwidth usage]),
+  AS_HELP_STRING([--enable-delay-pools],[Enable delay pools to limit bandwidth usage]),
 [ if test "$enableval" = "yes" ; then
     AC_MSG_NOTICE([Delay pools enabled])
     AC_DEFINE([DELAY_POOLS],1,[Traffic management via "delay pools".])
@@ -791,8 +782,7 @@ use_adaptation=no
 
 AM_CONDITIONAL(USE_ESI, false)
 AC_ARG_ENABLE(esi,
-  AC_HELP_STRING([--enable-esi],
-                 [Enable ESI for accelerators. Requires libexpat.
+  AS_HELP_STRING([--enable-esi],[Enable ESI for accelerators. Requires libexpat.
                   Enabling ESI will cause squid to follow the
                   Edge Acceleration Specification (www.esi.org).
                   This causes squid to IGNORE client Cache-Control headers.
@@ -821,7 +811,7 @@ fi
 
 AM_CONDITIONAL(USE_ICAP_CLIENT, false)
 AC_ARG_ENABLE(icap-client,
-  AC_HELP_STRING([--enable-icap-client],[Enable the ICAP client.]),
+  AS_HELP_STRING([--enable-icap-client],[Enable the ICAP client.]),
 	      use_icap_client=$enableval, use_icap_client=no)
 if test "$use_icap_client" = "yes" ; then
   AC_DEFINE(ICAP_CLIENT,1,[Enable ICAP client features in Squid])
@@ -837,8 +827,7 @@ AC_SUBST(ICAP_LIBS)
 use_ecap=1
 AC_MSG_CHECKING(whether to support eCAP)
 AC_ARG_ENABLE(ecap,
-  AC_HELP_STRING([--enable-ecap],
-                 [support loadable content adaptation modules]),
+  AS_HELP_STRING([--enable-ecap],[support loadable content adaptation modules]),
     [
         case "${enableval}" in
             yes) use_ecap=yes ;;
@@ -910,8 +899,7 @@ dnl   fi
 dnl ])     
 
 AC_ARG_ENABLE(useragent-log,
-  AC_HELP_STRING([--enable-useragent-log],
-                 [Enable logging of User-Agent header]),
+  AS_HELP_STRING([--enable-useragent-log],[Enable logging of User-Agent header]),
 [ if test "$enableval" = "yes" ; then
     AC_MSG_NOTICE([User-Agent logging enabled])
     AC_DEFINE(USE_USERAGENT_LOG,1,[If you want to log User-Agent request header values, define this.
@@ -921,7 +909,7 @@ AC_ARG_ENABLE(useragent-log,
 ])
 
 AC_ARG_ENABLE(referer-log,
-  AC_HELP_STRING([--enable-referer-log],[Enable logging of Referer header]),
+  AS_HELP_STRING([--enable-referer-log],[Enable logging of Referer header]),
 [ if test "$enableval" = "yes" ; then
     AC_MSG_NOTICE([Referer logging enabled])
     AC_DEFINE(USE_REFERER_LOG,1,[If you want to log Referer request header values, define this.
@@ -932,7 +920,7 @@ AC_ARG_ENABLE(referer-log,
 
 USE_WCCP=1
 AC_ARG_ENABLE(wccp,  
-  AC_HELP_STRING([--disable-wccp],[Disable Web Cache Coordination Protocol]),
+  AS_HELP_STRING([--disable-wccp],[Disable Web Cache Coordination Protocol]),
 [ if test "$enableval" = "no" ; then
     AC_MSG_NOTICE([Web Cache Coordination Protocol disabled])
     USE_WCCP=0
@@ -944,8 +932,7 @@ fi
 
 USE_WCCPv2=1
 AC_ARG_ENABLE(wccpv2,
-  AC_HELP_STRING([--disable-wccpv2],
-                 [Disable Web Cache Coordination V2 Protocol]),
+  AS_HELP_STRING([--disable-wccpv2],[Disable Web Cache Coordination V2 Protocol]),
 [ if test "$enableval" = "no" ; then
     AC_MSG_NOTICE(["Web Cache Coordination V2 Protocol disabled])
     USE_WCCPv2=0
@@ -956,7 +943,7 @@ if test $USE_WCCPv2 = 1; then
 fi
 
 AC_ARG_ENABLE(kill-parent-hack,
-  AC_HELP_STRING([--enable-kill-parent-hack],[Kill parent on shutdown]),
+  AS_HELP_STRING([--enable-kill-parent-hack],[Kill parent on shutdown]),
 [ if test "$enableval" = "yes" ; then
     AC_MSG_NOTICE([Kill parent on shutdown])
     AC_DEFINE(KILL_PARENT_OPT,1,[A dangerous feature which causes Squid to kill its parent process
@@ -967,7 +954,7 @@ AC_ARG_ENABLE(kill-parent-hack,
 
 USE_SNMP=true
 AC_ARG_ENABLE(snmp,
-  AC_HELP_STRING([--disable-snmp],[Disable SNMP monitoring support]),
+  AS_HELP_STRING([--disable-snmp],[Disable SNMP monitoring support]),
 [ if test "$enableval" = "no" ; then
     AC_MSG_NOTICE([SNMP monitoring disabled])
     USE_SNMP=
@@ -983,8 +970,7 @@ AC_SUBST(SNMPLIB)
 AC_SUBST(makesnmplib)
 
 AC_ARG_ENABLE(cachemgr-hostname,
-  AC_HELP_STRING([--enable-cachemgr-hostname=hostname],
-                 [Make cachemgr.cgi default to this host.
+  AS_HELP_STRING([--enable-cachemgr-hostname=hostname],[Make cachemgr.cgi default to this host.
                   If unspecified, uses the name of the build-host]),
 [  case $enableval in
    yes)
@@ -1004,8 +990,7 @@ AC_ARG_ENABLE(cachemgr-hostname,
 
 AM_CONDITIONAL(ENABLE_ARP_ACL, false)
 AC_ARG_ENABLE(arp-acl,
-  AC_HELP_STRING([--enable-arp-acl],
-                 [Enable use of ARP ACL lists (ether address)]),
+  AS_HELP_STRING([--enable-arp-acl],[Enable use of ARP ACL lists (ether address)]),
 [  if test "$enableval" = "yes" ; then
      AC_MSG_NOTICE([ARP ACL lists enabled (ether address)])
      case "$host" in
@@ -1038,7 +1023,7 @@ AC_ARG_ENABLE(arp-acl,
 USE_HTCP=true
 AM_CONDITIONAL(ENABLE_HTCP, false)
 AC_ARG_ENABLE(htcp,
-  AC_HELP_STRING([--disable-htcp],[Disable HTCP protocol support]),
+  AS_HELP_STRING([--disable-htcp],[Disable HTCP protocol support]),
 [ if test "$enableval" = "no" ; then
     AC_MSG_NOTICE([HTCP support disabled])
   fi
@@ -1053,7 +1038,7 @@ AM_CONDITIONAL(ENABLE_SSL, false)
 
 dnl Default is to use OpenSSL when available
 AC_ARG_ENABLE(ssl,
-  AC_HELP_STRING([--enable-ssl],[Enable ssl gatewaying support using OpenSSL]),
+  AS_HELP_STRING([--enable-ssl],[Enable ssl gatewaying support using OpenSSL]),
 [ if test "$enableval" != "no"; then
     AC_MSG_NOTICE([SSL gatewaying using OpenSSL enabled])
     AC_DEFINE(USE_SSL,1,[Define this to include code for SSL encryption.])
@@ -1073,8 +1058,7 @@ AC_ARG_ENABLE(ssl,
 
 dnl User may specify OpenSSL is needed from a non-standard location
 AC_ARG_WITH(openssl,
-  AC_HELP_STRING([--with-openssl{=PATH}],
-                 [Compile with the OpenSSL libraries. The path to
+  AS_HELP_STRING([--with-openssl{=PATH}],[Compile with the OpenSSL libraries. The path to
                   the OpenSSL development libraries and headers
                   installation can be specified if outside of the
                   system standard directories]),
@@ -1112,7 +1096,7 @@ AC_SUBST(SSLLIB)
 
 
 AC_ARG_ENABLE(forw-via-db,
-  AC_HELP_STRING([--enable-forw-via-db],[Enable Forw/Via database]),
+  AS_HELP_STRING([--enable-forw-via-db],[Enable Forw/Via database]),
 [ if test "$enableval" = "yes" ; then
     AC_MSG_NOTICE([FORW-VIA enabled])
     AC_DEFINE(FORW_VIA_DB,1,[Enable Forw/Via database])
@@ -1120,8 +1104,7 @@ AC_ARG_ENABLE(forw-via-db,
 ])
 
 AC_ARG_ENABLE(cache-digests,
-  AC_HELP_STRING([--enable-cache-digests],
-                 [Use Cache Digests.
+  AS_HELP_STRING([--enable-cache-digests],[Use Cache Digests.
                   See http://wiki.squid-cache.org/SquidFaq/CacheDigests]),
 [ if test "$enableval" = "yes" ; then
     AC_MSG_NOTICE([Cache Disgests enabled])
@@ -1131,8 +1114,7 @@ AC_ARG_ENABLE(cache-digests,
 
 dnl Size of COSS memory buffer
 AC_ARG_WITH(coss-membuf-size,
-  AC_HELP_STRING([--with-coss-membuf-size=size],
-                 [COSS membuf size (default 1048576 bytes)]),
+  AS_HELP_STRING([--with-coss-membuf-size=size],[COSS membuf size (default 1048576 bytes)]),
 [  if test -n "$withval" -a "x$withval" != "xno" ; then
       AC_MSG_NOTICE([Setting COSS membuf size to $with_coss_membuf_size bytes])
       AC_DEFINE_UNQUOTED(COSS_MEMBUF_SZ, $with_coss_membuf_size,[Define if you want to set the COSS membuf size])
@@ -1144,7 +1126,7 @@ dnl check for netio plugin stuff
 dnl Enable poll()
 disable_poll=
 AC_ARG_ENABLE(poll,
-  AC_HELP_STRING([--disable-poll],[Disable poll(2) support.]),
+  AS_HELP_STRING([--disable-poll],[Disable poll(2) support.]),
 [
   case "$enableval" in
   yes)
@@ -1161,7 +1143,7 @@ AC_ARG_ENABLE(poll,
 dnl Enable select()
 disable_select=
 AC_ARG_ENABLE(select,
-  AC_HELP_STRING([--disable-select],[Disable select(2) support.]),
+  AS_HELP_STRING([--disable-select],[Disable select(2) support.]),
 [
   case "$enableval" in
   yes)
@@ -1179,7 +1161,7 @@ dnl Enable kqueue()
 dnl kqueue support is still experiemntal and unstable. Not enabled by default.
 disable_kqueue=true
 AC_ARG_ENABLE(kqueue,
-  AC_HELP_STRING([--enable-kqueue],[Enable kqueue(2) support (experimental).]),
+  AS_HELP_STRING([--enable-kqueue],[Enable kqueue(2) support (experimental).]),
 [
   case "$enableval" in
   yes)
@@ -1202,7 +1184,7 @@ dnl Enable epoll()
 disable_epoll=
 force_epoll="no"
 AC_ARG_ENABLE(epoll,
-  AC_HELP_STRING([--disable-epoll],[Disable Linux epoll(2) support.]),
+  AS_HELP_STRING([--disable-epoll],[Disable Linux epoll(2) support.]),
 [
   case "$enableval" in
   yes)
@@ -1241,7 +1223,7 @@ if test -z "$disable_epoll"; then
   dnl Verify that epoll really works
   if test $ac_cv_func_epoll_ctl = yes; then
     AC_CACHE_CHECK(if epoll works, ac_cv_epoll_works,
-      AC_TRY_RUN([
+      AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <sys/epoll.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -1250,11 +1232,11 @@ int main(int argc, char **argv)
     int fd = epoll_create(256);
     if (fd < 0) {
 	perror("epoll_create:");
-	exit(1);
+	return 1;
     }
-    exit(0);
+    return 0;
 }
-      ], [ac_cv_epoll_works=yes], [ac_cv_epoll_works=no]))
+      ]])],[ac_cv_epoll_works=yes],[ac_cv_epoll_works=no],[]))
   fi
 
   if test "$force_epoll" = "yes" && test "$ac_cv_epoll_works" = "no" ; then
@@ -1265,8 +1247,7 @@ fi
 dnl Disable HTTP violations
 http_violations=1
 AC_ARG_ENABLE(http-violations,
-  AC_HELP_STRING([--disable-http-violations],
-                 [This allows you to remove code which is known to
+  AS_HELP_STRING([--disable-http-violations],[This allows you to remove code which is known to
                   violate the HTTP protocol specification.]),
 [ if test "$enableval" = "no" ; then
     AC_MSG_NOTICE([Disabling HTTP Violations])
@@ -1281,8 +1262,7 @@ fi
 
 dnl Enable IPFW Transparent Proxy
 AC_ARG_ENABLE(ipfw-transparent,
-  AC_HELP_STRING([--enable-ipfw-transparent],
-                 [Enable Transparent Proxy support for systems
+  AS_HELP_STRING([--enable-ipfw-transparent],[Enable Transparent Proxy support for systems
                   using FreeBSD IPFW style redirection.]),
 [ if test "$enableval" = "yes" ; then
 	AC_MSG_NOTICE([IPFW Transparent Proxy enabled])
@@ -1295,8 +1275,7 @@ AC_ARG_ENABLE(ipfw-transparent,
 
 dnl Enable IP-Filter Transparent Proxy
 AC_ARG_ENABLE(ipf-transparent,
-  AC_HELP_STRING([--enable-ipf-transparent],
-                 [Enable Transparent Proxy support for systems
+  AS_HELP_STRING([--enable-ipf-transparent],[Enable Transparent Proxy support for systems
                   using IP-Filter network address redirection.]),
 [ if test "$enableval" = "yes" ; then
 	AC_MSG_NOTICE([IP-Filter Transparent Proxy enabled])
@@ -1309,8 +1288,7 @@ AC_ARG_ENABLE(ipf-transparent,
 
 dnl Enable PF Transparent Proxy
 AC_ARG_ENABLE(pf-transparent,
-  AC_HELP_STRING([--enable-pf-transparent],
-                 [Enable Transparent Proxy support for systems
+  AS_HELP_STRING([--enable-pf-transparent],[Enable Transparent Proxy support for systems
                   using PF network address redirection.]),
 [ if test "$enableval" = "yes" ; then
 	AC_MSG_NOTICE([PF Transparent Proxy enabled])
@@ -1323,8 +1301,7 @@ AC_ARG_ENABLE(pf-transparent,
 
 dnl Enable Linux Netfilter Transparent Proxy
 AC_ARG_ENABLE(linux-netfilter,
-  AC_HELP_STRING([--enable-linux-netfilter],
-                 [Enable Transparent Proxy support for Linux (Netfilter)]),
+  AS_HELP_STRING([--enable-linux-netfilter],[Enable Transparent Proxy support for Linux (Netfilter)]),
 [ if test "$enableval" = "yes" ; then
 	AC_MSG_NOTICE([Linux (Netfilter) Transparent Proxy enabled])
 	AC_DEFINE(LINUX_NETFILTER,1,[Enable support for Transparent Proxy on Linux (Netfilter) systems])
@@ -1339,14 +1316,14 @@ buildmodel=""
 needlargefiles=
 
 AC_ARG_WITH(large-files,
-  AC_HELP_STRING([--with-large-files],[Enable support for large files (logs etc).]),
+  AS_HELP_STRING([--with-large-files],[Enable support for large files (logs etc).]),
 [ if test "x$withval" = "xyes"; then
 	needlargefiles=1
   fi
 ])
 
 dnl UNIX Build environment
-dnl AC_HELP_STRING is not suited here because it doesn't allow to specify newlines
+dnl AS_HELP_STRING is not suited here because it doesn't allow to specify newlines
 AC_ARG_WITH(build-environment,
 [  --with-build-environment=model
                           The build environment to use. Normally one of
@@ -1446,8 +1423,7 @@ esac
 
 dnl Enable Linux transparent proxy support for obsolete TPROXY
 AC_ARG_ENABLE(linux-tproxy,
-  AC_HELP_STRING([--enable-linux-tproxy],
-			     [Enable real Transparent Proxy support for Netfilter TPROXY 
+  AS_HELP_STRING([--enable-linux-tproxy],[Enable real Transparent Proxy support for Netfilter TPROXY 
                   (version 2).]),
 [ if test "$enableval" = "yes" ; then
 	AC_MSG_NOTICE(["Linux Netfilter/TPROXY v2 enabled])
@@ -1465,8 +1441,7 @@ AC_ARG_ENABLE(linux-tproxy,
 AM_CONDITIONAL(MAKE_LEAKFINDER, false)
 dnl Enable Leak Finding Functions
 AC_ARG_ENABLE(leakfinder,
-  AC_HELP_STRING([--enable-leakfinder],
-                 [Enable Leak Finding code.  Enabling this alone
+  AS_HELP_STRING([--enable-leakfinder],[Enable Leak Finding code.  Enabling this alone
                   does nothing; you also have to modify the source
 			      code to use the leak finding functions.  Probably
 			      Useful for hackers only.]),
@@ -1480,8 +1455,7 @@ AC_ARG_ENABLE(leakfinder,
 
 follow_xff=1
 AC_ARG_ENABLE(follow-x-forwarded-for,
-  AC_HELP_STRING([--enable-follow-x-forwarded-for],
-                 [Enable support for following the X-Forwarded-For
+  AS_HELP_STRING([--enable-follow-x-forwarded-for],[Enable support for following the X-Forwarded-For
                  HTTP header to try to find the IP address of the
                  original or indirect client when a request has
                  been forwarded through other proxies.]),
@@ -1498,8 +1472,7 @@ fi
 
 use_ident=1
 AC_ARG_ENABLE(ident-lookups,
-  AC_HELP_STRING([--disable-ident-lookups],
-                 [This allows you to remove code that performs Ident (RFC 931) lookups.]),
+  AS_HELP_STRING([--disable-ident-lookups],[This allows you to remove code that performs Ident (RFC 931) lookups.]),
 [ if test "$enableval" = "no" ; then
     AC_MSG_NOTICE([Disabling Ident Lookups])
     use_ident=0
@@ -1514,8 +1487,7 @@ fi
 AM_CONDITIONAL(USE_DNSSERVER, false)
 use_dnsserver=
 AC_ARG_ENABLE(internal-dns,
-  AC_HELP_STRING([--disable-internal-dns],
-                 [Prevents Squid from directly sending and receiving DNS messages, 
+  AS_HELP_STRING([--disable-internal-dns],[Prevents Squid from directly sending and receiving DNS messages, 
                   and instead enables the old external 'dnsserver' processes.]),
 [ if test "$enableval" = "no" ; then
     AC_MSG_WARN([Disabling Internal DNS queries])
@@ -1529,8 +1501,7 @@ fi
 
 dnl Select Default hosts file location
 AC_ARG_ENABLE(default-hostsfile,
-  AC_HELP_STRING([--enable-default-hostsfile=path],
-                 [Select default location for hosts file.
+  AS_HELP_STRING([--enable-default-hostsfile=path],[Select default location for hosts file.
                   See hosts_file directive in squid.conf for details]),
 [
     if test "$enableval" != "none" ; then
@@ -1549,8 +1520,7 @@ AC_SUBST(OPT_DEFAULT_HOSTS)
 
 dnl Select auth schemes modules to build
 AC_ARG_ENABLE(auth,
-  AC_HELP_STRING([--enable-auth="list of auth scheme modules"],
-                 [Build support for the list of authentication schemes.
+  AS_HELP_STRING([--enable-auth="list of auth scheme modules"],[Build support for the list of authentication schemes.
                   The default is to build support for the Basic scheme.
                   See src/auth for a list of available modules, or
                   Programmers Guide section authentication schemes
@@ -1609,8 +1579,7 @@ if test -n "$AUTH_MODULE_basic"; then
 	BASIC_AUTH_HELPERS="all"
 fi
 AC_ARG_ENABLE(basic-auth-helpers,
-  AC_HELP_STRING([--enable-basic-auth-helpers="list of helpers"],
-                 [This option selects which basic scheme proxy_auth
+  AS_HELP_STRING([--enable-basic-auth-helpers="list of helpers"],[This option selects which basic scheme proxy_auth
                   helpers to build and install as part of the normal 
                   build process. For a list of available
                   helpers see the helpers/basic_auth directory.]),
@@ -1660,8 +1629,7 @@ if test -n "$AUTH_MODULE_ntlm"; then
 	NTLM_AUTH_HELPERS="all"
 fi
 AC_ARG_ENABLE(ntlm-auth-helpers,
-  AC_HELP_STRING([--enable-ntlm-auth-helpers="list of helpers"],
-                [This option selects which proxy_auth ntlm helpers
+  AS_HELP_STRING([--enable-ntlm-auth-helpers="list of helpers"],[This option selects which proxy_auth ntlm helpers
                  to build and install as part of the normal build 
                  process. For a list of available helpers see
                  the helpers/ntlm_auth directory.]),
@@ -1703,8 +1671,7 @@ if test -n "$AUTH_MODULE_negotiate"; then
 	NEGOTIATE_AUTH_HELPERS="all"
 fi
 AC_ARG_ENABLE(negotiate-auth-helpers,
-  AC_HELP_STRING([--enable-negotiate-auth-helpers="list of helpers"],
-                 [This option selects which proxy_auth negotiate helpers
+  AS_HELP_STRING([--enable-negotiate-auth-helpers="list of helpers"],[This option selects which proxy_auth negotiate helpers
                   to build and install as part of the normal build 
                   process. For a list of available helpers see
                   the helpers/negotiate_auth directory.]),
@@ -1747,8 +1714,7 @@ if test -n "$AUTH_MODULE_digest"; then
 	DIGEST_AUTH_HELPERS=all
 fi
 AC_ARG_ENABLE(digest-auth-helpers,
-  AC_HELP_STRING([--enable-digest-auth-helpers="list of helpers"],
-                 [This option selects which digest scheme authentication
+  AS_HELP_STRING([--enable-digest-auth-helpers="list of helpers"],[This option selects which digest scheme authentication
                   helpers to build and install as part of the normal build
                   process. For a list of available helpers see the
                   helpers/digest_auth directory.]),
@@ -1787,8 +1753,7 @@ AC_SUBST(DIGEST_AUTH_HELPERS)
 
 dnl Enable "NTLM fail open"
 AC_ARG_ENABLE(ntlm-fail-open,
-  AC_HELP_STRING([--enable-ntlm-fail-open],
-                 [Enable NTLM fail open, where a helper that fails one of the
+  AS_HELP_STRING([--enable-ntlm-fail-open],[Enable NTLM fail open, where a helper that fails one of the
                   Authentication steps can allow squid to still authenticate
                   the user.]),
 [ if test "$enableval" = "yes" ; then
@@ -1799,8 +1764,7 @@ AC_ARG_ENABLE(ntlm-fail-open,
 dnl Select external_acl helpers to build
 EXTERNAL_ACL_HELPERS=all
 AC_ARG_ENABLE(external-acl-helpers,
-  AC_HELP_STRING([--enable-external-acl-helpers="list of helpers"],
-                 [This option selects which external_acl helpers to
+  AS_HELP_STRING([--enable-external-acl-helpers="list of helpers"],[This option selects which external_acl helpers to
                   build and install as part of the normal build
                   process. For a list of available helpers see the
                   helpers/external_acl directory.]),
@@ -1838,8 +1802,7 @@ fi
 AC_SUBST(EXTERNAL_ACL_HELPERS)
 
 AC_ARG_WITH(valgrind-debug,
-  AC_HELP_STRING([--with-valgrind-debug],
-                 [Include debug instrumentation for use with valgrind]),
+  AS_HELP_STRING([--with-valgrind-debug],[Include debug instrumentation for use with valgrind]),
 [ case $withval in
   yes)
 	valgrind=1
@@ -1863,8 +1826,7 @@ AC_ARG_WITH(valgrind-debug,
 
 dnl Disable "memPools" code
 AC_ARG_ENABLE(mempools,
-  AC_HELP_STRING([--disable-mempools],
-                 [Disable memPools. Note that this option now simply sets the
+  AS_HELP_STRING([--disable-mempools],[Disable memPools. Note that this option now simply sets the
 			      default behaviour. Specific classes can override this at runtime, and
 			      only lib/MemPool.c needs to be altered to change the squid-wide 
 			      default for all classes.]),
@@ -1880,8 +1842,7 @@ AC_ARG_ENABLE(mempools,
 
 dnl Enable WIN32 Service compile mode
 AC_ARG_ENABLE(win32-service,
-  AC_HELP_STRING([--enable-win32-service],
-                 [Compile Squid as a WIN32 Service.
+  AS_HELP_STRING([--enable-win32-service],[Compile Squid as a WIN32 Service.
                   Works only on MS-Windows platforms (NT and up).]),
 [ if test "$enableval" = "yes" ; then
     AC_MSG_NOTICE([Enabling WIN32 run service mode])
@@ -1909,7 +1870,7 @@ fi
 
 dnl Disable "unlinkd" code
 AC_ARG_ENABLE(unlinkd,
-  AC_HELP_STRING([--disable-unlinkd],[Do not use unlinkd]),
+  AS_HELP_STRING([--disable-unlinkd],[Do not use unlinkd]),
 [ if test "$enableval" = "no" ; then
     use_unlinkd=no
   else
@@ -1931,8 +1892,7 @@ fi
 
 dnl Enable backtraces on fatal errors
 AC_ARG_ENABLE(stacktraces,
-  AC_HELP_STRING([--enable-stacktraces],
-                 [Enable automatic call backtrace on fatal errors]),
+  AS_HELP_STRING([--enable-stacktraces],[Enable automatic call backtrace on fatal errors]),
 [ if test "$enableval" = "yes" ; then
     AC_MSG_NOTICE([Enabling automatic stack backtraces on fatal errors])
     AC_DEFINE(PRINT_STACK_TRACE, 1,[Print stacktraces on fatal errors])
@@ -1942,8 +1902,7 @@ AC_ARG_ENABLE(stacktraces,
 AM_CONDITIONAL(ENABLE_XPROF_STATS, false)
 dnl Enable USE_XPROF_STATS
 AC_ARG_ENABLE(cpu-profiling,
-  AC_HELP_STRING([--enable-cpu-profiling],
-                 [Enable instrumentation to try and understand how CPU power 
+  AS_HELP_STRING([--enable-cpu-profiling],[Enable instrumentation to try and understand how CPU power 
                   is spent by squid, by enabling specific probes in selected
                   functions. New probes can only be added by modifying the source code.
                   It is meant to help developers in optimizing performance
@@ -1959,8 +1918,7 @@ AC_ARG_ENABLE(cpu-profiling,
 
 dnl Enable X-Accelerator-Vary for Vary support within an accelerator setup
 AC_ARG_ENABLE(x-accelerator-vary,
-  AC_HELP_STRING([--enable-x-accelerator-vary],
-                 [Enable support for the X-Accelerator-Vary
+  AS_HELP_STRING([--enable-x-accelerator-vary],[Enable support for the X-Accelerator-Vary
                   HTTP header. Can be used to indicate
                   variance within an accelerator setup.
                   Typically used together with other code
@@ -1972,7 +1930,7 @@ AC_ARG_ENABLE(x-accelerator-vary,
 ])
 
 AC_ARG_ENABLE(zph-qos,
-  AC_HELP_STRING([--enable-zph-qos],[Enable ZPH QOS support]),
+  AS_HELP_STRING([--enable-zph-qos],[Enable ZPH QOS support]),
 [ if test "$enableval" = "yes" ; then
     AC_MSG_NOTICE([ZPH QOS enabled])
     AC_DEFINE(USE_ZPH_QOS,1,
@@ -1995,8 +1953,7 @@ AC_ARG_WITH(maxfd,,
     esac
 ])
 AC_ARG_WITH(filedescriptors,
-  AC_HELP_STRING([--with-filedescriptors=NUMBER],
-                 [Force squid to support NUMBER filedescriptors]),
+  AS_HELP_STRING([--with-filedescriptors=NUMBER],[Force squid to support NUMBER filedescriptors]),
 [ 
   case ${withval} in
     [[0-9]]*)
@@ -2022,8 +1979,7 @@ else
 fi
 
 AC_ARG_WITH(cppunit-basedir,
-  AC_HELP_STRING([--with-cppunit-basedir=PATH],
-                 [Path where the cppunit headers are libraries are found 
+  AS_HELP_STRING([--with-cppunit-basedir=PATH],[Path where the cppunit headers are libraries are found 
                   for unit testing.]),
 [ if test -f $withval/include/cppunit/TestCase.h; then
 	AC_MSG_NOTICE([Using cppunit includes from $withval])
@@ -2037,7 +1993,6 @@ AC_ARG_WITH(cppunit-basedir,
 	SQUID_CPPUNIT_LIBS='$(SQUID_CPPUNIT_LA)'
     else
 	AC_MSG_ERROR(Cannot find cppunit at $withval)
-	exit 1
     fi
 ])
 AC_SUBST(SQUID_CPPUNIT_LIBS)
@@ -2481,14 +2436,12 @@ case "$host_os" in
     save_LIBS="$LIBS"
     for curlib in ws2_32 wsock32; do
 	LIBS="$LIBS -l$curlib"
-	AC_TRY_LINK([#include <winsock.h>],
-			[
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <winsock.h>]], [[
 			socket(0,0,0);
 			select(0,NULL,NULL,NULL,NULL);
 			closesocket(0);
 			gethostname(NULL,0);
-			],
-			have_winsock=yes, have_winsock=no)
+			]])],[have_winsock=yes],[have_winsock=no])
 
 	if test $have_winsock = yes; then
 		ac_cv_func_select='yes'
@@ -2510,17 +2463,15 @@ esac
 
 dnl Ripped from the Samba sources
 AC_CACHE_CHECK([for unix domain sockets],squid_cv_unixsocket, [
-    AC_TRY_COMPILE([
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/types.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <sys/socket.h>
-#include <sys/un.h>],
-[
+#include <sys/un.h>]], [[
   struct sockaddr_un sunaddr; 
   sunaddr.sun_family = AF_UNIX;
-],
-        squid_cv_unixsocket=yes,squid_cv_unixsocket=no)])
+]])],[squid_cv_unixsocket=yes],[squid_cv_unixsocket=no])])
 if test x"$squid_cv_unixsocket" = x"yes"; then
    AC_DEFINE(HAVE_UNIXSOCKET,1,[Do we have unix sockets? (required for the winbind ntlm helper])
 fi
@@ -2573,7 +2524,7 @@ dnl Enable IPv6 support
 AC_MSG_CHECKING([whether to enable IPv6])
 use_ipng=yes
 AC_ARG_ENABLE(ipv6,
-  AC_HELP_STRING([--disable-ipv6],[Disable IPv6 support]),
+  AS_HELP_STRING([--disable-ipv6],[Disable IPv6 support]),
 [ if test "x$enableval" = "xyes" ; then
     AC_MSG_RESULT(yes)
   else
@@ -2593,21 +2544,19 @@ if test "$use_ipng" = "yes"; then
       ;;
   esac
   AC_CACHE_CHECK([if PF_INET6 is available], $use_ipng,
-    AC_TRY_RUN([ /* PF_INET6 available check */
+    AC_RUN_IFELSE([AC_LANG_SOURCE([[ /* PF_INET6 available check */
 #       include <sys/types.h>
 #       include <sys/socket.h>
-        int main() {
+        int main(int argc, char **argv) {
           if (socket(PF_INET6, SOCK_STREAM, 0) < 0)
             return 1;
           else
             return 0;
         }
-      ],
-      [ AC_MSG_RESULT(yes)
+      ]])],[ AC_MSG_RESULT(yes)
         use_ipng=yes
-        SAVED_LIBS="$LIBS" ],
-      [ AC_MSG_RESULT(no)
-        use_ipng=no ])
+        SAVED_LIBS="$LIBS" ],[ AC_MSG_RESULT(no)
+        use_ipng=no ],[])
    )
    LIBS="$SAVED_LIBS"
 fi
@@ -2619,8 +2568,7 @@ if test "$use_ipng" = "yes"; then
 dnl Check for forced split-stack mode
   AC_MSG_CHECKING([for IPv6 split-stack requirement])
   AC_ARG_WITH(ipv6-split-stack,
-    AC_HELP_STRING([--with-ipv6-split-stack],
-		   [Force-Enable experimental split-stack support for Windows XP and *BSD. Requires IPv6.]),
+    AS_HELP_STRING([--with-ipv6-split-stack],[Force-Enable experimental split-stack support for Windows XP and *BSD. Requires IPv6.]),
     [ use_v4mapped="no"
       AC_MSG_RESULT(yes)],
     [ AC_MSG_RESULT(no) ])
@@ -2630,14 +2578,14 @@ dnl Useful for other OS with hybrid-stack defaults turned OFF
 dnl But only usable if it actually works...
   if test "$use_v4mapped" = "yes" ; then
     AC_MSG_CHECKING([for IPv6 v4-mapping ability])
-    AC_TRY_RUN([ /* IPPROTO_V4MAPPED is usable check */
+    AC_RUN_IFELSE([AC_LANG_SOURCE([[ /* IPPROTO_V4MAPPED is usable check */
 #       include <sys/types.h>
 #       include <sys/socket.h>
 #	include <netinet/in.h>
 #if HAVE_NETINET_IN6_H
 #	include <netinet/in6.h>
 #endif
-        int main() {
+        int main(int argc, char **argv) {
           int s = socket(PF_INET6, SOCK_STREAM, 0);
           int tos = 0;
           if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &tos, sizeof(int)) < 0)
@@ -2645,15 +2593,13 @@ dnl But only usable if it actually works...
           else
             return 0;
         }
-      ],
-      [ AC_MSG_RESULT(yes)
+      ]])],[ AC_MSG_RESULT(yes)
         use_v4mapped=yes
         AC_DEFINE(IPV6_SPECIAL_V4MAPPED, 1, [Enable v4-mapping through v6 sockets])
-      ],
-      [ AC_MSG_RESULT(no)
+      ],[ AC_MSG_RESULT(no)
         AC_DEFINE(IPV6_SPECIAL_V4MAPPED, 0, [Enable v4-mapping through v6 sockets])
         use_v4mapped=no
-      ])
+      ],[])
   fi
 
 dnl if we can't defer v4-mapping to the OS we are forced to split-stack the FD table.
@@ -2671,15 +2617,12 @@ dnl if we can't defer v4-mapping to the OS we are forced to split-stack the FD t
 dnl Check whether this OS defines sin6_len as a member of sockaddr_in6 as a backup to ss_len
 AC_CACHE_CHECK([for sin6_len field in struct sockaddr_in6],
                 ac_cv_have_sin6_len_in_struct_sai, [
-        AC_TRY_COMPILE([
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-                ],
-                [ struct sockaddr_in6 s; s.sin6_len = 1; ],
-                [ ac_cv_have_sin6_len_in_struct_sai="yes" ],
-                [ ac_cv_have_sin6_len_in_struct_sai="no" ]
-        )
+                ]], [[ struct sockaddr_in6 s; s.sin6_len = 1; ]])],[ ac_cv_have_sin6_len_in_struct_sai="yes" ],[ ac_cv_have_sin6_len_in_struct_sai="no" 
+        ])
   ])
   if test "x$ac_cv_have_sin6_len_in_struct_sai" = "xyes" ; then
     AC_DEFINE(HAVE_SIN6_LEN_IN_SAI, 1, [Does struct sockaddr_in6 have sin6_len? 1: Yes, 0: No])
@@ -2698,15 +2641,12 @@ fi
 dnl Check whether this OS defines ss_len as a member of sockaddr_storage
 AC_CACHE_CHECK([for ss_len field in struct sockaddr_storage],
 		ac_cv_have_ss_len_in_struct_ss, [
-	AC_TRY_COMPILE([
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-		],
-		[ struct sockaddr_storage s; s.ss_len = 1; ],
-		[ ac_cv_have_ss_len_in_struct_ss="yes" ],
-		[ ac_cv_have_ss_len_in_struct_ss="no" ]
-	)
+		]], [[ struct sockaddr_storage s; s.ss_len = 1; ]])],[ ac_cv_have_ss_len_in_struct_ss="yes" ],[ ac_cv_have_ss_len_in_struct_ss="no" 
+	])
 ])
 if test "x$ac_cv_have_ss_len_in_struct_ss" = "xyes" ; then
 	AC_DEFINE(HAVE_SS_LEN_IN_SS, 1, [Does struct sockaddr_storage have ss_len? 1: Yes, 0: No])
@@ -2717,15 +2657,12 @@ fi
 dnl Check whether this OS defines sin_len as a member of sockaddr_in as a backup to ss_len
 AC_CACHE_CHECK([for sin_len field in struct sockaddr_in],
                 ac_cv_have_sin_len_in_struct_sai, [
-        AC_TRY_COMPILE([
+        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-                ],
-                [ struct sockaddr_in s; s.sin_len = 1; ],
-                [ ac_cv_have_sin_len_in_struct_sai="yes" ],
-                [ ac_cv_have_sin_len_in_struct_sai="no" ]
-        )
+                ]], [[ struct sockaddr_in s; s.sin_len = 1; ]])],[ ac_cv_have_sin_len_in_struct_sai="yes" ],[ ac_cv_have_sin_len_in_struct_sai="no" 
+        ])
 ])
 if test "x$ac_cv_have_sin_len_in_struct_sai" = "xyes" ; then
         AC_DEFINE(HAVE_SIN_LEN_IN_SAI, 1, [Does struct sockaddr_in have sin_len? 1: Yes, 0: No])
@@ -2776,7 +2713,7 @@ DBLIB=
 dnl 1.85
 AC_CACHE_CHECK(if dbopen needs -ldb,ac_cv_dbopen_libdb, [
 SAVED_LIBS="$LIBS"; LIBS="$LIBS -ldb"
-  AC_TRY_LINK([
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
@@ -2787,10 +2724,7 @@ SAVED_LIBS="$LIBS"; LIBS="$LIBS -ldb"
 #include <db_185.h>
 #elif HAVE_DB_H
 #include <db.h>
-#endif],
-    [dbopen("", 0, 0, DB_HASH, (void *)0L)],
-    ac_cv_dbopen_libdb="yes",
-    ac_cv_dbopen_libdb="no")
+#endif]], [[dbopen("", 0, 0, DB_HASH, (void *)0L)]])],[ac_cv_dbopen_libdb="yes"],[ac_cv_dbopen_libdb="no"])
 LIBS="$SAVED_LIBS"
 ])
 if test $ac_cv_dbopen_libdb = yes; then
@@ -3051,16 +2985,16 @@ dnl to know that setresuid() exists, because RedHat 5.0 declares
 dnl setresuid() but doesn't implement it.
 dnl
 AC_CACHE_CHECK(if setresuid is implemented, ac_cv_func_setresuid,
-  AC_TRY_RUN([
+  AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <stdlib.h>
-  int main() {
+  int main(int argc, char **argv) {
     if(setresuid(-1,-1,-1)) {
       perror("setresuid:");
-      exit(1);
+      return 1;
     }
-    exit(0);
+    return 0;
   }
-  ],ac_cv_func_setresuid="yes",ac_cv_func_setresuid="no")
+  ]])],[ac_cv_func_setresuid="yes"],[ac_cv_func_setresuid="no"],[])
 )
 if test "$ac_cv_func_setresuid" = "yes" ; then
   AC_DEFINE(HAVE_SETRESUID,1,[Yay! Another Linux brokenness.  Its not good enough to know that setresuid() exists, because RedHat 5.0 declare setresuid() but doesn't implement it.])
@@ -3071,7 +3005,7 @@ dnl to know that strnstr() exists, because MacOSX 10.4 have a bad
 dnl copy that crashes with a buffer over-run!
 dnl
 AC_CACHE_CHECK(if strnstr is well implemented, ac_cv_func_strnstr,
-  AC_TRY_RUN([
+  AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -3085,7 +3019,7 @@ int main(int argc, char **argv)
     strnstr(str, "fubar", size);
     return 0;
 }
-  ],ac_cv_func_strnstr="yes",ac_cv_func_strnstr="no")
+  ]])],[ac_cv_func_strnstr="yes"],[ac_cv_func_strnstr="no"],[])
 )
 if test "$ac_cv_func_strnstr" = "yes" ; then
   AC_DEFINE(HAVE_STRNSTR,1,[Yay! We have a working strnstr!])
@@ -3097,22 +3031,20 @@ dnl
 dnl Test for va_copy
 dnl
 AC_CACHE_CHECK(if va_copy is implemented, ac_cv_func_va_copy,
-  AC_TRY_RUN([
+  AC_RUN_IFELSE([AC_LANG_SOURCE([[
       #include <stdarg.h>
       #include <stdlib.h>
-      void f (int i, ...) {
+      int f (int i, ...) {
          va_list args1, args2;
          va_start (args1, i);
          va_copy (args2, args1);
          if (va_arg (args2, int) != 42 || va_arg (args1, int) != 42)
-            exit (1);
+            return 1;
          va_end (args1); va_end (args2);
-      }
-      int main() {
-         f (0, 42);
          return 0;
       }
-      ],ac_cv_func_va_copy="yes",ac_cv_func_va_copy="no")
+      int main(int argc, char **argv) { return f (0, 42); }
+      ]])],[ac_cv_func_va_copy="yes"],[ac_cv_func_va_copy="no"],[])
 )
 if test "$ac_cv_func_va_copy" = "yes" ; then
   AC_DEFINE(HAVE_VA_COPY, 1, [If your system have va_copy])
@@ -3122,22 +3054,20 @@ dnl
 dnl Some systems support __va_copy
 dnl
 AC_CACHE_CHECK(if __va_copy is implemented, ac_cv_func___va_copy,
-  AC_TRY_RUN([
+  AC_RUN_IFELSE([AC_LANG_SOURCE([[
       #include <stdarg.h>
       #include <stdlib.h>
-      void f (int i, ...) {
+      int f (int i, ...) {
          va_list args1, args2;
          va_start (args1, i);
          __va_copy (args2, args1);
          if (va_arg (args2, int) != 42 || va_arg (args1, int) != 42)
-            exit (1);
+            return 1;
          va_end (args1); va_end (args2);
-      }
-      int main() {
-         f (0, 42);
          return 0;
       }
-      ],ac_cv_func___va_copy="yes",ac_cv_func___va_copy="no")
+      int main(int argc, char **argv) { return f (0, 42); }
+      ]])],[ac_cv_func___va_copy="yes"],[ac_cv_func___va_copy="no"],[])
 )
 if test "$ac_cv_func___va_copy" = "yes" ; then
   AC_DEFINE(HAVE___VA_COPY, 1, [Some systems have __va_copy instead of va_copy])
@@ -3250,8 +3180,7 @@ if test "$LINUX_TPROXY2" ; then
 fi
 
 AC_ARG_ENABLE(gnuregex,
-  AC_HELP_STRING([--enable-gnuregex],
-                 [Compile GNUregex.  Unless you have reason to use 
+  AS_HELP_STRING([--enable-gnuregex],[Compile GNUregex.  Unless you have reason to use 
                  this option, you should not enable it.
                  This library file is usually only required on Windows and 
                  very old Unix boxes which do not have their own regex 
@@ -3272,10 +3201,8 @@ if test -z "$USE_GNUREGEX"; then
 if test "$ac_cv_func_regcomp" = "no" || test "$USE_GNUREGEX" = "yes" ; then
 	USE_GNUREGEX="yes"
 else
-	AC_TRY_COMPILE([#include <sys/types.h>
-#include <regex.h>],[regex_t t; regcomp(&t,"",0);],
-		USE_GNUREGEX="no",
-		USE_GNUREGEX="yes")
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
+#include <regex.h>]], [[regex_t t; regcomp(&t,"",0);]])],[USE_GNUREGEX="no"],[USE_GNUREGEX="yes"])
 fi
 fi
 AC_MSG_RESULT($USE_GNUREGEX)
@@ -3289,7 +3216,7 @@ AC_SUBST(REGEXLIB)
 
 dnl Not cached since people are likely to tune this
 AC_MSG_CHECKING(Default FD_SETSIZE value)
-AC_TRY_RUN([
+AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #if HAVE_STDIO_H
 #include <stdio.h>
 #endif
@@ -3314,15 +3241,12 @@ AC_TRY_RUN([
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
 #endif
-main() {
+int main(int argc, char **argv) {
 	FILE *fp = fopen("conftestval", "w");
 	fprintf (fp, "%d\n", FD_SETSIZE);
-	exit(0);
+	return 0;
 }
-],
-DEFAULT_FD_SETSIZE=`cat conftestval`,
-DEFAULT_FD_SETSIZE=256,
-DEFAULT_FD_SETSIZE=256)
+]])],[DEFAULT_FD_SETSIZE=`cat conftestval`],[DEFAULT_FD_SETSIZE=256],[DEFAULT_FD_SETSIZE=256])
 AC_MSG_RESULT($DEFAULT_FD_SETSIZE)
 AC_DEFINE_UNQUOTED(DEFAULT_FD_SETSIZE, $DEFAULT_FD_SETSIZE, [Default FD_SETSIZE value])
 
@@ -3341,14 +3265,14 @@ else
   	LDFLAGS=`echo $LDFLAGS | sed -e "s/-pthread//"`
       fi
   esac
-  AC_TRY_RUN([
+  AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/time.h>	/* needed on FreeBSD */
 #include <sys/param.h>
 #include <sys/resource.h>
-main() {
+int main(int argc, char **argv) {
 	FILE *fp;
 	int i,j;
 #if defined(__CYGWIN32__) || defined (__CYGWIN__)
@@ -3401,12 +3325,9 @@ main() {
 #endif /* IF !DEF CYGWIN */
 	fp = fopen("conftestval", "w");
 	fprintf (fp, "%d\n", i & ~0x3F);
-	exit(0);
+	return 0;
 }
-  ],
-  SQUID_MAXFD=`cat conftestval`,
-  SQUID_MAXFD=256,
-  SQUID_MAXFD=256)
+  ]])],[SQUID_MAXFD=`cat conftestval`],[SQUID_MAXFD=256],[SQUID_MAXFD=256])
   dnl Microsoft MSVCRT.DLL supports 2048 maximum FDs
   case "$host_os" in
   mingw|mingw32)
@@ -3432,7 +3353,7 @@ fi
 
 dnl Not cached since people are likely to tune this
 AC_MSG_CHECKING(Default UDP send buffer size)
-AC_TRY_RUN([
+AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -3448,7 +3369,7 @@ AC_TRY_RUN([
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
 #endif
-main ()
+int main(int argc, char **argv)
 {
 	FILE *fp;
         int fd,val=0;
@@ -3459,28 +3380,25 @@ main ()
 #else
         socklen_t len=sizeof(socklen_t);
 #endif
-	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) exit(1);
+	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) return 1;
 #if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
-        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&val, &len) < 0) exit(1);
+        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&val, &len) < 0) return 1;
 	WSACleanup();
 #else
-        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &val, &len) < 0) exit(1);
+        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &val, &len) < 0) return 1;
 #endif
-	if (val<=0) exit(1);
+	if (val<=0) return 1;
         fp = fopen("conftestval", "w");
         fprintf (fp, "%d\n", val);
-	exit(0);
+	return 0;
 }
-],
-SQUID_DETECT_UDP_SO_SNDBUF=`cat conftestval`,
-SQUID_DETECT_UDP_SO_SNDBUF=16384,
-SQUID_DETECT_UDP_SO_SNDBUF=16384)
+]])],[SQUID_DETECT_UDP_SO_SNDBUF=`cat conftestval`],[SQUID_DETECT_UDP_SO_SNDBUF=16384],[SQUID_DETECT_UDP_SO_SNDBUF=16384])
 AC_MSG_RESULT($SQUID_DETECT_UDP_SO_SNDBUF)
 AC_DEFINE_UNQUOTED(SQUID_DETECT_UDP_SO_SNDBUF, $SQUID_DETECT_UDP_SO_SNDBUF,[UDP send buffer size])
 
 dnl Not cached since people are likely to tune this
 AC_MSG_CHECKING(Default UDP receive buffer size)
-AC_TRY_RUN([
+AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -3496,7 +3414,7 @@ AC_TRY_RUN([
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
 #endif
-main ()
+int main(int argc, char **argv)
 {
 	FILE *fp;
         int fd,val=0;
@@ -3507,28 +3425,25 @@ main ()
 #else
         socklen_t len=sizeof(socklen_t);
 #endif
-	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) exit(1);
+	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) return 1;
 #if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
-        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&val, &len) < 0) exit(1);
+        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&val, &len) < 0) return 1;
 	WSACleanup();
 #else
-        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &val, &len) < 0) exit(1);
+        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &val, &len) < 0) return 1;
 #endif
-	if (val <= 0) exit(1);
+	if (val <= 0) return 1;
 	fp = fopen("conftestval", "w"); 
 	fprintf (fp, "%d\n", val);
-	exit(0);
+	return 0;
 }
-],
-SQUID_DETECT_UDP_SO_RCVBUF=`cat conftestval`,
-SQUID_DETECT_UDP_SO_RCVBUF=16384,
-SQUID_DETECT_UDP_SO_RCVBUF=16384)
+]])],[SQUID_DETECT_UDP_SO_RCVBUF=`cat conftestval`],[SQUID_DETECT_UDP_SO_RCVBUF=16384],[SQUID_DETECT_UDP_SO_RCVBUF=16384])
 AC_MSG_RESULT($SQUID_DETECT_UDP_SO_RCVBUF)
 AC_DEFINE_UNQUOTED(SQUID_DETECT_UDP_SO_RCVBUF, $SQUID_DETECT_UDP_SO_RCVBUF,[UDP receive buffer size])
 
 dnl Not cached since people are likely to tune this
 AC_MSG_CHECKING(Default TCP send buffer size)
-AC_TRY_RUN([
+AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -3544,7 +3459,7 @@ AC_TRY_RUN([
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
 #endif
-main ()
+int main(int argc, char **argv)
 {
 	FILE *fp;
         int fd,val=0;
@@ -3555,22 +3470,19 @@ main ()
 #else
         socklen_t len=sizeof(socklen_t);
 #endif
-	if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) exit(1);
+	if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) return 1;
 #if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
-        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&val, &len) < 0) exit(1);
+        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&val, &len) < 0) return 1;
 	WSACleanup();
 #else
-        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &val, &len) < 0) exit(1);
+        if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &val, &len) < 0) return 1;
 #endif
-	if (val <= 0) exit(1);
+	if (val <= 0) return 1;
 	fp = fopen("conftestval", "w"); 
 	fprintf (fp, "%d\n", val);
-	exit(0);
+	return 0;
 }
-],
-SQUID_TCP_SO_SNDBUF=`cat conftestval`,
-SQUID_TCP_SO_SNDBUF=16384,
-SQUID_TCP_SO_SNDBUF=16384)
+]])],[SQUID_TCP_SO_SNDBUF=`cat conftestval`],[SQUID_TCP_SO_SNDBUF=16384],[SQUID_TCP_SO_SNDBUF=16384])
 AC_MSG_RESULT($SQUID_TCP_SO_SNDBUF)
 if test $SQUID_TCP_SO_SNDBUF -gt 32768; then
     AC_MSG_NOTICE([Limiting send buffer size to 32K])
@@ -3580,7 +3492,7 @@ AC_DEFINE_UNQUOTED(SQUID_TCP_SO_SNDBUF, $SQUID_TCP_SO_SNDBUF,[TCP send buffer si
 
 dnl Not cached since people are likely to tune this
 AC_MSG_CHECKING(Default TCP receive buffer size)
-AC_TRY_RUN([
+AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -3596,7 +3508,7 @@ AC_TRY_RUN([
 #if HAVE_WINSOCK2_H
 #include <winsock2.h>
 #endif
-main ()
+int main(int argc, char **argv)
 {
 	FILE *fp;
         int fd,val=0;
@@ -3607,22 +3519,19 @@ main ()
 #else
         socklen_t len=sizeof(socklen_t);
 #endif
-	if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) exit(1);
+	if ((fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) return 1;
 #if (defined(WIN32) || defined(__WIN32__) || defined(__WIN32)) && !(defined(__CYGWIN32__) || defined(__CYGWIN__))
-        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&val, &len) < 0) exit(1);
+        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&val, &len) < 0) return 1;
 	WSACleanup();
 #else
-        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &val, &len) < 0) exit(1);
+        if (getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &val, &len) < 0) return 1;
 #endif
-	if (val <= 0) exit(1);
+	if (val <= 0) return 1;
 	fp = fopen("conftestval", "w"); 
 	fprintf (fp, "%d\n", val);
-	exit(0);
+	return 0;
 }
-],
-SQUID_TCP_SO_RCVBUF=`cat conftestval`,
-SQUID_TCP_SO_RCVBUF=16384,
-SQUID_TCP_SO_RCVBUF=16384)
+]])],[SQUID_TCP_SO_RCVBUF=`cat conftestval`],[SQUID_TCP_SO_RCVBUF=16384],[SQUID_TCP_SO_RCVBUF=16384])
 AC_MSG_RESULT($SQUID_TCP_SO_RCVBUF)
 if test $SQUID_TCP_SO_RCVBUF -gt 65535; then
     AC_MSG_NOTICE([Limiting receive buffer size to 64K])
@@ -3630,9 +3539,7 @@ if test $SQUID_TCP_SO_RCVBUF -gt 65535; then
 fi
 AC_DEFINE_UNQUOTED(SQUID_TCP_SO_RCVBUF, $SQUID_TCP_SO_RCVBUF,[TCP receive buffer size])
 AC_CACHE_CHECK(if sys_errlist is already defined, ac_cv_needs_sys_errlist,
-  AC_TRY_COMPILE([#include <stdio.h>],[char *s = sys_errlist;],
-    ac_cv_needs_sys_errlist="no",
-    ac_cv_needs_sys_errlist="yes")
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>]], [[char *s = sys_errlist;]])],[ac_cv_needs_sys_errlist="no"],[ac_cv_needs_sys_errlist="yes"])
 )
 if test "$ac_cv_needs_sys_errlist" = "yes" ; then
   AC_DEFINE(NEED_SYS_ERRLIST,1,[If we need to declare sys_errlist[] as external])
@@ -3640,27 +3547,22 @@ fi
 
 dnl Not cached since people are likely to change this
 AC_MSG_CHECKING(for libresolv _dns_ttl_ hack)
-AC_TRY_LINK(extern int _dns_ttl_;,return _dns_ttl_;,
-[AC_MSG_RESULT(yes)
-AC_DEFINE(LIBRESOLV_DNS_TTL_HACK,1,[If libresolv.a has been hacked to export _dns_ttl_])],
-AC_MSG_RESULT(no))
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[extern int _dns_ttl_;]], [[return _dns_ttl_;]])],[AC_MSG_RESULT(yes)
+AC_DEFINE(LIBRESOLV_DNS_TTL_HACK,1,[If libresolv.a has been hacked to export _dns_ttl_])],[AC_MSG_RESULT(no)])
 
 if test "$ac_cv_header_sys_statvfs_h" = "yes" ; then
 AC_MSG_CHECKING(for working statvfs() interface)
-AC_TRY_COMPILE([
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/statvfs.h>
-],
-[
+]], [[
 struct statvfs sfs;
 sfs.f_blocks = sfs.f_bfree = sfs.f_frsize = 
 sfs.f_files = sfs.f_ffree = 0;
 statvfs("/tmp", &sfs);
-],
-  ac_cv_func_statvfs=yes,
-  ac_cv_func_statvfs=no)
+]])],[ac_cv_func_statvfs=yes],[ac_cv_func_statvfs=no])
 AC_MSG_RESULT($ac_cv_func_statvfs)
 if test "$ac_cv_func_statvfs" = "yes" ; then
   AC_DEFINE(HAVE_STATVFS,1,[If your system has statvfs(), and if it actually works!])
@@ -3669,7 +3571,7 @@ fi
 
 dnl Detect what resolver fields we have available to use...
 AC_CACHE_CHECK(for _res_ext.nsaddr_list, ac_cv_have_res_ext_nsaddr_list,
-AC_TRY_COMPILE([
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
@@ -3685,10 +3587,7 @@ AC_TRY_COMPILE([
 #if HAVE_RESOLV_H
 #include <resolv.h>
 #endif
-],
-[_res_ext.nsaddr_list[[0]].s_addr;],
-ac_cv_have_res_ext_nsaddr_list="yes",
-ac_cv_have_res_ext_nsaddr_list="no"))
+]], [[_res_ext.nsaddr_list[[0]].s_addr;]])],[ac_cv_have_res_ext_nsaddr_list="yes"],[ac_cv_have_res_ext_nsaddr_list="no"]))
 if test "$ac_cv_have_res_ext_nsaddr_list" = "yes" ; then
   AC_DEFINE(_SQUID_RES_NSADDR6_LARRAY,_res_ext.nsaddr_list,[If _res_ext structure has nsaddr_list member])
   AC_DEFINE(_SQUID_RES_NSADDR6_COUNT,ns6count,[Nameserver Counter for IPv6 _res_ext])
@@ -3696,7 +3595,7 @@ fi
 
 if test "$_SQUID_RES_NSADDR6_LIST" = ""; then
 AC_CACHE_CHECK(for _res._u._ext.nsaddrs, ac_cv_have_res_ext_nsaddrs,
-AC_TRY_COMPILE([
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
@@ -3712,10 +3611,7 @@ AC_TRY_COMPILE([
 #if HAVE_RESOLV_H
 #include <resolv.h>
 #endif
-],
-[_res._u._ext.nsaddrs[[0]]->sin6_addr;],
-ac_cv_have_res_ext_nsaddrs="yes",
-ac_cv_have_res_ext_nsaddrs="no"))
+]], [[_res._u._ext.nsaddrs[[0]]->sin6_addr;]])],[ac_cv_have_res_ext_nsaddrs="yes"],[ac_cv_have_res_ext_nsaddrs="no"]))
 if test "$ac_cv_have_res_ext_nsaddrs" = "yes" ; then
   AC_DEFINE(_SQUID_RES_NSADDR6_LPTR,_res._u._ext.nsaddrs,[If _res structure has _ext.nsaddrs member])
   AC_DEFINE(_SQUID_RES_NSADDR6_COUNT,_res._u._ext.nscount6,[Nameserver Counter for IPv6 _res])
@@ -3723,7 +3619,7 @@ fi
 fi
 
 AC_CACHE_CHECK(for _res.nsaddr_list, ac_cv_have_res_nsaddr_list,
-AC_TRY_COMPILE([
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
@@ -3739,10 +3635,7 @@ AC_TRY_COMPILE([
 #if HAVE_RESOLV_H
 #include <resolv.h>
 #endif
-],
-[_res.nsaddr_list[[0]];],
-ac_cv_have_res_nsaddr_list="yes",
-ac_cv_have_res_nsaddr_list="no"))
+]], [[_res.nsaddr_list[[0]];]])],[ac_cv_have_res_nsaddr_list="yes"],[ac_cv_have_res_nsaddr_list="no"]))
 if test $ac_cv_have_res_nsaddr_list = "yes" ; then
   AC_DEFINE(_SQUID_RES_NSADDR_LIST,_res.nsaddr_list,[If _res structure has nsaddr_list member])
   AC_DEFINE(_SQUID_RES_NSADDR_COUNT,_res.nscount,[Nameserver counter for IPv4 _res])
@@ -3750,7 +3643,7 @@ fi
 
 if test "$_SQUID_RES_NSADDR_LIST" = ""; then
 AC_CACHE_CHECK(for _res.ns_list, ac_cv_have_res_ns_list,
-AC_TRY_COMPILE([
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
@@ -3766,10 +3659,7 @@ AC_TRY_COMPILE([
 #if HAVE_RESOLV_H
 #include <resolv.h>
 #endif
-],
-[_res.ns_list[[0]].addr;],
-ac_cv_have_res_ns_list="yes",
-ac_cv_have_res_ns_list="no"))
+]], [[_res.ns_list[[0]].addr;]])],[ac_cv_have_res_ns_list="yes"],[ac_cv_have_res_ns_list="no"]))
 if test $ac_cv_have_res_ns_list = "yes" ; then
   AC_DEFINE(_SQUID_RES_NSADDR_LIST,_res.ns_list,[If _res structure has ns_list member])
   AC_DEFINE(_SQUID_RES_NSADDR_COUNT,_res.nscount,[Nameserver counter for IPv4 _res])
@@ -3779,8 +3669,7 @@ fi
 dnl Squid will usually attempt to translate when packaging or building from VCS 
 use_translation="yes"
 AC_ARG_ENABLE(translation,
- AC_HELP_STRING([--disable-translation],
-		[Prevent Squid generating localized error page templates and manuals.
+ AS_HELP_STRING([--disable-translation],[Prevent Squid generating localized error page templates and manuals.
 		 Which is usually tried, but may not be needed.]),
 [ if test "$enableval" = "no" ; then
     use_translation=no
@@ -3798,8 +3687,7 @@ dnl Squid now has limited locale handling ...
 dnl on error pages
 use_errlocale=yes
 AC_ARG_ENABLE(auto-locale,
- AC_HELP_STRING([--disable-auto-locale],
-		[This prevents Squid providing localized error pages based on the
+ AS_HELP_STRING([--disable-auto-locale],[This prevents Squid providing localized error pages based on the
 		 clients request headers.
 		 When disabled Squid requires explicit language configuration.]),
 [ if test "$enableval" = "no" ; then
