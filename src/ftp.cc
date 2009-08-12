@@ -529,30 +529,37 @@ FtpStateData::~FtpStateData()
 
 /**
  * Parse a possible login username:password pair.
- * Produces filled member varisbles user, password, password_url if anything found.
+ * Produces filled member variables user, password, password_url if anything found.
  */
 void
-FtpStateData::loginParser(const char *login_, int escaped)
+FtpStateData::loginParser(const char *login, int escaped)
 {
-    char *login = xstrdup(login_);
-    char *s = NULL;
+    const char *u = NULL;
+    const char *p = NULL;
+    int len;
 
     debugs(9, 4, HERE << ": login='" << login << "', escaped=" << escaped);
     debugs(9, 9, HERE << ": IN : login='" << login << "', escaped=" << escaped << ", user=" << user << ", password=" << password);
 
-    if ((s = strchr(login, ':'))) {
-        *s = '\0';
+    if ((u = strchr(login, ':'))) {
 
         /* if there was a username part */
-        if (s > login) {
-            xstrncpy(user, login, MAX_URL);
+        if (u > login) {
+            len = u - login;
+            if (len > MAX_URL)
+                len = MAX_URL;
+            xstrncpy(user, login, len);
+            user[len] = '\0';
             if (escaped)
                 rfc1738_unescape(user);
         }
 
         /* if there was a password part */
-        if ( s[1] != '\0' ) {
-            xstrncpy(password, s + 1, MAX_URL);
+        p = strchr(u, '@');
+        if ( p > u ) {
+            len = p - u;
+            xstrncpy(password, u + 1, len);
+            password[len] = '\0';
             if (escaped) {
                 rfc1738_unescape(password);
                 password_url = 1;
@@ -560,13 +567,17 @@ FtpStateData::loginParser(const char *login_, int escaped)
         }
     } else if (login[0]) {
         /* no password, just username */
-        xstrncpy(user, login, MAX_URL);
+        u = strchr(login, '@');
+        len = u - login;
+        if (len > MAX_URL)
+            len = MAX_URL;
+        xstrncpy(user, login, len);
+        user[len] = '\0';
         if (escaped)
             rfc1738_unescape(user);
     }
 
     debugs(9, 9, HERE << ": OUT: login='" << login << "', escaped=" << escaped << ", user=" << user << ", password=" << password);
-    safe_free(login);
 }
 
 void
