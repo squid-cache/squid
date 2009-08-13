@@ -1,5 +1,11 @@
 #!/bin/sh
 while read request; do
+case $request in
+*SLEEP=*)
+	sleep `echo $request | sed -e 's/.*SLEEP=\([^;]*\).*/\1/'`
+	request=`echo $request | sed -e 's/SLEEP=[^;]*;*//'`
+	;;
+esac
 data="`echo $request | cut -c4-`"
 blob="$$.$data-$challenge.`date +%s`"
 case $request in
