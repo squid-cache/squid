@@ -6,36 +6,42 @@
 # Should be run from the source package root directory with paths relative to there.
 #
 
-dist="${1}"
+config="${1}"
+base="`dirname ${0}`"
 
-# Figure out where to log the test output
-log=`echo "${dist}" | sed s/..test-suite.buildtests.//g `
+#if we are on Linux, let's try parallelizing
+pjobs="" #default
+if [ -e /proc/cpuinfo ]; then
+    ncpus=`grep '^processor' /proc/cpuinfo | tail -1|awk '{print $3}'`
+    ncpus=`expr ${ncpus} + 1`
+    pjobs="-j${ncpus}"
+fi
 
-# ... and send everything there...
-{
-
-if test -e ${dist%%.opts}.opts ; then
-	echo "BUILD: ${dist%%.opts}.opts"
-	. ./${dist%%.opts}.opts
+if test -e ${config} ; then
+	echo "BUILD: ${config}"
+	. ${config}
 else
-	echo "BUILD: DEFAULT"
-	OPTS=""
-	FLAGS=""
+	echo -n "BUILD ERROR: Unable to locate test configuration '${config}' from " && pwd
+	exit 1;
 fi
 
 #
 # empty all the existing code, reconfigure and builds test code
-
-make -k distclean || echo "distclean done. errors are unwanted but okay here."
+# but skip if we have no files to remove.
+FILECOUNT=`ls -1 | grep -c .`
+if test "${FILECOUNT}" != "0" ; then
+  make -k distclean || echo "distclean done. errors are unwanted but okay here."
+  rm -f -r src/fs/aufs/.deps src/fs/diskd/.deps
+fi
 
 #
 # above command currently encounters dependancy problems on cleanup.
 #
-rm -f -r src/fs/aufs/.deps src/fs/diskd/.deps &&
-	../configure --silent ${OPTS} 2>&1 &&
-	make check 2>&1 &&
-	make 2>&1
-
-} 2>&1 > ./buildtest_${log}.log
-
 # do not build any of the install's ...
+	$base/../configure ${OPTS} 2>&1 &&
+	make ${pjobs} ${MAKETEST} 2>&1
+
+# Remember and then explicitly return the result of the last command
+# to the script caller. Probably not needed on most or all platforms.
+result=$?
+exit ${result}
