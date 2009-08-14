@@ -991,6 +991,7 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
 
     if ((t = strchr(srv->rbuf, '\n'))) {
         /* end of reply found */
+	int called = 1;
         debugs(84, 3, "helperStatefulHandleRead: end of reply found");
 
         if (t > srv->rbuf && t[-1] == '\r')
@@ -999,36 +1000,10 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
         *t = '\0';
 
         if (r && cbdataReferenceValid(r->data)) {
-            switch ((r->callback(r->data, srv, srv->rbuf))) {	/*if non-zero reserve helper */
-
-            case S_HELPER_UNKNOWN:
-                    fatal("helperStatefulHandleRead: either a non-state aware callback was give to the stateful helper routines, or an uninitialised callback response was received.\n");
-                break;
-
-            case S_HELPER_RELEASE:	/* helper finished with */
-
-                srv->flags.reserved = 0;
-
-                if ((srv->parent->OnEmptyQueue != NULL) && (srv->data))
-                    srv->parent->OnEmptyQueue(srv->data);
-
-                debugs(84, 5, "StatefulHandleRead: releasing " << hlp->id_name << " #" << srv->index + 1);
-
-                break;
-
-            case S_HELPER_RESERVE:	/* 'pin' this helper for the caller */
-
-        	srv->flags.reserved = 1;
-        	debugs(84, 5, "StatefulHandleRead: reserving " << hlp->id_name << " #" << srv->index + 1);
-
-                break;
-
-            default:
-                fatal("helperStatefulHandleRead: unknown stateful helper callback result.\n");
-            }
-
+            r->callback(r->data, srv, srv->rbuf);
         } else {
             debugs(84, 1, "StatefulHandleRead: no callback data registered");
+	    called = 0;
         }
 
         srv->flags.busy = 0;
@@ -1042,7 +1017,10 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
                        tvSubMsec(srv->dispatch_time, current_time),
                        hlp->stats.replies, REDIRECT_AV_FACTOR);
 
-        helperStatefulServerDone(srv);
+	if (called)
+	    helperStatefulServerDone(srv);
+	else
+	    helperStatefulReleaseServer(srv);
     }
 
     if (srv->rfd != -1)
@@ -1309,6 +1287,7 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
     if (!cbdataReferenceValid(r->data)) {
         debugs(84, 1, "helperStatefulDispatch: invalid callback data");
         helperStatefulRequestFree(r);
+	helperStatefulReleaseServer(srv);
         return;
     }
 
@@ -1331,6 +1310,7 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
     }
 
     srv->flags.busy = 1;
+    srv->flags.reserved = 1;
     srv->request = r;
     srv->dispatch_time = current_time;
     comm_write(srv->wfd,

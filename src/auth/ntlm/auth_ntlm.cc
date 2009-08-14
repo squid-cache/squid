@@ -329,13 +329,12 @@ NTLMUser::~NTLMUser()
     debugs(29, 5, "NTLMUser::~NTLMUser: doing nothing to clearNTLM scheme data for '" << this << "'");
 }
 
-static stateful_helper_callback_t
+static void
 authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 {
     authenticateStateData *r = static_cast<authenticateStateData *>(data);
 
     int valid;
-    stateful_helper_callback_t result = S_HELPER_UNKNOWN;
     char *blob;
 
     AuthUserRequest *auth_user_request;
@@ -347,11 +346,10 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
     valid = cbdataReferenceValid(r->data);
 
     if (!valid) {
-        debugs(29, 1, "authenticateNTLMHandleReply: invalid callback data. Releasing helper '" << lastserver << "'.");
+        debugs(29, 1, "authenticateNTLMHandleReply: invalid callback data. helper '" << lastserver << "'.");
         cbdataReferenceDone(r->data);
         authenticateStateFree(r);
-        debugs(29, 9, "authenticateNTLMHandleReply: telling stateful helper : " << S_HELPER_RELEASE);
-        return S_HELPER_RELEASE;
+        return;
     }
 
     if (!reply) {
@@ -389,25 +387,22 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
     if (strncasecmp(reply, "TT ", 3) == 0) {
         /* we have been given a blob to send to the client */
         safe_free(ntlm_request->server_blob);
-	ntlm_request->request->flags.must_keepalive = 1;
-	if (ntlm_request->request->flags.proxy_keepalive) {
-	    ntlm_request->server_blob = xstrdup(blob);
-	    ntlm_request->auth_state = AUTHENTICATE_STATE_IN_PROGRESS;
-	    auth_user_request->denyMessage("Authentication in progress");
-	    debugs(29, 4, "authenticateNTLMHandleReply: Need to challenge the client with a server blob '" << blob << "'");
-	    result = S_HELPER_RESERVE;
-	} else {
-	    ntlm_request->auth_state = AUTHENTICATE_STATE_FAILED;
-	    auth_user_request->denyMessage("NTLM authentication requires a persistent connection");
-	    result = S_HELPER_RELEASE;
-	}
+        ntlm_request->request->flags.must_keepalive = 1;
+        if (ntlm_request->request->flags.proxy_keepalive) {
+            ntlm_request->server_blob = xstrdup(blob);
+            ntlm_request->auth_state = AUTHENTICATE_STATE_IN_PROGRESS;
+            auth_user_request->denyMessage("Authentication in progress");
+            debugs(29, 4, "authenticateNTLMHandleReply: Need to challenge the client with a server blob '" << blob << "'");
+        } else {
+            ntlm_request->auth_state = AUTHENTICATE_STATE_FAILED;
+            auth_user_request->denyMessage("NTLM authentication requires a persistent connection");
+        }
     } else if (strncasecmp(reply, "AF ", 3) == 0) {
         /* we're finished, release the helper */
         ntlm_user->username(blob);
         auth_user_request->denyMessage("Login successful");
         safe_free(ntlm_request->server_blob);
 
-        result = S_HELPER_RELEASE;
         debugs(29, 4, "authenticateNTLMHandleReply: Successfully validated user via NTLM. Username '" << blob << "'");
         /* connection is authenticated */
         debugs(29, 4, "AuthNTLMUserRequest::authenticate: authenticated user " << ntlm_user->username());
@@ -441,7 +436,6 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
         ntlm_request->auth_state = AUTHENTICATE_STATE_FAILED;
         safe_free(ntlm_request->server_blob);
         authenticateNTLMReleaseServer(ntlm_request);
-        result = S_HELPER_RELEASE;
         debugs(29, 4, "authenticateNTLMHandleReply: Failed validating user via NTLM. Error returned '" << blob << "'");
     } else if (strncasecmp(reply, "BH ", 3) == 0) {
         /* TODO kick off a refresh process. This can occur after a YR or after
@@ -453,7 +447,6 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
         ntlm_request->auth_state = AUTHENTICATE_STATE_FAILED;
         safe_free(ntlm_request->server_blob);
         authenticateNTLMReleaseServer(ntlm_request);
-        result = S_HELPER_RELEASE;
         debugs(29, 1, "authenticateNTLMHandleReply: Error validating user via NTLM. Error returned '" << reply << "'");
     } else {
         /* protocol error */
@@ -467,8 +460,6 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
     r->handler(r->data, NULL);
     cbdataReferenceDone(r->data);
     authenticateStateFree(r);
-    debugs(29, 9, "authenticateNTLMHandleReply: telling stateful helper : " << result);
-    return result;
 }
 
 static void

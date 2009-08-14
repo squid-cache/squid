@@ -367,13 +367,12 @@ NegotiateUser::~NegotiateUser()
     debugs(29, 5, "NegotiateUser::~NegotiateUser: doing nothing to clearNegotiate scheme data for '" << this << "'");
 }
 
-static stateful_helper_callback_t
+static void
 authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
 {
     authenticateStateData *r = static_cast<authenticateStateData *>(data);
 
     int valid;
-    stateful_helper_callback_t result = S_HELPER_UNKNOWN;
     char *blob, *arg = NULL;
 
     AuthUserRequest *auth_user_request;
@@ -385,11 +384,10 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
     valid = cbdataReferenceValid(r->data);
 
     if (!valid) {
-        debugs(29, 1, "authenticateNegotiateHandleReply: invalid callback data. Releasing helper '" << lastserver << "'.");
+        debugs(29, 1, "authenticateNegotiateHandleReply: invalid callback data. helper '" << lastserver << "'.");
         cbdataReferenceDone(r->data);
         authenticateStateFree(r);
-        debugs(29, 9, "authenticateNegotiateHandleReply: telling stateful helper : " << S_HELPER_RELEASE);
-        return S_HELPER_RELEASE;
+        return;
     }
 
     if (!reply) {
@@ -433,18 +431,16 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
         if (arg)
             *arg++ = '\0';
         safe_free(negotiate_request->server_blob);
-	negotiate_request->request->flags.must_keepalive = 1;
-	if (negotiate_request->request->flags.proxy_keepalive) {
-	    negotiate_request->server_blob = xstrdup(blob);
-	    negotiate_request->auth_state = AUTHENTICATE_STATE_IN_PROGRESS;
-	    auth_user_request->denyMessage("Authentication in progress");
-	    debugs(29, 4, "authenticateNegotiateHandleReply: Need to challenge the client with a server blob '" << blob << "'");
-	    result = S_HELPER_RESERVE;
-	} else {
-	    negotiate_request->auth_state = AUTHENTICATE_STATE_FAILED;
-	    auth_user_request->denyMessage("NTLM authentication requires a persistent connection");
-	    result = S_HELPER_RELEASE;
-	}
+        negotiate_request->request->flags.must_keepalive = 1;
+        if (negotiate_request->request->flags.proxy_keepalive) {
+            negotiate_request->server_blob = xstrdup(blob);
+            negotiate_request->auth_state = AUTHENTICATE_STATE_IN_PROGRESS;
+            auth_user_request->denyMessage("Authentication in progress");
+            debugs(29, 4, "authenticateNegotiateHandleReply: Need to challenge the client with a server blob '" << blob << "'");
+        } else {
+            negotiate_request->auth_state = AUTHENTICATE_STATE_FAILED;
+            auth_user_request->denyMessage("NTLM authentication requires a persistent connection");
+        }
     } else if (strncasecmp(reply, "AF ", 3) == 0 && arg != NULL) {
         /* we're finished, release the helper */
 
@@ -462,8 +458,6 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
         authenticateNegotiateReleaseServer(negotiate_request);
 
         negotiate_request->auth_state = AUTHENTICATE_STATE_DONE;
-
-        result = S_HELPER_RELEASE;
 
         debugs(29, 4, "authenticateNegotiateHandleReply: Successfully validated user via Negotiate. Username '" << blob << "'");
 
@@ -510,8 +504,6 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
 
         authenticateNegotiateReleaseServer(negotiate_request);
 
-        result = S_HELPER_RELEASE;
-
         debugs(29, 4, "authenticateNegotiateHandleReply: Failed validating user via Negotiate. Error returned '" << blob << "'");
     } else if (strncasecmp(reply, "BH ", 3) == 0) {
         /* TODO kick off a refresh process. This can occur after a YR or after
@@ -523,7 +515,6 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
         negotiate_request->auth_state = AUTHENTICATE_STATE_FAILED;
         safe_free(negotiate_request->server_blob);
         authenticateNegotiateReleaseServer(negotiate_request);
-        result = S_HELPER_RELEASE;
         debugs(29, 1, "authenticateNegotiateHandleReply: Error validating user via Negotiate. Error returned '" << reply << "'");
     } else {
         /* protocol error */
@@ -537,8 +528,6 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
     r->handler(r->data, NULL);
     cbdataReferenceDone(r->data);
     authenticateStateFree(r);
-    debugs(29, 9, "authenticateNegotiateHandleReply: telling stateful helper : " << result);
-    return result;
 }
 
 static void
