@@ -2085,6 +2085,22 @@ DOC_START
 	enough to keep larger objects from hoarding cache_mem.
 DOC_END
 
+NAME: memory_cache_mode
+TYPE: memcachemode
+LOC: Config
+DEFAULT: always
+DOC_START
+	Controls which objects to keep in the memory cache (cache_mem)
+
+	always	Keep most recently fetched objects in memory (default)
+
+	disk	Only disk cache hits are kept in memory, which means
+		an object must first be cached on disk and then hit
+		a second time before cached in memory.
+
+	network	Only objects fetched from network is kept in memory
+DOC_END
+
 NAME: memory_replacement_policy
 TYPE: removalpolicy
 LOC: Config.memPolicy

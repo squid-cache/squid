@@ -444,6 +444,8 @@ struct SquidConfig {
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
         int WIN32_IpAddrChangeMonitor;
+        int memory_cache_first;
+        int memory_cache_disk;
     } onoff;
 
     int forward_max_tries;
