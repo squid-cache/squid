@@ -73,7 +73,7 @@ public:
      * better
      */
     int64_t objectBytesOnDisk() const;
-    int64_t policyLowestOffsetToKeep() const;
+    int64_t policyLowestOffsetToKeep(bool swap) const;
     void trimSwappable();
     void trimUnSwappable();
     bool isContiguous() const;
