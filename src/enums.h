@@ -374,17 +374,8 @@ typedef enum {
 typedef enum {
     S_HELPER_UNKNOWN,
     S_HELPER_RESERVE,
-    S_HELPER_RELEASE,
-    S_HELPER_DEFER
+    S_HELPER_RELEASE
 } stateful_helper_callback_t;
-
-/* stateful helper reservation info */
-typedef enum {
-    S_HELPER_FREE,		/* available for requests */
-    S_HELPER_RESERVED,		/* in a reserved state - no active request, but state data in the helper shouldn't be disturbed */
-    S_HELPER_DEFERRED		/* available for requests, and at least one more will come from a previous caller with the server pointer */
-} stateful_helper_reserve_t;
-
 
 #if SQUID_SNMP
 enum {
