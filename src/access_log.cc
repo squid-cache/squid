@@ -41,6 +41,7 @@
 
 #include "acl/Checklist.h"
 
+#include "hier_code.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"

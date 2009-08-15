@@ -7,11 +7,11 @@ class ErrorState;
 class HttpRequest;
 
 #include "comm.h"
+#include "hier_code.h"
 #include "ip/IpAddress.h"
 
 class FwdServer
 {
-
 public:
     peer *_peer;                /* NULL --> origin server */
     hier_code code;
@@ -20,7 +20,6 @@ public:
 
 class FwdState : public RefCountable
 {
-
 public:
     typedef RefCount<FwdState> Pointer;
     ~FwdState();

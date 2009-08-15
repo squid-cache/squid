@@ -34,10 +34,11 @@
 #ifndef SQUID_HTTPHIERARCHYLOGENTRY_H
 #define SQUID_HTTPHIERARCHYLOGENTRY_H
 
+#include "hier_code.h"
 #include "rfc2181.h"
 #include "PingData.h"
 
-/** todo Cleanup: break hier_code type out. We don't need the rest. */
+/* for lookup_t and http_status */
 #include "enums.h"
 
 class HierarchyLogEntry
