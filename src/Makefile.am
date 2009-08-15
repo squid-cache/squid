@@ -354,6 +354,8 @@ squid_SOURCES = \
 	gopher.cc \
 	helper.cc \
 	helper.h \
+	hier_code.h \
+	hier_code.cc \
 	HierarchyLogEntry.h \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -1088,6 +1090,8 @@ tests_testCacheManager_SOURCES = \
 	fqdncache.cc \
 	ftp.cc \
 	gopher.cc \
+	hier_code.h \
+	hier_code.cc \
 	helper.cc \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -1258,6 +1262,8 @@ tests_testEvent_SOURCES = \
 	fqdncache.cc \
 	ftp.cc \
 	gopher.cc \
+	hier_code.h \
+	hier_code.cc \
 	helper.cc \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -1407,6 +1413,8 @@ tests_testEventLoop_SOURCES = \
 	ftp.cc \
 	gopher.cc \
 	helper.cc \
+	hier_code.h \
+	hier_code.cc \
 	$(HTCPSOURCE) \
 	http.cc \
 	HttpBody.cc \
@@ -1544,6 +1552,8 @@ tests_test_http_range_SOURCES = \
 	ftp.cc \
 	gopher.cc \
 	helper.cc \
+	hier_code.h \
+	hier_code.cc \
 	$(HTCPSOURCE) \
 	http.cc \
 	HttpBody.cc \
@@ -1697,6 +1707,8 @@ tests_testHttpRequest_SOURCES = \
 	ftp.cc \
 	gopher.cc \
 	helper.cc \
+	hier_code.h \
+	hier_code.cc \
 	$(HTCPSOURCE) \
 	http.cc \
 	HttpBody.cc \
@@ -2049,6 +2061,8 @@ tests_testURL_SOURCES = \
 	ftp.cc \
 	gopher.cc \
 	helper.cc \
+	hier_code.h \
+	hier_code.cc \
 	$(HTCPSOURCE) \
 	http.cc \
 	HttpBody.cc \

@@ -677,6 +677,14 @@ DOC_START
 	acl aclname tag tagvalue ...
 	  # string match on tag returned by external acl helper [slow]
 
+	acl aclname hier_code codename ...
+	  # string match against squid hierarchy code(s); [fast]
+	  #  e.g., DIRECT, PARENT_HIT, NONE, etc.
+	  #
+	  # NOTE: This has no effect in http_access rules. It only has
+	  # effect in rules that affect the reply data stream such as
+	  # http_reply_access.
+
 Examples:
 acl macaddress arp 09:00:2b:23:45:67
 acl myexample dst_as 1241

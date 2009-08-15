@@ -36,6 +36,7 @@
 #include "event.h"
 #include "PeerSelectState.h"
 #include "Store.h"
+#include "hier_code.h"
 #include "ICP.h"
 #include "HttpRequest.h"
 #include "acl/FilledChecklist.h"
@@ -43,32 +44,6 @@
 #include "forward.h"
 #include "SquidTime.h"
 #include "icmp/net_db.h"
-
-const char *hier_strings[] = {
-    "NONE",
-    "DIRECT",
-    "SIBLING_HIT",
-    "PARENT_HIT",
-    "DEFAULT_PARENT",
-    "SINGLE_PARENT",
-    "FIRST_UP_PARENT",
-    "FIRST_PARENT_MISS",
-    "CLOSEST_PARENT_MISS",
-    "CLOSEST_PARENT",
-    "CLOSEST_DIRECT",
-    "NO_DIRECT_FAIL",
-    "SOURCE_FASTEST",
-    "ROUNDROBIN_PARENT",
-#if USE_CACHE_DIGESTS
-    "CD_PARENT_HIT",
-    "CD_SIBLING_HIT",
-#endif
-    "CARP",
-    "ANY_PARENT",
-    "USERHASH",
-    "SOURCEHASH",
-    "INVALID CODE"
-};
 
 static struct {
     int timeouts;
@@ -624,7 +599,6 @@ void
 peerSelectInit(void)
 {
     memset(&PeerStats, '\0', sizeof(PeerStats));
-    assert(sizeof(hier_strings) == (HIER_MAX + 1) * sizeof(char *));
 }
 
 static void
