@@ -36,6 +36,7 @@
 
 #include "config.h"
 #include "ip/IpAddress.h"
+#include "Debug.h"
 #include "util.h"
 
 
@@ -54,15 +55,6 @@
 
 #ifdef INET6
 #error "INET6 defined but has been deprecated! Try running bootstrap and configure again."
-#endif
-
-/* We want to use the debug routines when running as module of squid. */
-/* otherwise fallback to printf if those are not available. */
-#ifndef SQUID_DEBUG
-#    define debugs(a,b,c)        //  drop.
-#else
-#warning "IpAddress built with Debugs!!"
-#    include "../src/Debug.h"
 #endif
 
 #if !USE_IPV6
@@ -177,9 +169,6 @@ const int IpAddress::ApplyMask(IpAddress const &mask_addr)
 
         p1[i] &= p2[i];
     }
-
-    /* we have found a situation where mask forms or destroys a IPv4 map. */
-    check4Mapped();
 
     return changes;
 }
@@ -544,9 +533,6 @@ IpAddress& IpAddress::operator =(struct sockaddr_in const &s)
     memcpy(&m_SocketAddr, &s, sizeof(struct sockaddr_in));
 #endif
 
-    /* maintain stored family values properly */
-    check4Mapped();
-
     return *this;
 };
 
@@ -567,12 +553,6 @@ IpAddress& IpAddress::operator =(const struct sockaddr_storage &s)
     return *this;
 };
 
-void IpAddress::check4Mapped()
-{
-    // obsolete.
-    // TODO use this NOW to set the sin6_family properly on exporting. not on import.
-}
-
 #if USE_IPV6
 IpAddress::IpAddress(struct sockaddr_in6 const &s)
 {
@@ -583,9 +563,6 @@ IpAddress::IpAddress(struct sockaddr_in6 const &s)
 IpAddress& IpAddress::operator =(struct sockaddr_in6 const &s)
 {
     memcpy(&m_SocketAddr, &s, sizeof(struct sockaddr_in6));
-
-    /* maintain address family properly */
-    check4Mapped();
     return *this;
 };
 
@@ -602,16 +579,9 @@ IpAddress& IpAddress::operator =(struct in_addr const &s)
 #if USE_IPV6
     Map4to6((const in_addr)s, m_SocketAddr.sin6_addr);
     m_SocketAddr.sin6_family = AF_INET6;
-
 #else
-
     memcpy(&m_SocketAddr.sin_addr, &s, sizeof(struct in_addr));
-
 #endif
-
-    /* maintain stored family type properly */
-    check4Mapped();
-
     return *this;
 };
 
@@ -625,13 +595,8 @@ IpAddress::IpAddress(struct in6_addr const &s)
 
 IpAddress& IpAddress::operator =(struct in6_addr const &s)
 {
-
     memcpy(&m_SocketAddr.sin6_addr, &s, sizeof(struct in6_addr));
     m_SocketAddr.sin6_family = AF_INET6;
-
-    /* maintain address family type properly */
-    check4Mapped();
-
     return *this;
 };
 
