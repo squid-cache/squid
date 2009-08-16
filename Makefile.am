@@ -23,8 +23,8 @@ dist-hook:
 	  cp -p $(top_srcdir)/RELEASENOTES.html $(distdir)/RELEASENOTES.html; \
 	else \
 	  notes=`ls -1rt $(top_srcdir)/doc/release-notes/*.html | head -1`; \
-	  @if [ -f $(notes) ]; then \
-	    cp $(notes) $(distdir)/RELEASENOTES.html; \
+	  if [ -f $$notes ]; then \
+	    cp $$notes $(distdir)/RELEASENOTES.html; \
 	  else \
 	    touch $(distdir)/RELEASENOTES.html; \
 	  fi; \
