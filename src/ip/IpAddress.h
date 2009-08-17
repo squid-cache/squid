@@ -390,6 +390,8 @@ private:
 
     bool GetReverseString4(char buf[MAX_IPSTRLEN], const struct in_addr &dat) const;
 
+    void check4Mapped();
+
 #if USE_IPV6
 
     bool GetReverseString6(char buf[MAX_IPSTRLEN], const struct in6_addr &dat) const;
