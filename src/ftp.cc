@@ -529,38 +529,56 @@ FtpStateData::~FtpStateData()
 
 /**
  * Parse a possible login username:password pair.
- * Produces filled member varisbles user, password, password_url if anything found.
+ * Produces filled member variables user, password, password_url if anything found.
  */
 void
 FtpStateData::loginParser(const char *login, int escaped)
 {
-    char *s = NULL;
+    const char *u = NULL; // end of the username sub-string
+    int len;              // length of the current sub-string to handle.
+
+    int total_len = strlen(login);
+
     debugs(9, 4, HERE << ": login='" << login << "', escaped=" << escaped);
     debugs(9, 9, HERE << ": IN : login='" << login << "', escaped=" << escaped << ", user=" << user << ", password=" << password);
 
-    if ((s = strchr(login, ':'))) {
-        *s = '\0';
+    if ((u = strchr(login, ':'))) {
 
         /* if there was a username part */
-        if (s > login) {
-            xstrncpy(user, login, MAX_URL);
+        if (u > login) {
+            len = u - login;
+            ++u; // jump off the delimiter.
+            if (len > MAX_URL)
+                len = MAX_URL-1;
+            xstrncpy(user, login, len +1);
+            debugs(9, 9, HERE << ": found user='" << user << "'(" << len <<"), escaped=" << escaped);
             if (escaped)
                 rfc1738_unescape(user);
+            debugs(9, 9, HERE << ": found user='" << user << "'(" << len <<") unescaped.");
         }
 
         /* if there was a password part */
-        if ( s[1] != '\0' ) {
-            xstrncpy(password, s + 1, MAX_URL);
+        len = login + total_len - u;
+        if ( len > 0) {
+            if (len > MAX_URL)
+                len = MAX_URL -1;
+            xstrncpy(password, u, len +1);
+            debugs(9, 9, HERE << ": found password='" << password << "'(" << len <<"), escaped=" << escaped);
             if (escaped) {
                 rfc1738_unescape(password);
                 password_url = 1;
             }
+            debugs(9, 9, HERE << ": found password='" << password << "'(" << len <<") unescaped.");
         }
     } else if (login[0]) {
         /* no password, just username */
-        xstrncpy(user, login, MAX_URL);
+        if (total_len > MAX_URL)
+            total_len = MAX_URL -1;
+        xstrncpy(user, login, total_len +1);
+        debugs(9, 9, HERE << ": found user='" << user << "'(" << total_len <<"), escaped=" << escaped);
         if (escaped)
             rfc1738_unescape(user);
+        debugs(9, 9, HERE << ": found user='" << user << "'(" << total_len <<") unescaped.");
     }
 
     debugs(9, 9, HERE << ": OUT: login='" << login << "', escaped=" << escaped << ", user=" << user << ", password=" << password);
