@@ -22,7 +22,12 @@ dist-hook:
 	@if [ -f $(top_srcdir)/RELEASENOTES.html ]; then \
 	  cp -p $(top_srcdir)/RELEASENOTES.html $(distdir)/RELEASENOTES.html; \
 	else \
-	  cp $(top_srcdir)/doc/release-notes/release-3.0.html $(distdir)/RELEASENOTES.html; \
+	  notes=`ls -1rt $(top_srcdir)/doc/release-notes/*.html | head -1`; \
+	  if [ -f $$notes ]; then \
+	    cp $$notes $(distdir)/RELEASENOTES.html; \
+	  else \
+	    touch $(distdir)/RELEASENOTES.html; \
+	  fi; \
 	fi
 
 EXTRA_DIST = \
