@@ -5452,11 +5452,11 @@ TYPE: string
 LOC: Config.chroot_dir
 DEFAULT: none
 DOC_START
-	Use this to have Squid do a chroot() while initializing.  This
-	also causes Squid to fully drop root privileges after
-	initializing.  This means, for example, if you use a HTTP
-	port less than 1024 and try to reconfigure, you will may get an
-	error saying that Squid can not open the port.
+	Specifies a directiry where Squid should do a chroot() while
+	initializing.  This also causes Squid to fully drop root
+	privileges after initializing.  This means, for example, if you
+	use a HTTP port less than 1024 and try to reconfigure, you may
+	get an error saying that Squid can not open the port.
 DOC_END
 
 NAME: balance_on_multiple_ip
