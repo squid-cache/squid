@@ -561,6 +561,11 @@ comm_local_port(int fd)
     if (F->local_addr.GetPort())
         return F->local_addr.GetPort();
 
+#if USE_IPV6
+    if (F->sock_family == AF_INET)
+        temp.SetIPv4();
+#endif
+
     temp.InitAddrInfo(addr);
 
     if (getsockname(fd, addr->ai_addr, &(addr->ai_addrlen)) ) {
@@ -574,14 +579,16 @@ comm_local_port(int fd)
 
     F->local_addr.SetPort(temp.GetPort());
 
+#if 0 // seems to undo comm_open actions on the FD ...
     // grab default socket information for this address
     temp.GetAddrInfo(addr);
 
     F->sock_family = addr->ai_family;
 
     temp.FreeAddrInfo(addr);
+#endif
 
-    debugs(5, 6, "comm_local_port: FD " << fd << ": port " << F->local_addr.GetPort());
+    debugs(5, 6, "comm_local_port: FD " << fd << ": port " << F->local_addr.GetPort() << "(family=" << F->sock_family << ")");
     return F->local_addr.GetPort();
 }
 
@@ -1009,6 +1016,8 @@ ConnectStateData::commResetFD()
     close(fd2);
     fde *F = &fd_table[fd];
 
+    debugs(50, 3, "commResetFD: Reset socket FD " << fd << "->" << fd2 << " : family=" << new_family );
+
     /* INET6: copy the new sockets family type to the FDE table */
     fd_table[fd].sock_family = new_family;
 
@@ -1326,7 +1335,7 @@ comm_connect_addr(int sock, const IpAddress &address)
         status = COMM_INPROGRESS;
     else
 #if USE_IPV6
-        if ( address.IsIPv4() && F->sock_family == AF_INET6 ) {
+        if ( F->sock_family == AF_INET6 && address.IsIPv4() ) {
 
             /* failover to trying IPv4-only link if an IPv6 one fails */
             /* to catch the edge case of apps listening on IPv4-localhost */
