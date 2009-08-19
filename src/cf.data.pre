@@ -632,7 +632,7 @@ NOCOMMENT_START
 #Recommended minimum configuration:
 acl manager proto cache_object
 acl localhost src 127.0.0.1/32
-acl to_localhost dst 127.0.0.0/8
+acl to_localhost dst 127.0.0.0/8 0.0.0.0/32
 #
 # Example rule allowing access from your local networks.
 # Adapt to list your (internal) IP networks from where browsing
