@@ -1704,6 +1704,11 @@ proxies.</P>
 <P>Disable error page localization for visitors.</P>
 <P>error_directory option is required if this option is used.</P>
 
+<DT><B>--disable-caps</B><DD>
+<P>Build without libcap support. The default is to auto-detect system capabilities
+and enable support when possible.</P>
+<P>NOTE: Disabling this or building without libcap support will break TPROXY support.</P>
+
 <DT><B>--disable-ipv6</B><DD>
 <P>Build without IPv6 support. The default is to auto-detect system capabilities
 and build with IPv6 when possible.</P>

@@ -27,5 +27,23 @@
 #endif
 
 
+/*
+ * sys/capability.h is only needed in Linux apparently.
+ *
+ * HACK: LIBCAP_BROKEN Ugly glue to get around linux header madness colliding with glibc
+ */
+#if HAVE_SYS_CAPABILITY_H
+
+#if LIBCAP_BROKEN
+#undef _POSIX_SOURCE
+#define _LINUX_TYPES_H
+#define _LINUX_FS_H
+typedef uint32_t __u32;
+#endif
+
+#include <sys/capability.h>
+#endif /* HAVE_SYS_CAPABILITY_H */
+
+
 #endif /* _SQUID_LINUX_ */
 #endif /* SQUID_OS_LINUX_H */
