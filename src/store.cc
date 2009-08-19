@@ -1840,7 +1840,7 @@ StoreEntry::trimMemory()
         return;
 
     if (!swapOutAble()) {
-	if (!EBIT_TEST(flags, KEY_PRIVATE) && mem_obj->policyLowestOffsetToKeep(0) == 0) {
+	if (mem_obj->policyLowestOffsetToKeep(0) == 0) {
 	    /* Nothing to do */
 	    return;
 	}
