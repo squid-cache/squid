@@ -481,7 +481,7 @@ HttpReply::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status *
     // skip arbitrary number of spaces...
     while (pos <= buf->contentSize() && (char)*(buf->content()+pos) == ' ') ++pos;
 
-    if (!xisdigit(*(buf->content()+pos))) {
+    if (pos < buf->contentSize() && !xisdigit(*(buf->content()+pos))) {
         debugs(58, 3, "HttpReply::sanityCheckStartLine: missing or invalid status number in '" << buf->content() << "'");
         *error = HTTP_INVALID_HEADER;
         return false;
