@@ -23,10 +23,15 @@ show_version()
   shift
   versions="$*"
   for version in $versions; do
-      if check_version $tool $tool $version; then
-	found=`eval ${tool} --version 2>/dev/null | grep -i "${version}" | grep -o -E "${version}[0-9\.]*"`
+    for variant in "" "-${version}" "`echo $version | sed -e 's/\.//g'`"; do
+      if check_version $tool ${tool}${variant} $version; then
+	found="${version}"
 	break
       fi
+    done
+    if [ "x$found" != "xNOT_FOUND" ]; then
+      break
+    fi
   done
   if [ "x$found" = "xNOT_FOUND" ]; then
     found="??"
@@ -95,7 +100,7 @@ bootstrap_libtoolize() {
         src=libltdl
 
         # do not bundle with the huge standard license text
-        rm -f $src/COPYING.LIB
+        rm -fv $src/COPYING.LIB
         makefile=$src/Makefile.in
         sed 's/COPYING.LIB/ /g' $makefile > $makefile.new;
         chmod u+w $makefile
@@ -123,9 +128,9 @@ acver=`find_variant autoconf ${acversions}`
 ltver=`find_variant libtool ${ltversions}`
 
 # Produce debug output about what version actually found.
-amversion=`show_version automake${amver} ${amversions}`
-acversion=`show_version autoconf${acver} ${acversions}`
-ltversion=`show_version libtool${ltver} ${ltversions}`
+amversion=`show_version automake ${amversions}`
+acversion=`show_version autoconf ${acversions}`
+ltversion=`show_version libtool ${ltversions}`
 
 # Set environment variable to tell automake which autoconf to use.
 AUTOCONF="autoconf${acver}" ; export AUTOCONF
