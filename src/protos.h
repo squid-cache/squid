@@ -40,6 +40,10 @@
 /* some parameters stil need this */
 #include "wordlist.h"
 
+/* for parameters that still need these */
+#include "lookup_t.h"
+
+
 class HttpRequestMethod;
 
 
@@ -354,10 +358,6 @@ SQUIDCEXTERN int mimeGetViewOption(const char *fn);
 
 SQUIDCEXTERN int mcastSetTtl(int, int);
 SQUIDCEXTERN IPH mcastJoinGroups;
-
-/* Labels for hierachical log file */
-/* put them all here for easier reference when writing a logfile analyzer */
-
 
 SQUIDCEXTERN peer *getFirstPeer(void);
 SQUIDCEXTERN peer *getFirstUpParent(HttpRequest *);

@@ -35,10 +35,11 @@
 #define SQUID_HTTPHIERARCHYLOGENTRY_H
 
 #include "hier_code.h"
+#include "lookup_t.h"
 #include "rfc2181.h"
 #include "PingData.h"
 
-/* for lookup_t and http_status */
+/* for http_status */
 #include "enums.h"
 
 class HierarchyLogEntry

@@ -28,7 +28,7 @@ typedef enum {
     HIER_MAX
 } hier_code;
 
-extern const char *hier_strings[];
+extern const char *hier_code_str[];
 
 inline const hier_code operator++(hier_code &i) { return (hier_code)(i+1); }
 

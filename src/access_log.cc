@@ -1033,7 +1033,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             if (al->hier.ping.timedout)
                 mb.append("TIMEOUT_", 8);
 
-            out = hier_strings[al->hier.code];
+            out = hier_code_str[al->hier.code];
 
             break;
 
@@ -1664,7 +1664,7 @@ accessLogSquid(AccessLogEntry * al, Logfile * logfile)
                       al->url,
                       user ? user : dash_str,
                       al->hier.ping.timedout ? "TIMEOUT_" : "",
-                      hier_strings[al->hier.code],
+                      hier_code_str[al->hier.code],
                       al->hier.host,
                       al->http.content_type);
     } else {
@@ -1682,7 +1682,7 @@ accessLogSquid(AccessLogEntry * al, Logfile * logfile)
                       al->url,
                       user ? user : dash_str,
                       al->hier.ping.timedout ? "TIMEOUT_" : "",
-                      hier_strings[al->hier.code],
+                      hier_code_str[al->hier.code],
                       al->hier.host,
                       al->http.content_type,
                       ereq,
@@ -1723,7 +1723,7 @@ accessLogCommon(AccessLogEntry * al, Logfile * logfile)
                   al->http.code,
                   al->cache.replySize,
                   log_tags[al->cache.code],
-                  hier_strings[al->hier.code]);
+                  hier_code_str[al->hier.code]);
 
     safe_free(user1);
 

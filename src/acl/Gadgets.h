@@ -2,7 +2,7 @@
 #define SQUID_ACL_GADGETS_H
 
 #include "config.h"
-#include "enums.h" /* for err_type */
+#include "err_type.h"
 
 struct dlink_list;
 class StoreEntry;

@@ -61,47 +61,6 @@ typedef enum {
     LOG_TYPE_MAX
 } log_type;
 
-typedef enum {
-    ERR_NONE,
-    ERR_READ_TIMEOUT,
-    ERR_LIFETIME_EXP,
-    ERR_READ_ERROR,
-    ERR_WRITE_ERROR,
-    ERR_SHUTTING_DOWN,
-    ERR_CONNECT_FAIL,
-    ERR_SECURE_CONNECT_FAIL,
-    ERR_INVALID_REQ,
-    ERR_UNSUP_REQ,
-    ERR_INVALID_URL,
-    ERR_SOCKET_FAILURE,
-    ERR_DNS_FAIL,
-    ERR_CANNOT_FORWARD,
-    ERR_FORWARDING_DENIED,
-    ERR_NO_RELAY,
-    ERR_ZERO_SIZE_OBJECT,
-    ERR_FTP_DISABLED,
-    ERR_FTP_FAILURE,
-    ERR_URN_RESOLVE,
-    ERR_ACCESS_DENIED,
-    ERR_CACHE_ACCESS_DENIED,
-    ERR_CACHE_MGR_ACCESS_DENIED,
-    ERR_SQUID_SIGNATURE,	/* not really an error */
-    ERR_FTP_PUT_CREATED,	/* !error,a note that the file was created */
-    ERR_FTP_PUT_MODIFIED,	/* modified, !created */
-    ERR_FTP_PUT_ERROR,
-    ERR_FTP_NOT_FOUND,
-    ERR_FTP_FORBIDDEN,
-    ERR_FTP_UNAVAILABLE,
-    ERR_ONLY_IF_CACHED_MISS,	/* failure to satisfy only-if-cached request */
-    ERR_TOO_BIG,
-    TCP_RESET,
-    ERR_ESI,                    /* Failure to perform ESI processing */
-    ERR_INVALID_RESP,
-    ERR_ICAP_FAILURE,
-    ERR_UNSUP_HTTPVERSION,     /* HTTP version is not supported */
-    ERR_MAX
-} err_type;
-
 enum fd_type {
     FD_NONE,
     FD_LOG,
@@ -122,12 +81,6 @@ typedef enum {
     PEER_PARENT,
     PEER_MULTICAST
 } peer_t;
-
-typedef enum {
-    LOOKUP_NONE,
-    LOOKUP_HIT,
-    LOOKUP_MISS
-} lookup_t;
 
 typedef enum {
     CC_BADHDR = -1,
@@ -155,35 +108,6 @@ typedef enum {
     SC_ENUM_END
 } http_hdr_sc_type;
 
-
-/// \ingroup ServerProtocolICPAPI
-typedef enum {
-    ICP_INVALID,
-    ICP_QUERY,
-    ICP_HIT,
-    ICP_MISS,
-    ICP_ERR,
-    ICP_SEND,
-    ICP_SENDA,
-    ICP_DATABEG,
-    ICP_DATA,
-    ICP_DATAEND,
-    ICP_SECHO,
-    ICP_DECHO,
-    ICP_NOTIFY,
-    ICP_INVALIDATE,
-    ICP_DELETE,
-    ICP_UNUSED15,
-    ICP_UNUSED16,
-    ICP_UNUSED17,
-    ICP_UNUSED18,
-    ICP_UNUSED19,
-    ICP_UNUSED20,
-    ICP_MISS_NOFETCH,
-    ICP_DENIED,
-    ICP_HIT_OBJ,
-    ICP_END
-} icp_opcode;
 
 typedef enum _mem_status_t {
     NOT_IN_MEMORY,
@@ -397,15 +321,6 @@ enum {
     STORE_LOG_RELEASE,
     STORE_LOG_SWAPOUTFAIL
 };
-
-typedef enum {
-    SWAP_LOG_NOP,
-    SWAP_LOG_ADD,
-    SWAP_LOG_DEL,
-    SWAP_LOG_VERSION,
-    SWAP_LOG_MAX
-} swap_log_op;
-
 
 /* parse state of HttpReply or HttpRequest */
 typedef enum {

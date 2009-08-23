@@ -31,7 +31,7 @@ ACLHierCodeData::dump()
 
     for (hier_code iter=HIER_NONE; iter<HIER_MAX; ++iter) {
         if (!values[iter]) continue;
-        wordlistAdd(&W, hier_strings[iter]);
+        wordlistAdd(&W, hier_code_str[iter]);
     }
 
     return W;
@@ -48,7 +48,7 @@ ACLHierCodeData::parse()
                 fatalf("ERROR: No such hier_code '%s'",t);
                 return;
             }
-            if (strcmp(hier_strings[iter],t) == 0) {
+            if (strcmp(hier_code_str[iter],t) == 0) {
                 values[iter] = true;
                 break; // back to while-loop
             }
