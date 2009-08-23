@@ -1436,12 +1436,11 @@ FtpStateData::processReplyBody()
 
     if (flags.isdir) {
         parseListing();
-    } else
-        if (const int csize = data.readBuf->contentSize()) {
-            writeReplyBody(data.readBuf->content(), csize);
-            debugs(9, 5, HERE << "consuming " << csize << " bytes of readBuf");
-            data.readBuf->consume(csize);
-        }
+    } else if (const int csize = data.readBuf->contentSize()) {
+        writeReplyBody(data.readBuf->content(), csize);
+        debugs(9, 5, HERE << "consuming " << csize << " bytes of readBuf");
+        data.readBuf->consume(csize);
+    }
 
     entry->flush();
 
@@ -1497,8 +1496,7 @@ FtpStateData::checkAuth(const HttpHeader * req_hdr)
             xstrncpy(password, Config.Ftp.anon_user, MAX_URL);
             flags.tried_auth_anonymous=1;
             return 1;
-        }
-        else if (!flags.tried_auth_nopass) {
+        } else if (!flags.tried_auth_nopass) {
             xstrncpy(password, null_string, MAX_URL);
             flags.tried_auth_nopass=1;
             return 1;
@@ -2465,7 +2463,7 @@ ftpReadEPSV(FtpStateData* ftpState)
         /* server response with list of supported methods   */
         /*   522 Network protocol not supported, use (1)    */
         /*   522 Network protocol not supported, use (1,2)  */
-        /* TODO: handle the (1,2) case. We might get it back after EPSV ALL 
+        /* TODO: handle the (1,2) case. We might get it back after EPSV ALL
          * which means close data + control without self-destructing and re-open from scratch. */
         debugs(9, 5, HERE << "scanning: " << ftpState->ctrl.last_reply);
         buf = ftpState->ctrl.last_reply;
@@ -2494,8 +2492,7 @@ ftpReadEPSV(FtpStateData* ftpState)
             ftpState->state = SENT_EPSV_1;
             ftpSendPassive(ftpState);
 #endif
-        }
-        else {
+        } else {
             /* handle broken server (RFC 2428 says MUST specify supported protocols in 522) */
             debugs(9, DBG_IMPORTANT, "WARNING: Server at " << fd_table[ftpState->ctrl.fd].ipaddr << " sent unknown protocol negotiation hint: " << buf);
             ftpSendPassive(ftpState);
@@ -2642,8 +2639,7 @@ ftpSendPassive(FtpStateData * ftpState)
             snprintf(cbuf, 1024, "EPSV 1\r\n");
             ftpState->state = SENT_EPSV_1;
             break;
-        }
-        else if (ftpState->flags.epsv_all_sent) {
+        } else if (ftpState->flags.epsv_all_sent) {
             debugs(9, DBG_IMPORTANT, "FTP does not allow PASV method after 'EPSV ALL' has been sent.");
             ftpFail(ftpState);
             return;

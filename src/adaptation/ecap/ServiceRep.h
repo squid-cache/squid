@@ -13,7 +13,8 @@
 
 namespace Adaptation
 {
-namespace Ecap {
+namespace Ecap
+{
 
 /* The eCAP service representative maintains information about a single eCAP
    service that Squid communicates with. One eCAP module may register many

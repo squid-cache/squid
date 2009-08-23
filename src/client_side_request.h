@@ -61,8 +61,8 @@ class ClientRequestContext;
 
 class ClientHttpRequest
 #if USE_ADAPTATION
-            : public Adaptation::Initiator, // to start adaptation transactions
-            public BodyConsumer     // to receive reply bodies in request satisf. mode
+        : public Adaptation::Initiator, // to start adaptation transactions
+        public BodyConsumer     // to receive reply bodies in request satisf. mode
 #endif
 {
 

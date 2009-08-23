@@ -46,8 +46,7 @@
 
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 //MOVED:Debug.h    extern FILE *debug_log;		/* NULL */

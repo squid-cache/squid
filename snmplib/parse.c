@@ -428,7 +428,7 @@ do_subtree(struct snmp_mib_tree *root, struct node **nodes)
 static
 #endif
 struct snmp_mib_tree *
-            build_tree(struct node *nodes) {
+build_tree(struct node *nodes) {
     struct node *np;
     struct snmp_mib_tree *tp;
     int bucket, nodes_left = 0;
@@ -635,7 +635,7 @@ free_node(struct node *np)
  * Returns 0 on error.
  */
 static struct node *
-            parse_objectid(FILE *fp, char *name) {
+parse_objectid(FILE *fp, char *name) {
     int type;
     char token[64];
     register int count;
@@ -744,7 +744,7 @@ parse_asntype(FILE *fp)
  * Returns 0 on error.
  */
 static struct node *
-            parse_objecttype(register FILE *fp, char *name) {
+parse_objecttype(register FILE *fp, char *name) {
     register int type;
     char token[64];
     int count, length;
@@ -978,7 +978,7 @@ static struct node *
 static
 #endif
 struct node *
-            parse(FILE *fp) {
+parse(FILE *fp) {
     char token[64];
     char name[64];
     int type = 1;
@@ -1062,7 +1062,7 @@ struct node *
 }
 
 struct snmp_mib_tree *
-            read_mib(char *filename) {
+read_mib(char *filename) {
     FILE *fp;
     struct node *nodes;
     struct snmp_mib_tree *tree;

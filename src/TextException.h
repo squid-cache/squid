@@ -20,7 +20,7 @@ public:
 
     virtual const char *what() const throw();
 
-	TextException& operator=(const TextException &right);
+    TextException& operator=(const TextException &right);
 
 public:
     char *message; // read-only

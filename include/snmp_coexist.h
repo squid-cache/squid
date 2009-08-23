@@ -31,8 +31,7 @@
  **********************************************************************/
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
     int snmp_coexist_V2toV1(struct snmp_pdu *);

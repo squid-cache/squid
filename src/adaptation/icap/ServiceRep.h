@@ -43,7 +43,8 @@
 
 namespace Adaptation
 {
-namespace Icap {
+namespace Icap
+{
 
 class Options;
 class OptXact;
@@ -78,7 +79,7 @@ class OptXact;
 
 
 class ServiceRep : public RefCountable, public Adaptation::Service,
-            public Adaptation::Initiator
+        public Adaptation::Initiator
 {
 
 public:

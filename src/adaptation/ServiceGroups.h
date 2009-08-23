@@ -81,7 +81,7 @@ public:
     SingleService(const String &aServiceKey);
 
 protected:
-    virtual bool replace(Pos &pos) const { return false; } 
+    virtual bool replace(Pos &pos) const { return false; }
     virtual bool advance(Pos &pos) const { return false; }
 };
 
@@ -92,7 +92,7 @@ public:
     ServiceChain();
 
 protected:
-    virtual bool replace(Pos &pos) const { return false; } 
+    virtual bool replace(Pos &pos) const { return false; }
     virtual bool advance(Pos &pos) const { return has(++pos); }
 };
 
@@ -106,7 +106,8 @@ public:
 
 /** iterates services stored in a group; iteration is not linear because we
     need to both replace failed services and advance to the next chain link */
-class ServicePlan {
+class ServicePlan
+{
 public:
     typedef unsigned int Pos; // Vector<>::poistion_type
 

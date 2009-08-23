@@ -121,7 +121,7 @@ static u_int32_t ipstr2long(char *ip_str)
     int	cur_byte;
 
     ipaddr = (u_int32_t)0;
-    for (i = 0;i < 4;i++) {
+    for (i = 0; i < 4; i++) {
         ptr = buf;
         count = 0;
         *ptr = '\0';

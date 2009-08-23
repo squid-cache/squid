@@ -377,12 +377,12 @@ request_flags::clearResetTCP()
 }
 
 #if ICAP_CLIENT
-Adaptation::Icap::History::Pointer 
+Adaptation::Icap::History::Pointer
 HttpRequest::icapHistory() const
 {
     if (!icapHistory_) {
         if ((LogfileStatus == LOG_ENABLE && alLogformatHasIcapToken) ||
-            IcapLogfileStatus == LOG_ENABLE) {
+                IcapLogfileStatus == LOG_ENABLE) {
             icapHistory_ = new Adaptation::Icap::History();
             debugs(93,4, HERE << "made " << icapHistory_ << " for " << this);
         }
@@ -393,7 +393,7 @@ HttpRequest::icapHistory() const
 #endif
 
 #if USE_ADAPTATION
-Adaptation::History::Pointer 
+Adaptation::History::Pointer
 HttpRequest::adaptHistory(bool createIfNone) const
 {
     if (!adaptHistory_ && createIfNone) {
@@ -404,11 +404,11 @@ HttpRequest::adaptHistory(bool createIfNone) const
     return adaptHistory_;
 }
 
-Adaptation::History::Pointer 
+Adaptation::History::Pointer
 HttpRequest::adaptLogHistory() const
 {
     const bool loggingNeedsHistory = (LogfileStatus == LOG_ENABLE) &&
-        alLogformatHasAdaptToken; // TODO: make global to remove this method?
+                                     alLogformatHasAdaptToken; // TODO: make global to remove this method?
     return HttpRequest::adaptHistory(loggingNeedsHistory);
 }
 

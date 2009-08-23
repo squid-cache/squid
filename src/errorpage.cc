@@ -975,7 +975,7 @@ ErrorState::BuildContent()
                         *dt = '-';
                     else
 #endif
-                    *dt = xtolower(hdr[pos]);
+                        *dt = xtolower(hdr[pos]);
                     // valid codes only contain A-Z, hyphen (-) and *
                     if (*dt != '-' && *dt != '*' && (*dt < 'a' || *dt > 'z') )
                         invalid_byte = true;
