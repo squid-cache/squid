@@ -129,6 +129,49 @@ testHttpReply::testSanityCheckFirstLine()
     input.reset();
     error = HTTP_STATUS_NONE;
 
+    // incomplete (short) status lines... not sane (yet), but no error either.
+    input.append("H", 1);
+    hdr_len = headersEnd(input.content(),input.contentSize());
+    CPPUNIT_ASSERT(!engine.sanityCheckStartLine(&input, hdr_len, &error) );
+    CPPUNIT_ASSERT_EQUAL(error, HTTP_STATUS_NONE);
+    input.reset();
+    error = HTTP_STATUS_NONE;
+
+    input.append("HTTP/", 5);
+    hdr_len = headersEnd(input.content(),input.contentSize());
+    CPPUNIT_ASSERT(!engine.sanityCheckStartLine(&input, hdr_len, &error) );
+    CPPUNIT_ASSERT_EQUAL(error, HTTP_STATUS_NONE);
+    input.reset();
+    error = HTTP_STATUS_NONE;
+
+    input.append("HTTP/1", 6);
+    hdr_len = headersEnd(input.content(),input.contentSize());
+    CPPUNIT_ASSERT(!engine.sanityCheckStartLine(&input, hdr_len, &error) );
+    CPPUNIT_ASSERT_EQUAL(error, HTTP_STATUS_NONE);
+    input.reset();
+    error = HTTP_STATUS_NONE;
+
+    input.append("HTTP/1.1", 8);
+    hdr_len = headersEnd(input.content(),input.contentSize());
+    CPPUNIT_ASSERT(!engine.sanityCheckStartLine(&input, hdr_len, &error) );
+    CPPUNIT_ASSERT_EQUAL(error, HTTP_STATUS_NONE);
+    input.reset();
+    error = HTTP_STATUS_NONE;
+
+    input.append("HTTP/1.1 ", 9); /* real case seen */
+    hdr_len = headersEnd(input.content(),input.contentSize());
+    CPPUNIT_ASSERT(engine.sanityCheckStartLine(&input, hdr_len, &error) );
+    CPPUNIT_ASSERT_EQUAL(error, HTTP_STATUS_NONE);
+    input.reset();
+    error = HTTP_STATUS_NONE;
+
+    input.append("HTTP/1.1    20", 14);
+    hdr_len = headersEnd(input.content(),input.contentSize());
+    CPPUNIT_ASSERT(engine.sanityCheckStartLine(&input, hdr_len, &error) );
+    CPPUNIT_ASSERT_EQUAL(error, HTTP_STATUS_NONE);
+    input.reset();
+    error = HTTP_STATUS_NONE;
+
     // status line with no status
     input.append("HTTP/1.1 \n\n", 11);
     hdr_len = headersEnd(input.content(),input.contentSize());
@@ -176,4 +219,5 @@ testHttpReply::testSanityCheckFirstLine()
     CPPUNIT_ASSERT_EQUAL(error, HTTP_INVALID_HEADER);
     input.reset();
     error = HTTP_STATUS_NONE;
+
 }
