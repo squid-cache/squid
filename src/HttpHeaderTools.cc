@@ -246,10 +246,16 @@ int
 strListGetItem(const String * str, char del, const char **item, int *ilen, const char **pos)
 {
     size_t len;
-    static char delim[3][8] = {
-			"\"?,",
-			"\"\\",
-			" ?,\t\r\n"
+
+    /* ',' is always enabled as field delimiter as this is required for
+     * processing merged header values properly, even if Cookie normally
+     * uses ';' as delimiter.
+     */
+    static char delim[3][8] =
+    {
+	"\"?,",
+	"\"\\",
+	" ?,\t\r\n"
     };
     int quoted = 0;
     assert(str && item && pos);
@@ -264,7 +270,7 @@ strListGetItem(const String * str, char del, const char **item, int *ilen, const
             return 0;
     }
 
-    /* skip leading ws and delimiters */
+    /* skip leading whitespace and delimiters */
     *pos += strspn(*pos, delim[2]);
 
     *item = *pos;		/* remember item's start */
@@ -272,20 +278,15 @@ strListGetItem(const String * str, char del, const char **item, int *ilen, const
     /* find next delimiter */
     do {
         *pos += strcspn(*pos, delim[quoted]);
-
-        if (**pos == del)
-            break;
-
         if (**pos == '"') {
             quoted = !quoted;
             *pos += 1;
-        }
-
-        if (quoted && **pos == '\\') {
+	} else if (quoted && **pos == '\\') {
             *pos += 1;
-
             if (**pos)
                 *pos += 1;
+	} else {
+	    break;		/* Delimiter found, marking the end of this value */
         }
     } while (**pos);
 
