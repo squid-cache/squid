@@ -32,11 +32,14 @@
 #include "config.h"
 #include "RefCount.h"
 #include "cbdata.h"
-
-/* needed for various structures still in structs.h */
 #include "dlink.h"
+#include "err_type.h"
+
 /* needed for the global config */
 #include "HttpHeader.h"
+
+/* for ICP_END */
+#include "icp_opcode.h"
 
 struct acl_name_list {
     char name[ACL_NAME_SZ];

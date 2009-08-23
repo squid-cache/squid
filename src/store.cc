@@ -50,12 +50,16 @@
 #endif
 #include "Stack.h"
 #include "SquidTime.h"
+#include "swap_log_op.h"
 
 static STMCB storeWriteComplete;
 
 #define REBUILD_TIMESTAMP_DELTA_MAX 2
 
 #define STORE_IN_MEM_BUCKETS            (229)
+
+
+/** \todo Convert these string constants to enum string-arrays generated */
 
 const char *memStatusStr[] = {
     "NOT_IN_MEMORY",

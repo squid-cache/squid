@@ -41,6 +41,7 @@
 #include "mem_node.h"
 #include "MemObject.h"
 #include "SwapDir.h"
+#include "swap_log_op.h"
 
 static void storeSwapOutStart(StoreEntry * e);
 static StoreIOState::STIOCB storeSwapOutFileClosed;

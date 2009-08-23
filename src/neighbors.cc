@@ -877,18 +877,13 @@ void
 peerNoteDigestLookup(HttpRequest * request, peer * p, lookup_t lookup)
 {
 #if USE_CACHE_DIGESTS
-
     if (p)
         strncpy(request->hier.cd_host, p->host, sizeof(request->hier.cd_host));
     else
         *request->hier.cd_host = '\0';
 
     request->hier.cd_lookup = lookup;
-
-    debugs(15, 4, "peerNoteDigestLookup: peer " <<
-           (p ? p->host : "<none>") << ", lookup: " <<
-           lookup_t_str[lookup]  );
-
+    debugs(15, 4, "peerNoteDigestLookup: peer " << (p? p->host : "<none>") << ", lookup: " << lookup_t_str[lookup]  );
 #endif
 }
 
@@ -1007,21 +1002,20 @@ ignoreMulticastReply(peer * p, MemObject * mem)
     return 1;
 }
 
-/* I should attach these records to the entry.  We take the first
+/**
+ * I should attach these records to the entry.  We take the first
  * hit we get our wait until everyone misses.  The timeout handler
  * call needs to nip this shopping list or call one of the misses.
  *
  * If a hit process is already started, then sobeit
  */
 void
-
 neighborsUdpAck(const cache_key * key, icp_common_t * header, const IpAddress &from)
 {
     peer *p = NULL;
     StoreEntry *entry;
     MemObject *mem = NULL;
     peer_t ntype = PEER_NONE;
-    char *opcode_d;
     icp_opcode opcode = (icp_opcode) header->opcode;
 
     debugs(15, 6, "neighborsUdpAck: opcode " << opcode << " '" << storeKeyText(key) << "'");
@@ -1035,7 +1029,7 @@ neighborsUdpAck(const cache_key * key, icp_common_t * header, const IpAddress &f
     if (opcode > ICP_END)
         return;
 
-    opcode_d = icp_opcode_str[opcode];
+    const char *opcode_d = icp_opcode_str[opcode];
 
     if (p)
         neighborUpdateRtt(p, mem);

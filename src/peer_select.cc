@@ -438,7 +438,7 @@ peerGetSomeNeighbor(ps_state * ps)
 
     if (code != HIER_NONE) {
         assert(p);
-        debugs(44, 3, "peerSelect: " << hier_strings[code] << "/" << p->host);
+        debugs(44, 3, "peerSelect: " << hier_code_str[code] << "/" << p->host);
         peerAddFwdServer(&ps->servers, p, code);
     }
 
@@ -461,7 +461,7 @@ peerGetSomeNeighborReplies(ps_state * ps)
 
     if (peerCheckNetdbDirect(ps)) {
         code = CLOSEST_DIRECT;
-        debugs(44, 3, "peerSelect: " << hier_strings[code] << "/" << request->GetHost());
+        debugs(44, 3, "peerSelect: " << hier_code_str[code] << "/" << request->GetHost());
         peerAddFwdServer(&ps->servers, NULL, code);
         return;
     }
@@ -478,7 +478,7 @@ peerGetSomeNeighborReplies(ps_state * ps)
         }
     }
     if (p && code != HIER_NONE) {
-        debugs(44, 3, "peerSelect: " << hier_strings[code] << "/" << p->host);
+        debugs(44, 3, "peerSelect: " << hier_code_str[code] << "/" << p->host);
         peerAddFwdServer(&ps->servers, p, code);
     }
 }
@@ -533,7 +533,7 @@ peerGetSomeParent(ps_state * ps)
     }
 
     if (code != HIER_NONE) {
-        debugs(44, 3, "peerSelect: " << hier_strings[code] << "/" << p->host);
+        debugs(44, 3, "peerSelect: " << hier_code_str[code] << "/" << p->host);
         peerAddFwdServer(&ps->servers, p, code);
     }
 }
@@ -765,7 +765,7 @@ peerAddFwdServer(FwdServer ** FSVR, peer * p, hier_code code)
     FwdServer *fs = (FwdServer *)memAllocate(MEM_FWD_SERVER);
     debugs(44, 5, "peerAddFwdServer: adding " <<
            (p ? p->host : "DIRECT")  << " " <<
-           hier_strings[code]  );
+           hier_code_str[code]  );
     fs->_peer = cbdataReference(p);
     fs->code = code;
 

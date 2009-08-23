@@ -38,6 +38,7 @@
 #include "MemObject.h"
 #include "SquidTime.h"
 #include "SwapDir.h"
+#include "swap_log_op.h"
 
 #if HAVE_STATVFS
 #if HAVE_SYS_STATVFS_H
