@@ -30,12 +30,12 @@ for FILENAME in `ls -1`; do
 		md52=`cat  $FILENAME.astylebak| tr -d "\n \t\r" | $MD5`;
 
 		if test "$md51" != "$md52" ; then
-			echo "File $PWD/$FILENAME not converted well";
+			echo "ERROR: File $PWD/$FILENAME not formating well";
 			mv $FILENAME $FILENAME.astylebad
 			mv $FILENAME.astylebak $FILENAME
-			exit 1;
+		else
+			rm $FILENAME.astylebak
 		fi
-		rm $FILENAME.astylebak
 		continue;
         fi
     esac
