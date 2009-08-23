@@ -100,7 +100,7 @@ bootstrap_libtoolize() {
         src=libltdl
 
         # do not bundle with the huge standard license text
-        rm -fv $src/COPYING.LIB
+        rm -f $src/COPYING.LIB
         makefile=$src/Makefile.in
         sed 's/COPYING.LIB/ /g' $makefile > $makefile.new;
         chmod u+w $makefile
