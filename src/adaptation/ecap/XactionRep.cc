@@ -20,7 +20,7 @@ Adaptation::Ecap::XactionRep::XactionRep(Adaptation::Initiator *anInitiator,
         theVirginRep(virginHeader), theCauseRep(NULL),
         proxyingVb(opUndecided), proxyingAb(opUndecided),
         adaptHistoryId(-1),
-		canAccessVb(false),
+        canAccessVb(false),
         abProductionFinished(false), abProductionAtEnd(false)
 {
     if (virginCause)
@@ -60,10 +60,10 @@ Adaptation::Ecap::XactionRep::start()
         proxyingVb = opNever;
 
     const HttpRequest *request = dynamic_cast<const HttpRequest*> (theCauseRep ?
-        theCauseRep->raw().header : theVirginRep.raw().header);
+                                 theCauseRep->raw().header : theVirginRep.raw().header);
     Must(request);
     Adaptation::History::Pointer ah = request->adaptLogHistory();
-    if (ah != NULL) { 
+    if (ah != NULL) {
         // retrying=false because ecap never retries transactions
         adaptHistoryId = ah->recordXactStart(service().cfg().key, current_time, false);
     }
@@ -96,7 +96,7 @@ Adaptation::Ecap::XactionRep::swanSong()
     terminateMaster();
 
     const HttpRequest *request = dynamic_cast<const HttpRequest*>(theCauseRep ?
-        theCauseRep->raw().header : theVirginRep.raw().header);
+                                 theCauseRep->raw().header : theVirginRep.raw().header);
     Must(request);
     Adaptation::History::Pointer ah = request->adaptLogHistory();
     if (ah != NULL && adaptHistoryId >= 0)
@@ -188,11 +188,10 @@ Adaptation::Ecap::XactionRep::useVirgin()
         stopConsumingFrom(vbody_pipe);
         canAccessVb = false;
         proxyingVb = opComplete;
-    } else
-        if (proxyingVb == opUndecided) {
-            vbody_pipe = NULL; // it is not our pipe anymore
-            proxyingVb = opNever;
-        }
+    } else if (proxyingVb == opUndecided) {
+        vbody_pipe = NULL; // it is not our pipe anymore
+        proxyingVb = opNever;
+    }
 
     sendAnswer(clone);
     Must(done());
@@ -410,8 +409,7 @@ Adaptation::Ecap::XactionRep::moveAbContent()
         stopProducingFor(answer().body_pipe, abProductionAtEnd);
         proxyingAb = opComplete;
         debugs(93,5, HERE << "last adapted body data retrieved");
-    } else
-    if (c.size > 0) {
+    } else if (c.size > 0) {
         if (const size_t used = answer().body_pipe->putMoreData(c.start, c.size))
             theMaster->abContentShift(used);
     }

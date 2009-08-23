@@ -340,7 +340,7 @@ void hex_dump(void *data, int size)
         char addrstr[10] = {0};
         char hexstr[ 16*3 + 5] = {0};
         char charstr[16*1 + 5] = {0};
-        for (n=1;n<=size;n++) {
+        for (n=1; n<=size; n++) {
             if (n%16 == 1) {
                 /* store address for this line */
                 snprintf(addrstr, sizeof(addrstr), "%.4x",

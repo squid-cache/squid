@@ -1858,7 +1858,8 @@ commUnsetNonBlocking(int fd)
 }
 
 void
-commSetCloseOnExec(int fd) {
+commSetCloseOnExec(int fd)
+{
 #ifdef FD_CLOEXEC
     int flags;
     int dummy = 0;
@@ -1878,7 +1879,8 @@ commSetCloseOnExec(int fd) {
 
 #ifdef TCP_NODELAY
 static void
-commSetTcpNoDelay(int fd) {
+commSetTcpNoDelay(int fd)
+{
     int on = 1;
 
     if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &on, sizeof(on)) < 0)
@@ -1890,7 +1892,8 @@ commSetTcpNoDelay(int fd) {
 #endif
 
 void
-commSetTcpKeepalive(int fd, int idle, int interval, int timeout) {
+commSetTcpKeepalive(int fd, int idle, int interval, int timeout)
+{
     int on = 1;
 #ifdef TCP_KEEPCNT
     if (timeout && interval) {
@@ -1916,7 +1919,8 @@ commSetTcpKeepalive(int fd, int idle, int interval, int timeout) {
 }
 
 void
-comm_init(void) {
+comm_init(void)
+{
     fd_table =(fde *) xcalloc(Squid_MaxFD, sizeof(fde));
     fdd_table = (fd_debug_t *)xcalloc(Squid_MaxFD, sizeof(fd_debug_t));
 
@@ -1946,7 +1950,8 @@ comm_init(void) {
 }
 
 void
-comm_exit(void) {
+comm_exit(void)
+{
     delete TheHalfClosed;
     TheHalfClosed = NULL;
 
@@ -1961,7 +1966,8 @@ comm_exit(void) {
 
 /* Write to FD. */
 static void
-commHandleWrite(int fd, void *data) {
+commHandleWrite(int fd, void *data)
+{
     comm_io_callback_t *state = (comm_io_callback_t *)data;
     int len = 0;
     int nleft;
@@ -2029,7 +2035,8 @@ commHandleWrite(int fd, void *data) {
  * free_func is used to free the passed buffer when the write has completed.
  */
 void
-comm_write(int fd, const char *buf, int size, IOCB * handler, void *handler_data, FREE * free_func) {
+comm_write(int fd, const char *buf, int size, IOCB * handler, void *handler_data, FREE * free_func)
+{
     AsyncCall::Pointer call = commCbCall(5,5, "SomeCommWriteHander",
                                          CommIoCbPtrFun(handler, handler_data));
 
@@ -2037,7 +2044,8 @@ comm_write(int fd, const char *buf, int size, IOCB * handler, void *handler_data
 }
 
 void
-comm_write(int fd, const char *buf, int size, AsyncCall::Pointer &callback, FREE * free_func) {
+comm_write(int fd, const char *buf, int size, AsyncCall::Pointer &callback, FREE * free_func)
+{
     debugs(5, 5, "comm_write: FD " << fd << ": sz " << size << ": asynCall " << callback);
 
     /* Make sure we are open, not closing, and not writing */
@@ -2055,12 +2063,14 @@ comm_write(int fd, const char *buf, int size, AsyncCall::Pointer &callback, FREE
 
 /* a wrapper around comm_write to allow for MemBuf to be comm_written in a snap */
 void
-comm_write_mbuf(int fd, MemBuf *mb, IOCB * handler, void *handler_data) {
+comm_write_mbuf(int fd, MemBuf *mb, IOCB * handler, void *handler_data)
+{
     comm_write(fd, mb->buf, mb->size, handler, handler_data, mb->freeFunc());
 }
 
 void
-comm_write_mbuf(int fd, MemBuf *mb, AsyncCall::Pointer &callback) {
+comm_write_mbuf(int fd, MemBuf *mb, AsyncCall::Pointer &callback)
+{
     comm_write(fd, mb->buf, mb->size, callback, mb->freeFunc());
 }
 
@@ -2070,7 +2080,8 @@ comm_write_mbuf(int fd, MemBuf *mb, AsyncCall::Pointer &callback) {
  * like to use it.
  */
 int
-ignoreErrno(int ierrno) {
+ignoreErrno(int ierrno)
+{
     switch (ierrno) {
 
     case EINPROGRESS:
@@ -2099,7 +2110,8 @@ ignoreErrno(int ierrno) {
 }
 
 void
-commCloseAllSockets(void) {
+commCloseAllSockets(void)
+{
     int fd;
     fde *F = NULL;
 
@@ -2128,7 +2140,8 @@ commCloseAllSockets(void) {
 }
 
 static bool
-AlreadyTimedOut(fde *F) {
+AlreadyTimedOut(fde *F)
+{
     if (!F->flags.open)
         return true;
 
@@ -2142,7 +2155,8 @@ AlreadyTimedOut(fde *F) {
 }
 
 void
-checkTimeouts(void) {
+checkTimeouts(void)
+{
     int fd;
     fde *F = NULL;
     AsyncCall::Pointer callback;
@@ -2175,7 +2189,8 @@ checkTimeouts(void) {
  * accept()ed.
  */
 int
-comm_listen(int sock) {
+comm_listen(int sock)
+{
     int x;
 
     if ((x = listen(sock, Squid_MaxFD >> 2)) < 0) {
@@ -2208,7 +2223,8 @@ comm_listen(int sock) {
 }
 
 void
-comm_accept(int fd, IOACB *handler, void *handler_data) {
+comm_accept(int fd, IOACB *handler, void *handler_data)
+{
     debugs(5, 5, "comm_accept: FD " << fd << " handler: " << (void*)handler);
     assert(isOpen(fd));
 
@@ -2218,7 +2234,8 @@ comm_accept(int fd, IOACB *handler, void *handler_data) {
 }
 
 void
-comm_accept(int fd, AsyncCall::Pointer &call) {
+comm_accept(int fd, AsyncCall::Pointer &call)
+{
     debugs(5, 5, "comm_accept: FD " << fd << " AsyncCall: " << call);
     assert(isOpen(fd));
 
@@ -2228,7 +2245,8 @@ comm_accept(int fd, AsyncCall::Pointer &call) {
 // Called when somebody wants to be notified when our socket accepts new
 // connection. We do not probe the FD until there is such interest.
 void
-AcceptFD::subscribe(AsyncCall::Pointer &call) {
+AcceptFD::subscribe(AsyncCall::Pointer &call)
+{
     /* make sure we're not pending! */
     assert(!theCallback);
     theCallback = call;
@@ -2244,7 +2262,8 @@ AcceptFD::subscribe(AsyncCall::Pointer &call) {
 }
 
 bool
-AcceptFD::acceptOne() {
+AcceptFD::acceptOne()
+{
     // If there is no callback and we accept, we will leak the accepted FD.
     // When we are running out of FDs, there is often no callback.
     if (!theCallback) {
@@ -2293,12 +2312,14 @@ AcceptFD::acceptOne() {
 }
 
 void
-AcceptFD::acceptNext() {
+AcceptFD::acceptNext()
+{
     mayAcceptMore = acceptOne();
 }
 
 void
-AcceptFD::notify(int newfd, comm_err_t errcode, int xerrno, const ConnectionDetail &connDetails) {
+AcceptFD::notify(int newfd, comm_err_t errcode, int xerrno, const ConnectionDetail &connDetails)
+{
     if (theCallback != NULL) {
         typedef CommAcceptCbParams Params;
         Params &params = GetCommParams<Params>(theCallback);
@@ -2317,12 +2338,14 @@ AcceptFD::notify(int newfd, comm_err_t errcode, int xerrno, const ConnectionDeta
  * to dupe itself and fob off an accept()ed connection
  */
 static void
-comm_accept_try(int fd, void *) {
+comm_accept_try(int fd, void *)
+{
     assert(isOpen(fd));
     fdc_table[fd].acceptNext();
 }
 
-void CommIO::Initialise() {
+void CommIO::Initialise()
+{
     /* Initialize done pipe signal */
     int DonePipe[2];
     if (pipe(DonePipe)) {}
@@ -2336,7 +2359,8 @@ void CommIO::Initialise() {
     Initialised = true;
 }
 
-void CommIO::NotifyIOClose() {
+void CommIO::NotifyIOClose()
+{
     /* Close done pipe signal */
     FlushPipe();
     close(DoneFD);
@@ -2352,19 +2376,22 @@ int CommIO::DoneFD = -1;
 int CommIO::DoneReadFD = -1;
 
 void
-CommIO::FlushPipe() {
+CommIO::FlushPipe()
+{
     char buf[256];
     FD_READ_METHOD(DoneReadFD, buf, sizeof(buf));
 }
 
 void
-CommIO::NULLFDHandler(int fd, void *data) {
+CommIO::NULLFDHandler(int fd, void *data)
+{
     FlushPipe();
     commSetSelect(fd, COMM_SELECT_READ, NULLFDHandler, NULL, 0);
 }
 
 void
-CommIO::ResetNotifications() {
+CommIO::ResetNotifications()
+{
     if (DoneSignalled) {
         FlushPipe();
         DoneSignalled = false;
@@ -2373,17 +2400,20 @@ CommIO::ResetNotifications() {
 
 AcceptLimiter AcceptLimiter::Instance_;
 
-AcceptLimiter &AcceptLimiter::Instance() {
+AcceptLimiter &AcceptLimiter::Instance()
+{
     return Instance_;
 }
 
 bool
-AcceptLimiter::deferring() const {
+AcceptLimiter::deferring() const
+{
     return deferred.size() > 0;
 }
 
 void
-AcceptLimiter::defer (int fd, Acceptor::AcceptorFunction *aFunc, void *data) {
+AcceptLimiter::defer (int fd, Acceptor::AcceptorFunction *aFunc, void *data)
+{
     debugs(5, 5, "AcceptLimiter::defer: FD " << fd << " handler: " << (void*)aFunc);
     Acceptor temp;
     temp.theFunction = aFunc;
@@ -2393,7 +2423,8 @@ AcceptLimiter::defer (int fd, Acceptor::AcceptorFunction *aFunc, void *data) {
 }
 
 void
-AcceptLimiter::kick() {
+AcceptLimiter::kick()
+{
     if (!deferring())
         return;
 
@@ -2409,7 +2440,8 @@ AcceptLimiter::kick() {
 // by scheduling a read callback to a monitoring handler that
 // will close the connection on read errors.
 void
-commStartHalfClosedMonitor(int fd) {
+commStartHalfClosedMonitor(int fd)
+{
     debugs(5, 5, HERE << "adding FD " << fd << " to " << *TheHalfClosed);
     assert(isOpen(fd));
     assert(!commHasHalfClosedMonitor(fd));
@@ -2419,7 +2451,8 @@ commStartHalfClosedMonitor(int fd) {
 
 static
 void
-commPlanHalfClosedCheck() {
+commPlanHalfClosedCheck()
+{
     if (!WillCheckHalfClosed && !TheHalfClosed->empty()) {
         eventAdd("commHalfClosedCheck", &commHalfClosedCheck, NULL, 1.0, 1);
         WillCheckHalfClosed = true;
@@ -2430,7 +2463,8 @@ commPlanHalfClosedCheck() {
 /// calls comm_read for those that do; re-schedules the check if needed
 static
 void
-commHalfClosedCheck(void *) {
+commHalfClosedCheck(void *)
+{
     debugs(5, 5, HERE << "checking " << *TheHalfClosed);
 
     typedef DescriptorSet::const_iterator DSCI;
@@ -2452,13 +2486,15 @@ commHalfClosedCheck(void *) {
 /// checks whether we are waiting for possibly half-closed connection to close
 // We are monitoring if the read handler for the fd is the monitoring handler.
 bool
-commHasHalfClosedMonitor(int fd) {
+commHasHalfClosedMonitor(int fd)
+{
     return TheHalfClosed->has(fd);
 }
 
 /// stop waiting for possibly half-closed connection to close
 static void
-commStopHalfClosedMonitor(int const fd) {
+commStopHalfClosedMonitor(int const fd)
+{
     debugs(5, 5, HERE << "removing FD " << fd << " from " << *TheHalfClosed);
 
     // cancel the read if one was scheduled
@@ -2472,7 +2508,8 @@ commStopHalfClosedMonitor(int const fd) {
 
 /// I/O handler for the possibly half-closed connection monitoring code
 static void
-commHalfClosedReader(int fd, char *, size_t size, comm_err_t flag, int, void *) {
+commHalfClosedReader(int fd, char *, size_t size, comm_err_t flag, int, void *)
+{
     // there cannot be more data coming in on half-closed connections
     assert(size == 0);
     assert(commHasHalfClosedMonitor(fd)); // or we would have canceled the read
@@ -2504,7 +2541,8 @@ DeferredRead::DeferredRead () : theReader(NULL), theContext(NULL), theRead(), ca
 
 DeferredRead::DeferredRead (DeferrableRead *aReader, void *data, CommRead const &aRead) : theReader(aReader), theContext (data), theRead(aRead), cancelled(false) {}
 
-DeferredReadManager::~DeferredReadManager() {
+DeferredReadManager::~DeferredReadManager()
+{
     flushReads();
     assert (deferredReads.empty());
 }
@@ -2516,7 +2554,8 @@ template cbdata_type CbDataList<DeferredRead>::CBDATA_CbDataList;
 /// \endcond
 
 void
-DeferredReadManager::delayRead(DeferredRead const &aRead) {
+DeferredReadManager::delayRead(DeferredRead const &aRead)
+{
     debugs(5, 3, "Adding deferred read on FD " << aRead.theRead.fd);
     CbDataList<DeferredRead> *temp = deferredReads.push_back(aRead);
 
@@ -2531,7 +2570,8 @@ DeferredReadManager::delayRead(DeferredRead const &aRead) {
 }
 
 void
-DeferredReadManager::CloseHandler(int fd, void *thecbdata) {
+DeferredReadManager::CloseHandler(int fd, void *thecbdata)
+{
     if (!cbdataReferenceValid (thecbdata))
         return;
 
@@ -2542,7 +2582,8 @@ DeferredReadManager::CloseHandler(int fd, void *thecbdata) {
 }
 
 DeferredRead
-DeferredReadManager::popHead(CbDataListContainer<DeferredRead> &deferredReads) {
+DeferredReadManager::popHead(CbDataListContainer<DeferredRead> &deferredReads)
+{
     assert (!deferredReads.empty());
 
     DeferredRead &read = deferredReads.head->element;
@@ -2557,7 +2598,8 @@ DeferredReadManager::popHead(CbDataListContainer<DeferredRead> &deferredReads) {
 }
 
 void
-DeferredReadManager::kickReads(int const count) {
+DeferredReadManager::kickReads(int const count)
+{
     /* if we had CbDataList::size() we could consolidate this and flushReads */
 
     if (count < 1) {
@@ -2577,7 +2619,8 @@ DeferredReadManager::kickReads(int const count) {
 }
 
 void
-DeferredReadManager::flushReads() {
+DeferredReadManager::flushReads()
+{
     CbDataListContainer<DeferredRead> reads;
     reads = deferredReads;
     deferredReads = CbDataListContainer<DeferredRead>();
@@ -2590,7 +2633,8 @@ DeferredReadManager::flushReads() {
 }
 
 void
-DeferredReadManager::kickARead(DeferredRead const &aRead) {
+DeferredReadManager::kickARead(DeferredRead const &aRead)
+{
     if (aRead.cancelled)
         return;
 
@@ -2603,15 +2647,18 @@ DeferredReadManager::kickARead(DeferredRead const &aRead) {
 }
 
 void
-DeferredRead::markCancelled() {
+DeferredRead::markCancelled()
+{
     cancelled = true;
 }
 
-ConnectionDetail::ConnectionDetail() : me(), peer() {
+ConnectionDetail::ConnectionDetail() : me(), peer()
+{
 }
 
 int
-CommSelectEngine::checkEvents(int timeout) {
+CommSelectEngine::checkEvents(int timeout)
+{
     static time_t last_timeout = 0;
 
     /* No, this shouldn't be here. But it shouldn't be in each comm handler. -adrian */

@@ -5,11 +5,14 @@
 #include "HttpHeader.h"
 #include "enums.h"
 
-namespace Adaptation {
-namespace Icap {
+namespace Adaptation
+{
+namespace Icap
+{
 
 /// collects information about ICAP processing related to an HTTP transaction
-class History: public RefCountable {
+class History: public RefCountable
+{
 public:
     typedef RefCount<History> Pointer;
 

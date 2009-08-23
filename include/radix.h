@@ -113,34 +113,31 @@ struct squid_radix_node_head {
     int rnh_pktsize;		/* permit, but not require fixed keys */
 
     struct squid_radix_node *(*rnh_addaddr)	/* add based on sockaddr */
-                (void *v, void *mask,
-
-                 struct squid_radix_node_head * head, struct squid_radix_node nodes[]);
+    (void *v, void *mask, struct squid_radix_node_head * head, struct squid_radix_node nodes[]);
 
     struct squid_radix_node *(*rnh_addpkt)	/* add based on packet hdr */
-                (void *v, void *mask,
-
-                 struct squid_radix_node_head * head, struct squid_radix_node nodes[]);
+    (void *v, void *mask, struct squid_radix_node_head * head, struct squid_radix_node nodes[]);
 
     struct squid_radix_node *(*rnh_deladdr)	/* remove based on sockaddr */
 
-                (void *v, void *mask, struct squid_radix_node_head * head);
+    (void *v, void *mask, struct squid_radix_node_head * head);
 
     struct squid_radix_node *(*rnh_delpkt)	/* remove based on packet hdr */
 
-                (void *v, void *mask, struct squid_radix_node_head * head);
+    (void *v, void *mask, struct squid_radix_node_head * head);
 
     struct squid_radix_node *(*rnh_matchaddr)		/* locate based on sockaddr */
 
-                (void *v, struct squid_radix_node_head * head);
+    (void *v, struct squid_radix_node_head * head);
 
     struct squid_radix_node *(*rnh_lookup)	/* locate based on sockaddr */
 
-                (void *v, void *mask, struct squid_radix_node_head * head);
+    (void *v, void *mask, struct squid_radix_node_head * head);
 
     struct squid_radix_node *(*rnh_matchpkt)	/* locate based on packet hdr */
 
-                (void *v, struct squid_radix_node_head * head);
+    (void *v, struct squid_radix_node_head * head);
+
     int (*rnh_walktree)		/* traverse tree */
 
     (struct squid_radix_node_head * head, int (*f) (struct squid_radix_node *, void *), void *w);

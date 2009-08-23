@@ -319,13 +319,13 @@ StoreEntry::storeClientType() const
 
         if (mem_obj->inmem_lo == 0 && !isEmpty()) {
             if (swap_status == SWAPOUT_DONE) {
-        	if (mem_obj->endOffset() == mem_obj->object_sz) {
-        	    /* hot object fully swapped in */
-        	    return STORE_MEM_CLIENT;
-        	}
+                if (mem_obj->endOffset() == mem_obj->object_sz) {
+                    /* hot object fully swapped in */
+                    return STORE_MEM_CLIENT;
+                }
             } else {
-        	/* Memory-only, or currently being swapped out */
-        	return STORE_MEM_CLIENT;
+                /* Memory-only, or currently being swapped out */
+                return STORE_MEM_CLIENT;
             }
         }
         return STORE_DISK_CLIENT;
@@ -1419,10 +1419,10 @@ StoreEntry::keepInMemory() const
         return 0;
 
     if (mem_obj->inmem_lo != 0)
-	return 0;
+        return 0;
 
     if (!Config.onoff.memory_cache_first && swap_status == SWAPOUT_DONE && refcount == 1)
-	return 0;
+        return 0;
 
     return 1;
 }
@@ -1844,10 +1844,10 @@ StoreEntry::trimMemory()
         return;
 
     if (!swapOutAble()) {
-	if (mem_obj->policyLowestOffsetToKeep(0) == 0) {
-	    /* Nothing to do */
-	    return;
-	}
+        if (mem_obj->policyLowestOffsetToKeep(0) == 0) {
+            /* Nothing to do */
+            return;
+        }
         /*
          * Its not swap-able, and we're about to delete a chunk,
          * so we must make it PRIVATE.  This is tricky/ugly because

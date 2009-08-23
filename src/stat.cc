@@ -1536,7 +1536,7 @@ statCPUUsage(int minutes)
 }
 
 extern double
-    statRequestHitRatio(int minutes)
+statRequestHitRatio(int minutes)
 {
     assert(minutes < N_COUNT_HIST);
     return dpercent(CountHist[0].client_http.hits -
@@ -1546,7 +1546,7 @@ extern double
 }
 
 extern double
-    statRequestHitMemoryRatio(int minutes)
+statRequestHitMemoryRatio(int minutes)
 {
     assert(minutes < N_COUNT_HIST);
     return dpercent(CountHist[0].client_http.mem_hits -
@@ -1556,7 +1556,7 @@ extern double
 }
 
 extern double
-    statRequestHitDiskRatio(int minutes)
+statRequestHitDiskRatio(int minutes)
 {
     assert(minutes < N_COUNT_HIST);
     return dpercent(CountHist[0].client_http.disk_hits -
@@ -1566,7 +1566,7 @@ extern double
 }
 
 extern double
-    statByteHitRatio(int minutes)
+statByteHitRatio(int minutes)
 {
     size_t s;
     size_t c;

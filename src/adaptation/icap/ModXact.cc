@@ -163,13 +163,12 @@ void Adaptation::Icap::ModXact::handleCommWroteHeaders()
     // determine next step
     if (preview.enabled())
         state.writing = preview.done() ? State::writingPaused : State::writingPreview;
-    else
-        if (virginBody.expected())
-            state.writing = State::writingPrime;
-        else {
-            stopWriting(true);
-            return;
-        }
+    else if (virginBody.expected())
+        state.writing = State::writingPrime;
+    else {
+        stopWriting(true);
+        return;
+    }
 
     writeMore();
 }
@@ -319,7 +318,7 @@ void Adaptation::Icap::ModXact::closeChunk(MemBuf &buf)
 const HttpRequest &Adaptation::Icap::ModXact::virginRequest() const
 {
     const HttpRequest *request = virgin.cause ?
-        virgin.cause : dynamic_cast<const HttpRequest*>(virgin.header);
+                                 virgin.cause : dynamic_cast<const HttpRequest*>(virgin.header);
     Must(request);
     return *request;
 }
@@ -656,7 +655,7 @@ void Adaptation::Icap::ModXact::maybeAllocateHttpMsg()
     if (gotEncapsulated("res-hdr")) {
         adapted.setHeader(new HttpReply);
         setOutcome(service().cfg().method == ICAP::methodReqmod ?
-            xoSatisfied : xoModified);
+                   xoSatisfied : xoModified);
     } else if (gotEncapsulated("req-hdr")) {
         adapted.setHeader(new HttpRequest);
         setOutcome(xoModified);
@@ -763,7 +762,7 @@ void Adaptation::Icap::ModXact::parseIcapHead()
     // We need to store received ICAP headers for <icapLastHeader logformat option.
     // If we already have stored headers from previous ICAP transaction related to this
     // request, old headers will be replaced with the new one.
-    
+
     Adaptation::Icap::History::Pointer h = request->icapHistory();
     if (h != NULL) {
         h->mergeIcapHeaders(&icapReply->header);
@@ -857,7 +856,7 @@ void Adaptation::Icap::ModXact::prepEchoing()
     if (const HttpRequest *oldR = dynamic_cast<const HttpRequest*>(oldHead)) {
         HttpRequest *newR = new HttpRequest;
         newR->canonical = oldR->canonical ?
-            xstrdup(oldR->canonical) : NULL; // parse() does not set it
+                          xstrdup(oldR->canonical) : NULL; // parse() does not set it
         newHead = newR;
     } else if (dynamic_cast<const HttpReply*>(oldHead)) {
         HttpReply *newRep = new HttpReply;
@@ -1110,57 +1109,56 @@ void Adaptation::Icap::ModXact::finalizeLogInfo()
 {
     HttpRequest * request_ = NULL;
     HttpReply * reply_ = NULL;
-    if(!(request_ = dynamic_cast<HttpRequest*>(adapted.header)))
-    {
+    if (!(request_ = dynamic_cast<HttpRequest*>(adapted.header))) {
         request_ = (virgin.cause? virgin.cause: dynamic_cast<HttpRequest*>(virgin.header));
         reply_ = dynamic_cast<HttpReply*>(adapted.header);
     }
 
     Adaptation::Icap::History::Pointer h = request_->icapHistory();
-     Must(h != NULL); // ICAPXaction::maybeLog calls only if there is a log
-     al.icp.opcode = ICP_INVALID;
-     al.url = h->log_uri.termedBuf();
-     const Adaptation::Icap::ServiceRep  &s = service();
-     al.icap.reqMethod = s.cfg().method;
+    Must(h != NULL); // ICAPXaction::maybeLog calls only if there is a log
+    al.icp.opcode = ICP_INVALID;
+    al.url = h->log_uri.termedBuf();
+    const Adaptation::Icap::ServiceRep  &s = service();
+    al.icap.reqMethod = s.cfg().method;
 
-     al.cache.caddr = request_->client_addr;
+    al.cache.caddr = request_->client_addr;
 
-     al.request = HTTPMSGLOCK(request_);
-     if(reply_)
-         al.reply = HTTPMSGLOCK(reply_);
-     else
-         al.reply = NULL;
+    al.request = HTTPMSGLOCK(request_);
+    if (reply_)
+        al.reply = HTTPMSGLOCK(reply_);
+    else
+        al.reply = NULL;
 
-     if (h->rfc931.size())
-         al.cache.rfc931 = h->rfc931.termedBuf();
+    if (h->rfc931.size())
+        al.cache.rfc931 = h->rfc931.termedBuf();
 
 #if USE_SSL
-     if (h->ssluser.size())
-         al.cache.ssluser = h->ssluser.termedBuf();
+    if (h->ssluser.size())
+        al.cache.ssluser = h->ssluser.termedBuf();
 #endif
-     al.cache.code = h->logType;
-     al.cache.requestSize = h->req_sz;
-     if (reply_) {
-         al.http.code = reply_->sline.status;
-         al.http.content_type = reply_->content_type.termedBuf();
-         al.cache.replySize = replyBodySize + reply_->hdr_sz;
-         al.cache.highOffset = replyBodySize;
-         //don't set al.cache.objectSize because it hasn't exist yet
+    al.cache.code = h->logType;
+    al.cache.requestSize = h->req_sz;
+    if (reply_) {
+        al.http.code = reply_->sline.status;
+        al.http.content_type = reply_->content_type.termedBuf();
+        al.cache.replySize = replyBodySize + reply_->hdr_sz;
+        al.cache.highOffset = replyBodySize;
+        //don't set al.cache.objectSize because it hasn't exist yet
 
-         Packer p;
-         MemBuf mb;
+        Packer p;
+        MemBuf mb;
 
-         mb.init();
-         packerToMemInit(&p, &mb);
+        mb.init();
+        packerToMemInit(&p, &mb);
 
-         reply_->header.packInto(&p);
-         al.headers.reply = xstrdup(mb.buf);
+        reply_->header.packInto(&p);
+        al.headers.reply = xstrdup(mb.buf);
 
-         packerClean(&p);
-         mb.clean();
-     }
-     prepareLogWithRequestDetails(request_, &al);
-     Xaction::finalizeLogInfo();
+        packerClean(&p);
+        mb.clean();
+    }
+    prepareLogWithRequestDetails(request_, &al);
+    Xaction::finalizeLogInfo();
 }
 
 
@@ -1198,12 +1196,12 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
         if (ah != NULL) {
             String name, value;
             if (ah->getXxRecord(name, value)) {
-                buf.Printf(SQUIDSTRINGPH ": " SQUIDSTRINGPH "\r\n",  
-                    SQUIDSTRINGPRINT(name), SQUIDSTRINGPRINT(value));
+                buf.Printf(SQUIDSTRINGPH ": " SQUIDSTRINGPH "\r\n",
+                           SQUIDSTRINGPRINT(name), SQUIDSTRINGPRINT(value));
             }
         }
     }
-    
+
 
     buf.Printf("Encapsulated: ");
 
@@ -1221,9 +1219,8 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
         urlPath = request->urlpath;
         if (ICAP::methodRespmod == m)
             encapsulateHead(buf, "req-hdr", httpBuf, request);
-        else
-            if (ICAP::methodReqmod == m)
-                encapsulateHead(buf, "req-hdr", httpBuf, virgin.header);
+        else if (ICAP::methodReqmod == m)
+            encapsulateHead(buf, "req-hdr", httpBuf, virgin.header);
     }
 
     if (ICAP::methodRespmod == m)
@@ -1359,9 +1356,8 @@ void Adaptation::Icap::ModXact::decideOnPreview()
 
     if (!virginBody.expected())
         ad = 0;
-    else
-        if (virginBody.knownSize())
-            ad = min(static_cast<uint64_t>(ad), virginBody.size()); // not more than we have
+    else if (virginBody.knownSize())
+        ad = min(static_cast<uint64_t>(ad), virginBody.size()); // not more than we have
 
     debugs(93, 5, HERE << "should offer " << ad << "-byte preview " <<
            "(service wanted " << wantedSize << ")");
@@ -1513,11 +1509,10 @@ void Adaptation::Icap::ModXact::estimateVirginBody()
 
     if (virgin.cause)
         method = virgin.cause->method;
+    else if (HttpRequest *req = dynamic_cast<HttpRequest*>(msg))
+        method = req->method;
     else
-        if (HttpRequest *req = dynamic_cast<HttpRequest*>(msg))
-            method = req->method;
-        else
-            method = METHOD_NONE;
+        method = METHOD_NONE;
 
     int64_t size;
     // expectingBody returns true for zero-sized bodies, but we will not
@@ -1664,9 +1659,8 @@ void Adaptation::Icap::Preview::wrote(size_t size, bool wroteEof)
 
     if (wroteEof)
         theState = stIeof; // written size is irrelevant
-    else
-        if (theWritten >= theAd)
-            theState = stDone;
+    else if (theWritten >= theAd)
+        theState = stDone;
 }
 
 bool Adaptation::Icap::ModXact::fillVirginHttpHeader(MemBuf &mb) const
@@ -1699,24 +1693,26 @@ Adaptation::Icap::Xaction *Adaptation::Icap::ModXactLauncher::createXaction()
     return new Adaptation::Icap::ModXact(this, virgin.header, virgin.cause, s);
 }
 
-void Adaptation::Icap::ModXactLauncher::swanSong() {
+void Adaptation::Icap::ModXactLauncher::swanSong()
+{
     debugs(93, 5, HERE << "swan sings");
     updateHistory(false);
     Adaptation::Icap::Launcher::swanSong();
 }
 
-void Adaptation::Icap::ModXactLauncher::updateHistory(bool start) {
-     HttpRequest *r = virgin.cause ?
-         virgin.cause : dynamic_cast<HttpRequest*>(virgin.header);
+void Adaptation::Icap::ModXactLauncher::updateHistory(bool start)
+{
+    HttpRequest *r = virgin.cause ?
+                     virgin.cause : dynamic_cast<HttpRequest*>(virgin.header);
 
-     // r should never be NULL but we play safe; TODO: add Should()
-     if (r) {
-         Adaptation::Icap::History::Pointer h = r->icapHistory();
-         if (h != NULL) {
-             if (start)
-                 h->start("ICAPModXactLauncher");
-             else
-                 h->stop("ICAPModXactLauncher");
-         }
-     }
+    // r should never be NULL but we play safe; TODO: add Should()
+    if (r) {
+        Adaptation::Icap::History::Pointer h = r->icapHistory();
+        if (h != NULL) {
+            if (start)
+                h->start("ICAPModXactLauncher");
+            else
+                h->stop("ICAPModXactLauncher");
+        }
+    }
 }

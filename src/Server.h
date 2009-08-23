@@ -56,10 +56,10 @@
  */
 class ServerStateData:
 #if USE_ADAPTATION
-            public Adaptation::Initiator,
-            public BodyProducer,
+        public Adaptation::Initiator,
+        public BodyProducer,
 #endif
-            public BodyConsumer
+        public BodyConsumer
 {
 
 public:

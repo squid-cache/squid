@@ -233,8 +233,7 @@ strListGetItem(const String * str, char del, const char **item, int *ilen, const
      * processing merged header values properly, even if Cookie normally
      * uses ';' as delimiter.
      */
-    static char delim[3][8] =
-    {
+    static char delim[3][8] = {
         "\"?,",
         "\"\\",
         " ?,\t\r\n"
@@ -263,12 +262,12 @@ strListGetItem(const String * str, char del, const char **item, int *ilen, const
         if (**pos == '"') {
             quoted = !quoted;
             *pos += 1;
-	} else if (quoted && **pos == '\\') {
+        } else if (quoted && **pos == '\\') {
             *pos += 1;
             if (**pos)
                 *pos += 1;
-	} else {
-	    break;		/* Delimiter found, marking the end of this value */
+        } else {
+            break;		/* Delimiter found, marking the end of this value */
         }
     } while (**pos);
 

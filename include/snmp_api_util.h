@@ -85,8 +85,7 @@ struct snmp_internal_session {
 #endif /* HAVE_SRAND */
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
     int snmp_get_socket_session(struct snmp_session *session_);

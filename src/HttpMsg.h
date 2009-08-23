@@ -99,13 +99,13 @@ public:
     virtual bool inheritProperties(const HttpMsg *aMsg) = 0;
 
 protected:
-     /**
-      * Validate the message start line is syntactically correct.
-      * Set HTTP error status according to problems found.
-      *
-      * \retval true   Status line has no serious problems.
-      * \retval false  Status line has a serious problem. Correct response is indicated by error.
-      */
+    /**
+     * Validate the message start line is syntactically correct.
+     * Set HTTP error status according to problems found.
+     *
+     * \retval true   Status line has no serious problems.
+     * \retval false  Status line has a serious problem. Correct response is indicated by error.
+     */
     virtual bool sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status *error) = 0;
 
     virtual void packFirstLineInto(Packer * p, bool full_uri) const = 0;
@@ -119,7 +119,8 @@ protected:
 };
 
 /* Temporary parsing state; might turn into the replacement parser later on */
-class HttpParser {
+class HttpParser
+{
 public:
     char state;
     const char *buf;

@@ -118,8 +118,8 @@ tmSaneValues(struct tm *tm)
 }
 
 static struct tm *
-            parse_date_elements(const char *day, const char *month, const char *year,
-                                const char *time, const char *zone) {
+parse_date_elements(const char *day, const char *month, const char *year,
+                    const char *time, const char *zone) {
     static struct tm tm;
     char *t;
     memset(&tm, 0, sizeof(tm));
@@ -150,7 +150,7 @@ static struct tm *
 }
 
 static struct tm *
-            parse_date(const char *str) {
+parse_date(const char *str) {
     struct tm *tm;
     static char tmp[64];
     char *t;
@@ -224,7 +224,7 @@ parse_rfc1123(const char *str)
 #elif defined(_SQUID_MSWIN_)
 #elif defined(_SQUID_SGI_)
 #else
-        extern long timezone;
+    extern long timezone;
 #endif
         /*
          * The following assumes a fixed DST offset of 1 hour,
@@ -235,7 +235,7 @@ parse_rfc1123(const char *str)
 #if defined ( _timezone) || defined(_SQUID_WIN32_)
         t -= (_timezone + dst);
 #else
-        t -= (timezone + dst);
+    t -= (timezone + dst);
 #endif
     }
 #endif

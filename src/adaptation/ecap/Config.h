@@ -11,7 +11,8 @@
 
 namespace Adaptation
 {
-namespace Ecap {
+namespace Ecap
+{
 
 class Config: public Adaptation::Config
 {

@@ -41,8 +41,7 @@ struct synch_state {
 };
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
     extern struct synch_state snmp_synch_state;
