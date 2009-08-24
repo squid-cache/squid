@@ -42,7 +42,7 @@
  * It returns a pointer to the first entry of the linked list
  */
 struct ip_user_dict *
-            load_dict (FILE * FH) {
+load_dict (FILE * FH) {
     struct ip_user_dict *current_entry;	/* the structure used to
 					   store data */
     struct ip_user_dict *first_entry = NULL;	/* the head of the

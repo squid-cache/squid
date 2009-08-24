@@ -36,6 +36,7 @@
 #include "event.h"
 #include "PeerSelectState.h"
 #include "Store.h"
+#include "hier_code.h"
 #include "ICP.h"
 #include "HttpRequest.h"
 #include "acl/FilledChecklist.h"
@@ -43,32 +44,6 @@
 #include "forward.h"
 #include "SquidTime.h"
 #include "icmp/net_db.h"
-
-const char *hier_strings[] = {
-    "NONE",
-    "DIRECT",
-    "SIBLING_HIT",
-    "PARENT_HIT",
-    "DEFAULT_PARENT",
-    "SINGLE_PARENT",
-    "FIRST_UP_PARENT",
-    "FIRST_PARENT_MISS",
-    "CLOSEST_PARENT_MISS",
-    "CLOSEST_PARENT",
-    "CLOSEST_DIRECT",
-    "NO_DIRECT_FAIL",
-    "SOURCE_FASTEST",
-    "ROUNDROBIN_PARENT",
-#if USE_CACHE_DIGESTS
-    "CD_PARENT_HIT",
-    "CD_SIBLING_HIT",
-#endif
-    "CARP",
-    "ANY_PARENT",
-    "USERHASH",
-    "SOURCEHASH",
-    "INVALID CODE"
-};
 
 static struct {
     int timeouts;
@@ -463,7 +438,7 @@ peerGetSomeNeighbor(ps_state * ps)
 
     if (code != HIER_NONE) {
         assert(p);
-        debugs(44, 3, "peerSelect: " << hier_strings[code] << "/" << p->host);
+        debugs(44, 3, "peerSelect: " << hier_code_str[code] << "/" << p->host);
         peerAddFwdServer(&ps->servers, p, code);
     }
 
@@ -486,7 +461,7 @@ peerGetSomeNeighborReplies(ps_state * ps)
 
     if (peerCheckNetdbDirect(ps)) {
         code = CLOSEST_DIRECT;
-        debugs(44, 3, "peerSelect: " << hier_strings[code] << "/" << request->GetHost());
+        debugs(44, 3, "peerSelect: " << hier_code_str[code] << "/" << request->GetHost());
         peerAddFwdServer(&ps->servers, NULL, code);
         return;
     }
@@ -503,7 +478,7 @@ peerGetSomeNeighborReplies(ps_state * ps)
         }
     }
     if (p && code != HIER_NONE) {
-        debugs(44, 3, "peerSelect: " << hier_strings[code] << "/" << p->host);
+        debugs(44, 3, "peerSelect: " << hier_code_str[code] << "/" << p->host);
         peerAddFwdServer(&ps->servers, p, code);
     }
 }
@@ -558,7 +533,7 @@ peerGetSomeParent(ps_state * ps)
     }
 
     if (code != HIER_NONE) {
-        debugs(44, 3, "peerSelect: " << hier_strings[code] << "/" << p->host);
+        debugs(44, 3, "peerSelect: " << hier_code_str[code] << "/" << p->host);
         peerAddFwdServer(&ps->servers, p, code);
     }
 }
@@ -624,7 +599,6 @@ void
 peerSelectInit(void)
 {
     memset(&PeerStats, '\0', sizeof(PeerStats));
-    assert(sizeof(hier_strings) == (HIER_MAX + 1) * sizeof(char *));
 }
 
 static void
@@ -791,7 +765,7 @@ peerAddFwdServer(FwdServer ** FSVR, peer * p, hier_code code)
     FwdServer *fs = (FwdServer *)memAllocate(MEM_FWD_SERVER);
     debugs(44, 5, "peerAddFwdServer: adding " <<
            (p ? p->host : "DIRECT")  << " " <<
-           hier_strings[code]  );
+           hier_code_str[code]  );
     fs->_peer = cbdataReference(p);
     fs->code = code;
 

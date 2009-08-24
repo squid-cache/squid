@@ -90,7 +90,8 @@
  * where structures of type fqdncache_entry whose most
  * interesting members are:
  */
-class fqdncache_entry {
+class fqdncache_entry
+{
 public:
     hash_link hash;		/* must be first */
     time_t lastref;

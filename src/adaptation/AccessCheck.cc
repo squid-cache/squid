@@ -24,7 +24,7 @@ Adaptation::AccessCheck::Start(Method method, VectPoint vp,
     if (Config::Enabled) {
         // the new check will call the callback and delete self, eventually
         return AsyncStart(new AccessCheck(
-            ServiceFilter(method, vp, req, rep), cb, cbdata));
+                              ServiceFilter(method, vp, req, rep), cb, cbdata));
     }
 
     debugs(83, 3, HERE << "adaptation off, skipping");
@@ -34,10 +34,10 @@ Adaptation::AccessCheck::Start(Method method, VectPoint vp,
 Adaptation::AccessCheck::AccessCheck(const ServiceFilter &aFilter,
                                      AccessCheckCallback *aCallback,
                                      void *aCallbackData):
-    AsyncJob("AccessCheck"), filter(aFilter),
-    callback(aCallback),
-    callback_data(cbdataReference(aCallbackData)),
-    acl_checklist(NULL)
+        AsyncJob("AccessCheck"), filter(aFilter),
+        callback(aCallback),
+        callback_data(cbdataReference(aCallbackData)),
+        acl_checklist(NULL)
 {
 #if ICAP_CLIENT
     Adaptation::Icap::History::Pointer h = filter.request->icapHistory();
@@ -46,7 +46,7 @@ Adaptation::AccessCheck::AccessCheck(const ServiceFilter &aFilter,
 #endif
 
     debugs(93, 5, HERE << "AccessCheck constructed for " <<
-        methodStr(filter.method) << " " << vectPointStr(filter.point));
+           methodStr(filter.method) << " " << vectPointStr(filter.point));
 }
 
 Adaptation::AccessCheck::~AccessCheck()
@@ -61,9 +61,10 @@ Adaptation::AccessCheck::~AccessCheck()
 }
 
 void
-Adaptation::AccessCheck::start() {
-	AsyncJob::start();
-	check();
+Adaptation::AccessCheck::start()
+{
+    AsyncJob::start();
+    check();
 }
 
 /// Walk the access rules list to find rules with applicable service groups
@@ -184,7 +185,7 @@ bool
 Adaptation::AccessCheck::isCandidate(AccessRule &r)
 {
     debugs(93,7,HERE << "checking candidacy of " << r.id << ", group " <<
-        r.groupId);
+           r.groupId);
 
     ServiceGroupPointer g = FindGroup(r.groupId);
 

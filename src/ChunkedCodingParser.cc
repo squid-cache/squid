@@ -192,17 +192,15 @@ bool ChunkedCodingParser::findCrlf(size_t &crlfBeg, size_t &crlfEnd)
         if (quoted) {
             if (c == '\\')
                 slashed = true;
-            else
-                if (c == '"')
-                    quoted = false;
+            else if (c == '"')
+                quoted = false;
 
             continue;
-        } else
-            if (c == '"') {
-                quoted = true;
-                crOff = -1;
-                continue;
-            }
+        } else if (c == '"') {
+            quoted = true;
+            crOff = -1;
+            continue;
+        }
 
         if (crOff < 0) { // looking for the first CR or LF
 

@@ -112,9 +112,9 @@ ESIVariableQuery::queryString() const
 }
 
 struct _query_elem const *
-            ESIVariableQuery::queryVector() const {
-        return query;
-    }
+ESIVariableQuery::queryVector() const {
+    return query;
+}
 
 size_t const &
 ESIVariableQuery::queryElements() const

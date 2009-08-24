@@ -188,7 +188,7 @@ char *md5sum(const char *s)
     SquidMD5Update(&ctx,(const unsigned char *)s,strlen(s));
     SquidMD5Final(digest,&ctx);
 
-    for (idx=0;idx<16;idx++)
+    for (idx=0; idx<16; idx++)
         sprintf(&sum[idx*2],"%02x",digest[idx]);
 
     sum[32]='\0';

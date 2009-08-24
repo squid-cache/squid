@@ -41,7 +41,8 @@ class wordlist;
 
 namespace Adaptation
 {
-namespace Icap {
+namespace Icap
+{
 
 /* Maintains options supported by a given ICAP service.
  * See RFC 3507, Section "4.10.2 OPTIONS Response". */

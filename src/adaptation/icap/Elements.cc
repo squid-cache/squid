@@ -2,8 +2,10 @@
 #include "adaptation/icap/Elements.h"
 
 // TODO: remove this file?
-namespace Adaptation {
-namespace Icap {
+namespace Adaptation
+{
+namespace Icap
+{
 
 const XactOutcome xoUnknown = "ICAP_ERR_UNKNOWN";
 const XactOutcome xoError = "ICAP_ERR_OTHER";

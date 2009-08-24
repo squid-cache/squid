@@ -26,8 +26,7 @@
 
 // C++ Specific
 #if defined(__cplusplus)
-extern "C"
-{
+extern "C" {
 #endif
 
 // Indicates if we copy data when creating a SPNEGO_TOKEN structure or not

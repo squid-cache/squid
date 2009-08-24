@@ -207,7 +207,7 @@ public:
 
     bool isEmpty () const {return true;}
 
-    virtual size_t bytesWanted(Range<size_t> const aRange) const { assert (aRange.size());return aRange.end - 1;}
+    virtual size_t bytesWanted(Range<size_t> const aRange) const { assert (aRange.size()); return aRange.end - 1;}
 
     void operator delete(void *address);
     void complete() {}
@@ -376,6 +376,9 @@ extern FREE destroyStoreEntry;
  \todo should be a subclass of Packer perhaps ?
  */
 SQUIDCEXTERN void packerToStoreInit(Packer * p, StoreEntry * e);
+
+/// \ingroup StoreAPI
+SQUIDCEXTERN void storeGetMemSpace(int size);
 
 #ifdef _USE_INLINE_
 #include "Store.cci"

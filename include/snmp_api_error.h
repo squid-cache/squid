@@ -52,8 +52,7 @@
 #define SNMPERR_LAST            -16	/* Last error message */
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
     /* extern int snmp_errno */

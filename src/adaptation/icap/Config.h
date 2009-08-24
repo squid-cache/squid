@@ -45,7 +45,8 @@ class acl_access;
 
 namespace Adaptation
 {
-namespace Icap {
+namespace Icap
+{
 
 class ConfigParser;
 

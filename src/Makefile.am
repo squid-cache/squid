@@ -229,31 +229,6 @@ DiskIO/DiskIOModules_gen.cc: Makefile
 	$(SHELL) $(srcdir)/DiskIO/modules.sh $(DISK_MODULES) > DiskIO/DiskIOModules_gen.cc
 
 
-EXTRA_squid_SOURCES = \
-	$(AIO_WIN32_ALL_SOURCES) \
-	$(all_AUTHMODULES) \
-	ConfigOption.h \
-	$(DELAY_POOL_ALL_SOURCE) \
-	dns.cc \
-	dnsserver.cc \
-	dns_internal.cc \
-	DnsLookupDetails.cc \
-	DnsLookupDetails.h \
-	htcp.cc \
-	htcp.h \
-	ipc.cc \
-	ipc_win32.cc \
-	ProfStats.cc \
-	LeakFinder.cc \
-	LeakFinder.h \
-	$(SNMP_ALL_SOURCE) \
-	$(UNLINKDSOURCE) \
-	$(SSL_ALL_SOURCE) \
-	$(WIN32_ALL_SOURCE) \
-	$(LOADABLE_MODULES_SOURCES) \
-	DiskIO/DiskThreads/aiops.cc \
-	DiskIO/DiskThreads/aiops_win32.cc
-
 squid_COMMSOURCES = \
 	comm_select.cc \
 	comm_select.h \
@@ -330,6 +305,7 @@ squid_SOURCES = \
 	dlink.cc \
 	$(DNSSOURCE) \
 	enums.h \
+	err_type.h \
 	errorpage.cc \
 	errorpage.h \
 	ETag.cc \
@@ -354,6 +330,7 @@ squid_SOURCES = \
 	gopher.cc \
 	helper.cc \
 	helper.h \
+	hier_code.h \
 	HierarchyLogEntry.h \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -384,6 +361,7 @@ squid_SOURCES = \
 	HttpRequestMethod.h \
 	HttpVersion.h \
 	ICP.h \
+	icp_opcode.h \
 	icp_v2.cc \
 	icp_v3.cc \
 	int.cc \
@@ -393,6 +371,7 @@ squid_SOURCES = \
 	$(LEAKFINDERSOURCE) \
 	list.cc \
 	logfile.cc \
+	lookup_t.h \
 	main.cc \
 	mem.cc \
 	mem_node.cc \
@@ -475,6 +454,7 @@ squid_SOURCES = \
 	Server.cc \
 	Server.h \
 	structs.h \
+	swap_log_op.h \
 	SwapDir.cc \
 	SwapDir.h \
 	time.cc \
@@ -496,6 +476,31 @@ squid_SOURCES = \
 	$(WIN32_SOURCE) \
 	$(WINSVC_SOURCE)
 
+EXTRA_squid_SOURCES = \
+	$(AIO_WIN32_ALL_SOURCES) \
+	$(all_AUTHMODULES) \
+	ConfigOption.h \
+	$(DELAY_POOL_ALL_SOURCE) \
+	dns.cc \
+	dnsserver.cc \
+	dns_internal.cc \
+	DnsLookupDetails.cc \
+	DnsLookupDetails.h \
+	htcp.cc \
+	htcp.h \
+	ipc.cc \
+	ipc_win32.cc \
+	ProfStats.cc \
+	LeakFinder.cc \
+	LeakFinder.h \
+	$(SNMP_ALL_SOURCE) \
+	$(UNLINKDSOURCE) \
+	$(SSL_ALL_SOURCE) \
+	$(WIN32_ALL_SOURCE) \
+	$(LOADABLE_MODULES_SOURCES) \
+	DiskIO/DiskThreads/aiops.cc \
+	DiskIO/DiskThreads/aiops_win32.cc
+
 noinst_HEADERS = \
 	client_side_request.cci \
 	MemBuf.cci \
@@ -506,12 +511,22 @@ noinst_HEADERS = \
 	SquidString.h \
 	SquidTime.h
 
+BUILT_SOURCES = \
+	cf_gen_defines.h \
+	cf_parser.h \
+	err_type.cc \
+	globals.cc \
+	hier_code.cc \
+	icp_opcode.cc \
+	lookup_t.cc \
+	repl_modules.cc \
+	swap_log_op.cc
+
+CLEANFILES += $(BUILT_SOURCES)
+
 nodist_squid_SOURCES = \
 	$(DISKIO_GEN_SOURCE) \
-	repl_modules.cc \
-	cf_parser.h \
-	globals.cc \
-	string_arrays.c
+	$(BUILT_SOURCES)
 
 squid_LDADD = \
 	$(COMMON_LIBS) \
@@ -627,13 +642,6 @@ ufsdump_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 nodist_ufsdump_SOURCES = \
 	globals.cc
 
-BUILT_SOURCES = \
-	cf_gen_defines.h \
-	cf_parser.h \
-	globals.cc \
-	string_arrays.c \
-	repl_modules.cc
-
 sysconf_DATA = \
 	squid.conf.default \
 	squid.conf.documented \
@@ -726,11 +734,27 @@ DEFS += -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\" -DDEFAULT_SQUID_DATA_DI
 
 snmp_core.o snmp_agent.o: ../snmplib/libsnmp.a $(top_srcdir)/include/cache_snmp.h
 
-globals.cc: globals.h mk-globals-c.pl
+globals.cc: globals.h mk-globals-c.awk
 	$(AWK) -f $(srcdir)/mk-globals-c.awk < $(srcdir)/globals.h > $@
 
-string_arrays.c: enums.h mk-string-arrays.pl
-	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/enums.h > $@
+## Generate files containing strng arrays for various enums....
+hier_code.cc: hier_code.h mk-string-arrays.awk
+	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/hier_code.h > $@
+
+err_type.cc: err_type.h mk-string-arrays.awk
+	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/err_type.h > $@
+
+lookup_t.cc: lookup_t.h mk-string-arrays.awk
+	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/lookup_t.h > $@
+
+icp_opcode.cc: icp_opcode.h mk-string-arrays.awk
+	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/icp_opcode.h > $@
+
+swap_log_op.cc: swap_log_op.h mk-string-arrays.awk
+	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/swap_log_op.h > $@
+
+
+## other generated files...
 
 cache_diff: cache_diff.o debug.o globals.o store_key_md5.o
 	$(CC) -o $@ $(LDFLAGS) $@.o debug.o globals.o store_key_md5.o $(STD_APP_LIBS)
@@ -808,8 +832,8 @@ uninstall-local:
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_MIME_TABLE)
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_CONFIG_FILE)
 
-CLEANFILES += cf_gen_defines.h cf.data cf_parser.h squid.conf.default squid.conf.documented \
-	globals.cc string_arrays.c repl_modules.cc DiskIO/DiskIOModules_gen.cc \
+CLEANFILES += cf.data squid.conf.default squid.conf.documented \
+	DiskIO/DiskIOModules_gen.cc \
 	test_tools.cc *.a
 
 test_tools.cc: $(top_srcdir)/test-suite/test_tools.cc
@@ -1088,6 +1112,7 @@ tests_testCacheManager_SOURCES = \
 	fqdncache.cc \
 	ftp.cc \
 	gopher.cc \
+	hier_code.h \
 	helper.cc \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -1168,9 +1193,7 @@ tests_testCacheManager_SOURCES = \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testCacheManager_SOURCES = \
-	globals.cc \
-	repl_modules.cc \
-	string_arrays.c
+	$(BUILT_SOURCES)
 tests_testCacheManager_LDADD = \
 	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
@@ -1196,7 +1219,8 @@ tests_testDiskIO_SOURCES = \
 	tests/testMain.cc \
 	tests/stub_cache_manager.cc
 nodist_tests_testDiskIO_SOURCES= \
-	$(SWAP_TEST_GEN_SOURCES)
+	$(SWAP_TEST_GEN_SOURCES) \
+	swap_log_op.cc
 tests_testDiskIO_LDADD = \
 	$(SWAP_TEST_LDADD) \
 	@DISK_LIBS@ \
@@ -1258,6 +1282,7 @@ tests_testEvent_SOURCES = \
 	fqdncache.cc \
 	ftp.cc \
 	gopher.cc \
+	hier_code.h \
 	helper.cc \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -1337,9 +1362,7 @@ tests_testEvent_SOURCES = \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testEvent_SOURCES = \
-	globals.cc \
-	repl_modules.cc \
-	string_arrays.c
+	$(BUILT_SOURCES)
 tests_testEvent_LDADD = \
 	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
@@ -1407,6 +1430,7 @@ tests_testEventLoop_SOURCES = \
 	ftp.cc \
 	gopher.cc \
 	helper.cc \
+	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
 	HttpBody.cc \
@@ -1485,9 +1509,7 @@ tests_testEventLoop_SOURCES = \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testEventLoop_SOURCES = \
-	globals.cc \
-	repl_modules.cc \
-	string_arrays.c
+	$(BUILT_SOURCES)
 tests_testEventLoop_LDADD = \
 	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
@@ -1544,6 +1566,7 @@ tests_test_http_range_SOURCES = \
 	ftp.cc \
 	gopher.cc \
 	helper.cc \
+	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
 	HttpBody.cc \
@@ -1628,9 +1651,7 @@ tests_test_http_range_SOURCES = \
 	Packer.cc \
 	MemBuf.cc
 nodist_tests_test_http_range_SOURCES = \
-	globals.cc \
-	repl_modules.cc \
-	string_arrays.c
+	$(BUILT_SOURCES)
 tests_test_http_range_LDADD = \
 	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
@@ -1697,6 +1718,7 @@ tests_testHttpRequest_SOURCES = \
 	ftp.cc \
 	gopher.cc \
 	helper.cc \
+	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
 	HttpBody.cc \
@@ -1776,9 +1798,7 @@ tests_testHttpRequest_SOURCES = \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testHttpRequest_SOURCES = \
-	globals.cc \
-	repl_modules.cc \
-	string_arrays.c
+	$(BUILT_SOURCES)
 tests_testHttpRequest_LDADD = \
 	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
@@ -1837,10 +1857,6 @@ STORE_TEST_SOURCES=\
 	URLScheme.cc \
 	wordlist.cc
 
-STORE_TEST_GEN_SOURCES = \
-	$(TESTSOURCES) \
-	string_arrays.c
-
 ## why so many sources? well httpHeaderTools requites ACLChecklist & friends.
 ## first line - what we are testing.
 tests_testStore_SOURCES= \
@@ -1864,7 +1880,8 @@ tests_testStore_SOURCES= \
 	$(STORE_TEST_SOURCES)
 
 nodist_tests_testStore_SOURCES= \
-	$(STORE_TEST_GEN_SOURCES)
+	$(TESTSOURCES) \
+	swap_log_op.cc
 
 tests_testStore_LDADD= \
 	$(COMMON_LIBS) \
@@ -1932,7 +1949,7 @@ SWAP_TEST_SOURCES = \
 	$(DISKIO_SOURCE)
 
 SWAP_TEST_GEN_SOURCES = \
-	$(STORE_TEST_GEN_SOURCES) \
+	$(TESTSOURCES) \
 	$(DISKIO_GEN_SOURCE)
 
 SWAP_TEST_LDADD = \
@@ -1958,7 +1975,8 @@ tests_testUfs_SOURCES = \
 	tests/stub_cache_manager.cc \
 	$(SWAP_TEST_SOURCES)
 nodist_tests_testUfs_SOURCES = \
-	$(SWAP_TEST_GEN_SOURCES)
+	$(SWAP_TEST_GEN_SOURCES) \
+	swap_log_op.cc
 tests_testUfs_LDADD = \
 	$(SWAP_TEST_LDADD) \
 	$(COMMON_LIBS) \
@@ -2049,6 +2067,7 @@ tests_testURL_SOURCES = \
 	ftp.cc \
 	gopher.cc \
 	helper.cc \
+	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
 	HttpBody.cc \
@@ -2125,9 +2144,7 @@ tests_testURL_SOURCES = \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testURL_SOURCES = \
-	globals.cc \
-	repl_modules.cc \
-	string_arrays.c
+	$(BUILT_SOURCES)
 tests_testURL_LDADD = \
 	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \

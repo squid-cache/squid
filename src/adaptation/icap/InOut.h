@@ -46,7 +46,8 @@
 
 namespace Adaptation
 {
-namespace Icap {
+namespace Icap
+{
 
 class InOut
 {

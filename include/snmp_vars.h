@@ -32,8 +32,7 @@
 #include "asn1.h"
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
     struct variable_list {

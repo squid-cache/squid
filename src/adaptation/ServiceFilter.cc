@@ -5,18 +5,18 @@
 
 
 Adaptation::ServiceFilter::ServiceFilter(Method aMethod, VectPoint aPoint,
-HttpRequest *aReq, HttpReply *aRep): method(aMethod), point(aPoint),
-    request(HTTPMSGLOCK(aReq)),
-    reply(aRep ? HTTPMSGLOCK(aRep) : NULL)
+        HttpRequest *aReq, HttpReply *aRep): method(aMethod), point(aPoint),
+        request(HTTPMSGLOCK(aReq)),
+        reply(aRep ? HTTPMSGLOCK(aRep) : NULL)
 {
     // a lot of code assumes that there is always a virgin request or cause
     assert(request);
 }
 
 Adaptation::ServiceFilter::ServiceFilter(const ServiceFilter &f):
-    method(f.method), point(f.point),
-    request(HTTPMSGLOCK(f.request)),
-    reply(f.reply ? HTTPMSGLOCK(f.reply) : NULL)
+        method(f.method), point(f.point),
+        request(HTTPMSGLOCK(f.request)),
+        reply(f.reply ? HTTPMSGLOCK(f.reply) : NULL)
 {
 }
 

@@ -52,22 +52,19 @@ SOFTWARE.
 #define SNMP_DEFAULT_MACREPEATERS   0
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
     /* Parse the buffer pointed to by arg3, of length arg4, into pdu arg2.
      *
      * Returns the community of the incoming PDU, or NULL
      */
-    u_char *snmp_parse(struct snmp_session *, struct snmp_pdu *,
-                       u_char *, int);
+    u_char *snmp_parse(struct snmp_session *, struct snmp_pdu *, u_char *, int);
 
     /* Encode pdu arg2 into buffer arg3.  arg4 contains the size of
      * the buffer.
      */
-    int snmp_build(struct snmp_session *, struct snmp_pdu *,
-                   u_char *, int *);
+    int snmp_build(struct snmp_session *, struct snmp_pdu *, u_char *, int *);
 
     /*
      * struct snmp_session *snmp_open(session)

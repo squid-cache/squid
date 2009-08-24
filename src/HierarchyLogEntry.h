@@ -34,10 +34,12 @@
 #ifndef SQUID_HTTPHIERARCHYLOGENTRY_H
 #define SQUID_HTTPHIERARCHYLOGENTRY_H
 
+#include "hier_code.h"
+#include "lookup_t.h"
 #include "rfc2181.h"
 #include "PingData.h"
 
-/** todo Cleanup: break hier_code type out. We don't need the rest. */
+/* for http_status */
 #include "enums.h"
 
 class HierarchyLogEntry
@@ -56,7 +58,7 @@ public:
     struct timeval peer_select_start;
 
     struct timeval store_complete_stop;
-    
+
     http_status peer_reply_status; ///< last HTTP status code received
     timeval peer_http_request_sent; ///< last peer finished writing req
     int64_t peer_response_time; ///< last peer response delay

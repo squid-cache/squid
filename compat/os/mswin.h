@@ -661,7 +661,8 @@ int WSADuplicateSocket(int s, DWORD n, LPWSAPROTOCOL_INFO l)
 
 #undef WSASocket
 inline
-int WSASocket(int a, int t, int p, LPWSAPROTOCOL_INFO i, GROUP g, DWORD f) {
+int WSASocket(int a, int t, int p, LPWSAPROTOCOL_INFO i, GROUP g, DWORD f)
+{
     SOCKET result;
 #ifdef UNICODE
     if ((result = ::WSASocketW(a, t, p, i, g, f)) == INVALID_SOCKET) {

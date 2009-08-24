@@ -36,8 +36,7 @@
 #define SNMP_VERSION_2	    1	/* RFC 1901 */
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
     u_char *snmp_msg_Encode(u_char *, int *, u_char *, int, int, struct snmp_pdu *);
