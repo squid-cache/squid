@@ -28,17 +28,21 @@ if test "${1}" = "-d" ; then
 fi
 
 if test "$concurrent" = "1"; then
+	# read concurrent input format
 	while read id url rest; do
-		if test ${DEBUG} ; then
+		if test "${DEBUG}" = "1" ; then
 			echo "ID:$id URL:$url EXTRAS:$rest" >>${LOG}
 		fi
-		echo "${id} " # blank URL for no change, or replace with another URL.
+		# blank URL for no change, or replace with another URL.
+		echo "${id} "
 	done
 else
+	# read old non-concurrent input format
 	while read url rest; do
-		if test ${DEBUG} ; then
+		if test "${DEBUG}" = "1" ; then
 			echo "URL:$url EXTRAS:$rest" >>${LOG}
 		fi
-		echo  # blank line/URL for no change, or replace with another URL.
+		# blank line/URL for no change, or replace with another URL.
+		echo
 	done
 fi
