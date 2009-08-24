@@ -69,8 +69,7 @@ typedef u_char oid;
 #define IS_EXTENSION_ID(byte)	(((byte) & ASN_EXTENSION_ID) == ASN_EXTENSION_ID)
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
     u_char *asn_build_header(u_char *, int *, u_char, int);

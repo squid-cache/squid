@@ -30,6 +30,7 @@ typedef union {
 /**
  * prototypes for system function missing from system includes
  */
+#include <sys/resource.h>
 SQUIDCEXTERN int getrusage(int, struct rusage *);
 
 

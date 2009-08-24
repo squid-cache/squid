@@ -33,6 +33,7 @@
  */
 
 #include "StoreSwapLogData.h"
+#include "swap_log_op.h"
 
 StoreSwapLogData::StoreSwapLogData(): op(0), swap_filen (0), timestamp (0), lastref (0), expires (0), lastmod(0), swap_file_sz (0), refcount (0), flags (0)
 {

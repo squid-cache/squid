@@ -610,8 +610,7 @@ helperStatefulShutdown(statefulhelper * hlp)
         if (srv->flags.reserved) {
             if (shutting_down) {
                 debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index + 1 << " is RESERVED. Closing anyway.");
-            }
-            else {
+            } else {
                 debugs(84, 3, "helperStatefulShutdown: " << hlp->id_name << " #" << srv->index + 1 << " is RESERVED. Not Shutting Down Yet.");
                 continue;
             }
@@ -1001,7 +1000,7 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
 
     if ((t = strchr(srv->rbuf, '\n'))) {
         /* end of reply found */
-	int called = 1;
+        int called = 1;
         debugs(84, 3, "helperStatefulHandleRead: end of reply found");
 
         if (t > srv->rbuf && t[-1] == '\r')
@@ -1013,7 +1012,7 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
             r->callback(r->data, srv, srv->rbuf);
         } else {
             debugs(84, 1, "StatefulHandleRead: no callback data registered");
-	    called = 0;
+            called = 0;
         }
 
         srv->flags.busy = 0;
@@ -1027,15 +1026,15 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
                        tvSubMsec(srv->dispatch_time, current_time),
                        hlp->stats.replies, REDIRECT_AV_FACTOR);
 
-	if (called)
-	    helperStatefulServerDone(srv);
-	else
-	    helperStatefulReleaseServer(srv);
+        if (called)
+            helperStatefulServerDone(srv);
+        else
+            helperStatefulReleaseServer(srv);
     }
 
     if (srv->rfd != -1)
         comm_read(srv->rfd, srv->rbuf + srv->roffset, srv->rbuf_sz - srv->roffset - 1,
-              helperStatefulHandleRead, srv);
+                  helperStatefulHandleRead, srv);
 }
 
 static void
@@ -1297,7 +1296,7 @@ helperStatefulDispatch(helper_stateful_server * srv, helper_stateful_request * r
     if (!cbdataReferenceValid(r->data)) {
         debugs(84, 1, "helperStatefulDispatch: invalid callback data");
         helperStatefulRequestFree(r);
-	helperStatefulReleaseServer(srv);
+        helperStatefulReleaseServer(srv);
         return;
     }
 

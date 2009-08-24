@@ -11,8 +11,7 @@
 #define SPNEGOHELP_H
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 #include <stddef.h>
@@ -29,9 +28,9 @@ extern "C"
      */
 
     int makeNegTokenTarg (const unsigned char *  kerberosToken,
-                          size_t                 kerberosTokenLength,
-                          const unsigned char ** negTokenTarg,
-                          size_t *               negTokenTargLength);
+    size_t                 kerberosTokenLength,
+    const unsigned char ** negTokenTarg,
+    size_t *               negTokenTargLength);
 
     /* -----------------------------------------------------------------------------
      * parseNegTokenInit parses an RFC 2478 SPNEGO NegTokenInit (token) to extract

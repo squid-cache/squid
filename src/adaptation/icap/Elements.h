@@ -41,10 +41,12 @@
 
 namespace Adaptation
 {
-namespace Icap {
+namespace Icap
+{
 
 //TODO: remove the ICAP namespace
-namespace ICAP {
+namespace ICAP
+{
 using Adaptation::Method;
 using Adaptation::methodNone;
 using Adaptation::methodRespmod;

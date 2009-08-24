@@ -46,8 +46,7 @@
 
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 //MOVED:Debug.h    extern FILE *debug_log;		/* NULL */
@@ -124,10 +123,6 @@ extern "C"
     extern unsigned long store_swap_size;	/* 0 */
     extern time_t hit_only_mode_until;	/* 0 */
     extern StatCounters statCounter;
-    extern char *err_type_str[];
-    extern char *icp_opcode_str[];
-    extern char *swap_log_op_str[];
-    extern char *lookup_t_str[];
     extern double request_failure_ratio;	/* 0.0 */
     extern int store_hash_buckets;	/* 0 */
     extern hash_table *store_table;	/* NULL */

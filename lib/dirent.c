@@ -155,7 +155,7 @@ opendir(const CHAR * szPath)
  * next entry in the directory.
  */
 struct dirent *
-            readdir(DIR * dirp) {
+readdir(DIR * dirp) {
     errno = 0;
 
     /* Check for valid DIR struct. */

@@ -22,7 +22,7 @@ icapLogOpen()
     }
 }
 
-void 
+void
 icapLogClose()
 {
     customlog *log;

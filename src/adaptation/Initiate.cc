@@ -30,7 +30,7 @@ public:
 /* Initiate */
 
 Adaptation::Initiate::Initiate(const char *aTypeName, Initiator *anInitiator):
-    AsyncJob(aTypeName), theInitiator(anInitiator)
+        AsyncJob(aTypeName), theInitiator(anInitiator)
 {
     assert(theInitiator);
 }

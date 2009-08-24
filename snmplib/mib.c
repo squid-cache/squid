@@ -100,7 +100,7 @@ init_mib(char *file)
 
 
 static struct snmp_mib_tree *
-            find_rfc1066_mib(struct snmp_mib_tree *root) {
+find_rfc1066_mib(struct snmp_mib_tree *root) {
     oid *op = RFC1066_MIB;
     struct snmp_mib_tree *tp;
     int len;
@@ -283,8 +283,8 @@ int objidlen;		/* number of subidentifiers */
 }
 
 static struct snmp_mib_tree *
-            get_symbol(objid, objidlen, subtree, buf)
-            oid *objid;
+get_symbol(objid, objidlen, subtree, buf)
+oid *objid;
 int objidlen;
 struct snmp_mib_tree *subtree;
 char *buf;

@@ -602,8 +602,7 @@ AuthNegotiateUserRequest::releaseAuthServer()
         debugs(29, 6, HERE << "releasing Negotiate auth server '" << authserver << "'");
         helperStatefulReleaseServer(authserver);
         authserver = NULL;
-    }
-    else
+    } else
         debugs(29, 6, HERE << "No Negotiate auth server to release.");
 }
 

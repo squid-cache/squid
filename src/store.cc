@@ -50,12 +50,16 @@
 #endif
 #include "Stack.h"
 #include "SquidTime.h"
+#include "swap_log_op.h"
 
 static STMCB storeWriteComplete;
 
 #define REBUILD_TIMESTAMP_DELTA_MAX 2
 
 #define STORE_IN_MEM_BUCKETS            (229)
+
+
+/** \todo Convert these string constants to enum string-arrays generated */
 
 const char *memStatusStr[] = {
     "NOT_IN_MEMORY",
@@ -99,7 +103,6 @@ static storerepl_entry_t *storerepl_list = NULL;
 /*
  * local function prototypes
  */
-static void storeGetMemSpace(int);
 static int getKeyCounter(void);
 static OBJH storeCheckCachableStats;
 static EVH storeLateRelease;
@@ -314,11 +317,18 @@ StoreEntry::storeClientType() const
     if (store_status == STORE_OK) {
         /* the object has completed. */
 
-        if (mem_obj->inmem_lo == 0 && !isEmpty())
-            /* hot object */
-            return STORE_MEM_CLIENT;
-        else
-            return STORE_DISK_CLIENT;
+        if (mem_obj->inmem_lo == 0 && !isEmpty()) {
+            if (swap_status == SWAPOUT_DONE) {
+                if (mem_obj->endOffset() == mem_obj->object_sz) {
+                    /* hot object fully swapped in */
+                    return STORE_MEM_CLIENT;
+                }
+            } else {
+                /* Memory-only, or currently being swapped out */
+                return STORE_MEM_CLIENT;
+            }
+        }
+        return STORE_DISK_CLIENT;
     }
 
     /* here and past, entry is STORE_PENDING */
@@ -1112,8 +1122,10 @@ StoreEntry::abort()
     unlock();       /* unlock */
 }
 
-/* Clear Memory storage to accommodate the given object len */
-static void
+/**
+ * Clear Memory storage to accommodate the given object len
+ */
+void
 storeGetMemSpace(int size)
 {
     PROF_start(storeGetMemSpace);
@@ -1406,7 +1418,13 @@ StoreEntry::keepInMemory() const
     if (mem_obj->data_hdr.size() == 0)
         return 0;
 
-    return mem_obj->inmem_lo == 0;
+    if (mem_obj->inmem_lo != 0)
+        return 0;
+
+    if (!Config.onoff.memory_cache_first && swap_status == SWAPOUT_DONE && refcount == 1)
+        return 0;
+
+    return 1;
 }
 
 int
@@ -1825,11 +1843,11 @@ StoreEntry::trimMemory()
     if (mem_status == IN_MEMORY)
         return;
 
-    if (mem_obj->policyLowestOffsetToKeep() == 0)
-        /* Nothing to do */
-        return;
-
     if (!swapOutAble()) {
+        if (mem_obj->policyLowestOffsetToKeep(0) == 0) {
+            /* Nothing to do */
+            return;
+        }
         /*
          * Its not swap-able, and we're about to delete a chunk,
          * so we must make it PRIVATE.  This is tricky/ugly because

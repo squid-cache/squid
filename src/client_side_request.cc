@@ -636,16 +636,14 @@ ClientRequestContext::adaptationAclCheckDone(Adaptation::ServiceGroupPointer g)
     debugs(93,3,HERE << this << " adaptationAclCheckDone called");
     assert(http);
 
-#if ICAP_CLIENT                                                                
+#if ICAP_CLIENT
     Adaptation::Icap::History::Pointer ih = http->request->icapHistory();
-    if(ih != NULL)
-    {                                                                          
-        if (http->getConn() != NULL)
-        {
+    if (ih != NULL) {
+        if (http->getConn() != NULL) {
             ih->rfc931 = http->getConn()->rfc931;
-#if USE_SSL                              
+#if USE_SSL
             ih->ssluser = sslGetUserEmail(fd_table[http->getConn()->fd].ssl);
-#endif  
+#endif
         }
         ih->log_uri = http->log_uri;
         ih->req_sz = http->req_sz;
@@ -1340,9 +1338,9 @@ ClientHttpRequest::startAdaptation(const Adaptation::ServiceGroupPointer &g)
     assert(!virginHeadSource);
     assert(!adaptedBodySource);
     virginHeadSource = initiateAdaptation(
-        new Adaptation::Iterator(this, request, NULL, g));
+                           new Adaptation::Iterator(this, request, NULL, g));
 
-    // we could try to guess whether we can bypass this adaptation 
+    // we could try to guess whether we can bypass this adaptation
     // initiation failure, but it should not really happen
     assert(virginHeadSource != NULL); // Must, really
 }
