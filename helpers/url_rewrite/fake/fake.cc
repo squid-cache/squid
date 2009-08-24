@@ -22,7 +22,6 @@
  * -h interface help.
  */
 char *my_program_name = NULL;
-int concurrent_detected = -1;
 
 
 static void
@@ -62,13 +61,6 @@ process_options(int argc, char *argv[])
         exit(1);
 }
 
-bool
-detect_concurrent(const char *)
-{
-    // TODO: scan the char* input and see if it is 100% numeric.
-    //   if so, enable concurrent support IDs.
-}
-
 int
 main(int argc, char *argv[])
 {
@@ -93,11 +85,6 @@ main(int argc, char *argv[])
         }
         else
             buflen = strlen(buf);   /* keep this so we only scan the buffer for \0 once per loop */
-
-/* TODO: later.
-        if (concurrent_detected < 0)
-            detect_concurrent(buf);
-// */
 
         helper_debug("Got %d bytes '%s' from Squid\n", buflen, buf);
 
