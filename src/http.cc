@@ -1604,6 +1604,8 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             }
         } else if (strcmp(orig_request->peer_login, "PROXYPASS") == 0) {
             /* Nothing to do */
+        } else if (strcmp(orig_request->peer_login, "PASSTHRU") == 0) {
+            /* Nothing to do (yet) */
         } else {
             httpHeaderPutStrf(hdr_out, HDR_PROXY_AUTHORIZATION, "Basic %s",
                               base64_encode(orig_request->peer_login));
@@ -1615,6 +1617,8 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
             !hdr_out->has(HDR_AUTHORIZATION)) {
         if (strcmp(orig_request->peer_login, "PASS") == 0) {
             /* No credentials to forward.. (should have been done above if available) */
+        } else if (strcmp(orig_request->peer_login, "PASSTHRU") == 0) {
+            /* Nothing to do (yet) */
         } else if (strcmp(orig_request->peer_login, "PROXYPASS") == 0) {
             /* Special mode, convert proxy authentication to WWW authentication
             * (also applies to authentication provided by external acl)
@@ -1723,13 +1727,11 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
          * Only pass on proxy authentication to peers for which
          * authentication forwarding is explicitly enabled
          */
-
         if (flags.proxying && orig_request->peer_login &&
                 (strcmp(orig_request->peer_login, "PASS") == 0 ||
-                 strcmp(orig_request->peer_login, "PROXYPASS") == 0)) {
+                 strcmp(orig_request->peer_login, "PASSTHRU") == 0)) {
             hdr_out->addEntry(e->clone());
         }
-
         break;
 
         /** \par RFC 2616 sect 13.5.1 - Hop-by-Hop headers which Squid does not pass on. */
@@ -1754,11 +1756,12 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
             hdr_out->addEntry(e->clone());
         } else {
             /** \note In accelerators, only forward authentication if enabled
-             * by login=PASS or login=PROXYPASS
+             * by login=PASS or login=PROXYPASS or login=PASSTHRU
              * (see also below for proxy->server authentication)
              */
             if (orig_request->peer_login &&
                     (strcmp(orig_request->peer_login, "PASS") == 0 ||
+                     strcmp(orig_request->peer_login, "PASSTHRU") == 0 ||
                      strcmp(orig_request->peer_login, "PROXYPASS") == 0)) {
                 hdr_out->addEntry(e->clone());
             }
