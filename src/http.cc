@@ -1722,7 +1722,8 @@ copyOneHeaderFromClientsideRequestToUpstreamRequest(const HttpHeaderEntry *e, co
          */
         if (!flags.originpeer && flags.proxying && orig_request->peer_login &&
 		(strcmp(orig_request->peer_login, "PASS") == 0 ||
-		strcmp(orig_request->peer_login, "PASSTHRU") == 0)) {
+		 strcmp(orig_request->peer_login, "PROXYPASS") == 0 ||
+		 strcmp(orig_request->peer_login, "PASSTHRU") == 0)) {
             hdr_out->addEntry(e->clone());
         }
         break;
