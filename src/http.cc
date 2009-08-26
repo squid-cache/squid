@@ -1460,6 +1460,7 @@ httpFixupAuthentication(HttpRequest * request, HttpRequest * orig_request, const
 	return;
 
     /* Needs to be explicitly enabled */
+    if (!orig_request->peer_login)
 	return;
 
     /* Maybe already dealt with? */
