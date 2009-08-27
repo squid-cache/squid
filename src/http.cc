@@ -1501,7 +1501,7 @@ httpFixupAuthentication(HttpRequest * request, HttpRequest * orig_request, const
     /* external_acl provided credentials */
     if (orig_request->extacl_user.size() && orig_request->extacl_passwd.size() &&
 	    (strcmp(orig_request->peer_login, "PASS") == 0 ||
-	     strcmp(orig_request->peer_login, "PROXYPASS"))) {
+	     strcmp(orig_request->peer_login, "PROXYPASS") == 0)) {
 	char loginbuf[256];
 	snprintf(loginbuf, sizeof(loginbuf), SQUIDSTRINGPH ":" SQUIDSTRINGPH,
 		 SQUIDSTRINGPRINT(orig_request->extacl_user),
