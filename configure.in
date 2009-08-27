@@ -473,6 +473,12 @@ if test -n "$STORE_MODULES"; then
 	    AC_MSG_ERROR(storeio $module does not exist)
 	fi
     done
+    for module in $STORE_MODULES_FULL; do
+	if test "$module" = "coss"; then
+	    echo "WARNING: COSS Support is not stable yet in Squid-3. Please do not use."
+	    sleep 10;
+	fi
+    done
     AC_MSG_NOTICE([Store modules built: $STORE_MODULES])
 fi
 dnl remove all but diskd - its the only module that needs to recurse
