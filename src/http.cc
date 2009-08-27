@@ -1493,7 +1493,7 @@ httpFixupAuthentication(HttpRequest * request, HttpRequest * orig_request, const
 
 	snprintf(loginbuf, sizeof(loginbuf), "%s%s", username, orig_request->peer_login + 1);
 
-	httpHeaderPutStrf(hdr_out, HDR_PROXY_AUTHORIZATION, "Basic %s",
+	httpHeaderPutStrf(hdr_out, header, "Basic %s",
 			  base64_encode(loginbuf));
 	return;
     }
@@ -1506,12 +1506,12 @@ httpFixupAuthentication(HttpRequest * request, HttpRequest * orig_request, const
 	snprintf(loginbuf, sizeof(loginbuf), SQUIDSTRINGPH ":" SQUIDSTRINGPH,
 		 SQUIDSTRINGPRINT(orig_request->extacl_user),
 		 SQUIDSTRINGPRINT(orig_request->extacl_passwd));
-	httpHeaderPutStrf(hdr_out, HDR_PROXY_AUTHORIZATION, "Basic %s",
+	httpHeaderPutStrf(hdr_out, header, "Basic %s",
 			  base64_encode(loginbuf));
 	return;
     }
 
-    httpHeaderPutStrf(hdr_out, HDR_PROXY_AUTHORIZATION, "Basic %s",
+    httpHeaderPutStrf(hdr_out, header, "Basic %s",
 		      base64_encode(orig_request->peer_login));
     return;
 }
