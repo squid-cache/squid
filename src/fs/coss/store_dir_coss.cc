@@ -1,4 +1,3 @@
-#error COSS Support is not stable yet in Squid-3. Please do not use.
 /*
  * $Id$
  * vim: set et :
@@ -49,6 +48,7 @@
 #include "ConfigOption.h"
 #include "StoreFScoss.h"
 #include "Parsing.h"
+#include "swap_log_op.h"
 
 #define STORE_META_BUFSZ 4096
 
