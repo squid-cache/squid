@@ -197,8 +197,7 @@ libexec_PROGRAMS = \
 cf_gen_SOURCES = cf_gen.cc
 nodist_cf_gen_HEADER = cf_gen_defines.h
 cf_gen_LDADD= \
-	../compat/libcompat.la \
-	-L../lib -lmiscutil \
+	$(COMPAT_LIB) \
 	@XTRA_LIBS@ \
 	@EPOLL_LIBS@ \
 	@MINGW_LIBS@
@@ -531,8 +530,6 @@ nodist_squid_SOURCES = \
 squid_LDADD = \
 	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
-        ../compat/libcompat.la \
-	-L../lib \
 	@XTRA_OBJS@ \
 	@DISK_LINKOBJS@ \
 	@REPL_OBJS@ \
@@ -542,8 +539,8 @@ squid_LDADD = \
 	@SNMPLIB@ \
 	${ADAPTATION_LIBS} \
 	${ESI_LIBS} \
+	$(COMPAT_LIB) \
 	@SSLLIB@ \
-	-lmiscutil \
 	@XTRA_LIBS@ \
 	@EPOLL_LIBS@ \
 	@MINGW_LIBS@ 

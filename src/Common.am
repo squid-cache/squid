@@ -25,6 +25,6 @@ INCLUDES = \
 $(OBJS): $(top_srcdir)/include/version.h $(top_builddir)/include/autoconf.h
 
 ## Because compatibility is almost universal. And the link order is important.
-COMPAT_LIBS = \
+COMPAT_LIB = \
 	-L$(top_builddir)/lib -lmiscutil \
 	$(top_builddir)/compat/libcompat.la
