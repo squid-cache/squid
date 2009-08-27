@@ -22,7 +22,7 @@
  * -h interface help.
  */
 char *my_program_name = NULL;
-
+int debug_enabled = 0;
 
 static void
 usage(void)
