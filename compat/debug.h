@@ -2,13 +2,13 @@
 #include "config.h"
 #endif
 
-#ifndef COMPAT_HELPER_DEBUG_H
-#define COMPAT_HELPER_DEBUG_H
+#ifndef COMPAT_DEBUG_H
+#define COMPAT_DEBUG_H
 
 /*
- * A debug method for use of external helpers.
+ * A debug method for use of external helpers and tools.
  * It shunts the debug messages down stderr for logging by Squid
- * of display to the user instead of corrupting the stdout data stream.
+ * or display to the user instead of corrupting the stdout data stream.
  */
 
 #if HAVE_STDIO_H
@@ -25,7 +25,7 @@
 
 SQUIDCEXTERN int debug_enabled;
 
-#define helper_debug(X...) \
+#define debug(X...) \
                      if (debug_enabled) { \
                          fprintf(stderr, "%s(%d): pid=%ld :", __FILE__, __LINE__, (long)getpid() ); \
                          fprintf(stderr,X); \
@@ -35,11 +35,11 @@ SQUIDCEXTERN int debug_enabled;
 
 /* TODO: non-GCC compilers can't do the above macro define yet. */
 inline void
-helper_debug(char *format,...)
+debug(char *format,...)
 {
     ; // nothing to do.
 }
 #endif
 
 
-#endif /* COMPAT_HELPER_DEBUG_H */
+#endif /* COMPAT_DEBUG_H */

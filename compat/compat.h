@@ -80,7 +80,7 @@
 /*****************************************************/
 
 /* helper debugging requires some hacks to be clean */
-#include "compat/helper_debug.h"
+#include "compat/debug.h"
 
 /* Valgrind API macros changed between two versions squid supports */
 #include "compat/valgrind.h"
