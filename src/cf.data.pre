@@ -1788,20 +1788,23 @@ DOC_START
 			Note: The string can include URL escapes (i.e. %20 for
 			spaces). This also means % must be written as %%.
 	
-	login=PROXYPASS
+	login=PASSTHRU
 			Send login details received from client to this peer.
-			Authentication is not required, nor changed.
+			Both Proxy- and WWW-Authorization headers are passed
+			without alteration to the peer.
+			Authentication is not required by Squid for this to work.
 			
 			Note: This will pass any form of authentication but
 			only Basic auth will work through a proxy unless the
 			connection-auth options are also used.
-	
+
 	login=PASS	Send login details received from client to this peer.
 			Authentication is not required by this option.
+			
 			If there are no client-provided authentication headers
 			to pass on, but username and password are available
-			from either proxy login or an external ACL user= and
-			password= result tags they may be sent instead.
+			from an external ACL user= and password= result tags
+			they may be sent instead.
 			
 			Note: To combine this with proxy_auth both proxies must
 			share the same user database as HTTP only allows for
