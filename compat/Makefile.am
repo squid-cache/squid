@@ -15,6 +15,7 @@ libcompat_la_SOURCES = \
 	assert.h \
 	compat.h \
 	compat_shared.h \
+	debug.h \
 	fdsetsize.h \
 	osdetect.h \
 	stdvarargs.h \
@@ -37,6 +38,7 @@ libcompat_la_SOURCES = \
 	\
 	assert.cc \
 	compat.cc \
+	debug.cc \
 	GnuRegex.h \
 	GnuRegex.c
 

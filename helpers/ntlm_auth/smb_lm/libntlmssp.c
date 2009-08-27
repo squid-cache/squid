@@ -260,7 +260,7 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
     pass[min(MAX_PASSWD_LEN,tmp.l)] = '\0';
 
 #if 1
-    debug ("Empty LM pass detection: user: '%s', ours:'%s', his: '%s'"
+    debug("Empty LM pass detection: user: '%s', ours:'%s', his: '%s'"
            "(length: %d)\n",
            user,lmencoded_empty_pass,tmp.str,tmp.l);
     if (memcmp(tmp.str,lmencoded_empty_pass,ENCODED_PASS_LEN)==0) {
@@ -272,7 +272,7 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
 
     tmp = ntlm_fetch_string ((char *) auth, auth_length, &auth->ntresponse);
     if (tmp.str != NULL && tmp.l != 0) {
-        debug ("Empty NT pass detection: user: '%s', ours:'%s', his: '%s'"
+        debug("Empty NT pass detection: user: '%s', ours:'%s', his: '%s'"
                "(length: %d)\n",
                user,ntencoded_empty_pass,tmp.str,tmp.l);
         if (memcmp(tmp.str,lmencoded_empty_pass,ENCODED_PASS_LEN)==0) {
