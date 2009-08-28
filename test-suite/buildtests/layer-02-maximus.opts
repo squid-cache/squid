@@ -86,6 +86,7 @@ OPTS=" \
 	--enable-digest-auth-helpers=all \
 	--enable-ntlm-fail-open \
 	--enable-external-acl-helpers=all \
+	--enable-url-rewrite-helpers=all \
 	--enable-mempools \
 	--enable-unlinkd \
 	--enable-stacktraces \
