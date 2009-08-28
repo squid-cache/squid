@@ -97,6 +97,7 @@ SQUIDCEXTERN void httpRequestFree(void *);
 
 extern void clientAccessCheck(void *);
 
+#include "Debug.h"
 /* see debug.c for info on context-based debugging */
 SQUIDCEXTERN Ctx ctx_enter(const char *descr);
 SQUIDCEXTERN void ctx_exit(Ctx ctx);
@@ -107,7 +108,7 @@ SQUIDCEXTERN void _db_rotate_log(void);
 
 SQUIDCEXTERN void _db_print(const char *,...) PRINTF_FORMAT_ARG1;
 
-/* packs, then prints an object using debug() */
+/* packs, then prints an object using debugs() */
 SQUIDCEXTERN void debugObj(int section, int level, const char *label, void *obj, ObjPackMethod pm);
 
 /* disk.c */
