@@ -395,7 +395,7 @@ void
 sigusr2_handle(int sig)
 {
     static int state = 0;
-    /* no debug() here; bad things happen if the signal is delivered during _db_print() */
+    /* no debugs() here; bad things happen if the signal is delivered during _db_print() */
 
     if (state == 0) {
 #ifndef MEM_GEN_TRACE
@@ -555,7 +555,7 @@ sig_child(int sig)
 
         pid = waitpid(-1, &status, WNOHANG);
 #endif
-        /* no debug() here; bad things happen if the signal is delivered during _db_print() */
+        /* no debugs() here; bad things happen if the signal is delivered during _db_print() */
 #if HAVE_SIGACTION
 
     } while (pid > 0);
