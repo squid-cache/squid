@@ -1051,7 +1051,7 @@ snmpDebugOid(int lvl, oid * Name, snint Len)
 static void
 snmpSnmplibDebug(int lvl, char *buf)
 {
-    debug(49, lvl) ("%s", buf);
+    debugs(49, lvl, buf);
 }
 
 

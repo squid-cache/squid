@@ -881,23 +881,23 @@ printliteral (stackmember s)
     switch (s.valuestored) {
 
     case ESI_LITERAL_INVALID:
-        debug(86, 1) ( " Invalid " );
+        old_debug(86, 1) ( " Invalid " );
         break;
 
     case ESI_LITERAL_FLOAT:
-        debug (86,1) ("%f", s.value.floating);
+        old_debug(86,1) ("%f", s.value.floating);
         break;
 
     case ESI_LITERAL_STRING:
-        debug (86,1) ("'%s'", s.value.string);
+        old_debug(86,1) ("'%s'", s.value.string);
         break;
 
     case ESI_LITERAL_INT:
-        debug (86,1) ("%d", s.value.integral);
+        old_debug(86,1) ("%d", s.value.integral);
         break;
 
     case ESI_LITERAL_BOOL:
-        debug (86,1)("%s",s.value.integral ? "true" : "false");
+        old_debug(86,1)("%s",s.value.integral ? "true" : "false");
     }
 }
 
@@ -907,7 +907,7 @@ printmember (stackmember s)
     switch (s.valuetype) {
 
     case ESI_EXPR_INVALID:
-        debug (86,1) (" Invalid ");
+        old_debug(86,1) (" Invalid ");
         break;
 
     case ESI_EXPR_LITERAL:
@@ -915,51 +915,51 @@ printmember (stackmember s)
         break;
 
     case ESI_EXPR_EXPR:
-        debug (86,1) ("%s", s.value.integral ? "true" : "false");
+        old_debug(86,1) ("%s", s.value.integral ? "true" : "false");
         break;
 
     case ESI_EXPR_OR:
-        debug (86,1) ("|");
+        old_debug(86,1) ("|");
         break;
 
     case ESI_EXPR_AND:
-        debug (86,1) ("&");
+        old_debug(86,1) ("&");
         break;
 
     case ESI_EXPR_NOT:
-        debug (86,1) ("!");
+        old_debug(86,1) ("!");
         break;
 
     case ESI_EXPR_START:
-        debug (86,1) ("(");
+        old_debug(86,1) ("(");
         break;
 
     case ESI_EXPR_END:
-        debug (86,1) (")");
+        old_debug(86,1) (")");
         break;
 
     case ESI_EXPR_EQ:
-        debug (86,1) ("==");
+        old_debug(86,1) ("==");
         break;
 
     case ESI_EXPR_NOTEQ:
-        debug (86,1) ("!=");
+        old_debug(86,1) ("!=");
         break;
 
     case ESI_EXPR_LESS:
-        debug (86,1) ("<");
+        old_debug(86,1) ("<");
         break;
 
     case ESI_EXPR_LESSEQ:
-        debug (86,1) ("<=");
+        old_debug(86,1) ("<=");
         break;
 
     case ESI_EXPR_MORE:
-        debug (86,1) (">");
+        old_debug(86,1) (">");
         break;
 
     case ESI_EXPR_MOREEQ:
-        debug (86,1) (">=");
+        old_debug(86,1) (">=");
         break;
     }
 }
@@ -973,7 +973,7 @@ dumpstack (stackmember * stack, int depth)
         printmember (stack[i]);
 
     if (depth)
-        debug (86,1) ("\n");
+        old_debug(86,1) ("\n");
 }
 
 int
