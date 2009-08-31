@@ -1303,6 +1303,8 @@ struct _Logfile {
     } flags;
 
     int syslog_priority;
+
+    int64_t sequence_number;  ///< Unique sequence number per log line.
 };
 
 class logformat_token;
