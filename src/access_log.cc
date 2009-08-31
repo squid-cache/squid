@@ -397,6 +397,8 @@ typedef enum {
     LFT_IO_SIZE_TOTAL,
     LFT_EXT_LOG,
 
+    LFT_SEQUENCE_NUMBER,
+
 #if USE_ADAPTATION
     LTF_ADAPTATION_SUM_XACT_TIMES,
     LTF_ADAPTATION_ALL_XACT_TIMES,
@@ -547,6 +549,7 @@ struct logformat_token_table_entry logformat_token_table[] = {
     {"et", LFT_TAG},
     {"st", LFT_IO_SIZE_TOTAL},
     {"ea", LFT_EXT_LOG},
+    {"sn", LFT_SEQUENCE_NUMBER},
 
     {"%", LFT_PERCENT},
 
@@ -1121,6 +1124,11 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
 
             quote = 1;
 
+            break;
+
+        case LFT_SEQUENCE_NUMBER:
+            outoff = logfile->sequence_number;
+            dooff = 1;
             break;
 
         case LFT_PERCENT:
