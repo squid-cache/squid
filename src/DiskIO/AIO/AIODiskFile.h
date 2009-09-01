@@ -33,6 +33,10 @@
 #ifndef SQUID_AIODISKFILE_H
 #define SQUID_AIODISKFILE_H
 
+#include "config.h"
+
+#if USE_DISKIO_AIO
+
 #include "DiskIO/DiskFile.h"
 #include "async_io.h"
 #include "cbdata.h"
@@ -79,4 +83,5 @@ private:
     bool error_;
 };
 
+#endif /* USE_DISKIO_AIO */
 #endif /* SQUID_AIODISKFILE_H */
