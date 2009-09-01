@@ -484,7 +484,7 @@ for module in $MAYBE_DISK_MODULES none; do
 	  AC_MSG_ERROR([DiskIO DiskDaemon module listed twice.])
 	fi
 	FOUND_DISKIO_DISKDAEMON="yes"
-	AC_MSG_NOTICE(["Enabling DiskDaemon DiskIO module])
+	AC_MSG_NOTICE([Enabling DiskDaemon DiskIO module])
 	DISK_LIBS="$DISK_LIBS libDiskDaemon.a"
 	DISK_MODULES="$DISK_MODULES DiskDaemon"
 	DISK_PROGRAMS="$DISK_PROGRAMS DiskIO/DiskDaemon/diskd"
@@ -495,63 +495,75 @@ for module in $MAYBE_DISK_MODULES none; do
 	  AC_MSG_ERROR([DiskIO DiskThreads  module listed twice.])
 	fi
 	FOUND_DISKIO_DISKTHREADS="yes"
+	use_diskthreads="yes"
+	LIBPTHREADS=
+	SAVE_SQUID_CFLAGS="$SQUID_CFLAGS"
+	SAVE_SQUID_CXXFLAGS="$SQUID_CXXFLAGS"
 	AC_ARG_WITH(pthreads,AS_HELP_STRING([--with-pthreads],[Use POSIX Threads]))
-	if test "$with_pthreads" = "yes"; then
-	  AC_MSG_NOTICE([With pthreads])
+	if test "$with_pthreads" != "no"; then
+		dnl TODO: this needs to be extended to handle more systems and better
+		dnl REF: http://www.openldap.org/lists/openldap-bugs/200006/msg00070.html
+		dnl REF: http://autoconf-archive.cryp.to/acx_pthread.html
+		case "$host" in
+		mingw|mingw32)
+			USE_AIOPS_WIN32=1
+			AC_MSG_NOTICE([Windows threads support automatically enabled])
+			;;
+		i386-unknown-freebsd*)
+			SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT"
+			SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT"
+			if test "$GCC" = "yes" ; then
+				if test -z "$PRESET_LDFLAGS"; then
+					LDFLAGS="$LDFLAGS -pthread"
+				fi
+			fi
+			;;
+		*-solaris2.*)
+		    if test "$GCC" = "yes" ; then
+			SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT -pthreads"
+			SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT -pthreads"
+		        AC_CHECK_LIB(pthread, main,[LIBPTHREADS="-lpthread"],
+		          [ AC_MSG_NOTICE(pthread library required but cannot be found.)
+			    use_diskthreads="no"
+			  ])
+		    else
+			dnl test for -lpthread first. libc version is a stub apparently on Solaris.
+			SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT -lpthread"
+			SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT -lpthread"
+			AC_CHECK_LIB(pthread, main,[LIBPTHREADS="-lpthread"],
+			  [ SQUID_CFLAGS="$SAVE_SQUID_CFLAGS -D_REENTRANT -lpthread -mt"
+			    SQUID_CXXFLAGS="$SAVE_SQUID_CXXFLAGS -D_REENTRANT -lpthread -mt"
+				AC_CHECK_LIB(pthread, main,[LIBPTHREADS="-lpthread"],
+			      [ AC_MSG_NOTICE(pthread library required but cannot be found.)
+				use_diskthreads="no"
+			      ])
+			  ])
+			fi
+			;;
+		*)
+			SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT"
+			SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT"
+			AC_CHECK_LIB(pthread, main,[DISK_LIBS="$DISK_LIBS -lpthread"],
+				[ AC_MSG_NOTICE(pthread library required but cannot be found.)
+				  use_diskthreads="no"
+				])
+			;;
+		esac
 	else
-            case "$host_os" in
-            mingw|mingw32)
-        	USE_AIOPS_WIN32=1
-	        AC_MSG_NOTICE([Windows threads support automatically enabled])
-                ;;
-            esac
+		AC_MSG_NOTICE([Native pthreads support manually disabled.])
+		use_diskthreads="no"
 	fi
-	dnl Check for pthreads
-	dnl We use pthreads when doing ASYNC I/O
-	dnl
-	dnl TODO: this needs to be re-coded to handle more systems and better
-	dnl REF: http://www.openldap.org/lists/openldap-bugs/200006/msg00070.html
-	dnl REF: http://autoconf-archive.cryp.to/acx_pthread.html
-	if test "$with_pthreads" = "yes"; then
-	    SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT"
-	    SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT"
-	    case "$host" in
-	    i386-unknown-freebsd*)
-	        if test "$GCC" = "yes" ; then
-	            if test -z "$PRESET_LDFLAGS"; then
-	                LDFLAGS="$LDFLAGS -pthread"
-	            fi
-	        fi
-	    ;;
-	    *-solaris2.*)
-	        if test "$GCC" = "yes" ; then
-		    SQUID_CFLAGS="$SQUID_CFLAGS -pthreads"
-		    SQUID_CXXFLAGS="$SQUID_CXXFLAGS -pthreads"
-	            AC_CHECK_LIB(pthread, main,[DISK_LIBS="$DISK_LIBS -lpthread"],
-	              [ AC_MSG_ERROR(pthread library required but cannot be found.) ])
-		else
-		    dnl test for -lpthread first. libc version is a stub apparently on Solaris.
-		    SQUID_CFLAGS="$SQUID_CFLAGS -lpthread"
-		    SQUID_CXXFLAGS="$SQUID_CXXFLAGS -lpthread"
-	            AC_CHECK_LIB(pthread, main,[DISK_LIBS="$DISK_LIBS -lpthread"],
-	              [ SQUID_CFLAGS="$SQUID_CFLAGS -lpthread -mt"
-		        SQUID_CXXFLAGS="$SQUID_CXXFLAGS -lpthread -mt"
-	                AC_CHECK_LIB(pthread, main,[DISK_LIBS="$DISK_LIBS -lpthread"],
-	                  [ AC_MSG_ERROR(pthread library required but cannot be found.) ])
-	            ])
-	        fi
-	    ;;
-	    *)
-	      AC_CHECK_LIB(pthread, main,[DISK_LIBS="$DISK_LIBS -lpthread"],
-	        [ AC_MSG_ERROR(pthread library required but cannot be found.) ])
-	    ;;
-	    esac
+	if test "$use_diskthreads" = "yes" ; then
+	  AC_DEFINE(USE_DISKIO_DISKTHREADS, 1, [Whether pthreads support is needed. Automatic])
 	  AC_MSG_NOTICE([Enabling DiskThreads DiskIO module])
-	  DISK_LIBS="$DISK_LIBS libDiskThreads.a"
+	  DISK_LIBS="$DISK_LIBS $LIBPTHREADS libDiskThreads.a"
 	  DISK_MODULES="$DISK_MODULES DiskThreads"
 	  DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/DiskThreads/DiskThreadsDiskIOModule.o"
 	else
-	  AC_MSG_ERROR([Native pthreads support disabled. DiskThreads module automaticaly disabled.])
+	  AC_DEFINE(USE_DISKIO_DISKTHREADS, 0, [Whether pthreads support is needed. Automatic])
+	  AC_MSG_NOTICE([Native pthreads support disabled. DiskThreads module automaticaly disabled.])
+	  SQUID_CFLAGS="$SAVE_SQUID_CFLAGS"
+	  SQUID_CXXFLAGS="$SAVE_SQUID_CXXFLAGS"
 	fi
 	;;
 
