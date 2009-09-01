@@ -460,8 +460,10 @@ fi ])
 
 dnl Some autoconf.h defines we might enable later...
 AC_DEFINE(USE_DISKIO_AIO, 0, [Whether POSIX AIO support is needed. Automatic])
+AC_DEFINE(USE_DISKIO_DISKTHREADS, 0, [Whether pthreads support is needed. Automatic])
 USE_AIOPS_WIN32=0
 use_aio=
+use_diskthreads=
 
 dnl Setup the module paths etc.
 FOUND_DISKIO_AIO=
