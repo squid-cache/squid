@@ -3,6 +3,8 @@
 
 #include "config.h"
 
+#if USE_DISKIO_AIO
+
 #ifdef _SQUID_WIN32_
 #include "aio_win32.h"
 #else
@@ -61,4 +63,5 @@ struct _async_queue {
     int aq_numpending;		/* Num of pending ops */
 };
 
-#endif
+#endif /* USE_DISKIO_AIO */
+#endif /* __ASYNC_IO_H_ */
