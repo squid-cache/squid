@@ -422,8 +422,7 @@ fi
 
 AC_ARG_ENABLE(disk-io,
   AS_HELP_STRING([--enable-disk-io="list of modules"],[Build support for the list of disk I/O modules.
-                  If unset only the "Blocking" module will be built.
-                  Set without a value all available modules will be built.
+                  Set without a value or omitted, all available modules will be built.
                   See src/DiskIO for a list of available modules, or
                   Programmers Guide section on DiskIO
                   for details on how to build your custom disk module]),
@@ -448,11 +447,16 @@ AC_ARG_ENABLE(disk-io,
   esac
 ],
 [ if test -z "$MAYBE_DISK_MODULES"; then
-    MAYBE_DISK_MODULES="Blocking"
-    AC_MSG_NOTICE([Enabling Blocking DiskIO module (required default)])
-    AC_DEFINE(USE_DISKIO,1,[DiskIO modules are expected to be available.])
-  fi
-])
+  AC_MSG_NOTICE([Enabling all available DiskIO modules (default)...])
+  for dir in $srcdir/src/DiskIO/*; do
+    module="`basename $dir`"
+    if test -d "$dir" && test "$module" != CVS; then
+	AC_MSG_NOTICE([Autodetected $module DiskIO module])
+	MAYBE_DISK_MODULES="$MAYBE_DISK_MODULES $module"
+    fi
+  done
+  AC_DEFINE(USE_DISKIO,1,[DiskIO modules are expected to be available.])
+fi ])
 
 dnl Some autoconf.h defines we might enable later...
 AC_DEFINE(USE_DISKIO_AIO, 0, [Whether POSIX AIO support is needed. Automatic])
