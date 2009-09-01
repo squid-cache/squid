@@ -36,6 +36,8 @@
 
 #include "config.h"
 
+#if USE_DISKIO_AIO
+
 #ifdef _SQUID_CYGWIN_
 #include "squid_windows.h"
 #endif
@@ -107,4 +109,5 @@ int aio_open(const char *, int);
 void aio_close(int);
 
 #endif /* _SQUID_MSWIN_ */
+#endif /* USE_DISKIO_AIO */
 #endif /* __WIN32_AIO_H__ */
