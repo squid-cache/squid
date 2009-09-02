@@ -33,6 +33,9 @@
  */
 
 #include "squid.h"
+
+#if !DISABLE_POOLS
+
 #include "MemPool.h"
 
 #if HAVE_IOSTREAM
@@ -79,11 +82,15 @@ MemPoolTest::run()
     delete Pool;
 }
 
+#endif /* DISABLE_POOLS */
+
 int
 main (int argc, char **argv)
 {
+#if !DISABLE_POOLS
     MemPoolTest aTest;
     aTest.run();
+#endif
     return 0;
 }
 
