@@ -913,8 +913,8 @@ main(int argc, char *argv[])
                 argc--;
             } else
                 value = "";
-            break;
 #endif
+            break;
         }
         args++;
         argc--;
