@@ -90,7 +90,7 @@ buildtest() {
 	    echo "Build OK. Global result is $globalResult."
 	fi
     else
-        if test "${verbose}" = "yes" ; then
+        if test "${verbose}" != "yes" ; then
             echo "Build Failed. Last log lines are:"
             tail -20 ${log}
         else
