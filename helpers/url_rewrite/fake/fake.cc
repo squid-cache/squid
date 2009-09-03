@@ -14,6 +14,10 @@
 
 #include "config.h"
 
+#if HAVE_CSTRING
+#include <cstring>
+#endif
+
 #define BUFFER_SIZE 10240
 
 /**
@@ -66,7 +70,6 @@ main(int argc, char *argv[])
 {
     char buf[BUFFER_SIZE];
     int buflen = 0;
-    char helper_command[3];
 
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
@@ -78,6 +81,7 @@ main(int argc, char *argv[])
     debug("%s build " __DATE__ ", " __TIME__ " starting up...\n", my_program_name);
 
     while (fgets(buf, BUFFER_SIZE, stdin) != NULL) {
+        char *p;
 
         if ((p = strchr(buf, '\n')) != NULL) {
             *p = '\0';		/* strip \n */

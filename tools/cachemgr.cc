@@ -147,17 +147,6 @@ typedef struct {
 } cachemgr_request;
 
 /*
- * Debugging macros (info goes to error_log on your web server)
- * Note: do not run cache manager with non zero debugging level
- *       if you do not debug, it may write a lot of [sensitive]
- *       information to your error log.
- */
-
-/* debugging level 0 (disabled) - 3 (max) */
-#define DEBUG_LEVEL 0
-#define debug(level) if ((level) <= DEBUG_LEVEL && DEBUG_LEVEL > 0)
-
-/*
  * Static variables and constants
  */
 static const time_t passwd_ttl = 60 * 60 * 3;	/* in sec */
@@ -871,9 +860,9 @@ process_request(cachemgr_request * req)
                  req->action,
                  make_auth_header(req));
     if (write(s, buf, l) < 0) {
-        debug(1) fprintf(stderr, "ERROR: (%d) writing request: '%s'\n", errno, buf);
+        fprintf(stderr,"ERROR: (%d) writing request: '%s'\n", errno, buf);
     } else {
-        debug(1) fprintf(stderr, "wrote request: '%s'\n", buf);
+        debug("wrote request: '%s'\n", buf);
     }
     return read_reply(s, req);
 }
@@ -905,6 +894,31 @@ main(int argc, char *argv[])
 
     if ((s = getenv("SCRIPT_NAME")) != NULL)
         script_name = xstrdup(s);
+
+   char **args = argv;
+   while (argc > 1 && args[1][0] == '-') {
+//        const char *value = "";
+        char option = args[1][1];
+        switch (option) {
+        case 'd':
+            debug_enabled = 1;
+            break;
+        default:
+#if 0 // unused for now.
+            if (strlen(args[1]) > 2) {
+                value = args[1] + 2;
+            } else if (argc > 2) {
+                value = args[2];
+                args++;
+                argc--;
+            } else
+                value = "";
+            break;
+#endif
+        }
+        args++;
+        argc--;
+    }
 
     req = read_request();
 
@@ -1019,7 +1033,7 @@ read_request(void)
     }
 
     make_pub_auth(req);
-    debug(1) fprintf(stderr, "cmgr: got req: host: '%s' port: %d uname: '%s' passwd: '%s' auth: '%s' oper: '%s'\n",
+    debug("cmgr: got req: host: '%s' port: %d uname: '%s' passwd: '%s' auth: '%s' oper: '%s'\n",
                      safe_str(req->hostname), req->port, safe_str(req->user_name), safe_str(req->passwd), safe_str(req->pub_auth), safe_str(req->action));
     return req;
 }
@@ -1036,7 +1050,7 @@ make_pub_auth(cachemgr_request * req)
 {
     static char buf[1024];
     safe_free(req->pub_auth);
-    debug(3) fprintf(stderr, "cmgr: encoding for pub...\n");
+    debug("cmgr: encoding for pub...\n");
 
     if (!req->passwd || !strlen(req->passwd))
         return;
@@ -1048,9 +1062,8 @@ make_pub_auth(cachemgr_request * req)
              req->user_name ? req->user_name : "",
              req->passwd);
 
-    debug(3) fprintf(stderr, "cmgr: pre-encoded for pub: %s\n", buf);
-
-    debug(3) fprintf(stderr, "cmgr: encoded: '%s'\n", base64_encode(buf));
+    debug("cmgr: pre-encoded for pub: %s\n", buf);
+    debug("cmgr: encoded: '%s'\n", base64_encode(buf));
 
     req->pub_auth = xstrdup(base64_encode(buf));
 }
@@ -1064,7 +1077,7 @@ decode_pub_auth(cachemgr_request * req)
     const char *user_name;
     const char *passwd;
 
-    debug(2) fprintf(stderr, "cmgr: decoding pub: '%s'\n", safe_str(req->pub_auth));
+    debug("cmgr: decoding pub: '%s'\n", safe_str(req->pub_auth));
     safe_free(req->passwd);
 
     if (!req->pub_auth || strlen(req->pub_auth) < 4 + strlen(safe_str(req->hostname)))
@@ -1072,28 +1085,28 @@ decode_pub_auth(cachemgr_request * req)
 
     buf = xstrdup(base64_decode(req->pub_auth));
 
-    debug(3) fprintf(stderr, "cmgr: length ok\n");
+    debug("cmgr: length ok\n");
 
     /* parse ( a lot of memory leaks, but that is cachemgr style :) */
     if ((host_name = strtok(buf, "|")) == NULL)
         return;
 
-    debug(3) fprintf(stderr, "cmgr: decoded host: '%s'\n", host_name);
+    debug("cmgr: decoded host: '%s'\n", host_name);
 
     if ((time_str = strtok(NULL, "|")) == NULL)
         return;
 
-    debug(3) fprintf(stderr, "cmgr: decoded time: '%s' (now: %d)\n", time_str, (int) now);
+    debug("cmgr: decoded time: '%s' (now: %d)\n", time_str, (int) now);
 
     if ((user_name = strtok(NULL, "|")) == NULL)
         return;
 
-    debug(3) fprintf(stderr, "cmgr: decoded uname: '%s'\n", user_name);
+    debug("cmgr: decoded uname: '%s'\n", user_name);
 
     if ((passwd = strtok(NULL, "|")) == NULL)
         return;
 
-    debug(2) fprintf(stderr, "cmgr: decoded passwd: '%s'\n", passwd);
+    debug("cmgr: decoded passwd: '%s'\n", passwd);
 
     /* verify freshness and validity */
     if (atoi(time_str) + passwd_ttl < now)
@@ -1102,7 +1115,7 @@ decode_pub_auth(cachemgr_request * req)
     if (strcasecmp(host_name, req->hostname))
         return;
 
-    debug(1) fprintf(stderr, "cmgr: verified auth. info.\n");
+    debug("cmgr: verified auth. info.\n");
 
     /* ok, accept */
     xfree(req->user_name);
