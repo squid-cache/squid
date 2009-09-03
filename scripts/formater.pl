@@ -25,13 +25,12 @@ use IPC::Open2;
 #
 # NP: The Squid code requires astyle version 1.22 or later
 #
-$ASTYLE_BIN="/usr/bin/astyle";
-
+$ASTYLE_BIN="/usr/local/bin/astyle";
+#$ASTYLE_BIN="/usr/bin/astyle";
 #$ASTYLE_BIN="/usr/local/src/astyle-1.22/bin/astyle";
+
 $ASTYLE_ARGS ="--mode=c -s4 -O -l";
-
 #$ASTYLE_ARGS="--mode=c -s4 -O --break-blocks -l";
-#$ASTYLE_BIN="/usr/local/src/astyle-1.22/bin/astyle";
 
 
 if(! -e $ASTYLE_BIN){
@@ -82,8 +81,7 @@ while($out){
 	print "An error while open2\n";
 	exit -1;
     }
-    
-    
+
     if($pid=fork()){
 	#do parrent staf
 	close(FROM_ASTYLE);
@@ -110,7 +108,7 @@ while($out){
     else{
 	# child staf
 	close(TO_ASTYLE);
-	
+
 	if(!open(OUT,">$out")){
 	    print "Can't open output file: $out\n";
 	    exit -1;
@@ -141,7 +139,7 @@ sub input_filter{
 
     if($$line =~/\s+int\s+.*/s || $$line=~ /\s+unsigned\s+.*/s ||
        $$line =~/^int\s+.*/s || $$line=~ /^unsigned\s+.*/s
-       ){ 
+       ){
 	if( $$line =~ /(\(|,|\)|\#|typedef)/s ){
 	    #excluding int/unsigned appeared inside function prototypes,typedefs etc....
 	    return 1;
@@ -158,12 +156,12 @@ sub input_filter{
             $prx =~ s/\s*$//g;
 	    $$line= $prx." int ".$name."__FORASTYLE__".$val.";".$extra;
 #	    print "----->".$$line."\n";
-	}	
+	}
 	elsif($$line =~ /\s*unsigned\s+([^:]*):\s*(\w+)\s*\;(.*)/s){
             local($name,$val,$extra)=($1,$2,$3);
             $prx =~ s/\s*$//g;
 	    $$line= "unsigned ".$name."__FORASTYLE__".$val.";".$extra;
-	}	
+	}
 	return 1;
     }
 
