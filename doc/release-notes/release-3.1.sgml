@@ -1521,6 +1521,14 @@ This section gives an account of those changes in three categories:
 	<p>Better support for Linux using the external DNS helper.
            The helper will now compile and work with dns_nameservers on more variants of Linux than previously.
 
+	<tag>--with-aio</tag>
+	<p>Deprecated. POSIX AIO is now auto-detected and enabled.
+	   Use --without-aio to disable, but only if you really have to.
+
+	<tag>--with-pthreads</tag>
+	<p>Deprecated. pthreads library is now auto-detected and enabled.
+	   Use --without-pthreads to disable, but only if you really have to.
+
 </descrip>
 </p>
 

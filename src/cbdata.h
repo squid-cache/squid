@@ -334,8 +334,13 @@ extern cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, in
  */
 #define cbdataReferenceValidDone(var, ptr) cbdataInternalReferenceDoneValid((void **)&(var), (ptr))
 
-/// \ingroup CBDATAAPI
+/**
+ * \ingroup CBDATAAPI
+ * 
+ * This needs to be defined LAST in teh class definition. It plays with private/public states in C++.
+ */
 #define CBDATA_CLASS2(type)	\
+	private: \
 	static cbdata_type CBDATA_##type; \
 	public: \
 		void *operator new(size_t size) { \
@@ -346,8 +351,7 @@ extern cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, in
   		void operator delete (void *address) { \
 		  if (address) cbdataInternalFree(address);\
 		} \
-                void *toCbdata() { return this; } \
-	private:
+                void *toCbdata() { return this; }
 #endif /* !CBDATA_DEBUG */
 
 /**
@@ -459,6 +463,7 @@ public:
      \todo CODE: make this a private field.
      */
     void *data; /* the wrapped data */
+
 private:
     CBDATA_CLASS2(generic_cbdata);
 };
