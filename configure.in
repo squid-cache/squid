@@ -2198,10 +2198,12 @@ AC_CHECK_HEADERS([libxml/parser.h], [], [
     	SAVED_CPPFLAGS="$CPPFLAGS"
 	CPPFLAGS="-I/usr/include/libxml2 $CPPFLAGS"
 	unset ac_cv_header_libxml_parser_h
-	AC_CHECK_HEADERS([libxml/parser.h], [], [
-		CPPFLAGS="$SAVED_CPPFLAGS"
-		])
+	AC_CHECK_HEADERS([libxml/parser.h], [ac_cv_libxml2_include=yes], [])
+	CPPFLAGS="$SAVED_CPPFLAGS"
 	])
+if test "x$ac_cv_libxml2_include" = "xyes"; then
+	SQUID_CXXFLAGS="-I/usr/include/libxml2 $SQUID_CXXFLAGS"
+fi
 
 AC_C_CONST
 AC_C_BIGENDIAN
