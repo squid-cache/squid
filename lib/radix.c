@@ -178,7 +178,7 @@ static char *rn_zeros, *rn_ones;
  */
 
 struct squid_radix_node *
-            squid_rn_search(void *v_arg, struct squid_radix_node *head) {
+squid_rn_search(void *v_arg, struct squid_radix_node *head) {
     register struct squid_radix_node *x;
     register caddr_t v;
 
@@ -192,7 +192,7 @@ struct squid_radix_node *
 }
 
 struct squid_radix_node *
-            squid_rn_search_m(void *v_arg, struct squid_radix_node *head, void *m_arg) {
+squid_rn_search_m(void *v_arg, struct squid_radix_node *head, void *m_arg) {
     register struct squid_radix_node *x;
     register caddr_t v = v_arg, m = m_arg;
 
@@ -233,7 +233,7 @@ squid_rn_refines(void *m_arg, void *n_arg)
 }
 
 struct squid_radix_node *
-            squid_rn_lookup(void *v_arg, void *m_arg, struct squid_radix_node_head *head) {
+squid_rn_lookup(void *v_arg, void *m_arg, struct squid_radix_node_head *head) {
     register struct squid_radix_node *x;
     caddr_t netmask = 0;
 
@@ -271,7 +271,7 @@ rn_satsifies_leaf(char *trial, register struct squid_radix_node *leaf, int skip)
 }
 
 struct squid_radix_node *
-            squid_rn_match(void *v_arg, struct squid_radix_node_head *head) {
+squid_rn_match(void *v_arg, struct squid_radix_node_head *head) {
     caddr_t v = v_arg;
     register struct squid_radix_node *t = head->rnh_treetop, *x;
     register caddr_t cp = v, cp2;
@@ -377,7 +377,7 @@ int rn_debug = 1;
 #endif
 
 struct squid_radix_node *
-            squid_rn_newpair(void *v, int b, struct squid_radix_node nodes[2]) {
+squid_rn_newpair(void *v, int b, struct squid_radix_node nodes[2]) {
     register struct squid_radix_node *tt = nodes, *t = tt + 1;
     t->rn_b = b;
     t->rn_bmask = 0x80 >> (b & 7);
@@ -398,7 +398,7 @@ struct squid_radix_node *
 }
 
 struct squid_radix_node *
-            squid_rn_insert(void *v_arg, struct squid_radix_node_head *head, int *dupentry, struct squid_radix_node nodes[2]) {
+squid_rn_insert(void *v_arg, struct squid_radix_node_head *head, int *dupentry, struct squid_radix_node nodes[2]) {
     caddr_t v = v_arg;
     struct squid_radix_node *top = head->rnh_treetop;
     int head_off = top->rn_off, vlen = (int) *((u_char *) v);
@@ -463,7 +463,7 @@ on1:
 }
 
 struct squid_radix_node *
-            squid_rn_addmask(void *n_arg, int search, int skip) {
+squid_rn_addmask(void *n_arg, int search, int skip) {
     caddr_t netmask = (caddr_t) n_arg;
     register struct squid_radix_node *x;
     register caddr_t cp, cplim;
@@ -548,7 +548,7 @@ rn_lexobetter(void *m_arg, void *n_arg)
 }
 
 static struct squid_radix_mask *
-            rn_new_radix_mask(struct squid_radix_node *tt, struct squid_radix_mask *next) {
+rn_new_radix_mask(struct squid_radix_node *tt, struct squid_radix_mask *next) {
     register struct squid_radix_mask *m;
 
     squid_MKGet(m);
@@ -569,7 +569,7 @@ static struct squid_radix_mask *
 }
 
 struct squid_radix_node *
-            squid_rn_addroute(void *v_arg, void *n_arg, struct squid_radix_node_head *head, struct squid_radix_node treenodes[2]) {
+squid_rn_addroute(void *v_arg, void *n_arg, struct squid_radix_node_head *head, struct squid_radix_node treenodes[2]) {
     caddr_t v = (caddr_t) v_arg, netmask = (caddr_t) n_arg;
     register struct squid_radix_node *t, *x = NULL, *tt;
     struct squid_radix_node *saved_tt, *top = head->rnh_treetop;
@@ -720,7 +720,7 @@ on2:
 }
 
 struct squid_radix_node *
-            squid_rn_delete(void *v_arg, void *netmask_arg, struct squid_radix_node_head *head) {
+squid_rn_delete(void *v_arg, void *netmask_arg, struct squid_radix_node_head *head) {
     register struct squid_radix_node *t, *p, *x, *tt;
     struct squid_radix_mask *m, *saved_m, **mp;
     struct squid_radix_node *dupedkey, *saved_tt, *top;

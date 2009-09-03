@@ -636,7 +636,8 @@ main(int argc, char *argv[])
 }
 
 static int
-client_comm_bind(int sock, const IpAddress &addr) {
+client_comm_bind(int sock, const IpAddress &addr)
+{
 
     int res;
 
@@ -654,7 +655,8 @@ client_comm_bind(int sock, const IpAddress &addr) {
 }
 
 static int
-client_comm_connect(int sock, const IpAddress &addr, struct timeval *tvp) {
+client_comm_connect(int sock, const IpAddress &addr, struct timeval *tvp)
+{
     int res;
     static struct addrinfo *AI = NULL;
 
@@ -673,7 +675,8 @@ client_comm_connect(int sock, const IpAddress &addr, struct timeval *tvp) {
 }
 
 static int
-Now(struct timeval *tp) {
+Now(struct timeval *tp)
+{
 #if GETTIMEOFDAY_NO_TZP
     return gettimeofday(tp);
 #else
@@ -683,18 +686,21 @@ Now(struct timeval *tp) {
 }				/* ARGSUSED */
 
 static void
-catchSignal(int sig) {
+catchSignal(int sig)
+{
     interrupted = 1;
     fprintf(stderr, "Interrupted.\n");
 }
 
 static void
-pipe_handler(int sig) {
+pipe_handler(int sig)
+{
     fprintf(stderr, "SIGPIPE received.\n");
 }
 
 static void
-set_our_signal(void) {
+set_our_signal(void)
+{
 #if HAVE_SIGACTION
 
     struct sigaction sa;
@@ -714,7 +720,8 @@ set_our_signal(void) {
 }
 
 static ssize_t
-myread(int fd, void *buf, size_t len) {
+myread(int fd, void *buf, size_t len)
+{
 #ifndef _SQUID_MSWIN_
     alarm(io_timeout);
     return read(fd, buf, len);
@@ -725,7 +732,8 @@ myread(int fd, void *buf, size_t len) {
 }
 
 static ssize_t
-mywrite(int fd, void *buf, size_t len) {
+mywrite(int fd, void *buf, size_t len)
+{
 #ifndef _SQUID_MSWIN_
     alarm(io_timeout);
     return write(fd, buf, len);

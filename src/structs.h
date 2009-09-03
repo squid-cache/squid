@@ -265,7 +265,7 @@ struct SquidConfig {
 
         customlog *accesslogs;
 
-#if ICAP_CLIENT        
+#if ICAP_CLIENT
         customlog *icaplogs;
 #endif
 

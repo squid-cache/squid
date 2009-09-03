@@ -10,7 +10,8 @@
 
 namespace Adaptation
 {
-namespace Ecap {
+namespace Ecap
+{
 
 // Squid wrapper, providing host application functionality to eCAP services.
 class Host : public libecap::host::Host

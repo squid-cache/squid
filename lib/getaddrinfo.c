@@ -83,7 +83,7 @@
 #include "inet_pton.h"
 
 static struct addrinfo *
-            dup_addrinfo (struct addrinfo *info, void *addr, size_t addrlen) {
+dup_addrinfo (struct addrinfo *info, void *addr, size_t addrlen) {
     struct addrinfo *ret;
 
     ret = malloc (sizeof (struct addrinfo));

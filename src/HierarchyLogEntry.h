@@ -56,7 +56,7 @@ public:
     struct timeval peer_select_start;
 
     struct timeval store_complete_stop;
-    
+
     http_status peer_reply_status; ///< last HTTP status code received
     timeval peer_http_request_sent; ///< last peer finished writing req
     int64_t peer_response_time; ///< last peer response delay

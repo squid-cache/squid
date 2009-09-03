@@ -18,13 +18,14 @@
 
 namespace Adaptation
 {
-namespace Ecap {
+namespace Ecap
+{
 
 /* The eCAP xaction representative maintains information about a single eCAP
    xaction that Squid communicates with. One eCAP module may register many
    eCAP xactions. */
 class XactionRep : public Adaptation::Initiate, public libecap::host::Xaction,
-            public BodyConsumer, public BodyProducer
+        public BodyConsumer, public BodyProducer
 {
 public:
     XactionRep(Adaptation::Initiator *anInitiator, HttpMsg *virginHeader, HttpRequest *virginCause, const Adaptation::ServicePointer &service);

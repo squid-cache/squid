@@ -1648,7 +1648,7 @@ GetService(const char *proto)
         return 0; /* NEVER REACHED */
     }
     /** Returns either the service port number from /etc/services */
-    if( !isUnsignedNumeric(token, strlen(token)) )
+    if ( !isUnsignedNumeric(token, strlen(token)) )
         port = getservbyname(token, proto);
     if (port != NULL) {
         return ntohs((u_short)port->s_port);

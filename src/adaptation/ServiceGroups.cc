@@ -11,8 +11,8 @@
 #define ServiceGroup ServiceGroup
 
 Adaptation::ServiceGroup::ServiceGroup(const String &aKind, bool allSame):
-    kind(aKind), method(methodNone), point(pointNone),
-    allServicesSame(allSame)
+        kind(aKind), method(methodNone), point(pointNone),
+        allServicesSame(allSame)
 {
 }
 
@@ -48,7 +48,7 @@ Adaptation::ServiceGroup::finalize()
         const String &sid = services[pos];
         ServicePointer service = at(pos);
         if (service != NULL) {
-            if (method == methodNone) { 
+            if (method == methodNone) {
                 // optimization: cache values that should be the same
                 method = service->cfg().method;
                 point = service->cfg().point;
@@ -61,18 +61,17 @@ Adaptation::ServiceGroup::finalize()
 
             checkUniqueness(pos);
 
-            if (allServicesSame) { 
+            if (allServicesSame) {
                 if (!baselineKey.size()) {
                     baselineKey = service->cfg().key;
                     baselineBypass = service->cfg().bypass;
-                } else
-                if (baselineBypass != service->cfg().bypass) {
+                } else if (baselineBypass != service->cfg().bypass) {
                     debugs(93,0, "WARNING: Inconsistent bypass in " << kind <<
-                        ' ' << id << " may produce surprising results: " <<
-                        baselineKey << " vs. " << sid);
+                           ' ' << id << " may produce surprising results: " <<
+                           baselineKey << " vs. " << sid);
                 }
             }
-        } else { 
+        } else {
             finalizeMsg("ERROR: Unknown adaptation name", sid, true);
         }
     }
@@ -91,8 +90,7 @@ Adaptation::ServiceGroup::checkUniqueness(const Pos checkedPos) const
         ServicePointer s = at(p);
         if (s != NULL && s->cfg().key == checkedService->cfg().key)
             finalizeMsg("duplicate service name", s->cfg().key, false);
-        else
-        if (s != NULL && s->cfg().uri == checkedService->cfg().uri)
+        else if (s != NULL && s->cfg().uri == checkedService->cfg().uri)
             finalizeMsg("duplicate service URI", s->cfg().uri, false);
     }
 }
@@ -100,15 +98,16 @@ Adaptation::ServiceGroup::checkUniqueness(const Pos checkedPos) const
 /// emits a formatted warning or error message at the appropriate dbg level
 void
 Adaptation::ServiceGroup::finalizeMsg(const char *msg, const String &culprit,
-    bool error) const
+                                      bool error) const
 {
-    const int level = error ? DBG_CRITICAL : DBG_IMPORTANT;
+    const int level = error ? DBG_CRITICAL :DBG_IMPORTANT;
     const char *pfx = error ? "ERROR: " : "WARNING: ";
     debugs(93,level, pfx << msg << ' ' << culprit << " in " << kind << " '" <<
-        id << "'");
+           id << "'");
 }
 
-Adaptation::ServicePointer Adaptation::ServiceGroup::at(const Pos pos) const {
+Adaptation::ServicePointer Adaptation::ServiceGroup::at(const Pos pos) const
+{
     return FindService(services[pos]);
 }
 
@@ -213,7 +212,7 @@ Adaptation::ServiceChain::ServiceChain(): ServiceGroup("adaptation chain", false
 /* ServiceChain */
 
 Adaptation::DynamicServiceChain::DynamicServiceChain(const String &ids,
-    const ServiceGroupPointer prev)
+        const ServiceGroupPointer prev)
 {
     kind = "dynamic adaptation chain"; // TODO: optimize by using String const
     id = ids; // use services ids as the dynamic group ID
@@ -241,8 +240,8 @@ Adaptation::ServicePlan::ServicePlan(): pos(0), atEof(true)
 }
 
 Adaptation::ServicePlan::ServicePlan(const ServiceGroupPointer &g,
-    const ServiceFilter &filter):
-    group(g), pos(0), atEof(!g || !g->has(pos))
+                                     const ServiceFilter &filter):
+        group(g), pos(0), atEof(!g || !g->has(pos))
 {
     // this will find the first service because starting pos is zero
     if (!atEof && !group->findService(filter, pos))
@@ -257,14 +256,16 @@ Adaptation::ServicePlan::current() const
 }
 
 Adaptation::ServicePointer
-Adaptation::ServicePlan::replacement(const ServiceFilter &filter) {
+Adaptation::ServicePlan::replacement(const ServiceFilter &filter)
+{
     if (!atEof && !group->findReplacement(filter, ++pos))
         atEof = true;
     return current();
 }
 
 Adaptation::ServicePointer
-Adaptation::ServicePlan::next(const ServiceFilter &filter) {
+Adaptation::ServicePlan::next(const ServiceFilter &filter)
+{
     if (!atEof && !group->findLink(filter, ++pos))
         atEof = true;
     return current();
@@ -277,7 +278,7 @@ Adaptation::ServicePlan::print(std::ostream &os) const
         return os << "[nil]";
 
     return os << group->id << '[' << pos << ".." << group->services.size() <<
-        (atEof ? ".]" : "]");
+           (atEof ? ".]" : "]");
 }
 
 

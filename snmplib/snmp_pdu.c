@@ -104,7 +104,7 @@
  */
 
 struct snmp_pdu *
-            snmp_pdu_create(int command) {
+snmp_pdu_create(int command) {
     struct snmp_pdu *pdu;
 
 #ifdef DEBUG_PDU
@@ -138,7 +138,7 @@ struct snmp_pdu *
 /* Clone an existing PDU.
  */
 struct snmp_pdu *
-            snmp_pdu_clone(struct snmp_pdu *Src) {
+snmp_pdu_clone(struct snmp_pdu *Src) {
     struct snmp_pdu *Dest;
 
 #ifdef DEBUG_PDU
@@ -172,12 +172,12 @@ struct snmp_pdu *
  * be returned.
  */
 struct snmp_pdu *
-            snmp_pdu_fix(struct snmp_pdu *pdu, int command) {
+snmp_pdu_fix(struct snmp_pdu *pdu, int command) {
     return (snmp_fix_pdu(pdu, command));
 }
 
 struct snmp_pdu *
-            snmp_fix_pdu(struct snmp_pdu *pdu, int command) {
+snmp_fix_pdu(struct snmp_pdu *pdu, int command) {
     struct variable_list *var, *newvar;
     struct snmp_pdu *newpdu;
     int i;

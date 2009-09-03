@@ -140,7 +140,7 @@ IpAddress::GetCIDR() const
 
 #endif
 
-    for (;shift<sizeof(m_SocketAddr.sin6_addr) ;shift++) {
+    for (; shift<sizeof(m_SocketAddr.sin6_addr) ; shift++) {
         byte= *(ptr+shift);
 
         if (byte == 0xFF) {
@@ -1020,7 +1020,8 @@ char* IpAddress::NtoA(char* buf, const unsigned int blen, int force) const
     return buf;
 }
 
-unsigned int IpAddress::ToHostname(char *buf, const unsigned int blen) const {
+unsigned int IpAddress::ToHostname(char *buf, const unsigned int blen) const
+{
     char *p = buf;
 
     if (IsIPv6() && blen > 0) {
@@ -1050,7 +1051,8 @@ unsigned int IpAddress::ToHostname(char *buf, const unsigned int blen) const {
     return (p - buf);
 }
 
-char* IpAddress::ToURL(char* buf, unsigned int blen) const {
+char* IpAddress::ToURL(char* buf, unsigned int blen) const
+{
     char *p = buf;
 
     // Ensure we have a buffer.
@@ -1072,7 +1074,8 @@ char* IpAddress::ToURL(char* buf, unsigned int blen) const {
     return buf;
 }
 
-void IpAddress::GetSockAddr(struct sockaddr_storage &addr, const int family) const {
+void IpAddress::GetSockAddr(struct sockaddr_storage &addr, const int family) const
+{
     struct sockaddr_in *sin = NULL;
 
     if ( family == AF_INET && !IsIPv4()) {
@@ -1097,7 +1100,8 @@ void IpAddress::GetSockAddr(struct sockaddr_storage &addr, const int family) con
 #endif /* USE_IPV6 */
 }
 
-void IpAddress::GetSockAddr(struct sockaddr_in &buf) const {
+void IpAddress::GetSockAddr(struct sockaddr_in &buf) const
+{
 #if USE_IPV6
 
     if ( IsIPv4() ) {
@@ -1130,7 +1134,8 @@ void IpAddress::GetSockAddr(struct sockaddr_in &buf) const {
 
 #if USE_IPV6
 
-void IpAddress::GetSockAddr(struct sockaddr_in6 &buf) const {
+void IpAddress::GetSockAddr(struct sockaddr_in6 &buf) const
+{
     memcpy(&buf, &m_SocketAddr, sizeof(struct sockaddr_in6));
     /* maintain address family. It may have changed inside us. */
     buf.sin6_family = AF_INET6;
@@ -1145,7 +1150,8 @@ void IpAddress::GetSockAddr(struct sockaddr_in6 &buf) const {
 
 #if USE_IPV6
 
-void IpAddress::Map4to6(const struct in_addr &in, struct in6_addr &out) const {
+void IpAddress::Map4to6(const struct in_addr &in, struct in6_addr &out) const
+{
     /* check for special cases */
 
     if ( in.s_addr == 0x00000000) {
@@ -1169,7 +1175,8 @@ void IpAddress::Map4to6(const struct in_addr &in, struct in6_addr &out) const {
     }
 }
 
-void IpAddress::Map6to4(const struct in6_addr &in, struct in_addr &out) const {
+void IpAddress::Map6to4(const struct in6_addr &in, struct in_addr &out) const
+{
     /* ANYADDR */
     /* NOADDR */
     /* general */
@@ -1181,13 +1188,15 @@ void IpAddress::Map6to4(const struct in6_addr &in, struct in_addr &out) const {
 #endif
 
 #if USE_IPV6
-void IpAddress::GetInAddr(in6_addr &buf) const {
+void IpAddress::GetInAddr(in6_addr &buf) const
+{
     memcpy(&buf, &m_SocketAddr.sin6_addr, sizeof(struct in6_addr));
 }
 
 #endif
 
-bool IpAddress::GetInAddr(struct in_addr &buf) const {
+bool IpAddress::GetInAddr(struct in_addr &buf) const
+{
 
 #if USE_IPV6
     if ( IsIPv4() ) {

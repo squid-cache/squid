@@ -57,8 +57,7 @@
 
 #ifdef __cplusplus
 
-extern "C"
-{
+extern "C" {
 #endif
 
     const char *snmp_errstring(int);

@@ -42,7 +42,7 @@ void ska_base64_decode(char* result, const char *data, int result_size)
         ska_base64_init();
     val = c = 0;
 
-    for (j = 0; *data ;data++) {
+    for (j = 0; *data ; data++) {
         unsigned int k = ((unsigned char) *data) % BASE64_VALUE_SZ;
         if (base64_value[k] < 0)
             continue;
@@ -144,7 +144,7 @@ int ska_base64_decode_len(const char *data)
     int i,j;
 
     j=0;
-    for (i=strlen(data)-1;i>=0;i--) {
+    for (i=strlen(data)-1; i>=0; i--) {
         if (data[i] == '=') j++;
         if (data[i] != '=') break;
     }

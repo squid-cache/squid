@@ -348,11 +348,10 @@ Adaptation::Ecap::MessageRep::MessageRep(HttpMsg *rawHeader):
 
     if (HttpRequest *req = dynamic_cast<HttpRequest*>(theMessage.header))
         theFirstLineRep = new RequestLineRep(*req);
+    else if (HttpReply *rep = dynamic_cast<HttpReply*>(theMessage.header))
+        theFirstLineRep = new StatusLineRep(*rep);
     else
-        if (HttpReply *rep = dynamic_cast<HttpReply*>(theMessage.header))
-            theFirstLineRep = new StatusLineRep(*rep);
-        else
-            Must(false); // unknown message header type
+        Must(false); // unknown message header type
 
     theHeaderRep = new HeaderRep(*theMessage.header);
 

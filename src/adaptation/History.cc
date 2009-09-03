@@ -10,12 +10,12 @@
 const static char *TheNullServices = ",null,";
 
 Adaptation::History::Entry::Entry(const String &sid, const timeval &when):
-    service(sid), start(when), theRptm(-1), retried(false)
+        service(sid), start(when), theRptm(-1), retried(false)
 {
 }
 
 Adaptation::History::Entry::Entry():
-    start(current_time), theRptm(-1), retried(false)
+        start(current_time), theRptm(-1), retried(false)
 {
 }
 
@@ -33,7 +33,8 @@ int Adaptation::History::Entry::rptm()
 }
 
 
-Adaptation::History::History(): theNextServices(TheNullServices) {
+Adaptation::History::History(): theNextServices(TheNullServices)
+{
 }
 
 int Adaptation::History::recordXactStart(const String &sid, const timeval &when, bool retrying)
@@ -82,8 +83,7 @@ void Adaptation::History::sumLogString(const char *serviceId, String &s)
     for (ECI i = theEntries.begin(); i != theEntries.end(); ++i) {
         if (i->retried) { // do not log retried xact but accumulate their time
             retriedRptm += i->rptm();
-        } else
-        if (!serviceId || i->service == serviceId) {
+        } else if (!serviceId || i->service == serviceId) {
             if (s.size() > 0) // not the first logged time, must delimit
                 s.append(",");
 
@@ -99,7 +99,7 @@ void Adaptation::History::sumLogString(const char *serviceId, String &s)
     }
 
     // the last transaction is never retried or it would not be the last
-    Must(!retriedRptm); 
+    Must(!retriedRptm);
 }
 
 void Adaptation::History::updateXxRecord(const char *name, const String &value)
@@ -111,7 +111,7 @@ void Adaptation::History::updateXxRecord(const char *name, const String &value)
 bool Adaptation::History::getXxRecord(String &name, String &value) const
 {
     if (theXxName.size() <= 0)
-       return false;
+        return false;
 
     name = theXxName;
     value = theXxValue;
@@ -121,7 +121,7 @@ bool Adaptation::History::getXxRecord(String &name, String &value) const
 void Adaptation::History::updateNextServices(const String &services)
 {
     if (theNextServices != TheNullServices)
-       debugs(93,3, HERE << "old services: " << theNextServices);
+        debugs(93,3, HERE << "old services: " << theNextServices);
     debugs(93,3, HERE << "new services: " << services);
     Must(services != TheNullServices);
     theNextServices = services;
@@ -130,7 +130,7 @@ void Adaptation::History::updateNextServices(const String &services)
 bool Adaptation::History::extractNextServices(String &value)
 {
     if (theNextServices == TheNullServices)
-       return false;
+        return false;
 
     value = theNextServices;
     theNextServices = TheNullServices; // prevents resetting the plan twice

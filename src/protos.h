@@ -748,23 +748,23 @@ SQUIDCEXTERN int SquidMain(int, char **);
 SQUIDCEXTERN int WIN32_pipe(int[2]);
 
 SQUIDCEXTERN int WIN32_getrusage(int, struct rusage *);
-            SQUIDCEXTERN void WIN32_ExceptionHandlerInit(void);
+SQUIDCEXTERN void WIN32_ExceptionHandlerInit(void);
 
-            SQUIDCEXTERN int Win32__WSAFDIsSet(int fd, fd_set* set);
-            SQUIDCEXTERN DWORD WIN32_IpAddrChangeMonitorInit();
+SQUIDCEXTERN int Win32__WSAFDIsSet(int fd, fd_set* set);
+SQUIDCEXTERN DWORD WIN32_IpAddrChangeMonitorInit();
 
 #endif
 
-            /* external_acl.c */
-            class external_acl;
-            SQUIDCEXTERN void parse_externalAclHelper(external_acl **);
+/* external_acl.c */
+class external_acl;
+        SQUIDCEXTERN void parse_externalAclHelper(external_acl **);
 
-            SQUIDCEXTERN void dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl *);
+        SQUIDCEXTERN void dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl *);
 
-            SQUIDCEXTERN void free_externalAclHelper(external_acl **);
+        SQUIDCEXTERN void free_externalAclHelper(external_acl **);
 
-            typedef void EAH(void *data, void *result);
-            class ACLChecklist;
+        typedef void EAH(void *data, void *result);
+        class ACLChecklist;
             SQUIDCEXTERN void externalAclLookup(ACLChecklist * ch, void *acl_data, EAH * handler, void *data);
 
             SQUIDCEXTERN void externalAclInit(void);

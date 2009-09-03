@@ -15,16 +15,16 @@
 
 
 Adaptation::Iterator::Iterator(Adaptation::Initiator *anInitiator,
-    HttpMsg *aMsg, HttpRequest *aCause,
-    const ServiceGroupPointer &aGroup):
-    AsyncJob("Iterator"),
-    Adaptation::Initiate("Iterator", anInitiator),
-    theGroup(aGroup),
-    theMsg(HTTPMSGLOCK(aMsg)),
-    theCause(aCause ? HTTPMSGLOCK(aCause) : NULL),
-    theLauncher(0),
-    iterations(0),
-    adapted(false)
+                               HttpMsg *aMsg, HttpRequest *aCause,
+                               const ServiceGroupPointer &aGroup):
+        AsyncJob("Iterator"),
+        Adaptation::Initiate("Iterator", anInitiator),
+        theGroup(aGroup),
+        theMsg(HTTPMSGLOCK(aMsg)),
+        theCause(aCause ? HTTPMSGLOCK(aCause) : NULL),
+        theLauncher(0),
+        iterations(0),
+        adapted(false)
 {
 }
 
@@ -58,9 +58,9 @@ void Adaptation::Iterator::step()
 
     if (iterations > Adaptation::Config::service_iteration_limit) {
         debugs(93,DBG_CRITICAL, "Adaptation iterations limit (" <<
-            Adaptation::Config::service_iteration_limit << ") exceeded:\n" <<
-            "\tPossible service loop with " <<
-            theGroup->kind << " " << theGroup->id << ", plan=" << thePlan);
+               Adaptation::Config::service_iteration_limit << ") exceeded:\n" <<
+               "\tPossible service loop with " <<
+               theGroup->kind << " " << theGroup->id << ", plan=" << thePlan);
         throw TexcHere("too many adaptations");
     }
 
@@ -69,7 +69,7 @@ void Adaptation::Iterator::step()
     debugs(93,5, HERE << "using adaptation service: " << service->cfg().key);
 
     theLauncher = initiateAdaptation(
-        service->makeXactLauncher(this, theMsg, theCause));
+                      service->makeXactLauncher(this, theMsg, theCause));
     Must(theLauncher);
     Must(!done());
 }
@@ -113,8 +113,8 @@ void Adaptation::Iterator::noteAdaptationQueryAbort(bool final)
     updatePlan(false);
 
     // can we replace the failed service (group-level bypass)?
-    const bool srcIntact = !theMsg->body_pipe || 
-        !theMsg->body_pipe->consumedSize();
+    const bool srcIntact = !theMsg->body_pipe ||
+                           !theMsg->body_pipe->consumedSize();
     // can we ignore the failure (compute while thePlan is not exhausted)?
     Must(!thePlan.exhausted());
     const bool canIgnore = thePlan.current()->cfg().bypass;
@@ -176,7 +176,7 @@ bool Adaptation::Iterator::updatePlan(bool adopt)
         debugs(85,3, HERE << "rejecting service-proposed plan");
         return false;
     }
-  
+
     debugs(85,3, HERE << "retiring old plan: " << thePlan);
     theGroup = new DynamicServiceChain(services, theGroup); // refcounted
     thePlan = ServicePlan(theGroup, filter());
@@ -196,8 +196,7 @@ Adaptation::ServiceFilter Adaptation::Iterator::filter() const
         method = methodReqmod;
         req = r;
         rep = NULL;
-    } else
-    if (HttpReply *r = dynamic_cast<HttpReply*>(theMsg)) {
+    } else if (HttpReply *r = dynamic_cast<HttpReply*>(theMsg)) {
         method = methodRespmod;
         req = theCause;
         rep = r;

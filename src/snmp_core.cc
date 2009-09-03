@@ -577,7 +577,7 @@ snmpConstructReponse(snmp_request_t * rq)
 
 static struct snmp_pdu *
 
-            snmpAgentResponse(struct snmp_pdu *PDU) {
+snmpAgentResponse(struct snmp_pdu *PDU) {
 
     struct snmp_pdu *Answer = NULL;
 

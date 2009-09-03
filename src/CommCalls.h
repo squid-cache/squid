@@ -172,7 +172,7 @@ protected:
 
 // accept (IOACB) dialer
 class CommAcceptCbPtrFun: public CallDialer,
-            public CommDialerParamsT<CommAcceptCbParams>
+        public CommDialerParamsT<CommAcceptCbParams>
 {
 public:
     typedef CommAcceptCbParams Params;
@@ -188,7 +188,7 @@ public:
 
 // connect (CNCB) dialer
 class CommConnectCbPtrFun: public CallDialer,
-            public CommDialerParamsT<CommConnectCbParams>
+        public CommDialerParamsT<CommConnectCbParams>
 {
 public:
     typedef CommConnectCbParams Params;
@@ -205,7 +205,7 @@ public:
 
 // read/write (IOCB) dialer
 class CommIoCbPtrFun: public CallDialer,
-            public CommDialerParamsT<CommIoCbParams>
+        public CommDialerParamsT<CommIoCbParams>
 {
 public:
     typedef CommIoCbParams Params;
@@ -222,7 +222,7 @@ public:
 
 // close (PF) dialer
 class CommCloseCbPtrFun: public CallDialer,
-            public CommDialerParamsT<CommCloseCbParams>
+        public CommDialerParamsT<CommCloseCbParams>
 {
 public:
     typedef CommCloseCbParams Params;
@@ -237,7 +237,7 @@ public:
 };
 
 class CommTimeoutCbPtrFun:public CallDialer,
-            public CommDialerParamsT<CommTimeoutCbParams>
+        public CommDialerParamsT<CommTimeoutCbParams>
 {
 public:
     typedef CommTimeoutCbParams Params;

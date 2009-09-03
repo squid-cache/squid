@@ -401,7 +401,7 @@ typedef enum {
     LTF_ADAPTATION_ALL_XACT_TIMES,
 #endif
 
-#if ICAP_CLIENT    
+#if ICAP_CLIENT
 
     LFT_ICAP_TOTAL_TIME,
     LFT_ICAP_LAST_MATCHED_HEADER,
@@ -414,15 +414,15 @@ typedef enum {
     LFT_ICAP_REQUEST_METHOD,
     LFT_ICAP_BYTES_SENT,
     LFT_ICAP_BYTES_READ,
-    
+
     LFT_ICAP_REQ_HEADER,
     LFT_ICAP_REQ_HEADER_ELEM,
     LFT_ICAP_REQ_ALL_HEADERS,
-    
+
     LFT_ICAP_REP_HEADER,
     LFT_ICAP_REP_HEADER_ELEM,
     LFT_ICAP_REP_ALL_HEADERS,
-    
+
     LFT_ICAP_TR_RESPONSE_TIME,
     LFT_ICAP_IO_TIME,
     LFT_ICAP_OUTCOME,
@@ -622,7 +622,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             if (al->cache.caddr.IsAnyAddr()) // e.g., ICAP OPTIONS lack client
                 out = "-";
             else
-            out = fqdncache_gethostbyaddr(al->cache.caddr, FQDN_LOOKUP_IF_MISS);
+                out = fqdncache_gethostbyaddr(al->cache.caddr, FQDN_LOOKUP_IF_MISS);
             if (!out) {
                 out = al->cache.caddr.NtoA(tmp,1024);
             }
@@ -703,7 +703,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             doint = 1;
             break;
 
-    case LFT_PEER_RESPONSE_TIME:
+        case LFT_PEER_RESPONSE_TIME:
             if (al->hier.peer_response_time < 0) {
                 out = "-";
             } else {
@@ -769,7 +769,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             break;
 #endif
 
-#if ICAP_CLIENT            
+#if ICAP_CLIENT
         case LFT_ICAP_LAST_MATCHED_HEADER:
             if (al->request) {
                 Adaptation::Icap::History::Pointer ih = al->request->icapHistory();
@@ -805,7 +805,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
 
         case LFT_ICAP_ADDR:
             if (!out)
-        out = al->icap.hostAddr.NtoA(tmp,1024);
+                out = al->icap.hostAddr.NtoA(tmp,1024);
             break;
 
         case LFT_ICAP_SERV_NAME:
@@ -880,7 +880,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
 
             break;
 
-        case LFT_ICAP_REP_ALL_HEADERS: 
+        case LFT_ICAP_REP_ALL_HEADERS:
             if (al->icap.reply) {
                 HttpHeaderPos pos = HttpHeaderInitPos;
                 while (const HttpHeaderEntry *e = al->icap.reply->header.getEntry(&pos)) {
@@ -996,8 +996,8 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             /* case LFT_USER_REALM: */
             /* case LFT_USER_SCHEME: */
 
-        // the fmt->type can not be LFT_HTTP_SENT_STATUS_CODE_OLD_30
-        // but compiler complains if ommited
+            // the fmt->type can not be LFT_HTTP_SENT_STATUS_CODE_OLD_30
+            // but compiler complains if ommited
         case LFT_HTTP_SENT_STATUS_CODE_OLD_30:
         case LFT_HTTP_SENT_STATUS_CODE:
             outint = al->http.code;
@@ -1007,10 +1007,9 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
             break;
 
         case LFT_HTTP_RECEIVED_STATUS_CODE:
-            if(al->hier.peer_reply_status == HTTP_STATUS_NONE) {
+            if (al->hier.peer_reply_status == HTTP_STATUS_NONE) {
                 out = "-";
-            }
-            else {
+            } else {
                 outint = al->hier.peer_reply_status;
                 doint = 1;
             }
@@ -1316,12 +1315,12 @@ accessLogGetNewLogFormatToken(logformat_token * lt, char *def, enum log_quote *q
             cur++;
     }
 
-    // For upward compatibility, assume "http::" prefix as default prefix 
+    // For upward compatibility, assume "http::" prefix as default prefix
     // for all log access formating codes, except those starting
     // from "icap::", "adapt::" and "%"
     if (strncmp(cur,"http::", 6) == 0 &&
-        strncmp(cur+6, "icap::", 6) != 0  &&
-        strncmp(cur+6, "adapt::", 12) != 0 && *(cur+6) != '%' ) {
+            strncmp(cur+6, "icap::", 6) != 0  &&
+            strncmp(cur+6, "adapt::", 12) != 0 && *(cur+6) != '%' ) {
         cur += 6;
     }
 
@@ -1349,7 +1348,7 @@ done:
 
     switch (lt->type) {
 
-#if ICAP_CLIENT    
+#if ICAP_CLIENT
     case LFT_ICAP_LAST_MATCHED_HEADER:
 
     case LFT_ICAP_REQ_HEADER:
@@ -1375,29 +1374,51 @@ done:
 
                 lt->data.header.element = cp;
 
-                switch(lt->type) {
-                case LFT_REQUEST_HEADER: lt->type = LFT_REQUEST_HEADER_ELEM; break;
-                case LFT_REPLY_HEADER: lt->type = LFT_REPLY_HEADER_ELEM; break;
+                switch (lt->type) {
+                case LFT_REQUEST_HEADER:
+                    lt->type = LFT_REQUEST_HEADER_ELEM;
+                    break;
+                case LFT_REPLY_HEADER:
+                    lt->type = LFT_REPLY_HEADER_ELEM;
+                    break;
 #if ICAP_CLIENT
-                case LFT_ICAP_LAST_MATCHED_HEADER: lt->type = LFT_ICAP_LAST_MATCHED_HEADER_ELEM; break;
-                case LFT_ICAP_REQ_HEADER: lt->type = LFT_ICAP_REQ_HEADER_ELEM; break; 
-                case LFT_ICAP_REP_HEADER: lt->type = LFT_ICAP_REP_HEADER_ELEM; break;
+                case LFT_ICAP_LAST_MATCHED_HEADER:
+                    lt->type = LFT_ICAP_LAST_MATCHED_HEADER_ELEM;
+                    break;
+                case LFT_ICAP_REQ_HEADER:
+                    lt->type = LFT_ICAP_REQ_HEADER_ELEM;
+                    break;
+                case LFT_ICAP_REP_HEADER:
+                    lt->type = LFT_ICAP_REP_HEADER_ELEM;
+                    break;
 #endif
-                default:break;
+                default:
+                    break;
                 }
             }
 
             lt->data.header.header = header;
         } else {
-            switch(lt->type) {
-            case LFT_REQUEST_HEADER: lt->type = LFT_REQUEST_ALL_HEADERS; break;
-            case LFT_REPLY_HEADER: lt->type = LFT_REPLY_ALL_HEADERS; break;
+            switch (lt->type) {
+            case LFT_REQUEST_HEADER:
+                lt->type = LFT_REQUEST_ALL_HEADERS;
+                break;
+            case LFT_REPLY_HEADER:
+                lt->type = LFT_REPLY_ALL_HEADERS;
+                break;
 #if ICAP_CLIENT
-            case LFT_ICAP_LAST_MATCHED_HEADER: lt->type = LFT_ICAP_LAST_MATCHED_ALL_HEADERS; break;
-            case LFT_ICAP_REQ_HEADER: lt->type = LFT_ICAP_REQ_ALL_HEADERS; break; 
-            case LFT_ICAP_REP_HEADER: lt->type = LFT_ICAP_REP_ALL_HEADERS; break;
+            case LFT_ICAP_LAST_MATCHED_HEADER:
+                lt->type = LFT_ICAP_LAST_MATCHED_ALL_HEADERS;
+                break;
+            case LFT_ICAP_REQ_HEADER:
+                lt->type = LFT_ICAP_REQ_ALL_HEADERS;
+                break;
+            case LFT_ICAP_REP_HEADER:
+                lt->type = LFT_ICAP_REP_ALL_HEADERS;
+                break;
 #endif
-            default:break;
+            default:
+                break;
             }
             Config.onoff.log_mime_hdrs = 1;
         }
@@ -1426,7 +1447,7 @@ done:
 
     case LFT_HTTP_SENT_STATUS_CODE_OLD_30:
         debugs(46, 0, "WARNING: the \"Hs\" formating code is deprecated use the \">Hs\" instead");
-	lt->type = LFT_HTTP_SENT_STATUS_CODE;
+        lt->type = LFT_HTTP_SENT_STATUS_CODE;
         break;
     default:
         break;
@@ -1505,15 +1526,26 @@ accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definit
 
                     arg = argbuf;
 
-                    switch(type) {
-                    case LFT_REQUEST_HEADER_ELEM: type = LFT_REQUEST_HEADER_ELEM; break;
-                    case LFT_REPLY_HEADER_ELEM: type = LFT_REPLY_HEADER_ELEM; break;
+                    switch (type) {
+                    case LFT_REQUEST_HEADER_ELEM:
+                        type = LFT_REQUEST_HEADER_ELEM;
+                        break;
+                    case LFT_REPLY_HEADER_ELEM:
+                        type = LFT_REPLY_HEADER_ELEM;
+                        break;
 #if ICAP_CLIENT
-                    case LFT_ICAP_LAST_MATCHED_HEADER_ELEM: type = LFT_ICAP_LAST_MATCHED_HEADER; break;
-                    case LFT_ICAP_REQ_HEADER_ELEM: type = LFT_ICAP_REQ_HEADER; break; 
-                    case LFT_ICAP_REP_HEADER_ELEM: type = LFT_ICAP_REP_HEADER; break;
+                    case LFT_ICAP_LAST_MATCHED_HEADER_ELEM:
+                        type = LFT_ICAP_LAST_MATCHED_HEADER;
+                        break;
+                    case LFT_ICAP_REQ_HEADER_ELEM:
+                        type = LFT_ICAP_REQ_HEADER;
+                        break;
+                    case LFT_ICAP_REP_HEADER_ELEM:
+                        type = LFT_ICAP_REP_HEADER;
+                        break;
 #endif
-                    default:break;
+                    default:
+                        break;
                     }
 
                     break;
@@ -1528,15 +1560,26 @@ accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definit
                 case LFT_ICAP_REP_ALL_HEADERS:
 #endif
 
-                    switch(type) {
-                    case LFT_REQUEST_ALL_HEADERS: type = LFT_REQUEST_HEADER; break;
-                    case LFT_REPLY_ALL_HEADERS: type = LFT_REPLY_HEADER; break;
+                    switch (type) {
+                    case LFT_REQUEST_ALL_HEADERS:
+                        type = LFT_REQUEST_HEADER;
+                        break;
+                    case LFT_REPLY_ALL_HEADERS:
+                        type = LFT_REPLY_HEADER;
+                        break;
 #if ICAP_CLIENT
-                    case LFT_ICAP_LAST_MATCHED_ALL_HEADERS: type = LFT_ICAP_LAST_MATCHED_HEADER; break;
-                    case LFT_ICAP_REQ_ALL_HEADERS: type = LFT_ICAP_REQ_HEADER; break; 
-                    case LFT_ICAP_REP_ALL_HEADERS: type = LFT_ICAP_REP_HEADER; break;
+                    case LFT_ICAP_LAST_MATCHED_ALL_HEADERS:
+                        type = LFT_ICAP_LAST_MATCHED_HEADER;
+                        break;
+                    case LFT_ICAP_REQ_ALL_HEADERS:
+                        type = LFT_ICAP_REQ_HEADER;
+                        break;
+                    case LFT_ICAP_REP_ALL_HEADERS:
+                        type = LFT_ICAP_REP_HEADER;
+                        break;
 #endif
-                    default:break;
+                    default:
+                        break;
                     }
 
                     break;
@@ -1775,24 +1818,24 @@ accessLogICAPSquid(AccessLogEntry * al, Logfile * logfile)
     if (user && !*user)
         safe_free(user);
 
-        logfilePrintf(logfile, "%9ld.%03d %6d %s -/%03d %"PRId64" %s %s %s -/%s -\n",
-                      (long int) current_time.tv_sec,
-                      (int) current_time.tv_usec / 1000,
+    logfilePrintf(logfile, "%9ld.%03d %6d %s -/%03d %"PRId64" %s %s %s -/%s -\n",
+                  (long int) current_time.tv_sec,
+                  (int) current_time.tv_usec / 1000,
 
-                      al->icap.trTime,
-                      client,
+                  al->icap.trTime,
+                  client,
 
-                      al->icap.resStatus,
-                      al->icap.bytesRead,
-                      Adaptation::Icap::ICAP::methodStr(al->icap.reqMethod),
-                      al->icap.reqUri.termedBuf(),
-                      user ? user : dash_str,
-                      al->icap.hostAddr.NtoA(tmp, MAX_IPSTRLEN));
+                  al->icap.resStatus,
+                  al->icap.bytesRead,
+                  Adaptation::Icap::ICAP::methodStr(al->icap.reqMethod),
+                  al->icap.reqUri.termedBuf(),
+                  user ? user : dash_str,
+                  al->icap.hostAddr.NtoA(tmp, MAX_IPSTRLEN));
     safe_free(user);
 }
 #endif
 
-void 
+void
 accessLogLogTo(customlog* log, AccessLogEntry * al, ACLChecklist * checklist)
 {
 
@@ -1873,7 +1916,7 @@ accessLogLog(AccessLogEntry * al, ACLChecklist * checklist)
 {
     if (LogfileStatus != LOG_ENABLE)
         return;
-    
+
     accessLogLogTo(Config.Log.accesslogs, al, checklist);
 #if MULTICAST_MISS_STREAM
 
@@ -2009,19 +2052,17 @@ accessLogInit(void)
 #if USE_ADAPTATION || ICAP_CLIENT
         alLogformatHasAdaptToken = false;
         alLogformatHasIcapToken = false;
-        for (logformat_token * curr_token = (log->logFormat?log->logFormat->format:NULL); curr_token; curr_token = curr_token->next)
-        {
+        for (logformat_token * curr_token = (log->logFormat?log->logFormat->format:NULL); curr_token; curr_token = curr_token->next) {
 #if USE_ADAPTATION
             if (curr_token->type == LTF_ADAPTATION_SUM_XACT_TIMES ||
-                curr_token->type == LTF_ADAPTATION_ALL_XACT_TIMES) {
+                    curr_token->type == LTF_ADAPTATION_ALL_XACT_TIMES) {
                 alLogformatHasAdaptToken = true;
             }
-#endif    
+#endif
 #if ICAP_CLIENT
             if (curr_token->type == LFT_ICAP_LAST_MATCHED_HEADER ||
-                curr_token->type == LFT_ICAP_LAST_MATCHED_HEADER_ELEM ||
-                curr_token->type == LFT_ICAP_LAST_MATCHED_ALL_HEADERS)
-            {
+                    curr_token->type == LFT_ICAP_LAST_MATCHED_HEADER_ELEM ||
+                    curr_token->type == LFT_ICAP_LAST_MATCHED_ALL_HEADERS) {
                 alLogformatHasIcapToken = true;
             }
 #endif
