@@ -45,6 +45,9 @@ buildtest() {
     echo "TESTING: ${layer}"
     chmod -R 777 ${btlayer}
     rm -f -r ${btlayer} && mkdir ${btlayer}
+    if test "${verbose}" = "yes" ; then
+        ls -la ${btlayer}
+    fi
     {
 	result=255
 	cd ${btlayer}
@@ -83,13 +86,17 @@ buildtest() {
 
     if test $result -eq 0; then
 	# successful execution
-	if test "$verbose" = yes; then
+	if test "${verbose}" = "yes"; then
 	    echo "Build OK. Global result is $globalResult."
 	fi
     else
-        echo "Build Failed. Last log lines are:"
-        tail -20 ${log}
-	globalResult=1
+        if test "${verbose}" != "yes" ; then
+            echo "Build Failed. Last log lines are:"
+            tail -20 ${log}
+        else
+            echo "Build FAILED."
+        fi
+        globalResult=1
     fi
 
     if test "${cleanup}" = "yes" ; then
