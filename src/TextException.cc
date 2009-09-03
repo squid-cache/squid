@@ -3,13 +3,13 @@
 
 TextException::TextException()
 {
-	message=NULL;
-	theFileName=NULL;
-	theLineNo=0;
+    message=NULL;
+    theFileName=NULL;
+    theLineNo=0;
 }
 
 TextException::TextException(const TextException& right) :
-	message((right.message?xstrdup(right.message):NULL)), theFileName(right.theFileName), theLineNo(right.theLineNo)
+        message((right.message?xstrdup(right.message):NULL)), theFileName(right.theFileName), theLineNo(right.theLineNo)
 {
 }
 
@@ -19,18 +19,18 @@ TextException::TextException(const char *aMsg, const char *aFileName, int aLineN
 
 TextException::~TextException() throw()
 {
-    if(message) xfree(message);
+    if (message) xfree(message);
 }
 
 TextException& TextException::operator=(const TextException &right)
 {
-	if(this==&right) return *this;
-	if(message) xfree(message);
+    if (this==&right) return *this;
+    if (message) xfree(message);
     message=(right.message?xstrdup(right.message):NULL);
     theFileName=right.theFileName;
     theLineNo=right.theLineNo;
 
-	return *this;	
+    return *this;
 }
 
 const char *TextException::what() const throw()

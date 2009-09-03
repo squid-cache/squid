@@ -36,9 +36,6 @@
 #ifndef SQUID_TYPEDEFS_H
 #define SQUID_TYPEDEFS_H
 
-typedef unsigned int store_status_t;
-//MOVED src/Store.h (only use)		typedef unsigned int ping_status_t;
-typedef unsigned int swap_status_t;
 typedef signed int sfileno;
 typedef signed int sdirno;
 

@@ -39,7 +39,8 @@
 
 namespace Adaptation
 {
-namespace Icap {
+namespace Icap
+{
 
 /* OptXact sends an ICAP OPTIONS request to the ICAP service,
  * parses the ICAP response, and sends it to the initiator. A NULL response

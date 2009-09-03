@@ -577,7 +577,7 @@ snmpConstructReponse(snmp_request_t * rq)
 
 static struct snmp_pdu *
 
-            snmpAgentResponse(struct snmp_pdu *PDU) {
+snmpAgentResponse(struct snmp_pdu *PDU) {
 
     struct snmp_pdu *Answer = NULL;
 
@@ -1051,7 +1051,7 @@ snmpDebugOid(int lvl, oid * Name, snint Len)
 static void
 snmpSnmplibDebug(int lvl, char *buf)
 {
-    debug(49, lvl) ("%s", buf);
+    debugs(49, lvl, buf);
 }
 
 

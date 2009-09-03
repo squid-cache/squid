@@ -1,3 +1,4 @@
+
 /*
  * mswin_negotiate_auth: helper for Negotiate Authentication for Squid Cache
  *
@@ -79,15 +80,15 @@ void
 helperfail(const char *reason)
 {
 #if FAIL_DEBUG
-    fail_debug_enabled =1;
+    fail_debug_enabled = 1;
 #endif
     SEND2("BH %s", reason);
 }
 
 /*
-  options:
-  -d enable debugging.
-  -v enable verbose Negotiate packet debugging.
+ * options:
+ * -d enable debugging.
+ * -v enable verbose Negotiate packet debugging.
  */
 char *my_program_name = NULL;
 
@@ -108,7 +109,7 @@ process_options(int argc, char *argv[])
 {
     int opt, had_error = 0;
 
-    opterr =0;
+    opterr = 0;
     while (-1 != (opt = getopt(argc, argv, "hdv"))) {
         switch (opt) {
         case 'd':
@@ -142,15 +143,15 @@ manage_request()
     char *c, *decoded;
     int plen, status;
     int oversized = 0;
-    char * ErrorMessage;
-    static char cred[SSP_MAX_CRED_LEN+1];
+    char *ErrorMessage;
+    static char cred[SSP_MAX_CRED_LEN + 1];
     BOOL Done = FALSE;
 
 try_again:
     if (fgets(buf, BUFFER_SIZE, stdin) == NULL)
         return 0;
 
-    c = memchr(buf, '\n', BUFFER_SIZE);	/* safer against overrun than strchr */
+    c = memchr(buf, '\n', BUFFER_SIZE);		/* safer against overrun than strchr */
     if (c) {
         if (oversized) {
             helperfail("illegal request received");
@@ -183,27 +184,30 @@ try_again:
             return 1;
         }
         /* Obtain server blob against SSPI */
-        plen = (strlen(buf) - 3) * 3 / 4;		/* we only need it here. Optimization */
+        plen = (strlen(buf) - 3) * 3 / 4;	/* we only need it here. Optimization */
         c = (char *) SSP_MakeNegotiateBlob(decoded, plen, &Done, &status, cred);
 
         if (status == SSP_OK) {
             if (Done) {
-                lc(cred);		/* let's lowercase them for our convenience */
+                lc(cred);	/* let's lowercase them for our convenience */
                 have_serverblob = 0;
                 Done = FALSE;
                 if (Negotiate_packet_debug_enabled) {
-                    printf("AF %s %s\n",c,cred);
                     decoded = base64_decode(c);
                     debug("sending 'AF' %s to squid with data:\n", cred);
-                    hex_dump(decoded, (strlen(c) * 3) / 4);
+                    if (c != NULL)
+                        hex_dump(decoded, (strlen(c) * 3) / 4);
+                    else
+                        fprintf(stderr, "No data available.\n");
+                    printf("AF %s %s\n", c, cred);
                 } else
                     SEND3("AF %s %s", c, cred);
             } else {
                 if (Negotiate_packet_debug_enabled) {
-                    printf("TT %s\n",c);
                     decoded = base64_decode(c);
                     debug("sending 'TT' to squid with data:\n");
                     hex_dump(decoded, (strlen(c) * 3) / 4);
+                    printf("TT %s\n", c);
                 } else {
                     SEND2("TT %s", c);
                 }
@@ -213,7 +217,6 @@ try_again:
             helperfail("can't obtain server blob");
         return 1;
     }
-
     if (memcmp(buf, "KK ", 3) == 0) {	/* authenticate-request */
         if (!have_serverblob) {
             helperfail("invalid server blob");
@@ -228,9 +231,8 @@ try_again:
             SEND("NA * Packet format error, couldn't base64-decode");
             return 1;
         }
-
         /* check against SSPI */
-        plen = (strlen(buf) - 3) * 3 / 4;		/* we only need it here. Optimization */
+        plen = (strlen(buf) - 3) * 3 / 4;	/* we only need it here. Optimization */
         c = (char *) SSP_ValidateNegotiateCredentials(decoded, plen, &Done, &status, cred);
 
         if (status == SSP_ERROR) {
@@ -241,8 +243,8 @@ try_again:
                           FORMAT_MESSAGE_IGNORE_INSERTS,
                           NULL,
                           GetLastError(),
-                          MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),   /* Default language */
-                          (LPTSTR) &ErrorMessage,
+                          MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),	/* Default language */
+                          (LPTSTR) & ErrorMessage,
                           0,
                           NULL);
             if (ErrorMessage[strlen(ErrorMessage) - 1] == '\n')
@@ -253,32 +255,34 @@ try_again:
             LocalFree(ErrorMessage);
             return 1;
         }
-
         if (Done) {
             lc(cred);		/* let's lowercase them for our convenience */
             have_serverblob = 0;
             Done = FALSE;
             if (Negotiate_packet_debug_enabled) {
-                printf("AF %s %s\n",c,cred);
                 decoded = base64_decode(c);
                 debug("sending 'AF' %s to squid with data:\n", cred);
-                hex_dump(decoded, (strlen(c) * 3) / 4);
+                if (c != NULL)
+                    hex_dump(decoded, (strlen(c) * 3) / 4);
+                else
+                    fprintf(stderr, "No data available.\n");
+                printf("AF %s %s\n", c, cred);
             } else {
                 SEND3("AF %s %s", c, cred);
             }
             return 1;
         } else {
             if (Negotiate_packet_debug_enabled) {
-                printf("TT %s\n",c);
                 decoded = base64_decode(c);
                 debug("sending 'TT' to squid with data:\n");
                 hex_dump(decoded, (strlen(c) * 3) / 4);
+                printf("TT %s\n", c);
             } else
                 SEND2("TT %s", c);
             return 1;
         }
 
-    } else {	/* not an auth-request */
+    } else {			/* not an auth-request */
         helperfail("illegal request received");
         fprintf(stderr, "Illegal request received: '%s'\n", buf);
         return 1;

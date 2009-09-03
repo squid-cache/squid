@@ -652,7 +652,7 @@ clientReplyContext::processMiss()
 
     /// Deny loops for accelerator and interceptor. TODO: deny in all modes?
     if (r->flags.loopdetect &&
-        (http->flags.accel || http->flags.intercepted)) {
+            (http->flags.accel || http->flags.intercepted)) {
         http->al.http.code = HTTP_FORBIDDEN;
         err = clientBuildError(ERR_ACCESS_DENIED, HTTP_FORBIDDEN, NULL, http->getConn()->peer, http->request);
         createStoreEntry(r->method, request_flags());
@@ -1768,6 +1768,7 @@ clientReplyContext::sendBodyTooLargeError()
 {
     IpAddress tmp_noaddr;
     tmp_noaddr.SetNoAddr(); // TODO: make a global const
+    http->logType = LOG_TCP_DENIED_REPLY;
     ErrorState *err = clientBuildError(ERR_TOO_BIG, HTTP_FORBIDDEN, NULL,
                                        http->getConn() != NULL ? http->getConn()->peer : tmp_noaddr,
                                        http->request);

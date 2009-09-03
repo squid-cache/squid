@@ -5,11 +5,13 @@
 #include "Array.h"
 #include "SquidString.h"
 
-namespace Adaptation {
+namespace Adaptation
+{
 
 
 /// collects information about adaptations related to a master transaction
-class History: public RefCountable {
+class History: public RefCountable
+{
 public:
     typedef RefCount<Adaptation::History> Pointer;
 
@@ -41,7 +43,8 @@ public:
 
 private:
     /// single Xaction stats (i.e., a historical record entry)
-    class Entry {
+    class Entry
+    {
     public:
         Entry(const String &serviceId, const timeval &when);
         Entry(); // required by Vector<>
@@ -58,8 +61,8 @@ private:
     public:
         bool retried; ///< whether the xaction was replaced by another
     };
-    
-    typedef Vector<Entry> Entries;  
+
+    typedef Vector<Entry> Entries;
     Entries theEntries; ///< historical record, in the order of xact starts
 
     // theXx* will become a map<string,string>, but we only support one record

@@ -60,6 +60,9 @@
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
+#if HAVE_LINUX_TYPES_H
+#include <linux/types.h>
+#endif
 #if STDC_HEADERS
 #include <stdlib.h>
 #include <stddef.h>

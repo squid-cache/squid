@@ -193,7 +193,7 @@ store_client::store_client(StoreEntry *e) : entry (e)
 
     if (getType() == STORE_DISK_CLIENT)
         /* assert we'll be able to get the data we want */
-        /* maybe we should open swapin_fd here */
+        /* maybe we should open swapin_sio here */
         assert(entry->swap_filen > -1 || entry->swapOutAble());
 
 #if STORE_CLIENT_LIST_DEBUG
@@ -472,24 +472,52 @@ store_client::fileRead()
 }
 
 static void
-storeClientReadBody(void *data, const char *buf, ssize_t len, StoreIOState::Pointer self)
+storeClientMemWriteComplete(void *data, StoreIOBuffer wroteBuffer)
 {
-    store_client *sc = (store_client *)data;
-    assert(sc->flags.disk_io_pending);
-    sc->flags.disk_io_pending = 0;
-    assert(sc->_callback.pending());
+    // Nothin to do here but callback is needed
+}
+
+void
+store_client::readBody(const char *buf, ssize_t len)
+{
+    int parsed_header = 0;
+
+    // Don't assert disk_io_pending here.. may be called by read_header
+    flags.disk_io_pending = 0;
+    assert(_callback.pending());
     debugs(90, 3, "storeClientReadBody: len " << len << "");
 
-    if (sc->copyInto.offset == 0 && len > 0 && sc->entry->getReply()->sline.status == 0) {
+    if (copyInto.offset == 0 && len > 0 && entry->getReply()->sline.status == 0) {
         /* Our structure ! */
-        HttpReply *rep = (HttpReply *) sc->entry->getReply(); // bypass const
+        HttpReply *rep = (HttpReply *) entry->getReply(); // bypass const
 
-        if (!rep->parseCharBuf(sc->copyInto.data, headersEnd(sc->copyInto.data, len))) {
+        if (!rep->parseCharBuf(copyInto.data, headersEnd(copyInto.data, len))) {
             debugs(90, 0, "Could not parse headers from on disk object");
+        } else {
+            parsed_header = 1;
         }
     }
 
-    sc->callback(len);
+    const HttpReply *rep = entry->getReply();
+    if (len > 0 && rep && entry->mem_obj->inmem_lo == 0 && entry->objectLen() <= (int64_t)Config.Store.maxInMemObjSize && Config.onoff.memory_cache_disk) {
+        storeGetMemSpace(len);
+        // The above may start to free our object so we need to check again
+        if (entry->mem_obj->inmem_lo == 0) {
+            /* Copy read data back into memory.
+             * but first we need to adjust offset.. some parts of the code
+             * counts offset including headers, some parts count offset as
+             * withing the body.. copyInto is including headers, but the mem
+             * cache expects offset without headers (using negative for headers)
+             * eventually not storing packed headers in memory at all.
+             */
+            int64_t mem_offset = entry->mem_obj->endOffset();
+            if ((copyInto.offset == mem_offset) || (parsed_header && mem_offset == rep->hdr_sz)) {
+                entry->mem_obj->write(StoreIOBuffer(len, copyInto.offset - rep->hdr_sz, copyInto.data), storeClientMemWriteComplete, this);
+            }
+        }
+    }
+
+    callback(len);
 }
 
 void
@@ -512,6 +540,13 @@ storeClientReadHeader(void *data, const char *buf, ssize_t len, StoreIOState::Po
 {
     store_client *sc = (store_client *)data;
     sc->readHeader(buf, len);
+}
+
+static void
+storeClientReadBody(void *data, const char *buf, ssize_t len, StoreIOState::Pointer self)
+{
+    store_client *sc = (store_client *)data;
+    sc->readBody(buf, len);
 }
 
 void
@@ -589,16 +624,8 @@ store_client::readHeader(char const *buf, ssize_t len)
         debugs(90, 3, "storeClientReadHeader: copying " << copy_sz << " bytes of body");
         xmemmove(copyInto.data, copyInto.data + mem->swap_hdr_sz, copy_sz);
 
-        if (copyInto.offset == 0 && len > 0 && entry->getReply()->sline.status == 0) {
-            /* Our structure ! */
-            HttpReply *rep = (HttpReply *) entry->getReply(); // bypass const
+        readBody(copyInto.data, copy_sz);
 
-            if (!rep->parseCharBuf(copyInto.data, headersEnd(copyInto.data, copy_sz))) {
-                debugs(90, 0, "could not parse headers from on disk structure!");
-            }
-        }
-
-        callback(copy_sz);
         return;
     }
 

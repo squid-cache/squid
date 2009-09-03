@@ -42,6 +42,7 @@
 #include "SwapDir.h"
 #include "ConfigParser.h"
 #include "acl/Acl.h"
+#include "acl/MethodData.h"
 #include "acl/Gadgets.h"
 #include "StoreFileSystem.h"
 #include "Parsing.h"
@@ -389,6 +390,7 @@ parseConfigFile(const char *file_name)
 
     configFreeMemory();
 
+    ACLMethodData::ThePurgeCount = 0;
     default_all();
 
     err_count = parseOneConfigFile(file_name, 0);
@@ -621,10 +623,9 @@ configDoConfigure(void)
 
 #endif
 
-    // we have reconfigured and in the process disabled any need for PURGE.
-    // turn it off now.
-    if(Config2.onoff.enable_purge == 2)
-        Config2.onoff.enable_purge = 0;
+    // we enable runtime PURGE checks if there is at least one PURGE method ACL
+    // TODO: replace with a dedicated "purge" ACL option?
+    Config2.onoff.enable_purge = (ACLMethodData::ThePurgeCount > 0);
 
     Config2.onoff.mangle_request_headers = httpReqHdrManglersConfigured();
 
@@ -1647,7 +1648,7 @@ GetService(const char *proto)
         return 0; /* NEVER REACHED */
     }
     /** Returns either the service port number from /etc/services */
-    if( !isUnsignedNumeric(token, strlen(token)) )
+    if ( !isUnsignedNumeric(token, strlen(token)) )
         port = getservbyname(token, proto);
     if (port != NULL) {
         return ntohs((u_short)port->s_port);
@@ -2767,6 +2768,50 @@ dump_removalpolicy(StoreEntry * entry, const char *name, RemovalPolicySettings *
         args = args->next;
     }
 
+    storeAppendPrintf(entry, "\n");
+}
+
+static void
+free_memcachemode(SquidConfig * config)
+{
+    return;
+}
+
+static void
+parse_memcachemode(SquidConfig * config)
+{
+    char *token = strtok(NULL, w_space);
+    if (!token)
+        self_destruct();
+
+    if (strcmp(token, "always") == 0) {
+        Config.onoff.memory_cache_first = 1;
+        Config.onoff.memory_cache_disk = 1;
+    } else if (strcmp(token, "disk") == 0) {
+        Config.onoff.memory_cache_first = 0;
+        Config.onoff.memory_cache_disk = 1;
+    } else if (strncmp(token, "net", 3) == 0) {
+        Config.onoff.memory_cache_first = 1;
+        Config.onoff.memory_cache_disk = 0;
+    } else if (strcmp(token, "never") == 0) {
+        Config.onoff.memory_cache_first = 0;
+        Config.onoff.memory_cache_disk = 0;
+    } else
+        self_destruct();
+}
+
+static void
+dump_memcachemode(StoreEntry * entry, const char *name, SquidConfig &config)
+{
+    storeAppendPrintf(entry, "%s ", name);
+    if (Config.onoff.memory_cache_first && Config.onoff.memory_cache_disk)
+        storeAppendPrintf(entry, "always");
+    else if (!Config.onoff.memory_cache_first && Config.onoff.memory_cache_disk)
+        storeAppendPrintf(entry, "disk");
+    else if (Config.onoff.memory_cache_first && !Config.onoff.memory_cache_disk)
+        storeAppendPrintf(entry, "network");
+    else if (!Config.onoff.memory_cache_first && !Config.onoff.memory_cache_disk)
+        storeAppendPrintf(entry, "none");
     storeAppendPrintf(entry, "\n");
 }
 

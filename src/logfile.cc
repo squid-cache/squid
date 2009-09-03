@@ -145,6 +145,8 @@ logfileOpen(const char *path, size_t bufsz, int fatal_flag)
     if (fatal_flag)
         lf->flags.fatal = 1;
 
+    lf->sequence_number = 0;
+
     return lf;
 }
 
@@ -218,6 +220,9 @@ logfileRotate(Logfile * lf)
 void
 logfileWrite(Logfile * lf, void *buf, size_t len)
 {
+   /* AYJ: this write gets called once per line? Squid-2 did it in lineEnd which we dont have. */
+   lf->sequence_number++;
+
 #if HAVE_SYSLOG
 
     if (lf->flags.syslog) {

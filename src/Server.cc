@@ -176,8 +176,8 @@ ServerStateData::serverComplete()
 
     HttpRequest *r = originalRequest();
     r->hier.total_response_time = r->hier.first_conn_start.tv_sec ?
-        tvSubMsec(r->hier.first_conn_start, current_time) : -1;
-    
+                                  tvSubMsec(r->hier.first_conn_start, current_time) : -1;
+
     if (requestBodySource != NULL)
         stopConsumingFrom(requestBodySource);
 
@@ -529,7 +529,7 @@ ServerStateData::startAdaptation(const Adaptation::ServiceGroupPointer &group, H
     }
 
     adaptedHeadSource = initiateAdaptation(
-        new Adaptation::Iterator(this, vrep, cause, group));
+                            new Adaptation::Iterator(this, vrep, cause, group));
     startedAdaptation = adaptedHeadSource != NULL;
     Must(startedAdaptation);
 }

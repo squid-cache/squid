@@ -60,7 +60,7 @@ MemObject::trimUnSwappable()
 }
 
 int64_t
-MemObject::policyLowestOffsetToKeep() const
+MemObject::policyLowestOffsetToKeep(bool swap) const
 {
     fatal ("Not implemented");
     return -1;

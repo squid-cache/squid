@@ -85,7 +85,8 @@
  * where structures of type ipcache_entry whose most
  * interesting members are:
  */
-class ipcache_entry {
+class ipcache_entry
+{
 public:
     hash_link hash;		/* must be first */
     time_t lastref;
@@ -656,7 +657,7 @@ ipcacheHandleReply(void *data, rfc1035_rr * answers, int na, const char *error_m
     IpcacheStats.replies++;
     const int age = i->age();
     statHistCount(&statCounter.dns.svc_time, age);
-                  
+
 #if USE_DNSSERVERS
 
     done = ipcacheParse(i, reply);

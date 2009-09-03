@@ -127,9 +127,9 @@ public:
     public:
         Headers() : request(NULL),
 #if ICAP_CLIENT
-                    icap(NULL),
+                icap(NULL),
 #endif
-                    reply(NULL) {}
+                reply(NULL) {}
 
         char *request;
 
@@ -157,9 +157,10 @@ public:
     /** \brief This subclass holds log info for ICAP part of request
      *  \todo Inner class declarations should be moved outside
      */
-    class IcapLogEntry {
+    class IcapLogEntry
+    {
     public:
-    IcapLogEntry():request(NULL),reply(NULL),outcome(Adaptation::Icap::xoUnknown),trTime(0),ioTime(0),resStatus(HTTP_STATUS_NONE){}
+        IcapLogEntry():request(NULL),reply(NULL),outcome(Adaptation::Icap::xoUnknown),trTime(0),ioTime(0),resStatus(HTTP_STATUS_NONE) {}
 
         IpAddress hostAddr; ///< ICAP server IP address
         String serviceName;        ///< ICAP service name
@@ -178,7 +179,7 @@ public:
         int trTime;
         /** \brief Transaction I/O time.
          * The timer starts when the first ICAP request
-         * byte is scheduled for sending and stops when the lastbyte of the 
+         * byte is scheduled for sending and stops when the lastbyte of the
          * ICAP response is received.
          */
         int ioTime;

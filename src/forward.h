@@ -7,11 +7,11 @@ class ErrorState;
 class HttpRequest;
 
 #include "comm.h"
+#include "hier_code.h"
 #include "ip/IpAddress.h"
 
 class FwdServer
 {
-
 public:
     peer *_peer;                /* NULL --> origin server */
     hier_code code;
@@ -20,7 +20,6 @@ public:
 
 class FwdState : public RefCountable
 {
-
 public:
     typedef RefCount<FwdState> Pointer;
     ~FwdState();
@@ -82,7 +81,6 @@ public:
     static void abort(void*);
 
 private:
-    CBDATA_CLASS2(FwdState);
     Pointer self;
     ErrorState *err;
     int client_fd;
@@ -101,6 +99,9 @@ private:
     } flags;
 
     IpAddress src; /* Client address for this connection. Needed for transparent operations. */
+
+    // NP: keep this last. It plays with private/public
+    CBDATA_CLASS2(FwdState);
 };
 
 #endif /* SQUID_FORWARD_H */

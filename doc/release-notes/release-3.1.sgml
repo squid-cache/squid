@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.1.0.11 release notes</title>
+<title>Squid 3.1.0.13 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.1.0.11 for testing.
+The Squid Team are pleased to announce the release of Squid-3.1.0.13 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.1/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -1455,6 +1455,11 @@ This section gives an account of those changes in three categories:
 	<p>Disable error page localization for visitors.
 	<p>error_directory option is required if this option is used.
 
+	<tag>--disable-caps</tag>
+	<p>Build without libcap support. The default is to auto-detect system capabilities
+	   and enable support when possible.
+	<p>NOTE: Disabling this or building without libcap support will break TPROXY support.
+
 	<tag>--disable-ipv6</tag>
 	<p>Build without IPv6 support. The default is to auto-detect system capabilities
 	   and build with IPv6 when possible.
@@ -1515,6 +1520,14 @@ This section gives an account of those changes in three categories:
 	<tag>--disable-internl-dns</tag>
 	<p>Better support for Linux using the external DNS helper.
            The helper will now compile and work with dns_nameservers on more variants of Linux than previously.
+
+	<tag>--with-aio</tag>
+	<p>Deprecated. POSIX AIO is now auto-detected and enabled.
+	   Use --without-aio to disable, but only if you really have to.
+
+	<tag>--with-pthreads</tag>
+	<p>Deprecated. pthreads library is now auto-detected and enabled.
+	   Use --without-pthreads to disable, but only if you really have to.
 
 </descrip>
 </p>

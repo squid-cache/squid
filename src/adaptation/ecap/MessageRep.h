@@ -21,7 +21,8 @@ class HttpReply;
 
 namespace Adaptation
 {
-namespace Ecap {
+namespace Ecap
+{
 
 class XactionRep;
 

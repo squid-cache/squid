@@ -14,16 +14,16 @@ namespace Adaptation
 
    Note: Initiate must be the first parent for cbdata to work. We use
    a temporary InitiatorHolder/toCbdata hacks and do not call cbdata
-   operations on the initiator directly. 
+   operations on the initiator directly.
 */
 
 /// iterates services in ServiceGroup, starting adaptation launchers
 class Iterator: public Initiate, public Initiator
 {
 public:
-    Iterator(Adaptation::Initiator *anInitiator, 
-        HttpMsg *virginHeader, HttpRequest *virginCause,
-        const Adaptation::ServiceGroupPointer &aGroup);
+    Iterator(Adaptation::Initiator *anInitiator,
+             HttpMsg *virginHeader, HttpRequest *virginCause,
+             const Adaptation::ServiceGroupPointer &aGroup);
     virtual ~Iterator();
 
     // Adaptation::Initiate: asynchronous communication with the initiator

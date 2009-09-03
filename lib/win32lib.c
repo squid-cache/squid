@@ -490,13 +490,13 @@ wsastrerror(int err)
 }
 
 struct passwd *
-            getpwnam(char *unused) {
+getpwnam(char *unused) {
     static struct passwd pwd = {NULL, NULL, 100, 100, NULL, NULL, NULL};
     return &pwd;
 }
 
 struct group *
-            getgrnam(char *unused) {
+getgrnam(char *unused) {
     static struct group grp = {NULL, NULL, 100, NULL};
     return &grp;
 }

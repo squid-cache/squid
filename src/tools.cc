@@ -41,17 +41,6 @@
 #include "SquidTime.h"
 #include "ip/IpIntercept.h"
 
-#ifdef _SQUID_LINUX_
-#if HAVE_SYS_CAPABILITY_H
-#undef _POSIX_SOURCE
-/* Ugly glue to get around linux header madness colliding with glibc */
-#define _LINUX_TYPES_H
-#define _LINUX_FS_H
-typedef uint32_t __u32;
-#include <sys/capability.h>
-#endif
-#endif
-
 #if HAVE_SYS_PRCTL_H
 #include <sys/prctl.h>
 #endif
@@ -406,7 +395,7 @@ void
 sigusr2_handle(int sig)
 {
     static int state = 0;
-    /* no debug() here; bad things happen if the signal is delivered during _db_print() */
+    /* no debugs() here; bad things happen if the signal is delivered during _db_print() */
 
     if (state == 0) {
 #ifndef MEM_GEN_TRACE
@@ -566,7 +555,7 @@ sig_child(int sig)
 
         pid = waitpid(-1, &status, WNOHANG);
 #endif
-        /* no debug() here; bad things happen if the signal is delivered during _db_print() */
+        /* no debugs() here; bad things happen if the signal is delivered during _db_print() */
 #if HAVE_SIGACTION
 
     } while (pid > 0);

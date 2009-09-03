@@ -70,6 +70,7 @@ public:
     void callback(ssize_t len, bool error = false);
     void doCopy (StoreEntry *e);
     void readHeader(const char *buf, ssize_t len);
+    void readBody(const char *buf, ssize_t len);
     void copy(StoreEntry *, StoreIOBuffer, STCB *, void *);
     void dumpStats(MemBuf * output, int clientNumber) const;
 

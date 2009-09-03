@@ -7,8 +7,8 @@
 #include "adaptation/ServiceConfig.h"
 
 Adaptation::ServiceConfig::ServiceConfig():
-    port(-1), method(methodNone), point(pointNone),
-    bypass(false), routing(false)
+        port(-1), method(methodNone), point(pointNone),
+        bypass(false), routing(false)
 {}
 
 const char *
@@ -91,12 +91,11 @@ Adaptation::ServiceConfig::parse()
         bool grokked = false;
         if (strcmp(name, "bypass") == 0)
             grokked = grokBool(bypass, name, value);
-        else
-        if (strcmp(name, "routing") == 0)
+        else if (strcmp(name, "routing") == 0)
             grokked = grokBool(routing, name, value);
         else {
             debugs(3, 0, cfg_filename << ':' << config_lineno << ": " <<
-                "unknown adaptation service option: " << name << '=' << value);
+                   "unknown adaptation service option: " << name << '=' << value);
         }
         if (!grokked)
             return false;
@@ -109,15 +108,15 @@ Adaptation::ServiceConfig::parse()
     // there should be nothing else left
     if (const char *tail = strtok(NULL, w_space)) {
         debugs(3, 0, cfg_filename << ':' << config_lineno << ": " <<
-            "garbage after adaptation service URI: " << tail);
+               "garbage after adaptation service URI: " << tail);
         return false;
     }
 
     debugs(3,5, cfg_filename << ':' << config_lineno << ": " <<
-        "adaptation_service " << key << ' ' <<
-            methodStr() << "_" << vectPointStr() << ' ' <<
-            bypass << routing << ' ' <<
-            uri);
+           "adaptation_service " << key << ' ' <<
+           methodStr() << "_" << vectPointStr() << ' ' <<
+           bypass << routing << ' ' <<
+           uri);
 
     return true;
 }
@@ -210,8 +209,7 @@ Adaptation::ServiceConfig::grokBool(bool &var, const char *name, const char *val
 {
     if (!strcmp(value, "0") || !strcmp(value, "off"))
         var = false;
-    else
-    if (!strcmp(value, "1") || !strcmp(value, "on"))
+    else if (!strcmp(value, "1") || !strcmp(value, "on"))
         var = true;
     else {
         debugs(3, 0, HERE << cfg_filename << ':' << config_lineno << ": " <<

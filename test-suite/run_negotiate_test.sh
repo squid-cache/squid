@@ -8,10 +8,11 @@ if [ $# -lt 1 ]; then
     exit 1
 fi
 
-echo "blob		# partial message"
-echo "USER=...		# Success"
-echo "BAD..		# Login failure"
-echo "ERR..		# Failure"
+echo   "blob		# partial message"
+echo   "SLEEP=..	# Delay. Can be combined with the others by using ;"
+echo   "USER=...	# Success"
+echo   "BAD..		# Helper failure"
+echo   "ERR..		# Login Failure"
 
 while read auth; do
 	echo "GET $url HTTP/1.0"

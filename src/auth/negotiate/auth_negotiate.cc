@@ -61,9 +61,6 @@
 // AYJ: must match re-definition in helpers/negotiate_auth/squid_kerb_auth/squid_kerb_auth.c
 #define MAX_AUTHTOKEN_LEN   32768
 
-static void
-authenticateNegotiateReleaseServer(AuthUserRequest * auth_user_request);
-
 
 /// \ingroup AuthNegotiateInternal
 static void
@@ -382,13 +379,12 @@ NegotiateUser::~NegotiateUser()
     debugs(29, 5, "NegotiateUser::~NegotiateUser: doing nothing to clearNegotiate scheme data for '" << this << "'");
 }
 
-static stateful_helper_callback_t
+static void
 authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
 {
     authenticateStateData *r = static_cast<authenticateStateData *>(data);
 
     int valid;
-    stateful_helper_callback_t result = S_HELPER_UNKNOWN;
     char *blob, *arg = NULL;
 
     AuthUserRequest *auth_user_request;
@@ -400,11 +396,10 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
     valid = cbdataReferenceValid(r->data);
 
     if (!valid) {
-        debugs(29, 1, "authenticateNegotiateHandleReply: invalid callback data. Releasing helper '" << lastserver << "'.");
+        debugs(29, 1, "authenticateNegotiateHandleReply: invalid callback data. helper '" << lastserver << "'.");
         cbdataReferenceDone(r->data);
         authenticateStateFree(r);
-        debugs(29, 9, "authenticateNegotiateHandleReply: telling stateful helper : " << S_HELPER_RELEASE);
-        return S_HELPER_RELEASE;
+        return;
     }
 
     if (!reply) {
@@ -454,11 +449,9 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
             negotiate_request->auth_state = AUTHENTICATE_STATE_IN_PROGRESS;
             auth_user_request->denyMessage("Authentication in progress");
             debugs(29, 4, "authenticateNegotiateHandleReply: Need to challenge the client with a server blob '" << blob << "'");
-            result = S_HELPER_RESERVE;
         } else {
             negotiate_request->auth_state = AUTHENTICATE_STATE_FAILED;
             auth_user_request->denyMessage("NTLM authentication requires a persistent connection");
-            result = S_HELPER_RELEASE;
         }
     } else if (strncasecmp(reply, "AF ", 3) == 0 && arg != NULL) {
         /* we're finished, release the helper */
@@ -474,11 +467,9 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
 
         negotiate_request->server_blob = xstrdup(blob);
 
-        authenticateNegotiateReleaseServer(negotiate_request);
+        negotiate_request->releaseAuthServer();
 
         negotiate_request->auth_state = AUTHENTICATE_STATE_DONE;
-
-        result = S_HELPER_RELEASE;
 
         debugs(29, 4, "authenticateNegotiateHandleReply: Successfully validated user via Negotiate. Username '" << blob << "'");
 
@@ -506,7 +497,7 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
         /* set these to now because this is either a new login from an
          * existing user or a new user */
         local_auth_user->expiretime = current_time.tv_sec;
-        authenticateNegotiateReleaseServer(negotiate_request);
+        negotiate_request->releaseAuthServer();
         negotiate_request->auth_state = AUTHENTICATE_STATE_DONE;
 
     } else if (strncasecmp(reply, "NA ", 3) == 0 && arg != NULL) {
@@ -523,9 +514,7 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
 
         negotiate_request->server_blob = xstrdup(blob);
 
-        authenticateNegotiateReleaseServer(negotiate_request);
-
-        result = S_HELPER_RELEASE;
+        negotiate_request->releaseAuthServer();
 
         debugs(29, 4, "authenticateNegotiateHandleReply: Failed validating user via Negotiate. Error returned '" << blob << "'");
     } else if (strncasecmp(reply, "BH ", 3) == 0) {
@@ -537,8 +526,7 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
         auth_user_request->denyMessage(blob);
         negotiate_request->auth_state = AUTHENTICATE_STATE_FAILED;
         safe_free(negotiate_request->server_blob);
-        authenticateNegotiateReleaseServer(negotiate_request);
-        result = S_HELPER_RELEASE;
+        negotiate_request->releaseAuthServer();
         debugs(29, 1, "authenticateNegotiateHandleReply: Error validating user via Negotiate. Error returned '" << reply << "'");
     } else {
         /* protocol error */
@@ -552,8 +540,6 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
     r->handler(r->data, NULL);
     cbdataReferenceDone(r->data);
     authenticateStateFree(r);
-    debugs(29, 9, "authenticateNegotiateHandleReply: telling stateful helper : " << result);
-    return result;
 }
 
 static void
@@ -605,25 +591,19 @@ AuthNegotiateUserRequest::module_start(RH * handler, void *data)
     helperStatefulSubmit(negotiateauthenticators, buf, authenticateNegotiateHandleReply, r, authserver);
 }
 
-/* clear the Negotiate helper of being reserved for future requests */
-static void
-authenticateNegotiateReleaseServer(AuthUserRequest * auth_user_request)
+/**
+ * Atomic action: properly release the Negotiate auth helpers which may have been reserved
+ * for this request connections use.
+ */
+void
+AuthNegotiateUserRequest::releaseAuthServer()
 {
-    AuthNegotiateUserRequest *negotiate_request;
-    assert(auth_user_request->user()->auth_type == AUTH_NEGOTIATE);
-    negotiate_request = dynamic_cast< AuthNegotiateUserRequest *>(auth_user_request);
-    assert(negotiate_request != NULL);
-    debugs(29, 9, "authenticateNegotiateReleaseServer: releasing server '" << negotiate_request->authserver << "'");
-    /* is it possible for the server to be NULL? hno seems to think so.
-     * Let's see what happens, might segfault in helperStatefulReleaseServer
-     * if it does. I leave it like this not to cover possibly problematic
-     * code-paths. Kinkie */
-    /* DPW 2007-05-07
-     * yes, it is possible */
-    if (negotiate_request->authserver) {
-        helperStatefulReleaseServer(negotiate_request->authserver);
-        negotiate_request->authserver = NULL;
-    }
+    if (authserver) {
+        debugs(29, 6, HERE << "releasing Negotiate auth server '" << authserver << "'");
+        helperStatefulReleaseServer(authserver);
+        authserver = NULL;
+    } else
+        debugs(29, 6, HERE << "No Negotiate auth server to release.");
 }
 
 /* clear any connection related authentication details */
@@ -639,8 +619,7 @@ AuthNegotiateUserRequest::onConnectionClose(ConnStateData *conn)
         return;
     }
 
-    if (authserver != NULL)
-        authenticateNegotiateReleaseServer(this);
+    releaseAuthServer();
 
     /* unlock the connection based lock */
     debugs(29, 9, "AuthNegotiateUserRequest::onConnectionClose: Unlocking auth_user from the connection '" << conn << "'.");

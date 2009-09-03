@@ -346,7 +346,7 @@ idnsParseResolvConf(void)
                 if (NULL == t)
                     continue;
 
-                if (strncmp(t, "ndots:", 6) != 0) {
+                if (strncmp(t, "ndots:", 6) == 0) {
                     ndots = atoi(t + 6);
 
                     if (ndots < 1)

@@ -551,7 +551,7 @@ wccp2_add_service_list(int service, int service_id, int service_priority,
 }
 
 static struct wccp2_service_list_t *
-            wccp2_get_service_by_id(int service, int service_id) {
+wccp2_get_service_by_id(int service, int service_id) {
 
     struct wccp2_service_list_t *p;
 

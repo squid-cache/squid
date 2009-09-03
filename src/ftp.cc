@@ -529,38 +529,56 @@ FtpStateData::~FtpStateData()
 
 /**
  * Parse a possible login username:password pair.
- * Produces filled member varisbles user, password, password_url if anything found.
+ * Produces filled member variables user, password, password_url if anything found.
  */
 void
 FtpStateData::loginParser(const char *login, int escaped)
 {
-    char *s = NULL;
+    const char *u = NULL; // end of the username sub-string
+    int len;              // length of the current sub-string to handle.
+
+    int total_len = strlen(login);
+
     debugs(9, 4, HERE << ": login='" << login << "', escaped=" << escaped);
     debugs(9, 9, HERE << ": IN : login='" << login << "', escaped=" << escaped << ", user=" << user << ", password=" << password);
 
-    if ((s = strchr(login, ':'))) {
-        *s = '\0';
+    if ((u = strchr(login, ':'))) {
 
         /* if there was a username part */
-        if (s > login) {
-            xstrncpy(user, login, MAX_URL);
+        if (u > login) {
+            len = u - login;
+            ++u; // jump off the delimiter.
+            if (len > MAX_URL)
+                len = MAX_URL-1;
+            xstrncpy(user, login, len +1);
+            debugs(9, 9, HERE << ": found user='" << user << "'(" << len <<"), escaped=" << escaped);
             if (escaped)
                 rfc1738_unescape(user);
+            debugs(9, 9, HERE << ": found user='" << user << "'(" << len <<") unescaped.");
         }
 
         /* if there was a password part */
-        if ( s[1] != '\0' ) {
-            xstrncpy(password, s + 1, MAX_URL);
+        len = login + total_len - u;
+        if ( len > 0) {
+            if (len > MAX_URL)
+                len = MAX_URL -1;
+            xstrncpy(password, u, len +1);
+            debugs(9, 9, HERE << ": found password='" << password << "'(" << len <<"), escaped=" << escaped);
             if (escaped) {
                 rfc1738_unescape(password);
                 password_url = 1;
             }
+            debugs(9, 9, HERE << ": found password='" << password << "'(" << len <<") unescaped.");
         }
     } else if (login[0]) {
         /* no password, just username */
-        xstrncpy(user, login, MAX_URL);
+        if (total_len > MAX_URL)
+            total_len = MAX_URL -1;
+        xstrncpy(user, login, total_len +1);
+        debugs(9, 9, HERE << ": found user='" << user << "'(" << total_len <<"), escaped=" << escaped);
         if (escaped)
             rfc1738_unescape(user);
+        debugs(9, 9, HERE << ": found user='" << user << "'(" << total_len <<") unescaped.");
     }
 
     debugs(9, 9, HERE << ": OUT: login='" << login << "', escaped=" << escaped << ", user=" << user << ", password=" << password);
@@ -1418,12 +1436,11 @@ FtpStateData::processReplyBody()
 
     if (flags.isdir) {
         parseListing();
-    } else
-        if (const int csize = data.readBuf->contentSize()) {
-            writeReplyBody(data.readBuf->content(), csize);
-            debugs(9, 5, HERE << "consuming " << csize << " bytes of readBuf");
-            data.readBuf->consume(csize);
-        }
+    } else if (const int csize = data.readBuf->contentSize()) {
+        writeReplyBody(data.readBuf->content(), csize);
+        debugs(9, 5, HERE << "consuming " << csize << " bytes of readBuf");
+        data.readBuf->consume(csize);
+    }
 
     entry->flush();
 
@@ -1479,8 +1496,7 @@ FtpStateData::checkAuth(const HttpHeader * req_hdr)
             xstrncpy(password, Config.Ftp.anon_user, MAX_URL);
             flags.tried_auth_anonymous=1;
             return 1;
-        }
-        else if (!flags.tried_auth_nopass) {
+        } else if (!flags.tried_auth_nopass) {
             xstrncpy(password, null_string, MAX_URL);
             flags.tried_auth_nopass=1;
             return 1;
@@ -2447,7 +2463,7 @@ ftpReadEPSV(FtpStateData* ftpState)
         /* server response with list of supported methods   */
         /*   522 Network protocol not supported, use (1)    */
         /*   522 Network protocol not supported, use (1,2)  */
-        /* TODO: handle the (1,2) case. We might get it back after EPSV ALL 
+        /* TODO: handle the (1,2) case. We might get it back after EPSV ALL
          * which means close data + control without self-destructing and re-open from scratch. */
         debugs(9, 5, HERE << "scanning: " << ftpState->ctrl.last_reply);
         buf = ftpState->ctrl.last_reply;
@@ -2476,8 +2492,7 @@ ftpReadEPSV(FtpStateData* ftpState)
             ftpState->state = SENT_EPSV_1;
             ftpSendPassive(ftpState);
 #endif
-        }
-        else {
+        } else {
             /* handle broken server (RFC 2428 says MUST specify supported protocols in 522) */
             debugs(9, DBG_IMPORTANT, "WARNING: Server at " << fd_table[ftpState->ctrl.fd].ipaddr << " sent unknown protocol negotiation hint: " << buf);
             ftpSendPassive(ftpState);
@@ -2611,6 +2626,7 @@ ftpSendPassive(FtpStateData * ftpState)
     case SENT_EPSV_ALL: /* EPSV ALL resulted in a bad response. Try ther EPSV methods. */
         ftpState->flags.epsv_all_sent = true;
         if (addr.IsIPv6()) {
+            debugs(9, 5, HERE << "FTP Channel is IPv6 (" << addr << ") attempting EPSV 2 after EPSV ALL has failed.");
             snprintf(cbuf, 1024, "EPSV 2\r\n");
             ftpState->state = SENT_EPSV_2;
             break;
@@ -2619,11 +2635,11 @@ ftpSendPassive(FtpStateData * ftpState)
 
     case SENT_EPSV_2: /* EPSV IPv6 failed. Try EPSV IPv4 */
         if (addr.IsIPv4()) {
+            debugs(9, 5, HERE << "FTP Channel is IPv4 (" << addr << ") attempting EPSV 1 after EPSV ALL has failed.");
             snprintf(cbuf, 1024, "EPSV 1\r\n");
             ftpState->state = SENT_EPSV_1;
             break;
-        }
-        else if (ftpState->flags.epsv_all_sent) {
+        } else if (ftpState->flags.epsv_all_sent) {
             debugs(9, DBG_IMPORTANT, "FTP does not allow PASV method after 'EPSV ALL' has been sent.");
             ftpFail(ftpState);
             return;
@@ -2631,27 +2647,35 @@ ftpSendPassive(FtpStateData * ftpState)
         // else fall through to skip EPSV 1
 
     case SENT_EPSV_1: /* EPSV options exhausted. Try PASV now. */
+        debugs(9, 5, HERE << "FTP Channel (" << addr << ") rejects EPSV connection attempts. Trying PASV instead.");
         snprintf(cbuf, 1024, "PASV\r\n");
         ftpState->state = SENT_PASV;
         break;
 
     default:
         if (!Config.Ftp.epsv) {
+            debugs(9, 5, HERE << "EPSV support manually disabled. Sending PASV for FTP Channel (" << addr <<")");
             snprintf(cbuf, 1024, "PASV\r\n");
             ftpState->state = SENT_PASV;
         } else if (Config.Ftp.epsv_all) {
+            debugs(9, 5, HERE << "EPSV ALL manually enabled. Attempting with FTP Channel (" << addr <<")");
             snprintf(cbuf, 1024, "EPSV ALL\r\n");
             ftpState->state = SENT_EPSV_ALL;
             /* block other non-EPSV connections being attempted */
             ftpState->flags.epsv_all_sent = true;
         } else {
 #if USE_IPV6
-            snprintf(cbuf, 1024, "EPSV 2\r\n");
-            ftpState->state = SENT_EPSV_2;
-#else
-            snprintf(cbuf, 1024, "EPSV 1\r\n");
-            ftpState->state = SENT_EPSV_1;
+            if (addr.IsIPv6()) {
+                debugs(9, 5, HERE << "FTP Channel (" << addr << "). Sending default EPSV 2");
+                snprintf(cbuf, 1024, "EPSV 2\r\n");
+                ftpState->state = SENT_EPSV_2;
+            }
 #endif
+            if (addr.IsIPv4()) {
+                debugs(9, 5, HERE << "Channel (" << addr <<"). Sending default EPSV 1");
+                snprintf(cbuf, 1024, "EPSV 1\r\n");
+                ftpState->state = SENT_EPSV_1;
+            }
         }
         break;
     }
@@ -2664,7 +2688,7 @@ ftpSendPassive(FtpStateData * ftpState)
                        COMM_NONBLOCKING,
                        ftpState->entry->url());
 
-    debugs(9, 3, HERE << "Unconnected data socket created on FD " << fd << " to " << addr);
+    debugs(9, 3, HERE << "Unconnected data socket created on FD " << fd << " from " << addr);
 
     if (fd < 0) {
         ftpFail(ftpState);

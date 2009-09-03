@@ -1,6 +1,6 @@
-all: release-3.1.html
+all: release-3.2.html
 
-DOC= release-3.1
+DOC= release-3.2
 
 $(DOC).ps: $(DOC).sgml
 	linuxdoc -B latex -o ps $(DOC)

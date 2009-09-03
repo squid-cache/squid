@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -34,6 +33,10 @@
 #ifndef SQUID_AIODISKIOMODULE_H
 #define SQUID_AIODISKIOMODULE_H
 
+#include "config.h"
+
+#if USE_DISKIO_AIO
+
 #include "DiskIO/DiskIOModule.h"
 
 class AIODiskIOModule : public DiskIOModule
@@ -51,4 +54,5 @@ private:
     static AIODiskIOModule Instance;
 };
 
+#endif /* USE_DISKIO_AIO */
 #endif /* SQUID_AIODISKIOMODULE_H */

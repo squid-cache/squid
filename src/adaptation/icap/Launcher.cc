@@ -72,7 +72,7 @@ void Adaptation::Icap::Launcher::noteAdaptationQueryAbort(bool final)
 {
     debugs(93,5, HERE << "launches: " << theLaunches << "; final: " << final);
     clearAdaptation(theXaction);
-       
+
     Must(done()); // swanSong will notify the initiator
 }
 
@@ -80,12 +80,11 @@ void Adaptation::Icap::Launcher::noteXactAbort(XactAbortInfo &info)
 {
     debugs(93,5, HERE << "theXaction:" << theXaction << " launches: " << theLaunches);
 
-     // TODO: add more checks from FwdState::checkRetry()?
+    // TODO: add more checks from FwdState::checkRetry()?
     if (canRetry(info)) {
         clearAdaptation(theXaction);
         launchXaction("retry");
-    } 
-    else if (canRepeat(info)) {
+    } else if (canRepeat(info)) {
         clearAdaptation(theXaction);
         launchXaction("repeat");
     } else {
@@ -93,7 +92,7 @@ void Adaptation::Icap::Launcher::noteXactAbort(XactAbortInfo &info)
         clearAdaptation(theXaction);
         tellQueryAborted(false); // caller decides based on bypass, consumption
         Must(done());
-    }   
+    }
 }
 
 bool Adaptation::Icap::Launcher::doneAll() const
@@ -132,15 +131,15 @@ bool Adaptation::Icap::Launcher::canRepeat(Adaptation::Icap::XactAbortInfo &info
     debugs(93,9, HERE << info.icapReply);
     if (!info.icapReply) // did not get to read an ICAP reply; a timeout?
         return true;
-       
+
     debugs(93,9, HERE << info.icapReply->sline.status);
     if (!info.icapReply->sline.status) // failed to parse the reply; I/O err
         return true;
-    
+
     ACLFilledChecklist *cl =
         new ACLFilledChecklist(TheConfig.repeat, info.icapRequest, dash_str);
     cl->reply = HTTPMSGLOCK(info.icapReply);
-    
+
     const bool result = cl->fastCheck();
     delete cl;
     return result;
@@ -149,17 +148,17 @@ bool Adaptation::Icap::Launcher::canRepeat(Adaptation::Icap::XactAbortInfo &info
 /* ICAPXactAbortInfo */
 
 Adaptation::Icap::XactAbortInfo::XactAbortInfo(HttpRequest *anIcapRequest,
-    HttpReply *anIcapReply, bool beRetriable, bool beRepeatable):
-    icapRequest(anIcapRequest ? HTTPMSGLOCK(anIcapRequest) : NULL),
-    icapReply(anIcapReply ? HTTPMSGLOCK(anIcapReply) : NULL),
-    isRetriable(beRetriable), isRepeatable(beRepeatable)
+        HttpReply *anIcapReply, bool beRetriable, bool beRepeatable):
+        icapRequest(anIcapRequest ? HTTPMSGLOCK(anIcapRequest) : NULL),
+        icapReply(anIcapReply ? HTTPMSGLOCK(anIcapReply) : NULL),
+        isRetriable(beRetriable), isRepeatable(beRepeatable)
 {
 }
 
 Adaptation::Icap::XactAbortInfo::XactAbortInfo(const Adaptation::Icap::XactAbortInfo &i):
-    icapRequest(i.icapRequest ? HTTPMSGLOCK(i.icapRequest) : NULL),
-    icapReply(i.icapReply ? HTTPMSGLOCK(i.icapReply) : NULL),
-    isRetriable(i.isRetriable), isRepeatable(i.isRepeatable)
+        icapRequest(i.icapRequest ? HTTPMSGLOCK(i.icapRequest) : NULL),
+        icapReply(i.icapReply ? HTTPMSGLOCK(i.icapReply) : NULL),
+        isRetriable(i.isRetriable), isRepeatable(i.isRepeatable)
 {
 }
 

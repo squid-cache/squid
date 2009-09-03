@@ -10,7 +10,7 @@ DnsLookupDetails::DnsLookupDetails(): wait(-1)
 }
 
 DnsLookupDetails::DnsLookupDetails(const String &e, int w):
-    error(e), wait(w)
+        error(e), wait(w)
 {
 }
 
