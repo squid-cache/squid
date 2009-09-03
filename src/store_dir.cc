@@ -189,6 +189,10 @@ storeDirSelectSwapDirRoundRobin(const StoreEntry * e)
     int load;
     RefCount<SwapDir> sd;
 
+    ssize_t objsize = e->objectLen();
+    if (objsize != -1)
+        objsize += e->mem_obj->swap_hdr_sz;
+
     for (i = 0; i <= Config.cacheSwap.n_configured; i++) {
         if (++dirn >= Config.cacheSwap.n_configured)
             dirn = 0;
@@ -201,7 +205,7 @@ storeDirSelectSwapDirRoundRobin(const StoreEntry * e)
         if (sd->cur_size > sd->max_size)
             continue;
 
-        if (!sd->objectSizeIsAcceptable(e->objectLen()))
+        if (!sd->objectSizeIsAcceptable(objsize))
             continue;
 
         /* check for error or overload condition */
