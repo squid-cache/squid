@@ -82,7 +82,6 @@ public:
     static void abort(void*);
 
 private:
-    CBDATA_CLASS2(FwdState);
     Pointer self;
     ErrorState *err;
     int client_fd;
@@ -101,6 +100,9 @@ private:
     } flags;
 
     IpAddress src; /* Client address for this connection. Needed for transparent operations. */
+
+    // NP: keep this last. It plays with private/public
+    CBDATA_CLASS2(FwdState);
 };
 
 #endif /* SQUID_FORWARD_H */
