@@ -208,7 +208,7 @@ RFCNB_Print_Hex(FILE * fd, struct RFCNB_Pkt *pkt, int Offset, int Len)
 /* Get a packet of size n */
 
 struct RFCNB_Pkt *
-            RFCNB_Alloc_Pkt(int n) {
+RFCNB_Alloc_Pkt(int n) {
     RFCNB_Pkt *pkt;
 
     if ((pkt = malloc(sizeof(struct RFCNB_Pkt))) == NULL) {

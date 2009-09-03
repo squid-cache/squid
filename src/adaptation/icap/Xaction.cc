@@ -432,7 +432,7 @@ void Adaptation::Icap::Xaction::setOutcome(const Adaptation::Icap::XactOutcome &
 {
     if (al.icap.outcome != xoUnknown) {
         debugs(93, 3, HERE << "Warning: reseting outcome: from " <<
-            al.icap.outcome << " to " << xo);
+               al.icap.outcome << " to " << xo);
     } else {
         debugs(93, 4, HERE << xo);
     }
@@ -462,19 +462,20 @@ void Adaptation::Icap::Xaction::swanSong()
     Adaptation::Initiate::swanSong();
 }
 
-void Adaptation::Icap::Xaction::tellQueryAborted() {
+void Adaptation::Icap::Xaction::tellQueryAborted()
+{
     Adaptation::Icap::Launcher *l = dynamic_cast<Adaptation::Icap::Launcher*>(theInitiator.ptr());
     Adaptation::Icap::XactAbortInfo abortInfo(icapRequest, icapReply, retriable(), repeatable());
-    CallJob(91, 5, __FILE__, __LINE__, 
+    CallJob(91, 5, __FILE__, __LINE__,
             "Adaptation::Icap::Launcher::noteXactAbort",
             XactAbortCall(l, &Adaptation::Icap::Launcher::noteXactAbort, abortInfo) );
     clearInitiator();
 }
 
 
-void Adaptation::Icap::Xaction::maybeLog() {
-    if(IcapLogfileStatus == LOG_ENABLE)
-    {
+void Adaptation::Icap::Xaction::maybeLog()
+{
+    if (IcapLogfileStatus == LOG_ENABLE) {
         ACLChecklist *checklist = new ACLFilledChecklist(::Config.accessList.icap, al.request, dash_str);
         if (!::Config.accessList.icap || checklist->fastCheck()) {
             finalizeLogInfo();
@@ -489,12 +490,12 @@ void Adaptation::Icap::Xaction::finalizeLogInfo()
 {
     //prepare log data
     al.icp.opcode = ICP_INVALID;
-    
+
     const Adaptation::Icap::ServiceRep &s = service();
     al.icap.hostAddr = s.cfg().host.termedBuf();
     al.icap.serviceName = s.cfg().key;
     al.icap.reqUri = s.cfg().uri;
-    
+
     al.icap.ioTime = tvSubMsec(icap_tio_start, icap_tio_finish);
     al.icap.trTime = tvSubMsec(icap_tr_start, current_time);
 

@@ -81,8 +81,7 @@ public:
 
     void mayUseConnection(bool aBool) {
         mayUseConnection_ = aBool;
-        debug (33,3)("ClientSocketContext::mayUseConnection: This %p marked %d\n",
-                     this, aBool);
+        debugs(33,3, HERE << "This " << this << " marked " << aBool);
     }
 
     class DeferredParams
@@ -155,14 +154,14 @@ public:
         ~In();
         char *addressToReadInto() const;
 
-	ChunkedCodingParser *bodyParser; ///< parses chunked request body
-	MemBuf chunked; ///< contains unparsed raw (chunked) body data
-	MemBuf dechunked; ///< accumulates parsed (dechunked) content
+        ChunkedCodingParser *bodyParser; ///< parses chunked request body
+        MemBuf chunked; ///< contains unparsed raw (chunked) body data
+        MemBuf dechunked; ///< accumulates parsed (dechunked) content
         char *buf;
         size_t notYetUsed;
         size_t allocatedSize;
-	size_t chunkedSeen; ///< size of processed or ignored raw read data
-	DechunkingState dechunkingState; ///< request dechunking state
+        size_t chunkedSeen; ///< size of processed or ignored raw read data
+        DechunkingState dechunkingState; ///< request dechunking state
     } in;
 
     int64_t bodySizeLeft();

@@ -39,7 +39,8 @@
 
 namespace Adaptation
 {
-namespace Icap {
+namespace Icap
+{
 
 extern void InitModule();
 extern void CleanModule();

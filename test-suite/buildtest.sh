@@ -31,7 +31,8 @@ fi
 FILECOUNT=`ls -1 | grep -c .`
 if test "${FILECOUNT}" != "0" ; then
   make -k distclean || echo "distclean done. errors are unwanted but okay here."
-  rm -f -r src/fs/aufs/.deps src/fs/diskd/.deps
+  ls -la .
+  rm -fr ./src/fs/aufs/.deps src/fs/diskd/.deps
 fi
 
 #

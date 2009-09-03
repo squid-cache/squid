@@ -67,8 +67,7 @@ struct snmp_mib_tree {
 #define TYPE_NULL	    10
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
     void init_mib(char *);

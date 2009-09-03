@@ -1,3 +1,22 @@
+Changes to squid-3.1.0.13 (04 Aug 2009):
+
+	- Bug 2723 regression: enable PURGE requests if PURGE method ACL is present.
+	- Fix one more internal profiler error
+	- Language Updates: Italian, Russian
+	- Language Updates: Add many more aliases
+	- Add Copyright document for errors/ content
+	- ... all bug fixes from 3.0.STABLE18
+	- ... and several code polishing cleanups
+
+Changes to squid-3.1.0.12 (27 Jul 2009):
+
+	- Bug 2716: Chunked request Signed/Unsigned build error
+	- Bug 2674: Remove limit on HTTP headers read.
+	- Bug 2620: Invalid HTTP response codes causes segfault
+	- Fix FTP EPSV negotiation parser.
+	- Fix Via string when leak checking is enabled (valgrind etc)
+	- ... and several documentation and testing additions
+
 Changes to squid-3.1.0.11 (19 Jul 2009):
 
 	- Bug 2087: Support adaptation sets and chains
@@ -196,6 +215,30 @@ Changes to squid-3.1.0.1 (27 Oct 2008):
 	- Follow_x_forwarder_for ported from 2.6
 	- Bug #2223: Follow XFF extensions added
 	- ... and many code and documentation cleanups
+
+Changes to squid-3.0.STABLE18 (04 Aug 2009):
+
+	- Bug 2728: regression: assertion failed: !eof
+	- Bug 2732: reply_body_max_size smaller than error page loops
+	            infinitely until out of memory
+	- Bug 2725: pconn failure if domain or client_address are unset
+	- Bug 2648: reserved helpers not shut down after reconfigure/rotate
+	- Bug 2462: make check should tell when cppunit is missing
+	- Remove excess messages about headers < minimum size
+	- Support Libtool 2.2.6
+
+Changes to squid-3.0.STABLE17 (27 Jul 2009):
+
+	- Bug 2680 regression: Crash after rotate with no helpers running
+	- Bug 2710: squid_kerb_auth non-terminated string
+	- Bug 2679: strsep and strtoll detection failure
+	- Bug 2674: Remove limit on HTTP headers read.
+	- Bug 2659: String length overflows on append, leading to segfaults
+	- Bug 2620: Invalid HTTP response codes causes segfault
+	- Bug 2080: wbinfo_group.pl - false positive under certain conditions
+	- Bug 1087: ESI processor not quoting attributes correctly.
+	- Fix: issue with AUFS/UFS/DiskD writing objects to disk cache
+	- Several small build issues with previous release.
 
 Changes to squid-3.0.STABLE16 (15 Jun 2009):
 

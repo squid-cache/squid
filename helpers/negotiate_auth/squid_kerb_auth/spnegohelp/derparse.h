@@ -26,8 +26,7 @@
 
 // C++ Specific
 #if defined(__cplusplus)
-extern "C"
-{
+extern "C" {
 #endif
 
     /* Identifier Types */

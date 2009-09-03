@@ -44,6 +44,7 @@
 #include "Parsing.h"
 #include "SquidTime.h"
 #include "SwapDir.h"
+#include "swap_log_op.h"
 
 int UFSSwapDir::NumberOfUFSDirs = 0;
 int *UFSSwapDir::UFSDirToGlobalDirMapping = NULL;

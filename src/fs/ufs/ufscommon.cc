@@ -1,6 +1,5 @@
 /*
  * $Id$
- * vim: set et :
  *
  * DEBUG: section 47    Store Directory Routines
  * AUTHOR: Robert Collins
@@ -34,6 +33,7 @@
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
  */
 
+#include "config.h"
 #include "ufscommon.h"
 #include "Store.h"
 #include "fde.h"
@@ -42,6 +42,8 @@
 #include "StoreMetaUnpacker.h"
 #include "RefCount.h"
 #include "StoreSwapLogData.h"
+#include "swap_log_op.h"
+
 
 CBDATA_CLASS_INIT(RebuildState);
 

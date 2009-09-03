@@ -189,9 +189,8 @@ BodyPipe::clearProducer(bool atEof)
         if (atEof) {
             if (!bodySizeKnown())
                 theBodySize = thePutSize;
-            else
-                if (bodySize() != thePutSize)
-                    debugs(91,3, HERE << "aborting on premature eof" << status());
+            else if (bodySize() != thePutSize)
+                debugs(91,3, HERE << "aborting on premature eof" << status());
         } else {
             // asserta that we can detect the abort if the consumer joins later
             assert(!bodySizeKnown() || bodySize() != thePutSize);
@@ -321,9 +320,8 @@ BodyPipe::checkIn(Checkout &checkout)
     const size_t currentSize = theBuf.contentSize();
     if (checkout.checkedOutSize > currentSize)
         postConsume(checkout.checkedOutSize - currentSize);
-    else
-        if (checkout.checkedOutSize < currentSize)
-            postAppend(currentSize - checkout.checkedOutSize);
+    else if (checkout.checkedOutSize < currentSize)
+        postAppend(currentSize - checkout.checkedOutSize);
 }
 
 void

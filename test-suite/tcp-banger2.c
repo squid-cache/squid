@@ -298,7 +298,7 @@ reply_done(int fd, void *data)
 }
 
 struct _request *
-            request(char *urlin) {
+request(char *urlin) {
     int s = -1, f = -1;
     char buf[4096];
     char msg[8192];

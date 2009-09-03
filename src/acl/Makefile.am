@@ -47,6 +47,10 @@ libacls_la_SOURCES = \
 	DomainData.h \
 	ExtUser.cc \
 	ExtUser.h \
+	HierCodeData.cc \
+	HierCodeData.h \
+	HierCode.cc \
+	HierCode.h \
 	HttpHeaderData.cc \
 	HttpHeaderData.h \
 	HttpRepHeader.cc \

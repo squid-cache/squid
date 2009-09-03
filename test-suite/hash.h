@@ -1,6 +1,5 @@
 #define  DEFAULT_HASH_SIZE 7951
-extern "C"
-{
+extern "C" {
     typedef unsigned int HASHHASH(const void *, unsigned int);
     struct _hash_link {
         char *key;

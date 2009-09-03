@@ -451,12 +451,10 @@ const char *Adaptation::Icap::ServiceRep::status() const
 
         if (!theOptions)
             buf.append(",!opt", 5);
-        else
-            if (!theOptions->valid())
-                buf.append(",!valid", 7);
-            else
-                if (!theOptions->fresh())
-                    buf.append(",stale", 6);
+        else if (!theOptions->valid())
+            buf.append(",!valid", 7);
+        else if (!theOptions->fresh())
+            buf.append(",stale", 6);
     }
 
     if (theOptionsFetcher)

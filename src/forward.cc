@@ -39,6 +39,7 @@
 #include "event.h"
 #include "errorpage.h"
 #include "fde.h"
+#include "hier_code.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemObject.h"

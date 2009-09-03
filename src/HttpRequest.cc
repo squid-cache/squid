@@ -208,18 +208,30 @@ HttpRequest::clone() const
     return copy;
 }
 
+/**
+ * Checks the first line of an HTTP request is valid
+ * currently just checks the request method is present.
+ *
+ * NP: Other errors are left for detection later in the parse.
+ */
 bool
-HttpRequest::sanityCheckStartLine(MemBuf *buf, http_status *error)
+HttpRequest::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status *error)
 {
-    /**
-     * Just see if the request buffer starts with a known
-     * HTTP request method.  NOTE this whole function is somewhat
-     * superfluous and could just go away.
-     \todo AYJ: Check for safely removing this function. We now accept 'unknown' request methods in HTTP.
-     */
+    // content is long enough to possibly hold a reply
+    // 2 being magic size of a 1-byte request method plus space delimiter
+    if ( buf->contentSize() < 2 ) {
+        // this is ony a real error if the headers apparently complete.
+        if (hdr_len > 0) {
+            debugs(58, 3, HERE << "Too large request header (" << hdr_len << " bytes)");
+            *error = HTTP_INVALID_HEADER;
+        }
+        return false;
+    }
 
+    /* See if the request buffer starts with a known HTTP request method. */
     if (HttpRequestMethod(buf->content(),NULL) == METHOD_NONE) {
         debugs(73, 3, "HttpRequest::sanityCheckStartLine: did not find HTTP request method");
+        *error = HTTP_INVALID_HEADER;
         return false;
     }
 
@@ -365,12 +377,12 @@ request_flags::clearResetTCP()
 }
 
 #if ICAP_CLIENT
-Adaptation::Icap::History::Pointer 
+Adaptation::Icap::History::Pointer
 HttpRequest::icapHistory() const
 {
     if (!icapHistory_) {
         if ((LogfileStatus == LOG_ENABLE && alLogformatHasIcapToken) ||
-            IcapLogfileStatus == LOG_ENABLE) {
+                IcapLogfileStatus == LOG_ENABLE) {
             icapHistory_ = new Adaptation::Icap::History();
             debugs(93,4, HERE << "made " << icapHistory_ << " for " << this);
         }
@@ -381,7 +393,7 @@ HttpRequest::icapHistory() const
 #endif
 
 #if USE_ADAPTATION
-Adaptation::History::Pointer 
+Adaptation::History::Pointer
 HttpRequest::adaptHistory(bool createIfNone) const
 {
     if (!adaptHistory_ && createIfNone) {
@@ -392,11 +404,11 @@ HttpRequest::adaptHistory(bool createIfNone) const
     return adaptHistory_;
 }
 
-Adaptation::History::Pointer 
+Adaptation::History::Pointer
 HttpRequest::adaptLogHistory() const
 {
     const bool loggingNeedsHistory = (LogfileStatus == LOG_ENABLE) &&
-        alLogformatHasAdaptToken; // TODO: make global to remove this method?
+                                     alLogformatHasAdaptToken; // TODO: make global to remove this method?
     return HttpRequest::adaptHistory(loggingNeedsHistory);
 }
 

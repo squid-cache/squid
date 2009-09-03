@@ -20,6 +20,8 @@
 #include "acl/ExtUser.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
+#include "acl/HierCodeData.h"
+#include "acl/HierCode.h"
 #include "acl/HttpHeaderData.h"
 #include "acl/HttpRepHeader.h"
 #include "acl/HttpReqHeader.h"
@@ -79,6 +81,8 @@ ACL::Prototype ACLExtUser::UserRegistryProtoype(&ACLExtUser::UserRegistryEntry_,
 ACLExtUser ACLExtUser::UserRegistryEntry_(new ACLUserData, "ext_user");
 ACL::Prototype ACLExtUser::RegexRegistryProtoype(&ACLExtUser::RegexRegistryEntry_, "ext_user_regex" );
 ACLExtUser ACLExtUser::RegexRegistryEntry_(new ACLRegexData, "ext_user_regex");
+ACL::Prototype ACLHierCode::RegistryProtoype(&ACLHierCode::RegistryEntry_, "hier_code");
+ACLStrategised<hier_code> ACLHierCode::RegistryEntry_(new ACLHierCodeData, ACLHierCodeStrategy::Instance(), "hier_code");
 ACL::Prototype ACLHTTPRepHeader::RegistryProtoype(&ACLHTTPRepHeader::RegistryEntry_, "rep_header");
 ACLStrategised<HttpHeader*> ACLHTTPRepHeader::RegistryEntry_(new ACLHTTPHeaderData, ACLHTTPRepHeaderStrategy::Instance(), "rep_header");
 ACL::Prototype ACLHTTPReqHeader::RegistryProtoype(&ACLHTTPReqHeader::RegistryEntry_, "req_header");

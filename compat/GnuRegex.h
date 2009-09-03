@@ -23,8 +23,7 @@
 #else  /* USE_GNUREGEX */
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
     /* Definitions for data structures and routines for the regular
@@ -418,12 +417,8 @@ extern "C"
 
     /* POSIX compatibility.  */
     extern int regcomp _RE_ARGS((regex_t * preg, const char *pattern, int cflags));
-    extern int regexec
-        _RE_ARGS((const regex_t * preg, const char *string, size_t nmatch,
-                  regmatch_t pmatch[], int eflags));
-    extern size_t regerror
-        _RE_ARGS((int errcode, const regex_t * preg, char *errbuf,
-                  size_t errbuf_size));
+    extern int regexec _RE_ARGS((const regex_t * preg, const char *string, size_t nmatch, regmatch_t pmatch[], int eflags));
+    extern size_t regerror _RE_ARGS((int errcode, const regex_t * preg, char *errbuf, size_t errbuf_size));
     extern void regfree _RE_ARGS((regex_t * preg));
 
 #ifdef __cplusplus

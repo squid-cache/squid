@@ -32,11 +32,14 @@
 #include "config.h"
 #include "RefCount.h"
 #include "cbdata.h"
-
-/* needed for various structures still in structs.h */
 #include "dlink.h"
+#include "err_type.h"
+
 /* needed for the global config */
 #include "HttpHeader.h"
+
+/* for ICP_END */
+#include "icp_opcode.h"
 
 struct acl_name_list {
     char name[ACL_NAME_SZ];
@@ -265,7 +268,7 @@ struct SquidConfig {
 
         customlog *accesslogs;
 
-#if ICAP_CLIENT        
+#if ICAP_CLIENT
         customlog *icaplogs;
 #endif
 
@@ -444,6 +447,8 @@ struct SquidConfig {
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
         int WIN32_IpAddrChangeMonitor;
+        int memory_cache_first;
+        int memory_cache_disk;
     } onoff;
 
     int forward_max_tries;
@@ -1298,6 +1303,8 @@ struct _Logfile {
     } flags;
 
     int syslog_priority;
+
+    int64_t sequence_number;  ///< Unique sequence number per log line.
 };
 
 class logformat_token;

@@ -717,7 +717,7 @@ mainReconfigureFinish(void *)
     enter_suid();		/* root to read config file */
 
     // we may have disabled the need for PURGE
-    if(Config2.onoff.enable_purge)
+    if (Config2.onoff.enable_purge)
         Config2.onoff.enable_purge = 2;
 
     parseConfigFile(ConfigFile);
@@ -786,13 +786,12 @@ mainRotate(void)
 {
     icmpEngine.Close();
 #if USE_DNSSERVERS
-
     dnsShutdown();
 #endif
-
     redirectShutdown();
     authenticateShutdown();
     externalAclShutdown();
+
     _db_rotate_log();		/* cache.log */
     storeDirWriteCleanLogs(1);
     storeLogRotate();		/* store.log */
@@ -803,16 +802,13 @@ mainRotate(void)
     icapLogRotate();               /*icap.log*/
 #endif
 #if WIP_FWD_LOG
-
     fwdLogRotate();
 #endif
 
     icmpEngine.Open();
 #if USE_DNSSERVERS
-
     dnsInit();
 #endif
-
     redirectInit();
     authenticateInit(&Config.authConfiguration);
     externalAclInit();
@@ -963,7 +959,7 @@ mainInitialize(void)
 
     accessLogInit();
 
-#if ICAP_CLIENT    
+#if ICAP_CLIENT
     icapLogOpen();
 #endif
 
@@ -1122,7 +1118,7 @@ static int SquidMainSafe(int argc, char **argv);
 #if USE_WIN32_SERVICE
 /* When USE_WIN32_SERVICE is defined, the main function is placed in win32.cc */
 extern "C" void WINAPI
-    SquidWinSvcMain(int argc, char **argv)
+SquidWinSvcMain(int argc, char **argv)
 #else
 int
 main(int argc, char **argv)

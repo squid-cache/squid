@@ -37,7 +37,7 @@ public:
 protected:
     Method parseMethod(const char *buf) const;
     VectPoint parseVectPoint(const char *buf) const;
- 
+
     /// interpret parsed values
     bool grokBool(bool &var, const char *name, const char *value);
     bool grokUri(const char *value);

@@ -61,7 +61,8 @@
 
 namespace Adaptation
 {
-namespace Icap {
+namespace Icap
+{
 
 class Xaction;
 class XactAbortInfo;
@@ -84,7 +85,7 @@ public:
 
 private:
     bool canRetry(XactAbortInfo &info) const; //< true if can retry in the case of persistent connection failures
-    bool canRepeat(XactAbortInfo &info) const; //< true if can repeat in the case of no or unsatisfactory response 
+    bool canRepeat(XactAbortInfo &info) const; //< true if can repeat in the case of no or unsatisfactory response
     virtual void noteAdaptationQueryAbort(bool final);
 
 protected:
@@ -103,9 +104,10 @@ protected:
     int theLaunches; // the number of transaction launches
 };
 
-/// helper class to pass information about aborted ICAP requests to 
+/// helper class to pass information about aborted ICAP requests to
 /// the Adaptation::Icap::Launcher class
-class XactAbortInfo {
+class XactAbortInfo
+{
 public:
     XactAbortInfo(HttpRequest *anIcapRequest, HttpReply *anIcapReply,
                   bool beRetriable, bool beRepeatable);
@@ -116,7 +118,7 @@ public:
     HttpReply *icapReply;
     bool isRetriable;
     bool isRepeatable;
-    
+
 private:
     XactAbortInfo &operator =(const XactAbortInfo &); // undefined
 };
@@ -129,19 +131,19 @@ inline std::ostream &operator << (std::ostream &os, Adaptation::Icap::XactAbortI
 }
 
 /// A Dialer class used to schedule the Adaptation::Icap::Launcher::noteXactAbort call
-class XactAbortCall: public UnaryMemFunT<Adaptation::Icap::Launcher, Adaptation::Icap::XactAbortInfo> {
+class XactAbortCall: public UnaryMemFunT<Adaptation::Icap::Launcher, Adaptation::Icap::XactAbortInfo>
+{
 public:
     typedef void (Adaptation::Icap::Launcher::*DialMethod)(Adaptation::Icap::XactAbortInfo &);
-    XactAbortCall(Adaptation::Icap::Launcher *launcer, DialMethod aMethod, 
+    XactAbortCall(Adaptation::Icap::Launcher *launcer, DialMethod aMethod,
                   const Adaptation::Icap::XactAbortInfo &info):
-    UnaryMemFunT<Adaptation::Icap::Launcher, Adaptation::Icap::XactAbortInfo>(launcer, NULL, info),
-       dialMethod(aMethod)
-    {}
+            UnaryMemFunT<Adaptation::Icap::Launcher, Adaptation::Icap::XactAbortInfo>(launcer, NULL, info),
+            dialMethod(aMethod) {}
     virtual void print(std::ostream &os) const {  os << '(' << "retriable:" << arg1.isRetriable << ", repeatable:" << arg1.isRepeatable << ')'; }
 
 public:
     DialMethod dialMethod;
-    
+
 protected:
     virtual void doDial() { (object->*dialMethod)(arg1); }
 };

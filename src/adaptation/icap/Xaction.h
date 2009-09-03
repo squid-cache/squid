@@ -46,7 +46,8 @@ class CommConnectCbParams;
 
 namespace Adaptation
 {
-namespace Icap {
+namespace Icap
+{
 
 /*
  * The ICAP Xaction implements common tasks for ICAP OPTIONS, REQMOD, and

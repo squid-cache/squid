@@ -955,6 +955,9 @@ ErrorState::BuildContent()
 
         while ( pos < hdr.size() ) {
 
+            /* skip any initial whitespace. */
+            while (pos < hdr.size() && xisspace(hdr[pos])) pos++;
+
             /*
              * Header value format:
              *  - sequence of whitespace delimited tags
@@ -962,17 +965,43 @@ ErrorState::BuildContent()
              *  - IFF a tag contains only two characters we can wildcard ANY translations matching: <it> '-'? .*
              *    with preference given to an exact match.
              */
+            bool invalid_byte = false;
             while (pos < hdr.size() && hdr[pos] != ';' && hdr[pos] != ',' && !xisspace(hdr[pos]) && dt < (dir+256) ) {
-                *dt++ = xtolower(hdr[pos++]);
+                if (!invalid_byte) {
+#if HTTP_VIOLATIONS
+                    // if accepting violations we may as well accept some broken browsers
+                    //  which may send us the right code, wrong ISO formatting.
+                    if (hdr[pos] == '_')
+                        *dt = '-';
+                    else
+#endif
+                        *dt = xtolower(hdr[pos]);
+                    // valid codes only contain A-Z, hyphen (-) and *
+                    if (*dt != '-' && *dt != '*' && (*dt < 'a' || *dt > 'z') )
+                        invalid_byte = true;
+                    else
+                        dt++; // move to next destination byte.
+                }
+                pos++;
             }
             *dt++ = '\0'; // nul-terminated the filename content string before system use.
 
-            debugs(4, 9, HERE << "STATE: dt='" << dt << "', reset='" << reset << "', reset[1]='" << reset[1] << "', pos=" << pos << ", buf='" << hdr.substr(pos,hdr.size()) << "'");
+            debugs(4, 9, HERE << "STATE: dt='" << dt << "', reset='" << reset << "', pos=" << pos << ", buf='" << ((pos < hdr.size()) ? hdr.substr(pos,hdr.size()) : "") << "'");
 
             /* if we found anything we might use, try it. */
-            if (*reset != '\0') {
+            if (*reset != '\0' && !invalid_byte) {
+
+                /* wildcard uses the configured default language */
+                if (reset[0] == '*' && reset[1] == '\0') {
+                    debugs(4, 6, HERE << "Found language '" << reset << "'. Using configured default.");
+                    m = error_text[page_id];
+                    if (!Config.errorDirectory)
+                        err_language = Config.errorDefaultLanguage;
+                    break;
+                }
 
                 debugs(4, 6, HERE << "Found language '" << reset << "', testing for available template in: '" << dir << "'");
+
                 m = errorTryLoadText( err_type_str[page_id], dir, false);
 
                 if (m) {
@@ -994,7 +1023,7 @@ ErrorState::BuildContent()
 
             dt = reset; // reset for next tag testing. we replace the failed name instead of cloning.
 
-            // IFF we terminated the tag on ';' we need to skip the 'q=' bit to the next ',' or end.
+            // IFF we terminated the tag on whitespace or ';' we need to skip to the next ',' or end of header.
             while (pos < hdr.size() && hdr[pos] != ',') pos++;
             if (hdr[pos] == ',') pos++;
         }
