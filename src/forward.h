@@ -82,7 +82,6 @@ public:
     static void abort(void*);
 
 private:
-    CBDATA_CLASS2(FwdState);
     Pointer self;
     ErrorState *err;
     int client_fd;
@@ -111,6 +110,9 @@ unsigned int forward_completed:1;
     struct sockaddr_in src;
 #endif
 
+
+    // NP: keep this last. It plays with private/public
+    CBDATA_CLASS2(FwdState);
 };
 
 #endif

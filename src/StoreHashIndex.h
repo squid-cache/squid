@@ -110,13 +110,15 @@ public:
     RefCount<StoreHashIndex> sd;
 
 private:
-    CBDATA_CLASS2(StoreSearchHashIndex);
     void copyBucket();
     void (*callback)(void *cbdata);
     void *cbdata;
     bool _done;
     int bucket;
     Vector<StoreEntry *> entries;
+
+    // keep this last. it plays with private/public
+    CBDATA_CLASS2(StoreSearchHashIndex);
 };
 
 #endif /* SQUID_STOREHASHINDEX_H */

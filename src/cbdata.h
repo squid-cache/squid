@@ -88,7 +88,12 @@ extern cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, in
 #define cbdataAlloc(type) ((type *)cbdataInternalAlloc(CBDATA_##type))
 #define cbdataFree(var)		do {if (var) {cbdataInternalFree(var); var = NULL;}} while(0)
 #define cbdataReferenceValidDone(var, ptr) cbdataInternalReferenceDoneValid((void **)&(var), (ptr))
+
+/**
+ * This needs to be defined LAST in teh class definition. It plays with private/public states in C++.
+ */
 #define CBDATA_CLASS2(type)	\
+	private: \
 	static cbdata_type CBDATA_##type; \
 	public: \
 		void *operator new(size_t size) { \
@@ -98,8 +103,7 @@ extern cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, in
 		} \
   		void operator delete (void *address) { \
 		  if (address) cbdataInternalFree(address);\
-		} \
-	private:
+		}
 #endif
 #define cbdataReference(var)	(cbdataInternalLock(var), var)
 #define cbdataReferenceDone(var) do {if (var) {cbdataInternalUnlock(var); var = NULL;}} while(0)
@@ -130,7 +134,7 @@ class generic_cbdata
      * - RBC 20060820
      */
     void *data; /* the wrapped data */
-  private:
+
     CBDATA_CLASS2(generic_cbdata);
 };
 
