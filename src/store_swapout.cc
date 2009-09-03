@@ -63,6 +63,15 @@ storeSwapOutStart(StoreEntry * e)
     /* If we start swapping out objects with OutOfBand Metadata,
      * then this code needs changing
      */
+
+    /* TODO: make some sort of data,size refcounted immutable buffer
+     * and stop fooling ourselves with "const char*" buffers.
+     */
+
+    // Create metadata now, possibly in vain: storeCreate needs swap_hdr_sz.
+    const char *buf = e->getSerialisedMetaData ();
+    assert(buf);
+
     /* Create the swap file */
     generic_cbdata *c = new generic_cbdata(e);
     sio = storeCreate(e, storeSwapOutFileNotify, storeSwapOutFileClosed, c);
@@ -70,6 +79,7 @@ storeSwapOutStart(StoreEntry * e)
     if (sio == NULL) {
         e->swap_status = SWAPOUT_NONE;
         delete c;
+        xfree((char*)buf);
         storeLog(STORE_LOG_SWAPOUTFAIL, e);
         return;
     }
@@ -87,16 +97,6 @@ storeSwapOutStart(StoreEntry * e)
     e->swap_dirn = mem->swapout.sio->swap_dirn;
 
     /* write out the swap metadata */
-    /* TODO: make some sort of data,size refcounted immutable buffer
-     * for use by this sort of function.
-     */
-    char const *buf = e->getSerialisedMetaData ();
-
-    /* If we start swapping out with out of band metadata, this assert
-     * will catch it - this code needs to be adjusted if that happens
-     */
-    assert (buf);
-
     storeIOWrite(mem->swapout.sio, buf, mem->swap_hdr_sz, 0, xfree);
 }
 
