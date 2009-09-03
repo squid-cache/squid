@@ -411,25 +411,248 @@ if test "$aufs_io_threads"; then
     [Defines how many threads aufs uses for I/O])
 fi
 
-AC_ARG_WITH(pthreads,
-  AS_HELP_STRING([--with-pthreads],[Use POSIX Threads]))
-if test "$with_pthreads" = "yes"; then
-  AC_MSG_NOTICE([With pthreads])
-fi
-
-AC_ARG_WITH(aio,
-  AS_HELP_STRING([--with-aio],[Use POSIX AIO]))
-if test "$with_aio" = "yes"; then
-  AC_MSG_NOTICE([With aio])
-fi
-
-
 AC_ARG_WITH(dl,
   AS_HELP_STRING([--with-dl],[Use dynamic linking]))
 if test "$with_dl" = "yes"; then
   AC_MSG_NOTICE([With dl])
 fi
 
+AC_ARG_ENABLE(disk-io,
+  AS_HELP_STRING([--enable-disk-io="list of modules"],[Build support for the list of disk I/O modules.
+                  Set without a value or omitted, all available modules will be built.
+                  See src/DiskIO for a list of available modules, or
+                  Programmers Guide section on DiskIO
+                  for details on how to build your custom disk module]),
+[ case $enableval in
+  yes)
+	for dir in $srcdir/src/DiskIO/*; do
+	    module="`basename $dir`"
+	    if test -d "$dir" && test "$module" != CVS; then
+		AC_MSG_NOTICE([Autodetected $module DiskIO module])
+		MAYBE_DISK_MODULES="$MAYBE_DISK_MODULES $module"
+	    fi
+	done
+	AC_DEFINE(USE_DISKIO,1,[DiskIO modules are expected to be available.])
+  	;;
+  no)
+	AC_DEFINE(USE_DISKIO,0,[DiskIO modules are expected to be available.])
+  	;;
+  *)
+	MAYBE_DISK_MODULES=" `echo $enableval| sed -e 's/,/ /g;s/  */ /g'` "
+	AC_DEFINE(USE_DISKIO,1,[DiskIO modules are expected to be available.])
+	;;
+  esac
+],
+[ if test -z "$MAYBE_DISK_MODULES"; then
+  AC_MSG_NOTICE([Enabling all available DiskIO modules (default)...])
+  for dir in $srcdir/src/DiskIO/*; do
+    module="`basename $dir`"
+    if test -d "$dir" && test "$module" != CVS; then
+	AC_MSG_NOTICE([Autodetected $module DiskIO module])
+	MAYBE_DISK_MODULES="$MAYBE_DISK_MODULES $module"
+    fi
+  done
+  AC_DEFINE(USE_DISKIO,1,[DiskIO modules are expected to be available.])
+fi ])
+
+dnl Some autoconf.h defines we might enable later...
+AC_DEFINE(USE_DISKIO_AIO, 0, [Whether POSIX AIO support is needed. Automatic])
+AC_DEFINE(USE_DISKIO_DISKTHREADS, 0, [Whether pthreads support is needed. Automatic])
+USE_AIOPS_WIN32=0
+use_aio=
+use_diskthreads=
+
+dnl Setup the module paths etc.
+FOUND_DISKIO_AIO=
+FOUND_DISKIO_BLOCKING=
+FOUND_DISKIO_DISKDAEMON=
+FOUND_DISKIO_DISKTHREADS=
+DISK_LIBS=
+DISK_MODULES=
+DISK_LINKOBJS=
+for module in $MAYBE_DISK_MODULES none; do
+  if test "$module" = "none"; then
+	continue
+  fi
+  if ! test -d $srcdir/src/DiskIO/$module; then
+    AC_MSG_ERROR(disk-io $module does not exist)
+  fi
+  case "$module" in
+    DiskDaemon)
+	if test "$FOUND_DISKIO_DISKDAEMON" = "yes" ; then
+	  AC_MSG_ERROR([DiskIO DiskDaemon module listed twice.])
+	fi
+	FOUND_DISKIO_DISKDAEMON="yes"
+	AC_MSG_NOTICE([Enabling DiskDaemon DiskIO module])
+	DISK_LIBS="$DISK_LIBS libDiskDaemon.a"
+	DISK_MODULES="$DISK_MODULES DiskDaemon"
+	DISK_PROGRAMS="$DISK_PROGRAMS DiskIO/DiskDaemon/diskd"
+	DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/DiskDaemon/DiskDaemonDiskIOModule.o"
+	;;
+    DiskThreads)
+	if test "$FOUND_DISKIO_DISKTHREADS" = "yes" ; then
+	  AC_MSG_ERROR([DiskIO DiskThreads  module listed twice.])
+	fi
+	FOUND_DISKIO_DISKTHREADS="yes"
+	use_diskthreads="yes"
+	LIBPTHREADS=
+	SAVE_SQUID_CFLAGS="$SQUID_CFLAGS"
+	SAVE_SQUID_CXXFLAGS="$SQUID_CXXFLAGS"
+	AC_ARG_WITH(pthreads,AS_HELP_STRING([--without-pthreads],[Disable POSIX Threads]))
+	if test "$with_pthreads" != "no"; then
+		dnl TODO: this needs to be extended to handle more systems and better
+		dnl REF: http://www.openldap.org/lists/openldap-bugs/200006/msg00070.html
+		dnl REF: http://autoconf-archive.cryp.to/acx_pthread.html
+		case "$host" in
+		mingw|mingw32)
+			USE_AIOPS_WIN32=1
+			AC_MSG_NOTICE([Windows threads support automatically enabled])
+			;;
+		i386-unknown-freebsd*)
+			SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT"
+			SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT"
+			if test "$GCC" = "yes" ; then
+				if test -z "$PRESET_LDFLAGS"; then
+					LDFLAGS="$LDFLAGS -pthread"
+				fi
+			fi
+			;;
+		*-solaris2.*)
+		    if test "$GCC" = "yes" ; then
+			SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT -pthreads"
+			SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT -pthreads"
+		        AC_CHECK_LIB(pthread, main,[LIBPTHREADS="-lpthread"],
+		          [ AC_MSG_NOTICE(pthread library required but cannot be found.)
+			    use_diskthreads="no"
+			  ])
+		    else
+			dnl test for -lpthread first. libc version is a stub apparently on Solaris.
+			SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT -lpthread"
+			SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT -lpthread"
+			AC_CHECK_LIB(pthread, main,[LIBPTHREADS="-lpthread"],
+			  [ SQUID_CFLAGS="$SAVE_SQUID_CFLAGS -D_REENTRANT -lpthread -mt"
+			    SQUID_CXXFLAGS="$SAVE_SQUID_CXXFLAGS -D_REENTRANT -lpthread -mt"
+				AC_CHECK_LIB(pthread, main,[LIBPTHREADS="-lpthread"],
+			      [ AC_MSG_NOTICE(pthread library required but cannot be found.)
+				use_diskthreads="no"
+			      ])
+			  ])
+			fi
+			;;
+		*)
+			SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT"
+			SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT"
+			AC_CHECK_LIB(pthread, main,[DISK_LIBS="$DISK_LIBS -lpthread"],
+				[ AC_MSG_NOTICE(pthread library required but cannot be found.)
+				  use_diskthreads="no"
+				])
+			;;
+		esac
+	else
+		AC_MSG_NOTICE([Native pthreads support manually disabled.])
+		use_diskthreads="no"
+	fi
+	if test "$use_diskthreads" = "yes" ; then
+	  AC_DEFINE(USE_DISKIO_DISKTHREADS, 1, [Whether pthreads support is needed. Automatic])
+	  AC_MSG_NOTICE([Enabling DiskThreads DiskIO module])
+	  DISK_LIBS="$DISK_LIBS $LIBPTHREADS libDiskThreads.a"
+	  DISK_MODULES="$DISK_MODULES DiskThreads"
+	  DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/DiskThreads/DiskThreadsDiskIOModule.o"
+	else
+	  AC_DEFINE(USE_DISKIO_DISKTHREADS, 0, [Whether pthreads support is needed. Automatic])
+	  AC_MSG_NOTICE([Native pthreads support disabled. DiskThreads module automaticaly disabled.])
+	  SQUID_CFLAGS="$SAVE_SQUID_CFLAGS"
+	  SQUID_CXXFLAGS="$SAVE_SQUID_CXXFLAGS"
+	fi
+	;;
+
+    AIO)
+	if test "$FOUND_DISKIO_AIO" = "yes" ; then
+	  AC_MSG_ERROR([DiskIO AIO module listed twice.])
+	fi
+	FOUND_DISKIO_AIO="yes"
+	dnl Check for POSIX AIO availability
+	use_aio="yes"
+	LIBAIO=
+	AC_ARG_WITH(aio, AS_HELP_STRING([--without-aio],[Do not use POSIX AIO. Default: auto-detect]))
+	if test "$with_aio" != "no"; then
+	    have_aio_header=no
+	    AC_CHECK_HEADERS(aio.h,[have_aio_header=yes])
+	    dnl On some systems POSIX AIO functions are in librt
+	    dnl On some systems POSIX AIO functions are in libaio
+	    AC_CHECK_LIB(rt,aio_read,[LIBAIO="-lrt"],AC_CHECK_LIB(aio,aio_read,[LIBAIO="-laio"],[]))
+	  dnl Enable AIO if the library and headers are found
+	  if test "$LIBAIO" != "" && test "$have_aio_header" = "yes"; then
+	    AC_MSG_NOTICE([Native POSIX AIO support detected.])
+	    use_aio="yes"
+	  else
+	    dnl Windows does things differently. We provide wrappers.
+	    dnl TODO: Windows really needs its own DiskIO module or its Overlaped IO
+	    case "$host_os" in
+	      mingw|mingw32)
+	        use_aio="yes"
+	        AC_MSG_NOTICE([Windows being built. Maybe-enable POSIX AIO.])
+	      ;;
+	      *)
+	        AC_MSG_NOTICE([Native POSIX AIO support not detected. AIO automatically disabled.])
+	        use_aio="no"
+	      ;;
+	    esac
+	  fi
+	else
+	  AC_MSG_NOTICE([POSIX AIO support manually disabled.])
+	  use_aio="no"
+	fi
+	dnl Use the POSIX AIO pieces if we actually need them.
+	if test "$use_aio" = "yes" ; then
+	  AC_DEFINE(USE_DISKIO_AIO, 1, [Whether POSIX AIO support is needed. Automatic])
+	  DISK_MODULES="$DISK_MODULES AIO"
+	  DISK_LIBS="$DISK_LIBS $LIBAIO libAIO.a"
+	  DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/AIO/AIODiskIOModule.o"
+	  case "$host_os" in
+	    mingw|mingw32)
+		USE_AIO_WIN32=1
+		AC_MSG_NOTICE([Replacing AIO DiskIO module with: Windows overlapped I/O support])
+		;;
+	    *)
+		AC_MSG_NOTICE([Enabling AIO DiskIO module])
+		;;
+	  esac
+	else
+	  AC_MSG_NOTICE([AIO DiskIO Module disabled. Missing POSIX AIO support.])
+	fi
+	;;
+
+    Blocking)
+	if test "$FOUND_DISKIO_BLOCKING" = "yes" ; then
+	  AC_MSG_ERROR([DiskIO Blocking module listed twice.])
+	fi
+	FOUND_DISKIO_BLOCKING="yes"
+	AC_MSG_NOTICE([Enabling Blocking DiskIO module])
+	DISK_LIBS="$DISK_LIBS libBlocking.a"
+	DISK_MODULES="$DISK_MODULES Blocking"
+	DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/Blocking/BlockingDiskIOModule.o"
+	;;
+
+    *)
+	AC_MSG_NOTICE([Enabling $module DiskIO module])
+	DISK_LIBS="$DISK_LIBS lib${module}.a"
+	DISK_MODULES="$DISK_MODULES ${module}"
+	DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/${module}/${module}DiskIOModule.o"
+	;;
+    esac
+done
+AC_MSG_NOTICE([IO Modules built: $DISK_MODULES])
+AC_SUBST(DISK_MODULES)
+AC_SUBST(DISK_LIBS)
+AC_SUBST(DISK_PROGRAMS)
+AC_SUBST(DISK_LINKOBJS)
+AM_CONDITIONAL([USE_AIOPS_WIN32], [test "$USE_AIOPS_WIN32" = 1])
+AM_CONDITIONAL([USE_AIO_WIN32], [test "$USE_AIO_WIN32" = 1])
+
+
+dnl Check what Storage formats are wanted.
+dnl This version will error out with a message saying why if a required DiskIO is missing.
 AC_ARG_ENABLE(storeio,
   AS_HELP_STRING([--enable-storeio="list of modules"],[Build support for the list of store I/O modules.
                   The default is only to build the "ufs" module.
@@ -472,29 +695,24 @@ if test -n "$STORE_MODULES"; then
     done
     AC_MSG_NOTICE([Store modules built: $STORE_MODULES])
 fi
-dnl remove all but diskd - its the only module that needs to recurse
-dnl into the sub directory
-UFS_FOUND=
-NEED_UFS=
-NEED_BLOCKING=
-NEED_DISKDAEMON=
-NEED_DISKTHREADS=
-NEED_AIO=
-STORE_TESTS=
 for fs in $STORE_MODULES none; do
     case "$fs" in
     diskd)
+	if ! test "$FOUND_DISKIO_BLOCKING" = "yes" && ! test "$FOUND_DISKIO_DISKDAEMON" = "yes" ; then
+	  AC_MSG_ERROR([Storage diskd module requires DiskIO modules: Blocking or DiskDaemon])
+	fi
 	NEED_UFS="true"
-	NEED_BLOCKING="true"
-	NEED_DISKDAEMON="true"
 	;;
     aufs)
+	if ! test "$FOUND_DISKIO_BLOCKING" = "yes" && ! test "$FOUND_DISKIO_DISKTHREADS" = "yes" ; then
+	  AC_MSG_ERROR([Storage diskd module requires DiskIO modules: Blocking or DiskThreads])
+	fi
 	NEED_UFS="true"
-	NEED_BLOCKING="true"
-	NEED_DISKTHREADS="true"
 	;;
     coss)
-	NEED_AIO="true"
+	if ! test "$FOUND_DISKIO_AIO" = "yes"; then
+	  AC_MSG_ERROR([COSS requires POSIX AIO which is not available.])
+	fi
 	dnl
 	dnl Automake om MinGW needs explicit exe extension
 	dnl for STORE_TESTS substition
@@ -539,180 +757,6 @@ done
 AC_SUBST(STORE_LIBS_TO_BUILD)
 AC_SUBST(STORE_LIBS_TO_ADD)
 AC_SUBST(STORE_TESTS)
-
-AC_ARG_ENABLE(disk-io,
-  AS_HELP_STRING([--enable-disk-io="list of modules"],[Build support for the list of disk I/O modules.
-                  If unset only the "Blocking" module will be built.
-                  Set without a value all available modules will be built.
-                  See src/DiskIO for a list of available modules, or
-                  Programmers Guide section on DiskIO
-                  for details on how to build your custom disk module]),
-[ case $enableval in
-  yes)
-	for dir in $srcdir/src/DiskIO/*; do
-	    module="`basename $dir`"
-	    if test -d "$dir" && test "$module" != CVS; then
-		AC_MSG_NOTICE([Autodetected $module DiskIO module])
-		DISK_MODULES="$DISK_MODULES $module"
-	    fi
-	done
-	AC_DEFINE(USE_DISKIO,1,[DiskIO modules are expected to be available.])
-  	;;
-  no)
-	AC_DEFINE(USE_DISKIO,0,[DiskIO modules are expected to be available.])
-  	;;
-  *)
-	DISK_MODULES="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
-	AC_DEFINE(USE_DISKIO,1,[DiskIO modules are expected to be available.])
-	;;
-  esac
-],
-[ if test -z "$DISK_MODULES"; then
-    DISK_MODULES="Blocking"
-    AC_MSG_NOTICE([Enabling Blocking DiskIO module (required default)])
-    AC_DEFINE(USE_DISKIO,1,[DiskIO modules are expected to be available.])
-  fi
-])
-if test -n "$DISK_MODULES"; then
-    for module in $DISK_MODULES; do
-	if test -d $srcdir/src/DiskIO/$module; then
-	    :
-	else
-	    AC_MSG_ERROR(disk-io $module does not exist)
-	fi
-    done
-    DISK_LIBS="lib`echo $DISK_MODULES|sed -e 's% %.a lib%g'`.a"
-    DISK_LINKOBJS=
-    for module in $DISK_MODULES; do
-        AC_MSG_NOTICE([Enabling $module DiskIO module])
-        DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/${module}/${module}DiskIOModule.o"
-    done
-fi
-for fs in $DISK_MODULES none; do
-    case "$fs" in
-    DiskDaemon)
-	DISK_PROGRAMS="$DISK_PROGRAMS DiskIO/DiskDaemon/diskd"
-	FOUND_DISKDAEMON="true"
-	;;
-    DiskThreads)
-	FOUND_DISKTHREADS="true"
-	;;
-    AIO)
-    	FOUND_AIO="true"
-	;;
-    Blocking)
-	FOUND_BLOCKING="true"
-    esac
-done
-
-if test -z "$FOUND_BLOCKING" && test -n "$NEED_BLOCKING"; then
-    AC_MSG_NOTICE([adding Blocking, as it is used by an active, legacy Store Module])
-    DISK_LIBS="$DISK_LIBS libBlocking.a"
-    DISK_MODULES="$DISK_MODULES Blocking"
-    DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/Blocking/BlockingDiskIOModule.o"
-fi
-
-if test -z "$FOUND_DISKDAEMON" && test -n "$NEED_DISKDAEMON"; then
-    AC_MSG_NOTICE(["adding DiskDaemon, as it is used by an active, legacy Store Module])
-    DISK_LIBS="$DISK_LIBS libDiskDaemon.a"
-    DISK_MODULES="$DISK_MODULES DiskDaemon"
-    DISK_PROGRAMS="$DISK_PROGRAMS DiskIO/DiskDaemon/diskd"
-    DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/DiskDaemon/DiskDaemonDiskIOModule.o"
-fi
-
-if test -z "$FOUND_DISKTHREADS" && test -n "$NEED_DISKTHREADS"; then
-    AC_MSG_NOTICE([adding DiskThreads, as it is used by an active, legacy Store Module])
-    DISK_LIBS="$DISK_LIBS libDiskThreads.a"
-    DISK_MODULES="$DISK_MODULES DiskThreads"
-    DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/DiskThreads/DiskThreadsDiskIOModule.o"
-fi
-
-if test -z "$FOUND_AIO" && test -n "$NEED_AIO"; then
-    AC_MSG_NOTICE([adding AIO, as it is used by an active, legacy Store Module])
-    DISK_LIBS="$DISK_LIBS libAIO.a"
-    DISK_MODULES="$DISK_MODULES AIO"
-    DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/AIO/AIODiskIOModule.o"
-fi
-AC_MSG_NOTICE([IO Modules built: $DISK_MODULES])
-USE_AIOPS_WIN32=0
-USE_AIO_WIN32=0
-dnl we know what is being built. now add dependencies.
-for fs in $DISK_MODULES none; do
-    case "$fs" in
-    DiskThreads)
-	if test -z "$with_pthreads"; then
-            case "$host_os" in
-            mingw|mingw32)
-        	USE_AIOPS_WIN32=1
-	        AC_MSG_NOTICE([DiskThreads IO Module used, Windows threads support automatically enabled])
-                ;;
-            *)
-	        AC_MSG_NOTICE([DiskThreads IO Module used, pthreads support automatically enabled])
-	        with_pthreads=yes
-                ;;
-            esac
-	fi
-	;;
-    AIO)
-	if test -z "$with_aio"; then
-            case "$host_os" in
-            mingw|mingw32)
-        	USE_AIO_WIN32=1
-	        AC_MSG_NOTICE([Aio IO Module used, Windows overlapped I/O support automatically enabled])
-                ;;
-            *)
-	        AC_MSG_NOTICE([Aio IO Module used, aio support automatically enabled])
-	        with_aio=yes
-                ;;
-            esac
-	fi
-	;;
-    esac
-done
-
-dnl Check for librt
-dnl We use AIO in the coss store
-if test "$with_aio" = "yes"; then
-    dnl On some systems POSIX AIO functions are in libaio
-    AC_CHECK_LIB(rt, aio_read,
-      [DISK_LIBS="$DISK_LIBS -lrt"],
-      AC_CHECK_LIB(aio, aio_read,[DISK_LIBS="$DISK_LIBS -laio"])
-    )
-fi
-
-dnl Check for pthreads
-dnl We use pthreads when doing ASYNC I/O
-if test "$with_pthreads" = "yes"; then
-    SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT"
-    SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT"
-    case "$host" in
-    i386-unknown-freebsd*)
-        if test "$GCC" = "yes" ; then
-            if test -z "$PRESET_LDFLAGS"; then
-                LDFLAGS="$LDFLAGS -pthread"
-            fi
-        fi
-    ;;
-    *-solaris2.*)
-        if test "$GCC" = "yes" ; then
-	    SQUID_CFLAGS="$SQUID_CFLAGS -pthreads"
-	    SQUID_CXXFLAGS="$SQUID_CXXFLAGS -pthreads"
-	else
-	    SQUID_CFLAGS="$SQUID_CFLAGS -mt"
-	    SQUID_CXXFLAGS="$SQUID_CXXFLAGS -mt"
-        fi
-    ;;
-    esac
-    AC_CHECK_LIB(pthread, main,[DISK_LIBS="$DISK_LIBS -lpthread"],
-      [ AC_MSG_ERROR(pthread library required but cannot be found.) ])
-fi
-
-AC_SUBST(DISK_MODULES)
-AC_SUBST(DISK_LIBS)
-AC_SUBST(DISK_PROGRAMS)
-AC_SUBST(DISK_LINKOBJS)
-AM_CONDITIONAL([USE_AIOPS_WIN32], [test "$USE_AIOPS_WIN32" = 1])
-AM_CONDITIONAL([USE_AIO_WIN32], [test "$USE_AIO_WIN32" = 1])
 
 
 dnl At lest one removal policy is always needed.
@@ -2063,7 +2107,6 @@ AC_HEADER_DIRENT
 AC_HEADER_STDC
 
 AC_CHECK_HEADERS( \
-	aio.h \
 	arpa/inet.h \
 	arpa/nameser.h \
 	assert.h \
