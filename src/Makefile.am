@@ -392,6 +392,7 @@ squid_SOURCES = \
 	pconn.h \
 	PeerDigest.h \
 	peer_digest.cc \
+	peer_proxy_negotiate_auth.cc \
 	peer_select.cc \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
@@ -543,7 +544,8 @@ squid_LDADD = \
 	@SSLLIB@ \
 	@XTRA_LIBS@ \
 	@EPOLL_LIBS@ \
-	@MINGW_LIBS@ 
+	@MINGW_LIBS@ \
+	@KRB5LIBS@
 squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@DISK_LIBS@ \
 	@DISK_LINKOBJS@ \
@@ -564,6 +566,9 @@ squid_LDFLAGS = \
 #         -all-static -dlopen self
 #
 endif
+
+## Kerberos libraries require their include path...
+INCLUDES += @KRB5INCS@
 
 
 unlinkd_SOURCES = unlinkd_daemon.cc SquidNew.cc
@@ -629,7 +634,7 @@ ufsdump_LDADD = \
 	-L$(top_builddir)/lib -lmiscutil \
 	@XTRA_LIBS@ \
 	@EPOLL_LIBS@ \
-	@MINGW_LIBS@ 
+	@MINGW_LIBS@
 ufsdump_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	$(COMMON_LIBS) \
 	@DISK_LIBS@ \
@@ -1143,6 +1148,7 @@ tests_testCacheManager_SOURCES = \
 	Parsing.cc \
 	pconn.cc \
 	peer_digest.cc \
+	peer_proxy_negotiate_auth.cc \
 	peer_select.cc \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
@@ -1203,7 +1209,8 @@ tests_testCacheManager_LDADD = \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
 	@SSLLIB@ \
-	@XTRA_LIBS@
+	@XTRA_LIBS@ \
+	@KRB5LIBS@
 tests_testCacheManager_LDFLAGS = $(LIBADD_DL)
 tests_testCacheManager_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
@@ -1313,6 +1320,7 @@ tests_testEvent_SOURCES = \
 	Parsing.cc \
 	pconn.cc \
 	peer_digest.cc \
+	peer_proxy_negotiate_auth.cc \
 	peer_select.cc \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
@@ -1372,7 +1380,8 @@ tests_testEvent_LDADD = \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
 	@SSLLIB@ \
-	@XTRA_LIBS@
+	@XTRA_LIBS@ \
+	@KRB5LIBS@
 tests_testEvent_LDFLAGS = $(LIBADD_DL)
 tests_testEvent_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
@@ -1460,6 +1469,7 @@ tests_testEventLoop_SOURCES = \
 	Parsing.cc \
 	pconn.cc \
 	peer_digest.cc \
+	peer_proxy_negotiate_auth.cc \
 	peer_select.cc \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
@@ -1519,7 +1529,8 @@ tests_testEventLoop_LDADD = \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
 	@SSLLIB@ \
-	@XTRA_LIBS@
+	@XTRA_LIBS@ \
+	@KRB5LIBS@
 tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
 tests_testEventLoop_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
@@ -1596,6 +1607,7 @@ tests_test_http_range_SOURCES = \
 	neighbors.cc \
 	Parsing.cc \
 	peer_digest.cc \
+	peer_proxy_negotiate_auth.cc \
 	peer_select.cc \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
@@ -1661,7 +1673,8 @@ tests_test_http_range_LDADD = \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
 	@SSLLIB@ \
-	@XTRA_LIBS@
+	@XTRA_LIBS@ \
+	@KRB5LIBS@
 tests_test_http_range_LDFLAGS = $(LIBADD_DL)
 tests_test_http_range_DEPENDENCIES = \
 	@SQUID_CPPUNIT_LA@
@@ -1748,6 +1761,7 @@ tests_testHttpRequest_SOURCES = \
 	Parsing.cc \
 	pconn.cc \
 	peer_digest.cc \
+	peer_proxy_negotiate_auth.cc \
 	peer_select.cc \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
@@ -1808,7 +1822,8 @@ tests_testHttpRequest_LDADD = \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
 	@SSLLIB@ \
-	@XTRA_LIBS@
+	@XTRA_LIBS@ \
+	@KRB5LIBS@
 tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 tests_testHttpRequest_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
@@ -2097,6 +2112,7 @@ tests_testURL_SOURCES = \
 	Parsing.cc \
 	pconn.cc \
 	peer_digest.cc \
+	peer_proxy_negotiate_auth.cc \
 	peer_select.cc \
 	peer_sourcehash.cc \
 	peer_userhash.cc \
@@ -2154,7 +2170,8 @@ tests_testURL_LDADD = \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
 	@SSLLIB@ \
-	@XTRA_LIBS@
+	@XTRA_LIBS@ \
+	@KRB5LIBS@
 tests_testURL_LDFLAGS = $(LIBADD_DL)
 tests_testURL_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
