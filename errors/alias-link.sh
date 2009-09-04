@@ -38,6 +38,6 @@ while read base aliases; do
 	# Remove and replace any pre-existing content/link
 	for alia in ${aliases}; do
 		${RM} -f -r ${DIR}/${alia} || exit 1
-		${LN} -s ${DIR}/${base} ${DIR}/${alia} || exit 1
+		${LN} -s ${base} ${DIR}/${alia} || exit 1
 	done
 done
