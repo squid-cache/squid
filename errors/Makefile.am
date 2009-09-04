@@ -89,7 +89,7 @@ TRANSLATE_LANGUAGES = \
 	zh-cn.lang \
 	zh-tw.lang
 
-CLEANFILES = $(TRANSLATE_LANGUAGES)
+CLEANFILES = $(TRANSLATE_LANGUAGES) translate-warn
 EXTRA_DIST = \
 	$(ERROR_TEMPLATES) \
 	aliases alias-link.sh alias-upgrade errorpage.css TRANSLATORS COPYRIGHT
