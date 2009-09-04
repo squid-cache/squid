@@ -110,7 +110,7 @@ translate-warn:
 
 all: all-am
 
-.po.lang:
+%.lang:
 	if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no" && test "$(PO2HTML)" != "off" && test -f $(top_srcdir)/errors/en.po; then \
 	    lang=`basename $@ .lang`; \
 	    mkdir -p $(top_builddir)/errors/$$lang; \
@@ -155,7 +155,6 @@ install-data-local: translate
 	$(INSTALL_DATA) $(srcdir)/COPYRIGHT $(DESTDIR)$(DEFAULT_ERROR_DIR)/COPYRIGHT; \
 	$(INSTALL_DATA) $(srcdir)/errorpage.css $(DESTDIR)$(DEFAULT_STYLESHEET).default; \
 	$(SHELL) $(srcdir)/alias-link.sh "$(LN)" "$(RM)" "$(DESTDIR)$(DEFAULT_ERROR_DIR)" "$(srcdir)/aliases" || exit 1 ;
-
 
 uninstall-local:
 	for l in $(TRANSLATE_LANGUAGES) templates; do \
@@ -202,5 +201,5 @@ clean:
 	    rm -rf $$lang; \
 	  done; \
 	fi
-	
+
 all: translate
