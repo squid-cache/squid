@@ -306,9 +306,12 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
-
-	<tag>???alphabetical list within group ordered: enable, disable, with, without) ???</tag>
-	<p> ???explain??
+	<tag>--enable-url-rewrite-helpers</tag>
+	<p>Build helpers for some basic URL-rewrite actions. For use by url_rewrite_program.
+	   If omitted or set to =all then all bundled helpers that are able to build will be built.
+	   If set to a specific list of helpers then only those helpers will build.
+	   Currently one demo helper <em>fake</em> is provided in shell and C++ forms to demonstrate
+	   the helper protocol usage and provide exemplar code.
 
 </descrip>
 
