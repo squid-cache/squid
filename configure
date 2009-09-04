@@ -26087,20 +26087,20 @@ if test `eval 'as_val=${'$as_ac_Header'}
   cat >>confdefs.h <<_ACEOF
 #define `$as_echo "HAVE_$ac_header" | $as_tr_cpp` 1
 _ACEOF
+ ac_cv_libxml2_include=yes
+fi
 
-else
+done
 
-		CPPFLAGS="$SAVED_CPPFLAGS"
+	CPPFLAGS="$SAVED_CPPFLAGS"
 
 fi
 
 done
 
-
+if test "x$ac_cv_libxml2_include" = "xyes"; then
+	SQUID_CXXFLAGS="-I/usr/include/libxml2 $SQUID_CXXFLAGS"
 fi
-
-done
-
 
 { $as_echo "$as_me:$LINENO: checking for an ANSI C-conforming const" >&5
 $as_echo_n "checking for an ANSI C-conforming const... " >&6; }
