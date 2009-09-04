@@ -74,9 +74,13 @@
 #include "compat/stdvarargs.h"
 #include "compat/assert.h"
 
+
 /*****************************************************/
 /* component-specific portabilities                  */
 /*****************************************************/
+
+/* helper debugging requires some hacks to be clean */
+#include "compat/debug.h"
 
 /* Valgrind API macros changed between two versions squid supports */
 #include "compat/valgrind.h"

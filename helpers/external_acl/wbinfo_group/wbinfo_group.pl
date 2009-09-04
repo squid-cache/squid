@@ -34,7 +34,7 @@
 use vars qw/ %opt /;
 
 # Disable output buffering
-$|=1;           
+$|=1;
 
 sub debug {
 	print STDERR "@_\n" if $opt{d};
@@ -86,7 +86,7 @@ print STDERR "Debugging mode ON.\n" if $opt{d};
 #
 while (<STDIN>) {
         chop;
-	&debug ("Got $_ from squid");
+	&debug("Got $_ from squid");
         ($user, @groups) = split(/\s+/);
 	$user =~ s/%([0-9a-fA-F][0-9a-fA-F])/pack("c",hex($1))/eg;
  	# test for each group squid send in it's request
@@ -95,7 +95,7 @@ while (<STDIN>) {
  		$ans = &check($user, $group);
  		last if $ans eq "OK";
  	}
-	&debug ("Sending $ans to squid");
+	&debug("Sending $ans to squid");
 	print "$ans\n";
 }
 

@@ -155,7 +155,7 @@ usage()
             my_program_name, my_program_name);
 }
 
-char debug_enabled=0;
+int debug_enabled=0;
 
 void
 process_options(int argc, char *argv[])
