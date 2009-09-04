@@ -26,7 +26,8 @@
 
 // C++ Specific
 #if defined(__cplusplus)
-extern "C" {
+extern "C"
+{
 #endif
 
 // Indicates if we copy data when creating a SPNEGO_TOKEN structure or not
@@ -64,19 +65,20 @@ extern "C" {
 // Defines an individual SPNEGO Token Element.
 //
 
-    typedef struct SpnegoElement {
-        size_t                nStructSize;        // Size of the element structure
-        int                   iElementPresent;    // Is the field present?  Must be either
-        // SPNEGO_TOKEN_ELEMENT_UNAVAILABLE or
-        // SPNEGO_TOKEN_ELEMENT_AVAILABLE
+    typedef struct SpnegoElement
+    {
+	size_t nStructSize;	// Size of the element structure
+	int iElementPresent;	// Is the field present?  Must be either
+	// SPNEGO_TOKEN_ELEMENT_UNAVAILABLE or
+	// SPNEGO_TOKEN_ELEMENT_AVAILABLE
 
-        SPNEGO_ELEMENT_TYPE   eElementType;       // The Element Type
+	SPNEGO_ELEMENT_TYPE eElementType;	// The Element Type
 
-        unsigned char         type;               // Data Type
+	unsigned char type;	// Data Type
 
-        unsigned char*        pbData;             // Points to actual Data
+	unsigned char *pbData;	// Points to actual Data
 
-        unsigned long         nDatalength;        // Actual Data Length
+	unsigned long nDatalength;	// Actual Data Length   
 
     } SPNEGO_ELEMENT;
 
@@ -89,18 +91,19 @@ extern "C" {
 // contain up to four distinct, optional elements.
 //
 
-    typedef struct SpnegoToken {
-        size_t            nStructSize;                              // Size of the Token structure
-        unsigned long     ulFlags;                                  // Internal Structure Flags - Reserved!
-        int               ucTokenType;                              // Token Type - Must be
-        // SPNEGO_TOKEN_INIT or
-        // SPNEGO_TOKEN_TARG
+    typedef struct SpnegoToken
+    {
+	size_t nStructSize;	// Size of the Token structure
+	unsigned long ulFlags;	// Internal Structure Flags - Reserved!
+	int ucTokenType;	// Token Type - Must be
+	// SPNEGO_TOKEN_INIT or
+	// SPNEGO_TOKEN_TARG
 
-        unsigned char*    pbBinaryData;                             // Points to binary token data
+	unsigned char *pbBinaryData;	// Points to binary token data
 
-        unsigned long     ulBinaryDataLen;                          // Length of the actual binary data
-        int               nNumElements;                             // Number of elements
-        SPNEGO_ELEMENT    aElementArray [MAX_NUM_TOKEN_ELEMENTS];   // Holds the elements for the token
+	unsigned long ulBinaryDataLen;	// Length of the actual binary data
+	int nNumElements;	// Number of elements
+	SPNEGO_ELEMENT aElementArray[MAX_NUM_TOKEN_ELEMENTS];	// Holds the elements for the token
     } SPNEGO_TOKEN;
 
 // Structure size in case we later choose to extend the structure
@@ -110,52 +113,53 @@ extern "C" {
 // Function definitions
 //
 
-    SPNEGO_TOKEN* AllocEmptySpnegoToken( unsigned char ucCopyData, unsigned long ulFlags,
-                                         unsigned char * pbTokenData, unsigned long ulTokenSize );
-    void FreeSpnegoToken( SPNEGO_TOKEN* pSpnegoToken );
-    void InitSpnegoTokenElementArray( SPNEGO_TOKEN* pSpnegoToken );
-    int InitSpnegoTokenType( SPNEGO_TOKEN* pSpnegoToken, long* pnTokenLength,
-                             long* pnRemainingTokenLength, unsigned char** ppbFirstElement );
-    int InitSpnegoTokenElements( SPNEGO_TOKEN* pSpnegoToken, unsigned char* pbTokenData,
-                                 long nRemainingTokenLength  );
-    int GetSpnegoInitTokenMechList( unsigned char* pbTokenData, int nMechListLength,
-                                    SPNEGO_ELEMENT* pSpnegoElement );
-    int InitSpnegoTokenElementFromBasicType( unsigned char* pbTokenData, int nElementLength,
-            unsigned char ucExpectedType,
-            SPNEGO_ELEMENT_TYPE spnegoElementType,
-            SPNEGO_ELEMENT* pSpnegoElement );
-    int InitSpnegoTokenElementFromOID( unsigned char* pbTokenData, int nElementLength,
-                                       SPNEGO_ELEMENT_TYPE spnegoElementType,
-                                       SPNEGO_ELEMENT* pSpnegoElement );
-    int FindMechOIDInMechList( SPNEGO_ELEMENT* pSpnegoElement, SPNEGO_MECH_OID MechOID,
-                               int * piMechTypeIndex );
-    int ValidateMechList( unsigned char* pbMechListData, long nBoundaryLength );
-    int CalculateMinSpnegoInitTokenSize( long nMechTokenLength, long nMechListMICLength,
-                                         SPNEGO_MECH_OID mechOid, int nReqFlagsAvailable,
-                                         long* plTokenSize, long* plInternalLength );
-    int CalculateMinSpnegoTargTokenSize( SPNEGO_MECH_OID MechType, SPNEGO_NEGRESULT spnegoNegResult,
-                                         long nMechTokenLen,
-                                         long nMechTokenMIC, long* pnTokenSize,
-                                         long* pnInternalTokenLength );
-    int CreateSpnegoInitToken( SPNEGO_MECH_OID MechType,
-                               unsigned char ucContextFlags, unsigned char* pbMechToken,
-                               unsigned long ulMechTokenLen, unsigned char* pbMechListMIC,
-                               unsigned long ulMechListMICLen, unsigned char* pbTokenData,
-                               long nTokenLength, long nInternalTokenLength );
-    int CreateSpnegoTargToken( SPNEGO_MECH_OID MechType,
-                               SPNEGO_NEGRESULT eNegResult, unsigned char* pbMechToken,
-                               unsigned long ulMechTokenLen, unsigned char* pbMechListMIC,
-                               unsigned long ulMechListMICLen, unsigned char* pbTokenData,
-                               long nTokenLength, long nInternalTokenLength );
-    int IsValidMechOid( SPNEGO_MECH_OID mechOid );
-    int IsValidContextFlags( unsigned char ucContextFlags );
-    int IsValidNegResult( SPNEGO_NEGRESULT negResult );
-    int IsValidSpnegoToken( SPNEGO_TOKEN* pSpnegoToken );
-    int IsValidSpnegoElement( SPNEGO_TOKEN* pSpnegoToken,SPNEGO_ELEMENT_TYPE spnegoElement );
-    int CalculateElementArrayIndex( SPNEGO_TOKEN* pSpnegoToken,SPNEGO_ELEMENT_TYPE spnegoElement );
-    int InitTokenFromBinary( unsigned char ucCopyData, unsigned long ulFlags,
-                             unsigned char* pbTokenData, unsigned long ulLength,
-                             SPNEGO_TOKEN** ppSpnegoToken );
+    SPNEGO_TOKEN *AllocEmptySpnegoToken(unsigned char ucCopyData,
+	unsigned long ulFlags, unsigned char *pbTokenData,
+	unsigned long ulTokenSize);
+    void FreeSpnegoToken(SPNEGO_TOKEN * pSpnegoToken);
+    void InitSpnegoTokenElementArray(SPNEGO_TOKEN * pSpnegoToken);
+    int InitSpnegoTokenType(SPNEGO_TOKEN * pSpnegoToken, long *pnTokenLength,
+	long *pnRemainingTokenLength, unsigned char **ppbFirstElement);
+    int InitSpnegoTokenElements(SPNEGO_TOKEN * pSpnegoToken,
+	unsigned char *pbTokenData, long nRemainingTokenLength);
+    int GetSpnegoInitTokenMechList(unsigned char *pbTokenData,
+	int nMechListLength, SPNEGO_ELEMENT * pSpnegoElement);
+    int InitSpnegoTokenElementFromBasicType(unsigned char *pbTokenData,
+	int nElementLength, unsigned char ucExpectedType,
+	SPNEGO_ELEMENT_TYPE spnegoElementType, SPNEGO_ELEMENT * pSpnegoElement);
+    int InitSpnegoTokenElementFromOID(unsigned char *pbTokenData,
+	int nElementLength, SPNEGO_ELEMENT_TYPE spnegoElementType,
+	SPNEGO_ELEMENT * pSpnegoElement);
+    int FindMechOIDInMechList(SPNEGO_ELEMENT * pSpnegoElement,
+	SPNEGO_MECH_OID MechOID, int *piMechTypeIndex);
+    int ValidateMechList(unsigned char *pbMechListData, long nBoundaryLength);
+    int CalculateMinSpnegoInitTokenSize(long nMechTokenLength,
+	long nMechListMICLength, SPNEGO_MECH_OID mechOid,
+	int nReqFlagsAvailable, long *plTokenSize, long *plInternalLength);
+    int CalculateMinSpnegoTargTokenSize(SPNEGO_MECH_OID MechType,
+	SPNEGO_NEGRESULT spnegoNegResult, long nMechTokenLen,
+	long nMechTokenMIC, long *pnTokenSize, long *pnInternalTokenLength);
+    int CreateSpnegoInitToken(SPNEGO_MECH_OID MechType,
+	unsigned char ucContextFlags, unsigned char *pbMechToken,
+	unsigned long ulMechTokenLen, unsigned char *pbMechListMIC,
+	unsigned long ulMechListMICLen, unsigned char *pbTokenData,
+	long nTokenLength, long nInternalTokenLength);
+    int CreateSpnegoTargToken(SPNEGO_MECH_OID MechType,
+	SPNEGO_NEGRESULT eNegResult, unsigned char *pbMechToken,
+	unsigned long ulMechTokenLen, unsigned char *pbMechListMIC,
+	unsigned long ulMechListMICLen, unsigned char *pbTokenData,
+	long nTokenLength, long nInternalTokenLength);
+    int IsValidMechOid(SPNEGO_MECH_OID mechOid);
+    int IsValidContextFlags(unsigned char ucContextFlags);
+    int IsValidNegResult(SPNEGO_NEGRESULT negResult);
+    int IsValidSpnegoToken(SPNEGO_TOKEN * pSpnegoToken);
+    int IsValidSpnegoElement(SPNEGO_TOKEN * pSpnegoToken,
+	SPNEGO_ELEMENT_TYPE spnegoElement);
+    int CalculateElementArrayIndex(SPNEGO_TOKEN * pSpnegoToken,
+	SPNEGO_ELEMENT_TYPE spnegoElement);
+    int InitTokenFromBinary(unsigned char ucCopyData, unsigned long ulFlags,
+	unsigned char *pbTokenData, unsigned long ulLength,
+	SPNEGO_TOKEN ** ppSpnegoToken);
 
     // C++ Specific
 #if defined(__cplusplus)
@@ -163,4 +167,3 @@ extern "C" {
 #endif
 
 #endif
-
