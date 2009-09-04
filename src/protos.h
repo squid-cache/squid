@@ -797,4 +797,8 @@ class external_acl;
 
 #endif
 
+#if HAVE_KRB5 && HAVE_GSSAPI
+            /* upstream proxy authentication */
+            SQUIDCEXTERN char *peer_proxy_negotiate_auth(char *principal_name, char *proxy);
+#endif
 #endif /* SQUID_PROTOS_H */
