@@ -1761,7 +1761,6 @@ if test -n "$NEGOTIATE_AUTH_HELPERS"; then
     AC_MSG_NOTICE([Negotiate auth helpers built: $NEGOTIATE_AUTH_HELPERS])
 fi
 AC_SUBST(NEGOTIATE_AUTH_HELPERS)
-AC_CONFIG_SUBDIRS(helpers/negotiate_auth/squid_kerb_auth)
 
 dnl Select digest auth scheme helpers to build
 if test -n "$AUTH_MODULE_digest"; then
@@ -4105,6 +4104,7 @@ AC_CONFIG_FILES([\
 	helpers/ntlm_auth/smb_lm/smbval/Makefile \
 	helpers/ntlm_auth/mswin_sspi/Makefile \
 	helpers/negotiate_auth/Makefile \
+	helpers/negotiate_auth/squid_kerb_auth/Makefile \
 	helpers/negotiate_auth/mswin_sspi/Makefile \
 	helpers/external_acl/Makefile \
 	helpers/external_acl/ip_user/Makefile \
