@@ -1,3 +1,16 @@
+Changes to squid-3.0.STABLE19 (06 Sep 2009):
+
+	- Bug 2745: Invalid Response error on small reads
+	- Bug 2739: DNS resolver option ndots can't be parsed from resolv.conf
+	- Bug 2734: some compile errors on Solaris
+	- Bug 2648: stateful helpers stuck in reserved if client disconnects while helper busy
+	- Bug 2541: Hang in 100% CPU loop while extacting header details using a delimiter other than comma
+	- Bug 2362: Remove support for deferred state in stateful helpers
+	- Add 0.0.0.0 as a to_localhost address
+	- Docs: Improve chroot directive documentation slightly
+	- Fixup libxml2 include magics, was failing when a configure cache was used
+	- ... and some minor testing improvements.
+
 Changes to squid-3.0.STABLE18 (04 Aug 2009):
 
 	- Bug 2728: regression: assertion failed: !eof
