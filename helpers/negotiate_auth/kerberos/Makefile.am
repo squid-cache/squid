@@ -1,4 +1,4 @@
-EXTRA_DIST = README NEWS ChangeLog AUTHORS INSTALL $(SPNEGO)
+EXTRA_DIST = README NEWS ChangeLog AUTHORS INSTALL
 SUBDIRS = 
 
 bin_PROGRAMS = negotiate_kerberos_auth negotiate_kerberos_auth_test
