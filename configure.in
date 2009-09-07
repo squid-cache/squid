@@ -696,11 +696,11 @@ if test -n "$STORE_MODULES"; then
 	fi
     done
     for module in $STORE_MODULES_FULL; do
-	if test "$module" = "coss"; then
-	    echo "WARNING: COSS Support is not stable yet in Squid-3. Please do not use."
-	    sleep 10;
-	fi
 	case "$module" in
+	coss)
+	    echo "WARNING: COSS Support is not stable yet in Squid-3. Please do not use."
+	    sleep 10
+	    ;;
 	esac
     done
     AC_MSG_NOTICE([Store modules built: $STORE_MODULES])
