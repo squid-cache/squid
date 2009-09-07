@@ -1,4 +1,4 @@
-EXTRA_DIST = README NEWS ChangeLog AUTHORS INSTALL
+EXTRA_DIST = README NEWS ChangeLog AUTHORS INSTALL $(SPNEGO)
 SUBDIRS = 
 
 bin_PROGRAMS = negotiate_kerberos_auth negotiate_kerberos_auth_test
@@ -9,12 +9,15 @@ SPNEGO = spnegohelp/derparse.c spnegohelp/derparse.h \
 	spnegohelp/spnego.c spnegohelp/spnego.h \
 	spnegohelp/spnegohelp.c spnegohelp/spnegohelp.h \
 	spnegohelp/spnegparse.c spnegohelp/spnegoparse.h
+
+EXTRA_DIST += $(SPNEGO)
+
 if HAVE_SPNEGO
 negotiate_kerberos_auth_SOURCES = $(SOURCE)
-AM_CPPFLAGS = $(KERBINCS) -I.
+AM_CPPFLAGS = $(KERBINCS) -I$(srcdir)
 else
 negotiate_kerberos_auth_SOURCES = $(SOURCE) $(SPNEGO)
-AM_CPPFLAGS = $(KERBINCS) -I$(srcdir)/spnegohelp -I.
+AM_CPPFLAGS = $(KERBINCS) -I$(srcdir)/spnegohelp -I$(srcdir)
 endif
 negotiate_kerberos_auth_test_SOURCES = $(SOURCE_test)
 
