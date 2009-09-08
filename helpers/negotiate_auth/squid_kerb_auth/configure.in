@@ -69,7 +69,7 @@ check_mit() {
        ac_includedir=""
        ac_libdir=""
        case $sys in
-	        Linux) if test "x$enableval" != "xyes" -a "x$enableval" != "x" ; then
+                Linux) if test "x$enableval" != "xyes" -a "x$enableval" != "x" -a "x$enableval" != "xno" ; then
                          ac_libdir=$enableval/lib
                          ac_includedir=$enableval/include
                        else
@@ -101,7 +101,7 @@ check_mit() {
                          fi
                        fi
                        ;;
-                *) if test "x$enableval" != "xyes" -a "x$enableval" != "x" ; then
+                *) if test "x$enableval" != "xyes" -a "x$enableval" != "x" -a "x$enableval" != "xno" ; then
                      ac_libdir=$enableval/lib
                      ac_includedir=$enableval/include
                      CPPFLAGS="$CPPFLAGS -I$ac_includedir"
@@ -142,7 +142,7 @@ check_heimdal(){
        ac_includedir=""
        ac_libdir=""
        case $sys in
-	        Linux) if test "x$enableval" != "xyes" -a "x$enableval" != "x" ; then
+                Linux) if test "x$enableval" != "xyes" -a "x$enableval" != "x" -a "x$enableval" != "xno" ; then
                          ac_libdir=$enableval/lib
                          ac_includedir=$enableval/include
                        else
@@ -179,7 +179,7 @@ check_heimdal(){
                          fi
                        fi
                        ;;
-                *) if test "x$enableval" != "xyes" -a "x$enableval" != "x" ; then
+                *) if test "x$enableval" != "xyes" -a "x$enableval" != "x" -a "x$enableval" != "xno" ; then
                      ac_libdir=$enableval/lib
                      ac_includedir=$enableval/include
                      CPPFLAGS="$CPPFLAGS -I$ac_includedir"
@@ -424,8 +424,7 @@ AC_ARG_WITH([squid],
   [ squid_dir=$withval ]
 )
 
-eval ac_p_include=$includedir
-CPPFLAGS="$CPPFLAGS -I$ac_p_include -I../../../ -I../../../include/ -I$squid_dir/include -I$squid_dir/src -I$squid_dir"
+CPPFLAGS="$CPPFLAGS -I../../../ -I../../../include/ -I$squid_dir/include -I$squid_dir/src -I$squid_dir"
 AC_CACHE_CHECK([for SQUID at '$squid_dir' ],ac_cv_have_squid,[
 AC_TRY_RUN([
 #include <config.h>
@@ -439,8 +438,7 @@ return 1;
   ac_cv_have_squid=yes,
   ac_cv_have_squid=no)
 ])
-eval ac_p_lib=$libdir
-LDFLAGS="$LDFLAGS -L../../../lib -L$ac_p_lib $w_flag$ac_p_lib$w_flag_2"
+LDFLAGS="$LDFLAGS -L../../../lib"
 if test "x$ac_cv_have_squid" = "xyes"; then
   AC_DEFINE(HAVE_SQUID,1, [Define to 1 if you have SQUID])
   AC_CHECK_HEADERS(getaddrinfo.h getnameinfo.h util.h)
