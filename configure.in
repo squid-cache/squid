@@ -1857,7 +1857,7 @@ if test "$ac_krb5_config" = "yes" ; then
     if test "x$ac_heimdal" == "x" ; then
         AC_CHECK_HEADERS(gssapi/gssapi_generic.h)
     fi
-    AC_CHECK_HEADERS(krb5.h com_err.h et/comm_err.h)
+    AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
     AC_MSG_CHECKING([for max_skew in struct krb5_context])
 AC_TRY_COMPILE([
 #include <krb5.h>
