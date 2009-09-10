@@ -1833,21 +1833,21 @@ if test x"$krb5confpath" != xno; then
     fi
 fi
 if test "$ac_krb5_config" = "yes" ; then
-    ac_heimdal=`$krb5confpath --version 2>/dev/null | grep -i heimdal`
-    ac_solaris=`$krb5confpath --version 2>/dev/null | grep -i solaris`
+    ac_heimdal="`$krb5confpath --version 2>/dev/null | grep -i heimdal`"
+    ac_solaris="`$krb5confpath --version 2>/dev/null | grep -i solaris`"
     if test "x$ac_heimdal" != "x" ; then
         AC_DEFINE(HAVE_HEIMDAL_KERBEROS,1,[Define to 1 if you have Heimdal Kerberos])
     else
         AC_DEFINE(HAVE_MIT_KERBEROS,1,[Define to 1 if you have MIT Kerberos])
     fi
     if test "$ac_solaris" != "" ; then
-        KRB5INCS=`$krb5confpath --cflags krb5 2>/dev/null`
-        KRB5LIBS=`$krb5confpath --libs krb5 2>/dev/null`
+        KRB5INCS="`$krb5confpath --cflags krb5 2>/dev/null`"
+        KRB5LIBS="`$krb5confpath --libs krb5 2>/dev/null`"
         KRB5INCS="-I/usr/include/gssapi $KRB5INCS"
         KRB5LIBS="-L/usr/lib -R/usr/lib -lgss -lresolv -lsocket -lnsl $KRB5LIBS"
     else
-        KRB5INCS=`$krb5confpath --cflags krb5 2>/dev/null`
-        KRB5LIBS=`$krb5confpath --libs krb5 2>/dev/null`
+        KRB5INCS="`$krb5confpath --cflags krb5 2>/dev/null`"
+        KRB5LIBS="`$krb5confpath --libs krb5 2>/dev/null`"
         KRB5INCS="`$krb5confpath --cflags gssapi 2>/dev/null` $KRB5INCS"
         KRB5LIBS="`$krb5confpath --libs gssapi 2>/dev/null` $KRB5LIBS"
     fi
@@ -1857,7 +1857,7 @@ if test "$ac_krb5_config" = "yes" ; then
     if test "x$ac_heimdal" == "x" ; then
         AC_CHECK_HEADERS(gssapi/gssapi_generic.h)
     fi
-    AC_CHECK_HEADERS(krb5.h com_err.h)
+    AC_CHECK_HEADERS(krb5.h com_err.h et/comm_err.h)
     AC_MSG_CHECKING([for max_skew in struct krb5_context])
 AC_TRY_COMPILE([
 #include <krb5.h>
@@ -1871,6 +1871,12 @@ AC_TRY_COMPILE([
     if test "x$ac_heimdal" == "x" ; then
         AC_CHECK_HEADERS(profile.h)
     fi
+    AC_CHECK_LIB(com_err,error_message,
+        AC_DEFINE(HAVE_ERROR_MESSAGE,1,[Define to 1 if you have error_message]),)
+    AC_CHECK_LIB(krb5,krb5_get_err_text,
+        AC_DEFINE(HAVE_KRB5_GET_ERR_TEXT,1,[Define to 1 if you have krb5_get_err_text]),)
+    AC_CHECK_LIB(krb5,krb5_get_error_message,
+        AC_DEFINE(HAVE_KRB5_GET_ERROR_MESSAGE,1,[Define to 1 if you have krb5_get_error_message]),)
     AC_CHECK_LIB(krb5,krb5_kt_free_entry,
         AC_DEFINE(HAVE_KRB5_KT_FREE_ENTRY,1,[Define to 1 if you have krb5_kt_free_entry]),)
     AC_CHECK_LIB(krb5,krb5_get_init_creds_keytab,
