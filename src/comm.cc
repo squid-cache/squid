@@ -628,9 +628,6 @@ comm_open_listener(int sock_type,
 {
     int sock = -1;
 
-    /* all listener sockets require bind() */
-    flags |= COMM_DOBIND;
-
     /* attempt native enabled port. */
     sock = comm_openex(sock_type, proto, addr, flags, 0, note);
 
@@ -793,8 +790,10 @@ comm_openex(int sock_type,
 
     if (addr.GetPort() > (u_short) 0) {
 #ifdef _SQUID_MSWIN_
+
         if (sock_type != SOCK_DGRAM)
 #endif
+
             commSetNoLinger(new_socket);
 
         if (opt_reuseaddr)
@@ -806,10 +805,7 @@ comm_openex(int sock_type,
         comm_set_transparent(new_socket);
     }
 
-    if ( (flags & COMM_DOBIND) || addr.GetPort() > 0 || !addr.IsAnyAddr() ) {
-        if ( !(flags & COMM_DOBIND) && addr.IsAnyAddr() )
-            debugs(5,1,"WARNING: Squid is attempting to bind() port " << addr << " without being a listener.");
-
+    if (!addr.IsNoAddr()) {
         if (commBind(new_socket, *AI) != COMM_OK) {
             comm_close(new_socket);
             addr.FreeAddrInfo(AI);
