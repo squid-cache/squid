@@ -438,3 +438,61 @@ IpIntercept::SetTproxy2OutgoingAddr(int fd, const IpAddress &src)
     return 0;
 }
 #endif
+
+bool
+IpIntercept::ProbeForTproxy(IpAddress &test)
+{
+#if LINUX_TPROXY2
+
+#if USE_IPV6
+        /* TPROXYv2 is not IPv6 capable. Force wildcard sockets to IPv4. Die on IPv6 IPs */
+        debugs(3, DBG_IMPORTANT, "Disabling IPv6 on port " << test << " (TPROXYv2 interception enabled)");
+        if ( test.IsIPv6() && !test.SetIPv4() ) {
+            debugs(3, DBG_CRITICAL, "IPv6 requires TPROXYv4 support. You only have TPROXYv2 for " << test );
+            return false;
+        }
+#endif /* USE_IPV6 */
+    return true;
+
+#else /* not LINUX_TPROXY2 */
+
+    int tos = 1;
+    int tmp_sock = -1;
+
+#if USE_IPV6
+    /* Probe to see if the Kernel TPROXY support is IPv6-enabled */
+    if (test.IsIPv6()) {
+        debugs(3, 3, "Probing for IPv6 TPROXY support on port " << test);
+
+        struct sockaddr_in6 tmp_ip6;
+
+        test.GetSockAddr(tmp_ip6);
+
+        if ( (tmp_sock = socket(PF_INET6, SOCK_STREAM, PROTO_TCP)) >= 0 &&
+            setsockopt(tmp_sock, SOL_IP, IP_TRANSPARENT, (char *)&tos, sizeof(int)) == 0 &&
+            bind(tmp_sock, tmp_ip6.sa_addr, tmp_ip6.sa_addrlen) == 0 ) {
+
+            debugs(3, 3, "IPv6 TPROXY support detected. Using.");
+            return true;
+        }
+    }
+#endif
+
+    /* Probe to see if the Kernel TPROXY support is IPv4-enabled (aka present) */
+    if (!tproxy_capable && s->s.SetIPv4()) {
+        debugs(3, 3, "Probing for IPv6 TPROXY support on port " << s->s);
+
+        struct sockaddr_in tmp_ip4;
+        test.GetSockAddr(tmp_ip4);
+
+        if ( (tmp_sock = socket(PF_INET, SOCK_STREAM, PROTO_TCP)) >= 0 &&
+            setsockopt(tmp_sock, SOL_IP, IP_TRANSPARENT, (char *)&tos, sizeof(int)) == 0 &&
+            bind(tmp_sock, tmp_ip4.sa_addr, tmp_ip4.sa_addrlen) == 0 ) {
+
+            debugs(3, 3, "IPv4 TPROXY support detected. Using.");
+            return true;
+        }
+    }
+
+    return false;
+}
