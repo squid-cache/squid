@@ -8,10 +8,10 @@ bin_PROGRAMS = negotiate_kerberos_auth negotiate_kerberos_auth_test
 SOURCE = negotiate_kerberos_auth.cc base64.cc base64.h
 SOURCE_test = negotiate_kerberos_auth_test.cc base64.cc base64.h
 SPNEGO = \
-	spnegohelp/derparse.c spnegohelp/derparse.h \
-	spnegohelp/spnego.c spnegohelp/spnego.h \
-	spnegohelp/spnegohelp.c spnegohelp/spnegohelp.h \
-	spnegohelp/spnegoparse.c spnegohelp/spnegoparse.h
+	spnegohelp/derparse.cc spnegohelp/derparse.h \
+	spnegohelp/spnego.cc spnegohelp/spnego.h \
+	spnegohelp/spnegohelp.cc spnegohelp/spnegohelp.h \
+	spnegohelp/spnegoparse.cc spnegohelp/spnegoparse.h
 
 if HAVE_SPNEGO
 negotiate_kerberos_auth_SOURCES = $(SOURCE)
