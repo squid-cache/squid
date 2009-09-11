@@ -55,7 +55,6 @@
 #elif HAVE_GSSAPI_H
 #include <gssapi.h>
 #endif /* HAVE_GSSAPI_GSSAPI_H */
-#define gss_nt_service_name GSS_C_NT_HOSTBASED_SERVICE
 #else /* HAVE_HEIMDAL_KERBEROS */
 #if HAVE_GSSAPI_GSSAPI_H
 #include <gssapi/gssapi.h>
@@ -69,6 +68,9 @@
 #include <gssapi/gssapi_generic.h>
 #endif /* HAVE_GSSAPI_GSSAPI_GENERIC_H */
 #endif /* HAVE_HEIMDAL_KERBEROS */
+#ifndef gss_nt_service_name
+#define gss_nt_service_name GSS_C_NT_HOSTBASED_SERVICE
+#endif
 
 #define PROGRAM "squid_kerb_auth"
 
@@ -239,7 +241,7 @@ main(int argc, char *const argv[])
     setbuf(stdout, NULL);
     setbuf(stdin, NULL);
 
-    while (-1 != (opt = getopt(argc, argv, "dis:h"))) {
+    while (-1 != (opt = getopt(argc, argv, "dirs:h"))) {
 	switch (opt) {
 	case 'd':
 	    debug = 1;
@@ -642,6 +644,26 @@ main(int argc, char *const argv[])
 	    user = NULL;
 	}
 	continue;
+    }
+}
+#else
+#include <stdio.h>
+#include <stdlib.h>
+#ifndef MAX_AUTHTOKEN_LEN
+#define MAX_AUTHTOKEN_LEN   65535
+#endif
+int
+main(int argc, char *const argv[])
+{
+    setbuf(stdout, NULL);
+    setbuf(stdin, NULL);
+    char buf[MAX_AUTHTOKEN_LEN];
+    while (1) {
+        if (fgets(buf, sizeof(buf) - 1, stdin) == NULL) {
+            fprintf(stdout, "BH input error\n");
+            exit(0);
+        }
+        fprintf(stdout, "BH Kerberos authentication not supported\n");
     }
 }
 #endif /* HAVE_GSSAPI */
