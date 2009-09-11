@@ -24,9 +24,9 @@ negotiate_kerberos_auth_test_SOURCES = $(SOURCE_test)
 
 
 negotiate_kerberos_auth_LDFLAGS = 
-negotiate_kerberos_auth_LDADD = -L../../../lib -lmiscutil $(XTRA_LIBS) $(KERBLIBS)
+negotiate_kerberos_auth_LDADD = $(COMPAT_LIB) $(XTRA_LIBS) $(KERBLIBS)
 negotiate_kerberos_auth_test_LDFLAGS = 
-negotiate_kerberos_auth_test_LDADD = -L../../../lib -lmiscutil $(XTRA_LIBS) $(KERBLIBS)
+negotiate_kerberos_auth_test_LDADD = $(COMPAT_LIB) $(XTRA_LIBS) $(KERBLIBS)
 
 KERBINCS = @KRB5INCS@
 KERBLIBS = @KRB5LIBS@
