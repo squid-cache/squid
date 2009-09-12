@@ -170,8 +170,7 @@ squid_kerb_proxy_auth(char *proxy)
     }
 
     service.value = xmalloc(strlen("HTTP") + strlen(proxy) + 2);
-    snprintf(service.value, strlen("HTTP") + strlen(proxy) + 2, "%s@%s", "HTTP",
-	proxy);
+    snprintf((char*)service.value, strlen("HTTP") + strlen(proxy) + 2, "%s@%s", "HTTP", proxy);
     service.length = strlen((char *) service.value);
 
     major_status = gss_import_name(&minor_status, &service,
@@ -196,7 +195,7 @@ squid_kerb_proxy_auth(char *proxy)
 	goto cleanup;
 
     if (output_token.length) {
-	token = xmalloc(ska_base64_encode_len(output_token.length));
+	token = (char*)xmalloc(ska_base64_encode_len(output_token.length));
 	ska_base64_encode(token, (const char *) output_token.value,
 	    ska_base64_encode_len(output_token.length), output_token.length);
     }
