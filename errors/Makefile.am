@@ -94,6 +94,8 @@ EXTRA_DIST = \
 	$(ERROR_TEMPLATES) \
 	aliases alias-link.sh alias-upgrade errorpage.css TRANSLATORS COPYRIGHT
 
+all: all-am
+
 translate: translate-warn $(TRANSLATE_LANGUAGES)
 
 translate-warn:
@@ -107,10 +109,9 @@ translate-warn:
 	esac; \
 	touch translate-warn
 
+$(TRANSLATE_LANGUAGES): $(ERROR_TEMPLATES)
 
-all: all-am
-
-%.lang:
+.po.lang:
 	if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no" && test "$(PO2HTML)" != "off" && test -f $(top_srcdir)/errors/en.po; then \
 	    lang=`basename $@ .lang`; \
 	    mkdir -p $(top_builddir)/errors/$$lang; \
@@ -194,7 +195,7 @@ dist-hook: translate
 	  fi; \
 	done
 
-clean:
+clean: clean-am
 	if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no" && test "$(PO2HTML)" != "off" && test -f $(top_srcdir)/errors/en.po; then \
 	  for lang in $(TRANSLATE_LANGUAGES); do \
 	    lang=`basename $$lang .lang`; \
