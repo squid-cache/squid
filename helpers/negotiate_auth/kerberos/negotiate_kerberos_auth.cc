@@ -289,7 +289,7 @@ main(int argc, char *const argv[])
 	    exit(-1);
 	}
 	service.value = xmalloc(strlen(service_name) + strlen(host_name) + 2);
-	snprintf(service.value, strlen(service_name) + strlen(host_name) + 2,
+	snprintf((char*)service.value, strlen(service_name) + strlen(host_name) + 2,
 	    "%s@%s", service_name, host_name);
 	service.length = strlen((char *) service.value);
     }
@@ -310,7 +310,7 @@ main(int argc, char *const argv[])
 	    exit(0);
 	}
 
-	c = memchr(buf, '\n', sizeof(buf) - 1);
+	c = (char*)memchr(buf, '\n', sizeof(buf) - 1);
 	if (c) {
 	    *c = '\0';
 	    length = c - buf;
@@ -408,7 +408,7 @@ main(int argc, char *const argv[])
 		LogTime(), PROGRAM, buf + 3, (int) input_token.length);
 	input_token.value = xmalloc(input_token.length);
 
-	ska_base64_decode(input_token.value, buf + 3, input_token.length);
+	ska_base64_decode((char*)input_token.value, buf + 3, input_token.length);
 
 
 #if !HAVE_SPNEGO
@@ -517,10 +517,10 @@ main(int argc, char *const argv[])
 		spnegoTokenLength = output_token.length;
 	    }
 #else
-	    spnegoToken = output_token.value;
+	    spnegoToken = (unsigned char *)output_token.value;
 	    spnegoTokenLength = output_token.length;
 #endif
-	    token = xmalloc(ska_base64_encode_len(spnegoTokenLength));
+	    token = (char*)xmalloc(ska_base64_encode_len(spnegoTokenLength));
 	    if (token == NULL) {
 		if (debug)
 		    fprintf(stderr, "%s| %s: Not enough memory\n", LogTime(),
@@ -550,7 +550,7 @@ main(int argc, char *const argv[])
 	    if (check_gss_err(major_status, minor_status, "gss_display_name()",
 		    debug, log))
 		goto cleanup;
-	    user = xmalloc(output_token.length + 1);
+	    user = (char*)xmalloc(output_token.length + 1);
 	    if (user == NULL) {
 		if (debug)
 		    fprintf(stderr, "%s| %s: Not enough memory\n", LogTime(),
@@ -593,7 +593,7 @@ main(int argc, char *const argv[])
 	    /*
 	     *  Return dummy token AA. May need an extra return tag then AF
 	     */
-	    user = xmalloc(output_token.length + 1);
+	    user = (char*)xmalloc(output_token.length + 1);
 	    if (user == NULL) {
 		if (debug)
 		    fprintf(stderr, "%s| %s: Not enough memory\n", LogTime(),
