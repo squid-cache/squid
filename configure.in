@@ -1659,6 +1659,8 @@ if test "$BASIC_AUTH_HELPERS" = "all" ; then
 	    helper="`basename $dir`"
 	    if test -f $dir/config.test && sh $dir/config.test "$@"; then
 		BASIC_AUTH_HELPERS="$BASIC_AUTH_HELPERS $helper"
+            elif test -d $srcdir/helpers/basic_auth/$helper ; then
+                AC_MSG_NOTICE([Basic auth helper $helper ... found but cannot be built])
 	    fi
 	done
 fi
@@ -1705,6 +1707,8 @@ if test "$NTLM_AUTH_HELPERS" = "all" ; then
 	    helper="`basename $dir`"
 	    if test -f $dir/config.test && sh $dir/config.test "$@"; then
 		NTLM_AUTH_HELPERS="$NTLM_AUTH_HELPERS $helper"
+            elif test -d $srcdir/helpers/ntlm_auth/$helper ; then
+                AC_MSG_NOTICE([NTLM auth helper $helper ... found but cannot be built])
 	    fi
 	done
 fi
@@ -1747,6 +1751,8 @@ if test "$NEGOTIATE_AUTH_HELPERS" = "all" ; then
 	    helper="`basename $dir`"
 	    if test -f $dir/config.test && sh $dir/config.test "$@";  then
 		NEGOTIATE_AUTH_HELPERS="$NEGOTIATE_AUTH_HELPERS $helper"
+            elif test -d $srcdir/helpers/negotiate_auth/$helper ; then
+                AC_MSG_NOTICE([Negotiate auth helper $helper ... found but cannot be built])
 	    fi
 	done
 fi
@@ -1789,6 +1795,8 @@ if test "$DIGEST_AUTH_HELPERS" = "all" ; then
 	    helper="`basename $dir`"
 	    if test -f $dir/config.test && sh $dir/config.test "$@"; then
 		DIGEST_AUTH_HELPERS="$DIGEST_AUTH_HELPERS $helper"
+            elif test -d $srcdir/helpers/digest_auth/$helper ; then
+                AC_MSG_NOTICE([Digest auth helper $helper ... found but cannot be built])
 	    fi
 	done
 fi
@@ -2034,6 +2042,8 @@ if test "$EXTERNAL_ACL_HELPERS" = "all" ; then
 	    helper="`basename $dir`"
 	    if test -f $dir/config.test && sh $dir/config.test "$@"; then
 		EXTERNAL_ACL_HELPERS="$EXTERNAL_ACL_HELPERS $helper"
+            elif test -d $srcdir/helpers/external_acl/$helper ; then
+                AC_MSG_NOTICE([External ACL helper $helper ... found but cannot be built])
 	    fi
 	done
 fi
@@ -2075,6 +2085,8 @@ if test "$URL_REWRITE_HELPERS" = "all" ; then
 	    helper="`basename $dir`"
 	    if test -f $dir/config.test && sh $dir/config.test "$@"; then
 		URL_REWRITE_HELPERS="$URL_REWRITE_HELPERS $helper"
+            elif test -d $srcdir/helpers/url_rewrite/$helper ; then
+                AC_MSG_NOTICE([URL re-write helper $helper ... found but cannot be built])
 	    fi
 	done
 fi
