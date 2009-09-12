@@ -32,18 +32,30 @@
 #include "config.h"
 
 #if HAVE_GSSAPI
+
+#if HAVE_STRING_H
 #include <string.h>
+#endif
+#if HAVE_STDOI_H
 #include <stdio.h>
+#endif
+#if HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
+#if HAVE_NETDB_H
 #include <netdb.h>
+#endif
+#if HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+#if HAVE_TIME_H
 #include <time.h>
+#endif
+#if HAVE_SYS_TIME_H
 #include <sys/time.h>
+#endif
 
-#include "getaddrinfo.h"
-#include "getnameinfo.h"
 #include "util.h"
-
 #include "base64.h"
 #if !HAVE_SPNEGO
 #include "spnegohelp.h"
@@ -72,7 +84,7 @@
 #define gss_nt_service_name GSS_C_NT_HOSTBASED_SERVICE
 #endif
 
-#define PROGRAM "squid_kerb_auth"
+#define PROGRAM "negotiate_kerberos_auth"
 
 #ifndef MAX_AUTHTOKEN_LEN
 #define MAX_AUTHTOKEN_LEN   65535
