@@ -28,15 +28,33 @@
 #include "config.h"
 
 #if HAVE_GSSAPI
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <time.h>
-#include <sys/time.h>
-#include <errno.h>
 
+#if HAVE_STRING_H
+#include <string.h>
+#endif
+#if HAVE_STDIO_H
+#include <stdio.h>
+#endif
+#if HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+#if HAVE_NETDB_H
+#include <netdb.h>
+#endif
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#if HAVE_TIME_H
+#include <time.h>
+#endif
+#if HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
+
+#include "base64.h"
 #include "util.h"
 
 #if HAVE_HEIMDAL_KERBEROS
@@ -60,8 +78,6 @@
 #endif /* HAVE_GSSAPI_GSSAPI_GENERIC_H */
 #endif /* HAVE_HEIMDAL_KERBEROS */
 
-#include "base64.h"
-
 static const char *LogTime(void);
 
 int check_gss_err(OM_uint32 major_status, OM_uint32 minor_status,
@@ -69,7 +85,7 @@ int check_gss_err(OM_uint32 major_status, OM_uint32 minor_status,
 
 const char *squid_kerb_proxy_auth(char *proxy);
 
-#define PROGRAM "squid_kerb_auth_test"
+#define PROGRAM "negotiate_kerberos_auth_test"
 
 static const char *
 LogTime()
