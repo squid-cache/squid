@@ -3088,16 +3088,7 @@ parse_http_port_option(http_port_list * s, char *token)
         IpInterceptor.StartTransparency();
         /* Log information regarding the port modes under transparency. */
         debugs(3, DBG_IMPORTANT, "Starting IP Spoofing on port " << s->s);
-        debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (Ip spoofing enabled)");
-
-#if USE_IPV6
-        /* INET6: until target TPROXY is known to work on IPv6 SOCKET, force wildcard to IPv4 */
-        debugs(3, DBG_IMPORTANT, "Disabling IPv6 on port " << s->s << " (interception enabled)");
-        if ( s->s.IsIPv6() && !s->s.SetIPv4() ) {
-            debugs(3, DBG_CRITICAL, "http(s)_port: IPv6 addresses cannot be transparent (protocol does not provide NAT)" << s->s );
-            self_destruct();
-        }
-#endif
+        debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (IP spoofing enabled)");
 
     } else if (strcmp(token, "ipv4") == 0) {
 #if USE_IPV6

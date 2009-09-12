@@ -1304,7 +1304,8 @@ EXPAND_AS_DEFINED      = AsyncCallWrapper \
                          AsyncCallEnter \
                          AsyncCallExit \
                          CBDATA_CLASS2 \
-                         MEMPROXY_CLASS_INLINE
+                         MEMPROXY_CLASS_INLINE \
+                         MEMPROXY_CLASS
 
 # If the SKIP_FUNCTION_MACROS tag is set to YES (the default) then 
 # doxygen's preprocessor will remove all function-like macros that are alone 
