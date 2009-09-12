@@ -3,7 +3,7 @@ include $(top_srcdir)/src/Common.am
 EXTRA_DIST = README COPYING
 SUBDIRS = 
 
-bin_PROGRAMS = negotiate_kerberos_auth negotiate_kerberos_auth_test
+libexec_PROGRAMS = negotiate_kerberos_auth negotiate_kerberos_auth_test
 
 SOURCE = negotiate_kerberos_auth.cc base64.cc base64.h
 SOURCE_test = negotiate_kerberos_auth_test.cc base64.cc base64.h
