@@ -57,6 +57,8 @@
 
 #include "util.h"
 #include "base64.h"
+#include "getaddrinfo.h"
+#include "getnameinfo.h"
 #if !HAVE_SPNEGO
 #include "spnegohelp.h"
 #endif
