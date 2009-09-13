@@ -1,6 +1,6 @@
 include $(top_srcdir)/src/Common.am
 
-EXTRA_DIST = README COPYING
+EXTRA_DIST = README COPYING config.test
 SUBDIRS = 
 
 libexec_PROGRAMS = negotiate_kerberos_auth negotiate_kerberos_auth_test
