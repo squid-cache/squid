@@ -745,6 +745,7 @@ tunnelPeerSelectComplete(FwdServer * fs, void *data)
 
     tunnelState->servers = fs;
     tunnelState->host = fs->_peer ? fs->_peer->host : xstrdup(request->GetHost());
+    request->peer_host = fs->_peer ? fs->_peer->host : NULL;
 
     if (fs->_peer == NULL) {
         tunnelState->port = request->port;

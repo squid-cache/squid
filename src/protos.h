@@ -106,8 +106,6 @@ SQUIDCEXTERN void _db_set_syslog(const char *facility);
 SQUIDCEXTERN void _db_init(const char *logfile, const char *options);
 SQUIDCEXTERN void _db_rotate_log(void);
 
-SQUIDCEXTERN void _db_print(const char *,...) PRINTF_FORMAT_ARG1;
-
 /* packs, then prints an object using debugs() */
 SQUIDCEXTERN void debugObj(int section, int level, const char *label, void *obj, ObjPackMethod pm);
 
@@ -797,4 +795,8 @@ class external_acl;
 
 #endif
 
+#if HAVE_KRB5 && HAVE_GSSAPI
+            /* upstream proxy authentication */
+            SQUIDCEXTERN char *peer_proxy_negotiate_auth(char *principal_name, char *proxy);
+#endif
 #endif /* SQUID_PROTOS_H */

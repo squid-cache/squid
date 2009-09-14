@@ -391,8 +391,9 @@ lib/libTrie/*:
 include/IPAddress.h lib/IPAddress.cc:
 include/rfc3596.h lib/rfc3596.cc:
 src/ICMPv6.h src/ICMPv6.cc:
+helpers/url_rewrite/fake/ fake.h, fake.cc, url_fake_rewrite.sh:
 
- This code is copyright (C) 2007 by Treehouse Networks Ltd
+ This code is copyright (C) 2007-2009 by Treehouse Networks Ltd
  of New Zealand. It is published and Licensed as an extension of
  squid under the same conditions as the main squid application.
 

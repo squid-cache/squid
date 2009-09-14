@@ -175,6 +175,8 @@ public:
 
     char *peer_login;		/* Configured peer login:password */
 
+    char *peer_host;           /* Selected peer host*/
+
     time_t lastmod;		/* Used on refreshes */
 
     const char *vary_headers;	/* Used when varying entities are detected. Changes how the store key is calculated */

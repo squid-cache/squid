@@ -1989,6 +1989,15 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
     /* Set method_p */
     *method_p = HttpRequestMethod(&hp->buf[hp->m_start], &hp->buf[hp->m_end]+1);
 
+    /* deny CONNECT via accelerated ports */
+    if (*method_p == METHOD_CONNECT && conn && conn->port && conn->port->accel) {
+        debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << conn->port->protocol << " Accelerator port " << conn->port->s.GetPort() );
+        /* XXX need a way to say "this many character length string" */
+        debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->buf);
+        /* XXX need some way to set 405 status on the error reply */
+        return parseHttpRequestAbort(conn, "error:method-not-allowed");
+    }
+
     if (*method_p == METHOD_NONE) {
         /* XXX need a way to say "this many character length string" */
         debugs(33, 1, "clientParseRequestMethod: Unsupported method in request '" << hp->buf << "'");

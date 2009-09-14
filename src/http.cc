@@ -39,24 +39,27 @@
  */
 
 #include "squid.h"
-#include "errorpage.h"
-#include "MemBuf.h"
-#include "http.h"
-#include "auth/UserRequest.h"
-#include "Store.h"
-#include "HttpReply.h"
-#include "HttpRequest.h"
-#include "MemObject.h"
-#include "HttpHdrContRange.h"
-#include "HttpHdrSc.h"
-#include "HttpHdrScTarget.h"
+
 #include "acl/FilledChecklist.h"
-#include "fde.h"
+#include "auth/UserRequest.h"
 #if DELAY_POOLS
 #include "DelayPools.h"
 #endif
+#include "errorpage.h"
+#include "fde.h"
+#include "http.h"
+#include "HttpHdrContRange.h"
+#include "HttpHdrSc.h"
+#include "HttpHdrScTarget.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
+#include "MemBuf.h"
+#include "MemObject.h"
+#include "protos.h"
 #include "SquidTime.h"
+#include "Store.h"
 #include "TextException.h"
+
 
 #define SQUID_ENTER_THROWING_CODE() try {
 #define SQUID_EXIT_THROWING_CODE(status) \
@@ -1511,6 +1514,22 @@ httpFixupAuthentication(HttpRequest * request, HttpRequest * orig_request, const
 	return;
     }
 
+    /* Kerberos login to peer */
+#if HAVE_KRB5 && HAVE_GSSAPI
+    if (strncmp(orig_request->peer_login, "NEGOTIATE",strlen("NEGOTIATE")) == 0) {
+        char *Token=NULL;
+        char *PrincipalName=NULL,*p;
+        if ((p=strchr(orig_request->peer_login,':')) != NULL ) {
+            PrincipalName=++p;
+        }
+        Token = peer_proxy_negotiate_auth(PrincipalName,request->peer_host);
+        if (Token) {
+            httpHeaderPutStrf(hdr_out, HDR_PROXY_AUTHORIZATION, "Negotiate %s",Token);
+        }
+        return;
+    }
+#endif /* HAVE_KRB5 && HAVE_GSSAPI */
+
     httpHeaderPutStrf(hdr_out, header, "Basic %s",
 		      base64_encode(orig_request->peer_login));
     return;
@@ -1990,6 +2009,7 @@ HttpStateData::sendRequest()
     }
 
     mb.init();
+    request->peer_host=_peer?_peer->host:NULL;
     buildRequestPrefix(request, orig_request, entry, &mb, flags);
     debugs(11, 6, "httpSendRequest: FD " << fd << ":\n" << mb.buf);
     comm_write_mbuf(fd, &mb, requestSender);

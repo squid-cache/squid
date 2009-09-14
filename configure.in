@@ -34,7 +34,7 @@ new_configure_args="$ac_configure_args --with-squid=$ac_abs_confdir"
 ac_configure_args="$new_configure_args"
 
 
-use_loadable_modules=0
+use_loadable_modules=1
 AC_MSG_CHECKING(whether to use loadable modules)
 AC_ARG_ENABLE(loadable-modules,
     AS_HELP_STRING([--disable-loadable-modules],[do not support loadable modules]) ,
@@ -51,7 +51,6 @@ AC_ARG_ENABLE(loadable-modules,
         AC_MSG_RESULT([$use_loadable_modules, implicitly])
     ]
 )
-use_loadable_modules=0
 
 AM_CONDITIONAL(USE_LOADABLE_MODULES, test $use_loadable_modules = yes)
 
@@ -697,11 +696,11 @@ if test -n "$STORE_MODULES"; then
 	fi
     done
     for module in $STORE_MODULES_FULL; do
-	if test "$module" = "coss"; then
-	    echo "WARNING: COSS Support is not stable yet in Squid-3. Please do not use."
-	    sleep 10;
-	fi
 	case "$module" in
+	coss)
+	    echo "WARNING: COSS Support is not stable yet in Squid-3. Please do not use."
+	    sleep 10
+	    ;;
 	esac
     done
     AC_MSG_NOTICE([Store modules built: $STORE_MODULES])
@@ -1806,6 +1805,207 @@ if test -n "$DIGEST_AUTH_HELPERS"; then
 fi
 AC_SUBST(DIGEST_AUTH_HELPERS)
 
+dnl Check Kerberos
+SAVED_CPPFLAGS=$CPPFLAGS
+SAVED_LIBS=$LIBS
+AC_ARG_WITH(krb5-config,
+ [  --with-krb5-config=PATH specify path to krb5-config @<:@default=detect@:>@],
+[ if test "$withval" = "yes"; then
+     unset krb5confpath
+  elif test "$withval" != "no"; then
+     krb5confpath=$withval
+  else
+     krb5confpath=no
+  fi
+])
+if test x"$krb5confpath" != xno; then
+    if test x"$krb5confpath" != x; then
+        if ! test -x "$krb5confpath"; then
+            AC_MSG_WARN([krb5-config '$krb5confpath' not executable, ignoring])
+            AC_CHECK_PROG(ac_krb5_config, krb5-config, yes, no)
+            krb5confpath=krb5-config
+        fi
+        krb5_config_path=`dirname $krb5confpath`
+        AC_CHECK_PROG(ac_krb5_config, krb5-config, yes, no, $krb5_config_path)
+    else
+    AC_CHECK_PROG(ac_krb5_config,krb5-config,yes,no)
+        krb5confpath=krb5-config
+    fi
+fi
+if test "$ac_krb5_config" = "yes" ; then
+    ac_heimdal="`$krb5confpath --version 2>/dev/null | grep -i heimdal`"
+    ac_solaris="`$krb5confpath --version 2>/dev/null | grep -i solaris`"
+    if test "x$ac_heimdal" != "x" ; then
+        AC_DEFINE(HAVE_HEIMDAL_KERBEROS,1,[Define to 1 if you have Heimdal Kerberos])
+    else
+        AC_DEFINE(HAVE_MIT_KERBEROS,1,[Define to 1 if you have MIT Kerberos])
+    fi
+    if test "$ac_solaris" != "" ; then
+        KRB5INCS="`$krb5confpath --cflags krb5 2>/dev/null`"
+        KRB5LIBS="`$krb5confpath --libs krb5 2>/dev/null`"
+        KRB5INCS="-I/usr/include/gssapi $KRB5INCS"
+        KRB5LIBS="-L/usr/lib -R/usr/lib -lgss -lresolv -lsocket -lnsl $KRB5LIBS"
+    else
+        KRB5INCS="`$krb5confpath --cflags krb5 2>/dev/null`"
+        KRB5LIBS="`$krb5confpath --libs krb5 2>/dev/null`"
+        KRB5INCS="`$krb5confpath --cflags gssapi 2>/dev/null` $KRB5INCS"
+        KRB5LIBS="`$krb5confpath --libs gssapi 2>/dev/null` $KRB5LIBS"
+    fi
+    CPPFLAGS="$CPPFLAGS $KRB5INCS"
+    LIBS="$LIBS $KRB5LIBS"
+    AC_CHECK_HEADERS(gssapi.h gssapi/gssapi.h gssapi/gssapi_krb5.h)
+    if test "x$ac_heimdal" == "x" ; then
+        AC_CHECK_HEADERS(gssapi/gssapi_generic.h)
+    fi
+    AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
+    AC_MSG_CHECKING([for max_skew in struct krb5_context])
+AC_TRY_COMPILE([
+#include <krb5.h>
+                ],
+                [ krb5_context kc; kc->max_skew = 1; ],
+                [ AC_DEFINE(HAVE_MAX_SKEW_IN_KRB5_CONTEXT, 1, [Define to 1 if max_skew in struct krb5_context])
+                  AC_MSG_RESULT(yes) ],
+                [ AC_MSG_RESULT(no) ]
+        )
+
+    if test "x$ac_heimdal" == "x" ; then
+        AC_CHECK_HEADERS(profile.h)
+    fi
+    AC_CHECK_LIB(com_err,error_message,
+        AC_DEFINE(HAVE_ERROR_MESSAGE,1,[Define to 1 if you have error_message]),)
+    AC_CHECK_LIB(krb5,krb5_get_err_text,
+        AC_DEFINE(HAVE_KRB5_GET_ERR_TEXT,1,[Define to 1 if you have krb5_get_err_text]),)
+    AC_CHECK_LIB(krb5,krb5_get_error_message,
+        AC_DEFINE(HAVE_KRB5_GET_ERROR_MESSAGE,1,[Define to 1 if you have krb5_get_error_message]),)
+    AC_CHECK_LIB(krb5,krb5_kt_free_entry,
+        AC_DEFINE(HAVE_KRB5_KT_FREE_ENTRY,1,[Define to 1 if you have krb5_kt_free_entry]),)
+    AC_CHECK_LIB(krb5,krb5_get_init_creds_keytab,
+        AC_DEFINE(HAVE_GET_INIT_CREDS_KEYTAB,1,[Define to 1 if you have krb5_get_init_creds_keytab]),)
+    AC_CHECK_LIB(krb5,krb5_get_max_time_skew,
+        AC_DEFINE(HAVE_KRB5_GET_MAX_TIME_SKEW,1,[Define to 1 if you have krb5_get_max_time_skew]),)
+    AC_CHECK_LIB(krb5,krb5_get_profile,
+        AC_DEFINE(HAVE_KRB5_GET_PROFILE,1,[Define to 1 if you have krb5_get_profile]),)
+    AC_CHECK_LIB(krb5,profile_get_integer,
+        AC_DEFINE(HAVE_PROFILE_GET_INTEGER,1,[Define to 1 if you have profile_get_integer]),)
+    AC_CHECK_LIB(krb5,profile_release,
+        AC_DEFINE(HAVE_PROFILE_RELEASE,1,[Define to 1 if you have profile_release]),)
+    AC_MSG_CHECKING([for memory cache])
+    AC_TRY_RUN([
+#include<krb5.h>
+main()
+{
+    krb5_context context;
+    krb5_ccache cc;
+
+    krb5_init_context(&context);
+    return krb5_cc_resolve(context, "MEMORY:test_cache", &cc);
+}],
+    [AC_DEFINE(HAVE_KRB5_MEMORY_CACHE,1, [Define to 1 if you have MEMORY: cache support])
+     AC_MSG_RESULT(yes)],
+    AC_MSG_RESULT(no))
+
+    AC_MSG_CHECKING([for working gssapi])
+    AC_TRY_RUN([
+#ifdef HAVE_GSSAPI_GSSAPI_H
+#include <gssapi/gssapi.h>
+#elif HAVE_GSSAPI_H
+#include <gssapi.h>
+#endif
+
+#ifdef HAVE_GSSAPI_GSSAPI_EXT_H
+#include <gssapi/gssapi_ext.h>
+#endif
+
+#ifdef HAVE_GSSAPI_GSSAPI_KRB5_H
+#include <gssapi/gssapi_krb5.h>
+#endif
+
+#ifdef HAVE_GSSAPI_GSSAPI_GENERIC_H
+#include <gssapi/gssapi_generic.h>
+#endif
+int
+main(void)
+{
+        OM_uint32 val;
+        gss_OID_set set;
+
+        gss_create_empty_oid_set(&val, &set);
+
+        return 0;
+}
+],  [AC_DEFINE(HAVE_GSSAPI, 1, [GSSAPI support])
+     AC_MSG_RESULT(yes)],
+    AC_MSG_RESULT(no))
+    AC_MSG_CHECKING([for spnego support])
+    AC_TRY_RUN([
+#ifdef HAVE_HEIMDAL_KERBEROS
+#ifdef HAVE_GSSAPI_GSSAPI_H
+#include <gssapi/gssapi.h>
+#elif defined(HAVE_GSSAPI_H)
+#include <gssapi.h>
+#endif
+#else
+#ifdef HAVE_GSSAPI_GSSAPI_H
+#include <gssapi/gssapi.h>
+#elif defined(HAVE_GSSAPI_H)
+#include <gssapi.h>
+#endif
+#ifdef HAVE_GSSAPI_GSSAPI_KRB5_H
+#include <gssapi/gssapi_krb5.h>
+#endif
+#ifdef HAVE_GSSAPI_GSSAPI_GENERIC_H
+#include <gssapi/gssapi_generic.h>
+#endif
+#endif
+#include <string.h>
+int main(int argc, char *argv[]) {
+ OM_uint32 major_status,minor_status;
+ gss_OID_set gss_mech_set;
+ int i;
+
+static gss_OID_desc _gss_mech_spnego  = {6, (void *)"\x2b\x06\x01\x05\x05\x02"};
+gss_OID gss_mech_spnego = &_gss_mech_spnego;
+
+ major_status = gss_indicate_mechs( &minor_status, &gss_mech_set);
+
+ for (i=0;i<gss_mech_set->count;i++) {
+     if (!memcmp(gss_mech_set->elements[i].elements,gss_mech_spnego->elements,gss_mech_set->elements[i].length)) {
+        return 0;
+     }
+ }
+
+ return 1;
+}],
+    [ac_cv_have_spnego=yes
+     AC_DEFINE(HAVE_SPNEGO,1, [Define to 1 if you have SPNEGO support])
+     AC_MSG_RESULT(yes)],
+    [ac_cv_have_spnego=no
+     AC_MSG_RESULT(no)])
+    AC_MSG_CHECKING([for working krb5])
+    AC_TRY_RUN([
+#ifdef HAVE_KRB5_H
+#include <krb5.h>
+#endif
+
+int
+main(void)
+{
+        krb5_context context;
+
+        krb5_init_context(&context);
+
+        return 0;
+}
+],  [AC_DEFINE(HAVE_KRB5, 1, [KRB5 support])
+     AC_MSG_RESULT(yes)],
+    AC_MSG_RESULT(no))
+   LIBS=$SAVED_LIBS
+   CPPFLAGS=$SAVED_CPPFLAGS
+   AC_SUBST(KRB5INCS)
+   AC_SUBST(KRB5LIBS)
+fi
+AM_CONDITIONAL(HAVE_SPNEGO, test x"$ac_cv_have_spnego" = x"yes" )
+
 dnl Enable "NTLM fail open"
 AC_ARG_ENABLE(ntlm-fail-open,
   AS_HELP_STRING([--enable-ntlm-fail-open],[Enable NTLM fail open, where a helper that fails one of the
@@ -1855,6 +2055,48 @@ if test -n "$EXTERNAL_ACL_HELPERS"; then
     AC_MSG_NOTICE([External acl helpers built: $EXTERNAL_ACL_HELPERS])
 fi
 AC_SUBST(EXTERNAL_ACL_HELPERS)
+
+dnl Select url_rewrite helpers to build
+URL_REWRITE_HELPERS=all
+AC_ARG_ENABLE(url-rewrite-helpers,
+  AC_HELP_STRING([--enable-url-rewrite-helpers="list of helpers"],
+                 [This option selects which url_rewrite helpers to
+                  build and install as part of the normal build
+                  process. For a list of available helpers see the
+                  helpers/url_rewrite directory.]),
+[ case "$enableval" in
+  yes)
+	URL_REWRITE_HELPERS=all
+	;;
+  no)
+	URL_REWRITE_HELPERS=""
+	;;
+  *)
+ 	URL_REWRITE_HELPERS="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
+	;;
+  esac
+])
+if test "$URL_REWRITE_HELPERS" = "all" ; then
+	URL_REWRITE_HELPERS=""
+	for dir in $srcdir/helpers/url_rewrite/*; do
+	    helper="`basename $dir`"
+	    if test -f $dir/config.test && sh $dir/config.test "$@"; then
+		URL_REWRITE_HELPERS="$URL_REWRITE_HELPERS $helper"
+	    fi
+	done
+fi
+if test -n "$URL_REWRITE_HELPERS"; then
+    for helper in $URL_REWRITE_HELPERS; do
+	if test -f $srcdir/helpers/url_rewrite/$helper/Makefile.in; then
+		:
+	else
+		AC_MSG_ERROR(url_rewrite helper $helper does not exist)
+	fi
+    done
+    AC_MSG_NOTICE([url_rewrite helpers built: $URL_REWRITE_HELPERS])
+fi
+AC_SUBST(URL_REWRITE_HELPERS)
+
 
 AC_ARG_WITH(valgrind-debug,
   AS_HELP_STRING([--with-valgrind-debug],[Include debug instrumentation for use with valgrind]),
@@ -3878,6 +4120,8 @@ AC_CONFIG_FILES([\
 	helpers/external_acl/wbinfo_group/Makefile \
 	helpers/external_acl/mswin_ad_group/Makefile \
 	helpers/external_acl/mswin_lm_group/Makefile \
+	helpers/url_rewrite/Makefile \
+	helpers/url_rewrite/fake/Makefile \
 	tools/Makefile
 ])
 

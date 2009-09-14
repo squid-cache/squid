@@ -51,7 +51,7 @@ ConfigParser::strtokFile(void)
     static FILE *wordFile = NULL;
 
     char *t, *fn;
-    LOCAL_ARRAY(char, buf, 256);
+    LOCAL_ARRAY(char, buf, CONFIG_LINE_LIMIT);
 
     do {
 
@@ -86,7 +86,7 @@ ConfigParser::strtokFile(void)
         }
 
         /* fromFile */
-        if (fgets(buf, 256, wordFile) == NULL) {
+        if (fgets(buf, CONFIG_LINE_LIMIT, wordFile) == NULL) {
             /* stop reading from file */
             fclose(wordFile);
             wordFile = NULL;

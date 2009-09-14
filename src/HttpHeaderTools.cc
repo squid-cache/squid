@@ -327,11 +327,11 @@ httpHeaderParseOffset(const char *start, int64_t * value)
 /**
  * Parses a quoted-string field (RFC 2616 section 2.2), complains if
  * something went wrong, returns non-zero on success.
- * start should point at the first ".
+ * start should point at the first double-quote.
  * RC TODO: This is too looose. We should honour the BNF and exclude CTL's
  */
 int
-httpHeaderParseQuotedString (const char *start, String *val)
+httpHeaderParseQuotedString(const char *start, String *val)
 {
     const char *end, *pos;
     val->clean();
