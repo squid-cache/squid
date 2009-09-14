@@ -1895,7 +1895,7 @@ parse_peer(peer ** head)
         p->weight = 1;
 
     if (p->connect_fail_limit < 1)
-        p->connect_fail_limit = 1;
+        p->connect_fail_limit = 10;
 
     p->icp.version = ICP_VERSION_CURRENT;
 
