@@ -1822,6 +1822,19 @@ DOC_START
 			be used to identify this proxy to the peer, similar to
 			the login=username:password option above.
 	
+	login=NEGOTIATE
+			If this is a personal/workgroup proxy and your parent
+			requires a secure proxy authentication.
+			The first principal from the default keytab or defined by
+			the environment variable KRB5_KTNAME will be used. 
+	
+	login=NEGOTIATE:principal_name
+			If this is a personal/workgroup proxy and your parent
+			requires a secure proxy authentication. 
+			The principal principal_name from the default keytab or
+			defined by the environment variable KRB5_KTNAME will be
+			used.
+	
 	connection-auth=on|off
 			Tell Squid that this peer does or not support Microsoft
 			connection oriented authentication, and any such

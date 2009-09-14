@@ -76,6 +76,7 @@ OPTS=" \
 	--disable-digest-auth-helpers \
 	--disable-ntlm-fail-open \
 	--disable-external-acl-helpers \
+	--disable-url-rewrite-helpers \
 	--disable-mempools \
 	--disable-win32-service \
 	--disable-unlinkd \
