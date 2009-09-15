@@ -23,7 +23,7 @@ class IpAddress;
 class IpIntercept
 {
 public:
-    IpIntercept() : transparent_active(0), intercept_active(0), last_reported(0) {};
+    IpIntercept() : transparent_active(0), intercept_active(0), last_reported(0), tproxy_version(TPROXY_UNKNOWN) {};
     ~IpIntercept() {};
 
     /** Perform NAT lookups */
@@ -34,6 +34,17 @@ public:
     // which require the address be set specifically post-connect.
     int SetTproxy2OutgoingAddr(int fd, const IpAddress &src);
 #endif
+
+    /**
+     * Test system networking calls for TPROXY support.
+     * Detects IPv6 and IPv4 level of support matches the address being listened on
+     * and if the compiled v2/v4 is usable as far down as a bind()ing.
+     * 
+     * \param test    Address set on the http(s)_port being checked.
+     * \retval true   TPROXY is available.
+     * \retval false  TPROXY is not available.
+     */
+    bool ProbeForTproxy(IpAddress &test);
 
     /**
      \retval 0	Full transparency is disabled.
