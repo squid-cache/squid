@@ -480,8 +480,8 @@ msgid ""
 "operates this cache.  Please contact them directly if you feel this is an "
 "error."
 msgstr ""
-"��^���^��^տ度�^�^��^ȶ�^Ա�^�^���^��^ܬ��^���^��^�^��^ʡ�^٨�^�^��^�^��^ʡ�^�^���^��^�^��^ȶ��^��^�^���^��^�^��^¨��^���^���^��^د�^�^�误$
-"们�^۴�^Υ�^�^�系�^�^�"
+"这些长度限制由操作本缓存服务器的服务提供者制定。如果您觉得这是错误的，请与他"
+"们直接联系。"
 
 #: templates/ERR_UNSUP_HTTPVERSION:6
 msgid ""
