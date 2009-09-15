@@ -3090,6 +3090,11 @@ parse_http_port_option(http_port_list * s, char *token)
         debugs(3, DBG_IMPORTANT, "Starting IP Spoofing on port " << s->s);
         debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (IP spoofing enabled)");
 
+        if (!IpInterceptor.ProbeForTproxy(s->s)) {
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: TPROXY support in the system does not work.");
+            self_destruct();
+        }
+
     } else if (strcmp(token, "ipv4") == 0) {
 #if USE_IPV6
         if ( !s->s.SetIPv4() ) {
