@@ -430,6 +430,12 @@ configDoConfigure(void)
     memConfigure();
     /* Sanity checks */
 
+    if (Config.cacheSwap.swapDirs == NULL) {
+        /* Memory-only cache probably in effect. */
+        /* turn off the cache rebuild delays... */
+        StoreController::store_dirs_rebuilding = 0;
+    }
+
     if (Debug::rotateNumber < 0) {
         Debug::rotateNumber = Config.Log.rotateNumber;
     }
