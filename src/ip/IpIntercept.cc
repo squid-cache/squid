@@ -477,11 +477,11 @@ IpIntercept::ProbeForTproxy(IpAddress &test)
             bind(tmp_sock, (struct sockaddr*)&tmp_ip6, sizeof(struct sockaddr_in6)) == 0 ) {
 
             debugs(3, 3, "IPv6 TPROXY support detected. Using.");
-            shutdown(tmp_sock, SHUT_RDWR);
+            close(tmp_sock);
             return true;
         }
         if (tmp_sock >= 0) {
-            shutdown(tmp_sock, SHUT_RDWR);
+            close(tmp_sock);
             tmp_sock = -1;
         }
     }
@@ -506,11 +506,11 @@ IpIntercept::ProbeForTproxy(IpAddress &test)
             bind(tmp_sock, (struct sockaddr*)&tmp_ip4, sizeof(struct sockaddr_in)) == 0 ) {
 
             debugs(3, 3, "IPv4 TPROXY support detected. Using.");
-            shutdown(tmp_sock, SHUT_RDWR);
+            close(tmp_sock);
             return true;
         }
         if (tmp_sock >= 0) {
-            shutdown(tmp_sock, SHUT_RDWR);
+            close(tmp_sock);
         }
     }
 
