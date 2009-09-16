@@ -220,8 +220,8 @@ logfileRotate(Logfile * lf)
 void
 logfileWrite(Logfile * lf, void *buf, size_t len)
 {
-   /* AYJ: this write gets called once per line? Squid-2 did it in lineEnd which we dont have. */
-   lf->sequence_number++;
+    /* AYJ: this write gets called once per line? Squid-2 did it in lineEnd which we dont have. */
+    lf->sequence_number++;
 
 #if HAVE_SYSLOG
 

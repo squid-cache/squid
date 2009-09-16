@@ -446,12 +446,12 @@ IpIntercept::ProbeForTproxy(IpAddress &test)
 #if LINUX_TPROXY2
 
 #if USE_IPV6
-        /* TPROXYv2 is not IPv6 capable. Force wildcard sockets to IPv4. Die on IPv6 IPs */
-        debugs(3, DBG_IMPORTANT, "Disabling IPv6 on port " << test << " (TPROXYv2 interception enabled)");
-        if ( test.IsIPv6() && !test.SetIPv4() ) {
-            debugs(3, DBG_CRITICAL, "IPv6 requires TPROXYv4 support. You only have TPROXYv2 for " << test );
-            return false;
-        }
+    /* TPROXYv2 is not IPv6 capable. Force wildcard sockets to IPv4. Die on IPv6 IPs */
+    debugs(3, DBG_IMPORTANT, "Disabling IPv6 on port " << test << " (TPROXYv2 interception enabled)");
+    if ( test.IsIPv6() && !test.SetIPv4() ) {
+        debugs(3, DBG_CRITICAL, "IPv6 requires TPROXYv4 support. You only have TPROXYv2 for " << test );
+        return false;
+    }
 #endif /* USE_IPV6 */
     return true;
 
@@ -473,8 +473,8 @@ IpIntercept::ProbeForTproxy(IpAddress &test)
         tmp.GetSockAddr(tmp_ip6);
 
         if ( (tmp_sock = socket(PF_INET6, SOCK_STREAM, IPPROTO_TCP)) >= 0 &&
-            setsockopt(tmp_sock, SOL_IP, IP_TRANSPARENT, (char *)&tos, sizeof(int)) == 0 &&
-            bind(tmp_sock, (struct sockaddr*)&tmp_ip6, sizeof(struct sockaddr_in6)) == 0 ) {
+                setsockopt(tmp_sock, SOL_IP, IP_TRANSPARENT, (char *)&tos, sizeof(int)) == 0 &&
+                bind(tmp_sock, (struct sockaddr*)&tmp_ip6, sizeof(struct sockaddr_in6)) == 0 ) {
 
             debugs(3, 3, "IPv6 TPROXY support detected. Using.");
             close(tmp_sock);
@@ -502,8 +502,8 @@ IpIntercept::ProbeForTproxy(IpAddress &test)
         tmp.GetSockAddr(tmp_ip4);
 
         if ( (tmp_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) >= 0 &&
-            setsockopt(tmp_sock, SOL_IP, IP_TRANSPARENT, (char *)&tos, sizeof(int)) == 0 &&
-            bind(tmp_sock, (struct sockaddr*)&tmp_ip4, sizeof(struct sockaddr_in)) == 0 ) {
+                setsockopt(tmp_sock, SOL_IP, IP_TRANSPARENT, (char *)&tos, sizeof(int)) == 0 &&
+                bind(tmp_sock, (struct sockaddr*)&tmp_ip4, sizeof(struct sockaddr_in)) == 0 ) {
 
             debugs(3, 3, "IPv4 TPROXY support detected. Using.");
             close(tmp_sock);

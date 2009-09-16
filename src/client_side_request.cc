@@ -747,7 +747,7 @@ clientCheckPinning(ClientHttpRequest * http)
      * a client connection
      */
     if (!http_conn)
-	return;
+        return;
 
     request->flags.connection_auth_disabled = http_conn->port->connection_auth_disabled;
     if (!request->flags.connection_auth_disabled) {
