@@ -73,7 +73,7 @@ httpStatusLinePackInto(const HttpStatusLine * sline, Packer * p)
     debugs(57, 9, "packing sline " << sline << " using " << p << ":");
     debugs(57, 9, "FORMAT=" << HttpStatusLineFormat );
     debugs(57, 9, "HTTP/" << sline->version.major << "." << sline->version.minor <<
-                 " " << sline->status << " " << (sline->reason ? sline->reason : httpStatusString(sline->status)) );
+           " " << sline->status << " " << (sline->reason ? sline->reason : httpStatusString(sline->status)) );
     packerPrintf(p, HttpStatusLineFormat, sline->version.major,
                  sline->version.minor, sline->status, httpStatusLineReason(sline));
 }
