@@ -23,7 +23,7 @@ class IpAddress;
 class IpIntercept
 {
 public:
-    IpIntercept() : transparent_active(0), intercept_active(0), last_reported(0), tproxy_version(TPROXY_UNKNOWN) {};
+    IpIntercept() : transparent_active(0), intercept_active(0), last_reported(0) {};
     ~IpIntercept() {};
 
     /** Perform NAT lookups */
