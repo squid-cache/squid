@@ -336,7 +336,7 @@ extern cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, in
 
 /**
  * \ingroup CBDATAAPI
- * 
+ *
  * This needs to be defined LAST in teh class definition. It plays with private/public states in C++.
  */
 #define CBDATA_CLASS2(type)	\
