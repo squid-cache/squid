@@ -2370,6 +2370,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     }
 
     request->flags.accelerated = http->flags.accel;
+    request->flags.ignore_cc = conn->port->ignore_cc;
     request->flags.no_direct = request->flags.accelerated ? !conn->port->allow_direct : 0;
 
     /** \par
