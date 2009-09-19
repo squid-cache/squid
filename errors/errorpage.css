@@ -66,11 +66,11 @@ pre {
     font-family:sans-serif;
 }
 
-/* special event: FTP directory listing */
-#ftplisting tr.entry td.icon,td.filename,td.size,td.date {
+/* special event: FTP / Gopher directory listing */
+#dirlisting tr.entry td.icon,td.filename,td.size,td.date {
     border-bottom: groove;
 }
-#ftplisting td.size {
+#dirlisting td.size {
     width: 50px;
     text-align: right;
     padding-right: 5px;
