@@ -3047,12 +3047,12 @@ parse_http_port_option(http_port_list * s, char *token)
     } else if (strcmp(token, "allow-direct") == 0) {
         s->allow_direct = 1;
     } else if (strcmp(token, "ignore-cc") == 0) {
-	s->ignore_cc = 1;
+        s->ignore_cc = 1;
 #if !HTTP_VIOLATIONS
-	if (!s->accel) {
-	    debugs(3, DBG_CRITICAL, "FATAL: ignore-cc is only valid in accelerator mode");
-	    self_destruct();
-	}
+        if (!s->accel) {
+            debugs(3, DBG_CRITICAL, "FATAL: ignore-cc is only valid in accelerator mode");
+            self_destruct();
+        }
 #endif
     } else if (strcmp(token, "no-connection-auth") == 0) {
         s->connection_auth_disabled = true;
