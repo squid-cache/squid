@@ -830,9 +830,9 @@ install-data-local: install-sysconfDATA install-dataDATA
 	$(INSTALL_DATA) squid.conf.documented $(DESTDIR)$(DEFAULT_CONFIG_FILE).documented; \
 	$(mkinstalldirs) $(DESTDIR)$(DEFAULT_LOG_PREFIX)
 
-uninstall-local:
-	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_MIME_TABLE)
-	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_CONFIG_FILE)
+uninstall-local: squid.conf.default
+	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_MIME_TABLE) $(srcdir)/mime.conf.default
+	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_CONFIG_FILE) squid.conf.default
 
 CLEANFILES += cf.data squid.conf.default squid.conf.documented \
 	DiskIO/DiskIOModules_gen.cc \
