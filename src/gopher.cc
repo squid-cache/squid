@@ -37,6 +37,7 @@
 #include "errorpage.h"
 #include "Store.h"
 #include "HttpRequest.h"
+#include "HttpReply.h"
 #include "comm.h"
 #if DELAY_POOLS
 #include "DelayPools.h"
@@ -138,7 +139,6 @@ typedef struct gopher_ds {
 } GopherStateData;
 
 static PF gopherStateFree;
-static void gopher_mime_content(MemBuf * mb, const char *name, const char *def);
 static void gopherMimeCreate(GopherStateData *);
 static void gopher_request_parse(const HttpRequest * req,
                                  char *type_id,
@@ -178,26 +178,6 @@ gopherStateFree(int fdnotused, void *data)
     cbdataFree(gopherState);
 }
 
-
-/**
- \ingroup ServerProtocolGopherInternal
- * Figure out content type from file extension
- */
-static void
-gopher_mime_content(MemBuf * mb, const char *name, const char *def_ctype)
-{
-    char *ctype = mimeGetContentType(name);
-    char *cenc = mimeGetContentEncoding(name);
-
-    if (cenc)
-        mb->Printf("Content-Encoding: %s\r\n", cenc);
-
-    mb->Printf("Content-Type: %s\r\n",
-               ctype ? ctype : def_ctype);
-}
-
-
-
 /**
  \ingroup ServerProtocolGopherInternal
  * Create MIME Header for Gopher Data
@@ -205,14 +185,9 @@ gopher_mime_content(MemBuf * mb, const char *name, const char *def_ctype)
 static void
 gopherMimeCreate(GopherStateData * gopherState)
 {
-    MemBuf mb;
-
-    mb.init();
-
-    mb.Printf("HTTP/1.0 200 OK Gatewaying\r\n"
-              "Server: Squid/%s\r\n"
-              "Date: %s\r\n",
-              version_string, mkrfc1123(squid_curtime));
+    StoreEntry *entry = gopherState->entry;
+    const char *mime_type = NULL;
+    const char *mime_enc = NULL;
 
     switch (gopherState->type_id) {
 
@@ -225,7 +200,7 @@ gopherMimeCreate(GopherStateData * gopherState)
     case GOPHER_WWW:
 
     case GOPHER_CSO:
-        mb.Printf("Content-Type: text/html\r\n");
+        mime_type = "text/html";
         break;
 
     case GOPHER_GIF:
@@ -233,17 +208,17 @@ gopherMimeCreate(GopherStateData * gopherState)
     case GOPHER_IMAGE:
 
     case GOPHER_PLUS_IMAGE:
-        mb.Printf("Content-Type: image/gif\r\n");
+        mime_type = "image/gif";
         break;
 
     case GOPHER_SOUND:
 
     case GOPHER_PLUS_SOUND:
-        mb.Printf("Content-Type: audio/basic\r\n");
+        mime_type = "audio/basic";
         break;
 
     case GOPHER_PLUS_MOVIE:
-        mb.Printf("Content-Type: video/mpeg\r\n");
+        mime_type = "video/mpeg";
         break;
 
     case GOPHER_MACBINHEX:
@@ -254,20 +229,33 @@ gopherMimeCreate(GopherStateData * gopherState)
 
     case GOPHER_BIN:
         /* Rightnow We have no idea what it is. */
-        gopher_mime_content(&mb, gopherState->request, def_gopher_bin);
+        mime_enc = mimeGetContentEncoding(gopherState->request);
+        mime_type = mimeGetContentType(gopherState->request);
+        if (!mime_type)
+            mime_type = def_gopher_bin;
         break;
 
     case GOPHER_FILE:
 
     default:
-        gopher_mime_content(&mb, gopherState->request, def_gopher_text);
+        mime_enc = mimeGetContentEncoding(gopherState->request);
+        mime_type = mimeGetContentType(gopherState->request);
+        if (!mime_type)
+            mime_type = def_gopher_text;
         break;
     }
 
-    mb.Printf("\r\n");
-    EBIT_CLR(gopherState->entry->flags, ENTRY_FWD_HDR_WAIT);
-    gopherState->entry->append(mb.buf, mb.size);
-    mb.clean();
+    assert(entry->isEmpty());
+    EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
+
+    HttpReply *reply = new HttpReply;
+    entry->buffer();
+    HttpVersion version(1, 0);
+    reply->setHeaders(version, HTTP_OK, "Gatewaying", mime_type, -1, -1, -2);
+    if (mime_enc)
+        reply->header.putStr(HDR_CONTENT_ENCODING, mime_enc);
+
+    entry->replaceHttpReply(reply);
 }
 
 /**
