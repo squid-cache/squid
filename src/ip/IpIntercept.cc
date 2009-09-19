@@ -385,7 +385,7 @@ IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAdd
         if ( NetfilterTransparent(fd, me, dst, silent) == 0) return 0;
     }
 
-    /* NAT is only available in IPv6 */
+    /* NAT is only available in IPv4 */
     if ( !me.IsIPv4()   ) return -1;
     if ( !peer.IsIPv4() ) return -1;
 
