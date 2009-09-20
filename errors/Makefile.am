@@ -135,7 +135,7 @@ install-exec-local: translate
 
 install-data-local: translate
 	$(mkinstalldirs) $(DESTDIR)$(DEFAULT_ERROR_DIR) ; \
-	for l in $(TRANSLATE_LANGUAGES); do \
+	for l in $(TRANSLATE_LANGUAGES) templates; do \
 	    l=`basename $$l .lang`; \
 	    echo "Located $$l for install..."; \
 	    if test -d $(srcdir)/$$l || test -d $(builddir)/$$l; then \
@@ -143,12 +143,12 @@ install-data-local: translate
 	    fi; \
 	    for f in $(ERROR_TEMPLATES); do \
 		page=`basename $$f`; \
-		if test -f $(builddir)/$$l/$$f; then \
-		    echo "$(INSTALL_DATA) $(builddir)/$$l/$$f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l"; \
-			    $(INSTALL_DATA) $(builddir)/$$l/$$f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; \
-		elif test -f $(srcdir)/$$l/$$f; then \
-		    echo "$(INSTALL_DATA) $(srcdir)/$$l/$$f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l"; \
-			    $(INSTALL_DATA) $(srcdir)/$$l/$$f $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; \
+		if test -f $(builddir)/$$l/$$page; then \
+		    echo "$(INSTALL_DATA) $(builddir)/$$l/$$page $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l"; \
+			    $(INSTALL_DATA) $(builddir)/$$l/$$page $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; \
+		elif test -f $(srcdir)/$$l/$$page; then \
+		    echo "$(INSTALL_DATA) $(srcdir)/$$l/$$page $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l"; \
+			    $(INSTALL_DATA) $(srcdir)/$$l/$$page $(DESTDIR)$(DEFAULT_ERROR_DIR)/$$l; \
 		fi; \
 	    done; \
 	done; \
