@@ -303,18 +303,18 @@ acl_ip_data::FactoryParse(const char *t)
 
 // IPv6
     } else if (sscanf(t, SCAN_ACL1_6, addr1, addr2, mask) == 3) {
-        debugs(28, 9, "aclIpParseIpData: '" << t << "' matched: SCAN1-v4: " << SCAN_ACL1_6);
+        debugs(28, 9, "aclIpParseIpData: '" << t << "' matched: SCAN1-v6: " << SCAN_ACL1_6);
         iptype=AF_INET6;
     } else if (sscanf(t, SCAN_ACL2_6, addr1, addr2, &c) >= 2) {
-        debugs(28, 9, "aclIpParseIpData: '" << t << "' matched: SCAN2-v4: " << SCAN_ACL2_6);
+        debugs(28, 9, "aclIpParseIpData: '" << t << "' matched: SCAN2-v6: " << SCAN_ACL2_6);
         mask[0] = '\0';
         iptype=AF_INET6;
     } else if (sscanf(t, SCAN_ACL3_6, addr1, mask) == 2) {
-        debugs(28, 9, "aclIpParseIpData: '" << t << "' matched: SCAN3-v4: " << SCAN_ACL3_6);
+        debugs(28, 9, "aclIpParseIpData: '" << t << "' matched: SCAN3-v6: " << SCAN_ACL3_6);
         addr2[0] = '\0';
         iptype=AF_INET6;
     } else if (sscanf(t, SCAN_ACL4_6, addr1, mask) == 2) {
-        debugs(28, 9, "aclIpParseIpData: '" << t << "' matched: SCAN4-v4: " << SCAN_ACL4_6);
+        debugs(28, 9, "aclIpParseIpData: '" << t << "' matched: SCAN4-v6: " << SCAN_ACL4_6);
         addr2[0] = '\0';
         iptype=AF_INET6;
 
