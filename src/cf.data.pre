@@ -829,8 +829,8 @@ DOC_START
 	opposite of the last line in the list.  If the last line was
 	deny, the default is allow.  Conversely, if the last line
 	is allow, the default will be deny.  For these reasons, it is a
-	good idea to have an "deny all" or "allow all" entry at the end
-	of your access lists to avoid potential confusion.
+	good idea to have an "deny all" entry at the end of your access
+	lists to avoid potential confusion.
 
 	This clause supports both fast and slow acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
@@ -1112,6 +1112,11 @@ DOC_START
 
 	   protocol=	Protocol to reconstruct accelerated requests with.
 			Defaults to http.
+
+	   ignore-cc	Ignore request Cache-Control headers.
+
+	   		Warning: This option violates HTTP specifications if
+			used in non-accelerator setups.
 
 	   connection-auth[=on|off]
 	                use connection-auth=off to tell Squid to prevent 

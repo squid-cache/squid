@@ -42,6 +42,9 @@
 #elif defined(__FreeBSD__)	/* FreeBSD */
 #define _SQUID_FREEBSD_
 
+#elif defined(__FreeBSD_kernel__)      /* GNU/kFreeBSD */
+#define _SQUID_KFREEBSD_
+
 #elif defined(__sgi__)	|| defined(sgi) || defined(__sgi)	/* SGI */
 #define _SQUID_SGI_
 
