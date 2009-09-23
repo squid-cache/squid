@@ -86,8 +86,7 @@ main(int argc, char *argv[])
         if ((p = strchr(buf, '\n')) != NULL) {
             *p = '\0';		/* strip \n */
             buflen = p - buf;   /* length is known already */
-        }
-        else
+        } else
             buflen = strlen(buf);   /* keep this so we only scan the buffer for \0 once per loop */
 
         debug("Got %d bytes '%s' from Squid\n", buflen, buf);

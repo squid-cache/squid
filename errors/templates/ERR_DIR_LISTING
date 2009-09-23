@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html><head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>FTP Directory: %U</title>
+<title>Directory: %U</title>
 <style type="text/css"><!-- 
  %l
 
@@ -11,7 +11,7 @@ body
  --></style>
 </head><body>
 <div id="titles">
-<h2>FTP Directory: <a href="/">%U</a>/</h2>
+<h2>Directory: <a href="/">%U</a>/</h2>
 </div>
 <hr>
 
@@ -22,7 +22,7 @@ body
 <pre>%z</pre>
 </blockquote>
 
-<table id="ftplisting" summary="FTP Directory Listing">
+<table id="dirlisting" summary="Directory Listing">
 <tr>
 <th><a href="../"><img border="0" src="/squid-internal-static/icons/anthony-dirup.gif" alt="Parent Directory"></a></th>
 <th nowrap="nowrap"><a href="../">Parent Directory</a> (<a href="/">Root Directory</a>)</th>

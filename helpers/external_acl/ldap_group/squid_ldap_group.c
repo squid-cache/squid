@@ -233,6 +233,7 @@ main(int argc, char **argv)
         case 'd':
         case 'g':
         case 'S':
+        case 'K':
             break;
         default:
             if (strlen(argv[1]) > 2) {

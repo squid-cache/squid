@@ -36,6 +36,17 @@ public:
 #endif
 
     /**
+     * Test system networking calls for TPROXY support.
+     * Detects IPv6 and IPv4 level of support matches the address being listened on
+     * and if the compiled v2/v4 is usable as far down as a bind()ing.
+     *
+     * \param test    Address set on the http(s)_port being checked.
+     * \retval true   TPROXY is available.
+     * \retval false  TPROXY is not available.
+     */
+    bool ProbeForTproxy(IpAddress &test);
+
+    /**
      \retval 0	Full transparency is disabled.
      \retval 1  Full transparency is enabled and active.
      */

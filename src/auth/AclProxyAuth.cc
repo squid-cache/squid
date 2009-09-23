@@ -146,7 +146,8 @@ ProxyAuthLookup::checkForAsync(ACLChecklist *cl)const
     assert(checklist->auth_user_request != NULL);
     auth_user_request = checklist->auth_user_request;
 
-    assert(authenticateValidateUser(auth_user_request));
+    int validated = authenticateValidateUser(auth_user_request);
+    assert(validated);
     auth_user_request->start(LookupDone, checklist);
 }
 

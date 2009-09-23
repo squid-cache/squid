@@ -3046,6 +3046,14 @@ parse_http_port_option(http_port_list * s, char *token)
         s->accel = 1;
     } else if (strcmp(token, "allow-direct") == 0) {
         s->allow_direct = 1;
+    } else if (strcmp(token, "ignore-cc") == 0) {
+        s->ignore_cc = 1;
+#if !HTTP_VIOLATIONS
+        if (!s->accel) {
+            debugs(3, DBG_CRITICAL, "FATAL: ignore-cc is only valid in accelerator mode");
+            self_destruct();
+        }
+#endif
     } else if (strcmp(token, "no-connection-auth") == 0) {
         s->connection_auth_disabled = true;
     } else if (strcmp(token, "connection-auth=off") == 0) {
@@ -3089,6 +3097,11 @@ parse_http_port_option(http_port_list * s, char *token)
         /* Log information regarding the port modes under transparency. */
         debugs(3, DBG_IMPORTANT, "Starting IP Spoofing on port " << s->s);
         debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (IP spoofing enabled)");
+
+        if (!IpInterceptor.ProbeForTproxy(s->s)) {
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: TPROXY support in the system does not work.");
+            self_destruct();
+        }
 
     } else if (strcmp(token, "ipv4") == 0) {
 #if USE_IPV6
