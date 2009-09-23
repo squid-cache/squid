@@ -11,7 +11,7 @@ body
  --></style>
 </head><body>
 <div id="titles">
-<h2>Directory: <a href="/">%U</a>/</h2>
+<h2>Directory: <a href="%U">%U</a>/</h2>
 </div>
 <hr>
 
