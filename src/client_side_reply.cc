@@ -366,7 +366,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
 
 	// if client sent IMS
 
-	if (http->request->flags.ims) {
+        if (http->request->flags.ims && !old_entry->modifiedSince(http->request)) {
 	    // forward the 304 from origin
 	    debugs(88, 3, "handleIMSReply: origin replied 304, revalidating existing entry and forwarding 304 to client");
 	    sendClientUpstreamResponse();
