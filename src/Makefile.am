@@ -535,6 +535,7 @@ squid_LDADD = \
 	@DISK_LINKOBJS@ \
 	@REPL_OBJS@ \
 	@DISK_LIBS@ \
+	@AIOLIB@ \
 	@CRYPTLIB@ \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
@@ -1228,12 +1229,14 @@ nodist_tests_testDiskIO_SOURCES= \
 tests_testDiskIO_LDADD = \
 	$(SWAP_TEST_LDADD) \
 	@DISK_LIBS@ \
+	@AIOLIB@ \
 	$(COMMON_LIBS) \
 	SquidConfig.o
 
 tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
 tests_testDiskIO_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@DISK_LIBS@ \
+	@AIOLIB@ \
 	$(SWAP_TEST_DS) \
 	@SQUID_CPPUNIT_LA@
 
@@ -1969,6 +1972,7 @@ SWAP_TEST_LDADD = \
 	$(COMMON_LIBS) \
 	@REPL_OBJS@ \
 	@DISK_LIBS@ \
+	@AIOLIB@ \
 	-L../lib -lmiscutil \
 	acl/libapi.la \
 	@SQUID_CPPUNIT_LIBS@
@@ -1976,6 +1980,7 @@ SWAP_TEST_DS =\
 	$(top_builddir)/lib/libmiscutil.a \
 	repl_modules.o \
 	@DISK_LIBS@ \
+	@AIOLIB@ \
 	$(COMMON_LIBS) \
 	@REPL_OBJS@ \
 	@SQUID_CPPUNIT_LA@
