@@ -38,7 +38,17 @@
 
 #include "squid.h"
 
-/*
+/**
+ * Limit to how long any given config line may be.
+ * This affects squid.conf and all included files.
+ *
+ * Behaviour when setting larger than 2KB is unknown.
+ * The config parser read mechanism can cope, but the other systems
+ * receiving the data from its buffers on such lines may not.
+ */
+#define CONFIG_LINE_LIMIT	2048
+
+/**
  * A configuration file Parser. Instances of this class track
  * parsing state and perform tokenisation. Syntax is currently
  * taken care of outside this class.
@@ -48,7 +58,6 @@
  * in all of squid by reference. Instead the tokeniser only is
  * brought in.
  */
-
 class ConfigParser
 {
 
