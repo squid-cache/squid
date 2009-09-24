@@ -1036,7 +1036,7 @@ authDigestUserLinkNonce(DigestUser * user, digest_nonce_h * nonce)
     authDigestNonceLink(nonce);
 
     /* ping this nonce to this auth user */
-    assert((nonce->user == NULL) || (nonce->user = user));
+    assert((nonce->user == NULL) || (nonce->user == user));
 
     /* we don't lock this reference because removing the user removes the
      * hash too. Of course if that changes we're stuffed so read the code huh?
