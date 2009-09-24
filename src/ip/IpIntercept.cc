@@ -369,9 +369,6 @@ IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAdd
     client = me;
     dst = peer;
 
-    if ( !me.IsIPv4()   ) return -1;
-    if ( !peer.IsIPv4() ) return -1;
-
 #if 0
     // Crop interception errors down to one per minute.
     int silent = (squid_curtime - last_reported > 60 ? 0 : 1);
@@ -387,6 +384,10 @@ IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAdd
     if (transparent_active) {
         if ( NetfilterTransparent(fd, me, dst, silent) == 0) return 0;
     }
+
+    /* NAT is only available in IPv4 */
+    if ( !me.IsIPv4()   ) return -1;
+    if ( !peer.IsIPv4() ) return -1;
 
     if (intercept_active) {
         /* NAT methods that use sock-opts to return client address */
