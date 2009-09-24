@@ -438,7 +438,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, struct IN_ADDR c)
         return (0 == splayLastResult);
     }
 
-#elif defined(_SQUID_FREEBSD_) || defined(_SQUID_NETBSD_) || defined(_SQUID_OPENBSD_) || defined(_SQUID_DRAGONFLY_)
+#elif defined(_SQUID_FREEBSD_) || defined(_SQUID_NETBSD_) || defined(_SQUID_OPENBSD_) || defined(_SQUID_DRAGONFLY_) || defined(_SQUID_KFREEBSD_)
 
     struct arpreq arpReq;
 

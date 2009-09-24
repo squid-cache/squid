@@ -89,6 +89,9 @@
 #if USE_ASYNC_IO && defined(LINUXTHREADS)
 #define _SQUID_LINUX_THREADS_
 #endif
+ 
+#elif defined(__FreeBSD_kernel__)      /* GNU/kFreeBSD */
+#define _SQUID_KFREEBSD_
 
 #elif defined(__sgi__)	|| defined(sgi) || defined(__sgi)	/* SGI */
 #define _SQUID_SGI_
