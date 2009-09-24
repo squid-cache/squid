@@ -1370,7 +1370,8 @@ ClientHttpRequest::noteAdaptationAnswer(HttpMsg *msg)
         // subscribe to receive reply body
         if (new_rep->body_pipe != NULL) {
             adaptedBodySource = new_rep->body_pipe;
-            assert(adaptedBodySource->setConsumerIfNotLate(this));
+            int consumer_ok = adaptedBodySource->setConsumerIfNotLate(this);
+            assert(consumer_ok);
         }
 
         clientStreamNode *node = (clientStreamNode *)client_stream.tail->prev->data;
