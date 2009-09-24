@@ -281,7 +281,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
     }
 
     /* request-specific checks */
-    if (request) {
+    if (request && !request->flags.ignore_cc) {
         HttpHdrCc *cc = request->cache_control;
 
         if (request->flags.ims && (R->flags.refresh_ims || Config.onoff.refresh_all_ims)) {

@@ -742,10 +742,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     HttpRequest *request = http->request;
     HttpHeader *req_hdr = &request->header;
     int no_cache = 0;
-#if !(USE_SQUID_ESI) || defined(USE_USERAGENT_LOG) || defined(USE_REFERER_LOG)
-
     const char *str;
-#endif
 
     request->imslen = -1;
     request->ims = req_hdr->getTime(HDR_IF_MODIFIED_SINCE);
@@ -753,44 +750,39 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
     if (request->ims > 0)
         request->flags.ims = 1;
 
-#if USE_SQUID_ESI
-    /*
-     * We ignore Cache-Control as per the Edge Architecture Section 3. See
-     * www.esi.org for more information.
-     */
-#else
+    if (!request->flags.ignore_cc) {
+        if (req_hdr->has(HDR_PRAGMA)) {
+            String s = req_hdr->getList(HDR_PRAGMA);
 
-    if (req_hdr->has(HDR_PRAGMA)) {
-        String s = req_hdr->getList(HDR_PRAGMA);
+            if (strListIsMember(&s, "no-cache", ','))
+                no_cache++;
 
-        if (strListIsMember(&s, "no-cache", ','))
-            no_cache++;
+            s.clean();
+        }
 
-        s.clean();
-    }
+        if (request->cache_control)
+            if (EBIT_TEST(request->cache_control->mask, CC_NO_CACHE))
+                no_cache++;
 
-    if (request->cache_control)
-        if (EBIT_TEST(request->cache_control->mask, CC_NO_CACHE))
-            no_cache++;
-
-    /*
-    * Work around for supporting the Reload button in IE browsers when Squid
-    * is used as an accelerator or transparent proxy, by turning accelerated
-    * IMS request to no-cache requests. Now knows about IE 5.5 fix (is
-    * actually only fixed in SP1, but we can't tell whether we are talking to
-    * SP1 or not so all 5.5 versions are treated 'normally').
-    */
-    if (Config.onoff.ie_refresh) {
-        if (http->flags.accel && request->flags.ims) {
-            if ((str = req_hdr->getStr(HDR_USER_AGENT))) {
-                if (strstr(str, "MSIE 5.01") != NULL)
-                    no_cache++;
-                else if (strstr(str, "MSIE 5.0") != NULL)
-                    no_cache++;
-                else if (strstr(str, "MSIE 4.") != NULL)
-                    no_cache++;
-                else if (strstr(str, "MSIE 3.") != NULL)
-                    no_cache++;
+        /*
+        * Work around for supporting the Reload button in IE browsers when Squid
+        * is used as an accelerator or transparent proxy, by turning accelerated
+        * IMS request to no-cache requests. Now knows about IE 5.5 fix (is
+        * actually only fixed in SP1, but we can't tell whether we are talking to
+        * SP1 or not so all 5.5 versions are treated 'normally').
+        */
+        if (Config.onoff.ie_refresh) {
+            if (http->flags.accel && request->flags.ims) {
+                if ((str = req_hdr->getStr(HDR_USER_AGENT))) {
+                    if (strstr(str, "MSIE 5.01") != NULL)
+                        no_cache++;
+                    else if (strstr(str, "MSIE 5.0") != NULL)
+                        no_cache++;
+                    else if (strstr(str, "MSIE 4.") != NULL)
+                        no_cache++;
+                    else if (strstr(str, "MSIE 3.") != NULL)
+                        no_cache++;
+                }
             }
         }
     }
@@ -799,7 +791,6 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         no_cache++;
     }
 
-#endif
     if (no_cache) {
 #if HTTP_VIOLATIONS
 

@@ -1105,6 +1105,11 @@ DOC_START
 	   protocol=	Protocol to reconstruct accelerated requests with.
 			Defaults to http.
 
+	   ignore-cc	Ignore request Cache-Control headers.
+
+	   		Warning: This option violates HTTP specifications if
+			used in non-accelerator setups.
+
 	   connection-auth[=on|off]
 	                use connection-auth=off to tell Squid to prevent 
 	                forwarding Microsoft connection oriented authentication

@@ -24,6 +24,7 @@ struct http_port_list {
     unsigned int allow_direct:1;       /**< Allow direct forwarding in accelerator mode */
     unsigned int vhost:1;              /**< uses host header */
     unsigned int sslBump:1;            /**< intercepts CONNECT requests */
+    unsigned int ignore_cc:1;          /**< Ignore request Cache-Control directives */
 
     int vport;                 /* virtual port support, -1 for dynamic, >0 static*/
     bool connection_auth_disabled;     /* Don't support connection oriented auth */

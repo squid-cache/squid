@@ -1503,7 +1503,7 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
     }
 
 #if USE_SQUID_ESI
-    {
+    if (orig_request->flags.accelerated) {
         /* Append Surrogate-Capabilities */
         String strSurrogate (hdr_in->getList(HDR_SURROGATE_CAPABILITY));
         snprintf(bbuf, BBUF_SZ, "%s=\"Surrogate/1.0 ESI/1.0\"",
