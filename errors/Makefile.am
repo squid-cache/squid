@@ -28,7 +28,7 @@ ERROR_TEMPLATES =  \
 	templates/ERR_UNSUP_HTTPVERSION \
 	templates/ERR_READ_TIMEOUT \
 	templates/ERR_ICAP_FAILURE \
-	templates/ERR_FTP_LISTING \
+	templates/ERR_DIR_LISTING \
 	templates/ERR_FTP_FORBIDDEN \
 	templates/ERR_ACCESS_DENIED \
 	templates/ERR_FORWARDING_DENIED \
