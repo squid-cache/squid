@@ -15,18 +15,15 @@ SPNEGO = \
 
 if HAVE_SPNEGO
 negotiate_kerberos_auth_SOURCES = $(SOURCE)
-AM_CPPFLAGS = $(INCLUDES) $(KERBINCS) -I$(srcdir)
+AM_CPPFLAGS = $(INCLUDES) -I$(srcdir)
 else
 negotiate_kerberos_auth_SOURCES = $(SOURCE) $(SPNEGO)
-AM_CPPFLAGS = $(INCLUDES) $(KERBINCS) -I$(srcdir)/spnegohelp -I$(srcdir)
+AM_CPPFLAGS = $(INCLUDES) -I$(srcdir)/spnegohelp -I$(srcdir)
 endif
 negotiate_kerberos_auth_test_SOURCES = $(SOURCE_test)
 
 
 negotiate_kerberos_auth_LDFLAGS = 
-negotiate_kerberos_auth_LDADD = $(COMPAT_LIB) $(XTRA_LIBS) $(KERBLIBS)
+negotiate_kerberos_auth_LDADD = $(COMPAT_LIB) $(XTRA_LIBS) @KRB5LIBS@
 negotiate_kerberos_auth_test_LDFLAGS = 
-negotiate_kerberos_auth_test_LDADD = $(COMPAT_LIB) $(XTRA_LIBS) $(KERBLIBS)
-
-KERBINCS = @KRB5INCS@
-KERBLIBS = @KRB5LIBS@
+negotiate_kerberos_auth_test_LDADD = $(COMPAT_LIB) $(XTRA_LIBS) @KRB5LIBS@
