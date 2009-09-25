@@ -884,6 +884,7 @@ struct peer {
         unsigned int userhash:1;
         unsigned int sourcehash:1;
         unsigned int originserver:1;
+        unsigned int no_tproxy:1;
     } options;
 
     int weight;
