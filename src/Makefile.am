@@ -535,6 +535,7 @@ squid_LDADD = \
 	@DISK_LINKOBJS@ \
 	@REPL_OBJS@ \
 	@DISK_LIBS@ \
+	@AIOLIB@ \
 	@CRYPTLIB@ \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
@@ -728,7 +729,6 @@ DEFAULT_UNLINKD		= $(libexecdir)/`echo unlinkd | sed '$(transform);s/$$/$(EXEEXT
 DEFAULT_DISKD		= $(libexecdir)/`echo diskd | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_ICON_DIR	= $(datadir)/icons
 DEFAULT_ERROR_DIR	= $(datadir)/errors
-DEFAULT_MIB_PATH	= $(datadir)/mib.txt
 DEFAULT_HOSTS		= @OPT_DEFAULT_HOSTS@
 
 # Make location configure settings available to the code
@@ -800,7 +800,6 @@ cf.data: cf.data.pre Makefile
 	s%@DEFAULT_NETDB_FILE@%$(DEFAULT_NETDB_FILE)%g;\
 	s%@DEFAULT_SWAP_DIR@%$(DEFAULT_SWAP_DIR)%g;\
 	s%@DEFAULT_ICON_DIR@%$(DEFAULT_ICON_DIR)%g;\
-	s%@DEFAULT_MIB_PATH@%$(DEFAULT_MIB_PATH)%g;\
 	s%@DEFAULT_ERROR_DIR@%$(DEFAULT_ERROR_DIR)%g;\
 	s%@DEFAULT_CONFIG_DIR@%$(DEFAULT_CONFIG_DIR)%g;\
 	s%@DEFAULT_PREFIX@%$(DEFAULT_PREFIX)%g;\
@@ -830,9 +829,9 @@ install-data-local: install-sysconfDATA install-dataDATA
 	$(INSTALL_DATA) squid.conf.documented $(DESTDIR)$(DEFAULT_CONFIG_FILE).documented; \
 	$(mkinstalldirs) $(DESTDIR)$(DEFAULT_LOG_PREFIX)
 
-uninstall-local:
-	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_MIME_TABLE)
-	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_CONFIG_FILE)
+uninstall-local: squid.conf.default
+	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_MIME_TABLE) $(srcdir)/mime.conf.default
+	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_CONFIG_FILE) squid.conf.default
 
 CLEANFILES += cf.data squid.conf.default squid.conf.documented \
 	DiskIO/DiskIOModules_gen.cc \
@@ -1228,12 +1227,14 @@ nodist_tests_testDiskIO_SOURCES= \
 tests_testDiskIO_LDADD = \
 	$(SWAP_TEST_LDADD) \
 	@DISK_LIBS@ \
+	@AIOLIB@ \
 	$(COMMON_LIBS) \
 	SquidConfig.o
 
 tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
 tests_testDiskIO_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@DISK_LIBS@ \
+	@AIOLIB@ \
 	$(SWAP_TEST_DS) \
 	@SQUID_CPPUNIT_LA@
 
@@ -1969,6 +1970,7 @@ SWAP_TEST_LDADD = \
 	$(COMMON_LIBS) \
 	@REPL_OBJS@ \
 	@DISK_LIBS@ \
+	@AIOLIB@ \
 	-L../lib -lmiscutil \
 	acl/libapi.la \
 	@SQUID_CPPUNIT_LIBS@
@@ -1976,6 +1978,7 @@ SWAP_TEST_DS =\
 	$(top_builddir)/lib/libmiscutil.a \
 	repl_modules.o \
 	@DISK_LIBS@ \
+	@AIOLIB@ \
 	$(COMMON_LIBS) \
 	@REPL_OBJS@ \
 	@SQUID_CPPUNIT_LA@

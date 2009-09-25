@@ -1036,7 +1036,7 @@ authDigestUserLinkNonce(DigestUser * user, digest_nonce_h * nonce)
     authDigestNonceLink(nonce);
 
     /* ping this nonce to this auth user */
-    assert((nonce->user == NULL) || (nonce->user = user));
+    assert((nonce->user == NULL) || (nonce->user == user));
 
     /* we don't lock this reference because removing the user removes the
      * hash too. Of course if that changes we're stuffed so read the code huh?
@@ -1106,6 +1106,7 @@ AuthDigestConfig::decode(char const *proxy_auth)
             /* quote mark */
             p++;
 
+            safe_free(username);
             username = xstrndup(p, strchr(p, '"') + 1 - p);
 
             debugs(29, 9, "authDigestDecodeAuth: Found Username '" << username << "'");
@@ -1118,6 +1119,7 @@ AuthDigestConfig::decode(char const *proxy_auth)
             /* quote mark */
             p++;
 
+            safe_free(digest_request->realm);
             digest_request->realm = xstrndup(p, strchr(p, '"') + 1 - p);
 
             debugs(29, 9, "authDigestDecodeAuth: Found realm '" << digest_request->realm << "'");
@@ -1131,6 +1133,7 @@ AuthDigestConfig::decode(char const *proxy_auth)
                 /* quote mark */
                 p++;
 
+            safe_free(digest_request->qop);
             digest_request->qop = xstrndup(p, strcspn(p, "\" \t\r\n()<>@,;:\\/[]?={}") + 1);
 
             debugs(29, 9, "authDigestDecodeAuth: Found qop '" << digest_request->qop << "'");
@@ -1144,6 +1147,7 @@ AuthDigestConfig::decode(char const *proxy_auth)
                 /* quote mark */
                 p++;
 
+            safe_free(digest_request->algorithm);
             digest_request->algorithm = xstrndup(p, strcspn(p, "\" \t\r\n()<>@,;:\\/[]?={}") + 1);
 
             debugs(29, 9, "authDigestDecodeAuth: Found algorithm '" << digest_request->algorithm << "'");
@@ -1156,6 +1160,7 @@ AuthDigestConfig::decode(char const *proxy_auth)
             /* quote mark */
             p++;
 
+            safe_free(digest_request->uri);
             digest_request->uri = xstrndup(p, strchr(p, '"') + 1 - p);
 
             debugs(29, 9, "authDigestDecodeAuth: Found uri '" << digest_request->uri << "'");
@@ -1168,6 +1173,7 @@ AuthDigestConfig::decode(char const *proxy_auth)
             /* quote mark */
             p++;
 
+            safe_free(digest_request->nonceb64);
             digest_request->nonceb64 = xstrndup(p, strchr(p, '"') + 1 - p);
 
             debugs(29, 9, "authDigestDecodeAuth: Found nonce '" << digest_request->nonceb64 << "'");
@@ -1189,6 +1195,7 @@ AuthDigestConfig::decode(char const *proxy_auth)
             /* quote mark */
             p++;
 
+            safe_free(digest_request->cnonce);
             digest_request->cnonce = xstrndup(p, strchr(p, '"') + 1 - p);
 
             debugs(29, 9, "authDigestDecodeAuth: Found cnonce '" << digest_request->cnonce << "'");
@@ -1201,6 +1208,7 @@ AuthDigestConfig::decode(char const *proxy_auth)
             /* quote mark */
             p++;
 
+            safe_free(digest_request->response);
             digest_request->response = xstrndup(p, strchr(p, '"') + 1 - p);
 
             debugs(29, 9, "authDigestDecodeAuth: Found response '" << digest_request->response << "'");

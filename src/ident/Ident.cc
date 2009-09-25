@@ -80,7 +80,7 @@ Ident::IdentConfig Ident::TheConfig;
 
 /**** PRIVATE FUNCTIONS ****/
 
-static void
+void
 Ident::identCallback(IdentStateData * state, char *result)
 {
     IdentClient *client;
@@ -99,7 +99,7 @@ Ident::identCallback(IdentStateData * state, char *result)
     }
 }
 
-static void
+void
 Ident::Close(int fdnotused, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
@@ -110,7 +110,7 @@ Ident::Close(int fdnotused, void *data)
     cbdataFree(state);
 }
 
-static void
+void
 Ident::Timeout(int fd, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
@@ -119,7 +119,7 @@ Ident::Timeout(int fd, void *data)
     comm_close(fd);
 }
 
-static void
+void
 Ident::ConnectDone(int fd, const DnsLookupDetails &, comm_err_t status, int xerrno, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
@@ -155,7 +155,7 @@ Ident::ConnectDone(int fd, const DnsLookupDetails &, comm_err_t status, int xerr
     commSetTimeout(fd, Ident::TheConfig.timeout, Ident::Timeout, state);
 }
 
-static void
+void
 Ident::ReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
@@ -194,7 +194,7 @@ Ident::ReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
     comm_close(fd);
 }
 
-static void
+void
 Ident::ClientAdd(IdentStateData * state, IDCB * callback, void *callback_data)
 {
     IdentClient *c = (IdentClient *)xcalloc(1, sizeof(*c));

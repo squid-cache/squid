@@ -1199,7 +1199,7 @@ NOCOMMENT_START
 	X-Forwarded-For entries, and place itself as the sole entry.
 	</verb>
 
-	<tag>http_port transparent intercept sslbump connection-auth[=on|off]</tag>
+	<tag>http_port transparent intercept sslbump connection-auth[=on|off] ignore-cc</tag>
 	<p>Option 'transparent' is being deprecated in favour of 'intercept' which more clearly identifies what the option does.
 	For now option 'tproxy' remains with old behaviour meaning fully-invisible proxy using TPROXY support.</p>
 	<p>New port options
@@ -1220,6 +1220,11 @@ NOCOMMENT_START
 	                idle is the initial time before TCP starts probing
 	                the connection, interval how often to probe, and
 	                timeout the time before giving up.
+
+	   ignore-cc	Ignore request Cache-Control headers.
+
+	                Warning: This option violates HTTP specifications if
+	                used in non-accelerator setups.
 
 	   sslBump      Intercept each CONNECT request matching ssl_bump ACL,
 	                establish secure connection with the client and with

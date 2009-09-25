@@ -210,4 +210,20 @@ max(A const & lhs, A const & rhs)
 #endif
 
 
+/**
+ * com_err.h is a C header and needs excplicit shielding, but not
+ * all other system headers including this care to do this.
+ */
+#ifdef __cplusplus
+#if HAVE_ET_COM_ERR_H
+extern "C" {
+#include <et/com_err.h>
+}
+#elif HAVE_COM_ERR_H
+extern "C" {
+#include <com_err.h>
+}
+#endif
+#endif
+
 #endif /* _SQUID_COMPAT_SHARED_H */
