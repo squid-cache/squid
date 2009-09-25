@@ -119,7 +119,7 @@ struct RefCountable_ {
     /* Not private, to allow class hierarchies */
     void RefCountReference() const {
 #if REFCOUNT_DEBUG
-       old_debug(0,1)("Incrementing this %p from count %u\n",this,count_);
+        old_debug(0,1)("Incrementing this %p from count %u\n",this,count_);
 #endif
 
         ++count_;

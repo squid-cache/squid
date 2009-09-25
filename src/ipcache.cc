@@ -1308,7 +1308,8 @@ ipcacheCycleAddr(const char *name, ipcache_addrs * ia)
         ia->cur = 0;
     }
 
-    debugs(14, 3, "ipcacheCycleAddr: " << name << " now at " << ia->in_addrs[ia->cur] << " (" << ia->cur << " of " << ia->count << ")");
+    /* NP: zero-based so we increase the human-readable number of our position */
+    debugs(14, 3, "ipcacheCycleAddr: " << name << " now at " << ia->in_addrs[ia->cur] << " (" << (ia->cur+1) << " of " << ia->count << ")");
 }
 
 /**
