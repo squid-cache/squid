@@ -848,18 +848,24 @@ AC_ARG_ENABLE(esi,
 if test "$use_esi" = "yes" ; then
   AC_DEFINE(USE_SQUID_ESI,1,[Compile the ESI processor and Surrogate header support])
   AM_CONDITIONAL(USE_ESI, true)
-
-  dnl Perform configuration consistency checks for ESI
-  dnl ESI support requires libexpat
-  AC_CHECK_LIB([expat], [main],
-        [ESI_LIBS="-lexpat"],
-        [AC_MSG_FAILURE([ESI support requires libexpat library, but no usable library was found])]
-  )
-  AC_CHECK_LIB([xml2], [main],
-        [ESI_LIBS="-lxml2"],
-        [AC_MSG_FAILURE([ESI support requires libxml2 library, but no usable library was found])]
-  )
-  XTRA_LIBS="$XTRA_LIBS -lexpat -lxml2"
+  ESI_LIBS=
+  HAVE_LIBEXPAT=0
+  AC_CHECK_LIB([expat], [main], [ESI_LIBS="$ESI_LIBS -lexpat"; HAVE_LIBEXPAT=1])
+  AC_DEFINE(HAVE_LIBEXPAT, $HAVE_LIBEXPAT, "Define to 1 if you have the expat library")
+  if test "$HAVE_LIBEXPAT" = 1; then
+    AM_CONDITIONAL(HAVE_LIBEXPAT, true)
+  else
+    AM_CONDITIONAL(HAVE_LIBEXPAT, false)
+  fi
+  HAVE_LIBXML2=
+  AC_CHECK_LIB([xml2], [main], [ESI_LIBS="$ESI_IBS -lxml2"; HAVE_LIBXML2=1])
+  AC_DEFINE(HAVE_LIBXML2, $HAVE_LIBXML2, "Define to 1 if you have the libxml2 library")
+  if test "$HAVE_LIBXML2" = 1; then
+    AM_CONDITIONAL(HAVE_LIBXML2, true)
+  else
+    AM_CONDITIONAL(HAVE_LIBXML2, false)
+  fi
+  XTRA_LIBS="$XTRA_LIBS $ESI_LIBS"
 
 else
   AC_DEFINE(USE_SQUID_ESI,0,[Compile the ESI processor and Surrogate header support])
