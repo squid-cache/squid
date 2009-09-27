@@ -1,3 +1,28 @@
+Changes to squid-3.1.0.14 (27 Sep 2009):
+
+	- Bug 2777: Various build issues on OpenSolaris
+	- Bug 2773: Segfault in RFC2069 Digest authentication
+	- Bug 2747: Compile errors on Solaris 10
+	- Bug 2735: Incomplete -fhuge-objects detection
+	- Bug 2722: Fix http_port accel combined with CONNECT
+	- Bug 2718: FTP sends EPSV2 on IPv4 connection
+	- Bug 2648: stateful helpers stuck in reserved
+	- Bug 2570: wccp2 "Here I Am" announcements not sent in memory-ony mode
+	- Bug 2510: digest_ldap_auth uses incorrect logic with TLS
+	- Bug 2483: bind() called before connect()
+	- Bug 2215: config file line length limit (extended to 2 KB)
+	- Support Accept-Language: * wildcard
+	- Support autoconf 2.64
+	- Support TPROXY for IPv6 traffic (requires kernel support)
+	- Support TPROXY cache cluster behind WCCPv2
+	- Correct ESI support to work in multi-mode Squid
+	- Add 0.0.0.0 as an to_localhost address
+	- DiskIO detection fixes and use optimal IO in default build.
+	- Correct peer connect-fail-limit default of 10
+	- Prevent squidclient sending two Accept: headers
+	- ... all bug fixes from 3.0.STABLE19
+	- ... and many more documentation fixes
+
 Changes to squid-3.1.0.13 (04 Aug 2009):
 
 	- Bug 2723 regression: enable PURGE requests if PURGE method ACL is present.

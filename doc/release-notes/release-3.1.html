@@ -1331,7 +1331,7 @@ see cache_mem and maximum_object_size_in_memory for size parameters.</P>
 <DT><B>cache_mem</B><DD>
 <P>Default size increased to 256MB.</P>
 
-<DT><B>cache_peer htcp-no-clr htcp-no-purge-clr htcp-only-clr htcp-forward-clr connection-auth[=on|off|auto] connect-fail-limit=N</B><DD>
+<DT><B>cache_peer htcp-no-clr htcp-no-purge-clr htcp-only-clr htcp-forward-clr connection-auth[=on|off|auto] connect-fail-limit=N no-tproxy</B><DD>
 <P>New Options.
 <PRE>
         use 'htcp-no-clr' to send HTCP to the neighbor but without
@@ -1357,6 +1357,10 @@ see cache_mem and maximum_object_size_in_memory for size parameters.</P>
         use 'connect-fail-limit=nn' to specify how many times
         connecting to a peer must fail before it is marked as
         down. Default is 10.
+
+        use 'no-tproxy' to specify that requests passed to this peer
+        are not to have the client IP spoofed. For use to prevent
+        packet routing issues with a cluster of peers behind WCCPv2.
         
 </PRE>
 </P>
@@ -1427,7 +1431,7 @@ format, so all helpers will need to be checked and converted to cope with such i
 </PRE>
 </P>
 
-<DT><B>http_port transparent intercept sslbump connection-auth[=on|off]</B><DD>
+<DT><B>http_port transparent intercept sslbump connection-auth[=on|off] ignore-cc</B><DD>
 <P>Option 'transparent' is being deprecated in favour of 'intercept' which more clearly identifies what the option does.
 For now option 'tproxy' remains with old behaviour meaning fully-invisible proxy using TPROXY support.</P>
 <P>New port options
@@ -1448,6 +1452,11 @@ For now option 'tproxy' remains with old behaviour meaning fully-invisible proxy
                         idle is the initial time before TCP starts probing
                         the connection, interval how often to probe, and
                         timeout the time before giving up.
+
+           ignore-cc    Ignore request Cache-Control headers.
+
+                        Warning: This option violates HTTP specifications if
+                        used in non-accelerator setups.
 
            sslBump      Intercept each CONNECT request matching ssl_bump ACL,
                         establish secure connection with the client and with
@@ -1772,6 +1781,14 @@ It also has a new squid.conf name for usage, see <EM>auth_param</EM> above for d
 <DT><B>--disable-internl-dns</B><DD>
 <P>Better support for Linux using the external DNS helper.
 The helper will now compile and work with dns_nameservers on more variants of Linux than previously.</P>
+
+<DT><B>--with-aio</B><DD>
+<P>Deprecated. POSIX AIO is now auto-detected and enabled.
+Use --without-aio to disable, but only if you really have to.</P>
+
+<DT><B>--with-pthreads</B><DD>
+<P>Deprecated. pthreads library is now auto-detected and enabled.
+Use --without-pthreads to disable, but only if you really have to.</P>
 
 </DL>
 </P>
