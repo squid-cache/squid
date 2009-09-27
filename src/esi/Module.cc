@@ -15,7 +15,7 @@ static ESIParser::Register *prExpat = 0;
 void Esi::Init()
 {
     assert(!prCustom); // we should be called once
-    
+
     prCustom = new ESIParser::Register("custom", &ESICustomParser::NewParser);
 
 #if HAVE_LIBXML2
