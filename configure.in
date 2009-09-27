@@ -461,6 +461,7 @@ AC_DEFINE(USE_DISKIO_DISKTHREADS, 0, [Whether pthreads support is needed. Automa
 USE_AIOPS_WIN32=0
 use_aio=
 use_diskthreads=
+AIOLIB=
 
 dnl Setup the module paths etc.
 FOUND_DISKIO_AIO=
@@ -573,16 +574,16 @@ for module in $MAYBE_DISK_MODULES none; do
 	FOUND_DISKIO_AIO="yes"
 	dnl Check for POSIX AIO availability
 	use_aio="yes"
-	LIBAIO=
+	AIOLIB=
 	AC_ARG_WITH(aio, AS_HELP_STRING([--without-aio],[Do not use POSIX AIO. Default: auto-detect]))
 	if test "$with_aio" != "no"; then
 	    have_aio_header=no
 	    AC_CHECK_HEADERS(aio.h,[have_aio_header=yes])
 	    dnl On some systems POSIX AIO functions are in librt
 	    dnl On some systems POSIX AIO functions are in libaio
-	    AC_CHECK_LIB(rt,aio_read,[LIBAIO="-lrt"],AC_CHECK_LIB(aio,aio_read,[LIBAIO="-laio"],[]))
+	    AC_CHECK_LIB(rt,aio_read,[AIOLIB="-lrt"],AC_CHECK_LIB(aio,aio_read,[AIOLIB="-laio"],[]))
 	  dnl Enable AIO if the library and headers are found
-	  if test "$LIBAIO" != "" && test "$have_aio_header" = "yes"; then
+	  if test "$AIOLIB" != "" && test "$have_aio_header" = "yes"; then
 	    AC_MSG_NOTICE([Native POSIX AIO support detected.])
 	    use_aio="yes"
 	  else
@@ -607,7 +608,7 @@ for module in $MAYBE_DISK_MODULES none; do
 	if test "$use_aio" = "yes" ; then
 	  AC_DEFINE(USE_DISKIO_AIO, 1, [Whether POSIX AIO support is needed. Automatic])
 	  DISK_MODULES="$DISK_MODULES AIO"
-	  DISK_LIBS="$DISK_LIBS $LIBAIO libAIO.a"
+	  DISK_LIBS="$DISK_LIBS libAIO.a"
 	  DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/AIO/AIODiskIOModule.o"
 	  case "$host_os" in
 	    mingw|mingw32)
@@ -647,6 +648,7 @@ AC_SUBST(DISK_MODULES)
 AC_SUBST(DISK_LIBS)
 AC_SUBST(DISK_PROGRAMS)
 AC_SUBST(DISK_LINKOBJS)
+AC_SUBST(AIOLIB)
 AM_CONDITIONAL([USE_AIOPS_WIN32], [test "$USE_AIOPS_WIN32" = 1])
 AM_CONDITIONAL([USE_AIO_WIN32], [test "$USE_AIO_WIN32" = 1])
 
