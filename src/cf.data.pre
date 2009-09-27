@@ -1918,6 +1918,9 @@ DOC_START
 			Can be used by outgoing access controls through the
 			peername ACL type.
 	
+	no-tproxy	Do not use the client-spoof TPROXY support when forwarding
+			requests to this peer. Use normal address selection instead.
+	
 	proxy-only	objects fetched from the peer will not be stored locally.
 	
 DOC_END
