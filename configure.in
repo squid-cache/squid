@@ -836,40 +836,42 @@ AC_ARG_ENABLE(delay-pools,
 dnl disable generic/common adaptation support by default
 use_adaptation=no
 
-AM_CONDITIONAL(USE_ESI, false)
+use_esi=yes
 AC_ARG_ENABLE(esi,
-  AS_HELP_STRING([--enable-esi],[Enable ESI for accelerators. Requires libexpat.
-                  Enabling ESI will cause squid to follow the
-                  Edge Acceleration Specification (www.esi.org).
-                  This causes squid to IGNORE client Cache-Control headers.
-                  DO NOT use this in a squid configured as a web proxy, 
-                  ONLY use it in a squid configured for webserver acceleration.]),
+  AS_HELP_STRING([--enable-esi],[Enable ESI for accelerators. Requires libexpat or libxml2.
+                  Enabling ESI will cause squid reverse proxies to be capable of the
+                  Edge Acceleration Specification (www.esi.org).]),
 	      use_esi=$enableval, use_esi=no)
+HAVE_LIBEXPAT=0
+EXPATLIB=
+HAVE_LIBXML2=0
+XMLLIB=
 if test "$use_esi" = "yes" ; then
-  AC_DEFINE(USE_SQUID_ESI,1,[Compile the ESI processor and Surrogate header support])
-  AM_CONDITIONAL(USE_ESI, true)
-  ESI_LIBS=
-  HAVE_LIBEXPAT=0
-  AC_CHECK_LIB([expat], [main], [ESI_LIBS="$ESI_LIBS -lexpat"; HAVE_LIBEXPAT=1])
-  AC_DEFINE(HAVE_LIBEXPAT, $HAVE_LIBEXPAT, "Define to 1 if you have the expat library")
-  if test "$HAVE_LIBEXPAT" = 1; then
-    AM_CONDITIONAL(HAVE_LIBEXPAT, true)
-  else
-    AM_CONDITIONAL(HAVE_LIBEXPAT, false)
-  fi
-  HAVE_LIBXML2=
-  AC_CHECK_LIB([xml2], [main], [ESI_LIBS="$ESI_IBS -lxml2"; HAVE_LIBXML2=1])
-  AC_DEFINE(HAVE_LIBXML2, $HAVE_LIBXML2, "Define to 1 if you have the libxml2 library")
-  if test "$HAVE_LIBXML2" = 1; then
-    AM_CONDITIONAL(HAVE_LIBXML2, true)
-  else
-    AM_CONDITIONAL(HAVE_LIBXML2, false)
-  fi
-  XTRA_LIBS="$XTRA_LIBS $ESI_LIBS"
 
-else
-  AC_DEFINE(USE_SQUID_ESI,0,[Compile the ESI processor and Surrogate header support])
+  AC_ARG_WITH(expat, AS_HELP_STRING([--without-libexpat],[Do not use libexpat for ESI.]))
+  if test "$with_expat" != "no" ; then
+    AC_CHECK_LIB([expat], [main], [EXPATLIB="-lexpat"; HAVE_LIBEXPAT=1])
+    AC_DEFINE_UNQUOTED(HAVE_LIBEXPAT, $HAVE_LIBEXPAT, [Define to 1 if you have the expat library])
+  fi
+
+  AC_ARG_WITH(xml2, AS_HELP_STRING([--without-libxml2],[Do not use libxml2 for ESI.]))
+  if test "$with_xml2" != "no" ; then
+    AC_CHECK_LIB([xml2], [main], [XMLLIB="-lxml2"; HAVE_LIBXML2=1])
+    AC_DEFINE_UNQUOTED(HAVE_LIBXML2, $HAVE_LIBXML2, [Define to 1 if you have the libxml2 library])
+  fi
+
+  if test "$HAVE_LIBEXPAT" = "0" && test "$HAVE_LIBXML2" = "0" ; then
+    AC_WARN([Disabling ESI support. It requires libexpat or libxml2 to operate. Neither are available.])
+    use_esi=no
+  else
+    AC_DEFINE(USE_SQUID_ESI,1,[Compile the ESI processor and Surrogate header support])
+  fi
 fi
+AM_CONDITIONAL(USE_ESI, test "$use_esi" = "yes")
+AM_CONDITIONAL(HAVE_LIBEXPAT, test $HAVE_LIBEXPAT = 1)
+AC_SUBST(EXPATLIB)
+AM_CONDITIONAL(HAVE_LIBXML2, test $HAVE_LIBXML2 = 1)
+AC_SUBST(XMLLIB)
 
 AM_CONDITIONAL(USE_ICAP_CLIENT, false)
 AC_ARG_ENABLE(icap-client,
