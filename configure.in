@@ -853,6 +853,7 @@ if test "$use_esi" = "yes" ; then
   AC_ARG_WITH(expat, AS_HELP_STRING([--without-libexpat],[Do not use libexpat for ESI. Default: auto-detect]))
   if test "$with_expat" != "no" ; then
     AC_CHECK_LIB([expat], [main], [EXPATLIB="-lexpat"; HAVE_LIBEXPAT=1])
+    AC_CHECK_HEADERS([expat.h])
     AC_DEFINE_UNQUOTED(HAVE_LIBEXPAT, $HAVE_LIBEXPAT, [Define to 1 if you have the expat library])
     if test "$with_expat" = "yes" && test "$HAVE_LIBEXPAT" != "1" ; then
       AC_MSG_ERROR([Required library libexpat is not able to be found.])
@@ -862,6 +863,7 @@ if test "$use_esi" = "yes" ; then
   AC_ARG_WITH(xml2, AS_HELP_STRING([--without-libxml2],[Do not use libxml2 for ESI. Default: auto-detect]))
   if test "$with_xml2" != "no" ; then
     AC_CHECK_LIB([xml2], [main], [XMLLIB="-lxml2"; HAVE_LIBXML2=1])
+    AC_CHECK_HEADERS([libxml/parser.h libxml/HTMLparser.h libxml/HTMLtree.h])
     AC_DEFINE_UNQUOTED(HAVE_LIBXML2, $HAVE_LIBXML2, [Define to 1 if you have the libxml2 library])
     if test "$with_xml2" = "yes" && test "$HAVE_LIBXML2" != "1" ; then
       AC_MSG_ERROR([Required library libxml2 is not able to be found.])
