@@ -40,7 +40,9 @@
 #ifndef SQUID_ESILIBXML2PARSER_H
 #define SQUID_ESILIBXML2PARSER_H
 
-#if USE_SQUID_ESI
+#include "config.h"
+
+#if USE_SQUID_ESI && HAVE_LIBXML2
 
 #include "esi/Parser.h"
 // workaround for definition of "free" that prevents include of
@@ -49,9 +51,15 @@
 #define OLD_FREE free
 #undef free
 #endif
+#if HAVE_LIBXML_PARSER_H
 #include <libxml/parser.h>
+#endif
+#if HAVE_LIBXML_HTMLPARSER_H
 #include <libxml/HTMLparser.h>
+#endif
+#if HAVE_LIBXML_HTMLTREE_H
 #include <libxml/HTMLtree.h>
+#endif
 
 #ifdef OLD_FREE
 #define free OLD_FREE

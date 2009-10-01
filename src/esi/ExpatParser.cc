@@ -35,7 +35,7 @@
 
 #include "squid.h"
 
-#if USE_SQUID_ESI
+#if USE_SQUID_ESI && HAVE_LIBEXPAT
 
 #include "esi/ExpatParser.h"
 
