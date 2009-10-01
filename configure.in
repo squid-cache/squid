@@ -863,7 +863,20 @@ if test "$use_esi" = "yes" ; then
   AC_ARG_WITH(xml2, AS_HELP_STRING([--without-libxml2],[Do not use libxml2 for ESI. Default: auto-detect]))
   if test "$with_xml2" != "no" ; then
     AC_CHECK_LIB([xml2], [main], [XMLLIB="-lxml2"; HAVE_LIBXML2=1])
-    AC_CHECK_HEADERS([libxml/parser.h libxml/HTMLparser.h libxml/HTMLtree.h])
+    dnl Find the main header and include path...
+    AC_CHECK_HEADERS([libxml/parser.h], [], [
+        SAVED_CPPFLAGS="$CPPFLAGS"
+        CPPFLAGS="-I/usr/include/libxml2 $CPPFLAGS"
+        unset ac_cv_header_libxml_parser_h
+        AC_CHECK_HEADERS([libxml/parser.h], [ac_cv_libxml2_include=yes], [])
+        CPPFLAGS="$SAVED_CPPFLAGS"
+        ])
+    if test "x$ac_cv_libxml2_include" = "xyes"; then
+        SQUID_CXXFLAGS="-I/usr/include/libxml2 $SQUID_CXXFLAGS"
+        CPPFLAGS="-I/usr/include/libxml2 $CPPFLAGS"
+    fi
+    dnl Now that we know where to look find the other headers...
+    AC_CHECK_HEADERS(libxml/HTMLparser.h libxml/HTMLtree.h)
     AC_DEFINE_UNQUOTED(HAVE_LIBXML2, $HAVE_LIBXML2, [Define to 1 if you have the libxml2 library])
     if test "$with_xml2" = "yes" && test "$HAVE_LIBXML2" != "1" ; then
       AC_MSG_ERROR([Required library libxml2 is not able to be found.])
@@ -2504,17 +2517,6 @@ AC_CHECK_HEADERS( \
 	resolv.h \
 ,,,
 SQUID_BSDNET_INCLUDES)
-
-AC_CHECK_HEADERS([libxml/parser.h], [], [
-    	SAVED_CPPFLAGS="$CPPFLAGS"
-	CPPFLAGS="-I/usr/include/libxml2 $CPPFLAGS"
-	unset ac_cv_header_libxml_parser_h
-	AC_CHECK_HEADERS([libxml/parser.h], [ac_cv_libxml2_include=yes], [])
-	CPPFLAGS="$SAVED_CPPFLAGS"
-	])
-if test "x$ac_cv_libxml2_include" = "xyes"; then
-	SQUID_CXXFLAGS="-I/usr/include/libxml2 $SQUID_CXXFLAGS"
-fi
 
 AC_C_CONST
 AC_C_BIGENDIAN
