@@ -676,8 +676,8 @@ DOC_START
 	opposite of the last line in the list.  If the last line was
 	deny, the default is allow.  Conversely, if the last line
 	is allow, the default will be deny.  For these reasons, it is a
-	good idea to have an "deny all" or "allow all" entry at the end
-	of your access lists to avoid potential confusion.
+	good idea to have an "deny all" entry at the end of your access
+	lists to avoid potential confusion.
 
 NOCOMMENT_START
 #Recommended minimum configuration:
