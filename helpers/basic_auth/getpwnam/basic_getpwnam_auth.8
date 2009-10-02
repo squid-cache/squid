@@ -1,0 +1,79 @@
+.TH basic_getpwnam_auth 8 "Squid getpwnam Authenticator"
+.
+.SH NAME
+basic_getpwnam_auth - Local Users auth helper for Squid
+.
+.SH SYNOPSIS
+basic_getpwnam_auth
+.
+.SH DESCRIPTION
+This helper allows Squid to authenticate any local user accounts
+to validate the user name and password of Basic HTTP authentication.
+.
+Uses getpwnam() and getspnam() routines for authentication.
+This has the following advantages over the NCSA module:
+.
+.BR Allows authentication of all known local users
+.BR Allows authentication through nsswitch.conf
+.BR can handle NIS(+) requests
+.BR can handle LDAP request
+.BR can handle PAM request
+.
+.SH SQUID.CONF
+.
+.RS
+.B auth_param basic program /path/to/basic_getpwnam_auth
+.RE
+.
+.SH NOTES
+.
+When used for authenticating to local UNIX shadow password databases
+the program must be running as root or else it won't have sufficient
+permissions to access the user password database. Such use of this
+program is not recommended, but if you absolutely need to then make
+the program setuid root
+.RS
+.P
+.B chown root basic_getpwnam_auth
+.BR
+.B chmod u+s basic_getpwnam_auth
+.RE
+.P
+Please note that in such configurations it is also strongly recommended
+that the program is moved into a directory where normal users cannot
+access it, as this mode of operation will allow any local user to
+brute-force other users passwords. Also note the program has not been
+fully audited and the author cannot be held responsible for any security
+issues due to such installations.
+.
+.SH AUTHOR
+Squid basic_getpwnam_auth is written by
+.I Erik Hofman <erik.hofman@a1.nl>
+.I Robin Elfrink <robin@a1.nl>
+.I Giancarlo Razzolini <linux-fan@onda.com.br>
+.
+Based on original code by
+.I Jon Thackray <jrmt@uk.gdscorp.com>.
+.
+This manual is written by
+.I Amos Jeffries <squid3@treenet.co.nz>
+.
+.SH COPYRIGHT
+Squid basic_getpwnam_auth and this manual is Copyright to the authors
+listed above.
+.
+Distributed under the GNU General Public License (GNU GPL) version 2 and later.
+.
+.SH QUESTIONS
+Questions on the usage of this program can be sent to the
+.I Squid Users <squid-users@squid-cache.org>
+mailing list.
+.
+.SH REPORTING BUGS
+Report bugs or bug-fixes to
+.I Squid Bugs <squid-bugs@squid-cache.org>
+or ideas for new improvements to 
+.I Squid Developers <squid-dev@squid-cache.org>
+.
+.SH "SEE ALSO"
+.BR squid (8), basic_pam_auth (8), basic_ncsa_auth (8), basic_ldap_auth (8)
