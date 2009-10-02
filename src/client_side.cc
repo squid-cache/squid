@@ -1913,6 +1913,15 @@ parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * metho
     /* Set method_p */
     *method_p = HttpRequestMethod(&hp->buf[hp->m_start], &hp->buf[hp->m_end]);
 
+    /* deny CONNECT via accelerated ports */
+    if (*method_p == METHOD_CONNECT && conn && conn->port && conn->port->accel) {
+        debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << conn->port->protocol << " Accelerator port " << conn->port->s.GetPort() );
+        /* XXX need a way to say "this many character length string" */
+        debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->buf);
+        /* XXX need some way to set 405 status on the error reply */
+        return parseHttpRequestAbort(conn, "error:method-not-allowed");
+    }
+
     if (*method_p == METHOD_NONE) {
         /* AYJ: hp->buf is occasionally full of binary crap. Replace any non-printables with underscores.
                 Also crop the output at 100 chars, we should not need a whole binary streaming video to identify the issue
