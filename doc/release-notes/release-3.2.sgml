@@ -54,6 +54,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 <itemize>
 	<item>squid_db_auth - basic_db_auth - Retrieve authentication details from a simple SQL database table.
 	<item>getpwnam_auth - basic_getpwname_auth - Authenticate with local system user accounts.
+	<item>squid_ldap_auth - basic_ldap_auth - Authenticate with LDAP user accounts.
 </itemize>
 
 <sect2>Digest Authentication protocol helpers

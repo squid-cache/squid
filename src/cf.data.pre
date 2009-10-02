@@ -1404,6 +1404,10 @@ DOC_START
 	ensure correct results it is best to set server_persistent_connections
 	to off when using this directive in such configurations.
 
+	Note: The use of this directive to set a local IP on outgoing TCP links
+	is incompatible with using TPROXY to set client IP out outbound TCP links.
+	When needing to contact peers use the no-tproxy cache_peer option to
+	re-enable normal forwarding such as this.
 
         IPv6 Magic:
 
