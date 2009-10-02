@@ -1125,7 +1125,8 @@ ClientHttpRequest::noteIcapAnswer(HttpMsg *msg)
         // subscribe to receive reply body
         if (new_rep->body_pipe != NULL) {
             icapBodySource = new_rep->body_pipe;
-            assert(icapBodySource->setConsumerIfNotLate(this));
+            int consumer_ok = icapBodySource->setConsumerIfNotLate(this);
+            assert(consumer_ok);
         }
 
         clientStreamNode *node = (clientStreamNode *)client_stream.tail->prev->data;
