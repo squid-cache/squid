@@ -1,13 +1,13 @@
-.TH squid_ldap_auth 8 "14 January 2005" "Squid LDAP Auth"
+.TH basic_ldap_auth 8 "14 January 2005" "Squid LDAP Auth"
 .
 .SH NAME
-squid_ldap_auth - Squid LDAP authentication helper
+basic_ldap_auth - LDAP authentication helper for Squid
 .
 .SH SYNOPSIS
-.B squid_ldap_auth
+.B basic_ldap_auth
 -b "base DN" [-u attribute] [options] [ldap_server_name[:port]|URI]...
 .br
-.B squid_ldap_auth
+.B basic_ldap_auth
 -b "base DN" -f "LDAP search filter" [options] [ldap_server_name[:port]|URI]...
 .
 .SH DESCRIPTION
@@ -28,6 +28,8 @@ The program has two major modes of operation. In the default mode
 of operation the users DN is constructed using the base DN and
 user attribute. In the other mode of operation a search
 filter is used to locate valid user DN's below the base DN.
+.
+.SH OPTIONS
 .
 .TP
 .BI "-b " "basedn " (REQUIRED)
@@ -175,43 +177,43 @@ For directories using the RFC2307 layout with a single domain, all
 you need to specify is usually the base DN under where your users
 are located and the server name:
 .IP
-squid_ldap_auth -b "ou=people,dc=your,dc=domain" ldapserver
+basic_ldap_auth -b "ou=people,dc=your,dc=domain" ldapserver
 .P
 If you have sub-domains then you need to use a search filter approach
 to locate your user DNs as these can no longer be constructed direcly
 from the base DN and login name alone:
 .IP
-squid_ldap_auth -b "dc=your,dc=domain" -f "uid=%s" ldapserver
+basic_ldap_auth -b "dc=your,dc=domain" -f "uid=%s" ldapserver
 .P
 And similarily if you only want to allow access to users having a
 specific attribute
 .IP
-squid_ldap_auth -b "dc=your,dc=domain" -f "(&(uid=%s)(specialattribute=value))" ldapserver
+basic_ldap_auth -b "dc=your,dc=domain" -f "(&(uid=%s)(specialattribute=value))" ldapserver
 .P
 Or if the user attribute of the user DN is "cn" instead of "uid" and
 you do not want to have to search for the users then you could use something
 like the following example for Active Directory:
 .IP
-squid_ldap_auth -u cn -b "cn=Users,dc=your,dc=domain" ldapserver
+basic_ldap_auth -u cn -b "cn=Users,dc=your,dc=domain" ldapserver
 .P
 If you want to search for the user DN and your directory does not allow
 anonymous searches then you must also use the -D and -w flags to specify
 a user DN and password to log in as to perform the searches, as in the
 following complex Active Directory example
 .IP
-squid_ldap_auth -P -R -b "dc=your,dc=domain" -D "cn=squid,cn=users,dc=your,dc=domain" -w "secretsquidpassword" -f "(&(userPrincipalName=%s)(objectClass=Person))" activedirectoryserver
+basic_ldap_auth -P -R -b "dc=your,dc=domain" -D "cn=squid,cn=users,dc=your,dc=domain" -w "secretsquidpassword" -f "(&(userPrincipalName=%s)(objectClass=Person))" activedirectoryserver
 .
 .SH NOTES
 .
 When constructing search filters it is strongly recommended to test the filter
-using ldapsearch before you attempt to use squid_ldap_auth. This to verify
+using ldapsearch before you attempt to use basic_ldap_auth. This to verify
 that the filter matches what you expect.
 .
 .SH AUTHOR
 This manual page was written by 
 .I Henrik Nordstrom <hno@squid-cache.org>
 .P
-squid_ldap_auth is written by 
+basic_ldap_auth is written by 
 .I Glenn Newton <gnewton@wapiti.cisti.nrc.ca>
 and
 .I Henrik Nordstrom <hno@squid-cache.org>
