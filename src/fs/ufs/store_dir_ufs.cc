@@ -143,7 +143,7 @@ UFSSwapDir::changeIO(DiskIOModule *module)
     IO->io = anIO;
     /* Change the IO Options */
 
-    if (currentIOOptions->options.size() > 2)
+    if (currentIOOptions && currentIOOptions->options.size() > 2)
         delete currentIOOptions->options.pop_back();
 
     /* TODO: factor out these 4 lines */
