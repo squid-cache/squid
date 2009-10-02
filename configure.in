@@ -3034,17 +3034,17 @@ dnl On MinGW OpenLDAP is not available, so LDAP helpers can be linked
 dnl only with Windows LDAP libraries using -lwldap32
 case "$host_os" in
 mingw|mingw32)
-       LIB_LDAP="-lwldap32"
-       LIB_LBER=""
-       ;;
+	LDAPLIB="-lwldap32"
+	LBERLIB=""
+	;;
 *)
-       LIB_LDAP="-lldap"
-       dnl LDAP helpers need to know if -llber is needed or not
-       AC_CHECK_LIB(lber, main, [LIB_LBER="-llber"])
-       ;;
+	LDAPLIB="-lldap"
+	dnl LDAP helpers need to know if -llber is needed or not
+	AC_CHECK_LIB(lber, main, [LBERLIB="-llber"])
+	;;
 esac
-AC_SUBST(LIB_LDAP)
-AC_SUBST(LIB_LBER)
+AC_SUBST(LDAPLIB)
+AC_SUBST(LBERLIB)
 
 dnl Check for libdb
 DBLIB=
