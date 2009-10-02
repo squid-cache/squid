@@ -1113,7 +1113,7 @@ NOCOMMENT_START
 	<tag>cache_mem</tag>
 	<p>Default size increased to 256MB.
 
-	<tag>cache_peer htcp-no-clr htcp-no-purge-clr htcp-only-clr htcp-forward-clr connection-auth[=on|off|auto] connect-fail-limit=N</tag>
+	<tag>cache_peer htcp-no-clr htcp-no-purge-clr htcp-only-clr htcp-forward-clr connection-auth[=on|off|auto] connect-fail-limit=N no-tproxy</tag>
 	<p>New Options.
 	<verb>
 	use 'htcp-no-clr' to send HTCP to the neighbor but without
@@ -1139,6 +1139,10 @@ NOCOMMENT_START
 	use 'connect-fail-limit=nn' to specify how many times
 	connecting to a peer must fail before it is marked as
 	down. Default is 10.
+
+	use 'no-tproxy' to specify that requests passed to this peer
+	are not to have the client IP spoofed. For use to prevent
+	packet routing issues with a cluster of peers behind WCCPv2.
 	</verb>
 
 	<tag>cache_store_log</tag>
