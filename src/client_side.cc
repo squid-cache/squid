@@ -942,14 +942,14 @@ ClientSocketContext::packRange(StoreIOBuffer const &source, MemBuf * mb)
             return;
         }
 
-        int64_t next = getNextRangeOffset();
+        int64_t nextOffset = getNextRangeOffset();
 
-        assert (next >= http->out.offset);
+        assert (nextOffset >= http->out.offset);
 
-        int64_t skip = next - http->out.offset;
+        int64_t skip = nextOffset - http->out.offset;
 
         /* adjust for not to be transmitted bytes */
-        http->out.offset = next;
+        http->out.offset = nextOffset;
 
         if (available.size() <= skip)
             return;
@@ -1914,8 +1914,8 @@ parseHttpRequest(ConnStateData::Pointer & conn, HttpParser *hp, method_t * metho
     *method_p = HttpRequestMethod(&hp->buf[hp->m_start], &hp->buf[hp->m_end]);
 
     /* deny CONNECT via accelerated ports */
-    if (*method_p == METHOD_CONNECT && conn && conn->port && conn->port->accel) {
-        debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << conn->port->protocol << " Accelerator port " << conn->port->s.GetPort() );
+    if (*method_p == METHOD_CONNECT && conn != NULL && conn->port && conn->port->accel) {
+        debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << conn->port->protocol << " Accelerator port " << ntohs(conn->port->s.sin_port) );
         /* XXX need a way to say "this many character length string" */
         debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->buf);
         /* XXX need some way to set 405 status on the error reply */
