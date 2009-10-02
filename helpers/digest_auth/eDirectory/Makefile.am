@@ -23,8 +23,8 @@ digest_edir_auth_SOURCES = digest_pw_auth.c \
 LDADD = \
 	$(top_builddir)/compat/libcompat.la \
 	-L$(top_builddir)/lib -lmiscutil \
-	$(LIB_LDAP) \
-	$(LIB_LBER) \
+	@LDAPLIB@ \
+	@LBERLIB@ \
 	$(CRYPTLIB) \
 	$(XTRA_LIBS) \
 	$(SSLLIB)
