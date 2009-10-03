@@ -366,6 +366,7 @@ ldapconnect(void)
                 exit(1);
             } else if (ldap_start_tls_s(ld, NULL, NULL) != LDAP_SUCCESS) {
                 exit(1);
+            }
 #else
 	    fprintf(stderr, "TLS not supported with your LDAP library\n");
 	    ldap_unbind(ld);
