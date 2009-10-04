@@ -1961,6 +1961,7 @@ AC_CHECK_HEADERS( \
 	ipl.h \
 	libc.h \
 	limits.h \
+	linux/types.h \
 	machine/byte_swap.h \
 	malloc.h \
 	math.h \
@@ -2019,8 +2020,7 @@ AC_CHECK_HEADERS( \
 	inttypes.h \
 	grp.h \
 	db.h \
-	db_185.h \
-	sys/capability.h
+	db_185.h
 )
 
 AC_CHECK_HEADERS(
@@ -2284,6 +2284,29 @@ AC_CHECK_TYPE(socklen_t,AC_DEFINE(HAVE_SOCKLEN_T,1,[socklen_t is defined by the 
 #include <stdlib.h>
 #include <stddef.h>
 #endif])
+
+dnl Check for libcap header (assume its not broken unless 
+use_caps=yes
+AC_ARG_ENABLE(caps, AS_HELP_STRING([--disable-caps],[disable usage of Linux capabilities library to control privileges]),
+[ if test "x$enableval" = "xyes" ; then
+    AC_MSG_RESULT(forced yes)
+  else
+    AC_MSG_RESULT(no)
+    use_caps=no
+  fi
+],[AC_MSG_RESULT(yes)])
+if test "x$use_caps" = "xyes"; then
+  dnl Check for libcap1 breakage or libcap2 fixed (assume broken unless found working)
+  libcap_broken=1
+  AC_CHECK_HEADERS(sys/capability.h)
+  AC_CACHE_CHECK([for operational libcap2], $libcap_broken,
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <sys/capability.h>]], [[
+                    capget(NULL, NULL);
+                    capset(NULL, NULL);
+                   ]])],[libcap_broken=0],[])
+  )
+  AC_DEFINE_UNQUOTED([LIBCAP_BROKEN],$libcap_broken,[if libcap2 is available and not clashing with libc])
+fi
 
 AC_CHECK_TYPE(mtyp_t,AC_DEFINE(HAVE_MTYP_T,1,[mtyp_t is defined by the system headers]),,[#include <sys/types.h>
 #include <sys/ipc.h>
@@ -2939,7 +2962,7 @@ if test "$LINUX_NETFILTER" ; then
         AC_DEFINE(LINUX_NETFILTER, 0)
     fi
     AC_MSG_RESULT($LINUX_NETFILTER)
-fi 
+fi
 if test "$LINUX_NETFILTER" = "no" ; then
     echo "WARNING: Cannot find necessary Linux kernel (Netfilter) header files"
     echo "         Linux Transparent Proxy support WILL NOT be enabled"
@@ -2949,6 +2972,7 @@ fi
 dnl Linux Netfilter/TPROXY support requires some specific header files
 dnl Shamelessly copied from shamelessly copied from above
 if test "$LINUX_TPROXY" ; then
+  if test "$use_caps" = "yes"; then
     AC_MSG_CHECKING(if TPROXY header files are installed)
     # hold on to your hats...
     if test "$ac_cv_header_linux_netfilter_ipv4_ip_tproxy_h" = "yes" && test "$LINUX_NETFILTER" = "yes"; then
@@ -2959,11 +2983,17 @@ if test "$LINUX_TPROXY" ; then
 	AC_DEFINE(LINUX_TPROXY, 0, [Enable real Transparent Proxy support for Netfilter TPROXY.])
     fi
     AC_MSG_RESULT($LINUX_TPROXY)
+  else
+    AC_MSG_WARN([Missing needed capabilities (libcap or libcap2) for TPROXY v2])
+    AC_MSG_WARN([Linux Transparent Proxy support WILL NOT be enabled])
+    LINUX_TPROXY="no"
+  fi
 fi
 if test "$LINUX_TPROXY" = "no" && test "$LINUX_NETFILTER" = "yes"; then
     echo "WARNING: Cannot find TPROXY headers, you need to install the"
     echo "tproxy package from:"
     echo " - lynx http://www.balabit.com/downloads/tproxy/"
+    echo "And libcap-dev or libcap2-dev"
     sleep 10
 fi
 

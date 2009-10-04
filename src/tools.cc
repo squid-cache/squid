@@ -40,16 +40,16 @@
 #include "wordlist.h"
 #include "SquidTime.h"
 
-#ifdef _SQUID_LINUX_
-#if HAVE_SYS_CAPABILITY_H
+#if defined(_SQUID_LINUX_) && HAVE_SYS_CAPABILITY_H
+// HACK: LIBCAP_BROKEN Ugly glue to get around linux header madness colliding with glibc
+#if LIBCAP_BROKEN
 #undef _POSIX_SOURCE
-/* Ugly glue to get around linux header madness colliding with glibc */
 #define _LINUX_TYPES_H
 #define _LINUX_FS_H
 typedef uint32_t __u32;
+#endif
 #include <sys/capability.h>
-#endif
-#endif
+#endif /* HAVE_SYS_CAPABILITY_H */
 
 #if HAVE_SYS_PRCTL_H
 #include <sys/prctl.h>
