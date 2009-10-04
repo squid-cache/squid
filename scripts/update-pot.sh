@@ -10,12 +10,12 @@
 
 cd errors/
 # Make sure any existing temp stuff is gone from previous updates...
-rm -r -f ./pot
+rm -rf ./pot
 rm -f errpages.pot.new
 rm errpages.pot
 
 # make a temp directory for all our workings...
-mkdir ./pot
+mkdir pot
 
 # Generate per-page disctionaries ...
 for f in `ls -1 ./templates/`; do
@@ -41,9 +41,30 @@ for f in `ls -1 ./*.po` ; do
 done
 
 # cleanup.
-rm -r -f ./pot
+rm -rf pot
 rm -f errpages.pot.new
 cd ..
 ## Done errors/ Updates
 
-## TODO: begin doc/manuals updates
+
+## begin doc/manuals updates
+
+# Build the po4a.conf
+cat doc/po4a.cnf >po4a.conf
+for f in `ls -1 helpers/*/*/*.8 doc/*.8.in tools/*.1 tools/*.8.in` ; do
+	echo "" >>po4a.conf
+	manp=`basename ${f}`
+	echo "[type: man] ${f} \$lang:doc/manuals/\$lang/${manp}" >>po4a.conf
+done
+
+## po4a conversion of all doc/manuals man files...
+po4a --no-translations --verbose po4a.conf
+
+(
+	cat doc/manuals/manuals.pot | 
+	sed s/PACKAGE\ VERSION/Squid-3/ |
+	sed s/LANGUAGE\ \<LL\@li\.org\>/Squid\ Developers\ \<squid-dev\@squid-cache\.org\>/
+) >doc/manuals/manuals.pot.tmp
+mv doc/manuals/manuals.pot.tmp doc/manuals/manuals.pot
+
+## Done doc/manuals/ Update
