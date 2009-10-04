@@ -36,11 +36,55 @@ Squid 3.2 represents a new feature release above 3.1.
 The most important of these new features are:
 
 <itemize>
+	<item>Helper Name Changes
 	<item>Multi-Lingual manuals
 	<item>Solaris 10 pthreads Support (Experimental)
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
+
+<sect1>Helper Name Changes
+
+<p>To improve the understanding of what each helper does and where it should be used the helper binaries
+   which are bundled with Squid have undergone a naming change in this release.
+
+<p>Below is a list of the old helper names and what their names have changed to.
+
+<sect2>Basic Authentication protocol helpers
+<itemize>
+	<item>squid_db_auth - basic_db_auth - Retrieve authentication details from a simple SQL database table.
+	<item>getpwnam_auth - basic_getpwname_auth - Authenticate with local system user accounts.
+	<item>squid_ldap_auth - basic_ldap_auth - Authenticate with LDAP user accounts.
+	<item>ncsa_auth - basic_ncsa_auth - Authenticate with NCSA httpd-style password file.
+</itemize>
+
+<sect2>Digest Authentication protocol helpers
+<itemize>
+	<item>(none yet converted)
+</itemize>
+
+<sect2>External ACL helpers
+<itemize>
+	<item>(none yet converted)
+</itemize>
+
+<sect2>Negotiate Authentication protocol helpers
+<itemize>
+	<item>(none yet converted)
+</itemize>
+
+<sect2>NTLM Authentication protocol helpers
+<itemize>
+	<item>ntlm_auth - ntlm_smb_lm_auth - Perform SMB LanManager domain-less authentication over NTLM protocol.
+</itemize>
+
+<sect2>URL re-write helpers
+<p>This group of helpers have been bundled to demonstrate how to code URL re-writers:
+
+<itemize>
+	<item>url_fake_rewrite - Accept various url_rewrite details and log the input.
+</itemize>
+
 
 <sect1>Multi-Lingual manuals
 

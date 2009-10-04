@@ -20,6 +20,10 @@ INCLUDES = \
 	-I$(top_builddir)/include \
 	@SQUID_CPPUNIT_INC@
 
+## Kerberos headers require their include path.
+## Because we use libcompat for comm_err.h header protections ...
+INCLUDES += @KRB5INCS@
+
 ## make all compiled sources depend on generated files
 ## XXX: Do we really need this? Does auto-dependency tracking work?
 $(OBJS): $(top_srcdir)/include/version.h $(top_builddir)/include/autoconf.h

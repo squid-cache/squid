@@ -5,26 +5,42 @@
 #include "esi/ExpatParser.h" /* must follow esi/Libxml2Parser.h */
 
 static ESIParser::Register *prCustom = 0;
+#if HAVE_LIBXML2
 static ESIParser::Register *prLibxml = 0;
+#endif
+#if HAVE_LIBEXPAT
 static ESIParser::Register *prExpat = 0;
+#endif
 
 void Esi::Init()
 {
     assert(!prCustom); // we should be called once
+
     prCustom = new ESIParser::Register("custom", &ESICustomParser::NewParser);
+
+#if HAVE_LIBXML2
     prLibxml = new ESIParser::Register("libxml2", &ESILibxml2Parser::NewParser);
+#endif
+
+#if HAVE_LIBEXPAT
     prExpat = new ESIParser::Register("expat", &ESIExpatParser::NewParser);
+#endif
 }
 
 void Esi::Clean()
 {
     assert(prCustom); // we should be called once, and only after Init()
 
+#if HAVE_LIBEXPAT
     delete prExpat;
-    delete prLibxml;
-    delete prCustom;
-
     prExpat = NULL;
+#endif
+
+#if HAVE_LIBXML2
+    delete prLibxml;
     prLibxml = NULL;
+#endif
+
+    delete prCustom;
     prCustom = NULL;
 }

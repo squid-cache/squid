@@ -1,0 +1,16 @@
+#
+#
+# Component Missing Libraries Check - everything MUST work at this level
+MAKETEST="distcheck"
+#
+# Currently tested components with plug-in-play capability:
+#
+#	ESI - optional libexpat, libxml2
+#
+# NP: there must be no overlap in code for plugging the libraries in/out.
+#     this means we can test the absence of all in one run and save time.
+#
+OPTS="--enable-esi --without-expat --without-xml2"
+
+# Fix the distclean testing.
+export DISTCHECK_CONFIGURE_FLAGS="${OPTS}"

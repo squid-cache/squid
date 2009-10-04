@@ -1,21 +1,12 @@
-#
-#  Makefile for the Squid Object Cache server
-#
-#  $Id$
-#
-#  Uncomment and customize the following to suit your needs:
-#
-
 include $(top_srcdir)/src/Common.am
 
-libexec_PROGRAMS	= ncsa_auth
-ncsa_auth_SOURCES	= ncsa_auth.c crypt_md5.c crypt_md5.h
-man_MANS 		= ncsa_auth.8
-EXTRA_DIST		= ncsa_auth.8
+libexec_PROGRAMS	= basic_ncsa_auth
+basic_ncsa_auth_SOURCES	= basic_ncsa_auth.cc crypt_md5.cc crypt_md5.h
+man_MANS 		= basic_ncsa_auth.8
+EXTRA_DIST		= basic_ncsa_auth.8
 LDADD = \
-	$(top_builddir)/compat/libcompat.la \
-	-L$(top_builddir)/lib -lmiscutil \
-	$(CRYPTLIB) \
+	$(COMPAT_LIB) \
+	@CRYPTLIB@ \
 	$(XTRA_LIBS) \
 	$(SSLLIB)
 

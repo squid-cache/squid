@@ -44,9 +44,12 @@ ADAPTATION_LIBS = @ADAPTATION_LIBS@
 
 if USE_ESI
 SUBDIRS += esi
-ESI_LIBS = \
+ESI_LOCAL_LIBS = \
 	esi/libesi.la \
 	$(top_builddir)/lib/libTrie/src/libTrie.a
+ESI_LIBS = $(ESI_LOCAL_LIBS) \
+	@XMLLIB@ \
+	@EXPATLIB@
 else
 ESI_LIBS = 
 endif
@@ -535,11 +538,12 @@ squid_LDADD = \
 	@DISK_LINKOBJS@ \
 	@REPL_OBJS@ \
 	@DISK_LIBS@ \
+	@AIOLIB@ \
 	@CRYPTLIB@ \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	${ADAPTATION_LIBS} \
-	${ESI_LIBS} \
+	$(ESI_LIBS) \
 	$(COMPAT_LIB) \
 	@SSLLIB@ \
 	@XTRA_LIBS@ \
@@ -552,7 +556,7 @@ squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
 	@SNMPLIB@ \
 	${ADAPTATION_LIBS} \
-	${ESI_LIBS} \
+	$(ESI_LOCAL_LIBS) \
 	$(COMMON_LIBS)
 
 if USE_LOADABLE_MODULES
@@ -728,7 +732,6 @@ DEFAULT_UNLINKD		= $(libexecdir)/`echo unlinkd | sed '$(transform);s/$$/$(EXEEXT
 DEFAULT_DISKD		= $(libexecdir)/`echo diskd | sed '$(transform);s/$$/$(EXEEXT)/'`
 DEFAULT_ICON_DIR	= $(datadir)/icons
 DEFAULT_ERROR_DIR	= $(datadir)/errors
-DEFAULT_MIB_PATH	= $(datadir)/mib.txt
 DEFAULT_HOSTS		= @OPT_DEFAULT_HOSTS@
 
 # Make location configure settings available to the code
@@ -768,11 +771,8 @@ test_cache_digest: test_cache_digest.o CacheDigest.o debug.o globals.o store_key
 cache_cf.o: cf_parser.h
 
 # squid.conf.default is built by cf_gen when making cf_parser.h
-squid.conf.documented: cf_parser.h
+squid.conf.default squid.conf.documented: cf_parser.h
 	true
-
-squid.conf.default: squid.conf.documented
-	$(EGREP) -v "^[#\ ]" squid.conf.documented | $(EGREP) . >squid.conf.default
 
 cf_parser.h: cf.data cf_gen$(EXEEXT)
 	./cf_gen cf.data $(srcdir)/cf.data.depend
@@ -800,7 +800,6 @@ cf.data: cf.data.pre Makefile
 	s%@DEFAULT_NETDB_FILE@%$(DEFAULT_NETDB_FILE)%g;\
 	s%@DEFAULT_SWAP_DIR@%$(DEFAULT_SWAP_DIR)%g;\
 	s%@DEFAULT_ICON_DIR@%$(DEFAULT_ICON_DIR)%g;\
-	s%@DEFAULT_MIB_PATH@%$(DEFAULT_MIB_PATH)%g;\
 	s%@DEFAULT_ERROR_DIR@%$(DEFAULT_ERROR_DIR)%g;\
 	s%@DEFAULT_CONFIG_DIR@%$(DEFAULT_CONFIG_DIR)%g;\
 	s%@DEFAULT_PREFIX@%$(DEFAULT_PREFIX)%g;\
@@ -1202,7 +1201,7 @@ tests_testCacheManager_LDADD = \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
-	${ESI_LIBS} \
+	$(ESI_LIBS) \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
@@ -1228,12 +1227,14 @@ nodist_tests_testDiskIO_SOURCES= \
 tests_testDiskIO_LDADD = \
 	$(SWAP_TEST_LDADD) \
 	@DISK_LIBS@ \
+	@AIOLIB@ \
 	$(COMMON_LIBS) \
 	SquidConfig.o
 
 tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
 tests_testDiskIO_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@DISK_LIBS@ \
+	@AIOLIB@ \
 	$(SWAP_TEST_DS) \
 	@SQUID_CPPUNIT_LA@
 
@@ -1373,7 +1374,7 @@ tests_testEvent_LDADD = \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
-	${ESI_LIBS} \
+	$(ESI_LIBS) \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
@@ -1522,7 +1523,7 @@ tests_testEventLoop_LDADD = \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
-	${ESI_LIBS} \
+	$(ESI_LIBS) \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
@@ -1666,7 +1667,7 @@ tests_test_http_range_LDADD = \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
-	${ESI_LIBS} \
+	$(ESI_LIBS) \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
@@ -1815,7 +1816,7 @@ tests_testHttpRequest_LDADD = \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
-	${ESI_LIBS} \
+	$(ESI_LIBS) \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
@@ -1969,6 +1970,7 @@ SWAP_TEST_LDADD = \
 	$(COMMON_LIBS) \
 	@REPL_OBJS@ \
 	@DISK_LIBS@ \
+	@AIOLIB@ \
 	-L../lib -lmiscutil \
 	acl/libapi.la \
 	@SQUID_CPPUNIT_LIBS@
@@ -1976,6 +1978,7 @@ SWAP_TEST_DS =\
 	$(top_builddir)/lib/libmiscutil.a \
 	repl_modules.o \
 	@DISK_LIBS@ \
+	@AIOLIB@ \
 	$(COMMON_LIBS) \
 	@REPL_OBJS@ \
 	@SQUID_CPPUNIT_LA@
@@ -2164,7 +2167,7 @@ tests_testURL_LDADD = \
 	@REGEXLIB@ \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
-	${ESI_LIBS} \
+	$(ESI_LIBS) \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
 	@SQUID_CPPUNIT_LIBS@ \

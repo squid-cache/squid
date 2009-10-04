@@ -39,7 +39,7 @@
 
 #include "squid.h"
 
-#if USE_SQUID_ESI
+#if USE_SQUID_ESI && HAVE_LIBXML2
 
 #include "esi/Libxml2Parser.h"
 

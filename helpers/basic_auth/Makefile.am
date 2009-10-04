@@ -1,7 +1,17 @@
-#  Makefile for storage modules in the Squid Object Cache server
-#
-#  $Id$
-#
+## Alphabetical list of sub-directories to distribute with Squid:
+DIST_SUBDIRS = \
+	DB \
+	getpwnam \
+	LDAP \
+	MSNT \
+	mswin_sspi \
+	multi-domain-NTLM \
+	NCSA \
+	PAM \
+	POP3 \
+	squid_radius_auth \
+	SASL \
+	SMB \
+	YP
 
-DIST_SUBDIRS	= getpwnam LDAP MSNT multi-domain-NTLM NCSA PAM SMB YP SASL mswin_sspi POP3 DB squid_radius_auth
-SUBDIRS		= @BASIC_AUTH_HELPERS@
+SUBDIRS	= @BASIC_AUTH_HELPERS@

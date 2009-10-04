@@ -1730,6 +1730,8 @@ parse_peer(peer ** head)
             p->options.background_ping = 1;
         } else if (!strcasecmp(token, "no-digest")) {
             p->options.no_digest = 1;
+        } else if (!strcasecmp(token, "no-tproxy")) {
+            p->options.no_tproxy = 1;
         } else if (!strcasecmp(token, "multicast-responder")) {
             p->options.mcast_responder = 1;
         } else if (!strncasecmp(token, "weight=", 7)) {
