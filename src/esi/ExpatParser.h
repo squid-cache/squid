@@ -33,10 +33,15 @@
 #ifndef SQUID_ESIEXPATPARSER_H
 #define SQUID_ESIEXPATPARSER_H
 
-#if USE_SQUID_ESI
+#include "config.h"
+
+#if USE_SQUID_ESI && HAVE_LIBEXPAT
 
 #include "esi/Parser.h"
+
+#if HAVE_EXPAT_H
 #include <expat.h>
+#endif
 
 class ESIExpatParser : public ESIParser
 {

@@ -36,12 +36,11 @@ MAKETEST="distcheck"
 #   --enable-ecap \
 #   --enable-epoll \
 #   --enable-kqueue \
-#   --enable-esi \
 #   --enable-win32-service \
 #
 #
 OPTS=" \
-	--disable-loadable-modules \
+	--enable-loadable-modules \
 	--enable-gnuregex \
 	--enable-optimizations \
 	--enable-inline \
@@ -97,6 +96,7 @@ OPTS=" \
 	--enable-auto-locale \
 	--enable-translation \
 	--enable-zph-qos \
+	--enable-esi \
  \
 	--with-aio \
 	--with-build-environment=default \

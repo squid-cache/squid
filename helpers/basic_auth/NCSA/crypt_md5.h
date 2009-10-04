@@ -12,7 +12,12 @@
  *    to64(salt+4, rand(), 4);
  *    salt[0] = '\0';
  */
+#ifndef _CRYPT_MD5_H
+#define _CRYPT_MD5_H
+
 char *crypt_md5(const char *pw, const char *salt);
 
 /* MD5 hash without salt */
 char *md5sum(const char *s);
+
+#endif /* _CRYPT_MD5_H */

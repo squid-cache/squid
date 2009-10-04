@@ -1,5 +1,5 @@
 /*
- * getpwnam_auth.c
+ * basic_getpwnam_auth.c
  *
  * AUTHOR: Erik Hofman <erik.hofman@a1.nl>
  *         Robin Elfrink <robin@a1.nl>

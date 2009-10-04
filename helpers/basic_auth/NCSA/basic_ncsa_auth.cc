@@ -58,7 +58,7 @@ typedef struct _user_data {
 static void
 my_free(void *p)
 {
-    user_data *u = p;
+    user_data *u = static_cast<user_data*>(p);
     xfree(u->user);
     xfree(u->passwd);
     xfree(u);
@@ -94,7 +94,7 @@ read_passwd_file(const char *passwdfile)
         user = strtok(buf, ":\n\r");
         passwd = strtok(NULL, ":\n\r");
         if ((strlen(user) > 0) && passwd) {
-            u = xmalloc(sizeof(*u));
+            u = static_cast<user_data*>(xmalloc(sizeof(*u)));
             u->user = xstrdup(user);
             u->passwd = xstrdup(passwd);
             hash_join(hash, (hash_link *) u);

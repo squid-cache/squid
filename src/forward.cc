@@ -775,7 +775,6 @@ FwdState::connectStart()
 
     IpAddress outgoing;
     unsigned short tos;
-
     IpAddress client_addr;
     assert(fs);
     assert(server_fd == -1);
@@ -791,8 +790,11 @@ FwdState::connectStart()
         ctimeout = Config.Timeout.connect;
     }
 
-    if (request->flags.spoof_client_ip)
-        client_addr = request->client_addr;
+    if (request->flags.spoof_client_ip) {
+        if (!fs->_peer || !fs->_peer->options.no_tproxy)
+            client_addr = request->client_addr;
+        // else no tproxy today ...
+    }
 
     if (ftimeout < 0)
         ftimeout = 5;
@@ -869,7 +871,9 @@ FwdState::connectStart()
 
     int flags = COMM_NONBLOCKING;
     if (request->flags.spoof_client_ip) {
-        flags |= COMM_TRANSPARENT;
+        if (!fs->_peer || !fs->_peer->options.no_tproxy)
+            flags |= COMM_TRANSPARENT;
+        // else no tproxy today ...
     }
 
     fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, outgoing, flags, tos, url);
@@ -1342,8 +1346,11 @@ aclMapTOS(acl_tos * head, ACLChecklist * ch)
 IpAddress
 getOutgoingAddr(HttpRequest * request, struct peer *dst_peer)
 {
-    if (request && request->flags.spoof_client_ip)
-        return request->client_addr;
+    if (request && request->flags.spoof_client_ip) {
+        if (!dst_peer || !dst_peer->options.no_tproxy)
+            return request->client_addr;
+        // else no tproxy today ...
+    }
 
     if (!Config.accessList.outgoing_address) {
         return IpAddress(); // anything will do.
