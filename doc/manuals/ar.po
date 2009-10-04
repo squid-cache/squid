@@ -30,7 +30,11 @@ msgid "@PACKAGE_STRING@"
 msgstr "@PACKAGE_STRING@"
 
 #. type: SH
-#: doc/cachemgr.cgi.8.in:4 doc/squid.8.in:4 helpers/basic_auth/NCSA/ncsa_auth.8:14 helpers/basic_auth/PAM/pam_auth.8:3 helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:3 helpers/external_acl/session/squid_session.8:3 helpers/external_acl/unix_group/squid_unix_group.8:3
+#: doc/cachemgr.cgi.8.in:4 doc/squid.8.in:4
+#: helpers/basic_auth/NCSA/ncsa_auth.8:14 helpers/basic_auth/PAM/pam_auth.8:3
+#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:3
+#: helpers/external_acl/session/squid_session.8:3
+#: helpers/external_acl/unix_group/squid_unix_group.8:3
 #, no-wrap
 msgid "NAME"
 msgstr ""
@@ -41,7 +45,11 @@ msgid "cachemgr.cgi - squid HTTP proxy manager interface"
 msgstr ""
 
 #. type: SH
-#: doc/cachemgr.cgi.8.in:6 doc/squid.8.in:6 helpers/basic_auth/NCSA/ncsa_auth.8:17 helpers/basic_auth/PAM/pam_auth.8:6 helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:6 helpers/external_acl/session/squid_session.8:6 helpers/external_acl/unix_group/squid_unix_group.8:6
+#: doc/cachemgr.cgi.8.in:6 doc/squid.8.in:6
+#: helpers/basic_auth/NCSA/ncsa_auth.8:17 helpers/basic_auth/PAM/pam_auth.8:6
+#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:6
+#: helpers/external_acl/session/squid_session.8:6
+#: helpers/external_acl/unix_group/squid_unix_group.8:6
 #, no-wrap
 msgid "SYNOPSIS"
 msgstr ""
@@ -52,7 +60,11 @@ msgid "B<http://your.server/cgi-bin/cachemgr.cgi>"
 msgstr "B<http://your.server/cgi-bin/cachemgr.cgi>"
 
 #. type: SH
-#: doc/cachemgr.cgi.8.in:8 doc/squid.8.in:26 helpers/basic_auth/NCSA/ncsa_auth.8:23 helpers/basic_auth/PAM/pam_auth.8:9 helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:13 helpers/external_acl/session/squid_session.8:9 helpers/external_acl/unix_group/squid_unix_group.8:9
+#: doc/cachemgr.cgi.8.in:8 doc/squid.8.in:26
+#: helpers/basic_auth/NCSA/ncsa_auth.8:23 helpers/basic_auth/PAM/pam_auth.8:9
+#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:13
+#: helpers/external_acl/session/squid_session.8:9
+#: helpers/external_acl/unix_group/squid_unix_group.8:9
 #, no-wrap
 msgid "DESCRIPTION"
 msgstr "وصف"
@@ -116,8 +128,8 @@ msgstr ""
 msgid ""
 "cachemgr.cgi calls the requested server on the requested port using HTTP and "
 "returns a formatted version of the response. To avoid abuse it is "
-"recommended to configure your web server to restrict access to the "
-"cachemgr.cgi program."
+"recommended to configure your web server to restrict access to the cachemgr."
+"cgi program."
 msgstr ""
 
 #. type: Plain text
@@ -128,7 +140,11 @@ msgid ""
 msgstr ""
 
 #. type: SH
-#: doc/cachemgr.cgi.8.in:39 doc/squid.8.in:178 helpers/basic_auth/NCSA/ncsa_auth.8:35 helpers/basic_auth/PAM/pam_auth.8:89 helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:87 helpers/external_acl/session/squid_session.8:61 helpers/external_acl/unix_group/squid_unix_group.8:63
+#: doc/cachemgr.cgi.8.in:39 doc/squid.8.in:178
+#: helpers/basic_auth/NCSA/ncsa_auth.8:35 helpers/basic_auth/PAM/pam_auth.8:89
+#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:87
+#: helpers/external_acl/session/squid_session.8:61
+#: helpers/external_acl/unix_group/squid_unix_group.8:63
 #, no-wrap
 msgid "SEE ALSO"
 msgstr "قرآءه الكُل"
@@ -138,12 +154,12 @@ msgstr "قرآءه الكُل"
 msgid "B<squid>(8)"
 msgstr "B<squid>(8)"
 
-#. Could add the following sections:
-#. .SH ENVIRONMENT
-#. .SH DIAGNOSTICS
-#. .SH BUGS
-#. .SH AUTHOR
-#. .SH SEE ALSO
+#.  Could add the following sections:
+#.  .SH ENVIRONMENT
+#.  .SH DIAGNOSTICS
+#.  .SH BUGS
+#.  .SH AUTHOR
+#.  .SH SEE ALSO
 #. type: Plain text
 #: doc/cachemgr.cgi.8.in:49
 msgid "B<The Squid FAQ>, Chapter 9 The Cache Manager"
@@ -164,8 +180,8 @@ msgstr ""
 #: doc/squid.8.in:26
 msgid ""
 "B<squid> [ B<-dhisrvzCFNRSVYX> ] [ B<-l>I< facility> ] [ B<-f>I< config-"
-"file> ] [ -[ B<au> ] I<port> ] [ B<-k signal> ] [ B<-n>I< service-name> ] [ "
-"B<-O>I< cmd-line> ]"
+"file> ] [ -[ B<au> ] I<port> ] [ B<-k signal> ] [ B<-n>I< service-name> ] "
+"[ B<-O>I< cmd-line> ]"
 msgstr ""
 
 #. type: Plain text
@@ -207,8 +223,8 @@ msgstr ""
 #. type: Plain text
 #: doc/squid.8.in:56
 msgid ""
-"B<squid> is derived from the ARPA-funded Harvest Project "
-"http://harvest.cs.colorado.edu/"
+"B<squid> is derived from the ARPA-funded Harvest Project http://harvest.cs."
+"colorado.edu/"
 msgstr ""
 
 #. type: Plain text
@@ -217,8 +233,8 @@ msgid ""
 "This manual page only lists the command line arguments.  For details on how "
 "to configure B<squid> see the file B<@DEFAULT_CONFIG_FILE@.documented,> the "
 "Squid wiki FAQ and examples at http://wiki.squid-cache.org/ , or the "
-"configuration manual on the B<squid> home page http://www.squid-"
-"cache.org/Doc/config/"
+"configuration manual on the B<squid> home page http://www.squid-cache.org/"
+"Doc/config/"
 msgstr ""
 
 #. type: SH
@@ -292,10 +308,8 @@ msgstr ""
 #. type: IP
 #: doc/squid.8.in:86
 #, no-wrap
-msgid ""
-"-k reconfigure | rotate | shutdown | interrupt | kill | debug | check | parse"
-msgstr ""
-"-k reconfigure | rotate | shutdown | interrupt | kill | debug | check | parse"
+msgid "-k reconfigure | rotate | shutdown | interrupt | kill | debug | check | parse"
+msgstr "-k reconfigure | rotate | shutdown | interrupt | kill | debug | check | parse"
 
 #. type: Plain text
 #: doc/squid.8.in:89
@@ -336,8 +350,7 @@ msgstr "-s"
 
 #. type: Plain text
 #: doc/squid.8.in:98
-msgid ""
-"Enable logging to syslog. Also configurable in B<@DEFAULT_CONFIG_FILE@>"
+msgid "Enable logging to syslog. Also configurable in B<@DEFAULT_CONFIG_FILE@>"
 msgstr ""
 
 #. type: IP
@@ -624,8 +637,8 @@ msgstr ""
 #: helpers/basic_auth/NCSA/ncsa_auth.8:27
 msgid ""
 "The only parameter is the password file.  It must have permissions to be "
-"read by the user that Squid is running as (cache_effective_user in "
-"squid.conf)."
+"read by the user that Squid is running as (cache_effective_user in squid."
+"conf)."
 msgstr ""
 
 #. type: Plain text
@@ -639,7 +652,8 @@ msgid "Only specify the password file name."
 msgstr ""
 
 #. type: SH
-#: helpers/basic_auth/NCSA/ncsa_auth.8:31 helpers/external_acl/session/squid_session.8:34
+#: helpers/basic_auth/NCSA/ncsa_auth.8:31
+#: helpers/external_acl/session/squid_session.8:34
 #, no-wrap
 msgid "EXAMPLE"
 msgstr ""
@@ -660,15 +674,17 @@ msgid "B<htpasswd>(1), B<squid>(8)"
 msgstr "B<htpasswd>(1), B<squid>(8)"
 
 #. type: SH
-#: helpers/basic_auth/NCSA/ncsa_auth.8:37 helpers/basic_auth/PAM/pam_auth.8:70 helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:65 helpers/external_acl/session/squid_session.8:47 helpers/external_acl/unix_group/squid_unix_group.8:41
+#: helpers/basic_auth/NCSA/ncsa_auth.8:37 helpers/basic_auth/PAM/pam_auth.8:70
+#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:65
+#: helpers/external_acl/session/squid_session.8:47
+#: helpers/external_acl/unix_group/squid_unix_group.8:41
 #, no-wrap
 msgid "AUTHOR"
 msgstr "ترخيص"
 
 #. type: Plain text
 #: helpers/basic_auth/NCSA/ncsa_auth.8:38
-msgid ""
-"Manpage written by Rodrigo Rubira Branco E<lt>rrbranco@br.ibm.comE<gt>"
+msgid "Manpage written by Rodrigo Rubira Branco E<lt>rrbranco@br.ibm.comE<gt>"
 msgstr ""
 
 #. type: TH
@@ -747,7 +763,8 @@ msgid ""
 msgstr ""
 
 #. type: SH
-#: helpers/basic_auth/PAM/pam_auth.8:33 helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:44
+#: helpers/basic_auth/PAM/pam_auth.8:33
+#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:44
 #, no-wrap
 msgid "CONFIGURATION"
 msgstr ""
@@ -755,8 +772,8 @@ msgstr ""
 #. type: Plain text
 #: helpers/basic_auth/PAM/pam_auth.8:39
 msgid ""
-"The program needs a PAM service to be configured in B</etc/pam.conf> or "
-"B</etc/pam.d/E<lt>servicenameE<gt>>"
+"The program needs a PAM service to be configured in B</etc/pam.conf> or B</"
+"etc/pam.d/E<lt>servicenameE<gt>>"
 msgstr ""
 
 #. type: Plain text
@@ -775,7 +792,8 @@ msgid ""
 msgstr ""
 
 #. type: SH
-#: helpers/basic_auth/PAM/pam_auth.8:49 helpers/external_acl/unix_group/squid_unix_group.8:36
+#: helpers/basic_auth/PAM/pam_auth.8:49
+#: helpers/external_acl/unix_group/squid_unix_group.8:36
 #, no-wrap
 msgid "NOTES"
 msgstr ""
@@ -831,7 +849,10 @@ msgid ""
 msgstr ""
 
 #. type: SH
-#: helpers/basic_auth/PAM/pam_auth.8:78 helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:75 helpers/external_acl/session/squid_session.8:51 helpers/external_acl/unix_group/squid_unix_group.8:53
+#: helpers/basic_auth/PAM/pam_auth.8:78
+#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:75
+#: helpers/external_acl/session/squid_session.8:51
+#: helpers/external_acl/unix_group/squid_unix_group.8:53
 #, no-wrap
 msgid "QUESTIONS"
 msgstr ""
@@ -844,17 +865,22 @@ msgid ""
 msgstr ""
 
 #. type: SH
-#: helpers/basic_auth/PAM/pam_auth.8:83 helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:81 helpers/external_acl/session/squid_session.8:55 helpers/external_acl/unix_group/squid_unix_group.8:57
+#: helpers/basic_auth/PAM/pam_auth.8:83
+#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:81
+#: helpers/external_acl/session/squid_session.8:55
+#: helpers/external_acl/unix_group/squid_unix_group.8:57
 #, no-wrap
 msgid "REPORTING BUGS"
 msgstr "تقرير عن ثغرة"
 
 #. type: Plain text
-#: helpers/basic_auth/PAM/pam_auth.8:88 helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:86 helpers/external_acl/session/squid_session.8:60
+#: helpers/basic_auth/PAM/pam_auth.8:88
+#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:86
+#: helpers/external_acl/session/squid_session.8:60
 msgid ""
-"Report bugs or bug-fixes to I<Squid Bugs E<lt>squid-bugs@squid-"
-"cache.orgE<gt>> or ideas for new improvements to I<Squid Developers "
-"E<lt>squid-dev@squid-cache.orgE<gt>>"
+"Report bugs or bug-fixes to I<Squid Bugs E<lt>squid-bugs@squid-cache."
+"orgE<gt>> or ideas for new improvements to I<Squid Developers E<lt>squid-"
+"dev@squid-cache.orgE<gt>>"
 msgstr ""
 
 #. type: Plain text
@@ -892,8 +918,7 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:12
-msgid ""
-"B<squid_radius_auth> -h \"server\" [-p port] [-i identifier] -w secret"
+msgid "B<squid_radius_auth> -h \"server\" [-p port] [-i identifier] -w secret"
 msgstr ""
 
 #. type: Plain text
@@ -1033,10 +1058,11 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:68 helpers/external_acl/unix_group/squid_unix_group.8:44
+#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:68
+#: helpers/external_acl/unix_group/squid_unix_group.8:44
 msgid ""
-"This manual page was written by I<Henrik Nordstrom E<lt>hno@squid-"
-"cache.orgE<gt>>"
+"This manual page was written by I<Henrik Nordstrom E<lt>hno@squid-cache."
+"orgE<gt>>"
 msgstr ""
 
 #. type: Plain text
@@ -1153,11 +1179,11 @@ msgstr ""
 #. type: Plain text
 #: helpers/external_acl/session/squid_session.8:39
 msgid ""
-"external_acl_type session ttl=300 negative_ttl=0 children=1 concurrency=200 "
-"%LOGIN /usr/local/squid/libexec/squid_session"
+"external_acl_type session ttl=300 negative_ttl=0 children=1 concurrency=200 %"
+"LOGIN /usr/local/squid/libexec/squid_session"
 msgstr ""
-"external_acl_type session ttl=300 negative_ttl=0 children=1 concurrency=200 "
-"%LOGIN /usr/local/squid/libexec/squid_session"
+"external_acl_type session ttl=300 negative_ttl=0 children=1 concurrency=200 %"
+"LOGIN /usr/local/squid/libexec/squid_session"
 
 #. type: Plain text
 #: helpers/external_acl/session/squid_session.8:41
@@ -1285,8 +1311,8 @@ msgstr ""
 #. type: Plain text
 #: helpers/external_acl/unix_group/squid_unix_group.8:31
 msgid ""
-"external_acl_type unix_group %LOGIN "
-"/usr/local/squid/libexec/squid_unix_group -p"
+"external_acl_type unix_group %LOGIN /usr/local/squid/libexec/"
+"squid_unix_group -p"
 msgstr ""
 
 #. type: Plain text
@@ -1309,8 +1335,8 @@ msgstr ""
 #. type: Plain text
 #: helpers/external_acl/unix_group/squid_unix_group.8:47
 msgid ""
-"squid_unix_group is written by I<Rodrigo Campos "
-"E<lt>rodrigo@geekbunker.orgE<gt>>"
+"squid_unix_group is written by I<Rodrigo Campos E<lt>rodrigo@geekbunker."
+"orgE<gt>>"
 msgstr ""
 
 #. type: SH
@@ -1337,9 +1363,8 @@ msgstr ""
 #. type: Plain text
 #: helpers/external_acl/unix_group/squid_unix_group.8:62
 msgid ""
-"Report bugs or bug-fixes to I<Rodrigo Campos "
-"E<lt>rodrigo@geekbunker.orgE<gt>> or I<Squid Developers E<lt>squid-dev@squid-"
-"cache.orgE<gt>>"
+"Report bugs or bug-fixes to I<Rodrigo Campos E<lt>rodrigo@geekbunker."
+"orgE<gt>> or I<Squid Developers E<lt>squid-dev@squid-cache.orgE<gt>>"
 msgstr ""
 
 #. type: Plain text
