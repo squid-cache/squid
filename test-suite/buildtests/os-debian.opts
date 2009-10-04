@@ -25,7 +25,6 @@ OPTS=" \
  \
 	--disable-maintainer-mode \
 	--disable-dependency-tracking \
-	--disable-loadable-modules \
 	--enable-inline \
 	--enable-async-io=8 \
 	--enable-storeio="ufs,aufs,coss,diskd,null" \
