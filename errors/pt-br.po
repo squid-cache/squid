@@ -8,15 +8,15 @@ msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2009-09-23 19:55+1300\n"
-"PO-Revision-Date: 2009-02-20 05:15+1300\n"
+"PO-Revision-Date: 2009-09-25 09:18+1300\n"
 "Last-Translator: Aecio F. Neto <aecioneto@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <pt_BR@li.org>\n"
+"Language: pt_BR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: pt_BR\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"X-Generator: Pootle 1.2.0\n"
+"X-Generator: Pootle 1.2.1\n"
 "X-Launchpad-Export-Date: 2008-07-27 05:12+0000\n"
 
 #: templates/ERR_DIR_LISTING:6
@@ -130,7 +130,7 @@ msgstr "Conteúdo do diretório:"
 
 #: templates/ERR_DIR_LISTING:4
 msgid "Directory Listing"
-msgstr "Listagem do diretóri"
+msgstr "Listagem do diretório"
 
 #: templates/ERR_DIR_LISTING:1
 msgid "Directory: %U"
@@ -138,7 +138,7 @@ msgstr "Diretório: %U"
 
 #: templates/ERR_DIR_LISTING:2
 msgid "Directory: <a href=\"%U\">%U</a>/"
-msgstr ""
+msgstr "Directório: <a href=\"%U\">%U</a>/"
 
 #: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2

@@ -3,15 +3,15 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2009-09-23 19:55+1300\n"
-"PO-Revision-Date: 2009-02-19 17:33+1300\n"
+"PO-Revision-Date: 2009-09-27 15:50+1300\n"
 "Last-Translator: Evgeni Gechev <etg@setcom.bg>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
+"Language: bg\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: bg\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Pootle 1.2.0\n"
+"X-Generator: Pootle 1.2.1\n"
 
 #: templates/ERR_DIR_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
@@ -135,9 +135,8 @@ msgid "Directory: %U"
 msgstr "директория: %U"
 
 #: templates/ERR_DIR_LISTING:2
-#, fuzzy
 msgid "Directory: <a href=\"%U\">%U</a>/"
-msgstr "директория: <a href=\"/\">%U</a>/"
+msgstr "директория: <a href=\"%U\">%U</a>/"
 
 #: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
