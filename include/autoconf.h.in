@@ -312,6 +312,9 @@
    */
 #undef HAVE_LINUX_NETFILTER_IPV4_IP_TPROXY_H
 
+/* Define to 1 if you have the <linux/types.h> header file. */
+#undef HAVE_LINUX_TYPES_H
+
 /* long is defined in system headers */
 #undef HAVE_LONG
 
@@ -804,6 +807,9 @@
    (presumably the RunCache script) upon receipt of SIGTERM or SIGINT. Use
    with caution. */
 #undef KILL_PARENT_OPT
+
+/* if libcap2 is available and not clashing with libc */
+#undef LIBCAP_BROKEN
 
 /* If libresolv.a has been hacked to export _dns_ttl_ */
 #undef LIBRESOLV_DNS_TTL_HACK
