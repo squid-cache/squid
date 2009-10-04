@@ -3,14 +3,15 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2009-09-23 19:55+1300\n"
-"PO-Revision-Date: 2009-01-18 17:25+1300\n"
-"Last-Translator: Rauf Kuliyev <rauf@kuliyev.com>\n"
+"PO-Revision-Date: 2009-10-03 06:58+0000\n"
+"Last-Translator: Farid <exodius_@hotmail.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Launchpad-Export-Date: 2009-10-04 07:44+0000\n"
+"X-Generator: Launchpad (build Unknown)\n"
 "Language: az\n"
-"X-Generator: Pootle 1.2.0\n"
 
 #: templates/ERR_DIR_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
@@ -118,7 +119,7 @@ msgstr "POST və PUT sorğuları üçün Content-Length göstərilməmişdir"
 
 #: templates/ERR_DIR_LISTING:3
 msgid "Directory Content:"
-msgstr ""
+msgstr "Direktoriyanın m�^�zmunu"
 
 #: templates/ERR_DIR_LISTING:4
 msgid "Directory Listing"
@@ -247,7 +248,7 @@ msgstr "%T texnologiyasından çox şey gözləməyə dəyməz :)"
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
-msgstr ""
+msgstr "İCAP protokol s�^�hvi"
 
 #: templates/ERR_TOO_BIG:7
 #, fuzzy
@@ -311,7 +312,7 @@ msgstr "Əməliyyat müvəfəqiyyətlə başa çatdı"
 
 #: templates/ERR_DIR_LISTING:5
 msgid "Parent Directory"
-msgstr ""
+msgstr "Ana direktoriya"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:7
 msgid ""
@@ -359,9 +360,8 @@ msgstr "URL-nin bəzi aspektləri səhvdir."
 
 #: templates/ERR_ICAP_FAILURE:8 templates/ERR_INVALID_REQ:5
 #: templates/ERR_INVALID_URL:7
-#, fuzzy
 msgid "Some possible problems are:"
-msgstr "Mümkün problemlər:"
+msgstr "Mümkün probleml�^�rd�^�n b�^�zil�^�ri:"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:6
 #, fuzzy
@@ -418,9 +418,8 @@ msgid "Squid sent the following FTP command:"
 msgstr "Squid Keş FTP-nin növbəti əmrini göndərmişdir:"
 
 #: templates/ERR_DNS_FAIL:6
-#, fuzzy
 msgid "The DNS server returned:"
-msgstr "Domen Adları serverindən gələn cavab:"
+msgstr "DNS serverin cavabı:"
 
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
@@ -433,13 +432,12 @@ msgstr ""
 "href=\"%U\">%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
-#, fuzzy
 msgid ""
 "The HTTP Response message received from the contacted server could not be "
 "understood or was otherwise malformed. Please contact the site operator."
 msgstr ""
-"Sorğu göndərilən serverdən gələn cavab anlaşılmazdı və ya dəyişdirilib. "
-"Səhifə operatoru ilə əlaqə yaradın."
+"Serverd�^�n gönd�^�rilmi�^� HTTP cavab mesajı s�^�hvdir v�^� ya s�^�hv formala�^�ıb. Xahi�^� "
+"edirik sayt operatoru il�^� �^�laq�^� saxlayın"
 
 #: templates/ERR_ICAP_FAILURE:9
 msgid "The ICAP server is not reachable."

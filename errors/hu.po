@@ -3,15 +3,15 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2009-09-23 19:55+1300\n"
-"PO-Revision-Date: 2009-06-07 17:44+1300\n"
-"Last-Translator: Bertold Kolics <bertold@sztaki.hu>\n"
+"PO-Revision-Date: 2009-09-30 09:51+0000\n"
+"Last-Translator: Muszela Balázs <bazsi86@gmail.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Launchpad-Export-Date: 2009-10-04 07:48+0000\n"
+"X-Generator: Launchpad (build Unknown)\n"
 "Language: hu\n"
-"Plural-Forms: nplurals=2; plural=(n !=1);\n"
-"X-Generator: Pootle 1.2.1\n"
 
 #: templates/ERR_DIR_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
@@ -118,16 +118,19 @@ msgid "Directory Content:"
 msgstr ""
 
 #: templates/ERR_DIR_LISTING:4
+#, fuzzy
 msgid "Directory Listing"
-msgstr ""
+msgstr "FTP Könyvtár Listázás"
 
 #: templates/ERR_DIR_LISTING:1
+#, fuzzy
 msgid "Directory: %U"
-msgstr ""
+msgstr "FTP Könyvtár: %U"
 
 #: templates/ERR_DIR_LISTING:2
+#, fuzzy
 msgid "Directory: <a href=\"%U\">%U</a>/"
-msgstr ""
+msgstr "FTP Könyvtár: <a href=\"/\">%U</a>/"
 
 #: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
@@ -312,7 +315,7 @@ msgstr "Művelet sikeresen végrehajtva"
 
 #: templates/ERR_DIR_LISTING:5
 msgid "Parent Directory"
-msgstr ""
+msgstr "Szülőkönyvtár"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:7
 msgid ""
