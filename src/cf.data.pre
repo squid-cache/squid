@@ -27,7 +27,7 @@
 #
 
 COMMENT_START
-	WELCOME TO SQUID @VERSION@
+	WELCOME TO @SQUID@
 	----------------------------
 
 	This is the default Squid configuration file. You may wish

@@ -800,11 +800,10 @@ cf.data: cf.data.pre Makefile
 	s%@DEFAULT_NETDB_FILE@%$(DEFAULT_NETDB_FILE)%g;\
 	s%@DEFAULT_SWAP_DIR@%$(DEFAULT_SWAP_DIR)%g;\
 	s%@DEFAULT_ICON_DIR@%$(DEFAULT_ICON_DIR)%g;\
-	s%@DEFAULT_ERROR_DIR@%$(DEFAULT_ERROR_DIR)%g;\
 	s%@DEFAULT_CONFIG_DIR@%$(DEFAULT_CONFIG_DIR)%g;\
 	s%@DEFAULT_PREFIX@%$(DEFAULT_PREFIX)%g;\
 	s%@DEFAULT_HOSTS@%$(DEFAULT_HOSTS)%g;\
-	s%@[V]ERSION@%$(VERSION)%g;"\
+	s%@SQUID@%SQUID\ $(VERSION)%g;"\
 	< $(srcdir)/cf.data.pre >$@
 
 repl_modules.cc: repl_modules.sh Makefile
