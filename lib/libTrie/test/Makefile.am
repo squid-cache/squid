@@ -11,4 +11,4 @@ trie_SOURCES = trie.cc
 trie_LDADD = $(top_builddir)/src/libTrie.a
 
 trie_c_SOURCES = trie-c.c
-trie_c_LDADD = $(top_builddir)/src/libTrie.a -lstdc++
+trie_c_LDADD = $(top_builddir)/src/libTrie.a -lstdc++ -lm
