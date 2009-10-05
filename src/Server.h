@@ -167,7 +167,7 @@ protected:
     void adaptOrFinalizeReply();
     void addVirginReplyBody(const char *buf, ssize_t len);
     void storeReplyBody(const char *buf, ssize_t len);
-    size_t replyBodySpace(size_t space = 4096 * 10);
+    size_t replyBodySpace(const MemBuf &readBuf, const size_t minSpace) const;
 
     // These should be private
     int64_t currentOffset;	/**< Our current offset in the StoreEntry */
