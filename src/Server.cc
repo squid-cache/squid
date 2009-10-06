@@ -833,7 +833,7 @@ ServerStateData::storeReplyBody(const char *data, ssize_t len)
 }
 
 size_t ServerStateData::replyBodySpace(const MemBuf &readBuf,
-    const size_t minSpace) const
+                                       const size_t minSpace) const
 {
     size_t space = readBuf.spaceSize(); // available space w/o heroic measures
     if (space < minSpace) {
