@@ -30,7 +30,7 @@ public:
         return true;
     };
 
-    void clear() { memset(eui, NULL, SZ_EUI48_BUF); };
+    void clear() { memset(eui, 0, SZ_EUI48_BUF); };
 
     /**
      * Decode an ascii representation of an EUI-48 ethernet address.
