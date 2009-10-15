@@ -130,7 +130,7 @@ EXTRA_libacls_la_SOURCES += $(SSL_ACLS)
 
 ARP_ACLS = Arp.cc Arp.h
 
-if ENABLE_ARP_ACL
+if USE_SQUID_EUI
 libacls_la_SOURCES += $(ARP_ACLS)
 endif
 

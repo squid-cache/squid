@@ -39,10 +39,7 @@
 #include "acl/Checklist.h"
 #include "splay.h"
 
-/// \ingroup ACLAPI
-struct acl_arp_data {
-    char eth[6];
-};
+class Eui48;
 
 /// \ingroup ACLAPI
 class ACLARP : public ACL
@@ -66,7 +63,7 @@ public:
 protected:
     static Prototype RegistryProtoype;
     static ACLARP RegistryEntry_;
-    SplayNode<acl_arp_data *> *data;
+    SplayNode<Eui48 *> *data;
     char const *class_;
 };
 
