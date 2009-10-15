@@ -177,7 +177,7 @@ AC_ARG_WITH(logdir,
 )
 AC_SUBST(DEFAULT_LOG_DIR)
 
-DEFAULT_PIDFILE="$localstatedir/squid.pid"
+DEFAULT_PIDFILE="$DEFAULT_LOG_DIR/squid.pid"
 AC_ARG_WITH(pidfile,
   AS_HELP_STRING([--with-pidfile=PATH],[Default location for squid PID file. default: $DEFAULT_PIDFILE]),
  [ case $withval in
@@ -1075,11 +1075,11 @@ AC_ARG_ENABLE(cachemgr-hostname,
    esac
 ])
 
-AM_CONDITIONAL(ENABLE_ARP_ACL, false)
-AC_ARG_ENABLE(arp-acl,
-  AS_HELP_STRING([--enable-arp-acl],[Enable use of ARP ACL lists (ether address)]),
+AM_CONDITIONAL(USE_SQUID_EUI, false)
+AC_ARG_ENABLE(eui,
+  AS_HELP_STRING([--enable-eui],[Enable use of ARP / MAC/ EUI (ether address)]),
 [  if test "$enableval" = "yes" ; then
-     AC_MSG_NOTICE([ARP ACL lists enabled (ether address)])
+     AC_MSG_NOTICE([EUI controls enabled (ether address)])
      case "$host" in
 	*-linux-*)
 	    ;;
@@ -1092,18 +1092,29 @@ AC_ARG_ENABLE(arp-acl,
 	*-netbsd*)
 	    ;;
 	*-cygwin*)
-        LIBS="$LIBS -liphlpapi"
+		EUILIB="-liphlpapi"
 	    ;;
 	*-mingw*)
-        LIBS="$LIBS -liphlpapi"
+		EUILIB="-liphlpapi"
 	    ;;
 	*)
-	    AC_MSG_WARN([ARP ACL support probably won't work on $host.])
+	    AC_MSG_WARN([EUI support probably won't work on $host.])
 	    sleep 10
 	    ;;
      esac
-     AC_DEFINE(USE_ARP_ACL,1,[Define this to include code which lets you specify access control elements based on ethernet hardware addresses.  This code uses functions found in 4.4 BSD derviations (e.g. FreeBSD, ?).])
-     AM_CONDITIONAL(ENABLE_ARP_ACL, true)
+     AC_CHECK_HEADERS( \
+		Iphlpapi.h \
+		net/if.h \
+		net/if_arp.h \
+		net/if_dl.h \
+		net/route.h \
+		netinet/if_ether.h \
+		sys/sockio.h \
+		sys/sysctl.h \
+		sys/ioctl.h \
+	)
+     AC_DEFINE(USE_SQUID_EUI,1,[Define this to include code which lets you use ethernet hardware addresses.  This code uses functions found in 4.4 BSD derviations (e.g. FreeBSD, ?).])
+     AM_CONDITIONAL(USE_SQUID_EUI, true)
    fi
 ])
 
@@ -4100,6 +4111,7 @@ AC_CONFIG_FILES([\
 	src/adaptation/icap/Makefile \
 	src/adaptation/ecap/Makefile \
 	src/esi/Makefile \
+	src/eui/Makefile \
 	src/icmp/Makefile \
 	src/ident/Makefile \
 	src/ip/Makefile \
