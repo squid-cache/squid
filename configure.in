@@ -2752,7 +2752,7 @@ AC_ARG_ENABLE(caps, AS_HELP_STRING([--disable-caps],[disable usage of Linux capa
   fi
 ],[AC_MSG_RESULT(yes)])
 if test "x$use_caps" = "xyes"; then
-  dnl Check for libcap1 breakage or libcap2 fixed (assume broken unless found working)
+  dnl Check for libcap1 header breakage or libcap2 fixed (assume broken unless found working)
   libcap_broken=1
   AC_CHECK_HEADERS(sys/capability.h)
   AC_CACHE_CHECK([for operational libcap2], $libcap_broken,
@@ -2762,6 +2762,7 @@ if test "x$use_caps" = "xyes"; then
                    ]])],[libcap_broken=0],[])
   )
   AC_DEFINE_UNQUOTED([LIBCAP_BROKEN],$libcap_broken,[if libcap2 is available and not clashing with libc])
+  AC_CHECK_LIB(cap, cap_get_proc)
 fi
 
 AC_CHECK_TYPE(mtyp_t,AC_DEFINE(HAVE_MTYP_T,1,[mtyp_t is defined by the system headers]),,[#include <sys/types.h>
