@@ -350,6 +350,10 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
+	<tag>--enable-eui</tag>
+	<p>Enable Support for handling EUI operations.
+	   This includes ARP lookups for MAC (EUI-48) addresses and the ACL arp type tests.
+
 	<tag>--enable-url-rewrite-helpers</tag>
 	<p>Build helpers for some basic URL-rewrite actions. For use by url_rewrite_program.
 	   If omitted or set to =all then all bundled helpers that are able to build will be built.
@@ -370,8 +374,8 @@ This section gives an account of those changes in three categories:
 <sect1>Removed options<label id="removedoptions">
 <p>
 <descrip>
-	<tag>???alphabetical list within group ordered: enable, disable, with, without) ???</tag>
-	<p> ???explain??
+	<tag>--enable-arp-acl</tag>
+	<p>Replaced by --enable-eui
 
 </descrip>
 

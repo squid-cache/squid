@@ -34,7 +34,7 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.h \
 	LoadableModules.cc
 
-SUBDIRS	= base acl fs repl auth ip icmp ident
+SUBDIRS	= base eui acl fs repl auth ip icmp ident
 
 if USE_ADAPTATION
 SUBDIRS += adaptation
@@ -161,6 +161,7 @@ COMMON_LIBS = \
 	auth/libacls.la \
 	ident/libident.la \
 	acl/libacls.la \
+	eui/libeui.la \
 	acl/libstate.la \
 	auth/libauth.la \
 	acl/libapi.la \
