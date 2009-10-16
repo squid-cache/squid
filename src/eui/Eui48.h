@@ -14,7 +14,8 @@ class IpAddress;
 #include <cstring>
 #endif
 
-class Eui48 {
+class Eui48
+{
 
 public:
     Eui48() { clear(); };
