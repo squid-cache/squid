@@ -2049,9 +2049,13 @@ accessLogInit(void)
 
         LogfileStatus = LOG_ENABLE;
 
-#if USE_ADAPTATION || ICAP_CLIENT
+#if USE_ADAPTATION
         alLogformatHasAdaptToken = false;
+#endif
+#if ICAP_CLIENT
         alLogformatHasIcapToken = false;
+#endif
+#if USE_ADAPTATION || ICAP_CLIENT
         for (logformat_token * curr_token = (log->logFormat?log->logFormat->format:NULL); curr_token; curr_token = curr_token->next) {
 #if USE_ADAPTATION
             if (curr_token->type == LTF_ADAPTATION_SUM_XACT_TIMES ||
