@@ -2753,27 +2753,41 @@ AC_CHECK_TYPE(socklen_t,AC_DEFINE(HAVE_SOCKLEN_T,1,[socklen_t is defined by the 
 #endif])
 
 dnl Check for libcap header (assume its not broken unless 
-use_caps=auto
-AC_ARG_WITH(caps, AS_HELP_STRING([--without-libcap],[disable usage of Linux capabilities library to control privileges]),
-[ if test "x$enableval" = "xyes" ; then
+use_libcap=auto
+AC_ARG_WITH(libcap, AS_HELP_STRING([--without-libcap],[disable usage of Linux capabilities library to control privileges]),
+[ if test "x$withval" = "xyes" ; then
     AC_MSG_RESULT(libcap forced enabled)
-    use_caps=yes
+    use_libcap=yes
   else
     AC_MSG_RESULT(libcap disabled)
-    use_caps=no
+    use_libcap=no
   fi
 ])
-if test "x$use_caps" != "xno"; then
+AC_ARG_WITH(caps,,
+[
+AC_MSG_WARN([--without-caps is obsolete, please use --without-libcap instead])
+sleep 10
+ if test "x$withval" = "xyes" ; then
+    AC_MSG_RESULT(libcap forced enabled)
+    use_libcap=yes
+  else
+    AC_MSG_RESULT(libcap disabled)
+    use_libcap=no
+  fi
+])
+
+if test "x$use_libcap" != "xno"; then
   # cap_clear_flag is the most recent libcap function we require
   AC_CHECK_LIB(cap, cap_clear_flag)
   if test "x$ac_cv_lib_cap_cap_clear_flag" != xyes; then
-    if test "x$use_caps" = "xyes"; then
+    if test "x$use_libcap" = "xyes"; then
       AC_MSG_ERROR([libcap forced enabled but not available or not usable, requires libcap-2.09 or later])
     fi
-    use_caps=no
+    use_libcap=no
   fi
 fi
-if test "x$use_caps" != "xno"; then
+
+if test "x$use_libcap" != "xno"; then
   AC_DEFINE(USE_LIBCAP, 1, [use libcap to set capabilities required for TPROXY])
   dnl Check for libcap headader breakage.
   AC_CHECK_HEADERS(sys/capability.h)
@@ -3530,7 +3544,7 @@ if test "$LINUX_NETFILTER" = "no" ; then
     sleep 10
 fi
 dnl Netfilter TPROXY depends on libcap but the NAT parts can still work.
-if test "$LINUX_NETFILTER" = "yes" && test "$use_caps" != "yes" ; then
+if test "$LINUX_NETFILTER" = "yes" && test "$use_libcap" != "yes" ; then
     AC_MSG_WARN([Missing needed capabilities (libcap or libcap2) for TPROXY])
     AC_MSG_WARN([Linux Transparent Proxy support WILL NOT be enabled])
     AC_MSG_WARN([Reduced support to Interception Proxy])
@@ -3540,7 +3554,7 @@ fi
 dnl Linux Netfilter/TPROXYv2 support requires some specific header files
 dnl Shamelessly copied from above
 if test "$LINUX_TPROXY2"; then
-  if test "$use_caps" = "yes"; then
+  if test "$use_libcap" = "yes"; then
     AC_MSG_CHECKING(if TPROXYv2 header files are installed)
     # hold on to your hats...
     if test "$ac_cv_header_linux_netfilter_ipv4_ip_tproxy_h" = "yes" && test "$LINUX_NETFILTER" = "yes"; then
