@@ -63,6 +63,11 @@ fi
 AC_LIBTOOL_DLOPEN
 if test $use_loadable_modules = yes;
 then
+    dnl Linux LTDL v3-v7 macros assume the autoconf 2.62 variable top_build_prefix is defined
+    dnl But from autoconf 2.64 its called ac_top_build_prefix and not automatically added to the Makefile
+    top_build_prefix=${ac_top_build_prefix}
+    AC_SUBST(top_build_prefix)
+
     AC_LIBLTDL_CONVENIENCE(lib/libLtdl)
 fi
 AC_PROG_LIBTOOL
