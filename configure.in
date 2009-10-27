@@ -2777,13 +2777,13 @@ if test "x$use_caps" != "xno"; then
   AC_DEFINE(USE_LIBCAP, 1, [use libcap to set capabilities required for TPROXY])
   dnl Check for libcap headader breakage.
   AC_CHECK_HEADERS(sys/capability.h)
-  AC_CACHE_CHECK([for operational libcap2 headers], libcap_broken,
+  AC_CACHE_CHECK([for operational libcap2 headers], squid_cv_libcap_broken,
     AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <sys/capability.h>]], [[
                     capget(NULL, NULL);
                     capset(NULL, NULL);
-                   ]])],[libcap_broken=0],[libcap_broken=1])
+                   ]])],[squid_cv_libcap_broken=0],[squid_cv_libcap_broken=1])
   )
-  AC_DEFINE_UNQUOTED([LIBCAP_BROKEN],$libcap_broken,[if libcap2 headers are broken and clashing with glibc])
+  AC_DEFINE_UNQUOTED([LIBCAP_BROKEN],$squid_cv_libcap_broken,[if libcap2 headers are broken and clashing with glibc])
 fi
 
 
