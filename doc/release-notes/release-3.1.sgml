@@ -1491,6 +1491,18 @@ This section gives an account of those changes in three categories:
 	<p>If it produces ongoing serious problems the external helper may be needed
 	   but please report the bugs anyway.
 
+	<tag>--with-libexpat / --without-libexpat</tag>
+	<p>Require libexpat XML parser to be built into Squid for ESI parsing.
+	   Build will fail if this option is used and the library is not present.
+	   Default is to auto-detect it when using ESI and ignore if not present.
+	   Use --without-libexpat to prevent it being auto-detected.
+
+	<tag>--with-libxml2 / --without-libxml2</tag>
+	<p>Require libxml2 XML parser to be built into Squid for ESI parsing.
+	   Build will fail if this option is used and the library is not present.
+	   Default is to auto-detect it when building with ESI.
+	   Use --without-libxml2 to prevent it being auto-detected.
+
 	<tag>--with-logdir=PATH</tag>
 	<p>Allow build-time configuration of Default location for squid logs.
 

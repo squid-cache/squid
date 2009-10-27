@@ -831,34 +831,61 @@ AC_ARG_ENABLE(delay-pools,
 dnl disable generic/common adaptation support by default
 use_adaptation=no
 
-AM_CONDITIONAL(USE_ESI, false)
+use_esi=yes
 AC_ARG_ENABLE(esi,
-  AS_HELP_STRING([--enable-esi],[Enable ESI for accelerators. Requires libexpat.
-                  Enabling ESI will cause squid to follow the
-                  Edge Acceleration Specification (www.esi.org).
-                  This causes squid to IGNORE client Cache-Control headers.
-                  DO NOT use this in a squid configured as a web proxy, 
-                  ONLY use it in a squid configured for webserver acceleration.]),
+  AS_HELP_STRING([--enable-esi],[Enable ESI for accelerators. Benefits from libexpat or libxml2.
+                  Enabling ESI will cause squid reverse proxies to be capable of the
+                  Edge Acceleration Specification (www.esi.org).]),
 	      use_esi=$enableval, use_esi=no)
+HAVE_LIBEXPAT=0
+EXPATLIB=
+HAVE_LIBXML2=0
+XMLLIB=
 if test "$use_esi" = "yes" ; then
+  AC_MSG_NOTICE([Enabling ESI processor and Surrogate header support.])
   AC_DEFINE(USE_SQUID_ESI,1,[Compile the ESI processor and Surrogate header support])
-  AM_CONDITIONAL(USE_ESI, true)
 
-  dnl Perform configuration consistency checks for ESI
-  dnl ESI support requires libexpat
-  AC_CHECK_LIB([expat], [main],
-        [ESI_LIBS="-lexpat"],
-        [AC_MSG_FAILURE([ESI support requires libexpat library, but no usable library was found])]
-  )
-  AC_CHECK_LIB([xml2], [main],
-        [ESI_LIBS="-lxml2"],
-        [AC_MSG_FAILURE([ESI support requires libxml2 library, but no usable library was found])]
-  )
-  XTRA_LIBS="$XTRA_LIBS -lexpat -lxml2"
+  AC_ARG_WITH(expat, AS_HELP_STRING([--without-libexpat],[Do not use libexpat for ESI. Default: auto-detect]))
+  if test "$with_expat" != "no" ; then
+    AC_CHECK_LIB([expat], [main], [EXPATLIB="-lexpat"; HAVE_LIBEXPAT=1])
+    AC_CHECK_HEADERS([expat.h])
+    AC_DEFINE_UNQUOTED(HAVE_LIBEXPAT, $HAVE_LIBEXPAT, [Define to 1 if you have the expat library])
+    if test "$with_expat" = "yes" && test "$HAVE_LIBEXPAT" != "1" ; then
+      AC_MSG_ERROR([Required library libexpat is not able to be found.])
+    fi
+  fi
+
+  AC_ARG_WITH(xml2, AS_HELP_STRING([--without-libxml2],[Do not use libxml2 for ESI. Default: auto-detect]))
+  if test "$with_xml2" != "no" ; then
+    AC_CHECK_LIB([xml2], [main], [XMLLIB="-lxml2"; HAVE_LIBXML2=1])
+    dnl Find the main header and include path...
+    AC_CHECK_HEADERS([libxml/parser.h], [], [
+        SAVED_CPPFLAGS="$CPPFLAGS"
+        CPPFLAGS="-I/usr/include/libxml2 $CPPFLAGS"
+        unset ac_cv_header_libxml_parser_h
+        AC_CHECK_HEADERS([libxml/parser.h], [ac_cv_libxml2_include=yes], [])
+        CPPFLAGS="$SAVED_CPPFLAGS"
+        ])
+    if test "x$ac_cv_libxml2_include" = "xyes"; then
+        SQUID_CXXFLAGS="-I/usr/include/libxml2 $SQUID_CXXFLAGS"
+        CPPFLAGS="-I/usr/include/libxml2 $CPPFLAGS"
+    fi
+    dnl Now that we know where to look find the other headers...
+    AC_CHECK_HEADERS(libxml/HTMLparser.h libxml/HTMLtree.h)
+    AC_DEFINE_UNQUOTED(HAVE_LIBXML2, $HAVE_LIBXML2, [Define to 1 if you have the libxml2 library])
+    if test "$with_xml2" = "yes" && test "$HAVE_LIBXML2" != "1" ; then
+      AC_MSG_ERROR([Required library libxml2 is not able to be found.])
+    fi
+  fi
 
 else
-  AC_DEFINE(USE_SQUID_ESI,0,[Compile the ESI processor and Surrogate header support])
+  AC_MSG_NOTICE([Disabling ESI processor and Surrogate header support.])
 fi
+AM_CONDITIONAL(USE_ESI, test "$use_esi" = "yes")
+AM_CONDITIONAL(HAVE_LIBEXPAT, test $HAVE_LIBEXPAT = 1)
+AC_SUBST(EXPATLIB)
+AM_CONDITIONAL(HAVE_LIBXML2, test $HAVE_LIBXML2 = 1)
+AC_SUBST(XMLLIB)
 
 AM_CONDITIONAL(USE_ICAP_CLIENT, false)
 AC_ARG_ENABLE(icap-client,
@@ -2243,17 +2270,6 @@ AC_CHECK_HEADERS( \
 	resolv.h \
 ,,,
 SQUID_BSDNET_INCLUDES)
-
-AC_CHECK_HEADERS([libxml/parser.h], [], [
-    	SAVED_CPPFLAGS="$CPPFLAGS"
-	CPPFLAGS="-I/usr/include/libxml2 $CPPFLAGS"
-	unset ac_cv_header_libxml_parser_h
-	AC_CHECK_HEADERS([libxml/parser.h], [ac_cv_libxml2_include=yes], [])
-	CPPFLAGS="$SAVED_CPPFLAGS"
-	])
-if test "x$ac_cv_libxml2_include" = "xyes"; then
-	SQUID_CXXFLAGS="-I/usr/include/libxml2 $SQUID_CXXFLAGS"
-fi
 
 AC_C_CONST
 AC_C_BIGENDIAN

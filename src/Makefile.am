@@ -44,9 +44,12 @@ ADAPTATION_LIBS = @ADAPTATION_LIBS@
 
 if USE_ESI
 SUBDIRS += esi
-ESI_LIBS = \
+ESI_LOCAL_LIBS = \
 	esi/libesi.la \
 	$(top_builddir)/lib/libTrie/src/libTrie.a
+ESI_LIBS = $(ESI_LOCAL_LIBS) \
+	@XMLLIB@ \
+	@EXPATLIB@
 else
 ESI_LIBS = 
 endif
@@ -527,7 +530,7 @@ squid_LDADD = \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	${ADAPTATION_LIBS} \
-	${ESI_LIBS} \
+	$(ESI_LIBS) \
 	@SSLLIB@ \
 	-lmiscutil \
 	@XTRA_LIBS@ \
@@ -539,7 +542,7 @@ squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
 	@SNMPLIB@ \
 	${ADAPTATION_LIBS} \
-	${ESI_LIBS} \
+	$(ESI_LOCAL_LIBS) \
 	$(COMMON_LIBS)
 
 if USE_LOADABLE_MODULES
@@ -1174,7 +1177,7 @@ tests_testCacheManager_LDADD = \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
-	${ESI_LIBS} \
+	$(ESI_LIBS) \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
@@ -1345,7 +1348,7 @@ tests_testEvent_LDADD = \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
-	${ESI_LIBS} \
+	$(ESI_LIBS) \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
@@ -1493,7 +1496,7 @@ tests_testEventLoop_LDADD = \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
-	${ESI_LIBS} \
+	$(ESI_LIBS) \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
@@ -1636,7 +1639,7 @@ tests_test_http_range_LDADD = \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
-	${ESI_LIBS} \
+	$(ESI_LIBS) \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
@@ -1784,7 +1787,7 @@ tests_testHttpRequest_LDADD = \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
-	${ESI_LIBS} \
+	$(ESI_LIBS) \
 	@REGEXLIB@ \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
@@ -2136,7 +2139,7 @@ tests_testURL_LDADD = \
 	@REGEXLIB@ \
 	@REPL_OBJS@ \
 	${ADAPTATION_LIBS} \
-	${ESI_LIBS} \
+	$(ESI_LIBS) \
 	@SNMPLIB@ \
 	-L../lib -lmiscutil \
 	@SQUID_CPPUNIT_LIBS@ \
