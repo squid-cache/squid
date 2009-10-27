@@ -61,6 +61,7 @@ storeSwapMetaBuild(StoreEntry * e)
     tlv **T = &TLV;
     const char *url;
     const char *vary;
+    const int64_t objsize = e->objectLen();
     assert(e->mem_obj != NULL);
     assert(e->swap_status == SWAPOUT_WRITING);
     url = e->url();
@@ -86,6 +87,17 @@ storeSwapMetaBuild(StoreEntry * e)
     if (!t) {
         storeSwapTLVFree(TLV);
         return NULL;
+    }
+
+
+    if (objsize >= 0) {
+	T = StoreMeta::Add(T, t);
+	t = StoreMeta::Factory(STORE_META_OBJSIZE, sizeof(objsize), &objsize);
+
+	if (!t) {
+	    storeSwapTLVFree(TLV);
+	    return NULL;
+	}
     }
 
     T = StoreMeta::Add(T, t);
