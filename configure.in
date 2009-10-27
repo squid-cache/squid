@@ -1524,7 +1524,7 @@ AC_ARG_ENABLE(linux-tproxy,
   AS_HELP_STRING([--enable-linux-tproxy],[Enable real Transparent Proxy support for Netfilter TPROXY 
                   (version 2).]),
 [ if test "$enableval" = "yes" ; then
-	AC_MSG_NOTICE(["Linux Netfilter/TPROXY v2 enabled])
+	AC_MSG_NOTICE([Linux Netfilter/TPROXY v2 enabled])
 	AC_DEFINE(LINUX_TPROXY2, 1, [Enable real Transparent Proxy support for Netfilter TPROXY v2.])
 	LINUX_TPROXY2="yes"
         if test -z "$LINUX_NETFILTER"; then
