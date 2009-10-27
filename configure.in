@@ -2753,28 +2753,39 @@ AC_CHECK_TYPE(socklen_t,AC_DEFINE(HAVE_SOCKLEN_T,1,[socklen_t is defined by the 
 #endif])
 
 dnl Check for libcap header (assume its not broken unless 
-use_caps=yes
-AC_ARG_ENABLE(caps, AS_HELP_STRING([--disable-caps],[disable usage of Linux capabilities library to control privileges]),
+use_caps=auto
+AC_ARG_WITH(caps, AS_HELP_STRING([--without-libcap],[disable usage of Linux capabilities library to control privileges]),
 [ if test "x$enableval" = "xyes" ; then
-    AC_MSG_RESULT(forced yes)
+    AC_MSG_RESULT(libcap forced enabled)
+    use_caps=yes
   else
-    AC_MSG_RESULT(no)
+    AC_MSG_RESULT(libcap disabled)
     use_caps=no
   fi
-],[AC_MSG_RESULT(yes)])
-if test "x$use_caps" = "xyes"; then
-  dnl Check for libcap1 header breakage or libcap2 fixed (assume broken unless found working)
-  libcap_broken=1
+])
+if test "x$use_caps" != "xno"; then
+  # cap_clear_flag is the most recent libcap function we require
+  AC_CHECK_LIB(cap, cap_clear_flag)
+  if test "x$ac_cv_lib_cap_cap_clear_flag" != xyes
+    if test "x$use_caps" = "xyes"; then
+      AC_MSG_ERROR("libcap forced enabled but not available or not usable, requires libcap-2.09 or later")
+    fi
+    use_caps=no
+  fi
+fi
+if test "x$use_caps" != "xno"; then
+  AC_DEFINE(USE_LIBCAP, 1, [use libcap to set capabilities required for TPROXY])
+  dnl Check for libcap headader breakage.
   AC_CHECK_HEADERS(sys/capability.h)
-  AC_CACHE_CHECK([for operational libcap2], $libcap_broken,
+  AC_CACHE_CHECK([for operational libcap2 headers], libcap_broken,
     AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <sys/capability.h>]], [[
                     capget(NULL, NULL);
                     capset(NULL, NULL);
-                   ]])],[libcap_broken=0],[])
+                   ]])],[libcap_broken=0],[libcap_broken=1])
   )
-  AC_DEFINE_UNQUOTED([LIBCAP_BROKEN],$libcap_broken,[if libcap2 is available and not clashing with libc])
-  AC_CHECK_LIB(cap, cap_get_proc)
+  AC_DEFINE_UNQUOTED([LIBCAP_BROKEN],$libcap_broken,[if libcap2 headers are broken and clashing with glibc])
 fi
+
 
 AC_CHECK_TYPE(mtyp_t,AC_DEFINE(HAVE_MTYP_T,1,[mtyp_t is defined by the system headers]),,[#include <sys/types.h>
 #include <sys/ipc.h>
