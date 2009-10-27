@@ -2771,7 +2771,9 @@ AC_ARG_WITH(libcap, AS_HELP_STRING([--without-libcap],[disable usage of Linux ca
 if test "x$use_libcap" != "xno"; then
   # cap_clear_flag is the most recent libcap function we require
   AC_CHECK_LIB(cap, cap_clear_flag)
-  if test "x$ac_cv_lib_cap_cap_clear_flag" != xyes; then
+  if test "x$ac_cv_lib_cap_cap_clear_flag" = xyes; then
+    use_libcap=yes
+  else
     if test "x$use_libcap" = "xyes"; then
       AC_MSG_ERROR([libcap forced enabled but not available or not usable, requires libcap-2.09 or later])
     fi
@@ -2779,7 +2781,7 @@ if test "x$use_libcap" != "xno"; then
   fi
 fi
 
-if test "x$use_libcap" != "xno"; then
+if test "x$use_libcap" = "xyes"; then
   AC_DEFINE(USE_LIBCAP, 1, [use libcap to set capabilities required for TPROXY])
   dnl Check for libcap headader breakage.
   AC_CHECK_HEADERS(sys/capability.h)
