@@ -2764,7 +2764,7 @@ AC_ARG_WITH(libcap, AS_HELP_STRING([--without-libcap],[disable usage of Linux ca
     AC_MSG_RESULT(libcap forced enabled)
     use_libcap=yes
   else
-    AC_MSG_RESULT(libcap disabled)
+    AC_MSG_RESULT(libcap forced disabled)
     use_libcap=no
   fi
 ])
