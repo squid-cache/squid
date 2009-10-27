@@ -84,6 +84,8 @@ using namespace Squid;
 #include <getopt.h>
 #endif
 
+#include "squid_types.h"
+
 #include "util.h"
 #include "ip/IpAddress.h"
 
@@ -387,7 +389,7 @@ main(int argc, char *argv[])
             strcat(msg, buf);
         }
         if (put_fd > 0) {
-            snprintf(buf, BUFSIZ, "Content-length: %d\r\n", (int) sb.st_size);
+            snprintf(buf, BUFSIZ, "Content-length: %" PRId64 "\r\n", (int64_t) sb.st_size);
             strcat(msg, buf);
         }
         if (opt_noaccept == 0) {
