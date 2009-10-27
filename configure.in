@@ -2754,6 +2754,11 @@ AC_CHECK_TYPE(socklen_t,AC_DEFINE(HAVE_SOCKLEN_T,1,[socklen_t is defined by the 
 
 dnl Check for libcap header (assume its not broken unless 
 use_libcap=auto
+AC_ARG_ENABLE(caps,, [
+   AC_MSG_WARN([--disable-caps is obsolete, please use --without-libcap instead])
+   sleep 10
+   with_libcap=$enableval
+])
 AC_ARG_WITH(libcap, AS_HELP_STRING([--without-libcap],[disable usage of Linux capabilities library to control privileges]),
 [ if test "x$withval" = "xyes" ; then
     AC_MSG_RESULT(libcap forced enabled)
@@ -2763,19 +2768,6 @@ AC_ARG_WITH(libcap, AS_HELP_STRING([--without-libcap],[disable usage of Linux ca
     use_libcap=no
   fi
 ])
-AC_ARG_WITH(caps,,
-[
-AC_MSG_WARN([--without-caps is obsolete, please use --without-libcap instead])
-sleep 10
- if test "x$withval" = "xyes" ; then
-    AC_MSG_RESULT(libcap forced enabled)
-    use_libcap=yes
-  else
-    AC_MSG_RESULT(libcap disabled)
-    use_libcap=no
-  fi
-])
-
 if test "x$use_libcap" != "xno"; then
   # cap_clear_flag is the most recent libcap function we require
   AC_CHECK_LIB(cap, cap_clear_flag)
