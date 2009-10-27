@@ -307,25 +307,29 @@ DOC_START
 
 	auth_param negotiate keep_alive on
 
-NOCOMMENT_START
+	
+	Examples:
+
 #Recommended minimum configuration per scheme:
 #auth_param negotiate program <uncomment and complete this line to activate>
 #auth_param negotiate children 5
 #auth_param negotiate keep_alive on
+#
 #auth_param ntlm program <uncomment and complete this line to activate>
 #auth_param ntlm children 5
 #auth_param ntlm keep_alive on
+#
 #auth_param digest program <uncomment and complete this line>
 #auth_param digest children 5
 #auth_param digest realm Squid proxy-caching web server
 #auth_param digest nonce_garbage_interval 5 minutes
 #auth_param digest nonce_max_duration 30 minutes
 #auth_param digest nonce_max_count 50
+#
 #auth_param basic program <uncomment and complete this line>
 #auth_param basic children 5
 #auth_param basic realm Squid proxy-caching web server
 #auth_param basic credentialsttl 2 hours
-NOCOMMENT_END
 DOC_END
 
 NAME: authenticate_cache_garbage_interval
@@ -677,26 +681,28 @@ DOC_START
 	acl aclname tag tagvalue ...
 	  # string match on tag returned by external acl helper [slow]
 
-Examples:
-acl macaddress arp 09:00:2b:23:45:67
-acl myexample dst_as 1241
-acl password proxy_auth REQUIRED
-acl fileupload req_mime_type -i ^multipart/form-data$
-acl javascript rep_mime_type -i ^application/x-javascript$
+	Examples:
+		acl macaddress arp 09:00:2b:23:45:67
+		acl myexample dst_as 1241
+		acl password proxy_auth REQUIRED
+		acl fileupload req_mime_type -i ^multipart/form-data$
+		acl javascript rep_mime_type -i ^application/x-javascript$
 
 NOCOMMENT_START
-#Recommended minimum configuration:
+#
+# Recommended minimum configuration:
+#
 acl manager proto cache_object
 acl localhost src 127.0.0.1/32
 acl to_localhost dst 127.0.0.0/8 0.0.0.0/32
-#
+
 # Example rule allowing access from your local networks.
 # Adapt to list your (internal) IP networks from where browsing
 # should be allowed
 acl localnet src 10.0.0.0/8	# RFC1918 possible internal network
 acl localnet src 172.16.0.0/12	# RFC1918 possible internal network
 acl localnet src 192.168.0.0/16	# RFC1918 possible internal network
-#
+
 acl SSL_ports port 443
 acl Safe_ports port 80		# http
 acl Safe_ports port 21		# ftp
@@ -828,22 +834,28 @@ DOC_START
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
 
 NOCOMMENT_START
-#Recommended minimum configuration:
+
+#
+# Recommended minimum Access Permission configuration:
 #
 # Only allow cachemgr access from localhost
 http_access allow manager localhost
 http_access deny manager
-# Deny requests to unknown ports
+
+# Deny requests to certain unsafe ports
 http_access deny !Safe_ports
-# Deny CONNECT to other than SSL ports
+
+# Deny CONNECT to other than secure SSL ports
 http_access deny CONNECT !SSL_ports
-#
+
 # We strongly recommend the following be uncommented to protect innocent
 # web applications running on the proxy server who think the only
 # one who can access services on "localhost" is a local user
 #http_access deny to_localhost
+
 #
 # INSERT YOUR OWN RULE(S) HERE TO ALLOW ACCESS FROM YOUR CLIENTS
+#
 
 # Example rule allowing access from your local networks.
 # Adapt localnet in the ACL section to list your (internal) IP networks
@@ -891,11 +903,10 @@ DOC_START
 
 	This clause only supports fast acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
-NOCOMMENT_START
-#Allow ICP queries from local networks only
+
+# Allow ICP queries from local networks only
 #icp_access allow localnet
 #icp_access deny all
-NOCOMMENT_END
 DOC_END
 
 NAME: htcp_access
@@ -918,11 +929,10 @@ DOC_START
 
 	This clause only supports fast acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
-NOCOMMENT_START
-#Allow HTCP queries from local networks only
+
+# Allow HTCP queries from local networks only
 #htcp_access allow localnet
 #htcp_access deny all
-NOCOMMENT_END
 DOC_END
 
 NAME: htcp_clr_access
@@ -941,7 +951,8 @@ DOC_START
 
 	This clause only supports fast acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
-#Allow HTCP CLR requests from trusted peers
+
+# Allow HTCP CLR requests from trusted peers
 acl htcp_clr_peer src 172.16.1.2
 htcp_clr_access allow htcp_clr_peer
 DOC_END
@@ -1162,6 +1173,7 @@ DOC_START
 	visible on the internal address.
 
 NOCOMMENT_START
+
 # Squid normally listens to port 3128
 http_port @DEFAULT_HTTP_PORT@
 NOCOMMENT_END
@@ -1539,17 +1551,17 @@ DOC_START
    
 	This clause only supports fast acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
-NOCOMMENT_START
-# Example: Bump all requests except those originating from localhost and 
-# those going to webax.com or example.com sites.
-#
-# acl localhost src 127.0.0.1/32
-# acl broken_sites dstdomain .webax.com
-# acl broken_sites dstdomain .example.com
-# ssl_bump deny localhost
-# ssl_bump deny broken_sites
-# ssl_bump allow all
-NOCOMMENT_END
+
+
+	# Example: Bump all requests except those originating from localhost and 
+	# those going to webax.com or example.com sites.
+
+	acl localhost src 127.0.0.1/32
+	acl broken_sites dstdomain .webax.com
+	acl broken_sites dstdomain .example.com
+	ssl_bump deny localhost
+	ssl_bump deny broken_sites
+	ssl_bump allow all
 DOC_END
 
 NAME: sslproxy_flags
@@ -1593,10 +1605,7 @@ DOC_START
 
 	See also: sslproxy_flags and DONT_VERIFY_PEER.
 
-NOCOMMENT_START
-#Default setting:
-# sslproxy_cert_error deny all
-NOCOMMENT_END
+	Default setting:  sslproxy_cert_error deny all
 DOC_END
 
 
@@ -2034,7 +2043,8 @@ DOC_START
 	list this option multiple times.
 	Note: never_direct overrides this option.
 NOCOMMENT_START
-#We recommend you to use at least the following line.
+
+# We recommend you to use at least the following line.
 hierarchy_stoplist cgi-bin ?
 NOCOMMENT_END
 DOC_END
@@ -2257,7 +2267,9 @@ DOC_START
 	which can be changed with the --with-coss-membuf-size=N configure
 	option.
 NOCOMMENT_START
-# cache_dir ufs @DEFAULT_SWAP_DIR@ 100 16 256
+
+# Uncomment and adjust the following to add a disk cache directory.
+#cache_dir ufs @DEFAULT_SWAP_DIR@ 100 16 256
 NOCOMMENT_END
 DOC_END
 
@@ -2624,9 +2636,9 @@ DOC_START
 	saved and for how long.  To disable, enter "none" or remove the line.
 	There are not really utilities to analyze this data, so you can safely
 	disable it.
-NOCOMMENT_START
-# cache_store_log @DEFAULT_STORE_LOG@
-NOCOMMENT_END
+
+	Example:
+		cache_store_log @DEFAULT_STORE_LOG@
 DOC_END
 
 NAME: cache_swap_state cache_swap_log
@@ -2879,6 +2891,7 @@ DOC_START
 	and coredump files will be left there.
 
 NOCOMMENT_START
+
 # Leave coredumps in the first cache dir
 coredump_dir @DEFAULT_SWAP_DIR@
 NOCOMMENT_END
@@ -3272,8 +3285,9 @@ DOC_START
 	to change one. The default setting is only active if none is
 	used.
 
-Suggested default:
 NOCOMMENT_START
+
+# Add any of your own refresh_pattern entries above these.
 refresh_pattern ^ftp:		1440	20%	10080
 refresh_pattern ^gopher:	1440	0%	1440
 refresh_pattern -i (/cgi-bin/|\?) 0	0%	0
@@ -4099,13 +4113,10 @@ DOC_START
 	default is `0' which disables sending the announcement
 	messages.
 
-	To enable announcing your cache, just uncomment the line
-	below.
+	To enable announcing your cache, just set an announce period.
 
-NOCOMMENT_START
-#To enable announcing your cache, just uncomment the line below.
-#announce_period 1 day
-NOCOMMENT_END
+	Example:
+		announce_period 1 day
 DOC_END
 
 NAME: announce_host
@@ -4704,9 +4715,9 @@ DOC_START
 	SNMP support set this to a suitable port number. Port number
 	3401 is often used for the Squid SNMP agent. By default it's
 	set to "0" (disabled)
-NOCOMMENT_START
-#snmp_port 3401
-NOCOMMENT_END
+
+	Example:
+		snmp_port 3401
 DOC_END
 
 NAME: snmp_access
@@ -4775,9 +4786,9 @@ DOC_START
 	The port number where Squid sends and receives ICP queries to
 	and from neighbor caches.  The standard UDP port for ICP is 3130.
 	Default is disabled (0).
-NOCOMMENT_START
-#icp_port @DEFAULT_ICP_PORT@
-NOCOMMENT_END
+
+	Example:
+		icp_port @DEFAULT_ICP_PORT@
 DOC_END
 
 NAME: htcp_port
@@ -4789,9 +4800,9 @@ DOC_START
 	The port number where Squid sends and receives HTCP queries to
 	and from neighbor caches.  To turn it on you want to set it to
 	4827. By default it is set to "0" (disabled).
-NOCOMMENT_START
-#htcp_port 4827
-NOCOMMENT_END
+
+	Example:
+		htcp_port 4827
 DOC_END
 
 NAME: log_icp_queries

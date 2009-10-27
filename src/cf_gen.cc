@@ -61,6 +61,7 @@
 #define MAX_LINE	1024	/* longest configuration line */
 #define _PATH_PARSER		"cf_parser.h"
 #define _PATH_SQUID_CONF	"squid.conf.documented"
+#define _PATH_SQUID_CONF_SHORT	"squid.conf.default"
 #define _PATH_CF_DEPEND		"cf.data.depend"
 
 enum State {
@@ -119,7 +120,7 @@ static void gen_parse_entry(Entry *entry, FILE *fp);
 static void gen_parse_alias(char *, EntryAlias *, Entry *, FILE *);
 static void gen_dump(Entry *, FILE *);
 static void gen_free(Entry *, FILE *);
-static void gen_conf(Entry *, FILE *);
+static void gen_conf(Entry *, FILE *, bool verbose_output);
 static void gen_default_if_none(Entry *, FILE *);
 
 
@@ -159,14 +160,22 @@ checkDepend(const char *directive, const char *name, const Type *types, const En
     exit(1);
 }
 
+static void
+usage(const char *program_name)
+{
+    fprintf(stderr, "Usage: %s cf.data cf.data.depend\n", program_name);
+    exit(1);
+}
+
 int
 main(int argc, char *argv[])
 {
     FILE *fp;
-    char *input_filename = argv[1];
+    char *input_filename;
     const char *output_filename = _PATH_PARSER;
     const char *conf_filename = _PATH_SQUID_CONF;
-    const char *type_depend = argv[2];
+    const char *conf_filename_short = _PATH_SQUID_CONF_SHORT;
+    const char *type_depend;
     int linenum = 0;
     Entry *entries = NULL;
     Entry *curr = NULL;
@@ -183,6 +192,11 @@ main(int argc, char *argv[])
 #endif
     char buff[MAX_LINE];
 
+    if (argc != 3)
+        usage(argv[0]);
+
+    input_filename = argv[1];
+    type_depend = argv[2];
 
     /*-------------------------------------------------------------------*
      * Parse type dependencies
@@ -486,8 +500,18 @@ main(int argc, char *argv[])
 
 #endif
 
-    gen_conf(entries, fp);
+    gen_conf(entries, fp, 1);
 
+    fclose(fp);
+
+    if ((fp = fopen(conf_filename_short, "w")) == NULL) {
+        perror(conf_filename_short);
+        exit(1);
+    }
+#ifdef _SQUID_WIN32_
+    setmode(fileno(fp), O_TEXT);
+#endif
+    gen_conf(entries, fp, 0);
     fclose(fp);
 
     return (rc);
@@ -773,7 +797,7 @@ available_if(char *name)
 }
 
 static void
-gen_conf(Entry * head, FILE * fp)
+gen_conf(Entry * head, FILE * fp, bool verbose_output)
 {
     Entry *entry;
     char buf[8192];
@@ -781,27 +805,31 @@ gen_conf(Entry * head, FILE * fp)
 
     for (entry = head; entry != NULL; entry = entry->next) {
         Line *line;
-        int blank = 1;
         int enabled = 1;
 
         if (!strcmp(entry->name, "comment"))
             (void) 0;
-        else
+        else if (verbose_output) {
             fprintf(fp, "#  TAG: %s", entry->name);
 
-        if (entry->comment)
-            fprintf(fp, "\t%s", entry->comment);
+            if (entry->comment)
+                fprintf(fp, "\t%s", entry->comment);
 
-        fprintf(fp, "\n");
+            fprintf(fp, "\n");
+        }
 
         if (!defined(entry->ifdef)) {
-            fprintf(fp, "# Note: This option is only available if Squid is rebuilt with the\n");
-            fprintf(fp, "#       %s\n#\n", available_if(entry->ifdef));
+            if (verbose_output) {
+                fprintf(fp, "# Note: This option is only available if Squid is rebuilt with the\n");
+                fprintf(fp, "#       %s\n#\n", available_if(entry->ifdef));
+            }
             enabled = 0;
         }
 
-        for (line = entry->doc; line != NULL; line = line->next) {
-            fprintf(fp, "#%s\n", line->data);
+        if (verbose_output) {
+            for (line = entry->doc; line != NULL; line = line->next) {
+                fprintf(fp, "#%s\n", line->data);
+            }
         }
 
         if (entry->default_value && strcmp(entry->default_value, "none") != 0) {
@@ -816,19 +844,12 @@ gen_conf(Entry * head, FILE * fp)
             }
         }
 
-        if (entry->nocomment)
-            blank = 0;
-
         if (!def && entry->doc && !entry->nocomment &&
                 strcmp(entry->name, "comment") != 0)
             lineAdd(&def, "none");
 
-        if (def && (entry->doc || entry->nocomment)) {
-            if (blank)
-                fprintf(fp, "#\n");
-
+        if (verbose_output && def && (entry->doc || entry->nocomment)) {
             fprintf(fp, "#Default:\n");
-
             while (def != NULL) {
                 line = def;
                 def = line->next;
@@ -836,21 +857,21 @@ gen_conf(Entry * head, FILE * fp)
                 xfree(line->data);
                 xfree(line);
             }
-
-            blank = 1;
         }
 
-        if (entry->nocomment && blank)
+        if (verbose_output && entry->nocomment)
             fprintf(fp, "#\n");
 
-        for (line = entry->nocomment; line != NULL; line = line->next) {
-            if (!enabled && line->data[0] != '#')
-                fprintf(fp, "#%s\n", line->data);
-            else
-                fprintf(fp, "%s\n", line->data);
+        if (enabled || verbose_output) {
+            for (line = entry->nocomment; line != NULL; line = line->next) {
+                if (!enabled && line->data[0] != '#')
+                    fprintf(fp, "#%s\n", line->data);
+                else
+                    fprintf(fp, "%s\n", line->data);
+            }
         }
 
-        if (entry->doc != NULL) {
+        if (verbose_output && entry->doc != NULL) {
             fprintf(fp, "\n");
         }
     }

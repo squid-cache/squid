@@ -745,11 +745,8 @@ test_cache_digest: test_cache_digest.o CacheDigest.o debug.o globals.o store_key
 cache_cf.o: cf_parser.h
 
 # squid.conf.default is built by cf_gen when making cf_parser.h
-squid.conf.documented: cf_parser.h
+squid.conf.default squid.conf.documented: cf_parser.h
 	true
-
-squid.conf.default: squid.conf.documented
-	$(EGREP) -v "^[#\ ]" squid.conf.documented | $(EGREP) . >squid.conf.default
 
 cf_parser.h: cf.data cf_gen$(EXEEXT)
 	./cf_gen cf.data $(srcdir)/cf.data.depend
