@@ -91,13 +91,13 @@ storeSwapMetaBuild(StoreEntry * e)
 
 
     if (objsize >= 0) {
-	T = StoreMeta::Add(T, t);
-	t = StoreMeta::Factory(STORE_META_OBJSIZE, sizeof(objsize), &objsize);
+        T = StoreMeta::Add(T, t);
+        t = StoreMeta::Factory(STORE_META_OBJSIZE, sizeof(objsize), &objsize);
 
-	if (!t) {
-	    storeSwapTLVFree(TLV);
-	    return NULL;
-	}
+        if (!t) {
+            storeSwapTLVFree(TLV);
+            return NULL;
+        }
     }
 
     T = StoreMeta::Add(T, t);
