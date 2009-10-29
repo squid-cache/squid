@@ -3530,6 +3530,8 @@ fi
 if test "$LINUX_NETFILTER" = "no" ; then
     AC_MSG_WARN([Cannot find necessary Linux kernel (Netfilter) header files])
     AC_MSG_WARN([Linux Transparent and Intercepting Proxy support WILL NOT be enabled])
+    LINUX_TPROXY2="no"
+    AC_DEFINE(LINUX_TPROXY2, 0, [Enable real Transparent Proxy support for Netfilter TPROXY v2.])
     sleep 10
 fi
 dnl Netfilter TPROXY depends on libcap but the NAT parts can still work.
@@ -3537,6 +3539,8 @@ if test "$LINUX_NETFILTER" = "yes" && test "$use_libcap" != "yes" ; then
     AC_MSG_WARN([Missing needed capabilities (libcap or libcap2) for TPROXY])
     AC_MSG_WARN([Linux Transparent Proxy support WILL NOT be enabled])
     AC_MSG_WARN([Reduced support to Interception Proxy])
+    LINUX_TPROXY2="no"
+    AC_DEFINE(LINUX_TPROXY2, 0, [Enable real Transparent Proxy support for Netfilter TPROXY v2.])
     sleep 10
 fi
 
@@ -3564,6 +3568,8 @@ if test "$LINUX_TPROXY2"; then
   else
     AC_MSG_WARN([Missing needed capabilities (libcap or libcap2) for TPROXY v2])
     AC_MSG_WARN([Linux Transparent Proxy support WILL NOT be enabled])
+    LINUX_TPROXY2="no"
+    AC_DEFINE(LINUX_TPROXY2, 0, [Enable real Transparent Proxy support for Netfilter TPROXY v2.])
     sleep 10
   fi
 fi
