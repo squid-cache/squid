@@ -176,7 +176,7 @@ squid_ldap_set_aliasderef(LDAP * ld, int deref)
 static void
 squid_ldap_set_referrals(LDAP * ld, int referrals)
 {
-    int *value = referrals ? LDAP_OPT_ON :LDAP_OPT_OFF;
+    int *value = static_cast<int*>(referrals ? LDAP_OPT_ON :LDAP_OPT_OFF);
     ldap_set_option(ld, LDAP_OPT_REFERRALS, value);
 }
 static void
@@ -385,7 +385,7 @@ main(int argc, char **argv)
         case 'h':
             if (ldapServer) {
                 int len = strlen(ldapServer) + 1 + strlen(value) + 1;
-                char *newhost = malloc(len);
+                char *newhost = static_cast<char*>(malloc(len));
                 snprintf(newhost, len, "%s %s", ldapServer, value);
                 free(ldapServer);
                 ldapServer = newhost;
@@ -505,7 +505,7 @@ main(int argc, char **argv)
         char *value = argv[1];
         if (ldapServer) {
             int len = strlen(ldapServer) + 1 + strlen(value) + 1;
-            char *newhost = malloc(len);
+            char *newhost = static_cast<char*>(malloc(len));
             snprintf(newhost, len, "%s %s", ldapServer, value);
             free(ldapServer);
             ldapServer = newhost;
