@@ -5452,7 +5452,7 @@ TYPE: string
 LOC: Config.chroot_dir
 DEFAULT: none
 DOC_START
-	Specifies a directiry where Squid should do a chroot() while
+	Specifies a directory where Squid should do a chroot() while
 	initializing.  This also causes Squid to fully drop root
 	privileges after initializing.  This means, for example, if you
 	use a HTTP port less than 1024 and try to reconfigure, you may
