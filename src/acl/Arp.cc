@@ -248,6 +248,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, IpAddress &c)
 #endif
 
     IpAddress ipAddr = c;
+    ipAddr.SetPort(0);  // ARP will fail if the port is included in the match.
 
 #if defined(_SQUID_LINUX_)
 
@@ -298,7 +299,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, IpAddress &c)
         acl_arp_data X;
         memcpy (X.eth, arpReq.arp_ha.sa_data, 6);
         *Top = (*Top)->splay(&X, aclArpCompare);
-        debugs(28, 3, "aclMatchArp: '" << c << "' " << (splayLastResult ? "NOT found" : "found"));
+        debugs(28, 3, "aclMatchArp: '" << ipAddr << "' " << (splayLastResult ? "NOT found" : "found"));
         return (0 == splayLastResult);
     }
 
@@ -332,7 +333,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, IpAddress &c)
         if (NULL != strchr(ifr->ifr_name, ':'))
             continue;
 
-        debugs(28, 4, "Looking up ARP address for " << c << " on " << ifr->ifr_name);
+        debugs(28, 4, "Looking up ARP address for " << ipAddr << " on " << ifr->ifr_name);
 
         /* Set up structures for ARP lookup */
 
@@ -384,7 +385,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, IpAddress &c)
 
         /* Return if match, otherwise continue to other interfaces */
         if (0 == splayLastResult) {
-            debugs(28, 3, "aclMatchArp: " << c << " found on " << ifr->ifr_name);
+            debugs(28, 3, "aclMatchArp: " << ipAddr << " found on " << ifr->ifr_name);
             return 1;
         }
 
@@ -432,7 +433,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, IpAddress &c)
         /* Do lookup */
         *Top = (*Top)->splay((acl_arp_data *)&arpReq.arp_ha.sa_data, aclArpCompare);
 
-        debugs(28, 3, "aclMatchArp: '" << c << "' " << (splayLastResult ? "NOT found" : "found"));
+        debugs(28, 3, "aclMatchArp: '" << ipAddr << "' " << (splayLastResult ? "NOT found" : "found"));
 
         return (0 == splayLastResult);
     }
@@ -533,7 +534,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, IpAddress &c)
     /* Do lookup */
     *Top = (*Top)->splay((acl_arp_data *)&arpReq.arp_ha.sa_data, aclArpCompare);
 
-    debugs(28, 3, "aclMatchArp: '" << c << "' " << (splayLastResult ? "NOT found" : "found"));
+    debugs(28, 3, "aclMatchArp: '" << ipAddr << "' " << (splayLastResult ? "NOT found" : "found"));
 
     return (0 == splayLastResult);
 
@@ -598,7 +599,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, IpAddress &c)
     /* Do lookup */
     *Top = (*Top)->splay((acl_arp_data *)&arpReq.arp_ha.sa_data, aclArpCompare);
 
-    debugs(28, 3, "aclMatchArp: '" << c << "' " << (splayLastResult ? "NOT found" : "found"));
+    debugs(28, 3, "aclMatchArp: '" << ipAddr << "' " << (splayLastResult ? "NOT found" : "found"));
 
     return (0 == splayLastResult);
 
@@ -610,7 +611,7 @@ aclMatchArp(SplayNode<acl_arp_data *> **dataptr, IpAddress &c)
     /*
      * Address was not found on any interface
      */
-    debugs(28, 3, "aclMatchArp: " << c << " NOT found");
+    debugs(28, 3, "aclMatchArp: " << ipAddr << " NOT found");
 
     return 0;
 }
