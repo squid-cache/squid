@@ -242,6 +242,20 @@ Changes to squid-3.1.0.1 (27 Oct 2008):
 	- Bug #2223: Follow XFF extensions added
 	- ... and many code and documentation cleanups
 
+Changes to squid-3.0.STABLE20 (29 Oct 2009):
+
+	- Bug 2794: ESI parsing on FreeBSD
+	- Bug 2791: assertion failed: MemBuf.cc:400: new_cap > (size_t) capacity
+	- Bug 2779: Support GNU/kFreeBSD
+	- Bug 2773: Segfault in RFC2069 Digest authantication
+	- Bug 2768: squid_ldap_group argument parsing error
+	- Bug 2761: Gopher and double HTTP response header
+	- Bug 2735: Incomplete -fhuge-objects detection
+	- Bug 2722: prevent CONNECT via http_port with accel
+	- Bug 2624: Invalid response for IMS request
+	- Bug 2510: digest_ldap_auth TLS support
+	- Correct LINUX_CAPABILITY actions on non-Linux
+
 Changes to squid-3.0.STABLE19 (06 Sep 2009):
 
 	- Bug 2745: Invalid Response error on small reads
