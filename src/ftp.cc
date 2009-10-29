@@ -1204,7 +1204,7 @@ FtpStateData::maybeReadVirginBody()
     if (data.read_pending)
         return;
 
-    int read_sz = replyBodySpace(data.readBuf->spaceSize());
+    const int read_sz = replyBodySpace(*data.readBuf, 0);
 
     debugs(11,9, HERE << "FTP may read up to " << read_sz << " bytes");
 
