@@ -157,7 +157,7 @@ Eui48::lookup(IpAddress &c)
     struct arpreq arpReq;
 #if !defined(_SQUID_WIN32_)
     struct sockaddr_in *sa = NULL;
-#endif
+#endif /* !_SQUID_WIN32_ */
 
     IpAddress ipAddr = c;
     ipAddr.SetPort(0);
@@ -169,6 +169,9 @@ Eui48::lookup(IpAddress &c)
 
     struct ifreq *ifr;
     int offset;
+
+    /* IPv6 builds do not provide the first http_port as an IPv4 socket for ARP */
+    int tmpSocket = socket(AF_INET,SOCK_STREAM,0);
 
     /*
      * The linux kernel 2.2 maintains per interface ARP caches and
@@ -191,8 +194,9 @@ Eui48::lookup(IpAddress &c)
     ipAddr.GetSockAddr(*sa);
 
     /* Query ARP table */
-    if (ioctl(HttpSockets[0], SIOCGARP, &arpReq) != -1) {
+    if (ioctl(tmpSocket, SIOCGARP, &arpReq) != -1) {
         /* Skip non-ethernet interfaces */
+        close(tmpSocket);
 
         if (arpReq.arp_ha.sa_family != ARPHRD_ETHER) {
             clear();
@@ -216,15 +220,17 @@ Eui48::lookup(IpAddress &c)
 
     ifc.ifc_buf = (char *)ifbuffer;
 
-    if (ioctl(HttpSockets[0], SIOCGIFCONF, &ifc) < 0) {
+    if (ioctl(tmpSocket, SIOCGIFCONF, &ifc) < 0) {
         debugs(28, 1, "Attempt to retrieve interface list failed: " << xstrerror());
         clear();
+        close(tmpSocket);
         return false;
     }
 
     if (ifc.ifc_len > (int)sizeof(ifbuffer)) {
         debugs(28, 1, "Interface list too long - " << ifc.ifc_len);
         clear();
+        close(tmpSocket);
         return false;
     }
 
@@ -257,7 +263,7 @@ Eui48::lookup(IpAddress &c)
         arpReq.arp_dev[sizeof(arpReq.arp_dev) - 1] = '\0';
 
         /* Query ARP table */
-        if (-1 == ioctl(HttpSockets[0], SIOCGARP, &arpReq)) {
+        if (-1 == ioctl(tmpSocket, SIOCGARP, &arpReq)) {
             /*
              * Query failed.  Do not log failed lookups or "device
              * not supported"
@@ -294,10 +300,16 @@ Eui48::lookup(IpAddress &c)
          */
 
         /* AYJ: 2009-10-06: for now we have to. We can only store one EUI at a time. */
+        close(tmpSocket);
         return true;
     }
 
+    close(tmpSocket);
+
 #elif defined(_SQUID_SOLARIS_)
+
+    /* IPv6 builds do not provide the first http_port as an IPv4 socket for ARP */
+    int tmpSocket = socket(AF_INET,SOCK_STREAM,0);
 
     /* Set up structures for ARP lookup with blank interface name */
 
@@ -307,11 +319,12 @@ Eui48::lookup(IpAddress &c)
     ipAddr.GetSockAddr(*sa);
 
     /* Query ARP table */
-    if (ioctl(HttpSockets[0], SIOCGARP, &arpReq) != -1) {
+    if (ioctl(tmpSocket, SIOCGARP, &arpReq) != -1) {
         /*
         *  Solaris (at least 2.6/x86) does not use arp_ha.sa_family -
         * it returns 00:00:00:00:00:00 for non-ethernet media
         */
+        close(tmpSocket);
 
         if (arpReq.arp_ha.sa_data[0] == 0 &&
                 arpReq.arp_ha.sa_data[1] == 0 &&
