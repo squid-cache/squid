@@ -335,12 +335,8 @@ This section gives a thorough account of those changes in three categories:
 <sect1>Removed tags<label id="removedtags">
 <p>
 <descrip>
-
-	<tag>???alphabetical list???</tag>
-	<p> ???
-	<verb>
-	relevant quote directly from cf.data.pre
-	</verb>
+	<tag>ftp_list_width</tag>
+	<p>Obsolete.
 
 </descrip>
 

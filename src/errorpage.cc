@@ -657,7 +657,12 @@ ErrorState::Convert(char token, bool url_presentable)
     case 'g':
         if (url_presentable) break;
         /* FTP SERVER MESSAGE */
-        wordlistCat(ftp.server_msg, &mb);
+        if(ftp.server_msg)
+            wordlistCat(ftp.server_msg, &mb);
+        else if(ftp.listing) {
+            mb.append(ftp.listing->content(), ftp.listing->contentSize());
+            do_quote = 0;
+        }
         break;
 
     case 'h':
@@ -816,6 +821,8 @@ ErrorState::Convert(char token, bool url_presentable)
         if (url_presentable) break;
         if (dnsError.size() > 0)
             p = dnsError.termedBuf();
+        else if (ftp.cwd_msg)
+            p = ftp.cwd_msg;
         else
             p = "[unknown]";
         break;
