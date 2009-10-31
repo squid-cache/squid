@@ -148,6 +148,8 @@ public:
         wordlist *server_msg;
         char *request;
         char *reply;
+        char *cwd_msg;
+        MemBuf *listing;
     } ftp;
 
     char *request_hdrs;

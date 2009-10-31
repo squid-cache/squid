@@ -2964,16 +2964,6 @@ DOC_START
 	(for example perl.com).
 DOC_END
 
-NAME: ftp_list_width
-TYPE: size_t
-DEFAULT: 32
-LOC: Config.Ftp.list_width
-DOC_START
-	Sets the width of ftp listings. This should be set to fit in
-	the width of a standard browser. Setting this too small
-	can cut off long filenames when browsing ftp sites.
-DOC_END
-
 NAME: ftp_passive
 TYPE: onoff
 DEFAULT: on

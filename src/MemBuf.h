@@ -72,8 +72,8 @@ public:
 
     /**
      * Whether the buffer contains any data space available.
-     \retval true	if data can be added to teh buffer
-     \retval false	if teh buffer is full
+     \retval true	if data can be added to the buffer
+     \retval false	if the buffer is full
      */
     bool hasSpace() const { return size+1 < capacity; }
 
