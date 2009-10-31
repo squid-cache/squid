@@ -34,16 +34,22 @@
 #ifndef SQUID_HTTPREQUEST_H
 #define SQUID_HTTPREQUEST_H
 
-#include "HttpMsg.h"
-#include "client_side.h"
-#include "HierarchyLogEntry.h"
-#include "HttpRequestMethod.h"
+#include "config.h"
+
 #if USE_ADAPTATION
 #include "adaptation/History.h"
 #endif
 #if ICAP_CLIENT
 #include "adaptation/icap/History.h"
 #endif
+#include "client_side.h"
+#if USE_SQUID_EUI
+#include "eui/Eui48.h"
+#include "eui/Eui64.h"
+#endif
+#include "HierarchyLogEntry.h"
+#include "HttpMsg.h"
+#include "HttpRequestMethod.h"
 
 /*  Http Request */
 //DEAD?: extern int httpRequestHdrAllowedByName(http_hdr_type id);
@@ -164,6 +170,13 @@ public:
 #if FOLLOW_X_FORWARDED_FOR
     IpAddress indirect_client_addr;
 #endif /* FOLLOW_X_FORWARDED_FOR */
+
+#if USE_SQUID_EUI
+    /* TODO these might be merged into one field if we can reliably map the EUI-48 into EUI-64
+       there are some OS differences in the upper bytes. */
+    Eui::Eui48 client_eui48;
+    Eui::Eui64 client_eui64;
+#endif
 
     IpAddress my_addr;
 

@@ -534,6 +534,7 @@ nodist_squid_SOURCES = \
 
 squid_LDADD = \
 	$(COMMON_LIBS) \
+	eui/libeui.la \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	@XTRA_OBJS@ \
 	@DISK_LINKOBJS@ \

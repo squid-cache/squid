@@ -87,6 +87,10 @@ HttpRequest::init()
     lastmod = -1;
     max_forwards = -1;
     client_addr.SetEmpty();
+#if USE_SQUID_EUI
+    client_eui48.clear();
+    client_eui64.clear();
+#endif
     my_addr.SetEmpty();
     body_pipe = NULL;
     // hier
@@ -565,6 +569,10 @@ bool HttpRequest::inheritProperties(const HttpMsg *aMsg)
         return false;
 
     client_addr = aReq->client_addr;
+#if USE_SQUID_EUI
+    client_eui48 = aReq->client_eui48;
+    client_eui64 = aReq->client_eui64;
+#endif
     my_addr = aReq->my_addr;
 
     dnsWait = aReq->dnsWait;

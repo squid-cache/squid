@@ -128,7 +128,7 @@ endif
 EXTRA_libacls_la_SOURCES += $(SSL_ACLS)
 
 
-ARP_ACLS = Arp.cc Arp.h
+ARP_ACLS = Arp.cc Arp.h Eui64.cc Eui64.h
 
 if USE_SQUID_EUI
 libacls_la_SOURCES += $(ARP_ACLS)

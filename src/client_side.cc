@@ -104,6 +104,7 @@
 #include "MemBuf.h"
 #include "SquidTime.h"
 #include "ChunkedCodingParser.h"
+#include "eui/Config.h"
 
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
@@ -2403,6 +2404,10 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     request->flags.internal = http->flags.internal;
     setLogUri (http, urlCanonicalClean(request));
     request->client_addr = conn->peer;
+#if USE_SQUID_EUI
+    request->client_eui48 = conn->peer_eui48;
+    request->client_eui64 = conn->peer_eui64;
+#endif
 #if FOLLOW_X_FORWARDED_FOR
     request->indirect_client_addr = conn->peer;
 #endif /* FOLLOW_X_FORWARDED_FOR */
@@ -3045,6 +3050,17 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
         identChecklist.my_addr = details->me;
         if (identChecklist.fastCheck())
             Ident::Start(details->me, details->peer, clientIdentDone, connState);
+    }
+#endif
+
+#if USE_SQUID_EUI
+    if (Eui::TheConfig.euiLookup) {
+        if (details->peer.IsIPv4()) {
+            connState->peer_eui48.lookup(details->peer);
+        }
+        else if (details->peer.IsIPv6()) {
+            connState->peer_eui64.lookup(details->peer);
+        }
     }
 #endif
 

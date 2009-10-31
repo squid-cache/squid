@@ -6,8 +6,9 @@
 */
 
 #include "acl/Acl.h"
-#ifdef USE_ARP_ACL
+#ifdef USE_SQUID_EUI
 #include "acl/Arp.h"
+#include "acl/Eui64.h"
 #endif
 #include "acl/Asn.h"
 #include "acl/Browser.h"
@@ -134,9 +135,11 @@ ACL::Prototype ACLCertificate::CARegistryProtoype(&ACLCertificate::CARegistryEnt
 ACLStrategised<SSL *> ACLCertificate::CARegistryEntry_(new ACLCertificateData (sslGetCAAttribute), ACLCertificateStrategy::Instance(), "ca_cert");
 #endif
 
-#ifdef USE_ARP_ACL
+#ifdef USE_SQUID_EUI
 ACL::Prototype ACLARP::RegistryProtoype(&ACLARP::RegistryEntry_, "arp");
 ACLARP ACLARP::RegistryEntry_("arp");
+ACL::Prototype ACLEui64::RegistryProtoype(&ACLEui64::RegistryEntry_, "eui64");
+ACLEui64 ACLEui64::RegistryEntry_("eui64");
 #endif
 
 #if USE_IDENT

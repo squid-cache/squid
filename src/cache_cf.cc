@@ -61,6 +61,7 @@
 #if USE_SQUID_ESI
 #include "esi/Parser.h"
 #endif
+#include "eui/Config.h"
 
 #if USE_ADAPTATION
 #include "adaptation/Config.h"

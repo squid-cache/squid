@@ -33,12 +33,14 @@
 #ifndef SQUID_CLIENTSIDE_H
 #define SQUID_CLIENTSIDE_H
 
-#include "comm.h"
-#include "StoreIOBuffer.h"
-#include "BodyPipe.h"
-#include "RefCount.h"
 #include "base/AsyncJob.h"
+#include "BodyPipe.h"
+#include "comm.h"
 #include "CommCalls.h"
+#include "eui/Eui48.h"
+#include "eui/Eui64.h"
+#include "RefCount.h"
+#include "StoreIOBuffer.h"
 
 class ConnStateData;
 
@@ -124,6 +126,9 @@ private:
     bool connRegistered_;
 };
 
+
+class ConnectionDetail;
+
 /** A connection to a socket */
 class ConnStateData : public BodyProducer/*, public RefCountable*/
 {
@@ -191,6 +196,11 @@ public:
     IpAddress log_addr;
     char rfc931[USER_IDENT_SZ];
     int nrequests;
+
+#if USE_SQUID_EUI
+    Eui::Eui48 peer_eui48;
+    Eui::Eui64 peer_eui64;
+#endif
 
     struct {
         bool readMoreRequests;
