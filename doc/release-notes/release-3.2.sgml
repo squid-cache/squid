@@ -314,6 +314,9 @@ This section gives a thorough account of those changes in three categories:
 <sect1>Changes to existing tags<label id="modifiedtags">
 <p>
 <descrip>
+	<tag>deny_info</tag>
+	<p>Support URL format tags. For dynamically generated URL in denial redirect.
+
 	<tag>external_acl_type</tag>
 	<p>New format tag <em>%SRCEUI48</em> EUI-48 / MAC address of client from ARP lookup.
 	<p>New format tag <em>%SRCEUI64</em> EUI-64 of clients with SLAAC address.

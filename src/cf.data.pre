@@ -5304,12 +5304,33 @@ DOC_START
 	    you may also specify them by your custom file name:
 	    Example: deny_info ERR_CUSTOM_ACCESS_DENIED bad_guys
 
-	Alternatively you can specify an error URL. The browsers will
-	get redirected (302) to the specified URL. %s in the redirection
-	URL will be replaced by the requested URL.
-
 	Alternatively you can tell Squid to reset the TCP connection
 	by specifying TCP_RESET.
+
+	Or you can specify an error URL or URL pattern. The browsers will
+	get redirected (302) to the specified URL after formattgin tags have
+	been replaced.
+
+	URL FORMAT TAGS:
+		%a	- username (if available. Password NOT included)
+		%B	- FTP path URL
+		%e	- Error number
+		%E	- Error description
+		%h	- Squid hostname
+		%H	- Request domain name
+		%i	- Client IP Address
+		%M	- Request Method
+		%o	- Message result from external ACL helper
+		%p	- Request Port number
+		%P	- Request Protocol name
+		%R	- Request URL path
+		%T	- Timestamp in RFC 1123 format
+		%U	- Full canonical URL from client
+			  (HTTPS URLs terminate with *)
+		%u	- Full canonical URL from client
+		%w	- Admin email from squid.conf
+		%%	- Literal percent (%) code
+
 DOC_END
 
 COMMENT_START
