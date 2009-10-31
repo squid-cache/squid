@@ -595,11 +595,12 @@ ErrorState::Dump(MemBuf * mb)
 #define CVT_BUF_SZ 512
 
 const char *
-ErrorState::Convert(char token)
+ErrorState::Convert(char token, bool url_presentable)
 {
     static MemBuf mb;
     const char *p = NULL;	/* takes priority over mb if set */
     int do_quote = 1;
+    int no_urlescape = 1;       /* item is NOT to be further URL-encoded */
     char ntoabuf[MAX_IPSTRLEN];
 
     mb.reset();
@@ -607,61 +608,56 @@ ErrorState::Convert(char token)
     switch (token) {
 
     case 'a':
-
         if (request && request->auth_user_request)
             p = request->auth_user_request->username();
-
         if (!p)
             p = "-";
-
         break;
 
     case 'B':
+        if (url_presentable) break;
         p = request ? ftpUrlWith2f(request) : "[no URL]";
-
+        no_urlescape = 1;
         break;
 
     case 'c':
+        if (url_presentable) break;
         p = errorPageName(type);
-
         break;
 
     case 'e':
         mb.Printf("%d", xerrno);
-
         break;
 
     case 'E':
-
         if (xerrno)
             mb.Printf("(%d) %s", xerrno, strerror(xerrno));
         else
             mb.Printf("[No Error]");
-
         break;
 
     case 'f':
+        if (url_presentable) break;
         /* FTP REQUEST LINE */
         if (ftp.request)
             p = ftp.request;
         else
             p = "nothing";
-
         break;
 
     case 'F':
+        if (url_presentable) break;
         /* FTP REPLY LINE */
         if (ftp.request)
             p = ftp.reply;
         else
             p = "nothing";
-
         break;
 
     case 'g':
+        if (url_presentable) break;
         /* FTP SERVER MESSAGE */
         wordlistCat(ftp.server_msg, &mb);
-
         break;
 
     case 'h':
@@ -674,60 +670,55 @@ ErrorState::Convert(char token)
                 p = request->hier.host;
             else
                 p = request->GetHost();
-        } else
+        } else if (!url_presentable)
             p = "[unknown host]";
-
         break;
 
     case 'i':
         mb.Printf("%s", src_addr.NtoA(ntoabuf,MAX_IPSTRLEN));
-
         break;
 
     case 'I':
         if (request && request->hier.host[0] != '\0') // if non-empty string
             mb.Printf("%s", request->hier.host);
-        else
+        else if (!url_presentable)
             p = "[unknown]";
-
         break;
 
     case 'l':
+        if (url_presentable) break;
         mb.append(error_stylesheet.content(), error_stylesheet.contentSize());
         do_quote = 0;
         break;
 
     case 'L':
+        if (url_presentable) break;
         if (Config.errHtmlText) {
             mb.Printf("%s", Config.errHtmlText);
             do_quote = 0;
-        } else
+        } else if (!url_presentable)
             p = "[not available]";
-
         break;
 
     case 'm':
+        if (url_presentable) break;
         p = auth_user_request->denyMessage("[not available]");
-
         break;
 
     case 'M':
         p = request ? RequestMethodStr(request->method) : "[unknown method]";
-
         break;
 
     case 'o':
         p = external_acl_message ? external_acl_message : "[not available]";
-
         break;
 
     case 'p':
         if (request) {
             mb.Printf("%d", (int) request->port);
-        } else {
+        } else if (!url_presentable) {
             p = "[unknown port]";
         }
-
         break;
 
     case 'P':
@@ -735,7 +726,10 @@ ErrorState::Convert(char token)
         break;
 
     case 'R':
-
+        if (url_presentable) {
+            p = (request->urlpath.size() != 0 ? request->urlpath.termedBuf() : "/");
+            break;
+        }
         if (NULL != request) {
             Packer p;
             String urlpath_or_slash;
@@ -757,16 +751,21 @@ ErrorState::Convert(char token)
         } else {
             p = "[no request]";
         }
-
         break;
 
     case 's':
-        p = visible_appname_string;
+        /* for backward compat we make %s show the full URL. Drop this in some future release. */
+        if (url_presentable) {
+            p = request ? urlCanonical(request) : url;
+            debugs(0,0, "WARNING: deny_info now accepts coded tags. Use %u to get the full URL instead of %s");
+        }
+        else
+            p = visible_appname_string;
         break;
 
     case 'S':
+        if (url_presentable) break;
         /* signature may contain %-escapes, recursion */
-
         if (page_id != ERR_SQUID_SIGNATURE) {
             const int saved_id = page_id;
             page_id = ERR_SQUID_SIGNATURE;
@@ -780,7 +779,6 @@ ErrorState::Convert(char token)
             /* wow, somebody put %S into ERR_SIGNATURE, stop recursion */
             p = "[%S]";
         }
-
         break;
 
     case 't':
@@ -802,46 +800,41 @@ ErrorState::Convert(char token)
         break;
 
     case 'w':
-
         if (Config.adminEmail)
             mb.Printf("%s", Config.adminEmail);
-        else
+        else if (!url_presentable)
             p = "[unknown]";
-
         break;
 
     case 'W':
+        if (url_presentable) break;
         if (Config.adminEmail && Config.onoff.emailErrData)
             Dump(&mb);
-
         break;
 
     case 'z':
+        if (url_presentable) break;
         if (dnsError.size() > 0)
             p = dnsError.termedBuf();
         else
             p = "[unknown]";
-
         break;
 
     case 'Z':
+        if (url_presentable) break;
         if (err_msg)
             p = err_msg;
         else
             p = "[unknown]";
-
         break;
 
     case '%':
         p = "%";
-
         break;
 
     default:
         mb.Printf("%%%c", token);
-
         do_quote = 0;
-
         break;
     }
 
@@ -855,7 +848,30 @@ ErrorState::Convert(char token)
     if (do_quote)
         p = html_quote(p);
 
+    if (url_presentable && !no_urlescape)
+        p = rfc1738_escape_part(p);
+
     return p;
+}
+
+void
+ErrorState::DenyInfoLocation(const char *name, HttpRequest *request, MemBuf &result)
+{
+    char const *m = name;
+    char const *p = m;
+    char const *t;
+
+    while ((p = strchr(m, '%'))) {
+        result.append(m, p - m);       /* copy */
+        t = Convert(*++p, true);       /* convert */
+        result.Printf("%s", t);        /* copy */
+        m = p + 1;                     /* advance */
+    }
+
+    if (*m)
+        result.Printf("%s", m);        /* copy tail */
+
+    assert((size_t)result.contentSize() == strlen(result.content()));
 }
 
 HttpReply *
@@ -871,8 +887,10 @@ ErrorState::BuildHttpReply()
         rep->setHeaders(version, HTTP_MOVED_TEMPORARILY, NULL, "text/html", 0, 0, -1);
 
         if (request) {
-            char *quoted_url = rfc1738_escape_part(urlCanonical(request));
-            httpHeaderPutStrf(&rep->header, HDR_LOCATION, name, quoted_url);
+            MemBuf redirect_location;
+            redirect_location.init();
+            DenyInfoLocation(name, request, redirect_location);
+            httpHeaderPutStrf(&rep->header, HDR_LOCATION, "%s", redirect_location.content() );
         }
 
         httpHeaderPutStrf(&rep->header, HDR_X_SQUID_ERROR, "%d %s", httpStatus, "Access Denied");
@@ -1048,7 +1066,7 @@ ErrorState::BuildContent()
 
     while ((p = strchr(m, '%'))) {
         content->append(m, p - m);	/* copy */
-        t = Convert(*++p);		/* convert */
+        t = Convert(*++p, false);	/* convert */
         content->Printf("%s", t);	/* copy */
         m = p + 1;			/* advance */
     }
