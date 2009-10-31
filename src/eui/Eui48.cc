@@ -119,7 +119,7 @@ struct arpreq {
  */
 
 bool
-Eui48::decode(const char *asc)
+Eui::Eui48::decode(const char *asc)
 {
     int a1 = 0, a2 = 0, a3 = 0, a4 = 0, a5 = 0, a6 = 0;
 
@@ -139,7 +139,7 @@ Eui48::decode(const char *asc)
 }
 
 bool
-Eui48::encode(char *buf, const int len)
+Eui::Eui48::encode(char *buf, const int len)
 {
     if (len < SZ_EUI48_BUF) return false;
 
@@ -152,7 +152,7 @@ Eui48::encode(char *buf, const int len)
 
 // return binary representation of the EUI
 bool
-Eui48::lookup(IpAddress &c)
+Eui::Eui48::lookup(IpAddress &c)
 {
     struct arpreq arpReq;
 #if !defined(_SQUID_WIN32_)
@@ -274,7 +274,7 @@ Eui48::lookup(IpAddress &c)
             else if (ENODEV == errno)
                 (void) 0;
             else
-                debugs(28, 1, "ARP query failed: " << ifr->ifr_name << ": " << xstrerror());
+                debugs(28, 1, "ARP query " << ipAddr << " failed: " << ifr->ifr_name << ": " << xstrerror());
 
             continue;
         }

@@ -1076,9 +1076,11 @@ AC_ARG_ENABLE(cachemgr-hostname,
 ])
 
 AM_CONDITIONAL(USE_SQUID_EUI, false)
+use_sq_eui="yes"
 AC_ARG_ENABLE(eui,
-  AS_HELP_STRING([--enable-eui],[Enable use of ARP / MAC/ EUI (ether address)]),
-[  if test "$enableval" = "yes" ; then
+  AS_HELP_STRING([--disable-eui],[Enable use of ARP / MAC/ EUI (ether address)]),
+  [use_sq_eui="$enableval"])
+if test "$use_sq_eui" = "yes" ; then
      AC_MSG_NOTICE([EUI controls enabled (ether address)])
      case "$host" in
 	*-linux-*)
@@ -1115,8 +1117,9 @@ AC_ARG_ENABLE(eui,
 	)
      AC_DEFINE(USE_SQUID_EUI,1,[Define this to include code which lets you use ethernet hardware addresses.  This code uses functions found in 4.4 BSD derviations (e.g. FreeBSD, ?).])
      AM_CONDITIONAL(USE_SQUID_EUI, true)
-   fi
-])
+else
+    AC_MSG_NOTICE([EUI controls disabled (ether address)])
+fi
 
 USE_HTCP=true
 AM_CONDITIONAL(ENABLE_HTCP, false)
@@ -3285,6 +3288,7 @@ AC_CHECK_FUNCS(\
 dnl ... and some we provide local replacements for
 AC_REPLACE_FUNCS(\
 	drand48 \
+	eui64_aton \
 	inet_ntop \
 	inet_pton \
 	initgroups \

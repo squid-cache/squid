@@ -6614,4 +6614,13 @@ DOC_START
 	Note: after changing this, Squid service must be restarted.
 DOC_END
 
+NAME: eui_lookup
+TYPE: onoff
+IFDEF: USE_SQUID_EUI
+DEFAULT: on
+LOC: Eui::TheConfig.euiLookup
+DOC_START
+	Whether to lookup the EUI or MAC address of a connected client.
+DOC_END
+
 EOF

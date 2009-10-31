@@ -294,6 +294,9 @@ This section gives a thorough account of those changes in three categories:
 <sect1>New tags<label id="newtags">
 <p>
 <descrip>
+	<tag>eui_lookup</tag>
+	<p> Whether to lookup the EUI or MAC address of a connected client.
+
 	<tag>memory_cache_mode</tag>
 	<p> Controls which objects to keep in the memory cache (cache_mem)
 	<verb>
@@ -306,14 +309,19 @@ This section gives a thorough account of those changes in three categories:
 	network   Only objects fetched from network is kept in memory
 	</verb>
 
-
 </descrip>
 
 <sect1>Changes to existing tags<label id="modifiedtags">
 <p>
 <descrip>
+	<tag>external_acl_type</tag>
+	<p>New format tag <em>%SRCEUI48</em> EUI-48 / MAC address of client from ARP lookup.
+	<p>New format tag <em>%SRCEUI64</em> EUI-64 of clients with SLAAC address.
+
 	<tag>logformat</tag>
 	<p><em>%sn</em> Unique sequence number per log line. Ported from 2.7
+	<p><em>%>eui</em> EUI logging (EUI-48 / MAC address for IPv4, EUI-64 for IPv6)
+	   Both EUI forms are logged in the same field. Type can be identified by length or byte delimiter.
 
 	<tag>windows_ipaddrchangemonitor</tag>
 	<p>Now only available to be set in Windows builds.

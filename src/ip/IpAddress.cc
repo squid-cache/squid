@@ -365,6 +365,25 @@ void IpAddress::SetLocalhost()
 #endif
 }
 
+bool IpAddress::IsSiteLocal6() const
+{
+#if USE_IPV6
+    return (m_SocketAddr.sin6_addr.s6_addr32[0] & htonl(0xff80)) == htonl(0xfe80);
+#else
+    return false;
+#endif
+}
+
+bool IpAddress::IsSlaac() const
+{
+#if USE_IPV6
+    return (m_SocketAddr.sin6_addr.s6_addr32[2] & htonl(0x000000ff)) == htonl(0x000000ff) && 
+           (m_SocketAddr.sin6_addr.s6_addr32[3] & htonl(0xff000000)) == htonl(0xfe000000);
+#else
+    return false;
+#endif
+}
+
 bool IpAddress::IsNoAddr() const
 {
     // IFF the address == 0xff..ff (all ones)

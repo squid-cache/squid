@@ -14,6 +14,8 @@ class IpAddress;
 #include <cstring>
 #endif
 
+namespace Eui {
+
 class Eui48
 {
 
@@ -60,6 +62,8 @@ public:
 private:
     unsigned char eui[SZ_EUI48_BUF];
 };
+
+}; // namespace Eui
 
 #endif /* USE_SQUID_EUI */
 #endif /* _SQUID_EUI_EUI48_H */
