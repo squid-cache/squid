@@ -1351,7 +1351,7 @@ void
 HttpStateData::maybeReadVirginBody()
 {
     // we may need to grow the buffer if headers do not fit
-    const int minRead = flags.headers_parsed ? 0 : 1024;
+    const int minRead = flags.headers_parsed ? 0 :1024;
     const int read_sz = replyBodySpace(*readBuf, minRead);
 
     debugs(11,9, HERE << (flags.do_next_read ? "may" : "wont") <<

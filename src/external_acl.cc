@@ -141,6 +141,10 @@ struct _external_acl_format {
 #endif
         EXT_ACL_SRC,
         EXT_ACL_SRCPORT,
+#if USE_SQUID_EUI
+        EXT_ACL_SRCEUI48,
+        EXT_ACL_SRCEUI64,
+#endif
         EXT_ACL_MYADDR,
         EXT_ACL_MYPORT,
         EXT_ACL_URI,
@@ -385,6 +389,12 @@ parse_externalAclHelper(external_acl ** list)
             format->type = _external_acl_format::EXT_ACL_SRC;
         else if (strcmp(token, "%SRCPORT") == 0)
             format->type = _external_acl_format::EXT_ACL_SRCPORT;
+#if USE_SQUID_EUI
+        else if (strcmp(token, "%SRCEUI48") == 0)
+            format->type = _external_acl_format::EXT_ACL_SRCEUI48;
+        else if (strcmp(token, "%SRCEUI64") == 0)
+            format->type = _external_acl_format::EXT_ACL_SRCEUI64;
+#endif
         else if (strcmp(token, "%MYADDR") == 0)
             format->type = _external_acl_format::EXT_ACL_MYADDR;
         else if (strcmp(token, "%MYPORT") == 0)
@@ -420,6 +430,7 @@ parse_externalAclHelper(external_acl ** list)
         else if (strcmp(token, "%EXT_USER") == 0)
             format->type = _external_acl_format::EXT_ACL_EXT_USER;
         else {
+            debugs(0,0, "ERROR: Unknown Format token " << token);
             self_destruct();
         }
 
@@ -515,6 +526,11 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
 
                 DUMP_EXT_ACL_TYPE(SRC);
                 DUMP_EXT_ACL_TYPE(SRCPORT);
+#if USE_SQUID_EUI
+                DUMP_EXT_ACL_TYPE(SRCEUI48);
+                DUMP_EXT_ACL_TYPE(SRCEUI64);
+#endif
+
                 DUMP_EXT_ACL_TYPE(MYADDR);
                 DUMP_EXT_ACL_TYPE(MYPORT);
                 DUMP_EXT_ACL_TYPE(URI);
@@ -852,6 +868,18 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
             snprintf(buf, sizeof(buf), "%d", request->client_addr.GetPort());
             str = buf;
             break;
+
+#if USE_SQUID_EUI
+        case _external_acl_format::EXT_ACL_SRCEUI48:
+            if (request->client_eui48.encode(buf, sizeof(buf)))
+                str = buf;
+            break;
+
+        case _external_acl_format::EXT_ACL_SRCEUI64:
+            if (request->client_eui64.encode(buf, sizeof(buf)))
+                str = buf;
+            break;
+#endif
 
         case _external_acl_format::EXT_ACL_MYADDR:
             str = request->my_addr.NtoA(buf, sizeof(buf));

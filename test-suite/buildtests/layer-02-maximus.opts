@@ -60,7 +60,7 @@ OPTS=" \
 	--enable-kill-parent-hack \
 	--enable-snmp \
 	--enable-cachemgr-hostname \
-	--enable-arp-acl \
+	--enable-eui \
 	--enable-htcp \
 	--enable-ssl \
 	--enable-forw-via-db \
@@ -112,5 +112,3 @@ OPTS=" \
 
 # Fix the distclean testing.
 export DISTCHECK_CONFIGURE_FLAGS="${OPTS}"
-
-
