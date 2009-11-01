@@ -49,7 +49,7 @@ OPTS=" \
 	--disable-kill-parent-hack \
 	--disable-snmp \
 	--disable-cachemgr-hostname \
-	--disable-arp-acl \
+	--disable-eui \
 	--disable-htcp \
 	--disable-ssl \
 	--disable-forw-via-db \
