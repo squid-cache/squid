@@ -14,7 +14,8 @@ class IpAddress;
 #include <sys/eui64.h>
 #endif
 
-namespace Eui {
+namespace Eui
+{
 
 /* EUI-64 is 8 bytes. */
 #if defined(EUI64_LEN)
@@ -23,7 +24,8 @@ namespace Eui {
 #define SZ_EUI64_BUF 8
 #endif
 
-class Eui64 {
+class Eui64
+{
 
 public:
     Eui64() { clear(); };

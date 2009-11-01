@@ -3057,8 +3057,7 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
     if (Eui::TheConfig.euiLookup) {
         if (details->peer.IsIPv4()) {
             connState->peer_eui48.lookup(details->peer);
-        }
-        else if (details->peer.IsIPv6()) {
+        } else if (details->peer.IsIPv6()) {
             connState->peer_eui64.lookup(details->peer);
         }
     }

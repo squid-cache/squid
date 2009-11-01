@@ -1,7 +1,8 @@
 #ifndef SQUID_EUI_CONFIG_H
 #define SQUID_EUI_CONFIG_H
 
-namespace Eui {
+namespace Eui
+{
 
 class EuiConfig
 {

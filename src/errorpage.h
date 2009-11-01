@@ -106,7 +106,7 @@ private:
 
     /**
      * Map the Error page and deny_info template % codes into textual output.
-     * 
+     *
      * Several of the codes produce blocks of non-URL compatible results.
      * When processing the deny_info location URL they will be skipped.
      *
