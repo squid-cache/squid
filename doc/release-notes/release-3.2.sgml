@@ -314,6 +314,9 @@ This section gives a thorough account of those changes in three categories:
 <sect1>Changes to existing tags<label id="modifiedtags">
 <p>
 <descrip>
+	<tag>acl random</tag>
+	<p>New type <em>random</em>. Pseudo-randomly match requests based on a configured probability.
+
 	<tag>deny_info</tag>
 	<p>Support URL format tags. For dynamically generated URL in denial redirect.
 
