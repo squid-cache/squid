@@ -636,6 +636,11 @@ DOC_START
 	  # clients may appear to come from multiple addresses if they are
 	  # going through proxy farms, so a limit of 1 may cause user problems.
 
+	acl aclname random probability
+	  # Pseudo-randomly match requests. Based on the probability given.
+	  # Probability may be written as a decimal (0.333), fraction (1/3)
+	  # or ratio of matches:non-matches (3:5).
+
 	acl aclname req_mime_type [-i] mime-type ...
 	  # regex match against the mime type of the request generated
 	  # by the client. Can be used to detect file upload or some
