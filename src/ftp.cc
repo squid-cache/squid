@@ -998,17 +998,17 @@ FtpStateData::htmlifyListEntry(const char *line)
     html = new MemBuf();
     html->init();
     html->Printf("<tr class=\"entry\">"
-             "<td class=\"icon\"><a href=\"%s%s\">%s</a></td>"
-             "<td class=\"filename\"><a href=\"%s%s\">%s</a></td>"
-             "<td class=\"date\">%s</td>"
-             "<td class=\"size\">%s</td>"
-             "<td class=\"actions\">%s%s%s%s</td>"
-             "</tr>\n",
-             prefix, href, icon,
-             prefix, href, html_quote(text),
-             parts->date,
-             size,
-             chdir, view, download, link);
+                 "<td class=\"icon\"><a href=\"%s%s\">%s</a></td>"
+                 "<td class=\"filename\"><a href=\"%s%s\">%s</a></td>"
+                 "<td class=\"date\">%s</td>"
+                 "<td class=\"size\">%s</td>"
+                 "<td class=\"actions\">%s%s%s%s</td>"
+                 "</tr>\n",
+                 prefix, href, icon,
+                 prefix, href, html_quote(text),
+                 parts->date,
+                 size,
+                 chdir, view, download, link);
 
     ftpListPartsFree(&parts);
     return html;
@@ -1078,7 +1078,7 @@ FtpStateData::parseListing()
 
         t = htmlifyListEntry(line);
 
-        if( t != NULL) {
+        if ( t != NULL) {
             debugs(9, 7, HERE << "listing append: t = {" << t->contentSize() << ", '" << t->content() << "'}");
             listing.append(t->content(), t->contentSize());
 //leak?            delete t;

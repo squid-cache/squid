@@ -14,7 +14,8 @@ class IpAddress;
 #include <cstring>
 #endif
 
-namespace Eui {
+namespace Eui
+{
 
 class Eui48
 {

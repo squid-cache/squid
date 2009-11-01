@@ -377,7 +377,7 @@ bool IpAddress::IsSiteLocal6() const
 bool IpAddress::IsSlaac() const
 {
 #if USE_IPV6
-    return (m_SocketAddr.sin6_addr.s6_addr32[2] & htonl(0x000000ff)) == htonl(0x000000ff) && 
+    return (m_SocketAddr.sin6_addr.s6_addr32[2] & htonl(0x000000ff)) == htonl(0x000000ff) &&
            (m_SocketAddr.sin6_addr.s6_addr32[3] & htonl(0xff000000)) == htonl(0xfe000000);
 #else
     return false;

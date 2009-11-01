@@ -657,9 +657,9 @@ ErrorState::Convert(char token, bool url_presentable)
     case 'g':
         if (url_presentable) break;
         /* FTP SERVER MESSAGE */
-        if(ftp.server_msg)
+        if (ftp.server_msg)
             wordlistCat(ftp.server_msg, &mb);
-        else if(ftp.listing) {
+        else if (ftp.listing) {
             mb.append(ftp.listing->content(), ftp.listing->contentSize());
             do_quote = 0;
         }
@@ -763,8 +763,7 @@ ErrorState::Convert(char token, bool url_presentable)
         if (url_presentable) {
             p = request ? urlCanonical(request) : url;
             debugs(0,0, "WARNING: deny_info now accepts coded tags. Use %u to get the full URL instead of %s");
-        }
-        else
+        } else
             p = visible_appname_string;
         break;
 

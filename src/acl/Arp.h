@@ -39,8 +39,9 @@
 #include "acl/Checklist.h"
 #include "splay.h"
 
-namespace Eui {
-    class Eui48;
+namespace Eui
+{
+class Eui48;
 };
 
 /// \ingroup ACLAPI

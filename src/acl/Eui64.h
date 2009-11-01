@@ -36,8 +36,9 @@
 #include "acl/Checklist.h"
 #include "splay.h"
 
-namespace Eui {
-    class Eui64;
+namespace Eui
+{
+class Eui64;
 };
 
 
