@@ -166,7 +166,8 @@ COMMON_LIBS = \
 	auth/libauth.la \
 	acl/libapi.la \
 	ip/libip.la \
-	fs/libfs.la
+	fs/libfs.la \
+	@XTRA_LIBS@
 
 ## Loadable Modules needs lib/libLtdl stuff
 INCLUDES += -I$(top_srcdir)/lib
@@ -548,7 +549,6 @@ squid_LDADD = \
 	$(ESI_LIBS) \
 	$(COMPAT_LIB) \
 	@SSLLIB@ \
-	@XTRA_LIBS@ \
 	@EPOLL_LIBS@ \
 	@MINGW_LIBS@ \
 	@KRB5LIBS@
@@ -638,7 +638,6 @@ ufsdump_LDADD = \
 	@SNMPLIB@ \
 	@SSLLIB@ \
 	-L$(top_builddir)/lib -lmiscutil \
-	@XTRA_LIBS@ \
 	@EPOLL_LIBS@ \
 	@MINGW_LIBS@
 ufsdump_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
@@ -658,7 +657,7 @@ sysconf_DATA = \
 data_DATA = \
 	mib.txt
 
-LDADD = $(COMMON_LIBS) -L../lib -lmiscutil @XTRA_LIBS@ @EPOLL_LIBS@ @MINGW_LIBS@
+LDADD = $(COMMON_LIBS) -L../lib -lmiscutil @EPOLL_LIBS@ @MINGW_LIBS@
 
 EXTRA_DIST = \
 	cf_gen_defines \
@@ -1209,7 +1208,6 @@ tests_testCacheManager_LDADD = \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
 	@SSLLIB@ \
-	@XTRA_LIBS@ \
 	@KRB5LIBS@
 tests_testCacheManager_LDFLAGS = $(LIBADD_DL)
 tests_testCacheManager_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
@@ -1382,7 +1380,6 @@ tests_testEvent_LDADD = \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
 	@SSLLIB@ \
-	@XTRA_LIBS@ \
 	@KRB5LIBS@
 tests_testEvent_LDFLAGS = $(LIBADD_DL)
 tests_testEvent_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
@@ -1531,7 +1528,6 @@ tests_testEventLoop_LDADD = \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
 	@SSLLIB@ \
-	@XTRA_LIBS@ \
 	@KRB5LIBS@
 tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
 tests_testEventLoop_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
@@ -1675,7 +1671,6 @@ tests_test_http_range_LDADD = \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
 	@SSLLIB@ \
-	@XTRA_LIBS@ \
 	@KRB5LIBS@
 tests_test_http_range_LDFLAGS = $(LIBADD_DL)
 tests_test_http_range_DEPENDENCIES = \
@@ -1824,7 +1819,6 @@ tests_testHttpRequest_LDADD = \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
 	@SSLLIB@ \
-	@XTRA_LIBS@ \
 	@KRB5LIBS@
 tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 tests_testHttpRequest_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
@@ -2174,7 +2168,6 @@ tests_testURL_LDADD = \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
 	@SSLLIB@ \
-	@XTRA_LIBS@ \
 	@KRB5LIBS@
 tests_testURL_LDFLAGS = $(LIBADD_DL)
 tests_testURL_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
