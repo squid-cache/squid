@@ -1440,8 +1440,10 @@ clientReplyContext::cloneReply()
 
     reply = HTTPMSGLOCK(rep);
 
-    /* enforce 1.0 reply version */
-    reply->sline.version = HttpVersion(1,0);
+    if (reply->sline.protocol == PROTO_HTTP) {
+        /* enforce 1.0 reply version (but only on real HTTP traffic) */
+        reply->sline.version = HttpVersion(1,0);
+    }
 
     /* do header conversions */
     buildReplyHeader();
