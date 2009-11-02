@@ -128,6 +128,8 @@ testHttpReply::testSanityCheckFirstLine()
     CPPUNIT_ASSERT(engine.sanityCheckStartLine(&input, hdr_len, &error) );
     CPPUNIT_ASSERT_EQUAL(error, HTTP_STATUS_NONE);
     input.reset();
+    engine.reset();
+    engine.protoPrefix="HTTP/";
     error = HTTP_STATUS_NONE;
 
     input.append("HTTP/1.1 200 \n\n", 15); /* real case seen */
