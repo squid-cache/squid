@@ -842,7 +842,7 @@ use_adaptation=no
 
 use_esi=yes
 AC_ARG_ENABLE(esi,
-  AS_HELP_STRING([--enable-esi],[Enable ESI for accelerators. Benefits from libexpat or libxml2.
+  AS_HELP_STRING([--enable-esi],[Enable ESI for accelerators. Benefits from expat or libxml2.
                   Enabling ESI will cause squid reverse proxies to be capable of the
                   Edge Acceleration Specification (www.esi.org).]),
 	      use_esi=$enableval, use_esi=no)
@@ -854,13 +854,13 @@ if test "$use_esi" = "yes" ; then
   AC_MSG_NOTICE([Enabling ESI processor and Surrogate header support.])
   AC_DEFINE(USE_SQUID_ESI,1,[Compile the ESI processor and Surrogate header support])
 
-  AC_ARG_WITH(libexpat, AS_HELP_STRING([--without-libexpat],[Do not use libexpat for ESI. Default: auto-detect]))
-  if test "$with_libexpat" != "no" ; then
+  AC_ARG_WITH(expat, AS_HELP_STRING([--without-expat],[Do not use expat for ESI. Default: auto-detect]))
+  if test "$with_expat" != "no" ; then
     AC_CHECK_LIB([expat], [main], [EXPATLIB="-lexpat"; HAVE_LIBEXPAT=1])
     AC_CHECK_HEADERS([expat.h])
     AC_DEFINE_UNQUOTED(HAVE_LIBEXPAT, $HAVE_LIBEXPAT, [Define to 1 if you have the expat library])
-    if test "$with_libexpat" = "yes" && test "$HAVE_LIBEXPAT" != "1" ; then
-      AC_MSG_ERROR([Required library libexpat is not able to be found.])
+    if test "$with_expat" = "yes" && test "$HAVE_LIBEXPAT" != "1" ; then
+      AC_MSG_ERROR([Required library expat is not able to be found.])
     fi
   fi
 
