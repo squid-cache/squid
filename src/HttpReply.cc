@@ -464,8 +464,7 @@ HttpReply::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status *
     if (strncmp(buf->content(), "ICY", 3) == 0) {
         protoPrefix = "ICY";
         pos = protoPrefix.psize();
-    }
-    else {
+    } else {
 
         if (protoPrefix.cmp(buf->content(), protoPrefix.size()) != 0) {
             debugs(58, 3, "HttpReply::sanityCheckStartLine: missing protocol prefix (" << protoPrefix << ") in '" << buf->content() << "'");
@@ -475,7 +474,7 @@ HttpReply::sanityCheckStartLine(MemBuf *buf, const size_t hdr_len, http_status *
 
         // catch missing or negative status value (negative '-' is not a digit)
         pos = protoPrefix.psize();
- 
+
         // skip arbitrary number of digits and a dot in the verion portion
         while ( pos <= buf->contentSize() && (*(buf->content()+pos) == '.' || xisdigit(*(buf->content()+pos)) ) ) ++pos;
 
