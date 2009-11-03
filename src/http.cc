@@ -718,7 +718,7 @@ HttpStateData::processReplyHeader()
     }
 
     flags.chunked = 0;
-    if (newrep->header.hasListMember(HDR_TRANSFER_ENCODING, "chunked", ',')) {
+    if (newrep->sline.protocol == PROTO_HTTP && newrep->header.hasListMember(HDR_TRANSFER_ENCODING, "chunked", ',')) {
         flags.chunked = 1;
         httpChunkDecoder = new ChunkedCodingParser;
     }
