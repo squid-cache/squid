@@ -212,6 +212,20 @@ if test "$GCC" = "yes"; then
     esac
     unset GCCVER
     unset GCCVER2
+
+dnl try to use -pipe
+    AC_MSG_CHECKING([if gcc -pipe works])
+    SAVED_CFLAGS="$CFLAGS"
+    SAVED_CXXFLAGS="$CXXFLAGS"
+    CFLAGS="$CFLAGS -pipe"
+    CXXFLAGS="$CXXFLAGS -pipe"
+    AC_COMPILE_IFELSE(AC_LANG_PROGRAM([],[return 0;]),[AC_MSG_RESULT([yes])],[
+        AC_MSG_RESULT([no])
+        CFLAGS="$SAVED_CFLAGS"
+        CXXFLAGS="$SAVED_CXXFLAGS"
+        ])
+    unset SAVED_CFLAGS
+    unset SAVED_CXXFLAGS
 fi
 
 dnl Set Default CFLAGS
