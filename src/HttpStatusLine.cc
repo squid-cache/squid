@@ -110,8 +110,7 @@ httpStatusLineParse(HttpStatusLine * sline, const String &protoPrefix, const cha
         debugs(57, 3, "httpStatusLineParse: Invalid HTTP identifier. Detected ICY protocol istead.");
         sline->protocol = PROTO_ICY;
         start += protoPrefix.size();
-    }
-    else if (protoPrefix.caseCmp(start, protoPrefix.size()) == 0) {
+    } else if (protoPrefix.caseCmp(start, protoPrefix.size()) == 0) {
 
         start += protoPrefix.size();
 
@@ -121,8 +120,7 @@ httpStatusLineParse(HttpStatusLine * sline, const String &protoPrefix, const cha
         if (sscanf(start, "%d.%d", &sline->version.major, &sline->version.minor) != 2) {
             debugs(57, 7, "httpStatusLineParse: Invalid HTTP identifier.");
         }
-    }
-    else
+    } else
         return 0;
 
     if (!(start = strchr(start, ' ')))
