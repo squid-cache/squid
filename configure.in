@@ -2541,6 +2541,7 @@ AC_CHECK_TYPE(mtyp_t,AC_DEFINE(HAVE_MTYP_T,1,[mtyp_t is defined by the system he
 dnl Check for needed libraries
 AC_CHECK_LIB(nsl, main)
 AC_CHECK_LIB(socket, main)
+AC_CHECK_LIB(opcom_stack,main)
 dnl Check for Winsock only on MinGW, on Cygwin we must use emulated BSD socket API
 case "$host_os" in
   mingw|mingw32)

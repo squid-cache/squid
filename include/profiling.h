@@ -67,7 +67,11 @@ get_tick(void)
 }
 
 #else
-#warning Unsupported CPU. Define function get_tick(). Disabling USE_XPROF_STATS...
+static inline hrtime_t
+get_tick(void)
+{
+	return 0; //unsupported on the CPU
+}
 #undef USE_XPROF_STATS
 #endif
 

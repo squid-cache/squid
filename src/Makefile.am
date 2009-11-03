@@ -165,10 +165,11 @@ COMMON_LIBS = \
 	auth/libauth.la \
 	acl/libapi.la \
 	ip/libip.la \
-	fs/libfs.la
+	fs/libfs.la \
+	@XTRA_LIBS@
 
 ## Loadable Modules needs lib/libLtdl stuff
-INCLUDES += -I$(top_srcdir)/lib
+INCLUDES += -I$(top_srcdir)/lib -I$(top_srcdir)/lib/libLtdl
 
 EXTRA_PROGRAMS = \
 	DiskIO/DiskDaemon/diskd \
@@ -533,7 +534,6 @@ squid_LDADD = \
 	$(ESI_LIBS) \
 	@SSLLIB@ \
 	-lmiscutil \
-	@XTRA_LIBS@ \
 	@EPOLL_LIBS@ \
 	@MINGW_LIBS@ 
 squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
@@ -619,7 +619,6 @@ ufsdump_LDADD = \
 	@SNMPLIB@ \
 	@SSLLIB@ \
 	-L$(top_builddir)/lib -lmiscutil \
-	@XTRA_LIBS@ \
 	@EPOLL_LIBS@ \
 	@MINGW_LIBS@ 
 ufsdump_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
@@ -916,6 +915,7 @@ tests_testHttpReply_LDADD=\
 	acl/libstate.la \
 	auth/libauth.la \
 	ip/libip.la \
+	@XTRA_LIBS@ \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
 	-L../lib -lmiscutil
@@ -1180,8 +1180,7 @@ tests_testCacheManager_LDADD = \
 	-L../lib -lmiscutil \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
-	@SSLLIB@ \
-	@XTRA_LIBS@
+	@SSLLIB@
 tests_testCacheManager_LDFLAGS = $(LIBADD_DL)
 tests_testCacheManager_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
@@ -1351,8 +1350,7 @@ tests_testEvent_LDADD = \
 	-L../lib -lmiscutil \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
-	@SSLLIB@ \
-	@XTRA_LIBS@
+	@SSLLIB@
 tests_testEvent_LDFLAGS = $(LIBADD_DL)
 tests_testEvent_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
@@ -1499,8 +1497,7 @@ tests_testEventLoop_LDADD = \
 	-L../lib -lmiscutil \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
-	@SSLLIB@ \
-	@XTRA_LIBS@
+	@SSLLIB@
 tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
 tests_testEventLoop_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
@@ -1642,8 +1639,7 @@ tests_test_http_range_LDADD = \
 	-L../lib -lmiscutil \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
-	@SSLLIB@ \
-	@XTRA_LIBS@
+	@SSLLIB@
 tests_test_http_range_LDFLAGS = $(LIBADD_DL)
 tests_test_http_range_DEPENDENCIES = \
 	@SQUID_CPPUNIT_LA@
@@ -1790,8 +1786,7 @@ tests_testHttpRequest_LDADD = \
 	-L../lib -lmiscutil \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
-	@SSLLIB@ \
-	@XTRA_LIBS@
+	@SSLLIB@
 tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 tests_testHttpRequest_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
@@ -2141,8 +2136,7 @@ tests_testURL_LDADD = \
 	-L../lib -lmiscutil \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
-	@SSLLIB@ \
-	@XTRA_LIBS@
+	@SSLLIB@
 tests_testURL_LDFLAGS = $(LIBADD_DL)
 tests_testURL_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \

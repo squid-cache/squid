@@ -69,6 +69,13 @@ static void restoreCapabilities(int keep);
 SQUIDCEXTERN int backtrace(void *, int);
 SQUIDCEXTERN void backtrace_symbols_fd(void *, int, int);
 SQUIDCEXTERN int setresuid(uid_t, uid_t, uid_t);
+
+#else /* _SQUID_LINUX_ */
+/* needed on Opensolaris for backtrace_symbols_fd */
+#if HAVE_EXECINFO_H
+#include <execinfo.h>
+#endif /* HAVE_EXECINFO_H */
+
 #endif /* _SQUID_LINUX */
 
 SQUIDCEXTERN void (*failure_notify) (const char *);
@@ -335,7 +342,7 @@ death(int sig)
     }
 
 #endif /* _SQUID_HPUX_ */
-#ifdef _SQUID_SOLARIS_
+#if defined(_SQUID_SOLARIS_) && HAVE_LIBOPCOM_STACK
     {				/* get ftp://opcom.sun.ca/pub/tars/opcom_stack.tar.gz and */
         extern void opcom_stack_trace(void);	/* link with -lopcom_stack */
         fflush(debug_log);
@@ -344,7 +351,7 @@ death(int sig)
         fflush(stdout);
     }
 
-#endif /* _SQUID_SOLARIS_ */
+#endif /* _SQUID_SOLARIS_  and HAVE_LIBOPCOM_STACK */
 #if HAVE_BACKTRACE_SYMBOLS_FD
     {
         static void *(callarray[8192]);

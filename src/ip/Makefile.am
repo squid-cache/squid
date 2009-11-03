@@ -24,6 +24,7 @@ testIpAddress_LDADD= \
 	$(top_builddir)/compat/libcompat.la \
 	libip.la \
 	-L$(top_builddir)/lib -lmiscutil \
+	@XTRA_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
 	@SQUID_CPPUNIT_LIBS@
 testIpAddress_LDFLAGS= $(LIBADD_DL)
