@@ -89,8 +89,8 @@ ACL::Prototype ACLMaxConnection::RegistryProtoype(&ACLMaxConnection::RegistryEnt
 ACLMaxConnection ACLMaxConnection::RegistryEntry_("maxconn");
 ACL::Prototype ACLMethod::RegistryProtoype(&ACLMethod::RegistryEntry_, "method");
 ACLStrategised<HttpRequestMethod> ACLMethod::RegistryEntry_(new ACLMethodData, ACLMethodStrategy::Instance(), "method");
+ACL::Prototype ACLMyIP::RegistryProtoype(&ACLMyIP::RegistryEntry_, "myip");
 ACLMyIP ACLMyIP::RegistryEntry_;
-ACLMyIP const &ACLMyIP::RegistryEntry() {return RegistryEntry_;}
 ACL::Prototype ACLMyPort::RegistryProtoype(&ACLMyPort::RegistryEntry_, "myport");
 ACLStrategised<int> ACLMyPort::RegistryEntry_(new ACLIntRange, ACLMyPortStrategy::Instance(), "myport");
 ACL::Prototype ACLMyPortName::RegistryProtoype(&ACLMyPortName::RegistryEntry_, "myportname");
