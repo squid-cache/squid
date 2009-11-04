@@ -678,7 +678,7 @@ HttpStateData::processReplyHeader()
     HttpReply *newrep = new HttpReply;
     const bool parsed = newrep->parse(readBuf, eof, &error);
 
-    if (!parsed && readBuf->contentSize() > 5 && strncmp(readBuf->content(), "HTTP/", 5) != 0) {
+    if (!parsed && readBuf->contentSize() > 5 && strncmp(readBuf->content(), "HTTP/", 5) != 0 && strncmp(readBuf->content(), "ICY", 3) != 0) {
         MemBuf *mb;
         HttpReply *tmprep = new HttpReply;
         tmprep->sline.version = HttpVersion(1, 0);
@@ -715,7 +715,7 @@ HttpStateData::processReplyHeader()
     }
 
     flags.chunked = 0;
-    if (newrep->header.hasListMember(HDR_TRANSFER_ENCODING, "chunked", ',')) {
+    if (newrep->sline.protocol == PROTO_HTTP && newrep->header.hasListMember(HDR_TRANSFER_ENCODING, "chunked", ',')) {
         flags.chunked = 1;
         httpChunkDecoder = new ChunkedCodingParser;
     }

@@ -39,6 +39,7 @@
 /* local constants */
 /* AYJ: see bug 2469 - RFC2616 confirms stating 'SP characters' plural! */
 const char *HttpStatusLineFormat = "HTTP/%d.%d %3d %s\r\n";
+const char *IcyStatusLineFormat = "ICY %3d %s\r\n";
 
 void
 httpStatusLineInit(HttpStatusLine * sline)
@@ -59,17 +60,31 @@ void
 httpStatusLineSet(HttpStatusLine * sline, HttpVersion version, http_status status, const char *reason)
 {
     assert(sline);
+    sline->protocol = PROTO_HTTP;
     sline->version = version;
     sline->status = status;
     /* Note: no xstrdup for 'reason', assumes constant 'reasons' */
     sline->reason = reason;
 }
 
-/** write HTTP version and status structures into a Packer buffer for output as HTTP status line. */
+/**
+ * Write HTTP version and status structures into a Packer buffer for output as HTTP status line.
+ * Special exemption made for ICY response status lines.
+ */
 void
 httpStatusLinePackInto(const HttpStatusLine * sline, Packer * p)
 {
     assert(sline && p);
+
+    /* handle ICY protocol status line specially. Pass on the bad format. */
+    if (sline->protocol == PROTO_ICY) {
+        debugs(57, 9, "packing sline " << sline << " using " << p << ":");
+        debugs(57, 9, "FORMAT=" << IcyStatusLineFormat );
+        debugs(57, 9, "ICY " << sline->status << " " << (sline->reason ? sline->reason : httpStatusString(sline->status)) );
+        packerPrintf(p, IcyStatusLineFormat, sline->status, httpStatusLineReason(sline));
+        return;
+    }
+
     debugs(57, 9, "packing sline " << sline << " using " << p << ":");
     debug(57, 9) (HttpStatusLineFormat, sline->version.major,
                   sline->version.minor, sline->status,
@@ -91,17 +106,22 @@ httpStatusLineParse(HttpStatusLine * sline, const String &protoPrefix, const cha
     // XXX: HttpMsg::parse() has a similar check but is using
     // casesensitive comparison (which is required by HTTP errata?)
 
-    if (protoPrefix.caseCmp(start, protoPrefix.size()) != 0)
+    if (protoPrefix.cmp("ICY", 3) == 0) {
+        debugs(57, 3, "httpStatusLineParse: Invalid HTTP identifier. Detected ICY protocol istead.");
+        sline->protocol = PROTO_ICY;
+        start += protoPrefix.size();
+    } else if (protoPrefix.caseCmp(start, protoPrefix.size()) == 0) {
+
+        start += protoPrefix.size();
+
+        if (!xisdigit(*start))
+            return 0;
+
+        if (sscanf(start, "%d.%d", &sline->version.major, &sline->version.minor) != 2) {
+            debugs(57, 7, "httpStatusLineParse: Invalid HTTP identifier.");
+        }
+    } else
         return 0;
-
-    start += protoPrefix.size();
-
-    if (!xisdigit(*start))
-        return 0;
-
-    if (sscanf(start, "%d.%d", &sline->version.major, &sline->version.minor) != 2) {
-        debugs(57, 7, "httpStatusLineParse: Invalid HTTP identifier.");
-    }
 
     if (!(start = strchr(start, ' ')))
         return 0;
