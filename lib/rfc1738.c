@@ -190,9 +190,8 @@ fromhex(char ch)
 }
 
 void
-rfc1738_unescape(char *s_)
+rfc1738_unescape(char *s)
 {
-    unsigned char *s = (unsigned char *) s_;
     int i, j;			/* i is write, j is read */
     for (i = j = 0; s[j]; i++, j++) {
         s[i] = s[j];
@@ -203,15 +202,14 @@ rfc1738_unescape(char *s_)
         } else {
             /* decode */
             char v1, v2;
-            int x;
             v1 = fromhex(s[j + 1]);
+	    if (v1 < 0)
+		continue;  /* non-hex or \0 */
             v2 = fromhex(s[j + 2]);
-            /* fromhex returns -1 on error which brings this out of range (|, not +) */
-            x = v1 << 4 | v2;
-            if (x > 0 && x <= 255) {
-                s[i] = x;
-                j += 2;
-            }
+	    if (v2 < 0)
+		continue;  /* non-hex or \0 */
+	    s[i] = v1 << 4 | v2;
+	    j += 2;
         }
     }
     s[i] = '\0';
