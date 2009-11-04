@@ -70,7 +70,7 @@ get_tick(void)
 static inline hrtime_t
 get_tick(void)
 {
-	return 0; //unsupported on the CPU
+    return 0; //unsupported on the CPU
 }
 #undef USE_XPROF_STATS
 #endif
