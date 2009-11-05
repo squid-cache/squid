@@ -202,14 +202,18 @@ rfc1738_unescape(char *s)
         } else {
             /* decode */
             char v1, v2;
+            int x;
             v1 = fromhex(s[j + 1]);
             if (v1 < 0)
                 continue;  /* non-hex or \0 */
             v2 = fromhex(s[j + 2]);
             if (v2 < 0)
                 continue;  /* non-hex or \0 */
-            s[i] = v1 << 4 | v2;
-            j += 2;
+            x = v1 << 4 | v2;
+            if (x > 0 && x <= 255) {
+                s[i] = x;
+                j += 2;
+            }
         }
     }
     s[i] = '\0';
