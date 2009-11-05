@@ -1720,6 +1720,8 @@ if test "$BASIC_AUTH_HELPERS" = "all" ; then
 	    helper="`basename $dir`"
 	    if test -f $dir/config.test && sh $dir/config.test "$@"; then
 		BASIC_AUTH_HELPERS="$BASIC_AUTH_HELPERS $helper"
+            elif test -d $srcdir/helpers/basic_auth/$helper ; then
+                AC_MSG_NOTICE([Basic auth helper $helper ... found but cannot be built])
 	    fi
 	done
 fi
@@ -1766,6 +1768,8 @@ if test "$NTLM_AUTH_HELPERS" = "all" ; then
 	    helper="`basename $dir`"
 	    if test -f $dir/config.test && sh $dir/config.test "$@"; then
 		NTLM_AUTH_HELPERS="$NTLM_AUTH_HELPERS $helper"
+            elif test -d $srcdir/helpers/ntlm_auth/$helper ; then
+                AC_MSG_NOTICE([NTLM auth helper $helper ... found but cannot be built])
 	    fi
 	done
 fi
@@ -1808,6 +1812,8 @@ if test "$NEGOTIATE_AUTH_HELPERS" = "all" ; then
 	    helper="`basename $dir`"
 	    if test -f $dir/config.test && sh $dir/config.test "$@";  then
 		NEGOTIATE_AUTH_HELPERS="$NEGOTIATE_AUTH_HELPERS $helper"
+            elif test -d $srcdir/helpers/negotiate_auth/$helper ; then
+                AC_MSG_NOTICE([Negotiate auth helper $helper ... found but cannot be built])
 	    fi
 	done
 fi
@@ -1822,7 +1828,6 @@ if test -n "$NEGOTIATE_AUTH_HELPERS"; then
     AC_MSG_NOTICE([Negotiate auth helpers built: $NEGOTIATE_AUTH_HELPERS])
 fi
 AC_SUBST(NEGOTIATE_AUTH_HELPERS)
-AC_CONFIG_SUBDIRS(helpers/negotiate_auth/squid_kerb_auth)
 
 dnl Select digest auth scheme helpers to build
 if test -n "$AUTH_MODULE_digest"; then
@@ -1851,6 +1856,8 @@ if test "$DIGEST_AUTH_HELPERS" = "all" ; then
 	    helper="`basename $dir`"
 	    if test -f $dir/config.test && sh $dir/config.test "$@"; then
 		DIGEST_AUTH_HELPERS="$DIGEST_AUTH_HELPERS $helper"
+            elif test -d $srcdir/helpers/digest_auth/$helper ; then
+                AC_MSG_NOTICE([Digest auth helper $helper ... found but cannot be built])
 	    fi
 	done
 fi
@@ -2102,6 +2109,8 @@ if test "$EXTERNAL_ACL_HELPERS" = "all" ; then
 	    helper="`basename $dir`"
 	    if test -f $dir/config.test && sh $dir/config.test "$@"; then
 		EXTERNAL_ACL_HELPERS="$EXTERNAL_ACL_HELPERS $helper"
+            elif test -d $srcdir/helpers/external_acl/$helper ; then
+                AC_MSG_NOTICE([External ACL helper $helper ... found but cannot be built])
 	    fi
 	done
 fi
@@ -2143,6 +2152,8 @@ if test "$URL_REWRITE_HELPERS" = "all" ; then
 	    helper="`basename $dir`"
 	    if test -f $dir/config.test && sh $dir/config.test "$@"; then
 		URL_REWRITE_HELPERS="$URL_REWRITE_HELPERS $helper"
+            elif test -d $srcdir/helpers/url_rewrite/$helper ; then
+                AC_MSG_NOTICE([URL re-write helper $helper ... found but cannot be built])
 	    fi
 	done
 fi
@@ -4193,6 +4204,7 @@ AC_CONFIG_FILES([\
 	helpers/ntlm_auth/smb_lm/smbval/Makefile \
 	helpers/ntlm_auth/mswin_sspi/Makefile \
 	helpers/negotiate_auth/Makefile \
+	helpers/negotiate_auth/kerberos/Makefile \
 	helpers/negotiate_auth/mswin_sspi/Makefile \
 	helpers/external_acl/Makefile \
 	helpers/external_acl/ip_user/Makefile \
