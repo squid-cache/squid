@@ -99,6 +99,17 @@ testHttpReply::testSanityCheckFirstLine()
     error = HTTP_STATUS_NONE;
 #endif
 
+    // valid ICY protocol status line
+    input.append("ICY 200 Okay\n\n", 18);
+    hdr_len = headersEnd(input.content(),input.contentSize());
+    CPPUNIT_ASSERT( engine.sanityCheckStartLine(&input, hdr_len, &error) );
+    CPPUNIT_ASSERT_EQUAL(error, HTTP_STATUS_NONE);
+    input.reset();
+    error = HTTP_STATUS_NONE;
+    /* NP: the engine saves details about the protocol. even when being reset :( */
+    engine.protoPrefix="HTTP/";
+    engine.reset();
+
     // empty status line
     input.append("\n\n", 2);
     hdr_len = headersEnd(input.content(),input.contentSize());
@@ -209,15 +220,4 @@ testHttpReply::testSanityCheckFirstLine()
     CPPUNIT_ASSERT_EQUAL(error, HTTP_INVALID_HEADER);
     input.reset();
     error = HTTP_STATUS_NONE;
-
-    // status line with non-HTTP protocol
-    input.append("ICY/1.1 200 Okay\n\n", 18); /* real case seen */
-    hdr_len = headersEnd(input.content(),input.contentSize());
-    /* NP: for nw ICY is handled as a pass-thru */
-    /*     Squid-3 will ignore it (and mangle the headers as per HTTP). */
-    CPPUNIT_ASSERT(!engine.sanityCheckStartLine(&input, hdr_len, &error) );
-    CPPUNIT_ASSERT_EQUAL(error, HTTP_INVALID_HEADER);
-    input.reset();
-    error = HTTP_STATUS_NONE;
-
 }

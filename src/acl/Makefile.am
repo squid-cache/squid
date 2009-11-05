@@ -79,6 +79,8 @@ libacls_la_SOURCES = \
 	ProtocolData.cc \
 	ProtocolData.h \
 	Protocol.h \
+	Random.cc \
+	Random.h \
 	Referer.cc \
 	Referer.h \
 	ReplyHeaderStrategy.h \
