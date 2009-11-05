@@ -81,19 +81,10 @@ SQUIDCEXTERN void xxfree(const void *);
  * for the extern version in squid
  */
 #ifndef _SQUID_EXTERNNEW_
-#if defined(_SQUID_SGI_) && !defined(_GNUC_)
-/*
- * The gcc compiler treats extern inline functions as being extern,
- * while the SGI MIPSpro compilers treat them as inline. To get equivalent
- * behavior, remove the inline keyword.
- */
-#define _SQUID_EXTERNNEW_ extern
-#else
 #ifdef __GNUC_STDC_INLINE__
 #define _SQUID_EXTERNNEW_ extern inline __attribute__((gnu_inline))
 #else
 #define _SQUID_EXTERNNEW_ extern inline
-#endif
 #endif
 #endif
 #include "SquidNew.h"
