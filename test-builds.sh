@@ -23,6 +23,12 @@ while [ $# -ge 1 ]; do
 	keepGoing="yes"
 	shift
 	;;
+    --use-config-cache)
+        #environment variable will be picked up by buildtest.sh
+        cache_file=/tmp/config.cache.$$
+        export cache_file
+        shift
+        ;;
     *)
     	break
 	;;
@@ -104,6 +110,11 @@ buildtest() {
 	rm -f -r ${log}
     fi
 }
+
+# if using cache, make sure to clear it up first
+if [ -n "$cache_file" -a -e "$cache_file" ]; then
+    rm $cache_file
+fi
 
 # Decide what tests to run, $* contains test spec names or filenames.
 # Use all knows specs if $* is empty or a special macro called 'all'.
