@@ -76,6 +76,7 @@ HttpRequest::init()
     urlpath = NULL;
     login[0] = '\0';
     host[0] = '\0';
+    host_is_numeric = -1;
     auth_user_request = NULL;
     pinned_connection = NULL;
     port = 0;
