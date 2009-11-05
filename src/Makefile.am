@@ -170,7 +170,7 @@ COMMON_LIBS = \
 	@XTRA_LIBS@
 
 ## Loadable Modules needs lib/libLtdl stuff
-INCLUDES += -I$(top_srcdir)/lib
+INCLUDES += -I$(top_srcdir)/lib -I$(top_srcdir)/lib/libLtdl
 
 EXTRA_PROGRAMS = \
 	DiskIO/DiskDaemon/diskd \
