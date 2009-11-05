@@ -70,7 +70,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <sect2>Negotiate Authentication protocol helpers
 <itemize>
-	<item>(none yet converted)
+	<item>squid_kerb_auth - negotiate_kerberos_auth - Authenticate with Kerberos servers.
 </itemize>
 
 <sect2>NTLM Authentication protocol helpers
