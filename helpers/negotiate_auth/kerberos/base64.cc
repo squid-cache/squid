@@ -27,7 +27,7 @@ ska_base64_init(void)
 
     for (i = 0; i < 64; i++)
 	base64_value[(int) base64_code[i]] = i;
-    base64_value['='] = 0;
+    base64_value[(int)'='] = 0;
 
     base64_initialized = 1;
 }
