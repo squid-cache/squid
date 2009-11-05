@@ -177,7 +177,7 @@ rfc1738_escape_part(const char *url)
  *  rfc1738_unescape() - Converts escaped characters (%xy numbers) in
  *  given the string.  %% is a %. %ab is the 8-bit hexadecimal number "ab"
  */
-static inline int 
+static inline int
 fromhex(char ch)
 {
     if (ch >= '0' && ch <= '9')
@@ -203,13 +203,13 @@ rfc1738_unescape(char *s)
             /* decode */
             char v1, v2;
             v1 = fromhex(s[j + 1]);
-	    if (v1 < 0)
-		continue;  /* non-hex or \0 */
+            if (v1 < 0)
+                continue;  /* non-hex or \0 */
             v2 = fromhex(s[j + 2]);
-	    if (v2 < 0)
-		continue;  /* non-hex or \0 */
-	    s[i] = v1 << 4 | v2;
-	    j += 2;
+            if (v2 < 0)
+                continue;  /* non-hex or \0 */
+            s[i] = v1 << 4 | v2;
+            j += 2;
         }
     }
     s[i] = '\0';
