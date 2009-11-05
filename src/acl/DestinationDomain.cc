@@ -81,7 +81,7 @@ ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledCheckl
     }
 
     /* numeric IPA? no, trust the above result. */
-    if(checklist->request->GetHostIsNumeric() == 0) {
+    if (checklist->request->GetHostIsNumeric() == 0) {
         return 0;
     }
 
