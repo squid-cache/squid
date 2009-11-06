@@ -202,9 +202,9 @@ cf_gen_SOURCES = cf_gen.cc
 nodist_cf_gen_HEADER = cf_gen_defines.h
 cf_gen_LDADD= \
 	$(COMPAT_LIB) \
-	@XTRA_LIBS@ \
 	@EPOLL_LIBS@ \
-	@MINGW_LIBS@
+	@MINGW_LIBS@ \
+	@XTRA_LIBS@
 cf_gen.$(OBJEXT): cf_gen_defines.h
 
 ## cf_gen.cc needs src/cf_gen_defines.h
@@ -992,7 +992,7 @@ tests_testAuth_LDADD= \
 	@REGEXLIB@ \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SSLLIB@ \
-	@XTRA_LIBS@ \
+	@XTRA_LIBS@
 tests_testAuth_LDFLAGS = $(LIBADD_DL)
 tests_testAuth_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@SQUID_CPPUNIT_LA@
