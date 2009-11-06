@@ -29,8 +29,8 @@
 
 int
 makeNegTokenTarg(const unsigned char *kerberosToken,
-    size_t kerberosTokenLength,
-    const unsigned char **negTokenTarg, size_t * negTokenTargLength)
+                 size_t kerberosTokenLength,
+                 const unsigned char **negTokenTarg, size_t * negTokenTargLength)
 {
     SPNEGO_TOKEN_HANDLE hSpnegoToken = NULL;
     int rc1 = 1;
@@ -39,7 +39,7 @@ makeNegTokenTarg(const unsigned char *kerberosToken,
     /* Check arguments. */
 
     if (!kerberosToken || !negTokenTarg || !negTokenTargLength)
-	return 10;
+        return 10;
 
     /* Does IIS reply with 1.2.840.48018.1.2.2 or 1.2.840.113554.1.2.2? */
 
@@ -48,59 +48,59 @@ makeNegTokenTarg(const unsigned char *kerberosToken,
     /* IIS does not include a MIC. */
 
     rc2 = spnegoCreateNegTokenTarg(spnego_mech_oid_Kerberos_V5_Legacy,
-	spnego_negresult_success,
-	(unsigned char *) kerberosToken,
-	kerberosTokenLength, NULL, 0, &hSpnegoToken);
+                                   spnego_negresult_success,
+                                   (unsigned char *) kerberosToken,
+                                   kerberosTokenLength, NULL, 0, &hSpnegoToken);
 
     if (rc2 != SPNEGO_E_SUCCESS) {
-	rc1 = abs(rc2) + 100;
-	goto cleanup;
+        rc1 = abs(rc2) + 100;
+        goto cleanup;
     }
 
     /* Get NegTokenTarg length. */
 
     rc2 = spnegoTokenGetBinary(hSpnegoToken,
-	NULL, (unsigned long *) negTokenTargLength);
+                               NULL, (unsigned long *) negTokenTargLength);
 
     if (rc2 != SPNEGO_E_BUFFER_TOO_SMALL) {
-	rc1 = abs(rc2) + 200;
-	goto cleanup;
+        rc1 = abs(rc2) + 200;
+        goto cleanup;
     }
 
     *negTokenTarg = malloc(*negTokenTargLength);
 
     if (!*negTokenTarg) {
-	rc1 = abs(rc2) + 300;
-	goto cleanup;
+        rc1 = abs(rc2) + 300;
+        goto cleanup;
     }
 
     /* Get NegTokenTarg data. */
 
     rc2 = spnegoTokenGetBinary(hSpnegoToken,
-	(unsigned char *) *negTokenTarg, (unsigned long *) negTokenTargLength);
+                               (unsigned char *) *negTokenTarg, (unsigned long *) negTokenTargLength);
 
 
     if (rc2 != SPNEGO_E_SUCCESS) {
-	rc1 = abs(rc2) + 400;
-	goto error;
+        rc1 = abs(rc2) + 400;
+        goto error;
     }
 
     rc1 = 0;
 
     goto cleanup;
 
-  error:
+error:
 
     if (*negTokenTarg) {
-	free((unsigned char *) *negTokenTarg);
-	*negTokenTarg = NULL;
-	*negTokenTargLength = 0;
+        free((unsigned char *) *negTokenTarg);
+        *negTokenTarg = NULL;
+        *negTokenTargLength = 0;
     }
 
-  cleanup:
+cleanup:
 
     if (hSpnegoToken)
-	spnegoFreeData(hSpnegoToken);
+        spnegoFreeData(hSpnegoToken);
 
     LOG(("makeNegTokenTarg returned %d\n", rc1));
     return rc1;
@@ -108,8 +108,8 @@ makeNegTokenTarg(const unsigned char *kerberosToken,
 
 int
 parseNegTokenInit(const unsigned char *negTokenInit,
-    size_t negTokenInitLength,
-    const unsigned char **kerberosToken, size_t * kerberosTokenLength)
+                  size_t negTokenInitLength,
+                  const unsigned char **kerberosToken, size_t * kerberosTokenLength)
 {
     SPNEGO_TOKEN_HANDLE hSpnegoToken = NULL;
     int pindex = -1;
@@ -121,16 +121,16 @@ parseNegTokenInit(const unsigned char *negTokenInit,
     /* Check arguments. */
 
     if (!negTokenInit || !kerberosToken || !kerberosTokenLength)
-	return 10;
+        return 10;
 
     /* Decode SPNEGO token. */
 
     rc2 = spnegoInitFromBinary((unsigned char *) negTokenInit,
-	negTokenInitLength, &hSpnegoToken);
+                               negTokenInitLength, &hSpnegoToken);
 
     if (rc2 != SPNEGO_E_SUCCESS) {
-	rc1 = abs(rc2) + 100;
-	goto cleanup;
+        rc1 = abs(rc2) + 100;
+        goto cleanup;
     }
 
     /* Check for negTokenInit choice. */
@@ -138,13 +138,13 @@ parseNegTokenInit(const unsigned char *negTokenInit,
     rc2 = spnegoGetTokenType(hSpnegoToken, &tokenType);
 
     if (rc2 != SPNEGO_E_SUCCESS) {
-	rc1 = abs(rc2) + 200;
-	goto cleanup;
+        rc1 = abs(rc2) + 200;
+        goto cleanup;
     }
 
     if (tokenType != SPNEGO_TOKEN_INIT) {
-	rc1 = abs(rc2) + 300;
-	goto cleanup;
+        rc1 = abs(rc2) + 300;
+        goto cleanup;
     }
 
     /*
@@ -156,16 +156,16 @@ parseNegTokenInit(const unsigned char *negTokenInit,
      */
 
     rc2 = spnegoIsMechTypeAvailable(hSpnegoToken,
-	spnego_mech_oid_Kerberos_V5_Legacy, &pindex);
+                                    spnego_mech_oid_Kerberos_V5_Legacy, &pindex);
 
     if (rc2 != SPNEGO_E_SUCCESS || pindex != 0) {
-	rc2 = spnegoIsMechTypeAvailable(hSpnegoToken,
-	    spnego_mech_oid_Kerberos_V5, &pindex);
+        rc2 = spnegoIsMechTypeAvailable(hSpnegoToken,
+                                        spnego_mech_oid_Kerberos_V5, &pindex);
 
-	if (rc2 != SPNEGO_E_SUCCESS || pindex != 0) {
-	    rc1 = abs(rc2) + 400;
-	    goto cleanup;
-	}
+        if (rc2 != SPNEGO_E_SUCCESS || pindex != 0) {
+            rc1 = abs(rc2) + 400;
+            goto cleanup;
+        }
     }
 
     /* Check for no reqFlags. */
@@ -175,36 +175,36 @@ parseNegTokenInit(const unsigned char *negTokenInit,
     rc2 = spnegoGetContextFlags(hSpnegoToken, &reqFlags);
 
     if (rc2 == SPNEGO_E_SUCCESS) {
-	rc1 = abs(rc2) + 500;
-	goto cleanup;
+        rc1 = abs(rc2) + 500;
+        goto cleanup;
     }
 
     /* Get mechanism token length. */
 
     rc2 = spnegoGetMechToken(hSpnegoToken,
-	NULL, (unsigned long *) kerberosTokenLength);
+                             NULL, (unsigned long *) kerberosTokenLength);
 
     if (rc2 != SPNEGO_E_BUFFER_TOO_SMALL) {
-	rc1 = abs(rc2) + 600;
-	goto cleanup;
+        rc1 = abs(rc2) + 600;
+        goto cleanup;
     }
 
     *kerberosToken = malloc(*kerberosTokenLength);
 
     if (!*kerberosToken) {
-	rc1 = abs(rc2) + 700;
-	goto cleanup;
+        rc1 = abs(rc2) + 700;
+        goto cleanup;
     }
 
     /* Get mechanism token data. */
 
     rc2 = spnegoGetMechToken(hSpnegoToken,
-	(unsigned char *) *kerberosToken,
-	(unsigned long *) kerberosTokenLength);
+                             (unsigned char *) *kerberosToken,
+                             (unsigned long *) kerberosTokenLength);
 
     if (rc2 != SPNEGO_E_SUCCESS) {
-	rc1 = abs(rc2) + 800;
-	goto error;
+        rc1 = abs(rc2) + 800;
+        goto error;
     }
 
     /* According to Microsoft, IE does not send a MIC. */
@@ -213,18 +213,18 @@ parseNegTokenInit(const unsigned char *negTokenInit,
 
     goto cleanup;
 
-  error:
+error:
 
     if (*kerberosToken) {
-	free((unsigned char *) *kerberosToken);
-	*kerberosToken = NULL;
-	*kerberosTokenLength = 0;
+        free((unsigned char *) *kerberosToken);
+        *kerberosToken = NULL;
+        *kerberosTokenLength = 0;
     }
 
-  cleanup:
+cleanup:
 
     if (hSpnegoToken)
-	spnegoFreeData(hSpnegoToken);
+        spnegoFreeData(hSpnegoToken);
 
     LOG(("parseNegTokenInit returned %d\n", rc1));
     return rc1;
