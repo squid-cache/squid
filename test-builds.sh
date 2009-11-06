@@ -9,6 +9,7 @@ globalResult=0
 cleanup="no"
 verbose="no"
 keepGoing="no"
+remove_cache_file="true"
 while [ $# -ge 1 ]; do
     case "$1" in
     --cleanup)
@@ -26,6 +27,14 @@ while [ $# -ge 1 ]; do
     --use-config-cache)
         #environment variable will be picked up by buildtest.sh
         cache_file=/tmp/config.cache.$$
+        export cache_file
+        shift
+        ;;
+    --aggressively-use-config-cache)
+        #environment variable will be picked up by buildtest.sh
+        #note: use ONLY if you know what you're doing
+        cache_file=/tmp/config.cache
+        remove_cache_file="false"
         export cache_file
         shift
         ;;
@@ -112,7 +121,7 @@ buildtest() {
 }
 
 # if using cache, make sure to clear it up first
-if [ -n "$cache_file" -a -e "$cache_file" ]; then
+if [ -n "$cache_file" -a -e "$cache_file" -a "$remove_cache_file" = "true" ]; then
     rm $cache_file
 fi
 
@@ -147,5 +156,10 @@ for t in $tests; do
 	exit $globalResult
     fi
 done
+
+# if using cache, make sure to clear it up first
+if [ -n "$cache_file" -a -e "$cache_file" -a "$remove_cache_file" = "true" ]; then
+    rm $cache_file
+fi
 
 exit $globalResult
