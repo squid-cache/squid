@@ -5,7 +5,8 @@
 #ifndef SQUID_OS_SOLARIS_H
 #define SQUID_OS_SOLARIS_H
 
-#ifdef _SQUID_SOLARIS_
+
+#if _SQUID_SOLARIS_
 
 /*
  * On Solaris 9 x86, gcc may includes a "fixed" set of old system
@@ -44,6 +45,13 @@ SQUIDCEXTERN int getpagesize(void);
 SQUIDCEXTERN int gethostname(char *, int);
 #endif
 
+/*
+ * SunPro CC handles extern inline as inline, PLUS extern symbols.
+ */
+
+#if !defined(_SQUID_EXTERNNEW_) && defined(__SUNPRO_CC)
+#define _SQUID_EXTERNNEW_ extern
+#endif
 
 
 #endif /* _SQUID_SOLARIS_ */
