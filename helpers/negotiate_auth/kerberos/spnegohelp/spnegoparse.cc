@@ -76,8 +76,8 @@ extern MECH_OID g_stcMechOIDList[];
 
 int
 CalculateMinSpnegoInitTokenSize(long nMechTokenLength,
-    long nMechListMICLength, SPNEGO_MECH_OID mechOid,
-    int nReqFlagsAvailable, long *pnTokenSize, long *pnInternalTokenLength)
+                                long nMechListMICLength, SPNEGO_MECH_OID mechOid,
+                                int nReqFlagsAvailable, long *pnTokenSize, long *pnInternalTokenLength)
 {
     int nReturn = SPNEGO_E_INVALID_LENGTH;
 
@@ -89,44 +89,44 @@ CalculateMinSpnegoInitTokenSize(long nMechTokenLength,
 
     // Start with MIC Element
     if (nMechListMICLength > 0L) {
-	nTempLength = ASNDerCalcElementLength(nMechListMICLength, NULL);
+        nTempLength = ASNDerCalcElementLength(nMechListMICLength, NULL);
 
-	// Check for rollover error
-	if (nTempLength < nMechListMICLength) {
-	    goto xEndTokenInitLength;
-	}
+        // Check for rollover error
+        if (nTempLength < nMechListMICLength) {
+            goto xEndTokenInitLength;
+        }
 
-	nTotalLength += nTempLength;
+        nTotalLength += nTempLength;
     }
     // Next is the MechToken
     if (nMechTokenLength > 0L) {
-	nTempLength += ASNDerCalcElementLength(nMechTokenLength, NULL);
+        nTempLength += ASNDerCalcElementLength(nMechTokenLength, NULL);
 
-	// Check for rollover error
-	if (nTempLength < nTotalLength) {
-	    goto xEndTokenInitLength;
-	}
+        // Check for rollover error
+        if (nTempLength < nTotalLength) {
+            goto xEndTokenInitLength;
+        }
 
-	nTotalLength = nTempLength;
+        nTotalLength = nTempLength;
     }
     // Next is the ReqFlags
     if (nReqFlagsAvailable) {
-	nTempLength +=
-	    ASNDerCalcElementLength(SPNEGO_NEGINIT_MAXLEN_REQFLAGS, NULL);
+        nTempLength +=
+            ASNDerCalcElementLength(SPNEGO_NEGINIT_MAXLEN_REQFLAGS, NULL);
 
-	// Check for rollover error
-	if (nTempLength < nTotalLength) {
-	    goto xEndTokenInitLength;
-	}
+        // Check for rollover error
+        if (nTempLength < nTotalLength) {
+            goto xEndTokenInitLength;
+        }
 
-	nTotalLength = nTempLength;
+        nTotalLength = nTempLength;
     }
     // Next is the MechList - This is REQUIRED
     nTempLength += ASNDerCalcMechListLength(mechOid, NULL);
 
     // Check for rollover error
     if (nTempLength < nTotalLength) {
-	goto xEndTokenInitLength;
+        goto xEndTokenInitLength;
     }
 
     nTotalLength = nTempLength;
@@ -138,7 +138,7 @@ CalculateMinSpnegoInitTokenSize(long nMechTokenLength,
 
     // Check for rollover error
     if (nTempLength < nTotalLength) {
-	goto xEndTokenInitLength;
+        goto xEndTokenInitLength;
     }
 
     nTotalLength = nTempLength;
@@ -148,7 +148,7 @@ CalculateMinSpnegoInitTokenSize(long nMechTokenLength,
 
     // Check for rollover error
     if (nTempLength < nTotalLength) {
-	goto xEndTokenInitLength;
+        goto xEndTokenInitLength;
     }
 
     nTotalLength = nTempLength;
@@ -158,7 +158,7 @@ CalculateMinSpnegoInitTokenSize(long nMechTokenLength,
 
     // Check for rollover error
     if (nTempLength < nTotalLength) {
-	goto xEndTokenInitLength;
+        goto xEndTokenInitLength;
     }
 
     nTotalLength = nTempLength;
@@ -168,7 +168,7 @@ CalculateMinSpnegoInitTokenSize(long nMechTokenLength,
 
     // Check for rollover error
     if (nTempLength < nTotalLength) {
-	goto xEndTokenInitLength;
+        goto xEndTokenInitLength;
     }
     // The internal length doesn't include the number of bytes
     // for the initial token
@@ -179,7 +179,7 @@ CalculateMinSpnegoInitTokenSize(long nMechTokenLength,
     *pnTokenSize = nTotalLength;
     nReturn = SPNEGO_E_SUCCESS;
 
-  xEndTokenInitLength:
+xEndTokenInitLength:
 
     LOG(("CalculateMinSpnegoInitTokenSize returned %d\n", nReturn));
     return nReturn;
@@ -218,10 +218,10 @@ CalculateMinSpnegoInitTokenSize(long nMechTokenLength,
 
 int
 CreateSpnegoInitToken(SPNEGO_MECH_OID MechType,
-    unsigned char ucContextFlags, unsigned char *pbMechToken,
-    unsigned long ulMechTokenLen, unsigned char *pbMechListMIC,
-    unsigned long ulMechListMICLen, unsigned char *pbTokenData,
-    long nTokenLength, long nInternalTokenLength)
+                      unsigned char ucContextFlags, unsigned char *pbMechToken,
+                      unsigned long ulMechTokenLen, unsigned char *pbMechListMIC,
+                      unsigned long ulMechListMICLen, unsigned char *pbTokenData,
+                      long nTokenLength, long nInternalTokenLength)
 {
     int nReturn = SPNEGO_E_INVALID_LENGTH;
 
@@ -241,77 +241,77 @@ CreateSpnegoInitToken(SPNEGO_MECH_OID MechType,
 
     // Start with MIC Element
     if (ulMechListMICLen > 0L) {
-	nTempLength =
-	    ASNDerCalcElementLength(ulMechListMICLen, &nInternalLength);
+        nTempLength =
+            ASNDerCalcElementLength(ulMechListMICLen, &nInternalLength);
 
-	// Decrease the pbWriteTokenData, now we know the length and
-	// write it out.
+        // Decrease the pbWriteTokenData, now we know the length and
+        // write it out.
 
-	pbWriteTokenData -= nTempLength;
-	nTempLength =
-	    ASNDerWriteElement(pbWriteTokenData,
-	    SPNEGO_NEGINIT_ELEMENT_MECHLISTMIC, OCTETSTRING, pbMechListMIC,
-	    ulMechListMICLen);
+        pbWriteTokenData -= nTempLength;
+        nTempLength =
+            ASNDerWriteElement(pbWriteTokenData,
+                               SPNEGO_NEGINIT_ELEMENT_MECHLISTMIC, OCTETSTRING, pbMechListMIC,
+                               ulMechListMICLen);
 
-	// Adjust Values and sanity check
-	nTotalBytesWritten += nTempLength;
-	nInternalTokenLength -= nTempLength;
+        // Adjust Values and sanity check
+        nTotalBytesWritten += nTempLength;
+        nInternalTokenLength -= nTempLength;
 
-	if (nTotalBytesWritten > nTokenLength || nInternalTokenLength < 0) {
-	    goto xEndWriteNegTokenInit;
-	}
+        if (nTotalBytesWritten > nTokenLength || nInternalTokenLength < 0) {
+            goto xEndWriteNegTokenInit;
+        }
 
     }				// IF MechListMIC is present
 
     // Next is the MechToken
     if (ulMechTokenLen > 0L) {
-	nTempLength = ASNDerCalcElementLength(ulMechTokenLen, &nInternalLength);
+        nTempLength = ASNDerCalcElementLength(ulMechTokenLen, &nInternalLength);
 
-	// Decrease the pbWriteTokenData, now we know the length and
-	// write it out.
-	pbWriteTokenData -= nTempLength;
-	nTempLength =
-	    ASNDerWriteElement(pbWriteTokenData,
-	    SPNEGO_NEGINIT_ELEMENT_MECHTOKEN, OCTETSTRING, pbMechToken,
-	    ulMechTokenLen);
-	// Adjust Values and sanity check
-	nTotalBytesWritten += nTempLength;
-	nInternalTokenLength -= nTempLength;
+        // Decrease the pbWriteTokenData, now we know the length and
+        // write it out.
+        pbWriteTokenData -= nTempLength;
+        nTempLength =
+            ASNDerWriteElement(pbWriteTokenData,
+                               SPNEGO_NEGINIT_ELEMENT_MECHTOKEN, OCTETSTRING, pbMechToken,
+                               ulMechTokenLen);
+        // Adjust Values and sanity check
+        nTotalBytesWritten += nTempLength;
+        nInternalTokenLength -= nTempLength;
 
-	if (nTotalBytesWritten > nTokenLength || nInternalTokenLength < 0) {
-	    goto xEndWriteNegTokenInit;
-	}
+        if (nTotalBytesWritten > nTokenLength || nInternalTokenLength < 0) {
+            goto xEndWriteNegTokenInit;
+        }
 
     }				// IF MechToken Length is present
 
     // Next is the ReqFlags
     if (ucContextFlags > 0L) {
 
-	nTempLength =
-	    ASNDerCalcElementLength(SPNEGO_NEGINIT_MAXLEN_REQFLAGS,
-	    &nInternalLength);
+        nTempLength =
+            ASNDerCalcElementLength(SPNEGO_NEGINIT_MAXLEN_REQFLAGS,
+                                    &nInternalLength);
 
-	// We need a byte that indicates how many bits difference between the number
-	// of bits used in final octet (we only have one) and the max (8)
+        // We need a byte that indicates how many bits difference between the number
+        // of bits used in final octet (we only have one) and the max (8)
 
-	abTempReqFlags[0] = SPNEGO_NEGINIT_REQFLAGS_BITDIFF;
-	abTempReqFlags[1] = ucContextFlags;
+        abTempReqFlags[0] = SPNEGO_NEGINIT_REQFLAGS_BITDIFF;
+        abTempReqFlags[1] = ucContextFlags;
 
-	// Decrease the pbWriteTokenData, now we know the length and
-	// write it out.
-	pbWriteTokenData -= nTempLength;
-	nTempLength =
-	    ASNDerWriteElement(pbWriteTokenData,
-	    SPNEGO_NEGINIT_ELEMENT_REQFLAGS, BITSTRING, abTempReqFlags,
-	    SPNEGO_NEGINIT_MAXLEN_REQFLAGS);
+        // Decrease the pbWriteTokenData, now we know the length and
+        // write it out.
+        pbWriteTokenData -= nTempLength;
+        nTempLength =
+            ASNDerWriteElement(pbWriteTokenData,
+                               SPNEGO_NEGINIT_ELEMENT_REQFLAGS, BITSTRING, abTempReqFlags,
+                               SPNEGO_NEGINIT_MAXLEN_REQFLAGS);
 
-	// Adjust Values and sanity check
-	nTotalBytesWritten += nTempLength;
-	nInternalTokenLength -= nTempLength;
+        // Adjust Values and sanity check
+        nTotalBytesWritten += nTempLength;
+        nInternalTokenLength -= nTempLength;
 
-	if (nTotalBytesWritten > nTokenLength || nInternalTokenLength < 0) {
-	    goto xEndWriteNegTokenInit;
-	}
+        if (nTotalBytesWritten > nTokenLength || nInternalTokenLength < 0) {
+            goto xEndWriteNegTokenInit;
+        }
 
     }				// IF ContextFlags
 
@@ -328,7 +328,7 @@ CreateSpnegoInitToken(SPNEGO_MECH_OID MechType,
     nInternalTokenLength -= nTempLength;
 
     if (nTotalBytesWritten > nTokenLength || nInternalTokenLength < 0) {
-	goto xEndWriteNegTokenInit;
+        goto xEndWriteNegTokenInit;
     }
     // The next tokens we're writing out reflect the total number of bytes
     // we have actually written out.
@@ -340,15 +340,15 @@ CreateSpnegoInitToken(SPNEGO_MECH_OID MechType,
     // write it out.
     pbWriteTokenData -= nTempLength;
     nTempLength =
-	ASNDerWriteToken(pbWriteTokenData, SPNEGO_CONSTRUCTED_SEQUENCE, NULL,
-	nTotalBytesWritten);
+        ASNDerWriteToken(pbWriteTokenData, SPNEGO_CONSTRUCTED_SEQUENCE, NULL,
+                         nTotalBytesWritten);
 
     // Adjust Values and sanity check
     nTotalBytesWritten += nTempLength;
     nInternalTokenLength -= nTempLength;
 
     if (nTotalBytesWritten > nTokenLength || nInternalTokenLength < 0) {
-	goto xEndWriteNegTokenInit;
+        goto xEndWriteNegTokenInit;
     }
     // Neg Init Token Identifier Token
     nTempLength = ASNDerCalcTokenLength(nTotalBytesWritten, 0L);
@@ -357,15 +357,15 @@ CreateSpnegoInitToken(SPNEGO_MECH_OID MechType,
     // write it out.
     pbWriteTokenData -= nTempLength;
     nTempLength =
-	ASNDerWriteToken(pbWriteTokenData, SPNEGO_NEGINIT_TOKEN_IDENTIFIER,
-	NULL, nTotalBytesWritten);
+        ASNDerWriteToken(pbWriteTokenData, SPNEGO_NEGINIT_TOKEN_IDENTIFIER,
+                         NULL, nTotalBytesWritten);
 
     // Adjust Values and sanity check
     nTotalBytesWritten += nTempLength;
     nInternalTokenLength -= nTempLength;
 
     if (nTotalBytesWritten > nTokenLength || nInternalTokenLength < 0) {
-	goto xEndWriteNegTokenInit;
+        goto xEndWriteNegTokenInit;
     }
     // SPNEGO OID Token
     nTempLength = g_stcMechOIDList[spnego_mech_oid_Spnego].iLen;
@@ -380,7 +380,7 @@ CreateSpnegoInitToken(SPNEGO_MECH_OID MechType,
     nInternalTokenLength -= nTempLength;
 
     if (nTotalBytesWritten > nTokenLength || nInternalTokenLength < 0) {
-	goto xEndWriteNegTokenInit;
+        goto xEndWriteNegTokenInit;
     }
     // App Constructed Token
     nTempLength = ASNDerCalcTokenLength(nTotalBytesWritten, 0L);
@@ -389,8 +389,8 @@ CreateSpnegoInitToken(SPNEGO_MECH_OID MechType,
     // write it out.
     pbWriteTokenData -= nTempLength;
     nTempLength =
-	ASNDerWriteToken(pbWriteTokenData, SPNEGO_NEGINIT_APP_CONSTRUCT, NULL,
-	nTotalBytesWritten);
+        ASNDerWriteToken(pbWriteTokenData, SPNEGO_NEGINIT_APP_CONSTRUCT, NULL,
+                         nTotalBytesWritten);
 
     // Adjust Values and sanity check
     nTotalBytesWritten += nTempLength;
@@ -402,11 +402,11 @@ CreateSpnegoInitToken(SPNEGO_MECH_OID MechType,
     // number of bytes left to write).
 
     if (nTotalBytesWritten == nTokenLength && nInternalTokenLength == 0 &&
-	pbWriteTokenData == pbTokenData) {
-	nReturn = SPNEGO_E_SUCCESS;
+            pbWriteTokenData == pbTokenData) {
+        nReturn = SPNEGO_E_SUCCESS;
     }
 
-  xEndWriteNegTokenInit:
+xEndWriteNegTokenInit:
 
     LOG(("CreateSpnegoInitToken returned %d\n", nReturn));
     return nReturn;
@@ -443,8 +443,8 @@ CreateSpnegoInitToken(SPNEGO_MECH_OID MechType,
 
 int
 CalculateMinSpnegoTargTokenSize(SPNEGO_MECH_OID MechType,
-    SPNEGO_NEGRESULT spnegoNegResult, long nMechTokenLen,
-    long nMechListMICLen, long *pnTokenSize, long *pnInternalTokenLength)
+                                SPNEGO_NEGRESULT spnegoNegResult, long nMechTokenLen,
+                                long nMechListMICLen, long *pnTokenSize, long *pnInternalTokenLength)
 {
     int nReturn = SPNEGO_E_INVALID_LENGTH;
 
@@ -456,54 +456,54 @@ CalculateMinSpnegoTargTokenSize(SPNEGO_MECH_OID MechType,
 
     // Start with MIC Element
     if (nMechListMICLen > 0L) {
-	nTempLength = ASNDerCalcElementLength(nMechListMICLen, NULL);
+        nTempLength = ASNDerCalcElementLength(nMechListMICLen, NULL);
 
-	// Check for rollover error
-	if (nTempLength < nMechListMICLen) {
-	    goto xEndTokenTargLength;
-	}
+        // Check for rollover error
+        if (nTempLength < nMechListMICLen) {
+            goto xEndTokenTargLength;
+        }
 
-	nTotalLength += nTempLength;
+        nTotalLength += nTempLength;
     }
     // Next is the MechToken
     if (nMechTokenLen > 0L) {
-	nTempLength += ASNDerCalcElementLength(nMechTokenLen, NULL);
+        nTempLength += ASNDerCalcElementLength(nMechTokenLen, NULL);
 
-	// Check for rollover error
-	if (nTempLength < nTotalLength) {
-	    goto xEndTokenTargLength;
-	}
+        // Check for rollover error
+        if (nTempLength < nTotalLength) {
+            goto xEndTokenTargLength;
+        }
 
-	nTotalLength = nTempLength;
+        nTotalLength = nTempLength;
     }
     // Supported MechType
     if (spnego_mech_oid_NotUsed != MechType) {
-	// Supported MechOID element - we use the token function since
-	// we already know the size of the OID token and value
-	nTempLength +=
-	    ASNDerCalcElementLength(g_stcMechOIDList[MechType].iActualDataLen,
-	    NULL);
+        // Supported MechOID element - we use the token function since
+        // we already know the size of the OID token and value
+        nTempLength +=
+            ASNDerCalcElementLength(g_stcMechOIDList[MechType].iActualDataLen,
+                                    NULL);
 
-	// Check for rollover error
-	if (nTempLength < nTotalLength) {
-	    goto xEndTokenTargLength;
-	}
+        // Check for rollover error
+        if (nTempLength < nTotalLength) {
+            goto xEndTokenTargLength;
+        }
 
-	nTotalLength = nTempLength;
+        nTotalLength = nTempLength;
 
     }				// IF MechType is available
 
     // NegResult Element
     if (spnego_negresult_NotUsed != spnegoNegResult) {
-	nTempLength +=
-	    ASNDerCalcElementLength(SPNEGO_NEGTARG_MAXLEN_NEGRESULT, NULL);
+        nTempLength +=
+            ASNDerCalcElementLength(SPNEGO_NEGTARG_MAXLEN_NEGRESULT, NULL);
 
-	// Check for rollover error
-	if (nTempLength < nTotalLength) {
-	    goto xEndTokenTargLength;
-	}
+        // Check for rollover error
+        if (nTempLength < nTotalLength) {
+            goto xEndTokenTargLength;
+        }
 
-	nTotalLength = nTempLength;
+        nTotalLength = nTempLength;
 
     }				// IF negResult is available
 
@@ -514,7 +514,7 @@ CalculateMinSpnegoTargTokenSize(SPNEGO_MECH_OID MechType,
 
     // Check for rollover error
     if (nTempLength < nTotalLength) {
-	goto xEndTokenTargLength;
+        goto xEndTokenTargLength;
     }
 
     nTotalLength = nTempLength;
@@ -524,7 +524,7 @@ CalculateMinSpnegoTargTokenSize(SPNEGO_MECH_OID MechType,
 
     // Check for rollover error
     if (nTempLength < nTotalLength) {
-	goto xEndTokenTargLength;
+        goto xEndTokenTargLength;
     }
     // The internal length doesn't include the number of bytes
     // for the initial token
@@ -535,7 +535,7 @@ CalculateMinSpnegoTargTokenSize(SPNEGO_MECH_OID MechType,
     *pnTokenSize = nTotalLength;
     nReturn = SPNEGO_E_SUCCESS;
 
-  xEndTokenTargLength:
+xEndTokenTargLength:
 
     LOG(("CalculateMinSpnegoTargTokenSize returned %d\n", nReturn));
     return nReturn;
@@ -574,10 +574,10 @@ CalculateMinSpnegoTargTokenSize(SPNEGO_MECH_OID MechType,
 
 int
 CreateSpnegoTargToken(SPNEGO_MECH_OID MechType,
-    SPNEGO_NEGRESULT eNegResult, unsigned char *pbMechToken,
-    unsigned long ulMechTokenLen, unsigned char *pbMechListMIC,
-    unsigned long ulMechListMICLen, unsigned char *pbTokenData,
-    long nTokenLength, long nInternalTokenLength)
+                      SPNEGO_NEGRESULT eNegResult, unsigned char *pbMechToken,
+                      unsigned long ulMechTokenLen, unsigned char *pbMechListMIC,
+                      unsigned long ulMechListMICLen, unsigned char *pbTokenData,
+                      long nTokenLength, long nInternalTokenLength)
 {
     int nReturn = SPNEGO_E_INVALID_LENGTH;
 
@@ -597,98 +597,98 @@ CreateSpnegoTargToken(SPNEGO_MECH_OID MechType,
 
     // Start with MIC Element
     if (ulMechListMICLen > 0L) {
-	nTempLength =
-	    ASNDerCalcElementLength(ulMechListMICLen, &nInternalLength);
+        nTempLength =
+            ASNDerCalcElementLength(ulMechListMICLen, &nInternalLength);
 
-	// Decrease the pbWriteTokenData, now we know the length and
-	// write it out.
+        // Decrease the pbWriteTokenData, now we know the length and
+        // write it out.
 
-	pbWriteTokenData -= nTempLength;
-	nTempLength =
-	    ASNDerWriteElement(pbWriteTokenData,
-	    SPNEGO_NEGTARG_ELEMENT_MECHLISTMIC, OCTETSTRING, pbMechListMIC,
-	    ulMechListMICLen);
+        pbWriteTokenData -= nTempLength;
+        nTempLength =
+            ASNDerWriteElement(pbWriteTokenData,
+                               SPNEGO_NEGTARG_ELEMENT_MECHLISTMIC, OCTETSTRING, pbMechListMIC,
+                               ulMechListMICLen);
 
-	// Adjust Values and sanity check
-	nTotalBytesWritten += nTempLength;
-	nInternalTokenLength -= nTempLength;
+        // Adjust Values and sanity check
+        nTotalBytesWritten += nTempLength;
+        nInternalTokenLength -= nTempLength;
 
-	if (nTotalBytesWritten > nTokenLength || nInternalTokenLength < 0) {
-	    goto xEndWriteNegTokenTarg;
-	}
+        if (nTotalBytesWritten > nTokenLength || nInternalTokenLength < 0) {
+            goto xEndWriteNegTokenTarg;
+        }
 
     }				// IF MechListMIC is present
 
     // Next is the MechToken
     if (ulMechTokenLen > 0L) {
-	nTempLength = ASNDerCalcElementLength(ulMechTokenLen, &nInternalLength);
+        nTempLength = ASNDerCalcElementLength(ulMechTokenLen, &nInternalLength);
 
-	// Decrease the pbWriteTokenData, now we know the length and
-	// write it out.
-	pbWriteTokenData -= nTempLength;
-	nTempLength =
-	    ASNDerWriteElement(pbWriteTokenData,
-	    SPNEGO_NEGTARG_ELEMENT_RESPONSETOKEN, OCTETSTRING, pbMechToken,
-	    ulMechTokenLen);
-	// Adjust Values and sanity check
-	nTotalBytesWritten += nTempLength;
-	nInternalTokenLength -= nTempLength;
+        // Decrease the pbWriteTokenData, now we know the length and
+        // write it out.
+        pbWriteTokenData -= nTempLength;
+        nTempLength =
+            ASNDerWriteElement(pbWriteTokenData,
+                               SPNEGO_NEGTARG_ELEMENT_RESPONSETOKEN, OCTETSTRING, pbMechToken,
+                               ulMechTokenLen);
+        // Adjust Values and sanity check
+        nTotalBytesWritten += nTempLength;
+        nInternalTokenLength -= nTempLength;
 
-	if (nTotalBytesWritten > nTokenLength || nInternalTokenLength < 0) {
-	    goto xEndWriteNegTokenTarg;
-	}
+        if (nTotalBytesWritten > nTokenLength || nInternalTokenLength < 0) {
+            goto xEndWriteNegTokenTarg;
+        }
 
     }				// IF MechToken Length is present
 
     // Supported Mech Type
     if (spnego_mech_oid_NotUsed != MechType) {
 
-	nTempLength =
-	    ASNDerCalcElementLength(g_stcMechOIDList[MechType].iActualDataLen,
-	    &nInternalLength);
+        nTempLength =
+            ASNDerCalcElementLength(g_stcMechOIDList[MechType].iActualDataLen,
+                                    &nInternalLength);
 
-	// Decrease the pbWriteTokenData, now we know the length and
-	// write it out.
-	pbWriteTokenData -= nTempLength;
-	nTempLength =
-	    ASNDerWriteToken(pbWriteTokenData,
-	    SPNEGO_NEGTARG_ELEMENT_SUPPORTEDMECH,
-	    g_stcMechOIDList[MechType].ucOid, g_stcMechOIDList[MechType].iLen);
+        // Decrease the pbWriteTokenData, now we know the length and
+        // write it out.
+        pbWriteTokenData -= nTempLength;
+        nTempLength =
+            ASNDerWriteToken(pbWriteTokenData,
+                             SPNEGO_NEGTARG_ELEMENT_SUPPORTEDMECH,
+                             g_stcMechOIDList[MechType].ucOid, g_stcMechOIDList[MechType].iLen);
 
-	// Adjust Values and sanity check
-	nTotalBytesWritten += nTempLength;
-	nInternalTokenLength -= nTempLength;
+        // Adjust Values and sanity check
+        nTotalBytesWritten += nTempLength;
+        nInternalTokenLength -= nTempLength;
 
-	if (nTotalBytesWritten > nTokenLength || nInternalTokenLength < 0) {
-	    goto xEndWriteNegTokenTarg;
-	}
+        if (nTotalBytesWritten > nTokenLength || nInternalTokenLength < 0) {
+            goto xEndWriteNegTokenTarg;
+        }
 
     }				// IF MechType is present
 
     // Neg Result
     // NegResult Element
     if (spnego_negresult_NotUsed != eNegResult) {
-	ucTemp = (unsigned char) eNegResult;
+        ucTemp = (unsigned char) eNegResult;
 
-	nTempLength =
-	    ASNDerCalcElementLength(SPNEGO_NEGTARG_MAXLEN_NEGRESULT,
-	    &nInternalLength);
+        nTempLength =
+            ASNDerCalcElementLength(SPNEGO_NEGTARG_MAXLEN_NEGRESULT,
+                                    &nInternalLength);
 
-	// Decrease the pbWriteTokenData, now we know the length and
-	// write it out.
-	pbWriteTokenData -= nTempLength;
-	nTempLength =
-	    ASNDerWriteElement(pbWriteTokenData,
-	    SPNEGO_NEGTARG_ELEMENT_NEGRESULT, ENUMERATED, &ucTemp,
-	    SPNEGO_NEGTARG_MAXLEN_NEGRESULT);
+        // Decrease the pbWriteTokenData, now we know the length and
+        // write it out.
+        pbWriteTokenData -= nTempLength;
+        nTempLength =
+            ASNDerWriteElement(pbWriteTokenData,
+                               SPNEGO_NEGTARG_ELEMENT_NEGRESULT, ENUMERATED, &ucTemp,
+                               SPNEGO_NEGTARG_MAXLEN_NEGRESULT);
 
-	// Adjust Values and sanity check
-	nTotalBytesWritten += nTempLength;
-	nInternalTokenLength -= nTempLength;
+        // Adjust Values and sanity check
+        nTotalBytesWritten += nTempLength;
+        nInternalTokenLength -= nTempLength;
 
-	if (nTotalBytesWritten > nTokenLength || nInternalTokenLength < 0) {
-	    goto xEndWriteNegTokenTarg;
-	}
+        if (nTotalBytesWritten > nTokenLength || nInternalTokenLength < 0) {
+            goto xEndWriteNegTokenTarg;
+        }
 
     }				// If eNegResult is available
 
@@ -702,15 +702,15 @@ CreateSpnegoTargToken(SPNEGO_MECH_OID MechType,
     // write it out.
     pbWriteTokenData -= nTempLength;
     nTempLength =
-	ASNDerWriteToken(pbWriteTokenData, SPNEGO_CONSTRUCTED_SEQUENCE, NULL,
-	nTotalBytesWritten);
+        ASNDerWriteToken(pbWriteTokenData, SPNEGO_CONSTRUCTED_SEQUENCE, NULL,
+                         nTotalBytesWritten);
 
     // Adjust Values and sanity check
     nTotalBytesWritten += nTempLength;
     nInternalTokenLength -= nTempLength;
 
     if (nTotalBytesWritten > nTokenLength || nInternalTokenLength < 0) {
-	goto xEndWriteNegTokenTarg;
+        goto xEndWriteNegTokenTarg;
     }
     // Neg Targ Token Identifier Token
     nTempLength = ASNDerCalcTokenLength(nTotalBytesWritten, 0L);
@@ -719,8 +719,8 @@ CreateSpnegoTargToken(SPNEGO_MECH_OID MechType,
     // write it out.
     pbWriteTokenData -= nTempLength;
     nTempLength =
-	ASNDerWriteToken(pbWriteTokenData, SPNEGO_NEGTARG_TOKEN_IDENTIFIER,
-	NULL, nTotalBytesWritten);
+        ASNDerWriteToken(pbWriteTokenData, SPNEGO_NEGTARG_TOKEN_IDENTIFIER,
+                         NULL, nTotalBytesWritten);
 
     // Adjust Values and sanity check
     nTotalBytesWritten += nTempLength;
@@ -732,12 +732,12 @@ CreateSpnegoTargToken(SPNEGO_MECH_OID MechType,
     // number of bytes left to write).
 
     if (nTotalBytesWritten == nTokenLength && nInternalTokenLength == 0 &&
-	pbWriteTokenData == pbTokenData) {
-	nReturn = SPNEGO_E_SUCCESS;
+            pbWriteTokenData == pbTokenData) {
+        nReturn = SPNEGO_E_SUCCESS;
     }
 
 
-  xEndWriteNegTokenTarg:
+xEndWriteNegTokenTarg:
 
     LOG(("CreateSpnegoTargToken returned %d\n", nReturn));
     return nReturn;
@@ -771,52 +771,52 @@ CreateSpnegoTargToken(SPNEGO_MECH_OID MechType,
 
 SPNEGO_TOKEN *
 AllocEmptySpnegoToken(unsigned char ucCopyData, unsigned long ulFlags,
-    unsigned char *pbTokenData, unsigned long ulTokenSize)
+                      unsigned char *pbTokenData, unsigned long ulTokenSize)
 {
     SPNEGO_TOKEN *pSpnegoToken =
-	(SPNEGO_TOKEN *) calloc(1, sizeof(SPNEGO_TOKEN));
+        (SPNEGO_TOKEN *) calloc(1, sizeof(SPNEGO_TOKEN));
 
     if (NULL != pSpnegoToken) {
-	// Set the token size
-	pSpnegoToken->nStructSize = SPNEGO_TOKEN_SIZE;
+        // Set the token size
+        pSpnegoToken->nStructSize = SPNEGO_TOKEN_SIZE;
 
-	// Initialize the element array
-	InitSpnegoTokenElementArray(pSpnegoToken);
+        // Initialize the element array
+        InitSpnegoTokenElementArray(pSpnegoToken);
 
-	// Assign the flags value
-	pSpnegoToken->ulFlags = ulFlags;
+        // Assign the flags value
+        pSpnegoToken->ulFlags = ulFlags;
 
-	//
-	// IF ucCopyData is TRUE, we will allocate a buffer and copy data into it.
-	// Otherwise, we will just copy the pointer and the length.  This is so we
-	// can cut out additional allocations for performance reasons
-	//
+        //
+        // IF ucCopyData is TRUE, we will allocate a buffer and copy data into it.
+        // Otherwise, we will just copy the pointer and the length.  This is so we
+        // can cut out additional allocations for performance reasons
+        //
 
-	if (SPNEGO_TOKEN_INTERNAL_FLAGS_FREEDATA == ucCopyData) {
-	    // Alloc the internal buffer.  Cleanup on failure.
-	    pSpnegoToken->pbBinaryData =
-		(unsigned char *) calloc(ulTokenSize, sizeof(unsigned char));
+        if (SPNEGO_TOKEN_INTERNAL_FLAGS_FREEDATA == ucCopyData) {
+            // Alloc the internal buffer.  Cleanup on failure.
+            pSpnegoToken->pbBinaryData =
+                (unsigned char *) calloc(ulTokenSize, sizeof(unsigned char));
 
-	    if (NULL != pSpnegoToken->pbBinaryData) {
-		// We must ALWAYS free this buffer
-		pSpnegoToken->ulFlags |= SPNEGO_TOKEN_INTERNAL_FLAGS_FREEDATA;
+            if (NULL != pSpnegoToken->pbBinaryData) {
+                // We must ALWAYS free this buffer
+                pSpnegoToken->ulFlags |= SPNEGO_TOKEN_INTERNAL_FLAGS_FREEDATA;
 
-		// Copy the data locally
-		memcpy(pSpnegoToken->pbBinaryData, pbTokenData, ulTokenSize);
-		pSpnegoToken->ulBinaryDataLen = ulTokenSize;
-	    } else {
-		free(pSpnegoToken);
-		pSpnegoToken = NULL;
-	    }
+                // Copy the data locally
+                memcpy(pSpnegoToken->pbBinaryData, pbTokenData, ulTokenSize);
+                pSpnegoToken->ulBinaryDataLen = ulTokenSize;
+            } else {
+                free(pSpnegoToken);
+                pSpnegoToken = NULL;
+            }
 
-	}			// IF ucCopyData
-	else {
-	    // Copy the pointer and the length directly - ulFlags will control whether or not
-	    // we are allowed to free the value
+        }			// IF ucCopyData
+        else {
+            // Copy the pointer and the length directly - ulFlags will control whether or not
+            // we are allowed to free the value
 
-	    pSpnegoToken->pbBinaryData = pbTokenData;
-	    pSpnegoToken->ulBinaryDataLen = ulTokenSize;
-	}
+            pSpnegoToken->pbBinaryData = pbTokenData;
+            pSpnegoToken->ulBinaryDataLen = ulTokenSize;
+        }
 
     }
 
@@ -845,14 +845,14 @@ FreeSpnegoToken(SPNEGO_TOKEN * pSpnegoToken)
 {
     if (NULL != pSpnegoToken) {
 
-	// Cleanup internal allocation per the flags
-	if (pSpnegoToken->ulFlags & SPNEGO_TOKEN_INTERNAL_FLAGS_FREEDATA &&
-	    NULL != pSpnegoToken->pbBinaryData) {
-	    free(pSpnegoToken->pbBinaryData);
-	    pSpnegoToken->pbBinaryData = NULL;
-	}
+        // Cleanup internal allocation per the flags
+        if (pSpnegoToken->ulFlags & SPNEGO_TOKEN_INTERNAL_FLAGS_FREEDATA &&
+                NULL != pSpnegoToken->pbBinaryData) {
+            free(pSpnegoToken->pbBinaryData);
+            pSpnegoToken->pbBinaryData = NULL;
+        }
 
-	free(pSpnegoToken);
+        free(pSpnegoToken);
     }
 }
 
@@ -886,10 +886,10 @@ InitSpnegoTokenElementArray(SPNEGO_TOKEN * pSpnegoToken)
     //
 
     for (nCtr = 0; nCtr < MAX_NUM_TOKEN_ELEMENTS; nCtr++) {
-	// Set the element size as well
-	pSpnegoToken->aElementArray[nCtr].nStructSize = SPNEGO_ELEMENT_SIZE;
-	pSpnegoToken->aElementArray[nCtr].iElementPresent =
-	    SPNEGO_TOKEN_ELEMENT_UNAVAILABLE;
+        // Set the element size as well
+        pSpnegoToken->aElementArray[nCtr].nStructSize = SPNEGO_ELEMENT_SIZE;
+        pSpnegoToken->aElementArray[nCtr].iElementPresent =
+            SPNEGO_TOKEN_ELEMENT_UNAVAILABLE;
     }
 
 }
@@ -920,7 +920,7 @@ InitSpnegoTokenElementArray(SPNEGO_TOKEN * pSpnegoToken)
 
 int
 InitSpnegoTokenType(SPNEGO_TOKEN * pSpnegoToken, long *pnTokenLength,
-    long *pnRemainingTokenLength, unsigned char **ppbFirstElement)
+                    long *pnRemainingTokenLength, unsigned char **ppbFirstElement)
 {
     int nReturn = SPNEGO_E_INVALID_TOKEN;
     long nActualTokenLength = 0L;
@@ -932,104 +932,104 @@ InitSpnegoTokenType(SPNEGO_TOKEN * pSpnegoToken, long *pnTokenLength,
     //
 
     if (SPNEGO_NEGINIT_APP_CONSTRUCT == *pbTokenData) {
-	// Validate the above token - this will tell us the actual length of the token
-	// per the encoding (minus the actual token bytes)
-	if ((nReturn =
-		ASNDerCheckToken(pbTokenData, SPNEGO_NEGINIT_APP_CONSTRUCT, 0L,
-		    nBoundaryLength, pnTokenLength, &nActualTokenLength))
-	    == SPNEGO_E_SUCCESS) {
-	    // Initialize the remaining token length value.  This will be used
-	    // to tell the caller how much token there is left once we've parsed
-	    // the header (they could calculate it from the other values, but this
-	    // is a bit friendlier)
-	    *pnRemainingTokenLength = *pnTokenLength;
+        // Validate the above token - this will tell us the actual length of the token
+        // per the encoding (minus the actual token bytes)
+        if ((nReturn =
+                    ASNDerCheckToken(pbTokenData, SPNEGO_NEGINIT_APP_CONSTRUCT, 0L,
+                                     nBoundaryLength, pnTokenLength, &nActualTokenLength))
+                == SPNEGO_E_SUCCESS) {
+            // Initialize the remaining token length value.  This will be used
+            // to tell the caller how much token there is left once we've parsed
+            // the header (they could calculate it from the other values, but this
+            // is a bit friendlier)
+            *pnRemainingTokenLength = *pnTokenLength;
 
-	    // Make adjustments to next token
-	    pbTokenData += nActualTokenLength;
-	    nBoundaryLength -= nActualTokenLength;
+            // Make adjustments to next token
+            pbTokenData += nActualTokenLength;
+            nBoundaryLength -= nActualTokenLength;
 
-	    // The next token should be an OID
-	    if ((nReturn =
-		    ASNDerCheckOID(pbTokenData, spnego_mech_oid_Spnego,
-			nBoundaryLength,
-			&nActualTokenLength)) == SPNEGO_E_SUCCESS) {
-		// Make adjustments to next token
-		pbTokenData += nActualTokenLength;
-		nBoundaryLength -= nActualTokenLength;
-		*pnRemainingTokenLength -= nActualTokenLength;
+            // The next token should be an OID
+            if ((nReturn =
+                        ASNDerCheckOID(pbTokenData, spnego_mech_oid_Spnego,
+                                       nBoundaryLength,
+                                       &nActualTokenLength)) == SPNEGO_E_SUCCESS) {
+                // Make adjustments to next token
+                pbTokenData += nActualTokenLength;
+                nBoundaryLength -= nActualTokenLength;
+                *pnRemainingTokenLength -= nActualTokenLength;
 
-		// The next token should specify the NegTokenInit
-		if ((nReturn =
-			ASNDerCheckToken(pbTokenData,
-			    SPNEGO_NEGINIT_TOKEN_IDENTIFIER,
-			    *pnRemainingTokenLength, nBoundaryLength,
-			    pnTokenLength, &nActualTokenLength))
-		    == SPNEGO_E_SUCCESS) {
-		    // Make adjustments to next token
-		    pbTokenData += nActualTokenLength;
-		    nBoundaryLength -= nActualTokenLength;
-		    *pnRemainingTokenLength -= nActualTokenLength;
+                // The next token should specify the NegTokenInit
+                if ((nReturn =
+                            ASNDerCheckToken(pbTokenData,
+                                             SPNEGO_NEGINIT_TOKEN_IDENTIFIER,
+                                             *pnRemainingTokenLength, nBoundaryLength,
+                                             pnTokenLength, &nActualTokenLength))
+                        == SPNEGO_E_SUCCESS) {
+                    // Make adjustments to next token
+                    pbTokenData += nActualTokenLength;
+                    nBoundaryLength -= nActualTokenLength;
+                    *pnRemainingTokenLength -= nActualTokenLength;
 
-		    // The next token should specify the start of a sequence
-		    if ((nReturn =
-			    ASNDerCheckToken(pbTokenData,
-				SPNEGO_CONSTRUCTED_SEQUENCE,
-				*pnRemainingTokenLength, nBoundaryLength,
-				pnTokenLength, &nActualTokenLength))
-			== SPNEGO_E_SUCCESS) {
-			// NegTokenInit header is now checked out!
+                    // The next token should specify the start of a sequence
+                    if ((nReturn =
+                                ASNDerCheckToken(pbTokenData,
+                                                 SPNEGO_CONSTRUCTED_SEQUENCE,
+                                                 *pnRemainingTokenLength, nBoundaryLength,
+                                                 pnTokenLength, &nActualTokenLength))
+                            == SPNEGO_E_SUCCESS) {
+                        // NegTokenInit header is now checked out!
 
-			// Make adjustments to next token
-			*pnRemainingTokenLength -= nActualTokenLength;
+                        // Make adjustments to next token
+                        *pnRemainingTokenLength -= nActualTokenLength;
 
-			// Store pointer to first element
-			*ppbFirstElement = pbTokenData + nActualTokenLength;
-			pSpnegoToken->ucTokenType = SPNEGO_TOKEN_INIT;
-		    }		// IF Check Sequence Token
+                        // Store pointer to first element
+                        *ppbFirstElement = pbTokenData + nActualTokenLength;
+                        pSpnegoToken->ucTokenType = SPNEGO_TOKEN_INIT;
+                    }		// IF Check Sequence Token
 
-		}		// IF Check NegTokenInit token
-
-
-	    }			// IF Check for SPNEGO OID
+                }		// IF Check NegTokenInit token
 
 
-	}			// IF check app construct token
+            }			// IF Check for SPNEGO OID
+
+
+        }			// IF check app construct token
 
     } else if (SPNEGO_NEGTARG_TOKEN_IDENTIFIER == *pbTokenData) {
 
-	// The next token should specify the NegTokenInit
-	if ((nReturn =
-		ASNDerCheckToken(pbTokenData, SPNEGO_NEGTARG_TOKEN_IDENTIFIER,
-		    *pnRemainingTokenLength, nBoundaryLength, pnTokenLength,
-		    &nActualTokenLength))
-	    == SPNEGO_E_SUCCESS) {
-	    // Initialize the remaining token length value.  This will be used
-	    // to tell the caller how much token there is left once we've parsed
-	    // the header (they could calculate it from the other values, but this
-	    // is a bit friendlier)
-	    *pnRemainingTokenLength = *pnTokenLength;
+        // The next token should specify the NegTokenInit
+        if ((nReturn =
+                    ASNDerCheckToken(pbTokenData, SPNEGO_NEGTARG_TOKEN_IDENTIFIER,
+                                     *pnRemainingTokenLength, nBoundaryLength, pnTokenLength,
+                                     &nActualTokenLength))
+                == SPNEGO_E_SUCCESS) {
+            // Initialize the remaining token length value.  This will be used
+            // to tell the caller how much token there is left once we've parsed
+            // the header (they could calculate it from the other values, but this
+            // is a bit friendlier)
+            *pnRemainingTokenLength = *pnTokenLength;
 
-	    // Make adjustments to next token
-	    pbTokenData += nActualTokenLength;
-	    nBoundaryLength -= nActualTokenLength;
+            // Make adjustments to next token
+            pbTokenData += nActualTokenLength;
+            nBoundaryLength -= nActualTokenLength;
 
-	    // The next token should specify the start of a sequence
-	    if ((nReturn =
-		    ASNDerCheckToken(pbTokenData, SPNEGO_CONSTRUCTED_SEQUENCE,
-			*pnRemainingTokenLength, nBoundaryLength, pnTokenLength,
-			&nActualTokenLength))
-		== SPNEGO_E_SUCCESS) {
-		// NegTokenInit header is now checked out!
+            // The next token should specify the start of a sequence
+            if ((nReturn =
+                        ASNDerCheckToken(pbTokenData, SPNEGO_CONSTRUCTED_SEQUENCE,
+                                         *pnRemainingTokenLength, nBoundaryLength, pnTokenLength,
+                                         &nActualTokenLength))
+                    == SPNEGO_E_SUCCESS) {
+                // NegTokenInit header is now checked out!
 
-		// Make adjustments to next token
-		*pnRemainingTokenLength -= nActualTokenLength;
+                // Make adjustments to next token
+                *pnRemainingTokenLength -= nActualTokenLength;
 
-		// Store pointer to first element
-		*ppbFirstElement = pbTokenData + nActualTokenLength;
-		pSpnegoToken->ucTokenType = SPNEGO_TOKEN_TARG;
-	    }			// IF Check Sequence Token
+                // Store pointer to first element
+                *ppbFirstElement = pbTokenData + nActualTokenLength;
+                pSpnegoToken->ucTokenType = SPNEGO_TOKEN_TARG;
+            }			// IF Check Sequence Token
 
-	}			// IF Check NegTokenInit token
+        }			// IF Check NegTokenInit token
 
     }				// ELSE IF it's a NegTokenTarg
 
@@ -1063,7 +1063,7 @@ InitSpnegoTokenType(SPNEGO_TOKEN * pSpnegoToken, long *pnTokenLength,
 
 int
 GetSpnegoInitTokenMechList(unsigned char *pbTokenData, int nMechListLength,
-    SPNEGO_ELEMENT * pSpnegoElement)
+                           SPNEGO_ELEMENT * pSpnegoElement)
 {
     int nReturn = SPNEGO_E_INVALID_TOKEN;
     long nLength = 0L;
@@ -1071,25 +1071,25 @@ GetSpnegoInitTokenMechList(unsigned char *pbTokenData, int nMechListLength,
 
     // Actual MechList is prepended by a Constructed Sequence Token
     if ((nReturn = ASNDerCheckToken(pbTokenData, SPNEGO_CONSTRUCTED_SEQUENCE,
-		nMechListLength, nMechListLength,
-		&nLength, &nActualTokenLength))
-	== SPNEGO_E_SUCCESS) {
-	// Adjust for this token
-	nMechListLength -= nActualTokenLength;
-	pbTokenData += nActualTokenLength;
+                                    nMechListLength, nMechListLength,
+                                    &nLength, &nActualTokenLength))
+            == SPNEGO_E_SUCCESS) {
+        // Adjust for this token
+        nMechListLength -= nActualTokenLength;
+        pbTokenData += nActualTokenLength;
 
-	// Perform simple validation of the actual MechList (i.e. ensure that
-	// the OIDs in the MechList are reasonable).
+        // Perform simple validation of the actual MechList (i.e. ensure that
+        // the OIDs in the MechList are reasonable).
 
-	if ((nReturn =
-		ValidateMechList(pbTokenData, nLength)) == SPNEGO_E_SUCCESS) {
-	    // Initialize the element now
-	    pSpnegoElement->eElementType = spnego_init_mechtypes;
-	    pSpnegoElement->iElementPresent = SPNEGO_TOKEN_ELEMENT_AVAILABLE;
-	    pSpnegoElement->type = SPNEGO_MECHLIST_TYPE;
-	    pSpnegoElement->nDatalength = nLength;
-	    pSpnegoElement->pbData = pbTokenData;
-	}
+        if ((nReturn =
+                    ValidateMechList(pbTokenData, nLength)) == SPNEGO_E_SUCCESS) {
+            // Initialize the element now
+            pSpnegoElement->eElementType = spnego_init_mechtypes;
+            pSpnegoElement->iElementPresent = SPNEGO_TOKEN_ELEMENT_AVAILABLE;
+            pSpnegoElement->type = SPNEGO_MECHLIST_TYPE;
+            pSpnegoElement->nDatalength = nLength;
+            pSpnegoElement->pbData = pbTokenData;
+        }
 
     }				// IF Check Token
 
@@ -1116,15 +1116,15 @@ GetSpnegoInitTokenMechList(unsigned char *pbTokenData, int nMechListLength,
 //
 // Comments :
 //    Checks that pbTokenData is pointing at the specified DER type.  If so,
-//    then we verify that lengths are proper and then fill out the 
+//    then we verify that lengths are proper and then fill out the
 //    SPNEGO_ELEMENT data structure.
 //
 ////////////////////////////////////////////////////////////////////////////
 
 int
 InitSpnegoTokenElementFromBasicType(unsigned char *pbTokenData,
-    int nElementLength, unsigned char ucExpectedType,
-    SPNEGO_ELEMENT_TYPE spnegoElementType, SPNEGO_ELEMENT * pSpnegoElement)
+                                    int nElementLength, unsigned char ucExpectedType,
+                                    SPNEGO_ELEMENT_TYPE spnegoElementType, SPNEGO_ELEMENT * pSpnegoElement)
 {
     int nReturn = SPNEGO_E_UNEXPECTED_TYPE;
     long nLength = 0L;
@@ -1133,22 +1133,22 @@ InitSpnegoTokenElementFromBasicType(unsigned char *pbTokenData,
     // The type BYTE must match our token data or something is badly wrong
     if (*pbTokenData == ucExpectedType) {
 
-	// Check that we are pointing at the specified type
-	if ((nReturn = ASNDerCheckToken(pbTokenData, ucExpectedType,
-		    nElementLength, nElementLength,
-		    &nLength, &nActualTokenLength))
-	    == SPNEGO_E_SUCCESS) {
-	    // Adjust for this token
-	    nElementLength -= nActualTokenLength;
-	    pbTokenData += nActualTokenLength;
+        // Check that we are pointing at the specified type
+        if ((nReturn = ASNDerCheckToken(pbTokenData, ucExpectedType,
+                                        nElementLength, nElementLength,
+                                        &nLength, &nActualTokenLength))
+                == SPNEGO_E_SUCCESS) {
+            // Adjust for this token
+            nElementLength -= nActualTokenLength;
+            pbTokenData += nActualTokenLength;
 
-	    // Initialize the element now
-	    pSpnegoElement->eElementType = spnegoElementType;
-	    pSpnegoElement->iElementPresent = SPNEGO_TOKEN_ELEMENT_AVAILABLE;
-	    pSpnegoElement->type = ucExpectedType;
-	    pSpnegoElement->nDatalength = nLength;
-	    pSpnegoElement->pbData = pbTokenData;
-	}
+            // Initialize the element now
+            pSpnegoElement->eElementType = spnegoElementType;
+            pSpnegoElement->iElementPresent = SPNEGO_TOKEN_ELEMENT_AVAILABLE;
+            pSpnegoElement->type = ucExpectedType;
+            pSpnegoElement->nDatalength = nLength;
+            pSpnegoElement->pbData = pbTokenData;
+        }
 
     }				// IF type makes sense
 
@@ -1183,7 +1183,7 @@ InitSpnegoTokenElementFromBasicType(unsigned char *pbTokenData,
 
 int
 InitSpnegoTokenElementFromOID(unsigned char *pbTokenData, int nElementLength,
-    SPNEGO_ELEMENT_TYPE spnegoElementType, SPNEGO_ELEMENT * pSpnegoElement)
+                              SPNEGO_ELEMENT_TYPE spnegoElementType, SPNEGO_ELEMENT * pSpnegoElement)
 {
     int nReturn = SPNEGO_E_UNEXPECTED_TYPE;
     long nLength = 0L;
@@ -1192,20 +1192,20 @@ InitSpnegoTokenElementFromOID(unsigned char *pbTokenData, int nElementLength,
     // The type BYTE must match our token data or something is badly wrong
     if (*pbTokenData == OID) {
 
-	// Check that we are pointing at an OID type
-	if ((nReturn = ASNDerCheckToken(pbTokenData, OID,
-		    nElementLength, nElementLength,
-		    &nLength, &nActualTokenLength))
-	    == SPNEGO_E_SUCCESS) {
-	    // Don't adjust any values for this function
+        // Check that we are pointing at an OID type
+        if ((nReturn = ASNDerCheckToken(pbTokenData, OID,
+                                        nElementLength, nElementLength,
+                                        &nLength, &nActualTokenLength))
+                == SPNEGO_E_SUCCESS) {
+            // Don't adjust any values for this function
 
-	    // Initialize the element now
-	    pSpnegoElement->eElementType = spnegoElementType;
-	    pSpnegoElement->iElementPresent = SPNEGO_TOKEN_ELEMENT_AVAILABLE;
-	    pSpnegoElement->type = OID;
-	    pSpnegoElement->nDatalength = nElementLength;
-	    pSpnegoElement->pbData = pbTokenData;
-	}
+            // Initialize the element now
+            pSpnegoElement->eElementType = spnegoElementType;
+            pSpnegoElement->iElementPresent = SPNEGO_TOKEN_ELEMENT_AVAILABLE;
+            pSpnegoElement->type = OID;
+            pSpnegoElement->nDatalength = nElementLength;
+            pSpnegoElement->pbData = pbTokenData;
+        }
 
     }				// IF type makes sense
 
@@ -1239,7 +1239,7 @@ InitSpnegoTokenElementFromOID(unsigned char *pbTokenData, int nElementLength,
 
 int
 InitSpnegoTokenElements(SPNEGO_TOKEN * pSpnegoToken, unsigned char *pbTokenData,
-    long nRemainingTokenLength)
+                        long nRemainingTokenLength)
 {
     //
     // The following arrays contain the token identifiers for the elements
@@ -1247,16 +1247,14 @@ InitSpnegoTokenElements(SPNEGO_TOKEN * pSpnegoToken, unsigned char *pbTokenData,
     // no defaults.
     //
 
-    static unsigned char abNegTokenInitElements[] =
-	{ SPNEGO_NEGINIT_ELEMENT_MECHTYPES, SPNEGO_NEGINIT_ELEMENT_REQFLAGS,
-	SPNEGO_NEGINIT_ELEMENT_MECHTOKEN, SPNEGO_NEGINIT_ELEMENT_MECHLISTMIC
-    };
+    static unsigned char abNegTokenInitElements[] = { SPNEGO_NEGINIT_ELEMENT_MECHTYPES, SPNEGO_NEGINIT_ELEMENT_REQFLAGS,
+            SPNEGO_NEGINIT_ELEMENT_MECHTOKEN, SPNEGO_NEGINIT_ELEMENT_MECHLISTMIC
+                                                    };
 
-    static unsigned char abNegTokenTargElements[] =
-	{ SPNEGO_NEGTARG_ELEMENT_NEGRESULT,
-	    SPNEGO_NEGTARG_ELEMENT_SUPPORTEDMECH,
-	SPNEGO_NEGTARG_ELEMENT_RESPONSETOKEN, SPNEGO_NEGTARG_ELEMENT_MECHLISTMIC
-    };
+    static unsigned char abNegTokenTargElements[] = { SPNEGO_NEGTARG_ELEMENT_NEGRESULT,
+            SPNEGO_NEGTARG_ELEMENT_SUPPORTEDMECH,
+            SPNEGO_NEGTARG_ELEMENT_RESPONSETOKEN, SPNEGO_NEGTARG_ELEMENT_MECHLISTMIC
+                                                    };
 
     int nReturn = SPNEGO_E_SUCCESS;
     int nCtr = 0L;
@@ -1266,17 +1264,15 @@ InitSpnegoTokenElements(SPNEGO_TOKEN * pSpnegoToken, unsigned char *pbTokenData,
 
     // Point to the correct array
     switch (pSpnegoToken->ucTokenType) {
-    case SPNEGO_TOKEN_INIT:
-	{
-	    pbElements = abNegTokenInitElements;
-	}
-	break;
+    case SPNEGO_TOKEN_INIT: {
+        pbElements = abNegTokenInitElements;
+    }
+    break;
 
-    case SPNEGO_TOKEN_TARG:
-	{
-	    pbElements = abNegTokenTargElements;
-	}
-	break;
+    case SPNEGO_TOKEN_TARG: {
+        pbElements = abNegTokenTargElements;
+    }
+    break;
 
     }				// SWITCH tokentype
 
@@ -1285,162 +1281,154 @@ InitSpnegoTokenElements(SPNEGO_TOKEN * pSpnegoToken, unsigned char *pbTokenData,
     //
 
     for (nCtr = 0L;
-	SPNEGO_E_SUCCESS == nReturn &&
-	nCtr < MAX_NUM_TOKEN_ELEMENTS && nRemainingTokenLength > 0L; nCtr++) {
+            SPNEGO_E_SUCCESS == nReturn &&
+            nCtr < MAX_NUM_TOKEN_ELEMENTS && nRemainingTokenLength > 0L; nCtr++) {
 
-	// Check if the token exists
-	if ((nReturn = ASNDerCheckToken(pbTokenData, pbElements[nCtr],
-		    0L, nRemainingTokenLength,
-		    &nElementLength, &nActualTokenLength))
-	    == SPNEGO_E_SUCCESS) {
+        // Check if the token exists
+        if ((nReturn = ASNDerCheckToken(pbTokenData, pbElements[nCtr],
+                                        0L, nRemainingTokenLength,
+                                        &nElementLength, &nActualTokenLength))
+                == SPNEGO_E_SUCCESS) {
 
-	    // Token data should skip over the sequence token and then
-	    // call the appropriate function to initialize the element
-	    pbTokenData += nActualTokenLength;
+            // Token data should skip over the sequence token and then
+            // call the appropriate function to initialize the element
+            pbTokenData += nActualTokenLength;
 
-	    // Lengths in the elements should NOT go beyond the element
-	    // length
+            // Lengths in the elements should NOT go beyond the element
+            // length
 
-	    // Different tokens mean different elements
-	    if (SPNEGO_TOKEN_INIT == pSpnegoToken->ucTokenType) {
+            // Different tokens mean different elements
+            if (SPNEGO_TOKEN_INIT == pSpnegoToken->ucTokenType) {
 
-		// Handle each element as appropriate
-		switch (pbElements[nCtr]) {
+                // Handle each element as appropriate
+                switch (pbElements[nCtr]) {
 
-		case SPNEGO_NEGINIT_ELEMENT_MECHTYPES:
-		    {
-			//
-			// This is a Mech List that specifies which OIDs the
-			// originator of the Init Token supports.
-			//
+                case SPNEGO_NEGINIT_ELEMENT_MECHTYPES: {
+                    //
+                    // This is a Mech List that specifies which OIDs the
+                    // originator of the Init Token supports.
+                    //
 
-			nReturn =
-			    GetSpnegoInitTokenMechList(pbTokenData,
-			    nElementLength, &pSpnegoToken->aElementArray[nCtr]);
+                    nReturn =
+                        GetSpnegoInitTokenMechList(pbTokenData,
+                                                   nElementLength, &pSpnegoToken->aElementArray[nCtr]);
 
-		    }
-		    break;
+                }
+                break;
 
-		case SPNEGO_NEGINIT_ELEMENT_REQFLAGS:
-		    {
-			//
-			// This is a BITSTRING which specifies the flags that the receiver
-			// pass to the gss_accept_sec_context() function.
-			//
+                case SPNEGO_NEGINIT_ELEMENT_REQFLAGS: {
+                    //
+                    // This is a BITSTRING which specifies the flags that the receiver
+                    // pass to the gss_accept_sec_context() function.
+                    //
 
-			nReturn =
-			    InitSpnegoTokenElementFromBasicType(pbTokenData,
-			    nElementLength, BITSTRING, spnego_init_reqFlags,
-			    &pSpnegoToken->aElementArray[nCtr]);
-		    }
-		    break;
+                    nReturn =
+                        InitSpnegoTokenElementFromBasicType(pbTokenData,
+                                                            nElementLength, BITSTRING, spnego_init_reqFlags,
+                                                            &pSpnegoToken->aElementArray[nCtr]);
+                }
+                break;
 
-		case SPNEGO_NEGINIT_ELEMENT_MECHTOKEN:
-		    {
-			//
-			// This is an OCTETSTRING which contains a GSSAPI token corresponding
-			// to the first OID in the MechList.
-			//
+                case SPNEGO_NEGINIT_ELEMENT_MECHTOKEN: {
+                    //
+                    // This is an OCTETSTRING which contains a GSSAPI token corresponding
+                    // to the first OID in the MechList.
+                    //
 
-			nReturn =
-			    InitSpnegoTokenElementFromBasicType(pbTokenData,
-			    nElementLength, OCTETSTRING, spnego_init_mechToken,
-			    &pSpnegoToken->aElementArray[nCtr]);
-		    }
-		    break;
+                    nReturn =
+                        InitSpnegoTokenElementFromBasicType(pbTokenData,
+                                                            nElementLength, OCTETSTRING, spnego_init_mechToken,
+                                                            &pSpnegoToken->aElementArray[nCtr]);
+                }
+                break;
 
-		case SPNEGO_NEGINIT_ELEMENT_MECHLISTMIC:
-		    {
-			//
-			// This is an OCTETSTRING which contains a message integrity BLOB.
-			//
+                case SPNEGO_NEGINIT_ELEMENT_MECHLISTMIC: {
+                    //
+                    // This is an OCTETSTRING which contains a message integrity BLOB.
+                    //
 
-			nReturn =
-			    InitSpnegoTokenElementFromBasicType(pbTokenData,
-			    nElementLength, OCTETSTRING,
-			    spnego_init_mechListMIC,
-			    &pSpnegoToken->aElementArray[nCtr]);
-		    }
-		    break;
+                    nReturn =
+                        InitSpnegoTokenElementFromBasicType(pbTokenData,
+                                                            nElementLength, OCTETSTRING,
+                                                            spnego_init_mechListMIC,
+                                                            &pSpnegoToken->aElementArray[nCtr]);
+                }
+                break;
 
-		}		// SWITCH Element
-	    } else {
+                }		// SWITCH Element
+            } else {
 
-		switch (pbElements[nCtr]) {
+                switch (pbElements[nCtr]) {
 
-		case SPNEGO_NEGTARG_ELEMENT_NEGRESULT:
-		    {
-			//
-			// This is an ENUMERATION which specifies result of the last GSS
-			// token negotiation call.
-			//
+                case SPNEGO_NEGTARG_ELEMENT_NEGRESULT: {
+                    //
+                    // This is an ENUMERATION which specifies result of the last GSS
+                    // token negotiation call.
+                    //
 
-			nReturn =
-			    InitSpnegoTokenElementFromBasicType(pbTokenData,
-			    nElementLength, ENUMERATED, spnego_targ_negResult,
-			    &pSpnegoToken->aElementArray[nCtr]);
-		    }
-		    break;
+                    nReturn =
+                        InitSpnegoTokenElementFromBasicType(pbTokenData,
+                                                            nElementLength, ENUMERATED, spnego_targ_negResult,
+                                                            &pSpnegoToken->aElementArray[nCtr]);
+                }
+                break;
 
-		case SPNEGO_NEGTARG_ELEMENT_SUPPORTEDMECH:
-		    {
-			//
-			// This is an OID which specifies a supported mechanism.
-			//
+                case SPNEGO_NEGTARG_ELEMENT_SUPPORTEDMECH: {
+                    //
+                    // This is an OID which specifies a supported mechanism.
+                    //
 
-			nReturn =
-			    InitSpnegoTokenElementFromOID(pbTokenData,
-			    nElementLength, spnego_targ_mechListMIC,
-			    &pSpnegoToken->aElementArray[nCtr]);
-		    }
-		    break;
+                    nReturn =
+                        InitSpnegoTokenElementFromOID(pbTokenData,
+                                                      nElementLength, spnego_targ_mechListMIC,
+                                                      &pSpnegoToken->aElementArray[nCtr]);
+                }
+                break;
 
-		case SPNEGO_NEGTARG_ELEMENT_RESPONSETOKEN:
-		    {
-			//
-			// This is an OCTETSTRING which specifies results of the last GSS
-			// token negotiation call.
-			//
+                case SPNEGO_NEGTARG_ELEMENT_RESPONSETOKEN: {
+                    //
+                    // This is an OCTETSTRING which specifies results of the last GSS
+                    // token negotiation call.
+                    //
 
-			nReturn =
-			    InitSpnegoTokenElementFromBasicType(pbTokenData,
-			    nElementLength, OCTETSTRING,
-			    spnego_targ_responseToken,
-			    &pSpnegoToken->aElementArray[nCtr]);
-		    }
-		    break;
+                    nReturn =
+                        InitSpnegoTokenElementFromBasicType(pbTokenData,
+                                                            nElementLength, OCTETSTRING,
+                                                            spnego_targ_responseToken,
+                                                            &pSpnegoToken->aElementArray[nCtr]);
+                }
+                break;
 
-		case SPNEGO_NEGTARG_ELEMENT_MECHLISTMIC:
-		    {
-			//
-			// This is an OCTETSTRING which specifies a message integrity BLOB.
-			//
+                case SPNEGO_NEGTARG_ELEMENT_MECHLISTMIC: {
+                    //
+                    // This is an OCTETSTRING which specifies a message integrity BLOB.
+                    //
 
-			nReturn =
-			    InitSpnegoTokenElementFromBasicType(pbTokenData,
-			    nElementLength, OCTETSTRING,
-			    spnego_targ_mechListMIC,
-			    &pSpnegoToken->aElementArray[nCtr]);
-		    }
-		    break;
+                    nReturn =
+                        InitSpnegoTokenElementFromBasicType(pbTokenData,
+                                                            nElementLength, OCTETSTRING,
+                                                            spnego_targ_mechListMIC,
+                                                            &pSpnegoToken->aElementArray[nCtr]);
+                }
+                break;
 
-		}		// SWITCH Element
+                }		// SWITCH Element
 
-	    }			// ELSE !NegTokenInit
+            }			// ELSE !NegTokenInit
 
-	    // Account for the entire token and following data
-	    nRemainingTokenLength -= (nActualTokenLength + nElementLength);
+            // Account for the entire token and following data
+            nRemainingTokenLength -= (nActualTokenLength + nElementLength);
 
-	    // Token data should skip past the element length now
-	    pbTokenData += nElementLength;
+            // Token data should skip past the element length now
+            pbTokenData += nElementLength;
 
-	}			// IF Token found
-	else if (SPNEGO_E_TOKEN_NOT_FOUND == nReturn) {
-	    // For now, this is a benign error (remember, all elements are optional, so
-	    // if we don't find one, it's okay).
+        }			// IF Token found
+        else if (SPNEGO_E_TOKEN_NOT_FOUND == nReturn) {
+            // For now, this is a benign error (remember, all elements are optional, so
+            // if we don't find one, it's okay).
 
-	    nReturn = SPNEGO_E_SUCCESS;
-	}
+            nReturn = SPNEGO_E_SUCCESS;
+        }
 
     }				// FOR enum elements
 
@@ -1450,7 +1438,7 @@ InitSpnegoTokenElements(SPNEGO_TOKEN * pSpnegoToken, unsigned char *pbTokenData,
     //
 
     if (SPNEGO_E_SUCCESS == nReturn && nRemainingTokenLength != 0L) {
-	nReturn = SPNEGO_E_INVALID_TOKEN;
+        nReturn = SPNEGO_E_INVALID_TOKEN;
     }
 
     LOG(("InitSpnegoTokenElements returned %d\n", nReturn));
@@ -1481,7 +1469,7 @@ InitSpnegoTokenElements(SPNEGO_TOKEN * pSpnegoToken, unsigned char *pbTokenData,
 
 int
 FindMechOIDInMechList(SPNEGO_ELEMENT * pSpnegoElement, SPNEGO_MECH_OID MechOID,
-    int *piMechTypeIndex)
+                      int *piMechTypeIndex)
 {
     int nReturn = SPNEGO_E_NOT_FOUND;
     int nCtr = 0;
@@ -1491,17 +1479,17 @@ FindMechOIDInMechList(SPNEGO_ELEMENT * pSpnegoElement, SPNEGO_MECH_OID MechOID,
 
     while (SPNEGO_E_SUCCESS != nReturn && nBoundaryLength > 0L) {
 
-	// Use the helper function to check the OID
-	if ((nReturn =
-		ASNDerCheckOID(pbMechListData, MechOID, nBoundaryLength,
-		    &nLength))
-	    == SPNEGO_E_SUCCESS) {
-	    *piMechTypeIndex = nCtr;
-	}
-	// Adjust for the current OID
-	pbMechListData += nLength;
-	nBoundaryLength -= nLength;
-	nCtr++;
+        // Use the helper function to check the OID
+        if ((nReturn =
+                    ASNDerCheckOID(pbMechListData, MechOID, nBoundaryLength,
+                                   &nLength))
+                == SPNEGO_E_SUCCESS) {
+            *piMechTypeIndex = nCtr;
+        }
+        // Adjust for the current OID
+        pbMechListData += nLength;
+        nBoundaryLength -= nLength;
+        nCtr++;
 
     }				// WHILE enuming OIDs
 
@@ -1539,15 +1527,15 @@ ValidateMechList(unsigned char *pbMechListData, long nBoundaryLength)
     long nTokenLength = 0L;
 
     while (SPNEGO_E_SUCCESS == nReturn && nBoundaryLength > 0L) {
-	// Verify that we have something that at least *looks* like an OID - in other
-	// words it has an OID identifier and specifies a length that doesn't go beyond
-	// the size of the list.
-	nReturn = ASNDerCheckToken(pbMechListData, OID, 0L, nBoundaryLength,
-	    &nLength, &nTokenLength);
+        // Verify that we have something that at least *looks* like an OID - in other
+        // words it has an OID identifier and specifies a length that doesn't go beyond
+        // the size of the list.
+        nReturn = ASNDerCheckToken(pbMechListData, OID, 0L, nBoundaryLength,
+                                   &nLength, &nTokenLength);
 
-	// Adjust for the current OID
-	pbMechListData += (nLength + nTokenLength);
-	nBoundaryLength -= (nLength + nTokenLength);
+        // Adjust for the current OID
+        pbMechListData += (nLength + nTokenLength);
+        nBoundaryLength -= (nLength + nTokenLength);
 
     }				// WHILE enuming OIDs
 
@@ -1577,10 +1565,10 @@ int
 IsValidMechOid(SPNEGO_MECH_OID mechOid)
 {
     LOG(("IsValidMechOid returned %d\n",
-	    mechOid >= spnego_mech_oid_Kerberos_V5_Legacy
-	    && mechOid <= spnego_mech_oid_Spnego));
+         mechOid >= spnego_mech_oid_Kerberos_V5_Legacy
+         && mechOid <= spnego_mech_oid_Spnego));
     return (mechOid >= spnego_mech_oid_Kerberos_V5_Legacy
-	&& mechOid <= spnego_mech_oid_Spnego);
+            && mechOid <= spnego_mech_oid_Spnego);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1606,7 +1594,7 @@ IsValidContextFlags(unsigned char ucContextFlags)
     // Mask out our valid bits.  If there is anything leftover, this
     // is not a valid value for Context Flags
     LOG(("IsValidContextFlags returned %d\n",
-	    ((ucContextFlags & ~SPNEGO_NEGINIT_CONTEXT_MASK) == 0)));
+         ((ucContextFlags & ~SPNEGO_NEGINIT_CONTEXT_MASK) == 0)));
     return ((ucContextFlags & ~SPNEGO_NEGINIT_CONTEXT_MASK) == 0);
 }
 
@@ -1631,9 +1619,9 @@ int
 IsValidNegResult(SPNEGO_NEGRESULT negResult)
 {
     LOG(("IsValidNegResult returned %d\n", negResult >= spnego_negresult_success
-	    && negResult <= spnego_negresult_rejected));
+         && negResult <= spnego_negresult_rejected));
     return (negResult >= spnego_negresult_success
-	&& negResult <= spnego_negresult_rejected);
+            && negResult <= spnego_negresult_rejected);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -1660,19 +1648,19 @@ IsValidSpnegoToken(SPNEGO_TOKEN * pSpnegoToken)
 
     // Parameter should be non-NULL
     if (NULL != pSpnegoToken) {
-	// Length should be at least the size defined in the header
-	if (pSpnegoToken->nStructSize >= SPNEGO_TOKEN_SIZE) {
-	    // Number of elements should be >= our maximum - if it's greater, that's
-	    // okay, since we'll only be accessing the elements up to MAX_NUM_TOKEN_ELEMENTS
-	    if (pSpnegoToken->nNumElements >= MAX_NUM_TOKEN_ELEMENTS) {
-		// Check for proper token type
-		if (SPNEGO_TOKEN_INIT == pSpnegoToken->ucTokenType ||
-		    SPNEGO_TOKEN_TARG == pSpnegoToken->ucTokenType) {
-		    nReturn = 1;
-		}
-	    }
+        // Length should be at least the size defined in the header
+        if (pSpnegoToken->nStructSize >= SPNEGO_TOKEN_SIZE) {
+            // Number of elements should be >= our maximum - if it's greater, that's
+            // okay, since we'll only be accessing the elements up to MAX_NUM_TOKEN_ELEMENTS
+            if (pSpnegoToken->nNumElements >= MAX_NUM_TOKEN_ELEMENTS) {
+                // Check for proper token type
+                if (SPNEGO_TOKEN_INIT == pSpnegoToken->ucTokenType ||
+                        SPNEGO_TOKEN_TARG == pSpnegoToken->ucTokenType) {
+                    nReturn = 1;
+                }
+            }
 
-	}			// IF struct size makes sense
+        }			// IF struct size makes sense
 
     }				// IF non-NULL spnego Token
 
@@ -1701,22 +1689,22 @@ IsValidSpnegoToken(SPNEGO_TOKEN * pSpnegoToken)
 
 int
 IsValidSpnegoElement(SPNEGO_TOKEN * pSpnegoToken,
-    SPNEGO_ELEMENT_TYPE spnegoElement)
+                     SPNEGO_ELEMENT_TYPE spnegoElement)
 {
     int nReturn = 0;
 
     // Check boundaries
     if (spnegoElement > spnego_element_min &&
-	spnegoElement < spnego_element_max) {
+            spnegoElement < spnego_element_max) {
 
-	// Check for appropriateness to token type
-	if (SPNEGO_TOKEN_INIT == pSpnegoToken->ucTokenType) {
-	    nReturn = (spnegoElement >= spnego_init_mechtypes &&
-		spnegoElement <= spnego_init_mechListMIC);
-	} else {
-	    nReturn = (spnegoElement >= spnego_targ_negResult &&
-		spnegoElement <= spnego_targ_mechListMIC);
-	}
+        // Check for appropriateness to token type
+        if (SPNEGO_TOKEN_INIT == pSpnegoToken->ucTokenType) {
+            nReturn = (spnegoElement >= spnego_init_mechtypes &&
+                       spnegoElement <= spnego_init_mechListMIC);
+        } else {
+            nReturn = (spnegoElement >= spnego_targ_negResult &&
+                       spnegoElement <= spnego_targ_mechListMIC);
+        }
 
     }				// IF boundary conditions are met
 
@@ -1745,7 +1733,7 @@ IsValidSpnegoElement(SPNEGO_TOKEN * pSpnegoToken,
 
 int
 CalculateElementArrayIndex(SPNEGO_TOKEN * pSpnegoToken,
-    SPNEGO_ELEMENT_TYPE spnegoElement)
+                           SPNEGO_ELEMENT_TYPE spnegoElement)
 {
     int nReturn = 0;
 
@@ -1753,9 +1741,9 @@ CalculateElementArrayIndex(SPNEGO_TOKEN * pSpnegoToken,
     // (these differ based on ucTokenType)
 
     if (SPNEGO_TOKEN_INIT == pSpnegoToken->ucTokenType) {
-	nReturn = spnegoElement - spnego_init_mechtypes;
+        nReturn = spnegoElement - spnego_init_mechtypes;
     } else {
-	nReturn = spnegoElement - spnego_targ_negResult;
+        nReturn = spnegoElement - spnego_targ_negResult;
     }
 
     LOG(("CalculateElementArrayIndex returned %d\n", nReturn));
@@ -1789,8 +1777,8 @@ CalculateElementArrayIndex(SPNEGO_TOKEN * pSpnegoToken,
 // Initializes SPNEGO_TOKEN structure from DER encoded binary data
 int
 InitTokenFromBinary(unsigned char ucCopyData, unsigned long ulFlags,
-    unsigned char *pbTokenData, unsigned long ulLength,
-    SPNEGO_TOKEN ** ppSpnegoToken)
+                    unsigned char *pbTokenData, unsigned long ulLength,
+                    SPNEGO_TOKEN ** ppSpnegoToken)
 {
     int nReturn = SPNEGO_E_INVALID_PARAMETER;
     SPNEGO_TOKEN *pSpnegoToken = NULL;
@@ -1802,41 +1790,41 @@ InitTokenFromBinary(unsigned char ucCopyData, unsigned long ulFlags,
 
     if (NULL != pbTokenData && NULL != ppSpnegoToken && 0L != ulLength) {
 
-	//
-	// Allocate the empty token, then initialize the data structure.
-	//
+        //
+        // Allocate the empty token, then initialize the data structure.
+        //
 
-	pSpnegoToken =
-	    AllocEmptySpnegoToken(ucCopyData, ulFlags, pbTokenData, ulLength);
+        pSpnegoToken =
+            AllocEmptySpnegoToken(ucCopyData, ulFlags, pbTokenData, ulLength);
 
-	if (NULL != pSpnegoToken) {
+        if (NULL != pSpnegoToken) {
 
-	    // Copy the binary data locally
+            // Copy the binary data locally
 
 
-	    // Initialize the token type
-	    if ((nReturn = InitSpnegoTokenType(pSpnegoToken, &nTokenLength,
-			&nRemainingTokenLength, &pbFirstElement))
-		== SPNEGO_E_SUCCESS) {
+            // Initialize the token type
+            if ((nReturn = InitSpnegoTokenType(pSpnegoToken, &nTokenLength,
+                                               &nRemainingTokenLength, &pbFirstElement))
+                    == SPNEGO_E_SUCCESS) {
 
-		// Initialize the element array
-		if ((nReturn =
-			InitSpnegoTokenElements(pSpnegoToken, pbFirstElement,
-			    nRemainingTokenLength))
-		    == SPNEGO_E_SUCCESS) {
-		    *ppSpnegoToken = pSpnegoToken;
-		}
+                // Initialize the element array
+                if ((nReturn =
+                            InitSpnegoTokenElements(pSpnegoToken, pbFirstElement,
+                                                    nRemainingTokenLength))
+                        == SPNEGO_E_SUCCESS) {
+                    *ppSpnegoToken = pSpnegoToken;
+                }
 
-	    }			// IF Init Token Type
+            }			// IF Init Token Type
 
-	    // Cleanup on error condition
-	    if (SPNEGO_E_SUCCESS != nReturn) {
-		spnegoFreeData(pSpnegoToken);
-	    }
+            // Cleanup on error condition
+            if (SPNEGO_E_SUCCESS != nReturn) {
+                spnegoFreeData(pSpnegoToken);
+            }
 
-	} else {
-	    nReturn = SPNEGO_E_OUT_OF_MEMORY;
-	}
+        } else {
+            nReturn = SPNEGO_E_OUT_OF_MEMORY;
+        }
 
     }				// IF Valid parameters
 
