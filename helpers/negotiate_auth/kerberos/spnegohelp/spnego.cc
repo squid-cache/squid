@@ -136,7 +136,7 @@ spnegoCreateNegTokenInit(SPNEGO_MECH_OID MechType,
                                                     &nTokenLength, &nInternalTokenLength))
                 == SPNEGO_E_SUCCESS) {
             // Allocate a buffer to hold the data.
-            pbTokenData = calloc(1, nTokenLength);
+            pbTokenData = static_cast<unsigned char*>(calloc(1, nTokenLength));
 
             if (NULL != pbTokenData) {
 
@@ -235,7 +235,7 @@ spnegoCreateNegTokenTarg(SPNEGO_MECH_OID MechType,
                                                     &nInternalTokenLength))
                 == SPNEGO_E_SUCCESS) {
             // Allocate a buffer to hold the data.
-            pbTokenData = calloc(1, nTokenLength);
+            pbTokenData = static_cast<unsigned char*>(calloc(1, nTokenLength));
 
             if (NULL != pbTokenData) {
 
@@ -537,16 +537,11 @@ spnegoGetNegotiationResult(SPNEGO_TOKEN_HANDLE hSpnegoToken,
             NULL != pnegResult && SPNEGO_TOKEN_TARG == pSpnegoToken->ucTokenType) {
 
         // Check if NegResult is available
-        if (pSpnegoToken->aElementArray[SPNEGO_TARG_NEGRESULT_ELEMENT].
-                iElementPresent == SPNEGO_TOKEN_ELEMENT_AVAILABLE) {
+        if (pSpnegoToken->aElementArray[SPNEGO_TARG_NEGRESULT_ELEMENT].iElementPresent == SPNEGO_TOKEN_ELEMENT_AVAILABLE) {
             // Must be 1 byte long and a valid value
-            if (pSpnegoToken->aElementArray[SPNEGO_TARG_NEGRESULT_ELEMENT].
-                    nDatalength == SPNEGO_NEGTARG_MAXLEN_NEGRESULT
-                    && IsValidNegResult(*pSpnegoToken->
-                                        aElementArray[SPNEGO_TARG_NEGRESULT_ELEMENT].pbData)) {
-                *pnegResult =
-                    *pSpnegoToken->aElementArray[SPNEGO_TARG_NEGRESULT_ELEMENT].
-                    pbData;
+            if (pSpnegoToken->aElementArray[SPNEGO_TARG_NEGRESULT_ELEMENT].nDatalength == SPNEGO_NEGTARG_MAXLEN_NEGRESULT
+                    && IsValidNegResult(*pSpnegoToken->aElementArray[SPNEGO_TARG_NEGRESULT_ELEMENT].pbData)) {
+                *pnegResult = static_cast<SPNGEO_RESULT>(*pSpnegoToken->aElementArray[SPNEGO_TARG_NEGRESULT_ELEMENT].pbData);
                 nReturn = SPNEGO_E_SUCCESS;
             } else {
                 nReturn = SPNEGO_E_INVALID_ELEMENT;
@@ -555,7 +550,7 @@ spnegoGetNegotiationResult(SPNEGO_TOKEN_HANDLE hSpnegoToken,
             nReturn = SPNEGO_E_ELEMENT_UNAVAILABLE;
         }
 
-    }				// IF parameters OK
+    } // IF parameters OK
 
     LOG(("spnegoGetNegotiationResult returned %d\n", nReturn));
     return nReturn;;
@@ -615,14 +610,13 @@ spnegoGetSupportedMechType(SPNEGO_TOKEN_HANDLE hSpnegoToken,
                     *pMechOID = nCtr;
                 }
 
-            }			// For enum MechOIDs
-
+            } // For enum MechOIDs
 
         } else {
             nReturn = SPNEGO_E_ELEMENT_UNAVAILABLE;
         }
 
-    }				// IF parameters OK
+    } // IF parameters OK
 
     LOG(("spnegoGetSupportedMechType returned %d\n", nReturn));
     return nReturn;;
