@@ -681,7 +681,7 @@ HttpStateData::processReplyHeader()
     HttpReply *newrep = new HttpReply;
     const bool parsed = newrep->parse(readBuf, eof, &error);
 
-    if (!parsed && readBuf->contentSize() > 5 && strncmp(readBuf->content(), "HTTP/", 5) != 0) {
+    if (!parsed && readBuf->contentSize() > 5 && strncmp(readBuf->content(), "HTTP/", 5) != 0 && strncmp(readBuf->content(), "ICY", 3) != 0) {
         MemBuf *mb;
         HttpReply *tmprep = new HttpReply;
         tmprep->sline.version = HttpVersion(1, 0);
@@ -718,7 +718,7 @@ HttpStateData::processReplyHeader()
     }
 
     flags.chunked = 0;
-    if (newrep->header.hasListMember(HDR_TRANSFER_ENCODING, "chunked", ',')) {
+    if (newrep->sline.protocol == PROTO_HTTP && newrep->header.hasListMember(HDR_TRANSFER_ENCODING, "chunked", ',')) {
         flags.chunked = 1;
         httpChunkDecoder = new ChunkedCodingParser;
     }
@@ -1350,7 +1350,9 @@ HttpStateData::processReplyBody()
 void
 HttpStateData::maybeReadVirginBody()
 {
-    int read_sz = replyBodySpace(readBuf->spaceSize());
+    // we may need to grow the buffer if headers do not fit
+    const int minRead = flags.headers_parsed ? 0 :1024;
+    const int read_sz = replyBodySpace(*readBuf, minRead);
 
     debugs(11,9, HERE << (flags.do_next_read ? "may" : "wont") <<
            " read up to " << read_sz << " bytes from FD " << fd);
@@ -1363,12 +1365,8 @@ HttpStateData::maybeReadVirginBody()
      * handler until we get a notification from someone that
      * its okay to read again.
      */
-    if (read_sz < 2) {
-        if (flags.headers_parsed)
-            return;
-        else
-            read_sz = 1024;
-    }
+    if (read_sz < 2)
+        return;
 
     if (flags.do_next_read) {
         flags.do_next_read = 0;

@@ -10,7 +10,7 @@ MAKETEST="distcheck"
 # NP: there must be no overlap in code for plugging the libraries in/out.
 #     this means we can test the absence of all in one run and save time.
 #
-OPTS="--enable-esi --without-expat --without-xml2"
+OPTS="--enable-esi --without-expat --without-libxml2"
 
 # Fix the distclean testing.
 export DISTCHECK_CONFIGURE_FLAGS="${OPTS}"

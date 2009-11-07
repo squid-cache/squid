@@ -117,7 +117,12 @@ const char * SkipBuildPrefix(const char* path);
  *
  * debugs(1,2, HERE << "some message");
  */
-#define HERE SkipBuildPrefix(__FILE__)<<"("<<__LINE__<<") "<<__FUNCTION__<<": "
+#ifdef __FUNCTION__
+#define _SQUID__FUNCTION__ __FUNCTION__
+#else
+#define _SQUID__FUNCTION__ "(function unknown)"
+#endif
+#define HERE SkipBuildPrefix(__FILE__)<<"("<<__LINE__<<") "<<_SQUID__FUNCTION__<<": "
 
 /*
  * MYNAME is for use at debug levels 0 and 1 where HERE is too messy.

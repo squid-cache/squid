@@ -52,6 +52,6 @@ const char *ProtocolStr[] = {
     "whois",
     "internal",
     "https",
+    "icy",
     "TOTAL"
 };
-

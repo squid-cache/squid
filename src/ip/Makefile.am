@@ -22,6 +22,7 @@ nodist_testIpAddress_SOURCES= \
 	../tests/testMain.cc
 testIpAddress_LDADD= \
 	libip.la \
+	@XTRA_LIBS@ \
 	$(COMPAT_LIB) \
 	@SQUID_CPPUNIT_LA@ \
 	@SQUID_CPPUNIT_LIBS@

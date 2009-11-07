@@ -145,7 +145,7 @@ static int sslinit = 0;
 #endif
 static int connect_timeout = 0;
 static int timelimit = LDAP_NO_LIMIT;
-static int debug = 0;
+static int debug_mode = 0;
 
 /* Added for TLS support and version 3 */
 static int use_tls = 0;
@@ -176,7 +176,7 @@ squid_ldap_set_aliasderef(LDAP * ld, int deref)
 static void
 squid_ldap_set_referrals(LDAP * ld, int referrals)
 {
-    int *value = referrals ? LDAP_OPT_ON :LDAP_OPT_OFF;
+    int *value = static_cast<int*>(referrals ? LDAP_OPT_ON :LDAP_OPT_OFF);
     ldap_set_option(ld, LDAP_OPT_REFERRALS, value);
 }
 static void
@@ -385,7 +385,7 @@ main(int argc, char **argv)
         case 'h':
             if (ldapServer) {
                 int len = strlen(ldapServer) + 1 + strlen(value) + 1;
-                char *newhost = malloc(len);
+                char *newhost = static_cast<char*>(malloc(len));
                 snprintf(newhost, len, "%s %s", ldapServer, value);
                 free(ldapServer);
                 ldapServer = newhost;
@@ -493,7 +493,7 @@ main(int argc, char **argv)
             break;
 #endif
         case 'd':
-            debug++;
+            debug_mode++;
             break;
         default:
             fprintf(stderr, PROGRAM_NAME ": ERROR: Unknown command line option '%c'\n", option);
@@ -505,7 +505,7 @@ main(int argc, char **argv)
         char *value = argv[1];
         if (ldapServer) {
             int len = strlen(ldapServer) + 1 + strlen(value) + 1;
-            char *newhost = malloc(len);
+            char *newhost = static_cast<char*>(malloc(len));
             snprintf(newhost, len, "%s %s", ldapServer, value);
             free(ldapServer);
             ldapServer = newhost;
@@ -647,7 +647,7 @@ checkLDAP(LDAP * persistent_ld, const char *userid, const char *password, const 
         /* LDAP can't bind with a blank password. Seen as "anonymous"
          * and always granted access
          */
-        if (debug)
+        if (debug_mode)
             fprintf(stderr, "Blank password given\n");
         return 1;
     }
@@ -674,7 +674,7 @@ checkLDAP(LDAP * persistent_ld, const char *userid, const char *password, const 
             }
         }
         snprintf(filter, sizeof(filter), searchfilter, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login);
-        if (debug)
+        if (debug_mode)
             fprintf(stderr, "user filter '%s', searchbase '%s'\n", filter, basedn);
         rc = ldap_search_s(search_ld, basedn, searchscope, filter, searchattr, 1, &res);
         if (rc != LDAP_SUCCESS) {
@@ -682,7 +682,7 @@ checkLDAP(LDAP * persistent_ld, const char *userid, const char *password, const 
                 /* Everything is fine. This is expected when referrals
                  * are disabled.
                  */
-                if (debug)
+                if (debug_mode)
                     fprintf(stderr, "noreferrals && rc == LDAP_PARTIAL_RESULTS\n");
             } else {
                 fprintf(stderr, PROGRAM_NAME ": WARNING, LDAP search error '%s'\n", ldap_err2string(rc));
@@ -698,7 +698,7 @@ checkLDAP(LDAP * persistent_ld, const char *userid, const char *password, const 
         }
         entry = ldap_first_entry(search_ld, res);
         if (!entry) {
-            if (debug)
+            if (debug_mode)
                 fprintf(stderr, "Ldap search returned nothing\n");
             ret = 1;
             goto search_done;
@@ -732,7 +732,7 @@ search_done:
         snprintf(dn, sizeof(dn), "%s=%s,%s", userattr, userid, basedn);
     }
 
-    if (debug)
+    if (debug_mode)
         fprintf(stderr, "attempting to authenticate user '%s'\n", dn);
     if (!bind_ld && !bind_once)
         bind_ld = persistent_ld;
