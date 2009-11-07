@@ -117,8 +117,8 @@ static STCB asHandleReply;
 extern "C" {
 #endif
 
-static int destroyRadixNode(struct squid_radix_node *rn, void *w);
-static int printRadixNode(struct squid_radix_node *rn, void *sentry);
+    static int destroyRadixNode(struct squid_radix_node *rn, void *w);
+    static int printRadixNode(struct squid_radix_node *rn, void *sentry);
 
 #if defined(__cplusplus)
 }
