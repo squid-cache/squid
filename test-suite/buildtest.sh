@@ -9,12 +9,24 @@
 config="${1}"
 base="`dirname ${0}`"
 
+# cache_file may be set by environment variable
+configcache=""
+if [ -n "$cache_file" ]; then
+    configcache="--cache-file=$cache_file"
+fi
+
 #if we are on Linux, let's try parallelizing
-pjobs="" #default
-if [ -e /proc/cpuinfo ]; then
+if [ -z "$pjobs" -a -e /proc/cpuinfo ]; then
     ncpus=`grep '^processor' /proc/cpuinfo | tail -1|awk '{print $3}'`
     ncpus=`expr ${ncpus} + 1`
     pjobs="-j${ncpus}"
+fi
+#if we are on FreeBSD, let's try parallelizing
+if [ -z "$pjobs" -a -x /sbin/sysctl ]; then
+    ncpus=`sysctl kern.smp.cpus | cut -f2 -d" "`
+    if [ $? -eq 0 -a -n $ncpus -a $ncpus -gt 1 ]; then
+        pjobs="-j${ncpus}"
+    fi
 fi
 
 if test -e ${config} ; then
@@ -39,7 +51,7 @@ fi
 # above command currently encounters dependancy problems on cleanup.
 #
 # do not build any of the install's ...
-	$base/../configure ${OPTS} 2>&1 &&
+	$base/../configure ${OPTS} ${configcache} 2>&1 &&
 	make ${pjobs} ${MAKETEST} 2>&1
 
 # Remember and then explicitly return the result of the last command

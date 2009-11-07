@@ -13,7 +13,8 @@ static void ska_base64_init(void);
 static int base64_initialized = 0;
 #define BASE64_VALUE_SZ 256
 int base64_value[BASE64_VALUE_SZ];
-const char base64_code[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+const char base64_code[] =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 
 static void
@@ -26,12 +27,13 @@ ska_base64_init(void)
 
     for (i = 0; i < 64; i++)
         base64_value[(int) base64_code[i]] = i;
-    base64_value['='] = 0;
+    base64_value[(int)'='] = 0;
 
     base64_initialized = 1;
 }
 
-void ska_base64_decode(char* result, const char *data, int result_size)
+void
+ska_base64_decode(char *result, const char *data, int result_size)
 {
     int j;
     int c;
@@ -42,7 +44,7 @@ void ska_base64_decode(char* result, const char *data, int result_size)
         ska_base64_init();
     val = c = 0;
 
-    for (j = 0; *data ; data++) {
+    for (j = 0; *data; data++) {
         unsigned int k = ((unsigned char) *data) % BASE64_VALUE_SZ;
         if (base64_value[k] < 0)
             continue;
@@ -66,7 +68,9 @@ void ska_base64_decode(char* result, const char *data, int result_size)
 }
 
 /* adopted from http://ftp.sunet.se/pub2/gnu/vm/base64-encode.c with adjustments */
-void ska_base64_encode(char* result, const char *data, int result_size, int data_size)
+void
+ska_base64_encode(char *result, const char *data, int result_size,
+                  int data_size)
 {
     int bits = 0;
     int char_count = 0;
@@ -127,26 +131,30 @@ void ska_base64_encode(char* result, const char *data, int result_size, int data
     }
 end:
     if (out_cnt >= result_size) {
-        result[result_size-1] = '\0';	/* terminate */
+        result[result_size - 1] = '\0';	/* terminate */
     } else {
         result[out_cnt] = '\0';	/* terminate */
     }
     return;
 }
 
-int ska_base64_encode_len(int len)
+int
+ska_base64_encode_len(int len)
 {
-    return ((len+2)/3*4)+1;
+    return ((len + 2) / 3 * 4) + 1;
 }
 
-int ska_base64_decode_len(const char *data)
+int
+ska_base64_decode_len(const char *data)
 {
-    int i,j;
+    int i, j;
 
-    j=0;
-    for (i=strlen(data)-1; i>=0; i--) {
-        if (data[i] == '=') j++;
-        if (data[i] != '=') break;
+    j = 0;
+    for (i = strlen(data) - 1; i >= 0; i--) {
+        if (data[i] == '=')
+            j++;
+        if (data[i] != '=')
+            break;
     }
-    return strlen(data)/4*3-j;
+    return strlen(data) / 4 * 3 - j;
 }

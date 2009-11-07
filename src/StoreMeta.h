@@ -127,10 +127,6 @@ enum {
      */
     STORE_META_STD_LFS,
 
-    /**
-     \deprecated
-     * Object size, not implemented, squid26 compatibility
-     */
     STORE_META_OBJSIZE,
 
     STORE_META_STOREURL,	/* the store url, if different to the normal URL */

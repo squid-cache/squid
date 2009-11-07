@@ -70,7 +70,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <sect2>Negotiate Authentication protocol helpers
 <itemize>
-	<item>(none yet converted)
+	<item>squid_kerb_auth - negotiate_kerberos_auth - Authenticate with Kerberos servers.
 </itemize>
 
 <sect2>NTLM Authentication protocol helpers
@@ -294,6 +294,9 @@ This section gives a thorough account of those changes in three categories:
 <sect1>New tags<label id="newtags">
 <p>
 <descrip>
+	<tag>eui_lookup</tag>
+	<p> Whether to lookup the EUI or MAC address of a connected client.
+
 	<tag>memory_cache_mode</tag>
 	<p> Controls which objects to keep in the memory cache (cache_mem)
 	<verb>
@@ -306,14 +309,25 @@ This section gives a thorough account of those changes in three categories:
 	network   Only objects fetched from network is kept in memory
 	</verb>
 
-
 </descrip>
 
 <sect1>Changes to existing tags<label id="modifiedtags">
 <p>
 <descrip>
+	<tag>acl random</tag>
+	<p>New type <em>random</em>. Pseudo-randomly match requests based on a configured probability.
+
+	<tag>deny_info</tag>
+	<p>Support URL format tags. For dynamically generated URL in denial redirect.
+
+	<tag>external_acl_type</tag>
+	<p>New format tag <em>%SRCEUI48</em> EUI-48 / MAC address of client from ARP lookup.
+	<p>New format tag <em>%SRCEUI64</em> EUI-64 of clients with SLAAC address.
+
 	<tag>logformat</tag>
 	<p><em>%sn</em> Unique sequence number per log line. Ported from 2.7
+	<p><em>%>eui</em> EUI logging (EUI-48 / MAC address for IPv4, EUI-64 for IPv6)
+	   Both EUI forms are logged in the same field. Type can be identified by length or byte delimiter.
 
 	<tag>windows_ipaddrchangemonitor</tag>
 	<p>Now only available to be set in Windows builds.
@@ -324,12 +338,8 @@ This section gives a thorough account of those changes in three categories:
 <sect1>Removed tags<label id="removedtags">
 <p>
 <descrip>
-
-	<tag>???alphabetical list???</tag>
-	<p> ???
-	<verb>
-	relevant quote directly from cf.data.pre
-	</verb>
+	<tag>ftp_list_width</tag>
+	<p>Obsolete.
 
 </descrip>
 
@@ -350,6 +360,10 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
+	<tag>--enable-eui</tag>
+	<p>Enable Support for handling EUI operations.
+	   This includes ARP lookups for MAC (EUI-48) addresses and the ACL arp type tests.
+
 	<tag>--enable-url-rewrite-helpers</tag>
 	<p>Build helpers for some basic URL-rewrite actions. For use by url_rewrite_program.
 	   If omitted or set to =all then all bundled helpers that are able to build will be built.
@@ -370,8 +384,8 @@ This section gives an account of those changes in three categories:
 <sect1>Removed options<label id="removedoptions">
 <p>
 <descrip>
-	<tag>???alphabetical list within group ordered: enable, disable, with, without) ???</tag>
-	<p> ???explain??
+	<tag>--enable-arp-acl</tag>
+	<p>Replaced by --enable-eui
 
 </descrip>
 

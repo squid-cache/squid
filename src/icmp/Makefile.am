@@ -61,6 +61,7 @@ pinger_LDFLAGS = $(LIBADD_DL)
 pinger_LDADD=\
 	libicmp-core.la \
 	../ip/libip.la \
+	@XTRA_LIBS@ \
 	$(top_builddir)/lib/libmiscutil.a
 pinger_DEPENDENCIES= \
 	libicmp-core.la \
@@ -103,6 +104,7 @@ testIcmp_LDADD=\
 	@SQUID_CPPUNIT_LA@ \
 	libicmp-core.la \
 	../ip/libip.la \
+	@XTRA_LIBS@ \
 	$(top_builddir)/lib/libmiscutil.a
 testIcmp_DEPENDENCIES= @SQUID_CPPUNIT_LA@ \
 	libicmp-core.la \
