@@ -714,6 +714,7 @@ getsymbol (const char *s, char const **endptr)
 
         if ((point = strchr (s, '.')) && point - s < (ssize_t)length) {
             /* floating point */
+            errno=0; /* reset errno */
             rv.value.floating = strtod (s, &end);
 
             if (s == end || errno) {
@@ -730,6 +731,7 @@ getsymbol (const char *s, char const **endptr)
             }
         } else {
             /* INT */
+            errno=0; /* reset errno */
             rv.value.integral = strtol (s, &end, 0);
 
             if (s == end || errno) {

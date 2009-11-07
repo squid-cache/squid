@@ -34,7 +34,7 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.h \
 	LoadableModules.cc
 
-SUBDIRS	= base acl fs repl auth ip icmp ident
+SUBDIRS	= base eui acl fs repl auth ip icmp ident
 
 if USE_ADAPTATION
 SUBDIRS += adaptation
@@ -161,6 +161,7 @@ COMMON_LIBS = \
 	auth/libacls.la \
 	ident/libident.la \
 	acl/libacls.la \
+	eui/libeui.la \
 	acl/libstate.la \
 	auth/libauth.la \
 	acl/libapi.la \
@@ -168,7 +169,7 @@ COMMON_LIBS = \
 	fs/libfs.la
 
 ## Loadable Modules needs lib/libLtdl stuff
-INCLUDES += -I$(top_srcdir)/lib
+INCLUDES += -I$(top_srcdir)/lib -I$(top_srcdir)/lib/libLtdl
 
 EXTRA_PROGRAMS = \
 	DiskIO/DiskDaemon/diskd \
@@ -201,9 +202,9 @@ cf_gen_SOURCES = cf_gen.cc
 nodist_cf_gen_HEADER = cf_gen_defines.h
 cf_gen_LDADD= \
 	$(COMPAT_LIB) \
-	@XTRA_LIBS@ \
 	@EPOLL_LIBS@ \
-	@MINGW_LIBS@
+	@MINGW_LIBS@ \
+	@XTRA_LIBS@
 cf_gen.$(OBJEXT): cf_gen_defines.h
 
 ## cf_gen.cc needs src/cf_gen_defines.h
@@ -533,6 +534,7 @@ nodist_squid_SOURCES = \
 
 squid_LDADD = \
 	$(COMMON_LIBS) \
+	eui/libeui.la \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	@XTRA_OBJS@ \
 	@DISK_LINKOBJS@ \
@@ -546,10 +548,10 @@ squid_LDADD = \
 	$(ESI_LIBS) \
 	$(COMPAT_LIB) \
 	@SSLLIB@ \
-	@XTRA_LIBS@ \
 	@EPOLL_LIBS@ \
 	@MINGW_LIBS@ \
-	@KRB5LIBS@
+	@KRB5LIBS@ \
+	@XTRA_LIBS@
 squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@DISK_LIBS@ \
 	@DISK_LINKOBJS@ \
@@ -636,9 +638,9 @@ ufsdump_LDADD = \
 	@SNMPLIB@ \
 	@SSLLIB@ \
 	-L$(top_builddir)/lib -lmiscutil \
-	@XTRA_LIBS@ \
 	@EPOLL_LIBS@ \
-	@MINGW_LIBS@
+	@MINGW_LIBS@ \
+	@XTRA_LIBS@
 ufsdump_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	$(COMMON_LIBS) \
 	@DISK_LIBS@ \
@@ -656,7 +658,12 @@ sysconf_DATA = \
 data_DATA = \
 	mib.txt
 
-LDADD = $(COMMON_LIBS) -L../lib -lmiscutil @XTRA_LIBS@ @EPOLL_LIBS@ @MINGW_LIBS@
+LDADD = $(COMMON_LIBS)\
+	-L../lib \
+	-lmiscutil \
+	@EPOLL_LIBS@ \
+	@MINGW_LIBS@ \
+	@XTRA_LIBS@
 
 EXTRA_DIST = \
 	cf_gen_defines \
@@ -800,11 +807,11 @@ cf.data: cf.data.pre Makefile
 	s%@DEFAULT_NETDB_FILE@%$(DEFAULT_NETDB_FILE)%g;\
 	s%@DEFAULT_SWAP_DIR@%$(DEFAULT_SWAP_DIR)%g;\
 	s%@DEFAULT_ICON_DIR@%$(DEFAULT_ICON_DIR)%g;\
-	s%@DEFAULT_ERROR_DIR@%$(DEFAULT_ERROR_DIR)%g;\
 	s%@DEFAULT_CONFIG_DIR@%$(DEFAULT_CONFIG_DIR)%g;\
 	s%@DEFAULT_PREFIX@%$(DEFAULT_PREFIX)%g;\
 	s%@DEFAULT_HOSTS@%$(DEFAULT_HOSTS)%g;\
-	s%@[V]ERSION@%$(VERSION)%g;"\
+	s%@IPV6_ONLY_SETTING@%$(SET_IPV6_SETTINGS)%g;\
+	s%@SQUID@%SQUID\ $(VERSION)%g;"\
 	< $(srcdir)/cf.data.pre >$@
 
 repl_modules.cc: repl_modules.sh Makefile
@@ -945,7 +952,8 @@ tests_testHttpReply_LDADD=\
 	ip/libip.la \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
-	-L../lib -lmiscutil
+	-L../lib -lmiscutil \
+	@XTRA_LIBS@
 tests_testHttpReply_DEPENDENCIES= @SQUID_CPPUNIT_LA@ \
 	$(top_builddir)/lib/libmiscutil.a
 
@@ -984,7 +992,8 @@ tests_testAuth_LDADD= \
 	-L../lib -lmiscutil \
 	@REGEXLIB@ \
 	@SQUID_CPPUNIT_LIBS@ \
-	@SSLLIB@
+	@SSLLIB@ \
+	@XTRA_LIBS@
 tests_testAuth_LDFLAGS = $(LIBADD_DL)
 tests_testAuth_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@SQUID_CPPUNIT_LA@
@@ -1046,7 +1055,8 @@ tests_testACLMaxUserIP_LDADD= \
 	-L../lib -lmiscutil \
 	@REGEXLIB@ \
 	@SQUID_CPPUNIT_LIBS@ \
-	@SSLLIB@
+	@SSLLIB@ \
+	@XTRA_LIBS@
 tests_testACLMaxUserIP_LDFLAGS = $(LIBADD_DL)
 tests_testACLMaxUserIP_DEPENDENCIES = \
 	@SQUID_CPPUNIT_LA@
@@ -1063,7 +1073,8 @@ nodist_tests_testBoilerplate_SOURCES = \
 tests_testBoilerplate_LDADD= \
 	-L../lib -lmiscutil \
 	@SQUID_CPPUNIT_LIBS@ \
-	@SSLLIB@
+	@SSLLIB@ \
+	@XTRA_LIBS@
 tests_testBoilerplate_LDFLAGS = $(LIBADD_DL)
 tests_testBoilerplate_DEPENDENCIES = \
 	@SQUID_CPPUNIT_LA@
@@ -1208,8 +1219,8 @@ tests_testCacheManager_LDADD = \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
 	@SSLLIB@ \
-	@XTRA_LIBS@ \
-	@KRB5LIBS@
+	@KRB5LIBS@ \
+	@XTRA_LIBS@
 tests_testCacheManager_LDFLAGS = $(LIBADD_DL)
 tests_testCacheManager_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
@@ -1229,7 +1240,8 @@ tests_testDiskIO_LDADD = \
 	@DISK_LIBS@ \
 	@AIOLIB@ \
 	$(COMMON_LIBS) \
-	SquidConfig.o
+	SquidConfig.o \
+	@XTRA_LIBS@
 
 tests_testDiskIO_LDFLAGS = $(LIBADD_DL)
 tests_testDiskIO_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
@@ -1381,8 +1393,8 @@ tests_testEvent_LDADD = \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
 	@SSLLIB@ \
-	@XTRA_LIBS@ \
-	@KRB5LIBS@
+	@KRB5LIBS@ \
+	@XTRA_LIBS@
 tests_testEvent_LDFLAGS = $(LIBADD_DL)
 tests_testEvent_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
@@ -1530,8 +1542,8 @@ tests_testEventLoop_LDADD = \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
 	@SSLLIB@ \
-	@XTRA_LIBS@ \
-	@KRB5LIBS@
+	@KRB5LIBS@ \
+	@XTRA_LIBS@
 tests_testEventLoop_LDFLAGS = $(LIBADD_DL)
 tests_testEventLoop_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
@@ -1674,8 +1686,8 @@ tests_test_http_range_LDADD = \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
 	@SSLLIB@ \
-	@XTRA_LIBS@ \
-	@KRB5LIBS@
+	@KRB5LIBS@ \
+	@XTRA_LIBS@
 tests_test_http_range_LDFLAGS = $(LIBADD_DL)
 tests_test_http_range_DEPENDENCIES = \
 	@SQUID_CPPUNIT_LA@
@@ -1823,8 +1835,8 @@ tests_testHttpRequest_LDADD = \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
 	@SSLLIB@ \
-	@XTRA_LIBS@ \
-	@KRB5LIBS@
+	@KRB5LIBS@ \
+	@XTRA_LIBS@
 tests_testHttpRequest_LDFLAGS = $(LIBADD_DL)
 tests_testHttpRequest_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \
@@ -1901,7 +1913,8 @@ tests_testStore_LDADD= \
 	-L../lib -lmiscutil \
 	@REGEXLIB@ \
 	@SQUID_CPPUNIT_LIBS@ \
-	@SSLLIB@
+	@SSLLIB@ \
+	@XTRA_LIBS@
 tests_testStore_LDFLAGS = $(LIBADD_DL)
 tests_testStore_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@SQUID_CPPUNIT_LA@
@@ -1925,7 +1938,8 @@ tests_testString_LDADD = \
 	-L../lib -lmiscutil \
 	@REGEXLIB@ \
 	@SQUID_CPPUNIT_LIBS@ \
-	@SSLLIB@
+	@SSLLIB@ \
+	@XTRA_LIBS@
 tests_testString_LDFLAGS = $(LIBADD_DL)
 tests_testString_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@SQUID_CPPUNIT_LA@
@@ -1973,7 +1987,8 @@ SWAP_TEST_LDADD = \
 	@AIOLIB@ \
 	-L../lib -lmiscutil \
 	acl/libapi.la \
-	@SQUID_CPPUNIT_LIBS@
+	@SQUID_CPPUNIT_LIBS@ \
+	@XTRA_LIBS@
 SWAP_TEST_DS =\
 	$(top_builddir)/lib/libmiscutil.a \
 	repl_modules.o \
@@ -1995,7 +2010,8 @@ nodist_tests_testUfs_SOURCES = \
 tests_testUfs_LDADD = \
 	$(SWAP_TEST_LDADD) \
 	$(COMMON_LIBS) \
-	@SSLLIB@
+	@SSLLIB@ \
+	@XTRA_LIBS@
 tests_testUfs_LDFLAGS = $(LIBADD_DL)
 tests_testUfs_DEPENDENCIES = \
 	$(SWAP_TEST_DS)
@@ -2011,7 +2027,8 @@ nodist_tests_testCoss_SOURCES = \
 tests_testCoss_LDADD = \
 	libsquid.la \
 	$(SWAP_TEST_LDADD) \
-	@SSLLIB@
+	@SSLLIB@ \
+	@XTRA_LIBS@
 tests_testCoss_LDFLAGS = $(LIBADD_DL)
 tests_testCoss_DEPENDENCIES = \
 	$(SWAP_TEST_DS)
@@ -2025,7 +2042,8 @@ nodist_tests_testNull_SOURCES = \
 	$(SWAP_TEST_GEN_SOURCES)
 tests_testNull_LDADD = \
 	$(SWAP_TEST_LDADD) \
-	@SSLLIB@
+	@SSLLIB@ \
+	@XTRA_LIBS@
 tests_testNull_LDFLAGS = $(LIBADD_DL)
 tests_testNull_DEPENDENCIES = \
 	$(SWAP_TEST_DS)
@@ -2173,8 +2191,8 @@ tests_testURL_LDADD = \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
 	@SSLLIB@ \
-	@XTRA_LIBS@ \
-	@KRB5LIBS@
+	@KRB5LIBS@ \
+	@XTRA_LIBS@
 tests_testURL_LDFLAGS = $(LIBADD_DL)
 tests_testURL_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	@REPL_OBJS@ \

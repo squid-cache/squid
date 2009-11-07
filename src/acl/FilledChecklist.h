@@ -47,6 +47,7 @@ public:
     IpAddress dst_addr;
     IpAddress my_addr;
     struct peer *dst_peer;
+    char *dst_rdns;
 
     HttpRequest *request;
     HttpReply *reply;

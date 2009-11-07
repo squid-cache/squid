@@ -832,8 +832,15 @@ ServerStateData::storeReplyBody(const char *data, ssize_t len)
     currentOffset += len;
 }
 
-size_t ServerStateData::replyBodySpace(size_t space)
+size_t ServerStateData::replyBodySpace(const MemBuf &readBuf,
+                                       const size_t minSpace) const
 {
+    size_t space = readBuf.spaceSize(); // available space w/o heroic measures
+    if (space < minSpace) {
+        const size_t maxSpace = readBuf.potentialSpaceSize(); // absolute best
+        space = min(minSpace, maxSpace); // do not promise more than asked
+    }
+
 #if USE_ADAPTATION
     if (responseBodyBuffer) {
         return 0;	// Stop reading if already overflowed waiting for ICAP to catch up

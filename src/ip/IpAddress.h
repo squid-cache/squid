@@ -204,6 +204,20 @@ public:
      */
     bool IsLocalhost() const;
 
+    /** Test whether content is an IPv6 Site-Local address.
+     \retval true  if address begins with fe80::/10.
+     \retval false if --disable-ipv6 has been compiled.
+     \retval false if address does not match fe80::/10
+     */
+    bool IsSiteLocal6() const;
+
+    /** Test whether content is an IPv6 address with SLAAC EUI-64 embeded.
+     \retval true  if address matches ::ff:fe00:0
+     \retval false if --disable-ipv6 has been compiled.
+     \retval false if address does not match ::ff:fe00:0
+     */
+    bool IsSlaac() const;
+
     /*@}*/
 
     /** Retrieve the Port if stored.

@@ -177,7 +177,7 @@ AC_ARG_WITH(logdir,
 )
 AC_SUBST(DEFAULT_LOG_DIR)
 
-DEFAULT_PIDFILE="$localstatedir/squid.pid"
+DEFAULT_PIDFILE="$DEFAULT_LOG_DIR/squid.pid"
 AC_ARG_WITH(pidfile,
   AS_HELP_STRING([--with-pidfile=PATH],[Default location for squid PID file. default: $DEFAULT_PIDFILE]),
  [ case $withval in
@@ -212,6 +212,20 @@ if test "$GCC" = "yes"; then
     esac
     unset GCCVER
     unset GCCVER2
+
+dnl try to use -pipe
+    AC_MSG_CHECKING([if gcc -pipe works])
+    SAVED_CFLAGS="$CFLAGS"
+    SAVED_CXXFLAGS="$CXXFLAGS"
+    CFLAGS="$CFLAGS -pipe"
+    CXXFLAGS="$CXXFLAGS -pipe"
+    AC_COMPILE_IFELSE(AC_LANG_PROGRAM([],[return 0;]),[AC_MSG_RESULT([yes])],[
+        AC_MSG_RESULT([no])
+        CFLAGS="$SAVED_CFLAGS"
+        CXXFLAGS="$SAVED_CXXFLAGS"
+        ])
+    unset SAVED_CFLAGS
+    unset SAVED_CXXFLAGS
 fi
 
 dnl Set Default CFLAGS
@@ -842,7 +856,7 @@ use_adaptation=no
 
 use_esi=yes
 AC_ARG_ENABLE(esi,
-  AS_HELP_STRING([--enable-esi],[Enable ESI for accelerators. Benefits from libexpat or libxml2.
+  AS_HELP_STRING([--enable-esi],[Enable ESI for accelerators. Benefits from expat or libxml2.
                   Enabling ESI will cause squid reverse proxies to be capable of the
                   Edge Acceleration Specification (www.esi.org).]),
 	      use_esi=$enableval, use_esi=no)
@@ -854,18 +868,18 @@ if test "$use_esi" = "yes" ; then
   AC_MSG_NOTICE([Enabling ESI processor and Surrogate header support.])
   AC_DEFINE(USE_SQUID_ESI,1,[Compile the ESI processor and Surrogate header support])
 
-  AC_ARG_WITH(expat, AS_HELP_STRING([--without-libexpat],[Do not use libexpat for ESI. Default: auto-detect]))
+  AC_ARG_WITH(expat, AS_HELP_STRING([--without-expat],[Do not use expat for ESI. Default: auto-detect]))
   if test "$with_expat" != "no" ; then
     AC_CHECK_LIB([expat], [main], [EXPATLIB="-lexpat"; HAVE_LIBEXPAT=1])
     AC_CHECK_HEADERS([expat.h])
     AC_DEFINE_UNQUOTED(HAVE_LIBEXPAT, $HAVE_LIBEXPAT, [Define to 1 if you have the expat library])
     if test "$with_expat" = "yes" && test "$HAVE_LIBEXPAT" != "1" ; then
-      AC_MSG_ERROR([Required library libexpat is not able to be found.])
+      AC_MSG_ERROR([Required library expat is not able to be found.])
     fi
   fi
 
-  AC_ARG_WITH(xml2, AS_HELP_STRING([--without-libxml2],[Do not use libxml2 for ESI. Default: auto-detect]))
-  if test "$with_xml2" != "no" ; then
+  AC_ARG_WITH(libxml2, AS_HELP_STRING([--without-libxml2],[Do not use libxml2 for ESI. Default: auto-detect]))
+  if test "$with_libxml2" != "no" ; then
     AC_CHECK_LIB([xml2], [main], [XMLLIB="-lxml2"; HAVE_LIBXML2=1])
     dnl Find the main header and include path...
     AC_CHECK_HEADERS([libxml/parser.h], [], [
@@ -882,7 +896,7 @@ if test "$use_esi" = "yes" ; then
     dnl Now that we know where to look find the other headers...
     AC_CHECK_HEADERS(libxml/HTMLparser.h libxml/HTMLtree.h)
     AC_DEFINE_UNQUOTED(HAVE_LIBXML2, $HAVE_LIBXML2, [Define to 1 if you have the libxml2 library])
-    if test "$with_xml2" = "yes" && test "$HAVE_LIBXML2" != "1" ; then
+    if test "$with_libxml2" = "yes" && test "$HAVE_LIBXML2" != "1" ; then
       AC_MSG_ERROR([Required library libxml2 is not able to be found.])
     fi
   fi
@@ -1075,11 +1089,13 @@ AC_ARG_ENABLE(cachemgr-hostname,
    esac
 ])
 
-AM_CONDITIONAL(ENABLE_ARP_ACL, false)
-AC_ARG_ENABLE(arp-acl,
-  AS_HELP_STRING([--enable-arp-acl],[Enable use of ARP ACL lists (ether address)]),
-[  if test "$enableval" = "yes" ; then
-     AC_MSG_NOTICE([ARP ACL lists enabled (ether address)])
+AM_CONDITIONAL(USE_SQUID_EUI, false)
+use_sq_eui="yes"
+AC_ARG_ENABLE(eui,
+  AS_HELP_STRING([--disable-eui],[Enable use of ARP / MAC/ EUI (ether address)]),
+  [use_sq_eui="$enableval"])
+if test "$use_sq_eui" = "yes" ; then
+     AC_MSG_NOTICE([EUI controls enabled (ether address)])
      case "$host" in
 	*-linux-*)
 	    ;;
@@ -1092,20 +1108,32 @@ AC_ARG_ENABLE(arp-acl,
 	*-netbsd*)
 	    ;;
 	*-cygwin*)
-        LIBS="$LIBS -liphlpapi"
+		EUILIB="-liphlpapi"
 	    ;;
 	*-mingw*)
-        LIBS="$LIBS -liphlpapi"
+		EUILIB="-liphlpapi"
 	    ;;
 	*)
-	    AC_MSG_WARN([ARP ACL support probably won't work on $host.])
+	    AC_MSG_WARN([EUI support probably won't work on $host.])
 	    sleep 10
 	    ;;
      esac
-     AC_DEFINE(USE_ARP_ACL,1,[Define this to include code which lets you specify access control elements based on ethernet hardware addresses.  This code uses functions found in 4.4 BSD derviations (e.g. FreeBSD, ?).])
-     AM_CONDITIONAL(ENABLE_ARP_ACL, true)
-   fi
-])
+     AC_CHECK_HEADERS( \
+		Iphlpapi.h \
+		net/if.h \
+		net/if_arp.h \
+		net/if_dl.h \
+		net/route.h \
+		netinet/if_ether.h \
+		sys/sockio.h \
+		sys/sysctl.h \
+		sys/ioctl.h \
+	)
+     AC_DEFINE(USE_SQUID_EUI,1,[Define this to include code which lets you use ethernet hardware addresses.  This code uses functions found in 4.4 BSD derviations (e.g. FreeBSD, ?).])
+     AM_CONDITIONAL(USE_SQUID_EUI, true)
+else
+    AC_MSG_NOTICE([EUI controls disabled (ether address)])
+fi
 
 USE_HTCP=true
 AM_CONDITIONAL(ENABLE_HTCP, false)
@@ -1513,7 +1541,7 @@ AC_ARG_ENABLE(linux-tproxy,
   AS_HELP_STRING([--enable-linux-tproxy],[Enable real Transparent Proxy support for Netfilter TPROXY 
                   (version 2).]),
 [ if test "$enableval" = "yes" ; then
-	AC_MSG_NOTICE(["Linux Netfilter/TPROXY v2 enabled])
+	AC_MSG_NOTICE([Linux Netfilter/TPROXY v2 enabled])
 	AC_DEFINE(LINUX_TPROXY2, 1, [Enable real Transparent Proxy support for Netfilter TPROXY v2.])
 	LINUX_TPROXY2="yes"
         if test -z "$LINUX_NETFILTER"; then
@@ -1692,6 +1720,8 @@ if test "$BASIC_AUTH_HELPERS" = "all" ; then
 	    helper="`basename $dir`"
 	    if test -f $dir/config.test && sh $dir/config.test "$@"; then
 		BASIC_AUTH_HELPERS="$BASIC_AUTH_HELPERS $helper"
+            elif test -d $srcdir/helpers/basic_auth/$helper ; then
+                AC_MSG_NOTICE([Basic auth helper $helper ... found but cannot be built])
 	    fi
 	done
 fi
@@ -1738,6 +1768,8 @@ if test "$NTLM_AUTH_HELPERS" = "all" ; then
 	    helper="`basename $dir`"
 	    if test -f $dir/config.test && sh $dir/config.test "$@"; then
 		NTLM_AUTH_HELPERS="$NTLM_AUTH_HELPERS $helper"
+            elif test -d $srcdir/helpers/ntlm_auth/$helper ; then
+                AC_MSG_NOTICE([NTLM auth helper $helper ... found but cannot be built])
 	    fi
 	done
 fi
@@ -1780,6 +1812,8 @@ if test "$NEGOTIATE_AUTH_HELPERS" = "all" ; then
 	    helper="`basename $dir`"
 	    if test -f $dir/config.test && sh $dir/config.test "$@";  then
 		NEGOTIATE_AUTH_HELPERS="$NEGOTIATE_AUTH_HELPERS $helper"
+            elif test -d $srcdir/helpers/negotiate_auth/$helper ; then
+                AC_MSG_NOTICE([Negotiate auth helper $helper ... found but cannot be built])
 	    fi
 	done
 fi
@@ -1794,7 +1828,6 @@ if test -n "$NEGOTIATE_AUTH_HELPERS"; then
     AC_MSG_NOTICE([Negotiate auth helpers built: $NEGOTIATE_AUTH_HELPERS])
 fi
 AC_SUBST(NEGOTIATE_AUTH_HELPERS)
-AC_CONFIG_SUBDIRS(helpers/negotiate_auth/squid_kerb_auth)
 
 dnl Select digest auth scheme helpers to build
 if test -n "$AUTH_MODULE_digest"; then
@@ -1823,6 +1856,8 @@ if test "$DIGEST_AUTH_HELPERS" = "all" ; then
 	    helper="`basename $dir`"
 	    if test -f $dir/config.test && sh $dir/config.test "$@"; then
 		DIGEST_AUTH_HELPERS="$DIGEST_AUTH_HELPERS $helper"
+            elif test -d $srcdir/helpers/digest_auth/$helper ; then
+                AC_MSG_NOTICE([Digest auth helper $helper ... found but cannot be built])
 	    fi
 	done
 fi
@@ -2074,6 +2109,8 @@ if test "$EXTERNAL_ACL_HELPERS" = "all" ; then
 	    helper="`basename $dir`"
 	    if test -f $dir/config.test && sh $dir/config.test "$@"; then
 		EXTERNAL_ACL_HELPERS="$EXTERNAL_ACL_HELPERS $helper"
+            elif test -d $srcdir/helpers/external_acl/$helper ; then
+                AC_MSG_NOTICE([External ACL helper $helper ... found but cannot be built])
 	    fi
 	done
 fi
@@ -2115,6 +2152,8 @@ if test "$URL_REWRITE_HELPERS" = "all" ; then
 	    helper="`basename $dir`"
 	    if test -f $dir/config.test && sh $dir/config.test "$@"; then
 		URL_REWRITE_HELPERS="$URL_REWRITE_HELPERS $helper"
+            elif test -d $srcdir/helpers/url_rewrite/$helper ; then
+                AC_MSG_NOTICE([URL re-write helper $helper ... found but cannot be built])
 	    fi
 	done
 fi
@@ -2742,27 +2781,48 @@ AC_CHECK_TYPE(socklen_t,AC_DEFINE(HAVE_SOCKLEN_T,1,[socklen_t is defined by the 
 #endif])
 
 dnl Check for libcap header (assume its not broken unless 
-use_caps=yes
-AC_ARG_ENABLE(caps, AS_HELP_STRING([--disable-caps],[disable usage of Linux capabilities library to control privileges]),
-[ if test "x$enableval" = "xyes" ; then
-    AC_MSG_RESULT(forced yes)
+use_libcap=auto
+AC_ARG_WITH(libcap, AS_HELP_STRING([--without-libcap],[disable usage of Linux capabilities library to control privileges]),
+[ if test "x$withval" = "xyes" ; then
+    AC_MSG_RESULT(libcap forced enabled)
+    use_libcap=yes
   else
-    AC_MSG_RESULT(no)
-    use_caps=no
+    AC_MSG_RESULT(libcap forced disabled)
+    use_libcap=no
   fi
-],[AC_MSG_RESULT(yes)])
-if test "x$use_caps" = "xyes"; then
-  dnl Check for libcap1 breakage or libcap2 fixed (assume broken unless found working)
-  libcap_broken=1
-  AC_CHECK_HEADERS(sys/capability.h)
-  AC_CACHE_CHECK([for operational libcap2], $libcap_broken,
-    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <sys/capability.h>]], [[
-                    capget(NULL, NULL);
-                    capset(NULL, NULL);
-                   ]])],[libcap_broken=0],[])
-  )
-  AC_DEFINE_UNQUOTED([LIBCAP_BROKEN],$libcap_broken,[if libcap2 is available and not clashing with libc])
+])
+if test "x$use_libcap" != "xno"; then
+  # cap_clear_flag is the most recent libcap function we require
+  AC_CHECK_LIB(cap, cap_clear_flag)
+  if test "x$ac_cv_lib_cap_cap_clear_flag" = xyes; then
+    use_libcap=yes
+  else
+    if test "x$use_libcap" = "xyes"; then
+      AC_MSG_ERROR([libcap forced enabled but not available or not usable, requires libcap-2.09 or later])
+    fi
+    use_libcap=no
+  fi
 fi
+
+if test "x$use_libcap" = "xyes"; then
+  AC_DEFINE(USE_LIBCAP, 1, [use libcap to set capabilities required for TPROXY])
+  dnl Check for libcap headader breakage.
+  AC_CHECK_HEADERS(sys/capability.h)
+  AC_CACHE_CHECK([for operational libcap2 headers], squid_cv_sys_capability_works,
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <stdlib.h>
+#include <stddef.h>
+#include <sys/capability.h>
+]], [[
+capget(NULL, NULL);
+capset(NULL, NULL);
+                   ]])],[squid_cv_sys_capability_works=yes],[squid_cv_sys_capability_works=no])
+  )
+  if test x$squid_cv_sys_capability_works != xyes; then
+    AC_DEFINE([LIBCAP_BROKEN],1,[if libcap2 headers are broken and clashing with glibc])
+  fi
+fi
+
 
 AC_CHECK_TYPE(mtyp_t,AC_DEFINE(HAVE_MTYP_T,1,[mtyp_t is defined by the system headers]),,[#include <sys/types.h>
 #include <sys/ipc.h>
@@ -2771,6 +2831,7 @@ AC_CHECK_TYPE(mtyp_t,AC_DEFINE(HAVE_MTYP_T,1,[mtyp_t is defined by the system he
 dnl Check for needed libraries
 AC_CHECK_LIB(nsl, main)
 AC_CHECK_LIB(socket, main)
+AC_CHECK_LIB(opcom_stack,main)
 dnl Check for Winsock only on MinGW, on Cygwin we must use emulated BSD socket API
 case "$host_os" in
   mingw|mingw32)
@@ -2905,6 +2966,7 @@ fi
 
 if test "$use_ipng" = "yes"; then
   AC_DEFINE(USE_IPV6,1,[Enable support for IPv6 ])
+  SET_IPV6_SETTINGS=""
   use_v4mapped=yes
 
 dnl Check for forced split-stack mode
@@ -2978,7 +3040,9 @@ else
   AC_DEFINE(USE_IPV6,0,[Enable support for IPv6])
   AC_DEFINE(IPV6_SPECIAL_SPLITSTACK,0,[Enable support for IPv6 on split-stack implementations])
   AC_DEFINE(IPV6_SPECIAL_V4MAPPED,0,[Enable v4-mapping through v6 sockets])
+  SET_IPV6_SETTINGS="\#IPv6 Not Available: "
 fi
+AC_SUBST(SET_IPV6_SETTINGS)
 
 dnl Check whether this OS defines ss_len as a member of sockaddr_storage
 AC_CACHE_CHECK([for ss_len field in struct sockaddr_storage],
@@ -3253,6 +3317,7 @@ AC_CHECK_FUNCS(\
 dnl ... and some we provide local replacements for
 AC_REPLACE_FUNCS(\
 	drand48 \
+	eui64_aton \
 	inet_ntop \
 	inet_pton \
 	initgroups \
@@ -3498,20 +3563,24 @@ fi
 if test "$LINUX_NETFILTER" = "no" ; then
     AC_MSG_WARN([Cannot find necessary Linux kernel (Netfilter) header files])
     AC_MSG_WARN([Linux Transparent and Intercepting Proxy support WILL NOT be enabled])
+    LINUX_TPROXY2="no"
+    AC_DEFINE(LINUX_TPROXY2, 0, [Enable real Transparent Proxy support for Netfilter TPROXY v2.])
     sleep 10
 fi
 dnl Netfilter TPROXY depends on libcap but the NAT parts can still work.
-if test "$LINUX_NETFILTER" = "yes" && test "$use_caps" != "yes" ; then
+if test "$LINUX_NETFILTER" = "yes" && test "$use_libcap" != "yes" ; then
     AC_MSG_WARN([Missing needed capabilities (libcap or libcap2) for TPROXY])
     AC_MSG_WARN([Linux Transparent Proxy support WILL NOT be enabled])
     AC_MSG_WARN([Reduced support to Interception Proxy])
+    LINUX_TPROXY2="no"
+    AC_DEFINE(LINUX_TPROXY2, 0, [Enable real Transparent Proxy support for Netfilter TPROXY v2.])
     sleep 10
 fi
 
 dnl Linux Netfilter/TPROXYv2 support requires some specific header files
 dnl Shamelessly copied from above
 if test "$LINUX_TPROXY2"; then
-  if test "$use_caps" = "yes"; then
+  if test "$use_libcap" = "yes"; then
     AC_MSG_CHECKING(if TPROXYv2 header files are installed)
     # hold on to your hats...
     if test "$ac_cv_header_linux_netfilter_ipv4_ip_tproxy_h" = "yes" && test "$LINUX_NETFILTER" = "yes"; then
@@ -3532,6 +3601,8 @@ if test "$LINUX_TPROXY2"; then
   else
     AC_MSG_WARN([Missing needed capabilities (libcap or libcap2) for TPROXY v2])
     AC_MSG_WARN([Linux Transparent Proxy support WILL NOT be enabled])
+    LINUX_TPROXY2="no"
+    AC_DEFINE(LINUX_TPROXY2, 0, [Enable real Transparent Proxy support for Netfilter TPROXY v2.])
     sleep 10
   fi
 fi
@@ -4099,6 +4170,7 @@ AC_CONFIG_FILES([\
 	src/adaptation/icap/Makefile \
 	src/adaptation/ecap/Makefile \
 	src/esi/Makefile \
+	src/eui/Makefile \
 	src/icmp/Makefile \
 	src/ident/Makefile \
 	src/ip/Makefile \
@@ -4135,6 +4207,7 @@ AC_CONFIG_FILES([\
 	helpers/ntlm_auth/smb_lm/smbval/Makefile \
 	helpers/ntlm_auth/mswin_sspi/Makefile \
 	helpers/negotiate_auth/Makefile \
+	helpers/negotiate_auth/kerberos/Makefile \
 	helpers/negotiate_auth/mswin_sspi/Makefile \
 	helpers/external_acl/Makefile \
 	helpers/external_acl/ip_user/Makefile \

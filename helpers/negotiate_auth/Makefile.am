@@ -1,7 +1,3 @@
-#  Makefile for negotiate authentication helpers in the Squid Object Cache server
-#
-#  $Id$
-#
 
-DIST_SUBDIRS	= mswin_sspi squid_kerb_auth
+DIST_SUBDIRS	= mswin_sspi kerberos
 SUBDIRS		= @NEGOTIATE_AUTH_HELPERS@

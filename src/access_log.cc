@@ -40,13 +40,16 @@
 #include "Store.h"
 
 #include "acl/Checklist.h"
-
+#include "CacheManager.h"
+#if USE_SQUID_EUI
+#include "eui/Eui48.h"
+#include "eui/Eui64.h"
+#endif
 #include "hier_code.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
 #include "SquidTime.h"
-#include "CacheManager.h"
 
 static void accessLogSquid(AccessLogEntry * al, Logfile * logfile);
 static void accessLogCommon(AccessLogEntry * al, Logfile * logfile);
@@ -328,6 +331,9 @@ typedef enum {
     LFT_CLIENT_IP_ADDRESS,
     LFT_CLIENT_FQDN,
     LFT_CLIENT_PORT,
+#if USE_SQUID_EUI
+    LFT_CLIENT_EUI,
+#endif
 
     /*LFT_SERVER_IP_ADDRESS, */
     LFT_SERVER_IP_OR_PEER_NAME,
@@ -477,9 +483,11 @@ struct logformat_token_table_entry {
 struct logformat_token_table_entry logformat_token_table[] = {
 
     {">a", LFT_CLIENT_IP_ADDRESS},
-
-    { ">p", LFT_CLIENT_PORT},
+    {">p", LFT_CLIENT_PORT},
     {">A", LFT_CLIENT_FQDN},
+#if USE_SQUID_EUI
+    {">eui", LFT_CLIENT_EUI},
+#endif
 
     /*{ "<a", LFT_SERVER_IP_ADDRESS }, */
     /*{ "<p", LFT_SERVER_PORT }, */
@@ -639,6 +647,18 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
                 doint = 1;
             }
             break;
+
+#if USE_SQUID_EUI
+        case LFT_CLIENT_EUI:
+            if (al->request) {
+                if (al->cache.caddr.IsIPv4())
+                    al->request->client_eui48.encode(tmp, 1024);
+                else
+                    al->request->client_eui64.encode(tmp, 1024);
+                out = tmp;
+            }
+            break;
+#endif
 
             /* case LFT_SERVER_IP_ADDRESS: */
 
