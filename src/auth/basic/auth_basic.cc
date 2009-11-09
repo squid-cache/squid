@@ -44,6 +44,7 @@
 #include "Store.h"
 #include "HttpReply.h"
 #include "basicScheme.h"
+#include "rfc1738.h"
 #include "wordlist.h"
 #include "SquidTime.h"
 

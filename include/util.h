@@ -90,12 +90,6 @@ SQUIDCEXTERN void xxfree(const void *);
 #include "SquidNew.h"
 #endif
 
-/* rfc1738.c */
-SQUIDCEXTERN char *rfc1738_escape(const char *);
-SQUIDCEXTERN char *rfc1738_escape_unescaped(const char *);
-SQUIDCEXTERN char *rfc1738_escape_part(const char *);
-SQUIDCEXTERN void rfc1738_unescape(char *);
-
 /* charset.c */
 SQUIDCEXTERN char *latin1_to_utf8(char *out, size_t size, const char *in);
 

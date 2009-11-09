@@ -38,7 +38,7 @@
 #include "acl/Url.h"
 #include "acl/Checklist.h"
 #include "acl/RegexData.h"
-
+#include "rfc1738.h"
 
 int
 ACLUrlStrategy::match (ACLData<char const *> * &data, ACLFilledChecklist *checklist)
