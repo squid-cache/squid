@@ -84,6 +84,7 @@
 
 #define LDAP_DEPRECATED 1
 
+#include "rfc1738.h"
 #include "util.h"
 
 #include <stdio.h>

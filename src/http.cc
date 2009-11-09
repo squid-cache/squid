@@ -56,6 +56,7 @@
 #include "MemBuf.h"
 #include "MemObject.h"
 #include "protos.h"
+#include "rfc1738.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "TextException.h"
