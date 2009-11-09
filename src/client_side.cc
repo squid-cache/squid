@@ -105,6 +105,7 @@
 #include "SquidTime.h"
 #include "ChunkedCodingParser.h"
 #include "eui/Config.h"
+#include "rfc1738.h"
 
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close

@@ -33,6 +33,8 @@
  */
 
 #include "config.h"
+#include "rfc1738.h"
+#include "util.h"
 
 #if HAVE_STDIO_H
 #include <stdio.h>
@@ -40,8 +42,6 @@
 #if HAVE_STRING_H
 #include <string.h>
 #endif
-
-#include "util.h"
 
 /*
  *  RFC 1738 defines that these characters should be escaped, as well
@@ -82,8 +82,8 @@ static char rfc1738_reserved_chars[] = {
  *  rfc1738_escape - Returns a static buffer contains the RFC 1738
  *  compliant, escaped version of the given url.
  */
-static char *
-rfc1738_do_escape(const char *url, int encode_reserved)
+char *
+rfc1738_do_escape(const char *url, int flags)
 {
     static char *buf;
     static size_t bufsize = 0;
@@ -94,7 +94,7 @@ rfc1738_do_escape(const char *url, int encode_reserved)
     if (buf == NULL || strlen(url) * 3 > bufsize) {
         xfree(buf);
         bufsize = strlen(url) * 3 + 1;
-        buf = xcalloc(bufsize, 1);
+        buf = (char*)xcalloc(bufsize, 1);
     }
     for (p = url, q = buf; *p != '\0' && q < (buf + bufsize - 1); p++, q++) {
         do_escape = 0;
@@ -107,10 +107,10 @@ rfc1738_do_escape(const char *url, int encode_reserved)
             }
         }
         /* Handle % separately */
-        if (encode_reserved >= 0 && *p == '%')
+        if (flags != RFC1738_ESCAPE_UNESCAPED && *p == '%')
             do_escape = 1;
         /* RFC 1738 defines these chars as reserved */
-        for (i = 0; i < sizeof(rfc1738_reserved_chars) && encode_reserved > 0; i++) {
+        for (i = 0; i < sizeof(rfc1738_reserved_chars) && flags == RFC1738_ESCAPE_RESERVED; i++) {
             if (*p == rfc1738_reserved_chars[i]) {
                 do_escape = 1;
                 break;
@@ -143,6 +143,7 @@ rfc1738_do_escape(const char *url, int encode_reserved)
     return (buf);
 }
 
+#if 0 /* legacy API */
 /*
  * rfc1738_escape - Returns a static buffer that contains the RFC
  * 1738 compliant, escaped version of the given url.
@@ -172,6 +173,7 @@ rfc1738_escape_part(const char *url)
 {
     return rfc1738_do_escape(url, 1);
 }
+#endif /* 0 */
 
 /*
  *  rfc1738_unescape() - Converts escaped characters (%xy numbers) in

@@ -54,6 +54,7 @@
 #include "SquidTime.h"
 #include "URLScheme.h"
 #include "SquidString.h"
+#include "rfc1738.h"
 
 /**
  \defgroup ServerProtocolFTPInternal Server-Side FTP Internals
