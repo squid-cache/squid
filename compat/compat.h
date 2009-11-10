@@ -49,7 +49,6 @@
 /* OS-macro wrapping should be done inside the OS .h */
 /*****************************************************/
 
-#include "compat/os/solaris.h"
 #include "compat/os/aix.h"
 #include "compat/os/dragonfly.h"
 #include "compat/os/freebsd.h"
@@ -61,6 +60,7 @@
 #include "compat/os/os2.h"
 #include "compat/os/qnx.h"
 #include "compat/os/sgi.h"
+#include "compat/os/solaris.h"
 #include "compat/os/sunos.h"
 #include "compat/os/windows.h"
 
