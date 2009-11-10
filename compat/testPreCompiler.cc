@@ -48,7 +48,7 @@ testPreCompiler::testIfDef()
 
     /* Defined to exist without a value generates pre-compiler errors when used in #if . */
 
-    /* Not Defined to exist at all == false */ 
+    /* Not Defined to exist at all == false */
 #undef UNDEFINED_FOO
 #if UNDEFINED_FOO
     bool undefinedTrue = true;
