@@ -534,7 +534,7 @@ squid_LDADD = \
 	@SSLLIB@ \
 	-lmiscutil \
 	@EPOLL_LIBS@ \
-	@MINGW_LIBS@ 
+	@MINGW_LIBS@ \
 	@XTRA_LIBS@
 squid_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 	@DISK_LIBS@ \
@@ -921,7 +921,6 @@ tests_testHttpReply_LDADD=\
 	acl/libstate.la \
 	auth/libauth.la \
 	ip/libip.la \
-	@XTRA_LIBS@ \
 	@SQUID_CPPUNIT_LIBS@ \
 	@SQUID_CPPUNIT_LA@ \
 	-L../lib -lmiscutil \
