@@ -10,7 +10,7 @@ INCLUDES += -I$(srcdir)
 
 AUTOMAKE_OPTIONS = subdir-objects
 
-# No recursion is needed for the subdirs, we build from here. // @REPL_POLICIES@
+# No recursion is needed for the subdirs, we build from here.
 
 EXTRA_LIBRARIES = liblru.a libheap.a
 noinst_LIBRARIES = @REPL_LIBS@
