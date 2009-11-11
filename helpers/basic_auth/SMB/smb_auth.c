@@ -46,6 +46,7 @@
 #include <string.h>
 
 #include "util.h"
+#include "rfc1738.h"
 
 #define BUFSIZE			256
 #define NMB_UNICAST		1
