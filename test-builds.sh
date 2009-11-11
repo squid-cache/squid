@@ -59,7 +59,8 @@ buildtest() {
     log=${btlayer}.log
     echo "TESTING: ${layer}"
     chmod -R 777 ${btlayer}
-    rm -f -r ${btlayer} && mkdir ${btlayer}
+    rm -f -r ${btlayer} || ( echo "FATAL: Failed to prepare test build sandpit." ; exit 1 )
+    mkdir ${btlayer}
     if test "${verbose}" = "yes" ; then
         ls -la ${btlayer}
     fi
@@ -93,16 +94,17 @@ buildtest() {
     errors="^ERROR|\ error:|\ Error\ |No\ such|assertion\ failed|FAIL:|:\ undefined"
     grep -E "${errors}" ${log}
 
-    if test "${cleanup}" = "yes" ; then
-	echo "REMOVE DATA: ${btlayer}"
-	chmod -R 777 ${btlayer}
-	rm -f -r ${btlayer}
-    fi
-
     if test $result -eq 0; then
 	# successful execution
 	if test "${verbose}" = "yes"; then
 	    echo "Build OK. Global result is $globalResult."
+	fi
+	if test "${cleanup}" = "yes" ; then
+	    echo "REMOVE DATA: ${btlayer}"
+	    chmod -R 777 ${btlayer}
+	    rm -f -r ${btlayer}
+	    echo "REMOVE LOG: ${log}"
+	    rm -f -r ${log}
 	fi
     else
         if test "${verbose}" != "yes" ; then
@@ -112,11 +114,6 @@ buildtest() {
             echo "Build FAILED."
         fi
         globalResult=1
-    fi
-
-    if test "${cleanup}" = "yes" ; then
-	echo "REMOVE LOG: ${log}"
-	rm -f -r ${log}
     fi
 }
 
