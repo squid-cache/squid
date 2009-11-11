@@ -1,4 +1,4 @@
-dnl  Configuration input file for Squid
+
 dnl
 dnl  $Id$
 dnl
@@ -474,6 +474,7 @@ FOUND_DISKIO_BLOCKING=
 FOUND_DISKIO_DISKDAEMON=
 FOUND_DISKIO_DISKTHREADS=
 DISK_LIBS=
+DISK_OS_LIBS=
 DISK_MODULES=
 DISK_LINKOBJS=
 for module in $MAYBE_DISK_MODULES none; do
@@ -548,7 +549,7 @@ for module in $MAYBE_DISK_MODULES none; do
 		*)
 			SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT"
 			SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT"
-			AC_CHECK_LIB(pthread, main,[DISK_LIBS="$DISK_LIBS -lpthread"],
+			AC_CHECK_LIB(pthread, main,[LIBPTHREADS="-lpthread"],
 				[ AC_MSG_NOTICE(pthread library required but cannot be found.)
 				  use_diskthreads="no"
 				])
@@ -561,7 +562,8 @@ for module in $MAYBE_DISK_MODULES none; do
 	if test "$use_diskthreads" = "yes" ; then
 	  AC_DEFINE(USE_DISKIO_DISKTHREADS, 1, [Whether pthreads support is needed. Automatic])
 	  AC_MSG_NOTICE([Enabling DiskThreads DiskIO module])
-	  DISK_LIBS="$DISK_LIBS $LIBPTHREADS libDiskThreads.a"
+	  DISK_LIBS="$DISK_LIBS libDiskThreads.a"
+	  DISK_OS_LIBS="$DISK_OS_LIBS $LIBPTHREADS"
 	  DISK_MODULES="$DISK_MODULES DiskThreads"
 	  DISK_LINKOBJS="$DISK_LINKOBJS DiskIO/DiskThreads/DiskThreadsDiskIOModule.o"
 	else
@@ -622,6 +624,7 @@ for module in $MAYBE_DISK_MODULES none; do
 		;;
 	    *)
 		AC_MSG_NOTICE([Enabling AIO DiskIO module])
+		DISK_OS_LIBS="$DISK_OS_LIBS $AIOLIB"
 		;;
 	  esac
 	else
@@ -653,7 +656,7 @@ AC_SUBST(DISK_MODULES)
 AC_SUBST(DISK_LIBS)
 AC_SUBST(DISK_PROGRAMS)
 AC_SUBST(DISK_LINKOBJS)
-AC_SUBST(AIOLIB)
+AC_SUBST(DISK_OS_LIBS)
 AM_CONDITIONAL([USE_AIOPS_WIN32], [test "$USE_AIOPS_WIN32" = 1])
 AM_CONDITIONAL([USE_AIO_WIN32], [test "$USE_AIO_WIN32" = 1])
 
