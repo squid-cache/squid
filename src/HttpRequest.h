@@ -92,12 +92,15 @@ public:
         host_addr = src;
         if ( host_addr.IsAnyAddr() ) {
             xstrncpy(host, src, SQUIDHOSTNAMELEN);
+            host_is_numeric = 0;
         } else {
             host_addr.ToHostname(host, SQUIDHOSTNAMELEN);
             debugs(23, 3, "HttpRequest::SetHost() given IP: " << host_addr);
+            host_is_numeric = 1;
         }
     };
     inline const char* GetHost(void) const { return host; };
+    inline const int GetHostIsNumeric(void) const { return host_is_numeric; };
 
 #if USE_ADAPTATION
     /// Returns possibly nil history, creating it if adapt. logging is enabled
@@ -124,6 +127,7 @@ public:
 
 private:
     char host[SQUIDHOSTNAMELEN];
+    int host_is_numeric;
 
     /***
      * The client side connection data of pinned connections for the client side
