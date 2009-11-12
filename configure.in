@@ -176,9 +176,9 @@ AC_ARG_WITH(logdir,
 )
 AC_SUBST(DEFAULT_LOG_DIR)
 
-DEFAULT_PIDFILE="$localstatedir/squid.pid"
+DEFAULT_PIDFILE="$localstatedir/run/squid.pid"
 AC_ARG_WITH(pidfile,
-  AS_HELP_STRING([--with-pidfile=PATH],[Default location for squid PID file. default: $DEFAULT_PIDFILE]),
+  AS_HELP_STRING([--with-pidfile=PATH],[Default location for squid PID file. default: PREFIX/var/run/squid.pid]),
  [ case $withval in
    yes|no)
      AC_MSG_ERROR( --with-pidfile requires a file PATH. --with-pidfile=PATH )
