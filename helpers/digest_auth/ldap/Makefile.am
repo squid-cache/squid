@@ -21,8 +21,8 @@ digest_ldap_auth_SOURCES = digest_pw_auth.c \
 LDADD = \
 	$(top_builddir)/compat/libcompat.la \
 	-L$(top_builddir)/lib -lmiscutil \
-	@LDAPLIB@ \
-	@LBERLIB@ \
+	$(LDAPLIB) \
+	$(LBERLIB) \
 	$(CRYPTLIB) \
 	$(XTRA_LIBS) \
 	$(SSLLIB)

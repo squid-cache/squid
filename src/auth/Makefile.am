@@ -3,7 +3,7 @@ include $(top_srcdir)/src/Common.am
 ## we need our local files too (but avoid -I. at all costs)
 INCLUDES += -I$(srcdir)
 
-noinst_LTLIBRARIES = libauth.la libacls.la @AUTH_LIBS_TO_BUILD@
+noinst_LTLIBRARIES = libauth.la libacls.la $(AUTH_LIBS_TO_BUILD)
 EXTRA_LTLIBRARIES = libbasic.la libdigest.la libntlm.la libnegotiate.la
 
 ## authentication framework; this library is always built
@@ -20,8 +20,8 @@ libauth_la_SOURCES = \
 	Gadgets.cc \
 	Gadgets.h
 
-libauth_la_LIBADD = @AUTH_LIBS_TO_BUILD@
-libauth_la_DEPENDENCIES = @AUTH_LIBS_TO_BUILD@
+libauth_la_LIBADD = $(AUTH_LIBS_TO_BUILD)
+libauth_la_DEPENDENCIES = $(AUTH_LIBS_TO_BUILD)
 
 ## authentication-dependent ACLs and authentication code they share
 libacls_la_SOURCES = \
