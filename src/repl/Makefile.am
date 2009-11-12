@@ -13,7 +13,7 @@ AUTOMAKE_OPTIONS = subdir-objects
 # No recursion is needed for the subdirs, we build from here.
 
 EXTRA_LIBRARIES = liblru.a libheap.a
-noinst_LIBRARIES = @REPL_LIBS@
+noinst_LIBRARIES = $(REPL_LIBS)
 
 liblru_a_SOURCES = lru/store_repl_lru.cc
 libheap_a_SOURCES = heap/store_heap_replacement.h heap/store_heap_replacement.cc heap/store_repl_heap.cc

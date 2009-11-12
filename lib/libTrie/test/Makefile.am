@@ -1,7 +1,7 @@
 INCLUDES = -I$(top_srcdir)/include
 
-AM_CFLAGS = @TRIE_CFLAGS@
-AM_CXXFLAGS = @TRIE_CXXFLAGS@
+AM_CFLAGS = $(TRIE_CFLAGS)
+AM_CXXFLAGS = $(TRIE_CXXFLAGS)
 
 TESTS = trie trie-c
 
