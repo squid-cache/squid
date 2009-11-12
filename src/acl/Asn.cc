@@ -112,9 +112,17 @@ static void asnCacheStart(int as);
 
 static STCB asHandleReply;
 
-static int destroyRadixNode(struct squid_radix_node *rn, void *w);
 
-static int printRadixNode(struct squid_radix_node *rn, void *sentry);
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
+    static int destroyRadixNode(struct squid_radix_node *rn, void *w);
+    static int printRadixNode(struct squid_radix_node *rn, void *sentry);
+
+#if defined(__cplusplus)
+}
+#endif
 
 void asnAclInitialize(ACL * acls);
 
