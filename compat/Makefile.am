@@ -40,6 +40,15 @@ libcompat_la_SOURCES = \
 	GnuRegex.h \
 	GnuRegex.c
 
+check_PROGRAMS += testPreCompiler
+TESTS += testPreCompiler
+
+testPreCompiler_SOURCES= \
+	testPreCompiler.h \
+	testPreCompiler.cc \
+	$(top_srcdir)/src/tests/testMain.cc
+testPreCompiler_LDADD= @SQUID_CPPUNIT_LA@ @SQUID_CPPUNIT_LIBS@
+testPreCompiler_LDFLAGS=
 
 # os/ subdir prevents us using src/TestHeaders.am
 #
