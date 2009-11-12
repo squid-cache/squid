@@ -2679,6 +2679,7 @@ fi
 
 if test "$use_ipng" = "yes"; then
   AC_DEFINE(USE_IPV6,1,[Enable support for IPv6 ])
+  SET_IPV6_SETTINGS=""
   use_v4mapped=yes
 
 dnl Check for forced split-stack mode
@@ -2752,7 +2753,9 @@ else
   AC_DEFINE(USE_IPV6,0,[Enable support for IPv6])
   AC_DEFINE(IPV6_SPECIAL_SPLITSTACK,0,[Enable support for IPv6 on split-stack implementations])
   AC_DEFINE(IPV6_SPECIAL_V4MAPPED,0,[Enable v4-mapping through v6 sockets])
+  SET_IPV6_SETTINGS="\#IPv6 Not Available: "
 fi
+AC_SUBST(SET_IPV6_SETTINGS)
 
 dnl Check whether this OS defines ss_len as a member of sockaddr_storage
 AC_CACHE_CHECK([for ss_len field in struct sockaddr_storage],

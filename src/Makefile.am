@@ -782,6 +782,7 @@ cf.data: cf.data.pre Makefile
 	s%@DEFAULT_CONFIG_DIR@%$(DEFAULT_CONFIG_DIR)%g;\
 	s%@DEFAULT_PREFIX@%$(DEFAULT_PREFIX)%g;\
 	s%@DEFAULT_HOSTS@%$(DEFAULT_HOSTS)%g;\
+	s%@IPV6_ONLY_SETTING@%$(SET_IPV6_SETTINGS)%g;\
 	s%@SQUID@%SQUID\ $(VERSION)%g;"\
 	< $(srcdir)/cf.data.pre >$@
 
