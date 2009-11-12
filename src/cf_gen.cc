@@ -473,6 +473,8 @@ main(int argc, char *argv[])
             " * Abstract: This file contains routines used to configure the\n"
             " *           variables in the squid server.\n"
             " */\n"
+            "\n"
+            "#include \"config.h\"\n"
             "\n",
             input_filename, argv[0]
            );
