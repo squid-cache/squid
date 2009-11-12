@@ -4,4 +4,4 @@
 #
 
 DIST_SUBDIRS	= password ldap eDirectory
-SUBDIRS		= @DIGEST_AUTH_HELPERS@
+SUBDIRS		= $(DIGEST_AUTH_HELPERS)
