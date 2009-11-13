@@ -63,13 +63,6 @@
 #include "spnegohelp.h"
 #endif
 
-#if HAVE_HEIMDAL_KERBEROS
-#if HAVE_GSSAPI_GSSAPI_H
-#include <gssapi/gssapi.h>
-#elif HAVE_GSSAPI_H
-#include <gssapi.h>
-#endif /* HAVE_GSSAPI_GSSAPI_H */
-#else /* HAVE_HEIMDAL_KERBEROS */
 #if HAVE_GSSAPI_GSSAPI_H
 #include <gssapi/gssapi.h>
 #elif HAVE_GSSAPI_H
@@ -81,7 +74,6 @@
 #if HAVE_GSSAPI_GSSAPI_GENERIC_H
 #include <gssapi/gssapi_generic.h>
 #endif /* HAVE_GSSAPI_GSSAPI_GENERIC_H */
-#endif /* HAVE_HEIMDAL_KERBEROS */
 #ifndef gss_nt_service_name
 #define gss_nt_service_name GSS_C_NT_HOSTBASED_SERVICE
 #endif
@@ -92,7 +84,7 @@
 #define MAX_AUTHTOKEN_LEN   65535
 #endif
 #ifndef SQUID_KERB_AUTH_VERSION
-#define SQUID_KERB_AUTH_VERSION "3.0.1sq"
+#define SQUID_KERB_AUTH_VERSION "3.0.2sq"
 #endif
 
 int check_gss_err(OM_uint32 major_status, OM_uint32 minor_status,
@@ -122,7 +114,10 @@ LogTime()
 char *
 gethost_name(void)
 {
+/*
     char hostname[sysconf(_SC_HOST_NAME_MAX)];
+*/
+    char hostname[1024];
     struct addrinfo *hres = NULL, *hres_list;
     int rc, count;
 
@@ -425,7 +420,7 @@ main(int argc, char *const argv[])
 
 
 #if !HAVE_SPNEGO
-        if ((rc = parseNegTokenInit(input_token.value,
+        if ((rc = parseNegTokenInit((const unsigned char*)input_token.value,
                                     input_token.length,
                                     &kerberosToken, &kerberosTokenLength)) != 0) {
             if (debug)
@@ -514,7 +509,7 @@ main(int argc, char *const argv[])
         if (output_token.length) {
 #if !HAVE_SPNEGO
             if (spnego_flag) {
-                if ((rc = makeNegTokenTarg(output_token.value,
+                if ((rc = makeNegTokenTarg((const unsigned char*)output_token.value,
                                            output_token.length,
                                            &spnegoToken, &spnegoTokenLength)) != 0) {
                     if (debug)
@@ -526,11 +521,11 @@ main(int argc, char *const argv[])
                     goto cleanup;
                 }
             } else {
-                spnegoToken = output_token.value;
+                spnegoToken = (const unsigned char*)output_token.value;
                 spnegoTokenLength = output_token.length;
             }
 #else
-            spnegoToken = (unsigned char *)output_token.value;
+            spnegoToken = (const unsigned char*)output_token.value;
             spnegoTokenLength = output_token.length;
 #endif
             token = (char*)xmalloc(ska_base64_encode_len(spnegoTokenLength));

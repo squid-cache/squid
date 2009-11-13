@@ -24,6 +24,6 @@ negotiate_kerberos_auth_test_SOURCES = $(SOURCE_test)
 
 
 negotiate_kerberos_auth_LDFLAGS = 
-negotiate_kerberos_auth_LDADD = $(COMPAT_LIB) $(XTRA_LIBS) $(KRB5LIBS)
+negotiate_kerberos_auth_LDADD = $(COMPAT_LIB) $(XTRA_LIBS) @KRB5LIBS@
 negotiate_kerberos_auth_test_LDFLAGS = 
-negotiate_kerberos_auth_test_LDADD = $(COMPAT_LIB) $(XTRA_LIBS) $(KRB5LIBS)
+negotiate_kerberos_auth_test_LDADD = $(COMPAT_LIB) $(XTRA_LIBS) @KRB5LIBS@
