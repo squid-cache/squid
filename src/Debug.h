@@ -120,7 +120,7 @@ const char * SkipBuildPrefix(const char* path);
 #ifdef __FUNCTION__
 #define _SQUID__FUNCTION__ __FUNCTION__
 #else
-#define _SQUID__FUNCTION__ "(function unknown)"
+#define _SQUID__FUNCTION__ ""
 #endif
 #define HERE SkipBuildPrefix(__FILE__)<<"("<<__LINE__<<") "<<_SQUID__FUNCTION__<<": "
 
