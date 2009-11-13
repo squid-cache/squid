@@ -56,7 +56,7 @@ SQUIDCEXTERN int gethostname(char *, int);
  * SunStudio CC does not define C++ portability API __FUNCTION__ 
  */
 #if defined(__SUNPRO_CC) && !defined(__FUNCTION__)
-#define __FUNCTION__ __func__
+#define __FUNCTION__ ""
 #endif
 
 #endif /* _SQUID_SOLARIS_ */
