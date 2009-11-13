@@ -57,14 +57,6 @@
 #include "base64.h"
 #include "util.h"
 
-#if HAVE_HEIMDAL_KERBEROS
-#if HAVE_GSSAPI_GSSAPI_H
-#include <gssapi/gssapi.h>
-#elif HAVE_GSSAPI_H
-#include <gssapi.h>
-#endif /* HAVE_GSSAPI_GSSAPI_H */
-#define gss_nt_service_name GSS_C_NT_HOSTBASED_SERVICE
-#else /* HAVE_HEIMDAL_KERBEROS */
 #if HAVE_GSSAPI_GSSAPI_H
 #include <gssapi/gssapi.h>
 #elif HAVE_GSSAPI_H
@@ -76,7 +68,9 @@
 #if HAVE_GSSAPI_GSSAPI_GENERIC_H
 #include <gssapi/gssapi_generic.h>
 #endif /* HAVE_GSSAPI_GSSAPI_GENERIC_H */
-#endif /* HAVE_HEIMDAL_KERBEROS */
+#ifndef gss_nt_service_name
+#define gss_nt_service_name GSS_C_NT_HOSTBASED_SERVICE
+#endif
 
 static const char *LogTime(void);
 

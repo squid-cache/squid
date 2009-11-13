@@ -67,7 +67,7 @@ makeNegTokenTarg(const unsigned char *kerberosToken,
         goto cleanup;
     }
 
-    *negTokenTarg = malloc(*negTokenTargLength);
+    *negTokenTarg = static_cast<const unsigned char *>(malloc(*negTokenTargLength));
 
     if (!*negTokenTarg) {
         rc1 = abs(rc2) + 300;
@@ -189,7 +189,7 @@ parseNegTokenInit(const unsigned char *negTokenInit,
         goto cleanup;
     }
 
-    *kerberosToken = malloc(*kerberosTokenLength);
+    *kerberosToken = static_cast<const unsigned char *>(malloc(*kerberosTokenLength));
 
     if (!*kerberosToken) {
         rc1 = abs(rc2) + 700;
