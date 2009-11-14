@@ -9,8 +9,8 @@
 class testRFC1738 : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( testRFC1738 );
-//    CPPUNIT_TEST( testUrlDecode );
-//    CPPUNIT_TEST( testUrlEncode );
+    CPPUNIT_TEST( testUrlDecode );
+    CPPUNIT_TEST( testUrlEncode );
 
     CPPUNIT_TEST( PercentZeroNullDecoding );
     CPPUNIT_TEST_SUITE_END();
