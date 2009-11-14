@@ -40,7 +40,7 @@ extern "C" {
 #if defined(__cplusplus)
 #define KRB5INT_BEGIN_DECLS     extern "C" {
 #define KRB5INT_END_DECLS
-KRB5INT_BEGIN_DECLS
+    KRB5INT_BEGIN_DECLS
 #endif
 #endif
 #include <krb5.h>

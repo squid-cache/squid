@@ -114,9 +114,9 @@ LogTime()
 char *
 gethost_name(void)
 {
-/*
-    char hostname[sysconf(_SC_HOST_NAME_MAX)];
-*/
+    /*
+        char hostname[sysconf(_SC_HOST_NAME_MAX)];
+    */
     char hostname[1024];
     struct addrinfo *hres = NULL, *hres_list;
     int rc, count;
