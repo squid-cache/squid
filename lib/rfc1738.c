@@ -179,33 +179,44 @@ rfc1738_escape_part(const char *url)
  *  rfc1738_unescape() - Converts escaped characters (%xy numbers) in 
  *  given the string.  %% is a %. %ab is the 8-bit hexadecimal number "ab"
  */
+static inline int
+fromhex(char ch)
+{
+    if (ch >= '0' && ch <= '9')
+        return ch - '0';
+    if (ch >= 'a' && ch <= 'f')
+        return ch - 'a' + 10;
+    if (ch >= 'A' && ch <= 'F')
+        return ch - 'A' + 10;
+    return -1;
+}
+
 void
 rfc1738_unescape(char *s)
 {
-    char hexnum[3];
     int i, j;			/* i is write, j is read */
-    unsigned int x;
     for (i = j = 0; s[j]; i++, j++) {
-	s[i] = s[j];
-	if (s[i] != '%')
-	    continue;
-	if (s[j + 1] == '%') {	/* %% case */
-	    j++;
-	    continue;
-	}
-	if (s[j + 1] && s[j + 2]) {
-	    if (s[j + 1] == '0' && s[j + 2] == '0') {	/* %00 case */
-		j += 2;
-		continue;
-	    }
-	    hexnum[0] = s[j + 1];
-	    hexnum[1] = s[j + 2];
-	    hexnum[2] = '\0';
-	    if (1 == sscanf(hexnum, "%x", &x)) {
-		s[i] = (char) (0x0ff & x);
-		j += 2;
-	    }
-	}
+        s[i] = s[j];
+        if (s[j] != '%') {
+            /* normal case, nothing more to do */
+        } else if (s[j + 1] == '%') {	/* %% case */
+            j++;		/* Skip % */
+        } else {
+            /* decode */
+            char v1, v2;
+            int x;
+            v1 = fromhex(s[j + 1]);
+            if (v1 < 0)
+                continue;  /* non-hex or \0 */
+            v2 = fromhex(s[j + 2]);
+            if (v2 < 0)
+                continue;  /* non-hex or \0 */
+            x = v1 << 4 | v2;
+            if (x > 0 && x <= 255) {
+                s[i] = x;
+                j += 2;
+            }
+        }
     }
     s[i] = '\0';
 }
