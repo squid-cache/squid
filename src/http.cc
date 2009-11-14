@@ -55,6 +55,7 @@
 #if DELAY_POOLS
 #include "DelayPools.h"
 #endif
+#include "rfc1738.h"
 #include "SquidTime.h"
 #include "TextException.h"
 

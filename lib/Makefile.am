@@ -99,6 +99,8 @@ tests_testAll_SOURCES= \
 	tests/testArray.cc \
 	tests/testRFC1035.h \
 	tests/testRFC1035.cc \
+	tests/testRFC1738.h \
+	tests/testRFC1738.cc \
 	tests/testMain.cc \
 	$(XPROF_STATS_SOURCE) \
 	$(WIN32SRC) \

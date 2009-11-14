@@ -31,6 +31,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "rfc1738.h"
 #include "util.h"
 
 #ifdef HAVE_SASL_SASL_H

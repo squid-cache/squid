@@ -63,6 +63,7 @@
  * Compile this program with: gcc -o pam_auth pam_auth.c -lpam -ldl
  */
 
+#include "rfc1738.h"
 #include "util.h"
 
 #include <stdio.h>

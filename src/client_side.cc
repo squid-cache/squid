@@ -104,6 +104,7 @@
 #include "MemBuf.h"
 #include "SquidTime.h"
 #include "ChunkedCodingParser.h"
+#include "rfc1738.h"
 
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close

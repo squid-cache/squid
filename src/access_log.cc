@@ -44,6 +44,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
+#include "rfc1738.h"
 #include "SquidTime.h"
 #include "CacheManager.h"
 
