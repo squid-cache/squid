@@ -45,7 +45,7 @@ void testRFC1738::testUrlDecode()
     /* Handle encoded % */
     unescaped_str = xstrdup("w%%rd");
     rfc1738_unescape(unescaped_str);
-    CPPUNIT_ASSERT(memcmp(unescaped_str, "w%%rd",6)==0);
+    CPPUNIT_ASSERT(memcmp(unescaped_str, "w%rd",5)==0);
     xfree(unescaped_str);
 
     /* Handle mixed-encoded % */
