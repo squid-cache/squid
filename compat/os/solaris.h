@@ -48,11 +48,16 @@ SQUIDCEXTERN int gethostname(char *, int);
 /*
  * SunPro CC handles extern inline as inline, PLUS extern symbols.
  */
-
 #if !defined(_SQUID_EXTERNNEW_) && defined(__SUNPRO_CC)
 #define _SQUID_EXTERNNEW_ extern
 #endif
 
+/*
+ * SunStudio CC does not define C++ portability API __FUNCTION__ 
+ */
+#if defined(__SUNPRO_CC) && !defined(__FUNCTION__)
+#define __FUNCTION__ ""
+#endif
 
 #endif /* _SQUID_SOLARIS_ */
 #endif /* SQUID_OS_SOALRIS_H */
