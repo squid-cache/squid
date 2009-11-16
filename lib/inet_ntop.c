@@ -20,6 +20,7 @@
  */
 
 #include "config.h"
+#include "include/inet_ntop.h"
 
 #ifndef HAVE_INET_NTOP
 
