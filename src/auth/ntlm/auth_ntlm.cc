@@ -577,7 +577,7 @@ AuthNTLMUserRequest::authenticated() const
 }
 
 void
-AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type)
+AuthNTLMUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * conn, http_hdr_type type)
 {
     const char *proxy_auth, *blob;
 
@@ -611,7 +611,7 @@ AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, h
     }
 
     /* get header */
-    proxy_auth = request->header.getStr(type);
+    proxy_auth = aRequest->header.getStr(type);
 
     /* locate second word */
     blob = proxy_auth;
@@ -640,8 +640,8 @@ AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, h
         assert(conn->auth_user_request == NULL);
         conn->auth_user_request = this;
         AUTHUSERREQUESTLOCK(conn->auth_user_request, "conn");
-        this->request = request;
-        HTTPMSGLOCK(this->request);
+        request = aRequest;
+        HTTPMSGLOCK(request);
         return;
 
         break;
@@ -661,10 +661,10 @@ AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, h
 
         client_blob = xstrdup (blob);
 
-        if (this->request)
-            HTTPMSGUNLOCK(this->request);
-        this->request = request;
-        HTTPMSGLOCK(this->request);
+        if (request)
+            HTTPMSGUNLOCK(request);
+        request = aRequest;
+        HTTPMSGLOCK(request);
         return;
 
         break;

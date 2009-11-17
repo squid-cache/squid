@@ -198,22 +198,22 @@ UFSStoreState::close()
 }
 
 void
-UFSStoreState::read_(char *buf, size_t size, off_t offset, STRCB * callback, void *callback_data)
+UFSStoreState::read_(char *buf, size_t size, off_t offset, STRCB * aCallback, void *aCallbackData)
 {
     assert(read.callback == NULL);
     assert(read.callback_data == NULL);
     assert(!reading);
     assert(!closing);
-    assert (callback);
+    assert (aCallback);
 
     if (!theFile->canRead()) {
         debugs(79, 3, "UFSStoreState::read_: queueing read because theFile can't read");
-        queueRead (buf, size, offset, callback, callback_data);
+        queueRead (buf, size, offset, aCallback, aCallbackData);
         return;
     }
 
-    read.callback = callback;
-    read.callback_data = cbdataReference(callback_data);
+    read.callback = aCallback;
+    read.callback_data = cbdataReference(aCallbackData);
     debugs(79, 3, "UFSStoreState::read_: dirno " << swap_dirn  << ", fileno "<<
            std::setfill('0') << std::hex << std::uppercase << std::setw(8) << swap_filen);
     offset_ = offset;
@@ -311,9 +311,9 @@ UFSStoreState::readCompleted(const char *buf, int len, int errflag, RefCount<Rea
     if (len > 0)
         offset_ += len;
 
-    STRCB *callback = read.callback;
+    STRCB *callback_ = read.callback;
 
-    assert(callback);
+    assert(callback_);
 
     read.callback = NULL;
 
@@ -335,7 +335,7 @@ UFSStoreState::readCompleted(const char *buf, int len, int errflag, RefCount<Rea
         if (len > 0 && read_buf != buf)
             memcpy(read_buf, buf, len);
 
-        callback(cbdata, read_buf, len, this);
+        callback_(cbdata, read_buf, len, this);
     }
 
     if (flags.try_closing || (theFile != NULL && theFile->error()) )
@@ -461,7 +461,7 @@ UFSStoreState::kickReadQueue()
 }
 
 void
-UFSStoreState::queueRead(char *buf, size_t size, off_t offset, STRCB *callback, void *callback_data)
+UFSStoreState::queueRead(char *buf, size_t size, off_t offset, STRCB *callback_, void *callback_data_)
 {
     debugs(79, 3, "UFSStoreState::queueRead: queueing read");
     assert(opening);
@@ -470,8 +470,8 @@ UFSStoreState::queueRead(char *buf, size_t size, off_t offset, STRCB *callback, 
     q->buf = buf;
     q->size = size;
     q->offset = offset;
-    q->callback = callback;
-    q->callback_data = cbdataReference(callback_data);
+    q->callback = callback_;
+    q->callback_data = cbdataReference(callback_data_);
     linklistPush(&pending_reads, q);
 }
 
