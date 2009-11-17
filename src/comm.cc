@@ -265,7 +265,7 @@ private:
 
 typedef enum {
     COMM_CB_READ = 1,
-    COMM_CB_DERIVED,
+    COMM_CB_DERIVED
 } comm_callback_t;
 
 struct _fd_debug_t {
