@@ -259,7 +259,7 @@ AuthNTLMUserRequest::module_direction()
 }
 
 void
-AuthNTLMConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, http_hdr_type type, HttpRequest * request)
+AuthNTLMConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
 {
     AuthNTLMUserRequest *ntlm_request;
 
@@ -272,8 +272,8 @@ AuthNTLMConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, ht
 
     /* New request, no user details */
     if (auth_user_request == NULL) {
-        debugs(29, 9, "AuthNTLMConfig::fixHeader: Sending type:" << type << " header: 'NTLM'");
-        httpHeaderPutStrf(&rep->header, type, "NTLM");
+        debugs(29, 9, "AuthNTLMConfig::fixHeader: Sending type:" << hdrType << " header: 'NTLM'");
+        httpHeaderPutStrf(&rep->header, hdrType, "NTLM");
 
         if (!keep_alive) {
             /* drop the connection */
@@ -301,14 +301,14 @@ AuthNTLMConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, ht
         case AUTHENTICATE_STATE_NONE:
             /* semantic change: do not drop the connection.
              * 2.5 implementation used to keep it open - Kinkie */
-            debugs(29, 9, "AuthNTLMConfig::fixHeader: Sending type:" << type << " header: 'NTLM'");
-            httpHeaderPutStrf(&rep->header, type, "NTLM");
+            debugs(29, 9, "AuthNTLMConfig::fixHeader: Sending type:" << hdrType << " header: 'NTLM'");
+            httpHeaderPutStrf(&rep->header, hdrType, "NTLM");
             break;
 
         case AUTHENTICATE_STATE_IN_PROGRESS:
             /* we're waiting for a response from the client. Pass it the blob */
-            debugs(29, 9, "AuthNTLMConfig::fixHeader: Sending type:" << type << " header: 'NTLM " << ntlm_request->server_blob << "'");
-            httpHeaderPutStrf(&rep->header, type, "NTLM %s", ntlm_request->server_blob);
+            debugs(29, 9, "AuthNTLMConfig::fixHeader: Sending type:" << hdrType << " header: 'NTLM " << ntlm_request->server_blob << "'");
+            httpHeaderPutStrf(&rep->header, hdrType, "NTLM %s", ntlm_request->server_blob);
             safe_free(ntlm_request->server_blob);
             break;
 
@@ -716,7 +716,7 @@ NTLMUser::deleteSelf() const
     delete this;
 }
 
-NTLMUser::NTLMUser (AuthConfig *config) : AuthUser (config)
+NTLMUser::NTLMUser (AuthConfig *aConfig) : AuthUser (aConfig)
 {
     proxy_auth_list.head = proxy_auth_list.tail = NULL;
 }
