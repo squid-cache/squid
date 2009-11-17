@@ -65,9 +65,9 @@ UFSStrategy::~UFSStrategy ()
 }
 
 StoreIOState::Pointer
-UFSStrategy::createState(SwapDir *SD, StoreEntry *e, StoreIOState::STIOCB * callback, void *callback_data) const
+UFSStrategy::createState(SwapDir *SD, StoreEntry *e, StoreIOState::STIOCB * aCallback, void *callback_data) const
 {
-    return new UFSStoreState (SD, e, callback, callback_data);
+    return new UFSStoreState (SD, e, aCallback, callback_data);
 }
 
 DiskFile::Pointer
@@ -198,7 +198,7 @@ UFSStoreState::close()
 }
 
 void
-UFSStoreState::read_(char *buf, size_t size, off_t offset, STRCB * aCallback, void *aCallbackData)
+UFSStoreState::read_(char *buf, size_t size, off_t aOffset, STRCB * aCallback, void *aCallbackData)
 {
     assert(read.callback == NULL);
     assert(read.callback_data == NULL);
@@ -208,7 +208,7 @@ UFSStoreState::read_(char *buf, size_t size, off_t offset, STRCB * aCallback, vo
 
     if (!theFile->canRead()) {
         debugs(79, 3, "UFSStoreState::read_: queueing read because theFile can't read");
-        queueRead (buf, size, offset, aCallback, aCallbackData);
+        queueRead (buf, size, aOffset, aCallback, aCallbackData);
         return;
     }
 
@@ -216,10 +216,10 @@ UFSStoreState::read_(char *buf, size_t size, off_t offset, STRCB * aCallback, vo
     read.callback_data = cbdataReference(aCallbackData);
     debugs(79, 3, "UFSStoreState::read_: dirno " << swap_dirn  << ", fileno "<<
            std::setfill('0') << std::hex << std::uppercase << std::setw(8) << swap_filen);
-    offset_ = offset;
+    offset_ = aOffset;
     read_buf = buf;
     reading = true;
-    theFile->read(new ReadRequest(buf,offset,size));
+    theFile->read(new ReadRequest(buf,aOffset,size));
 }
 
 
@@ -232,7 +232,7 @@ UFSStoreState::read_(char *buf, size_t size, off_t offset, STRCB * aCallback, vo
  * code simpler and always go through the pending_writes queue.
  */
 void
-UFSStoreState::write(char const *buf, size_t size, off_t offset, FREE * free_func)
+UFSStoreState::write(char const *buf, size_t size, off_t aOffset, FREE * free_func)
 {
     debugs(79, 3, "UFSStoreState::write: dirn " << swap_dirn  << ", fileno "<<
            std::setfill('0') << std::hex << std::uppercase << std::setw(8) << swap_filen);
@@ -244,7 +244,7 @@ UFSStoreState::write(char const *buf, size_t size, off_t offset, FREE * free_fun
         return;
     }
 
-    queueWrite(buf, size, offset, free_func);
+    queueWrite(buf, size, aOffset, free_func);
     drainWriteQueue();
 }
 
@@ -461,7 +461,7 @@ UFSStoreState::kickReadQueue()
 }
 
 void
-UFSStoreState::queueRead(char *buf, size_t size, off_t offset, STRCB *callback_, void *callback_data_)
+UFSStoreState::queueRead(char *buf, size_t size, off_t aOffset, STRCB *callback_, void *callback_data_)
 {
     debugs(79, 3, "UFSStoreState::queueRead: queueing read");
     assert(opening);
@@ -469,7 +469,7 @@ UFSStoreState::queueRead(char *buf, size_t size, off_t offset, STRCB *callback_,
     _queued_read *q = new _queued_read;
     q->buf = buf;
     q->size = size;
-    q->offset = offset;
+    q->offset = aOffset;
     q->callback = callback_;
     q->callback_data = cbdataReference(callback_data_);
     linklistPush(&pending_reads, q);
@@ -537,7 +537,7 @@ UFSStoreState::tryClosing()
 }
 
 void
-UFSStoreState::queueWrite(char const *buf, size_t size, off_t offset, FREE * free_func)
+UFSStoreState::queueWrite(char const *buf, size_t size, off_t aOffset, FREE * free_func)
 {
     debugs(79, 3, HERE << this << " UFSStoreState::queueWrite: queueing write of size " << size);
 
@@ -545,20 +545,20 @@ UFSStoreState::queueWrite(char const *buf, size_t size, off_t offset, FREE * fre
     q = new _queued_write;
     q->buf = buf;
     q->size = size;
-    q->offset = offset;
+    q->offset = aOffset;
     q->free_func = free_func;
     linklistPush(&pending_writes, q);
 }
 
 StoreIOState::Pointer
 UFSStrategy::open(SwapDir * SD, StoreEntry * e, StoreIOState::STFNCB * file_callback,
-                  StoreIOState::STIOCB * callback, void *callback_data)
+                  StoreIOState::STIOCB * aCallback, void *callback_data)
 {
     assert (((UFSSwapDir *)SD)->IO == this);
     debugs(79, 3, "UFSStrategy::open: fileno "<< std::setfill('0') << std::hex << std::uppercase << std::setw(8) << e->swap_filen);
 
     /* to consider: make createstate a private UFSStrategy call */
-    StoreIOState::Pointer sio = createState (SD, e, callback, callback_data);
+    StoreIOState::Pointer sio = createState (SD, e, aCallback, callback_data);
 
     sio->mode |= O_RDONLY;
 
@@ -587,7 +587,7 @@ UFSStrategy::open(SwapDir * SD, StoreEntry * e, StoreIOState::STFNCB * file_call
 
 StoreIOState::Pointer
 UFSStrategy::create(SwapDir * SD, StoreEntry * e, StoreIOState::STFNCB * file_callback,
-                    StoreIOState::STIOCB * callback, void *callback_data)
+                    StoreIOState::STIOCB * aCallback, void *callback_data)
 {
     assert (((UFSSwapDir *)SD)->IO == this);
     /* Allocate a number */
@@ -596,7 +596,7 @@ UFSStrategy::create(SwapDir * SD, StoreEntry * e, StoreIOState::STFNCB * file_ca
 
     /* Shouldn't we handle a 'bitmap full' error here? */
 
-    StoreIOState::Pointer sio = createState (SD, e, callback, callback_data);
+    StoreIOState::Pointer sio = createState (SD, e, aCallback, callback_data);
 
     sio->mode |= O_WRONLY | O_CREAT | O_TRUNC;
 
