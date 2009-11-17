@@ -288,9 +288,9 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
 
     if (CheckPassword(mgr) != 0) {
         /* build error message */
-        ErrorState *err;
+        ErrorState *errState;
         HttpReply *rep;
-        err = errorCon(ERR_CACHE_MGR_ACCESS_DENIED, HTTP_UNAUTHORIZED, request);
+        errState = errorCon(ERR_CACHE_MGR_ACCESS_DENIED, HTTP_UNAUTHORIZED, request);
         /* warn if user specified incorrect password */
 
         if (mgr->passwd)
@@ -304,9 +304,9 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
                    fd_table[fd].ipaddr << ": password needed for '" <<
                    mgr->action << "'" );
 
-        rep = err->BuildHttpReply();
+        rep = errState->BuildHttpReply();
 
-        errorStateFree(err);
+        errorStateFree(errState);
 
         /*
          * add Authenticate header, use 'action' as a realm because

@@ -1375,9 +1375,9 @@ AuthDigestUserRequest::module_start(RH * handler, void *data)
     r->auth_user_request = this;
     AUTHUSERREQUESTLOCK(r->auth_user_request, "r");
     if (digestConfig.utf8) {
-        char user[1024];
-        latin1_to_utf8(user, sizeof(user), digest_user->username());
-        snprintf(buf, 8192, "\"%s\":\"%s\"\n", user, realm);
+        char userstr[1024];
+        latin1_to_utf8(userstr, sizeof(userstr), digest_user->username());
+        snprintf(buf, 8192, "\"%s\":\"%s\"\n", userstr, realm);
     } else {
         snprintf(buf, 8192, "\"%s\":\"%s\"\n", digest_user->username(), realm);
     }
@@ -1385,7 +1385,7 @@ AuthDigestUserRequest::module_start(RH * handler, void *data)
     helperSubmit(digestauthenticators, buf, authenticateDigestHandleReply, r);
 }
 
-DigestUser::DigestUser (AuthConfig *config) : AuthUser (config), HA1created (0)
+DigestUser::DigestUser (AuthConfig *aConfig) : AuthUser (aConfig), HA1created (0)
 {}
 
 AuthUser *

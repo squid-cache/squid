@@ -152,10 +152,10 @@ HttpRequestMethod::AddExtension(const char *mstr)
 }
 
 void
-HttpRequestMethod::Configure(SquidConfig &Config)
+HttpRequestMethod::Configure(SquidConfig &cfg)
 {
 #if 0 /* extension methods obsolete now that we have METHOD_OTHER always enabled */
-    wordlist *w = Config.ext_methods;
+    wordlist *w = cfg.ext_methods;
 
     while (w) {
         char *s;
