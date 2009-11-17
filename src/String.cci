@@ -80,11 +80,11 @@ String::termedBuf() const
 }
 
 char
-String::operator [](unsigned int pos) const
+String::operator [](unsigned int aPos) const
 {
-    assert(pos < size_);
+    assert(aPos < size_);
 
-    return buf_[pos];
+    return buf_[aPos];
 }
 
 

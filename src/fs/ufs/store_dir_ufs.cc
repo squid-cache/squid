@@ -155,12 +155,12 @@ UFSSwapDir::changeIO(DiskIOModule *module)
 }
 
 bool
-UFSSwapDir::optionIOParse(char const *option, const char *value, int reconfiguring)
+UFSSwapDir::optionIOParse(char const *option, const char *value, int isaReconfig)
 {
     if (strcmp(option, "IOEngine") != 0)
         return false;
 
-    if (reconfiguring)
+    if (isaReconfig)
         /* silently ignore this */
         return true;
 
@@ -432,15 +432,15 @@ UFSSwapDir::dereference(StoreEntry & e)
 }
 
 StoreIOState::Pointer
-UFSSwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB * file_callback, StoreIOState::STIOCB * callback, void *callback_data)
+UFSSwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB * file_callback, StoreIOState::STIOCB * aCallback, void *callback_data)
 {
-    return IO->create (this, &e, file_callback, callback, callback_data);
+    return IO->create (this, &e, file_callback, aCallback, callback_data);
 }
 
 StoreIOState::Pointer
-UFSSwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB * file_callback, StoreIOState::STIOCB * callback, void *callback_data)
+UFSSwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB * file_callback, StoreIOState::STIOCB * aCallback, void *callback_data)
 {
-    return IO->open (this, &e, file_callback, callback, callback_data);
+    return IO->open (this, &e, file_callback, aCallback, callback_data);
 }
 
 int
