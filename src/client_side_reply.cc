@@ -947,13 +947,13 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 void
 clientReplyContext::traceReply(clientStreamNode * node)
 {
-    clientStreamNode *next = (clientStreamNode *)node->node.next->data;
+    clientStreamNode *nextNode = (clientStreamNode *)node->node.next->data;
     StoreIOBuffer localTempBuffer;
     assert(http->request->max_forwards == 0);
     createStoreEntry(http->request->method, request_flags());
-    localTempBuffer.offset = next->readBuffer.offset + headers_sz;
-    localTempBuffer.length = next->readBuffer.length;
-    localTempBuffer.data = next->readBuffer.data;
+    localTempBuffer.offset = nextNode->readBuffer.offset + headers_sz;
+    localTempBuffer.length = nextNode->readBuffer.length;
+    localTempBuffer.data = nextNode->readBuffer.data;
     storeClientCopy(sc, http->storeEntry(),
                     localTempBuffer, SendMoreData, this);
     http->storeEntry()->releaseRequest();
