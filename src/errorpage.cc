@@ -862,7 +862,7 @@ ErrorState::Convert(char token, bool url_presentable)
 }
 
 void
-ErrorState::DenyInfoLocation(const char *name, HttpRequest *request, MemBuf &result)
+ErrorState::DenyInfoLocation(const char *name, HttpRequest *aRequest, MemBuf &result)
 {
     char const *m = name;
     char const *p = m;
