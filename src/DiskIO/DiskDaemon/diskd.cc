@@ -303,11 +303,10 @@ fsHash(const void *key, unsigned int n)
 }
 
 SQUIDCEXTERN {
-static void
-alarm_handler(int sig)
-{
-    (void) 0;
-}
+    static void
+    alarm_handler(int sig) {
+        (void) 0;
+    }
 };
 
 int
