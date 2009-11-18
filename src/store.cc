@@ -365,10 +365,10 @@ StoreEntry::StoreEntry()
     swap_dirn = -1;
 }
 
-StoreEntry::StoreEntry(const char *url, const char *log_url)
+StoreEntry::StoreEntry(const char *aUrl, const char *aLogUrl)
 {
     debugs(20, 3, HERE << "new StoreEntry " << this);
-    mem_obj = new MemObject(url, log_url);
+    mem_obj = new MemObject(aUrl, aLogUrl);
 
     expires = lastmod = lastref = timestamp = -1;
 
@@ -1627,12 +1627,12 @@ StoreEntry::url() const
 }
 
 void
-StoreEntry::createMemObject(const char *url, const char *log_url)
+StoreEntry::createMemObject(const char *aUrl, const char *aLogUrl)
 {
     if (mem_obj)
         return;
 
-    mem_obj = new MemObject(url, log_url);
+    mem_obj = new MemObject(aUrl, aLogUrl);
 }
 
 /* this just sets DELAY_SENDING */

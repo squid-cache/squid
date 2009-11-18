@@ -1353,10 +1353,10 @@ HttpStateData::maybeReadVirginBody()
 {
     // we may need to grow the buffer if headers do not fit
     const int minRead = flags.headers_parsed ? 0 :1024;
-    const int read_sz = replyBodySpace(*readBuf, minRead);
+    const int read_size = replyBodySpace(*readBuf, minRead);
 
     debugs(11,9, HERE << (flags.do_next_read ? "may" : "wont") <<
-           " read up to " << read_sz << " bytes from FD " << fd);
+           " read up to " << read_size << " bytes from FD " << fd);
 
     /*
      * why <2? Because delayAwareRead() won't actually read if
@@ -1366,13 +1366,13 @@ HttpStateData::maybeReadVirginBody()
      * handler until we get a notification from someone that
      * its okay to read again.
      */
-    if (read_sz < 2)
+    if (read_size < 2)
         return;
 
     if (flags.do_next_read) {
         flags.do_next_read = 0;
         typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
-        entry->delayAwareRead(fd, readBuf->space(read_sz), read_sz,
+        entry->delayAwareRead(fd, readBuf->space(read_size), read_size,
                               asyncCall(11, 5, "HttpStateData::readReply",
                                         Dialer(this, &HttpStateData::readReply)));
     }
