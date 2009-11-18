@@ -3786,10 +3786,10 @@ FtpStateData::printfReplyBody(const char *fmt, ...)
  * which should be sent to either StoreEntry, or to ICAP...
  */
 void
-FtpStateData::writeReplyBody(const char *data, size_t len)
+FtpStateData::writeReplyBody(const char *dataToWrite, size_t dataLength)
 {
-    debugs(9, 5, HERE << "writing " << len << " bytes to the reply");
-    addVirginReplyBody(data, len);
+    debugs(9, 5, HERE << "writing " << dataLength << " bytes to the reply");
+    addVirginReplyBody(dataToWrite, dataLength);
 }
 
 /**
