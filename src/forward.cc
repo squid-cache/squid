@@ -869,14 +869,14 @@ FwdState::connectStart()
 
     debugs(17, 3, "fwdConnectStart: got outgoing addr " << outgoing << ", tos " << tos);
 
-    int localFlags = COMM_NONBLOCKING;
+    int commFlags = COMM_NONBLOCKING;
     if (request->flags.spoof_client_ip) {
         if (!fs->_peer || !fs->_peer->options.no_tproxy)
-            localFlags |= COMM_TRANSPARENT;
+            commFlags |= COMM_TRANSPARENT;
         // else no tproxy today ...
     }
 
-    fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, outgoing, localFlags, tos, url);
+    fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, outgoing, commFlags, tos, url);
 
     debugs(17, 3, "fwdConnectStart: got TCP FD " << fd);
 
@@ -912,11 +912,11 @@ FwdState::connectStart()
     commSetTimeout(fd, ctimeout, fwdConnectTimeoutWrapper, this);
 
 #if LINUX_TPROXY2
-    if (!fs->_peer && request->localFlags.spoof_client_ip) {
+    if (!fs->_peer && request->flags.spoof_client_ip) {
         // try to set the outgoing address using TPROXY v2
         // if it fails we abort any further TPROXY actions on this connection
         if (IpInterceptor.SetTproxy2OutgoingAddr(int fd, const IpAddress &src) == -1) {
-            request->localFlags.spoof_client_ip = 0;
+            request->flags.spoof_client_ip = 0;
         }
     }
 #endif
