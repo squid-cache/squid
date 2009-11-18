@@ -737,7 +737,7 @@ ErrorState::Convert(char token, bool url_presentable)
             break;
         }
         if (NULL != request) {
-            Packer p;
+            Packer pck;
             String urlpath_or_slash;
 
             if (request->urlpath.size() != 0)
@@ -749,9 +749,9 @@ ErrorState::Convert(char token, bool url_presentable)
                       RequestMethodStr(request->method),
                       SQUIDSTRINGPRINT(urlpath_or_slash),
                       request->http_ver.major, request->http_ver.minor);
-            packerToMemInit(&p, &mb);
-            request->header.packInto(&p);
-            packerClean(&p);
+            packerToMemInit(&pck, &mb);
+            request->header.packInto(&pck);
+            packerClean(&pck);
         } else if (request_hdrs) {
             p = request_hdrs;
         } else {

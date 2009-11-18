@@ -108,9 +108,9 @@ EventDialer::print(std::ostream &os) const
 }
 
 
-ev_entry::ev_entry(char const * aName, EVH * aFunction, void * aArgument, double when,
-                   int weight, bool haveArgument) : name(aName), func(aFunction),
-        arg(haveArgument ? cbdataReference(aArgument) : aArgument), when(when), weight(weight),
+ev_entry::ev_entry(char const * aName, EVH * aFunction, void * aArgument, double evWhen,
+                   int aWeight, bool haveArgument) : name(aName), func(aFunction),
+        arg(haveArgument ? cbdataReference(aArgument) : aArgument), when(evWhen), weight(aWeight),
         cbdata(haveArgument)
 {
 }

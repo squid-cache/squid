@@ -803,7 +803,7 @@ ftpListParseParts(const char *buf, struct _ftp_flags flags)
         p->type = 0;
 
         while (ct && *ct) {
-            time_t t;
+            time_t tm;
             int l = strcspn(ct, ",");
             char *tmp;
 
@@ -821,12 +821,12 @@ ftpListParseParts(const char *buf, struct _ftp_flags flags)
                 break;
 
             case 'm':
-                t = (time_t) strtol(ct + 1, &tmp, 0);
+                tm = (time_t) strtol(ct + 1, &tmp, 0);
 
                 if (tmp != ct + 1)
                     break;	/* not a valid integer */
 
-                p->date = xstrdup(ctime(&t));
+                p->date = xstrdup(ctime(&tm));
 
                 *(strstr(p->date, "\n")) = '\0';
 

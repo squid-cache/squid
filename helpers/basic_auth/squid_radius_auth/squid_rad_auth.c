@@ -219,7 +219,7 @@ result_recv(u_int32_t host, u_short udp_port, char *buffer, int length)
  *    Generate a random vector.
  */
 static void
-random_vector(char *vector)
+random_vector(char *aVector)
 {
     int randno;
     int i;
@@ -227,8 +227,8 @@ random_vector(char *vector)
     srand((time(0) ^ rand()) + rand());
     for (i = 0; i < AUTH_VECTOR_LEN;) {
         randno = rand();
-        memcpy(vector, &randno, sizeof(int));
-        vector += sizeof(int);
+        memcpy(aVector, &randno, sizeof(int));
+        aVector += sizeof(int);
         i += sizeof(int);
     }
 }
