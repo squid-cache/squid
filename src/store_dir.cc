@@ -919,10 +919,10 @@ StoreSearchHashIndex::~StoreSearchHashIndex()
 {}
 
 void
-StoreSearchHashIndex::next(void (callback)(void *cbdata), void *cbdata)
+StoreSearchHashIndex::next(void (aCallback)(void *), void *aCallbackData)
 {
     next();
-    callback (cbdata);
+    aCallback (aCallbackData);
 }
 
 bool
