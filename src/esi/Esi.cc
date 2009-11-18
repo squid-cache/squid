@@ -1004,7 +1004,7 @@ ESIContext::start(const char *el, const char **attr, size_t attrCount)
     char localbuf [HTTP_REQBUF_SZ];
     ESIElement::Pointer element;
     int specifiedattcount = attrCount * 2;
-    char *pos;
+    char *position;
     assert (ellen < sizeof (localbuf)); /* prevent unexpected overruns. */
 
     debugs(86, 5, "ESIContext::Start: element '" << el << "' with " << specifiedattcount << " tags");
@@ -1020,33 +1020,33 @@ ESIContext::start(const char *el, const char **attr, size_t attrCount)
         localbuf[0] = '<';
         localbuf[1] = '\0';
         assert (xstrncpy (&localbuf[1], el, sizeof(localbuf) - 2));
-        pos = localbuf + strlen (localbuf);
+        position = localbuf + strlen (localbuf);
 
         for (i = 0; i < specifiedattcount && attr[i]; i += 2) {
-            *pos++ = ' ';
+            *position++ = ' ';
             /* TODO: handle thisNode gracefully */
-            assert (xstrncpy (pos, attr[i], sizeof(localbuf) + (pos - localbuf)));
-            pos += strlen (pos);
-            *pos++ = '=';
-            *pos++ = '\"';
+            assert (xstrncpy (position, attr[i], sizeof(localbuf) + (position - localbuf)));
+            position += strlen (position);
+            *position++ = '=';
+            *position++ = '\"';
             const char *chPtr = attr[i + 1];
             char ch;
             while ((ch = *chPtr++) != '\0') {
                 if (ch == '\"') {
-                    assert( xstrncpy(pos, "&quot;", sizeof(localbuf) + (pos-localbuf)) );
-                    pos += 6;
+                    assert( xstrncpy(position, "&quot;", sizeof(localbuf) + (position-localbuf)) );
+                    position += 6;
                 } else {
-                    *(pos++) = ch;
+                    *(position++) = ch;
                 }
             }
-            pos += strlen (pos);
-            *pos++ = '\"';
+            position += strlen (position);
+            *position++ = '\"';
         }
 
-        *pos++ = '>';
-        *pos = '\0';
+        *position++ = '>';
+        *position = '\0';
 
-        addLiteral (localbuf, pos - localbuf);
+        addLiteral (localbuf, position - localbuf);
         debugs(86, 5, "esi stack depth " << parserState.stackdepth);
         return;
         break;
@@ -1118,7 +1118,7 @@ ESIContext::end(const char *el)
 {
     unsigned int ellen = strlen (el);
     char localbuf [HTTP_REQBUF_SZ];
-    char *pos;
+    char *position;
 
     if (flags.error)
         /* waiting for expat to finish the buffer we gave it */
@@ -1132,10 +1132,10 @@ ESIContext::end(const char *el)
         localbuf[0] = '<';
         localbuf[1] = '/';
         assert (xstrncpy (&localbuf[2], el, sizeof(localbuf) - 3));
-        pos = localbuf + strlen (localbuf);
-        *pos++ = '>';
-        *pos = '\0';
-        addLiteral (localbuf, pos - localbuf);
+        position = localbuf + strlen (localbuf);
+        *position++ = '>';
+        *position = '\0';
+        addLiteral (localbuf, position - localbuf);
         break;
 
     case ESIElement::ESI_ELEMENT_COMMENT:
