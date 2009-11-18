@@ -213,7 +213,7 @@ Icmp6::Recv(void)
     struct addrinfo *from = NULL;
 //    struct ip6_hdr *ip = NULL;
     static char *pkt = NULL;
-    struct icmp6_hdr *icmp6 = NULL;
+    struct icmp6_hdr *icmp6header = NULL;
     icmpEchoData *echo = NULL;
     struct timeval now;
     static pingerReplyData preply;
@@ -278,12 +278,12 @@ Icmp6::Recv(void)
     );
     */
 
-    icmp6 = (struct icmp6_hdr *) pkt;
+    icmp6header = (struct icmp6_hdr *) pkt;
     pkt += sizeof(icmp6_hdr);
 
-    if (icmp6->icmp6_type != ICMP6_ECHO_REPLY) {
+    if (icmp6header->icmp6_type != ICMP6_ECHO_REPLY) {
 
-        switch (icmp6->icmp6_type) {
+        switch (icmp6header->icmp6_type) {
         case 134:
         case 135:
         case 136:
@@ -291,15 +291,15 @@ Icmp6::Recv(void)
             break;
 
         default:
-            debugs(42, 8, HERE << preply.from << " said: " << icmp6->icmp6_type << "/" << (int)icmp6->icmp6_code << " " <<
-                   ( icmp6->icmp6_type&0x80 ? icmp6HighPktStr[(int)(icmp6->icmp6_type&0x7f)] : icmp6LowPktStr[(int)(icmp6->icmp6_type&0x7f)] )
+            debugs(42, 8, HERE << preply.from << " said: " << icmp6header->icmp6_type << "/" << (int)icmp6header->icmp6_code << " " <<
+                   ( icmp6header->icmp6_type&0x80 ? icmp6HighPktStr[(int)(icmp6header->icmp6_type&0x7f)] : icmp6LowPktStr[(int)(icmp6header->icmp6_type&0x7f)] )
                   );
         }
         return;
     }
 
-    if (icmp6->icmp6_id != icmp_ident) {
-        debugs(42, 8, HERE << "dropping Icmp6 read. IDENT check failed. ident=='" << icmp_ident << "'=='" << icmp6->icmp6_id << "'");
+    if (icmp6header->icmp6_id != icmp_ident) {
+        debugs(42, 8, HERE << "dropping Icmp6 read. IDENT check failed. ident=='" << icmp_ident << "'=='" << icmp6header->icmp6_id << "'");
         return;
     }
 
@@ -329,8 +329,8 @@ Icmp6::Recv(void)
     }
 
     Log(preply.from,
-        icmp6->icmp6_type,
-        ( icmp6->icmp6_type&0x80 ? icmp6HighPktStr[(int)(icmp6->icmp6_type&0x7f)] : icmp6LowPktStr[(int)(icmp6->icmp6_type&0x7f)] ),
+        icmp6header->icmp6_type,
+        ( icmp6header->icmp6_type&0x80 ? icmp6HighPktStr[(int)(icmp6header->icmp6_type&0x7f)] : icmp6LowPktStr[(int)(icmp6header->icmp6_type&0x7f)] ),
         preply.rtt,
         preply.hops);
 
