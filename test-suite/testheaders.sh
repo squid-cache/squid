@@ -27,7 +27,7 @@ for f in `cd ${dir} && ls -1 *.h 2>/dev/null`; do
 
 		# run compile test on the new file.
 		# DEBUG: echo "TRY: ${cc} -o testHeaderDeps.o ./testHeaderDeps_${hdr}.cc"
-		${cc} -o testHeaderDeps_${hdr}.o ./testHeaderDeps_${hdr}.cc
+		${cc} -c -o testHeaderDeps_${hdr}.o ./testHeaderDeps_${hdr}.cc
 		rm ./testHeaderDeps_${hdr}.cc
 	fi
 	if [ ! -f testHeaderDeps_${hdr}.o ]; then
