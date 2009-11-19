@@ -146,7 +146,7 @@ DiskThreadsIOStrategy::callback()
             if (cbdataReferenceValidDone(ctrlp->done_handler_data, &cbdata)) {
                 retval = 1;	/* Return that we've actually done some work */
                 done_callback(ctrlp->fd, cbdata, ctrlp->bufp,
-                         ctrlp->result.aio_return, ctrlp->result.aio_errno);
+                              ctrlp->result.aio_return, ctrlp->result.aio_errno);
             } else {
                 if (ctrlp->operation == _AIO_OPEN) {
                     /* The open operation was aborted.. */
