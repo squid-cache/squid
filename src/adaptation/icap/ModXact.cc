@@ -32,9 +32,6 @@ CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, ModXactLauncher);
 
 static const size_t TheBackupLimit = BodyPipe::MaxCapacity;
 
-extern Adaptation::Icap::Config Adaptation::Icap::TheConfig;
-
-
 Adaptation::Icap::ModXact::State::State()
 {
     memset(this, 0, sizeof(*this));
