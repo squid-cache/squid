@@ -285,6 +285,7 @@ extern cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, in
 #define cbdataInternalUnlock(a)		cbdataInternalUnlockDbg(a,__FILE__,__LINE__)
 #define cbdataReferenceValidDone(var, ptr) cbdataInternalReferenceDoneValidDbg((void **)&(var), (ptr), __FILE__,__LINE__)
 #define CBDATA_CLASS2(type)	\
+	private: \
 	static cbdata_type CBDATA_##type; \
 	public: \
 		void *operator new(size_t size) { \
@@ -295,9 +296,8 @@ extern cbdata_type cbdataInternalAddType(cbdata_type type, const char *label, in
   		void operator delete (void *address) { \
 		  if (address) cbdataInternalFreeDbg(address,__FILE__,__LINE__); \
 		} \
-                void *toCbdata() { return this; } \
-	private:
-#else
+                void *toCbdata() { return this; }
+#else /* CBDATA_DEBUG */
 
 /**
  \ingroup CBDATAAPI
