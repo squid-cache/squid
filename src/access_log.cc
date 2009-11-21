@@ -49,6 +49,7 @@
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
+#include "rfc1738.h"
 #include "SquidTime.h"
 
 static void accessLogSquid(AccessLogEntry * al, Logfile * logfile);

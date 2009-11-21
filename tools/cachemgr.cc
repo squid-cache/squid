@@ -31,6 +31,7 @@
  */
 
 #include "config.h"
+#include "rfc1738.h"
 
 #if HAVE_UNISTD_H
 #include <unistd.h>

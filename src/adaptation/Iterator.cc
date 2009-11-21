@@ -196,10 +196,10 @@ Adaptation::ServiceFilter Adaptation::Iterator::filter() const
         method = methodReqmod;
         req = r;
         rep = NULL;
-    } else if (HttpReply *r = dynamic_cast<HttpReply*>(theMsg)) {
+    } else if (HttpReply *theReply = dynamic_cast<HttpReply*>(theMsg)) {
         method = methodRespmod;
         req = theCause;
-        rep = r;
+        rep = theReply;
     } else {
         Must(false); // should not happen
     }

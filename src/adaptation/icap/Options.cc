@@ -6,8 +6,6 @@
 #include "adaptation/icap/Config.h"
 #include "SquidTime.h"
 
-extern Adaptation::Icap::Config Adaptation::Icap::TheConfig;
-
 Adaptation::Icap::Options::Options(): error("unconfigured"),
         max_connections(-1), allow204(false),
         preview(-1), theTTL(-1)

@@ -200,14 +200,14 @@ BodyPipe::clearProducer(bool atEof)
 }
 
 size_t
-BodyPipe::putMoreData(const char *buf, size_t size)
+BodyPipe::putMoreData(const char *aBuffer, size_t size)
 {
     if (bodySizeKnown())
         size = min((uint64_t)size, unproducedSize());
 
     const size_t spaceSize = static_cast<size_t>(theBuf.potentialSpaceSize());
     if ((size = min(size, spaceSize))) {
-        theBuf.append(buf, size);
+        theBuf.append(aBuffer, size);
         postAppend(size);
         return size;
     }
@@ -261,15 +261,15 @@ BodyPipe::clearConsumer()
 }
 
 size_t
-BodyPipe::getMoreData(MemBuf &buf)
+BodyPipe::getMoreData(MemBuf &aMemBuffer)
 {
     if (!theBuf.hasContent())
         return 0; // did not touch the possibly uninitialized buf
 
-    if (buf.isNull())
-        buf.init();
-    const size_t size = min(theBuf.contentSize(), buf.potentialSpaceSize());
-    buf.append(theBuf.content(), size);
+    if (aMemBuffer.isNull())
+        aMemBuffer.init();
+    const size_t size = min(theBuf.contentSize(), aMemBuffer.potentialSpaceSize());
+    aMemBuffer.append(theBuf.content(), size);
     theBuf.consume(size);
     postConsume(size);
     return size; // cannot be zero if we called buf.init above
@@ -409,35 +409,35 @@ BodyPipe::scheduleBodyEndNotification()
 // a short temporary string describing buffer status for debugging
 const char *BodyPipe::status() const
 {
-    static MemBuf buf;
-    buf.reset();
+    static MemBuf outputBuffer;
+    outputBuffer.reset();
 
-    buf.append(" [", 2);
+    outputBuffer.append(" [", 2);
 
-    buf.Printf("%"PRIu64"<=%"PRIu64, theGetSize, thePutSize);
+    outputBuffer.Printf("%"PRIu64"<=%"PRIu64, theGetSize, thePutSize);
     if (theBodySize >= 0)
-        buf.Printf("<=%"PRId64, theBodySize);
+        outputBuffer.Printf("<=%"PRId64, theBodySize);
     else
-        buf.append("<=?", 3);
+        outputBuffer.append("<=?", 3);
 
-    buf.Printf(" %d+%d", (int)theBuf.contentSize(), (int)theBuf.spaceSize());
+    outputBuffer.Printf(" %d+%d", (int)theBuf.contentSize(), (int)theBuf.spaceSize());
 
-    buf.Printf(" pipe%p", this);
+    outputBuffer.Printf(" pipe%p", this);
     if (theProducer)
-        buf.Printf(" prod%p", theProducer);
+        outputBuffer.Printf(" prod%p", theProducer);
     if (theConsumer)
-        buf.Printf(" cons%p", theConsumer);
+        outputBuffer.Printf(" cons%p", theConsumer);
 
     if (mustAutoConsume)
-        buf.append(" A", 2);
+        outputBuffer.append(" A", 2);
     if (isCheckedOut)
-        buf.append(" L", 2); // Locked
+        outputBuffer.append(" L", 2); // Locked
 
-    buf.append("]", 1);
+    outputBuffer.append("]", 1);
 
-    buf.terminate();
+    outputBuffer.terminate();
 
-    return buf.content();
+    return outputBuffer.content();
 }
 
 

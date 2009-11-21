@@ -46,6 +46,7 @@
 #include "acl/Gadgets.h"
 #include "StoreFileSystem.h"
 #include "Parsing.h"
+#include "rfc1738.h"
 #include "MemBuf.h"
 #include "wordlist.h"
 #include "ident/Config.h"

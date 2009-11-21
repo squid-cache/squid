@@ -6,7 +6,7 @@ man_MANS 		= basic_ncsa_auth.8
 EXTRA_DIST		= basic_ncsa_auth.8
 LDADD = \
 	$(COMPAT_LIB) \
-	@CRYPTLIB@ \
+	$(CRYPTLIB) \
 	$(XTRA_LIBS) \
 	$(SSLLIB)
 
