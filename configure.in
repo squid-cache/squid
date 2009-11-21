@@ -2542,9 +2542,12 @@ AC_CHECK_TYPE(mtyp_t,AC_DEFINE(HAVE_MTYP_T,1,[mtyp_t is defined by the system he
 #include <sys/msg.h>])
 
 dnl Check for needed libraries
-AC_CHECK_LIB(nsl, main)
-AC_CHECK_LIB(socket, main)
-AC_CHECK_LIB(opcom_stack,main)
+AC_SEARCH_LIBS([gethostbyname],[nsl resolv bind])
+AC_SEARCH_LIBS([res_init],[resolv])
+AC_SEARCH_LIBS([bind],[socket])
+AC_SEARCH_LIBS([opcom_stack_trace],[opcom_stack])
+AC_SEARCH_LIBS([strlcpy], [bsd])
+AC_SEARCH_LIBS([yp_match], [nsl nss_nis nss_nisplus])
 dnl Check for Winsock only on MinGW, on Cygwin we must use emulated BSD socket API
 case "$host_os" in
   mingw|mingw32)
@@ -2614,19 +2617,7 @@ dnl end rip
 		esac
   fi
 
-AC_CHECK_LIB(bsd, main)
 AC_CHECK_LIB(regex, main, [REGEXLIB="-lregex"])
-AC_CHECK_LIB(bind, gethostbyname)
-if test $ac_cv_lib_bind_gethostbyname = "no" ; then
-    case "$host" in
-	i386-*-freebsd*)
-		AC_MSG_NOTICE([skipping libresolv checks for $host])
-		;;
-	*)
-		AC_CHECK_LIB(resolv, main)
-		;;
-    esac
-fi
 case "$host_os" in
 mingw|mingw32)
 	AC_MSG_NOTICE([Use MSVCRT for math functions.])
