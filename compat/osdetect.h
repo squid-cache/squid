@@ -17,7 +17,13 @@
 
 /* SUN SOLARIS / OPENSOLARIS */
 #if defined(__sun__) || defined(__sun) || defined(__SUNPRO_CC) || defined(__SunOS_OSversion)
+#define _SQUID_SUN_ 1 /* SunOS */
+
+#if defined(__SVR4) /* Solaris */
 #define _SQUID_SOLARIS_ 1
+#else /* SunOS */
+#define _SQUID_SUNOS_ 1
+#endif /* __SVR4 */
 
 #elif defined(__hpux)		/* HP-UX - SysV-like? */
 #define _SQUID_HPUX_ 1

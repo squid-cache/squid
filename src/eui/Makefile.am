@@ -11,4 +11,4 @@ libeui_la_SOURCES = \
 	Eui64.h \
 	Eui64.cc
 
-libeui_la_LIBADD = @EUILIB@
+libeui_la_LIBADD = $(EUILIB)

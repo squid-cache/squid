@@ -34,6 +34,7 @@
 #include "comm.h"
 #include "fde.h"
 #include "ip/IpAddress.h"
+#include "rfc1738.h"
 
 static const char *hello_string = "hi there\n";
 #define HELLO_BUF_SZ 32

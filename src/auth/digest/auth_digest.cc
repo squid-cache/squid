@@ -773,7 +773,7 @@ AuthDigestUserRequest::addTrailer(HttpReply * rep, int accel)
 
 /* add the [www-|Proxy-]authenticate header on a 407 or 401 reply */
 void
-AuthDigestConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, http_hdr_type type, HttpRequest * request)
+AuthDigestConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
 {
     if (!authenticate)
         return;
@@ -791,13 +791,13 @@ AuthDigestConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, 
     /* on a 407 or 401 we always use a new nonce */
     digest_nonce_h *nonce = authenticateDigestNonceNew();
 
-    debugs(29, 9, "authenticateFixHeader: Sending type:" << type <<
+    debugs(29, 9, "authenticateFixHeader: Sending type:" << hdrType <<
            " header: 'Digest realm=\"" << digestAuthRealm << "\", nonce=\"" <<
            authenticateDigestNonceNonceb64(nonce) << "\", qop=\"" << QOP_AUTH <<
            "\", stale=" << (stale ? "true" : "false"));
 
     /* in the future, for WWW auth we may want to support the domain entry */
-    httpHeaderPutStrf(&rep->header, type, "Digest realm=\"%s\", nonce=\"%s\", qop=\"%s\", stale=%s", digestAuthRealm, authenticateDigestNonceNonceb64(nonce), QOP_AUTH, stale ? "true" : "false");
+    httpHeaderPutStrf(&rep->header, hdrType, "Digest realm=\"%s\", nonce=\"%s\", qop=\"%s\", stale=%s", digestAuthRealm, authenticateDigestNonceNonceb64(nonce), QOP_AUTH, stale ? "true" : "false");
 }
 
 DigestUser::~DigestUser()
@@ -1375,9 +1375,9 @@ AuthDigestUserRequest::module_start(RH * handler, void *data)
     r->auth_user_request = this;
     AUTHUSERREQUESTLOCK(r->auth_user_request, "r");
     if (digestConfig.utf8) {
-        char user[1024];
-        latin1_to_utf8(user, sizeof(user), digest_user->username());
-        snprintf(buf, 8192, "\"%s\":\"%s\"\n", user, realm);
+        char userstr[1024];
+        latin1_to_utf8(userstr, sizeof(userstr), digest_user->username());
+        snprintf(buf, 8192, "\"%s\":\"%s\"\n", userstr, realm);
     } else {
         snprintf(buf, 8192, "\"%s\":\"%s\"\n", digest_user->username(), realm);
     }
@@ -1385,7 +1385,7 @@ AuthDigestUserRequest::module_start(RH * handler, void *data)
     helperSubmit(digestauthenticators, buf, authenticateDigestHandleReply, r);
 }
 
-DigestUser::DigestUser (AuthConfig *config) : AuthUser (config), HA1created (0)
+DigestUser::DigestUser (AuthConfig *aConfig) : AuthUser (aConfig), HA1created (0)
 {}
 
 AuthUser *

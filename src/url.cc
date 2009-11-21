@@ -36,6 +36,7 @@
 #include "URL.h"
 #include "HttpRequest.h"
 #include "URLScheme.h"
+#include "rfc1738.h"
 
 static HttpRequest *urnParse(const HttpRequestMethod& method, char *urn);
 static const char valid_hostname_chars_u[] =

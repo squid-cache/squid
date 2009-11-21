@@ -9,8 +9,8 @@
 /// impossible services value to identify unset theNextServices
 const static char *TheNullServices = ",null,";
 
-Adaptation::History::Entry::Entry(const String &sid, const timeval &when):
-        service(sid), start(when), theRptm(-1), retried(false)
+Adaptation::History::Entry::Entry(const String &serviceId, const timeval &when):
+        service(serviceId), start(when), theRptm(-1), retried(false)
 {
 }
 
@@ -37,13 +37,13 @@ Adaptation::History::History(): theNextServices(TheNullServices)
 {
 }
 
-int Adaptation::History::recordXactStart(const String &sid, const timeval &when, bool retrying)
+int Adaptation::History::recordXactStart(const String &serviceId, const timeval &when, bool retrying)
 {
     if (retrying) {
         Must(!theEntries.empty()); // or there would be nothing to retry
         theEntries.back().retried = true;
     }
-    theEntries.push_back(Adaptation::History::Entry(sid, when));
+    theEntries.push_back(Adaptation::History::Entry(serviceId, when));
     return theEntries.size() - 1; // record position becomes history ID
 }
 

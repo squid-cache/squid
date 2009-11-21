@@ -44,6 +44,7 @@
 #include "Store.h"
 #include "HttpReply.h"
 #include "basicScheme.h"
+#include "rfc1738.h"
 #include "wordlist.h"
 #include "SquidTime.h"
 
@@ -210,11 +211,11 @@ AuthBasicUserRequest::module_direction()
 }
 
 void
-AuthBasicConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, http_hdr_type type, HttpRequest * request)
+AuthBasicConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
 {
     if (authenticate) {
-        debugs(29, 9, HERE << "Sending type:" << type << " header: 'Basic realm=\"" << basicAuthRealm << "\"'");
-        httpHeaderPutStrf(&rep->header, type, "Basic realm=\"%s\"", basicAuthRealm);
+        debugs(29, 9, HERE << "Sending type:" << hdrType << " header: 'Basic realm=\"" << basicAuthRealm << "\"'");
+        httpHeaderPutStrf(&rep->header, hdrType, "Basic realm=\"%s\"", basicAuthRealm);
     }
 }
 
@@ -381,7 +382,7 @@ BasicUser::deleteSelf() const
     delete this;
 }
 
-BasicUser::BasicUser(AuthConfig *config) : AuthUser (config) , passwd (NULL), credentials_checkedtime(0), auth_queue(NULL), cleartext (NULL), currentRequest (NULL), httpAuthHeader (NULL)
+BasicUser::BasicUser(AuthConfig *aConfig) : AuthUser (aConfig) , passwd (NULL), credentials_checkedtime(0), auth_queue(NULL), cleartext (NULL), currentRequest (NULL), httpAuthHeader (NULL)
 {
     flags.credentials_ok = 0;
 }

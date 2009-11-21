@@ -32,9 +32,6 @@ CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, ModXactLauncher);
 
 static const size_t TheBackupLimit = BodyPipe::MaxCapacity;
 
-extern Adaptation::Icap::Config Adaptation::Icap::TheConfig;
-
-
 Adaptation::Icap::ModXact::State::State()
 {
     memset(this, 0, sizeof(*this));
@@ -337,20 +334,20 @@ size_t Adaptation::Icap::ModXact::virginContentSize(const Adaptation::Icap::Virg
 {
     Must(act.active());
     // asbolute start of unprocessed data
-    const uint64_t start = act.offset();
+    const uint64_t dataStart = act.offset();
     // absolute end of buffered data
-    const uint64_t end = virginConsumed + virgin.body_pipe->buf().contentSize();
-    Must(virginConsumed <= start && start <= end);
-    return static_cast<size_t>(end - start);
+    const uint64_t dataEnd = virginConsumed + virgin.body_pipe->buf().contentSize();
+    Must(virginConsumed <= dataStart && dataStart <= dataEnd);
+    return static_cast<size_t>(dataEnd - dataStart);
 }
 
 // pointer to buffered virgin body data available for the specified activity
 const char *Adaptation::Icap::ModXact::virginContentData(const Adaptation::Icap::VirginBodyAct &act) const
 {
     Must(act.active());
-    const uint64_t start = act.offset();
-    Must(virginConsumed <= start);
-    return virgin.body_pipe->buf().content() + static_cast<size_t>(start-virginConsumed);
+    const uint64_t dataStart = act.offset();
+    Must(virginConsumed <= dataStart);
+    return virgin.body_pipe->buf().content() + static_cast<size_t>(dataStart-virginConsumed);
 }
 
 void Adaptation::Icap::ModXact::virginConsume()
@@ -1700,7 +1697,7 @@ void Adaptation::Icap::ModXactLauncher::swanSong()
     Adaptation::Icap::Launcher::swanSong();
 }
 
-void Adaptation::Icap::ModXactLauncher::updateHistory(bool start)
+void Adaptation::Icap::ModXactLauncher::updateHistory(bool doStart)
 {
     HttpRequest *r = virgin.cause ?
                      virgin.cause : dynamic_cast<HttpRequest*>(virgin.header);
@@ -1709,7 +1706,7 @@ void Adaptation::Icap::ModXactLauncher::updateHistory(bool start)
     if (r) {
         Adaptation::Icap::History::Pointer h = r->icapHistory();
         if (h != NULL) {
-            if (start)
+            if (doStart)
                 h->start("ICAPModXactLauncher");
             else
                 h->stop("ICAPModXactLauncher");

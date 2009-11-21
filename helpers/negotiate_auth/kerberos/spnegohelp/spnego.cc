@@ -540,8 +540,8 @@ spnegoGetNegotiationResult(SPNEGO_TOKEN_HANDLE hSpnegoToken,
         if (pSpnegoToken->aElementArray[SPNEGO_TARG_NEGRESULT_ELEMENT].iElementPresent == SPNEGO_TOKEN_ELEMENT_AVAILABLE) {
             // Must be 1 byte long and a valid value
             if (pSpnegoToken->aElementArray[SPNEGO_TARG_NEGRESULT_ELEMENT].nDatalength == SPNEGO_NEGTARG_MAXLEN_NEGRESULT
-                    && IsValidNegResult(*pSpnegoToken->aElementArray[SPNEGO_TARG_NEGRESULT_ELEMENT].pbData)) {
-                *pnegResult = static_cast<SPNGEO_RESULT>(*pSpnegoToken->aElementArray[SPNEGO_TARG_NEGRESULT_ELEMENT].pbData);
+                    && IsValidNegResult(static_cast<SPNEGO_NEGRESULT>(*pSpnegoToken->aElementArray[SPNEGO_TARG_NEGRESULT_ELEMENT].pbData))) {
+                *pnegResult = static_cast<SPNEGO_NEGRESULT>(*pSpnegoToken->aElementArray[SPNEGO_TARG_NEGRESULT_ELEMENT].pbData);
                 nReturn = SPNEGO_E_SUCCESS;
             } else {
                 nReturn = SPNEGO_E_INVALID_ELEMENT;
@@ -603,11 +603,11 @@ spnegoGetSupportedMechType(SPNEGO_TOKEN_HANDLE hSpnegoToken,
                 if ((nReturn =
                             ASNDerCheckOID(pSpnegoToken->
                                            aElementArray[SPNEGO_TARG_SUPPMECH_ELEMENT].pbData,
-                                           nCtr,
+                                           static_cast<SPNEGO_MECH_OID>(nCtr),
                                            pSpnegoToken->
                                            aElementArray[SPNEGO_TARG_SUPPMECH_ELEMENT].
                                            nDatalength, &nLength)) == SPNEGO_E_SUCCESS) {
-                    *pMechOID = nCtr;
+                    *pMechOID = static_cast<SPNEGO_MECH_OID>(nCtr);
                 }
 
             } // For enum MechOIDs

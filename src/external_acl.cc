@@ -60,6 +60,7 @@
 #include "auth/Gadgets.h"
 #include "helper.h"
 #include "MemBuf.h"
+#include "rfc1738.h"
 #include "URLScheme.h"
 #include "wordlist.h"
 

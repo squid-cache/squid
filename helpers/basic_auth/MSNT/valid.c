@@ -9,16 +9,16 @@
 int
 Valid_User(char *USERNAME, char *PASSWORD, char *SERVER, char *BACKUP, char *DOMAIN)
 {
-    const char *SMB_Prots[] = {"PC NETWORK PROGRAM 1.0",
-                               "MICROSOFT NETWORKS 1.03",
-                               "MICROSOFT NETWORKS 3.0",
-                               "LANMAN1.0",
-                               "LM1.2X002",
-                               "Samba",
-                               "NT LM 0.12",
-                               "NT LANMAN 1.0",
-                               NULL
-                              };
+    const char *supportedDialects[] = {"PC NETWORK PROGRAM 1.0",
+                                       "MICROSOFT NETWORKS 1.03",
+                                       "MICROSOFT NETWORKS 3.0",
+                                       "LANMAN1.0",
+                                       "LM1.2X002",
+                                       "Samba",
+                                       "NT LM 0.12",
+                                       "NT LANMAN 1.0",
+                                       NULL
+                                      };
     void *con;
 
     SMB_Init();
@@ -29,7 +29,7 @@ Valid_User(char *USERNAME, char *PASSWORD, char *SERVER, char *BACKUP, char *DOM
             return (NTV_SERVER_ERROR);
         }
     }
-    if (SMB_Negotiate(con, SMB_Prots) < 0) {	/* An error */
+    if (SMB_Negotiate(con, supportedDialects) < 0) {	/* An error */
         SMB_Discon(con, 0);
         return (NTV_PROTOCOL_ERROR);
     }

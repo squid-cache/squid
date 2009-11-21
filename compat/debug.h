@@ -20,10 +20,11 @@
 
 /* Debugging stuff */
 
+SQUIDCEXTERN int debug_enabled;
+
 /* the macro overload style is really a gcc-ism */
 #ifdef __GNUC__
 
-SQUIDCEXTERN int debug_enabled;
 
 #define debug(X...) \
                      if (debug_enabled) { \
@@ -33,12 +34,8 @@ SQUIDCEXTERN int debug_enabled;
 
 #else /* __GNUC__ */
 
-/* TODO: non-GCC compilers can't do the above macro define yet. */
-inline void
-debug(char *format,...)
-{
-    ; // nothing to do.
-}
+/* non-GCC compilers can't do the above macro define yet. */
+void debug(char *format,...);
 #endif
 
 

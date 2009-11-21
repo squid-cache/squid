@@ -167,7 +167,7 @@ class SignalEngine: public AsyncEngine
 {
 
 public:
-    SignalEngine(EventLoop &loop) : loop(loop) {}
+    SignalEngine(EventLoop &evtLoop) : loop(evtLoop) {}
     virtual int checkEvents(int timeout);
 
 private:

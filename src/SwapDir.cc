@@ -165,7 +165,7 @@ SwapDir::getOptionTree() const
 }
 
 void
-SwapDir::parseOptions(int reconfiguring)
+SwapDir::parseOptions(int isaReconfig)
 {
     unsigned int old_read_only = flags.read_only;
     char *name, *value;
@@ -181,7 +181,7 @@ SwapDir::parseOptions(int reconfiguring)
         debugs(3,2, "SwapDir::parseOptions: parsing store option '" << name << "'='" << (value ? value : "") << "'");
 
         if (newOption)
-            if (!newOption->parse(name, value, reconfiguring))
+            if (!newOption->parse(name, value, isaReconfig))
                 self_destruct();
     }
 
@@ -193,7 +193,7 @@ SwapDir::parseOptions(int reconfiguring)
      * parsing...
      */
 
-    if (reconfiguring) {
+    if (isaReconfig) {
         if (old_read_only != flags.read_only) {
             debugs(3, 1, "Cache dir '" << path << "' now " << (flags.read_only ? "No-Store" : "Read-Write"));
         }
@@ -212,7 +212,7 @@ SwapDir::dumpOptions(StoreEntry * entry) const
 }
 
 bool
-SwapDir::optionReadOnlyParse(char const *option, const char *value, int reconfiguring)
+SwapDir::optionReadOnlyParse(char const *option, const char *value, int isaReconfig)
 {
     if (strcmp(option, "no-store") != 0 && strcmp(option, "read-only") != 0)
         return false;
@@ -237,7 +237,7 @@ SwapDir::optionReadOnlyDump(StoreEntry * e) const
 }
 
 bool
-SwapDir::optionMaxSizeParse(char const *option, const char *value, int reconfiguring)
+SwapDir::optionMaxSizeParse(char const *option, const char *value, int isaReconfig)
 {
     if (strcmp(option, "max-size") != 0)
         return false;
@@ -247,7 +247,7 @@ SwapDir::optionMaxSizeParse(char const *option, const char *value, int reconfigu
 
     int64_t size = strtoll(value, NULL, 10);
 
-    if (reconfiguring && max_objsize != size)
+    if (isaReconfig && max_objsize != size)
         debugs(3, 1, "Cache dir '" << path << "' max object size now " << size);
 
     max_objsize = size;
@@ -276,7 +276,7 @@ SwapDir::get
 void
 
 SwapDir::get
-(String const key, STOREGETCLIENT callback, void *cbdata)
+(String const key, STOREGETCLIENT aCallback, void *aCallbackData)
 {
     fatal("not implemented");
 }

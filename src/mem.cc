@@ -504,7 +504,7 @@ memInUse(mem_type type)
 
 /* ick */
 
-static void
+void
 memFree2K(void *p)
 {
     memFree(p, MEM_2K_BUF);
@@ -522,19 +522,19 @@ memFree8K(void *p)
     memFree(p, MEM_8K_BUF);
 }
 
-static void
+void
 memFree16K(void *p)
 {
     memFree(p, MEM_16K_BUF);
 }
 
-static void
+void
 memFree32K(void *p)
 {
     memFree(p, MEM_32K_BUF);
 }
 
-static void
+void
 memFree64K(void *p)
 {
     memFree(p, MEM_64K_BUF);

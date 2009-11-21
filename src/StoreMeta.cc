@@ -101,10 +101,10 @@ const int StoreMeta::MinimumTLVLength = 0;
 const int StoreMeta::MaximumTLVLength = 1 << 16;
 
 bool
-StoreMeta::validLength(int length) const
+StoreMeta::validLength(int aLength) const
 {
-    if (!IntRange (MinimumTLVLength, MaximumTLVLength).includes(length)) {
-        debugs(20, 0, "storeSwapMetaUnpack: insane length (" << length << ")!");
+    if (!IntRange (MinimumTLVLength, MaximumTLVLength).includes(aLength)) {
+        debugs(20, 0, "storeSwapMetaUnpack: insane length (" << aLength << ")!");
         return false;
     }
 

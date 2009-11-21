@@ -64,7 +64,7 @@ Icmp::CheckSum(unsigned short *ptr, int size)
     unsigned short oddbyte;
     unsigned short answer;
 
-    if (!ptr) return 65535; // bad input.
+    if (!ptr) return (int)htons(0xffff); // bad input.
 
     sum = 0;
 
