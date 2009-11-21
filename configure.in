@@ -31,6 +31,17 @@ dnl Make the squid top srcdir available to sub-packages as --with-squid=PATH
 new_configure_args="$ac_configure_args --with-squid=$ac_abs_confdir"
 ac_configure_args="$new_configure_args"
 
+squid_disable_werror="no"
+AC_ARG_ENABLE(strict-error-checking,
+  AS_HELP_STRING([--disable-strict-error-checking],[By default squid is compiled
+                 with all possible static compiler error-checks enbled.
+                 This flag disables the behavior]),
+[ 
+  if test "${enableval}" = "no"
+  then
+    squid_disable_werror="yes"
+  fi
+])
 
 use_loadable_modules=1
 AC_MSG_CHECKING(whether to use loadable modules)
@@ -264,10 +275,15 @@ dnl TODO: check if the problem will be present in any other newer MinGW release.
         SQUID_CFLAGS="-Wall -Wpointer-arith -Wwrite-strings -Wcomments"
 	;;
     *)
-        SQUID_CFLAGS="-Werror -Wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments"
+        SQUID_CFLAGS="-Wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments"
 	;;
     esac
-    SQUID_CXXFLAGS="-Werror -Wall -Wpointer-arith -Wwrite-strings -Wcomments"
+    SQUID_CXXFLAGS="-Wall -Wpointer-arith -Wwrite-strings -Wcomments"
+    if test "$squid_disable_werror" = "no"
+    then
+        SQUID_CFLAGS="$SQUID_CFLAGS -Werror"
+        SQUID_CXXFLAGS="$SQUID_CXXFLAGS -Werror"
+    fi
 else
     SQUID_CFLAGS=
     SQUID_CXXFLAGS=
@@ -2109,6 +2125,7 @@ AC_PATH_PROG(TRUE, true, /usr/bin/true)
 AC_PATH_PROG(MV, mv, $FALSE)
 AC_PATH_PROG(MKDIR, mkdir, $FALSE)
 AC_PATH_PROG(LN, ln, cp)
+AC_PATH_PROG(CHMOD, chmod, $FALSE)
 
 AC_PATH_PROG(RM, rm, $FALSE)
 dnl Libtool 2.2.6 requires: rm -f
