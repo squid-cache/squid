@@ -163,9 +163,8 @@ msgid "ERROR: Cache Manager Access Denied"
 msgstr "ERREUR : Accès au Gestionnaire de Cache Interdit"
 
 #: templates/ERR_FTP_PUT_ERROR:1
-#, fuzzy
 msgid "ERROR: FTP upload failed"
-msgstr "ERREUR : Échec de l'envoi FTP"
+msgstr "ERREUR: envoi FTP défectueux"
 
 #: templates/ERR_ACCESS_DENIED:1 templates/ERR_CANNOT_FORWARD:1
 #: templates/ERR_CONNECT_FAIL:1 templates/ERR_DNS_FAIL:1 templates/ERR_ESI:1
@@ -418,9 +417,8 @@ msgid "Squid sent the following FTP command:"
 msgstr "Squid a envoyé la commande FTP suivante :"
 
 #: templates/ERR_DNS_FAIL:6
-#, fuzzy
 msgid "The DNS server returned:"
-msgstr "Le serveur DNS a répondu :"
+msgstr "Le serveur DNS a retourné :"
 
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
