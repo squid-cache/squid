@@ -7,5 +7,5 @@ basic_ldap_auth_SOURCES	= basic_ldap_auth.cc
 
 LDADD = \
 	$(COMPAT_LIB) \
-	@LDAPLIB@ \
-	@LBERLIB@
+	$(LDAPLIB) \
+	$(LBERLIB)

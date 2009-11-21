@@ -53,7 +53,7 @@ unlinkdUnlink(const char *path)
 {
     char buf[MAXPATHLEN];
     int l;
-    int x;
+    int bytes_written;
     static int queuelen = 0;
 
     if (unlinkd_wfd < 0) {
@@ -98,15 +98,15 @@ unlinkdUnlink(const char *path)
     * decrement the queue size by the number of newlines read.
     */
     if (queuelen > 0) {
-        int x;
+        int bytes_read;
         int i;
         char rbuf[512];
-        x = read(unlinkd_rfd, rbuf, 511);
+        bytes_read = read(unlinkd_rfd, rbuf, 511);
 
-        if (x > 0) {
-            rbuf[x] = '\0';
+        if (bytes_read > 0) {
+            rbuf[bytes_read] = '\0';
 
-            for (i = 0; i < x; i++)
+            for (i = 0; i < bytes_read; i++)
                 if ('\n' == rbuf[i])
                     queuelen--;
 
@@ -118,14 +118,14 @@ unlinkdUnlink(const char *path)
     assert(l < MAXPATHLEN);
     xstrncpy(buf, path, MAXPATHLEN);
     buf[l++] = '\n';
-    x = write(unlinkd_wfd, buf, l);
+    bytes_written = write(unlinkd_wfd, buf, l);
 
-    if (x < 0) {
+    if (bytes_written < 0) {
         debugs(2, 1, "unlinkdUnlink: write FD " << unlinkd_wfd << " failed: " << xstrerror());
         safeunlink(path, 0);
         return;
-    } else if (x != l) {
-        debugs(2, 1, "unlinkdUnlink: FD " << unlinkd_wfd << " only wrote " << x << " of " << l << " bytes");
+    } else if (bytes_written != l) {
+        debugs(2, 1, "unlinkdUnlink: FD " << unlinkd_wfd << " only wrote " << bytes_written << " of " << l << " bytes");
         safeunlink(path, 0);
         return;
     }

@@ -48,6 +48,7 @@
 #include "SwapDir.h"
 #include "icmp/net_db.h"
 #include "ip/IpAddress.h"
+#include "rfc1738.h"
 
 /// \ingroup ServerProtocolICPInternal2
 static void icpLogIcp(const IpAddress &, log_type, int, const char *, int);

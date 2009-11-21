@@ -43,6 +43,7 @@
 #include "HttpRequest.h"
 #include "client_side.h"
 #include "helper.h"
+#include "rfc1738.h"
 
 typedef struct {
     void *data;

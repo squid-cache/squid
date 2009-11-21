@@ -67,9 +67,9 @@ class ConfigOptionAdapter : public ConfigOption
 public:
     ConfigOptionAdapter(C& theObject, bool (C::*parseFP)(char const *option, const char *value, int reconfiguring), void (C::*dumpFP) (StoreEntry * e) const) : object(theObject), parser (parseFP), dumper(dumpFP) {}
 
-    bool parse(char const *option, const char *value, int reconfiguring) {
+    bool parse(char const *option, const char *value, int isaReconf) {
         if (parser)
-            return (object.*parser)(option, value, reconfiguring);
+            return (object.*parser)(option, value, isaReconf);
 
         return false;
     }

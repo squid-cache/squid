@@ -39,7 +39,7 @@
 #include "acl/Checklist.h"
 #include "acl/RegexData.h"
 #include "HttpRequest.h"
-
+#include "rfc1738.h"
 
 int
 ACLUrlPathStrategy::match (ACLData<char const *> * &data, ACLFilledChecklist *checklist)

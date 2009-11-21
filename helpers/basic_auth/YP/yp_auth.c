@@ -4,6 +4,8 @@
  */
 
 #include "config.h"
+#include "rfc1738.h"
+
 #if HAVE_STDIO_H
 #include <stdio.h>
 #endif

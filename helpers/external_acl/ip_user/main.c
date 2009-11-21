@@ -19,6 +19,7 @@
 *
 */
 
+#include "rfc1738.h"
 #include "util.h"
 
 #include <stdio.h>

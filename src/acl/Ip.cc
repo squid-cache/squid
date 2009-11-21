@@ -508,10 +508,10 @@ ACLIP::parse()
 
         while (q != NULL) {
             /* pop each result off the list and add it to the data tree individually */
-            acl_ip_data *next = q->next;
+            acl_ip_data *next_node = q->next;
             q->next = NULL;
             data = data->insert(q, acl_ip_data::NetworkCompare);
-            q = next;
+            q = next_node;
         }
     }
 }

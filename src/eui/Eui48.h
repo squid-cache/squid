@@ -14,6 +14,11 @@ class IpAddress;
 #include <cstring>
 #endif
 
+/* memcpy and friends */
+#if HAVE_STRING_H
+#include <string.h>
+#endif
+
 namespace Eui
 {
 

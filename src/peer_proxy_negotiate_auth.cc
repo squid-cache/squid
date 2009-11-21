@@ -36,6 +36,13 @@ extern "C" {
 #include <profile.h>
 #endif				/* HAVE_PROFILE_H */
 #if HAVE_KRB5_H
+#if HAVE_BROKEN_SOLARIS_KRB5_H
+#if defined(__cplusplus)
+#define KRB5INT_BEGIN_DECLS     extern "C" {
+#define KRB5INT_END_DECLS
+    KRB5INT_BEGIN_DECLS
+#endif
+#endif
 #include <krb5.h>
 #elif HAVE_ET_COM_ERR_H
 #include <et/com_err.h>
