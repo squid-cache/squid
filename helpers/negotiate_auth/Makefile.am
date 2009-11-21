@@ -4,4 +4,4 @@
 #
 
 DIST_SUBDIRS	= mswin_sspi squid_kerb_auth
-SUBDIRS		= @NEGOTIATE_AUTH_HELPERS@
+SUBDIRS		= $(NEGOTIATE_AUTH_HELPERS)

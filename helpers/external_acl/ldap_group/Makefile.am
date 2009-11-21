@@ -22,4 +22,4 @@ LDADD = \
 	-L$(top_builddir)/lib -lmiscutil \
 	$(LIB_LDAP) \
 	$(LIB_LBER) \
-	@XTRA_LIBS@
+	$(XTRA_LIBS)
