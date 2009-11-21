@@ -783,7 +783,7 @@ RebuildState::getNextFile(sfileno * filn_p, int *size)
 }
 
 void
-RebuildState::next(void (callback)(void *cbdata), void *cbdata)
+RebuildState::next(void (aCallback)(void *aCallbackDataarg), void *aCallbackData)
 {
     /* for now, we don't cache at all */
     speed = 1;
@@ -792,7 +792,7 @@ RebuildState::next(void (callback)(void *cbdata), void *cbdata)
     while (!isDone() && currentEntry() == NULL)
         rebuildStep();
 
-    callback(cbdata);
+    aCallback(aCallbackData);
 }
 
 bool

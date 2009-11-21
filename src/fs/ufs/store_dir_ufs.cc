@@ -107,7 +107,7 @@ UFSSwapDir::parseSizeL1L2()
  */
 
 void
-UFSSwapDir::reconfigure(int index, char *path)
+UFSSwapDir::reconfigure(int aIndex, char *aPath)
 {
     parseSizeL1L2();
     parseOptions(1);
@@ -154,12 +154,12 @@ UFSSwapDir::changeIO(DiskIOModule *module)
 }
 
 bool
-UFSSwapDir::optionIOParse(char const *option, const char *value, int reconfiguring)
+UFSSwapDir::optionIOParse(char const *option, const char *value, int isaReconfig)
 {
     if (strcmp(option, "IOEngine") != 0)
         return false;
 
-    if (reconfiguring)
+    if (isaReconfig)
         /* silently ignore this */
         return true;
 
@@ -431,15 +431,15 @@ UFSSwapDir::dereference(StoreEntry & e)
 }
 
 StoreIOState::Pointer
-UFSSwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB * file_callback, StoreIOState::STIOCB * callback, void *callback_data)
+UFSSwapDir::createStoreIO(StoreEntry &e, StoreIOState::STFNCB * file_callback, StoreIOState::STIOCB * aCallback, void *callback_data)
 {
-    return IO->create (this, &e, file_callback, callback, callback_data);
+    return IO->create (this, &e, file_callback, aCallback, callback_data);
 }
 
 StoreIOState::Pointer
-UFSSwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB * file_callback, StoreIOState::STIOCB * callback, void *callback_data)
+UFSSwapDir::openStoreIO(StoreEntry &e, StoreIOState::STFNCB * file_callback, StoreIOState::STIOCB * aCallback, void *callback_data)
 {
-    return IO->open (this, &e, file_callback, callback, callback_data);
+    return IO->open (this, &e, file_callback, aCallback, callback_data);
 }
 
 int
@@ -489,50 +489,50 @@ UFSSwapDir::swapSubDir(int subdirn)const
 }
 
 int
-UFSSwapDir::createDirectory(const char *path, int should_exist)
+UFSSwapDir::createDirectory(const char *aPath, int should_exist)
 {
     int created = 0;
 
     struct stat st;
     getCurrentTime();
 
-    if (0 == ::stat(path, &st)) {
+    if (0 == ::stat(aPath, &st)) {
         if (S_ISDIR(st.st_mode)) {
-            debugs(47, (should_exist ? 3 : 1), path << " exists");
+            debugs(47, (should_exist ? 3 : 1), aPath << " exists");
         } else {
-            fatalf("Swap directory %s is not a directory.", path);
+            fatalf("Swap directory %s is not a directory.", aPath);
         }
 
 #ifdef _SQUID_MSWIN_
 
-    } else if (0 == mkdir(path)) {
+    } else if (0 == mkdir(aPath)) {
 #else
 
-    } else if (0 == mkdir(path, 0755)) {
+    } else if (0 == mkdir(aPath, 0755)) {
 #endif
-        debugs(47, (should_exist ? 1 : 3), path << " created");
+        debugs(47, (should_exist ? 1 : 3), aPath << " created");
         created = 1;
     } else {
         fatalf("Failed to make swap directory %s: %s",
-               path, xstrerror());
+               aPath, xstrerror());
     }
 
     return created;
 }
 
 bool
-UFSSwapDir::pathIsDirectory(const char *path)const
+UFSSwapDir::pathIsDirectory(const char *aPath)const
 {
 
     struct stat sb;
 
-    if (::stat(path, &sb) < 0) {
-        debugs(47, 0, "" << path << ": " << xstrerror());
+    if (::stat(aPath, &sb) < 0) {
+        debugs(47, 0, "" << aPath << ": " << xstrerror());
         return false;
     }
 
     if (S_ISDIR(sb.st_mode) == 0) {
-        debugs(47, 0, "" << path << " is not a directory");
+        debugs(47, 0, "" << aPath << " is not a directory");
         return false;
     }
 
@@ -686,7 +686,7 @@ UFSSwapDir::addDiskRestore(const cache_key * key,
                            time_t lastref,
                            time_t lastmod,
                            u_int32_t refcount,
-                           u_int16_t flags,
+                           u_int16_t newFlags,
                            int clean)
 {
     StoreEntry *e = NULL;
@@ -707,7 +707,7 @@ UFSSwapDir::addDiskRestore(const cache_key * key,
     e->expires = expires;
     e->lastmod = lastmod;
     e->refcount = refcount;
-    e->flags = flags;
+    e->flags = newFlags;
     EBIT_SET(e->flags, ENTRY_CACHABLE);
     EBIT_CLR(e->flags, RELEASE_REQUEST);
     EBIT_CLR(e->flags, KEY_PRIVATE);
@@ -1388,10 +1388,10 @@ StoreSearchUFS::~StoreSearchUFS()
 }
 
 void
-StoreSearchUFS::next(void (callback)(void *cbdata), void *cbdata)
+StoreSearchUFS::next(void (aCallback)(void *cbdata), void *aCallbackArgs)
 {
     next();
-    callback (cbdata);
+    aCallback(aCallbackArgs);
 }
 
 bool

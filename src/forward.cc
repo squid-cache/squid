@@ -868,14 +868,14 @@ FwdState::connectStart()
 
     debugs(17, 3, "fwdConnectStart: got outgoing addr " << outgoing << ", tos " << tos);
 
-    int flags = COMM_NONBLOCKING;
+    int commFlags = COMM_NONBLOCKING;
     if (request->flags.spoof_client_ip) {
         if (!fs->_peer || !fs->_peer->options.no_tproxy)
-            flags |= COMM_TRANSPARENT;
+            commFlags |= COMM_TRANSPARENT;
         // else no tproxy today ...
     }
 
-    fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, outgoing, flags, tos, url);
+    fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, outgoing, commFlags, tos, url);
 
     debugs(17, 3, "fwdConnectStart: got TCP FD " << fd);
 

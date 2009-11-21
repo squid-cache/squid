@@ -448,7 +448,7 @@ class generic_cbdata
 {
 public:
 
-    generic_cbdata(void * data) : data(data) {}
+    generic_cbdata(void * aData) : data(aData) {}
 
     template<typename wrapped_type>void unwrap(wrapped_type **output) {
         *output = static_cast<wrapped_type *>(data);

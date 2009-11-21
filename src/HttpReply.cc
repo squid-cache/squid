@@ -210,7 +210,7 @@ HttpReply::packed304Reply()
 
 void
 HttpReply::setHeaders(HttpVersion ver, http_status status, const char *reason,
-                      const char *ctype, int64_t clen, time_t lmt, time_t expires)
+                      const char *ctype, int64_t clen, time_t lmt, time_t expiresTime)
 {
     HttpHeader *hdr;
     httpStatusLineSet(&sline, ver, status, reason);
@@ -228,8 +228,8 @@ HttpReply::setHeaders(HttpVersion ver, http_status status, const char *reason,
     if (clen >= 0)
         hdr->putInt64(HDR_CONTENT_LENGTH, clen);
 
-    if (expires >= 0)
-        hdr->putTime(HDR_EXPIRES, expires);
+    if (expiresTime >= 0)
+        hdr->putTime(HDR_EXPIRES, expiresTime);
 
     if (lmt > 0)		/* this used to be lmt != 0 @?@ */
         hdr->putTime(HDR_LAST_MODIFIED, lmt);
@@ -238,7 +238,7 @@ HttpReply::setHeaders(HttpVersion ver, http_status status, const char *reason,
 
     content_length = clen;
 
-    expires = expires;
+    expires = expiresTime;
 
     last_modified = lmt;
 }

@@ -301,7 +301,7 @@ AuthNegotiateUserRequest::addHeader(HttpReply * rep, int accel)
 }
 
 void
-AuthNegotiateConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, http_hdr_type type, HttpRequest * request)
+AuthNegotiateConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, http_hdr_type reqType, HttpRequest * request)
 {
     AuthNegotiateUserRequest *negotiate_request;
 
@@ -314,8 +314,8 @@ AuthNegotiateConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *re
 
     /* New request, no user details */
     if (auth_user_request == NULL) {
-        debugs(29, 9, "AuthNegotiateConfig::fixHeader: Sending type:" << type << " header: 'Negotiate'");
-        httpHeaderPutStrf(&rep->header, type, "Negotiate");
+        debugs(29, 9, "AuthNegotiateConfig::fixHeader: Sending type:" << reqType << " header: 'Negotiate'");
+        httpHeaderPutStrf(&rep->header, reqType, "Negotiate");
 
         if (!keep_alive) {
             /* drop the connection */
@@ -342,12 +342,12 @@ AuthNegotiateConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *re
              */
 
             if (negotiate_request->server_blob) {
-                debugs(29, 9, "authenticateNegotiateFixErrorHeader: Sending type:" << type << " header: 'Negotiate " << negotiate_request->server_blob << "'");
-                httpHeaderPutStrf(&rep->header, type, "Negotiate %s", negotiate_request->server_blob);
+                debugs(29, 9, "authenticateNegotiateFixErrorHeader: Sending type:" << reqType << " header: 'Negotiate " << negotiate_request->server_blob << "'");
+                httpHeaderPutStrf(&rep->header, reqType, "Negotiate %s", negotiate_request->server_blob);
                 safe_free(negotiate_request->server_blob);
             } else {
                 debugs(29, 9, "authenticateNegotiateFixErrorHeader: Connection authenticated");
-                httpHeaderPutStrf(&rep->header, type, "Negotiate");
+                httpHeaderPutStrf(&rep->header, reqType, "Negotiate");
             }
 
             break;
@@ -355,14 +355,14 @@ AuthNegotiateConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *re
         case AUTHENTICATE_STATE_NONE:
             /* semantic change: do not drop the connection.
              * 2.5 implementation used to keep it open - Kinkie */
-            debugs(29, 9, "AuthNegotiateConfig::fixHeader: Sending type:" << type << " header: 'Negotiate'");
-            httpHeaderPutStrf(&rep->header, type, "Negotiate");
+            debugs(29, 9, "AuthNegotiateConfig::fixHeader: Sending type:" << reqType << " header: 'Negotiate'");
+            httpHeaderPutStrf(&rep->header, reqType, "Negotiate");
             break;
 
         case AUTHENTICATE_STATE_IN_PROGRESS:
             /* we're waiting for a response from the client. Pass it the blob */
-            debugs(29, 9, "AuthNegotiateConfig::fixHeader: Sending type:" << type << " header: 'Negotiate " << negotiate_request->server_blob << "'");
-            httpHeaderPutStrf(&rep->header, type, "Negotiate %s", negotiate_request->server_blob);
+            debugs(29, 9, "AuthNegotiateConfig::fixHeader: Sending type:" << reqType << " header: 'Negotiate " << negotiate_request->server_blob << "'");
+            httpHeaderPutStrf(&rep->header, reqType, "Negotiate %s", negotiate_request->server_blob);
             safe_free(negotiate_request->server_blob);
             break;
 
@@ -660,7 +660,7 @@ AuthNegotiateUserRequest::authenticated() const
 }
 
 void
-AuthNegotiateUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type)
+AuthNegotiateUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * conn, http_hdr_type type)
 {
     const char *proxy_auth, *blob;
 
@@ -694,7 +694,7 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * request, ConnStateData * co
     }
 
     /* get header */
-    proxy_auth = request->header.getStr(type);
+    proxy_auth = aRequest->header.getStr(type);
 
     /* locate second word */
     blob = proxy_auth;
@@ -722,8 +722,8 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * request, ConnStateData * co
         assert(conn->auth_user_request == NULL);
         conn->auth_user_request = this;
         AUTHUSERREQUESTLOCK(conn->auth_user_request, "conn");
-        this->request = request;
-        HTTPMSGLOCK(this->request);
+        request = aRequest;
+        HTTPMSGLOCK(request);
         return;
 
         break;
@@ -743,10 +743,10 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * request, ConnStateData * co
 
         client_blob = xstrdup (blob);
 
-        if (this->request)
-            HTTPMSGUNLOCK(this->request);
-        this->request = request;
-        HTTPMSGLOCK(this->request);
+        if (request)
+            HTTPMSGUNLOCK(request);
+        request = aRequest;
+        HTTPMSGLOCK(request);
         return;
 
         break;
@@ -801,7 +801,7 @@ NegotiateUser::deleteSelf() const
     delete this;
 }
 
-NegotiateUser::NegotiateUser (AuthConfig *config) : AuthUser (config)
+NegotiateUser::NegotiateUser (AuthConfig *aConfig) : AuthUser (aConfig)
 {
     proxy_auth_list.head = proxy_auth_list.tail = NULL;
 }

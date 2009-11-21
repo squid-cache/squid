@@ -219,7 +219,7 @@ result_recv(u_int32_t host, u_short udp_port, char *buffer, int length)
  *    Generate a random vector.
  */
 static void
-random_vector(char *vector)
+random_vector(char *aVector)
 {
     int randno;
     int i;
@@ -227,8 +227,8 @@ random_vector(char *vector)
     srand((time(0) ^ rand()) + rand());
     for (i = 0; i < AUTH_VECTOR_LEN;) {
         randno = rand();
-        memcpy(vector, &randno, sizeof(int));
-        vector += sizeof(int);
+        memcpy(aVector, &randno, sizeof(int));
+        aVector += sizeof(int);
         i += sizeof(int);
     }
 }
@@ -288,7 +288,7 @@ urldecode(char *dst, const char *src, int size)
 }
 
 static int
-authenticate(int sockfd, const char *username, const char *passwd)
+authenticate(int socket_fd, const char *username, const char *passwd)
 {
     AUTH_HDR *auth;
     u_short total_length;
@@ -414,7 +414,7 @@ authenticate(int sockfd, const char *username, const char *passwd)
          *    Send the request we've built.
          */
         gettimeofday(&sent, NULL);
-        send(sockfd, (char *) auth, total_length, 0);
+        send(socket_fd, (char *) auth, total_length, 0);
         while ((time_spent = time_since(&sent)) < 1000000) {
             struct timeval tv;
             int rc, len;
@@ -426,11 +426,11 @@ authenticate(int sockfd, const char *username, const char *passwd)
                 tv.tv_usec = 1000000 - time_spent;
             }
             FD_ZERO(&readfds);
-            FD_SET(sockfd, &readfds);
-            if (select(sockfd + 1, &readfds, NULL, NULL, &tv) == 0)	/* Select timeout */
+            FD_SET(socket_fd, &readfds);
+            if (select(socket_fd + 1, &readfds, NULL, NULL, &tv) == 0)	/* Select timeout */
                 break;
             salen = sizeof(saremote);
-            len = recvfrom(sockfd, recv_buffer, sizeof(i_recv_buffer),
+            len = recvfrom(socket_fd, recv_buffer, sizeof(i_recv_buffer),
                            0, (struct sockaddr *) &saremote, &salen);
 
             if (len < 0)

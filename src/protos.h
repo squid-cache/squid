@@ -83,7 +83,7 @@ SQUIDCEXTERN void clientdbInit(void);
 SQUIDCEXTERN void clientdbUpdate(const IpAddress &, log_type, protocol_t, size_t);
 
 SQUIDCEXTERN int clientdbCutoffDenied(const IpAddress &);
-SQUIDCEXTERN void clientdbDump(StoreEntry *);
+void clientdbDump(StoreEntry *);
 SQUIDCEXTERN void clientdbFreeMemory(void);
 
 SQUIDCEXTERN int clientdbEstablished(const IpAddress &, int);
@@ -473,8 +473,12 @@ SQUIDCEXTERN void *memAllocString(size_t net_size, size_t * gross_size);
 SQUIDCEXTERN void *memAllocBuf(size_t net_size, size_t * gross_size);
 SQUIDCEXTERN void *memReallocBuf(void *buf, size_t net_size, size_t * gross_size);
 SQUIDCEXTERN void memFree(void *, int type);
-SQUIDCEXTERN void memFree4K(void *);
-SQUIDCEXTERN void memFree8K(void *);
+void memFree2K(void *);
+void memFree4K(void *);
+void memFree8K(void *);
+void memFree16K(void *);
+void memFree32K(void *);
+void memFree64K(void *);
 SQUIDCEXTERN void memFreeString(size_t size, void *);
 SQUIDCEXTERN void memFreeBuf(size_t size, void *);
 SQUIDCEXTERN FREE *memFreeBufFunc(size_t size);

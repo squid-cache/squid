@@ -126,22 +126,22 @@ clientReplyContext::removeStoreReference(store_client ** scp,
         StoreEntry ** ep)
 {
     StoreEntry *e;
-    store_client *sc = *scp;
+    store_client *sc_tmp = *scp;
 
     if ((e = *ep) != NULL) {
         *ep = NULL;
-        storeUnregister(sc, e, this);
+        storeUnregister(sc_tmp, e, this);
         *scp = NULL;
         e->unlock();
     }
 }
 
 void
-clientReplyContext::removeClientStoreReference(store_client **scp, ClientHttpRequest *http)
+clientReplyContext::removeClientStoreReference(store_client **scp, ClientHttpRequest *aHttpRequest)
 {
-    StoreEntry *reference = http->storeEntry();
+    StoreEntry *reference = aHttpRequest->storeEntry();
     removeStoreReference(scp, &reference);
-    http->storeEntry(reference);
+    aHttpRequest->storeEntry(reference);
 }
 
 void *
@@ -217,8 +217,8 @@ clientReplyContext::triggerInitialStoreRead()
      * startSendProcess
      */
     assert(reqofs == 0);
-    StoreIOBuffer tempBuffer (next()->readBuffer.length, 0, next()->readBuffer.data);
-    storeClientCopy(sc, http->storeEntry(), tempBuffer, SendMoreData, this);
+    StoreIOBuffer localTempBuffer (next()->readBuffer.length, 0, next()->readBuffer.data);
+    storeClientCopy(sc, http->storeEntry(), localTempBuffer, SendMoreData, this);
 }
 
 /* there is an expired entry in the store.
@@ -278,8 +278,8 @@ clientReplyContext::processExpired()
 
     {
         /* start counting the length from 0 */
-        StoreIOBuffer tempBuffer(HTTP_REQBUF_SZ, 0, tempbuf);
-        storeClientCopy(sc, entry, tempBuffer, HandleIMSReply, this);
+        StoreIOBuffer localTempBuffer(HTTP_REQBUF_SZ, 0, tempbuf);
+        storeClientCopy(sc, entry, localTempBuffer, HandleIMSReply, this);
     }
 }
 
@@ -807,7 +807,7 @@ clientReplyContext::purgeFoundObject(StoreEntry *entry)
         return;
     }
 
-    StoreIOBuffer tempBuffer;
+    StoreIOBuffer localTempBuffer;
     /* Swap in the metadata */
     http->storeEntry(entry);
 
@@ -822,14 +822,14 @@ clientReplyContext::purgeFoundObject(StoreEntry *entry)
 
     reqofs = 0;
 
-    tempBuffer.offset = http->out.offset;
+    localTempBuffer.offset = http->out.offset;
 
-    tempBuffer.length = next()->readBuffer.length;
+    localTempBuffer.length = next()->readBuffer.length;
 
-    tempBuffer.data = next()->readBuffer.data;
+    localTempBuffer.data = next()->readBuffer.data;
 
     storeClientCopy(sc, http->storeEntry(),
-                    tempBuffer, CacheHit, this);
+                    localTempBuffer, CacheHit, this);
 }
 
 void
@@ -947,15 +947,15 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
 void
 clientReplyContext::traceReply(clientStreamNode * node)
 {
-    clientStreamNode *next = (clientStreamNode *)node->node.next->data;
-    StoreIOBuffer tempBuffer;
+    clientStreamNode *nextNode = (clientStreamNode *)node->node.next->data;
+    StoreIOBuffer localTempBuffer;
     assert(http->request->max_forwards == 0);
     createStoreEntry(http->request->method, request_flags());
-    tempBuffer.offset = next->readBuffer.offset + headers_sz;
-    tempBuffer.length = next->readBuffer.length;
-    tempBuffer.data = next->readBuffer.data;
+    localTempBuffer.offset = nextNode->readBuffer.offset + headers_sz;
+    localTempBuffer.length = nextNode->readBuffer.length;
+    localTempBuffer.data = nextNode->readBuffer.data;
     storeClientCopy(sc, http->storeEntry(),
-                    tempBuffer, SendMoreData, this);
+                    localTempBuffer, SendMoreData, this);
     http->storeEntry()->releaseRequest();
     http->storeEntry()->buffer();
     HttpReply *rep = new HttpReply;
@@ -1021,7 +1021,7 @@ clientReplyContext::storeNotOKTransferDone() const
     assert(mem != NULL);
     assert(http->request != NULL);
     /* mem->reply was wrong because it uses the UPSTREAM header length!!! */
-    HttpReply const *reply = mem->getReply();
+    HttpReply const *curReply = mem->getReply();
 
     if (headers_sz == 0)
         /* haven't found end of headers yet */
@@ -1029,9 +1029,9 @@ clientReplyContext::storeNotOKTransferDone() const
 
     int sending = SENDING_BODY;
 
-    if (reply->sline.status == HTTP_NO_CONTENT ||
-            reply->sline.status == HTTP_NOT_MODIFIED ||
-            reply->sline.status < HTTP_OK ||
+    if (curReply->sline.status == HTTP_NO_CONTENT ||
+            curReply->sline.status == HTTP_NOT_MODIFIED ||
+            curReply->sline.status < HTTP_OK ||
             http->request->method == METHOD_HEAD)
         sending = SENDING_HDRSONLY;
 
@@ -1040,10 +1040,10 @@ clientReplyContext::storeNotOKTransferDone() const
      * If we are sending a body and we don't have a content-length,
      * then we must wait for the object to become STORE_OK.
      */
-    if (reply->content_length < 0)
+    if (curReply->content_length < 0)
         return 0;
 
-    int64_t expectedLength = reply->content_length + http->out.headers_sz;
+    int64_t expectedLength = curReply->content_length + http->out.headers_sz;
 
     if (http->out.size < expectedLength)
         return 0;
@@ -1277,11 +1277,11 @@ clientReplyContext::buildReplyHeader()
             /* TODO: if maxage or s-maxage is present, don't do this */
 
             if (squid_curtime - http->storeEntry()->timestamp >= 86400) {
-                char tempbuf[512];
-                snprintf (tempbuf, sizeof(tempbuf), "%s %s %s",
+                char tbuf[512];
+                snprintf (tbuf, sizeof(tbuf), "%s %s %s",
                           "113", ThisCache,
                           "This cache hit is still fresh and more than 1 day old");
-                hdr->putStr(HDR_WARNING, tempbuf);
+                hdr->putStr(HDR_WARNING, tbuf);
             }
         }
     }
@@ -1642,7 +1642,7 @@ clientReplyContext::doGetMoreData()
     /* We still have to do store logic processing - vary, cache hit etc */
     if (http->storeEntry() != NULL) {
         /* someone found the object in the cache for us */
-        StoreIOBuffer tempBuffer;
+        StoreIOBuffer localTempBuffer;
 
         http->storeEntry()->lock();
 
@@ -1675,10 +1675,10 @@ clientReplyContext::doGetMoreData()
             comm_set_tos(http->getConn()->fd, Config.zph.tos_local_hit);
         }
 #endif /* USE_ZPH_QOS */
-        tempBuffer.offset = reqofs;
-        tempBuffer.length = getNextNode()->readBuffer.length;
-        tempBuffer.data = getNextNode()->readBuffer.data;
-        storeClientCopy(sc, http->storeEntry(), tempBuffer, CacheHit, this);
+        localTempBuffer.offset = reqofs;
+        localTempBuffer.length = getNextNode()->readBuffer.length;
+        localTempBuffer.data = getNextNode()->readBuffer.data;
+        storeClientCopy(sc, http->storeEntry(), localTempBuffer, CacheHit, this);
     } else {
         /* MISS CASE, http->logType is already set! */
         processMiss();
@@ -1730,17 +1730,17 @@ clientReplyContext::sendStreamError(StoreIOBuffer const &result)
      * client socket!
      */
     debugs(88, 5, "clientReplyContext::sendStreamError: A stream error has occured, marking as complete and sending no data.");
-    StoreIOBuffer tempBuffer;
+    StoreIOBuffer localTempBuffer;
     flags.complete = 1;
-    tempBuffer.flags.error = result.flags.error;
+    localTempBuffer.flags.error = result.flags.error;
     clientStreamCallback((clientStreamNode*)http->client_stream.head->data, http, NULL,
-                         tempBuffer);
+                         localTempBuffer);
 }
 
 void
 clientReplyContext::pushStreamData(StoreIOBuffer const &result, char *source)
 {
-    StoreIOBuffer tempBuffer;
+    StoreIOBuffer localTempBuffer;
 
     if (result.length == 0) {
         debugs(88, 5, "clientReplyContext::pushStreamData: marking request as complete due to 0 length store result");
@@ -1748,14 +1748,14 @@ clientReplyContext::pushStreamData(StoreIOBuffer const &result, char *source)
     }
 
     assert(result.offset - headers_sz == next()->readBuffer.offset);
-    tempBuffer.offset = result.offset - headers_sz;
-    tempBuffer.length = result.length;
+    localTempBuffer.offset = result.offset - headers_sz;
+    localTempBuffer.length = result.length;
 
-    if (tempBuffer.length)
-        tempBuffer.data = source;
+    if (localTempBuffer.length)
+        localTempBuffer.data = source;
 
     clientStreamCallback((clientStreamNode*)http->client_stream.head->data, http, NULL,
-                         tempBuffer);
+                         localTempBuffer);
 }
 
 clientStreamNode *
@@ -1893,7 +1893,7 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
     assert (!flags.headersSent);
     flags.headersSent = true;
 
-    StoreIOBuffer tempBuffer;
+    StoreIOBuffer localTempBuffer;
     char *buf = next()->readBuffer.data;
     char *body_buf = buf + reply->hdr_sz;
 
@@ -1907,20 +1907,20 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
     if (next()->readBuffer.offset != 0) {
         if (next()->readBuffer.offset > body_size) {
             /* Can't use any of the body we received. send nothing */
-            tempBuffer.length = 0;
-            tempBuffer.data = NULL;
+            localTempBuffer.length = 0;
+            localTempBuffer.data = NULL;
         } else {
-            tempBuffer.length = body_size - next()->readBuffer.offset;
-            tempBuffer.data = body_buf + next()->readBuffer.offset;
+            localTempBuffer.length = body_size - next()->readBuffer.offset;
+            localTempBuffer.data = body_buf + next()->readBuffer.offset;
         }
     } else {
-        tempBuffer.length = body_size;
-        tempBuffer.data = body_buf;
+        localTempBuffer.length = body_size;
+        localTempBuffer.data = body_buf;
     }
 
     /* TODO??: move the data in the buffer back by the request header size */
     clientStreamCallback((clientStreamNode *)http->client_stream.head->data,
-                         http, reply, tempBuffer);
+                         http, reply, localTempBuffer);
 
     return;
 }
@@ -2031,7 +2031,7 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
 /* Using this breaks the client layering just a little!
  */
 void
-clientReplyContext::createStoreEntry(const HttpRequestMethod& m, request_flags flags)
+clientReplyContext::createStoreEntry(const HttpRequestMethod& m, request_flags reqFlags)
 {
     assert(http != NULL);
     /*
@@ -2042,7 +2042,7 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, request_flags f
     if (http->request == NULL)
         http->request = HTTPMSGLOCK(new HttpRequest(m, PROTO_NONE, null_string));
 
-    StoreEntry *e = storeCreateEntry(http->uri, http->log_uri, flags, m);
+    StoreEntry *e = storeCreateEntry(http->uri, http->log_uri, reqFlags, m);
 
     sc = storeClientListAdd(e, this);
 
@@ -2065,7 +2065,7 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, request_flags f
     //    storeClientCopy(http->sc, e, 0, HTTP_REQBUF_SZ, http->reqbuf,
     //        SendMoreData, this);
     /* So, we mark the store logic as complete */
-    this->flags.storelogiccomplete = 1;
+    flags.storelogiccomplete = 1;
 
     /* and get the caller to request a read, from whereever they are */
     /* NOTE: after ANY data flows down the pipe, even one step,

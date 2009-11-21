@@ -554,7 +554,7 @@ ErrorState::Dump(MemBuf * mb)
     str.Printf("HTTP Request:\r\n");
 
     if (NULL != request) {
-        Packer p;
+        Packer pck;
         String urlpath_or_slash;
 
         if (request->urlpath.size() != 0)
@@ -566,9 +566,9 @@ ErrorState::Dump(MemBuf * mb)
                    RequestMethodStr(request->method),
                    SQUIDSTRINGPRINT(urlpath_or_slash),
                    request->http_ver.major, request->http_ver.minor);
-        packerToMemInit(&p, &str);
-        request->header.packInto(&p);
-        packerClean(&p);
+        packerToMemInit(&pck, &str);
+        request->header.packInto(&pck);
+        packerClean(&pck);
     } else if (request_hdrs) {
         p = request_hdrs;
     } else {
@@ -738,7 +738,7 @@ ErrorState::Convert(char token)
     case 'R':
 
         if (NULL != request) {
-            Packer p;
+            Packer pck;
             String urlpath_or_slash;
 
             if (request->urlpath.size() != 0)
@@ -750,9 +750,9 @@ ErrorState::Convert(char token)
                       RequestMethodStr(request->method),
                       SQUIDSTRINGPRINT(urlpath_or_slash),
                       request->http_ver.major, request->http_ver.minor);
-            packerToMemInit(&p, &mb);
-            request->header.packInto(&p);
-            packerClean(&p);
+            packerToMemInit(&pck, &mb);
+            request->header.packInto(&pck);
+            packerClean(&pck);
         } else if (request_hdrs) {
             p = request_hdrs;
         } else {

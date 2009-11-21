@@ -592,7 +592,7 @@ public:
 
 private:
     bool validChar (char c);
-    void eval (ESIVarState::Variable *var, char const *subref, char const *found_default );
+    void eval (ESIVarState::Variable *var, char const *subref, char const *foundDefault );
     void doFunction();
     void identifyFunction();
     char *string;
@@ -611,14 +611,14 @@ private:
 };
 
 void
-ESIVariableProcessor::eval (ESIVarState::Variable *var, char const *subref, char const *found_default )
+ESIVariableProcessor::eval (ESIVarState::Variable *var, char const *subref, char const *foundDefault )
 {
     assert (var);
 
-    if (!found_default)
-        found_default = "";
+    if (!foundDefault)
+        foundDefault = "";
 
-    var->eval (*varState, subref, found_default);
+    var->eval (*varState, subref, foundDefault);
 }
 
 bool

@@ -981,14 +981,14 @@ ClientSocketContext::packRange(StoreIOBuffer const &source, MemBuf * mb)
             return;
         }
 
-        int64_t next = getNextRangeOffset();
+        int64_t nextOffset = getNextRangeOffset();
 
-        assert (next >= http->out.offset);
+        assert (nextOffset >= http->out.offset);
 
-        int64_t skip = next - http->out.offset;
+        int64_t skip = nextOffset - http->out.offset;
 
         /* adjust for not to be transmitted bytes */
-        http->out.offset = next;
+        http->out.offset = nextOffset;
 
         if (available.size() <= skip)
             return;
@@ -1668,23 +1668,23 @@ ClientSocketContext::initiateClose(const char *reason)
 }
 
 void
-ClientSocketContext::writeComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag)
+ClientSocketContext::writeComplete(int aFileDescriptor, char *bufnotused, size_t size, comm_err_t errflag)
 {
     StoreEntry *entry = http->storeEntry();
     http->out.size += size;
-    assert(fd > -1);
-    debugs(33, 5, "clientWriteComplete: FD " << fd << ", sz " << size <<
+    assert(aFileDescriptor > -1);
+    debugs(33, 5, "clientWriteComplete: FD " << aFileDescriptor << ", sz " << size <<
            ", err " << errflag << ", off " << http->out.size << ", len " <<
            entry ? entry->objectLen() : 0);
     clientUpdateSocketStats(http->logType, size);
-    assert (this->fd() == fd);
+    assert (this->fd() == aFileDescriptor);
 
     /* Bail out quickly on COMM_ERR_CLOSING - close handlers will tidy up */
 
     if (errflag == COMM_ERR_CLOSING)
         return;
 
-    if (errflag || clientHttpRequestStatus(fd, http)) {
+    if (errflag || clientHttpRequestStatus(aFileDescriptor, http)) {
         initiateClose("failure or true request status");
         /* Do we leak here ? */
         return;
@@ -1697,7 +1697,7 @@ ClientSocketContext::writeComplete(int fd, char *bufnotused, size_t size, comm_e
         break;
 
     case STREAM_COMPLETE:
-        debugs(33, 5, "clientWriteComplete: FD " << fd << " Keeping Alive");
+        debugs(33, 5, "clientWriteComplete: FD " << aFileDescriptor << " Keeping Alive");
         keepaliveNextRequest();
         return;
 
@@ -3732,7 +3732,7 @@ ConnStateData::clientPinnedConnectionClosed(const CommCloseCbParams &io)
      * connection has gone away */
 }
 
-void ConnStateData::pinConnection(int pinning_fd, HttpRequest *request, struct peer *peer, bool auth)
+void ConnStateData::pinConnection(int pinning_fd, HttpRequest *request, struct peer *aPeer, bool auth)
 {
     fde *f;
     char desc[FD_DESC_SZ];
@@ -3751,12 +3751,12 @@ void ConnStateData::pinConnection(int pinning_fd, HttpRequest *request, struct p
     pinning.pinned = true;
     if (pinning.peer)
         cbdataReferenceDone(pinning.peer);
-    if (peer)
-        pinning.peer = cbdataReference(peer);
+    if (aPeer)
+        pinning.peer = cbdataReference(aPeer);
     pinning.auth = auth;
     f = &fd_table[fd];
     snprintf(desc, FD_DESC_SZ, "%s pinned connection for %s:%d (%d)",
-             (auth || !peer) ? request->GetHost() : peer->name, f->ipaddr, (int) f->remote_port, fd);
+             (auth || !aPeer) ? request->GetHost() : aPeer->name, f->ipaddr, (int) f->remote_port, fd);
     fd_note(pinning_fd, desc);
 
     typedef CommCbMemFunT<ConnStateData, CommCloseCbParams> Dialer;
@@ -3766,7 +3766,7 @@ void ConnStateData::pinConnection(int pinning_fd, HttpRequest *request, struct p
 
 }
 
-int ConnStateData::validatePinnedConnection(HttpRequest *request, const struct peer *peer)
+int ConnStateData::validatePinnedConnection(HttpRequest *request, const struct peer *aPeer)
 {
     bool valid = true;
     if (pinning.fd < 0)
@@ -3781,7 +3781,7 @@ int ConnStateData::validatePinnedConnection(HttpRequest *request, const struct p
     if (pinning.peer && !cbdataReferenceValid(pinning.peer)) {
         valid = false;
     }
-    if (peer != pinning.peer) {
+    if (aPeer != pinning.peer) {
         valid = false;
     }
 

@@ -119,12 +119,12 @@ tmSaneValues(struct tm *tm)
 
 static struct tm *
 parse_date_elements(const char *day, const char *month, const char *year,
-                    const char *time, const char *zone) {
+                    const char *aTime, const char *zone) {
     static struct tm tm;
     char *t;
     memset(&tm, 0, sizeof(tm));
 
-    if (!day || !month || !year || !time)
+    if (!day || !month || !year || !aTime)
         return NULL;
     tm.tm_mday = atoi(day);
     tm.tm_mon = make_month(month);
@@ -137,8 +137,8 @@ parse_date_elements(const char *day, const char *month, const char *year,
         tm.tm_year += 100;
     else if (tm.tm_year > 19000)
         tm.tm_year -= 19000;
-    tm.tm_hour = make_num(time);
-    t = strchr(time, ':');
+    tm.tm_hour = make_num(aTime);
+    t = strchr(aTime, ':');
     if (!t)
         return NULL;
     t++;
@@ -158,7 +158,7 @@ parse_date(const char *str) {
     char *day = NULL;
     char *month = NULL;
     char *year = NULL;
-    char *time = NULL;
+    char *timestr = NULL;
     char *zone = NULL;
 
     xstrncpy(tmp, str, 64);
@@ -178,7 +178,7 @@ parse_date(const char *str) {
                     year = t;
                 }
             } else if (strchr(t, ':'))
-                time = t;
+                timestr = t;
             else if (!year)
                 year = t;
         } else if (!wday)
@@ -188,7 +188,7 @@ parse_date(const char *str) {
         else if (!zone)
             zone = t;
     }
-    tm = parse_date_elements(day, month, year, time, zone);
+    tm = parse_date_elements(day, month, year, timestr, zone);
 
     return tm;
 }
