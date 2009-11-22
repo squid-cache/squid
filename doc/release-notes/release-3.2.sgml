@@ -309,6 +309,9 @@ This section gives a thorough account of those changes in three categories:
 	network   Only objects fetched from network is kept in memory
 	</verb>
 
+	<tag>logfile_daemon</tag>
+	<p>Ported from 2.7
+
 </descrip>
 
 <sect1>Changes to existing tags<label id="modifiedtags">
@@ -419,6 +422,9 @@ This section gives an account of those changes in three categories:
 
 	<tag>redirector_bypass</tag>
 	<p>Replaced by <em>url_rewrite_bypass</em>
+
+	<tag>upgrade_http0.9</tag>
+	<p>Obsolete.
 
 	<tag>zph_local</tag>
 	<p>Replaced by <em>qos_flows local-hit=</em>
@@ -583,9 +589,6 @@ This section gives an account of those changes in three categories:
 	<tag>location_rewrite_program</tag>
 	<p>Not yet ported from 2.6
 
-	<tag>logfile_daemon</tag>
-	<p>Not yet ported from 2.7
-
 	<tag>logformat</tag>
 	<p><em>%oa</em> tag not yet ported from 2.7
 
@@ -620,9 +623,6 @@ This section gives an account of those changes in three categories:
 	<p>Not yet ported from 2.7
 	
 	<tag>update_headers</tag>
-	<p>Not yet ported from 2.7
-
-	<tag>upgrade_http0.9</tag>
 	<p>Not yet ported from 2.7
 
 	<tag>zero_buffers</tag>

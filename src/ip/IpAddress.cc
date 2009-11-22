@@ -35,6 +35,7 @@
  */
 
 #include "config.h"
+#include "Debug.h"
 #include "ip/IpAddress.h"
 #include "util.h"
 
@@ -54,15 +55,6 @@
 
 #ifdef INET6
 #error "INET6 defined but has been deprecated! Try running bootstrap and configure again."
-#endif
-
-/* We want to use the debug routines when running as module of squid. */
-/* otherwise fallback to printf if those are not available. */
-#ifndef SQUID_DEBUG
-#    define debugs(a,b,c)        //  drop.
-#else
-#warning "IpAddress built with Debugs!!"
-#    include "../src/Debug.h"
 #endif
 
 #if !USE_IPV6
