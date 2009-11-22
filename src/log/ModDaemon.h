@@ -1,9 +1,6 @@
 /*
- * $Id$
- *
- * DEBUG: section 40    Referer Logging
- * AUTHOR: Joe Ramey <ramey@csc.ti.com> (useragent)
- *         Jens-S. Vöckler <voeckler@rvs.uni-hannover.de> (mod 4 referer)
+ * DEBUG: section 50    Log file handling
+ * AUTHOR: Adrian Chadd <adrian@squid-cache.org>
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -21,83 +18,24 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *
+ *  
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *
+ *  
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+#ifndef _SQUID_SRC_LOG_MODDAEMON_H
+#define _SQUID_SRC_LOG_MODDAEMON_H
 
-#include "squid.h"
-#include "log/File.h"
-#include "SquidTime.h"
+#include "config.h"
 
-#if USE_REFERER_LOG
-static Logfile *refererlog = NULL;
-#endif
+class Logfile;
 
-void
-refererOpenLog(void)
-{
-#if USE_REFERER_LOG
-    assert(NULL == refererlog);
+extern int logfile_mod_daemon_open(Logfile * lf, const char *path, size_t bufsz, int fatal_flag);
 
-    if (!Config.Log.referer || (0 == strcmp(Config.Log.referer, "none"))) {
-        debugs(40, 1, "Referer logging is disabled.");
-        return;
-    }
-
-    refererlog = logfileOpen(Config.Log.referer, 0, 1);
-#endif
-}
-
-void
-refererRotateLog(void)
-{
-#if USE_REFERER_LOG
-
-    if (NULL == refererlog)
-        return;
-
-    logfileRotate(refererlog);
-
-#endif
-}
-
-void
-logReferer(const char *client, const char *referer, const char *uri)
-{
-#if USE_REFERER_LOG
-
-    if (NULL == refererlog)
-        return;
-
-    logfilePrintf(refererlog, "%9d.%03d %s %s %s\n",
-                  (int) current_time.tv_sec,
-                  (int) current_time.tv_usec / 1000,
-                  client,
-                  referer,
-                  uri ? uri : "-");
-
-#endif
-}
-
-void
-refererCloseLog(void)
-{
-#if USE_REFERER_LOG
-
-    if (NULL == refererlog)
-        return;
-
-    logfileClose(refererlog);
-
-    refererlog = NULL;
-
-#endif
-}
+#endif /* _SQUID_SRC_LOG_MODDAEMON_H */

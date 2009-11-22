@@ -1894,6 +1894,47 @@ if test -n "$DIGEST_AUTH_HELPERS"; then
 fi
 AC_SUBST(DIGEST_AUTH_HELPERS)
 
+dnl Select logging daemon helpers to build
+LOG_DAEMON_HELPERS="all"
+AC_ARG_ENABLE(log-daemon-helpers,
+  AS_HELP_STRING([--enable-log-daemon-auth-helpers="list of helpers"],[This option selects which logging daemon
+                  helpers to build and install as part of the normal build process. For a list of available
+                  helpers see the helpers/log_daemon directory.]),
+[ case "$enableval" in
+  yes)
+	LOG_DAEMON_HELPERS="all"
+	;;
+  no)
+	LOG_DAEMON_HELPERS=""
+	;;
+  *)
+	LOG_DAEMON_HELPERS="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
+	;;
+  esac
+])
+if test "$LOG_DAEMON_HELPERS" = "all" ; then
+	LOG_DAEMON_HELPERS=""
+	for dir in $srcdir/helpers/log_daemon/*; do
+	    helper="`basename $dir`"
+	    if test -f $dir/config.test && sh $dir/config.test "$@"; then
+		LOG_DAEMON_HELPERS="$LOG_DAEMON_HELPERS $helper"
+            elif test -d $srcdir/helpers/log_daemon/$helper ; then
+                AC_MSG_NOTICE([Log daemon auth helper $helper ... found but cannot be built])
+	    fi
+	done
+fi
+if test -n "$LOG_DAEMON_HELPERS"; then
+    for helper in $LOG_DAEMON_HELPERS; do
+	if test -d $srcdir/helpers/log_daemon/$helper; then
+		:
+	else
+	    AC_MSG_ERROR(Log daemon helper $helper does not exist)
+	fi
+    done
+    AC_MSG_NOTICE([Log daemon helpers built: $LOG_DAEMON_HELPERS])
+fi
+AC_SUBST(LOG_DAEMON_HELPERS)
+
 dnl
 dnl Check Kerberos/GSSAPI/SPNEGO
 dnl
@@ -4240,6 +4281,7 @@ AC_CONFIG_FILES([\
 	src/icmp/Makefile \
 	src/ident/Makefile \
 	src/ip/Makefile \
+	src/log/Makefile \
 	contrib/Makefile \
 	snmplib/Makefile \
 	icons/Makefile \
@@ -4283,6 +4325,8 @@ AC_CONFIG_FILES([\
 	helpers/external_acl/wbinfo_group/Makefile \
 	helpers/external_acl/mswin_ad_group/Makefile \
 	helpers/external_acl/mswin_lm_group/Makefile \
+	helpers/log_daemon/Makefile \
+	helpers/log_daemon/file/Makefile \
 	helpers/url_rewrite/Makefile \
 	helpers/url_rewrite/fake/Makefile \
 	tools/Makefile
