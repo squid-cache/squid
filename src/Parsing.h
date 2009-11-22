@@ -60,4 +60,12 @@ extern u_short GetShort(void);
 extern bool StringToInt(const char *str, int &result, const char **p, int base);
 extern bool StringToInt64(const char *str, int64_t &result, const char **p, int base);
 
+/**
+ * Parse a socket address (host:port), fill the given IpAddress object
+ * \retval false     Failure.
+ * \retval true      Success.
+ * Destroys token during parse.
+ */
+extern bool GetHostWithPort(char *token, IpAddress *ipa);
+
 #endif /* SQUID_PARSING_H */

@@ -205,10 +205,10 @@ using namespace Squid;
 #define SQUIDHOSTNAMELEN 256
 #endif
 
-#define SQUID_MAXPATHLEN 256
 #ifndef MAXPATHLEN
 #define MAXPATHLEN SQUID_MAXPATHLEN
 #endif
+
 
 #if !HAVE_STRUCT_RUSAGE
 /*

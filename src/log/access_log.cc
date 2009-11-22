@@ -48,6 +48,7 @@
 #include "hier_code.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
+#include "log/File.h"
 #include "MemBuf.h"
 #include "rfc1738.h"
 #include "SquidTime.h"
@@ -1889,56 +1890,51 @@ accessLogLogTo(customlog* log, AccessLogEntry * al, ACLChecklist * checklist)
         if (checklist && log->aclList && !checklist->matchAclListFast(log->aclList))
             continue;
 
-        switch (log->type) {
+        if (log->logfile) {
+            logfileLineStart(log->logfile);
 
-        case CLF_AUTO:
+            switch (log->type) {
 
-            if (Config.onoff.common_log)
-                accessLogCommon(al, log->logfile);
-            else
+            case CLF_AUTO:
+                if (Config.onoff.common_log)
+                    accessLogCommon(al, log->logfile);
+                else
+                    accessLogSquid(al, log->logfile);
+                break;
+
+            case CLF_SQUID:
                 accessLogSquid(al, log->logfile);
+                break;
 
-            break;
+            case CLF_COMMON:
+                accessLogCommon(al, log->logfile);
+                break;
 
-        case CLF_SQUID:
-            accessLogSquid(al, log->logfile);
-
-            break;
-
-        case CLF_COMMON:
-            accessLogCommon(al, log->logfile);
-
-            break;
-
-        case CLF_CUSTOM:
-            accessLogCustom(al, log);
-
-            break;
+            case CLF_CUSTOM:
+                accessLogCustom(al, log);
+                break;
 
 #if ICAP_CLIENT
-        case CLF_ICAP_SQUID:
-            accessLogICAPSquid(al, log->logfile);
-
-            break;
+            case CLF_ICAP_SQUID:
+                accessLogICAPSquid(al, log->logfile);
+                break;
 #endif
 
-        case CLF_NONE:
-            goto last;
+            case CLF_NONE:
+                return; // abort!
 
-        default:
-            fatalf("Unknown log format %d\n", log->type);
+            default:
+                fatalf("Unknown log format %d\n", log->type);
+                break;
+            }
 
-            break;
+            logfileLineEnd(log->logfile);
         }
 
-        logfileFlush(log->logfile);
-
+        // NP:  WTF?  if _any_ log line has no checklist ignore the following ones?
         if (!checklist)
             break;
     }
-
-last:
-    (void)0; /* NULL statement for label */
 }
 
 void
@@ -2075,7 +2071,7 @@ accessLogInit(void)
         if (log->type == CLF_NONE)
             continue;
 
-        log->logfile = logfileOpen(log->filename, MAX_URL << 1, 1);
+        log->logfile = logfileOpen(log->filename, MAX_URL << 2, 1);
 
         LogfileStatus = LOG_ENABLE;
 
@@ -2352,16 +2348,10 @@ headersLog(int cs, int pq, const HttpRequestMethod& method, void *data)
         S = (unsigned short) HTTP_STATUS_NONE;
 
     logfileWrite(headerslog, &magic, sizeof(magic));
-
     logfileWrite(headerslog, &M, sizeof(M));
-
     logfileWrite(headerslog, &S, sizeof(S));
-
     logfileWrite(headerslog, hmask, sizeof(HttpHeaderMask));
-
     logfileWrite(headerslog, &ccmask, sizeof(int));
-
-    logfileFlush(headerslog);
 }
 
 #endif
