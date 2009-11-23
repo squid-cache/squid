@@ -1,11 +1,11 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
 <HEAD>
- <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.65">
- <TITLE>Squid 3.1.0.13 release notes</TITLE>
+ <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.66">
+ <TITLE>Squid 3.1.0.15 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.1.0.13 release notes</H1>
+<H1>Squid 3.1.0.15 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -33,6 +33,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <LI><A NAME="toc2.7">2.7</A> <A HREF="#ss2.7">SSL Bump (for HTTPS Filtering and Adaptation)</A>
 <LI><A NAME="toc2.8">2.8</A> <A HREF="#ss2.8">eCAP Adaptation Module support</A>
 <LI><A NAME="toc2.9">2.9</A> <A HREF="#ss2.9">ICAP Bypass and Retry enhancements</A>
+<LI><A NAME="toc2.10">2.10</A> <A HREF="#ss2.10">ICY streaming protocol support</A>
 </UL>
 <P>
 <H2><A NAME="toc3">3.</A> <A HREF="#s3">Windows support</A></H2>
@@ -81,7 +82,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.1.0.13 for testing.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.1.0.15 for testing.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.1/">http://www.squid-cache.org/Versions/v3/3.1/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -117,6 +118,7 @@ While this release is not deemed ready for production use, we believe it is read
 <LI>SSL Bump (for HTTPS Filtering and Adaptation)</LI>
 <LI>eCAP Adaptation Module support</LI>
 <LI>ICAP Bypass and Retry enhancements</LI>
+<LI>ICY streaming protocol support</LI>
 </UL>
 </P>
 <P>Most user-facing changes are reflected in squid.conf (see below).</P>
@@ -218,14 +220,10 @@ software which hard coded the MIB paths needs to be upgraded for this Squid rele
 to the IPv4 or IPv6 network that address belongs to. They are not permitted over the
 IPv4-IPv6 boundary. Some ACL voodoo can however be applied to explicitly route the
 IPv6/IPv4 bound traffic (DIRECT access) out an appropriate interface.
-<PRE>
-    acl toIP6 dst ipv6
-    tcp_outgoing_address 2001::1 toIP6
-    tcp_outgoing_address 10.0.0.1 !toIP6
-</PRE>
-</P>
+See the squid.conf documentation for further details.</P>
 
-<P>WCCP is not available (neither version 1 or 2). It remains built into squid for use with IPv4 traffic but IPv6 cannot use it.</P>
+<P>WCCP is not available (neither version 1 or 2).
+It remains built into squid for use with IPv4 traffic but IPv6 cannot use it.</P>
 
 <P>Transparent Interception is done via NAT at the OS level and is not available in IPv6.
 Squid will ensure that any port set with transparent, intercept, or tproxy options be an IPv4-only
@@ -405,6 +403,26 @@ including themselves in the dynamic adaptation chain they request. When the
 limit is exceeded, the master transaction fails. The default limit of 16
 should be large enough to not require an explicit configuration in most
 environments yet may be small enough to limit side-effects of loops.</P>
+
+<H2><A NAME="ss2.10">2.10</A> <A HREF="#toc2.10">ICY streaming protocol support</A>
+</H2>
+
+<P>Squid-3.1 adds native support for streaming protocol ICY.</P>
+
+<P>This protocol uses port 80 and violates RFC 2616 by using an HTTP/1.1 compliant request and non-HTTP reply
+to start the stream transaction. If the reply is handled according to HTTP/1.1 RFC-compliance requirements
+the audio stream becomes jerky and contains regular 'popping' sounds.</P>
+
+<P>Squid now processes the ICY replies natively according to the ICY requirements, not HTTP/1.1 requirements.
+The streamed data is not cacheable. All processing and access controls may be applied the same as for HTTP.</P>
+
+<H3>squid.conf change</H3>
+
+<P>Squid-2 contained a hack using the <EM>update_http0.9</EM> squid.conf option to work around the
+unusual replies. This option is now obsolete.</P>
+
+<P>The proto ACL type matches <EM>ICY</EM> once the reply has been received, before that the processing
+is only aware on an HTTP request. So the ACL will match <EM>HTTP</EM>.</P>
 
 
 <H2><A NAME="s3">3.</A> <A HREF="#toc3">Windows support</A></H2>
@@ -1276,7 +1294,8 @@ DEFAULT: None bypassed.
 <P>
 <DL>
 <DT><B>acl</B><DD>
-<P>New preset content <EM>ipv6</EM> available as a preset type in the src and dst ACL matching all of the public IPv6 network space.</P>
+<P>New preset <EM>ipv6</EM> available in the src and dst ACL matching all of the public IPv6 network space.</P>
+<P>New preset <EM>ipv4</EM> available in the src and dst ACL matching all of IPv4 network space.</P>
 <P>New acl type myportname, matching the name of the http_port or https_port where the request was accepted.</P>
 <P>New acl type tag, matching the tag= returned from the external_acl_type helper.</P>
 <P>New acl type peername, matching against a named cache_peer entry where the request will be attempted first.
@@ -1284,6 +1303,8 @@ NP: peername currently is limited to only match the first peer possible.
 <PRE>
         acl aclname dst ipv6                    # request for IPv6-enabled site
         acl aclname src ipv6                    # request from IPv6 address
+        acl aclname dst ipv4                    # request for IPv4 site
+        acl aclname src ipv4                    # request from IPv4 address
         acl aclname myportname 3128 ...         # http(s)_port name
         acl aclname peername myPeer ...         # cache_peer ... name=myPeer
         acl aclname tag value ...               # tag= option from external ACL
@@ -1725,6 +1746,13 @@ and build with IPv6 when possible.</P>
 <DT><B>--disable-loadable-modules</B><DD>
 <P>Build without support for loadable modules.</P>
 
+<DT><B>--disable-strict-error-checking</B><DD>
+<P>Build Squid without advanced compiler error checking.
+This only affects the building process, enabling it to complete despite some
+possibly serious issues.
+Please do not use lightly, and please report the build issues which make it needed
+to the squid developers before doing so.</P>
+
 <DT><B>--disable-translation</B><DD>
 <P>Prevent Squid generating localized error page templates and manuals.
 Which is usually tried, but may not be needed.</P>
@@ -1852,6 +1880,9 @@ Use --without-pthreads to disable, but only if you really have to.</P>
 
 <DT><B>redirector_bypass</B><DD>
 <P>Replaced by <EM>url_rewrite_bypass</EM></P>
+
+<DT><B>upgrade_http0.9</B><DD>
+<P>Obsolete. ICY protocol streaming support added natively.</P>
 
 <DT><B>zph_local</B><DD>
 <P>Replaced by <EM>qos_flows local-hit=</EM></P>
@@ -2063,9 +2094,6 @@ Use --without-pthreads to disable, but only if you really have to.</P>
 <P>Not yet ported from 2.7</P>
 
 <DT><B>update_headers</B><DD>
-<P>Not yet ported from 2.7</P>
-
-<DT><B>upgrade_http0.9</B><DD>
 <P>Not yet ported from 2.7</P>
 
 <DT><B>zero_buffers</B><DD>

@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.1.0.13 release notes</title>
+<title>Squid 3.1.0.15 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.1.0.13 for testing.
+The Squid Team are pleased to announce the release of Squid-3.1.0.15 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.1/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -46,6 +46,7 @@ The most important of these new features are:
 	<item>SSL Bump (for HTTPS Filtering and Adaptation)
 	<item>eCAP Adaptation Module support
 	<item>ICAP Bypass and Retry enhancements
+	<item>ICY streaming protocol support
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -142,13 +143,10 @@ config options provided on a clean install.
  to the IPv4 or IPv6 network that address belongs to. They are not permitted over the
  IPv4-IPv6 boundary. Some ACL voodoo can however be applied to explicitly route the
  IPv6/IPv4 bound traffic (DIRECT access) out an appropriate interface.
-<verb>
-    acl toIP6 dst ipv6
-    tcp_outgoing_address 2001::1 toIP6
-    tcp_outgoing_address 10.0.0.1 !toIP6
-</verb>
+ See the squid.conf documentation for further details.
 
-<p>WCCP is not available (neither version 1 or 2). It remains built into squid for use with IPv4 traffic but IPv6 cannot use it.
+<p>WCCP is not available (neither version 1 or 2).
+   It remains built into squid for use with IPv4 traffic but IPv6 cannot use it.
 
 <p>Transparent Interception is done via NAT at the OS level and is not available in IPv6.
    Squid will ensure that any port set with transparent, intercept, or tproxy options be an IPv4-only
@@ -310,6 +308,23 @@ While decrypted, the traffic can be inspected using ICAP.
   limit is exceeded, the master transaction fails. The default limit of 16
   should be large enough to not require an explicit configuration in most
   environments yet may be small enough to limit side-effects of loops.
+
+<sect1>ICY streaming protocol support
+<p>Squid-3.1 adds native support for streaming protocol ICY.
+
+<p>This protocol uses port 80 and violates RFC 2616 by using an HTTP/1.1 compliant request and non-HTTP reply
+  to start the stream transaction. If the reply is handled according to HTTP/1.1 RFC-compliance requirements
+  the audio stream becomes jerky and contains regular 'popping' sounds.
+
+<p>Squid now processes the ICY replies natively according to the ICY requirements, not HTTP/1.1 requirements.
+  The streamed data is not cacheable. All processing and access controls may be applied the same as for HTTP.
+
+<sect2>squid.conf change
+<p>Squid-2 contained a hack using the <em>update_http0.9</em> squid.conf option to work around the
+  unusual replies. This option is now obsolete.
+
+<p>The proto ACL type matches <em>ICY</em> once the reply has been received, before that the processing
+  is only aware on an HTTP request. So the ACL will match <em>HTTP</em>.
 
 
 <sect>Windows support
@@ -1062,7 +1077,8 @@ NOCOMMENT_START
 <p>
 <descrip>
 	<tag>acl</tag>
-	<p>New preset content <em>ipv6</em> available as a preset type in the src and dst ACL matching all of the public IPv6 network space.
+	<p>New preset <em>ipv6</em> available in the src and dst ACL matching all of the public IPv6 network space.
+	<p>New preset <em>ipv4</em> available in the src and dst ACL matching all of IPv4 network space.
 	<p>New acl type myportname, matching the name of the http_port or https_port where the request was accepted.
 	<p>New acl type tag, matching the tag= returned from the external_acl_type helper.
 	<p>New acl type peername, matching against a named cache_peer entry where the request will be attempted first.
@@ -1070,6 +1086,8 @@ NOCOMMENT_START
         <verb>
 	acl aclname dst ipv6			# request for IPv6-enabled site
 	acl aclname src ipv6			# request from IPv6 address
+	acl aclname dst ipv4			# request for IPv4 site
+	acl aclname src ipv4			# request from IPv4 address
         acl aclname myportname 3128 ...         # http(s)_port name
 	acl aclname peername myPeer ...		# cache_peer ... name=myPeer
 	acl aclname tag value ...		# tag= option from external ACL
@@ -1476,6 +1494,13 @@ This section gives an account of those changes in three categories:
 	<tag>--disable-loadable-modules</tag>
 	<p>Build without support for loadable modules.
 
+	<tag>--disable-strict-error-checking</tag>
+	<p>Build Squid without advanced compiler error checking.
+	   This only affects the building process, enabling it to complete despite some
+	   possibly serious issues.
+	   Please do not use lightly, and please report the build issues which make it needed
+	   to the squid developers before doing so.
+
 	<tag>--disable-translation</tag>
         <p>Prevent Squid generating localized error page templates and manuals.
            Which is usually tried, but may not be needed.
@@ -1598,7 +1623,7 @@ This section gives an account of those changes in three categories:
 	<p>Replaced by <em>url_rewrite_bypass</em>
 
 	<tag>upgrade_http0.9</tag>
-	<p>ICY protocol streaming support added natively.
+	<p>Obsolete. ICY protocol streaming support added natively.
 
 	<tag>zph_local</tag>
 	<p>Replaced by <em>qos_flows local-hit=</em>
