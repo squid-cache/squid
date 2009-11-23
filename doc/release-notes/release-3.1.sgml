@@ -143,13 +143,10 @@ config options provided on a clean install.
  to the IPv4 or IPv6 network that address belongs to. They are not permitted over the
  IPv4-IPv6 boundary. Some ACL voodoo can however be applied to explicitly route the
  IPv6/IPv4 bound traffic (DIRECT access) out an appropriate interface.
-<verb>
-    acl toIP6 dst ipv6
-    tcp_outgoing_address 2001::1 toIP6
-    tcp_outgoing_address 10.0.0.1 !toIP6
-</verb>
+ See the squid.conf documentation for further details.
 
-<p>WCCP is not available (neither version 1 or 2). It remains built into squid for use with IPv4 traffic but IPv6 cannot use it.
+<p>WCCP is not available (neither version 1 or 2).
+   It remains built into squid for use with IPv4 traffic but IPv6 cannot use it.
 
 <p>Transparent Interception is done via NAT at the OS level and is not available in IPv6.
    Squid will ensure that any port set with transparent, intercept, or tproxy options be an IPv4-only
@@ -1080,7 +1077,8 @@ NOCOMMENT_START
 <p>
 <descrip>
 	<tag>acl</tag>
-	<p>New preset content <em>ipv6</em> available as a preset type in the src and dst ACL matching all of the public IPv6 network space.
+	<p>New preset <em>ipv6</em> available in the src and dst ACL matching all of the public IPv6 network space.
+	<p>New preset <em>ipv4</em> available in the src and dst ACL matching all of IPv4 network space.
 	<p>New acl type myportname, matching the name of the http_port or https_port where the request was accepted.
 	<p>New acl type tag, matching the tag= returned from the external_acl_type helper.
 	<p>New acl type peername, matching against a named cache_peer entry where the request will be attempted first.
@@ -1088,6 +1086,8 @@ NOCOMMENT_START
         <verb>
 	acl aclname dst ipv6			# request for IPv6-enabled site
 	acl aclname src ipv6			# request from IPv6 address
+	acl aclname dst ipv4			# request for IPv4 site
+	acl aclname src ipv4			# request from IPv4 address
         acl aclname myportname 3128 ...         # http(s)_port name
 	acl aclname peername myPeer ...		# cache_peer ... name=myPeer
 	acl aclname tag value ...		# tag= option from external ACL
