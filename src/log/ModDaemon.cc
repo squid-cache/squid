@@ -18,12 +18,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -42,7 +42,7 @@
 #define	LOGFILE_MAXBUFS		128
 
 /* Size of the logfile buffer */
-/* 
+/*
  * For optimal performance this should match LOGFILE_BUFSIZ in logfile-daemon.c
  */
 #define	LOGFILE_BUFSZ		32768
@@ -122,38 +122,38 @@ logfileHandleWrite(int fd, void *data)
     ret = FD_WRITE_METHOD(ll->wfd, b->buf + b->written_len, b->len - b->written_len);
     debugs(50, 3, "logfileHandleWrite: " << lf->path << ": write returned " << ret);
     if (ret < 0) {
-	if (ignoreErrno(errno)) {
-	    /* something temporary */
-	    goto reschedule;
-	}
-	debugs(50, DBG_IMPORTANT,"logfileHandleWrite: " << lf->path << ": error writing (" << xstrerror() << ")");
-	/* XXX should handle this better */
-	fatal("I don't handle this error well!");
+        if (ignoreErrno(errno)) {
+            /* something temporary */
+            goto reschedule;
+        }
+        debugs(50, DBG_IMPORTANT,"logfileHandleWrite: " << lf->path << ": error writing (" << xstrerror() << ")");
+        /* XXX should handle this better */
+        fatal("I don't handle this error well!");
     }
     if (ret == 0) {
-	/* error? */
-	debugs(50, DBG_IMPORTANT, "logfileHandleWrite: " << lf->path << ": wrote 0 bytes?");
-	/* XXX should handle this better */
-	fatal("I don't handle this error well!");
+        /* error? */
+        debugs(50, DBG_IMPORTANT, "logfileHandleWrite: " << lf->path << ": wrote 0 bytes?");
+        /* XXX should handle this better */
+        fatal("I don't handle this error well!");
     }
     /* ret > 0, so something was written */
     b->written_len += ret;
     assert(b->written_len <= b->len);
     if (b->written_len == b->len) {
-	/* written the whole buffer! */
-	logfileFreeBuffer(lf, b);
-	b = NULL;
+        /* written the whole buffer! */
+        logfileFreeBuffer(lf, b);
+        b = NULL;
     }
     /* Is there more to write? */
     if (ll->bufs.head == NULL) {
-	goto finish;
+        goto finish;
     }
     /* there is, so schedule more */
 
-  reschedule:
+reschedule:
     commSetSelect(ll->wfd, COMM_SELECT_WRITE, logfileHandleWrite, lf, 0);
     ll->flush_pending = 1;
-  finish:
+finish:
     return;
 }
 
@@ -162,13 +162,13 @@ logfileQueueWrite(Logfile * lf)
 {
     l_daemon_t *ll = (l_daemon_t *) lf->data;
     if (ll->flush_pending || ll->bufs.head == NULL) {
-	return;
+        return;
     }
     ll->flush_pending = 1;
     if (ll->bufs.head) {
-	logfile_buffer_t *b = static_cast<logfile_buffer_t*>(ll->bufs.head->data);
-	if (b->len + 2 <= b->size)
-	    logfile_mod_daemon_append(lf, "F\n", 2);
+        logfile_buffer_t *b = static_cast<logfile_buffer_t*>(ll->bufs.head->data);
+        if (b->len + 2 <= b->size)
+            logfile_mod_daemon_append(lf, "F\n", 2);
     }
     /* Ok, schedule a write-event */
     commSetSelect(ll->wfd, COMM_SELECT_WRITE, logfileHandleWrite, lf, 0);
@@ -183,23 +183,23 @@ logfile_mod_daemon_append(Logfile * lf, const char *buf, int len)
 
     /* Is there a buffer? If not, create one */
     if (ll->bufs.head == NULL) {
-	logfileNewBuffer(lf);
+        logfileNewBuffer(lf);
     }
     debugs(50, 3, "logfile_mod_daemon_append: " << lf->path << ": appending " << len << " bytes");
     /* Copy what can be copied */
     while (len > 0) {
-	b = static_cast<logfile_buffer_t*>(ll->bufs.tail->data);
-	debugs(50, 3, "logfile_mod_daemon_append: current buffer has " << b->len << " of " << b->size << " bytes before append");
-	s = min(len, (b->size - b->len));
-	xmemcpy(b->buf + b->len, buf, s);
-	len = len - s;
-	buf = buf + s;
-	b->len = b->len + s;
-	assert(b->len <= LOGFILE_BUFSZ);
-	assert(len >= 0);
-	if (len > 0) {
-	    logfileNewBuffer(lf);
-	}
+        b = static_cast<logfile_buffer_t*>(ll->bufs.tail->data);
+        debugs(50, 3, "logfile_mod_daemon_append: current buffer has " << b->len << " of " << b->size << " bytes before append");
+        s = min(len, (b->size - b->len));
+        xmemcpy(b->buf + b->len, buf, s);
+        len = len - s;
+        buf = buf + s;
+        b->len = b->len + s;
+        assert(b->len <= LOGFILE_BUFSZ);
+        assert(len >= 0);
+        if (len > 0) {
+            logfileNewBuffer(lf);
+        }
     }
 }
 
@@ -243,13 +243,13 @@ logfile_mod_daemon_open(Logfile * lf, const char *path, size_t bufsz, int fatal_
     ll->eol = 1;
     {
         IpAddress localhost;
-	args[0] = "(logfile-daemon)";
-	args[1] = path;
-	args[2] = NULL;
+        args[0] = "(logfile-daemon)";
+        args[1] = path;
+        args[2] = NULL;
         localhost.SetLocalhost();
-	ll->pid = ipcCreate(IPC_STREAM, Log::TheConfig.logfile_daemon, args, "logfile-daemon", localhost, &ll->rfd, &ll->wfd, NULL);
-	if (ll->pid < 0)
-	    fatal("Couldn't start logfile helper");
+        ll->pid = ipcCreate(IPC_STREAM, Log::TheConfig.logfile_daemon, args, "logfile-daemon", localhost, &ll->rfd, &ll->wfd, NULL);
+        if (ll->pid < 0)
+            fatal("Couldn't start logfile helper");
     }
     ll->nbufs = 0;
 
@@ -272,7 +272,7 @@ logfile_mod_daemon_close(Logfile * lf)
     debugs(50, 1, "Logfile Daemon: closing log " << lf->path);
     logfileFlush(lf);
     if (ll->rfd == ll->wfd)
-       comm_close(ll->rfd);
+        comm_close(ll->rfd);
     else {
         comm_close(ll->rfd);
         comm_close(ll->wfd);
@@ -307,11 +307,11 @@ logfile_mod_daemon_writeline(Logfile * lf, const char *buf, size_t len)
     l_daemon_t *ll = static_cast<l_daemon_t *>(lf->data);
     /* Make sure the logfile buffer isn't too large */
     if (ll->nbufs > LOGFILE_MAXBUFS) {
-	if (ll->last_warned < squid_curtime - LOGFILE_WARN_TIME) {
-	    ll->last_warned = squid_curtime;
-	    debugs(50, DBG_IMPORTANT, "Logfile: " << lf->path << ": queue is too large; some log messages have been lost.");
-	}
-	return;
+        if (ll->last_warned < squid_curtime - LOGFILE_WARN_TIME) {
+            ll->last_warned = squid_curtime;
+            debugs(50, DBG_IMPORTANT, "Logfile: " << lf->path << ": queue is too large; some log messages have been lost.");
+        }
+        return;
     }
     /* Append this data to the end buffer; create a new one if needed */
     /* Are we eol? If so, prefix with our logfile command byte */
@@ -339,9 +339,9 @@ logfile_mod_daemon_lineend(Logfile * lf)
     ll->eol = 1;
     /* Kick a write off if the head buffer is -full- */
     if (ll->bufs.head != NULL) {
-	b = static_cast<logfile_buffer_t*>(ll->bufs.head->data);
-	if (b->node.next != NULL || !Config.onoff.buffered_logs)
-	    logfileQueueWrite(lf);
+        b = static_cast<logfile_buffer_t*>(ll->bufs.head->data);
+        if (b->node.next != NULL || !Config.onoff.buffered_logs)
+            logfileQueueWrite(lf);
     }
 }
 
@@ -350,14 +350,14 @@ logfile_mod_daemon_flush(Logfile * lf)
 {
     l_daemon_t *ll = static_cast<l_daemon_t *>(lf->data);
     if (commUnsetNonBlocking(ll->wfd)) {
-	debugs(50, DBG_IMPORTANT, "Logfile Daemon: Couldn't set the pipe blocking for flush! You're now missing some log entries.");
-	return;
+        debugs(50, DBG_IMPORTANT, "Logfile Daemon: Couldn't set the pipe blocking for flush! You're now missing some log entries.");
+        return;
     }
     while (ll->bufs.head != NULL) {
-	logfileHandleWrite(ll->wfd, lf);
+        logfileHandleWrite(ll->wfd, lf);
     }
     if (commSetNonBlocking(ll->wfd)) {
-	fatalf("Logfile Daemon: %s: Couldn't set the pipe non-blocking for flush!\n", lf->path);
-	return;
+        fatalf("Logfile Daemon: %s: Couldn't set the pipe non-blocking for flush!\n", lf->path);
+        return;
     }
 }

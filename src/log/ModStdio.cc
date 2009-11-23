@@ -18,12 +18,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -55,10 +55,10 @@ logfileWriteWrapper(Logfile * lf, const void *buf, size_t len)
     fd_bytes(ll->fd, s, FD_WRITE);
 
     if (s == len)
-	return;
+        return;
 
     if (!lf->flags.fatal)
-	return;
+        return;
 
     fatalf("logfileWrite (stdio): %s: %s\n", lf->path, xstrerror());
 }
@@ -69,17 +69,17 @@ logfile_mod_stdio_writeline(Logfile * lf, const char *buf, size_t len)
     l_stdio_t *ll = (l_stdio_t *) lf->data;
 
     if (0 == ll->bufsz) {
-	/* buffering disabled */
-	logfileWriteWrapper(lf, buf, len);
-	return;
+        /* buffering disabled */
+        logfileWriteWrapper(lf, buf, len);
+        return;
     }
     if (ll->offset > 0 && (ll->offset + len) > ll->bufsz)
-	logfileFlush(lf);
+        logfileFlush(lf);
 
     if (len > ll->bufsz) {
-	/* too big to fit in buffer */
-	logfileWriteWrapper(lf, buf, len);
-	return;
+        /* too big to fit in buffer */
+        logfileWriteWrapper(lf, buf, len);
+        return;
     }
     /* buffer it */
     xmemcpy(ll->buf + ll->offset, buf, len);
@@ -107,7 +107,7 @@ logfile_mod_stdio_flush(Logfile * lf)
 {
     l_stdio_t *ll = (l_stdio_t *) lf->data;
     if (0 == ll->offset)
-	return;
+        return;
     logfileWriteWrapper(lf, ll->buf, (size_t) ll->offset);
     ll->offset = 0;
 }
@@ -129,8 +129,8 @@ logfile_mod_stdio_rotate(Logfile * lf)
 #ifdef S_ISREG
 
     if (stat(lf->path, &sb) == 0)
-	if (S_ISREG(sb.st_mode) == 0)
-	    return;
+        if (S_ISREG(sb.st_mode) == 0)
+            return;
 
 #endif
 
@@ -138,10 +138,10 @@ logfile_mod_stdio_rotate(Logfile * lf)
 
     /* Rotate numbers 0 through N up one */
     for (i = Config.Log.rotateNumber; i > 1;) {
-	i--;
-	snprintf(from, MAXPATHLEN, "%s.%d", lf->path, i - 1);
-	snprintf(to, MAXPATHLEN, "%s.%d", lf->path, i);
-	xrename(from, to);
+        i--;
+        snprintf(from, MAXPATHLEN, "%s.%d", lf->path, i - 1);
+        snprintf(to, MAXPATHLEN, "%s.%d", lf->path, i);
+        xrename(from, to);
     }
 
     /* Rotate the current log to .0 */
@@ -150,15 +150,15 @@ logfile_mod_stdio_rotate(Logfile * lf)
     file_close(ll->fd);		/* always close */
 
     if (Config.Log.rotateNumber > 0) {
-	snprintf(to, MAXPATHLEN, "%s.%d", lf->path, 0);
-	xrename(lf->path, to);
+        snprintf(to, MAXPATHLEN, "%s.%d", lf->path, 0);
+        xrename(lf->path, to);
     }
     /* Reopen the log.  It may have been renamed "manually" */
     ll->fd = file_open(lf->path, O_WRONLY | O_CREAT | O_TEXT);
 
     if (DISK_ERROR == ll->fd && lf->flags.fatal) {
-	debugs(50, DBG_CRITICAL, "logfileRotate (stdio): " << lf->path << ": " << xstrerror());
-	fatalf("Cannot open %s: %s", lf->path, xstrerror());
+        debugs(50, DBG_CRITICAL, "logfileRotate (stdio): " << lf->path << ": " << xstrerror());
+        fatalf("Cannot open %s: %s", lf->path, xstrerror());
     }
 }
 
@@ -169,10 +169,10 @@ logfile_mod_stdio_close(Logfile * lf)
     lf->f_flush(lf);
 
     if (ll->fd >= 0)
-	file_close(ll->fd);
+        file_close(ll->fd);
 
     if (ll->buf)
-	xfree(ll->buf);
+        xfree(ll->buf);
 
     xfree(lf->data);
     lf->data = NULL;
@@ -197,23 +197,23 @@ logfile_mod_stdio_open(Logfile * lf, const char *path, size_t bufsz, int fatal_f
     ll->fd = file_open(path, O_WRONLY | O_CREAT | O_TEXT);
 
     if (DISK_ERROR == ll->fd) {
-	if (ENOENT == errno && fatal_flag) {
-	    fatalf("Cannot open '%s' because\n"
-		"\tthe parent directory does not exist.\n"
-		"\tPlease create the directory.\n", path);
-	} else if (EACCES == errno && fatal_flag) {
-	    fatalf("Cannot open '%s' for writing.\n"
-		"\tThe parent directory must be writeable by the\n"
-		"\tuser '%s', which is the cache_effective_user\n"
-		"\tset in squid.conf.", path, Config.effectiveUser);
-	} else {
-	    debugs(50, DBG_IMPORTANT, "logfileOpen (stdio): " <<  path << ": " << xstrerror());
-	    return 0;
-	}
+        if (ENOENT == errno && fatal_flag) {
+            fatalf("Cannot open '%s' because\n"
+                   "\tthe parent directory does not exist.\n"
+                   "\tPlease create the directory.\n", path);
+        } else if (EACCES == errno && fatal_flag) {
+            fatalf("Cannot open '%s' for writing.\n"
+                   "\tThe parent directory must be writeable by the\n"
+                   "\tuser '%s', which is the cache_effective_user\n"
+                   "\tset in squid.conf.", path, Config.effectiveUser);
+        } else {
+            debugs(50, DBG_IMPORTANT, "logfileOpen (stdio): " <<  path << ": " << xstrerror());
+            return 0;
+        }
     }
     if (bufsz > 0) {
-	ll->buf = static_cast<char*>(xmalloc(bufsz));
-	ll->bufsz = bufsz;
+        ll->buf = static_cast<char*>(xmalloc(bufsz));
+        ll->bufsz = bufsz;
     }
     return 1;
 }
