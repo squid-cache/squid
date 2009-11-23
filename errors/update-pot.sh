@@ -7,12 +7,12 @@
 #
 
 # Make sure any existing temp stuff is gone from previous updates...
-rm -r -f ./pot
+rm -rf ./pot
 rm -f errpages.pot.new
 rm errpages.pot
 
 # make a temp directory for all our workings...
-mkdir ./pot
+mkdir pot
 
 # Generate per-page disctionaries ...
 for f in `ls -1 ./templates/`; do
@@ -38,5 +38,5 @@ for f in `ls -1 ./*.po` ; do
 done
 
 # cleanup.
-rm -r -f ./pot
+rm -rf pot
 rm -f errpages.pot.new

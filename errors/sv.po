@@ -2,16 +2,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-07-23 01:13+1300\n"
-"PO-Revision-Date: 2008-10-17 19:43+1300\n"
-"Last-Translator: Henrik Nordström <henrik@henriknordstrom.net>\n"
+"POT-Creation-Date: 2009-09-23 19:55+1300\n"
+"PO-Revision-Date: 2009-11-11 10:15+0000\n"
+"Last-Translator: Fredrik Svensson <fredrik@member.fsf.org>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Pootle 1.1.0\n"
+"X-Generator: Translate Toolkit 1.4.0\n"
 
-#: templates/ERR_FTP_LISTING:6
+#: templates/ERR_DIR_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
 msgstr ""
 
@@ -28,8 +28,8 @@ msgid ""
 "<b>Invalid Response</b> error was encountered while trying to process the "
 "request:"
 msgstr ""
-"<b>Felaktigt Svarsmeddelande</b> fel p&aring;tr&auml;ffades n&auml;r f&ouml;"
-"rfr&aring;gan skulle behandlas:"
+"<b>Felaktigt Svarsmeddelande</b> fel p&aring;tr&auml;ffades n&auml;r "
+"f&ouml;rfr&aring;gan skulle behandlas:"
 
 #: templates/ERR_READ_TIMEOUT:7
 msgid ""
@@ -38,8 +38,8 @@ msgid ""
 msgstr ""
 "En timeout intr&auml;ffade i v&auml;ntan p&aring; att f&aring; l&auml;sa "
 "data fr&aring;n n&auml;tverket.  Antingen &auml;r servern nere eller "
-"ocks&aring; &auml;r n&auml;tverket tungt belastat.  V&auml;nligen f&ouml;"
-"rs&ouml;k igen."
+"ocks&aring; &auml;r n&auml;tverket tungt belastat.  V&auml;nligen "
+"f&ouml;rs&ouml;k igen."
 
 #: templates/ERR_URN_RESOLVE:3
 msgid "A URL for the requested URN could not be retrieved"
@@ -64,8 +64,8 @@ msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"Ett misslyckande vid FTP autentifiering intr&auml;ffade vid f&ouml;rs&ouml;"
-"ket att h&auml;mta URL: <a href=\"%U\">%U</a>"
+"Ett misslyckande vid FTP autentifiering intr&auml;ffade vid "
+"f&ouml;rs&ouml;ket att h&auml;mta URL: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_FTP_FAILURE:4
 msgid ""
@@ -92,8 +92,8 @@ msgid ""
 "An error condition occurred while writing to the network.  Please retry your "
 "request."
 msgstr ""
-"Ett fel intr&auml;ffade vid f&ouml;rs&ouml;k att skriva till n&auml;"
-"tverket.  V&auml;nligen f&ouml;rs&ouml;k igen."
+"Ett fel intr&auml;ffade vid f&ouml;rs&ouml;k att skriva till n&auml;tverket. "
+" V&auml;nligen f&ouml;rs&ouml;k igen."
 
 #: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
 msgid "Cache Access Denied."
@@ -120,9 +120,21 @@ msgstr "Anslutnings att %I misslyckades."
 msgid "Content-Length missing for POST or PUT requests."
 msgstr "Content-Length saknas i POST eller PUT beg&auml;ran."
 
-#: templates/ERR_FTP_LISTING:3
+#: templates/ERR_DIR_LISTING:3
 msgid "Directory Content:"
 msgstr ""
+
+#: templates/ERR_DIR_LISTING:4
+msgid "Directory Listing"
+msgstr ""
+
+#: templates/ERR_DIR_LISTING:1
+msgid "Directory: %U"
+msgstr "Katalog: %U"
+
+#: templates/ERR_DIR_LISTING:2
+msgid "Directory: <a href=\"%U\">%U</a>/"
+msgstr "Katalog: <a href=\"%U\">%U</a>/"
 
 #: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
@@ -152,7 +164,6 @@ msgid "ERROR: Cache Manager Access Denied"
 msgstr "FEL: Tilltr&auml;de till Cachehanteraren Nekas"
 
 #: templates/ERR_FTP_PUT_ERROR:1
-#, fuzzy
 msgid "ERROR: FTP upload failed"
 msgstr "FEL: FTP uppladdning misslyckades"
 
@@ -181,26 +192,13 @@ msgstr "FEL: Beg&auml;rd URN kunde inte h&auml;mtas"
 msgid "ESI Processing failed."
 msgstr "ESI bearbetning misslyckades."
 
-#: templates/ERR_FTP_LISTING:4
-msgid "FTP Directory Listing"
-msgstr ""
-
-#: templates/ERR_FTP_LISTING:1
-msgid "FTP Directory: %U"
-msgstr ""
-
-#: templates/ERR_FTP_LISTING:2
-msgid "FTP Directory: <a href=\"/\">%U</a>/"
-msgstr ""
-
 #: templates/ERR_FTP_PUT_CREATED:1
 msgid "FTP PUT Successful: File Created"
 msgstr "FTP PUT lyckades: Filen Skapades"
 
 #: templates/ERR_FTP_PUT_MODIFIED:1
-#, fuzzy
 msgid "FTP PUT Successful: File Updated"
-msgstr "FTP PUT lyckades: Filen uppdaterades"
+msgstr "FTP PUT Lyckades: Fil Uppdaterad"
 
 #: templates/ERR_FTP_PUT_ERROR:3
 msgid "FTP PUT/upload failed"
@@ -228,21 +226,22 @@ msgstr "Vidarebefodran Nekad."
 
 #: templates/ERR_ACCESS_DENIED:8 templates/ERR_CACHE_ACCESS_DENIED:8
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:8 templates/ERR_CANNOT_FORWARD:8
-#: templates/ERR_CONNECT_FAIL:9 templates/ERR_DNS_FAIL:9 templates/ERR_ESI:9
+#: templates/ERR_CONNECT_FAIL:9 templates/ERR_DIR_LISTING:7
+#: templates/ERR_DNS_FAIL:9 templates/ERR_ESI:9
 #: templates/ERR_FORWARDING_DENIED:8 templates/ERR_FTP_DISABLED:8
 #: templates/ERR_FTP_FAILURE:8 templates/ERR_FTP_FORBIDDEN:8
-#: templates/ERR_FTP_LISTING:7 templates/ERR_FTP_NOT_FOUND:9
-#: templates/ERR_FTP_PUT_CREATED:4 templates/ERR_FTP_PUT_ERROR:9
-#: templates/ERR_FTP_PUT_MODIFIED:4 templates/ERR_FTP_UNAVAILABLE:8
-#: templates/ERR_ICAP_FAILURE:11 templates/ERR_INVALID_REQ:13
-#: templates/ERR_INVALID_RESP:8 templates/ERR_INVALID_URL:13
-#: templates/ERR_LIFETIME_EXP:8 templates/ERR_NO_RELAY:8
-#: templates/ERR_ONLY_IF_CACHED_MISS:8 templates/ERR_READ_ERROR:9
-#: templates/ERR_READ_TIMEOUT:9 templates/ERR_SECURE_CONNECT_FAIL:9
-#: templates/ERR_SHUTTING_DOWN:7 templates/ERR_SOCKET_FAILURE:9
-#: templates/ERR_TOO_BIG:10 templates/ERR_UNSUP_HTTPVERSION:8
-#: templates/ERR_UNSUP_REQ:8 templates/ERR_URN_RESOLVE:8
-#: templates/ERR_WRITE_ERROR:9 templates/ERR_ZERO_SIZE_OBJECT:8
+#: templates/ERR_FTP_NOT_FOUND:9 templates/ERR_FTP_PUT_CREATED:4
+#: templates/ERR_FTP_PUT_ERROR:9 templates/ERR_FTP_PUT_MODIFIED:4
+#: templates/ERR_FTP_UNAVAILABLE:8 templates/ERR_ICAP_FAILURE:11
+#: templates/ERR_INVALID_REQ:13 templates/ERR_INVALID_RESP:8
+#: templates/ERR_INVALID_URL:13 templates/ERR_LIFETIME_EXP:8
+#: templates/ERR_NO_RELAY:8 templates/ERR_ONLY_IF_CACHED_MISS:8
+#: templates/ERR_READ_ERROR:9 templates/ERR_READ_TIMEOUT:9
+#: templates/ERR_SECURE_CONNECT_FAIL:9 templates/ERR_SHUTTING_DOWN:7
+#: templates/ERR_SOCKET_FAILURE:9 templates/ERR_TOO_BIG:10
+#: templates/ERR_UNSUP_HTTPVERSION:8 templates/ERR_UNSUP_REQ:8
+#: templates/ERR_URN_RESOLVE:8 templates/ERR_WRITE_ERROR:9
+#: templates/ERR_ZERO_SIZE_OBJECT:8
 msgid "Generated %T by %h (%s)"
 msgstr "Skapad %T av %h (%s)"
 
@@ -261,8 +260,8 @@ msgid ""
 "If you are making a GET request, then the item you are trying to download is "
 "too large."
 msgstr ""
-"Ifall du utf&ouml;rde en GET beg&auml;ran, s&aring; &auml;r svaret du f&ouml;"
-"rs&ouml;ker ladda ned f&ouml;r stort."
+"Ifall du utf&ouml;rde en GET beg&auml;ran, s&aring; &auml;r svaret du "
+"f&ouml;rs&ouml;ker ladda ned f&ouml;r stort."
 
 #: templates/ERR_TOO_BIG:6
 msgid ""
@@ -317,9 +316,9 @@ msgstr "Igen Wais Relay"
 msgid "Operation successful"
 msgstr "Operationen lyckades"
 
-#: templates/ERR_FTP_LISTING:5
+#: templates/ERR_DIR_LISTING:5
 msgid "Parent Directory"
-msgstr ""
+msgstr "Föräldrakatalog"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:7
 msgid ""
@@ -328,8 +327,8 @@ msgid ""
 "chpasswd.cgi\">change</a> your default password."
 msgstr ""
 "V&auml;nligen kontakta <a href=\"mailto:%w%W\">cacheadministratorn</a> om Ni "
-"har sv&aring;righ eter med att autentifiera Er sj&auml;lv, eller <a href="
-"\"http://%h/cgi-bin/chpasswd.cgi\">byt</a> Ert l&ouml;senord."
+"har sv&aring;righ eter med att autentifiera Er sj&auml;lv, eller <a "
+"href=\"http://%h/cgi-bin/chpasswd.cgi\">byt</a> Ert l&ouml;senord."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
 msgid ""
@@ -339,9 +338,9 @@ msgid ""
 "cache log for more detailed error messages."
 msgstr ""
 "V&auml;nligen kontakta <a href=\"mailto:%w%W\">cacheadministratorn</a> om Ni "
-"har sv&aring;righeter med att autentifiera Er sj&auml;lv, om Ni <em>&auml;r</"
-"em> administratorn, l&auml;s Squid dokumentationen om cache hanterar "
-"interfacet och kontrollera cache loggen f&ouml;r mer detaljerade "
+"har sv&aring;righeter med att autentifiera Er sj&auml;lv, om Ni "
+"<em>&auml;r</em> administratorn, l&auml;s Squid dokumentationen om cache "
+"hanterar interfacet och kontrollera cache loggen f&ouml;r mer detaljerade "
 "felmeddelanden."
 
 #: templates/ERR_READ_ERROR:5
@@ -363,7 +362,8 @@ msgstr "Socket Fel"
 #: templates/ERR_INVALID_URL:6
 msgid "Some aspect of the requested URL is incorrect."
 msgstr ""
-"N&aring;gon eller n&aring;gra aspekter av beg&auml;rd URL &auml;r inkorrekta."
+"N&aring;gon eller n&aring;gra aspekter av beg&auml;rd URL &auml;r "
+"inkorrekta."
 
 #: templates/ERR_ICAP_FAILURE:8 templates/ERR_INVALID_REQ:5
 #: templates/ERR_INVALID_URL:7
@@ -375,16 +375,16 @@ msgid ""
 "Sorry, you are not currently allowed to request %U from this cache manager "
 "until you have authenticated yourself."
 msgstr ""
-"Ledsen, Ni &auml;r f&ouml;rn&auml;rvarande ej ber&auml;ttigad att beg&auml;"
-"ra %U fr&aring;n denna cache tills det att Ni har autentifierat Er."
+"Ledsen, Ni &auml;r f&ouml;rn&auml;rvarande ej ber&auml;ttigad att "
+"beg&auml;ra %U fr&aring;n denna cache tills det att Ni har autentifierat Er."
 
 #: templates/ERR_CACHE_ACCESS_DENIED:6
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache until you "
 "have authenticated yourself."
 msgstr ""
-"Ledsen, Ni &auml;r f&ouml;rn&auml;rvarande ej ber&auml;ttigad att beg&auml;"
-"ra %U fr&aring;n denna cache tills det att Ni har autentifierat Er."
+"Ledsen, Ni &auml;r f&ouml;rn&auml;rvarande ej ber&auml;ttigad att "
+"beg&auml;ra %U fr&aring;n denna cache tills det att Ni har autentifierat Er."
 
 #: templates/ERR_ZERO_SIZE_OBJECT:6
 msgid "Squid did not receive any data for this request."
@@ -404,8 +404,8 @@ msgid ""
 "Squid has terminated the request because it has exceeded the maximum "
 "connection lifetime."
 msgstr ""
-"Squid har avbrutit beg&auml;ran p&aring; grund av att den har &ouml;"
-"verskridikt den till&aring;tna livstiden f&ouml;r en anslutning."
+"Squid har avbrutit beg&auml;ran p&aring; grund av att den har "
+"&ouml;verskridikt den till&aring;tna livstiden f&ouml;r en anslutning."
 
 #: templates/ERR_SOCKET_FAILURE:7
 msgid ""
@@ -468,16 +468,16 @@ msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"F&ouml;ljande fel p&aring;tr&auml;ffades vid h&auml;mtning av URL: <a href="
-"\"%U\">%U</a>"
+"F&ouml;ljande fel p&aring;tr&auml;ffades vid h&auml;mtning av URL: <a href=\""
+"%U\">%U</a>"
 
 #: templates/ERR_URN_RESOLVE:4
 msgid ""
 "The following error was encountered while trying to retrieve the URN: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"F&ouml;ljande fel p&aring;tr&auml;ffades vid h&auml;mtning av URN: <a href="
-"\"%U\">%U</a>"
+"F&ouml;ljande fel p&aring;tr&auml;ffades vid h&auml;mtning av URN: <a href=\""
+"%U\">%U</a>"
 
 #: templates/ERR_CONNECT_FAIL:7
 msgid "The remote host or network may be down.  Please try the request again."
@@ -549,9 +549,9 @@ msgid ""
 "This cache is in the process of shutting down and can not service your "
 "request at this time.  Please retry your request again soon."
 msgstr ""
-"Denna cache h&aring;ller p&aring; att st&auml;nga av sig och kan d&auml;"
-"rf&ouml;r inte behandla din f&ouml;rfr&aring;gan.  V&auml;nligen f&ouml;"
-"rs&ouml;k igen lite senare."
+"Denna cache h&aring;ller p&aring; att st&auml;nga av sig och kan "
+"d&auml;rf&ouml;r inte behandla din f&ouml;rfr&aring;gan.  V&auml;nligen "
+"f&ouml;rs&ouml;k igen lite senare."
 
 #: templates/ERR_FORWARDING_DENIED:6
 msgid ""
@@ -559,9 +559,9 @@ msgid ""
 "sibling relationship.  Perhaps the client at %i is a cache which has been "
 "misconfigured."
 msgstr ""
-"Denna cache kommer inte vidarebefodra en beg&auml;ran eftersom den f&ouml;"
-"rs&ouml;ker att tvinga sig till en r&auml;ttighet som den inte har.  Kanske "
-"klienten vid %i &auml;r en cache som &auml;r felkonfigurerad."
+"Denna cache kommer inte vidarebefodra en beg&auml;ran eftersom den "
+"f&ouml;rs&ouml;ker att tvinga sig till en r&auml;ttighet som den inte har.  "
+"Kanske klienten vid %i &auml;r en cache som &auml;r felkonfigurerad."
 
 #: templates/ERR_ICAP_FAILURE:7
 msgid "This means that some aspect of the ICAP communication failed."
@@ -589,8 +589,8 @@ msgid ""
 "This means that the surrogate was not able to process the ESI template. "
 "Please report this error to the webmaster."
 msgstr ""
-"Detta betyder att surrogat servern kunde inte bearbeta ESI mallen. V&auml;"
-"nligen kontakta den ansvariga f&ouml;r webbservern ifr&aring;ga."
+"Detta betyder att surrogat servern kunde inte bearbeta ESI mallen. "
+"V&auml;nligen kontakta den ansvariga f&ouml;r webbservern ifr&aring;ga."
 
 #: templates/ERR_FTP_NOT_FOUND:7
 msgid ""
@@ -599,8 +599,8 @@ msgid ""
 "<a href=\"%B\">%B</a>."
 msgstr ""
 "Detta kan orsakas av en FTP URL med en absolut s&ouml;kv&auml;g (vilket inte "
-"&ouml;verensst&auml;mmer med RFC 1738).  Om detta &auml;r orsaken, kan filen "
-"&aring;terfinnas vid <a href=\"%B\">%B</a>."
+"&ouml;verensst&auml;mmer med RFC 1738).  Om detta &auml;r orsaken, kan "
+"filen &aring;terfinnas vid <a href=\"%B\">%B</a>."
 
 #: templates/ERR_SECURE_CONNECT_FAIL:7
 msgid ""
@@ -611,9 +611,10 @@ msgid ""
 msgstr ""
 "Denna proxy server och kontaktad server misslyckades med att f&ouml;rhandla "
 "fram en accepterbar s&auml;kerhetsinst&auml;llning f&ouml;r hanteringen av "
-"din beg&auml;ran. Det &auml;r m&ouml;jligt att kontaktad server inte st&ouml;"
-"djer s&auml;kra anslutningar, eller att proxy servern inte r n&ouml;jd med "
-"de s&auml;kerhets alternativ eller certifikat som presenterades av servern."
+"din beg&auml;ran. Det &auml;r m&ouml;jligt att kontaktad server inte "
+"st&ouml;djer s&auml;kra anslutningar, eller att proxy servern inte r "
+"n&ouml;jd med de s&auml;kerhets alternativ eller certifikat som "
+"presenterades av servern."
 
 #: templates/ERR_CANNOT_FORWARD:6
 msgid ""
@@ -625,13 +626,12 @@ msgstr ""
 "Denna f&ouml;rfr&aring;gan kunde ej vidarebefodras till ursprunglig server "
 "eller till &ouml;verliggande cache-noder.  Den mest sannolika anledningen "
 "till detta fel &auml;r cacheadministratorn till&aring;ter inte denna cache "
-"att g&ouml;ra direkta anslutningar till ursprungliga servrar, och alla &ouml;"
-"verliggande cache-noder kan ej n&aring;s f&ouml;r tillf&auml;llet."
+"att g&ouml;ra direkta anslutningar till ursprungliga servrar, och alla "
+"&ouml;verliggande cache-noder kan ej n&aring;s f&ouml;r tillf&auml;llet."
 
 #: templates/ERR_DNS_FAIL:5
 msgid "Unable to determine IP address from host name <q>%H</q>"
-msgstr ""
-"Kunde inte f&aring; fram IP-adressen f&ouml;r v&auml;rdnamnet <q>%H</q>"
+msgstr "Kunde inte f&aring; fram IP-adressen f&ouml;r v&auml;rdnamnet <q>%H</q>"
 
 #: templates/ERR_CANNOT_FORWARD:5
 msgid "Unable to forward this request at this time."
@@ -656,8 +656,8 @@ msgstr ""
 #: templates/ERR_FTP_PUT_ERROR:4
 msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
 msgstr ""
-"Vid f&ouml;rs&ouml;ket att utföra PUT till f&ouml;ljande URL: <a href=\"%U\">"
-"%U</a>"
+"Vid f&ouml;rs&ouml;ket att utföra PUT till f&ouml;ljande URL: <a href=\"%U\">%"
+"U</a>"
 
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
@@ -670,9 +670,9 @@ msgid ""
 "revalidation prohibited by the <q>only-if-cached</q> directive."
 msgstr ""
 "Du har beg&auml;rt ett dokument med <q>only-if-cached</q> cache kontroll "
-"direktivet. Dokumentet &aring;terfanns inte i cache databasen, <em>eller</"
-"em> det kr&auml;vs en uppdatering av cache databasen, men f&ouml;rhindras av "
-"<q>only-if-cached</q> direktivet."
+"direktivet. Dokumentet &aring;terfanns inte i cache databasen, "
+"<em>eller</em> det kr&auml;vs en uppdatering av cache databasen, men "
+"f&ouml;rhindras av <q>only-if-cached</q> direktivet."
 
 #: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
 #: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
@@ -703,8 +703,8 @@ msgstr ""
 #: templates/ERR_ESI:8
 msgid "Your webmaster is <a href=\"mailto:%w\">%w</a>."
 msgstr ""
-"Addressen till ansvarig administrat&ouml;r &auml;r <a href=\"mailto:%w\">%w</"
-"a>."
+"Addressen till ansvarig administrat&ouml;r &auml;r <a href=\"mailto:%w\">%"
+"w</a>."
 
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"

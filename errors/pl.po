@@ -2,19 +2,18 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-07-23 01:13+1300\n"
-"PO-Revision-Date: 2009-06-13 14:32+1300\n"
-"Last-Translator: Maciej Kozinski <Maciej.Kozinski@boa.uni.torun.pl>\n"
+"POT-Creation-Date: 2009-09-23 19:55+1300\n"
+"PO-Revision-Date: 2009-10-29 15:38+0000\n"
+"Last-Translator: Michal Prochowski <Unknown>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Launchpad-Export-Date: 2009-11-07 08:09+0000\n"
+"X-Generator: Launchpad (build Unknown)\n"
 "Language: pl\n"
-"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
-"|| n%100>=20) ? 1 : 2);\n"
-"X-Generator: Pootle 1.2.1\n"
 
-#: templates/ERR_FTP_LISTING:6
+#: templates/ERR_DIR_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
 msgstr ""
 
@@ -23,12 +22,16 @@ msgid ""
 "<b>Invalid Request</b> error was encountered while trying to process the "
 "request:"
 msgstr ""
+"<b>Nieprawidłowe zapytanie</b> wystąpił błąd podczas próby przetworzenia "
+"zapytania"
 
 #: templates/ERR_INVALID_RESP:4
 msgid ""
 "<b>Invalid Response</b> error was encountered while trying to process the "
 "request:"
 msgstr ""
+"<b>Nieprawidłowa odpowiedź</b> wystąpił błąd podczas próby przetworzenia "
+"zapytania"
 
 #: templates/ERR_READ_TIMEOUT:7
 msgid ""
@@ -70,7 +73,7 @@ msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:10
 msgid "An Illegal response was received from the ICAP server."
-msgstr ""
+msgstr "Odebrano błędną odpowiedź z serwera ICAP"
 
 #: templates/ERR_READ_ERROR:7
 msgid ""
@@ -104,14 +107,26 @@ msgstr "przekroczony dopuszczalny czas połączenie"
 
 #: templates/ERR_CONNECT_FAIL:5
 msgid "Connection to %I failed."
-msgstr ""
+msgstr "Nieudane połączenie z %I."
 
 #: templates/ERR_INVALID_REQ:10
 msgid "Content-Length missing for POST or PUT requests."
 msgstr "Brak pola Content-Length  dla metod POST lub PUT"
 
-#: templates/ERR_FTP_LISTING:3
+#: templates/ERR_DIR_LISTING:3
 msgid "Directory Content:"
+msgstr ""
+
+#: templates/ERR_DIR_LISTING:4
+msgid "Directory Listing"
+msgstr ""
+
+#: templates/ERR_DIR_LISTING:1
+msgid "Directory: %U"
+msgstr ""
+
+#: templates/ERR_DIR_LISTING:2
+msgid "Directory: <a href=\"%U\">%U</a>/"
 msgstr ""
 
 #: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
@@ -170,18 +185,6 @@ msgstr "BŁĄD: Żądany URN nie może zostać sprowadzony"
 msgid "ESI Processing failed."
 msgstr ""
 
-#: templates/ERR_FTP_LISTING:4
-msgid "FTP Directory Listing"
-msgstr ""
-
-#: templates/ERR_FTP_LISTING:1
-msgid "FTP Directory: %U"
-msgstr ""
-
-#: templates/ERR_FTP_LISTING:2
-msgid "FTP Directory: <a href=\"/\">%U</a>/"
-msgstr ""
-
 #: templates/ERR_FTP_PUT_CREATED:1
 msgid "FTP PUT Successful: File Created"
 msgstr "Operacja FTP PUT udała się: plik został utworzony"
@@ -200,7 +203,7 @@ msgstr "FTP jest wyłączone"
 
 #: templates/ERR_SECURE_CONNECT_FAIL:5
 msgid "Failed to establish a secure connection to %I"
-msgstr ""
+msgstr "Nie można ustanowić bezpiecznego połączenia z %I"
 
 #: templates/ERR_FTP_PUT_CREATED:3
 msgid "File created"
@@ -216,23 +219,24 @@ msgstr "Przekazanie żądania zabronione."
 
 #: templates/ERR_ACCESS_DENIED:8 templates/ERR_CACHE_ACCESS_DENIED:8
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:8 templates/ERR_CANNOT_FORWARD:8
-#: templates/ERR_CONNECT_FAIL:9 templates/ERR_DNS_FAIL:9 templates/ERR_ESI:9
+#: templates/ERR_CONNECT_FAIL:9 templates/ERR_DIR_LISTING:7
+#: templates/ERR_DNS_FAIL:9 templates/ERR_ESI:9
 #: templates/ERR_FORWARDING_DENIED:8 templates/ERR_FTP_DISABLED:8
 #: templates/ERR_FTP_FAILURE:8 templates/ERR_FTP_FORBIDDEN:8
-#: templates/ERR_FTP_LISTING:7 templates/ERR_FTP_NOT_FOUND:9
-#: templates/ERR_FTP_PUT_CREATED:4 templates/ERR_FTP_PUT_ERROR:9
-#: templates/ERR_FTP_PUT_MODIFIED:4 templates/ERR_FTP_UNAVAILABLE:8
-#: templates/ERR_ICAP_FAILURE:11 templates/ERR_INVALID_REQ:13
-#: templates/ERR_INVALID_RESP:8 templates/ERR_INVALID_URL:13
-#: templates/ERR_LIFETIME_EXP:8 templates/ERR_NO_RELAY:8
-#: templates/ERR_ONLY_IF_CACHED_MISS:8 templates/ERR_READ_ERROR:9
-#: templates/ERR_READ_TIMEOUT:9 templates/ERR_SECURE_CONNECT_FAIL:9
-#: templates/ERR_SHUTTING_DOWN:7 templates/ERR_SOCKET_FAILURE:9
-#: templates/ERR_TOO_BIG:10 templates/ERR_UNSUP_HTTPVERSION:8
-#: templates/ERR_UNSUP_REQ:8 templates/ERR_URN_RESOLVE:8
-#: templates/ERR_WRITE_ERROR:9 templates/ERR_ZERO_SIZE_OBJECT:8
+#: templates/ERR_FTP_NOT_FOUND:9 templates/ERR_FTP_PUT_CREATED:4
+#: templates/ERR_FTP_PUT_ERROR:9 templates/ERR_FTP_PUT_MODIFIED:4
+#: templates/ERR_FTP_UNAVAILABLE:8 templates/ERR_ICAP_FAILURE:11
+#: templates/ERR_INVALID_REQ:13 templates/ERR_INVALID_RESP:8
+#: templates/ERR_INVALID_URL:13 templates/ERR_LIFETIME_EXP:8
+#: templates/ERR_NO_RELAY:8 templates/ERR_ONLY_IF_CACHED_MISS:8
+#: templates/ERR_READ_ERROR:9 templates/ERR_READ_TIMEOUT:9
+#: templates/ERR_SECURE_CONNECT_FAIL:9 templates/ERR_SHUTTING_DOWN:7
+#: templates/ERR_SOCKET_FAILURE:9 templates/ERR_TOO_BIG:10
+#: templates/ERR_UNSUP_HTTPVERSION:8 templates/ERR_UNSUP_REQ:8
+#: templates/ERR_URN_RESOLVE:8 templates/ERR_WRITE_ERROR:9
+#: templates/ERR_ZERO_SIZE_OBJECT:8
 msgid "Generated %T by %h (%s)"
-msgstr ""
+msgstr "Utworzono %T przez %h (%s)"
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
@@ -295,7 +299,7 @@ msgstr "brak Wais Relay"
 msgid "Operation successful"
 msgstr "Operacja zakończona pomyślnie"
 
-#: templates/ERR_FTP_LISTING:5
+#: templates/ERR_DIR_LISTING:5
 msgid "Parent Directory"
 msgstr ""
 
@@ -422,7 +426,7 @@ msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:9
 msgid "The ICAP server is not reachable."
-msgstr ""
+msgstr "Serwer ICAP jest nieosiągalny."
 
 #: templates/ERR_FTP_NOT_FOUND:4
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
@@ -458,7 +462,7 @@ msgstr ""
 
 #: templates/ERR_TOO_BIG:5
 msgid "The request or reply is too large."
-msgstr ""
+msgstr "Zapytanie lub odpowiedź jest zbyt długa."
 
 #: templates/ERR_ACCESS_DENIED:3 templates/ERR_CANNOT_FORWARD:3
 #: templates/ERR_CONNECT_FAIL:3 templates/ERR_DNS_FAIL:3 templates/ERR_ESI:3
@@ -480,7 +484,7 @@ msgstr "Żądany URL nie może zostać pobrany"
 #: templates/ERR_FTP_NOT_FOUND:6 templates/ERR_FTP_PUT_ERROR:6
 #: templates/ERR_FTP_UNAVAILABLE:6
 msgid "The server responded with:"
-msgstr ""
+msgstr "Odpowiedź serwera:"
 
 #: templates/ERR_CONNECT_FAIL:6 templates/ERR_ICAP_FAILURE:6
 #: templates/ERR_READ_ERROR:6 templates/ERR_READ_TIMEOUT:6
@@ -590,7 +594,7 @@ msgstr "Nie można przekazać tego żądania w chwili obecnej."
 
 #: templates/ERR_UNSUP_HTTPVERSION:3 templates/ERR_UNSUP_HTTPVERSION:5
 msgid "Unsupported HTTP version"
-msgstr ""
+msgstr "Nieobsługiwana wersja HTTP"
 
 #: templates/ERR_UNSUP_REQ:5
 msgid "Unsupported Request Method and Protocol"

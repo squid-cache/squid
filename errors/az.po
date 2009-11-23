@@ -2,17 +2,18 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-07-23 01:13+1300\n"
-"PO-Revision-Date: 2009-01-18 17:25+1300\n"
-"Last-Translator: Rauf Kuliyev <rauf@kuliyev.com>\n"
+"POT-Creation-Date: 2009-09-23 19:55+1300\n"
+"PO-Revision-Date: 2009-10-05 17:49+0000\n"
+"Last-Translator: Elxan İsmayılov <elxan.i@gmail.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Launchpad-Export-Date: 2009-11-07 08:13+0000\n"
+"X-Generator: Launchpad (build Unknown)\n"
 "Language: az\n"
-"X-Generator: Pootle 1.2.0\n"
 
-#: templates/ERR_FTP_LISTING:6
+#: templates/ERR_DIR_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
 msgstr ""
 
@@ -34,7 +35,7 @@ msgid ""
 "or server may be down or congested.  Please retry your request."
 msgstr ""
 "Məlumatlar şəbəkədən oxunan zaman gözləmə müddəti bitmişdir. Şəbəkə və ya "
-"server işləmir, yaxud həddən ziyadə yüklənmişdir. Xahiş edirik, sorğunu "
+"server işləmir, yaxud həddindən arıq yüklənmişdir. Xahiş edirik, sorğunu "
 "təkrar edin."
 
 #: templates/ERR_URN_RESOLVE:3
@@ -116,8 +117,20 @@ msgstr ""
 msgid "Content-Length missing for POST or PUT requests."
 msgstr "POST və PUT sorğuları üçün Content-Length göstərilməmişdir"
 
-#: templates/ERR_FTP_LISTING:3
+#: templates/ERR_DIR_LISTING:3
 msgid "Directory Content:"
+msgstr "Direktoriyanın m�^�zmunu"
+
+#: templates/ERR_DIR_LISTING:4
+msgid "Directory Listing"
+msgstr ""
+
+#: templates/ERR_DIR_LISTING:1
+msgid "Directory: %U"
+msgstr ""
+
+#: templates/ERR_DIR_LISTING:2
+msgid "Directory: <a href=\"%U\">%U</a>/"
 msgstr ""
 
 #: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
@@ -176,18 +189,6 @@ msgstr "SƏHV: Sorğulanan URN ilə əlaqə yaradılmadı"
 msgid "ESI Processing failed."
 msgstr ""
 
-#: templates/ERR_FTP_LISTING:4
-msgid "FTP Directory Listing"
-msgstr ""
-
-#: templates/ERR_FTP_LISTING:1
-msgid "FTP Directory: %U"
-msgstr ""
-
-#: templates/ERR_FTP_LISTING:2
-msgid "FTP Directory: <a href=\"/\">%U</a>/"
-msgstr ""
-
 #: templates/ERR_FTP_PUT_CREATED:1
 msgid "FTP PUT Successful: File Created"
 msgstr "FTP PUT müvəfəqiyyətlə başa çatdı: Fayl yarandı"
@@ -222,21 +223,22 @@ msgstr "Yönləndirmə qadağandır."
 
 #: templates/ERR_ACCESS_DENIED:8 templates/ERR_CACHE_ACCESS_DENIED:8
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:8 templates/ERR_CANNOT_FORWARD:8
-#: templates/ERR_CONNECT_FAIL:9 templates/ERR_DNS_FAIL:9 templates/ERR_ESI:9
+#: templates/ERR_CONNECT_FAIL:9 templates/ERR_DIR_LISTING:7
+#: templates/ERR_DNS_FAIL:9 templates/ERR_ESI:9
 #: templates/ERR_FORWARDING_DENIED:8 templates/ERR_FTP_DISABLED:8
 #: templates/ERR_FTP_FAILURE:8 templates/ERR_FTP_FORBIDDEN:8
-#: templates/ERR_FTP_LISTING:7 templates/ERR_FTP_NOT_FOUND:9
-#: templates/ERR_FTP_PUT_CREATED:4 templates/ERR_FTP_PUT_ERROR:9
-#: templates/ERR_FTP_PUT_MODIFIED:4 templates/ERR_FTP_UNAVAILABLE:8
-#: templates/ERR_ICAP_FAILURE:11 templates/ERR_INVALID_REQ:13
-#: templates/ERR_INVALID_RESP:8 templates/ERR_INVALID_URL:13
-#: templates/ERR_LIFETIME_EXP:8 templates/ERR_NO_RELAY:8
-#: templates/ERR_ONLY_IF_CACHED_MISS:8 templates/ERR_READ_ERROR:9
-#: templates/ERR_READ_TIMEOUT:9 templates/ERR_SECURE_CONNECT_FAIL:9
-#: templates/ERR_SHUTTING_DOWN:7 templates/ERR_SOCKET_FAILURE:9
-#: templates/ERR_TOO_BIG:10 templates/ERR_UNSUP_HTTPVERSION:8
-#: templates/ERR_UNSUP_REQ:8 templates/ERR_URN_RESOLVE:8
-#: templates/ERR_WRITE_ERROR:9 templates/ERR_ZERO_SIZE_OBJECT:8
+#: templates/ERR_FTP_NOT_FOUND:9 templates/ERR_FTP_PUT_CREATED:4
+#: templates/ERR_FTP_PUT_ERROR:9 templates/ERR_FTP_PUT_MODIFIED:4
+#: templates/ERR_FTP_UNAVAILABLE:8 templates/ERR_ICAP_FAILURE:11
+#: templates/ERR_INVALID_REQ:13 templates/ERR_INVALID_RESP:8
+#: templates/ERR_INVALID_URL:13 templates/ERR_LIFETIME_EXP:8
+#: templates/ERR_NO_RELAY:8 templates/ERR_ONLY_IF_CACHED_MISS:8
+#: templates/ERR_READ_ERROR:9 templates/ERR_READ_TIMEOUT:9
+#: templates/ERR_SECURE_CONNECT_FAIL:9 templates/ERR_SHUTTING_DOWN:7
+#: templates/ERR_SOCKET_FAILURE:9 templates/ERR_TOO_BIG:10
+#: templates/ERR_UNSUP_HTTPVERSION:8 templates/ERR_UNSUP_REQ:8
+#: templates/ERR_URN_RESOLVE:8 templates/ERR_WRITE_ERROR:9
+#: templates/ERR_ZERO_SIZE_OBJECT:8
 msgid "Generated %T by %h (%s)"
 msgstr ""
 
@@ -246,7 +248,7 @@ msgstr "%T texnologiyasından çox şey gözləməyə dəyməz :)"
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
-msgstr ""
+msgstr "İCAP protokol s�^�hvi"
 
 #: templates/ERR_TOO_BIG:7
 #, fuzzy
@@ -308,9 +310,9 @@ msgstr "Wais ötürücü təyin edilməmişdir"
 msgid "Operation successful"
 msgstr "Əməliyyat müvəfəqiyyətlə başa çatdı"
 
-#: templates/ERR_FTP_LISTING:5
+#: templates/ERR_DIR_LISTING:5
 msgid "Parent Directory"
-msgstr ""
+msgstr "Ana direktoriya"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:7
 msgid ""
@@ -358,9 +360,8 @@ msgstr "URL-nin bəzi aspektləri səhvdir."
 
 #: templates/ERR_ICAP_FAILURE:8 templates/ERR_INVALID_REQ:5
 #: templates/ERR_INVALID_URL:7
-#, fuzzy
 msgid "Some possible problems are:"
-msgstr "Mümkün problemlər:"
+msgstr "Mümkün probleml�^�rd�^�n b�^�zil�^�ri:"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:6
 #, fuzzy
@@ -417,9 +418,8 @@ msgid "Squid sent the following FTP command:"
 msgstr "Squid Keş FTP-nin növbəti əmrini göndərmişdir:"
 
 #: templates/ERR_DNS_FAIL:6
-#, fuzzy
 msgid "The DNS server returned:"
-msgstr "Domen Adları serverindən gələn cavab:"
+msgstr "DNS serverin cavabı:"
 
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
@@ -432,13 +432,12 @@ msgstr ""
 "href=\"%U\">%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
-#, fuzzy
 msgid ""
 "The HTTP Response message received from the contacted server could not be "
 "understood or was otherwise malformed. Please contact the site operator."
 msgstr ""
-"Sorğu göndərilən serverdən gələn cavab anlaşılmazdı və ya dəyişdirilib. "
-"Səhifə operatoru ilə əlaqə yaradın."
+"Serverd�^�n gönd�^�rilmi�^� HTTP cavab mesajı s�^�hvdir v�^� ya s�^�hv formala�^�ıb. Xahi�^� "
+"edirik sayt operatoru il�^� �^�laq�^� saxlayın"
 
 #: templates/ERR_ICAP_FAILURE:9
 msgid "The ICAP server is not reachable."
