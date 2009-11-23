@@ -70,6 +70,7 @@ dnl
 dnl Test whether -fhuge-objects is available with this c++ compiler. gcc-29.5 series compilers need this on some platform with large objects.
 dnl
 AC_DEFUN([AC_TEST_CHECKFORHUGEOBJECTS],[
+ if test "$GCC" = "yes"; then
   AC_MSG_CHECKING([whether compiler accepts -fhuge-objects])
   AC_CACHE_VAL([ac_cv_test_checkforhugeobjects],[
     ac_cv_test_checkforhugeobjects=`echo "int main(int argc, char **argv) { int foo; }" > conftest.cc
@@ -92,6 +93,7 @@ exit $res`
   else
     HUGE_OBJECT_FLAG=""
   fi
+ fi
 ]) # end of AC_DEFUN of AC_TEST_CHECKFORHUGEOBJECTS
 
 
