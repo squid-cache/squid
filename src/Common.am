@@ -4,8 +4,8 @@
 ## so it must not contain stuff specific to or bad for some subdirectories.
 
 ## TODO: make this set by configure?
-AM_CFLAGS = @SQUID_CFLAGS@
-AM_CXXFLAGS = @SQUID_CXXFLAGS@
+AM_CFLAGS = $(SQUID_CFLAGS)
+AM_CXXFLAGS = $(SQUID_CXXFLAGS)
 DEFS = @DEFS@
 
 ## so that others can always use += for these variables
@@ -18,7 +18,7 @@ INCLUDES = \
 	-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src \
 	-I$(top_builddir)/include \
-	@SQUID_CPPUNIT_INC@
+	$(SQUID_CPPUNIT_INC)
 
 ## make all compiled sources depend on generated files
 ## XXX: Do we really need this? Does auto-dependency tracking work?
