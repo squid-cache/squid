@@ -18,12 +18,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -51,63 +51,62 @@ static int
 syslog_ntoa(const char *s)
 {
 #define syslog_symbol(a) #a, a
-    static syslog_symbol_t symbols[] =
-    {
+    static syslog_symbol_t symbols[] = {
 #ifdef LOG_AUTHPRIV
-	{syslog_symbol(LOG_AUTHPRIV)},
+        {syslog_symbol(LOG_AUTHPRIV)},
 #endif
 #ifdef LOG_DAEMON
-	{syslog_symbol(LOG_DAEMON)},
+        {syslog_symbol(LOG_DAEMON)},
 #endif
 #ifdef LOG_LOCAL0
-	{syslog_symbol(LOG_LOCAL0)},
+        {syslog_symbol(LOG_LOCAL0)},
 #endif
 #ifdef LOG_LOCAL1
-	{syslog_symbol(LOG_LOCAL1)},
+        {syslog_symbol(LOG_LOCAL1)},
 #endif
 #ifdef LOG_LOCAL2
-	{syslog_symbol(LOG_LOCAL2)},
+        {syslog_symbol(LOG_LOCAL2)},
 #endif
 #ifdef LOG_LOCAL3
-	{syslog_symbol(LOG_LOCAL3)},
+        {syslog_symbol(LOG_LOCAL3)},
 #endif
 #ifdef LOG_LOCAL4
-	{syslog_symbol(LOG_LOCAL4)},
+        {syslog_symbol(LOG_LOCAL4)},
 #endif
 #ifdef LOG_LOCAL5
-	{syslog_symbol(LOG_LOCAL5)},
+        {syslog_symbol(LOG_LOCAL5)},
 #endif
 #ifdef LOG_LOCAL6
-	{syslog_symbol(LOG_LOCAL6)},
+        {syslog_symbol(LOG_LOCAL6)},
 #endif
 #ifdef LOG_LOCAL7
-	{syslog_symbol(LOG_LOCAL7)},
+        {syslog_symbol(LOG_LOCAL7)},
 #endif
 #ifdef LOG_USER
-	{syslog_symbol(LOG_USER)},
+        {syslog_symbol(LOG_USER)},
 #endif
 #ifdef LOG_ERR
-	{syslog_symbol(LOG_ERR)},
+        {syslog_symbol(LOG_ERR)},
 #endif
 #ifdef LOG_WARNING
-	{syslog_symbol(LOG_WARNING)},
+        {syslog_symbol(LOG_WARNING)},
 #endif
 #ifdef LOG_NOTICE
-	{syslog_symbol(LOG_NOTICE)},
+        {syslog_symbol(LOG_NOTICE)},
 #endif
 #ifdef LOG_INFO
-	{syslog_symbol(LOG_INFO)},
+        {syslog_symbol(LOG_INFO)},
 #endif
 #ifdef LOG_DEBUG
-	{syslog_symbol(LOG_DEBUG)},
+        {syslog_symbol(LOG_DEBUG)},
 #endif
-	{NULL, 0}
+        {NULL, 0}
     };
     syslog_symbol_t *p;
 
     for (p = symbols; p->name != NULL; ++p)
-	if (!strcmp(s, p->name) || !strcasecmp(s, p->name + 4))
-	    return p->value;
+        if (!strcmp(s, p->name) || !strcasecmp(s, p->name + 4))
+            return p->value;
 
     debugs(1, 1, "Unknown syslog facility/priority '" << s << "'");
     return 0;
@@ -185,7 +184,7 @@ logfile_mod_syslog_open(Logfile * lf, const char *path, size_t bufsz, int fatal_
         ll->syslog_priority |= syslog_ntoa(priority);
         xfree(priority);
         if ((ll->syslog_priority & PRIORITY_MASK) == 0)
-        ll->syslog_priority |= LOG_INFO;
+            ll->syslog_priority |= LOG_INFO;
     }
 
     return 1;

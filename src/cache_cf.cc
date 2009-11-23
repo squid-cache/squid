@@ -2875,8 +2875,7 @@ parse_IpAddress_list(IpAddress_list ** head)
             s->s = ipa;
 
             *head = s;
-        }
-        else
+        } else
             self_destruct();
     }
 }
