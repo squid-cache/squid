@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.1.0.13 release notes</title>
+<title>Squid 3.1.0.15 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.1.0.13 for testing.
+The Squid Team are pleased to announce the release of Squid-3.1.0.15 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.1/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -46,6 +46,7 @@ The most important of these new features are:
 	<item>SSL Bump (for HTTPS Filtering and Adaptation)
 	<item>eCAP Adaptation Module support
 	<item>ICAP Bypass and Retry enhancements
+	<item>ICY streaming protocol support
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -310,6 +311,23 @@ While decrypted, the traffic can be inspected using ICAP.
   limit is exceeded, the master transaction fails. The default limit of 16
   should be large enough to not require an explicit configuration in most
   environments yet may be small enough to limit side-effects of loops.
+
+<sect1>ICY streaming protocol support
+<p>Squid-3.1 adds native support for streaming protocol ICY.
+
+<p>This protocol uses port 80 and violates RFC 2616 by using an HTTP/1.1 compliant request and non-HTTP reply
+  to start the stream transaction. If the reply is handled according to HTTP/1.1 RFC-compliance requirements
+  the audio stream becomes jerky and contains regular 'popping' sounds.
+
+<p>Squid now processes the ICY replies natively according to the ICY requirements, not HTTP/1.1 requirements.
+  The streamed data is not cacheable. All processing and access controls may be applied the same as for HTTP.
+
+<sect2>squid.conf change
+<p>Squid-2 contained a hack using the <em>update_http0.9</em> squid.conf option to work around the
+  unusual replies. This option is now obsolete.
+
+<p>The proto ACL type matches <em>ICY</em> once the reply has been received, before that the processing
+  is only aware on an HTTP request. So the ACL will match <em>HTTP</em>.
 
 
 <sect>Windows support
@@ -1476,6 +1494,13 @@ This section gives an account of those changes in three categories:
 	<tag>--disable-loadable-modules</tag>
 	<p>Build without support for loadable modules.
 
+	<tag>--disable-strict-error-checking</tag>
+	<p>Build Squid without advanced compiler error checking.
+	   This only affects the building process, enabling it to complete despite some
+	   possibly serious issues.
+	   Please do not use lightly, and please report the build issues which make it needed
+	   to the squid developers before doing so.
+
 	<tag>--disable-translation</tag>
         <p>Prevent Squid generating localized error page templates and manuals.
            Which is usually tried, but may not be needed.
@@ -1586,7 +1611,7 @@ This section gives an account of those changes in three categories:
 	<p>Replaced by <em>url_rewrite_bypass</em>
 
 	<tag>upgrade_http0.9</tag>
-	<p>ICY protocol streaming support added natively.
+	<p>Obsolete. ICY protocol streaming support added natively.
 
 	<tag>zph_local</tag>
 	<p>Replaced by <em>qos_flows local-hit=</em>
