@@ -32,6 +32,7 @@ test_tools.cc: $(top_srcdir)/test-suite/test_tools.cc
 # globals.cc is needed by test_tools.cc.
 # Neither of these should be disted from here.
 TESTSOURCES= test_tools.cc
+CLEANFILES += test_tools.cc
 
 ## ##### squidclient  #####
 
