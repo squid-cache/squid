@@ -18,12 +18,12 @@
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2 of the License, or
  *  (at your option) any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
@@ -60,10 +60,10 @@ logfile_mod_udp_write(Logfile * lf, const char *buf, size_t len)
     fd_bytes(ll->fd, s, FD_WRITE);
 #if 0
     if (s < 0) {
-       debugs(1, 1, "logfile (udp): got errno (" << errno << "):" << xstrerror());
+        debugs(1, 1, "logfile (udp): got errno (" << errno << "):" << xstrerror());
     }
     if (s != len) {
-       debugs(1, 1, "logfile (udp): len=" << len << ", wrote=" << s);
+        debugs(1, 1, "logfile (udp): len=" << len << ", wrote=" << s);
     }
 #endif
 
@@ -75,7 +75,7 @@ logfile_mod_udp_flush(Logfile * lf)
 {
     l_udp_t *ll = (l_udp_t *) lf->data;
     if (0 == ll->offset)
-       return;
+        return;
     logfile_mod_udp_write(lf, ll->buf, (size_t) ll->offset);
     ll->offset = 0;
 }
@@ -86,17 +86,17 @@ logfile_mod_udp_writeline(Logfile * lf, const char *buf, size_t len)
     l_udp_t *ll = (l_udp_t *) lf->data;
 
     if (0 == ll->bufsz) {
-	/* buffering disabled */
-	logfile_mod_udp_write(lf, buf, len);
-	return;
+        /* buffering disabled */
+        logfile_mod_udp_write(lf, buf, len);
+        return;
     }
     if (ll->offset > 0 && (ll->offset + len + 4) > ll->bufsz)
-	logfile_mod_udp_flush(lf);
+        logfile_mod_udp_flush(lf);
 
     if (len > ll->bufsz) {
-	/* too big to fit in buffer */
-	logfile_mod_udp_write(lf, buf, len);
-	return;
+        /* too big to fit in buffer */
+        logfile_mod_udp_write(lf, buf, len);
+        return;
     }
     /* buffer it */
     xmemcpy(ll->buf + ll->offset, buf, len);
@@ -131,10 +131,10 @@ logfile_mod_udp_close(Logfile * lf)
     lf->f_flush(lf);
 
     if (ll->fd >= 0)
-	file_close(ll->fd);
+        file_close(ll->fd);
 
     if (ll->buf)
-	xfree(ll->buf);
+        xfree(ll->buf);
 
     xfree(lf->data);
     lf->data = NULL;
@@ -162,17 +162,17 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
     lf->data = ll;
 
     if (strncmp(path, "//", 2) == 0) {
-       path += 2;
+        path += 2;
     }
     strAddr = xstrdup(path);
     if (!GetHostWithPort(strAddr, &addr)) {
-	if (lf->flags.fatal) {
-	    fatalf("Invalid UDP logging address '%s'\n", lf->path);
-	} else {
-	    debugs(50, DBG_IMPORTANT, "Invalid UDP logging address '" << lf->path << "'");
-	    safe_free(strAddr);
-	    return FALSE;
-	}
+        if (lf->flags.fatal) {
+            fatalf("Invalid UDP logging address '%s'\n", lf->path);
+        } else {
+            debugs(50, DBG_IMPORTANT, "Invalid UDP logging address '" << lf->path << "'");
+            safe_free(strAddr);
+            return FALSE;
+        }
     }
     safe_free(strAddr);
 
@@ -187,35 +187,34 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
 
     ll->fd = comm_open(SOCK_DGRAM, IPPROTO_UDP, no_addr, COMM_NONBLOCKING, "UDP log socket");
     if (ll->fd < 0) {
-	if (lf->flags.fatal) {
-	    fatalf("Unable to open UDP socket for logging\n");
-	} else {
-	    debugs(50, DBG_IMPORTANT, "Unable to open UDP socket for logging");
-	    return FALSE;
-	}
-    }
-    else if (comm_connect_addr(ll->fd, &addr)) {
-	if (lf->flags.fatal) {
-	    fatalf("Unable to connect to %s for UDP log: %s\n", lf->path, xstrerror());
-	} else {
-	    debugs(50, DBG_IMPORTANT, "Unable to connect to " << lf->path << " for UDP log: " << xstrerror());
-	    return FALSE;
-	}
+        if (lf->flags.fatal) {
+            fatalf("Unable to open UDP socket for logging\n");
+        } else {
+            debugs(50, DBG_IMPORTANT, "Unable to open UDP socket for logging");
+            return FALSE;
+        }
+    } else if (comm_connect_addr(ll->fd, &addr)) {
+        if (lf->flags.fatal) {
+            fatalf("Unable to connect to %s for UDP log: %s\n", lf->path, xstrerror());
+        } else {
+            debugs(50, DBG_IMPORTANT, "Unable to connect to " << lf->path << " for UDP log: " << xstrerror());
+            return FALSE;
+        }
     }
     if (ll->fd == -1) {
-	if (ENOENT == errno && fatal_flag) {
-	    fatalf("Cannot open '%s' because\n"
-		"\tthe parent directory does not exist.\n"
-		"\tPlease create the directory.\n", path);
-	} else if (EACCES == errno && fatal_flag) {
-	    fatalf("Cannot open '%s' for writing.\n"
-		"\tThe parent directory must be writeable by the\n"
-		"\tuser '%s', which is the cache_effective_user\n"
-		"\tset in squid.conf.", path, Config.effectiveUser);
-	} else {
-	    debugs(50, DBG_IMPORTANT, "logfileOpen (UDP): " << lf->path << ": " << xstrerror());
-	    return 0;
-	}
+        if (ENOENT == errno && fatal_flag) {
+            fatalf("Cannot open '%s' because\n"
+                   "\tthe parent directory does not exist.\n"
+                   "\tPlease create the directory.\n", path);
+        } else if (EACCES == errno && fatal_flag) {
+            fatalf("Cannot open '%s' for writing.\n"
+                   "\tThe parent directory must be writeable by the\n"
+                   "\tuser '%s', which is the cache_effective_user\n"
+                   "\tset in squid.conf.", path, Config.effectiveUser);
+        } else {
+            debugs(50, DBG_IMPORTANT, "logfileOpen (UDP): " << lf->path << ": " << xstrerror());
+            return 0;
+        }
     }
     /* Force buffer size to something roughly fitting inside an MTU */
     /*
@@ -225,8 +224,8 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
      */
     bufsz = 1400;
     if (bufsz > 0) {
-	ll->buf = static_cast<char*>(xmalloc(bufsz));
-	ll->bufsz = bufsz;
+        ll->buf = static_cast<char*>(xmalloc(bufsz));
+        ll->bufsz = bufsz;
     }
 
     return 1;

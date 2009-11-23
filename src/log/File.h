@@ -4,7 +4,8 @@
 #include "config.h"
 #include "dlink.h"
 
-class logfile_buffer_t {
+class logfile_buffer_t
+{
 public:
     char *buf;
     int size;
@@ -22,7 +23,8 @@ typedef void LOGFLUSH(Logfile *);
 typedef void LOGROTATE(Logfile *);
 typedef void LOGCLOSE(Logfile *);
 
-class Logfile {
+class Logfile
+{
 
 public:
     char path[SQUID_MAXPATHLEN];

@@ -1,7 +1,8 @@
 #ifndef SQUID_SRC_LOG_CONFIG_H
 #define SQUID_SRC_LOG_CONFIG_H
 
-namespace Log {
+namespace Log
+{
 
 class LogConfig
 {
