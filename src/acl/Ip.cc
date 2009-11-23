@@ -109,7 +109,8 @@ acl_ip_data::toStr(char *buf, int len) const
         b3[0] = '/';
         rlen++;
 #if USE_IPV6
-        snprintf(&(b3[1]), (len-rlen), "%u", mask.GetCIDR() - (addr1.IsIPv4()?96:0) );
+        int cidr =  mask.GetCIDR() - (addr1.IsIPv4()?96:0);
+        snprintf(&(b3[1]), (len-rlen), "%u", (unsigned int)(cidr<0?0:cidr) );
 #else
         snprintf(&(b3[1]), (len-rlen), "%u", mask.GetCIDR() );
 #endif
@@ -273,7 +274,29 @@ acl_ip_data::FactoryParse(const char *t)
         return q;
     }
 
+    /* Detect some old broken strings equivalent to 'all'.
+     * treat them nicely. But be loud until its fixed.  */
+    if (strcasecmp(t, "0/0") == 0 || strcasecmp(t, "0.0.0.0/0") == 0 || strcasecmp(t, "0.0.0.0/0.0.0.0") == 0 ||
+        strcasecmp(t, "0.0.0.0") == 0 || strcasecmp(t, "0.0.0.0-0.0.0.0") == 0 || strcasecmp(t, "0.0.0.0-0.0.0.0/0") == 0) {
+
+        debugs(28,DBG_CRITICAL, "ERROR: '" << t << "' needs to be replaced by the term 'all'.");
+        debugs(28,DBG_CRITICAL, "SECURITY NOTICE: Overriding config setting. Using 'all' instead.");
+        q->addr1.SetAnyAddr();
+        q->addr2.SetEmpty();
+        q->mask.SetAnyAddr();
+        return q;
+    }
+
 #if USE_IPV6
+    /* Special ACL RHS "ipv4" matches IPv4 Internet
+     * A nod to IANA; we include the entire class space in case
+     * they manage to find a way to recover and use it */
+    if (strcasecmp(t, "ipv4") == 0) {
+        q->mask.SetNoAddr();
+        q->mask.ApplyMask(0, AF_INET);
+        return q;
+    }
+
     /* Special ACL RHS "ipv6" matches IPv6-Unicast Internet */
     if (strcasecmp(t, "ipv6") == 0) {
         debugs(28, 9, "aclIpParseIpData: magic 'ipv6' found.");
