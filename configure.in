@@ -14,6 +14,8 @@ AC_REVISION($Revision$)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
+m4_include([acinclude/compiler-flags.m4])
+
 PRESET_CFLAGS="$CFLAGS"
 PRESET_LDFLAGS="$LDFLAGS"
 
@@ -306,8 +308,10 @@ fi
 AC_SUBST(SQUID_CFLAGS)
 AC_SUBST(SQUID_CXXFLAGS)
 
-AC_TEST_CHECKFORHUGEOBJECTS
-SQUID_CXXFLAGS="$SQUID_CXXFLAGS $HUGE_OBJECT_FLAG"
+SQUID_CXX_CHECK_FHUGEOBJECTS
+if test "$squid_cv_test_checkforhugeobjects" = "yes"; then
+	SQUID_CXXFLAGS="$SQUID_CXXFLAGS -fhuge-objects"
+fi
 
 dnl Set LDFLAGS
 if test -z "$PRESET_LDFLAGS"; then
