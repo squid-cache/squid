@@ -277,7 +277,7 @@ acl_ip_data::FactoryParse(const char *t)
     /* Detect some old broken strings equivalent to 'all'.
      * treat them nicely. But be loud until its fixed.  */
     if (strcasecmp(t, "0/0") == 0 || strcasecmp(t, "0.0.0.0/0") == 0 || strcasecmp(t, "0.0.0.0/0.0.0.0") == 0 ||
-        strcasecmp(t, "0.0.0.0") == 0 || strcasecmp(t, "0.0.0.0-0.0.0.0") == 0 || strcasecmp(t, "0.0.0.0-0.0.0.0/0") == 0) {
+            strcasecmp(t, "0.0.0.0") == 0 || strcasecmp(t, "0.0.0.0-0.0.0.0") == 0 || strcasecmp(t, "0.0.0.0-0.0.0.0/0") == 0) {
 
         debugs(28,DBG_CRITICAL, "ERROR: '" << t << "' needs to be replaced by the term 'all'.");
         debugs(28,DBG_CRITICAL, "SECURITY NOTICE: Overriding config setting. Using 'all' instead.");
