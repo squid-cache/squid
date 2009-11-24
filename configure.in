@@ -24,13 +24,49 @@ if test -z "$LDFLAGS"; then
         LDFLAGS="-g"
 fi
 
-dnl Check for GNU cc
+# Check for GNU cc
 AC_PROG_CC
 AM_PROG_CC_C_O
 AC_PROG_CXX
 AC_LANG([C++])
 AC_CANONICAL_HOST
 
+# test for programs
+AC_PROG_LIBTOOL
+AC_PROG_RANLIB
+AC_PROG_CPP
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_EGREP
+
+AC_PATH_PROG(SH, sh, /bin/sh)
+AC_PATH_PROG(FALSE, false, /usr/bin/false)
+AC_PATH_PROG(TRUE, true, /usr/bin/true)
+AC_PATH_PROG(MV, mv, $FALSE)
+AC_PATH_PROG(MKDIR, mkdir, $FALSE)
+AC_PATH_PROG(LN, ln, cp)
+AC_PATH_PROG(CHMOD, chmod, $FALSE)
+
+AC_PATH_PROG(RM, rm, $FALSE)
+dnl Libtool 2.2.6 requires: rm -f
+RM="$RM -f"
+
+AC_PATH_PROG(PERL, perl, none)
+if test "$ac_cv_path_PERL" = "none"; then
+  AC_MSG_FAILURE([Perl is required to compile Squid. Please install Perl and then re-run configure ])
+fi
+
+dnl set $(AR)
+AC_PATH_PROG(AR, ar, $FALSE)
+AR_R="$AR r"
+case "$host" in
+	*-next-nextstep3)
+		AR="libtool -o"
+		;;
+esac
+AC_SUBST(AR_R)
+
+AC_PATH_PROG(CPPUNITCONFIG, cppunit-config, false)
 dnl Make the squid top srcdir available to sub-packages as --with-squid=PATH
 new_configure_args="$ac_configure_args --with-squid=$ac_abs_confdir"
 ac_configure_args="$new_configure_args"
@@ -85,7 +121,6 @@ then
 
     AC_LIBLTDL_CONVENIENCE(lib/libLtdl)
 fi
-AC_PROG_LIBTOOL
 AC_LTDL_DLLIB
 
 # Do we need these unconditionally for "make distcheck" to work?
@@ -99,7 +134,6 @@ then
     AC_SUBST([LIBADD_DL])
 fi
 
-AC_PROG_RANLIB
 
 
 REGEXLIB=''	# -lregex
@@ -2410,7 +2444,6 @@ AC_ARG_WITH(filedescriptors,
     esac
 ])
 
-AC_PATH_PROG(CPPUNITCONFIG, cppunit-config, false)
 if $CPPUNITCONFIG --help >/dev/null; then
   AC_MSG_NOTICE([using system installed cppunit])
   SQUID_CPPUNIT_LIBS="`$CPPUNITCONFIG --libs`"
@@ -2463,29 +2496,8 @@ case "$host" in
 	;;
 esac
 
-dnl Check for programs
-AC_PROG_CPP
-AC_PROG_INSTALL
-AC_PROG_LN_S
-AC_PATH_PROG(SH, sh, /bin/sh)
-AC_PATH_PROG(FALSE, false, /usr/bin/false)
-AC_PATH_PROG(TRUE, true, /usr/bin/true)
-AC_PATH_PROG(MV, mv, $FALSE)
-AC_PATH_PROG(MKDIR, mkdir, $FALSE)
-AC_PATH_PROG(LN, ln, cp)
-AC_PATH_PROG(CHMOD, chmod, $FALSE)
-
-AC_PATH_PROG(RM, rm, $FALSE)
-dnl Libtool 2.2.6 requires: rm -f
-RM="$RM -f"
 
 dnl automake handles this AC_PATH_PROG(MAKEDEPEND, makedepend, $TRUE)
-AC_PROG_EGREP
-
-AC_PATH_PROG(PERL, perl, none)
-if test "$ac_cv_path_PERL" = "none"; then
-  AC_MSG_FAILURE([Perl is required to compile Squid. Please install Perl and then re-run configure ])
-fi
 
 case "$host" in
     *-hp-hpux*)
@@ -2493,16 +2505,6 @@ case "$host" in
 	RANLIB=":"
 	;;
 esac
-
-dnl set $(AR)
-AC_PATH_PROG(AR, ar, $FALSE)
-AR_R="$AR r"
-case "$host" in
-	*-next-nextstep3)
-		AR="libtool -o"
-		;;
-esac
-AC_SUBST(AR_R)
 
 dnl Check for headers
 AC_HEADER_DIRENT
