@@ -67,6 +67,7 @@ esac
 AC_SUBST(AR_R)
 
 AC_PATH_PROG(CPPUNITCONFIG, cppunit-config, false)
+
 dnl Make the squid top srcdir available to sub-packages as --with-squid=PATH
 new_configure_args="$ac_configure_args --with-squid=$ac_abs_confdir"
 ac_configure_args="$new_configure_args"
@@ -134,6 +135,10 @@ then
     AC_SUBST([LIBADD_DL])
 fi
 
+
+dnl ********************************* KK ***********************
+SQUID_GUESS_CC_VARIANT
+SQUID_GUESS_CC_WERROR_FLAG
 
 
 REGEXLIB=''	# -lregex
