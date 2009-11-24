@@ -47,7 +47,7 @@ AC_DEFUN([SQUID_TEST_COMPILER_FLAG],[
 ])
 
 # check if the c++ compiler supports the -fhuge-objects flag
-# sets the vartiable squid_cv_test_checkforhugeobjects to either "yes" or "no"
+# sets the variable squid_cv_test_checkforhugeobjects to either "yes" or "no"
 AC_DEFUN([SQUID_CXX_CHECK_FHUGEOBJECTS],[
   AC_LANG_PUSH([C++])
   if test "$GCC" = "yes"; then
@@ -56,4 +56,50 @@ AC_DEFUN([SQUID_CXX_CHECK_FHUGEOBJECTS],[
     squid_cv_test_checkforhugeobjects=no
   fi
   AC_LANG_POP([C++])
+])
+
+# detect what kind of compiler we're using, either by using hints from
+# autoconf itself, or by using predefined preprocessor macros
+# sets the variable squid_cv_compiler to one of
+#  - gcc
+#  - sunstudio
+
+AC_DEFUN([SQUID_GUESS_CC_VARIANT], [
+ AC_CACHE_CHECK([what kind of compiler we're using],[squid_cv_compiler],
+ [
+  AC_REQUIRE([AC_PROG_CC])
+  if test "$GCC" = "yes" ; then
+   squid_cv_compiler="gcc"
+  fi
+  dnl repeat the next block for each compiler, changing the
+  dnl preprocessor definition type so that it depends on platform-specific
+  dnl predefined macros
+  dnl SunPro CC
+  if test -z "$squid_cv_compiler" ; then
+   AC_COMPILE_IFELSE([
+    AC_LANG_PROGRAM([[
+#if !defined(__SUNPRO_C) && !defined(__SUNPRO_CC)
+#error "not sunpro c"
+#endif
+    ]])],[squid_cv_compiler="sunstudio"],[])
+  fi
+  dnl end of block to be repeated
+  if test -z "$squid_cv_compiler" ; then
+   squid_cv_compiler="unknown"
+  fi
+  ])
+ ])
+
+# define the flag to use to have the compiler treat warnings as errors
+# requirs SQUID_GUESS_CC_VARIANT
+# sets the variable squid_cv_cc_werror_flag to the right flag
+AC_DEFUN([SQUID_GUESS_CC_WERROR_FLAG], [
+ AC_REQUIRE([SQUID_GUESS_CC_VARIANT])
+ AC_MSG_CHECKING([for compiler warnings-are-errors flag])
+ case "$squid_cv_compiler" in
+  gcc) squid_cv_cc_werror_flag="-Werror" ;;
+  sunstudio) squid_cv_cc_werror_flag="-errwarn=%all" ;;
+  *) ;;
+ esac
+ AC_MSG_RESULT([$squid_cv_cc_werror_flag])
 ])
