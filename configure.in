@@ -55,6 +55,7 @@ AC_PATH_PROG(PERL, perl, none)
 if test "$ac_cv_path_PERL" = "none"; then
   AC_MSG_FAILURE([Perl is required to compile Squid. Please install Perl and then re-run configure ])
 fi
+AC_PATH_PROG(POD2MAN, pod2man, none)
 
 dnl set $(AR)
 AC_PATH_PROG(AR, ar, $FALSE)
@@ -338,7 +339,6 @@ SQUID_CXX_CHECK_FHUGEOBJECTS
 if test "$squid_cv_test_checkforhugeobjects" = "yes"; then
 	SQUID_CXXFLAGS="$SQUID_CXXFLAGS -fhuge-objects"
 fi
-echo "************* HERE ***************"
 # see if we can use cc -pipe
 SQUID_TEST_COMPILER_FLAG([squid_cv_test_cc_pipe],[-pipe])
 if test "$squid_cv_test_cc_pipe" ; then
