@@ -31,7 +31,7 @@ dnl Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 # first argument is the variable containing the result 
 # (will be set to "yes" or "no")
 # second argument is the flag to be tested, verbatim
-
+#
 AC_DEFUN([SQUID_CC_CHECK_ARGUMENT],[
   AC_CACHE_CHECK([whether compiler accepts $2],[$1],
   [{
@@ -49,6 +49,7 @@ AC_DEFUN([SQUID_CC_CHECK_ARGUMENT],[
 
 # check if the c++ compiler supports the -fhuge-objects flag
 # sets the variable squid_cv_cxx_arg_fhugeobjects to either "yes" or "no"
+#
 AC_DEFUN([SQUID_CXX_CHECK_ARG_FHUGEOBJECTS],[
   AC_LANG_PUSH([C++])
   if test "$GCC" = "yes"; then
@@ -65,6 +66,7 @@ AC_DEFUN([SQUID_CXX_CHECK_ARG_FHUGEOBJECTS],[
 #  - gcc
 #  - sunstudio
 #  - none (undetected)
+# 
 AC_DEFUN([SQUID_CC_GUESS_VARIANT], [
  AC_CACHE_CHECK([what kind of compiler we're using],[squid_cv_compiler],
  [
@@ -93,16 +95,33 @@ AC_DEFUN([SQUID_CC_GUESS_VARIANT], [
 
 # define the flag to use to have the compiler treat warnings as errors
 # requirs SQUID_CC_GUESS_VARIANT
-# sets the variable squid_cv_cc_option_werror to the right flag
-# or to an empty string if it can't be detected.
+# Sets a few variables to contain some compiler-dependent command line
+# options, or to empty strings if the compiler doesn't support those
+# options
+# They are (with their GCC equivalent):
+# squid_cv_cc_option_werror   (-Werror)
+# squid_cv_cc_option_wall     (-Wall)
+# squid_cv_cc_option_optimize (-O3)
 # 
-AC_DEFUN([SQUID_CC_GUESS_OPTION_WERROR], [
+AC_DEFUN([SQUID_CC_GUESS_OPTIONS], [
  AC_REQUIRE([SQUID_CC_GUESS_VARIANT])
  AC_MSG_CHECKING([for compiler warnings-are-errors flag])
  case "$squid_cv_compiler" in
-  gcc) squid_cv_cc_option_werror="-Werror" ;;
-  sunstudio) squid_cv_cc_option_werror="-errwarn=%all" ;;
-  *) squid_cv_cc_option_werror="" ;;
+  gcc) 
+   squid_cv_cc_option_werror="-Werror" 
+   squid_cv_cc_option_wall="-Wall"
+   squid_cv_cc_option_optimize="-O3"
+   ;;
+  sunstudio) 
+   squid_cv_cc_option_werror="-errwarn=%all" 
+   squid_cv_cc_option_wall="+w"
+   squid_cv_cc_option_optimize="-fast"
+   ;;
+  *) 
+   squid_cv_cc_option_werror="" 
+   squid_cv_cc_option_wall=""
+   squid_cv_cc_option_optimize=""
+   ;;
  esac
  AC_MSG_RESULT([$squid_cv_cc_option_werror])
 ])
