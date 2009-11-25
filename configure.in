@@ -70,10 +70,9 @@ AC_SUBST(AR_R)
 AC_PATH_PROG(CPPUNITCONFIG, cppunit-config, false)
 
 dnl Make the squid top srcdir available to sub-packages as --with-squid=PATH
-new_configure_args="$ac_configure_args --with-squid=$ac_abs_confdir"
-ac_configure_args="$new_configure_args"
+ac_configure_args="$ac_configure_args --with-squid=$ac_abs_confdir"
 
-squid_disable_werror="no"
+squid_opt_enable_werror="yes" # default
 AC_ARG_ENABLE(strict-error-checking,
   AS_HELP_STRING([--disable-strict-error-checking],[By default squid is compiled
                  with all possible static compiler error-checks enbled.
@@ -81,7 +80,7 @@ AC_ARG_ENABLE(strict-error-checking,
 [ 
   if test "${enableval}" = "no"
   then
-    squid_disable_werror="yes"
+    squid_opt_enable_werror="no"
   fi
 ])
 
@@ -139,7 +138,7 @@ fi
 
 dnl ********************************* KK ***********************
 SQUID_CC_GUESS_VARIANT
-SQUID_CC_GUESS_OPTION_WERROR
+SQUID_CC_GUESS_OPTIONS
 
 
 REGEXLIB=''	# -lregex
@@ -281,18 +280,18 @@ if test -z "$PRESET_CFLAGS"; then
 	    CFLAGS=`echo $CFLAGS | sed -e 's/-O[0-9]/-O/'`
 	    ;;
         *)
-    	    CFLAGS="-Wall $CFLAGS"
+    	    CFLAGS="$squid_cv_cc_option_wall $CFLAGS"
     	    ;;
         esac
     else
 	case "$host" in
 	*mips-sgi-irix6.*)
 	    # suggested by Rafael Seidl <rafaels@cthulhu.engr.sgi.com>
-	    CFLAGS="-O3 -OPT:Olimit=0:space=OFF \
+	    CFLAGS="$squid_cv_cc_option_optimize -OPT:Olimit=0:space=OFF \
 		-woff 1009,1014,1110,1116,1183,1185,1188,1204,1230,1233,1355 \
 		-Wl,-woff,85,-woff,84,-woff,134 \
 		-nostdinc -I/usr/include -D_BSD_SIGNALS $CFLAGS"
-	    CXXFLAGS="-O3 -OPT:Olimit=0:space=OFF \
+	    CXXFLAGS="$squid_cv_cc_option_optimize -OPT:Olimit=0:space=OFF \
 		-woff 1009,1014,1110,1116,1183,1185,1188,1204,1230,1233,1355 \
 		-Wl,-woff,85,-woff,84,-woff,134 \
 		-nostdinc -I/usr/include -D_BSD_SIGNALS $CXXFLAGS"
@@ -300,7 +299,7 @@ if test -z "$PRESET_CFLAGS"; then
 	alpha-dec-osf4.*)
 	    # Mogul says DEC compilers take both -g and -O2
 	    CFLAGS=`echo $CFLAGS | sed -e 's/-g/-g3/'`
-	    CFLAGS="-O2 $CFLAGS"
+	    CFLAGS="$squid_cv_cc_option_optimize $CFLAGS"
 	    ;;
 	*)
 	    ;;
@@ -316,19 +315,19 @@ dnl -Werror -Wmissing-prototypes -Wmissing-declarations
 dnl TODO: check if the problem will be present in any other newer MinGW release.
     case "$host_os" in
     mingw|mingw32)
-        SQUID_CFLAGS="-Wall -Wpointer-arith -Wwrite-strings -Wcomments"
+        SQUID_CFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wcomments"
 	;;
     *)
-        SQUID_CFLAGS="-Wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments"
+        SQUID_CFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments"
 	;;
     esac
-    SQUID_CXXFLAGS="-Wall -Wpointer-arith -Wwrite-strings -Wcomments"
+    SQUID_CXXFLAGS="$squid_cv_cc_option_wall -Wpointer-arith -Wwrite-strings -Wcomments"
 else
     SQUID_CFLAGS=
     SQUID_CXXFLAGS=
 fi
 
-if test "$squid_disable_werror" = "no"
+if test "$squid_opt_enable_werror" = "no"
 then
     SQUID_CFLAGS="$SQUID_CFLAGS $squid_cv_cc_option_werror"
     SQUID_CXXFLAGS="$SQUID_CXXFLAGS $squid_cv_cc_option_werror"
