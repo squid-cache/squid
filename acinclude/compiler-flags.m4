@@ -28,7 +28,8 @@ dnl Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 
 
 # check if the compiler accepts a supplied flag
-# first argument is the variable containing the result (will be set to "yes" or "no"
+# first argument is the variable containing the result 
+# (will be set to "yes" or "no")
 # second argument is the flag to be tested, verbatim
 
 AC_DEFUN([SQUID_TEST_COMPILER_FLAG],[
