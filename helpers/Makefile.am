@@ -1,1 +1,8 @@
-SUBDIRS = basic_auth ntlm_auth digest_auth negotiate_auth external_acl url_rewrite
+SUBDIRS = \
+	basic_auth \
+	digest_auth \
+	external_acl \
+	log_daemon \
+	negotiate_auth \
+	ntlm_auth \
+	url_rewrite

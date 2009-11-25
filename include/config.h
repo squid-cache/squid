@@ -262,6 +262,8 @@ typedef long mtyp_t;
 #define LEAK_CHECK_MODE 1
 #endif
 
+/* temp hack: needs to be pre-defined for now. */
+#define SQUID_MAXPATHLEN 256
 
 /*
  * strnstr() is needed. The OS may not provide a working copy.

@@ -98,6 +98,7 @@ SQUIDCEXTERN void httpRequestFree(void *);
 extern void clientAccessCheck(void *);
 
 #include "Debug.h"
+
 /* see debug.c for info on context-based debugging */
 SQUIDCEXTERN Ctx ctx_enter(const char *descr);
 SQUIDCEXTERN void ctx_exit(Ctx ctx);
@@ -703,14 +704,6 @@ SQUIDCEXTERN void *leakAddFL(void *, const char *, int);
 SQUIDCEXTERN void *leakTouchFL(void *, const char *, int);
 SQUIDCEXTERN void *leakFreeFL(void *, const char *, int);
 #endif
-
-/* logfile.c */
-SQUIDCEXTERN Logfile *logfileOpen(const char *path, size_t bufsz, int);
-SQUIDCEXTERN void logfileClose(Logfile * lf);
-SQUIDCEXTERN void logfileRotate(Logfile * lf);
-SQUIDCEXTERN void logfileWrite(Logfile * lf, void *buf, size_t len);
-SQUIDCEXTERN void logfileFlush(Logfile * lf);
-SQUIDCEXTERN void logfilePrintf(Logfile * lf, const char *fmt,...) PRINTF_FORMAT_ARG2;
 
 /*
  * prototypes for system functions missing from system includes
