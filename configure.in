@@ -265,19 +265,6 @@ if test "$GCC" = "yes"; then
     unset GCCVER
     unset GCCVER2
 
-dnl try to use -pipe
-    AC_MSG_CHECKING([if gcc -pipe works])
-    SAVED_CFLAGS="$CFLAGS"
-    SAVED_CXXFLAGS="$CXXFLAGS"
-    CFLAGS="$CFLAGS -pipe"
-    CXXFLAGS="$CXXFLAGS -pipe"
-    AC_COMPILE_IFELSE(AC_LANG_PROGRAM([],[return 0;]),[AC_MSG_RESULT([yes])],[
-        AC_MSG_RESULT([no])
-        CFLAGS="$SAVED_CFLAGS"
-        CXXFLAGS="$SAVED_CXXFLAGS"
-        ])
-    unset SAVED_CFLAGS
-    unset SAVED_CXXFLAGS
 fi
 
 dnl Set Default CFLAGS
@@ -350,6 +337,13 @@ AC_SUBST(SQUID_CXXFLAGS)
 SQUID_CXX_CHECK_FHUGEOBJECTS
 if test "$squid_cv_test_checkforhugeobjects" = "yes"; then
 	SQUID_CXXFLAGS="$SQUID_CXXFLAGS -fhuge-objects"
+fi
+echo "************* HERE ***************"
+# see if we can use cc -pipe
+SQUID_TEST_COMPILER_FLAG([squid_cv_test_cc_pipe],[-pipe])
+if test "$squid_cv_test_cc_pipe" ; then
+    SQUID_CXXFLAGS="$SQUID_CXXFLAGS -pipe"
+    SQUID_CFLAGS="$SQUID_CFLAGS -pipe"
 fi
 
 dnl Set LDFLAGS
