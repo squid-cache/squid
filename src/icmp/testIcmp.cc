@@ -31,15 +31,15 @@ testIcmp::testChecksum()
 
     CPPUNIT_ASSERT_EQUAL((int)htons(0xfffe), icmp.testChecksum(buf,2)); // 1
     CPPUNIT_ASSERT_EQUAL((int)htons(0xfffe), icmp.testChecksum(buf,3));
- 
+
     CPPUNIT_ASSERT_EQUAL((int)htons(0xfffc), icmp.testChecksum(buf,4)); // 1+2
     CPPUNIT_ASSERT_EQUAL((int)htons(0xfffc), icmp.testChecksum(buf,5));
 
     CPPUNIT_ASSERT_EQUAL((int)htons(0xfff9), icmp.testChecksum(buf,6)); // 1+2+3
-    CPPUNIT_ASSERT_EQUAL((int)htons(0xfff9), icmp.testChecksum(buf,7)); 
+    CPPUNIT_ASSERT_EQUAL((int)htons(0xfff9), icmp.testChecksum(buf,7));
 
     CPPUNIT_ASSERT_EQUAL((int)htons(0xfff5), icmp.testChecksum(buf,8)); // 1+2+3+4
-    CPPUNIT_ASSERT_EQUAL((int)htons(0xfff5), icmp.testChecksum(buf,9)); 
+    CPPUNIT_ASSERT_EQUAL((int)htons(0xfff5), icmp.testChecksum(buf,9));
 
     CPPUNIT_ASSERT_EQUAL((int)htons(0xfff0), icmp.testChecksum(buf,10)); // 1+2...+5
     CPPUNIT_ASSERT_EQUAL((int)htons(0xfff0), icmp.testChecksum(buf,11));
@@ -56,7 +56,7 @@ testIcmp::testChecksum()
     CPPUNIT_ASSERT_EQUAL((int)htons(0xffd2), icmp.testChecksum(buf,18)); // 1+2...+9
     CPPUNIT_ASSERT_EQUAL((int)htons(0xffd2), icmp.testChecksum(buf,19));
 
-    // data with accurate length 
+    // data with accurate length
     CPPUNIT_ASSERT_EQUAL((int)htons(0xffc8), icmp.testChecksum(buf,20)); // 1+2...+10
 
     // data with invalid length (overrun) ==> Garbage checksum...

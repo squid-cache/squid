@@ -1292,23 +1292,6 @@ struct _store_rebuild_data {
     int zero_object_sz;
 };
 
-struct _Logfile {
-    int fd;
-    char path[MAXPATHLEN];
-    char *buf;
-    size_t bufsz;
-    size_t offset;
-
-    struct {
-        unsigned int fatal;
-        unsigned int syslog;
-    } flags;
-
-    int syslog_priority;
-
-    int64_t sequence_number;  ///< Unique sequence number per log line.
-};
-
 class logformat_token;
 
 struct _logformat {
@@ -1316,6 +1299,8 @@ struct _logformat {
     logformat_token *format;
     logformat *next;
 };
+
+class Logfile;
 
 struct _customlog {
     char *filename;

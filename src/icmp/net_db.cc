@@ -40,6 +40,7 @@
 
 #include "squid.h"
 #include "icmp/net_db.h"
+#include "log/File.h"
 #include "cbdata.h"
 #include "event.h"
 #include "CacheManager.h"
