@@ -1,3 +1,24 @@
+Changes to squid-3.1.0.15 (23 Nov 2009):
+
+	- Regression Fix: myip ACL not accepted in config
+	- Bug 2795: acl arp lookups including port
+	- Bug 2794: ESI parsing fails on FreeBSD
+	- Bug 2778: fix linking issues using SunCC
+	- Bug 2724: eCAP build failure unless ICAP enabled
+	- Bug 2628: Correct default PID location to PREFIX/var/run/squid.pid
+	- Bug 2617: Performance degradation during processing list of dstdomain ACL's
+	- Bug 2374: Support ICY / ICEcast / SHOUTcast streaming protocol.
+	- Fix: 64-bit filesize issue in squidclient POST of large files
+	- Fix: send correct Connection: header on intercepted replies
+	- Support libtool 2.x
+	- ESI libraries libexpat and libxml2 now optional
+	- ESI support default enabled
+	- Bump libcap minimum requirement to libcap 2.09+
+	- ARP / MAC support fixes for IPv6-mode
+	- Add outstanding IPv6 settings to squid.conf (localnet, localhost)
+	- ... and many additions to the background testing structure
+	- ... and very many minor build and code cleanups for non-GCC compilers.
+
 Changes to squid-3.1.0.14 (27 Sep 2009):
 
 	- Bug 2777: Various build issues on OpenSolaris
