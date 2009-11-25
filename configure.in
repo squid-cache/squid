@@ -55,7 +55,7 @@ AC_PATH_PROG(PERL, perl, none)
 if test "$ac_cv_path_PERL" = "none"; then
   AC_MSG_FAILURE([Perl is required to compile Squid. Please install Perl and then re-run configure ])
 fi
-AC_PATH_PROG(POD2MAN, pod2man, none)
+AC_PATH_PROG(POD2MAN, pod2man, $FALSE)
 
 dnl set $(AR)
 AC_PATH_PROG(AR, ar, $FALSE)
@@ -138,8 +138,8 @@ fi
 
 
 dnl ********************************* KK ***********************
-SQUID_GUESS_CC_VARIANT
-SQUID_GUESS_CC_WERROR_FLAG
+SQUID_CC_GUESS_VARIANT
+SQUID_CC_GUESS_OPTION_WERROR
 
 
 REGEXLIB=''	# -lregex
@@ -323,25 +323,27 @@ dnl TODO: check if the problem will be present in any other newer MinGW release.
 	;;
     esac
     SQUID_CXXFLAGS="-Wall -Wpointer-arith -Wwrite-strings -Wcomments"
-    if test "$squid_disable_werror" = "no"
-    then
-        SQUID_CFLAGS="$SQUID_CFLAGS -Werror"
-        SQUID_CXXFLAGS="$SQUID_CXXFLAGS -Werror"
-    fi
 else
     SQUID_CFLAGS=
     SQUID_CXXFLAGS=
 fi
+
+if test "$squid_disable_werror" = "no"
+then
+    SQUID_CFLAGS="$SQUID_CFLAGS $squid_cv_cc_option_werror"
+    SQUID_CXXFLAGS="$SQUID_CXXFLAGS $squid_cv_cc_option_werror"
+fi
+
 AC_SUBST(SQUID_CFLAGS)
 AC_SUBST(SQUID_CXXFLAGS)
 
-SQUID_CXX_CHECK_FHUGEOBJECTS
-if test "$squid_cv_test_checkforhugeobjects" = "yes"; then
+SQUID_CXX_CHECK_ARG_FHUGEOBJECTS
+if test "$squid_cv_cxx_arg_fhugeobjects" = "yes"; then
 	SQUID_CXXFLAGS="$SQUID_CXXFLAGS -fhuge-objects"
 fi
 # see if we can use cc -pipe
-SQUID_TEST_COMPILER_FLAG([squid_cv_test_cc_pipe],[-pipe])
-if test "$squid_cv_test_cc_pipe" ; then
+SQUID_CC_CHECK_ARGUMENT([squid_cv_cc_arg_pipe],[-pipe])
+if test "$squid_cv_cc_arg_pipe" ; then
     SQUID_CXXFLAGS="$SQUID_CXXFLAGS -pipe"
     SQUID_CFLAGS="$SQUID_CFLAGS -pipe"
 fi
