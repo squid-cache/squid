@@ -32,7 +32,7 @@ dnl Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
 # (will be set to "yes" or "no")
 # second argument is the flag to be tested, verbatim
 
-AC_DEFUN([SQUID_TEST_COMPILER_FLAG],[
+AC_DEFUN([SQUID_CC_CHECK_ARGUMENT],[
   AC_CACHE_CHECK([whether compiler accepts $2],[$1],
   [{
     AC_REQUIRE([AC_PROG_CC])
@@ -48,13 +48,13 @@ AC_DEFUN([SQUID_TEST_COMPILER_FLAG],[
 ])
 
 # check if the c++ compiler supports the -fhuge-objects flag
-# sets the variable squid_cv_test_checkforhugeobjects to either "yes" or "no"
-AC_DEFUN([SQUID_CXX_CHECK_FHUGEOBJECTS],[
+# sets the variable squid_cv_cxx_arg_fhugeobjects to either "yes" or "no"
+AC_DEFUN([SQUID_CXX_CHECK_ARG_FHUGEOBJECTS],[
   AC_LANG_PUSH([C++])
   if test "$GCC" = "yes"; then
-    SQUID_TEST_COMPILER_FLAG([squid_cv_test_checkforhugeobjects],[-Werror -fhuge-objects])
+    SQUID_CC_CHECK_ARGUMENT([squid_cv_cxx_arg_fhugeobjects],[-Werror -fhuge-objects])
   else
-    squid_cv_test_checkforhugeobjects=no
+    squid_cv_cxx_arg_fhugeobjects=no
   fi
   AC_LANG_POP([C++])
 ])
@@ -64,8 +64,8 @@ AC_DEFUN([SQUID_CXX_CHECK_FHUGEOBJECTS],[
 # sets the variable squid_cv_compiler to one of
 #  - gcc
 #  - sunstudio
-
-AC_DEFUN([SQUID_GUESS_CC_VARIANT], [
+#  - none (undetected)
+AC_DEFUN([SQUID_CC_GUESS_VARIANT], [
  AC_CACHE_CHECK([what kind of compiler we're using],[squid_cv_compiler],
  [
   AC_REQUIRE([AC_PROG_CC])
@@ -86,21 +86,23 @@ AC_DEFUN([SQUID_GUESS_CC_VARIANT], [
   fi
   dnl end of block to be repeated
   if test -z "$squid_cv_compiler" ; then
-   squid_cv_compiler="unknown"
+   squid_cv_compiler="none"
   fi
   ])
  ])
 
 # define the flag to use to have the compiler treat warnings as errors
-# requirs SQUID_GUESS_CC_VARIANT
-# sets the variable squid_cv_cc_werror_flag to the right flag
-AC_DEFUN([SQUID_GUESS_CC_WERROR_FLAG], [
- AC_REQUIRE([SQUID_GUESS_CC_VARIANT])
+# requirs SQUID_CC_GUESS_VARIANT
+# sets the variable squid_cv_cc_option_werror to the right flag
+# or to an empty string if it can't be detected.
+# 
+AC_DEFUN([SQUID_CC_GUESS_OPTION_WERROR], [
+ AC_REQUIRE([SQUID_CC_GUESS_VARIANT])
  AC_MSG_CHECKING([for compiler warnings-are-errors flag])
  case "$squid_cv_compiler" in
-  gcc) squid_cv_cc_werror_flag="-Werror" ;;
-  sunstudio) squid_cv_cc_werror_flag="-errwarn=%all" ;;
-  *) ;;
+  gcc) squid_cv_cc_option_werror="-Werror" ;;
+  sunstudio) squid_cv_cc_option_werror="-errwarn=%all" ;;
+  *) squid_cv_cc_option_werror="" ;;
  esac
- AC_MSG_RESULT([$squid_cv_cc_werror_flag])
+ AC_MSG_RESULT([$squid_cv_cc_option_werror])
 ])
