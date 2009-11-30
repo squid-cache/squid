@@ -992,9 +992,9 @@ FwdState::dispatch()
                  * prepared in the kernel by the ZPH incoming TCP TOS preserving
                  * patch.
                  */
-                unsigned char * p = buf;
-                while (p-buf < len) {
-                    struct cmsghdr *o = (struct cmsghdr*)p;
+                unsigned char * pbuf = buf;
+                while (pbuf-buf < len) {
+                    struct cmsghdr *o = (struct cmsghdr*)pbuf;
                     if (o->cmsg_len<=0)
                         break;
 
@@ -1002,7 +1002,7 @@ FwdState::dispatch()
                         clientFde->upstreamTOS = (unsigned char)(*(int*)CMSG_DATA(o));
                         break;
                     }
-                    p += CMSG_LEN(o->cmsg_len);
+                    pbuf += CMSG_LEN(o->cmsg_len);
                 }
             } else {
                 debugs(33, 1, "ZPH: error in getsockopt(IP_PKTOPTIONS) on FD "<<server_fd<<" "<<xstrerror());
