@@ -14,6 +14,7 @@ AC_REVISION($Revision$)dnl
 AC_PREFIX_DEFAULT(/usr/local/squid)
 AM_MAINTAINER_MODE
 
+m4_include([acinclude/squid-util.m4])
 m4_include([acinclude/compiler-flags.m4])
 
 PRESET_CFLAGS="$CFLAGS"
