@@ -91,7 +91,7 @@ LogTime()
 
     gettimeofday(&now, NULL);
     if (now.tv_sec != last_t) {
-        tm = localtime(&now.tv_sec);
+        tm = localtime((const struct time_t*)&now.tv_sec);
         strftime(buf, 127, "%Y/%m/%d %H:%M:%S", tm);
         last_t = now.tv_sec;
     }
