@@ -37,6 +37,8 @@ $1_CFLAGS="${CFLAGS}"
 $1_CXXFLAGS="${CXXFLAGS}"
 $1_LDFLAGS="${LDFLAGS}"
 $1_LIBS="${LIBS}"
+$1_CC="${LIBS}"
+$1_CXX="${LIBS}"
 $1_squid_saved_vars="$2"
 for squid_util_var_tosave in $2
 do
@@ -53,6 +55,8 @@ unset $1_CFLAGS
 unset $1_$CXXFLAGS
 unset $1_LDFLAGS
 unset $1_LIBS
+unset $1_CC
+unset $1_CXX
 for squid_util_var_tosave in $$1_squid_saved_vars
 do
     unset ${squid_util_var_tosave2}
@@ -68,6 +72,8 @@ CFLAGS="${$1_CFLAGS}"
 CXXFLAGS="${$1_CXXFLAGS}"
 LDFLAGS="${$1_LDFLAGS}"
 LIBS="${$1_LIBS}"
+CC="${$1_CC}"
+CXX="${$1_CXX}"
 for squid_util_var_tosave in $$1_squid_saved_vars
 do
     squid_util_var_tosave2="$1_${squid_util_var_tosave}"
@@ -76,3 +82,15 @@ done
 SQUID_STATE_COMMIT($1)
 ])
 
+
+dnl look for modules in the base-directory supplied as argument.
+dnl fill-in the variable pointed-to by the second argument with the space-separated
+dnl list of modules 
+AC_DEFUN([SQUID_LOOK_FOR_MODULES],[
+for dir in $1/*; do
+  module="`basename $dir`"
+  if test -d "$dir" && test "$module" != CVS; then
+      $2="$$2 $module"
+  fi
+done
+])

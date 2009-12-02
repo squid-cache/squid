@@ -453,84 +453,59 @@ AC_ARG_ENABLE(xmalloc-statistics,
   fi
 ])
 
-AC_ARG_ENABLE(async-io,
-  AS_HELP_STRING([--enable-async-io[=N_THREADS]],[Shorthand for "--with-aufs-threads=N_THREADS --with-pthreads
-                  --enable-storeio=ufs,aufs"]),
-[ case $enableval in
-  yes)
-	with_pthreads="yes"
-	STORE_MODULES="ufs aufs"
-    ;;
-  no)
-    ;;
-  *)
-  	aufs_io_threads=$enableval
-	with_pthreads="yes"
-	STORE_MODULES="ufs aufs"
-    ;;
-  esac
-])
-
 AC_ARG_WITH(aufs-threads,
   AS_HELP_STRING([--with-aufs-threads=N_THREADS],[Tune the number of worker threads for the aufs object store.]),
 [ case $withval in
   [[0-9]]*)
-    aufs_io_threads=$withval
+    squid_opt_aufs_threads=$withval
     ;;
   *)
     AC_MSG_ERROR(--with-aufs-threads expects a numeric argument)
     ;;
   esac
 ])
-if test "$aufs_io_threads"; then
-    AC_MSG_NOTICE([With $aufs_io_threads aufs threads])
-    AC_DEFINE_UNQUOTED(AUFS_IO_THREADS,$aufs_io_threads,
+if test "$squid_opt_aufs_threads"; then
+    AC_MSG_NOTICE([With $squid_opt_aufs_threads aufs threads])
+    AC_DEFINE_UNQUOTED(AUFS_IO_THREADS,$squid_opt_aufs_threads,
     [Defines how many threads aufs uses for I/O])
 fi
 
-AC_ARG_WITH(dl,
-  AS_HELP_STRING([--with-dl],[Use dynamic linking]))
+AC_ARG_WITH(dl, AS_HELP_STRING([--with-dl],[Use dynamic linking]))
 if test "$with_dl" = "yes"; then
   AC_MSG_NOTICE([With dl])
 fi
 
+squid_disk_module_candidates=""
+squid_opt_enable_diskio=auto  #values: 0(no), 1(yes), "auto"(=yes+detect modules)
 AC_ARG_ENABLE(disk-io,
-  AS_HELP_STRING([--enable-disk-io="list of modules"],[Build support for the list of disk I/O modules.
-                  Set without a value or omitted, all available modules will be built.
-                  See src/DiskIO for a list of available modules, or
-                  Programmers Guide section on DiskIO
-                  for details on how to build your custom disk module]),
+  AS_HELP_STRING([--enable-disk-io="list of modules"],
+    [Build support for the list of disk I/O modules.
+     Set without a value or omitted, all available modules will be built.
+     See src/DiskIO for a list of available modules, or
+     Programmers Guide section on DiskIO
+     for details on how to build your custom disk module]),
 [ case $enableval in
   yes)
-	for dir in $srcdir/src/DiskIO/*; do
-	    module="`basename $dir`"
-	    if test -d "$dir" && test "$module" != CVS; then
-		AC_MSG_NOTICE([Autodetected $module DiskIO module])
-		MAYBE_DISK_MODULES="$MAYBE_DISK_MODULES $module"
-	    fi
-	done
-	AC_DEFINE(USE_DISKIO,1,[DiskIO modules are expected to be available.])
+    #do nothing, "auto" is ok
   	;;
   no)
-	AC_DEFINE(USE_DISKIO,0,[DiskIO modules are expected to be available.])
+    squid_opt_enable_diskio=0
   	;;
   *)
-	MAYBE_DISK_MODULES=" `echo $enableval| sed -e 's/,/ /g;s/  */ /g'` "
-	AC_DEFINE(USE_DISKIO,1,[DiskIO modules are expected to be available.])
+    squid_opt_enable_diskio=1
+	squid_disk_module_candidates=" `echo $enableval| sed -e 's/,/ /g;s/  */ /g'` "
 	;;
   esac
-],
-[ if test -z "$MAYBE_DISK_MODULES"; then
-  AC_MSG_NOTICE([Enabling all available DiskIO modules (default)...])
-  for dir in $srcdir/src/DiskIO/*; do
-    module="`basename $dir`"
-    if test -d "$dir" && test "$module" != CVS; then
-	AC_MSG_NOTICE([Autodetected $module DiskIO module])
-	MAYBE_DISK_MODULES="$MAYBE_DISK_MODULES $module"
-    fi
-  done
-  AC_DEFINE(USE_DISKIO,1,[DiskIO modules are expected to be available.])
-fi ])
+])
+
+if test $squid_opt_enable_diskio = "auto"; then
+    squid_opt_enable_diskio=1
+    AC_MSG_CHECKING([for available DiskIO modules])
+    SQUID_LOOK_FOR_MODULES([$srcdir/src/DiskIO],[squid_disk_module_candidates])
+    AC_MSG_RESULT([$squid_disk_module_candidates])
+fi
+AC_DEFINE_UNQUOTED([USE_DISKIO],[$squid_opt_enable_diskio],
+    [DiskIO modules are expected to be available.])
 
 dnl Some autoconf.h defines we might enable later...
 AC_DEFINE(USE_DISKIO_AIO, 0, [Whether POSIX AIO support is needed. Automatic])
@@ -549,7 +524,7 @@ DISK_LIBS=
 DISK_OS_LIBS=
 DISK_MODULES=
 DISK_LINKOBJS=
-for module in $MAYBE_DISK_MODULES none; do
+for module in $squid_disk_module_candidates none; do
   if test "$module" = "none"; then
 	continue
   fi
