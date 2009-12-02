@@ -36,6 +36,7 @@
 #include "cache_snmp.h"
 #include "Store.h"
 #include "mem_node.h"
+#include "SquidMath.h"
 #include "SquidTime.h"
 
 /************************************************************************
@@ -371,7 +372,7 @@ snmp_prfSysFn(variable_list * Var, snint * ErrP)
     case PERF_SYS_CPUUSAGE:
         squid_getrusage(&rusage);
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      (snint) dpercent(rusage_cputime(&rusage), tvSubDsec(squid_start, current_time)),
+                                      (snint) Math::doublePercent(rusage_cputime(&rusage), tvSubDsec(squid_start, current_time)),
                                       ASN_INTEGER);
         break;
 

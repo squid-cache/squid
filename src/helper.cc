@@ -34,6 +34,7 @@
 
 #include "squid.h"
 #include "helper.h"
+#include "SquidMath.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "comm.h"
@@ -920,10 +921,7 @@ helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
 
             srv->dispatch_time = r->dispatch_time;
 
-            hlp->stats.avg_svc_time =
-                intAverage(hlp->stats.avg_svc_time,
-                           tvSubMsec(r->dispatch_time, current_time),
-                           hlp->stats.replies, REDIRECT_AV_FACTOR);
+            hlp->stats.avg_svc_time = Math::intAverage(hlp->stats.avg_svc_time, tvSubMsec(r->dispatch_time, current_time), hlp->stats.replies, REDIRECT_AV_FACTOR);
 
             helperRequestFree(r);
         } else {
@@ -1020,9 +1018,9 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
         hlp->stats.replies++;
         srv->answer_time = current_time;
         hlp->stats.avg_svc_time =
-            intAverage(hlp->stats.avg_svc_time,
-                       tvSubMsec(srv->dispatch_time, current_time),
-                       hlp->stats.replies, REDIRECT_AV_FACTOR);
+            Math::intAverage(hlp->stats.avg_svc_time,
+                             tvSubMsec(srv->dispatch_time, current_time),
+                             hlp->stats.replies, REDIRECT_AV_FACTOR);
 
         if (called)
             helperStatefulServerDone(srv);
