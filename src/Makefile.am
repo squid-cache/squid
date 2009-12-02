@@ -407,6 +407,8 @@ squid_SOURCES = \
 	send-announce.cc \
 	$(SNMP_SOURCE) \
 	squid.h \
+	SquidMath.h \
+	SquidMath.cc \
 	SquidNew.cc \
 	$(SSL_SOURCE) \
 	stat.cc \
@@ -1167,6 +1169,8 @@ tests_testCacheManager_SOURCES = \
 	Server.cc \
 	$(SNMP_SOURCE) \
 	$(SSL_SOURCE) \
+	SquidMath.h \
+	SquidMath.cc \
 	stat.cc \
 	StatHist.cc \
 	stmem.cc \
@@ -1233,6 +1237,8 @@ tests_testDiskIO_SOURCES = \
 	tests/stub_cache_manager.cc
 nodist_tests_testDiskIO_SOURCES= \
 	$(SWAP_TEST_GEN_SOURCES) \
+	SquidMath.cc \
+	SquidMath.h \
 	swap_log_op.cc
 tests_testDiskIO_LDADD = \
 	$(SWAP_TEST_LDADD) \
@@ -1339,6 +1345,8 @@ tests_testEvent_SOURCES = \
 	Server.cc \
 	$(SNMP_SOURCE) \
 	$(SSL_SOURCE) \
+	SquidMath.h \
+	SquidMath.cc \
 	stat.cc \
 	StatHist.cc \
 	stmem.cc \
@@ -1487,6 +1495,8 @@ tests_testEventLoop_SOURCES = \
 	Server.cc \
 	$(SNMP_SOURCE) \
 	$(SSL_SOURCE) \
+	SquidMath.h \
+	SquidMath.cc \
 	stat.cc \
 	StatHist.cc \
 	stmem.cc \
@@ -1626,6 +1636,8 @@ tests_test_http_range_SOURCES = \
 	Server.cc \
 	$(SNMP_SOURCE) \
 	$(SSL_SOURCE) \
+	SquidMath.h \
+	SquidMath.cc \
 	stat.cc \
 	StatHist.cc \
 	stmem.cc \
@@ -1778,6 +1790,8 @@ tests_testHttpRequest_SOURCES = \
 	Server.cc \
 	$(SNMP_SOURCE) \
 	$(SSL_SOURCE) \
+	SquidMath.h \
+	SquidMath.cc \
 	stat.cc \
 	StatHist.cc \
 	stmem.cc \
@@ -1900,6 +1914,8 @@ tests_testStore_SOURCES= \
 
 nodist_tests_testStore_SOURCES= \
 	$(TESTSOURCES) \
+	SquidMath.cc \
+	SquidMath.h \
 	swap_log_op.cc
 
 tests_testStore_LDADD= \
@@ -1999,6 +2015,8 @@ tests_testUfs_SOURCES = \
 	$(SWAP_TEST_SOURCES)
 nodist_tests_testUfs_SOURCES = \
 	$(SWAP_TEST_GEN_SOURCES) \
+	SquidMath.cc \
+	SquidMath.h \
 	swap_log_op.cc
 tests_testUfs_LDADD = \
 	$(SWAP_TEST_LDADD) \
@@ -2134,6 +2152,8 @@ tests_testURL_SOURCES = \
 	Server.cc \
 	$(SNMP_SOURCE) \
 	$(SSL_SOURCE) \
+	SquidMath.h \
+	SquidMath.cc \
 	stat.cc \
 	StatHist.cc \
 	stmem.cc \

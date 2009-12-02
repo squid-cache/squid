@@ -36,6 +36,7 @@
 #include "event.h"
 #include "CacheManager.h"
 #include "ClientInfo.h"
+#include "SquidMath.h"
 #include "SquidTime.h"
 #include "Store.h"
 
@@ -261,15 +262,10 @@ clientdbDump(StoreEntry * sentry)
             if (LOG_UDP_HIT == l)
                 icp_hits += c->Icp.result_hist[l];
 
-            storeAppendPrintf(sentry,
-                              "        %-20.20s %7d %3d%%\n",
-                              log_tags[l],
-                              c->Icp.result_hist[l],
-                              percent(c->Icp.result_hist[l], c->Icp.n_requests));
+            storeAppendPrintf(sentry, "        %-20.20s %7d %3d%%\n",log_tags[l], c->Icp.result_hist[l], Math::intPercent(c->Icp.result_hist[l], c->Icp.n_requests));
         }
 
-        storeAppendPrintf(sentry, "    HTTP Requests %d\n",
-                          c->Http.n_requests);
+        storeAppendPrintf(sentry, "    HTTP Requests %d\n", c->Http.n_requests);
 
         for (l = LOG_TAG_NONE; l < LOG_TYPE_MAX; ++l) {
             if (c->Http.result_hist[l] == 0)
@@ -284,7 +280,7 @@ clientdbDump(StoreEntry * sentry)
                               "        %-20.20s %7d %3d%%\n",
                               log_tags[l],
                               c->Http.result_hist[l],
-                              percent(c->Http.result_hist[l], c->Http.n_requests));
+                              Math::intPercent(c->Http.result_hist[l], c->Http.n_requests));
         }
 
         storeAppendPrintf(sentry, "\n");
@@ -292,9 +288,9 @@ clientdbDump(StoreEntry * sentry)
 
     storeAppendPrintf(sentry, "TOTALS\n");
     storeAppendPrintf(sentry, "ICP : %d Queries, %d Hits (%3d%%)\n",
-                      icp_total, icp_hits, percent(icp_hits, icp_total));
+                      icp_total, icp_hits, Math::intPercent(icp_hits, icp_total));
     storeAppendPrintf(sentry, "HTTP: %d Requests, %d Hits (%3d%%)\n",
-                      http_total, http_hits, percent(http_hits, http_total));
+                      http_total, http_hits, Math::intPercent(http_hits, http_total));
 }
 
 static void
