@@ -122,12 +122,21 @@ unset squid_cleanup_tmp
 
 dnl check that all the modules supplied as a whitespace-separated list (second
 dnl argument) exist as members of the basedir passed as first argument
-dnl call AC_MESG_ERROR if any module does not
+dnl call AC_MESG_ERROR if any module does not exist. Also sets individual variables
+dnl named $2_modulename to value "yes"
+dnl e.g. SQUID_CHECK_EXISTING_MODULES([$srcdir/src/fs],[foo_module_candidates])
+dnl where $foo_module_candidates is "foo bar gazonk"
+dnl checks whether $srcdir/src/fs/{foo,bar,gazonk} exist and are all dirs
+dnl AND sets $foo_module_candidates_foo, $foo_module_candidates_bar 
+dnl and $foo_module_candidates_gazonk to "yes"
 AC_DEFUN([SQUID_CHECK_EXISTING_MODULES],[
-  for squid_module_check_exist_tmp in $2
+  for squid_module_check_exist_tmp in $$2
   do
-    if ! test -d $1/$squid_module_check_exist_tmp
+    if test -d $1/$squid_module_check_exist_tmp
     then
+      eval "$2_$squid_module_check_exist_tmp='yes'"
+      #echo "defining $2_$squid_module_check_exist_tmp"
+    else
       AC_MSG_ERROR([$squid_module_check_exist_tmp not found in $1])
     fi
   done
