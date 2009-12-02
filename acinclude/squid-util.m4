@@ -94,3 +94,41 @@ for dir in $1/*; do
   fi
 done
 ])
+
+dnl remove duplicates out of a list.
+dnl dnl argument is the name of a variable to be checked and cleaned up
+AC_DEFUN([SQUID_CLEANUP_MODULES_LIST],[
+squid_cleanup_tmp_outlist=""
+for squid_cleanup_tmp in $$1
+do
+  squid_cleanup_tmp_dupe=0
+  for squid_cleanup_tmp2 in $squid_cleanup_tmp_outlist
+  do
+    if test "$squid_cleanup_tmp" = "$squid_cleanup_tmp2"; then
+      squid_cleanup_tmp_dupe=1
+      break
+    fi
+  done
+  if test $squid_cleanup_tmp_dupe -eq 0; then
+    squid_cleanup_tmp_outlist="${squid_cleanup_tmp_outlist} $squid_cleanup_tmp"
+  fi
+done
+$1=$squid_cleanup_tmp_outlist
+unset squid_cleanup_tmp_outlist
+unset squid_cleanup_tmp_dupe
+unset squid_cleanup_tmp2
+unset squid_cleanup_tmp
+])
+
+dnl check that all the modules supplied as a whitespace-separated list (second
+dnl argument) exist as members of the basedir passed as first argument
+dnl call AC_MESG_ERROR if any module does not
+AC_DEFUN([SQUID_CHECK_EXISTING_MODULES],[
+  for squid_module_check_exist_tmp in $2
+  do
+    if ! test -d $1/$squid_module_check_exist_tmp
+    then
+      AC_MSG_ERROR([$squid_module_check_exist_tmp not found in $1])
+    fi
+  done
+])
