@@ -57,6 +57,14 @@ AM_INIT_AUTOMAKE(libTrie, 0.1)
 AM_MAINTAINER_MODE
 AC_PROG_RANLIB
 
+AC_LIBTOOL_DLOPEN
+AC_LIBLTDL_CONVENIENCE
+AC_PROG_LIBTOOL
+AC_LTDL_DLLIB
+AC_SUBST(INCLTDL)
+AC_SUBST(LIBLTDL)
+
+
 dnl set useful flags
 if test "$GCC" = "yes"; then
    TRIE_CFLAGS="-Werror -Wall -Wpointer-arith -Wwrite-strings -Wmissing-prototypes -Wmissing-declarations -Wcomments"
