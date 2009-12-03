@@ -2034,6 +2034,7 @@ tests_testCoss_SOURCES = \
 	tests/stub_cache_manager.cc \
 	$(SWAP_TEST_SOURCES)
 nodist_tests_testCoss_SOURCES = \
+	swap_log_op.cc \
 	$(SWAP_TEST_GEN_SOURCES)
 tests_testCoss_LDADD = \
 	libsquid.la \
