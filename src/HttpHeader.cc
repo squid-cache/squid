@@ -515,7 +515,7 @@ HttpHeader::parse(const char *header_start, const char *header_end)
     HttpHeaderStats[owner].parsedCount++;
 
     char *nulpos;
-    if (nulpos = memchr(header_start, '\0', header_end - header_start)) {
+    if ((nulpos = (char*)memchr(header_start, '\0', header_end - header_start))) {
         debugs(55, 1, "WARNING: HTTP header contains NULL characters {" <<
                getStringPrefix(header_start, nulpos) << "}\nNULL\n{" << getStringPrefix(nulpos+1, header_end));
         goto reset;
