@@ -1533,7 +1533,7 @@ statCPUUsage(int minutes)
 {
     assert(minutes < N_COUNT_HIST);
     return Math::doublePercent(CountHist[0].cputime - CountHist[minutes].cputime,
-                    tvSubDsec(CountHist[minutes].timestamp, CountHist[0].timestamp));
+                               tvSubDsec(CountHist[minutes].timestamp, CountHist[0].timestamp));
 }
 
 extern double
@@ -1541,9 +1541,9 @@ statRequestHitRatio(int minutes)
 {
     assert(minutes < N_COUNT_HIST);
     return Math::doublePercent(CountHist[0].client_http.hits -
-                    CountHist[minutes].client_http.hits,
-                    CountHist[0].client_http.requests -
-                    CountHist[minutes].client_http.requests);
+                               CountHist[minutes].client_http.hits,
+                               CountHist[0].client_http.requests -
+                               CountHist[minutes].client_http.requests);
 }
 
 extern double
@@ -1551,9 +1551,9 @@ statRequestHitMemoryRatio(int minutes)
 {
     assert(minutes < N_COUNT_HIST);
     return Math::doublePercent(CountHist[0].client_http.mem_hits -
-                    CountHist[minutes].client_http.mem_hits,
-                    CountHist[0].client_http.hits -
-                    CountHist[minutes].client_http.hits);
+                               CountHist[minutes].client_http.mem_hits,
+                               CountHist[0].client_http.hits -
+                               CountHist[minutes].client_http.hits);
 }
 
 extern double
@@ -1561,9 +1561,9 @@ statRequestHitDiskRatio(int minutes)
 {
     assert(minutes < N_COUNT_HIST);
     return Math::doublePercent(CountHist[0].client_http.disk_hits -
-                    CountHist[minutes].client_http.disk_hits,
-                    CountHist[0].client_http.hits -
-                    CountHist[minutes].client_http.hits);
+                               CountHist[minutes].client_http.disk_hits,
+                               CountHist[0].client_http.hits -
+                               CountHist[minutes].client_http.hits);
 }
 
 extern double
