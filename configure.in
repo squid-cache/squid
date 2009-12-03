@@ -714,6 +714,9 @@ AC_ARG_ENABLE([storeio],
   *)
     squid_opt_enable_storeio=yes
 	squid_storeio_module_candidates="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
+    # ufs is really always needed as it has low-level routines
+    # if it's a dupe it will be cleaned-up later
+    squid_storeio_module_candidates="$squid_storeio_module_candidates ufs"
 	;;
   esac
 ])
@@ -731,16 +734,16 @@ AC_MSG_NOTICE([Store modules built: $squid_storeio_module_candidates])
 for fs in $squid_storeio_module_candidates none; do
     case "$fs" in
     diskd)
-	if test "$squid_disk_module_candidates_Blocking" != "yes" -a "$squid_disk_module_candidates_DiskDaemon" != "yes" ; then
-	  AC_MSG_ERROR([Storage diskd module requires DiskIO modules: Blocking or DiskDaemon])
+	if test "$squid_disk_module_candidates_Blocking" != "yes" -a \
+        "$squid_disk_module_candidates_DiskDaemon" != "yes" ; then
+	  AC_MSG_ERROR([Storage diskd module requires DiskIO module: Blocking or DiskDaemon])
 	fi
-	squid_storeio_module_candidates="$squid_storeio_module_candidates ufs"
 	;;
     aufs)
-	if test "$squid_disk_module_candidates_Blocking" != "yes" -a "$squid_disk_module_candidates_DiskThreads" != "yes" ; then
-	  AC_MSG_ERROR([Storage diskd module requires DiskIO modules: Blocking or DiskThreads])
+	if test "$squid_disk_module_candidates_Blocking" != "yes" -a \
+        "$squid_disk_module_candidates_DiskThreads" != "yes" ; then
+	  AC_MSG_ERROR([Storage module aufs requires DiskIO module: Blocking or DiskThreads])
 	fi
-	squid_storeio_module_candidates="$squid_storeio_module_candidates ufs"
 	;;
     coss)
       AC_MSG_WARN([COSS Support is not stable yet in Squid-3. Please do not use.])
@@ -755,22 +758,9 @@ for fs in $squid_storeio_module_candidates none; do
 	STORE_TESTS="$STORE_TESTS tests/testCoss$EXEEXT"
 	;;
     ufs)
-	UFS_FOUND="true"
 	STORE_TESTS="$STORE_TESTS tests/testUfs$EXEEXT"
     esac
 done
-
-SQUID_CLEANUP_MODULES_LIST([squid_storeio_module_candidates])
-
-if test -n "$NEED_UFS"; then
-    AC_MSG_NOTICE([Adding UFS, as it contains core logic for diskd and aufs])
-    squid_storeio_module_candidates="$squid_storeio_module_candidates ufs"
-    dnl
-    dnl Automake om MinGW needs explicit exe extension
-    dnl for STORE_TESTS substition
-    dnl
-    STORE_TESTS="$STORE_TESTS tests/testUfs$EXEEXT"
-fi
 
 AH_TEMPLATE(HAVE_FS_UFS, "Define to 1 if ufs filesystem module is build")
 AH_TEMPLATE(HAVE_FS_AUFS, "Define to 1 if aufs filesystem module is build")
