@@ -2,7 +2,8 @@
 #define _SQUID_SRC_SQUIDMATH_H
 
 /* Math functions we define locally for Squid */
-namespace Math {
+namespace Math
+{
 
 extern int intPercent(int a, int b);
 extern double doublePercent(double, double);
