@@ -141,3 +141,13 @@ AC_DEFUN([SQUID_CHECK_EXISTING_MODULES],[
     fi
   done
 ])
+
+dnl lowercases the contents of the variable whose name is passed by argument
+AC_DEFUN([SQUID_TOUPPER_VAR_CONTENTS],[
+  $1=`echo $$1|tr ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz`
+])
+
+dnl uppercases the contents of the variable whose name is passed by argument
+AC_DEFUN([SQUID_TOUPPER_VAR_CONTENTS],[
+  $1=`echo $$1|tr abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ`
+])
