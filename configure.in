@@ -724,6 +724,8 @@ if test "$squid_opt_enable_storeio" = "auto"; then
   squid_opt_enable_storeio=yes
   AC_MSG_CHECKING([for available StoreIO modules])
   SQUID_LOOK_FOR_MODULES([$srcdir/src/fs],[squid_storeio_module_candidates])
+  # disable coss
+  squid_storeio_module_candidates=`ecoh $squid_storeio_module_candidates|sed 's/coss//'`
   AC_MSG_RESULT([$squid_storeio_module_candidates])
 fi
 
