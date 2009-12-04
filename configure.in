@@ -47,7 +47,7 @@ AC_PATH_PROG(MV, mv, $FALSE)
 AC_PATH_PROG(MKDIR, mkdir, $FALSE)
 AC_PATH_PROG(LN, ln, cp)
 AC_PATH_PROG(CHMOD, chmod, $FALSE)
-
+AC_PATH_PROG(TR, tr, $FALSE)
 AC_PATH_PROG(RM, rm, $FALSE)
 dnl Libtool 2.2.6 requires: rm -f
 RM="$RM -f"
@@ -764,6 +764,7 @@ for fs in $squid_storeio_module_candidates none; do
     esac
 done
 
+dnl TODO: FIXME What are those for? They seem to be never be defined. Kinkie
 AH_TEMPLATE(HAVE_FS_UFS, "Define to 1 if ufs filesystem module is build")
 AH_TEMPLATE(HAVE_FS_AUFS, "Define to 1 if aufs filesystem module is build")
 AH_TEMPLATE(HAVE_FS_DISKD, "Define to 1 if diskd filesystem module is build")
@@ -779,8 +780,8 @@ STORE_LIBS_TO_ADD=
 for fs in $squid_storeio_module_candidates; do
     STORE_LIBS_TO_BUILD="$STORE_LIBS_TO_BUILD lib${fs}.la"
     STORE_LIBS_TO_ADD="$STORE_LIBS_TO_ADD fs/lib${fs}.la"
-    HAVE_FS_TYPE=HAVE_FS_`echo $fs | sed 'y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/'` 
-    AC_DEFINE_UNQUOTED($HAVE_FS_TYPE, 1)
+    SQUID_TOUPPER_VAR_CONTENTS([fs])
+    AC_DEFINE_UNQUOTED(HAVE_FS_${fs}, 1)
 done
 
 AC_SUBST(STORE_LIBS_TO_BUILD)
