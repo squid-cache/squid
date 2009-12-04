@@ -5,10 +5,10 @@
 namespace Math
 {
 
-extern int intPercent(int a, int b);
-extern double doublePercent(double, double);
-extern int intAverage(int, int, int, int);
-extern double doubleAverage(double, double, int, int);
+extern int intPercent(const int a, const int b);
+extern double doublePercent(const double, const double);
+extern int intAverage(const int, const int, int, const int);
+extern double doubleAverage(const double, const double, int, const int);
 
 }; // namespace Math
 
