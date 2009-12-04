@@ -2035,6 +2035,8 @@ tests_testCoss_SOURCES = \
 	$(SWAP_TEST_SOURCES)
 nodist_tests_testCoss_SOURCES = \
 	swap_log_op.cc \
+	SquidMath.cc \
+	SquidMath.h \
 	$(SWAP_TEST_GEN_SOURCES)
 tests_testCoss_LDADD = \
 	libsquid.la \
