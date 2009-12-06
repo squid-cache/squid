@@ -18,7 +18,7 @@ typedef int64_t  hrtime_t;
 #include <sys/time.h>
 #endif
 
-#if defined(__i386) || defined(__i386__)
+#if defined(__GNUC__) && ( defined(__i386) || defined(__i386__) )
 static inline hrtime_t
 get_tick(void)
 {
@@ -30,7 +30,7 @@ asm volatile ("rdtsc":"=A" (regs));
     /* Note that "rdtsc" is relatively slow OP and stalls the CPU pipes, so use it wisely */
 }
 
-#elif defined(__x86_64) || defined(__x86_64__)
+#elif defined(__GNUC__) && ( defined(__x86_64) || defined(__x86_64__) )
 static inline hrtime_t
 get_tick(void)
 {
@@ -41,7 +41,7 @@ get_tick(void)
     return (hrtime_t)hi << 32 | lo;
 }
 
-#elif defined(__alpha)
+#elif defined(__GNUC__) && defined(__alpha)
 static inline hrtime_t
 get_tick(void)
 {
