@@ -33,5 +33,28 @@
  *
  */
 
-#define _SQUID_EXTERNNEW_
+/* #define _SQUID_EXTERNNEW_ */ /* Why? kinkie */
 #include "squid.h"
+
+
+#ifdef __SUNPRO_CC
+
+#include <new>
+void *operator new(size_t size) throw (std::bad_alloc)
+{
+    return xmalloc(size);
+}
+void operator delete (void *address) throw()
+{
+    xfree (address);
+}
+void *operator new[] (size_t size) throw (std::bad_alloc)
+{
+    return xmalloc(size);
+}
+void operator delete[] (void *address) throw()
+{
+    xfree (address);
+}
+
+#endif /* __SUNPRO_CC */

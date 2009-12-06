@@ -34,6 +34,8 @@
 #ifndef SQUID_NEW_H
 #define SQUID_NEW_H
 
+#ifndef __SUNPRO_CC
+
 /* Any code using libstdc++ must have externally resolvable overloads
  * for void * operator new - which means in the .o for the binary,
  * or in a shared library. static libs don't propogate the symbol
@@ -57,4 +59,7 @@ _SQUID_EXTERNNEW_ void operator delete[] (void *address) throw()
 {
     xfree (address);
 }
+
+#endif /* __SUNPRO_CC */
+
 #endif /* SQUID_NEW_H */

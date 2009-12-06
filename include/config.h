@@ -1,5 +1,5 @@
 /*
- * $Id: config.h,v 1.25.2.1 2008/02/25 03:41:38 amosjeffries Exp $
+ * $Id$
  *
  * AUTHOR: Duane Wessels
  *
@@ -57,83 +57,82 @@
 #endif
 
 /* define the _SQUID_TYPE_ based on a guess of the OS */
-#if defined(__sun__) || defined(__sun)	/* SUN */
-#define _SQUID_SUN_
+#if defined(__sun__) || defined(__sun) || defined(__SUNPRO_CC) || defined(__SunOS_OSversion) /* SUN */
 #if defined(__SVR4)		/* SOLARIS */
-#define _SQUID_SOLARIS_
+#define _SQUID_SOLARIS_ 1
 #else /* SUNOS */
-#define _SQUID_SUNOS_
+#define _SQUID_SUNOS_ 1
 #endif
 
 #elif defined(__hpux)		/* HP-UX - SysV-like? */
-#define _SQUID_HPUX_
-#define _SQUID_SYSV_
+#define _SQUID_HPUX_ 1
+#define _SQUID_SYSV_ 1
 
 #elif defined(__osf__)		/* OSF/1 */
-#define _SQUID_OSF_
+#define _SQUID_OSF_ 1
 
 #elif defined(__ultrix)		/* Ultrix */
-#define _SQUID_ULTRIX_
+#define _SQUID_ULTRIX_ 1
 
 #elif defined(_AIX)		/* AIX */
-#define _SQUID_AIX_
+#define _SQUID_AIX_ 1
 
 #elif defined(__linux__)	/* Linux */
-#define _SQUID_LINUX_
+#define _SQUID_LINUX_ 1
 #if USE_ASYNC_IO
-#define _SQUID_LINUX_THREADS_
+#define _SQUID_LINUX_THREADS_ 1
 #endif
 
 #elif defined(__FreeBSD__)	/* FreeBSD */
-#define _SQUID_FREEBSD_
+#define _SQUID_FREEBSD_ 1
 #if USE_ASYNC_IO && defined(LINUXTHREADS)
-#define _SQUID_LINUX_THREADS_
+#define _SQUID_LINUX_THREADS_ 1
 #endif
  
 #elif defined(__FreeBSD_kernel__)      /* GNU/kFreeBSD */
-#define _SQUID_KFREEBSD_
+#define _SQUID_KFREEBSD_ 1
 
 #elif defined(__sgi__)	|| defined(sgi) || defined(__sgi)	/* SGI */
-#define _SQUID_SGI_
+#define _SQUID_SGI_ 1
 #if !defined(_SVR4_SOURCE)
-#define _SVR4_SOURCE		/* for tempnam(3) */
+#define _SVR4_SOURCE 1		/* for tempnam(3) */
 #endif
 #if USE_ASYNC_IO
-#define _ABI_SOURCE
+#define _ABI_SOURCE 1
 #endif /* USE_ASYNC_IO */
 
 #elif defined(__NeXT__)
-#define _SQUID_NEXT_
+#define _SQUID_NEXT_ 1
 
 #elif defined(__bsdi__)
-#define _SQUID_BSDI_		/* BSD/OS */
+#define _SQUID_BSDI_ 1		/* BSD/OS */
 
 #elif defined(__NetBSD__)
-#define _SQUID_NETBSD_
+#define _SQUID_NETBSD_ 1
 
 #elif defined(__OpenBSD__)
-#define _SQUID_OPENBSD_
+#define _SQUID_OPENBSD_ 1
 
 #elif defined(__DragonFly__)
-#define _SQUID_DRAGONFLY_
+#define _SQUID_DRAGONFLY_ 1
 
 #elif defined(__CYGWIN32__)  || defined(__CYGWIN__)
-#define _SQUID_CYGWIN_
-#define _SQUID_WIN32_
+#define _SQUID_CYGWIN_ 1
+#define _SQUID_WIN32_ 1
 
 #elif defined(WIN32) || defined(WINNT) || defined(__WIN32__) || defined(__WIN32)
-#define _SQUID_MSWIN_
-#define _SQUID_WIN32_
+#define _SQUID_MSWIN_ 1
+#define _SQUID_WIN32_ 1
 #include "squid_mswin.h"
 
 #elif defined(__APPLE__)
-#define _SQUID_APPLE_
+#define _SQUID_APPLE_ 1
 
 #elif defined(sony_news) && defined(__svr4)
-#define _SQUID_NEWSOS6_
+#define _SQUID_NEWSOS6_ 1
 
 #elif defined(__EMX__) || defined(OS2) || defined(__OS2__)
-#define _SQUID_OS2_
+#define _SQUID_OS2_ 1
 /*
  *  FIXME: the os2 port of bash seems to have problems checking
  *  the return codes of programs in if statements.  These options

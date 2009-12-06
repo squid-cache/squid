@@ -83,7 +83,13 @@ SQUIDCEXTERN void xxfree(const void *);
  * for the extern version in squid
  */
 #ifndef _SQUID_EXTERNNEW_
-#if defined(_SQUID_SGI_) && !defined(_GNUC_)
+/*
+ * SunPro CC handles extern inline as inline, PLUS extern symbols.
+ */
+#if _SQUID_SOLARIS_ && !defined(_SQUID_EXTERNNEW_) && defined(__SUNPRO_CC)
+#define _SQUID_EXTERNNEW_ extern
+#else
+#if _SQUID_SGI_ && !defined(_GNUC_)
 /* 
  * The gcc compiler treats extern inline functions as being extern,
  * while the SGI MIPSpro compilers treat them as inline. To get equivalent
@@ -96,8 +102,9 @@ SQUIDCEXTERN void xxfree(const void *);
 #else
 #define _SQUID_EXTERNNEW_ extern inline
 #endif
-#endif
-#endif
+#endif /* SGI */
+#endif /* Solaris */
+#endif /* _SQUID_EXTERNNEW_ */
 #include "SquidNew.h"
 #endif
 
