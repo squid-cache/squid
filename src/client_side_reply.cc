@@ -1302,8 +1302,8 @@ clientReplyContext::buildReplyHeader()
         hdr->putStr(HDR_VIA, strVia.buf());
     }
     /* Signal keep-alive if needed */
-    hdr->putStr(http->flags.accel ? HDR_CONNECTION : HDR_PROXY_CONNECTION,
-                request->flags.proxy_keepalive ? "keep-alive" : "close");
+    hdr->putStr( (http->flags.accel || http->flags.transparent)? HDR_CONNECTION : HDR_PROXY_CONNECTION,
+                 request->flags.proxy_keepalive ? "keep-alive" : "close");
 
 #if ADD_X_REQUEST_URI
     /*
