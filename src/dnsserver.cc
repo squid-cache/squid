@@ -276,11 +276,10 @@ main(int argc, char *argv[])
     char request[512];
     char *t = NULL;
     int c;
-#if HAVE_RES_INIT
-
     int opt_s = 0;
-#if HAVE_RES_NSADDR_LIST || HAVE_RES_NS_LIST
 
+#if HAVE_RES_INIT
+#if HAVE_RES_NSADDR_LIST || HAVE_RES_NS_LIST
     extern char *optarg;
 #endif
 #endif
@@ -288,7 +287,6 @@ main(int argc, char *argv[])
     safe_inet_addr("255.255.255.255", &no_addr);
 
 #if HAVE_RES_INIT
-
     res_init();
 #ifdef RES_DEFAULT
 
