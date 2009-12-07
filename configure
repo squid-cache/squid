@@ -21557,7 +21557,9 @@ fi
 
 
 
+if test "$GCC" = "yes"; then
 
+ if test "$GCC" = "yes"; then
   { $as_echo "$as_me:$LINENO: checking whether compiler accepts -fhuge-objects" >&5
 $as_echo_n "checking whether compiler accepts -fhuge-objects... " >&6; }
   if test "${ac_cv_test_checkforhugeobjects+set}" = set; then
@@ -21584,11 +21586,11 @@ $as_echo "${ac_cv_test_checkforhugeobjects}" >&6; }
   if test "X${ac_cv_test_checkforhugeobjects}" != Xno
   then
     HUGE_OBJECT_FLAG="-fhuge-objects"
-  else
-    HUGE_OBJECT_FLAG=""
   fi
+ fi #gcc
 
-SQUID_CXXFLAGS="$SQUID_CXXFLAGS $HUGE_OBJECT_FLAG"
+       SQUID_CXXFLAGS="$SQUID_CXXFLAGS $HUGE_OBJECT_FLAG"
+fi
 
 if test -z "$PRESET_LDFLAGS"; then
     if test "$GCC" = "yes"; then

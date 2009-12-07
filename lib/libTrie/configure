@@ -4112,15 +4112,17 @@ else
    TRIE_CXXFLAGS=
 fi
 
+if test "$GCC" = "yes" ; then
 
+ if test "$GCC" = "yes"; then
   { $as_echo "$as_me:$LINENO: checking whether compiler accepts -fhuge-objects" >&5
 $as_echo_n "checking whether compiler accepts -fhuge-objects... " >&6; }
   if test "${ac_cv_test_checkforhugeobjects+set}" = set; then
   $as_echo_n "(cached) " >&6
 else
 
-    ac_cv_test_checkforhugeobjects=`echo "int foo;" > conftest.cc
-${CXX} -Werror -fhuge-objects -c conftest.cc 2>/dev/null
+    ac_cv_test_checkforhugeobjects=`echo "int main(int argc, char **argv) { int foo; }" > conftest.cc
+${CXX} -Werror -fhuge-objects -o conftest.bin conftest.cc 2>/dev/null
 res=$?
 rm -f conftest.*
 echo yes
@@ -4139,11 +4141,11 @@ $as_echo "${ac_cv_test_checkforhugeobjects}" >&6; }
   if test "X${ac_cv_test_checkforhugeobjects}" != Xno
   then
     HUGE_OBJECT_FLAG="-fhuge-objects"
-  else
-    HUGE_OBJECT_FLAG=""
   fi
+ fi #gcc
 
-TRIE_CXXFLAGS="$TRIE_CXXFLAGS $HUGE_OBJECT_FLAG"
+       TRIE_CXXFLAGS="$TRIE_CXXFLAGS $HUGE_OBJECT_FLAG"
+fi
 
 
 
