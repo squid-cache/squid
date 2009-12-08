@@ -341,9 +341,11 @@ if test "$squid_cv_cxx_arg_fhugeobjects" = "yes"; then
 	SQUID_CXXFLAGS="$SQUID_CXXFLAGS -fhuge-objects"
 fi
 # see if we can use cc -pipe (Sunstudio c++ is more lenient, let's test with c)
-AC_LANG_PUSH([C])
+SQUID_STATE_SAVE([squid_pipe])
+CFLAGS="$CFLAGS $squid_cv_cc_option_werror"
+CXXFLAGS="$CXXFLAGS $squid_cv_cc_option_werror"
 SQUID_CC_CHECK_ARGUMENT([squid_cv_cc_arg_pipe],[-pipe])
-AC_LANG_POP([C])
+SQUID_STATE_ROLLBACK([squid_pipe])
 if test "$squid_cv_cc_arg_pipe" ; then
     SQUID_CXXFLAGS="$SQUID_CXXFLAGS -pipe"
     SQUID_CFLAGS="$SQUID_CFLAGS -pipe"
