@@ -37,8 +37,8 @@ $1_CFLAGS="${CFLAGS}"
 $1_CXXFLAGS="${CXXFLAGS}"
 $1_LDFLAGS="${LDFLAGS}"
 $1_LIBS="${LIBS}"
-$1_CC="${LIBS}"
-$1_CXX="${LIBS}"
+$1_CC="${CC}"
+$1_CXX="${CXX}"
 $1_squid_saved_vars="$2"
 for squid_util_var_tosave in $2
 do
