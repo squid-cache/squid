@@ -52,7 +52,7 @@ dnl with the same prefix. It's not necessary to specify the extra variables pass
 dnl to SQUID_STATE_SAVE again, they will be automatically reclaimed.
 AC_DEFUN([SQUID_STATE_COMMIT],[
 unset $1_CFLAGS
-unset $1_$CXXFLAGS
+unset $1_CXXFLAGS
 unset $1_LDFLAGS
 unset $1_LIBS
 unset $1_CC
