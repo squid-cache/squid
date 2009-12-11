@@ -412,11 +412,12 @@ else
     AC_DEFINE(_SQUID_INLINE_,, [Keyword used by squid for inlining methods])
 fi
 
+AH_TEMPLATE(CBDATA_DEBUG,[Enable for cbdata debug information])
 AC_ARG_ENABLE(debug-cbdata,
   AS_HELP_STRING([--enable-debug-cbdata],[Provide some debug information in cbdata]),
 [ if test "$enableval" = "yes" ; then
     AC_MSG_NOTICE([cbdata debugging enabled])
-    AC_DEFINE(CBDATA_DEBUG,1,[Enable for cbdata debug information])
+    AC_DEFINE(CBDATA_DEBUG,1)
   fi
 ])
 
@@ -446,11 +447,12 @@ dnl     AC_DEFINE(XMALLOC_DEBUG,1)
 dnl   fi
 dnl ])
 
+AH_TEMPLATE(XMALLOC_STATISTICS,[Define to have malloc statistics])
 AC_ARG_ENABLE(xmalloc-statistics,
   AS_HELP_STRING([--enable-xmalloc-statistics],[Show malloc statistics in status page]),
 [ if test "$enableval" = "yes" ; then
     AC_MSG_NOTICE([malloc statistics enabled])
-    AC_DEFINE(XMALLOC_STATISTICS,1,[Define to have malloc statistics])
+    AC_DEFINE(XMALLOC_STATISTICS,1)
   fi
 ])
 
@@ -515,8 +517,8 @@ AC_DEFINE_UNQUOTED([USE_DISKIO],[$squid_opt_enable_diskio],
 
 dnl ****************** KK HERE *********************
 dnl Some autoconf.h defines we might enable later...
-AC_DEFINE(USE_DISKIO_AIO, 0, [Whether POSIX AIO support is needed. Automatic])
-AC_DEFINE(USE_DISKIO_DISKTHREADS, 0, [Whether pthreads support is needed. Automatic])
+AH_TEMPLATE(USE_DISKIO_AIO, [Whether POSIX AIO support is needed. Automatic])
+AH_TEMPLATE(USE_DISKIO_DISKTHREADS, [Whether pthreads support is needed. Automatic])
 USE_AIOPS_WIN32=0
 use_aio=
 use_diskthreads=
