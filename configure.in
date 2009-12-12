@@ -231,8 +231,9 @@ AC_SUBST(DEFAULT_LOG_DIR)
 
 DEFAULT_PIDFILE="$localstatedir/run/squid.pid"
 AC_ARG_WITH(pidfile,
-  AS_HELP_STRING([--with-pidfile=PATH],[Default location for squid PID file. default: PREFIX/var/run/squid.pid]),
- [ case $withval in
+  AS_HELP_STRING([--with-pidfile=PATH],
+                 [Default location for squid PID file. default: PREFIX/var/run/squid.pid]),
+[case $withval in
    yes|no)
      AC_MSG_ERROR( --with-pidfile requires a file PATH. --with-pidfile=PATH )
      ;;
@@ -240,8 +241,7 @@ AC_ARG_WITH(pidfile,
      DEFAULT_PIDFILE="$withval"
      ;;
    esac
- ]
-)
+])
 AC_SUBST(DEFAULT_PIDFILE)
 
 dnl Gerben Wierda <Gerben_Wierda@RnA.nl>
@@ -340,37 +340,9 @@ SQUID_CXX_CHECK_ARG_FHUGEOBJECTS
 if test "$squid_cv_cxx_arg_fhugeobjects" = "yes"; then
 	SQUID_CXXFLAGS="$SQUID_CXXFLAGS -fhuge-objects"
 fi
-# see if we can use cc -pipe (Sunstudio c++ is more lenient, let's test with c)
-SQUID_STATE_SAVE([squid_pipe])
-CFLAGS="$CFLAGS $squid_cv_cc_option_werror"
-CXXFLAGS="$CXXFLAGS $squid_cv_cc_option_werror"
-SQUID_CC_CHECK_ARGUMENT([squid_cv_cc_arg_pipe],[-pipe])
-SQUID_STATE_ROLLBACK([squid_pipe])
-if test "$squid_cv_cc_arg_pipe" ; then
-    SQUID_CXXFLAGS="$SQUID_CXXFLAGS -pipe"
-    SQUID_CFLAGS="$SQUID_CFLAGS -pipe"
-fi
-
-dnl Set LDFLAGS
-if test -z "$PRESET_LDFLAGS"; then
-    if test "$GCC" = "yes"; then
-        case "$host" in
-	*mips-sgi-irix6.*)
-	    # Silence Linker warnings 84, 85 and 134
-    	    LDFLAGS="-Wl,-woff,85 -Wl,-woff,84 -Wl,-woff,134 $LDFLAGS"
-    	    ;;
-        *)
-    	    # nothing
-	    ;;
-        esac
-    else
-	case "$host" in
-        *)
-    	    # nothing
-	    ;;
-	esac
-    fi
-fi
+# squid_cv_cc_arg_pipe is set by SQUID_CC_GUESS_OPTIONS
+SQUID_CXXFLAGS="$SQUID_CXXFLAGS $squid_cv_cc_arg_pipe"
+SQUID_CFLAGS="$SQUID_CFLAGS $squid_cv_cc_arg_pipe"
 
 SquidInline="yes"
 
