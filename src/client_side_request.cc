@@ -1373,6 +1373,7 @@ ClientHttpRequest::noteAdaptationAnswer(HttpMsg *msg)
         request_satisfaction_mode = true;
         request_satisfaction_offset = 0;
         storeEntry()->replaceHttpReply(new_rep);
+        storeEntry()->timestampsSet();
 
         if (!adaptedBodySource) // no body
             storeEntry()->complete();
