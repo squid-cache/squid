@@ -320,12 +320,22 @@ This section gives a thorough account of those changes in three categories:
 	<tag>acl random</tag>
 	<p>New type <em>random</em>. Pseudo-randomly match requests based on a configured probability.
 
+	<tag>auth_param</tag>
+	<p>New options for Basic, Digest, NTLM, Negotiate <em>children</em> settings.
+	   <em>startup=N</em> determins minimum number of helper processes used.
+	   <em>idle=N</em> determines how many helper to retain as buffer against sudden traffic loads.
+
 	<tag>deny_info</tag>
 	<p>Support URL format tags. For dynamically generated URL in denial redirect.
 
 	<tag>external_acl_type</tag>
-	<p>New format tag <em>%SRCEUI48</em> EUI-48 / MAC address of client from ARP lookup.
-	<p>New format tag <em>%SRCEUI64</em> EUI-64 of clients with SLAAC address.
+	<p>New format tags and option parameters:
+	<p><em>%SRCEUI48</em> EUI-48 / MAC address of client from ARP lookup.
+	<p><em>%SRCEUI64</em> EUI-64 of clients with SLAAC address.
+	<p><em>children-max=N</em> determins maximum number of helper processes used.
+	<p><em>children-startup=N</em> determins minimum number of helper processes used.
+	<p><em>children-idle=N</em> determines how many helper to retain as buffer against sudden traffic loads.
+	<p>Deprecated <em>children=N</em> in favor of <em>children-max=N</em>.
 
 	<tag>logformat</tag>
 	<p><em>%sn</em> Unique sequence number per log line. Ported from 2.7
@@ -335,6 +345,12 @@ This section gives a thorough account of those changes in three categories:
 	<tag>windows_ipaddrchangemonitor</tag>
 	<p>Now only available to be set in Windows builds.
 
+	<tag>url_rewrite_children</tag>
+	<tag>New options <em>startup=N</em>, <em>idle=N</em>, <em>concurrency=N</em>
+	<p>startup=N allow finer tuning of how many helpers are started initially.
+	<p>idle=N allow fine tuning of how many helper to retain as buffer against sudden traffic loads.
+	<p>concurrency=N was previously called url_rewrite_concurrency as a distinct directive.
+
 </descrip>
 
 
@@ -343,6 +359,9 @@ This section gives a thorough account of those changes in three categories:
 <descrip>
 	<tag>ftp_list_width</tag>
 	<p>Obsolete.
+
+	<tag>url_rewrite_concurrency</tag>
+	<p>Replaced by url_rewrite_children ... concurrency=N option.
 
 </descrip>
 

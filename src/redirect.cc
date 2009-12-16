@@ -194,13 +194,11 @@ redirectInit(void)
         return;
 
     if (redirectors == NULL)
-        redirectors = helperCreate("redirector");
+        redirectors = new helper("redirector");
 
     redirectors->cmdline = Config.Program.redirect;
 
-    redirectors->n_to_start = Config.redirectChildren;
-
-    redirectors->concurrency = Config.redirectConcurrency;
+    redirectors->childs = Config.redirectChildren;
 
     redirectors->ipc_type = IPC_STREAM;
 
@@ -223,7 +221,6 @@ redirectShutdown(void)
     if (!shutting_down)
         return;
 
-    helperFree(redirectors);
-
+    delete redirectors;
     redirectors = NULL;
 }

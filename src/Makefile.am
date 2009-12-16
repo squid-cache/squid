@@ -330,6 +330,8 @@ squid_SOURCES = \
 	gopher.cc \
 	helper.cc \
 	helper.h \
+	HelperChildConfig.h \
+	HelperChildConfig.cc \
 	hier_code.h \
 	HierarchyLogEntry.h \
 	$(HTCPSOURCE) \
@@ -600,6 +602,7 @@ recv_announce_SOURCES = recv-announce.cc SquidNew.cc
 ## mem.cc wants ClientInfo.h
 ## libbase.la wants cbdata.*
 ## libbase.la wants MemBuf.*
+## structs.h wants HelperChildConfig.* (stub it)
 ufsdump_SOURCES = \
 	ClientInfo.h \
 	cbdata.h \
@@ -624,6 +627,8 @@ ufsdump_SOURCES = \
 	ufsdump.cc \
 	dlink.h \
 	dlink.cc \
+	HelperChildConfig.h \
+	tests/stub_HelperChildConfig.cc \
 	HttpRequestMethod.cc \
 	RemovalPolicy.cc \
 	squid.h \
@@ -938,6 +943,7 @@ tests_testHttpReply_SOURCES=\
 	Packer.h \
 	Packer.cc \
 	tests/stub_cache_manager.cc \
+	tests/stub_HelperChildConfig.cc \
 	tests/stub_StatHist.cc \
 	tests/stub_store.cc \
 	SquidString.h \
@@ -962,6 +968,8 @@ tests_testHttpReply_DEPENDENCIES= $(SQUID_CPPUNIT_LA) \
 tests_testAuth_SOURCES = \
 	tests/testAuth.cc tests/testMain.cc  tests/testAuth.h \
 	ConfigParser.cc \
+	HelperChildConfig.h \
+	HelperChildConfig.cc \
 	tests/stub_acl.cc tests/stub_cache_cf.cc \
 	tests/stub_helper.cc cbdata.cc String.cc \
 	tests/stub_store.cc HttpHeaderTools.cc HttpHeader.cc mem.cc ClientInfo.h \
@@ -1023,6 +1031,8 @@ tests_testACLMaxUserIP_SOURCES= \
 	ClientInfo.h \
 	ConfigParser.cc \
 	ETag.cc \
+	HelperChildConfig.h \
+	HelperChildConfig.cc \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
 	HttpHdrContRange.cc \
@@ -1127,6 +1137,8 @@ tests_testCacheManager_SOURCES = \
 	gopher.cc \
 	hier_code.h \
 	helper.cc \
+	HelperChildConfig.h \
+	HelperChildConfig.cc \
 	$(HTCPSOURCE) \
 	http.cc \
 	HttpBody.cc \
@@ -1234,7 +1246,8 @@ tests_testDiskIO_SOURCES = \
 	tests/testDiskIO.cc \
 	tests/testDiskIO.h \
 	tests/testMain.cc \
-	tests/stub_cache_manager.cc
+	tests/stub_cache_manager.cc \
+	tests/stub_HelperChildConfig.cc
 nodist_tests_testDiskIO_SOURCES= \
 	$(SWAP_TEST_GEN_SOURCES) \
 	SquidMath.cc \
@@ -1304,6 +1317,8 @@ tests_testEvent_SOURCES = \
 	gopher.cc \
 	hier_code.h \
 	helper.cc \
+	HelperChildConfig.h \
+	HelperChildConfig.cc \
 	$(HTCPSOURCE) \
 	http.cc \
 	HttpBody.cc \
@@ -1453,6 +1468,8 @@ tests_testEventLoop_SOURCES = \
 	ftp.cc \
 	gopher.cc \
 	helper.cc \
+	HelperChildConfig.h \
+	HelperChildConfig.cc \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -1592,6 +1609,8 @@ tests_test_http_range_SOURCES = \
 	ftp.cc \
 	gopher.cc \
 	helper.cc \
+	HelperChildConfig.h \
+	HelperChildConfig.cc \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -1747,6 +1766,8 @@ tests_testHttpRequest_SOURCES = \
 	ftp.cc \
 	gopher.cc \
 	helper.cc \
+	HelperChildConfig.h \
+	HelperChildConfig.cc \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -1908,6 +1929,7 @@ tests_testStore_SOURCES= \
 	tests/TestSwapDir.cc \
 	tests/TestSwapDir.h \
 	tests/stub_fd.cc \
+	tests/stub_HelperChildConfig.cc \
 	tests/stub_HttpReply.cc \
 	tests/stub_cache_manager.cc \
 	$(STORE_TEST_SOURCES)
@@ -1940,6 +1962,7 @@ tests_testString_SOURCES = \
 	tests/testString.cc \
 	tests/testString.h \
 	tests/stub_cache_manager.cc \
+	tests/stub_HelperChildConfig.cc \
 	time.cc
 nodist_tests_testString_SOURCES = \
 	$(TESTSOURCES)
@@ -2012,6 +2035,7 @@ tests_testUfs_SOURCES = \
 	tests/testMain.cc \
 	tests/testUfs.h \
 	tests/stub_cache_manager.cc \
+	tests/stub_HelperChildConfig.cc \
 	$(SWAP_TEST_SOURCES)
 nodist_tests_testUfs_SOURCES = \
 	$(SWAP_TEST_GEN_SOURCES) \
@@ -2032,6 +2056,7 @@ tests_testCoss_SOURCES = \
 	tests/testMain.cc \
 	tests/testCoss.h \
 	tests/stub_cache_manager.cc \
+	tests/stub_HelperChildConfig.cc \
 	$(SWAP_TEST_SOURCES)
 nodist_tests_testCoss_SOURCES = \
 	swap_log_op.cc \
@@ -2111,6 +2136,8 @@ tests_testURL_SOURCES = \
 	ftp.cc \
 	gopher.cc \
 	helper.cc \
+	HelperChildConfig.h \
+	HelperChildConfig.cc \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \

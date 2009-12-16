@@ -107,9 +107,7 @@ public:
 
     wordlist *cmdline;
 
-    int children;
-
-    int concurrency;
+    HelperChildConfig children;
 
     helper *theHelper;
 
@@ -210,7 +208,7 @@ free_external_acl(void *data)
 
     if (p->theHelper) {
         helperShutdown(p->theHelper);
-        helperFree(p->theHelper);
+        delete p->theHelper;
         p->theHelper = NULL;
     }
 
@@ -295,10 +293,11 @@ parse_externalAclHelper(external_acl ** list)
     /* set defaults */
     a->ttl = DEFAULT_EXTERNAL_ACL_TTL;
     a->negative_ttl = -1;
-    a->children = DEFAULT_EXTERNAL_ACL_CHILDREN;
+    a->children.n_max = DEFAULT_EXTERNAL_ACL_CHILDREN;
+    a->children.n_startup = a->children.n_max;
+    a->children.n_idle = 99999999; // big to detect if the user sets their own.
     a->local_addr.SetLocalhost();
     a->quote = external_acl::QUOTE_METHOD_URL;
-
 
     token = strtok(NULL, w_space);
 
@@ -316,9 +315,16 @@ parse_externalAclHelper(external_acl ** list)
         } else if (strncmp(token, "negative_ttl=", 13) == 0) {
             a->negative_ttl = atoi(token + 13);
         } else if (strncmp(token, "children=", 9) == 0) {
-            a->children = atoi(token + 9);
+            a->children.n_max = atoi(token + 9);
+            debugs(0, 0, "WARNING: external_acl_type option children=N has been deprecated in favor of children-max=N and children-startup=N");
+        } else if (strncmp(token, "children-max=", 13) == 0) {
+            a->children.n_max = atoi(token + 13);
+        } else if (strncmp(token, "children-startup=", 17) == 0) {
+            a->children.n_startup = atoi(token + 17);
+        } else if (strncmp(token, "children-idle=", 14) == 0) {
+            a->children.n_idle = atoi(token + 14);
         } else if (strncmp(token, "concurrency=", 12) == 0) {
-            a->concurrency = atoi(token + 12);
+            a->children.concurrency = atoi(token + 12);
         } else if (strncmp(token, "cache=", 6) == 0) {
             a->cache_size = atoi(token + 6);
         } else if (strncmp(token, "grace=", 6) == 0) {
@@ -350,6 +356,11 @@ parse_externalAclHelper(external_acl ** list)
 
         token = strtok(NULL, w_space);
     }
+
+    /* our default idle is huge on purpose, make it sane when we know whether the user has set their own. */
+    if (a->children.n_idle > a->children.n_max - a->children.n_startup)
+        a->children.n_idle = max(1, (int)(a->children.n_max - a->children.n_startup));
+
 
     if (a->negative_ttl == -1)
         a->negative_ttl = a->ttl;
@@ -483,11 +494,17 @@ dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl
         if (node->grace)
             storeAppendPrintf(sentry, " grace=%d", node->grace);
 
-        if (node->children != DEFAULT_EXTERNAL_ACL_CHILDREN)
-            storeAppendPrintf(sentry, " children=%d", node->children);
+        if (node->children.n_max != DEFAULT_EXTERNAL_ACL_CHILDREN)
+            storeAppendPrintf(sentry, " children-max=%d", node->children.n_max);
 
-        if (node->concurrency)
-            storeAppendPrintf(sentry, " concurrency=%d", node->concurrency);
+        if (node->children.n_startup != 1)
+            storeAppendPrintf(sentry, " children-startup=%d", node->children.n_startup);
+
+        if (node->children.n_idle != (node->children.n_max + node->children.n_startup) )
+            storeAppendPrintf(sentry, " children-idle=%d", node->children.n_idle);
+
+        if (node->children.concurrency)
+            storeAppendPrintf(sentry, " concurrency=%d", node->children.concurrency);
 
         if (node->cache)
             storeAppendPrintf(sentry, " cache=%d", node->cache_size);
@@ -744,7 +761,7 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
             debugs(82, 2, "aclMatchExternal: \"" << key << "\": entry=@" <<
                    entry << ", age=" << (entry ? (long int) squid_curtime - entry->date : 0));
 
-            if (acl->def->theHelper->stats.queue_size <= acl->def->theHelper->n_running) {
+            if (acl->def->theHelper->stats.queue_size <= (int)acl->def->theHelper->childs.n_active) {
                 debugs(82, 2, "aclMatchExternal: \"" << key << "\": queueing a call.");
                 ch->changeState (ExternalACLLookup::Instance());
 
@@ -1331,7 +1348,7 @@ ACLExternal::ExternalAclLookup(ACLChecklist *checklist, ACLExternal * me, EAH * 
     } else {
         /* Check for queue overload */
 
-        if (def->theHelper->stats.queue_size >= def->theHelper->n_running) {
+        if (def->theHelper->stats.queue_size >= (int)def->theHelper->childs.n_running) {
             debugs(82, 1, "externalAclLookup: '" << def->name << "' queue overload (ch=" << ch << ")");
             cbdataFree(state);
             callback(callback_data, entry);
@@ -1407,13 +1424,11 @@ externalAclInit(void)
             p->cache = hash_create((HASHCMP *) strcmp, hashPrime(1024), hash4);
 
         if (!p->theHelper)
-            p->theHelper = helperCreate(p->name);
+            p->theHelper = new helper(p->name);
 
         p->theHelper->cmdline = p->cmdline;
 
-        p->theHelper->n_to_start = p->children;
-
-        p->theHelper->concurrency = p->concurrency;
+        p->theHelper->childs = p->children;
 
         p->theHelper->ipc_type = IPC_TCP_SOCKET;
 
