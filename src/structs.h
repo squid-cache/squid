@@ -128,6 +128,8 @@ struct relist {
 #include "ip/QosConfig.h"
 #endif
 
+#include "HelperChildConfig.h"
+
 /* forward decl for SquidConfig, see RemovalPolicy.h */
 
 class RemovalPolicySettings;
@@ -301,11 +303,10 @@ struct SquidConfig {
     } Program;
 #if USE_DNSSERVERS
 
-    int dnsChildren;
+    HelperChildConfig dnsChildren;
 #endif
 
-    int redirectChildren;
-    int redirectConcurrency;
+    HelperChildConfig redirectChildren;
     time_t authenticateGCInterval;
     time_t authenticateTTL;
     time_t authenticateIpTTL;

@@ -1370,6 +1370,9 @@ SquidMain(int argc, char **argv)
 
     mainLoop.setTimeService(&time_engine);
 
+    /* at this point we are finished the synchronous startup. */
+    starting_up = 0;
+
     mainLoop.run();
 
     if (mainLoop.errcount == 10)

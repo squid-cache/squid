@@ -36,16 +36,9 @@
 #include "squid.h"
 #include "cbdata.h"
 #include "ip/IpAddress.h"
+#include "HelperChildConfig.h"
 
 class helper_request;
-
-typedef struct _helper helper;
-
-typedef struct _helper_stateful statefulhelper;
-
-typedef struct _helper_server helper_server;
-
-typedef struct _helper_stateful_server helper_stateful_server;
 
 typedef struct _helper_flags helper_flags;
 
@@ -53,69 +46,74 @@ typedef struct _helper_stateful_flags helper_stateful_flags;
 
 typedef void HLPSCB(void *, void *lastserver, char *buf);
 
-struct _helper {
+class helper {
+public:
+    inline helper(const char *name) : cmdline(NULL), id_name(name) {};
+    ~helper();
+
+public:
     wordlist *cmdline;
     dlink_list servers;
     dlink_list queue;
     const char *id_name;
-    int n_to_start;           ///< Configuration setting of how many helper children should be running
-    int n_running;            ///< Total helper children objects currently existing
-    int n_active;             ///< Count of helper children active (not shutting down)
+    HelperChildConfig childs;    ///< Configuration settings for number running.
     int ipc_type;
     IpAddress addr;
-    unsigned int concurrency;
     time_t last_queue_warn;
     time_t last_restart;
 
-    struct {
+    struct _stats {
         int requests;
         int replies;
         int queue_size;
         int avg_svc_time;
     } stats;
+
+private:
+    CBDATA_CLASS2(helper);
 };
 
-struct _helper_stateful {
-    wordlist *cmdline;
-    dlink_list servers;
-    dlink_list queue;
-    const char *id_name;
-    int n_to_start;           ///< Configuration setting of how many helper children should be running
-    int n_running;            ///< Total helper children objects currently existing
-    int n_active;             ///< Count of helper children active (not shutting down)
-    int ipc_type;
-    IpAddress addr;
+class statefulhelper : public helper {
+public:
+    inline statefulhelper(const char *name) : helper(name) {};
+    inline ~statefulhelper() {};
+
+public:
     MemAllocator *datapool;
     HLPSAVAIL *IsAvailable;
     HLPSONEQ *OnEmptyQueue;
-    time_t last_queue_warn;
-    time_t last_restart;
 
-    struct {
-        int requests;
-        int replies;
-        int queue_size;
-        int avg_svc_time;
-    } stats;
+private:
+    CBDATA_CLASS2(statefulhelper);
 };
 
-struct _helper_server {
+/*
+ * Fields shared between stateless and stateful helper servers.
+ */
+class HelperServerBase {
+public:
     int index;
     int pid;
     IpAddress addr;
     int rfd;
     int wfd;
-    MemBuf *wqueue;
-    MemBuf *writebuf;
+    void *hIpc;
+
     char *rbuf;
     size_t rbuf_sz;
     size_t roffset;
 
     struct timeval dispatch_time;
-
     struct timeval answer_time;
 
     dlink_node link;
+};
+
+class helper_server : public HelperServerBase {
+public:
+    MemBuf *wqueue;
+    MemBuf *writebuf;
+
     helper *parent;
     helper_request **requests;
 
@@ -129,29 +127,15 @@ struct _helper_server {
         int uses;
         unsigned int pending;
     } stats;
-
-    void *hIpc;
 };
 
 class helper_stateful_request;
 
-struct _helper_stateful_server {
-    int index;
-    int pid;
-    IpAddress addr;
-    int rfd;
-    int wfd;
+class helper_stateful_server : public HelperServerBase {
+public:
     /* MemBuf wqueue; */
     /* MemBuf writebuf; */
-    char *rbuf;
-    size_t rbuf_sz;
-    size_t roffset;
 
-    struct timeval dispatch_time;
-
-    struct timeval answer_time;
-
-    dlink_node link;
     statefulhelper *parent;
     helper_stateful_request *request;
 
@@ -168,7 +152,6 @@ struct _helper_stateful_server {
         int releases;
     } stats;
     void *data;			/* State data used by the calling routines */
-    void *hIpc;
 };
 
 class helper_request
@@ -207,13 +190,8 @@ SQUIDCEXTERN void helperStats(StoreEntry * sentry, helper * hlp, const char *lab
 SQUIDCEXTERN void helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label = NULL);
 SQUIDCEXTERN void helperShutdown(helper * hlp);
 SQUIDCEXTERN void helperStatefulShutdown(statefulhelper * hlp);
-SQUIDCEXTERN helper *helperCreate(const char *);
-SQUIDCEXTERN statefulhelper *helperStatefulCreate(const char *);
-SQUIDCEXTERN void helperFree(helper *);
-SQUIDCEXTERN void helperStatefulFree(statefulhelper *);
 SQUIDCEXTERN void helperStatefulReleaseServer(helper_stateful_server * srv);
 SQUIDCEXTERN void *helperStatefulServerGetData(helper_stateful_server * srv);
-
 
 
 #endif /* SQUID_HELPER_H */
