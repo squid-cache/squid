@@ -3633,10 +3633,11 @@ FtpStateData::failed(err_type error, int xerrno)
 void
 FtpStateData::failedErrorMessage(err_type error, int xerrno)
 {
-    ErrorState *err;
+    ErrorState *ftperr;
     const char *command, *reply;
+
     /* Translate FTP errors into HTTP errors */
-    err = NULL;
+    ftperr = NULL;
 
     switch (error) {
 
@@ -3650,12 +3651,12 @@ FtpStateData::failedErrorMessage(err_type error, int xerrno)
 
             if (ctrl.replycode > 500)
                 if (password_url)
-                    err = errorCon(ERR_FTP_FORBIDDEN, HTTP_FORBIDDEN, fwd->request);
+                    ftperr = errorCon(ERR_FTP_FORBIDDEN, HTTP_FORBIDDEN, fwd->request);
                 else
-                    err = errorCon(ERR_FTP_FORBIDDEN, HTTP_UNAUTHORIZED, fwd->request);
+                    ftperr = errorCon(ERR_FTP_FORBIDDEN, HTTP_UNAUTHORIZED, fwd->request);
 
             else if (ctrl.replycode == 421)
-                err = errorCon(ERR_FTP_UNAVAILABLE, HTTP_SERVICE_UNAVAILABLE, fwd->request);
+                ftperr = errorCon(ERR_FTP_UNAVAILABLE, HTTP_SERVICE_UNAVAILABLE, fwd->request);
 
             break;
 
@@ -3663,7 +3664,7 @@ FtpStateData::failedErrorMessage(err_type error, int xerrno)
 
         case SENT_RETR:
             if (ctrl.replycode == 550)
-                err = errorCon(ERR_FTP_NOT_FOUND, HTTP_NOT_FOUND, fwd->request);
+                ftperr = errorCon(ERR_FTP_NOT_FOUND, HTTP_NOT_FOUND, fwd->request);
 
             break;
 
@@ -3674,20 +3675,20 @@ FtpStateData::failedErrorMessage(err_type error, int xerrno)
         break;
 
     case ERR_READ_TIMEOUT:
-        err = errorCon(error, HTTP_GATEWAY_TIMEOUT, fwd->request);
+        ftperr = errorCon(error, HTTP_GATEWAY_TIMEOUT, fwd->request);
         break;
 
     default:
-        err = errorCon(error, HTTP_BAD_GATEWAY, fwd->request);
+        ftperr = errorCon(error, HTTP_BAD_GATEWAY, fwd->request);
         break;
     }
 
-    if (err == NULL)
-        err = errorCon(ERR_FTP_FAILURE, HTTP_BAD_GATEWAY, fwd->request);
+    if (ftperr == NULL)
+        ftperr = errorCon(ERR_FTP_FAILURE, HTTP_BAD_GATEWAY, fwd->request);
 
-    err->xerrno = xerrno;
+    ftperr->xerrno = xerrno;
 
-    err->ftp.server_msg = ctrl.message;
+    ftperr->ftp.server_msg = ctrl.message;
 
     ctrl.message = NULL;
 
@@ -3705,12 +3706,13 @@ FtpStateData::failedErrorMessage(err_type error, int xerrno)
         reply = ctrl.last_reply;
 
     if (command)
-        err->ftp.request = xstrdup(command);
+        ftperr->ftp.request = xstrdup(command);
 
     if (reply)
-        err->ftp.reply = xstrdup(reply);
+        ftperr->ftp.reply = xstrdup(reply);
 
-    fwd->fail(err);
+    entry->replaceHttpReply( ftperr->BuildHttpReply() );
+    errorStateFree(ftperr);
 }
 
 /// \ingroup ServerProtocolFTPInternal
@@ -3752,7 +3754,8 @@ ftpSendReply(FtpStateData * ftpState)
     else
         err->ftp.reply = xstrdup("");
 
-    errorAppendEntry(ftpState->entry, err);
+    ftpState->entry->replaceHttpReply( err->BuildHttpReply() );
+    errorStateFree(err);
 
     ftpSendQuit(ftpState);
 }
