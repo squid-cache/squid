@@ -19,6 +19,7 @@ delay_pool_rates	delay_class
 denyinfo		acl
 eol
 externalAclHelper	auth_param
+HelperChildConfig
 hostdomain		cache_peer
 hostdomaintype		cache_peer
 http_header_access

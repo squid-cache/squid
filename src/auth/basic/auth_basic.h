@@ -107,6 +107,8 @@ private:
 
 MEMPROXY_CLASS_INLINE(AuthBasicUserRequest);
 
+#include "HelperChildConfig.h"
+
 /* configuration runtime data */
 
 class AuthBasicConfig : public AuthConfig
@@ -125,7 +127,7 @@ public:
     virtual void parse(AuthConfig *, int, char *);
     virtual void registerWithCacheManager(void);
     virtual const char * type() const;
-    int authenticateChildren;
+    HelperChildConfig authenticateChildren;
     int authenticateConcurrency;
     char *basicAuthRealm;
     wordlist *authenticate;
