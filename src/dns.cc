@@ -118,11 +118,11 @@ dnsSubmit(const char *lookup, HLPCB * callback, void *data)
     static time_t first_warn = 0;
     snprintf(buf, 256, "%s\n", lookup);
 
-    if (dnsservers->stats.queue_size >= dnsservers->childs.n_active && dnsservers->childs.needNew() > 0) {
+    if (dnsservers->stats.queue_size >= (int)dnsservers->childs.n_active && dnsservers->childs.needNew() > 0) {
         helperOpenServers(dnsservers);
     }
 
-    if (dnsservers->stats.queue_size >= dnsservers->childs.n_running * 2) {
+    if (dnsservers->stats.queue_size >= (int)(dnsservers->childs.n_running * 2)) {
         if (first_warn == 0)
             first_warn = squid_curtime;
 
