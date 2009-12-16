@@ -41,6 +41,7 @@
 #include "MemObject.h"
 #include "PeerDigest.h"
 #include "PeerSelectState.h"
+#include "SquidMath.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "icmp/net_db.h"
@@ -925,8 +926,7 @@ neighborUpdateRtt(peer * p, MemObject * mem)
     if (p->options.weighted_roundrobin)
         rtt_av_factor = RTT_BACKGROUND_AV_FACTOR;
 
-    p->stats.rtt = intAverage(p->stats.rtt, rtt,
-                              p->stats.pings_acked, rtt_av_factor);
+    p->stats.rtt = Math::intAverage(p->stats.rtt, rtt, p->stats.pings_acked, rtt_av_factor);
 }
 
 #if USE_HTCP
@@ -1484,10 +1484,7 @@ peerCountMcastPeersDone(void *data)
     if (cbdataReferenceValid(psstate->callback_data)) {
         peer *p = (peer *)psstate->callback_data;
         p->mcast.flags.counting = 0;
-        p->mcast.avg_n_members = doubleAverage(p->mcast.avg_n_members,
-                                               (double) psstate->ping.n_recv,
-                                               ++p->mcast.n_times_counted,
-                                               10);
+        p->mcast.avg_n_members = Math::doubleAverage(p->mcast.avg_n_members, (double) psstate->ping.n_recv, ++p->mcast.n_times_counted, 10);
         debugs(15, 1, "Group " << p->host  << ": " << psstate->ping.n_recv  <<
                " replies, "<< std::setw(4)<< std::setprecision(2) <<
                p->mcast.avg_n_members <<" average, RTT " << p->stats.rtt);
@@ -1522,7 +1519,7 @@ peerCountHandleIcpReply(peer * p, peer_t type, protocol_t proto, void *hdrnotuse
     if (p->options.weighted_roundrobin)
         rtt_av_factor = RTT_BACKGROUND_AV_FACTOR;
 
-    p->stats.rtt = intAverage(p->stats.rtt, rtt, psstate->ping.n_recv, rtt_av_factor);
+    p->stats.rtt = Math::intAverage(p->stats.rtt, rtt, psstate->ping.n_recv, rtt_av_factor);
 }
 
 static void
@@ -1695,12 +1692,10 @@ dump_peers(StoreEntry * sentry, peer * peers)
 
             storeAppendPrintf(sentry, "PINGS ACKED: %8d %3d%%\n",
                               e->stats.pings_acked,
-                              percent(e->stats.pings_acked, e->stats.pings_sent));
+                              Math::intPercent(e->stats.pings_acked, e->stats.pings_sent));
         }
 
-        storeAppendPrintf(sentry, "IGNORED    : %8d %3d%%\n",
-                          e->stats.ignored_replies,
-                          percent(e->stats.ignored_replies, e->stats.pings_acked));
+        storeAppendPrintf(sentry, "IGNORED    : %8d %3d%%\n", e->stats.ignored_replies, Math::intPercent(e->stats.ignored_replies, e->stats.pings_acked));
 
         if (!e->options.no_query) {
             storeAppendPrintf(sentry, "Histogram of PINGS ACKED:\n");
@@ -1709,10 +1704,10 @@ dump_peers(StoreEntry * sentry, peer * peers)
             if (e->options.htcp) {
                 storeAppendPrintf(sentry, "\tMisses\t%8d %3d%%\n",
                                   e->htcp.counts[0],
-                                  percent(e->htcp.counts[0], e->stats.pings_acked));
+                                  Math::intPercent(e->htcp.counts[0], e->stats.pings_acked));
                 storeAppendPrintf(sentry, "\tHits\t%8d %3d%%\n",
                                   e->htcp.counts[1],
-                                  percent(e->htcp.counts[1], e->stats.pings_acked));
+                                  Math::intPercent(e->htcp.counts[1], e->stats.pings_acked));
             } else {
 #endif
 
@@ -1723,7 +1718,7 @@ dump_peers(StoreEntry * sentry, peer * peers)
                     storeAppendPrintf(sentry, "    %12.12s : %8d %3d%%\n",
                                       icp_opcode_str[op],
                                       e->icp.counts[op],
-                                      percent(e->icp.counts[op], e->stats.pings_acked));
+                                      Math::intPercent(e->icp.counts[op], e->stats.pings_acked));
                 }
 
 #if USE_HTCP
@@ -1750,8 +1745,7 @@ dump_peers(StoreEntry * sentry, peer * peers)
             storeAppendPrintf(sentry, "\n");
         }
 
-        storeAppendPrintf(sentry, "keep-alive ratio: %d%%\n",
-                          percent(e->stats.n_keepalives_recv, e->stats.n_keepalives_sent));
+        storeAppendPrintf(sentry, "keep-alive ratio: %d%%\n", Math::intPercent(e->stats.n_keepalives_recv, e->stats.n_keepalives_sent));
     }
 }
 

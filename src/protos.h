@@ -571,8 +571,6 @@ SQUIDCEXTERN void no_suid(void);
 SQUIDCEXTERN void writePidFile(void);
 SQUIDCEXTERN void setSocketShutdownLifetimes(int);
 SQUIDCEXTERN void setMaxFD(void);
-SQUIDCEXTERN int percent(int, int);
-SQUIDCEXTERN double dpercent(double, double);
 SQUIDCEXTERN void squid_signal(int sig, SIGHDLR *, int flags);
 SQUIDCEXTERN pid_t readPidFile(void);
 SQUIDCEXTERN void keepCapabilities(void);
@@ -580,8 +578,6 @@ SQUIDCEXTERN void keepCapabilities(void);
 /* AYJ debugs function to show locations being reset with memset() */
 SQUIDCEXTERN void *xmemset(void *dst, int, size_t);
 
-SQUIDCEXTERN int intAverage(int, int, int, int);
-SQUIDCEXTERN double doubleAverage(double, double, int, int);
 SQUIDCEXTERN void debug_trap(const char *);
 SQUIDCEXTERN void logsFlush(void);
 SQUIDCEXTERN const char *checkNullString(const char *p);

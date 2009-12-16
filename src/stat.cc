@@ -48,6 +48,7 @@
 #include "client_side_request.h"
 #include "client_side.h"
 #include "MemBuf.h"
+#include "SquidMath.h"
 #include "SquidTime.h"
 
 /* these are included because they expose stats calls */
@@ -199,7 +200,7 @@ stat_io_get(StoreEntry * sentry)
                           i ? (1 << (i - 1)) + 1 : 1,
                           1 << i,
                           IOStats.Http.read_hist[i],
-                          percent(IOStats.Http.read_hist[i], IOStats.Http.reads));
+                          Math::intPercent(IOStats.Http.read_hist[i], IOStats.Http.reads));
     }
 
     storeAppendPrintf(sentry, "\n");
@@ -212,7 +213,7 @@ stat_io_get(StoreEntry * sentry)
                           i ? (1 << (i - 1)) + 1 : 1,
                           1 << i,
                           IOStats.Ftp.read_hist[i],
-                          percent(IOStats.Ftp.read_hist[i], IOStats.Ftp.reads));
+                          Math::intPercent(IOStats.Ftp.read_hist[i], IOStats.Ftp.reads));
     }
 
     storeAppendPrintf(sentry, "\n");
@@ -225,7 +226,7 @@ stat_io_get(StoreEntry * sentry)
                           i ? (1 << (i - 1)) + 1 : 1,
                           1 << i,
                           IOStats.Gopher.read_hist[i],
-                          percent(IOStats.Gopher.read_hist[i], IOStats.Gopher.reads));
+                          Math::intPercent(IOStats.Gopher.read_hist[i], IOStats.Gopher.reads));
     }
 
     storeAppendPrintf(sentry, "\n");
@@ -539,16 +540,16 @@ info_get(StoreEntry * sentry)
                       store_swap_size);
 
     storeAppendPrintf(sentry, "\tStorage Swap capacity:\t%4.1f%% used, %4.1f%% free\n",
-                      dpercent(store_swap_size, Store::Root().maxSize()),
-                      dpercent((Store::Root().maxSize() - store_swap_size), Store::Root().maxSize()));
+                      Math::doublePercent(store_swap_size, Store::Root().maxSize()),
+                      Math::doublePercent((Store::Root().maxSize() - store_swap_size), Store::Root().maxSize()));
 
 
     storeAppendPrintf(sentry, "\tStorage Mem size:\t%lu KB\n",
                       (unsigned long)mem_node::StoreMemSize() >> 10);
 
     storeAppendPrintf(sentry, "\tStorage Mem capacity:\t%4.1f%% used, %4.1f%% free\n",
-                      dpercent(mem_node::InUseCount(), store_pages_max),
-                      dpercent((store_pages_max - mem_node::InUseCount()), store_pages_max));
+                      Math::doublePercent(mem_node::InUseCount(), store_pages_max),
+                      Math::doublePercent((store_pages_max - mem_node::InUseCount()), store_pages_max));
 
     storeAppendPrintf(sentry, "\tMean Object Size:\t%0.2f KB\n",
                       n_disk_objects ? (double) store_swap_size / n_disk_objects : 0.0);
@@ -597,7 +598,7 @@ info_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "\tCPU Time:\t%.3f seconds\n", cputime);
 
     storeAppendPrintf(sentry, "\tCPU Usage:\t%.2f%%\n",
-                      dpercent(cputime, runtime));
+                      Math::doublePercent(cputime, runtime));
 
     storeAppendPrintf(sentry, "\tCPU Usage, 5 minute avg:\t%.2f%%\n",
                       statCPUUsage(5));
@@ -628,7 +629,7 @@ info_get(StoreEntry * sentry)
                       ms.bytes_total >> 10);
 
     storeAppendPrintf(sentry, "\tTotal free:            %6d KB %d%%\n",
-                      ms.bytes_free >> 10, percent(ms.bytes_free, ms.bytes_total));
+                      ms.bytes_free >> 10, Math::intPercent(ms.bytes_free, ms.bytes_total));
 
 #elif HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
 
@@ -657,12 +658,12 @@ info_get(StoreEntry * sentry)
     t = mp.uordblks + mp.usmblks + mp.hblkhd;
 
     storeAppendPrintf(sentry, "\tTotal in use:          %6d KB %d%%\n",
-                      t >> 10, percent(t, mp.arena + mp.hblkhd));
+                      t >> 10, Math::intPercent(t, mp.arena + mp.hblkhd));
 
     t = mp.fsmblks + mp.fordblks;
 
     storeAppendPrintf(sentry, "\tTotal free:            %6d KB %d%%\n",
-                      t >> 10, percent(t, mp.arena + mp.hblkhd));
+                      t >> 10, Math::intPercent(t, mp.arena + mp.hblkhd));
 
     t = mp.arena + mp.hblkhd;
 
@@ -695,7 +696,7 @@ info_get(StoreEntry * sentry)
 #if !(HAVE_MSTATS && HAVE_GNUMALLOC_H) && HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
 
     storeAppendPrintf(sentry, "\tTotal accounted:       %6d KB %3d%%\n",
-                      statMemoryAccounted() >> 10, percent(statMemoryAccounted(), t));
+                      statMemoryAccounted() >> 10, Math::intPercent(statMemoryAccounted(), t));
 
 #else
 
@@ -710,10 +711,10 @@ info_get(StoreEntry * sentry)
 
         storeAppendPrintf(sentry, "\tmemPool accounted:     %6d KB %3d%%\n",
                           (int) mp_stats.TheMeter->alloc.level >> 10,
-                          percent(mp_stats.TheMeter->alloc.level, t));
+                          Math::intPercent(mp_stats.TheMeter->alloc.level, t));
         storeAppendPrintf(sentry, "\tmemPool unaccounted:   %6d KB %3d%%\n",
                           (t - (int) mp_stats.TheMeter->alloc.level) >> 10,
-                          percent((t - mp_stats.TheMeter->alloc.level), t));
+                          Math::intPercent((t - mp_stats.TheMeter->alloc.level), t));
 #endif
 
         storeAppendPrintf(sentry, "\tmemPoolAlloc calls: %9.0f\n",
@@ -1004,7 +1005,7 @@ statAvgDump(StoreEntry * sentry, int minutes, int hours)
 
     storeAppendPrintf(sentry, "cpu_time = %f seconds\n", ct);
     storeAppendPrintf(sentry, "wall_time = %f seconds\n", dt);
-    storeAppendPrintf(sentry, "cpu_usage = %f%%\n", dpercent(ct, dt));
+    storeAppendPrintf(sentry, "cpu_usage = %f%%\n", Math::doublePercent(ct, dt));
 }
 
 static void
@@ -1531,38 +1532,38 @@ static double
 statCPUUsage(int minutes)
 {
     assert(minutes < N_COUNT_HIST);
-    return dpercent(CountHist[0].cputime - CountHist[minutes].cputime,
-                    tvSubDsec(CountHist[minutes].timestamp, CountHist[0].timestamp));
+    return Math::doublePercent(CountHist[0].cputime - CountHist[minutes].cputime,
+                               tvSubDsec(CountHist[minutes].timestamp, CountHist[0].timestamp));
 }
 
 extern double
 statRequestHitRatio(int minutes)
 {
     assert(minutes < N_COUNT_HIST);
-    return dpercent(CountHist[0].client_http.hits -
-                    CountHist[minutes].client_http.hits,
-                    CountHist[0].client_http.requests -
-                    CountHist[minutes].client_http.requests);
+    return Math::doublePercent(CountHist[0].client_http.hits -
+                               CountHist[minutes].client_http.hits,
+                               CountHist[0].client_http.requests -
+                               CountHist[minutes].client_http.requests);
 }
 
 extern double
 statRequestHitMemoryRatio(int minutes)
 {
     assert(minutes < N_COUNT_HIST);
-    return dpercent(CountHist[0].client_http.mem_hits -
-                    CountHist[minutes].client_http.mem_hits,
-                    CountHist[0].client_http.hits -
-                    CountHist[minutes].client_http.hits);
+    return Math::doublePercent(CountHist[0].client_http.mem_hits -
+                               CountHist[minutes].client_http.mem_hits,
+                               CountHist[0].client_http.hits -
+                               CountHist[minutes].client_http.hits);
 }
 
 extern double
 statRequestHitDiskRatio(int minutes)
 {
     assert(minutes < N_COUNT_HIST);
-    return dpercent(CountHist[0].client_http.disk_hits -
-                    CountHist[minutes].client_http.disk_hits,
-                    CountHist[0].client_http.hits -
-                    CountHist[minutes].client_http.hits);
+    return Math::doublePercent(CountHist[0].client_http.disk_hits -
+                               CountHist[minutes].client_http.disk_hits,
+                               CountHist[0].client_http.hits -
+                               CountHist[minutes].client_http.hits);
 }
 
 extern double
@@ -1596,9 +1597,9 @@ statByteHitRatio(int minutes)
 #endif
 
     if (c > s)
-        return dpercent(c - s, c);
+        return Math::doublePercent(c - s, c);
     else
-        return (-1.0 * dpercent(s - c, c));
+        return (-1.0 * Math::doublePercent(s - c, c));
 }
 
 static void

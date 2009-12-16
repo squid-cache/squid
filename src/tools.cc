@@ -38,6 +38,7 @@
 #include "fde.h"
 #include "MemBuf.h"
 #include "wordlist.h"
+#include "SquidMath.h"
 #include "SquidTime.h"
 #include "ip/IpIntercept.h"
 
@@ -162,7 +163,7 @@ dumpMallocStats(void)
             (int) (ms.bytes_total >> 10));
     fprintf(debug_log, "\tTotal free:            %6d KB %d%%\n",
             (int) (ms.bytes_free >> 10),
-            percent(ms.bytes_free, ms.bytes_total));
+            Math::intPercent(ms.bytes_free, ms.bytes_total));
 #elif HAVE_MALLINFO && HAVE_STRUCT_MALLINFO
 
     struct mallinfo mp;
@@ -196,12 +197,12 @@ dumpMallocStats(void)
     t = mp.uordblks + mp.usmblks + mp.hblkhd;
 
     fprintf(debug_log, "\tTotal in use:          %6d KB %d%%\n",
-            t >> 10, percent(t, mp.arena));
+            t >> 10, Math::intPercent(t, mp.arena));
 
     t = mp.fsmblks + mp.fordblks;
 
     fprintf(debug_log, "\tTotal free:            %6d KB %d%%\n",
-            t >> 10, percent(t, mp.arena));
+            t >> 10, Math::intPercent(t, mp.arena));
 
 #if HAVE_STRUCT_MALLINFO_MXFAST
 
@@ -947,18 +948,6 @@ setMaxFD(void)
 #endif /* RLIMIT_VMEM */
 }
 
-int
-percent(int a, int b)
-{
-    return b ? ((int) (100.0 * a / b + 0.5)) : 0;
-}
-
-double
-dpercent(double a, double b)
-{
-    return b ? (100.0 * a / b) : 0.0;
-}
-
 void
 squid_signal(int sig, SIGHDLR * func, int flags)
 {
@@ -1014,24 +1003,6 @@ squid_signal(int sig, SIGHDLR * func, int flags)
     signal(sig, func);
 
 #endif
-}
-
-double
-doubleAverage(double cur, double newD, int N, int max)
-{
-    if (N > max)
-        N = max;
-
-    return (cur * (N - 1.0) + newD) / N;
-}
-
-int
-intAverage(int cur, int newI, int n, int max)
-{
-    if (n > max)
-        n = max;
-
-    return (cur * (n - 1) + newI) / n;
 }
 
 void

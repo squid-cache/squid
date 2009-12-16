@@ -429,6 +429,8 @@ squid_SOURCES = \
 	send-announce.cc \
 	$(SNMP_SOURCE) \
 	squid.h \
+	SquidMath.h \
+	SquidMath.cc \
 	SquidNew.cc \
 	$(SSL_SOURCE) \
 	stat.cc \
@@ -1137,6 +1139,8 @@ tests_testCacheManager_SOURCES = \
 	Server.cc \
 	$(SNMP_SOURCE) \
 	$(SSL_SOURCE) \
+	SquidMath.h \
+	SquidMath.cc \
 	stat.cc \
 	StatHist.cc \
 	stmem.cc \
@@ -1202,7 +1206,9 @@ tests_testDiskIO_SOURCES = \
 	tests/testMain.cc \
 	tests/stub_cache_manager.cc
 nodist_tests_testDiskIO_SOURCES= \
-	$(SWAP_TEST_GEN_SOURCES)
+	$(SWAP_TEST_GEN_SOURCES) \
+	SquidMath.cc \
+	SquidMath.h
 tests_testDiskIO_LDADD = \
 	$(SWAP_TEST_LDADD) \
 	$(DISK_LIBS) \
@@ -1308,6 +1314,8 @@ tests_testEvent_SOURCES = \
 	Server.cc \
 	$(SNMP_SOURCE) \
 	$(SSL_SOURCE) \
+	SquidMath.h \
+	SquidMath.cc \
 	stat.cc \
 	StatHist.cc \
 	stmem.cc \
@@ -1456,6 +1464,8 @@ tests_testEventLoop_SOURCES = \
 	Server.cc \
 	$(SNMP_SOURCE) \
 	$(SSL_SOURCE) \
+	SquidMath.h \
+	SquidMath.cc \
 	stat.cc \
 	StatHist.cc \
 	stmem.cc \
@@ -1595,6 +1605,8 @@ tests_test_http_range_SOURCES = \
 	Server.cc \
 	$(SNMP_SOURCE) \
 	$(SSL_SOURCE) \
+	SquidMath.h \
+	SquidMath.cc \
 	stat.cc \
 	StatHist.cc \
 	stmem.cc \
@@ -1747,6 +1759,8 @@ tests_testHttpRequest_SOURCES = \
 	Server.cc \
 	$(SNMP_SOURCE) \
 	$(SSL_SOURCE) \
+	SquidMath.h \
+	SquidMath.cc \
 	stat.cc \
 	StatHist.cc \
 	stmem.cc \
@@ -1872,7 +1886,9 @@ tests_testStore_SOURCES= \
 	$(STORE_TEST_SOURCES)
 
 nodist_tests_testStore_SOURCES= \
-	$(STORE_TEST_GEN_SOURCES)
+	$(STORE_TEST_GEN_SOURCES) \
+	SquidMath.cc \
+	SquidMath.h
 
 tests_testStore_LDADD= \
 	$(COMMON_LIBS) \
@@ -1970,7 +1986,9 @@ tests_testUfs_SOURCES = \
 	tests/stub_cache_manager.cc \
 	$(SWAP_TEST_SOURCES)
 nodist_tests_testUfs_SOURCES = \
-	$(SWAP_TEST_GEN_SOURCES)
+	$(SWAP_TEST_GEN_SOURCES) \
+	SquidMath.cc \
+	SquidMath.h
 tests_testUfs_LDADD = \
 	$(SWAP_TEST_LDADD) \
 	$(COMMON_LIBS) \
@@ -2105,6 +2123,8 @@ tests_testURL_SOURCES = \
 	Server.cc \
 	$(SNMP_SOURCE) \
 	$(SSL_SOURCE) \
+	SquidMath.h \
+	SquidMath.cc \
 	stat.cc \
 	StatHist.cc \
 	stmem.cc \
