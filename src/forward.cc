@@ -999,7 +999,8 @@ FwdState::dispatch()
                         break;
 
                     if (o->cmsg_level == SOL_IP && o->cmsg_type == IP_TOS) {
-                        clientFde->upstreamTOS = (unsigned char)(*(int*)CMSG_DATA(o));
+                        int *tmp = (int*)CMSG_DATA(o);
+                        clientFde->upstreamTOS = (unsigned char)*tmp;
                         break;
                     }
                     pbuf += CMSG_LEN(o->cmsg_len);
