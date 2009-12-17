@@ -588,7 +588,7 @@ shut_down(int sig)
 #ifdef KILL_PARENT_OPT
 
     if (getppid() > 1) {
-        debugs(1, 1, "Killing RunCache, pid " << getppid());
+        debugs(1, 1, "Killing master process, pid " << getppid());
 
         if (kill(getppid(), sig) < 0)
             debugs(1, 1, "kill " << getppid() << ": " << xstrerror());
