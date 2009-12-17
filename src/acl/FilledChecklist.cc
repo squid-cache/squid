@@ -30,23 +30,7 @@ ACLFilledChecklist::authenticated()
 
     /* get authed here */
     /* Note: this fills in auth_user_request when applicable */
-    /*
-     * DPW 2007-05-08
-     * tryToAuthenticateAndSetAuthUser used to try to lock and
-     * unlock auth_user_request on our behalf, but it was too
-     * ugly and hard to follow.  Now we do our own locking here.
-     *
-     * I'm not sure what tryToAuthenticateAndSetAuthUser does when
-     * auth_user_request is set before calling.  I'm tempted to
-     * unlock and set it to NULL, but it seems safer to save the
-     * pointer before calling and unlock it afterwards.  If the
-     * pointer doesn't change then its a no-op.
-     */
-    AuthUserRequest *old_auth_user_request = auth_user_request;
-    auth_acl_t result = AuthUserRequest::tryToAuthenticateAndSetAuthUser (&auth_user_request, headertype, request, conn(), src_addr);
-    if (auth_user_request)
-        AUTHUSERREQUESTLOCK(auth_user_request, "ACLFilledChecklist");
-    AUTHUSERREQUESTUNLOCK(old_auth_user_request, "old ACLFilledChecklist");
+    auth_acl_t result = AuthUserRequest::tryToAuthenticateAndSetAuthUser(&auth_user_request, headertype, request, conn(), src_addr);
     switch (result) {
 
     case AUTH_ACL_CANNOT_AUTHENTICATE:
@@ -83,18 +67,14 @@ ACLFilledChecklist::checkCallback(allow_t answer)
     /* During reconfigure, we can end up not finishing call
      * sequences into the auth code */
 
-    if (auth_user_request) {
+    if (auth_user_request != NULL) {
         /* the filled_checklist lock */
-        AUTHUSERREQUESTUNLOCK(auth_user_request, "ACLFilledChecklist");
+        auth_user_request = NULL;
         /* it might have been connection based */
-        assert(conn() != NULL);
-        /*
-         * DPW 2007-05-08
-         * yuck, this make me uncomfortable.  why do this here?
-         * ConnStateData will do its own unlocking.
-         */
-        AUTHUSERREQUESTUNLOCK(conn()->auth_user_request, "conn via ACLFilledChecklist");
-        conn()->auth_type = AUTH_BROKEN;
+        if(conn()) {
+            conn()->auth_user_request = NULL;
+            conn()->auth_type = AUTH_BROKEN;
+        }
     }
 
     ACLChecklist::checkCallback(answer); // may delete us
@@ -155,10 +135,6 @@ ACLFilledChecklist::~ACLFilledChecklist()
     HTTPMSGUNLOCK(request);
 
     HTTPMSGUNLOCK(reply);
-
-    // no auth_user_request in builds without any Authentication configured
-    if (auth_user_request)
-        AUTHUSERREQUESTUNLOCK(auth_user_request, "ACLFilledChecklist destructor");
 
     cbdataReferenceDone(conn_);
 

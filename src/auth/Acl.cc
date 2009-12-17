@@ -32,25 +32,9 @@ AuthenticateAcl(ACLChecklist *ch)
 
     /* get authed here */
     /* Note: this fills in auth_user_request when applicable */
-    /*
-     * DPW 2007-05-08
-     * tryToAuthenticateAndSetAuthUser used to try to lock and
-     * unlock auth_user_request on our behalf, but it was too
-     * ugly and hard to follow.  Now we do our own locking here.
-     *
-     * I'm not sure what tryToAuthenticateAndSetAuthUser does when
-     * auth_user_request is set before calling.  I'm tempted to
-     * unlock and set it to NULL, but it seems safer to save the
-     * pointer before calling and unlock it afterwards.  If the
-     * pointer doesn't change then its a no-op.
-     */
-    AuthUserRequest *old_auth_user_request = checklist->auth_user_request;
     const auth_acl_t result = AuthUserRequest::tryToAuthenticateAndSetAuthUser(
                                   &checklist->auth_user_request, headertype, request,
                                   checklist->conn(), checklist->src_addr);
-    if (checklist->auth_user_request)
-        AUTHUSERREQUESTLOCK(checklist->auth_user_request, "ACLAuth::authenticated");
-    AUTHUSERREQUESTUNLOCK(old_auth_user_request, "old ACLAuth");
     switch (result) {
 
     case AUTH_ACL_CANNOT_AUTHENTICATE:

@@ -141,7 +141,7 @@ ProxyAuthLookup::checkForAsync(ACLChecklist *cl)const
     checklist->asyncInProgress(true);
     debugs(28, 3, "ACLChecklist::checkForAsync: checking password via authenticator");
 
-    AuthUserRequest *auth_user_request;
+    AuthUserRequest::Pointer auth_user_request;
     /* make sure someone created auth_user_request for us */
     assert(checklist->auth_user_request != NULL);
     auth_user_request = checklist->auth_user_request;
@@ -165,10 +165,10 @@ ProxyAuthLookup::LookupDone(void *data, char *result)
         /* credentials could not be checked either way
          * restart the whole process */
         /* OR the connection was closed, there's no way to continue */
-        AUTHUSERREQUESTUNLOCK(checklist->auth_user_request, "ProxyAuthLookup");
+        checklist->auth_user_request = NULL;
 
         if (checklist->conn() != NULL) {
-            AUTHUSERREQUESTUNLOCK(checklist->conn()->auth_user_request, "conn via ProxyAuthLookup");	// DPW discomfort
+            checklist->conn()->auth_user_request = NULL;
             checklist->conn()->auth_type = AUTH_BROKEN;
         }
     }
@@ -201,7 +201,7 @@ int
 ACLProxyAuth::matchForCache(ACLChecklist *cl)
 {
     ACLFilledChecklist *checklist = Filled(cl);
-    assert (checklist->auth_user_request);
+    assert (checklist->auth_user_request != NULL);
     return data->match(checklist->auth_user_request->username());
 }
 
@@ -215,9 +215,8 @@ ACLProxyAuth::matchProxyAuth(ACLChecklist *cl)
     ACLFilledChecklist *checklist = Filled(cl);
     checkAuthForCaching(checklist);
     /* check to see if we have matched the user-acl before */
-    int result = cacheMatchAcl(&checklist->auth_user_request->user()->
-                               proxy_match_cache, checklist);
-    AUTHUSERREQUESTUNLOCK(checklist->auth_user_request, "ACLChecklist via ACLProxyAuth");
+    int result = cacheMatchAcl(&checklist->auth_user_request->user()->proxy_match_cache, checklist);
+    checklist->auth_user_request = NULL;
     return result;
 }
 

@@ -729,8 +729,7 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
 
         key = makeExternalAclKey(ch, acl);
 
-        if (acl->def->require_auth)
-            AUTHUSERREQUESTUNLOCK(ch->auth_user_request, "ACLChecklist via aclMatchExternal");
+        acl->def->require_auth = NULL;
 
         if (!key) {
             /* Not sufficient data to process */
@@ -845,7 +844,7 @@ makeExternalAclKey(ACLFilledChecklist * ch, external_acl_data * acl_data)
         switch (format->type) {
 
         case _external_acl_format::EXT_ACL_LOGIN:
-            assert (ch->auth_user_request);
+            assert (ch->auth_user_request != NULL);
             str = ch->auth_user_request->username();
             break;
 #if USE_IDENT

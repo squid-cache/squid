@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -151,7 +150,7 @@ private:
 public:
     IpAddress host_addr;
 
-    AuthUserRequest *auth_user_request;
+    AuthUserRequest::Pointer auth_user_request;
 
     u_short port;
 

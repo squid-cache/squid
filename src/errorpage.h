@@ -35,6 +35,7 @@
 #define   SQUID_ERRORPAGE_H
 
 #include "squid.h"
+#include "auth/UserRequest.h"
 #include "cbdata.h"
 #include "ip/IpAddress.h"
 
@@ -78,7 +79,6 @@
  \endverbatim
  */
 
-class AuthUserRequest;
 class HttpReply;
 class MemBuf;
 
@@ -127,7 +127,7 @@ public:
     int page_id;
     char *err_language;
     http_status httpStatus;
-    AuthUserRequest *auth_user_request;
+    AuthUserRequest::Pointer auth_user_request;
     HttpRequest *request;
     char *url;
     int xerrno;

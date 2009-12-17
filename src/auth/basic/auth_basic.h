@@ -20,7 +20,7 @@ class AuthenticateStateData
 
 public:
     void *data;
-    AuthUserRequest *auth_user_request;
+    AuthUserRequest::Pointer auth_user_request;
     RH *handler;
 };
 
@@ -31,12 +31,10 @@ class BasicAuthQueueNode
 
 public:
     BasicAuthQueueNode *next;
-    AuthUserRequest *auth_user_request;
+    AuthUserRequest::Pointer auth_user_request;
     RH *handler;
     void *data;
 };
-
-class AuthBasicUserRequest;
 
 class BasicUser : public AuthUser
 {
@@ -48,13 +46,13 @@ public:
     BasicUser(AuthConfig *);
     ~BasicUser();
     bool authenticated() const;
-    void queueRequest(AuthUserRequest * auth_user_request, RH * handler, void *data);
-    void submitRequest (AuthUserRequest * auth_user_request, RH * handler, void *data);
-    void decode(char const *credentials, AuthUserRequest *);
+    void queueRequest(AuthUserRequest::Pointer auth_user_request, RH * handler, void *data);
+    void submitRequest(AuthUserRequest::Pointer auth_user_request, RH * handler, void *data);
+    void decode(char const *credentials, AuthUserRequest::Pointer);
     char *getCleartext() {return cleartext;}
 
     bool valid() const;
-    void makeLoggingInstance(AuthBasicUserRequest *auth_user_request);
+    void makeLoggingInstance(AuthUserRequest::Pointer auth_user_request);
     AuthUser * makeCachedFrom();
     void updateCached(BasicUser *from);
     char *passwd;
@@ -72,7 +70,7 @@ private:
     void extractUsername();
     void extractPassword();
     char *cleartext;
-    AuthUserRequest *currentRequest;
+    AuthUserRequest::Pointer currentRequest;
     char const *httpAuthHeader;
 };
 
@@ -117,10 +115,10 @@ public:
     ~AuthBasicConfig();
     virtual bool active() const;
     virtual bool configured() const;
-    virtual AuthUserRequest *decode(char const *proxy_auth);
+    virtual AuthUserRequest::Pointer decode(char const *proxy_auth);
     virtual void done();
     virtual void dump(StoreEntry *, const char *, AuthConfig *);
-    virtual void fixHeader(AuthUserRequest *, HttpReply *, http_hdr_type, HttpRequest *);
+    virtual void fixHeader(AuthUserRequest::Pointer, HttpReply *, http_hdr_type, HttpRequest *);
     virtual void init(AuthConfig *);
     virtual void parse(AuthConfig *, int, char *);
     virtual void registerWithCacheManager(void);

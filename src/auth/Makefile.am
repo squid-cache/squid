@@ -10,6 +10,7 @@ EXTRA_LTLIBRARIES = libbasic.la libdigest.la libntlm.la libnegotiate.la
 libauth_la_SOURCES = \
 	Config.cc \
 	Config.h \
+	enums.h \
 	Scheme.cc \
 	Scheme.h \
 	User.h \

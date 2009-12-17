@@ -95,10 +95,9 @@ void
 clientReplyContext::setReplyToError(
     err_type err, http_status status, const HttpRequestMethod& method, char const *uri,
     IpAddress &addr, HttpRequest * failedrequest, const char *unparsedrequest,
-    AuthUserRequest * auth_user_request)
+    AuthUserRequest::Pointer auth_user_request)
 {
-    ErrorState *errstate =
-        clientBuildError(err, status, uri, addr, failedrequest);
+    ErrorState *errstate = clientBuildError(err, status, uri, addr, failedrequest);
 
     if (unparsedrequest)
         errstate->request_hdrs = xstrdup(unparsedrequest);
@@ -111,10 +110,7 @@ clientReplyContext::setReplyToError(
 
     createStoreEntry(method, request_flags());
 
-    if (auth_user_request) {
-        errstate->auth_user_request = auth_user_request;
-        AUTHUSERREQUESTLOCK(errstate->auth_user_request, "errstate");
-    }
+    errstate->auth_user_request = auth_user_request;
 
     assert(errstate->callback_data == NULL);
     errorAppendEntry(http->storeEntry(), errstate);
@@ -1361,9 +1357,8 @@ clientReplyContext::buildReplyHeader()
          * responses
          */
         authenticateFixHeader(reply, request->auth_user_request, request, 0, 1);
-    } else if (request->auth_user_request)
-        authenticateFixHeader(reply, request->auth_user_request, request,
-                              http->flags.accel, 0);
+    } else if (request->auth_user_request != NULL)
+        authenticateFixHeader(reply, request->auth_user_request, request, http->flags.accel, 0);
 
     /* Append X-Cache */
     httpHeaderPutStrf(hdr, HDR_X_CACHE, "%s from %s",
