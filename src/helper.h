@@ -46,7 +46,8 @@ typedef struct _helper_stateful_flags helper_stateful_flags;
 
 typedef void HLPSCB(void *, void *lastserver, char *buf);
 
-class helper {
+class helper
+{
 public:
     inline helper(const char *name) : cmdline(NULL), id_name(name) {};
     ~helper();
@@ -73,7 +74,8 @@ private:
     CBDATA_CLASS2(helper);
 };
 
-class statefulhelper : public helper {
+class statefulhelper : public helper
+{
 public:
     inline statefulhelper(const char *name) : helper(name) {};
     inline ~statefulhelper() {};
@@ -90,7 +92,8 @@ private:
 /*
  * Fields shared between stateless and stateful helper servers.
  */
-class HelperServerBase {
+class HelperServerBase
+{
 public:
     int index;
     int pid;
@@ -109,7 +112,8 @@ public:
     dlink_node link;
 };
 
-class helper_server : public HelperServerBase {
+class helper_server : public HelperServerBase
+{
 public:
     MemBuf *wqueue;
     MemBuf *writebuf;
@@ -131,7 +135,8 @@ public:
 
 class helper_stateful_request;
 
-class helper_stateful_server : public HelperServerBase {
+class helper_stateful_server : public HelperServerBase
+{
 public:
     /* MemBuf wqueue; */
     /* MemBuf writebuf; */

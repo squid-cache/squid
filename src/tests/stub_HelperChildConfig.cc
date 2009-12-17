@@ -33,7 +33,8 @@ HelperChildConfig::operator =(const HelperChildConfig &rhs)
 }
 
 const int
-HelperChildConfig::needNew() const {
+HelperChildConfig::needNew() const
+{
     /* during the startup and reconfigure use our special amount... */
     if (starting_up || reconfiguring) return n_startup;
 
