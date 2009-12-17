@@ -7,7 +7,8 @@
  * Some derived from a helper children configuration option,
  * some from runtime stats on the currently active children.
  */
-class HelperChildConfig {
+class HelperChildConfig
+{
 public:
     HelperChildConfig();
     HelperChildConfig(const unsigned int m, const unsigned int s, const unsigned int i, const unsigned int cc);
