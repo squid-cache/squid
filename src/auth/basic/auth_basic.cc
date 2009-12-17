@@ -211,7 +211,7 @@ AuthBasicUserRequest::module_direction()
 }
 
 void
-AuthBasicConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
+AuthBasicConfig::fixHeader(AuthUserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
 {
     if (authenticate) {
         debugs(29, 9, HERE << "Sending type:" << hdrType << " header: 'Basic realm=\"" << basicAuthRealm << "\"'");
@@ -462,11 +462,11 @@ BasicUser::extractPassword()
 }
 
 void
-BasicUser::decode(char const *proxy_auth, AuthUserRequest *auth_user_request)
+BasicUser::decode(char const *proxy_auth, AuthUserRequest::Pointer auth_user_request)
 {
     currentRequest = auth_user_request;
     httpAuthHeader = proxy_auth;
-    if (decodeCleartext ()) {
+    if (decodeCleartext()) {
         extractUsername();
         extractPassword();
     }
@@ -485,7 +485,7 @@ BasicUser::valid() const
 }
 
 void
-BasicUser::makeLoggingInstance(AuthBasicUserRequest *auth_user_request)
+BasicUser::makeLoggingInstance(AuthUserRequest::Pointer auth_user_request)
 {
     if (username()) {
         /* log the username */
@@ -552,10 +552,10 @@ BasicUser::updateCached(BasicUser *from)
  * "cannot decode credentials". Use the message field to return a
  * descriptive message to the user.
  */
-AuthUserRequest *
+AuthUserRequest::Pointer
 AuthBasicConfig::decode(char const *proxy_auth)
 {
-    AuthBasicUserRequest *auth_user_request = new AuthBasicUserRequest();
+    AuthUserRequest::Pointer auth_user_request = new AuthBasicUserRequest();
     /* decode the username */
     /* trim BASIC from string */
 
@@ -633,7 +633,7 @@ AuthBasicConfig::registerWithCacheManager(void)
 }
 
 void
-BasicUser::queueRequest(AuthUserRequest * auth_user_request, RH * handler, void *data)
+BasicUser::queueRequest(AuthUserRequest::Pointer auth_user_request, RH * handler, void *data)
 {
     BasicAuthQueueNode *node;
     node = static_cast<BasicAuthQueueNode *>(xmalloc(sizeof(BasicAuthQueueNode)));
@@ -672,7 +672,7 @@ AuthBasicUserRequest::module_start(RH * handler, void *data)
 }
 
 void
-BasicUser::submitRequest(AuthUserRequest * auth_user_request, RH * handler, void *data)
+BasicUser::submitRequest(AuthUserRequest::Pointer auth_user_request, RH * handler, void *data)
 {
     /* mark the user as haveing verification in progress */
     flags.credentials_ok = 2;

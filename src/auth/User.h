@@ -34,7 +34,8 @@
 #ifndef SQUID_AUTHUSER_H
 #define SQUID_AUTHUSER_H
 
-class AuthUserRequest;
+#include "auth/UserRequest.h"
+
 class AuthConfig;
 class AuthUserHashPointer;
 
@@ -87,7 +88,7 @@ public:
     void clearIp();
     void removeIp(IpAddress);
     void addIp(IpAddress);
-    _SQUID_INLINE_ void addRequest(AuthUserRequest *);
+    _SQUID_INLINE_ void addRequest(AuthUserRequest::Pointer);
 
     void lock();
     void unlock();

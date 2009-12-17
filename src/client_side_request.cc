@@ -602,7 +602,7 @@ ClientRequestContext::clientAccessCheckDone(int answer)
                                     http->getConn() != NULL ? http->getConn()->peer : tmpnoaddr,
                                     http->request,
                                     NULL,
-                                    http->getConn() != NULL && http->getConn()->auth_user_request ?
+                                    http->getConn() != NULL && http->getConn()->auth_user_request != NULL ?
                                     http->getConn()->auth_user_request : http->request->auth_user_request);
 
         node = (clientStreamNode *)http->client_stream.tail->data;
@@ -1017,11 +1017,7 @@ ClientRequestContext::clientRedirectDone(char *result)
         new_request->my_addr = old_request->my_addr;
         new_request->flags = old_request->flags;
         new_request->flags.redirected = 1;
-
-        if (old_request->auth_user_request) {
-            new_request->auth_user_request = old_request->auth_user_request;
-            AUTHUSERREQUESTLOCK(new_request->auth_user_request, "new request");
-        }
+        new_request->auth_user_request = old_request->auth_user_request;
 
         if (old_request->body_pipe != NULL) {
             new_request->body_pipe = old_request->body_pipe;
@@ -1492,7 +1488,7 @@ ClientHttpRequest::handleAdaptationFailure(bool bypassable)
     repContext->setReplyToError(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR,
                                 request->method, NULL,
                                 (c != NULL ? c->peer : noAddr), request, NULL,
-                                (c != NULL && c->auth_user_request ?
+                                (c != NULL && c->auth_user_request != NULL ?
                                  c->auth_user_request : request->auth_user_request));
 
     node = (clientStreamNode *)client_stream.tail->data;

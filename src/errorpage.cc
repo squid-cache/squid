@@ -501,7 +501,7 @@ errorStateFree(ErrorState * err)
     wordlistDestroy(&err->ftp.server_msg);
     safe_free(err->ftp.request);
     safe_free(err->ftp.reply);
-    AUTHUSERREQUESTUNLOCK(err->auth_user_request, "errstate");
+    err->auth_user_request = NULL;
     safe_free(err->err_msg);
 #if USE_ERR_LOCALES
     if (err->err_language != Config.errorDefaultLanguage)
@@ -609,7 +609,7 @@ ErrorState::Convert(char token, bool url_presentable)
     switch (token) {
 
     case 'a':
-        if (request && request->auth_user_request)
+        if (request && request->auth_user_request != NULL)
             p = request->auth_user_request->username();
         if (!p)
             p = "-";

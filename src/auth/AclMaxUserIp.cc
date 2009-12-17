@@ -112,9 +112,7 @@ ACLMaxUserIP::parse()
  * 1 : Match
  */
 int
-ACLMaxUserIP::match(AuthUserRequest * auth_user_request,
-
-                    IpAddress const &src_addr)
+ACLMaxUserIP::match(AuthUserRequest::Pointer auth_user_request, IpAddress const &src_addr)
 {
     /*
      * the logic for flush the ip list when the limit is hit vs keep
@@ -159,7 +157,7 @@ ACLMaxUserIP::match(ACLChecklist *cl)
 
     ti = match(checklist->auth_user_request, checklist->src_addr);
 
-    AUTHUSERREQUESTUNLOCK(checklist->auth_user_request, "ACLChecklist via ACLMaxUserIP");
+    checklist->auth_user_request = NULL;
 
     return ti;
 }

@@ -37,8 +37,7 @@
 
 #include "acl/Acl.h"
 #include "acl/Checklist.h"
-
-class AuthUserRequest;
+#include "auth/UserRequest.h"
 
 /// \ingroup ACLAPI
 class ACLMaxUserIP : public ACL
@@ -69,7 +68,7 @@ private:
     static Prototype RegistryProtoype;
     static ACLMaxUserIP RegistryEntry_;
 
-    int match(AuthUserRequest *, IpAddress const &);
+    int match(AuthUserRequest::Pointer, IpAddress const &);
     char const *class_;
     int maximum;
 

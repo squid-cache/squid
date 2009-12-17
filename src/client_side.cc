@@ -489,13 +489,12 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry * aLogEntry)
         aLogEntry->cache.requestSize += request->content_length;
     aLogEntry->cache.extuser = request->extacl_user.termedBuf();
 
-    if (request->auth_user_request) {
+    if (request->auth_user_request != NULL) {
 
         if (request->auth_user_request->username())
-            aLogEntry->cache.authuser =
-                xstrdup(request->auth_user_request->username());
+            aLogEntry->cache.authuser = xstrdup(request->auth_user_request->username());
 
-        AUTHUSERREQUESTUNLOCK(request->auth_user_request, "request via clientPrepareLogWithRequestDetails");
+        request->auth_user_request = NULL;
     }
 }
 
@@ -671,8 +670,6 @@ ConnStateData::~ConnStateData()
 
     if (!flags.swanSang)
         debugs(33, 1, "BUG: ConnStateData was not destroyed properly; FD " << fd);
-
-    AUTHUSERREQUESTUNLOCK(auth_user_request, "~conn");
 
     cbdataReferenceDone(port);
 

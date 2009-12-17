@@ -2,8 +2,8 @@
 #define SQUID_ACLFILLED_CHECKLIST_H
 
 #include "acl/Checklist.h"
+#include "auth/UserRequest.h"
 
-class AuthUserRequest;
 class ExternalACLEntry;
 class ConnStateData;
 
@@ -53,7 +53,7 @@ public:
     HttpReply *reply;
 
     char rfc931[USER_IDENT_SZ];
-    AuthUserRequest *auth_user_request;
+    AuthUserRequest::Pointer auth_user_request;
 
 #if SQUID_SNMP
     char *snmp_community;

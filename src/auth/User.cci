@@ -58,12 +58,14 @@ AuthUser::username(char const*aString)
 }
 
 void
-AuthUser::addRequest(AuthUserRequest *request)
+AuthUser::addRequest(AuthUserRequest::Pointer request)
 {
     /* lock for the request link */
-
+    /* AYJ: 2009-12-12: WTF? locking the AuthUser because it has a reference to a request? */
+    /*    seems to me like this once-upon-a-time may have been intended to lock the AuthUserRequest */
     lock();
+
     dlink_node *node = dlinkNodeNew();
 
-    dlinkAdd(request, node, &requests);
+    dlinkAdd(&request, node, &requests);
 }

@@ -32,7 +32,8 @@
 #ifndef SQUID_AUTHCONFIG_H
 #define SQUID_AUTHCONFIG_H
 
-class AuthUserRequest;
+#include "auth/UserRequest.h"
+
 class StoreEntry;
 class HttpReply;
 class HttpRequest;
@@ -56,7 +57,7 @@ class AuthConfig
 {
 
 public:
-    static AuthUserRequest *CreateAuthUser (const char *proxy_auth);
+    static AuthUserRequest::Pointer CreateAuthUser(const char *proxy_auth);
 
     static AuthConfig *Find(const char *proxy_auth);
     AuthConfig() {}
@@ -81,7 +82,7 @@ public:
      \param proxy_auth	Login Pattern to parse.
      \retval *		Details needed to authenticate.
      */
-    virtual AuthUserRequest *decode(char const *proxy_auth) = 0;
+    virtual AuthUserRequest::Pointer decode(char const *proxy_auth) = 0;
 
     /**
      * squid is finished with this config, release any unneeded resources.
@@ -109,7 +110,7 @@ public:
     virtual void dump(StoreEntry *, const char *, AuthConfig *) = 0;
 
     /** add headers as needed when challenging for auth */
-    virtual void fixHeader(AuthUserRequest *, HttpReply *, http_hdr_type, HttpRequest *) = 0;
+    virtual void fixHeader(AuthUserRequest::Pointer, HttpReply *, http_hdr_type, HttpRequest *) = 0;
     /** prepare to handle requests */
     virtual void init(AuthConfig *) = 0;
     /** expose any/all statistics to a CacheManager */

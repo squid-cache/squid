@@ -68,9 +68,8 @@ AuthUser::AuthUser (AuthConfig *aConfig) :
  * related scheme data itself.
  */
 void
-AuthUser::absorb (AuthUser *from)
+AuthUser::absorb(AuthUser *from)
 {
-    AuthUserRequest *auth_user_request;
     /*
      * XXX combine two authuser structs. Incomplete: it should merge
      * in hash references too and ask the module to merge in scheme
@@ -80,12 +79,13 @@ AuthUser::absorb (AuthUser *from)
     dlink_node *link = from->requests.head;
 
     while (link) {
-        auth_user_request = static_cast<AuthUserRequest *>(link->data);
+        AuthUserRequest::Pointer *auth_user_request = static_cast<AuthUserRequest::Pointer*>(link->data);
         dlink_node *tmplink = link;
         link = link->next;
         dlinkDelete(tmplink, &from->requests);
         dlinkAddTail(auth_user_request, tmplink, &requests);
-        auth_user_request->user(this);
+        AuthUserRequest::Pointer aur = *(auth_user_request);
+        aur->user(this);
     }
 
     references += from->references;
@@ -95,7 +95,6 @@ AuthUser::absorb (AuthUser *from)
 
 AuthUser::~AuthUser()
 {
-    AuthUserRequest *auth_user_request;
     dlink_node *link, *tmplink;
     debugs(29, 5, "AuthUser::~AuthUser: Freeing auth_user '" << this << "' with refcount '" << references << "'.");
     assert(references == 0);
@@ -116,7 +115,7 @@ AuthUser::~AuthUser()
 
     while (link) {
         debugs(29, 5, "AuthUser::~AuthUser: removing request entry '" << link->data << "'");
-        auth_user_request = static_cast<AuthUserRequest *>(link->data);
+        AuthUserRequest::Pointer *auth_user_request = static_cast<AuthUserRequest::Pointer*>(link->data);
         tmplink = link;
         link = link->next;
         dlinkDelete(tmplink, &requests);
