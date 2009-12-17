@@ -66,7 +66,7 @@
 static void
 authenticateStateFree(authenticateStateData * r)
 {
-    AUTHUSERREQUESTUNLOCK(r->auth_user_request, "r");
+    r->auth_user_request = NULL;
     cbdataFree(r);
 }
 
@@ -301,7 +301,7 @@ AuthNegotiateUserRequest::addHeader(HttpReply * rep, int accel)
 }
 
 void
-AuthNegotiateConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, http_hdr_type reqType, HttpRequest * request)
+AuthNegotiateConfig::fixHeader(AuthUserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type reqType, HttpRequest * request)
 {
     AuthNegotiateUserRequest *negotiate_request;
 
@@ -323,8 +323,7 @@ AuthNegotiateConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *re
             request->flags.proxy_keepalive = 0;
         }
     } else {
-        negotiate_request = dynamic_cast<AuthNegotiateUserRequest *>(auth_user_request);
-
+        negotiate_request = dynamic_cast<AuthNegotiateUserRequest *>(auth_user_request.getRaw());
         assert(negotiate_request != NULL);
 
         switch (negotiate_request->auth_state) {
@@ -387,7 +386,6 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
     int valid;
     char *blob, *arg = NULL;
 
-    AuthUserRequest *auth_user_request;
     AuthUser *auth_user;
     NegotiateUser *negotiate_user;
     AuthNegotiateUserRequest *negotiate_request;
@@ -407,20 +405,21 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
         reply = (char *)"BH Internal error";
     }
 
-    auth_user_request = r->auth_user_request;
+    AuthUserRequest::Pointer auth_user_request = r->auth_user_request;
     assert(auth_user_request != NULL);
-    negotiate_request = dynamic_cast<AuthNegotiateUserRequest *>(auth_user_request);
 
+    negotiate_request = dynamic_cast<AuthNegotiateUserRequest *>(auth_user_request.getRaw());
     assert(negotiate_request != NULL);
+
     assert(negotiate_request->waiting);
     negotiate_request->waiting = 0;
     safe_free(negotiate_request->client_blob);
 
-    auth_user = negotiate_request->user();
+    auth_user = auth_user_request->user();
     assert(auth_user != NULL);
     assert(auth_user->auth_type == AUTH_NEGOTIATE);
-    negotiate_user = dynamic_cast<negotiate_user_t *>(auth_user_request->user());
 
+    negotiate_user = dynamic_cast<negotiate_user_t *>(auth_user_request->user());
     assert(negotiate_user != NULL);
 
     if (negotiate_request->authserver == NULL)
@@ -533,10 +532,7 @@ authenticateNegotiateHandleReply(void *data, void *lastserver, char *reply)
         fatalf("authenticateNegotiateHandleReply: *** Unsupported helper response ***, '%s'\n", reply);
     }
 
-    if (negotiate_request->request) {
-        HTTPMSGUNLOCK(negotiate_request->request);
-        negotiate_request->request = NULL;
-    }
+    negotiate_request->request = NULL;
     r->handler(r->data, NULL);
     cbdataReferenceDone(r->data);
     authenticateStateFree(r);
@@ -577,7 +573,6 @@ AuthNegotiateUserRequest::module_start(RH * handler, void *data)
     r->handler = handler;
     r->data = cbdataReference(data);
     r->auth_user_request = this;
-    AUTHUSERREQUESTLOCK(r->auth_user_request, "r");
 
     if (auth_state == AUTHENTICATE_STATE_INITIAL) {
         snprintf(buf, MAX_AUTHTOKEN_LEN, "YR %s\n", client_blob); //CHECKME: can ever client_blob be 0 here?
@@ -624,19 +619,20 @@ AuthNegotiateUserRequest::onConnectionClose(ConnStateData *conn)
     /* unlock the connection based lock */
     debugs(29, 9, "AuthNegotiateUserRequest::onConnectionClose: Unlocking auth_user from the connection '" << conn << "'.");
 
-    AUTHUSERREQUESTUNLOCK(conn->auth_user_request, "conn");
+    conn->auth_user_request = NULL;
 }
 
 /*
  * Decode a Negotiate [Proxy-]Auth string, placing the results in the passed
  * Auth_user structure.
  */
-AuthUserRequest *
+AuthUserRequest::Pointer
 AuthNegotiateConfig::decode(char const *proxy_auth)
 {
     NegotiateUser *newUser = new NegotiateUser(&negotiateConfig);
-    AuthNegotiateUserRequest *auth_user_request = new AuthNegotiateUserRequest ();
+    AuthUserRequest *auth_user_request = new AuthNegotiateUserRequest();
     assert(auth_user_request->user() == NULL);
+
     auth_user_request->user(newUser);
     auth_user_request->user()->auth_type = AUTH_NEGOTIATE;
     auth_user_request->user()->addRequest(auth_user_request);
@@ -721,7 +717,6 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * c
         conn->auth_type = AUTH_NEGOTIATE;
         assert(conn->auth_user_request == NULL);
         conn->auth_user_request = this;
-        AUTHUSERREQUESTLOCK(conn->auth_user_request, "conn");
         request = aRequest;
         HTTPMSGLOCK(request);
         return;

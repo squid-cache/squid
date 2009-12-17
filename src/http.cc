@@ -1490,7 +1490,7 @@ httpFixupAuthentication(HttpRequest * request, HttpRequest * orig_request, const
 
         if (orig_request->extacl_user.size())
             username = orig_request->extacl_user.termedBuf();
-        else if (orig_request->auth_user_request)
+        else if (orig_request->auth_user_request != NULL)
             username = orig_request->auth_user_request->username();
 
         snprintf(loginbuf, sizeof(loginbuf), "%s%s", username, orig_request->peer_login + 1);

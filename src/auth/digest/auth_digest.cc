@@ -773,16 +773,16 @@ AuthDigestUserRequest::addTrailer(HttpReply * rep, int accel)
 
 /* add the [www-|Proxy-]authenticate header on a 407 or 401 reply */
 void
-AuthDigestConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
+AuthDigestConfig::fixHeader(AuthUserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
 {
     if (!authenticate)
         return;
 
     int stale = 0;
 
-    if (auth_user_request) {
+    if (auth_user_request != NULL) {
         AuthDigestUserRequest *digest_request;
-        digest_request = dynamic_cast < AuthDigestUserRequest * >(auth_user_request);
+        digest_request = dynamic_cast<AuthDigestUserRequest*>(auth_user_request.getRaw());
         assert (digest_request != NULL);
 
         stale = !digest_request->flags.invalid_password;
@@ -820,9 +820,6 @@ static void
 authenticateDigestHandleReply(void *data, char *reply)
 {
     DigestAuthenticateStateData *replyData = static_cast < DigestAuthenticateStateData * >(data);
-    AuthUserRequest *auth_user_request;
-    AuthDigestUserRequest *digest_request;
-    digest_user_h *digest_user;
     char *t = NULL;
     void *cbdata;
     debugs(29, 9, "authenticateDigestHandleReply: {" << (reply ? reply : "<NULL>") << "}");
@@ -836,11 +833,13 @@ authenticateDigestHandleReply(void *data, char *reply)
     }
 
     assert(replyData->auth_user_request != NULL);
-    auth_user_request = replyData->auth_user_request;
-    digest_request = dynamic_cast < AuthDigestUserRequest * >(auth_user_request);
+    AuthUserRequest::Pointer auth_user_request = replyData->auth_user_request;
+
+    /* AYJ: 2009-12-12: allow this because the digest_request pointer is purely local */
+    AuthDigestUserRequest *digest_request = dynamic_cast < AuthDigestUserRequest * >(auth_user_request.getRaw());
     assert(digest_request);
 
-    digest_user = dynamic_cast < digest_user_h * >(auth_user_request->user());
+    digest_user_h *digest_user = dynamic_cast < digest_user_h * >(auth_user_request->user());
     assert(digest_user != NULL);
 
     if (reply && (strncasecmp(reply, "ERR", 3) == 0)) {
@@ -857,8 +856,7 @@ authenticateDigestHandleReply(void *data, char *reply)
     if (cbdataReferenceValidDone(replyData->data, &cbdata))
         replyData->handler(cbdata, NULL);
 
-    //we know replyData->auth_user_request != NULL, or we'd have asserted
-    AUTHUSERREQUESTUNLOCK(replyData->auth_user_request, "replyData");
+    replyData->auth_user_request = NULL;
 
     cbdataFree(replyData);
 }
@@ -1045,8 +1043,8 @@ authDigestUserLinkNonce(DigestUser * user, digest_nonce_h * nonce)
 }
 
 /* setup the necessary info to log the username */
-static AuthUserRequest *
-authDigestLogUsername(char *username, AuthDigestUserRequest *auth_user_request)
+static AuthUserRequest::Pointer
+authDigestLogUsername(char *username, AuthUserRequest::Pointer auth_user_request)
 {
     assert(auth_user_request != NULL);
 
@@ -1058,9 +1056,9 @@ authDigestLogUsername(char *username, AuthDigestUserRequest *auth_user_request)
     /* set the auth_user type */
     digest_user->auth_type = AUTH_BROKEN;
     /* link the request to the user */
-    auth_user_request->authUser(digest_user);
     auth_user_request->user(digest_user);
-    digest_user->addRequest (auth_user_request);
+    digest_user->lock();
+    digest_user->addRequest(auth_user_request);
     return auth_user_request;
 }
 
@@ -1068,7 +1066,7 @@ authDigestLogUsername(char *username, AuthDigestUserRequest *auth_user_request)
  * Decode a Digest [Proxy-]Auth string, placing the results in the passed
  * Auth_user structure.
  */
-AuthUserRequest *
+AuthUserRequest::Pointer
 AuthDigestConfig::decode(char const *proxy_auth)
 {
     const char *item;
@@ -1360,7 +1358,7 @@ AuthDigestUserRequest::module_start(RH * handler, void *data)
     char buf[8192];
     digest_user_h *digest_user;
     assert(user()->auth_type == AUTH_DIGEST);
-    digest_user = dynamic_cast < digest_user_h * >(user());
+    digest_user = dynamic_cast<digest_user_h*>(user());
     assert(digest_user != NULL);
     debugs(29, 9, "authenticateStart: '\"" << digest_user->username() << "\":\"" << realm << "\"'");
 
@@ -1372,8 +1370,7 @@ AuthDigestUserRequest::module_start(RH * handler, void *data)
     r = cbdataAlloc(DigestAuthenticateStateData);
     r->handler = handler;
     r->data = cbdataReference(data);
-    r->auth_user_request = this;
-    AUTHUSERREQUESTLOCK(r->auth_user_request, "r");
+    r->auth_user_request = static_cast<AuthUserRequest*>(this);
     if (digestConfig.utf8) {
         char userstr[1024];
         latin1_to_utf8(userstr, sizeof(userstr), digest_user->username());

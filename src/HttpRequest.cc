@@ -123,7 +123,7 @@ HttpRequest::clean()
     // points to a pipe that is owned and initiated by another object.
     body_pipe = NULL;
 
-    AUTHUSERREQUESTUNLOCK(auth_user_request, "request");
+    auth_user_request = NULL;
 
     safe_free(canonical);
 
@@ -589,10 +589,7 @@ bool HttpRequest::inheritProperties(const HttpMsg *aMsg)
     // may eventually need cloneNullAdaptationImmune() for that.
     flags = aReq->flags.cloneAdaptationImmune();
 
-    if (aReq->auth_user_request) {
-        auth_user_request = aReq->auth_user_request;
-        AUTHUSERREQUESTLOCK(auth_user_request, "inheritProperties");
-    }
+    auth_user_request = aReq->auth_user_request;
 
     if (aReq->pinned_connection) {
         pinned_connection = cbdataReference(aReq->pinned_connection);

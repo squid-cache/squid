@@ -42,7 +42,7 @@
  * Unauthenticated structure. The structure is given an inital lock here.
  * It may also be NULL reflecting that no user could be created.
  */
-AuthUserRequest *
+AuthUserRequest::Pointer
 AuthConfig::CreateAuthUser(const char *proxy_auth)
 {
     assert(proxy_auth != NULL);
@@ -55,14 +55,7 @@ AuthConfig::CreateAuthUser(const char *proxy_auth)
         return NULL;
     }
 
-    AuthUserRequest *result = config->decode (proxy_auth);
-
-    /*
-     * DPW 2007-05-08
-     * Do not lock the AuthUserRequest on the caller's behalf.
-     * Callers must manage their own locks.
-     */
-    return result;
+    return config->decode(proxy_auth);
 }
 
 AuthConfig *

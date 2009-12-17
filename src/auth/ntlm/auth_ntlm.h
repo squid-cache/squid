@@ -27,7 +27,7 @@ typedef enum {
 
 typedef struct {
     void *data;
-    AuthUserRequest *auth_user_request;
+    AuthUserRequest::Pointer auth_user_request;
     RH *handler;
 } authenticateStateData;
 #endif
@@ -105,10 +105,10 @@ public:
     AuthNTLMConfig();
     virtual bool active() const;
     virtual bool configured() const;
-    virtual AuthUserRequest *decode(char const *proxy_auth);
+    virtual AuthUserRequest::Pointer decode(char const *proxy_auth);
     virtual void done();
     virtual void dump(StoreEntry *, const char *, AuthConfig *);
-    virtual void fixHeader(AuthUserRequest *, HttpReply *, http_hdr_type, HttpRequest *);
+    virtual void fixHeader(AuthUserRequest::Pointer, HttpReply *, http_hdr_type, HttpRequest *);
     virtual void init(AuthConfig *);
     virtual void parse(AuthConfig *, int, char *);
     virtual void registerWithCacheManager(void);

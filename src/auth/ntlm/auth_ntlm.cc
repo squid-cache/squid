@@ -54,7 +54,7 @@
 static void
 authenticateStateFree(authenticateStateData * r)
 {
-    AUTHUSERREQUESTUNLOCK(r->auth_user_request, "r");
+    r->auth_user_request = NULL;
     cbdataFree(r);
 }
 
@@ -259,10 +259,8 @@ AuthNTLMUserRequest::module_direction()
 }
 
 void
-AuthNTLMConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
+AuthNTLMConfig::fixHeader(AuthUserRequest::Pointer auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
 {
-    AuthNTLMUserRequest *ntlm_request;
-
     if (!authenticate)
         return;
 
@@ -280,8 +278,7 @@ AuthNTLMConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, ht
             request->flags.proxy_keepalive = 0;
         }
     } else {
-        ntlm_request = dynamic_cast<AuthNTLMUserRequest *>(auth_user_request);
-
+        AuthNTLMUserRequest *ntlm_request = dynamic_cast<AuthNTLMUserRequest *>(auth_user_request.getRaw());
         assert(ntlm_request != NULL);
 
         switch (ntlm_request->auth_state) {
@@ -312,7 +309,6 @@ AuthNTLMConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, ht
             safe_free(ntlm_request->server_blob);
             break;
 
-
         default:
             debugs(29, 0, "AuthNTLMConfig::fixHeader: state " << ntlm_request->auth_state << ".");
             fatal("unexpected state in AuthenticateNTLMFixErrorHeader.\n");
@@ -333,9 +329,9 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
     int valid;
     char *blob;
 
-    AuthUserRequest *auth_user_request;
     AuthUser *auth_user;
     NTLMUser *ntlm_user;
+    AuthUserRequest::Pointer auth_user_request;
     AuthNTLMUserRequest *ntlm_request;
 
     debugs(29, 8, "authenticateNTLMHandleReply: helper: '" << lastserver << "' sent us '" << (reply ? reply : "<NULL>") << "'");
@@ -355,8 +351,8 @@ authenticateNTLMHandleReply(void *data, void *lastserver, char *reply)
 
     auth_user_request = r->auth_user_request;
     assert(auth_user_request != NULL);
-    ntlm_request = dynamic_cast<AuthNTLMUserRequest *>(auth_user_request);
 
+    ntlm_request = dynamic_cast<AuthNTLMUserRequest *>(auth_user_request.getRaw());
     assert(ntlm_request != NULL);
     assert(ntlm_request->waiting);
     ntlm_request->waiting = 0;
@@ -493,7 +489,6 @@ AuthNTLMUserRequest::module_start(RH * handler, void *data)
     r->handler = handler;
     r->data = cbdataReference(data);
     r->auth_user_request = this;
-    AUTHUSERREQUESTLOCK(r->auth_user_request, "r");
 
     if (auth_state == AUTHENTICATE_STATE_INITIAL) {
         snprintf(buf, 8192, "YR %s\n", client_blob); //CHECKME: can ever client_blob be 0 here?
@@ -541,19 +536,20 @@ AuthNTLMUserRequest::onConnectionClose(ConnStateData *conn)
     /* unlock the connection based lock */
     debugs(29, 9, "AuthNTLMUserRequest::onConnectionClose: Unlocking auth_user from the connection '" << conn << "'.");
 
-    AUTHUSERREQUESTUNLOCK(conn->auth_user_request, "conn");
+    conn->auth_user_request = NULL;
 }
 
 /*
  * Decode a NTLM [Proxy-]Auth string, placing the results in the passed
  * Auth_user structure.
  */
-AuthUserRequest *
+AuthUserRequest::Pointer
 AuthNTLMConfig::decode(char const *proxy_auth)
 {
     NTLMUser *newUser = new NTLMUser(&ntlmConfig);
-    AuthNTLMUserRequest *auth_user_request = new AuthNTLMUserRequest ();
+    AuthUserRequest::Pointer auth_user_request = new AuthNTLMUserRequest();
     assert(auth_user_request->user() == NULL);
+
     auth_user_request->user(newUser);
     auth_user_request->user()->auth_type = AUTH_NTLM;
     auth_user_request->user()->addRequest(auth_user_request);
@@ -639,7 +635,6 @@ AuthNTLMUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * conn, 
         conn->auth_type = AUTH_NTLM;
         assert(conn->auth_user_request == NULL);
         conn->auth_user_request = this;
-        AUTHUSERREQUESTLOCK(conn->auth_user_request, "conn");
         request = aRequest;
         HTTPMSGLOCK(request);
         return;

@@ -1653,7 +1653,7 @@ statClientRequests(StoreEntry * s)
                           (int) http->start_time.tv_usec,
                           tvSubDsec(http->start_time, current_time));
 
-        if (http->request->auth_user_request)
+        if (http->request->auth_user_request != NULL)
             p = http->request->auth_user_request->username();
         else if (http->request->extacl_user.defined()) {
             p = http->request->extacl_user.termedBuf();

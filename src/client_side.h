@@ -33,6 +33,7 @@
 #ifndef SQUID_CLIENTSIDE_H
 #define SQUID_CLIENTSIDE_H
 
+#include "auth/UserRequest.h"
 #include "base/AsyncJob.h"
 #include "BodyPipe.h"
 #include "comm.h"
@@ -43,15 +44,11 @@
 #include "StoreIOBuffer.h"
 
 class ConnStateData;
-
 class ClientHttpRequest;
-
 class clientStreamNode;
-
-class AuthUserRequest;
-
 class ChunkedCodingParser;
 class HttpParser;
+// class AuthUserRequest::Pointer;
 
 template <class T>
 class Range;
@@ -181,7 +178,7 @@ public:
      * note this is ONLY connection based because NTLM is against HTTP spec.
      * the user details for connection based authentication
      */
-    AuthUserRequest *auth_user_request;
+    AuthUserRequest::Pointer auth_user_request;
 
     /**
      * used by the owner of the connection, opaque otherwise
