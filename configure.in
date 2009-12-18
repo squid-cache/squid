@@ -474,6 +474,8 @@ AC_DEFINE_UNQUOTED([USE_DISKIO],[$squid_opt_enable_diskio],
 dnl ****************** KK HERE *********************
 
 dnl Some autoconf.h defines we might enable later...
+AC_ARG_WITH(pthreads,AS_HELP_STRING([--without-pthreads],[Disable POSIX Threads]))
+AC_ARG_WITH(aio, AS_HELP_STRING([--without-aio],[Do not use POSIX AIO. Default: auto-detect]))
 AH_TEMPLATE(USE_DISKIO_AIO, [Whether POSIX AIO support is needed. Automatic])
 AH_TEMPLATE(USE_DISKIO_DISKTHREADS, [Whether pthreads support is needed. Automatic])
 USE_AIOPS_WIN32=0
@@ -505,29 +507,24 @@ for module in $squid_disk_module_candidates none; do
     DiskThreads)
 	squid_opt_use_diskthreads="yes"
 	LIBPTHREADS=
-	SAVE_SQUID_CFLAGS="$SQUID_CFLAGS"
-	SAVE_SQUID_CXXFLAGS="$SQUID_CXXFLAGS"
-    dnl being reimplemented above
-    AC_ARG_WITH(pthreads,AS_HELP_STRING([--without-pthreads],[Disable POSIX Threads]))
+	SQUID_STATE_SAVE([diskthreads_state],[SQUID_CFLAGS SQUID_CXXFLAGS])
 	if test "$with_pthreads" != "no"; then
 		dnl TODO: this needs to be extended to handle more systems and better
 		dnl REF: http://www.openldap.org/lists/openldap-bugs/200006/msg00070.html
 		dnl REF: http://autoconf-archive.cryp.to/acx_pthread.html
-		case "$host" in
-		mingw|mingw32)
+		case "$squid_host_os" in
+		mingw)
 			USE_AIOPS_WIN32=1
 			AC_MSG_NOTICE([Windows threads support automatically enabled])
 			;;
-		i386-unknown-freebsd*)
+		freebsd)
 			SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT"
 			SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT"
-			if test "$GCC" = "yes" ; then
-				if test -z "$PRESET_LDFLAGS"; then
-					LDFLAGS="$LDFLAGS -pthread"
-				fi
+			if test "$GCC" = "yes" -a -z "$PRESET_LDFLAGS" ; then
+				LDFLAGS="$LDFLAGS -pthread"
 			fi
 			;;
-		*-solaris2.*)
+		solaris)
 		    if test "$GCC" = "yes" ; then
 			SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT -pthreads"
 			SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT -pthreads"
@@ -550,7 +547,7 @@ for module in $squid_disk_module_candidates none; do
 		*)
 			SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT"
 			SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT"
-			AC_CHECK_LIB(pthread, main,[LIBPTHREADS="-lpthread"],
+			AC_CHECK_LIB(pthread, pthread_create ,[LIBPTHREADS="-lpthread"],
 				[ AC_MSG_NOTICE(pthread library required but cannot be found.)
 				  squid_opt_use_diskthreads="no"
 				])
@@ -570,8 +567,7 @@ for module in $squid_disk_module_candidates none; do
 	else
 	  AC_DEFINE(USE_DISKIO_DISKTHREADS, 0, [Whether pthreads support is needed. Automatic])
 	  AC_MSG_NOTICE([Native pthreads support disabled. DiskThreads module automaticaly disabled.])
-	  SQUID_CFLAGS="$SAVE_SQUID_CFLAGS"
-	  SQUID_CXXFLAGS="$SAVE_SQUID_CXXFLAGS"
+          SQUID_STATE_ROLLBACK([diskthreads_state])
 	fi
 	;;
 
@@ -579,7 +575,6 @@ for module in $squid_disk_module_candidates none; do
 	dnl Check for POSIX AIO availability
 	squid_opt_use_aio="yes"
 	AIOLIB=
-	AC_ARG_WITH(aio, AS_HELP_STRING([--without-aio],[Do not use POSIX AIO. Default: auto-detect]))
 	if test "$with_aio" != "no"; then
 	    have_aio_header=no
 	    AC_CHECK_HEADERS(aio.h,[have_aio_header=yes])
