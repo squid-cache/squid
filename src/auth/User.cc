@@ -120,7 +120,7 @@ AuthUser::~AuthUser()
         link = link->next;
         dlinkDelete(tmplink, &requests);
         dlinkNodeDelete(tmplink);
-        delete auth_user_request;
+        *auth_user_request = NULL;
     }
 
     /* free cached acl results */
