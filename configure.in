@@ -32,6 +32,12 @@ AC_PROG_CXX
 AC_LANG([C++])
 AC_CANONICAL_HOST
 
+AC_MSG_CHECKING([simplified host os])
+squid_host_os=`echo $host_os|sed 's/[0-9].*//'`
+squid_host_os_version=`echo $host_os|sed "s/$squid_host_os//"`
+AC_MSG_RESULT($squid_host_os (version $squid_host_os_version))
+# on windows squid_host_os is either mingw or cygwin, version is 32
+
 # test for programs
 AC_PROG_LIBTOOL
 AC_PROG_RANLIB
@@ -62,11 +68,6 @@ AC_PATH_PROG(POD2MAN, pod2man, $FALSE)
 dnl set $(AR)
 AC_PATH_PROG(AR, ar, $FALSE)
 AR_R="$AR r"
-case "$host" in
-	*-next-nextstep3)
-		AR="libtool -o"
-		;;
-esac
 AC_SUBST(AR_R)
 
 
@@ -158,17 +159,10 @@ AC_SUBST(CGIEXT)
 
 dnl this should be expanded to a list of platform sensible support requirements.
 dnl (adding an option like --enable-cygwin-support doesn't make sense :]) - R Collins 2001
-case "$host_os" in
-mingw|mingw32|cygwin|cygwin32)
-        AM_CONDITIONAL(ENABLE_WIN32SPECIFIC, true)
-	;;
-*)
-	AM_CONDITIONAL(ENABLE_WIN32SPECIFIC, false)
-	;;
-esac
+AM_CONDITIONAL(ENABLE_WIN32SPECIFIC,[test "$squid_host_os" = "mingw" -o "$squid_host_os" = "cygwin"])
+AM_CONDITIONAL(USE_IPC_WIN32,[test "$squid_host_os" = "mingw"])
 
-case "$host_os" in
-mingw|mingw32)
+if test $squid_host_os = "mingw"; then
 	AC_PATH_PROG(WIN32_PSAPI, psapi.dll, none)
 	CFLAGS="$CFLAGS -mthreads"
 	CXXFLAGS="$CXXFLAGS -mthreads"
@@ -180,13 +174,8 @@ mingw|mingw32)
 		LIBS="$LIBS -lpsapi"
 	fi
 	MINGW_LIBS="-lmingwex"
-	AM_CONDITIONAL(USE_IPC_WIN32, true)
 	AC_SUBST(MINGW_LIBS)
-	;;
-*)
-	AM_CONDITIONAL(USE_IPC_WIN32, false)
-	;;
-esac
+fi
 
 if test -z "$CACHE_HTTP_PORT"; then
 	CACHE_HTTP_PORT="3128"
@@ -243,13 +232,6 @@ AC_ARG_WITH(pidfile,
    esac
 ])
 AC_SUBST(DEFAULT_PIDFILE)
-
-dnl Gerben Wierda <Gerben_Wierda@RnA.nl>
-case "$host" in
-    mab-next-nextstep3)
-	CC="$CC -arch m68k -arch i486 -arch hppa -arch sparc"
-	;;
-esac
 
 if test "$GCC" = "yes"; then
     GCCVER=`$CC -v 2>&1 | awk '$2 ==  "version" {print $3}'`
@@ -490,6 +472,7 @@ AC_DEFINE_UNQUOTED([USE_DISKIO],[$squid_opt_enable_diskio],
 
 
 dnl ****************** KK HERE *********************
+
 dnl Some autoconf.h defines we might enable later...
 AH_TEMPLATE(USE_DISKIO_AIO, [Whether POSIX AIO support is needed. Automatic])
 AH_TEMPLATE(USE_DISKIO_DISKTHREADS, [Whether pthreads support is needed. Automatic])
@@ -524,7 +507,8 @@ for module in $squid_disk_module_candidates none; do
 	LIBPTHREADS=
 	SAVE_SQUID_CFLAGS="$SQUID_CFLAGS"
 	SAVE_SQUID_CXXFLAGS="$SQUID_CXXFLAGS"
-	AC_ARG_WITH(pthreads,AS_HELP_STRING([--without-pthreads],[Disable POSIX Threads]))
+    dnl being reimplemented above
+    AC_ARG_WITH(pthreads,AS_HELP_STRING([--without-pthreads],[Disable POSIX Threads]))
 	if test "$with_pthreads" != "no"; then
 		dnl TODO: this needs to be extended to handle more systems and better
 		dnl REF: http://www.openldap.org/lists/openldap-bugs/200006/msg00070.html
@@ -555,14 +539,12 @@ for module in $squid_disk_module_candidates none; do
 			dnl test for -lpthread first. libc version is a stub apparently on Solaris.
 			SQUID_CFLAGS="$SQUID_CFLAGS -D_REENTRANT -lpthread"
 			SQUID_CXXFLAGS="$SQUID_CXXFLAGS -D_REENTRANT -lpthread"
-			AC_CHECK_LIB(pthread, main,[LIBPTHREADS="-lpthread"],
-			  [ SQUID_CFLAGS="$SAVE_SQUID_CFLAGS -D_REENTRANT -lpthread -mt"
-			    SQUID_CXXFLAGS="$SAVE_SQUID_CXXFLAGS -D_REENTRANT -lpthread -mt"
-				AC_CHECK_LIB(pthread, main,[LIBPTHREADS="-lpthread"],
-			      [ AC_MSG_NOTICE(pthread library required but cannot be found.)
-				squid_opt_use_diskthreads="no"
-			      ])
-			  ])
+            AC_SEARCH_LIBS([pthread_create],[pthread thread],[
+              LIBPTHREADS="" #in LIBS 
+            ],[
+              AC_MSG_NOTICE(pthread library required but cannot be found.)
+              squid_opt_use_diskthreads="no"
+            ])
 			fi
 			;;
 		*)
