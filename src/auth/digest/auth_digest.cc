@@ -573,7 +573,6 @@ AuthDigestUserRequest::authenticated() const
 void
 AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type)
 {
-    AuthUser *auth_user;
     AuthDigestUserRequest *digest_request;
     digest_user_h *digest_user;
 
@@ -581,11 +580,10 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData * conn,
     HASHHEX HA2 = "";
     HASHHEX Response;
 
-    assert(authUser() != NULL);
-    auth_user = authUser();
+    assert(user() != NULL);
+    AuthUser *auth_user = user();
 
-    digest_user = dynamic_cast < digest_user_h * >(auth_user);
-
+    digest_user = dynamic_cast<digest_user_h*>(auth_user);
     assert(digest_user != NULL);
 
     /* if the check has corrupted the user, just return */
@@ -1333,11 +1331,10 @@ AuthDigestConfig::decode(char const *proxy_auth)
     /*link the request and the user */
     assert(digest_request != NULL);
 
-    digest_request->authUser (digest_user);
-
+    digest_user->lock();
     digest_request->user(digest_user);
 
-    digest_user->addRequest (digest_request);
+    digest_user->addRequest(digest_request);
 
     debugs(29, 9, "username = '" << digest_user->username() << "'\nrealm = '" <<
            digest_request->realm << "'\nqop = '" << digest_request->qop <<
@@ -1385,20 +1382,6 @@ AuthDigestUserRequest::module_start(RH * handler, void *data)
 DigestUser::DigestUser (AuthConfig *aConfig) : AuthUser (aConfig), HA1created (0)
 {}
 
-AuthUser *
-AuthDigestUserRequest::authUser() const
-{
-    return const_cast<AuthUser *>(user());
-}
-
-void
-AuthDigestUserRequest::authUser(AuthUser *aUser)
-{
-    assert(!authUser());
-    user(aUser);
-    user()->lock();
-}
-
 AuthDigestUserRequest::CredentialsState
 AuthDigestUserRequest::credentials() const
 {
@@ -1414,7 +1397,7 @@ AuthDigestUserRequest::credentials(CredentialsState newCreds)
 AuthDigestUserRequest::AuthDigestUserRequest() : nonceb64(NULL) ,cnonce(NULL) ,realm(NULL),
         pszPass(NULL) ,algorithm(NULL) ,pszMethod(NULL),
         qop(NULL) ,uri(NULL) ,response(NULL),
-        nonce(NULL), _theUser (NULL) ,
+        nonce(NULL),
         credentials_ok (Unchecked)
 {}
 
