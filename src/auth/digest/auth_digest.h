@@ -70,17 +70,12 @@ public:
 #endif
 
     virtual void module_start(RH *, void *);
-    virtual AuthUser *user() {return _theUser;}
-
-    virtual const AuthUser *user() const {return _theUser;}
-
-    virtual void user(AuthUser *aUser) {_theUser=dynamic_cast<DigestUser *>(aUser);}
 
     CredentialsState credentials() const;
     void credentials(CredentialsState);
 
-    void authUser(AuthUser *);
-    AuthUser *authUser() const;
+//    void authUser(AuthUser *);
+//    AuthUser *authUser() const;
 
     char *nonceb64;		/* "dcd98b7102dd2f0e8b11d0f600bfb0c093" */
     char *cnonce;		/* "0a4f113b" */
@@ -101,7 +96,6 @@ public:
     digest_nonce_h *nonce;
 
 private:
-    DigestUser *_theUser;
     CredentialsState credentials_ok;
 };
 
