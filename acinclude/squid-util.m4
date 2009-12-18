@@ -143,7 +143,7 @@ AC_DEFUN([SQUID_CHECK_EXISTING_MODULES],[
 ])
 
 dnl lowercases the contents of the variable whose name is passed by argument
-AC_DEFUN([SQUID_TOUPPER_VAR_CONTENTS],[
+AC_DEFUN([SQUID_TOLOWER_VAR_CONTENTS],[
   $1=`echo $$1|tr ABCDEFGHIJKLMNOPQRSTUVWXYZ abcdefghijklmnopqrstuvwxyz`
 ])
 
