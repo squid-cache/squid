@@ -301,8 +301,7 @@ AuthBasicConfig::dump(StoreEntry * entry, const char *name, AuthConfig * scheme)
     storeAppendPrintf(entry, "\n");
 
     storeAppendPrintf(entry, "%s basic realm %s\n", name, basicAuthRealm);
-    storeAppendPrintf(entry, "%s basic children %d startup=%d idle=%d\n", name, authenticateChildren.n_max, authenticateChildren.n_startup, authenticateChildren.n_idle);
-    storeAppendPrintf(entry, "%s basic concurrency %d\n", name, authenticateConcurrency);
+    storeAppendPrintf(entry, "%s basic children %d startup=%d idle=%d concurrency=%d\n", name, authenticateChildren.n_max, authenticateChildren.n_startup, authenticateChildren.n_idle, authenticateChildren.concurrency);
     storeAppendPrintf(entry, "%s basic credentialsttl %d seconds\n", name, (int) credentialsTTL);
     storeAppendPrintf(entry, "%s basic casesensitive %s\n", name, casesensitive ? "on" : "off");
 }
@@ -331,8 +330,6 @@ AuthBasicConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
         requirePathnameExists("auth_param basic program", authenticate->key);
     } else if (strcasecmp(param_str, "children") == 0) {
         authenticateChildren.parseConfig();
-    } else if (strcasecmp(param_str, "concurrency") == 0) {
-        parse_int(&authenticateConcurrency);
     } else if (strcasecmp(param_str, "realm") == 0) {
         parse_eol(&basicAuthRealm);
     } else if (strcasecmp(param_str, "credentialsttl") == 0) {
@@ -609,8 +606,6 @@ AuthBasicConfig::init(AuthConfig * scheme)
         basicauthenticators->cmdline = authenticate;
 
         basicauthenticators->childs = authenticateChildren;
-
-        basicauthenticators->childs.concurrency = authenticateConcurrency;
 
         basicauthenticators->ipc_type = IPC_STREAM;
 

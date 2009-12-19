@@ -295,7 +295,7 @@ parse_externalAclHelper(external_acl ** list)
     a->negative_ttl = -1;
     a->children.n_max = DEFAULT_EXTERNAL_ACL_CHILDREN;
     a->children.n_startup = a->children.n_max;
-    a->children.n_idle = 99999999; // big to detect if the user sets their own.
+    a->children.n_idle = 1;
     a->local_addr.SetLocalhost();
     a->quote = external_acl::QUOTE_METHOD_URL;
 
@@ -357,10 +357,15 @@ parse_externalAclHelper(external_acl ** list)
         token = strtok(NULL, w_space);
     }
 
-    /* our default idle is huge on purpose, make it sane when we know whether the user has set their own. */
-    if (a->children.n_idle > a->children.n_max - a->children.n_startup)
-        a->children.n_idle = max(1, (int)(a->children.n_max - a->children.n_startup));
+     /* check that child startup value is sane. */
+    if ((a->children.n_startup > a->children.n_max)
+        a->children.n_startup = a->children.n_max;
 
+     /* check that child idle value is sane. */
+    if (a->children.n_idle > a->children.n_max)
+        a->children.n_idle = a->children.n_max;
+    if (a->children.n_idle < 1)
+        a->children.n_idle = 1;
 
     if (a->negative_ttl == -1)
         a->negative_ttl = a->ttl;
