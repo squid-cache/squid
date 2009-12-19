@@ -128,7 +128,6 @@ public:
     virtual void registerWithCacheManager(void);
     virtual const char * type() const;
     HelperChildConfig authenticateChildren;
-    int authenticateConcurrency;
     char *basicAuthRealm;
     wordlist *authenticate;
     time_t credentialsTTL;
