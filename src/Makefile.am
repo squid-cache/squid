@@ -166,9 +166,6 @@ COMMON_LIBS = \
 	ip/libip.la \
 	fs/libfs.la
 
-## Loadable Modules needs lib/libLtdl stuff
-INCLUDES += -I$(top_srcdir)/lib -I$(top_srcdir)/lib/libLtdl
-
 EXTRA_PROGRAMS = \
 	DiskIO/DiskDaemon/diskd \
 	unlinkd \
