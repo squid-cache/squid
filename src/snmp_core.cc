@@ -235,26 +235,29 @@ snmpInit(void)
     /* cachePeerTable - 1.3.6.1.4.1.3495.1.5.1 */
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.5", MESH_PTBL, NULL, NULL);
 
-    /* CachePeerEntry - 1.3.6.1.4.1.3495.1.5.1.1 */
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1", 1, NULL, NULL);
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.1", MESH_PTBL_INDEX, snmp_meshPtblFn, peer_Inst);
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.1", MESH_PTBL_NAME, snmp_meshPtblFn, peer_Inst);
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.1", MESH_PTBL_ADDR_TYPE, snmp_meshPtblFn, peer_Inst);
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.1", MESH_PTBL_ADDR, snmp_meshPtblFn, peer_Inst);
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.1", MESH_PTBL_HTTP, snmp_meshPtblFn, peer_Inst);
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.1", MESH_PTBL_ICP, snmp_meshPtblFn, peer_Inst);
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.1", MESH_PTBL_TYPE, snmp_meshPtblFn, peer_Inst);
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.1", MESH_PTBL_STATE, snmp_meshPtblFn, peer_Inst);
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.1", MESH_PTBL_SENT, snmp_meshPtblFn, peer_Inst);
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.1", MESH_PTBL_PACKED, snmp_meshPtblFn, peer_Inst);
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.1", MESH_PTBL_FETCHES, snmp_meshPtblFn, peer_Inst);
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.1", MESH_PTBL_RTT, snmp_meshPtblFn, peer_Inst);
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.1", MESH_PTBL_IGN, snmp_meshPtblFn, peer_Inst);
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.1", MESH_PTBL_KEEPAL_S, snmp_meshPtblFn, peer_Inst);
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.1", MESH_PTBL_KEEPAL_R, snmp_meshPtblFn, peer_Inst);
+    /* CachePeerTableEntry (version 3) - 1.3.6.1.4.1.3495.1.5.1.3 */
+    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1", 3, NULL, NULL);
+    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.3", MESH_PTBL_INDEX, snmp_meshPtblFn, peer_Inst);
+    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.3", MESH_PTBL_NAME, snmp_meshPtblFn, peer_Inst);
+    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.3", MESH_PTBL_ADDR_TYPE, snmp_meshPtblFn, peer_Inst);
+    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.3", MESH_PTBL_ADDR, snmp_meshPtblFn, peer_Inst);
+    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.3", MESH_PTBL_HTTP, snmp_meshPtblFn, peer_Inst);
+    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.3", MESH_PTBL_ICP, snmp_meshPtblFn, peer_Inst);
+    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.3", MESH_PTBL_TYPE, snmp_meshPtblFn, peer_Inst);
+    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.3", MESH_PTBL_STATE, snmp_meshPtblFn, peer_Inst);
+    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.3", MESH_PTBL_SENT, snmp_meshPtblFn, peer_Inst);
+    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.3", MESH_PTBL_PACKED, snmp_meshPtblFn, peer_Inst);
+    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.3", MESH_PTBL_FETCHES, snmp_meshPtblFn, peer_Inst);
+    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.3", MESH_PTBL_RTT, snmp_meshPtblFn, peer_Inst);
+    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.3", MESH_PTBL_IGN, snmp_meshPtblFn, peer_Inst);
+    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.3", MESH_PTBL_KEEPAL_S, snmp_meshPtblFn, peer_Inst);
+    mib_tree_last = snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.3", MESH_PTBL_KEEPAL_R, snmp_meshPtblFn, peer_Inst);
 
+#if 0
     /* cacheClientTable - 1.3.6.1.4.1.3495.1.5.2 */
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.5", MESH_CTBL, NULL, NULL);
+
+    /* BUG 2811: we NEED to create a reliable index for the clientDb and morph this to version 3 of the table. */
 
     /* cacheClientEntry - 1.3.6.1.4.1.3495.1.5.2.1 */
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.2", 1, NULL, NULL);
@@ -268,6 +271,7 @@ snmpInit(void)
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.2.1", MESH_CTBL_ICPBYTES, snmp_meshCtblFn, client_Inst);
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.2.1", MESH_CTBL_ICPHITS, snmp_meshCtblFn, client_Inst);
     mib_tree_last = snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.2.1", MESH_CTBL_ICPHITBYTES, snmp_meshCtblFn, client_Inst);
+#endif
 
     debugs(49, 9, "snmpInit: Completed SNMP mib tree structure");
 }
@@ -883,7 +887,7 @@ snmpTreeEntry(oid entry, snint len, mib_tree_entry * current)
     mib_tree_entry *next = NULL;
     int count = 0;
 
-    while ((!next) && (count < current->children)) {
+    while ((!next) && current && (count < current->children)) {
         if (current->leaves[count]->name[len] == entry) {
             next = current->leaves[count];
         }
