@@ -357,123 +357,123 @@ parse_externalAclHelper(external_acl ** list)
         token = strtok(NULL, w_space);
     }
 
-     /* check that child startup value is sane. */
+    /* check that child startup value is sane. */
     if ((a->children.n_startup > a->children.n_max)
-        a->children.n_startup = a->children.n_max;
+            a->children.n_startup = a->children.n_max;
 
-     /* check that child idle value is sane. */
-    if (a->children.n_idle > a->children.n_max)
-        a->children.n_idle = a->children.n_max;
-    if (a->children.n_idle < 1)
-        a->children.n_idle = 1;
+            /* check that child idle value is sane. */
+            if (a->children.n_idle > a->children.n_max)
+                a->children.n_idle = a->children.n_max;
+                if (a->children.n_idle < 1)
+                    a->children.n_idle = 1;
 
-    if (a->negative_ttl == -1)
-        a->negative_ttl = a->ttl;
+                    if (a->negative_ttl == -1)
+                        a->negative_ttl = a->ttl;
 
-    /* Parse format */
-    p = &a->format;
+                        /* Parse format */
+                        p = &a->format;
 
-    while (token) {
-        external_acl_format *format;
+                while (token) {
+                    external_acl_format *format;
 
-        /* stop on first non-format token found */
+                    /* stop on first non-format token found */
 
-        if (*token != '%')
-            break;
+                    if (*token != '%')
+                            break;
 
-        format = cbdataAlloc(external_acl_format);
+                        format = cbdataAlloc(external_acl_format);
 
-        if (strncmp(token, "%{", 2) == 0) {
-            // deprecated. but assume the old configs all referred to request headers.
-            debugs(82, DBG_IMPORTANT, "WARNING: external_acl_type format %{...} is being replaced by %>{...} for : " << token);
-            parse_header_token(format, (token+2), _external_acl_format::EXT_ACL_HEADER_REQUEST);
-        } else if (strncmp(token, "%>{", 3) == 0) {
-            parse_header_token(format, (token+3), _external_acl_format::EXT_ACL_HEADER_REQUEST);
-        } else if (strncmp(token, "%<{", 3) == 0) {
-            parse_header_token(format, (token+3), _external_acl_format::EXT_ACL_HEADER_REPLY);
-        } else if (strcmp(token, "%LOGIN") == 0) {
-            format->type = _external_acl_format::EXT_ACL_LOGIN;
-            a->require_auth = true;
-        }
+                        if (strncmp(token, "%{", 2) == 0) {
+                            // deprecated. but assume the old configs all referred to request headers.
+                            debugs(82, DBG_IMPORTANT, "WARNING: external_acl_type format %{...} is being replaced by %>{...} for : " << token);
+                            parse_header_token(format, (token+2), _external_acl_format::EXT_ACL_HEADER_REQUEST);
+                        } else if (strncmp(token, "%>{", 3) == 0) {
+                            parse_header_token(format, (token+3), _external_acl_format::EXT_ACL_HEADER_REQUEST);
+                        } else if (strncmp(token, "%<{", 3) == 0) {
+                            parse_header_token(format, (token+3), _external_acl_format::EXT_ACL_HEADER_REPLY);
+                        } else if (strcmp(token, "%LOGIN") == 0) {
+                            format->type = _external_acl_format::EXT_ACL_LOGIN;
+                            a->require_auth = true;
+                        }
 
 #if USE_IDENT
-        else if (strcmp(token, "%IDENT") == 0)
-            format->type = _external_acl_format::EXT_ACL_IDENT;
+                        else if (strcmp(token, "%IDENT") == 0)
+                            format->type = _external_acl_format::EXT_ACL_IDENT;
 
 #endif
 
-        else if (strcmp(token, "%SRC") == 0)
-            format->type = _external_acl_format::EXT_ACL_SRC;
-        else if (strcmp(token, "%SRCPORT") == 0)
-            format->type = _external_acl_format::EXT_ACL_SRCPORT;
+                        else if (strcmp(token, "%SRC") == 0)
+                            format->type = _external_acl_format::EXT_ACL_SRC;
+                        else if (strcmp(token, "%SRCPORT") == 0)
+                            format->type = _external_acl_format::EXT_ACL_SRCPORT;
 #if USE_SQUID_EUI
-        else if (strcmp(token, "%SRCEUI48") == 0)
-            format->type = _external_acl_format::EXT_ACL_SRCEUI48;
-        else if (strcmp(token, "%SRCEUI64") == 0)
-            format->type = _external_acl_format::EXT_ACL_SRCEUI64;
+                        else if (strcmp(token, "%SRCEUI48") == 0)
+                            format->type = _external_acl_format::EXT_ACL_SRCEUI48;
+                        else if (strcmp(token, "%SRCEUI64") == 0)
+                            format->type = _external_acl_format::EXT_ACL_SRCEUI64;
 #endif
-        else if (strcmp(token, "%MYADDR") == 0)
-            format->type = _external_acl_format::EXT_ACL_MYADDR;
-        else if (strcmp(token, "%MYPORT") == 0)
-            format->type = _external_acl_format::EXT_ACL_MYPORT;
-        else if (strcmp(token, "%URI") == 0)
-            format->type = _external_acl_format::EXT_ACL_URI;
-        else if (strcmp(token, "%DST") == 0)
-            format->type = _external_acl_format::EXT_ACL_DST;
-        else if (strcmp(token, "%PROTO") == 0)
-            format->type = _external_acl_format::EXT_ACL_PROTO;
-        else if (strcmp(token, "%PORT") == 0)
-            format->type = _external_acl_format::EXT_ACL_PORT;
-        else if (strcmp(token, "%PATH") == 0)
-            format->type = _external_acl_format::EXT_ACL_PATH;
-        else if (strcmp(token, "%METHOD") == 0)
-            format->type = _external_acl_format::EXT_ACL_METHOD;
+                        else if (strcmp(token, "%MYADDR") == 0)
+                            format->type = _external_acl_format::EXT_ACL_MYADDR;
+                        else if (strcmp(token, "%MYPORT") == 0)
+                            format->type = _external_acl_format::EXT_ACL_MYPORT;
+                        else if (strcmp(token, "%URI") == 0)
+                            format->type = _external_acl_format::EXT_ACL_URI;
+                        else if (strcmp(token, "%DST") == 0)
+                            format->type = _external_acl_format::EXT_ACL_DST;
+                        else if (strcmp(token, "%PROTO") == 0)
+                            format->type = _external_acl_format::EXT_ACL_PROTO;
+                        else if (strcmp(token, "%PORT") == 0)
+                            format->type = _external_acl_format::EXT_ACL_PORT;
+                        else if (strcmp(token, "%PATH") == 0)
+                            format->type = _external_acl_format::EXT_ACL_PATH;
+                        else if (strcmp(token, "%METHOD") == 0)
+                            format->type = _external_acl_format::EXT_ACL_METHOD;
 
 #if USE_SSL
 
-        else if (strcmp(token, "%USER_CERT") == 0)
-            format->type = _external_acl_format::EXT_ACL_USER_CERT_RAW;
-        else if (strcmp(token, "%USER_CERTCHAIN") == 0)
-            format->type = _external_acl_format::EXT_ACL_USER_CERTCHAIN_RAW;
-        else if (strncmp(token, "%USER_CERT_", 11) == 0) {
-            format->type = _external_acl_format::EXT_ACL_USER_CERT;
-            format->header = xstrdup(token + 11);
-        } else if (strncmp(token, "%CA_CERT_", 11) == 0) {
-            format->type = _external_acl_format::EXT_ACL_USER_CERT;
-            format->header = xstrdup(token + 11);
-        }
+                        else if (strcmp(token, "%USER_CERT") == 0)
+                            format->type = _external_acl_format::EXT_ACL_USER_CERT_RAW;
+                        else if (strcmp(token, "%USER_CERTCHAIN") == 0)
+                            format->type = _external_acl_format::EXT_ACL_USER_CERTCHAIN_RAW;
+                        else if (strncmp(token, "%USER_CERT_", 11) == 0) {
+                            format->type = _external_acl_format::EXT_ACL_USER_CERT;
+                            format->header = xstrdup(token + 11);
+                        } else if (strncmp(token, "%CA_CERT_", 11) == 0) {
+                            format->type = _external_acl_format::EXT_ACL_USER_CERT;
+                            format->header = xstrdup(token + 11);
+                        }
 
 #endif
-        else if (strcmp(token, "%EXT_USER") == 0)
-            format->type = _external_acl_format::EXT_ACL_EXT_USER;
-        else {
-            debugs(0,0, "ERROR: Unknown Format token " << token);
-            self_destruct();
-        }
+                        else if (strcmp(token, "%EXT_USER") == 0)
+                            format->type = _external_acl_format::EXT_ACL_EXT_USER;
+                        else {
+                            debugs(0,0, "ERROR: Unknown Format token " << token);
+                            self_destruct();
+                        }
 
-        *p = format;
-        p = &format->next;
-        token = strtok(NULL, w_space);
-    }
+                        *p = format;
+                        p = &format->next;
+                        token = strtok(NULL, w_space);
+                    }
 
     /* There must be at least one format token */
     if (!a->format)
-        self_destruct();
+    self_destruct();
 
     /* helper */
     if (!token)
         self_destruct();
 
-    wordlistAdd(&a->cmdline, token);
+        wordlistAdd(&a->cmdline, token);
 
-    /* arguments */
-    parse_wordlist(&a->cmdline);
+        /* arguments */
+        parse_wordlist(&a->cmdline);
 
-    while (*list)
-        list = &(*list)->next;
+        while (*list)
+            list = &(*list)->next;
 
-    *list = a;
-}
+            *list = a;
+        }
 
 void
 dump_externalAclHelper(StoreEntry * sentry, const char *name, const external_acl * list)
