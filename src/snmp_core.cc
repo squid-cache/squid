@@ -219,7 +219,7 @@ snmpInit(void)
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.4.2", FQDN_GHBN, snmp_netFqdnFn, static_Inst);
 
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.4", NET_DNS_CACHE, NULL, NULL);
- #if USE_DNSSERVERS
+#if USE_DNSSERVERS
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.4.3", DNS_REQ, snmp_netDnsFn, static_Inst);
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.4.3", DNS_REP, snmp_netDnsFn, static_Inst);
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.4.3", DNS_SERVERS, snmp_netDnsFn, static_Inst);
@@ -752,7 +752,7 @@ peer_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn)
     peer *peers = Config.peers;
 
     if (peers == NULL) {
-       debugs(49, 6, "snmp peer_Inst: No Peers.");
+        debugs(49, 6, "snmp peer_Inst: No Peers.");
         current = current->parent->parent->parent->leaves[1];
         while ((current) && (!current->parsefunction))
             current = current->leaves[0];
@@ -931,7 +931,7 @@ snmpLookupNodeStr(mib_tree_entry *root, const char *str)
     }
 
     int i, r = 1;
-    while(r <= namelen) {
+    while (r <= namelen) {
 
         /* Find the child node which matches this */
         for (i = 0; i < e->children && e->leaves[i]->name[r] != name[r]; i++) ; // seek-loop
@@ -961,7 +961,7 @@ snmpCreateOidFromStr(const char *str, oid **name, int *nl)
     char *s = xstrdup(str);
 
     /* Parse the OID string into oid bits */
-    while( (p = strsep(&s, delim)) != NULL) {
+    while ( (p = strsep(&s, delim)) != NULL) {
         *name = (oid*)xrealloc(*name, sizeof(oid) * ((*nl) + 1));
         (*name)[*nl] = atoi(p);
         (*nl)++;
