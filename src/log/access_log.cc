@@ -1047,7 +1047,13 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
              */
 
         case LFT_SQUID_STATUS:
-            out = log_tags[al->cache.code];
+            if (al->http.timedout || al->http.aborted) {
+                snprintf(tmp, sizeof(tmp), "%s%s", log_tags[al->cache.code],
+                    al->http.statusSfx());
+                out = tmp;
+            } else {
+                out = log_tags[al->cache.code];
+            }
 
             break;
 
@@ -1725,12 +1731,13 @@ accessLogSquid(AccessLogEntry * al, Logfile * logfile)
         safe_free(user);
 
     if (!Config.onoff.log_mime_hdrs) {
-        logfilePrintf(logfile, "%9ld.%03d %6d %s %s/%03d %"PRId64" %s %s %s %s%s/%s %s\n",
+        logfilePrintf(logfile, "%9ld.%03d %6d %s %s%s/%03d %"PRId64" %s %s %s %s%s/%s %s\n",
                       (long int) current_time.tv_sec,
                       (int) current_time.tv_usec / 1000,
                       al->cache.msec,
                       client,
                       log_tags[al->cache.code],
+                      al->http.statusSfx(),
                       al->http.code,
                       al->cache.replySize,
                       al->_private.method_str,
@@ -1743,12 +1750,13 @@ accessLogSquid(AccessLogEntry * al, Logfile * logfile)
     } else {
         char *ereq = log_quote(al->headers.request);
         char *erep = log_quote(al->headers.reply);
-        logfilePrintf(logfile, "%9ld.%03d %6d %s %s/%03d %"PRId64" %s %s %s %s%s/%s %s [%s] [%s]\n",
+        logfilePrintf(logfile, "%9ld.%03d %6d %s %s%s/%03d %"PRId64" %s %s %s %s%s/%s %s [%s] [%s]\n",
                       (long int) current_time.tv_sec,
                       (int) current_time.tv_usec / 1000,
                       al->cache.msec,
                       client,
                       log_tags[al->cache.code],
+                      al->http.statusSfx(),
                       al->http.code,
                       al->cache.replySize,
                       al->_private.method_str,
@@ -1785,7 +1793,7 @@ accessLogCommon(AccessLogEntry * al, Logfile * logfile)
 
     user2 = accessLogFormatName(al->cache.rfc931);
 
-    logfilePrintf(logfile, "%s %s %s [%s] \"%s %s HTTP/%d.%d\" %d %"PRId64" %s:%s",
+    logfilePrintf(logfile, "%s %s %s [%s] \"%s %s HTTP/%d.%d\" %d %"PRId64" %s%s:%s",
                   client,
                   user2 ? user2 : dash_str,
                   user1 ? user1 : dash_str,
@@ -1796,6 +1804,7 @@ accessLogCommon(AccessLogEntry * al, Logfile * logfile)
                   al->http.code,
                   al->cache.replySize,
                   log_tags[al->cache.code],
+                  al->http.statusSfx(),
                   hier_code_str[al->hier.code]);
 
     safe_free(user1);

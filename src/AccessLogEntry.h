@@ -55,12 +55,20 @@ public:
     {
 
     public:
-        HttpDetails() : method(METHOD_NONE), code(0), content_type(NULL) {}
+    HttpDetails() : method(METHOD_NONE), code(0), content_type(NULL),
+	timedout(false), aborted(false) {}
 
         HttpRequestMethod method;
         int code;
         const char *content_type;
         HttpVersion version;
+        bool timedout; ///< terminated due to a lifetime or I/O timeout
+        bool aborted; ///< other abnormal termination (e.g., I/O error)
+
+        /// compute suffix for the status access.log field
+        const char *statusSfx() const {
+            return timedout ? "_TIMEDOUT" : (aborted ? "_ABORTED" : "");
+        }
     } http;
 
     class ICPDetails

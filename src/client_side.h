@@ -114,6 +114,7 @@ public:
     void deferRecipientForLater(clientStreamNode * node, HttpReply * rep, StoreIOBuffer receivedData);
     bool multipartRangeRequest() const;
     void registerWithConn();
+    void noteIoError(const int xerrno); ///< update state to reflect I/O error
 
 private:
     CBDATA_CLASS(ClientSocketContext);
@@ -142,6 +143,7 @@ public:
     int getAvailableBufferLength() const;
     bool areAllContextsForThisConnection() const;
     void freeAllContexts();
+    void notifyAllContexts(const int xerrno); ///< tell everybody about the err
     void readNextRequest();
     void makeSpaceAvailable();
     ClientSocketContext::Pointer getCurrentContext() const;
