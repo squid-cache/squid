@@ -471,7 +471,6 @@ AC_DEFINE_UNQUOTED([USE_DISKIO],[$squid_opt_enable_diskio],
     [DiskIO modules are expected to be available.])
 
 
-dnl ****************** KK HERE *********************
 
 dnl Some autoconf.h defines we might enable later...
 AC_ARG_WITH(pthreads,AS_HELP_STRING([--without-pthreads],[Disable POSIX Threads]))
@@ -757,12 +756,7 @@ AC_ARG_ENABLE(removal-policies,
                   to build your custom policy]),
 [ case $enableval in
   yes)
-	for dir in $srcdir/src/repl/*; do
-	    module="`basename $dir`"
-	    if test -d "$dir" && test "$module" != CVS && test "$module" != "lru"; then
-		REPL_POLICIES="$REPL_POLICIES $module"
-	    fi
-	done
+    SQUID_LOOK_FOR_MODULES([$srcdir/src/repl],[REPL_POLICIES])
   	;;
   no)
   	;;
@@ -773,7 +767,7 @@ AC_ARG_ENABLE(removal-policies,
 ])
 if test -n "$REPL_POLICIES"; then
     SQUID_CHECK_EXISTING_MODULES([$srcdir/src/repl],[REPL_POLICIES])
-    AC_MSG_NOTICE([Removal policies built: $REPL_POLICIES])
+    AC_MSG_NOTICE([Removal policies to build: $REPL_POLICIES])
     REPL_OBJS="repl/lib`echo $REPL_POLICIES|sed -e 's% %.a repl/lib%g'`.a"
     REPL_LIBS="`echo $REPL_OBJS|sed -e 's%repl/%%g'`"
 fi
@@ -802,22 +796,22 @@ AC_ARG_ENABLE(delay-pools,
 ])
 
 dnl disable generic/common adaptation support by default
-use_adaptation=no
+squid_opt_use_adaptation=no
 
-use_esi=yes
+squid_opt_use_esi=yes
 AH_TEMPLATE([USE_SQUID_ESI],
             [Define to enable the ESI processor and Surrogate header support])
 AC_ARG_ENABLE(esi,
   AS_HELP_STRING([--enable-esi],
-	               [Enable ESI for accelerators. Benefits from expat or libxml2.
+                 [Enable ESI for accelerators. Benefits from expat or libxml2.
                   Enabling ESI will cause squid reverse proxies to be capable
-									of the Edge Acceleration Specification (www.esi.org).]),
-	      [use_esi=$enableval], [use_esi=no])
+                  of the Edge Acceleration Specification (www.esi.org).]),
+	            [squid_opt_use_esi=$enableval], [squid_opt_use_esi=no])
 HAVE_LIBEXPAT=0
 EXPATLIB=
 HAVE_LIBXML2=0
 XMLLIB=
-if test "$use_esi" = "yes" ; then
+if test "$squid_opt_use_esi" = "yes" ; then
   AC_MSG_NOTICE([Enabling ESI processor and Surrogate header support.])
   AC_DEFINE(USE_SQUID_ESI,1,
 	          [Compile the ESI processor and Surrogate header support])
@@ -827,7 +821,7 @@ fi
 
 # ESI support libraries: expat
 AC_ARG_WITH(expat, AS_HELP_STRING([--without-expat],[Do not use expat for ESI. Default: auto-detect]))
-if test "$use_esi" = "yes" -a "$with_expat" != "no" ; then
+if test "$squid_opt_use_esi" = "yes" -a "$with_expat" != "no" ; then
   AC_CHECK_LIB([expat], [main], [EXPATLIB="-lexpat"; HAVE_LIBEXPAT=1])
   AC_CHECK_HEADERS([expat.h])
   AC_DEFINE_UNQUOTED(HAVE_LIBEXPAT, $HAVE_LIBEXPAT, [Define to 1 if you have the expat library])
@@ -837,7 +831,7 @@ if test "$use_esi" = "yes" -a "$with_expat" != "no" ; then
 fi
 
 AC_ARG_WITH(libxml2, AS_HELP_STRING([--without-libxml2],[Do not use libxml2 for ESI. Default: auto-detect]))
-if test "$use_esi" = "yes" -a "$with_libxml2" != "no" ; then
+if test "$squid_opt_use_esi" = "yes" -a "$with_libxml2" != "no" ; then
   AC_CHECK_LIB([xml2], [main], [XMLLIB="-lxml2"; HAVE_LIBXML2=1])
   dnl Find the main header and include path...
   AC_CHECK_HEADERS([libxml/parser.h], [], [
@@ -859,7 +853,7 @@ if test "$use_esi" = "yes" -a "$with_libxml2" != "no" ; then
   fi
 fi
 
-AM_CONDITIONAL(USE_ESI, test "$use_esi" = "yes")
+AM_CONDITIONAL(USE_ESI, test "$squid_opt_use_esi" = "yes")
 AM_CONDITIONAL(HAVE_LIBEXPAT, test $HAVE_LIBEXPAT = 1)
 AC_SUBST(EXPATLIB)
 AM_CONDITIONAL(HAVE_LIBXML2, test $HAVE_LIBXML2 = 1)
@@ -868,39 +862,39 @@ AC_SUBST(XMLLIB)
 AM_CONDITIONAL(USE_ICAP_CLIENT, false)
 AC_ARG_ENABLE(icap-client,
   AS_HELP_STRING([--enable-icap-client],[Enable the ICAP client.]),
-	      use_icap_client=$enableval, use_icap_client=no)
-if test "$use_icap_client" = "yes" ; then
+	             squid_opt_use_icap_client=$enableval, squid_opt_use_icap_client=no)
+if test "$squid_opt_use_icap_client" = "yes" ; then
   AC_DEFINE(ICAP_CLIENT,1,[Enable ICAP client features in Squid])
   AM_CONDITIONAL(USE_ICAP_CLIENT, true)
   ICAP_LIBS="icap/libicap.la"
-  use_adaptation=yes
+  squid_opt_use_adaptation=yes
 else
   AC_DEFINE(ICAP_CLIENT,0,[Enable ICAP client features in Squid])
   ICAP_LIBS=""
 fi
 AC_SUBST(ICAP_LIBS)
 
-use_ecap=1
+squid_opt_use_ecap=1
 AC_MSG_CHECKING(whether to support eCAP)
 AC_ARG_ENABLE(ecap,
   AS_HELP_STRING([--enable-ecap],[support loadable content adaptation modules]),
     [
         case "${enableval}" in
-            yes) use_ecap=yes ;;
-            no) use_ecap=no ;;
+            yes) squid_opt_use_ecap=yes ;;
+            no) squid_opt_use_ecap=no ;;
             *) AC_MSG_ERROR(bad value ${enableval} for --enable-ecap) ;;
         esac
-        AC_MSG_RESULT([$use_ecap, explicitly])
+        AC_MSG_RESULT([$squid_opt_use_ecap, explicitly])
     ],
     [
-        use_ecap=no;
-        AC_MSG_RESULT([$use_ecap, implicitly])
+        squid_opt_use_ecap=no;
+        AC_MSG_RESULT([$squid_opt_use_ecap, implicitly])
     ]
 )
 
 dnl Perform configuration consistency checks for eCAP
 ECAPLIB=""
-if test $use_ecap = yes;
+if test $squid_opt_use_ecap = yes;
 then
     dnl eCAP support requires loadable modules, which are enabled by default
     if test "$use_loadable_modules" != "yes"
@@ -915,12 +909,12 @@ then
     )
 fi
 
-AM_CONDITIONAL(USE_ECAP, test $use_ecap = yes)
-if test $use_ecap = yes;
+AM_CONDITIONAL(USE_ECAP, test $squid_opt_use_ecap = yes)
+if test $squid_opt_use_ecap = yes;
 then
     AC_DEFINE(USE_ECAP,1,[Enable eCAP support])
     ECAP_LIBS="ecap/libecap.la $ECAP_LIBS"
-    use_adaptation=yes
+    squid_opt_use_adaptation=yes
 else
     AC_DEFINE(USE_ECAP,0,[Disable eCAP support])
     ECAP_LIBS=""
@@ -932,8 +926,8 @@ AC_SUBST(ECAPLIB)
 
 
 dnl enable adaptation if requested by specific adaptation mechanisms
-AM_CONDITIONAL(USE_ADAPTATION, test $use_adaptation = yes)
-if test $use_adaptation = yes
+AM_CONDITIONAL(USE_ADAPTATION, test $squid_opt_use_adaptation = yes)
+if test $squid_opt_use_adaptation = yes
 then
     AC_DEFINE(USE_ADAPTATION,1,[common adaptation support])
     ADAPTATION_LIBS="adaptation/libadaptation.la"
@@ -951,16 +945,19 @@ dnl [  --enable-mem-gen-trace  Do trace of memory stuff],
 dnl [ if test "$enableval" = "yes" ; then
 dnl     AC_MSG_NOTICE([Memory trace (to file) enabled])
 dnl     AC_DEFINE(MEM_GEN_TRACE,1,[Define for log file trace of mem alloc/free])
-dnl   fi    
-dnl ])     
+dnl   fi
+dnl ])
+
+dnl ****************** KK HERE *********************
 
 AC_ARG_ENABLE(useragent-log,
   AS_HELP_STRING([--enable-useragent-log],[Enable logging of User-Agent header]),
 [ if test "$enableval" = "yes" ; then
     AC_MSG_NOTICE([User-Agent logging enabled])
-    AC_DEFINE(USE_USERAGENT_LOG,1,[If you want to log User-Agent request header values, define this.
-    By default, they are written to useragent.log in the Squid log
-    directory.])
+    AC_DEFINE(USE_USERAGENT_LOG,1,
+              [If you want to log User-Agent request header values, define this.
+               By default, they are written to useragent.log in the Squid log
+               directory.])
   fi
 ])
 
@@ -968,20 +965,20 @@ AC_ARG_ENABLE(referer-log,
   AS_HELP_STRING([--enable-referer-log],[Enable logging of Referer header]),
 [ if test "$enableval" = "yes" ; then
     AC_MSG_NOTICE([Referer logging enabled])
-    AC_DEFINE(USE_REFERER_LOG,1,[If you want to log Referer request header values, define this.
-    By default, they are written to referer.log in the Squid log
-    directory.])
+    AC_DEFINE(USE_REFERER_LOG,1,
+              [If you want to log Referer request header values, define this.
+               By default, they are written to referer.log in the Squid log directory.])
   fi
 ])
 
 USE_WCCP=1
-AC_ARG_ENABLE(wccp,  
+AC_ARG_ENABLE(wccp,
   AS_HELP_STRING([--disable-wccp],[Disable Web Cache Coordination Protocol]),
 [ if test "$enableval" = "no" ; then
     AC_MSG_NOTICE([Web Cache Coordination Protocol disabled])
     USE_WCCP=0
   fi
-])      
+])
 if test $USE_WCCP = 1; then
     AC_DEFINE(USE_WCCP, 1, [Define to enable WCCP])
 fi
@@ -990,7 +987,7 @@ USE_WCCPv2=1
 AC_ARG_ENABLE(wccpv2,
   AS_HELP_STRING([--disable-wccpv2],[Disable Web Cache Coordination V2 Protocol]),
 [ if test "$enableval" = "no" ; then
-    AC_MSG_NOTICE(["Web Cache Coordination V2 Protocol disabled])
+    AC_MSG_NOTICE(["Web Cache Coordination V2 Protocol disabled"])
     USE_WCCPv2=0
   fi
 ])
@@ -1002,9 +999,10 @@ AC_ARG_ENABLE(kill-parent-hack,
   AS_HELP_STRING([--enable-kill-parent-hack],[Kill parent on shutdown]),
 [ if test "$enableval" = "yes" ; then
     AC_MSG_NOTICE([Kill parent on shutdown])
-    AC_DEFINE(KILL_PARENT_OPT,1,[A dangerous feature which causes Squid to kill its parent process
-    (presumably the RunCache script) upon receipt of SIGTERM or SIGINT.
-    Use with caution.])
+    AC_DEFINE(KILL_PARENT_OPT,1,
+              [A dangerous feature which causes Squid to kill its parent process
+               (presumably the RunCache script) upon receipt of SIGTERM or SIGINT.
+               Use with caution.])
   fi
 ])
 
@@ -1016,17 +1014,18 @@ AC_ARG_ENABLE(snmp,
     USE_SNMP=
   fi
 ])
-if test x"$USE_SNMP" = xtrue; then
+if test "$USE_SNMP" = 'true'; then
     AC_DEFINE(SQUID_SNMP,1,[Define to enable SNMP monitoring of Squid])
     SNMPLIB='../snmplib/libsnmp.a'
     makesnmplib=snmplib
 fi
-AM_CONDITIONAL(USE_SNMP, [test x$USE_SNMP = xtrue])
+AM_CONDITIONAL(USE_SNMP, [test "$USE_SNMP" = "true"])
 AC_SUBST(SNMPLIB)
 AC_SUBST(makesnmplib)
 
 AC_ARG_ENABLE(cachemgr-hostname,
-  AS_HELP_STRING([--enable-cachemgr-hostname=hostname],[Make cachemgr.cgi default to this host.
+  AS_HELP_STRING([--enable-cachemgr-hostname=hostname],
+                 [Make cachemgr.cgi default to this host.
                   If unspecified, uses the name of the build-host]),
 [  case $enableval in
    yes)
@@ -1045,27 +1044,17 @@ AC_ARG_ENABLE(cachemgr-hostname,
 ])
 
 AM_CONDITIONAL(USE_SQUID_EUI, false)
-use_sq_eui="yes"
+squid_opt_use_eui="yes"
 AC_ARG_ENABLE(eui,
   AS_HELP_STRING([--disable-eui],[Enable use of ARP / MAC/ EUI (ether address)]),
-  [use_sq_eui="$enableval"])
-if test "$use_sq_eui" = "yes" ; then
+  [squid_opt_use_eui="$enableval"])
+if test "$squid_opt_use_eui" = "yes" ; then
      AC_MSG_NOTICE([EUI controls enabled (ether address)])
-     case "$host" in
-	*-linux-*)
+     case "$squid_host_os" in
+	linux|solaris|freebsd|openbsd|netbsd)
+        $(TRUE)
 	    ;;
-	*-solaris*)
-	    ;;
-	*-freebsd*)
-	    ;;
-	*-openbsd*)
-	    ;;
-	*-netbsd*)
-	    ;;
-	*-cygwin*)
-		EUILIB="-liphlpapi"
-	    ;;
-	*-mingw*)
+	cygwin|mingw)
 		EUILIB="-liphlpapi"
 	    ;;
 	*)
@@ -1084,7 +1073,7 @@ if test "$use_sq_eui" = "yes" ; then
 		sys/sysctl.h \
 		sys/ioctl.h \
 	)
-     AC_DEFINE(USE_SQUID_EUI,1,[Define this to include code which lets you use ethernet hardware addresses.  This code uses functions found in 4.4 BSD derviations (e.g. FreeBSD, ?).])
+     AC_DEFINE(USE_SQUID_EUI,1,[Define this to include code which lets you use ethernet hardware addresses. This code uses API initially defined in 4.4-BSD.])
      AM_CONDITIONAL(USE_SQUID_EUI, true)
 else
     AC_MSG_NOTICE([EUI controls disabled (ether address)])
@@ -1098,10 +1087,11 @@ AC_ARG_ENABLE(htcp,
     AC_MSG_NOTICE([HTCP support disabled])
   fi
 ])
-if test x$USE_HTCP = xtrue; then
-    AC_DEFINE(USE_HTCP,1, [Define this to include code for the Hypertext Cache Protocol (HTCP)])
+if test "$USE_HTCP" = "true"; then
+    AC_DEFINE(USE_HTCP,1, 
+       [Define this to include code for the Hypertext Cache Protocol (HTCP)])
 fi
-AM_CONDITIONAL(ENABLE_HTCP, [test x$USE_HTCP = xtrue])
+AM_CONDITIONAL(ENABLE_HTCP, [test "$USE_HTCP" = "true"])
 
 dnl SSL is not enabled by default.
 AM_CONDITIONAL(ENABLE_SSL, false)
@@ -1113,15 +1103,11 @@ AC_ARG_ENABLE(ssl,
     AC_MSG_NOTICE([SSL gatewaying using OpenSSL enabled])
     AC_DEFINE(USE_SSL,1,[Define this to include code for SSL encryption.])
     AM_CONDITIONAL(ENABLE_SSL, true)
-    case "$host_os" in
-    mingw|mingw32)
-        dnl Native Windows port of OpenSSL needs -lgdi32
+    if test "$squid_host_os" = "mingw" ; then
         SSLLIB='-lssleay32 -leay32 -lgdi32'
-        ;;
-    *)
+    else
         SSLLIB='-lssl -lcrypto'
-	;;
-    esac
+    fi
     USE_OPENSSL=1
   fi
 ])
