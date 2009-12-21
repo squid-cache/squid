@@ -165,6 +165,7 @@ struct SquidConfig {
 
     struct {
         time_t read;
+        time_t write;
         time_t lifetime;
         time_t connect;
         time_t forward;

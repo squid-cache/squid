@@ -3986,6 +3986,21 @@ DOC_START
 	default is 15 minutes.
 DOC_END
 
+NAME: write_timeout
+COMMENT: time-units
+TYPE: time_t
+LOC: Config.Timeout.write
+DEFAULT: 15 minutes
+DOC_START
+	This timeout is tracked for all connections that have data
+	available for writing and are waiting for the socket to become
+	ready. After each successful write, the timeout is extended by
+	the configured amount. If Squid has data to write but the
+	connection is not ready for the configured duration, the
+	transaction associated with the connection is terminated. The
+	default is 15 minutes.
+DOC_END
+
 NAME: request_timeout
 TYPE: time_t
 LOC: Config.Timeout.request
