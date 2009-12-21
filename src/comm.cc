@@ -1991,6 +1991,9 @@ commHandleWrite(int fd, void *data)
     debugs(5, 5, "commHandleWrite: write() returns " << len);
     fd_bytes(fd, len, FD_WRITE);
     statCounter.syscalls.sock.writes++;
+    // After each successful partial write, 
+    // reset fde::writeStart to the current time. 
+    fd_table[fd].writeStart = squid_curtime;
 
     if (len == 0) {
         /* Note we even call write if nleft == 0 */
@@ -2062,6 +2065,7 @@ comm_write(int fd, const char *buf, int size, AsyncCall::Pointer &callback, FREE
     comm_io_callback_t *ccb = COMMIO_FD_WRITECB(fd);
     assert(!ccb->active());
 
+    fd_table[fd].writeStart = squid_curtime;
     /* Queue the write */
     commio_set_callback(fd, IOCB_WRITE, ccb, callback,
                         (char *)buf, free_func, size);
@@ -2162,6 +2166,18 @@ AlreadyTimedOut(fde *F)
     return false;
 }
 
+static bool
+writeTimedOut(int fd)
+{
+    if (!commio_has_callback(fd, IOCB_WRITE, COMMIO_FD_WRITECB(fd)))
+        return false;
+
+    if ((squid_curtime - fd_table[fd].writeStart) < Config.Timeout.write)
+        return false;
+
+    return true;
+}
+
 void
 checkTimeouts(void)
 {
@@ -2172,7 +2188,11 @@ checkTimeouts(void)
     for (fd = 0; fd <= Biggest_FD; fd++) {
         F = &fd_table[fd];
 
-        if (AlreadyTimedOut(F))
+        if (writeTimedOut(fd)) {
+            // We have an active write callback and we are timed out
+            commio_finish_callback(fd, COMMIO_FD_WRITECB(fd), COMM_ERROR, ETIMEDOUT);
+        }
+        else if (AlreadyTimedOut(F))
             continue;
 
         debugs(5, 5, "checkTimeouts: FD " << fd << " Expired");
