@@ -357,11 +357,11 @@ parse_externalAclHelper(external_acl ** list)
         token = strtok(NULL, w_space);
     }
 
-     /* check that child startup value is sane. */
+    /* check that child startup value is sane. */
     if (a->children.n_startup > a->children.n_max)
         a->children.n_startup = a->children.n_max;
 
-     /* check that child idle value is sane. */
+    /* check that child idle value is sane. */
     if (a->children.n_idle > a->children.n_max)
         a->children.n_idle = a->children.n_max;
     if (a->children.n_idle < 1)
