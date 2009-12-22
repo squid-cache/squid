@@ -3110,7 +3110,7 @@ FtpStateData::failedErrorMessage(err_type error, int xerrno)
     if (reply)
         ftperr->ftp.reply = xstrdup(reply);
 
-    entry->replaceHttpReply( ftperr->BuildHttpReply() );
+    entry->replaceHttpReply( errorBuildReply(ftperr) );
     errorStateFree(ftperr);
 }
 
@@ -3152,7 +3152,7 @@ ftpSendReply(FtpStateData * ftpState)
     else
         err->ftp.reply = xstrdup("");
 
-    ftpState->entry->replaceHttpReply( err->BuildHttpReply() );
+    ftpState->entry->replaceHttpReply( errorBuildReply(err) );
     errorStateFree(err);
 
     ftpSendQuit(ftpState);
