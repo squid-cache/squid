@@ -623,6 +623,15 @@ ConnStateData::freeAllContexts()
     }
 }
 
+/// propagates abort event to all contexts
+void
+ConnStateData::notifyAllContexts(int xerrno)
+{
+    typedef ClientSocketContext::Pointer CSCP;
+    for (CSCP c = getCurrentContext(); c.getRaw(); c = c->next)
+        c->noteIoError(xerrno);
+}
+
 /* This is a handler normally called by comm_close() */
 void ConnStateData::connStateClosed(const CommCloseCbParams &io)
 {
@@ -1622,6 +1631,19 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, i
     context->writeComplete (fd, bufnotused, size, errflag);
 }
 
+/// remembers the abnormal connection termination for logging purposes
+void
+ClientSocketContext::noteIoError(const int xerrno)
+{
+    if (http) {
+        if (xerrno == ETIMEDOUT)
+            http->al.http.timedout = true;
+        else // even if xerrno is zero (which means read abort/eof)
+            http->al.http.aborted = true;
+    }
+}
+
+
 void
 ClientSocketContext::doClose()
 {
@@ -2215,6 +2237,7 @@ ConnStateData::connFinishedWithConn(int size)
         } else if (!Config.onoff.half_closed_clients) {
             /* admin doesn't want to support half-closed client sockets */
             debugs(33, 3, "connFinishedWithConn: FD " << fd << " aborted (half_closed_clients disabled)");
+            notifyAllContexts(0); // no specific error implies abort
             return 1;
         }
     }
@@ -2663,6 +2686,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
      * lame half-close detection
      */
     if (connReadWasError(io.flag, io.size, io.xerrno)) {
+        notifyAllContexts(io.xerrno);
         comm_close(fd);
         return;
     }
@@ -2937,8 +2961,9 @@ static void
 clientLifetimeTimeout(int fd, void *data)
 {
     ClientHttpRequest *http = (ClientHttpRequest *)data;
-    debugs(33, 1, "WARNING: Closing client " << http->getConn()->peer << " connection due to lifetime timeout");
+    debugs(33, 1, "WARNING: Closing client " << " connection due to lifetime timeout");
     debugs(33, 1, "\t" << http->uri);
+    http->al.http.timedout = true;
     comm_close(fd);
 }
 
