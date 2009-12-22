@@ -123,7 +123,7 @@ then
     top_build_prefix=${ac_top_build_prefix}
     AC_SUBST(top_build_prefix)
 
-    AC_LIBLTDL_CONVENIENCE(lib/libLtdl)
+    AC_LIBLTDL_CONVENIENCE
 fi
 AC_LTDL_DLLIB
 
@@ -619,6 +619,7 @@ for module in $squid_disk_module_candidates none; do
 		;;
 	  esac
 	else
+	  AC_DEFINE(USE_DISKIO_AIO, 0, [Whether POSIX AIO support is needed. Automatic])
 	  AC_MSG_NOTICE([AIO DiskIO Module disabled. Missing POSIX AIO support.])
 	fi
 	;;
@@ -4043,8 +4044,6 @@ AC_CONFIG_FILES([\
 	compat/Makefile \
 	lib/Makefile \
 	scripts/Makefile \
-	scripts/RunCache \
-	scripts/RunAccel \
 	src/Makefile \
 	src/base/Makefile \
 	src/acl/Makefile \
@@ -4113,6 +4112,6 @@ AC_CONFIG_FILES([\
 AC_CONFIG_SUBDIRS(lib/libTrie)
 
 # must configure libltdl subdir unconditionally for "make distcheck" to work
-AC_CONFIG_SUBDIRS(lib/libLtdl)
+AC_CONFIG_SUBDIRS(libltdl)
 
 AC_OUTPUT
