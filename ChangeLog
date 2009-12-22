@@ -1,3 +1,14 @@
+Changes to squid-3.0.STABLE21 (22 Dec 2009):
+
+	- Bug 2830: Clarify where NULL byte is in headers.
+	- Bug 2778: Linking issues using SunCC
+	- Bug 2395: FTP errors not displayed
+	- Bug 2155: Assertion failures on malformed Content-Range response headers
+	- Fix parsing and a few bugs in ACL time type
+	- Fix RFC keep-alive compliance on intercepted replies
+	- Improved security hardening on %nn parser
+	- Replace several GCC-specific code snippets.
+
 Changes to squid-3.0.STABLE20 (29 Oct 2009):
 
 	- Bug 2794: ESI parsing on FreeBSD
