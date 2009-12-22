@@ -130,13 +130,20 @@ DOC_START
 	translate the HTTP iso-latin-1 charset to UTF-8 before sending the
 	username & password to the helper.
 
-	"children" numberofchildren
-	The number of authenticator processes to spawn. If you start too few
+	"children" numberofchildren [startup=N] [idle=N]
+	The maximum number of authenticator processes to spawn. If you start too few
 	Squid will have to wait for them to process a backlog of credential
 	verifications, slowing it down. When password verifications are
 	done via a (slow) network you are likely to need lots of
 	authenticator processes.
-	auth_param basic children 5
+
+	The startup= and idle= options permit some skew in the exact amount
+	run. A minimum of startup=N will begin during startup and reconfigure
+	and Squid will start more in groups of up to idle=N in an attempt to meet
+	traffic needs and to keep idle=N free above those traffic needs up to
+	the maximum.
+
+	auth_param basic children 20 startup=0 idle=1
 
 	"concurrency" concurrency
 	The number of concurrent requests the helper can process.
@@ -198,13 +205,20 @@ DOC_START
 	translate the HTTP iso-latin-1 charset to UTF-8 before sending the
 	username & password to the helper.
 
-	"children" numberofchildren
-	The number of authenticator processes to spawn (no default).
+	"children" numberofchildren [startup=N] [idle=N]
+	The maximum number of authenticator processes to spawn (default 5).
 	If you start too few Squid will have to wait for them to
 	process a backlog of H(A1) calculations, slowing it down.
 	When the H(A1) calculations are done via a (slow) network
 	you are likely to need lots of authenticator processes.
-	auth_param digest children 5
+
+	The startup= and idle= options permit some skew in the exact amount
+	run. A minimum of startup=N will begin during startup and reconfigure
+	and Squid will start more in groups of up to idle=N in an attempt to meet
+	traffic needs and to keep idle=N free above those traffic needs up to
+	the maximum.
+
+	auth_param digest children 20 startup=0 idle=1
 
 	"realm" realmstring
 	Specifies the realm name which is to be reported to the
@@ -254,15 +268,21 @@ DOC_START
 
 	auth_param ntlm program @DEFAULT_PREFIX@/bin/ntlm_auth
 
-	"children" numberofchildren
-	The number of authenticator processes to spawn (no default).
+	"children" numberofchildren [startup=N] [idle=N]
+	The maximum number of authenticator processes to spawn (default 5).
 	If you start too few Squid will have to wait for them to
 	process a backlog of credential verifications, slowing it
 	down. When credential verifications are done via a (slow)
 	network you are likely to need lots of authenticator
 	processes.
 
-	auth_param ntlm children 5
+	The startup= and idle= options permit some skew in the exact amount
+	run. A minimum of startup=N will begin during startup and reconfigure
+	and Squid will start more in groups of up to idle=N in an attempt to meet
+	traffic needs and to keep idle=N free above those traffic needs up to
+	the maximum.
+
+	auth_param ntlm children 20 startup=0 idle=1
 
 	"keep_alive" on|off
 	If you experience problems with PUT/POST requests when using the
@@ -289,14 +309,21 @@ DOC_START
 
 	auth_param negotiate program @DEFAULT_PREFIX@/bin/ntlm_auth --helper-protocol=gss-spnego
 
-	"children" numberofchildren
-	The number of authenticator processes to spawn (no default).
+	"children" numberofchildren [startup=N] [idle=N]
+	The maximum number of authenticator processes to spawn (default 5).
 	If you start too few Squid will have to wait for them to
 	process a backlog of credential verifications, slowing it
 	down. When crendential verifications are done via a (slow)
 	network you are likely to need lots of authenticator
 	processes.
-	auth_param negotiate children 5
+
+	The startup= and idle= options permit some skew in the exact amount
+	run. A minimum of startup=N will begin during startup and reconfigure
+	and Squid will start more in groups of up to idle=N in an attempt to meet
+	traffic needs and to keep idle=N free above those traffic needs up to
+	the maximum.
+
+	auth_param negotiate children 20 startup=0 idle=1
 
 	"keep_alive" on|off
 	If you experience problems with PUT/POST requests when using the
@@ -312,22 +339,22 @@ DOC_START
 
 #Recommended minimum configuration per scheme:
 #auth_param negotiate program <uncomment and complete this line to activate>
-#auth_param negotiate children 5
+#auth_param negotiate children 20 startup=0 idle=1
 #auth_param negotiate keep_alive on
 #
 #auth_param ntlm program <uncomment and complete this line to activate>
-#auth_param ntlm children 5
+#auth_param ntlm children 20 startup=0 idle=1
 #auth_param ntlm keep_alive on
 #
 #auth_param digest program <uncomment and complete this line>
-#auth_param digest children 5
+#auth_param digest children 20 startup=0 idle=1
 #auth_param digest realm Squid proxy-caching web server
 #auth_param digest nonce_garbage_interval 5 minutes
 #auth_param digest nonce_max_duration 30 minutes
 #auth_param digest nonce_max_count 50
 #
 #auth_param basic program <uncomment and complete this line>
-#auth_param basic children 5
+#auth_param basic children 5 stratup=5 idle=1
 #auth_param basic realm Squid proxy-caching web server
 #auth_param basic credentialsttl 2 hours
 DOC_END
@@ -390,14 +417,24 @@ DOC_START
 	  negative_ttl=n
 	  		TTL for cached negative lookups (default same
 	  		as ttl)
-	  children=n	Number of acl helper processes spawn to service
-			external acl lookups of this type. (default 5)
+	  children-max=n
+			Maximum number of acl helper processes spawned to service
+			external acl lookups of this type. (default 20)
+	  children-startup=n
+			Minimum number of acl helper processes to spawn during
+			startup and reconfigure to service external acl lookups
+			of this type. (default 0)
+	  children-idle=n
+			Number of acl helper processes to keep ahead of traffic
+			loads. Squid will spawn this many at once whenever load
+			rises above the capabilities of existing processes.
+			Up to the value of children-max. (default 1)
 	  concurrency=n	concurrency level per process. Only used with helpers
 			capable of processing more than one query at a time.
-	  cache=n	result cache size, 0 is unbounded (default)
+	  cache=n	limit the result cache size, default is unbounded.
 	  grace=n	Percentage remaining of TTL where a refresh of a
 			cached entry should be initiated without needing to
-			wait for a new reply. (default 0 for no grace period)
+			wait for a new reply. (default is for no grace period)
 	  protocol=2.5	Compatibility mode for Squid-2.5 external acl helpers
 	  ipv4 / ipv6	IP-mode used to communicate to this helper.
 			For compatability with older configurations and helpers
@@ -3158,21 +3195,36 @@ DOC_START
 DOC_END
 
 NAME: url_rewrite_children redirect_children
-TYPE: int
-DEFAULT: 5
+TYPE: HelperChildConfig
+DEFAULT: 20 startup=0 idle=1 concurrency=1
 LOC: Config.redirectChildren
 DOC_START
-	The number of redirector processes to spawn. If you start
-	too few Squid will have to wait for them to process a backlog of
-	URLs, slowing it down. If you start too many they will use RAM
-	and other system resources.
-DOC_END
+	The maximum number of redirector processes to spawn. If you limit
+	it too few Squid will have to wait for them to process a backlog of
+	URLs, slowing it down. If you allow too many they will use RAM
+	and other system resources noticably.
+	
+	The startup= and idle= options allow some measure of skew in your
+	tuning.
+	
+		startup=
+	
+	Sets a minimum of how many processes are to be spawned when Squid
+	starts or reconfigures. When set to zero the first request will
+	cause spawning of the first child process to handle it.
+	
+	Starting too few will cause an initial slowdown in traffic as Squid
+	attempts to simultaneously spawn enough processes to cope.
+	
+		idle=
+	
+	Sets a minimum of how many processes Squid is to try and keep available
+	at all times. When traffic begins to rise above what the existing
+	processes can handle this many more will be spawned up to the maximum
+	configured. A minimum setting of 1 is required.
 
-NAME: url_rewrite_concurrency redirect_concurrency
-TYPE: int
-DEFAULT: 0
-LOC: Config.redirectConcurrency
-DOC_START
+		concurrency=
+
 	The number of requests each redirector helper can handle in
 	parallel. Defaults to 0 which indicates the redirector
 	is a old-style single threaded redirector.
@@ -3931,6 +3983,21 @@ DOC_START
 	each successful read(), the timeout will be extended by this
 	amount.  If no data is read again after this amount of time,
 	the request is aborted and logged with ERR_READ_TIMEOUT.  The
+	default is 15 minutes.
+DOC_END
+
+NAME: write_timeout
+COMMENT: time-units
+TYPE: time_t
+LOC: Config.Timeout.write
+DEFAULT: 15 minutes
+DOC_START
+	This timeout is tracked for all connections that have data
+	available for writing and are waiting for the socket to become
+	ready. After each successful write, the timeout is extended by
+	the configured amount. If Squid has data to write but the
+	connection is not ready for the configured duration, the
+	transaction associated with the connection is terminated. The
 	default is 15 minutes.
 DOC_END
 
@@ -6133,17 +6200,35 @@ DOC_START
 DOC_END
 
 NAME: dns_children
-TYPE: int
+TYPE: HelperChildConfig
 IFDEF: USE_DNSSERVERS
-DEFAULT: 5
+DEFAULT: 32 startup=1 idle=1
 LOC: Config.dnsChildren
 DOC_START
-	The number of processes spawn to service DNS name lookups.
-	For heavily loaded caches on large servers, you should
-	probably increase this value to at least 10.  The maximum
-	is 32.  The default is 5.
-
-	You must have at least one dnsserver process.
+	The maximum number of processes spawn to service DNS name lookups.
+	If you limit it too few Squid will have to wait for them to process
+	a backlog of requests, slowing it down. If you allow too many they
+	will use RAM and other system resources noticably.
+	The maximum this may be safely set to is 32.
+	
+	The startup= and idle= options allow some measure of skew in your
+	tuning.
+	
+		startup=
+	
+	Sets a minimum of how many processes are to be spawned when Squid
+	starts or reconfigures. When set to zero the first request will
+	cause spawning of the first child process to handle it.
+	
+	Starting too few will cause an initial slowdown in traffic as Squid
+	attempts to simultaneously spawn enough processes to cope.
+	
+		idle=
+	
+	Sets a minimum of how many processes Squid is to try and keep available
+	at all times. When traffic begins to rise above what the existing
+	processes can handle this many more will be spawned up to the maximum
+	configured. A minimum setting of 1 is required.
 DOC_END
 
 NAME: dns_retransmit_interval
@@ -6154,7 +6239,6 @@ IFDEF: !USE_DNSSERVERS
 DOC_START
 	Initial retransmit interval for DNS queries. The interval is
 	doubled each time all configured DNS servers have been tried.
-
 DOC_END
 
 NAME: dns_timeout

@@ -142,6 +142,8 @@ Adaptation::Ecap::FirstLineRep::protocol() const
         return protocolCacheObj;
     case PROTO_INTERNAL:
         return protocolInternal;
+    case PROTO_ICY:
+        return Name();
     case PROTO_NONE:
         return Name();
 
