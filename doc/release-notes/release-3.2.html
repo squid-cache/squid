@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
 <HEAD>
- <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.50">
+ <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.65">
  <TITLE>Squid 3.2.0.0 release notes</TITLE>
 </HEAD>
 <BODY>
@@ -24,8 +24,9 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <H2><A NAME="toc2">2.</A> <A HREF="#s2">Major new features since Squid-3.1</A></H2>
 
 <UL>
-<LI><A NAME="toc2.1">2.1</A> <A HREF="#ss2.1">Multi-Lingual manuals</A>
-<LI><A NAME="toc2.2">2.2</A> <A HREF="#ss2.2">Solaris 10 pthreads Support (Experimental)</A>
+<LI><A NAME="toc2.1">2.1</A> <A HREF="#ss2.1">Helper Name Changes</A>
+<LI><A NAME="toc2.2">2.2</A> <A HREF="#ss2.2">Multi-Lingual manuals</A>
+<LI><A NAME="toc2.3">2.3</A> <A HREF="#ss2.3">Solaris 10 pthreads Support (Experimental)</A>
 </UL>
 <P>
 <H2><A NAME="toc3">3.</A> <A HREF="#s3">Windows support</A></H2>
@@ -97,16 +98,77 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <H2><A NAME="s2">2.</A> <A HREF="#toc2">Major new features since Squid-3.1</A></H2>
 
 <P>Squid 3.2 represents a new feature release above 3.1.</P>
-<P>The most important of these new features are:</P>
-<P>
+
+<P>The most important of these new features are:
 <UL>
+<LI>Helper Name Changes</LI>
 <LI>Multi-Lingual manuals</LI>
 <LI>Solaris 10 pthreads Support (Experimental)</LI>
 </UL>
 </P>
 <P>Most user-facing changes are reflected in squid.conf (see below).</P>
 
-<H2><A NAME="ss2.1">2.1</A> <A HREF="#toc2.1">Multi-Lingual manuals</A>
+<H2><A NAME="ss2.1">2.1</A> <A HREF="#toc2.1">Helper Name Changes</A>
+</H2>
+
+<P>To improve the understanding of what each helper does and where it should be used the helper binaries
+which are bundled with Squid have undergone a naming change in this release.</P>
+
+<P>Below is a list of the old helper names and what their names have changed to.</P>
+
+<H3>Basic Authentication protocol helpers</H3>
+
+<P>
+<UL>
+<LI>squid_db_auth - basic_db_auth - Retrieve authentication details from a simple SQL database table.</LI>
+<LI>getpwnam_auth - basic_getpwname_auth - Authenticate with local system user accounts.</LI>
+<LI>squid_ldap_auth - basic_ldap_auth - Authenticate with LDAP user accounts.</LI>
+<LI>ncsa_auth - basic_ncsa_auth - Authenticate with NCSA httpd-style password file.</LI>
+</UL>
+</P>
+
+<H3>Digest Authentication protocol helpers</H3>
+
+<P>
+<UL>
+<LI>(none yet converted)</LI>
+</UL>
+</P>
+
+<H3>External ACL helpers</H3>
+
+<P>
+<UL>
+<LI>(none yet converted)</LI>
+</UL>
+</P>
+
+<H3>Negotiate Authentication protocol helpers</H3>
+
+<P>
+<UL>
+<LI>squid_kerb_auth - negotiate_kerberos_auth - Authenticate with Kerberos servers.</LI>
+</UL>
+</P>
+
+<H3>NTLM Authentication protocol helpers</H3>
+
+<P>
+<UL>
+<LI>ntlm_auth - ntlm_smb_lm_auth - Perform SMB LanManager domain-less authentication over NTLM protocol.</LI>
+</UL>
+</P>
+
+<H3>URL re-write helpers</H3>
+
+<P>This group of helpers have been bundled to demonstrate how to code URL re-writers:
+<UL>
+<LI>url_fake_rewrite - Accept various url_rewrite details and log the input.</LI>
+</UL>
+</P>
+
+
+<H2><A NAME="ss2.2">2.2</A> <A HREF="#toc2.2">Multi-Lingual manuals</A>
 </H2>
 
 <P>The man(8) and man(1) pages bundled with Squid are now provided online for all
@@ -118,7 +180,7 @@ versions and beginning with 3.2 they are available in languages other than engli
 <P>3.1 began the Internationalization of Squid with the public facing error pages.
 This move begins the Localization of the internal administrator facing manuals.</P>
 
-<H2><A NAME="ss2.2">2.2</A> <A HREF="#toc2.2">Solaris 10 pthreads Support (Experimental)</A>
+<H2><A NAME="ss2.3">2.3</A> <A HREF="#toc2.3">Solaris 10 pthreads Support (Experimental)</A>
 </H2>
 
 <P>Automatic detection and use of the pthreads library available from Solaris 10</P>
@@ -369,6 +431,9 @@ ScriptAlias /squid/cgi-bin/ "c:/squid/libexec/"
 
 <P>
 <DL>
+<DT><B>eui_lookup</B><DD>
+<P> Whether to lookup the EUI or MAC address of a connected client.</P>
+
 <DT><B>memory_cache_mode</B><DD>
 <P> Controls which objects to keep in the memory cache (cache_mem)
 <PRE>
@@ -383,6 +448,8 @@ ScriptAlias /squid/cgi-bin/ "c:/squid/libexec/"
 </PRE>
 </P>
 
+<DT><B>logfile_daemon</B><DD>
+<P>Ported from 2.7</P>
 
 </DL>
 </P>
@@ -392,8 +459,42 @@ ScriptAlias /squid/cgi-bin/ "c:/squid/libexec/"
 
 <P>
 <DL>
+<DT><B>acl random</B><DD>
+<P>New type <EM>random</EM>. Pseudo-randomly match requests based on a configured probability.</P>
+
+<DT><B>auth_param</B><DD>
+<P>New options for Basic, Digest, NTLM, Negotiate <EM>children</EM> settings.
+<EM>startup=N</EM> determins minimum number of helper processes used.
+<EM>idle=N</EM> determines how many helper to retain as buffer against sudden traffic loads.
+<EM>concurrency=N</EM> previously called <EM>auth_param ... concurrency</EM> as a separate option.</P>
+<P>Removed Basic, Digest, NTLM, Negotiate <EM>auth_param ... concurrency</EM> setting option.</P>
+
+<DT><B>deny_info</B><DD>
+<P>Support URL format tags. For dynamically generated URL in denial redirect.</P>
+
+<DT><B>external_acl_type</B><DD>
+<P>New format tags and option parameters:</P>
+<P><EM>%SRCEUI48</EM> EUI-48 / MAC address of client from ARP lookup.</P>
+<P><EM>%SRCEUI64</EM> EUI-64 of clients with SLAAC address.</P>
+<P><EM>children-max=N</EM> determins maximum number of helper processes used.</P>
+<P><EM>children-startup=N</EM> determins minimum number of helper processes used.</P>
+<P><EM>children-idle=N</EM> determines how many helper to retain as buffer against sudden traffic loads.</P>
+<P>Deprecated <EM>children=N</EM> in favor of <EM>children-max=N</EM>.</P>
+
+<DT><B>logformat</B><DD>
+<P><EM>%sn</EM> Unique sequence number per log line. Ported from 2.7</P>
+<P><EM>%>eui</EM> EUI logging (EUI-48 / MAC address for IPv4, EUI-64 for IPv6)
+Both EUI forms are logged in the same field. Type can be identified by length or byte delimiter.</P>
+
 <DT><B>windows_ipaddrchangemonitor</B><DD>
 <P>Now only available to be set in Windows builds.</P>
+
+<DT><B>url_rewrite_children</B><DD>
+
+<DT><B>New options <EM>startup=N</EM>, <EM>idle=N</EM>, <EM>concurrency=N</EM></B><DD>
+<P>startup=N allow finer tuning of how many helpers are started initially.</P>
+<P>idle=N allow fine tuning of how many helper to retain as buffer against sudden traffic loads.</P>
+<P>concurrency=N was previously called url_rewrite_concurrency as a distinct directive.</P>
 
 </DL>
 </P>
@@ -404,14 +505,11 @@ ScriptAlias /squid/cgi-bin/ "c:/squid/libexec/"
 
 <P>
 <DL>
+<DT><B>ftp_list_width</B><DD>
+<P>Obsolete.</P>
 
-<DT><B>???alphabetical list???</B><DD>
-<P> ???
-<PRE>
-        relevant quote directly from cf.data.pre
-        
-</PRE>
-</P>
+<DT><B>url_rewrite_concurrency</B><DD>
+<P>Replaced by url_rewrite_children ... concurrency=N option.</P>
 
 </DL>
 </P>
@@ -438,9 +536,16 @@ ScriptAlias /squid/cgi-bin/ "c:/squid/libexec/"
 
 <P>
 <DL>
+<DT><B>--enable-eui</B><DD>
+<P>Enable Support for handling EUI operations.
+This includes ARP lookups for MAC (EUI-48) addresses and the ACL arp type tests.</P>
 
-<DT><B>???alphabetical list within group ordered: enable, disable, with, without) ???</B><DD>
-<P> ???explain??</P>
+<DT><B>--enable-url-rewrite-helpers</B><DD>
+<P>Build helpers for some basic URL-rewrite actions. For use by url_rewrite_program.
+If omitted or set to =all then all bundled helpers that are able to build will be built.
+If set to a specific list of helpers then only those helpers will build.
+Currently one demo helper <EM>fake</EM> is provided in shell and C++ forms to demonstrate
+the helper protocol usage and provide exemplar code.</P>
 
 </DL>
 </P>
@@ -452,6 +557,7 @@ ScriptAlias /squid/cgi-bin/ "c:/squid/libexec/"
 <DL>
 <DT><B>???alphabetical list within group ordered: enable, disable, with, without) ???</B><DD>
 <P> ???explain??</P>
+
 </DL>
 </P>
 <H2><A NAME="removedoptions"></A> <A NAME="ss5.3">5.3</A> <A HREF="#toc5.3">Removed options</A>
@@ -459,8 +565,8 @@ ScriptAlias /squid/cgi-bin/ "c:/squid/libexec/"
 
 <P>
 <DL>
-<DT><B>???alphabetical list within group ordered: enable, disable, with, without) ???</B><DD>
-<P> ???explain??</P>
+<DT><B>--enable-arp-acl</B><DD>
+<P>Replaced by --enable-eui</P>
 
 </DL>
 </P>
@@ -497,6 +603,9 @@ ScriptAlias /squid/cgi-bin/ "c:/squid/libexec/"
 
 <DT><B>redirector_bypass</B><DD>
 <P>Replaced by <EM>url_rewrite_bypass</EM></P>
+
+<DT><B>upgrade_http0.9</B><DD>
+<P>Obsolete.</P>
 
 <DT><B>zph_local</B><DD>
 <P>Replaced by <EM>qos_flows local-hit=</EM></P>
@@ -599,9 +708,6 @@ ScriptAlias /squid/cgi-bin/ "c:/squid/libexec/"
 <P><EM>urllogin</EM> option not yet ported from 2.6</P>
 <P><EM>urlgroup</EM> option not yet ported from 2.6</P>
 
-<DT><B>auth_param digest</B><DD>
-<P><EM>concurrency</EM> option not yet ported from Squid-2</P>
-
 <DT><B>authenticate_ip_shortcircuit_access</B><DD>
 <P>Not yet ported from 2.7</P>
 
@@ -670,12 +776,8 @@ ScriptAlias /squid/cgi-bin/ "c:/squid/libexec/"
 <DT><B>location_rewrite_program</B><DD>
 <P>Not yet ported from 2.6</P>
 
-<DT><B>logfile_daemon</B><DD>
-<P>Not yet ported from 2.7</P>
-
 <DT><B>logformat</B><DD>
 <P><EM>%oa</EM> tag not yet ported from 2.7</P>
-<P><EM>%sn</EM> tag not yet ported from 2.7</P>
 
 <DT><B>max_filedescriptors</B><DD>
 <P>Not yet ported from 2.7</P>
@@ -708,9 +810,6 @@ ScriptAlias /squid/cgi-bin/ "c:/squid/libexec/"
 <P>Not yet ported from 2.7</P>
 
 <DT><B>update_headers</B><DD>
-<P>Not yet ported from 2.7</P>
-
-<DT><B>upgrade_http0.9</B><DD>
 <P>Not yet ported from 2.7</P>
 
 <DT><B>zero_buffers</B><DD>
