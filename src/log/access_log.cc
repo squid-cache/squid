@@ -1049,7 +1049,7 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
         case LFT_SQUID_STATUS:
             if (al->http.timedout || al->http.aborted) {
                 snprintf(tmp, sizeof(tmp), "%s%s", log_tags[al->cache.code],
-                    al->http.statusSfx());
+                         al->http.statusSfx());
                 out = tmp;
             } else {
                 out = log_tags[al->cache.code];
