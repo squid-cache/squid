@@ -55,8 +55,8 @@ public:
     {
 
     public:
-    HttpDetails() : method(METHOD_NONE), code(0), content_type(NULL),
-	timedout(false), aborted(false) {}
+        HttpDetails() : method(METHOD_NONE), code(0), content_type(NULL),
+                timedout(false), aborted(false) {}
 
         HttpRequestMethod method;
         int code;
