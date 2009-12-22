@@ -16,6 +16,7 @@ AM_MAINTAINER_MODE
 
 m4_include([acinclude/squid-util.m4])
 m4_include([acinclude/compiler-flags.m4])
+m4_include([acinclude/os-deps.m4])
 
 PRESET_CFLAGS="$CFLAGS"
 PRESET_LDFLAGS="$LDFLAGS"
@@ -3356,11 +3357,11 @@ AM_CONDITIONAL([USE_KQUEUE], [test $SELECT_TYPE = kqueue])
 AM_CONDITIONAL([USE_DEVPOLL], [test $SELECT_TYPE = devpoll])
 
 case $SELECT_TYPE in
-epoll) AC_DEFINE(USE_EPOLL,1,[Use epoll() for the IO loop]) ;;
-poll)  AC_DEFINE(USE_POLL,1,[Use poll() for the IO loop]) ;;
-kqueue) AC_DEFINE(USE_KQUEUE,1,[Use kqueue() for the IO loop]) ;;
-select_win32) AC_DEFINE(USE_SELECT_WIN32,1,[Use Winsock select() for the IO loop]) ;;
-select) AC_DEFINE(USE_SELECT,1,[Use select() for the IO loop]) ;;
+  epoll) AC_DEFINE(USE_EPOLL,1,[Use epoll() for the IO loop]) ;;
+  poll) AC_DEFINE(USE_POLL,1,[Use poll() for the IO loop]) ;;
+  kqueue) AC_DEFINE(USE_KQUEUE,1,[Use kqueue() for the IO loop]) ;;
+  select_win32) AC_DEFINE(USE_SELECT_WIN32,1,[Use Winsock select() for the IO loop]) ;;
+  select) AC_DEFINE(USE_SELECT,1,[Use select() for the IO loop]) ;;
 esac
 
 dnl Yay!  Another Linux brokenness.  Its not good enough
@@ -3383,78 +3384,10 @@ if test "$ac_cv_func_setresuid" = "yes" ; then
   AC_DEFINE(HAVE_SETRESUID,1,[Yay! Another Linux brokenness.  Its not good enough to know that setresuid() exists, because RedHat 5.0 declare setresuid() but doesn't implement it.])
 fi
 
-dnl Yay!  This one is  a MacOSX brokenness.  Its not good enough
-dnl to know that strnstr() exists, because MacOSX 10.4 have a bad
-dnl copy that crashes with a buffer over-run!
-dnl
-AC_CACHE_CHECK(if strnstr is well implemented, ac_cv_func_strnstr,
-  AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-    // we expect this to succeed, or crash on over-run.
-    // if it passes otherwise we may need a better check.
-int main(int argc, char **argv)
-{
-    int size = 20;
-    char *str = malloc(size);
-    memset(str, 'x', size);
-    strnstr(str, "fubar", size);
-    return 0;
-}
-  ]])],[ac_cv_func_strnstr="yes"],[ac_cv_func_strnstr="no"],[])
-)
-if test "$ac_cv_func_strnstr" = "yes" ; then
-  AC_DEFINE(HAVE_STRNSTR,1,[Yay! We have a working strnstr!])
-else
-  AC_DEFINE(HAVE_STRNSTR,0,[Yay! A MacOS X brokenness. Its not good enough to know that strnstr() exists, because MacOSX 10.4 and earlier may have a buffer overrun.])
-fi
+SQUID_CHECK_FUNC_STRNSTR
+SQUID_CHECK_FUNC_VACOPY
+SQUID_CHECK_FUNC___VACOPY
 
-dnl
-dnl Test for va_copy
-dnl
-AC_CACHE_CHECK(if va_copy is implemented, ac_cv_func_va_copy,
-  AC_RUN_IFELSE([AC_LANG_SOURCE([[
-      #include <stdarg.h>
-      #include <stdlib.h>
-      int f (int i, ...) {
-         va_list args1, args2;
-         va_start (args1, i);
-         va_copy (args2, args1);
-         if (va_arg (args2, int) != 42 || va_arg (args1, int) != 42)
-            return 1;
-         va_end (args1); va_end (args2);
-         return 0;
-      }
-      int main(int argc, char **argv) { return f (0, 42); }
-      ]])],[ac_cv_func_va_copy="yes"],[ac_cv_func_va_copy="no"],[])
-)
-if test "$ac_cv_func_va_copy" = "yes" ; then
-  AC_DEFINE(HAVE_VA_COPY, 1, [If your system have va_copy])
-fi
-
-dnl
-dnl Some systems support __va_copy
-dnl
-AC_CACHE_CHECK(if __va_copy is implemented, ac_cv_func___va_copy,
-  AC_RUN_IFELSE([AC_LANG_SOURCE([[
-      #include <stdarg.h>
-      #include <stdlib.h>
-      int f (int i, ...) {
-         va_list args1, args2;
-         va_start (args1, i);
-         __va_copy (args2, args1);
-         if (va_arg (args2, int) != 42 || va_arg (args1, int) != 42)
-            return 1;
-         va_end (args1); va_end (args2);
-         return 0;
-      }
-      int main(int argc, char **argv) { return f (0, 42); }
-      ]])],[ac_cv_func___va_copy="yes"],[ac_cv_func___va_copy="no"],[])
-)
-if test "$ac_cv_func___va_copy" = "yes" ; then
-  AC_DEFINE(HAVE___VA_COPY, 1, [Some systems have __va_copy instead of va_copy])
-fi
   
 dnl IP-Filter support requires ipf header files. These aren't
 dnl installed by default, so we need to check for them
