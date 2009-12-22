@@ -1991,8 +1991,8 @@ commHandleWrite(int fd, void *data)
     debugs(5, 5, "commHandleWrite: write() returns " << len);
     fd_bytes(fd, len, FD_WRITE);
     statCounter.syscalls.sock.writes++;
-    // After each successful partial write, 
-    // reset fde::writeStart to the current time. 
+    // After each successful partial write,
+    // reset fde::writeStart to the current time.
     fd_table[fd].writeStart = squid_curtime;
 
     if (len == 0) {
@@ -2191,8 +2191,7 @@ checkTimeouts(void)
         if (writeTimedOut(fd)) {
             // We have an active write callback and we are timed out
             commio_finish_callback(fd, COMMIO_FD_WRITECB(fd), COMM_ERROR, ETIMEDOUT);
-        }
-        else if (AlreadyTimedOut(F))
+        } else if (AlreadyTimedOut(F))
             continue;
 
         debugs(5, 5, "checkTimeouts: FD " << fd << " Expired");
