@@ -112,3 +112,5 @@ if test "$squid_cv_func___va_copy" = "yes" ; then
   AC_DEFINE(HAVE___VA_COPY, 1)
 fi
 ]) dnl SQUID_CHECK_FUNC___VACOPY
+
+
