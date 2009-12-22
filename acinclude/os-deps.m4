@@ -114,3 +114,24 @@ fi
 ]) dnl SQUID_CHECK_FUNC___VACOPY
 
 
+dnl check that epoll actually works
+dnl sets squid_cv_epoll_works to "yes" or "no"
+AC_DEFUN([SQUID_CHECK_EPOLL],[
+
+    AC_CACHE_CHECK(if epoll works, squid_cv_epoll_works,
+      AC_RUN_IFELSE([AC_LANG_SOURCE([[
+#include <sys/epoll.h>
+#include <stdlib.h>
+#include <stdio.h>
+int main(int argc, char **argv)
+{
+    int fd = epoll_create(256);
+    if (fd < 0) {
+	perror("epoll_create:");
+	return 1;
+    }
+    return 0;
+}
+      ]])],[squid_cv_epoll_works=yes],[squid_cv_epoll_works=no],[]))
+
+]) dnl SQUID_CHECK_EPOLL
