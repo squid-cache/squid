@@ -241,7 +241,6 @@ if test "$GCC" = "yes"; then
     i386-*-freebsd*)
 	if test $GCCVER2 -lt 300 ; then
 	    AC_MSG_FAILURE([GCC $GCCVER causes a coredump on $host. Try a more recent GCC version])
-	    sleep 5
 	fi
 	;;
     esac
@@ -704,7 +703,6 @@ for fs in $squid_storeio_module_candidates none; do
 	;;
     coss)
       AC_MSG_WARN([COSS Support is not stable yet in Squid-3. Please do not use.])
-      sleep 10
 	if ! test "$squid_disk_module_candidates_AIO" = "yes"; then
 	  AC_MSG_ERROR([COSS requires POSIX AIO which is not available.])
 	fi
@@ -971,40 +969,40 @@ AC_ARG_ENABLE(referer-log,
   fi
 ])
 
-USE_WCCP=1
+squid_opt_use_wccp=1
 AC_ARG_ENABLE(wccp,
   AS_HELP_STRING([--disable-wccp],[Disable Web Cache Coordination Protocol]),
 [ if test "$enableval" = "no" ; then
     AC_MSG_NOTICE([Web Cache Coordination Protocol disabled])
-    USE_WCCP=0
+    squid_opt_use_wccp=0
   fi
 ])
-if test $USE_WCCP = 1; then
-    AC_DEFINE(USE_WCCP, 1, [Define to enable WCCP])
-fi
+AC_DEFINE_UNQUOTED(USE_WCCP, $squid_opt_use_wccp, [Define to enable WCCP])
 
-USE_WCCPv2=1
+squid_opt_use_wccp_v2=1
 AC_ARG_ENABLE(wccpv2,
   AS_HELP_STRING([--disable-wccpv2],[Disable Web Cache Coordination V2 Protocol]),
 [ if test "$enableval" = "no" ; then
     AC_MSG_NOTICE([Web Cache Coordination V2 Protocol disabled])
-    USE_WCCPv2=0
+    squid_opt_use_wccp_v2=0
   fi
 ])
-if test $USE_WCCPv2 = 1; then
-    AC_DEFINE(USE_WCCPv2, 1, [Define to enable WCCP V2])
-fi
+AC_DEFINE_UNQUOTED(USE_WCCPv2,$squid_opt_use_wccp_v2,[Define to enable WCCP V2])
 
+
+squid_opt_kill_parent=0
 AC_ARG_ENABLE(kill-parent-hack,
   AS_HELP_STRING([--enable-kill-parent-hack],[Kill parent on shutdown]),
 [ if test "$enableval" = "yes" ; then
     AC_MSG_NOTICE([Kill parent on shutdown])
-    AC_DEFINE(KILL_PARENT_OPT,1,
-              [A dangerous feature which causes Squid to kill its parent process
-               (presumably the RunCache script) upon receipt of SIGTERM or SIGINT.
-               Use with caution.])
+    squid_opt_kill_parent=1
   fi
 ])
+AC_DEFINE_UNQUOTED(KILL_PARENT_OPT,$squid_opt_kill_parent,
+                   [A dangerous feature which causes Squid to kill its parent process
+                   (presumably the RunCache script) upon receipt of SIGTERM or SIGINT.
+                   Use with caution.])
+
 
 USE_SNMP=true
 AC_ARG_ENABLE(snmp,
@@ -1059,7 +1057,6 @@ if test "$squid_opt_use_eui" = "yes" ; then
 	    ;;
 	*)
 	    AC_MSG_WARN([EUI support probably won't work on $host.])
-	    sleep 10
 	    ;;
      esac
      AC_CHECK_HEADERS( \
@@ -1327,41 +1324,40 @@ AC_ARG_ENABLE(ipfw-transparent,
 ])
 
 dnl Enable IP-Filter Transparent Proxy
+AH_TEMPLATE(IPF_TRANSPARENT,[Enable support for Transparent Proxy on systems using IP-
+squid_opt_ipf_transparent=no
+Filter address redirection.])
 AC_ARG_ENABLE(ipf-transparent,
   AS_HELP_STRING([--enable-ipf-transparent],[Enable Transparent Proxy support for systems
                   using IP-Filter network address redirection.]),
 [ if test "$enableval" = "yes" ; then
 	AC_MSG_NOTICE([IP-Filter Transparent Proxy enabled])
-	AC_DEFINE(IPF_TRANSPARENT,1,[Enable support for Transparent Proxy on systems using IP-Filter address redirection. This provides "masquerading" support for non Linux system.])
-	IPF_TRANSPARENT="yes"
-  else
-	AC_DEFINE(IPF_TRANSPARENT,0,[Enable support for Transparent Proxy on systems using IP-Filter address redirection. This provides "masquerading" support for non Linux system.])
+	squid_opt_ipf_transparent="yes"
   fi
 ])
 
 dnl Enable PF Transparent Proxy
+AH_TEMPLATE(PF_TRANSPARENT,[Enable support for Transparent Proxy on systems using PF address redirection (e.g. OpenBSD)])
 AC_ARG_ENABLE(pf-transparent,
   AS_HELP_STRING([--enable-pf-transparent],[Enable Transparent Proxy support for systems
                   using PF network address redirection.]),
 [ if test "$enableval" = "yes" ; then
 	AC_MSG_NOTICE([PF Transparent Proxy enabled])
-	AC_DEFINE(PF_TRANSPARENT,1,[Enable support for Transparent Proxy on systems using PF address redirection. This provides "masquerading" support for OpenBSD.])
-	PF_TRANSPARENT="yes"
-  else
-	AC_DEFINE(PF_TRANSPARENT,0,[Enable support for Transparent Proxy on systems using PF address redirection. This provides "masquerading" support for OpenBSD.])
+	squid_opt_pf_transparent="yes"
   fi
 ])
 
 dnl Enable Linux Netfilter Transparent Proxy
+squid_opt_linux_netfilter="no"
+AH_TEMPLATE(LINUX_NETFILTER,[Enable support for Transparent Proxy on Linux via Netfilter])
 AC_ARG_ENABLE(linux-netfilter,
-  AS_HELP_STRING([--enable-linux-netfilter],[Enable Transparent Proxy support for Linux (Netfilter)]),
-[ if test "$enableval" = "yes" ; then
-	AC_MSG_NOTICE([Linux (Netfilter) Transparent Proxy enabled])
-	AC_DEFINE(LINUX_NETFILTER,1,[Enable support for Transparent Proxy on Linux (Netfilter) systems])
-	LINUX_NETFILTER="yes"
-  else
-	AC_DEFINE(LINUX_NETFILTER,0,[Enable support for Transparent Proxy on Linux (Netfilter) systems])
-  fi
+  AS_HELP_STRING([--enable-linux-netfilter],
+                 [Enable Transparent Proxy support for Linux (Netfilter)]), [ 
+if test "$enableval" = "yes" ; then
+  AC_MSG_NOTICE([Linux (Netfilter) Transparent Proxy enabled])
+  AC_DEFINE(LINUX_NETFILTER,1,[Enable support for Transparent Proxy on Linux (Netfilter) systems])
+  squid_opt_linux_netfilter="yes"
+fi
 ])
 
 dnl Enable Large file support
@@ -1407,8 +1403,7 @@ if test $needlargefiles && test -z "$buildmodel"; then
 		fi
 	done
 	if test -z "$buildmodel"; then
-		AC_MSG_WARN(["No suitable build environment found for large files. Trying to use _FILE_OFFSET_BITS=64])
-		sleep 1
+		AC_MSG_WARN([No suitable build environment found for large files. Trying to use _FILE_OFFSET_BITS=64])
 	fi
 fi
 case "$buildmodel" in
@@ -1475,19 +1470,20 @@ dnl "-64" from LDFLAGS
 esac
 
 dnl Enable Linux transparent proxy support for obsolete TPROXY
+AH_TEMPLATE(LINUX_TPROXY2,[Enable real Transparent Proxy support for Netfilter TPROXY v2])
 AC_ARG_ENABLE(linux-tproxy,
   AS_HELP_STRING([--enable-linux-tproxy],[Enable real Transparent Proxy support for Netfilter TPROXY 
                   (version 2).]),
 [ if test "$enableval" = "yes" ; then
 	AC_MSG_NOTICE([Linux Netfilter/TPROXY v2 enabled])
-	AC_DEFINE(LINUX_TPROXY2, 1, [Enable real Transparent Proxy support for Netfilter TPROXY v2.])
+	AC_DEFINE(LINUX_TPROXY2, 1)
 	LINUX_TPROXY2="yes"
-        if test -z "$LINUX_NETFILTER"; then
+        if test -z "$squid_opt_linux_netfilter"; then
 	    AC_MSG_NOTICE([Linux-Netfilter Transparent Proxy automatically enabled])
-	    LINUX_NETFILTER="yes"
+	    squid_opt_linux_netfilter="yes"
 	fi
   else
-	AC_DEFINE(LINUX_TPROXY2, 0, [Enable real Transparent Proxy support for Netfilter TPROXY v2.])
+	AC_DEFINE(LINUX_TPROXY2, 0)
   fi
 ])
 
@@ -1557,17 +1553,16 @@ AC_ARG_ENABLE(default-hostsfile,
   AS_HELP_STRING([--enable-default-hostsfile=path],[Select default location for hosts file.
                   See hosts_file directive in squid.conf for details]),
 [
-    if test "$enableval" != "none" ; then
-    	if test -f $enableval; then
-	    OPT_DEFAULT_HOSTS=$enableval
-    	else
-	    AC_MSG_WARN([Unable to find $enableval])
-	    sleep 5
-	fi
+  if test "$enableval" != "none" ; then
+    if test -f $enableval; then
+      OPT_DEFAULT_HOSTS=$enableval
     else
-	OPT_DEFAULT_HOSTS="none"
+      AC_MSG_WARN([Unable to find $enableval])
     fi
-    AC_MSG_NOTICE([Default hosts file set to: $enableval])
+  else
+    OPT_DEFAULT_HOSTS="none"
+  fi
+  AC_MSG_NOTICE([Default hosts file set to: $enableval])
 ],[OPT_DEFAULT_HOSTS="/etc/hosts"])
 AC_SUBST(OPT_DEFAULT_HOSTS)
 
@@ -1646,7 +1641,6 @@ AC_ARG_ENABLE(basic-auth-helpers,
   *)
 	if test -z "$AUTH_MODULE_basic"; then
 		AC_MSG_WARN([Basic auth helpers selected without the basic scheme enabled])
-		sleep 15
 	fi
 	BASIC_AUTH_HELPERS="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
 	;;
@@ -3391,8 +3385,8 @@ SQUID_CHECK_FUNC___VACOPY
   
 dnl IP-Filter support requires ipf header files. These aren't
 dnl installed by default, so we need to check for them
-if test "$IPF_TRANSPARENT" ; then
-    AC_MSG_CHECKING(if IP-Filter header files are installed)
+if test "$squid_opt_ipf_transparent" != "no" ; then
+    AC_MSG_CHECKING(for availability of IP-Filter header files)
     # hold on to your hats...
     if test "$ac_cv_header_ip_compat_h" = "yes" ||
         test "$ac_cv_header_ip_fil_compat_h" = "yes" ||
@@ -3400,88 +3394,76 @@ if test "$IPF_TRANSPARENT" ; then
         test "$ac_cv_header_netinet_ip_fil_compat_h" = "yes" ; then
         have_ipfilter_compat_header="yes"
      fi
-     if test "x$have_ipfilter_compat_header" = "xyes" &&
+     if test "$have_ipfilter_compat_header" = "yes" &&
        test "$ac_cv_header_ip_fil_h" = "yes" &&
        test "$ac_cv_header_ip_nat_h" = "yes" ; then
-        IPF_TRANSPARENT="yes"
+        squid_opt_ipf_transparent="yes"
         AC_DEFINE(IPF_TRANSPARENT, 1)
     elif test "$have_ipfilter_compat_header" = "yes" &&
          test "$ac_cv_header_netinet_ip_fil_h" = "yes" &&
          test "$ac_cv_header_netinet_ip_nat_h" = "yes" ; then
-        IPF_TRANSPARENT="yes"
+        squid_opt_ipf_transparent="yes"
         AC_DEFINE(IPF_TRANSPARENT, 1)
     else
-        IPF_TRANSPARENT="no"
+        squid_opt_ipf_transparent="no"
         AC_DEFINE(IPF_TRANSPARENT, 0)
     fi
     AC_MSG_RESULT($IPF_TRANSPARENT)
 fi 
-if test "$IPF_TRANSPARENT" = "no" ; then
-    AC_MSG_WARN([Cannot find necessary IP-Filter header files])
-    AC_MSG_WARN([Transparent Proxy support WILL NOT be enabled])
-    sleep 10
-elif test "$IPF_TRANSPARENT" = "yes" ; then
+if test "$squid_opt_ipf_transparent" = "yes" -a "$squid_host_os" = "solaris" ; then
 dnl On Solaris Ipfilter includes expect that SOLARIS2 is defined with the
 dnl Solaris minor version (8, 9, 10, ...)
-    case "$host" in
-	*-solaris*)
-	    solrev=`uname -r | sh -c 'IFS=. read j n x; echo $n'`
-	    CFLAGS="-DSOLARIS2=$solrev $CFLAGS" 
-	    CXXFLAGS="-DSOLARIS2=$solrev $CXXFLAGS" 
-	    ;;
-	*)
-	    ;;
-    esac
+  solrev=`uname -r | sh -c 'IFS=. read j n x; echo $n'`
+  CFLAGS="-DSOLARIS2=$solrev $CFLAGS" 
+  CXXFLAGS="-DSOLARIS2=$solrev $CXXFLAGS" 
 fi
 
 dnl PF support requires a header file.
-if test "$PF_TRANSPARENT" ; then
-    AC_MSG_CHECKING(if PF header file is installed)
-    # hold on to your hats...
-    if test "$ac_cv_header_net_pfvar_h" = "yes" || test "$ac_cv_header_net_pf_pfvar_h" = "yes"; then
-        PF_TRANSPARENT="yes"
-        AC_DEFINE(PF_TRANSPARENT, 1)
-    else
-        PF_TRANSPARENT="no"
-        AC_DEFINE(PF_TRANSPARENT, 0)
-    fi
-    AC_MSG_RESULT($PF_TRANSPARENT)
+if test "$squid_opt_pf_transparent" != "no" ; then
+  AC_MSG_CHECKING(for availability o fPF header files)
+  # hold on to your hats...
+  if test "$ac_cv_header_net_pfvar_h" = "yes" || test "$ac_cv_header_net_pf_pfvar_h" = "yes"; then
+    squid_opt_pf_transparent="yes"
+    AC_DEFINE(PF_TRANSPARENT, 1)
+  else
+    squid_opt_pf_transparent="no"
+    AC_DEFINE(PF_TRANSPARENT, 0)
+  fi
+  AC_MSG_RESULT($squid_opt_pf_transparent)
 fi
-if test "$PF_TRANSPARENT" = "no" ; then
+if test "$squid_opt_pf_transparent" = "no" ; then
     AC_MSG_WARN([Cannot find necessary PF header file])
     AC_MSG_WARN([Transparent Proxy support WILL NOT be enabled])
-    sleep 10
 fi
 
 dnl Linux-Netfilter support requires Linux 2.4 kernel header files.
-dnl Shamelessly copied from above
-if test "$LINUX_NETFILTER" ; then
+if test "$squid_opt_linux_netfilter" != "no" ; then
     AC_MSG_CHECKING(if Linux (Netfilter) kernel header files are installed)
     # hold on to your hats...
     if test "$ac_cv_header_linux_netfilter_ipv4_h" = "yes"; then
-        LINUX_NETFILTER="yes"
+        squid_opt_linux_netfilter="yes"
         AC_DEFINE(LINUX_NETFILTER, 1)
     else
-        LINUX_NETFILTER="no"
+        squid_opt_linux_netfilter="no"
         AC_DEFINE(LINUX_NETFILTER, 0)
+        AC_MSG_WARN([Cannot find necessary Linux kernel (Netfilter) header files])
+        AC_MSG_WARN([Linux Transparent and Intercepting Proxy support WILL NOT be enabled])
     fi
-    AC_MSG_RESULT($LINUX_NETFILTER)
+    AC_MSG_RESULT($squid_opt_linux_netfilter)
 fi
-if test "$LINUX_NETFILTER" = "no" ; then
-    AC_MSG_WARN([Cannot find necessary Linux kernel (Netfilter) header files])
-    AC_MSG_WARN([Linux Transparent and Intercepting Proxy support WILL NOT be enabled])
+
+if test "$squid_opt_linux_netfilter" = "no" ; then
     LINUX_TPROXY2="no"
-    AC_DEFINE(LINUX_TPROXY2, 0, [Enable real Transparent Proxy support for Netfilter TPROXY v2.])
-    sleep 10
+    AC_DEFINE(LINUX_TPROXY2, 0, 
+              [Enable real Transparent Proxy support for Netfilter TPROXY v2.])
 fi
 dnl Netfilter TPROXY depends on libcap but the NAT parts can still work.
-if test "$LINUX_NETFILTER" = "yes" && test "$use_libcap" != "yes" ; then
+if test "$squid_opt_linux_netfilter" = "yes" && test "$use_libcap" != "yes" ; then
     AC_MSG_WARN([Missing needed capabilities (libcap or libcap2) for TPROXY])
     AC_MSG_WARN([Linux Transparent Proxy support WILL NOT be enabled])
     AC_MSG_WARN([Reduced support to Interception Proxy])
     LINUX_TPROXY2="no"
     AC_DEFINE(LINUX_TPROXY2, 0, [Enable real Transparent Proxy support for Netfilter TPROXY v2.])
-    sleep 10
 fi
 
 dnl Linux Netfilter/TPROXYv2 support requires some specific header files
@@ -3490,7 +3472,7 @@ if test "$LINUX_TPROXY2"; then
   if test "$use_libcap" = "yes"; then
     AC_MSG_CHECKING(if TPROXYv2 header files are installed)
     # hold on to your hats...
-    if test "$ac_cv_header_linux_netfilter_ipv4_ip_tproxy_h" = "yes" && test "$LINUX_NETFILTER" = "yes"; then
+    if test "$ac_cv_header_linux_netfilter_ipv4_ip_tproxy_h" = "yes" && test "$squid_opt_linux_netfilter" = "yes"; then
 	LINUX_TPROXY2="yes"
 	AC_DEFINE(LINUX_TPROXY2, 1, [Enable real Transparent Proxy support for Netfilter TPROXY v2.])
     else
@@ -3498,19 +3480,17 @@ if test "$LINUX_TPROXY2"; then
 	AC_DEFINE(LINUX_TPROXY2, 0, [Enable real Transparent Proxy support for Netfilter TPROXY v2.])
     fi
     AC_MSG_RESULT($LINUX_TPROXY2)
-    if test "$LINUX_TPROXY2" = "no" && test "$LINUX_NETFILTER" = "yes"; then
+    if test "$LINUX_TPROXY2" = "no" && test "$squid_opt_linux_netfilter" = "yes"; then
         AC_MSG_WARN([Cannot find TPROXY v2 headers, you need to patch the kernel with ])
         AC_MSG_WARN([tproxy package from:])
         AC_MSG_WARN([ - lynx http://www.balabit.com/downloads/files/tproxy/])
         AC_MSG_WARN([Or select the '--enable-linux-netfilter' option instead for Netfilter support.])
-        sleep 10
     fi
   else
     AC_MSG_WARN([Missing needed capabilities (libcap or libcap2) for TPROXY v2])
     AC_MSG_WARN([Linux Transparent Proxy support WILL NOT be enabled])
     LINUX_TPROXY2="no"
     AC_DEFINE(LINUX_TPROXY2, 0, [Enable real Transparent Proxy support for Netfilter TPROXY v2.])
-    sleep 10
   fi
 fi
 
@@ -3677,13 +3657,11 @@ if test "$SQUID_MAXFD" -lt 512 ; then
     AC_MSG_WARN([cache will be very busy.  Please see the FAQ page])
     AC_MSG_WARN([http://wiki.squid-cache.org/SquidFaq/TroubleShooting])
     AC_MSG_WARN([on how to increase your filedescriptor limit])
-    sleep 10
 fi
 LDFLAGS="$TLDFLAGS"
 
 if test `expr $SQUID_MAXFD % 64` != 0; then
     AC_MSG_WARN([$SQUID_MAXFD is not an multiple of 64. This may cause issues on certain platforms.])
-    sleep 10
 fi
 
 dnl Not cached since people are likely to tune this
