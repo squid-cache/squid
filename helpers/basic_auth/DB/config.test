@@ -2,6 +2,6 @@
 
 ## Test: do we have perl to build the helper scripts?
 ## Test: do we have pod2man to build the manual?
-$(PERL) --version >/dev/null 2>&1 && $(POD2MAN) --help >/dev/null 2>&1 
+${PERL} --version >/dev/null 2>&1 && $(POD2MAN) --help >/dev/null 2>&1 
 
 exit $?
