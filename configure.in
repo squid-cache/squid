@@ -1507,7 +1507,7 @@ AC_ARG_ENABLE(default-hostsfile,
   AS_HELP_STRING([--enable-default-hostsfile=path],[Select default location for hosts file.
                   See hosts_file directive in squid.conf for details]),
 [
-  if test "$enableval" != "none" ; then
+  if test "$enableval" != "none" -a "$enableval" != "no" ; then
     if test -f $enableval; then
       OPT_DEFAULT_HOSTS=$enableval
     else

@@ -140,7 +140,7 @@ dnsSubmit(const char *lookup, HLPCB * callback, void *data)
     helperSubmit(dnsservers, buf, callback, data);
 }
 
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 /*
  * The function to return the DNS via SNMP
  */
@@ -168,7 +168,7 @@ snmp_netDnsFn(variable_list * Var, snint * ErrP)
 
     case DNS_SERVERS:
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      dnsservers->n_running,
+                                      dnsservers->childs.n_running,
                                       SMI_COUNTER32);
         break;
 
@@ -180,5 +180,5 @@ snmp_netDnsFn(variable_list * Var, snint * ErrP)
     return Answer;
 }
 
-#endif /*SQUID_SNMP */
+#endif /* SQUID_SNMP */
 #endif /* USE_DNSSERVERS */

@@ -1634,7 +1634,7 @@ idnsPTRLookup(const IpAddress &addr, IDNSCB * callback, void *data)
     idnsSendQuery(q);
 }
 
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 /*
  * The function to return the DNS via SNMP
  */

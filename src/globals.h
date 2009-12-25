@@ -102,7 +102,7 @@ extern "C" {
     extern int theOutIcpConnection;	/* -1 */
     extern int DnsSocketA;		/* -1 */
     extern int DnsSocketB;		/* -1 */
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 
     extern int theInSnmpConnection;	/* -1 */
     extern int theOutSnmpConnection;	/* -1 */

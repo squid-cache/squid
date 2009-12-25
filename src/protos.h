@@ -282,7 +282,7 @@ SQUIDCEXTERN void httpHeaderStoreReport(StoreEntry * e);
 SQUIDCEXTERN void httpHdrMangleList(HttpHeader *, HttpRequest *, int req_or_rep);
 SQUIDCEXTERN int httpReqHdrManglersConfigured();
 
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 SQUIDCEXTERN PF snmpHandleUdp;
 SQUIDCEXTERN void snmpInit(void);
 SQUIDCEXTERN void snmpConnectionOpen(void);
@@ -306,7 +306,7 @@ SQUIDCEXTERN variable_list *snmp_netFqdnFn(variable_list *, snint *);
 SQUIDCEXTERN variable_list *snmp_netDnsFn(variable_list *, snint *);
 #else
 SQUIDCEXTERN variable_list *snmp_netIdnsFn(variable_list *, snint *);
-#endif
+#endif /* USE_DNSSERVERS */
 SQUIDCEXTERN variable_list *snmp_meshPtblFn(variable_list *, snint *);
 SQUIDCEXTERN variable_list *snmp_meshCtblFn(variable_list *, snint *);
 #endif /* SQUID_SNMP */
