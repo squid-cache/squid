@@ -151,3 +151,22 @@ dnl uppercases the contents of the variable whose name is passed by argument
 AC_DEFUN([SQUID_TOUPPER_VAR_CONTENTS],[
   $1=`echo $$1|tr abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ`
 ])
+
+dnl like AC_DEFINE_UNQUOTED, but it defines the value to 0 or 1 using well-known textual
+dnl conventions:
+dnl 1: "yes", "true", 1
+dnl 0: "no" , "false", 0, ""
+dnl aborts with an error for unknown values
+AC_DEFUN([SQUID_DEFINE_UNQUOTED],[
+squid_tmp_define=""
+case "$2" in 
+  yes|true|1) squid_tmp_define="1" ;;
+  no|false|0) squid_tmp_define="0" ;;
+  *) AC_MSG_ERROR([SQUID_DEFINE[]_UNQUOTED: unrecognized value: $2]) ;;
+esac
+ifelse([$#],3, 
+  [AC_DEFINE_UNQUOTED([$1], [$squid_tmp_define],[$3])],
+  [AC_DEFINE_UNQUOTED([$1], [$squid_tmp_define])]
+)
+unset squid_tmp_define
+])
