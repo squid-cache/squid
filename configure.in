@@ -90,20 +90,17 @@ AC_ARG_ENABLE(strict-error-checking,
 use_loadable_modules=1
 AC_MSG_CHECKING(whether to use loadable modules)
 AC_ARG_ENABLE(loadable-modules,
-    AS_HELP_STRING([--disable-loadable-modules],[do not support loadable modules]) ,
-    [
+    AS_HELP_STRING([--disable-loadable-modules],[do not support loadable modules]) , [
         case "${enableval}" in
             yes) use_loadable_modules=yes ;;
             no) use_loadable_modules=no ;;
             *) AC_MSG_ERROR(bad value ${enableval} for --disable-loadable-modules) ;;
         esac
         AC_MSG_RESULT([$use_loadable_modules, explicitly])
-    ],
-    [
+    ], [
         use_loadable_modules=yes;
         AC_MSG_RESULT([$use_loadable_modules, implicitly])
-    ]
-)
+    ])
 
 AM_CONDITIONAL(USE_LOADABLE_MODULES, test $use_loadable_modules = yes)
 
@@ -160,7 +157,8 @@ AC_SUBST(CGIEXT)
 
 dnl this should be expanded to a list of platform sensible support requirements.
 dnl (adding an option like --enable-cygwin-support doesn't make sense :]) - R Collins 2001
-AM_CONDITIONAL(ENABLE_WIN32SPECIFIC,[test "$squid_host_os" = "mingw" -o "$squid_host_os" = "cygwin"])
+AM_CONDITIONAL(ENABLE_WIN32SPECIFIC,
+               [test "$squid_host_os" = "mingw" -o "$squid_host_os" = "cygwin"])
 AM_CONDITIONAL(USE_IPC_WIN32,[test "$squid_host_os" = "mingw"])
 
 if test $squid_host_os = "mingw"; then
@@ -187,15 +185,16 @@ fi
 
 dnl Substitutions
 AC_DEFINE_UNQUOTED(CACHE_HTTP_PORT, $CACHE_HTTP_PORT,
-[What default TCP port to use for HTTP listening?])
+                   [What default TCP port to use for HTTP listening?])
 AC_SUBST(CACHE_HTTP_PORT)
 AC_DEFINE_UNQUOTED(CACHE_ICP_PORT, $CACHE_ICP_PORT,
-[What default UDP port to use for ICP listening?])
+                   [What default UDP port to use for ICP listening?])
 AC_SUBST(CACHE_ICP_PORT)
 
 AC_DEFINE_UNQUOTED(CONFIG_HOST_TYPE, "$host",[Host type from configure])
 
-AC_DEFINE_UNQUOTED(SQUID_CONFIGURE_OPTIONS, "$ac_configure_args", [configure command line used to configure Squid])
+AC_DEFINE_UNQUOTED(SQUID_CONFIGURE_OPTIONS, "$ac_configure_args", 
+                       [configure command line used to configure Squid])
 
 CACHE_EFFECTIVE_USER="nobody"
 AC_ARG_WITH(default-user,
@@ -368,13 +367,13 @@ else
     AC_DEFINE(_SQUID_INLINE_,[], [Keyword used by squid for inlining methods])
 fi
 
-AH_TEMPLATE(CBDATA_DEBUG,[Enable for cbdata debug information])
 AC_ARG_ENABLE(debug-cbdata,
-  AS_HELP_STRING([--enable-debug-cbdata],[Provide some debug information in cbdata]),
-[ if test "$enableval" = "yes" ; then
-    AC_MSG_NOTICE([cbdata debugging enabled])
-    AC_DEFINE(CBDATA_DEBUG,1)
-  fi
+  AS_HELP_STRING([--enable-debug-cbdata],
+      [Provide some debug information in cbdata]), [ 
+if test "$enableval" = "yes" ; then
+  AC_MSG_NOTICE([cbdata debugging enabled])
+  AC_DEFINE(CBDATA_DEBUG,1, [Enable support for cbdata debug information])
+fi
 ])
 
 dnl Nasty hack to get autoconf 2.64 on Linux to run.
@@ -405,16 +404,19 @@ dnl ])
 
 AH_TEMPLATE(XMALLOC_STATISTICS,[Define to have malloc statistics])
 AC_ARG_ENABLE(xmalloc-statistics,
-  AS_HELP_STRING([--enable-xmalloc-statistics],[Show malloc statistics in status page]),
-[ if test "$enableval" = "yes" ; then
-    AC_MSG_NOTICE([malloc statistics enabled])
-    AC_DEFINE(XMALLOC_STATISTICS,1)
-  fi
+  AS_HELP_STRING([--enable-xmalloc-statistics],
+                 [Show malloc statistics in status page]), [
+if test "$enableval" = "yes" ; then
+  AC_MSG_NOTICE([malloc statistics enabled])
+  AC_DEFINE(XMALLOC_STATISTICS,1)
+fi
 ])
 
+squid_opt_aufs_threads=""
 AC_ARG_WITH(aufs-threads,
-  AS_HELP_STRING([--with-aufs-threads=N_THREADS],[Tune the number of worker threads for the aufs object store.]),
-[ case $withval in
+  AS_HELP_STRING([--with-aufs-threads=N_THREADS],
+   [Tune the number of worker threads for the aufs object store.]), [ 
+case $withval in
   [[0-9]]*)
     squid_opt_aufs_threads=$withval
     ;;
@@ -423,10 +425,10 @@ AC_ARG_WITH(aufs-threads,
     ;;
   esac
 ])
-if test "$squid_opt_aufs_threads"; then
+if test -n "$squid_opt_aufs_threads"; then
     AC_MSG_NOTICE([With $squid_opt_aufs_threads aufs threads])
     AC_DEFINE_UNQUOTED(AUFS_IO_THREADS,$squid_opt_aufs_threads,
-    [Defines how many threads aufs uses for I/O])
+                 [Defines how many threads aufs uses for I/O])
 fi
 
 AC_ARG_WITH(dl, AS_HELP_STRING([--with-dl],[Use dynamic linking]))
@@ -436,23 +438,24 @@ fi
 
 AC_MSG_CHECKING([for DiskIO modules to be enabled])
 squid_disk_module_candidates=""
-squid_opt_enable_diskio=auto  #values: 0(no), 1(yes), "auto"(=yes+detect modules)
+squid_opt_enable_diskio="auto"  #values: no, yes, "auto"(=yes+detect modules)
 AC_ARG_ENABLE(disk-io,
   AS_HELP_STRING([--enable-disk-io="list of modules"],
     [Build support for the list of disk I/O modules.
      Set without a value or omitted, all available modules will be built.
      See src/DiskIO for a list of available modules, or
      Programmers Guide section on DiskIO
-     for details on how to build your custom disk module]),
-[ case $enableval in
+     for details on how to build your custom disk module]), [ 
+case $enableval in
   yes)
+    $(TRUE)
     #do nothing, "auto" is ok
   	;;
   no)
-    squid_opt_enable_diskio=0
+    squid_opt_enable_diskio="no"
   	;;
   *)
-    squid_opt_enable_diskio=1
+    squid_opt_enable_diskio="yes"
 	squid_disk_module_candidates=" `echo $enableval| sed -e 's/,/ /g;s/  */ /g'` "
     SQUID_CLEANUP_MODULES_LIST([squid_disk_module_candidates])
 	;;
@@ -461,13 +464,13 @@ AC_ARG_ENABLE(disk-io,
 
 # if requested to autodetect, find out what we have
 if test $squid_opt_enable_diskio = "auto"; then
-    squid_opt_enable_diskio=1
+    squid_opt_enable_diskio="yes"
     SQUID_LOOK_FOR_MODULES([$srcdir/src/DiskIO],[squid_disk_module_candidates])
 fi
 
 AC_MSG_RESULT([${squid_disk_module_candidates_output:-none}])
 SQUID_CHECK_EXISTING_MODULES([$srcdir/src/DiskIO],[squid_disk_module_candidates])
-AC_DEFINE_UNQUOTED([USE_DISKIO],[$squid_opt_enable_diskio],
+SQUID_DEFINE_UNQUOTED([USE_DISKIO],$squid_opt_enable_diskio,
     [DiskIO modules are expected to be available.])
 
 
@@ -816,7 +819,7 @@ if test "$squid_opt_use_esi" = "yes" ; then
   AC_DEFINE(USE_SQUID_ESI,1,
 	          [Compile the ESI processor and Surrogate header support])
 else
-	AC_MSG_NOTICE([Disabling ESI processor])
+  AC_MSG_NOTICE([Disabling ESI processor])
 fi
 
 # ESI support libraries: expat
@@ -859,17 +862,17 @@ AC_SUBST(EXPATLIB)
 AM_CONDITIONAL(HAVE_LIBXML2, test $HAVE_LIBXML2 = 1)
 AC_SUBST(XMLLIB)
 
-AM_CONDITIONAL(USE_ICAP_CLIENT, false)
+# icap argument handling
 AC_ARG_ENABLE(icap-client,
   AS_HELP_STRING([--enable-icap-client],[Enable the ICAP client.]),
-	             squid_opt_use_icap_client=$enableval, squid_opt_use_icap_client=no)
+	             [squid_opt_use_icap_client=$enableval], [squid_opt_use_icap_client=no])
+SQUID_DEFINE_UNQUOTED([ICAP_CLIENT],$squid_opt_use_icap_client,
+     [Enable ICAP client features in Squid])
+AM_CONDITIONAL(USE_ICAP_CLIENT, [test "$squid_opt_use_icap_client" = "yes" ])
 if test "$squid_opt_use_icap_client" = "yes" ; then
-  AC_DEFINE(ICAP_CLIENT,1,[Enable ICAP client features in Squid])
-  AM_CONDITIONAL(USE_ICAP_CLIENT, true)
   ICAP_LIBS="icap/libicap.la"
   squid_opt_use_adaptation=yes
 else
-  AC_DEFINE(ICAP_CLIENT,0,[Enable ICAP client features in Squid])
   ICAP_LIBS=""
 fi
 AC_SUBST(ICAP_LIBS)
@@ -877,16 +880,13 @@ AC_SUBST(ICAP_LIBS)
 squid_opt_use_ecap=1
 AC_MSG_CHECKING(whether to support eCAP)
 AC_ARG_ENABLE(ecap,
-  AS_HELP_STRING([--enable-ecap],[support loadable content adaptation modules]),
-    [
-        case "${enableval}" in
-            yes) squid_opt_use_ecap=yes ;;
-            no) squid_opt_use_ecap=no ;;
-            *) AC_MSG_ERROR(bad value ${enableval} for --enable-ecap) ;;
-        esac
-        AC_MSG_RESULT([$squid_opt_use_ecap, explicitly])
-    ],
-    [
+  AS_HELP_STRING([--enable-ecap],[support loadable content adaptation modules]), [
+    case "${enableval}" in
+       yes|no) squid_opt_use_ecap=$enableval ;;
+       *) AC_MSG_ERROR(bad value ${enableval} for --enable-ecap) ;;
+    esac
+AC_MSG_RESULT([$squid_opt_use_ecap, explicitly])
+    ], [
         squid_opt_use_ecap=no;
         AC_MSG_RESULT([$squid_opt_use_ecap, implicitly])
     ]
@@ -950,13 +950,11 @@ dnl ])
 
 
 AC_ARG_ENABLE(useragent-log,
-  AS_HELP_STRING([--enable-useragent-log],[Enable logging of User-Agent header]),
-[ if test "$enableval" = "yes" ; then
+  AS_HELP_STRING([--enable-useragent-log],[Enable logging of User-Agent header]), [ 
+  if test "$enableval" = "yes" ; then
     AC_MSG_NOTICE([User-Agent logging enabled])
     AC_DEFINE(USE_USERAGENT_LOG,1,
-              [If you want to log User-Agent request header values, define this.
-               By default, they are written to useragent.log in the Squid log
-               directory.])
+              [If you want to log User-Agent request header values, define this.])
   fi
 ])
 
@@ -970,36 +968,36 @@ AC_ARG_ENABLE(referer-log,
   fi
 ])
 
-squid_opt_use_wccp=1
+squid_opt_use_wccp="yes"
 AC_ARG_ENABLE(wccp,
-  AS_HELP_STRING([--disable-wccp],[Disable Web Cache Coordination Protocol]),
-[ if test "$enableval" = "no" ; then
-    AC_MSG_NOTICE([Web Cache Coordination Protocol disabled])
-    squid_opt_use_wccp=0
+  AS_HELP_STRING([--disable-wccp],[Disable Web Cache Coordination Protocol]), [
+if test "$enableval" = "no" ; then
+    squid_opt_use_wccp="no"
   fi
 ])
-AC_DEFINE_UNQUOTED(USE_WCCP, $squid_opt_use_wccp, [Define to enable WCCP])
+AC_MSG_NOTICE([Web Cache Coordination Protocol enabled: $squid_opt_use_wccp])
+SQUID_DEFINE_UNQUOTED(USE_WCCP, $squid_opt_use_wccp, [Define to enable WCCP])
 
-squid_opt_use_wccp_v2=1
+squid_opt_use_wccp_v2="yes"
 AC_ARG_ENABLE(wccpv2,
-  AS_HELP_STRING([--disable-wccpv2],[Disable Web Cache Coordination V2 Protocol]),
-[ if test "$enableval" = "no" ; then
-    AC_MSG_NOTICE([Web Cache Coordination V2 Protocol disabled])
-    squid_opt_use_wccp_v2=0
+  AS_HELP_STRING([--disable-wccpv2],[Disable Web Cache Coordination V2 Protocol]), [ 
+if test "$enableval" = "no" ; then
+    squid_opt_use_wccp_v2=yes
   fi
 ])
-AC_DEFINE_UNQUOTED(USE_WCCPv2,$squid_opt_use_wccp_v2,[Define to enable WCCP V2])
+AC_MSG_NOTICE([Web Cache Coordination V2 Protocol enabled: $squid_opt_use_wccp_v2])
+SQUID_DEFINE_UNQUOTED(USE_WCCPv2,$squid_opt_use_wccp_v2,[Define to enable WCCP V2])
 
 
-squid_opt_kill_parent=0
+squid_opt_kill_parent="no"
 AC_ARG_ENABLE(kill-parent-hack,
-  AS_HELP_STRING([--enable-kill-parent-hack],[Kill parent on shutdown]),
-[ if test "$enableval" = "yes" ; then
-    AC_MSG_NOTICE([Kill parent on shutdown])
-    squid_opt_kill_parent=1
+  AS_HELP_STRING([--enable-kill-parent-hack],[Kill parent on shutdown]), [ 
+  if test "$enableval" = "yes" ; then
+    squid_opt_kill_parent="yes"
   fi
 ])
-AC_DEFINE_UNQUOTED(KILL_PARENT_OPT,$squid_opt_kill_parent,
+AC_MSG_NOTICE([Kill parent on shutdown hack enabled: $squid_opt_kill_parent])
+SQUID_DEFINE_UNQUOTED(KILL_PARENT_OPT,$squid_opt_kill_parent,
                    [A dangerous feature which causes Squid to kill its parent process
                    (presumably the RunCache script) upon receipt of SIGTERM or SIGINT.
                    Use with caution.])
@@ -1184,7 +1182,7 @@ AC_ARG_ENABLE(poll,
 [
   case "$enableval" in
   yes)
-    SELECT_TYPE="poll"
+    squid_opt_io_loop_engine="poll"
     squid_opt_enable_poll=yes
     ;;
   no)
@@ -1201,7 +1199,7 @@ AC_ARG_ENABLE(select,
 [
   case "$enableval" in
   yes)
-    SELECT_TYPE="select"
+    squid_opt_io_loop_engine="select"
     squid_opt_enable_select=yes
     ;;
   no)
@@ -1219,7 +1217,7 @@ AC_ARG_ENABLE(kqueue,
 [
   case "$enableval" in
   yes)
-    SELECT_TYPE="kqueue"
+    squid_opt_io_loop_engine="kqueue"
     AC_CHECK_HEADERS([sys/event.h],[],
       [ AC_MSG_ERROR([kqueue support requires sys/event.h header file.]) ])
     squid_opt_enable_kqueue=yes
@@ -1238,7 +1236,7 @@ AC_ARG_ENABLE(epoll,
 [
   case "$enableval" in
   yes)
-    SELECT_TYPE="epoll"
+    squid_opt_io_loop_engine="epoll"
     squid_opt_enable_epoll="yes"
     ;;
   no)
@@ -1454,41 +1452,35 @@ AC_ARG_ENABLE(leakfinder,
 [ if test "$enableval" = "yes" ; then
 	AC_MSG_NOTICE([Leak-Finding enabled])
 	AC_DEFINE(USE_LEAKFINDER,1,[Enable code for assisting in finding memory leaks.  Hacker stuff only.])
-	USE_LEAKFINDER="yes"
 	AM_CONDITIONAL(MAKE_LEAKFINDER, true)
   fi
 ])
 
-follow_xff=1
+AH_TEMPLATE([FOLLOW_X_FORWARDED_FOR],[Enable following X-Forwarded-For headers])
+squid_opt_follow_xff=1
 AC_ARG_ENABLE(follow-x-forwarded-for,
   AS_HELP_STRING([--enable-follow-x-forwarded-for],[Enable support for following the X-Forwarded-For
                  HTTP header to try to find the IP address of the
                  original or indirect client when a request has
-                 been forwarded through other proxies.]),
-[ if test "$enableval" = "yes" ; then
-    AC_MSG_NOTICE([follow X-Forwarded-For enabled])
-    follow_xff=1
-  fi
-])
-if test $follow_xff = 1; then
-    AC_DEFINE(FOLLOW_X_FORWARDED_FOR, 1, [Enable following X-Forwarded-For headers])
-else
-    AC_DEFINE(FOLLOW_X_FORWARDED_FOR, 0)
+                 been forwarded through other proxies.]), [
+if test "$enableval" = "no" ; then
+  squid_opt_follow_xff=0
 fi
+])
+AC_MSG_NOTICE([Support for X-Forwarded-For enabled: $squid_opt_follow_xff])
+AC_DEFINE_UNQUOTED([FOLLOW_X_FORWARDED_FOR],$squid_opt_follow_xff)
 
-use_ident=1
+AH_TEMPLATE(USE_IDENT,[Support for Ident (RFC 931) lookups])
+squid_opt_use_ident=1
 AC_ARG_ENABLE(ident-lookups,
-  AS_HELP_STRING([--disable-ident-lookups],[This allows you to remove code that performs Ident (RFC 931) lookups.]),
-[ if test "$enableval" = "no" ; then
-    AC_MSG_NOTICE([Disabling Ident Lookups])
-    use_ident=0
-  fi
-])
-if test $use_ident = 1; then
-    AC_DEFINE(USE_IDENT, 1,[Compile in support for Ident (RFC 931) lookups?  Enabled by default.])
-else
-    AC_DEFINE(USE_IDENT, 0)
+  AS_HELP_STRING([--disable-ident-lookups],
+                 [Remove code that supports performing Ident (RFC 931) lookups.]), [ 
+if test "$enableval" = "no" ; then
+  squid_opt_use_ident=0
 fi
+])
+AC_MSG_NOTICE([Support for Ident lookups enabled: $squid_opt_use_ident])
+AC_DEFINE_UNQUOTED(USE_IDENT,$squid_opt_use_ident)
 
 AM_CONDITIONAL(USE_DNSSERVER, false)
 use_dnsserver=
@@ -3278,36 +3270,36 @@ dnl are actually going to (ab)use
 dnl Actually do the define magic now
 dnl mostly ripped from squid-commloops, thanks to adrian and benno
 
-if test -n "$SELECT_TYPE"; then
-	AC_MSG_NOTICE([choosing user-specified net I/O API $SELECT_TYPE])
+if test -n "$squid_opt_io_loop_engine"; then
+	AC_MSG_NOTICE([choosing user-specified net I/O API $squid_opt_io_loop_engine])
 elif test "$squid_opt_enable_epoll" != "no" && test "$ac_cv_epoll_works" = "yes" ; then
-  SELECT_TYPE="epoll"
+  squid_opt_io_loop_engine="epoll"
 elif test "$squid_opt_enable_kqueue" != "no" && test "$ac_cv_func_kqueue" = "yes" ; then
-  SELECT_TYPE="kqueue"
+  squid_opt_io_loop_engine="kqueue"
 elif test "$squid_opt_enable_poll" != "no" && test "$ac_cv_func_poll" = "yes" ; then
-  SELECT_TYPE="poll"
+  squid_opt_io_loop_engine="poll"
 elif test "$squid_opt_enable_select" != "no" && test "$ac_cv_func_select" = "yes" ; then
-  SELECT_TYPE="select"
+  squid_opt_io_loop_engine="select"
   if test "$squid_host_os" = "mingw" ; then
-    SELECT_TYPE="select_win32"
+    squid_opt_io_loop_engine="select_win32"
   fi
 else
   AC_MSG_WARN([Eep!  Can't find poll, kqueue, epoll, or select!])
   AC_MSG_WARN([I'll try select and hope for the best.])
-  SELECT_TYPE="select"
+  squid_opt_io_loop_engine="select"
 fi
 
-AC_MSG_NOTICE([Using ${SELECT_TYPE} for the IO loop.])
+AC_MSG_NOTICE([Using ${squid_opt_io_loop_engine} for the IO loop.])
 
-AM_CONDITIONAL([USE_POLL], [test $SELECT_TYPE = poll])
-AM_CONDITIONAL([USE_EPOLL], [test $SELECT_TYPE = epoll])
-AM_CONDITIONAL([USE_SELECT], [test $SELECT_TYPE = select])
-AM_CONDITIONAL([USE_SELECT_SIMPLE], [test $SELECT_TYPE = select_simple])
-AM_CONDITIONAL([USE_SELECT_WIN32], [test $SELECT_TYPE = select_win32])
-AM_CONDITIONAL([USE_KQUEUE], [test $SELECT_TYPE = kqueue])
-AM_CONDITIONAL([USE_DEVPOLL], [test $SELECT_TYPE = devpoll])
+AM_CONDITIONAL([USE_POLL], [test $squid_opt_io_loop_engine = poll])
+AM_CONDITIONAL([USE_EPOLL], [test $squid_opt_io_loop_engine = epoll])
+AM_CONDITIONAL([USE_SELECT], [test $squid_opt_io_loop_engine = select])
+AM_CONDITIONAL([USE_SELECT_SIMPLE], [test $squid_opt_io_loop_engine = select_simple])
+AM_CONDITIONAL([USE_SELECT_WIN32], [test $squid_opt_io_loop_engine = select_win32])
+AM_CONDITIONAL([USE_KQUEUE], [test $squid_opt_io_loop_engine = kqueue])
+AM_CONDITIONAL([USE_DEVPOLL], [test $squid_opt_io_loop_engine = devpoll])
 
-case $SELECT_TYPE in
+case $squid_opt_io_loop_engine in
   epoll) AC_DEFINE(USE_EPOLL,1,[Use epoll() for the IO loop]) ;;
   poll) AC_DEFINE(USE_POLL,1,[Use poll() for the IO loop]) ;;
   kqueue) AC_DEFINE(USE_KQUEUE,1,[Use kqueue() for the IO loop]) ;;
