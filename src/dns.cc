@@ -168,7 +168,7 @@ snmp_netDnsFn(variable_list * Var, snint * ErrP)
 
     case DNS_SERVERS:
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      dnsservers->n_running,
+                                      dnsservers->childs.n_running,
                                       SMI_COUNTER32);
         break;
 
