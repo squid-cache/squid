@@ -3393,20 +3393,6 @@ if test "$squid_opt_pf_transparent" = "no" ; then
     AC_MSG_WARN([Transparent Proxy support WILL NOT be enabled])
 fi
 
-<<<<<<< TREE
-# Linux-Netfilter support requires Linux 2.4 kernel header files.
-if test "$squid_opt_linux_netfilter" = "auto" -a "$squid_opt_linux_tproxy2" = "yes" ; then
-  squid_opt_linux_netfilter="yes"
-  AC_MSG_NOTICE([Linux TPROXY support requested, Netfilter not specified. Also enabling netfilter])
-fi
-if test "$squid_opt_linux_netfilter" = "no" -a "$squid_opt_linux_tproxy2" = "yes" ; then
-    AC_MSG_WARN([Linux Netfilter is explicitly disabled, also disabling TPROXY])
-    squid_opt_linux_tproxy2="no"
-    # AC_DEFINE'd later
-fi
-=======
-dnl Linux-Netfilter support requires Linux 2.4 kernel header files.
->>>>>>> MERGE-SOURCE
 if test "$squid_opt_linux_netfilter" != "no" ; then
     AC_MSG_CHECKING(if Linux (Netfilter) kernel header files are installed)
     # hold on to your hats...
@@ -3421,16 +3407,11 @@ if test "$squid_opt_linux_netfilter" != "no" ; then
     AC_MSG_RESULT($squid_opt_linux_netfilter)
 fi
 
-<<<<<<< TREE
-# Netfilter TPROXY depends on libcap but the NAT parts can still work.
-=======
 dnl Netfilter TPROXY depends on libcap but the NAT parts can still work.
->>>>>>> MERGE-SOURCE
 if test "$squid_opt_linux_netfilter" = "yes" && test "$use_libcap" != "yes" ; then
     AC_MSG_WARN([Missing needed capabilities (libcap or libcap2) for TPROXY])
     AC_MSG_WARN([Linux Transparent Proxy support WILL NOT be enabled])
     AC_MSG_WARN([Reduced support to Interception Proxy])
-<<<<<<< TREE
     squid_opt_linux_tproxy2="no"
     # AC_DEFINE'd later
 fi
@@ -3454,13 +3435,9 @@ if test "$squid_opt_linux_tproxy2" = "yes" ; then
     squid_opt_linux_tproxy2="no"
     dnl need to output before next lines
     AC_MSG_RESULT($squid_opt_linux_tproxy2)
-
     AC_MSG_WARN([Cannot find TPROXY v2 headers, you need to patch the kernel with ])
     AC_MSG_WARN([tproxy package from: http://www.balabit.com/downloads/files/tproxy/])
     AC_MSG_WARN([or use '--enable-linux-netfilter' option instead for Netfilter support.])
-=======
-dnl Linux Netfilter/TPROXYv2 support requires some specific header files
->>>>>>> MERGE-SOURCE
   else
     AC_MSG_RESULT($squid_opt_linux_tproxy2)
   fi
