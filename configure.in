@@ -1005,17 +1005,18 @@ SQUID_DEFINE_UNQUOTED(KILL_PARENT_OPT,$squid_opt_kill_parent,
 
 squid_opt_enable_snmp="yes"
 AC_ARG_ENABLE(snmp,
-  AS_HELP_STRING([--disable-snmp],[Disable SNMP monitoring support]),
-[ if test "$enableval" = "no" ; then
+  AS_HELP_STRING([--disable-snmp],[Disable SNMP monitoring support]), [ 
+  if test "$enableval" = "no" ; then
     AC_MSG_NOTICE([SNMP monitoring disabled])
     squid_opt_enable_snmp="no"
   fi
 ])
 if test "$squid_opt_enable_snmp" = "yes"; then
-    AC_DEFINE(SQUID_SNMP,1,[Define to enable SNMP monitoring of Squid])
     SNMPLIB='../snmplib/libsnmp.a'
     makesnmplib=snmplib
 fi
+SQUID_DEFINE_UNQUOTED(SQUID_SNMP,$squid_opt_enable_snmp,
+   [Define to enable SNMP monitoring of Squid])
 AM_CONDITIONAL(USE_SNMP, [test "$squid_opt_enable_snmp" = "yes"])
 AC_SUBST(SNMPLIB)
 AC_SUBST(makesnmplib)
@@ -1457,45 +1458,49 @@ AC_ARG_ENABLE(leakfinder,
 ])
 
 AH_TEMPLATE([FOLLOW_X_FORWARDED_FOR],[Enable following X-Forwarded-For headers])
-squid_opt_follow_xff=1
+squid_opt_follow_xff="yes"
 AC_ARG_ENABLE(follow-x-forwarded-for,
   AS_HELP_STRING([--enable-follow-x-forwarded-for],[Enable support for following the X-Forwarded-For
                  HTTP header to try to find the IP address of the
                  original or indirect client when a request has
                  been forwarded through other proxies.]), [
 if test "$enableval" = "no" ; then
-  squid_opt_follow_xff=0
+  squid_opt_follow_xff="no"
 fi
 ])
 AC_MSG_NOTICE([Support for X-Forwarded-For enabled: $squid_opt_follow_xff])
-AC_DEFINE_UNQUOTED([FOLLOW_X_FORWARDED_FOR],$squid_opt_follow_xff)
+SQUID_DEFINE_UNQUOTED([FOLLOW_X_FORWARDED_FOR],$squid_opt_follow_xff)
 
 AH_TEMPLATE(USE_IDENT,[Support for Ident (RFC 931) lookups])
-squid_opt_use_ident=1
+squid_opt_use_ident="yes"
 AC_ARG_ENABLE(ident-lookups,
   AS_HELP_STRING([--disable-ident-lookups],
                  [Remove code that supports performing Ident (RFC 931) lookups.]), [ 
 if test "$enableval" = "no" ; then
-  squid_opt_use_ident=0
+  squid_opt_use_ident="no"
 fi
 ])
 AC_MSG_NOTICE([Support for Ident lookups enabled: $squid_opt_use_ident])
-AC_DEFINE_UNQUOTED(USE_IDENT,$squid_opt_use_ident)
+SQUID_DEFINE_UNQUOTED(USE_IDENT,$squid_opt_use_ident)
 
-AM_CONDITIONAL(USE_DNSSERVER, false)
-use_dnsserver=
+squid_opt_use_dnsserver="no"
+AH_TEMPLATE(USE_DNSSERVERS,
+    [Use dnsserver processes instead of the internal DNS protocol support])
 AC_ARG_ENABLE(internal-dns,
-  AS_HELP_STRING([--disable-internal-dns],[Prevents Squid from directly sending and receiving DNS messages, 
-                  and instead enables the old external 'dnsserver' processes.]),
-[ if test "$enableval" = "no" ; then
+  AS_HELP_STRING([--disable-internal-dns],
+           [Prevents Squid from directly sending and receiving DNS messages, 
+            and instead enables the old external 'dnsserver' processes.]), [
+  if test "$enableval" = "no" ; then
     AC_MSG_WARN([Disabling Internal DNS queries])
-    use_dnsserver="yes"
+    squid_opt_use_dnsserver="yes"
+    AC_DEFINE(USE_DNSSERVERS,1)
+  else
+    AC_DEFINE(USE_DNSSERVERS,0)
   fi
 ])
-if test "$use_dnsserver" = "yes"; then
-    AC_DEFINE(USE_DNSSERVERS,1,[Use dnsserver processes instead of the internal DNS protocol support])
-    AM_CONDITIONAL(USE_DNSSERVER, true)
-fi
+AM_CONDITIONAL([USE_DNSSERVER],[test "$squid_opt_use_dnsserver" = "yes" ])
+
+dnl ************** KK HERE *************
 
 dnl Select Default hosts file location
 AC_ARG_ENABLE(default-hostsfile,
