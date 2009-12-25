@@ -282,7 +282,7 @@ SQUIDCEXTERN size_t getpagesize(void);
 #endif
 #endif
 
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 #include "cache_snmp.h"
 #endif
 
