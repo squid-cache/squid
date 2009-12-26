@@ -170,3 +170,11 @@ ifelse([$#],3,
 )
 unset squid_tmp_define
 ])
+
+dnl aborts with an error specified as the second argument if the first argument doesn't
+dnl contain either "yes" or "no"
+AC_DEFUN([SQUID_YESNO],[
+if test "$1" != "yes" -a "$1" != "no" ; then
+  AC_MSG_ERROR([$2])
+fi
+])
