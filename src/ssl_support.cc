@@ -241,112 +241,112 @@ static struct ssl_option {
 
 ssl_options[] = {
 
-#ifdef SSL_OP_MICROSOFT_SESS_ID_BUG
+#if SSL_OP_MICROSOFT_SESS_ID_BUG
     {
         "MICROSOFT_SESS_ID_BUG", SSL_OP_MICROSOFT_SESS_ID_BUG
     },
 #endif
-#ifdef SSL_OP_NETSCAPE_CHALLENGE_BUG
+#if SSL_OP_NETSCAPE_CHALLENGE_BUG
     {
         "NETSCAPE_CHALLENGE_BUG", SSL_OP_NETSCAPE_CHALLENGE_BUG
     },
 #endif
-#ifdef SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG
+#if SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG
     {
         "NETSCAPE_REUSE_CIPHER_CHANGE_BUG", SSL_OP_NETSCAPE_REUSE_CIPHER_CHANGE_BUG
     },
 #endif
-#ifdef SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG
+#if SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG
     {
         "SSLREF2_REUSE_CERT_TYPE_BUG", SSL_OP_SSLREF2_REUSE_CERT_TYPE_BUG
     },
 #endif
-#ifdef SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER
+#if SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER
     {
         "MICROSOFT_BIG_SSLV3_BUFFER", SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER
     },
 #endif
-#ifdef SSL_OP_MSIE_SSLV2_RSA_PADDING
+#if SSL_OP_MSIE_SSLV2_RSA_PADDING
     {
         "MSIE_SSLV2_RSA_PADDING", SSL_OP_MSIE_SSLV2_RSA_PADDING
     },
 #endif
-#ifdef SSL_OP_SSLEAY_080_CLIENT_DH_BUG
+#if SSL_OP_SSLEAY_080_CLIENT_DH_BUG
     {
         "SSLEAY_080_CLIENT_DH_BUG", SSL_OP_SSLEAY_080_CLIENT_DH_BUG
     },
 #endif
-#ifdef SSL_OP_TLS_D5_BUG
+#if SSL_OP_TLS_D5_BUG
     {
         "TLS_D5_BUG", SSL_OP_TLS_D5_BUG
     },
 #endif
-#ifdef SSL_OP_TLS_BLOCK_PADDING_BUG
+#if SSL_OP_TLS_BLOCK_PADDING_BUG
     {
         "TLS_BLOCK_PADDING_BUG", SSL_OP_TLS_BLOCK_PADDING_BUG
     },
 #endif
-#ifdef SSL_OP_TLS_ROLLBACK_BUG
+#if SSL_OP_TLS_ROLLBACK_BUG
     {
         "TLS_ROLLBACK_BUG", SSL_OP_TLS_ROLLBACK_BUG
     },
 #endif
-#ifdef SSL_OP_ALL
+#if SSL_OP_ALL
     {
         "ALL", SSL_OP_ALL
     },
 #endif
-#ifdef SSL_OP_SINGLE_DH_USE
+#if SSL_OP_SINGLE_DH_USE
     {
         "SINGLE_DH_USE", SSL_OP_SINGLE_DH_USE
     },
 #endif
-#ifdef SSL_OP_EPHEMERAL_RSA
+#if SSL_OP_EPHEMERAL_RSA
     {
         "EPHEMERAL_RSA", SSL_OP_EPHEMERAL_RSA
     },
 #endif
-#ifdef SSL_OP_PKCS1_CHECK_1
+#if SSL_OP_PKCS1_CHECK_1
     {
         "PKCS1_CHECK_1", SSL_OP_PKCS1_CHECK_1
     },
 #endif
-#ifdef SSL_OP_PKCS1_CHECK_2
+#if SSL_OP_PKCS1_CHECK_2
     {
         "PKCS1_CHECK_2", SSL_OP_PKCS1_CHECK_2
     },
 #endif
-#ifdef SSL_OP_NETSCAPE_CA_DN_BUG
+#if SSL_OP_NETSCAPE_CA_DN_BUG
     {
         "NETSCAPE_CA_DN_BUG", SSL_OP_NETSCAPE_CA_DN_BUG
     },
 #endif
-#ifdef SSL_OP_NON_EXPORT_FIRST
+#if SSL_OP_NON_EXPORT_FIRST
     {
         "NON_EXPORT_FIRST", SSL_OP_NON_EXPORT_FIRST
     },
 #endif
-#ifdef SSL_OP_CIPHER_SERVER_PREFERENCE
+#if SSL_OP_CIPHER_SERVER_PREFERENCE
     {
         "CIPHER_SERVER_PREFERENCE", SSL_OP_CIPHER_SERVER_PREFERENCE
     },
 #endif
-#ifdef SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG
+#if SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG
     {
         "NETSCAPE_DEMO_CIPHER_CHANGE_BUG", SSL_OP_NETSCAPE_DEMO_CIPHER_CHANGE_BUG
     },
 #endif
-#ifdef SSL_OP_NO_SSLv2
+#if SSL_OP_NO_SSLv2
     {
         "NO_SSLv2", SSL_OP_NO_SSLv2
     },
 #endif
-#ifdef SSL_OP_NO_SSLv3
+#if SSL_OP_NO_SSLv3
     {
         "NO_SSLv3", SSL_OP_NO_SSLv3
     },
 #endif
-#ifdef SSL_OP_NO_TLSv1
+#if SSL_OP_NO_TLSv1
     {
         "NO_TLSv1", SSL_OP_NO_TLSv1
     },
@@ -480,7 +480,7 @@ ssl_parse_flags(const char *flags)
         else if (strcmp(flag, "NO_SESSION_REUSE") == 0)
             fl |= SSL_FLAG_NO_SESSION_REUSE;
 
-#ifdef X509_V_FLAG_CRL_CHECK
+#if X509_V_FLAG_CRL_CHECK
 
         else if (strcmp(flag, "VERIFY_CRL") == 0)
             fl |= SSL_FLAG_VERIFY_CRL;
@@ -577,7 +577,7 @@ ssl_initialize(void)
         ssl_initialized = 1;
         SSL_load_error_strings();
         SSLeay_add_ssl_algorithms();
-#ifdef HAVE_OPENSSL_ENGINE_H
+#if HAVE_OPENSSL_ENGINE_H
 
         if (Config.SSL.ssl_engine) {
             ENGINE *e;
@@ -787,7 +787,7 @@ sslCreateServerContext(const char *certfile, const char *keyfile, int version, c
             fl |= SSL_FLAG_VERIFY_CRL;
         }
 
-#ifdef X509_V_FLAG_CRL_CHECK
+#if X509_V_FLAG_CRL_CHECK
         if (fl & SSL_FLAG_VERIFY_CRL_ALL)
             X509_STORE_set_flags(SSL_CTX_get_cert_store(sslContext), X509_V_FLAG_CRL_CHECK|X509_V_FLAG_CRL_CHECK_ALL);
         else if (fl & SSL_FLAG_VERIFY_CRL)
@@ -951,7 +951,7 @@ sslCreateClientContext(const char *certfile, const char *keyfile, int version, c
         fl |= SSL_FLAG_VERIFY_CRL;
     }
 
-#ifdef X509_V_FLAG_CRL_CHECK
+#if X509_V_FLAG_CRL_CHECK
     if (fl & SSL_FLAG_VERIFY_CRL_ALL)
         X509_STORE_set_flags(SSL_CTX_get_cert_store(sslContext), X509_V_FLAG_CRL_CHECK|X509_V_FLAG_CRL_CHECK_ALL);
     else if (fl & SSL_FLAG_VERIFY_CRL)

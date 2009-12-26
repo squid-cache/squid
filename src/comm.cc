@@ -52,7 +52,7 @@
 #if defined(_SQUID_CYGWIN_)
 #include <sys/ioctl.h>
 #endif
-#ifdef HAVE_NETINET_TCP_H
+#if HAVE_NETINET_TCP_H
 #include <netinet/tcp.h>
 #endif
 
@@ -234,7 +234,7 @@ static void commPlanHalfClosedCheck();
 static comm_err_t commBind(int s, struct addrinfo &);
 static void commSetReuseAddr(int);
 static void commSetNoLinger(int);
-#ifdef TCP_NODELAY
+#if TCP_NODELAY
 static void commSetTcpNoDelay(int);
 #endif
 static void commSetTcpRcvbuf(int, int);
@@ -658,7 +658,7 @@ limitError(int const anErrno)
 int
 comm_set_tos(int fd, int tos)
 {
-#ifdef IP_TOS
+#if IP_TOS
     int x = setsockopt(fd, IPPROTO_IP, IP_TOS, (char *) &tos, sizeof(int));
     if (x < 0)
         debugs(50, 1, "comm_set_tos: setsockopt(IP_TOS) on FD " << fd << ": " << xstrerror());
@@ -672,7 +672,7 @@ comm_set_tos(int fd, int tos)
 void
 comm_set_v6only(int fd, int tos)
 {
-#ifdef IPV6_V6ONLY
+#if IPV6_V6ONLY
     if (setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &tos, sizeof(int)) < 0) {
         debugs(50, 1, "comm_open: setsockopt(IPV6_V6ONLY) " << (tos?"ON":"OFF") << " for FD " << fd << ": " << xstrerror());
     }
@@ -830,7 +830,7 @@ comm_openex(int sock_type,
             PROF_stop(comm_open);
         }
 
-#ifdef TCP_NODELAY
+#if TCP_NODELAY
     if (sock_type == SOCK_STREAM)
         commSetTcpNoDelay(new_socket);
 
@@ -957,7 +957,7 @@ copyFDFlags(int to, fde *F)
     if (F->flags.nonblocking)
         commSetNonBlocking(to);
 
-#ifdef TCP_NODELAY
+#if TCP_NODELAY
 
     if (F->flags.nodelay)
         commSetTcpNoDelay(to);
@@ -1784,7 +1784,7 @@ commSetTcpRcvbuf(int fd, int size)
         debugs(50, 1, "commSetTcpRcvbuf: FD " << fd << ", SIZE " << size << ": " << xstrerror());
     if (setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *) &size, sizeof(size)) < 0)
         debugs(50, 1, "commSetTcpRcvbuf: FD " << fd << ", SIZE " << size << ": " << xstrerror());
-#ifdef TCP_WINDOW_CLAMP
+#if TCP_WINDOW_CLAMP
     if (setsockopt(fd, SOL_TCP, TCP_WINDOW_CLAMP, (char *) &size, sizeof(size)) < 0)
         debugs(50, 1, "commSetTcpRcvbuf: FD " << fd << ", SIZE " << size << ": " << xstrerror());
 #endif
@@ -1868,7 +1868,7 @@ commUnsetNonBlocking(int fd)
 void
 commSetCloseOnExec(int fd)
 {
-#ifdef FD_CLOEXEC
+#if FD_CLOEXEC
     int flags;
     int dummy = 0;
 
@@ -1885,7 +1885,7 @@ commSetCloseOnExec(int fd)
 #endif
 }
 
-#ifdef TCP_NODELAY
+#if TCP_NODELAY
 static void
 commSetTcpNoDelay(int fd)
 {
@@ -1903,20 +1903,20 @@ void
 commSetTcpKeepalive(int fd, int idle, int interval, int timeout)
 {
     int on = 1;
-#ifdef TCP_KEEPCNT
+#if TCP_KEEPCNT
     if (timeout && interval) {
         int count = (timeout + interval - 1) / interval;
         if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPCNT, &count, sizeof(on)) < 0)
             debugs(5, 1, "commSetKeepalive: FD " << fd << ": " << xstrerror());
     }
 #endif
-#ifdef TCP_KEEPIDLE
+#if TCP_KEEPIDLE
     if (idle) {
         if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &idle, sizeof(on)) < 0)
             debugs(5, 1, "commSetKeepalive: FD " << fd << ": " << xstrerror());
     }
 #endif
-#ifdef TCP_KEEPINTVL
+#if TCP_KEEPINTVL
     if (interval) {
         if (setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &interval, sizeof(on)) < 0)
             debugs(5, 1, "commSetKeepalive: FD " << fd << ": " << xstrerror());
@@ -2107,7 +2107,7 @@ ignoreErrno(int ierrno)
     case EALREADY:
 
     case EINTR:
-#ifdef ERESTART
+#if ERESTART
 
     case ERESTART:
 #endif
@@ -2226,7 +2226,7 @@ comm_listen(int sock)
     }
 
     if (Config.accept_filter && strcmp(Config.accept_filter, "none") != 0) {
-#ifdef SO_ACCEPTFILTER
+#if SO_ACCEPTFILTER
         struct accept_filter_arg afa;
         bzero(&afa, sizeof(afa));
         debugs(5, DBG_CRITICAL, "Installing accept filter '" << Config.accept_filter << "' on FD " << sock);
@@ -2234,7 +2234,7 @@ comm_listen(int sock)
         x = setsockopt(sock, SOL_SOCKET, SO_ACCEPTFILTER, &afa, sizeof(afa));
         if (x < 0)
             debugs(5, 0, "SO_ACCEPTFILTER '" << Config.accept_filter << "': '" << xstrerror());
-#elif defined(TCP_DEFER_ACCEPT)
+#elif TCP_DEFER_ACCEPT
         int seconds = 30;
         if (strncmp(Config.accept_filter, "data=", 5) == 0)
             seconds = atoi(Config.accept_filter + 5);

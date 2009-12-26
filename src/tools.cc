@@ -405,7 +405,7 @@ sigusr2_handle(int sig)
     /* no debugs() here; bad things happen if the signal is delivered during _db_print() */
 
     if (state == 0) {
-#ifndef MEM_GEN_TRACE
+#if !MEM_GEN_TRACE
         Debug::parseOptions("ALL,7");
 #else
 
@@ -414,7 +414,7 @@ sigusr2_handle(int sig)
 
         state = 1;
     } else {
-#ifndef MEM_GEN_TRACE
+#if !MEM_GEN_TRACE
         Debug::parseOptions(Debug::debugOptions);
 #else
 

@@ -14,13 +14,13 @@
  * header files.
  */
 #if defined(i386) || defined(__i386)
-#ifndef HAVE_PAD128_T
+#if !HAVE_PAD128_T
 typedef union {
     long double	_q;
     int32_t		_l[4];
 } pad128_t;
 #endif
-#ifndef HAVE_UPAD128_T
+#if !HAVE_UPAD128_T
 typedef union {
     long double	_q;
     uint32_t	_l[4];

@@ -369,7 +369,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
         return NULL;
     }
 
-#ifdef HARDCODE_DENY_PORTS
+#if HARDCODE_DENY_PORTS
     /* These ports are filtered in the default squid.conf, but
      * maybe someone wants them hardcoded... */
     if (port == 7 || port == 9 || port == 19) {
@@ -810,7 +810,7 @@ urlCheckRequest(const HttpRequest * r)
         break;
 
     case PROTO_HTTPS:
-#ifdef USE_SSL
+#if USE_SSL
 
         rc = 1;
 

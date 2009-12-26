@@ -107,7 +107,7 @@ static OBJH statUtilization;
 static OBJH statCountersHistograms;
 static OBJH statClientRequests;
 
-#ifdef XMALLOC_STATISTICS
+#if XMALLOC_STATISTICS
 static void info_get_mallstat(int, int, int, void *);
 static double xm_time;
 static double xm_deltat;
@@ -425,7 +425,7 @@ statOpenfdObj(StoreEntry * sentry)
 
 #endif
 
-#ifdef XMALLOC_STATISTICS
+#if XMALLOC_STATISTICS
 static void
 info_get_mallstat(int size, int number, int oldnum, void *data)
 {
@@ -462,7 +462,7 @@ info_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "Squid Object Cache: Version %s\n",
                       version_string);
 
-#ifdef _SQUID_WIN32_
+#if _SQUID_WIN32_
 
     if (WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE) {
         storeAppendPrintf(sentry,"\nRunning as %s Windows System Service on %s\n",

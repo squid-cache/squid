@@ -57,7 +57,7 @@ int _wcsicmp(const wchar_t *, const wchar_t *);
 #if HAVE_CTYPE_H
 #include <ctype.h>
 #endif
-#ifdef HAVE_STRING_H
+#if HAVE_STRING_H
 #include <string.h>
 #endif
 #if HAVE_GETOPT_H

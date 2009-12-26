@@ -33,7 +33,7 @@
 
 /* modified for long long <mgd@swarm.org> 1999-08-12 */
 
-#ifdef HAVE_CONFIG_H
+#if HAVE_CONFIG_H
 #include <config.h>
 #endif
 #if HAVE_CTYPE_H

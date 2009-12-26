@@ -492,6 +492,6 @@ String::rfind(char const ch) const
 
 
 
-#ifndef _USE_INLINE_
+#if !_USE_INLINE_
 #include "String.cci"
 #endif

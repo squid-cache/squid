@@ -16,7 +16,7 @@
 /*
  * Don't allow inclusion of malloc.h
  */
-#ifdef HAVE_MALLOC_H
+#if HAVE_MALLOC_H
 #undef HAVE_MALLOC_H
 #endif
 
