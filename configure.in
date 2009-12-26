@@ -1515,7 +1515,6 @@ AC_ARG_ENABLE(default-hostsfile,
 ],[OPT_DEFAULT_HOSTS="/etc/hosts"])
 AC_SUBST(OPT_DEFAULT_HOSTS)
 
-dnl ************** KK HERE *************
 # Select auth schemes modules to build
 squid_opt_enable_auth="auto"
 AC_ARG_ENABLE(auth,
@@ -1562,57 +1561,51 @@ test -n "$AUTH_MODULES_digest" && AC_DEFINE([HAVE_AUTH_MODULE_DIGEST],1,[Digest 
 test -n "$AUTH_MODULES_ntlm" && AC_DEFINE([HAVE_AUTH_MODULE_NTLM],1,[NTLM auth module is built])
 test -n "$AUTH_MODULES_negotiate" && AC_DEFINE([HAVE_AUTH_MODULE_NEGOTIATE],1,[Negotiate auth module is built])
 
-dnl Select basic auth scheme helpers to build
-if test -n "$AUTH_MODULES_basic"; then
-	BASIC_AUTH_HELPERS="all"
-fi
+# Select basic auth scheme helpers to build
+dnl code path: squid_opt_basic_auth_helpers can contain either
+dnl "auto" (default) or the list of modules to be built.
+dnl Modules are then checked for existence dnl and for a 
+dnl successful config.test in the module's dir. As they succeed the
+dnl variable BASIC_AUTH_HELPERS gets filled in and then substituted in
+dnl the Makefile
+BASIC_AUTH_HELPERS=""
+squid_opt_basic_auth_helpers="auto"
 AC_ARG_ENABLE(basic-auth-helpers,
-  AS_HELP_STRING([--enable-basic-auth-helpers="list of helpers"],[This option selects which basic scheme proxy_auth
+  AS_HELP_STRING([--enable-basic-auth-helpers="list of helpers"],
+                 [This option selects which basic scheme proxy_auth
                   helpers to build and install as part of the normal 
                   build process. For a list of available
-                  helpers see the helpers/basic_auth directory.]),
-[ case "$enableval" in
-  yes)
-	BASIC_AUTH_HELPERS="all"
-	;;
-  no)
-	BASIC_AUTH_HELPERS=""
-	;;
-  *)
-	if test -z "$AUTH_MODULES_basic"; then
-		AC_MSG_WARN([Basic auth helpers selected without the basic scheme enabled])
-	fi
-	BASIC_AUTH_HELPERS="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
+                  helpers see the helpers/basic_auth directory.]), [
+  case "$enableval" in
+    yes) squid_opt_basic_auth_helpers="auto" ;;
+    no)  squid_opt_basic_auth_helpers="" ;;
+    *)   if test -z "$AUTH_MODULES_basic"; then
+           AC_MSG_WARN([Basic auth helpers selected without the basic scheme enabled])
+         fi
+         squid_opt_basic_auth_helpers="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
 	;;
   esac
 ])
-if test "$BASIC_AUTH_HELPERS" = "all" ; then
-	BASIC_AUTH_HELPERS=""
-	for dir in $srcdir/helpers/basic_auth/*; do
-	    helper="`basename $dir`"
-	    if test -f $dir/config.test && sh $dir/config.test "$@"; then
-		BASIC_AUTH_HELPERS="$BASIC_AUTH_HELPERS $helper"
-            elif test -d $srcdir/helpers/basic_auth/$helper ; then
-                AC_MSG_NOTICE([Basic auth helper $helper ... found but cannot be built])
-	    fi
-	done
+if test "$squid_opt_basic_auth_helpers" = "auto" ; then
+  squid_opt_basic_auth_helpers=""
+  SQUID_LOOK_FOR_MODULES([$srcdir/helpers/basic_auth],[squid_opt_basic_auth_helpers])
 fi
-if test -n "$BASIC_AUTH_HELPERS"; then
-    for helper in $BASIC_AUTH_HELPERS; do
-	if test -d $srcdir/helpers/basic_auth/$helper; then
-	    case $helper in
-	    SASL)
-		    require_sasl=yes
-		    ;;
-	    esac
-	else
-	    AC_MSG_ERROR(Basic auth helper $helper does not exist)
-	fi
-    done
-    AC_MSG_NOTICE([Basic auth helpers built: $BASIC_AUTH_HELPERS])
-fi
+for helper in $squid_opt_basic_auth_helpers ; do
+  dir="$srcdir/helpers/basic_auth/$helper"
+  if test -f $dir/config.test && sh $dir/config.test "$@"; then
+    BASIC_AUTH_HELPERS="$BASIC_AUTH_HELPERS $helper"
+    # special case
+    if test "$helper" = "SASL" ; then
+      require_sasl=yes
+    fi
+  elif test -d $srcdir/helpers/basic_auth/$helper ; then
+    AC_MSG_NOTICE([Basic auth helper $helper ... found but cannot be built])
+  fi
+done
+AC_MSG_NOTICE([Basic auth helpers built: $BASIC_AUTH_HELPERS])
 AC_SUBST(BASIC_AUTH_HELPERS)
 
+dnl ************** KK HERE *************
 dnl Select ntlm auth helpers to build
 if test -n "$AUTH_MODULES_ntlm"; then
 	NTLM_AUTH_HELPERS="all"
