@@ -24,7 +24,7 @@
 
 int initgroups(const char *name, gid_t basegid)
 {
-#ifdef HAVE_SETGROUPS
+#if HAVE_SETGROUPS
 #ifndef NGROUPS_MAX
 #define NGROUPS_MAX 16
 #endif

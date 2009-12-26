@@ -67,7 +67,7 @@
 /* Typedefs for missing entries on a system */
 
 /* int8_t */
-#ifndef HAVE_INT8_T
+#if !HAVE_INT8_T
 #if HAVE_CHAR && SIZEOF_CHAR == 1
 typedef char int8_t;
 #else
@@ -76,7 +76,7 @@ typedef char int8_t;
 #endif
 
 /* u_int8_t */
-#ifndef HAVE_U_INT8_T
+#if !HAVE_U_INT8_T
 #if HAVE_UINT8_T
 typedef uint8_t u_int8_t;
 #else
@@ -85,7 +85,7 @@ typedef unsigned char u_int8_t;
 #endif
 
 /* int16_t */
-#ifndef HAVE_INT16_T
+#if !HAVE_INT16_T
 #if HAVE_SHORT && SIZEOF_SHORT == 2
 typedef short int16_t;
 #elif HAVE_INT && SIZEOF_INT == 2
@@ -96,7 +96,7 @@ typedef int int16_t;
 #endif
 
 /* u_int16_t */
-#ifndef HAVE_U_INT16_T
+#if !HAVE_U_INT16_T
 #if HAVE_UINT16_T
 typedef uint16_t u_int16_t;
 #else
@@ -105,7 +105,7 @@ typedef unsigned int16_t u_int16_t;
 #endif
 
 /* int32_t */
-#ifndef HAVE_INT32_T
+#if !HAVE_INT32_T
 #if HAVE_INT && SIZEOF_INT == 4
 typedef int int32_t;
 #elif HAVE_LONG && SIZEOF_LONG == 4
@@ -116,7 +116,7 @@ typedef long int32_t;
 #endif
 
 /* u_int32_t */
-#ifndef HAVE_U_INT32_T
+#if !HAVE_U_INT32_T
 #if HAVE_UINT32_T
 typedef uint32_t u_int32_t;
 #else
@@ -125,7 +125,7 @@ typedef unsigned int32_t u_int32_t;
 #endif
 
 /* int64_t */
-#ifndef HAVE_INT64_T
+#if !HAVE_INT64_T
 #if HAVE___INT64
 typedef __int64 int64_t;
 #elif HAVE_LONG && SIZEOF_LONG == 8
@@ -138,7 +138,7 @@ typedef long long int64_t;
 #endif
 
 /* u_int64_t */
-#ifndef HAVE_U_INT64_T
+#if !HAVE_U_INT64_T
 #if HAVE_UINT64_T
 typedef uint64_t u_int64_t;
 #else
@@ -147,35 +147,35 @@ typedef unsigned int64_t u_int64_t;
 #endif
 
 
-#ifndef HAVE_PID_T
+#if !HAVE_PID_T
 typedef int pid_t;
 #endif
 
-#ifndef HAVE_SIZE_T
+#if !HAVE_SIZE_T
 typedef unsigned int size_t;
 #endif
 
-#ifndef HAVE_SSIZE_T
+#if !HAVE_SSIZE_T
 typedef int ssize_t;
 #endif
 
-#ifndef HAVE_OFF_T
+#if !HAVE_OFF_T
 typedef int off_t;
 #endif
 
-#ifndef HAVE_MODE_T
+#if !HAVE_MODE_T
 typedef unsigned short mode_t;
 #endif
 
-#ifndef HAVE_FD_MASK
+#if !HAVE_FD_MASK
 typedef unsigned long fd_mask;
 #endif
 
-#ifndef HAVE_SOCKLEN_T
+#if !HAVE_SOCKLEN_T
 typedef int socklen_t;
 #endif
 
-#ifndef HAVE_MTYP_T
+#if !HAVE_MTYP_T
 typedef long mtyp_t;
 #endif
 
@@ -197,7 +197,7 @@ typedef long mtyp_t;
 #define SQUID_UDP_SO_RCVBUF SQUID_DETECT_UDP_SO_RCVBUF
 #endif
 
-#ifdef HAVE_MEMCPY
+#if HAVE_MEMCPY
 #define xmemcpy(d,s,n) memcpy((d),(s),(n))
 #elif HAVE_BCOPY
 #define xmemcpy(d,s,n) bcopy((s),(d),(n))
@@ -205,7 +205,7 @@ typedef long mtyp_t;
 #define xmemcpy(d,s,n) memmove((d),(s),(n))
 #endif
 
-#ifdef HAVE_MEMMOVE
+#if HAVE_MEMMOVE
 #define xmemmove(d,s,n) memmove((d),(s),(n))
 #elif HAVE_BCOPY
 #define xmemmove(d,s,n) bcopy((s),(d),(n))

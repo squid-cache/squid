@@ -821,6 +821,6 @@ RebuildState::currentItem()
     return currentEntry();
 }
 
-#ifndef _USE_INLINE_
+#if !_USE_INLINE_
 #include "ufscommon.cci"
 #endif

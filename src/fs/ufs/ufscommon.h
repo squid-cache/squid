@@ -422,7 +422,7 @@ private:
     void *cbdata;
 };
 
-#ifdef _USE_INLINE_
+#if _USE_INLINE_
 #include "ufscommon.cci"
 #endif
 

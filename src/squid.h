@@ -121,13 +121,13 @@ using namespace Squid;
 #if HAVE_LIBC_H
 #include <libc.h>
 #endif
-#ifdef HAVE_SYS_SYSCALL_H
+#if HAVE_SYS_SYSCALL_H
 #include <sys/syscall.h>
 #endif
-#ifdef HAVE_STRING_H
+#if HAVE_STRING_H
 #include <string.h>
 #endif
-#ifdef HAVE_STRINGS_H
+#if HAVE_STRINGS_H
 #include <strings.h>
 #endif
 #if HAVE_BSTRING_H
@@ -191,7 +191,7 @@ using namespace Squid;
  * and Squid may be running with a lot more..
  * But only for code linked into Squid, not the helpers.. (unlinkd, pinger)
  */
-#ifdef SQUID_FDSET_NOUSE
+#if SQUID_FDSET_NOUSE
 # ifndef SQUID_HELPER
 #  define fd_set ERROR_FD_SET_USED
 # endif

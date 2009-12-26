@@ -43,7 +43,7 @@
 /* An emulation of the RFC 2553 / Posix getaddrinfo resolver interface.
  */
 
-#ifndef HAVE_GETADDRINFO
+#if !HAVE_GETADDRINFO
 
 /* Need to turn off Posix features in glibc to build this */
 #undef _POSIX_C_SOURCE

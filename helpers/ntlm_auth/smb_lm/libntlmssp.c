@@ -26,7 +26,7 @@ typedef unsigned char uchar;
 #if HAVE_STDLIB_H
 #include <stdlib.h>
 #endif /* HAVE_STDLIB_H */
-#ifdef HAVE_UNISTD_H
+#if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 
@@ -63,7 +63,7 @@ int SMB_Negotiate(void *Con_Handle, char *Prots[]);
 int SMB_Logon_Server(SMB_Handle_Type Con_Handle, char *UserName, char *PassWord, char *Domain, int precrypted);
 #endif
 
-#ifdef DEBUG
+#if DEBUG
 #define debug_dump_ntlmssp_flags dump_ntlmssp_flags
 #else /* DEBUG */
 #define debug_dump_ntlmssp_flags(X)	/* empty */

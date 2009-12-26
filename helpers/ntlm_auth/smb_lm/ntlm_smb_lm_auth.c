@@ -41,16 +41,16 @@ extern int RFCNB_Get_Last_Error(void);
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
-#ifdef HAVE_STRING_H
+#if HAVE_STRING_H
 #include <string.h>
 #endif
-#ifdef HAVE_CTYPE_H
+#if HAVE_CTYPE_H
 #include <ctype.h>
 #endif
-#ifdef HAVE_UNISTD_H
+#if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#ifdef HAVE_ASSERT_H
+#if HAVE_ASSERT_H
 #include <assert.h>
 #endif
 
@@ -62,12 +62,12 @@ const char * obtain_challenge(void);
 void manage_request(void);
 
 
-#ifdef DEBUG
+#if DEBUG
 char error_messages_buffer[BUFFER_SIZE];
 #endif
 
 char load_balance = 0, protocol_pedantic = 0;
-#ifdef NTLM_FAIL_OPEN
+#if NTLM_FAIL_OPEN
 char last_ditch_enabled = 0;
 #endif
 
@@ -112,7 +112,7 @@ lc(char *string)
 void
 send_bh_or_ld(char const *bhmessage, ntlm_authenticate * failedauth, int authlen)
 {
-#ifdef NTLM_FAIL_OPEN
+#if NTLM_FAIL_OPEN
     char *creds = NULL;
     if (last_ditch_enabled) {
         creds = fetch_credentials(failedauth, authlen);
@@ -125,7 +125,7 @@ send_bh_or_ld(char const *bhmessage, ntlm_authenticate * failedauth, int authlen
     } else {
 #endif
         SEND2("BH %s", bhmessage);
-#ifdef NTLM_FAIL_OPEN
+#if NTLM_FAIL_OPEN
     }
 #endif
 }
@@ -171,7 +171,7 @@ process_options(int argc, char *argv[])
             fprintf(stderr,
                     "WARNING. The -f flag is DEPRECATED and always active.\n");
             break;
-#ifdef NTLM_FAIL_OPEN
+#if NTLM_FAIL_OPEN
         case 'l':
             last_ditch_enabled = 1;
             break;
@@ -462,7 +462,7 @@ int
 main(int argc, char *argv[])
 {
     debug("ntlm_auth build " __DATE__ ", " __TIME__ " starting up...\n");
-#ifdef DEBUG
+#if DEBUG
     debug("changing dir to /tmp\n");
     if (chdir("/tmp") != 0) {
         debug("ERROR: (%d) failed.\n",errno);

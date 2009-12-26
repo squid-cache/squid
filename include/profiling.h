@@ -10,7 +10,7 @@
 class CacheManager;
 #endif
 
-#ifdef USE_XPROF_STATS
+#if USE_XPROF_STATS
 
 #if !defined(_SQUID_SOLARIS_)
 typedef int64_t  hrtime_t;
@@ -77,7 +77,7 @@ get_tick(void)
 
 #endif /* USE_XPROF_STATS - maybe disabled above */
 
-#ifdef USE_XPROF_STATS
+#if USE_XPROF_STATS
 
 typedef enum {
     XPROF_PROF_UNACCOUNTED,

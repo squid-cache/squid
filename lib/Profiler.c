@@ -109,7 +109,7 @@
 
 #include <assert.h>
 
-#ifdef USE_XPROF_STATS
+#if USE_XPROF_STATS
 
 
 #if HAVE_GNUMALLLOC_H

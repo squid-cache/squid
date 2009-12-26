@@ -43,10 +43,10 @@
 #if HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
-#ifdef HAVE_STRING_H
+#if HAVE_STRING_H
 #include <string.h>
 #endif
-#ifdef HAVE_STRINGS_H
+#if HAVE_STRINGS_H
 #include <strings.h>
 #endif
 #if HAVE_SYS_TYPES_H
