@@ -8,7 +8,7 @@
 
 #include "config.h"
 
-#ifdef HAVE_GETNAMEINFO
+#if HAVE_GETNAMEINFO
 
 /* These functions are provided by the OS */
 #define xgetnameinfo	getnameinfo

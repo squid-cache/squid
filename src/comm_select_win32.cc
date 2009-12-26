@@ -37,7 +37,7 @@
 #include "CacheManager.h"
 #include "SquidTime.h"
 
-#ifdef USE_SELECT_WIN32
+#if USE_SELECT_WIN32
 #include "Store.h"
 #include "fde.h"
 

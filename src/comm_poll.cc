@@ -39,7 +39,7 @@
 #include "Store.h"
 #include "fde.h"
 
-#ifdef USE_POLL
+#if USE_POLL
 
 static int MAX_POLL_TIME = 1000;	/* see also comm_quick_poll_required() */
 

@@ -348,7 +348,7 @@ hashFreeMemory(hash_table * hid)
 }
 
 
-#ifdef USE_HASH_DRIVER
+#if USE_HASH_DRIVER
 /*
  *  hash-driver - Run with a big file as stdin to insert each line into the
  *  hash table, then prints the whole hash table, then deletes a random item,

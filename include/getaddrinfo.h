@@ -44,7 +44,7 @@
 
 /* Structure and prototypes taken from RFC 2553 */
 
-#ifdef HAVE_GETADDRINFO
+#if HAVE_GETADDRINFO
 
 /* These functions are provided by the OS */
 #define xgetaddrinfo	getaddrinfo

@@ -1957,6 +1957,6 @@ NullStoreEntry::getSerialisedMetaData()
     return NULL;
 }
 
-#ifndef _USE_INLINE_
+#if !_USE_INLINE_
 #include "Store.cci"
 #endif

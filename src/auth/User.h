@@ -111,7 +111,7 @@ private:
     dlink_list ip_list;
 };
 
-#ifdef _USE_INLINE_
+#if _USE_INLINE_
 #include "auth/User.cci"
 #endif
 

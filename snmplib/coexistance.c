@@ -53,10 +53,10 @@
 #if HAVE_MEMORY_H
 #include <memory.h>
 #endif
-#ifdef HAVE_STRING_H
+#if HAVE_STRING_H
 #include <string.h>
 #endif
-#ifdef HAVE_STRINGS_H
+#if HAVE_STRINGS_H
 #include <strings.h>
 #endif
 #if HAVE_BSTRING_H
@@ -109,7 +109,7 @@ snmp_coexist_V2toV1(struct snmp_pdu *PDU)
 
     case SNMP_PDU_GET:
     case SNMP_PDU_GETNEXT:
-#ifdef SNMP_PDU_SET
+#if SNMP_PDU_SET
     case SNMP_PDU_SET:
 #endif
         return (1);

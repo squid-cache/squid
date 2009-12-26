@@ -157,7 +157,7 @@ int statMemoryAccounted(void);
 #ifdef _SQUID_MSWIN_
 SQUIDCEXTERN int chroot (const char *);
 SQUIDCEXTERN int ftruncate(int, off_t);
-#ifndef HAVE_GETTIMEOFDAY
+#if !HAVE_GETTIMEOFDAY
 SQUIDCEXTERN int gettimeofday(struct timeval * ,void *);
 #endif
 SQUIDCEXTERN int kill(pid_t, int);

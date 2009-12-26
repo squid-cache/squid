@@ -45,10 +45,10 @@ SOFTWARE.
 #if HAVE_MEMORY_H
 #include <memory.h>
 #endif
-#ifdef HAVE_STRING_H
+#if HAVE_STRING_H
 #include <string.h>
 #endif
-#ifdef HAVE_STRINGS_H
+#if HAVE_STRINGS_H
 #include <strings.h>
 #endif
 #if HAVE_BSTRING_H
