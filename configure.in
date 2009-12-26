@@ -448,7 +448,7 @@ AC_ARG_ENABLE(disk-io,
      for details on how to build your custom disk module]), [ 
 case $enableval in
   yes)
-    $(TRUE)
+    ${TRUE}
     #do nothing, "auto" is ok
   	;;
   no)
@@ -1050,7 +1050,7 @@ if test "$squid_opt_use_eui" = "yes" ; then
      AC_MSG_NOTICE([EUI controls enabled (ether address)])
      case "$squid_host_os" in
 	linux|solaris|freebsd|openbsd|netbsd)
-        $(TRUE)
+        ${TRUE}
 	    ;;
 	cygwin|mingw)
 		EUILIB="-liphlpapi"
