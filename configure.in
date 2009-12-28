@@ -1609,7 +1609,7 @@ AC_MSG_NOTICE([Basic auth helpers built: $BASIC_AUTH_HELPERS])
 AC_SUBST(BASIC_AUTH_HELPERS)
 
 dnl ************** KK HERE *************
-dnl Select ntlm auth helpers to build
+# Select ntlm auth helpers to build
 if test "$AUTH_MODULES_ntlm" = "yes" ; then
   squid_opt_ntlm_auth_helpers="auto"
 else
@@ -1639,56 +1639,48 @@ for helper in $squid_opt_ntlm_auth_helpers ; do
   if test -f $dir/config.test && sh $dir/config.test "$@"; then
     NTLM_AUTH_HELPERS="$NTLM_AUTH_HELPERS $helper"
   elif test -d $srcdir/helpers/ntlm_auth/$helper ; then
-    AC_MSG_NOTICE([Basic auth helper $helper ... found but cannot be built])
+    AC_MSG_NOTICE([NTLM auth helper $helper ... found but cannot be built])
   fi
 done
 AC_MSG_NOTICE([NTLM auth helpers built: $NTLM_AUTH_HELPERS])
 AC_SUBST(NTLM_AUTH_HELPERS)
 
-dnl Select negotiate auth helpers to build
-if test -n "$AUTH_MODULES_negotiate"; then
-	NEGOTIATE_AUTH_HELPERS="all"
+# Select negotiate auth helpers to build
+if test "$AUTH_MODULES_negotiate" = "yes" ; then
+  squid_opt_negotiate_auth_helpers="auto"
+else
+  squid_opt_negotiate_auth_helpers=""
 fi
 AC_ARG_ENABLE(negotiate-auth-helpers,
   AS_HELP_STRING([--enable-negotiate-auth-helpers="list of helpers"],
                  [This option selects which proxy_auth negotiate helpers
                   to build and install as part of the normal build 
                   process. For a list of available helpers see
-                  the helpers/negotiate_auth directory.]),
-[ case "$enableval" in
-  yes) 
-	NEGOTIATE_AUTH_HELPERS="all"
-	;;
-  no)
-	NEGOTIATE_AUTH_HELPERS=""
-	;;
-  *)
-	NEGOTIATE_AUTH_HELPERS="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
-	;;
+                  the helpers/negotiate_auth directory.]), [
+  case "$enableval" in
+  yes) squid_opt_negotiate_auth_helpers="all" ;;
+  no)  squid_opt_negotiate_auth_helpers="" ;;
+  *)   squid_opt_negotiate_auth_helpers="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`" ;;
   esac
 ])
-if test "$NEGOTIATE_AUTH_HELPERS" = "all" ; then
-	NEGOTIATE_AUTH_HELPERS=""
-	for dir in $srcdir/helpers/negotiate_auth/*; do
-	    helper="`basename $dir`"
-	    if test -f $dir/config.test && sh $dir/config.test "$@";  then
-		NEGOTIATE_AUTH_HELPERS="$NEGOTIATE_AUTH_HELPERS $helper"
-            elif test -d $srcdir/helpers/negotiate_auth/$helper ; then
-                AC_MSG_NOTICE([Negotiate auth helper $helper ... found but cannot be built])
-	    fi
-	done
+if test "$squid_opt_negotiate_auth_helpers" = "auto" ; then
+  squid_opt_negotiate_auth_helpers=""
+  SQUID_LOOK_FOR_MODULES([$srcdir/helpers/negotiate_auth],[squid_opt_negotiate_auth_helpers])
 fi
-if test -n "$NEGOTIATE_AUTH_HELPERS"; then
-    for helper in $NEGOTIATE_AUTH_HELPERS; do
-	if test -d $srcdir/helpers/negotiate_auth/$helper; then
-	    :
-	else
-	    AC_MSG_ERROR(Negotiate Auth helper $helper does not exist)
-	fi
-    done
-    AC_MSG_NOTICE([Negotiate auth helpers built: $NEGOTIATE_AUTH_HELPERS])
+if test -n "$squid_opt_negotiate_auth_helpers" -a -z "$AUTH_MODULES_negotiate" ; then
+  AC_MSG_WARN([Negotiate auth helpers selected without the Negotiate scheme enabled])
 fi
+for helper in $squid_opt_negotiate_auth_helpers ; do
+  dir="$srcdir/helpers/negotiate_auth/$helper"
+  if test -f $dir/config.test && sh $dir/config.test "$@"; then
+    NEGOTIATE_AUTH_HELPERS="$NEGOTIATE_AUTH_HELPERS $helper"
+  elif test -d $srcdir/helpers/negotiate_auth/$helper ; then
+    AC_MSG_NOTICE([Negotiate auth helper $helper ... found but cannot be built])
+  fi
+done
+AC_MSG_NOTICE([Negotiate auth helpers built: $NEGOTIATE_AUTH_HELPERS])
 AC_SUBST(NEGOTIATE_AUTH_HELPERS)
+
 
 dnl Select digest auth scheme helpers to build
 if test -n "$AUTH_MODULES_digest"; then
