@@ -37,6 +37,9 @@
 #include "comm.h"
 #include "event.h"
 #include "fde.h"
+#include "comm/AcceptLimiter.h"
+#include "comm/comm_internal.h"
+#include "comm/ListenStateData.h"
 #include "CommIO.h"
 #include "CommRead.h"
 #include "ConnectionDetail.h"
@@ -242,44 +245,15 @@ static PF commConnectFree;
 static PF commHandleWrite;
 static IPH commConnectDnsHandle;
 
-static PF comm_accept_try;
-
-class AcceptFD
-{
-
-public:
-    AcceptFD(int aFd = -1): fd(aFd), theCallback(0), mayAcceptMore(false) {}
-
-    void subscribe(AsyncCall::Pointer &call);
-    void acceptNext();
-    void notify(int newfd, comm_err_t, int xerrno, const ConnectionDetail &);
-
-    int fd;
-
-private:
-    bool acceptOne();
-
-    AsyncCall::Pointer theCallback;
-    bool mayAcceptMore;
-};
-
 typedef enum {
     COMM_CB_READ = 1,
     COMM_CB_DERIVED,
 } comm_callback_t;
 
-struct _fd_debug_t {
-    char const *close_file;
-    int close_line;
-};
-
-typedef struct _fd_debug_t fd_debug_t;
-
 static MemAllocator *conn_close_pool = NULL;
-AcceptFD *fdc_table = NULL; // TODO: rename. And use Vector<>?
 fd_debug_t *fdd_table = NULL;
 
-static bool
+bool
 isOpen(const int fd)
 {
     return fd_table[fd].flags.open != 0;
@@ -1372,69 +1346,6 @@ comm_connect_addr(int sock, const IpAddress &address)
     return status;
 }
 
-/* Wait for an incoming connection on FD.  FD should be a socket returned
- * from comm_listen. */
-static int
-comm_old_accept(int fd, ConnectionDetail &details)
-{
-    PROF_start(comm_accept);
-    statCounter.syscalls.sock.accepts++;
-    int sock;
-    struct addrinfo *gai = NULL;
-    details.me.InitAddrInfo(gai);
-
-    if ((sock = accept(fd, gai->ai_addr, &gai->ai_addrlen)) < 0) {
-
-        details.me.FreeAddrInfo(gai);
-
-        PROF_stop(comm_accept);
-
-        if (ignoreErrno(errno)) {
-            debugs(50, 5, "comm_old_accept: FD " << fd << ": " << xstrerror());
-            return COMM_NOMESSAGE;
-        } else if (ENFILE == errno || EMFILE == errno) {
-            debugs(50, 3, "comm_old_accept: FD " << fd << ": " << xstrerror());
-            return COMM_ERROR;
-        } else {
-            debugs(50, 1, "comm_old_accept: FD " << fd << ": " << xstrerror());
-            return COMM_ERROR;
-        }
-    }
-
-    details.peer = *gai;
-
-    details.me.InitAddrInfo(gai);
-
-    details.me.SetEmpty();
-    getsockname(sock, gai->ai_addr, &gai->ai_addrlen);
-    details.me = *gai;
-
-    commSetCloseOnExec(sock);
-
-    /* fdstat update */
-    fd_open(sock, FD_SOCKET, "HTTP Request");
-    fdd_table[sock].close_file = NULL;
-    fdd_table[sock].close_line = 0;
-    fde *F = &fd_table[sock];
-    details.peer.NtoA(F->ipaddr,MAX_IPSTRLEN);
-    F->remote_port = details.peer.GetPort();
-    F->local_addr.SetPort(details.me.GetPort());
-#if USE_IPV6
-    F->sock_family = AF_INET;
-#else
-    F->sock_family = details.me.IsIPv4()?AF_INET:AF_INET6;
-#endif
-    details.me.FreeAddrInfo(gai);
-
-    commSetNonBlocking(sock);
-
-    /* IFF the socket is (tproxy) transparent, pass the flag down to allow spoofing */
-    F->flags.transparent = fd_table[fd].flags.transparent;
-
-    PROF_stop(comm_accept);
-    return sock;
-}
-
 void
 commCallCloseHandlers(int fd)
 {
@@ -1532,7 +1443,6 @@ comm_close_start(int fd, void *data)
 
 }
 
-
 void
 comm_close_complete(int fd, void *data)
 {
@@ -1549,15 +1459,10 @@ comm_close_complete(int fd, void *data)
 
     close(fd);
 
-    fdc_table[fd] = AcceptFD(fd);
-
     statCounter.syscalls.sock.closes++;
 
     /* When an fd closes, give accept() a chance, if need be */
-
-    if (fdNFree() >= RESERVED_FD)
-        AcceptLimiter::Instance().kick();
-
+    Comm::AcceptLimiter::Instance().kick();
 }
 
 /*
@@ -1617,8 +1522,8 @@ _comm_close(int fd, char const *file, int line)
         commio_finish_callback(fd, COMMIO_FD_READCB(fd), COMM_ERR_CLOSING, errno);
     }
 
-    // notify accept handlers
-    fdc_table[fd].notify(-1, COMM_ERR_CLOSING, 0, ConnectionDetail());
+    // Listening FD need to be closed by deleting their ListenStateData object.
+    assert(Comm::CurrentListenerSockets[fd] == NULL);
 
     commCallCloseHandlers(fd);
 
@@ -1932,10 +1837,11 @@ comm_init(void)
     fd_table =(fde *) xcalloc(Squid_MaxFD, sizeof(fde));
     fdd_table = (fd_debug_t *)xcalloc(Squid_MaxFD, sizeof(fd_debug_t));
 
-    fdc_table = new AcceptFD[Squid_MaxFD];
-    for (int pos = 0; pos < Squid_MaxFD; ++pos) {
-        fdc_table[pos] = AcceptFD(pos);
-    }
+    /* make sure we have an empty listening socket map */
+    Comm::CurrentListenerSockets.clear();
+
+    /* make sure the accept() socket FIFO delay queue exists */
+    Comm::AcceptLimiter::Instance();
 
     commfd_table = (comm_fd_t *) xcalloc(Squid_MaxFD, sizeof(comm_fd_t));
     for (int pos = 0; pos < Squid_MaxFD; pos++) {
@@ -1965,10 +1871,7 @@ comm_exit(void)
 
     safe_free(fd_table);
     safe_free(fdd_table);
-    if (fdc_table) {
-        delete[] fdc_table;
-        fdc_table = NULL;
-    }
+    Comm::CurrentListenerSockets.clear();
     safe_free(commfd_table);
 }
 
@@ -2189,169 +2092,6 @@ checkTimeouts(void)
     }
 }
 
-/*
- * New-style listen and accept routines
- *
- * Listen simply registers our interest in an FD for listening,
- * and accept takes a callback to call when an FD has been
- * accept()ed.
- */
-int
-comm_listen(int sock)
-{
-    int x;
-
-    if ((x = listen(sock, Squid_MaxFD >> 2)) < 0) {
-        debugs(50, 0, "comm_listen: listen(" << (Squid_MaxFD >> 2) << ", " << sock << "): " << xstrerror());
-        return x;
-    }
-
-    if (Config.accept_filter && strcmp(Config.accept_filter, "none") != 0) {
-#ifdef SO_ACCEPTFILTER
-        struct accept_filter_arg afa;
-        bzero(&afa, sizeof(afa));
-        debugs(5, DBG_CRITICAL, "Installing accept filter '" << Config.accept_filter << "' on FD " << sock);
-        xstrncpy(afa.af_name, Config.accept_filter, sizeof(afa.af_name));
-        x = setsockopt(sock, SOL_SOCKET, SO_ACCEPTFILTER, &afa, sizeof(afa));
-        if (x < 0)
-            debugs(5, 0, "SO_ACCEPTFILTER '" << Config.accept_filter << "': '" << xstrerror());
-#elif defined(TCP_DEFER_ACCEPT)
-        int seconds = 30;
-        if (strncmp(Config.accept_filter, "data=", 5) == 0)
-            seconds = atoi(Config.accept_filter + 5);
-        x = setsockopt(sock, IPPROTO_TCP, TCP_DEFER_ACCEPT, &seconds, sizeof(seconds));
-        if (x < 0)
-            debugs(5, 0, "TCP_DEFER_ACCEPT '" << Config.accept_filter << "': '" << xstrerror());
-#else
-        debugs(5, 0, "accept_filter not supported on your OS");
-#endif
-    }
-
-    return sock;
-}
-
-void
-comm_accept(int fd, IOACB *handler, void *handler_data)
-{
-    debugs(5, 5, "comm_accept: FD " << fd << " handler: " << (void*)handler);
-    assert(isOpen(fd));
-
-    AsyncCall::Pointer call = commCbCall(5,5, "SomeCommAcceptHandler",
-                                         CommAcceptCbPtrFun(handler, handler_data));
-    fdc_table[fd].subscribe(call);
-}
-
-void
-comm_accept(int fd, AsyncCall::Pointer &call)
-{
-    debugs(5, 5, "comm_accept: FD " << fd << " AsyncCall: " << call);
-    assert(isOpen(fd));
-
-    fdc_table[fd].subscribe(call);
-}
-
-// Called when somebody wants to be notified when our socket accepts new
-// connection. We do not probe the FD until there is such interest.
-void
-AcceptFD::subscribe(AsyncCall::Pointer &call)
-{
-    /* make sure we're not pending! */
-    assert(!theCallback);
-    theCallback = call;
-
-#if OPTIMISTIC_IO
-    mayAcceptMore = true; // even if we failed to accept last time
-#endif
-
-    if (mayAcceptMore)
-        acceptNext();
-    else
-        commSetSelect(fd, COMM_SELECT_READ, comm_accept_try, NULL, 0);
-}
-
-bool
-AcceptFD::acceptOne()
-{
-    // If there is no callback and we accept, we will leak the accepted FD.
-    // When we are running out of FDs, there is often no callback.
-    if (!theCallback) {
-        debugs(5, 5, "AcceptFD::acceptOne orphaned: FD " << fd);
-        // XXX: can we remove this and similar "just in case" calls and
-        // either listen always or listen only when there is a callback?
-        if (!AcceptLimiter::Instance().deferring())
-            commSetSelect(fd, COMM_SELECT_READ, comm_accept_try, NULL, 0);
-        return false;
-    }
-
-    /*
-     * We don't worry about running low on FDs here.  Instead,
-     * httpAccept() will use AcceptLimiter if we reach the limit
-     * there.
-     */
-
-    /* Accept a new connection */
-    ConnectionDetail connDetails;
-    int newfd = comm_old_accept(fd, connDetails);
-
-    /* Check for errors */
-
-    if (newfd < 0) {
-        assert(theCallback != NULL);
-
-        if (newfd == COMM_NOMESSAGE) {
-            /* register interest again */
-            debugs(5, 5, HERE << "try later: FD " << fd <<
-                   " handler: " << *theCallback);
-            commSetSelect(fd, COMM_SELECT_READ, comm_accept_try, NULL, 0);
-            return false;
-        }
-
-        // A non-recoverable error; notify the caller */
-        notify(-1, COMM_ERROR, errno, connDetails);
-        return false;
-    }
-
-    assert(theCallback != NULL);
-    debugs(5, 5, "AcceptFD::acceptOne accepted: FD " << fd <<
-           " newfd: " << newfd << " from: " << connDetails.peer <<
-           " handler: " << *theCallback);
-    notify(newfd, COMM_OK, 0, connDetails);
-    return true;
-}
-
-void
-AcceptFD::acceptNext()
-{
-    mayAcceptMore = acceptOne();
-}
-
-void
-AcceptFD::notify(int newfd, comm_err_t errcode, int xerrno, const ConnectionDetail &connDetails)
-{
-    if (theCallback != NULL) {
-        typedef CommAcceptCbParams Params;
-        Params &params = GetCommParams<Params>(theCallback);
-        params.fd = fd;
-        params.nfd = newfd;
-        params.details = connDetails;
-        params.flag = errcode;
-        params.xerrno = xerrno;
-        ScheduleCallHere(theCallback);
-        theCallback = NULL;
-    }
-}
-
-/*
- * This callback is called whenever a filedescriptor is ready
- * to dupe itself and fob off an accept()ed connection
- */
-static void
-comm_accept_try(int fd, void *)
-{
-    assert(isOpen(fd));
-    fdc_table[fd].acceptNext();
-}
-
 void CommIO::Initialise()
 {
     /* Initialize done pipe signal */
@@ -2404,44 +2144,6 @@ CommIO::ResetNotifications()
         FlushPipe();
         DoneSignalled = false;
     }
-}
-
-AcceptLimiter AcceptLimiter::Instance_;
-
-AcceptLimiter &AcceptLimiter::Instance()
-{
-    return Instance_;
-}
-
-bool
-AcceptLimiter::deferring() const
-{
-    return deferred.size() > 0;
-}
-
-void
-AcceptLimiter::defer (int fd, Acceptor::AcceptorFunction *aFunc, void *data)
-{
-    debugs(5, 5, "AcceptLimiter::defer: FD " << fd << " handler: " << (void*)aFunc);
-    Acceptor temp;
-    temp.theFunction = aFunc;
-    temp.acceptFD = fd;
-    temp.theData = data;
-    deferred.push_back(temp);
-}
-
-void
-AcceptLimiter::kick()
-{
-    if (!deferring())
-        return;
-
-    /* Yes, this means the first on is the last off....
-     * If the list container was a little more friendly, we could sensibly us it.
-     */
-    Acceptor temp = deferred.pop_back();
-
-    comm_accept (temp.acceptFD, temp.theFunction, temp.theData);
 }
 
 /// Start waiting for a possibly half-closed connection to close
