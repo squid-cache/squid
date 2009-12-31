@@ -1522,9 +1522,6 @@ _comm_close(int fd, char const *file, int line)
         commio_finish_callback(fd, COMMIO_FD_READCB(fd), COMM_ERR_CLOSING, errno);
     }
 
-    // Listening FD need to be closed by deleting their ListenStateData object.
-    assert(Comm::CurrentListenerSockets[fd] == NULL);
-
     commCallCloseHandlers(fd);
 
     if (F->pconn.uses)
@@ -1837,9 +1834,6 @@ comm_init(void)
     fd_table =(fde *) xcalloc(Squid_MaxFD, sizeof(fde));
     fdd_table = (fd_debug_t *)xcalloc(Squid_MaxFD, sizeof(fd_debug_t));
 
-    /* make sure we have an empty listening socket map */
-    Comm::CurrentListenerSockets.clear();
-
     /* make sure the accept() socket FIFO delay queue exists */
     Comm::AcceptLimiter::Instance();
 
@@ -1871,7 +1865,6 @@ comm_exit(void)
 
     safe_free(fd_table);
     safe_free(fdd_table);
-    Comm::CurrentListenerSockets.clear();
     safe_free(commfd_table);
 }
 
