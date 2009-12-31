@@ -125,4 +125,6 @@ private:
 
 };
 
+SQUIDCEXTERN int fdNFree(void);
+
 #endif /* SQUID_FDE_H */

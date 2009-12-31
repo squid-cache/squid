@@ -1,7 +1,5 @@
-
 /*
  * $Id$
- *
  */
 
 #include "squid.h"
@@ -18,6 +16,8 @@ http_port_list::http_port_list(const char *aProtocol)
 
 http_port_list::~http_port_list()
 {
+    delete listener;
+
     safe_free(name);
     safe_free(defaultsite);
     safe_free(protocol);
