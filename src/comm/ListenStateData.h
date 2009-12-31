@@ -45,13 +45,9 @@ private:
 
     AsyncCall::Pointer theCallback;
     bool mayAcceptMore;
+
+    void setListen();
 };
-
-extern std::map<int,ListenStateData*> CurrentListenerSockets;
-
-// remaining legacy functions. TODO replace all uses with the ListenData constructor
-extern int comm_listen(int fd);
-extern ListenStateData *comm_accept(int fd, IOACB *handler, void *handler_data);
 
 }; // namespace Comm
 
