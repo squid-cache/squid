@@ -56,6 +56,7 @@
 #include "MemBuf.h"
 #include "MemObject.h"
 #include "protos.h"
+#include "rfc1738.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "TextException.h"
@@ -542,7 +543,7 @@ HttpStateData::cacheableReply()
         return 0;
 
     default:			/* Unknown status code */
-        debugs (11, 0, HERE << "HttpStateData::cacheableReply: unexpected http status code " << rep->sline.status);
+        debugs (11, DBG_IMPORTANT, "WARNING: Unexpected http status code " << rep->sline.status);
 
         return 0;
 
@@ -681,7 +682,7 @@ HttpStateData::processReplyHeader()
     HttpReply *newrep = new HttpReply;
     const bool parsed = newrep->parse(readBuf, eof, &error);
 
-    if (!parsed && readBuf->contentSize() > 5 && strncmp(readBuf->content(), "HTTP/", 5) != 0) {
+    if (!parsed && readBuf->contentSize() > 5 && strncmp(readBuf->content(), "HTTP/", 5) != 0 && strncmp(readBuf->content(), "ICY", 3) != 0) {
         MemBuf *mb;
         HttpReply *tmprep = new HttpReply;
         tmprep->sline.version = HttpVersion(1, 0);
@@ -718,7 +719,7 @@ HttpStateData::processReplyHeader()
     }
 
     flags.chunked = 0;
-    if (newrep->header.hasListMember(HDR_TRANSFER_ENCODING, "chunked", ',')) {
+    if (newrep->sline.protocol == PROTO_HTTP && newrep->header.hasListMember(HDR_TRANSFER_ENCODING, "chunked", ',')) {
         flags.chunked = 1;
         httpChunkDecoder = new ChunkedCodingParser;
     }
@@ -1223,22 +1224,22 @@ HttpStateData::decodeAndWriteReplyBody()
 {
     const char *data = NULL;
     int len;
-    bool status = false;
+    bool wasThereAnException = false;
     assert(flags.chunked);
     assert(httpChunkDecoder);
     SQUID_ENTER_THROWING_CODE();
     MemBuf decodedData;
     decodedData.init();
-    const bool done = httpChunkDecoder->parse(readBuf,&decodedData);
+    const bool doneParsing = httpChunkDecoder->parse(readBuf,&decodedData);
     len = decodedData.contentSize();
     data=decodedData.content();
     addVirginReplyBody(data, len);
-    if (done) {
+    if (doneParsing) {
         lastChunk = 1;
         flags.do_next_read = 0;
     }
-    SQUID_EXIT_THROWING_CODE(status);
-    return status;
+    SQUID_EXIT_THROWING_CODE(wasThereAnException);
+    return wasThereAnException;
 }
 
 /**
@@ -1352,10 +1353,10 @@ HttpStateData::maybeReadVirginBody()
 {
     // we may need to grow the buffer if headers do not fit
     const int minRead = flags.headers_parsed ? 0 :1024;
-    const int read_sz = replyBodySpace(*readBuf, minRead);
+    const int read_size = replyBodySpace(*readBuf, minRead);
 
     debugs(11,9, HERE << (flags.do_next_read ? "may" : "wont") <<
-           " read up to " << read_sz << " bytes from FD " << fd);
+           " read up to " << read_size << " bytes from FD " << fd);
 
     /*
      * why <2? Because delayAwareRead() won't actually read if
@@ -1365,13 +1366,13 @@ HttpStateData::maybeReadVirginBody()
      * handler until we get a notification from someone that
      * its okay to read again.
      */
-    if (read_sz < 2)
+    if (read_size < 2)
         return;
 
     if (flags.do_next_read) {
         flags.do_next_read = 0;
         typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
-        entry->delayAwareRead(fd, readBuf->space(read_sz), read_sz,
+        entry->delayAwareRead(fd, readBuf->space(read_size), read_size,
                               asyncCall(11, 5, "HttpStateData::readReply",
                                         Dialer(this, &HttpStateData::readReply)));
     }
@@ -1910,28 +1911,28 @@ HttpStateData::decideIfWeDoRanges (HttpRequest * orig_request)
 /* build request prefix and append it to a given MemBuf;
  * return the length of the prefix */
 mb_size_t
-HttpStateData::buildRequestPrefix(HttpRequest * request,
-                                  HttpRequest * orig_request,
-                                  StoreEntry * entry,
+HttpStateData::buildRequestPrefix(HttpRequest * aRequest,
+                                  HttpRequest * original_request,
+                                  StoreEntry * sentry,
                                   MemBuf * mb,
-                                  http_state_flags flags)
+                                  http_state_flags stateFlags)
 {
     const int offset = mb->size;
     HttpVersion httpver(1, 0);
     mb->Printf("%s %s HTTP/%d.%d\r\n",
-               RequestMethodStr(request->method),
-               request->urlpath.size() ? request->urlpath.termedBuf() : "/",
+               RequestMethodStr(aRequest->method),
+               aRequest->urlpath.size() ? aRequest->urlpath.termedBuf() : "/",
                httpver.major,httpver.minor);
     /* build and pack headers */
     {
         HttpHeader hdr(hoRequest);
         Packer p;
-        httpBuildRequestHeader(request, orig_request, entry, &hdr, flags);
+        httpBuildRequestHeader(aRequest, original_request, sentry, &hdr, stateFlags);
 
-        if (request->flags.pinned && request->flags.connection_auth)
-            request->flags.auth_sent = 1;
+        if (aRequest->flags.pinned && aRequest->flags.connection_auth)
+            aRequest->flags.auth_sent = 1;
         else if (hdr.has(HDR_AUTHORIZATION))
-            request->flags.auth_sent = 1;
+            aRequest->flags.auth_sent = 1;
 
         packerToMemInit(&p, mb);
         hdr.packInto(&p);

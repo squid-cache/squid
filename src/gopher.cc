@@ -45,6 +45,7 @@
 #endif
 #include "MemBuf.h"
 #include "forward.h"
+#include "rfc1738.h"
 #include "SquidTime.h"
 
 /**

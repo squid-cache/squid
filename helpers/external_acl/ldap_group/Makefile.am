@@ -20,6 +20,6 @@ squid_ldap_group_SOURCES	= squid_ldap_group.c
 LDADD = \
 	$(top_builddir)/compat/libcompat.la \
 	-L$(top_builddir)/lib -lmiscutil \
-	@LDAPLIB@ \
-	@LBERLIB@ \
-	@XTRA_LIBS@
+	$(LDAPLIB) \
+	$(LBERLIB) \
+	$(XTRA_LIBS)

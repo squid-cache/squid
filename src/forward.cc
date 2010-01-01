@@ -869,14 +869,14 @@ FwdState::connectStart()
 
     debugs(17, 3, "fwdConnectStart: got outgoing addr " << outgoing << ", tos " << tos);
 
-    int flags = COMM_NONBLOCKING;
+    int commFlags = COMM_NONBLOCKING;
     if (request->flags.spoof_client_ip) {
         if (!fs->_peer || !fs->_peer->options.no_tproxy)
-            flags |= COMM_TRANSPARENT;
+            commFlags |= COMM_TRANSPARENT;
         // else no tproxy today ...
     }
 
-    fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, outgoing, flags, tos, url);
+    fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, outgoing, commFlags, tos, url);
 
     debugs(17, 3, "fwdConnectStart: got TCP FD " << fd);
 
@@ -993,17 +993,18 @@ FwdState::dispatch()
                  * prepared in the kernel by the ZPH incoming TCP TOS preserving
                  * patch.
                  */
-                unsigned char * p = buf;
-                while (p-buf < len) {
-                    struct cmsghdr *o = (struct cmsghdr*)p;
+                unsigned char * pbuf = buf;
+                while (pbuf-buf < len) {
+                    struct cmsghdr *o = (struct cmsghdr*)pbuf;
                     if (o->cmsg_len<=0)
                         break;
 
                     if (o->cmsg_level == SOL_IP && o->cmsg_type == IP_TOS) {
-                        clientFde->upstreamTOS = (unsigned char)(*(int*)CMSG_DATA(o));
+                        int *tmp = (int*)CMSG_DATA(o);
+                        clientFde->upstreamTOS = (unsigned char)*tmp;
                         break;
                     }
-                    p += CMSG_LEN(o->cmsg_len);
+                    pbuf += CMSG_LEN(o->cmsg_len);
                 }
             } else {
                 debugs(33, 1, "ZPH: error in getsockopt(IP_PKTOPTIONS) on FD "<<server_fd<<" "<<xstrerror());

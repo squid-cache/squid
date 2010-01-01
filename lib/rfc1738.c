@@ -33,6 +33,8 @@
  */
 
 #include "config.h"
+#include "rfc1738.h"
+#include "util.h"
 
 #if HAVE_STDIO_H
 #include <stdio.h>
@@ -40,8 +42,6 @@
 #if HAVE_STRING_H
 #include <string.h>
 #endif
-
-#include "util.h"
 
 /*
  *  RFC 1738 defines that these characters should be escaped, as well
@@ -82,8 +82,8 @@ static char rfc1738_reserved_chars[] = {
  *  rfc1738_escape - Returns a static buffer contains the RFC 1738
  *  compliant, escaped version of the given url.
  */
-static char *
-rfc1738_do_escape(const char *url, int encode_reserved)
+char *
+rfc1738_do_escape(const char *url, int flags)
 {
     static char *buf;
     static size_t bufsize = 0;
@@ -94,7 +94,7 @@ rfc1738_do_escape(const char *url, int encode_reserved)
     if (buf == NULL || strlen(url) * 3 > bufsize) {
         xfree(buf);
         bufsize = strlen(url) * 3 + 1;
-        buf = xcalloc(bufsize, 1);
+        buf = (char*)xcalloc(bufsize, 1);
     }
     for (p = url, q = buf; *p != '\0' && q < (buf + bufsize - 1); p++, q++) {
         do_escape = 0;
@@ -107,10 +107,10 @@ rfc1738_do_escape(const char *url, int encode_reserved)
             }
         }
         /* Handle % separately */
-        if (encode_reserved >= 0 && *p == '%')
+        if (flags != RFC1738_ESCAPE_UNESCAPED && *p == '%')
             do_escape = 1;
         /* RFC 1738 defines these chars as reserved */
-        for (i = 0; i < sizeof(rfc1738_reserved_chars) && encode_reserved > 0; i++) {
+        for (i = 0; i < sizeof(rfc1738_reserved_chars) && flags == RFC1738_ESCAPE_RESERVED; i++) {
             if (*p == rfc1738_reserved_chars[i]) {
                 do_escape = 1;
                 break;
@@ -143,6 +143,7 @@ rfc1738_do_escape(const char *url, int encode_reserved)
     return (buf);
 }
 
+#if 0 /* legacy API */
 /*
  * rfc1738_escape - Returns a static buffer that contains the RFC
  * 1738 compliant, escaped version of the given url.
@@ -172,35 +173,47 @@ rfc1738_escape_part(const char *url)
 {
     return rfc1738_do_escape(url, 1);
 }
+#endif /* 0 */
 
 /*
  *  rfc1738_unescape() - Converts escaped characters (%xy numbers) in
  *  given the string.  %% is a %. %ab is the 8-bit hexadecimal number "ab"
  */
+static inline int
+fromhex(char ch)
+{
+    if (ch >= '0' && ch <= '9')
+        return ch - '0';
+    if (ch >= 'a' && ch <= 'f')
+        return ch - 'a' + 10;
+    if (ch >= 'A' && ch <= 'F')
+        return ch - 'A' + 10;
+    return -1;
+}
+
 void
 rfc1738_unescape(char *s)
 {
-    char hexnum[3];
     int i, j;			/* i is write, j is read */
-    unsigned int x;
     for (i = j = 0; s[j]; i++, j++) {
         s[i] = s[j];
-        if (s[i] != '%')
-            continue;
-        if (s[j + 1] == '%') {	/* %% case */
-            j++;
-            continue;
-        }
-        if (s[j + 1] && s[j + 2]) {
-            if (s[j + 1] == '0' && s[j + 2] == '0') {	/* %00 case */
-                j += 2;
-                continue;
-            }
-            hexnum[0] = s[j + 1];
-            hexnum[1] = s[j + 2];
-            hexnum[2] = '\0';
-            if (1 == sscanf(hexnum, "%x", &x)) {
-                s[i] = (char) (0x0ff & x);
+        if (s[j] != '%') {
+            /* normal case, nothing more to do */
+        } else if (s[j + 1] == '%') {	/* %% case */
+            j++;		/* Skip % */
+        } else {
+            /* decode */
+            char v1, v2;
+            int x;
+            v1 = fromhex(s[j + 1]);
+            if (v1 < 0)
+                continue;  /* non-hex or \0 */
+            v2 = fromhex(s[j + 2]);
+            if (v2 < 0)
+                continue;  /* non-hex or \0 */
+            x = v1 << 4 | v2;
+            if (x > 0 && x <= 255) {
+                s[i] = x;
                 j += 2;
             }
         }

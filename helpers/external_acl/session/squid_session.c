@@ -149,10 +149,10 @@ int main(int argc, char **argv)
     init_db();
 
     while (fgets(request, sizeof(request), stdin)) {
-        const char *index, *detail;
+        const char *user_key, *detail;
         char *lastdetail;
         int action = 0;
-        index = strtok(request, " \n");
+        user_key = strtok(request, " \n");
         detail = strtok(NULL, "\n");
         lastdetail = strrchr(detail, ' ');
         if (lastdetail) {
@@ -166,18 +166,18 @@ int main(int argc, char **argv)
         }
         if (action == -1) {
             session_logout(detail);
-            printf("%s OK message=\"Bye\"\n", index);
+            printf("%s OK message=\"Bye\"\n", user_key);
         } else if (action == 1) {
             session_login(detail);
-            printf("%s OK message=\"Welcome\"\n", index);
+            printf("%s OK message=\"Welcome\"\n", user_key);
         } else if (session_active(detail)) {
             session_login(detail);
-            printf("%s OK\n", index);
+            printf("%s OK\n", user_key);
         } else if (default_action == 1) {
             session_login(detail);
-            printf("%s ERR message=\"Welcome\"\n", index);
+            printf("%s ERR message=\"Welcome\"\n", user_key);
         } else {
-            printf("%s ERR message=\"No session available\"\n", index);
+            printf("%s ERR message=\"No session available\"\n", user_key);
         }
     }
     shutdown_db();

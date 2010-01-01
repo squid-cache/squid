@@ -1,7 +1,7 @@
 include $(top_srcdir)/src/Common.am
 
 EXTRA_LTLIBRARIES = libaufs.la libdiskd.la libcoss.la libufs.la
-noinst_LTLIBRARIES =  @STORE_LIBS_TO_BUILD@ libfs.la
+noinst_LTLIBRARIES =  $(STORE_LIBS_TO_BUILD) libfs.la
 
 # aufs is a "fake" legacy store
 libaufs_la_SOURCES = \
@@ -29,8 +29,8 @@ libufs_la_SOURCES = \
 	ufs/ufscommon.h 
 
 libfs_la_SOURCES = Module.cc Module.h
-libfs_la_LIBADD =  @STORE_LIBS_TO_BUILD@
-libfs_la_DEPENDENCIES = @STORE_LIBS_TO_BUILD@
+libfs_la_LIBADD =  $(STORE_LIBS_TO_BUILD)
+libfs_la_DEPENDENCIES = $(STORE_LIBS_TO_BUILD)
 
 EXTRA_DIST = \
 	coss/coss-notes.txt

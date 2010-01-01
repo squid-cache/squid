@@ -160,3 +160,55 @@ StringToInt64(const char *s, int64_t &result, const char **p, int base)
 
     return false;
 }
+
+bool
+GetHostWithPort(char *token, IpAddress *ipa)
+{
+    char *t;
+    char *host;
+    char *tmp;
+    unsigned short port;
+
+    host = NULL;
+    port = 0;
+
+#if USE_IPV6
+    if (*token == '[') {
+        /* [host]:port */
+        host = token + 1;
+        t = strchr(host, ']');
+        if (!t)
+            return false;
+        *t++ = '\0';
+        if (*t != ':')
+            return false;
+        port = xatos(t + 1);
+    } else
+#endif
+        if ((t = strchr(token, ':'))) {
+            /* host:port */
+            host = token;
+            *t = '\0';
+            port = xatos(t + 1);
+
+            if (0 == port)
+                return false;
+        } else if ((port = strtol(token, &tmp, 10)), !*tmp) {
+            /* port */
+        } else {
+            host = token;
+            port = 0;
+        }
+
+    if (NULL == host)
+        ipa->SetAnyAddr();
+    else if ( ipa->GetHostByName(host) ) /* dont use ipcache. Accept either FQDN or IPA. */
+        (void) 0;
+    else
+        return false;
+
+    /* port MUST be set after the IPA lookup/conversion is performed. */
+    ipa->SetPort(port);
+
+    return true;
+}

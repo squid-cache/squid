@@ -19,10 +19,12 @@ testIpAddress_SOURCES= \
 	testIpAddress.cc \
 	testIpAddress.h
 nodist_testIpAddress_SOURCES= \
-	../tests/testMain.cc
+	$(top_srcdir)/src/tests/testMain.cc \
+	$(top_srcdir)/test-suite/test_tools.cc
 testIpAddress_LDADD= \
 	libip.la \
+	$(XTRA_LIBS) \
 	$(COMPAT_LIB) \
-	@SQUID_CPPUNIT_LA@ \
-	@SQUID_CPPUNIT_LIBS@
+	$(SQUID_CPPUNIT_LA) \
+	$(SQUID_CPPUNIT_LIBS)
 testIpAddress_LDFLAGS= $(LIBADD_DL)

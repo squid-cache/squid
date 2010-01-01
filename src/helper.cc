@@ -34,6 +34,7 @@
 
 #include "squid.h"
 #include "helper.h"
+#include "SquidMath.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "comm.h"
@@ -67,9 +68,9 @@ static void StatefulEnqueue(statefulhelper * hlp, helper_stateful_request * r);
 static bool helperStartStats(StoreEntry *sentry, void *hlp, const char *label);
 
 
-CBDATA_TYPE(helper);
+CBDATA_CLASS_INIT(helper);
 CBDATA_TYPE(helper_server);
-CBDATA_TYPE(statefulhelper);
+CBDATA_CLASS_INIT(statefulhelper);
 CBDATA_TYPE(helper_stateful_server);
 
 void
@@ -100,10 +101,10 @@ helperOpenServers(helper * hlp)
     else
         shortname = xstrdup(progname);
 
-    /* dont ever start more than hlp->n_to_start processes. */
-    int need_new = hlp->n_to_start - hlp->n_active;
+    /* figure out how many new child are actually needed. */
+    int need_new = hlp->childs.needNew();
 
-    debugs(84, 1, "helperOpenServers: Starting " << need_new << "/" << hlp->n_to_start << " '" << shortname << "' processes");
+    debugs(84, 1, "helperOpenServers: Starting " << need_new << "/" << hlp->childs.n_max << " '" << shortname << "' processes");
 
     if (need_new < 1) {
         debugs(84, 1, "helperOpenServers: No '" << shortname << "' processes needed.");
@@ -139,8 +140,8 @@ helperOpenServers(helper * hlp)
             continue;
         }
 
-        hlp->n_running++;
-        hlp->n_active++;
+        hlp->childs.n_running++;
+        hlp->childs.n_active++;
         CBDATA_INIT_TYPE(helper_server);
         srv = cbdataAlloc(helper_server);
         srv->hIpc = hIpc;
@@ -152,7 +153,7 @@ helperOpenServers(helper * hlp)
         srv->rbuf = (char *)memAllocBuf(BUF_8KB, &srv->rbuf_sz);
         srv->wqueue = new MemBuf;
         srv->roffset = 0;
-        srv->requests = (helper_request **)xcalloc(hlp->concurrency ? hlp->concurrency : 1, sizeof(*srv->requests));
+        srv->requests = (helper_request **)xcalloc(hlp->childs.concurrency ? hlp->childs.concurrency : 1, sizeof(*srv->requests));
         srv->parent = cbdataReference(hlp);
         dlinkAddTail(srv, &srv->link, &hlp->servers);
 
@@ -206,11 +207,10 @@ helperStatefulOpenServers(statefulhelper * hlp)
     else
         shortname = xstrdup(progname);
 
-    /* dont ever start more than hlp->n_to_start processes. */
-    /* n_active are the helpers which have not been shut down. */
-    int need_new = hlp->n_to_start - hlp->n_active;
+    /* figure out haw mant new helpers are needed. */
+    int need_new = hlp->childs.needNew();
 
-    debugs(84, 1, "helperOpenServers: Starting " << need_new << "/" << hlp->n_to_start << " '" << shortname << "' processes");
+    debugs(84, 1, "helperOpenServers: Starting " << need_new << "/" << hlp->childs.n_max << " '" << shortname << "' processes");
 
     if (need_new < 1) {
         debugs(84, 1, "helperStatefulOpenServers: No '" << shortname << "' processes needed.");
@@ -248,8 +248,8 @@ helperStatefulOpenServers(statefulhelper * hlp)
             continue;
         }
 
-        hlp->n_running++;
-        hlp->n_active++;
+        hlp->childs.n_running++;
+        hlp->childs.n_active++;
         CBDATA_INIT_TYPE(helper_stateful_server);
         helper_stateful_server *srv = cbdataAlloc(helper_stateful_server);
         srv->hIpc = hIpc;
@@ -403,7 +403,7 @@ helperStats(StoreEntry * sentry, helper * hlp, const char *label)
     storeAppendPrintf(sentry, "program: %s\n",
                       hlp->cmdline->key);
     storeAppendPrintf(sentry, "number active: %d of %d (%d shutting down)\n",
-                      hlp->n_active, hlp->n_to_start, (hlp->n_running - hlp->n_active) );
+                      hlp->childs.n_active, hlp->childs.n_max, (hlp->childs.n_running - hlp->childs.n_active) );
     storeAppendPrintf(sentry, "requests sent: %d\n",
                       hlp->stats.requests);
     storeAppendPrintf(sentry, "replies received: %d\n",
@@ -456,7 +456,7 @@ helperStatefulStats(StoreEntry * sentry, statefulhelper * hlp, const char *label
     storeAppendPrintf(sentry, "program: %s\n",
                       hlp->cmdline->key);
     storeAppendPrintf(sentry, "number active: %d of %d (%d shutting down)\n",
-                      hlp->n_active, hlp->n_to_start, (hlp->n_running - hlp->n_active) );
+                      hlp->childs.n_active, hlp->childs.n_max, (hlp->childs.n_running - hlp->childs.n_active) );
     storeAppendPrintf(sentry, "requests sent: %d\n",
                       hlp->stats.requests);
     storeAppendPrintf(sentry, "replies received: %d\n",
@@ -523,8 +523,8 @@ helperShutdown(helper * hlp)
             continue;
         }
 
-        hlp->n_active--;
-        assert(hlp->n_active >= 0);
+        assert(hlp->childs.n_active > 0);
+        hlp->childs.n_active--;
         srv->flags.shutdown = 1;	/* request it to shut itself down */
 
         if (srv->flags.closing) {
@@ -591,8 +591,8 @@ helperStatefulShutdown(statefulhelper * hlp)
             continue;
         }
 
-        hlp->n_active--;
-        assert(hlp->n_active >= 0);
+        assert(hlp->childs.n_active > 0);
+        hlp->childs.n_active--;
         srv->flags.shutdown = 1;	/* request it to shut itself down */
 
         if (srv->flags.busy) {
@@ -647,56 +647,13 @@ helperStatefulShutdown(statefulhelper * hlp)
     }
 }
 
-
-helper *
-helperCreate(const char *name)
+helper::~helper()
 {
-    helper *hlp;
-    CBDATA_INIT_TYPE(helper);
-    hlp = cbdataAlloc(helper);
-    hlp->id_name = name;
-    return hlp;
+    /* note, don't free id_name, it probably points to static memory */
+
+    if (queue.head)
+        debugs(84, 0, "WARNING: freeing " << id_name << " helper with " << stats.queue_size << " requests queued");
 }
-
-statefulhelper *
-helperStatefulCreate(const char *name)
-{
-    statefulhelper *hlp;
-    CBDATA_INIT_TYPE(statefulhelper);
-    hlp = cbdataAlloc(statefulhelper);
-    hlp->id_name = name;
-    return hlp;
-}
-
-
-void
-helperFree(helper * hlp)
-{
-    if (!hlp)
-        return;
-
-    /* note, don't free hlp->name, it probably points to static memory */
-    if (hlp->queue.head)
-        debugs(84, 0, "WARNING: freeing " << hlp->id_name << " helper with " <<
-               hlp->stats.queue_size << " requests queued");
-
-    cbdataFree(hlp);
-}
-
-void
-helperStatefulFree(statefulhelper * hlp)
-{
-    if (!hlp)
-        return;
-
-    /* note, don't free hlp->name, it probably points to static memory */
-    if (hlp->queue.head)
-        debugs(84, 0, "WARNING: freeing " << hlp->id_name << " helper with " <<
-               hlp->stats.queue_size << " requests queued");
-
-    cbdataFree(hlp);
-}
-
 
 /* ====================================================================== */
 /* LOCAL FUNCTIONS */
@@ -708,7 +665,7 @@ helperServerFree(int fd, void *data)
     helper_server *srv = (helper_server *)data;
     helper *hlp = srv->parent;
     helper_request *r;
-    int i, concurrency = hlp->concurrency;
+    int i, concurrency = hlp->childs.concurrency;
 
     if (!concurrency)
         concurrency = 1;
@@ -747,24 +704,21 @@ helperServerFree(int fd, void *data)
 
     dlinkDelete(&srv->link, &hlp->servers);
 
-    hlp->n_running--;
-
-    assert(hlp->n_running >= 0);
+    assert(hlp->childs.n_running > 0);
+    hlp->childs.n_running--;
 
     if (!srv->flags.shutdown) {
-        hlp->n_active--;
-        assert(hlp->n_active >= 0);
-        debugs(84, 0, "WARNING: " << hlp->id_name << " #" << srv->index + 1 <<
-               " (FD " << fd << ") exited");
+        assert(hlp->childs.n_active > 0);
+        hlp->childs.n_active--;
+        debugs(84, DBG_CRITICAL, "WARNING: " << hlp->id_name << " #" << srv->index + 1 << " (FD " << fd << ") exited");
 
-        if (hlp->n_active < hlp->n_to_start / 2) {
-            debugs(80, 0, "Too few " << hlp->id_name << " processes are running");
+        if (hlp->childs.needNew() > 0) {
+            debugs(80, 1, "Too few " << hlp->id_name << " processes are running (need " << hlp->childs.needNew() << "/" << hlp->childs.n_max << ")");
 
-            if (hlp->last_restart > squid_curtime - 30)
+            if (hlp->childs.n_active < hlp->childs.n_startup && hlp->last_restart > squid_curtime - 30)
                 fatalf("The %s helpers are crashing too rapidly, need help!\n", hlp->id_name);
 
-            debugs(80, 0, "Starting new helpers");
-
+            debugs(80, 1, "Starting new helpers");
             helperOpenServers(hlp);
         }
     }
@@ -809,23 +763,21 @@ helperStatefulServerFree(int fd, void *data)
 
     dlinkDelete(&srv->link, &hlp->servers);
 
-    hlp->n_running--;
-
-    assert(hlp->n_running >= 0);
+    assert(hlp->childs.n_running > 0);
+    hlp->childs.n_running--;
 
     if (!srv->flags.shutdown) {
-        hlp->n_active--;
-        assert( hlp->n_active >= 0);
+        assert( hlp->childs.n_active > 0);
+        hlp->childs.n_active--;
         debugs(84, 0, "WARNING: " << hlp->id_name << " #" << srv->index + 1 << " (FD " << fd << ") exited");
 
-        if (hlp->n_active <= hlp->n_to_start / 2) {
-            debugs(80, 0, "Too few " << hlp->id_name << " processes are running");
+        if (hlp->childs.needNew() > 0) {
+            debugs(80, 1, "Too few " << hlp->id_name << " processes are running (need " << hlp->childs.needNew() << "/" << hlp->childs.n_max << ")");
 
-            if (hlp->last_restart > squid_curtime - 30)
+            if (hlp->childs.n_active < hlp->childs.n_startup && hlp->last_restart > squid_curtime - 30)
                 fatalf("The %s helpers are crashing too rapidly, need help!\n", hlp->id_name);
 
-            debugs(80, 0, "Starting new helpers");
-
+            debugs(80, 1, "Starting new helpers");
             helperStatefulOpenServers(hlp);
         }
     }
@@ -892,7 +844,7 @@ helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
 
         *t++ = '\0';
 
-        if (hlp->concurrency) {
+        if (hlp->childs.concurrency) {
             i = strtol(msg, &msg, 10);
 
             while (*msg && xisspace(*msg))
@@ -920,10 +872,7 @@ helperHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
 
             srv->dispatch_time = r->dispatch_time;
 
-            hlp->stats.avg_svc_time =
-                intAverage(hlp->stats.avg_svc_time,
-                           tvSubMsec(r->dispatch_time, current_time),
-                           hlp->stats.replies, REDIRECT_AV_FACTOR);
+            hlp->stats.avg_svc_time = Math::intAverage(hlp->stats.avg_svc_time, tvSubMsec(r->dispatch_time, current_time), hlp->stats.replies, REDIRECT_AV_FACTOR);
 
             helperRequestFree(r);
         } else {
@@ -1020,9 +969,9 @@ helperStatefulHandleRead(int fd, char *buf, size_t len, comm_err_t flag, int xer
         hlp->stats.replies++;
         srv->answer_time = current_time;
         hlp->stats.avg_svc_time =
-            intAverage(hlp->stats.avg_svc_time,
-                       tvSubMsec(srv->dispatch_time, current_time),
-                       hlp->stats.replies, REDIRECT_AV_FACTOR);
+            Math::intAverage(hlp->stats.avg_svc_time,
+                             tvSubMsec(srv->dispatch_time, current_time),
+                             hlp->stats.replies, REDIRECT_AV_FACTOR);
 
         if (called)
             helperStatefulServerDone(srv);
@@ -1042,7 +991,14 @@ Enqueue(helper * hlp, helper_request * r)
     dlinkAddTail(r, link, &hlp->queue);
     hlp->stats.queue_size++;
 
-    if (hlp->stats.queue_size < hlp->n_running)
+    /* do this first so idle=N has a chance to grow the child pool before it hits critical. */
+    if (hlp->childs.needNew() > 0) {
+        debugs(84, 0, "Starting new " << hlp->id_name << " helpers...");
+        helperOpenServers(hlp);
+        return;
+    }
+
+    if (hlp->stats.queue_size < (int)hlp->childs.n_running)
         return;
 
     if (squid_curtime - hlp->last_queue_warn < 600)
@@ -1053,15 +1009,12 @@ Enqueue(helper * hlp, helper_request * r)
 
     hlp->last_queue_warn = squid_curtime;
 
-    debugs(84, 0, "WARNING: All " << hlp->id_name << " processes are busy.");
+    debugs(84, 0, "WARNING: All " << hlp->childs.n_active << "/" << hlp->childs.n_max << " " << hlp->id_name << " processes are busy.");
     debugs(84, 0, "WARNING: " << hlp->stats.queue_size << " pending requests queued");
+    debugs(84, 0, "WARNING: Consider increasing the number of " << hlp->id_name << " processes in your config file.");
 
-
-    if (hlp->stats.queue_size > hlp->n_running * 2)
+    if (hlp->stats.queue_size > (int)hlp->childs.n_running * 2)
         fatalf("Too many queued %s requests", hlp->id_name);
-
-    debugs(84, 1, "Consider increasing the number of " << hlp->id_name << " processes in your config file.");
-
 }
 
 static void
@@ -1071,10 +1024,17 @@ StatefulEnqueue(statefulhelper * hlp, helper_stateful_request * r)
     dlinkAddTail(r, link, &hlp->queue);
     hlp->stats.queue_size++;
 
-    if (hlp->stats.queue_size < hlp->n_running)
+    /* do this first so idle=N has a chance to grow the child pool before it hits critical. */
+    if (hlp->childs.needNew() > 0) {
+        debugs(84, 0, "Starting new " << hlp->id_name << " helpers...");
+        helperStatefulOpenServers(hlp);
+        return;
+    }
+
+    if (hlp->stats.queue_size < (int)hlp->childs.n_running)
         return;
 
-    if (hlp->stats.queue_size > hlp->n_running * 2)
+    if (hlp->stats.queue_size > (int)hlp->childs.n_running * 2)
         fatalf("Too many queued %s requests", hlp->id_name);
 
     if (squid_curtime - hlp->last_queue_warn < 600)
@@ -1085,11 +1045,9 @@ StatefulEnqueue(statefulhelper * hlp, helper_stateful_request * r)
 
     hlp->last_queue_warn = squid_curtime;
 
-    debugs(84, 0, "WARNING: All " << hlp->id_name << " processes are busy.");
-
+    debugs(84, 0, "WARNING: All " << hlp->childs.n_active << "/" << hlp->childs.n_max << " " << hlp->id_name << " processes are busy.");
     debugs(84, 0, "WARNING: " << hlp->stats.queue_size << " pending requests queued");
-    debugs(84, 1, "Consider increasing the number of " << hlp->id_name << " processes in your config file.");
-
+    debugs(84, 0, "WARNING: Consider increasing the number of " << hlp->id_name << " processes in your config file.");
 }
 
 static helper_request *
@@ -1131,7 +1089,7 @@ GetFirstAvailable(helper * hlp)
     helper_server *srv;
     helper_server *selected = NULL;
 
-    if (hlp->n_running == 0)
+    if (hlp->childs.n_running == 0)
         return NULL;
 
     /* Find "least" loaded helper (approx) */
@@ -1159,7 +1117,7 @@ GetFirstAvailable(helper * hlp)
     if (!selected)
         return NULL;
 
-    if (selected->stats.pending >= (hlp->concurrency ? hlp->concurrency : 1))
+    if (selected->stats.pending >= (hlp->childs.concurrency ? hlp->childs.concurrency : 1))
         return NULL;
 
     return selected;
@@ -1170,9 +1128,9 @@ StatefulGetFirstAvailable(statefulhelper * hlp)
 {
     dlink_node *n;
     helper_stateful_server *srv = NULL;
-    debugs(84, 5, "StatefulGetFirstAvailable: Running servers " << hlp->n_running);
+    debugs(84, 5, "StatefulGetFirstAvailable: Running servers " << hlp->childs.n_running);
 
-    if (hlp->n_running == 0)
+    if (hlp->childs.n_running == 0)
         return NULL;
 
     for (n = hlp->servers.head; n != NULL; n = n->next) {
@@ -1240,7 +1198,7 @@ helperDispatch(helper_server * srv, helper_request * r)
         return;
     }
 
-    for (slot = 0; slot < (hlp->concurrency ? hlp->concurrency : 1); slot++) {
+    for (slot = 0; slot < (hlp->childs.concurrency ? hlp->childs.concurrency : 1); slot++) {
         if (!srv->requests[slot]) {
             ptr = &srv->requests[slot];
             break;
@@ -1255,7 +1213,7 @@ helperDispatch(helper_server * srv, helper_request * r)
     if (srv->wqueue->isNull())
         srv->wqueue->init();
 
-    if (hlp->concurrency)
+    if (hlp->childs.concurrency)
         srv->wqueue->Printf("%d %s", slot, r->buf);
     else
         srv->wqueue->append(r->buf, strlen(r->buf));

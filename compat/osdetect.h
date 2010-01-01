@@ -15,76 +15,78 @@
  *     or other definitions within this if-else structure.
  */
 
-#if defined(__sun__) || defined(__sun)	/* SUN */
-# define _SQUID_SUN_
-# if defined(__SVR4)		/* SOLARIS */
-#  define _SQUID_SOLARIS_
-# else /* SUNOS */
-#  define _SQUID_SUNOS_
-# endif
+/* SUN SOLARIS / OPENSOLARIS */
+#if defined(__sun__) || defined(__sun) || defined(__SUNPRO_CC) || defined(__SunOS_OSversion)
+#define _SQUID_SUN_ 1 /* SunOS */
+
+#if defined(__SVR4) /* Solaris */
+#define _SQUID_SOLARIS_ 1
+#else /* SunOS */
+#define _SQUID_SUNOS_ 1
+#endif /* __SVR4 */
 
 #elif defined(__hpux)		/* HP-UX - SysV-like? */
-#define _SQUID_HPUX_
-#define _SQUID_SYSV_
+#define _SQUID_HPUX_ 1
+#define _SQUID_SYSV_ 1
 
 #elif defined(__osf__)		/* OSF/1 */
-#define _SQUID_OSF_
+#define _SQUID_OSF_ 1
 
 #elif defined(__ultrix)		/* Ultrix */
-#define _SQUID_ULTRIX_
+#define _SQUID_ULTRIX_ 1
 
 #elif defined(_AIX)		/* AIX */
-#define _SQUID_AIX_
+#define _SQUID_AIX_ 1
 
-#elif defined(__linux__)	/* Linux */
-#define _SQUID_LINUX_
+#elif defined(__linux__)	/* Linux. WARNING: solaris-x86 also sets this */
+#define _SQUID_LINUX_ 1
 
 #elif defined(__FreeBSD__)	/* FreeBSD */
-#define _SQUID_FREEBSD_
+#define _SQUID_FREEBSD_ 1
 
 #elif defined(__FreeBSD_kernel__)      /* GNU/kFreeBSD */
-#define _SQUID_KFREEBSD_
+#define _SQUID_KFREEBSD_ 1
 
 #elif defined(__sgi__)	|| defined(sgi) || defined(__sgi)	/* SGI */
-#define _SQUID_SGI_
+#define _SQUID_SGI_ 1
 
 #elif defined(__NeXT__)
-#define _SQUID_NEXT_
+#define _SQUID_NEXT_ 1
 
-#elif defined(__bsdi__)
-#define _SQUID_BSDI_		/* BSD/OS */
+#elif defined(__bsdi__)		/* BSD/OS */
+#define _SQUID_BSDI_ 1
 
 #elif defined(__NetBSD__)
-#define _SQUID_NETBSD_
+#define _SQUID_NETBSD_ 1
 
 #elif defined(__OpenBSD__)
-#define _SQUID_OPENBSD_
+#define _SQUID_OPENBSD_ 1
 
 #elif defined(__DragonFly__)
-#define _SQUID_DRAGONFLY_
+#define _SQUID_DRAGONFLY_ 1
 
 #elif defined(__CYGWIN32__)  || defined(__CYGWIN__)
-#define _SQUID_CYGWIN_
-#define _SQUID_WIN32_
+#define _SQUID_CYGWIN_ 1
+#define _SQUID_WIN32_ 1
 
 #elif defined(WIN32) || defined(WINNT) || defined(__WIN32__) || defined(__WIN32)
 /* We are using _SQUID_MSWIN_ define in cf.data.pre, so
    it must be defined to 1 to avoid the build failure of cfgen.
  */
 #define _SQUID_MSWIN_ 1
-#define _SQUID_WIN32_
+#define _SQUID_WIN32_ 1
 
 #elif defined(__APPLE__)
-#define _SQUID_APPLE_
+#define _SQUID_APPLE_ 1
 
 #elif defined(sony_news) && defined(__svr4)
-#define _SQUID_NEWSOS6_
+#define _SQUID_NEWSOS6_ 1
 
 #elif defined(__QNX__)
-#define _SQUID_QNX_
+#define _SQUID_QNX_ 1
 
 #elif defined(__EMX__) || defined(OS2) || defined(__OS2__)
-#define _SQUID_OS2_
+#define _SQUID_OS2_ 1
 
 #endif /* OS automatic detection */
 

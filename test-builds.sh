@@ -9,6 +9,7 @@ globalResult=0
 cleanup="no"
 verbose="no"
 keepGoing="no"
+remove_cache_file="true"
 while [ $# -ge 1 ]; do
     case "$1" in
     --cleanup)
@@ -23,6 +24,20 @@ while [ $# -ge 1 ]; do
 	keepGoing="yes"
 	shift
 	;;
+    --use-config-cache)
+        #environment variable will be picked up by buildtest.sh
+        cache_file=/tmp/config.cache.$$
+        export cache_file
+        shift
+        ;;
+    --aggressively-use-config-cache)
+        #environment variable will be picked up by buildtest.sh
+        #note: use ONLY if you know what you're doing
+        cache_file=/tmp/config.cache
+        remove_cache_file="false"
+        export cache_file
+        shift
+        ;;
     *)
     	break
 	;;
@@ -44,7 +59,8 @@ buildtest() {
     log=${btlayer}.log
     echo "TESTING: ${layer}"
     chmod -R 777 ${btlayer}
-    rm -f -r ${btlayer} && mkdir ${btlayer}
+    rm -f -r ${btlayer} || ( echo "FATAL: Failed to prepare test build sandpit." ; exit 1 )
+    mkdir ${btlayer}
     if test "${verbose}" = "yes" ; then
         ls -la ${btlayer}
     fi
@@ -78,16 +94,17 @@ buildtest() {
     errors="^ERROR|\ error:|\ Error\ |No\ such|assertion\ failed|FAIL:|:\ undefined"
     grep -E "${errors}" ${log}
 
-    if test "${cleanup}" = "yes" ; then
-	echo "REMOVE DATA: ${btlayer}"
-	chmod -R 777 ${btlayer}
-	rm -f -r ${btlayer}
-    fi
-
     if test $result -eq 0; then
 	# successful execution
 	if test "${verbose}" = "yes"; then
 	    echo "Build OK. Global result is $globalResult."
+	fi
+	if test "${cleanup}" = "yes" ; then
+	    echo "REMOVE DATA: ${btlayer}"
+	    chmod -R 777 ${btlayer}
+	    rm -f -r ${btlayer}
+	    echo "REMOVE LOG: ${log}"
+	    rm -f -r ${log}
 	fi
     else
         if test "${verbose}" != "yes" ; then
@@ -98,12 +115,12 @@ buildtest() {
         fi
         globalResult=1
     fi
-
-    if test "${cleanup}" = "yes" ; then
-	echo "REMOVE LOG: ${log}"
-	rm -f -r ${log}
-    fi
 }
+
+# if using cache, make sure to clear it up first
+if [ -n "$cache_file" -a -e "$cache_file" -a "$remove_cache_file" = "true" ]; then
+    rm $cache_file
+fi
 
 # Decide what tests to run, $* contains test spec names or filenames.
 # Use all knows specs if $* is empty or a special macro called 'all'.
@@ -136,5 +153,10 @@ for t in $tests; do
 	exit $globalResult
     fi
 done
+
+# if using cache, make sure to clear it up first
+if [ -n "$cache_file" -a -e "$cache_file" -a "$remove_cache_file" = "true" ]; then
+    rm $cache_file
+fi
 
 exit $globalResult

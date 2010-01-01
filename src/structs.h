@@ -128,6 +128,8 @@ struct relist {
 #include "ip/QosConfig.h"
 #endif
 
+#include "HelperChildConfig.h"
+
 /* forward decl for SquidConfig, see RemovalPolicy.h */
 
 class RemovalPolicySettings;
@@ -163,6 +165,7 @@ struct SquidConfig {
 
     struct {
         time_t read;
+        time_t write;
         time_t lifetime;
         time_t connect;
         time_t forward;
@@ -301,11 +304,10 @@ struct SquidConfig {
     } Program;
 #if USE_DNSSERVERS
 
-    int dnsChildren;
+    HelperChildConfig dnsChildren;
 #endif
 
-    int redirectChildren;
-    int redirectConcurrency;
+    HelperChildConfig redirectChildren;
     time_t authenticateGCInterval;
     time_t authenticateTTL;
     time_t authenticateIpTTL;
@@ -1292,23 +1294,6 @@ struct _store_rebuild_data {
     int zero_object_sz;
 };
 
-struct _Logfile {
-    int fd;
-    char path[MAXPATHLEN];
-    char *buf;
-    size_t bufsz;
-    size_t offset;
-
-    struct {
-        unsigned int fatal;
-        unsigned int syslog;
-    } flags;
-
-    int syslog_priority;
-
-    int64_t sequence_number;  ///< Unique sequence number per log line.
-};
-
 class logformat_token;
 
 struct _logformat {
@@ -1316,6 +1301,8 @@ struct _logformat {
     logformat_token *format;
     logformat *next;
 };
+
+class Logfile;
 
 struct _customlog {
     char *filename;

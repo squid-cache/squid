@@ -76,20 +76,34 @@ ACLDestinationDomainStrategy::match (ACLData<MatchType> * &data, ACLFilledCheckl
 {
     assert(checklist != NULL && checklist->request != NULL);
 
-    const ipcache_addrs *ia = NULL;
-    const char *fqdn = NULL;
-
-    if (data->match(checklist->request->GetHost()))
+    if (data->match(checklist->request->GetHost())) {
         return 1;
+    }
 
-    /* numeric IPA? */
-    if ((ia = ipcacheCheckNumeric(checklist->request->GetHost())) == NULL)
+    /* numeric IPA? no, trust the above result. */
+    if (checklist->request->GetHostIsNumeric() == 0) {
         return 0;
+    }
+
+    /* do we already have the rDNS? match on it if we do. */
+    if (checklist->dst_rdns) {
+        debugs(28, 3, "aclMatchAcl: '" << AclMatchedName << "' match with stored rDNS '" << checklist->dst_rdns << "' for '" << checklist->request->GetHost() << "'");
+        return data->match(checklist->dst_rdns);
+    }
+
+    /* raw IP without rDNS? look it up and wait for the result */
+    const ipcache_addrs *ia = ipcacheCheckNumeric(checklist->request->GetHost());
+    if (!ia) {
+        /* not a valid IPA */
+        checklist->dst_rdns = xstrdup("invalid");
+        return 0;
+    }
 
     checklist->dst_addr = ia->in_addrs[0];
-    fqdn = fqdncache_gethostbyaddr(checklist->dst_addr, FQDN_LOOKUP_IF_MISS);
+    const char *fqdn = fqdncache_gethostbyaddr(checklist->dst_addr, FQDN_LOOKUP_IF_MISS);
 
     if (fqdn) {
+        checklist->dst_rdns = xstrdup(fqdn);
         return data->match(fqdn);
     } else if (!checklist->destinationDomainChecked()) {
         /* FIXME: Using AclMatchedName here is not OO correct. Should find a way to the current acl */

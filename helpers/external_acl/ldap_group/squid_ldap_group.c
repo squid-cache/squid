@@ -35,6 +35,7 @@
 
 #define LDAP_DEPRECATED 1
 
+#include "rfc1738.h"
 #include "util.h"
 
 #include <stdio.h>
@@ -140,21 +141,21 @@ squid_ldap_set_referrals(LDAP * ld, int referrals)
     ldap_set_option(ld, LDAP_OPT_REFERRALS, value);
 }
 static void
-squid_ldap_set_timelimit(LDAP * ld, int timelimit)
+squid_ldap_set_timelimit(LDAP * ld, int aTimeLimit)
 {
-    ldap_set_option(ld, LDAP_OPT_TIMELIMIT, &timelimit);
+    ldap_set_option(ld, LDAP_OPT_TIMELIMIT, &aTimeLimit);
 }
 static void
-squid_ldap_set_connect_timeout(LDAP * ld, int timelimit)
+squid_ldap_set_connect_timeout(LDAP * ld, int aTimeLimit)
 {
 #if defined(LDAP_OPT_NETWORK_TIMEOUT)
     struct timeval tv;
-    tv.tv_sec = timelimit;
+    tv.tv_sec = aTimeLimit;
     tv.tv_usec = 0;
     ldap_set_option(ld, LDAP_OPT_NETWORK_TIMEOUT, &tv);
 #elif defined(LDAP_X_OPT_CONNECT_TIMEOUT)
-    timelimit *= 1000;
-    ldap_set_option(ld, LDAP_X_OPT_CONNECT_TIMEOUT, &timelimit);
+    aTimeLimit *= 1000;
+    ldap_set_option(ld, LDAP_X_OPT_CONNECT_TIMEOUT, &aTimeLimit);
 #endif
 }
 static void

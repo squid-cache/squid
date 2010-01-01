@@ -55,12 +55,14 @@ nodist_pinger_SOURCES = \
 	$(top_builddir)/src/globals.cc \
 	$(top_srcdir)/src/time.cc \
 	$(top_srcdir)/src/SquidConfig.cc \
-	$(top_srcdir)/src/SquidNew.cc
+	$(top_srcdir)/src/SquidNew.cc \
+	$(top_srcdir)/src/tests/stub_HelperChildConfig.cc
 
 pinger_LDFLAGS = $(LIBADD_DL)
 pinger_LDADD=\
 	libicmp-core.la \
 	../ip/libip.la \
+	$(XTRA_LIBS) \
 	$(top_builddir)/lib/libmiscutil.a
 pinger_DEPENDENCIES= \
 	libicmp-core.la \
@@ -99,11 +101,12 @@ nodist_testIcmp_SOURCES = \
 	$(top_builddir)/src/globals.cc
 testIcmp_LDFLAGS = $(LIBADD_DL)
 testIcmp_LDADD=\
-	@SQUID_CPPUNIT_LIBS@ \
-	@SQUID_CPPUNIT_LA@ \
+	$(SQUID_CPPUNIT_LIBS) \
+	$(SQUID_CPPUNIT_LA) \
 	libicmp-core.la \
 	../ip/libip.la \
+	$(XTRA_LIBS) \
 	$(top_builddir)/lib/libmiscutil.a
-testIcmp_DEPENDENCIES= @SQUID_CPPUNIT_LA@ \
+testIcmp_DEPENDENCIES= $(SQUID_CPPUNIT_LA) \
 	libicmp-core.la \
 	$(top_builddir)/lib/libmiscutil.a

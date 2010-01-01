@@ -84,22 +84,34 @@ httpHdrRangeRespSpecParseInit(HttpHdrRangeSpec * spec, const char *field, int fl
     if (!httpHeaderParseOffset(field, &spec->offset))
         return 0;
 
+    /* Additional check for BUG2155 - there MUST BE first-byte-pos and it MUST be positive*/
+    if (spec->offset < 0) {
+        debugs(68, 2, "invalid (no first-byte-pos or it is negative) resp-range-spec near: '" << field << "'");
+        return 0;
+    }
+
     p++;
 
     /* do we have last-pos ? */
-    if (p - field < flen) {
-        int64_t last_pos;
-
-        if (!httpHeaderParseOffset(p, &last_pos))
-            return 0;
-
-        spec->length = size_diff(last_pos + 1, spec->offset);
-        /* Ensure typecast is safe */
-        assert (spec->length >= 0);
+    if (p - field >= flen) {
+        debugs(68, 2, "invalid (no last-byte-pos) resp-range-spec near: '" << field << "'");
+        return 0;
     }
 
+    int64_t last_pos;
+
+    if (!httpHeaderParseOffset(p, &last_pos))
+        return 0;
+
+    if (last_pos < spec->offset) {
+        debugs(68, 2, "invalid (negative last-byte-pos) resp-range-spec near: '" << field << "'");
+        return 0;
+    }
+
+    spec->length = size_diff(last_pos + 1, spec->offset);
+
     /* we managed to parse, check if the result makes sence */
-    if (known_spec(spec->length) && spec->length == 0) {
+    if (spec->length <= 0) {
         debugs(68, 2, "invalid range (" << spec->offset << " += " <<
                (long int) spec->length << ") in resp-range-spec near: '" << field << "'");
         return 0;
@@ -176,6 +188,14 @@ httpHdrContRangeParseInit(HttpHdrContRange * range, const char *str)
         range->elength = range_spec_unknown;
     else if (!httpHeaderParseOffset(p, &range->elength))
         return 0;
+    else if (range->elength <= 0) {
+        /* Additional paranoidal check for BUG2155 - entity-length MUST be > 0 */
+        debugs(68, 2, "invalid (entity-length is negative) content-range-spec near: '" << str << "'");
+        return 0;
+    } else if (known_spec(range->spec.length) && range->elength < (range->spec.offset + range->spec.length)) {
+        debugs(68, 2, "invalid (range is outside entity-length) content-range-spec near: '" << str << "'");
+        return 0;
+    }
 
     debugs(68, 8, "parsed content-range field: " <<
            (long int) range->spec.offset << "-" <<

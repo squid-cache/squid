@@ -6,8 +6,9 @@
 */
 
 #include "acl/Acl.h"
-#ifdef USE_ARP_ACL
+#ifdef USE_SQUID_EUI
 #include "acl/Arp.h"
+#include "acl/Eui64.h"
 #endif
 #include "acl/Asn.h"
 #include "acl/Browser.h"
@@ -37,6 +38,7 @@
 #include "acl/PeerName.h"
 #include "acl/ProtocolData.h"
 #include "acl/Protocol.h"
+#include "acl/Random.h"
 #include "acl/Referer.h"
 #include "acl/RegexData.h"
 #include "acl/ReplyHeaderStrategy.h"
@@ -93,8 +95,8 @@ ACL::Prototype ACLMaxConnection::RegistryProtoype(&ACLMaxConnection::RegistryEnt
 ACLMaxConnection ACLMaxConnection::RegistryEntry_("maxconn");
 ACL::Prototype ACLMethod::RegistryProtoype(&ACLMethod::RegistryEntry_, "method");
 ACLStrategised<HttpRequestMethod> ACLMethod::RegistryEntry_(new ACLMethodData, ACLMethodStrategy::Instance(), "method");
+ACL::Prototype ACLMyIP::RegistryProtoype(&ACLMyIP::RegistryEntry_, "myip");
 ACLMyIP ACLMyIP::RegistryEntry_;
-ACLMyIP const &ACLMyIP::RegistryEntry() {return RegistryEntry_;}
 ACL::Prototype ACLMyPort::RegistryProtoype(&ACLMyPort::RegistryEntry_, "myport");
 ACLStrategised<int> ACLMyPort::RegistryEntry_(new ACLIntRange, ACLMyPortStrategy::Instance(), "myport");
 ACL::Prototype ACLMyPortName::RegistryProtoype(&ACLMyPortName::RegistryEntry_, "myportname");
@@ -103,6 +105,8 @@ ACL::Prototype ACLPeerName::RegistryProtoype(&ACLPeerName::RegistryEntry_, "peer
 ACLStrategised<const char *> ACLPeerName::RegistryEntry_(new ACLStringData, ACLPeerNameStrategy::Instance(), "peername");
 ACL::Prototype ACLProtocol::RegistryProtoype(&ACLProtocol::RegistryEntry_, "proto");
 ACLStrategised<protocol_t> ACLProtocol::RegistryEntry_(new ACLProtocolData, ACLProtocolStrategy::Instance(), "proto");
+ACL::Prototype ACLRandom::RegistryProtoype(&ACLRandom::RegistryEntry_, "random");
+ACLRandom ACLRandom::RegistryEntry_("random");
 ACL::Prototype ACLReferer::RegistryProtoype(&ACLReferer::RegistryEntry_, "referer_regex");
 ACLStrategised<char const *> ACLReferer::RegistryEntry_(new ACLRegexData, ACLRequestHeaderStrategy<HDR_REFERER>::Instance(), "referer_regex");
 ACL::Prototype ACLReplyMIMEType::RegistryProtoype(&ACLReplyMIMEType::RegistryEntry_, "rep_mime_type");
@@ -134,9 +138,11 @@ ACL::Prototype ACLCertificate::CARegistryProtoype(&ACLCertificate::CARegistryEnt
 ACLStrategised<SSL *> ACLCertificate::CARegistryEntry_(new ACLCertificateData (sslGetCAAttribute), ACLCertificateStrategy::Instance(), "ca_cert");
 #endif
 
-#ifdef USE_ARP_ACL
+#ifdef USE_SQUID_EUI
 ACL::Prototype ACLARP::RegistryProtoype(&ACLARP::RegistryEntry_, "arp");
 ACLARP ACLARP::RegistryEntry_("arp");
+ACL::Prototype ACLEui64::RegistryProtoype(&ACLEui64::RegistryEntry_, "eui64");
+ACLEui64 ACLEui64::RegistryEntry_("eui64");
 #endif
 
 #if USE_IDENT

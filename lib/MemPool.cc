@@ -848,7 +848,7 @@ size_t MemAllocator::RoundedSize(size_t s)
     return ((s + sizeof(void*) - 1) / sizeof(void*)) * sizeof(void*);
 }
 
-MemMalloc::MemMalloc(char const *label, size_t aSize) : MemImplementingAllocator(label, aSize) { inuse = 0; }
+MemMalloc::MemMalloc(char const *aLabel, size_t aSize) : MemImplementingAllocator(aLabel, aSize) { inuse = 0; }
 
 bool
 MemMalloc::idleTrigger(int shift) const

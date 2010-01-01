@@ -2,8 +2,12 @@
 #
 
 AUTOMAKE_OPTIONS = dist-bzip2 subdir-objects 1.5 foreign
-DIST_SUBDIRS	= compat lib snmplib scripts src icons errors contrib doc helpers test-suite tools
-SUBDIRS		= compat lib @makesnmplib@ scripts src icons errors doc helpers test-suite tools
+DIST_SUBDIRS	= compat lib libltdl snmplib scripts src icons errors contrib doc helpers test-suite tools
+SUBDIRS		= compat lib @makesnmplib@
+if USE_LOADABLE_MODULES
+SUBDIRS += libltdl
+endif
+SUBDIRS += scripts src icons errors doc helpers test-suite tools
 
 DISTCLEANFILES = include/stamp-h include/stamp-h[0-9]*
 DEFAULT_PINGER		= $(libexecdir)/`echo pinger | sed '$(transform);s/$$/$(EXEEXT)/'`
@@ -50,7 +54,7 @@ install-pinger:
 check: have-cppunit check-recursive
 
 have-cppunit:
-	@if test "@SQUID_CPPUNIT_INC@@SQUID_CPPUNIT_LA@@SQUID_CPPUNIT_LIBS@" = "" ; then \
+	@if test "$(SQUID_CPPUNIT_INC)$(SQUID_CPPUNIT_LA)$(SQUID_CPPUNIT_LIBS)" = "" ; then \
 		echo "FATAL: 'make check' requires cppunit and cppunit development packages. They do not appear to be installed." ; \
 		exit 1 ; \
 	fi

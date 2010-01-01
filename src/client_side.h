@@ -33,12 +33,14 @@
 #ifndef SQUID_CLIENTSIDE_H
 #define SQUID_CLIENTSIDE_H
 
-#include "comm.h"
-#include "StoreIOBuffer.h"
-#include "BodyPipe.h"
-#include "RefCount.h"
 #include "base/AsyncJob.h"
+#include "BodyPipe.h"
+#include "comm.h"
 #include "CommCalls.h"
+#include "eui/Eui48.h"
+#include "eui/Eui64.h"
+#include "RefCount.h"
+#include "StoreIOBuffer.h"
 
 class ConnStateData;
 
@@ -112,6 +114,7 @@ public:
     void deferRecipientForLater(clientStreamNode * node, HttpReply * rep, StoreIOBuffer receivedData);
     bool multipartRangeRequest() const;
     void registerWithConn();
+    void noteIoError(const int xerrno); ///< update state to reflect I/O error
 
 private:
     CBDATA_CLASS(ClientSocketContext);
@@ -123,6 +126,9 @@ private:
     bool mayUseConnection_; /* This request may use the connection. Don't read anymore requests for now */
     bool connRegistered_;
 };
+
+
+class ConnectionDetail;
 
 /** A connection to a socket */
 class ConnStateData : public BodyProducer/*, public RefCountable*/
@@ -137,6 +143,7 @@ public:
     int getAvailableBufferLength() const;
     bool areAllContextsForThisConnection() const;
     void freeAllContexts();
+    void notifyAllContexts(const int xerrno); ///< tell everybody about the err
     void readNextRequest();
     void makeSpaceAvailable();
     ClientSocketContext::Pointer getCurrentContext() const;
@@ -191,6 +198,11 @@ public:
     IpAddress log_addr;
     char rfc931[USER_IDENT_SZ];
     int nrequests;
+
+#if USE_SQUID_EUI
+    Eui::Eui48 peer_eui48;
+    Eui::Eui64 peer_eui64;
+#endif
 
     struct {
         bool readMoreRequests;

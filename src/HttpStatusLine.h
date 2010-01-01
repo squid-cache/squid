@@ -39,20 +39,32 @@ class String;
 /* for SQUIDCEXTERN */
 #include "config.h"
 
-/* for http_status */
+/* for http_status and protocol_t */
 #include "enums.h"
 
-/* for class variables */
 #include "HttpVersion.h"
+#include "SquidString.h"
 
+/**
+ * Holds the values parsed from an HTTP reply status line.
+ *
+ * For example: HTTP/1.1 200 Okay
+ */
 class HttpStatusLine
 {
-
 public:
     /* public, read only */
-    HttpVersion version;
-    const char *reason;		/**< points to a _constant_ string (default or supplied), never free()d */
-    http_status status;
+
+    /**
+     * By rights protocol name should be a constant "HTTP", with no need for this field to exist.
+     * However there are protocols which violate HTTP by sending their wn custom formats
+     * back with other protocol names (ICY streaming format being the current major problem)
+     */
+    protocol_t protocol;
+
+    HttpVersion version;     ///< breakdown of protocol version labels: 0.9 1.0 1.1
+    http_status status;      ///< status code. ie 200 404
+    const char *reason;	     ///< points to a _constant_ string (default or supplied), never free()d */
 };
 
 /* init/clean */

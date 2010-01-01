@@ -366,10 +366,10 @@ StoreEntry::StoreEntry()
     swap_dirn = -1;
 }
 
-StoreEntry::StoreEntry(const char *url, const char *log_url)
+StoreEntry::StoreEntry(const char *aUrl, const char *aLogUrl)
 {
     debugs(20, 3, HERE << "new StoreEntry " << this);
-    mem_obj = new MemObject(url, log_url);
+    mem_obj = new MemObject(aUrl, aLogUrl);
 
     expires = lastmod = lastref = timestamp = -1;
 
@@ -1407,7 +1407,7 @@ storeConfigure(void)
                                (float) Config.Swap.highWaterMark) / (float) 100);
     store_swap_low = (long) (((float) Store::Root().maxSize() *
                               (float) Config.Swap.lowWaterMark) / (float) 100);
-    store_pages_max = Config.memMaxSize / SM_PAGE_SIZE;
+    store_pages_max = Config.memMaxSize / sizeof(mem_node);
 }
 
 int
@@ -1628,12 +1628,12 @@ StoreEntry::url() const
 }
 
 void
-StoreEntry::createMemObject(const char *url, const char *log_url)
+StoreEntry::createMemObject(const char *aUrl, const char *aLogUrl)
 {
     if (mem_obj)
         return;
 
-    mem_obj = new MemObject(url, log_url);
+    mem_obj = new MemObject(aUrl, aLogUrl);
 }
 
 /* this just sets DELAY_SENDING */

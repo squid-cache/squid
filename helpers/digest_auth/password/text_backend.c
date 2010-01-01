@@ -53,7 +53,7 @@ my_free(void *p)
 }
 
 static void
-read_passwd_file(const char *passwdfile, int ha1mode)
+read_passwd_file(const char *passwordFile, int isHa1Mode)
 {
     FILE *f;
     char buf[8192];
@@ -72,7 +72,7 @@ read_passwd_file(const char *passwdfile, int ha1mode)
         fprintf(stderr, "digest_pw_auth: cannot create hash table\n");
         exit(1);
     }
-    f = fopen(passwdfile, "r");
+    f = fopen(passwordFile, "r");
     while (fgets(buf, 8192, f) != NULL) {
         if ((buf[0] == '#') || (buf[0] == ' ') || (buf[0] == '\t') ||
                 (buf[0] == '\n'))
@@ -88,7 +88,7 @@ read_passwd_file(const char *passwdfile, int ha1mode)
             if (strncmp(passwd, "{HHA1}", 6) == 0) {
                 ha1 = passwd + 6;
                 passwd = NULL;
-            } else if (ha1mode) {
+            } else if (isHa1Mode) {
                 ha1 = passwd;
                 passwd = NULL;
             }

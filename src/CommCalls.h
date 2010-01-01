@@ -290,9 +290,9 @@ CommCbFunPtrCallT<Dialer> *commCbCall(int debugSection, int debugLevel,
 /* CommCbFunPtrCallT */
 
 template <class Dialer>
-CommCbFunPtrCallT<Dialer>::CommCbFunPtrCallT(int debugSection, int debugLevel,
+CommCbFunPtrCallT<Dialer>::CommCbFunPtrCallT(int aDebugSection, int aDebugLevel,
         const char *callName, const Dialer &aDialer):
-        AsyncCall(debugSection, debugLevel, callName),
+        AsyncCall(aDebugSection, aDebugLevel, callName),
         dialer(aDialer)
 {
 }

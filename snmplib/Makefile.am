@@ -2,8 +2,8 @@
 ##
 ## Makefile for libsnmp.
 ## 
-AM_CFLAGS = @SQUID_CFLAGS@
-AM_CXXFLAGS = @SQUID_CXXFLAGS@
+AM_CFLAGS = $(SQUID_CFLAGS)
+AM_CXXFLAGS = $(SQUID_CXXFLAGS)
 noinst_LIBRARIES = libsnmp.a
 libsnmp_a_SOURCES  = asn1.c parse.c snmp_vars.c \
 	coexistance.c snmp_api.c snmp_error.c  \
