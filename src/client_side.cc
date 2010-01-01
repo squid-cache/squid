@@ -2345,8 +2345,7 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         debugs(33, 1, "clientProcessRequest: Invalid Request");
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
-        switch(hp->request_parse_status)
-        {
+        switch (hp->request_parse_status) {
         case HTTP_HEADER_TOO_LARGE:
             repContext->setReplyToError(ERR_TOO_BIG, HTTP_HEADER_TOO_LARGE, method, http->uri, conn->peer, NULL, conn->in.buf, NULL);
             break;
