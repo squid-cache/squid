@@ -97,21 +97,21 @@ squid_ldap_set_referrals(int referrals)
     ldap_set_option(ld, LDAP_OPT_REFERRALS, value);
 }
 static void
-squid_ldap_set_timelimit(int timelimit)
+squid_ldap_set_timelimit(int aTimeLimit)
 {
-    ldap_set_option(ld, LDAP_OPT_TIMELIMIT, &timelimit);
+    ldap_set_option(ld, LDAP_OPT_TIMELIMIT, &aTimeLimit);
 }
 static void
-squid_ldap_set_connect_timeout(int timelimit)
+squid_ldap_set_connect_timeout(int aTimeLimit)
 {
 #if defined(LDAP_OPT_NETWORK_TIMEOUT)
     struct timeval tv;
-    tv.tv_sec = timelimit;
+    tv.tv_sec = aTimeLimit;
     tv.tv_usec = 0;
     ldap_set_option(ld, LDAP_OPT_NETWORK_TIMEOUT, &tv);
 #elif defined(LDAP_X_OPT_CONNECT_TIMEOUT)
-    timelimit *= 1000;
-    ldap_set_option(ld, LDAP_X_OPT_CONNECT_TIMEOUT, &timelimit);
+    aTimeLimit *= 1000;
+    ldap_set_option(ld, LDAP_X_OPT_CONNECT_TIMEOUT, &aTimeLimit);
 #endif
 }
 
@@ -135,12 +135,12 @@ squid_ldap_set_referrals(int referrals)
         ld->ld_options &= ~LDAP_OPT_REFERRALS;
 }
 static void
-squid_ldap_set_timelimit(int timelimit)
+squid_ldap_set_timelimit(int aTimeLimit)
 {
-    ld->ld_timelimit = timelimit;
+    ld->ld_timelimit = aTimeLimit;
 }
 static void
-squid_ldap_set_connect_timeout(int timelimit)
+squid_ldap_set_connect_timeout(int aTimeLimit)
 {
     fprintf(stderr, "Connect timeouts not supported in your LDAP library\n");
 }

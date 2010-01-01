@@ -44,6 +44,7 @@
 #include "Store.h"
 #include "HttpReply.h"
 #include "basicScheme.h"
+#include "rfc1738.h"
 #include "wordlist.h"
 #include "SquidTime.h"
 
@@ -87,9 +88,7 @@ basicScheme::done()
     if (!shutting_down)
         return;
 
-    if (basicauthenticators)
-        helperFree(basicauthenticators);
-
+    delete basicauthenticators;
     basicauthenticators = NULL;
 
     /* XXX Reinstate auth shutdown for dynamic schemes? */
@@ -105,7 +104,7 @@ AuthBasicConfig::active() const
 bool
 AuthBasicConfig::configured() const
 {
-    if ((authenticate != NULL) && (authenticateChildren != 0) &&
+    if ((authenticate != NULL) && (authenticateChildren.n_max != 0) &&
             (basicAuthRealm != NULL)) {
         debugs(29, 9, HERE << "returning configured");
         return true;
@@ -210,11 +209,11 @@ AuthBasicUserRequest::module_direction()
 }
 
 void
-AuthBasicConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, http_hdr_type type, HttpRequest * request)
+AuthBasicConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
 {
     if (authenticate) {
-        debugs(29, 9, HERE << "Sending type:" << type << " header: 'Basic realm=\"" << basicAuthRealm << "\"'");
-        httpHeaderPutStrf(&rep->header, type, "Basic realm=\"%s\"", basicAuthRealm);
+        debugs(29, 9, HERE << "Sending type:" << hdrType << " header: 'Basic realm=\"" << basicAuthRealm << "\"'");
+        httpHeaderPutStrf(&rep->header, hdrType, "Basic realm=\"%s\"", basicAuthRealm);
     }
 }
 
@@ -302,16 +301,14 @@ AuthBasicConfig::dump(StoreEntry * entry, const char *name, AuthConfig * scheme)
     storeAppendPrintf(entry, "\n");
 
     storeAppendPrintf(entry, "%s basic realm %s\n", name, basicAuthRealm);
-    storeAppendPrintf(entry, "%s basic children %d\n", name, authenticateChildren);
-    storeAppendPrintf(entry, "%s basic concurrency %d\n", name, authenticateConcurrency);
+    storeAppendPrintf(entry, "%s basic children %d startup=%d idle=%d concurrency=%d\n", name, authenticateChildren.n_max, authenticateChildren.n_startup, authenticateChildren.n_idle, authenticateChildren.concurrency);
     storeAppendPrintf(entry, "%s basic credentialsttl %d seconds\n", name, (int) credentialsTTL);
     storeAppendPrintf(entry, "%s basic casesensitive %s\n", name, casesensitive ? "on" : "off");
 }
 
-AuthBasicConfig::AuthBasicConfig()
+AuthBasicConfig::AuthBasicConfig() : authenticateChildren(20,0,1,1)
 {
     /* TODO: move into initialisation list */
-    authenticateChildren = 5;
     credentialsTTL = 2 * 60 * 60;	/* two hours */
     basicAuthRealm = xstrdup("Squid proxy-caching web server");
 }
@@ -332,9 +329,7 @@ AuthBasicConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
 
         requirePathnameExists("auth_param basic program", authenticate->key);
     } else if (strcasecmp(param_str, "children") == 0) {
-        parse_int(&authenticateChildren);
-    } else if (strcasecmp(param_str, "concurrency") == 0) {
-        parse_int(&authenticateConcurrency);
+        authenticateChildren.parseConfig();
     } else if (strcasecmp(param_str, "realm") == 0) {
         parse_eol(&basicAuthRealm);
     } else if (strcasecmp(param_str, "credentialsttl") == 0) {
@@ -381,7 +376,7 @@ BasicUser::deleteSelf() const
     delete this;
 }
 
-BasicUser::BasicUser(AuthConfig *config) : AuthUser (config) , passwd (NULL), credentials_checkedtime(0), auth_queue(NULL), cleartext (NULL), currentRequest (NULL), httpAuthHeader (NULL)
+BasicUser::BasicUser(AuthConfig *aConfig) : AuthUser (aConfig) , passwd (NULL), credentials_checkedtime(0), auth_queue(NULL), cleartext (NULL), currentRequest (NULL), httpAuthHeader (NULL)
 {
     flags.credentials_ok = 0;
 }
@@ -606,13 +601,11 @@ AuthBasicConfig::init(AuthConfig * scheme)
         authbasic_initialised = 1;
 
         if (basicauthenticators == NULL)
-            basicauthenticators = helperCreate("basicauthenticator");
+            basicauthenticators = new helper("basicauthenticator");
 
         basicauthenticators->cmdline = authenticate;
 
-        basicauthenticators->n_to_start = authenticateChildren;
-
-        basicauthenticators->concurrency = authenticateConcurrency;
+        basicauthenticators->childs = authenticateChildren;
 
         basicauthenticators->ipc_type = IPC_STREAM;
 

@@ -36,6 +36,7 @@
 #include "squid.h"
 #include "Store.h"
 #include "MemObject.h"
+#include "SquidMath.h"
 #include "SquidTime.h"
 #include "SwapDir.h"
 #include "swap_log_op.h"
@@ -365,8 +366,8 @@ StoreController::stat(StoreEntry &output) const
     storeAppendPrintf(&output, "Current Store Swap Size: %8lu KB\n",
                       store_swap_size);
     storeAppendPrintf(&output, "Current Capacity       : %d%% used, %d%% free\n",
-                      percent((int) store_swap_size, (int) maxSize()),
-                      percent((int) (maxSize() - store_swap_size), (int) maxSize()));
+                      Math::intPercent((int) store_swap_size, (int) maxSize()),
+                      Math::intPercent((int) (maxSize() - store_swap_size), (int) maxSize()));
     /* FIXME Here we should output memory statistics */
 
     /* now the swapDir */
@@ -705,7 +706,7 @@ StoreController::get
 void
 
 StoreController::get
-(String const key, STOREGETCLIENT callback, void *cbdata)
+(String const key, STOREGETCLIENT aCallback, void *aCallbackData)
 {
     fatal("not implemented");
 }
@@ -782,7 +783,7 @@ StoreHashIndex::get
 void
 
 StoreHashIndex::get
-(String const key, STOREGETCLIENT callback, void *cbdata)
+(String const key, STOREGETCLIENT aCallback, void *aCallbackData)
 {
     fatal("not implemented");
 }
@@ -919,10 +920,10 @@ StoreSearchHashIndex::~StoreSearchHashIndex()
 {}
 
 void
-StoreSearchHashIndex::next(void (callback)(void *cbdata), void *cbdata)
+StoreSearchHashIndex::next(void (aCallback)(void *), void *aCallbackData)
 {
     next();
-    callback (cbdata);
+    aCallback (aCallbackData);
 }
 
 bool

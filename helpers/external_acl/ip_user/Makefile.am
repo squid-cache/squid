@@ -29,4 +29,4 @@ EXTRA_DIST = \
 LDADD = \
 	$(top_builddir)/compat/libcompat.la \
 	-L$(top_builddir)/lib -lmiscutil \
-	@XTRA_LIBS@
+	$(XTRA_LIBS)

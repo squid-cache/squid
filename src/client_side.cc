@@ -94,6 +94,7 @@
 #include "comm.h"
 #include "comm/ListenStateData.h"
 #include "ConnectionDetail.h"
+#include "eui/Config.h"
 #include "fde.h"
 #include "HttpHdrContRange.h"
 #include "HttpReply.h"
@@ -104,6 +105,7 @@
 #include "MemBuf.h"
 #include "MemObject.h"
 #include "ProtoPort.h"
+#include "rfc1738.h"
 #include "SquidTime.h"
 #include "Store.h"
 
@@ -139,8 +141,7 @@ static IOCB clientWriteComplete;
 static IOCB clientWriteBodyComplete;
 static bool clientParseRequest(ConnStateData * conn, bool &do_next_read);
 static PF clientLifetimeTimeout;
-static ClientSocketContext *parseHttpRequestAbort(ConnStateData * conn,
-        const char *uri);
+static ClientSocketContext *parseHttpRequestAbort(ConnStateData * conn, const char *uri);
 static ClientSocketContext *parseHttpRequest(ConnStateData *, HttpParser *, HttpRequestMethod *, HttpVersion *);
 #if USE_IDENT
 static IDCB clientIdentDone;
@@ -622,6 +623,15 @@ ConnStateData::freeAllContexts()
     }
 }
 
+/// propagates abort event to all contexts
+void
+ConnStateData::notifyAllContexts(int xerrno)
+{
+    typedef ClientSocketContext::Pointer CSCP;
+    for (CSCP c = getCurrentContext(); c.getRaw(); c = c->next)
+        c->noteIoError(xerrno);
+}
+
 /* This is a handler normally called by comm_close() */
 void ConnStateData::connStateClosed(const CommCloseCbParams &io)
 {
@@ -981,14 +991,14 @@ ClientSocketContext::packRange(StoreIOBuffer const &source, MemBuf * mb)
             return;
         }
 
-        int64_t next = getNextRangeOffset();
+        int64_t nextOffset = getNextRangeOffset();
 
-        assert (next >= http->out.offset);
+        assert (nextOffset >= http->out.offset);
 
-        int64_t skip = next - http->out.offset;
+        int64_t skip = nextOffset - http->out.offset;
 
         /* adjust for not to be transmitted bytes */
-        http->out.offset = next;
+        http->out.offset = nextOffset;
 
         if (available.size() <= skip)
             return;
@@ -1621,6 +1631,19 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, i
     context->writeComplete (fd, bufnotused, size, errflag);
 }
 
+/// remembers the abnormal connection termination for logging purposes
+void
+ClientSocketContext::noteIoError(const int xerrno)
+{
+    if (http) {
+        if (xerrno == ETIMEDOUT)
+            http->al.http.timedout = true;
+        else // even if xerrno is zero (which means read abort/eof)
+            http->al.http.aborted = true;
+    }
+}
+
+
 void
 ClientSocketContext::doClose()
 {
@@ -1668,23 +1691,23 @@ ClientSocketContext::initiateClose(const char *reason)
 }
 
 void
-ClientSocketContext::writeComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag)
+ClientSocketContext::writeComplete(int aFileDescriptor, char *bufnotused, size_t size, comm_err_t errflag)
 {
     StoreEntry *entry = http->storeEntry();
     http->out.size += size;
-    assert(fd > -1);
-    debugs(33, 5, "clientWriteComplete: FD " << fd << ", sz " << size <<
+    assert(aFileDescriptor > -1);
+    debugs(33, 5, "clientWriteComplete: FD " << aFileDescriptor << ", sz " << size <<
            ", err " << errflag << ", off " << http->out.size << ", len " <<
            entry ? entry->objectLen() : 0);
     clientUpdateSocketStats(http->logType, size);
-    assert (this->fd() == fd);
+    assert (this->fd() == aFileDescriptor);
 
     /* Bail out quickly on COMM_ERR_CLOSING - close handlers will tidy up */
 
     if (errflag == COMM_ERR_CLOSING)
         return;
 
-    if (errflag || clientHttpRequestStatus(fd, http)) {
+    if (errflag || clientHttpRequestStatus(aFileDescriptor, http)) {
         initiateClose("failure or true request status");
         /* Do we leak here ? */
         return;
@@ -1697,7 +1720,7 @@ ClientSocketContext::writeComplete(int fd, char *bufnotused, size_t size, comm_e
         break;
 
     case STREAM_COMPLETE:
-        debugs(33, 5, "clientWriteComplete: FD " << fd << " Keeping Alive");
+        debugs(33, 5, "clientWriteComplete: FD " << aFileDescriptor << " Keeping Alive");
         keepaliveNextRequest();
         return;
 
@@ -1811,9 +1834,10 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
 
 #if SHOULD_REJECT_UNKNOWN_URLS
 
-        if (!url)
+        if (!url) {
+            hp->request_parse_status = HTTP_BAD_REQUEST;
             return parseHttpRequestAbort(conn, "error:invalid-request");
-
+        }
 #endif
 
         if (url)
@@ -1940,6 +1964,7 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
         return NULL;
     } else if ( (size_t)hp->bufsiz >= Config.maxRequestHeaderSize && headersEnd(hp->buf, Config.maxRequestHeaderSize) == 0) {
         debugs(33, 5, "parseHttpRequest: Too large request");
+        hp->request_parse_status = HTTP_HEADER_TOO_LARGE;
         return parseHttpRequestAbort(conn, "error:request-too-large");
     }
 
@@ -1984,6 +2009,7 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
     /* Enforce max_request_size */
     if (req_sz >= Config.maxRequestHeaderSize) {
         debugs(33, 5, "parseHttpRequest: Too large request");
+        hp->request_parse_status = HTTP_HEADER_TOO_LARGE;
         return parseHttpRequestAbort(conn, "error:request-too-large");
     }
 
@@ -1995,15 +2021,14 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
         debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << conn->port->protocol << " Accelerator port " << conn->port->s.GetPort() );
         /* XXX need a way to say "this many character length string" */
         debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->buf);
-        /* XXX need some way to set 405 status on the error reply */
+        hp->request_parse_status = HTTP_METHOD_NOT_ALLOWED;
         return parseHttpRequestAbort(conn, "error:method-not-allowed");
     }
 
     if (*method_p == METHOD_NONE) {
         /* XXX need a way to say "this many character length string" */
         debugs(33, 1, "clientParseRequestMethod: Unsupported method in request '" << hp->buf << "'");
-
-        /* XXX where's the method set for this error? */
+        hp->request_parse_status = HTTP_METHOD_NOT_ALLOWED;
         return parseHttpRequestAbort(conn, "error:unsupported-request-method");
     }
 
@@ -2026,6 +2051,7 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
      */
     if ( squid_strnstr(req_hdr, "\r\r\n", req_sz) ) {
         debugs(33, 1, "WARNING: suspicious HTTP request contains double CR");
+        hp->request_parse_status = HTTP_BAD_REQUEST;
         return parseHttpRequestAbort(conn, "error:double-CR");
     }
 
@@ -2214,6 +2240,7 @@ ConnStateData::connFinishedWithConn(int size)
         } else if (!Config.onoff.half_closed_clients) {
             /* admin doesn't want to support half-closed client sockets */
             debugs(33, 3, "connFinishedWithConn: FD " << fd << " aborted (half_closed_clients disabled)");
+            notifyAllContexts(0); // no specific error implies abort
             return 1;
         }
     }
@@ -2319,7 +2346,16 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         debugs(33, 1, "clientProcessRequest: Invalid Request");
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
-        repContext->setReplyToError(ERR_INVALID_REQ, HTTP_BAD_REQUEST, method, NULL, conn->peer, NULL, conn->in.buf, NULL);
+        switch (hp->request_parse_status) {
+        case HTTP_HEADER_TOO_LARGE:
+            repContext->setReplyToError(ERR_TOO_BIG, HTTP_HEADER_TOO_LARGE, method, http->uri, conn->peer, NULL, conn->in.buf, NULL);
+            break;
+        case HTTP_METHOD_NOT_ALLOWED:
+            repContext->setReplyToError(ERR_UNSUP_REQ, HTTP_METHOD_NOT_ALLOWED, method, http->uri, conn->peer, NULL, conn->in.buf, NULL);
+            break;
+        default:
+            repContext->setReplyToError(ERR_INVALID_REQ, HTTP_BAD_REQUEST, method, http->uri, conn->peer, NULL, conn->in.buf, NULL);
+        }
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = false;
@@ -2404,6 +2440,10 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
     request->flags.internal = http->flags.internal;
     setLogUri (http, urlCanonicalClean(request));
     request->client_addr = conn->peer;
+#if USE_SQUID_EUI
+    request->client_eui48 = conn->peer_eui48;
+    request->client_eui64 = conn->peer_eui64;
+#endif
 #if FOLLOW_X_FORWARDED_FOR
     request->indirect_client_addr = conn->peer;
 #endif /* FOLLOW_X_FORWARDED_FOR */
@@ -2658,6 +2698,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
      * lame half-close detection
      */
     if (connReadWasError(io.flag, io.size, io.xerrno)) {
+        notifyAllContexts(io.xerrno);
         comm_close(fd);
         return;
     }
@@ -2878,8 +2919,7 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
          */
         ClientHttpRequest **H;
         clientStreamNode *node;
-        ClientHttpRequest *http =
-            parseHttpRequestAbort(this, "error:Connection%20lifetime%20expired");
+        ClientHttpRequest *http = parseHttpRequestAbort(this, "error:Connection%20lifetime%20expired");
         node = http->client_stream.tail->prev->data;
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
@@ -2930,8 +2970,9 @@ static void
 clientLifetimeTimeout(int fd, void *data)
 {
     ClientHttpRequest *http = (ClientHttpRequest *)data;
-    debugs(33, 1, "WARNING: Closing client " << http->getConn()->peer << " connection due to lifetime timeout");
+    debugs(33, 1, "WARNING: Closing client " << " connection due to lifetime timeout");
     debugs(33, 1, "\t" << http->uri);
+    http->al.http.timedout = true;
     comm_close(fd);
 }
 
@@ -3018,6 +3059,16 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
         identChecklist.my_addr = details->me;
         if (identChecklist.fastCheck())
             Ident::Start(details->me, details->peer, clientIdentDone, connState);
+    }
+#endif
+
+#if USE_SQUID_EUI
+    if (Eui::TheConfig.euiLookup) {
+        if (details->peer.IsIPv4()) {
+            connState->peer_eui48.lookup(details->peer);
+        } else if (details->peer.IsIPv6()) {
+            connState->peer_eui64.lookup(details->peer);
+        }
     }
 #endif
 
@@ -3708,7 +3759,7 @@ ConnStateData::clientPinnedConnectionClosed(const CommCloseCbParams &io)
      * connection has gone away */
 }
 
-void ConnStateData::pinConnection(int pinning_fd, HttpRequest *request, struct peer *peer, bool auth)
+void ConnStateData::pinConnection(int pinning_fd, HttpRequest *request, struct peer *aPeer, bool auth)
 {
     fde *f;
     char desc[FD_DESC_SZ];
@@ -3727,12 +3778,12 @@ void ConnStateData::pinConnection(int pinning_fd, HttpRequest *request, struct p
     pinning.pinned = true;
     if (pinning.peer)
         cbdataReferenceDone(pinning.peer);
-    if (peer)
-        pinning.peer = cbdataReference(peer);
+    if (aPeer)
+        pinning.peer = cbdataReference(aPeer);
     pinning.auth = auth;
     f = &fd_table[fd];
     snprintf(desc, FD_DESC_SZ, "%s pinned connection for %s:%d (%d)",
-             (auth || !peer) ? request->GetHost() : peer->name, f->ipaddr, (int) f->remote_port, fd);
+             (auth || !aPeer) ? request->GetHost() : aPeer->name, f->ipaddr, (int) f->remote_port, fd);
     fd_note(pinning_fd, desc);
 
     typedef CommCbMemFunT<ConnStateData, CommCloseCbParams> Dialer;
@@ -3742,7 +3793,7 @@ void ConnStateData::pinConnection(int pinning_fd, HttpRequest *request, struct p
 
 }
 
-int ConnStateData::validatePinnedConnection(HttpRequest *request, const struct peer *peer)
+int ConnStateData::validatePinnedConnection(HttpRequest *request, const struct peer *aPeer)
 {
     bool valid = true;
     if (pinning.fd < 0)
@@ -3757,7 +3808,7 @@ int ConnStateData::validatePinnedConnection(HttpRequest *request, const struct p
     if (pinning.peer && !cbdataReferenceValid(pinning.peer)) {
         valid = false;
     }
-    if (peer != pinning.peer) {
+    if (aPeer != pinning.peer) {
         valid = false;
     }
 

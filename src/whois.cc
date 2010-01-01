@@ -49,8 +49,8 @@ class WhoisState
 
 public:
     ~WhoisState();
-    void readReply (int fd, char *buf, size_t len, comm_err_t flag, int xerrno);
-    void setReplyToOK(StoreEntry *entry);
+    void readReply (int fd, char *aBuffer, size_t aBufferLength, comm_err_t flag, int xerrno);
+    void setReplyToOK(StoreEntry *sentry);
     StoreEntry *entry;
     HttpRequest *request;
     FwdState::Pointer fwd;
@@ -124,17 +124,17 @@ whoisReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void 
 }
 
 void
-WhoisState::setReplyToOK(StoreEntry *entry)
+WhoisState::setReplyToOK(StoreEntry *sentry)
 {
     HttpReply *reply = new HttpReply;
-    entry->buffer();
+    sentry->buffer();
     HttpVersion version(1, 0);
     reply->setHeaders(version, HTTP_OK, "Gatewaying", "text/plain", -1, -1, -2);
-    entry->replaceHttpReply(reply);
+    sentry->replaceHttpReply(reply);
 }
 
 void
-WhoisState::readReply (int fd, char *buf, size_t len, comm_err_t flag, int xerrno)
+WhoisState::readReply (int fd, char *aBuffer, size_t aBufferLength, comm_err_t flag, int xerrno)
 {
     int do_next_read = 0;
 
@@ -144,27 +144,27 @@ WhoisState::readReply (int fd, char *buf, size_t len, comm_err_t flag, int xerrn
         return;
     }
 
-    buf[len] = '\0';
-    debugs(75, 3, "whoisReadReply: FD " << fd << " read " << len << " bytes");
-    debugs(75, 5, "{" << buf << "}");
+    aBuffer[aBufferLength] = '\0';
+    debugs(75, 3, "whoisReadReply: FD " << fd << " read " << aBufferLength << " bytes");
+    debugs(75, 5, "{" << aBuffer << "}");
 
-    if (flag == COMM_OK && len > 0) {
+    if (flag == COMM_OK && aBufferLength > 0) {
         if (!dataWritten)
             setReplyToOK(entry);
 
-        kb_incr(&statCounter.server.all.kbytes_in, len);
+        kb_incr(&statCounter.server.all.kbytes_in, aBufferLength);
 
-        kb_incr(&statCounter.server.http.kbytes_in, len);
+        kb_incr(&statCounter.server.http.kbytes_in, aBufferLength);
 
         /* No range support, we always grab it all */
         dataWritten = true;
 
-        entry->append(buf, len);
+        entry->append(aBuffer, aBufferLength);
 
         entry->flush();
 
         do_next_read = 1;
-    } else if (flag != COMM_OK || len < 0) {
+    } else if (flag != COMM_OK || aBufferLength < 0) {
         debugs(50, 2, "whoisReadReply: FD " << fd << ": read failure: " << xstrerror() << ".");
 
         if (ignoreErrno(errno)) {
@@ -194,7 +194,7 @@ WhoisState::readReply (int fd, char *buf, size_t len, comm_err_t flag, int xerrn
     }
 
     if (do_next_read)
-        comm_read(fd, buf, BUFSIZ, whoisReadReply, this);
+        comm_read(fd, aBuffer, BUFSIZ, whoisReadReply, this);
 }
 
 static void

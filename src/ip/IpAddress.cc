@@ -35,6 +35,7 @@
  */
 
 #include "config.h"
+#include "Debug.h"
 #include "ip/IpAddress.h"
 #include "util.h"
 
@@ -54,15 +55,6 @@
 
 #ifdef INET6
 #error "INET6 defined but has been deprecated! Try running bootstrap and configure again."
-#endif
-
-/* We want to use the debug routines when running as module of squid. */
-/* otherwise fallback to printf if those are not available. */
-#ifndef SQUID_DEBUG
-#    define debugs(a,b,c)        //  drop.
-#else
-#warning "IpAddress built with Debugs!!"
-#    include "../src/Debug.h"
 #endif
 
 #if !USE_IPV6
@@ -362,6 +354,25 @@ void IpAddress::SetLocalhost()
 #else
     m_SocketAddr.sin_addr.s_addr = htonl(0x7F000001);
     m_SocketAddr.sin_family = AF_INET;
+#endif
+}
+
+bool IpAddress::IsSiteLocal6() const
+{
+#if USE_IPV6
+    return (m_SocketAddr.sin6_addr.s6_addr32[0] & htonl(0xff80)) == htonl(0xfe80);
+#else
+    return false;
+#endif
+}
+
+bool IpAddress::IsSlaac() const
+{
+#if USE_IPV6
+    return (m_SocketAddr.sin6_addr.s6_addr32[2] & htonl(0x000000ff)) == htonl(0x000000ff) &&
+           (m_SocketAddr.sin6_addr.s6_addr32[3] & htonl(0xff000000)) == htonl(0xfe000000);
+#else
+    return false;
 #endif
 }
 

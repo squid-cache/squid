@@ -9,6 +9,12 @@
 config="${1}"
 base="`dirname ${0}`"
 
+# cache_file may be set by environment variable
+configcache=""
+if [ -n "$cache_file" ]; then
+    configcache="--cache-file=$cache_file"
+fi
+
 #if we are on Linux, let's try parallelizing
 if [ -z "$pjobs" -a -e /proc/cpuinfo ]; then
     ncpus=`grep '^processor' /proc/cpuinfo | tail -1|awk '{print $3}'`
@@ -45,7 +51,7 @@ fi
 # above command currently encounters dependancy problems on cleanup.
 #
 # do not build any of the install's ...
-	$base/../configure ${OPTS} 2>&1 &&
+	$base/../configure ${OPTS} ${configcache} 2>&1 &&
 	make ${pjobs} ${MAKETEST} 2>&1
 
 # Remember and then explicitly return the result of the last command

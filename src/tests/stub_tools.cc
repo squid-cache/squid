@@ -31,7 +31,7 @@
  *
  */
 
-#include "squid.h"
+#include "config.h"
 
 int
 percent(int a, int b)
@@ -43,5 +43,6 @@ percent(int a, int b)
 void
 death(int sig)
 {
-    fatal ("Not implemented");
+    fprintf(stderr, "Not implemented");
+    exit(1);
 }

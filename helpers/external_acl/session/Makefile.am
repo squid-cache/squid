@@ -19,4 +19,4 @@ squid_session_SOURCES		= squid_session.c
 
 LDADD = \
 	$(top_builddir)/compat/libcompat.la \
-	@LIB_DB@
+	$(LIB_DB)

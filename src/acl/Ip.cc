@@ -109,7 +109,8 @@ acl_ip_data::toStr(char *buf, int len) const
         b3[0] = '/';
         rlen++;
 #if USE_IPV6
-        snprintf(&(b3[1]), (len-rlen), "%u", mask.GetCIDR() - (addr1.IsIPv4()?96:0) );
+        int cidr =  mask.GetCIDR() - (addr1.IsIPv4()?96:0);
+        snprintf(&(b3[1]), (len-rlen), "%u", (unsigned int)(cidr<0?0:cidr) );
 #else
         snprintf(&(b3[1]), (len-rlen), "%u", mask.GetCIDR() );
 #endif
@@ -273,13 +274,93 @@ acl_ip_data::FactoryParse(const char *t)
         return q;
     }
 
+    /* Detect some old broken strings equivalent to 'all'.
+     * treat them nicely. But be loud until its fixed.  */
+    if (strcasecmp(t, "0/0") == 0 || strcasecmp(t, "0.0.0.0/0") == 0 || strcasecmp(t, "0.0.0.0/0.0.0.0") == 0 ||
+            strcasecmp(t, "0.0.0.0-255.255.255.255") == 0 || strcasecmp(t, "0.0.0.0-0.0.0.0/0") == 0) {
+
+        debugs(28,DBG_CRITICAL, "ERROR: '" << t << "' needs to be replaced by the term 'all'.");
+        debugs(28,DBG_CRITICAL, "SECURITY NOTICE: Overriding config setting. Using 'all' instead.");
+        q->addr1.SetAnyAddr();
+        q->addr2.SetEmpty();
+        q->mask.SetAnyAddr();
+        return q;
+    }
+
 #if USE_IPV6
+    /* Special ACL RHS "ipv4" matches IPv4 Internet
+     * A nod to IANA; we include the entire class space in case
+     * they manage to find a way to recover and use it */
+    if (strcasecmp(t, "ipv4") == 0) {
+        q->mask.SetNoAddr();
+        q->mask.ApplyMask(0, AF_INET);
+        return q;
+    }
+
     /* Special ACL RHS "ipv6" matches IPv6-Unicast Internet */
     if (strcasecmp(t, "ipv6") == 0) {
         debugs(28, 9, "aclIpParseIpData: magic 'ipv6' found.");
-        t = "2000::/3";
-        /* AYJ: due to the nature os IPv6 this will not always work,
-         *      we may need to turn recursive to catch all the valid v6 sub-nets. */
+        r = q; // save head of the list for result.
+
+        /* 0000::/4 is a mix of localhost and obsolete IPv4-mapping space. Not valid outside this host. */
+
+        /* Future global unicast space: 1000::/4 */
+        q->addr1 = "1000::";
+        q->mask.SetNoAddr();
+        q->mask.ApplyMask(4, AF_INET6);
+
+        /* Current global unicast space: 2000::/4 = (2000::/4 - 3000::/4) */
+        q->next = new acl_ip_data;
+        q = q->next;
+        q->addr1 = "2000::";
+        q->mask.SetNoAddr();
+        q->mask.ApplyMask(3, AF_INET6);
+
+        /* Future global unicast space: 4000::/2 = (4000::/4 - 7000::/4) */
+        q->next = new acl_ip_data;
+        q = q->next;
+        q->addr1 = "4000::";
+        q->mask.SetNoAddr();
+        q->mask.ApplyMask(2, AF_INET6);
+
+        /* Future global unicast space: 8000::/2 = (8000::/4 - B000::/4) */
+        q->next = new acl_ip_data;
+        q = q->next;
+        q->addr1 = "8000::";
+        q->mask.SetNoAddr();
+        q->mask.ApplyMask(2, AF_INET6);
+
+        /* Future global unicast space: C000::/3 = (C000::/4 - D000::/4) */
+        q->next = new acl_ip_data;
+        q = q->next;
+        q->addr1 = "C000::";
+        q->mask.SetNoAddr();
+        q->mask.ApplyMask(3, AF_INET6);
+
+        /* Future global unicast space: E000::/4 */
+        q->next = new acl_ip_data;
+        q = q->next;
+        q->addr1 = "E000::";
+        q->mask.SetNoAddr();
+        q->mask.ApplyMask(4, AF_INET6);
+
+        /* F000::/4 is mostly reserved non-unicast. With some exceptions ... */
+
+        /* RFC 4193 Unique-Local unicast space: FC00::/7 */
+        q->next = new acl_ip_data;
+        q = q->next;
+        q->addr1 = "FC00::";
+        q->mask.SetNoAddr();
+        q->mask.ApplyMask(7, AF_INET6);
+
+        /* Link-Local unicast space: FE80::/10 */
+        q->next = new acl_ip_data;
+        q = q->next;
+        q->addr1 = "FE80::";
+        q->mask.SetNoAddr();
+        q->mask.ApplyMask(10, AF_INET6);
+
+        return r;
     }
 #endif
 
@@ -449,8 +530,11 @@ ACLIP::parse()
         acl_ip_data *q = acl_ip_data::FactoryParse(t);
 
         while (q != NULL) {
+            /* pop each result off the list and add it to the data tree individually */
+            acl_ip_data *next_node = q->next;
+            q->next = NULL;
             data = data->insert(q, acl_ip_data::NetworkCompare);
-            q = q->next;
+            q = next_node;
         }
     }
 }

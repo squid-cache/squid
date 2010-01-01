@@ -439,7 +439,7 @@ DiskdIOStrategy::getOptionTree() const
 }
 
 bool
-DiskdIOStrategy::optionQ1Parse(const char *name, const char *value, int reconfiguring)
+DiskdIOStrategy::optionQ1Parse(const char *name, const char *value, int isaReconfig)
 {
     if (strcmp(name, "Q1") != 0)
         return false;
@@ -448,7 +448,7 @@ DiskdIOStrategy::optionQ1Parse(const char *name, const char *value, int reconfig
 
     magic1 = atoi(value);
 
-    if (!reconfiguring)
+    if (!isaReconfig)
         return true;
 
     if (old_magic1 < magic1) {
@@ -478,7 +478,7 @@ DiskdIOStrategy::optionQ1Dump(StoreEntry * e) const
 }
 
 bool
-DiskdIOStrategy::optionQ2Parse(const char *name, const char *value, int reconfiguring)
+DiskdIOStrategy::optionQ2Parse(const char *name, const char *value, int isaReconfig)
 {
     if (strcmp(name, "Q2") != 0)
         return false;
@@ -487,7 +487,7 @@ DiskdIOStrategy::optionQ2Parse(const char *name, const char *value, int reconfig
 
     magic2 = atoi(value);
 
-    if (!reconfiguring)
+    if (!isaReconfig)
         return true;
 
     if (old_magic2 < magic2) {

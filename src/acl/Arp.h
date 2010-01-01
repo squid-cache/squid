@@ -39,7 +39,10 @@
 #include "acl/Checklist.h"
 #include "splay.h"
 
+namespace Eui
+{
 class Eui48;
+};
 
 /// \ingroup ACLAPI
 class ACLARP : public ACL
@@ -63,7 +66,7 @@ public:
 protected:
     static Prototype RegistryProtoype;
     static ACLARP RegistryEntry_;
-    SplayNode<Eui48 *> *data;
+    SplayNode<Eui::Eui48 *> *data;
     char const *class_;
 };
 

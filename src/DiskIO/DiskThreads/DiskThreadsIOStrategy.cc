@@ -139,14 +139,14 @@ DiskThreadsIOStrategy::callback()
         dlinkDelete(&ctrlp->node, &used_list);
 
         if (ctrlp->done_handler) {
-            AIOCB *callback = ctrlp->done_handler;
+            AIOCB *done_callback = ctrlp->done_handler;
             void *cbdata;
             ctrlp->done_handler = NULL;
 
             if (cbdataReferenceValidDone(ctrlp->done_handler_data, &cbdata)) {
                 retval = 1;	/* Return that we've actually done some work */
-                callback(ctrlp->fd, cbdata, ctrlp->bufp,
-                         ctrlp->result.aio_return, ctrlp->result.aio_errno);
+                done_callback(ctrlp->fd, cbdata, ctrlp->bufp,
+                              ctrlp->result.aio_return, ctrlp->result.aio_errno);
             } else {
                 if (ctrlp->operation == _AIO_OPEN) {
                     /* The open operation was aborted.. */

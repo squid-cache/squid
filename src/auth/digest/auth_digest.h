@@ -134,6 +134,8 @@ struct _digest_nonce_h : public hash_link {
     } flags;
 };
 
+#include "HelperChildConfig.h"
+
 /* configuration runtime data */
 
 class AuthDigestConfig : public AuthConfig
@@ -151,7 +153,7 @@ public:
     virtual void parse(AuthConfig *, int, char *);
     virtual void registerWithCacheManager(void);
     virtual const char * type() const;
-    int authenticateChildren;
+    HelperChildConfig authenticateChildren;
     char *digestAuthRealm;
     wordlist *authenticate;
     time_t nonceGCInterval;

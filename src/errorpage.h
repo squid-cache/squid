@@ -99,9 +99,21 @@ private:
     MemBuf *BuildContent(void);
 
     /**
-     * Convert an error template into an error page.
+     * Generates the Location: header value for a deny_info error page
+     * to be used for this error.
      */
-    const char *Convert(char token);
+    void DenyInfoLocation(const char *name, HttpRequest *request, MemBuf &result);
+
+    /**
+     * Map the Error page and deny_info template % codes into textual output.
+     *
+     * Several of the codes produce blocks of non-URL compatible results.
+     * When processing the deny_info location URL they will be skipped.
+     *
+     * \param token             The token following % which need to be converted
+     * \param url_presentable   URL-encode the the output for deny_info redirect
+     */
+    const char *Convert(char token, bool url_presentable);
 
     /**
      * CacheManager / Debug dump of the ErrorState object.
@@ -136,6 +148,8 @@ public:
         wordlist *server_msg;
         char *request;
         char *reply;
+        char *cwd_msg;
+        MemBuf *listing;
     } ftp;
 
     char *request_hdrs;

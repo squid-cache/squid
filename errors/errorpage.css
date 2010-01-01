@@ -67,6 +67,15 @@ pre {
 }
 
 /* special event: FTP / Gopher directory listing */
+#dirmsg {
+    font-family: courier;
+    color: black;
+    font-size: 10pt;
+}
+#dirlisting {
+    margin-left: 2%;
+    margin-right: 2%;
+}
 #dirlisting tr.entry td.icon,td.filename,td.size,td.date {
     border-bottom: groove;
 }

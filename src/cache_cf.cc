@@ -33,57 +33,62 @@
  */
 
 #include "squid.h"
-#include "ProtoPort.h"
-#include "HttpRequestMethod.h"
+
+#include "acl/Acl.h"
+#include "acl/Gadgets.h"
+#include "acl/MethodData.h"
+#if USE_ADAPTATION
+#include "adaptation/Config.h"
+#endif
+#if ICAP_CLIENT
+#include "adaptation/icap/Config.h"
+#endif
+#if USE_ECAP
+#include "adaptation/ecap/Config.h"
+#endif
 #include "auth/Config.h"
 #include "auth/Scheme.h"
 #include "CacheManager.h"
-#include "Store.h"
-#include "SwapDir.h"
 #include "ConfigParser.h"
-#include "acl/Acl.h"
-#include "acl/MethodData.h"
-#include "acl/Gadgets.h"
-#include "StoreFileSystem.h"
-#include "Parsing.h"
-#include "MemBuf.h"
-#include "wordlist.h"
+#include "eui/Config.h"
+#if USE_SQUID_ESI
+#include "esi/Parser.h"
+#endif
+#include "HttpRequestMethod.h"
 #include "ident/Config.h"
 #include "ip/IpIntercept.h"
+#include "log/Config.h"
+#include "MemBuf.h"
+#include "Parsing.h"
+#include "ProtoPort.h"
+#include "rfc1738.h"
+#if SQUID_SNMP
+#include "snmp.h"
+#endif
+#include "Store.h"
+#include "StoreFileSystem.h"
+#include "SwapDir.h"
+#include "wordlist.h"
 
 #if HAVE_GLOB_H
 #include <glob.h>
 #endif
 
-#if SQUID_SNMP
-#include "snmp.h"
-#endif
-#if USE_SQUID_ESI
-#include "esi/Parser.h"
-#endif
-
 #if USE_ADAPTATION
-#include "adaptation/Config.h"
-
 static void parse_adaptation_service_set_type();
 static void parse_adaptation_service_chain_type();
 static void parse_adaptation_access_type();
-
 #endif
 
 #if ICAP_CLIENT
-#include "adaptation/icap/Config.h"
-
 static void parse_icap_service_type(Adaptation::Icap::Config *);
 static void dump_icap_service_type(StoreEntry *, const char *, const Adaptation::Icap::Config &);
 static void free_icap_service_type(Adaptation::Icap::Config *);
 static void parse_icap_class_type();
 static void parse_icap_access_type();
-
 #endif
 
 #if USE_ECAP
-#include "adaptation/ecap/Config.h"
 static void parse_ecap_service_type(Adaptation::Ecap::Config *);
 static void dump_ecap_service_type(StoreEntry *, const char *, const Adaptation::Ecap::Config &);
 static void free_ecap_service_type(Adaptation::Ecap::Config *);
@@ -467,14 +472,14 @@ configDoConfigure(void)
 
 #if USE_DNSSERVERS
 
-    if (Config.dnsChildren < 1)
+    if (Config.dnsChildren.n_max < 1)
         fatal("No dnsservers allocated");
 
 #endif
 
     if (Config.Program.redirect) {
-        if (Config.redirectChildren < 1) {
-            Config.redirectChildren = 0;
+        if (Config.redirectChildren.n_max < 1) {
+            Config.redirectChildren.n_max = 0;
             wordlistDestroy(&Config.Program.redirect);
         }
     }
@@ -525,7 +530,7 @@ configDoConfigure(void)
 
     requirePathnameExists("unlinkd_program", Config.Program.unlinkd);
 #endif
-
+    requirePathnameExists("logfile_daemon", Log::TheConfig.logfile_daemon);
     if (Config.Program.redirect)
         requirePathnameExists("redirect_program", Config.Program.redirect->key);
 
@@ -2531,11 +2536,13 @@ free_time_t(time_t * var)
     *var = 0;
 }
 
+#if UNUSED_CODE
 static void
 dump_size_t(StoreEntry * entry, const char *name, size_t var)
 {
     storeAppendPrintf(entry, "%s %d\n", name, (int) var);
 }
+#endif
 
 static void
 dump_b_size_t(StoreEntry * entry, const char *name, size_t var)
@@ -2563,6 +2570,7 @@ dump_kb_int64_t(StoreEntry * entry, const char *name, int64_t var)
     storeAppendPrintf(entry, "%s %"PRId64" %s\n", name, var, B_KBYTES_STR);
 }
 
+#if UNUSED_CODE
 static void
 parse_size_t(size_t * var)
 {
@@ -2570,6 +2578,7 @@ parse_size_t(size_t * var)
     i = GetInteger();
     *var = (size_t) i;
 }
+#endif
 
 static void
 parse_b_size_t(size_t * var)
@@ -2849,74 +2858,25 @@ parseNeighborType(const char *s)
 }
 
 #if USE_WCCPv2
-void
-parse_IpAddress_list_token(IpAddress_list ** head, char *token)
-{
-    char *t;
-    char *host;
-    char *tmp;
-
-    IpAddress ipa;
-    unsigned short port;
-    IpAddress_list *s;
-
-    host = NULL;
-    port = 0;
-
-#if USE_IPV6
-    if (*token == '[') {
-        /* [host]:port */
-        host = token + 1;
-        t = strchr(host, ']');
-        if (!t)
-            self_destruct();
-        *t++ = '\0';
-        if (*t != ':')
-            self_destruct();
-        port = xatos(t + 1);
-    } else
-#endif
-        if ((t = strchr(token, ':'))) {
-            /* host:port */
-            host = token;
-            *t = '\0';
-            port = xatos(t + 1);
-
-            if (0 == port)
-                self_destruct();
-        } else if ((port = strtol(token, &tmp, 10)), !*tmp) {
-            /* port */
-        } else {
-            host = token;
-            port = 0;
-        }
-
-    if (NULL == host)
-        ipa.SetAnyAddr();
-    else if ( ipa.GetHostByName(host) )	/* dont use ipcache. Accept either FQDN or IPA. */
-        (void) 0;
-    else
-        self_destruct();
-
-    /* port MUST be set after the IPA lookup/conversion is perofrmed. */
-    ipa.SetPort(port);
-
-    while (*head)
-        head = &(*head)->next;
-
-    s = static_cast<IpAddress_list *>(xcalloc(1, sizeof(*s)));
-    s->s = ipa;
-
-    *head = s;
-}
-
 static void
 parse_IpAddress_list(IpAddress_list ** head)
 {
     char *token;
+    IpAddress_list *s;
+    IpAddress ipa;
 
     while ((token = strtok(NULL, w_space))) {
-        parse_IpAddress_list_token(head, token);
+        if (GetHostWithPort(token, &ipa)) {
+
+            while (*head)
+                head = &(*head)->next;
+
+            s = static_cast<IpAddress_list *>(xcalloc(1, sizeof(*s)));
+            s->s = ipa;
+
+            *head = s;
+        } else
+            self_destruct();
     }
 }
 
