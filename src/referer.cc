@@ -34,7 +34,7 @@
  */
 
 #include "squid.h"
-
+#include "log/File.h"
 #include "SquidTime.h"
 
 #if USE_REFERER_LOG

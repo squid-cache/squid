@@ -126,7 +126,7 @@ void
 ACLTimeData::parse()
 {
     ACLTimeData **Tail;
-    long weekbits = 0;
+    long parsed_weekbits = 0;
 
     for (Tail = &next; *Tail; Tail = &((*Tail)->next));
     ACLTimeData *q = NULL;
@@ -143,35 +143,35 @@ ACLTimeData::parse()
                 switch (*t++) {
 
                 case 'S':
-                    weekbits |= ACL_SUNDAY;
+                    parsed_weekbits |= ACL_SUNDAY;
                     break;
 
                 case 'M':
-                    weekbits |= ACL_MONDAY;
+                    parsed_weekbits |= ACL_MONDAY;
                     break;
 
                 case 'T':
-                    weekbits |= ACL_TUESDAY;
+                    parsed_weekbits |= ACL_TUESDAY;
                     break;
 
                 case 'W':
-                    weekbits |= ACL_WEDNESDAY;
+                    parsed_weekbits |= ACL_WEDNESDAY;
                     break;
 
                 case 'H':
-                    weekbits |= ACL_THURSDAY;
+                    parsed_weekbits |= ACL_THURSDAY;
                     break;
 
                 case 'F':
-                    weekbits |= ACL_FRIDAY;
+                    parsed_weekbits |= ACL_FRIDAY;
                     break;
 
                 case 'A':
-                    weekbits |= ACL_SATURDAY;
+                    parsed_weekbits |= ACL_SATURDAY;
                     break;
 
                 case 'D':
-                    weekbits |= ACL_WEEKDAYS;
+                    parsed_weekbits |= ACL_WEEKDAYS;
                     break;
 
                 case '-':
@@ -198,7 +198,7 @@ ACLTimeData::parse()
                 return;
             }
 
-            if ((weekbits == 0) && (start == 0) && (stop == 0))
+            if ((parsed_weekbits == 0) && (start == 0) && (stop == 0))
                 q = this;
             else
                 q = new ACLTimeData;
@@ -207,9 +207,9 @@ ACLTimeData::parse()
 
             q->stop = h2 * 60 + m2;
 
-            q->weekbits = weekbits;
+            q->weekbits = parsed_weekbits;
 
-            weekbits = 0;
+            parsed_weekbits = 0;
 
             if (q->start > q->stop) {
                 debugs(28, 0, "aclParseTimeSpec: Reversed time range");
@@ -231,23 +231,18 @@ ACLTimeData::parse()
         }
     }
 
-    if (weekbits) {
+    if (parsed_weekbits) {
 
-        if ((weekbits == 0) && (start == 0) && (stop == 0))
-            q = this;
-        else
-            q = new ACLTimeData;
+        q = new ACLTimeData;
 
         q->start = 0 * 60 + 0;
 
         q->stop =  24 * 60 + 0;
 
-        q->weekbits = weekbits;
+        q->weekbits = parsed_weekbits;
 
-        if (q != this) {
-            *(Tail) = q;
-            Tail = &q->next;
-        }
+        *(Tail) = q;
+        Tail = &q->next;
     }
 }
 

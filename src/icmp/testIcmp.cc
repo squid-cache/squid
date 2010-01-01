@@ -15,28 +15,51 @@ void
 testIcmp::testChecksum()
 {
     stubIcmp icmp;
-    short unsigned int buf[10] = {1,2,3,4,5,6,7,8,9};
+    short unsigned int buf[10] = {htons(1),htons(2),htons(3),htons(4),htons(5),htons(6),htons(7),htons(8),htons(9), htons(10)};
 
     // NULL data
-    CPPUNIT_ASSERT_EQUAL(65535, icmp.testChecksum(NULL,0));
+    CPPUNIT_ASSERT_EQUAL((int)htons(0xffff), icmp.testChecksum(NULL,0));
 
     // NULL data with length!!
-    CPPUNIT_ASSERT_EQUAL(65535, icmp.testChecksum(NULL,1));
+    CPPUNIT_ASSERT_EQUAL((int)htons(0xffff), icmp.testChecksum(NULL,1));
 
     // data with 0 length
-    CPPUNIT_ASSERT_EQUAL(65535, icmp.testChecksum(buf,0));
+    CPPUNIT_ASSERT_EQUAL((int)htons(0xffff), icmp.testChecksum(buf,0));
 
     // data with invalid length (low)
-    CPPUNIT_ASSERT_EQUAL(65534, icmp.testChecksum(buf,1));
+    CPPUNIT_ASSERT_EQUAL((int)htons(0xffff), icmp.testChecksum(buf,1));
 
-    // data with invalid length (max-low)
-    CPPUNIT_ASSERT_EQUAL(65520, icmp.testChecksum(buf,9));
+    CPPUNIT_ASSERT_EQUAL((int)htons(0xfffe), icmp.testChecksum(buf,2)); // 1
+    CPPUNIT_ASSERT_EQUAL((int)htons(0xfffe), icmp.testChecksum(buf,3));
+
+    CPPUNIT_ASSERT_EQUAL((int)htons(0xfffc), icmp.testChecksum(buf,4)); // 1+2
+    CPPUNIT_ASSERT_EQUAL((int)htons(0xfffc), icmp.testChecksum(buf,5));
+
+    CPPUNIT_ASSERT_EQUAL((int)htons(0xfff9), icmp.testChecksum(buf,6)); // 1+2+3
+    CPPUNIT_ASSERT_EQUAL((int)htons(0xfff9), icmp.testChecksum(buf,7));
+
+    CPPUNIT_ASSERT_EQUAL((int)htons(0xfff5), icmp.testChecksum(buf,8)); // 1+2+3+4
+    CPPUNIT_ASSERT_EQUAL((int)htons(0xfff5), icmp.testChecksum(buf,9));
+
+    CPPUNIT_ASSERT_EQUAL((int)htons(0xfff0), icmp.testChecksum(buf,10)); // 1+2...+5
+    CPPUNIT_ASSERT_EQUAL((int)htons(0xfff0), icmp.testChecksum(buf,11));
+
+    CPPUNIT_ASSERT_EQUAL((int)htons(0xffea), icmp.testChecksum(buf,12)); // 1+2...+6
+    CPPUNIT_ASSERT_EQUAL((int)htons(0xffea), icmp.testChecksum(buf,13));
+
+    CPPUNIT_ASSERT_EQUAL((int)htons(0xffe3), icmp.testChecksum(buf,14)); // 1+2...+7
+    CPPUNIT_ASSERT_EQUAL((int)htons(0xffe3), icmp.testChecksum(buf,15));
+
+    CPPUNIT_ASSERT_EQUAL((int)htons(0xffdb), icmp.testChecksum(buf,16)); // 1+2...+8
+    CPPUNIT_ASSERT_EQUAL((int)htons(0xffdb), icmp.testChecksum(buf,17));
+
+    CPPUNIT_ASSERT_EQUAL((int)htons(0xffd2), icmp.testChecksum(buf,18)); // 1+2...+9
+    CPPUNIT_ASSERT_EQUAL((int)htons(0xffd2), icmp.testChecksum(buf,19));
 
     // data with accurate length
-    CPPUNIT_ASSERT_EQUAL(65520, icmp.testChecksum(buf,10));
+    CPPUNIT_ASSERT_EQUAL((int)htons(0xffc8), icmp.testChecksum(buf,20)); // 1+2...+10
 
-    // data with invalid length (overrun)
-    CPPUNIT_ASSERT_EQUAL(65514, icmp.testChecksum(buf,11));
+    // data with invalid length (overrun) ==> Garbage checksum...
 }
 
 void

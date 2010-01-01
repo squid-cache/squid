@@ -52,8 +52,8 @@ void Adaptation::Icap::OptXact::makeRequest(MemBuf &buf)
     buf.append(ICAP::crlf, 2);
 
     // XXX: HttpRequest cannot fully parse ICAP Request-Line
-    http_status status;
-    Must(icapRequest->parse(&buf, true, &status) > 0);
+    http_status reqStatus;
+    Must(icapRequest->parse(&buf, true, &reqStatus) > 0);
 }
 
 void Adaptation::Icap::OptXact::handleCommWrote(size_t size)

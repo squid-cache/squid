@@ -17,7 +17,7 @@ LDADD = \
 	$(top_builddir)/src/globals.o \
 	$(top_builddir)/src/time.o
 
-EXTRA_PROGRAMS = mem_node_test membanger splay tcp-banger2 rfc1738
+EXTRA_PROGRAMS = mem_node_test membanger splay tcp-banger2
 
 EXTRA_DIST = testheaders.sh
 
@@ -35,7 +35,6 @@ TESTS += debug \
 	syntheticoperators \
 	VirtualDeleteOperator \
 	StackTest \
-	rfc1738 \
 	refcount\
 	splay\
 	MemPoolTest\
@@ -50,7 +49,6 @@ check_PROGRAMS += debug \
 		mem_node_test\
 		mem_hdr_test \
 		refcount\
-		rfc1738\
 		splay \
 		StackTest \
 		syntheticoperators \
@@ -76,8 +74,6 @@ splay_SOURCES = splay.cc
 StackTest_SOURCES = StackTest.cc $(DEBUG_SOURCE)
 syntheticoperators_SOURCES = syntheticoperators.cc $(DEBUG_SOURCE)
 VirtualDeleteOperator_SOURCES = VirtualDeleteOperator.cc $(DEBUG_SOURCE)
-
-rfc1738_SOURCES = rfc1738.cc
 
 ## membanger won't link today. Bitrot..
 ##CC	= gcc

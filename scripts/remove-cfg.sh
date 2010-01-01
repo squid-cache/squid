@@ -18,7 +18,7 @@ fi
 if test -f $prime
 then
 	# is the primary config identical to the default?
-	if diff -q $default $prime > /dev/null
+	if diff $default $prime > /dev/null
 	then
  		echo " $remover -f $prime";
                 $remover -f $prime;

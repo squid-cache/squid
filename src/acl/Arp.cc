@@ -42,10 +42,10 @@
 #include "ip/IpAddress.h"
 #include "wordlist.h"
 
-static void aclParseArpList(SplayNode<Eui48 *> **curlist);
-static int aclMatchArp(SplayNode<Eui48 *> **dataptr, IpAddress &c);
-static SplayNode<Eui48 *>::SPLAYCMP aclArpCompare;
-static SplayNode<Eui48 *>::SPLAYWALKEE aclDumpArpListWalkee;
+static void aclParseArpList(SplayNode<Eui::Eui48 *> **curlist);
+static int aclMatchArp(SplayNode<Eui::Eui48 *> **dataptr, IpAddress &c);
+static SplayNode<Eui::Eui48 *>::SPLAYCMP aclArpCompare;
+static SplayNode<Eui::Eui48 *>::SPLAYWALKEE aclDumpArpListWalkee;
 
 
 ACL *
@@ -66,7 +66,7 @@ ACLARP::ACLARP (ACLARP const & old) : data (NULL), class_ (old.class_)
 ACLARP::~ACLARP()
 {
     if (data)
-        data->destroy(SplayNode<Eui48*>::DefaultFree);
+        data->destroy(SplayNode<Eui::Eui48*>::DefaultFree);
 }
 
 char const *
@@ -107,11 +107,11 @@ ACLARP::empty () const
  *       Solaris code by R. Gancarz <radekg@solaris.elektrownia-lagisza.com.pl>
  */
 
-Eui48 *
+Eui::Eui48 *
 aclParseArpData(const char *t)
 {
     char buf[256];
-    Eui48 *q = new Eui48;
+    Eui::Eui48 *q = new Eui::Eui48;
     debugs(28, 5, "aclParseArpData: " << t);
 
     if (sscanf(t, "%[0-9a-fA-F:]", buf) != 1) {
@@ -141,11 +141,11 @@ ACLARP::parse()
 }
 
 void
-aclParseArpList(SplayNode<Eui48 *> **curlist)
+aclParseArpList(SplayNode<Eui::Eui48 *> **curlist)
 {
     char *t = NULL;
-    SplayNode<Eui48*> **Top = curlist;
-    Eui48 *q = NULL;
+    SplayNode<Eui::Eui48*> **Top = curlist;
+    Eui::Eui48 *q = NULL;
 
     while ((t = strtokFile())) {
         if ((q = aclParseArpData(t)) == NULL)
@@ -173,10 +173,10 @@ ACLARP::match(ACLChecklist *cl)
 /* aclMatchArp */
 /***************/
 int
-aclMatchArp(SplayNode<Eui48 *> **dataptr, IpAddress &c)
+aclMatchArp(SplayNode<Eui::Eui48 *> **dataptr, IpAddress &c)
 {
-    Eui48 result;
-    SplayNode<Eui48 *> **Top = dataptr;
+    Eui::Eui48 result;
+    SplayNode<Eui::Eui48 *> **Top = dataptr;
 
     if (result.lookup(c)) {
         /* Do ACL match lookup */
@@ -193,13 +193,13 @@ aclMatchArp(SplayNode<Eui48 *> **dataptr, IpAddress &c)
 }
 
 static int
-aclArpCompare(Eui48 * const &a, Eui48 * const &b)
+aclArpCompare(Eui::Eui48 * const &a, Eui::Eui48 * const &b)
 {
-    return memcmp(a, b, sizeof(Eui48));
+    return memcmp(a, b, sizeof(Eui::Eui48));
 }
 
 static void
-aclDumpArpListWalkee(Eui48 * const &node, void *state)
+aclDumpArpListWalkee(Eui::Eui48 * const &node, void *state)
 {
     static char buf[48];
     node->encode(buf, 48);

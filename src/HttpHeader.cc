@@ -514,9 +514,10 @@ HttpHeader::parse(const char *header_start, const char *header_end)
     debugs(55, 7, "parsing hdr: (" << this << ")" << std::endl << getStringPrefix(header_start, header_end));
     HttpHeaderStats[owner].parsedCount++;
 
-    if (memchr(header_start, '\0', header_end - header_start)) {
+    char *nulpos;
+    if ((nulpos = (char*)memchr(header_start, '\0', header_end - header_start))) {
         debugs(55, 1, "WARNING: HTTP header contains NULL characters {" <<
-               getStringPrefix(header_start, header_end) << "}");
+               getStringPrefix(header_start, nulpos) << "}\nNULL\n{" << getStringPrefix(nulpos+1, header_end));
         goto reset;
     }
 

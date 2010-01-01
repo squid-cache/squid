@@ -302,11 +302,12 @@ fsHash(const void *key, unsigned int n)
     return (*k & (--n));
 }
 
-static void
-alarm_handler(int sig)
-{
-    (void) 0;
-}
+SQUIDCEXTERN {
+    static void
+    alarm_handler(int sig) {
+        (void) 0;
+    }
+};
 
 int
 main(int argc, char *argv[])

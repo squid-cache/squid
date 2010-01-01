@@ -31,7 +31,7 @@
  *
  */
 #include "config.h"
-#include "IpIntercept.h"
+#include "ip/IpIntercept.h"
 #include "fde.h"
 
 #if IPF_TRANSPARENT
@@ -45,7 +45,7 @@
 #if HAVE_NET_IF_H
 #include <net/if.h>
 #endif
-#ifdef HAVE_IPL_H
+#if HAVE_IPL_H
 #include <ipl.h>
 #elif HAVE_NETINET_IPL_H
 #include <netinet/ipl.h>
@@ -79,10 +79,10 @@
 #include <sys/fcntl.h>
 #include <net/if.h>
 #include <netinet/in.h>
-#ifdef HAVE_NET_PF_PFVAR_H
+#if HAVE_NET_PF_PFVAR_H
 #include <net/pf/pfvar.h>
 #endif /* HAVE_NET_PF_PFVAR_H */
-#ifdef HAVE_NET_PFVAR_H
+#if HAVE_NET_PFVAR_H
 #include <net/pfvar.h>
 #endif /* HAVE_NET_PFVAR_H */
 #endif /* PF_TRANSPARENT required headers */
@@ -93,7 +93,7 @@
 #endif
 
 #if LINUX_TPROXY2
-#ifdef HAVE_LINUX_NETFILTER_IPV4_IP_TPROXY_H
+#if HAVE_LINUX_NETFILTER_IPV4_IP_TPROXY_H
 #include <linux/netfilter_ipv4/ip_tproxy.h>
 #else
 #error " TPROXY v2 Header file missing: linux/netfilter_ipv4/ip_tproxy.h. Perhapse you meant to use TPROXY v4 ? "
@@ -407,6 +407,7 @@ IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAdd
 }
 
 #if LINUX_TPROXY2
+int
 IpIntercept::SetTproxy2OutgoingAddr(int fd, const IpAddress &src)
 {
     IpAddress addr;

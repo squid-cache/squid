@@ -87,7 +87,7 @@ SQUIDCEXTERN void clientdbInit(void);
 SQUIDCEXTERN void clientdbUpdate(const IpAddress &, log_type, protocol_t, size_t);
 
 SQUIDCEXTERN int clientdbCutoffDenied(const IpAddress &);
-SQUIDCEXTERN void clientdbDump(StoreEntry *);
+void clientdbDump(StoreEntry *);
 SQUIDCEXTERN void clientdbFreeMemory(void);
 
 SQUIDCEXTERN int clientdbEstablished(const IpAddress &, int);
@@ -98,6 +98,7 @@ SQUIDCEXTERN void httpRequestFree(void *);
 extern void clientAccessCheck(void *);
 
 #include "Debug.h"
+
 /* see debug.c for info on context-based debugging */
 SQUIDCEXTERN Ctx ctx_enter(const char *descr);
 SQUIDCEXTERN void ctx_exit(Ctx ctx);
@@ -225,6 +226,7 @@ SQUIDCEXTERN const char *httpMakeVaryMark(HttpRequest * request, HttpReply const
 SQUIDCEXTERN int etagParseInit(ETag * etag, const char *str);
 SQUIDCEXTERN int etagIsEqual(const ETag * tag1, const ETag * tag2);
 
+#include "HttpStatusCode.h"
 SQUIDCEXTERN const char *httpStatusString(http_status status);
 
 /* Http Body */
@@ -471,8 +473,12 @@ SQUIDCEXTERN void *memAllocString(size_t net_size, size_t * gross_size);
 SQUIDCEXTERN void *memAllocBuf(size_t net_size, size_t * gross_size);
 SQUIDCEXTERN void *memReallocBuf(void *buf, size_t net_size, size_t * gross_size);
 SQUIDCEXTERN void memFree(void *, int type);
-SQUIDCEXTERN void memFree4K(void *);
-SQUIDCEXTERN void memFree8K(void *);
+void memFree2K(void *);
+void memFree4K(void *);
+void memFree8K(void *);
+void memFree16K(void *);
+void memFree32K(void *);
+void memFree64K(void *);
 SQUIDCEXTERN void memFreeString(size_t size, void *);
 SQUIDCEXTERN void memFreeBuf(size_t size, void *);
 SQUIDCEXTERN FREE *memFreeBufFunc(size_t size);
@@ -565,8 +571,6 @@ SQUIDCEXTERN void no_suid(void);
 SQUIDCEXTERN void writePidFile(void);
 SQUIDCEXTERN void setSocketShutdownLifetimes(int);
 SQUIDCEXTERN void setMaxFD(void);
-SQUIDCEXTERN int percent(int, int);
-SQUIDCEXTERN double dpercent(double, double);
 SQUIDCEXTERN void squid_signal(int sig, SIGHDLR *, int flags);
 SQUIDCEXTERN pid_t readPidFile(void);
 SQUIDCEXTERN void keepCapabilities(void);
@@ -574,8 +578,6 @@ SQUIDCEXTERN void keepCapabilities(void);
 /* AYJ debugs function to show locations being reset with memset() */
 SQUIDCEXTERN void *xmemset(void *dst, int, size_t);
 
-SQUIDCEXTERN int intAverage(int, int, int, int);
-SQUIDCEXTERN double doubleAverage(double, double, int, int);
 SQUIDCEXTERN void debug_trap(const char *);
 SQUIDCEXTERN void logsFlush(void);
 SQUIDCEXTERN const char *checkNullString(const char *p);
@@ -698,14 +700,6 @@ SQUIDCEXTERN void *leakAddFL(void *, const char *, int);
 SQUIDCEXTERN void *leakTouchFL(void *, const char *, int);
 SQUIDCEXTERN void *leakFreeFL(void *, const char *, int);
 #endif
-
-/* logfile.c */
-SQUIDCEXTERN Logfile *logfileOpen(const char *path, size_t bufsz, int);
-SQUIDCEXTERN void logfileClose(Logfile * lf);
-SQUIDCEXTERN void logfileRotate(Logfile * lf);
-SQUIDCEXTERN void logfileWrite(Logfile * lf, void *buf, size_t len);
-SQUIDCEXTERN void logfileFlush(Logfile * lf);
-SQUIDCEXTERN void logfilePrintf(Logfile * lf, const char *fmt,...) PRINTF_FORMAT_ARG2;
 
 /*
  * prototypes for system functions missing from system includes

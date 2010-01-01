@@ -20,4 +20,4 @@ squid_unix_group_SOURCES	= check_group.c
 LDADD = \
 	$(top_builddir)/compat/libcompat.la \
 	-L$(top_builddir)/lib -lmiscutil \
-	@XTRA_LIBS@
+	$(XTRA_LIBS)

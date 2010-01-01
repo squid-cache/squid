@@ -22,6 +22,7 @@
 #include "config.h"
 
 #ifndef HAVE_INET_NTOP
+#include "inet_ntop.h"
 
 /*
  * Copyright (c) 2004 by Internet Systems Consortium, Inc. ("ISC")

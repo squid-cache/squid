@@ -465,9 +465,9 @@ main(int argc, char *argv[])
     char request[512];
     char *t = NULL;
     int c;
+    int opt_s = 0;
 
 #if HAVE_RES_INIT
-    int opt_s = 0;
     res_init();
 #endif
 

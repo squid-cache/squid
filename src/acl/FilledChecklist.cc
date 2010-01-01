@@ -120,6 +120,7 @@ ACLFilledChecklist::operator delete (void *address)
 
 ACLFilledChecklist::ACLFilledChecklist() :
         dst_peer(NULL),
+        dst_rdns(NULL),
         request (NULL),
         reply (NULL),
         auth_user_request (NULL),
@@ -145,6 +146,8 @@ ACLFilledChecklist::ACLFilledChecklist() :
 ACLFilledChecklist::~ACLFilledChecklist()
 {
     assert (!asyncInProgress());
+
+    safe_free(dst_rdns); // created by xstrdup().
 
     if (extacl_entry)
         cbdataReferenceDone(extacl_entry);
@@ -231,6 +234,7 @@ ACLFilledChecklist::markSourceDomainChecked()
  */
 ACLFilledChecklist::ACLFilledChecklist(const acl_access *A, HttpRequest *http_request, const char *ident):
         dst_peer(NULL),
+        dst_rdns(NULL),
         request(NULL),
         reply(NULL),
         auth_user_request(NULL),

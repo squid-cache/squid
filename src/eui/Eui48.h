@@ -14,6 +14,14 @@ class IpAddress;
 #include <cstring>
 #endif
 
+/* memcpy and friends */
+#if HAVE_STRING_H
+#include <string.h>
+#endif
+
+namespace Eui
+{
+
 class Eui48
 {
 
@@ -60,6 +68,8 @@ public:
 private:
     unsigned char eui[SZ_EUI48_BUF];
 };
+
+}; // namespace Eui
 
 #endif /* USE_SQUID_EUI */
 #endif /* _SQUID_EUI_EUI48_H */

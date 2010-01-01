@@ -93,9 +93,7 @@ ntlmScheme::done()
     if (!shutting_down)
         return;
 
-    if (ntlmauthenticators)
-        helperStatefulFree(ntlmauthenticators);
-
+    delete ntlmauthenticators;
     ntlmauthenticators = NULL;
 
     debugs(29, 2, "ntlmScheme::done: NTLM authentication Shutdown.");
@@ -120,13 +118,13 @@ AuthNTLMConfig::dump(StoreEntry * entry, const char *name, AuthConfig * scheme)
         list = list->next;
     }
 
-    storeAppendPrintf(entry, "\n%s ntlm children %d\n",
-                      name, authenticateChildren);
+    storeAppendPrintf(entry, "\n%s ntlm children %d startup=%d idle=%d concurrency=%d\n",
+                      name, authenticateChildren.n_max, authenticateChildren.n_startup, authenticateChildren.n_idle, authenticateChildren.concurrency);
     storeAppendPrintf(entry, "%s %s keep_alive %s\n", name, "ntlm", keep_alive ? "on" : "off");
 
 }
 
-AuthNTLMConfig::AuthNTLMConfig() : authenticateChildren(5), keep_alive(1)
+AuthNTLMConfig::AuthNTLMConfig() : authenticateChildren(20,0,1,1), keep_alive(1)
 { }
 
 void
@@ -140,7 +138,7 @@ AuthNTLMConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
 
         requirePathnameExists("auth_param ntlm program", authenticate->key);
     } else if (strcasecmp(param_str, "children") == 0) {
-        parse_int(&authenticateChildren);
+        authenticateChildren.parseConfig();
     } else if (strcasecmp(param_str, "keep_alive") == 0) {
         parse_onoff(&keep_alive);
     } else {
@@ -175,7 +173,7 @@ AuthNTLMConfig::init(AuthConfig * scheme)
         authntlm_initialised = 1;
 
         if (ntlmauthenticators == NULL)
-            ntlmauthenticators = helperStatefulCreate("ntlmauthenticator");
+            ntlmauthenticators = new statefulhelper("ntlmauthenticator");
 
         if (!proxy_auth_cache)
             proxy_auth_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
@@ -184,7 +182,7 @@ AuthNTLMConfig::init(AuthConfig * scheme)
 
         ntlmauthenticators->cmdline = authenticate;
 
-        ntlmauthenticators->n_to_start = authenticateChildren;
+        ntlmauthenticators->childs = authenticateChildren;
 
         ntlmauthenticators->ipc_type = IPC_STREAM;
 
@@ -212,7 +210,7 @@ AuthNTLMConfig::active() const
 bool
 AuthNTLMConfig::configured() const
 {
-    if ((authenticate != NULL) && (authenticateChildren != 0)) {
+    if ((authenticate != NULL) && (authenticateChildren.n_max != 0)) {
         debugs(29, 9, "AuthNTLMConfig::configured: returning configured");
         return true;
     }
@@ -259,7 +257,7 @@ AuthNTLMUserRequest::module_direction()
 }
 
 void
-AuthNTLMConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, http_hdr_type type, HttpRequest * request)
+AuthNTLMConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, http_hdr_type hdrType, HttpRequest * request)
 {
     AuthNTLMUserRequest *ntlm_request;
 
@@ -272,8 +270,8 @@ AuthNTLMConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, ht
 
     /* New request, no user details */
     if (auth_user_request == NULL) {
-        debugs(29, 9, "AuthNTLMConfig::fixHeader: Sending type:" << type << " header: 'NTLM'");
-        httpHeaderPutStrf(&rep->header, type, "NTLM");
+        debugs(29, 9, "AuthNTLMConfig::fixHeader: Sending type:" << hdrType << " header: 'NTLM'");
+        httpHeaderPutStrf(&rep->header, hdrType, "NTLM");
 
         if (!keep_alive) {
             /* drop the connection */
@@ -301,14 +299,14 @@ AuthNTLMConfig::fixHeader(AuthUserRequest *auth_user_request, HttpReply *rep, ht
         case AUTHENTICATE_STATE_NONE:
             /* semantic change: do not drop the connection.
              * 2.5 implementation used to keep it open - Kinkie */
-            debugs(29, 9, "AuthNTLMConfig::fixHeader: Sending type:" << type << " header: 'NTLM'");
-            httpHeaderPutStrf(&rep->header, type, "NTLM");
+            debugs(29, 9, "AuthNTLMConfig::fixHeader: Sending type:" << hdrType << " header: 'NTLM'");
+            httpHeaderPutStrf(&rep->header, hdrType, "NTLM");
             break;
 
         case AUTHENTICATE_STATE_IN_PROGRESS:
             /* we're waiting for a response from the client. Pass it the blob */
-            debugs(29, 9, "AuthNTLMConfig::fixHeader: Sending type:" << type << " header: 'NTLM " << ntlm_request->server_blob << "'");
-            httpHeaderPutStrf(&rep->header, type, "NTLM %s", ntlm_request->server_blob);
+            debugs(29, 9, "AuthNTLMConfig::fixHeader: Sending type:" << hdrType << " header: 'NTLM " << ntlm_request->server_blob << "'");
+            httpHeaderPutStrf(&rep->header, hdrType, "NTLM %s", ntlm_request->server_blob);
             safe_free(ntlm_request->server_blob);
             break;
 
@@ -577,7 +575,7 @@ AuthNTLMUserRequest::authenticated() const
 }
 
 void
-AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type)
+AuthNTLMUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * conn, http_hdr_type type)
 {
     const char *proxy_auth, *blob;
 
@@ -611,7 +609,7 @@ AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, h
     }
 
     /* get header */
-    proxy_auth = request->header.getStr(type);
+    proxy_auth = aRequest->header.getStr(type);
 
     /* locate second word */
     blob = proxy_auth;
@@ -640,8 +638,8 @@ AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, h
         assert(conn->auth_user_request == NULL);
         conn->auth_user_request = this;
         AUTHUSERREQUESTLOCK(conn->auth_user_request, "conn");
-        this->request = request;
-        HTTPMSGLOCK(this->request);
+        request = aRequest;
+        HTTPMSGLOCK(request);
         return;
 
         break;
@@ -661,10 +659,10 @@ AuthNTLMUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, h
 
         client_blob = xstrdup (blob);
 
-        if (this->request)
-            HTTPMSGUNLOCK(this->request);
-        this->request = request;
-        HTTPMSGLOCK(this->request);
+        if (request)
+            HTTPMSGUNLOCK(request);
+        request = aRequest;
+        HTTPMSGLOCK(request);
         return;
 
         break;
@@ -716,7 +714,7 @@ NTLMUser::deleteSelf() const
     delete this;
 }
 
-NTLMUser::NTLMUser (AuthConfig *config) : AuthUser (config)
+NTLMUser::NTLMUser (AuthConfig *aConfig) : AuthUser (aConfig)
 {
     proxy_auth_list.head = proxy_auth_list.tail = NULL;
 }

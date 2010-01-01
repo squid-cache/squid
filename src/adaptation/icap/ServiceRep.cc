@@ -15,8 +15,8 @@
 
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, ServiceRep);
 
-Adaptation::Icap::ServiceRep::ServiceRep(const Adaptation::ServiceConfig &cfg):
-        AsyncJob("Adaptation::Icap::ServiceRep"), Adaptation::Service(cfg),
+Adaptation::Icap::ServiceRep::ServiceRep(const Adaptation::ServiceConfig &svcCfg):
+        AsyncJob("Adaptation::Icap::ServiceRep"), Adaptation::Service(svcCfg),
         theOptions(NULL), theOptionsFetcher(0), theLastUpdate(0),
         theSessionFailures(0), isSuspended(0), notifying(false),
         updateScheduled(false), self(NULL),

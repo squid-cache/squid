@@ -7,10 +7,6 @@ include $(top_srcdir)/src/Common.am
 
 SUBDIRS =
 
-if USE_LOADABLE_MODULES
-SUBDIRS += libLtdl
-endif
-
 if USE_ESI
 SUBDIRS += libTrie
 endif
@@ -76,18 +72,18 @@ libmiscutil_a_SOURCES = \
 	xusleep.c \
 	$(XPROF_STATS_SOURCE) \
 	$(WIN32SRC)
-libmiscutil_a_LIBADD = @LIBOBJS@
+libmiscutil_a_LIBADD = $(LIBOBJS)
 
 # $(top_srcdir)/include/version.h should be a dependency
 libntlmauth_a_SOURCES = \
 	ntlmauth.c
 libntlmauth_a_LIBADD = \
-	@LIBOBJS@
+	$(LIBOBJS)
 libsspwin32_a_SOURCES = \
 	base64.c \
 	sspwin32.c
 libsspwin32_a_LIBADD = \
-	@LIBOBJS@
+	$(LIBOBJS)
 
 
 TESTS += tests/testAll
@@ -99,12 +95,14 @@ tests_testAll_SOURCES= \
 	tests/testArray.cc \
 	tests/testRFC1035.h \
 	tests/testRFC1035.cc \
+	tests/testRFC1738.h \
+	tests/testRFC1738.cc \
 	tests/testMain.cc \
 	$(XPROF_STATS_SOURCE) \
 	$(WIN32SRC) \
 	util.c
 
-tests_testAll_LDADD= @SQUID_CPPUNIT_LA@ @SQUID_CPPUNIT_LIBS@
+tests_testAll_LDADD= $(SQUID_CPPUNIT_LA) $(SQUID_CPPUNIT_LIBS)
 
 tests_testAll_LDFLAGS = $(LIBADD_DL)
 
