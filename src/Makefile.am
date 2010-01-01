@@ -334,6 +334,7 @@ squid_SOURCES = \
 	$(HTCPSOURCE) \
 	http.cc \
 	http.h \
+	HttpStatusCode.h \
 	HttpStatusLine.cc \
 	HttpStatusLine.h \
 	HttpHdrCc.cc \
@@ -931,6 +932,7 @@ tests_testHttpReply_SOURCES=\
 	HttpMsg.cc \
 	HttpReply.h \
 	HttpReply.cc \
+	HttpStatusCode.h \
 	HttpStatusLine.h \
 	HttpStatusLine.cc \
 	mem.cc \

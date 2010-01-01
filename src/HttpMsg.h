@@ -33,9 +33,9 @@
 #ifndef SQUID_HTTPMSG_H
 #define SQUID_HTTPMSG_H
 
-#include "enums.h"
 #include "typedefs.h"
 #include "HttpHeader.h"
+#include "HttpStatusCode.h"
 #include "HttpVersion.h"
 #include "BodyPipe.h"
 
