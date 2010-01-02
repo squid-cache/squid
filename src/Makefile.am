@@ -1934,7 +1934,6 @@ tests_testStore_SOURCES= \
 	tests/testStoreHashIndex.h \
 	tests/TestSwapDir.cc \
 	tests/TestSwapDir.h \
-	tests/stub_fd.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_HttpReply.cc \
 	tests/stub_cache_manager.cc \
