@@ -37,6 +37,9 @@
  *
  * Change Log:
  *
+ *   Version 2.3, 2009-11-06
+ *      Converted to C++. Brought into line with Squid-3 code styles.
+ *
  *   Version 2.2, 2003-11-05
  *      One shot mode is now the default mode of operation
  *      with persistent PAM connections enabled by -t option.
@@ -60,21 +63,37 @@
  *   Version 1.1, 1999-05-11
  *	Initial version
  *
- * Compile this program with: gcc -o pam_auth pam_auth.c -lpam -ldl
+ * Compile this program with: gcc -o basic_pam_auth basic_pam_auth.cc -lpam -ldl
  */
+#include "config.h"
 
 #include "rfc1738.h"
 #include "util.h"
 
+#if HAVE_STDIO_H
 #include <stdio.h>
+#endif
+#if HAVE_ASSERT_H
 #include <assert.h>
+#endif
+#if HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
+#if HAVE_STRING_H
 #include <string.h>
+#endif
+#if HAVE_SIGNAL_H
 #include <signal.h>
+#endif
+#if HAVE_TIME_H
 #include <time.h>
+#endif
+#if HAVE_UNISTD_H
 #include <unistd.h>
-
+#endif
+#if HAVE_SECURITY_PAM_APPL_H
 #include <security/pam_appl.h>
+#endif
 
 #define BUFSIZE 8192
 
@@ -89,9 +108,11 @@
 #define DEFAULT_SQUID_PAM_TTL 0
 #endif
 
+#if _SQUID_SOLARIS_
 static char *password = NULL;	/* Workaround for Solaris 2.6 brokenness */
+#endif
 
-/*
+/**
  * A simple "conversation" function returning the supplied password.
  * Has a bit to much error control, but this is my first PAM application
  * so I'd rather check everything than make any mistakes. The function
@@ -250,7 +271,7 @@ error:
         }
         /* cleanup */
         retval = PAM_SUCCESS;
-#ifdef PAM_AUTHTOK
+#if defined(PAM_AUTHTOK)
         if (ttl != 0) {
             if (retval == PAM_SUCCESS)
                 retval = pam_set_item(pamh, PAM_AUTHTOK, NULL);

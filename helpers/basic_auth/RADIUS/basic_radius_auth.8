@@ -1,13 +1,13 @@
-.TH squid_radius_auth 8 "7 August 2004" "Squid RADIUS Auth"
+.TH basic_radius_auth 8 "7 August 2004" "Squid RADIUS Auth"
 .
 .SH NAME
-squid_radius_auth - Squid RADIUS authentication helper
+basic_radius_auth - Squid RADIUS authentication helper
 .
 .SH SYNOPSIS
-.B squid_radius_auth
+.B basic_radius_auth
 -f configfile
 .br
-.B squid_radius_auth
+.B basic_radius_auth
 -h "server" [-p port] [-i identifier] -w secret
 .
 .SH DESCRIPTION
@@ -56,7 +56,7 @@ specifies the shared RADIUS secret.
 .
 .TP
 .BI "identifier " nameofserver
-specifies what the proxy should identify itsels as to the RADIUS server.
+specifies what the proxy should identify itself as to the RADIUS server.
 This directive is optional.
 .
 .TP
@@ -66,7 +66,7 @@ Specifies the port number or service name where the helper should connect.
 This manual page was written by 
 .I Henrik Nordstrom <hno@squid-cache.org>
 .P
-squid_radius_auth is written by 
+basic_radius_auth is written by 
 .I Marc van Selm <selm@cistron.nl>
 with contributions from
 .I Henrik Nordstrom <hno@squid-cache.org>
