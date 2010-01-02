@@ -34,6 +34,13 @@ test_tools.cc: $(top_srcdir)/test-suite/test_tools.cc
 TESTSOURCES= test_tools.cc
 CLEANFILES += test_tools.cc
 
+## ##### helper-mux #####
+
+libexec_SCRIPTS = helper-mux.pl
+
+## Test scripts
+EXTRA_DIST += helper-ok-dying.pl helper-ok.pl helper-mux.README
+
 ## ##### squidclient  #####
 
 bin_PROGRAMS = squidclient

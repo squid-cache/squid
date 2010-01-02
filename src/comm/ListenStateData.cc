@@ -39,6 +39,7 @@
 #include "comm/ListenStateData.h"
 #include "ConnectionDetail.h"
 #include "fde.h"
+#include "protos.h"
 #include "SquidTime.h"
 
 /**
@@ -240,6 +241,14 @@ Comm::ListenStateData::oldAccept(ConnectionDetail &details)
     }
 
     details.peer = *gai;
+
+    if ( Config.client_ip_max_connections >= 0) {
+        if (clientdbEstablished(details.peer, 0) > Config.client_ip_max_connections) {
+            debugs(50, DBG_IMPORTANT, "WARNING: " << details.peer << " attempting more than " << Config.client_ip_max_connections << " connections.");
+            details.me.FreeAddrInfo(gai);
+            return COMM_ERROR;
+        }
+    }
 
     details.me.InitAddrInfo(gai);
 
