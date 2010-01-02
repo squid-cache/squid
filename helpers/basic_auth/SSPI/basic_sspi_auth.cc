@@ -25,9 +25,14 @@
 */
 
 #include "config.h"
-#include <stdio.h>
-#include <getopt.h>
 #include "util.h"
+
+#if HAVE_STDIO_H
+#include <stdio.h>
+#endif
+#if GETOPT_H
+#include <getopt.h>
+#endif
 
 /* Check if we try to compile on a Windows Platform */
 #if defined(_SQUID_CYGWIN_) || defined(_SQUID_MSWIN_)

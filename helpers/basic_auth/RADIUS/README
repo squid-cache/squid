@@ -1,4 +1,4 @@
-Squid_radius_auth V1.09
+basic_radius_auth V1.09
 
 This kit is loosely based on radtest from the Cistron-radiusd which
 again is based on Livingston sources. See COPYRIGHT for details.
@@ -16,7 +16,7 @@ make clean
 make install
 
 or if you want the helper installed elsewhere than /usr/local/squid
-(the default installation path of Squid-2.5) use something like:
+(the default installation path of Squid) use something like:
 
 make CONFDIR=/etc PREFIX=/usr BINDIR='${PREFIX}/libexec/squid' install
 
@@ -35,12 +35,12 @@ Configuration:
 The RADIUS authenticator is configured using a small configuration file.
 
 The configuration file should look like this:
-# squid_rad_auth configuration file
+# basic_radius_auth configuration file
 # MvS: 28-10-1998
 server suncone.cistron.nl
 secret testje
 
-An example can be found in etc/squid_rad_auth.conf 
+An example can be found in etc/basic_radius_auth.conf 
 
 
 /etc/services:
@@ -53,12 +53,12 @@ Adding this is not mandatory because it used the default port 1812 anyway.
 Note: Some old RADIUS servers uses the unofficial port 1645, and you may
 need to override the service port used either by editing /etc/services
 or by specifying the port using the -p command line option or the port
-tag in squid_rad_auth.conf
+tag in basic_radius_auth.conf
 
 
 Test it:
 
-Start squid_rad_auth and type a username and a username. The authenticator
+Start basic_radius_auth and type a username and a username. The authenticator
 returns OK if the radiusd accepted your password. In any other case you'll
 get ERR.
 
