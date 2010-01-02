@@ -34,12 +34,53 @@ The 3.2 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 
 <p>The most important of these new features are:
 <itemize>
+	<item>Helper Multiplexer
 	<item>Helper Name Changes
 	<item>Multi-Lingual manuals
 	<item>Solaris 10 pthreads Support (Experimental)
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
+
+<sect1>Helper Multiplexer
+<p>The helper multiplexer's purpose is to relieve some of the burden
+   Squid has when dealing with slow helpers. It does so by acting as a
+   middleman between squid and the actual helpers, talking to Squid via
+   the multiplexed concurrent variant of the helper protocol and to the
+   helpers via the non-concurrent variant.
+
+<p>Helpers are started on demand, and in theory the muxer can handle up to
+   1k helpers per instance. It's up to squid to decide how many helpers
+   to start.
+
+<p>The muxer knows nothing about the actual messages being passed around,
+   and as such can't really (yet?) compensate for broken helpers.
+   It is not yet able to manage dying helpers, but it will.
+
+<p>To configure the multiplexer add its binary name (usually /usr/share/libexec/helper-mux.pl)
+   in front of the name of whichever helper is being multiplexed. It takes the helper binary
+   path and parameters as its own command parameters. The <em>concurrency</em> setting already
+   existing in Squid is used to configure how many child helpers it may run.
+
+<p>For example, a traditional configration is
+   <verb>
+	url_rewrite_program /your/redirector.sh
+	url_rewrite_children 5
+   </verb>
+   the alternative multiplexer configuration is:
+   <verb>
+	url_rewrite_program /usr/share/libexec/helper-mux.pl /your/redirector.sh
+	url_rewrite_children 1 concurrency=5
+   </verb>
+
+<p>Helpers which are already concurrent protocol enabled gain little benefit from the multiplexer
+   on most systems. However on some systems where Squid spawning helpers causes excess memory usage
+   the reduction in direct helper spawned by Squid can result in a great reduction in resource use.
+
+<p>The helper can be controlled using various signals:
+   <itemize>
+	<item>SIGHUP: dump the state of all helpers to STDERR
+   </itemize>
 
 <sect1>Helper Name Changes
 
@@ -168,10 +209,12 @@ This section gives a thorough account of those changes in three categories:
 	<p>Now only available to be set in Windows builds.
 
 	<tag>url_rewrite_children</tag>
-	<tag>New options <em>startup=N</em>, <em>idle=N</em>, <em>concurrency=N</em>
-	<p>startup=N allow finer tuning of how many helpers are started initially.
-	<p>idle=N allow fine tuning of how many helper to retain as buffer against sudden traffic loads.
-	<p>concurrency=N was previously called url_rewrite_concurrency as a distinct directive.
+	<p>New options <em>startup=N</em>, <em>idle=N</em>, <em>concurrency=N</em>
+	<itemize>
+		<item>startup=N allow finer tuning of how many helpers are started initially.
+		<item>idle=N allow fine tuning of how many helper to retain as buffer against sudden traffic loads.
+		<item>concurrency=N was previously called url_rewrite_concurrency as a distinct directive.
+	</itemize>
 
 </descrip>
 
