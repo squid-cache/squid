@@ -4,14 +4,14 @@ DIST_SUBDIRS = \
 	getpwnam \
 	LDAP \
 	MSNT \
-	mswin_sspi \
-	multi-domain-NTLM \
+	MSNT-multi-domain \
 	NCSA \
+	NIS \
 	PAM \
 	POP3 \
-	squid_radius_auth \
+	RADIUS \
 	SASL \
 	SMB \
-	YP
+	SSPI
 
 SUBDIRS	= $(BASIC_AUTH_HELPERS)
