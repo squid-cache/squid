@@ -293,6 +293,7 @@ parse_externalAclHelper(external_acl ** list)
     /* set defaults */
     a->ttl = DEFAULT_EXTERNAL_ACL_TTL;
     a->negative_ttl = -1;
+    a->cache_size = 256*1024;
     a->children.n_max = DEFAULT_EXTERNAL_ACL_CHILDREN;
     a->children.n_startup = a->children.n_max;
     a->children.n_idle = 1;

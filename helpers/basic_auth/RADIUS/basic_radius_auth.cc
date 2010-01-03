@@ -28,11 +28,11 @@
  *      Copyright (C) 2006 Henrik Nordstrom <hno@squid-cache.org>
  */
 
-/* Squid_rad_auth is a RADIUS authenticator for Squid-2.5 and later.
+/* basic_radius_auth is a RADIUS authenticator for Squid-2.5 and later.
  * The authenticator reads a line with a user and password combination.
  * If access is granted OK is returned. Else ERR.
  *
- * Squid_rad_auth-1.0 is based on modules from the Cistron-radiusd-1.5.4.
+ * basic_radius_auth-1.0 is based on modules from the Cistron-radiusd-1.5.4.
  *
  * Currently you should only start 1 authentificator at a time because the
  * the ID's of the different programs can start to conflict. I'm not sure it
@@ -46,52 +46,54 @@
  */
 
 #include	"config.h"
+#include	"md5.h"
+#include	"radius.h"
+#include	"radius-util.h"
 
 #if HAVE_SYS_TYPES_H
-#include	<sys/types.h>
+#include <sys/types.h>
 #endif
 #if HAVE_SYS_SOCKET_H
-#include	<sys/socket.h>
+#include <sys/socket.h>
 #endif
 #if HAVE_NETINET_IN_H
-#include	<netinet/in.h>
+#include <netinet/in.h>
 #endif
 #if HAVE_SYS_TIME_H
-#include	<sys/time.h>
+#include <sys/time.h>
 #endif
 #if HAVE_UNISTD_H
-#include	<unistd.h>
+#include <unistd.h>
 #endif
 #if HAVE_FCNTL_H
-#include	<fcntl.h>
+#include <fcntl.h>
 #endif
 #ifdef _SQUID_WIN32_
 #include <io.h>
 #endif
-
 #if HAVE_CTYPE_H
-#include	<ctype.h>
+#include <ctype.h>
 #endif
 #if HAVE_STDIO_H
-#include	<stdio.h>
+#include <stdio.h>
 #endif
 #if HAVE_UNISTD_H
-#include	<unistd.h>
+#include <unistd.h>
 #endif
 #if HAVE_NETDB_H
-#include	<netdb.h>
+#include <netdb.h>
 #endif
 #if HAVE_PWD_H
-#include	<pwd.h>
+#include <pwd.h>
 #endif
 #if HAVE_STDLIB_H
-#include	<stdlib.h>
+#include <stdlib.h>
 #endif
 #if HAVE_TIME_H
-#include	<time.h>
+#include <time.h>
 #endif
 #if HAVE_STRING_H
-#include	<string.h>
+#include <string.h>
 #endif
 #if HAVE_GETOPT_H
 #include <getopt.h>
@@ -99,10 +101,6 @@
 #if HAVE_ERRNO_H
 #include <errno.h>
 #endif
-
-#include	"md5.h"
-#include	"radius.h"
-#include	"radius-util.h"
 
 #define MAXPWNAM	254
 #define MAXPASS		254
@@ -127,7 +125,7 @@ static u_int32_t nas_ipaddr;
 static u_int32_t auth_ipaddr;
 static int retries = 30;
 
-char progname[] = "squid_rad_auth";
+char progname[] = "basic_radius_auth";
 int debug_flag = 0;
 
 #ifdef _SQUID_MSWIN_
@@ -189,7 +187,7 @@ result_recv(u_int32_t host, u_short udp_port, char *buffer, int length)
 
     if (totallen != length) {
         fprintf(stderr,
-                "Squid_rad_auth: Received invalid reply length from server (want %d/ got %d)\n",
+                "basic_radius_auth: Received invalid reply length from server (want %d/ got %d)\n",
                 totallen, length);
         return -1;
     }
@@ -235,7 +233,7 @@ random_vector(char *aVector)
 
 /* read the config file
  * The format should be something like:
- * # squid_rad_auth configuration file
+ * # basic_radius_auth configuration file
  * # MvS: 28-10-1998
  * server suncone.cistron.nl
  * secret testje
