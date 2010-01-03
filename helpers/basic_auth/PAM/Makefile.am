@@ -8,4 +8,4 @@ basic_pam_auth_SOURCES	= basic_pam_auth.cc
 basic_pam_auth_LDADD = \
 	$(COMPAT_LIB) \
 	-lpam \
-	@XTRA_LIBS@
+	$(XTRA_LIBS)
