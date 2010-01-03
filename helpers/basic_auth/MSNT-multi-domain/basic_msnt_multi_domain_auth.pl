@@ -24,7 +24,7 @@
 #  fall back to the %controllers hack.
 $try_reverse_dns=1;
 
-# Soem servers (at least mine) don't like to be called by their fully
+# Some servers (at least mine) don't like to be called by their fully
 #  qualified name. define this if you wish to call them ONLY by their
 #  hostname.
 $dont_use_fqdn=1;
@@ -134,4 +134,3 @@ sub discover_dc {
   return ($pdc,$bdc) if ($pdc);
   return 0;
 }
-

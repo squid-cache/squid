@@ -1,0 +1,16 @@
+The helper multiplexer's purpose is to relieve some of the burden
+squid has when dealing with slow helpers. It does so by acting as a
+middleman between squid and the actual helpers, talking to squid via
+the multiplexed variant of the helper protocol and to the helpers
+via the non-multiplexed variant.
+
+Helpers are started on demand, and in theory the muxer can handle up to
+1k helpers per instance. It's up to squid to decide how many helpers
+to start.
+
+The muxer knows nothing about the actual messages being passed around,
+and as such can't really (yet?) compensate for broken helpers.
+It is not yet able to manage dying helpers, but it will.
+
+The helper can be controlled using various signals:
+- SIGHUP: dump the state of all helpers to STDERR

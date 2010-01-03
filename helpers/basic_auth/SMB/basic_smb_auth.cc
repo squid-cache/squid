@@ -1,5 +1,5 @@
 /*
- *  smb_auth - SMB proxy authentication module
+ *  basic_smb_auth - SMB proxy authentication module
  *  Copyright (C) 1998  Richard Huveneers <richard@hekkihek.hacom.nl>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -40,13 +40,20 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include "util.h"
+#include "config.h"
 #include "rfc1738.h"
+#include "util.h"
+
+#if HAVE_STDIO_H
+#include <stdio.h>
+#endif
+#if HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+#if HAVE_STRING_H
+#include <string.h>
+#endif
+
 
 #define BUFSIZE			256
 #define NMB_UNICAST		1
