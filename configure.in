@@ -17,6 +17,7 @@ AM_MAINTAINER_MODE
 m4_include([acinclude/squid-util.m4])
 m4_include([acinclude/compiler-flags.m4])
 m4_include([acinclude/os-deps.m4])
+m4_include([acinclude/krb5.m4])
 
 PRESET_CFLAGS="$CFLAGS"
 PRESET_LDFLAGS="$LDFLAGS"
@@ -1746,21 +1747,20 @@ done
 AC_MSG_NOTICE([Log daemon helpers built: $LOG_DAEMON_HELPERS])
 AC_SUBST(LOG_DAEMON_HELPERS)
 
-dnl ######## KK HERE ###########
+dnl KK FIXME: this is pretty complex
 dnl
 dnl Check Kerberos/GSSAPI/SPNEGO
 dnl
-SAVED_CPPFLAGS=$CPPFLAGS
-SAVED_LIBS=$LIBS
+SQUID_STATE_SAVE([krbsave])
+
 AC_ARG_WITH(krb5-config,
  [  --with-krb5-config=PATH specify path to krb5-config @<:@default=detect@:>@],
-[ if test "$withval" = "yes"; then
-     unset krb5confpath
-  elif test "$withval" != "no"; then
-     krb5confpath=$withval
-  else
-     krb5confpath=no
-  fi
+[
+  case "$withval" in
+	yes) unset krb5confpath ;;
+	no)  krb5confpath=no ;;
+	*)   krb5confpath=$withval ;;
+	esac
 ])
 if test x"$krb5confpath" != xno; then
     if test x"$krb5confpath" != x; then
@@ -1803,20 +1803,8 @@ if test "$ac_krb5_config" = "yes" ; then
         AC_CHECK_HEADERS(profile.h)
     fi
     AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
-    AC_CACHE_CHECK([for broken Solaris krb5.h],squid_cv_broken_krb5_h, [
-        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#include <krb5.h>
-int i;
-]])], [ squid_cv_broken_krb5_h=no ],
-      [ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#if defined(__cplusplus)
-#define KRB5INT_BEGIN_DECLS     extern "C" {
-#define KRB5INT_END_DECLS
-KRB5INT_BEGIN_DECLS
-#endif
-#include <krb5.h>
-int i;
-]])], [ squid_cv_broken_krb5_h=yes ], [ squid_cv_broken_krb5_h=no ])])])
+
+		SQUID_CHECK_KRB5_BROKEN_SOLARIS_KRB5_H
     if test x"$squid_cv_broken_krb5_h" = x"yes"; then
        AC_DEFINE(HAVE_BROKEN_SOLARIS_KRB5_H, 1, [Define to 1 if krb5.h is broken for C++])
     fi
@@ -1827,146 +1815,62 @@ int i;
     elif test "x$ac_cv_header_et_com_err_h" == "xyes" ; then
         AC_EGREP_HEADER(error_message,et/com_err.h,ac_com_error_message=yes)
     fi
-    AC_CACHE_CHECK([for max_skew in struct krb5_context],squid_cv_max_skew_context, [
-        AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-#if HAVE_BROKEN_SOLARIS_KRB5_H
-#if defined(__cplusplus)
-#define KRB5INT_BEGIN_DECLS     extern "C" {
-#define KRB5INT_END_DECLS
-KRB5INT_BEGIN_DECLS
-#endif
-#endif
-#include <krb5.h>
-krb5_context kc; kc->max_skew = 1;
-]])],[ squid_cv_max_skew_context=yes ], [ squid_cv_max_skew_context=no ])])
+
+		SQUID_CHECK_MAX_SKEW_IN_KRB5_CONTEXT
     if test x"$squid_cv_max_skew_context" = x"yes"; then
        AC_DEFINE(HAVE_MAX_SKEW_IN_KRB5_CONTEXT, 1, [Define to 1 if max_skew in struct krb5_context])
     fi
 
     if test `echo $KRB5LIBS | grep -c com_err` -ne 0 -a "x$ac_com_error_message" == "xyes" ; then
         AC_CHECK_LIB(com_err,error_message,
-            AC_DEFINE(HAVE_ERROR_MESSAGE,1,[Define to 1 if you have error_message]),)
+            AC_DEFINE(HAVE_ERROR_MESSAGE,1,
+						          [Define to 1 if you have error_message]),)
     elif test  "x$ac_com_error_message" == "xyes" ; then
         AC_CHECK_LIB(krb5,error_message,
-            AC_DEFINE(HAVE_ERROR_MESSAGE,1,[Define to 1 if you have error_message]),)
+            AC_DEFINE(HAVE_ERROR_MESSAGE,1,
+						          [Define to 1 if you have error_message]),)
     fi
     AC_CHECK_LIB(krb5,krb5_get_err_text,
-        AC_DEFINE(HAVE_KRB5_GET_ERR_TEXT,1,[Define to 1 if you have krb5_get_err_text]),)
+        AC_DEFINE(HAVE_KRB5_GET_ERR_TEXT,1,
+				          [Define to 1 if you have krb5_get_err_text]),)
     AC_CHECK_LIB(krb5,krb5_get_error_message,
-        AC_DEFINE(HAVE_KRB5_GET_ERROR_MESSAGE,1,[Define to 1 if you have krb5_get_error_message]),)
+        AC_DEFINE(HAVE_KRB5_GET_ERROR_MESSAGE,1,
+				          [Define to 1 if you have krb5_get_error_message]),)
     AC_CHECK_LIB(krb5,krb5_kt_free_entry,
-        AC_DEFINE(HAVE_KRB5_KT_FREE_ENTRY,1,[Define to 1 if you have krb5_kt_free_entry]),)
+        AC_DEFINE(HAVE_KRB5_KT_FREE_ENTRY,1,
+				          [Define to 1 if you have krb5_kt_free_entry]),)
     AC_CHECK_LIB(krb5,krb5_get_init_creds_keytab,
-        AC_DEFINE(HAVE_GET_INIT_CREDS_KEYTAB,1,[Define to 1 if you have krb5_get_init_creds_keytab]),)
+        AC_DEFINE(HAVE_GET_INIT_CREDS_KEYTAB,1,
+				          [Define to 1 if you have krb5_get_init_creds_keytab]),)
     AC_CHECK_LIB(krb5,krb5_get_max_time_skew,
-        AC_DEFINE(HAVE_KRB5_GET_MAX_TIME_SKEW,1,[Define to 1 if you have krb5_get_max_time_skew]),)
+        AC_DEFINE(HAVE_KRB5_GET_MAX_TIME_SKEW,1,
+				          [Define to 1 if you have krb5_get_max_time_skew]),)
     AC_CHECK_LIB(krb5,krb5_get_profile,
-        AC_DEFINE(HAVE_KRB5_GET_PROFILE,1,[Define to 1 if you have krb5_get_profile]),)
+        AC_DEFINE(HAVE_KRB5_GET_PROFILE,1,
+				          [Define to 1 if you have krb5_get_profile]),)
     AC_CHECK_LIB(krb5,profile_get_integer,
-        AC_DEFINE(HAVE_PROFILE_GET_INTEGER,1,[Define to 1 if you have profile_get_integer]),)
+        AC_DEFINE(HAVE_PROFILE_GET_INTEGER,1,
+				          [Define to 1 if you have profile_get_integer]),)
     AC_CHECK_LIB(krb5,profile_release,
-        AC_DEFINE(HAVE_PROFILE_RELEASE,1,[Define to 1 if you have profile_release]),)
-    AC_CACHE_CHECK([for memory cache], squid_cv_memory_cache, [
-        AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#if HAVE_BROKEN_SOLARIS_KRB5_H
-#if defined(__cplusplus)
-#define KRB5INT_BEGIN_DECLS     extern "C" {
-#define KRB5INT_END_DECLS
-KRB5INT_BEGIN_DECLS
-#endif
-#endif
-#include<krb5.h>
-main()
-{
-    krb5_context context;
-    krb5_ccache cc;
+        AC_DEFINE(HAVE_PROFILE_RELEASE,1,
+				          [Define to 1 if you have profile_release]),)
 
-    krb5_init_context(&context);
-    return krb5_cc_resolve(context, "MEMORY:test_cache", &cc);
-}
-]])], [ squid_cv_memory_cache=yes ], [ squid_cv_memory_cache=no ])])
+		SQUID_CHECK_KRB5_CONTEXT_MEMORY_CACHE
     if test "$squid_cv_memory_cache" = "yes" ; then
         AC_DEFINE(HAVE_KRB5_MEMORY_CACHE,1, [Define to 1 if you have MEMORY: cache support])
     fi
-    AC_CACHE_CHECK([for working gssapi], squid_cv_working_gssapi, [
-        AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#ifdef HAVE_GSSAPI_GSSAPI_H
-#include <gssapi/gssapi.h>
-#elif HAVE_GSSAPI_H
-#include <gssapi.h>
-#endif
 
-#ifdef HAVE_GSSAPI_GSSAPI_EXT_H
-#include <gssapi/gssapi_ext.h>
-#endif
-
-#ifdef HAVE_GSSAPI_GSSAPI_KRB5_H
-#include <gssapi/gssapi_krb5.h>
-#endif
-
-#ifdef HAVE_GSSAPI_GSSAPI_GENERIC_H
-#include <gssapi/gssapi_generic.h>
-#endif
-int
-main(void)
-{
-        OM_uint32 val;
-        gss_OID_set set;
-
-        gss_create_empty_oid_set(&val, &set);
-
-        return 0;
-}
-]])],  [ squid_cv_working_gssapi=yes ], [ squid_cv_working_gssapi=no ])])
+    SQUID_CHECK_WORKING_GSSAPI
     if test "$squid_cv_working_gssapi" = "yes" ; then
         AC_DEFINE(HAVE_GSSAPI, 1, [GSSAPI support])
     fi
 
-    AC_CACHE_CHECK([for spnego support], squid_cv_have_spnego, [
-        AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#ifdef HAVE_HEIMDAL_KERBEROS
-#ifdef HAVE_GSSAPI_GSSAPI_H
-#include <gssapi/gssapi.h>
-#elif defined(HAVE_GSSAPI_H)
-#include <gssapi.h>
-#endif
-#else
-#ifdef HAVE_GSSAPI_GSSAPI_H
-#include <gssapi/gssapi.h>
-#elif defined(HAVE_GSSAPI_H)
-#include <gssapi.h>
-#endif
-#ifdef HAVE_GSSAPI_GSSAPI_KRB5_H
-#include <gssapi/gssapi_krb5.h>
-#endif
-#ifdef HAVE_GSSAPI_GSSAPI_GENERIC_H
-#include <gssapi/gssapi_generic.h>
-#endif
-#endif
-#include <string.h>
-int main(int argc, char *argv[]) {
- OM_uint32 major_status,minor_status;
- gss_OID_set gss_mech_set;
- int i;
-
-static gss_OID_desc _gss_mech_spnego  = {6, (void *)"\x2b\x06\x01\x05\x05\x02"};
-gss_OID gss_mech_spnego = &_gss_mech_spnego;
-
- major_status = gss_indicate_mechs( &minor_status, &gss_mech_set);
-
- for (i=0;i<gss_mech_set->count;i++) {
-     if (!memcmp(gss_mech_set->elements[i].elements,gss_mech_spnego->elements,gss_mech_set->elements[i].length)) {
-        return 0;
-     }
- }
-
- return 1;
-}
-]])],  [ squid_cv_have_spnego=yes ], [ squid_cv_have_spnego=no ])])
-
+    SQUID_CHECK_SPNEGO_SUPPORT
     if test "$squid_cv_have_spnego" = "yes" ; then
      AC_DEFINE(HAVE_SPNEGO,1, [Define to 1 if you have SPNEGO support])
     fi
+
+dnl ########## KK HERE ######
     AC_CACHE_CHECK([for working krb5], squid_cv_working_krb5, [
         AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #ifdef HAVE_KRB5_H
@@ -1994,8 +1898,7 @@ main(void)
         AC_DEFINE(HAVE_KRB5, 1, [KRB5 support])
     fi
 
-   LIBS=$SAVED_LIBS
-   CPPFLAGS=$SAVED_CPPFLAGS
+   SQUID_STATE_ROLLBACK([krbsave])
    AC_SUBST(KRB5INCS)
    AC_SUBST(KRB5LIBS)
 fi
