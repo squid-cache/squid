@@ -26,21 +26,29 @@
  *             or with SASL2: gcc -Wall -o sasl_auth sasl_auth.c -lsasl2
  *
  */
-#include <stdio.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
-
+#include "config.h"
 #include "rfc1738.h"
 #include "util.h"
 
+#if HAVE_STDIO_H
+#include <stdio.h>
+#endif
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
+#if HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+#if HAVE_STRING_H
+#include <string.h>
+#endif
 #if HAVE_SASL_SASL_H
 #include <sasl/sasl.h>
 #else
 #include <sasl.h>
 #endif
 
-#define APP_NAME_SASL	"squid_sasl_auth"
+#define APP_NAME_SASL	"basic_sasl_auth"
 
 int
 main(int argc, char *argv[])

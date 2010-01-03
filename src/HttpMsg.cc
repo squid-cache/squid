@@ -402,6 +402,7 @@ void
 HttpParserInit(HttpParser *hdr, const char *buf, int bufsiz)
 {
     hdr->state = 1;
+    hdr->request_parse_status = HTTP_STATUS_NONE;
     hdr->buf = buf;
     hdr->bufsiz = bufsiz;
     hdr->req_start = hdr->req_end = -1;
