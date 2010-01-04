@@ -1747,7 +1747,6 @@ done
 AC_MSG_NOTICE([Log daemon helpers built: $LOG_DAEMON_HELPERS])
 AC_SUBST(LOG_DAEMON_HELPERS)
 
-dnl KK FIXME: this is pretty complex
 dnl
 dnl Check Kerberos/GSSAPI/SPNEGO
 dnl
@@ -1870,50 +1869,30 @@ if test "$ac_krb5_config" = "yes" ; then
      AC_DEFINE(HAVE_SPNEGO,1, [Define to 1 if you have SPNEGO support])
     fi
 
-dnl ########## KK HERE ######
-    AC_CACHE_CHECK([for working krb5], squid_cv_working_krb5, [
-        AC_RUN_IFELSE([AC_LANG_SOURCE([[
-#ifdef HAVE_KRB5_H
-#if HAVE_BROKEN_SOLARIS_KRB5_H
-#if defined(__cplusplus)
-#define KRB5INT_BEGIN_DECLS     extern "C" {
-#define KRB5INT_END_DECLS
-KRB5INT_BEGIN_DECLS
-#endif
-#endif
-#include <krb5.h>
-#endif
-
-int
-main(void)
-{
-        krb5_context context;
-
-        krb5_init_context(&context);
-
-        return 0;
-}
-]])], [ squid_cv_working_krb5=yes ], [ squid_cv_working_krb5=no ])])
+    SQUID_CHECK_WORKING_KRB5
     if test "$squid_cv_working_krb5" = "yes" ; then
         AC_DEFINE(HAVE_KRB5, 1, [KRB5 support])
     fi
 
-   SQUID_STATE_ROLLBACK([krbsave])
    AC_SUBST(KRB5INCS)
    AC_SUBST(KRB5LIBS)
 fi
+SQUID_STATE_ROLLBACK([krbsave])
 AM_CONDITIONAL(HAVE_SPNEGO, test x"$squid_cv_have_spnego" = x"yes" )
 
 dnl Enable "NTLM fail open"
 AC_ARG_ENABLE(ntlm-fail-open,
-  AS_HELP_STRING([--enable-ntlm-fail-open],[Enable NTLM fail open, where a helper that fails one of the
+  AS_HELP_STRING([--enable-ntlm-fail-open],
+	               [Enable NTLM fail open, where a helper that fails one of the
                   Authentication steps can allow squid to still authenticate
-                  the user.]),
-[ if test "$enableval" = "yes" ; then
-    AC_DEFINE(NTLM_FAIL_OPEN,1,[Define if NTLM is allowed to fail gracefully when a helper has problems. WARNING: This has security implications. DO NOT enable unless you KNOW you need it.])
+                  the user. This has security implications.]), [ 
+  if test "$enableval" = "yes" ; then
+    AC_DEFINE(NTLM_FAIL_OPEN,1,
+	   [Define if NTLM is allowed to fail gracefully when a helper has problems.])
   fi
 ])
 
+########### KK HERE ##########
 dnl Select external_acl helpers to build
 EXTERNAL_ACL_HELPERS=all
 AC_ARG_ENABLE(external-acl-helpers,

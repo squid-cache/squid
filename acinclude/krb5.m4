@@ -102,8 +102,8 @@ main()
 
 dnl checks that gssapi is ok, and sets squid_cv_working_gssapi accordingly
 AC_DEFUN([SQUID_CHECK_WORKING_GSSAPI], [
-	AC_CACHE_CHECK([for working gssapi], squid_cv_working_gssapi, [
-		AC_RUN_IFELSE([AC_LANG_SOURCE([[
+  AC_CACHE_CHECK([for working gssapi], squid_cv_working_gssapi, [
+    AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #ifdef HAVE_GSSAPI_GSSAPI_H
 #include <gssapi/gssapi.h>
 #elif HAVE_GSSAPI_H
@@ -131,14 +131,14 @@ main(void)
 
         return 0;
 }
-	]])],  [ squid_cv_working_gssapi=yes ], [ squid_cv_working_gssapi=no ])])
+  ]])],  [ squid_cv_working_gssapi=yes ], [ squid_cv_working_gssapi=no ])])
 ])
 
 
 dnl check for a working spnego, and set squid_cv_have_spnego
 AC_DEFUN([SQUID_CHECK_SPNEGO_SUPPORT], [
-	AC_CACHE_CHECK([for spnego support], squid_cv_have_spnego, [
-		AC_RUN_IFELSE([AC_LANG_SOURCE([[
+  AC_CACHE_CHECK([for spnego support], squid_cv_have_spnego, [
+    AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #ifdef HAVE_HEIMDAL_KERBEROS
 #ifdef HAVE_GSSAPI_GSSAPI_H
 #include <gssapi/gssapi.h>
@@ -177,6 +177,33 @@ gss_OID gss_mech_spnego = &_gss_mech_spnego;
 
  return 1;
 }
-	]])],  
-	[ squid_cv_have_spnego=yes ], [ squid_cv_have_spnego=no ])])
+  ]])],  
+  [ squid_cv_have_spnego=yes ], [ squid_cv_have_spnego=no ])])
+])
+
+dnl checks that krb5 is functional. Sets squid_cv_working_krb5
+AC_DEFUN([SQUID_CHECK_WORKING_KRB5],[
+  AC_CACHE_CHECK([for working krb5], squid_cv_working_krb5, [
+    AC_RUN_IFELSE([AC_LANG_SOURCE([[
+#ifdef HAVE_KRB5_H
+#if HAVE_BROKEN_SOLARIS_KRB5_H
+#if defined(__cplusplus)
+#define KRB5INT_BEGIN_DECLS     extern "C" {
+#define KRB5INT_END_DECLS
+KRB5INT_BEGIN_DECLS
+#endif
+#endif
+#include <krb5.h>
+#endif
+
+int
+main(void)
+{
+        krb5_context context;
+
+        krb5_init_context(&context);
+
+        return 0;
+}
+  ]])], [ squid_cv_working_krb5=yes ], [ squid_cv_working_krb5=no ])])
 ])
