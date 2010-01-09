@@ -77,9 +77,6 @@
 #endif
 
 #include "base64.h"
-#ifndef HAVE_SPNEGO
-#include "spnegohelp/spnegohelp.h"
-#endif
 
 #define PROGRAM "squid_kerb_auth"
 
@@ -212,9 +209,6 @@ int main(int argc, char * const argv[])
     int length=0;
     static int err=0;
     int opt, debug=0, log=0;
-#ifndef HAVE_SPNEGO
-    int rc;
-#endif
     OM_uint32 ret_flags=0, spnego_flag=0;
     char *service_name=(char *)"HTTP",*host_name=NULL;
     char *token = NULL;
@@ -228,9 +222,6 @@ int main(int argc, char * const argv[])
     gss_buffer_desc 	input_token = GSS_C_EMPTY_BUFFER;
     gss_buffer_desc 	output_token = GSS_C_EMPTY_BUFFER;
     const unsigned char	*kerberosToken       = NULL;
-#ifndef HAVE_SPNEGO
-    size_t		kerberosTokenLength = 0;
-#endif
     const unsigned char	*spnegoToken         = NULL ;
     size_t		spnegoTokenLength   = 0;
 
@@ -388,38 +379,6 @@ int main(int argc, char * const argv[])
         ska_base64_decode(input_token.value,buf+3,input_token.length);
 
 
-#ifndef HAVE_SPNEGO
-        if (( rc=parseNegTokenInit (input_token.value,
-                                    input_token.length,
-                                    &kerberosToken,
-                                    &kerberosTokenLength))!=0 ) {
-            if (debug)
-                fprintf(stderr, "%s| %s: parseNegTokenInit failed with rc=%d\n", LogTime(), PROGRAM, rc);
-
-            /* if between 100 and 200 it might be a GSSAPI token and not a SPNEGO token */
-            if ( rc < 100 || rc > 199 ) {
-                if (debug)
-                    fprintf(stderr, "%s| %s: Invalid GSS-SPNEGO query [%s]\n", LogTime(), PROGRAM, buf);
-                fprintf(stdout, "BH Invalid GSS-SPNEGO query\n");
-                goto cleanup;
-            }
-            if ((input_token.length >= sizeof ntlmProtocol + 1) &&
-                    (!memcmp (input_token.value, ntlmProtocol, sizeof ntlmProtocol))) {
-                if (debug)
-                    fprintf(stderr, "%s| %s: received type %d NTLM token\n", LogTime(), PROGRAM, (int) *((unsigned char *)input_token.value + sizeof ntlmProtocol));
-                fprintf(stdout, "BH received type %d NTLM token\n",(int) *((unsigned char *)input_token.value + sizeof ntlmProtocol));
-                goto cleanup;
-            }
-            if (debug)
-                fprintf(stderr, "%s| %s: Token is possibly a GSSAPI token\n", LogTime(), PROGRAM);
-            spnego_flag=0;
-        } else {
-            gss_release_buffer(&minor_status, &input_token);
-            input_token.length=kerberosTokenLength;
-            input_token.value=(void *)kerberosToken;
-            spnego_flag=1;
-        }
-#else
         if ((input_token.length >= sizeof ntlmProtocol + 1) &&
                 (!memcmp (input_token.value, ntlmProtocol, sizeof ntlmProtocol))) {
             if (debug)
@@ -427,7 +386,6 @@ int main(int argc, char * const argv[])
             fprintf(stdout, "BH received type %d NTLM token\n",(int) *((unsigned char *)input_token.value + sizeof ntlmProtocol));
             goto cleanup;
         }
-#endif
 
         if ( service_principal ) {
             if ( strcasecmp(service_principal,"GSS_C_NO_NAME") ) {
@@ -466,25 +424,8 @@ int main(int argc, char * const argv[])
 
 
         if (output_token.length) {
-#ifndef HAVE_SPNEGO
-            if (spnego_flag) {
-                if ((rc=makeNegTokenTarg (output_token.value,
-                                          output_token.length,
-                                          &spnegoToken,
-                                          &spnegoTokenLength))!=0 ) {
-                    if (debug)
-                        fprintf(stderr, "%s| %s: makeNegTokenTarg failed with rc=%d\n", LogTime(), PROGRAM, rc);
-                    fprintf(stdout, "BH makeNegTokenTarg failed with rc=%d\n",rc);
-                    goto cleanup;
-                }
-            } else {
-                spnegoToken = output_token.value;
-                spnegoTokenLength = output_token.length;
-            }
-#else
             spnegoToken = output_token.value;
             spnegoTokenLength = output_token.length;
-#endif
             token = xmalloc(ska_base64_encode_len(spnegoTokenLength));
             if (token == NULL) {
                 if (debug)

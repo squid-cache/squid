@@ -313,65 +313,6 @@ if test "$enable_arg" = "no"; then
   esac
 fi
 
-old_LIBS=$LIBS
-AC_CACHE_CHECK([for SPNEGO support],ac_cv_have_spnego,[
-  AC_TRY_RUN([
-#ifdef HAVE_HEIMDAL_KERBEROS
-#ifdef HAVE_GSSAPI_GSSAPI_H
-#include <gssapi/gssapi.h>
-#elif defined(HAVE_GSSAPI_H)
-#include <gssapi.h>
-#endif
-#else
-#ifdef HAVE_SEAM_KERBEROS
-#ifdef HAVE_GSSAPI_GSSAPI_H
-#include <gssapi/gssapi.h>
-#elif defined(HAVE_GSSAPI_H)
-#include <gssapi.h>
-#endif
-#ifdef HAVE_GSSAPI_GSSAPI_EXT_H
-#include <gssapi/gssapi_ext.h>
-#endif
-#else /*MIT*/
-#ifdef HAVE_GSSAPI_GSSAPI_H
-#include <gssapi/gssapi.h>
-#elif defined(HAVE_GSSAPI_H)
-#include <gssapi.h>
-#endif
-#ifdef HAVE_GSSAPI_GSSAPI_KRB5_H
-#include <gssapi/gssapi_krb5.h>
-#endif
-#ifdef HAVE_GSSAPI_GSSAPI_GENERIC_H
-#include <gssapi/gssapi_generic.h>
-#endif
-#endif
-#endif
-
-int main(int argc, char *argv[]) {
- OM_uint32 major_status,minor_status;
- gss_OID_set gss_mech_set;
- int i;
-
-static gss_OID_desc _gss_mech_spnego  = {6, (void *)"\x2b\x06\x01\x05\x05\x02"};
-gss_OID gss_mech_spnego = &_gss_mech_spnego;
-
- major_status = gss_indicate_mechs( &minor_status, &gss_mech_set);
-
- for (i=0;i<gss_mech_set->count;i++) {
-     if (!memcmp(gss_mech_set->elements[i].elements,gss_mech_spnego->elements,gss_mech_set->elements[i].length)) {
-        return 0;
-     }
- }
-
- return 1;
-}],
-  ac_cv_have_spnego=yes,
-  ac_cv_have_spnego=no)])
-if test x"$ac_cv_have_spnego" = x"yes"; then
-  AC_DEFINE(HAVE_SPNEGO,1, [Define to 1 if you have SPNEGO support])
-fi
-LIBS=$old_LIBS
-
 AC_C_BIGENDIAN
 
 AC_CHECK_HEADERS( \
@@ -525,9 +466,6 @@ echo "configure: ##"
 echo "configure: ## $enable_arg has been selected"
 echo "configure: ##"
 echo "configure: ## -----------------------------##"
-
-dnl set variable for use in automakefile(s)
-AM_CONDITIONAL(HAVE_SPNEGO, test x"$ac_cv_have_spnego" = x"yes" )
 
 MY_CFLAGS="-Wall -Wextra -Werror -Wcomment -Wpointer-arith -Wcast-align -Wwrite-strings -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wdeclaration-after-statement -Wshadow"
 for ac_cv_my_cflag in $MY_CFLAGS; do
