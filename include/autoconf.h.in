@@ -562,9 +562,6 @@
 /* socklen_t is defined by the system headers */
 #undef HAVE_SOCKLEN_T
 
-/* Define to 1 if you have SPNEGO support */
-#undef HAVE_SPNEGO
-
 /* Define to 1 if you have the `srand48' function. */
 #undef HAVE_SRAND48
 
