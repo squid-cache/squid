@@ -34,9 +34,6 @@
 #include <sys/time.h>
 
 #include "base64.h"
-#ifndef HAVE_SPNEGO
-#include "spnegohelp.h"
-#endif
 
 // AYJ: must match the definition in src/auth/negotiate/auth_negotiate.cc
 #define MAX_AUTHTOKEN_LEN	32768
@@ -209,10 +206,6 @@ int main(int argc, char * const argv[])
   gss_buffer_desc 	input_token = GSS_C_EMPTY_BUFFER;
   gss_buffer_desc 	output_token = GSS_C_EMPTY_BUFFER;
   const unsigned char	*kerberosToken       = NULL;
-#ifndef HAVE_SPNEGO
-  int rc;
-  size_t		kerberosTokenLength = 0;
-#endif
   const unsigned char	*spnegoToken         = NULL ;
   size_t		spnegoTokenLength   = 0;
 
@@ -357,36 +350,6 @@ int main(int argc, char * const argv[])
     base64_decode(input_token.value,buf+3,input_token.length);
 
  
-#ifndef HAVE_SPNEGO
-    if (( rc=parseNegTokenInit (input_token.value,
-				input_token.length,
-				&kerberosToken,
-				&kerberosTokenLength))!=0 ){
-      if (debug)
-	fprintf(stderr, "%s| %s: parseNegTokenInit failed with rc=%d\n", LogTime(), PROGRAM, rc);
-        
-      /* if between 100 and 200 it might be a GSSAPI token and not a SPNEGO token */    
-      if ( rc < 100 || rc > 199 ) {
-	if (debug)
-	  fprintf(stderr, "%s| %s: Invalid GSS-SPNEGO query [%s]\n", LogTime(), PROGRAM, buf);
-	fprintf(stdout, "NA Invalid GSS-SPNEGO query\n");
-	goto cleanup;
-      } 
-      if ((input_token.length >= sizeof ntlmProtocol + 1) &&
-	  (!memcmp (input_token.value, ntlmProtocol, sizeof ntlmProtocol))) {
-	if (debug)
-	  fprintf(stderr, "%s| %s: received type %d NTLM token\n", LogTime(), PROGRAM, (int) *((unsigned char *)input_token.value + sizeof ntlmProtocol));
-	fprintf(stdout, "NA received type %d NTLM token\n",(int) *((unsigned char *)input_token.value + sizeof ntlmProtocol));
-	goto cleanup;
-      } 
-      spnego_flag=0;
-    } else {
-      gss_release_buffer(&minor_status, &input_token);
-      input_token.length=kerberosTokenLength;
-      input_token.value=(void *)kerberosToken;
-      spnego_flag=1;
-    }
-#else
     if ((input_token.length >= sizeof ntlmProtocol + 1) &&
 	(!memcmp (input_token.value, ntlmProtocol, sizeof ntlmProtocol))) {
       if (debug)
@@ -394,7 +357,6 @@ int main(int argc, char * const argv[])
       fprintf(stdout, "NA received type %d NTLM token\n",(int) *((unsigned char *)input_token.value + sizeof ntlmProtocol));
       goto cleanup;
     } 
-#endif
      
     if ( service_principal ) {
       if ( strcasecmp(service_principal,"GSS_C_NO_NAME") ){
