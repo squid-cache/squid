@@ -7,7 +7,7 @@
 #define XSTD_USE_LIBLTDL 1
 
 #if XSTD_USE_LIBLTDL
-#include "libLtdl/ltdl.h" /* generated file */
+#include "libltdl/ltdl.h" /* generated file */
 #else
 #include <dlfcn.h>
 #endif

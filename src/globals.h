@@ -118,6 +118,7 @@ extern "C" {
 //MOVED:snmp_core.cc    extern IpAddress theOutSNMPAddr;
 
     extern struct timeval squid_start;
+    extern int starting_up;	/* 1 */
     extern int shutting_down;	/* 0 */
     extern int reconfiguring;	/* 0 */
     extern unsigned long store_swap_size;	/* 0 */

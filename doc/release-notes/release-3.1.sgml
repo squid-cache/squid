@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.1.0.13 release notes</title>
+<title>Squid 3.1.0.15 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.1.0.13 for testing.
+The Squid Team are pleased to announce the release of Squid-3.1.0.15 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.1/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -46,6 +46,7 @@ The most important of these new features are:
 	<item>SSL Bump (for HTTPS Filtering and Adaptation)
 	<item>eCAP Adaptation Module support
 	<item>ICAP Bypass and Retry enhancements
+	<item>ICY streaming protocol support
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
@@ -142,13 +143,10 @@ config options provided on a clean install.
  to the IPv4 or IPv6 network that address belongs to. They are not permitted over the
  IPv4-IPv6 boundary. Some ACL voodoo can however be applied to explicitly route the
  IPv6/IPv4 bound traffic (DIRECT access) out an appropriate interface.
-<verb>
-    acl toIP6 dst ipv6
-    tcp_outgoing_address 2001::1 toIP6
-    tcp_outgoing_address 10.0.0.1 !toIP6
-</verb>
+ See the squid.conf documentation for further details.
 
-<p>WCCP is not available (neither version 1 or 2). It remains built into squid for use with IPv4 traffic but IPv6 cannot use it.
+<p>WCCP is not available (neither version 1 or 2).
+   It remains built into squid for use with IPv4 traffic but IPv6 cannot use it.
 
 <p>Transparent Interception is done via NAT at the OS level and is not available in IPv6.
    Squid will ensure that any port set with transparent, intercept, or tproxy options be an IPv4-only
@@ -311,181 +309,22 @@ While decrypted, the traffic can be inspected using ICAP.
   should be large enough to not require an explicit configuration in most
   environments yet may be small enough to limit side-effects of loops.
 
+<sect1>ICY streaming protocol support
+<p>Squid-3.1 adds native support for streaming protocol ICY.
 
-<sect>Windows support
-<P>This Squid version can run on Windows as a system service using the Cygwin emulation environment, 
-or can be compiled in Windows native mode using the MinGW + MSYS development environment. Windows NT 4 SP4 and later are supported.<newline>
-On Windows 2000 and later the service is configured to use the Windows Service Recovery option
-restarting automatically after 60 seconds.
+<p>This protocol uses port 80 and violates RFC 2616 by using an HTTP/1.1 compliant request and non-HTTP reply
+  to start the stream transaction. If the reply is handled according to HTTP/1.1 RFC-compliance requirements
+  the audio stream becomes jerky and contains regular 'popping' sounds.
 
-<sect1>Usage
+<p>Squid now processes the ICY replies natively according to the ICY requirements, not HTTP/1.1 requirements.
+  The streamed data is not cacheable. All processing and access controls may be applied the same as for HTTP.
 
-<p>Some new command line options were added for the Windows service support:<newline>
+<sect2>squid.conf change
+<p>Squid-2 contained a hack using the <em>update_http0.9</em> squid.conf option to work around the
+  unusual replies. This option is now obsolete.
 
-<p>The service installation is made with -i command line switch, it's possible to use -f switch at
-the same time for specify a different config-file settings for the Squid Service that will be
-stored on the Windows Registry.
-
-<p>A new -n switch specify the Windows Service Name, so multiple Squid instance are allowed.
-<em/"Squid"/ is the default when the switch is not used.
-
-<p>So, to install the service, the syntax is: 
-
-<verb>squid -i [-f file] [-n name]</verb>
-
-<p>Service uninstallation is made with -r command line switch with the appropriate -n switch.
-
-<p>The -k switch family must be used with the appropriate -f and -n switches, so the syntax is: 
-
-<verb>squid -k command [-f file] -n service-name</verb>
-where <em/service-name/ is the name specified with -n options at service install time.
-
-<p>To use the Squid original command line, the new -O switch must be used ONCE, the syntax is: 
-
-<verb>squid -O cmdline [-n service-name]</verb>
-<p>If multiple service command line options must be specified, use quote. The -n switch is
-needed only when a non default service name is in use.
-
-<p>Don't use the "Start parameters" in the Windows 2000/XP/2003 Service applet: they are
-specific to Windows services functionality and Squid is not designed for understand they.
-
-<p>In the following example the command line of the "squidsvc" Squid service is set to "-D -u 3130": 
-
-<verb>squid -O "-D -u 3130" -n squidsvc</verb>
-
-<sect1>PSAPI.DLL (Process Status Helper) Considerations
-
-<p>The process status helper functions make it easier for you to obtain information about
-processes and device drivers running on Microsoft® Windows NT®/Windows® 2000. These
-functions are available in PSAPI.DLL, which is distributed in the Microsoft® Platform
-Software Development Kit (SDK). The same information is generally available through the
-performance data in the registry, but it is more difficult to get to it. PSAPI.DLL is
-freely redistributable.
-
-<p>PSAPI.DLL is available only on Windows NT, 2000, XP and 2003. The implementation in Squid is
-aware of this, and try to use it only on the right platform.
-
-<p>On Windows NT PSAPI.DLL can be found as component of many applications, if you need it,
-you can find it on Windows NT Resource KIT. If you have problem, it can be
-downloaded from here:
-<url url="http://download.microsoft.com/download/platformsdk/Redist/4.0.1371.1/NT4/EN-US/psinst.EXE" name="http://download.microsoft.com/download/platformsdk/Redist/4.0.1371.1/NT4/EN-US/psinst.EXE">
-
-<p>On Windows 2000 and later it is available installing the Windows Support Tools, located on the
-Support\Tools folder of the installation Windows CD-ROM.
-
-<sect1>Registry DNS lookup
-
-<p>On Windows platforms, if no value is specified in the <em/dns_nameservers/ option on
-squid.conf or in the /etc/resolv.conf file, the list of DNS name servers are
-taken from the Windows registry, both static and dynamic DHCP configurations
-are supported.
-
-<sect1>Compatibility Notes
-<p>
-<itemize>
-<item>It's recommended to use '/' char in Squid paths instead of '\'
-<item>Paths with spaces (like 'C:\Programs Files\Squid) are NOT supported by Squid
-<item>When using ACL like 'acl aclname acltype "file"' the file must be in DOS text
-format (CR+LF) and the full Windows path must be specified, for example:
-
-<verb>acl blocklist url_regex -i "c:/squid/etc/blocked1.txt"</verb>
-
-<item>The Windows equivalent of '/dev/null' is 'NUL'
-<item>Squid doesn't know how to run external helpers based on scripts, like .bat, .cmd,
-.vbs, .pl, etc. So in squid.conf the interpreter path must be always specified, for example:
-
-<verb>redirect_program c:/perl/bin/perl.exe c:/squid/libexec/redir.pl
-redirect_program c:/winnt/system32/cmd.exe /C c:/squid/libexec/redir.cmd</verb>
-<item>When Squid runs in command line mode, the launching user account must have administrative privilege on the system
-<item>"Start parameters" in the Windows 2000/XP/2003 Service applet cannot be used
-<item>On Windows Vista and later, User Account Control (UAC) must be disabled before running service installation
-</itemize>
-
-
-<sect1>Known Limitations
-<p>
-<itemize>
-<item>Squid features not operational:<newline>
-<itemize>
-<item>DISKD: still needs to be ported<newline>
-<item>WCCP: cannot work because user space GRE support on Windows is missing<newline>
-<item>Transparent Proxy: missing Windows non commercial interception driver<newline>
-</itemize>
-<item>Some code sections can make blocking calls.
-<item>Some external helpers may not work.
-<item>File Descriptors number hard-limited to 2048 when building with MinGW.
-</itemize>
-
-<sect1>Building Squid on Windows
-
-<p>A reasonably recent release of <url url="http://www.cygwin.com/" name="Cygwin"> or <url url="http://www.mingw.org/" name="MinGW"> is needed.<newline>
-The usage of the Cygwin environment is very similar to other Unix/Linux environments, and -devel version of libraries must be installed.<newline>
-For the MinGW environment, the packages MSYS, MinGW and msysDTK must be installed. Some additional libraries and tools must be downloaded separately:<newline><newline>
-OpenSSL: <url url="http://www.slproweb.com/products/Win32OpenSSL.html" name="Shining Light Productions Win32 OpenSSL"><newline>
-libcrypt: <url url="http://sourceforge.net/projects/mingwrep/" name="MinGW packages repository"><newline>
-db-1.85: <url url="http://tinycobol.org/download.html" name="TinyCOBOL download area"><newline>
-When running configure, --disable-wccp and --disable-wccpv2 options should always specified to avoid compile errors.<newline>
-<itemize>
-<item>New configure options:<newline>
-<itemize>
-<item>--enable-win32-service<newline>
-</itemize>
-<item>Updated configure options:<newline>
-<itemize>
-<item>--enable-arp-acl<newline>
-<item>--enable-default-hostsfile<newline>
-</itemize>
-<item>Unsupported configure options:<newline>
-<itemize>
-<item>--enable-coss-aio-ops: On Windows Posix AIO is not available<newline>
-<item>--with-large-files: No suitable build environment is available on both Cygwin and MinGW, but --enable-large-cache-files works fine<newline>
-</itemize>
-<item>Recommended configure minimal options for Windows:<newline>
-<itemize>
-<item>--prefix=c:/squid --disable-wccp --disable-wccpv2 --enable-win32-service --enable-default-hostsfile=none
-</itemize>
-</itemize>
-<newline>
-Before build Squid with SSL support, some operations are needed (in the following example OpenSSL is installed in C:\OpenSSL and MinGW in C:\MinGW):
-<itemize>
-<item>Copy C:\OpenSSL\lib\MinGW content to C:\MinGW\lib<newline>
-<item>Copy C:\OpenSSL\include\openssl content to C:\MinGW\include\openssl<newline>
-<item>Rename C:\MinGW\lib\ssleay32.a to C:\MinGW\lib\libssleay32.a<newline>
-</itemize>
-
-<sect1>Using cache manager on Windows:
-<p>On Windows, cache manager (cachemgr.cgi) can be used with Microsoft IIS or Apache.<newline>
-Some specific configuration could be needed:<newline>
-<itemize>
-<item>IIS 6 (Windows 2003):<newline>
-<itemize>
-<item>On IIS 6.0 all CGI extensions are denied by default for security reason, so the following configuration is needed:<newline>
-<itemize>
-<item>Create a cgi-bin Directory
-<item>Define the cgi-bin IIS Virtual Directory with read and CGI execute IIS
-permissions, ASP scripts are not needed. This automatically defines a
-cgi-bin IIS web application 
-<item>Copy cachemgr.cgi into cgi-bin directory and look to file permissions:
-the IIS system account and SYSTEM must be able to read and execute the file
-<item>In IIS manager go to Web Service extensions and add a new Web Service
-Extension called <em/"Squid Cachemgr"/, add the cachemgr.cgi file and set the
-extension status to <em/Allowed/
-</itemize>
-</itemize>
-<item>Apache:<newline>
-<itemize>
-<item>On Windows, cachemgr.cgi needs to create a temporary file, so Apache must be instructed
- to pass the TMP and TEMP Windows environment variables to CGI applications:<newline>
-<verb>
-ScriptAlias /squid/cgi-bin/ "c:/squid/libexec/"
-&lt;Location /squid/cgi-bin/cachemgr.cgi&gt;
-    PassEnv TMP TEMP
-    Order allow,deny
-    Allow from workstation.example.com
-&lt;/Location&gt;
-</verb>
-</itemize>
-</itemize>
+<p>The proto ACL type matches <em>ICY</em> once the reply has been received, before that the processing
+  is only aware on an HTTP request. So the ACL will match <em>HTTP</em>.
 
 
 <sect>Changes to squid.conf since Squid-3.0
@@ -1062,7 +901,8 @@ NOCOMMENT_START
 <p>
 <descrip>
 	<tag>acl</tag>
-	<p>New preset content <em>ipv6</em> available as a preset type in the src and dst ACL matching all of the public IPv6 network space.
+	<p>New preset <em>ipv6</em> available in the src and dst ACL matching all of the public IPv6 network space.
+	<p>New preset <em>ipv4</em> available in the src and dst ACL matching all of IPv4 network space.
 	<p>New acl type myportname, matching the name of the http_port or https_port where the request was accepted.
 	<p>New acl type tag, matching the tag= returned from the external_acl_type helper.
 	<p>New acl type peername, matching against a named cache_peer entry where the request will be attempted first.
@@ -1070,6 +910,8 @@ NOCOMMENT_START
         <verb>
 	acl aclname dst ipv6			# request for IPv6-enabled site
 	acl aclname src ipv6			# request from IPv6 address
+	acl aclname dst ipv4			# request for IPv4 site
+	acl aclname src ipv4			# request from IPv4 address
         acl aclname myportname 3128 ...         # http(s)_port name
 	acl aclname peername myPeer ...		# cache_peer ... name=myPeer
 	acl aclname tag value ...		# tag= option from external ACL
@@ -1476,6 +1318,13 @@ This section gives an account of those changes in three categories:
 	<tag>--disable-loadable-modules</tag>
 	<p>Build without support for loadable modules.
 
+	<tag>--disable-strict-error-checking</tag>
+	<p>Build Squid without advanced compiler error checking.
+	   This only affects the building process, enabling it to complete despite some
+	   possibly serious issues.
+	   Please do not use lightly, and please report the build issues which make it needed
+	   to the squid developers before doing so.
+
 	<tag>--disable-translation</tag>
         <p>Prevent Squid generating localized error page templates and manuals.
            Which is usually tried, but may not be needed.
@@ -1586,7 +1435,7 @@ This section gives an account of those changes in three categories:
 	<p>Replaced by <em>url_rewrite_bypass</em>
 
 	<tag>upgrade_http0.9</tag>
-	<p>ICY protocol streaming support added natively.
+	<p>Obsolete. ICY protocol streaming support added natively.
 
 	<tag>zph_local</tag>
 	<p>Replaced by <em>qos_flows local-hit=</em>

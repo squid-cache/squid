@@ -17,19 +17,37 @@ man_MANS =
 DISTCLEANFILES = 
 
 LDADD = \
-	../compat/libcompat.la \
-	../src/ip/libip.la \
-	-L../lib -lmiscutil \
+	$(top_builddir)/src/time.o \
+	$(top_builddir)/src/ip/libip.la \
+	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 
 include $(top_srcdir)/doc/manuals/Substitute.am
 
+test_tools.cc: $(top_srcdir)/test-suite/test_tools.cc
+	cp $(top_srcdir)/test-suite/test_tools.cc .
+
+# stock tools for unit tests - library independent versions of dlink_list
+# etc.
+# globals.cc is needed by test_tools.cc.
+# Neither of these should be disted from here.
+TESTSOURCES= test_tools.cc
+CLEANFILES += test_tools.cc
+
+## ##### helper-mux #####
+
+libexec_SCRIPTS = helper-mux.pl
+EXTRA_DIST += helper-mux.pl helper-mux.README
+
+## Test Scripts
+EXTRA_DIST += helper-ok-dying.pl helper-ok.pl
 
 ## ##### squidclient  #####
 
 bin_PROGRAMS = squidclient
 
-squidclient_SOURCES = squidclient.cc
+squidclient_SOURCES = squidclient.cc \
+	test_tools.cc
 
 EXTRA_DIST += squidclient.1
 man_MANS += squidclient.1
@@ -42,7 +60,9 @@ DEFAULT_CACHEMGR_CONFIG = $(sysconfdir)/cachemgr.conf
 
 libexec_PROGRAMS = cachemgr$(CGIEXT)
 
-cachemgr__CGIEXT__SOURCES = cachemgr.cc
+cachemgr__CGIEXT__SOURCES = cachemgr.cc \
+	test_tools.cc
+
 cachemgr__CGIEXT__CXXFLAGS = -DDEFAULT_CACHEMGR_CONFIG=\"$(DEFAULT_CACHEMGR_CONFIG)\" $(AM_CXXFLAGS)
 
 EXTRA_DIST += cachemgr.conf cachemgr.cgi.8 cachemgr.cgi.8.in

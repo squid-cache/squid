@@ -1,0 +1,72 @@
+basic_radius_auth V1.09
+
+This kit is loosely based on radtest from the Cistron-radiusd which
+again is based on Livingston sources. See COPYRIGHT for details.
+
+This authenticator is specifically made for Squid-2.5 and later.
+
+Installation:
+
+Copy the correct makefile to Makefile
+   Makefile.default = Most OS:es.
+   Makefile.solaris = SunOS5 (Solaris)
+
+cp Makefile.default Makefile   
+make clean
+make install
+
+or if you want the helper installed elsewhere than /usr/local/squid
+(the default installation path of Squid) use something like:
+
+make CONFDIR=/etc PREFIX=/usr BINDIR='${PREFIX}/libexec/squid' install
+
+Complete list of make options for tweakin the installation paths:
+
+  PREFIX   Top level installation directory (/usr/local/squid)
+  BINDIR   Where the binary is installed (PREFIX/libexec)
+  CONFDIR  Where the configuration file is installed (PREFIX/etc)
+  MANDIR   Where the manpage is installed (PREFIX/man/man8)
+  MANEXT   Manpage extension (.8)
+  DESTDIR  Root prefix for packaging
+
+
+Configuration:
+
+The RADIUS authenticator is configured using a small configuration file.
+
+The configuration file should look like this:
+# basic_radius_auth configuration file
+# MvS: 28-10-1998
+server suncone.cistron.nl
+secret testje
+
+An example can be found in etc/basic_radius_auth.conf 
+
+
+/etc/services:
+
+Modify /etc/services and add:
+radius          1812/udp
+
+Adding this is not mandatory because it used the default port 1812 anyway.
+
+Note: Some old RADIUS servers uses the unofficial port 1645, and you may
+need to override the service port used either by editing /etc/services
+or by specifying the port using the -p command line option or the port
+tag in basic_radius_auth.conf
+
+
+Test it:
+
+Start basic_radius_auth and type a username and a username. The authenticator
+returns OK if the radiusd accepted your password. In any other case you'll
+get ERR.
+
+
+Squid:
+
+Add the authenticator to squid.conf. See the instructions from squid for
+help.
+
+Marc van Selm <selm@cistron.nl>
+Henrik Nordstrom <hno@squid-cache.org>

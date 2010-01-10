@@ -28,13 +28,12 @@
 #include "config.h"
 #include "util.h"
 
-/* Convert ISO-LATIN-1 to UTF-8
- */
+/** Convert ISO-LATIN-1 to UTF-8 */
 char *
 latin1_to_utf8(char *out, size_t size, const char *in)
 {
-    unsigned char *p;
-    for (p = (unsigned char *)out; *in && size > 2; in++) {
+    unsigned char *p = (unsigned char *)out;
+    for (; *in && size > 2; in++) {
         unsigned char ch = (unsigned char)*in;
         if (ch < 0x80) {
             *p++ = ch;
@@ -46,10 +45,8 @@ latin1_to_utf8(char *out, size_t size, const char *in)
             size--;
         }
     }
-    *p++ = '\0';
+    *p = '\0';
     if (*in)
         return NULL;
     return out;
 }
-
-

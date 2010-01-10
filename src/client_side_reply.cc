@@ -357,13 +357,14 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
     HttpReply *old_rep = (HttpReply *) old_entry->getReply();
 
     // origin replied 304
-
+    // TODO FIXME: old_rep2 was forcibly unshadowed, used to be old_rep. Are we sure
+    //  that the right semantics were preserved?
     if (status == HTTP_NOT_MODIFIED) {
         http->logType = LOG_TCP_REFRESH_UNMODIFIED;
 
         // update headers on existing entry
-        HttpReply *old_rep = (HttpReply *) old_entry->getReply();
-        old_rep->updateOnNotModified(http->storeEntry()->getReply());
+        HttpReply *old_rep2 = (HttpReply *) old_entry->getReply();
+        old_rep2->updateOnNotModified(http->storeEntry()->getReply());
         old_entry->timestampsSet();
 
         // if client sent IMS
@@ -375,7 +376,7 @@ clientReplyContext::handleIMSReply(StoreIOBuffer result)
         } else {
             // send existing entry, it's still valid
             debugs(88, 3, "handleIMSReply: origin replied 304, revalidating existing entry and sending " <<
-                   old_rep->sline.status << " to client");
+                   old_rep2->sline.status << " to client");
             sendClientOldEntry();
         }
     }

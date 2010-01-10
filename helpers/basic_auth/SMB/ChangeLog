@@ -1,3 +1,7 @@
+7 November 2009, version 0.05
+
+- Naming change for helpers in Squid-3.
+
 28 September 1999, version 0.05
 
 - Easier debugging: added the -d option to smb_auth.

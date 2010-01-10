@@ -111,11 +111,11 @@ public:
     cbdata_type type;
 #if CBDATA_DEBUG
 
-    void addHistory(char const *label, char const *file, int line) {
+    void addHistory(char const *label, char const *aFile, int aLine) {
         if (calls.size() > 1000)
             return;
 
-        calls.push_back(new CBDataCall(label, file, line));
+        calls.push_back(new CBDataCall(label, aFile, aLine));
     }
 
     dlink_node link;
@@ -126,7 +126,7 @@ public:
 
     /* cookie used while debugging */
     long cookie;
-    void check(int line) const {assert(cookie == ((long)this ^ Cookie));}
+    void check(int aLine) const {assert(cookie == ((long)this ^ Cookie));}
     static const long Cookie;
 
 #if !HASHED_CBDATA

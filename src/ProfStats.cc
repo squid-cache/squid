@@ -34,10 +34,12 @@
  */
 
 #include "squid.h"
-#include "event.h"
-#include "CacheManager.h"
 
 #ifdef USE_XPROF_STATS
+
+#include "CacheManager.h"
+#include "event.h"
+#include "SquidMath.h"
 #include "Store.h"
 
 /* Private stuff */
@@ -121,7 +123,7 @@ xprof_show_item(StoreEntry * sentry, const char *name, xprof_stats_data * hist)
                       hist->count ? hist->summ / hist->count : 0,
                       hist->worst,
                       hist->count / time_frame,
-                      dpercent((double) hist->summ, (double) hist->delta));
+                      Math::doublePercent((double) hist->summ, (double) hist->delta));
 }
 
 static void
