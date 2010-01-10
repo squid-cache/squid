@@ -139,8 +139,7 @@ static IOCB clientWriteComplete;
 static IOCB clientWriteBodyComplete;
 static bool clientParseRequest(ConnStateData * conn, bool &do_next_read);
 static PF clientLifetimeTimeout;
-static ClientSocketContext *parseHttpRequestAbort(ConnStateData * conn,
-        const char *uri);
+static ClientSocketContext *parseHttpRequestAbort(ConnStateData * conn, const char *uri);
 static ClientSocketContext *parseHttpRequest(ConnStateData *, HttpParser *, HttpRequestMethod *, HttpVersion *);
 #if USE_IDENT
 static IDCB clientIdentDone;
@@ -621,6 +620,15 @@ ConnStateData::freeAllContexts()
         context->connIsFinished();
         assert (context != currentobject);
     }
+}
+
+/// propagates abort event to all contexts
+void
+ConnStateData::notifyAllContexts(int xerrno)
+{
+    typedef ClientSocketContext::Pointer CSCP;
+    for (CSCP c = getCurrentContext(); c.getRaw(); c = c->next)
+        c->noteIoError(xerrno);
 }
 
 /* This is a handler normally called by comm_close() */
@@ -1622,6 +1630,19 @@ clientWriteComplete(int fd, char *bufnotused, size_t size, comm_err_t errflag, i
     context->writeComplete (fd, bufnotused, size, errflag);
 }
 
+/// remembers the abnormal connection termination for logging purposes
+void
+ClientSocketContext::noteIoError(const int xerrno)
+{
+    if (http) {
+        if (xerrno == ETIMEDOUT)
+            http->al.http.timedout = true;
+        else // even if xerrno is zero (which means read abort/eof)
+            http->al.http.aborted = true;
+    }
+}
+
+
 void
 ClientSocketContext::doClose()
 {
@@ -1812,9 +1833,10 @@ prepareAcceleratedURL(ConnStateData * conn, ClientHttpRequest *http, char *url, 
 
 #if SHOULD_REJECT_UNKNOWN_URLS
 
-        if (!url)
+        if (!url) {
+            hp->request_parse_status = HTTP_BAD_REQUEST;
             return parseHttpRequestAbort(conn, "error:invalid-request");
-
+        }
 #endif
 
         if (url)
@@ -1941,6 +1963,7 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
         return NULL;
     } else if ( (size_t)hp->bufsiz >= Config.maxRequestHeaderSize && headersEnd(hp->buf, Config.maxRequestHeaderSize) == 0) {
         debugs(33, 5, "parseHttpRequest: Too large request");
+        hp->request_parse_status = HTTP_HEADER_TOO_LARGE;
         return parseHttpRequestAbort(conn, "error:request-too-large");
     }
 
@@ -1985,6 +2008,7 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
     /* Enforce max_request_size */
     if (req_sz >= Config.maxRequestHeaderSize) {
         debugs(33, 5, "parseHttpRequest: Too large request");
+        hp->request_parse_status = HTTP_HEADER_TOO_LARGE;
         return parseHttpRequestAbort(conn, "error:request-too-large");
     }
 
@@ -1996,15 +2020,14 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
         debugs(33, DBG_IMPORTANT, "WARNING: CONNECT method received on " << conn->port->protocol << " Accelerator port " << conn->port->s.GetPort() );
         /* XXX need a way to say "this many character length string" */
         debugs(33, DBG_IMPORTANT, "WARNING: for request: " << hp->buf);
-        /* XXX need some way to set 405 status on the error reply */
+        hp->request_parse_status = HTTP_METHOD_NOT_ALLOWED;
         return parseHttpRequestAbort(conn, "error:method-not-allowed");
     }
 
     if (*method_p == METHOD_NONE) {
         /* XXX need a way to say "this many character length string" */
         debugs(33, 1, "clientParseRequestMethod: Unsupported method in request '" << hp->buf << "'");
-
-        /* XXX where's the method set for this error? */
+        hp->request_parse_status = HTTP_METHOD_NOT_ALLOWED;
         return parseHttpRequestAbort(conn, "error:unsupported-request-method");
     }
 
@@ -2027,6 +2050,7 @@ parseHttpRequest(ConnStateData *conn, HttpParser *hp, HttpRequestMethod * method
      */
     if ( squid_strnstr(req_hdr, "\r\r\n", req_sz) ) {
         debugs(33, 1, "WARNING: suspicious HTTP request contains double CR");
+        hp->request_parse_status = HTTP_BAD_REQUEST;
         return parseHttpRequestAbort(conn, "error:double-CR");
     }
 
@@ -2215,6 +2239,7 @@ ConnStateData::connFinishedWithConn(int size)
         } else if (!Config.onoff.half_closed_clients) {
             /* admin doesn't want to support half-closed client sockets */
             debugs(33, 3, "connFinishedWithConn: FD " << fd << " aborted (half_closed_clients disabled)");
+            notifyAllContexts(0); // no specific error implies abort
             return 1;
         }
     }
@@ -2320,7 +2345,16 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         debugs(33, 1, "clientProcessRequest: Invalid Request");
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
-        repContext->setReplyToError(ERR_INVALID_REQ, HTTP_BAD_REQUEST, method, NULL, conn->peer, NULL, conn->in.buf, NULL);
+        switch (hp->request_parse_status) {
+        case HTTP_HEADER_TOO_LARGE:
+            repContext->setReplyToError(ERR_TOO_BIG, HTTP_HEADER_TOO_LARGE, method, http->uri, conn->peer, NULL, conn->in.buf, NULL);
+            break;
+        case HTTP_METHOD_NOT_ALLOWED:
+            repContext->setReplyToError(ERR_UNSUP_REQ, HTTP_METHOD_NOT_ALLOWED, method, http->uri, conn->peer, NULL, conn->in.buf, NULL);
+            break;
+        default:
+            repContext->setReplyToError(ERR_INVALID_REQ, HTTP_BAD_REQUEST, method, http->uri, conn->peer, NULL, conn->in.buf, NULL);
+        }
         assert(context->http->out.offset == 0);
         context->pullData();
         conn->flags.readMoreRequests = false;
@@ -2663,6 +2697,7 @@ ConnStateData::clientReadRequest(const CommIoCbParams &io)
      * lame half-close detection
      */
     if (connReadWasError(io.flag, io.size, io.xerrno)) {
+        notifyAllContexts(io.xerrno);
         comm_close(fd);
         return;
     }
@@ -2883,8 +2918,7 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
          */
         ClientHttpRequest **H;
         clientStreamNode *node;
-        ClientHttpRequest *http =
-            parseHttpRequestAbort(this, "error:Connection%20lifetime%20expired");
+        ClientHttpRequest *http = parseHttpRequestAbort(this, "error:Connection%20lifetime%20expired");
         node = http->client_stream.tail->prev->data;
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
@@ -2937,8 +2971,9 @@ static void
 clientLifetimeTimeout(int fd, void *data)
 {
     ClientHttpRequest *http = (ClientHttpRequest *)data;
-    debugs(33, 1, "WARNING: Closing client " << http->getConn()->peer << " connection due to lifetime timeout");
+    debugs(33, 1, "WARNING: Closing client " << " connection due to lifetime timeout");
     debugs(33, 1, "\t" << http->uri);
+    http->al.http.timedout = true;
     comm_close(fd);
 }
 

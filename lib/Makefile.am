@@ -7,10 +7,6 @@ include $(top_srcdir)/src/Common.am
 
 SUBDIRS =
 
-if USE_LOADABLE_MODULES
-SUBDIRS += libLtdl
-endif
-
 if USE_ESI
 SUBDIRS += libTrie
 endif

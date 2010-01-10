@@ -407,6 +407,7 @@ IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAdd
 }
 
 #if LINUX_TPROXY2
+int
 IpIntercept::SetTproxy2OutgoingAddr(int fd, const IpAddress &src)
 {
     IpAddress addr;

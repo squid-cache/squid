@@ -91,18 +91,16 @@ LogTime()
 
     gettimeofday(&now, NULL);
     if (now.tv_sec != last_t) {
-        tm = localtime(&now.tv_sec);
+        tm = localtime((const time_t*)&now.tv_sec);
         strftime(buf, 127, "%Y/%m/%d %H:%M:%S", tm);
         last_t = now.tv_sec;
     }
     return buf;
 }
 
-#ifdef HAVE_SPNEGO
 #ifndef gss_mech_spnego
 static gss_OID_desc _gss_mech_spnego = { 6, (void *) "\x2b\x06\x01\x05\x05\x02" };
 gss_OID gss_mech_spnego = &_gss_mech_spnego;
-#endif
 #endif
 
 int
@@ -190,11 +188,7 @@ squid_kerb_proxy_auth(char *proxy)
 
     major_status = gss_init_sec_context(&minor_status,
                                         GSS_C_NO_CREDENTIAL, &gss_context, server_name,
-#ifdef HAVE_SPNEGO
                                         gss_mech_spnego,
-#else
-                                        0,
-#endif
                                         0,
                                         0,
                                         GSS_C_NO_CHANNEL_BINDINGS,

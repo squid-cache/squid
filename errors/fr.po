@@ -13,8 +13,7 @@ msgstr ""
 
 #: templates/ERR_DIR_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
-msgstr ""
-"<a href=\"../\">Répertoire Parent</a> (<a href=\"/\">Répertoire Racine</a>)"
+msgstr "<a href=\"../\">Répertoire Parent</a> (<a href=\"/\">Répertoire Racine</a>)"
 
 #: templates/ERR_INVALID_REQ:4
 msgid ""
@@ -299,8 +298,8 @@ msgstr "Nom de machine absent"
 msgid ""
 "Missing or incorrect access protocol (should be <q>http://</q> or similar)"
 msgstr ""
-"Protocole d'accès absent ou incorrect (il devrait être de la forme <q>http://"
-"</q> ou similaire)"
+"Protocole d'accès absent ou incorrect (il devrait être de la forme "
+"<q>http://</q> ou similaire)"
 
 #: templates/ERR_INVALID_REQ:6
 msgid "Missing or unknown request method."
@@ -461,16 +460,16 @@ msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"L'erreur suivante a été rencontrée en essayant d'accéder à l'URL : <a href="
-"\"%U\">%U</a>"
+"L'erreur suivante a été rencontrée en essayant d'accéder à l'URL : <a href=\""
+"%U\">%U</a>"
 
 #: templates/ERR_URN_RESOLVE:4
 msgid ""
 "The following error was encountered while trying to retrieve the URN: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"L'erreur suivante a été rencontrée en essayant d'accéder à l'URN : <a href="
-"\"%U\">%U</a>"
+"L'erreur suivante a été rencontrée en essayant d'accéder à l'URN : <a href=\""
+"%U\">%U</a>"
 
 #: templates/ERR_CONNECT_FAIL:7
 msgid "The remote host or network may be down.  Please try the request again."
@@ -531,8 +530,7 @@ msgstr ""
 
 #: templates/ERR_UNSUP_HTTPVERSION:6
 msgid "This Squid does not accept the HTTP version you are attempting to use."
-msgstr ""
-"Ce Squid ne supporte pas la version de HTTP que vous tentez d'utiliser."
+msgstr "Ce Squid ne supporte pas la version de HTTP que vous tentez d'utiliser."
 
 #: templates/ERR_FTP_DISABLED:6
 msgid "This cache does not support FTP."
@@ -661,7 +659,8 @@ msgid ""
 msgstr ""
 "Vous avez formulé une requête avec la directive de contrôle <q>only-if-"
 "cached</q>. Le document n'a pas été trouvé dans le cache, <em>ou</em> il "
-"nécessite une revalidation, interdite par la directive <q>only-if-cached</q>."
+"nécessite une revalidation, interdite par la directive <q>only-if-"
+"cached</q>."
 
 #: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
 #: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
