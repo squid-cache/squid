@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
-"POT-Creation-Date: 2010-01-10 23:06+1400\n"
+"POT-Creation-Date: 2010-01-11 01:17+1400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -28,7 +28,7 @@ msgid "Squid Web Proxy"
 msgstr ""
 
 #. type: SH
-#: doc/squid.8.in:4 helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:3 helpers/basic_auth/LDAP/basic_ldap_auth.8:3 helpers/basic_auth/NCSA/basic_ncsa_auth.8:14 helpers/basic_auth/PAM/pam_auth.8:3 helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:3 helpers/external_acl/ldap_group/squid_ldap_group.8:3 helpers/external_acl/session/squid_session.8:3 helpers/external_acl/unix_group/squid_unix_group.8:3 tools/cachemgr.cgi.8.in:4 tools/squidclient.1:2
+#: doc/squid.8.in:4 helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:3 helpers/basic_auth/LDAP/basic_ldap_auth.8:3 helpers/basic_auth/NCSA/basic_ncsa_auth.8:14 helpers/basic_auth/PAM/basic_pam_auth.8:3 helpers/basic_auth/RADIUS/basic_radius_auth.8:3 helpers/external_acl/ldap_group/squid_ldap_group.8:3 helpers/external_acl/session/squid_session.8:3 helpers/external_acl/unix_group/squid_unix_group.8:3 tools/cachemgr.cgi.8.in:4 tools/squidclient.1:2
 #, no-wrap
 msgid "NAME"
 msgstr ""
@@ -39,7 +39,7 @@ msgid "squid - proxy caching server"
 msgstr ""
 
 #. type: SH
-#: doc/squid.8.in:6 helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:6 helpers/basic_auth/LDAP/basic_ldap_auth.8:6 helpers/basic_auth/NCSA/basic_ncsa_auth.8:17 helpers/basic_auth/PAM/pam_auth.8:6 helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:6 helpers/external_acl/ldap_group/squid_ldap_group.8:6 helpers/external_acl/session/squid_session.8:6 helpers/external_acl/unix_group/squid_unix_group.8:6 tools/cachemgr.cgi.8.in:6 tools/squidclient.1:4
+#: doc/squid.8.in:6 helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:6 helpers/basic_auth/LDAP/basic_ldap_auth.8:6 helpers/basic_auth/NCSA/basic_ncsa_auth.8:17 helpers/basic_auth/PAM/basic_pam_auth.8:6 helpers/basic_auth/RADIUS/basic_radius_auth.8:6 helpers/external_acl/ldap_group/squid_ldap_group.8:6 helpers/external_acl/session/squid_session.8:6 helpers/external_acl/unix_group/squid_unix_group.8:6 tools/cachemgr.cgi.8.in:6 tools/squidclient.1:4
 #, no-wrap
 msgid "SYNOPSIS"
 msgstr ""
@@ -80,7 +80,7 @@ msgid "I<cmd-line>"
 msgstr ""
 
 #. type: SH
-#: doc/squid.8.in:22 helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:9 helpers/basic_auth/LDAP/basic_ldap_auth.8:13 helpers/basic_auth/NCSA/basic_ncsa_auth.8:23 helpers/basic_auth/PAM/pam_auth.8:9 helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:13 helpers/external_acl/ldap_group/squid_ldap_group.8:9 helpers/external_acl/session/squid_session.8:9 helpers/external_acl/unix_group/squid_unix_group.8:9 tools/cachemgr.cgi.8.in:8 tools/squidclient.1:59
+#: doc/squid.8.in:22 helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:9 helpers/basic_auth/LDAP/basic_ldap_auth.8:13 helpers/basic_auth/NCSA/basic_ncsa_auth.8:23 helpers/basic_auth/PAM/basic_pam_auth.8:9 helpers/basic_auth/RADIUS/basic_radius_auth.8:13 helpers/external_acl/ldap_group/squid_ldap_group.8:9 helpers/external_acl/session/squid_session.8:9 helpers/external_acl/unix_group/squid_unix_group.8:9 tools/cachemgr.cgi.8.in:8 tools/squidclient.1:59
 #, no-wrap
 msgid "DESCRIPTION"
 msgstr ""
@@ -378,7 +378,7 @@ msgid "Location of B<squid> error pages and templates."
 msgstr ""
 
 #. type: SH
-#: doc/squid.8.in:174 helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:78 helpers/basic_auth/LDAP/basic_ldap_auth.8:237 helpers/basic_auth/NCSA/basic_ncsa_auth.8:37 helpers/basic_auth/PAM/pam_auth.8:89 helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:87 helpers/external_acl/ldap_group/squid_ldap_group.8:211 helpers/external_acl/session/squid_session.8:61 helpers/external_acl/unix_group/squid_unix_group.8:63 tools/cachemgr.cgi.8.in:39 tools/squidclient.1:119
+#: doc/squid.8.in:174 helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:78 helpers/basic_auth/LDAP/basic_ldap_auth.8:237 helpers/basic_auth/NCSA/basic_ncsa_auth.8:37 helpers/basic_auth/PAM/basic_pam_auth.8:89 helpers/basic_auth/RADIUS/basic_radius_auth.8:87 helpers/external_acl/ldap_group/squid_ldap_group.8:211 helpers/external_acl/session/squid_session.8:61 helpers/external_acl/unix_group/squid_unix_group.8:63 tools/cachemgr.cgi.8.in:39 tools/squidclient.1:119
 #, no-wrap
 msgid "SEE ALSO"
 msgstr ""
@@ -444,13 +444,13 @@ msgid "B<auth_param basic program /path/to/basic_getpwnam_auth>"
 msgstr ""
 
 #. type: SH
-#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:28 helpers/basic_auth/LDAP/basic_ldap_auth.8:206 helpers/basic_auth/PAM/pam_auth.8:49 helpers/external_acl/ldap_group/squid_ldap_group.8:179 helpers/external_acl/unix_group/squid_unix_group.8:36
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:28 helpers/basic_auth/LDAP/basic_ldap_auth.8:206 helpers/basic_auth/PAM/basic_pam_auth.8:49 helpers/external_acl/ldap_group/squid_ldap_group.8:179 helpers/external_acl/unix_group/squid_unix_group.8:36
 #, no-wrap
 msgid "NOTES"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:35 helpers/basic_auth/PAM/pam_auth.8:56
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:35 helpers/basic_auth/PAM/basic_pam_auth.8:56
 msgid ""
 "When used for authenticating to local UNIX shadow password databases the "
 "program must be running as root or else it won't have sufficient permissions "
@@ -464,7 +464,7 @@ msgid "B<chown root basic_getpwnam_auth> B<chmod u+s basic_getpwnam_auth>"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:48 helpers/basic_auth/PAM/pam_auth.8:69
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:48 helpers/basic_auth/PAM/basic_pam_auth.8:69
 msgid ""
 "Please note that in such configurations it is also strongly recommended that "
 "the program is moved into a directory where normal users cannot access it, "
@@ -475,7 +475,7 @@ msgid ""
 msgstr ""
 
 #. type: SH
-#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:49 helpers/basic_auth/LDAP/basic_ldap_auth.8:212 helpers/basic_auth/NCSA/basic_ncsa_auth.8:35 helpers/basic_auth/PAM/pam_auth.8:70 helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:65 helpers/external_acl/ldap_group/squid_ldap_group.8:185 helpers/external_acl/session/squid_session.8:47 helpers/external_acl/unix_group/squid_unix_group.8:41 tools/squidclient.1:122
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:49 helpers/basic_auth/LDAP/basic_ldap_auth.8:212 helpers/basic_auth/NCSA/basic_ncsa_auth.8:35 helpers/basic_auth/PAM/basic_pam_auth.8:70 helpers/basic_auth/RADIUS/basic_radius_auth.8:65 helpers/external_acl/ldap_group/squid_ldap_group.8:185 helpers/external_acl/session/squid_session.8:47 helpers/external_acl/unix_group/squid_unix_group.8:41 tools/squidclient.1:122
 #, no-wrap
 msgid "AUTHOR"
 msgstr ""
@@ -499,7 +499,7 @@ msgid "This manual is written by I<Amos Jeffries E<lt>squid3@treenet.co.nzE<gt>>
 msgstr ""
 
 #. type: SH
-#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:61 helpers/basic_auth/PAM/pam_auth.8:74
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:61 helpers/basic_auth/PAM/basic_pam_auth.8:74
 #, no-wrap
 msgid "COPYRIGHT"
 msgstr ""
@@ -519,26 +519,26 @@ msgid ""
 msgstr ""
 
 #. type: SH
-#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:67 helpers/basic_auth/LDAP/basic_ldap_auth.8:225 helpers/basic_auth/PAM/pam_auth.8:78 helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:75 helpers/external_acl/ldap_group/squid_ldap_group.8:199 helpers/external_acl/session/squid_session.8:51 helpers/external_acl/unix_group/squid_unix_group.8:53
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:67 helpers/basic_auth/LDAP/basic_ldap_auth.8:225 helpers/basic_auth/PAM/basic_pam_auth.8:78 helpers/basic_auth/RADIUS/basic_radius_auth.8:75 helpers/external_acl/ldap_group/squid_ldap_group.8:199 helpers/external_acl/session/squid_session.8:51 helpers/external_acl/unix_group/squid_unix_group.8:53
 #, no-wrap
 msgid "QUESTIONS"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:71 helpers/basic_auth/PAM/pam_auth.8:82
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:71 helpers/basic_auth/PAM/basic_pam_auth.8:82
 msgid ""
 "Questions on the usage of this program can be sent to the I<Squid Users "
 "E<lt>squid-users@squid-cache.orgE<gt>> mailing list."
 msgstr ""
 
 #. type: SH
-#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:72 helpers/basic_auth/LDAP/basic_ldap_auth.8:231 helpers/basic_auth/PAM/pam_auth.8:83 helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:81 helpers/external_acl/ldap_group/squid_ldap_group.8:205 helpers/external_acl/session/squid_session.8:55 helpers/external_acl/unix_group/squid_unix_group.8:57
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:72 helpers/basic_auth/LDAP/basic_ldap_auth.8:231 helpers/basic_auth/PAM/basic_pam_auth.8:83 helpers/basic_auth/RADIUS/basic_radius_auth.8:81 helpers/external_acl/ldap_group/squid_ldap_group.8:205 helpers/external_acl/session/squid_session.8:55 helpers/external_acl/unix_group/squid_unix_group.8:57
 #, no-wrap
 msgid "REPORTING BUGS"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:77 helpers/basic_auth/LDAP/basic_ldap_auth.8:236 helpers/basic_auth/PAM/pam_auth.8:88 helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:86 helpers/external_acl/ldap_group/squid_ldap_group.8:210 helpers/external_acl/session/squid_session.8:60
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:77 helpers/basic_auth/LDAP/basic_ldap_auth.8:236 helpers/basic_auth/PAM/basic_pam_auth.8:88 helpers/basic_auth/RADIUS/basic_radius_auth.8:86 helpers/external_acl/ldap_group/squid_ldap_group.8:210 helpers/external_acl/session/squid_session.8:60
 msgid ""
 "Report bugs or bug-fixes to I<Squid Bugs "
 "E<lt>squid-bugs@squid-cache.orgE<gt>> or ideas for new improvements to "
@@ -1006,7 +1006,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:215 helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:68 helpers/external_acl/unix_group/squid_unix_group.8:44
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:215 helpers/basic_auth/RADIUS/basic_radius_auth.8:68 helpers/external_acl/unix_group/squid_unix_group.8:44
 msgid ""
 "This manual page was written by I<Henrik Nordstrom "
 "E<lt>hno@squid-cache.orgE<gt>>"
@@ -1145,59 +1145,59 @@ msgid "B<htpasswd>(1), B<squid>(8)"
 msgstr ""
 
 #. type: TH
-#: helpers/basic_auth/PAM/pam_auth.8:1
+#: helpers/basic_auth/PAM/basic_pam_auth.8:1
 #, no-wrap
-msgid "pam_auth"
+msgid "basic_pam_auth"
 msgstr ""
 
 #. type: TH
-#: helpers/basic_auth/PAM/pam_auth.8:1
+#: helpers/basic_auth/PAM/basic_pam_auth.8:1
 #, no-wrap
 msgid "5 Sep 2003"
 msgstr ""
 
 #. type: TH
-#: helpers/basic_auth/PAM/pam_auth.8:1
+#: helpers/basic_auth/PAM/basic_pam_auth.8:1
 #, no-wrap
-msgid "Squid PAM Auth"
+msgid "Squid PAM Basic Auth"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/PAM/pam_auth.8:5
-msgid "pam_auth - Squid PAM authentication helper"
+#: helpers/basic_auth/PAM/basic_pam_auth.8:5
+msgid "pam_auth - Squid PAM Basic authentication helper"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/PAM/pam_auth.8:8
-msgid "squid_pam_auth [-n \"service name\"] [-t TTL] [-o] [-1]"
+#: helpers/basic_auth/PAM/basic_pam_auth.8:8
+msgid "basic_pam_auth [-n \"service name\"] [-t TTL] [-o] [-1]"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/PAM/pam_auth.8:13
+#: helpers/basic_auth/PAM/basic_pam_auth.8:13
 msgid ""
 "This helper allows Squid to connect to a mostly any available PAM database "
 "to validate the user name and password of Basic HTTP authentication."
 msgstr ""
 
 #. type: TP
-#: helpers/basic_auth/PAM/pam_auth.8:14
+#: helpers/basic_auth/PAM/basic_pam_auth.8:14
 #, no-wrap
 msgid "B<-s >I<service-name>"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/PAM/pam_auth.8:17
+#: helpers/basic_auth/PAM/basic_pam_auth.8:17
 msgid "Specifies the PAM service name Squid uses, defaults to \"squid\""
 msgstr ""
 
 #. type: TP
-#: helpers/basic_auth/PAM/pam_auth.8:18
+#: helpers/basic_auth/PAM/basic_pam_auth.8:18
 #, no-wrap
 msgid "B<-t >I<TTL>"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/PAM/pam_auth.8:26
+#: helpers/basic_auth/PAM/basic_pam_auth.8:26
 msgid ""
 "Enables persistent PAM connections where the connection to the PAM database "
 "is kept open and reused for new logins. The TTL specifies how long the "
@@ -1208,31 +1208,31 @@ msgid ""
 msgstr ""
 
 #. type: TP
-#: helpers/basic_auth/PAM/pam_auth.8:27
+#: helpers/basic_auth/PAM/basic_pam_auth.8:27
 #, no-wrap
 msgid "B<-o>"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/PAM/pam_auth.8:31
+#: helpers/basic_auth/PAM/basic_pam_auth.8:31
 msgid "Do not perform the PAM account management group (account expiration etc)"
 msgstr ""
 
 #. type: SH
-#: helpers/basic_auth/PAM/pam_auth.8:33 helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:44
+#: helpers/basic_auth/PAM/basic_pam_auth.8:33 helpers/basic_auth/RADIUS/basic_radius_auth.8:44
 #, no-wrap
 msgid "CONFIGURATION"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/PAM/pam_auth.8:39
+#: helpers/basic_auth/PAM/basic_pam_auth.8:39
 msgid ""
 "The program needs a PAM service to be configured in B</etc/pam.conf> or "
 "B</etc/pam.d/E<lt>servicenameE<gt>>"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/PAM/pam_auth.8:44
+#: helpers/basic_auth/PAM/basic_pam_auth.8:44
 msgid ""
 "The default service name is \"squid\", and the program makes use of the "
 "'B<auth>' and 'B<account>' management groups to verify the password and the "
@@ -1240,157 +1240,157 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/PAM/pam_auth.8:48
+#: helpers/basic_auth/PAM/basic_pam_auth.8:48
 msgid ""
 "For details on how to configure PAM services, see the PAM documentation for "
 "your system. This manual does not cover PAM configuration details."
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/PAM/pam_auth.8:59
+#: helpers/basic_auth/PAM/basic_pam_auth.8:59
 msgid "B<chown root pam_auth>"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/PAM/pam_auth.8:61
+#: helpers/basic_auth/PAM/basic_pam_auth.8:61
 msgid "B<chmod u+s pam_auth>"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/PAM/pam_auth.8:73
+#: helpers/basic_auth/PAM/basic_pam_auth.8:73
 msgid ""
-"Squid pam_auth and this manual is written by I<Henrik Nordstrom "
+"Squid basic_pam_auth and this manual is written by I<Henrik Nordstrom "
 "E<lt>hno@squid-cache.orgE<gt>>"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/PAM/pam_auth.8:77
+#: helpers/basic_auth/PAM/basic_pam_auth.8:77
 msgid ""
-"Squid pam_auth and this manual is Copyright 1999,2002,2003 Henrik Nordstrom "
-"E<lt>hno@squid-cache.orgE<gt>"
+"Squid basic_pam_auth and this manual is Copyright 1999,2002,2003 Henrik "
+"Nordstrom E<lt>hno@squid-cache.orgE<gt>"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/PAM/pam_auth.8:90
+#: helpers/basic_auth/PAM/basic_pam_auth.8:90
 msgid "B<pam>(8),B< PAM Systems Administrator Guide>"
 msgstr ""
 
 #. type: TH
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:1
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:1
 #, no-wrap
-msgid "squid_radius_auth"
+msgid "basic_radius_auth"
 msgstr ""
 
 #. type: TH
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:1
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:1
 #, no-wrap
 msgid "7 August 2004"
 msgstr ""
 
 #. type: TH
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:1
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:1
 #, no-wrap
 msgid "Squid RADIUS Auth"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:5
-msgid "squid_radius_auth - Squid RADIUS authentication helper"
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:5
+msgid "basic_radius_auth - Squid RADIUS authentication helper"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:9
-msgid "B<squid_radius_auth> -f configfile"
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:9
+msgid "B<basic_radius_auth> -f configfile"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:12
-msgid "B<squid_radius_auth> -h \"server\" [-p port] [-i identifier] -w secret"
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:12
+msgid "B<basic_radius_auth> -h \"server\" [-p port] [-i identifier] -w secret"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:16
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:16
 msgid ""
 "This helper allows Squid to connect to a RADIUS server to validate the user "
 "name and password of Basic HTTP authentication."
 msgstr ""
 
 #. type: TP
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:17
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:17
 #, no-wrap
 msgid "B<-f >I<configfile >"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:21
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:21
 msgid ""
 "Specifies the path to a configuration file. See the CONFIGURATION section "
 "for details."
 msgstr ""
 
 #. type: TP
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:22
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:22
 #, no-wrap
 msgid "B<-h >I<server>"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:25
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:25
 msgid "Alternative method of specifying the server to connect to"
 msgstr ""
 
 #. type: TP
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:26
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:26
 #, no-wrap
 msgid "B<-p >I<port>"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:30
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:30
 msgid ""
 "Specify another server port where the RADIUS server listens for requests if "
 "different from the default RADIUS port.  Normally not specified."
 msgstr ""
 
 #. type: TP
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:31
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:31
 #, no-wrap
 msgid "B<-i >I<identifier>"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:35
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:35
 msgid ""
 "Unique identifier identifying this Squid proxy to the RADIUS server.  If not "
 "specified the IP address is used as to identify the proxy."
 msgstr ""
 
 #. type: TP
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:35
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:35
 #, no-wrap
 msgid "B<-w >I<secret>"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:39
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:39
 msgid ""
 "Alternative method of specifying the shared secret. Using the configuration "
 "file is generally more secure and recommended."
 msgstr ""
 
 #. type: TP
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:40
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:40
 #, no-wrap
 msgid "B<-t >I<timeout>"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:43
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:43
 msgid "RADIUS request timeout. Default 10 seconds."
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:48
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:48
 msgid ""
 "The configuration specifies how the helper connects to RADIUS.  The file "
 "contains a list of directives (one per line). Lines beginning with a # is "
@@ -1398,61 +1398,61 @@ msgid ""
 msgstr ""
 
 #. type: TP
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:49
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:49
 #, no-wrap
 msgid "B<server >I<radiusserver>"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:52
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:52
 msgid "specifies the name or address of the RADIUS server to connect to."
 msgstr ""
 
 #. type: TP
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:53
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:53
 #, no-wrap
 msgid "B<secret >I<somesecretstring>"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:56
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:56
 msgid "specifies the shared RADIUS secret."
 msgstr ""
 
 #. type: TP
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:57
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:57
 #, no-wrap
 msgid "B<identifier >I<nameofserver>"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:61
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:61
 msgid ""
-"specifies what the proxy should identify itsels as to the RADIUS server.  "
+"specifies what the proxy should identify itself as to the RADIUS server.  "
 "This directive is optional."
 msgstr ""
 
 #. type: TP
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:62
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:62
 #, no-wrap
 msgid "B<port >I<portnumber>"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:65
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:65
 msgid "Specifies the port number or service name where the helper should connect."
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:74
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:74
 msgid ""
-"squid_radius_auth is written by I<Marc van Selm E<lt>selm@cistron.nlE<gt>> "
+"basic_radius_auth is written by I<Marc van Selm E<lt>selm@cistron.nlE<gt>> "
 "with contributions from I<Henrik Nordstrom E<lt>hno@squid-cache.orgE<gt>> "
 "and many others"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:80
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:80
 msgid ""
 "Any questions on usage can be sent to I<Squid Users "
 "E<lt>squid-users@squid-cache.orgE<gt>>, or to your favorite RADIUS "
@@ -1460,7 +1460,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/squid_radius_auth/squid_radius_auth.8:88
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:88
 msgid "B<RFC2058> - Remote Authentication Dial In User Service (RADIUS)"
 msgstr ""
 
