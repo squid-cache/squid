@@ -61,15 +61,13 @@ msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"Došlo k chybě při autentizaci FTP při pokusu získat URL: <a href=\"%U\">%U</"
-"a>"
+"Došlo k chybě při autentizaci FTP při pokusu získat URL: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_FTP_FAILURE:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
-msgstr ""
-"Došlo k chybě protokolu FTP při pokusu získat URL: <a href=\"%U\">%U</a>"
+msgstr "Došlo k chybě protokolu FTP při pokusu získat URL: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_ICAP_FAILURE:10
 msgid "An Illegal response was received from the ICAP server."
@@ -79,8 +77,7 @@ msgstr "Ze serveru ICAP byla přijata neplatná odpověď."
 msgid ""
 "An error condition occurred while reading data from the network.  Please "
 "retry your request."
-msgstr ""
-"Nastala chyba při čtení dat ze sítě. Prosím zkuste požadavek zopakovat."
+msgstr "Nastala chyba při čtení dat ze sítě. Prosím zkuste požadavek zopakovat."
 
 #: templates/ERR_WRITE_ERROR:7
 msgid ""

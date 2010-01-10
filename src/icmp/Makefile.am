@@ -55,7 +55,8 @@ nodist_pinger_SOURCES = \
 	$(top_builddir)/src/globals.cc \
 	$(top_srcdir)/src/time.cc \
 	$(top_srcdir)/src/SquidConfig.cc \
-	$(top_srcdir)/src/SquidNew.cc
+	$(top_srcdir)/src/SquidNew.cc \
+	$(top_srcdir)/src/tests/stub_HelperChildConfig.cc
 
 pinger_LDFLAGS = $(LIBADD_DL)
 pinger_LDADD=\
