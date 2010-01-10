@@ -1,27 +1,27 @@
-# German translation for squid
-# Copyright (c) 2009 Rosetta Contributors and Canonical Ltd 2009
+# Russian translation for squid
+# Copyright (c) 2010 Rosetta Contributors and Canonical Ltd 2010
 # This file is distributed under the same license as the squid package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2009.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2010.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: FULL NAME <EMAIL@ADDRESS>\n"
 "POT-Creation-Date: 2010-01-11 01:17+1400\n"
-"PO-Revision-Date: 2009-12-06 15:21+0000\n"
-"Last-Translator: MartinK <Unknown>\n"
-"Language-Team: German <de@li.org>\n"
+"PO-Revision-Date: 2010-01-08 17:59+0000\n"
+"Last-Translator: Sergey Sedov <Unknown>\n"
+"Language-Team: Russian <ru@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Launchpad-Export-Date: 2010-01-10 09:12+0000\n"
+"X-Launchpad-Export-Date: 2010-01-10 09:08+0000\n"
 "X-Generator: Launchpad (build Unknown)\n"
 
 #. type: TH
 #: doc/squid.8.in:1
 #, no-wrap
 msgid "squid"
-msgstr "squid"
+msgstr ""
 
 #. type: TH
 #: doc/squid.8.in:1
@@ -41,12 +41,12 @@ msgstr ""
 #: tools/cachemgr.cgi.8.in:4 tools/squidclient.1:2
 #, no-wrap
 msgid "NAME"
-msgstr "NAME"
+msgstr ""
 
 #. type: Plain text
 #: doc/squid.8.in:6
 msgid "squid - proxy caching server"
-msgstr "squid - proxy caching server"
+msgstr ""
 
 #. type: SH
 #: doc/squid.8.in:6 helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:6
@@ -60,37 +60,35 @@ msgstr "squid - proxy caching server"
 #: tools/cachemgr.cgi.8.in:6 tools/squidclient.1:4
 #, no-wrap
 msgid "SYNOPSIS"
-msgstr "ÜBERSICHT"
+msgstr ""
 
 #. type: Plain text
 #: doc/squid.8.in:8
-#, fuzzy
 msgid "B<squid>"
-msgstr "B<squid>(8)"
+msgstr ""
 
 #. type: Plain text
 #: doc/squid.8.in:11
 #, fuzzy
 msgid "I<facility>"
-msgstr "-l facility"
+msgstr "-f файл"
 
 #. type: Plain text
 #: doc/squid.8.in:13
 #, fuzzy
 msgid "I<config-file>"
-msgstr "-f Datei"
+msgstr "-f файл"
 
 #. type: Plain text
 #: doc/squid.8.in:15 tools/squidclient.1:33
-#, fuzzy
 msgid "I<port>"
-msgstr "-a port"
+msgstr ""
 
 #. type: Plain text
 #: doc/squid.8.in:17
 #, fuzzy
 msgid "I<signal>"
-msgstr "-f Datei"
+msgstr "-f файл"
 
 #. type: Plain text
 #: doc/squid.8.in:19
@@ -114,7 +112,7 @@ msgstr ""
 #: tools/cachemgr.cgi.8.in:8 tools/squidclient.1:59
 #, no-wrap
 msgid "DESCRIPTION"
-msgstr "BESCHREIBUNG"
+msgstr ""
 
 #. type: Plain text
 #: doc/squid.8.in:29
@@ -124,10 +122,6 @@ msgid ""
 "traditional caching software, B<squid> handles all requests in a single, non-"
 "blocking process."
 msgstr ""
-"B<squid> ist ein leistungsfähiger Proxy caching Server für Web Clients, "
-"welcher FTP, gopher, ICAP, ICP, HTCP and HTTP Data Objects unterstützt. Im "
-"Unterschied zu traditioneller caching Software verarbeitet B<squid> alle "
-"Anfragen in einem einzigen non-blocking Prozess."
 
 #. type: Plain text
 #: doc/squid.8.in:34
@@ -176,13 +170,13 @@ msgstr ""
 #: helpers/basic_auth/NCSA/basic_ncsa_auth.8:29 tools/squidclient.1:67
 #, no-wrap
 msgid "OPTIONS"
-msgstr "OPTIONEN"
+msgstr "ПАРАМЕТРЫ"
 
 #. type: IP
 #: doc/squid.8.in:66
 #, no-wrap
 msgid "-a port"
-msgstr "-a port"
+msgstr ""
 
 #. type: Plain text
 #: doc/squid.8.in:69
@@ -195,7 +189,7 @@ msgstr ""
 #: doc/squid.8.in:69
 #, no-wrap
 msgid "-d level"
-msgstr "-d Level"
+msgstr ""
 
 #. type: Plain text
 #: doc/squid.8.in:71
@@ -206,7 +200,7 @@ msgstr ""
 #: doc/squid.8.in:71
 #, no-wrap
 msgid "-f file"
-msgstr "-f Datei"
+msgstr "-f файл"
 
 #. type: Plain text
 #: doc/squid.8.in:78
@@ -226,7 +220,7 @@ msgstr ""
 #. type: Plain text
 #: doc/squid.8.in:82
 msgid "Install as a Windows Service (see -n option)."
-msgstr "Installieren als Windows Dienst (siehe -n Option)."
+msgstr ""
 
 #. type: Plain text
 #: doc/squid.8.in:85
@@ -239,7 +233,7 @@ msgstr ""
 #: doc/squid.8.in:85
 #, no-wrap
 msgid "-n name"
-msgstr "-n Name"
+msgstr ""
 
 #. type: Plain text
 #: doc/squid.8.in:88
@@ -263,7 +257,7 @@ msgstr ""
 #: doc/squid.8.in:94
 #, no-wrap
 msgid "-l facility"
-msgstr "-l facility"
+msgstr ""
 
 #. type: Plain text
 #: doc/squid.8.in:96
@@ -274,7 +268,7 @@ msgstr ""
 #: doc/squid.8.in:96
 #, no-wrap
 msgid "-u port"
-msgstr "-u Port"
+msgstr ""
 
 #. type: Plain text
 #: doc/squid.8.in:98
@@ -289,7 +283,7 @@ msgstr ""
 #. type: Plain text
 #: doc/squid.8.in:102
 msgid "Create swap directories"
-msgstr "Erstelle Swap Verzeichnisse"
+msgstr ""
 
 #. type: Plain text
 #: doc/squid.8.in:104
@@ -304,13 +298,13 @@ msgstr ""
 #. type: Plain text
 #: doc/squid.8.in:108
 msgid "No daemon mode."
-msgstr "No daemon Modus."
+msgstr ""
 
 #. type: IP
 #: doc/squid.8.in:108
 #, no-wrap
 msgid "-O options"
-msgstr "-O Optionen"
+msgstr ""
 
 #. type: Plain text
 #: doc/squid.8.in:110
@@ -336,7 +330,7 @@ msgstr ""
 #. type: Plain text
 #: doc/squid.8.in:116
 msgid "Force full debugging."
-msgstr "Erzwinge vollständige Fehlersuche."
+msgstr ""
 
 #. type: IP
 #: doc/squid.8.in:116
@@ -353,7 +347,7 @@ msgstr ""
 #: doc/squid.8.in:119 tools/cachemgr.cgi.8.in:13
 #, no-wrap
 msgid "FILES"
-msgstr "DATEIEN"
+msgstr ""
 
 #. type: Plain text
 #: doc/squid.8.in:127
@@ -426,7 +420,7 @@ msgstr ""
 #: tools/cachemgr.cgi.8.in:39 tools/squidclient.1:119
 #, no-wrap
 msgid "SEE ALSO"
-msgstr "SIEHE AUCH"
+msgstr "СМОТРИТЕ ТАКЖЕ"
 
 #. type: Plain text
 #: doc/squid.8.in:183
@@ -459,14 +453,10 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:12
-#, fuzzy
 msgid ""
 "This helper allows Squid to authenticate any local user accounts to validate "
 "the user name and password of Basic HTTP authentication."
 msgstr ""
-"Dieser Helfer erlaubt Squid sich mit einem RADIUS Server zu verbinden, um "
-"den Benutzernamen und das Passwort einer Basic HTTP Authentifizierung zu "
-"bestätigen."
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:15
@@ -596,7 +586,7 @@ msgstr ""
 #: helpers/external_acl/unix_group/squid_unix_group.8:53
 #, no-wrap
 msgid "QUESTIONS"
-msgstr "FRAGEN"
+msgstr ""
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:71
@@ -605,8 +595,6 @@ msgid ""
 "Questions on the usage of this program can be sent to the I<Squid Users "
 "E<lt>squid-users@squid-cache.orgE<gt>> mailing list."
 msgstr ""
-"Fragen zur Verwendung dieses Programms können an die I<Squid Users "
-"E<lt>squid-users@squid-cache.orgE<gt>> Mailingliste gesendet werden."
 
 #. type: SH
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:72
@@ -722,7 +710,7 @@ msgstr ""
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:40
 #, fuzzy, no-wrap
 msgid "B<-f >I<filter>"
-msgstr "-f Datei"
+msgstr "-f файл"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:43
@@ -1156,14 +1144,11 @@ msgstr ""
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:230
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:204
-#, fuzzy
 msgid ""
 "Any questions on usage can be sent to I<Squid Users E<lt>squid-users@squid-"
 "cache.orgE<gt>>, or to your favorite LDAP list/friend if the question is "
 "more related to LDAP than Squid."
 msgstr ""
-"Fragen zur Verwendung dieses Programms können an die I<Squid Users "
-"E<lt>squid-users@squid-cache.orgE<gt>> Mailingliste gesendet werden."
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:239
@@ -1232,7 +1217,6 @@ msgstr ""
 #: helpers/basic_auth/NCSA/basic_ncsa_auth.8:29
 msgid "This password file can be manipulated using htpasswd."
 msgstr ""
-"Diese Passwortdatei kann unter der Verwendung von htpasswd verändert werden."
 
 #. type: Plain text
 #: helpers/basic_auth/NCSA/basic_ncsa_auth.8:31
@@ -1255,21 +1239,18 @@ msgstr ""
 #: helpers/basic_auth/NCSA/basic_ncsa_auth.8:33 tools/cachemgr.cgi.8.in:31
 #, no-wrap
 msgid "SECURITY"
-msgstr "SICHERHEIT"
+msgstr "БЕЗОПАСНОСТЬ"
 
 #. type: Plain text
 #: helpers/basic_auth/NCSA/basic_ncsa_auth.8:35
-#, fuzzy
 msgid ""
 "B<basic_ncsa_auth> must have access to the password file to be executed."
 msgstr ""
-"B<ncsa_auth> benötigt Zugriff auf die Passwortdatei, um ausgeführt zu werden."
 
 #. type: Plain text
 #: helpers/basic_auth/NCSA/basic_ncsa_auth.8:37
 msgid "Manpage written by Rodrigo Rubira Branco E<lt>rrbranco@br.ibm.comE<gt>"
 msgstr ""
-"Manpage verfasst durch Rodrigo Rubira Branco E<lt>rrbranco@br.ibm.comE<gt>"
 
 #. type: Plain text
 #: helpers/basic_auth/NCSA/basic_ncsa_auth.8:38
@@ -1379,9 +1360,6 @@ msgid ""
 "For details on how to configure PAM services, see the PAM documentation for "
 "your system. This manual does not cover PAM configuration details."
 msgstr ""
-"Für genauere Informationen zur Konfiguration von PAM Diensten, schauen Sie "
-"in die PAM Dokumentation Ihres Systems. Dieses Manual behandelt keine "
-"Details zur PAM Konfiguration."
 
 #. type: Plain text
 #: helpers/basic_auth/PAM/basic_pam_auth.8:59
@@ -1451,9 +1429,6 @@ msgid ""
 "This helper allows Squid to connect to a RADIUS server to validate the user "
 "name and password of Basic HTTP authentication."
 msgstr ""
-"Dieser Helfer erlaubt Squid sich mit einem RADIUS Server zu verbinden, um "
-"den Benutzernamen und das Passwort einer Basic HTTP Authentifizierung zu "
-"bestätigen."
 
 #. type: TP
 #: helpers/basic_auth/RADIUS/basic_radius_auth.8:17
@@ -2131,7 +2106,7 @@ msgstr ""
 #: tools/cachemgr.cgi.8.in:1
 #, no-wrap
 msgid "cachemgr.cgi"
-msgstr "cachemgr.cgi"
+msgstr ""
 
 #. type: TH
 #: tools/cachemgr.cgi.8.in:1
@@ -2142,7 +2117,7 @@ msgstr ""
 #. type: Plain text
 #: tools/cachemgr.cgi.8.in:6
 msgid "cachemgr.cgi - squid HTTP proxy manager interface"
-msgstr "cachemgr.cgi - squid HTTP Proxy Manager Oberfläche"
+msgstr ""
 
 #. type: Plain text
 #: tools/cachemgr.cgi.8.in:13
@@ -2152,10 +2127,6 @@ msgid ""
 "convenient way to manage the cache and view statistics without logging into "
 "the server."
 msgstr ""
-"Der cache manager (cachemgr.cgi) ist ein CGI Utility um Statistiken über den "
-"laufenden Squid HTTP Proxy Prozess anzuzeigen. Der cache manager ist ein "
-"bequemer Weg, um den Cache zu verwalten und Statistiken einzusehen, ohne "
-"sich an dem Server anzumelden."
 
 #. type: Plain text
 #: tools/cachemgr.cgi.8.in:22
@@ -2164,10 +2135,6 @@ msgid ""
 "via this cachemgr.cgi program. Each line specifies a B<server>:B<port> "
 "followed by an optional description"
 msgstr ""
-"Die access Konfigurationsdatei definiert die Squid Server, welche über "
-"dieses cachemgr.cgi Programm verwaltet werden können. Jede Zeile "
-"spezifiziert ein B<server>:B<port> , gefolgt von einer optionalen "
-"Beschreibung."
 
 #. type: Plain text
 #: tools/cachemgr.cgi.8.in:26
@@ -2202,9 +2169,9 @@ msgstr ""
 
 #. type: TH
 #: tools/squidclient.1:1
-#, fuzzy, no-wrap
+#, no-wrap
 msgid "squidclient"
-msgstr "squid"
+msgstr ""
 
 #. type: TH
 #: tools/squidclient.1:1
@@ -2219,9 +2186,8 @@ msgstr ""
 
 #. type: Plain text
 #: tools/squidclient.1:6
-#, fuzzy
 msgid "B<squidclient>"
-msgstr "squid"
+msgstr ""
 
 #. type: Plain text
 #: tools/squidclient.1:9 tools/squidclient.1:39
@@ -2267,7 +2233,7 @@ msgstr ""
 #: tools/squidclient.1:36
 #, fuzzy
 msgid "I<file>"
-msgstr "-f Datei"
+msgstr "-f файл"
 
 #. type: Plain text
 #: tools/squidclient.1:42
@@ -2413,9 +2379,9 @@ msgstr ""
 
 #. type: IP
 #: tools/squidclient.1:95
-#, fuzzy, no-wrap
+#, no-wrap
 msgid "-p I<port>"
-msgstr "-a port"
+msgstr ""
 
 #. type: Plain text
 #: tools/squidclient.1:97
@@ -2426,7 +2392,7 @@ msgstr ""
 #: tools/squidclient.1:97
 #, fuzzy, no-wrap
 msgid "-P I<file>"
-msgstr "-f Datei"
+msgstr "-f файл"
 
 #. type: Plain text
 #: tools/squidclient.1:99
@@ -2437,7 +2403,7 @@ msgstr ""
 #: tools/squidclient.1:99
 #, no-wrap
 msgid "-r"
-msgstr "-r"
+msgstr ""
 
 #. type: Plain text
 #: tools/squidclient.1:101
@@ -2448,7 +2414,7 @@ msgstr ""
 #: tools/squidclient.1:101
 #, no-wrap
 msgid "-s"
-msgstr "-s"
+msgstr ""
 
 #. type: Plain text
 #: tools/squidclient.1:103
@@ -2503,7 +2469,7 @@ msgstr ""
 #: tools/squidclient.1:111
 #, no-wrap
 msgid "-v"
-msgstr "-v"
+msgstr ""
 
 #. type: Plain text
 #: tools/squidclient.1:113
@@ -2551,41 +2517,3 @@ msgid ""
 "Laboratory for Applied Network Research and funded by the National Science "
 "Foundation."
 msgstr ""
-
-#~ msgid "-h"
-#~ msgstr "-h"
-
-#~ msgid "-i"
-#~ msgstr "-i"
-
-#~ msgid ""
-#~ "-k reconfigure | rotate | shutdown | interrupt | kill | debug | check | "
-#~ "parse"
-#~ msgstr ""
-#~ "-k nocheinmal konfigurieren | rotieren | herunterfahren | unterbrechen | "
-#~ "beenden | debuggen | überprüfen | analysieren"
-
-#~ msgid "-z"
-#~ msgstr "-z"
-
-#~ msgid "-C"
-#~ msgstr "-C"
-
-#~ msgid "B<http://your.server/cgi-bin/cachemgr.cgi>"
-#~ msgstr "B<http://your.server/cgi-bin/cachemgr.cgi>"
-
-#~ msgid "I<./cachemgr.conf>"
-#~ msgstr "I<./cachemgr.conf>"
-
-#, fuzzy
-#~ msgid "I<@SYSCONFDIR@/cachemgr.conf>"
-#~ msgstr "I<./cachemgr.conf>"
-
-#~ msgid "B<The Squid FAQ>, Chapter 9 The Cache Manager"
-#~ msgstr "B<The Squid FAQ>, Kapitel 9 Der Cache Manager"
-
-#~ msgid "@PACKAGE_STRING@"
-#~ msgstr "@PACKAGE_STRING@"
-
-#~ msgid "I<@DEFAULT_CACHEMGR_CONFIG@>"
-#~ msgstr "I<@DEFAULT_CACHEMGR_CONFIG@>"
