@@ -168,11 +168,11 @@ squid.conf.
 .P
 .ft CR
 .nf
-external_acl_type ldap_group %LOGIN /path/to/squid_ldap_group ...
+.if !'po4a'hide' external_acl_type ldap_group %LOGIN /path/to/squid_ldap_group ...
 .br
-acl group1 external ldap_group Group1
+.if !'po4a'hide' acl group1 external ldap_group Group1
 .br
-acl group2 external ldap_group Group2
+.if !'po4a'hide' acl group2 external ldap_group Group2
 .fi
 .ft
 .
