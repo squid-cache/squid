@@ -5,24 +5,20 @@
 squid \- proxy caching server
 .SH SYNOPSIS
 .B squid
-[
-.B \-dhisrvzCFNRSVYX
-] [
-.BI \-l " facility"
-] [
-.BI \-f " config-file"
-] [
-\-[
-.B au
-] 
-.I port
-] [
-.B \-k " signal"
-] [
-.BI \-n " service-name"
-] [
-.BI \-O " cmd-line"
-]
+.if !'po4a'hide' .RB [\-dhisrvzCFNRSVYX]
+.if !'po4a'hide' .RB [-l
+.IR facility
+.if !'po4a'hide' .RB ] [\-f
+.IR config-file
+.if !'po4a'hide' .RB ] [\-[au] 
+.IR port
+.if !'po4a'hide' .RB ] [\-k
+.IR signal
+.if !'po4a'hide' .RB ] [\-n
+.IR service-name
+.if !'po4a'hide' .RB ] [\-O
+.IR cmd-line
+.if !'po4a'hide' .RB ]
 .SH DESCRIPTION
 .B squid
 is a high-performance proxy caching server for web clients,
@@ -52,7 +48,7 @@ This reduces the amount of time the cache waits for results.
 .PP
 .B squid
 is derived from the ARPA-funded Harvest Project 
-http://harvest.cs.colorado.edu/
+.if !'po4a'hide' http://harvest.cs.colorado.edu/
 .PP
 This manual page only lists the command line arguments.  For details
 on how to configure
@@ -79,41 +75,41 @@ If the file name starts with a ! or | then it is assumed to be an external
 command or command line. Can for example be used to pre-process the
 configuration before it is being read by Squid. To facilitate this Squid
 also understands the common #line notion to indicate the real source file.
-.IP -h
+.if !'po4a'hide' .IP -h
 Print help message.
-.IP -i
+.if !'po4a'hide' .IP -i
 Install as a Windows Service (see -n option).
-.IP "-k reconfigure | rotate | shutdown | interrupt | kill | debug | check | parse"
+.if !'po4a'hide' .IP "-k reconfigure | rotate | shutdown | interrupt | kill | debug | check | parse"
 Parse configuration file, then send signal to running copy 
 (except -k parse) and exit.
 .IP "-n name"
 Specify Windows Service name to use for service operations, default is: 
 .BI Squid
 .
-.IP -r
+.if !'po4a'hide' .IP -r
 Remove a Windows Service (see -n option).
-.IP -s
+.if !'po4a'hide' .IP -s
 Enable logging to syslog. Also configurable in
 .BI @SYSCONFDIR@/squid.conf
 .IP "-l facility"
 Use specified syslog facility. implies -s
 .IP "-u port"
 Specify ICP port number (default: 3130), disable with 0.
-.IP -v
+.if !'po4a'hide' .IP -v
 Print version and build details.
-.IP -z
+.if !'po4a'hide' .IP -z
 Create swap directories
-.IP -C
+.if !'po4a'hide' .IP -C
 Do not catch fatal signals.
-.IP -F
+.if !'po4a'hide' .IP -F
 Don't serve any requests until store is rebuilt.
-.IP -N
+.if !'po4a'hide' .IP -N
 No daemon mode.
 .IP "-O options"
 Set Windows Service Command line options in Registry.
-.IP -R
+.if !'po4a'hide' .IP -R
 Do not set REUSEADDR on port.
-.IP "-S"
+.if !'po4a'hide' .IP "-S"
 Double-check swap during rebuild.
 .IP -X
 Force full debugging.
@@ -121,7 +117,7 @@ Force full debugging.
 Only return UDP_HIT or UDP_MISS_NOFETCH during fast reload.
 
 .SH FILES
-.I @SYSCONFDIR@/squid.conf
+.if !'po4a'hide' .I @SYSCONFDIR@/squid.conf
 .RS
 The main configuration file.  You must initially make 
 changes to this file for 
@@ -137,7 +133,7 @@ the version of Squid you are using. Use this to look up the default
 configuration settings and syntax after upgrading.
 .RE
 
-.I @SYSCONFDIR@/squid.conf.documented
+.if !'po4a'hide' .I @SYSCONFDIR@/squid.conf.documented
 .RS
 Reference copy of the configuration file. Always kept up to date with
 the version of Squid you are using. Use this to read the documentation
@@ -146,29 +142,29 @@ configuration manual is also available for a full reference of options.
 .BR see http://www.squid-cache.org/Doc/config/
 .RE
 
-.I cachemgr.conf
+.if !'po4a'hide' .I cachemgr.conf
 .RS
 The main configuration file for the web cachemgr.cgi tools.
 .RE
 
-.I msntauth.conf
+.if !'po4a'hide' .I msntauth.conf
 .RS
 The main configuration file for the Sample MSNT authenticator.
 .RE
 
-.I errorpage.css
+.if !'po4a'hide' .I errorpage.css
 .RS
 CSS Stylesheet to control the display of generated error pages.
 Use this to set any company branding you need, it will apply to every
 Language Squid provides error pages for.
 .RE
 
-.I @DEFAULT_MIME_TABLE@ (mime_table)
+.if !'po4a'hide' .I @DEFAULT_MIME_TABLE@ (mime_table)
 .RS
 MIME type mappings for FTP gatewaying
 .RE
 
-.I @DEFAULT_ERROR_DIR@
+.if !'po4a'hide' .I @DEFAULT_ERROR_DIR@
 .RS
 Location of
 .B squid 
@@ -176,22 +172,13 @@ error pages and templates.
 .RE
 
 .SH SEE ALSO
-.BR cachemgr.cgi "(8), "
-.BR pam_auth "(8), "
-.BR squid_ldap_auth "(8), "
-.BR squid_ldap_group "(8), "
-.BR squid_session "(8), "
-.BR squid_unix_group "(8), "
+.if !'po4a'hide' .BR cachemgr.cgi "(8), "
+.if !'po4a'hide' .BR pam_auth "(8), "
+.if !'po4a'hide' .BR squid_ldap_auth "(8), "
+.if !'po4a'hide' .BR squid_ldap_group "(8), "
+.if !'po4a'hide' .BR squid_session "(8), "
+.if !'po4a'hide' .BR squid_unix_group "(8), "
 .br
 .B The Squid FAQ wiki http://wiki.squid-cache.org/SquidFaq
+.br
 .B The Squid Configuration Manual http://www.squid-cache.org/Doc/config/
-
-
-
-.\" Could add the following sections:
-.\" .SH ENVIRONMENT
-.\" .SH DIAGNOSTICS
-.\" .SH BUGS
-.\" .SH AUTHOR
-.\" .SH SEE ALSO
-
