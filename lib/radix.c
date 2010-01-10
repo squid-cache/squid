@@ -620,7 +620,8 @@ squid_rn_addroute(void *v_arg, void *n_arg, struct squid_radix_node_head *head, 
         if (tt == saved_tt) {
             struct squid_radix_node *xx = x;
             /* link in at head of list */
-            (tt = treenodes)->rn_dupedkey = t;
+            tt = treenodes;
+            tt->rn_dupedkey = t;
             tt->rn_flags = t->rn_flags;
             tt->rn_p = x = t->rn_p;
             if (x->rn_l == t)
@@ -630,7 +631,8 @@ squid_rn_addroute(void *v_arg, void *n_arg, struct squid_radix_node_head *head, 
             saved_tt = tt;
             x = xx;
         } else {
-            (tt = treenodes)->rn_dupedkey = t->rn_dupedkey;
+            tt = treenodes;
+            tt->rn_dupedkey = t->rn_dupedkey;
             t->rn_dupedkey = tt;
         }
 #ifdef RN_DEBUG
