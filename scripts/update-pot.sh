@@ -58,7 +58,7 @@ for f in `ls -1 helpers/*/*/*.8 doc/*.8.in tools/*.1 tools/*.8.in` ; do
 done
 
 ## po4a conversion of all doc/manuals man files...
-po4a --no-translations --verbose po4a.conf
+po4a --no-translations -o groff_code=verbatim --verbose po4a.conf
 
 (
 	cat doc/manuals/manuals.pot | 
