@@ -4,16 +4,16 @@
 .SH NAME
 cachemgr.cgi \- squid HTTP proxy manager interface
 .SH SYNOPSIS
-.B http://your.server/cgi-bin/cachemgr.cgi
+.if !'po4a'hide' .B http://your.server/cgi-bin/cachemgr.cgi
 .SH DESCRIPTION
 The cache manager (cachemgr.cgi) is a CGI utility for displaying statistics
 about the Squid HTTP proxy process as it runs. The cache manager is a
 convenient way to manage the cache and view statistics without logging
 into the server.
 .SH FILES
-.I ./cachemgr.conf
+.if !'po4a'hide' .I ./cachemgr.conf
 .br
-.I @SYSCONFDIR@/cachemgr.conf
+.if !'po4a'hide' .I @SYSCONFDIR@/cachemgr.conf
 .RS
 The access configuration file defining which Squid servers may
 be managed via this cachemgr.cgi program. Each line specifies a
@@ -37,14 +37,5 @@ cachemgr.cgi program.
 Configuration examples for many common web servers can be found in the
 Squid FAQ.
 .SH SEE ALSO
-.BR squid "(8)"
-.BR squidclient "(1)"
-.br
-.BR "The Squid FAQ" ", Chapter 9 The Cache Manager"
-.\" Could add the following sections:
-.\" .SH ENVIRONMENT
-.\" .SH DIAGNOSTICS
-.\" .SH BUGS
-.\" .SH AUTHOR
-.\" .SH SEE ALSO
-
+.if !'po4a'hide' .BR squid "(8)"
+.if !'po4a'hide' .BR squidclient "(1)"

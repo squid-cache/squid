@@ -3,41 +3,58 @@
 squidclient -- a simple HTTP web client
 .SH SYNOPSIS
 .B squidclient
-.RB [ \-arsv ]
-.RB [ \-g
-.IR count ]
-.RB [ \-h
-.IR remote\-host ]
-.RB [ \-H
-.IR 'string' ]
-.RB [ \-i
-.IR IMS ]
-.RB [ \-I
-.IR ping\-interval ]
-.RB [ \-j
-.IR 'Host\-header' ]
-.RB [ \-l
-.IR local\-host ]
-.RB [ \-m
-.IR method ]
-.RB [ \-p
-.IR port ]
-.RB [ \-P
-.IR file ]
-.RB [ \-t
-.IR count ]
-.RB [ \-T
-.IR timeout ]
-.RB [ \-u
-.IR proxy-user ]
-.RB [ \-U
-.IR www-user ]
-.RB [ \-V
-.IR version ]
-.RB [ \-w
-.IR proxy-password ]
-.RB [ \-W
-.IR www-password ]
+.if !'po4a'hide' .RB [ \-arsv ]
+.if !'po4a'hide' .RB [ \-g
+.IR count
+.if !'po4a'hide' ]
+.if !'po4a'hide' .RB [ \-h
+.IR remote\-host
+.if !'po4a'hide' ]
+.if !'po4a'hide' .RB [ \-H
+.IR 'string'
+.if !'po4a'hide' ]
+.if !'po4a'hide' .RB [ \-i
+.IR IMS
+.if !'po4a'hide' ]
+.if !'po4a'hide' .RB [ \-I
+.IR ping\-interval
+.if !'po4a'hide' ]
+.if !'po4a'hide' .RB [ \-j
+.IR 'Host\-header'
+.if !'po4a'hide' ]
+.if !'po4a'hide' .RB [ \-l
+.IR local\-host
+.if !'po4a'hide' ]
+.if !'po4a'hide' .RB [ \-m
+.IR method
+.if !'po4a'hide' ]
+.if !'po4a'hide' .RB [ \-p
+.IR port
+.if !'po4a'hide' ]
+.if !'po4a'hide' .RB [ \-P
+.IR file
+.if !'po4a'hide' ]
+.if !'po4a'hide' .RB [ \-t
+.IR count
+.if !'po4a'hide' ]
+.if !'po4a'hide' .RB [ \-T
+.IR timeout
+.if !'po4a'hide' ]
+.if !'po4a'hide' .RB [ \-u
+.IR proxy-user
+.if !'po4a'hide' ]
+.if !'po4a'hide' .RB [ \-U
+.IR www-user
+.if !'po4a'hide' ]
+.if !'po4a'hide' .RB [ \-V
+.IR version
+.if !'po4a'hide' ]
+.if !'po4a'hide' .RB [ \-w
+.IR proxy-password
+.if !'po4a'hide' ]
+.if !'po4a'hide' .RB [ \-W
+.IR www-password
+.if !'po4a'hide' ]
 .B url
 .SH DESCRIPTION
 .B squidclient
@@ -48,7 +65,7 @@ Some additional features for access to the
 .B Squid
 proxy object cache and management information are provided.
 .SH OPTIONS
-.IP "\-a"
+.if !'po4a'hide' .IP "\-a"
 Do NOT include Accept: header.
 .IP "\-g \fIcount\fP"
 Ping mode, perform
@@ -72,8 +89,8 @@ called \fBPURGE\fP. You can use that to purge a specific URL from the cache.
 You need to have \fIpurge\fP access setup in squid.conf similar to
 \fImanager\fP access. Here is an example:
 .nf
-      acl purge method PURGE
-      http_access deny purge !localhost
+.if !'po4a'hide'       acl purge method PURGE
+.if !'po4a'hide'       http_access deny purge !localhost
 .fi
 .IP "\-p \fIport\fP"
 Port number of cache.  Default is 3128.
@@ -100,8 +117,8 @@ WWW authentication password
 .IP "\-V \fIversion\fP"
 HTTP Version. Use '-' for HTTP/0.9 omitted case
 .SH SEE ALSO
-.BR cachemgr.cgi "(8), "
-.BR squid "(8)"
+.if !'po4a'hide' .BR cachemgr.cgi "(8), "
+.if !'po4a'hide' .BR squid "(8)"
 .SH AUTHOR
 Derived from Harvest. Further developed by by numerous individuals from
 the internet community. Development is led by Duane Wessels of the
