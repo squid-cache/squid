@@ -1,88 +1,84 @@
 .TH squid 8 "Squid Web Proxy"
-.\" Copyright and licensing information
-.\" goes here.
 .SH NAME
-squid \- proxy caching server
+squid \- HTTP proxy caching server
 .SH SYNOPSIS
-.B squid
+.if !'po4a'hide' .B squid
 .if !'po4a'hide' .RB [\-dhisrvzCFNRSVYX]
-.if !'po4a'hide' .RB [-l
+.if !'po4a'hide' .RB [\-l
 .IR facility
 .if !'po4a'hide' .RB ] [\-f
 .IR config-file
-.if !'po4a'hide' .RB ] [\-[au] 
+.if !'po4a'hide' .RB ] [\-[au]
 .IR port
 .if !'po4a'hide' .RB ] [\-k
 .IR signal
 .if !'po4a'hide' .RB ] [\-n
 .IR service-name
 .if !'po4a'hide' .RB ] [\-O
-.IR cmd-line
+.IR command-line
 .if !'po4a'hide' .RB ]
 .SH DESCRIPTION
 .B squid
 is a high-performance proxy caching server for web clients,
 supporting FTP, gopher, ICAP, ICP, HTCP and HTTP data objects.
 Unlike traditional caching software, 
-.B squid
-handles all requests in a single, non-blocking process.
+Squid handles all requests in a single, non-blocking process.
 .PP
-.B squid
-keeps meta data and especially hot objects cached in RAM, 
+Squid keeps meta data and especially hot objects cached in RAM, 
 caches DNS lookups, supports non-blocking DNS lookups, and implements
 negative caching of failed requests.
 .PP
-.B squid
-supports SSL, extensive access controls, and full request logging. 
+Squid supports SSL, extensive access controls, and full request logging. 
 By using the lightweight Internet Cache Protocols ICP, HTCP or CARP, 
-.B squid 
-caches can be arranged in a hierarchy or mesh for additional 
+Squid caches can be arranged in a hierarchy or mesh for additional 
 bandwidth savings.
 .PP
+Squid consists of a main server program
 .B squid
-consists of a main server program squid, some optional programs for 
+, some optional programs for 
 custom processing and authentication, and some management and client
 tools.  When squid starts up, it spawns a configurable number of
 helper processes, each of which can perform parallel lookups.
 This reduces the amount of time the cache waits for results.
 .PP
-.B squid
-is derived from the ARPA-funded Harvest Project 
-.if !'po4a'hide' http://harvest.cs.colorado.edu/
+Squid is derived from the ARPA-funded Harvest Project.
 .PP
-This manual page only lists the command line arguments.  For details
-on how to configure
-.B squid
-see the file 
+This manual page only lists the command line arguments.
+For details on how to configure Squid see the file 
 .BI @SYSCONFDIR@/squid.conf.documented,
-the Squid wiki FAQ and examples at
-http://wiki.squid-cache.org/ ,
-or the configuration manual on the
-.B squid
-home page http://www.squid-cache.org/Doc/config/
+the Squid wiki FAQ and examples at http://wiki.squid-cache.org/ ,
+or the configuration manual on the Squid home page
+.if !'po4a'hide' http://www.squid-cache.org/Doc/config/
 .PP
 
 .SH OPTIONS
-.IP "-a port"
-Specify HTTP port number where Squid should listen for requests, in addition
-to any http_port specifications in squid.conf.
-.IP "-d level"
+.if !'po4a'hide' .IP "-a port"
+ Specify HTTP port number where Squid should listen for requests, in addition to any
+.B http_port
+specifications in 
+.B squid.conf
+.if !'po4a'hide' .IP "-d level"
 Write debugging to stderr also.
-.IP "-f file"
+.if !'po4a'hide' .IP "-f file"
 Use the given config-file instead of
 .IR @SYSCONFDIR@/squid.conf .
-If the file name starts with a ! or | then it is assumed to be an external
-command or command line. Can for example be used to pre-process the
-configuration before it is being read by Squid. To facilitate this Squid
-also understands the common #line notion to indicate the real source file.
+If the file name starts with a 
+.B !
+or
+.B |
+then it is assumed to be an external command or command line.
+Can for example be used to pre-process the configuration before it is being read by Squid.
+To facilitate this Squid also understands the common #line notion to indicate the real source file.
 .if !'po4a'hide' .IP -h
 Print help message.
 .if !'po4a'hide' .IP -i
 Install as a Windows Service (see -n option).
 .if !'po4a'hide' .IP "-k reconfigure | rotate | shutdown | interrupt | kill | debug | check | parse"
 Parse configuration file, then send signal to running copy 
-(except -k parse) and exit.
-.IP "-n name"
+(except
+.B "-k parse"
+) and exit.
+.if !'po4a'hide' .IP "-n name"
 Specify Windows Service name to use for service operations, default is: 
 .BI Squid
 .
@@ -91,9 +87,10 @@ Remove a Windows Service (see -n option).
 .if !'po4a'hide' .IP -s
 Enable logging to syslog. Also configurable in
 .BI @SYSCONFDIR@/squid.conf
-.IP "-l facility"
-Use specified syslog facility. implies -s
-.IP "-u port"
+.if !'po4a'hide' .IP "-l facility"
+Use specified syslog facility. implies
+.B -s
+.if !'po4a'hide' .IP "-u port"
 Specify ICP port number (default: 3130), disable with 0.
 .if !'po4a'hide' .IP -v
 Print version and build details.
@@ -108,13 +105,19 @@ No daemon mode.
 .IP "-O options"
 Set Windows Service Command line options in Registry.
 .if !'po4a'hide' .IP -R
-Do not set REUSEADDR on port.
+Do not set
+.B REUSEADDR
+on port.
 .if !'po4a'hide' .IP "-S"
 Double-check swap during rebuild.
-.IP -X
+.if !'po4a'hide' .IP -X
 Force full debugging.
-.IP -Y
-Only return UDP_HIT or UDP_MISS_NOFETCH during fast reload.
+.if !'po4a'hide' .IP -Y
+Only return
+.B UDP_HIT
+or
+.B UDP_MISS_NOFETCH
+during fast reload.
 
 .SH FILES
 .if !'po4a'hide' .I @SYSCONFDIR@/squid.conf
@@ -129,22 +132,27 @@ allow access from any browser.
 .I *.default files
 .RS
 Reference copy of the configuration file. Always kept up to date with
-the version of Squid you are using. Use this to look up the default
-configuration settings and syntax after upgrading.
+the version of Squid you are using.
+.PP
+Use this to look up the default configuration settings and syntax after upgrading.
 .RE
 
 .if !'po4a'hide' .I @SYSCONFDIR@/squid.conf.documented
 .RS
 Reference copy of the configuration file. Always kept up to date with
-the version of Squid you are using. Use this to read the documentation
-for configuration options available in your build of Squid. The online
-configuration manual is also available for a full reference of options.
+the version of Squid you are using.
+.PP
+Use this to read the documentation for configuration options available in
+your build of Squid. The online configuration manual is also available for
+a full reference of options.
 .BR see http://www.squid-cache.org/Doc/config/
 .RE
 
 .if !'po4a'hide' .I cachemgr.conf
 .RS
-The main configuration file for the web cachemgr.cgi tools.
+The main configuration file for the web
+.B cachemgr.cgi
+tools.
 .RE
 
 .if !'po4a'hide' .I msntauth.conf
@@ -156,7 +164,7 @@ The main configuration file for the Sample MSNT authenticator.
 .RS
 CSS Stylesheet to control the display of generated error pages.
 Use this to set any company branding you need, it will apply to every
-Language Squid provides error pages for.
+language Squid provides error pages for.
 .RE
 
 .if !'po4a'hide' .I @DEFAULT_MIME_TABLE@ (mime_table)
@@ -166,9 +174,7 @@ MIME type mappings for FTP gatewaying
 
 .if !'po4a'hide' .I @DEFAULT_ERROR_DIR@
 .RS
-Location of
-.B squid 
-error pages and templates.
+Location of Squid error pages and templates.
 .RE
 
 .SH SEE ALSO
