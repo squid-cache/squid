@@ -4,7 +4,7 @@
 squid_session - Squid session tracking external acl group helper
 .
 .SH SYNOPSIS
-squid_session [-t idle_timeout] [-b dbpath] [-a]
+.if !'po4a'hide' squid_session [-t idle_timeout] [-b dbpath] [-a]
 .
 .SH DESCRIPTION
 This helper maintains a concept of sessions by monitoring requests
@@ -14,17 +14,17 @@ timer.
 Intended use is for displaying "terms of use" pages, ad popups etc.
 .
 .TP
-.BI "-t " "idletimeout " "(default 3600)"
+.if !'po4a'hide' .BI "-t " "idletimeout " "(default 3600)"
 Specifies the session idle timeout timer.
 .
 .TP
-.BI "-b " "dbpath"
+.if !'po4a'hide' .BI "-b " "dbpath"
 Path to persistent database. If not specified the session details
 will be kept in memory only and all sessions will reset each time
 Squid restarts it's helpers (Squid restart or rotation of logs).
 .
 .TP
-.B "-a"
+.if !'po4a'hide' .B "-a"
 Active mode. In this mode sessions are started by evaluating an
 acl with the argument LOGIN, or terminated by the argument LOGOUT.
 .P
@@ -34,29 +34,35 @@ the first request.
 .SH EXAMPLE
 .P
 Configuration example using the default automatic mode
-.IP
-external_acl_type session ttl=300 negative_ttl=0 children=1 concurrency=200 %LOGIN /usr/local/squid/libexec/squid_session
-.IP
-acl session external session
-.IP
-http_access deny !session
-.IP
-deny_info http://your.server/bannerpage?url=%s session
+.if !'po4a'hide' .IP
+.if !'po4a'hide' external_acl_type session ttl=300 negative_ttl=0 children=1 concurrency=200 %LOGIN /usr/local/squid/libexec/squid_session
+.if !'po4a'hide' .IP
+.if !'po4a'hide' acl session external session
+.if !'po4a'hide' .IP
+.if !'po4a'hide' http_access deny !session
+.if !'po4a'hide' .IP
+.if !'po4a'hide' deny_info http://your.server.example.com/bannerpage?url=%s session
 .P
-Then set up http://your.server/bannerpage to display a session startup page and then redirect the user back to the requested URL given in the url query parameter.
+Then set up http://your.server.example.com/bannerpage to display a session startup
+page and then redirect the user back to the requested URL given in the url query parameter.
 .SH AUTHOR
-This helper and documentation was written by 
-.I Henrik Nordstrom <henrik@henriknordstrom.net>
+This program and documentation was written by
+.if !'po4a'hide' .I Henrik Nordstrom <henrik@henriknordstrom.net>
 .
 .SH QUESTIONS
-Any questions on usage can be sent to 
-.IR "Squid Users <squid-users@squid-cache.org>" .
+Questions on the usage of this program can be sent to the
+.I Squid Users mailing list
+.if !'po4a'hide' <squid-users@squid-cache.org>
 .
 .SH REPORTING BUGS
-Report bugs or bug-fixes to
+Report bugs or bug fixes using http://bugs.squid-cache.org/
+.
+Report serious security bugs to
 .I Squid Bugs <squid-bugs@squid-cache.org>
-or ideas for new improvements to 
-.I Squid Developers <squid-dev@squid-cache.org>
+.
+Report ideas for new improvements to the
+.I Squid Developers mailing list
+.if !'po4a'hide' <squid-dev@squid-cache.org>
 .
 .SH "SEE ALSO"
-.BR squid ( 8 )
+.if !'po4a'hide' .BR squid ( 8 )
