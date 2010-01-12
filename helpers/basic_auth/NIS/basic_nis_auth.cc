@@ -4,7 +4,10 @@
  */
 
 #include "config.h"
+#include "hash.h"
+#include "nis_support.h"
 #include "rfc1738.h"
+#include "util.h"
 
 #if HAVE_STDIO_H
 #include <stdio.h>
@@ -28,11 +31,6 @@
 #include <crypt.h>
 #endif
 
-#include "util.h"
-#include "hash.h"
-
-#include "nis_support.h"
-
 int
 main(int argc, char **argv)
 {
@@ -45,9 +43,9 @@ main(int argc, char **argv)
     setbuf(stdout, NULL);
 
     if (argc != 3) {
-        fprintf(stderr, "Usage: yp_auth <domainname> <nis map for password>\n");
+        fprintf(stderr, "Usage: basic_yp_auth <domainname> <nis map for password>\n");
         fprintf(stderr, "\n");
-        fprintf(stderr, "Example yp_auth mydomain.com passwd.byname\n");
+        fprintf(stderr, "Example basic_yp_auth mydomain.com passwd.byname\n");
         exit(1);
     }
     nisdomain = argv[1];

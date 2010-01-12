@@ -1,0 +1,3 @@
+[po4a_langs] ar cs de en en_AU ru
+
+[po4a_paths] doc/manuals/manuals.pot $lang:doc/manuals/$lang.po

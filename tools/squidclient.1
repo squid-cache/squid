@@ -1,109 +1,185 @@
-.TH squidclient 1 "Squid Web Client Tool"
+.if !'po4a'hide' .TH squidclient 1
+.
 .SH NAME
-squidclient -- a simple HTTP web client
+.if !'po4a'hide' .B squidclient
+.if !'po4a'hide' \-
+A simple HTTP web client tool
+.
 .SH SYNOPSIS
-.B squidclient
-.RB [ \-arsv ]
-.RB [ \-g
-.IR count ]
-.RB [ \-h
-.IR remote\-host ]
-.RB [ \-H
-.IR 'string' ]
-.RB [ \-i
-.IR IMS ]
-.RB [ \-I
-.IR ping\-interval ]
-.RB [ \-j
-.IR 'Host\-header' ]
-.RB [ \-l
-.IR local\-host ]
-.RB [ \-m
-.IR method ]
-.RB [ \-p
-.IR port ]
-.RB [ \-P
-.IR file ]
-.RB [ \-t
-.IR count ]
-.RB [ \-T
-.IR timeout ]
-.RB [ \-u
-.IR proxy-user ]
-.RB [ \-U
-.IR www-user ]
-.RB [ \-V
-.IR version ]
-.RB [ \-w
-.IR proxy-password ]
-.RB [ \-W
-.IR www-password ]
-.B url
+.if !'po4a'hide' .B squidclient
+.if !'po4a'hide' .B "[ \-arsv ] [ \-g"
+count
+.if !'po4a'hide' .B "] [ \-h"
+remote\-host
+.if !'po4a'hide' .B "] [ \-H '"
+string
+.if !'po4a'hide' .B "' ] [ \-i"
+IMS
+.if !'po4a'hide' .B "] [ \-I"
+ping\-interval
+.if !'po4a'hide' .B "] [ \-j '"
+Host\-header
+.if !'po4a'hide' .B "' ] [ \-l"
+local\-host
+.if !'po4a'hide' .B "] [ \-m"
+method
+.if !'po4a'hide' .B "] [ \-p"
+port
+.if !'po4a'hide' .B "] [ \-P"
+file
+.if !'po4a'hide' .B "] [ \-t"
+count
+.if !'po4a'hide' .B "] [ \-T"
+timeout
+.if !'po4a'hide' .B "] [ \-u"
+proxy\-user
+.if !'po4a'hide' .B "] [ \-U"
+www\-user
+.if !'po4a'hide' .B "] [ \-V"
+version
+.if !'po4a'hide' .B "] [ \-w"
+proxy\-password
+.if !'po4a'hide' .B "] [ \-W"
+www\-password
+.if !'po4a'hide' .B "] "
+url
+.
 .SH DESCRIPTION
 .B squidclient
 is a tool providing a command line interface for retrieving URLs.
 Designed for testing any HTTP 0.9, 1.0, or 1.1 web server or proxy.
 This tool can be combined with scripts to perform any basic HTTP operation.
 Some additional features for access to the 
-.B Squid
+.B squid
 proxy object cache and management information are provided.
+.
 .SH OPTIONS
-.IP "\-a"
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B "\-a"
 Do NOT include Accept: header.
-.IP "\-g \fIcount\fP"
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-g count"
 Ping mode, perform
 .I count
 iterations (0 to loop until interrupted).
-.IP "\-h \fIhost\fP"
-Retrieve URL from cache on hostname.  Default is localhost.
-.IP "\-H \fI'string'\fP"
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .IP "\-h host"
+Retrieve URL from cache on hostname.  Default is
+.B localhost
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-H 'string'"
 Extra headers to send. Use '\\n' for new lines.
-.IP "\-i \fItime\fP"
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-i time"
 If-Modified-Since time (in Epoch seconds).
-.IP "-I \fIinterval\fP"
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-I interval"
 Ping interval in seconds (default 1 second).
-.IP "\-j \fIhosthdr\fP"
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-j hosthdr"
 Host header content
-.IP "\-l \fIhost\fP"
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-l host"
 Specify a local IP address to bind to.  Default is none.
-.IP "\-m \fImethod\fP"
-Request method, default is GET. Squid also supports a non-standard method
-called \fBPURGE\fP. You can use that to purge a specific URL from the cache.
-You need to have \fIpurge\fP access setup in squid.conf similar to
-\fImanager\fP access. Here is an example:
-.nf
-      acl purge method PURGE
-      http_access deny purge !localhost
-.fi
-.IP "\-p \fIport\fP"
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-m method"
+Request method, default is
+.I GET.
+Squid also supports a non-standard method called
+.I PURGE.
+You can use that to purge a specific URL from the cache.
+You need to have
+.I purge
+access setup in
+.B squid.conf
+similar to
+.I manager
+ access. Here is an example:
+.if !'po4a'hide' .nf
+.if !'po4a'hide'       acl purge method PURGE
+.if !'po4a'hide'       http_access deny purge !localhost
+.if !'po4a'hide' .fi
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-p port"
 Port number of cache.  Default is 3128.
-.IP "\-P \fIfile"
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-P file"
 PUT request. Using the named file.
-.IP "\-r"
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-r"
 Force cache to reload URL.
-.IP "\-s"
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-s"
 Silent.  Do not print data to stdout.
-.IP "\-t \fIcount\fP"
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-t count"
 Trace count cache-hops
-.IP "\-T \fItimeout\fP"
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-T timeout"
 Timeout value (seconds) for read/write operations.
-.IP "\-u \fIuser\fP"
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-u user"
 Proxy authentication username
-.IP "\-U \fIuser\fP"
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-U user"
 WWW authentication username
-.IP "\-v"
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-v"
 Verbose. Print outgoing message to stderr.
-.IP "\-w \fIpassword\fP"
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-V version"
+HTTP Version. Use '\-' for HTTP/0.9 omitted case
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-w password"
 Proxy authentication password
-.IP "\-W \fIpassword\fP"
+.
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-W password"
 WWW authentication password
-.IP "\-V \fIversion\fP"
-HTTP Version. Use '-' for HTTP/0.9 omitted case
-.SH SEE ALSO
-.BR cachemgr.cgi "(8), "
-.BR squid "(8)"
+.
 .SH AUTHOR
 Derived from Harvest. Further developed by by numerous individuals from
 the internet community. Development is led by Duane Wessels of the
 National Laboratory for Applied Network Research and funded by
 the National Science Foundation.
+.
+.SH COPYRIGHT
+Distributed under the GNU Public License version 2 or later (GPL2+).
+.
+.SH QUESTIONS
+Questions on the usage of this program can be sent to the
+.I Squid Users mailing list
+.if !'po4a'hide' <squid-users@squid-cache.org>
+.
+.SH REPORTING BUGS
+Report bugs or bug fixes using http://bugs.squid-cache.org/
+.PP
+Report serious security bugs to
+.I Squid Bugs <squid-bugs@squid-cache.org>
+.PP
+Report ideas for new improvements to the
+.I Squid Developers mailing list
+.if !'po4a'hide' <squid-dev@squid-cache.org>
+.
+.SH SEE ALSO
+.if !'po4a'hide' .BR squid "(8), "
+.if !'po4a'hide' .BR cachemgr.cgi "(8)"
