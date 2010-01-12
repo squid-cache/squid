@@ -34,7 +34,7 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.h \
 	LoadableModules.cc
 
-SUBDIRS	= base eui acl fs repl auth ip icmp ident log
+SUBDIRS	= base comm eui acl fs repl auth ip icmp ident log
 
 if USE_ADAPTATION
 SUBDIRS += adaptation
@@ -532,6 +532,7 @@ nodist_squid_SOURCES = \
 
 squid_LDADD = \
 	$(COMMON_LIBS) \
+	comm/libcomm-listener.la \
 	eui/libeui.la \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	log/liblog.la \
@@ -825,7 +826,7 @@ repl_modules.cc: repl_modules.sh Makefile
 include $(top_srcdir)/doc/manuals/Substitute.am
 
 squid.8: $(srcdir)/squid.8.in Makefile
-        $(SUBSTITUTE) < $(srcdir)/squid.8.in > $@
+	$(SUBSTITUTE) < $(srcdir)/squid.8.in > $@
 
 man_MANS = squid.8
 EXTRA_DIST += squid.8.in
@@ -1229,8 +1230,10 @@ tests_testCacheManager_SOURCES = \
 	wordlist.cc
 nodist_tests_testCacheManager_SOURCES = \
 	$(BUILT_SOURCES)
+# comm.cc only requires comm/libcomm-listener.la until fdc_table is dead.
 tests_testCacheManager_LDADD = \
 	$(COMMON_LIBS) \
+	comm/libcomm-listener.la \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	log/liblog.la \
 	$(REPL_OBJS) \
@@ -1411,6 +1414,7 @@ nodist_tests_testEvent_SOURCES = \
 tests_testEvent_LDADD = \
 	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
+	comm/libcomm-listener.la \
 	log/liblog.la \
 	$(REPL_OBJS) \
 	${ADAPTATION_LIBS} \
@@ -1563,6 +1567,7 @@ nodist_tests_testEventLoop_SOURCES = \
 tests_testEventLoop_LDADD = \
 	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
+	comm/libcomm-listener.la \
 	log/liblog.la \
 	$(REPL_OBJS) \
 	${ADAPTATION_LIBS} \
@@ -1710,6 +1715,7 @@ nodist_tests_test_http_range_SOURCES = \
 tests_test_http_range_LDADD = \
 	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
+	comm/libcomm-listener.la \
 	log/liblog.la \
 	$(REPL_OBJS) \
 	${ADAPTATION_LIBS} \
@@ -1862,6 +1868,7 @@ nodist_tests_testHttpRequest_SOURCES = \
 tests_testHttpRequest_LDADD = \
 	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
+	comm/libcomm-listener.la \
 	log/liblog.la \
 	$(REPL_OBJS) \
 	${ADAPTATION_LIBS} \
@@ -1936,11 +1943,11 @@ tests_testStore_SOURCES= \
 	tests/testStoreHashIndex.h \
 	tests/TestSwapDir.cc \
 	tests/TestSwapDir.h \
-	tests/stub_fd.cc \
 	tests/stub_HelperChildConfig.cc \
 	tests/stub_HttpReply.cc \
 	tests/stub_cache_manager.cc \
-	$(STORE_TEST_SOURCES)
+	$(STORE_TEST_SOURCES) \
+	tests/stub_fd.cc
 
 nodist_tests_testStore_SOURCES= \
 	$(TESTSOURCES) \
@@ -2229,6 +2236,7 @@ nodist_tests_testURL_SOURCES = \
 tests_testURL_LDADD = \
 	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
+	comm/libcomm-listener.la \
 	log/liblog.la \
 	$(REGEXLIB) \
 	$(REPL_OBJS) \
