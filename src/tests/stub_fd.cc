@@ -32,7 +32,8 @@
  *
  */
 
-#include "squid.h"
+#include "config.h"
+#include "fde.h"
 
 int
 fdNFree(void)
