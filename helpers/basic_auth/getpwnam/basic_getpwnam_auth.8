@@ -20,15 +20,18 @@ and
 routines for authentication.
 .PP
 This has the following advantages over the NCSA module:
+.TP 5
+Allows authentication of all known local users
+.TP
+Allows authentication through nsswitch.conf
+.TP
+Can handle NIS(+) requests
+.TP
+Can handle LDAP request
+.TP
+Can handle PAM request
 .
-.IP Allows authentication of all known local users
-.IP Allows authentication through nsswitch.conf
-.IP Can handle NIS(+) requests
-.IP Can handle LDAP request
-.IP Can handle PAM request
-.
-.if !'po4a'hide' .SH CONFIGURATION
-.
+.SH CONFIGURATION
 .if !'po4a'hide' .RS
 .if !'po4a'hide' .B auth_param basic program /path/to/basic_getpwnam_auth
 .if !'po4a'hide' .B auth_param basic children concurrency=1
