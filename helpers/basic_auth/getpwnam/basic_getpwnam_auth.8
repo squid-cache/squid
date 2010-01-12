@@ -1,44 +1,53 @@
-.TH basic_getpwnam_auth 8 "Squid getpwnam Authenticator"
+.if !'po4a'hide' .TH basic_getpwnam_auth 8
 .
 .SH NAME
-basic_getpwnam_auth - Local Users auth helper for Squid
+.if !'po4a'hide' .B basic_getpwnam_auth
+.if !'po4a'hide' \-
+Local Users auth helper for Squid
 .
 .SH SYNOPSIS
-basic_getpwnam_auth
+.if !'po4a'hide' .B basic_getpwnam_auth
 .
 .SH DESCRIPTION
-This helper allows Squid to authenticate any local user accounts
+.B basic_getpwnam_auth
+allows Squid to authenticate any local user accounts
 to validate the user name and password of Basic HTTP authentication.
-.
-Uses getpwnam() and getspnam() routines for authentication.
+.PP
+It uses
+.B getpwnam()
+and
+.B getspnam()
+routines for authentication.
+.PP
 This has the following advantages over the NCSA module:
 .
-.BR Allows authentication of all known local users
-.BR Allows authentication through nsswitch.conf
-.BR can handle NIS(+) requests
-.BR can handle LDAP request
-.BR can handle PAM request
+.IP Allows authentication of all known local users
+.IP Allows authentication through nsswitch.conf
+.IP Can handle NIS(+) requests
+.IP Can handle LDAP request
+.IP Can handle PAM request
 .
-.SH SQUID.CONF
+.if !'po4a'hide' .SH CONFIGURATION
 .
-.RS
-.B auth_param basic program /path/to/basic_getpwnam_auth
-.RE
-.
-.SH NOTES
-.
+.if !'po4a'hide' .RS
+.if !'po4a'hide' .B auth_param basic program /path/to/basic_getpwnam_auth
+.if !'po4a'hide' .B auth_param basic children concurrency=1
+.if !'po4a'hide' .RE
+.PP
 When used for authenticating to local UNIX shadow password databases
 the program must be running as root or else it won't have sufficient
 permissions to access the user password database. Such use of this
 program is not recommended, but if you absolutely need to then make
-the program setuid root
-.RS
-.P
-.B chown root basic_getpwnam_auth
-.BR
-.B chmod u+s basic_getpwnam_auth
-.RE
-.P
+the program
+.B setuid
+.B root
+.if !'po4a'hide' .RS
+.if !'po4a'hide' .P
+.if !'po4a'hide' .B chown root basic_getpwnam_auth
+.if !'po4a'hide' .BR
+.if !'po4a'hide' .B chmod u+s basic_getpwnam_auth
+.if !'po4a'hide' .RE
+.PP
 Please note that in such configurations it is also strongly recommended
 that the program is moved into a directory where normal users cannot
 access it, as this mode of operation will allow any local user to
@@ -47,33 +56,41 @@ fully audited and the author cannot be held responsible for any security
 issues due to such installations.
 .
 .SH AUTHOR
-Squid basic_getpwnam_auth is written by
-.I Erik Hofman <erik.hofman@a1.nl>
-.I Robin Elfrink <robin@a1.nl>
-.I Giancarlo Razzolini <linux-fan@onda.com.br>
-.
+This program was written by
+.if !'po4a'hide' .I Erik Hofman <erik.hofman@a1.nl>
+.if !'po4a'hide' .I Robin Elfrink <robin@a1.nl>
+.if !'po4a'hide' .I Giancarlo Razzolini <linux-fan@onda.com.br>
+.PP
 Based on original code by
-.I Jon Thackray <jrmt@uk.gdscorp.com>.
-.
-This manual is written by
-.I Amos Jeffries <squid3@treenet.co.nz>
+.if !'po4a'hide' .I Jon Thackray <jrmt@uk.gdscorp.com>.
+.PP
+This manual was written by
+.if !'po4a'hide' .I Amos Jeffries <squid3@treenet.co.nz>
 .
 .SH COPYRIGHT
-Squid basic_getpwnam_auth and this manual is Copyright to the authors
-listed above.
-.
+Squid
+.B basic_getpwnam_auth
+and this manual is Copyright to the authors listed above.
+.PP
 Distributed under the GNU General Public License (GNU GPL) version 2 and later.
 .
 .SH QUESTIONS
 Questions on the usage of this program can be sent to the
-.I Squid Users <squid-users@squid-cache.org>
-mailing list.
+.I Squid Users mailing list
+.if !'po4a'hide' <squid-users@squid-cache.org>
 .
 .SH REPORTING BUGS
-Report bugs or bug-fixes to
+Report bugs or bug fixes using http://bugs.squid-cache.org/
+.PP
+Report serious security bugs to
 .I Squid Bugs <squid-bugs@squid-cache.org>
-or ideas for new improvements to 
-.I Squid Developers <squid-dev@squid-cache.org>
+.PP
+Report ideas for new improvements to the
+.I Squid Developers mailing list
+.if !'po4a'hide' <squid-dev@squid-cache.org>
 .
-.SH "SEE ALSO"
-.BR squid (8), basic_pam_auth (8), basic_ncsa_auth (8), basic_ldap_auth (8)
+.SH SEE ALSO
+.if !'po4a'hide' .BR squid "(8), "
+.if !'po4a'hide' .BR basic_pam_auth "(8), "
+.if !'po4a'hide' .BR basic_ncsa_auth "(8), "
+.if !'po4a'hide' .BR basic_ldap_auth "(8)"
