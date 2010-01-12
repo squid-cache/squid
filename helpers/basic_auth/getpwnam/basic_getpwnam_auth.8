@@ -1,20 +1,24 @@
-.TH basic_getpwnam_auth 8 "Squid getpwnam Authenticator"
+.if !'po4a'hide' .TH basic_getpwnam_auth 8
 .
 .SH NAME
-basic_getpwnam_auth \- Local Users auth helper for Squid
+.if !'po4a'hide' .B basic_getpwnam_auth
+.if !'po4a'hide' \-
+Local Users auth helper for Squid
 .
 .SH SYNOPSIS
 .if !'po4a'hide' .B basic_getpwnam_auth
 .
 .SH DESCRIPTION
-This helper allows Squid to authenticate any local user accounts
+.B basic_getpwnam_auth
+allows Squid to authenticate any local user accounts
 to validate the user name and password of Basic HTTP authentication.
 .PP
-Uses
+It uses
 .B getpwnam()
 and
 .B getspnam()
 routines for authentication.
+.PP
 This has the following advantages over the NCSA module:
 .
 .IP Allows authentication of all known local users
@@ -23,14 +27,13 @@ This has the following advantages over the NCSA module:
 .IP Can handle LDAP request
 .IP Can handle PAM request
 .
-.if !'po4a'hide' .SH SQUID.CONF
+.if !'po4a'hide' .SH CONFIGURATION
 .
 .if !'po4a'hide' .RS
 .if !'po4a'hide' .B auth_param basic program /path/to/basic_getpwnam_auth
+.if !'po4a'hide' .B auth_param basic children concurrency=1
 .if !'po4a'hide' .RE
-.
-.SH NOTES
-.
+.PP
 When used for authenticating to local UNIX shadow password databases
 the program must be running as root or else it won't have sufficient
 permissions to access the user password database. Such use of this
@@ -44,7 +47,7 @@ the program
 .if !'po4a'hide' .BR
 .if !'po4a'hide' .B chmod u+s basic_getpwnam_auth
 .if !'po4a'hide' .RE
-.P
+.PP
 Please note that in such configurations it is also strongly recommended
 that the program is moved into a directory where normal users cannot
 access it, as this mode of operation will allow any local user to
@@ -57,10 +60,10 @@ This program was written by
 .if !'po4a'hide' .I Erik Hofman <erik.hofman@a1.nl>
 .if !'po4a'hide' .I Robin Elfrink <robin@a1.nl>
 .if !'po4a'hide' .I Giancarlo Razzolini <linux-fan@onda.com.br>
-.
+.PP
 Based on original code by
 .if !'po4a'hide' .I Jon Thackray <jrmt@uk.gdscorp.com>.
-.
+.PP
 This manual was written by
 .if !'po4a'hide' .I Amos Jeffries <squid3@treenet.co.nz>
 .
@@ -68,7 +71,7 @@ This manual was written by
 Squid
 .B basic_getpwnam_auth
 and this manual is Copyright to the authors listed above.
-.
+.PP
 Distributed under the GNU General Public License (GNU GPL) version 2 and later.
 .
 .SH QUESTIONS
@@ -78,13 +81,16 @@ Questions on the usage of this program can be sent to the
 .
 .SH REPORTING BUGS
 Report bugs or bug fixes using http://bugs.squid-cache.org/
-.
+.PP
 Report serious security bugs to
 .I Squid Bugs <squid-bugs@squid-cache.org>
-.
+.PP
 Report ideas for new improvements to the
 .I Squid Developers mailing list
 .if !'po4a'hide' <squid-dev@squid-cache.org>
 .
-.SH "SEE ALSO"
-.if !'po4a'hide' .BR squid (8), basic_pam_auth (8), basic_ncsa_auth (8), basic_ldap_auth (8)
+.SH SEE ALSO
+.if !'po4a'hide' .BR squid "(8), "
+.if !'po4a'hide' .BR basic_pam_auth "(8), "
+.if !'po4a'hide' .BR basic_ncsa_auth "(8), "
+.if !'po4a'hide' .BR basic_ldap_auth "(8)"
