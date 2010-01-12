@@ -37,7 +37,6 @@ typedef void IOCB(int fd, char *, size_t size, comm_err_t flag, int xerrno, void
 /* comm.c */
 extern bool comm_iocallbackpending(void); /* inline candidate */
 
-extern int comm_listen(int fd);
 SQUIDCEXTERN int commSetNonBlocking(int fd);
 SQUIDCEXTERN int commUnsetNonBlocking(int fd);
 SQUIDCEXTERN void commSetCloseOnExec(int fd);
@@ -103,8 +102,6 @@ SQUIDCEXTERN void comm_quick_poll_required(void);
 
 class ConnectionDetail;
 typedef void IOACB(int fd, int nfd, ConnectionDetail *details, comm_err_t flag, int xerrno, void *data);
-extern void comm_accept(int fd, IOACB *handler, void *handler_data);
-extern void comm_accept(int fd, AsyncCall::Pointer &call);
 extern void comm_add_close_handler(int fd, PF *, void *);
 extern void comm_add_close_handler(int fd, AsyncCall::Pointer &);
 extern void comm_remove_close_handler(int fd, PF *, void *);
@@ -132,33 +129,6 @@ extern bool commHasHalfClosedMonitor(int fd);
 // XXX: remove these wrappers which minimize client_side.cc changes in a commit
 inline void commMarkHalfClosed(int fd) { commStartHalfClosedMonitor(fd); }
 inline bool commIsHalfClosed(int fd) { return commHasHalfClosedMonitor(fd); }
-
-/* Not sure where these should live yet */
-
-class Acceptor
-{
-
-public:
-    typedef void AcceptorFunction (int, int, ConnectionDetail *, comm_err_t, int, void *);
-    AcceptorFunction *theFunction;
-    int acceptFD;
-    void *theData;
-};
-
-class AcceptLimiter
-{
-
-public:
-    static AcceptLimiter &Instance();
-    void defer (int, Acceptor::AcceptorFunction *, void *);
-    void kick();
-
-    bool deferring() const;
-
-private:
-    static AcceptLimiter Instance_;
-    Vector<Acceptor> deferred;
-};
 
 /* A comm engine that calls comm_select */
 
