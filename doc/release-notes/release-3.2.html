@@ -151,7 +151,8 @@ the reduction in direct helper spawned by Squid can result in a great reduction 
 <P>To improve the understanding of what each helper does and where it should be used the helper binaries
 which are bundled with Squid have undergone a naming change in this release.</P>
 
-<P>Below is a list of the old helper names and what their names have changed to.</P>
+<P>Below is a list of the old helper names and what their names have changed to.
+For several helpers the directory name used in --enable-X-helpers configure option has also changed.</P>
 
 <H3>Basic Authentication protocol helpers</H3>
 
@@ -161,6 +162,14 @@ which are bundled with Squid have undergone a naming change in this release.</P>
 <LI>getpwnam_auth - basic_getpwname_auth - Authenticate with local system user accounts.</LI>
 <LI>squid_ldap_auth - basic_ldap_auth - Authenticate with LDAP user accounts.</LI>
 <LI>ncsa_auth - basic_ncsa_auth - Authenticate with NCSA httpd-style password file.</LI>
+<LI>pam_auth - basic_pam_auth - Authenticate with the system PAM infrastructure.</LI>
+<LI>pop3.pl - basic_pop3_auth.pl - Authenticate with a mail server POP3/SMTP credentials</LI>
+<LI>squid_sasl_auth - basic_sasl_auth - Authenticate with SASL ???</LI>
+<LI>smb_auth - basic_smb_auth - Authenticate with Samba SMB ???</LI>
+<LI>yp_auth - basic_nis_auth - Authenticate with NIS security system.</LI>
+<LI>mswin_sspi - basic_sspi_auth - Authenticate with a Windows Domain Controller using SSPI.</LI>
+<LI>MSNT-muti-domain - basic_msnt_multi_domain_auth.pl - Authenticate with any one of multiple Windows Domain Controllers.</LI>
+<LI>squid_radius_auth - basic_radius_auth - Authenticate with RADIUS.</LI>
 </UL>
 </P>
 
@@ -236,7 +245,6 @@ This move begins the Localization of the internal administrator facing manuals.<
 <A HREF="#removedtags">Removed tags</A></LI>
 </UL>
 </P>
-
 
 
 <H2><A NAME="newtags"></A> <A NAME="ss3.1">3.1</A> <A HREF="#toc3.1">New tags</A>

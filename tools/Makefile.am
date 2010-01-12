@@ -37,9 +37,10 @@ CLEANFILES += test_tools.cc
 ## ##### helper-mux #####
 
 libexec_SCRIPTS = helper-mux.pl
+EXTRA_DIST += helper-mux.pl helper-mux.README
 
-## Test scripts
-EXTRA_DIST += helper-ok-dying.pl helper-ok.pl helper-mux.README
+## Test Scripts
+EXTRA_DIST += helper-ok-dying.pl helper-ok.pl
 
 ## ##### squidclient  #####
 

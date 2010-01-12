@@ -7,9 +7,9 @@ against SASL identifies itself with an application name. Each
 
 For this authenticator, the SASL application name is, by default,
 
-	squid_sasl_auth
+	basic_sasl_auth
 
-To configure the authentication method used the file "squid_sasl_auth.conf" 
+To configure the authentication method used the file "basic_sasl_auth.conf" 
 can be placed in the appropriate location, usually "/usr/lib/sasl".
 
 The authentication database is defined by the "pwcheck_method" parameter.
@@ -39,9 +39,9 @@ will typically fail with "-1, generic error".
 	chown root.mail sasl_auth
 	chmod ug+s sasl_auth
 
-If the application name ("squid_sasl_auth") will also be used for the
+If the application name ("basic_sasl_auth") will also be used for the
 pam service name if pwcheck_method:pam is chosen. And example pam
-configuration file  "squid_sasl_auth" is also included.
+configuration file  "basic_sasl_auth.pam" is also included.
 
 
 Ian Castle
