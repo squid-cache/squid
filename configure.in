@@ -2526,6 +2526,7 @@ AC_CHECK_HEADERS( \
 	linux/types.h \
 	machine/byte_swap.h \
 	malloc.h \
+	map \
 	math.h \
 	memory.h \
 	mount.h \
@@ -4223,6 +4224,7 @@ AC_CONFIG_FILES([\
 	src/adaptation/Makefile \
 	src/adaptation/icap/Makefile \
 	src/adaptation/ecap/Makefile \
+	src/comm/Makefile \
 	src/esi/Makefile \
 	src/eui/Makefile \
 	src/icmp/Makefile \
