@@ -7,9 +7,9 @@ Squid UNIX Group helper
 .
 .SH SYNOPSIS
 .if !'po4a'hide' .B "squid_unix_group [\-g "
-groupname
+group
 .if !'po4a'hide' .B "] [\-g "
-groupname
+group
 .if !'po4a'hide' .B "...] [\-p] [\-s]"
 .
 .SH DESCRIPTION
@@ -18,7 +18,7 @@ allows Squid to base access controls on users memberships in UNIX groups.
 .
 .SH OPTIONS
 .if !'po4a'hide' .TP
-.if !'po4a'hide' .BI "\-g " "groupname "
+.if !'po4a'hide' .BI "\-g " "group "
 Specifies a group name to match.
 .
 .if !'po4a'hide' .TP
@@ -69,7 +69,7 @@ This manual was written by
 .SH COPYRIGHT
 This program and documentation is copyright to the authors named above.
 .PP
-Distributed under the GNU Public License version 2 or later (GPL2+).
+Distributed under the GNU General Public License (GNU GPL) version 2 or later (GPL2+).
 .
 .SH QUESTIONS
 Questions on the usage of this program can be sent to the
@@ -86,7 +86,7 @@ Report ideas for new improvements to the
 .I Squid Developers mailing list
 .if !'po4a'hide' <squid-dev@squid-cache.org>
 .PP
-Additionally bugs or bug-fixes can be reported to
+Additionally bugs or bug\-fixes can be reported to
 .if !'po4a'hide' .I Rodrigo Campos <rodrigo@geekbunker.org>
 .
 .SH SEE ALSO
