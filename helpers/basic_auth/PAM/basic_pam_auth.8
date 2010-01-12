@@ -1,22 +1,29 @@
-.TH basic_pam_auth 8 "5 Sep 2003" "Squid PAM Basic Auth"
+.if !'po4a'hide' .TH basic_pam_auth 8 "5 Sep 2003"
 .
 .SH NAME
-pam_auth - Squid PAM Basic authentication helper
+.if !'po4a'hide' .B basic_pam_auth
+.if !'po4a'hide' \-
+Squid PAM Basic authentication helper
 .
 .SH SYNOPSIS
-.if !'po4a'hide' basic_pam_auth [-n "service name"] [-t TTL] [-o] [-1]
+.if !'po4a'hide' .B "basic_pam_auth [\-n \""
+service name
+.if !'po4a'hide'.B "\"] [\-t "
+TTL
+.if !'po4a'hide' .B "] [\-o] [\-1]"
 .
 .SH DESCRIPTION
 This helper allows Squid to connect to a mostly any available PAM
 database to validate the user name and password of Basic HTTP
 authentication.
 .
-.TP
-.if !'po4a'hide' .BI "-s " "service-name"
+.SH OPTIONS
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .BI "\-s " "service\-name"
 Specifies the PAM service name Squid uses, defaults to "squid"
 .
-.TP
-.if !'po4a'hide' .BI "-t " TTL
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI "\-t " TTL
 Enables persistent PAM connections where the connection to the PAM
 database is kept open and reused for new logins. The TTL specifies
 how long the connection will be kept open (in seconds).  Default is
@@ -24,14 +31,12 @@ to not keep PAM connections open. Please note that the use of
 persistent PAM connections is slightly outside the PAM
 specification and may not work with all PAM configurations.
 .
-.TP
-.if !'po4a'hide' .BI "-o"
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .BI \-o
 Do not perform the PAM account management group (account
 expiration etc)
-
 .
 .SH CONFIGURATION
-.
 The program needs a PAM service to be configured in 
 .B /etc/pam.conf
 or
@@ -59,7 +64,7 @@ the program setuid root
 .if !'po4a'hide' .br
 .if !'po4a'hide' .B chmod u+s pam_auth
 .if !'po4a'hide' .RE
-.P
+.PP
 Please note that in such configurations it is also strongly recommended
 that the program is moved into a directory where normal users cannot
 access it, as this mode of operation will allow any local user to
@@ -68,10 +73,7 @@ fully audited and the author cannot be held responsible for any security
 issues due to such installations.
 .
 .SH AUTHOR
-This program is written by
-.if !'po4a'hide' .I Henrik Nordstrom <hno@squid-cache.org>
-.
-This manual is written by
+This program and documentation was written by
 .if !'po4a'hide' .I Henrik Nordstrom <hno@squid-cache.org>
 .
 .SH COPYRIGHT
@@ -87,14 +89,17 @@ Questions on the usage of this program can be sent to the
 .
 .SH REPORTING BUGS
 Report bugs or bug fixes using http://bugs.squid-cache.org/
-.
+.PP
 Report serious security bugs to
 .I Squid Bugs <squid-bugs@squid-cache.org>
-.
+.PP
 Report ideas for new improvements to the
 .I Squid Developers mailing list
 .if !'po4a'hide' <squid-dev@squid-cache.org>
 .
-.SH "SEE ALSO"
-.if !'po4a'hide' .BR pam (8),
+.SH SEE ALSO
+.if !'po4a'hide' .BR squid "(8), "
+.if !'po4a'hide' .BR pam "(8), "
+.if !'po4a'hide' .BR pam.conf "(5), "
+.br
 PAM Systems Administrator Guide
