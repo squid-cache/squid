@@ -80,8 +80,7 @@ static const char *LogTime()
     gettimeofday(&now, NULL);
     if (now.tv_sec != last_t) {
         // FreeBSD defines tv_sec as long in non-ARM systems with a TODO note
-        time_t tmp = now.tv_sec;
-        tm = localtime(&tmp);
+        tm = localtime((const time_t*)&now.tv_sec);
         strftime(buf, 127, "%Y/%m/%d %H:%M:%S", tm);
         last_t = now.tv_sec;
     }
