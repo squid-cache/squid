@@ -866,6 +866,8 @@ gen_conf(Entry * head, FILE * fp, bool verbose_output)
 
         if (enabled || verbose_output) {
             for (line = entry->nocomment; line != NULL; line = line->next) {
+                if (!line->data)
+                    continue;
                 if (!enabled && line->data[0] != '#')
                     fprintf(fp, "#%s\n", line->data);
                 else
