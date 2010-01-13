@@ -523,11 +523,11 @@ DOC_START
 	acl aclname srcdomain   .foo.com ...
 	  # reverse lookup, from client IP [slow]
 	acl aclname dstdomain   .foo.com ...
-	  # Destination server from URL [slow]
+	  # Destination server from URL [fast]
 	acl aclname srcdom_regex [-i] \.foo\.com ...
 	  # regex matching client name [slow]
 	acl aclname dstdom_regex [-i] \.foo\.com ...
-	  # regex matching server [slow]
+	  # regex matching server [fast]
 	  #
 	  # For dstdomain and dstdom_regex a reverse lookup is tried if a IP
 	  # based URL is used and no match is found. The name "none" is used
