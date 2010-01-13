@@ -3362,7 +3362,7 @@ clientHttpConnectionsOpen(void)
             continue;
 
         AsyncCall::Pointer call = commCbCall(5,5, "SomeCommAcceptHandler(httpAccept)",
-                                         CommAcceptCbPtrFun(httpAccept, s));
+                                             CommAcceptCbPtrFun(httpAccept, s));
 
         s->listener = new Comm::ListenStateData(fd, call, true);
 
@@ -3416,7 +3416,7 @@ clientHttpsConnectionsOpen(void)
             continue;
 
         AsyncCall::Pointer call = commCbCall(5,5, "SomeCommAcceptHandler(httpsAccept)",
-                                         CommAcceptCbPtrFun(httpsAccept, s));
+                                             CommAcceptCbPtrFun(httpsAccept, s));
 
         s->listener = new Comm::ListenStateData(fd, call, true);
 
