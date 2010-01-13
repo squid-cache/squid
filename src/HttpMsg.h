@@ -36,6 +36,7 @@
 
 #include "typedefs.h"
 #include "HttpHeader.h"
+#include "HttpStatusCode.h"
 #include "HttpVersion.h"
 #include "BodyPipe.h"
 

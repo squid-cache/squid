@@ -223,6 +223,7 @@ SQUIDCEXTERN const char *httpMakeVaryMark(HttpRequest * request, HttpReply const
 SQUIDCEXTERN int etagParseInit(ETag * etag, const char *str);
 SQUIDCEXTERN int etagIsEqual(const ETag * tag1, const ETag * tag2);
 
+#include "HttpStatusCode.h"
 SQUIDCEXTERN const char *httpStatusString(http_status status);
 
 /* Http Body */
