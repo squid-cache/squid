@@ -1044,9 +1044,7 @@ AC_ARG_ENABLE(kill-parent-hack,
   AS_HELP_STRING([--enable-kill-parent-hack],[Kill parent on shutdown]),
 [ if test "$enableval" = "yes" ; then
     AC_MSG_NOTICE([Kill parent on shutdown])
-    AC_DEFINE(KILL_PARENT_OPT,1,[A dangerous feature which causes Squid to kill its parent process
-    (presumably the RunCache script) upon receipt of SIGTERM or SIGINT.
-    Use with caution.])
+    AC_DEFINE(KILL_PARENT_OPT,1,[A dangerous feature which causes Squid to kill its parent process upon receipt of SIGTERM or SIGINT. Use with caution.])
   fi
 ])
 
@@ -3877,8 +3875,6 @@ AC_CONFIG_FILES([\
 	compat/Makefile \
 	lib/Makefile \
 	scripts/Makefile \
-	scripts/RunCache \
-	scripts/RunAccel \
 	src/Makefile \
 	src/base/Makefile \
 	src/acl/Makefile \
