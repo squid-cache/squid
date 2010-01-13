@@ -79,7 +79,7 @@ then
     top_build_prefix=${ac_top_build_prefix}
     AC_SUBST(top_build_prefix)
 
-    AC_LIBLTDL_CONVENIENCE(lib/libLtdl)
+    AC_LIBLTDL_CONVENIENCE
 fi
 AC_PROG_LIBTOOL
 AC_LTDL_DLLIB
@@ -3935,6 +3935,6 @@ AC_CONFIG_FILES([\
 AC_CONFIG_SUBDIRS(lib/libTrie)
 
 # must configure libltdl subdir unconditionally for "make distcheck" to work
-AC_CONFIG_SUBDIRS(lib/libLtdl)
+AC_CONFIG_SUBDIRS(libltdl)
 
 AC_OUTPUT
