@@ -1,4 +1,4 @@
-1158/*
+/*
  * DEBUG: section 0     CGI Cache Manager
  * AUTHOR: Duane Wessels
  *
