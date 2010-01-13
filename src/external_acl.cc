@@ -292,6 +292,7 @@ parse_externalAclHelper(external_acl ** list)
     a->ttl = DEFAULT_EXTERNAL_ACL_TTL;
     a->negative_ttl = -1;
     a->children = DEFAULT_EXTERNAL_ACL_CHILDREN;
+    a->cache_size = 256*1024;
     a->local_addr.SetLocalhost();
     a->quote = external_acl::QUOTE_METHOD_URL;
 
