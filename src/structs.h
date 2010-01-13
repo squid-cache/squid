@@ -618,6 +618,8 @@ struct SquidConfig {
 #if USE_LOADABLE_MODULES
     wordlist *loadable_module_names;
 #endif
+
+    int client_ip_max_connections;
 };
 
 SQUIDCEXTERN SquidConfig Config;

@@ -5469,6 +5469,24 @@ accept_filter httpready
 accept_filter data
 DOC_END
 
+NAME: client_ip_max_connections
+TYPE: int
+LOC: Config.client_ip_max_connections
+DEFAULT: -1
+DOC_START
+	Set an absolute limit on the number of connections a single
+	client IP can use. Any more than this and Squid will begin to drop
+	new connections from the client until it closes some links.
+
+	Note that this is a global limit. It affects all HTTP, HTCP, Gopher and FTP
+	connections from the client. For finer control use the ACL access controls.
+
+	Requires client_db to be enabled (the default).
+
+	WARNING: This may noticably slow down traffic received via external proxies
+	or NAT devices and cause them to rebound error messages back to their clients.
+DOC_END
+
 NAME: tcp_recv_bufsize
 COMMENT: (bytes)
 TYPE: b_size_t

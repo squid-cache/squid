@@ -48,6 +48,7 @@
 #include "icmp/net_db.h"
 #include "ip/IpAddress.h"
 #include "ip/IpIntercept.h"
+#include "protos.h"
 
 #if defined(_SQUID_CYGWIN_)
 #include <sys/ioctl.h>
@@ -1395,6 +1396,14 @@ comm_old_accept(int fd, ConnectionDetail &details)
     }
 
     details.peer = *gai;
+
+    if ( Config.client_ip_max_connections >= 0) {
+        if (clientdbEstablished(details.peer, 0) > Config.client_ip_max_connections) {
+            debugs(50, DBG_IMPORTANT, "WARNING: " << details.peer << " attempting more than " << Config.client_ip_max_connections << " connections.");
+            details.me.FreeAddrInfo(gai);
+            return COMM_ERROR;
+        }
+    }
 
     details.me.InitAddrInfo(gai);
 
