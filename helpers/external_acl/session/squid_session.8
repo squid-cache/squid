@@ -1,62 +1,88 @@
-.TH squid_session 8 "19 March 2006" "Version 1.0"
+.if !'po4a'hide' .TH squid_session 8 "19 March 2006"
 .
 .SH NAME
-squid_session - Squid session tracking external acl group helper
+.if !'po4a'hide' .B squid_session
+.if !'po4a'hide' \-
+Squid session tracking external acl group helper.
+.PP
+Version 1.0
 .
 .SH SYNOPSIS
-squid_session [-t idle_timeout] [-b dbpath] [-a]
+.if !'po4a'hide' .B squid_session
+.if !'po4a'hide' .B "[\-t"
+timeout
+.if !'po4a'hide' .B "] [\-b"
+database
+.if !'po4a'hide' .B "] [\-a]"
 .
 .SH DESCRIPTION
-This helper maintains a concept of sessions by monitoring requests
+.B squid_session
+maintains a concept of sessions by monitoring requests
 and timing out sessions if no requests have been seen for the idle timeout
 timer.
-.P
+.PP
 Intended use is for displaying "terms of use" pages, ad popups etc.
 .
-.TP
-.BI "-t " "idletimeout " "(default 3600)"
-Specifies the session idle timeout timer.
+.SH OPTIONS
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B "\-t timeout"
+.B Timeout
+for any session. If not specified the default is 3600 seconds.
 .
-.TP
-.BI "-b " "dbpath"
-Path to persistent database. If not specified the session details
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B "\-b path"
+.B Path
+to persistent database. If not specified the session details
 will be kept in memory only and all sessions will reset each time
 Squid restarts it's helpers (Squid restart or rotation of logs).
 .
-.TP
-.B "-a"
+.if !'po4a'hide' .TP
+.if !'po4a'hide' .B \-a
 Active mode. In this mode sessions are started by evaluating an
-acl with the argument LOGIN, or terminated by the argument LOGOUT.
-.P
+acl with the argument
+.B LOGIN
+, or terminated by the argument
+.B LOGOUT
+.PP
 Without this flag the helper automatically starts the session after
 the first request.
 .
-.SH EXAMPLE
-.P
+.SH CONFIGURATION
+.PP
 Configuration example using the default automatic mode
-.IP
-external_acl_type session ttl=300 negative_ttl=0 children=1 concurrency=200 %LOGIN /usr/local/squid/libexec/squid_session
-.IP
-acl session external session
-.IP
-http_access deny !session
-.IP
-deny_info http://your.server/bannerpage?url=%s session
-.P
-Then set up http://your.server/bannerpage to display a session startup page and then redirect the user back to the requested URL given in the url query parameter.
+.if !'po4a'hide' .RS
+.if !'po4a'hide' external_acl_type session ttl=300 negative_ttl=0 children=1 concurrency=200 %LOGIN /usr/local/squid/libexec/squid_session
+.if !'po4a'hide' acl session external session
+.if !'po4a'hide' http_access deny !session
+.if !'po4a'hide' deny_info http://your.server.example.com/bannerpage?url=%s session
+.if !'po4a'hide' .RE
+.PP
+Then set up http://your.server.example.com/bannerpage to display a session startup
+page and then redirect the user back to the requested URL given in the url query parameter.
+.
 .SH AUTHOR
-This helper and documentation was written by 
-.I Henrik Nordstrom <henrik@henriknordstrom.net>
+This program and documentation was written by
+.if !'po4a'hide' .I Henrik Nordstrom <henrik@henriknordstrom.net>
+.
+.SH COPYRIGHT
+This program and documentation is copyright to the authors named above.
+.PP
+Distributed under the GNU General Public License (GNU GPL) version 2 or later (GPL2+).
 .
 .SH QUESTIONS
-Any questions on usage can be sent to 
-.IR "Squid Users <squid-users@squid-cache.org>" .
+Questions on the usage of this program can be sent to the
+.I Squid Users mailing list
+.if !'po4a'hide' <squid-users@squid-cache.org>
 .
 .SH REPORTING BUGS
-Report bugs or bug-fixes to
+Report bugs or bug fixes using http://bugs.squid-cache.org/
+.PP
+Report serious security bugs to
 .I Squid Bugs <squid-bugs@squid-cache.org>
-or ideas for new improvements to 
-.I Squid Developers <squid-dev@squid-cache.org>
+.PP
+Report ideas for new improvements to the
+.I Squid Developers mailing list
+.if !'po4a'hide' <squid-dev@squid-cache.org>
 .
-.SH "SEE ALSO"
-.BR squid ( 8 )
+.SH SEE ALSO
+.if !'po4a'hide' .BR squid "(8)"
