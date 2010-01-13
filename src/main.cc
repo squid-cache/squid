@@ -720,7 +720,11 @@ mainReconfigureFinish(void *)
     if (Config2.onoff.enable_purge)
         Config2.onoff.enable_purge = 2;
 
-    parseConfigFile(ConfigFile);
+    // parse the config returns a count of errors encountered.
+    if ( parseConfigFile(ConfigFile) != 0) {
+        // for now any errors are a fatal condition...
+        self_destruct();
+    }
 
     setUmask(Config.umask);
     Mem::Report();
@@ -1119,13 +1123,16 @@ static int SquidMainSafe(int argc, char **argv);
 /* When USE_WIN32_SERVICE is defined, the main function is placed in win32.cc */
 extern "C" void WINAPI
 SquidWinSvcMain(int argc, char **argv)
-#else
-int
-main(int argc, char **argv)
-#endif
 {
     SquidMainSafe(argc, argv);
 }
+#else
+int
+main(int argc, char **argv)
+{
+    return SquidMainSafe(argc, argv);
+}
+#endif
 
 static int
 SquidMainSafe(int argc, char **argv)
@@ -1260,8 +1267,7 @@ SquidMain(int argc, char **argv)
 
         Mem::Report();
 
-        if (opt_parse_cfg_only)
-
+        if (opt_parse_cfg_only || parse_err > 0)
             return parse_err;
     }
     setUmask(Config.umask);
