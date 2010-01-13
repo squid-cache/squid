@@ -100,11 +100,11 @@ fi
 
 # Collate Manual Pages and generate HTML versions
 if (groff --help >/dev/null); then
-	make -C ${tmpdir}/doc all
+	make -C ${tmpdir}/src squid.8
 	if [ ! -d ${tmpdir}/doc/manuals ] ; then
 		mkdir -p ${tmpdir}/doc/manuals
 	fi
-	for f in `ls -1 ${tmpdir}/helpers/*/*/*.8 ${tmpdir}/doc/*.8 ${tmpdir}/tools/*.1 ${tmpdir}/tools/*.8 ./helpers/*/*/*.8 2>/dev/null` ; do
+	for f in `ls -1 ${tmpdir}/helpers/*/*/*.8 ${tmpdir}/src/*.8 ${tmpdir}/tools/*.1 ${tmpdir}/tools/*.8 ./helpers/*/*/*.8 2>/dev/null` ; do
 		cp $f ${tmpdir}/doc/manuals/
 	done
 	for f in `ls -1 ${tmpdir}/doc/manuals/*.1  ${tmpdir}/doc/manuals/*.8 2>/dev/null` ; do

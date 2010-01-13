@@ -35,6 +35,7 @@
 
 #include "squid.h"
 #include "event.h"
+#include "fde.h"
 #include "Store.h"
 #include "CacheManager.h"
 #include "StoreClient.h"

@@ -144,7 +144,6 @@ SQUIDCEXTERN void fd_open(int fd, unsigned int type, const char *);
 SQUIDCEXTERN void fd_note(int fd, const char *);
 SQUIDCEXTERN void fd_bytes(int fd, int len, unsigned int type);
 SQUIDCEXTERN void fdDumpOpen(void);
-SQUIDCEXTERN int fdNFree(void);
 SQUIDCEXTERN int fdUsageHigh(void);
 SQUIDCEXTERN void fdAdjustReserved(void);
 
