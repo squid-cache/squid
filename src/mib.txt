@@ -724,15 +724,15 @@ squid MODULE-IDENTITY
         ::= { cacheMesh 1 }
 
 	cachePeerEntry OBJECT-TYPE
-		SYNTAX CachePeerEntry
+		SYNTAX CachePeerTableEntry
 		MAX-ACCESS not-accessible
 		STATUS current
 		DESCRIPTION
-			" An entry in cachePeerTable "
+			" An entry in cachePeerTable (version 3) "
 		INDEX 	{ cachePeerIndex }
-	::= { cachePeerTable 1 }
+	::= { cachePeerTable 3 }
 
-	CachePeerEntry ::= SEQUENCE {
+	CachePeerTableEntry ::= SEQUENCE {
 	  cachePeerIndex	CachePeerTableIndex, 
 	  cachePeerName		DisplayString,
 	  cachePeerAddressType  InetAddressType,

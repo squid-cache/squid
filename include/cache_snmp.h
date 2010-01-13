@@ -236,7 +236,7 @@ enum {
     MESH_END
 };
 
-/* cachePeerTable CachePeerEntry */
+/* CachePeerTableEntry (version 3) */
 enum {
     MESH_PTBL_START     = 0,
     MESH_PTBL_INDEX     = 1,  /* cachePeerIndex  */
