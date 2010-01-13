@@ -82,30 +82,32 @@
  */
 
 #include "squid.h"
-#include "client_side.h"
-#include "clientStream.h"
-#include "ProtoPort.h"
+
+#include "acl/FilledChecklist.h"
 #include "auth/UserRequest.h"
-#include "Store.h"
+#include "ChunkedCodingParser.h"
+#include "client_side.h"
+#include "client_side_reply.h"
+#include "client_side_request.h"
+#include "ClientRequestContext.h"
+#include "clientStream.h"
 #include "comm.h"
+#include "comm/ListenStateData.h"
+#include "ConnectionDetail.h"
+#include "eui/Config.h"
+#include "fde.h"
 #include "HttpHdrContRange.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
 #include "ident/Config.h"
 #include "ident/Ident.h"
 #include "ip/IpIntercept.h"
-#include "MemObject.h"
-#include "fde.h"
-#include "client_side_request.h"
-#include "acl/FilledChecklist.h"
-#include "ConnectionDetail.h"
-#include "client_side_reply.h"
-#include "ClientRequestContext.h"
 #include "MemBuf.h"
-#include "SquidTime.h"
-#include "ChunkedCodingParser.h"
-#include "eui/Config.h"
+#include "MemObject.h"
+#include "ProtoPort.h"
 #include "rfc1738.h"
+#include "SquidTime.h"
+#include "Store.h"
 
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
@@ -148,7 +150,6 @@ static CSCB clientSocketRecipient;
 static CSD clientSocketDetach;
 static void clientSetKeepaliveFlag(ClientHttpRequest *);
 static int clientIsContentLengthValid(HttpRequest * r);
-static bool okToAccept();
 static int clientIsRequestBodyValid(int64_t bodyLength);
 static int clientIsRequestBodyTooLargeForPolicy(int64_t bodyLength);
 
@@ -2965,8 +2966,6 @@ ConnStateData::requestTimeout(const CommTimeoutCbParams &io)
 #endif
 }
 
-
-
 static void
 clientLifetimeTimeout(int fd, void *data)
 {
@@ -2975,22 +2974,6 @@ clientLifetimeTimeout(int fd, void *data)
     debugs(33, 1, "\t" << http->uri);
     http->al.http.timedout = true;
     comm_close(fd);
-}
-
-static bool
-okToAccept()
-{
-    static time_t last_warn = 0;
-
-    if (fdNFree() >= RESERVED_FD)
-        return true;
-
-    if (last_warn + 15 < squid_curtime) {
-        debugs(33, 0, HERE << "WARNING! Your cache is running out of filedescriptors");
-        last_warn = squid_curtime;
-    }
-
-    return false;
 }
 
 ConnStateData *
@@ -3046,16 +3029,6 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
 {
     http_port_list *s = (http_port_list *)data;
     ConnStateData *connState = NULL;
-
-    if (flag == COMM_ERR_CLOSING) {
-        return;
-    }
-
-    if (!okToAccept())
-        AcceptLimiter::Instance().defer (sock, httpAccept, data);
-    else
-        /* kick off another one for later */
-        comm_accept(sock, httpAccept, data);
 
     if (flag != COMM_OK) {
         debugs(33, 1, "httpAccept: FD " << sock << ": accept failure: " << xstrerr(xerrno));
@@ -3263,16 +3236,6 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
     https_port_list *s = (https_port_list *)data;
     SSL_CTX *sslContext = s->sslContext;
 
-    if (flag == COMM_ERR_CLOSING) {
-        return;
-    }
-
-    if (!okToAccept())
-        AcceptLimiter::Instance().defer (sock, httpsAccept, data);
-    else
-        /* kick off another one for later */
-        comm_accept(sock, httpsAccept, data);
-
     if (flag != COMM_OK) {
         errno = xerrno;
         debugs(33, 1, "httpsAccept: FD " << sock << ": accept failure: " << xstrerr(xerrno));
@@ -3308,7 +3271,6 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
         if (identChecklist.fastCheck())
             Ident::Start(details->me, details->peer, clientIdentDone, connState);
     }
-
 #endif
 
     if (s->http.tcp_keepalive.enabled) {
@@ -3384,6 +3346,8 @@ clientHttpConnectionsOpen(void)
             ++bumpCount;
 #endif
 
+        /* AYJ: 2009-12-27: bit bumpy. new ListenStateData(...) should be doing all the Comm:: stuff ... */
+
         enter_suid();
 
         if (s->spoof_client_ip) {
@@ -3397,9 +3361,10 @@ clientHttpConnectionsOpen(void)
         if (fd < 0)
             continue;
 
-        comm_listen(fd);
+        AsyncCall::Pointer call = commCbCall(5,5, "SomeCommAcceptHandler(httpAccept)",
+                                             CommAcceptCbPtrFun(httpAccept, s));
 
-        comm_accept(fd, httpAccept, s);
+        s->listener = new Comm::ListenStateData(fd, call, true);
 
         debugs(1, 1, "Accepting " <<
                (s->intercepted ? " intercepted" : "") <<
@@ -3450,9 +3415,10 @@ clientHttpsConnectionsOpen(void)
         if (fd < 0)
             continue;
 
-        comm_listen(fd);
+        AsyncCall::Pointer call = commCbCall(5,5, "SomeCommAcceptHandler(httpsAccept)",
+                                             CommAcceptCbPtrFun(httpsAccept, s));
 
-        comm_accept(fd, httpsAccept, s);
+        s->listener = new Comm::ListenStateData(fd, call, true);
 
         debugs(1, 1, "Accepting HTTPS connections at " << s->http.s << ", FD " << fd << ".");
 
@@ -3467,7 +3433,6 @@ clientOpenListenSockets(void)
 {
     clientHttpConnectionsOpen();
 #if USE_SSL
-
     clientHttpsConnectionsOpen();
 #endif
 
@@ -3478,15 +3443,27 @@ clientOpenListenSockets(void)
 void
 clientHttpConnectionsClose(void)
 {
-    int i;
-
-    for (i = 0; i < NHttpSockets; i++) {
-        if (HttpSockets[i] >= 0) {
-            debugs(1, 1, "FD " << HttpSockets[i] <<
-                   " Closing HTTP connection");
-            comm_close(HttpSockets[i]);
-            HttpSockets[i] = -1;
+    for (http_port_list *s = Config.Sockaddr.http; s; s = s->next) {
+        if (s->listener) {
+            debugs(1, 1, "FD " << s->listener->fd << " Closing HTTP connection");
+            delete s->listener;
+            s->listener = NULL;
         }
+    }
+
+#if USE_SSL
+    for (http_port_list *s = Config.Sockaddr.https; s; s = s->next) {
+        if (s->listener) {
+            debugs(1, 1, "FD " << s->listener->fd << " Closing HTTPS connection");
+            delete s->listener;
+            s->listener = NULL;
+        }
+    }
+#endif
+
+    // TODO see if we can drop HttpSockets array entirely */
+    for (int i = 0; i < NHttpSockets; i++) {
+        HttpSockets[i] = -1;
     }
 
     NHttpSockets = 0;
