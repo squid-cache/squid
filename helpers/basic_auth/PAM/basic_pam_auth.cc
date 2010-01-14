@@ -230,10 +230,10 @@ start:
         conv.appdata_ptr = (char *) password_buf;	/* from buf above. not allocated */
 
 #if _SQUID_SOLARIS_
-            /* Workaround for Solaris 2.6 where the PAM library is broken
-             * and does not pass appdata_ptr to the conversation routine
-             */
-            password = password_buf;
+        /* Workaround for Solaris 2.6 where the PAM library is broken
+         * and does not pass appdata_ptr to the conversation routine
+         */
+        password = password_buf;
 #endif
         if (ttl == 0) {
             /* Create PAM connection */
