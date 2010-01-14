@@ -36,6 +36,7 @@
 #include "event.h"
 #include "CacheManager.h"
 #include "ClientInfo.h"
+#include "ip/IpAddress.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -412,26 +413,37 @@ client_entry(IpAddress *current)
 variable_list *
 snmp_meshCtblFn(variable_list * Var, snint * ErrP)
 {
-    variable_list *Answer = NULL;
-    static char key[16];
+    char key[MAX_IPSTRLEN];
     ClientInfo *c = NULL;
-    int aggr = 0;
+    IpAddress keyIp;
 
-    log_type l;
     *ErrP = SNMP_ERR_NOERROR;
-    debugs(49, 6, "snmp_meshCtblFn: Current : ");
-    snmpDebugOid(6, Var->name, Var->name_length);
-    /* FIXME INET6 : This must implement the key for IPv6 address */
-    snprintf(key, sizeof(key), "%d.%d.%d.%d", Var->name[LEN_SQ_NET + 3], Var->name[LEN_SQ_NET + 4],
-             Var->name[LEN_SQ_NET + 5], Var->name[LEN_SQ_NET + 6]);
-    debugs(49, 5, "snmp_meshCtblFn: [" << key << "] requested!");
-    c = (ClientInfo *) hash_lookup(client_table, key);
-
-    if (c == NULL) {
-        debugs(49, 5, "snmp_meshCtblFn: not found.");
+    MemBuf tmp;
+    debugs(49, 6, HERE << "Current : length=" << Var->name_length << ": " << snmpDebugOid(Var->name, Var->name_length, tmp));
+    if (Var->name_length == 16 ) {
+        oid2addr(&(Var->name[12]), keyIp, 4);
+#if USE_IPV6
+    } else if (Var->name_length == 28 ) {
+        oid2addr(&(Var->name[12]), keyIp, 16);
+#endif
+    } else {
         *ErrP = SNMP_ERR_NOSUCHNAME;
         return NULL;
     }
+
+    keyIp.NtoA(key, sizeof(key));
+    debugs(49, 5, HERE << "[" << key << "] requested!");
+    c = (ClientInfo *) hash_lookup(client_table, key);
+
+    if (c == NULL) {
+        debugs(49, 5, HERE << "not found.");
+        *ErrP = SNMP_ERR_NOSUCHNAME;
+        return NULL;
+    }
+
+    variable_list *Answer = NULL;
+    int aggr = 0;
+    log_type l;
 
     switch (Var->name[LEN_SQ_NET + 2]) {
 
