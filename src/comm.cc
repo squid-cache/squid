@@ -45,6 +45,7 @@
 #include "MemBuf.h"
 #include "pconn.h"
 #include "SquidTime.h"
+#include "protos.h"
 
 #if defined(_SQUID_CYGWIN_)
 #include <sys/ioctl.h>
@@ -1354,6 +1355,13 @@ comm_old_accept(int fd, ConnectionDetail &details)
 
     Slen = sizeof(details.me);
     memset(&details.me, '\0', Slen);
+
+    if ( Config.client_ip_max_connections >= 0) {
+        if (clientdbEstablished(details.peer, 0) > Config.client_ip_max_connections) {
+            debugs(50, DBG_IMPORTANT, "WARNING: " << inet_ntoa(details.peer.sin_addr) << " attempting more than " << Config.client_ip_max_connections << " connections.");
+            return COMM_ERROR;
+        }
+    }
 
     getsockname(sock, (struct sockaddr *) &details.me, &Slen);
     commSetCloseOnExec(sock);

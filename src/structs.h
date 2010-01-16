@@ -743,6 +743,7 @@ struct _SquidConfig
 
     char *accept_filter;
     int umask;
+    int client_ip_max_connections;
 };
 
 struct _SquidConfig2
