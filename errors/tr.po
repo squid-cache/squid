@@ -3,13 +3,13 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-01-10 22:56+1300\n"
-"PO-Revision-Date: 2010-01-07 12:45+0000\n"
+"PO-Revision-Date: 2010-01-10 15:46+0000\n"
 "Last-Translator: Hüseyin Sevgi <hsevgi@msn.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Launchpad-Export-Date: 2010-01-09 15:00+0000\n"
+"X-Launchpad-Export-Date: 2010-01-16 02:24+0000\n"
 "X-Generator: Launchpad (build Unknown)\n"
 "Language: tr\n"
 
@@ -206,7 +206,7 @@ msgstr "FTP şu anda kapalı."
 
 #: templates/ERR_SECURE_CONNECT_FAIL:5
 msgid "Failed to establish a secure connection to %I"
-msgstr ""
+msgstr "%I ile güvenli bağlantı kurma başarısız"
 
 #: templates/ERR_FTP_PUT_CREATED:3
 msgid "File created"
@@ -261,6 +261,7 @@ msgid ""
 "If you are making a POST or PUT request, then the item you are trying to "
 "upload is too large."
 msgstr ""
+"Bir POST veya PUT isteği yapıyorsanız yüklemeye çalıştığınız öğe çok büyük."
 
 #: templates/ERR_INVALID_REQ:11 templates/ERR_INVALID_URL:11
 msgid "Illegal character in hostname; underscores are not allowed."
@@ -408,7 +409,7 @@ msgstr "DNS sunucusundan gelen cevap:"
 
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
-msgstr ""
+msgstr "ESI işlemi geri döndü:"
 
 #: templates/ERR_FTP_UNAVAILABLE:4
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
@@ -452,7 +453,7 @@ msgstr ""
 msgid ""
 "The following error was encountered while trying to retrieve the URN: <a "
 "href=\"%U\">%U</a>"
-msgstr ""
+msgstr "URN: <a href=\"%U\">%U</a> erişilirken bir hata ile karşılaşıldı."
 
 #: templates/ERR_CONNECT_FAIL:7
 msgid "The remote host or network may be down.  Please try the request again."
@@ -511,7 +512,7 @@ msgstr ""
 
 #: templates/ERR_UNSUP_HTTPVERSION:6
 msgid "This Squid does not accept the HTTP version you are attempting to use."
-msgstr ""
+msgstr "Squid kullandığınız HTTP versiyonunu kabul etmiyor."
 
 #: templates/ERR_FTP_DISABLED:6
 msgid "This cache does not support FTP."
@@ -522,6 +523,8 @@ msgid ""
 "This cache is in the process of shutting down and can not service your "
 "request at this time.  Please retry your request again soon."
 msgstr ""
+"Bu önbellik şuan kapatılıyor ve isteğinize cevap veremez. Lütfen kısa bir "
+"süre sonra tekrar deneyin."
 
 #: templates/ERR_FORWARDING_DENIED:6
 msgid ""
@@ -542,6 +545,8 @@ msgid ""
 "This means that the FTP server may not have permission or space to store the "
 "file. Check the path, permissions, diskspace and try again."
 msgstr ""
+"FTP sunucusunun dosya saklamak için izni olmayabilir. Paketi,izinleri ve "
+"disk alanını kontrol edin ve tekrar deneyin."
 
 #: templates/ERR_DNS_FAIL:7
 #, fuzzy
@@ -595,7 +600,7 @@ msgstr "Şu anda sizi yönlendiremem."
 
 #: templates/ERR_UNSUP_HTTPVERSION:3 templates/ERR_UNSUP_HTTPVERSION:5
 msgid "Unsupported HTTP version"
-msgstr ""
+msgstr "Desteklenmeyen HTTP versiyonu."
 
 #: templates/ERR_UNSUP_REQ:5
 msgid "Unsupported Request Method and Protocol"
@@ -643,7 +648,7 @@ msgstr ""
 #: templates/ERR_UNSUP_REQ:7 templates/ERR_URN_RESOLVE:7
 #: templates/ERR_WRITE_ERROR:8 templates/ERR_ZERO_SIZE_OBJECT:7
 msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
-msgstr ""
+msgstr "Önbellk yöneticiniz <a href=\"mailto:%w%W\">%w</a>."
 
 #: templates/ERR_INVALID_RESP:6
 msgid ""
@@ -653,7 +658,7 @@ msgstr ""
 
 #: templates/ERR_ESI:8
 msgid "Your webmaster is <a href=\"mailto:%w\">%w</a>."
-msgstr ""
+msgstr "Senin webmaster'ın <a href=\"mailto:%w\">%w</a>."
 
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
