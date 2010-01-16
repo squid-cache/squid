@@ -1572,8 +1572,8 @@ snmp_netIdnsFn(variable_list * Var, snint * ErrP)
 {
     int i, n = 0;
     variable_list *Answer = NULL;
-    debugs(49, 5, "snmp_netDnsFn: Processing request: ");
-    snmpDebugOid(5, Var->name, Var->name_length);
+    MemBuf tmp;
+    debugs(49, 5, "snmp_netDnsFn: Processing request: " << snmpDebugOid(Var->name, Var->name_length, tmp));
     *ErrP = SNMP_ERR_NOERROR;
 
     switch (Var->name[LEN_SQ_NET + 1]) {
