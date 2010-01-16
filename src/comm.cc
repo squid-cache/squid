@@ -1357,7 +1357,7 @@ comm_old_accept(int fd, ConnectionDetail &details)
     memset(&details.me, '\0', Slen);
 
     if ( Config.client_ip_max_connections >= 0) {
-        if (clientdbEstablished(details.peer, 0) > Config.client_ip_max_connections) {
+        if (clientdbEstablished(details.peer.sin_addr, 0) > Config.client_ip_max_connections) {
             debugs(50, DBG_IMPORTANT, "WARNING: " << inet_ntoa(details.peer.sin_addr) << " attempting more than " << Config.client_ip_max_connections << " connections.");
             return COMM_ERROR;
         }
