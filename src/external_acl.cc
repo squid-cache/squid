@@ -223,6 +223,8 @@ parse_externalAclHelper(external_acl ** list)
     a->ttl = DEFAULT_EXTERNAL_ACL_TTL;
     a->negative_ttl = -1;
     a->children = DEFAULT_EXTERNAL_ACL_CHILDREN;
+    a->cache_size = 256*1024;
+    a->quote = external_acl::QUOTE_METHOD_URL;
 
     token = strtok(NULL, w_space);
 
@@ -232,8 +234,6 @@ parse_externalAclHelper(external_acl ** list)
     a->name = xstrdup(token);
 
     token = strtok(NULL, w_space);
-
-    a->quote = external_acl::QUOTE_METHOD_URL;
 
     /* Parse options */
     while (token) {
