@@ -104,17 +104,19 @@ password_conversation(int num_msg, const struct pam_message **msg, struct pam_re
         fprintf(stderr, "ERROR: Unexpected PAM converstaion '%d/%s'\n", msg[0]->msg_style, msg[0]->msg);
         return PAM_CONV_ERR;
     }
+#if _SQUID_SOLARIS_
     if (!appdata_ptr) {
         /* Workaround for Solaris 2.6 where the PAM library is broken
          * and does not pass appdata_ptr to the conversation routine
          */
         appdata_ptr = password;
     }
+#endif
     if (!appdata_ptr) {
         fprintf(stderr, "ERROR: No password available to password_converstation!\n");
         return PAM_CONV_ERR;
     }
-    *resp = calloc(num_msg, sizeof(struct pam_response));
+    *resp = static_cast<struct pam_response *>(calloc(num_msg, sizeof(struct pam_response)));
     if (!*resp) {
         fprintf(stderr, "ERROR: Out of memory!\n");
         return PAM_CONV_ERR;
@@ -148,7 +150,7 @@ main(int argc, char *argv[])
     pam_handle_t *pamh = NULL;
     int retval = PAM_SUCCESS;
     char *user;
-    /* char *password; */
+    char *password_buf;
     char buf[BUFSIZE];
     time_t pamh_created = 0;
     int ttl = DEFAULT_SQUID_PAM_TTL;
@@ -190,22 +192,28 @@ start:
 
     while (fgets(buf, BUFSIZE, stdin)) {
         user = buf;
-        password = strchr(buf, '\n');
-        if (!password) {
+        password_buf = strchr(buf, '\n');
+        if (!password_buf) {
             fprintf(stderr, "authenticator: Unexpected input '%s'\n", buf);
             goto error;
         }
-        *password = '\0';
-        password = strchr(buf, ' ');
-        if (!password) {
+        *password_buf = '\0';
+        password_buf = strchr(buf, ' ');
+        if (!password_buf) {
             fprintf(stderr, "authenticator: Unexpected input '%s'\n", buf);
             goto error;
         }
-        *password++ = '\0';
+        *password_buf++ = '\0';
         rfc1738_unescape(user);
-        rfc1738_unescape(password);
-        conv.appdata_ptr = (char *) password;	/* from buf above. not allocated */
+        rfc1738_unescape(password_buf);
+        conv.appdata_ptr = (char *) password_buf;	/* from buf above. not allocated */
 
+#if _SQUID_SOLARIS_
+        /* Workaround for Solaris 2.6 where the PAM library is broken
+         * and does not pass appdata_ptr to the conversation routine
+         */
+        password = password_buf;
+#endif
         if (ttl == 0) {
             /* Create PAM connection */
             retval = pam_start(service, user, &conv, &pamh);

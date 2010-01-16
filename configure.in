@@ -2209,6 +2209,7 @@ AC_CHECK_HEADERS( \
 	shadow.h \
 	regex.h \
 	sched.h \
+	security/pam_appl.h \
 	signal.h \
 	sstream \
 	stdarg.h \
