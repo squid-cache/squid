@@ -217,11 +217,11 @@ aclParseAclList(ConfigParser &parser, ACLList ** head)
             t++;
         }
 
-        debugs(28, 3, "aclParseAccessLine: looking for ACL name '" << t << "'");
+        debugs(28, 3, "aclParseAclList: looking for ACL name '" << t << "'");
         a = ACL::FindByName(t);
 
         if (a == NULL) {
-            debugs(28, 0, "aclParseAccessLine: ACL name '" << t << "' not found.");
+            debugs(28, 0, "aclParseAclList: ACL name '" << t << "' not found.");
             delete L;
             parser.destruct();
             continue;

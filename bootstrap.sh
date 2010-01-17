@@ -82,12 +82,7 @@ bootstrap_libtoolize() {
     # instead of manualy moving files from ltdl to lib/libLtdl
     if egrep -q '^[[:space:]]*AC_LIBLTDL_' configure.in
     then
-	if libtoolize$ltver --help | grep -q -- --ltdl.=; then
-	    ltdl="--ltdl=lib/libLtdl"
-	else
-	    ltdl="--ltdl"
-	    copy_libltdl=1
-	fi
+	ltdl="--ltdl"
     else
         ltdl=""
     fi
@@ -95,7 +90,7 @@ bootstrap_libtoolize() {
     bootstrap libtoolize$ltver $ltdl --force --copy --automake
 
     # customize generated libltdl, if any
-    if test -d libltdl && [ $copy_libltdl ]
+    if test -d libltdl
     then
         src=libltdl
 
@@ -106,19 +101,6 @@ bootstrap_libtoolize() {
         chmod u+w $makefile
         mv $makefile.new $makefile
         chmod u-w $makefile
-
-        dest=lib/libLtdl
-        # move $src to $dest
-	if test -d $dest # already exists
-	then
-	    echo "Updating $dest from $src."
-            chmod u+w $dest/*
-            mv $src/* $dest/
-            rmdir $src
-	else
-	    echo "Creating $dest from $src."
-	    mv $src $dest
-        fi
     fi
 }
 

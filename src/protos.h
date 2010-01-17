@@ -144,7 +144,6 @@ SQUIDCEXTERN void fd_open(int fd, unsigned int type, const char *);
 SQUIDCEXTERN void fd_note(int fd, const char *);
 SQUIDCEXTERN void fd_bytes(int fd, int len, unsigned int type);
 SQUIDCEXTERN void fdDumpOpen(void);
-SQUIDCEXTERN int fdNFree(void);
 SQUIDCEXTERN int fdUsageHigh(void);
 SQUIDCEXTERN void fdAdjustReserved(void);
 
@@ -227,6 +226,7 @@ SQUIDCEXTERN const char *httpMakeVaryMark(HttpRequest * request, HttpReply const
 SQUIDCEXTERN int etagParseInit(ETag * etag, const char *str);
 SQUIDCEXTERN int etagIsEqual(const ETag * tag1, const ETag * tag2);
 
+#include "HttpStatusCode.h"
 SQUIDCEXTERN const char *httpStatusString(http_status status);
 
 /* Http Body */
@@ -282,13 +282,13 @@ SQUIDCEXTERN void httpHeaderStoreReport(StoreEntry * e);
 SQUIDCEXTERN void httpHdrMangleList(HttpHeader *, HttpRequest *, int req_or_rep);
 SQUIDCEXTERN int httpReqHdrManglersConfigured();
 
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 SQUIDCEXTERN PF snmpHandleUdp;
 SQUIDCEXTERN void snmpInit(void);
 SQUIDCEXTERN void snmpConnectionOpen(void);
 SQUIDCEXTERN void snmpConnectionShutdown(void);
 SQUIDCEXTERN void snmpConnectionClose(void);
-SQUIDCEXTERN void snmpDebugOid(int lvl, oid * Name, snint Len);
+SQUIDCEXTERN const char * snmpDebugOid(oid * Name, snint Len, MemBuf &outbuf);
 
 SQUIDCEXTERN void addr2oid(IpAddress &addr, oid *Dest);
 SQUIDCEXTERN void oid2addr(oid *Dest, IpAddress &addr, u_int code);

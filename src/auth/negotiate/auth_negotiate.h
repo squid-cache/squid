@@ -101,6 +101,8 @@ public:
 
 MEMPROXY_CLASS_INLINE(AuthNegotiateUserRequest);
 
+#include "HelperChildConfig.h"
+
 /* configuration runtime data */
 
 /// \ingroup AuthNegotiateAPI
@@ -119,7 +121,7 @@ public:
     virtual void parse(AuthConfig *, int, char *);
     virtual void registerWithCacheManager(void);
     virtual const char * type() const;
-    int authenticateChildren;
+    HelperChildConfig authenticateChildren;
     int keep_alive;
     wordlist *authenticate;
 };

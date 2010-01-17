@@ -510,10 +510,8 @@ digestScheme::done()
         return;
     }
 
-    if (digestauthenticators) {
-        helperFree(digestauthenticators);
-        digestauthenticators = NULL;
-    }
+    delete digestauthenticators;
+    digestauthenticators = NULL;
 
     authDigestUserShutdown();
     authenticateDigestNonceShutdown();
@@ -535,9 +533,9 @@ AuthDigestConfig::dump(StoreEntry * entry, const char *name, AuthConfig * scheme
         list = list->next;
     }
 
-    storeAppendPrintf(entry, "\n%s %s realm %s\n%s %s children %d\n%s %s nonce_max_count %d\n%s %s nonce_max_duration %d seconds\n%s %s nonce_garbage_interval %d seconds\n",
+    storeAppendPrintf(entry, "\n%s %s realm %s\n%s %s children %d startup=%d idle=%d concurrency=%d\n%s %s nonce_max_count %d\n%s %s nonce_max_duration %d seconds\n%s %s nonce_garbage_interval %d seconds\n",
                       name, "digest", digestAuthRealm,
-                      name, "digest", authenticateChildren,
+                      name, "digest", authenticateChildren.n_max, authenticateChildren.n_startup, authenticateChildren.n_idle, authenticateChildren.concurrency,
                       name, "digest", noncemaxuses,
                       name, "digest", (int) noncemaxduration,
                       name, "digest", (int) nonceGCInterval);
@@ -553,7 +551,7 @@ bool
 AuthDigestConfig::configured() const
 {
     if ((authenticate != NULL) &&
-            (authenticateChildren != 0) &&
+            (authenticateChildren.n_max != 0) &&
             (digestAuthRealm != NULL) && (noncemaxduration > -1))
         return true;
 
@@ -870,11 +868,11 @@ AuthDigestConfig::init(AuthConfig * scheme)
         authdigest_initialised = 1;
 
         if (digestauthenticators == NULL)
-            digestauthenticators = helperCreate("digestauthenticator");
+            digestauthenticators = new helper("digestauthenticator");
 
         digestauthenticators->cmdline = authenticate;
 
-        digestauthenticators->n_to_start = authenticateChildren;
+        digestauthenticators->childs = authenticateChildren;
 
         digestauthenticators->ipc_type = IPC_STREAM;
 
@@ -903,12 +901,10 @@ AuthDigestConfig::done()
     safe_free(digestAuthRealm);
 }
 
-
-AuthDigestConfig::AuthDigestConfig()
+AuthDigestConfig::AuthDigestConfig() : authenticateChildren(20,0,1,1)
 {
     /* TODO: move into initialisation list */
     authenticate = NULL;
-    authenticateChildren = 5;
     /* 5 minutes */
     nonceGCInterval = 5 * 60;
     /* 30 minutes */
@@ -932,7 +928,7 @@ AuthDigestConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
 
         requirePathnameExists("auth_param digest program", authenticate->key);
     } else if (strcasecmp(param_str, "children") == 0) {
-        parse_int(&authenticateChildren);
+        authenticateChildren.parseConfig();
     } else if (strcasecmp(param_str, "realm") == 0) {
         parse_eol(&digestAuthRealm);
     } else if (strcasecmp(param_str, "nonce_garbage_interval") == 0) {

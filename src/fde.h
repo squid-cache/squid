@@ -94,6 +94,7 @@ public:
     void *write_data;
     AsyncCall::Pointer timeoutHandler;
     time_t timeout;
+    time_t writeStart;
     void *lifetime_data;
     AsyncCall::Pointer closeHandler;
     AsyncCall::Pointer halfClosedReader; /// read handler for half-closed fds
@@ -124,5 +125,7 @@ private:
     }
 
 };
+
+SQUIDCEXTERN int fdNFree(void);
 
 #endif /* SQUID_FDE_H */

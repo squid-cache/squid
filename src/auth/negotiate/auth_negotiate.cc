@@ -101,10 +101,20 @@ AuthNegotiateConfig::done()
 
     if (negotiateauthenticators) {
         helperStatefulShutdown(negotiateauthenticators);
-        helperStatefulFree(negotiateauthenticators);
-        negotiateauthenticators = NULL;
     }
 
+    if (!shutting_down)
+        return;
+
+    delete negotiateauthenticators;
+    negotiateauthenticators = NULL;
+
+    debugs(29, 2, "negotiateScheme::done: Negotiate authentication Shutdown.");
+}
+
+void
+AuthNegotiateConfig::done()
+{
     if (authenticate)
         wordlistDestroy(&authenticate);
 }
@@ -120,13 +130,13 @@ AuthNegotiateConfig::dump(StoreEntry * entry, const char *name, AuthConfig * sch
         list = list->next;
     }
 
-    storeAppendPrintf(entry, "\n%s negotiate children %d\n",
-                      name, authenticateChildren);
+    storeAppendPrintf(entry, "\n%s negotiate children %d startup=%d idle=%d concurrency=%d\n",
+                      name, authenticateChildren.n_max, authenticateChildren.n_startup, authenticateChildren.n_idle, authenticateChildren.concurrency);
     storeAppendPrintf(entry, "%s %s keep_alive %s\n", name, "negotiate", keep_alive ? "on" : "off");
 
 }
 
-AuthNegotiateConfig::AuthNegotiateConfig() : authenticateChildren(5), keep_alive(1), authenticate(NULL)
+AuthNegotiateConfig::AuthNegotiateConfig() : authenticateChildren(20,0,1,1), keep_alive(1), authenticate(NULL)
 { }
 
 void
@@ -140,7 +150,7 @@ AuthNegotiateConfig::parse(AuthConfig * scheme, int n_configured, char *param_st
 
         requirePathnameExists("auth_param negotiate program", authenticate->key);
     } else if (strcasecmp(param_str, "children") == 0) {
-        parse_int(&authenticateChildren);
+        authenticateChildren.parseConfig();
     } else if (strcasecmp(param_str, "keep_alive") == 0) {
         parse_onoff(&keep_alive);
     } else {
@@ -177,7 +187,7 @@ AuthNegotiateConfig::init(AuthConfig * scheme)
         authnegotiate_initialised = 1;
 
         if (negotiateauthenticators == NULL)
-            negotiateauthenticators = helperStatefulCreate("negotiateauthenticator");
+            negotiateauthenticators = new statefulhelper("negotiateauthenticator");
 
         if (!proxy_auth_cache)
             proxy_auth_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
@@ -186,7 +196,7 @@ AuthNegotiateConfig::init(AuthConfig * scheme)
 
         negotiateauthenticators->cmdline = authenticate;
 
-        negotiateauthenticators->n_to_start = authenticateChildren;
+        negotiateauthenticators->childs = authenticateChildren;
 
         negotiateauthenticators->ipc_type = IPC_STREAM;
 
@@ -214,7 +224,7 @@ AuthNegotiateConfig::active() const
 bool
 AuthNegotiateConfig::configured() const
 {
-    if ((authenticate != NULL) && (authenticateChildren != 0)) {
+    if ((authenticate != NULL) && (authenticateChildren.n_max != 0)) {
         debugs(29, 9, "AuthNegotiateConfig::configured: returning configured");
         return true;
     }
