@@ -693,7 +693,9 @@ mainReconfigureStart(void)
 #endif
 
     redirectShutdown();
-    authenticateShutdown();
+    authenticateShutdown(); /* destroys any unused auth schemas */
+    InitAuthSchemes();      /* create new ones required for config parsing */
+
     externalAclShutdown();
     storeDirCloseSwapLogs();
     storeLogClose();
@@ -747,7 +749,7 @@ mainReconfigureFinish(void *)
 #endif
 
     redirectInit();
-    authenticateInit(&Config.authConfiguration);
+    authenticateInit(&Auth::TheConfig);
     externalAclInit();
 #if USE_WCCP
 
@@ -789,7 +791,11 @@ mainRotate(void)
     dnsShutdown();
 #endif
     redirectShutdown();
-    authenticateShutdown();
+
+    /* TODO: should only terminate the helpers they are using.  nothing else. */
+    authenticateShutdown(); /* destroys any unused auth schemas */
+    InitAuthSchemes();      /* create new ones required for config parsing */
+
     externalAclShutdown();
 
     _db_rotate_log();		/* cache.log */
@@ -810,7 +816,7 @@ mainRotate(void)
     dnsInit();
 #endif
     redirectInit();
-    authenticateInit(&Config.authConfiguration);
+    authenticateInit(&Auth::TheConfig);
     externalAclInit();
 }
 
@@ -943,7 +949,7 @@ mainInitialize(void)
 
     redirectInit();
 
-    authenticateInit(&Config.authConfiguration);
+    authenticateInit(&Auth::TheConfig);
 
     externalAclInit();
 
@@ -1255,6 +1261,8 @@ SquidMain(int argc, char **argv)
 
         /* we may want the parsing process to set this up in the future */
         Store::Root(new StoreController);
+
+        InitAuthSchemes();      /* required for config parsing */
 
         parse_err = parseConfigFile(ConfigFile);
 

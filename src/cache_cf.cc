@@ -393,6 +393,8 @@ parseConfigFile(const char *file_name)
     int err_count = 0;
     CacheManager *manager=CacheManager::GetInstance();
 
+    debugs(5, 4, HERE);
+
     configFreeMemory();
 
     ACLMethodData::ThePurgeCount = 0;
@@ -1425,7 +1427,7 @@ check_null_string(char *s)
 }
 
 static void
-parse_authparam(authConfig * config)
+parse_authparam(Auth::authConfig * config)
 {
     char *type_str;
     char *param_str;
@@ -1436,38 +1438,43 @@ parse_authparam(authConfig * config)
     if ((param_str = strtok(NULL, w_space)) == NULL)
         self_destruct();
 
-    /* find a configuration for the scheme */
-    AuthConfig *scheme = AuthConfig::Find (type_str);
+    /* find a configuration for the scheme in the currently parsed configs... */
+    AuthConfig *schemeCfg = AuthConfig::Find(type_str);
 
-    if (scheme == NULL) {
-        /* Create a configuration */
-        AuthScheme *theScheme;
+    if (schemeCfg == NULL) {
+        /* Create a configuration based on the scheme info */
+        AuthScheme::Pointer theScheme = AuthScheme::Find(type_str);
 
-        if ((theScheme = AuthScheme::Find(type_str)) == NULL) {
-            debugs(3, 0, "Parsing Config File: Unknown authentication scheme '" << type_str << "'.");
-            return;
+        if (theScheme == NULL) {
+            debugs(3, DBG_CRITICAL, "Parsing Config File: Unknown authentication scheme '" << type_str << "'.");
+            self_destruct();
         }
 
         config->push_back(theScheme->createConfig());
-        scheme = config->back();
-        assert (scheme);
+        schemeCfg = AuthConfig::Find(type_str);
+        if (schemeCfg == NULL) {
+            debugs(3, DBG_CRITICAL, "Parsing Config File: Corruption configuring authentication scheme '" << type_str << "'.");
+            self_destruct();
+        }
     }
 
-    scheme->parse(scheme, config->size(), param_str);
+    schemeCfg->parse(schemeCfg, config->size(), param_str);
 }
 
 static void
-free_authparam(authConfig * cfg)
+free_authparam(Auth::authConfig * cfg)
 {
-    AuthConfig *scheme;
-    /* DON'T FREE THESE FOR RECONFIGURE */
+    /* Wipe the Auth globals and Detach/Destruct component config + state. */
+    cfg->clean();
 
-    if (reconfiguring)
-        return;
-
+    /* remove our pointers to the probably-dead sub-configs */
     while (cfg->size()) {
-        scheme = cfg->pop_back();
-        scheme->done();
+        cfg->pop_back();
+    }
+
+    /* on reconfigure initialize new auth schemes for the new config. */
+    if(reconfiguring) {
+        InitAuthSchemes();
     }
 }
 

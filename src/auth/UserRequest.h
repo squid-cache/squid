@@ -36,13 +36,12 @@
 #define SQUID_AUTHUSERREQUEST_H
 
 #include "auth/enums.h"
+#include "auth/Scheme.h"
 #include "dlink.h"
 #include "ip/IpAddress.h"
-#include "RefCount.h"
 #include "typedefs.h"
 #include "HttpHeader.h"
 
-class AuthScheme;
 class AuthUser;
 class ConnStateData;
 class HttpReply;
@@ -142,7 +141,7 @@ public:
      */
     char const *username() const;
 
-    AuthScheme *scheme() const;
+    AuthScheme::Pointer scheme() const;
 
     virtual const char * connLastHeader();
 

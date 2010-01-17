@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -35,6 +34,7 @@
 #define SQUID_BASICSCHEME_H
 
 #include "auth/Scheme.h"
+#include "auth/basic/auth_basic.h"
 
 /// \ingroup AuthAPI
 /// \ingroup AuthSchemeAPI
@@ -42,8 +42,8 @@ class basicScheme : public AuthScheme
 {
 
 public:
-    static AuthScheme &GetInstance();
-    basicScheme();
+    static AuthScheme::Pointer GetInstance();
+    basicScheme() {};
     virtual ~basicScheme() {}
 
     /* per scheme */
@@ -55,7 +55,8 @@ public:
     basicScheme &operator=(basicScheme const &);
 
 private:
-    static basicScheme *_instance;
+    static AuthScheme::Pointer _instance;
+//    AuthBasicConfig basicConfig;
 };
 
 #endif /* SQUID_BASICSCHEME_H */

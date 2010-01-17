@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -36,6 +35,7 @@
 
 #include "squid.h"
 #include "Array.h"
+#include "RefCount.h"
 
 /**
  \defgroup AuthSchemeAPI	Authentication Scheme API
@@ -53,34 +53,38 @@
  * a new class AuthConfiguration should be made, and the
  * config specific calls on AuthScheme moved to it.
  */
-class AuthScheme
+class AuthScheme : public RefCountable
 {
+public:
+    typedef RefCount<AuthScheme> Pointer;
 
 public:
-    static void AddScheme(AuthScheme &);
-    static void FreeAll();
-    static Vector<AuthScheme*> const &Schemes();
-    static AuthScheme *Find(const char *);
-    typedef Vector<AuthScheme*>::iterator iterator;
-    typedef Vector<AuthScheme*>::const_iterator const_iterator;
-    AuthScheme() : initialised (false) {}
+    AuthScheme() : initialised (false) {};
+    virtual ~AuthScheme() {};
 
-    virtual ~AuthScheme() {}
+    static void AddScheme(AuthScheme::Pointer);
+    static void FreeAll();
+//    static Vector<AuthScheme::Pointer> const &Schemes();
+    static AuthScheme::Pointer Find(const char *);
+    typedef Vector<AuthScheme::Pointer>::iterator iterator;
+    typedef Vector<AuthScheme::Pointer>::const_iterator const_iterator;
 
     /* per scheme methods */
     virtual char const *type () const = 0;
     virtual void done() = 0;
     virtual AuthConfig *createConfig() = 0;
+
     // Not implemented
     AuthScheme(AuthScheme const &);
     AuthScheme &operator=(AuthScheme const&);
+
+    static Vector<AuthScheme::Pointer> &GetSchemes();
 
 protected:
     bool initialised;
 
 private:
-    static Vector<AuthScheme*> &GetSchemes();
-    static Vector<AuthScheme*> *_Schemes;
+    static Vector<AuthScheme::Pointer> *_Schemes;
 };
 
 #endif /* SQUID_AUTHSCHEME_H */

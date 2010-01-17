@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -35,6 +34,7 @@
 #define SQUID_DIGESTSCHEME_H
 
 #include "auth/Scheme.h"
+#include "auth/digest/auth_digest.h"
 
 /// \ingroup AuthSchemeAPI
 /// \ingroup AuthAPI
@@ -42,20 +42,21 @@ class digestScheme : public AuthScheme
 {
 
 public:
-    static AuthScheme &GetInstance();
-    digestScheme();
+    static AuthScheme::Pointer GetInstance();
+    digestScheme() {};
     virtual ~digestScheme() {}
 
     /* per scheme */
     virtual char const *type () const;
     virtual void done();
     virtual AuthConfig *createConfig();
+
     /* Not implemented */
     digestScheme (digestScheme const &);
     digestScheme &operator=(digestScheme const &);
 
 private:
-    static digestScheme *_instance;
+    static AuthScheme::Pointer _instance;
 };
 
 #endif /* SQUID_DIGESTSCHEME_H */

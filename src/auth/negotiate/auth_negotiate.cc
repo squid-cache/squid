@@ -38,7 +38,7 @@
 
 
 #include "squid.h"
-#include "auth_negotiate.h"
+#include "auth/negotiate/auth_negotiate.h"
 #include "auth/Gadgets.h"
 #include "CacheManager.h"
 #include "Store.h"
@@ -47,7 +47,7 @@
 #include "HttpRequest.h"
 #include "SquidTime.h"
 /** \todo remove this include */
-#include "negotiateScheme.h"
+#include "auth/negotiate/negotiateScheme.h"
 #include "wordlist.h"
 
 /**
@@ -94,35 +94,17 @@ static hash_table *proxy_auth_cache = NULL;
  *
  */
 
-/**
- \ingroup AuthNegotiateInternal
- \todo move to negotiateScheme.cc
- */
-void
-negotiateScheme::done()
-{
-    /* TODO: this should be a Config call. */
-    debugs(29, 2, "negotiateScheme::done: shutting down Negotiate authentication.");
-
-    if (negotiateauthenticators)
-        helperStatefulShutdown(negotiateauthenticators);
-
-    authnegotiate_initialised = 0;
-
-    if (!shutting_down)
-        return;
-
-    if (negotiateauthenticators)
-        helperStatefulFree(negotiateauthenticators);
-
-    negotiateauthenticators = NULL;
-
-    debugs(29, 2, "negotiateScheme::done: Negotiate authentication Shutdown.");
-}
-
 void
 AuthNegotiateConfig::done()
 {
+    authnegotiate_initialised = 0;
+
+    if (negotiateauthenticators) {
+        helperStatefulShutdown(negotiateauthenticators);
+        helperStatefulFree(negotiateauthenticators);
+        negotiateauthenticators = NULL;
+    }
+
     if (authenticate)
         wordlistDestroy(&authenticate);
 }
@@ -144,7 +126,7 @@ AuthNegotiateConfig::dump(StoreEntry * entry, const char *name, AuthConfig * sch
 
 }
 
-AuthNegotiateConfig::AuthNegotiateConfig() : authenticateChildren(5), keep_alive(1)
+AuthNegotiateConfig::AuthNegotiateConfig() : authenticateChildren(5), keep_alive(1), authenticate(NULL)
 { }
 
 void
@@ -180,7 +162,7 @@ AuthNegotiateConfig::parse(AuthConfig * scheme, int n_configured, char *param_st
 const char *
 AuthNegotiateConfig::type() const
 {
-    return negotiateScheme::GetInstance().type();
+    return negotiateScheme::GetInstance()->type();
 }
 
 /**
@@ -798,12 +780,6 @@ NegotiateUser::deleteSelf() const
 NegotiateUser::NegotiateUser (AuthConfig *aConfig) : AuthUser (aConfig)
 {
     proxy_auth_list.head = proxy_auth_list.tail = NULL;
-}
-
-AuthConfig *
-negotiateScheme::createConfig()
-{
-    return &negotiateConfig;
 }
 
 const char *

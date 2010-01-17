@@ -39,7 +39,7 @@
 
 #include "squid.h"
 #include "rfc2617.h"
-#include "auth_digest.h"
+#include "auth/digest/auth_digest.h"
 #include "auth/Gadgets.h"
 #include "event.h"
 #include "CacheManager.h"
@@ -49,7 +49,7 @@
 #include "wordlist.h"
 #include "SquidTime.h"
 /* TODO don't include this */
-#include "digestScheme.h"
+#include "auth/digest/digestScheme.h"
 
 /* Digest Scheme */
 
@@ -59,8 +59,6 @@ static AUTHSSTATS authenticateDigestStats;
 static helper *digestauthenticators = NULL;
 
 static hash_table *digest_nonce_cache;
-
-static AuthDigestConfig digestConfig;
 
 static int authdigest_initialised = 0;
 static MemAllocator *digest_nonce_pool = NULL;
@@ -206,7 +204,7 @@ authenticateDigestNonceSetup(void)
     if (!digest_nonce_cache) {
         digest_nonce_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
         assert(digest_nonce_cache);
-        eventAdd("Digest none cache maintenance", authenticateDigestNonceCacheCleanup, NULL, digestConfig.nonceGCInterval, 1);
+        eventAdd("Digest none cache maintenance", authenticateDigestNonceCacheCleanup, NULL, static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->nonceGCInterval, 1);
     }
 }
 
@@ -273,8 +271,8 @@ authenticateDigestNonceCacheCleanup(void *data)
 
     debugs(29, 3, "authenticateDigestNonceCacheCleanup: Finished cleaning the nonce cache.");
 
-    if (digestConfig.active())
-        eventAdd("Digest none cache maintenance", authenticateDigestNonceCacheCleanup, NULL, digestConfig.nonceGCInterval, 1);
+    if (static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->active())
+        eventAdd("Digest none cache maintenance", authenticateDigestNonceCacheCleanup, NULL, static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->nonceGCInterval, 1);
 }
 
 static void
@@ -361,12 +359,12 @@ authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9])
     }
 
     /* is the nonce-count ok ? */
-    if (!digestConfig.CheckNonceCount) {
+    if (!static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->CheckNonceCount) {
         nonce->nc++;
         return -1;              /* forced OK by configuration */
     }
 
-    if ((digestConfig.NonceStrictness && intnc != nonce->nc + 1) ||
+    if ((static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->NonceStrictness && intnc != nonce->nc + 1) ||
             intnc < nonce->nc + 1) {
         debugs(29, 4, "authDigestNonceIsValid: Nonce count doesn't match");
         nonce->flags.valid = 0;
@@ -391,10 +389,10 @@ authDigestNonceIsStale(digest_nonce_h * nonce)
         return -1;
 
     /* has it's max duration expired? */
-    if (nonce->noncedata.creationtime + digestConfig.noncemaxduration < current_time.tv_sec) {
+    if (nonce->noncedata.creationtime + static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->noncemaxduration < current_time.tv_sec) {
         debugs(29, 4, "authDigestNonceIsStale: Nonce is too old. " <<
                nonce->noncedata.creationtime << " " <<
-               digestConfig.noncemaxduration << " " <<
+               static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->noncemaxduration << " " <<
                current_time.tv_sec);
 
         nonce->flags.valid = 0;
@@ -407,7 +405,7 @@ authDigestNonceIsStale(digest_nonce_h * nonce)
         return -1;
     }
 
-    if (nonce->nc > digestConfig.noncemaxuses) {
+    if (nonce->nc > static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->noncemaxuses) {
         debugs(29, 4, "authDigestNoncelastRequest: Nonce count over user limit");
         nonce->flags.valid = 0;
         return -1;
@@ -429,7 +427,7 @@ authDigestNonceLastRequest(digest_nonce_h * nonce)
         return -1;
     }
 
-    if (nonce->nc >= digestConfig.noncemaxuses - 1) {
+    if (nonce->nc >= static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->noncemaxuses - 1) {
         debugs(29, 4, "authDigestNoncelastRequest: Nonce count about to hit user limit");
         return -1;
     }
@@ -520,6 +518,9 @@ digestScheme::done()
     authDigestUserShutdown();
     authenticateDigestNonceShutdown();
     debugs(29, 2, "authenticateDigestDone: Digest authentication shut down.");
+
+    /* clear the global handle to this scheme. */
+    _instance = NULL;
 }
 
 void
@@ -625,7 +626,7 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData * conn,
             return;
         }
 
-        if (digestConfig.PostWorkaround && request->method != METHOD_GET) {
+        if (static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->PostWorkaround && request->method != METHOD_GET) {
             /* Ugly workaround for certain very broken browsers using the
              * wrong method to calculate the request-digest on POST request.
              * This should be deleted once Digest authentication becomes more
@@ -732,7 +733,7 @@ AuthDigestUserRequest::addHeader(HttpReply * rep, int accel)
 
 #endif
 
-    if ((digestConfig.authenticate) && authDigestNonceLastRequest(nonce)) {
+    if ((static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->authenticate) && authDigestNonceLastRequest(nonce)) {
         flags.authinfo_sent = 1;
         debugs(29, 9, "authDigestAddHead: Sending type:" << type << " header: 'nextnonce=\"" << authenticateDigestNonceNonceb64(nonce) << "\"");
         httpHeaderPutStrf(&rep->header, type, "nextnonce=\"%s\"", authenticateDigestNonceNonceb64(nonce));
@@ -761,7 +762,7 @@ AuthDigestUserRequest::addTrailer(HttpReply * rep, int accel)
 
     type = accel ? HDR_AUTHENTICATION_INFO : HDR_PROXY_AUTHENTICATION_INFO;
 
-    if ((digestConfig.authenticate) && authDigestNonceLastRequest(nonce)) {
+    if ((static_cast<AuthDigestConfig*>(digestScheme::GetInstance()->getConfig())->authenticate) && authDigestNonceLastRequest(nonce)) {
         debugs(29, 9, "authDigestAddTrailer: Sending type:" << type << " header: 'nextnonce=\"" << authenticateDigestNonceNonceb64(nonce) << "\"");
         httpTrailerPutStrf(&rep->header, type, "nextnonce=\"%s\"", authenticateDigestNonceNonceb64(nonce));
     }
@@ -906,6 +907,7 @@ AuthDigestConfig::done()
 AuthDigestConfig::AuthDigestConfig()
 {
     /* TODO: move into initialisation list */
+    authenticate = NULL;
     authenticateChildren = 5;
     /* 5 minutes */
     nonceGCInterval = 5 * 60;
@@ -955,7 +957,7 @@ AuthDigestConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
 const char *
 AuthDigestConfig::type() const
 {
-    return digestScheme::GetInstance().type();
+    return digestScheme::GetInstance()->type();
 }
 
 
@@ -1048,7 +1050,7 @@ authDigestLogUsername(char *username, AuthUserRequest::Pointer auth_user_request
 
     /* log the username */
     debugs(29, 9, "authDigestLogUsername: Creating new user for logging '" << username << "'");
-    digest_user_h *digest_user = new DigestUser(&digestConfig);
+    digest_user_h *digest_user = new DigestUser(static_cast<AuthDigestConfig*>(AuthConfig::Find("digest")));
     /* save the credentials */
     digest_user->username(username);
     /* set the auth_user type */
@@ -1304,7 +1306,7 @@ AuthDigestConfig::decode(char const *proxy_auth)
     if ((auth_user = authDigestUserFindUsername(username)) == NULL) {
         /* the user doesn't exist in the username cache yet */
         debugs(29, 9, "authDigestDecodeAuth: Creating new digest user '" << username << "'");
-        digest_user = new DigestUser (&digestConfig);
+        digest_user = new DigestUser(this);
         /* auth_user is a parent */
         auth_user = digest_user;
         /* save the username */
@@ -1359,7 +1361,7 @@ AuthDigestUserRequest::module_start(RH * handler, void *data)
     assert(digest_user != NULL);
     debugs(29, 9, "authenticateStart: '\"" << digest_user->username() << "\":\"" << realm << "\"'");
 
-    if (digestConfig.authenticate == NULL) {
+    if (static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->authenticate == NULL) {
         handler(data, NULL);
         return;
     }
@@ -1368,7 +1370,7 @@ AuthDigestUserRequest::module_start(RH * handler, void *data)
     r->handler = handler;
     r->data = cbdataReference(data);
     r->auth_user_request = static_cast<AuthUserRequest*>(this);
-    if (digestConfig.utf8) {
+    if (static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->utf8) {
         char userstr[1024];
         latin1_to_utf8(userstr, sizeof(userstr), digest_user->username());
         snprintf(buf, 8192, "\"%s\":\"%s\"\n", userstr, realm);
@@ -1417,10 +1419,3 @@ AuthDigestUserRequest::~AuthDigestUserRequest()
     if (nonce)
         authDigestNonceUnlink(nonce);
 }
-
-AuthConfig *
-digestScheme::createConfig()
-{
-    return &digestConfig;
-}
-

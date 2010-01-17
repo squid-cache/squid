@@ -38,12 +38,12 @@
 
 
 #include "squid.h"
-#include "auth_basic.h"
+#include "auth/basic/auth_basic.h"
 #include "auth/Gadgets.h"
 #include "CacheManager.h"
 #include "Store.h"
 #include "HttpReply.h"
-#include "basicScheme.h"
+#include "auth/basic/basicScheme.h"
 #include "rfc1738.h"
 #include "wordlist.h"
 #include "SquidTime.h"
@@ -61,8 +61,6 @@ static AUTHSSTATS authenticateBasicStats;
 
 static helper *basicauthenticators = NULL;
 
-static AuthBasicConfig basicConfig;
-
 static int authbasic_initialised = 0;
 
 
@@ -73,29 +71,6 @@ static int authbasic_initialised = 0;
  */
 
 /* internal functions */
-
-/* TODO: move to basicScheme.cc - after all per request and user functions are moved out */
-void
-basicScheme::done()
-{
-    /* TODO: this should be a Config call. */
-
-    if (basicauthenticators)
-        helperShutdown(basicauthenticators);
-
-    authbasic_initialised = 0;
-
-    if (!shutting_down)
-        return;
-
-    if (basicauthenticators)
-        helperFree(basicauthenticators);
-
-    basicauthenticators = NULL;
-
-    /* XXX Reinstate auth shutdown for dynamic schemes? */
-    debugs(29, DBG_CRITICAL, HERE << "Basic authentication Shutdown.");
-}
 
 bool
 AuthBasicConfig::active() const
@@ -119,7 +94,7 @@ AuthBasicConfig::configured() const
 const char *
 AuthBasicConfig::type() const
 {
-    return basicScheme::GetInstance().type();
+    return basicScheme::GetInstance()->type();
 }
 
 AuthBasicUserRequest::AuthBasicUserRequest()
@@ -132,7 +107,7 @@ AuthBasicUserRequest::~AuthBasicUserRequest()
 bool
 BasicUser::authenticated() const
 {
-    if ((flags.credentials_ok == 1) && (credentials_checkedtime + basicConfig.credentialsTTL > squid_curtime))
+    if ((flags.credentials_ok == 1) && (credentials_checkedtime + static_cast<AuthBasicConfig*>(config)->credentialsTTL > squid_curtime))
         return true;
 
     debugs(29, 4, "User not authenticated or credentials need rechecking.");
@@ -166,7 +141,7 @@ AuthBasicUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, 
         return;
 
     /* are we about to recheck the credentials externally? */
-    if ((basic_auth->credentials_checkedtime + basicConfig.credentialsTTL) <= squid_curtime) {
+    if ((basic_auth->credentials_checkedtime + static_cast<AuthBasicConfig*>(AuthConfig::Find("basic"))->credentialsTTL) <= squid_curtime) {
         debugs(29, 4, "authBasicAuthenticate: credentials expired - rechecking");
         return;
     }
@@ -195,7 +170,7 @@ AuthBasicUserRequest::module_direction()
 
     case 1:			/* checked & ok */
 
-        if (basic_auth->credentials_checkedtime + basicConfig.credentialsTTL <= squid_curtime)
+        if (basic_auth->credentials_checkedtime + static_cast<AuthBasicConfig*>(AuthConfig::Find("basic"))->credentialsTTL <= squid_curtime)
             return -1;
 
         return 0;
@@ -219,10 +194,18 @@ AuthBasicConfig::fixHeader(AuthUserRequest::Pointer auth_user_request, HttpReply
     }
 }
 
-/* free any allocated configuration details */
+/** shutdown the auth helpers and free any allocated configuration details */
 void
 AuthBasicConfig::done()
 {
+    authbasic_initialised = 0;
+
+    if (basicauthenticators) {
+        helperShutdown(basicauthenticators);
+        helperFree(basicauthenticators);
+        basicauthenticators = NULL;
+    }
+
     if (authenticate)
         wordlistDestroy(&authenticate);
 
@@ -309,11 +292,14 @@ AuthBasicConfig::dump(StoreEntry * entry, const char *name, AuthConfig * scheme)
     storeAppendPrintf(entry, "%s basic casesensitive %s\n", name, casesensitive ? "on" : "off");
 }
 
-AuthBasicConfig::AuthBasicConfig()
+AuthBasicConfig::AuthBasicConfig() :
+        authenticateChildren(5),
+        authenticateConcurrency(1),
+        authenticate(NULL),
+        credentialsTTL( 2*60*60 ),
+        casesensitive(0),
+        utf8(0)
 {
-    /* TODO: move into initialisation list */
-    authenticateChildren = 5;
-    credentialsTTL = 2 * 60 * 60;	/* two hours */
     basicAuthRealm = xstrdup("Squid proxy-caching web server");
 }
 
@@ -436,7 +422,7 @@ BasicUser::extractUsername()
         *seperator = ':';
     }
 
-    if (!basicConfig.casesensitive)
+    if (!static_cast<AuthBasicConfig*>(config)->casesensitive)
         Tolower((char *)username());
 }
 
@@ -491,7 +477,7 @@ BasicUser::makeLoggingInstance(AuthUserRequest::Pointer auth_user_request)
         /* log the username */
         debugs(29, 9, HERE << "Creating new user for logging '" << username() << "'");
         /* new scheme data */
-        BasicUser *basic_auth = new BasicUser(& basicConfig);
+        BasicUser *basic_auth = new BasicUser(config);
         auth_user_request->user(basic_auth);
         /* save the credentials */
         basic_auth->username(username());
@@ -508,7 +494,7 @@ BasicUser::makeCachedFrom()
 {
     /* the user doesn't exist in the username cache yet */
     debugs(29, 9, HERE << "Creating new user '" << username() << "'");
-    BasicUser *basic_user = new BasicUser(&basicConfig);
+    BasicUser *basic_user = new BasicUser(config);
     /* save the credentials */
     basic_user->username(username());
     username(NULL);
@@ -562,7 +548,7 @@ AuthBasicConfig::decode(char const *proxy_auth)
     while (xisgraph(*proxy_auth))
         proxy_auth++;
 
-    BasicUser *basic_auth, local_basic(&basicConfig);
+    BasicUser *basic_auth, local_basic(this);
 
     /* Trim leading whitespace before decoding */
     while (xisspace(*proxy_auth))
@@ -601,7 +587,7 @@ AuthBasicConfig::decode(char const *proxy_auth)
 /** Initialize helpers and the like for this auth scheme. Called AFTER parsing the
  * config file */
 void
-AuthBasicConfig::init(AuthConfig * scheme)
+AuthBasicConfig::init(AuthConfig * schemeCfg)
 {
     if (authenticate) {
         authbasic_initialised = 1;
@@ -656,7 +642,7 @@ AuthBasicUserRequest::module_start(RH * handler, void *data)
     assert(basic_auth != NULL);
     debugs(29, 9, HERE << "'" << basic_auth->username() << ":" << basic_auth->passwd << "'");
 
-    if (basicConfig.authenticate == NULL) {
+    if (static_cast<AuthBasicConfig*>(AuthConfig::Find("basic"))->authenticate == NULL) {
         handler(data, NULL);
         return;
     }
@@ -683,7 +669,7 @@ BasicUser::submitRequest(AuthUserRequest::Pointer auth_user_request, RH * handle
     r->handler = handler;
     r->data = cbdataReference(data);
     r->auth_user_request = auth_user_request;
-    if (basicConfig.utf8) {
+    if (static_cast<AuthBasicConfig*>(config)->utf8) {
         latin1_to_utf8(user, sizeof(user), username());
         latin1_to_utf8(pass, sizeof(pass), passwd);
         xstrncpy(user, rfc1738_escape(user), sizeof(user));
@@ -694,10 +680,4 @@ BasicUser::submitRequest(AuthUserRequest::Pointer auth_user_request, RH * handle
     }
     snprintf(buf, sizeof(buf), "%s %s\n", user, pass);
     helperSubmit(basicauthenticators, buf, authenticateBasicHandleReply, r);
-}
-
-AuthConfig *
-basicScheme::createConfig()
-{
-    return &basicConfig;
 }

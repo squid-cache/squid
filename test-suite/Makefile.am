@@ -67,7 +67,7 @@ mem_hdr_test_SOURCES = mem_hdr_test.cc $(DEBUG_SOURCE)
 mem_hdr_test_LDADD = $(top_builddir)/src/stmem.o \
 		     $(top_builddir)/src/mem_node.o $(LDADD)
 MemPoolTest_SOURCES = MemPoolTest.cc
-refcount_SOURCES = refcount.cc
+refcount_SOURCES = refcount.cc  $(DEBUG_SOURCE)
 
 splay_SOURCES = splay.cc
 

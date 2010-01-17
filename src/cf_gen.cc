@@ -710,6 +710,7 @@ gen_dump(Entry * head, FILE * fp)
             "static void\n"
             "dump_config(StoreEntry *entry)\n"
             "{\n"
+            "    debugs(5, 4, HERE);\n"
            );
 
     for (entry = head; entry != NULL; entry = entry->next) {
@@ -744,6 +745,7 @@ gen_free(Entry * head, FILE * fp)
             "static void\n"
             "free_all(void)\n"
             "{\n"
+            "    debugs(5, 4, HERE);\n"
            );
 
     for (entry = head; entry != NULL; entry = entry->next) {

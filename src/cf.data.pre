@@ -66,7 +66,7 @@ COMMENT_END
 
 NAME: auth_param
 TYPE: authparam
-LOC: Config.authConfiguration
+LOC: Auth::TheConfig
 DEFAULT: none
 DOC_START
 	This is used to define parameters for the various authentication
