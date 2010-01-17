@@ -73,9 +73,9 @@ dnsInit(void)
         return;
 
     if (dnsservers == NULL)
-        dnsservers = helperCreate("dnsserver");
+        dnsservers = new helper("dnsserver");
 
-    dnsservers->n_to_start = Config.dnsChildren;
+    dnsservers->childs = Config.dnsChildren;
 
     dnsservers->ipc_type = IPC_STREAM;
 
@@ -107,8 +107,7 @@ dnsShutdown(void)
     if (!shutting_down)
         return;
 
-    helperFree(dnsservers);
-
+    delete dnsservers;
     dnsservers = NULL;
 }
 
@@ -119,7 +118,11 @@ dnsSubmit(const char *lookup, HLPCB * callback, void *data)
     static time_t first_warn = 0;
     snprintf(buf, 256, "%s\n", lookup);
 
-    if (dnsservers->stats.queue_size >= dnsservers->n_running * 2) {
+    if (dnsservers->stats.queue_size >= (int)dnsservers->childs.n_active && dnsservers->childs.needNew() > 0) {
+        helperOpenServers(dnsservers);
+    }
+
+    if (dnsservers->stats.queue_size >= (int)(dnsservers->childs.n_running * 2)) {
         if (first_warn == 0)
             first_warn = squid_curtime;
 
@@ -145,8 +148,8 @@ variable_list *
 snmp_netDnsFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer = NULL;
-    debugs(49, 5, "snmp_netDnsFn: Processing request: " << Var->name[LEN_SQ_NET + 1]);
-    snmpDebugOid(5, Var->name, Var->name_length);
+    MemBuf tmp;
+    debugs(49, 5, "snmp_netDnsFn: Processing request: " << Var->name[LEN_SQ_NET + 1] << " " << snmpDebugOid(Var->name, Var->name_length, tmp));
     *ErrP = SNMP_ERR_NOERROR;
 
     switch (Var->name[LEN_SQ_NET + 1]) {
@@ -165,7 +168,7 @@ snmp_netDnsFn(variable_list * Var, snint * ErrP)
 
     case DNS_SERVERS:
         Answer = snmp_var_new_integer(Var->name, Var->name_length,
-                                      dnsservers->n_running,
+                                      dnsservers->childs.n_running,
                                       SMI_COUNTER32);
         break;
 

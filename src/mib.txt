@@ -287,6 +287,7 @@ squid MODULE-IDENTITY
 		DESCRIPTION
 			" Highest file descriptors in use "
         ::= { cacheSysPerf 13 }
+
 	--
 	-- cacheProtoStats
 	--
@@ -690,7 +691,7 @@ squid MODULE-IDENTITY
                 MAX-ACCESS read-only
                 STATUS current
 		DESCRIPTION
-			" Number of external dnsserver requests "
+			" Number of external DNS server requests "
         ::= { cacheDns 1 }
 
 	cacheDnsReplies OBJECT-TYPE
@@ -698,7 +699,7 @@ squid MODULE-IDENTITY
                 MAX-ACCESS read-only
                 STATUS current
 		DESCRIPTION
-			" Number of external dnsserver replies "
+			" Number of external DNS server replies "
         ::= { cacheDns 2 }
 
 	cacheDnsNumberServers OBJECT-TYPE
@@ -706,7 +707,7 @@ squid MODULE-IDENTITY
                 MAX-ACCESS read-only
                 STATUS current
 		DESCRIPTION
-			" Number of external dnsserver processes "
+			" Number of external DNS server processes "
         ::= { cacheDns 3 }
 	
 --
@@ -723,16 +724,16 @@ squid MODULE-IDENTITY
         ::= { cacheMesh 1 }
 
 	cachePeerEntry OBJECT-TYPE
-		SYNTAX CachePeerEntry
+		SYNTAX CachePeerTableEntry
 		MAX-ACCESS not-accessible
 		STATUS current
 		DESCRIPTION
-			" An entry in cachePeerTable "
+			" An entry in cachePeerTable (version 3) "
 		INDEX 	{ cachePeerIndex }
-	::= { cachePeerTable 1 }
+	::= { cachePeerTable 3 }
 
-	CachePeerEntry ::= SEQUENCE {
-	  cachePeerIndex	CachePeerIndex, 
+	CachePeerTableEntry ::= SEQUENCE {
+	  cachePeerIndex	CachePeerTableIndex, 
 	  cachePeerName		DisplayString,
 	  cachePeerAddressType  InetAddressType,
 	  cachePeerAddress      InetAddress,
@@ -757,7 +758,7 @@ squid MODULE-IDENTITY
 				the appropriate port number for the connection."
 			SYNTAX       Integer32 (1..65535)
 	
-	CachePeerIndex ::= TEXTUAL-CONVENTION
+	CachePeerTableIndex ::= TEXTUAL-CONVENTION
              DISPLAY-HINT "d"
              STATUS       current
              DESCRIPTION
@@ -770,7 +771,6 @@ squid MODULE-IDENTITY
                network management system to the next
                re-initialization."
              SYNTAX       Integer32 (1..2147483647)
-
 
 
 	cachePeerIndex OBJECT-TYPE
@@ -929,15 +929,14 @@ squid MODULE-IDENTITY
                     "A list of cache client entries."
        	::= { cacheMesh 2 }
 
-
 	cacheClientEntry OBJECT-TYPE
            SYNTAX CacheClientEntry
            MAX-ACCESS  not-accessible
            STATUS  current
            DESCRIPTION
-                    "An entry in cacheClientTable "
-	   INDEX { cacheClientAddressType, cacheClientAddress }
-	::= { cacheClientTable 1 }
+                    "An IP entry in cacheClientTable "
+	   INDEX { cacheClientAddress }
+	::= { cacheClientTable 2 }
 
 	CacheClientEntry ::= SEQUENCE {
 		cacheClientAddressType  InetAddressType,

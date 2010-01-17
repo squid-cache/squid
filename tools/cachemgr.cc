@@ -558,7 +558,7 @@ munge_other_line(const char *buf, cachemgr_request * req)
 
     xfree(buf_copy);
     /* record ends */
-    l += snprintf(html + l, sizeof(html) - l, "</tr>\n");
+    snprintf(html + l, sizeof(html) - l, "</tr>\n");
     next_is_header = is_header && strstr(buf, "\t\t");
     table_line_num++;
     return html;
@@ -819,7 +819,7 @@ process_request(cachemgr_request * req)
 
     if ( !S.IsAnyAddr() ) {
         (void) 0;
-    } else if ( S = req->hostname)
+    } else if ((S = req->hostname))
         (void) 0;
     else {
         snprintf(buf, 1024, "Unknown host: %s\n", req->hostname);
@@ -1155,8 +1155,7 @@ make_auth_header(const cachemgr_request * req)
 
     assert(stringLength < sizeof(buf));
 
-    stringLength += snprintf(&buf[stringLength], sizeof(buf) - stringLength,
-                             "Proxy-Authorization: Basic %s\r\n", str64);
+    snprintf(&buf[stringLength], sizeof(buf) - stringLength, "Proxy-Authorization: Basic %s\r\n", str64);
 
     return buf;
 }
