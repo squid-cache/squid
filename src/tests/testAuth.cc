@@ -59,15 +59,15 @@ static
 AuthConfig *
 getConfig(char const *type_str)
 {
-    Vector<AuthConfig *> &config = Config.authConfiguration;
+    Auth::authConfig &config = Auth::TheConfig;
     /* find a configuration for the scheme */
-    AuthConfig *scheme = AuthConfig::Find (type_str);
+    AuthConfig *scheme = AuthConfig::Find(type_str);
 
     if (scheme == NULL) {
         /* Create a configuration */
-        AuthScheme *theScheme;
+        AuthScheme::Pointer theScheme = AuthScheme::Find(type_str);
 
-        if ((theScheme = AuthScheme::Find(type_str)) == NULL) {
+        if (theScheme == NULL) {
             return NULL;
             //fatalf("Unknown authentication scheme '%s'.\n", type_str);
         }
@@ -84,7 +84,7 @@ static
 void
 setup_scheme(AuthConfig *scheme, char const **params, unsigned param_count)
 {
-    Vector<AuthConfig *> &config = Config.authConfiguration;
+    Auth::authConfig &config = Auth::TheConfig;
 
     for (unsigned position=0; position < param_count; position++) {
         char *param_str=xstrdup(params[position]);
@@ -104,7 +104,7 @@ fake_auth_setup()
 
     Mem::Init();
 
-    Vector<AuthConfig *> &config = Config.authConfiguration;
+    Auth::authConfig &config = Auth::TheConfig;
 
     char const *digest_parms[]= {"program /home/robertc/install/squid/libexec/digest_pw_auth /home/robertc/install/squid/etc/digest.pwd",
                                  "realm foo"
@@ -155,7 +155,7 @@ testAuthConfig::create()
     Debug::Levels[29]=9;
     fake_auth_setup();
 
-    for (AuthScheme::const_iterator i = AuthScheme::Schemes().begin(); i != AuthScheme::Schemes().end(); ++i) {
+    for (AuthScheme::iterator i = AuthScheme::GetSchemes().begin(); i != AuthScheme::GetSchemes().end(); ++i) {
         AuthUserRequest::Pointer authRequest = AuthConfig::CreateAuthUser(find_proxy_auth((*i)->type()));
         CPPUNIT_ASSERT(authRequest != NULL);
     }
@@ -174,7 +174,7 @@ testAuthUserRequest::scheme()
     Debug::Levels[29]=9;
     fake_auth_setup();
 
-    for (AuthScheme::const_iterator i = AuthScheme::Schemes().begin(); i != AuthScheme::Schemes().end(); ++i) {
+    for (AuthScheme::iterator i = AuthScheme::GetSchemes().begin(); i != AuthScheme::GetSchemes().end(); ++i) {
         // create a user request
         // check its scheme matches *i
         AuthUserRequest::Pointer authRequest = AuthConfig::CreateAuthUser(find_proxy_auth((*i)->type()));

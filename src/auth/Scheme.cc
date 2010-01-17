@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -39,22 +38,22 @@
 #include "auth/Gadgets.h"
 #include "auth/Config.h"
 
-Vector<AuthScheme*> *AuthScheme::_Schemes = NULL;
+Vector<AuthScheme::Pointer> *AuthScheme::_Schemes = NULL;
 
 void
-AuthScheme::AddScheme(AuthScheme &instance)
+AuthScheme::AddScheme(AuthScheme::Pointer instance)
 {
     iterator i = GetSchemes().begin();
 
     while (i != GetSchemes().end()) {
-        assert(strcmp((*i)->type(), instance.type()) != 0);
+        assert(strcmp((*i)->type(), instance->type()) != 0);
         ++i;
     }
 
-    GetSchemes().push_back (&instance);
+    GetSchemes().push_back(instance);
 }
 
-AuthScheme *
+AuthScheme::Pointer
 AuthScheme::Find(const char *typestr)
 {
     for (iterator i = GetSchemes().begin(); i != GetSchemes().end(); ++i) {
@@ -62,33 +61,40 @@ AuthScheme::Find(const char *typestr)
             return *i;
     }
 
-    return NULL;
+    return AuthScheme::Pointer(NULL);
 }
 
-Vector<AuthScheme *> const &
+#if 0 // with ref-counting we never have a constant version of *::Pointer
+Vector<AuthScheme::Pointer> const &
 AuthScheme::Schemes()
 {
     return GetSchemes();
 }
+#endif
 
-Vector<AuthScheme*> &
+Vector<AuthScheme::Pointer> &
 AuthScheme::GetSchemes()
 {
     if (!_Schemes)
-        _Schemes = new Vector<AuthScheme *>;
+        _Schemes = new Vector<AuthScheme::Pointer>;
 
     return *_Schemes;
 }
 
-/*
- * called when a graceful shutdown is to occur
- * of each scheme module.
+/**
+ * Called when a graceful shutdown is to occur of each scheme module.
+ * On completion the auth components are to be considered deleted.
+ * None will be available globally. Some may remain around for their
+ * currently active connections to close, but only those active
+ * connections will retain pointers to them.
  */
 void
 AuthScheme::FreeAll()
 {
+    assert(false); // NP: this should NOT happen during regular progarm execution...
+
     while (GetSchemes().size()) {
-        AuthScheme *scheme = GetSchemes().back();
+        AuthScheme::Pointer scheme = GetSchemes().back();
         GetSchemes().pop_back();
         scheme->done();
     }

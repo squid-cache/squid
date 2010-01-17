@@ -38,15 +38,14 @@
 
 
 #include "squid.h"
-#include "auth_ntlm.h"
 #include "auth/Gadgets.h"
+#include "auth/ntlm/auth_ntlm.h"
+#include "auth/ntlm/ntlmScheme.h"
 #include "CacheManager.h"
 #include "Store.h"
 #include "client_side.h"
 #include "HttpReply.h"
 #include "HttpRequest.h"
-/* TODO remove this include */
-#include "ntlmScheme.h"
 #include "wordlist.h"
 #include "SquidTime.h"
 
@@ -63,12 +62,9 @@ static HLPSCB authenticateNTLMHandleReply;
 static AUTHSSTATS authenticateNTLMStats;
 
 static statefulhelper *ntlmauthenticators = NULL;
-
-CBDATA_TYPE(authenticateStateData);
-
 static int authntlm_initialised = 0;
 
-static auth_ntlm_config ntlmConfig;
+CBDATA_TYPE(authenticateStateData);
 
 static hash_table *proxy_auth_cache = NULL;
 
@@ -78,33 +74,18 @@ static hash_table *proxy_auth_cache = NULL;
  *
  */
 
-/* move to ntlmScheme.cc */
-void
-ntlmScheme::done()
-{
-    /* TODO: this should be a Config call. */
-    debugs(29, 2, "ntlmScheme::done: shutting down NTLM authentication.");
-
-    if (ntlmauthenticators)
-        helperStatefulShutdown(ntlmauthenticators);
-
-    authntlm_initialised = 0;
-
-    if (!shutting_down)
-        return;
-
-    if (ntlmauthenticators)
-        helperStatefulFree(ntlmauthenticators);
-
-    ntlmauthenticators = NULL;
-
-    debugs(29, 2, "ntlmScheme::done: NTLM authentication Shutdown.");
-}
-
 /* free any allocated configuration details */
 void
 AuthNTLMConfig::done()
 {
+    authntlm_initialised = 0;
+
+    if (ntlmauthenticators) {
+        helperStatefulShutdown(ntlmauthenticators);
+        helperStatefulFree(ntlmauthenticators);
+        ntlmauthenticators = NULL;
+    }
+
     if (authenticate)
         wordlistDestroy(&authenticate);
 }
@@ -126,7 +107,7 @@ AuthNTLMConfig::dump(StoreEntry * entry, const char *name, AuthConfig * scheme)
 
 }
 
-AuthNTLMConfig::AuthNTLMConfig() : authenticateChildren(5), keep_alive(1)
+AuthNTLMConfig::AuthNTLMConfig() : authenticateChildren(5), keep_alive(1), authenticate(NULL)
 { }
 
 void
@@ -162,7 +143,7 @@ AuthNTLMConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
 const char *
 AuthNTLMConfig::type() const
 {
-    return ntlmScheme::GetInstance().type();
+    return ntlmScheme::GetInstance()->type();
 }
 
 /* Initialize helpers and the like for this auth scheme. Called AFTER parsing the
@@ -479,7 +460,7 @@ AuthNTLMUserRequest::module_start(RH * handler, void *data)
 
     debugs(29, 8, "AuthNTLMUserRequest::module_start: auth state is '" << auth_state << "'");
 
-    if (ntlmConfig.authenticate == NULL) {
+    if (static_cast<AuthNTLMConfig*>(AuthConfig::Find("ntlm"))->authenticate == NULL) {
         debugs(29, 0, "AuthNTLMUserRequest::module_start: no NTLM program specified.");
         handler(data, NULL);
         return;
@@ -546,7 +527,7 @@ AuthNTLMUserRequest::onConnectionClose(ConnStateData *conn)
 AuthUserRequest::Pointer
 AuthNTLMConfig::decode(char const *proxy_auth)
 {
-    NTLMUser *newUser = new NTLMUser(&ntlmConfig);
+    NTLMUser *newUser = new NTLMUser(AuthConfig::Find("ntlm"));
     AuthUserRequest::Pointer auth_user_request = new AuthNTLMUserRequest();
     assert(auth_user_request->user() == NULL);
 
@@ -713,12 +694,6 @@ NTLMUser::deleteSelf() const
 NTLMUser::NTLMUser (AuthConfig *aConfig) : AuthUser (aConfig)
 {
     proxy_auth_list.head = proxy_auth_list.tail = NULL;
-}
-
-AuthConfig *
-ntlmScheme::createConfig()
-{
-    return &ntlmConfig;
 }
 
 const char *

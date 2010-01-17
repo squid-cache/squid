@@ -35,7 +35,7 @@
 
 #include "hash.h"
 #include "MemPool.h"
-#include "typedefs.h" /* for authConfig */
+#include "auth/Config.h"
 
 class AuthUser;
 
@@ -83,7 +83,7 @@ typedef void AUTHSSTATS(StoreEntry *);
 extern void authenticateAuthUserMerge(AuthUser *, AuthUser *);
 
 /// \ingroup AuthAPI
-extern void authenticateInit(authConfig *);
+extern void authenticateInit(Auth::authConfig *);
 /// \ingroup AuthAPI
 extern void authenticateShutdown(void);
 /// \ingroup AuthAPI

@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -57,7 +56,7 @@ authenticateActiveSchemeCount(void)
 {
     int rv = 0;
 
-    for (authConfig::iterator i = Config.authConfiguration.begin(); i != Config.authConfiguration.end(); ++i)
+    for (Auth::authConfig::iterator i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i)
         if ((*i)->configured())
             ++rv;
 
@@ -69,7 +68,7 @@ authenticateActiveSchemeCount(void)
 int
 authenticateSchemeCount(void)
 {
-    int rv = AuthScheme::Schemes().size();
+    int rv = AuthScheme::GetSchemes().size();
 
     debugs(29, 9, "authenticateSchemeCount: " << rv << " active.");
 
@@ -77,22 +76,25 @@ authenticateSchemeCount(void)
 }
 
 static void
-authenticateRegisterWithCacheManager(authConfig * config)
+authenticateRegisterWithCacheManager(Auth::authConfig * config)
 {
-    for (authConfig::iterator i = config->begin(); i != config->end(); ++i) {
+    for (Auth::authConfig::iterator i = config->begin(); i != config->end(); ++i) {
         AuthConfig *scheme = *i;
         scheme->registerWithCacheManager();
     }
 }
 
 void
-authenticateInit(authConfig * config)
+authenticateInit(Auth::authConfig * config)
 {
-    for (authConfig::iterator i = config->begin(); i != config->end(); ++i) {
-        AuthConfig *scheme = *i;
+    if (!config)
+        return;
 
-        if (scheme->configured())
-            scheme->init(scheme);
+    for (Auth::authConfig::iterator i = config->begin(); i != config->end(); ++i) {
+        AuthConfig *schemeCfg = *i;
+
+        if (schemeCfg->configured())
+            schemeCfg->init(schemeCfg);
     }
 
     if (!proxy_auth_username_cache)
@@ -100,7 +102,7 @@ authenticateInit(authConfig * config)
     else
         AuthUser::CachedACLsReset();
 
-    authenticateRegisterWithCacheManager(&Config.authConfiguration);
+    authenticateRegisterWithCacheManager(config);
 }
 
 void
@@ -113,7 +115,7 @@ authenticateShutdown(void)
         hashFreeItems(proxy_auth_username_cache, AuthUserHashPointer::removeFromCache);
         AuthScheme::FreeAll();
     } else {
-        for (AuthScheme::const_iterator i = AuthScheme::Schemes().begin(); i != AuthScheme::Schemes().end(); ++i)
+        for (AuthScheme::iterator i = (AuthScheme::GetSchemes()).begin(); i != (AuthScheme::GetSchemes()).end(); ++i)
             (*i)->done();
     }
 }

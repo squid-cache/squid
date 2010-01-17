@@ -1083,6 +1083,7 @@ tests_testBoilerplate_DEPENDENCIES = \
 
 ## Tests of the CacheManager module.
 tests_testCacheManager_SOURCES = \
+	$(ACL_REGISTRATION_SOURCES) \
 	debug.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
@@ -1256,6 +1257,7 @@ tests_testDiskIO_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 
 ## Tests of the Even module.
 tests_testEvent_SOURCES = \
+	$(ACL_REGISTRATION_SOURCES) \
 	debug.cc \
 	EventLoop.h \
 	EventLoop.cc \
@@ -1407,6 +1409,7 @@ tests_testEvent_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 
 ## Tests of the EventLoop module.
 tests_testEventLoop_SOURCES = \
+	$(ACL_REGISTRATION_SOURCES) \
 	debug.cc \
 	EventLoop.h \
 	EventLoop.cc \
@@ -1556,6 +1559,7 @@ tests_testEventLoop_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	$(SQUID_CPPUNIT_LA)
 
 tests_test_http_range_SOURCES = \
+	$(ACL_REGISTRATION_SOURCES) \
 	tests/test_http_range.cc \
 	BodyPipe.cc \
 	cache_cf.cc \
@@ -1702,6 +1706,7 @@ tests_test_http_range_DEPENDENCIES = \
 
 ## Tests of the HttpRequest module.
 tests_testHttpRequest_SOURCES = \
+	$(ACL_REGISTRATION_SOURCES) \
 	debug.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
@@ -2063,6 +2068,7 @@ tests_testNull_DEPENDENCIES = \
 ## Tests of the URL module.
 ## TODO: Trim this down once the insanity is over.
 tests_testURL_SOURCES = \
+	$(ACL_REGISTRATION_SOURCES) \
 	debug.cc \
 	url.cc \
 	URLScheme.cc \
