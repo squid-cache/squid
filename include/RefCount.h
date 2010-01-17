@@ -37,6 +37,10 @@
 
 #include "config.h"
 
+#if REFCOUNT_DEBUG
+#include "Debug.h"
+#endif
+
 #if HAVE_IOSTREAM
 #include <iostream>
 #endif

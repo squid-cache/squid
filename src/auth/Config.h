@@ -121,4 +121,13 @@ public:
     virtual const char * type() const = 0;
 };
 
+namespace Auth
+{
+
+typedef Vector<AuthConfig *> authConfig;
+
+extern authConfig TheConfig;
+
+}; // namespace Auth
+
 #endif /* SQUID_AUTHCONFIG_H */

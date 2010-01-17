@@ -567,7 +567,7 @@ AuthUserRequest::addReplyAuthHeader(HttpReply * rep, AuthUserRequest::Pointer au
         else {
             /* call each configured & running authscheme */
 
-            for (authConfig::iterator  i = Config.authConfiguration.begin(); i != Config.authConfiguration.end(); ++i) {
+            for (Auth::authConfig::iterator  i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i) {
                 AuthConfig *scheme = *i;
 
                 if (scheme->active())
@@ -605,7 +605,7 @@ authenticateAddTrailer(HttpReply * rep, AuthUserRequest::Pointer auth_user_reque
         auth_user_request->addTrailer(rep, accelerated);
 }
 
-AuthScheme *
+AuthScheme::Pointer
 AuthUserRequest::scheme() const
 {
     /* TODO: this should be overriden by the child and be essentially a no-op */
