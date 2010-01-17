@@ -34,7 +34,7 @@ for FILENAME in `ls -1`; do
 			mv $FILENAME $FILENAME.astylebad
 			mv $FILENAME.astylebak $FILENAME
 		else
-			rm $FILENAME.astylebak
+			rm -f $FILENAME.astylebak
 		fi
 		continue
         fi

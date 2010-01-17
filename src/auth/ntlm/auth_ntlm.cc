@@ -82,10 +82,21 @@ AuthNTLMConfig::done()
 
     if (ntlmauthenticators) {
         helperStatefulShutdown(ntlmauthenticators);
-        helperStatefulFree(ntlmauthenticators);
-        ntlmauthenticators = NULL;
     }
 
+    if (!shutting_down)
+        return;
+
+    delete ntlmauthenticators;
+    ntlmauthenticators = NULL;
+
+    debugs(29, 2, "ntlmScheme::done: NTLM authentication Shutdown.");
+}
+
+/* free any allocated configuration details */
+void
+AuthNTLMConfig::done()
+{
     if (authenticate)
         wordlistDestroy(&authenticate);
 }
@@ -101,13 +112,13 @@ AuthNTLMConfig::dump(StoreEntry * entry, const char *name, AuthConfig * scheme)
         list = list->next;
     }
 
-    storeAppendPrintf(entry, "\n%s ntlm children %d\n",
-                      name, authenticateChildren);
+    storeAppendPrintf(entry, "\n%s ntlm children %d startup=%d idle=%d concurrency=%d\n",
+                      name, authenticateChildren.n_max, authenticateChildren.n_startup, authenticateChildren.n_idle, authenticateChildren.concurrency);
     storeAppendPrintf(entry, "%s %s keep_alive %s\n", name, "ntlm", keep_alive ? "on" : "off");
 
 }
 
-AuthNTLMConfig::AuthNTLMConfig() : authenticateChildren(5), keep_alive(1), authenticate(NULL)
+AuthNTLMConfig::AuthNTLMConfig() : authenticateChildren(20,0,1,1), keep_alive(1), authenticate(NULL)
 { }
 
 void
@@ -121,7 +132,7 @@ AuthNTLMConfig::parse(AuthConfig * scheme, int n_configured, char *param_str)
 
         requirePathnameExists("auth_param ntlm program", authenticate->key);
     } else if (strcasecmp(param_str, "children") == 0) {
-        parse_int(&authenticateChildren);
+        authenticateChildren.parseConfig();
     } else if (strcasecmp(param_str, "keep_alive") == 0) {
         parse_onoff(&keep_alive);
     } else {
@@ -156,7 +167,7 @@ AuthNTLMConfig::init(AuthConfig * scheme)
         authntlm_initialised = 1;
 
         if (ntlmauthenticators == NULL)
-            ntlmauthenticators = helperStatefulCreate("ntlmauthenticator");
+            ntlmauthenticators = new statefulhelper("ntlmauthenticator");
 
         if (!proxy_auth_cache)
             proxy_auth_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
@@ -165,7 +176,7 @@ AuthNTLMConfig::init(AuthConfig * scheme)
 
         ntlmauthenticators->cmdline = authenticate;
 
-        ntlmauthenticators->n_to_start = authenticateChildren;
+        ntlmauthenticators->childs = authenticateChildren;
 
         ntlmauthenticators->ipc_type = IPC_STREAM;
 
@@ -193,7 +204,7 @@ AuthNTLMConfig::active() const
 bool
 AuthNTLMConfig::configured() const
 {
-    if ((authenticate != NULL) && (authenticateChildren != 0)) {
+    if ((authenticate != NULL) && (authenticateChildren.n_max != 0)) {
         debugs(29, 9, "AuthNTLMConfig::configured: returning configured");
         return true;
     }

@@ -33,28 +33,30 @@
  */
 
 #include "squid.h"
-#include "Store.h"
-#include "HttpRequest.h"
-#include "HttpReply.h"
+#include "comm.h"
+#include "comm/ListenStateData.h"
+#include "ConnectionDetail.h"
 #include "errorpage.h"
 #include "fde.h"
-#include "comm.h"
-#include "HttpHeaderRange.h"
+#include "forward.h"
 #include "HttpHdrContRange.h"
+#include "HttpHeaderRange.h"
 #include "HttpHeader.h"
+#include "HttpRequest.h"
+#include "HttpReply.h"
+#include "MemBuf.h"
+#include "rfc1738.h"
+#include "Server.h"
+#include "SquidString.h"
+#include "SquidTime.h"
+#include "Store.h"
+#include "URLScheme.h"
+#include "wordlist.h"
+
 #if DELAY_POOLS
 #include "DelayPools.h"
 #include "MemObject.h"
 #endif
-#include "ConnectionDetail.h"
-#include "forward.h"
-#include "Server.h"
-#include "MemBuf.h"
-#include "wordlist.h"
-#include "SquidTime.h"
-#include "URLScheme.h"
-#include "SquidString.h"
-#include "rfc1738.h"
 
 /**
  \defgroup ServerProtocolFTPInternal Server-Side FTP Internals
@@ -140,10 +142,20 @@ public:
     /// called after the socket is opened, sets up close handler
     void opened(int aFd, const AsyncCall::Pointer &aCloser);
 
-    void close(); /// clears the close handler and calls comm_close
-    void clear(); /// just resets fd and close handler
+    /** Handles all operations needed to properly close the active channel FD.
+     * clearing the close handler, clearing the listen socket properly, and calling comm_close
+     */
+    void close();
+
+    void clear(); /// just resets fd and close handler. does not close active connections.
 
     int fd; /// channel descriptor; \todo: remove because the closer has it
+
+    /** Current listening socket handler. delete on shutdown or abort.
+     * FTP stores a copy of the FD in the field fd above.
+     * Use close() to properly close the channel.
+     */
+    Comm::ListenStateData *listener;
 
 private:
     AsyncCall::Pointer closer; /// Comm close handler callback
@@ -435,6 +447,11 @@ FtpStateData::ctrlClosed(const CommCloseCbParams &io)
 void
 FtpStateData::dataClosed(const CommCloseCbParams &io)
 {
+    if (data.listener) {
+        delete data.listener;
+        data.listener = NULL;
+        data.fd = -1;
+    }
     data.clear();
     failed(ERR_FTP_FAILURE, 0);
     /* failed closes ctrl.fd and frees ftpState */
@@ -2697,7 +2714,7 @@ ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
     int on = 1;
     int x = 0;
 
-    /// Close old data channel, if any. We may open a new one below.
+    /// Close old data channels, if any. We may open a new one below.
     ftpState->data.close();
 
     /*
@@ -2741,7 +2758,12 @@ ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
         return -1;
     }
 
-    if (comm_listen(fd) < 0) {
+    typedef CommCbMemFunT<FtpStateData, CommAcceptCbParams> acceptDialer;
+    AsyncCall::Pointer acceptCall = asyncCall(11, 5, "FtpStateData::ftpAcceptDataConnection",
+                                    acceptDialer(ftpState, &FtpStateData::ftpAcceptDataConnection));
+    ftpState->data.listener = new Comm::ListenStateData(fd, acceptCall, false);
+
+    if (!ftpState->data.listener || ftpState->data.listener->errcode < 0) {
         comm_close(fd);
         return -1;
     }
@@ -2896,8 +2918,8 @@ void FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
     char ntoapeer[MAX_IPSTRLEN];
     debugs(9, 3, "ftpAcceptDataConnection");
 
-    if (io.flag == COMM_ERR_CLOSING)
-        return;
+    // one connection accepted. the handler has stopped listening. drop our local pointer to it.
+    data.listener = NULL;
 
     if (EBIT_TEST(entry->flags, ENTRY_ABORTED)) {
         abortTransaction("entry aborted when accepting data conn");
@@ -2918,17 +2940,20 @@ void FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
                    io.details.peer << "), expecting " <<
                    fd_table[ctrl.fd].ipaddr);
 
+            /* close the bad soures connection down ASAP. */
             comm_close(io.nfd);
+
+            /* we are ony accepting once, so need to re-open the listener socket. */
             typedef CommCbMemFunT<FtpStateData, CommAcceptCbParams> acceptDialer;
             AsyncCall::Pointer acceptCall = asyncCall(11, 5, "FtpStateData::ftpAcceptDataConnection",
                                             acceptDialer(this, &FtpStateData::ftpAcceptDataConnection));
-            comm_accept(data.fd, acceptCall);
+            data.listener = new Comm::ListenStateData(data.fd, acceptCall, false);
             return;
         }
     }
 
     if (io.flag != COMM_OK) {
-        debugs(9, DBG_IMPORTANT, "ftpHandleDataAccept: comm_accept(" << io.nfd << "): " << xstrerr(io.xerrno));
+        debugs(9, DBG_IMPORTANT, "ftpHandleDataAccept: FD " << io.nfd << ": " << xstrerr(io.xerrno));
         /** \todo XXX Need to set error message */
         ftpFail(this);
         return;
@@ -3059,7 +3084,7 @@ void FtpStateData::readStor()
         AsyncCall::Pointer acceptCall = asyncCall(11, 5, "FtpStateData::ftpAcceptDataConnection",
                                         acceptDialer(this, &FtpStateData::ftpAcceptDataConnection));
 
-        comm_accept(data.fd, acceptCall);
+        data.listener = new Comm::ListenStateData(data.fd, acceptCall, false);
     } else {
         debugs(9, DBG_IMPORTANT, HERE << "Unexpected reply code "<< std::setfill('0') << std::setw(3) << code);
         ftpFail(this);
@@ -3195,7 +3220,7 @@ ftpReadList(FtpStateData * ftpState)
         AsyncCall::Pointer acceptCall = asyncCall(11, 5, "FtpStateData::ftpAcceptDataConnection",
                                         acceptDialer(ftpState, &FtpStateData::ftpAcceptDataConnection));
 
-        comm_accept(ftpState->data.fd, acceptCall);
+        ftpState->data.listener = new Comm::ListenStateData(ftpState->data.fd, acceptCall, false);
         /*
          * Cancel the timeout on the Control socket and establish one
          * on the data socket
@@ -3256,7 +3281,7 @@ ftpReadRetr(FtpStateData * ftpState)
         typedef CommCbMemFunT<FtpStateData, CommAcceptCbParams> acceptDialer;
         AsyncCall::Pointer acceptCall = asyncCall(11, 5, "FtpStateData::ftpAcceptDataConnection",
                                         acceptDialer(ftpState, &FtpStateData::ftpAcceptDataConnection));
-        comm_accept(ftpState->data.fd, acceptCall);
+        ftpState->data.listener = new Comm::ListenStateData(ftpState->data.fd, acceptCall, false);
         /*
          * Cancel the timeout on the Control socket and establish one
          * on the data socket
@@ -3848,7 +3873,7 @@ FtpStateData::closeServer()
 /**
  * Did we close all FTP server connection(s)?
  *
- \retval true	Both server control and data channels are closed.
+ \retval true	Both server control and data channels are closed. And not waitigng for a new data connection to open.
  \retval false	Either control channel or data is still active.
  */
 bool
@@ -3927,7 +3952,14 @@ FtpChannel::opened(int aFd, const AsyncCall::Pointer &aCloser)
 void
 FtpChannel::close()
 {
-    if (fd >= 0) {
+    // channels with active listeners will be closed when the listener handler dies.
+    if (listener) {
+        delete listener;
+        listener = NULL;
+        comm_remove_close_handler(fd, closer);
+        closer = NULL;
+        fd = -1;
+    } else if (fd >= 0) {
         comm_remove_close_handler(fd, closer);
         closer = NULL;
         comm_close(fd); // we do not expect to be called back

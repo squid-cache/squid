@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -36,6 +35,7 @@
 
 #include "typedefs.h"
 #include "HttpHeader.h"
+#include "HttpStatusCode.h"
 #include "HttpVersion.h"
 #include "BodyPipe.h"
 
@@ -131,6 +131,11 @@ public:
     int u_start, u_end;
     int v_start, v_end;
     int v_maj, v_min;
+
+    /** HTTP status code to be used on the invalid-request error page
+     * HTTP_STATUS_NONE indicates incomplete parse, HTTP_OK indicates no error.
+     */
+    http_status request_parse_status;
 };
 
 extern void HttpParserInit(HttpParser *, const char *buf, int len);

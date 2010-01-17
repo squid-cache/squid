@@ -34,7 +34,7 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.h \
 	LoadableModules.cc
 
-SUBDIRS	= base eui acl fs repl auth ip icmp ident log
+SUBDIRS	= base comm eui acl fs repl auth ip icmp ident log
 
 if USE_ADAPTATION
 SUBDIRS += adaptation
@@ -165,9 +165,6 @@ COMMON_LIBS = \
 	acl/libapi.la \
 	ip/libip.la \
 	fs/libfs.la
-
-## Loadable Modules needs lib/libLtdl stuff
-INCLUDES += -I$(top_srcdir)/lib -I$(top_srcdir)/lib/libLtdl
 
 EXTRA_PROGRAMS = \
 	DiskIO/DiskDaemon/diskd \
@@ -330,11 +327,14 @@ squid_SOURCES = \
 	gopher.cc \
 	helper.cc \
 	helper.h \
+	HelperChildConfig.h \
+	HelperChildConfig.cc \
 	hier_code.h \
 	HierarchyLogEntry.h \
 	$(HTCPSOURCE) \
 	http.cc \
 	http.h \
+	HttpStatusCode.h \
 	HttpStatusLine.cc \
 	HttpStatusLine.h \
 	HttpHdrCc.cc \
@@ -532,6 +532,7 @@ nodist_squid_SOURCES = \
 
 squid_LDADD = \
 	$(COMMON_LIBS) \
+	comm/libcomm-listener.la \
 	eui/libeui.la \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	log/liblog.la \
@@ -600,6 +601,7 @@ recv_announce_SOURCES = recv-announce.cc SquidNew.cc
 ## mem.cc wants ClientInfo.h
 ## libbase.la wants cbdata.*
 ## libbase.la wants MemBuf.*
+## structs.h wants HelperChildConfig.* (stub it)
 ufsdump_SOURCES = \
 	ClientInfo.h \
 	cbdata.h \
@@ -624,6 +626,8 @@ ufsdump_SOURCES = \
 	ufsdump.cc \
 	dlink.h \
 	dlink.cc \
+	HelperChildConfig.h \
+	tests/stub_HelperChildConfig.cc \
 	HttpRequestMethod.cc \
 	RemovalPolicy.cc \
 	squid.h \
@@ -819,6 +823,15 @@ cf.data: cf.data.pre Makefile
 repl_modules.cc: repl_modules.sh Makefile
 	$(SHELL) $(srcdir)/repl_modules.sh $(REPL_POLICIES) > repl_modules.cc
 
+include $(top_srcdir)/doc/manuals/Substitute.am
+
+squid.8: $(srcdir)/squid.8.in Makefile
+	$(SUBSTITUTE) < $(srcdir)/squid.8.in > $@
+
+man_MANS = squid.8
+EXTRA_DIST += squid.8.in
+CLEANFILES += squid.8
+
 install-data-local: install-sysconfDATA install-dataDATA
 	@if test -f $(DESTDIR)$(DEFAULT_MIME_TABLE) ; then \
 	        echo "$@ will not overwrite existing $(DESTDIR)$(DEFAULT_MIME_TABLE)" ; \
@@ -929,6 +942,7 @@ tests_testHttpReply_SOURCES=\
 	HttpMsg.cc \
 	HttpReply.h \
 	HttpReply.cc \
+	HttpStatusCode.h \
 	HttpStatusLine.h \
 	HttpStatusLine.cc \
 	mem.cc \
@@ -938,6 +952,7 @@ tests_testHttpReply_SOURCES=\
 	Packer.h \
 	Packer.cc \
 	tests/stub_cache_manager.cc \
+	tests/stub_HelperChildConfig.cc \
 	tests/stub_StatHist.cc \
 	tests/stub_store.cc \
 	SquidString.h \
@@ -962,6 +977,8 @@ tests_testHttpReply_DEPENDENCIES= $(SQUID_CPPUNIT_LA) \
 tests_testAuth_SOURCES = \
 	tests/testAuth.cc tests/testMain.cc  tests/testAuth.h \
 	ConfigParser.cc \
+	HelperChildConfig.h \
+	HelperChildConfig.cc \
 	tests/stub_acl.cc tests/stub_cache_cf.cc \
 	tests/stub_helper.cc cbdata.cc String.cc \
 	tests/stub_store.cc HttpHeaderTools.cc HttpHeader.cc mem.cc ClientInfo.h \
@@ -1023,6 +1040,8 @@ tests_testACLMaxUserIP_SOURCES= \
 	ClientInfo.h \
 	ConfigParser.cc \
 	ETag.cc \
+	HelperChildConfig.h \
+	HelperChildConfig.cc \
 	HttpHeader.cc \
 	HttpHeaderTools.cc \
 	HttpHdrContRange.cc \
@@ -1128,6 +1147,8 @@ tests_testCacheManager_SOURCES = \
 	gopher.cc \
 	hier_code.h \
 	helper.cc \
+	HelperChildConfig.h \
+	HelperChildConfig.cc \
 	$(HTCPSOURCE) \
 	http.cc \
 	HttpBody.cc \
@@ -1210,8 +1231,10 @@ tests_testCacheManager_SOURCES = \
 	wordlist.cc
 nodist_tests_testCacheManager_SOURCES = \
 	$(BUILT_SOURCES)
+# comm.cc only requires comm/libcomm-listener.la until fdc_table is dead.
 tests_testCacheManager_LDADD = \
 	$(COMMON_LIBS) \
+	comm/libcomm-listener.la \
 	icmp/libicmp.la icmp/libicmp-core.la \
 	log/liblog.la \
 	$(REPL_OBJS) \
@@ -1235,7 +1258,8 @@ tests_testDiskIO_SOURCES = \
 	tests/testDiskIO.cc \
 	tests/testDiskIO.h \
 	tests/testMain.cc \
-	tests/stub_cache_manager.cc
+	tests/stub_cache_manager.cc \
+	tests/stub_HelperChildConfig.cc
 nodist_tests_testDiskIO_SOURCES= \
 	$(SWAP_TEST_GEN_SOURCES) \
 	SquidMath.cc \
@@ -1306,6 +1330,8 @@ tests_testEvent_SOURCES = \
 	gopher.cc \
 	hier_code.h \
 	helper.cc \
+	HelperChildConfig.h \
+	HelperChildConfig.cc \
 	$(HTCPSOURCE) \
 	http.cc \
 	HttpBody.cc \
@@ -1390,6 +1416,7 @@ nodist_tests_testEvent_SOURCES = \
 tests_testEvent_LDADD = \
 	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
+	comm/libcomm-listener.la \
 	log/liblog.la \
 	$(REPL_OBJS) \
 	${ADAPTATION_LIBS} \
@@ -1456,6 +1483,8 @@ tests_testEventLoop_SOURCES = \
 	ftp.cc \
 	gopher.cc \
 	helper.cc \
+	HelperChildConfig.h \
+	HelperChildConfig.cc \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -1541,6 +1570,7 @@ nodist_tests_testEventLoop_SOURCES = \
 tests_testEventLoop_LDADD = \
 	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
+	comm/libcomm-listener.la \
 	log/liblog.la \
 	$(REPL_OBJS) \
 	${ADAPTATION_LIBS} \
@@ -1596,6 +1626,8 @@ tests_test_http_range_SOURCES = \
 	ftp.cc \
 	gopher.cc \
 	helper.cc \
+	HelperChildConfig.h \
+	HelperChildConfig.cc \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -1687,6 +1719,7 @@ nodist_tests_test_http_range_SOURCES = \
 tests_test_http_range_LDADD = \
 	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
+	comm/libcomm-listener.la \
 	log/liblog.la \
 	$(REPL_OBJS) \
 	${ADAPTATION_LIBS} \
@@ -1752,6 +1785,8 @@ tests_testHttpRequest_SOURCES = \
 	ftp.cc \
 	gopher.cc \
 	helper.cc \
+	HelperChildConfig.h \
+	HelperChildConfig.cc \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -1838,6 +1873,7 @@ nodist_tests_testHttpRequest_SOURCES = \
 tests_testHttpRequest_LDADD = \
 	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
+	comm/libcomm-listener.la \
 	log/liblog.la \
 	$(REPL_OBJS) \
 	${ADAPTATION_LIBS} \
@@ -1912,10 +1948,11 @@ tests_testStore_SOURCES= \
 	tests/testStoreHashIndex.h \
 	tests/TestSwapDir.cc \
 	tests/TestSwapDir.h \
-	tests/stub_fd.cc \
+	tests/stub_HelperChildConfig.cc \
 	tests/stub_HttpReply.cc \
 	tests/stub_cache_manager.cc \
-	$(STORE_TEST_SOURCES)
+	$(STORE_TEST_SOURCES) \
+	tests/stub_fd.cc
 
 nodist_tests_testStore_SOURCES= \
 	$(TESTSOURCES) \
@@ -1945,6 +1982,7 @@ tests_testString_SOURCES = \
 	tests/testString.cc \
 	tests/testString.h \
 	tests/stub_cache_manager.cc \
+	tests/stub_HelperChildConfig.cc \
 	time.cc
 nodist_tests_testString_SOURCES = \
 	$(TESTSOURCES)
@@ -2017,6 +2055,7 @@ tests_testUfs_SOURCES = \
 	tests/testMain.cc \
 	tests/testUfs.h \
 	tests/stub_cache_manager.cc \
+	tests/stub_HelperChildConfig.cc \
 	$(SWAP_TEST_SOURCES)
 nodist_tests_testUfs_SOURCES = \
 	$(SWAP_TEST_GEN_SOURCES) \
@@ -2037,6 +2076,7 @@ tests_testCoss_SOURCES = \
 	tests/testMain.cc \
 	tests/testCoss.h \
 	tests/stub_cache_manager.cc \
+	tests/stub_HelperChildConfig.cc \
 	$(SWAP_TEST_SOURCES)
 nodist_tests_testCoss_SOURCES = \
 	swap_log_op.cc \
@@ -2117,6 +2157,8 @@ tests_testURL_SOURCES = \
 	ftp.cc \
 	gopher.cc \
 	helper.cc \
+	HelperChildConfig.h \
+	HelperChildConfig.cc \
 	hier_code.h \
 	$(HTCPSOURCE) \
 	http.cc \
@@ -2200,6 +2242,7 @@ nodist_tests_testURL_SOURCES = \
 tests_testURL_LDADD = \
 	$(COMMON_LIBS) \
 	icmp/libicmp.la icmp/libicmp-core.la \
+	comm/libcomm-listener.la \
 	log/liblog.la \
 	$(REGEXLIB) \
 	$(REPL_OBJS) \
