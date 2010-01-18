@@ -669,7 +669,7 @@ msgstr ""
 "Aţi cerut un document cu directiva <q>only-if-cached</q> (numai dacă există "
 "deja în cache). Documentul nu a fost găsit în cache, <em>sau</em> a "
 "necesitat o revalidare, revalidare interzisă de directiva <q>only-if-"
-"cached<-q>."
+"cached</q>."
 
 #: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
 #: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
