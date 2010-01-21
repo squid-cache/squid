@@ -90,15 +90,10 @@ AuthNTLMConfig::done()
     delete ntlmauthenticators;
     ntlmauthenticators = NULL;
 
-    debugs(29, 2, "ntlmScheme::done: NTLM authentication Shutdown.");
-}
-
-/* free any allocated configuration details */
-void
-AuthNTLMConfig::done()
-{
     if (authenticate)
         wordlistDestroy(&authenticate);
+
+    debugs(29, 2, "ntlmScheme::done: NTLM authentication Shutdown.");
 }
 
 void
