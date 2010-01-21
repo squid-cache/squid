@@ -1108,7 +1108,7 @@ AC_ARG_ENABLE(cachemgr-hostname,
 AM_CONDITIONAL(USE_SQUID_EUI, false)
 use_sq_eui="yes"
 AC_ARG_ENABLE(eui,
-  AS_HELP_STRING([--disable-eui],[Enable use of ARP / MAC/ EUI (ether address)]),
+  AS_HELP_STRING([--disable-eui],[Disable use of ARP / MAC/ EUI (ether address)]),
   [use_sq_eui="$enableval"])
 if test "$use_sq_eui" = "yes" ; then
      AC_MSG_NOTICE([EUI controls enabled (ether address)])

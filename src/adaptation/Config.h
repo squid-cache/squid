@@ -39,6 +39,7 @@ public:
     int send_client_username;
     int service_failure_limit;
     int service_revival_delay;
+    int icap_uses_indirect_client;
 
     Vector<ServiceConfig*> serviceConfigs;
 
