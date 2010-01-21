@@ -109,14 +109,10 @@ AuthNegotiateConfig::done()
     delete negotiateauthenticators;
     negotiateauthenticators = NULL;
 
-    debugs(29, 2, "negotiateScheme::done: Negotiate authentication Shutdown.");
-}
-
-void
-AuthNegotiateConfig::done()
-{
     if (authenticate)
         wordlistDestroy(&authenticate);
+
+    debugs(29, 2, "negotiateScheme::done: Negotiate authentication Shutdown.");
 }
 
 void

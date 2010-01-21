@@ -294,7 +294,6 @@ AuthBasicConfig::dump(StoreEntry * entry, const char *name, AuthConfig * scheme)
 
 AuthBasicConfig::AuthBasicConfig() :
         authenticateChildren(20,0,1,1),
-        authenticateConcurrency(1),
         authenticate(NULL),
         credentialsTTL( 2*60*60 ),
         casesensitive(0),
