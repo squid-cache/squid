@@ -399,13 +399,13 @@ ClientRequestContext::httpStateIsValid()
 
 #if FOLLOW_X_FORWARDED_FOR
 /**
- * clientFollowXForwardedForCheck() checks the content of X-Forwarded-For: 
+ * clientFollowXForwardedForCheck() checks the content of X-Forwarded-For:
  * against the followXFF ACL, or cleans up and passes control to
  * clientAccessCheck().
  *
  * The trust model here is a little ambiguous. So to clarify the logic:
  * - we may always use the direct client address as the client IP.
- * - these trust tests merey tell whether we trust given IP enough to believe the 
+ * - these trust tests merey tell whether we trust given IP enough to believe the
  *   IP string which it appended to the X-Forwarded-For: header.
  * - if at any point we don't trust what an IP adds we stop looking.
  * - at that point the current contents of indirect_client_addr are the value set
