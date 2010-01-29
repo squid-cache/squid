@@ -1093,7 +1093,7 @@ DOC_START
 
 	   tproxy	Support Linux TPROXY for spoofing outgoing
 			connections using the client IP address.
-			NP: disables authentication and IPv6 on the port.
+			NP: disables authentication and maybe IPv6 on the port.
 
 	   accel	Accelerator mode. Also needs at least one of
 			vhost / vport / defaultsite.
