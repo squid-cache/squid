@@ -750,10 +750,10 @@ DOC_START
 
 	The end result of this process is an IP address that we will
 	refer to as the indirect client address.  This address may
-	be treated as the client address for access control, delay
+	be treated as the client address for access control, ICAP, delay
 	pools and logging, depending on the acl_uses_indirect_client,
-	delay_pool_uses_indirect_client and log_uses_indirect_client
-	options.
+	icap_uses_indirect_client, delay_pool_uses_indirect_client and
+	log_uses_indirect_client options.
 
 	This clause only supports fast acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
@@ -3561,6 +3561,19 @@ DOC_START
 Example:
  acl buggy_server url_regex ^http://....
  broken_posts allow buggy_server
+DOC_END
+
+NAME: icap_uses_indirect_client
+COMMENT: on|off
+TYPE: onoff
+IFDEF: FOLLOW_X_FORWARDED_FOR
+DEFAULT: on
+LOC: Adaptation::Icap::TheConfig.icap_uses_indirect_client
+DOC_START
+   Controls whether the indirect client address
+   (see follow_x_forwarded_for) instead of the
+   direct client address is passed to an ICAP
+   server as "X-Client-IP".
 DOC_END
 
 NAME: via
