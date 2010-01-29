@@ -461,17 +461,17 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry * aLogEntry)
         mb.init();
         packerToMemInit(&p, &mb);
         request->header.packInto(&p);
-	//This is the request after adaptation or redirection
-	aLogEntry->headers.adapted_request = xstrdup(mb.buf);
+        //This is the request after adaptation or redirection
+        aLogEntry->headers.adapted_request = xstrdup(mb.buf);
 
-	// the virgin request is saved to aLogEntry->request
-	if (aLogEntry->request) {
-	    packerClean(&p);
-	    mb.reset();
-	    packerToMemInit(&p, &mb);
-	    aLogEntry->request->header.packInto(&p);
-	    aLogEntry->headers.request = xstrdup(mb.buf);
-	}
+        // the virgin request is saved to aLogEntry->request
+        if (aLogEntry->request) {
+            packerClean(&p);
+            mb.reset();
+            packerToMemInit(&p, &mb);
+            aLogEntry->request->header.packInto(&p);
+            aLogEntry->headers.request = xstrdup(mb.buf);
+        }
 
 #if ICAP_CLIENT
         packerClean(&p);
