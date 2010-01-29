@@ -938,9 +938,10 @@ ErrorState::BuildContent()
     int l = 0;
 
     /** error_directory option in squid.conf overrides translations.
+     * Custom errors are always found either in error_directory or the templates directory.
      * Otherwise locate the Accept-Language header
      */
-    if (!Config.errorDirectory && request && request->header.getList(HDR_ACCEPT_LANGUAGE, &hdr) ) {
+    if (!Config.errorDirectory && page_id < ERR_MAX && request && request->header.getList(HDR_ACCEPT_LANGUAGE, &hdr) ) {
 
         size_t pos = 0; // current parsing position in header string
         char *reset = NULL; // where to reset the p pointer for each new tag file
