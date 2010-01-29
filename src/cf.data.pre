@@ -2495,7 +2495,7 @@ DOC_START
 
 	HTTP cache related format codes:
 
-		[http::]>h	Virgin request header. Optional header name argument
+		[http::]>h	Original request header. Optional header name argument
 				on the format header[:[separator]element]
 		[http::]>ha	The HTTP request headers after adaptation and redirection. 
 				Optional header name argument as for >h
