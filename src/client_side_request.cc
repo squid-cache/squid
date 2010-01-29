@@ -399,23 +399,30 @@ ClientRequestContext::httpStateIsValid()
 
 #if FOLLOW_X_FORWARDED_FOR
 /**
- * clientFollowXForwardedForCheck() checks the indirect_client_addr
+ * clientFollowXForwardedForCheck() checks the content of X-Forwarded-For: 
  * against the followXFF ACL, or cleans up and passes control to
  * clientAccessCheck().
+ *
+ * The trust model here is a little ambiguous. So to clarify the logic:
+ * - we may always use the direct client address as the client IP.
+ * - these trust tests merey tell whether we trust given IP enough to believe the 
+ *   IP string which it appended to the X-Forwarded-For: header.
+ * - if at any point we don't trust what an IP adds we stop looking.
+ * - at that point the current contents of indirect_client_addr are the value set
+ *   by the last previously trusted IP.
+ * ++ indirect_client_addr contains the remote direct client from the trusted peers viewpoint.
  */
-
 static void
 clientFollowXForwardedForCheck(int answer, void *data)
 {
     ClientRequestContext *calloutContext = (ClientRequestContext *) data;
-    ClientHttpRequest *http = NULL;
-    HttpRequest *request = NULL;
 
     if (!calloutContext->httpStateIsValid())
         return;
 
-    http = calloutContext->http;
-    request = http->request;
+    ClientHttpRequest *http = calloutContext->http;
+    HttpRequest *request = http->request;
+
     /*
      * answer should be be ACCESS_ALLOWED or ACCESS_DENIED if we are
      * called as a result of ACL checks, or -1 if we are called when
@@ -423,12 +430,11 @@ clientFollowXForwardedForCheck(int answer, void *data)
      */
     if (answer == ACCESS_ALLOWED &&
             request->x_forwarded_for_iterator.size () != 0) {
+
         /*
-        * The IP address currently in request->indirect_client_addr
-        * is trusted to use X-Forwarded-For.  Remove the last
-        * comma-delimited element from x_forwarded_for_iterator and use
-        * it to to replace indirect_client_addr, then repeat the cycle.
-        */
+         * Remove the last comma-delimited element from the
+         * x_forwarded_for_iterator and use it to repeat the cycle.
+         */
         const char *p;
         const char *asciiaddr;
         int l;
@@ -457,17 +463,12 @@ clientFollowXForwardedForCheck(int answer, void *data)
         if (xinet_pton(AF_INET, asciiaddr, &addr) != 0) {
             request->indirect_client_addr = addr;
             request->x_forwarded_for_iterator.cut(l);
-            if (! Config.onoff.acl_uses_indirect_client) {
-                /*
-                * If acl_uses_indirect_client is off, then it's impossible
-                * to follow more than one level of X-Forwarded-For.
-                */
-                request->x_forwarded_for_iterator.clean();
+            calloutContext->acl_checklist = clientAclChecklistCreate(Config.accessList.followXFF, http);
+            if (!Config.onoff.acl_uses_indirect_client) {
+                /* override the default src_addr tested if we have to go deeper than one level into XFF */
+                Filled(calloutContext->acl_checklist)->src_addr = request->indirect_client_addr;
             }
-            calloutContext->acl_checklist =
-                clientAclChecklistCreate(Config.accessList.followXFF, http);
-            calloutContext->acl_checklist->
-            nonBlockingCheck(clientFollowXForwardedForCheck, data);
+            calloutContext->acl_checklist->nonBlockingCheck(clientFollowXForwardedForCheck, data);
             return;
         }
     } /*if (answer == ACCESS_ALLOWED &&
@@ -485,15 +486,8 @@ clientFollowXForwardedForCheck(int answer, void *data)
     request->x_forwarded_for_iterator.clean();
     request->flags.done_follow_x_forwarded_for = 1;
 
-    /* If follow XFF is denied, we reset the indirect_client_addr
-       to the direct client. Thats the one we are configured to check for */
-    if (answer == ACCESS_DENIED) {
-        request->indirect_client_addr = request->client_addr;
-    }
-    /* on a failure, leave it as undefined state ?? */
-    else if (answer != ACCESS_ALLOWED) {
-        debugs(28, DBG_CRITICAL, "Follow X-Forwarded-For encountered an error. Ignoring address: " << request->indirect_client_addr );
-        request->indirect_client_addr = request->client_addr;
+    if (answer != ACCESS_ALLOWED && answer != ACCESS_DENIED) {
+        debugs(28, DBG_CRITICAL, "ERROR: Processing X-Forwarded-For. Stopping at IP address: " << request->indirect_client_addr );
     }
 
     /* process actual access ACL as normal. */
@@ -509,9 +503,16 @@ ClientRequestContext::clientAccessCheck()
     if (!http->request->flags.done_follow_x_forwarded_for &&
             Config.accessList.followXFF &&
             http->request->header.has(HDR_X_FORWARDED_FOR)) {
-        http->request->x_forwarded_for_iterator =
-            http->request->header.getList(HDR_X_FORWARDED_FOR);
-        clientFollowXForwardedForCheck(ACCESS_ALLOWED, this);
+
+        /* we always trust the direct client address for actual use */
+        http->request->indirect_client_addr = http->request->client_addr;
+
+        /* setup the XFF iterator for processing */
+        http->request->x_forwarded_for_iterator = http->request->header.getList(HDR_X_FORWARDED_FOR);
+
+        /* begin by checking to see if we trust direct client enough to walk XFF */
+        acl_checklist = clientAclChecklistCreate(Config.accessList.followXFF, http);
+        acl_checklist->nonBlockingCheck(clientFollowXForwardedForCheck, this);
         return;
     }
 #endif /* FOLLOW_X_FORWARDED_FOR */
