@@ -48,8 +48,7 @@ class AccessLogEntry
 
 public:
     AccessLogEntry() : url(NULL) , reply(NULL), request(NULL),
-	adapted_request(NULL)
-    {}
+            adapted_request(NULL) {}
 
     const char *url;
 
@@ -136,7 +135,7 @@ public:
 
     public:
         Headers() : request(NULL),
-	    adapted_request(NULL),
+                adapted_request(NULL),
 
 #if ICAP_CLIENT
                 icap(NULL),
@@ -145,7 +144,7 @@ public:
 
         char *request; //< virgin HTTP request headers
 
-	char *adapted_request; //< HTTP request headers after adaptation and redirection
+        char *adapted_request; //< HTTP request headers after adaptation and redirection
 
 
 #if ICAP_CLIENT
@@ -166,7 +165,7 @@ public:
     } _private;
     HierarchyLogEntry hier;
     HttpReply *reply;
-    HttpRequest *request; //< virgin HTTP request 
+    HttpRequest *request; //< virgin HTTP request
     HttpRequest *adapted_request; //< HTTP request after adaptation and redirection
 
 
