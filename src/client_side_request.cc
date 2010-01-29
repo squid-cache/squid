@@ -438,7 +438,7 @@ clientFollowXForwardedForCheck(int answer, void *data)
         const char *p;
         const char *asciiaddr;
         int l;
-        struct in_addr addr;
+        IpAddress addr;
         p = request->x_forwarded_for_iterator.termedBuf();
         l = request->x_forwarded_for_iterator.size();
 
@@ -460,7 +460,7 @@ clientFollowXForwardedForCheck(int answer, void *data)
         while (l > 0 && ! (p[l-1] == ',' || xisspace(p[l-1])))
             l--;
         asciiaddr = p+l;
-        if (xinet_pton(AF_INET, asciiaddr, &addr) != 0) {
+        if ((addr = asciiaddr)) {
             request->indirect_client_addr = addr;
             request->x_forwarded_for_iterator.cut(l);
             calloutContext->acl_checklist = clientAclChecklistCreate(Config.accessList.followXFF, http);
@@ -506,6 +506,7 @@ ClientRequestContext::clientAccessCheck()
 
         /* we always trust the direct client address for actual use */
         http->request->indirect_client_addr = http->request->client_addr;
+        http->request->indirect_client_addr.SetPort(0);
 
         /* setup the XFF iterator for processing */
         http->request->x_forwarded_for_iterator = http->request->header.getList(HDR_X_FORWARDED_FOR);
