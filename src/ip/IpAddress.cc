@@ -251,13 +251,7 @@ bool IpAddress::IsSockAddr() const
 bool IpAddress::IsIPv4() const
 {
 #if USE_IPV6
-
-    return IsAnyAddr() || IsNoAddr() ||
-           ( m_SocketAddr.sin6_addr.s6_addr32[0] == htonl(0x00000000) &&
-             m_SocketAddr.sin6_addr.s6_addr32[1] == htonl(0x00000000) &&
-             m_SocketAddr.sin6_addr.s6_addr32[2] == htonl(0x0000FFFF)
-           );
-
+    return IsAnyAddr() || IsNoAddr() || IN6_IS_ADDR_V4MAPPED( &m_SocketAddr.sin6_addr );
 #else
     return true; // enforce IPv4 in IPv4-only mode.
 #endif
@@ -266,12 +260,7 @@ bool IpAddress::IsIPv4() const
 bool IpAddress::IsIPv6() const
 {
 #if USE_IPV6
-
-    return IsAnyAddr() || IsNoAddr() ||
-           !( m_SocketAddr.sin6_addr.s6_addr32[0] == htonl(0x00000000) &&
-              m_SocketAddr.sin6_addr.s6_addr32[1] == htonl(0x00000000) &&
-              m_SocketAddr.sin6_addr.s6_addr32[2] == htonl(0x0000FFFF)
-            );
+    return IsAnyAddr() || IsNoAddr() || !IN6_IS_ADDR_V4MAPPED( &m_SocketAddr.sin6_addr );
 #else
     return false; // enforce IPv4 in IPv4-only mode.
 #endif
@@ -280,13 +269,8 @@ bool IpAddress::IsIPv6() const
 bool IpAddress::IsAnyAddr() const
 {
 #if USE_IPV6
-    return     m_SocketAddr.sin6_addr.s6_addr32[0] == 0
-               && m_SocketAddr.sin6_addr.s6_addr32[1] == 0
-               && m_SocketAddr.sin6_addr.s6_addr32[2] == 0
-               && m_SocketAddr.sin6_addr.s6_addr32[3] == 0
-               ;
+    return IN6_IS_ADDR_UNSPECIFIED( &m_SocketAddr.sin6_addr );
 #else
-
     return (INADDR_ANY == m_SocketAddr.sin_addr.s_addr);
 #endif
 }
@@ -310,15 +294,20 @@ void IpAddress::SetEmpty()
 bool IpAddress::SetIPv4()
 {
 #if USE_IPV6
+    static const struct in6_addr v4_localhost = {{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0xff, 0xff, 0xff, 0xff, 0x7f, 0x00, 0x00, 0x01 }}
+    };
+    static const struct in6_addr v4_any = {{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0xff, 0xff, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00 }}
+    };
 
     if ( IsLocalhost() ) {
-        m_SocketAddr.sin6_addr.s6_addr32[2] = htonl(0xffff);
-        m_SocketAddr.sin6_addr.s6_addr32[3] = htonl(0x7F000001);
+        m_SocketAddr.sin6_addr = v4_localhost;
         return true;
     }
 
     if ( IsAnyAddr() ) {
-        m_SocketAddr.sin6_addr.s6_addr32[2] = htonl(0xffff);
+        m_SocketAddr.sin6_addr = v4_any;
         return true;
     }
 
@@ -335,19 +324,12 @@ bool IpAddress::SetIPv4()
 bool IpAddress::IsLocalhost() const
 {
 #if USE_IPV6
-    return    (   m_SocketAddr.sin6_addr.s6_addr32[0] == 0
-                  && m_SocketAddr.sin6_addr.s6_addr32[1] == 0
-                  && m_SocketAddr.sin6_addr.s6_addr32[2] == 0
-                  && m_SocketAddr.sin6_addr.s6_addr32[3] == htonl(0x1)
-              )
-              ||
-              (   m_SocketAddr.sin6_addr.s6_addr32[0] == 0
-                  && m_SocketAddr.sin6_addr.s6_addr32[1] == 0
-                  && m_SocketAddr.sin6_addr.s6_addr32[2] == htonl(0xffff)
-                  && m_SocketAddr.sin6_addr.s6_addr32[3] == htonl(0x7F000001)
-              );
-#else
+    static const struct in6_addr v4_localhost = {{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0xff, 0xff, 0xff, 0xff, 0x7f, 0x00, 0x00, 0x01 }}
+    };
 
+    return IN6_IS_ADDR_LOOPBACK( &m_SocketAddr.sin6_addr ) || IN6_ARE_ADDR_EQUAL( &m_SocketAddr.sin6_addr, &v4_localhost );
+#else
     return (htonl(0x7F000001) == m_SocketAddr.sin_addr.s_addr);
 #endif
 }
@@ -369,13 +351,12 @@ bool IpAddress::IsNoAddr() const
 {
     // IFF the address == 0xff..ff (all ones)
 #if USE_IPV6
-    return     m_SocketAddr.sin6_addr.s6_addr32[0] == 0xFFFFFFFF
-               && m_SocketAddr.sin6_addr.s6_addr32[1] == 0xFFFFFFFF
-               && m_SocketAddr.sin6_addr.s6_addr32[2] == 0xFFFFFFFF
-               && m_SocketAddr.sin6_addr.s6_addr32[3] == 0xFFFFFFFF
-               ;
-#else
+    static const struct in6_addr v6_noaddr = {{{ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }}
+    };
 
+    return IN6_ARE_ADDR_EQUAL( &m_SocketAddr.sin6_addr, &v6_noaddr );
+#else
     return 0xFFFFFFFF == m_SocketAddr.sin_addr.s_addr;
 #endif
 }
@@ -445,8 +426,8 @@ bool IpAddress::GetReverseString(char buf[MAX_IPSTRLEN], int show_type) const
 
     if (show_type == AF_INET && IsIPv4()) {
 #if USE_IPV6
-
-        return GetReverseString4(buf, *(struct in_addr*)&m_SocketAddr.sin6_addr.s6_addr32[3] );
+        struct in_addr* tmp = (struct in_addr*)&m_SocketAddr.sin6_addr.s6_addr[12];
+        return GetReverseString4(buf, *tmp);
     } else if ( show_type == AF_INET6 && IsIPv6() ) {
         return GetReverseString6(buf, m_SocketAddr.sin6_addr);
 #else
@@ -1156,22 +1137,19 @@ void IpAddress::Map4to6(const struct in_addr &in, struct in6_addr &out) const
 
     if ( in.s_addr == 0x00000000) {
         /* ANYADDR */
-
         memset(&out, 0, sizeof(struct in6_addr));
     } else if ( in.s_addr == 0xFFFFFFFF) {
         /* NOADDR */
-
-        out.s6_addr32[0] = 0xFFFFFFFF;
-        out.s6_addr32[1] = 0xFFFFFFFF;
-        out.s6_addr32[2] = 0xFFFFFFFF;
-        out.s6_addr32[3] = 0xFFFFFFFF;
-
+        memset(&out, 255, sizeof(struct in6_addr));
     } else {
         /* general */
-
         memset(&out, 0, sizeof(struct in6_addr));
-        out.s6_addr32[2] = htonl(0xFFFF);
-        out.s6_addr32[3] = in.s_addr;
+        out.s6_addr[10] = 0xFF;
+        out.s6_addr[11] = 0xFF;
+        out.s6_addr[12] = ((uint8_t *)&in.s_addr)[0];
+        out.s6_addr[13] = ((uint8_t *)&in.s_addr)[1];
+        out.s6_addr[14] = ((uint8_t *)&in.s_addr)[2];
+        out.s6_addr[15] = ((uint8_t *)&in.s_addr)[3];
     }
 }
 
@@ -1182,7 +1160,10 @@ void IpAddress::Map6to4(const struct in6_addr &in, struct in_addr &out) const
     /* general */
 
     memset(&out, 0, sizeof(struct in_addr));
-    out.s_addr = in.s6_addr32[3];
+    ((uint8_t *)&out.s_addr)[0] = in.s6_addr[12];
+    ((uint8_t *)&out.s_addr)[1] = in.s6_addr[13];
+    ((uint8_t *)&out.s_addr)[2] = in.s6_addr[14];
+    ((uint8_t *)&out.s_addr)[3] = in.s6_addr[15];
 }
 
 #endif
