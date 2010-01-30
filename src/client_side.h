@@ -239,7 +239,7 @@ public:
      \param peer      if it is not NULL also check if the peer is the pinning peer
      \return          The fd of the server side connection or -1 if fails.
      */
-    int validatePinnedConnection(HttpRequest *request, const struct peer *peer=NULL);
+    int validatePinnedConnection(HttpRequest *request, const struct peer *peer);
     /**
      * returts the pinned peer if exists, NULL otherwise
      */

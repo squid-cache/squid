@@ -385,8 +385,8 @@ peerSelectPinned(ps_state * ps)
     peer *peer;
     if (!request->pinnedConnection())
         return;
-    if (request->pinnedConnection()->validatePinnedConnection(request) != -1) {
-        peer = request->pinnedConnection()->pinnedPeer();
+    peer = request->pinnedConnection()->pinnedPeer();
+    if (request->pinnedConnection()->validatePinnedConnection(request, peer) != -1) {
         if (peer && peerAllowedToUse(peer, request)) {
             peerAddFwdServer(&ps->servers, peer, PINNED);
             if (ps->entry)
