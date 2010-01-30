@@ -1128,11 +1128,13 @@ NOCOMMENT_START
 	<tag>logformat</tag>
 	<p>New log format tag sets %icap::* %adapt::* for adaptation information.
 	   %Hs tag deprecated and replaced by request/reply specific &gt;Hs and &lt;Hs
+	   new %ha option to log original headers received from client (after adaptation and redirection)
 	   HTTP request/reply format tags may now be optionally prefixed with http::.
 	   Old forms will be deprecated in some as yet undecided future release.
 	<verb>
 		dt		Total time spent making DNS lookups (milliseconds)
 
+		[http::]>ha	The HTTP request headers after adaptation and redirection.
 		[http::]>Hs	HTTP status code sent to the client
 		[http::]<Hs	HTTP status code received from the next hop
 		[http::]>sh	Received HTTP request headers size

@@ -1243,6 +1243,10 @@ ClientHttpRequest::doCallouts()
 {
     assert(calloutContext);
 
+    /*Save the original request for logging purposes*/
+    if (!calloutContext->http->al.request)
+        calloutContext->http->al.request = HTTPMSGLOCK(request);
+
     if (!calloutContext->http_access_done) {
         debugs(83, 3, HERE << "Doing calloutContext->clientAccessCheck()");
         calloutContext->http_access_done = true;

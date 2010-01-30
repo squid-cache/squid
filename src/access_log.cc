@@ -351,6 +351,10 @@ typedef enum {
     LFT_REQUEST_HEADER_ELEM,
     LFT_REQUEST_ALL_HEADERS,
 
+    LFT_ADAPTED_REQUEST_HEADER,
+    LFT_ADAPTED_REQUEST_HEADER_ELEM,
+    LFT_ADAPTED_REQUEST_ALL_HEADERS,
+
     LFT_REPLY_HEADER,
     LFT_REPLY_HEADER_ELEM,
     LFT_REPLY_ALL_HEADERS,
@@ -500,6 +504,8 @@ struct logformat_token_table_entry logformat_token_table[] = {
     {"<tt", LFT_TOTAL_SERVER_SIDE_RESPONSE_TIME},
     {"dt", LFT_DNS_WAIT_TIME},
 
+    {">ha", LFT_ADAPTED_REQUEST_HEADER},
+    {">ha", LFT_ADAPTED_REQUEST_ALL_HEADERS},
     {">h", LFT_REQUEST_HEADER},
     {">h", LFT_REQUEST_ALL_HEADERS},
     {"<h", LFT_REPLY_HEADER},
@@ -740,6 +746,17 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
 
             break;
 
+        case LFT_ADAPTED_REQUEST_HEADER:
+
+            if (al->request)
+                sb = al->adapted_request->header.getByName(fmt->data.header.header);
+
+            out = sb.termedBuf();
+
+            quote = 1;
+
+            break;
+
         case LFT_REPLY_HEADER:
             if (al->reply)
                 sb = al->reply->header.getByName(fmt->data.header.header);
@@ -929,6 +946,16 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
 
             break;
 
+        case LFT_ADAPTED_REQUEST_HEADER_ELEM:
+            if (al->adapted_request)
+                sb = al->adapted_request->header.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator);
+
+            out = sb.termedBuf();
+
+            quote = 1;
+
+            break;
+
         case LFT_REPLY_HEADER_ELEM:
             if (al->reply)
                 sb = al->reply->header.getByNameListMember(fmt->data.header.header, fmt->data.header.element, fmt->data.header.separator);
@@ -941,6 +968,13 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
 
         case LFT_REQUEST_ALL_HEADERS:
             out = al->headers.request;
+
+            quote = 1;
+
+            break;
+
+        case LFT_ADAPTED_REQUEST_ALL_HEADERS:
+            out = al->headers.adapted_request;
 
             quote = 1;
 
@@ -1357,6 +1391,8 @@ done:
     case LFT_ICAP_REP_HEADER:
 #endif
 
+    case LFT_ADAPTED_REQUEST_HEADER:
+
     case LFT_REQUEST_HEADER:
 
     case LFT_REPLY_HEADER:
@@ -1379,6 +1415,11 @@ done:
                 case LFT_REQUEST_HEADER:
                     lt->type = LFT_REQUEST_HEADER_ELEM;
                     break;
+
+                case LFT_ADAPTED_REQUEST_HEADER:
+                    lt->type = LFT_ADAPTED_REQUEST_HEADER_ELEM;
+                    break;
+
                 case LFT_REPLY_HEADER:
                     lt->type = LFT_REPLY_HEADER_ELEM;
                     break;
@@ -1404,6 +1445,11 @@ done:
             case LFT_REQUEST_HEADER:
                 lt->type = LFT_REQUEST_ALL_HEADERS;
                 break;
+
+            case LFT_ADAPTED_REQUEST_HEADER:
+                lt->type = LFT_ADAPTED_REQUEST_ALL_HEADERS;
+                break;
+
             case LFT_REPLY_HEADER:
                 lt->type = LFT_REPLY_ALL_HEADERS;
                 break;
@@ -1517,7 +1563,7 @@ accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definit
                 case LFT_ICAP_REP_HEADER_ELEM:
 #endif
                 case LFT_REQUEST_HEADER_ELEM:
-
+                case LFT_ADAPTED_REQUEST_HEADER_ELEM:
                 case LFT_REPLY_HEADER_ELEM:
 
                     if (t->data.header.separator != ',')
@@ -1530,6 +1576,9 @@ accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definit
                     switch (type) {
                     case LFT_REQUEST_HEADER_ELEM:
                         type = LFT_REQUEST_HEADER_ELEM;
+                        break;
+                    case LFT_ADAPTED_REQUEST_HEADER_ELEM:
+                        type = LFT_ADAPTED_REQUEST_HEADER_ELEM;
                         break;
                     case LFT_REPLY_HEADER_ELEM:
                         type = LFT_REPLY_HEADER_ELEM;
@@ -1552,7 +1601,7 @@ accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definit
                     break;
 
                 case LFT_REQUEST_ALL_HEADERS:
-
+                case LFT_ADAPTED_REQUEST_ALL_HEADERS:
                 case LFT_REPLY_ALL_HEADERS:
 
 #if ICAP_CLIENT
@@ -1564,6 +1613,9 @@ accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definit
                     switch (type) {
                     case LFT_REQUEST_ALL_HEADERS:
                         type = LFT_REQUEST_HEADER;
+                        break;
+                    case LFT_ADAPTED_REQUEST_ALL_HEADERS:
+                        type = LFT_ADAPTED_REQUEST_HEADER;
                         break;
                     case LFT_REPLY_ALL_HEADERS:
                         type = LFT_REPLY_HEADER;
@@ -2348,6 +2400,9 @@ accessLogFreeMemory(AccessLogEntry * aLogEntry)
 
     safe_free(aLogEntry->headers.reply);
     safe_free(aLogEntry->cache.authuser);
+
+    safe_free(aLogEntry->headers.adapted_request);
+    HTTPMSGUNLOCK(aLogEntry->adapted_request);
 
     HTTPMSGUNLOCK(aLogEntry->reply);
     HTTPMSGUNLOCK(aLogEntry->request);

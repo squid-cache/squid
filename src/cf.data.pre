@@ -2408,8 +2408,10 @@ DOC_START
 
 	HTTP cache related format codes:
 
-		[http::]>h	Request header. Optional header name argument
+		[http::]>h	Original request header. Optional header name argument
 				on the format header[:[separator]element]
+		[http::]>ha	The HTTP request headers after adaptation and redirection. 
+				Optional header name argument as for >h
 		[http::]<h	Reply header. Optional header name argument
 				as for >h
 		[http::]un	User name
