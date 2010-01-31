@@ -146,6 +146,7 @@ wccpConnectionOpen(void)
     }
 
     Config.Wccp.address.SetPort(WCCP_PORT);
+    Config.Wccp.router.SetPort(WCCP_PORT);
 
     theWccpConnection = comm_open_listener(SOCK_DGRAM,
                                            IPPROTO_UDP,
