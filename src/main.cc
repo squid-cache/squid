@@ -632,7 +632,11 @@ mainReconfigure(void)
     refererCloseLog();
     errorClean();
     enter_suid();		/* root to read config file */
-    parseConfigFile(ConfigFile, manager);
+    // parse the config returns a count of errors encountered.
+    if ( parseConfigFile(ConfigFile, manager) != 0) {
+        // for now any errors are a fatal condition...
+        self_destruct();
+    }
     setUmask(Config.umask);
     Mem::Report();
     setEffectiveUser();
@@ -1057,29 +1061,49 @@ mainInitialize(void)
     configured_once = 1;
 }
 
+// unsafe main routine -- may throw
+int SquidMain(int argc, char **argv);
+/// unsafe main routine wrapper to catch exceptions
+static int SquidMainSafe(int argc, char **argv);
+
 #if USE_WIN32_SERVICE
 /* When USE_WIN32_SERVICE is defined, the main function is placed in win32.cc */
 extern "C" void WINAPI
-    SquidWinSvcMain(int argc, char **argv)
+SquidWinSvcMain(int argc, char **argv)
 {
-    SquidMain(argc, argv);
+    SquidMainSafe(argc, argv);
+}
+#else
+int
+main(int argc, char **argv)
+{
+    return SquidMainSafe(argc, argv);
+}
+#endif
+
+static int
+SquidMainSafe(int argc, char **argv)
+{
+    try {
+        return SquidMain(argc, argv);
+    } catch (const std::exception &e) {
+        std::cerr << "dying from an unhandled exception: " << e.what() << std::endl;
+        throw;
+    } catch (...) {
+        std::cerr << "dying from an unhandled exception." << std::endl;
+        throw;
+    }
+    return -1; // not reached
 }
 
 int
 SquidMain(int argc, char **argv)
-#else
-int
-main(int argc, char **argv)
-#endif
 {
-    int oldmask;
 #ifdef _SQUID_WIN32_
-
     int WIN32_init_err;
 #endif
 
 #if HAVE_SBRK
-
     sbrk_start = sbrk(0);
 #endif
 
@@ -1125,7 +1149,7 @@ main(int argc, char **argv)
      * set.  Unfortunately, there is no way to get the current
      * umask value without setting it.
      */
-    oldmask = umask(S_IRWXO);
+    int oldmask = umask(S_IRWXO);
 
     if (oldmask)
         umask(oldmask);
@@ -1210,9 +1234,7 @@ main(int argc, char **argv)
         parse_err = parseConfigFile(ConfigFile, manager);
 
         Mem::Report();
-        
-        if (opt_parse_cfg_only)
-
+        if (opt_parse_cfg_only || parse_err > 0)
             return parse_err;
     }
     setUmask(Config.umask);
