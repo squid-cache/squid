@@ -570,7 +570,7 @@ HttpStateData::cacheableReply()
         return 0;
 
     default:			/* Unknown status code */
-        debugs (11, 0, HERE << "HttpStateData::cacheableReply: unexpected http status code " << rep->sline.status);
+        debugs (11, DBG_IMPORTANT, "WARNING: Unexpected http status code " << rep->sline.status);
 
         return 0;
 
