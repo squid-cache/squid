@@ -835,8 +835,9 @@ HttpStateData::haveParsedReplyHeaders()
 
         if (!vary) {
             entry->makePrivate();
+            if (!fwd->reforwardableStatus(rep->sline.status))
+                EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
             goto no_cache;
-
         }
 
         entry->mem_obj->vary_headers = xstrdup(vary);
