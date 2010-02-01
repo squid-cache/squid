@@ -89,7 +89,9 @@
 #define DEFAULT_SQUID_PAM_TTL 0
 #endif
 
+#if _SQUID_SOLARIS_
 static char *password = NULL;	/* Workaround for Solaris 2.6 brokenness */
+#endif
 
 /*
  * A simple "conversation" function returning the supplied password.
