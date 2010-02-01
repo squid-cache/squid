@@ -1,11 +1,11 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
 <HEAD>
- <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.66">
- <TITLE>Squid 3.1.0.15 release notes</TITLE>
+ <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.65">
+ <TITLE>Squid 3.1.0.16 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.1.0.15 release notes</H1>
+<H1>Squid 3.1.0.16 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -36,53 +36,41 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <LI><A NAME="toc2.10">2.10</A> <A HREF="#ss2.10">ICY streaming protocol support</A>
 </UL>
 <P>
-<H2><A NAME="toc3">3.</A> <A HREF="#s3">Windows support</A></H2>
+<H2><A NAME="toc3">3.</A> <A HREF="#s3">Changes to squid.conf since Squid-3.0</A></H2>
 
 <UL>
-<LI><A NAME="toc3.1">3.1</A> <A HREF="#ss3.1">Usage</A>
-<LI><A NAME="toc3.2">3.2</A> <A HREF="#ss3.2">PSAPI.DLL (Process Status Helper) Considerations</A>
-<LI><A NAME="toc3.3">3.3</A> <A HREF="#ss3.3">Registry DNS lookup</A>
-<LI><A NAME="toc3.4">3.4</A> <A HREF="#ss3.4">Compatibility Notes</A>
-<LI><A NAME="toc3.5">3.5</A> <A HREF="#ss3.5">Known Limitations</A>
-<LI><A NAME="toc3.6">3.6</A> <A HREF="#ss3.6">Building Squid on Windows</A>
-<LI><A NAME="toc3.7">3.7</A> <A HREF="#ss3.7">Using cache manager on Windows:</A>
+<LI><A NAME="toc3.1">3.1</A> <A HREF="#ss3.1">New tags</A>
+<LI><A NAME="toc3.2">3.2</A> <A HREF="#ss3.2">Changes to existing tags</A>
+<LI><A NAME="toc3.3">3.3</A> <A HREF="#ss3.3">Removed tags</A>
 </UL>
 <P>
-<H2><A NAME="toc4">4.</A> <A HREF="#s4">Changes to squid.conf since Squid-3.0</A></H2>
+<H2><A NAME="toc4">4.</A> <A HREF="#s4">Changes to ./configure options since Squid-3.0</A></H2>
 
 <UL>
-<LI><A NAME="toc4.1">4.1</A> <A HREF="#ss4.1">New tags</A>
-<LI><A NAME="toc4.2">4.2</A> <A HREF="#ss4.2">Changes to existing tags</A>
-<LI><A NAME="toc4.3">4.3</A> <A HREF="#ss4.3">Removed tags</A>
+<LI><A NAME="toc4.1">4.1</A> <A HREF="#ss4.1">New options</A>
+<LI><A NAME="toc4.2">4.2</A> <A HREF="#ss4.2">Changes to existing options</A>
+<LI><A NAME="toc4.3">4.3</A> <A HREF="#ss4.3">Removed options</A>
 </UL>
 <P>
-<H2><A NAME="toc5">5.</A> <A HREF="#s5">Changes to ./configure options since Squid-3.0</A></H2>
+<H2><A NAME="toc5">5.</A> <A HREF="#s5">Options Removed since Squid-2</A></H2>
 
 <UL>
-<LI><A NAME="toc5.1">5.1</A> <A HREF="#ss5.1">New options</A>
-<LI><A NAME="toc5.2">5.2</A> <A HREF="#ss5.2">Changes to existing options</A>
-<LI><A NAME="toc5.3">5.3</A> <A HREF="#ss5.3">Removed options</A>
+<LI><A NAME="toc5.1">5.1</A> <A HREF="#ss5.1">Removed squid.conf options since Squid-2.7</A>
+<LI><A NAME="toc5.2">5.2</A> <A HREF="#ss5.2">Removed squid.conf options since Squid-2.6</A>
+<LI><A NAME="toc5.3">5.3</A> <A HREF="#ss5.3">Removed ./configure options since Squid-2.7</A>
 </UL>
 <P>
-<H2><A NAME="toc6">6.</A> <A HREF="#s6">Options Removed since Squid-2</A></H2>
+<H2><A NAME="toc6">6.</A> <A HREF="#s6">Regressions since Squid-2.7</A></H2>
 
 <UL>
-<LI><A NAME="toc6.1">6.1</A> <A HREF="#ss6.1">Removed squid.conf options since Squid-2.7</A>
-<LI><A NAME="toc6.2">6.2</A> <A HREF="#ss6.2">Removed squid.conf options since Squid-2.6</A>
-<LI><A NAME="toc6.3">6.3</A> <A HREF="#ss6.3">Removed ./configure options since Squid-2.7</A>
-</UL>
-<P>
-<H2><A NAME="toc7">7.</A> <A HREF="#s7">Regressions since Squid-2.7</A></H2>
-
-<UL>
-<LI><A NAME="toc7.1">7.1</A> <A HREF="#ss7.1">Missing squid.conf options available in Squid-2.7</A>
-<LI><A NAME="toc7.2">7.2</A> <A HREF="#ss7.2">Missing ./configure options available in Squid-2.7</A>
+<LI><A NAME="toc6.1">6.1</A> <A HREF="#ss6.1">Missing squid.conf options available in Squid-2.7</A>
+<LI><A NAME="toc6.2">6.2</A> <A HREF="#ss6.2">Missing ./configure options available in Squid-2.7</A>
 </UL>
 
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.1.0.15 for testing.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.1.0.16 for testing.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.1/">http://www.squid-cache.org/Versions/v3/3.1/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -425,230 +413,7 @@ unusual replies. This option is now obsolete.</P>
 is only aware on an HTTP request. So the ACL will match <EM>HTTP</EM>.</P>
 
 
-<H2><A NAME="s3">3.</A> <A HREF="#toc3">Windows support</A></H2>
-
-<P>This Squid version can run on Windows as a system service using the Cygwin emulation environment, 
-or can be compiled in Windows native mode using the MinGW + MSYS development environment. Windows NT 4 SP4 and later are supported.<BR>
-On Windows 2000 and later the service is configured to use the Windows Service Recovery option
-restarting automatically after 60 seconds.</P>
-
-<H2><A NAME="ss3.1">3.1</A> <A HREF="#toc3.1">Usage</A>
-</H2>
-
-<P>Some new command line options were added for the Windows service support:<BR></P>
-
-<P>The service installation is made with -i command line switch, it's possible to use -f switch at
-the same time for specify a different config-file settings for the Squid Service that will be
-stored on the Windows Registry.</P>
-
-<P>A new -n switch specify the Windows Service Name, so multiple Squid instance are allowed.
-<EM>"Squid"</EM> is the default when the switch is not used.</P>
-
-<P>So, to install the service, the syntax is: </P>
-<P>
-<PRE>
-squid -i [-f file] [-n name]
-</PRE>
-</P>
-
-<P>Service uninstallation is made with -r command line switch with the appropriate -n switch.</P>
-
-<P>The -k switch family must be used with the appropriate -f and -n switches, so the syntax is: </P>
-<P>
-<PRE>
-squid -k command [-f file] -n service-name
-</PRE>
-
-where <EM>service-name</EM> is the name specified with -n options at service install time.</P>
-
-<P>To use the Squid original command line, the new -O switch must be used ONCE, the syntax is: </P>
-<P>
-<PRE>
-squid -O cmdline [-n service-name]
-</PRE>
-</P>
-<P>If multiple service command line options must be specified, use quote. The -n switch is
-needed only when a non default service name is in use.</P>
-
-<P>Don't use the "Start parameters" in the Windows 2000/XP/2003 Service applet: they are
-specific to Windows services functionality and Squid is not designed for understand they.</P>
-
-<P>In the following example the command line of the "squidsvc" Squid service is set to "-D -u 3130": </P>
-<P>
-<PRE>
-squid -O "-D -u 3130" -n squidsvc
-</PRE>
-</P>
-
-<H2><A NAME="ss3.2">3.2</A> <A HREF="#toc3.2">PSAPI.DLL (Process Status Helper) Considerations</A>
-</H2>
-
-<P>The process status helper functions make it easier for you to obtain information about
-processes and device drivers running on Microsoft® Windows NT®/Windows® 2000. These
-functions are available in PSAPI.DLL, which is distributed in the Microsoft® Platform
-Software Development Kit (SDK). The same information is generally available through the
-performance data in the registry, but it is more difficult to get to it. PSAPI.DLL is
-freely redistributable.</P>
-
-<P>PSAPI.DLL is available only on Windows NT, 2000, XP and 2003. The implementation in Squid is
-aware of this, and try to use it only on the right platform.</P>
-
-<P>On Windows NT PSAPI.DLL can be found as component of many applications, if you need it,
-you can find it on Windows NT Resource KIT. If you have problem, it can be
-downloaded from here:
-<A HREF="http://download.microsoft.com/download/platformsdk/Redist/4.0.1371.1/NT4/EN-US/psinst.EXE">http://download.microsoft.com/download/platformsdk/Redist/4.0.1371.1/NT4/EN-US/psinst.EXE</A></P>
-
-<P>On Windows 2000 and later it is available installing the Windows Support Tools, located on the
-Support\Tools folder of the installation Windows CD-ROM.</P>
-
-<H2><A NAME="ss3.3">3.3</A> <A HREF="#toc3.3">Registry DNS lookup</A>
-</H2>
-
-<P>On Windows platforms, if no value is specified in the <EM>dns_nameservers</EM> option on
-squid.conf or in the /etc/resolv.conf file, the list of DNS name servers are
-taken from the Windows registry, both static and dynamic DHCP configurations
-are supported.</P>
-
-<H2><A NAME="ss3.4">3.4</A> <A HREF="#toc3.4">Compatibility Notes</A>
-</H2>
-
-<P>
-<UL>
-<LI>It's recommended to use '/' char in Squid paths instead of '\'</LI>
-<LI>Paths with spaces (like 'C:\Programs Files\Squid) are NOT supported by Squid</LI>
-<LI>When using ACL like 'acl aclname acltype "file"' the file must be in DOS text
-format (CR+LF) and the full Windows path must be specified, for example:
-
-<PRE>
-acl blocklist url_regex -i "c:/squid/etc/blocked1.txt"
-</PRE>
-
-</LI>
-<LI>The Windows equivalent of '/dev/null' is 'NUL'</LI>
-<LI>Squid doesn't know how to run external helpers based on scripts, like .bat, .cmd,
-.vbs, .pl, etc. So in squid.conf the interpreter path must be always specified, for example:
-
-<PRE>
-redirect_program c:/perl/bin/perl.exe c:/squid/libexec/redir.pl
-redirect_program c:/winnt/system32/cmd.exe /C c:/squid/libexec/redir.cmd
-</PRE>
-</LI>
-<LI>When Squid runs in command line mode, the launching user account must have administrative privilege on the system</LI>
-<LI>"Start parameters" in the Windows 2000/XP/2003 Service applet cannot be used</LI>
-<LI>On Windows Vista and later, User Account Control (UAC) must be disabled before running service installation</LI>
-</UL>
-</P>
-
-
-<H2><A NAME="ss3.5">3.5</A> <A HREF="#toc3.5">Known Limitations</A>
-</H2>
-
-<P>
-<UL>
-<LI>Squid features not operational:<BR>
-<UL>
-<LI>DISKD: still needs to be ported<BR></LI>
-<LI>WCCP: cannot work because user space GRE support on Windows is missing<BR></LI>
-<LI>Transparent Proxy: missing Windows non commercial interception driver<BR></LI>
-</UL>
-</LI>
-<LI>Some code sections can make blocking calls.</LI>
-<LI>Some external helpers may not work.</LI>
-<LI>File Descriptors number hard-limited to 2048 when building with MinGW.</LI>
-</UL>
-</P>
-
-<H2><A NAME="ss3.6">3.6</A> <A HREF="#toc3.6">Building Squid on Windows</A>
-</H2>
-
-<P>A reasonably recent release of 
-<A HREF="http://www.cygwin.com/">Cygwin</A> or 
-<A HREF="http://www.mingw.org/">MinGW</A> is needed.<BR>
-The usage of the Cygwin environment is very similar to other Unix/Linux environments, and -devel version of libraries must be installed.<BR>
-For the MinGW environment, the packages MSYS, MinGW and msysDTK must be installed. Some additional libraries and tools must be downloaded separately:<BR><BR>
-OpenSSL: 
-<A HREF="http://www.slproweb.com/products/Win32OpenSSL.html">Shining Light Productions Win32 OpenSSL</A><BR>
-libcrypt: 
-<A HREF="http://sourceforge.net/projects/mingwrep/">MinGW packages repository</A><BR>
-db-1.85: 
-<A HREF="http://tinycobol.org/download.html">TinyCOBOL download area</A><BR>
-When running configure, --disable-wccp and --disable-wccpv2 options should always specified to avoid compile errors.<BR>
-<UL>
-<LI>New configure options:<BR>
-<UL>
-<LI>--enable-win32-service<BR></LI>
-</UL>
-</LI>
-<LI>Updated configure options:<BR>
-<UL>
-<LI>--enable-arp-acl<BR></LI>
-<LI>--enable-default-hostsfile<BR></LI>
-</UL>
-</LI>
-<LI>Unsupported configure options:<BR>
-<UL>
-<LI>--enable-coss-aio-ops: On Windows Posix AIO is not available<BR></LI>
-<LI>--with-large-files: No suitable build environment is available on both Cygwin and MinGW, but --enable-large-cache-files works fine<BR></LI>
-</UL>
-</LI>
-<LI>Recommended configure minimal options for Windows:<BR>
-<UL>
-<LI>--prefix=c:/squid --disable-wccp --disable-wccpv2 --enable-win32-service --enable-default-hostsfile=none</LI>
-</UL>
-</LI>
-</UL>
-<BR>
-Before build Squid with SSL support, some operations are needed (in the following example OpenSSL is installed in C:\OpenSSL and MinGW in C:\MinGW):
-<UL>
-<LI>Copy C:\OpenSSL\lib\MinGW content to C:\MinGW\lib<BR></LI>
-<LI>Copy C:\OpenSSL\include\openssl content to C:\MinGW\include\openssl<BR></LI>
-<LI>Rename C:\MinGW\lib\ssleay32.a to C:\MinGW\lib\libssleay32.a<BR></LI>
-</UL>
-</P>
-
-<H2><A NAME="ss3.7">3.7</A> <A HREF="#toc3.7">Using cache manager on Windows:</A>
-</H2>
-
-<P>On Windows, cache manager (cachemgr.cgi) can be used with Microsoft IIS or Apache.<BR>
-Some specific configuration could be needed:<BR>
-<UL>
-<LI>IIS 6 (Windows 2003):<BR>
-<UL>
-<LI>On IIS 6.0 all CGI extensions are denied by default for security reason, so the following configuration is needed:<BR>
-<UL>
-<LI>Create a cgi-bin Directory</LI>
-<LI>Define the cgi-bin IIS Virtual Directory with read and CGI execute IIS
-permissions, ASP scripts are not needed. This automatically defines a
-cgi-bin IIS web application </LI>
-<LI>Copy cachemgr.cgi into cgi-bin directory and look to file permissions:
-the IIS system account and SYSTEM must be able to read and execute the file</LI>
-<LI>In IIS manager go to Web Service extensions and add a new Web Service
-Extension called <EM>"Squid Cachemgr"</EM>, add the cachemgr.cgi file and set the
-extension status to <EM>Allowed</EM></LI>
-</UL>
-</LI>
-</UL>
-</LI>
-<LI>Apache:<BR>
-<UL>
-<LI>On Windows, cachemgr.cgi needs to create a temporary file, so Apache must be instructed
-to pass the TMP and TEMP Windows environment variables to CGI applications:<BR>
-<PRE>
-ScriptAlias /squid/cgi-bin/ "c:/squid/libexec/"
-&lt;Location /squid/cgi-bin/cachemgr.cgi&gt;
-    PassEnv TMP TEMP
-    Order allow,deny
-    Allow from workstation.example.com
-&lt;/Location&gt;
-</PRE>
-</LI>
-</UL>
-</LI>
-</UL>
-</P>
-
-
-<H2><A NAME="s4">4.</A> <A HREF="#toc4">Changes to squid.conf since Squid-3.0</A></H2>
+<H2><A NAME="s3">3.</A> <A HREF="#toc3">Changes to squid.conf since Squid-3.0</A></H2>
 
 <P>There have been changes to Squid's configuration file since Squid-3.0.</P>
 <P>This section gives a thorough account of those changes in three categories:</P>
@@ -665,7 +430,7 @@ ScriptAlias /squid/cgi-bin/ "c:/squid/libexec/"
 
 
 
-<H2><A NAME="newtags"></A> <A NAME="ss4.1">4.1</A> <A HREF="#toc4.1">New tags</A>
+<H2><A NAME="newtags"></A> <A NAME="ss3.1">3.1</A> <A HREF="#toc3.1">New tags</A>
 </H2>
 
 <P>
@@ -1288,7 +1053,7 @@ DEFAULT: None bypassed.
 </DL>
 </P>
 
-<H2><A NAME="modifiedtags"></A> <A NAME="ss4.2">4.2</A> <A HREF="#toc4.2">Changes to existing tags</A>
+<H2><A NAME="modifiedtags"></A> <A NAME="ss3.2">3.2</A> <A HREF="#toc3.2">Changes to existing tags</A>
 </H2>
 
 <P>
@@ -1539,11 +1304,13 @@ For now option 'tproxy' remains with old behaviour meaning fully-invisible proxy
 <DT><B>logformat</B><DD>
 <P>New log format tag sets %icap::* %adapt::* for adaptation information.
 %Hs tag deprecated and replaced by request/reply specific &gt;Hs and &lt;Hs
+new %&gt;ha option to log HTTP request headers after adaptation and redirection.
 HTTP request/reply format tags may now be optionally prefixed with http::.
 Old forms will be deprecated in some as yet undecided future release.
 <PRE>
                 dt              Total time spent making DNS lookups (milliseconds)
 
+                [http::]>ha     The HTTP request headers after adaptation and redirection.
                 [http::]>Hs     HTTP status code sent to the client
                 [http::]&lt;Hs  HTTP status code received from the next hop
                 [http::]>sh     Received HTTP request headers size
@@ -1674,7 +1441,7 @@ refresh_pattern .                    0   20%     4320
 </P>
 
 
-<H2><A NAME="removedtags"></A> <A NAME="ss4.3">4.3</A> <A HREF="#toc4.3">Removed tags</A>
+<H2><A NAME="removedtags"></A> <A NAME="ss3.3">3.3</A> <A HREF="#toc3.3">Removed tags</A>
 </H2>
 
 <P>
@@ -1697,7 +1464,7 @@ The -D command line option used previously to suppress these tests is also obsol
 </P>
 
 
-<H2><A NAME="s5">5.</A> <A HREF="#toc5">Changes to ./configure options since Squid-3.0</A></H2>
+<H2><A NAME="s4">4.</A> <A HREF="#toc4">Changes to ./configure options since Squid-3.0</A></H2>
 
 <P>There have been some changes to Squid's build configuration since Squid-3.0.</P>
 <P>This section gives an account of those changes in three categories:</P>
@@ -1713,7 +1480,7 @@ The -D command line option used previously to suppress these tests is also obsol
 </P>
 
 
-<H2><A NAME="newoptions"></A> <A NAME="ss5.1">5.1</A> <A HREF="#toc5.1">New options</A>
+<H2><A NAME="newoptions"></A> <A NAME="ss4.1">4.1</A> <A HREF="#toc4.1">New options</A>
 </H2>
 
 <P>
@@ -1797,7 +1564,7 @@ Default is to automatically detect the binary.</P>
 </DL>
 </P>
 
-<H2><A NAME="modifiedoptions"></A> <A NAME="ss5.2">5.2</A> <A HREF="#toc5.2">Changes to existing options</A>
+<H2><A NAME="modifiedoptions"></A> <A NAME="ss4.2">4.2</A> <A HREF="#toc4.2">Changes to existing options</A>
 </H2>
 
 <P>
@@ -1832,7 +1599,7 @@ Use --without-pthreads to disable, but only if you really have to.</P>
 
 </DL>
 </P>
-<H2><A NAME="removedoptions"></A> <A NAME="ss5.3">5.3</A> <A HREF="#toc5.3">Removed options</A>
+<H2><A NAME="removedoptions"></A> <A NAME="ss4.3">4.3</A> <A HREF="#toc4.3">Removed options</A>
 </H2>
 
 <P>
@@ -1849,11 +1616,11 @@ Use --without-pthreads to disable, but only if you really have to.</P>
 </P>
 
 
-<H2><A NAME="s6">6.</A> <A HREF="#toc6">Options Removed since Squid-2</A></H2>
+<H2><A NAME="s5">5.</A> <A HREF="#toc5">Options Removed since Squid-2</A></H2>
 
 <P>Some squid.conf and ./configure options which were available in Squid-2.6 and Squid-2.7 are made obsolete in Squid-3.1.</P>
 
-<H2><A NAME="ss6.1">6.1</A> <A HREF="#toc6.1">Removed squid.conf options since Squid-2.7</A>
+<H2><A NAME="ss5.1">5.1</A> <A HREF="#toc5.1">Removed squid.conf options since Squid-2.7</A>
 </H2>
 
 <P>
@@ -1902,7 +1669,7 @@ Use --without-pthreads to disable, but only if you really have to.</P>
 </DL>
 </P>
 
-<H2><A NAME="ss6.2">6.2</A> <A HREF="#toc6.2">Removed squid.conf options since Squid-2.6</A>
+<H2><A NAME="ss5.2">5.2</A> <A HREF="#toc5.2">Removed squid.conf options since Squid-2.6</A>
 </H2>
 
 <P>
@@ -1913,7 +1680,7 @@ Use --without-pthreads to disable, but only if you really have to.</P>
 </DL>
 </P>
 
-<H2><A NAME="ss6.3">6.3</A> <A HREF="#toc6.3">Removed ./configure options since Squid-2.7</A>
+<H2><A NAME="ss5.3">5.3</A> <A HREF="#toc5.3">Removed ./configure options since Squid-2.7</A>
 </H2>
 
 <P>
@@ -1970,13 +1737,13 @@ Use --without-pthreads to disable, but only if you really have to.</P>
 </P>
 
 
-<H2><A NAME="s7">7.</A> <A HREF="#toc7">Regressions since Squid-2.7</A></H2>
+<H2><A NAME="s6">6.</A> <A HREF="#toc6">Regressions since Squid-2.7</A></H2>
 
 <P>Some squid.conf and ./configure options which were available in Squid-2.7 are not yet available in Squid-3.1</P>
 
 <P>If you need something to do then porting one of these from Squid-2 to Squid-3 is most welcome.</P>
 
-<H2><A NAME="ss7.1">7.1</A> <A HREF="#toc7.1">Missing squid.conf options available in Squid-2.7</A>
+<H2><A NAME="ss6.1">6.1</A> <A HREF="#toc6.1">Missing squid.conf options available in Squid-2.7</A>
 </H2>
 
 <P>
@@ -2102,7 +1869,7 @@ Use --without-pthreads to disable, but only if you really have to.</P>
 </DL>
 </P>
 
-<H2><A NAME="ss7.2">7.2</A> <A HREF="#toc7.2">Missing ./configure options available in Squid-2.7</A>
+<H2><A NAME="ss6.2">6.2</A> <A HREF="#toc6.2">Missing ./configure options available in Squid-2.7</A>
 </H2>
 
 <P>
