@@ -116,7 +116,7 @@ password_conversation(int num_msg, const struct pam_message **msg, struct pam_re
         fprintf(stderr, "ERROR: No password available to password_converstation!\n");
         return PAM_CONV_ERR;
     }
-    *resp = static_cast<struct pam_response *>(calloc(num_msg, sizeof(struct pam_response)));
+    *resp = (struct pam_response *)(calloc(num_msg, sizeof(struct pam_response)));
     if (!*resp) {
         fprintf(stderr, "ERROR: Out of memory!\n");
         return PAM_CONV_ERR;
