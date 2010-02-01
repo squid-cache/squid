@@ -263,6 +263,16 @@ Changes to squid-3.1.0.1 (27 Oct 2008):
 	- Bug #2223: Follow XFF extensions added
 	- ... and many code and documentation cleanups
 
+Changes to squid-3.0.STABLE22 (01 Feb 2010):
+
+	- Regression Fix: Make Squid abort on all config parse failures.
+	- Bug 2787: Reduce unexpected http status to non-critical warnings.
+	- Bug 2496: Downloading some variants in full before relaying
+	- Bug 2452: Add upper limit to external_acl_type entries.
+	- Removed optional kerberos/spnegohelp/ library due to licensing issues
+	- Add client_ip_max_connections
+	- Handle DNS header-only packets as invalid.
+
 Changes to squid-3.0.STABLE21 (22 Dec 2009):
 
 	- Bug 2830: Clarify where NULL byte is in headers.
