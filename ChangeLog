@@ -1,3 +1,20 @@
+Changes to squid-3.1.0.16 (01 Feb 2010):
+
+	- Regression Fix: Make Squid abort on all config parse failures.
+	- Regression Bug 2811: SNMP client/peer table OID numbering
+	- Bug 2851: Connection pinning fails when using a peer
+	- Bug 2850: Mismatch in hier_code enum / hier_strings array
+	- Bug 2731: Add follow_x_forwarded_for support to ICAP
+	- Bug 2730: Regressions in follow_x_forwarded_for since Squid-2
+	- Bug 2706: Set timestamps during ICAP request satisfaction.
+	- Bug 2553: X-Forwarded-For with IPv6 address not handled correctly
+	- Fix: WCCPv1 not connecting to router correctly
+	- Remove obsolete RunCache/RunAccel scripts.
+	- Add client_ip_max_connections
+	- Add the http::>ha format code and make http::>h log original request headers
+	- ... and all bug fixes from 3.0 up to 3.0.STABLE22
+	- ... and many more minor build and display annoyances.
+
 Changes to squid-3.1.0.15 (23 Nov 2009):
 
 	- Regression Fix: myip ACL not accepted in config
