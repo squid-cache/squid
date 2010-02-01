@@ -67,6 +67,7 @@ const char *hier_strings[] = {
     "ANY_PARENT",
     "USERHASH",
     "SOURCEHASH",
+    "PINNED",
     "INVALID CODE"
 };
 
