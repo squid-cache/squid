@@ -1,3 +1,8 @@
+Changes to squid-3.0.STABLE23 (02 Feb 2010):
+
+	- Bug 2856: removing assert() required for 3.0 patch for SQUID-2010:1
+	- Regression Fix: Build error in Kerberos helper after library removal.
+
 Changes to squid-3.0.STABLE22 (01 Feb 2010):
 
 	- Regression Fix: Make Squid abort on all config parse failures.
