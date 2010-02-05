@@ -429,7 +429,6 @@ This section gives an account of those changes in three categories:
 	<p>COSS <em>maxfullbufs=</em> option not yet ported from 2.6
 
 	<tag>cache_peer</tag>
-	<p><em>multicast-siblings</em> not yet ported from 2.7
 	<p><em>idle=</em> not yet ported from 2.7
 	<p><em>http11</em> not yet ported from 2.7
 	<p><em>monitorinterval=</em> not yet ported from 2.6
