@@ -285,18 +285,21 @@ ClientHttpRequest::~ClientHttpRequest()
     PROF_stop(httpRequestFree);
 }
 
-/* Create a request and kick it off */
-/*
+/**
+ * Create a request and kick it off
+ *
+ * \retval 0     success
+ * \retval -1    failure
+ *
  * TODO: Pass in the buffers to be used in the inital Read request, as they are
  * determined by the user
  */
-int				/* returns nonzero on failure */
+int
 clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * streamcallback,
                    CSD * streamdetach, ClientStreamData streamdata, HttpHeader const *header,
                    char *tailbuf, size_t taillen)
 {
     size_t url_sz;
-    HttpVersion http_ver (1, 0);
     ClientHttpRequest *http = new ClientHttpRequest(NULL);
     HttpRequest *request;
     StoreIOBuffer tempBuffer;
@@ -325,7 +328,7 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
     }
 
     /*
-     * now update the headers in request with our supplied headers. urLParse
+     * now update the headers in request with our supplied headers. urlParse
      * should return a blank header set, but we use Update to be sure of
      * correctness.
      */
@@ -364,6 +367,8 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
 
     request->my_addr.SetPort(0);
 
+    /* RFC 2616 says 'upgrade' to our 1.0 regardless of what the client is */
+    HttpVersion http_ver(1,0);
     request->http_ver = http_ver;
 
     http->request = HTTPMSGLOCK(request);

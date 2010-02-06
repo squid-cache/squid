@@ -151,7 +151,7 @@ peerAllowedToUse(const peer * p, HttpRequest * request)
 #if PEER_MULTICAST_SIBLINGS
         if (p->type == PEER_MULTICAST && p->options.mcast_siblings &&
                 (request->flags.nocache || request->flags.refresh || request->flags.loopdetect || request->flags.need_validation))
-            debugs(15, 2, "peerAllowedToUse(" << p->name << ", " << request->host << ") : multicast-siblings optimization match");
+            debugs(15, 2, "peerAllowedToUse(" << p->name << ", " << request->GetHost() << ") : multicast-siblings optimization match");
 #endif
         if (request->flags.nocache)
             return 0;
