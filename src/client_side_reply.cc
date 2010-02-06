@@ -935,13 +935,8 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
     triggerInitialStoreRead();
 
     HttpReply *rep = new HttpReply;
-
-    HttpVersion version(1,0);
-
-    rep->setHeaders(version, purgeStatus, NULL, NULL, 0, 0, -1);
-
+    rep->setHeaders(purgeStatus, NULL, NULL, 0, 0, -1);
     http->storeEntry()->replaceHttpReply(rep);
-
     http->storeEntry()->complete();
 }
 
@@ -960,9 +955,7 @@ clientReplyContext::traceReply(clientStreamNode * node)
     http->storeEntry()->releaseRequest();
     http->storeEntry()->buffer();
     HttpReply *rep = new HttpReply;
-    HttpVersion version(1,0);
-    rep->setHeaders(version, HTTP_OK, NULL, "text/plain",
-                    http->request->prefixLen(), 0, squid_curtime);
+    rep->setHeaders(HTTP_OK, NULL, "text/plain", http->request->prefixLen(), 0, squid_curtime);
     http->storeEntry()->replaceHttpReply(rep);
     http->request->swapOut(http->storeEntry());
     http->storeEntry()->complete();
