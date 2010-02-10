@@ -1270,6 +1270,13 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, IpAddress &from)
         return;
     }
 
+    if (NULL == s->request) {
+        debugs(31, 3, "htcpHandleClr: request not generated.");
+        htcpLogHtcp(from, hdr->opcode, LOG_UDP_INVALID, s->uri);
+        htcpFreeSpecifier(s);
+        return;
+    }
+
     if (!htcpAccessCheck(Config.accessList.htcp_clr, s, from)) {
         debugs(31, 2, "htcpHandleClr: Access denied");
         htcpLogHtcp(from, hdr->opcode, LOG_UDP_DENIED, s->uri);
