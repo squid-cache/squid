@@ -1298,6 +1298,13 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, struct sockaddr_in *from)
         return;
     }
 
+    if (!s->request) {
+        debugs(31, 2, "htcpHandleTstRequest: failed to parse request");
+        htcpLogHtcp(from, dhdr->opcode, LOG_UDP_INVALID, dash_str);
+        htcpFreeSpecifier(s);
+        return;
+    }
+
     if (!htcpAccessCheck(Config.accessList.htcp_clr, s, from))
     {
         debugs(31, 2, "htcpHandleClr: Access denied");
