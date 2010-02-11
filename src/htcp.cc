@@ -665,14 +665,12 @@ htcpUnpackSpecifier(char *buf, int sz)
 
     /* Set METHOD */
     s->method = buf;
-
     buf += l;
-
     sz -= l;
+    debugs(31, 6, "htcpUnpackSpecifier: METHOD (" << l << "/" << sz << ") '" << s->method << "'");
 
     /* Find length of URI */
     l = ntohs(*(u_int16_t *) buf);
-
     sz -= 2;
 
     if (l > sz) {
@@ -683,19 +681,16 @@ htcpUnpackSpecifier(char *buf, int sz)
 
     /* Add terminating null to METHOD */
     *buf = '\0';
-
-    /* Set URI */
     buf += 2;
 
+    /* Set URI */
     s->uri = buf;
-
     buf += l;
-
     sz -= l;
+    debugs(31, 6, "htcpUnpackSpecifier: URI (" << l << "/" << sz << ") '" << s->uri << "'");
 
     /* Find length of VERSION */
     l = ntohs(*(u_int16_t *) buf);
-
     sz -= 2;
 
     if (l > sz) {
@@ -706,19 +701,16 @@ htcpUnpackSpecifier(char *buf, int sz)
 
     /* Add terminating null to URI */
     *buf = '\0';
-
-    /* Set VERSION */
     buf += 2;
 
+    /* Set VERSION */
     s->version = buf;
-
     buf += l;
-
     sz -= l;
+    debugs(31, 6, "htcpUnpackSpecifier: VERSION (" << l << "/" << sz << ") '" << s->version << "'");
 
     /* Find length of REQ-HDRS */
     l = ntohs(*(u_int16_t *) buf);
-
     sz -= 2;
 
     if (l > sz) {
@@ -729,15 +721,13 @@ htcpUnpackSpecifier(char *buf, int sz)
 
     /* Add terminating null to URI */
     *buf = '\0';
-
-    /* Set REQ-HDRS */
     buf += 2;
 
+    /* Set REQ-HDRS */
     s->req_hdrs = buf;
-
     buf += l;
-
     sz -= l;
+    debugs(31, 6, "htcpUnpackSpecifier: REQ-HDRS (" << l << "/" << sz << ") '" << s->req_hdrs << "'");
 
     debugs(31, 3, "htcpUnpackSpecifier: " << sz << " bytes left");
 
@@ -1270,9 +1260,9 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, IpAddress &from)
         return;
     }
 
-    if (NULL == s->request) {
-        debugs(31, 3, "htcpHandleClr: request not generated.");
-        htcpLogHtcp(from, hdr->opcode, LOG_UDP_INVALID, s->uri);
+    if (!s->request) {
+        debugs(31, 2, "htcpHandleTstRequest: failed to parse request");
+        htcpLogHtcp(from, dhdr->opcode, LOG_UDP_INVALID, dash_str);
         htcpFreeSpecifier(s);
         return;
     }
