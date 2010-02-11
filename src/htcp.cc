@@ -1272,7 +1272,7 @@ htcpHandleClr(htcpDataHeader * hdr, char *buf, int sz, IpAddress &from)
 
     if (!s->request) {
         debugs(31, 2, "htcpHandleTstRequest: failed to parse request");
-        htcpLogHtcp(from, dhdr->opcode, LOG_UDP_INVALID, dash_str);
+        htcpLogHtcp(from, hdr->opcode, LOG_UDP_INVALID, dash_str);
         htcpFreeSpecifier(s);
         return;
     }
