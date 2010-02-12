@@ -685,9 +685,7 @@ HttpStateData::processReplyHeader()
     if (!parsed && readBuf->contentSize() > 5 && strncmp(readBuf->content(), "HTTP/", 5) != 0 && strncmp(readBuf->content(), "ICY", 3) != 0) {
         MemBuf *mb;
         HttpReply *tmprep = new HttpReply;
-        tmprep->sline.version = HttpVersion(1, 0);
-        tmprep->sline.status = HTTP_OK;
-        tmprep->header.putTime(HDR_DATE, squid_curtime);
+        tmprep->setHeaders(HTTP_OK, "Gatewaying", NULL, -1, -1, -1);
         tmprep->header.putExt("X-Transformed-From", "HTTP/0.9");
         mb = tmprep->pack();
         newrep->parse(mb, eof, &error);
@@ -696,7 +694,7 @@ HttpStateData::processReplyHeader()
         if (!parsed && error > 0) { // unrecoverable parsing error
             debugs(11, 3, "processReplyHeader: Non-HTTP-compliant header: '" <<  readBuf->content() << "'");
             flags.headers_parsed = 1;
-            newrep->sline.version = HttpVersion(1, 0);
+            newrep->sline.version = HttpVersion(1,0);
             newrep->sline.status = error;
             HttpReply *vrep = setVirginReply(newrep);
             entry->replaceHttpReply(vrep);
@@ -838,8 +836,9 @@ HttpStateData::haveParsedReplyHeaders()
 
         if (!vary) {
             entry->makePrivate();
+            if (!fwd->reforwardableStatus(rep->sline.status))
+                EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
             goto no_cache;
-
         }
 
         entry->mem_obj->vary_headers = xstrdup(vary);
@@ -1153,6 +1152,7 @@ HttpStateData::continueAfterParsingHeader()
             const http_status s = vrep->sline.status;
             const HttpVersion &v = vrep->sline.version;
             if (s == HTTP_INVALID_HEADER && v != HttpVersion(0,9)) {
+                debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: Bad header encountered from " << entry->url() << " AKA " << orig_request->GetHost() << orig_request->urlpath.termedBuf() );
                 error = ERR_INVALID_RESP;
             } else if (s == HTTP_HEADER_TOO_LARGE) {
                 fwd->dontRetry(true);
@@ -1162,12 +1162,18 @@ HttpStateData::continueAfterParsingHeader()
             }
         } else {
             // parsed headers but got no reply
+            debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: No reply at all for " << entry->url() << " AKA " << orig_request->GetHost() << orig_request->urlpath.termedBuf() );
             error = ERR_INVALID_RESP;
         }
     } else {
         assert(eof);
-        error = readBuf->hasContent() ?
-                ERR_INVALID_RESP : ERR_ZERO_SIZE_OBJECT;
+        if (readBuf->hasContent()) {
+            error = ERR_INVALID_RESP;
+            debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: Headers did not parse at all for " << entry->url() << " AKA " << orig_request->GetHost() << orig_request->urlpath.termedBuf() );
+        } else {
+            error = ERR_ZERO_SIZE_OBJECT;
+            debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: No object data received for " << entry->url() << " AKA " << orig_request->GetHost() << orig_request->urlpath.termedBuf() );
+        }
     }
 
     assert(error != ERR_NONE);
@@ -1918,7 +1924,7 @@ HttpStateData::buildRequestPrefix(HttpRequest * aRequest,
                                   http_state_flags stateFlags)
 {
     const int offset = mb->size;
-    HttpVersion httpver(1, 0);
+    HttpVersion httpver(1,0);
     mb->Printf("%s %s HTTP/%d.%d\r\n",
                RequestMethodStr(aRequest->method),
                aRequest->urlpath.size() ? aRequest->urlpath.termedBuf() : "/",

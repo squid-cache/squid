@@ -157,6 +157,31 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
             int i;
             int found = 0;
             char cn[1024];
+
+            STACK_OF(GENERAL_NAME) * altnames;
+            altnames = (STACK*)X509_get_ext_d2i(peer_cert, NID_subject_alt_name, NULL, NULL);
+            if (altnames) {
+                int numalts = sk_GENERAL_NAME_num(altnames);
+                debugs(83, 3, "Verifying server domain " << server << " to certificate subjectAltName");
+                for (i = 0; i < numalts; i++) {
+                    const GENERAL_NAME *check = sk_GENERAL_NAME_value(altnames, i);
+                    if (check->type != GEN_DNS) {
+                        continue;
+                    }
+                    ASN1_STRING *data = check->d.dNSName;
+                    if (data->length > (int)sizeof(cn) - 1) {
+                        continue;
+                    }
+                    memcpy(cn, data->data, data->length);
+                    cn[data->length] = '\0';
+                    debugs(83, 4, "Verifying server domain " << server << " to certificate name " << cn);
+                    if (matchDomainName(server, cn[0] == '*' ? cn + 1 : cn) == 0) {
+                        found = 1;
+                        break;
+                    }
+                }
+            }
+
             X509_NAME *name = X509_get_subject_name(peer_cert);
             debugs(83, 3, "Verifying server domain " << server << " to certificate dn " << buffer);
 

@@ -53,8 +53,8 @@ variable_list *
 snmp_sysFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer = NULL;
-    debugs(49, 5, "snmp_sysFn: Processing request:");
-    snmpDebugOid(5, Var->name, Var->name_length);
+    MemBuf tmp;
+    debugs(49, 5, "snmp_sysFn: Processing request:" << snmpDebugOid(Var->name, Var->name_length, tmp));
     *ErrP = SNMP_ERR_NOERROR;
 
     switch (Var->name[LEN_SQ_SYS]) {

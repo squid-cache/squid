@@ -128,8 +128,7 @@ WhoisState::setReplyToOK(StoreEntry *sentry)
 {
     HttpReply *reply = new HttpReply;
     sentry->buffer();
-    HttpVersion version(1, 0);
-    reply->setHeaders(version, HTTP_OK, "Gatewaying", "text/plain", -1, -1, -2);
+    reply->setHeaders(HTTP_OK, "Gatewaying", "text/plain", -1, -1, -2);
     sentry->replaceHttpReply(reply);
 }
 
