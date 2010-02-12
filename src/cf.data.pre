@@ -1739,6 +1739,15 @@ DOC_START
 	userhash	Load-balance parents based on the client proxy_auth or ident username.
 	
 	sourcehash	Load-balance parents based on the client source IP.
+
+	multicast-siblings
+			To be used only for cache peers of type "multicast".
+			ALL members of this multicast group have "sibling"
+			relationship with it, not "parent".  This is to a mulicast
+			group when the requested object would be fetched only from
+			a "parent" cache, anyway.  It's useful, e.g., when
+			configuring a pool of redundant Squid proxies, being
+			members of the same multicast group.
 	
 	
 	==== PEER SELECTION OPTIONS ====

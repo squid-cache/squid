@@ -1736,6 +1736,10 @@ parse_peer(peer ** head)
             p->options.no_tproxy = 1;
         } else if (!strcasecmp(token, "multicast-responder")) {
             p->options.mcast_responder = 1;
+#if PEER_MULTICAST_SIBLINGS
+        } else if (!strcasecmp(token, "multicast-siblings")) {
+            p->options.mcast_siblings = 1;
+#endif
         } else if (!strncasecmp(token, "weight=", 7)) {
             p->weight = xatoi(token + 7);
         } else if (!strncasecmp(token, "basetime=", 9)) {

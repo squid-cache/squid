@@ -38,6 +38,8 @@
 /* needed for the global config */
 #include "HttpHeader.h"
 
+#define PEER_MULTICAST_SIBLINGS 1
+
 struct acl_name_list {
     char name[ACL_NAME_SZ];
     acl_name_list *next;
@@ -882,6 +884,9 @@ struct peer {
         unsigned int sourcehash:1;
         unsigned int originserver:1;
         unsigned int no_tproxy:1;
+#if PEER_MULTICAST_SIBLINGS
+        unsigned int mcast_siblings:1;
+#endif
     } options;
 
     int weight;

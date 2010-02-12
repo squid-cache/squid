@@ -955,7 +955,7 @@ NOCOMMENT_START
 	<tag>cache_mem</tag>
 	<p>Default size increased to 256MB.
 
-	<tag>cache_peer htcp-no-clr htcp-no-purge-clr htcp-only-clr htcp-forward-clr connection-auth[=on|off|auto] connect-fail-limit=N no-tproxy</tag>
+	<tag>cache_peer htcp-no-clr htcp-no-purge-clr htcp-only-clr htcp-forward-clr connection-auth[=on|off|auto] connect-fail-limit=N multicast-siblings no-tproxy</tag>
 	<p>New Options.
 	<verb>
 	use 'htcp-no-clr' to send HTCP to the neighbor but without
@@ -985,6 +985,8 @@ NOCOMMENT_START
 	use 'no-tproxy' to specify that requests passed to this peer
 	are not to have the client IP spoofed. For use to prevent
 	packet routing issues with a cluster of peers behind WCCPv2.
+
+	<p><em>multicast-siblings</em> ported from 2.7
 	</verb>
 
 	<tag>cache_store_log</tag>
@@ -1564,7 +1566,6 @@ This section gives an account of those changes in three categories:
 	<p>COSS <em>maxfullbufs=</em> option not yet ported from 2.6
 
 	<tag>cache_peer</tag>
-	<p><em>multicast-siblings</em> not yet ported from 2.7
 	<p><em>idle=</em> not yet ported from 2.7
 	<p><em>http11</em> not yet ported from 2.7
 	<p><em>monitorinterval=</em> not yet ported from 2.6

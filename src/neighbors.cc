@@ -124,6 +124,11 @@ neighborType(const peer * p, const HttpRequest * request)
             if (d->type != PEER_NONE)
                 return d->type;
     }
+#if PEER_MULTICAST_SIBLINGS
+    if (p->type == PEER_MULTICAST)
+        if (p->options.mcast_siblings)
+            return PEER_SIBLING;
+#endif
 
     return p->type;
 }
@@ -143,6 +148,11 @@ peerAllowedToUse(const peer * p, HttpRequest * request)
     assert(request != NULL);
 
     if (neighborType(p, request) == PEER_SIBLING) {
+#if PEER_MULTICAST_SIBLINGS
+        if (p->type == PEER_MULTICAST && p->options.mcast_siblings &&
+                (request->flags.nocache || request->flags.refresh || request->flags.loopdetect || request->flags.need_validation))
+            debugs(15, 2, "peerAllowedToUse(" << p->name << ", " << request->host << ") : multicast-siblings optimization match");
+#endif
         if (request->flags.nocache)
             return 0;
 
@@ -1569,6 +1579,11 @@ dump_peer_options(StoreEntry * sentry, peer * p)
 
     if (p->options.mcast_responder)
         storeAppendPrintf(sentry, " multicast-responder");
+
+#if PEER_MULTICAST_SIBLINGS
+    if (p->options.mcast_siblings)
+        storeAppendPrintf(sentry, " multicast-siblings");
+#endif
 
     if (p->weight != 1)
         storeAppendPrintf(sentry, " weight=%d", p->weight);
