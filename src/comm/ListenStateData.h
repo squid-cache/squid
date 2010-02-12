@@ -10,7 +10,8 @@
 
 class ConnectionDetail;
 
-namespace Comm {
+namespace Comm
+{
 
 class ListenStateData
 {

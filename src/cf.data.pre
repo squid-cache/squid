@@ -800,10 +800,10 @@ DOC_START
 
 	The end result of this process is an IP address that we will
 	refer to as the indirect client address.  This address may
-	be treated as the client address for access control, delay
+	be treated as the client address for access control, ICAP, delay
 	pools and logging, depending on the acl_uses_indirect_client,
-	delay_pool_uses_indirect_client and log_uses_indirect_client
-	options.
+	icap_uses_indirect_client, delay_pool_uses_indirect_client and
+	log_uses_indirect_client options.
 
 	This clause only supports fast acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
@@ -840,7 +840,7 @@ DOC_END
 NAME: delay_pool_uses_indirect_client
 COMMENT: on|off
 TYPE: onoff
-IFDEF: FOLLOW_X_FORWARDED_FOR DELAY_POOLS
+IFDEF: FOLLOW_X_FORWARDED_FOR&&DELAY_POOLS
 DEFAULT: on
 LOC: Config.onoff.delay_pool_uses_indirect_client
 DOC_START
@@ -920,6 +920,20 @@ http_access allow localhost
 # And finally deny all other access to this proxy
 http_access deny all
 NOCOMMENT_END
+DOC_END
+
+NAME: adapted_http_access http_access2
+TYPE: acl_access
+LOC: Config.accessList.adapted_http
+DEFAULT: none
+DOC_START
+	Allowing or Denying access based on defined access lists
+
+	Essentially identical to http_access, but runs after redirectors
+	and ICAP/eCAP adaptation. Allowing access control based on their
+	output.
+
+	If not set then only http_access is used.
 DOC_END
 
 NAME: http_reply_access
@@ -1793,6 +1807,15 @@ DOC_START
 	userhash	Load-balance parents based on the client proxy_auth or ident username.
 	
 	sourcehash	Load-balance parents based on the client source IP.
+
+	multicast-siblings
+			To be used only for cache peers of type "multicast".
+			ALL members of this multicast group have "sibling"
+			relationship with it, not "parent".  This is to a mulicast
+			group when the requested object would be fetched only from
+			a "parent" cache, anyway.  It's useful, e.g., when
+			configuring a pool of redundant Squid proxies, being
+			members of the same multicast group.
 	
 	
 	==== PEER SELECTION OPTIONS ====
@@ -2495,8 +2518,10 @@ DOC_START
 
 	HTTP cache related format codes:
 
-		[http::]>h	Request header. Optional header name argument
+		[http::]>h	Original request header. Optional header name argument
 				on the format header[:[separator]element]
+		[http::]>ha	The HTTP request headers after adaptation and redirection. 
+				Optional header name argument as for >h
 		[http::]<h	Reply header. Optional header name argument
 				as for >h
 		[http::]un	User name
@@ -3679,6 +3704,19 @@ DOC_START
 Example:
  acl buggy_server url_regex ^http://....
  broken_posts allow buggy_server
+DOC_END
+
+NAME: icap_uses_indirect_client
+COMMENT: on|off
+TYPE: onoff
+IFDEF: FOLLOW_X_FORWARDED_FOR&&ICAP_CLIENT
+DEFAULT: on
+LOC: Adaptation::Icap::TheConfig.icap_uses_indirect_client
+DOC_START
+   Controls whether the indirect client address
+   (see follow_x_forwarded_for) instead of the
+   direct client address is passed to an ICAP
+   server as "X-Client-IP".
 DOC_END
 
 NAME: via
