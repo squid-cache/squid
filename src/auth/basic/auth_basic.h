@@ -79,25 +79,6 @@ MEMPROXY_CLASS_INLINE(BasicUser);
 
 typedef class BasicUser basic_data;
 
-/* follows the http request around */
-
-class AuthBasicUserRequest : public AuthUserRequest
-{
-
-public:
-    MEMPROXY_CLASS(AuthBasicUserRequest);
-
-    AuthBasicUserRequest();
-    virtual ~AuthBasicUserRequest();
-
-    virtual int authenticated() const;
-    virtual void authenticate(HttpRequest * request, ConnStateData *conn, http_hdr_type type);
-    virtual int module_direction();
-    virtual void module_start(RH *, void *);
-};
-
-MEMPROXY_CLASS_INLINE(AuthBasicUserRequest);
-
 #include "HelperChildConfig.h"
 
 /* configuration runtime data */
