@@ -49,6 +49,7 @@ ERROR_TEMPLATES =  \
 	templates/ERR_WRITE_ERROR
 
 TRANSLATE_LANGUAGES = \
+	af.lang \
 	ar.lang \
 	az.lang \
 	bg.lang \

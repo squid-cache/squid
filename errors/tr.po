@@ -2,32 +2,32 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-09-23 19:55+1300\n"
-"PO-Revision-Date: 2008-12-13 23:10+1300\n"
-"Last-Translator: Tural KAPTAN <kaptan@kaptan.ulakbim.gov.tr>\n"
+"POT-Creation-Date: 2010-02-13 00:05+1300\n"
+"PO-Revision-Date: 2010-01-10 15:46+0000\n"
+"Last-Translator: Hüseyin Sevgi <hsevgi@msn.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Launchpad-Export-Date: 2010-01-16 02:24+0000\n"
+"X-Generator: Launchpad (build Unknown)\n"
 "Language: tr\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Pootle 1.2.0\n"
 
 #: templates/ERR_DIR_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
-msgstr ""
+msgstr "<a href=\"../\">Kaynak Dizin</a> (<a href=\"/\">Kök Dizin</a>)"
 
 #: templates/ERR_INVALID_REQ:4
 msgid ""
 "<b>Invalid Request</b> error was encountered while trying to process the "
 "request:"
-msgstr ""
+msgstr "<b>Geçersiz İstek</b> İşlem sırasında bir hata ile karşılaşıldı:"
 
 #: templates/ERR_INVALID_RESP:4
 msgid ""
 "<b>Invalid Response</b> error was encountered while trying to process the "
 "request:"
-msgstr ""
+msgstr "<b>Geçersiz Yanıt</b> İşlem sırasında bir hata ile karşılaşıldı:"
 
 #: templates/ERR_READ_TIMEOUT:7
 msgid ""
@@ -39,7 +39,7 @@ msgstr ""
 
 #: templates/ERR_URN_RESOLVE:3
 msgid "A URL for the requested URN could not be retrieved"
-msgstr ""
+msgstr "URN'ye erişmek için bir URL alınamadı."
 
 #: templates/ERR_ACCESS_DENIED:5
 msgid "Access Denied."
@@ -60,16 +60,20 @@ msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
+"URL: <a href=\"%U\">%U</a> adresine erişilirken bir FTP onay hatası meydana "
+"geldi."
 
 #: templates/ERR_FTP_FAILURE:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
 msgstr ""
+"URL: <a href=\"%U\">%U</a> adresine erişilirken bir iletişim hatası meydana "
+"geldi."
 
 #: templates/ERR_ICAP_FAILURE:10
 msgid "An Illegal response was received from the ICAP server."
-msgstr ""
+msgstr "ICAP sunucusundan yasadışı bir yanıt alınmıştır."
 
 #: templates/ERR_READ_ERROR:7
 msgid ""
@@ -106,7 +110,7 @@ msgstr "Bağlantı süresi doldu."
 
 #: templates/ERR_CONNECT_FAIL:5
 msgid "Connection to %I failed."
-msgstr ""
+msgstr "%I 'a bağlantı başarısız."
 
 #: templates/ERR_INVALID_REQ:10
 msgid "Content-Length missing for POST or PUT requests."
@@ -114,19 +118,19 @@ msgstr "Content-Length, POST veya PUT istekleri için eksik."
 
 #: templates/ERR_DIR_LISTING:3
 msgid "Directory Content:"
-msgstr ""
+msgstr "Dizin İçeriği"
 
 #: templates/ERR_DIR_LISTING:4
 msgid "Directory Listing"
-msgstr ""
+msgstr "Dizin Listesi"
 
 #: templates/ERR_DIR_LISTING:1
 msgid "Directory: %U"
-msgstr ""
+msgstr "Dizin: %U"
 
 #: templates/ERR_DIR_LISTING:2
 msgid "Directory: <a href=\"%U\">%U</a>/"
-msgstr ""
+msgstr "Dizin: <a href=\"%U\">%U</a>/"
 
 #: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
@@ -182,7 +186,7 @@ msgstr "HATA: İstenilen URN'e ulaşılamadı"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
-msgstr ""
+msgstr "ESI İşleminde hata."
 
 #: templates/ERR_FTP_PUT_CREATED:1
 msgid "FTP PUT Successful: File Created"
@@ -193,9 +197,8 @@ msgid "FTP PUT Successful: File Updated"
 msgstr "FTP PUT Başarılı: Dosya güncellendi"
 
 #: templates/ERR_FTP_PUT_ERROR:3
-#, fuzzy
 msgid "FTP PUT/upload failed"
-msgstr "FTP dosya yüklemesi yapılamadı"
+msgstr "FTP PUT/Gönderme hatası"
 
 #: templates/ERR_FTP_DISABLED:5
 msgid "FTP is Disabled"
@@ -203,7 +206,7 @@ msgstr "FTP şu anda kapalı."
 
 #: templates/ERR_SECURE_CONNECT_FAIL:5
 msgid "Failed to establish a secure connection to %I"
-msgstr ""
+msgstr "%I ile güvenli bağlantı kurma başarısız"
 
 #: templates/ERR_FTP_PUT_CREATED:3
 msgid "File created"
@@ -236,7 +239,7 @@ msgstr "Yönlendirme yasak."
 #: templates/ERR_URN_RESOLVE:8 templates/ERR_WRITE_ERROR:9
 #: templates/ERR_ZERO_SIZE_OBJECT:8
 msgid "Generated %T by %h (%s)"
-msgstr ""
+msgstr "%h (%s) tarafından %T oluşturuldu"
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
@@ -244,19 +247,21 @@ msgstr "%T de URN den fazla birsey beklemeyin. :)"
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
-msgstr ""
+msgstr "ICAP iletişim hatası."
 
 #: templates/ERR_TOO_BIG:7
 msgid ""
 "If you are making a GET request, then the item you are trying to download is "
 "too large."
 msgstr ""
+"Eğer GET isteği yapıyorsanız, indirmeye çalıştığınız dosya çok büyüktür."
 
 #: templates/ERR_TOO_BIG:6
 msgid ""
 "If you are making a POST or PUT request, then the item you are trying to "
 "upload is too large."
 msgstr ""
+"Bir POST veya PUT isteği yapıyorsanız yüklemeye çalıştığınız öğe çok büyük."
 
 #: templates/ERR_INVALID_REQ:11 templates/ERR_INVALID_URL:11
 msgid "Illegal character in hostname; underscores are not allowed."
@@ -404,11 +409,12 @@ msgstr "DNS sunucusundan gelen cevap:"
 
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
-msgstr ""
+msgstr "ESI işlemi geri döndü:"
 
 #: templates/ERR_FTP_UNAVAILABLE:4
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr ""
+"Erişmek istediğiniz URL: <a href=\"%U\">%U</a> FTP sunucusu çok meşgul."
 
 #: templates/ERR_INVALID_RESP:5
 msgid ""
@@ -418,11 +424,11 @@ msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:9
 msgid "The ICAP server is not reachable."
-msgstr ""
+msgstr "ICAP sunucusu erişilemez."
 
 #: templates/ERR_FTP_NOT_FOUND:4
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
-msgstr ""
+msgstr "URL adresine erişilemiyor: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_ACCESS_DENIED:4 templates/ERR_CACHE_ACCESS_DENIED:4
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:4 templates/ERR_CANNOT_FORWARD:4
@@ -440,21 +446,22 @@ msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
+"URL adresine erişilmeye çalışıyorken hata meydana geldi: <a href=\"%U\">%U</"
+"a>"
 
 #: templates/ERR_URN_RESOLVE:4
 msgid ""
 "The following error was encountered while trying to retrieve the URN: <a "
 "href=\"%U\">%U</a>"
-msgstr ""
+msgstr "URN: <a href=\"%U\">%U</a> erişilirken bir hata ile karşılaşıldı."
 
 #: templates/ERR_CONNECT_FAIL:7
-#, fuzzy
 msgid "The remote host or network may be down.  Please try the request again."
-msgstr "Hedef WWW sunucu ile bağlantı kurulamadı. Lütfen tekrar deneyin."
+msgstr "Uzak bağlantı veya ağ bozuk olabilir. Lütfen tekrar deneyin."
 
 #: templates/ERR_TOO_BIG:5
 msgid "The request or reply is too large."
-msgstr ""
+msgstr "Talep veya cevap çok büyük."
 
 #: templates/ERR_ACCESS_DENIED:3 templates/ERR_CANNOT_FORWARD:3
 #: templates/ERR_CONNECT_FAIL:3 templates/ERR_DNS_FAIL:3 templates/ERR_ESI:3
@@ -476,7 +483,7 @@ msgstr "İstenilen URL'e ulaşılamadı"
 #: templates/ERR_FTP_NOT_FOUND:6 templates/ERR_FTP_PUT_ERROR:6
 #: templates/ERR_FTP_UNAVAILABLE:6
 msgid "The server responded with:"
-msgstr ""
+msgstr "Sunucu cevabı:"
 
 #: templates/ERR_CONNECT_FAIL:6 templates/ERR_ICAP_FAILURE:6
 #: templates/ERR_READ_ERROR:6 templates/ERR_READ_TIMEOUT:6
@@ -499,10 +506,13 @@ msgid ""
 "operates this cache.  Please contact them directly if you feel this is an "
 "error."
 msgstr ""
+"Bu sınırlar internet servis sağlayıcınız tarafından kurulmuştur. Eğer bunun "
+"bir hata olduğnu düşünüyorsanız lütfen servis sağlayıcınızla irtibata "
+"geçiniz."
 
 #: templates/ERR_UNSUP_HTTPVERSION:6
 msgid "This Squid does not accept the HTTP version you are attempting to use."
-msgstr ""
+msgstr "Squid kullandığınız HTTP versiyonunu kabul etmiyor."
 
 #: templates/ERR_FTP_DISABLED:6
 msgid "This cache does not support FTP."
@@ -513,6 +523,8 @@ msgid ""
 "This cache is in the process of shutting down and can not service your "
 "request at this time.  Please retry your request again soon."
 msgstr ""
+"Bu önbellik şuan kapatılıyor ve isteğinize cevap veremez. Lütfen kısa bir "
+"süre sonra tekrar deneyin."
 
 #: templates/ERR_FORWARDING_DENIED:6
 msgid ""
@@ -533,6 +545,8 @@ msgid ""
 "This means that the FTP server may not have permission or space to store the "
 "file. Check the path, permissions, diskspace and try again."
 msgstr ""
+"FTP sunucusunun dosya saklamak için izni olmayabilir. Paketi,izinleri ve "
+"disk alanını kontrol edin ve tekrar deneyin."
 
 #: templates/ERR_DNS_FAIL:7
 #, fuzzy
@@ -586,7 +600,7 @@ msgstr "Şu anda sizi yönlendiremem."
 
 #: templates/ERR_UNSUP_HTTPVERSION:3 templates/ERR_UNSUP_HTTPVERSION:5
 msgid "Unsupported HTTP version"
-msgstr ""
+msgstr "Desteklenmeyen HTTP versiyonu."
 
 #: templates/ERR_UNSUP_REQ:5
 msgid "Unsupported Request Method and Protocol"
@@ -634,7 +648,7 @@ msgstr ""
 #: templates/ERR_UNSUP_REQ:7 templates/ERR_URN_RESOLVE:7
 #: templates/ERR_WRITE_ERROR:8 templates/ERR_ZERO_SIZE_OBJECT:7
 msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
-msgstr ""
+msgstr "Önbellk yöneticiniz <a href=\"mailto:%w%W\">%w</a>."
 
 #: templates/ERR_INVALID_RESP:6
 msgid ""
@@ -644,7 +658,7 @@ msgstr ""
 
 #: templates/ERR_ESI:8
 msgid "Your webmaster is <a href=\"mailto:%w\">%w</a>."
-msgstr ""
+msgstr "Senin webmaster'ın <a href=\"mailto:%w\">%w</a>."
 
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"

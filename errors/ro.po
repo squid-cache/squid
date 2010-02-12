@@ -7,9 +7,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-09-23 19:55+1300\n"
-"PO-Revision-Date: 2009-01-18 21:16+1300\n"
-"Last-Translator: Iusty Pop Daniel <iusty@netcompsj.ro>\n"
+"POT-Creation-Date: 2010-02-13 00:05+1300\n"
+"PO-Revision-Date: 2010-01-18 21:29+0200\n"
+"Last-Translator: Arthur <arthur@psw.ro>\n"
 "Language-Team: Romanian <ro@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Language: ro\n"
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
 "20)) ? 1 : 2);;\n"
-"X-Generator: Pootle 1.2.0\n"
+"X-Generator: Pootle 2.0.0\n"
 "X-Launchpad-Export-Date: 2009-01-18 05:16+0000\n"
 
 #: templates/ERR_DIR_LISTING:6
@@ -46,13 +46,13 @@ msgid ""
 "A Timeout occurred while waiting to read data from the network.  The network "
 "or server may be down or congested.  Please retry your request."
 msgstr ""
-"S-a depăşit timpul de aşteptare în tipul citirii datelor de la reţea. "
-"Reţeaua sau serverul ar putea fi căzute sau congestionate. Vă rugăm să "
+"S-a depăşit timpul de aşteptare în tipul citirii datelor de la reţea.  "
+"Reţeaua sau serverul ar putea fi căzute sau congestionate.  Vă rugăm să "
 "încercaţi din nou."
 
 #: templates/ERR_URN_RESOLVE:3
 msgid "A URL for the requested URN could not be retrieved"
-msgstr "Un URL pentru URN-ul cerut nu a putut fi adus"
+msgstr "Un URL pentru URN-ul cerut nu a putut fi accesat"
 
 #: templates/ERR_ACCESS_DENIED:5
 msgid "Access Denied."
@@ -64,8 +64,8 @@ msgid ""
 "this time.  Please contact your service provider if you feel this is "
 "incorrect."
 msgstr ""
-"Configuraţia de control al accesului împiedică permiterea cererii "
-"dumneavoastră în acest moment. Vă rugăm contactaţi furnizorul de servicii "
+"Configuraţia de control al accesului împiedică ca cererea dumneavoastră să "
+"fie permisă în acest moment.  Vă rugăm contactaţi furnizorul de servicii "
 "dacă credeţi că acest lucru nu este corect."
 
 #: templates/ERR_FTP_FORBIDDEN:4
@@ -73,7 +73,7 @@ msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"Autentificărea FTP a eşuat în timp ce se încerca aducerea URL-ului: <a href="
+"Autentificarea FTP a eşuat în timp ce se încerca accesarea URL-ului: <a href="
 "\"%U\">%U</a>"
 
 #: templates/ERR_FTP_FAILURE:4
@@ -81,28 +81,28 @@ msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
 msgstr ""
-"O eroare în protocolul FTP a survenit în timp ce se încerca aducerea URL-"
+"O eroare în protocolul FTP a survenit în timp ce se încerca accesarea URL-"
 "ului: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_ICAP_FAILURE:10
 msgid "An Illegal response was received from the ICAP server."
-msgstr "Un răspuns 'Illegal' (ilegal) a fost recepţionat de la serverul ICAP."
+msgstr "S-a recepţionat un răspuns ilegal de la serverul ICAP."
 
 #: templates/ERR_READ_ERROR:7
 msgid ""
 "An error condition occurred while reading data from the network.  Please "
 "retry your request."
 msgstr ""
-"A survenit o condiţie de eroare în timp ce se citeau date de la reţea. Vă "
-"rugăm încercaţi din nou."
+"A survenit o eroare în timp ce se citeau date din reţea.  Vă rugăm să "
+"încercaţi cererea din nou."
 
 #: templates/ERR_WRITE_ERROR:7
 msgid ""
 "An error condition occurred while writing to the network.  Please retry your "
 "request."
 msgstr ""
-"A survenit o condiţie de eroare în timp ce se scriau date la reţea. Vă rugăm "
-"încercaţi din nou."
+"A survenit o eroare în timp ce se scriau date în reţea.  Vă rugăm să "
+"încercaţi cererea din nou."
 
 #: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
 msgid "Cache Access Denied."
@@ -111,7 +111,7 @@ msgstr "Interzis accesul la cache."
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:3
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:5
 msgid "Cache Manager Access Denied."
-msgstr "Interzis accesul la cache manager."
+msgstr "Interzis accesul la Managerul de cache."
 
 #: templates/ERR_URN_RESOLVE:5
 msgid "Cannot Resolve URN"
@@ -142,9 +142,8 @@ msgid "Directory: %U"
 msgstr "Directorul: %U"
 
 #: templates/ERR_DIR_LISTING:2
-#, fuzzy
 msgid "Directory: <a href=\"%U\">%U</a>/"
-msgstr "Directorul: <a href=\"/\">%U</a>/"
+msgstr "Directorul: <a href=\"%U\">%U</a>/"
 
 #: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
@@ -167,15 +166,15 @@ msgstr "EROARE"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:1
 msgid "ERROR: Cache Access Denied"
-msgstr "EROARE: interzis accesul la cache"
+msgstr "EROARE: Interzis accesul la Cache"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:1
 msgid "ERROR: Cache Manager Access Denied"
-msgstr "EROARE: interzis accesul la cache manager"
+msgstr "EROARE: Interzis accesul la Managerul de Cache"
 
 #: templates/ERR_FTP_PUT_ERROR:1
 msgid "ERROR: FTP upload failed"
-msgstr "EROARE: operaţia FTP de încărcare a eşuat"
+msgstr "EROARE: Operaţia FTP de încărcare a eşuat"
 
 #: templates/ERR_ACCESS_DENIED:1 templates/ERR_CANNOT_FORWARD:1
 #: templates/ERR_CONNECT_FAIL:1 templates/ERR_DNS_FAIL:1 templates/ERR_ESI:1
@@ -192,11 +191,11 @@ msgstr "EROARE: operaţia FTP de încărcare a eşuat"
 #: templates/ERR_UNSUP_REQ:1 templates/ERR_WRITE_ERROR:1
 #: templates/ERR_ZERO_SIZE_OBJECT:1
 msgid "ERROR: The requested URL could not be retrieved"
-msgstr "EROARE: URL-ul cerut nu a putut fi adus"
+msgstr "EROARE: URL-ul cerut nu a putut fi accesat"
 
 #: templates/ERR_URN_RESOLVE:1
 msgid "ERROR: The requested URN not be retrieved"
-msgstr "EROARE: URN-ul cerut nu a putut fi adus"
+msgstr "EROARE: URN-ul cerut nu a putut fi accesat"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
@@ -220,7 +219,7 @@ msgstr "FTP este dezactivat"
 
 #: templates/ERR_SECURE_CONNECT_FAIL:5
 msgid "Failed to establish a secure connection to %I"
-msgstr ""
+msgstr "A eşuat stabilirea unei conexiuni securizate cu %I"
 
 #: templates/ERR_FTP_PUT_CREATED:3
 msgid "File created"
@@ -253,7 +252,7 @@ msgstr "Înaintarea cererii este interzisă."
 #: templates/ERR_URN_RESOLVE:8 templates/ERR_WRITE_ERROR:9
 #: templates/ERR_ZERO_SIZE_OBJECT:8
 msgid "Generated %T by %h (%s)"
-msgstr ""
+msgstr "Generat %T de către %h (%s)"
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
@@ -261,7 +260,7 @@ msgstr "Hei, nu vă aşteptaţi la prea multe de la URN-uri pe %T :)"
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
-msgstr "Eroare la protocolul ICAP"
+msgstr "Eroare în protocolul ICAP."
 
 #: templates/ERR_TOO_BIG:7
 msgid ""
@@ -285,9 +284,8 @@ msgstr ""
 "Caracter ilegal în numele staţiei; liniuţele de subliniere nu sunt permise."
 
 #: templates/ERR_INVALID_URL:10
-#, fuzzy
 msgid "Illegal double-escape in the URL-Path"
-msgstr "Caracterul escape-dublu este ilegal în calea URL"
+msgstr "Secvenţa escape-dublu este ilegală în calea URL"
 
 #: templates/ERR_INVALID_URL:5
 msgid "Invalid URL"
@@ -356,9 +354,8 @@ msgid "Read Error"
 msgstr "Eroare la citire"
 
 #: templates/ERR_READ_TIMEOUT:5
-#, fuzzy
 msgid "Read Timeout"
-msgstr "Cererea de citire a expirat înainte să primesc răspuns"
+msgstr "Cererea de citire a expirat"
 
 #: templates/ERR_INVALID_REQ:9
 msgid "Request is too large."
@@ -375,14 +372,14 @@ msgstr "O parte a URL-ului cerut este incorectă."
 #: templates/ERR_ICAP_FAILURE:8 templates/ERR_INVALID_REQ:5
 #: templates/ERR_INVALID_URL:7
 msgid "Some possible problems are:"
-msgstr "Câteva probleme posibile sunt:"
+msgstr "Unele posibile probleme sunt:"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:6
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache manager "
 "until you have authenticated yourself."
 msgstr ""
-"Cu regret, nu aveţi momentan permisiunea de a face cererea %U de la acest "
+"Ne pare rău, nu aveţi momentan permisiunea de a face cererea %U de la acest "
 "cache manager până când nu vă autentificaţi."
 
 #: templates/ERR_CACHE_ACCESS_DENIED:6
@@ -390,8 +387,8 @@ msgid ""
 "Sorry, you are not currently allowed to request %U from this cache until you "
 "have authenticated yourself."
 msgstr ""
-"Ne pare rău, dar nu sunteţi îndreptăţit să accesaţi %U din acest cache pana "
-"cand nu v-aţi autenticat."
+"Ne pare rău, nu aveţi momentan permisiunea să accesaţi %U din acest cache "
+"până când nu vă autentificaţi."
 
 #: templates/ERR_ZERO_SIZE_OBJECT:6
 msgid "Squid did not receive any data for this request."
@@ -402,7 +399,7 @@ msgid ""
 "Squid does not support all request methods for all access protocols. For "
 "example, you can not POST a Gopher request."
 msgstr ""
-"Squid nu suportă toate metodele de cerere pentru toate protocolurile de "
+"Squid nu suportă toate metodele de cerere pentru toate protocoalele de "
 "acces. De exemplu, nu puteţi face o cerere de tip POST pentru Gopher."
 
 #: templates/ERR_LIFETIME_EXP:6
@@ -418,8 +415,8 @@ msgid ""
 "Squid is unable to create a TCP socket, presumably due to excessive load. "
 "Please retry your request."
 msgstr ""
-"Squid nu poate crea un soclu TCP, probabil din cauza încărcării excesive. Vă "
-"rugăm încercaţi din nou."
+"Squid nu poate crea un socket TCP, probabil din cauza încărcării excesive. "
+"Vă rugăm să încercaţi cererea din nou."
 
 #: templates/ERR_FTP_FAILURE:5 templates/ERR_FTP_FORBIDDEN:5
 #: templates/ERR_FTP_NOT_FOUND:5 templates/ERR_FTP_PUT_ERROR:5
@@ -438,21 +435,23 @@ msgstr "Procesorul ESI a răspuns:"
 #: templates/ERR_FTP_UNAVAILABLE:4
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr ""
-"Serverul FTP a fost prea ocupat pentru a aduce URL-ul: <a href=\"%U\">%U</a>"
+"Serverul FTP a fost prea ocupat pentru a accesa URL-ul: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
 msgid ""
 "The HTTP Response message received from the contacted server could not be "
 "understood or was otherwise malformed. Please contact the site operator."
 msgstr ""
+"Mesajul HTTP primit de la serverul contactat nu a putut fi inţeles sau a "
+"fost malformat. Vă rugăm să contactaţi administratorul serverului respectiv."
 
 #: templates/ERR_ICAP_FAILURE:9
 msgid "The ICAP server is not reachable."
-msgstr ""
+msgstr "Serverul ICAP nu poate fi contactat."
 
 #: templates/ERR_FTP_NOT_FOUND:4
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
-msgstr ""
+msgstr "URL-ul următor nu a putut fi accesat: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_ACCESS_DENIED:4 templates/ERR_CACHE_ACCESS_DENIED:4
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:4 templates/ERR_CANNOT_FORWARD:4
@@ -470,22 +469,26 @@ msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
+"S-a recepţionat următoarea eroare când se încerca accesarea URL-ului: <a "
+"href=\"%U\">%U</a>"
 
 #: templates/ERR_URN_RESOLVE:4
 msgid ""
 "The following error was encountered while trying to retrieve the URN: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
+"S-a recepţionat următoarea eroare când se încerca accesarea URN-ului: <a "
+"href=\"%U\">%U</a>"
 
 #: templates/ERR_CONNECT_FAIL:7
 msgid "The remote host or network may be down.  Please try the request again."
 msgstr ""
-"Calculatorul sau reţeaua destinaţie s-ar putea să fie inoperabile.  Repetaţi "
-"cererea mai târziu."
+"Calculatorul sau reţeaua destinaţie s-ar putea să fie inoperabile.  Vă rugăm "
+"să încercaţi cererea din nou."
 
 #: templates/ERR_TOO_BIG:5
 msgid "The request or reply is too large."
-msgstr ""
+msgstr "Cererea sau răspunsul este prea mare."
 
 #: templates/ERR_ACCESS_DENIED:3 templates/ERR_CANNOT_FORWARD:3
 #: templates/ERR_CONNECT_FAIL:3 templates/ERR_DNS_FAIL:3 templates/ERR_ESI:3
@@ -501,28 +504,28 @@ msgstr ""
 #: templates/ERR_TOO_BIG:3 templates/ERR_UNSUP_REQ:3
 #: templates/ERR_WRITE_ERROR:3 templates/ERR_ZERO_SIZE_OBJECT:3
 msgid "The requested URL could not be retrieved"
-msgstr "URL-ul cerut nu a putut fi citit"
+msgstr "URL-ul cerut nu a putut fi accesat"
 
 #: templates/ERR_FTP_FAILURE:6 templates/ERR_FTP_FORBIDDEN:6
 #: templates/ERR_FTP_NOT_FOUND:6 templates/ERR_FTP_PUT_ERROR:6
 #: templates/ERR_FTP_UNAVAILABLE:6
 msgid "The server responded with:"
-msgstr ""
+msgstr "Răspunsul serverului a fost:"
 
 #: templates/ERR_CONNECT_FAIL:6 templates/ERR_ICAP_FAILURE:6
 #: templates/ERR_READ_ERROR:6 templates/ERR_READ_TIMEOUT:6
 #: templates/ERR_SECURE_CONNECT_FAIL:6 templates/ERR_SOCKET_FAILURE:6
 #: templates/ERR_WRITE_ERROR:6
 msgid "The system returned: <i>%E</i>"
-msgstr "Sistemul de operare a returnat mesajul:<i>%E</i>"
+msgstr "Sistemul de operare a returnat mesajul: <i>%E</i>"
 
 #: templates/ERR_NO_RELAY:6
 msgid ""
 "There is no WAIS Relay host defined for this Cache!  Yell at the "
 "administrator."
 msgstr ""
-"Nu este definit nici un calculator relay Wais pentru acest cache! Strigaţi "
-"la administrator!"
+"Nu este definit niciun relay WAIS pentru acest cache!  Strigaţi la "
+"administrator!"
 
 #: templates/ERR_TOO_BIG:8
 msgid ""
@@ -530,10 +533,14 @@ msgid ""
 "operates this cache.  Please contact them directly if you feel this is an "
 "error."
 msgstr ""
+"Aceste limite au fost impuse de către organizaţia care oferă serviciile de "
+"Internet şi care administreză acest cache.  Vă rugăm să îi contactaţi în mod "
+"direct dacă sunteţi de părere că este o greşeală."
 
 #: templates/ERR_UNSUP_HTTPVERSION:6
 msgid "This Squid does not accept the HTTP version you are attempting to use."
 msgstr ""
+"Acest Squid nu acceptă versiunea HTTP pe care încercaţi să o utilizaţi."
 
 #: templates/ERR_FTP_DISABLED:6
 msgid "This cache does not support FTP."
@@ -544,6 +551,8 @@ msgid ""
 "This cache is in the process of shutting down and can not service your "
 "request at this time.  Please retry your request again soon."
 msgstr ""
+"Acest cache este în curs de închidere şi nu poate procesa cererea în acest "
+"moment.  Vă rugăm să repetaţi cererea cât mai curând."
 
 #: templates/ERR_FORWARDING_DENIED:6
 msgid ""
@@ -557,28 +566,33 @@ msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:7
 msgid "This means that some aspect of the ICAP communication failed."
-msgstr ""
+msgstr "Aceasta însemnă că o parte din comunicarea ICAP a eşuat."
 
 #: templates/ERR_FTP_PUT_ERROR:7
 msgid ""
 "This means that the FTP server may not have permission or space to store the "
 "file. Check the path, permissions, diskspace and try again."
 msgstr ""
+"Aceasta înseamnă probabil că serverul FTP nu are permisiunea sau spaţiul "
+"necesar pentru a stoca fişierul. Verificaţi calea, permisiunile, spaţiul pe "
+"disc şi încercaţi din nou."
 
+# incercare de a evita cacofonia
 #: templates/ERR_DNS_FAIL:7
-#, fuzzy
 msgid ""
 "This means that the cache was not able to resolve the hostname presented in "
 "the URL. Check if the address is correct."
 msgstr ""
-"Aceasta înseamnă că cache-ul nu a putut rezolva numele host-ului scris în "
-"URL. Verificaţi dacă adresa este corectă."
+"Aceasta înseamnă că serverul de cache nu a putut rezolva numele host-ului "
+"scris în URL. Verificaţi dacă adresa este corectă."
 
 #: templates/ERR_ESI:7
 msgid ""
 "This means that the surrogate was not able to process the ESI template. "
 "Please report this error to the webmaster."
 msgstr ""
+"Aceasta înseamnă ca proxy-ul intermediar nu a putut procesa modelul ESI. Vă "
+"rugăm să raportaţi această eroare webmaster-ului."
 
 #: templates/ERR_FTP_NOT_FOUND:7
 msgid ""
@@ -586,6 +600,9 @@ msgid ""
 "comply with RFC 1738).  If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
+"Acest lucru poate fi cauzat de un URL FTP cu o cale absolută (ceea ce nu "
+"este conform RFC-ului 1738).  Dacă aceasta este cauza, atunci fişierul poate "
+"fi găsit la <a href=\"%B\">%B</a>."
 
 #: templates/ERR_SECURE_CONNECT_FAIL:7
 msgid ""
@@ -594,6 +611,10 @@ msgid ""
 "host does not support secure connections, or the proxy is not satisfied with "
 "the host security credentials."
 msgstr ""
+"Acest proxy şi serverul cerut nu au putut negocia o modalitate de securizare "
+"mutual acceptabilă pentru a procesa cererea d-voastră. Este posibil ca "
+"serverul respectiv să nu suporte conexiuni securizate, sau că proxy-ul nu "
+"este satisfăcut de certificările de securitate ale serverului."
 
 #: templates/ERR_CANNOT_FORWARD:6
 msgid ""
@@ -603,9 +624,10 @@ msgid ""
 "servers, and all configured parent caches are currently unreachable."
 msgstr ""
 "Această cerere nu a putut fi înaintată către serverul de origine sau un "
-"cache părinte.  Cea mai probabilă cauză de eroare este administratorul cache-"
-"ului nu permite acestui cache să facă conexiuni directe către serverele de "
-"origine, şi toate cache-urile părinte nu pot fi contactate îm acest moment."
+"cache părinte.  Cea mai probabilă cauză de eroare este că administratorul "
+"cache-ului nu permite acestui cache să facă conexiuni directe către "
+"serverele de origine şi toate cache-urile părinte nu pot fi contactate în "
+"acest moment."
 
 #: templates/ERR_DNS_FAIL:5
 msgid "Unable to determine IP address from host name <q>%H</q>"
@@ -617,20 +639,19 @@ msgstr "Nu pot să forwardez această cerere la acest moment."
 
 #: templates/ERR_UNSUP_HTTPVERSION:3 templates/ERR_UNSUP_HTTPVERSION:5
 msgid "Unsupported HTTP version"
-msgstr ""
+msgstr "Versiune HTTP nesuportată"
 
 #: templates/ERR_UNSUP_REQ:5
-#, fuzzy
 msgid "Unsupported Request Method and Protocol"
-msgstr "Combinaţie de protocol şi cerere invalidă"
+msgstr "Metodă de cerere şi protocol nesuportată"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS:5
 msgid ""
 "Valid document was not found in the cache and <q>only-if-cached</q> "
 "directive was specified."
 msgstr ""
-"Un document cu cale corectă de altfel nu a fost găsit în cache şi directiva "
-"<q>only-if-cached</q> (numai dacă este deja în cache) a fost specificată."
+"Un document valid nu a fost găsit în cache şi directiva <q>only-if-cached</"
+"q> (numai dacă este deja în cache) a fost specificată."
 
 #: templates/ERR_FTP_PUT_ERROR:4
 msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
@@ -666,18 +687,20 @@ msgstr ""
 #: templates/ERR_UNSUP_REQ:7 templates/ERR_URN_RESOLVE:7
 #: templates/ERR_WRITE_ERROR:8 templates/ERR_ZERO_SIZE_OBJECT:7
 msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
-msgstr ""
+msgstr "Administratorul cache-ului este <a href=\"mailto:%w%W\">%w</a>."
 
 #: templates/ERR_INVALID_RESP:6
 msgid ""
 "Your cache administrator may be able to provide you with more details about "
 "the exact nature of the problem if needed."
 msgstr ""
+"Administratorul cache-ului vă poate oferi mai multe detalii în legătură cu "
+"natura exactă a problemei dacă este nevoie."
 
 #: templates/ERR_ESI:8
 msgid "Your webmaster is <a href=\"mailto:%w\">%w</a>."
-msgstr ""
+msgstr "Webmaster-ul este <a href=\"mailto:%w\">%w</a>."
 
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
-msgstr "Replică de lungime Zero"
+msgstr "Răspuns de lungime zero"

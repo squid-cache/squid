@@ -2,9 +2,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2009-09-23 19:55+1300\n"
-"PO-Revision-Date: 2009-06-14 17:18+1300\n"
-"Last-Translator: Peter Hanecak <hany@megaloman.sk>\n"
+"POT-Creation-Date: 2010-02-13 00:05+1300\n"
+"PO-Revision-Date: 2009-12-04 05:36+1300\n"
+"Last-Translator: Ivan Masár <helix84@centrum.sk>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -16,26 +16,31 @@ msgstr ""
 #: templates/ERR_DIR_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
 msgstr ""
+"<a href=\"../\">Rodičovský adresár</a> (<a href=\"/\">Koreňový adresár</a>)"
 
 #: templates/ERR_INVALID_REQ:4
 msgid ""
 "<b>Invalid Request</b> error was encountered while trying to process the "
 "request:"
 msgstr ""
+"Vyskytla sa chyba <b>Neplatná požiadavka</b> pri pokuse o spracovanie "
+"požiadavky:"
 
 #: templates/ERR_INVALID_RESP:4
 msgid ""
 "<b>Invalid Response</b> error was encountered while trying to process the "
 "request:"
 msgstr ""
+"Vyskytla sa chyba <b>Neplatná odpoveď</b> pri pokuse o spracovanie "
+"požiadavky:"
 
 #: templates/ERR_READ_TIMEOUT:7
 msgid ""
 "A Timeout occurred while waiting to read data from the network.  The network "
 "or server may be down or congested.  Please retry your request."
 msgstr ""
-"Vyskytol sa timeout pri čítaní zo siete. Sieť alebo server môžu byť mimo "
-"prevádzky alebo preťažené. Opakujte prosím svoju požiadavku. "
+"Vyhradený čas vypršal počas čítania zo siete. Sieť alebo server môžu byť "
+"mimo prevádzky alebo preťažené. Opakujte prosím svoju požiadavku. "
 
 #: templates/ERR_URN_RESOLVE:3
 msgid "A URL for the requested URN could not be retrieved"
@@ -43,7 +48,7 @@ msgstr "URL pre požadované URN je nedostupné"
 
 #: templates/ERR_ACCESS_DENIED:5
 msgid "Access Denied."
-msgstr ""
+msgstr "Prístup zamietnutý."
 
 #: templates/ERR_ACCESS_DENIED:6
 msgid ""
@@ -51,9 +56,9 @@ msgid ""
 "this time.  Please contact your service provider if you feel this is "
 "incorrect."
 msgstr ""
-"Pístup k dokumentu Vám teraz nebol umožnený v dôsledku nedostatočných "
-"prístupových práv. Ak si myslíte, že je to chyba, kontaktujte prosím správcu "
-"daného systému."
+"Prístup k dokumentu vám v tomto čase nebol umožnený v dôsledku "
+"nedostatočných prístupových práv. Ak si myslíte, že je to chyba, kontaktujte "
+"prosím správcu daného systému."
 
 #: templates/ERR_FTP_FORBIDDEN:4
 msgid ""
@@ -63,22 +68,23 @@ msgstr ""
 "Pri pokuse získať URL sa vyskytla chyba autentifikácie: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_FTP_FAILURE:4
-#, fuzzy
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
-msgstr "Pri pokuse o prístup k\" <a href=\"%U\">%U</a> sa vyskytla chyba FTP."
+msgstr ""
+"Vyskytla sa chyba protokolu FTP pri pokuse o prístup k URL: <a href=\"%U\">%"
+"U</a>"
 
 #: templates/ERR_ICAP_FAILURE:10
 msgid "An Illegal response was received from the ICAP server."
-msgstr ""
+msgstr "Od ICAP servera bola prijatá neplatná odpoveď."
 
 #: templates/ERR_READ_ERROR:7
 msgid ""
 "An error condition occurred while reading data from the network.  Please "
 "retry your request."
 msgstr ""
-"Vyskytla sa chyba pri prenose údajov cez sieť. Opakujte prosím svoju "
+"Vyskytla sa chyba pri prenose údajov cez sieť. Prosím, opakujte svoju "
 "požiadavku."
 
 #: templates/ERR_WRITE_ERROR:7
@@ -86,48 +92,48 @@ msgid ""
 "An error condition occurred while writing to the network.  Please retry your "
 "request."
 msgstr ""
-"Vyskytla sa chyba pri zápise do siete. Opakujte prosím Vašu požiadavku."
+"Vyskytla sa chyba pri zápise do siete. Prosím, opakujte svoju požiadavku."
 
 #: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
 msgid "Cache Access Denied."
-msgstr ""
+msgstr "Prístup ku cache zamietnutý."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:3
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:5
 msgid "Cache Manager Access Denied."
-msgstr ""
+msgstr "Prístup k sprívcovi cache zamietnutý."
 
 #: templates/ERR_URN_RESOLVE:5
 msgid "Cannot Resolve URN"
-msgstr ""
+msgstr "Nemožno preložiť URN"
 
 #: templates/ERR_LIFETIME_EXP:5
 msgid "Connection Lifetime Expired"
-msgstr ""
+msgstr "Životnosť pojenia vypršala"
 
 #: templates/ERR_CONNECT_FAIL:5
 msgid "Connection to %I failed."
-msgstr ""
+msgstr "Spojenie k %I zlyhalo."
 
 #: templates/ERR_INVALID_REQ:10
 msgid "Content-Length missing for POST or PUT requests."
-msgstr "Chýbajúca položka Content-Length pre požiadavky POST or PUT"
+msgstr "Chýbajúca položka Content-Length pre požiadavky POST alebo PUT."
 
 #: templates/ERR_DIR_LISTING:3
 msgid "Directory Content:"
-msgstr ""
+msgstr "Obsah adresára:"
 
 #: templates/ERR_DIR_LISTING:4
 msgid "Directory Listing"
-msgstr ""
+msgstr "Výpis obsahu adresára"
 
 #: templates/ERR_DIR_LISTING:1
 msgid "Directory: %U"
-msgstr ""
+msgstr "Adresár: %U"
 
 #: templates/ERR_DIR_LISTING:2
 msgid "Directory: <a href=\"%U\">%U</a>/"
-msgstr ""
+msgstr "Adresár: <a href=\"%U\">%U</a>/"
 
 #: templates/ERR_ACCESS_DENIED:2 templates/ERR_CACHE_ACCESS_DENIED:2
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:2 templates/ERR_CANNOT_FORWARD:2
@@ -150,16 +156,15 @@ msgstr "CHYBA"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:1
 msgid "ERROR: Cache Access Denied"
-msgstr ""
+msgstr "CHYBA: Prístup ku cache zamietnutý"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:1
 msgid "ERROR: Cache Manager Access Denied"
-msgstr ""
+msgstr "CHYBA: Prístup ku správcovi cache zamietnutý"
 
 #: templates/ERR_FTP_PUT_ERROR:1
-#, fuzzy
 msgid "ERROR: FTP upload failed"
-msgstr "CHYBA: neuspesny FTP upload"
+msgstr "CHYBA: Nahrávanie prostredníctvom FTP zlyhalo"
 
 #: templates/ERR_ACCESS_DENIED:1 templates/ERR_CANNOT_FORWARD:1
 #: templates/ERR_CONNECT_FAIL:1 templates/ERR_DNS_FAIL:1 templates/ERR_ESI:1
@@ -176,48 +181,47 @@ msgstr "CHYBA: neuspesny FTP upload"
 #: templates/ERR_UNSUP_REQ:1 templates/ERR_WRITE_ERROR:1
 #: templates/ERR_ZERO_SIZE_OBJECT:1
 msgid "ERROR: The requested URL could not be retrieved"
-msgstr "CHYBA: Požadovaný dokument je nedostupný"
+msgstr "CHYBA: Požadovaný URL nebolo možné získať"
 
 #: templates/ERR_URN_RESOLVE:1
 msgid "ERROR: The requested URN not be retrieved"
-msgstr "CHYBA: URL pre požadované URN je nedostupné"
+msgstr "CHYBA: Požadované URN nebolo možné získať"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
-msgstr ""
+msgstr "Spracovanie ESI zlyhalo."
 
 #: templates/ERR_FTP_PUT_CREATED:1
 msgid "FTP PUT Successful: File Created"
-msgstr "operácia FTP PUT úspešná: súbor vytvorený"
+msgstr "operácia FTP PUT úspešná: Súbor vytvorený"
 
 #: templates/ERR_FTP_PUT_MODIFIED:1
 msgid "FTP PUT Successful: File Updated"
-msgstr "operácia FTP PUT úspešná: súbor aktualizovaný"
+msgstr "operácia FTP PUT úspešná: Súbor aktualizovaný"
 
 #: templates/ERR_FTP_PUT_ERROR:3
-#, fuzzy
 msgid "FTP PUT/upload failed"
-msgstr "neúspešná FTP operácia PUT/upload"
+msgstr "FTP PUT/nahrávanie zlyhalo"
 
 #: templates/ERR_FTP_DISABLED:5
 msgid "FTP is Disabled"
-msgstr ""
+msgstr "FTP je vypnuté"
 
 #: templates/ERR_SECURE_CONNECT_FAIL:5
 msgid "Failed to establish a secure connection to %I"
-msgstr ""
+msgstr "Nepodarilo sa nadviazať zabezpečené spojenie s %I"
 
 #: templates/ERR_FTP_PUT_CREATED:3
 msgid "File created"
-msgstr "súbor vytvorený"
+msgstr "Súbor vytvorený"
 
 #: templates/ERR_FTP_PUT_MODIFIED:3
 msgid "File updated"
-msgstr "súbor aktualizovaný"
+msgstr "Súbor aktualizovaný"
 
 #: templates/ERR_FORWARDING_DENIED:5
 msgid "Forwarding Denied."
-msgstr ""
+msgstr "Preposielanie zamietnuté."
 
 #: templates/ERR_ACCESS_DENIED:8 templates/ERR_CACHE_ACCESS_DENIED:8
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:8 templates/ERR_CANNOT_FORWARD:8
@@ -238,7 +242,7 @@ msgstr ""
 #: templates/ERR_URN_RESOLVE:8 templates/ERR_WRITE_ERROR:9
 #: templates/ERR_ZERO_SIZE_OBJECT:8
 msgid "Generated %T by %h (%s)"
-msgstr ""
+msgstr "Vytvoril %T, %h (%s)"
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
@@ -246,43 +250,47 @@ msgstr "Hej, neočakávaj priveľa od URN na %T :)"
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
-msgstr ""
+msgstr "Chyba protokoly ICAP."
 
 #: templates/ERR_TOO_BIG:7
 msgid ""
 "If you are making a GET request, then the item you are trying to download is "
 "too large."
 msgstr ""
+"Ak vykonávate požiadavku GET, položka, ktorú sa snažíte stiahnuť je príliš "
+"veľká."
 
 #: templates/ERR_TOO_BIG:6
 msgid ""
 "If you are making a POST or PUT request, then the item you are trying to "
 "upload is too large."
 msgstr ""
+"Ak vykonávate požiadavku POST alebo PUT, položka, ktorú sa snažíte nahrať je "
+"príliš veľká."
 
 #: templates/ERR_INVALID_REQ:11 templates/ERR_INVALID_URL:11
 msgid "Illegal character in hostname; underscores are not allowed."
-msgstr "Chybný znak v názve serveru; podtrhovník nie je povolený."
+msgstr "Chybný znak v názve serveru; podčiarovník nie je povolený."
 
 #: templates/ERR_INVALID_URL:10
 msgid "Illegal double-escape in the URL-Path"
-msgstr "Chybný double-escape v URL ceste"
+msgstr "Chybná dvojitá úniková klauzula v URL-Path"
 
 #: templates/ERR_INVALID_URL:5
 msgid "Invalid URL"
-msgstr ""
+msgstr "Neplatný URL"
 
 #: templates/ERR_INVALID_REQ:8
 msgid "Missing HTTP Identifier (HTTP/1.0)."
-msgstr "Chýbajúci identifikátor HTTP (HTTP/1.0)"
+msgstr "Chýbajúci identifikátor HTTP (HTTP/1.0)."
 
 #: templates/ERR_INVALID_REQ:7
 msgid "Missing URL."
-msgstr "Chýbajúce URL"
+msgstr "Chýbajúci URL."
 
 #: templates/ERR_INVALID_URL:9
 msgid "Missing hostname"
-msgstr "Chýbajúci názov serveru"
+msgstr "Chýbajúci názov servera"
 
 #: templates/ERR_INVALID_URL:8
 msgid ""
@@ -293,19 +301,19 @@ msgstr ""
 
 #: templates/ERR_INVALID_REQ:6
 msgid "Missing or unknown request method."
-msgstr "Chýbajúca alebo neznáma metóda (POST, GET)"
+msgstr "Chýbajúca alebo neznáma metóda požiadavky."
 
 #: templates/ERR_NO_RELAY:5
 msgid "No Wais Relay"
-msgstr ""
+msgstr "Žiadne relé WAIS"
 
 #: templates/ERR_FTP_PUT_CREATED:2 templates/ERR_FTP_PUT_MODIFIED:2
 msgid "Operation successful"
-msgstr "operácia úspešná"
+msgstr "Operácia úspešná"
 
 #: templates/ERR_DIR_LISTING:5
 msgid "Parent Directory"
-msgstr ""
+msgstr "Nadradený adresár"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:7
 msgid ""
@@ -314,8 +322,8 @@ msgid ""
 "chpasswd.cgi\">change</a> your default password."
 msgstr ""
 "Ak máte problém pri autentifikácii, kontaktujte prosím <a href=\"mailto:%w%W"
-"\">cache administrátora</a> alebo si <a href=\"http://%h/cgi-bin/chpasswd.cgi"
-"\">zmeňte</a> Vaše implicitné heslo."
+"\">správcu cache</a> alebo si <a href=\"http://%h/cgi-bin/chpasswd.cgi"
+"\">zmeňte</a> svoje predvolené heslo."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
 msgid ""
@@ -325,54 +333,54 @@ msgid ""
 "cache log for more detailed error messages."
 msgstr ""
 "Ak máte problém pri autentifikácii, kontaktujte prosím <a href=\"mailto:%w%W"
-"\">cache administrátora</a>. Ak Vy sám <em>ste</em> administrátor, "
-"prečítajte si prosím dokumentáciu k rozhraniu cache manažéra a prezrite si "
-"detailnejšie chybové hlásenie v cache logu."
+"\">správcu cache</a>. Ak vy sám <em>ste</em> správca, prečítajte si prosím "
+"dokumentáciu k rozhraniu správcu cache a prezrite si podrobnejšie chybové "
+"hlásenie v protokole cache."
 
 #: templates/ERR_READ_ERROR:5
 msgid "Read Error"
-msgstr ""
+msgstr "Chyba pri čítaní"
 
 #: templates/ERR_READ_TIMEOUT:5
 msgid "Read Timeout"
-msgstr ""
+msgstr "Čas vypršal pri čítaní"
 
 #: templates/ERR_INVALID_REQ:9
 msgid "Request is too large."
-msgstr "Požiadavka je príliš dlhá"
+msgstr "Požiadavka je príliš dlhá."
 
 #: templates/ERR_SOCKET_FAILURE:5
 msgid "Socket Failure"
-msgstr ""
+msgstr "Chyba socketu"
 
 #: templates/ERR_INVALID_URL:6
-#, fuzzy
 msgid "Some aspect of the requested URL is incorrect."
-msgstr "Niektorá časť Vami požadovaného URL je chybná."
+msgstr "Niektorá časť vami požadovaného URL je chybná."
 
 #: templates/ERR_ICAP_FAILURE:8 templates/ERR_INVALID_REQ:5
 #: templates/ERR_INVALID_URL:7
-#, fuzzy
 msgid "Some possible problems are:"
-msgstr "Možné problémy:"
+msgstr "Niektoré možné problémy:"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:6
-#, fuzzy
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache manager "
 "until you have authenticated yourself."
-msgstr "Prístup k dokumentu %U Vám bude povolený až po Vašej autentifikácii."
+msgstr ""
+"Ľutujeme, prístup k dokumentu %U zo správcu cache vám bude povolený až po "
+"tom ako sa autentifikujete."
 
 #: templates/ERR_CACHE_ACCESS_DENIED:6
-#, fuzzy
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache until you "
 "have authenticated yourself."
-msgstr "Prepáčte, ale prístup k %U je povolený až po autentifikácii."
+msgstr ""
+"Ľutujeme, prístup k dokumentu %U z cache vám bude povolený až po tom ako sa "
+"autentifikujete."
 
 #: templates/ERR_ZERO_SIZE_OBJECT:6
 msgid "Squid did not receive any data for this request."
-msgstr "Squid nedostal v odpovedi na Vašu požiadavku žiadne údaje."
+msgstr "Squid nedostal v odpovedi na túto požiadavku žiadne údaje."
 
 #: templates/ERR_UNSUP_REQ:6
 msgid ""
@@ -387,7 +395,7 @@ msgid ""
 "Squid has terminated the request because it has exceeded the maximum "
 "connection lifetime."
 msgstr ""
-"Squid yrušil požiadavku pretože bola prekročená maximálna dĺžka trvania "
+"Squid prerušil požiadavku, pretože bola prekročená maximálna dĺžka trvania "
 "spojenia."
 
 #: templates/ERR_SOCKET_FAILURE:7
@@ -395,8 +403,8 @@ msgid ""
 "Squid is unable to create a TCP socket, presumably due to excessive load. "
 "Please retry your request."
 msgstr ""
-"Squid nie je schopný vytvoriž TCP socket pravdepodobne v dôsledku "
-"preťaženia. Opakujte prosím svoju požiadavku."
+"Squid nie je schopný vytvoriť TCP socket pravdepodobne v dôsledku "
+"preťaženia. Prosím, opakujte svoju požiadavku."
 
 #: templates/ERR_FTP_FAILURE:5 templates/ERR_FTP_FORBIDDEN:5
 #: templates/ERR_FTP_NOT_FOUND:5 templates/ERR_FTP_PUT_ERROR:5
@@ -410,30 +418,29 @@ msgstr "DNS server odpovedal:"
 
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
-msgstr ""
+msgstr "ESI procesor vrátil:"
 
 #: templates/ERR_FTP_UNAVAILABLE:4
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr ""
-"FTP server bol príliš zaneprázdnený pri pokuse získat nasledovné URL: <a "
+"FTP server bol príliš zaneprázdnený pri pokuse získať nasledovný URL: <a "
 "href=\"%U\">%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
-#, fuzzy
 msgid ""
 "The HTTP Response message received from the contacted server could not be "
 "understood or was otherwise malformed. Please contact the site operator."
 msgstr ""
-"HTTP odpovedi obdržanej z kontaktovaného servera nebolo možné porozumieť "
+"HTTP odpovedi prijatej z kontaktovaného servera nebolo možné porozumieť "
 "alebo bola nejako poškodená. Kontaktujte prosím správcu servera."
 
 #: templates/ERR_ICAP_FAILURE:9
 msgid "The ICAP server is not reachable."
-msgstr ""
+msgstr "ICAP server nie je dostupný."
 
 #: templates/ERR_FTP_NOT_FOUND:4
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
-msgstr "Nasledovné URL je nedostupné: <a href=\"%U\">%U</a>"
+msgstr "Nasledovný URL je nedostupný: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_ACCESS_DENIED:4 templates/ERR_CACHE_ACCESS_DENIED:4
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:4 templates/ERR_CANNOT_FORWARD:4
@@ -451,21 +458,23 @@ msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
+"Pri pokuse o získanie URL sa vyskytla nasledovná chyba: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_URN_RESOLVE:4
 msgid ""
 "The following error was encountered while trying to retrieve the URN: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
+"Pri pokuse o získanie URN sa vyskytla nasledovná chyba: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_CONNECT_FAIL:7
 msgid "The remote host or network may be down.  Please try the request again."
 msgstr ""
-"Vzdialený server alebo sieť sú nedostupné. Opakujte prosím Vašu požiadavku."
+"Vzdialený server alebo sieť sú nedostupné. Prosím, opakujte svoju požiadavku."
 
 #: templates/ERR_TOO_BIG:5
 msgid "The request or reply is too large."
-msgstr ""
+msgstr "Požiadavka alebo odpoveď je príliš veľká."
 
 #: templates/ERR_ACCESS_DENIED:3 templates/ERR_CANNOT_FORWARD:3
 #: templates/ERR_CONNECT_FAIL:3 templates/ERR_DNS_FAIL:3 templates/ERR_ESI:3
@@ -480,15 +489,14 @@ msgstr ""
 #: templates/ERR_SHUTTING_DOWN:3 templates/ERR_SOCKET_FAILURE:3
 #: templates/ERR_TOO_BIG:3 templates/ERR_UNSUP_REQ:3
 #: templates/ERR_WRITE_ERROR:3 templates/ERR_ZERO_SIZE_OBJECT:3
-#, fuzzy
 msgid "The requested URL could not be retrieved"
-msgstr "Požadovaný dokument je nedostupný"
+msgstr "Požadovaný URL nebolo možné získať"
 
 #: templates/ERR_FTP_FAILURE:6 templates/ERR_FTP_FORBIDDEN:6
 #: templates/ERR_FTP_NOT_FOUND:6 templates/ERR_FTP_PUT_ERROR:6
 #: templates/ERR_FTP_UNAVAILABLE:6
 msgid "The server responded with:"
-msgstr ""
+msgstr "Server odpovedal:"
 
 #: templates/ERR_CONNECT_FAIL:6 templates/ERR_ICAP_FAILURE:6
 #: templates/ERR_READ_ERROR:6 templates/ERR_READ_TIMEOUT:6
@@ -503,7 +511,7 @@ msgid ""
 "administrator."
 msgstr ""
 "Tento cache server nemá nastavenú žiadnu WAIS Relay! Kričte na svojho "
-"administrátora."
+"správcu."
 
 #: templates/ERR_TOO_BIG:8
 msgid ""
@@ -511,23 +519,24 @@ msgid ""
 "operates this cache.  Please contact them directly if you feel this is an "
 "error."
 msgstr ""
+"Tieto obmedzenia zaviedol poskytovateľ služby tohto cache servera. Prosím, "
+"kontaktujte ho priamo ak máte pocit, že to je chyba."
 
 #: templates/ERR_UNSUP_HTTPVERSION:6
 msgid "This Squid does not accept the HTTP version you are attempting to use."
-msgstr ""
+msgstr "Tento Squid neprijíma HTTP verziu, ktorú sa pokúšate použiť."
 
 #: templates/ERR_FTP_DISABLED:6
 msgid "This cache does not support FTP."
 msgstr "Tento cache server nepodporuje protokol FTP."
 
 #: templates/ERR_SHUTTING_DOWN:5
-#, fuzzy
 msgid ""
 "This cache is in the process of shutting down and can not service your "
 "request at this time.  Please retry your request again soon."
 msgstr ""
-"Táto cache sa práve vypína a nemôže spracovať Vašu požiadavku. Opakujte "
-"prosím svoju požiadavku za nejaký čas."
+"Táto cache sa práve vypína a nemôže spracovať vašu požiadavku. Opakujte "
+"prosím svoju požiadavku o chvíľu."
 
 #: templates/ERR_FORWARDING_DENIED:6
 msgid ""
@@ -535,33 +544,36 @@ msgid ""
 "sibling relationship.  Perhaps the client at %i is a cache which has been "
 "misconfigured."
 msgstr ""
-"Tento server nepresmeruje Vašu požiadavku pretože mu to nedovoľujú vzťahy v "
+"Tento server nepresmeruje vašu požiadavku, pretože mu to nedovoľujú vzťahy v "
 "hierarchii cache serverov. Cache server %i je možno zle nakonfigurovaný."
 
 #: templates/ERR_ICAP_FAILURE:7
 msgid "This means that some aspect of the ICAP communication failed."
-msgstr ""
+msgstr "To znamená, že niektorá časť komunikácie ICAP zlyhala."
 
 #: templates/ERR_FTP_PUT_ERROR:7
 msgid ""
 "This means that the FTP server may not have permission or space to store the "
 "file. Check the path, permissions, diskspace and try again."
 msgstr ""
+"To znamená, že FTP server nemusí mať oprávnenie alebo priestor na uloženie "
+"súboru. Skontrolujte cestu, oprávnenia, miesto na disku a skúste to znova."
 
 #: templates/ERR_DNS_FAIL:7
-#, fuzzy
 msgid ""
 "This means that the cache was not able to resolve the hostname presented in "
 "the URL. Check if the address is correct."
 msgstr ""
-"To znamená, že Cache server nebol schopný získať adresu uvedenú v URL. "
-"Skontrolujte prosím adresu."
+"To znamená, že cache server nebol schopný získať adresu uvedenú v URL. "
+"Prosím, skontrolujte správnosť adresy."
 
 #: templates/ERR_ESI:7
 msgid ""
 "This means that the surrogate was not able to process the ESI template. "
 "Please report this error to the webmaster."
 msgstr ""
+"To znamená, že zástupca nedokázal spracovať šablónu ESI. Prosím, ohláste "
+"túto chybu webmasterovi."
 
 #: templates/ERR_FTP_NOT_FOUND:7
 msgid ""
@@ -570,7 +582,7 @@ msgid ""
 "<a href=\"%B\">%B</a>."
 msgstr ""
 "To môže byť spôsobené uvedením absolútnej cesty v FTP URL (čo odporuje RFC "
-"1738). V tomto prípade by ste dokument mohli nájsť na <a href=\"%B\">%B</a>."
+"1738). V tomto prípade by ste súbor mohli nájsť na <a href=\"%B\">%B</a>."
 
 #: templates/ERR_SECURE_CONNECT_FAIL:7
 msgid ""
@@ -579,19 +591,22 @@ msgid ""
 "host does not support secure connections, or the proxy is not satisfied with "
 "the host security credentials."
 msgstr ""
+"Táto proxy a vzdialený server sa nedokázali dohodnúť na vzájomne "
+"prijateľných bezpečnostných nastaveniach na spracovanie vašej požiadavky. Je "
+"možné, že vzdialený server nepodporuje zabezpečené pripojenia alebo že proxy "
+"server nie je spokojný s prihlasovacími údajmi hostiteľa."
 
 #: templates/ERR_CANNOT_FORWARD:6
-#, fuzzy
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
 "caches.  The most likely cause for this error is that the cache "
 "administrator does not allow this cache to make direct connections to origin "
 "servers, and all configured parent caches are currently unreachable."
 msgstr ""
-"Požiadavka nemôže byť presmerovaná k pôvodnému serveru alebo nadradeným "
-"cache serverom. Príčinou môže byť Cache server administrátor nedovolil "
-"tomuto cache serveru priamy prístup k pôvodnym serverom a všetky nadradené "
-"cache servery su práve nedostupné"
+"Požiadavku nemožno presmerovať k pôvodnému serveru alebo nadradeným cache "
+"serverom. Príčinou môže byť, že správca cache servera nedovolil tomuto cache "
+"serveru priamy prístup k pôvodným serverom a všetky nadradené cache servery "
+"sú práve nedostupné."
 
 #: templates/ERR_DNS_FAIL:5
 msgid "Unable to determine IP address from host name <q>%H</q>"
@@ -603,27 +618,27 @@ msgstr "Požiadavku teraz nie je možné presmerovať."
 
 #: templates/ERR_UNSUP_HTTPVERSION:3 templates/ERR_UNSUP_HTTPVERSION:5
 msgid "Unsupported HTTP version"
-msgstr ""
+msgstr "Nepodporovaná verzia HTTP"
 
 #: templates/ERR_UNSUP_REQ:5
 msgid "Unsupported Request Method and Protocol"
-msgstr ""
+msgstr "Nepodporovaná metóda a protokol požiadavky"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS:5
 msgid ""
 "Valid document was not found in the cache and <q>only-if-cached</q> "
 "directive was specified."
 msgstr ""
-"Vami požadovaný dokument sa nenachádza v cachi pričom bola špecifikovaná "
-"direktíva <q>only-if-cached</q>."
+"Vami požadovaný dokument sa nenachádza v cache, a bola uvedená direktíva "
+"<q>only-if-cached</q>."
 
 #: templates/ERR_FTP_PUT_ERROR:4
 msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
-msgstr "Pri pokuse o operáciu PUT na nasledovné URL: <a href=\"%U\">%U</a>"
+msgstr "Pri pokuse o operáciu PUT na nasledovný URL: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
-msgstr ""
+msgstr "Chyba pri zápise"
 
 #: templates/ERR_ONLY_IF_CACHED_MISS:6
 msgid ""
@@ -632,7 +647,7 @@ msgid ""
 "revalidation prohibited by the <q>only-if-cached</q> directive."
 msgstr ""
 "Vyslali ste požiadavku s direktívou <q>only-if-cached</q> na riadenie "
-"činnosti cache. Požadovaný dokument nebol nájdený v cachi <em>alebo</em> "
+"činnosti cache. Požadovaný dokument nebol nájdený v cache <em>alebo</em> "
 "tento dokument vyžaduje aktualizáciu pričom toto je direktívou <q>only-if-"
 "cached</q> obmedzené."
 
@@ -651,20 +666,20 @@ msgstr ""
 #: templates/ERR_UNSUP_REQ:7 templates/ERR_URN_RESOLVE:7
 #: templates/ERR_WRITE_ERROR:8 templates/ERR_ZERO_SIZE_OBJECT:7
 msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
-msgstr "Vaším cache administrátorom je <a href=\"mailto:%w%W\">%w</a>."
+msgstr "Vaším správcom cache je <a href=\"mailto:%w%W\">%w</a>."
 
 #: templates/ERR_INVALID_RESP:6
 msgid ""
 "Your cache administrator may be able to provide you with more details about "
 "the exact nature of the problem if needed."
 msgstr ""
-"V prípade potreby Vám Váš cache administrátor môže poskytnúť detaily o "
-"presnej povahe problému."
+"V prípade potreby vám váš správca cache môže poskytnúť podrobnosti o presnej "
+"povahe problému."
 
 #: templates/ERR_ESI:8
 msgid "Your webmaster is <a href=\"mailto:%w\">%w</a>."
-msgstr ""
+msgstr "Váš webmaster je <a href=\"mailto:%w\">%w</a>."
 
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
-msgstr ""
+msgstr "Odpoveď s nulovou veľkosťou"
