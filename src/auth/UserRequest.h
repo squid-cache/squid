@@ -58,6 +58,9 @@ struct AuthUserIP {
 /**
  \ingroup AuthAPI
  * This is a short lived structure is the visible aspect of the authentication framework.
+ *
+ * It and its children hold the state data while processing authentication for a client request.
+ * The AuthenticationStateData object is merely a CBDATA wrapper for one of these.
  */
 class AuthUserRequest : public RefCountable
 {

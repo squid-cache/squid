@@ -183,6 +183,7 @@ testAuthUserRequest::scheme()
 }
 
 #if HAVE_AUTH_MODULE_BASIC
+#include "auth/basic/basicUserRequest.h"
 #include "auth/basic/auth_basic.h"
 /* AuthBasicUserRequest::AuthBasicUserRequest works
  */
