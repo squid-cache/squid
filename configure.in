@@ -2200,6 +2200,7 @@ AC_CHECK_HEADERS( \
 	openssl/err.h \
 	openssl/md5.h \
 	openssl/ssl.h \
+	openssl/x509v3.h \
 	netinet/tcp.h \
 	openssl/engine.h \
 	ostream \
