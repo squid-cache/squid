@@ -475,6 +475,10 @@ This section gives a thorough account of those changes in three categories:
 	matters.
 	</verb>
 
+	<tag>adapted_http_access</tag>
+	<p>New name for <em>http_access2</em>. This form includes access control
+	of ICAP and eCAP adaptations as well as the URL-rewriter alterations.
+
 	<tag>chunked_request_body_max_size</tag>
 	<p>New option to enable handing of broken HTTP/1.1 clients sending chunk requests.
 	<verb>
@@ -1437,6 +1441,9 @@ This section gives an account of those changes in three categories:
 	<tag>header_access</tag>
 	<p>Replaced by <em>request_header_access</em> and <em>reply_header_access</em>
 
+	<tag>http_access2</tag>
+	<p>Replaced by <em>adapted_http_access</em>
+
 	<tag>http_port</tag>
 	<p><em>no-connection-auth</em> replaced by <em>connection-auth=[on|off]</em>. Default is ON.
 	<p><em>transparent</em> option replaced by <em>intercept</em>
@@ -1588,9 +1595,6 @@ This section gives an account of those changes in three categories:
 
 	<tag>external_refresh_check</tag>
 	<p>Not yet ported from 2.7
-
-	<tag>http_access2</tag>
-	<p>Not yet ported from 2.6
 
 	<tag>http_port</tag>
 	<p><em>act-as-origin</em> not yet ported from 2.7

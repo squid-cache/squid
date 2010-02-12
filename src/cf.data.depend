@@ -21,7 +21,7 @@ eol
 externalAclHelper	auth_param
 hostdomain		cache_peer
 hostdomaintype		cache_peer
-http_header_access
+http_header_access	acl
 http_header_replace
 http_port_list
 https_port_list

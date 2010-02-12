@@ -527,6 +527,23 @@ ClientRequestContext::clientAccessCheck()
     }
 }
 
+/**
+ * Identical in operation to clientAccessCheck() but performed later using different configured ACL list.
+ * The default here is to allow all. Since the earlier http_access should do a default deny all.
+ * This check is just for a last-minute denial based on adapted request headers.
+ */
+void
+ClientRequestContext::clientAccessCheck2()
+{
+    if (Config.accessList.adapted_http) {
+        acl_checklist = clientAclChecklistCreate(Config.accessList.adapted_http, http);
+        acl_checklist->nonBlockingCheck(clientAccessCheckDoneWrapper, this);
+    } else {
+        debugs(85, 2, HERE << "No adapted_http_access configuration.");
+        clientAccessCheckDone(ACCESS_ALLOWED);
+    }
+}
+
 void
 clientAccessCheckDoneWrapper(int answer, void *data)
 {
@@ -1274,6 +1291,13 @@ ClientHttpRequest::doCallouts()
             calloutContext->clientRedirectStart();
             return;
         }
+    }
+
+    if (!calloutContext->adapted_http_access_done) {
+        debugs(83, 3, HERE << "Doing calloutContext->clientAccessCheck2()");
+        calloutContext->adapted_http_access_done = true;
+        calloutContext->clientAccessCheck2();
+        return;
     }
 
     if (!calloutContext->interpreted_req_hdrs) {

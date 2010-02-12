@@ -872,6 +872,20 @@ http_access deny all
 NOCOMMENT_END
 DOC_END
 
+NAME: adapted_http_access http_access2
+TYPE: acl_access
+LOC: Config.accessList.adapted_http
+DEFAULT: none
+DOC_START
+	Allowing or Denying access based on defined access lists
+
+	Essentially identical to http_access, but runs after redirectors
+	and ICAP/eCAP adaptation. Allowing access control based on their
+	output.
+
+	If not set then only http_access is used.
+DOC_END
+
 NAME: http_reply_access
 TYPE: acl_access
 LOC: Config.accessList.reply

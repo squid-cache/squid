@@ -454,6 +454,7 @@ struct SquidConfig {
 
     struct {
         acl_access *http;
+        acl_access *adapted_http;
         acl_access *icp;
         acl_access *miss;
         acl_access *NeverDirect;
