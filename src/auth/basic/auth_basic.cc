@@ -39,12 +39,13 @@
 
 #include "squid.h"
 #include "auth/basic/auth_basic.h"
+#include "auth/basic/basicScheme.h"
 #include "auth/basic/basicUserRequest.h"
 #include "auth/Gadgets.h"
+#include "auth/State.h"
 #include "CacheManager.h"
 #include "Store.h"
 #include "HttpReply.h"
-#include "auth/basic/basicScheme.h"
 #include "rfc1738.h"
 #include "wordlist.h"
 #include "SquidTime.h"
@@ -141,7 +142,7 @@ BasicUser::~BasicUser()
 static void
 authenticateBasicHandleReply(void *data, char *reply)
 {
-    AuthenticateStateData *r = static_cast<AuthenticateStateData *>(data);
+    authenticateStateData *r = static_cast<authenticateStateData *>(data);
     BasicAuthQueueNode *tmpnode;
     char *t = NULL;
     void *cbdata;
@@ -255,8 +256,6 @@ authenticateBasicStats(StoreEntry * sentry)
 {
     helperStats(sentry, basicauthenticators, "Basic Authenticator Statistics");
 }
-
-CBDATA_TYPE(AuthenticateStateData);
 
 static AuthUser *
 authBasicAuthUserFindUsername(const char *username)
@@ -518,7 +517,7 @@ AuthBasicConfig::init(AuthConfig * schemeCfg)
 
         helperOpenServers(basicauthenticators);
 
-        CBDATA_INIT_TYPE(AuthenticateStateData);
+        CBDATA_INIT_TYPE(authenticateStateData);
     }
 }
 
@@ -550,10 +549,10 @@ BasicUser::submitRequest(AuthUserRequest::Pointer auth_user_request, RH * handle
 {
     /* mark the user as having verification in progress */
     flags.credentials_ok = 2;
-    AuthenticateStateData *r = NULL;
+    authenticateStateData *r = NULL;
     char buf[8192];
     char user[1024], pass[1024];
-    r = cbdataAlloc(AuthenticateStateData);
+    r = cbdataAlloc(authenticateStateData);
     r->handler = handler;
     r->data = cbdataReference(data);
     r->auth_user_request = auth_user_request;

@@ -14,19 +14,7 @@
 
 #define DefaultAuthenticateChildrenMax  32	/* 32 processes */
 
-/* Generic */
-
-class AuthenticateStateData
-{
-
-public:
-    void *data;
-    AuthUserRequest::Pointer auth_user_request;
-    RH *handler;
-};
-
-/* queue of auth requests waiting for verification to occur */
-
+/** queue of auth requests waiting for verification to occur */
 class BasicAuthQueueNode
 {
 
