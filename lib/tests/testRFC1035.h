@@ -13,6 +13,7 @@ class testRFC1035 : public CPPUNIT_NS::TestFixture
     CPPUNIT_TEST( testHeaderUnpack );
     CPPUNIT_TEST( testParseAPacket );
 
+    CPPUNIT_TEST( testBugPacketHeadersOnly );
     CPPUNIT_TEST( testBugPacketEndingOnCompressionPtr );
     CPPUNIT_TEST_SUITE_END();
 
@@ -24,6 +25,7 @@ protected:
 
     // bugs.
     void testBugPacketEndingOnCompressionPtr();
+    void testBugPacketHeadersOnly();
 };
 
 #endif /* SQUID_SRC_TEST_IPADDRESS_H */

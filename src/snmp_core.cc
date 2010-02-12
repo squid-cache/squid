@@ -251,27 +251,26 @@ snmpInit(void)
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.3", MESH_PTBL_RTT, snmp_meshPtblFn, peer_Inst);
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.3", MESH_PTBL_IGN, snmp_meshPtblFn, peer_Inst);
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.3", MESH_PTBL_KEEPAL_S, snmp_meshPtblFn, peer_Inst);
-    mib_tree_last = snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.3", MESH_PTBL_KEEPAL_R, snmp_meshPtblFn, peer_Inst);
+    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.1.3", MESH_PTBL_KEEPAL_R, snmp_meshPtblFn, peer_Inst);
 
-#if 0
     /* cacheClientTable - 1.3.6.1.4.1.3495.1.5.2 */
     snmpAddNodeStr("1.3.6.1.4.1.3495.1.5", MESH_CTBL, NULL, NULL);
 
-    /* BUG 2811: we NEED to create a reliable index for the clientDb and morph this to version 3 of the table. */
+    /* BUG 2811: we NEED to create a reliable index for the client DB and make version 3 of the table. */
+    /* for now we have version 2 table with OID capable of mixed IPv4 / IPv6 clients and upgraded address text format. */
 
-    /* cacheClientEntry - 1.3.6.1.4.1.3495.1.5.2.1 */
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.2", 1, NULL, NULL);
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.2.1", MESH_CTBL_ADDR_TYPE, snmp_meshCtblFn, client_Inst);
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.2.1", MESH_CTBL_ADDR, snmp_meshCtblFn, client_Inst);
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.2.1", MESH_CTBL_HTREQ, snmp_meshCtblFn, client_Inst);
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.2.1", MESH_CTBL_HTBYTES, snmp_meshCtblFn, client_Inst);
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.2.1", MESH_CTBL_HTHITS, snmp_meshCtblFn, client_Inst);
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.2.1", MESH_CTBL_HTHITBYTES, snmp_meshCtblFn, client_Inst);
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.2.1", MESH_CTBL_ICPREQ, snmp_meshCtblFn, client_Inst);
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.2.1", MESH_CTBL_ICPBYTES, snmp_meshCtblFn, client_Inst);
-    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.2.1", MESH_CTBL_ICPHITS, snmp_meshCtblFn, client_Inst);
-    mib_tree_last = snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.2.1", MESH_CTBL_ICPHITBYTES, snmp_meshCtblFn, client_Inst);
-#endif
+    /* cacheClientEntry - 1.3.6.1.4.1.3495.1.5.2.2 */
+    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.2", 2, NULL, NULL);
+    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.2.2", MESH_CTBL_ADDR_TYPE, snmp_meshCtblFn, client_Inst);
+    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.2.2", MESH_CTBL_ADDR, snmp_meshCtblFn, client_Inst);
+    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.2.2", MESH_CTBL_HTREQ, snmp_meshCtblFn, client_Inst);
+    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.2.2", MESH_CTBL_HTBYTES, snmp_meshCtblFn, client_Inst);
+    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.2.2", MESH_CTBL_HTHITS, snmp_meshCtblFn, client_Inst);
+    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.2.2", MESH_CTBL_HTHITBYTES, snmp_meshCtblFn, client_Inst);
+    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.2.2", MESH_CTBL_ICPREQ, snmp_meshCtblFn, client_Inst);
+    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.2.2", MESH_CTBL_ICPBYTES, snmp_meshCtblFn, client_Inst);
+    snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.2.2", MESH_CTBL_ICPHITS, snmp_meshCtblFn, client_Inst);
+    mib_tree_last = snmpAddNodeStr("1.3.6.1.4.1.3495.1.5.2.2", MESH_CTBL_ICPHITBYTES, snmp_meshCtblFn, client_Inst);
 
     debugs(49, 9, "snmpInit: Completed SNMP mib tree structure");
 }
@@ -588,8 +587,8 @@ snmpTreeGet(oid * Current, snint CurrentLen)
 
     debugs(49, 5, "snmpTreeGet: Called");
 
-    debugs(49, 6, "snmpTreeGet: Current : ");
-    snmpDebugOid(6, Current, CurrentLen);
+    MemBuf tmp;
+    debugs(49, 6, "snmpTreeGet: Current : " << snmpDebugOid(Current, CurrentLen, tmp) );
 
     mibTreeEntry = mib_tree_head;
 
@@ -619,8 +618,8 @@ snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
 
     debugs(49, 5, "snmpTreeNext: Called");
 
-    debugs(49, 6, "snmpTreeNext: Current : ");
-    snmpDebugOid(6, Current, CurrentLen);
+    MemBuf tmp;
+    debugs(49, 6, "snmpTreeNext: Current : " << snmpDebugOid(Current, CurrentLen, tmp));
 
     mibTreeEntry = mib_tree_head;
 
@@ -650,8 +649,8 @@ snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
         *NextLen = CurrentLen;
         *Next = (*mibTreeEntry->instancefunction) (Current, NextLen, mibTreeEntry, &Fn);
         if (*Next) {
-            debugs(49, 6, "snmpTreeNext: Next : ");
-            snmpDebugOid(6, *Next, *NextLen);
+            MemBuf tmp;
+            debugs(49, 6, "snmpTreeNext: Next : " << snmpDebugOid(*Next, *NextLen, tmp));
             return (Fn);
         }
     }
@@ -694,8 +693,8 @@ snmpTreeNext(oid * Current, snint CurrentLen, oid ** Next, snint * NextLen)
     }
 
     if (*Next) {
-        debugs(49, 6, "snmpTreeNext: Next : ");
-        snmpDebugOid(6, *Next, *NextLen);
+        MemBuf tmp;
+        debugs(49, 6, "snmpTreeNext: Next : " << snmpDebugOid(*Next, *NextLen, tmp));
         return (Fn);
     } else
         return NULL;
@@ -807,6 +806,8 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
             size = sizeof(in6_addr);
 #endif
 
+        debugs(49, 6, HERE << "len" << *len << ", current-len" << current->len << ", addr=" << laddr << ", size=" << size);
+
         instance = (oid *)xmalloc(sizeof(name) * (*len + size ));
         xmemcpy(instance, name, (sizeof(name) * (*len)));
 
@@ -830,6 +831,9 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
             else
                 newshift = sizeof(in6_addr);
 #endif
+
+            debugs(49, 6, HERE << "len" << *len << ", current-len" << current->len << ", addr=" << laddr << ", newshift=" << newshift);
+
             instance = (oid *)xmalloc(sizeof(name) * (current->len +  newshift));
             xmemcpy(instance, name, (sizeof(name) * (current->len)));
             addr2oid(laddr, &instance[current->len]);  // the addr.
@@ -840,7 +844,6 @@ client_Inst(oid * name, snint * len, mib_tree_entry * current, oid_ParseFn ** Fn
     *Fn = current->parsefunction;
     return (instance);
 }
-
 
 /*
  * Utility functions
@@ -1016,8 +1019,8 @@ snmpAddNode(oid * name, int len, oid_ParseFn * parsefunction, instance_Fn * inst
     mib_tree_entry *entry = NULL;
     va_start(args, children);
 
-    debugs(49, 6, "snmpAddNode: Children : " << children << ", Oid : ");
-    snmpDebugOid(6, name, len);
+    MemBuf tmp;
+    debugs(49, 6, "snmpAddNode: Children : " << children << ", Oid : " << snmpDebugOid(name, len, tmp));
 
     va_start(args, children);
     entry = (mib_tree_entry *)xmalloc(sizeof(mib_tree_entry));
@@ -1066,19 +1069,19 @@ snmpCreateOid(int length,...)
 /*
  * Debug calls, prints out the OID for debugging purposes.
  */
-void
-snmpDebugOid(int lvl, oid * Name, snint Len)
+const char *
+snmpDebugOid(oid * Name, snint Len, MemBuf &outbuf)
 {
-    char mbuf[16], objid[1024];
+    char mbuf[16];
     int x;
-    objid[0] = '\0';
+    if (outbuf.isNull())
+        outbuf.init(16, MAX_IPSTRLEN);
 
     for (x = 0; x < Len; x++) {
-        snprintf(mbuf, sizeof(mbuf), ".%u", (unsigned int) Name[x]);
-        strncat(objid, mbuf, sizeof(objid) - strlen(objid) - 1);
+        size_t bytes = snprintf(mbuf, sizeof(mbuf), ".%u", (unsigned int) Name[x]);
+        outbuf.append(mbuf, bytes);
     }
-
-    debugs(49, lvl, "   oid = " << objid);
+    return outbuf.content();
 }
 
 static void
@@ -1103,7 +1106,7 @@ addr2oid(IpAddress &addr, oid * Dest)
     struct in_addr iaddr;
 #if USE_IPV6
     struct in6_addr i6addr;
-    oid code = addr.IsIPv4()? INETADDRESSTYPE_IPV4  : INETADDRESSTYPE_IPV6 ;
+    oid code = addr.IsIPv6()? INETADDRESSTYPE_IPV6  : INETADDRESSTYPE_IPV4 ;
     u_int size = (code == INETADDRESSTYPE_IPV4) ? sizeof(struct in_addr):sizeof(struct in6_addr);
 #else
     oid code = INETADDRESSTYPE_IPV4 ;
@@ -1124,9 +1127,8 @@ addr2oid(IpAddress &addr, oid * Dest)
         // OID's are in network order
         Dest[i] = *cp++;
     }
-    debugs(49, 7, "addr2oid: Dest : ");
-    snmpDebugOid(7, Dest, size );
-
+    MemBuf tmp;
+    debugs(49, 7, "addr2oid: Dest : " << snmpDebugOid(Dest, size, tmp));
 }
 
 /*
@@ -1150,8 +1152,8 @@ oid2addr(oid * id, IpAddress &addr, u_int size)
     else
         cp = (u_char *) &(i6addr);
 #endif /* USE_IPV6 */
-    debugs(49, 7, "oid2addr: id : ");
-    snmpDebugOid(7, id, size  );
+    MemBuf tmp;
+    debugs(49, 7, "oid2addr: id : " << snmpDebugOid(id, size, tmp) );
     for (i=0 ; i<size; i++) {
         cp[i] = id[i];
     }

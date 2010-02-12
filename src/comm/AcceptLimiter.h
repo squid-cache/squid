@@ -3,7 +3,8 @@
 
 #include "Array.h"
 
-namespace Comm {
+namespace Comm
+{
 
 class ListenStateData;
 
