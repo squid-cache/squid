@@ -33,9 +33,11 @@
 #ifndef SQUID_AUTHSCHEME_H
 #define SQUID_AUTHSCHEME_H
 
-#include "squid.h"
+#include "config.h"
 #include "Array.h"
 #include "RefCount.h"
+
+class AuthConfig;
 
 /**
  \defgroup AuthSchemeAPI	Authentication Scheme API
@@ -43,12 +45,12 @@
  */
 
 /**
- \ingroup AuthAPI
- \ingroup AuthSchemeAPI
- \par
+ * \ingroup AuthAPI
+ * \ingroup AuthSchemeAPI
+ * \par
  * I represent an authentication scheme. For now my children
- * store both the scheme metadata, and the scheme configuration.
- \par
+ * store the scheme metadata.
+ * \par
  * Should we need multiple configs of a single scheme,
  * a new class AuthConfiguration should be made, and the
  * config specific calls on AuthScheme moved to it.
@@ -57,17 +59,29 @@ class AuthScheme : public RefCountable
 {
 public:
     typedef RefCount<AuthScheme> Pointer;
+    typedef Vector<AuthScheme::Pointer>::iterator iterator;
+    typedef Vector<AuthScheme::Pointer>::const_iterator const_iterator;
 
 public:
     AuthScheme() : initialised (false) {};
     virtual ~AuthScheme() {};
 
     static void AddScheme(AuthScheme::Pointer);
+
+    /**
+     * Final termination of all authentication components.
+     * To be used only on shutdown. All global pointers are released.
+     * After this all schemes will appear completely unsupported
+     * until a call to InitAuthModules().
+     * Release the Auth::TheConfig handles instead to disable authentication
+     * without terminiating all support.
+     */
     static void FreeAll();
-//    static Vector<AuthScheme::Pointer> const &Schemes();
+
+    /**
+     * Locate an authentication scheme component by Name.
+     */
     static AuthScheme::Pointer Find(const char *);
-    typedef Vector<AuthScheme::Pointer>::iterator iterator;
-    typedef Vector<AuthScheme::Pointer>::const_iterator const_iterator;
 
     /* per scheme methods */
     virtual char const *type () const = 0;

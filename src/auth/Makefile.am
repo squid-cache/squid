@@ -19,7 +19,9 @@ libauth_la_SOURCES = \
 	UserRequest.h \
 	UserRequest.cc \
 	Gadgets.cc \
-	Gadgets.h
+	Gadgets.h \
+	State.h \
+	State.cc
 
 libauth_la_LIBADD = $(AUTH_LIBS_TO_BUILD)
 libauth_la_DEPENDENCIES = $(AUTH_LIBS_TO_BUILD)
@@ -32,32 +34,39 @@ libacls_la_SOURCES = \
 	AclMaxUserIp.cc \
 	AclMaxUserIp.h \
 	AclProxyAuth.cc \
-	AclProxyAuth.h	
-
+	AclProxyAuth.h
 
 libbasic_la_SOURCES = \
 	basic/basicScheme.cc \
 	basic/basicScheme.h \
 	basic/auth_basic.cc \
-	basic/auth_basic.h
+	basic/auth_basic.h \
+	basic/basicUserRequest.cc \
+	basic/basicUserRequest.h
 
 libdigest_la_SOURCES = \
 	digest/digestScheme.cc \
 	digest/digestScheme.h \
 	digest/auth_digest.cc \
-	digest/auth_digest.h
+	digest/auth_digest.h \
+	digest/digestUserRequest.cc \
+	digest/digestUserRequest.h
 
 libntlm_la_SOURCES = \
 	ntlm/ntlmScheme.cc \
 	ntlm/ntlmScheme.h \
 	ntlm/auth_ntlm.cc \
-	ntlm/auth_ntlm.h
+	ntlm/auth_ntlm.h \
+	ntlm/ntlmUserRequest.cc \
+	ntlm/ntlmUserRequest.h
 
 libnegotiate_la_SOURCES = \
 	negotiate/negotiateScheme.cc \
 	negotiate/negotiateScheme.h \
 	negotiate/auth_negotiate.cc \
-	negotiate/auth_negotiate.h
+	negotiate/auth_negotiate.h \
+	negotiate/negotiateUserRequest.cc \
+	negotiate/negotiateUserRequest.h
 
 
 TESTS += testHeaders
