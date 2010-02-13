@@ -3221,7 +3221,7 @@ DOC_END
 
 NAME: url_rewrite_children redirect_children
 TYPE: HelperChildConfig
-DEFAULT: 20 startup=0 idle=1 concurrency=1
+DEFAULT: 20 startup=0 idle=1 concurrency=0
 LOC: Config.redirectChildren
 DOC_START
 	The maximum number of redirector processes to spawn. If you limit

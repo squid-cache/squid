@@ -51,7 +51,7 @@ public:
 
     /**
      * How many concurrent requests each child helper may be capable of handling.
-     * Default: 1  - no concurrency possible.
+     * Default: 0  - no concurrency possible.
      */
     unsigned int concurrency;
 
