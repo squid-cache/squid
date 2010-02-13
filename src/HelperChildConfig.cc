@@ -8,7 +8,7 @@ HelperChildConfig::HelperChildConfig() :
         n_max(0),
         n_startup(1),
         n_idle(1),
-        concurrency(1),
+        concurrency(0),
         n_running(0),
         n_active(0)
 {}
