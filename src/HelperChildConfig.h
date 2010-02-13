@@ -10,8 +10,7 @@
 class HelperChildConfig
 {
 public:
-    HelperChildConfig();
-    HelperChildConfig(const unsigned int m, const unsigned int s, const unsigned int i, const unsigned int cc);
+    HelperChildConfig(const unsigned int m=0, const unsigned int s=0, const unsigned int i=1, const unsigned int cc=0);
     ~HelperChildConfig();
     HelperChildConfig &operator =(const HelperChildConfig &rhs);
 
