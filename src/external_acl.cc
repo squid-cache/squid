@@ -121,6 +121,12 @@ public:
 
     dlink_list queue;
 
+    /**
+     * Configuration flag. May only be altered by the configuration parser.
+     *
+     * Indicates that all uses of this external_acl_type helper require authentication
+     * details to be processed. If none are available its a fail match.
+     */
     bool require_auth;
 
     enum {
@@ -741,16 +747,16 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
         if (acl->def->require_auth) {
             int ti;
             /* Make sure the user is authenticated */
+            debugs(82, 3, "aclMatchExternal: " << acl->def->name << " check user authenticated.");
 
             if ((ti = AuthenticateAcl(ch)) != 1) {
                 debugs(82, 2, "aclMatchExternal: " << acl->def->name << " user not authenticated (" << ti << ")");
                 return ti;
             }
+            debugs(82, 3, "aclMatchExternal: " << acl->def->name << " user is authenticated.");
         }
 
         key = makeExternalAclKey(ch, acl);
-
-        acl->def->require_auth = NULL;
 
         if (!key) {
             /* Not sufficient data to process */
@@ -1278,6 +1284,7 @@ ACLExternal::ExternalAclLookup(ACLChecklist *checklist, ACLExternal * me, EAH * 
     if (acl->def->require_auth) {
         int ti;
         /* Make sure the user is authenticated */
+        debugs(82, 3, "aclMatchExternal: " << acl->def->name << " check user authenticated.");
 
         if ((ti = AuthenticateAcl(ch)) != 1) {
             debugs(82, 1, "externalAclLookup: " << acl->def->name <<
@@ -1285,6 +1292,7 @@ ACLExternal::ExternalAclLookup(ACLChecklist *checklist, ACLExternal * me, EAH * 
             callback(callback_data, NULL);
             return;
         }
+        debugs(82, 3, "aclMatchExternal: " << acl->def->name << " user is authenticated.");
     }
 
     const char *key = makeExternalAclKey(ch, acl);
