@@ -370,7 +370,10 @@ BasicUser::decode(char const *proxy_auth, AuthUserRequest::Pointer auth_user_req
         extractUsername();
         extractPassword();
     }
-    currentRequest = NULL;
+    currentRequest = NULL; // AYJ: why ?? we have only just filled it with data!
+    // so that we dont have circular UserRequest->User->UseRequest loops persisting outside the auth decode sequence????
+
+    // okay we dont need the original buffer string any more.
     httpAuthHeader = NULL;
 }
 
@@ -475,26 +478,23 @@ AuthBasicConfig::decode(char const *proxy_auth)
         return auth_user_request;
     }
 
-    /* now lookup and see if we have a matching auth_user structure in
-     * memory. */
-
-    AuthUser *auth_user;
+    /* now lookup and see if we have a matching auth_user structure in memory. */
+    AuthUser *auth_user = NULL;
 
     if ((auth_user = authBasicAuthUserFindUsername(local_basic.username())) == NULL) {
+        /* TODO: optimize. make "local_basic" the object we will store. dont allocate, duplicate, discard. */
         auth_user = local_basic.makeCachedFrom();
         basic_auth = dynamic_cast<BasicUser *>(auth_user);
         assert (basic_auth);
     } else {
         basic_auth = dynamic_cast<BasicUser *>(auth_user);
-        assert (basic_auth);
-        basic_auth->updateCached (&local_basic);
+        assert(basic_auth);
+        basic_auth->updateCached(&local_basic);
     }
 
     /* link the request to the in-cache user */
     auth_user_request->user(basic_auth);
-
     basic_auth->addRequest(auth_user_request);
-
     return auth_user_request;
 }
 
