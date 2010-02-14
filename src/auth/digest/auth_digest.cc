@@ -1254,7 +1254,11 @@ AuthDigestConfig::decode(char const *proxy_auth)
     }
 
     /* we can't check the URI just yet. We'll check it in the
-     * authenticate phase */
+     * authenticate phase, but needs to be given */
+    if (!digest_request->uri) {
+        debugs(29, 4, "authenticateDigestDecode: Missing URI field");
+        return authDigestLogUsername(username, digest_request);
+    }
 
     /* is the response the correct length? */
 
