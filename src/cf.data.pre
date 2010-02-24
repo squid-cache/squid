@@ -2005,7 +2005,7 @@ DOC_START
 
 	The syntax is identical to 'http_access' and the other lists of
 	ACL elements.  See the comments for 'http_access' below, or
-	the Squid FAQ (http://www.squid-cache.org/FAQ/FAQ-10.html).
+	the Squid FAQ (http://wiki.squid-cache.org/SquidFaq/SquidAcl).
 DOC_END
 
 NAME: neighbor_type_domain
