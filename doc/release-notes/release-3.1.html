@@ -2,10 +2,10 @@
 <HTML>
 <HEAD>
  <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.65">
- <TITLE>Squid 3.1.0.16 release notes</TITLE>
+ <TITLE>Squid 3.1.0.17 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.1.0.16 release notes</H1>
+<H1>Squid 3.1.0.17 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -70,7 +70,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.1.0.16 for testing.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.1.0.17 for testing.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.1/">http://www.squid-cache.org/Versions/v3/3.1/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -581,6 +581,10 @@ Default: ON
         
 </PRE>
 </P>
+
+<DT><B>adapted_http_access</B><DD>
+<P>New name for <EM>http_access2</EM>. This form includes access control
+of ICAP and eCAP adaptations as well as the URL-rewriter alterations.</P>
 
 <DT><B>chunked_request_body_max_size</B><DD>
 <P>New option to enable handing of broken HTTP/1.1 clients sending chunk requests.
@@ -1117,7 +1121,7 @@ see cache_mem and maximum_object_size_in_memory for size parameters.</P>
 <DT><B>cache_mem</B><DD>
 <P>Default size increased to 256MB.</P>
 
-<DT><B>cache_peer htcp-no-clr htcp-no-purge-clr htcp-only-clr htcp-forward-clr connection-auth[=on|off|auto] connect-fail-limit=N no-tproxy</B><DD>
+<DT><B>cache_peer htcp-no-clr htcp-no-purge-clr htcp-only-clr htcp-forward-clr connection-auth[=on|off|auto] connect-fail-limit=N multicast-siblings no-tproxy</B><DD>
 <P>New Options.
 <PRE>
         use 'htcp-no-clr' to send HTCP to the neighbor but without
@@ -1147,6 +1151,8 @@ see cache_mem and maximum_object_size_in_memory for size parameters.</P>
         use 'no-tproxy' to specify that requests passed to this peer
         are not to have the client IP spoofed. For use to prevent
         packet routing issues with a cluster of peers behind WCCPv2.
+
+        multicast-siblings ported from 2.7
         
 </PRE>
 </P>
@@ -1635,6 +1641,9 @@ Use --without-pthreads to disable, but only if you really have to.</P>
 <DT><B>header_access</B><DD>
 <P>Replaced by <EM>request_header_access</EM> and <EM>reply_header_access</EM></P>
 
+<DT><B>http_access2</B><DD>
+<P>Replaced by <EM>adapted_http_access</EM></P>
+
 <DT><B>http_port</B><DD>
 <P><EM>no-connection-auth</EM> replaced by <EM>connection-auth=[on|off]</EM>. Default is ON.</P>
 <P><EM>transparent</EM> option replaced by <EM>intercept</EM></P>
@@ -1773,7 +1782,6 @@ Use --without-pthreads to disable, but only if you really have to.</P>
 <P>COSS <EM>maxfullbufs=</EM> option not yet ported from 2.6</P>
 
 <DT><B>cache_peer</B><DD>
-<P><EM>multicast-siblings</EM> not yet ported from 2.7</P>
 <P><EM>idle=</EM> not yet ported from 2.7</P>
 <P><EM>http11</EM> not yet ported from 2.7</P>
 <P><EM>monitorinterval=</EM> not yet ported from 2.6</P>
@@ -1796,9 +1804,6 @@ Use --without-pthreads to disable, but only if you really have to.</P>
 
 <DT><B>external_refresh_check</B><DD>
 <P>Not yet ported from 2.7</P>
-
-<DT><B>http_access2</B><DD>
-<P>Not yet ported from 2.6</P>
 
 <DT><B>http_port</B><DD>
 <P><EM>act-as-origin</EM> not yet ported from 2.7</P>
