@@ -682,9 +682,7 @@ HttpStateData::processReplyHeader()
     if (!parsed && readBuf->contentSize() > 5 && strncmp(readBuf->content(), "HTTP/", 5) != 0 && strncmp(readBuf->content(), "ICY", 3) != 0) {
         MemBuf *mb;
         HttpReply *tmprep = new HttpReply;
-        tmprep->sline.version = HttpVersion(1, 0);
-        tmprep->sline.status = HTTP_OK;
-        tmprep->header.putTime(HDR_DATE, squid_curtime);
+        tmprep->setHeaders(HTTP_OK, "Gatewaying", NULL, -1, -1, -1);
         tmprep->header.putExt("X-Transformed-From", "HTTP/0.9");
         mb = tmprep->pack();
         newrep->parse(mb, eof, &error);
@@ -693,7 +691,7 @@ HttpStateData::processReplyHeader()
         if (!parsed && error > 0) { // unrecoverable parsing error
             debugs(11, 3, "processReplyHeader: Non-HTTP-compliant header: '" <<  readBuf->content() << "'");
             flags.headers_parsed = 1;
-            newrep->sline.version = HttpVersion(1, 0);
+            newrep->sline.version = HttpVersion(1,0);
             newrep->sline.status = error;
             HttpReply *vrep = setVirginReply(newrep);
             entry->replaceHttpReply(vrep);
@@ -1910,7 +1908,7 @@ HttpStateData::buildRequestPrefix(HttpRequest * aRequest,
                                   http_state_flags stateFlags)
 {
     const int offset = mb->size;
-    HttpVersion httpver(1, 0);
+    HttpVersion httpver(1,0);
     mb->Printf("%s %s HTTP/%d.%d\r\n",
                RequestMethodStr(aRequest->method),
                aRequest->urlpath.size() ? aRequest->urlpath.termedBuf() : "/",

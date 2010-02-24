@@ -3810,11 +3810,9 @@ FtpStateData::appendSuccessHeader()
 
     /* set standard stuff */
 
-    HttpVersion version(1, 0);
     if (0 == getCurrentOffset()) {
         /* Full reply */
-        reply->setHeaders(version, HTTP_OK, "Gatewaying",
-                          mime_type, theSize, mdtm, -2);
+        reply->setHeaders(HTTP_OK, "Gatewaying", mime_type, theSize, mdtm, -2);
     } else if (theSize < getCurrentOffset()) {
         /*
          * DPW 2007-05-04
@@ -3826,15 +3824,13 @@ FtpStateData::appendSuccessHeader()
                " current offset=" << getCurrentOffset() <<
                ", but theSize=" << theSize <<
                ".  assuming full content response");
-        reply->setHeaders(version, HTTP_OK, "Gatewaying",
-                          mime_type, theSize, mdtm, -2);
+        reply->setHeaders(HTTP_OK, "Gatewaying", mime_type, theSize, mdtm, -2);
     } else {
         /* Partial reply */
         HttpHdrRangeSpec range_spec;
         range_spec.offset = getCurrentOffset();
         range_spec.length = theSize - getCurrentOffset();
-        reply->setHeaders(version, HTTP_PARTIAL_CONTENT, "Gatewaying",
-                          mime_type, theSize - getCurrentOffset(), mdtm, -2);
+        reply->setHeaders(HTTP_PARTIAL_CONTENT, "Gatewaying", mime_type, theSize - getCurrentOffset(), mdtm, -2);
         httpHeaderAddContRange(&reply->header, range_spec, theSize);
     }
 

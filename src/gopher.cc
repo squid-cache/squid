@@ -251,8 +251,7 @@ gopherMimeCreate(GopherStateData * gopherState)
 
     HttpReply *reply = new HttpReply;
     entry->buffer();
-    HttpVersion version(1, 0);
-    reply->setHeaders(version, HTTP_OK, "Gatewaying", mime_type, -1, -1, -2);
+    reply->setHeaders(HTTP_OK, "Gatewaying", mime_type, -1, -1, -2);
     if (mime_enc)
         reply->header.putStr(HDR_CONTENT_ENCODING, mime_enc);
 
