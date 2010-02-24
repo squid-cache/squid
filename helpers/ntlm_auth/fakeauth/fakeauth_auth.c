@@ -164,7 +164,7 @@ ntlmMakeChallenge(struct ntlm_challenge *chal, int32_t flags)
     if (authenticate_ntlm_domain != NULL)
         while (authenticate_ntlm_domain[i++]);
 
-
+    chal->flags = flags;
     chal->target.offset = htole32(48);
     chal->target.maxlen = htole16(i);
     chal->target.len = chal->target.maxlen;
