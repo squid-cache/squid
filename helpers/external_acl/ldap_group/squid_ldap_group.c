@@ -476,6 +476,8 @@ main(int argc, char **argv)
             char *u = strrchr(user, '\\');
             if (!u)
                 u = strrchr(user, '/');
+            if (!u)
+                u = strrchr(user, '+');
             if (u && u[1])
                 user = u + 1;
         }
