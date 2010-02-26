@@ -717,8 +717,8 @@ ErrorState::Convert(char token, bool url_presentable)
 
     case 'o':
         p = request ? request->extacl_message.termedBuf() : external_acl_message;
-	if (!p)
-	    p = "[not available]";
+        if (!p)
+            p = "[not available]";
         break;
 
     case 'p':
