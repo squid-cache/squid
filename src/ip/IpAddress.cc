@@ -321,10 +321,8 @@ bool IpAddress::IsLocalhost() const
 void IpAddress::SetLocalhost()
 {
 #if USE_IPV6
-    SetAnyAddr();
-    m_SocketAddr.sin6_addr.s6_addr[15] = 0x1;
+    m_SocketAddr.sin6_addr = in6addr_loopback;
     m_SocketAddr.sin6_family = AF_INET6;
-
 #else
     m_SocketAddr.sin_addr.s_addr = htonl(0x7F000001);
     m_SocketAddr.sin_family = AF_INET;
@@ -334,8 +332,7 @@ void IpAddress::SetLocalhost()
 bool IpAddress::IsSiteLocal6() const
 {
 #if USE_IPV6
-    return m_SocketAddr.sin6_addr.s6_addr[0] == 0xfe &&
-           (m_SocketAddr.sin6_addr.s6_addr[1] & 0x80);
+    return IN6_IS_ADDR_SITELOCAL( &m_SocketAddr.sin6_addr );
 #else
     return false;
 #endif
