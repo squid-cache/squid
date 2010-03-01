@@ -193,6 +193,8 @@ public:
 
     String extacl_log;		/* String to be used for access.log purposes */
 
+    String extacl_message;	/* String to be used for error page purposes */
+
 #if FOLLOW_X_FORWARDED_FOR
     String x_forwarded_for_iterator; /* XXX a list of IP addresses */
 #endif /* FOLLOW_X_FORWARDED_FOR */

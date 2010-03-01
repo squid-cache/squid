@@ -100,6 +100,7 @@ HttpRequest::init()
     extacl_user = null_string;
     extacl_passwd = null_string;
     extacl_log = null_string;
+    extacl_message = null_string;
     pstate = psReadyToParseStartLine;
 #if FOLLOW_X_FORWARDED_FOR
     indirect_client_addr.SetEmpty();
@@ -149,6 +150,8 @@ HttpRequest::clean()
     extacl_passwd.clean();
 
     extacl_log.clean();
+
+    extacl_message.clean();
 
 #if USE_ADAPTATION
     adaptHistory_ = NULL;
@@ -203,6 +206,7 @@ HttpRequest::clone() const
     copy->extacl_user = extacl_user;
     copy->extacl_passwd = extacl_passwd;
     copy->extacl_log = extacl_log;
+    copy->extacl_message = extacl_message;
 
     assert(copy->inheritProperties(this));
 

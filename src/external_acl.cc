@@ -770,6 +770,9 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
 
         if (entry->log.size())
             ch->request->extacl_log = entry->log;
+
+        if (entry->message.size())
+            ch->request->extacl_message = entry->message;
     }
 
     return result;
