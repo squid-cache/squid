@@ -5,8 +5,6 @@
 #include "config.h"
 #include "util.h"
 
-extern char **environ;
-
 /* aaaack but it's fast and const should make it shared text page. */
 const int pr2six[256] = {
     64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
