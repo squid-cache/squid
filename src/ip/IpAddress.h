@@ -412,6 +412,22 @@ private:
 
     struct sockaddr_in m_SocketAddr;
 #endif
+
+private:
+    /* Internally used constants */
+    static const unsigned int STRLEN_IP4A = 16;              // aaa.bbb.ccc.ddd\0
+    static const unsigned int STRLEN_IP4R = 28;              // ddd.ccc.bbb.aaa.in-addr.arpa.\0
+    static const unsigned int STRLEN_IP4S = 21;              // ddd.ccc.bbb.aaa:ppppp\0
+    static const unsigned int MAX_IP4_STRLEN = STRLEN_IP4R;
+#if USE_IPV6
+    static const unsigned int STRLEN_IP6A = 42;           // [ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff]/0
+    static const unsigned int STRLEN_IP6R = 75;           // f.f.f.f f.f.f.f f.f.f.f f.f.f.f f.f.f.f f.f.f.f f.f.f.f f.f.f.f ipv6.arpa./0
+    static const unsigned int STRLEN_IP6S = 48;           // [ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff]:00000/0
+    static const unsigned int MAX_IP6_STRLEN = STRLEN_IP6R;
+    static const struct in6_addr v4_localhost;
+    static const struct in6_addr v4_anyaddr;
+    static const struct in6_addr v6_noaddr;
+#endif
 };
 
 
