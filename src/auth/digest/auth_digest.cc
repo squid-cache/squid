@@ -67,6 +67,33 @@ static MemAllocator *digest_nonce_pool = NULL;
 
 CBDATA_TYPE(DigestAuthenticateStateData);
 
+enum {
+    DIGEST_USERNAME=1,
+    DIGEST_REALM,
+    DIGEST_QOP,
+    DIGEST_ALGORITHM,
+    DIGEST_URI,
+    DIGEST_NONCE,
+    DIGEST_NC,
+    DIGEST_CNONCE,
+    DIGEST_RESPONSE,
+    DIGEST_ENUM_END
+};
+
+static const HttpHeaderFieldAttrs DigestAttrs[DIGEST_ENUM_END] = {
+    {"username",  (http_hdr_type)DIGEST_USERNAME},
+    {"realm", (http_hdr_type)DIGEST_REALM},
+    {"qop", (http_hdr_type)DIGEST_QOP},
+    {"algorithm", (http_hdr_type)DIGEST_ALGORITHM},
+    {"uri", (http_hdr_type)DIGEST_URI},
+    {"nonce", (http_hdr_type)DIGEST_NONCE},
+    {"nc", (http_hdr_type)DIGEST_NC},
+    {"cnonce", (http_hdr_type)DIGEST_CNONCE},
+    {"response", (http_hdr_type)DIGEST_RESPONSE},
+};
+
+static HttpHeaderFieldInfo *DigestFieldsInfo = NULL;
+
 /*
  *
  * Nonce Functions
@@ -505,6 +532,9 @@ digestScheme::done()
     if (digestauthenticators)
         helperShutdown(digestauthenticators);
 
+    httpHeaderDestroyFieldsInfo(DigestFieldsInfo, DIGEST_ENUM_END);
+    DigestFieldsInfo = NULL;
+
     authdigest_initialised = 0;
 
     if (!shutting_down) {
@@ -867,6 +897,7 @@ void
 AuthDigestConfig::init(AuthConfig * scheme)
 {
     if (authenticate) {
+	DigestFieldsInfo = httpHeaderBuildFieldsInfo(DigestAttrs, DIGEST_ENUM_END);
         authenticateDigestNonceSetup();
         authdigest_initialised = 1;
 
