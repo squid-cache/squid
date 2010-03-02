@@ -67,7 +67,7 @@ static MemAllocator *digest_nonce_pool = NULL;
 
 CBDATA_TYPE(DigestAuthenticateStateData);
 
-enum {
+enum http_digest_attr_type {
     DIGEST_USERNAME=1,
     DIGEST_REALM,
     DIGEST_QOP,
@@ -1103,7 +1103,7 @@ AuthDigestConfig::decode(char const *proxy_auth)
     const char *pos = NULL;
     char *username = NULL;
     digest_nonce_h *nonce;
-    int ilen;
+    size_t ilen;
 
     debugs(29, 9, "authenticateDigestDecodeAuth: beginning");
 
@@ -1121,124 +1121,84 @@ AuthDigestConfig::decode(char const *proxy_auth)
     String temp(proxy_auth);
 
     while (strListGetItem(&temp, ',', &item, &ilen, &pos)) {
-        if ((p = strchr(item, '=')) && (p - item < ilen))
-            ilen = p++ - item;
+	String value();
+	size_t nlen;
+	/* isolate directive name */
+	if ((p = (const char *)memchr(item, '=', ilen)) && (p - item < ilen)) {
+            nlen = p++ - item;
+	    if (!httpHeaderParseQuotedString(p, &value))
+		value.initLimit(p, ilen - (p - item));
+	} else
+	    nlen = ilen;
 
-        if (!strncmp(item, "username", ilen)) {
-            /* white space */
+	if (!value.defined()) {
+	    debugs(29, 9, "authDigestDecodeAuth: Failed to parse attribute '" << temp << "' in '" << proxy_auth << "'");
+	    continue;
+	}
 
-            while (xisspace(*p))
-                p++;
+	/* find type */
+	http_digest_attr_type type = (http_digest_attr_type)httpHeaderIdByName(item, nlen, DigestFieldsInfo, DIGEST_ENUM_END);
 
-            /* quote mark */
-            p++;
-
+	switch (type) {
+	case DIGEST_USERNAME:
             safe_free(username);
-            username = xstrndup(p, strchr(p, '"') + 1 - p);
-
+            username = xstrndup(value.rawBuf(), value.size() + 1);
             debugs(29, 9, "authDigestDecodeAuth: Found Username '" << username << "'");
-        } else if (!strncmp(item, "realm", ilen)) {
-            /* white space */
+	    break;
 
-            while (xisspace(*p))
-                p++;
-
-            /* quote mark */
-            p++;
-
+	case DIGEST_REALM:
             safe_free(digest_request->realm);
-            digest_request->realm = xstrndup(p, strchr(p, '"') + 1 - p);
-
+            digest_request->realm = xstrndup(value.rawBuf(), value.size() + 1);
             debugs(29, 9, "authDigestDecodeAuth: Found realm '" << digest_request->realm << "'");
-        } else if (!strncmp(item, "qop", ilen)) {
-            /* white space */
+	    break;
 
-            while (xisspace(*p))
-                p++;
-
-            if (*p == '\"')
-                /* quote mark */
-                p++;
-
+	case DIGEST_QOP:
             safe_free(digest_request->qop);
-            digest_request->qop = xstrndup(p, strcspn(p, "\" \t\r\n()<>@,;:\\/[]?={}") + 1);
-
+            digest_request->qop = xstrndup(value.rawBuf(), value.size() + 1);
             debugs(29, 9, "authDigestDecodeAuth: Found qop '" << digest_request->qop << "'");
-        } else if (!strncmp(item, "algorithm", ilen)) {
-            /* white space */
+	    break;
 
-            while (xisspace(*p))
-                p++;
-
-            if (*p == '\"')
-                /* quote mark */
-                p++;
-
+	case DIGEST_ALGORITHM:
             safe_free(digest_request->algorithm);
-            digest_request->algorithm = xstrndup(p, strcspn(p, "\" \t\r\n()<>@,;:\\/[]?={}") + 1);
-
+            digest_request->algorithm = xstrndup(value.rawBuf(), value.size() + 1);
             debugs(29, 9, "authDigestDecodeAuth: Found algorithm '" << digest_request->algorithm << "'");
-        } else if (!strncmp(item, "uri", ilen)) {
-            /* white space */
+	    break;
 
-            while (xisspace(*p))
-                p++;
-
-            /* quote mark */
-            p++;
-
+	case DIGEST_URI:
             safe_free(digest_request->uri);
-            digest_request->uri = xstrndup(p, strchr(p, '"') + 1 - p);
-
+            digest_request->uri = xstrndup(value.rawBuf(), value.size() + 1);
             debugs(29, 9, "authDigestDecodeAuth: Found uri '" << digest_request->uri << "'");
-        } else if (!strncmp(item, "nonce", ilen)) {
-            /* white space */
+	    break;
 
-            while (xisspace(*p))
-                p++;
-
-            /* quote mark */
-            p++;
-
+	case DIGEST_NONCE:
             safe_free(digest_request->nonceb64);
-            digest_request->nonceb64 = xstrndup(p, strchr(p, '"') + 1 - p);
-
+            digest_request->nonceb64 = xstrndup(value.rawBuf(), value.size() + 1);
             debugs(29, 9, "authDigestDecodeAuth: Found nonce '" << digest_request->nonceb64 << "'");
-        } else if (!strncmp(item, "nc", ilen)) {
-            /* white space */
+	    break;
 
-            while (xisspace(*p))
-                p++;
-
-            xstrncpy(digest_request->nc, p, 9);
-
+	case DIGEST_NC:
+	    if (value.size() != 8) {
+		debugs(29, 9, "authDigestDecodeAuth: Invalid nc '" << value << "' in '" << temp << "'");
+	    }
+            xstrncpy(digest_request->nc, value.rawBuf(), value.size() + 1);
             debugs(29, 9, "authDigestDecodeAuth: Found noncecount '" << digest_request->nc << "'");
-        } else if (!strncmp(item, "cnonce", ilen)) {
-            /* white space */
+	    break;
 
-            while (xisspace(*p))
-                p++;
-
-            /* quote mark */
-            p++;
-
+	case DIGEST_CNONCE:
             safe_free(digest_request->cnonce);
-            digest_request->cnonce = xstrndup(p, strchr(p, '"') + 1 - p);
-
+            digest_request->cnonce = xstrndup(value.rawBuf(), value.size() + 1);
             debugs(29, 9, "authDigestDecodeAuth: Found cnonce '" << digest_request->cnonce << "'");
-        } else if (!strncmp(item, "response", ilen)) {
-            /* white space */
+	    break;
 
-            while (xisspace(*p))
-                p++;
-
-            /* quote mark */
-            p++;
-
+	case DIGEST_RESPONSE:
             safe_free(digest_request->response);
-            digest_request->response = xstrndup(p, strchr(p, '"') + 1 - p);
-
+            digest_request->response = xstrndup(value.rawBuf(), value.size() + 1);
             debugs(29, 9, "authDigestDecodeAuth: Found response '" << digest_request->response << "'");
+	    break;
+
+	default:
+            debugs(29, 2, "authDigestDecodeAuth: Unknown attribute '" << item << "' in '" << temp << "'");
+
         }
     }
 
