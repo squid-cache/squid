@@ -159,7 +159,7 @@ ssl_verify_cb(int ok, X509_STORE_CTX * ctx)
             char cn[1024];
 
             STACK_OF(GENERAL_NAME) * altnames;
-            altnames = (STACK*)X509_get_ext_d2i(peer_cert, NID_subject_alt_name, NULL, NULL);
+            altnames = (STACK_OF(GENERAL_NAME)*)X509_get_ext_d2i(peer_cert, NID_subject_alt_name, NULL, NULL);
             if (altnames) {
                 int numalts = sk_GENERAL_NAME_num(altnames);
                 debugs(83, 3, "Verifying server domain " << server << " to certificate subjectAltName");
