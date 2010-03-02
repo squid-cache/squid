@@ -1197,7 +1197,7 @@ AuthDigestConfig::decode(char const *proxy_auth)
 	    break;
 
 	default:
-            debugs(29, 2, "authDigestDecodeAuth: Unknown attribute '" << item << "' in '" << temp << "'");
+            debugs(29, 3, "authDigestDecodeAuth: Unknown attribute '" << item << "' in '" << temp << "'");
 
         }
     }
@@ -1216,64 +1216,36 @@ AuthDigestConfig::decode(char const *proxy_auth)
      * correct values - 400/401/407
      */
 
-    /* first the NONCE count */
+    /* 2069 requirements */
 
-    if (digest_request->cnonce && strlen(digest_request->nc) != 8) {
-        debugs(29, 4, "authenticateDigestDecode: nonce count length invalid");
+    /* do we have a username ? */
+    if (!username || username[0] == '\0') {
+        debugs(29, 2, "authenticateDigestDecode: Empty or not present username");
         return authDigestLogUsername(username, digest_request);
     }
 
-    /* now the nonce */
-    nonce = authenticateDigestNonceFindNonce(digest_request->nonceb64);
-
-    if (!nonce) {
-        /* we couldn't find a matching nonce! */
-        debugs(29, 4, "authenticateDigestDecode: Unexpected or invalid nonce received");
+    /* do we have a realm ? */
+    if (!digest_request->realm || digest_request->realm[0] == '\0') {
+        debugs(29, 2, "authenticateDigestDecode: Empty or not present realm");
         return authDigestLogUsername(username, digest_request);
     }
 
-    digest_request->nonce = nonce;
-    authDigestNonceLink(nonce);
-
-    /* check the qop is what we expected. Note that for compatability with
-     * RFC 2069 we should support a missing qop. Tough. */
-
-    if (digest_request->qop && strcmp(digest_request->qop, QOP_AUTH) != 0) {
-        /* we received a qop option we didn't send */
-        debugs(29, 4, "authenticateDigestDecode: Invalid qop option received");
+    /* and a nonce? */
+    if (!digest_request->nonceb64 || digest_request->nonceb64[0] == '\0') {
+        debugs(29, 2, "authenticateDigestDecode: Empty or not present nonce");
         return authDigestLogUsername(username, digest_request);
     }
 
     /* we can't check the URI just yet. We'll check it in the
      * authenticate phase, but needs to be given */
-    if (!digest_request->uri) {
-        debugs(29, 4, "authenticateDigestDecode: Missing URI field");
+    if (!digest_request->uri || digest_request->uri[0] == '\0') {
+        debugs(29, 2, "authenticateDigestDecode: Missing URI field");
         return authDigestLogUsername(username, digest_request);
     }
 
     /* is the response the correct length? */
-
     if (!digest_request->response || strlen(digest_request->response) != 32) {
-        debugs(29, 4, "authenticateDigestDecode: Response length invalid");
-        return authDigestLogUsername(username, digest_request);
-    }
-
-    /* do we have a username ? */
-    if (!username || username[0] == '\0') {
-        debugs(29, 4, "authenticateDigestDecode: Empty or not present username");
-        return authDigestLogUsername(username, digest_request);
-    }
-
-    /* check that we're not being hacked / the username hasn't changed */
-    if (nonce->user && strcmp(username, nonce->user->username())) {
-        debugs(29, 4, "authenticateDigestDecode: Username for the nonce does not equal the username for the request");
-        return authDigestLogUsername(username, digest_request);
-    }
-
-    /* if we got a qop, did we get a cnonce or did we get a cnonce wihtout a qop? */
-    if ((digest_request->qop && !digest_request->cnonce)
-            || (!digest_request->qop && digest_request->cnonce)) {
-        debugs(29, 4, "authenticateDigestDecode: qop without cnonce, or vice versa!");
+        debugs(29, 2, "authenticateDigestDecode: Response length invalid");
         return authDigestLogUsername(username, digest_request);
     }
 
@@ -1283,6 +1255,54 @@ AuthDigestConfig::decode(char const *proxy_auth)
     else if (strcmp(digest_request->algorithm, "MD5")
              && strcmp(digest_request->algorithm, "MD5-sess")) {
         debugs(29, 4, "authenticateDigestDecode: invalid algorithm specified!");
+        return authDigestLogUsername(username, digest_request);
+    }
+
+    /* 2617 requirements, indicated by qop */
+    if (digest_request->qop) {
+
+	/* check the qop is what we expected. */
+	if (strcmp(digest_request->qop, QOP_AUTH) != 0) {
+	    /* we received a qop option we didn't send */
+	    debugs(29, 2, "authenticateDigestDecode: Invalid qop option received");
+	    return authDigestLogUsername(username, digest_request);
+	}
+
+	/* check cnonce */
+	if (!digest_request->cnonce || digest_request->cnonce[0] == '\0') {
+	    debugs(29, 2, "authenticateDigestDecode: Missing URI field");
+	    return authDigestLogUsername(username, digest_request);
+	}
+
+	/* check nc */
+	if (strlen(digest_request->nc) != 8 || strspn(digest_request->nc, "0123456789abcdefABCDEF") != 8) {
+	    debugs(29, 2, "authenticateDigestDecode: invalid nonce count");
+	    return authDigestLogUsername(username, digest_request);
+	}
+    } else {
+	/* cnonce and nc both require qop */
+	if (digest_request->cnonce || digest_request->nc) {
+	    debugs(29, 4, "authenticateDigestDecode: missing qop!");
+	    return authDigestLogUsername(username, digest_request);
+	}
+    }
+
+    /** below nonce state dependent **/
+
+    /* now the nonce */
+    nonce = authenticateDigestNonceFindNonce(digest_request->nonceb64);
+    if (!nonce) {
+        /* we couldn't find a matching nonce! */
+        debugs(29, 2, "authenticateDigestDecode: Unexpected or invalid nonce received");
+        return authDigestLogUsername(username, digest_request);
+    }
+
+    digest_request->nonce = nonce;
+    authDigestNonceLink(nonce);
+
+    /* check that we're not being hacked / the username hasn't changed */
+    if (nonce->user && strcmp(username, nonce->user->username())) {
+        debugs(29, 2, "authenticateDigestDecode: Username for the nonce does not equal the username for the request");
         return authDigestLogUsername(username, digest_request);
     }
 
