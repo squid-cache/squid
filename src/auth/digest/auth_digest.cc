@@ -1103,7 +1103,7 @@ AuthDigestConfig::decode(char const *proxy_auth)
     const char *pos = NULL;
     char *username = NULL;
     digest_nonce_h *nonce;
-    size_t ilen;
+    int ilen;
 
     debugs(29, 9, "authenticateDigestDecodeAuth: beginning");
 
@@ -1121,13 +1121,13 @@ AuthDigestConfig::decode(char const *proxy_auth)
     String temp(proxy_auth);
 
     while (strListGetItem(&temp, ',', &item, &ilen, &pos)) {
-	String value();
+	String value;
 	size_t nlen;
 	/* isolate directive name */
 	if ((p = (const char *)memchr(item, '=', ilen)) && (p - item < ilen)) {
             nlen = p++ - item;
 	    if (!httpHeaderParseQuotedString(p, &value))
-		value.initLimit(p, ilen - (p - item));
+		value.limitInit(p, ilen - (p - item));
 	} else
 	    nlen = ilen;
 
