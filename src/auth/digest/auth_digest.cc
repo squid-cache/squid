@@ -1270,7 +1270,7 @@ AuthDigestConfig::decode(char const *proxy_auth)
 
 	/* check cnonce */
 	if (!digest_request->cnonce || digest_request->cnonce[0] == '\0') {
-	    debugs(29, 2, "authenticateDigestDecode: Missing URI field");
+	    debugs(29, 2, "authenticateDigestDecode: Missing cnonce field");
 	    return authDigestLogUsername(username, digest_request);
 	}
 
