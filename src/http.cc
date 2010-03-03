@@ -310,12 +310,8 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
 void
 HttpStateData::processSurrogateControl(HttpReply *reply)
 {
-#if USE_SQUID_ESI
-
     if (request->flags.accelerated && reply->surrogate_control) {
-        HttpHdrScTarget *sctusable =
-            httpHdrScGetMergedTarget(reply->surrogate_control,
-                                     Config.Accel.surrogate_id);
+        HttpHdrScTarget *sctusable = httpHdrScGetMergedTarget(reply->surrogate_control, Config.Accel.surrogate_id);
 
         if (sctusable) {
             if (EBIT_TEST(sctusable->mask, SC_NO_STORE) ||
@@ -327,7 +323,7 @@ HttpStateData::processSurrogateControl(HttpReply *reply)
 
             /* The HttpHeader logic cannot tell if the header it's parsing is a reply to an
              * accelerated request or not...
-             * Still, this is an abtraction breach. - RC
+             * Still, this is an abstraction breach. - RC
              */
             if (sctusable->max_age != -1) {
                 if (sctusable->max_age < sctusable->max_stale)
@@ -345,8 +341,6 @@ HttpStateData::processSurrogateControl(HttpReply *reply)
             httpHdrScTargetDestroy(sctusable);
         }
     }
-
-#endif
 }
 
 int
@@ -1597,16 +1591,17 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         strVia.clean();
     }
 
-#if USE_SQUID_ESI
     if (orig_request->flags.accelerated) {
         /* Append Surrogate-Capabilities */
-        String strSurrogate (hdr_in->getList(HDR_SURROGATE_CAPABILITY));
-        snprintf(bbuf, BBUF_SZ, "%s=\"Surrogate/1.0 ESI/1.0\"",
-                 Config.Accel.surrogate_id);
+        String strSurrogate(hdr_in->getList(HDR_SURROGATE_CAPABILITY));
+#if USE_SQUID_ESI
+        snprintf(bbuf, BBUF_SZ, "%s=\"Surrogate/1.0 ESI/1.0\"", Config.Accel.surrogate_id);
+#else
+        snprintf(bbuf, BBUF_SZ, "%s=\"Surrogate/1.0\"", Config.Accel.surrogate_id);
+#endif
         strListAdd(&strSurrogate, bbuf, ',');
         hdr_out->putStr(HDR_SURROGATE_CAPABILITY, strSurrogate.termedBuf());
     }
-#endif
 
     /** \pre Handle X-Forwarded-For */
     if (strcmp(opt_forwarded_for, "delete") != 0) {
