@@ -315,10 +315,7 @@ struct SquidConfig {
     time_t authenticateIpTTL;
 
     struct {
-#if USE_SQUID_ESI
         char *surrogate_id;
-#endif
-
     } Accel;
     char *appendDomain;
     size_t appendDomainLen;
@@ -427,11 +424,7 @@ struct SquidConfig {
         int ie_refresh;
         int vary_ignore_expire;
         int pipeline_prefetch;
-
-#if USE_SQUID_ESI
         int surrogate_is_remote;
-#endif
-
         int request_entities;
         int detect_broken_server_pconns;
         int balance_on_multiple_ip;

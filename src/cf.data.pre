@@ -4326,7 +4326,6 @@ COMMENT_START
 COMMENT_END
 
 NAME: httpd_accel_surrogate_id
-IFDEF: USE_SQUID_ESI
 TYPE:  string
 LOC: Config.Accel.surrogate_id
 DEFAULT: unset-id
@@ -4338,7 +4337,6 @@ DOC_START
 DOC_END
 
 NAME: http_accel_surrogate_remote
-IFDEF: USE_SQUID_ESI
 COMMENT: on|off
 TYPE: onoff
 DEFAULT: off
