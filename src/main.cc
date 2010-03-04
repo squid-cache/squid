@@ -1864,7 +1864,7 @@ watch_child(char *argv[])
         pid = waitpid(-1, &status, 0);
 
 #endif
-        /* XXX: Why loop? Should not we only process one terminated kid? */
+        // Loop to collect all stopped kids before we go to sleep below.
         do
         {
             Kid* kid = TheKids.find(pid);
