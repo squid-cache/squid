@@ -112,6 +112,7 @@ void WINAPI WIN32_svcHandler(DWORD);
 /** for error reporting from xmalloc and friends */
 SQUIDCEXTERN void (*failure_notify) (const char *);
 
+static int KidIdentifier = 0;
 static int opt_parse_cfg_only = 0;
 static char *opt_syslog_facility = NULL;
 static int icpPortNumOverride = 1;	/* Want to detect "-u 0" */
@@ -1152,6 +1153,8 @@ SquidMainSafe(int argc, char **argv)
 int
 SquidMain(int argc, char **argv)
 {
+    sscanf(argv[0], "(squid%d)", &KidIdentifier);
+
 #ifdef _SQUID_WIN32_
 
     int WIN32_init_err;
@@ -1320,7 +1323,7 @@ SquidMain(int argc, char **argv)
         return 0;
     }
 
-    if (!opt_no_daemon)
+    if (!opt_no_daemon && Config.main_processes > 0)
         watch_child(argv);
 
     setMaxFD();
@@ -1477,11 +1480,11 @@ mainStartScript(const char *prog)
         do {
 #ifdef _SQUID_NEXT_
             union wait status;
-            rpid = wait3(&status, 0, NULL);
+            rpid = wait4(cpid, &status, 0, NULL);
 #else
 
             int status;
-            rpid = waitpid(-1, &status, 0);
+            rpid = waitpid(cpid, &status, 0);
 #endif
 
         } while (rpid != cpid);
@@ -1511,14 +1514,254 @@ checkRunningPid(void)
     return 1;
 }
 
+/// XXX: temporary hack to avoid http_port conflicts among listening kids
+void update_port(unsigned short* port)
+{
+    if (KidIdentifier > 0)
+        *port += KidIdentifier - 1;
+}
+
+/// Squid child, including current forked process info and
+/// info persistent across restarts
+class Kid
+{
+public:
+#ifdef _SQUID_NEXT_
+    typedef union wait status_type;
+#else
+    typedef int status_type;
+#endif
+
+    /// keep restarting until the number of bad failures exceed this limit
+    enum { badFailureLimit = 4 };
+
+    /// slower start failures are not "frequent enough" to be counted as "bad"
+    enum { fastFailureTimeLimit = 10 }; // seconds
+
+public:
+    Kid():
+        badFailures(0),
+        pid(-1),
+        startTime(0),
+        isRunning(false)
+    {
+    }
+
+    Kid(const String& kid_name):
+        theName(kid_name),
+        badFailures(0),
+        pid(-1),
+        startTime(0),
+        isRunning(false)
+    {
+    }
+
+    /// called when this kid got started, records PID
+    void start(pid_t cpid)
+    {
+        assert(!running());
+        assert(cpid > 0);
+
+        isRunning = true;
+        pid = cpid;
+        time(&startTime);
+    }
+
+    /// called when kid terminates, sets exiting status
+    void stop(status_type exitStatus)
+    {
+        assert(running());
+        assert(startTime != 0);
+
+        isRunning = false;
+
+        time_t stop_time;
+        time(&stop_time);
+        if ((stop_time - startTime) < fastFailureTimeLimit)
+            badFailures++;
+        else
+            badFailures = 0; // the failures are not "frequent" [any more]
+
+        status = exitStatus;
+    }
+
+    /// returns true if tracking of kid is stopped
+    bool running() const
+    {
+        return isRunning;
+    }
+
+    /// returns current pid for a running kid and last pid for a stopped kid
+    pid_t getPid() const
+    {
+        assert(pid > 0);
+        return pid;
+    }
+
+    /// whether the failures are "repeated and frequent"
+    bool hopeless() const
+    {
+        return badFailures > badFailureLimit;
+    }
+
+    /// returns true if the process terminated normally
+    bool calledExit() const
+    {
+        return (pid > 0) && !running() && WIFEXITED(status);
+    }
+
+    /// returns the exit status of the process
+    int exitStatus() const
+    {
+        return WEXITSTATUS(status);
+    }
+
+    /// whether the process exited with a given exit status code
+    bool calledExit(int code) const
+    {
+        return calledExit() && (exitStatus() == code);
+    }
+
+    /// whether the process exited with code 0
+    bool exitedHappy() const
+    {
+        return calledExit(0);
+    }
+    
+    /// returns true if the kid was terminated by a signal
+    bool signaled() const
+    {
+        return (pid > 0) && !running() && WIFSIGNALED(status);
+    }
+
+    /// returns the number of the signal that caused the kid to terminate
+    int termSignal() const
+    {
+        return WTERMSIG(status);
+    }
+
+    /// whether the process was terminated by a given signal
+    bool signaled(int sgnl) const
+    {
+        return signaled() && (termSignal() == sgnl);
+    }
+
+    /// returns kid name
+    const String& name() const
+    {
+        return theName;
+    }
+
+private:
+    // Information preserved across restarts
+    String theName; ///< process name
+    int badFailures; ///< number of "repeated frequent" failures
+
+    // Information specific to a running or stopped kid
+    pid_t pid; ///< current (for a running kid) or last (for stopped kid) PID
+    time_t startTime; ///< last start time
+    bool  isRunning; ///< whether the kid is assumed to be alive
+    status_type status; ///< exit status of a stopped kid
+};
+
+/// a collection of kids
+class Kids
+{
+public:
+    Kids ():
+        storage()
+    {
+    }
+
+private:
+    Kids (const Kids&); ///< not implemented
+    Kids& operator= (const Kids&); ///< not implemented
+
+public:
+    /// maintain n kids
+    void init(size_t n)
+    {
+        assert(n > 0);
+
+        if (storage.size() > 0)
+            storage.clean();
+
+        storage.reserve(n);
+
+        for (size_t i = 1; i <= n; ++i) {
+            char kid_name[32];
+            snprintf(kid_name, sizeof(kid_name), "(squid%d)", (int)i);
+            storage.push_back(Kid(kid_name));
+        }
+    }
+
+    /// returns kid by pid
+    Kid* find(pid_t pid)
+    {
+        assert(pid > 0);
+        assert(count() > 0);
+
+        for (size_t i = 0; i < storage.size(); ++i) {
+            if (storage[i].getPid() == pid)
+                return &storage[i];
+        }
+        return NULL;
+    }
+
+    /// returns the kid by index, useful for kids iteration
+    Kid& get(size_t i)
+    {
+        assert(i >= 0 && i < count());
+        return storage[i];
+    }
+
+    /// whether all kids are hopeless
+    bool allHopeless() const
+    {
+        for (size_t i = 0; i < storage.size(); ++i) {
+            if (!storage[i].hopeless())
+                return false;
+        }
+        return true;
+    }
+
+    /// whether all kids called exited happy
+    bool allExitedHappy() const
+    {
+        for (size_t i = 0; i < storage.size(); ++i) {
+            if (!storage[i].exitedHappy())
+                return false;
+        }
+        return true;
+    }
+
+    /// whether all kids died from a given signal
+    bool allSignaled(int sgnl) const
+    {
+        for (size_t i = 0; i < storage.size(); ++i) {
+            if (!storage[i].signaled(sgnl))
+                return false;
+        }
+        return true;
+    }
+
+    /// returns the number of kids
+    size_t count() const
+    {
+        return storage.size();
+    }
+
+private:
+    Vector<Kid> storage;
+};
+
+static Kids TheKids; ///< All kids being maintained
+
 static void
 watch_child(char *argv[])
 {
 #ifndef _SQUID_MSWIN_
     char *prog;
-    int failcount = 0;
-    time_t start;
-    time_t stop;
 #ifdef _SQUID_NEXT_
 
     union wait status;
@@ -1535,7 +1778,7 @@ watch_child(char *argv[])
 
     int nullfd;
 
-    if (*(argv[0]) == '(')
+    if (KidIdentifier != 0)
         return;
 
     openlog(APP_SHORTNAME, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
@@ -1577,24 +1820,38 @@ watch_child(char *argv[])
         dup2(nullfd, 2);
     }
 
+    if (Config.main_processes > 128) {
+        syslog(LOG_ALERT, "Suspiciously high main_processes value: %d",
+            Config.main_processes);
+        // but we keep going in hope that user knows best
+	}
+    TheKids.init(Config.main_processes);
+
+    // keep [re]starting kids until it is time to quit
     for (;;) {
         mainStartScript(argv[0]);
 
-        if ((pid = fork()) == 0) {
-            /* child */
-            openlog(APP_SHORTNAME, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
-            prog = xstrdup(argv[0]);
-            argv[0] = xstrdup("(squid)");
-            execvp(prog, argv);
-            syslog(LOG_ALERT, "execvp failed: %s", xstrerror());
+        // start each kid that needs to be [re]started; once
+        for (size_t i = 0; i < TheKids.count(); ++i) {
+            Kid& kid = TheKids.get(i);
+            if (kid.hopeless() || kid.exitedHappy() || kid.running())
+                continue;
+
+            if ((pid = fork()) == 0) {
+                /* child */
+                openlog(APP_SHORTNAME, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
+                prog = xstrdup(argv[0]);    /* XXX: leak */
+                argv[0] = const_cast<char*>(kid.name().termedBuf());
+                execvp(prog, argv);
+                syslog(LOG_ALERT, "execvp failed: %s", xstrerror());
+            }
+
+            kid.start(pid);
+            syslog(LOG_NOTICE, "Squid Parent: child process %d started", pid);
         }
 
         /* parent */
         openlog(APP_SHORTNAME, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
-
-        syslog(LOG_NOTICE, "Squid Parent: child process %d started", pid);
-
-        time(&start);
 
         squid_signal(SIGINT, SIG_IGN, SA_RESTART);
 
@@ -1607,51 +1864,48 @@ watch_child(char *argv[])
         pid = waitpid(-1, &status, 0);
 
 #endif
+        /* XXX: Why loop? Should not we only process one terminated kid? */
+        do
+        {
+            Kid* kid = TheKids.find(pid);
+            if (kid) {
+                kid->stop(status);
+                if (kid->calledExit()) {
+                    syslog(LOG_NOTICE,
+                       "Squid Parent: child process %d exited with status %d",
+                        kid->getPid(), kid->exitStatus());
+                } else if (kid->signaled()) {
+                    syslog(LOG_NOTICE,
+                       "Squid Parent: child process %d exited due to signal %d with status %d",
+                        kid->getPid(), kid->termSignal(), kid->exitStatus());
+                } else {
+                    syslog(LOG_NOTICE, "Squid Parent: child process %d exited", kid->getPid());
+                }
+            } else {
+                syslog(LOG_NOTICE, "Squid Parent: unknown child process %d exited", pid);
+            }
+#ifdef _SQUID_NEXT_
+        } while ((pid = wait3(&status, WNOHANG, NULL)) > 0);
+#else
+        } while ((pid = waitpid(-1, &status, WNOHANG)) > 0);
+#endif
 
-        time(&stop);
-
-        if (WIFEXITED(status)) {
-            syslog(LOG_NOTICE,
-                   "Squid Parent: child process %d exited with status %d",
-                   pid, WEXITSTATUS(status));
-        } else if (WIFSIGNALED(status)) {
-            syslog(LOG_NOTICE,
-                   "Squid Parent: child process %d exited due to signal %d with status %d",
-                   pid, WTERMSIG(status), WEXITSTATUS(status));
-        } else {
-            syslog(LOG_NOTICE, "Squid Parent: child process %d exited", pid);
+        if (TheKids.allExitedHappy()) {
+            exit(0);
         }
 
-        if (stop - start < 10)
-            failcount++;
-        else
-            failcount = 0;
-
-        if (failcount == 5) {
+        if (TheKids.allHopeless()) {
             syslog(LOG_ALERT, "Exiting due to repeated, frequent failures");
             exit(1);
         }
 
-        if (WIFEXITED(status))
-            if (WEXITSTATUS(status) == 0)
-                exit(0);
+        if (TheKids.allSignaled(SIGKILL)) {
+            exit(0);
+        }
 
-        if (WIFSIGNALED(status)) {
-            switch (WTERMSIG(status)) {
-
-            case SIGKILL:
-                exit(0);
-                break;
-
-            case SIGINT:
-            case SIGTERM:
-                syslog(LOG_ALERT, "Exiting due to unexpected forced shutdown");
-                exit(1);
-                break;
-
-            default:
-                break;
-            }
+        if (TheKids.allSignaled(SIGINT) || TheKids.allSignaled(SIGTERM)) {
+            syslog(LOG_ALERT, "Exiting due to unexpected forced shutdown");
+            exit(1);
         }
 
         squid_signal(SIGINT, SIG_DFL, SA_RESTART);
