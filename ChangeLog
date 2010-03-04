@@ -1,3 +1,12 @@
+Changes to squid-3.1.0.17 (24 Feb 2010):
+
+	- Regression Fix: Non-English error page UTF encoding
+	- Bug 2616: reduce IdleConnList::removeFD messages
+	- Bug 1843: multicast-siblings cache_peer option
+	- Port from 2.7: X509 certificate alias-domain handling
+	- Add adapted_http_access option
+	- NTLMv2 support for fake NTLM helper
+
 Changes to squid-3.1.0.16 (01 Feb 2010):
 
 	- Regression Fix: Make Squid abort on all config parse failures.
@@ -278,6 +287,11 @@ Changes to squid-3.1.0.1 (27 Oct 2008):
 	- Follow_x_forwarder_for ported from 2.6
 	- Bug #2223: Follow XFF extensions added
 	- ... and many code and documentation cleanups
+
+Changes to squid-3.0.STABLE24 (13 Feb 2010):
+
+	- Bug 2858: Segment violation in HTCP
+	- Updated refresh pattern for dynamic pages
 
 Changes to squid-3.0.STABLE23 (02 Feb 2010):
 

@@ -337,15 +337,8 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
     entry->buffer();
 
     {
-        HttpVersion version(1,0);
         HttpReply *rep = new HttpReply;
-        rep->setHeaders(version,
-                        HTTP_OK,
-                        NULL,
-                        "text/plain",
-                        -1,			/* C-Len */
-                        squid_curtime,	/* LMT */
-                        squid_curtime);
+        rep->setHeaders(HTTP_OK, NULL, "text/plain", -1, squid_curtime, squid_curtime);
         entry->replaceHttpReply(rep);
     }
 
