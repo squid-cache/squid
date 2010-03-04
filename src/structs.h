@@ -41,6 +41,8 @@
 /* for ICP_END */
 #include "icp_opcode.h"
 
+#define PEER_MULTICAST_SIBLINGS 1
+
 struct acl_name_list {
     char name[ACL_NAME_SZ];
     acl_name_list *next;
@@ -313,10 +315,7 @@ struct SquidConfig {
     time_t authenticateIpTTL;
 
     struct {
-#if USE_SQUID_ESI
         char *surrogate_id;
-#endif
-
     } Accel;
     char *appendDomain;
     size_t appendDomainLen;
@@ -425,11 +424,7 @@ struct SquidConfig {
         int ie_refresh;
         int vary_ignore_expire;
         int pipeline_prefetch;
-
-#if USE_SQUID_ESI
         int surrogate_is_remote;
-#endif
-
         int request_entities;
         int detect_broken_server_pconns;
         int balance_on_multiple_ip;
@@ -459,6 +454,7 @@ struct SquidConfig {
 
     struct {
         acl_access *http;
+        acl_access *adapted_http;
         acl_access *icp;
         acl_access *miss;
         acl_access *NeverDirect;
@@ -889,6 +885,9 @@ struct peer {
         unsigned int sourcehash:1;
         unsigned int originserver:1;
         unsigned int no_tproxy:1;
+#if PEER_MULTICAST_SIBLINGS
+        unsigned int mcast_siblings:1;
+#endif
     } options;
 
     int weight;
