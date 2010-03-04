@@ -2969,6 +2969,9 @@ parse_http_port_specification(http_port_list * s, char *token)
         self_destruct();
     }
 
+    extern void update_port(unsigned short* port);
+    update_port(&port);
+
     if (NULL == host) {
         s->s.SetAnyAddr();
         s->s.SetPort(port);
