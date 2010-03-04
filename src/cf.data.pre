@@ -922,6 +922,20 @@ http_access deny all
 NOCOMMENT_END
 DOC_END
 
+NAME: adapted_http_access http_access2
+TYPE: acl_access
+LOC: Config.accessList.adapted_http
+DEFAULT: none
+DOC_START
+	Allowing or Denying access based on defined access lists
+
+	Essentially identical to http_access, but runs after redirectors
+	and ICAP/eCAP adaptation. Allowing access control based on their
+	output.
+
+	If not set then only http_access is used.
+DOC_END
+
 NAME: http_reply_access
 TYPE: acl_access
 LOC: Config.accessList.reply
@@ -1793,6 +1807,15 @@ DOC_START
 	userhash	Load-balance parents based on the client proxy_auth or ident username.
 	
 	sourcehash	Load-balance parents based on the client source IP.
+
+	multicast-siblings
+			To be used only for cache peers of type "multicast".
+			ALL members of this multicast group have "sibling"
+			relationship with it, not "parent".  This is to a mulicast
+			group when the requested object would be fetched only from
+			a "parent" cache, anyway.  It's useful, e.g., when
+			configuring a pool of redundant Squid proxies, being
+			members of the same multicast group.
 	
 	
 	==== PEER SELECTION OPTIONS ====
@@ -2052,7 +2075,7 @@ DOC_START
 
 	The syntax is identical to 'http_access' and the other lists of
 	ACL elements.  See the comments for 'http_access' below, or
-	the Squid FAQ (http://www.squid-cache.org/FAQ/FAQ-10.html).
+	the Squid FAQ (http://wiki.squid-cache.org/SquidFaq/SquidAcl).
 DOC_END
 
 NAME: neighbor_type_domain
@@ -3198,7 +3221,7 @@ DOC_END
 
 NAME: url_rewrite_children redirect_children
 TYPE: HelperChildConfig
-DEFAULT: 20 startup=0 idle=1 concurrency=1
+DEFAULT: 20 startup=0 idle=1 concurrency=0
 LOC: Config.redirectChildren
 DOC_START
 	The maximum number of redirector processes to spawn. If you limit
@@ -4303,7 +4326,6 @@ COMMENT_START
 COMMENT_END
 
 NAME: httpd_accel_surrogate_id
-IFDEF: USE_SQUID_ESI
 TYPE:  string
 LOC: Config.Accel.surrogate_id
 DEFAULT: unset-id
@@ -4315,7 +4337,6 @@ DOC_START
 DOC_END
 
 NAME: http_accel_surrogate_remote
-IFDEF: USE_SQUID_ESI
 COMMENT: on|off
 TYPE: onoff
 DEFAULT: off

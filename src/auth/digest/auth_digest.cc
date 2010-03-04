@@ -904,7 +904,7 @@ AuthDigestConfig::done()
     safe_free(digestAuthRealm);
 }
 
-AuthDigestConfig::AuthDigestConfig() : authenticateChildren(20,0,1,1)
+AuthDigestConfig::AuthDigestConfig() : authenticateChildren(20)
 {
     /* TODO: move into initialisation list */
     /* 5 minutes */

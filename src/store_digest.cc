@@ -420,10 +420,9 @@ storeDigestRewriteResume(void)
     e->setPublicKey();
     /* fake reply */
     HttpReply *rep = new HttpReply;
-    HttpVersion version(1, 0);
-    rep->setHeaders(version, HTTP_OK, "Cache Digest OK",
-                    "application/cache-digest", store_digest->mask_size + sizeof(sd_state.cblock),
-                    squid_curtime, squid_curtime + Config.digest.rewrite_period);
+    rep->setHeaders(HTTP_OK, "Cache Digest OK",
+                    "application/cache-digest", (store_digest->mask_size + sizeof(sd_state.cblock)),
+                    squid_curtime, (squid_curtime + Config.digest.rewrite_period) );
     debugs(71, 3, "storeDigestRewrite: entry expires on " << rep->expires <<
            " (" << std::showpos << (int) (rep->expires - squid_curtime) << ")");
     e->buffer();
