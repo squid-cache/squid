@@ -505,6 +505,12 @@ configDoConfigure(void)
              uniqueHostname(),
              visible_appname_string);
 
+    /* Use visible_hostname as default surrogate_id */
+    if (!Config.Accel.surrogate_id) {
+        const char *t = getMyHostname();
+        Config.Accel.surrogate_id = xstrdup( (t?t:"unset-id") );
+    }
+
     if (!Config.udpMaxHitObjsz || Config.udpMaxHitObjsz > SQUID_UDP_SO_SNDBUF)
         Config.udpMaxHitObjsz = SQUID_UDP_SO_SNDBUF;
 
