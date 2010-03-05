@@ -4327,13 +4327,15 @@ COMMENT_END
 
 NAME: httpd_accel_surrogate_id
 TYPE:  string
+DEFAULT: none
 LOC: Config.Accel.surrogate_id
-DEFAULT: unset-id
 DOC_START
 	Surrogates (http://www.esi.org/architecture_spec_1.0.html)
 	need an identification token to allow control targeting. Because
 	a farm of surrogates may all perform the same tasks, they may share
 	an identification token.
+
+	The default ID is the visible_hostname
 DOC_END
 
 NAME: http_accel_surrogate_remote
