@@ -1538,10 +1538,10 @@ accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definit
     logformat *format;
 
     struct logformat_token_table_entry *te;
-    debugs(46, 0, "accessLogDumpLogFormat called");
+    debugs(46, 4, "accessLogDumpLogFormat called");
 
     for (format = definitions; format; format = format->next) {
-        debugs(46, 0, "Dumping logformat definition for " << format->name);
+        debugs(46, 3, "Dumping logformat definition for " << format->name);
         storeAppendPrintf(entry, "logformat %s ", format->name);
 
         for (t = format->format; t; t = t->next) {
