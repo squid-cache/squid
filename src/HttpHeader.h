@@ -76,6 +76,7 @@ typedef enum {
     HDR_DATE,
     HDR_ETAG,
     HDR_EXPIRES,
+    HDR_EXPECT,
     HDR_FROM,
     HDR_HOST,
     HDR_IF_MATCH,

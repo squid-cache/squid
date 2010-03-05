@@ -460,9 +460,6 @@ This section gives an account of those changes in three categories:
 	<p><em>http11</em> not yet ported from 2.7
 	<p><em>urlgroup=</em> not yet ported from 2.6
 
-	<tag>ignore_expect_100</tag>
-	<p>Not yet ported from 2.7
-
 	<tag>ignore_ims_on_miss</tag>
 	<p>Not yet ported from 2.7
 
