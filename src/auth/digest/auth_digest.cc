@@ -68,7 +68,7 @@ static MemAllocator *digest_nonce_pool = NULL;
 CBDATA_TYPE(DigestAuthenticateStateData);
 
 enum http_digest_attr_type {
-    DIGEST_USERNAME=1,
+    DIGEST_USERNAME,
     DIGEST_REALM,
     DIGEST_QOP,
     DIGEST_ALGORITHM,
@@ -1254,7 +1254,7 @@ AuthDigestConfig::decode(char const *proxy_auth)
         digest_request->algorithm = xstrndup("MD5", 4);
     else if (strcmp(digest_request->algorithm, "MD5")
              && strcmp(digest_request->algorithm, "MD5-sess")) {
-        debugs(29, 4, "authenticateDigestDecode: invalid algorithm specified!");
+        debugs(29, 2, "authenticateDigestDecode: invalid algorithm specified!");
         return authDigestLogUsername(username, digest_request);
     }
 
@@ -1282,7 +1282,7 @@ AuthDigestConfig::decode(char const *proxy_auth)
     } else {
 	/* cnonce and nc both require qop */
 	if (digest_request->cnonce || digest_request->nc) {
-	    debugs(29, 4, "authenticateDigestDecode: missing qop!");
+	    debugs(29, 2, "authenticateDigestDecode: missing qop!");
 	    return authDigestLogUsername(username, digest_request);
 	}
     }
