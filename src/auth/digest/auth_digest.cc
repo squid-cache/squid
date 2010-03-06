@@ -1125,17 +1125,29 @@ AuthDigestConfig::decode(char const *proxy_auth)
     String temp(proxy_auth);
 
     while (strListGetItem(&temp, ',', &item, &ilen, &pos)) {
-        String value;
+        /* isolate directive name & value */
         size_t nlen;
-        /* isolate directive name */
+	size_t vlen;
         if ((p = (const char *)memchr(item, '=', ilen)) && (p - item < ilen)) {
             nlen = p++ - item;
-            if (!httpHeaderParseQuotedString(p, &value))
-                value.limitInit(p, ilen - (p - item));
-        } else
+	    vlen = ilen - (p - item);
+        } else {
             nlen = ilen;
+	    vlen = 0;
+	}
 
-        if (!value.defined()) {
+	/* parse value. auth-param     = token "=" ( token | quoted-string ) */
+        String value;
+	if (vlen > 0) {
+	    if (*p == '"') {
+		if (!httpHeaderParseQuotedString(p, &value)) {
+		    debugs(29, 9, "authDigestDecodeAuth: Failed to parse attribute '" << temp << "' in '" << proxy_auth << "'");
+		    continue;
+		}
+	    } else {
+		value.limitInit(p, vlen);
+	    }
+	} else {
             debugs(29, 9, "authDigestDecodeAuth: Failed to parse attribute '" << temp << "' in '" << proxy_auth << "'");
             continue;
         }
