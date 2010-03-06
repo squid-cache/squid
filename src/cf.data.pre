@@ -130,7 +130,7 @@ DOC_START
 	translate the HTTP iso-latin-1 charset to UTF-8 before sending the
 	username & password to the helper.
 
-	"children" numberofchildren [startup=N] [idle=N]
+	"children" numberofchildren [startup=N] [idle=N] [concurrency=N]
 	The maximum number of authenticator processes to spawn. If you start too few
 	Squid will have to wait for them to process a backlog of credential
 	verifications, slowing it down. When password verifications are
@@ -143,17 +143,15 @@ DOC_START
 	traffic needs and to keep idle=N free above those traffic needs up to
 	the maximum.
 
-	auth_param basic children 20 startup=0 idle=1
-
-	"concurrency" concurrency
-	The number of concurrent requests the helper can process.
-	The default of 0 is used for helpers who only supports
-	one request at a time. Setting this changes the protocol used to
-	include a channel number first on the request/response line, allowing
-	multiple requests to be sent to the same helper in parallell without
-	wating for the response.
+	The concurrency= option sets the number of concurrent requests the
+	helper can process.  The default of 0 is used for helpers who only
+	supports one request at a time. Setting this to a number greater than
+	0 changes the protocol used to include a channel number first on the
+	request/response line, allowing multiple requests to be sent to the
+	same helper in parallell without wating for the response.
 	Must not be set unless it's known the helper supports this.
-	auth_param basic concurrency 0
+
+	auth_param basic children 20 startup=0 idle=1
 
 	"realm" realmstring
 	Specifies the realm name which is to be reported to the
@@ -205,7 +203,7 @@ DOC_START
 	translate the HTTP iso-latin-1 charset to UTF-8 before sending the
 	username & password to the helper.
 
-	"children" numberofchildren [startup=N] [idle=N]
+	"children" numberofchildren [startup=N] [idle=N] [concurrency=N]
 	The maximum number of authenticator processes to spawn (default 5).
 	If you start too few Squid will have to wait for them to
 	process a backlog of H(A1) calculations, slowing it down.
@@ -217,6 +215,14 @@ DOC_START
 	and Squid will start more in groups of up to idle=N in an attempt to meet
 	traffic needs and to keep idle=N free above those traffic needs up to
 	the maximum.
+
+	The concurrency= option sets the number of concurrent requests the
+	helper can process.  The default of 0 is used for helpers who only
+	supports one request at a time. Setting this to a number greater than
+	0 changes the protocol used to include a channel number first on the
+	request/response line, allowing multiple requests to be sent to the
+	same helper in parallell without wating for the response.
+	Must not be set unless it's known the helper supports this.
 
 	auth_param digest children 20 startup=0 idle=1
 
