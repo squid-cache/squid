@@ -668,6 +668,7 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData * conn,
 
             if (strcasecmp(digest_request->response, Response)) {
                 credentials(Failed);
+                digest_request->flags.invalid_password = 1;
                 digest_request->setDenyMessage("Incorrect password");
                 return;
             } else {
@@ -1210,7 +1211,7 @@ AuthDigestConfig::decode(char const *proxy_auth)
 
         default:
             debugs(29, 3, "authDigestDecodeAuth: Unknown attribute '" << item << "' in '" << temp << "'");
-
+            break;
         }
     }
 
