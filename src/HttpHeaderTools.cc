@@ -336,27 +336,27 @@ httpHeaderParseQuotedString(const char *start, String *val)
     const char *end, *pos;
     val->clean();
     if (*start != '"') {
-	debugs(66, 2, "failed to parse a quoted-string header field near '" << start << "'");
-	return 0;
+        debugs(66, 2, "failed to parse a quoted-string header field near '" << start << "'");
+        return 0;
     }
     pos = start + 1;
 
     while (*pos != '"') {
-	if (*pos == '\\') {
-	    pos++;
-	}
-	if (!*pos) {
-	    debugs(66, 2, "failed to parse a quoted-string header field near '" << start << "'");
-	    val->clean();
-	    return 0;
-	}
-	end = pos + strcspn(pos, "\"\\");
-	val->append(pos, end-pos);
-	pos = end;
+        if (*pos == '\\') {
+            pos++;
+        }
+        if (!*pos) {
+            debugs(66, 2, "failed to parse a quoted-string header field near '" << start << "'");
+            val->clean();
+            return 0;
+        }
+        end = pos + strcspn(pos, "\"\\");
+        val->append(pos, end-pos);
+        pos = end;
     }
     /* Make sure it's defined even if empty "" */
     if (!val->defined())
-	val->limitInit("", 0);
+        val->limitInit("", 0);
     return 1;
 }
 
