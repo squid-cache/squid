@@ -569,8 +569,9 @@ HttpStateData::cacheableReply()
 
         return 0;
 
-    default:			/* Unknown status code */
-        debugs (11, DBG_IMPORTANT, "WARNING: Unexpected http status code " << rep->sline.status);
+    default:
+        /* RFC 2616 section 6.1.1: an unrecognized response MUST NOT be cached. */
+        debugs (11, 3, HERE << "Unknown HTTP status code " << rep->sline.status << ". Not cacheable.");
 
         return 0;
 
