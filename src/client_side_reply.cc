@@ -931,13 +931,8 @@ clientReplyContext::purgeDoPurgeHead(StoreEntry *newEntry)
     triggerInitialStoreRead();
 
     HttpReply *rep = new HttpReply;
-
-    HttpVersion version(1,0);
-
-    rep->setHeaders(version, purgeStatus, NULL, NULL, 0, 0, -1);
-
+    rep->setHeaders(purgeStatus, NULL, NULL, 0, 0, -1);
     http->storeEntry()->replaceHttpReply(rep);
-
     http->storeEntry()->complete();
 }
 
@@ -956,9 +951,7 @@ clientReplyContext::traceReply(clientStreamNode * node)
     http->storeEntry()->releaseRequest();
     http->storeEntry()->buffer();
     HttpReply *rep = new HttpReply;
-    HttpVersion version(1,0);
-    rep->setHeaders(version, HTTP_OK, NULL, "text/plain",
-                    http->request->prefixLen(), 0, squid_curtime);
+    rep->setHeaders(HTTP_OK, NULL, "text/plain", http->request->prefixLen(), 0, squid_curtime);
     http->storeEntry()->replaceHttpReply(rep);
     http->request->swapOut(http->storeEntry());
     http->storeEntry()->complete();
@@ -1422,6 +1415,14 @@ clientReplyContext::buildReplyHeader()
                 http->memOjbect()->url ? http->memObject()->url : http->uri);
 
 #endif
+
+    /* Surrogate-Control requires Surrogate-Capability from upstream to pass on */
+    if ( hdr->has(HDR_SURROGATE_CONTROL) ) {
+        if (!request->header.has(HDR_SURROGATE_CAPABILITY)) {
+            hdr->delById(HDR_SURROGATE_CONTROL);
+        }
+        /* TODO: else case: drop any controls intended specifically for our surrogate ID */
+    }
 
     httpHdrMangleList(hdr, request, ROR_REPLY);
 }

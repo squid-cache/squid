@@ -1,3 +1,29 @@
+Changes to squid-3.1.0.17 (24 Feb 2010):
+
+	- Regression Fix: Non-English error page UTF encoding
+	- Bug 2616: reduce IdleConnList::removeFD messages
+	- Bug 1843: multicast-siblings cache_peer option
+	- Port from 2.7: X509 certificate alias-domain handling
+	- Add adapted_http_access option
+	- NTLMv2 support for fake NTLM helper
+
+Changes to squid-3.1.0.16 (01 Feb 2010):
+
+	- Regression Fix: Make Squid abort on all config parse failures.
+	- Regression Bug 2811: SNMP client/peer table OID numbering
+	- Bug 2851: Connection pinning fails when using a peer
+	- Bug 2850: Mismatch in hier_code enum / hier_strings array
+	- Bug 2731: Add follow_x_forwarded_for support to ICAP
+	- Bug 2730: Regressions in follow_x_forwarded_for since Squid-2
+	- Bug 2706: Set timestamps during ICAP request satisfaction.
+	- Bug 2553: X-Forwarded-For with IPv6 address not handled correctly
+	- Fix: WCCPv1 not connecting to router correctly
+	- Remove obsolete RunCache/RunAccel scripts.
+	- Add client_ip_max_connections
+	- Add the http::>ha format code and make http::>h log original request headers
+	- ... and all bug fixes from 3.0 up to 3.0.STABLE22
+	- ... and many more minor build and display annoyances.
+
 Changes to squid-3.1.0.15 (23 Nov 2009):
 
 	- Regression Fix: myip ACL not accepted in config
@@ -261,6 +287,26 @@ Changes to squid-3.1.0.1 (27 Oct 2008):
 	- Follow_x_forwarder_for ported from 2.6
 	- Bug #2223: Follow XFF extensions added
 	- ... and many code and documentation cleanups
+
+Changes to squid-3.0.STABLE24 (13 Feb 2010):
+
+	- Bug 2858: Segment violation in HTCP
+	- Updated refresh pattern for dynamic pages
+
+Changes to squid-3.0.STABLE23 (02 Feb 2010):
+
+	- Bug 2856: removing assert() required for 3.0 patch for SQUID-2010:1
+	- Regression Fix: Build error in Kerberos helper after library removal.
+
+Changes to squid-3.0.STABLE22 (01 Feb 2010):
+
+	- Regression Fix: Make Squid abort on all config parse failures.
+	- Bug 2787: Reduce unexpected http status to non-critical warnings.
+	- Bug 2496: Downloading some variants in full before relaying
+	- Bug 2452: Add upper limit to external_acl_type entries.
+	- Removed optional kerberos/spnegohelp/ library due to licensing issues
+	- Add client_ip_max_connections
+	- Handle DNS header-only packets as invalid.
 
 Changes to squid-3.0.STABLE21 (22 Dec 2009):
 

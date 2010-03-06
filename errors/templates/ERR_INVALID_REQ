@@ -31,6 +31,7 @@ body
 <li><p>Request is too large.</p></li>
 <li><p>Content-Length missing for POST or PUT requests.</p></li>
 <li><p>Illegal character in hostname; underscores are not allowed.</p></li>
+<li><p>HTTP/1.1 Expect: feature is being asked from an HTTP/1.0 software.</p></li>
 </ul>
 
 <p>Your cache administrator is <a href="mailto:%w%W">%w</a>.</p>

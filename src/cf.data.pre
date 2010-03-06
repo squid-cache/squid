@@ -922,6 +922,20 @@ http_access deny all
 NOCOMMENT_END
 DOC_END
 
+NAME: adapted_http_access http_access2
+TYPE: acl_access
+LOC: Config.accessList.adapted_http
+DEFAULT: none
+DOC_START
+	Allowing or Denying access based on defined access lists
+
+	Essentially identical to http_access, but runs after redirectors
+	and ICAP/eCAP adaptation. Allowing access control based on their
+	output.
+
+	If not set then only http_access is used.
+DOC_END
+
 NAME: http_reply_access
 TYPE: acl_access
 LOC: Config.accessList.reply
@@ -1793,6 +1807,15 @@ DOC_START
 	userhash	Load-balance parents based on the client proxy_auth or ident username.
 	
 	sourcehash	Load-balance parents based on the client source IP.
+
+	multicast-siblings
+			To be used only for cache peers of type "multicast".
+			ALL members of this multicast group have "sibling"
+			relationship with it, not "parent".  This is to a mulicast
+			group when the requested object would be fetched only from
+			a "parent" cache, anyway.  It's useful, e.g., when
+			configuring a pool of redundant Squid proxies, being
+			members of the same multicast group.
 	
 	
 	==== PEER SELECTION OPTIONS ====
@@ -2052,7 +2075,7 @@ DOC_START
 
 	The syntax is identical to 'http_access' and the other lists of
 	ACL elements.  See the comments for 'http_access' below, or
-	the Squid FAQ (http://www.squid-cache.org/FAQ/FAQ-10.html).
+	the Squid FAQ (http://wiki.squid-cache.org/SquidFaq/SquidAcl).
 DOC_END
 
 NAME: neighbor_type_domain
@@ -2495,8 +2518,10 @@ DOC_START
 
 	HTTP cache related format codes:
 
-		[http::]>h	Request header. Optional header name argument
+		[http::]>h	Original request header. Optional header name argument
 				on the format header[:[separator]element]
+		[http::]>ha	The HTTP request headers after adaptation and redirection. 
+				Optional header name argument as for >h
 		[http::]<h	Reply header. Optional header name argument
 				as for >h
 		[http::]un	User name
@@ -3196,7 +3221,7 @@ DOC_END
 
 NAME: url_rewrite_children redirect_children
 TYPE: HelperChildConfig
-DEFAULT: 20 startup=0 idle=1 concurrency=1
+DEFAULT: 20 startup=0 idle=1 concurrency=0
 LOC: Config.redirectChildren
 DOC_START
 	The maximum number of redirector processes to spawn. If you limit
@@ -3948,6 +3973,21 @@ DOC_START
 	or response to be rejected.
 DOC_END
 
+NAME: ignore_expect_100
+COMMENT: on|off
+IFDEF: HTTP_VIOLATIONS
+TYPE: onoff
+LOC: Config.onoff.ignore_expect_100
+DEFAULT: off
+DOC_START
+	This option makes Squid ignore any Expect: 100-continue header present
+	in the request. RFC 2616 requires that Squid being unable to satisfy
+	the response expectation MUST return a 417 error.
+
+	Note: Enabling this is a HTTP protocol violation, but some clients may
+	not handle it well..
+DOC_END
+
 COMMENT_START
  TIMEOUTS
  -----------------------------------------------------------------------------
@@ -4301,19 +4341,19 @@ COMMENT_START
 COMMENT_END
 
 NAME: httpd_accel_surrogate_id
-IFDEF: USE_SQUID_ESI
 TYPE:  string
+DEFAULT: none
 LOC: Config.Accel.surrogate_id
-DEFAULT: unset-id
 DOC_START
 	Surrogates (http://www.esi.org/architecture_spec_1.0.html)
 	need an identification token to allow control targeting. Because
 	a farm of surrogates may all perform the same tasks, they may share
 	an identification token.
+
+	The default ID is the visible_hostname
 DOC_END
 
 NAME: http_accel_surrogate_remote
-IFDEF: USE_SQUID_ESI
 COMMENT: on|off
 TYPE: onoff
 DEFAULT: off
