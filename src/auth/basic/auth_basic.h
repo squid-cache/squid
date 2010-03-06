@@ -88,8 +88,8 @@ public:
     virtual void registerWithCacheManager(void);
     virtual const char * type() const;
     HelperChildConfig authenticateChildren;
-    char *basicAuthRealm;
     wordlist *authenticate;
+    char *basicAuthRealm;
     time_t credentialsTTL;
     int casesensitive;
     int utf8;

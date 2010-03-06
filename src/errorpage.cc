@@ -716,7 +716,9 @@ ErrorState::Convert(char token, bool url_presentable)
         break;
 
     case 'o':
-        p = external_acl_message ? external_acl_message : "[not available]";
+        p = request ? request->extacl_message.termedBuf() : external_acl_message;
+        if (!p)
+            p = "[not available]";
         break;
 
     case 'p':
@@ -887,11 +889,10 @@ ErrorState::BuildHttpReply()
     HttpReply *rep = new HttpReply;
     const char *name = errorPageName(page_id);
     /* no LMT for error pages; error pages expire immediately */
-    HttpVersion version(1, 0);
 
     if (strchr(name, ':')) {
         /* Redirection */
-        rep->setHeaders(version, HTTP_MOVED_TEMPORARILY, NULL, "text/html", 0, 0, -1);
+        rep->setHeaders(HTTP_MOVED_TEMPORARILY, NULL, "text/html", 0, 0, -1);
 
         if (request) {
             MemBuf redirect_location;
@@ -903,7 +904,7 @@ ErrorState::BuildHttpReply()
         httpHeaderPutStrf(&rep->header, HDR_X_SQUID_ERROR, "%d %s", httpStatus, "Access Denied");
     } else {
         MemBuf *content = BuildContent();
-        rep->setHeaders(version, httpStatus, NULL, "text/html", content->contentSize(), 0, -1);
+        rep->setHeaders(httpStatus, NULL, "text/html", content->contentSize(), 0, -1);
         /*
          * include some information for downstream caches. Implicit
          * replaceable content. This isn't quite sufficient. xerrno is not

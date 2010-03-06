@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.1.0.15 release notes</title>
+<title>Squid 3.1.0.17 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.1.0.15 for testing.
+The Squid Team are pleased to announce the release of Squid-3.1.0.17 for testing.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.1/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -475,6 +475,10 @@ This section gives a thorough account of those changes in three categories:
 	matters.
 	</verb>
 
+	<tag>adapted_http_access</tag>
+	<p>New name for <em>http_access2</em>. This form includes access control
+	of ICAP and eCAP adaptations as well as the URL-rewriter alterations.
+
 	<tag>chunked_request_body_max_size</tag>
 	<p>New option to enable handing of broken HTTP/1.1 clients sending chunk requests.
 	<verb>
@@ -763,6 +767,10 @@ logformat icap_squid %ts.%03tu %6icap::tr %>a %icap::to/%03icap::Hs %icap::<size
 	count against this limit.
 	</verb>
 
+	<tag>ignore_expect_100</tag>
+	<p>Ported from 2.7. Requires --enable-http-violations
+	Prevents 417 errors being sent to broken HTTP/1.1 non-compliant clients.
+
 	<tag>include</tag>
 	<p>New option to import entire secondary configuration files into squid.conf.
 	<verb>
@@ -955,7 +963,7 @@ NOCOMMENT_START
 	<tag>cache_mem</tag>
 	<p>Default size increased to 256MB.
 
-	<tag>cache_peer htcp-no-clr htcp-no-purge-clr htcp-only-clr htcp-forward-clr connection-auth[=on|off|auto] connect-fail-limit=N no-tproxy</tag>
+	<tag>cache_peer htcp-no-clr htcp-no-purge-clr htcp-only-clr htcp-forward-clr connection-auth[=on|off|auto] connect-fail-limit=N multicast-siblings no-tproxy</tag>
 	<p>New Options.
 	<verb>
 	use 'htcp-no-clr' to send HTCP to the neighbor but without
@@ -985,6 +993,8 @@ NOCOMMENT_START
 	use 'no-tproxy' to specify that requests passed to this peer
 	are not to have the client IP spoofed. For use to prevent
 	packet routing issues with a cluster of peers behind WCCPv2.
+
+	multicast-siblings ported from 2.7
 	</verb>
 
 	<tag>cache_store_log</tag>
@@ -1128,11 +1138,13 @@ NOCOMMENT_START
 	<tag>logformat</tag>
 	<p>New log format tag sets %icap::* %adapt::* for adaptation information.
 	   %Hs tag deprecated and replaced by request/reply specific &gt;Hs and &lt;Hs
+	   new %&gt;ha option to log HTTP request headers after adaptation and redirection.
 	   HTTP request/reply format tags may now be optionally prefixed with http::.
 	   Old forms will be deprecated in some as yet undecided future release.
 	<verb>
 		dt		Total time spent making DNS lookups (milliseconds)
 
+		[http::]>ha	The HTTP request headers after adaptation and redirection.
 		[http::]>Hs	HTTP status code sent to the client
 		[http::]<Hs	HTTP status code received from the next hop
 		[http::]>sh	Received HTTP request headers size
@@ -1421,6 +1433,9 @@ This section gives an account of those changes in three categories:
 	<tag>header_access</tag>
 	<p>Replaced by <em>request_header_access</em> and <em>reply_header_access</em>
 
+	<tag>http_access2</tag>
+	<p>Replaced by <em>adapted_http_access</em>
+
 	<tag>http_port</tag>
 	<p><em>no-connection-auth</em> replaced by <em>connection-auth=[on|off]</em>. Default is ON.
 	<p><em>transparent</em> option replaced by <em>intercept</em>
@@ -1550,7 +1565,6 @@ This section gives an account of those changes in three categories:
 	<p>COSS <em>maxfullbufs=</em> option not yet ported from 2.6
 
 	<tag>cache_peer</tag>
-	<p><em>multicast-siblings</em> not yet ported from 2.7
 	<p><em>idle=</em> not yet ported from 2.7
 	<p><em>http11</em> not yet ported from 2.7
 	<p><em>monitorinterval=</em> not yet ported from 2.6
@@ -1574,16 +1588,10 @@ This section gives an account of those changes in three categories:
 	<tag>external_refresh_check</tag>
 	<p>Not yet ported from 2.7
 
-	<tag>http_access2</tag>
-	<p>Not yet ported from 2.6
-
 	<tag>http_port</tag>
 	<p><em>act-as-origin</em> not yet ported from 2.7
 	<p><em>http11</em> not yet ported from 2.7
 	<p><em>urlgroup=</em> not yet ported from 2.6
-
-	<tag>ignore_expect_100</tag>
-	<p>Not yet ported from 2.7
 
 	<tag>ignore_ims_on_miss</tag>
 	<p>Not yet ported from 2.7
