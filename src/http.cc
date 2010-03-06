@@ -714,6 +714,26 @@ HttpStateData::processReplyHeader()
         readBuf->consume(header_bytes_read);
     }
 
+    /* Skip 1xx messages for now. Advertised in Via as an internal 1.0 hop */
+    if (newrep->sline.protocol == PROTO_HTTP && newrep->sline.status >= 100 && newrep->sline.status < 200) {
+
+#if WHEN_HTTP11
+        /* When HTTP/1.1 check if the client is expecting a 1xx reply and maybe pass it on */
+        if (orig_request->header.has(HDR_EXPECT)) {
+            // TODO: pass to the client anyway?
+        }
+#endif
+        delete newrep;
+        debugs(11, 2, HERE << "1xx headers consume " << header_bytes_read << " bytes header.");
+        header_bytes_read = 0;
+        if (reply_bytes_read > 0)
+            debugs(11, 2, HERE << "1xx headers consume " << reply_bytes_read << " bytes reply.");
+        reply_bytes_read = 0;
+        ctx_exit(ctx);
+        processReplyHeader();
+        return;
+    }
+
     flags.chunked = 0;
     if (newrep->sline.protocol == PROTO_HTTP && newrep->header.hasListMember(HDR_TRANSFER_ENCODING, "chunked", ',')) {
         flags.chunked = 1;
