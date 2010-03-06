@@ -1137,14 +1137,14 @@ AuthDigestConfig::decode(char const *proxy_auth)
 	if (vlen > 0) {
 	    if (*p == '"') {
 		if (!httpHeaderParseQuotedString(p, &value)) {
-		    debugs(29, 9, "authDigestDecodeAuth: Failed to parse attribute '" << temp << "' in '" << proxy_auth << "'");
+		    debugs(29, 9, "authDigestDecodeAuth: Failed to parse attribute '" << item << "' in '" << temp << "'");
 		    continue;
 		}
 	    } else {
 		value.limitInit(p, vlen);
 	    }
 	} else {
-            debugs(29, 9, "authDigestDecodeAuth: Failed to parse attribute '" << temp << "' in '" << proxy_auth << "'");
+            debugs(29, 9, "authDigestDecodeAuth: Failed to parse attribute '" << item << "' in '" << temp << "'");
             continue;
         }
 
