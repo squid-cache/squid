@@ -285,18 +285,21 @@ ClientHttpRequest::~ClientHttpRequest()
     PROF_stop(httpRequestFree);
 }
 
-/* Create a request and kick it off */
-/*
+/**
+ * Create a request and kick it off
+ *
+ * \retval 0     success
+ * \retval -1    failure
+ *
  * TODO: Pass in the buffers to be used in the inital Read request, as they are
  * determined by the user
  */
-int				/* returns nonzero on failure */
+int
 clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * streamcallback,
                    CSD * streamdetach, ClientStreamData streamdata, HttpHeader const *header,
                    char *tailbuf, size_t taillen)
 {
     size_t url_sz;
-    HttpVersion http_ver (1, 0);
     ClientHttpRequest *http = new ClientHttpRequest(NULL);
     HttpRequest *request;
     StoreIOBuffer tempBuffer;
@@ -325,7 +328,7 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
     }
 
     /*
-     * now update the headers in request with our supplied headers. urLParse
+     * now update the headers in request with our supplied headers. urlParse
      * should return a blank header set, but we use Update to be sure of
      * correctness.
      */
@@ -364,6 +367,8 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
 
     request->my_addr.SetPort(0);
 
+    /* RFC 2616 says 'upgrade' to our 1.0 regardless of what the client is */
+    HttpVersion http_ver(1,0);
     request->http_ver = http_ver;
 
     http->request = HTTPMSGLOCK(request);
@@ -399,13 +404,13 @@ ClientRequestContext::httpStateIsValid()
 
 #if FOLLOW_X_FORWARDED_FOR
 /**
- * clientFollowXForwardedForCheck() checks the content of X-Forwarded-For: 
+ * clientFollowXForwardedForCheck() checks the content of X-Forwarded-For:
  * against the followXFF ACL, or cleans up and passes control to
  * clientAccessCheck().
  *
  * The trust model here is a little ambiguous. So to clarify the logic:
  * - we may always use the direct client address as the client IP.
- * - these trust tests merey tell whether we trust given IP enough to believe the 
+ * - these trust tests merey tell whether we trust given IP enough to believe the
  *   IP string which it appended to the X-Forwarded-For: header.
  * - if at any point we don't trust what an IP adds we stop looking.
  * - at that point the current contents of indirect_client_addr are the value set
@@ -524,6 +529,23 @@ ClientRequestContext::clientAccessCheck()
     } else {
         debugs(0, DBG_CRITICAL, "No http_access configuration found. This will block ALL traffic");
         clientAccessCheckDone(ACCESS_DENIED);
+    }
+}
+
+/**
+ * Identical in operation to clientAccessCheck() but performed later using different configured ACL list.
+ * The default here is to allow all. Since the earlier http_access should do a default deny all.
+ * This check is just for a last-minute denial based on adapted request headers.
+ */
+void
+ClientRequestContext::clientAccessCheck2()
+{
+    if (Config.accessList.adapted_http) {
+        acl_checklist = clientAclChecklistCreate(Config.accessList.adapted_http, http);
+        acl_checklist->nonBlockingCheck(clientAccessCheckDoneWrapper, this);
+    } else {
+        debugs(85, 2, HERE << "No adapted_http_access configuration.");
+        clientAccessCheckDone(ACCESS_ALLOWED);
     }
 }
 
@@ -1252,6 +1274,10 @@ ClientHttpRequest::doCallouts()
 {
     assert(calloutContext);
 
+    /*Save the original request for logging purposes*/
+    if (!calloutContext->http->al.request)
+        calloutContext->http->al.request = HTTPMSGLOCK(request);
+
     if (!calloutContext->http_access_done) {
         debugs(83, 3, HERE << "Doing calloutContext->clientAccessCheck()");
         calloutContext->http_access_done = true;
@@ -1279,6 +1305,13 @@ ClientHttpRequest::doCallouts()
             calloutContext->clientRedirectStart();
             return;
         }
+    }
+
+    if (!calloutContext->adapted_http_access_done) {
+        debugs(83, 3, HERE << "Doing calloutContext->clientAccessCheck2()");
+        calloutContext->adapted_http_access_done = true;
+        calloutContext->clientAccessCheck2();
+        return;
     }
 
     if (!calloutContext->interpreted_req_hdrs) {

@@ -64,15 +64,8 @@ internalStart(HttpRequest * request, StoreEntry * entry)
         const char *msgbuf = "This cache does not support Cache Digests.\n";
 #endif
 
-        HttpVersion version(1, 0);
         HttpReply *reply = new HttpReply;
-        reply->setHeaders(version,
-                          HTTP_NOT_FOUND,
-                          "Not Found",
-                          "text/plain",
-                          strlen(msgbuf),
-                          squid_curtime,
-                          -2);
+        reply->setHeaders(HTTP_NOT_FOUND, "Not Found", "text/plain", strlen(msgbuf), squid_curtime, -2);
         entry->replaceHttpReply(reply);
         entry->append(msgbuf, strlen(msgbuf));
         entry->complete();

@@ -37,8 +37,10 @@
 
 extern void httpReplyInitModule(void);
 
+#if DEAD_CODE
 /** do everything in one call: init, set, pack, clean, return MemBuf */
 extern MemBuf *httpPackedReply(HttpVersion ver, http_status status, const char *ctype, int64_t clen, time_t lmt, time_t expires);
+#endif
 
 /* Sync changes here with HttpReply.cc */
 
@@ -104,7 +106,7 @@ public:
     void updateOnNotModified(HttpReply const *other);
 
     /** set commonly used info with one call */
-    void setHeaders(HttpVersion ver, http_status status,
+    void setHeaders(http_status status,
                     const char *reason, const char *ctype, int64_t clen, time_t lmt, time_t expires);
 
     /** \return a ready to use mem buffer with a packed reply */

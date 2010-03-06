@@ -329,9 +329,6 @@ urnHandleReply(void *data, StoreIOBuffer result)
 
     debugs(52, 3, "urnHandleReply: Called with size=" << (unsigned int)result.length << ".");
 
-    /* Can't be lower because of the goto's */
-    HttpVersion version(1, 0);
-
     if (EBIT_TEST(urlres_e->flags, ENTRY_ABORTED) || result.length == 0 || result.flags.error < 0) {
         urnHandleReplyError(urnState, urlres_e);
         return;
@@ -439,8 +436,7 @@ urnHandleReply(void *data, StoreIOBuffer result)
         "</ADDRESS>\n",
         APP_FULLNAME, getMyHostname());
     rep = new HttpReply;
-    rep->setHeaders(version, HTTP_MOVED_TEMPORARILY, NULL,
-                    "text/html", mb->contentSize(), 0, squid_curtime);
+    rep->setHeaders(HTTP_MOVED_TEMPORARILY, NULL, "text/html", mb->contentSize(), 0, squid_curtime);
 
     if (urnState->flags.force_menu) {
         debugs(51, 3, "urnHandleReply: forcing menu");

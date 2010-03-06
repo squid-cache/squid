@@ -67,16 +67,6 @@
 #  define s6_addr	s_addr
 #endif
 
-static const unsigned int STRLEN_IP4A = 16;              // aaa.bbb.ccc.ddd\0
-static const unsigned int STRLEN_IP4R = 28;              // ddd.ccc.bbb.aaa.in-addr.arpa.\0
-static const unsigned int STRLEN_IP4S = 21;              // ddd.ccc.bbb.aaa:ppppp\0
-static const unsigned int MAX_IP4_STRLEN = STRLEN_IP4R;
-static const unsigned int STRLEN_IP6A = 42;           // [ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff]/0
-static const unsigned int STRLEN_IP6R = 75;           // f.f.f.f f.f.f.f f.f.f.f f.f.f.f f.f.f.f f.f.f.f f.f.f.f f.f.f.f ipv6.arpa./0
-static const unsigned int STRLEN_IP6S = 48;           // [ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff]:00000/0
-static const unsigned int MAX_IP6_STRLEN = STRLEN_IP6R;
-
-
 /* Debugging only. Dump the address content when a fatal assert is encountered. */
 #if USE_IPV6
 #define IASSERT(a,b)  \
@@ -243,13 +233,7 @@ bool IpAddress::IsSockAddr() const
 bool IpAddress::IsIPv4() const
 {
 #if USE_IPV6
-
-    return IsAnyAddr() || IsNoAddr() ||
-           ( m_SocketAddr.sin6_addr.s6_addr32[0] == htonl(0x00000000) &&
-             m_SocketAddr.sin6_addr.s6_addr32[1] == htonl(0x00000000) &&
-             m_SocketAddr.sin6_addr.s6_addr32[2] == htonl(0x0000FFFF)
-           );
-
+    return IsAnyAddr() || IsNoAddr() || IN6_IS_ADDR_V4MAPPED( &m_SocketAddr.sin6_addr );
 #else
     return true; // enforce IPv4 in IPv4-only mode.
 #endif
@@ -258,12 +242,7 @@ bool IpAddress::IsIPv4() const
 bool IpAddress::IsIPv6() const
 {
 #if USE_IPV6
-
-    return IsAnyAddr() || IsNoAddr() ||
-           !( m_SocketAddr.sin6_addr.s6_addr32[0] == htonl(0x00000000) &&
-              m_SocketAddr.sin6_addr.s6_addr32[1] == htonl(0x00000000) &&
-              m_SocketAddr.sin6_addr.s6_addr32[2] == htonl(0x0000FFFF)
-            );
+    return IsAnyAddr() || IsNoAddr() || !IN6_IS_ADDR_V4MAPPED( &m_SocketAddr.sin6_addr );
 #else
     return false; // enforce IPv4 in IPv4-only mode.
 #endif
@@ -272,13 +251,8 @@ bool IpAddress::IsIPv6() const
 bool IpAddress::IsAnyAddr() const
 {
 #if USE_IPV6
-    return     m_SocketAddr.sin6_addr.s6_addr32[0] == 0
-               && m_SocketAddr.sin6_addr.s6_addr32[1] == 0
-               && m_SocketAddr.sin6_addr.s6_addr32[2] == 0
-               && m_SocketAddr.sin6_addr.s6_addr32[3] == 0
-               ;
+    return IN6_IS_ADDR_UNSPECIFIED( &m_SocketAddr.sin6_addr );
 #else
-
     return (INADDR_ANY == m_SocketAddr.sin_addr.s_addr);
 #endif
 }
@@ -299,18 +273,29 @@ void IpAddress::SetEmpty()
     memset(&m_SocketAddr, 0, sizeof(m_SocketAddr) );
 }
 
+#if USE_IPV6
+const struct in6_addr IpAddress::v4_localhost = {{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0xff, 0xff, 0x7f, 0x00, 0x00, 0x01 }}
+};
+const struct in6_addr IpAddress::v4_anyaddr = {{{ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00 }}
+};
+const struct in6_addr IpAddress::v6_noaddr = {{{ 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff }}
+};
+#endif
+
+
 bool IpAddress::SetIPv4()
 {
 #if USE_IPV6
-
     if ( IsLocalhost() ) {
-        m_SocketAddr.sin6_addr.s6_addr32[2] = htonl(0xffff);
-        m_SocketAddr.sin6_addr.s6_addr32[3] = htonl(0x7F000001);
+        m_SocketAddr.sin6_addr = v4_localhost;
         return true;
     }
 
     if ( IsAnyAddr() ) {
-        m_SocketAddr.sin6_addr.s6_addr32[2] = htonl(0xffff);
+        m_SocketAddr.sin6_addr = v4_anyaddr;
         return true;
     }
 
@@ -327,19 +312,8 @@ bool IpAddress::SetIPv4()
 bool IpAddress::IsLocalhost() const
 {
 #if USE_IPV6
-    return    (   m_SocketAddr.sin6_addr.s6_addr32[0] == 0
-                  && m_SocketAddr.sin6_addr.s6_addr32[1] == 0
-                  && m_SocketAddr.sin6_addr.s6_addr32[2] == 0
-                  && m_SocketAddr.sin6_addr.s6_addr32[3] == htonl(0x1)
-              )
-              ||
-              (   m_SocketAddr.sin6_addr.s6_addr32[0] == 0
-                  && m_SocketAddr.sin6_addr.s6_addr32[1] == 0
-                  && m_SocketAddr.sin6_addr.s6_addr32[2] == htonl(0xffff)
-                  && m_SocketAddr.sin6_addr.s6_addr32[3] == htonl(0x7F000001)
-              );
+    return IN6_IS_ADDR_LOOPBACK( &m_SocketAddr.sin6_addr ) || IN6_ARE_ADDR_EQUAL( &m_SocketAddr.sin6_addr, &v4_localhost );
 #else
-
     return (htonl(0x7F000001) == m_SocketAddr.sin_addr.s_addr);
 #endif
 }
@@ -347,10 +321,8 @@ bool IpAddress::IsLocalhost() const
 void IpAddress::SetLocalhost()
 {
 #if USE_IPV6
-    SetAnyAddr();
-    m_SocketAddr.sin6_addr.s6_addr[15] = 0x1;
+    m_SocketAddr.sin6_addr = in6addr_loopback;
     m_SocketAddr.sin6_family = AF_INET6;
-
 #else
     m_SocketAddr.sin_addr.s_addr = htonl(0x7F000001);
     m_SocketAddr.sin_family = AF_INET;
@@ -360,7 +332,7 @@ void IpAddress::SetLocalhost()
 bool IpAddress::IsSiteLocal6() const
 {
 #if USE_IPV6
-    return (m_SocketAddr.sin6_addr.s6_addr32[0] & htonl(0xff80)) == htonl(0xfe80);
+    return IN6_IS_ADDR_SITELOCAL( &m_SocketAddr.sin6_addr );
 #else
     return false;
 #endif
@@ -369,8 +341,8 @@ bool IpAddress::IsSiteLocal6() const
 bool IpAddress::IsSlaac() const
 {
 #if USE_IPV6
-    return (m_SocketAddr.sin6_addr.s6_addr32[2] & htonl(0x000000ff)) == htonl(0x000000ff) &&
-           (m_SocketAddr.sin6_addr.s6_addr32[3] & htonl(0xff000000)) == htonl(0xfe000000);
+    return m_SocketAddr.sin6_addr.s6_addr[10] == htons(0xff) &&
+           m_SocketAddr.sin6_addr.s6_addr[11] == htons(0xfe);
 #else
     return false;
 #endif
@@ -380,13 +352,8 @@ bool IpAddress::IsNoAddr() const
 {
     // IFF the address == 0xff..ff (all ones)
 #if USE_IPV6
-    return     m_SocketAddr.sin6_addr.s6_addr32[0] == 0xFFFFFFFF
-               && m_SocketAddr.sin6_addr.s6_addr32[1] == 0xFFFFFFFF
-               && m_SocketAddr.sin6_addr.s6_addr32[2] == 0xFFFFFFFF
-               && m_SocketAddr.sin6_addr.s6_addr32[3] == 0xFFFFFFFF
-               ;
+    return IN6_ARE_ADDR_EQUAL( &m_SocketAddr.sin6_addr, &v6_noaddr );
 #else
-
     return 0xFFFFFFFF == m_SocketAddr.sin_addr.s_addr;
 #endif
 }
@@ -394,10 +361,10 @@ bool IpAddress::IsNoAddr() const
 void IpAddress::SetNoAddr()
 {
 #if USE_IPV6
-    memset(&m_SocketAddr.sin6_addr, 0xFFFFFFFF, sizeof(struct in6_addr) );
+    memset(&m_SocketAddr.sin6_addr, 0xFF, sizeof(struct in6_addr) );
     m_SocketAddr.sin6_family = AF_INET6;
 #else
-    memset(&m_SocketAddr.sin_addr, 0xFFFFFFFF, sizeof(struct in_addr) );
+    memset(&m_SocketAddr.sin_addr, 0xFF, sizeof(struct in_addr) );
     m_SocketAddr.sin_family = AF_INET;
 #endif
 }
@@ -456,8 +423,8 @@ bool IpAddress::GetReverseString(char buf[MAX_IPSTRLEN], int show_type) const
 
     if (show_type == AF_INET && IsIPv4()) {
 #if USE_IPV6
-
-        return GetReverseString4(buf, *(struct in_addr*)&m_SocketAddr.sin6_addr.s6_addr32[3] );
+        struct in_addr* tmp = (struct in_addr*)&m_SocketAddr.sin6_addr.s6_addr[12];
+        return GetReverseString4(buf, *tmp);
     } else if ( show_type == AF_INET6 && IsIPv6() ) {
         return GetReverseString6(buf, m_SocketAddr.sin6_addr);
 #else
@@ -1167,22 +1134,19 @@ void IpAddress::Map4to6(const struct in_addr &in, struct in6_addr &out) const
 
     if ( in.s_addr == 0x00000000) {
         /* ANYADDR */
-
         memset(&out, 0, sizeof(struct in6_addr));
     } else if ( in.s_addr == 0xFFFFFFFF) {
         /* NOADDR */
-
-        out.s6_addr32[0] = 0xFFFFFFFF;
-        out.s6_addr32[1] = 0xFFFFFFFF;
-        out.s6_addr32[2] = 0xFFFFFFFF;
-        out.s6_addr32[3] = 0xFFFFFFFF;
-
+        memset(&out, 255, sizeof(struct in6_addr));
     } else {
         /* general */
-
         memset(&out, 0, sizeof(struct in6_addr));
-        out.s6_addr32[2] = htonl(0xFFFF);
-        out.s6_addr32[3] = in.s_addr;
+        out.s6_addr[10] = 0xFF;
+        out.s6_addr[11] = 0xFF;
+        out.s6_addr[12] = ((uint8_t *)&in.s_addr)[0];
+        out.s6_addr[13] = ((uint8_t *)&in.s_addr)[1];
+        out.s6_addr[14] = ((uint8_t *)&in.s_addr)[2];
+        out.s6_addr[15] = ((uint8_t *)&in.s_addr)[3];
     }
 }
 
@@ -1193,7 +1157,10 @@ void IpAddress::Map6to4(const struct in6_addr &in, struct in_addr &out) const
     /* general */
 
     memset(&out, 0, sizeof(struct in_addr));
-    out.s_addr = in.s6_addr32[3];
+    ((uint8_t *)&out.s_addr)[0] = in.s6_addr[12];
+    ((uint8_t *)&out.s_addr)[1] = in.s6_addr[13];
+    ((uint8_t *)&out.s_addr)[2] = in.s6_addr[14];
+    ((uint8_t *)&out.s_addr)[3] = in.s6_addr[15];
 }
 
 #endif
