@@ -67,6 +67,33 @@ static MemAllocator *digest_nonce_pool = NULL;
 
 CBDATA_TYPE(DigestAuthenticateStateData);
 
+enum http_digest_attr_type {
+    DIGEST_USERNAME,
+    DIGEST_REALM,
+    DIGEST_QOP,
+    DIGEST_ALGORITHM,
+    DIGEST_URI,
+    DIGEST_NONCE,
+    DIGEST_NC,
+    DIGEST_CNONCE,
+    DIGEST_RESPONSE,
+    DIGEST_ENUM_END
+};
+
+static const HttpHeaderFieldAttrs DigestAttrs[DIGEST_ENUM_END] = {
+    {"username",  (http_hdr_type)DIGEST_USERNAME},
+    {"realm", (http_hdr_type)DIGEST_REALM},
+    {"qop", (http_hdr_type)DIGEST_QOP},
+    {"algorithm", (http_hdr_type)DIGEST_ALGORITHM},
+    {"uri", (http_hdr_type)DIGEST_URI},
+    {"nonce", (http_hdr_type)DIGEST_NONCE},
+    {"nc", (http_hdr_type)DIGEST_NC},
+    {"cnonce", (http_hdr_type)DIGEST_CNONCE},
+    {"response", (http_hdr_type)DIGEST_RESPONSE},
+};
+
+static HttpHeaderFieldInfo *DigestFieldsInfo = NULL;
+
 /*
  *
  * Nonce Functions
@@ -507,6 +534,9 @@ digestScheme::done()
     if (digestauthenticators)
         helperShutdown(digestauthenticators);
 
+    httpHeaderDestroyFieldsInfo(DigestFieldsInfo, DIGEST_ENUM_END);
+    DigestFieldsInfo = NULL;
+
     authdigest_initialised = 0;
 
     if (!shutting_down) {
@@ -871,6 +901,7 @@ void
 AuthDigestConfig::init(AuthConfig * scheme)
 {
     if (authenticate) {
+        DigestFieldsInfo = httpHeaderBuildFieldsInfo(DigestAttrs, DIGEST_ENUM_END);
         authenticateDigestNonceSetup();
         authdigest_initialised = 1;
 
@@ -1093,124 +1124,84 @@ AuthDigestConfig::decode(char const *proxy_auth)
     String temp(proxy_auth);
 
     while (strListGetItem(&temp, ',', &item, &ilen, &pos)) {
-        if ((p = strchr(item, '=')) && (p - item < ilen))
-            ilen = p++ - item;
+        String value;
+        size_t nlen;
+        /* isolate directive name */
+        if ((p = (const char *)memchr(item, '=', ilen)) && (p - item < ilen)) {
+            nlen = p++ - item;
+            if (!httpHeaderParseQuotedString(p, &value))
+                value.limitInit(p, ilen - (p - item));
+        } else
+            nlen = ilen;
 
-        if (!strncmp(item, "username", ilen)) {
-            /* white space */
+        if (!value.buf()) {
+            debugs(29, 9, "authDigestDecodeAuth: Failed to parse attribute '" << temp << "' in '" << proxy_auth << "'");
+            continue;
+        }
 
-            while (xisspace(*p))
-                p++;
+        /* find type */
+        http_digest_attr_type type = (http_digest_attr_type)httpHeaderIdByName(item, nlen, DigestFieldsInfo, DIGEST_ENUM_END);
 
-            /* quote mark */
-            p++;
-
+        switch (type) {
+        case DIGEST_USERNAME:
             safe_free(username);
-            username = xstrndup(p, strchr(p, '"') + 1 - p);
-
+            username = xstrndup(value.buf(), value.size() + 1);
             debugs(29, 9, "authDigestDecodeAuth: Found Username '" << username << "'");
-        } else if (!strncmp(item, "realm", ilen)) {
-            /* white space */
+            break;
 
-            while (xisspace(*p))
-                p++;
-
-            /* quote mark */
-            p++;
-
+        case DIGEST_REALM:
             safe_free(digest_request->realm);
-            digest_request->realm = xstrndup(p, strchr(p, '"') + 1 - p);
-
+            digest_request->realm = xstrndup(value.buf(), value.size() + 1);
             debugs(29, 9, "authDigestDecodeAuth: Found realm '" << digest_request->realm << "'");
-        } else if (!strncmp(item, "qop", ilen)) {
-            /* white space */
+            break;
 
-            while (xisspace(*p))
-                p++;
-
-            if (*p == '\"')
-                /* quote mark */
-                p++;
-
+        case DIGEST_QOP:
             safe_free(digest_request->qop);
-            digest_request->qop = xstrndup(p, strcspn(p, "\" \t\r\n()<>@,;:\\/[]?={}") + 1);
-
+            digest_request->qop = xstrndup(value.buf(), value.size() + 1);
             debugs(29, 9, "authDigestDecodeAuth: Found qop '" << digest_request->qop << "'");
-        } else if (!strncmp(item, "algorithm", ilen)) {
-            /* white space */
+            break;
 
-            while (xisspace(*p))
-                p++;
-
-            if (*p == '\"')
-                /* quote mark */
-                p++;
-
+        case DIGEST_ALGORITHM:
             safe_free(digest_request->algorithm);
-            digest_request->algorithm = xstrndup(p, strcspn(p, "\" \t\r\n()<>@,;:\\/[]?={}") + 1);
-
+            digest_request->algorithm = xstrndup(value.buf(), value.size() + 1);
             debugs(29, 9, "authDigestDecodeAuth: Found algorithm '" << digest_request->algorithm << "'");
-        } else if (!strncmp(item, "uri", ilen)) {
-            /* white space */
+            break;
 
-            while (xisspace(*p))
-                p++;
-
-            /* quote mark */
-            p++;
-
+        case DIGEST_URI:
             safe_free(digest_request->uri);
-            digest_request->uri = xstrndup(p, strchr(p, '"') + 1 - p);
-
+            digest_request->uri = xstrndup(value.buf(), value.size() + 1);
             debugs(29, 9, "authDigestDecodeAuth: Found uri '" << digest_request->uri << "'");
-        } else if (!strncmp(item, "nonce", ilen)) {
-            /* white space */
+            break;
 
-            while (xisspace(*p))
-                p++;
-
-            /* quote mark */
-            p++;
-
+        case DIGEST_NONCE:
             safe_free(digest_request->nonceb64);
-            digest_request->nonceb64 = xstrndup(p, strchr(p, '"') + 1 - p);
-
+            digest_request->nonceb64 = xstrndup(value.buf(), value.size() + 1);
             debugs(29, 9, "authDigestDecodeAuth: Found nonce '" << digest_request->nonceb64 << "'");
-        } else if (!strncmp(item, "nc", ilen)) {
-            /* white space */
+            break;
 
-            while (xisspace(*p))
-                p++;
-
-            xstrncpy(digest_request->nc, p, 9);
-
+        case DIGEST_NC:
+            if (value.size() != 8) {
+                debugs(29, 9, "authDigestDecodeAuth: Invalid nc '" << value << "' in '" << temp << "'");
+            }
+            xstrncpy(digest_request->nc, value.buf(), value.size() + 1);
             debugs(29, 9, "authDigestDecodeAuth: Found noncecount '" << digest_request->nc << "'");
-        } else if (!strncmp(item, "cnonce", ilen)) {
-            /* white space */
+            break;
 
-            while (xisspace(*p))
-                p++;
-
-            /* quote mark */
-            p++;
-
+        case DIGEST_CNONCE:
             safe_free(digest_request->cnonce);
-            digest_request->cnonce = xstrndup(p, strchr(p, '"') + 1 - p);
-
+            digest_request->cnonce = xstrndup(value.buf(), value.size() + 1);
             debugs(29, 9, "authDigestDecodeAuth: Found cnonce '" << digest_request->cnonce << "'");
-        } else if (!strncmp(item, "response", ilen)) {
-            /* white space */
+            break;
 
-            while (xisspace(*p))
-                p++;
-
-            /* quote mark */
-            p++;
-
+        case DIGEST_RESPONSE:
             safe_free(digest_request->response);
-            digest_request->response = xstrndup(p, strchr(p, '"') + 1 - p);
-
+            digest_request->response = xstrndup(value.buf(), value.size() + 1);
             debugs(29, 9, "authDigestDecodeAuth: Found response '" << digest_request->response << "'");
+            break;
+
+        default:
+            debugs(29, 3, "authDigestDecodeAuth: Unknown attribute '" << item << "' in '" << temp << "'");
+
         }
     }
 
@@ -1228,60 +1219,36 @@ AuthDigestConfig::decode(char const *proxy_auth)
      * correct values - 400/401/407
      */
 
-    /* first the NONCE count */
+    /* 2069 requirements */
 
-    if (digest_request->cnonce && strlen(digest_request->nc) != 8) {
-        debugs(29, 4, "authenticateDigestDecode: nonce count length invalid");
+    /* do we have a username ? */
+    if (!username || username[0] == '\0') {
+        debugs(29, 2, "authenticateDigestDecode: Empty or not present username");
         return authDigestLogUsername(username, digest_request);
     }
 
-    /* now the nonce */
-    nonce = authenticateDigestNonceFindNonce(digest_request->nonceb64);
-
-    if (!nonce) {
-        /* we couldn't find a matching nonce! */
-        debugs(29, 4, "authenticateDigestDecode: Unexpected or invalid nonce received");
+    /* do we have a realm ? */
+    if (!digest_request->realm || digest_request->realm[0] == '\0') {
+        debugs(29, 2, "authenticateDigestDecode: Empty or not present realm");
         return authDigestLogUsername(username, digest_request);
     }
 
-    digest_request->nonce = nonce;
-    authDigestNonceLink(nonce);
-
-    /* check the qop is what we expected. Note that for compatability with
-     * RFC 2069 we should support a missing qop. Tough. */
-
-    if (digest_request->qop && strcmp(digest_request->qop, QOP_AUTH) != 0) {
-        /* we received a qop option we didn't send */
-        debugs(29, 4, "authenticateDigestDecode: Invalid qop option received");
+    /* and a nonce? */
+    if (!digest_request->nonceb64 || digest_request->nonceb64[0] == '\0') {
+        debugs(29, 2, "authenticateDigestDecode: Empty or not present nonce");
         return authDigestLogUsername(username, digest_request);
     }
 
     /* we can't check the URI just yet. We'll check it in the
-     * authenticate phase */
+     * authenticate phase, but needs to be given */
+    if (!digest_request->uri || digest_request->uri[0] == '\0') {
+        debugs(29, 2, "authenticateDigestDecode: Missing URI field");
+        return authDigestLogUsername(username, digest_request);
+    }
 
     /* is the response the correct length? */
-
     if (!digest_request->response || strlen(digest_request->response) != 32) {
-        debugs(29, 4, "authenticateDigestDecode: Response length invalid");
-        return authDigestLogUsername(username, digest_request);
-    }
-
-    /* do we have a username ? */
-    if (!username || username[0] == '\0') {
-        debugs(29, 4, "authenticateDigestDecode: Empty or not present username");
-        return authDigestLogUsername(username, digest_request);
-    }
-
-    /* check that we're not being hacked / the username hasn't changed */
-    if (nonce->user && strcmp(username, nonce->user->username())) {
-        debugs(29, 4, "authenticateDigestDecode: Username for the nonce does not equal the username for the request");
-        return authDigestLogUsername(username, digest_request);
-    }
-
-    /* if we got a qop, did we get a cnonce or did we get a cnonce wihtout a qop? */
-    if ((digest_request->qop && !digest_request->cnonce)
-            || (!digest_request->qop && digest_request->cnonce)) {
-        debugs(29, 4, "authenticateDigestDecode: qop without cnonce, or vice versa!");
+        debugs(29, 2, "authenticateDigestDecode: Response length invalid");
         return authDigestLogUsername(username, digest_request);
     }
 
@@ -1290,7 +1257,55 @@ AuthDigestConfig::decode(char const *proxy_auth)
         digest_request->algorithm = xstrndup("MD5", 4);
     else if (strcmp(digest_request->algorithm, "MD5")
              && strcmp(digest_request->algorithm, "MD5-sess")) {
-        debugs(29, 4, "authenticateDigestDecode: invalid algorithm specified!");
+        debugs(29, 2, "authenticateDigestDecode: invalid algorithm specified!");
+        return authDigestLogUsername(username, digest_request);
+    }
+
+    /* 2617 requirements, indicated by qop */
+    if (digest_request->qop) {
+
+        /* check the qop is what we expected. */
+        if (strcmp(digest_request->qop, QOP_AUTH) != 0) {
+            /* we received a qop option we didn't send */
+            debugs(29, 2, "authenticateDigestDecode: Invalid qop option received");
+            return authDigestLogUsername(username, digest_request);
+        }
+
+        /* check cnonce */
+        if (!digest_request->cnonce || digest_request->cnonce[0] == '\0') {
+            debugs(29, 2, "authenticateDigestDecode: Missing cnonce field");
+            return authDigestLogUsername(username, digest_request);
+        }
+
+        /* check nc */
+        if (strlen(digest_request->nc) != 8 || strspn(digest_request->nc, "0123456789abcdefABCDEF") != 8) {
+            debugs(29, 2, "authenticateDigestDecode: invalid nonce count");
+            return authDigestLogUsername(username, digest_request);
+        }
+    } else {
+        /* cnonce and nc both require qop */
+        if (digest_request->cnonce || digest_request->nc) {
+            debugs(29, 2, "authenticateDigestDecode: missing qop!");
+            return authDigestLogUsername(username, digest_request);
+        }
+    }
+
+    /** below nonce state dependent **/
+
+    /* now the nonce */
+    nonce = authenticateDigestNonceFindNonce(digest_request->nonceb64);
+    if (!nonce) {
+        /* we couldn't find a matching nonce! */
+        debugs(29, 2, "authenticateDigestDecode: Unexpected or invalid nonce received");
+        return authDigestLogUsername(username, digest_request);
+    }
+
+    digest_request->nonce = nonce;
+    authDigestNonceLink(nonce);
+
+    /* check that we're not being hacked / the username hasn't changed */
+    if (nonce->user && strcmp(username, nonce->user->username())) {
+        debugs(29, 2, "authenticateDigestDecode: Username for the nonce does not equal the username for the request");
         return authDigestLogUsername(username, digest_request);
     }
 
