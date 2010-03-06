@@ -2457,6 +2457,27 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         goto finish;
     }
 
+    if (request->header.has(HDR_EXPECT)) {
+        int ignore = 0;
+#if HTTP_VIOLATIONS
+        if (Config.onoff.ignore_expect_100) {
+            String expect = request->header.getList(HDR_EXPECT);
+            if (expect.caseCmp("100-continue") == 0)
+                ignore = 1;
+            expect.clean();
+        }
+#endif
+        if (!ignore) {
+            clientStreamNode *node = context->getClientReplyContext();
+            clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+            assert (repContext);
+            repContext->setReplyToError(ERR_INVALID_REQ, HTTP_EXPECTATION_FAILED, request->method, http->uri, conn->peer, request, NULL, NULL);
+            assert(context->http->out.offset == 0);
+            context->pullData();
+            goto finish;
+        }
+    }
+
     http->request = HTTPMSGLOCK(request);
     clientSetKeepaliveFlag(http);
 

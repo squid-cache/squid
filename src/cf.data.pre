@@ -3855,6 +3855,21 @@ DOC_START
 	or response to be rejected.
 DOC_END
 
+NAME: ignore_expect_100
+COMMENT: on|off
+IFDEF: HTTP_VIOLATIONS
+TYPE: onoff
+LOC: Config.onoff.ignore_expect_100
+DEFAULT: off
+DOC_START
+	This option makes Squid ignore any Expect: 100-continue header present
+	in the request. RFC 2616 requires that Squid being unable to satisfy
+	the response expectation MUST return a 417 error.
+
+	Note: Enabling this is a HTTP protocol violation, but some clients may
+	not handle it well..
+DOC_END
+
 COMMENT_START
  TIMEOUTS
  -----------------------------------------------------------------------------

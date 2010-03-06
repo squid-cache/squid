@@ -401,6 +401,7 @@ struct SquidConfig {
 #if HTTP_VIOLATIONS
 
         int reload_into_ims;
+        int ignore_expect_100;
 #endif
 
         int offline;

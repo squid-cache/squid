@@ -767,6 +767,10 @@ logformat icap_squid %ts.%03tu %6icap::tr %>a %icap::to/%03icap::Hs %icap::<size
 	count against this limit.
 	</verb>
 
+	<tag>ignore_expect_100</tag>
+	<p>Ported from 2.7. Requires --enable-http-violations
+	Prevents 417 errors being sent to broken HTTP/1.1 non-compliant clients.
+
 	<tag>include</tag>
 	<p>New option to import entire secondary configuration files into squid.conf.
 	<verb>
@@ -1600,9 +1604,6 @@ This section gives an account of those changes in three categories:
 	<p><em>act-as-origin</em> not yet ported from 2.7
 	<p><em>http11</em> not yet ported from 2.7
 	<p><em>urlgroup=</em> not yet ported from 2.6
-
-	<tag>ignore_expect_100</tag>
-	<p>Not yet ported from 2.7
 
 	<tag>ignore_ims_on_miss</tag>
 	<p>Not yet ported from 2.7
