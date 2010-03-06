@@ -1236,6 +1236,15 @@ AuthDigestConfig::decode(char const *proxy_auth)
         return authDigestLogUsername(username, digest_request);
     }
 
+    /* Sanity check of the username.
+     * " can not be allowed in usernames until * the digest helper protocol
+     * have been redone
+     */
+    if (strchr(username, '"')) {
+        debugs(29, 2, "authenticateDigestDecode: Unacceptable username '" << username << "'");
+        return authDigestLogUsername(username, digest_request);
+    }
+
     /* do we have a realm ? */
     if (!digest_request->realm || digest_request->realm[0] == '\0') {
         debugs(29, 2, "authenticateDigestDecode: Empty or not present realm");
