@@ -342,15 +342,15 @@ httpHeaderParseQuotedString (const char *start, String *val)
     pos = start + 1;
 
     while (*pos != '"') {
-	bool quoted = (*pos == '\\');
-	if (quoted)
-	    pos++;
+        bool quoted = (*pos == '\\');
+        if (quoted)
+            pos++;
         if (!*pos) {
             debugs(66, 2, "failed to parse a quoted-string header field near '" << start << "'");
             val->clean();
             return 0;
         }
-	end = pos + strcspn(pos + quoted, "\"\\") + quoted;
+        end = pos + strcspn(pos + quoted, "\"\\") + quoted;
         val->append(pos, end-pos);
         pos = end;
     }

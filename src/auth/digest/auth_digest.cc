@@ -1127,27 +1127,27 @@ AuthDigestConfig::decode(char const *proxy_auth)
     while (strListGetItem(&temp, ',', &item, &ilen, &pos)) {
         /* isolate directive name & value */
         size_t nlen;
-	size_t vlen;
+        size_t vlen;
         if ((p = (const char *)memchr(item, '=', ilen)) && (p - item < ilen)) {
             nlen = p++ - item;
-	    vlen = ilen - (p - item);
+            vlen = ilen - (p - item);
         } else {
             nlen = ilen;
-	    vlen = 0;
-	}
+            vlen = 0;
+        }
 
-	/* parse value. auth-param     = token "=" ( token | quoted-string ) */
+        /* parse value. auth-param     = token "=" ( token | quoted-string ) */
         String value;
-	if (vlen > 0) {
-	    if (*p == '"') {
-		if (!httpHeaderParseQuotedString(p, &value)) {
-		    debugs(29, 9, "authDigestDecodeAuth: Failed to parse attribute '" << temp << "' in '" << proxy_auth << "'");
-		    continue;
-		}
-	    } else {
-		value.limitInit(p, vlen);
-	    }
-	} else {
+        if (vlen > 0) {
+            if (*p == '"') {
+                if (!httpHeaderParseQuotedString(p, &value)) {
+                    debugs(29, 9, "authDigestDecodeAuth: Failed to parse attribute '" << temp << "' in '" << proxy_auth << "'");
+                    continue;
+                }
+            } else {
+                value.limitInit(p, vlen);
+            }
+        } else {
             debugs(29, 9, "authDigestDecodeAuth: Failed to parse attribute '" << temp << "' in '" << proxy_auth << "'");
             continue;
         }
