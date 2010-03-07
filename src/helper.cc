@@ -200,7 +200,7 @@ helperStatefulOpenServers(statefulhelper * hlp)
         return;
 
     if (hlp->childs.concurrency)
-	debugs(84, 0, "ERROR: concurrency= is not yet supported for stateful helpers ('" << hlp->cmdline << "')");
+        debugs(84, 0, "ERROR: concurrency= is not yet supported for stateful helpers ('" << hlp->cmdline << "')");
 
     char *progname = hlp->cmdline->key;
 
