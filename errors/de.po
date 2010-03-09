@@ -2,16 +2,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-02-13 00:05+1300\n"
-"PO-Revision-Date: 2009-09-26 08:42+1300\n"
+"POT-Creation-Date: 2010-03-08 00:04+1300\n"
+"PO-Revision-Date: 2010-03-07 13:19+0200\n"
 "Last-Translator: Constantin Rack <info@vigos.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
+"Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Pootle 1.2.1\n"
+"X-Generator: Pootle 2.0.1\n"
 
 #: templates/ERR_DIR_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
@@ -235,7 +235,7 @@ msgstr "Weiterleitung verweigert."
 #: templates/ERR_FTP_NOT_FOUND:9 templates/ERR_FTP_PUT_CREATED:4
 #: templates/ERR_FTP_PUT_ERROR:9 templates/ERR_FTP_PUT_MODIFIED:4
 #: templates/ERR_FTP_UNAVAILABLE:8 templates/ERR_ICAP_FAILURE:11
-#: templates/ERR_INVALID_REQ:13 templates/ERR_INVALID_RESP:8
+#: templates/ERR_INVALID_REQ:14 templates/ERR_INVALID_RESP:8
 #: templates/ERR_INVALID_URL:13 templates/ERR_LIFETIME_EXP:8
 #: templates/ERR_NO_RELAY:8 templates/ERR_ONLY_IF_CACHED_MISS:8
 #: templates/ERR_READ_ERROR:9 templates/ERR_READ_TIMEOUT:9
@@ -246,6 +246,10 @@ msgstr "Weiterleitung verweigert."
 #: templates/ERR_ZERO_SIZE_OBJECT:8
 msgid "Generated %T by %h (%s)"
 msgstr "Erzeugt am %T von %h (%s)"
+
+#: templates/ERR_INVALID_REQ:12
+msgid "HTTP/1.1 Expect: feature is being asked from an HTTP/1.0 software."
+msgstr "HTTP/1.1 Expect wird von einer HTTP/1.0 Software erfragt"
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
@@ -403,8 +407,8 @@ msgid ""
 "Squid is unable to create a TCP socket, presumably due to excessive load. "
 "Please retry your request."
 msgstr ""
-"Squid kann keinen TCP Socket erstellen, warscheinlich aufgrund von großer "
-"Systemlast. Bitte wiederholen sie die Anfrage."
+"Squid kann keinen TCP-Socket erstellen, wahrscheinlich aufgrund von großer "
+"Systemlast. Bitte wiederholen Sie die Anfrage."
 
 #: templates/ERR_FTP_FAILURE:5 templates/ERR_FTP_FORBIDDEN:5
 #: templates/ERR_FTP_NOT_FOUND:5 templates/ERR_FTP_PUT_ERROR:5
@@ -665,7 +669,7 @@ msgstr ""
 #: templates/ERR_FORWARDING_DENIED:7 templates/ERR_FTP_DISABLED:7
 #: templates/ERR_FTP_FAILURE:7 templates/ERR_FTP_FORBIDDEN:7
 #: templates/ERR_FTP_NOT_FOUND:8 templates/ERR_FTP_PUT_ERROR:8
-#: templates/ERR_FTP_UNAVAILABLE:7 templates/ERR_INVALID_REQ:12
+#: templates/ERR_FTP_UNAVAILABLE:7 templates/ERR_INVALID_REQ:13
 #: templates/ERR_INVALID_RESP:7 templates/ERR_INVALID_URL:12
 #: templates/ERR_LIFETIME_EXP:7 templates/ERR_NO_RELAY:7
 #: templates/ERR_ONLY_IF_CACHED_MISS:7 templates/ERR_READ_ERROR:8
