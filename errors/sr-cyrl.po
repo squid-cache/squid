@@ -2,20 +2,18 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-02-13 00:05+1300\n"
-"PO-Revision-Date: 2008-11-29 19:45+1300\n"
-"Last-Translator: Bratislav Ilic <batailic@gmail.com>\n"
+"POT-Creation-Date: 2010-03-08 00:05+1300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Pootle 1.1.0\n"
+"X-Generator: Translate Toolkit 1.5.3\n"
 
 #: templates/ERR_DIR_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
 msgstr ""
-"<a href=\"../\">Надређени директоријум</a> (<a href=\"/\">Основни "
-"директоријум</a>)"
 
 #: templates/ERR_INVALID_REQ:4
 msgid ""
@@ -34,16 +32,14 @@ msgid ""
 "A Timeout occurred while waiting to read data from the network.  The network "
 "or server may be down or congested.  Please retry your request."
 msgstr ""
-"Prilikom isèitavanja greške sa mreže došlo je do prekida.  Mreža ili server "
-"su možda preoptereæeni ili nedostupni.  Molimo pokušajte ponovo."
 
 #: templates/ERR_URN_RESOLVE:3
 msgid "A URL for the requested URN could not be retrieved"
-msgstr "Tražena adresa (URL) za URN ne može da se dovuèe"
+msgstr ""
 
 #: templates/ERR_ACCESS_DENIED:5
 msgid "Access Denied."
-msgstr "Pristup nije dozvoljen."
+msgstr ""
 
 #: templates/ERR_ACCESS_DENIED:6
 msgid ""
@@ -51,26 +47,18 @@ msgid ""
 "this time.  Please contact your service provider if you feel this is "
 "incorrect."
 msgstr ""
-"Sistem za kontrolu pristupa konfigurisan je tako da vam u ovom trenutku "
-"pristup nije dozvoljen. Ako smatrate da to nije u redu, molimo da "
-"kontaktirate vašeg servis provajdera."
 
 #: templates/ERR_FTP_FORBIDDEN:4
-#, fuzzy
 msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
-"Prilikom pokušaja da se dovuèe URL: <a href=\"%U\">%U</a> nije uspela FTP "
-"autentifikacija."
 
 #: templates/ERR_FTP_FAILURE:4
 msgid ""
 "An FTP protocol error occurred while trying to retrieve the URL: <a href=\"%U"
 "\">%U</a>"
 msgstr ""
-"Desila se greška u FTP protokolu prilikom dovlaèenja URL-a: <a href=\"%U\">%"
-"U</a>"
 
 #: templates/ERR_ICAP_FAILURE:10
 msgid "An Illegal response was received from the ICAP server."
@@ -81,31 +69,29 @@ msgid ""
 "An error condition occurred while reading data from the network.  Please "
 "retry your request."
 msgstr ""
-"Desila se greška prilikom èitanja podataka sa mreže.  Molimo pokušajte "
-"ponovo."
 
 #: templates/ERR_WRITE_ERROR:7
 msgid ""
 "An error condition occurred while writing to the network.  Please retry your "
 "request."
-msgstr "Desila se greška prilikom upisa u mreži. Molimo pokušajte ponovo."
+msgstr ""
 
 #: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
 msgid "Cache Access Denied."
-msgstr "Pristup proksi/keš serveru nije dozvoljen."
+msgstr ""
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:3
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:5
 msgid "Cache Manager Access Denied."
-msgstr "Pristup proksi/keš server menadžeru nije dozvoljen."
+msgstr ""
 
 #: templates/ERR_URN_RESOLVE:5
 msgid "Cannot Resolve URN"
-msgstr "Ne mogu da odgonetnem URN"
+msgstr ""
 
 #: templates/ERR_LIFETIME_EXP:5
 msgid "Connection Lifetime Expired"
-msgstr "Dozvoljeno trajanje konekcije je prekoraèeno"
+msgstr ""
 
 #: templates/ERR_CONNECT_FAIL:5
 msgid "Connection to %I failed."
@@ -113,7 +99,7 @@ msgstr ""
 
 #: templates/ERR_INVALID_REQ:10
 msgid "Content-Length missing for POST or PUT requests."
-msgstr "Nedostaje dužina zahteva (Content-Length) za POST ili PUT zahtev"
+msgstr ""
 
 #: templates/ERR_DIR_LISTING:3
 msgid "Directory Content:"
@@ -148,19 +134,19 @@ msgstr ""
 #: templates/ERR_URN_RESOLVE:2 templates/ERR_WRITE_ERROR:2
 #: templates/ERR_ZERO_SIZE_OBJECT:2
 msgid "ERROR"
-msgstr "GREŠKA"
+msgstr ""
 
 #: templates/ERR_CACHE_ACCESS_DENIED:1
 msgid "ERROR: Cache Access Denied"
-msgstr "GREŠKA: Pristup proksi/keš serveru nije dozvoljen"
+msgstr ""
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:1
 msgid "ERROR: Cache Manager Access Denied"
-msgstr "GREŠKA: Pristup proksi/keš server menadžeru nije dozvoljen"
+msgstr ""
 
 #: templates/ERR_FTP_PUT_ERROR:1
 msgid "ERROR: FTP upload failed"
-msgstr "GREŠKA: FTP PUT/upload nije uspeo"
+msgstr ""
 
 #: templates/ERR_ACCESS_DENIED:1 templates/ERR_CANNOT_FORWARD:1
 #: templates/ERR_CONNECT_FAIL:1 templates/ERR_DNS_FAIL:1 templates/ERR_ESI:1
@@ -177,47 +163,47 @@ msgstr "GREŠKA: FTP PUT/upload nije uspeo"
 #: templates/ERR_UNSUP_REQ:1 templates/ERR_WRITE_ERROR:1
 #: templates/ERR_ZERO_SIZE_OBJECT:1
 msgid "ERROR: The requested URL could not be retrieved"
-msgstr "GREŠKA: Tražena adresa (URL) ne može da se dovuèe"
+msgstr ""
 
 #: templates/ERR_URN_RESOLVE:1
 msgid "ERROR: The requested URN not be retrieved"
-msgstr "GREŠKA: Tražena adresa (URL) za URN ne može da se dovuèe"
+msgstr ""
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
-msgstr "ESI obrada nije uspela."
+msgstr ""
 
 #: templates/ERR_FTP_PUT_CREATED:1
 msgid "FTP PUT Successful: File Created"
-msgstr "FTP PUT uspešan: Fajl je prenesen"
+msgstr ""
 
 #: templates/ERR_FTP_PUT_MODIFIED:1
 msgid "FTP PUT Successful: File Updated"
-msgstr "FTP PUT uspešan: Fajl je osvežen"
+msgstr ""
 
 #: templates/ERR_FTP_PUT_ERROR:3
 msgid "FTP PUT/upload failed"
-msgstr "FTP PUT/upload nije uspeo"
+msgstr ""
 
 #: templates/ERR_FTP_DISABLED:5
 msgid "FTP is Disabled"
-msgstr "FTP nije omoguæen."
+msgstr ""
 
 #: templates/ERR_SECURE_CONNECT_FAIL:5
 msgid "Failed to establish a secure connection to %I"
-msgstr "Nije uspelo uspostavljanje sigune konekcije sa %I"
+msgstr ""
 
 #: templates/ERR_FTP_PUT_CREATED:3
 msgid "File created"
-msgstr "Fajl je prenesen"
+msgstr ""
 
 #: templates/ERR_FTP_PUT_MODIFIED:3
 msgid "File updated"
-msgstr "Fajl je osvežen"
+msgstr ""
 
 #: templates/ERR_FORWARDING_DENIED:5
 msgid "Forwarding Denied."
-msgstr "Prosleðivanje odbijeno."
+msgstr ""
 
 #: templates/ERR_ACCESS_DENIED:8 templates/ERR_CACHE_ACCESS_DENIED:8
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:8 templates/ERR_CANNOT_FORWARD:8
@@ -228,7 +214,7 @@ msgstr "Prosleðivanje odbijeno."
 #: templates/ERR_FTP_NOT_FOUND:9 templates/ERR_FTP_PUT_CREATED:4
 #: templates/ERR_FTP_PUT_ERROR:9 templates/ERR_FTP_PUT_MODIFIED:4
 #: templates/ERR_FTP_UNAVAILABLE:8 templates/ERR_ICAP_FAILURE:11
-#: templates/ERR_INVALID_REQ:13 templates/ERR_INVALID_RESP:8
+#: templates/ERR_INVALID_REQ:14 templates/ERR_INVALID_RESP:8
 #: templates/ERR_INVALID_URL:13 templates/ERR_LIFETIME_EXP:8
 #: templates/ERR_NO_RELAY:8 templates/ERR_ONLY_IF_CACHED_MISS:8
 #: templates/ERR_READ_ERROR:9 templates/ERR_READ_TIMEOUT:9
@@ -240,75 +226,70 @@ msgstr "Prosleðivanje odbijeno."
 msgid "Generated %T by %h (%s)"
 msgstr ""
 
+#: templates/ERR_INVALID_REQ:12
+msgid "HTTP/1.1 Expect: feature is being asked from an HTTP/1.0 software."
+msgstr ""
+
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
-msgstr "Hej, nemoj mnogo da oèekujes od URNova na %T! :)"
+msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
-msgstr "Greška u ICAP protokolu."
+msgstr ""
 
 #: templates/ERR_TOO_BIG:7
-#, fuzzy
 msgid ""
 "If you are making a GET request, then the item you are trying to download is "
 "too large."
 msgstr ""
-"Ako ste uputili GET zahtev, onda je telo odgovora to što pokušavate da "
-"skinete preveliko."
 
 #: templates/ERR_TOO_BIG:6
-#, fuzzy
 msgid ""
 "If you are making a POST or PUT request, then the item you are trying to "
 "upload is too large."
 msgstr ""
-"Ukoliko je vaš zahtev POST ili PUT, onda je telo zahteva to štopokušavate da "
-"upload-ujete preveliko."
 
 #: templates/ERR_INVALID_REQ:11 templates/ERR_INVALID_URL:11
 msgid "Illegal character in hostname; underscores are not allowed."
 msgstr ""
-"Nedozvoljeni karakteri u imenu raèunara; donja crta (_) nije dozvoljena."
 
 #: templates/ERR_INVALID_URL:10
 msgid "Illegal double-escape in the URL-Path"
-msgstr "Nedozvoljeni dvostruki-escape u URL putanji"
+msgstr ""
 
 #: templates/ERR_INVALID_URL:5
 msgid "Invalid URL"
-msgstr "Neispravna adresa (URL)"
+msgstr ""
 
 #: templates/ERR_INVALID_REQ:8
 msgid "Missing HTTP Identifier (HTTP/1.0)."
-msgstr "Nedostaje  HTTP identifikator (HTTP/1.0)."
+msgstr ""
 
 #: templates/ERR_INVALID_REQ:7
 msgid "Missing URL."
-msgstr "Nedostaje adresa (URL)."
+msgstr ""
 
 #: templates/ERR_INVALID_URL:9
 msgid "Missing hostname"
-msgstr "Nedostaje ime raèunara (servera)"
+msgstr ""
 
 #: templates/ERR_INVALID_URL:8
 msgid ""
 "Missing or incorrect access protocol (should be <q>http://</q> or similar)"
 msgstr ""
-"Pristupni protokol nedostaje ili je neispravan (trebao bi da bude <q>http://"
-"</q> ili slièno)"
 
 #: templates/ERR_INVALID_REQ:6
 msgid "Missing or unknown request method."
-msgstr "Metod zahteva je nepoznat ili nedostaje."
+msgstr ""
 
 #: templates/ERR_NO_RELAY:5
 msgid "No Wais Relay"
-msgstr "Nema Wais relay-a"
+msgstr ""
 
 #: templates/ERR_FTP_PUT_CREATED:2 templates/ERR_FTP_PUT_MODIFIED:2
 msgid "Operation successful"
-msgstr "Operacija je okonèana uspešno"
+msgstr ""
 
 #: templates/ERR_DIR_LISTING:5
 msgid "Parent Directory"
@@ -320,9 +301,6 @@ msgid ""
 "have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
 "chpasswd.cgi\">change</a> your default password."
 msgstr ""
-"Ukoliko budete imali problema oko autentifikacije molimo kontaktirajte <a "
-"href=\"mailto:%w%W\">proksi administratora</a> ili želite da  <a href="
-"\"http://%h/cgi-bin/chpasswd.cgi\">promenite</a> svoju poèetnu lozinku."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
 msgid ""
@@ -331,30 +309,26 @@ msgid ""
 "administrator, read Squid documentation on cache manager interface and check "
 "cache log for more detailed error messages."
 msgstr ""
-"koliko budete imali problema oko autentifikacije molimo kontaktirajte <a "
-"href=\"mailto:%w%W\">proxy administratora</a> a ako vi <em>jeste</em> "
-"administrator, proèitajte dokumentaciju o keš menadžeru za Squid i proverite "
-"keš log za detaljnije opise grešaka."
 
 #: templates/ERR_READ_ERROR:5
 msgid "Read Error"
-msgstr "Greška u èitanju"
+msgstr ""
 
 #: templates/ERR_READ_TIMEOUT:5
 msgid "Read Timeout"
-msgstr "Predugo vreme èitanja"
+msgstr ""
 
 #: templates/ERR_INVALID_REQ:9
 msgid "Request is too large."
-msgstr "Zahtev je predug."
+msgstr ""
 
 #: templates/ERR_SOCKET_FAILURE:5
 msgid "Socket Failure"
-msgstr "Greška prilikom uspostavljanja konekcije (Socket)"
+msgstr ""
 
 #: templates/ERR_INVALID_URL:6
 msgid "Some aspect of the requested URL is incorrect."
-msgstr "Jedan od aspekata zahtevane adrese (URL) nije ispravan."
+msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:8 templates/ERR_INVALID_REQ:5
 #: templates/ERR_INVALID_URL:7
@@ -362,85 +336,66 @@ msgid "Some possible problems are:"
 msgstr ""
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:6
-#, fuzzy
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache manager "
 "until you have authenticated yourself."
 msgstr ""
-"Na žalost trenutno vam nije dozvoljeno da zahtevate %U iz ovog keš menadžera "
-"pre nego što se autentifikujete."
 
 #: templates/ERR_CACHE_ACCESS_DENIED:6
-#, fuzzy
 msgid ""
 "Sorry, you are not currently allowed to request %U from this cache until you "
 "have authenticated yourself."
 msgstr ""
-"Na žalost trenutno vam nije dozvoljeno da zahtevate %U iz ovog proksi "
-"servera pre nego što se ne autentifikujete."
 
 #: templates/ERR_ZERO_SIZE_OBJECT:6
-#, fuzzy
 msgid "Squid did not receive any data for this request."
-msgstr "Squid proksi nije dobio nikakav odgovor na vaš zahtev."
+msgstr ""
 
 #: templates/ERR_UNSUP_REQ:6
 msgid ""
 "Squid does not support all request methods for all access protocols. For "
 "example, you can not POST a Gopher request."
 msgstr ""
-"Squid Proksi server ne podržava sve metode zahteva za sve moguæe pristupne "
-"protokole. Na primer ne možete da uradite POST na Gopher zahtev."
 
 #: templates/ERR_LIFETIME_EXP:6
 msgid ""
 "Squid has terminated the request because it has exceeded the maximum "
 "connection lifetime."
 msgstr ""
-"Squid Proksi server je prekinuo konekciju jer je prekoraèila dozvoljeno "
-"trajanje konekcije."
 
 #: templates/ERR_SOCKET_FAILURE:7
 msgid ""
 "Squid is unable to create a TCP socket, presumably due to excessive load. "
 "Please retry your request."
 msgstr ""
-"Squid nije u stanju da kreira TCP socket, verovatno zbog preoptereæenosti. "
-"Molimo pokušajte ponovo."
 
 #: templates/ERR_FTP_FAILURE:5 templates/ERR_FTP_FORBIDDEN:5
 #: templates/ERR_FTP_NOT_FOUND:5 templates/ERR_FTP_PUT_ERROR:5
 #: templates/ERR_FTP_UNAVAILABLE:5
 msgid "Squid sent the following FTP command:"
-msgstr "Squid je poslao sledeæu FTP komandu:"
+msgstr ""
 
 #: templates/ERR_DNS_FAIL:6
 msgid "The DNS server returned:"
-msgstr "DNS server je vratio informaciju:"
+msgstr ""
 
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
-msgstr "ESI procesor je vratio:"
+msgstr ""
 
 #: templates/ERR_FTP_UNAVAILABLE:4
-#, fuzzy
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr ""
-"FTP server je bio preoptereæen prilikom pokušaja da se dovuèe URL: <a href="
-"\"%U\">%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
 msgid ""
 "The HTTP Response message received from the contacted server could not be "
 "understood or was otherwise malformed. Please contact the site operator."
 msgstr ""
-"HTTP odgovor koji je dobijen od kontaktiranog servera ne može da se razume "
-"ili je na neki nacin pogrešno formirana. Molimo kontaktirajte operatora "
-"sajta."
 
 #: templates/ERR_ICAP_FAILURE:9
 msgid "The ICAP server is not reachable."
-msgstr "ICAP server je nedostupan."
+msgstr ""
 
 #: templates/ERR_FTP_NOT_FOUND:4
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
@@ -471,11 +426,11 @@ msgstr ""
 
 #: templates/ERR_CONNECT_FAIL:7
 msgid "The remote host or network may be down.  Please try the request again."
-msgstr "Udaljeni raèunar ili mreža nisu operativni.  Molimo pokušajte kasnije."
+msgstr ""
 
 #: templates/ERR_TOO_BIG:5
 msgid "The request or reply is too large."
-msgstr "Zahtev ili odgovor je prevelik."
+msgstr ""
 
 #: templates/ERR_ACCESS_DENIED:3 templates/ERR_CANNOT_FORWARD:3
 #: templates/ERR_CONNECT_FAIL:3 templates/ERR_DNS_FAIL:3 templates/ERR_ESI:3
@@ -491,7 +446,7 @@ msgstr "Zahtev ili odgovor je prevelik."
 #: templates/ERR_TOO_BIG:3 templates/ERR_UNSUP_REQ:3
 #: templates/ERR_WRITE_ERROR:3 templates/ERR_ZERO_SIZE_OBJECT:3
 msgid "The requested URL could not be retrieved"
-msgstr "Tražena adresa (URL) ne može da se dovuèe"
+msgstr ""
 
 #: templates/ERR_FTP_FAILURE:6 templates/ERR_FTP_FORBIDDEN:6
 #: templates/ERR_FTP_NOT_FOUND:6 templates/ERR_FTP_PUT_ERROR:6
@@ -504,15 +459,13 @@ msgstr ""
 #: templates/ERR_SECURE_CONNECT_FAIL:6 templates/ERR_SOCKET_FAILURE:6
 #: templates/ERR_WRITE_ERROR:6
 msgid "The system returned: <i>%E</i>"
-msgstr "Sistem je dao povratnu informaciju: <i>%E</i>"
+msgstr ""
 
 #: templates/ERR_NO_RELAY:6
 msgid ""
 "There is no WAIS Relay host defined for this Cache!  Yell at the "
 "administrator."
 msgstr ""
-"Za ovaj proksi server nije definisan WAIS relay raèunar! Pitajte "
-"administratora."
 
 #: templates/ERR_TOO_BIG:8
 msgid ""
@@ -520,9 +473,6 @@ msgid ""
 "operates this cache.  Please contact them directly if you feel this is an "
 "error."
 msgstr ""
-"Ove limite postavio je intenet servis provajder koji koristi ovaj proksi "
-"server. Ako smatrate da je to greška, molimo stupite u kontakt sa "
-"administratorom."
 
 #: templates/ERR_UNSUP_HTTPVERSION:6
 msgid "This Squid does not accept the HTTP version you are attempting to use."
@@ -530,15 +480,13 @@ msgstr ""
 
 #: templates/ERR_FTP_DISABLED:6
 msgid "This cache does not support FTP."
-msgstr "Ovaj proksi server ne omoguèava FTP saobraæaj."
+msgstr ""
 
 #: templates/ERR_SHUTTING_DOWN:5
 msgid ""
 "This cache is in the process of shutting down and can not service your "
 "request at this time.  Please retry your request again soon."
 msgstr ""
-"Ovaj proksi server je u procesu iskljuèivanja i ne može da izvrši zahtev u "
-"ovom trenutku. Molimo pokušajte ponovo uskoro."
 
 #: templates/ERR_FORWARDING_DENIED:6
 msgid ""
@@ -546,14 +494,10 @@ msgid ""
 "sibling relationship.  Perhaps the client at %i is a cache which has been "
 "misconfigured."
 msgstr ""
-"Ovaj proksi server neæe da prosledi vaš zahtev zato što pokušava da poštuje "
-"sibling odnose.  Možda je klijent na %i proksi serveru koji je pogrešno "
-"konfigurisan."
 
 #: templates/ERR_ICAP_FAILURE:7
-#, fuzzy
 msgid "This means that some aspect of the ICAP communication failed."
-msgstr "Ovo znaci da neki aspekti ICAP protokola nisu u redu."
+msgstr ""
 
 #: templates/ERR_FTP_PUT_ERROR:7
 msgid ""
@@ -566,17 +510,12 @@ msgid ""
 "This means that the cache was not able to resolve the hostname presented in "
 "the URL. Check if the address is correct."
 msgstr ""
-"što znaèi proksi server nije u stanju da identifikuje ime raèunara koje se "
-"nalazi u adresi (URL). Proverite da li je adresa ispravna."
 
 #: templates/ERR_ESI:7
-#, fuzzy
 msgid ""
 "This means that the surrogate was not able to process the ESI template. "
 "Please report this error to the webmaster."
 msgstr ""
-"Ovo znaci da  surogat nije uspeo da obradi ESI zahtev. Molimo obavestite "
-"webmastera o ovoj grešci."
 
 #: templates/ERR_FTP_NOT_FOUND:7
 msgid ""
@@ -584,9 +523,6 @@ msgid ""
 "comply with RFC 1738).  If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
-"To može da bude prouzrokovano time što je FTP adresa (URL) sa apsolutnom "
-"putanjom (što se ne slaže sa RFC 1738).  Ukoliko je to sluèaj, fajl možete "
-"da naðete na <a href=\"%B\">%B</a>."
 
 #: templates/ERR_SECURE_CONNECT_FAIL:7
 msgid ""
@@ -595,31 +531,22 @@ msgid ""
 "host does not support secure connections, or the proxy is not satisfied with "
 "the host security credentials."
 msgstr ""
-"Ovaj proksi i udaljeni server nisu uspeli da se dogovore oko sigunosnih "
-"podešavanja za izvršavanje vašeg zahteva. Moguce je da je udaljeni server ne "
-"podržava sigune konekcije, ili da proksi nije zadovoljan sa pravilima "
-"sigunosti udaljenog servera."
 
 #: templates/ERR_CANNOT_FORWARD:6
-#, fuzzy
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
 "caches.  The most likely cause for this error is that the cache "
 "administrator does not allow this cache to make direct connections to origin "
 "servers, and all configured parent caches are currently unreachable."
 msgstr ""
-"Ovaj zahtev nije mogao da bude prosleðen izvonom serveru niti bilo kom "
-"nadreðenom proxy serveru. Najverovatniji uzrok ove greške je da keš "
-"administrator ne dozvoljava da ovaj proksi server direktno pristupi izvonom "
-"serveru,  svi konfigurisani nadreðeni proksi serveri su trenutno nedostupni."
 
 #: templates/ERR_DNS_FAIL:5
 msgid "Unable to determine IP address from host name <q>%H</q>"
-msgstr "Nije moguæe odrediti IP adresu iz imena raèunara za <q>%H</q>"
+msgstr ""
 
 #: templates/ERR_CANNOT_FORWARD:5
 msgid "Unable to forward this request at this time."
-msgstr "Vaš zahtev ne može da se prosledi u ovom trenutku."
+msgstr ""
 
 #: templates/ERR_UNSUP_HTTPVERSION:3 templates/ERR_UNSUP_HTTPVERSION:5
 msgid "Unsupported HTTP version"
@@ -627,25 +554,21 @@ msgstr ""
 
 #: templates/ERR_UNSUP_REQ:5
 msgid "Unsupported Request Method and Protocol"
-msgstr "Nepodržan metod ili protokol zahteva (Request)"
+msgstr ""
 
 #: templates/ERR_ONLY_IF_CACHED_MISS:5
 msgid ""
 "Valid document was not found in the cache and <q>only-if-cached</q> "
 "directive was specified."
 msgstr ""
-"U kešu nije naðen validan dokument a specificirane je direktiva <q>only-if-"
-"cached</q>."
 
 #: templates/ERR_FTP_PUT_ERROR:4
 msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
 msgstr ""
-"Tokom pokušaja da se prenese (PUT) strana sa sledeæom adresom (URL): <a href="
-"\"%U\">%U</a>"
 
 #: templates/ERR_WRITE_ERROR:5
 msgid "Write Error"
-msgstr "Greška u upisu"
+msgstr ""
 
 #: templates/ERR_ONLY_IF_CACHED_MISS:6
 msgid ""
@@ -653,16 +576,13 @@ msgid ""
 "directive. The document was not found in the cache, <em>or</em> it required "
 "revalidation prohibited by the <q>only-if-cached</q> directive."
 msgstr ""
-"Za vaš zahtev postavljena je <q>only-if-cached</q> proksi direktiva.Dokument "
-"nije naðen u proksi arhivi, <em>ili</em> se zahteva revalidacija kojaje "
-"zabranjena direktivom <q>only-if-cached</q>."
 
 #: templates/ERR_ACCESS_DENIED:7 templates/ERR_CANNOT_FORWARD:7
 #: templates/ERR_CONNECT_FAIL:8 templates/ERR_DNS_FAIL:8
 #: templates/ERR_FORWARDING_DENIED:7 templates/ERR_FTP_DISABLED:7
 #: templates/ERR_FTP_FAILURE:7 templates/ERR_FTP_FORBIDDEN:7
 #: templates/ERR_FTP_NOT_FOUND:8 templates/ERR_FTP_PUT_ERROR:8
-#: templates/ERR_FTP_UNAVAILABLE:7 templates/ERR_INVALID_REQ:12
+#: templates/ERR_FTP_UNAVAILABLE:7 templates/ERR_INVALID_REQ:13
 #: templates/ERR_INVALID_RESP:7 templates/ERR_INVALID_URL:12
 #: templates/ERR_LIFETIME_EXP:7 templates/ERR_NO_RELAY:7
 #: templates/ERR_ONLY_IF_CACHED_MISS:7 templates/ERR_READ_ERROR:8
@@ -672,21 +592,18 @@ msgstr ""
 #: templates/ERR_UNSUP_REQ:7 templates/ERR_URN_RESOLVE:7
 #: templates/ERR_WRITE_ERROR:8 templates/ERR_ZERO_SIZE_OBJECT:7
 msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
-msgstr "Vaš keš/proksi administrator je: <a href=\"mailto:%w%W\">%w</a>."
+msgstr ""
 
 #: templates/ERR_INVALID_RESP:6
-#, fuzzy
 msgid ""
 "Your cache administrator may be able to provide you with more details about "
 "the exact nature of the problem if needed."
 msgstr ""
-"Vaš keš administrator vas može informisati o detaljima prirode vašeg "
-"problema."
 
 #: templates/ERR_ESI:8
 msgid "Your webmaster is <a href=\"mailto:%w\">%w</a>."
-msgstr "Vaš webmaster je <a href=\"mailto:%w\">%w</a>."
+msgstr ""
 
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
-msgstr "Odgovor nulte dužine"
+msgstr ""
