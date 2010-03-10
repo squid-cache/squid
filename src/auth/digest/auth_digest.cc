@@ -532,8 +532,10 @@ digestScheme::done()
     if (digestauthenticators)
         helperShutdown(digestauthenticators);
 
-    httpHeaderDestroyFieldsInfo(DigestFieldsInfo, DIGEST_ENUM_END);
-    DigestFieldsInfo = NULL;
+    if (DigestFieldsInfo) {
+	httpHeaderDestroyFieldsInfo(DigestFieldsInfo, DIGEST_ENUM_END);
+	DigestFieldsInfo = NULL;
+    }
 
     authdigest_initialised = 0;
 
@@ -670,6 +672,7 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData * conn,
 
             if (strcasecmp(digest_request->response, Response)) {
                 credentials(Failed);
+                digest_request->flags.invalid_password = 1;
                 digest_request->setDenyMessage("Incorrect password");
                 return;
             } else {
@@ -1141,14 +1144,14 @@ AuthDigestConfig::decode(char const *proxy_auth)
         if (vlen > 0) {
             if (*p == '"') {
                 if (!httpHeaderParseQuotedString(p, &value)) {
-                    debugs(29, 9, "authDigestDecodeAuth: Failed to parse attribute '" << temp << "' in '" << proxy_auth << "'");
+                    debugs(29, 9, "authDigestDecodeAuth: Failed to parse attribute '" << item << "' in '" << temp << "'");
                     continue;
                 }
             } else {
                 value.limitInit(p, vlen);
             }
         } else {
-            debugs(29, 9, "authDigestDecodeAuth: Failed to parse attribute '" << temp << "' in '" << proxy_auth << "'");
+            debugs(29, 9, "authDigestDecodeAuth: Failed to parse attribute '" << item << "' in '" << temp << "'");
             continue;
         }
 
@@ -1214,7 +1217,7 @@ AuthDigestConfig::decode(char const *proxy_auth)
 
         default:
             debugs(29, 3, "authDigestDecodeAuth: Unknown attribute '" << item << "' in '" << temp << "'");
-
+            break;
         }
     }
 
@@ -1237,6 +1240,15 @@ AuthDigestConfig::decode(char const *proxy_auth)
     /* do we have a username ? */
     if (!username || username[0] == '\0') {
         debugs(29, 2, "authenticateDigestDecode: Empty or not present username");
+        return authDigestLogUsername(username, digest_request);
+    }
+
+    /* Sanity check of the username.
+     * " can not be allowed in usernames until * the digest helper protocol
+     * have been redone
+     */
+    if (strchr(username, '"')) {
+        debugs(29, 2, "authenticateDigestDecode: Unacceptable username '" << username << "'");
         return authDigestLogUsername(username, digest_request);
     }
 
