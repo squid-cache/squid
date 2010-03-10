@@ -2973,14 +2973,22 @@ dnl end rip
   fi
 
 AC_CHECK_LIB(regex, main, [REGEXLIB="-lregex"])
+MATHLIB=""
 case "$host_os" in
 mingw|mingw32)
 	AC_MSG_NOTICE([Use MSVCRT for math functions.])
 	;;
 	*)
-	AC_CHECK_LIB(m, main)
+	AC_SEARCH_LIBS([rint],[m],[
+	case "$ac_cv_search_rint" in
+	no*)
+		;;
+	*)
+		MATHLIB="$ac_cv_search_rint"
+	esac ])
 	;;
 esac
+AC_SUBST(MATHLIB)
 
 dnl Enable IPv6 support
 AC_MSG_CHECKING([whether to enable IPv6])
