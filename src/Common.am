@@ -29,6 +29,8 @@ INCLUDES += $(KRB5INCS)
 $(OBJS): $(top_srcdir)/include/version.h $(top_builddir)/include/autoconf.h
 
 ## Because compatibility is almost universal. And the link order is important.
+## NP: libmisc util.cc depends on rint from math library
 COMPAT_LIB = \
 	-L$(top_builddir)/lib -lmiscutil \
-	$(top_builddir)/compat/libcompat.la
+	$(top_builddir)/compat/libcompat.la \
+	$(MATHLIB)
