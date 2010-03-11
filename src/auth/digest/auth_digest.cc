@@ -533,8 +533,8 @@ digestScheme::done()
         helperShutdown(digestauthenticators);
 
     if (DigestFieldsInfo) {
-	httpHeaderDestroyFieldsInfo(DigestFieldsInfo, DIGEST_ENUM_END);
-	DigestFieldsInfo = NULL;
+        httpHeaderDestroyFieldsInfo(DigestFieldsInfo, DIGEST_ENUM_END);
+        DigestFieldsInfo = NULL;
     }
 
     authdigest_initialised = 0;
