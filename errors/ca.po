@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-02-13 00:05+1300\n"
+"POT-Creation-Date: 2010-03-08 00:04+1300\n"
 "PO-Revision-Date: 2010-02-04 18:35+1300\n"
 "Last-Translator: Jordi Bruguera <jordi@dns1.grn.es>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -230,7 +230,7 @@ msgstr "Reenviament denegat."
 #: templates/ERR_FTP_NOT_FOUND:9 templates/ERR_FTP_PUT_CREATED:4
 #: templates/ERR_FTP_PUT_ERROR:9 templates/ERR_FTP_PUT_MODIFIED:4
 #: templates/ERR_FTP_UNAVAILABLE:8 templates/ERR_ICAP_FAILURE:11
-#: templates/ERR_INVALID_REQ:13 templates/ERR_INVALID_RESP:8
+#: templates/ERR_INVALID_REQ:14 templates/ERR_INVALID_RESP:8
 #: templates/ERR_INVALID_URL:13 templates/ERR_LIFETIME_EXP:8
 #: templates/ERR_NO_RELAY:8 templates/ERR_ONLY_IF_CACHED_MISS:8
 #: templates/ERR_READ_ERROR:9 templates/ERR_READ_TIMEOUT:9
@@ -240,6 +240,10 @@ msgstr "Reenviament denegat."
 #: templates/ERR_URN_RESOLVE:8 templates/ERR_WRITE_ERROR:9
 #: templates/ERR_ZERO_SIZE_OBJECT:8
 msgid "Generated %T by %h (%s)"
+msgstr ""
+
+#: templates/ERR_INVALID_REQ:12
+msgid "HTTP/1.1 Expect: feature is being asked from an HTTP/1.0 software."
 msgstr ""
 
 #: templates/ERR_URN_RESOLVE:6
@@ -653,7 +657,7 @@ msgstr ""
 #: templates/ERR_FORWARDING_DENIED:7 templates/ERR_FTP_DISABLED:7
 #: templates/ERR_FTP_FAILURE:7 templates/ERR_FTP_FORBIDDEN:7
 #: templates/ERR_FTP_NOT_FOUND:8 templates/ERR_FTP_PUT_ERROR:8
-#: templates/ERR_FTP_UNAVAILABLE:7 templates/ERR_INVALID_REQ:12
+#: templates/ERR_FTP_UNAVAILABLE:7 templates/ERR_INVALID_REQ:13
 #: templates/ERR_INVALID_RESP:7 templates/ERR_INVALID_URL:12
 #: templates/ERR_LIFETIME_EXP:7 templates/ERR_NO_RELAY:7
 #: templates/ERR_ONLY_IF_CACHED_MISS:7 templates/ERR_READ_ERROR:8
