@@ -323,8 +323,9 @@ HttpRequest::pack(Packer * p)
 {
     assert(p);
     /* pack request-line */
-    packerPrintf(p, "%s " SQUIDSTRINGPH " HTTP/1.0\r\n",
-                 RequestMethodStr(method), SQUIDSTRINGPRINT(urlpath));
+    packerPrintf(p, "%s " SQUIDSTRINGPH " HTTP/%d.%d\r\n",
+                 RequestMethodStr(method), SQUIDSTRINGPRINT(urlpath),
+                 http_ver.major, http_ver.minor);
     /* headers */
     header.packInto(p);
     /* trailer */

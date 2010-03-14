@@ -1320,7 +1320,7 @@ netdbExchangeStart(void *data)
 
     HTTPMSGLOCK(ex->r);
     assert(NULL != ex->r);
-    ex->r->http_ver = HttpVersion(1,0);
+    ex->r->http_ver = HttpVersion(1,1);
     ex->connstate = STATE_HEADER;
     ex->e = storeCreateEntry(uri, uri, request_flags(), METHOD_GET);
     ex->buf_sz = NETDB_REQBUF_SZ;

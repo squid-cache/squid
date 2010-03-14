@@ -321,18 +321,13 @@ HttpMsg::setContentLength(int64_t clen)
 int
 httpMsgIsPersistent(HttpVersion const &http_ver, const HttpHeader * hdr)
 {
-#if WHEN_SQUID_IS_HTTP1_1
-
     if ((http_ver.major >= 1) && (http_ver.minor >= 1)) {
         /*
          * for modern versions of HTTP: persistent unless there is
          * a "Connection: close" header.
          */
         return !httpHeaderHasConnDir(hdr, "close");
-    } else
-#else
-    {
-#endif
+    } else {
         /*
          * Persistent connections in Netscape 3.x are allegedly broken,
          * return false if it is a browser connection.  If there is a
@@ -340,17 +335,17 @@ httpMsgIsPersistent(HttpVersion const &http_ver, const HttpHeader * hdr)
          */
         const char *agent = hdr->getStr(HDR_USER_AGENT);
 
-    if (agent && !hdr->has(HDR_VIA)) {
-        if (!strncasecmp(agent, "Mozilla/3.", 10))
-            return 0;
+        if (agent && !hdr->has(HDR_VIA)) {
+            if (!strncasecmp(agent, "Mozilla/3.", 10))
+                return 0;
 
-        if (!strncasecmp(agent, "Netscape/3.", 11))
-            return 0;
+            if (!strncasecmp(agent, "Netscape/3.", 11))
+                return 0;
+        }
+
+        /* for old versions of HTTP: persistent if has "keep-alive" */
+        return httpHeaderHasConnDir(hdr, "keep-alive");
     }
-
-    /* for old versions of HTTP: persistent if has "keep-alive" */
-    return httpHeaderHasConnDir(hdr, "keep-alive");
-}
 }
 
 void HttpMsg::packInto(Packer *p, bool full_uri) const

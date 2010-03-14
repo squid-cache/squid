@@ -367,8 +367,8 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
 
     request->my_addr.SetPort(0);
 
-    /* RFC 2616 says 'upgrade' to our 1.0 regardless of what the client is */
-    HttpVersion http_ver(1,0);
+    /* Our version is HTTP/1.1 */
+    HttpVersion http_ver(1,1);
     request->http_ver = http_ver;
 
     http->request = HTTPMSGLOCK(request);
