@@ -1,3 +1,14 @@
+Changes to squid-3.1.0.18 (14 Mar 2010):
+
+	- Regression Fix: IPv4-mapped prefix, broken in 3.1.0.16
+	- Bug 2869: Remove unused external reference
+	- Bug 2866: Support OpenSSL 1.0
+	- Bug 2813: Random unix_group crash at startup
+	- Send HTTP1.1 compliant 417 responses
+	- Associate external acl message with the request
+	- Various Digest parser fixes
+	- ... and all bug fixes from 3.0 up to 3.0.STABLE25
+
 Changes to squid-3.1.0.17 (24 Feb 2010):
 
 	- Regression Fix: Non-English error page UTF encoding

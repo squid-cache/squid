@@ -2,10 +2,10 @@
 <HTML>
 <HEAD>
  <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.65">
- <TITLE>Squid 3.1.0.17 release notes</TITLE>
+ <TITLE>Squid 3.1.0.18 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.1.0.17 release notes</H1>
+<H1>Squid 3.1.0.18 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -70,7 +70,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.1.0.17 for testing.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.1.0.18 for testing.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.1/">http://www.squid-cache.org/Versions/v3/3.1/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -900,6 +900,10 @@ retried.
         
 </PRE>
 </P>
+
+<DT><B>ignore_expect_100</B><DD>
+<P>Ported from 2.7. Requires --enable-http-violations
+Prevents 417 errors being sent to broken HTTP/1.1 non-compliant clients.</P>
 
 <DT><B>include</B><DD>
 <P>New option to import entire secondary configuration files into squid.conf.
@@ -1809,9 +1813,6 @@ Use --without-pthreads to disable, but only if you really have to.</P>
 <P><EM>act-as-origin</EM> not yet ported from 2.7</P>
 <P><EM>http11</EM> not yet ported from 2.7</P>
 <P><EM>urlgroup=</EM> not yet ported from 2.6</P>
-
-<DT><B>ignore_expect_100</B><DD>
-<P>Not yet ported from 2.7</P>
 
 <DT><B>ignore_ims_on_miss</B><DD>
 <P>Not yet ported from 2.7</P>
