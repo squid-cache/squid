@@ -176,10 +176,9 @@ rfc1738_escape_part(const char *url)
 #endif /* 0 */
 
 /*
- *  rfc1738_unescape() - Converts escaped characters (%xy numbers) in
- *  given the string.  %% is a %. %ab is the 8-bit hexadecimal number "ab"
+ * Converts a ascii hex code into a binary character.
  */
-static inline int
+inline int
 fromhex(char ch)
 {
     if (ch >= '0' && ch <= '9')
@@ -191,6 +190,10 @@ fromhex(char ch)
     return -1;
 }
 
+/*
+ *  rfc1738_unescape() - Converts escaped characters (%xy numbers) in
+ *  given the string.  %% is a %. %ab is the 8-bit hexadecimal number "ab"
+ */
 void
 rfc1738_unescape(char *s)
 {
