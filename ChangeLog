@@ -1,3 +1,11 @@
+Changes to squid-3.0.STABLE25 (14 Mar 2010):
+
+	- Bug 2845: Rework the http digest auth parser
+	- Bug 2787: unknown/unexpected status code messages
+	- Bug 2507: squid_ldap_group: Strip Domain name separated by +
+	- Bug 2367: stale=true on digest requests with unknown nonce
+	- ... and several other minor corrections
+
 Changes to squid-3.0.STABLE24 (13 Feb 2010):
 
 	- Bug 2858: Segment violation in HTCP
