@@ -178,6 +178,8 @@ rfc1738_escape_part(const char *url)
 /*
  * Converts a ascii hex code into a binary character.
  */
+inline int fromhex(char ch); // prototype to keep GCC happy.
+
 inline int
 fromhex(char ch)
 {
