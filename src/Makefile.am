@@ -721,7 +721,7 @@ libDiskThreads_a_SOURCES = \
 		DiskIO/DiskThreads/DiskThreadsIOStrategy.h
 
 DiskIO_DiskDaemon_diskd_SOURCES = DiskIO/DiskDaemon/diskd.cc 
-DiskIO_DiskDaemon_diskd_LDADD = $(top_builddir)/lib/libmiscutil.a $(XTRA_LIBS)
+DiskIO_DiskDaemon_diskd_LDADD = $(COMPAT_LIB) $(XTRA_LIBS)
 
 
 DEFAULT_HTTP_PORT	= $(CACHE_HTTP_PORT)
