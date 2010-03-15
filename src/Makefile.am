@@ -622,6 +622,7 @@ ufsdump_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	String.cc \
+	SquidNew.cc \
 	time.cc \
 	ufsdump.cc \
 	dlink.h \
