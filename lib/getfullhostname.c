@@ -62,7 +62,7 @@
 #include <arpa/inet.h>
 #endif
 
-#endif // 0
+#endif /* 0 */
 
 
 #if HAVE_UNISTD_H
