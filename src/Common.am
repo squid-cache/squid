@@ -32,5 +32,4 @@ $(OBJS): $(top_srcdir)/include/version.h $(top_builddir)/include/autoconf.h
 ## NP: libmisc util.cc depends on rint from math library
 COMPAT_LIB = \
 	-L$(top_builddir)/lib -lmiscutil \
-	$(top_builddir)/compat/libcompat.la \
-	$(MATHLIB)
+	$(top_builddir)/compat/libcompat.la
