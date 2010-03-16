@@ -112,7 +112,6 @@ void WINAPI WIN32_svcHandler(DWORD);
 /** for error reporting from xmalloc and friends */
 SQUIDCEXTERN void (*failure_notify) (const char *);
 
-static int KidIdentifier = 0;
 static int opt_parse_cfg_only = 0;
 static char *opt_syslog_facility = NULL;
 static int icpPortNumOverride = 1;	/* Want to detect "-u 0" */
@@ -1150,10 +1149,25 @@ SquidMainSafe(int argc, char **argv)
     return -1; // not reached
 }
 
+/// computes name and ID for the current kid process
+static void
+ConfigureCurrentKid(const char *processName)
+{
+	// kids are marked with parenthesis around their process names
+    if (processName && processName[0] == '(') {
+        if (const char *idStart = strrchr(processName, '-')) {
+            KidIdentifier = atoi(idStart + 1);
+            const int nameLen = idStart - (processName + 1);
+			KidName.limitInit(processName + 1, nameLen);
+        }
+    }
+    // else use defaults, but it should not happen except for the main process
+}
+
 int
 SquidMain(int argc, char **argv)
 {
-    sscanf(argv[0], "(squid%d)", &KidIdentifier);
+    ConfigureCurrentKid(argv[0]);
 
 #ifdef _SQUID_WIN32_
 
@@ -1690,7 +1704,7 @@ public:
 
         for (size_t i = 1; i <= n; ++i) {
             char kid_name[32];
-            snprintf(kid_name, sizeof(kid_name), "(squid%d)", (int)i);
+            snprintf(kid_name, sizeof(kid_name), "(squid-%d)", (int)i);
             storage.push_back(Kid(kid_name));
         }
     }

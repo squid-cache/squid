@@ -258,6 +258,42 @@ parseManyConfigFiles(char* files, int depth)
     return error_count;
 }
 
+static void
+ReplaceSubstr(char*& str, int& len, unsigned substrIdx, unsigned substrLen, const char* newSubstr)
+{
+    assert(str != NULL);
+    assert(newSubstr != NULL);
+
+    unsigned newSubstrLen = strlen(newSubstr);
+    if (newSubstrLen > substrLen)
+        str = (char*)realloc(str, len - substrLen + newSubstrLen + 1);
+
+    // move tail part including zero
+    memmove(str + substrIdx + newSubstrLen, str + substrIdx + substrLen, len - substrIdx - substrLen + 1);
+    // copy new substring in place
+    memcpy(str + substrIdx, newSubstr, newSubstrLen);
+
+    len = strlen(str);
+}
+
+static void
+SubstituteMacro(char*& line, int& len, const char* macroName, const char* substStr)
+{
+    assert(line != NULL);
+    assert(macroName != NULL);
+    assert(substStr != NULL);
+    unsigned macroNameLen = strlen(macroName);
+    while (const char* macroPos = strstr(line, macroName)) // we would replace all occurrences
+        ReplaceSubstr(line, len, macroPos - line, macroNameLen, substStr);
+}
+
+static void
+ProcessMacros(char*& line, int& len)
+{
+    SubstituteMacro(line, len, "${process_name}", KidName.termedBuf());
+    SubstituteMacro(line, len, "${process_number}", xitoa(KidIdentifier));
+}
+
 static int
 parseOneConfigFile(const char *file_name, unsigned int depth)
 {
@@ -357,6 +393,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
             continue;
         }
 
+        ProcessMacros(tmp_line, tmp_line_len);
         debugs(3, 5, "Processing: '" << tmp_line << "'");
 
         /* Handle includes here */
