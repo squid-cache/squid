@@ -57,6 +57,18 @@ COMMENT_START
   This arbitrary restriction is to prevent recursive include references
   from causing Squid entering an infinite loop whilst trying to load
   configuration files.
+
+
+  SMP-Related Macros
+
+	The following SMP-related preprocessor macros can be used.
+
+	${process_name} expands to the current Squid process "name"
+	(e.g., squid1, squid2, or cache1).
+
+	${process_number} expands to the current Squid process
+	identifier, which is an integer number (e.g., 1, 2, 3) unique
+	across all Squid processes.
 COMMENT_END
 
 COMMENT_START
