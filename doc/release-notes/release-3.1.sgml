@@ -1426,6 +1426,9 @@ This section gives an account of those changes in three categories:
 	<tag>auth_param</tag>
 	<p><em>blankpassword</em> option for basic scheme removed.
 
+	<tag>cache_peer</tag>
+	<p><em>http11</em> Obsolete.
+
 	<tag>external_acl_type</tag>
 	<p>Format tag <em>%{Header}</em> replaced by <em>%>{Header}</em>
 	<p>Format tag <em>%{Header:member}</em> replaced by <em>%>{Header:member}</em>
@@ -1448,6 +1451,9 @@ This section gives an account of those changes in three categories:
 
 	<tag>redirector_bypass</tag>
 	<p>Replaced by <em>url_rewrite_bypass</em>
+
+	<tag>server_http11</tag>
+	<p>Obsolete.
 
 	<tag>upgrade_http0.9</tag>
 	<p>Obsolete. ICY protocol streaming support added natively.
@@ -1566,7 +1572,6 @@ This section gives an account of those changes in three categories:
 
 	<tag>cache_peer</tag>
 	<p><em>idle=</em> not yet ported from 2.7
-	<p><em>http11</em> not yet ported from 2.7
 	<p><em>monitorinterval=</em> not yet ported from 2.6
 	<p><em>monitorsize=</em> not yet ported from 2.6
 	<p><em>monitortimeout=</em> not yet ported from 2.6
@@ -1628,9 +1633,6 @@ This section gives an account of those changes in three categories:
 	<p><em>negative-ttl=</em> not yet ported from 2.7
 
 	<tag>refresh_stale_hit</tag>
-	<p>Not yet ported from 2.7
-
-	<tag>server_http11</tag>
 	<p>Not yet ported from 2.7
 
 	<tag>storeurl_access</tag>
