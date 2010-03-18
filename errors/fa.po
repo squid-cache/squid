@@ -238,15 +238,12 @@ msgstr "امکان Forward بسته شده است."
 msgid "Generated %T by %h (%s)"
 msgstr "%T توسط %h(%s) تولید شد."
 
+#, fuzzy
 #: templates/ERR_INVALID_REQ:12
-msgid "HTTP/1.1 Expect: feature is being asked from an HTTP/1.0 software."
+msgid "HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
 msgstr ""
 "انتظار برای HTTP/1.1 : این ویژگی از یک نرم افزار با HTTP/1.0 درخواست شده "
 "است."
-
-#: templates/ERR_INVALID_REQ:12
-msgid "HTTP/1.1 Expect: feature is being asked from an HTTP/1.0 software."
-msgstr ""
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
