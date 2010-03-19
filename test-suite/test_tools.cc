@@ -5,7 +5,6 @@
 // XXX: This file is made of large pieces of src/debug.cc and src/tools.cc
 // with only a few minor modifications. TODO: redesign or delete.
 
-#define _SQUID_EXTERNNEW_
 #include "squid.h"
 
 /* AYJ: the debug stuff here should really be in a stub_debug.cc file for tests to link */
