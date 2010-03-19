@@ -2641,7 +2641,10 @@ mingw|mingw32)
 	AC_MSG_NOTICE([Use MSVCRT for math functions.])
 	;;
 	*)
-	AC_CHECK_LIB(m, main)
+	dnl rint() is only used in old C code for now.
+	AC_LANG_PUSH([C])
+	AC_SEARCH_LIBS([rint],[m])
+	AC_LANG_POP([C])
 	;;
 esac
 
