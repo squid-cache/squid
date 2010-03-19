@@ -3,15 +3,15 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-03-18 12:39+1300\n"
-"PO-Revision-Date: 2009-09-27 15:50+1300\n"
+"PO-Revision-Date: 2010-03-18 18:28+0200\n"
 "Last-Translator: Evgeni Gechev <etg@setcom.bg>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
+"Language: bg\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: bg\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Pootle 1.2.1\n"
+"X-Generator: Pootle 2.0.1\n"
 
 #: templates/ERR_DIR_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
@@ -35,7 +35,6 @@ msgstr ""
 "отговор</b>:"
 
 #: templates/ERR_READ_TIMEOUT:7
-#, fuzzy
 msgid ""
 "A Timeout occurred while waiting to read data from the network. The network "
 "or server may be down or congested. Please retry your request."
@@ -53,7 +52,6 @@ msgid "Access Denied."
 msgstr "Отказан достъп"
 
 #: templates/ERR_ACCESS_DENIED:6
-#, fuzzy
 msgid ""
 "Access control configuration prevents your request from being allowed at "
 "this time. Please contact your service provider if you feel this is "
@@ -84,7 +82,6 @@ msgid "An Illegal response was received from the ICAP server."
 msgstr "Невалиден отговор от ICAP сървъра."
 
 #: templates/ERR_READ_ERROR:7
-#, fuzzy
 msgid ""
 "An error condition occurred while reading data from the network. Please "
 "retry your request."
@@ -93,7 +90,6 @@ msgstr ""
 "направите Вашата заявка."
 
 #: templates/ERR_WRITE_ERROR:7
-#, fuzzy
 msgid ""
 "An error condition occurred while writing to the network. Please retry your "
 "request."
@@ -229,15 +225,15 @@ msgstr "Файлът е обновен"
 
 #: templates/ERR_AGENT_CONFIGURE:6 templates/ERR_AGENT_WPAD:6
 msgid "For Firefox browsers go to: <ul>"
-msgstr ""
+msgstr "За браузер Firefox идете на: <ul>"
 
 #: templates/ERR_AGENT_CONFIGURE:9 templates/ERR_AGENT_WPAD:8
 msgid "For Internet Explorer browsers go to: <ul>"
-msgstr ""
+msgstr "За браузер Internet Explorer идете на: <ul>"
 
 #: templates/ERR_AGENT_CONFIGURE:12 templates/ERR_AGENT_WPAD:11
 msgid "For Opera browsers go to: <ul>"
-msgstr ""
+msgstr "За браузер Opera идете на: <ul>"
 
 #: templates/ERR_FORWARDING_DENIED:5
 msgid "Forwarding Denied."
@@ -276,7 +272,7 @@ msgstr "Не очаквайте прекалено много на този ет
 
 #: templates/ERR_AGENT_CONFIGURE:5 templates/ERR_AGENT_WPAD:5
 msgid "How to find these settings in your browser:"
-msgstr ""
+msgstr "Как да намерите тези настройки на Вашия браузер:"
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
@@ -311,7 +307,7 @@ msgstr "Невалиден double-escape символ в адреса"
 #: templates/ERR_AGENT_CONFIGURE:8 templates/ERR_AGENT_CONFIGURE:11
 #: templates/ERR_AGENT_CONFIGURE:14
 msgid "In the HTTP proxy box type the proxy name %h and port 3128."
-msgstr ""
+msgstr "В полето HTTP proxy напишете име на proxy сървър %h и порт 3128."
 
 #: templates/ERR_INVALID_URL:5
 msgid "Invalid URL"
@@ -388,11 +384,11 @@ msgstr "Заявката е прекалено голяма."
 
 #: templates/ERR_AGENT_WPAD:10
 msgid "Select Automatically detect settings"
-msgstr ""
+msgstr "Изберете Автоматично откриване на настройките."
 
 #: templates/ERR_AGENT_WPAD:13
 msgid "Select Use Automatic proxy configuration"
-msgstr ""
+msgstr "Изберете Използване на Автоматично конфигуриране на прокси сървър."
 
 #: templates/ERR_SOCKET_FAILURE:5
 msgid "Socket Failure"
@@ -511,7 +507,6 @@ msgid ""
 msgstr "Възникна следната грешка при опит за достъп до: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_CONNECT_FAIL:7
-#, fuzzy
 msgid "The remote host or network may be down. Please try the request again."
 msgstr ""
 "Вероятно отдалеченият сървър или мрежа са недостъпни. Моля, опитайте отново "
@@ -551,15 +546,14 @@ msgid "The system returned: <i>%E</i>"
 msgstr "Операционната система даде следното съобщение: <i>%E</i>"
 
 #: templates/ERR_NO_RELAY:6
-#, fuzzy
 msgid ""
 "There is no WAIS Relay host defined for this Cache! Yell at the "
 "administrator."
 msgstr ""
-"Няма дефиниран WAIS Relay за този кеш сървър. Обърнете се към администратора."
+"Няма дефиниран WAIS Relay за този кеш сървър. Обърнете се към "
+"администратора."
 
 #: templates/ERR_TOO_BIG:8
-#, fuzzy
 msgid ""
 "These limits have been established by the Internet Service Provider who "
 "operates this cache. Please contact them directly if you feel this is an "
@@ -580,7 +574,6 @@ msgid "This cache does not support FTP."
 msgstr "Този кеш сървър не поддържа FTP"
 
 #: templates/ERR_SHUTTING_DOWN:5
-#, fuzzy
 msgid ""
 "This cache is in the process of shutting down and can not service your "
 "request at this time. Please retry your request again soon."
@@ -589,7 +582,6 @@ msgstr ""
 "вашата заявка. Моля опитайте отново след няколко минути."
 
 #: templates/ERR_FORWARDING_DENIED:6
-#, fuzzy
 msgid ""
 "This cache will not forward your request because it is trying to enforce a "
 "sibling relationship. Perhaps the client at %i is a cache which has been "
@@ -627,14 +619,13 @@ msgstr ""
 "web сървъра"
 
 #: templates/ERR_FTP_NOT_FOUND:7
-#, fuzzy
 msgid ""
 "This might be caused by an FTP URL with an absolute path (which does not "
 "comply with RFC 1738). If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
-"Това би могло да бъде причинено от заявка, в която е посочен абсолютен път "
-"(което е неправилно според документ RFC 1738). Ако това е причината, то "
+"Това би могло да бъде причинено от FTP заявка, в която е посочен абсолютен "
+"път (което е неправилно според документ RFC 1738). Ако това е причината, то "
 "файлът би могъл да бъде намерен на адрес <a href=\"%B\">%B</a>."
 
 #: templates/ERR_SECURE_CONNECT_FAIL:7
@@ -650,7 +641,6 @@ msgstr ""
 "достатъчно нивото на сигурност на web сървъра."
 
 #: templates/ERR_CANNOT_FORWARD:6
-#, fuzzy
 msgid ""
 "This request could not be forwarded to the origin server or to any parent "
 "caches. The most likely cause for this error is that the cache administrator "
@@ -666,6 +656,8 @@ msgstr ""
 msgid ""
 "Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy"
 msgstr ""
+"Инструменти -&gt; Опции за интернет -&gt; Връзки -&gt; LAN настройки -&gt; "
+"Прокси сървър"
 
 #: templates/ERR_AGENT_CONFIGURE:7 templates/ERR_AGENT_WPAD:7
 msgid ""
