@@ -172,14 +172,14 @@ EXTRA_PROGRAMS = \
 	recv-announce \
 	tests/testUfs \
 	tests/testCoss \
-	tests/testNull
+	tests/testNull \
+	ufsdump
 
 ## cfgen is used when building squid
 ## ufsdump is a debug utility, it is possibly useful for end users with cache
 ## corruption, but at this point we do not install it.
 noinst_PROGRAMS = \
-	cf_gen \
-	ufsdump
+	cf_gen
 
 sbin_PROGRAMS = \
 	squid
