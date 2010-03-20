@@ -133,7 +133,7 @@ rfc1738_do_escape(const char *url, int flags)
          * allocated - KA */
 
         if (do_escape == 1) {
-            (void) snprintf(q, 3, "%%%02X", (unsigned char) *p);
+            (void) snprintf(q, (bufsize-(p-buf)), "%%%02X", (unsigned char) *p);
             q += sizeof(char) * 2;
         } else {
             *q = *p;
