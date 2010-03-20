@@ -12,7 +12,7 @@
 #include <dlfcn.h>
 #endif
 
-#include "TextException.h"
+#include "base/TextException.h"
 #include "LoadableModule.h"
 
 // Note: We must use preprocessor instead of C ifs because if dlopen()

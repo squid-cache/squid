@@ -42,6 +42,7 @@
 
 #include "acl/FilledChecklist.h"
 #include "auth/UserRequest.h"
+#include "base/TextException.h"
 #if DELAY_POOLS
 #include "DelayPools.h"
 #endif
@@ -59,7 +60,6 @@
 #include "rfc1738.h"
 #include "SquidTime.h"
 #include "Store.h"
-#include "TextException.h"
 
 
 #define SQUID_ENTER_THROWING_CODE() try {

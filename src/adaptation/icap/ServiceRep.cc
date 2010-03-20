@@ -3,14 +3,14 @@
  */
 
 #include "squid.h"
-#include "TextException.h"
-#include "HttpReply.h"
-#include "adaptation/icap/ServiceRep.h"
-#include "adaptation/icap/Options.h"
-#include "adaptation/icap/OptXact.h"
-#include "ConfigParser.h"
 #include "adaptation/icap/Config.h"
 #include "adaptation/icap/ModXact.h"
+#include "adaptation/icap/Options.h"
+#include "adaptation/icap/OptXact.h"
+#include "adaptation/icap/ServiceRep.h"
+#include "base/TextException.h"
+#include "ConfigParser.h"
+#include "HttpReply.h"
 #include "SquidTime.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, ServiceRep);
