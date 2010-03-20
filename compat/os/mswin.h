@@ -63,21 +63,10 @@
 
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
 
-typedef unsigned char uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned int uint32_t;
-typedef unsigned __int64 uint64_t;
-
-typedef long pid_t;
-
 #if defined __USE_FILE_OFFSET64
-typedef int64_t off_t;
 typedef uint64_t ino_t;
-
 #else
-typedef long off_t;
 typedef unsigned long ino_t;
-
 #endif
 
 #define INT64_MAX _I64_MAX
@@ -222,7 +211,6 @@ struct timezone {
 #define FD_SETSIZE SQUID_MAXFD
 #endif
 
-#include <stddef.h>
 #include <process.h>
 #include <errno.h>
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
@@ -245,7 +233,6 @@ struct timezone {
 #pragma warning (pop)
 #endif
 #include <io.h>
-#include <stdlib.h>
 
 typedef char * caddr_t;
 

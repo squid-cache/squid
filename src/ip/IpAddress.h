@@ -51,11 +51,7 @@
 #ifdef _SQUID_MSWIN_
 #include <ws2tcpip.h>
 #endif
-#if HAVE_NETDB_H && !defined(_SQUID_NETDB_H_)   /* protect NEXTSTEP */
-#define _SQUID_NETDB_H_
-#ifdef _SQUID_NEXT_
-#include <netinet/in_systm.h>
-#endif
+#if HAVE_NETDB_H
 #include <netdb.h>
 #endif
 

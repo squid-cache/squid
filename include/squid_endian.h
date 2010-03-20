@@ -56,7 +56,6 @@
  */
 
 #include "config.h"
-#include "squid_types.h"
 
 /*
  * Some systems define bswap_16() and bswap_32() in <byteswap.h>

@@ -19,6 +19,7 @@ libcompat_la_SOURCES = \
 	fdsetsize.h \
 	osdetect.h \
 	stdvarargs.h \
+	types.h \
 	valgrind.h \
 	\
 	os/aix.h \

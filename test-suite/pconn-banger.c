@@ -35,9 +35,6 @@
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
 #if HAVE_STDIO_H
 #include <stdio.h>
 #endif
@@ -52,12 +49,6 @@
 #endif
 #ifdef HAVE_BSTRING_H
 #include <bstring.h>
-#endif
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#if HAVE_SYS_SELECT_H
-#include <sys/select.h>
 #endif
 #if HAVE_SIGNAL_H
 #include <signal.h>
