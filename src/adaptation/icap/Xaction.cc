@@ -9,7 +9,7 @@
 #include "adaptation/icap/Xaction.h"
 #include "adaptation/icap/Launcher.h"
 #include "adaptation/icap/Config.h"
-#include "TextException.h"
+#include "base/TextException.h"
 #include "pconn.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"

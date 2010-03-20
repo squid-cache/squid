@@ -3,7 +3,7 @@
 
 // Origin: xstd/TextException
 
-#include "squid.h"
+#include "config.h"
 #include <exception>
 
 // simple exception to report custom errors

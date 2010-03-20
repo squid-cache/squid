@@ -1,7 +1,7 @@
 
 #include "squid.h"
+#include "base/TextException.h"
 #include "BodyPipe.h"
-#include "TextException.h"
 
 CBDATA_CLASS_INIT(BodyPipe);
 
