@@ -249,9 +249,7 @@ libsquid_la_SOURCES = \
 	CommCalls.h \
 	DescriptorSet.cc \
 	DescriptorSet.h \
-	SquidConfig.cc \
-        TextException.cc \
-        TextException.h
+	SquidConfig.cc
 
 squid_SOURCES = \
 	$(ACL_REGISTRATION_SOURCES) \
@@ -968,9 +966,10 @@ tests_testHttpReply_LDADD=\
 	acl/libstate.la \
 	auth/libauth.la \
 	ip/libip.la \
+	base/libbase.la \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
-	-L../lib -lmiscutil \
+	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testHttpReply_DEPENDENCIES= $(SQUID_CPPUNIT_LA) \
 	$(top_builddir)/lib/libmiscutil.a
