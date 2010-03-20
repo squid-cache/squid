@@ -143,43 +143,9 @@ rfc1738_do_escape(const char *url, int flags)
     return (buf);
 }
 
-#if 0 /* legacy API */
-/*
- * rfc1738_escape - Returns a static buffer that contains the RFC
- * 1738 compliant, escaped version of the given url.
- */
-char *
-rfc1738_escape(const char *url)
-{
-    return rfc1738_do_escape(url, 0);
-}
-
-/*
- * rfc1738_escape_unescaped - Returns a static buffer that contains
- * the RFC 1738 compliant, escaped version of the given url.
- */
-char *
-rfc1738_escape_unescaped(const char *url)
-{
-    return rfc1738_do_escape(url, -1);
-}
-
-/*
- * rfc1738_escape_part - Returns a static buffer that contains the
- * RFC 1738 compliant, escaped version of the given url segment.
- */
-char *
-rfc1738_escape_part(const char *url)
-{
-    return rfc1738_do_escape(url, 1);
-}
-#endif /* 0 */
-
 /*
  * Converts a ascii hex code into a binary character.
  */
-/* int fromhex(char ch); *//* prototype to keep GCC happy. */
-
 static int
 fromhex(char ch)
 {
