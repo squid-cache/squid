@@ -43,14 +43,12 @@
 #if HAVE_ASSERT_H
 #include <assert.h>
 #endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
 #if HAVE_STRING_H
 #include <string.h>
 #endif
 #if HAVE_ARPA_INET_H
-#include <arpa/inet.h>  /* inet_ntoa() */
+/* for inet_ntoa() */
+#include <arpa/inet.h>
 #endif
 
 #ifdef INET6

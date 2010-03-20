@@ -35,14 +35,8 @@
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
 #if HAVE_STDIO_H
 #include <stdio.h>
-#endif
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
 #endif
 #if HAVE_CTYPE_H
 #include <ctype.h>
@@ -64,8 +58,7 @@
 #if HAVE_MEMORY_H
 #include <memory.h>
 #endif
-#if HAVE_NETDB_H && !defined(_SQUID_NETDB_H_)	/* protect NEXTSTEP */
-#define _SQUID_NETDB_H_
+#if HAVE_NETDB_H
 #include <netdb.h>
 #endif
 #if HAVE_PWD_H
@@ -121,9 +114,6 @@
 #endif
 #ifdef HAVE_CRYPT_H
 #include <crypt.h>
-#endif
-#if HAVE_SYS_SELECT_H
-#include <sys/select.h>
 #endif
 #if HAVE_GETOPT_H
 #include <getopt.h>

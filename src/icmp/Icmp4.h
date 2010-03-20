@@ -37,9 +37,6 @@
 #include "config.h"
 #include "Icmp.h"
 
-#if HAVE_NETINET_IN_SYSTM_H
-#include <netinet/in_systm.h>
-#endif
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
