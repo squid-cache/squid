@@ -42,7 +42,7 @@
 /** On linux this must be defined to get PRId64 and friends */
 #define __STDC_FORMAT_MACROS
 
-#include "squid_types.h"
+#include "compat/types.h"
 
 /*****************************************************/
 /* per-OS hacks. One file per OS.                    */
