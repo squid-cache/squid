@@ -133,7 +133,7 @@ rfc1738_do_escape(const char *url, int flags)
          * allocated - KA */
 
         if (do_escape == 1) {
-            (void) sprintf(q, "%%%02X", (unsigned char) *p);
+            (void) snprintf(q, 3, "%%%02X", (unsigned char) *p);
             q += sizeof(char) * 2;
         } else {
             *q = *p;
@@ -178,9 +178,9 @@ rfc1738_escape_part(const char *url)
 /*
  * Converts a ascii hex code into a binary character.
  */
-inline int fromhex(char ch); /* prototype to keep GCC happy. */
+/* int fromhex(char ch); *//* prototype to keep GCC happy. */
 
-inline int
+static int
 fromhex(char ch)
 {
     if (ch >= '0' && ch <= '9')
