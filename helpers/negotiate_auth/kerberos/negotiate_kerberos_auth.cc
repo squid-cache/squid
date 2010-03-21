@@ -171,7 +171,7 @@ check_gss_err(OM_uint32 major_status, OM_uint32 minor_status,
                                           GSS_C_GSS_CODE, GSS_C_NULL_OID, &msg_ctx, &status_string);
             if (maj_stat == GSS_S_COMPLETE) {
                 if (sizeof(buf) > len + status_string.length + 1) {
-                    sprintf(buf + len, "%s", (char *) status_string.value);
+                    snprintf(buf + len, (sizeof(buf)-len), "%s", (char *) status_string.value);
                     len += status_string.length;
                 }
                 gss_release_buffer(&min_stat, &status_string);
@@ -180,7 +180,7 @@ check_gss_err(OM_uint32 major_status, OM_uint32 minor_status,
             gss_release_buffer(&min_stat, &status_string);
         }
         if (sizeof(buf) > len + 2) {
-            sprintf(buf + len, "%s", ". ");
+            snprintf(buf + len, (sizeof(buf)-len), "%s", ". ");
             len += 2;
         }
         msg_ctx = 0;
@@ -190,7 +190,7 @@ check_gss_err(OM_uint32 major_status, OM_uint32 minor_status,
                                           GSS_C_MECH_CODE, GSS_C_NULL_OID, &msg_ctx, &status_string);
             if (maj_stat == GSS_S_COMPLETE) {
                 if (sizeof(buf) > len + status_string.length) {
-                    sprintf(buf + len, "%s", (char *) status_string.value);
+                    snprintf(buf + len,(sizeof(buf)-len), "%s", (char *) status_string.value);
                     len += status_string.length;
                 }
                 gss_release_buffer(&min_stat, &status_string);

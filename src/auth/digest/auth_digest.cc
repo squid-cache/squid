@@ -220,7 +220,7 @@ authenticateDigestNonceDelete(digest_nonce_h * nonce)
 
         safe_free(nonce->key);
 
-        digest_nonce_pool->free(nonce);
+        digest_nonce_pool->freeOne(nonce);
     }
 }
 

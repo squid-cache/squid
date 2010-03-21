@@ -169,7 +169,7 @@ StoreEntry::operator new (size_t bytecount)
 void
 StoreEntry::operator delete (void *address)
 {
-    pool->free(address);
+    pool->freeOne(address);
 }
 
 void

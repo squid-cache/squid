@@ -786,7 +786,7 @@ helperStatefulServerFree(int fd, void *data)
     }
 
     if (srv->data != NULL)
-        hlp->datapool->free(srv->data);
+        hlp->datapool->freeOne(srv->data);
 
     cbdataReferenceDone(srv->parent);
 

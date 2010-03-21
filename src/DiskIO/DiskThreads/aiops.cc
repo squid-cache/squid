@@ -218,7 +218,7 @@ squidaio_xfree(void *p, int size)
     MemAllocator *pool;
 
     if ((pool = squidaio_get_pool(size)) != NULL) {
-        pool->free(p);
+        pool->freeOne(p);
     } else
         xfree(p);
 }
@@ -230,7 +230,7 @@ squidaio_xstrfree(char *str)
     int len = strlen(str) + 1;
 
     if ((pool = squidaio_get_pool(len)) != NULL) {
-        pool->free(str);
+        pool->freeOne(str);
     } else
         xfree(str);
 }
@@ -634,7 +634,7 @@ squidaio_cleanup_request(squidaio_request_t * requestp)
         resultp->aio_errno = requestp->err;
     }
 
-    squidaio_request_pool->free(requestp);
+    squidaio_request_pool->freeOne(requestp);
 }				/* squidaio_cleanup_request */
 
 

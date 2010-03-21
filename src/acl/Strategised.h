@@ -99,7 +99,7 @@ template <class MatchType>
 void
 ACLStrategised<MatchType>::operator delete (void *address)
 {
-    Pool->free(address);
+    Pool->freeOne(address);
 }
 
 template <class MatchType>
