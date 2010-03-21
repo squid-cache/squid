@@ -981,7 +981,7 @@ read_request(void)
     if (strlen(buf) == 0)
 #endif
     {
-        free(buf);
+        xfree(buf);
         return NULL;
     }
 
