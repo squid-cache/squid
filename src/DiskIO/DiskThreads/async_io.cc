@@ -125,7 +125,7 @@ aioCancel(int fd)
         }
 
         dlinkDelete(m, &used_list);
-        DiskThreadsIOStrategy::Instance.squidaio_ctrl_pool->free(ctrlp);
+        DiskThreadsIOStrategy::Instance.squidaio_ctrl_pool->freeOne(ctrlp);
     }
 }
 

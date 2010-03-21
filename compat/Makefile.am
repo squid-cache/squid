@@ -20,6 +20,7 @@ libcompat_la_SOURCES = \
 	osdetect.h \
 	stdvarargs.h \
 	types.h \
+	unsafe.h \
 	valgrind.h \
 	\
 	os/aix.h \
@@ -28,6 +29,7 @@ libcompat_la_SOURCES = \
 	os/hpux.h \
 	os/linux.h \
 	os/mswin.h \
+	os/netbsd.h \
 	os/next.h \
 	os/openbsd.h \
 	os/os2.h \

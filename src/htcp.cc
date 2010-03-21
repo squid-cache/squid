@@ -639,7 +639,7 @@ htcpFreeSpecifier(htcpSpecifier * s)
 static void
 htcpFreeDetail(htcpDetail * d)
 {
-    htcpDetailPool->free(d);
+    htcpDetailPool->freeOne(d);
 }
 
 /*

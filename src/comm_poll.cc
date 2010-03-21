@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -40,6 +39,20 @@
 #include "fde.h"
 
 #ifdef USE_POLL
+
+#if HAVE_POLL_H
+#include <poll.h>
+#endif
+
+/* Needed for poll() on Linux at least */
+#if USE_POLL
+#ifndef POLLRDNORM
+#define POLLRDNORM POLLIN
+#endif
+#ifndef POLLWRNORM
+#define POLLWRNORM POLLOUT
+#endif
+#endif
 
 static int MAX_POLL_TIME = 1000;	/* see also comm_quick_poll_required() */
 

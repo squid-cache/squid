@@ -716,5 +716,10 @@ struct rusage {
 
 #undef ACL
 
+#if !defined(getpagesize)
+/* Windows may lack getpagesize() prototype */
+SQUIDCEXTERN size_t getpagesize(void);
+#endif
+
 #endif /* _SQUID_WIN32_ */
 #endif /* SQUID_OS_MSWIN_H */

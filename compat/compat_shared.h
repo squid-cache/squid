@@ -36,7 +36,6 @@
 #if HAVE_DIRENT_H
 #include <dirent.h>
 #define NAMLEN(dirent) strlen((dirent)->d_name)
-
 #else /* if not HAVE_DIRENT_H */
 #define dirent direct
 #define NAMLEN(dirent) (dirent)->d_namlen
@@ -173,6 +172,7 @@ max(A const & lhs, A const & rhs)
 #endif
 
 
+#ifndef SQUID_NONBLOCK
 /* REQUIRED for the below logics. If they move this needs to as well */
 #if HAVE_FCNTL_H
 #include <fcntl.h>
@@ -189,7 +189,7 @@ max(A const & lhs, A const & rhs)
 /** O_NDELAY is our fallback. */
 #define SQUID_NONBLOCK O_NDELAY
 #endif
-
+#endif
 
 /**
  * Signalling flags are apparently not always provided.
@@ -211,8 +211,8 @@ max(A const & lhs, A const & rhs)
 
 
 /**
- * com_err.h is a C header and needs excplicit shielding, but not
- * all other system headers including this care to do this.
+ * com_err.h is a C header and needs explicit shielding, but not
+ * all other system headers including this care to do so.
  */
 #ifdef __cplusplus
 #if HAVE_ET_COM_ERR_H
