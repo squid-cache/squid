@@ -22,9 +22,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+#define SQUID_NO_ALLOC_PROTECT 1
+#include "config.h"
 
 #include <string.h>
-#include <stdlib.h>
 
 int RFCNB_errno = 0;
 int RFCNB_saved_errno = 0;
@@ -347,14 +348,12 @@ RFCNB_Listen()
 void
 RFCNB_Get_Error(char *buffer, int buf_len)
 {
-
     if (RFCNB_saved_errno <= 0) {
-        sprintf(buffer, "%s", RFCNB_Error_Strings[RFCNB_errno]);
+        snprintf(buffer, buf_len, "%s", RFCNB_Error_Strings[RFCNB_errno]);
     } else {
-        sprintf(buffer, "%s\n\terrno:%s", RFCNB_Error_Strings[RFCNB_errno],
+        snprintf(buffer, buf_len, "%s\n\terrno:%s", RFCNB_Error_Strings[RFCNB_errno],
                 strerror(RFCNB_saved_errno));
     }
-
 }
 
 /* Pick up the last error response and returns as a code                 */

@@ -353,7 +353,7 @@ main(int argc, char *argv[])
         if (newhost) {
             char *t;
             newhost += 3;
-            newhost = strdup(newhost);
+            newhost = xstrdup(newhost);
             t = newhost + strcspn(newhost, "@/?");
             if (*t == '@') {
                 newhost = t + 1;

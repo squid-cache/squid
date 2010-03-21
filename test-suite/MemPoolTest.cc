@@ -74,11 +74,11 @@ MemPoolTest::run()
     assert (something);
     assert (something->aValue == 0);
     something->aValue = 5;
-    Pool->free(something);
+    Pool->freeOne(something);
     SomethingToAlloc *otherthing = static_cast<SomethingToAlloc *>(Pool->alloc());
     assert (otherthing == something);
     assert (otherthing->aValue == 0);
-    Pool->free (otherthing);
+    Pool->freeOne(otherthing);
     delete Pool;
 }
 
