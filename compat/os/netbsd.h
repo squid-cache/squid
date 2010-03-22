@@ -19,5 +19,8 @@
 #define SQUID_NO_ALLOC_PROTECT 1
 #endif
 
+/* NetBSD does not provide sys_errlist global for strerror */
+#define NEED_SYS_ERRLIST 1
+
 #endif /* _SQUID_NETBSD_ */
 #endif /* SQUID_OS_NETBSD_H */

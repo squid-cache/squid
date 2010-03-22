@@ -31,6 +31,9 @@
  */
 
 #include "config.h"
+#include "compat/inet_ntop.h"
+#include "compat/getaddrinfo.h"
+#include "compat/getnameinfo.h"
 
 #if HAVE_UNISTD_H
 #include <unistd.h>
@@ -204,10 +207,10 @@ lookup(const char *buf)
     hints.ai_flags = AI_CANONNAME;
 
     for (;;) {
-        xfreeaddrinfo(AI);
+        freeaddrinfo(AI);
         AI = NULL;
 
-        if ( 0 == (res = xgetaddrinfo(buf,NULL,&hints,&AI)) )
+        if ( 0 == (res = getaddrinfo(buf,NULL,&hints,&AI)) )
             break;
 
         if (res != EAI_AGAIN)
@@ -255,11 +258,11 @@ lookup(const char *buf)
                 /* annoying inet_ntop breaks the nice code by requiring the in*_addr */
                 switch (aiptr->ai_family) {
                 case AF_INET:
-                    xinet_ntop(aiptr->ai_family, &((struct sockaddr_in*)aiptr->ai_addr)->sin_addr, ntoabuf, MAX_IPSTRLEN);
+                    inet_ntop(aiptr->ai_family, &((struct sockaddr_in*)aiptr->ai_addr)->sin_addr, ntoabuf, MAX_IPSTRLEN);
                     break;
 #if USE_IPV6
                 case AF_INET6:
-                    xinet_ntop(aiptr->ai_family, &((struct sockaddr_in6*)aiptr->ai_addr)->sin6_addr, ntoabuf, MAX_IPSTRLEN);
+                    inet_ntop(aiptr->ai_family, &((struct sockaddr_in6*)aiptr->ai_addr)->sin6_addr, ntoabuf, MAX_IPSTRLEN);
                     break;
 #endif
                 default:
@@ -281,7 +284,7 @@ lookup(const char *buf)
          */
         if (NULL != AI && NULL != AI->ai_addr) {
             for (;;) {
-                if ( 0 == (res = xgetnameinfo(AI->ai_addr, AI->ai_addrlen, ntoabuf, MAX_IPSTRLEN, NULL,0,0)) )
+                if ( 0 == (res = getnameinfo(AI->ai_addr, AI->ai_addrlen, ntoabuf, MAX_IPSTRLEN, NULL,0,0)) )
                     break;
 
                 if (res != EAI_AGAIN)
@@ -317,7 +320,7 @@ lookup(const char *buf)
         break;
 
     case EAI_FAIL:
-        printf("$fail DNS Domain/IP '%s' does not exist: %s.\n", buf, xgai_strerror(res));
+        printf("$fail DNS Domain/IP '%s' does not exist: %s.\n", buf, gai_strerror(res));
         break;
 
 #if defined(EAI_NODATA) || defined(EAI_NONAME)
@@ -328,14 +331,14 @@ lookup(const char *buf)
 #ifdef EAI_NONAME
     case EAI_NONAME:
 #endif
-        printf("$fail DNS Domain/IP '%s' exists without any FQDN/IPs: %s.\n", buf, xgai_strerror(res));
+        printf("$fail DNS Domain/IP '%s' exists without any FQDN/IPs: %s.\n", buf, gai_strerror(res));
         break;
 #endif
     default:
-        printf("$fail A system error occured looking up Domain/IP '%s': %s.\n", buf, xgai_strerror(res));
+        printf("$fail A system error occured looking up Domain/IP '%s': %s.\n", buf, gai_strerror(res));
     }
 
-    xfreeaddrinfo(AI);
+    freeaddrinfo(AI);
 }
 
 /**

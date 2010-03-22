@@ -57,6 +57,7 @@
  */
 
 #include "config.h"
+#include "compat/inet_pton.h"
 #include "util.h"
 
 #if HAVE_STDIO_H
@@ -263,7 +264,7 @@ main(int argc, char *argv[])
         ((struct sockaddr_in6 *)S)->sin6_family = AF_INET6;
         ((struct sockaddr_in6 *)S)->sin6_port = htons(atoi(argv[var+1]));
 
-        if ( ! xinet_pton(AF_INET6, argv[var], &((struct sockaddr_in6 *)S)->sin6_addr.s_addr) )
+        if ( ! inet_pton(AF_INET6, argv[var], &((struct sockaddr_in6 *)S)->sin6_addr.s_addr) )
             perror("listen address");
         return 1;
     }
@@ -278,7 +279,7 @@ else
     ((struct sockaddr_in *)S)->sin_family = AF_INET;
     ((struct sockaddr_in *)S)->sin_port = htons(atoi(argv[var+1]));
 
-    if ( ! xinet_pton(AF_INET, argv[var], &((struct sockaddr_in *)S)->sin_addr.s_addr) )
+    if ( ! inet_pton(AF_INET, argv[var], &((struct sockaddr_in *)S)->sin_addr.s_addr) )
         perror("listen address");
     return 1;
 }
@@ -294,10 +295,10 @@ while (fgets(input, 512, stdin))
     memset(buf, '\0', 512);
     sz = 512;
 
-    if (xinet_pton(AF_INET6, input, &junk6)) {
+    if (inet_pton(AF_INET6, input, &junk6)) {
         sid = rfc1035BuildPTRQuery6(junk6, buf, &sz);
         sidb=0;
-    } else if (xinet_pton(AF_INET, input, &junk4)) {
+    } else if (inet_pton(AF_INET, input, &junk4)) {
         sid = rfc1035BuildPTRQuery4(junk4, buf, &sz);
         sidb=0;
     } else {

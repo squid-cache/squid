@@ -35,6 +35,7 @@
 #include "squid.h"
 #include "comm.h"
 #include "comm/ListenStateData.h"
+#include "compat/strtoll.h"
 #include "ConnectionDetail.h"
 #include "errorpage.h"
 #include "fde.h"

@@ -1,14 +1,12 @@
+#ifndef SQUID_CONFIG_H
+#include "config.h"
+#endif
+
 #ifndef _INC_INET_PTON_H
 #define _INC_INET_PTON_H
 
-#include "config.h"
-
-#if HAVE_INET_PTON
-
 /* Use the system provided version where possible */
-#define xinet_pton inet_pton
-
-#else
+#if !HAVE_INET_PTON
 
 /* int
 * inet_pton(af, src, dst)
@@ -22,7 +20,7 @@
 *      Paul Vixie, 1996.
 */
 SQUIDCEXTERN int xinet_pton(int af, const char *src, void *dst);
+#define inet_pton xinet_pton
 
 #endif
-
 #endif /* _INC_INET_NTOP_H */
