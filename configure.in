@@ -2400,7 +2400,9 @@ AC_ARG_WITH(filedescriptors,
 
 AC_PATH_PROG(CPPUNITCONFIG, cppunit-config, false)
 if $CPPUNITCONFIG --help >/dev/null; then
-  AC_MSG_NOTICE([using system installed cppunit])
+  squid_cv_cppunit_version="`$CPPUNITCONFIG --version`"
+  AC_MSG_NOTICE([using system installed cppunit version $squid_cv_cppunit_version])
+  unset squid_cv_cppunit_version
   SQUID_CPPUNIT_LIBS="`$CPPUNITCONFIG --libs`"
   SQUID_CPPUNIT_LA=''
   SQUID_CPPUNIT_INC="`$CPPUNITCONFIG --cflags`"
