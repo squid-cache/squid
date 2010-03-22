@@ -1,8 +1,8 @@
-# Czech translation for squid
-# Copyright (c) 2009 Rosetta Contributors and Canonical Ltd 2009
-# This file is distributed under the same license as the squid package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2009.
-#
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: squid\n"
@@ -14,22 +14,13 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Launchpad-Export-Date: 2010-01-10 09:16+0000\n"
-"X-Generator: Launchpad (build Unknown)\n"
+"X-Generator: Translate Toolkit 1.5.3\n"
 
 #. type: SH
-#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:3
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:3
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:3
-#: helpers/basic_auth/PAM/basic_pam_auth.8:3
-#: helpers/basic_auth/RADIUS/basic_radius_auth.8:3
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:3
-#: helpers/external_acl/session/squid_session.8:3
-#: helpers/external_acl/unix_group/squid_unix_group.8:3 src/squid.8.in:3
-#: tools/cachemgr.cgi.8.in:3 tools/squidclient.1:3
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:3 helpers/basic_auth/LDAP/basic_ldap_auth.8:3 helpers/basic_auth/NCSA/basic_ncsa_auth.8:3 helpers/basic_auth/PAM/basic_pam_auth.8:3 helpers/basic_auth/RADIUS/basic_radius_auth.8:3 helpers/external_acl/ldap_group/squid_ldap_group.8:3 helpers/external_acl/session/squid_session.8:3 helpers/external_acl/unix_group/squid_unix_group.8:3 src/squid.8.in:3 tools/cachemgr.cgi.8.in:3 tools/squidclient.1:3
 #, no-wrap
 msgid "NAME"
-msgstr "JMÉNO"
+msgstr ""
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:7
@@ -37,32 +28,16 @@ msgid "Local Users auth helper for Squid"
 msgstr ""
 
 #. type: SH
-#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:8
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:8
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:8
-#: helpers/basic_auth/PAM/basic_pam_auth.8:8
-#: helpers/basic_auth/RADIUS/basic_radius_auth.8:8
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:10
-#: helpers/external_acl/session/squid_session.8:10
-#: helpers/external_acl/unix_group/squid_unix_group.8:8 src/squid.8.in:8
-#: tools/cachemgr.cgi.8.in:8 tools/squidclient.1:8
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:8 helpers/basic_auth/LDAP/basic_ldap_auth.8:8 helpers/basic_auth/NCSA/basic_ncsa_auth.8:8 helpers/basic_auth/PAM/basic_pam_auth.8:8 helpers/basic_auth/RADIUS/basic_radius_auth.8:8 helpers/external_acl/ldap_group/squid_ldap_group.8:10 helpers/external_acl/session/squid_session.8:10 helpers/external_acl/unix_group/squid_unix_group.8:8 src/squid.8.in:8 tools/cachemgr.cgi.8.in:8 tools/squidclient.1:8
 #, no-wrap
 msgid "SYNOPSIS"
 msgstr ""
 
 #. type: SH
-#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:11
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:39
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:12
-#: helpers/basic_auth/PAM/basic_pam_auth.8:15
-#: helpers/basic_auth/RADIUS/basic_radius_auth.8:26
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:26
-#: helpers/external_acl/session/squid_session.8:18
-#: helpers/external_acl/unix_group/squid_unix_group.8:15 src/squid.8.in:25
-#: tools/cachemgr.cgi.8.in:11 tools/squidclient.1:47
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:11 helpers/basic_auth/LDAP/basic_ldap_auth.8:39 helpers/basic_auth/NCSA/basic_ncsa_auth.8:12 helpers/basic_auth/PAM/basic_pam_auth.8:15 helpers/basic_auth/RADIUS/basic_radius_auth.8:26 helpers/external_acl/ldap_group/squid_ldap_group.8:26 helpers/external_acl/session/squid_session.8:18 helpers/external_acl/unix_group/squid_unix_group.8:15 src/squid.8.in:25 tools/cachemgr.cgi.8.in:11 tools/squidclient.1:47
 #, no-wrap
 msgid "DESCRIPTION"
-msgstr "POPIS"
+msgstr ""
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:15
@@ -112,15 +87,7 @@ msgid "Can handle PAM requests"
 msgstr ""
 
 #. type: SH
-#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:34
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:242
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:24
-#: helpers/basic_auth/PAM/basic_pam_auth.8:41
-#: helpers/basic_auth/RADIUS/basic_radius_auth.8:61
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:209
-#: helpers/external_acl/session/squid_session.8:50
-#: helpers/external_acl/unix_group/squid_unix_group.8:33
-#: tools/cachemgr.cgi.8.in:19
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:34 helpers/basic_auth/LDAP/basic_ldap_auth.8:242 helpers/basic_auth/NCSA/basic_ncsa_auth.8:24 helpers/basic_auth/PAM/basic_pam_auth.8:41 helpers/basic_auth/RADIUS/basic_radius_auth.8:61 helpers/external_acl/ldap_group/squid_ldap_group.8:209 helpers/external_acl/session/squid_session.8:50 helpers/external_acl/unix_group/squid_unix_group.8:33 tools/cachemgr.cgi.8.in:19
 #, no-wrap
 msgid "CONFIGURATION"
 msgstr ""
@@ -136,8 +103,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:60
-#: helpers/basic_auth/PAM/basic_pam_auth.8:79
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:60 helpers/basic_auth/PAM/basic_pam_auth.8:79
 msgid ""
 "Please note that in such configurations it is also strongly recommended that "
 "the program is moved into a directory where normal users cannot access it, "
@@ -148,23 +114,13 @@ msgid ""
 msgstr ""
 
 #. type: SH
-#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:61
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:288
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:30
-#: helpers/basic_auth/PAM/basic_pam_auth.8:80
-#: helpers/basic_auth/RADIUS/basic_radius_auth.8:85
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:232
-#: helpers/external_acl/session/squid_session.8:63
-#: helpers/external_acl/unix_group/squid_unix_group.8:62 src/squid.8.in:216
-#: tools/cachemgr.cgi.8.in:51 tools/squidclient.1:163
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:61 helpers/basic_auth/LDAP/basic_ldap_auth.8:288 helpers/basic_auth/NCSA/basic_ncsa_auth.8:30 helpers/basic_auth/PAM/basic_pam_auth.8:80 helpers/basic_auth/RADIUS/basic_radius_auth.8:85 helpers/external_acl/ldap_group/squid_ldap_group.8:232 helpers/external_acl/session/squid_session.8:63 helpers/external_acl/unix_group/squid_unix_group.8:62 src/squid.8.in:216 tools/cachemgr.cgi.8.in:51 tools/squidclient.1:163
 #, no-wrap
 msgid "AUTHOR"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:63
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:234
-#: helpers/external_acl/unix_group/squid_unix_group.8:64
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:63 helpers/external_acl/ldap_group/squid_ldap_group.8:234 helpers/external_acl/unix_group/squid_unix_group.8:64
 msgid "This program was written by"
 msgstr ""
 
@@ -174,96 +130,52 @@ msgid "Based on original code by"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:71
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:32
-#: helpers/basic_auth/RADIUS/basic_radius_auth.8:93
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:243
-#: helpers/external_acl/unix_group/squid_unix_group.8:67
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:71 helpers/basic_auth/NCSA/basic_ncsa_auth.8:32 helpers/basic_auth/RADIUS/basic_radius_auth.8:93 helpers/external_acl/ldap_group/squid_ldap_group.8:243 helpers/external_acl/unix_group/squid_unix_group.8:67
 msgid "This manual was written by"
 msgstr ""
 
 #. type: SH
-#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:73
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:296
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:37
-#: helpers/basic_auth/PAM/basic_pam_auth.8:84
-#: helpers/basic_auth/RADIUS/basic_radius_auth.8:95
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:245
-#: helpers/external_acl/session/squid_session.8:67
-#: helpers/external_acl/unix_group/squid_unix_group.8:69 src/squid.8.in:226
-#: tools/cachemgr.cgi.8.in:57 tools/squidclient.1:169
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:73 helpers/basic_auth/LDAP/basic_ldap_auth.8:296 helpers/basic_auth/NCSA/basic_ncsa_auth.8:37 helpers/basic_auth/PAM/basic_pam_auth.8:84 helpers/basic_auth/RADIUS/basic_radius_auth.8:95 helpers/external_acl/ldap_group/squid_ldap_group.8:245 helpers/external_acl/session/squid_session.8:67 helpers/external_acl/unix_group/squid_unix_group.8:69 src/squid.8.in:226 tools/cachemgr.cgi.8.in:57 tools/squidclient.1:169
 #, no-wrap
 msgid "COPYRIGHT"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:75
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:298
-#: helpers/basic_auth/RADIUS/basic_radius_auth.8:97
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:247
-#: helpers/external_acl/session/squid_session.8:69
-#: helpers/external_acl/unix_group/squid_unix_group.8:71
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:75 helpers/basic_auth/LDAP/basic_ldap_auth.8:298 helpers/basic_auth/RADIUS/basic_radius_auth.8:97 helpers/external_acl/ldap_group/squid_ldap_group.8:247 helpers/external_acl/session/squid_session.8:69 helpers/external_acl/unix_group/squid_unix_group.8:71
 msgid "This program and documentation is copyright to the authors named above."
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:77
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:300
-#: helpers/basic_auth/PAM/basic_pam_auth.8:91
-#: helpers/basic_auth/RADIUS/basic_radius_auth.8:99
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:249
-#: helpers/external_acl/session/squid_session.8:71
-#: helpers/external_acl/unix_group/squid_unix_group.8:73
-#: tools/cachemgr.cgi.8.in:59 tools/squidclient.1:171
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:77 helpers/basic_auth/LDAP/basic_ldap_auth.8:300 helpers/basic_auth/PAM/basic_pam_auth.8:91 helpers/basic_auth/RADIUS/basic_radius_auth.8:99 helpers/external_acl/ldap_group/squid_ldap_group.8:249 helpers/external_acl/session/squid_session.8:71 helpers/external_acl/unix_group/squid_unix_group.8:73 tools/cachemgr.cgi.8.in:59 tools/squidclient.1:171
 msgid ""
 "Distributed under the GNU General Public License (GNU GPL) version 2 or "
 "later (GPLv2+)."
 msgstr ""
 
 #. type: SH
-#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:78
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:301
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:50
-#: helpers/basic_auth/PAM/basic_pam_auth.8:92
-#: helpers/basic_auth/RADIUS/basic_radius_auth.8:100
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:250
-#: helpers/external_acl/session/squid_session.8:72
-#: helpers/external_acl/unix_group/squid_unix_group.8:74 src/squid.8.in:243
-#: tools/cachemgr.cgi.8.in:60 tools/squidclient.1:172
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:78 helpers/basic_auth/LDAP/basic_ldap_auth.8:301 helpers/basic_auth/NCSA/basic_ncsa_auth.8:50 helpers/basic_auth/PAM/basic_pam_auth.8:92 helpers/basic_auth/RADIUS/basic_radius_auth.8:100 helpers/external_acl/ldap_group/squid_ldap_group.8:250 helpers/external_acl/session/squid_session.8:72 helpers/external_acl/unix_group/squid_unix_group.8:74 src/squid.8.in:243 tools/cachemgr.cgi.8.in:60 tools/squidclient.1:172
 #, no-wrap
 msgid "QUESTIONS"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:81
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:304
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:53
-#: helpers/basic_auth/PAM/basic_pam_auth.8:95
-#: helpers/basic_auth/RADIUS/basic_radius_auth.8:103
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:253
-#: helpers/external_acl/session/squid_session.8:75
-#: helpers/external_acl/unix_group/squid_unix_group.8:77 src/squid.8.in:246
-#: tools/cachemgr.cgi.8.in:63 tools/squidclient.1:175
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:81 helpers/basic_auth/LDAP/basic_ldap_auth.8:304 helpers/basic_auth/NCSA/basic_ncsa_auth.8:53 helpers/basic_auth/PAM/basic_pam_auth.8:95 helpers/basic_auth/RADIUS/basic_radius_auth.8:103 helpers/external_acl/ldap_group/squid_ldap_group.8:253 helpers/external_acl/session/squid_session.8:75 helpers/external_acl/unix_group/squid_unix_group.8:77 src/squid.8.in:246 tools/cachemgr.cgi.8.in:63 tools/squidclient.1:175
 msgid ""
 "Questions on the usage of this program can be sent to the I<Squid Users "
 "mailing list>"
 msgstr ""
 
 #. type: SH
-#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:83
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:309
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:55
-#: helpers/basic_auth/PAM/basic_pam_auth.8:97
-#: helpers/basic_auth/RADIUS/basic_radius_auth.8:108
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:258
-#: helpers/external_acl/session/squid_session.8:77
-#: helpers/external_acl/unix_group/squid_unix_group.8:79 src/squid.8.in:248
-#: tools/cachemgr.cgi.8.in:65 tools/squidclient.1:177
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:83 helpers/basic_auth/LDAP/basic_ldap_auth.8:309 helpers/basic_auth/NCSA/basic_ncsa_auth.8:55 helpers/basic_auth/PAM/basic_pam_auth.8:97 helpers/basic_auth/RADIUS/basic_radius_auth.8:108 helpers/external_acl/ldap_group/squid_ldap_group.8:258 helpers/external_acl/session/squid_session.8:77 helpers/external_acl/unix_group/squid_unix_group.8:79 src/squid.8.in:248 tools/cachemgr.cgi.8.in:65 tools/squidclient.1:177
 #, no-wrap
 msgid "REPORTING BUGS"
 msgstr ""
 
 #. type: Plain text
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:85 helpers/basic_auth/LDAP/basic_ldap_auth.8:311 helpers/basic_auth/NCSA/basic_ncsa_auth.8:57 helpers/basic_auth/PAM/basic_pam_auth.8:99 helpers/basic_auth/RADIUS/basic_radius_auth.8:110 helpers/external_acl/ldap_group/squid_ldap_group.8:260 helpers/external_acl/session/squid_session.8:79 helpers/external_acl/unix_group/squid_unix_group.8:81 src/squid.8.in:250 tools/cachemgr.cgi.8.in:67 tools/squidclient.1:179
+msgid "Report bugs or bug fixes using http://bugs.squid-cache.org/"
+msgstr ""
+
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:86
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:312
 #: helpers/basic_auth/NCSA/basic_ncsa_auth.8:58
@@ -279,6 +191,12 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:88 helpers/basic_auth/LDAP/basic_ldap_auth.8:314 helpers/basic_auth/NCSA/basic_ncsa_auth.8:60 helpers/basic_auth/PAM/basic_pam_auth.8:102 helpers/basic_auth/RADIUS/basic_radius_auth.8:113 helpers/external_acl/ldap_group/squid_ldap_group.8:263 helpers/external_acl/session/squid_session.8:82 helpers/external_acl/unix_group/squid_unix_group.8:84 src/squid.8.in:253 tools/cachemgr.cgi.8.in:70 tools/squidclient.1:182
+msgid ""
+"Report serious security bugs to I<Squid Bugs "
+"E<lt>squid-bugs@squid-cache.orgE<gt>>"
+msgstr ""
+
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:88
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:314
 #: helpers/basic_auth/NCSA/basic_ncsa_auth.8:60
@@ -292,6 +210,10 @@ msgid "Report bugs or bug fixes using http://bugs.squid-cache.org/"
 msgstr ""
 
 #. type: Plain text
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:91 helpers/basic_auth/LDAP/basic_ldap_auth.8:317 helpers/basic_auth/NCSA/basic_ncsa_auth.8:63 helpers/basic_auth/PAM/basic_pam_auth.8:105 helpers/basic_auth/RADIUS/basic_radius_auth.8:116 helpers/external_acl/ldap_group/squid_ldap_group.8:266 helpers/external_acl/session/squid_session.8:85 helpers/external_acl/unix_group/squid_unix_group.8:87 src/squid.8.in:256 tools/cachemgr.cgi.8.in:73 tools/squidclient.1:185
+msgid "Report ideas for new improvements to the I<Squid Developers mailing list>"
+msgstr ""
+
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:91
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:317
 #: helpers/basic_auth/NCSA/basic_ncsa_auth.8:63
@@ -332,7 +254,7 @@ msgstr ""
 #: tools/cachemgr.cgi.8.in:77 tools/squidclient.1:189
 #, no-wrap
 msgid "SEE ALSO"
-msgstr "VIZ TAKÉ"
+msgstr ""
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:7
@@ -340,9 +262,7 @@ msgid "LDAP authentication helper for Squid"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:12
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:27
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:14
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:12 helpers/basic_auth/LDAP/basic_ldap_auth.8:27 helpers/external_acl/ldap_group/squid_ldap_group.8:14
 msgid "base DN"
 msgstr ""
 
@@ -352,38 +272,27 @@ msgid "attribute"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:16
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:31
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:18
-#, fuzzy
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:16 helpers/basic_auth/LDAP/basic_ldap_auth.8:31 helpers/external_acl/ldap_group/squid_ldap_group.8:18
 msgid "options"
-msgstr "-O nastavení"
+msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:18
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:33
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:18 helpers/basic_auth/LDAP/basic_ldap_auth.8:33
 msgid "LDAP server name"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:20
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:35
-#: helpers/basic_auth/RADIUS/basic_radius_auth.8:18
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:22 src/squid.8.in:17
-#: tools/squidclient.1:28
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:20 helpers/basic_auth/LDAP/basic_ldap_auth.8:35 helpers/basic_auth/RADIUS/basic_radius_auth.8:18 helpers/external_acl/ldap_group/squid_ldap_group.8:22 src/squid.8.in:17 tools/squidclient.1:28
 msgid "port"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:22
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:37
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:24
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:22 helpers/basic_auth/LDAP/basic_ldap_auth.8:37 helpers/external_acl/ldap_group/squid_ldap_group.8:24
 msgid "URI"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:29
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:16
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:29 helpers/external_acl/ldap_group/squid_ldap_group.8:16
 msgid "LDAP search filter"
 msgstr ""
 
@@ -411,23 +320,16 @@ msgstr ""
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:61
 msgid ""
 "The program has two major modes of operation. In the default mode of "
-"operation the users DN is constructed using the base DN and user attribute. "
-"In the other mode of operation a search filter is used to locate valid user "
-"DN's below the base DN."
+"operation the users DN is constructed using the base DN and user "
+"attribute. In the other mode of operation a search filter is used to locate "
+"valid user DN's below the base DN."
 msgstr ""
 
 #. type: SH
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:62
-#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:20
-#: helpers/basic_auth/PAM/basic_pam_auth.8:21
-#: helpers/basic_auth/RADIUS/basic_radius_auth.8:31
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:49
-#: helpers/external_acl/session/squid_session.8:26
-#: helpers/external_acl/unix_group/squid_unix_group.8:19 src/squid.8.in:59
-#: tools/squidclient.1:56
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:62 helpers/basic_auth/NCSA/basic_ncsa_auth.8:20 helpers/basic_auth/PAM/basic_pam_auth.8:21 helpers/basic_auth/RADIUS/basic_radius_auth.8:31 helpers/external_acl/ldap_group/squid_ldap_group.8:49 helpers/external_acl/session/squid_session.8:26 helpers/external_acl/unix_group/squid_unix_group.8:19 src/squid.8.in:59 tools/squidclient.1:56
 #, no-wrap
 msgid "OPTIONS"
-msgstr "MOŽNOSTI"
+msgstr ""
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:67
@@ -454,8 +356,8 @@ msgstr ""
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:90
 msgid ""
-"Will crash if other B<%> values than B<%s> are used, or if more than 15 B<%"
-"s> are used."
+"Will crash if other B<%> values than B<%s> are used, or if more than 15 "
+"B<%s> are used."
 msgstr ""
 
 #. type: Plain text
@@ -486,33 +388,30 @@ msgstr ""
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:126
 msgid ""
-"Search scope when performing user DN searches specified by the B<-f> option. "
-"Defaults to B<sub>"
+"Search scope when performing user DN searches specified by the B<-f> "
+"option. Defaults to B<sub>"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:130
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:178
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:130 helpers/external_acl/ldap_group/squid_ldap_group.8:178
 msgid "B<base> object only,"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:133
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:181
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:133 helpers/external_acl/ldap_group/squid_ldap_group.8:181
 msgid "B<one> level below the base object or"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:136
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:184
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:136 helpers/external_acl/ldap_group/squid_ldap_group.8:184
 msgid "B<sub>tree below the base object"
 msgstr ""
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:142
 msgid ""
-"The DN and password to bind as while performing searches. Required by the B<-"
-"f> flag if the directory does not allow anonymous searches."
+"The DN and password to bind as while performing searches. Required by the "
+"B<-f> flag if the directory does not allow anonymous searches."
 msgstr ""
 
 #. type: Plain text
@@ -525,16 +424,14 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:152
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:98
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:152 helpers/external_acl/ldap_group/squid_ldap_group.8:98
 msgid ""
 "The DN and the name of a file containing the password to bind as while "
 "performing searches."
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:157
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:103
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:157 helpers/external_acl/ldap_group/squid_ldap_group.8:103
 msgid ""
 "Less insecure version of the former parameter pair with two advantages: The "
 "password does not occur in the process listing, and the password is not "
@@ -554,8 +451,8 @@ msgstr ""
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:178
 msgid ""
-"Only bind once per LDAP connection. Some LDAP servers do not allow re-"
-"binding as another user after a successful I<ldap_bind.> The use of this "
+"Only bind once per LDAP connection. Some LDAP servers do not allow "
+"re-binding as another user after a successful I<ldap_bind.> The use of this "
 "option always opens a new connection for each login attempt. If combined "
 "with the B<-P> option for persistent LDAP connection then the connection "
 "used for searching for the user DN is kept persistent but a new connection "
@@ -563,8 +460,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:182
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:170
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:182 helpers/external_acl/ldap_group/squid_ldap_group.8:170
 msgid "Do not follow referrals"
 msgstr ""
 
@@ -603,20 +499,17 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:216
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:204
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:216 helpers/external_acl/ldap_group/squid_ldap_group.8:204
 msgid "LDAP protocol version. Defaults to 2 if not specified."
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:220
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:208
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:220 helpers/external_acl/ldap_group/squid_ldap_group.8:208
 msgid "Use TLS encryption"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:224
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:107
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:224 helpers/external_acl/ldap_group/squid_ldap_group.8:107
 msgid "Enable LDAP over SSL (requires Netscape LDAP API libraries)"
 msgstr ""
 
@@ -628,14 +521,12 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:235
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:192
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:235 helpers/external_acl/ldap_group/squid_ldap_group.8:192
 msgid "Specify time limit on LDAP search operations"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:241
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:82
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:241 helpers/external_acl/ldap_group/squid_ldap_group.8:82
 msgid ""
 "Debug mode where each step taken will get reported in detail.  Useful for "
 "understanding what goes wrong if the results is not what is expected."
@@ -690,8 +581,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/LDAP/basic_ldap_auth.8:290
-#: helpers/basic_auth/RADIUS/basic_radius_auth.8:87
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:290 helpers/basic_auth/RADIUS/basic_radius_auth.8:87
 msgid "This program is written by"
 msgstr ""
 
@@ -750,8 +640,7 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/basic_auth/NCSA/basic_ncsa_auth.8:29
-msgid ""
-"B<basic_ncsa_auth> must have access to the password file to be executed."
+msgid "B<basic_ncsa_auth> must have access to the password file to be executed."
 msgstr ""
 
 #. type: Plain text
@@ -795,7 +684,8 @@ msgstr ""
 #: helpers/basic_auth/PAM/basic_pam_auth.8:20
 msgid ""
 "B<basic_pam_auth> allows Squid to connect to a mostly any available PAM "
-"database to validate the user name and password of Basic HTTP authentication."
+"database to validate the user name and password of Basic HTTP "
+"authentication."
 msgstr ""
 
 #. type: Plain text
@@ -816,15 +706,14 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/basic_auth/PAM/basic_pam_auth.8:40
-msgid ""
-"Do not perform the PAM account management group (account expiration etc)"
+msgid "Do not perform the PAM account management group (account expiration etc)"
 msgstr ""
 
 #. type: Plain text
 #: helpers/basic_auth/PAM/basic_pam_auth.8:46
 msgid ""
-"The program needs a PAM service to be configured in B</etc/pam.conf> or B</"
-"etc/pam.d/squid>"
+"The program needs a PAM service to be configured in B</etc/pam.conf> or "
+"B</etc/pam.d/squid>"
 msgstr ""
 
 #. type: Plain text
@@ -858,8 +747,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/PAM/basic_pam_auth.8:82
-#: helpers/external_acl/session/squid_session.8:65
+#: helpers/basic_auth/PAM/basic_pam_auth.8:82 helpers/external_acl/session/squid_session.8:65
 msgid "This program and documentation was written by"
 msgstr ""
 
@@ -899,8 +787,7 @@ msgid "secret"
 msgstr ""
 
 #. type: Plain text
-#: helpers/basic_auth/RADIUS/basic_radius_auth.8:24
-#: helpers/external_acl/session/squid_session.8:14 tools/squidclient.1:34
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:24 helpers/external_acl/session/squid_session.8:14 tools/squidclient.1:34
 msgid "timeout"
 msgstr ""
 
@@ -976,8 +863,7 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/basic_auth/RADIUS/basic_radius_auth.8:84
-msgid ""
-"Specifies the port number or service name where the helper should connect."
+msgid "Specifies the port number or service name where the helper should connect."
 msgstr ""
 
 #. type: Plain text
@@ -1151,8 +1037,7 @@ msgid "search scope. Defaults to B<sub>"
 msgstr ""
 
 #. type: Plain text
-#: helpers/external_acl/ldap_group/squid_ldap_group.8:188
-#: helpers/external_acl/unix_group/squid_unix_group.8:32
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:188 helpers/external_acl/unix_group/squid_unix_group.8:32
 msgid "Strip NT domain name component from user names (/ or \\e separated)"
 msgstr ""
 
@@ -1160,8 +1045,8 @@ msgstr ""
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:200
 msgid ""
 "LDAP attribute used to construct the user DN from the user name and base dn "
-"without needing to search for the user.  A maximum of 16 occurrences of B<%"
-"s> are supported."
+"without needing to search for the user.  A maximum of 16 occurrences of "
+"B<%s> are supported."
 msgstr ""
 
 #. type: Plain text
@@ -1215,7 +1100,8 @@ msgstr ""
 #: helpers/external_acl/session/squid_session.8:23
 msgid ""
 "B<squid_session> maintains a concept of sessions by monitoring requests and "
-"timing out sessions if no requests have been seen for the idle timeout timer."
+"timing out sessions if no requests have been seen for the idle timeout "
+"timer."
 msgstr ""
 
 #. type: Plain text
@@ -1225,8 +1111,7 @@ msgstr ""
 
 #. type: Plain text
 #: helpers/external_acl/session/squid_session.8:31
-msgid ""
-"B<Timeout> for any session. If not specified the default is 3600 seconds."
+msgid "B<Timeout> for any session. If not specified the default is 3600 seconds."
 msgstr ""
 
 #. type: Plain text
@@ -1270,8 +1155,7 @@ msgid "Squid UNIX Group helper"
 msgstr ""
 
 #. type: Plain text
-#: helpers/external_acl/unix_group/squid_unix_group.8:11
-#: helpers/external_acl/unix_group/squid_unix_group.8:13
+#: helpers/external_acl/unix_group/squid_unix_group.8:11 helpers/external_acl/unix_group/squid_unix_group.8:13
 msgid "group"
 msgstr ""
 
@@ -1304,7 +1188,8 @@ msgstr ""
 #: helpers/external_acl/unix_group/squid_unix_group.8:56
 msgid ""
 "By default up to 11 groups can be matched in one acl (including commandline "
-"specified groups). This limit is defined by B<MAX_GROUPS> in the source code."
+"specified groups). This limit is defined by B<MAX_GROUPS> in the source "
+"code."
 msgstr ""
 
 #. type: SH
@@ -1361,8 +1246,8 @@ msgstr ""
 msgid ""
 "B<squid> is a high-performance proxy caching server for web clients, "
 "supporting FTP, gopher, ICAP, ICP, HTCP and HTTP data objects.  Unlike "
-"traditional caching software, Squid handles all requests in a single, non-"
-"blocking process."
+"traditional caching software, Squid handles all requests in a single, "
+"non-blocking process."
 msgstr ""
 
 #. type: Plain text
@@ -1416,7 +1301,7 @@ msgstr ""
 #. type: Plain text
 #: src/squid.8.in:70
 msgid "Do not catch fatal signals."
-msgstr "Nemohu zachytit rozhodující signály."
+msgstr ""
 
 #. type: Plain text
 #: src/squid.8.in:74
@@ -1436,12 +1321,12 @@ msgstr ""
 #. type: Plain text
 #: src/squid.8.in:90
 msgid "Don't serve any requests until store is rebuilt."
-msgstr "Nepodáváme žádné žádosti na přestavbu do úložiště."
+msgstr ""
 
 #. type: Plain text
 #: src/squid.8.in:94
 msgid "Print help message."
-msgstr "Vytiskout pomocnou zprávu."
+msgstr ""
 
 #. type: Plain text
 #: src/squid.8.in:100
@@ -1489,8 +1374,7 @@ msgstr ""
 
 #. type: Plain text
 #: src/squid.8.in:142
-msgid ""
-"Enable logging to syslog. Also configurable in B<@SYSCONFDIR@/squid.conf>"
+msgid "Enable logging to syslog. Also configurable in B<@SYSCONFDIR@/squid.conf>"
 msgstr ""
 
 #. type: Plain text
@@ -1527,7 +1411,7 @@ msgstr ""
 #: src/squid.8.in:171
 #, no-wrap
 msgid "FILES"
-msgstr "SOUBORY"
+msgstr ""
 
 #. type: Plain text
 #: src/squid.8.in:173
@@ -1697,7 +1581,7 @@ msgstr ""
 #: tools/cachemgr.cgi.8.in:43
 #, no-wrap
 msgid "SECURITY"
-msgstr "BEZPEČNOST"
+msgstr ""
 
 #. type: Plain text
 #: tools/cachemgr.cgi.8.in:50
@@ -1921,21 +1805,3 @@ msgstr ""
 #: tools/squidclient.1:162
 msgid "WWW authentication password"
 msgstr ""
-
-#~ msgid "squid"
-#~ msgstr "squid"
-
-#, fuzzy
-#~ msgid "squidclient"
-#~ msgstr "squid"
-
-#, fuzzy
-#~ msgid "B<squidclient>"
-#~ msgstr "squid"
-
-#, fuzzy
-#~ msgid "B<squid>"
-#~ msgstr "squid"
-
-#~ msgid "-n name"
-#~ msgstr "-n název"
