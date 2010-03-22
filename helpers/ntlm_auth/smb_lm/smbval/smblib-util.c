@@ -114,7 +114,7 @@ SMB_DOSTimToStr(int DOS_time)
     DOS_year = ((DOS_time & 0xFE000000) >> 25) + 80;
 
     snprintf(SMB_Time_Temp, 48, "%2d/%02d/%2d %2d:%02d:%02d", DOS_day, DOS_month,
-            DOS_year, DOS_hour, DOS_min, DOS_sec);
+             DOS_year, DOS_hour, DOS_min, DOS_sec);
 
     return (SMB_Time_Temp);
 
