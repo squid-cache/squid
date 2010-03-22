@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include <cppunit/BriefTestProgressListener.h>
 #include <cppunit/TextTestProgressListener.h>
 #include <cppunit/CompilerOutputter.h>
