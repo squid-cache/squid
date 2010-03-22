@@ -1,3 +1,12 @@
+#ifndef SQUID_CONFIG_H
+#include "config.h"
+#endif
+
+/* If we have this system file use it. Otherwise use the below definitions. */
+#if HAVE_SYS_EUI64_H
+#include <sys/eui64.h>
+#else
+
 /*
  * Squid Change History:
  *
@@ -38,8 +47,6 @@
 #ifndef _SYS_EUI64_H
 #define _SYS_EUI64_H
 
-#include <sys/types.h>
-
 /**
  * Size of the ASCII representation of an EUI-64.
  */
@@ -63,3 +70,4 @@ extern "C"
 int eui64_aton(const char *a, struct eui64 *e);
 
 #endif /* !_SYS_EUI64_H */
+#endif /* HAVE_SYS_EUI64_H */

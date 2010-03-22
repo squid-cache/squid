@@ -323,6 +323,7 @@ SQUIDCEXTERN int _free_osfhnd(int);
 SQUIDCEXTERN THREADLOCAL int ws32_result;
 
 #define strerror(e) WIN32_strerror(e)
+#define HAVE_STRERROR 1
 
 #ifdef __cplusplus
 

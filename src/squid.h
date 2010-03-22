@@ -154,44 +154,21 @@ using namespace Squid;
 #endif
 
 #include "md5.h"
-
 #if USE_SSL
 #include "ssl_support.h"
 #endif
-
 #ifdef SQUID_SNMP
 #include "cache_snmp.h"
 #endif
-
 #include "hash.h"
 #include "rfc3596.h"
-
-
 #include "defines.h"
 #include "enums.h"
 #include "typedefs.h"
 #include "util.h"
 #include "profiling.h"
 #include "MemPool.h"
-
 #include "ip/IpAddress.h"
-
-#if !HAVE_TEMPNAM
-#include "tempnam.h"
-#endif
-
-#if !HAVE_STRSEP
-#include "strsep.h"
-#endif
-
-#if !HAVE_STRTOLL
-#include "strtoll.h"
-#endif
-
-#if !HAVE_INITGROUPS
-#include "initgroups.h"
-#endif
-
 #include "structs.h"
 #include "protos.h"
 #include "globals.h"

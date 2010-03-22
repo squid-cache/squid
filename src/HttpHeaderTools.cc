@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -34,9 +33,10 @@
  */
 
 #include "squid.h"
-#include "HttpHeader.h"
-#include "HttpHdrContRange.h"
 #include "acl/FilledChecklist.h"
+#include "compat/strtoll.h"
+#include "HttpHdrContRange.h"
+#include "HttpHeader.h"
 #include "MemBuf.h"
 
 static void httpHeaderPutStrvf(HttpHeader * hdr, http_hdr_type id, const char *fmt, va_list vargs);

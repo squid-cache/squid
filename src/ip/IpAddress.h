@@ -36,11 +36,7 @@
 #ifndef _INC_IPADDRESS_H
 #define _INC_IPADDRESS_H
 
-#include "getaddrinfo.h"
-#include "getnameinfo.h"
-#include "inet_ntop.h"
-#include "inet_pton.h"
-
+#include "config.h"
 
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
