@@ -135,41 +135,9 @@ max(A const & lhs, A const & rhs)
 #endif /* max */
 
 /**
- * tempnam() not provided by all systems
- * TODO: detect WHICH systems and move to their OS-specific compat files
- */
-#if !HAVE_TEMPNAM
-#include "tempnam.h"
-#endif
-
-/**
- * strsep() not provided by all systems
- * TODO: detect WHICH systems and move to their OS-specific compat files
- */
-#if !HAVE_STRSEP
-#include "strsep.h"
-#endif
-
-/**
- * strtoll() not provided by all systems
- * TODO: detect WHICH systems and move to their OS-specific compat files
- */
-#if !HAVE_STRTOLL
-#include "strtoll.h"
-#endif
-
-/**
  * Common shared definition of what whitespace consists of for string tests
  */
 #define w_space     " \t\n\r"
-
-/**
- * initgroups() not provided by all systems
- * TODO: detect WHICH systems and move to their OS-specific compat files
- */
-#if !HAVE_INITGROUPS
-#include "initgroups.h"
-#endif
 
 
 #ifndef SQUID_NONBLOCK

@@ -1,14 +1,12 @@
+#ifndef SQUID_CONFIG_H
+#include "config.h"
+#endif
+
 #ifndef _INC_INET_NTOP_H
 #define _INC_INET_NTOP_H
 
-#include "config.h"
-
-#if HAVE_INET_NTOP
-
 /* Use the system provided version where possible */
-#define xinet_ntop inet_ntop
-
-#else
+#if !HAVE_INET_NTOP
 
 /* char *
 * inet_ntop(af, src, dst, size)
@@ -19,7 +17,7 @@
 *      Paul Vixie, 1996.
 */
 SQUIDCEXTERN const char * xinet_ntop(int af, const void *src, char *dst, size_t size);
+#define inet_ntop xinet_ntop
 
 #endif
-
 #endif /* _INC_INET_NTOP_H */

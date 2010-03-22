@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -34,6 +33,7 @@
  */
 
 #include "squid.h"
+#include "compat/strtoll.h"
 #include "SwapDir.h"
 #include "StoreFileSystem.h"
 #include "ConfigOption.h"

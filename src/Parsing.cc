@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -33,6 +32,8 @@
  *
  */
 
+#include "config.h"
+#include "compat/strtoll.h"
 #include "Parsing.h"
 
 /*

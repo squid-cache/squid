@@ -77,9 +77,9 @@
 
 #ifndef HAVE_GETNAMEINFO
 
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
+#include "compat/inet_ntop.h"
+#include "compat/getaddrinfo.h"
+
 #if HAVE_STDIO_H
 #include <stdio.h>
 #endif
@@ -120,12 +120,6 @@
 #ifdef _SQUID_MSWIN_
 #undef IN_ADDR
 #include <ws2tcpip.h>
-#endif
-
-#include "getaddrinfo.h"
-
-#if !HAVE_INET_NTOP
-#include "inet_ntop.h"
 #endif
 
 static const struct afd {
@@ -330,7 +324,7 @@ numeric:
             }
 #endif
             default:
-                if (xinet_ntop(afd->a_af, addr, host,
+                if (inet_ntop(afd->a_af, addr, host,
                                hostlen) == NULL)
                     return EAI_SYSTEM;
                 break;
@@ -352,7 +346,7 @@ int flags;
     int numaddrlen;
     char numaddr[512];
 
-    if (xinet_ntop(AF_INET6, addr, numaddr, sizeof(numaddr)) == NULL)
+    if (inet_ntop(AF_INET6, addr, numaddr, sizeof(numaddr)) == NULL)
         return EAI_SYSTEM;
 
     numaddrlen = strlen(numaddr);

@@ -1,36 +1,5 @@
-
 #include "config.h"
-
-/*
- * On some systems, FD_SETSIZE is set to something lower than the
- * actual number of files which can be opened.  IRIX is one case,
- * NetBSD is another.  So here we increase FD_SETSIZE to our
- * configure-discovered maximum *before* any system includes.
- */
-#define CHANGE_FD_SETSIZE 1
-
-/* Cannot increase FD_SETSIZE on Linux */
-#if defined(_SQUID_LINUX_)
-#undef CHANGE_FD_SETSIZE
-#define CHANGE_FD_SETSIZE 0
-#endif
-
-/* Cannot increase FD_SETSIZE on FreeBSD before 2.2.0, causes select(2)
- * to return EINVAL. */
-/* Marian Durkovic <marian@svf.stuba.sk> */
-/* Peter Wemm <peter@spinner.DIALix.COM> */
-#if defined(_SQUID_FREEBSD_)
-#include <osreldate.h>
-#if __FreeBSD_version < 220000
-#undef CHANGE_FD_SETSIZE
-#define CHANGE_FD_SETSIZE 0
-#endif
-#endif
-
-/* Increase FD_SETSIZE if SQUID_MAXFD is bigger */
-#if CHANGE_FD_SETSIZE && SQUID_MAXFD > DEFAULT_FD_SETSIZE
-#define FD_SETSIZE SQUID_MAXFD
-#endif
+#include "compat/getaddrinfo.h"
 
 #if HAVE_UNISTD_H
 #include <unistd.h>
@@ -80,8 +49,6 @@
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif
-
-#include "getaddrinfo.h"
 
 #define PROXY_PORT "3128"
 #define PROXY_ADDR "127.0.0.1"
@@ -171,22 +138,19 @@ open_http_socket(void)
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
 
-    xgetaddrinfo(proxy_addr, proxy_port, &hints, AI);
+    getaddrinfo(proxy_addr, proxy_port, &hints, AI);
 
     if ((s = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol)) < 0) {
         perror("socket");
-        xfreeaddrinfo(AI);
-        return -1;
+	s = -1;
     }
-
-    if (connect(s, AI->ai_addr, AI->ai_addrlen) < 0) {
+    else if (connect(s, AI->ai_addr, AI->ai_addrlen) < 0) {
         close(s);
         perror("connect");
-        xfreeaddrinfo(AI);
-        return -1;
+        s = -1;
     }
 
-    xfreeaddrinfo(AI);
+    freeaddrinfo(AI);
     return s;
 }
 

@@ -1,4 +1,5 @@
 #include "config.h"
+#include "compat/getaddrinfo.h"
 #include "testIpAddress.h"
 #include "ip/IpAddress.h"
 
@@ -610,7 +611,7 @@ testIpAddress::testAddrInfo()
     IpAddress anIP = "127.0.0.1";
 
     /* assert this just to check that getaddrinfo is working properly */
-    CPPUNIT_ASSERT( xgetaddrinfo("127.0.0.1", NULL, &hints, &expect ) == 0 );
+    CPPUNIT_ASSERT( getaddrinfo("127.0.0.1", NULL, &hints, &expect ) == 0 );
 
     anIP.GetAddrInfo(ipval);
 
@@ -690,7 +691,7 @@ testIpAddress::testAddrInfo()
 
     CPPUNIT_ASSERT( memcmp( expect->ai_addr, ipval->ai_addr, expect->ai_addrlen ) == 0 );
 
-    xfreeaddrinfo(expect);
+    freeaddrinfo(expect);
 }
 
 void
