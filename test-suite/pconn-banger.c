@@ -142,9 +142,8 @@ open_http_socket(void)
 
     if ((s = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol)) < 0) {
         perror("socket");
-	s = -1;
-    }
-    else if (connect(s, AI->ai_addr, AI->ai_addrlen) < 0) {
+        s = -1;
+    } else if (connect(s, AI->ai_addr, AI->ai_addrlen) < 0) {
         close(s);
         perror("connect");
         s = -1;

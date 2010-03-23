@@ -325,7 +325,7 @@ numeric:
 #endif
             default:
                 if (inet_ntop(afd->a_af, addr, host,
-                               hostlen) == NULL)
+                              hostlen) == NULL)
                     return EAI_SYSTEM;
                 break;
             }
