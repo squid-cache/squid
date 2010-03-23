@@ -1,7 +1,7 @@
 /*
  * Squid Change History:
  *
- *  2009-10-16 : import eui64_ntoa() function from NetBSD eui64.c
+ *  2009-10-16 : import eui64_aton() function from NetBSD eui64.c
  */
 
 /*      $NetBSD: eui64.c,v 1.1 2005/07/11 15:35:25 kiyohara Exp $       */
@@ -74,9 +74,12 @@
  * Columbia University, New York City
  */
 
-#include <stdio.h>
-#include "eui64_aton.h"
+#include "config.h"
+#include "compat/eui64_aton.h"
 
+#if HAVE_STDIO_H
+#include <stdio.h>
+#endif
 
 /*
  * Convert an ASCII representation of an EUI-64 to binary form.
