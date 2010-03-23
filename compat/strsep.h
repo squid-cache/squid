@@ -41,17 +41,17 @@
  * to point to the next char after it.  Otherwise, *STRINGP is set to NULL.
  * If *STRINGP was already NULL, nothing happens.
  * Returns the old value of *STRINGP.
- * 
+ *
  *\par
  * This is a variant of strtok() that is multithread-safe and supports
  * empty fields.
- * 
+ *
  * \note   Caveat: It modifies the original string.
  * \note   Caveat: These functions cannot be used on constant strings.
  * \note   Caveat: The identity of the delimiting character is lost.
  * \note   Caveat: It doesn't work with multibyte strings unless all of the delimiter
  * characters are ASCII characters < 0x30.
- * 
+ *
  * See also strtok_r().
  */
 SQUIDCEXTERN char *strsep(char **stringp, const char *delim);

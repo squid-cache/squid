@@ -10,7 +10,7 @@
 /**
  *\par
  * Convert a string to a int64 integer.
- * 
+ *
  *\par
  * Ignores `locale' stuff.  Assumes that the upper and lower case
  * alphabets and digits are each contiguous.
