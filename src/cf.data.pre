@@ -3074,7 +3074,7 @@ DOC_END
 
 NAME: pinger_enable
 TYPE: onoff
-DEFAULT: on
+DEFAULT: off
 LOC: Config.pinger.enable
 IFDEF: USE_ICMP
 DOC_START
