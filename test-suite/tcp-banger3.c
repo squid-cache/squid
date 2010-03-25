@@ -52,9 +52,6 @@
 #if HAVE_TIME_H
 #include <time.h>
 #endif
-#if HAVE_SYS_TIME_H
-#include <sys/time.h>
-#endif
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
@@ -73,8 +70,12 @@
 #if HAVE_ASSERT_H
 #include <assert.h>
 #endif
+#if HAVE_NETDB_H
 #include <netdb.h>
+#endif
+#if HAVE_SYS_WAIT_H
 #include <sys/wait.h>
+#endif
 
 #define READ_BUF_SZ 4096
 #define URL_BUF_SZ 4096

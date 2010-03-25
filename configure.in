@@ -4037,6 +4037,14 @@ if test "$ac_cv_needs_sys_errlist" = "yes" ; then
   AC_DEFINE(NEED_SYS_ERRLIST,1,[If we need to declare sys_errlist[] as external])
 fi
 
+dnl Hurd does not supply MAXPATHLEN. we may need to define it outselves.
+dnl Other system define it in system headers
+AC_CHECK_HEADERS([sys/param.h])
+AC_MSG_CHECKING(for MAXPATHLEN)
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <sys/param.h>]],[[int i = MAXPATHLEN;]])],[AC_MSG_RESULT(yes)],[AC_MSG_RESULT(no)
+    AC_DEFINE(MAXPATHLEN,256,[If MAXPATHLEN has not been defined])])
+
+
 dnl Not cached since people are likely to change this
 AC_MSG_CHECKING(for libresolv _dns_ttl_ hack)
 AC_LINK_IFELSE([AC_LANG_PROGRAM([[extern int _dns_ttl_;]], [[return _dns_ttl_;]])],[AC_MSG_RESULT(yes)

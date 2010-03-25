@@ -1455,7 +1455,7 @@ sendSignal(void)
 static void
 mainStartScript(const char *prog)
 {
-    char script[SQUID_MAXPATHLEN];
+    char script[MAXPATHLEN];
     char *t;
     size_t sl = 0;
     pid_t cpid;
