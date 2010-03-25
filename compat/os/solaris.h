@@ -30,7 +30,9 @@ typedef union {
 
 /**
  * prototypes for system function missing from system includes
+ * NP: sys/resource.h and sys/time.h are apparently order-dependant.
  */
+#include <sys/time.h>
 #include <sys/resource.h>
 SQUIDCEXTERN int getrusage(int, struct rusage *);
 

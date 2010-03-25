@@ -35,9 +35,6 @@
 #if HAVE_STDIO_H
 #include <stdio.h>
 #endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
 #if HAVE_NETDB_H
 #include <netdb.h>
 #endif
@@ -46,9 +43,6 @@
 #endif
 #if HAVE_TIME_H
 #include <time.h>
-#endif
-#if HAVE_SYS_TIME_H
-#include <sys/time.h>
 #endif
 #if HAVE_ERRNO_H
 #include <errno.h>

@@ -75,12 +75,6 @@
 #if HAVE_SYS_PARAM_H
 #include <sys/param.h>
 #endif
-#if HAVE_SYS_TIME_H
-#include <sys/time.h>
-#endif
-#if HAVE_SYS_RESOURCE_H
-#include <sys/resource.h>	/* needs sys/time.h above it */
-#endif
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
