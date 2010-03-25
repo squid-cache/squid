@@ -195,14 +195,4 @@ extern "C" {
 #endif
 
 
-/* Apparently the IPPROTO_ are not always defined either... */ 
-/* TODO: find out what OS require these and define specifically for them. */
-#ifndef IPPROTO_UDP
-#define IPPROTO_UDP 0
-#endif
-#ifndef IPPROTO_TCP
-#define IPPROTO_TCP 0  
-#endif
-
-
 #endif /* _SQUID_COMPAT_SHARED_H */
