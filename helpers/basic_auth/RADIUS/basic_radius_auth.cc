@@ -50,17 +50,11 @@
 #include	"radius.h"
 #include	"radius-util.h"
 
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
 #if HAVE_NETINET_IN_H
 #include <netinet/in.h>
-#endif
-#if HAVE_SYS_TIME_H
-#include <sys/time.h>
 #endif
 #if HAVE_UNISTD_H
 #include <unistd.h>
@@ -85,9 +79,6 @@
 #endif
 #if HAVE_PWD_H
 #include <pwd.h>
-#endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
 #endif
 #if HAVE_TIME_H
 #include <time.h>

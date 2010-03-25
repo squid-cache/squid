@@ -42,15 +42,8 @@
 #if HAVE_TIME_H
 #include <time.h>
 #endif
-#if HAVE_SYS_TIME_H
-#include <sys/time.h>
-#endif
 #if HAVE_ARPA_INET_H
 #include <arpa/inet.h>
-#endif
-
-#if defined(_SQUID_FREEBSD_)
-#define _etext etext
 #endif
 
 SQUIDCEXTERN const char *mkhttpdlogtime(const time_t *);

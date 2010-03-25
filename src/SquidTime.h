@@ -37,10 +37,7 @@
 #if HAVE_TIME_H
 #include <time.h>
 #endif
-#if HAVE_SYS_TIME_H
-#include <sys/time.h>
-#endif
-
+/* NP: sys/time.h is provided by libcompat */
 
 /* globals for accessing time */
 extern struct timeval current_time;

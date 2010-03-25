@@ -5,9 +5,6 @@
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#if HAVE_SYS_TIME_H
-#include <sys/time.h>
-#endif
 
 /**
  * xusleep, as usleep but accepts longer pauses

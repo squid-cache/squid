@@ -13,8 +13,6 @@ class CacheManager;
 
 #if !_SQUID_SOLARIS_
 typedef int64_t  hrtime_t;
-#else
-#include <sys/time.h>
 #endif
 
 #if defined(__GNUC__) && ( defined(__i386) || defined(__i386__) )
