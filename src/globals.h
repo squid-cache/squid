@@ -173,7 +173,7 @@ extern "C" {
     extern const char *external_acl_message;      /* NULL */
     extern int opt_send_signal;	/* -1 */
     extern int opt_no_daemon; /* 0 */
-    extern String KidName; /* APP_SHORTNAME */
+    extern char KidName[NAME_MAX];
     extern int KidIdentifier; /* 0 */
 
 

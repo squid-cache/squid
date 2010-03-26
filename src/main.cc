@@ -1158,10 +1158,12 @@ ConfigureCurrentKid(const char *processName)
         if (const char *idStart = strrchr(processName, '-')) {
             KidIdentifier = atoi(idStart + 1);
             const int nameLen = idStart - (processName + 1);
-			KidName.limitInit(processName + 1, nameLen);
+            xstrncpy(KidName, processName + 1, nameLen + 1);
         }
+    } else {
+        xstrncpy(KidName, APP_SHORTNAME, sizeof(KidName));
+        KidIdentifier = 0;
     }
-    // else use defaults, but it should not happen except for the main process
 }
 
 int
