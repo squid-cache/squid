@@ -512,9 +512,9 @@ struct SquidConfig {
         int n_allocated;
         int n_configured;
     } cacheSwap;
-/*
- * I'm sick of having to keep doing this ..
- */
+    /*
+     * I'm sick of having to keep doing this ..
+     */
 #define INDEXSD(i)   (Config.cacheSwap.swapDirs[(i)].getRaw())
 
     struct {
