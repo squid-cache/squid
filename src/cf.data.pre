@@ -59,6 +59,31 @@ COMMENT_START
   configuration files.
 
 
+  Conditional configuration
+
+	If-statements can be used to make configuration directives
+	depend on conditions:
+
+	    if <CONDITION>
+	        ... regular configuration directives ...
+	    [else
+	        ... regular configuration directives ...]
+	    endif
+
+	The else part is optional. The keywords "if", "else", and "endif"
+	must be typed on their own lines, as if they were regular
+	configuration directives.
+
+	These individual conditions types are supported:
+
+	    true
+		Always evaluates to true.
+	    false
+		Always evaluates to false.
+	    <integer> = <integer>
+	        Equality comparison of two integer numbers.
+
+
   SMP-Related Macros
 
 	The following SMP-related preprocessor macros can be used.
