@@ -290,8 +290,76 @@ SubstituteMacro(char*& line, int& len, const char* macroName, const char* substS
 static void
 ProcessMacros(char*& line, int& len)
 {
-    SubstituteMacro(line, len, "${process_name}", KidName.termedBuf());
+    SubstituteMacro(line, len, "${process_name}", KidName);
     SubstituteMacro(line, len, "${process_number}", xitoa(KidIdentifier));
+}
+
+static void
+trim_trailing_ws(char* str)
+{
+    assert(str != NULL);
+    unsigned i = strlen(str);
+    while ((i > 0) && xisspace(str[i - 1]))
+        --i;
+    str[i] = '\0';
+}
+
+static const char*
+FindStatement(const char* line, const char* statement)
+{
+    assert(line != NULL);
+    assert(statement != NULL);
+
+    const char* str = skip_ws(line);
+    unsigned len = strlen(statement);
+    if (strncmp(str, statement, len) == 0) {
+        str += len;
+        if (*str == '\0')
+            return str;
+        else if (xisspace(*str))
+            return skip_ws(str);
+    }
+
+    return NULL;
+}
+
+static bool
+StrToInt(const char* str, long& number)
+{
+    assert(str != NULL);
+
+    char* end;
+    number = strtol(str, &end, 0);
+
+    return (end != str) && (*end == '\0'); // returns true if string contains nothing except number
+}
+
+static bool
+EvalBoolExpr(const char* expr)
+{
+    assert(expr != NULL);
+    if (strcmp(expr, "true") == 0) {
+        return true;
+    } else if (strcmp(expr, "false") == 0) {
+        return false;
+    } else if (const char* equation = strchr(expr, '=')) {
+        const char* rvalue = skip_ws(equation + 1);
+        char* lvalue = (char*)xmalloc(equation - expr + 1);
+        xstrncpy(lvalue, expr, equation - expr + 1);
+        trim_trailing_ws(lvalue);
+
+        long number1;
+        if (!StrToInt(lvalue, number1))
+            fatalf("String is not a integer number: '%s'\n", lvalue);
+        long number2;
+        if (!StrToInt(rvalue, number2))
+            fatalf("String is not a integer number: '%s'\n", rvalue);
+
+        xfree(lvalue);
+        return number1 == number2;
+    }
+    fatalf("Unable to evaluate expression '%s'\n", expr);
+    return false; // this place cannot be reached
 }
 
 static int
@@ -334,6 +402,7 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
 
     config_lineno = 0;
 
+    Vector<bool> if_states;
     while (fgets(config_input_line, BUFSIZ, fp)) {
         config_lineno++;
 
@@ -393,21 +462,38 @@ parseOneConfigFile(const char *file_name, unsigned int depth)
             continue;
         }
 
+        trim_trailing_ws(tmp_line);
         ProcessMacros(tmp_line, tmp_line_len);
         debugs(3, 5, "Processing: '" << tmp_line << "'");
 
-        /* Handle includes here */
-        if (tmp_line_len >= 9 && strncmp(tmp_line, "include", 7) == 0 && xisspace(tmp_line[7])) {
-            err_count += parseManyConfigFiles(tmp_line + 8, depth + 1);
-        } else if (!parse_line(tmp_line)) {
-            debugs(3, 0, HERE << cfg_filename << ":" << config_lineno << " unrecognized: '" << tmp_line << "'");
-            err_count++;
+        if (const char* expr = FindStatement(tmp_line, "if")) {
+            if_states.push_back(EvalBoolExpr(expr)); // store last if-statement meaning
+        } else if (FindStatement(tmp_line, "endif")) {
+            if (!if_states.empty())
+                if_states.pop_back(); // remove last if-statement meaning
+            else
+                fatalf("'endif' without 'if'\n");
+        } else if (FindStatement(tmp_line, "else")) {
+            if (!if_states.empty())
+                if_states.back() = !if_states.back();
+            else
+                fatalf("'else' without 'if'\n");
+        } else if (if_states.empty() || if_states.back()) { // test last if-statement meaning if present
+            /* Handle includes here */
+            if (tmp_line_len >= 9 && strncmp(tmp_line, "include", 7) == 0 && xisspace(tmp_line[7])) {
+                err_count += parseManyConfigFiles(tmp_line + 8, depth + 1);
+            } else if (!parse_line(tmp_line)) {
+                debugs(3, 0, HERE << cfg_filename << ":" << config_lineno << " unrecognized: '" << tmp_line << "'");
+                err_count++;
+            }
         }
 
         safe_free(tmp_line);
         tmp_line_len = 0;
 
     }
+    if (!if_states.empty())
+        fatalf("if-statement without 'endif'\n");
 
     if (is_pipe) {
         int ret = pclose(fp);
