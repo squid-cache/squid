@@ -1521,6 +1521,19 @@ LOC: Config.ssl_client.options
 TYPE: string
 DOC_START
 	SSL engine options to use when proxying https:// URLs
+	
+	The most important being:
+
+		NO_SSLv2  Disallow the use of SSLv2
+		NO_SSLv3  Disallow the use of SSLv3
+		NO_TLSv1  Disallow the use of TLSv1
+		SINGLE_DH_USE
+			Always create a new key when using
+			temporary/ephemeral DH key exchanges
+	
+	These options vary depending on your SSL engine.
+	See the OpenSSL SSL_CTX_set_options documentation for a
+	complete list of possible options.
 DOC_END
 
 NAME: sslproxy_cipher
@@ -1530,6 +1543,8 @@ LOC: Config.ssl_client.cipher
 TYPE: string
 DOC_START
 	SSL cipher list to use when proxying https:// URLs
+
+	Colon separated list of supported ciphers.
 DOC_END
 
 NAME: sslproxy_cafile
