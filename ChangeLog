@@ -1,3 +1,11 @@
+Changes to squid-3.1.1 (29 Mar 2010):
+
+	- Bug 2873: undefined symbol
+	- Bug 2827: assertion in authentication
+	- Remove ufsdump binary from default builds
+	- Remove pinger from default startups
+	- ... and several documentation updates.
+
 Changes to squid-3.1.0.18 (14 Mar 2010):
 
 	- Regression Fix: IPv4-mapped prefix, broken in 3.1.0.16

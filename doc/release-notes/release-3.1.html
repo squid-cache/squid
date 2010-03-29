@@ -2,10 +2,10 @@
 <HTML>
 <HEAD>
  <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.65">
- <TITLE>Squid 3.1.0.18 release notes</TITLE>
+ <TITLE>Squid 3.1.1 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.1.0.18 release notes</H1>
+<H1>Squid 3.1.1 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -70,20 +70,39 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.1.0.18 for testing.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.1.1.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.1/">http://www.squid-cache.org/Versions/v3/3.1/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
 <P>A large number of the show-stopper bugs have been fixed along with general improvements to the ICAP support.
-While this release is not deemed ready for production use, we believe it is ready for wider testing by the community.</P>
-<P>We welcome feedback and bug reports. If you find a bug, please see 
-<A HREF="http://wiki.squid-cache.org/SquidFaq/TroubleShooting#head-7067fc0034ce967e67911becaabb8c95a34d576d">http://wiki.squid-cache.org/SquidFaq/TroubleShooting#head-7067fc0034ce967e67911becaabb8c95a34d576d</A> for how to submit a report with a stack trace.</P>
+While this release is not fully bug-free we believe it is ready for use in production on many systems.</P>
+<P>We welcome feedback and bug reports. If you find a new bug, please see 
+<A HREF="http://wiki.squid-cache.org/SquidFaq/BugReporting">http://wiki.squid-cache.org/SquidFaq/BugReporting</A> for how to submit a report with a stack trace and other required details. Additional information is also very welcome on other open bugs.</P>
 
 <H2><A NAME="ss1.1">1.1</A> <A HREF="#toc1.1">Known issues</A>
 </H2>
 
 <P>Although this release is deemed good enough for use in many setups, please note the existence of 
-<A HREF="http://www.squid-cache.org/bugs/buglist.cgi?query_format=advanced&amp;short_desc_type=allwordssubstr&amp;short_desc=&amp;target_milestone=3.1&amp;long_desc_type=allwordssubstr&amp;long_desc=&amp;bug_file_loc_type=allwordssubstr&amp;bug_file_loc=&amp;status_whiteboard_type=allwordssubstr&amp;status_whiteboard=&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;emailtype1=substring&amp;email1=&amp;emailtype2=substring&amp;email2=&amp;bugidtype=include&amp;bug_id=&amp;votes=&amp;chfieldfrom=&amp;chfieldto=Now&amp;chfieldvalue=&amp;cmdtype=doit&amp;order=bugs.bug_severity&amp;field0-0-0=noop&amp;type0-0-0=noop&amp;value0-0-0=">open bugs against Squid-3.1</A>.</P>
+<A HREF="http://bugs.squid-cache.org/buglist.cgi?query_format=advanced&amp;target_milestone=3.1&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;cmdtype=doit&amp;order=bugs.bug_severity">open bugs against Squid-3.1</A>.</P>
+
+<P>Some issues to note as currently known in this release which are not able to be fixed in this 3.1 series are:</P>
+<P>
+<UL>
+<LI>The lack of some features available in Squid-2.x series. See the regression sections below for full details.</LI>
+<LI>The lack of IPv6 split-stack support for MacOSX, OpenBSD and maybe others.</LI>
+</UL>
+</P>
+
+<P>Currently known issues which only depends on available developer time and may still be resolved in a future 3.1 release are:</P>
+<P>
+<UL>
+<LI>IPv4 fall-back occasionally failing on dual IPv4/IPv6 websites.</LI>
+<LI>An ongoing slow FD leak introduced somewhere during the Squid-3.0 cycle.</LI>
+<LI>Windows support is still largely missing.</LI>
+<LI>Build status for the 3.x series is still largely unknown for Unix based OS and other less popular systems.</LI>
+</UL>
+</P>
+
 
 <H2><A NAME="ss1.2">1.2</A> <A HREF="#toc1.2">Changes since earlier releases of Squid-3.1</A>
 </H2>
@@ -114,7 +133,7 @@ While this release is not deemed ready for production use, we believe it is read
 <H2><A NAME="ss2.1">2.1</A> <A HREF="#toc2.1">New Version Numbering System</A>
 </H2>
 
-<P>Begining with 3.1 the Squid Developers are trialling a new release numbering system.</P>
+<P>Begining with 3.1 the Squid Developers are using a new release numbering system.</P>
 
 <P>We have decided, based on input from interested users to drop the Squid-2 terminology of
 (DEVEL, PRE, RC, and STABLE) from the release package names.
@@ -162,18 +181,23 @@ Vastly reducing the number of bugs in all code.
 <P>squid.conf has undergone a facelift.</P>
 
 <P>Don't worry, few operational changes have been made.
-Older configs from are still expected to run in 3.1 with only the usual minor
+Older configs from Squdi 2.x and 3.0 are still expected to run in 3.1 with only the usual minor
 changes seen between major release. Details on those are listed below.</P>
 
-<P>New users will be relieved to see a short 32-line or less squid.conf on clean installs.
+<P>New users will be relieved to see a very short squid.conf on clean installs.
 Many of the options have reasonable defaults but had previously needed them explicitly configured!
 These are now proper built-in defaults and no longer need to be in squid.conf unless changed.</P>
 
 <P>All of the option documentation has been offloaded to another file <EM>squid.conf.documented</EM> which
-contains a fully documented set of options previously cluttering up squid.conf itself.</P>
+contains a fully documented set of available options previously cluttering up squid.conf itself.</P>
 
 <P>Package maintainers are provided with a second file squid.conf.default which as always contains the default
 config options provided on a clean install.</P>
+
+<P>We are also providing online copies of configuration documentation.
+Updated live to match the latest release of each Squid series, and a combined global version.
+This is available on 
+<A HREF="http://www.squid-cache.org/Doc/config/">the Squid website</A></P>
 
 
 <H2><A NAME="ss2.3">2.3</A> <A HREF="#toc2.3">Internet Protocol version 6 (IPv6)</A>
@@ -191,18 +215,23 @@ define behaviour for localhost may need ::1/128 included.</P>
 
 <P>Pinger has been upgraded to perform both ICMP and ICMPv6 as required.
 As a result of this and due to a change in the binary protocol format between them,
-new builds of squid are no longer backwards-compatible with old pinger binaries.
-You will need to perform "make install-pinger" again after installing squid.</P>
+new builds of Squid are no longer backwards-compatible with old pinger binaries.
+You will need to perform "make install-pinger" again after installing Squid.</P>
 
 <P>Peer and Client SNMP tables have been altered to handle IPv6 addresses.
 As a side effect of this the long-missing fix to show seperate named peers on one IP
 has been integrated. Making the SNMP peer table now produce correct output.
 The table structure change is identical for both IPv4-only and Dual modes but with
 IPv4-only simply not including any IPv6 entries. This means any third-party SNMP
-software which hard coded the MIB paths needs to be upgraded for this Squid release.</P>
-
+software which hard coded the MIB paths needs to be upgraded for this Squid release.
+Details can be found in the wiki 
+<A HREF="http://wiki.squid-cache.org/Features/Snmp#Squid_OIDs">SNMP feature page</A>.</P>
 
 <H3>Limitations of IPv6 Support</H3>
+
+<P>In this release there is no split-stack support. This means that OS which do not provide
+IP stacks based on the KAME stack with Hybrid extensions to do IPv4-mapping cannot use IPv6
+with Squid.</P>
 
 <P>Specify a specific tcp_outgoing_address and the clients who match its ACL are limited
 to the IPv4 or IPv6 network that address belongs to. They are not permitted over the
@@ -213,8 +242,8 @@ See the squid.conf documentation for further details.</P>
 <P>WCCP is not available (neither version 1 or 2).
 It remains built into squid for use with IPv4 traffic but IPv6 cannot use it.</P>
 
-<P>Transparent Interception is done via NAT at the OS level and is not available in IPv6.
-Squid will ensure that any port set with transparent, intercept, or tproxy options be an IPv4-only
+<P>Pseudo-Transparent Interception is done via NAT at the OS level and is not available in IPv6.
+Squid will ensure that any port set with transparent or intercept options be an IPv4-only
 listening address. Wildcard can still be used but will not open as an IPv6.
 To ensure that squid can accept IPv6 traffic on its default port, an alternative should
 be chosen to handle transparently intercepted traffic.
@@ -223,6 +252,11 @@ be chosen to handle transparently intercepted traffic.
    http_port 8080 intercept
 </PRE>
 </P>
+
+<P>Real transparent Interception (TPROXY) may be able to perform IPv6 interception.
+However this currently still needs kernel patching with experimental patches to enable IPv6.
+Squid will attempt to discover support on startup and may permit or deny IPv6 wildcard for
+tproxy flagged ports depending on your system.</P>
 
 <P>The bundled NTLM Auth helper is IPv4-native between itself and the NTLM server.
 A new one will be needed for IPv6 traffic between the helper and server.</P>
@@ -245,7 +279,7 @@ with the RADIUS server. A new helper will be needed for IPv6 RADIUS protocol.</P
 
 <P>For best coverage of languages, using the latest language pack of error files is recommended.
 Updates can be downloaded from 
-<A HREF="http://www.squid-cahch.org/Versions/langpack/">www.squid-cache.org/Versions/langpack/</A></P>
+<A HREF="http://www.squid-cache.org/Versions/langpack/">www.squid-cache.org/Versions/langpack/</A></P>
 
 <P>The squid developers are interested in making squid available in a wide variety of languages.
 Contribution of new languages is encouraged.</P>
@@ -296,9 +330,9 @@ before copying the value to the TOS send towards clients.</LI>
 
 <H3>Squid Configuration</H3>
 
-<P>Squid 3.1 needs to be configured with --enable-zph-qos for the ZPH QoS controls to be available.</P>
+<P>Squid 3.1 needs to be configured with <EM>--enable-zph-qos</EM> for the ZPH QoS controls to be available.</P>
 
-<P>The configuration options for 2.7 and 3.1 are based on different ZPH patches.
+<P>The configuration options for Squid 2.7 and 3.1 are based on different ZPH patches.
 The two releases configuration differs and only the TOS mode settings are directly translatable.</P>
 <P>
 <UL>
@@ -308,7 +342,7 @@ The two releases configuration differs and only the TOS mode settings are direct
 </UL>
 </P>
 
-<P>The lines above are spearated for documentation. qos_flows may be configured with all options on one line, or separated as shown.
+<P>The lines above are separated for documentation. qos_flows may be configured with all options on one line, or separated as shown.
 Also options may be repeated as many times as desired. Only the final configured value for any option will be used.</P>
 
 <P>The legacy <EM>Option</EM> and <EM>Priority</EM> modes available in Squid-2.7 are no longer supported.</P>
@@ -320,9 +354,14 @@ Also options may be repeated as many times as desired. Only the final configured
 <P>Details in 
 <A HREF="http://wiki.squid-cache.org/Features/SslBump">The Squid wiki</A></P>
 
-<P>Squid-in-the-middle decryption and encryption of straight CONNECT and transparently redirected SSL traffic,
+<P>Squid-in-the-middle decryption and encryption of CONNECT tunneled SSL traffic,
 using configurable client- and server-side certificates.
 While decrypted, the traffic can be inspected using ICAP.</P>
+
+<P>Squid 3.1 releases limit SSL Bump to CONNECT requests and requires that clients are
+configured to explicitly use the proxy in their browser settings or via WPAD/PAC
+configuration. Use of interception for port 443 is not officially supported, despite
+being known to work under certain limited networking circumstances.</P>
 
 
 <H2><A NAME="ss2.8">2.8</A> <A HREF="#toc2.8">eCAP Adaptation Module support</A>
@@ -330,6 +369,12 @@ While decrypted, the traffic can be inspected using ICAP.</P>
 
 <P>Details in 
 <A HREF="http://wiki.squid-cache.org/Features/eCAP">The Squid wiki</A></P>
+
+<P>eCAP provides a way to integrate CAP modules directly into Squid without the need for
+a c-icap server wrapper. This enables faster processing.</P>
+
+<P>Currently known and available eCAP modules are listed in the wiki feature page on eCAP.</P>
+
 
 <H2><A NAME="ss2.9">2.9</A> <A HREF="#toc2.9">ICAP Bypass and Retry enhancements</A>
 </H2>
@@ -392,10 +437,12 @@ limit is exceeded, the master transaction fails. The default limit of 16
 should be large enough to not require an explicit configuration in most
 environments yet may be small enough to limit side-effects of loops.</P>
 
+
 <H2><A NAME="ss2.10">2.10</A> <A HREF="#toc2.10">ICY streaming protocol support</A>
 </H2>
 
-<P>Squid-3.1 adds native support for streaming protocol ICY.</P>
+<P>Squid-3.1 adds native support for streaming protocol ICY.
+Also commonly known as SHOUTcast multimedia streams.</P>
 
 <P>This protocol uses port 80 and violates RFC 2616 by using an HTTP/1.1 compliant request and non-HTTP reply
 to start the stream transaction. If the reply is handled according to HTTP/1.1 RFC-compliance requirements
@@ -409,7 +456,7 @@ The streamed data is not cacheable. All processing and access controls may be ap
 <P>Squid-2 contained a hack using the <EM>update_http0.9</EM> squid.conf option to work around the
 unusual replies. This option is now obsolete.</P>
 
-<P>The proto ACL type matches <EM>ICY</EM> once the reply has been received, before that the processing
+<P>The <EM>proto</EM> ACL type matches <EM>ICY</EM> once the reply has been received, before that the processing
 is only aware on an HTTP request. So the ACL will match <EM>HTTP</EM>.</P>
 
 
@@ -965,7 +1012,7 @@ Default: ON
 <PRE>
         Control whether the pinger is active at run-time.
         Enables turning ICMP pinger on and off with a simple squid -k reconfigure.
-        default is on when --enable-icmp is compiled in.
+        default is off when --enable-icmp is compiled in.
         
 </PRE>
 </P>
@@ -1423,6 +1470,8 @@ refresh_pattern .                    0   20%     4320
         is never forced or permitted out the IPv4 interface.
 
         acl to_ipv6 dst ipv6
+        http_access allow to_ipv6 !all
+
         tcp_outgoing_address 2002::c001 good_service_net to_ipv6
         tcp_outgoing_address 10.0.0.2 good_service_net !to_ipv6
 
@@ -1524,7 +1573,7 @@ and build with IPv6 when possible.</P>
 <P>Build without support for loadable modules.</P>
 
 <DT><B>--disable-strict-error-checking</B><DD>
-<P>Build Squid without advanced compiler error checking.
+<P>Build Squid without advanced compiler error checking (without the -Werror option).
 This only affects the building process, enabling it to complete despite some
 possibly serious issues.
 Please do not use lightly, and please report the build issues which make it needed
@@ -1533,8 +1582,10 @@ to the squid developers before doing so.</P>
 <DT><B>--disable-translation</B><DD>
 <P>Prevent Squid generating localized error page templates and manuals.
 Which is usually tried, but may not be needed.</P>
-<P>This is a development optimization for building from VCS when localization is
-not needed. Has no effect on pre-translated source bundles.</P>
+<P>This is an optimization for building fast when localization is not needed
+or localization tools are not available.</P>
+<P>A copy of the latest translated files can instead be downloaded from
+<A HREF="http://www.squid-cache.org/Versions/langpack/">http://www.squid-cache.org/Versions/langpack/</A></P>
 
 <DT><B>--with-dns-cname</B><DD>
 <P>Enable CNAME recursion within the Internal DNS resolver stub squid uses.
@@ -1589,7 +1640,8 @@ This options requires a linux kernel 2.6.25 or later for embeded netfilter TPROX
 <P>Older REDIRECT and DNAT targets work as before on HTTP ports marked 'intercept'.</P>
 
 <DT><B>--enable-linux-tproxy</B><DD>
-<P>Deprecated. Remains only to support old TPROXY version 2.2 installations.</P>
+<P>Deprecated. Remains only to support old TPROXY version 2.2 installations.
+Scheduled for complete removal in Squid 3.2</P>
 
 <DT><B>--enable-ntlm-auth-helpers</B><DD>
 <P>Helper previously built by <EM>SMB</EM> is now built by <EM>smb_lm</EM>.
@@ -1597,7 +1649,8 @@ It also has a new squid.conf name for usage, see <EM>auth_param</EM> above for d
 
 <DT><B>--disable-internl-dns</B><DD>
 <P>Better support for Linux using the external DNS helper.
-The helper will now compile and work with dns_nameservers on more variants of Linux than previously.</P>
+The helper will now compile and work with dns_nameservers on more variants of Linux than previously.
+It is still deprecated however and use of this option should be avoided as much as possible.</P>
 
 <DT><B>--with-aio</B><DD>
 <P>Deprecated. POSIX AIO is now auto-detected and enabled.
@@ -1638,6 +1691,9 @@ Use --without-pthreads to disable, but only if you really have to.</P>
 <DT><B>auth_param</B><DD>
 <P><EM>blankpassword</EM> option for basic scheme removed.</P>
 
+<DT><B>cache_peer</B><DD>
+<P><EM>http11</EM> Obsolete.</P>
+
 <DT><B>external_acl_type</B><DD>
 <P>Format tag <EM>%{Header}</EM> replaced by <EM>%>{Header}</EM></P>
 <P>Format tag <EM>%{Header:member}</EM> replaced by <EM>%>{Header:member}</EM></P>
@@ -1660,6 +1716,9 @@ Use --without-pthreads to disable, but only if you really have to.</P>
 
 <DT><B>redirector_bypass</B><DD>
 <P>Replaced by <EM>url_rewrite_bypass</EM></P>
+
+<DT><B>server_http11</B><DD>
+<P>Obsolete.</P>
 
 <DT><B>upgrade_http0.9</B><DD>
 <P>Obsolete. ICY protocol streaming support added natively.</P>
@@ -1787,7 +1846,6 @@ Use --without-pthreads to disable, but only if you really have to.</P>
 
 <DT><B>cache_peer</B><DD>
 <P><EM>idle=</EM> not yet ported from 2.7</P>
-<P><EM>http11</EM> not yet ported from 2.7</P>
 <P><EM>monitorinterval=</EM> not yet ported from 2.6</P>
 <P><EM>monitorsize=</EM> not yet ported from 2.6</P>
 <P><EM>monitortimeout=</EM> not yet ported from 2.6</P>
@@ -1830,7 +1888,7 @@ Use --without-pthreads to disable, but only if you really have to.</P>
 <P>Not yet ported from 2.6</P>
 
 <DT><B>logfile_daemon</B><DD>
-<P>Not yet ported from 2.7</P>
+<P>Not yet ported from 2.7.</P>
 
 <DT><B>logformat</B><DD>
 <P><EM>%oa</EM> tag not yet ported from 2.7</P>
@@ -1849,9 +1907,6 @@ Use --without-pthreads to disable, but only if you really have to.</P>
 <P><EM>negative-ttl=</EM> not yet ported from 2.7</P>
 
 <DT><B>refresh_stale_hit</B><DD>
-<P>Not yet ported from 2.7</P>
-
-<DT><B>server_http11</B><DD>
 <P>Not yet ported from 2.7</P>
 
 <DT><B>storeurl_access</B><DD>
