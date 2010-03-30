@@ -69,6 +69,7 @@
 #include "StoreFileSystem.h"
 #include "SwapDir.h"
 #include "wordlist.h"
+#include "ipc/Kids.h"
 
 #if HAVE_GLOB_H
 #include <glob.h>
@@ -3091,9 +3092,6 @@ parse_http_port_specification(http_port_list * s, char *token)
         debugs(3, 0, "http(s)_port: Port cannot be 0: " << token);
         self_destruct();
     }
-
-    extern void update_port(unsigned short* port);
-    update_port(&port);
 
     if (NULL == host) {
         s->s.SetAnyAddr();
