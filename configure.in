@@ -4233,6 +4233,7 @@ AC_CONFIG_FILES([\
 	src/ident/Makefile \
 	src/ip/Makefile \
 	src/log/Makefile \
+	src/ipc/Makefile \
 	contrib/Makefile \
 	snmplib/Makefile \
 	icons/Makefile \
