@@ -34,7 +34,7 @@ LOADABLE_MODULES_SOURCES = \
 	LoadableModules.h \
 	LoadableModules.cc
 
-SUBDIRS	= base comm eui acl fs repl auth ip icmp ident log
+SUBDIRS	= base comm eui acl fs repl auth ip icmp ident log ipc
 
 if USE_ADAPTATION
 SUBDIRS += adaptation
@@ -164,7 +164,8 @@ COMMON_LIBS = \
 	auth/libauth.la \
 	acl/libapi.la \
 	ip/libip.la \
-	fs/libfs.la
+	fs/libfs.la \
+	ipc/libipc.la
 
 EXTRA_PROGRAMS = \
 	DiskIO/DiskDaemon/diskd \
