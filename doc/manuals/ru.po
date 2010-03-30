@@ -48,7 +48,7 @@ msgstr ""
 #: tools/cachemgr.cgi.8.in:8 tools/squidclient.1:8
 #, no-wrap
 msgid "SYNOPSIS"
-msgstr ""
+msgstr "СИНТАКСИС"
 
 #. type: SH
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:11
@@ -70,6 +70,8 @@ msgid ""
 "B<basic_getpwnam_auth> allows Squid to authenticate any local user accounts "
 "to validate the user name and password of Basic HTTP authentication."
 msgstr ""
+"<basic_getpwnam_auth> позволяет Squid авторизовать любых пользователей чьи "
+"имена и пароли подходят для Базовой HTTP авторизации."
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:21
@@ -79,7 +81,7 @@ msgstr ""
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:23
 msgid "This has the following advantages over the NCSA module:"
-msgstr ""
+msgstr "Это имеет приимущество над модулем NCSA:"
 
 #. type: TP
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:23
@@ -180,7 +182,7 @@ msgstr ""
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:243
 #: helpers/external_acl/unix_group/squid_unix_group.8:67
 msgid "This manual was written by"
-msgstr ""
+msgstr "Это руководство было написано"
 
 #. type: SH
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:73
@@ -248,6 +250,8 @@ msgid ""
 "Questions on the usage of this program can be sent to the I<Squid Users "
 "mailing list>"
 msgstr ""
+"Вопросы по использованию этой программы могут быть заданы в I<Squid Users "
+"mailing list>"
 
 #. type: SH
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:83
@@ -290,6 +294,8 @@ msgstr ""
 #: tools/cachemgr.cgi.8.in:69 tools/squidclient.1:181
 msgid "Report bugs or bug fixes using http://bugs.squid-cache.org/"
 msgstr ""
+"Сообщите об ошибках или их исправлениях используя http://bugs.squid-"
+"cache.org/"
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:91
@@ -305,6 +311,8 @@ msgid ""
 "Report serious security bugs to I<Squid Bugs E<lt>squid-bugs@squid-cache."
 "orgE<gt>>"
 msgstr ""
+"Сообщите о серьёзных проблемах безопасности в I<Squid Bugs E<lt>squid-bugs"
+"@squid-cache.orgE<gt>>"
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:94
@@ -319,6 +327,8 @@ msgstr ""
 msgid ""
 "Report ideas for new improvements to the I<Squid Developers mailing list>"
 msgstr ""
+"Сообщите о новых идеях по улучшению программы в I<Squid Developers mailing "
+"list>"
 
 #. type: SH
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:96
@@ -362,7 +372,7 @@ msgstr ""
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:18
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:33
 msgid "LDAP server name"
-msgstr ""
+msgstr "Адрес сервера LDAP"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:20
@@ -378,7 +388,7 @@ msgstr ""
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:37
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:24
 msgid "URI"
-msgstr ""
+msgstr "URL"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:29
@@ -499,7 +509,7 @@ msgstr ""
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:133
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:181
 msgid "B<one> level below the base object or"
-msgstr ""
+msgstr "B<one> уровнем ниже базового объекта или"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:136
@@ -692,12 +702,12 @@ msgstr ""
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:290
 #: helpers/basic_auth/RADIUS/basic_radius_auth.8:87
 msgid "This program is written by"
-msgstr ""
+msgstr "Эта программа написана"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:294
 msgid "This manual is written by"
-msgstr ""
+msgstr "Это руководство написано"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:308
@@ -1526,7 +1536,7 @@ msgstr ""
 #: src/squid.8.in:171
 #, no-wrap
 msgid "FILES"
-msgstr ""
+msgstr "ФАЙЛЫ"
 
 #. type: Plain text
 #: src/squid.8.in:173
