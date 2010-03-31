@@ -1,5 +1,7 @@
-#include "squid.h"
-#include "TextException.h"
+#include "config.h"
+#include "base/TextException.h"
+#include "Debug.h"
+#include "util.h"
 
 TextException::TextException()
 {

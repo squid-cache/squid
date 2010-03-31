@@ -1,8 +1,8 @@
 #include "squid.h"
 #include <libecap/adapter/service.h>
-#include "TextException.h"
 #include "adaptation/ecap/ServiceRep.h"
 #include "adaptation/ecap/XactionRep.h"
+#include "base/TextException.h"
 
 Adaptation::Ecap::ServiceRep::ServiceRep(const Adaptation::ServiceConfig &cfg):
         /*AsyncJob("Adaptation::Ecap::ServiceRep"),*/ Adaptation::Service(cfg)

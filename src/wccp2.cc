@@ -35,11 +35,12 @@
 #if USE_WCCPv2
 
 #include "comm.h"
+#include "compat/strsep.h"
 #include "event.h"
+#include "ip/IpAddress.h"
 #include "Parsing.h"
 #include "Store.h"
 #include "SwapDir.h"
-#include "ip/IpAddress.h"
 
 #if HAVE_NETDB_H
 #include <netdb.h>

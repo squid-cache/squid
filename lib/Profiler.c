@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -33,13 +32,15 @@
  *
  */
 
-/*
+/**
  * CPU Profiling implementation.
  *
+ * \par
  *  This library implements the Probes needed to gather stats.
  *  See src/ProfStats.c which implements historical recording and
  *  presentation in CacheMgr.cgi.
  *
+ * \par
  *  For timing we prefer on-CPU ops that retrieve cpu ticks counter.
  *  For Intel, this is "rdtsc", which is 64-bit counter that virtually
  *  never wraps. For alpha, this is "rpcc" which is 32-bit counter and
@@ -56,16 +57,19 @@
  *   probename must be added to profiling.h into xprof_type enum list
  *   with prepended "XPROF_" string.
  *
- * Description.
- *  PROF gathers stats per probename into structures. It indexes these
+ * \section description Description.
+ * \par PROF
+ *  gathers stats per probename into structures. It indexes these
  *  structures by enum type index in an array.
  *
- *  PROF records best, best, average and worst values for delta time,
+ * \par PROF
+ *  records best, best, average and worst values for delta time,
  *  also, if UNACCED is defined, it measures "empty" time during which
  *  no probes are in measuring state. This allows to see time "unaccounted"
  *  for. If OVERHEAD is defined, additional calculations are made at every
  *  probe to measure approximate overhead of the probe code itself.
  *
+ * \par
  *  Probe data is stored in linked-list, so the more probes you define,
  *  the more overhead is added to find the deepest nested probe. To reduce
  *  average overhead, linked list is manipulated each time PR_start is
@@ -77,17 +81,20 @@
  *  fast and frequent sections of code, we want to reduce this overhead
  *  to absolute minimum possible.
  *
+ * \par
  *  For actual measurements, probe overhead cancels out mostly. Still,
  *  do not take the measured times as facts, they should be viewed in
  *  relative comparison to overall CPU time and on the same platform.
  *
+ * \par
  *  Every 1 second, Event within squid is called that parses gathered
  *  statistics of every probe, and accumulates that into historical
  *  structures for last 1,5,30 secs, 1,5,30 mins, and 1,5 and 24 hours.
  *  Each second active probe stats are reset, and only historical data
  *  is presented in cachemgr output.
  *
- * Reading stats.
+ * \section reading Reading stats.
+ * \par
  *  "Worst case" may be misleading. Anything can happen at any section
  *  of code that could delay reaching to probe stop. For eg. system may
  *  need to service interrupt routine, task switch could occur, or page
@@ -99,19 +106,23 @@
  *  in given section of code, and its average completion time. This data
  *  could be used to detect bottlenecks withing squid and optimise them.
  *
+ * \par
  *  TOTALS are quite off reality. Its there just to summarise cumulative
  *  times and percent column. Percent values over 100% shows that there
  *  have been some probes nested into each other.
  *
  */
 
-#include "profiling.h"
-
-#include <assert.h>
+#define SQUID_NO_ALLOC_PROTECT 1
+#include "config.h"
 
 #if USE_XPROF_STATS
 
+#include "profiling.h"
 
+#if HAVE_ASSERT_H
+#include <assert.h>
+#endif
 #if HAVE_GNUMALLLOC_H
 #include <gnumalloc.h>
 #elif HAVE_MALLOC_H

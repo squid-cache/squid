@@ -4,13 +4,18 @@ AC_DEFUN([SQUID_DEFAULT_INCLUDES],[[
 /* What a mess.. many systems have added the (now standard) bit types
  * in their own ways, so we need to scan a wide variety of headers to
  * find them..
- * IMPORTANT: Keep include/squid_types.h syncronised with this list
+ * IMPORTANT: Keep compat/types.h syncronised with this list
  */
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif  
-#if STDC_HEADERS
+#if HAVE_LINUX_TYPES_H
+#include <linux/types.h>
+#endif  
+#if HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
+#if HAVE_STDDEF_H
 #include <stddef.h>
 #endif
 #if HAVE_INTTYPES_H

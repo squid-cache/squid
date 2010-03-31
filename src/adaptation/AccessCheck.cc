@@ -10,7 +10,7 @@
 #include "adaptation/AccessRule.h"
 #include "adaptation/Config.h"
 #include "adaptation/AccessCheck.h"
-
+#include "base/TextException.h"
 
 /** \cond AUTODOCS-IGNORE */
 cbdata_type Adaptation::AccessCheck::CBDATA_AccessCheck = CBDATA_UNKNOWN;

@@ -43,24 +43,8 @@
  */
 
 #include "squid.h"
-#include "clientStream.h"
-#include "client_side_request.h"
-#include "auth/UserRequest.h"
-#include "HttpRequest.h"
-#include "ProtoPort.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
-#include "client_side.h"
-#include "client_side_reply.h"
-#include "Store.h"
-#include "HttpReply.h"
-#include "MemObject.h"
-#include "ClientRequestContext.h"
-#include "SquidTime.h"
-#include "wordlist.h"
-#include "inet_pton.h"
-#include "fde.h"
-
 #if USE_ADAPTATION
 #include "adaptation/AccessCheck.h"
 #include "adaptation/Iterator.h"
@@ -68,9 +52,22 @@
 #if ICAP_CLIENT
 #include "adaptation/icap/History.h"
 #endif
-//static void adaptationAclCheckDoneWrapper(Adaptation::ServicePointer service, void *data);
 #endif
-
+#include "auth/UserRequest.h"
+#include "clientStream.h"
+#include "client_side.h"
+#include "client_side_reply.h"
+#include "client_side_request.h"
+#include "ClientRequestContext.h"
+#include "compat/inet_pton.h"
+#include "fde.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
+#include "MemObject.h"
+#include "ProtoPort.h"
+#include "Store.h"
+#include "SquidTime.h"
+#include "wordlist.h"
 
 
 #if LINGERING_CLOSE
@@ -285,18 +282,21 @@ ClientHttpRequest::~ClientHttpRequest()
     PROF_stop(httpRequestFree);
 }
 
-/* Create a request and kick it off */
-/*
+/**
+ * Create a request and kick it off
+ *
+ * \retval 0     success
+ * \retval -1    failure
+ *
  * TODO: Pass in the buffers to be used in the inital Read request, as they are
  * determined by the user
  */
-int				/* returns nonzero on failure */
+int
 clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * streamcallback,
                    CSD * streamdetach, ClientStreamData streamdata, HttpHeader const *header,
                    char *tailbuf, size_t taillen)
 {
     size_t url_sz;
-    HttpVersion http_ver (1, 0);
     ClientHttpRequest *http = new ClientHttpRequest(NULL);
     HttpRequest *request;
     StoreIOBuffer tempBuffer;
@@ -325,7 +325,7 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
     }
 
     /*
-     * now update the headers in request with our supplied headers. urLParse
+     * now update the headers in request with our supplied headers. urlParse
      * should return a blank header set, but we use Update to be sure of
      * correctness.
      */
@@ -364,6 +364,8 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
 
     request->my_addr.SetPort(0);
 
+    /* Our version is HTTP/1.1 */
+    HttpVersion http_ver(1,1);
     request->http_ver = http_ver;
 
     http->request = HTTPMSGLOCK(request);
@@ -399,23 +401,30 @@ ClientRequestContext::httpStateIsValid()
 
 #if FOLLOW_X_FORWARDED_FOR
 /**
- * clientFollowXForwardedForCheck() checks the indirect_client_addr
+ * clientFollowXForwardedForCheck() checks the content of X-Forwarded-For:
  * against the followXFF ACL, or cleans up and passes control to
  * clientAccessCheck().
+ *
+ * The trust model here is a little ambiguous. So to clarify the logic:
+ * - we may always use the direct client address as the client IP.
+ * - these trust tests merey tell whether we trust given IP enough to believe the
+ *   IP string which it appended to the X-Forwarded-For: header.
+ * - if at any point we don't trust what an IP adds we stop looking.
+ * - at that point the current contents of indirect_client_addr are the value set
+ *   by the last previously trusted IP.
+ * ++ indirect_client_addr contains the remote direct client from the trusted peers viewpoint.
  */
-
 static void
 clientFollowXForwardedForCheck(int answer, void *data)
 {
     ClientRequestContext *calloutContext = (ClientRequestContext *) data;
-    ClientHttpRequest *http = NULL;
-    HttpRequest *request = NULL;
 
     if (!calloutContext->httpStateIsValid())
         return;
 
-    http = calloutContext->http;
-    request = http->request;
+    ClientHttpRequest *http = calloutContext->http;
+    HttpRequest *request = http->request;
+
     /*
      * answer should be be ACCESS_ALLOWED or ACCESS_DENIED if we are
      * called as a result of ACL checks, or -1 if we are called when
@@ -423,16 +432,15 @@ clientFollowXForwardedForCheck(int answer, void *data)
      */
     if (answer == ACCESS_ALLOWED &&
             request->x_forwarded_for_iterator.size () != 0) {
+
         /*
-        * The IP address currently in request->indirect_client_addr
-        * is trusted to use X-Forwarded-For.  Remove the last
-        * comma-delimited element from x_forwarded_for_iterator and use
-        * it to to replace indirect_client_addr, then repeat the cycle.
-        */
+         * Remove the last comma-delimited element from the
+         * x_forwarded_for_iterator and use it to repeat the cycle.
+         */
         const char *p;
         const char *asciiaddr;
         int l;
-        struct in_addr addr;
+        IpAddress addr;
         p = request->x_forwarded_for_iterator.termedBuf();
         l = request->x_forwarded_for_iterator.size();
 
@@ -454,20 +462,15 @@ clientFollowXForwardedForCheck(int answer, void *data)
         while (l > 0 && ! (p[l-1] == ',' || xisspace(p[l-1])))
             l--;
         asciiaddr = p+l;
-        if (xinet_pton(AF_INET, asciiaddr, &addr) != 0) {
+        if ((addr = asciiaddr)) {
             request->indirect_client_addr = addr;
             request->x_forwarded_for_iterator.cut(l);
-            if (! Config.onoff.acl_uses_indirect_client) {
-                /*
-                * If acl_uses_indirect_client is off, then it's impossible
-                * to follow more than one level of X-Forwarded-For.
-                */
-                request->x_forwarded_for_iterator.clean();
+            calloutContext->acl_checklist = clientAclChecklistCreate(Config.accessList.followXFF, http);
+            if (!Config.onoff.acl_uses_indirect_client) {
+                /* override the default src_addr tested if we have to go deeper than one level into XFF */
+                Filled(calloutContext->acl_checklist)->src_addr = request->indirect_client_addr;
             }
-            calloutContext->acl_checklist =
-                clientAclChecklistCreate(Config.accessList.followXFF, http);
-            calloutContext->acl_checklist->
-            nonBlockingCheck(clientFollowXForwardedForCheck, data);
+            calloutContext->acl_checklist->nonBlockingCheck(clientFollowXForwardedForCheck, data);
             return;
         }
     } /*if (answer == ACCESS_ALLOWED &&
@@ -485,15 +488,8 @@ clientFollowXForwardedForCheck(int answer, void *data)
     request->x_forwarded_for_iterator.clean();
     request->flags.done_follow_x_forwarded_for = 1;
 
-    /* If follow XFF is denied, we reset the indirect_client_addr
-       to the direct client. Thats the one we are configured to check for */
-    if (answer == ACCESS_DENIED) {
-        request->indirect_client_addr = request->client_addr;
-    }
-    /* on a failure, leave it as undefined state ?? */
-    else if (answer != ACCESS_ALLOWED) {
-        debugs(28, DBG_CRITICAL, "Follow X-Forwarded-For encountered an error. Ignoring address: " << request->indirect_client_addr );
-        request->indirect_client_addr = request->client_addr;
+    if (answer != ACCESS_ALLOWED && answer != ACCESS_DENIED) {
+        debugs(28, DBG_CRITICAL, "ERROR: Processing X-Forwarded-For. Stopping at IP address: " << request->indirect_client_addr );
     }
 
     /* process actual access ACL as normal. */
@@ -509,9 +505,17 @@ ClientRequestContext::clientAccessCheck()
     if (!http->request->flags.done_follow_x_forwarded_for &&
             Config.accessList.followXFF &&
             http->request->header.has(HDR_X_FORWARDED_FOR)) {
-        http->request->x_forwarded_for_iterator =
-            http->request->header.getList(HDR_X_FORWARDED_FOR);
-        clientFollowXForwardedForCheck(ACCESS_ALLOWED, this);
+
+        /* we always trust the direct client address for actual use */
+        http->request->indirect_client_addr = http->request->client_addr;
+        http->request->indirect_client_addr.SetPort(0);
+
+        /* setup the XFF iterator for processing */
+        http->request->x_forwarded_for_iterator = http->request->header.getList(HDR_X_FORWARDED_FOR);
+
+        /* begin by checking to see if we trust direct client enough to walk XFF */
+        acl_checklist = clientAclChecklistCreate(Config.accessList.followXFF, http);
+        acl_checklist->nonBlockingCheck(clientFollowXForwardedForCheck, this);
         return;
     }
 #endif /* FOLLOW_X_FORWARDED_FOR */
@@ -522,6 +526,23 @@ ClientRequestContext::clientAccessCheck()
     } else {
         debugs(0, DBG_CRITICAL, "No http_access configuration found. This will block ALL traffic");
         clientAccessCheckDone(ACCESS_DENIED);
+    }
+}
+
+/**
+ * Identical in operation to clientAccessCheck() but performed later using different configured ACL list.
+ * The default here is to allow all. Since the earlier http_access should do a default deny all.
+ * This check is just for a last-minute denial based on adapted request headers.
+ */
+void
+ClientRequestContext::clientAccessCheck2()
+{
+    if (Config.accessList.adapted_http) {
+        acl_checklist = clientAclChecklistCreate(Config.accessList.adapted_http, http);
+        acl_checklist->nonBlockingCheck(clientAccessCheckDoneWrapper, this);
+    } else {
+        debugs(85, 2, HERE << "No adapted_http_access configuration.");
+        clientAccessCheckDone(ACCESS_ALLOWED);
     }
 }
 
@@ -1254,6 +1275,10 @@ ClientHttpRequest::doCallouts()
 {
     assert(calloutContext);
 
+    /*Save the original request for logging purposes*/
+    if (!calloutContext->http->al.request)
+        calloutContext->http->al.request = HTTPMSGLOCK(request);
+
     if (!calloutContext->http_access_done) {
         debugs(83, 3, HERE << "Doing calloutContext->clientAccessCheck()");
         calloutContext->http_access_done = true;
@@ -1281,6 +1306,13 @@ ClientHttpRequest::doCallouts()
             calloutContext->clientRedirectStart();
             return;
         }
+    }
+
+    if (!calloutContext->adapted_http_access_done) {
+        debugs(83, 3, HERE << "Doing calloutContext->clientAccessCheck2()");
+        calloutContext->adapted_http_access_done = true;
+        calloutContext->clientAccessCheck2();
+        return;
     }
 
     if (!calloutContext->interpreted_req_hdrs) {

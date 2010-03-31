@@ -33,14 +33,18 @@
  */
 
 #include "squid.h"
-#include "ProtoPort.h"
-#include "SwapDir.h"
+#include "compat/initgroups.h"
+#include "compat/getaddrinfo.h"
+#include "compat/getnameinfo.h"
+#include "compat/tempnam.h"
 #include "fde.h"
+#include "ip/IpIntercept.h"
 #include "MemBuf.h"
-#include "wordlist.h"
+#include "ProtoPort.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
-#include "ip/IpIntercept.h"
+#include "SwapDir.h"
+#include "wordlist.h"
 
 #if HAVE_SYS_PRCTL_H
 #include <sys/prctl.h>
@@ -612,7 +616,7 @@ getMyHostname(void)
 
         sa.GetAddrInfo(AI);
         /* we are looking for a name. */
-        if (xgetnameinfo(AI->ai_addr, AI->ai_addrlen, host, SQUIDHOSTNAMELEN, NULL, 0, NI_NAMEREQD ) == 0) {
+        if (getnameinfo(AI->ai_addr, AI->ai_addrlen, host, SQUIDHOSTNAMELEN, NULL, 0, NI_NAMEREQD ) == 0) {
             /* DNS lookup successful */
             /* use the official name from DNS lookup */
             debugs(50, 4, "getMyHostname: resolved " << sa << " to '" << host << "'");
@@ -636,7 +640,7 @@ getMyHostname(void)
             memset(&hints, 0, sizeof(addrinfo));
             hints.ai_flags = AI_CANONNAME;
 
-            if (xgetaddrinfo(host, NULL, NULL, &AI) == 0) {
+            if (getaddrinfo(host, NULL, NULL, &AI) == 0) {
                 /* DNS lookup successful */
                 /* use the official name from DNS lookup */
                 debugs(50, 6, "getMyHostname: '" << host << "' has rDNS.");
@@ -644,14 +648,14 @@ getMyHostname(void)
 
                 /* AYJ: do we want to flag AI_ALL and cache the result anywhere. ie as our local host IPs? */
                 if (AI) {
-                    xfreeaddrinfo(AI);
+                    freeaddrinfo(AI);
                     AI = NULL;
                 }
 
                 return host;
             }
 
-            if (AI) xfreeaddrinfo(AI);
+            if (AI) freeaddrinfo(AI);
             debugs(50, 1, "WARNING: '" << host << "' rDNS test failed: " << xstrerror());
         }
     }

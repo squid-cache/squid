@@ -21,6 +21,7 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 ******************************************************************/
 
+#define SQUID_NO_STRING_BUFFER_PROTECT 1
 #include "config.h"
 
 #include <stdio.h>

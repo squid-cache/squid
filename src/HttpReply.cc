@@ -156,19 +156,20 @@ HttpReply::pack()
     return mb;
 }
 
+#if DEAD_CODE
 MemBuf *
-httpPackedReply(HttpVersion ver, http_status status, const char *ctype,
-                int64_t clen, time_t lmt, time_t expires)
+httpPackedReply(http_status status, const char *ctype, int64_t clen, time_t lmt, time_t expires)
 {
     HttpReply *rep = new HttpReply;
-    rep->setHeaders(ver, status, ctype, NULL, clen, lmt, expires);
+    rep->setHeaders(status, ctype, NULL, clen, lmt, expires);
     MemBuf *mb = rep->pack();
     delete rep;
     return mb;
 }
+#endif
 
 HttpReply *
-HttpReply::make304 () const
+HttpReply::make304() const
 {
     static const http_hdr_type ImsEntries[] = {HDR_DATE, HDR_CONTENT_TYPE, HDR_EXPIRES, HDR_LAST_MODIFIED, /* eof */ HDR_OTHER};
 
@@ -185,8 +186,7 @@ HttpReply::make304 () const
     /* rv->content_range */
     /* rv->keep_alive */
     HttpVersion ver(1,0);
-    httpStatusLineSet(&rv->sline, ver,
-                      HTTP_NOT_MODIFIED, "");
+    httpStatusLineSet(&rv->sline, ver, HTTP_NOT_MODIFIED, "");
 
     for (t = 0; ImsEntries[t] != HDR_OTHER; ++t)
         if ((e = header.findEntry(ImsEntries[t])))
@@ -209,10 +209,11 @@ HttpReply::packed304Reply()
 }
 
 void
-HttpReply::setHeaders(HttpVersion ver, http_status status, const char *reason,
+HttpReply::setHeaders(http_status status, const char *reason,
                       const char *ctype, int64_t clen, time_t lmt, time_t expiresTime)
 {
     HttpHeader *hdr;
+    HttpVersion ver(1,0);
     httpStatusLineSet(&sline, ver, status, reason);
     hdr = &header;
     hdr->putStr(HDR_SERVER, visible_appname_string);

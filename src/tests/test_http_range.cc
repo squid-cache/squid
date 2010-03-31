@@ -31,6 +31,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+#define SQUID_UNIT_TEST 1
 #include "config.h"
 
 #if 0

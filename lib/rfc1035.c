@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -48,14 +47,8 @@
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
 #if HAVE_MEMORY_H
 #include <memory.h>
-#endif
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
 #endif
 #if HAVE_ASSERT_H
 #include <assert.h>
@@ -287,7 +280,10 @@ rfc1035NameUnpack(const char *buf, size_t sz, unsigned int *off, unsigned short 
     size_t len;
     assert(ns > 0);
     do {
-        assert((*off) < sz);
+        if ((*off) >= sz) {
+            RFC1035_UNPACK_DEBUG;
+            return 1;
+        }
         c = *(buf + (*off));
         if (c > 191) {
             /* blasted compression */
@@ -739,7 +735,6 @@ rfc1035SetQueryID(char *buf, unsigned short qid)
 
 #if DRIVER
 #include <sys/socket.h>
-#include <sys/time.h>
 int
 main(int argc, char *argv[])
 {
