@@ -1,3 +1,7 @@
+#ifndef SQUID_CONFIG_H
+#include "config.h"
+#endif
+
 #ifndef _getaddrinfo_h
 #define _getaddrinfo_h
 
@@ -17,8 +21,6 @@
  *
  *  Original License and code follows.
  */
-
-#include "config.h"
 
 /*
  *  This file is part of libESMTP, a library for submission of RFC 2822
@@ -44,14 +46,8 @@
 
 /* Structure and prototypes taken from RFC 2553 */
 
-#if HAVE_GETADDRINFO
-
 /* These functions are provided by the OS */
-#define xgetaddrinfo	getaddrinfo
-#define xfreeaddrinfo	freeaddrinfo
-#define xgai_strerror	gai_strerror
-
-#else /* !HAVE_GETADDRINFO */
+#if !HAVE_GETADDRINFO
 
 /* SG 23/09/2007:
 On Windows the following definitions are already available, may be that
@@ -102,13 +98,15 @@ struct addrinfo {
 /* RFC 2553 / Posix resolver */
 SQUIDCEXTERN int xgetaddrinfo (const char *nodename, const char *servname,
                                const struct addrinfo *hints, struct addrinfo **res);
+#define getaddrinfo	xgetaddrinfo
 
 /* Free addrinfo structure and associated storage */
 SQUIDCEXTERN void xfreeaddrinfo (struct addrinfo *ai);
+#define freeaddrinfo	xfreeaddrinfo
 
 /* Convert error return from getaddrinfo() to string */
 SQUIDCEXTERN const char *xgai_strerror (int code);
+#define gai_strerror	xgai_strerror
 
 #endif /* HAVE_GETADDRINFO */
-
-#endif
+#endif /* _getaddrinfo_h */

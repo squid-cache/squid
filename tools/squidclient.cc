@@ -46,12 +46,6 @@ using namespace Squid;
 #if HAVE_STDIO_H
 #include <stdio.h>
 #endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
@@ -61,8 +55,7 @@ using namespace Squid;
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#if HAVE_NETDB_H && !defined(_SQUID_NETDB_H_)	/* protect NEXTSTEP */
-#define _SQUID_NETDB_H_
+#if HAVE_NETDB_H
 #include <netdb.h>
 #endif
 #if HAVE_SIGNAL_H
@@ -83,8 +76,6 @@ using namespace Squid;
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
-
-#include "squid_types.h"
 
 #include "util.h"
 #include "ip/IpAddress.h"
@@ -362,7 +353,7 @@ main(int argc, char *argv[])
         if (newhost) {
             char *t;
             newhost += 3;
-            newhost = strdup(newhost);
+            newhost = xstrdup(newhost);
             t = newhost + strcspn(newhost, "@/?");
             if (*t == '@') {
                 newhost = t + 1;

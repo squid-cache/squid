@@ -13,11 +13,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
+#define SQUID_NO_ALLOC_PROTECT 1
 #include "config.h"
+
 #include "ntlmauth.h"
 #include "ntlm_smb_lm_auth.h"
-#include "squid_endian.h"
 #include "util.h"
 #include "smbval/smblib-common.h"
 #include "smbval/rfcnb-error.h"

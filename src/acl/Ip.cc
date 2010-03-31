@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "compat/getaddrinfo.h"
 #include "acl/Ip.h"
 #include "acl/Checklist.h"
 #include "MemBuf.h"
@@ -405,7 +406,7 @@ acl_ip_data::FactoryParse(const char *t)
         addr2[0] = '\0';
     } else if (sscanf(t, "%s", addr1) == 1) {
         /*
-         * Note, must use plain xgetaddrinfo() here because at startup
+         * Note, must use plain getaddrinfo() here because at startup
          * ipcache hasn't been initialized
          * TODO: offload this to one of the IpAddress lookups.
          */
@@ -425,11 +426,11 @@ acl_ip_data::FactoryParse(const char *t)
         hints.ai_flags |= AI_V4MAPPED | AI_ALL;
 #endif
 
-        int errcode = xgetaddrinfo(addr1,NULL,&hints,&hp);
+        int errcode = getaddrinfo(addr1,NULL,&hints,&hp);
         if (hp == NULL) {
             debugs(28, 0, "aclIpParseIpData: Bad host/IP: '" << addr1 <<
                    "' in '" << t << "', flags=" << hints.ai_flags <<
-                   " : (" << errcode << ") " << xgai_strerror(errcode) );
+                   " : (" << errcode << ") " << gai_strerror(errcode) );
             self_destruct();
             return NULL;
         }
@@ -468,7 +469,7 @@ acl_ip_data::FactoryParse(const char *t)
             return NULL;
         }
 
-        xfreeaddrinfo(hp);
+        freeaddrinfo(hp);
 
         return q;
     }

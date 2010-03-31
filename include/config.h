@@ -63,7 +63,6 @@
 #endif
 #endif
 
-
 /* Typedefs for missing entries on a system */
 
 /* int8_t */

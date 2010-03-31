@@ -1,3 +1,7 @@
+#ifndef SQUID_CONFIG_H
+#include "config.h"
+#endif
+
 /* Copyright (C) 2004 Free Software Foundation, Inc.
  * Written by Yoann Vandoorselaere <yoann@prelude-ids.org>
  *
@@ -19,8 +23,6 @@
 #ifndef GNULIB_STRSEP_H_
 #define GNULIB_STRSEP_H_
 
-#include "config.h"
-
 #if HAVE_STRSEP
 
 /*
@@ -33,26 +35,26 @@
 #else
 
 /**
-\par
-Searches the next delimiter (char listed in DELIM) starting at *STRINGP.
-If one is found, it is overwritten with a NULL, and *STRINGP is advanced
-to point to the next char after it.  Otherwise, *STRINGP is set to NULL.
-If *STRINGP was already NULL, nothing happens.
-Returns the old value of *STRINGP.
-\par
-This is a variant of strtok() that is multithread-safe and supports
-empty fields.
-
-\note   Caveat: It modifies the original string.
-\note   Caveat: These functions cannot be used on constant strings.
-\note   Caveat: The identity of the delimiting character is lost.
-\note   Caveat: It doesn't work with multibyte strings unless all of the delimiter
-characters are ASCII characters < 0x30.
-
-See also strtok_r().
-*/
+ *\par
+ * Searches the next delimiter (char listed in DELIM) starting at *STRINGP.
+ * If one is found, it is overwritten with a NULL, and *STRINGP is advanced
+ * to point to the next char after it.  Otherwise, *STRINGP is set to NULL.
+ * If *STRINGP was already NULL, nothing happens.
+ * Returns the old value of *STRINGP.
+ *
+ *\par
+ * This is a variant of strtok() that is multithread-safe and supports
+ * empty fields.
+ *
+ * \note   Caveat: It modifies the original string.
+ * \note   Caveat: These functions cannot be used on constant strings.
+ * \note   Caveat: The identity of the delimiting character is lost.
+ * \note   Caveat: It doesn't work with multibyte strings unless all of the delimiter
+ * characters are ASCII characters < 0x30.
+ *
+ * See also strtok_r().
+ */
 SQUIDCEXTERN char *strsep(char **stringp, const char *delim);
 
 #endif /* HAVE_STRSEP */
-
 #endif /* GNULIB_STRSEP_H_ */

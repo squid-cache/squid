@@ -130,7 +130,7 @@ DOC_START
 	translate the HTTP iso-latin-1 charset to UTF-8 before sending the
 	username & password to the helper.
 
-	"children" numberofchildren [startup=N] [idle=N]
+	"children" numberofchildren [startup=N] [idle=N] [concurrency=N]
 	The maximum number of authenticator processes to spawn. If you start too few
 	Squid will have to wait for them to process a backlog of credential
 	verifications, slowing it down. When password verifications are
@@ -143,17 +143,15 @@ DOC_START
 	traffic needs and to keep idle=N free above those traffic needs up to
 	the maximum.
 
-	auth_param basic children 20 startup=0 idle=1
-
-	"concurrency" concurrency
-	The number of concurrent requests the helper can process.
-	The default of 0 is used for helpers who only supports
-	one request at a time. Setting this changes the protocol used to
-	include a channel number first on the request/response line, allowing
-	multiple requests to be sent to the same helper in parallell without
-	wating for the response.
+	The concurrency= option sets the number of concurrent requests the
+	helper can process.  The default of 0 is used for helpers who only
+	supports one request at a time. Setting this to a number greater than
+	0 changes the protocol used to include a channel number first on the
+	request/response line, allowing multiple requests to be sent to the
+	same helper in parallell without wating for the response.
 	Must not be set unless it's known the helper supports this.
-	auth_param basic concurrency 0
+
+	auth_param basic children 20 startup=0 idle=1
 
 	"realm" realmstring
 	Specifies the realm name which is to be reported to the
@@ -205,7 +203,7 @@ DOC_START
 	translate the HTTP iso-latin-1 charset to UTF-8 before sending the
 	username & password to the helper.
 
-	"children" numberofchildren [startup=N] [idle=N]
+	"children" numberofchildren [startup=N] [idle=N] [concurrency=N]
 	The maximum number of authenticator processes to spawn (default 5).
 	If you start too few Squid will have to wait for them to
 	process a backlog of H(A1) calculations, slowing it down.
@@ -217,6 +215,14 @@ DOC_START
 	and Squid will start more in groups of up to idle=N in an attempt to meet
 	traffic needs and to keep idle=N free above those traffic needs up to
 	the maximum.
+
+	The concurrency= option sets the number of concurrent requests the
+	helper can process.  The default of 0 is used for helpers who only
+	supports one request at a time. Setting this to a number greater than
+	0 changes the protocol used to include a channel number first on the
+	request/response line, allowing multiple requests to be sent to the
+	same helper in parallell without wating for the response.
+	Must not be set unless it's known the helper supports this.
 
 	auth_param digest children 20 startup=0 idle=1
 
@@ -800,10 +806,10 @@ DOC_START
 
 	The end result of this process is an IP address that we will
 	refer to as the indirect client address.  This address may
-	be treated as the client address for access control, delay
+	be treated as the client address for access control, ICAP, delay
 	pools and logging, depending on the acl_uses_indirect_client,
-	delay_pool_uses_indirect_client and log_uses_indirect_client
-	options.
+	icap_uses_indirect_client, delay_pool_uses_indirect_client and
+	log_uses_indirect_client options.
 
 	This clause only supports fast acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
@@ -840,7 +846,7 @@ DOC_END
 NAME: delay_pool_uses_indirect_client
 COMMENT: on|off
 TYPE: onoff
-IFDEF: FOLLOW_X_FORWARDED_FOR DELAY_POOLS
+IFDEF: FOLLOW_X_FORWARDED_FOR&&DELAY_POOLS
 DEFAULT: on
 LOC: Config.onoff.delay_pool_uses_indirect_client
 DOC_START
@@ -920,6 +926,20 @@ http_access allow localhost
 # And finally deny all other access to this proxy
 http_access deny all
 NOCOMMENT_END
+DOC_END
+
+NAME: adapted_http_access http_access2
+TYPE: acl_access
+LOC: Config.accessList.adapted_http
+DEFAULT: none
+DOC_START
+	Allowing or Denying access based on defined access lists
+
+	Essentially identical to http_access, but runs after redirectors
+	and ICAP/eCAP adaptation. Allowing access control based on their
+	output.
+
+	If not set then only http_access is used.
 DOC_END
 
 NAME: http_reply_access
@@ -1561,6 +1581,19 @@ LOC: Config.ssl_client.options
 TYPE: string
 DOC_START
 	SSL engine options to use when proxying https:// URLs
+	
+	The most important being:
+
+		NO_SSLv2  Disallow the use of SSLv2
+		NO_SSLv3  Disallow the use of SSLv3
+		NO_TLSv1  Disallow the use of TLSv1
+		SINGLE_DH_USE
+			Always create a new key when using
+			temporary/ephemeral DH key exchanges
+	
+	These options vary depending on your SSL engine.
+	See the OpenSSL SSL_CTX_set_options documentation for a
+	complete list of possible options.
 DOC_END
 
 NAME: sslproxy_cipher
@@ -1570,6 +1603,8 @@ LOC: Config.ssl_client.cipher
 TYPE: string
 DOC_START
 	SSL cipher list to use when proxying https:// URLs
+
+	Colon separated list of supported ciphers.
 DOC_END
 
 NAME: sslproxy_cafile
@@ -1793,6 +1828,15 @@ DOC_START
 	userhash	Load-balance parents based on the client proxy_auth or ident username.
 	
 	sourcehash	Load-balance parents based on the client source IP.
+
+	multicast-siblings
+			To be used only for cache peers of type "multicast".
+			ALL members of this multicast group have "sibling"
+			relationship with it, not "parent".  This is to a mulicast
+			group when the requested object would be fetched only from
+			a "parent" cache, anyway.  It's useful, e.g., when
+			configuring a pool of redundant Squid proxies, being
+			members of the same multicast group.
 	
 	
 	==== PEER SELECTION OPTIONS ====
@@ -2052,7 +2096,7 @@ DOC_START
 
 	The syntax is identical to 'http_access' and the other lists of
 	ACL elements.  See the comments for 'http_access' below, or
-	the Squid FAQ (http://www.squid-cache.org/FAQ/FAQ-10.html).
+	the Squid FAQ (http://wiki.squid-cache.org/SquidFaq/SquidAcl).
 DOC_END
 
 NAME: neighbor_type_domain
@@ -2495,8 +2539,10 @@ DOC_START
 
 	HTTP cache related format codes:
 
-		[http::]>h	Request header. Optional header name argument
+		[http::]>h	Original request header. Optional header name argument
 				on the format header[:[separator]element]
+		[http::]>ha	The HTTP request headers after adaptation and redirection. 
+				Optional header name argument as for >h
 		[http::]<h	Reply header. Optional header name argument
 				as for >h
 		[http::]un	User name
@@ -3196,7 +3242,7 @@ DOC_END
 
 NAME: url_rewrite_children redirect_children
 TYPE: HelperChildConfig
-DEFAULT: 20 startup=0 idle=1 concurrency=1
+DEFAULT: 20 startup=0 idle=1 concurrency=0
 LOC: Config.redirectChildren
 DOC_START
 	The maximum number of redirector processes to spawn. If you limit
@@ -3681,6 +3727,19 @@ Example:
  broken_posts allow buggy_server
 DOC_END
 
+NAME: icap_uses_indirect_client
+COMMENT: on|off
+TYPE: onoff
+IFDEF: FOLLOW_X_FORWARDED_FOR&&ICAP_CLIENT
+DEFAULT: on
+LOC: Adaptation::Icap::TheConfig.icap_uses_indirect_client
+DOC_START
+   Controls whether the indirect client address
+   (see follow_x_forwarded_for) instead of the
+   direct client address is passed to an ICAP
+   server as "X-Client-IP".
+DOC_END
+
 NAME: via
 IFDEF: HTTP_VIOLATIONS
 COMMENT: on|off
@@ -3933,6 +3992,21 @@ DOC_START
 
 	If set to "off" then such HTTP errors will cause the request
 	or response to be rejected.
+DOC_END
+
+NAME: ignore_expect_100
+COMMENT: on|off
+IFDEF: HTTP_VIOLATIONS
+TYPE: onoff
+LOC: Config.onoff.ignore_expect_100
+DEFAULT: off
+DOC_START
+	This option makes Squid ignore any Expect: 100-continue header present
+	in the request. RFC 2616 requires that Squid being unable to satisfy
+	the response expectation MUST return a 417 error.
+
+	Note: Enabling this is a HTTP protocol violation, but some clients may
+	not handle it well..
 DOC_END
 
 COMMENT_START
@@ -4288,19 +4362,19 @@ COMMENT_START
 COMMENT_END
 
 NAME: httpd_accel_surrogate_id
-IFDEF: USE_SQUID_ESI
 TYPE:  string
+DEFAULT: none
 LOC: Config.Accel.surrogate_id
-DEFAULT: unset-id
 DOC_START
 	Surrogates (http://www.esi.org/architecture_spec_1.0.html)
 	need an identification token to allow control targeting. Because
 	a farm of surrogates may all perform the same tasks, they may share
 	an identification token.
+
+	The default ID is the visible_hostname
 DOC_END
 
 NAME: http_accel_surrogate_remote
-IFDEF: USE_SQUID_ESI
 COMMENT: on|off
 TYPE: onoff
 DEFAULT: off

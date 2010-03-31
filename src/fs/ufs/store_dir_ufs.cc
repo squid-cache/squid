@@ -484,9 +484,9 @@ UFSSwapDir::mapBitAllocate()
 char *
 UFSSwapDir::swapSubDir(int subdirn)const
 {
-    LOCAL_ARRAY(char, fullfilename, SQUID_MAXPATHLEN);
+    LOCAL_ARRAY(char, fullfilename, MAXPATHLEN);
     assert(0 <= subdirn && subdirn < l1);
-    snprintf(fullfilename, SQUID_MAXPATHLEN, "%s/%02X", path, subdirn);
+    snprintf(fullfilename, MAXPATHLEN, "%s/%02X", path, subdirn);
     return fullfilename;
 }
 
@@ -589,13 +589,13 @@ UFSSwapDir::createSwapSubDirs()
 char *
 UFSSwapDir::logFile(char const *ext) const
 {
-    LOCAL_ARRAY(char, lpath, SQUID_MAXPATHLEN);
-    LOCAL_ARRAY(char, pathtmp, SQUID_MAXPATHLEN);
+    LOCAL_ARRAY(char, lpath, MAXPATHLEN);
+    LOCAL_ARRAY(char, pathtmp, MAXPATHLEN);
     LOCAL_ARRAY(char, digit, 32);
     char *pathtmp2;
 
     if (Config.Log.swap) {
-        xstrncpy(pathtmp, path, SQUID_MAXPATHLEN - 64);
+        xstrncpy(pathtmp, path, MAXPATHLEN - 64);
         pathtmp2 = pathtmp;
 
         while ((pathtmp2 = strchr(pathtmp2, '/')) != NULL)
@@ -605,15 +605,15 @@ UFSSwapDir::logFile(char const *ext) const
             pathtmp[strlen(pathtmp) - 1] = '\0';
 
         for (pathtmp2 = pathtmp; *pathtmp2 == '.'; pathtmp2++);
-        snprintf(lpath, SQUID_MAXPATHLEN - 64, Config.Log.swap, pathtmp2);
+        snprintf(lpath, MAXPATHLEN - 64, Config.Log.swap, pathtmp2);
 
-        if (strncmp(lpath, Config.Log.swap, SQUID_MAXPATHLEN - 64) == 0) {
+        if (strncmp(lpath, Config.Log.swap, MAXPATHLEN - 64) == 0) {
             strcat(lpath, ".");
             snprintf(digit, 32, "%02d", index);
             strncat(lpath, digit, 3);
         }
     } else {
-        xstrncpy(lpath, path, SQUID_MAXPATHLEN - 64);
+        xstrncpy(lpath, path, MAXPATHLEN - 64);
         strcat(lpath, "/swap.state");
     }
 
@@ -1087,7 +1087,7 @@ UFSSwapDir::DirClean(int swap_index)
     D1 = (swap_index / N0) % N1;
     N2 = SD->l2;
     D2 = ((swap_index / N0) / N1) % N2;
-    snprintf(p1, SQUID_MAXPATHLEN, "%s/%02X/%02X",
+    snprintf(p1, MAXPATHLEN, "%s/%02X/%02X",
              SD->path, D1, D2);
     debugs(36, 3, "storeDirClean: Cleaning directory " << p1);
     dir_pointer = opendir(p1);
@@ -1336,7 +1336,7 @@ UFSSwapDir::dump(StoreEntry & entry) const
 char *
 UFSSwapDir::fullPath(sfileno filn, char *fullpath) const
 {
-    LOCAL_ARRAY(char, fullfilename, SQUID_MAXPATHLEN);
+    LOCAL_ARRAY(char, fullfilename, MAXPATHLEN);
     int L1 = l1;
     int L2 = l2;
 
@@ -1345,7 +1345,7 @@ UFSSwapDir::fullPath(sfileno filn, char *fullpath) const
 
     fullpath[0] = '\0';
 
-    snprintf(fullpath, SQUID_MAXPATHLEN, "%s/%02X/%02X/%08X",
+    snprintf(fullpath, MAXPATHLEN, "%s/%02X/%02X/%08X",
              path,
              ((filn / L2) / L2) % L1,
              (filn / L2) % L2,

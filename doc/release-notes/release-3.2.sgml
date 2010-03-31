@@ -296,6 +296,9 @@ This section gives an account of those changes in three categories:
 	<tag>auth_param</tag>
 	<p><em>blankpassword</em> option for basic scheme removed.
 
+	<tag>cache_peer</tag>
+	<p><em>http11</em> Obsolete.
+
 	<tag>external_acl_type</tag>
 	<p>Format tag <em>%{Header}</em> replaced by <em>%>{Header}</em>
 	<p>Format tag <em>%{Header:member}</em> replaced by <em>%>{Header:member}</em>
@@ -307,6 +310,9 @@ This section gives an account of those changes in three categories:
 	<p><em>no-connection-auth</em> replaced by <em>connection-auth=[on|off]</em>. Default is ON.
 	<p><em>transparent</em> option replaced by <em>intercept</em>
 
+	<tag>http_access2</tag>
+	<p>Replaced by <em>adapted_http_access</em>
+
 	<tag>httpd_accel_no_pmtu_disc</tag>
 	<p>Replaced by <em>http_port disable-pmtu-discovery=</em> option
 
@@ -315,6 +321,9 @@ This section gives an account of those changes in three categories:
 
 	<tag>redirector_bypass</tag>
 	<p>Replaced by <em>url_rewrite_bypass</em>
+
+	<tag>server_http11</tag>
+	<p>Obsolete.
 
 	<tag>upgrade_http0.9</tag>
 	<p>Obsolete.
@@ -429,9 +438,7 @@ This section gives an account of those changes in three categories:
 	<p>COSS <em>maxfullbufs=</em> option not yet ported from 2.6
 
 	<tag>cache_peer</tag>
-	<p><em>multicast-siblings</em> not yet ported from 2.7
 	<p><em>idle=</em> not yet ported from 2.7
-	<p><em>http11</em> not yet ported from 2.7
 	<p><em>monitorinterval=</em> not yet ported from 2.6
 	<p><em>monitorsize=</em> not yet ported from 2.6
 	<p><em>monitortimeout=</em> not yet ported from 2.6
@@ -453,16 +460,10 @@ This section gives an account of those changes in three categories:
 	<tag>external_refresh_check</tag>
 	<p>Not yet ported from 2.7
 
-	<tag>http_access2</tag>
-	<p>Not yet ported from 2.6
-
 	<tag>http_port</tag>
 	<p><em>act-as-origin</em> not yet ported from 2.7
 	<p><em>http11</em> not yet ported from 2.7
 	<p><em>urlgroup=</em> not yet ported from 2.6
-
-	<tag>ignore_expect_100</tag>
-	<p>Not yet ported from 2.7
 
 	<tag>ignore_ims_on_miss</tag>
 	<p>Not yet ported from 2.7
@@ -495,9 +496,6 @@ This section gives an account of those changes in three categories:
 	<p><em>negative-ttl=</em> not yet ported from 2.7
 
 	<tag>refresh_stale_hit</tag>
-	<p>Not yet ported from 2.7
-
-	<tag>server_http11</tag>
 	<p>Not yet ported from 2.7
 
 	<tag>storeurl_access</tag>

@@ -505,6 +505,12 @@ configDoConfigure(void)
              uniqueHostname(),
              visible_appname_string);
 
+    /* Use visible_hostname as default surrogate_id */
+    if (!Config.Accel.surrogate_id) {
+        const char *t = getMyHostname();
+        Config.Accel.surrogate_id = xstrdup( (t?t:"unset-id") );
+    }
+
     if (!Config.udpMaxHitObjsz || Config.udpMaxHitObjsz > SQUID_UDP_SO_SNDBUF)
         Config.udpMaxHitObjsz = SQUID_UDP_SO_SNDBUF;
 
@@ -1597,12 +1603,13 @@ dump_peer(StoreEntry * entry, const char *name, peer * p)
     LOCAL_ARRAY(char, xname, 128);
 
     while (p != NULL) {
-        storeAppendPrintf(entry, "%s %s %s %d %d",
+        storeAppendPrintf(entry, "%s %s %s %d %d name=%s",
                           name,
                           p->host,
                           neighborTypeStr(p),
                           p->http_port,
-                          p->icp.port);
+                          p->icp.port,
+                          p->name);
         dump_peer_options(entry, p);
 
         for (d = p->peer_domain; d; d = d->next) {
@@ -1739,6 +1746,10 @@ parse_peer(peer ** head)
             p->options.no_tproxy = 1;
         } else if (!strcasecmp(token, "multicast-responder")) {
             p->options.mcast_responder = 1;
+#if PEER_MULTICAST_SIBLINGS
+        } else if (!strcasecmp(token, "multicast-siblings")) {
+            p->options.mcast_siblings = 1;
+#endif
         } else if (!strncasecmp(token, "weight=", 7)) {
             p->weight = xatoi(token + 7);
         } else if (!strncasecmp(token, "basetime=", 9)) {

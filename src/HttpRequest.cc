@@ -104,6 +104,7 @@ HttpRequest::init()
     extacl_user = null_string;
     extacl_passwd = null_string;
     extacl_log = null_string;
+    extacl_message = null_string;
     pstate = psReadyToParseStartLine;
 #if FOLLOW_X_FORWARDED_FOR
     indirect_client_addr.SetEmpty();
@@ -153,6 +154,8 @@ HttpRequest::clean()
     extacl_passwd.clean();
 
     extacl_log.clean();
+
+    extacl_message.clean();
 
 #if USE_ADAPTATION
     adaptHistory_ = NULL;
@@ -207,6 +210,7 @@ HttpRequest::clone() const
     copy->extacl_user = extacl_user;
     copy->extacl_passwd = extacl_passwd;
     copy->extacl_log = extacl_log;
+    copy->extacl_message = extacl_message;
 
     assert(copy->inheritProperties(this));
 
@@ -323,8 +327,9 @@ HttpRequest::pack(Packer * p)
 {
     assert(p);
     /* pack request-line */
-    packerPrintf(p, "%s " SQUIDSTRINGPH " HTTP/1.0\r\n",
-                 RequestMethodStr(method), SQUIDSTRINGPRINT(urlpath));
+    packerPrintf(p, "%s " SQUIDSTRINGPH " HTTP/%d.%d\r\n",
+                 RequestMethodStr(method), SQUIDSTRINGPRINT(urlpath),
+                 http_ver.major, http_ver.minor);
     /* headers */
     header.packInto(p);
     /* trailer */

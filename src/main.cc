@@ -38,6 +38,7 @@
 #include "adaptation/icap/icap_log.h"
 #endif
 #include "auth/Gadgets.h"
+#include "base/TextException.h"
 #include "ConfigParser.h"
 #include "errorpage.h"
 #include "event.h"
@@ -73,7 +74,6 @@
 #include "MemPool.h"
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"
-#include "TextException.h"
 
 #if USE_LOADABLE_MODULES
 #include "LoadableModules.h"
@@ -1455,7 +1455,7 @@ sendSignal(void)
 static void
 mainStartScript(const char *prog)
 {
-    char script[SQUID_MAXPATHLEN];
+    char script[MAXPATHLEN];
     char *t;
     size_t sl = 0;
     pid_t cpid;

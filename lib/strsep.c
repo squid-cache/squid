@@ -1,7 +1,3 @@
-/*
- * $Id$
- */
-
 /* Copyright (C) 2004 Free Software Foundation, Inc.
  * Written by Yoann Vandoorselaere <yoann@prelude-ids.org>
  *
@@ -21,17 +17,13 @@
  * USA.
  */
 
-#if HAVE_CONFIG_H
-#include <config.h>
-#endif
-
-/* Specification.  */
-#include "strsep.h"
+#include "config.h"
+#include "compat/strsep.h"
 
 #include <string.h>
 
 char *
-strsep (char **stringp, const char *delim)
+strsep(char **stringp, const char *delim)
 {
     char *start = *stringp;
     char *ptr;
