@@ -42,6 +42,7 @@
 
 #include "acl/FilledChecklist.h"
 #include "auth/UserRequest.h"
+#include "base/TextException.h"
 #if DELAY_POOLS
 #include "DelayPools.h"
 #endif
@@ -59,7 +60,6 @@
 #include "rfc1738.h"
 #include "SquidTime.h"
 #include "Store.h"
-#include "TextException.h"
 
 
 #define SQUID_ENTER_THROWING_CODE() try {
@@ -310,12 +310,8 @@ httpMaybeRemovePublic(StoreEntry * e, http_status status)
 void
 HttpStateData::processSurrogateControl(HttpReply *reply)
 {
-#if USE_SQUID_ESI
-
     if (request->flags.accelerated && reply->surrogate_control) {
-        HttpHdrScTarget *sctusable =
-            httpHdrScGetMergedTarget(reply->surrogate_control,
-                                     Config.Accel.surrogate_id);
+        HttpHdrScTarget *sctusable = httpHdrScGetMergedTarget(reply->surrogate_control, Config.Accel.surrogate_id);
 
         if (sctusable) {
             if (EBIT_TEST(sctusable->mask, SC_NO_STORE) ||
@@ -327,7 +323,7 @@ HttpStateData::processSurrogateControl(HttpReply *reply)
 
             /* The HttpHeader logic cannot tell if the header it's parsing is a reply to an
              * accelerated request or not...
-             * Still, this is an abtraction breach. - RC
+             * Still, this is an abstraction breach. - RC
              */
             if (sctusable->max_age != -1) {
                 if (sctusable->max_age < sctusable->max_stale)
@@ -345,8 +341,6 @@ HttpStateData::processSurrogateControl(HttpReply *reply)
             httpHdrScTargetDestroy(sctusable);
         }
     }
-
-#endif
 }
 
 int
@@ -542,8 +536,9 @@ HttpStateData::cacheableReply()
 
         return 0;
 
-    default:			/* Unknown status code */
-        debugs (11, DBG_IMPORTANT, "WARNING: Unexpected http status code " << rep->sline.status);
+    default:
+        /* RFC 2616 section 6.1.1: an unrecognized response MUST NOT be cached. */
+        debugs (11, 3, HERE << "Unknown HTTP status code " << rep->sline.status << ". Not cacheable.");
 
         return 0;
 
@@ -685,9 +680,7 @@ HttpStateData::processReplyHeader()
     if (!parsed && readBuf->contentSize() > 5 && strncmp(readBuf->content(), "HTTP/", 5) != 0 && strncmp(readBuf->content(), "ICY", 3) != 0) {
         MemBuf *mb;
         HttpReply *tmprep = new HttpReply;
-        tmprep->sline.version = HttpVersion(1, 0);
-        tmprep->sline.status = HTTP_OK;
-        tmprep->header.putTime(HDR_DATE, squid_curtime);
+        tmprep->setHeaders(HTTP_OK, "Gatewaying", NULL, -1, -1, -1);
         tmprep->header.putExt("X-Transformed-From", "HTTP/0.9");
         mb = tmprep->pack();
         newrep->parse(mb, eof, &error);
@@ -696,7 +689,7 @@ HttpStateData::processReplyHeader()
         if (!parsed && error > 0) { // unrecoverable parsing error
             debugs(11, 3, "processReplyHeader: Non-HTTP-compliant header: '" <<  readBuf->content() << "'");
             flags.headers_parsed = 1;
-            newrep->sline.version = HttpVersion(1, 0);
+            newrep->sline.version = HttpVersion(1,0);
             newrep->sline.status = error;
             HttpReply *vrep = setVirginReply(newrep);
             entry->replaceHttpReply(vrep);
@@ -716,6 +709,26 @@ HttpStateData::processReplyHeader()
 
         header_bytes_read = headersEnd(readBuf->content(), readBuf->contentSize());
         readBuf->consume(header_bytes_read);
+    }
+
+    /* Skip 1xx messages for now. Advertised in Via as an internal 1.0 hop */
+    if (newrep->sline.protocol == PROTO_HTTP && newrep->sline.status >= 100 && newrep->sline.status < 200) {
+
+#if WHEN_HTTP11
+        /* When HTTP/1.1 check if the client is expecting a 1xx reply and maybe pass it on */
+        if (orig_request->header.has(HDR_EXPECT)) {
+            // TODO: pass to the client anyway?
+        }
+#endif
+        delete newrep;
+        debugs(11, 2, HERE << "1xx headers consume " << header_bytes_read << " bytes header.");
+        header_bytes_read = 0;
+        if (reply_bytes_read > 0)
+            debugs(11, 2, HERE << "1xx headers consume " << reply_bytes_read << " bytes reply.");
+        reply_bytes_read = 0;
+        ctx_exit(ctx);
+        processReplyHeader();
+        return;
     }
 
     flags.chunked = 0;
@@ -838,8 +851,9 @@ HttpStateData::haveParsedReplyHeaders()
 
         if (!vary) {
             entry->makePrivate();
+            if (!fwd->reforwardableStatus(rep->sline.status))
+                EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
             goto no_cache;
-
         }
 
         entry->mem_obj->vary_headers = xstrdup(vary);
@@ -1108,6 +1122,23 @@ HttpStateData::readReply(const CommIoCbParams &io)
     if (len == 0) { // reached EOF?
         eof = 1;
         flags.do_next_read = 0;
+
+        /* Bug 2789: Replies may terminate with \r\n then EOF instead of \r\n\r\n
+         * Ensure here that we have at minimum two \r\n when EOF is seen.
+         * TODO: When headersEnd() is cleaned up to only be called once we can merge
+         * this as a special case there where it belongs.
+         */
+        if (!flags.headers_parsed) {
+            /*
+             * Yes Henrik, there is a point to doing this.  When we
+             * called httpProcessReplyHeader() before, we didn't find
+             * the end of headers, but now we are definately at EOF, so
+             * we want to process the reply headers.
+             */
+            /* Fake an "end-of-headers" to work around such broken servers */
+            readBuf->append("\r\n", 2);
+            len = 2;
+        }
     }
 
     if (!flags.headers_parsed) { // have not parsed headers yet?
@@ -1153,6 +1184,7 @@ HttpStateData::continueAfterParsingHeader()
             const http_status s = vrep->sline.status;
             const HttpVersion &v = vrep->sline.version;
             if (s == HTTP_INVALID_HEADER && v != HttpVersion(0,9)) {
+                debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: Bad header encountered from " << entry->url() << " AKA " << orig_request->GetHost() << orig_request->urlpath.termedBuf() );
                 error = ERR_INVALID_RESP;
             } else if (s == HTTP_HEADER_TOO_LARGE) {
                 fwd->dontRetry(true);
@@ -1162,12 +1194,18 @@ HttpStateData::continueAfterParsingHeader()
             }
         } else {
             // parsed headers but got no reply
+            debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: No reply at all for " << entry->url() << " AKA " << orig_request->GetHost() << orig_request->urlpath.termedBuf() );
             error = ERR_INVALID_RESP;
         }
     } else {
         assert(eof);
-        error = readBuf->hasContent() ?
-                ERR_INVALID_RESP : ERR_ZERO_SIZE_OBJECT;
+        if (readBuf->hasContent()) {
+            error = ERR_INVALID_RESP;
+            debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: Headers did not parse at all for " << entry->url() << " AKA " << orig_request->GetHost() << orig_request->urlpath.termedBuf() );
+        } else {
+            error = ERR_ZERO_SIZE_OBJECT;
+            debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: No object data received for " << entry->url() << " AKA " << orig_request->GetHost() << orig_request->urlpath.termedBuf() );
+        }
     }
 
     assert(error != ERR_NONE);
@@ -1590,16 +1628,17 @@ HttpStateData::httpBuildRequestHeader(HttpRequest * request,
         strVia.clean();
     }
 
-#if USE_SQUID_ESI
     if (orig_request->flags.accelerated) {
         /* Append Surrogate-Capabilities */
-        String strSurrogate (hdr_in->getList(HDR_SURROGATE_CAPABILITY));
-        snprintf(bbuf, BBUF_SZ, "%s=\"Surrogate/1.0 ESI/1.0\"",
-                 Config.Accel.surrogate_id);
+        String strSurrogate(hdr_in->getList(HDR_SURROGATE_CAPABILITY));
+#if USE_SQUID_ESI
+        snprintf(bbuf, BBUF_SZ, "%s=\"Surrogate/1.0 ESI/1.0\"", Config.Accel.surrogate_id);
+#else
+        snprintf(bbuf, BBUF_SZ, "%s=\"Surrogate/1.0\"", Config.Accel.surrogate_id);
+#endif
         strListAdd(&strSurrogate, bbuf, ',');
         hdr_out->putStr(HDR_SURROGATE_CAPABILITY, strSurrogate.termedBuf());
     }
-#endif
 
     /** \pre Handle X-Forwarded-For */
     if (strcmp(opt_forwarded_for, "delete") != 0) {
@@ -1918,7 +1957,7 @@ HttpStateData::buildRequestPrefix(HttpRequest * aRequest,
                                   http_state_flags stateFlags)
 {
     const int offset = mb->size;
-    HttpVersion httpver(1, 0);
+    HttpVersion httpver(1,1);
     mb->Printf("%s %s HTTP/%d.%d\r\n",
                RequestMethodStr(aRequest->method),
                aRequest->urlpath.size() ? aRequest->urlpath.termedBuf() : "/",
@@ -2140,15 +2179,6 @@ HttpStateData::abortTransaction(const char *reason)
     fwd->handleUnregisteredServerEnd();
     deleteThis("HttpStateData::abortTransaction");
 }
-
-#if DEAD_CODE
-void
-httpBuildVersion(HttpVersion * version, unsigned int major, unsigned int minor)
-{
-    version->major = major;
-    version->minor = minor;
-}
-#endif
 
 HttpRequest *
 HttpStateData::originalRequest()

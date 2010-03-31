@@ -8,7 +8,7 @@
 
 #include "adaptation/icap/OptXact.h"
 #include "adaptation/icap/Options.h"
-#include "TextException.h"
+#include "base/TextException.h"
 #include "SquidTime.h"
 #include "HttpRequest.h"
 

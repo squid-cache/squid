@@ -1,10 +1,8 @@
 #include "config.h"
+#include "compat/initgroups.h"
 
 #if HAVE_GRP_H
 #include <grp.h>
-#endif
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
 #endif
 #if HAVE_UNISTD_H
 #include <unistd.h>
@@ -17,9 +15,6 @@
 #endif
 #if HAVE_LIMITS_H
 #include <limits.h>
-#endif
-#if !HAVE_INITGROUPS
-#include "initgroups.h"
 #endif
 
 int initgroups(const char *name, gid_t basegid)

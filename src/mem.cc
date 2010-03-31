@@ -186,7 +186,7 @@ memAllocate(mem_type type)
 void
 memFree(void *p, int type)
 {
-    MemPools[type]->free(p);
+    MemPools[type]->freeOne(p);
 }
 
 /* allocate a variable size buffer using best-fit pool */
@@ -241,7 +241,7 @@ memFreeString(size_t size, void *buf)
 
     memMeterDec(StrCountMeter);
     memMeterDel(StrVolumeMeter, size);
-    pool ? pool->free(buf) : xfree(buf);
+    pool ? pool->freeOne(buf) : xfree(buf);
 }
 
 /* Find the best fit MEM_X_BUF type */

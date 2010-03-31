@@ -1,12 +1,10 @@
+#define SQUID_UNIT_TEST 1
 #include "config.h"
 #include <cppunit/TestAssert.h>
 
 #include "testHttpReply.h"
 #include "HttpReply.h"
 #include "Mem.h"
-
-/* to avoid libsquid.la and its comm stuff */
-#include "TextException.cc"
 
 CPPUNIT_TEST_SUITE_REGISTRATION( testHttpReply );
 

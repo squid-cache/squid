@@ -4,15 +4,6 @@
 
 #include <string.h>
 
-HelperChildConfig::HelperChildConfig() :
-        n_max(0),
-        n_startup(1),
-        n_idle(1),
-        concurrency(1),
-        n_running(0),
-        n_active(0)
-{}
-
 HelperChildConfig::HelperChildConfig(const unsigned int m, const unsigned int s, const unsigned int i, const unsigned int cc) :
         n_max(m),
         n_startup(s),

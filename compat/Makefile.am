@@ -10,15 +10,26 @@ include $(top_srcdir)/src/Common.am
 # Port Specific Configurations
 
 noinst_LTLIBRARIES = libcompat.la
-
 libcompat_la_SOURCES = \
 	assert.h \
 	compat.h \
 	compat_shared.h \
 	debug.h \
+	drand48.h \
+	eui64_aton.h \
 	fdsetsize.h \
+	getaddrinfo.h \
+	getnameinfo.h \
+	inet_ntop.h \
+	inet_pton.h \
+	initgroups.h \
 	osdetect.h \
 	stdvarargs.h \
+	strsep.h \
+	strtoll.h \
+	tempnam.h \
+	types.h \
+	unsafe.h \
 	valgrind.h \
 	\
 	os/aix.h \
@@ -27,6 +38,7 @@ libcompat_la_SOURCES = \
 	os/hpux.h \
 	os/linux.h \
 	os/mswin.h \
+	os/netbsd.h \
 	os/next.h \
 	os/openbsd.h \
 	os/os2.h \

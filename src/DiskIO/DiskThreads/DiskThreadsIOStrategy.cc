@@ -166,7 +166,7 @@ DiskThreadsIOStrategy::callback()
         if (ctrlp->operation == _AIO_READ)
             squidaio_xfree(ctrlp->bufp, ctrlp->len);
 
-        squidaio_ctrl_pool->free(ctrlp);
+        squidaio_ctrl_pool->freeOne(ctrlp);
     }
 
     return retval;
@@ -180,13 +180,13 @@ DiskThreadsIOStrategy::sync()
         return;			/* nothing to do then */
 
     /* Flush all pending operations */
-    debugs(32, 1, "aioSync: flushing pending I/O operations");
+    debugs(32, 2, "aioSync: flushing pending I/O operations");
 
     do {
         callback();
     } while (squidaio_sync());
 
-    debugs(32, 1, "aioSync: done");
+    debugs(32, 2, "aioSync: done");
 }
 
 DiskThreadsIOStrategy::DiskThreadsIOStrategy() :  initialised (false) {}

@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -69,9 +68,7 @@ LeakFinder::LeakFinder()
 }
 
 void *
-
-LeakFinder::add
-(void *p, const char *file, int line)
+LeakFinder::addSome(void *p, const char *file, int line)
 {
     assert(hash_lookup(table, p) == NULL);
     LeakFinderPtr *c = new LeakFinderPtr(p, file, line);
@@ -93,7 +90,7 @@ LeakFinder::touch(void *p, const char *file, int line)
 }
 
 void *
-LeakFinder::free(void *p, const char *file, int line)
+LeakFinder::freeSome(void *p, const char *file, int line)
 {
     assert(p);
     LeakFinderPtr *c = (LeakFinderPtr *) hash_lookup(table, p);

@@ -95,6 +95,7 @@ static const HttpHeaderFieldAttrs HeadersAttrs[] = {
     {"Date", HDR_DATE, ftDate_1123},
     {"ETag", HDR_ETAG, ftETag},
     {"Expires", HDR_EXPIRES, ftDate_1123},
+    {"Expect", HDR_EXPECT, ftStr},
     {"From", HDR_FROM, ftStr},
     {"Host", HDR_HOST, ftStr},
     {"If-Match", HDR_IF_MATCH, ftStr},	/* for now */
@@ -174,6 +175,7 @@ static http_hdr_type ListHeadersArr[] = {
     HDR_CONTENT_ENCODING,
     HDR_CONTENT_LANGUAGE,
     HDR_CONNECTION,
+    HDR_EXPECT,
     HDR_IF_MATCH, HDR_IF_NONE_MATCH,
     HDR_LINK, HDR_PRAGMA,
     HDR_PROXY_CONNECTION,
@@ -186,7 +188,7 @@ static http_hdr_type ListHeadersArr[] = {
     HDR_WWW_AUTHENTICATE,
     HDR_AUTHENTICATION_INFO,
     HDR_PROXY_AUTHENTICATION_INFO,
-    /* HDR_EXPECT, HDR_TE, HDR_TRAILER */
+    /* HDR_TE, HDR_TRAILER */
 #if X_ACCELERATOR_VARY
     HDR_X_ACCELERATOR_VARY,
 #endif

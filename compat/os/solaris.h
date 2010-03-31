@@ -30,7 +30,9 @@ typedef union {
 
 /**
  * prototypes for system function missing from system includes
+ * NP: sys/resource.h and sys/time.h are apparently order-dependant.
  */
+#include <sys/time.h>
 #include <sys/resource.h>
 SQUIDCEXTERN int getrusage(int, struct rusage *);
 
@@ -58,6 +60,13 @@ SQUIDCEXTERN int gethostname(char *, int);
 #if defined(__SUNPRO_CC) && !defined(__FUNCTION__)
 #define __FUNCTION__ ""
 #endif
+
+/* Exclude CPPUnit tests from the allocator restrictions. */
+/* BSD implementation uses these still */
+#if defined(SQUID_UNIT_TEST)
+#define SQUID_NO_STRING_BUFFER_PROTECT 1
+#endif
+
 
 #endif /* _SQUID_SOLARIS_ */
 #endif /* SQUID_OS_SOALRIS_H */
