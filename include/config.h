@@ -174,10 +174,6 @@ typedef unsigned long fd_mask;
 typedef int socklen_t;
 #endif
 
-#if !HAVE_MTYP_T
-typedef long mtyp_t;
-#endif
-
 #if !defined(CACHEMGR_HOSTNAME)
 #define CACHEMGR_HOSTNAME ""
 #else
