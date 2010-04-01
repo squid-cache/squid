@@ -79,13 +79,13 @@ OPTS=" \
 	--enable-internal-dns \
 	--enable-default-hostsfile \
 	--enable-auth \
-	--enable-basic-auth-helpers=all \
-	--enable-ntlm-auth-helpers=all \
-	--enable-negotiate-auth-helpers=all \
-	--enable-digest-auth-helpers=all \
+	--enable-basic-auth-helpers \
+	--enable-ntlm-auth-helpers \
+	--enable-negotiate-auth-helpers \
+	--enable-digest-auth-helpers \
 	--enable-ntlm-fail-open \
-	--enable-external-acl-helpers=all \
-	--enable-url-rewrite-helpers=all \
+	--enable-external-acl-helpers \
+	--enable-url-rewrite-helpers \
 	--enable-mempools \
 	--enable-unlinkd \
 	--enable-stacktraces \

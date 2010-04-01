@@ -1803,7 +1803,7 @@ if test "$ac_krb5_config" = "yes" ; then
     fi
     AC_CHECK_HEADERS(krb5.h com_err.h et/com_err.h)
 
-		SQUID_CHECK_KRB5_BROKEN_SOLARIS_KRB5_H
+    SQUID_CHECK_KRB5_SOLARIS_BROKEN_KRB5_H
     if test x"$squid_cv_broken_krb5_h" = x"yes"; then
        AC_DEFINE(HAVE_BROKEN_SOLARIS_KRB5_H, 1, [Define to 1 if krb5.h is broken for C++])
     fi
@@ -1894,45 +1894,41 @@ AC_ARG_ENABLE(ntlm-fail-open,
 
 ########### KK HERE ##########
 dnl Select external_acl helpers to build
-EXTERNAL_ACL_HELPERS=all
+EXTERNAL_ACL_HELPERS=""
+squid_opt_external_acl_helpers="auto"
 AC_ARG_ENABLE(external-acl-helpers,
-  AS_HELP_STRING([--enable-external-acl-helpers="list of helpers"],[This option selects which external_acl helpers to
+  AS_HELP_STRING([--enable-external-acl-helpers="list of helpers"],
+                 [This option selects which external_acl helpers to
                   build and install as part of the normal build
                   process. For a list of available helpers see the
                   helpers/external_acl directory.]),
 [ case "$enableval" in
   yes)
-	EXTERNAL_ACL_HELPERS=all
+    squid_opt_external_acl_helpers="auto"
 	;;
   no)
-	EXTERNAL_ACL_HELPERS=""
+	squid_opt_external_acl_helpers=""
 	;;
   *)
- 	EXTERNAL_ACL_HELPERS="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
+ 	squid_opt_external_acl_helpers="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
 	;;
   esac
 ])
-if test "$EXTERNAL_ACL_HELPERS" = "all" ; then
-	EXTERNAL_ACL_HELPERS=""
-	for dir in $srcdir/helpers/external_acl/*; do
-	    helper="`basename $dir`"
-	    if test -f $dir/config.test && sh $dir/config.test "$@"; then
-		EXTERNAL_ACL_HELPERS="$EXTERNAL_ACL_HELPERS $helper"
-            elif test -d $srcdir/helpers/external_acl/$helper ; then
-                AC_MSG_NOTICE([External ACL helper $helper ... found but cannot be built])
-	    fi
-	done
+if test "$squid_opt_external_acl_helpers" = "auto" ; then
+	squid_opt_external_acl_helpers=""
+    SQUID_LOOK_FOR_MODULES([$srcdir/helpers/external_acl],[squid_opt_external_acl_helpers])
 fi
-if test -n "$EXTERNAL_ACL_HELPERS"; then
-    for helper in $EXTERNAL_ACL_HELPERS; do
-	if test -f $srcdir/helpers/external_acl/$helper/Makefile.in; then
-		:
-	else
-		AC_MSG_ERROR(external acl helper $helper does not exist)
-	fi
+if test -n "$squid_opt_external_acl_helpers"; then
+    for helper in $squid_opt_external_acl_helpers; do
+        dir="$srcdir/helpers/external_acl/$helper"
+        if test -f $dir/config.test && sh $dir/config.test "$@"; then
+            EXTERNAL_ACL_HELPERS="$EXTERNAL_ACL_HELPERS $helper"
+        else
+            AC_MSG_NOTICE([external acl helper $helper ... found but cannot be built])
+        fi
     done
-    AC_MSG_NOTICE([External acl helpers built: $EXTERNAL_ACL_HELPERS])
 fi
+AC_MSG_NOTICE([External acl helpers built: $EXTERNAL_ACL_HELPERS])
 AC_SUBST(EXTERNAL_ACL_HELPERS)
 
 dnl Select url_rewrite helpers to build
