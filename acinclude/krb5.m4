@@ -48,7 +48,7 @@ int i;
 ]])], [ squid_cv_broken_krb5_h=yes ], [ squid_cv_broken_krb5_h=no ])
     ])
   ])
-]) dnl SQUID_CHECK_KRB5_BROKEN_SOLARIS_KRB5_H
+]) dnl SQUID_CHECK_KRB5_SOLARIS_BROKEN_KRB5_H
 
 
 dnl check the max skew in the krb5 context, and sets squid_cv_max_skew_context
