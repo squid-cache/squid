@@ -35,8 +35,8 @@ AC_LANG([C++])
 AC_CANONICAL_HOST
 
 AC_MSG_CHECKING([simplified host os])
-squid_host_os=`echo $host_os|sed 's/[0-9].*//'`
-squid_host_os_version=`echo $host_os|sed "s/$squid_host_os//"`
+squid_host_os=`echo $host_os|sed 's/[0-9].*//;s/-.*//g'`
+squid_host_os_version=`echo $host_os|tr -d "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-"`
 AC_MSG_RESULT($squid_host_os (version $squid_host_os_version))
 # on windows squid_host_os is either mingw or cygwin, version is 32
 
@@ -1052,7 +1052,7 @@ if test "$squid_opt_use_eui" = "yes" ; then
 		EUILIB="-liphlpapi"
 	    ;;
 	*)
-	    AC_MSG_WARN([EUI support probably won't work on $host.])
+	    AC_MSG_WARN([EUI support probably won't work on host $host.])
 	    ;;
      esac
      AC_CHECK_HEADERS( \
