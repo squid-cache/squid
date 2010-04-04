@@ -336,7 +336,7 @@ death(int sig)
     else
         fprintf(debug_log, "FATAL: Received signal %d...dying.\n", sig);
 
-#ifdef PRINT_STACK_TRACE
+#if PRINT_STACK_TRACE
 #ifdef _SQUID_HPUX_
     {
         extern void U_STACK_TRACE(void);	/* link with -lcl */
