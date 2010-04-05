@@ -5772,21 +5772,38 @@ DOC_START
 DOC_END
 
 NAME: icap_service_failure_limit
-TYPE: int
+COMMENT: limit [in memory-depth time-units]
+TYPE: icap_service_failure_limit
 IFDEF: ICAP_CLIENT
-LOC: Adaptation::Icap::TheConfig.service_failure_limit
+LOC: Adaptation::Icap::TheConfig
 DEFAULT: 10
 DOC_START
 	The limit specifies the number of failures that Squid tolerates
 	when establishing a new TCP connection with an ICAP service. If
 	the number of failures exceeds the limit, the ICAP service is
 	not used for new ICAP requests until it is time to refresh its
-	OPTIONS. The per-service failure counter is reset to zero each
-	time Squid fetches new service OPTIONS.
+	OPTIONS.
 
 	A negative value disables the limit. Without the limit, an ICAP
 	service will not be considered down due to connectivity failures
 	between ICAP OPTIONS requests.
+
+	Squid forgets ICAP service failures older than the specified
+	value of memory-depth. The memory fading algorithm 
+	is approximate because Squid does not remember individual 
+	errors but groups them instead, splitting the option
+	value into ten time slots of equal length.
+
+	When memory-depth is 0 and by default this option has no 
+	effect on service failure expiration.
+
+	Squid always forgets failures when updating service settings
+	using an ICAP OPTIONS transaction, regardless of this option
+	setting.
+
+	For example,
+		# suspend service usage after 10 failures in 5 seconds:
+		icap_service_failure_limit 10 in 5 seconds
 DOC_END
 
 NAME: icap_service_revival_delay
