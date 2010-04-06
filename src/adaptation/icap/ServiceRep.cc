@@ -55,7 +55,7 @@ Adaptation::Icap::ServiceRep::finalize()
     }
 
     theSessionFailures.configure(TheConfig.oldest_service_failure > 0 ?
-        TheConfig.oldest_service_failure : -1);
+                                 TheConfig.oldest_service_failure : -1);
 }
 
 void Adaptation::Icap::ServiceRep::invalidate()

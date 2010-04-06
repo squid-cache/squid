@@ -3745,7 +3745,7 @@ static void parse_icap_service_failure_limit(Adaptation::Icap::Config *cfg)
     }
 
     d = static_cast<time_t> (xatoi(token));
-    
+
     m = static_cast<time_t> (1);
 
     if (0 == d)
@@ -3753,8 +3753,7 @@ static void parse_icap_service_failure_limit(Adaptation::Icap::Config *cfg)
     else if ((token = strtok(NULL, w_space)) == NULL) {
         debugs(3, 0, "No time-units on '" << config_input_line << "'");
         self_destruct();
-    }
-    else if ((m = parseTimeUnits(token)) == 0)
+    } else if ((m = parseTimeUnits(token)) == 0)
         self_destruct();
 
     cfg->oldest_service_failure = (m * d);
