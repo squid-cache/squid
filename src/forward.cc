@@ -914,7 +914,7 @@ FwdState::connectStart()
     if (!fs->_peer && request->flags.spoof_client_ip) {
         // try to set the outgoing address using TPROXY v2
         // if it fails we abort any further TPROXY actions on this connection
-        if (IpInterceptor.SetTproxy2OutgoingAddr(int fd, const IpAddress &src) == -1) {
+        if (IpInterceptor.SetTproxy2OutgoingAddr(fd, src) == -1) {
             request->flags.spoof_client_ip = 0;
         }
     }
