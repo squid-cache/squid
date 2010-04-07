@@ -706,8 +706,8 @@ clientSetKeepaliveFlag(ClientHttpRequest * http)
     debugs(33, 3, "clientSetKeepaliveFlag: method = " <<
            RequestMethodStr(request->method));
 
-    /* We are HTTP/1.0 facing clients still */
-    HttpVersion http_ver(1,0);
+    /* We are HTTP/1.1 facing clients now*/
+    HttpVersion http_ver(1,1);
 
     if (httpMsgIsPersistent(http_ver, req_hdr))
         request->flags.proxy_keepalive = 1;

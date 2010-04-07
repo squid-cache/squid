@@ -692,7 +692,7 @@ HttpStateData::processReplyHeader()
         if (!parsed && error > 0) { // unrecoverable parsing error
             debugs(11, 3, "processReplyHeader: Non-HTTP-compliant header: '" <<  readBuf->content() << "'");
             flags.headers_parsed = 1;
-            newrep->sline.version = HttpVersion(1,0);
+            newrep->sline.version = HttpVersion(1,1);
             newrep->sline.status = error;
             HttpReply *vrep = setVirginReply(newrep);
             entry->replaceHttpReply(vrep);
@@ -717,7 +717,7 @@ HttpStateData::processReplyHeader()
     /* Skip 1xx messages for now. Advertised in Via as an internal 1.0 hop */
     if (newrep->sline.protocol == PROTO_HTTP && newrep->sline.status >= 100 && newrep->sline.status < 200) {
 
-#if WHEN_HTTP11
+#if WHEN_HTTP11_EXPECT_HANDLED
         /* When HTTP/1.1 check if the client is expecting a 1xx reply and maybe pass it on */
         if (orig_request->header.has(HDR_EXPECT)) {
             // TODO: pass to the client anyway?
