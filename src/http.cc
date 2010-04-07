@@ -1936,8 +1936,10 @@ HttpStateData::decideIfWeDoRanges (HttpRequest * orig_request)
      *  the server and fetch only the requested content)
      */
 
+    int64_t roffLimit = orig_request->getRangeOffsetLimit();
+
     if (NULL == orig_request->range || !orig_request->flags.cachable
-            || orig_request->range->offsetLimitExceeded() || orig_request->flags.connection_auth)
+            || orig_request->range->offsetLimitExceeded(roffLimit) || orig_request->flags.connection_auth)
         result = false;
 
     debugs(11, 8, "decideIfWeDoRanges: range specs: " <<
