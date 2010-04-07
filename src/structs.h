@@ -551,7 +551,7 @@ struct SquidConfig {
     } comm_incoming;
     int max_open_disk_fds;
     int uri_whitespace;
-    int64_t rangeOffsetLimit;
+    acl_size_t *rangeOffsetLimit;
 #if MULTICAST_MISS_STREAM
 
     struct {
