@@ -35,6 +35,7 @@
 #define SQUID_ICAPSERVICEREP_H
 
 #include "cbdata.h"
+#include "FadingCounter.h"
 #include "adaptation/Service.h"
 #include "adaptation/forward.h"
 #include "adaptation/Initiator.h"
@@ -134,8 +135,7 @@ private:
     Adaptation::Initiate *theOptionsFetcher; // pending ICAP OPTIONS transaction
     time_t theLastUpdate; // time the options were last updated
 
-    static const int TheSessionFailureLimit;
-    int theSessionFailures;
+    FadingCounter theSessionFailures;
     const char *isSuspended; // also stores suspension reason for debugging
 
     bool notifying; // may be true in any state except for the initial

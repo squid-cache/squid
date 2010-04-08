@@ -716,8 +716,8 @@ clientSetKeepaliveFlag(ClientHttpRequest * http)
     debugs(33, 3, "clientSetKeepaliveFlag: method = " <<
            RequestMethodStr(request->method));
 
-    /* We are HTTP/1.0 facing clients still */
-    HttpVersion http_ver(1,0);
+    /* We are HTTP/1.1 facing clients now*/
+    HttpVersion http_ver(1,1);
 
     if (httpMsgIsPersistent(http_ver, req_hdr))
         request->flags.proxy_keepalive = 1;
@@ -1127,6 +1127,8 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
     assert(request->range);
     /* check if we still want to do ranges */
 
+    int64_t roffLimit = request->getRangeOffsetLimit();
+
     if (!rep)
         range_err = "no [parse-able] reply";
     else if ((rep->sline.status != HTTP_OK) && (rep->sline.status != HTTP_PARTIAL_CONTENT))
@@ -1147,7 +1149,7 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
         range_err = "canonization failed";
     else if (http->request->range->isComplex())
         range_err = "too complex range header";
-    else if (!logTypeIsATcpHit(http->logType) && http->request->range->offsetLimitExceeded())
+    else if (!logTypeIsATcpHit(http->logType) && http->request->range->offsetLimitExceeded(roffLimit))
         range_err = "range outside range_offset_limit";
 
     /* get rid of our range specs on error */
