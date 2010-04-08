@@ -74,9 +74,6 @@ public:
     long expiretime;
     /** how many references are outstanding to this instance */
     size_t references;
-    /** the auth_user_request structures that link to this. Yes it could be a splaytree
-     * but how many requests will a single username have in parallel? */
-    dlink_list requests;
 
     static void cacheInit();
     static void CachedACLsReset();
@@ -85,10 +82,25 @@ public:
     virtual ~AuthUser();
     _SQUID_INLINE_ char const *username() const;
     _SQUID_INLINE_ void username(char const *);
+
+    /* Manage list of IPs using this username */
     void clearIp();
     void removeIp(IpAddress);
     void addIp(IpAddress);
+
+#if USER_REQUEST_LOOP_DEAD
+protected:
+    /* manage list of active authentication requests for this username */
+    /** the auth_user_request structures that link to this. Yes it could be a splaytree
+     * but how many requests will a single username have in parallel? */
+    dlink_list requests;
+
+    /* AYJ: why? do we need this here? it forms the core of a circular refcount. */
+
+public:
     _SQUID_INLINE_ void addRequest(AuthUserRequest::Pointer);
+    _SQUID_INLINE_ void doneRequest(AuthUserRequest::Pointer);
+#endif /* USER_REQUEST_LOOP_DEAD */
 
     void lock();
     void unlock();
@@ -96,10 +108,10 @@ public:
     void addToNameCache();
 
 protected:
-    AuthUser (AuthConfig *);
+    AuthUser(AuthConfig *);
 
 private:
-    static void cacheCleanup (void *unused);
+    static void cacheCleanup(void *unused);
 
     /**
      * DPW 2007-05-08

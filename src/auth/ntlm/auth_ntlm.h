@@ -28,8 +28,6 @@ MEMPROXY_CLASS_INLINE(NTLMUser);
 
 typedef class NTLMUser ntlm_user_t;
 
-#include "HelperChildConfig.h"
-
 /* configuration runtime data */
 
 class AuthNTLMConfig : public AuthConfig
@@ -47,9 +45,7 @@ public:
     virtual void parse(AuthConfig *, int, char *);
     virtual void registerWithCacheManager(void);
     virtual const char * type() const;
-    HelperChildConfig authenticateChildren;
     int keep_alive;
-    wordlist *authenticate;
 };
 
 typedef class AuthNTLMConfig auth_ntlm_config;

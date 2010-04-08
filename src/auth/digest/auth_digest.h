@@ -74,8 +74,6 @@ extern int authDigestNonceIsValid(digest_nonce_h * nonce, char nc[9]);
 extern const char *authenticateDigestNonceNonceb64(const digest_nonce_h * nonce);
 extern const int authDigestNonceLastRequest(digest_nonce_h * nonce);
 
-#include "HelperChildConfig.h"
-
 /* configuration runtime data */
 
 class AuthDigestConfig : public AuthConfig
@@ -93,9 +91,7 @@ public:
     virtual void parse(AuthConfig *, int, char *);
     virtual void registerWithCacheManager(void);
     virtual const char * type() const;
-    HelperChildConfig authenticateChildren;
     char *digestAuthRealm;
-    wordlist *authenticate;
     time_t nonceGCInterval;
     time_t noncemaxduration;
     unsigned int noncemaxuses;

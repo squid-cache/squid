@@ -202,7 +202,9 @@ testAuthBasicUserRequest::username()
     BasicUser *basic_auth=new BasicUser(AuthConfig::Find("basic"));
     basic_auth->username("John");
     temp->user(basic_auth);
+#if USER_REQUEST_LOOP_DEAD
     basic_auth->addRequest(temp);
+#endif
     CPPUNIT_ASSERT_EQUAL(0, strcmp("John", temp->username()));
 }
 #endif /* HAVE_AUTH_MODULE_BASIC */
@@ -226,7 +228,9 @@ testAuthDigestUserRequest::username()
     DigestUser *duser=new DigestUser(AuthConfig::Find("digest"));
     duser->username("John");
     temp->user(duser);
+#if USER_REQUEST_LOOP_DEAD
     duser->addRequest(temp);
+#endif
     CPPUNIT_ASSERT_EQUAL(0, strcmp("John", temp->username()));
 }
 #endif /* HAVE_AUTH_MODULE_DIGEST */
@@ -250,7 +254,9 @@ testAuthNTLMUserRequest::username()
     NTLMUser *nuser=new NTLMUser(AuthConfig::Find("ntlm"));
     nuser->username("John");
     temp->user(nuser);
+#if USER_REQUEST_LOOP_DEAD
     nuser->addRequest(temp);
+#endif
     CPPUNIT_ASSERT_EQUAL(0, strcmp("John", temp->username()));
 }
 #endif /* HAVE_AUTH_MODULE_NTLM */
@@ -274,7 +280,9 @@ testAuthNegotiateUserRequest::username()
     NegotiateUser *nuser=new NegotiateUser(AuthConfig::Find("negotiate"));
     nuser->username("John");
     temp->user(nuser);
+#if USER_REQUEST_LOOP_DEAD
     nuser->addRequest(temp);
+#endif
     CPPUNIT_ASSERT_EQUAL(0, strcmp("John", temp->username()));
 }
 

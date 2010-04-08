@@ -57,11 +57,14 @@ AuthUser::AuthUser (AuthConfig *aConfig) :
     proxy_auth_list.head = proxy_auth_list.tail = NULL;
     proxy_match_cache.head = proxy_match_cache.tail = NULL;
     ip_list.head = ip_list.tail = NULL;
+#if USER_REQUEST_LOOP_DEAD
     requests.head = requests.tail = NULL;
+#endif
     debugs(29, 5, "AuthUser::AuthUser: Initialised auth_user '" << this << "' with refcount '" << references << "'.");
 }
 
-/* Combine two user structs. ONLY to be called from within a scheme
+/**
+ * Combine two user structs. ONLY to be called from within a scheme
  * module. The scheme module is responsible for ensuring that the
  * two users _can_ be merged without invalidating all the request
  * scheme data. The scheme is also responsible for merging any user
@@ -76,17 +79,21 @@ AuthUser::absorb(AuthUser *from)
      * data
      */
     debugs(29, 5, "authenticateAuthUserMerge auth_user '" << from << "' into auth_user '" << this << "'.");
+#if USER_REQUEST_LOOP_DEAD
     dlink_node *link = from->requests.head;
 
     while (link) {
         AuthUserRequest::Pointer *auth_user_request = static_cast<AuthUserRequest::Pointer*>(link->data);
+        /* add to our list. replace if already present. */
+        addRequest(*auth_user_request);
+        AuthUserRequest::Pointer aur = *(auth_user_request);
+        aur->user(this);
+        /* remove from other list */
         dlink_node *tmplink = link;
         link = link->next;
         dlinkDelete(tmplink, &from->requests);
-        dlinkAddTail(auth_user_request, tmplink, &requests);
-        AuthUserRequest::Pointer aur = *(auth_user_request);
-        aur->user(this);
     }
+#endif /* USER_REQUEST_LOOP_DEAD */
 
     references += from->references;
     from->references = 0;
@@ -95,7 +102,6 @@ AuthUser::absorb(AuthUser *from)
 
 AuthUser::~AuthUser()
 {
-    dlink_node *link, *tmplink;
     debugs(29, 5, "AuthUser::~AuthUser: Freeing auth_user '" << this << "' with refcount '" << references << "'.");
     assert(references == 0);
     /* were they linked in by username ? */
@@ -110,18 +116,21 @@ AuthUser::~AuthUser()
         delete usernamehash;
     }
 
+#if USER_REQUEST_LOOP_DEAD
     /* remove any outstanding requests */
-    link = requests.head;
+    dlink_node *link = requests.head;
 
     while (link) {
         debugs(29, 5, "AuthUser::~AuthUser: removing request entry '" << link->data << "'");
         AuthUserRequest::Pointer *auth_user_request = static_cast<AuthUserRequest::Pointer*>(link->data);
-        tmplink = link;
+        dlink_node *tmplink = link;
         link = link->next;
         dlinkDelete(tmplink, &requests);
+        tmplink->data = NULL;
         dlinkNodeDelete(tmplink);
         *auth_user_request = NULL;
     }
+#endif /* USER_REQUEST_LOOP_DEAD */
 
     /* free cached acl results */
     aclCacheMatchFlush(&proxy_match_cache);
@@ -166,7 +175,6 @@ AuthUser::CachedACLsReset()
         username = auth_user->username();
         /* free cached acl results */
         aclCacheMatchFlush(&auth_user->proxy_match_cache);
-
     }
 
     debugs(29, 3, "AuthUser::CachedACLsReset: Finished.");
