@@ -56,10 +56,10 @@
 #if HAVE_MEMORY_H
 #include <memory.h>
 #endif
-#ifdef HAVE_STRING_H
+#if HAVE_STRING_H
 #include <string.h>
 #endif
-#ifdef HAVE_STRINGS_H
+#if HAVE_STRINGS_H
 #include <strings.h>
 #endif
 #if HAVE_BSTRING_H
@@ -108,7 +108,7 @@ struct variable_list *
 snmp_var_new(oid * Name, int Len) {
     struct variable_list *New;
 
-#ifdef DEBUG_VARS
+#if DEBUG_VARS
     printf("VARS: Creating.\n");
 #endif
 
@@ -135,7 +135,7 @@ snmp_var_new(oid * Name, int Len) {
         snmp_set_api_error(SNMPERR_OS_ERR);
         return (NULL);
     }
-#ifdef DEBUG_VARS
+#if DEBUG_VARS
     printf("VARS: Copying name, size (%d)\n", Len);
 #endif
 
@@ -165,7 +165,7 @@ struct variable_list *
 snmp_var_clone(struct variable_list *Src) {
     struct variable_list *Dest;
 
-#ifdef DEBUG_VARS
+#if DEBUG_VARS
     printf("VARS: Cloning.\n");
 #endif
 
@@ -174,7 +174,7 @@ snmp_var_clone(struct variable_list *Src) {
         snmp_set_api_error(SNMPERR_OS_ERR);
         return (NULL);
     }
-#ifdef DEBUG_VARS
+#if DEBUG_VARS
     printf("VARS: Copying entire variable list.  (Size %d)\n",
            sizeof(struct variable_list));
 #endif
@@ -188,7 +188,7 @@ snmp_var_clone(struct variable_list *Src) {
             xfree(Dest);
             return (NULL);
         }
-#ifdef DEBUG_VARS
+#if DEBUG_VARS
         printf("VARS: Copying name OID. (Size %d)\n", Src->name_length);
 #endif
         xmemcpy((char *) Dest->name, (char *) Src->name,
@@ -204,15 +204,15 @@ snmp_var_clone(struct variable_list *Src) {
             xfree(Dest);
             return (NULL);
         }
-#ifdef DEBUG_VARS
+#if DEBUG_VARS
         printf("VARS: Copying value (Size %d)\n", Src->val_len);
 #endif
         xmemcpy((char *) Dest->val.string, (char *) Src->val.string, Src->val_len);
     }
-#ifdef DEBUG_VARS
+#if DEBUG_VARS
     printf("VARS: Cloned %x.\n", (unsigned int) Dest);
 #endif
-#ifdef DEBUG_VARS_MALLOC
+#if DEBUG_VARS_MALLOC
     printf("VARS: Cloned  (%x)\n", (unsigned int) Dest);
     printf("VARS: Name is (%x)\n", (unsigned int) Dest->name);
 #endif
@@ -382,7 +382,7 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
     int ThisVarLen = 0;
 
     VarLastP = VarP;
-#ifdef DEBUG_VARS_DECODE
+#if DEBUG_VARS_DECODE
     printf("VARS: Decoding buffer of length %d\n", *BufLen);
 #endif
 
@@ -395,7 +395,7 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
         snmp_set_api_error(SNMPERR_PDU_PARSE);
         return (NULL);
     }
-#ifdef DEBUG_VARS_DECODE
+#if DEBUG_VARS_DECODE
     printf("VARS: All Variable length %d\n", AllVarLen);
 #endif
 
@@ -426,7 +426,7 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
             snmp_set_api_error(SNMPERR_PDU_PARSE);
             PARSE_ERROR;
         }
-#ifdef DEBUG_VARS_DECODE
+#if DEBUG_VARS_DECODE
         printf("VARS: Header type 0x%x (%d bytes left)\n", VarBindType, ThisVarLen);
 #endif
 
@@ -442,7 +442,7 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
             snmp_set_api_error(SNMPERR_PDU_PARSE);
             PARSE_ERROR;
         }
-#ifdef DEBUG_VARS_DECODE
+#if DEBUG_VARS_DECODE
         printf("VARS: Decoded OBJID (%d bytes). (%d bytes left)\n",
                Var->name_length, ThisVarLen);
 #endif
@@ -457,7 +457,7 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
             PARSE_ERROR;
         ThisVarLen = DataLen;
 
-#ifdef DEBUG_VARS_DECODE
+#if DEBUG_VARS_DECODE
         printf("VARS: Data type %d\n", Var->type);
 #endif
 
@@ -475,7 +475,7 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
             bufp = asn_parse_int(DataPtr, &ThisVarLen,
                                  &Var->type, (int *) Var->val.integer,
                                  Var->val_len);
-#ifdef DEBUG_VARS_DECODE
+#if DEBUG_VARS_DECODE
             printf("VARS: Decoded integer '%d' (%d bytes left)\n",
                    *(Var->val.integer), ThisVarLen);
 #endif
@@ -494,7 +494,7 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
             bufp = asn_parse_unsigned_int(DataPtr, &ThisVarLen,
                                           &Var->type, (u_int *) Var->val.integer,
                                           Var->val_len);
-#ifdef DEBUG_VARS_DECODE
+#if DEBUG_VARS_DECODE
             printf("VARS: Decoded timeticks '%d' (%d bytes left)\n",
                    *(Var->val.integer), ThisVarLen);
 #endif
@@ -512,7 +512,7 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
             bufp = asn_parse_string(DataPtr, &ThisVarLen,
                                     &Var->type, Var->val.string,
                                     &Var->val_len);
-#ifdef DEBUG_VARS_DECODE
+#if DEBUG_VARS_DECODE
             printf("VARS: Decoded string '%s' (length %d) (%d bytes left)\n",
                    (Var->val.string), Var->val_len, ThisVarLen);
 #endif
@@ -532,7 +532,7 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
             if (bufp) {
                 xmemcpy((char *) Var->val.objid, (char *) TmpBuf, Var->val_len);
             }
-#ifdef DEBUG_VARS_DECODE
+#if DEBUG_VARS_DECODE
             printf("VARS: Decoded OBJID (length %d) (%d bytes left)\n",
                    Var->val_len, ThisVarLen);
 #endif
@@ -558,7 +558,7 @@ snmp_var_DecodeVarBind(u_char * Buffer, int *BufLen,
         if (bufp == NULL)
             PARSE_ERROR;
 
-#ifdef DEBUG_VARS_DECODE
+#if DEBUG_VARS_DECODE
         printf("VARS:  Adding to list.\n");
 #endif
         /* Add variable to the list */

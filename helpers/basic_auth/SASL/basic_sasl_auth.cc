@@ -42,7 +42,7 @@
 #if HAVE_STRING_H
 #include <string.h>
 #endif
-#ifdef HAVE_SASL_SASL_H
+#if HAVE_SASL_SASL_H
 #include <sasl/sasl.h>
 #else
 #include <sasl.h>

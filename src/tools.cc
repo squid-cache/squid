@@ -336,7 +336,7 @@ death(int sig)
     else
         fprintf(debug_log, "FATAL: Received signal %d...dying.\n", sig);
 
-#ifdef PRINT_STACK_TRACE
+#if PRINT_STACK_TRACE
 #ifdef _SQUID_HPUX_
     {
         extern void U_STACK_TRACE(void);	/* link with -lcl */
@@ -409,7 +409,7 @@ sigusr2_handle(int sig)
     /* no debugs() here; bad things happen if the signal is delivered during _db_print() */
 
     if (state == 0) {
-#ifndef MEM_GEN_TRACE
+#if !MEM_GEN_TRACE
         Debug::parseOptions("ALL,7");
 #else
 
@@ -418,7 +418,7 @@ sigusr2_handle(int sig)
 
         state = 1;
     } else {
-#ifndef MEM_GEN_TRACE
+#if !MEM_GEN_TRACE
         Debug::parseOptions(Debug::debugOptions);
 #else
 
