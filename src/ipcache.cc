@@ -1479,7 +1479,7 @@ ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
     return 0;
 }
 
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 /**
  \ingroup IPCacheAPI
  *

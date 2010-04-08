@@ -74,7 +74,7 @@ get_tick(void)
 
 #endif /* USE_XPROF_STATS - maybe disabled above */
 
-#ifdef USE_XPROF_STATS
+#if USE_XPROF_STATS
 
 typedef enum {
     XPROF_PROF_UNACCOUNTED,

@@ -97,19 +97,19 @@
 #if HAVE_LIBC_H
 #include <libc.h>
 #endif
-#ifdef HAVE_SYS_SYSCALL_H
+#if HAVE_SYS_SYSCALL_H
 #include <sys/syscall.h>
 #endif
-#ifdef HAVE_STRING_H
+#if HAVE_STRING_H
 #include <string.h>
 #endif
-#ifdef HAVE_STRINGS_H
+#if HAVE_STRINGS_H
 #include <strings.h>
 #endif
 #if HAVE_BSTRING_H
 #include <bstring.h>
 #endif
-#ifdef HAVE_CRYPT_H
+#if HAVE_CRYPT_H
 #include <crypt.h>
 #endif
 #if HAVE_GETOPT_H
@@ -318,11 +318,11 @@ lookup(const char *buf)
         break;
 
 #if defined(EAI_NODATA) || defined(EAI_NONAME)
-#ifdef EAI_NODATA
+#if EAI_NODATA
         /* deprecated. obsolete on some OS */
     case EAI_NODATA:
 #endif
-#ifdef EAI_NONAME
+#if EAI_NONAME
     case EAI_NONAME:
 #endif
         printf("$fail DNS Domain/IP '%s' exists without any FQDN/IPs: %s.\n", buf, gai_strerror(res));

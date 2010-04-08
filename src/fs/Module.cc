@@ -5,20 +5,20 @@
 #include "fs/ufs/ufscommon.h"
 #endif
 
-#ifdef HAVE_FS_COSS
+#if HAVE_FS_COSS
 #include "fs/coss/StoreFScoss.h"
 #endif
 
-#ifdef HAVE_FS_UFS
+#if HAVE_FS_UFS
 static StoreFSufs<UFSSwapDir> *UfsInstance;
 #endif
 
-#ifdef HAVE_FS_AUFS
+#if HAVE_FS_AUFS
 static StoreFSufs<UFSSwapDir> *AufsInstance;
 #endif
 
 
-#ifdef HAVE_FS_DISKD
+#if HAVE_FS_DISKD
 static StoreFSufs<UFSSwapDir> *DiskdInstance;
 #endif
 
@@ -27,7 +27,7 @@ static StoreFSufs<UFSSwapDir> *DiskdInstance;
  * (b) declare the StoreFScoss::stats  as static and
  * (c) merge the StoreFScoss::stat() method with the static
  *     StoreFScoss::Stats() */
-#ifdef HAVE_FS_COSS
+#if HAVE_FS_COSS
 StoreFScoss &CossInstance = StoreFScoss::GetInstance();
 #endif
 
@@ -35,16 +35,16 @@ StoreFScoss &CossInstance = StoreFScoss::GetInstance();
 void Fs::Init()
 {
 
-#ifdef HAVE_FS_UFS
+#if HAVE_FS_UFS
     UfsInstance = new StoreFSufs<UFSSwapDir>("Blocking", "ufs");
 #endif
 
-#ifdef HAVE_FS_AUFS
+#if HAVE_FS_AUFS
     AufsInstance = new StoreFSufs<UFSSwapDir>("DiskThreads", "aufs");;
 #endif
 
 
-#ifdef HAVE_FS_DISKD
+#if HAVE_FS_DISKD
     DiskdInstance = new StoreFSufs<UFSSwapDir>("DiskDaemon", "diskd");;
 #endif
 
@@ -53,16 +53,16 @@ void Fs::Init()
 
 void Fs::Clean()
 {
-#ifdef HAVE_FS_UFS
+#if HAVE_FS_UFS
     delete UfsInstance;
 #endif
 
-#ifdef HAVE_FS_AUFS
+#if HAVE_FS_AUFS
     delete AufsInstance;
 #endif
 
 
-#ifdef HAVE_FS_DISKD
+#if HAVE_FS_DISKD
     delete DiskdInstance;
 #endif
 

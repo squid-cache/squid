@@ -11,16 +11,16 @@
 CPPUNIT_TEST_SUITE_REGISTRATION( testAuth );
 CPPUNIT_TEST_SUITE_REGISTRATION( testAuthConfig );
 CPPUNIT_TEST_SUITE_REGISTRATION( testAuthUserRequest );
-#ifdef HAVE_AUTH_MODULE_BASIC
+#if HAVE_AUTH_MODULE_BASIC
 CPPUNIT_TEST_SUITE_REGISTRATION( testAuthBasicUserRequest );
 #endif
-#ifdef HAVE_AUTH_MODULE_DIGEST
+#if HAVE_AUTH_MODULE_DIGEST
 CPPUNIT_TEST_SUITE_REGISTRATION( testAuthDigestUserRequest );
 #endif
-#ifdef HAVE_AUTH_MODULE_NTLM
+#if HAVE_AUTH_MODULE_NTLM
 CPPUNIT_TEST_SUITE_REGISTRATION( testAuthNTLMUserRequest );
 #endif
-#ifdef HAVE_AUTH_MODULE_NEGOTIATE
+#if HAVE_AUTH_MODULE_NEGOTIATE
 CPPUNIT_TEST_SUITE_REGISTRATION( testAuthNegotiateUserRequest );
 #endif
 
@@ -182,7 +182,7 @@ testAuthUserRequest::scheme()
     }
 }
 
-#ifdef HAVE_AUTH_MODULE_BASIC
+#if HAVE_AUTH_MODULE_BASIC
 #include "auth/basic/auth_basic.h"
 /* AuthBasicUserRequest::AuthBasicUserRequest works
  */
@@ -208,7 +208,7 @@ testAuthBasicUserRequest::username()
 }
 #endif /* HAVE_AUTH_MODULE_BASIC */
 
-#ifdef HAVE_AUTH_MODULE_DIGEST
+#if HAVE_AUTH_MODULE_DIGEST
 #include "auth/digest/auth_digest.h"
 /* AuthDigestUserRequest::AuthDigestUserRequest works
  */
@@ -234,7 +234,7 @@ testAuthDigestUserRequest::username()
 }
 #endif /* HAVE_AUTH_MODULE_DIGEST */
 
-#ifdef HAVE_AUTH_MODULE_NTLM
+#if HAVE_AUTH_MODULE_NTLM
 #include "auth/ntlm/auth_ntlm.h"
 /* AuthNTLMUserRequest::AuthNTLMUserRequest works
  */
@@ -260,7 +260,7 @@ testAuthNTLMUserRequest::username()
 }
 #endif /* HAVE_AUTH_MODULE_NTLM */
 
-#ifdef HAVE_AUTH_MODULE_NEGOTIATE
+#if HAVE_AUTH_MODULE_NEGOTIATE
 #include "auth/negotiate/auth_negotiate.h"
 /* AuthNegotiateUserRequest::AuthNegotiateUserRequest works
  */
