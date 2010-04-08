@@ -26,6 +26,8 @@ AuthDigestUserRequest::AuthDigestUserRequest() :
  */
 AuthDigestUserRequest::~AuthDigestUserRequest()
 {
+    assert(RefCountCount()==0);
+
     safe_free(nonceb64);
     safe_free(cnonce);
     safe_free(realm);

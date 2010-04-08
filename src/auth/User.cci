@@ -57,15 +57,36 @@ AuthUser::username(char const*aString)
     }
 }
 
+#if USER_REQUEST_LOOP_DEAD
 void
 AuthUser::addRequest(AuthUserRequest::Pointer request)
 {
-    /* lock for the request link */
-    /* AYJ: 2009-12-12: WTF? locking the AuthUser because it has a reference to a request? */
-    /*    seems to me like this once-upon-a-time may have been intended to lock the AuthUserRequest */
+    /* lock for the request link (AKA lock because the request links to us) */
     lock();
 
     dlink_node *node = dlinkNodeNew();
 
     dlinkAdd(&request, node, &requests);
 }
+
+void
+AuthUser::doneRequest(AuthUserRequest::Pointer request)
+{
+    /* unlink from the auth_user struct */
+    dlink_node *link = requests.head;
+    AuthUserRequest::Pointer *auth_user_request = NULL;
+
+    while (link) {
+        auth_user_request = static_cast<AuthUserRequest::Pointer*>(link->data);
+        if (*auth_user_request == request) {
+            dlink_node *tmplink = link;
+            link = link->next;
+            dlinkDelete(tmplink, &requests);
+            tmplink->data = NULL;
+            dlinkNodeDelete(tmplink);
+            *auth_user_request = NULL;
+        }
+        link = link->next;
+    }
+}
+#endif /* USER_REQUEST_LOOP_DEAD */

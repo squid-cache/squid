@@ -116,7 +116,7 @@ AuthNegotiateConfig::dump(StoreEntry * entry, const char *name, AuthConfig * sch
 
 }
 
-AuthNegotiateConfig::AuthNegotiateConfig() : authenticateChildren(20), keep_alive(1), authenticate(NULL)
+AuthNegotiateConfig::AuthNegotiateConfig() : keep_alive(1)
 { }
 
 void
@@ -312,7 +312,9 @@ AuthNegotiateConfig::decode(char const *proxy_auth)
 
     auth_user_request->user(newUser);
     auth_user_request->user()->auth_type = AUTH_NEGOTIATE;
+#if USER_REQUEST_LOOP_DEAD
     auth_user_request->user()->addRequest(auth_user_request);
+#endif
 
     /* all we have to do is identify that it's Negotiate - the helper does the rest */
     debugs(29, 9, "AuthNegotiateConfig::decode: Negotiate authentication");

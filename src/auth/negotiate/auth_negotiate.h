@@ -35,8 +35,6 @@ public:
 
 MEMPROXY_CLASS_INLINE(NegotiateUser);
 
-#include "HelperChildConfig.h"
-
 extern statefulhelper *negotiateauthenticators;
 
 /* configuration runtime data */
@@ -57,9 +55,7 @@ public:
     virtual void parse(AuthConfig *, int, char *);
     virtual void registerWithCacheManager(void);
     virtual const char * type() const;
-    HelperChildConfig authenticateChildren;
     int keep_alive;
-    wordlist *authenticate;
 };
 
 extern AuthNegotiateConfig negotiateConfig;

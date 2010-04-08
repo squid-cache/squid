@@ -67,8 +67,6 @@ MEMPROXY_CLASS_INLINE(BasicUser);
 
 typedef class BasicUser basic_data;
 
-#include "HelperChildConfig.h"
-
 /* configuration runtime data */
 
 class AuthBasicConfig : public AuthConfig
@@ -87,8 +85,6 @@ public:
     virtual void parse(AuthConfig *, int, char *);
     virtual void registerWithCacheManager(void);
     virtual const char * type() const;
-    HelperChildConfig authenticateChildren;
-    wordlist *authenticate;
     char *basicAuthRealm;
     time_t credentialsTTL;
     int casesensitive;
