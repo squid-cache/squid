@@ -1,19 +1,14 @@
+#ifndef SQUID_CONFIG_H
+#include "config.h"
+#endif
+
 #ifndef _getnameinfo_h
 #define _getnameinfo_h
 /*
  * Reconstructed from KAME getnameinfo.c (in lib/)
- *
- * $Id$
  */
 
-#include "config.h"
-
-#ifdef HAVE_GETNAMEINFO
-
-/* These functions are provided by the OS */
-#define xgetnameinfo	getnameinfo
-
-#else /* !HAVE_GETNAMEINFO */
+#if !HAVE_GETNAMEINFO
 
 /* RFC 2553 / Posix resolver */
 SQUIDCEXTERN int xgetnameinfo(const struct sockaddr *sa,
@@ -23,8 +18,8 @@ SQUIDCEXTERN int xgetnameinfo(const struct sockaddr *sa,
                               char *serv,
                               size_t servlen,
                               int flags );
+#define getnameinfo	xgetnameinfo
 
 
 #endif /* HAVE_GETNAMEINFO */
-
-#endif
+#endif /* _getnameinfo_h */

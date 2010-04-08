@@ -43,24 +43,8 @@
  */
 
 #include "squid.h"
-#include "clientStream.h"
-#include "client_side_request.h"
-#include "auth/UserRequest.h"
-#include "HttpRequest.h"
-#include "ProtoPort.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
-#include "client_side.h"
-#include "client_side_reply.h"
-#include "Store.h"
-#include "HttpReply.h"
-#include "MemObject.h"
-#include "ClientRequestContext.h"
-#include "SquidTime.h"
-#include "wordlist.h"
-#include "inet_pton.h"
-#include "fde.h"
-
 #if USE_ADAPTATION
 #include "adaptation/AccessCheck.h"
 #include "adaptation/Iterator.h"
@@ -68,9 +52,22 @@
 #if ICAP_CLIENT
 #include "adaptation/icap/History.h"
 #endif
-//static void adaptationAclCheckDoneWrapper(Adaptation::ServicePointer service, void *data);
 #endif
-
+#include "auth/UserRequest.h"
+#include "clientStream.h"
+#include "client_side.h"
+#include "client_side_reply.h"
+#include "client_side_request.h"
+#include "ClientRequestContext.h"
+#include "compat/inet_pton.h"
+#include "fde.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
+#include "MemObject.h"
+#include "ProtoPort.h"
+#include "Store.h"
+#include "SquidTime.h"
+#include "wordlist.h"
 
 
 #if LINGERING_CLOSE
@@ -367,8 +364,8 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
 
     request->my_addr.SetPort(0);
 
-    /* RFC 2616 says 'upgrade' to our 1.0 regardless of what the client is */
-    HttpVersion http_ver(1,0);
+    /* Our version is HTTP/1.1 */
+    HttpVersion http_ver(1,1);
     request->http_ver = http_ver;
 
     http->request = HTTPMSGLOCK(request);

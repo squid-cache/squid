@@ -22,9 +22,10 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+#define SQUID_NO_ALLOC_PROTECT 1
+#include "config.h"
 
 #include "smblib-priv.h"
-#include <stdlib.h>
 #include <string.h>
 
 #include "rfcnb.h"
@@ -112,8 +113,8 @@ SMB_DOSTimToStr(int DOS_time)
     DOS_month = (DOS_time & 0x01E00000) >> 21;
     DOS_year = ((DOS_time & 0xFE000000) >> 25) + 80;
 
-    sprintf(SMB_Time_Temp, "%2d/%02d/%2d %2d:%02d:%02d", DOS_day, DOS_month,
-            DOS_year, DOS_hour, DOS_min, DOS_sec);
+    snprintf(SMB_Time_Temp, 48, "%2d/%02d/%2d %2d:%02d:%02d", DOS_day, DOS_month,
+             DOS_year, DOS_hour, DOS_min, DOS_sec);
 
     return (SMB_Time_Temp);
 

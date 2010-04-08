@@ -40,15 +40,13 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  */
+#define SQUID_NO_ALLOC_PROTECT 1
 #include "config.h"
 #include "rfc1738.h"
 #include "util.h"
 
 #if HAVE_STDIO_H
 #include <stdio.h>
-#endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
 #endif
 #if HAVE_STRING_H
 #include <string.h>
@@ -178,7 +176,7 @@ main(int argc, char *argv[])
         }
         if (strcmp(argv[i], "-S") == 0) {
             if (lastdom != NULL) {
-                if ((lastdom->authshare = strdup(argv[++i])) == NULL)
+                if ((lastdom->authshare = xstrdup(argv[++i])) == NULL)
                     return 1;
 
                 /* convert backslashes to forward slashes */

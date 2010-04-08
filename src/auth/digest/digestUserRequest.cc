@@ -75,7 +75,7 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData * conn,
     HASHHEX HA2 = "";
     HASHHEX Response;
 
-    assert(user() != NULL);
+    assert(authUser() != NULL);
     AuthUser *auth_user = user();
 
     digest_user = dynamic_cast<digest_user_h*>(auth_user);
@@ -133,6 +133,7 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData * conn,
 
             if (strcasecmp(digest_request->response, Response)) {
                 credentials(Failed);
+                digest_request->flags.invalid_password = 1;
                 digest_request->setDenyMessage("Incorrect password");
                 return;
             } else {

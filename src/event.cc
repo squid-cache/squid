@@ -32,8 +32,10 @@
  *
  */
 
-#include "event.h"
+#include "config.h"
+#include "compat/drand48.h"
 #include "CacheManager.h"
+#include "event.h"
 #include "Store.h"
 #include "SquidTime.h"
 

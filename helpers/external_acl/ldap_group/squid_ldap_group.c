@@ -32,6 +32,8 @@
  * as published by the Free Software Foundation; either version 2,
  * or (at your option) any later version.
  */
+#define SQUID_NO_ALLOC_PROTECT 1
+#include "config.h"
 
 #define LDAP_DEPRECATED 1
 
@@ -40,7 +42,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
 #include <ctype.h>
 
 #ifdef _SQUID_MSWIN_		/* Native Windows port and MinGW */
@@ -264,7 +265,7 @@ main(int argc, char **argv)
                 free(ldapServer);
                 ldapServer = newhost;
             } else {
-                ldapServer = strdup(value);
+                ldapServer = xstrdup(value);
             }
             break;
         case 'b':
@@ -393,7 +394,7 @@ main(int argc, char **argv)
             free(ldapServer);
             ldapServer = newhost;
         } else {
-            ldapServer = strdup(value);
+            ldapServer = xstrdup(value);
         }
         argc--;
         argv++;
@@ -789,9 +790,9 @@ searchLDAP(LDAP * ld, char *group, char *login, char *extension_dn)
     } else if (userdnattr) {
         char dn[8192];
         if (extension_dn && *extension_dn)
-            sprintf(dn, "%s=%s, %s, %s", userdnattr, login, extension_dn, userbasedn ? userbasedn : basedn);
+            snprintf(dn, 8192, "%s=%s, %s, %s", userdnattr, login, extension_dn, userbasedn ? userbasedn : basedn);
         else
-            sprintf(dn, "%s=%s, %s", userdnattr, login, userbasedn ? userbasedn : basedn);
+            snprintf(dn, 8192, "%s=%s, %s", userdnattr, login, userbasedn ? userbasedn : basedn);
         return searchLDAPGroup(ld, group, dn, extension_dn);
     } else {
         return searchLDAPGroup(ld, group, login, extension_dn);
@@ -821,7 +822,7 @@ readSecret(const char *filename)
     if ((e = strrchr(buf, '\r')))
         *e = 0;
 
-    bindpasswd = strdup(buf);
+    bindpasswd = xstrdup(buf);
     if (!bindpasswd) {
         fprintf(stderr, PROGRAM_NAME " ERROR: can not allocate memory\n");
     }

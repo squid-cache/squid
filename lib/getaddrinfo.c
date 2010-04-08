@@ -49,9 +49,9 @@
 #undef _POSIX_C_SOURCE
 #undef _XOPEN_SOURCE
 
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
+#include "compat/getaddrinfo.h"
+#include "compat/inet_pton.h"
+
 #if HAVE_STRING_H
 #include <string.h>
 #endif
@@ -61,7 +61,6 @@
 #if HAVE_ERRNO_H
 #include <errno.h>
 #endif
-
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
@@ -78,9 +77,6 @@
 #undef IN_ADDR
 #include <ws2tcpip.h>
 #endif
-
-#include "getaddrinfo.h"
-#include "inet_pton.h"
 
 static struct addrinfo *
 dup_addrinfo (struct addrinfo *info, void *addr, size_t addrlen) {
@@ -168,7 +164,7 @@ xgetaddrinfo (const char *nodename, const char *servname,
         return (*res == NULL) ? EAI_MEMORY : 0;
     }
 
-    /* If AI_NUMERIC is specified, use xinet_pton to translate numbers and
+    /* If AI_NUMERIC is specified, use inet_pton to translate numbers and
        dots notation. */
     if (hints->ai_flags & AI_NUMERICHOST) {
         struct sockaddr_in sin;
@@ -181,7 +177,7 @@ xgetaddrinfo (const char *nodename, const char *servname,
 
         sin.sin_family = result.ai_family;
         sin.sin_port = htons (port);
-        if (xinet_pton(result.ai_family, nodename, &sin.sin_addr))
+        if (inet_pton(result.ai_family, nodename, &sin.sin_addr))
             return EAI_NONAME;
         sin.sin_addr.s_addr = inet_addr (nodename);
         /* Duplicate result and addr and return */

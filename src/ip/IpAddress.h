@@ -36,11 +36,7 @@
 #ifndef _INC_IPADDRESS_H
 #define _INC_IPADDRESS_H
 
-#include "getaddrinfo.h"
-#include "getnameinfo.h"
-#include "inet_ntop.h"
-#include "inet_pton.h"
-
+#include "config.h"
 
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
@@ -51,11 +47,7 @@
 #ifdef _SQUID_MSWIN_
 #include <ws2tcpip.h>
 #endif
-#if HAVE_NETDB_H && !defined(_SQUID_NETDB_H_)   /* protect NEXTSTEP */
-#define _SQUID_NETDB_H_
-#ifdef _SQUID_NEXT_
-#include <netinet/in_systm.h>
-#endif
+#if HAVE_NETDB_H
 #include <netdb.h>
 #endif
 

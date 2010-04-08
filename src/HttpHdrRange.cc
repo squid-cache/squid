@@ -524,31 +524,29 @@ HttpHdrRange::lowestOffset(int64_t size) const
 }
 
 /*
- * Return true if the first range offset is larger than the configured
- * limit.
- * Note that exceeding the limit (returning true) results in only
- * grabbing the needed range elements from the origin.
+ * \retval true   Fetch only requested ranges. The first range is larger that configured limit.
+ * \retval false  Full download. Not a range request, no limit, or the limit is not yet reached.
  */
 bool
-HttpHdrRange::offsetLimitExceeded() const
+HttpHdrRange::offsetLimitExceeded(const int64_t limit) const
 {
     if (NULL == this)
         /* not a range request */
         return false;
 
-    if (Config.rangeOffsetLimit == 0)
-        /* disabled */
+    if (limit == 0)
+        /* 0 == disabled */
         return true;
 
-    if (-1 == Config.rangeOffsetLimit)
-        /* forced */
+    if (-1 == limit)
+        /* 'none' == forced */
         return false;
 
     if (firstOffset() == -1)
         /* tail request */
         return true;
 
-    if (Config.rangeOffsetLimit >= firstOffset())
+    if (limit >= firstOffset())
         /* below the limit */
         return false;
 

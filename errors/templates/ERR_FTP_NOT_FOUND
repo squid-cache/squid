@@ -30,7 +30,7 @@ body
 <pre>%g</pre>
 </blockquote>
 
-<p>This might be caused by an FTP URL with an absolute path (which does not comply with RFC 1738).  If this is the cause, then the file can be found at <a href="%B">%B</a>.</p>
+<p>This might be caused by an FTP URL with an absolute path (which does not comply with RFC 1738). If this is the cause, then the file can be found at <a href="%B">%B</a>.</p>
 
 <p>Your cache administrator is <a href="mailto:%w%W">%w</a>.</p>
 <br>

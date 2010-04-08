@@ -35,22 +35,21 @@
  */
 
 #include "config.h"
+#include "compat/inet_ntop.h"
+#include "compat/getaddrinfo.h"
 #include "Debug.h"
 #include "ip/IpAddress.h"
 #include "util.h"
 
-
 #if HAVE_ASSERT_H
 #include <assert.h>
-#endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
 #endif
 #if HAVE_STRING_H
 #include <string.h>
 #endif
 #if HAVE_ARPA_INET_H
-#include <arpa/inet.h>  /* inet_ntoa() */
+/* for inet_ntoa() */
+#include <arpa/inet.h>
 #endif
 
 #ifdef INET6
@@ -479,11 +478,11 @@ bool IpAddress::LookupHostIP(const char *s, bool nodns)
     want.ai_family = AF_INET;
 #endif
 
-    if ( (err = xgetaddrinfo(s, NULL, &want, &res)) != 0) {
-        debugs(14,3, HERE << "Given Bad IP '" << s << "': " << xgai_strerror(err) );
-        /* free the memory xgetaddrinfo() dynamically allocated. */
+    if ( (err = getaddrinfo(s, NULL, &want, &res)) != 0) {
+        debugs(14,3, HERE << "Given Bad IP '" << s << "': " << gai_strerror(err) );
+        /* free the memory getaddrinfo() dynamically allocated. */
         if (res) {
-            xfreeaddrinfo(res);
+            freeaddrinfo(res);
             res = NULL;
         }
         return false;
@@ -497,8 +496,8 @@ bool IpAddress::LookupHostIP(const char *s, bool nodns)
     operator=(*res);
     SetPort(port);
 
-    /* free the memory xgetaddrinfo() dynamically allocated. */
-    xfreeaddrinfo(res);
+    /* free the memory getaddrinfo() dynamically allocated. */
+    freeaddrinfo(res);
 
     res = NULL;
 
@@ -975,16 +974,16 @@ char* IpAddress::NtoA(char* buf, const unsigned int blen, int force) const
 #if USE_IPV6
     if ( force == AF_INET6 || (force == AF_UNSPEC && IsIPv6()) ) {
 
-        xinet_ntop(AF_INET6, &m_SocketAddr.sin6_addr, buf, blen);
+        inet_ntop(AF_INET6, &m_SocketAddr.sin6_addr, buf, blen);
 
     } else  if ( force == AF_INET || (force == AF_UNSPEC && IsIPv4()) ) {
 
         struct in_addr tmp;
         GetInAddr(tmp);
-        xinet_ntop(AF_INET, &tmp, buf, blen);
+        inet_ntop(AF_INET, &tmp, buf, blen);
 #else
     if ( force == AF_UNSPEC || (force == AF_INET && IsIPv4()) ) {
-        xinet_ntop(AF_INET, &m_SocketAddr.sin_addr, buf, blen);
+        inet_ntop(AF_INET, &m_SocketAddr.sin_addr, buf, blen);
 #endif
     } else {
         debugs(14,0,"WARNING: Corrupt IP Address details OR required to display in unknown format (" <<

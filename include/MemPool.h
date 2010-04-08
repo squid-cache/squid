@@ -209,7 +209,7 @@ public:
     /**
      * Free a element allocated by MemAllocator::alloc()
      */
-    virtual void free(void *) = 0;
+    virtual void freeOne(void *) = 0;
 
     virtual char const *objectType() const;
     virtual size_t objectSize() const = 0;
@@ -259,7 +259,7 @@ public:
     /**
      * Free a element allocated by MemAllocatorProxy::alloc()
      */
-    void free(void *);
+    void freeOne(void *);
 
     int inUseCount() const;
     size_t objectSize() const;
@@ -317,7 +317,7 @@ CLASS::operator new (size_t byteCount) \
 void \
 CLASS::operator delete (void *address) \
 { \
-    Pool().free(address); \
+    Pool().freeOne(address); \
 }
 
 /// \ingroup MemPoolsAPI
@@ -338,7 +338,7 @@ public:
     /**
      * Free a element allocated by MemImplementingAllocator::alloc()
      */
-    virtual void free(void *);
+    virtual void freeOne(void *);
 
     virtual bool idleTrigger(int shift) const = 0;
     virtual void clean(time_t maxage) = 0;

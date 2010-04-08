@@ -9,7 +9,7 @@
 #include "adaptation/icap/Xaction.h"
 #include "adaptation/icap/Launcher.h"
 #include "adaptation/icap/Config.h"
-#include "TextException.h"
+#include "base/TextException.h"
 #include "pconn.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
@@ -215,7 +215,6 @@ void Adaptation::Icap::Xaction::dieOnConnectionFailure()
 {
     debugs(93, 2, HERE << typeName <<
            " failed to connect to " << service().cfg().uri);
-    theService->noteFailure();
     throw TexcHere("cannot connect to the ICAP service");
 }
 
@@ -259,8 +258,6 @@ void Adaptation::Icap::Xaction::handleCommTimedout()
            theService->cfg().methodStr() << " " <<
            theService->cfg().uri << status());
     reuseConnection = false;
-    service().noteFailure();
-
     throw TexcHere(connector != NULL ?
                    "timed out while connecting to the ICAP service" :
                    "timed out while talking to the ICAP service");
@@ -281,6 +278,7 @@ void Adaptation::Icap::Xaction::handleCommClosed()
 void Adaptation::Icap::Xaction::callException(const std::exception  &e)
 {
     setOutcome(xoError);
+    service().noteFailure();
     Adaptation::Initiate::callException(e);
 }
 

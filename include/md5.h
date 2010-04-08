@@ -34,8 +34,6 @@
  *
  */
 
-#include "squid_types.h"
-
 typedef struct SquidMD5Context {
     uint32_t buf[4];
     uint32_t bytes[2];
