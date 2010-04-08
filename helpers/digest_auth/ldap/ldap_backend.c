@@ -5,6 +5,9 @@
  * ldap_backend.c
  * AUTHOR: Flavio Pescuma, MARA Systems AB <flavio@marasystems.com>
  */
+#define SQUID_NO_ALLOC_PROTECT 1
+#include "config.h"
+#include "util.h"
 
 #define LDAP_DEPRECATED 1
 
@@ -237,7 +240,7 @@ retrysrch:
                 }
             }
         } else if (userdnattr) {
-            sprintf(searchbase, "%s=%s, %s", userdnattr, login, userbasedn);
+            snprintf(searchbase, 8192, "%s=%s, %s", userdnattr, login, userbasedn);
 
 retrydnattr:
             if (debug)
@@ -274,7 +277,7 @@ retrydnattr:
             if (debug)
                 printf("password: %s\n", password);
             if (password)
-                password = strdup(password);
+                password = xstrdup(password);
             ldap_value_free(values);
             ldap_msgfree(res);
             return password;
@@ -435,7 +438,7 @@ LDAPArguments(int argc, char **argv)
                 free(ldapServer);
                 ldapServer = newhost;
             } else {
-                ldapServer = strdup(value);
+                ldapServer = xstrdup(value);
             }
             break;
         case 'A':
@@ -561,7 +564,7 @@ LDAPArguments(int argc, char **argv)
             free(ldapServer);
             ldapServer = newhost;
         } else {
-            ldapServer = strdup(value);
+            ldapServer = xstrdup(value);
         }
         argc--;
         argv++;
@@ -628,7 +631,7 @@ readSecret(const char *filename)
     if ((e = strrchr(buf, '\r')))
         *e = 0;
 
-    bindpasswd = strdup(buf);
+    bindpasswd = xstrdup(buf);
     if (!bindpasswd) {
         fprintf(stderr, PROGRAM_NAME " ERROR: can not allocate memory\n");
     }

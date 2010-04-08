@@ -312,6 +312,8 @@ squid_SOURCES = \
 	ExternalACL.h \
 	ExternalACLEntry.cc \
 	ExternalACLEntry.h \
+	FadingCounter.h \
+	FadingCounter.cc \
 	fd.cc \
 	fde.cc \
 	fde.h \
@@ -1226,6 +1228,7 @@ tests_testCacheManager_SOURCES = \
 	useragent.cc \
 	wccp2.cc \
 	whois.cc \
+	FadingCounter.cc \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testCacheManager_SOURCES = \
@@ -1407,6 +1410,7 @@ tests_testEvent_SOURCES = \
 	useragent.cc \
 	wccp2.cc \
 	whois.cc \
+	FadingCounter.cc \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testEvent_SOURCES = \
@@ -1560,6 +1564,7 @@ tests_testEventLoop_SOURCES = \
 	useragent.cc \
 	wccp2.cc \
 	whois.cc \
+	FadingCounter.cc \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testEventLoop_SOURCES = \
@@ -1706,6 +1711,7 @@ tests_test_http_range_SOURCES = \
 	useragent.cc \
 	wccp2.cc \
 	whois.cc \
+	FadingCounter.cc \
 	$(WIN32_SOURCE) \
 	wordlist.cc \
 	Packer.cc \
@@ -1861,6 +1867,7 @@ tests_testHttpRequest_SOURCES = \
 	useragent.cc \
 	wccp2.cc \
 	whois.cc \
+	FadingCounter.cc \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testHttpRequest_SOURCES = \
@@ -2231,6 +2238,7 @@ tests_testURL_SOURCES = \
 	useragent.cc \
 	wccp2.cc \
 	whois.cc \
+	FadingCounter.cc \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testURL_SOURCES = \
