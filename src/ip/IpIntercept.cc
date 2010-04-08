@@ -73,7 +73,6 @@
 #endif /* IPF_TRANSPARENT required headers */
 
 #if PF_TRANSPARENT
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <sys/fcntl.h>
@@ -88,7 +87,6 @@
 #endif /* PF_TRANSPARENT required headers */
 
 #if LINUX_NETFILTER
-#include <linux/types.h>
 #include <linux/netfilter_ipv4.h>
 #endif
 

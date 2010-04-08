@@ -1,6 +1,8 @@
+#ifndef SQUID_CONFIG_H
+#include "config.h"
+#endif
+
 /*
- * $Id$
- *
  * * * * * * * * Legal stuff * * * * * * *
  *
  * (C) 2000 Francesco Chemolli <kinkie@kame.usr.dsi.unimi.it>
@@ -49,7 +51,7 @@
  * from system locations or various attempts. This is just a convenience
  * header to include which takes care of proper preprocessor stuff
  *
- * This file is only intended to be included via config.h, do
+ * This file is only intended to be included via compat/compat.h, do
  * not include directly.
  */
 
@@ -63,8 +65,10 @@
 #if HAVE_LINUX_TYPES_H
 #include <linux/types.h>
 #endif
-#if STDC_HEADERS
+#if HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
+#if HAVE_STDDEF_H
 #include <stddef.h>
 #endif
 #if HAVE_INTTYPES_H
@@ -80,6 +84,12 @@
 /* Several OS require types declared by in_systm.h without including it themselves. */
 #include <netinet/in_systm.h>
 #endif
+
+
+/******************************************************/
+/* Typedefs for missing entries on a system           */
+/******************************************************/
+
 
 /*
  * ISO C99 Standard printf() macros for 64 bit integers
@@ -104,6 +114,130 @@
 #else
 #define PRIu64 "lu"
 #endif
+#endif
+
+/* int64_t */
+#ifndef HAVE_INT64_T
+#if HAVE___INT64
+typedef __int64 int64_t;
+#elif HAVE_LONG && SIZEOF_LONG == 8
+typedef long int64_t;
+#elif HAVE_LONG_LONG && SIZEOF_LONG_LONG == 8
+typedef long long int64_t;
+#else
+#error NO 64 bit signed type available
+#endif
+#endif
+
+/* u_int64_t */
+#ifndef HAVE_U_INT64_T
+#if HAVE_UINT64_T
+typedef uint64_t u_int64_t;
+#else
+typedef unsigned int64_t u_int64_t;
+#endif
+#endif
+
+/* int32_t */
+#ifndef HAVE_INT32_T
+#if HAVE_INT && SIZEOF_INT == 4
+typedef int int32_t;
+#elif HAVE_LONG && SIZEOF_LONG == 4
+typedef long int32_t;
+#else
+#error NO 32 bit signed type available
+#endif
+#endif
+
+/* u_int32_t */
+#ifndef HAVE_U_INT32_T
+#if HAVE_UINT32_T
+typedef uint32_t u_int32_t;
+#else
+typedef unsigned int32_t u_int32_t;
+#endif
+#endif
+
+/* int16_t */
+#ifndef HAVE_INT16_T
+#if HAVE_SHORT && SIZEOF_SHORT == 2
+typedef short int16_t;
+#elif HAVE_INT && SIZEOF_INT == 2
+typedef int int16_t;
+#else
+#error NO 16 bit signed type available
+#endif
+#endif
+
+/* u_int16_t */
+#ifndef HAVE_U_INT16_T
+#if HAVE_UINT16_T
+typedef uint16_t u_int16_t;
+#else
+typedef unsigned int16_t u_int16_t;
+#endif
+#endif
+
+/* int8_t */
+#ifndef HAVE_INT8_T
+#if HAVE_CHAR && SIZEOF_CHAR == 1
+typedef char int8_t;
+#else
+#error NO 8 bit signed type available
+#endif
+#endif
+
+/* u_int8_t */
+#ifndef HAVE_U_INT8_T
+#if HAVE_UINT8_T
+typedef uint8_t u_int8_t;
+#else
+typedef unsigned char u_int8_t;
+#endif
+#endif
+
+#ifndef HAVE_PID_T
+#if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
+typedef long pid_t;
+#else
+typedef int pid_t;
+#endif
+#endif
+
+#ifndef HAVE_SIZE_T
+typedef unsigned int size_t;
+#endif
+
+#ifndef HAVE_SSIZE_T
+typedef int ssize_t;
+#endif
+
+#ifndef HAVE_OFF_T
+#if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
+#if defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
+typedef int64_t off_t;
+#else
+typedef long off_t;
+#endif
+#else
+typedef int off_t;
+#endif
+#endif
+
+#ifndef HAVE_MODE_T
+typedef unsigned short mode_t;
+#endif
+
+#ifndef HAVE_FD_MASK
+typedef unsigned long fd_mask;
+#endif
+
+#ifndef HAVE_SOCKLEN_T
+typedef int socklen_t;
+#endif
+
+#ifndef HAVE_MTYP_T
+typedef long mtyp_t;
 #endif
 
 #endif /* SQUID_TYPES_H */

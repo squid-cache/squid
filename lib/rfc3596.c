@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -57,6 +56,7 @@
  */
 
 #include "config.h"
+#include "compat/inet_pton.h"
 #include "util.h"
 
 #if HAVE_STDIO_H
@@ -65,14 +65,8 @@
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
 #if HAVE_MEMORY_H
 #include <memory.h>
-#endif
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
 #endif
 #if HAVE_ASSERT_H
 #include <assert.h>
@@ -164,7 +158,6 @@ rfc3596BuildAAAAQuery(const char *hostname, char *buf, size_t sz, unsigned short
  * \return the size of the query
  */
 ssize_t
-
 rfc3596BuildPTRQuery4(const struct in_addr addr, char *buf, size_t sz, unsigned short qid, rfc1035_query * query)
 {
     static char rev[RFC1035_MAXHOSTNAMESZ];
@@ -181,13 +174,12 @@ rfc3596BuildPTRQuery4(const struct in_addr addr, char *buf, size_t sz, unsigned 
 }
 
 ssize_t
-
 rfc3596BuildPTRQuery6(const struct in6_addr addr, char *buf, size_t sz, unsigned short qid, rfc1035_query * query)
 {
     static char rev[RFC1035_MAXHOSTNAMESZ];
     const uint8_t* r = addr.s6_addr;
     char* p = rev;
-    int i; // NP: MUST allow signed for loop termination.
+    int i; /* NP: MUST allow signed for loop termination. */
 
     /* work from the raw addr field. anything else may have representation changes. */
     /* The sin6_port and sin6_addr members shall be in network byte order. */
@@ -209,7 +201,6 @@ rfc3596BuildPTRQuery6(const struct in6_addr addr, char *buf, size_t sz, unsigned
 #  undef main(a,b)
 
 #include <sys/socket.h>
-#include <sys/time.h>
 
 int
 main(int argc, char *argv[])
@@ -263,7 +254,7 @@ main(int argc, char *argv[])
         ((struct sockaddr_in6 *)S)->sin6_family = AF_INET6;
         ((struct sockaddr_in6 *)S)->sin6_port = htons(atoi(argv[var+1]));
 
-        if ( ! xinet_pton(AF_INET6, argv[var], &((struct sockaddr_in6 *)S)->sin6_addr.s_addr) )
+        if ( ! inet_pton(AF_INET6, argv[var], &((struct sockaddr_in6 *)S)->sin6_addr.s_addr) )
             perror("listen address");
         return 1;
     }
@@ -278,7 +269,7 @@ else
     ((struct sockaddr_in *)S)->sin_family = AF_INET;
     ((struct sockaddr_in *)S)->sin_port = htons(atoi(argv[var+1]));
 
-    if ( ! xinet_pton(AF_INET, argv[var], &((struct sockaddr_in *)S)->sin_addr.s_addr) )
+    if ( ! inet_pton(AF_INET, argv[var], &((struct sockaddr_in *)S)->sin_addr.s_addr) )
         perror("listen address");
     return 1;
 }
@@ -294,10 +285,10 @@ while (fgets(input, 512, stdin))
     memset(buf, '\0', 512);
     sz = 512;
 
-    if (xinet_pton(AF_INET6, input, &junk6)) {
+    if (inet_pton(AF_INET6, input, &junk6)) {
         sid = rfc1035BuildPTRQuery6(junk6, buf, &sz);
         sidb=0;
-    } else if (xinet_pton(AF_INET, input, &junk4)) {
+    } else if (inet_pton(AF_INET, input, &junk4)) {
         sid = rfc1035BuildPTRQuery4(junk4, buf, &sz);
         sidb=0;
     } else {

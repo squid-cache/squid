@@ -9,16 +9,11 @@
 
 #if USE_SQUID_EUI
 
+#include "compat/eui64_aton.h"
 #include "Debug.h"
 #include "eui/Eui64.h"
 #include "globals.h"
 #include "ip/IpAddress.h"
-
-#if HAVE_SYS_EUI64_H
-#include <sys/eui64.h>
-#else
-#include "eui64_aton.h"
-#endif
 
 bool
 Eui::Eui64::decode(const char *asc)

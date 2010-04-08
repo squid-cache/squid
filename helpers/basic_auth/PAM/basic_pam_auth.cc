@@ -65,6 +65,7 @@
  *
  * Compile this program with: gcc -o basic_pam_auth basic_pam_auth.cc -lpam -ldl
  */
+#define SQUID_NO_ALLOC_PROTECT 1
 #include "config.h"
 
 #include "rfc1738.h"
@@ -75,9 +76,6 @@
 #endif
 #if HAVE_ASSERT_H
 #include <assert.h>
-#endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
 #endif
 #if HAVE_STRING_H
 #include <string.h>
@@ -142,7 +140,7 @@ password_conversation(int num_msg, const struct pam_message **msg, struct pam_re
         fprintf(stderr, "ERROR: Out of memory!\n");
         return PAM_CONV_ERR;
     }
-    (*resp)[0].resp = strdup((char *) appdata_ptr);
+    (*resp)[0].resp = xstrdup((char *) appdata_ptr);
     (*resp)[0].resp_retcode = 0;
 
     return ((*resp)[0].resp ? PAM_SUCCESS : PAM_CONV_ERR);

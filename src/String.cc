@@ -34,8 +34,8 @@
  */
 
 #include "squid.h"
+#include "base/TextException.h"
 #include "Store.h"
-#include "TextException.h"
 
 int
 String::psize() const

@@ -3,15 +3,15 @@
  */
 
 #include "squid.h"
-#include "TextException.h"
-#include "HttpRequest.h"
-#include "HttpReply.h"
 #include "acl/FilledChecklist.h"
-#include "HttpMsg.h"
 #include "adaptation/icap/Launcher.h"
 #include "adaptation/icap/Xaction.h"
 #include "adaptation/icap/ServiceRep.h"
 #include "adaptation/icap/Config.h"
+#include "base/TextException.h"
+#include "HttpMsg.h"
+#include "HttpRequest.h"
+#include "HttpReply.h"
 
 
 Adaptation::Icap::Launcher::Launcher(const char *aTypeName,

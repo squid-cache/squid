@@ -31,19 +31,14 @@
  */
 
 #include "config.h"
+#include "compat/tempnam.h"
 #include "rfc1738.h"
 
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
 #if HAVE_STDIO_H
 #include <stdio.h>
-#endif
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
 #endif
 #if HAVE_CTYPE_H
 #include <ctype.h>
@@ -65,8 +60,7 @@
 #if HAVE_MEMORY_H
 #include <memory.h>
 #endif
-#if HAVE_NETDB_H && !defined(_SQUID_NETDB_H_)	/* protect NEXTSTEP */
-#define _SQUID_NETDB_H_
+#if HAVE_NETDB_H
 #include <netdb.h>
 #endif
 #if HAVE_PWD_H
@@ -80,12 +74,6 @@
 #endif
 #if HAVE_SYS_PARAM_H
 #include <sys/param.h>
-#endif
-#if HAVE_SYS_TIME_H
-#include <sys/time.h>
-#endif
-#if HAVE_SYS_RESOURCE_H
-#include <sys/resource.h>	/* needs sys/time.h above it */
 #endif
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
@@ -119,9 +107,6 @@
 #endif
 #if HAVE_CRYPT_H
 #include <crypt.h>
-#endif
-#if HAVE_SYS_SELECT_H
-#include <sys/select.h>
 #endif
 #if HAVE_FNMATCH_H
 extern "C" {
@@ -991,7 +976,7 @@ read_request(void)
     if (strlen(buf) == 0)
 #endif
     {
-        free(buf);
+        xfree(buf);
         return NULL;
     }
 

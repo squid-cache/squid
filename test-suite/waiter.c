@@ -1,5 +1,8 @@
-#include <sys/time.h>
+#include "config.h"
+
+#if HAVE_ASSERT_H
 #include <assert.h>
+#endif
 
 int
 main(int argc, char *argv[])

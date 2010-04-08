@@ -48,13 +48,6 @@ extern "C" {
     /* POSIX says that <sys/types.h> must be included (by the caller) before
      * <regex.h>.  */
 
-#ifdef VMS
-    /* VMS doesn't have `size_t' in <sys/types.h>, even though POSIX says it
-     * should be there.  */
-#include <stddef.h>
-#endif
-
-
     /* The following bits are used to determine the regexp syntax we
      * recognize.  The set/not-set meanings are chosen so that Emacs syntax
      * remains the value 0.  The bits are given in alphabetical order, and

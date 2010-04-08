@@ -173,14 +173,14 @@ EXTRA_PROGRAMS = \
 	recv-announce \
 	tests/testUfs \
 	tests/testCoss \
-	tests/testNull
+	tests/testNull \
+	ufsdump
 
 ## cfgen is used when building squid
 ## ufsdump is a debug utility, it is possibly useful for end users with cache
 ## corruption, but at this point we do not install it.
 noinst_PROGRAMS = \
-	cf_gen \
-	ufsdump
+	cf_gen
 
 sbin_PROGRAMS = \
 	squid
@@ -249,9 +249,7 @@ libsquid_la_SOURCES = \
 	CommCalls.h \
 	DescriptorSet.cc \
 	DescriptorSet.h \
-	SquidConfig.cc \
-        TextException.cc \
-        TextException.h
+	SquidConfig.cc
 
 squid_SOURCES = \
 	$(ACL_REGISTRATION_SOURCES) \
@@ -314,6 +312,8 @@ squid_SOURCES = \
 	ExternalACL.h \
 	ExternalACLEntry.cc \
 	ExternalACLEntry.h \
+	FadingCounter.h \
+	FadingCounter.cc \
 	fd.cc \
 	fde.cc \
 	fde.h \
@@ -622,6 +622,7 @@ ufsdump_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	String.cc \
+	SquidNew.cc \
 	time.cc \
 	ufsdump.cc \
 	dlink.h \
@@ -721,7 +722,7 @@ libDiskThreads_a_SOURCES = \
 		DiskIO/DiskThreads/DiskThreadsIOStrategy.h
 
 DiskIO_DiskDaemon_diskd_SOURCES = DiskIO/DiskDaemon/diskd.cc 
-DiskIO_DiskDaemon_diskd_LDADD = $(top_builddir)/lib/libmiscutil.a $(XTRA_LIBS)
+DiskIO_DiskDaemon_diskd_LDADD = $(COMPAT_LIB) $(XTRA_LIBS)
 
 
 DEFAULT_HTTP_PORT	= $(CACHE_HTTP_PORT)
@@ -967,9 +968,10 @@ tests_testHttpReply_LDADD=\
 	acl/libstate.la \
 	auth/libauth.la \
 	ip/libip.la \
+	base/libbase.la \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
-	-L../lib -lmiscutil \
+	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testHttpReply_DEPENDENCIES= $(SQUID_CPPUNIT_LA) \
 	$(top_builddir)/lib/libmiscutil.a
@@ -1227,6 +1229,7 @@ tests_testCacheManager_SOURCES = \
 	useragent.cc \
 	wccp2.cc \
 	whois.cc \
+	FadingCounter.cc \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testCacheManager_SOURCES = \
@@ -1409,6 +1412,7 @@ tests_testEvent_SOURCES = \
 	useragent.cc \
 	wccp2.cc \
 	whois.cc \
+	FadingCounter.cc \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testEvent_SOURCES = \
@@ -1563,6 +1567,7 @@ tests_testEventLoop_SOURCES = \
 	useragent.cc \
 	wccp2.cc \
 	whois.cc \
+	FadingCounter.cc \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testEventLoop_SOURCES = \
@@ -1710,6 +1715,7 @@ tests_test_http_range_SOURCES = \
 	useragent.cc \
 	wccp2.cc \
 	whois.cc \
+	FadingCounter.cc \
 	$(WIN32_SOURCE) \
 	wordlist.cc \
 	Packer.cc \
@@ -1866,6 +1872,7 @@ tests_testHttpRequest_SOURCES = \
 	useragent.cc \
 	wccp2.cc \
 	whois.cc \
+	FadingCounter.cc \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testHttpRequest_SOURCES = \
@@ -2235,6 +2242,7 @@ tests_testURL_SOURCES = \
 	useragent.cc \
 	wccp2.cc \
 	whois.cc \
+	FadingCounter.cc \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testURL_SOURCES = \
