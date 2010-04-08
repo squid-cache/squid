@@ -873,7 +873,7 @@ fqdncacheAddEntryFromHosts(char *addr, wordlist * hostnames)
 }
 
 
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 /**
  *  \ingroup FQDNCacheAPI
  * The function to return the FQDN statistics via SNMP

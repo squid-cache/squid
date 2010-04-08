@@ -56,7 +56,7 @@
    #ifndef to exclude the internal DNS code from compile process when
    using external DNS process.
  */
-#ifndef USE_DNSSERVERS
+#if !USE_DNSSERVERS
 #ifdef _SQUID_WIN32_
 #include "squid_windows.h"
 #define REG_TCPIP_PARA_INTERFACES "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces"
@@ -1634,7 +1634,7 @@ idnsPTRLookup(const IpAddress &addr, IDNSCB * callback, void *data)
     idnsSendQuery(q);
 }
 
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 /*
  * The function to return the DNS via SNMP
  */

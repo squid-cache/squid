@@ -108,13 +108,13 @@ using namespace Squid;
 #if HAVE_LIBC_H
 #include <libc.h>
 #endif
-#ifdef HAVE_SYS_SYSCALL_H
+#if HAVE_SYS_SYSCALL_H
 #include <sys/syscall.h>
 #endif
-#ifdef HAVE_STRING_H
+#if HAVE_STRING_H
 #include <string.h>
 #endif
-#ifdef HAVE_STRINGS_H
+#if HAVE_STRINGS_H
 #include <strings.h>
 #endif
 #if HAVE_BSTRING_H
@@ -157,7 +157,7 @@ using namespace Squid;
 #if USE_SSL
 #include "ssl_support.h"
 #endif
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 #include "cache_snmp.h"
 #endif
 #include "hash.h"
