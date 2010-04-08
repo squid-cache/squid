@@ -84,8 +84,8 @@ SQUID_STATE_COMMIT($1)
 
 
 dnl look for modules in the base-directory supplied as argument.
-dnl fill-in the variable pointed-to by the second argument with the space-separated
-dnl list of modules 
+dnl fill-in the variable pointed-to by the second argument with the
+dnl space-separated list of modules 
 AC_DEFUN([SQUID_LOOK_FOR_MODULES],[
 for dir in $1/*; do
   module="`basename $dir`"
