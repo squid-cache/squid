@@ -33,11 +33,11 @@
  */
 
 #include "squid.h"
+#include "base/TextException.h"
 #include "Server.h"
 #include "Store.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
-#include "TextException.h"
 #include "errorpage.h"
 #include "SquidTime.h"
 

@@ -71,7 +71,8 @@ ACLFilledChecklist::checkCallback(allow_t answer)
         /* the filled_checklist lock */
         auth_user_request = NULL;
         /* it might have been connection based */
-        if(conn()) {
+        /* BUG 2827: the connection may also not exist. ie fast ACL tests vs client disconnection. */
+        if (conn()) {
             conn()->auth_user_request = NULL;
             conn()->auth_type = AUTH_BROKEN;
         }

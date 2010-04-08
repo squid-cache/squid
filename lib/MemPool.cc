@@ -555,7 +555,7 @@ MemImplementingAllocator::alloc()
 }
 
 void
-MemImplementingAllocator::free(void *obj)
+MemImplementingAllocator::freeOne(void *obj)
 {
     assert(obj != NULL);
     (void) VALGRIND_CHECK_MEM_IS_ADDRESSABLE(obj, obj_size);
@@ -882,9 +882,9 @@ MemAllocatorProxy::alloc()
 }
 
 void
-MemAllocatorProxy::free(void *address)
+MemAllocatorProxy::freeOne(void *address)
 {
-    getAllocator()->free(address);
+    getAllocator()->freeOne(address);
     /* TODO: check for empty, and if so, if the default type has altered,
      * switch
      */

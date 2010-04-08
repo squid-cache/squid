@@ -511,6 +511,10 @@ struct SquidConfig {
         int n_allocated;
         int n_configured;
     } cacheSwap;
+    /*
+     * I'm sick of having to keep doing this ..
+     */
+#define INDEXSD(i)   (Config.cacheSwap.swapDirs[(i)].getRaw())
 
     struct {
         char *directory;
@@ -546,7 +550,7 @@ struct SquidConfig {
     } comm_incoming;
     int max_open_disk_fds;
     int uri_whitespace;
-    int64_t rangeOffsetLimit;
+    acl_size_t *rangeOffsetLimit;
 #if MULTICAST_MISS_STREAM
 
     struct {

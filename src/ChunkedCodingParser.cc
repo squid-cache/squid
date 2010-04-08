@@ -1,6 +1,6 @@
 #include "squid.h"
+#include "base/TextException.h"
 #include "Parsing.h"
-#include "TextException.h"
 #include "ChunkedCodingParser.h"
 #include "MemBuf.h"
 

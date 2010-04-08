@@ -1,3 +1,22 @@
+Changes to squid-3.1.1 (29 Mar 2010):
+
+	- Bug 2873: undefined symbol
+	- Bug 2827: assertion in authentication
+	- Remove ufsdump binary from default builds
+	- Remove pinger from default startups
+	- ... and several documentation updates.
+
+Changes to squid-3.1.0.18 (14 Mar 2010):
+
+	- Regression Fix: IPv4-mapped prefix, broken in 3.1.0.16
+	- Bug 2869: Remove unused external reference
+	- Bug 2866: Support OpenSSL 1.0
+	- Bug 2813: Random unix_group crash at startup
+	- Send HTTP1.1 compliant 417 responses
+	- Associate external acl message with the request
+	- Various Digest parser fixes
+	- ... and all bug fixes from 3.0 up to 3.0.STABLE25
+
 Changes to squid-3.1.0.17 (24 Feb 2010):
 
 	- Regression Fix: Non-English error page UTF encoding
@@ -287,6 +306,14 @@ Changes to squid-3.1.0.1 (27 Oct 2008):
 	- Follow_x_forwarder_for ported from 2.6
 	- Bug #2223: Follow XFF extensions added
 	- ... and many code and documentation cleanups
+
+Changes to squid-3.0.STABLE25 (14 Mar 2010):
+
+	- Bug 2845: Rework the http digest auth parser
+	- Bug 2787: unknown/unexpected status code messages
+	- Bug 2507: squid_ldap_group: Strip Domain name separated by +
+	- Bug 2367: stale=true on digest requests with unknown nonce
+	- ... and several other minor corrections
 
 Changes to squid-3.0.STABLE24 (13 Feb 2010):
 

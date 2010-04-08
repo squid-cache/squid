@@ -1,10 +1,10 @@
 #include "squid.h"
-#include "wordlist.h"
-#include "HttpReply.h"
-#include "adaptation/icap/Options.h"
-#include "TextException.h"
 #include "adaptation/icap/Config.h"
+#include "adaptation/icap/Options.h"
+#include "base/TextException.h"
+#include "HttpReply.h"
 #include "SquidTime.h"
+#include "wordlist.h"
 
 Adaptation::Icap::Options::Options(): error("unconfigured"),
         max_connections(-1), allow204(false),

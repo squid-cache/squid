@@ -248,8 +248,12 @@ public:
         cbdataReferenceDone(pinned_connection);
     }
 
+    int64_t getRangeOffsetLimit(); /* the result of this function gets cached in rangeOffsetLimit */
+
 private:
     const char *packableURI(bool full_uri) const;
+
+    mutable int64_t rangeOffsetLimit;  /* caches the result of getRangeOffsetLimit */
 
 protected:
     virtual void packFirstLineInto(Packer * p, bool full_uri) const;

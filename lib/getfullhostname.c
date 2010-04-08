@@ -33,44 +33,12 @@
  */
 #include "getfullhostname.h"
 
-#if 0 /* we SHOULD NOT need ALL these here. */
-#if HAVE_LIBC_H
-#include <libc.h>
-#endif
-#if HAVE_STDIO_H
-#include <stdio.h>
-#endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#if HAVE_STRING_H
-#include <string.h>
-#endif
-#if HAVE_SYS_PARAM_H
-#include <sys/param.h>
-#endif
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#if HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
-#if HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#endif
-#if HAVE_ARPA_INET_H
-#include <arpa/inet.h>
-#endif
-
-#endif // 0
-
 
 #if HAVE_UNISTD_H
 /* for gethostname() function */
 #include <unistd.h>
 #endif
-#if HAVE_NETDB_H && !defined(_SQUID_NETDB_H_)	/* protect on NEXTSTEP */
-#define _SQUID_NETDB_H_
+#if HAVE_NETDB_H
 /* for gethostbyname() */
 #include <netdb.h>
 #endif
@@ -78,7 +46,7 @@
 /* for RFC 2181 constants */
 #include "rfc2181.h"
 
-/* for xstrncpy() - may need breakign out of there. */
+/* for xstrncpy() - may need breaking out of there. */
 #include "util.h"
 
 /**
@@ -96,7 +64,7 @@ getfullhostname(void)
 
     if (gethostname(buf, RFC2181_MAXHOSTNAMELEN) < 0)
         return NULL;
-    /** \todo convert this to a xgetaddrinfo() call */
+    /** \todo convert this to a getaddrinfo() call */
     if ((hp = gethostbyname(buf)) != NULL)
         xstrncpy(buf, hp->h_name, RFC2181_MAXHOSTNAMELEN);
     return buf;

@@ -244,18 +244,18 @@ For directories using the RFC2307 layout with a single domain, all
 you need to specify is usually the base DN under where your users
 are located and the server name:
 .IP
-.if !'po4a'hide' .R basic_ldap_auth -b "ou=people,dc=your,dc=domain" ldapserver
+.if !'po4a'hide' .B basic_ldap_auth -b "ou=people,dc=your,dc=domain" ldapserver
 .PP
 If you have sub\-domains then you need to use a search filter approach
 to locate your user DNs as these can no longer be constructed direcly
 from the base DN and login name alone:
 .IP
-.if !'po4a'hide' .R basic_ldap_auth -b "dc=your,dc=domain" -f "uid=%s" ldapserver
+.if !'po4a'hide' .B basic_ldap_auth -b "dc=your,dc=domain" -f "uid=%s" ldapserver
 .PP
 And similarily if you only want to allow access to users having a
 specific attribute
 .IP
-.if !'po4a'hide' .R basic_ldap_auth -b "dc=your,dc=domain" -f "(&(uid=%s)(specialattribute=value))" ldapserver
+.if !'po4a'hide' .B basic_ldap_auth -b "dc=your,dc=domain" -f "(&(uid=%s)(specialattribute=value))" ldapserver
 .PP
 Or if the user attribute of the user DN is
 .B "cn"
@@ -264,7 +264,7 @@ instead of
 and you do not want to have to search for the users then you could use something
 like the following example for Active Directory:
 .IP
-.if !'po4a'hide' .R basic_ldap_auth -u cn -b "cn=Users,dc=your,dc=domain" ldapserver
+.if !'po4a'hide' .B basic_ldap_auth -u cn -b "cn=Users,dc=your,dc=domain" ldapserver
 .PP
 If you want to search for the user DN and your directory does not allow
 anonymous searches then you must also use the
@@ -274,7 +274,7 @@ and
 flags to specify a user DN and password to log in as to perform the searches, as in the
 following complex Active Directory example
 .IP
-.if !'po4a'hide' .R basic_ldap_auth -P -R -b "dc=your,dc=domain" -D "cn=squid,cn=users,dc=your,dc=domain" -w "secretsquidpassword" -f "(&(userPrincipalName=%s)(objectClass=Person))" activedirectoryserver
+.if !'po4a'hide' .B basic_ldap_auth -P -R -b "dc=your,dc=domain" -D "cn=squid,cn=users,dc=your,dc=domain" -w "secretsquidpassword" -f "(&(userPrincipalName=%s)(objectClass=Person))" activedirectoryserver
 .
 .PP
 .B NOTE:
@@ -296,7 +296,7 @@ This manual is written by
 .SH COPYRIGHT
 This program and documentation is copyright to the authors named above.
 .PP
-Distributed under the GNU General Public License (GNU GPL) version 2 or later (GPL2+).
+Distributed under the GNU General Public License (GNU GPL) version 2 or later (GPLv2+).
 .
 .SH QUESTIONS
 Questions on the usage of this program can be sent to the
@@ -307,6 +307,9 @@ Or to your favorite LDAP list/friend if the question is more related to
 LDAP than Squid.
 .
 .SH REPORTING BUGS
+Bug reports need to be made in English.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+.PP
 Report bugs or bug fixes using http://bugs.squid-cache.org/
 .PP
 Report serious security bugs to

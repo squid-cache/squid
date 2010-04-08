@@ -61,7 +61,7 @@ IdleConnList::~IdleConnList()
     parent->unlinkList(this);
 
     if (nfds_alloc == PCONN_FDS_SZ)
-        pconn_fds_pool->free(fds);
+        pconn_fds_pool->freeOne(fds);
     else
         xfree(fds);
 
@@ -118,7 +118,7 @@ IdleConnList::push(int fd)
         xmemcpy(fds, old, nfds * sizeof(int));
 
         if (nfds == PCONN_FDS_SZ)
-            pconn_fds_pool->free(old);
+            pconn_fds_pool->freeOne(old);
         else
             xfree(old);
     }

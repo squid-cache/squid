@@ -30,9 +30,10 @@
  *
  */
 #include "squid.h"
-#include "comm.h"
-#include "cache_snmp.h"
 #include "acl/FilledChecklist.h"
+#include "cache_snmp.h"
+#include "comm.h"
+#include "compat/strsep.h"
 #include "ip/IpAddress.h"
 
 #define SNMP_REQUEST_SIZE 4096
