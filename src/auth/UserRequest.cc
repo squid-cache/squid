@@ -135,32 +135,20 @@ AuthUserRequest::AuthUserRequest():_auth_user(NULL), message(NULL),
 
 AuthUserRequest::~AuthUserRequest()
 {
-    dlink_node *link;
+    assert(RefCountCount()==0);
     debugs(29, 5, "AuthUserRequest::~AuthUserRequest: freeing request " << this);
 
     if (user()) {
+#if USER_REQUEST_LOOP_DEAD
         /* AYJ: something strange: in order to be deleted this object must not be
          * referenced anywhere. Including the AuthUser list of requests.
          * I expect the following loop to NEVER find a pointer to this request object.
          */
+        user()->doneRequest(this);
+#endif /* USER_REQUEST_LOOP_DEAD */
 
-        /* unlink from the auth_user struct */
-        link = user()->requests.head;
-
-        while (link) {
-
-            assert( static_cast<AuthUserRequest::Pointer*>(link->data)->getRaw() != this );
-
-            if (static_cast<AuthUserRequest::Pointer*>(link->data)->getRaw() == this) {
-                dlinkDelete(link, &user()->requests);
-                dlinkNodeDelete(link);
-            }
-            link = link->next;
-        }
-
-        /* unlock the request structure's lock */
+        /* unlock the request structure's lock and release it */
         user()->unlock();
-
         user(NULL);
     }
 

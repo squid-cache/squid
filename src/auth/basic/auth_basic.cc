@@ -212,8 +212,6 @@ AuthBasicConfig::dump(StoreEntry * entry, const char *name, AuthConfig * scheme)
 }
 
 AuthBasicConfig::AuthBasicConfig() :
-        authenticateChildren(20),
-        authenticate(NULL),
         credentialsTTL( 2*60*60 ),
         casesensitive(0),
         utf8(0)
@@ -387,6 +385,10 @@ BasicUser::valid() const
     return true;
 }
 
+/**
+ * Generate a duplicate of the bad credentials before clearing the working copy.
+ * apparently for logging, but WTF?!
+ */
 void
 BasicUser::makeLoggingInstance(AuthUserRequest::Pointer auth_user_request)
 {
@@ -401,8 +403,10 @@ BasicUser::makeLoggingInstance(AuthUserRequest::Pointer auth_user_request)
         username(NULL);
         /* set the auth_user type */
         basic_auth->auth_type = AUTH_BROKEN;
+#if USER_REQUEST_LOOP_DEAD
         /* link the request to the user */
         basic_auth->addRequest(auth_user_request);
+#endif /* USER_REQUEST_LOOP_DEAD */
     }
 }
 
@@ -494,7 +498,9 @@ AuthBasicConfig::decode(char const *proxy_auth)
 
     /* link the request to the in-cache user */
     auth_user_request->user(basic_auth);
+#if USER_REQUEST_LOOP_DEAD
     basic_auth->addRequest(auth_user_request);
+#endif /* USER_REQUEST_LOOP_DEAD */
     return auth_user_request;
 }
 

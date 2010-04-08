@@ -63,7 +63,7 @@ static hash_table *digest_nonce_cache;
 static int authdigest_initialised = 0;
 static MemAllocator *digest_nonce_pool = NULL;
 
-CBDATA_TYPE(DigestAuthenticateStateData);
+// CBDATA_TYPE(DigestAuthenticateStateData);
 
 enum http_digest_attr_type {
     DIGEST_USERNAME,
@@ -676,7 +676,7 @@ AuthDigestConfig::done()
     safe_free(digestAuthRealm);
 }
 
-AuthDigestConfig::AuthDigestConfig() : authenticateChildren(20), authenticate(NULL)
+AuthDigestConfig::AuthDigestConfig()
 {
     /* TODO: move into initialisation list */
     /* 5 minutes */
@@ -828,7 +828,9 @@ authDigestLogUsername(char *username, AuthUserRequest::Pointer auth_user_request
     /* link the request to the user */
     auth_user_request->user(digest_user);
     digest_user->lock();
+#if USER_REQUEST_LOOP_DEAD
     digest_user->addRequest(auth_user_request);
+#endif
     return auth_user_request;
 }
 
@@ -1090,8 +1092,9 @@ AuthDigestConfig::decode(char const *proxy_auth)
 
     digest_user->lock();
     digest_request->user(digest_user);
-
+#if USER_REQUEST_LOOP_DEAD
     digest_user->addRequest(digest_request);
+#endif
 
     debugs(29, 9, "username = '" << digest_user->username() << "'\nrealm = '" <<
            digest_request->realm << "'\nqop = '" << digest_request->qop <<

@@ -33,10 +33,12 @@
 #define SQUID_AUTHCONFIG_H
 
 #include "auth/UserRequest.h"
+#include "HelperChildConfig.h"
 
 class StoreEntry;
 class HttpReply;
 class HttpRequest;
+class wordlist;
 
 /* for http_hdr_type parameters-by-value */
 #include "HttpHeader.h"
@@ -60,7 +62,7 @@ public:
     static AuthUserRequest::Pointer CreateAuthUser(const char *proxy_auth);
 
     static AuthConfig *Find(const char *proxy_auth);
-    AuthConfig() {}
+    AuthConfig() : authenticateChildren(20), authenticate(NULL) {}
 
     virtual ~AuthConfig() {}
 
@@ -119,6 +121,10 @@ public:
     virtual void parse(AuthConfig *, int, char *) = 0;
     /** the http string id */
     virtual const char * type() const = 0;
+
+public:
+    HelperChildConfig authenticateChildren;    
+    wordlist *authenticate;
 };
 
 namespace Auth

@@ -504,7 +504,7 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry * aLogEntry)
         if (request->auth_user_request->username())
             aLogEntry->cache.authuser = xstrdup(request->auth_user_request->username());
 
-        request->auth_user_request = NULL;
+// WTF??        request->auth_user_request = NULL;
     }
 }
 

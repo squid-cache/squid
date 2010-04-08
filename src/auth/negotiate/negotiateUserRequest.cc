@@ -25,6 +25,7 @@ AuthNegotiateUserRequest::AuthNegotiateUserRequest() :
 
 AuthNegotiateUserRequest::~AuthNegotiateUserRequest()
 {
+    assert(RefCountCount()==0);
     safe_free(server_blob);
     safe_free(client_blob);
 
