@@ -623,7 +623,7 @@ HttpRequest::getRangeOffsetLimit()
     /* -2 is the starting value of rangeOffsetLimit.
      * If it is -2, that means we haven't checked it yet.
      *  Otherwise, return the current value */
-    if(rangeOffsetLimit != -2)
+    if (rangeOffsetLimit != -2)
         return rangeOffsetLimit;
 
     rangeOffsetLimit = 0; // default value for rangeOffsetLimit
