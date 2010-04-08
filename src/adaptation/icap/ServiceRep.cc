@@ -18,7 +18,7 @@ CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Icap, ServiceRep);
 Adaptation::Icap::ServiceRep::ServiceRep(const Adaptation::ServiceConfig &svcCfg):
         AsyncJob("Adaptation::Icap::ServiceRep"), Adaptation::Service(svcCfg),
         theOptions(NULL), theOptionsFetcher(0), theLastUpdate(0),
-        theSessionFailures(0), isSuspended(0), notifying(false),
+        isSuspended(0), notifying(false),
         updateScheduled(false), self(NULL),
         wasAnnouncedUp(true) // do not announce an "up" service at startup
 {}
@@ -53,6 +53,9 @@ Adaptation::Icap::ServiceRep::finalize()
             writeableCfg().port = 1344;
         }
     }
+
+    theSessionFailures.configure(TheConfig.oldest_service_failure > 0 ?
+                                 TheConfig.oldest_service_failure : -1);
 }
 
 void Adaptation::Icap::ServiceRep::invalidate()
@@ -69,15 +72,16 @@ void Adaptation::Icap::ServiceRep::invalidate()
 
 void Adaptation::Icap::ServiceRep::noteFailure()
 {
-    ++theSessionFailures;
-    debugs(93,4, HERE << " failure " << theSessionFailures << " out of " <<
-           TheConfig.service_failure_limit << " allowed " << status());
+    const int failures = theSessionFailures.count(1);
+    debugs(93,4, HERE << " failure " << failures << " out of " <<
+           TheConfig.service_failure_limit << " allowed in " <<
+           TheConfig.oldest_service_failure << "sec " << status());
 
     if (isSuspended)
         return;
 
     if (TheConfig.service_failure_limit >= 0 &&
-            theSessionFailures > TheConfig.service_failure_limit)
+            failures > TheConfig.service_failure_limit)
         suspend("too many failures");
 
     // TODO: Should bypass setting affect how much Squid tries to talk to
@@ -235,7 +239,7 @@ void Adaptation::Icap::ServiceRep::changeOptions(Adaptation::Icap::Options *newO
 
     delete theOptions;
     theOptions = newOptions;
-    theSessionFailures = 0;
+    theSessionFailures.clear();
     isSuspended = 0;
     theLastUpdate = squid_curtime;
 
@@ -463,8 +467,8 @@ const char *Adaptation::Icap::ServiceRep::status() const
     if (notifying)
         buf.append(",notif", 6);
 
-    if (theSessionFailures > 0)
-        buf.Printf(",fail%d", theSessionFailures);
+    if (const int failures = theSessionFailures.remembered())
+        buf.Printf(",fail%d", failures);
 
     buf.append("]", 1);
     buf.terminate();
