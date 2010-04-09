@@ -33,7 +33,7 @@
  * __FD_SETSIZE. Ofcourse a user program may NEVER include bits/whatever.h
  * directly, so this is a dirty hack!
  */
-#if defined(_SQUID_LINUX_)
+#if _SQUID_LINUX_ || _SQUID_KFREEBSD_
 #undef CHANGE_FD_SETSIZE
 #define CHANGE_FD_SETSIZE 0
 #include <features.h>
@@ -52,7 +52,7 @@
  * --Marian Durkovic <marian@svf.stuba.sk>
  * --Peter Wemm <peter@spinner.DIALix.COM>
  */
-#if defined(_SQUID_FREEBSD_)
+#if _SQUID_FREEBSD_
 #include <osreldate.h>
 #if __FreeBSD_version < 220000
 #undef CHANGE_FD_SETSIZE
@@ -64,7 +64,7 @@
  * Trying to redefine CHANGE_FD_SETSIZE causes a slew of warnings
  * on Mac OS X Server.
  */
-#if defined(_SQUID_APPLE_)
+#if _SQUID_APPLE_
 #undef CHANGE_FD_SETSIZE
 #define CHANGE_FD_SETSIZE 0
 #endif
