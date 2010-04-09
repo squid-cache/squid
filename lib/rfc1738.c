@@ -174,8 +174,7 @@ rfc1738_unescape(char *s)
             j++;		/* Skip % */
         } else {
             /* decode */
-            char v1, v2;
-            int x;
+            int v1, v2, x;
             v1 = fromhex(s[j + 1]);
             if (v1 < 0)
                 continue;  /* non-hex or \0 */
