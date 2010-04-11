@@ -154,8 +154,6 @@ noinst_LTLIBRARIES = libsquid.la
 
 # libraries used by many targets
 COMMON_LIBS = \
-	base/libbase.la \
-	libsquid.la \
 	auth/libacls.la \
 	ident/libident.la \
 	acl/libacls.la \
@@ -163,6 +161,8 @@ COMMON_LIBS = \
 	acl/libstate.la \
 	auth/libauth.la \
 	acl/libapi.la \
+	base/libbase.la \
+	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la
 
@@ -755,7 +755,7 @@ snmp_core.o snmp_agent.o: ../snmplib/libsnmp.a $(top_srcdir)/include/cache_snmp.
 globals.cc: globals.h mk-globals-c.awk
 	$(AWK) -f $(srcdir)/mk-globals-c.awk < $(srcdir)/globals.h > $@
 
-## Generate files containing strng arrays for various enums....
+## Generate files containing string arrays for various enums....
 hier_code.cc: hier_code.h mk-string-arrays.awk
 	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/hier_code.h > $@
 
@@ -981,6 +981,7 @@ tests_testAuth_SOURCES = \
 	ConfigParser.cc \
 	HelperChildConfig.h \
 	HelperChildConfig.cc \
+	ip/stubQosConfig.cc \
 	tests/stub_acl.cc tests/stub_cache_cf.cc \
 	tests/stub_helper.cc cbdata.cc String.cc \
 	tests/stub_store.cc HttpHeaderTools.cc HttpHeader.cc mem.cc ClientInfo.h \

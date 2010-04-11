@@ -30,7 +30,7 @@ ACLFilledChecklist::authenticated()
 
     /* get authed here */
     /* Note: this fills in auth_user_request when applicable */
-    auth_acl_t result = AuthUserRequest::tryToAuthenticateAndSetAuthUser(&auth_user_request, headertype, request, conn(), src_addr);
+    AuthAclState result = AuthUserRequest::tryToAuthenticateAndSetAuthUser(&auth_user_request, headertype, request, conn(), src_addr);
     switch (result) {
 
     case AUTH_ACL_CANNOT_AUTHENTICATE:

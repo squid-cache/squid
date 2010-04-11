@@ -47,7 +47,7 @@ AuthUser::username () const
 }
 
 void
-AuthUser::username(char const*aString)
+AuthUser::username(char const *aString)
 {
     if (aString) {
         assert(!username_);

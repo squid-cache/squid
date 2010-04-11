@@ -92,6 +92,18 @@ AuthBasicConfig::type() const
     return basicScheme::GetInstance()->type();
 }
 
+int32_t
+BasicUser::ttl() const
+{
+    if (flags.credentials_ok != 1)
+        return -1; // TTL is obsolete NOW.
+
+    int32_t basic_ttl = credentials_checkedtime - squid_curtime + static_cast<AuthBasicConfig*>(config)->credentialsTTL;
+    int32_t global_ttl = static_cast<int32_t>(expiretime - squid_curtime + Config.authenticateTTL);
+
+    return min(basic_ttl, global_ttl);
+}
+
 
 bool
 BasicUser::authenticated() const
@@ -158,7 +170,10 @@ authenticateBasicHandleReply(void *data, char *reply)
 
     assert(r->auth_user_request != NULL);
     assert(r->auth_user_request->user()->auth_type == AUTH_BASIC);
-    basic_data *basic_auth = dynamic_cast<basic_data *>(r->auth_user_request->user());
+
+    /* this is okay since we only play with the BasicUser child fields below
+     * and dont pass the pointer itself anywhere */
+    BasicUser *basic_auth = dynamic_cast<BasicUser *>(r->auth_user_request->user().getRaw());
 
     assert(basic_auth != NULL);
 
@@ -255,7 +270,7 @@ authenticateBasicStats(StoreEntry * sentry)
     helperStats(sentry, basicauthenticators, "Basic Authenticator Statistics");
 }
 
-static AuthUser *
+static AuthUser::Pointer
 authBasicAuthUserFindUsername(const char *username)
 {
     AuthUserHashPointer *usernamehash;
@@ -280,7 +295,7 @@ BasicUser::deleteSelf() const
     delete this;
 }
 
-BasicUser::BasicUser(AuthConfig *aConfig) : AuthUser (aConfig) , passwd (NULL), credentials_checkedtime(0), auth_queue(NULL), cleartext (NULL), currentRequest (NULL), httpAuthHeader (NULL)
+BasicUser::BasicUser(AuthConfig *aConfig) : AuthUser(aConfig) , passwd (NULL), credentials_checkedtime(0), auth_queue(NULL), cleartext(NULL), currentRequest(NULL), httpAuthHeader(NULL)
 {
     flags.credentials_ok = 0;
 }
@@ -387,7 +402,6 @@ BasicUser::valid() const
 
 /**
  * Generate a duplicate of the bad credentials before clearing the working copy.
- * apparently for logging, but WTF?!
  */
 void
 BasicUser::makeLoggingInstance(AuthUserRequest::Pointer auth_user_request)
@@ -396,7 +410,7 @@ BasicUser::makeLoggingInstance(AuthUserRequest::Pointer auth_user_request)
         /* log the username */
         debugs(29, 9, HERE << "Creating new user for logging '" << username() << "'");
         /* new scheme data */
-        BasicUser *basic_auth = new BasicUser(config);
+        AuthUser::Pointer basic_auth = dynamic_cast<AuthUser*>(new BasicUser(config));
         auth_user_request->user(basic_auth);
         /* save the credentials */
         basic_auth->username(username());
@@ -410,7 +424,9 @@ BasicUser::makeLoggingInstance(AuthUserRequest::Pointer auth_user_request)
     }
 }
 
-AuthUser *
+#if 0
+/* TODO: instead of duplicating into the cache why not just add a ::Pointer to ourselves there? */
+AuthUser::Pointer
 BasicUser::makeCachedFrom()
 {
     /* the user doesn't exist in the username cache yet */
@@ -430,13 +446,18 @@ BasicUser::makeCachedFrom()
     /* the requests after this link to the basic_user */
     /* store user in hash */
     basic_user->addToNameCache();
-    return basic_user;
+
+    AuthUser::Pointer auth_user = dynamic_cast<AuthUser*>(basic_user);
+    return auth_user;
 }
+#endif
 
 void
 BasicUser::updateCached(BasicUser *from)
 {
-    debugs(29, 9, HERE << "Found user '" << from->username() << "' in the user cache as '" << this << "'");
+    debugs(29, 9, HERE << "Found user '" << from->username() << "' already in the user cache as '" << this << "'");
+
+    assert(strcmp(from->username(), username()) == 0);
 
     if (strcmp(from->passwd, passwd)) {
         debugs(29, 4, HERE << "new password found. Updating in user master record and resetting auth state to unchecked");
@@ -469,35 +490,49 @@ AuthBasicConfig::decode(char const *proxy_auth)
     while (xisgraph(*proxy_auth))
         proxy_auth++;
 
-    BasicUser *basic_auth, local_basic(this);
+    /* decoder copy. maybe temporary. maybe added to hash if none already existing. */
+    BasicUser *local_basic = new BasicUser(this);
 
     /* Trim leading whitespace before decoding */
     while (xisspace(*proxy_auth))
         proxy_auth++;
 
-    local_basic.decode(proxy_auth, auth_user_request);
+    local_basic->decode(proxy_auth, auth_user_request);
 
-    if (!local_basic.valid()) {
-        local_basic.makeLoggingInstance(auth_user_request);
+    if (!local_basic->valid()) {
+        local_basic->makeLoggingInstance(auth_user_request);
         return auth_user_request;
     }
 
     /* now lookup and see if we have a matching auth_user structure in memory. */
-    AuthUser *auth_user = NULL;
+    AuthUser::Pointer auth_user;
 
-    if ((auth_user = authBasicAuthUserFindUsername(local_basic.username())) == NULL) {
-        /* TODO: optimize. make "local_basic" the object we will store. dont allocate, duplicate, discard. */
-        auth_user = local_basic.makeCachedFrom();
-        basic_auth = dynamic_cast<BasicUser *>(auth_user);
-        assert (basic_auth);
+    if ((auth_user = authBasicAuthUserFindUsername(local_basic->username())) == NULL) {
+        /* the user doesn't exist in the username cache yet */
+        /* save the credentials */
+        debugs(29, 9, HERE << "Creating new user '" << local_basic->username() << "'");
+        /* set the auth_user type */
+        local_basic->auth_type = AUTH_BASIC;
+        /* current time for timeouts */
+        local_basic->expiretime = current_time.tv_sec;
+
+        /* this basic_user struct is the 'lucky one' to get added to the username cache */
+        /* the requests after this link to the basic_user */
+        /* store user in hash */
+        local_basic->addToNameCache();
+
+        auth_user = dynamic_cast<AuthUser*>(local_basic);
+        assert(auth_user != NULL);
     } else {
-        basic_auth = dynamic_cast<BasicUser *>(auth_user);
+        /* replace the current cached password with the new one */
+        BasicUser *basic_auth = dynamic_cast<BasicUser *>(auth_user.getRaw());
         assert(basic_auth);
-        basic_auth->updateCached(&local_basic);
+        basic_auth->updateCached(local_basic);
+        auth_user = basic_auth;
     }
 
     /* link the request to the in-cache user */
-    auth_user_request->user(basic_auth);
+    auth_user_request->user(auth_user);
 #if USER_REQUEST_LOOP_DEAD
     basic_auth->addRequest(auth_user_request);
 #endif /* USER_REQUEST_LOOP_DEAD */

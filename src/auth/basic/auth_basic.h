@@ -42,15 +42,18 @@ public:
 
     bool valid() const;
     void makeLoggingInstance(AuthUserRequest::Pointer auth_user_request);
-    AuthUser * makeCachedFrom();
+#if 0
+    AuthUser::Pointer makeCachedFrom();
+#endif
+    /** Update the cached password for a username. */
     void updateCached(BasicUser *from);
+    virtual int32_t ttl() const;
+
     char *passwd;
     time_t credentials_checkedtime;
 
     struct {
-
-unsigned int credentials_ok:
-        2;	/*0=unchecked,1=ok,2=failed */
+        unsigned int credentials_ok:2;	/* 0=unchecked, 1=ok, 2=failed */
     } flags;
     BasicAuthQueueNode *auth_queue;
 
@@ -64,8 +67,6 @@ private:
 };
 
 MEMPROXY_CLASS_INLINE(BasicUser);
-
-typedef class BasicUser basic_data;
 
 /* configuration runtime data */
 
@@ -91,4 +92,4 @@ public:
     int utf8;
 };
 
-#endif
+#endif /* __AUTH_BASIC_H__ */

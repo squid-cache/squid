@@ -79,15 +79,9 @@ AuthNTLMUserRequest::module_start(RH * handler, void *data)
 {
     authenticateStateData *r = NULL;
     static char buf[8192];
-    ntlm_user_t *ntlm_user;
-    AuthUser *auth_user = user();
 
     assert(data);
     assert(handler);
-    assert(auth_user);
-    assert(auth_user->auth_type == AUTH_NTLM);
-
-    ntlm_user = dynamic_cast<ntlm_user_t *>(user());
 
     debugs(29, 8, "AuthNTLMUserRequest::module_start: auth state is '" << auth_state << "'");
 
@@ -168,15 +162,7 @@ AuthNTLMUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * conn, 
 {
     const char *proxy_auth, *blob;
 
-    /* TODO: rename this!! */
-    AuthUser *local_auth_user;
-    ntlm_user_t *ntlm_user;
-
-    local_auth_user = user();
-    assert(local_auth_user);
-    assert(local_auth_user->auth_type == AUTH_NTLM);
-    ntlm_user = dynamic_cast<ntlm_user_t *>(local_auth_user);
-    assert (this);
+    assert(this);
 
     /* Check that we are in the client side, where we can generate
      * auth challenges */
@@ -265,11 +251,6 @@ AuthNTLMUserRequest::HandleReply(void *data, void *lastserver, char *reply)
     int valid;
     char *blob;
 
-    AuthUser *auth_user;
-    NTLMUser *ntlm_user;
-    AuthUserRequest::Pointer auth_user_request;
-    AuthNTLMUserRequest *ntlm_request;
-
     debugs(29, 8, "authenticateNTLMHandleReply: helper: '" << lastserver << "' sent us '" << (reply ? reply : "<NULL>") << "'");
     valid = cbdataReferenceValid(r->data);
 
@@ -285,21 +266,17 @@ AuthNTLMUserRequest::HandleReply(void *data, void *lastserver, char *reply)
         reply = (char *)"BH Internal error";
     }
 
-    auth_user_request = r->auth_user_request;
+    AuthUserRequest::Pointer auth_user_request = r->auth_user_request;
     assert(auth_user_request != NULL);
 
-    ntlm_request = dynamic_cast<AuthNTLMUserRequest *>(auth_user_request.getRaw());
+    AuthNTLMUserRequest *ntlm_request = dynamic_cast<AuthNTLMUserRequest *>(auth_user_request.getRaw());
     assert(ntlm_request != NULL);
     assert(ntlm_request->waiting);
+    assert(ntlm_request->user() != NULL);
+    assert(ntlm_request->user()->auth_type == AUTH_NTLM);
+
     ntlm_request->waiting = 0;
     safe_free(ntlm_request->client_blob);
-
-    auth_user = ntlm_request->user();
-    assert(auth_user != NULL);
-    assert(auth_user->auth_type == AUTH_NTLM);
-    ntlm_user = dynamic_cast<ntlm_user_t *>(auth_user_request->user());
-
-    assert(ntlm_user != NULL);
 
     if (ntlm_request->authserver == NULL)
         ntlm_request->authserver = static_cast<helper_stateful_server*>(lastserver);
@@ -308,7 +285,6 @@ AuthNTLMUserRequest::HandleReply(void *data, void *lastserver, char *reply)
 
     /* seperate out the useful data */
     blob = strchr(reply, ' ');
-
     if (blob)
         blob++;
 
@@ -327,31 +303,29 @@ AuthNTLMUserRequest::HandleReply(void *data, void *lastserver, char *reply)
         }
     } else if (strncasecmp(reply, "AF ", 3) == 0) {
         /* we're finished, release the helper */
-        ntlm_user->username(blob);
+        auth_user_request->user()->username(blob);
         auth_user_request->denyMessage("Login successful");
         safe_free(ntlm_request->server_blob);
 
         debugs(29, 4, "authenticateNTLMHandleReply: Successfully validated user via NTLM. Username '" << blob << "'");
         /* connection is authenticated */
-        debugs(29, 4, "AuthNTLMUserRequest::authenticate: authenticated user " << ntlm_user->username());
+        debugs(29, 4, "AuthNTLMUserRequest::authenticate: authenticated user " << auth_user_request->user()->username());
         /* see if this is an existing user with a different proxy_auth
          * string */
-        auth_user_hash_pointer *usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, ntlm_user->username()));
-        AuthUser *local_auth_user = ntlm_request->user();
-        while (usernamehash && (usernamehash->user()->auth_type != AUTH_NTLM || strcmp(usernamehash->user()->username(), ntlm_user->username()) != 0))
+        auth_user_hash_pointer *usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, auth_user_request->user()->username()));
+        AuthUser::Pointer local_auth_user = ntlm_request->user();
+        while (usernamehash && (usernamehash->user()->auth_type != AUTH_NTLM || strcmp(usernamehash->user()->username(), auth_user_request->user()->username()) != 0))
             usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
         if (usernamehash) {
             /* we can't seamlessly recheck the username due to the
              * challenge-response nature of the protocol.
              * Just free the temporary auth_user */
             usernamehash->user()->absorb(local_auth_user);
-            //authenticateAuthUserMerge(local_auth_user, usernamehash->user());
             local_auth_user = usernamehash->user();
             ntlm_request->_auth_user = local_auth_user;
         } else {
             /* store user in hash's */
             local_auth_user->addToNameCache();
-            // authenticateUserNameCacheAdd(local_auth_user);
         }
         /* set these to now because this is either a new login from an
          * existing user or a new user */

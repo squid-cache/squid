@@ -27,9 +27,11 @@ class NegotiateUser : public AuthUser
 
 public:
     MEMPROXY_CLASS(NegotiateUser);
-    virtual void deleteSelf() const;
     NegotiateUser(AuthConfig *);
     ~NegotiateUser();
+    virtual void deleteSelf() const;
+    virtual int32_t ttl() const;
+
     dlink_list proxy_auth_list;
 };
 
