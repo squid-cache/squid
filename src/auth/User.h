@@ -34,16 +34,18 @@
 #ifndef SQUID_AUTHUSER_H
 #define SQUID_AUTHUSER_H
 
+#if USER_REQUEST_LOOP_DEAD
 #include "auth/UserRequest.h"
+#endif
+
+#include "auth/AuthType.h"
+#include "dlink.h"
+#include "ip/IpAddress.h"
+#include "RefCount.h"
 
 class AuthConfig;
 class AuthUserHashPointer;
-
-/* for auth_type_t */
-#include "enums.h"
-
-#include "ip/IpAddress.h"
-#include "dlink.h"
+class StoreEntry;
 
 /**
  *  \ingroup AuthAPI
@@ -53,16 +55,17 @@ class AuthUserHashPointer;
  * structure is the cached ACL match results. This structure, is private to
  * the authentication framework.
  */
-class AuthUser
+class AuthUser : public RefCountable
 {
-
 public:
+    typedef RefCount<AuthUser> Pointer;
+
     /* extra fields for proxy_auth */
     /* auth_type and auth_module are deprecated. Do Not add new users of these fields.
      * Aim to remove shortly
      */
     /** \deprecated this determines what scheme owns the user data. */
-    auth_type_t auth_type;
+    AuthType auth_type;
     /** the config for this user */
     AuthConfig *config;
     /** we only have one username associated with a given auth_user struct */
@@ -72,16 +75,20 @@ public:
     dlink_list proxy_match_cache;
     size_t ipcount;
     long expiretime;
-    /** how many references are outstanding to this instance */
-    size_t references;
 
     static void cacheInit();
     static void CachedACLsReset();
 
-    void absorb(AuthUser *from);
+    void absorb(AuthUser::Pointer from);
     virtual ~AuthUser();
     _SQUID_INLINE_ char const *username() const;
     _SQUID_INLINE_ void username(char const *);
+
+    /**
+     * How long these credentials are still valid for.
+     * Negative numbers means already expired.
+     */
+    virtual int32_t ttl() const = 0;
 
     /* Manage list of IPs using this username */
     void clearIp();
@@ -102,10 +109,8 @@ public:
     _SQUID_INLINE_ void doneRequest(AuthUserRequest::Pointer);
 #endif /* USER_REQUEST_LOOP_DEAD */
 
-    void lock();
-    void unlock();
-
     void addToNameCache();
+    static void UsernameCacheStats(StoreEntry * output);
 
 protected:
     AuthUser(AuthConfig *);

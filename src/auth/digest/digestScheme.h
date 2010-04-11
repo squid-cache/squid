@@ -57,6 +57,13 @@ public:
 
 private:
     static AuthScheme::Pointer _instance;
+
+    /**
+     * Remove all cached user credentials from circulation.
+     * Intended for use during shutdown procedure.
+     * After calling this all newly received credentials must be re-authenticated.
+     */
+    static void PurgeCredentialsCache(void);
 };
 
 #endif /* SQUID_DIGESTSCHEME_H */

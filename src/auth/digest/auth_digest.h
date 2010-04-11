@@ -29,6 +29,9 @@ public:
     DigestUser(AuthConfig *);
     ~DigestUser();
     int authenticated() const;
+
+    virtual int32_t ttl() const;
+
     HASH HA1;
     int HA1created;
 
@@ -38,8 +41,6 @@ public:
 };
 
 MEMPROXY_CLASS_INLINE(DigestUser);
-
-typedef class DigestUser digest_user_h;
 
 
 /* data to be encoded into the nonce's b64 representation */

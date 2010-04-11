@@ -7,7 +7,7 @@
 int
 AuthBasicUserRequest::authenticated() const
 {
-    BasicUser const *basic_auth = dynamic_cast<BasicUser const *>(user());
+    BasicUser const *basic_auth = dynamic_cast<BasicUser const *>(user().getRaw());
 
     if (basic_auth && basic_auth->authenticated())
         return 1;
@@ -22,7 +22,7 @@ AuthBasicUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, 
 {
     assert(user() != NULL);
 
-    basic_data *basic_auth = dynamic_cast<BasicUser *>(user());
+    BasicUser *basic_auth = dynamic_cast<BasicUser *>(user().getRaw());
 
     /* if the password is not ok, do an identity */
 
@@ -49,7 +49,7 @@ int
 AuthBasicUserRequest::module_direction()
 {
     /* null auth_user is checked for by authenticateDirection */
-    basic_data *basic_auth = dynamic_cast<BasicUser *>(user());
+    BasicUser const *basic_auth = dynamic_cast<BasicUser *>(user().getRaw());
     assert (basic_auth);
 
     switch (basic_auth->flags.credentials_ok) {
@@ -78,9 +78,8 @@ AuthBasicUserRequest::module_direction()
 void
 AuthBasicUserRequest::module_start(RH * handler, void *data)
 {
-    basic_data *basic_auth;
     assert(user()->auth_type == AUTH_BASIC);
-    basic_auth = dynamic_cast<basic_data *>(user());
+    BasicUser *basic_auth = dynamic_cast<BasicUser *>(user().getRaw());
     assert(basic_auth != NULL);
     debugs(29, 9, HERE << "'" << basic_auth->username() << ":" << basic_auth->passwd << "'");
 
@@ -96,6 +95,6 @@ AuthBasicUserRequest::module_start(RH * handler, void *data)
         return;
     }
 
-    basic_auth->submitRequest (this, handler, data);
+    basic_auth->submitRequest(this, handler, data);
 }
 

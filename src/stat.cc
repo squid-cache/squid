@@ -1040,6 +1040,9 @@ statRegisterWithCacheManager(void)
     manager->registerAction("active_requests",
                             "Client-side Active Requests",
                             statClientRequests, 0, 1);
+    manager->registerAction("username_cache",
+                            "Active Cached Usernames",
+                            AuthUser::UsernameCacheStats, 0, 1);
 #if DEBUG_OPENFD
     manager->registerAction("openfd_objects", "Objects with Swapout files open",
                             statOpenfdObj, 0, 0);

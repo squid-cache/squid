@@ -35,19 +35,22 @@
 #ifndef SQUID_AUTHUSERREQUEST_H
 #define SQUID_AUTHUSERREQUEST_H
 
-#include "auth/enums.h"
+#include "auth/AuthAclState.h"
 #include "auth/Scheme.h"
+#include "auth/User.h"
 #include "dlink.h"
 #include "ip/IpAddress.h"
 #include "typedefs.h"
 #include "HttpHeader.h"
 
-class AuthUser;
 class ConnStateData;
 class HttpReply;
 class HttpRequest;
 
-struct AuthUserIP {
+/// \ingroup AuthAPI
+class AuthUserIP
+{
+public:
     dlink_node node;
     /* IP addr this user authenticated from */
 
@@ -73,7 +76,7 @@ public:
      * it has request specific data, and links to user specific data
      * the user
      */
-    AuthUser *_auth_user;
+    AuthUser::Pointer _auth_user;
 
     /**
      *  Used by squid to determine what the next step in performing authentication for a given scheme is.
@@ -110,13 +113,13 @@ public:
      */
     virtual void module_start(RH *handler, void *data) = 0;
 
-    virtual AuthUser *user() {return _auth_user;}
+    virtual AuthUser::Pointer user() {return _auth_user;}
 
-    virtual const AuthUser *user() const {return _auth_user;}
+    virtual const AuthUser::Pointer user() const {return _auth_user;}
 
-    virtual void user(AuthUser *aUser) {_auth_user=aUser;}
+    virtual void user(AuthUser::Pointer aUser) {_auth_user=aUser;}
 
-    static auth_acl_t tryToAuthenticateAndSetAuthUser(AuthUserRequest::Pointer *, http_hdr_type, HttpRequest *, ConnStateData *, IpAddress &);
+    static AuthAclState tryToAuthenticateAndSetAuthUser(AuthUserRequest::Pointer *, http_hdr_type, HttpRequest *, ConnStateData *, IpAddress &);
     static void addReplyAuthHeader(HttpReply * rep, AuthUserRequest::Pointer auth_user_request, HttpRequest * request, int accelerated, int internal);
 
     AuthUserRequest();
@@ -150,7 +153,7 @@ public:
 
 private:
 
-    static auth_acl_t authenticate(AuthUserRequest::Pointer * auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, IpAddress &src_addr);
+    static AuthAclState authenticate(AuthUserRequest::Pointer * auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, IpAddress &src_addr);
 
     /** return a message on the 407 error pages */
     char *message;
@@ -160,7 +163,7 @@ private:
      * is to allow multiple auth acl references from different _access areas
      * when using connection based authentication
      */
-    auth_acl_t lastReply;
+    AuthAclState lastReply;
 };
 
 /* AuthUserRequest */

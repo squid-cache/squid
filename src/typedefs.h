@@ -54,10 +54,6 @@ typedef struct {
 /// \deprecated Use AuthUserHashPointer instead.
 typedef struct AuthUserHashPointer auth_user_hash_pointer;
 
-/// \ingroup AuthAPI
-/// \deprecated Use AuthUserIP instead.
-typedef struct AuthUserIP auth_user_ip_t;
-
 /* temporary: once Config is fully hidden, this shouldn't be needed */
 #include "Array.h"
 

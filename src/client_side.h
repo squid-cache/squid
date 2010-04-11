@@ -33,6 +33,7 @@
 #ifndef SQUID_CLIENTSIDE_H
 #define SQUID_CLIENTSIDE_H
 
+#include "auth/AuthType.h"
 #include "auth/UserRequest.h"
 #include "base/AsyncJob.h"
 #include "BodyPipe.h"
@@ -174,7 +175,7 @@ public:
      * Is this connection based authentication? if so what type it
      * is.
      */
-    auth_type_t auth_type;
+    AuthType auth_type;
 
     /**
      * note this is ONLY connection based because NTLM is against HTTP spec.

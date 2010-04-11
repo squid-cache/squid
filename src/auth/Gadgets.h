@@ -36,6 +36,7 @@
 #include "hash.h"
 #include "MemPool.h"
 #include "auth/Config.h"
+#include "auth/User.h"
 
 class AuthUser;
 
@@ -52,15 +53,15 @@ struct AuthUserHashPointer : public hash_link {
     /* first two items must be same as hash_link */
 
 public:
-    static void removeFromCache (void *anAuthUserHashPointer);
+    static void removeFromCache(void *anAuthUserHashPointer);
     MEMPROXY_CLASS(AuthUserHashPointer);
 
-    AuthUserHashPointer(AuthUser *);
+    AuthUserHashPointer(AuthUser::Pointer );
 
-    AuthUser *user() const;
+    AuthUser::Pointer user() const;
 
 private:
-    AuthUser *auth_user;
+    AuthUser::Pointer auth_user;
 };
 
 MEMPROXY_CLASS_INLINE(AuthUserHashPointer);
@@ -75,19 +76,10 @@ class StoreEntry;
  */
 typedef void AUTHSSTATS(StoreEntry *);
 
-/**
- \ingroup AuthAPI
- * subsumed by the C++ interface
- \todo does 'subsumed' mean deprecated use a C++ API call?
- */
-extern void authenticateAuthUserMerge(AuthUser *, AuthUser *);
-
 /// \ingroup AuthAPI
 extern void authenticateInit(Auth::authConfig *);
 /// \ingroup AuthAPI
 extern void authenticateShutdown(void);
-/// \ingroup AuthAPI
-extern int authenticateAuthUserInuse(AuthUser * auth_user);
 
 /// \ingroup AuthAPI
 extern void authenticateFreeProxyAuthUserACLResults(void *data);

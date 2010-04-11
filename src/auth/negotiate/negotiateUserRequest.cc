@@ -119,15 +119,12 @@ AuthNegotiateUserRequest::module_start(RH * handler, void *data)
 {
     authenticateStateData *r = NULL;
     static char buf[MAX_AUTHTOKEN_LEN];
-    NegotiateUser *negotiate_user;
-    AuthUser *auth_user = user();
 
     assert(data);
     assert(handler);
-    assert(auth_user);
-    assert(auth_user->auth_type == AUTH_NEGOTIATE);
 
-    negotiate_user = dynamic_cast<NegotiateUser*>(user());
+    assert(user() != NULL);
+    assert(user()->auth_type == AUTH_NEGOTIATE);
 
     debugs(29, 8, HERE << "auth state is '" << auth_state << "'");
 
@@ -193,16 +190,6 @@ AuthNegotiateUserRequest::onConnectionClose(ConnStateData *conn)
 void
 AuthNegotiateUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * conn, http_hdr_type type)
 {
-    const char *proxy_auth, *blob;
-
-    /** \todo rename this!! */
-    AuthUser *local_auth_user;
-    NegotiateUser *negotiate_user;
-
-    local_auth_user = user();
-    assert(local_auth_user);
-    assert(local_auth_user->auth_type == AUTH_NEGOTIATE);
-    negotiate_user = dynamic_cast<NegotiateUser *>(local_auth_user);
     assert (this);
 
     /** Check that we are in the client side, where we can generate auth challenges */
@@ -223,10 +210,10 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * c
     }
 
     /* get header */
-    proxy_auth = aRequest->header.getStr(type);
+    const char *proxy_auth = aRequest->header.getStr(type);
 
     /* locate second word */
-    blob = proxy_auth;
+    const char *blob = proxy_auth;
 
     if (blob) {
         while (xisspace(*blob) && *blob)
@@ -291,10 +278,6 @@ AuthNegotiateUserRequest::HandleReply(void *data, void *lastserver, char *reply)
     int valid;
     char *blob, *arg = NULL;
 
-    AuthUser *auth_user;
-    NegotiateUser *negotiate_user;
-    AuthNegotiateUserRequest *negotiate_request;
-
     debugs(29, 8, HERE << "helper: '" << lastserver << "' sent us '" << (reply ? reply : "<NULL>") << "'");
     valid = cbdataReferenceValid(r->data);
 
@@ -313,19 +296,15 @@ AuthNegotiateUserRequest::HandleReply(void *data, void *lastserver, char *reply)
     AuthUserRequest::Pointer auth_user_request = r->auth_user_request;
     assert(auth_user_request != NULL);
 
-    negotiate_request = dynamic_cast<AuthNegotiateUserRequest *>(auth_user_request.getRaw());
+    AuthNegotiateUserRequest *negotiate_request = dynamic_cast<AuthNegotiateUserRequest *>(auth_user_request.getRaw());
     assert(negotiate_request != NULL);
 
     assert(negotiate_request->waiting);
     negotiate_request->waiting = 0;
     safe_free(negotiate_request->client_blob);
 
-    auth_user = auth_user_request->user();
-    assert(auth_user != NULL);
-    assert(auth_user->auth_type == AUTH_NEGOTIATE);
-
-    negotiate_user = dynamic_cast<NegotiateUser *>(auth_user_request->user());
-    assert(negotiate_user != NULL);
+    assert(auth_user_request->user() != NULL);
+    assert(auth_user_request->user()->auth_type == AUTH_NEGOTIATE);
 
     if (negotiate_request->authserver == NULL)
         negotiate_request->authserver = static_cast<helper_stateful_server*>(lastserver);
@@ -363,7 +342,7 @@ AuthNegotiateUserRequest::HandleReply(void *data, void *lastserver, char *reply)
         if (arg)
             *arg++ = '\0';
 
-        negotiate_user->username(arg);
+        auth_user_request->user()->username(arg);
         auth_user_request->denyMessage("Login successful");
         safe_free(negotiate_request->server_blob);
         negotiate_request->server_blob = xstrdup(blob);
@@ -372,25 +351,25 @@ AuthNegotiateUserRequest::HandleReply(void *data, void *lastserver, char *reply)
         debugs(29, 4, HERE << "Successfully validated user via Negotiate. Username '" << blob << "'");
 
         /* connection is authenticated */
-        debugs(29, 4, HERE << "authenticated user " << negotiate_user->username());
+        debugs(29, 4, HERE << "authenticated user " << auth_user_request->user()->username());
         /* see if this is an existing user with a different proxy_auth
          * string */
-        AuthUserHashPointer *usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, negotiate_user->username()));
-        AuthUser *local_auth_user = negotiate_request->user();
-        while (usernamehash && (usernamehash->user()->auth_type != AUTH_NEGOTIATE || strcmp(usernamehash->user()->username(), negotiate_user->username()) != 0))
+        AuthUserHashPointer *usernamehash = static_cast<AuthUserHashPointer *>(hash_lookup(proxy_auth_username_cache, auth_user_request->user()->username()));
+        AuthUser::Pointer local_auth_user = negotiate_request->user();
+        while (usernamehash && (usernamehash->user()->auth_type != AUTH_NEGOTIATE || strcmp(usernamehash->user()->username(), auth_user_request->user()->username()) != 0))
             usernamehash = static_cast<AuthUserHashPointer *>(usernamehash->next);
         if (usernamehash) {
             /* we can't seamlessly recheck the username due to the
              * challenge-response nature of the protocol.
-             * Just free the temporary auth_user */
+             * Just free the temporary auth_user after merging as
+             * much of it new state into the existing one as possible */
             usernamehash->user()->absorb(local_auth_user);
-            //authenticateAuthUserMerge(local_auth_user, usernamehash->user());
             local_auth_user = usernamehash->user();
+            /* from here on we are working with the original cached credentials. */
             negotiate_request->_auth_user = local_auth_user;
         } else {
             /* store user in hash's */
             local_auth_user->addToNameCache();
-            // authenticateUserNameCacheAdd(local_auth_user);
         }
         /* set these to now because this is either a new login from an
          * existing user or a new user */
