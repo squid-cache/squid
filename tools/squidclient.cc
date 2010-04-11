@@ -135,7 +135,7 @@ usage(const char *progname)
     fprintf(stderr,
             "Version: %s\n"
             "Usage: %s [-arsv] [-g count] [-h remote host] [-H 'string'] [-i IMS] [-I ping-interval] [-j 'Host-header']"
-            "[-l local-host] [-m method] [-p port] [-P file] [-t count] [-T timeout] [-u proxy-user] [-U www-user] "
+            "[-k] [-l local-host] [-m method] [-p port] [-P file] [-t count] [-T timeout] [-u proxy-user] [-U www-user] "
             "[-V version] [-w proxy-password] [-W www-password] url\n"
             "\n"
             "Options:\n"
@@ -146,6 +146,7 @@ usage(const char *progname)
             "    -i IMS       If-Modified-Since time (in Epoch seconds).\n"
             "    -I interval  Ping interval in seconds (default 1 second).\n"
             "    -j hosthdr   Host header content\n"
+            "    -k           Keep the connection active. Default is to do only one request then close.\n"
             "    -l host      Specify a local IP address to bind to.  Default is none.\n"
             "    -m method    Request method, default is GET.\n"
             "    -p port      Port number of cache.  Default is %d.\n"
@@ -444,10 +445,10 @@ main(int argc, char *argv[])
                 } else
                     strcat(msg, "Connection: keep-alive\r\n");
             }
-        } else {
-            if (!keep_alive)
-                strcat(msg, "Connection: close\r\n");
         }
+        /* HTTP/1.1 may need close */
+        if (!keep_alive)
+            strcat(msg, "Connection: close\r\n");
 
         strcat(msg, extra_hdrs);
         strcat(msg, "\r\n");
