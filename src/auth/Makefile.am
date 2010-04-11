@@ -8,20 +8,21 @@ EXTRA_LTLIBRARIES = libbasic.la libdigest.la libntlm.la libnegotiate.la
 
 ## authentication framework; this library is always built
 libauth_la_SOURCES = \
+	AuthType.h \
+	AuthType.cc \
 	Config.cc \
 	Config.h \
-	enums.h \
+	Gadgets.cc \
+	Gadgets.h \
 	Scheme.cc \
 	Scheme.h \
+	State.h \
+	State.cc \
 	User.h \
 	User.cci \
 	User.cc \
 	UserRequest.h \
-	UserRequest.cc \
-	Gadgets.cc \
-	Gadgets.h \
-	State.h \
-	State.cc
+	UserRequest.cc
 
 libauth_la_LIBADD = $(AUTH_LIBS_TO_BUILD)
 libauth_la_DEPENDENCIES = $(AUTH_LIBS_TO_BUILD)
@@ -34,7 +35,8 @@ libacls_la_SOURCES = \
 	AclMaxUserIp.cc \
 	AclMaxUserIp.h \
 	AclProxyAuth.cc \
-	AclProxyAuth.h
+	AclProxyAuth.h \
+	AuthAclState.h
 
 libbasic_la_SOURCES = \
 	basic/basicScheme.cc \
@@ -67,6 +69,9 @@ libnegotiate_la_SOURCES = \
 	negotiate/auth_negotiate.h \
 	negotiate/negotiateUserRequest.cc \
 	negotiate/negotiateUserRequest.h
+
+AuthType.cc: AuthType.h $(top_srcdir)/src/mk-string-arrays.awk
+	$(AWK) -f $(top_srcdir)/src/mk-string-arrays.awk < $(srcdir)/AuthType.h > $@
 
 
 TESTS += testHeaders

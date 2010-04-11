@@ -6,8 +6,6 @@
 #include "helper.h"
 #include "MemPool.h"
 
-// #include "typedefs.h"
-
 class ConnStateData;
 class HttpReply;
 class HttpRequest;

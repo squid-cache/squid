@@ -42,6 +42,7 @@
 
 #include "squid.h"
 #include "auth/Gadgets.h"
+#include "auth/User.h"
 #include "CompositePoolNode.h"
 #include "DelayIdComposite.h"
 #include "DelayBucket.h"
@@ -59,10 +60,10 @@ public:
     void operator delete (void *);
 
     void stats(StoreEntry *)const;
-    DelayUserBucket(AuthUser *);
+    DelayUserBucket(AuthUser::Pointer);
     ~DelayUserBucket();
     DelayBucket theBucket;
-    AuthUser *authUser;
+    AuthUser::Pointer authUser;
 };
 
 /// \ingroup DelayPoolsAPI
@@ -91,7 +92,7 @@ private:
     public:
         void *operator new(size_t);
         void operator delete (void *);
-        Id (RefCount<DelayUser>, AuthUser *);
+        Id(RefCount<DelayUser>, AuthUser::Pointer);
         ~Id();
         virtual int bytesWanted (int min, int max) const;
         virtual void bytesIn(int qty);

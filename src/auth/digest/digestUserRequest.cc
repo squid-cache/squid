@@ -68,29 +68,24 @@ AuthDigestUserRequest::authenticated() const
 void
 AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type)
 {
-    AuthDigestUserRequest *digest_request;
-    digest_user_h *digest_user;
-
     HASHHEX SESSIONKEY;
     HASHHEX HA2 = "";
     HASHHEX Response;
 
-    assert(authUser() != NULL);
-    AuthUser *auth_user = user();
-
-    digest_user = dynamic_cast<digest_user_h*>(auth_user);
-    assert(digest_user != NULL);
-
     /* if the check has corrupted the user, just return */
-
     if (credentials() == Failed) {
         return;
     }
 
-    digest_request = this;
+    assert(user() != NULL);
+    AuthUser::Pointer auth_user = user();
+
+    DigestUser *digest_user = dynamic_cast<DigestUser*>(auth_user.getRaw());
+    assert(digest_user != NULL);
+
+    AuthDigestUserRequest *digest_request = this;
 
     /* do we have the HA1 */
-
     if (!digest_user->HA1created) {
         credentials(Pending);
         return;
@@ -165,7 +160,7 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData * conn,
 
         /* check for stale nonce */
         if (!authDigestNonceIsValid(digest_request->nonce, digest_request->nc)) {
-            debugs(29, 3, "authenticateDigestAuthenticateuser: user '" << digest_user->username() << "' validated OK but nonce stale");
+            debugs(29, 3, "authenticateDigestAuthenticateuser: user '" << auth_user->username() << "' validated OK but nonce stale");
             credentials(Failed);
             digest_request->setDenyMessage("Stale nonce");
             return;
@@ -175,7 +170,7 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData * conn,
     credentials(Ok);
 
     /* password was checked and did match */
-    debugs(29, 4, "authenticateDigestAuthenticateuser: user '" << digest_user->username() << "' validated OK");
+    debugs(29, 4, "authenticateDigestAuthenticateuser: user '" << auth_user->username() << "' validated OK");
 
     /* auth_user is now linked, we reset these values
      * after external auth occurs anyway */
@@ -265,11 +260,14 @@ AuthDigestUserRequest::module_start(RH * handler, void *data)
 {
     authenticateStateData *r = NULL;
     char buf[8192];
-    digest_user_h *digest_user;
-    assert(user()->auth_type == AUTH_DIGEST);
-    digest_user = dynamic_cast<digest_user_h*>(user());
+
+    assert(user() != NULL && user()->auth_type == AUTH_DIGEST);
+#if 0
+    DigestUser *digest_user = dynamic_cast<DigestUser*>(user().getRaw());
     assert(digest_user != NULL);
-    debugs(29, 9, "authenticateStart: '\"" << digest_user->username() << "\":\"" << realm << "\"'");
+#endif
+
+    debugs(29, 9, "authenticateStart: '\"" << user()->username() << "\":\"" << realm << "\"'");
 
     if (static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->authenticate == NULL) {
         handler(data, NULL);
@@ -282,10 +280,10 @@ AuthDigestUserRequest::module_start(RH * handler, void *data)
     r->auth_user_request = static_cast<AuthUserRequest*>(this);
     if (static_cast<AuthDigestConfig*>(AuthConfig::Find("digest"))->utf8) {
         char userstr[1024];
-        latin1_to_utf8(userstr, sizeof(userstr), digest_user->username());
+        latin1_to_utf8(userstr, sizeof(userstr), user()->username());
         snprintf(buf, 8192, "\"%s\":\"%s\"\n", userstr, realm);
     } else {
-        snprintf(buf, 8192, "\"%s\":\"%s\"\n", digest_user->username(), realm);
+        snprintf(buf, 8192, "\"%s\":\"%s\"\n", user()->username(), realm);
     }
 
     helperSubmit(digestauthenticators, buf, AuthDigestUserRequest::HandleReply, r);
@@ -310,20 +308,21 @@ AuthDigestUserRequest::HandleReply(void *data, char *reply)
     assert(replyData->auth_user_request != NULL);
     AuthUserRequest::Pointer auth_user_request = replyData->auth_user_request;
 
-    /* AYJ: 2009-12-12: allow this because the digest_request pointer is purely local */
-    AuthDigestUserRequest *digest_request = dynamic_cast < AuthDigestUserRequest * >(auth_user_request.getRaw());
-    assert(digest_request);
-
-    digest_user_h *digest_user = dynamic_cast < digest_user_h * >(auth_user_request->user());
-    assert(digest_user != NULL);
-
     if (reply && (strncasecmp(reply, "ERR", 3) == 0)) {
+        /* allow this because the digest_request pointer is purely local */
+        AuthDigestUserRequest *digest_request = dynamic_cast<AuthDigestUserRequest *>(auth_user_request.getRaw());
+        assert(digest_request);
+
         digest_request->credentials(AuthDigestUserRequest::Failed);
         digest_request->flags.invalid_password = 1;
 
         if (t && *t)
             digest_request->setDenyMessage(t);
     } else if (reply) {
+        /* allow this because the digest_request pointer is purely local */
+        DigestUser *digest_user = dynamic_cast<DigestUser *>(auth_user_request->user().getRaw());
+        assert(digest_user != NULL);
+
         CvtBin(reply, digest_user->HA1);
         digest_user->HA1created = 1;
     }

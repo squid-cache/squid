@@ -18,9 +18,12 @@ class NTLMUser : public AuthUser
 
 public:
     MEMPROXY_CLASS(NTLMUser);
-    virtual void deleteSelf() const;
     NTLMUser(AuthConfig *);
     ~NTLMUser();
+
+    virtual void deleteSelf() const;
+    virtual int32_t ttl() const;
+
     dlink_list proxy_auth_list;
 };
 

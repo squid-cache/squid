@@ -121,23 +121,6 @@ authenticateShutdown(void)
 }
 
 /**
- \retval 0 not in use
- \retval ? in use
- */
-int
-authenticateAuthUserInuse(AuthUser * auth_user)
-{
-    assert(auth_user != NULL);
-    return auth_user->references;
-}
-
-void
-authenticateAuthUserMerge(AuthUser * from, AuthUser * to)
-{
-    to->absorb (from);
-}
-
-/**
  * Cleans all config-dependent data from the auth_user cache.
  \note It DOES NOT Flush the user cache.
  */
@@ -145,7 +128,7 @@ void
 authenticateUserCacheRestart(void)
 {
     AuthUserHashPointer *usernamehash;
-    AuthUser *auth_user;
+    AuthUser::Pointer auth_user;
     debugs(29, 3, HERE << "Clearing config dependent cache data.");
     hash_first(proxy_auth_username_cache);
 
@@ -155,35 +138,24 @@ authenticateUserCacheRestart(void)
     }
 }
 
-
+// TODO: remove this wrapper. inline the actions.
 void
 AuthUserHashPointer::removeFromCache(void *usernamehash_p)
 {
     AuthUserHashPointer *usernamehash = static_cast<AuthUserHashPointer *>(usernamehash_p);
-    AuthUser *auth_user = usernamehash->auth_user;
-
-    if ((authenticateAuthUserInuse(auth_user) - 1))
-        debugs(29, 1, "AuthUserHashPointer::removeFromCache: entry in use - not freeing");
-
-    auth_user->unlock();
-
-    /** \todo change behaviour - we remove from the auth user list here, and then unlock, and the
-     * delete ourselves.
-     */
+    hash_remove_link(proxy_auth_username_cache, (hash_link *)usernamehash);
+    delete usernamehash;
 }
 
-AuthUserHashPointer::AuthUserHashPointer(AuthUser * anAuth_user):
+AuthUserHashPointer::AuthUserHashPointer(AuthUser::Pointer anAuth_user):
         auth_user(anAuth_user)
 {
     key = (void *)anAuth_user->username();
     next = NULL;
     hash_join(proxy_auth_username_cache, (hash_link *) this);
-
-    /** lock for presence in the cache */
-    auth_user->lock();
 }
 
-AuthUser *
+AuthUser::Pointer
 AuthUserHashPointer::user() const
 {
     return auth_user;

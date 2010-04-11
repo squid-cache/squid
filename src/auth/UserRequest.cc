@@ -56,7 +56,7 @@
 char const *
 AuthUserRequest::username() const
 {
-    if (user())
+    if (user() != NULL)
         return user()->username();
     else
         return NULL;
@@ -138,7 +138,7 @@ AuthUserRequest::~AuthUserRequest()
     assert(RefCountCount()==0);
     debugs(29, 5, "AuthUserRequest::~AuthUserRequest: freeing request " << this);
 
-    if (user()) {
+    if (user() != NULL) {
 #if USER_REQUEST_LOOP_DEAD
         /* AYJ: something strange: in order to be deleted this object must not be
          * referenced anywhere. Including the AuthUser list of requests.
@@ -147,23 +147,22 @@ AuthUserRequest::~AuthUserRequest()
         user()->doneRequest(this);
 #endif /* USER_REQUEST_LOOP_DEAD */
 
-        /* unlock the request structure's lock and release it */
-        user()->unlock();
+        /* release our references to the user credentials */
         user(NULL);
     }
 
-    safe_free (message);
+    safe_free(message);
 }
 
 void
-AuthUserRequest::setDenyMessage (char const *aString)
+AuthUserRequest::setDenyMessage(char const *aString)
 {
-    safe_free (message);
-    message = xstrdup (aString);
+    safe_free(message);
+    message = xstrdup(aString);
 }
 
 char const *
-AuthUserRequest::getDenyMessage ()
+AuthUserRequest::getDenyMessage()
 {
     return message;
 }
@@ -181,7 +180,7 @@ AuthUserRequest::denyMessage(char const * const default_message)
 static void
 authenticateAuthUserRequestSetIp(AuthUserRequest::Pointer auth_user_request, IpAddress &ipaddr)
 {
-    AuthUser *auth_user = auth_user_request->user();
+    AuthUser::Pointer auth_user = auth_user_request->user();
 
     if (!auth_user)
         return;
@@ -192,7 +191,7 @@ authenticateAuthUserRequestSetIp(AuthUserRequest::Pointer auth_user_request, IpA
 void
 authenticateAuthUserRequestRemoveIp(AuthUserRequest::Pointer auth_user_request, IpAddress const &ipaddr)
 {
-    AuthUser *auth_user = auth_user_request->user();
+    AuthUser::Pointer auth_user = auth_user_request->user();
 
     if (!auth_user)
         return;
@@ -211,7 +210,7 @@ int
 authenticateAuthUserRequestIPCount(AuthUserRequest::Pointer auth_user_request)
 {
     assert(auth_user_request != NULL);
-    assert(auth_user_request->user());
+    assert(auth_user_request->user() != NULL);
     return auth_user_request->user()->ipcount;
 }
 
@@ -306,7 +305,7 @@ authTryGetUser(AuthUserRequest::Pointer auth_user_request, ConnStateData * conn,
  *
  * Caller is responsible for locking and unlocking their *auth_user_request!
  */
-auth_acl_t
+AuthAclState
 AuthUserRequest::authenticate(AuthUserRequest::Pointer * auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, IpAddress &src_addr)
 {
     const char *proxy_auth;
@@ -475,7 +474,7 @@ AuthUserRequest::authenticate(AuthUserRequest::Pointer * auth_user_request, http
     return AUTH_AUTHENTICATED;
 }
 
-auth_acl_t
+AuthAclState
 AuthUserRequest::tryToAuthenticateAndSetAuthUser(AuthUserRequest::Pointer * auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, IpAddress &src_addr)
 {
     /* If we have already been called, return the cached value */
@@ -492,7 +491,7 @@ AuthUserRequest::tryToAuthenticateAndSetAuthUser(AuthUserRequest::Pointer * auth
     }
 
     /* ok, call the actual authenticator routine. */
-    auth_acl_t result = authenticate(auth_user_request, headertype, request, conn, src_addr);
+    AuthAclState result = authenticate(auth_user_request, headertype, request, conn, src_addr);
 
     t = authTryGetUser(*auth_user_request, conn, request);
 
