@@ -165,12 +165,9 @@ AuthUser::~AuthUser()
     assert(RefCountCount() == 0);
 
     /* were they linked in by username ? */
-
     if (usernamehash) {
-        assert(usernamehash->user() == this);
         debugs(29, 5, "AuthUser::~AuthUser: removing usernamehash entry '" << usernamehash << "'");
-        hash_remove_link(proxy_auth_username_cache,
-                         (hash_link *) usernamehash);
+        hash_remove_link(proxy_auth_username_cache, (hash_link *) usernamehash);
         /* don't free the key as we use the same user string as the auth_user
          * structure */
         delete usernamehash;
@@ -274,6 +271,9 @@ AuthUser::cacheCleanup(void *datanotused)
              * and re-using current valid credentials.
              */
             hash_remove_link(proxy_auth_username_cache, usernamehash);
+            /* resolve the circular references of AuthUserHashPointer<->AuthUser by cutting before deleting. */
+            if(auth_user->usernamehash == usernamehash)
+                auth_user->usernamehash = NULL;
             delete usernamehash;
         }
     }

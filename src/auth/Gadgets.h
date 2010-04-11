@@ -46,19 +46,18 @@ class AuthUser;
  * This is used to link auth_users into the username cache.
  * Because some schemes may link in aliases to a user,
  * the link is not part of the AuthUser structure itself.
- *
- \todo Inheritance in a struct? this should be a class.
  */
-struct AuthUserHashPointer : public hash_link {
+class AuthUserHashPointer : public hash_link {
     /* first two items must be same as hash_link */
 
 public:
-    static void removeFromCache(void *anAuthUserHashPointer);
     MEMPROXY_CLASS(AuthUserHashPointer);
 
-    AuthUserHashPointer(AuthUser::Pointer );
+    AuthUserHashPointer(AuthUser::Pointer);
+    ~AuthUserHashPointer() { auth_user = NULL; };
 
     AuthUser::Pointer user() const;
+    static void removeFromCache(void *anAuthUserHashPointer);
 
 private:
     AuthUser::Pointer auth_user;
