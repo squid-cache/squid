@@ -1,7 +1,3 @@
-#
-#  Makefile for the Squid Object Cache server
-#
-
 include $(top_srcdir)/src/Common.am
 
 SUBDIRS = smbval
@@ -20,3 +16,5 @@ LDADD = \
 	smbval/libsmbvalid.a \
 	$(CRYPTLIB) \
 	$(XTRA_LIBS)
+
+EXTRA_DIST = config.test
