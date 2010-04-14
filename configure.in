@@ -942,6 +942,10 @@ dnl
 dnl AC_ARG_ENABLE(mem-gen-trace,
 dnl [  --enable-mem-gen-trace  Do trace of memory stuff],
 dnl [ if test "$enableval" = "yes" ; then
+if test "$enableval" = "yes" ; then
+    AC_MSG_NOTICE([Enabling automatic stack backtraces on fatal errors])
+    AC_DEFINE(PRINT_STACK_TRACE, 1,[Print stacktraces on fatal errors])
+  fi
 dnl     AC_MSG_NOTICE([Memory trace (to file) enabled])
 dnl     AC_DEFINE(MEM_GEN_TRACE,1,[Define for log file trace of mem alloc/free])
 dnl   fi
@@ -2085,7 +2089,7 @@ AC_ARG_ENABLE(cpu-profiling,
                  New probes can only be added by modifying the source code.
                  It is meant to help developers in optimizing performance
                  of Squid internal functions.
-                 If you are not developer you shouldn't enable this, 
+                 If you are not developer you should not enable this, 
                  as it slows squid down somewhat.
                  See lib/Profiler.c for more details.]), [
 SQUID_YESNO([$enableval],
@@ -2115,15 +2119,16 @@ AC_MSG_NOTICE([X-Accelerator-Vary support enabled: $squid_opt_enable_x_accelerat
 SQUID_DEFINE_UNQUOTED([X_ACCELERATOR_VARY],$squid_opt_enable_x_accelerator_vary,
                       [Enable support for the X-Accelerator-Vary HTTP header])
 
+
 AC_ARG_ENABLE(zph-qos,
-  AS_HELP_STRING([--enable-zph-qos],[Enable ZPH QOS support]),
-[ if test "$enableval" = "yes" ; then
-    AC_MSG_NOTICE([ZPH QOS enabled])
-    AC_DEFINE(USE_ZPH_QOS,1,
-    [ Define this to use Squid's ZPH (Zero Penalty Hit) QOS features.
-      When enabled, Squid will alter TOS field of HIT responses for better QOS on intermediate routing/shaping devices.])
-  fi
+  AS_HELP_STRING([--enable-zph-qos],[Enable ZPH QOS support]), [
+SQUID_YESNO([$enableval],
+            [unrecognized argument to --enable-zph-qos: $enableval])
 ])
+SQUID_DEFINE_UNQUOTED([USE_ZPH_QOS],${enable_zph_qos:=no},
+          [Enable Zero Penalty Hit QOS. When set, Squid will alter the
+           TOS field of HIT responses to help policing network traffic])
+AC_MSG_NOTICE([ZPH QOS enabled: $enable_zph_qos])
 
 dnl --with-maxfd present for compatibility with Squid-2.
 dnl undocumented in ./configure --help  to encourage using the Squid-3 directive.
