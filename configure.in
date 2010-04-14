@@ -41,7 +41,6 @@ AC_MSG_RESULT($squid_host_os (version $squid_host_os_version))
 # on windows squid_host_os is either mingw or cygwin, version is 32
 
 # test for programs
-AC_PROG_LIBTOOL
 AC_PROG_RANLIB
 AC_PROG_CPP
 AC_PROG_INSTALL
@@ -119,6 +118,8 @@ then
 
     AC_LIBLTDL_CONVENIENCE
 fi
+dnl LibTool environment is now prepared for setup. Check that it is usable and initialize.
+AC_PROG_LIBTOOL
 AC_LTDL_DLLIB
 
 # Do we need these unconditionally for "make distcheck" to work?
