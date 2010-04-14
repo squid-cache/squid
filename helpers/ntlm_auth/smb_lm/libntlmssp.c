@@ -12,6 +12,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  */
+#include "config.h"
 
 typedef unsigned char uchar;
 
@@ -23,9 +24,6 @@ typedef unsigned char uchar;
 #if HAVE_STRING_H
 #include <string.h>
 #endif /* HAVE_STRING_H */
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif /* HAVE_STDLIB_H */
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif

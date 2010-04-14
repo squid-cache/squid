@@ -1,11 +1,3 @@
-#
-#  Makefile for the ip_user external_acl helper by Rodrigo Campos
-#
-#  $Id$
-#
-#  Uncomment and customize the following to suit your needs:
-#
-
 include $(top_srcdir)/src/Common.am
 
 ## we need our local files too (but avoid -I. at all costs)
@@ -24,7 +16,8 @@ EXTRA_DIST = \
 	example.conf \
 	example-deny_all_but.conf \
 	license \
-	README
+	README \
+	config.test
 
 LDADD = \
 	$(top_builddir)/compat/libcompat.la \
