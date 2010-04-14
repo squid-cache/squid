@@ -2066,21 +2066,18 @@ SQUID_DEFINE_UNQUOTED([USE_UNLINKD],$squid_opt_enable_unlinkd,
 AM_CONDITIONAL(ENABLE_UNLINKD,test "$squid_opt_enable_unlinkd" = "yes")
 
 # Enable backtraces on fatal errors
-squid_opt_enable_stacktraces=no
 AC_ARG_ENABLE(stacktraces,
   AS_HELP_STRING([--enable-stacktraces],
                  [Enable automatic call backtrace on fatal errors]), [
 SQUID_YESNO([$enableval],
             [unrecognized argument to --enable-stacktraces: $enableval])
-squid_opt_enable_stacktraces=$enableval
 ])
-AC_MSG_NOTICE([Automatically print stack trace on fatal errors: $squid_opt_enable_stacktraces])
-SQUID_DEFINE_UNQUOTED([PRINT_STACK_TRACE],$squid_opt_enable_stacktraces,
+SQUID_DEFINE_UNQUOTED([PRINT_STACK_TRACE],${enable_stacktraces:=no},
                       [Print stack traces on fatal errors])
+AC_MSG_NOTICE([Automatically print stack trace on fatal errors: $enable_stacktraces])
 
 
 # CPU Profiling options handling
-squid_opt_enable_cpu_profiling=no
 AC_ARG_ENABLE(cpu-profiling,
   AS_HELP_STRING([--enable-cpu-profiling],
                  [Enable instrumentation to try and understand how CPU power 
@@ -2094,16 +2091,14 @@ AC_ARG_ENABLE(cpu-profiling,
                  See lib/Profiler.c for more details.]), [
 SQUID_YESNO([$enableval],
             [unrecognized argument to --enable-cpu-profiling: $enableval])
-squid_opt_enable_cpu_profiling=$enableval
 ])
-AC_MSG_NOTICE([CPU profiling enabled: $squid_opt_enable_cpu_profiling])
-SQUID_DEFINE_UNQUOTED([USE_XPROF_STATS],$squid_opt_enable_cpu_profiling,
+SQUID_DEFINE_UNQUOTED([USE_XPROF_STATS],${enable_cpu_profiling:=no},
                       [Define to enable CPU profiling within Squid])
 AM_CONDITIONAL(ENABLE_XPROF_STATS,
-               test $squid_opt_enable_cpu_profiling = "yes")
+               test $enable_cpu_profiling = "yes")
+AC_MSG_NOTICE([CPU profiling enabled: $enable_cpu_profiling])
 
 # Enable X-Accelerator-Vary for Vary support within an accelerator setup
-squid_opt_enable_x_accelerator_vary=no
 AC_ARG_ENABLE(x-accelerator-vary,
   AS_HELP_STRING([--enable-x-accelerator-vary],
                  [Enable support for the X-Accelerator-Vary
@@ -2113,11 +2108,10 @@ AC_ARG_ENABLE(x-accelerator-vary,
                   that adds custom HTTP headers to the requests.]), [
 SQUID_YESNO([$enableval],
             [unrecognized argument to --enable-x-accelerator-vary: $enableval])
-squid_opt_enable_x_accelerator_vary=$enableval
 ])
-AC_MSG_NOTICE([X-Accelerator-Vary support enabled: $squid_opt_enable_x_accelerator_vary])
-SQUID_DEFINE_UNQUOTED([X_ACCELERATOR_VARY],$squid_opt_enable_x_accelerator_vary,
+SQUID_DEFINE_UNQUOTED([X_ACCELERATOR_VARY],${enable_x_accelerator_vary:=no},
                       [Enable support for the X-Accelerator-Vary HTTP header])
+AC_MSG_NOTICE([X-Accelerator-Vary support enabled: $enable_x_accelerator_vary])
 
 
 AC_ARG_ENABLE(zph-qos,
