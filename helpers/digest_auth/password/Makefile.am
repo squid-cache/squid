@@ -24,3 +24,5 @@ LDADD = \
 	$(CRYPTLIB) \
 	$(XTRA_LIBS) \
 	$(SSLLIB)
+
+EXTRA_DIST = config.test
