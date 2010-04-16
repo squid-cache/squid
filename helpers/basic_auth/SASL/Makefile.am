@@ -8,4 +8,8 @@ basic_sasl_auth_LDADD = \
 	$(LIBSASL) \
 	$(XTRA_LIBS)
 
-EXTRA_DIST = basic_sasl_auth.pam basic_sasl_auth.conf config.test
+EXTRA_DIST = \
+	basic_sasl_auth.8 \
+	basic_sasl_auth.conf \
+	basic_sasl_auth.pam \
+	config.test
