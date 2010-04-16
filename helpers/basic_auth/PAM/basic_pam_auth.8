@@ -65,9 +65,9 @@ program is not recommended, but if you absolutely need to then make
 the program setuid root
 .if !'po4a'hide' .RS
 .if !'po4a'hide' .P
-.if !'po4a'hide' .B chown root pam_auth
+.if !'po4a'hide' .B chown root basic_pam_auth
 .if !'po4a'hide' .br
-.if !'po4a'hide' .B chmod u+s pam_auth
+.if !'po4a'hide' .B chmod u+s basic_pam_auth
 .if !'po4a'hide' .RE
 .PP
 Please note that in such configurations it is also strongly recommended
@@ -109,7 +109,7 @@ Report ideas for new improvements to the
 .
 .SH SEE ALSO
 .if !'po4a'hide' .BR squid "(8), "
-.if !'po4a'hide' .BR pam "(8), "
+.if !'po4a'hide' .BR pam "(3), "
 .if !'po4a'hide' .BR pam.conf "(5), "
 .if !'po4a'hide' .BR chown "(1), "
 .if !'po4a'hide' .BR chmod "(1), "
