@@ -1883,7 +1883,11 @@ commHandleWrite(int fd, void *data)
            (long int) state->offset << ", sz " << (long int) state->size << ".");
 
     nleft = state->size - state->offset;
-    len = FD_WRITE_METHOD(fd, state->buf + state->offset, nleft);
+    // XXX: if we use UDS and it is not connected then 'sendto' will be called.
+    if (!fd_table[fd].flags.called_connect && fd_table[fd].unix_addr.sun_family == AF_LOCAL)
+        len = sendto(fd, state->buf + state->offset, nleft, 0, (sockaddr*)&fd_table[fd].unix_addr, SUN_LEN(&fd_table[fd].unix_addr));
+    else
+        len = FD_WRITE_METHOD(fd, state->buf + state->offset, nleft);
     debugs(5, 5, "commHandleWrite: write() returns " << len);
     fd_bytes(fd, len, FD_WRITE);
     statCounter.syscalls.sock.writes++;
@@ -2408,4 +2412,100 @@ CommSelectEngine::checkEvents(int timeout)
         fatal_dump("comm.cc: Internal error -- this should never happen.");
         return EVENT_ERROR;
     };
+}
+
+/**
+ * Create a unix-domain socket
+ */
+int
+comm_open_uds(int sock_type,
+              int proto,
+              struct sockaddr_un* addr,
+              int flags)
+{
+    int new_socket;
+    struct addrinfo AI;
+
+    PROF_start(comm_open);
+
+    /* Create socket for accepting new connections. */
+    statCounter.syscalls.sock.sockets++;
+
+    /* Setup the socket addrinfo details for use */
+    AI.ai_flags = 0;
+    AI.ai_family = PF_UNIX;
+    AI.ai_socktype = sock_type;
+    AI.ai_protocol = proto;
+    AI.ai_addrlen = SUN_LEN(addr);
+    AI.ai_addr = (sockaddr*)addr;
+    AI.ai_canonname = NULL;
+    AI.ai_next = NULL;
+
+    debugs(50, 3, "comm_openex: Attempt open socket for: " << addr->sun_path);
+
+    if ((new_socket = socket(AI.ai_family, AI.ai_socktype, AI.ai_protocol)) < 0) {
+        /* Increase the number of reserved fd's if calls to socket()
+         * are failing because the open file table is full.  This
+         * limits the number of simultaneous clients */
+
+        if (limitError(errno)) {
+            debugs(50, DBG_IMPORTANT, "comm_open: socket failure: " << xstrerror());
+            fdAdjustReserved();
+        } else {
+            debugs(50, DBG_CRITICAL, "comm_open: socket failure: " << xstrerror());
+        }
+
+        PROF_stop(comm_open);
+        return -1;
+    }
+
+    debugs(50, 3, "comm_openex: Opened socket FD " << new_socket << " : family=" << AI.ai_family << ", type=" << AI.ai_socktype << ", protocol=" << AI.ai_protocol );
+
+    /* update fdstat */
+    debugs(50, 5, "comm_open: FD " << new_socket << " is a new socket");
+
+    assert(!isOpen(new_socket));
+
+    fd_open(new_socket, FD_SOCKET, NULL);
+    fd_table[new_socket].sock_family = AI.ai_family;
+
+    fd_table[new_socket].unix_addr = *addr;
+
+    fdd_table[new_socket].close_file = NULL;
+    fdd_table[new_socket].close_line = 0;
+
+    if (!(flags & COMM_NOCLOEXEC))
+        commSetCloseOnExec(new_socket);
+
+    if (flags & COMM_REUSEADDR)
+        commSetReuseAddr(new_socket);
+
+    if (flags & COMM_NONBLOCKING) {
+        if (commSetNonBlocking(new_socket) != COMM_OK) {
+            comm_close(new_socket);
+            PROF_stop(comm_open);
+            return -1;
+        }
+    }
+
+    if (flags & COMM_DOBIND) {
+        if (commBind(new_socket, AI) != COMM_OK) {
+            comm_close(new_socket);
+            PROF_stop(comm_open);
+            return -1;
+        }
+    }
+
+#ifdef TCP_NODELAY
+    if (sock_type == SOCK_STREAM)
+        commSetTcpNoDelay(new_socket);
+
+#endif
+
+    if (Config.tcpRcvBufsz > 0 && sock_type == SOCK_STREAM)
+        commSetTcpRcvbuf(new_socket, Config.tcpRcvBufsz);
+
+    PROF_stop(comm_open);
+
+    return new_socket;
 }

@@ -56,6 +56,8 @@
 #include "DiskIO/DiskIOModule.h"
 #include "comm.h"
 #include "ipc/Kids.h"
+#include "ipc/Coordinator.h"
+#include "ipc/Strand.h"
 #if USE_EPOLL
 #include "comm_epoll.h"
 #endif
@@ -1396,6 +1398,13 @@ SquidMain(int argc, char **argv)
 
     mainLoop.setTimeService(&time_engine);
 
+    if (!opt_no_daemon && Config.main_processes > 1) {
+        if (KidIdentifier == Config.main_processes + 1)
+            AsyncJob::AsyncStart(new Ipc::Coordinator);
+        else if (KidIdentifier != 0)
+            AsyncJob::AsyncStart(new Ipc::Strand);
+    }
+
     /* at this point we are finished the synchronous startup. */
     starting_up = 0;
 
@@ -1606,7 +1615,7 @@ watch_child(char *argv[])
         mainStartScript(argv[0]);
 
         // start each kid that needs to be [re]started; once
-        for (size_t i = 0; i < TheKids.count(); ++i) {
+        for (int i = TheKids.count() - 1; i >= 0; --i) {
             Kid& kid = TheKids.get(i);
             if (kid.hopeless() || kid.exitedHappy() || kid.running())
                 continue;
