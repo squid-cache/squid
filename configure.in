@@ -1070,7 +1070,7 @@ fi
 AC_MSG_NOTICE([EUI (MAC address) controls enabled: $enable_eui])
 SQUID_DEFINE_UNQUOTED(USE_SQUID_EUI,$enable_eui,
    [Define this to include code which lets you use ethernet addresses. This code uses API initially defined in 4.4-BSD.])
-AM_CONDITIONAL(USE_SQUID_EUI, [test "$enable" = "yes" ])
+AM_CONDITIONAL(USE_SQUID_EUI, [test "$enable_eui" = "yes" ])
 
 
 AC_ARG_ENABLE(htcp,
@@ -1086,22 +1086,27 @@ AC_MSG_NOTICE([HTCP support enabled: $enable_htcp])
 
 dnl TODO KK: SSL not yet refactored
 dnl SSL is not enabled by default.
-AM_CONDITIONAL(ENABLE_SSL, false)
 dnl Default is to use OpenSSL when available
 AC_ARG_ENABLE(ssl,
-  AS_HELP_STRING([--enable-ssl],[Enable ssl gatewaying support using OpenSSL]),
-[ if test "$enableval" != "no"; then
-    AC_MSG_NOTICE([SSL gatewaying using OpenSSL enabled])
-    AC_DEFINE(USE_SSL,1,[Define this to include code for SSL encryption.])
-    AM_CONDITIONAL(ENABLE_SSL, true)
+  AS_HELP_STRING([--enable-ssl],
+                 [Enable ssl gatewaying support using OpenSSL]), [
+SQUID_YESNO([$enableval],
+            [unrecognized argument to --enable-ssl: $enableval])
+])
+SQUID_DEFINE_UNQUOTED([USE_SSL],${enable_ssl:=no},
+    [Define this to include code for SSL gatewaying support])
+AM_CONDITIONAL(ENABLE_SSL,[ test $enable_ssl = "yes" ])
+if test $enable_ssl = "yes" ; then
     if test "$squid_host_os" = "mingw" ; then
         SSLLIB='-lssleay32 -leay32 -lgdi32'
     else
         SSLLIB='-lssl -lcrypto'
     fi
-    USE_OPENSSL=1
-  fi
-])
+fi
+AC_MSG_NOTICE([SSL gatewaying support enabled: $enable_ssl])
+
+#FIXME: temporary refactoring help
+USE_OPENSSL=$enable_ssl 
 
 dnl User may specify OpenSSL is needed from a non-standard location
 AC_ARG_WITH(openssl,
