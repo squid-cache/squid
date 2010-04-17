@@ -613,7 +613,7 @@ serverConnectionsOpen(void)
 
     htcpInit();
 #endif
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 
     snmpConnectionOpen();
 #endif
@@ -651,7 +651,7 @@ serverConnectionsClose(void)
 #endif
 
     icmpEngine.Close();
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 
     snmpConnectionShutdown();
 #endif
@@ -680,7 +680,7 @@ mainReconfigureStart(void)
 
     htcpSocketClose();
 #endif
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 
     snmpConnectionClose();
 #endif
@@ -977,7 +977,7 @@ mainInitialize(void)
     Ident::Init();
 #endif
 
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 
     snmpInit();
 
@@ -1700,7 +1700,7 @@ SquidShutdown()
 
     htcpSocketClose();
 #endif
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 
     snmpConnectionClose();
 #endif

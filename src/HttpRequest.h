@@ -148,7 +148,7 @@ private:
 #endif
 
 public:
-    IpAddress host_addr;
+    Ip::Address host_addr;
 
     AuthUserRequest::Pointer auth_user_request;
 
@@ -168,10 +168,10 @@ public:
 
     int64_t max_forwards;
 
-    IpAddress client_addr;
+    Ip::Address client_addr;
 
 #if FOLLOW_X_FORWARDED_FOR
-    IpAddress indirect_client_addr;
+    Ip::Address indirect_client_addr;
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
 #if USE_SQUID_EUI
@@ -181,7 +181,7 @@ public:
     Eui::Eui64 client_eui64;
 #endif
 
-    IpAddress my_addr;
+    Ip::Address my_addr;
 
     HierarchyLogEntry hier;
 

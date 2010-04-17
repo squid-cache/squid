@@ -8,7 +8,9 @@
 /* EUI-48 is 6 bytes. */
 #define SZ_EUI48_BUF 6
 
-class IpAddress;
+namespace Ip {
+    class Address;
+};
 
 #if HAVE_CSTRING
 #include <cstring>
@@ -63,7 +65,7 @@ public:
     bool encode(char *buf, const int len);
 
     // lookup an EUI-48 / MAC address via ARP
-    bool lookup(IpAddress &c);
+    bool lookup(Ip::Address &c);
 
 private:
     unsigned char eui[SZ_EUI48_BUF];

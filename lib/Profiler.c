@@ -116,7 +116,7 @@
 #define SQUID_NO_ALLOC_PROTECT 1
 #include "config.h"
 
-#ifdef USE_XPROF_STATS
+#if USE_XPROF_STATS
 
 #include "profiling.h"
 

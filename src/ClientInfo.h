@@ -11,7 +11,7 @@ class ClientInfo
 public:
     hash_link hash;             /* must be first */
 
-    IpAddress addr;
+    Ip::Address addr;
 
     struct {
         int result_hist[LOG_TYPE_MAX];

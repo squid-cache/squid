@@ -148,7 +148,7 @@ logfile_mod_udp_close(Logfile * lf)
 int
 logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_flag)
 {
-    IpAddress addr;
+    Ip::Address addr;
     char *strAddr;
 
     lf->f_close = logfile_mod_udp_close;
@@ -176,16 +176,16 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
     }
     safe_free(strAddr);
 
-    IpAddress no_addr;
-    no_addr.SetNoAddr();
+    Ip::Address any_addr;
+    any_addr.SetAnyAddr();
 
 #if USE_IPV6
     // require the sending UDP port to be of the right family for the destination address.
     if (addr.IsIPv4())
-        no_addr.SetIPv4();
+        any_addr.SetIPv4();
 #endif
 
-    ll->fd = comm_open(SOCK_DGRAM, IPPROTO_UDP, no_addr, COMM_NONBLOCKING, "UDP log socket");
+    ll->fd = comm_open(SOCK_DGRAM, IPPROTO_UDP, any_addr, COMM_NONBLOCKING, "UDP log socket");
     if (ll->fd < 0) {
         if (lf->flags.fatal) {
             fatalf("Unable to open UDP socket for logging\n");
@@ -193,7 +193,7 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
             debugs(50, DBG_IMPORTANT, "Unable to open UDP socket for logging");
             return FALSE;
         }
-    } else if (comm_connect_addr(ll->fd, &addr)) {
+    } else if (!comm_connect_addr(ll->fd, &addr)) {
         if (lf->flags.fatal) {
             fatalf("Unable to connect to %s for UDP log: %s\n", lf->path, xstrerror());
         } else {

@@ -12,6 +12,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  */
+#include "config.h"
 
 typedef unsigned char uchar;
 
@@ -23,10 +24,7 @@ typedef unsigned char uchar;
 #if HAVE_STRING_H
 #include <string.h>
 #endif /* HAVE_STRING_H */
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif /* HAVE_STDLIB_H */
-#ifdef HAVE_UNISTD_H
+#if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 
@@ -63,7 +61,7 @@ int SMB_Negotiate(void *Con_Handle, char *Prots[]);
 int SMB_Logon_Server(SMB_Handle_Type Con_Handle, char *UserName, char *PassWord, char *Domain, int precrypted);
 #endif
 
-#ifdef DEBUG
+#if DEBUG
 #define debug_dump_ntlmssp_flags dump_ntlmssp_flags
 #else /* DEBUG */
 #define debug_dump_ntlmssp_flags(X)	/* empty */

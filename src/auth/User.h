@@ -92,8 +92,8 @@ public:
 
     /* Manage list of IPs using this username */
     void clearIp();
-    void removeIp(IpAddress);
-    void addIp(IpAddress);
+    void removeIp(Ip::Address);
+    void addIp(Ip::Address);
 
 #if USER_REQUEST_LOOP_DEAD
 protected:

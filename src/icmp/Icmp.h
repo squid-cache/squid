@@ -47,7 +47,7 @@
 
 /* This is a line-data format struct. DO NOT alter. */
 struct pingerEchoData {
-    IpAddress to;
+    Ip::Address to;
     unsigned char opcode;
     int psize;
     char payload[PINGER_PAYLOAD_SZ];
@@ -55,7 +55,7 @@ struct pingerEchoData {
 
 /* This is a line-data format struct. DO NOT alter. */
 struct pingerReplyData {
-    IpAddress from;
+    Ip::Address from;
     unsigned char opcode;
     int rtt;
     int hops;
@@ -109,7 +109,7 @@ public:
      *                Content longer than MAX_PAYLOAD will be truncated.
      \param len       Length of the payload in bytes if any is to be sent or 0.
      */
-    virtual void SendEcho(IpAddress &to, int opcode, const char *payload=NULL, int len=0) =0;
+    virtual void SendEcho(Ip::Address &to, int opcode, const char *payload=NULL, int len=0) =0;
 
     /// Handle ICMP responses.
     virtual void Recv(void) =0;
@@ -137,7 +137,7 @@ protected:
     int ipHops(int ttl);
 
     /// Log the packet.
-    void Log(const IpAddress &addr, const u_int8_t type, const char* pkt_str, const int rtt, const int hops);
+    void Log(const Ip::Address &addr, const u_int8_t type, const char* pkt_str, const int rtt, const int hops);
 
     /* no use wasting memory */
     int icmp_sock;

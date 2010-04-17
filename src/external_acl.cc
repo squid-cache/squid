@@ -134,7 +134,7 @@ public:
         QUOTE_METHOD_URL
     } quote;
 
-    IpAddress local_addr;
+    Ip::Address local_addr;
 };
 
 struct _external_acl_format {

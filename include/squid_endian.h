@@ -67,7 +67,7 @@
 #if HAVE_BYTESWAP_H
 #  include <byteswap.h>
 #endif /* HAVE_BYTESWAP_H */
-#ifdef HAVE_MACHINE_BYTE_SWAP_H
+#if HAVE_MACHINE_BYTE_SWAP_H
 #  include <machine/byte_swap.h>
 #endif	/* HAVE_MACHINE_BYTE_SWAP_H */
 #if HAVE_SYS_BSWAP_H

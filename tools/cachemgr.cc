@@ -766,7 +766,7 @@ process_request(cachemgr_request * req)
 
     char ipbuf[MAX_IPSTRLEN];
     struct addrinfo *AI = NULL;
-    IpAddress S;
+    Ip::Address S;
     int s;
     int l;
 

@@ -1250,7 +1250,7 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
     }
 
     if (TheConfig.send_client_ip && request) {
-        IpAddress client_addr;
+        Ip::Address client_addr;
 #if FOLLOW_X_FORWARDED_FOR
         if (TheConfig.icap_uses_indirect_client) {
             client_addr = request->indirect_client_addr;

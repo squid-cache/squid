@@ -200,7 +200,7 @@ snmp_meshPtblFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer = NULL;
 
-    IpAddress laddr;
+    Ip::Address laddr;
     char *cp = NULL;
     peer *p = NULL;
     int cnt = 0;
