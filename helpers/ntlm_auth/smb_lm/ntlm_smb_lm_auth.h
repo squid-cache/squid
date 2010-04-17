@@ -31,7 +31,7 @@
  * define this if you want debugging
  */
 #ifndef DEBUG
-#define DEBUG
+#define DEBUG 1
 #endif
 
 #define DEAD_DC_RETRY_INTERVAL 30

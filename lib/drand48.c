@@ -4,7 +4,7 @@
  * hack by Martin Hamilton <martinh@gnu.org> to make Squid build on
  * Win32 with GNU-Win32 - sorry, folks! */
 
-#ifndef HAVE_DRAND48
+#if !HAVE_DRAND48
 
 #define N	16
 #define MASK	((unsigned)(1 << (N - 1)) + (1 << (N - 1)) - 1)

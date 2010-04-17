@@ -193,7 +193,7 @@ parse_rfc1123(const char *str)
     if (!tm)
         return -1;
     tm->tm_isdst = -1;
-#ifdef HAVE_TIMEGM
+#if HAVE_TIMEGM
     t = timegm(tm);
 #elif HAVE_TM_TM_GMTOFF
     t = mktime(tm);
@@ -250,7 +250,7 @@ mkhttpdlogtime(const time_t * t)
 
     struct tm *gmt = gmtime(t);
 
-#ifndef USE_GMT
+#if !USE_GMT
     int gmt_min, gmt_hour, gmt_yday, day_offset;
     size_t len;
     struct tm *lt;

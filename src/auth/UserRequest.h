@@ -54,7 +54,7 @@ public:
     dlink_node node;
     /* IP addr this user authenticated from */
 
-    IpAddress ipaddr;
+    Ip::Address ipaddr;
     time_t ip_expiretime;
 };
 
@@ -119,7 +119,7 @@ public:
 
     virtual void user(AuthUser::Pointer aUser) {_auth_user=aUser;}
 
-    static AuthAclState tryToAuthenticateAndSetAuthUser(AuthUserRequest::Pointer *, http_hdr_type, HttpRequest *, ConnStateData *, IpAddress &);
+    static AuthAclState tryToAuthenticateAndSetAuthUser(AuthUserRequest::Pointer *, http_hdr_type, HttpRequest *, ConnStateData *, Ip::Address &);
     static void addReplyAuthHeader(HttpReply * rep, AuthUserRequest::Pointer auth_user_request, HttpRequest * request, int accelerated, int internal);
 
     AuthUserRequest();
@@ -153,7 +153,7 @@ public:
 
 private:
 
-    static AuthAclState authenticate(AuthUserRequest::Pointer * auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, IpAddress &src_addr);
+    static AuthAclState authenticate(AuthUserRequest::Pointer * auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, Ip::Address &src_addr);
 
     /** return a message on the 407 error pages */
     char *message;
@@ -174,7 +174,7 @@ extern void authenticateFixHeader(HttpReply *, AuthUserRequest::Pointer, HttpReq
 extern void authenticateAddTrailer(HttpReply *, AuthUserRequest::Pointer, HttpRequest *, int);
 
 /// \ingroup AuthAPI
-extern void authenticateAuthUserRequestRemoveIp(AuthUserRequest::Pointer, IpAddress const &);
+extern void authenticateAuthUserRequestRemoveIp(AuthUserRequest::Pointer, Ip::Address const &);
 /// \ingroup AuthAPI
 extern void authenticateAuthUserRequestClearIp(AuthUserRequest::Pointer);
 /// \ingroup AuthAPI

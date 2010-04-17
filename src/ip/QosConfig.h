@@ -5,6 +5,10 @@
 
 #if USE_ZPH_QOS
 
+namespace Ip {
+
+namespace Qos {
+
 class QosConfig
 {
 public:
@@ -22,6 +26,8 @@ public:
     void dumpConfigLine(char *entry, const char *name) const;
 };
 
+extern QosConfig TheConfig;
+
 /* legacy parser access wrappers */
 #define parse_QosConfig(X)	(X)->parseConfigLine()
 #define free_QosConfig(X)
@@ -30,6 +36,9 @@ public:
 		(X).dumpConfigLine(temp,n); \
 	        storeAppendPrintf(e, "%s", temp); \
 	} while(0);
+
+}; // namespace Qos
+}; // namespace Ip
 
 #endif /* USE_ZPH_QOS */
 #endif /* SQUID_QOSCONFIG_H */

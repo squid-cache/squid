@@ -44,9 +44,9 @@ public:
 
     ConnectionDetail();
 
-    IpAddress me;
+    Ip::Address me;
 
-    IpAddress peer;
+    Ip::Address peer;
 };
 
 #endif

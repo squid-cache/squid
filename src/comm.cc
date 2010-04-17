@@ -209,11 +209,11 @@ public:
 // defaults given by client
     char *host;
     u_short default_port;
-    IpAddress default_addr;
+    Ip::Address default_addr;
     // NP: CANNOT store the default addr:port together as it gets set/reset differently.
 
     DnsLookupDetails dns; ///< host lookup details
-    IpAddress S;
+    Ip::Address S;
     AsyncCall::Pointer callback;
 
     int fd;
@@ -470,7 +470,7 @@ comm_read_cancel(int fd, AsyncCall::Pointer &callback)
  * synchronous wrapper around udp socket functions
  */
 int
-comm_udp_recvfrom(int fd, void *buf, size_t len, int flags, IpAddress &from)
+comm_udp_recvfrom(int fd, void *buf, size_t len, int flags, Ip::Address &from)
 {
     statCounter.syscalls.sock.recvfroms++;
     int x = 0;
@@ -494,7 +494,7 @@ comm_udp_recvfrom(int fd, void *buf, size_t len, int flags, IpAddress &from)
 int
 comm_udp_recv(int fd, void *buf, size_t len, int flags)
 {
-    IpAddress nul;
+    Ip::Address nul;
     return comm_udp_recvfrom(fd, buf, len, flags, nul);
 }
 
@@ -521,7 +521,7 @@ comm_has_incomplete_write(int fd)
 u_short
 comm_local_port(int fd)
 {
-    IpAddress temp;
+    Ip::Address temp;
     struct addrinfo *addr = NULL;
     fde *F = &fd_table[fd];
 
@@ -588,7 +588,7 @@ commBind(int s, struct addrinfo &inaddr)
 int
 comm_open(int sock_type,
           int proto,
-          IpAddress &addr,
+          Ip::Address &addr,
           int flags,
           const char *note)
 {
@@ -598,7 +598,7 @@ comm_open(int sock_type,
 int
 comm_open_listener(int sock_type,
                    int proto,
-                   IpAddress &addr,
+                   Ip::Address &addr,
                    int flags,
                    const char *note)
 {
@@ -681,7 +681,7 @@ comm_set_transparent(int fd)
 int
 comm_openex(int sock_type,
             int proto,
-            IpAddress &addr,
+            Ip::Address &addr,
             int flags,
             unsigned char TOS,
             const char *note)
@@ -947,7 +947,7 @@ int
 ConnectStateData::commResetFD()
 {
     struct addrinfo *AI = NULL;
-    IpAddress nul;
+    Ip::Address nul;
     int new_family = AF_UNSPEC;
 
 // XXX: do we have to check this?
@@ -1196,7 +1196,7 @@ int commSetTimeout(int fd, int timeout, AsyncCall::Pointer &callback)
 }
 
 int
-comm_connect_addr(int sock, const IpAddress &address)
+comm_connect_addr(int sock, const Ip::Address &address)
 {
     comm_err_t status = COMM_OK;
     fde *F = &fd_table[sock];
@@ -1426,7 +1426,7 @@ comm_reset_close(int fd)
     L.l_linger = 0;
 
     if (setsockopt(fd, SOL_SOCKET, SO_LINGER, (char *) &L, sizeof(L)) < 0)
-        debugs(50, 0, "commResetTCPClose: FD " << fd << ": " << xstrerror());
+        debugs(50, DBG_CRITICAL, "ERROR: Closing FD " << fd << " with TCP RST: " << xstrerror());
 
     comm_close(fd);
 }
@@ -1544,7 +1544,7 @@ _comm_close(int fd, char const *file, int line)
 /* Send a udp datagram to specified TO_ADDR. */
 int
 comm_udp_sendto(int fd,
-                const IpAddress &to_addr,
+                const Ip::Address &to_addr,
                 const void *buf,
                 int len)
 {
@@ -2041,8 +2041,8 @@ commCloseAllSockets(void)
             debugs(5, 5, "commCloseAllSockets: FD " << fd << ": Calling timeout handler");
             ScheduleCallHere(callback);
         } else {
-            debugs(5, 5, "commCloseAllSockets: FD " << fd << ": calling comm_close()");
-            comm_close(fd);
+            debugs(5, 5, "commCloseAllSockets: FD " << fd << ": calling comm_reset_close()");
+            comm_reset_close(fd);
         }
     }
 }

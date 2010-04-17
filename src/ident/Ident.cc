@@ -58,9 +58,8 @@ typedef struct _IdentStateData {
     hash_link hash;		/* must be first */
     int fd;			/* IDENT fd */
 
-    IpAddress me;
-
-    IpAddress my_peer;
+    Ip::Address me;
+    Ip::Address my_peer;
     IdentClient *clients;
     char buf[4096];
 } IdentStateData;
@@ -214,7 +213,7 @@ CBDATA_TYPE(IdentStateData);
  * start a TCP connection to the peer host on port 113
  */
 void
-Ident::Start(IpAddress &me, IpAddress &my_peer, IDCB * callback, void *data)
+Ident::Start(Ip::Address &me, Ip::Address &my_peer, IDCB * callback, void *data)
 {
     IdentStateData *state;
     int fd;
@@ -235,7 +234,7 @@ Ident::Start(IpAddress &me, IpAddress &my_peer, IDCB * callback, void *data)
         return;
     }
 
-    IpAddress addr = me;
+    Ip::Address addr = me;
     addr.SetPort(0); // NP: use random port for secure outbound to IDENT_PORT
 
     fd = comm_open_listener(SOCK_STREAM,

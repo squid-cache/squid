@@ -1291,7 +1291,7 @@ void
 HttpStateData::processReplyBody()
 {
     AsyncCall::Pointer call;
-    IpAddress client_addr;
+    Ip::Address client_addr;
     bool ispinned = false;
 
     if (!flags.headers_parsed) {

@@ -56,7 +56,7 @@
 
 struct arpreq {
 
-    IpAddress arp_pa;   /* protocol address */
+    Ip::Address arp_pa;   /* protocol address */
 
     struct sockaddr arp_ha;   /* hardware address */
     int arp_flags;            /* flags */
@@ -152,14 +152,14 @@ Eui::Eui48::encode(char *buf, const int len)
 
 // return binary representation of the EUI
 bool
-Eui::Eui48::lookup(IpAddress &c)
+Eui::Eui48::lookup(Ip::Address &c)
 {
     struct arpreq arpReq;
 #if !defined(_SQUID_WIN32_)
     struct sockaddr_in *sa = NULL;
 #endif /* !_SQUID_WIN32_ */
 
-    IpAddress ipAddr = c;
+    Ip::Address ipAddr = c;
     ipAddr.SetPort(0);
 
 #if defined(_SQUID_LINUX_)

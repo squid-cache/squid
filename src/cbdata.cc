@@ -173,7 +173,7 @@ MEMPROXY_CLASS_INLINE(cbdata);
 #endif
 
 static OBJH cbdataDump;
-#ifdef CBDATA_DEBUG
+#if CBDATA_DEBUG
 static OBJH cbdataDumpHistory;
 #endif
 

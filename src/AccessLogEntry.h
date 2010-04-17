@@ -111,7 +111,7 @@ public:
         {;
         }
 
-        IpAddress caddr;
+        Ip::Address caddr;
         int64_t requestSize;
         int64_t replySize;
         int requestHeadersSize; ///< received, including request line
@@ -178,7 +178,7 @@ public:
     public:
         IcapLogEntry():request(NULL),reply(NULL),outcome(Adaptation::Icap::xoUnknown),trTime(0),ioTime(0),resStatus(HTTP_STATUS_NONE) {}
 
-        IpAddress hostAddr; ///< ICAP server IP address
+        Ip::Address hostAddr; ///< ICAP server IP address
         String serviceName;        ///< ICAP service name
         String reqUri;             ///< ICAP Request-URI
         Adaptation::Icap::ICAP::Method reqMethod; ///< ICAP request method
