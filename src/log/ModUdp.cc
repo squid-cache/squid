@@ -148,7 +148,7 @@ logfile_mod_udp_close(Logfile * lf)
 int
 logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_flag)
 {
-    IpAddress addr;
+    Ip::Address addr;
     char *strAddr;
 
     lf->f_close = logfile_mod_udp_close;
@@ -176,7 +176,7 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
     }
     safe_free(strAddr);
 
-    IpAddress any_addr;
+    Ip::Address any_addr;
     any_addr.SetAnyAddr();
 
 #if USE_IPV6

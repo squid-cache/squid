@@ -100,10 +100,10 @@
 
 
 // single global instance for access by other components.
-IpIntercept IpInterceptor;
+Ip::Intercept Ip::Interceptor;
 
 void
-IpIntercept::StopTransparency(const char *str)
+Ip::Intercept::StopTransparency(const char *str)
 {
     if (transparent_active) {
         debugs(89, DBG_IMPORTANT, "Stopping full transparency: " << str);
@@ -112,7 +112,7 @@ IpIntercept::StopTransparency(const char *str)
 }
 
 void
-IpIntercept::StopInterception(const char *str)
+Ip::Intercept::StopInterception(const char *str)
 {
     if (intercept_active) {
         debugs(89, DBG_IMPORTANT, "Stopping IP interception: " << str);
@@ -121,7 +121,7 @@ IpIntercept::StopInterception(const char *str)
 }
 
 int
-IpIntercept::NetfilterInterception(int fd, const IpAddress &me, IpAddress &dst, int silent)
+Ip::Intercept::NetfilterInterception(int fd, const Ip::Address &me, Ip::Address &dst, int silent)
 {
 #if LINUX_NETFILTER
     struct addrinfo *lookup = NULL;
@@ -139,7 +139,7 @@ IpIntercept::NetfilterInterception(int fd, const IpAddress &me, IpAddress &dst, 
         dst = *lookup;
     }
 
-    dst.FreeAddrInfo(lookup);
+    Address::FreeAddrInfo(lookup);
 
     if (me != dst) {
         debugs(89, 5, HERE << "address NAT: me= " << me << ", dst= " << dst);
@@ -152,7 +152,7 @@ IpIntercept::NetfilterInterception(int fd, const IpAddress &me, IpAddress &dst, 
 }
 
 int
-IpIntercept::NetfilterTransparent(int fd, const IpAddress &me, IpAddress &client, int silent)
+Ip::Intercept::NetfilterTransparent(int fd, const Ip::Address &me, Ip::Address &client, int silent)
 {
 #if LINUX_NETFILTER
 
@@ -171,7 +171,7 @@ IpIntercept::NetfilterTransparent(int fd, const IpAddress &me, IpAddress &client
 }
 
 int
-IpIntercept::IpfwInterception(int fd, const IpAddress &me, IpAddress &dst, int silent)
+Ip::Intercept::IpfwInterception(int fd, const Ip::Address &me, Ip::Address &dst, int silent)
 {
 #if IPFW_TRANSPARENT
     struct addrinfo *lookup = NULL;
@@ -189,7 +189,7 @@ IpIntercept::IpfwInterception(int fd, const IpAddress &me, IpAddress &dst, int s
         dst = *lookup;
     }
 
-    dst.FreeAddrInfo(lookup);
+    Address::FreeAddrInfo(lookup);
 
     if (me != dst) {
         debugs(89, 5, HERE << "address NAT: me= " << me << ", dst= " << dst);
@@ -202,7 +202,7 @@ IpIntercept::IpfwInterception(int fd, const IpAddress &me, IpAddress &dst, int s
 }
 
 int
-IpIntercept::IpfInterception(int fd, const IpAddress &me, IpAddress &client, IpAddress &dst, int silent)
+Ip::Intercept::IpfInterception(int fd, const Ip::Address &me, Ip::Address &client, Ip::Address &dst, int silent)
 {
 #if IPF_TRANSPARENT  /* --enable-ipf-transparent */
 
@@ -299,7 +299,7 @@ IpIntercept::IpfInterception(int fd, const IpAddress &me, IpAddress &client, IpA
 }
 
 int
-IpIntercept::PfInterception(int fd, const IpAddress &me, IpAddress &client, IpAddress &dst, int silent)
+Ip::Intercept::PfInterception(int fd, const Ip::Address &me, Ip::Address &client, Ip::Address &dst, int silent)
 {
 #if PF_TRANSPARENT  /* --enable-pf-transparent */
 
@@ -356,7 +356,7 @@ IpIntercept::PfInterception(int fd, const IpAddress &me, IpAddress &client, IpAd
 
 
 int
-IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAddress &client, IpAddress &dst)
+Ip::Intercept::NatLookup(int fd, const Ip::Address &me, const Ip::Address &peer, Ip::Address &client, Ip::Address &dst)
 {
     /* --enable-linux-netfilter    */
     /* --enable-ipfw-transparent   */
@@ -406,9 +406,9 @@ IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAdd
 
 #if LINUX_TPROXY2
 int
-IpIntercept::SetTproxy2OutgoingAddr(int fd, const IpAddress &src)
+Ip::Intercept::SetTproxy2OutgoingAddr(int fd, const Ip::Address &src)
 {
-    IpAddress addr;
+    Address addr;
     struct in_tproxy itp;
 
     src.GetInAddr(itp.v.addr.faddr);
@@ -440,7 +440,7 @@ IpIntercept::SetTproxy2OutgoingAddr(int fd, const IpAddress &src)
 #endif
 
 bool
-IpIntercept::ProbeForTproxy(IpAddress &test)
+Ip::Intercept::ProbeForTproxy(Ip::Address &test)
 {
     debugs(3, 3, "Detect TPROXY support on port " << test);
 #if LINUX_TPROXY2
@@ -468,7 +468,7 @@ IpIntercept::ProbeForTproxy(IpAddress &test)
         debugs(3, 3, "...Probing for IPv6 TPROXY support.");
 
         struct sockaddr_in6 tmp_ip6;
-        IpAddress tmp = "::2";
+        Ip::Address tmp = "::2";
         tmp.SetPort(0);
         tmp.GetSockAddr(tmp_ip6);
 
@@ -497,7 +497,7 @@ IpIntercept::ProbeForTproxy(IpAddress &test)
         debugs(3, 3, "...Probing for IPv4 TPROXY support.");
 
         struct sockaddr_in tmp_ip4;
-        IpAddress tmp = "127.0.0.2";
+        Ip::Address tmp = "127.0.0.2";
         tmp.SetPort(0);
         tmp.GetSockAddr(tmp_ip4);
 
