@@ -38,33 +38,34 @@
 
 /* old includes without reasons given. */
 #include "squid.h"
-#include "client_side_reply.h"
-#include "errorpage.h"
-#include "StoreClient.h"
-#include "Store.h"
-#include "HttpReply.h"
-#include "HttpRequest.h"
-#include "forward.h"
-#include "clientStream.h"
-#include "auth/UserRequest.h"
-#if USE_SQUID_ESI
-#include "esi/Esi.h"
-#endif
-#include "MemObject.h"
-#include "fde.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
+#include "auth/UserRequest.h"
+#include "client_side.h"
+#include "client_side_reply.h"
+#include "clientStream.h"
 #if DELAY_POOLS
 #include "DelayPools.h"
 #endif
-#include "client_side.h"
+#include "errorpage.h"
+#if USE_SQUID_ESI
+#include "esi/Esi.h"
+#endif
+#include "fde.h"
+#include "forward.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
+#include "ip/QosConfig.h"
+#include "MemObject.h"
 #include "SquidTime.h"
+#include "StoreClient.h"
+#include "Store.h"
 
 CBDATA_CLASS_INIT(clientReplyContext);
 
 /* Local functions */
 extern "C" CSS clientReplyStatus;
-extern ErrorState *clientBuildError(err_type, http_status, char const *, IpAddress &, HttpRequest *);
+extern ErrorState *clientBuildError(err_type, http_status, char const *, Ip::Address &, HttpRequest *);
 
 /* privates */
 
@@ -94,7 +95,7 @@ clientReplyContext::clientReplyContext(ClientHttpRequest *clientContext) : http 
 void
 clientReplyContext::setReplyToError(
     err_type err, http_status status, const HttpRequestMethod& method, char const *uri,
-    IpAddress &addr, HttpRequest * failedrequest, const char *unparsedrequest,
+    Ip::Address &addr, HttpRequest * failedrequest, const char *unparsedrequest,
     AuthUserRequest * auth_user_request)
 {
     ErrorState *errstate =
@@ -1672,9 +1673,9 @@ clientReplyContext::doGetMoreData()
         assert(http->out.size == 0);
         assert(http->out.offset == 0);
 #if USE_ZPH_QOS
-        if (Config.zph.tos_local_hit) {
-            debugs(33, 2, "ZPH Local hit, TOS=" << Config.zph.tos_local_hit);
-            comm_set_tos(http->getConn()->fd, Config.zph.tos_local_hit);
+        if (Ip::Qos::TheConfig.tos_local_hit) {
+            debugs(33, 2, "ZPH Local hit, TOS=" << Ip::Qos::TheConfig.tos_local_hit);
+            comm_set_tos(http->getConn()->fd, Ip::Qos::TheConfig.tos_local_hit);
         }
 #endif /* USE_ZPH_QOS */
         localTempBuffer.offset = reqofs;
@@ -1770,7 +1771,7 @@ clientReplyContext::next() const
 void
 clientReplyContext::sendBodyTooLargeError()
 {
-    IpAddress tmp_noaddr;
+    Ip::Address tmp_noaddr;
     tmp_noaddr.SetNoAddr(); // TODO: make a global const
     http->logType = LOG_TCP_DENIED_REPLY;
     ErrorState *err = clientBuildError(ERR_TOO_BIG, HTTP_FORBIDDEN, NULL,
@@ -1844,7 +1845,7 @@ clientReplyContext::processReplyAccessResult(bool accessAllowed)
         if (page_id == ERR_NONE)
             page_id = ERR_ACCESS_DENIED;
 
-        IpAddress tmp_noaddr;
+        Ip::Address tmp_noaddr;
         tmp_noaddr.SetNoAddr();
         err = clientBuildError(page_id, HTTP_FORBIDDEN, NULL,
                                http->getConn() != NULL ? http->getConn()->peer : tmp_noaddr,
@@ -1959,14 +1960,14 @@ clientReplyContext::sendMoreData (StoreIOBuffer result)
     if (reqofs==0 && !logTypeIsATcpHit(http->logType)) {
         assert(fd >= 0); // the beginning of this method implies fd may be -1
         int tos = 0;
-        if (Config.zph.tos_sibling_hit && http->request->hier.code==SIBLING_HIT ) {
-            tos = Config.zph.tos_sibling_hit;
+        if (Ip::Qos::TheConfig.tos_sibling_hit && http->request->hier.code==SIBLING_HIT ) {
+            tos = Ip::Qos::TheConfig.tos_sibling_hit;
             debugs(33, 2, "ZPH: Sibling Peer hit with hier.code=" << http->request->hier.code << ", TOS=" << tos);
-        } else if (Config.zph.tos_parent_hit && http->request->hier.code==PARENT_HIT) {
-            tos = Config.zph.tos_parent_hit;
+        } else if (Ip::Qos::TheConfig.tos_parent_hit && http->request->hier.code==PARENT_HIT) {
+            tos = Ip::Qos::TheConfig.tos_parent_hit;
             debugs(33, 2, "ZPH: Parent Peer hit with hier.code=" << http->request->hier.code << ", TOS=" << tos);
-        } else if (Config.zph.preserve_miss_tos && Config.zph.preserve_miss_tos_mask) {
-            tos = fd_table[fd].upstreamTOS & Config.zph.preserve_miss_tos_mask;
+        } else if (Ip::Qos::TheConfig.preserve_miss_tos && Ip::Qos::TheConfig.preserve_miss_tos_mask) {
+            tos = fd_table[fd].upstreamTOS & Ip::Qos::TheConfig.preserve_miss_tos_mask;
             debugs(33, 2, "ZPH: Preserving TOS on miss, TOS="<<tos);
         }
         comm_set_tos(fd,tos);
@@ -2078,7 +2079,7 @@ clientReplyContext::createStoreEntry(const HttpRequestMethod& m, request_flags r
 
 ErrorState *
 clientBuildError(err_type page_id, http_status status, char const *url,
-                 IpAddress &src_addr, HttpRequest * request)
+                 Ip::Address &src_addr, HttpRequest * request)
 {
     ErrorState *err = errorCon(page_id, status, request);
     err->src_addr = src_addr;

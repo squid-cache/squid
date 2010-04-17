@@ -69,7 +69,7 @@ private:
     static Prototype RegistryProtoype;
     static ACLMaxUserIP RegistryEntry_;
 
-    int match(AuthUserRequest *, IpAddress const &);
+    int match(AuthUserRequest *, Ip::Address const &);
     char const *class_;
     int maximum;
 

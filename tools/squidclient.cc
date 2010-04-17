@@ -93,9 +93,9 @@ using namespace Squid;
 typedef void SIGHDLR(int sig);
 
 /* Local functions */
-static int client_comm_bind(int, const IpAddress &);
+static int client_comm_bind(int, const Ip::Address &);
 
-static int client_comm_connect(int, const IpAddress &, struct timeval *);
+static int client_comm_connect(int, const Ip::Address &, struct timeval *);
 static void usage(const char *progname);
 
 static int Now(struct timeval *);
@@ -167,7 +167,7 @@ main(int argc, char *argv[])
     int opt_noaccept = 0;
     int opt_verbose = 0;
     const char *hostname, *localhost;
-    IpAddress iaddr;
+    Ip::Address iaddr;
     char url[BUFSIZ], msg[MESSAGELEN], buf[BUFSIZ];
     char extra_hdrs[HEADERLEN];
     const char *method = "GET";
@@ -630,7 +630,7 @@ main(int argc, char *argv[])
 }
 
 static int
-client_comm_bind(int sock, const IpAddress &addr)
+client_comm_bind(int sock, const Ip::Address &addr)
 {
 
     int res;
@@ -649,7 +649,7 @@ client_comm_bind(int sock, const IpAddress &addr)
 }
 
 static int
-client_comm_connect(int sock, const IpAddress &addr, struct timeval *tvp)
+client_comm_connect(int sock, const Ip::Address &addr, struct timeval *tvp)
 {
     int res;
     static struct addrinfo *AI = NULL;

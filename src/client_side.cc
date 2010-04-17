@@ -170,7 +170,7 @@ static void connNoteUseOfBuffer(ConnStateData* conn, size_t byteCount);
 static int connKeepReadingIncompleteRequest(ConnStateData * conn);
 static void connCancelIncompleteRequests(ConnStateData * conn);
 
-static ConnStateData *connStateCreate(const IpAddress &peer, const IpAddress &me, int fd, http_port_list *port);
+static ConnStateData *connStateCreate(const Ip::Address &peer, const Ip::Address &me, int fd, http_port_list *port);
 
 
 int
@@ -2426,10 +2426,10 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
      * If transparent or interception mode is working clone the transparent and interception flags
      * from the port settings to the request.
      */
-    if (IpInterceptor.InterceptActive()) {
+    if (Ip::Interceptor.InterceptActive()) {
         request->flags.intercepted = http->flags.intercepted;
     }
-    if (IpInterceptor.TransparentActive()) {
+    if (Ip::Interceptor.TransparentActive()) {
         request->flags.spoof_client_ip = conn->port->spoof_client_ip;
     }
 
@@ -3010,7 +3010,7 @@ clientLifetimeTimeout(int fd, void *data)
 }
 
 ConnStateData *
-connStateCreate(const IpAddress &peer, const IpAddress &me, int fd, http_port_list *port)
+connStateCreate(const Ip::Address &peer, const Ip::Address &me, int fd, http_port_list *port)
 {
     ConnStateData *result = new ConnStateData;
 
@@ -3023,9 +3023,9 @@ connStateCreate(const IpAddress &peer, const IpAddress &me, int fd, http_port_li
     result->port = cbdataReference(port);
 
     if (port->intercepted || port->spoof_client_ip) {
-        IpAddress client, dst;
+        Ip::Address client, dst;
 
-        if (IpInterceptor.NatLookup(fd, me, peer, client, dst) == 0) {
+        if (Ip::Interceptor.NatLookup(fd, me, peer, client, dst) == 0) {
             result->me = client;
             result->peer = dst;
             result->transparent(true);

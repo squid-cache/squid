@@ -1410,7 +1410,7 @@ NAME: qos_flows
 TYPE: QosConfig
 IFDEF: USE_ZPH_QOS
 DEFAULT: none
-LOC: Config.zph
+LOC: Ip::Qos::TheConfig
 DOC_START
 	Allows you to select a TOS/DSCP value to mark outgoing
 	connections with, based on where the reply was sourced.

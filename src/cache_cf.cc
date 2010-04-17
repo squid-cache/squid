@@ -57,6 +57,7 @@
 #include "HttpRequestMethod.h"
 #include "ident/Config.h"
 #include "ip/IpIntercept.h"
+#include "ip/QosConfig.h"
 #include "log/Config.h"
 #include "MemBuf.h"
 #include "Parsing.h"
@@ -154,11 +155,11 @@ static void dump_denyinfo(StoreEntry * entry, const char *name, acl_deny_info_li
 static void free_denyinfo(acl_deny_info_list ** var);
 
 #if USE_WCCPv2
-static void parse_IpAddress_list(IpAddress_list **);
-static void dump_IpAddress_list(StoreEntry *, const char *, const IpAddress_list *);
-static void free_IpAddress_list(IpAddress_list **);
+static void parse_IpAddress_list(Ip::Address_list **);
+static void dump_IpAddress_list(StoreEntry *, const char *, const Ip::Address_list *);
+static void free_IpAddress_list(Ip::Address_list **);
 #if CURRENTLY_UNUSED
-static int check_null_IpAddress_list(const IpAddress_list *);
+static int check_null_IpAddress_list(const Ip::Address_list *);
 #endif /* CURRENTLY_UNUSED */
 #endif /* USE_WCCPv2 */
 
@@ -1008,14 +1009,14 @@ free_acl_access(acl_access ** head)
 }
 
 static void
-dump_address(StoreEntry * entry, const char *name, IpAddress &addr)
+dump_address(StoreEntry * entry, const char *name, Ip::Address &addr)
 {
     char buf[MAX_IPSTRLEN];
     storeAppendPrintf(entry, "%s %s\n", name, addr.NtoA(buf,MAX_IPSTRLEN) );
 }
 
 static void
-parse_address(IpAddress *addr)
+parse_address(Ip::Address *addr)
 {
     char *token = strtok(NULL, w_space);
 
@@ -1035,7 +1036,7 @@ parse_address(IpAddress *addr)
 }
 
 static void
-free_address(IpAddress *addr)
+free_address(Ip::Address *addr)
 {
     addr->SetEmpty();
 }
@@ -2874,11 +2875,11 @@ parseNeighborType(const char *s)
 
 #if USE_WCCPv2
 static void
-parse_IpAddress_list(IpAddress_list ** head)
+parse_IpAddress_list(Ip::Address_list ** head)
 {
     char *token;
-    IpAddress_list *s;
-    IpAddress ipa;
+    Ip::Address_list *s;
+    Ip::Address ipa;
 
     while ((token = strtok(NULL, w_space))) {
         if (GetHostWithPort(token, &ipa)) {
@@ -2886,7 +2887,7 @@ parse_IpAddress_list(IpAddress_list ** head)
             while (*head)
                 head = &(*head)->next;
 
-            s = static_cast<IpAddress_list *>(xcalloc(1, sizeof(*s)));
+            s = static_cast<Ip::Address_list *>(xcalloc(1, sizeof(*s)));
             s->s = ipa;
 
             *head = s;
@@ -2896,7 +2897,7 @@ parse_IpAddress_list(IpAddress_list ** head)
 }
 
 static void
-dump_IpAddress_list(StoreEntry * e, const char *n, const IpAddress_list * s)
+dump_IpAddress_list(StoreEntry * e, const char *n, const Ip::Address_list * s)
 {
     char ntoabuf[MAX_IPSTRLEN];
 
@@ -2909,7 +2910,7 @@ dump_IpAddress_list(StoreEntry * e, const char *n, const IpAddress_list * s)
 }
 
 static void
-free_IpAddress_list(IpAddress_list ** head)
+free_IpAddress_list(Ip::Address_list ** head)
 {
     if (*head) delete *head;
     *head = NULL;
@@ -2920,7 +2921,7 @@ free_IpAddress_list(IpAddress_list ** head)
  * be used by icp_port and htcp_port
  */
 static int
-check_null_IpAddress_list(const IpAddress_list * s)
+check_null_IpAddress_list(const Ip::Address_list * s)
 {
     return NULL == s;
 }
@@ -3051,7 +3052,7 @@ parse_http_port_option(http_port_list * s, char *token)
 
     } else if (strcmp(token, "transparent") == 0 || strcmp(token, "intercept") == 0) {
         s->intercepted = 1;
-        IpInterceptor.StartInterception();
+        Ip::Interceptor.StartInterception();
         /* Log information regarding the port modes under interception. */
         debugs(3, DBG_IMPORTANT, "Starting Authentication on port " << s->s);
         debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (interception enabled)");
@@ -3070,12 +3071,12 @@ parse_http_port_option(http_port_list * s, char *token)
             self_destruct();
         }
         s->spoof_client_ip = 1;
-        IpInterceptor.StartTransparency();
+        Ip::Interceptor.StartTransparency();
         /* Log information regarding the port modes under transparency. */
         debugs(3, DBG_IMPORTANT, "Starting IP Spoofing on port " << s->s);
         debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (IP spoofing enabled)");
 
-        if (!IpInterceptor.ProbeForTproxy(s->s)) {
+        if (!Ip::Interceptor.ProbeForTproxy(s->s)) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: TPROXY support in the system does not work.");
             self_destruct();
         }

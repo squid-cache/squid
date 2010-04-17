@@ -85,8 +85,8 @@ public:
     _SQUID_INLINE_ char const *username() const;
     _SQUID_INLINE_ void username(char const *);
     void clearIp();
-    void removeIp(IpAddress);
-    void addIp(IpAddress);
+    void removeIp(Ip::Address);
+    void addIp(Ip::Address);
     _SQUID_INLINE_ void addRequest(AuthUserRequest *);
 
     void lock();

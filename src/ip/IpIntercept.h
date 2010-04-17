@@ -4,13 +4,15 @@
  * AUTHOR: Amos Jeffries
  *
  */
-#ifndef SQUID_IPINTERCEPTION_H
-#define SQUID_IPINTERCEPTION_H
-
-class IpAddress;
+#ifndef SQUID_IP_IPINTERCEPT_H
+#define SQUID_IP_IPINTERCEPT_H
 
 /* for time_t */
 #include "SquidTime.h"
+
+namespace Ip {
+
+class Address;
 
 /**
  \defgroup IpInterceptAPI IP Interception and Transparent Proxy API
@@ -20,19 +22,19 @@ class IpAddress;
  * instead there is this neutral API which other connection state machines
  * and the comm layer use to co-ordinate their own state for transparency.
  */
-class IpIntercept
+class Intercept
 {
 public:
-    IpIntercept() : transparent_active(0), intercept_active(0), last_reported(0) {};
-    ~IpIntercept() {};
+    Intercept() : transparent_active(0), intercept_active(0), last_reported(0) {};
+    ~Intercept() {};
 
     /** Perform NAT lookups */
-    int NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAddress &client, IpAddress &dst);
+    int NatLookup(int fd, const Address &me, const Address &peer, Address &client, Address &dst);
 
 #if LINUX_TPROXY2
     // only relevant to TPROXY v2 connections.
     // which require the address be set specifically post-connect.
-    int SetTproxy2OutgoingAddr(int fd, const IpAddress &src);
+    int SetTproxy2OutgoingAddr(int fd, const Address &src);
 #endif
 
     /**
@@ -44,7 +46,7 @@ public:
      * \retval true   TPROXY is available.
      * \retval false  TPROXY is not available.
      */
-    bool ProbeForTproxy(IpAddress &test);
+    bool ProbeForTproxy(Address &test);
 
     /**
      \retval 0	Full transparency is disabled.
@@ -103,7 +105,7 @@ private:
      \retval 0     Successfuly located the new address.
      \retval -1    An error occured during NAT lookups.
      */
-    int NetfilterInterception(int fd, const IpAddress &me, IpAddress &client, int silent);
+    int NetfilterInterception(int fd, const Address &me, Address &client, int silent);
 
     /**
      * perform Lookups on Netfilter fully-transparent interception targets (TPROXY).
@@ -117,7 +119,7 @@ private:
      \retval 0     Successfuly located the new address.
      \retval -1    An error occured during NAT lookups.
      */
-    int NetfilterTransparent(int fd, const IpAddress &me, IpAddress &dst, int silent);
+    int NetfilterTransparent(int fd, const Address &me, Address &dst, int silent);
 
     /**
      * perform Lookups on IPFW interception.
@@ -131,7 +133,7 @@ private:
      \retval 0     Successfuly located the new address.
      \retval -1    An error occured during NAT lookups.
      */
-    int IpfwInterception(int fd, const IpAddress &me, IpAddress &client, int silent);
+    int IpfwInterception(int fd, const Address &me, Address &client, int silent);
 
     /**
      * perform Lookups on IPF interception.
@@ -148,7 +150,7 @@ private:
      \retval 0     Successfuly located the new address.
      \retval -1    An error occured during NAT lookups.
      */
-    int IpfInterception(int fd, const IpAddress &me, IpAddress &client, IpAddress &dst, int silent);
+    int IpfInterception(int fd, const Address &me, Address &client, Address &dst, int silent);
 
     /**
      * perform Lookups on PF interception.
@@ -165,7 +167,7 @@ private:
      \retval 0     Successfuly located the new address.
      \retval -1    An error occured during NAT lookups.
      */
-    int PfInterception(int fd, const IpAddress &me, IpAddress &client, IpAddress &dst, int silent);
+    int PfInterception(int fd, const Address &me, Address &client, Address &dst, int silent);
 
 
     int transparent_active;
@@ -182,6 +184,8 @@ private:
  \ingroup IpInterceptAPI
  * Globally available instance of the IP Interception manager.
  */
-extern IpIntercept IpInterceptor;
+extern Intercept Interceptor;
 
-#endif /* SQUID_IPINTERCEPTION_H */
+}; // namespace Ip
+
+#endif /* SQUID_IP_IPINTERCEPT_H */

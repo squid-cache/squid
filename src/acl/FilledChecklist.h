@@ -43,9 +43,9 @@ public:
     virtual bool hasReply() const { return reply != NULL; }
 
 public:
-    IpAddress src_addr;
-    IpAddress dst_addr;
-    IpAddress my_addr;
+    Ip::Address src_addr;
+    Ip::Address dst_addr;
+    Ip::Address my_addr;
     struct peer *dst_peer;
     char *dst_rdns;
 

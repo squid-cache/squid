@@ -43,7 +43,7 @@ public:
     bool checkRetry();
     bool checkRetriable();
     void dispatch();
-    void pconnPush(int fd, const peer *_peer, const HttpRequest *req, const char *domain, IpAddress &client_addr);
+    void pconnPush(int fd, const peer *_peer, const HttpRequest *req, const char *domain, Ip::Address &client_addr);
 
     bool dontRetry() { return flags.dont_retry; }
 
@@ -98,7 +98,7 @@ private:
         unsigned int forward_completed:1;
     } flags;
 
-    IpAddress src; /* Client address for this connection. Needed for transparent operations. */
+    Ip::Address src; /* Client address for this connection. Needed for transparent operations. */
 
     // NP: keep this last. It plays with private/public
     CBDATA_CLASS2(FwdState);
