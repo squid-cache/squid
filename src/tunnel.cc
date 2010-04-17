@@ -640,7 +640,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
     statCounter.server.all.requests++;
     statCounter.server.other.requests++;
     /* Create socket. */
-    IpAddress temp = getOutgoingAddr(request,NULL);
+    Ip::Address temp = getOutgoingAddr(request,NULL);
     int flags = COMM_NONBLOCKING;
     if (request->flags.spoof_client_ip) {
         flags |= COMM_TRANSPARENT;

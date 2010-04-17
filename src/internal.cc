@@ -103,7 +103,7 @@ internalRemoteUri(const char *host, u_short port, const char *dir, const char *n
 
 #if USE_IPV6
     /* check for an IP address and format appropriately if found */
-    IpAddress test = lc_host;
+    Ip::Address test = lc_host;
     if ( !test.IsAnyAddr() ) {
         test.ToHostname(lc_host,SQUIDHOSTNAMELEN);
     }

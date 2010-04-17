@@ -137,7 +137,7 @@ struct _nsvc {
 };
 
 struct _ns {
-    IpAddress S;
+    Ip::Address S;
     int nqueries;
     int nreplies;
     nsvc *vc;
@@ -180,7 +180,7 @@ static void idnsSendQuery(idns_query * q);
 static IOCB idnsReadVCHeader;
 static void idnsDoSendQueryVC(nsvc *vc);
 
-static int idnsFromKnownNameserver(IpAddress const &from);
+static int idnsFromKnownNameserver(Ip::Address const &from);
 static idns_query *idnsFindQuery(unsigned short id);
 static void idnsGrokReply(const char *buf, size_t sz);
 static PF idnsRead;
@@ -191,7 +191,7 @@ static void idnsRcodeCount(int, int);
 static void
 idnsAddNameserver(const char *buf)
 {
-    IpAddress A;
+    Ip::Address A;
 
     if (!(A = buf)) {
         debugs(78, 0, "WARNING: rejecting '" << buf << "' as a name server, because it is not a numeric IP address");
@@ -734,7 +734,7 @@ idnsInitVC(int ns)
     nameservers[ns].vc = vc;
     vc->ns = ns;
 
-    IpAddress addr;
+    Ip::Address addr;
 
     if (!Config.Addrs.udp_outgoing.IsNoAddr())
         addr = Config.Addrs.udp_outgoing;
@@ -856,7 +856,7 @@ idnsSendQuery(idns_query * q)
 }
 
 static int
-idnsFromKnownNameserver(IpAddress const &from)
+idnsFromKnownNameserver(Ip::Address const &from)
 {
     int i;
 
@@ -1132,7 +1132,7 @@ idnsRead(int fd, void *data)
     int max = INCOMING_DNS_MAX;
     static char rbuf[SQUID_UDP_SO_RCVBUF];
     int ns;
-    IpAddress from;
+    Ip::Address from;
 
     debugs(78, 3, "idnsRead: starting with FD " << fd);
 
@@ -1143,7 +1143,7 @@ idnsRead(int fd, void *data)
      *  The cause of this is still unknown, however copying the data appears
      *  to allow it to be passed further without this erasure.
      */
-    IpAddress bugbypass;
+    Ip::Address bugbypass;
 
     while (max--) {
         len = comm_udp_recvfrom(fd, rbuf, SQUID_UDP_SO_RCVBUF, 0, bugbypass);
@@ -1359,7 +1359,7 @@ idnsInit(void)
     if (DnsSocketA < 0 && DnsSocketB < 0) {
         int port;
 
-        IpAddress addr; // since we don't want to alter Config.Addrs.udp_* and dont have one of our own.
+        Ip::Address addr; // since we don't want to alter Config.Addrs.udp_* and dont have one of our own.
 
         if (!Config.Addrs.udp_outgoing.IsNoAddr())
             addr = Config.Addrs.udp_outgoing;
@@ -1367,7 +1367,7 @@ idnsInit(void)
             addr = Config.Addrs.udp_incoming;
 
 #if IPV6_SPECIAL_SPLITSTACK
-        IpAddress addr4 = addr;
+        Ip::Address addr4 = addr;
 
         if ( addr.IsAnyAddr() || addr.IsIPv6() ) {
             debugs(78, 2, "idnsInit: attempt open DNS socket to: " << addr);
@@ -1580,7 +1580,7 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
 }
 
 void
-idnsPTRLookup(const IpAddress &addr, IDNSCB * callback, void *data)
+idnsPTRLookup(const Ip::Address &addr, IDNSCB * callback, void *data)
 {
     idns_query *q;
 

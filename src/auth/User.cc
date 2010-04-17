@@ -240,7 +240,7 @@ AuthUser::clearIp()
 }
 
 void
-AuthUser::removeIp(IpAddress ipaddr)
+AuthUser::removeIp(Ip::Address ipaddr)
 {
     auth_user_ip_t *ipdata = (auth_user_ip_t *) ip_list.head;
 
@@ -263,7 +263,7 @@ AuthUser::removeIp(IpAddress ipaddr)
 }
 
 void
-AuthUser::addIp(IpAddress ipaddr)
+AuthUser::addIp(Ip::Address ipaddr)
 {
     auth_user_ip_t *ipdata = (auth_user_ip_t *) ip_list.head;
     int found = 0;

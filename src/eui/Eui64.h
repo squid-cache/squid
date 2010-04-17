@@ -5,7 +5,9 @@
 
 #if USE_SQUID_EUI
 
-class IpAddress;
+namespace Ip {
+    class Address;
+};
 
 #if HAVE_CSTRING
 #include <cstring>
@@ -70,13 +72,13 @@ public:
     bool encode(char *buf, const int len);
 
     // lookup an EUI-64 address via IPv6 SLAAC or NDP
-    bool lookup(IpAddress &c);
+    bool lookup(Ip::Address &c);
 
     // lookup an EUI-64 address via IPv6 NDP
-    bool lookupNdp(IpAddress &c);
+    bool lookupNdp(Ip::Address &c);
 
     // lookup an EUI-64 address via decoding the IPv6 address SLAAC data
-    bool lookupSlaac(IpAddress &c);
+    bool lookupSlaac(Ip::Address &c);
 
 private:
     unsigned char eui[SZ_EUI64_BUF];
