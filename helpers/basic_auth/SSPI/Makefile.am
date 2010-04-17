@@ -11,4 +11,4 @@ basic_sspi_auth_LDADD = \
 	-lnetapi32 -ladvapi32 -lsspwin32 \
 	$(XTRA_LIBS)
 
-EXTRA_DIST = readme.txt
+EXTRA_DIST = readme.txt config.test

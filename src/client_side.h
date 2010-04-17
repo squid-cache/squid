@@ -189,11 +189,11 @@ public:
      */
     ClientSocketContext::Pointer currentobject;
 
-    IpAddress peer;
+    Ip::Address peer;
 
-    IpAddress me;
+    Ip::Address me;
 
-    IpAddress log_addr;
+    Ip::Address log_addr;
     char rfc931[USER_IDENT_SZ];
     int nrequests;
 

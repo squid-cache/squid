@@ -135,7 +135,7 @@ public:
     String dnsError; ///< DNS lookup error message
     time_t ttl;
 
-    IpAddress src_addr;
+    Ip::Address src_addr;
     char *redirect_url;
     ERCB *callback;
     void *callback_data;

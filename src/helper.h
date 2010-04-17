@@ -59,7 +59,7 @@ public:
     const char *id_name;
     HelperChildConfig childs;    ///< Configuration settings for number running.
     int ipc_type;
-    IpAddress addr;
+    Ip::Address addr;
     time_t last_queue_warn;
     time_t last_restart;
 
@@ -97,7 +97,7 @@ class HelperServerBase
 public:
     int index;
     int pid;
-    IpAddress addr;
+    Ip::Address addr;
     int rfd;
     int wfd;
     void *hIpc;

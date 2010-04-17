@@ -38,7 +38,7 @@
 #include "Store.h"
 #include "fde.h"
 
-#ifdef USE_POLL
+#if USE_POLL
 
 #if HAVE_POLL_H
 #include <poll.h>

@@ -524,7 +524,7 @@ fqdncacheHandleReply(void *data, rfc1035_rr * answers, int na, const char *error
  * 			and does not affect the FQDN cache.
  */
 void
-fqdncache_nbgethostbyaddr(IpAddress &addr, FQDNH * handler, void *handlerData)
+fqdncache_nbgethostbyaddr(const Ip::Address &addr, FQDNH * handler, void *handlerData)
 {
     fqdncache_entry *f = NULL;
     char name[MAX_IPSTRLEN];
@@ -642,7 +642,7 @@ fqdncache_init(void)
  *
  */
 const char *
-fqdncache_gethostbyaddr(IpAddress &addr, int flags)
+fqdncache_gethostbyaddr(const Ip::Address &addr, int flags)
 {
     char name[MAX_IPSTRLEN];
     fqdncache_entry *f = NULL;
@@ -747,7 +747,7 @@ dummy_handler(const char *, const DnsLookupDetails &, void *)
 
 /// \ingroup FQDNCacheAPI
 const char *
-fqdnFromAddr(IpAddress &addr)
+fqdnFromAddr(const Ip::Address &addr)
 {
     const char *n;
     static char buf[MAX_IPSTRLEN];
@@ -873,7 +873,7 @@ fqdncacheAddEntryFromHosts(char *addr, wordlist * hostnames)
 }
 
 
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 /**
  *  \ingroup FQDNCacheAPI
  * The function to return the FQDN statistics via SNMP

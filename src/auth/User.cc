@@ -44,7 +44,7 @@
 #include "SquidTime.h"
 #include "Store.h"
 
-#ifndef _USE_INLINE_
+#if !_USE_INLINE_
 #include "auth/User.cci"
 #endif
 
@@ -305,7 +305,7 @@ AuthUser::clearIp()
 }
 
 void
-AuthUser::removeIp(IpAddress ipaddr)
+AuthUser::removeIp(Ip::Address ipaddr)
 {
     AuthUserIP *ipdata = (AuthUserIP *) ip_list.head;
 
@@ -328,7 +328,7 @@ AuthUser::removeIp(IpAddress ipaddr)
 }
 
 void
-AuthUser::addIp(IpAddress ipaddr)
+AuthUser::addIp(Ip::Address ipaddr)
 {
     AuthUserIP *ipdata = (AuthUserIP *) ip_list.head;
     int found = 0;

@@ -81,7 +81,7 @@
 #define SQUID_UDP_SO_RCVBUF SQUID_DETECT_UDP_SO_RCVBUF
 #endif
 
-#ifdef HAVE_MEMCPY
+#if HAVE_MEMCPY
 #define xmemcpy(d,s,n) memcpy((d),(s),(n))
 #elif HAVE_BCOPY
 #define xmemcpy(d,s,n) bcopy((s),(d),(n))
@@ -89,7 +89,7 @@
 #define xmemcpy(d,s,n) memmove((d),(s),(n))
 #endif
 
-#ifdef HAVE_MEMMOVE
+#if HAVE_MEMMOVE
 #define xmemmove(d,s,n) memmove((d),(s),(n))
 #elif HAVE_BCOPY
 #define xmemmove(d,s,n) bcopy((s),(d),(n))

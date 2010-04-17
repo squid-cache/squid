@@ -1,9 +1,3 @@
-#
-#  Makefile for the Squid Object Cache server
-#
-#  $Id$
-#
-
 include $(top_srcdir)/src/Common.am
 
 libexec_PROGRAMS = mswin_ntlm_auth
@@ -21,4 +15,4 @@ LDADD = \
 	-ladvapi32 \
 	$(XTRA_LIBS)
 
-EXTRA_DIST = readme.txt
+EXTRA_DIST = readme.txt config.test

@@ -336,7 +336,7 @@ death(int sig)
     else
         fprintf(debug_log, "FATAL: Received signal %d...dying.\n", sig);
 
-#ifdef PRINT_STACK_TRACE
+#if PRINT_STACK_TRACE
 #ifdef _SQUID_HPUX_
     {
         extern void U_STACK_TRACE(void);	/* link with -lcl */
@@ -409,7 +409,7 @@ sigusr2_handle(int sig)
     /* no debugs() here; bad things happen if the signal is delivered during _db_print() */
 
     if (state == 0) {
-#ifndef MEM_GEN_TRACE
+#if !MEM_GEN_TRACE
         Debug::parseOptions("ALL,7");
 #else
 
@@ -418,7 +418,7 @@ sigusr2_handle(int sig)
 
         state = 1;
     } else {
-#ifndef MEM_GEN_TRACE
+#if !MEM_GEN_TRACE
         Debug::parseOptions(Debug::debugOptions);
 #else
 
@@ -588,7 +588,7 @@ getMyHostname(void)
     LOCAL_ARRAY(char, host, SQUIDHOSTNAMELEN + 1);
     static int present = 0;
     struct addrinfo *AI = NULL;
-    IpAddress sa;
+    Ip::Address sa;
 
     if (Config.visibleHostname != NULL)
         return Config.visibleHostname;
@@ -1209,10 +1209,10 @@ strwordquote(MemBuf * mb, const char *str)
 void
 keepCapabilities(void)
 {
-#if HAVE_PRCTL && defined(PR_SET_KEEPCAPS) && USE_LIBCAP
+#if USE_LIBCAP && HAVE_PRCTL && defined(PR_SET_KEEPCAPS)
 
     if (prctl(PR_SET_KEEPCAPS, 1, 0, 0, 0)) {
-        IpInterceptor.StopTransparency("capability setting has failed.");
+        Ip::Interceptor.StopTransparency("capability setting has failed.");
     }
 #endif
 }
@@ -1228,14 +1228,14 @@ restoreCapabilities(int keep)
     else
         caps = cap_init();
     if (!caps) {
-        IpInterceptor.StopTransparency("Can't get current capabilities");
+        Ip::Interceptor.StopTransparency("Can't get current capabilities");
     } else {
         int ncaps = 0;
         int rc = 0;
         cap_value_t cap_list[10];
         cap_list[ncaps++] = CAP_NET_BIND_SERVICE;
 
-        if (IpInterceptor.TransparentActive()) {
+        if (Ip::Interceptor.TransparentActive()) {
             cap_list[ncaps++] = CAP_NET_ADMIN;
 #if LINUX_TPROXY2
             cap_list[ncaps++] = CAP_NET_BROADCAST;
@@ -1247,12 +1247,12 @@ restoreCapabilities(int keep)
         rc |= cap_set_flag(caps, CAP_PERMITTED, ncaps, cap_list, CAP_SET);
 
         if (rc || cap_set_proc(caps) != 0) {
-            IpInterceptor.StopTransparency("Error enabling needed capabilities.");
+            Ip::Interceptor.StopTransparency("Error enabling needed capabilities.");
         }
         cap_free(caps);
     }
 #elif defined(_SQUID_LINUX_)
-    IpInterceptor.StopTransparency("Missing needed capability support.");
+    Ip::Interceptor.StopTransparency("Missing needed capability support.");
 #endif /* HAVE_SYS_CAPABILITY_H */
 }
 
