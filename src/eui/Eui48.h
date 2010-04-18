@@ -8,8 +8,9 @@
 /* EUI-48 is 6 bytes. */
 #define SZ_EUI48_BUF 6
 
-namespace Ip {
-    class Address;
+namespace Ip
+{
+class Address;
 };
 
 #if HAVE_CSTRING

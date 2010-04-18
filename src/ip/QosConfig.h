@@ -5,9 +5,11 @@
 
 #if USE_ZPH_QOS
 
-namespace Ip {
+namespace Ip
+{
 
-namespace Qos {
+namespace Qos
+{
 
 class QosConfig
 {
