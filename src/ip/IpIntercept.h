@@ -10,7 +10,8 @@
 /* for time_t */
 #include "SquidTime.h"
 
-namespace Ip {
+namespace Ip
+{
 
 class Address;
 
