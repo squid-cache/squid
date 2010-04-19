@@ -151,7 +151,7 @@ int
 logfile_mod_tcp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_flag)
 {
     debugs(5, 3, "Tcp Open called");	
-    IpAddress addr;
+    Ip::Address addr;
     	
     char *strAddr;
 
@@ -180,9 +180,9 @@ logfile_mod_tcp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
         }
     }
 
-safe_free(strAddr);
+    safe_free(strAddr);
 
-    IpAddress any_addr;
+    Ip::Address any_addr;
     any_addr.SetAnyAddr();
 
 #if USE_IPV6
