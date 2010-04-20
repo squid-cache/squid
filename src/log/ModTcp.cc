@@ -188,7 +188,7 @@ logfile_mod_tcp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
 #if USE_IPV6
     // require the sending TCP port to be of the right family for the destination address.
     if (addr.IsIPv4())
-        no_addr.SetIPv4();
+        any_addr.SetIPv4();
 #endif
 
     ll->fd = comm_open(SOCK_STREAM, IPPROTO_TCP, any_addr, COMM_NONBLOCKING, "TCP log socket");
