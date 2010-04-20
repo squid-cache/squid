@@ -150,9 +150,9 @@ logfile_mod_tcp_close(Logfile * lf)
 int
 logfile_mod_tcp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_flag)
 {
-    debugs(5, 3, "Tcp Open called");	
+    debugs(5, 3, "Tcp Open called");
     Ip::Address addr;
-    	
+
     char *strAddr;
 
     lf->f_close = logfile_mod_tcp_close;
