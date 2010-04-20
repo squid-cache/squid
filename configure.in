@@ -1084,57 +1084,55 @@ AM_CONDITIONAL(ENABLE_HTCP, [test "$enable_htcp" = "yes"])
 AC_MSG_NOTICE([HTCP support enabled: $enable_htcp])
 
 
-dnl TODO KK: SSL not yet refactored
-dnl SSL is not enabled by default.
-dnl Default is to use OpenSSL when available
+# SSL is not enabled by default.
+# Default is to use OpenSSL when available
 AC_ARG_ENABLE(ssl,
   AS_HELP_STRING([--enable-ssl],
                  [Enable ssl gatewaying support using OpenSSL]), [
 SQUID_YESNO([$enableval],
             [unrecognized argument to --enable-ssl: $enableval])
 ])
-SQUID_DEFINE_UNQUOTED([USE_SSL],${enable_ssl:=no},
-    [Define this to include code for SSL gatewaying support])
-AM_CONDITIONAL(ENABLE_SSL,[ test $enable_ssl = "yes" ])
-if test $enable_ssl = "yes" ; then
+# USE_OPENSSL is AC_DEFINED later
+# default for ssl is set here
+if test ${enable_ssl:=no} = "yes" ; then
     if test "$squid_host_os" = "mingw" ; then
         SSLLIB='-lssleay32 -leay32 -lgdi32'
     else
         SSLLIB='-lssl -lcrypto'
     fi
 fi
+AM_CONDITIONAL(ENABLE_SSL,[ test $enable_ssl = "yes" ])
 AC_MSG_NOTICE([SSL gatewaying support enabled: $enable_ssl])
-
-#FIXME: temporary refactoring help
-USE_OPENSSL=$enable_ssl 
 
 dnl User may specify OpenSSL is needed from a non-standard location
 AC_ARG_WITH(openssl,
-  AS_HELP_STRING([--with-openssl{=PATH}],[Compile with the OpenSSL libraries. The path to
+  AS_HELP_STRING([--with-openssl=PATH],
+                 [Compile with the OpenSSL libraries. The path to
                   the OpenSSL development libraries and headers
                   installation can be specified if outside of the
-                  system standard directories]),
-[ 
-  case "$with_openssl" in
-  yes)
-    USE_OPENSSL=1
-    ;;
-  no)
-    USE_OPENSSL=
+                  system standard directories]), [ 
+case "$with_openssl" in
+  yes|no) AC_MSG_ERROR([--with-openssl requires a path argument])
     ;;
   *)
+    if test ! -d $withval ; then
+      AC_MSG_ERROR([--with-openssl path does not point to a directory])
+    fi
     SSLLIBDIR="$with_openssl/lib"
     CPPFLAGS="-I$with_openssl/include $CPPFLAGS"
-    USE_OPENSSL=1
+    enable_ssl=yes
   esac
 ])
-if test -n "$USE_OPENSSL"; then
-  AC_MSG_NOTICE([Using OpenSSL MD5 implementation])
-  AC_DEFINE(USE_OPENSSL,1,[Define this to make use of the OpenSSL libraries for MD5 calculation rather than Squid's own MD5 implementation or if building with SSL encryption (USE_SSL)])
+AC_MSG_NOTICE([Using OpenSSL MD5 implementation: $enable_ssl])
+SQUID_DEFINE_UNQUOTED(USE_SSL,$enable_ssl,
+   [Define this to include code for SSL gatewaying support])
+SQUID_DEFINE_UNQUOTED(USE_OPENSSL,$enable_ssl,
+   [Define this to make use of the OpenSSL libraries for MD5 calculation rather than Squid-supplied MD5 implementation or if building with SSL encryption])
+if test "$enable_ssl" = "yes"; then
   if test -z "$SSLLIB"; then
     SSLLIB="-lcrypto" # for MD5 routines
   fi
-  dnl This is a workaround for RedHat 9 brain damage..
+  # This is a workaround for RedHat 9 brain damage..
   if test -d /usr/kerberos/include && test -z "$SSLLIBDIR" && test -f /usr/include/openssl/kssl.h; then
     AC_MSG_NOTICE([OpenSSL depends on Kerberos])
     SSLLIBDIR="/usr/kerberos/lib"
