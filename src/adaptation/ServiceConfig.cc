@@ -169,8 +169,7 @@ Adaptation::ServiceConfig::grokUri(const char *value)
         } else {
             return false;
         }
-    }
-    else {
+    } else {
         if ((e = strchr(s, ':')) != NULL) {
             have_port = true;
         } else if ((e = strchr(s, '/')) != NULL) {
