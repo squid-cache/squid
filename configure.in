@@ -2650,18 +2650,20 @@ esac
 
 dnl Enable IPv6 support
 AC_MSG_CHECKING([whether to enable IPv6])
-use_ipng=yes
+use_ipng=auto
 AC_ARG_ENABLE(ipv6,
   AS_HELP_STRING([--disable-ipv6],[Disable IPv6 support]),
-[ if test "x$enableval" = "xyes" ; then
-    AC_MSG_RESULT(yes)
-  else
-    AC_MSG_RESULT(no)
-    use_ipng=no
-  fi
-],[AC_MSG_RESULT(yes)])
+[ case $enableval in
+  yes|no)
+    use_ipng=yes
+    ;;
+  *)
+    ;;
+  esac
+])
+AC_MSG_RESULT($use_ipng)
 
-if test "$use_ipng" = "yes"; then
+if test "$use_ipng" != "no"; then
   SAVED_LIBS="$LIBS"
   dnl Solaris 10/11 requires  -lsocket
   case "$host" in
@@ -2671,10 +2673,11 @@ if test "$use_ipng" = "yes"; then
     *)
       ;;
   esac
-  AC_CACHE_CHECK([if PF_INET6 is available], $use_ipng,
+  AC_CACHE_CHECK([if PF_INET6 is available], $squid_cv_pf_inet6,
     AC_RUN_IFELSE([AC_LANG_SOURCE([[ /* PF_INET6 available check */
 #       include <sys/types.h>
 #       include <sys/socket.h>
+#error failure check.
         int main(int argc, char **argv) {
           if (socket(PF_INET6, SOCK_STREAM, 0) < 0)
             return 1;
@@ -2682,14 +2685,22 @@ if test "$use_ipng" = "yes"; then
             return 0;
         }
       ]])],[ AC_MSG_RESULT(yes)
-        use_ipng=yes
-        SAVED_LIBS="$LIBS" ],[ AC_MSG_RESULT(no)
-        use_ipng=no ],[])
+		squid_cv_pf_inet6="yes"
+		SAVED_LIBS="$LIBS" ],[ AC_MSG_RESULT(no)
+		squid_cv_pf_inet6="no"],[])
    )
    LIBS="$SAVED_LIBS"
 fi
 
-if test "$use_ipng" = "yes"; then
+# NP: semi-silent failure as IPv4-only mode is perfectly usable on this system.
+# unless --enable-ipv6 is explicitly used. in which case it's a hard fail.
+if test "x$use_ipng" = "xyes" && test "x$squid_cv_pf_inet6" = "xno"; then
+	AC_MSG_ERROR([IPv6 cannot be built on this system. Basic kernel definitions are missing.])
+else
+	AC_MSG_WARN([IPv6 cannot be built on this system. Basic kernel definitions are missing.])
+fi
+
+if test "$use_ipng" != "no" && test "$squid_cv_pf_inet6" = "yes" ; then
   AC_DEFINE(USE_IPV6,1,[Enable support for IPv6 ])
   SET_IPV6_SETTINGS=""
   use_v4mapped=yes
@@ -2760,12 +2771,11 @@ AC_CACHE_CHECK([for sin6_len field in struct sockaddr_in6],
   fi
 
 else
-  # NP: semi-silent failure as IPv4-only mode is perfectly usable on this system.
-  AC_MSG_WARN([IPv6 is not available on this system.])
+  # IPv6 is not available, but is not explicitly required. Auto-Disable.
   AC_DEFINE(USE_IPV6,0,[Enable support for IPv6])
   AC_DEFINE(IPV6_SPECIAL_SPLITSTACK,0,[Enable support for IPv6 on split-stack implementations])
   AC_DEFINE(IPV6_SPECIAL_V4MAPPED,0,[Enable v4-mapping through v6 sockets])
-  SET_IPV6_SETTINGS="\#IPv6 Not Available: "
+  SET_IPV6_SETTINGS=""
 fi
 AC_SUBST(SET_IPV6_SETTINGS)
 
