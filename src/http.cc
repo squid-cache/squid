@@ -1125,6 +1125,23 @@ HttpStateData::readReply(const CommIoCbParams &io)
     if (len == 0) { // reached EOF?
         eof = 1;
         flags.do_next_read = 0;
+
+        /* Bug 2789: Replies may terminate with \r\n then EOF instead of \r\n\r\n
+         * Ensure here that we have at minimum two \r\n when EOF is seen.
+         * TODO: When headersEnd() is cleaned up to only be called once we can merge
+         * this as a special case there where it belongs.
+         */
+        if (!flags.headers_parsed) {
+            /*
+             * Yes Henrik, there is a point to doing this.  When we
+             * called httpProcessReplyHeader() before, we didn't find
+             * the end of headers, but now we are definately at EOF, so
+             * we want to process the reply headers.
+             */
+            /* Fake an "end-of-headers" to work around such broken servers */
+            readBuf->append("\r\n", 2);
+            len = 2;
+        }
     }
 
     if (!flags.headers_parsed) { // have not parsed headers yet?
