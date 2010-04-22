@@ -2775,7 +2775,7 @@ else
   AC_DEFINE(USE_IPV6,0,[Enable support for IPv6])
   AC_DEFINE(IPV6_SPECIAL_SPLITSTACK,0,[Enable support for IPv6 on split-stack implementations])
   AC_DEFINE(IPV6_SPECIAL_V4MAPPED,0,[Enable v4-mapping through v6 sockets])
-  SET_IPV6_SETTINGS=""
+  SET_IPV6_SETTINGS="\#IPv6 Not Available: "
 fi
 AC_SUBST(SET_IPV6_SETTINGS)
 
