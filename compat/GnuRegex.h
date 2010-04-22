@@ -405,25 +405,11 @@ extern "C" {
      * unfortunately clutters up the declarations a bit, but I think it's
      * worth it.  */
 
-#if STDC_HEADERS
-
-#define _RE_ARGS(args) args
-
-#else /* not __STDC__ */
-
-#define _RE_ARGS(args) ()
-
-#endif /* not __STDC__ */
-
     /* POSIX compatibility.  */
-    extern int regcomp _RE_ARGS((regex_t * preg, const char *pattern, int cflags));
-    extern int regexec
-    _RE_ARGS((const regex_t * preg, const char *string, size_t nmatch,
-              regmatch_t pmatch[], int eflags));
-    extern size_t regerror
-    _RE_ARGS((int errcode, const regex_t * preg, char *errbuf,
-              size_t errbuf_size));
-    extern void regfree _RE_ARGS((regex_t * preg));
+    extern int regcomp(regex_t * preg, const char *pattern, int cflags);
+    extern int regexec(const regex_t * preg, const char *string, size_t nmatch, regmatch_t pmatch[], int eflags);
+    extern size_t regerror(int errcode, const regex_t * preg, char *errbuf, size_t errbuf_size);
+    extern void regfree(regex_t * preg);
 
 #ifdef __cplusplus
 }
