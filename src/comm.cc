@@ -1517,7 +1517,7 @@ comm_reset_close(int fd)
     L.l_linger = 0;
 
     if (setsockopt(fd, SOL_SOCKET, SO_LINGER, (char *) &L, sizeof(L)) < 0)
-        debugs(50, 0, "commResetTCPClose: FD " << fd << ": " << xstrerror());
+        debugs(50, DBG_CRITICAL, "ERROR: Closing FD " << fd << " with TCP RST: " << xstrerror());
 
     comm_close(fd);
 }
@@ -2143,8 +2143,8 @@ commCloseAllSockets(void)
             debugs(5, 5, "commCloseAllSockets: FD " << fd << ": Calling timeout handler");
             ScheduleCallHere(callback);
         } else {
-            debugs(5, 5, "commCloseAllSockets: FD " << fd << ": calling comm_close()");
-            comm_close(fd);
+            debugs(5, 5, "commCloseAllSockets: FD " << fd << ": calling comm_reset_close()");
+            comm_reset_close(fd);
         }
     }
 }
