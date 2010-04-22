@@ -10,7 +10,7 @@ include $(top_srcdir)/src/Common.am
 
 libexec_PROGRAMS 	= squid_radius_auth
 man_MANS 		= squid_radius_auth.8
-EXTRA_DIST		= squid_radius_auth.8
+EXTRA_DIST		= squid_radius_auth.8 config.test
 squid_radius_auth_SOURCES = \
 			squid_rad_auth.c \
 			radius.h \

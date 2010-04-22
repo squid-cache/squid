@@ -18,3 +18,5 @@ LDADD = \
 	-L$(top_builddir)/lib -lmiscutil \
 	$(CRYPTLIB) \
 	$(XTRA_LIBS)
+
+EXTRA_DIST = config.test

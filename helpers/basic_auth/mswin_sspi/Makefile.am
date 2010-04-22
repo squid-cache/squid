@@ -21,4 +21,4 @@ LDADD = \
 ## we need our local files too (but avoid -I. at all costs)
 INCLUDES += -I$(srcdir)
 
-EXTRA_DIST = readme.txt
+EXTRA_DIST = readme.txt config.test

@@ -19,4 +19,4 @@ LDADD = \
 	$(LIBSASL) \
 	$(XTRA_LIBS)
 
-EXTRA_DIST		= squid_sasl_auth squid_sasl_auth.conf
+EXTRA_DIST		= squid_sasl_auth squid_sasl_auth.conf config.test

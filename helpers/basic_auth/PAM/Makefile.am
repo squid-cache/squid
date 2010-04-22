@@ -9,7 +9,7 @@
 include $(top_srcdir)/src/Common.am
 
 man_MANS		= pam_auth.8
-EXTRA_DIST		= pam_auth.8
+EXTRA_DIST		= pam_auth.8 config.test
 libexec_PROGRAMS	= pam_auth
 
 ## we need our local files too (but avoid -I. at all costs)

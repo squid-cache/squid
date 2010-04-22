@@ -1,12 +1,3 @@
-#
-#  Makefile for the Squid Object Cache server
-#
-#  $Id$
-#
-#  Uncomment and customize the following to suit your needs:
-#
-
-
 libexec_PROGRAMS = mswin_check_ad_group
 
 mswin_check_ad_group_SOURCES = mswin_check_ad_group.c mswin_check_ad_group.h
@@ -23,4 +14,4 @@ LDADD = \
 	-lntdll \
 	$(XTRA_LIBS)
 
-EXTRA_DIST = readme.txt
+EXTRA_DIST = readme.txt config.test

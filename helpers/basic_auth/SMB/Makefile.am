@@ -22,7 +22,7 @@ SMB_AUTH_HELPER_PATH = $(libexecdir)/$(SMB_AUTH_HELPER)
 libexec_SCRIPTS	= $(SMB_AUTH_HELPER)
 libexec_PROGRAMS = smb_auth
 smb_auth_CFLAGS = -DSAMBAPREFIX=\"$(SAMBAPREFIX)\" -DHELPERSCRIPT=\"$(SMB_AUTH_HELPER_PATH)\"
-EXTRA_DIST = smb_auth.sh COPYING-2.0
+EXTRA_DIST = smb_auth.sh COPYING-2.0 config.test
 
 ## we need our local files too (but avoid -I. at all costs)
 INCLUDES += -I$(srcdir)

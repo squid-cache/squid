@@ -10,4 +10,5 @@ libexec_SCRIPTS	= \
 	pop3.pl
 
 EXTRA_DIST = \
-	pop3.pl
+	pop3.pl \
+	config.test

@@ -1,11 +1,3 @@
-#
-#  Makefile for the Squid Object Cache server
-#
-#  $Id$
-#
-#  Uncomment and customize the following to suit your needs:
-#
-
 include $(top_srcdir)/src/Common.am
 
 MSNTAUTH_CONF = $(sysconfdir)/msntauth.conf
@@ -25,7 +17,8 @@ EXTRA_DIST = \
 	COPYING-2.0 \
 	msntauth.conf.default \
 	msntauth-v2.0.lsm \
-	README.html
+	README.html \
+	config.test
 
 sysconf_DATA = \
 	msntauth.conf.default
