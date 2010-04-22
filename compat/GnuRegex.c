@@ -24,7 +24,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.  */
 
 /* AIX requires this to be the first thing in the file. */
-#if defined (_AIX) && !defined (REGEX_MALLOC)
+#if defined (_AIX) && !defined(REGEX_MALLOC)
 #pragma alloca
 #endif
 
@@ -46,13 +46,6 @@
 #include <string.h>
 #else
 #include <strings.h>
-#endif
-
-#ifdef STDC_HEADERS
-#include <stdlib.h>
-#else
-char *malloc();
-char *realloc();
 #endif
 
 
