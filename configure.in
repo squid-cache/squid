@@ -1290,8 +1290,6 @@ AC_ARG_ENABLE(ipf-transparent,
 AC_MSG_NOTICE([IPF-based transparent proxying requested: ${enable_ipf_transparent:=auto}])
 
 dnl Enable PF Transparent Proxy
-AH_TEMPLATE(PF_TRANSPARENT,
-  [Enable support for Transparent Proxy on systems using OpenBSD-style PF firewalling])
 AC_ARG_ENABLE(pf-transparent,
   AS_HELP_STRING([--enable-pf-transparent],
     [Enable Transparent Proxy support for systems using PF network address redirection.]), [
@@ -1299,7 +1297,7 @@ AC_ARG_ENABLE(pf-transparent,
               [unrecognized argument to --enable-pf-transparent: $enableval])
 ])
 #will be AC_DEFINE'd later, after checking for appropriate infrastructure
-AC_MSG_NOTICE([PF-based transparent proxying enabled: ${enable_pf_transparent:=no}])
+AC_MSG_NOTICE([PF-based transparent proxying requested: ${enable_pf_transparent:=auto}])
 
 # Enable Linux Netfilter Transparent Proxy
 squid_opt_linux_netfilter="auto"
@@ -3160,7 +3158,6 @@ if test "$enable_ipf_transparent" != "no" ; then
         enable_ipf_transparent="yes"
     else
         enable_ipf_transparent="no"
-        AC_DEFINE(IPF_TRANSPARENT, 0)
     fi
     AC_MSG_RESULT($IPF_TRANSPARENT)
 fi
@@ -3177,23 +3174,23 @@ dnl Solaris minor version (8, 9, 10, ...)
 fi
 
 dnl PF support requires a header file.
-AC_MSG_NOTICE([Support for PF-based transparent proxy requested: $enable_pf_transparent])
 if test "$enable_pf_transparent" != "no" ; then
   AC_MSG_CHECKING(for availability of PF header files)
-  # hold on to your hats...
-  if test "$ac_cv_header_net_pfvar_h" = "yes" || test "$ac_cv_header_net_pf_pfvar_h" = "yes"; then
-    enable_pf_transparent="yes"
-    AC_DEFINE(PF_TRANSPARENT, 1)
-  else
-    enable_pf_transparent="no"
-    AC_DEFINE(PF_TRANSPARENT, 0)
-  fi
-  AC_MSG_RESULT($enable_pf_transparent)
+	if test "$ac_cv_header_net_pfvar_h" = "yes" -o \
+    "$ac_cv_header_net_pf_pfvar_h" = "yes"; then
+		if test "$enable_pf_transparent" = "auto" ; then
+			enable_pf_transparent="yes"
+		fi
+	else
+		if test "$enable_pf_transparent" = "yes" ; then
+      AC_MSG_ERROR([PF-based transparent proxy requested but needed header not found])
+		fi
+		enable_pf_transparent="no"
+	fi
+  AC_MSG_RESULT([$enable_pf_transparent])
 fi
-if test "$enable_pf_transparent" = "no" ; then
-    AC_MSG_WARN([Cannot find necessary PF header file])
-    AC_MSG_WARN([Transparent Proxy support WILL NOT be enabled])
-fi
+SQUID_DEFINE_UNQUOTED([PF_TRANSPARENT],$enable_pf_transparent,
+  [Enable support for PF-style transparent proxying])
 
 if test "$squid_opt_linux_netfilter" != "no" ; then
     AC_MSG_CHECKING(if Linux (Netfilter) kernel header files are installed)
