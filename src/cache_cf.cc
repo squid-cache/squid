@@ -3001,37 +3001,97 @@ parse_http_port_specification(http_port_list * s, char *token)
 static void
 parse_http_port_option(http_port_list * s, char *token)
 {
-    if (strncmp(token, "defaultsite=", 12) == 0) {
-        safe_free(s->defaultsite);
-        s->defaultsite = xstrdup(token + 12);
+    /* modes first */
+
+    if (strcmp(token, "accel") == 0) {
+        if (s->intercepted || s->spoof_client_ip) {
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: Accelerator mode requires its own port. It cannot be shared with other modes.");
+            self_destruct();
+        }
         s->accel = 1;
-    } else if (strncmp(token, "name=", 5) == 0) {
-        safe_free(s->name);
-        s->name = xstrdup(token + 5);
-    } else if (strcmp(token, "vhost") == 0) {
-        s->vhost = 1;
-        s->accel = 1;
-    } else if (strcmp(token, "vport") == 0) {
-        s->vport = -1;
-        s->accel = 1;
-    } else if (strncmp(token, "vport=", 6) == 0) {
-        s->vport = xatos(token + 6);
-        s->accel = 1;
-    } else if (strncmp(token, "protocol=", 9) == 0) {
-        s->protocol = xstrdup(token + 9);
-        s->accel = 1;
-    } else if (strcmp(token, "accel") == 0) {
-        s->accel = 1;
-    } else if (strcmp(token, "allow-direct") == 0) {
-        s->allow_direct = 1;
-    } else if (strcmp(token, "ignore-cc") == 0) {
-        s->ignore_cc = 1;
-#if !HTTP_VIOLATIONS
-        if (!s->accel) {
-            debugs(3, DBG_CRITICAL, "FATAL: ignore-cc is only valid in accelerator mode");
+    } else if (strcmp(token, "transparent") == 0 || strcmp(token, "intercept") == 0) {
+        if (s->accel || s->spoof_client_ip) {
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: Intercept mode requires its own interception port. It cannot be shared with other modes.");
+            self_destruct();
+        }
+        s->intercepted = 1;
+        Ip::Interceptor.StartInterception();
+        /* Log information regarding the port modes under interception. */
+        debugs(3, DBG_IMPORTANT, "Starting Authentication on port " << s->s);
+        debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (interception enabled)");
+
+#if USE_IPV6
+        /* INET6: until transparent REDIRECT works on IPv6 SOCKET, force wildcard to IPv4 */
+        debugs(3, DBG_IMPORTANT, "Disabling IPv6 on port " << s->s << " (interception enabled)");
+        if ( !s->s.SetIPv4() ) {
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: IPv6 addresses cannot be transparent (protocol does not provide NAT)" << s->s );
             self_destruct();
         }
 #endif
+    } else if (strcmp(token, "tproxy") == 0) {
+        if (s->intercepted || s->accel) {
+            debugs(3,DBG_CRITICAL, "FATAL: http(s)_port: TPROXY option requires its own interception port. It cannot be shared with other modes.");
+            self_destruct();
+        }
+        s->spoof_client_ip = 1;
+        Ip::Interceptor.StartTransparency();
+        /* Log information regarding the port modes under transparency. */
+        debugs(3, DBG_IMPORTANT, "Starting IP Spoofing on port " << s->s);
+        debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (IP spoofing enabled)");
+
+        if (!Ip::Interceptor.ProbeForTproxy(s->s)) {
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: TPROXY support in the system does not work.");
+            self_destruct();
+        }
+
+    } else if (strncmp(token, "defaultsite=", 12) == 0) {
+        if (!s->accel) {
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: defaultsite option requires Acceleration mode flag.");
+            self_destruct();
+        }
+        safe_free(s->defaultsite);
+        s->defaultsite = xstrdup(token + 12);
+    } else if (strcmp(token, "vhost") == 0) {
+        if (!s->accel) {
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: vhost option requires Acceleration mode flag.");
+            self_destruct();
+        }
+        s->vhost = 1;
+    } else if (strcmp(token, "vport") == 0) {
+        if (!s->accel) {
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: vport option requires Acceleration mode flag.");
+            self_destruct();
+        }
+        s->vport = -1;
+    } else if (strncmp(token, "vport=", 6) == 0) {
+        if (!s->accel) {
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: vport option requires Acceleration mode flag.");
+            self_destruct();
+        }
+        s->vport = xatos(token + 6);
+    } else if (strncmp(token, "protocol=", 9) == 0) {
+        if (!s->accel) {
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: protocol option requires Acceleration mode flag.");
+            self_destruct();
+        }
+        s->protocol = xstrdup(token + 9);
+    } else if (strcmp(token, "allow-direct") == 0) {
+        if (!s->accel) {
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: vport option requires Acceleration mode flag.");
+            self_destruct();
+        }
+        s->allow_direct = 1;
+    } else if (strcmp(token, "ignore-cc") == 0) {
+#if !HTTP_VIOLATIONS
+        if (!s->accel) {
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: ignore-cc option requires Scceleration mode flag.");
+            self_destruct();
+        }
+#endif
+        s->ignore_cc = 1;
+    } else if (strncmp(token, "name=", 5) == 0) {
+        safe_free(s->name);
+        s->name = xstrdup(token + 5);
     } else if (strcmp(token, "no-connection-auth") == 0) {
         s->connection_auth_disabled = true;
     } else if (strcmp(token, "connection-auth=off") == 0) {
@@ -3049,42 +3109,10 @@ parse_http_port_option(http_port_list * s, char *token)
             s->disable_pmtu_discovery = DISABLE_PMTU_ALWAYS;
         else
             self_destruct();
-
-    } else if (strcmp(token, "transparent") == 0 || strcmp(token, "intercept") == 0) {
-        s->intercepted = 1;
-        Ip::Interceptor.StartInterception();
-        /* Log information regarding the port modes under interception. */
-        debugs(3, DBG_IMPORTANT, "Starting Authentication on port " << s->s);
-        debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (interception enabled)");
-
-#if USE_IPV6
-        /* INET6: until transparent REDIRECT works on IPv6 SOCKET, force wildcard to IPv4 */
-        debugs(3, DBG_IMPORTANT, "Disabling IPv6 on port " << s->s << " (interception enabled)");
-        if ( !s->s.SetIPv4() ) {
-            debugs(3, DBG_CRITICAL, "http(s)_port: IPv6 addresses cannot be transparent (protocol does not provide NAT)" << s->s );
-            self_destruct();
-        }
-#endif
-    } else if (strcmp(token, "tproxy") == 0) {
-        if (s->intercepted || s->accel) {
-            debugs(3,DBG_CRITICAL, "http(s)_port: TPROXY option requires its own interception port. It cannot be shared.");
-            self_destruct();
-        }
-        s->spoof_client_ip = 1;
-        Ip::Interceptor.StartTransparency();
-        /* Log information regarding the port modes under transparency. */
-        debugs(3, DBG_IMPORTANT, "Starting IP Spoofing on port " << s->s);
-        debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (IP spoofing enabled)");
-
-        if (!Ip::Interceptor.ProbeForTproxy(s->s)) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: TPROXY support in the system does not work.");
-            self_destruct();
-        }
-
     } else if (strcmp(token, "ipv4") == 0) {
 #if USE_IPV6
         if ( !s->s.SetIPv4() ) {
-            debugs(3, 0, "http(s)_port: IPv6 addresses cannot be used a IPv4-Only." << s->s );
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: IPv6 addresses cannot be used a IPv4-Only." << s->s );
             self_destruct();
         }
 #endif
@@ -3106,6 +3134,10 @@ parse_http_port_option(http_port_list * s, char *token)
             t = strchr(t, ',');
         }
 #if USE_SSL
+    } else if (strcmp(token, "sslBump") == 0) {
+        s->sslBump = 1; // accelerated when bumped, otherwise not
+    } else if (strcmp(token, "ssl") == 0) {
+        s->ssl = 1;
     } else if (strncmp(token, "cert=", 5) == 0) {
         safe_free(s->cert);
         s->cert = xstrdup(token + 5);
@@ -3114,7 +3146,6 @@ parse_http_port_option(http_port_list * s, char *token)
         s->key = xstrdup(token + 4);
     } else if (strncmp(token, "version=", 8) == 0) {
         s->version = xatoi(token + 8);
-
         if (s->version < 1 || s->version > 4)
             self_destruct();
     } else if (strncmp(token, "options=", 8) == 0) {
@@ -3144,15 +3175,8 @@ parse_http_port_option(http_port_list * s, char *token)
     } else if (strncmp(token, "sslcontext=", 11) == 0) {
         safe_free(s->sslcontext);
         s->sslcontext = xstrdup(token + 11);
-    } else if (strcmp(token, "sslBump") == 0) {
-        s->sslBump = 1; // accelerated when bumped, otherwise not
 #endif
     } else {
-        self_destruct();
-    }
-
-    if ( s->spoof_client_ip && (s->intercepted || s->accel) ) {
-        debugs(3,DBG_CRITICAL, "http(s)_port: TPROXY option requires its own interception port. It cannot be shared.");
         self_destruct();
     }
 }
@@ -3268,17 +3292,23 @@ dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
                       n,
                       s->s.ToURL(buf,MAX_IPSTRLEN));
 
-    if (s->defaultsite)
-        storeAppendPrintf(e, " defaultsite=%s", s->defaultsite);
-
     if (s->intercepted)
         storeAppendPrintf(e, " intercept");
+
+    if (s->spoof_client_ip)
+        storeAppendPrintf(e, " tproxy");
+
+    if (s->accel)
+        storeAppendPrintf(e, " accel");
 
     if (s->vhost)
         storeAppendPrintf(e, " vhost");
 
     if (s->vport)
         storeAppendPrintf(e, " vport");
+
+    if (s->defaultsite)
+        storeAppendPrintf(e, " defaultsite=%s", s->defaultsite);
 
     if (s->connection_auth_disabled)
         storeAppendPrintf(e, " connection-auth=off");
@@ -3305,6 +3335,9 @@ dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
     }
 
 #if USE_SSL
+    if (s->sslBump)
+        storeAppendPrintf(e, " sslBump");
+
     if (s->cert)
         storeAppendPrintf(e, " cert=%s", s->cert);
 
@@ -3337,9 +3370,6 @@ dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
 
     if (s->sslcontext)
         storeAppendPrintf(e, " sslcontext=%s", s->sslcontext);
-
-    if (s->sslBump)
-        storeAppendPrintf(e, " sslBump");
 #endif
 }
 
