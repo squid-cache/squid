@@ -3136,8 +3136,6 @@ parse_http_port_option(http_port_list * s, char *token)
 #if USE_SSL
     } else if (strcmp(token, "sslBump") == 0) {
         s->sslBump = 1; // accelerated when bumped, otherwise not
-    } else if (strcmp(token, "ssl") == 0) {
-        s->ssl = 1;
     } else if (strncmp(token, "cert=", 5) == 0) {
         safe_free(s->cert);
         s->cert = xstrdup(token + 5);
