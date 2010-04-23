@@ -681,6 +681,7 @@ comm_set_v6only(int fd, int tos)
 void
 comm_set_transparent(int fd)
 {
+#if !LINUX_TPROXY2
 #if defined(IP_TRANSPARENT)
     int tos = 1;
     if (setsockopt(fd, SOL_IP, IP_TRANSPARENT, (char *) &tos, sizeof(int)) < 0) {
@@ -692,6 +693,7 @@ comm_set_transparent(int fd)
 #else
     debugs(50, DBG_CRITICAL, "WARNING: comm_open: setsockopt(IP_TRANSPARENT) not supported on this platform");
 #endif /* sockopt */
+#endif /* !LINUX_TPROXY2 */
 }
 
 /**
