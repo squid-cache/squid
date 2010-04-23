@@ -1486,38 +1486,197 @@ AC_ARG_ENABLE(default-hostsfile,
 AC_SUBST(OPT_DEFAULT_HOSTS)
 
 # Select auth schemes modules to build
-squid_opt_enable_auth="auto"
 AC_ARG_ENABLE(auth,
-  AS_HELP_STRING([--enable-auth="list of auth scheme modules"],
-                 [Build support for the list of authentication schemes.
-                  The default is to build support for the Basic scheme.
-                  See src/auth for a list of available modules, or
-                  Programmers Guide section authentication schemes
-                  for details on how to build your custom auth scheme
-                  module]), [
-  case $enableval in
-  yes)
-    : # auto is OK
-    ;;
-  no)
-    squid_opt_enable_auth="no"
-    ;;
-  *)
-    squid_opt_enable_auth="yes"
-    AUTH_MODULES="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
-    ;;
-  esac
+  AS_HELP_STRING([--enable-auth],
+                 [Build global support for authentication. The list of schemes
+                  and helpers to be enabled is defined elsewhere]), [
+SQUID_YESNO([$enableval],
+            [unrecognized argument to --enable-auth: $enableval])
 ])
-AC_MSG_CHECKING([for authentication modules to build])
-if test "$squid_opt_enable_auth" = "auto" ; then
-  squid_opt_enable_auth="yes"
-  SQUID_LOOK_FOR_MODULES([$srcdir/src/auth],[AUTH_MODULES])
+AC_MSG_NOTICE([Authentication support enabled: ${enable_auth:=yes}])
+SQUID_DEFINE_UNQUOTED([USE_AUTH],$enable_auth,
+   [Enable support for authentication])
+AUTH_MODULES=""
+
+AC_ARG_ENABLE(auth-basic,
+  AS_HELP_STRING([--enable-auth-basic="list of helpers"],
+     [Enable the basic authentication scheme, and build the specified helpers.
+      Not providing an explicit list of helpers will attempt build of
+      all possible helpers. Default is to do so.
+      To disable the basic authentication scheme, use --disable-auth-basic.
+      To enable but build no helpers, provide an empty list.
+      To see available helpers, see the helpers/basic_auth directory. ]),[
+#nothing to do really
+])
+#not specified. Inherit global
+if test "x$enable_auth_basic" = "x"; then
+    enable_auth_basic=$enable_auth
 fi
-SQUID_CHECK_EXISTING_MODULES([$srcdir/src/auth],[AUTH_MODULES])
-AC_MSG_RESULT([${AUTH_MODULES:-none}])
+#conflicts with global
+if test "$enable_auth_basic" != "no" -a "$enable_auth" = "no" ; then
+    AC_MSG_ERROR([Basic auth requested but auth disabled])
+fi
+#define list of modules to build
+if test "$enable_auth_basic" = "yes" ; then
+    SQUID_LOOK_FOR_MODULES([$srcdir/helpers/basic_auth],[enable_auth_basic])
+fi
+#handle the "none" special case
+if test "x$enable_auth_basic" = "xnone" ; then
+    enable_auth_basic=""
+fi
+BASIC_AUTH_HELPERS=""
+#enable_auth_basic contains either "no" or the list of modules to be built
+enable_auth_basic="`echo $enable_auth_basic| sed -e 's/,/ /g;s/  */ /g'`"
+if test "$enable_auth_basic" != "no" ; then
+    AUTH_MODULES="$AUTH_MODULES basic"
+    AC_DEFINE([HAVE_AUTH_MODULE_BASIC],1,[Basic auth module is built])
+    for helper in $enable_auth_basic
+    do
+    dir="$srcdir/helpers/basic_auth/$helper"
+    if test -f $dir/config.test && sh $dir/config.test "$@"; then
+      BASIC_AUTH_HELPERS="$BASIC_AUTH_HELPERS $helper"
+      # special case
+      if test "$helper" = "SASL" ; then
+        squid_require_sasl=yes
+      fi
+    elif test -d $srcdir/helpers/basic_auth/$helper ; then
+      AC_MSG_NOTICE([Basic auth helper $helper ... found but cannot be built])
+    fi
+    done
+fi
+AC_MSG_NOTICE([Basic auth helpers to be built: $BASIC_AUTH_HELPERS])
+AC_SUBST(BASIC_AUTH_HELPERS)
+
+AC_ARG_ENABLE(auth-ntlm,
+  AS_HELP_STRING([--enable-auth-ntlm="list of helpers"],
+     [Enable the NTLM authentication scheme, and build the specified helpers.
+      Not providing an explicit list of helpers will attempt build of
+      all possible helpers. Default is to do so.
+      To disable the NTLM authentication scheme, use --disable-auth-ntlm.
+      To enable but build no helpers, specify "none".
+      To see available helpers, see the helpers/ntlm_auth directory. ]),[
+])
+if test "x$enable_auth_ntlm" = "x"; then
+    enable_auth_ntlm=$enable_auth
+fi
+#conflicts with global
+if test "x$enable_auth_ntlm" != "xno" -a "x$enable_auth" = "xno" ; then
+    AC_MSG_ERROR([NTLM auth requested but auth disabled])
+fi
+#define list of modules to build
+if test "x$enable_auth_ntlm" = "xyes" ; then
+    SQUID_LOOK_FOR_MODULES([$srcdir/helpers/ntlm_auth],[enable_auth_ntlm])
+fi
+#handle the "none" special case
+if test "x$enable_auth_ntlm" = "xnone" ; then
+    enable_auth_ntlm=""
+fi
+NTLM_AUTH_HELPERS=""
+enable_auth_ntlm="`echo $enable_auth_ntlm| sed -e 's/,/ /g;s/  */ /g'`"
+if test "$enable_auth_ntlm" != "no" ; then
+    AUTH_MODULES="$AUTH_MODULES ntlm"
+    AC_DEFINE([HAVE_AUTH_MODULE_NTLM],1,[NTLM auth module is built])
+    for helper in $enable_auth_ntlm ; do
+        dir="$srcdir/helpers/ntlm_auth/$helper"
+        if test -f $dir/config.test && sh $dir/config.test "$@"; then
+            NTLM_AUTH_HELPERS="$NTLM_AUTH_HELPERS $helper"
+        elif test -d $srcdir/helpers/ntlm_auth/$helper ; then
+            AC_MSG_NOTICE([NTLM auth helper $helper ... found but cannot be built])
+        fi
+    done
+fi
+AC_MSG_NOTICE([NTLM auth helpers built: $NTLM_AUTH_HELPERS])
+AC_SUBST(NTLM_AUTH_HELPERS)
+
+AC_ARG_ENABLE(auth-negotiate,
+  AS_HELP_STRING([--enable-auth-negotiate="list of helpers"],
+     [Enable the Negotiate authentication scheme, and build the specified 
+      helpers.
+      Not providing an explicit list of helpers will attempt build of
+      all possible helpers. Default is to do so.
+      To disable the Negotiate authentication scheme, 
+      use --disable-auth-negotiate.
+      To enable but build no helpers, specify "none".
+      To see available helpers, see the helpers/negotiate_auth directory. ]),[
+#nothing to do, really
+])
+if test "x$enable_auth_negotiate" = "x"; then
+    enable_auth_negotiate=$enable_auth
+fi
+#conflicts with global
+if test "x$enable_auth_negotiate" != "xno" -a "x$enable_auth" = "xno" ; then
+    AC_MSG_ERROR([Negotiate auth requested but auth disabled])
+fi
+#define list of modules to build
+if test "x$enable_auth_negotiate" = "xyes" ; then
+    SQUID_LOOK_FOR_MODULES([$srcdir/helpers/negotiate_auth],[enable_auth_negotiate])
+fi
+#handle the "none" special case
+if test "x$enable_auth_negotiate" = "xnone" ; then
+    enable_auth_negotiate=""
+fi
+NEGOTIATE_AUTH_HELPERS=""
+enable_auth_negotiate="`echo $enable_auth_negotiate| sed -e 's/,/ /g;s/  */ /g'`"
+if test "$enable_auth_negotiate" != "no" ; then
+    AUTH_MODULES="$AUTH_MODULES negotiate"
+    AC_DEFINE([HAVE_AUTH_MODULE_NEGOTIATE],1,[Negotiate auth module is built])
+    for helper in $enable_auth_negotiate ; do
+        dir="$srcdir/helpers/negotiate_auth/$helper"
+        if test -f $dir/config.test && sh $dir/config.test "$@"; then
+            NEGOTIATE_AUTH_HELPERS="$NEGOTIATE_AUTH_HELPERS $helper"
+        elif test -d $srcdir/helpers/negotiate_auth/$helper ; then
+            AC_MSG_NOTICE([Negotiate auth helper $helper ... found but cannot be built])
+        fi
+    done
+fi
+AC_MSG_NOTICE([Negotiate auth helpers built: $NEGOTIATE_AUTH_HELPERS])
+AC_SUBST(NEGOTIATE_AUTH_HELPERS)
+
+AC_ARG_ENABLE(auth-digest,
+  AS_HELP_STRING([--enable-auth-digest="list of helpers"],
+     [Enable the Digest authentication scheme, and build the specified helpers.
+      Not providing an explicit list of helpers will attempt build of
+      all possible helpers. Default is to do so.
+      To disable the Digest authentication scheme, use --disable-auth-digest.
+      To enable but build no helpers, specify "none".
+      To see available helpers, see the helpers/digest_auth directory. ]),[
+#nothing to do, really
+])
+if test "x$enable_auth_digest" = "x"; then
+    enable_auth_digest=$enable_auth
+fi
+#conflicts with global
+if test "x$enable_auth_digest" != "xno" -a "x$enable_auth" = "xno" ; then
+    AC_MSG_ERROR([Digest auth requested but auth disabled])
+fi
+#define list of modules to build
+if test "x$enable_auth_digest" = "xyes" ; then
+    SQUID_LOOK_FOR_MODULES([$srcdir/helpers/digest_auth],[enable_auth_digest])
+fi
+#handle the "none" special case
+if test "x$enable_auth_digest" = "xnone" ; then
+    enable_auth_digest=""
+fi
+DIGEST_AUTH_HELPERS=""
+enable_auth_digest="`echo $enable_auth_digest| sed -e 's/,/ /g;s/  */ /g'`"
+if test "$enable_auth_digest" != "no" ; then
+    AUTH_MODULES="$AUTH_MODULES digest"
+    AC_DEFINE([HAVE_AUTH_MODULE_DIGEST],1,[Digest auth module is built])
+    for helper in $enable_auth_digest ; do
+        dir="$srcdir/helpers/digest_auth/$helper"
+        if test -f $dir/config.test && sh $dir/config.test "$@"; then
+            DIGEST_AUTH_HELPERS="$DIGEST_AUTH_HELPERS $helper"
+        elif test -d $srcdir/helpers/digest_auth/$helper ; then
+            AC_MSG_NOTICE([Digest auth helper $helper ... found but cannot be built])
+        fi
+    done
+fi
+AC_MSG_NOTICE([Digest auth helpers built: $DIGEST_AUTH_HELPERS])
+AC_SUBST(DIGEST_AUTH_HELPERS)
 
 dnl Authentication libraries to build
 dnl This list will not be needed when each auth library has its own Makefile
+dnl this is to be placed AFTER each auth modile's handler
 AUTH_LIBS_TO_BUILD=
 for module in $AUTH_MODULES; do
     AUTH_LIBS_TO_BUILD="$AUTH_LIBS_TO_BUILD lib${module}.la"
@@ -1525,172 +1684,10 @@ done
 AC_SUBST(AUTH_MODULES)
 AC_SUBST(AUTH_LIBS_TO_BUILD)
 
-dnl bundled auth modules, in order to have handy defines for the cppunit testsuite
-test -n "$AUTH_MODULES_basic" && AC_DEFINE([HAVE_AUTH_MODULE_BASIC],1,[Basic auth module is built])
-test -n "$AUTH_MODULES_digest" && AC_DEFINE([HAVE_AUTH_MODULE_DIGEST],1,[Digest auth module is built])
-test -n "$AUTH_MODULES_ntlm" && AC_DEFINE([HAVE_AUTH_MODULE_NTLM],1,[NTLM auth module is built])
-test -n "$AUTH_MODULES_negotiate" && AC_DEFINE([HAVE_AUTH_MODULE_NEGOTIATE],1,[Negotiate auth module is built])
-
-# Select basic auth scheme helpers to build
-dnl code path: squid_opt_basic_auth_helpers can contain either
-dnl "auto" (default) or the list of modules to be built.
-dnl Modules are then checked for existence dnl and for a 
-dnl successful config.test in the module's dir. As they succeed the
-dnl variable BASIC_AUTH_HELPERS gets filled in and then substituted in
-dnl the Makefile
-BASIC_AUTH_HELPERS=""
-if test "$AUTH_MODULES_basic" = "yes" ; then
-  squid_opt_basic_auth_helpers="auto"
-else
-  squid_opt_basic_auth_helpers=""
-fi
-AC_ARG_ENABLE(basic-auth-helpers,
-  AS_HELP_STRING([--enable-basic-auth-helpers="list of helpers"],
-                 [This option selects which basic scheme proxy_auth
-                  helpers to build and install as part of the normal 
-                  build process. For a list of available
-                  helpers see the helpers/basic_auth directory.]), [
-  case "$enableval" in
-    yes) squid_opt_basic_auth_helpers="auto" ;;
-    no)  squid_opt_basic_auth_helpers="" ;;
-    *)   squid_opt_basic_auth_helpers="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`" ;;
-  esac
-])
-if test "$squid_opt_basic_auth_helpers" = "auto" ; then
-  squid_opt_basic_auth_helpers=""
-  SQUID_LOOK_FOR_MODULES([$srcdir/helpers/basic_auth],[squid_opt_basic_auth_helpers])
-fi
-if test -n "$squid_opt_basic_auth_helpers" -a -z "$AUTH_MODULES_basic" ; then
-  AC_MSG_WARN([Basic auth helpers selected without the basic scheme enabled])
-fi
-for helper in $squid_opt_basic_auth_helpers ; do
-  dir="$srcdir/helpers/basic_auth/$helper"
-  if test -f $dir/config.test && sh $dir/config.test "$@"; then
-    BASIC_AUTH_HELPERS="$BASIC_AUTH_HELPERS $helper"
-    # special case
-    if test "$helper" = "SASL" ; then
-      squid_require_sasl=yes
-    fi
-  elif test -d $srcdir/helpers/basic_auth/$helper ; then
-    AC_MSG_NOTICE([Basic auth helper $helper ... found but cannot be built])
-  fi
-done
-AC_MSG_NOTICE([Basic auth helpers built: $BASIC_AUTH_HELPERS])
-AC_SUBST(BASIC_AUTH_HELPERS)
-
-# Select ntlm auth helpers to build
-if test "$AUTH_MODULES_ntlm" = "yes" ; then
-  squid_opt_ntlm_auth_helpers="auto"
-else
-  squid_opt_ntlm_auth_helpers=""
-fi
-AC_ARG_ENABLE(ntlm-auth-helpers,
-  AS_HELP_STRING([--enable-ntlm-auth-helpers="list of helpers"],
-                 [This option selects which proxy_auth ntlm helpers
-                 to build and install as part of the normal build 
-                 process. For a list of available helpers see
-                 the helpers/ntlm_auth directory.]), [
-case "$enableval" in
-  yes) squid_opt_ntlm_auth_helpers="auto" ;;
-  no)  squid_opt_ntlm_auth_helpers="" ;;
-  *) squid_opt_ntlm_auth_helpers="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`" ;;
-  esac
-])
-if test "$squid_opt_ntlm_auth_helpers" = "auto" ; then
-  squid_opt_ntlm_auth_helpers=""
-  SQUID_LOOK_FOR_MODULES([$srcdir/helpers/ntlm_auth],[squid_opt_ntlm_auth_helpers])
-fi
-if test -n "$squid_opt_ntlm_auth_helpers" -a -z "$AUTH_MODULES_ntlm" ; then
-  AC_MSG_WARN([NTLM auth helpers selected without the NTLM scheme enabled])
-fi
-for helper in $squid_opt_ntlm_auth_helpers ; do
-  dir="$srcdir/helpers/ntlm_auth/$helper"
-  if test -f $dir/config.test && sh $dir/config.test "$@"; then
-    NTLM_AUTH_HELPERS="$NTLM_AUTH_HELPERS $helper"
-  elif test -d $srcdir/helpers/ntlm_auth/$helper ; then
-    AC_MSG_NOTICE([NTLM auth helper $helper ... found but cannot be built])
-  fi
-done
-AC_MSG_NOTICE([NTLM auth helpers built: $NTLM_AUTH_HELPERS])
-AC_SUBST(NTLM_AUTH_HELPERS)
-
-# Select negotiate auth helpers to build
-if test "$AUTH_MODULES_negotiate" = "yes" ; then
-  squid_opt_negotiate_auth_helpers="auto"
-else
-  squid_opt_negotiate_auth_helpers=""
-fi
-AC_ARG_ENABLE(negotiate-auth-helpers,
-  AS_HELP_STRING([--enable-negotiate-auth-helpers="list of helpers"],
-                 [This option selects which proxy_auth negotiate helpers
-                  to build and install as part of the normal build 
-                  process. For a list of available helpers see
-                  the helpers/negotiate_auth directory.]), [
-  case "$enableval" in
-  yes) squid_opt_negotiate_auth_helpers="all" ;;
-  no)  squid_opt_negotiate_auth_helpers="" ;;
-  *)   squid_opt_negotiate_auth_helpers="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`" ;;
-  esac
-])
-if test "$squid_opt_negotiate_auth_helpers" = "auto" ; then
-  squid_opt_negotiate_auth_helpers=""
-  SQUID_LOOK_FOR_MODULES([$srcdir/helpers/negotiate_auth],[squid_opt_negotiate_auth_helpers])
-fi
-if test -n "$squid_opt_negotiate_auth_helpers" -a -z "$AUTH_MODULES_negotiate" ; then
-  AC_MSG_WARN([Negotiate auth helpers selected without the Negotiate scheme enabled])
-fi
-for helper in $squid_opt_negotiate_auth_helpers ; do
-  dir="$srcdir/helpers/negotiate_auth/$helper"
-  if test -f $dir/config.test && sh $dir/config.test "$@"; then
-    NEGOTIATE_AUTH_HELPERS="$NEGOTIATE_AUTH_HELPERS $helper"
-  elif test -d $srcdir/helpers/negotiate_auth/$helper ; then
-    AC_MSG_NOTICE([Negotiate auth helper $helper ... found but cannot be built])
-  fi
-done
-AC_MSG_NOTICE([Negotiate auth helpers built: $NEGOTIATE_AUTH_HELPERS])
-AC_SUBST(NEGOTIATE_AUTH_HELPERS)
-
-
-dnl Select digest auth scheme helpers to build
-if test "$AUTH_MODULES_digest" = "yes" ; then
-  squid_opt_digest_auth_helpers="auto"
-else
-  squid_opt_digest_auth_helpers=""
-fi
-AC_ARG_ENABLE(digest-auth-helpers,
-  AS_HELP_STRING([--enable-digest-auth-helpers="list of helpers"],
-                 [This option selects which digest scheme authentication
-                  helpers to build and install as part of the normal build
-                  process. For a list of available helpers see the
-                  helpers/digest_auth directory.]), [
-case "$enableval" in
-  yes) squid_opt_digest_auth_helpers="all" ;;
-  no)  squid_opt_digest_auth_helpers="" ;;
-  *)   squid_opt_digest_auth_helpers="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`" ;;
-  esac
-])
-if test "$squid_opt_digest_auth_helpers" = "auto" ; then
-  squid_opt_digest_auth_helpers=""
-  SQUID_LOOK_FOR_MODULES([$srcdir/helpers/digest_auth],[squid_opt_digest_auth_helpers])
-fi
-if test -n "$squid_opt_digest_auth_helpers" -a -z "$AUTH_MODULES_digest" ; then
-  AC_MSG_WARN([Digest auth helpers selected without the Digest scheme enabled])
-fi
-for helper in $squid_opt_digest_auth_helpers ; do
-  dir="$srcdir/helpers/digest_auth/$helper"
-  if test -f $dir/config.test && sh $dir/config.test "$@"; then
-    DIGEST_AUTH_HELPERS="$DIGEST_AUTH_HELPERS $helper"
-  elif test -d $srcdir/helpers/digest_auth/$helper ; then
-    AC_MSG_NOTICE([Digest auth helper $helper ... found but cannot be built])
-  fi
-done
-AC_MSG_NOTICE([Digest auth helpers built: $DIGEST_AUTH_HELPERS])
-AC_SUBST(DIGEST_AUTH_HELPERS)
-
 dnl Select logging daemon helpers to build
 squid_opt_logdaemon_helpers="auto"
 AC_ARG_ENABLE(log-daemon-helpers,
-  AS_HELP_STRING([--enable-log-daemon-auth-helpers="list of helpers"],
+  AS_HELP_STRING([--enable-log-daemon-helpers="list of helpers"],
                  [This option selects which logging daemon helpers to 
                   build and install as part of the normal build process
                   For a list of available helpers see the helpers/log_daemon
@@ -1710,7 +1707,7 @@ for helper in $squid_opt_logdaemon_helpers ; do
   if test -f $dir/config.test && sh $dir/config.test "$@"; then
     LOG_DAEMON_HELPERS="$LOG_DAEMON_HELPERS $helper"
   elif test -d $srcdir/helpers/log_daemon/$helper ; then
-    AC_MSG_NOTICE([Log daemon auth helper $helper ... found but cannot be built])
+    AC_MSG_NOTICE([Log daemon helper $helper ... found but cannot be built])
   fi
 done
 AC_MSG_NOTICE([Log daemon helpers built: $LOG_DAEMON_HELPERS])
