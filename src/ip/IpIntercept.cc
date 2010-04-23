@@ -90,15 +90,6 @@
 #include <linux/netfilter_ipv4.h>
 #endif
 
-#if LINUX_TPROXY2
-#if HAVE_LINUX_NETFILTER_IPV4_IP_TPROXY_H
-#include <linux/netfilter_ipv4/ip_tproxy.h>
-#else
-#error " TPROXY v2 Header file missing: linux/netfilter_ipv4/ip_tproxy.h. Perhapse you meant to use TPROXY v4 ? "
-#endif
-#endif
-
-
 // single global instance for access by other components.
 Ip::Intercept Ip::Interceptor;
 
@@ -404,58 +395,10 @@ Ip::Intercept::NatLookup(int fd, const Ip::Address &me, const Ip::Address &peer,
     return -1;
 }
 
-#if LINUX_TPROXY2
-int
-Ip::Intercept::SetTproxy2OutgoingAddr(int fd, const Ip::Address &src)
-{
-    Address addr;
-    struct in_tproxy itp;
-
-    src.GetInAddr(itp.v.addr.faddr);
-    itp.v.addr.fport = 0;
-
-    /* If these syscalls fail then we just fallback to connecting
-     * normally by simply ignoring the errors...
-     */
-    itp.op = TPROXY_ASSIGN;
-
-    addr = (struct in_addr)itp.v.addr.faddr;
-    addr.SetPort(itp.v.addr.fport);
-
-    if (setsockopt(fd, SOL_IP, IP_TPROXY, &itp, sizeof(itp)) == -1) {
-        debugs(20, 1, "tproxy ip=" << addr << " ERROR ASSIGN");
-        return -1;
-    } else {
-        itp.op = TPROXY_FLAGS;
-        itp.v.flags = ITP_CONNECT;
-
-        if (setsockopt(fd, SOL_IP, IP_TPROXY, &itp, sizeof(itp)) == -1) {
-            debugs(20, 1, "tproxy ip=" << addr << " ERROR CONNECT");
-            return -1;
-        }
-    }
-
-    return 0;
-}
-#endif
-
 bool
 Ip::Intercept::ProbeForTproxy(Ip::Address &test)
 {
     debugs(3, 3, "Detect TPROXY support on port " << test);
-#if LINUX_TPROXY2
-
-#if USE_IPV6
-    /* TPROXYv2 is not IPv6 capable. Force wildcard sockets to IPv4. Die on IPv6 IPs */
-    debugs(3, DBG_IMPORTANT, "Disabling IPv6 on port " << test << " (TPROXYv2 interception enabled)");
-    if ( test.IsIPv6() && !test.SetIPv4() ) {
-        debugs(3, DBG_CRITICAL, "IPv6 requires TPROXYv4 support. You only have TPROXYv2 for " << test );
-        return false;
-    }
-#endif /* USE_IPV6 */
-    return true;
-
-#else /* not LINUX_TPROXY2 */
 
 #if defined(IP_TRANSPARENT)
 
@@ -517,6 +460,5 @@ Ip::Intercept::ProbeForTproxy(Ip::Address &test)
 #else /* undefined IP_TRANSPARENT */
     debugs(3, 3, "setsockopt(IP_TRANSPARENT) not supported on this platform. Disabling TPROXYv4.");
 #endif
-#endif /* LINUX_TPROXY2 */
     return false;
 }

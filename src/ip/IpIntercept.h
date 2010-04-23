@@ -32,12 +32,6 @@ public:
     /** Perform NAT lookups */
     int NatLookup(int fd, const Address &me, const Address &peer, Address &client, Address &dst);
 
-#if LINUX_TPROXY2
-    // only relevant to TPROXY v2 connections.
-    // which require the address be set specifically post-connect.
-    int SetTproxy2OutgoingAddr(int fd, const Address &src);
-#endif
-
     /**
      * Test system networking calls for TPROXY support.
      * Detects IPv6 and IPv4 level of support matches the address being listened on
