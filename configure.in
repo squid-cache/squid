@@ -2703,7 +2703,6 @@ if test "$use_ipng" != "no"; then
     AC_RUN_IFELSE([AC_LANG_SOURCE([[ /* PF_INET6 available check */
 #       include <sys/types.h>
 #       include <sys/socket.h>
-#error failure check.
         int main(int argc, char **argv) {
           if (socket(PF_INET6, SOCK_STREAM, 0) < 0)
             return 1;
