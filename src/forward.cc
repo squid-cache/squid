@@ -911,16 +911,6 @@ FwdState::connectStart()
 
     commSetTimeout(fd, ctimeout, fwdConnectTimeoutWrapper, this);
 
-#if LINUX_TPROXY2
-    if (!fs->_peer && request->flags.spoof_client_ip) {
-        // try to set the outgoing address using TPROXY v2
-        // if it fails we abort any further TPROXY actions on this connection
-        if (Ip::Interceptor.SetTproxy2OutgoingAddr(fd, src) == -1) {
-            request->flags.spoof_client_ip = 0;
-        }
-    }
-#endif
-
     updateHierarchyInfo();
     commConnectStart(fd, host, port, fwdConnectDoneWrapper, this);
 }
