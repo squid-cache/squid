@@ -2681,7 +2681,7 @@ AC_ARG_ENABLE(ipv6,
   AS_HELP_STRING([--disable-ipv6],[Disable IPv6 support]),
 [ case $enableval in
   yes|no)
-    use_ipng=yes
+    use_ipng=$enableval
     ;;
   *)
     ;;
@@ -2699,7 +2699,7 @@ if test "$use_ipng" != "no"; then
     *)
       ;;
   esac
-  AC_CACHE_CHECK([if PF_INET6 is available], $squid_cv_pf_inet6,
+  AC_CACHE_CHECK([if PF_INET6 is available], squid_cv_pf_inet6,
     AC_RUN_IFELSE([AC_LANG_SOURCE([[ /* PF_INET6 available check */
 #       include <sys/types.h>
 #       include <sys/socket.h>
@@ -2709,10 +2709,7 @@ if test "$use_ipng" != "no"; then
           else
             return 0;
         }
-      ]])],[ AC_MSG_RESULT(yes)
-		squid_cv_pf_inet6="yes"
-		SAVED_LIBS="$LIBS" ],[ AC_MSG_RESULT(no)
-		squid_cv_pf_inet6="no"],[])
+      ]])],[squid_cv_pf_inet6="yes" ; SAVED_LIBS="$LIBS"],[squid_cv_pf_inet6="no"],[])
    )
    LIBS="$SAVED_LIBS"
 fi
@@ -2721,7 +2718,7 @@ fi
 # unless --enable-ipv6 is explicitly used. in which case it's a hard fail.
 if test "x$use_ipng" = "xyes" && test "x$squid_cv_pf_inet6" = "xno"; then
 	AC_MSG_ERROR([IPv6 cannot be built on this system. Basic kernel definitions are missing.])
-else
+elif test "x$use_ipng" = "xauto" && test "x$squid_cv_pf_inet6" = "xno"; then
 	AC_MSG_WARN([IPv6 cannot be built on this system. Basic kernel definitions are missing.])
 fi
 
