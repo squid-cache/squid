@@ -15,7 +15,7 @@
 
 #include "cbdata.h"
 
-class IpAddress;
+class Ip::Address;
 
 namespace Ident
 {
@@ -28,7 +28,7 @@ namespace Ident
  * Self-registers with a global ident lookup manager,
  * will call Ident::Init() itself if the manager has not been initialized already.
  */
-void Start(IpAddress &me, IpAddress &my_peer, IDCB * callback, void *cbdata);
+void Start(Ip::Address &me, Ip::Address &my_peer, IDCB * callback, void *cbdata);
 
 /**
  \ingroup IdentAPI

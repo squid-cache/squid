@@ -90,20 +90,11 @@
 #include <linux/netfilter_ipv4.h>
 #endif
 
-#if LINUX_TPROXY2
-#if HAVE_LINUX_NETFILTER_IPV4_IP_TPROXY_H
-#include <linux/netfilter_ipv4/ip_tproxy.h>
-#else
-#error " TPROXY v2 Header file missing: linux/netfilter_ipv4/ip_tproxy.h. Perhapse you meant to use TPROXY v4 ? "
-#endif
-#endif
-
-
 // single global instance for access by other components.
-IpIntercept IpInterceptor;
+Ip::Intercept Ip::Interceptor;
 
 void
-IpIntercept::StopTransparency(const char *str)
+Ip::Intercept::StopTransparency(const char *str)
 {
     if (transparent_active) {
         debugs(89, DBG_IMPORTANT, "Stopping full transparency: " << str);
@@ -112,7 +103,7 @@ IpIntercept::StopTransparency(const char *str)
 }
 
 void
-IpIntercept::StopInterception(const char *str)
+Ip::Intercept::StopInterception(const char *str)
 {
     if (intercept_active) {
         debugs(89, DBG_IMPORTANT, "Stopping IP interception: " << str);
@@ -121,7 +112,7 @@ IpIntercept::StopInterception(const char *str)
 }
 
 int
-IpIntercept::NetfilterInterception(int fd, const IpAddress &me, IpAddress &dst, int silent)
+Ip::Intercept::NetfilterInterception(int fd, const Ip::Address &me, Ip::Address &dst, int silent)
 {
 #if LINUX_NETFILTER
     struct addrinfo *lookup = NULL;
@@ -139,7 +130,7 @@ IpIntercept::NetfilterInterception(int fd, const IpAddress &me, IpAddress &dst, 
         dst = *lookup;
     }
 
-    dst.FreeAddrInfo(lookup);
+    Address::FreeAddrInfo(lookup);
 
     if (me != dst) {
         debugs(89, 5, HERE << "address NAT: me= " << me << ", dst= " << dst);
@@ -152,7 +143,7 @@ IpIntercept::NetfilterInterception(int fd, const IpAddress &me, IpAddress &dst, 
 }
 
 int
-IpIntercept::NetfilterTransparent(int fd, const IpAddress &me, IpAddress &client, int silent)
+Ip::Intercept::NetfilterTransparent(int fd, const Ip::Address &me, Ip::Address &client, int silent)
 {
 #if LINUX_NETFILTER
 
@@ -171,7 +162,7 @@ IpIntercept::NetfilterTransparent(int fd, const IpAddress &me, IpAddress &client
 }
 
 int
-IpIntercept::IpfwInterception(int fd, const IpAddress &me, IpAddress &dst, int silent)
+Ip::Intercept::IpfwInterception(int fd, const Ip::Address &me, Ip::Address &dst, int silent)
 {
 #if IPFW_TRANSPARENT
     struct addrinfo *lookup = NULL;
@@ -189,7 +180,7 @@ IpIntercept::IpfwInterception(int fd, const IpAddress &me, IpAddress &dst, int s
         dst = *lookup;
     }
 
-    dst.FreeAddrInfo(lookup);
+    Address::FreeAddrInfo(lookup);
 
     if (me != dst) {
         debugs(89, 5, HERE << "address NAT: me= " << me << ", dst= " << dst);
@@ -202,7 +193,7 @@ IpIntercept::IpfwInterception(int fd, const IpAddress &me, IpAddress &dst, int s
 }
 
 int
-IpIntercept::IpfInterception(int fd, const IpAddress &me, IpAddress &client, IpAddress &dst, int silent)
+Ip::Intercept::IpfInterception(int fd, const Ip::Address &me, Ip::Address &client, Ip::Address &dst, int silent)
 {
 #if IPF_TRANSPARENT  /* --enable-ipf-transparent */
 
@@ -299,7 +290,7 @@ IpIntercept::IpfInterception(int fd, const IpAddress &me, IpAddress &client, IpA
 }
 
 int
-IpIntercept::PfInterception(int fd, const IpAddress &me, IpAddress &client, IpAddress &dst, int silent)
+Ip::Intercept::PfInterception(int fd, const Ip::Address &me, Ip::Address &client, Ip::Address &dst, int silent)
 {
 #if PF_TRANSPARENT  /* --enable-pf-transparent */
 
@@ -356,7 +347,7 @@ IpIntercept::PfInterception(int fd, const IpAddress &me, IpAddress &client, IpAd
 
 
 int
-IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAddress &client, IpAddress &dst)
+Ip::Intercept::NatLookup(int fd, const Ip::Address &me, const Ip::Address &peer, Ip::Address &client, Ip::Address &dst)
 {
     /* --enable-linux-netfilter    */
     /* --enable-ipfw-transparent   */
@@ -404,58 +395,10 @@ IpIntercept::NatLookup(int fd, const IpAddress &me, const IpAddress &peer, IpAdd
     return -1;
 }
 
-#if LINUX_TPROXY2
-int
-IpIntercept::SetTproxy2OutgoingAddr(int fd, const IpAddress &src)
-{
-    IpAddress addr;
-    struct in_tproxy itp;
-
-    src.GetInAddr(itp.v.addr.faddr);
-    itp.v.addr.fport = 0;
-
-    /* If these syscalls fail then we just fallback to connecting
-     * normally by simply ignoring the errors...
-     */
-    itp.op = TPROXY_ASSIGN;
-
-    addr = (struct in_addr)itp.v.addr.faddr;
-    addr.SetPort(itp.v.addr.fport);
-
-    if (setsockopt(fd, SOL_IP, IP_TPROXY, &itp, sizeof(itp)) == -1) {
-        debugs(20, 1, "tproxy ip=" << addr << " ERROR ASSIGN");
-        return -1;
-    } else {
-        itp.op = TPROXY_FLAGS;
-        itp.v.flags = ITP_CONNECT;
-
-        if (setsockopt(fd, SOL_IP, IP_TPROXY, &itp, sizeof(itp)) == -1) {
-            debugs(20, 1, "tproxy ip=" << addr << " ERROR CONNECT");
-            return -1;
-        }
-    }
-
-    return 0;
-}
-#endif
-
 bool
-IpIntercept::ProbeForTproxy(IpAddress &test)
+Ip::Intercept::ProbeForTproxy(Ip::Address &test)
 {
     debugs(3, 3, "Detect TPROXY support on port " << test);
-#if LINUX_TPROXY2
-
-#if USE_IPV6
-    /* TPROXYv2 is not IPv6 capable. Force wildcard sockets to IPv4. Die on IPv6 IPs */
-    debugs(3, DBG_IMPORTANT, "Disabling IPv6 on port " << test << " (TPROXYv2 interception enabled)");
-    if ( test.IsIPv6() && !test.SetIPv4() ) {
-        debugs(3, DBG_CRITICAL, "IPv6 requires TPROXYv4 support. You only have TPROXYv2 for " << test );
-        return false;
-    }
-#endif /* USE_IPV6 */
-    return true;
-
-#else /* not LINUX_TPROXY2 */
 
 #if defined(IP_TRANSPARENT)
 
@@ -468,7 +411,7 @@ IpIntercept::ProbeForTproxy(IpAddress &test)
         debugs(3, 3, "...Probing for IPv6 TPROXY support.");
 
         struct sockaddr_in6 tmp_ip6;
-        IpAddress tmp = "::2";
+        Ip::Address tmp = "::2";
         tmp.SetPort(0);
         tmp.GetSockAddr(tmp_ip6);
 
@@ -497,7 +440,7 @@ IpIntercept::ProbeForTproxy(IpAddress &test)
         debugs(3, 3, "...Probing for IPv4 TPROXY support.");
 
         struct sockaddr_in tmp_ip4;
-        IpAddress tmp = "127.0.0.2";
+        Ip::Address tmp = "127.0.0.2";
         tmp.SetPort(0);
         tmp.GetSockAddr(tmp_ip4);
 
@@ -517,6 +460,5 @@ IpIntercept::ProbeForTproxy(IpAddress &test)
 #else /* undefined IP_TRANSPARENT */
     debugs(3, 3, "setsockopt(IP_TRANSPARENT) not supported on this platform. Disabling TPROXYv4.");
 #endif
-#endif /* LINUX_TPROXY2 */
     return false;
 }

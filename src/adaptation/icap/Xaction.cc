@@ -87,7 +87,7 @@ void Adaptation::Icap::Xaction::start()
 // TODO: obey service-specific, OPTIONS-reported connection limit
 void Adaptation::Icap::Xaction::openConnection()
 {
-    IpAddress client_addr;
+    Ip::Address client_addr;
 
     Must(connection < 0);
 
@@ -115,7 +115,7 @@ void Adaptation::Icap::Xaction::openConnection()
 
     disableRetries(); // we only retry pconn failures
 
-    IpAddress outgoing;
+    Ip::Address outgoing;
     connection = comm_open(SOCK_STREAM, 0, outgoing,
                            COMM_NONBLOCKING, s.cfg().uri.termedBuf());
 
@@ -175,7 +175,7 @@ void Adaptation::Icap::Xaction::closeConnection()
         }
 
         if (reuseConnection) {
-            IpAddress client_addr;
+            Ip::Address client_addr;
             //status() adds leading spaces.
             debugs(93,3, HERE << "pushing pconn" << status());
             AsyncCall::Pointer call = NULL;

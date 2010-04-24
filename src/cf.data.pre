@@ -1133,17 +1133,16 @@ TYPE: http_port_list
 DEFAULT: none
 LOC: Config.Sockaddr.http
 DOC_START
-	Usage:	port [options]
-		hostname:port [options]
-		1.2.3.4:port [options]
+	Usage:	port [mode] [options]
+		hostname:port [mode] [options]
+		1.2.3.4:port [mode] [options]
 
 	The socket addresses where Squid will listen for HTTP client
 	requests.  You may specify multiple socket addresses.
 	There are three forms: port alone, hostname with port, and
 	IP address with port.  If you specify a hostname or IP
 	address, Squid binds the socket to that specific
-	address.  This replaces the old 'tcp_incoming_address'
-	option.  Most likely, you do not need to bind to a specific
+	address. Most likely, you do not need to bind to a specific
 	address, so you can use the port number alone.
 
 	If you are running Squid in accelerator mode, you
@@ -1155,7 +1154,7 @@ DOC_START
 
 	You may specify multiple socket addresses on multiple lines.
 
-	Options:
+	Modes:
 
 	   intercept	Support for IP-Layer interception of
 			outgoing requests without browser settings.
@@ -1168,6 +1167,20 @@ DOC_START
 	   accel	Accelerator mode. Also needs at least one of
 			vhost / vport / defaultsite.
 
+	   sslbump 	Intercept each CONNECT request matching ssl_bump ACL,
+			establish secure connection with the client and with
+			the server, decrypt HTTP messages as they pass through
+			Squid, and treat them as unencrypted HTTP messages,
+			becoming the man-in-the-middle.
+
+			The ssl_bump option is required to fully enable
+			the SslBump feature.
+
+	Omitting the mode flag causes default forward proxy mode to be used.
+
+
+	Accelerator Mode Options:
+
 	   allow-direct	Allow direct forwarding in accelerator mode. Normally
 			accelerated requests are denied direct forwarding as if
 			never_direct was used.
@@ -1178,22 +1191,90 @@ DOC_START
 			accelerators should consider the default.
 			Implies accel.
 
-	   vhost	Accelerator mode using Host header for virtual
-			domain support. Implies accel.
+	   vhost	Using the Host header for virtual domain support.
+			Also uses the port as specified in Host: header.
 
-	   vport	Accelerator with IP based virtual host support.
-			Implies accel.
+	   vport	IP based virtual host support. Using the http_port number
+			in passed on Host: headers.
 
-	   vport=NN	As above, but uses specified port number rather
-			than the http_port number. Implies accel.
+	   vport=NN	Uses the specified port number rather than the
+			http_port number.
 
 	   protocol=	Protocol to reconstruct accelerated requests with.
-			Defaults to http.
+			Defaults to http://.
 
 	   ignore-cc	Ignore request Cache-Control headers.
 
 	   		Warning: This option violates HTTP specifications if
 			used in non-accelerator setups.
+
+
+	SSL Bump Mode Options:
+
+	   cert=	Path to SSL certificate (PEM format).
+
+	   key=		Path to SSL private key file (PEM format)
+			if not specified, the certificate file is
+			assumed to be a combined certificate and
+			key file.
+
+	   version=	The version of SSL/TLS supported
+			    1	automatic (default)
+			    2	SSLv2 only
+			    3	SSLv3 only
+			    4	TLSv1 only
+
+	   cipher=	Colon separated list of supported ciphers.
+
+	   options=	Various SSL engine options. The most important
+			being:
+			    NO_SSLv2  Disallow the use of SSLv2
+			    NO_SSLv3  Disallow the use of SSLv3
+			    NO_TLSv1  Disallow the use of TLSv1
+			    SINGLE_DH_USE Always create a new key when using
+				      temporary/ephemeral DH key exchanges
+			See src/ssl_support.c or OpenSSL SSL_CTX_set_options
+			documentation for a complete list of options.
+
+	   clientca=	File containing the list of CAs to use when
+			requesting a client certificate.
+
+	   cafile=	File containing additional CA certificates to
+			use when verifying client certificates. If unset
+			clientca will be used.
+
+	   capath=	Directory containing additional CA certificates
+			and CRL lists to use when verifying client certificates.
+
+	   crlfile=	File of additional CRL lists to use when verifying
+			the client certificate, in addition to CRLs stored in
+			the capath. Implies VERIFY_CRL flag below.
+
+	   dhparams=	File containing DH parameters for temporary/ephemeral
+			DH key exchanges.
+
+	   sslflags=	Various flags modifying the use of SSL:
+			    DELAYED_AUTH
+				Don't request client certificates
+				immediately, but wait until acl processing
+				requires a certificate (not yet implemented).
+			    NO_DEFAULT_CA
+				Don't use the default CA lists built in
+				to OpenSSL.
+			    NO_SESSION_REUSE
+				Don't allow for session reuse. Each connection
+				will result in a new SSL session.
+			    VERIFY_CRL
+				Verify CRL lists when accepting client
+				certificates.
+			    VERIFY_CRL_ALL
+				Verify CRL lists for all certificates in the
+				client certificate chain.
+
+	   sslcontext=	SSL session ID context identifier.
+
+
+	Other Options:
 
 	   connection-auth[=on|off]
 	                use connection-auth=off to tell Squid to prevent 
@@ -1215,22 +1296,6 @@ DOC_START
 			have such setup and experience that certain clients
 			sporadically hang or never complete requests set
 			disable-pmtu-discovery option to 'transparent'.
-
-	   sslBump 	Intercept each CONNECT request matching ssl_bump ACL,
-			establish secure connection with the client and with
-			the server, decrypt HTTP messages as they pass through
-			Squid, and treat them as unencrypted HTTP messages,
-			becoming the man-in-the-middle.
-
-			When this option is enabled, additional options become
-			available to specify SSL-related properties of the
-			client-side connection: cert, key, version, cipher,
-			options, clientca, cafile, capath, crlfile, dhparams,
-			sslflags, and sslcontext. See the https_port directive
-			for more information on these options.
-
-			The ssl_bump option is required to fully enable
-			the SslBump feature.
 
 	   name=	Specifies a internal name for the port. Defaults to
 			the port specification (port or addr:port)
@@ -1410,7 +1475,7 @@ NAME: qos_flows
 TYPE: QosConfig
 IFDEF: USE_ZPH_QOS
 DEFAULT: none
-LOC: Config.zph
+LOC: Ip::Qos::TheConfig
 DOC_START
 	Allows you to select a TOS/DSCP value to mark outgoing
 	connections with, based on where the reply was sourced.
