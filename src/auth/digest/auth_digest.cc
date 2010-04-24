@@ -830,9 +830,6 @@ authDigestLogUsername(char *username, AuthUserRequest::Pointer auth_user_request
     digest_user->auth_type = AUTH_BROKEN;
     /* link the request to the user */
     auth_user_request->user(digest_user);
-#if USER_REQUEST_LOOP_DEAD
-    digest_user->addRequest(auth_user_request);
-#endif
     return auth_user_request;
 }
 
@@ -1114,10 +1111,6 @@ AuthDigestConfig::decode(char const *proxy_auth)
     assert(digest_request != NULL);
 
     digest_request->user(digest_user);
-#if USER_REQUEST_LOOP_DEAD
-    digest_user->addRequest(digest_request);
-#endif
-
     debugs(29, 9, "username = '" << digest_user->username() << "'\nrealm = '" <<
            digest_request->realm << "'\nqop = '" << digest_request->qop <<
            "'\nalgorithm = '" << digest_request->algorithm << "'\nuri = '" <<

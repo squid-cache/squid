@@ -981,7 +981,6 @@ tests_testAuth_SOURCES = \
 	ConfigParser.cc \
 	HelperChildConfig.h \
 	HelperChildConfig.cc \
-	ip/stubQosConfig.cc \
 	tests/stub_acl.cc tests/stub_cache_cf.cc \
 	tests/stub_helper.cc cbdata.cc String.cc \
 	tests/stub_store.cc HttpHeaderTools.cc HttpHeader.cc mem.cc ClientInfo.h \

@@ -34,10 +34,6 @@
 #ifndef SQUID_AUTHUSER_H
 #define SQUID_AUTHUSER_H
 
-#if USER_REQUEST_LOOP_DEAD
-#include "auth/UserRequest.h"
-#endif
-
 #include "auth/AuthType.h"
 #include "dlink.h"
 #include "ip/IpAddress.h"
@@ -94,20 +90,6 @@ public:
     void clearIp();
     void removeIp(Ip::Address);
     void addIp(Ip::Address);
-
-#if USER_REQUEST_LOOP_DEAD
-protected:
-    /* manage list of active authentication requests for this username */
-    /** the auth_user_request structures that link to this. Yes it could be a splaytree
-     * but how many requests will a single username have in parallel? */
-    dlink_list requests;
-
-    /* AYJ: why? do we need this here? it forms the core of a circular refcount. */
-
-public:
-    _SQUID_INLINE_ void addRequest(AuthUserRequest::Pointer);
-    _SQUID_INLINE_ void doneRequest(AuthUserRequest::Pointer);
-#endif /* USER_REQUEST_LOOP_DEAD */
 
     void addToNameCache();
     static void UsernameCacheStats(StoreEntry * output);
