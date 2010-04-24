@@ -140,14 +140,6 @@ AuthUserRequest::~AuthUserRequest()
     debugs(29, 5, "AuthUserRequest::~AuthUserRequest: freeing request " << this);
 
     if (user() != NULL) {
-#if USER_REQUEST_LOOP_DEAD
-        /* AYJ: something strange: in order to be deleted this object must not be
-         * referenced anywhere. Including the AuthUser list of requests.
-         * I expect the following loop to NEVER find a pointer to this request object.
-         */
-        user()->doneRequest(this);
-#endif /* USER_REQUEST_LOOP_DEAD */
-
         /* release our references to the user credentials */
         user(NULL);
     }

@@ -134,7 +134,7 @@ AuthDigestUserRequest::authenticate(HttpRequest * request, ConnStateData * conn,
             } else {
                 const char *useragent = request->header.getStr(HDR_USER_AGENT);
 
-                static IpAddress last_broken_addr;
+                static Ip::Address last_broken_addr;
                 static int seen_broken_client = 0;
 
                 if (!seen_broken_client) {
