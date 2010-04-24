@@ -1397,14 +1397,6 @@ default|"")
   fi
 esac
 
-dnl Enable Linux transparent proxy support for obsolete TPROXY
-AC_ARG_ENABLE(linux-tproxy,
-  AS_HELP_STRING([--enable-linux-tproxy],
-    [Enable real Transparent Proxy support for Netfilter TPROXY (v2)]), [
-  #AC_DEFINE will be handled later
-])
-AC_MSG_NOTICE([Linux TPROXY v2 support requested: ${enable_linux_tproxy:=yes}])
-
 dnl Enable Leak Finding Functions
 squid_opt_enable_leakfinder=no
 AC_ARG_ENABLE(leakfinder,
@@ -2261,10 +2253,8 @@ AC_CHECK_HEADERS( \
 	db.h \
 	db_185.h
 )
-
 AC_CHECK_HEADERS(
-	linux/netfilter_ipv4.h \
-	linux/netfilter_ipv4/ip_tproxy.h \
+	linux/netfilter_ipv4.h
 ,,,
 SQUID_DEFAULT_INCLUDES
 #if HAVE_LIMITS_H
@@ -2656,18 +2646,20 @@ esac
 
 dnl Enable IPv6 support
 AC_MSG_CHECKING([whether to enable IPv6])
-use_ipng=yes
+use_ipng=auto
 AC_ARG_ENABLE(ipv6,
   AS_HELP_STRING([--disable-ipv6],[Disable IPv6 support]),
-[ if test "x$enableval" = "xyes" ; then
-    AC_MSG_RESULT(yes)
-  else
-    AC_MSG_RESULT(no)
-    use_ipng=no
-  fi
-],[AC_MSG_RESULT(yes)])
+[ case $enableval in
+  yes|no)
+    use_ipng=$enableval
+    ;;
+  *)
+    ;;
+  esac
+])
+AC_MSG_RESULT($use_ipng)
 
-if test "$use_ipng" = "yes"; then
+if test "$use_ipng" != "no"; then
   SAVED_LIBS="$LIBS"
   dnl Solaris 10/11 requires  -lsocket
   case "$host" in
@@ -2677,7 +2669,7 @@ if test "$use_ipng" = "yes"; then
     *)
       ;;
   esac
-  AC_CACHE_CHECK([if PF_INET6 is available], $use_ipng,
+  AC_CACHE_CHECK([if PF_INET6 is available], squid_cv_pf_inet6,
     AC_RUN_IFELSE([AC_LANG_SOURCE([[ /* PF_INET6 available check */
 #       include <sys/types.h>
 #       include <sys/socket.h>
@@ -2687,15 +2679,20 @@ if test "$use_ipng" = "yes"; then
           else
             return 0;
         }
-      ]])],[ AC_MSG_RESULT(yes)
-        use_ipng=yes
-        SAVED_LIBS="$LIBS" ],[ AC_MSG_RESULT(no)
-        use_ipng=no ],[])
+      ]])],[squid_cv_pf_inet6="yes" ; SAVED_LIBS="$LIBS"],[squid_cv_pf_inet6="no"],[])
    )
    LIBS="$SAVED_LIBS"
 fi
 
-if test "$use_ipng" = "yes"; then
+# NP: semi-silent failure as IPv4-only mode is perfectly usable on this system.
+# unless --enable-ipv6 is explicitly used. in which case it's a hard fail.
+if test "x$use_ipng" = "xyes" && test "x$squid_cv_pf_inet6" = "xno"; then
+	AC_MSG_ERROR([IPv6 cannot be built on this system. Basic kernel definitions are missing.])
+elif test "x$use_ipng" = "xauto" && test "x$squid_cv_pf_inet6" = "xno"; then
+	AC_MSG_WARN([IPv6 cannot be built on this system. Basic kernel definitions are missing.])
+fi
+
+if test "$use_ipng" != "no" && test "$squid_cv_pf_inet6" = "yes" ; then
   AC_DEFINE(USE_IPV6,1,[Enable support for IPv6 ])
   SET_IPV6_SETTINGS=""
   use_v4mapped=yes
@@ -2766,8 +2763,7 @@ AC_CACHE_CHECK([for sin6_len field in struct sockaddr_in6],
   fi
 
 else
-  # NP: semi-silent failure as IPv4-only mode is perfectly usable on this system.
-  AC_MSG_WARN([IPv6 is not available on this system.])
+  # IPv6 is not available, but is not explicitly required. Auto-Disable.
   AC_DEFINE(USE_IPV6,0,[Enable support for IPv6])
   AC_DEFINE(IPV6_SPECIAL_SPLITSTACK,0,[Enable support for IPv6 on split-stack implementations])
   AC_DEFINE(IPV6_SPECIAL_V4MAPPED,0,[Enable v4-mapping through v6 sockets])
@@ -3201,43 +3197,8 @@ if test "$enable_linux_netfilter" = "yes" && test "$use_libcap" != "yes" ; then
     AC_MSG_WARN([Missing needed capabilities (libcap or libcap2) for TPROXY])
     AC_MSG_WARN([Linux Transparent Proxy support WILL NOT be enabled])
     AC_MSG_WARN([Reduced support to Interception Proxy])
-    enable_linux_tproxy="no"
     # AC_DEFINE'd later
 fi
-
-# Linux Netfilter/TPROXYv2 support requires some specific header files and
-# support infrastructure (netfilter and libcap)
-if test "$enable_linux_tproxy" = "yes" -a "$use_libcap" != "yes" ; then
-  AC_MSG_WARN([Missing needed capabilities (libcap or libcap2) for TPROXY])
-  AC_MSG_WARN([Disabling Linux TPROXY v2 support])
-  AC_MSG_WARN([Interception proxy will still work])
-  enable_linux_tproxy="no"
-fi
-if test "$enable_linux_tproxy" = "yes" ; then
-  # we already checked that $use_libcap2=yes 
-  if test "$enable_linux_netfilter" = "no" ; then
-    enable_linux_netfilter="yes"
-    AC_MSG_NOTICE([Enabling Linux Netfilter support needed by Linux TPROXY v2])
-  fi
-  AC_MSG_CHECKING([if TPROXYv2 header files are installed])
-  if test "$ac_cv_header_linux_netfilter_ipv4_ip_tproxy_h" != "yes" ; then
-    enable_linux_tproxy="no"
-    dnl need to output before next lines
-    AC_MSG_RESULT($enable_linux_tproxy)
-    AC_MSG_WARN([Cannot find TPROXY v2 headers, you need to patch the kernel with ])
-    AC_MSG_WARN([tproxy package from: http://www.balabit.com/downloads/files/tproxy/])
-    AC_MSG_WARN([or use '--enable-linux-netfilter' option instead for Netfilter support.])
-  else
-    AC_MSG_RESULT($enable_linux_tproxy)
-  fi
-fi
-
-AC_MSG_NOTICE([Linux Netfilter support enabled: $enable_linux_netfilter])
-SQUID_DEFINE_UNQUOTED([LINUX_NETFILTER],$enable_linux_netfilter,
-  [Enable support for Transparent Proxy on Linux via Netfilter])
-SQUID_DEFINE_UNQUOTED(LINUX_TPROXY2,$enable_linux_tproxy,
-    [Enable real Transparent Proxy support for Netfilter TPROXY v2])
-
 
 AC_ARG_ENABLE(gnuregex,
   AS_HELP_STRING([--enable-gnuregex],

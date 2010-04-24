@@ -773,9 +773,9 @@ FwdState::connectStart()
     int ctimeout;
     int ftimeout = Config.Timeout.forward - (squid_curtime - start_t);
 
-    IpAddress outgoing;
+    Ip::Address outgoing;
     unsigned short tos;
-    IpAddress client_addr;
+    Ip::Address client_addr;
     assert(fs);
     assert(server_fd == -1);
     debugs(17, 3, "fwdConnectStart: " << url);
@@ -910,16 +910,6 @@ FwdState::connectStart()
     comm_add_close_handler(fd, fwdServerClosedWrapper, this);
 
     commSetTimeout(fd, ctimeout, fwdConnectTimeoutWrapper, this);
-
-#if LINUX_TPROXY2
-    if (!fs->_peer && request->flags.spoof_client_ip) {
-        // try to set the outgoing address using TPROXY v2
-        // if it fails we abort any further TPROXY actions on this connection
-        if (IpInterceptor.SetTproxy2OutgoingAddr(fd, src) == -1) {
-            request->flags.spoof_client_ip = 0;
-        }
-    }
-#endif
 
     updateHierarchyInfo();
     commConnectStart(fd, host, port, fwdConnectDoneWrapper, this);
@@ -1197,7 +1187,7 @@ FwdState::reforwardableStatus(http_status s)
  *  -  address of the client for which we made the connection
  */
 void
-FwdState::pconnPush(int fd, const peer *_peer, const HttpRequest *req, const char *domain, IpAddress &client_addr)
+FwdState::pconnPush(int fd, const peer *_peer, const HttpRequest *req, const char *domain, Ip::Address &client_addr)
 {
     if (_peer) {
         fwdPconnPool->push(fd, _peer->name, _peer->http_port, domain, client_addr);
@@ -1311,12 +1301,12 @@ fwdServerFree(FwdServer * fs)
     memFree(fs, MEM_FWD_SERVER);
 }
 
-static IpAddress
+static Ip::Address
 aclMapAddr(acl_address * head, ACLChecklist * ch)
 {
     acl_address *l;
 
-    IpAddress addr;
+    Ip::Address addr;
 
     for (l = head; l; l = l->next) {
         if (!l->aclList || ch->matchAclListFast(l->aclList))
@@ -1344,7 +1334,7 @@ aclMapTOS(acl_tos * head, ACLChecklist * ch)
     return 0;
 }
 
-IpAddress
+Ip::Address
 getOutgoingAddr(HttpRequest * request, struct peer *dst_peer)
 {
     if (request && request->flags.spoof_client_ip) {
@@ -1354,7 +1344,7 @@ getOutgoingAddr(HttpRequest * request, struct peer *dst_peer)
     }
 
     if (!Config.accessList.outgoing_address) {
-        return IpAddress(); // anything will do.
+        return Ip::Address(); // anything will do.
     }
 
     ACLFilledChecklist ch(NULL, request, NULL);

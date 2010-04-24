@@ -440,7 +440,7 @@ clientFollowXForwardedForCheck(int answer, void *data)
         const char *p;
         const char *asciiaddr;
         int l;
-        IpAddress addr;
+        Ip::Address addr;
         p = request->x_forwarded_for_iterator.termedBuf();
         l = request->x_forwarded_for_iterator.size();
 
@@ -616,7 +616,7 @@ ClientRequestContext::clientAccessCheckDone(int answer)
         clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
-        IpAddress tmpnoaddr;
+        Ip::Address tmpnoaddr;
         tmpnoaddr.SetNoAddr();
         repContext->setReplyToError(page_id, status,
                                     http->request->method, NULL,
@@ -1518,7 +1518,7 @@ ClientHttpRequest::handleAdaptationFailure(bool bypassable)
     // The original author of the code also wanted to pass an errno to
     // setReplyToError, but it seems unlikely that the errno reflects the
     // true cause of the error at this point, so I did not pass it.
-    IpAddress noAddr;
+    Ip::Address noAddr;
     noAddr.SetNoAddr();
     ConnStateData * c = getConn();
     repContext->setReplyToError(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR,

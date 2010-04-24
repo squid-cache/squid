@@ -1,6 +1,7 @@
 /*
  * DEBUG: section 50    Log file handling
- * AUTHOR: Adrian Chadd
+ * AUTHOR: Dhaval Varia
+ * Developed based on ModUdp.* by Adrian Chadd
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -33,14 +34,14 @@
 #include "squid.h"
 #include "comm.h"
 #include "log/File.h"
-#include "log/ModUdp.h"
+#include "log/ModTcp.h"
 #include "Parsing.h"
 
 /*
- * This logfile UDP module is mostly inspired by a patch by Tim Starling
+ * This logfile TCP module is mostly inspired by a patch by Tim Starling
  * from Wikimedia.
  *
- * It doesn't do any UDP buffering - it'd be quite a bit of work for
+ * It doesn't do any TCP buffering - it'd be quite a bit of work for
  * something which the kernel could be doing for you!
  */
 
@@ -49,21 +50,22 @@ typedef struct {
     char *buf;
     size_t bufsz;
     int offset;
-} l_udp_t;
+} l_tcp_t;
 
 static void
-logfile_mod_udp_write(Logfile * lf, const char *buf, size_t len)
+logfile_mod_tcp_write(Logfile * lf, const char *buf, size_t len)
 {
-    l_udp_t *ll = (l_udp_t *) lf->data;
+    l_tcp_t *ll = (l_tcp_t *) lf->data;
     ssize_t s;
     s = write(ll->fd, (char const *) buf, len);
+
     fd_bytes(ll->fd, s, FD_WRITE);
 #if 0
     if (s < 0) {
-        debugs(1, 1, "logfile (udp): got errno (" << errno << "):" << xstrerror());
+        debugs(1, 1, "logfile (tcp): got errno (" << errno << "):" << xstrerror());
     }
     if (s != len) {
-        debugs(1, 1, "logfile (udp): len=" << len << ", wrote=" << s);
+        debugs(1, 1, "logfile (tcp): len=" << len << ", wrote=" << s);
     }
 #endif
 
@@ -71,31 +73,31 @@ logfile_mod_udp_write(Logfile * lf, const char *buf, size_t len)
 }
 
 static void
-logfile_mod_udp_flush(Logfile * lf)
+logfile_mod_tcp_flush(Logfile * lf)
 {
-    l_udp_t *ll = (l_udp_t *) lf->data;
+    l_tcp_t *ll = (l_tcp_t *) lf->data;
     if (0 == ll->offset)
         return;
-    logfile_mod_udp_write(lf, ll->buf, (size_t) ll->offset);
+    logfile_mod_tcp_write(lf, ll->buf, (size_t) ll->offset);
     ll->offset = 0;
 }
 
 static void
-logfile_mod_udp_writeline(Logfile * lf, const char *buf, size_t len)
+logfile_mod_tcp_writeline(Logfile * lf, const char *buf, size_t len)
 {
-    l_udp_t *ll = (l_udp_t *) lf->data;
+    l_tcp_t *ll = (l_tcp_t *) lf->data;
 
     if (0 == ll->bufsz) {
         /* buffering disabled */
-        logfile_mod_udp_write(lf, buf, len);
+        logfile_mod_tcp_write(lf, buf, len);
         return;
     }
     if (ll->offset > 0 && (ll->offset + len + 4) > ll->bufsz)
-        logfile_mod_udp_flush(lf);
+        logfile_mod_tcp_flush(lf);
 
     if (len > ll->bufsz) {
         /* too big to fit in buffer */
-        logfile_mod_udp_write(lf, buf, len);
+        logfile_mod_tcp_write(lf, buf, len);
         return;
     }
     /* buffer it */
@@ -109,25 +111,25 @@ logfile_mod_udp_writeline(Logfile * lf, const char *buf, size_t len)
 }
 
 static void
-logfile_mod_udp_linestart(Logfile * lf)
+logfile_mod_tcp_linestart(Logfile * lf)
 {
 }
 
 static void
-logfile_mod_udp_lineend(Logfile * lf)
+logfile_mod_tcp_lineend(Logfile * lf)
 {
 }
 
 static void
-logfile_mod_udp_rotate(Logfile * lf)
+logfile_mod_tcp_rotate(Logfile * lf)
 {
     return;
 }
 
 static void
-logfile_mod_udp_close(Logfile * lf)
+logfile_mod_tcp_close(Logfile * lf)
 {
-    l_udp_t *ll = (l_udp_t *) lf->data;
+    l_tcp_t *ll = (l_tcp_t *) lf->data;
     lf->f_flush(lf);
 
     if (ll->fd >= 0)
@@ -146,58 +148,62 @@ logfile_mod_udp_close(Logfile * lf)
  * This code expects the path to be //host:port
  */
 int
-logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_flag)
+logfile_mod_tcp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_flag)
 {
+    debugs(5, 3, "Tcp Open called");
     Ip::Address addr;
+
     char *strAddr;
 
-    lf->f_close = logfile_mod_udp_close;
-    lf->f_linewrite = logfile_mod_udp_writeline;
-    lf->f_linestart = logfile_mod_udp_linestart;
-    lf->f_lineend = logfile_mod_udp_lineend;
-    lf->f_flush = logfile_mod_udp_flush;
-    lf->f_rotate = logfile_mod_udp_rotate;
+    lf->f_close = logfile_mod_tcp_close;
+    lf->f_linewrite = logfile_mod_tcp_writeline;
+    lf->f_linestart = logfile_mod_tcp_linestart;
+    lf->f_lineend = logfile_mod_tcp_lineend;
+    lf->f_flush = logfile_mod_tcp_flush;
+    lf->f_rotate = logfile_mod_tcp_rotate;
 
-    l_udp_t *ll = static_cast<l_udp_t*>(xcalloc(1, sizeof(*ll)));
+    l_tcp_t *ll = static_cast<l_tcp_t*>(xcalloc(1, sizeof(*ll)));
     lf->data = ll;
 
     if (strncmp(path, "//", 2) == 0) {
         path += 2;
     }
     strAddr = xstrdup(path);
+
     if (!GetHostWithPort(strAddr, &addr)) {
         if (lf->flags.fatal) {
-            fatalf("Invalid UDP logging address '%s'\n", lf->path);
+            fatalf("Invalid TCP logging address '%s'\n", lf->path);
         } else {
-            debugs(50, DBG_IMPORTANT, "Invalid UDP logging address '" << lf->path << "'");
+            debugs(50, DBG_IMPORTANT, "Invalid TCP logging address '" << lf->path << "'");
             safe_free(strAddr);
             return FALSE;
         }
     }
+
     safe_free(strAddr);
 
     Ip::Address any_addr;
     any_addr.SetAnyAddr();
 
 #if USE_IPV6
-    // require the sending UDP port to be of the right family for the destination address.
+    // require the sending TCP port to be of the right family for the destination address.
     if (addr.IsIPv4())
         any_addr.SetIPv4();
 #endif
 
-    ll->fd = comm_open(SOCK_DGRAM, IPPROTO_UDP, any_addr, COMM_NONBLOCKING, "UDP log socket");
+    ll->fd = comm_open(SOCK_STREAM, IPPROTO_TCP, any_addr, COMM_NONBLOCKING, "TCP log socket");
     if (ll->fd < 0) {
         if (lf->flags.fatal) {
-            fatalf("Unable to open UDP socket for logging\n");
+            fatalf("Unable to open TCP socket for logging\n");
         } else {
-            debugs(50, DBG_IMPORTANT, "Unable to open UDP socket for logging");
+            debugs(50, DBG_IMPORTANT, "Unable to open TCP socket for logging");
             return FALSE;
         }
     } else if (!comm_connect_addr(ll->fd, &addr)) {
         if (lf->flags.fatal) {
-            fatalf("Unable to connect to %s for UDP log: %s\n", lf->path, xstrerror());
+            fatalf("Unable to connect to %s for TCP log: %s\n", lf->path, xstrerror());
         } else {
-            debugs(50, DBG_IMPORTANT, "Unable to connect to " << lf->path << " for UDP log: " << xstrerror());
+            debugs(50, DBG_IMPORTANT, "Unable to connect to " << lf->path << " for TCP log: " << xstrerror());
             return FALSE;
         }
     }
@@ -212,17 +218,12 @@ logfile_mod_udp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_fla
                    "\tuser '%s', which is the cache_effective_user\n"
                    "\tset in squid.conf.", path, Config.effectiveUser);
         } else {
-            debugs(50, DBG_IMPORTANT, "logfileOpen (UDP): " << lf->path << ": " << xstrerror());
+            debugs(50, DBG_IMPORTANT, "logfileOpen (TCP): " << lf->path << ": " << xstrerror());
             return 0;
         }
     }
-    /* Force buffer size to something roughly fitting inside an MTU */
-    /*
-     * XXX note the receive side needs to receive the whole packet at once;
-     * applications like netcat have a small default receive buffer and will
-     * truncate!
-     */
-    bufsz = 1400;
+
+    bufsz = 65536;
     if (bufsz > 0) {
         ll->buf = static_cast<char*>(xmalloc(bufsz));
         ll->bufsz = bufsz;

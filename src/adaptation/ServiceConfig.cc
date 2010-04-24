@@ -125,6 +125,7 @@ bool
 Adaptation::ServiceConfig::grokUri(const char *value)
 {
     // TODO: find core code that parses URLs and extracts various parts
+    // AYJ: most of this is duplicate of urlParse() in src/url.cc
 
     if (!value || !*value) {
         debugs(3, 0, HERE << cfg_filename << ':' << config_lineno << ": " <<
@@ -153,15 +154,32 @@ Adaptation::ServiceConfig::grokUri(const char *value)
 
     bool have_port = false;
 
-    if ((e = strchr(s, ':')) != NULL) {
-        have_port = true;
-    } else if ((e = strchr(s, '/')) != NULL) {
-        have_port = false;
+    int len = 0;
+    if (*s == '[') {
+        const char *t;
+        if ((t = strchr(s, ']')) == NULL)
+            return false;
+
+        s++;
+        len = t - s;
+        if ((e = strchr(t, ':')) != NULL) {
+            have_port = true;
+        } else if ((e = strchr(t, '/')) != NULL) {
+            have_port = false;
+        } else {
+            return false;
+        }
     } else {
-        return false;
+        if ((e = strchr(s, ':')) != NULL) {
+            have_port = true;
+        } else if ((e = strchr(s, '/')) != NULL) {
+            have_port = false;
+        } else {
+            return false;
+        }
+        len = e - s;
     }
 
-    int len = e - s;
     host.limitInit(s, len);
     s = e;
 

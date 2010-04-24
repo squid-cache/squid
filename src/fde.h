@@ -55,7 +55,7 @@ public:
     unsigned int type;
     u_short remote_port;
 
-    IpAddress local_addr;
+    Ip::Address local_addr;
     unsigned char tos;
     int sock_family;
     char ipaddr[MAX_IPSTRLEN];            /* dotted decimal address of peer */
@@ -121,7 +121,7 @@ private:
         halfClosedReader = NULL;
         // XXX: the following memset may corrupt or leak new or changed members
         memset(this, 0, sizeof(fde));
-        local_addr.SetEmpty(); // IpAddress likes to be setup nicely.
+        local_addr.SetEmpty(); // Ip::Address likes to be setup nicely.
     }
 
 };

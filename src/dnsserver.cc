@@ -179,7 +179,7 @@ lookup(const char *buf)
     int ttl = 0;
     int retry = 0;
     unsigned int i = 0;
-    IpAddress ipa;
+    Ip::Address ipa;
     char ntoabuf[MAX_IPSTRLEN];
     struct addrinfo hints;
     struct addrinfo *AI = NULL;
@@ -374,7 +374,7 @@ squid_res_setservers(int reset)
     int ns6count = 0;
 #endif
 #if HAVE_RES_INIT
-    IpAddress ipa;
+    Ip::Address ipa;
 #ifdef _SQUID_RES_NSADDR_LIST
     extern char *optarg;
 #endif
