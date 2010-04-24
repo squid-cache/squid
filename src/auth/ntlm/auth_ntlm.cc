@@ -290,9 +290,6 @@ AuthNTLMConfig::decode(char const *proxy_auth)
 
     auth_user_request->user(newUser);
     auth_user_request->user()->auth_type = AUTH_NTLM;
-#if USER_REQUEST_LOOP_DEAD
-    auth_user_request->user()->addRequest(auth_user_request);
-#endif
 
     /* all we have to do is identify that it's NTLM - the helper does the rest */
     debugs(29, 9, "AuthNTLMConfig::decode: NTLM authentication");

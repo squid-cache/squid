@@ -417,10 +417,6 @@ BasicUser::makeLoggingInstance(AuthUserRequest::Pointer auth_user_request)
         username(NULL);
         /* set the auth_user type */
         basic_auth->auth_type = AUTH_BROKEN;
-#if USER_REQUEST_LOOP_DEAD
-        /* link the request to the user */
-        basic_auth->addRequest(auth_user_request);
-#endif /* USER_REQUEST_LOOP_DEAD */
     }
 }
 
@@ -533,9 +529,6 @@ AuthBasicConfig::decode(char const *proxy_auth)
 
     /* link the request to the in-cache user */
     auth_user_request->user(auth_user);
-#if USER_REQUEST_LOOP_DEAD
-    basic_auth->addRequest(auth_user_request);
-#endif /* USER_REQUEST_LOOP_DEAD */
     return auth_user_request;
 }
 
