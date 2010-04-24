@@ -40,7 +40,7 @@ class ACLChecklist;
 #include "acl/Strategy.h"
 #include "ip/IpAddress.h"
 
-class ACLSourceASNStrategy : public ACLStrategy<IpAddress>
+class ACLSourceASNStrategy : public ACLStrategy<Ip::Address>
 {
 
 public:

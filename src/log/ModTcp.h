@@ -1,9 +1,9 @@
-
 /*
  * $Id$
  *
- * DEBUG: section 3     Configuration File Parsing
- * AUTHOR: Harvest Derived
+ * DEBUG: section 50    Log file handling
+ * AUTHOR: Dhaval Varia
+ * Developed based on ModUdp.* by Adrian Chadd
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -32,40 +32,13 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+#ifndef _SQUID_SRC_LOG_MODTCP_H
+#define _SQUID_SRC_LOG_MODTCP_H
 
-#ifndef SQUID_PARSING_H
-#define SQUID_PARSING_H
+#include "config.h"
 
-#include "squid.h"
+class Logfile;
 
-extern double xatof(const char *token);
-extern int xatoi(const char *token);
-extern long xatol(const char *token);
-extern unsigned short xatos(const char *token);
+extern int logfile_mod_tcp_open(Logfile * lf, const char *path, size_t bufsz, int fatal_flag);
 
-/**
- * Parse a 64-bit integer value.
- */
-extern int64_t GetInteger64(void);
-
-/**
- * Parses an integer value.
- * Uses a method that obeys hexadecimal 0xN syntax needed for certain bitmasks.
- */
-extern int GetInteger(void);
-
-extern u_short GetShort(void);
-
-// on success, returns true and sets *p (if any) to the end of the integer
-extern bool StringToInt(const char *str, int &result, const char **p, int base);
-extern bool StringToInt64(const char *str, int64_t &result, const char **p, int base);
-
-/**
- * Parse a socket address (host:port), fill the given Ip::Address object
- * \retval false     Failure.
- * \retval true      Success.
- * Destroys token during parse.
- */
-extern bool GetHostWithPort(char *token, Ip::Address *ipa);
-
-#endif /* SQUID_PARSING_H */
+#endif /* _SQUID_SRC_LOG_MODTCP_H */

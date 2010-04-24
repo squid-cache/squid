@@ -159,7 +159,7 @@ protected:
 
     virtual char const *label() const = 0;
 
-    virtual unsigned int makeKey(IpAddress &src_addr) const = 0;
+    virtual unsigned int makeKey(Ip::Address &src_addr) const = 0;
 
     DelaySpec spec;
 
@@ -190,7 +190,7 @@ public:
 
 protected:
     virtual char const *label() const {return "Individual";}
-    virtual unsigned int makeKey(IpAddress &src_addr) const;
+    virtual unsigned int makeKey(Ip::Address &src_addr) const;
 };
 
 /// \ingroup DelayPoolsInternal
@@ -203,7 +203,7 @@ public:
 
 protected:
     virtual char const *label() const {return "Network";}
-    virtual unsigned int makeKey (IpAddress &src_addr) const;
+    virtual unsigned int makeKey (Ip::Address &src_addr) const;
 };
 
 /* don't use remote storage for these */
@@ -247,9 +247,9 @@ protected:
 
     virtual char const *label() const {return "Individual";}
 
-    virtual unsigned int makeKey (IpAddress &src_addr) const;
+    virtual unsigned int makeKey(Ip::Address &src_addr) const;
 
-    unsigned char makeHostKey (IpAddress &src_addr) const;
+    unsigned char makeHostKey(Ip::Address &src_addr) const;
 
     DelaySpec spec;
     VectorMap<unsigned char, ClassCBucket> buckets;
@@ -855,7 +855,7 @@ VectorPool::Id::bytesIn(int qty)
 }
 
 unsigned int
-IndividualPool::makeKey (IpAddress &src_addr) const
+IndividualPool::makeKey(Ip::Address &src_addr) const
 {
     /* IPv4 required for this pool */
     if ( !src_addr.IsIPv4() )
@@ -881,7 +881,7 @@ ClassCNetPool::operator delete (void *address)
 }
 
 unsigned int
-ClassCNetPool::makeKey (IpAddress &src_addr) const
+ClassCNetPool::makeKey(Ip::Address &src_addr) const
 {
     /* IPv4 required for this pool */
     if ( !src_addr.IsIPv4() )
@@ -954,7 +954,7 @@ ClassCHostPool::keyAllocated (unsigned char const key) const
 }
 
 unsigned char
-ClassCHostPool::makeHostKey (IpAddress &src_addr) const
+ClassCHostPool::makeHostKey(Ip::Address &src_addr) const
 {
     /* IPv4 required for this pool */
     if ( !src_addr.IsIPv4() )
@@ -967,7 +967,7 @@ ClassCHostPool::makeHostKey (IpAddress &src_addr) const
 }
 
 unsigned int
-ClassCHostPool::makeKey (IpAddress &src_addr) const
+ClassCHostPool::makeKey(Ip::Address &src_addr) const
 {
     /* IPv4 required for this pool */
     if ( !src_addr.IsIPv4() )

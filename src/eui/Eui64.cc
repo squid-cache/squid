@@ -36,7 +36,7 @@ Eui::Eui64::encode(char *buf, const int len)
 
 // return binary representation of the EUI
 bool
-Eui::Eui64::lookup(IpAddress &c)
+Eui::Eui64::lookup(Ip::Address &c)
 {
     /* try to short-circuit slow OS lookups by using SLAAC data */
     if (lookupSlaac(c)) return true;
@@ -46,7 +46,7 @@ Eui::Eui64::lookup(IpAddress &c)
 }
 
 bool
-Eui::Eui64::lookupSlaac(IpAddress &c)
+Eui::Eui64::lookupSlaac(Ip::Address &c)
 {
 #if USE_IPV6
     /* RFC 4291 Link-Local unicast addresses which contain SLAAC - usually trustable. */
@@ -65,7 +65,7 @@ Eui::Eui64::lookupSlaac(IpAddress &c)
 
 // return binary representation of the EUI
 bool
-Eui::Eui64::lookupNdp(IpAddress &c)
+Eui::Eui64::lookupNdp(Ip::Address &c)
 {
 #if USE_IPV6
 

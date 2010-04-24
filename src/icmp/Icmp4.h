@@ -167,7 +167,7 @@ public:
     virtual int Open();
 
 #if USE_ICMP
-    virtual void SendEcho(IpAddress &, int, const char*, int);
+    virtual void SendEcho(Ip::Address &, int, const char*, int);
     virtual void Recv(void);
 #endif
 };

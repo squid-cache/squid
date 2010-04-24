@@ -163,7 +163,7 @@ StringToInt64(const char *s, int64_t &result, const char **p, int base)
 }
 
 bool
-GetHostWithPort(char *token, IpAddress *ipa)
+GetHostWithPort(char *token, Ip::Address *ipa)
 {
     char *t;
     char *host;
