@@ -96,7 +96,11 @@ protected:
     AuthUser(AuthConfig *);
 
 private:
+    /**
+     * Garbage Collection for the username cache.
+     */
     static void cacheCleanup(void *unused);
+    static time_t last_discard; /// Time of last username cache garbage collection.
 
     /**
      * DPW 2007-05-08
