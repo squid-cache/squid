@@ -51,6 +51,8 @@
 // This should be converted into a pooled type. Does not need to be cbdata
 CBDATA_TYPE(AuthUserIP);
 
+time_t AuthUser::last_discard = 0;
+
 AuthUser::AuthUser(AuthConfig *aConfig) :
         auth_type(AUTH_UNKNOWN),
         config(aConfig),
@@ -166,6 +168,7 @@ AuthUser::cacheInit(void)
         proxy_auth_username_cache = hash_create((HASHCMP *) strcmp, 7921, hash_string);
         assert(proxy_auth_username_cache);
         eventAdd("User Cache Maintenance", cacheCleanup, NULL, Config.authenticateGCInterval, 1);
+        last_discard = squid_curtime;
     }
 }
 
@@ -230,6 +233,7 @@ AuthUser::cacheCleanup(void *datanotused)
 
     debugs(29, 3, "AuthUser::cacheCleanup: Finished cleaning the user cache.");
     eventAdd("User Cache Maintenance", cacheCleanup, NULL, Config.authenticateGCInterval, 1);
+    last_discard = squid_curtime;
 }
 
 void
@@ -335,7 +339,7 @@ void
 AuthUser::addToNameCache()
 {
     /* AuthUserHashPointer will self-register with the username cache */
-    AuthUserHashPointer *notused = new AuthUserHashPointer(this);
+    new AuthUserHashPointer(this);
 }
 
 /**
@@ -348,22 +352,24 @@ AuthUser::UsernameCacheStats(StoreEntry *output)
 
     /* overview of username cache */
     storeAppendPrintf(output, "Cached Usernames: %d of %d\n", proxy_auth_username_cache->count, proxy_auth_username_cache->size);
+    storeAppendPrintf(output, "Next Garbage Collection in %d seconds.\n", static_cast<int32_t>(last_discard + Config.authenticateGCInterval - squid_curtime));
 
     /* cache dump column titles */
-    storeAppendPrintf(output, "Authentication cached Usernames:\n");
-    storeAppendPrintf(output, "%-15s %-9s %s\n",
+    storeAppendPrintf(output, "\n%-15s %-9s %-9s %s\n",
                       "Type",
-                      "TTL",
+                      "Check TTL",
+                      "Cache TTL",
                       "Username");
-    storeAppendPrintf(output, "--------------- --------- ------------------------------\n");
+    storeAppendPrintf(output, "--------------- --------- --------- ------------------------------\n");
 
     hash_first(proxy_auth_username_cache);
     while ((usernamehash = ((AuthUserHashPointer *) hash_next(proxy_auth_username_cache)))) {
         AuthUser::Pointer auth_user = usernamehash->user();
 
-        storeAppendPrintf(output, "%-15s %-9d %s\n",
+        storeAppendPrintf(output, "%-15s %-9d %-9d %s\n",
                           AuthType_str[auth_user->auth_type],
                           auth_user->ttl(),
+                          static_cast<int32_t>(auth_user->expiretime - squid_curtime + Config.authenticateTTL),
                           auth_user->username()
                           );
     }
