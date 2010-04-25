@@ -1707,10 +1707,13 @@ void
 storeReplAdd(const char *type, REMOVALPOLICYCREATE * create)
 {
     int i;
-    /* find the number of currently known repl types */
 
+    /* find the number of currently known repl types */
     for (i = 0; storerepl_list && storerepl_list[i].typestr; i++) {
-        assert(strcmp(storerepl_list[i].typestr, type) != 0);
+        if (strcmp(storerepl_list[i].typestr, type) == 0) {
+            debugs(20, 1, "WARNING: Trying to load store replacement policy " << type << " twice.");
+            return;
+        }
     }
 
     /* add the new type */

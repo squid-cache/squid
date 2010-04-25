@@ -3,8 +3,9 @@
 
 #include "config.h"
 
-namespace Ip {
-    class Address;
+namespace Ip
+{
+class Address;
 };
 
 class StoreEntry;
