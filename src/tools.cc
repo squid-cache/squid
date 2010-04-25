@@ -1237,9 +1237,6 @@ restoreCapabilities(int keep)
 
         if (Ip::Interceptor.TransparentActive()) {
             cap_list[ncaps++] = CAP_NET_ADMIN;
-#if LINUX_TPROXY2
-            cap_list[ncaps++] = CAP_NET_BROADCAST;
-#endif
         }
 
         cap_clear_flag(caps, CAP_EFFECTIVE);
