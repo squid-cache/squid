@@ -64,8 +64,6 @@ public:
     AuthType auth_type;
     /** the config for this user */
     AuthConfig *config;
-    /** we only have one username associated with a given auth_user struct */
-    AuthUserHashPointer *usernamehash;
     /** we may have many proxy-authenticate strings that decode to the same user */
     dlink_list proxy_auth_list;
     dlink_list proxy_match_cache;

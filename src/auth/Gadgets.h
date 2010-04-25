@@ -43,9 +43,14 @@ class AuthUser;
 /**
  \ingroup AuthAPI
  *
- * This is used to link auth_users into the username cache.
+ * This is used to link AuthUsers objects into the username cache.
  * Because some schemes may link in aliases to a user,
  * the link is not part of the AuthUser structure itself.
+ *
+ * Code must not hold onto copies of these objects.
+ * They may exist only so long as the AuthUser being referenced
+ * is recorded in the cache. Any caller using hash_remove_link
+ * must then delete the AuthUserHashPointer.
  */
 class AuthUserHashPointer : public hash_link {
     /* first two items must be same as hash_link */
@@ -57,7 +62,6 @@ public:
     ~AuthUserHashPointer() { auth_user = NULL; };
 
     AuthUser::Pointer user() const;
-    static void removeFromCache(void *anAuthUserHashPointer);
 
 private:
     AuthUser::Pointer auth_user;
@@ -87,8 +91,6 @@ extern int authenticateActiveSchemeCount(void);
 /// \ingroup AuthAPI
 extern int authenticateSchemeCount(void);
 
-/// \ingroup AuthAPI
-extern void authenticateUserCacheRestart(void);
 /// \ingroup AuthAPI
 extern void authenticateOnCloseConnection(ConnStateData * conn);
 

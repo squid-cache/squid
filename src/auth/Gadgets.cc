@@ -60,7 +60,7 @@ authenticateActiveSchemeCount(void)
         if ((*i)->configured())
             ++rv;
 
-    debugs(29, 9, "authenticateActiveSchemeCount: " << rv << " active.");
+    debugs(29, 9, HERE << rv << " active.");
 
     return rv;
 }
@@ -70,7 +70,7 @@ authenticateSchemeCount(void)
 {
     int rv = AuthScheme::GetSchemes().size();
 
-    debugs(29, 9, "authenticateSchemeCount: " << rv << " active.");
+    debugs(29, 9, HERE << rv << " active.");
 
     return rv;
 }
@@ -87,6 +87,11 @@ authenticateRegisterWithCacheManager(Auth::authConfig * config)
 void
 authenticateInit(Auth::authConfig * config)
 {
+    /* Do this first to clear memory and remove dead state on a reconfigure */
+    if (proxy_auth_username_cache)
+        AuthUser::CachedACLsReset();
+
+    /* If we do not have any auth config state to create stop now. */
     if (!config)
         return;
 
@@ -99,8 +104,6 @@ authenticateInit(Auth::authConfig * config)
 
     if (!proxy_auth_username_cache)
         AuthUser::cacheInit();
-    else
-        AuthUser::CachedACLsReset();
 
     authenticateRegisterWithCacheManager(config);
 }
@@ -108,43 +111,21 @@ authenticateInit(Auth::authConfig * config)
 void
 authenticateShutdown(void)
 {
-    debugs(29, 2, "authenticateShutdown: shutting down auth schemes");
+    debugs(29, 2, HERE << "Shutting down auth schemes");
     /* free the cache if we are shutting down */
-
     if (shutting_down) {
-        hashFreeItems(proxy_auth_username_cache, AuthUserHashPointer::removeFromCache);
+        hash_first(proxy_auth_username_cache);
+        AuthUserHashPointer *usernamehash;
+        while ((usernamehash = ((AuthUserHashPointer *) hash_next(proxy_auth_username_cache)))) {
+            debugs(29, 5, HERE << "Clearing entry for user: " << usernamehash->user()->username());
+            hash_remove_link(proxy_auth_username_cache, (hash_link *)usernamehash);
+            delete usernamehash;
+        }
         AuthScheme::FreeAll();
     } else {
         for (AuthScheme::iterator i = (AuthScheme::GetSchemes()).begin(); i != (AuthScheme::GetSchemes()).end(); ++i)
             (*i)->done();
     }
-}
-
-/**
- * Cleans all config-dependent data from the auth_user cache.
- \note It DOES NOT Flush the user cache.
- */
-void
-authenticateUserCacheRestart(void)
-{
-    AuthUserHashPointer *usernamehash;
-    AuthUser::Pointer auth_user;
-    debugs(29, 3, HERE << "Clearing config dependent cache data.");
-    hash_first(proxy_auth_username_cache);
-
-    while ((usernamehash = ((AuthUserHashPointer *) hash_next(proxy_auth_username_cache)))) {
-        auth_user = usernamehash->user();
-        debugs(29, 5, "authenticateUserCacheRestat: Clearing cache ACL results for user: " << auth_user->username());
-    }
-}
-
-// TODO: remove this wrapper. inline the actions.
-void
-AuthUserHashPointer::removeFromCache(void *usernamehash_p)
-{
-    AuthUserHashPointer *usernamehash = static_cast<AuthUserHashPointer *>(usernamehash_p);
-    hash_remove_link(proxy_auth_username_cache, (hash_link *)usernamehash);
-    delete usernamehash;
 }
 
 AuthUserHashPointer::AuthUserHashPointer(AuthUser::Pointer anAuth_user):
