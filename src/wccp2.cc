@@ -304,7 +304,7 @@ struct wccp2_router_id_element_t {
 
 static struct wccp2_router_id_element_t wccp2_router_id_element;
 
-/** \interface WCCpv2_Protocol
+/** \interface WCCPv2_Protocol
  * Sect 5.6.9 Capabilities Info Component
  */
 struct wccp2_capability_info_header_t {
