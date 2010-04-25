@@ -54,7 +54,6 @@ CBDATA_TYPE(AuthUserIP);
 AuthUser::AuthUser(AuthConfig *aConfig) :
         auth_type(AUTH_UNKNOWN),
         config(aConfig),
-        usernamehash(NULL),
         ipcount(0),
         expiretime(0),
         username_(NULL)
@@ -146,15 +145,6 @@ AuthUser::~AuthUser()
     debugs(29, 5, "AuthUser::~AuthUser: Freeing auth_user '" << this << "'.");
     assert(RefCountCount() == 0);
 
-    /* were they linked in by username ? */
-    if (usernamehash) {
-        debugs(29, 5, "AuthUser::~AuthUser: removing usernamehash entry '" << usernamehash << "'");
-        hash_remove_link(proxy_auth_username_cache, (hash_link *) usernamehash);
-        /* don't free the key as we use the same user string as the auth_user
-         * structure */
-        delete usernamehash;
-    }
-
     /* free cached acl results */
     aclCacheMatchFlush(&proxy_match_cache);
 
@@ -183,18 +173,15 @@ void
 AuthUser::CachedACLsReset()
 {
     /*
-     * We walk the hash by username as that is the unique key we use.
      * This must complete all at once, because we are ensuring correctness.
      */
     AuthUserHashPointer *usernamehash;
     AuthUser::Pointer auth_user;
-    char const *username = NULL;
     debugs(29, 3, "AuthUser::CachedACLsReset: Flushing the ACL caches for all users.");
     hash_first(proxy_auth_username_cache);
 
     while ((usernamehash = ((AuthUserHashPointer *) hash_next(proxy_auth_username_cache)))) {
         auth_user = usernamehash->user();
-        username = auth_user->username();
         /* free cached acl results */
         aclCacheMatchFlush(&auth_user->proxy_match_cache);
     }
@@ -221,7 +208,7 @@ AuthUser::cacheCleanup(void *datanotused)
         auth_user = usernamehash->user();
         username = auth_user->username();
 
-        /* if we need to have inpedendent expiry clauses, insert a module call
+        /* if we need to have indedendent expiry clauses, insert a module call
          * here */
         debugs(29, 4, "AuthUser::cacheCleanup: Cache entry:\n\tType: " <<
                auth_user->auth_type << "\n\tUsername: " << username <<
@@ -237,9 +224,6 @@ AuthUser::cacheCleanup(void *datanotused)
              * and re-using current valid credentials.
              */
             hash_remove_link(proxy_auth_username_cache, usernamehash);
-            /* resolve the circular references of AuthUserHashPointer<->AuthUser by cutting before deleting. */
-            if(auth_user->usernamehash == usernamehash)
-                auth_user->usernamehash = NULL;
             delete usernamehash;
         }
     }
@@ -344,11 +328,14 @@ AuthUser::addIp(Ip::Address ipaddr)
     debugs(29, 2, "authenticateAuthUserAddIp: user '" << username() << "' has been seen at a new IP address (" << ipaddr << ")");
 }
 
-/* addToNameCache: add a auth_user structure to the username cache */
+/**
+ * Add the AuthUser structure to the username cache.
+ */
 void
 AuthUser::addToNameCache()
 {
-    usernamehash = new AuthUserHashPointer(this);
+    /* AuthUserHashPointer will self-register with the username cache */
+    AuthUserHashPointer *notused = new AuthUserHashPointer(this);
 }
 
 /**

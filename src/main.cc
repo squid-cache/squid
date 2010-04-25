@@ -733,7 +733,6 @@ mainReconfigureFinish(void *)
     setEffectiveUser();
     _db_init(Debug::cache_log, Debug::debugOptions);
     ipcache_restart();		/* clear stuck entries */
-    authenticateUserCacheRestart();	/* clear stuck ACL entries */
     fqdncache_restart();	/* sigh, fqdncache too */
     parseEtcHosts();
     errorInitialize();		/* reload error pages */
