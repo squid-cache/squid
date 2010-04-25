@@ -39,10 +39,10 @@ OPTS=" \
 	--with-large-files \
 	--enable-underscores \
 	--enable-icap-client \
-	--enable-auth="basic,digest,ntlm" \
-	--enable-basic-auth-helpers="LDAP,MSNT,NCSA,PAM,SASL,SMB,YP,getpwnam,multi-domain-NTLM" \
-	--enable-ntlm-auth-helpers="SMB" \
-	--enable-digest-auth-helpers="ldap,password" \
+	--enable-auth \
+	--enable-auth-basic="LDAP,MSNT,NCSA,PAM,SASL,SMB,YP,getpwnam,multi-domain-NTLM" \
+	--enable-auth-ntlm="SMB" \
+	--enable-auth-digest="ldap,password" \
 	--enable-external-acl-helpers="ip_user,ldap_group,session,unix_group,wbinfo_group" \
 	--with-filedescriptors=65536 \
 	--enable-epoll \
