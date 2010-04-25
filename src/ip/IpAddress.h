@@ -58,7 +58,8 @@
 #include <ostream>
 #endif
 
-namespace Ip {
+namespace Ip
+{
 
 /* FreeBSD hack:
  *   This OS has at least one version that defines these as private

@@ -15,5 +15,7 @@ liblog_la_SOURCES = \
 	ModStdio.h \
 	ModSyslog.cc \
 	ModSyslog.h \
+	ModTcp.cc \
+	ModTcp.h \
 	ModUdp.cc \
 	ModUdp.h

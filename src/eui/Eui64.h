@@ -5,8 +5,9 @@
 
 #if USE_SQUID_EUI
 
-namespace Ip {
-    class Address;
+namespace Ip
+{
+class Address;
 };
 
 #if HAVE_CSTRING
