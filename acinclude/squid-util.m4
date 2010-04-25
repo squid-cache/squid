@@ -87,6 +87,7 @@ dnl look for modules in the base-directory supplied as argument.
 dnl fill-in the variable pointed-to by the second argument with the
 dnl space-separated list of modules 
 AC_DEFUN([SQUID_LOOK_FOR_MODULES],[
+$2=""
 for dir in $1/*; do
   module="`basename $dir`"
   if test -d "$dir" && test "$module" != CVS; then
