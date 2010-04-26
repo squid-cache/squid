@@ -81,8 +81,20 @@ typedef void AUTHSSTATS(StoreEntry *);
 
 /// \ingroup AuthAPI
 extern void authenticateInit(Auth::authConfig *);
-/// \ingroup AuthAPI
-extern void authenticateShutdown(void);
+
+/** \ingroup AuthAPI
+ * Remove all idle authentication state. Intended for use by reconfigure.
+ *
+ * Removes the username cache contents and global configuration state.
+ * Stops just short of detaching the auth components completely.
+ *
+ * Currently active requests should finish. Howevee new requests will not use
+ * authentication unless something causes the global config to be rebuilt.
+ * Such as a configure load action adding config and re-running authenticateInit().
+ */
+extern void authenticateReset(void);
+
+extern void authenticateRotate(void);
 
 /// \ingroup AuthAPI
 extern void authenticateFreeProxyAuthUserACLResults(void *data);
