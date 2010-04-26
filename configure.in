@@ -18,6 +18,7 @@ m4_include([acinclude/squid-util.m4])
 m4_include([acinclude/compiler-flags.m4])
 m4_include([acinclude/os-deps.m4])
 m4_include([acinclude/krb5.m4])
+m4_include([acinclude/pam.m4])
 
 PRESET_CFLAGS="$CFLAGS"
 PRESET_LDFLAGS="$LDFLAGS"
@@ -2253,6 +2254,9 @@ AC_CHECK_HEADERS( \
 	db.h \
 	db_185.h
 )
+
+CHECK_STRUCT_PAM_CONV
+
 AC_CHECK_HEADERS(
 	linux/netfilter_ipv4.h
 ,,,
