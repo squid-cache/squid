@@ -26,9 +26,17 @@ void Kids::init(size_t n)
 
     storage.reserve(n);
 
+    char kid_name[32];
+
+    // add Kid records for all n main strands
     for (size_t i = 1; i <= n; ++i) {
-        char kid_name[32];
         snprintf(kid_name, sizeof(kid_name), "(squid-%d)", (int)i);
+        storage.push_back(Kid(kid_name));
+    }
+
+    // if coordination is needed, add a Kid record for Coordinator
+    if (n > 1) {
+        snprintf(kid_name, sizeof(kid_name), "(squid-coord-%d)", (int)(n + 1));
         storage.push_back(Kid(kid_name));
     }
 }
