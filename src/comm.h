@@ -55,6 +55,7 @@ SQUIDCEXTERN void comm_init(void);
 SQUIDCEXTERN void comm_exit(void);
 
 SQUIDCEXTERN int comm_open(int, int, IpAddress &, int, const char *note);
+SQUIDCEXTERN int comm_open_uds(int sock_type, int proto, struct sockaddr_un* addr, int flags);
 
 /**
  * Open a port specially bound for listening or sending through a specific port.
