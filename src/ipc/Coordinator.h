@@ -20,7 +20,12 @@ namespace Ipc
 class Coordinator: public Port
 {
 public:
+    static Coordinator* Instance();
+
+public:
     Coordinator();
+
+    void broadcastSignal(int sig) const; ///< send sig to registered strands
 
 protected:
     virtual void start(); // Port (AsyncJob) API
@@ -32,6 +37,7 @@ protected:
 
 private:
     Vector<StrandData> strands; ///< registered processes and threads
+    static Coordinator* TheInstance; ///< the only class instance in existence
 
     CBDATA_CLASS2(Coordinator);
 
