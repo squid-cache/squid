@@ -1,0 +1,53 @@
+/*
+ * $Id$
+ *
+ * DEBUG: section 54    Interprocess Communication
+ *
+ */
+
+#ifndef SQUID_IPC_PORT_H
+#define SQUID_IPC_PORT_H
+
+
+#include "SquidString.h"
+#include "ipc/UdsOp.h"
+
+
+namespace Ipc
+{
+
+
+/// Waits for and receives incoming IPC messages; kids handle the messages
+class Port: public UdsOp
+{
+public:
+    Port(const String &aListenAddr);
+
+protected:
+    /// calculates IPC message address for strand #id at path
+    static String MakeAddr(const char *path, int id);
+
+    virtual void start() = 0; // UdsOp (AsyncJob) API; has body
+    virtual bool doneAll() const; // UdsOp (AsyncJob) API
+
+    /// read the next incoming message
+    void listen();
+
+    /// handle IPC message just read
+    virtual void receive(const Message& message) = 0;
+
+private:
+    void noteRead(const CommIoCbParams &params); // Comm callback API
+
+private:
+    Message buf; ///< UDS read buffer filled by Comm
+};
+
+
+extern const char coordinatorAddr[]; ///< where coordinator listens
+extern const char strandAddrPfx[]; ///< strand's listening address prefix
+
+} // namespace Ipc
+
+
+#endif /* SQUID_IPC_PORT_H */

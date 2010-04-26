@@ -60,6 +60,7 @@ public:
     int sock_family;
     char ipaddr[MAX_IPSTRLEN];            /* dotted decimal address of peer */
     char desc[FD_DESC_SZ];
+    struct sockaddr_un unix_addr; ///< unix domain socket (UDS) address, if any
 
     struct {
         unsigned int open:1;

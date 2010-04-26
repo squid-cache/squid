@@ -36,6 +36,7 @@
 #include "Debug.h"
 #include "SquidTime.h"
 #include "util.h"
+#include "ipc/Kids.h"
 
 /* for shutting_down flag in xassert() */
 #include "globals.h"
@@ -52,6 +53,7 @@ FILE *debug_log = NULL;
 static char *debug_log_file = NULL;
 static int Ctx_Lock = 0;
 static const char *debugLogTime(void);
+static const char *debugLogKid(void);
 static void ctx_print(void);
 #if HAVE_SYSLOG
 #ifdef LOG_LOCAL4
@@ -117,8 +119,9 @@ _db_print(const char *format,...)
     va_start(args2, format);
     va_start(args3, format);
 
-    snprintf(f, BUFSIZ, "%s| %s",
+    snprintf(f, BUFSIZ, "%s%s| %s",
              debugLogTime(),
+             debugLogKid(),
              format);
 
     _db_print_file(f, args1);
@@ -541,6 +544,18 @@ debugLogTime(void)
 
     buf[127] = '\0';
     return buf;
+}
+
+static const char *
+debugLogKid(void)
+{
+    if (KidIdentifier != 0) {
+		static char buf[16];
+        snprintf(buf, sizeof(buf), " kid%d", KidIdentifier);
+		return buf;
+    }
+
+    return "";
 }
 
 void
