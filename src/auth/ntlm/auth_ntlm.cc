@@ -65,6 +65,17 @@ static hash_table *proxy_auth_cache = NULL;
  *
  */
 
+void
+AuthNTLMConfig::rotateHelpers()
+{
+    /* schedule closure of existing helpers */
+    if (ntlmauthenticators) {
+        helperStatefulShutdown(ntlmauthenticators);
+    }
+
+    /* NP: dynamic helper restart will ensure they start up again as needed. */
+}
+
 /* free any allocated configuration details */
 void
 AuthNTLMConfig::done()

@@ -498,6 +498,18 @@ authDigestUserFindUsername(const char *username)
     return NULL;
 }
 
+void
+AuthDigestConfig::rotateHelpers()
+{
+    /* schedule closure of existing helpers */
+    if (digestauthenticators) {
+        helperShutdown(digestauthenticators);
+    }
+
+    /* NP: dynamic helper restart will ensure they start up again as needed. */
+}
+
+
 /** delete the digest request structure. Does NOT delete related structures */
 void
 digestScheme::done()

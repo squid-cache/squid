@@ -106,6 +106,12 @@ public:
     virtual bool configured() const = 0;
 
     /**
+     * Shutdown just the auth helpers.
+     * For use by log rotate etc. where auth needs to stay running, with the helpers restarted.
+     */
+    virtual void rotateHelpers(void) = 0;
+
+    /**
      * Responsible for writing to the StoreEntry the configuration parameters that a user
      * would put in a config file to recreate the running configuration.
      */

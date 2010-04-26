@@ -109,23 +109,32 @@ authenticateInit(Auth::authConfig * config)
 }
 
 void
-authenticateShutdown(void)
+authenticateRotate(void)
 {
-    debugs(29, 2, HERE << "Shutting down auth schemes");
-    /* free the cache if we are shutting down */
-    if (shutting_down) {
-        hash_first(proxy_auth_username_cache);
-        AuthUserHashPointer *usernamehash;
-        while ((usernamehash = ((AuthUserHashPointer *) hash_next(proxy_auth_username_cache)))) {
-            debugs(29, 5, HERE << "Clearing entry for user: " << usernamehash->user()->username());
-            hash_remove_link(proxy_auth_username_cache, (hash_link *)usernamehash);
-            delete usernamehash;
-        }
-        AuthScheme::FreeAll();
-    } else {
-        for (AuthScheme::iterator i = (AuthScheme::GetSchemes()).begin(); i != (AuthScheme::GetSchemes()).end(); ++i)
-            (*i)->done();
+    for (Auth::authConfig::iterator i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i)
+        if ((*i)->configured())
+            (*i)->rotateHelpers();
+}
+
+void
+authenticateReset(void)
+{
+    debugs(29, 2, HERE << "Reset authentication State.");
+
+    /* free all username cache entries */
+    hash_first(proxy_auth_username_cache);
+    AuthUserHashPointer *usernamehash;
+    while ((usernamehash = ((AuthUserHashPointer *) hash_next(proxy_auth_username_cache)))) {
+        debugs(29, 5, HERE << "Clearing entry for user: " << usernamehash->user()->username());
+        hash_remove_link(proxy_auth_username_cache, (hash_link *)usernamehash);
+        delete usernamehash;
     }
+
+    /* schedule shutdown of the helpers */
+    authenticateRotate();
+
+    /* free current global config details too. */
+    Auth::TheConfig.clean();
 }
 
 AuthUserHashPointer::AuthUserHashPointer(AuthUser::Pointer anAuth_user):
