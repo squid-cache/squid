@@ -1540,6 +1540,10 @@ mainStartScript(const char *prog)
 static int
 checkRunningPid(void)
 {
+    // master process must start alone, but its kids processes may co-exist
+    if (KidIdentifier != 0)
+        return 0;
+
     pid_t pid;
 
     if (!debug_log)
