@@ -41,6 +41,8 @@
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "ip/IpIntercept.h"
+#include "ipc/Kids.h"
+#include "ipc/Coordinator.h"
 
 #if HAVE_SYS_PRCTL_H
 #include <sys/prctl.h>
@@ -64,6 +66,7 @@ extern void log_trace_done();
 extern void log_trace_init(char *);
 #endif
 static void restoreCapabilities(int keep);
+int DebugSignal = -1;
 
 #ifdef _SQUID_LINUX_
 /* Workaround for crappy glic header files */
@@ -397,12 +400,25 @@ death(int sig)
     abort();
 }
 
+void
+BroadcastSignalIfAny(int& sig)
+{
+    if (sig > 0) {
+        if (!opt_no_daemon && Config.main_processes > 1) {
+            if (KidIdentifier == Config.main_processes + 1)
+                Ipc::Coordinator::Instance()->broadcastSignal(sig);
+        }
+        sig = -1;
+    }
+}
 
 void
 sigusr2_handle(int sig)
 {
     static int state = 0;
     /* no debugs() here; bad things happen if the signal is delivered during _db_print() */
+
+    DebugSignal = sig;
 
     if (state == 0) {
 #ifndef MEM_GEN_TRACE
@@ -790,6 +806,26 @@ no_suid(void)
 #endif
 }
 
+bool
+IsPidFileMaintainer()
+{
+    if (!opt_no_daemon && Config.main_processes > 0) {
+        if (Config.main_processes > 1) {
+            // multiple kids delegate PID file maintanence to the coordinator
+            if (KidIdentifier <= Config.main_processes)
+                return false;
+        } else {
+            // master process does not maintain PID file when
+            // Config.main_processes == 1
+            if (KidIdentifier == 0)
+                return false;
+        }
+    }
+
+    // if there are no kids, then the master process maintains the PID file
+    return true;
+}
+
 void
 writePidFile(void)
 {
@@ -797,6 +833,9 @@ writePidFile(void)
     const char *f = NULL;
     mode_t old_umask;
     char buf[32];
+
+    if (!IsPidFileMaintainer())
+        return;
 
     if ((f = Config.pidFilename) == NULL)
         return;

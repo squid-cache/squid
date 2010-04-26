@@ -11,6 +11,7 @@
 
 
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Coordinator);
+Ipc::Coordinator* Ipc::Coordinator::TheInstance = NULL;
 
 
 Ipc::Coordinator::Coordinator():
@@ -61,4 +62,24 @@ void Ipc::Coordinator::handleRegistrationRequest(const StrandData& strand)
     // send back an acknowledgement; TODO: remove as not needed?
     SendMessage(MakeAddr(strandAddrPfx, strand.kidId),
         Message(mtRegistration, strand.kidId, strand.pid));
+}
+
+void Ipc::Coordinator::broadcastSignal(int sig) const
+{
+    typedef Vector<StrandData>::const_iterator VSDCI;
+    for (VSDCI iter = strands.begin(); iter != strands.end(); ++iter) {
+        debugs(54, 5, HERE << "signal " << sig << " to kid" << iter->kidId <<
+            ", PID=" << iter->pid);
+        kill(iter->pid, sig);
+    }
+}
+
+Ipc::Coordinator* Ipc::Coordinator::Instance()
+{
+    if (!TheInstance)
+        TheInstance = new Coordinator;
+    // XXX: if the Coordinator job quits, this pointer will become invalid
+    // we could make Coordinator death fatal, except during exit, but since
+    // Strands do not re-register, even process death would be pointless.
+    return TheInstance;
 }

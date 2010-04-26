@@ -575,6 +575,10 @@ SQUIDCEXTERN void squid_signal(int sig, SIGHDLR *, int flags);
 SQUIDCEXTERN pid_t readPidFile(void);
 SQUIDCEXTERN void keepCapabilities(void);
 
+SQUIDCEXTERN void BroadcastSignalIfAny(int& sig);
+SQUIDCEXTERN bool IsPidFileMaintainer();
+SQUIDCEXTERN int DebugSignal;
+
 /* AYJ debugs function to show locations being reset with memset() */
 SQUIDCEXTERN void *xmemset(void *dst, int, size_t);
 
