@@ -127,6 +127,10 @@ static volatile int do_rotate = 0;
 static volatile int do_shutdown = 0;
 static volatile int shutdown_status = 0;
 
+static int RotateSignal = -1;
+static int ReconfigureSignal = -1;
+static int ShutdownSignal = -1;
+
 static void mainRotate(void);
 static void mainReconfigureStart(void);
 static void mainReconfigureFinish(void*);
@@ -198,6 +202,10 @@ SignalEngine::checkEvents(int timeout)
         doShutdown(do_shutdown > 0 ? (int) Config.shutdownLifetime : 0);
         do_shutdown = 0;
     }
+    BroadcastSignalIfAny(DebugSignal);
+    BroadcastSignalIfAny(RotateSignal);
+    BroadcastSignalIfAny(ReconfigureSignal);
+    BroadcastSignalIfAny(ShutdownSignal);
 
     PROF_stop(SignalEngine_checkEvents);
     return EVENT_IDLE;
@@ -556,6 +564,7 @@ void
 rotate_logs(int sig)
 {
     do_rotate = 1;
+    RotateSignal = sig;
 #ifndef _SQUID_MSWIN_
 #if !HAVE_SIGACTION
 
@@ -569,6 +578,7 @@ void
 reconfigure(int sig)
 {
     do_reconfigure = 1;
+    ReconfigureSignal = sig;
 #ifndef _SQUID_MSWIN_
 #if !HAVE_SIGACTION
 
@@ -581,6 +591,7 @@ void
 shut_down(int sig)
 {
     do_shutdown = sig == SIGINT ? -1 : 1;
+    ShutdownSignal = sig;
 #ifdef SIGTTIN
 
     if (SIGTTIN == sig)
@@ -724,9 +735,16 @@ mainReconfigureFinish(void *)
         Config2.onoff.enable_purge = 2;
 
     // parse the config returns a count of errors encountered.
+    const int oldMainProcesses = Config.main_processes;
     if ( parseConfigFile(ConfigFile) != 0) {
         // for now any errors are a fatal condition...
         self_destruct();
+    }
+    if (oldMainProcesses != Config.main_processes) {
+        debugs(1, DBG_CRITICAL, "WARNING: Changing 'main_processes' (from " <<
+            oldMainProcesses << " to " << Config.main_processes <<
+            ") is not supported and ignored");
+        Config.main_processes = oldMainProcesses;
     }
 
     setUmask(Config.umask);
@@ -1400,7 +1418,7 @@ SquidMain(int argc, char **argv)
 
     if (!opt_no_daemon && Config.main_processes > 1) {
         if (KidIdentifier == Config.main_processes + 1)
-            AsyncJob::AsyncStart(new Ipc::Coordinator);
+            AsyncJob::AsyncStart(Ipc::Coordinator::Instance());
         else if (KidIdentifier != 0)
             AsyncJob::AsyncStart(new Ipc::Strand);
     }
@@ -1826,10 +1844,12 @@ SquidShutdown()
 
 #endif
 
-    if (Config.pidFilename && strcmp(Config.pidFilename, "none") != 0) {
-        enter_suid();
-        safeunlink(Config.pidFilename, 0);
-        leave_suid();
+    if (IsPidFileMaintainer()) {
+        if (Config.pidFilename && strcmp(Config.pidFilename, "none") != 0) {
+            enter_suid();
+            safeunlink(Config.pidFilename, 0);
+            leave_suid();
+        }
     }
 
     debugs(1, 1, "Squid Cache (Version " << version_string << "): Exiting normally.");
