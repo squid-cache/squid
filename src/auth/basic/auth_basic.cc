@@ -125,6 +125,17 @@ AuthBasicConfig::fixHeader(AuthUserRequest::Pointer auth_user_request, HttpReply
     }
 }
 
+void
+AuthBasicConfig::rotateHelpers()
+{
+    /* schedule closure of existing helpers */
+    if (basicauthenticators) {
+        helperShutdown(basicauthenticators);
+    }
+
+    /* NP: dynamic helper restart will ensure they start up again as needed. */
+}
+
 /** shutdown the auth helpers and free any allocated configuration details */
 void
 AuthBasicConfig::done()

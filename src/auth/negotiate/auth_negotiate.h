@@ -51,6 +51,7 @@ public:
     virtual bool configured() const;
     virtual AuthUserRequest::Pointer decode(char const *proxy_auth);
     virtual void done();
+    virtual void rotateHelpers();
     virtual void dump(StoreEntry *, const char *, AuthConfig *);
     virtual void fixHeader(AuthUserRequest::Pointer, HttpReply *, http_hdr_type, HttpRequest *);
     virtual void init(AuthConfig *);

@@ -42,9 +42,7 @@ public:
 
     bool valid() const;
     void makeLoggingInstance(AuthUserRequest::Pointer auth_user_request);
-#if 0
-    AuthUser::Pointer makeCachedFrom();
-#endif
+
     /** Update the cached password for a username. */
     void updateCached(BasicUser *from);
     virtual int32_t ttl() const;
@@ -80,6 +78,7 @@ public:
     virtual bool configured() const;
     virtual AuthUserRequest::Pointer decode(char const *proxy_auth);
     virtual void done();
+    virtual void rotateHelpers();
     virtual void dump(StoreEntry *, const char *, AuthConfig *);
     virtual void fixHeader(AuthUserRequest::Pointer, HttpReply *, http_hdr_type, HttpRequest *);
     virtual void init(AuthConfig *);

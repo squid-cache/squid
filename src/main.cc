@@ -212,7 +212,12 @@ SignalEngine::doShutdown(time_t wait)
     WIN32_svcstatusupdate(SERVICE_STOP_PENDING, (wait + 1) * 1000);
 #endif
 
+    /* run the closure code which can be shared with reconfigure */
     serverConnectionsClose();
+
+    /* detach the auth components (only do this on full shutdown) */
+    AuthScheme::FreeAll();
+
     eventAdd("SquidShutdown", &StopEventLoop, this, (double) (wait + 1), 1, false);
 }
 
@@ -693,9 +698,7 @@ mainReconfigureStart(void)
 #endif
 
     redirectShutdown();
-    authenticateShutdown(); /* destroys any unused auth schemas */
-    InitAuthSchemes();      /* create new ones required for config parsing */
-
+    authenticateReset();
     externalAclShutdown();
     storeDirCloseSwapLogs();
     storeLogClose();
@@ -794,11 +797,7 @@ mainRotate(void)
     dnsShutdown();
 #endif
     redirectShutdown();
-
-    /* TODO: should only terminate the helpers they are using.  nothing else. */
-    authenticateShutdown(); /* destroys any unused auth schemas */
-    InitAuthSchemes();      /* create new ones required for config parsing */
-
+    authenticateRotate();
     externalAclShutdown();
 
     _db_rotate_log();		/* cache.log */
@@ -1724,7 +1723,7 @@ SquidShutdown()
     DelayPools::FreePools();
 #endif
 
-    authenticateShutdown();
+    authenticateReset();
 #if USE_WIN32_SERVICE
 
     WIN32_svcstatusupdate(SERVICE_STOP_PENDING, 10000);
