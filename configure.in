@@ -2850,7 +2850,12 @@ DBLIB=
 dnl check that dbopen is actually defined in the header
 dnl FIXME: in case of failure undef db-related includes etc.
 AC_CHECK_DECL(dbopen,,,[
-AC_INCLUDES_DEFAULT
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#if HAVE_LIMITS_H
+#include <limits.h>
+#endif
 #if HAVE_DB_185_H
 #include <db_185.h>
 #elif HAVE_DB_H
@@ -2861,7 +2866,12 @@ dnl 1.85
 AC_CACHE_CHECK(if dbopen needs -ldb,ac_cv_dbopen_libdb, [
 SAVED_LIBS="$LIBS"; LIBS="$LIBS -ldb"
   AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-AC_INCLUDES_DEFAULT
+#if HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#if HAVE_LIMITS_H
+#include <limits.h>
+#endif
 #if HAVE_DB_185_H
 #include <db_185.h>
 #elif HAVE_DB_H
