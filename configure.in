@@ -18,6 +18,7 @@ m4_include([acinclude/squid-util.m4])
 m4_include([acinclude/compiler-flags.m4])
 m4_include([acinclude/os-deps.m4])
 m4_include([acinclude/krb5.m4])
+m4_include([acinclude/pam.m4])
 
 PRESET_CFLAGS="$CFLAGS"
 PRESET_LDFLAGS="$LDFLAGS"
@@ -942,10 +943,6 @@ dnl
 dnl AC_ARG_ENABLE(mem-gen-trace,
 dnl [  --enable-mem-gen-trace  Do trace of memory stuff],
 dnl [ if test "$enableval" = "yes" ; then
-if test "$enableval" = "yes" ; then
-    AC_MSG_NOTICE([Enabling automatic stack backtraces on fatal errors])
-    AC_DEFINE(PRINT_STACK_TRACE, 1,[Print stacktraces on fatal errors])
-  fi
 dnl     AC_MSG_NOTICE([Memory trace (to file) enabled])
 dnl     AC_DEFINE(MEM_GEN_TRACE,1,[Define for log file trace of mem alloc/free])
 dnl   fi
@@ -1978,19 +1975,13 @@ AC_ARG_ENABLE(win32-service,
 
 # Check for Cyrus SASL
 if test "$squid_require_sasl" = "yes"; then
-	AC_CHECK_HEADERS(sasl/sasl.h sasl.h)
-	if test "$ac_cv_header_sasl_sasl_h" = "yes"; then
-		AC_MSG_NOTICE([using SASL2])
-		LIBSASL="-lsasl2"
-	else
-		if test "$ac_cv_header_sasl_h" = "yes"; then
-			AC_MSG_NOTICE([using SASL])
-			LIBSASL="-lsasl"
-		else
-			AC_MSG_ERROR(Neither SASL nor SASL2 found)
-		fi
-	fi
-	AC_SUBST(LIBSASL)
+  AC_CHECK_HEADERS(sasl/sasl.h sasl.h)
+  AC_CHECK_LIB(sasl2,sasl_errstring,[LIBSASL="-lsasl2"],[
+    AC_CHECK_LIB(sasl,sasl_errstring,[LIBSASL="-lsasl"], [
+      AC_MSG_ERROR(Neither SASL nor SASL2 found)
+    ])
+  ])
+  AC_SUBST(LIBSASL)
 fi
 
 # Disable "unlinkd" code
@@ -2253,6 +2244,9 @@ AC_CHECK_HEADERS( \
 	db.h \
 	db_185.h
 )
+
+CHECK_STRUCT_PAM_CONV
+
 AC_CHECK_HEADERS(
 	linux/netfilter_ipv4.h
 ,,,
@@ -2850,17 +2844,24 @@ AC_SUBST(LDAPLIB)
 AC_SUBST(LBERLIB)
 
 dnl Check for libdb
+dnl this is not fully functional if db.h is for a differend db version
 DBLIB=
+
+dnl check that dbopen is actually defined in the header
+dnl FIXME: in case of failure undef db-related includes etc.
+AC_CHECK_DECL(dbopen,,,[
+AC_INCLUDES_DEFAULT
+#if HAVE_DB_185_H
+#include <db_185.h>
+#elif HAVE_DB_H
+#include <db.h>
+#endif])
+
 dnl 1.85
 AC_CACHE_CHECK(if dbopen needs -ldb,ac_cv_dbopen_libdb, [
 SAVED_LIBS="$LIBS"; LIBS="$LIBS -ldb"
   AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#if HAVE_LIMITS_H
-#include <limits.h>
-#endif
+AC_INCLUDES_DEFAULT
 #if HAVE_DB_185_H
 #include <db_185.h>
 #elif HAVE_DB_H
