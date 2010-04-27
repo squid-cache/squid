@@ -43,12 +43,11 @@
 #ifndef        __BIT_TYPES_DEFINED__
 #define        __BIT_TYPES_DEFINED__
 #endif
-#if defined(HAVE_DB_185_H)
+
+#if HAVE_DB_185_H
 #include <db_185.h>
-#elif defined(HAVE_DB_H)
+#elif HAVE_DB_H
 #include <db.h>
-#else
-#include <db_185.h>
 #endif
 
 static int session_ttl = 3600;
