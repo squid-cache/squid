@@ -579,7 +579,7 @@ void
 BasicUser::queueRequest(AuthUserRequest::Pointer auth_user_request, RH * handler, void *data)
 {
     BasicAuthQueueNode *node;
-    node = static_cast<BasicAuthQueueNode *>(xmalloc(sizeof(BasicAuthQueueNode)));
+    node = static_cast<BasicAuthQueueNode *>(xcalloc(1, sizeof(BasicAuthQueueNode)));
     assert(node);
     /* save the details */
     node->next = auth_queue;
