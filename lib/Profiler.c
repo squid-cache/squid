@@ -116,9 +116,11 @@
 #define SQUID_NO_ALLOC_PROTECT 1
 #include "config.h"
 
+/* This include needs to be BELOW config, as it may undef USE_XPROF_STATS */
+#include "profiling.h"
+
 #if USE_XPROF_STATS
 
-#include "profiling.h"
 
 #if HAVE_ASSERT_H
 #include <assert.h>
