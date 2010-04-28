@@ -287,7 +287,7 @@ wccpLowestIP(void)
     for (loop = 0; loop < (unsigned) ntohl(wccp_i_see_you.number); loop++) {
         assert(loop < WCCP_ACTIVE_CACHES);
 
-        if (local_ip >= wccp_i_see_you.wccp_cache_entry[loop].ip_addr)
+        if (local_ip > wccp_i_see_you.wccp_cache_entry[loop].ip_addr)
             return 0;
 
         if (local_ip == wccp_i_see_you.wccp_cache_entry[loop].ip_addr)

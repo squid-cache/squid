@@ -92,9 +92,9 @@ my ($_dbh, $_sth);
 sub close_db()
 {
     return if !defined($_dbh);
+    undef $_sth;
     $_dbh->disconnect();
     undef $_dbh;
-    undef $_sth;
 }
 
 sub open_db()
