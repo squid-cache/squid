@@ -59,18 +59,18 @@ struct wccp_here_i_am_t {
 };
 
 struct wccp_cache_entry_t {
-    IpAddress ip_addr;
+    struct in_addr ip_addr;
     int revision;
     char hash[WCCP_HASH_SIZE];
     int reserved;
 };
 
 struct wccp_i_see_you_t {
-    int type;
-    int version;
-    int change;
-    int id;
-    int number;
+    int32_t type;
+    int32_t version;
+    int32_t change;
+    int32_t id;
+    int32_t number;
 
     struct wccp_cache_entry_t wccp_cache_entry[WCCP_ACTIVE_CACHES];
 };
@@ -288,7 +288,7 @@ wccpLowestIP(void)
     for (loop = 0; loop < (unsigned) ntohl(wccp_i_see_you.number); loop++) {
         assert(loop < WCCP_ACTIVE_CACHES);
 
-        if (wccp_i_see_you.wccp_cache_entry[loop].ip_addr < local_ip)
+        if (local_ip > wccp_i_see_you.wccp_cache_entry[loop].ip_addr)
             return 0;
 
         if (wccp_i_see_you.wccp_cache_entry[loop].ip_addr == local_ip)
