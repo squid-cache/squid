@@ -804,7 +804,8 @@ install-data-local: install-sysconfDATA install-dataDATA
 	$(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE).default; \
 	echo "$(INSTALL_DATA) squid.conf.documented $(DESTDIR)$(DEFAULT_CONFIG_FILE).documented"; \
 	$(INSTALL_DATA) squid.conf.documented $(DESTDIR)$(DEFAULT_CONFIG_FILE).documented; \
-	$(mkinstalldirs) $(DESTDIR)$(DEFAULT_LOG_PREFIX)
+	$(mkinstalldirs) $(DESTDIR)$(DEFAULT_LOG_PREFIX); \
+	$(mkinstalldirs) $(DESTDIR)`dirname $(DEFAULT_PIDFILE)`
 
 uninstall-local: squid.conf.default
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_MIME_TABLE) $(srcdir)/mime.conf.default
