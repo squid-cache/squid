@@ -29,6 +29,5 @@ OPTS=" \
 	--enable-cpu-profiling \
 	--enable-win32-service \
 	--enable-default-hostsfile=none \
-	--enable-auth="basic,ntlm,digest,negotiate" \
 	--enable-disk-io="Blocking,AIO,DiskThreads" \
 "
