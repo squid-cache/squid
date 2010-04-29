@@ -35,6 +35,8 @@ protected:
     void registerStrand(const StrandCoord &); ///< adds or updates existing
     void handleRegistrationRequest(const StrandCoord &); ///< register,ACK
 
+    void handleDescriptorGet(const Descriptor& request);
+
 private:
     typedef Vector<StrandCoord> Strands; ///< unsorted strands
     Strands strands; ///< registered processes and threads

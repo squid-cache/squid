@@ -15,6 +15,7 @@ namespace Ipc
 {
 
 class StrandCoord;
+class Descriptor;
 
 /// Receives coordination messages on behalf of its process or thread
 class Strand: public Port
@@ -31,6 +32,7 @@ protected:
 private:
     void registerSelf(); /// let Coordinator know this strand exists
     void handleRegistrationResponse(const StrandCoord &strand);
+    void putDescriptor(const Descriptor &message);
 
 private:
     bool isRegistered; ///< whether Coordinator ACKed registration (unused)

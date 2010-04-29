@@ -50,8 +50,13 @@ void Ipc::Coordinator::receive(const TypedMsgHdr& message)
         handleRegistrationRequest(StrandCoord(message));
         break;
 
+    case mtDescriptorGet:
+        debugs(54, 6, HERE << "Descriptor get request");
+        handleDescriptorGet(Descriptor(message));
+        break;
+
     default:
-        debugs(54, 6, HERE << "Unhandled message type: " << message.type());
+        debugs(54, 1, HERE << "Unhandled message type: " << message.type());
         break;
     }
 }
@@ -64,6 +69,34 @@ void Ipc::Coordinator::handleRegistrationRequest(const StrandCoord& strand)
     TypedMsgHdr message;
     strand.pack(message);
     SendMessage(MakeAddr(strandAddrPfx, strand.kidId), message);
+}
+
+void Ipc::Coordinator::handleDescriptorGet(const Descriptor& request)
+{
+    // XXX: hack: create descriptor here
+    char buffer[64];
+    snprintf(buffer, sizeof(buffer), "/tmp/squid_shared_file.txt");
+    static int fd = -1;
+    if (fd < 0) {
+        fd = open(buffer, O_CREAT | O_RDWR | O_APPEND, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+        int n = snprintf(buffer, sizeof(buffer), "coord: created %d\n", fd);
+        ssize_t bytes = write(fd, buffer, n);
+        Must(bytes == n);
+        debugs(54, 6, "Created FD " << fd << " for kid" << request.fromKid);
+    } else {
+        int n = snprintf(buffer, sizeof(buffer), "coord: updated %d\n", fd);
+        ssize_t bytes = write(fd, buffer, n);
+        Must(bytes == n);
+    }
+
+    debugs(54, 6, "Sending FD " << fd << " to kid" << request.fromKid);
+
+    Descriptor response(-1, fd);
+    TypedMsgHdr message;
+    response.pack(message);
+    SendMessage(MakeAddr(strandAddrPfx, request.fromKid), message);
+
+    // XXX: close(fd); fd should be opened until the message has not reached rec iver 
 }
 
 void Ipc::Coordinator::broadcastSignal(int sig) const
