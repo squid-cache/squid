@@ -8,6 +8,10 @@ libipc_la_SOURCES = \
 	Kid.h \
 	Kids.cc \
 	Kids.h \
+	Messages.cc \
+	Messages.h \
+	TypedMsgHdr.cc \
+	TypedMsgHdr.h \
 	Coordinator.cc \
 	Coordinator.h \
 	UdsOp.cc \

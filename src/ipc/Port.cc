@@ -7,6 +7,7 @@
 
 
 #include "config.h"
+#include "CommCalls.h"
 #include "ipc/Port.h"
 
 const char Ipc::coordinatorAddr[] = DEFAULT_PREFIX "/var/run/coordinator.ipc";
@@ -17,6 +18,7 @@ Ipc::Port::Port(const String& aListenAddr):
     UdsOp(aListenAddr)
 {
     setOptions(COMM_NONBLOCKING | COMM_DOBIND);
+    buf.allocate();
 }
 
 void Ipc::Port::start()
@@ -54,11 +56,10 @@ void Ipc::Port::noteRead(const CommIoCbParams& params)
         " [" << this << ']');
     if (params.flag == COMM_OK) {
         assert(params.buf == buf.raw());
-        assert(params.size == buf.size());
         receive(buf);
     }
     // TODO: if there was a fatal error on our socket, close the socket before
-	// trying to listen again and print a level-1 error message.
+    // trying to listen again and print a level-1 error message.
 
     listen();
 }

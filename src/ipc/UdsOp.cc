@@ -8,31 +8,13 @@
 
 #include "config.h"
 #include "comm.h"
+#include "CommCalls.h"
 #include "ipc/UdsOp.h"
 
 
-Ipc::Message::Message()
-{
-    data.messageType = mtNone;
-    data.strand.kidId = -1;
-}
-
-Ipc::Message::Message(MessageType messageType, int kidId, pid_t pid)
-{
-    data.messageType = messageType;
-    data.strand.kidId = kidId;
-    data.strand.pid = pid;
-}
-
-const Ipc::StrandData &Ipc::Message::strand() const
-{
-    Must(data.messageType == mtRegistration);
-	return data.strand;
-}
-
 Ipc::UdsOp::UdsOp(const String& pathAddr):
     AsyncJob("Ipc::UdsOp"),
-    addr(setAddr(pathAddr)),
+    address(PathToAddress(pathAddr)),
     options(COMM_NONBLOCKING),
     fd_(-1)
 {
@@ -55,21 +37,11 @@ int Ipc::UdsOp::fd()
 {
     if (fd_ < 0) {
         if (options & COMM_DOBIND)
-            unlink(addr.sun_path);
-        fd_ = comm_open_uds(SOCK_DGRAM, 0, &addr, options);
+            unlink(address.sun_path);
+        fd_ = comm_open_uds(SOCK_DGRAM, 0, &address, options);
         Must(fd_ >= 0);
     }
     return fd_;
-}
-
-struct sockaddr_un Ipc::UdsOp::setAddr(const String& pathAddr)
-{
-    assert(pathAddr.size() != 0);
-    struct sockaddr_un unixAddr;
-    memset(&unixAddr, 0, sizeof(unixAddr));
-    unixAddr.sun_family = AF_LOCAL;
-    xstrncpy(unixAddr.sun_path, pathAddr.termedBuf(), sizeof(unixAddr.sun_path));
-    return unixAddr;
 }
 
 void Ipc::UdsOp::setTimeout(int seconds, const char *handlerName)
@@ -91,15 +63,28 @@ void Ipc::UdsOp::noteTimeout(const CommTimeoutCbParams &)
 }
 
 
+struct sockaddr_un
+Ipc::PathToAddress(const String& pathAddr)
+{
+    assert(pathAddr.size() != 0);
+    struct sockaddr_un unixAddr;
+    memset(&unixAddr, 0, sizeof(unixAddr));
+    unixAddr.sun_family = AF_LOCAL;
+    xstrncpy(unixAddr.sun_path, pathAddr.termedBuf(), sizeof(unixAddr.sun_path));
+    return unixAddr;
+}
+
+
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, UdsSender);
 
-Ipc::UdsSender::UdsSender(const String& pathAddr, const Message& aMessage):
+Ipc::UdsSender::UdsSender(const String& pathAddr, const TypedMsgHdr& aMessage):
     UdsOp(pathAddr),
     message(aMessage),
-    retries(4), // TODO: make configurable?
-    timeout(5), // TODO: make configurable?
+    retries(10), // TODO: make configurable?
+    timeout(10), // TODO: make configurable?
     writing(false)
 {
+    message.address(address);
 }
 
 void Ipc::UdsSender::start()
@@ -128,8 +113,10 @@ void Ipc::UdsSender::wrote(const CommIoCbParams& params)
 {
     debugs(54, 5, HERE << "FD " << params.fd << " flag " << params.flag << " [" << this << ']');
     writing = false;
-    if (params.flag != COMM_OK && retries-- > 0)
+    if (params.flag != COMM_OK && retries-- > 0) {
+        sleep(1); // do not spend all tries at once; XXX: use an async timed event instead of blocking here; store the time when we started writing so that we do not sleep if not needed?
         write(); // XXX: should we close on error so that fd() reopens?
+    }
 }
 
 void Ipc::UdsSender::timedout()
@@ -139,7 +126,7 @@ void Ipc::UdsSender::timedout()
 }
 
 
-void Ipc::SendMessage(const String& toAddress, const Message& message)
+void Ipc::SendMessage(const String& toAddress, const TypedMsgHdr &message)
 {
     AsyncJob::AsyncStart(new UdsSender(toAddress, message));
 }

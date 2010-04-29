@@ -14,6 +14,7 @@
 namespace Ipc
 {
 
+class StrandCoord;
 
 /// Receives coordination messages on behalf of its process or thread
 class Strand: public Port
@@ -25,11 +26,11 @@ public:
 
 protected:
     virtual void timedout(); // Port (UsdOp) API
-    virtual void receive(const Message& message); // Port API
+    virtual void receive(const TypedMsgHdr &message); // Port API
 
 private:
     void registerSelf(); /// let Coordinator know this strand exists
-    void handleRegistrationResponse(const StrandData& strand);
+    void handleRegistrationResponse(const StrandCoord &strand);
 
 private:
     bool isRegistered; ///< whether Coordinator ACKed registration (unused)

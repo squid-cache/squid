@@ -7,6 +7,7 @@
 
 #include "config.h"
 #include "ipc/Strand.h"
+#include "ipc/Messages.h"
 #include "ipc/Kids.h"
 
 
@@ -29,18 +30,19 @@ void Ipc::Strand::registerSelf()
 {
     debugs(54, 6, HERE);
     Must(!isRegistered);
-    SendMessage(coordinatorAddr,
-		Message(mtRegistration, KidIdentifier, getpid()));
+    TypedMsgHdr message;
+    StrandCoord(KidIdentifier, getpid()).pack(message);
+    SendMessage(coordinatorAddr, message);
     setTimeout(6, "Ipc::Strand::timeoutHandler"); // TODO: make 6 configurable?
 }
 
-void Ipc::Strand::receive(const Message& message)
+void Ipc::Strand::receive(const TypedMsgHdr &message)
 {
     debugs(54, 6, HERE);
     switch (message.type()) {
 
     case mtRegistration:
-        handleRegistrationResponse(message.strand());
+        handleRegistrationResponse(StrandCoord(message));
         break;
 
     default:
@@ -49,7 +51,7 @@ void Ipc::Strand::receive(const Message& message)
     }
 }
 
-void Ipc::Strand::handleRegistrationResponse(const StrandData& strand)
+void Ipc::Strand::handleRegistrationResponse(const StrandCoord &strand)
 {
     // handle registration response from the coordinator; it could be stale
     if (strand.kidId == KidIdentifier && strand.pid == getpid()) {
