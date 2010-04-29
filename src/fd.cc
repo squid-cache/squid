@@ -45,6 +45,9 @@ int socket_read_method(int, char *, int);
 int socket_write_method(int, const char *, int);
 int file_read_method(int, char *, int);
 int file_write_method(int, const char *, int);
+#else
+int msghdr_read_method(int, char *, int);
+int msghdr_write_method(int, const char *, int);
 #endif
 
 const char *fdTypeStr[] = {
@@ -53,6 +56,7 @@ const char *fdTypeStr[] = {
     "File",
     "Socket",
     "Pipe",
+    "MsgHdr",
     "Unknown"
 };
 
@@ -169,6 +173,24 @@ default_write_method(int fd, const char *buf, int len)
     return i;
 }
 
+int
+msghdr_read_method(int fd, char *buf, int len)
+{
+    PROF_start(read);
+    const int i = recvmsg(fd, reinterpret_cast<msghdr*>(buf), MSG_DONTWAIT);
+    PROF_stop(read);
+    return i;
+}
+
+int
+msghdr_write_method(int fd, const char *buf, int len)
+{
+    PROF_start(write);
+    const int i = sendmsg(fd, reinterpret_cast<const msghdr*>(buf), MSG_NOSIGNAL);
+    PROF_stop(write);
+    return i > 0 ? len : i; // len is imprecise but the caller expects a match
+}
+
 #endif
 
 void
@@ -213,9 +235,18 @@ fd_open(int fd, unsigned int type, const char *desc)
     }
 
 #else
-    F->read_method = &default_read_method;
+    switch (type) {
 
-    F->write_method = &default_write_method;
+    case FD_MSGHDR:
+        F->read_method = &msghdr_read_method;
+        F->write_method = &msghdr_write_method;
+        break;
+
+    default:
+        F->read_method = &default_read_method;
+        F->write_method = &default_write_method;
+        break;
+    }
 
 #endif
 

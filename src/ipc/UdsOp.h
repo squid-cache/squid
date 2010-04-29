@@ -10,45 +10,14 @@
 
 
 #include "SquidString.h"
-#include "CommCalls.h"
+#include "base/AsyncJob.h"
+#include "ipc/TypedMsgHdr.h"
 
+class CommTimeoutCbParams;
+class CommIoCbParams;
 
 namespace Ipc
 {
-
-
-typedef enum { mtNone = 0, mtRegistration } MessageType;
-
-/// Strand registration information
-struct StrandData
-{
-    int kidId;
-    pid_t pid;
-};
-
-/// information sent or received during IPC
-class Message
-{
-public:
-    Message();
-    Message(MessageType messageType, int kidId, pid_t pid);
-
-    /// raw, type-independent access
-    int type() const { return data.messageType; }
-    char *raw() { return reinterpret_cast<char*>(&data); }
-    const char *raw() const { return reinterpret_cast<const char*>(&data); }
-    size_t size() const { return sizeof(data); }
-
-    /// type-dependent access
-    const StrandData& strand() const;
-
-private:
-    struct Data {
-        int messageType;
-        StrandData strand;
-        // TODO: redesign to better handle many type-specific datas like strand
-    } data; ///< everything being sent or received
-};
 
 /// code shared by unix-domain socket senders (e.g., UdsSender or Coordinator)
 /// and receivers (e.g. Port or Coordinator)
@@ -57,6 +26,9 @@ class UdsOp: public AsyncJob
 public:
     UdsOp(const String &pathAddr);
     virtual ~UdsOp();
+
+public:
+    struct sockaddr_un address; ///< UDS address from path; treat as read-only
 
 protected:
     virtual void timedout() {} ///< called after setTimeout() if timed out
@@ -73,11 +45,7 @@ private:
     /// Comm timeout callback; calls timedout()
     void noteTimeout(const CommTimeoutCbParams &p);
 
-    /// configures addr member
-    struct sockaddr_un setAddr(const String &pathAddr);
-
 private:
-    struct sockaddr_un addr; ///< UDS address
     int options; ///< UDS options
     int fd_; ///< UDS descriptor
 
@@ -86,12 +54,17 @@ private:
     UdsOp &operator= (const UdsOp &); // not implemented
 };
 
+/// converts human-readable filename path into UDS address
+extern struct sockaddr_un PathToAddress(const String &pathAddr);
+
+
+
 // XXX: move UdsSender code to UdsSender.{cc,h}
 /// attempts to send an IPC message a few times, with a timeout
 class UdsSender: public UdsOp
 {
 public:
-    UdsSender(const String& pathAddr, const Message& aMessage);
+    UdsSender(const String& pathAddr, const TypedMsgHdr& aMessage);
 
 protected:
     virtual void start(); // UdsOp (AsyncJob) API
@@ -103,7 +76,7 @@ private:
     void wrote(const CommIoCbParams& params); ///< done writing or error
 
 private:
-    Message message; ///< what to send
+    TypedMsgHdr message; ///< what to send
     int retries; ///< how many times to try after a write error
     int timeout; ///< total time to send the message
     bool writing; ///< whether Comm started and did not finish writing
@@ -116,7 +89,7 @@ private:
 };
 
 
-void SendMessage(const String& toAddress, const Message& message);
+void SendMessage(const String& toAddress, const TypedMsgHdr& message);
 
 
 }
