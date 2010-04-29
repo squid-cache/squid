@@ -19,15 +19,16 @@ namespace Ipc
 
 class TypedMsgHdr;
 
-typedef enum { mtNone = 0, mtRegistration, mtDescriptor } MessageType;
+typedef enum { mtNone = 0, mtRegistration,
+    mtDescriptorGet, mtDescriptorPut } MessageType;
 
 /// Strand location details
 class StrandCoord {
 public:
-	StrandCoord(); ///< unknown location
-	StrandCoord(int akidId, pid_t aPid); ///< from registrant
-	explicit StrandCoord(const TypedMsgHdr &hdrMsg); ///< from recvmsg()
-	void pack(TypedMsgHdr &hdrMsg) const; ///< prepare for sendmsg()
+    StrandCoord(); ///< unknown location
+    StrandCoord(int akidId, pid_t aPid); ///< from registrant
+    explicit StrandCoord(const TypedMsgHdr &hdrMsg); ///< from recvmsg()
+    void pack(TypedMsgHdr &hdrMsg) const; ///< prepare for sendmsg()
 
 public:
     int kidId; ///< internal Squid process number
@@ -38,11 +39,13 @@ public:
 class Descriptor
 {
 public:
-    explicit Descriptor(int fd); ///< from descriptor sender
-	explicit Descriptor(const TypedMsgHdr &hdrMsg); ///< from recvmsg()
-	void pack(TypedMsgHdr &hdrMsg) const; ///< prepare for sendmsg()
+    Descriptor(); ///< unknown descriptor
+    Descriptor(int fromKid, int fd); ///< from descriptor sender or requestor
+    explicit Descriptor(const TypedMsgHdr &hdrMsg); ///< from recvmsg()
+    void pack(TypedMsgHdr &hdrMsg) const; ///< prepare for sendmsg()
 
 public:
+    int fromKid; /// the source of this message
     int fd; ///< raw descriptor value
 };
 

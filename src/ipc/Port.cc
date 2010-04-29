@@ -18,7 +18,6 @@ Ipc::Port::Port(const String& aListenAddr):
     UdsOp(aListenAddr)
 {
     setOptions(COMM_NONBLOCKING | COMM_DOBIND);
-    buf.allocate();
 }
 
 void Ipc::Port::start()
@@ -30,6 +29,7 @@ void Ipc::Port::start()
 void Ipc::Port::listen()
 {
     debugs(54, 6, HERE);
+    buf.prepForReading();
     AsyncCall::Pointer readHandler = asyncCall(54, 6, "Ipc::Port::noteRead",
         CommCbMemFunT<Port, CommIoCbParams>(this, &Port::noteRead));
     comm_read(fd(), buf.raw(), buf.size(), readHandler);
