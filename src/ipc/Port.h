@@ -34,13 +34,13 @@ protected:
     void listen();
 
     /// handle IPC message just read
-    virtual void receive(const Message& message) = 0;
+    virtual void receive(const TypedMsgHdr& message) = 0;
 
 private:
     void noteRead(const CommIoCbParams &params); // Comm callback API
 
 private:
-    Message buf; ///< UDS read buffer filled by Comm
+    TypedMsgHdr buf; ///< msghdr struct filled by Comm
 };
 
 

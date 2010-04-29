@@ -11,7 +11,7 @@
 
 #include "Array.h"
 #include "ipc/Port.h"
-
+#include "ipc/Messages.h"
 
 namespace Ipc
 {
@@ -29,14 +29,15 @@ public:
 
 protected:
     virtual void start(); // Port (AsyncJob) API
-    virtual void receive(const Message& message); // Port API
+    virtual void receive(const TypedMsgHdr& message); // Port API
 
-    StrandData* findStrand(int kidId); ///< registered strand or NULL
-    void registerStrand(const StrandData &); ///< adds or updates existing
-    void handleRegistrationRequest(const StrandData &); ///< registers and ACKs
+    StrandCoord* findStrand(int kidId); ///< registered strand or NULL
+    void registerStrand(const StrandCoord &); ///< adds or updates existing
+    void handleRegistrationRequest(const StrandCoord &); ///< register,ACK
 
 private:
-    Vector<StrandData> strands; ///< registered processes and threads
+    typedef Vector<StrandCoord> Strands; ///< unsorted strands
+    Strands strands; ///< registered processes and threads
     static Coordinator* TheInstance; ///< the only class instance in existence
 
     CBDATA_CLASS2(Coordinator);

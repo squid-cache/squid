@@ -1883,11 +1883,7 @@ commHandleWrite(int fd, void *data)
            (long int) state->offset << ", sz " << (long int) state->size << ".");
 
     nleft = state->size - state->offset;
-    // XXX: tmp hack: call sendto() for unconnected UDS sockets
-    if (!fd_table[fd].flags.called_connect && fd_table[fd].unix_addr.sun_family == AF_LOCAL)
-        len = sendto(fd, state->buf + state->offset, nleft, 0, (sockaddr*)&fd_table[fd].unix_addr, SUN_LEN(&fd_table[fd].unix_addr));
-    else
-        len = FD_WRITE_METHOD(fd, state->buf + state->offset, nleft);
+    len = FD_WRITE_METHOD(fd, state->buf + state->offset, nleft);
     debugs(5, 5, "commHandleWrite: write() returns " << len);
     fd_bytes(fd, len, FD_WRITE);
     statCounter.syscalls.sock.writes++;
@@ -2464,13 +2460,11 @@ comm_open_uds(int sock_type,
     debugs(50, 5, HERE << "FD " << new_socket << " is a new socket");
 
     assert(!isOpen(new_socket));
-    fd_open(new_socket, FD_SOCKET, NULL);
+    fd_open(new_socket, FD_MSGHDR, NULL);
 
     fdd_table[new_socket].close_file = NULL;
 
     fdd_table[new_socket].close_line = 0;
-
-    fd_table[new_socket].unix_addr = *addr;
 
     fd_table[new_socket].sock_family = AI.ai_family;
 

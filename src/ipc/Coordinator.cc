@@ -24,29 +24,30 @@ void Ipc::Coordinator::start()
     Port::start();
 }
 
-Ipc::StrandData* Ipc::Coordinator::findStrand(int kidId)
+Ipc::StrandCoord* Ipc::Coordinator::findStrand(int kidId)
 {
-    for (Vector<StrandData>::iterator iter = strands.begin(); iter != strands.end(); ++iter) {
+    typedef Strands::iterator SI;
+    for (SI iter = strands.begin(); iter != strands.end(); ++iter) {
         if (iter->kidId == kidId)
             return &(*iter);
     }
     return NULL;
 }
 
-void Ipc::Coordinator::registerStrand(const StrandData& strand)
+void Ipc::Coordinator::registerStrand(const StrandCoord& strand)
 {
-    if (StrandData* found = findStrand(strand.kidId))
+    if (StrandCoord* found = findStrand(strand.kidId))
         *found = strand;
     else
         strands.push_back(strand);
 }
 
-void Ipc::Coordinator::receive(const Message& message)
+void Ipc::Coordinator::receive(const TypedMsgHdr& message)
 {
     switch (message.type()) {
     case mtRegistration:
         debugs(54, 6, HERE << "Registration request");
-        handleRegistrationRequest(message.strand());
+        handleRegistrationRequest(StrandCoord(message));
         break;
 
     default:
@@ -55,19 +56,20 @@ void Ipc::Coordinator::receive(const Message& message)
     }
 }
 
-void Ipc::Coordinator::handleRegistrationRequest(const StrandData& strand)
+void Ipc::Coordinator::handleRegistrationRequest(const StrandCoord& strand)
 {
     registerStrand(strand);
 
     // send back an acknowledgement; TODO: remove as not needed?
-    SendMessage(MakeAddr(strandAddrPfx, strand.kidId),
-        Message(mtRegistration, strand.kidId, strand.pid));
+    TypedMsgHdr message;
+    strand.pack(message);
+    SendMessage(MakeAddr(strandAddrPfx, strand.kidId), message);
 }
 
 void Ipc::Coordinator::broadcastSignal(int sig) const
 {
-    typedef Vector<StrandData>::const_iterator VSDCI;
-    for (VSDCI iter = strands.begin(); iter != strands.end(); ++iter) {
+    typedef Strands::const_iterator SCI;
+    for (SCI iter = strands.begin(); iter != strands.end(); ++iter) {
         debugs(54, 5, HERE << "signal " << sig << " to kid" << iter->kidId <<
             ", PID=" << iter->pid);
         kill(iter->pid, sig);
