@@ -71,6 +71,8 @@ typedef enum {
 
 static void commStopHalfClosedMonitor(int fd);
 static IOCB commHalfClosedReader;
+static void comm_init_opened(int new_socket, IpAddress &addr, unsigned char TOS, const char *note, struct addrinfo *AI);
+static int comm_apply_flags(int new_socket, IpAddress &addr, int flags, struct addrinfo *AI);
 
 
 struct comm_io_callback_t {
@@ -687,7 +689,6 @@ comm_openex(int sock_type,
             const char *note)
 {
     int new_socket;
-    fde *F = NULL;
     int tos = 0;
     struct addrinfo *AI = NULL;
 
@@ -743,6 +744,29 @@ comm_openex(int sock_type,
 
 #endif
 
+    comm_init_opened(new_socket, addr, TOS, note, AI);
+    new_socket = comm_apply_flags(new_socket, addr, flags, AI);
+
+    addr.FreeAddrInfo(AI);
+
+    PROF_stop(comm_open);
+
+    return new_socket;
+}
+
+/// update FD tables after a local or remote (IPC) comm_openex();
+void
+comm_init_opened(int new_socket,
+            IpAddress &addr,
+            unsigned char TOS,
+            const char *note,
+            struct addrinfo *AI)
+{
+    assert(new_socket >= 0);
+    assert(AI);
+
+    fde *F = NULL;
+
     /* update fdstat */
     debugs(5, 5, "comm_open: FD " << new_socket << " is a new socket");
 
@@ -760,6 +784,19 @@ comm_openex(int sock_type,
     F->tos = TOS;
 
     F->sock_family = AI->ai_family;
+}
+
+/// apply flags after a local comm_open*() call;
+/// returns new_socket or -1 on error
+static int
+comm_apply_flags(int new_socket,
+            IpAddress &addr,
+            int flags,
+            struct addrinfo *AI)
+{
+    assert(new_socket >= 0);
+    assert(AI);
+    const int sock_type = AI->ai_socktype;
 
     if (!(flags & COMM_NOCLOEXEC))
         commSetCloseOnExec(new_socket);
@@ -790,18 +827,14 @@ comm_openex(int sock_type,
 
         if (commBind(new_socket, *AI) != COMM_OK) {
             comm_close(new_socket);
-            addr.FreeAddrInfo(AI);
             return -1;
-            PROF_stop(comm_open);
         }
     }
 
-    addr.FreeAddrInfo(AI);
-
     if (flags & COMM_NONBLOCKING)
         if (commSetNonBlocking(new_socket) == COMM_ERROR) {
+            comm_close(new_socket);
             return -1;
-            PROF_stop(comm_open);
         }
 
 #ifdef TCP_NODELAY
@@ -812,8 +845,6 @@ comm_openex(int sock_type,
 
     if (Config.tcpRcvBufsz > 0 && sock_type == SOCK_STREAM)
         commSetTcpRcvbuf(new_socket, Config.tcpRcvBufsz);
-
-    PROF_stop(comm_open);
 
     return new_socket;
 }
