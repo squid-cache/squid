@@ -2,14 +2,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-03-19 19:26+1300\n"
+"POT-Creation-Date: 2010-05-01 00:17+1300\n"
 "PO-Revision-Date: 2010-04-28 16:17+0200\n"
 "Last-Translator:  <clytie@riverland.net.au>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
-"Language: vi\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: vi\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Pootle 2.0.1\n"
 
@@ -59,7 +59,8 @@ msgstr ""
 msgid ""
 "An FTP authentication failure occurred while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
-msgstr "Gặp lỗi xác thực FTP trong khi thử lấy địa chỉ URL: <a href=\"%U\">%U</a>"
+msgstr ""
+"Gặp lỗi xác thực FTP trong khi thử lấy địa chỉ URL: <a href=\"%U\">%U</a>"
 
 #: templates/ERR_FTP_FAILURE:4
 msgid ""
@@ -177,8 +178,9 @@ msgid "ERROR: The requested URL could not be retrieved"
 msgstr "LỖI: không thể lấy địa chỉ URL yêu cầu"
 
 #: templates/ERR_URN_RESOLVE:1
-msgid "ERROR: The requested URN not be retrieved"
-msgstr "LỖI: không thể lấy URN yêu cầu"
+#, fuzzy
+msgid "ERROR: The requested URN could not be retrieved"
+msgstr "LỖI: không thể lấy địa chỉ URL yêu cầu"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
@@ -338,9 +340,9 @@ msgid ""
 "have difficulties authenticating yourself or <a href=\"http://%h/cgi-bin/"
 "chpasswd.cgi\">change</a> your default password."
 msgstr ""
-"Hãy liên lạc với <a href=\"mailto:%w%W\">quản trị vùng nhớ tạm</a> nếu bạn gặp "
-"khó khăn trong việc tự xác thực, hoặc bạn <a href=\"http://%h/cgi-"
-"bin/chpasswd.cgi\">thay đổi</a> mật khẩu mặc định của mình."
+"Hãy liên lạc với <a href=\"mailto:%w%W\">quản trị vùng nhớ tạm</a> nếu bạn "
+"gặp khó khăn trong việc tự xác thực, hoặc bạn <a href=\"http://%h/cgi-bin/"
+"chpasswd.cgi\">thay đổi</a> mật khẩu mặc định của mình."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:7
 msgid ""
@@ -349,10 +351,10 @@ msgid ""
 "administrator, read Squid documentation on cache manager interface and check "
 "cache log for more detailed error messages."
 msgstr ""
-"Hãy liên lạc với <a href=\"mailto:%w%W\">quản trị vùng nhớ tạm</a> nếu bạn gặp "
-"khó khăn trong việc tự xác thực, hoặc nếu bạn <em>có phải</em> là quản trị "
-"thì đọc tài liệu hướng dẫn Squid về giao diện quản lý vùng nhớ tạm và kiểm "
-"tra lại sổ theo dõi vùng nhớ tạm có thông điệp lỗi chi tiết hơn không."
+"Hãy liên lạc với <a href=\"mailto:%w%W\">quản trị vùng nhớ tạm</a> nếu bạn "
+"gặp khó khăn trong việc tự xác thực, hoặc nếu bạn <em>có phải</em> là quản "
+"trị thì đọc tài liệu hướng dẫn Squid về giao diện quản lý vùng nhớ tạm và "
+"kiểm tra lại sổ theo dõi vùng nhớ tạm có thông điệp lỗi chi tiết hơn không."
 
 #: templates/ERR_READ_ERROR:5
 msgid "Read Error"
@@ -692,3 +694,6 @@ msgstr ""
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
 msgstr ""
+
+#~ msgid "ERROR: The requested URN not be retrieved"
+#~ msgstr "LỖI: không thể lấy URN yêu cầu"

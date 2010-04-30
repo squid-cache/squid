@@ -2,14 +2,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-03-19 19:26+1300\n"
-"PO-Revision-Date: 2010-03-23 14:35+0200\n"
+"POT-Creation-Date: 2010-05-01 00:17+1300\n"
+"PO-Revision-Date: 2010-05-01 00:17+1300\n"
 "Last-Translator: Amos <squid3@treenet.co.nz>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
-"Language: en\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: en\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Pootle 2.0.1\n"
 
@@ -81,7 +81,6 @@ msgid "An Illegal response was received from the ICAP server."
 msgstr "An Illegal response was received from the ICAP server."
 
 #: templates/ERR_READ_ERROR:7
-#, fuzzy
 msgid ""
 "An error condition occurred while reading data from the network. Please "
 "retry your request."
@@ -188,8 +187,8 @@ msgid "ERROR: The requested URL could not be retrieved"
 msgstr "ERROR: The requested URL could not be retrieved"
 
 #: templates/ERR_URN_RESOLVE:1
-msgid "ERROR: The requested URN not be retrieved"
-msgstr "ERROR: The requested URN not be retrieved"
+msgid "ERROR: The requested URN could not be retrieved"
+msgstr "ERROR: The requested URN could not be retrieved"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
@@ -262,10 +261,9 @@ msgid "Generated %T by %h (%s)"
 msgstr "Generated %T by %h (%s)"
 
 #: templates/ERR_INVALID_REQ:12
-#, fuzzy
 msgid ""
 "HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
-msgstr "HTTP/1.1 Expect: feature is being asked from an HTTP/1.0 software."
+msgstr "HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
@@ -507,7 +505,6 @@ msgstr ""
 "href=\"%U\">%U</a>"
 
 #: templates/ERR_CONNECT_FAIL:7
-#, fuzzy
 msgid "The remote host or network may be down. Please try the request again."
 msgstr "The remote host or network may be down. Please try the request again."
 
@@ -754,3 +751,6 @@ msgstr "Your webmaster is <a href=\"mailto:%w\">%w</a>."
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
 msgstr "Zero Sized Reply"
+
+#~ msgid "ERROR: The requested URN not be retrieved"
+#~ msgstr "ERROR: The requested URN not be retrieved"
