@@ -1,5 +1,5 @@
 /*
- * digest_pw_auth.c
+ * digest_file_auth.cc
  *
  * AUTHOR: Robert Collins. Based on ncsa_auth.c by Arjan de Vet
  * <Arjan.deVet@adv.iae.nl>
@@ -30,9 +30,11 @@
  * Copyright (c) 2003  Robert Collins  <robertc@squid-cache.org>
  */
 
+#include "config.h"
 #include "digest_common.h"
 #include "text_backend.h"
-#define PROGRAM_NAME "digest_pw_auth"
+
+#define PROGRAM_NAME "digest_file_auth"
 
 static void
 GetHHA1(RequestData * requestData)
@@ -94,5 +96,5 @@ main(int argc, char **argv)
     ProcessArguments(argc, argv);
     while (fgets(buf, 256, stdin) != NULL)
         DoOneRequest(buf);
-    exit(0);
+    return 0;
 }
