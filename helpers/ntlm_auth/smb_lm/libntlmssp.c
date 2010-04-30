@@ -18,6 +18,7 @@ typedef unsigned char uchar;
 
 #include "ntlm_smb_lm_auth.h"
 #include "util.h"		/* from Squid */
+#include "compat/stdvarargs.h"
 #include "valid.h"
 #include "smbencrypt.h"
 
@@ -67,6 +68,16 @@ int SMB_Logon_Server(SMB_Handle_Type Con_Handle, char *UserName, char *PassWord,
 #define debug_dump_ntlmssp_flags(X)	/* empty */
 #endif /* DEBUG */
 
+void
+debug (char *format,...)
+{
+#ifdef DEBUG
+    va_list args;
+    va_start(args,format);
+    vfprintf(stderr, format, args);
+    va_end(args);
+#endif /* DEBUG */
+}
 
 #define ENCODED_PASS_LEN 24
 static unsigned char challenge[NONCE_LEN];
