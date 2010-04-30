@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-03-19 19:26+1300\n"
+"POT-Creation-Date: 2010-05-01 00:17+1300\n"
 "PO-Revision-Date: 2009-10-28 12:47+0000\n"
 "Last-Translator: Mārtiņš Bruņenieks <Unknown>\n"
 "Language-Team: Latvian <lv@li.org>\n"
@@ -193,7 +193,8 @@ msgid "ERROR: The requested URL could not be retrieved"
 msgstr "KĻŪDA: Pieprasītā adrese nav atrodama"
 
 #: templates/ERR_URN_RESOLVE:1
-msgid "ERROR: The requested URN not be retrieved"
+#, fuzzy
+msgid "ERROR: The requested URN could not be retrieved"
 msgstr "KĻŪDA: Pieprasītā adrese nav atrodama"
 
 #: templates/ERR_ESI:5
@@ -735,3 +736,6 @@ msgstr "Jūsu tīmekļa pārzinis ir <a href=\"mailto:%w\">%w</a>."
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
 msgstr "Nulles izmēra atbilde"
+
+#~ msgid "ERROR: The requested URN not be retrieved"
+#~ msgstr "KĻŪDA: Pieprasītā adrese nav atrodama"
