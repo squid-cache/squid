@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-03-19 19:26+1300\n"
+"POT-Creation-Date: 2010-05-01 00:17+1300\n"
 "PO-Revision-Date: 2010-01-02 23:51+0000\n"
 "Last-Translator: Jarosław Ogrodnik <nobodythere@gmail.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -183,8 +183,9 @@ msgid "ERROR: The requested URL could not be retrieved"
 msgstr "BŁĄD: Żądany URL nie może zostać pobrany"
 
 #: templates/ERR_URN_RESOLVE:1
-msgid "ERROR: The requested URN not be retrieved"
-msgstr "BŁĄD: Żądany URN nie może zostać sprowadzony"
+#, fuzzy
+msgid "ERROR: The requested URN could not be retrieved"
+msgstr "BŁĄD: Żądany URL nie może zostać pobrany"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
@@ -727,3 +728,6 @@ msgstr ""
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
 msgstr "sprowadzony dokument ma zerowy rozmiar"
+
+#~ msgid "ERROR: The requested URN not be retrieved"
+#~ msgstr "BŁĄD: Żądany URN nie może zostać sprowadzony"
