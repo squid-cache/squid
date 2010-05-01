@@ -904,7 +904,7 @@ bool IpAddress::operator >(const IpAddress &rhs) const
 
 bool IpAddress::operator <(const IpAddress &rhs) const
 {
-    if (IsNoAddr() && !rhs.IsNoAddr())
+    if (IsAnyAddr() && !rhs.IsAnyAddr())
         return true;
 
     return ( matchIPAddr(rhs) < 0);

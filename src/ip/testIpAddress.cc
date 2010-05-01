@@ -332,6 +332,28 @@ testIpAddress::testBooleans()
     CPPUNIT_ASSERT(  ( lhsIPA <= rhsIPA ) );
     CPPUNIT_ASSERT( !( lhsIPA <  rhsIPA ) );
 
+    /* test equality versus ANYADDR */
+    lhsIPA.SetAnyAddr();
+    rhsIPA.SetAnyAddr();
+    CPPUNIT_ASSERT( lhsIPA.matchIPAddr(rhsIPA) == 0 );
+    CPPUNIT_ASSERT(  ( lhsIPA == rhsIPA ) );
+    CPPUNIT_ASSERT( !( lhsIPA != rhsIPA ) );
+    CPPUNIT_ASSERT(  ( lhsIPA >= rhsIPA ) );
+    CPPUNIT_ASSERT( !( lhsIPA >  rhsIPA ) );
+    CPPUNIT_ASSERT(  ( lhsIPA <= rhsIPA ) );
+    CPPUNIT_ASSERT( !( lhsIPA <  rhsIPA ) );
+
+    /* test equality versus NOADDR */
+    lhsIPA.SetNoAddr();
+    rhsIPA.SetNoAddr();
+    CPPUNIT_ASSERT( lhsIPA.matchIPAddr(rhsIPA) == 0 );
+    CPPUNIT_ASSERT(  ( lhsIPA == rhsIPA ) );
+    CPPUNIT_ASSERT( !( lhsIPA != rhsIPA ) );
+    CPPUNIT_ASSERT(  ( lhsIPA >= rhsIPA ) );
+    CPPUNIT_ASSERT( !( lhsIPA >  rhsIPA ) );
+    CPPUNIT_ASSERT(  ( lhsIPA <= rhsIPA ) );
+    CPPUNIT_ASSERT( !( lhsIPA <  rhsIPA ) );
+
     /* test inequality (less than) */
     lhsIPA = valLow;
     rhsIPA = valHigh;
@@ -343,8 +365,52 @@ testIpAddress::testBooleans()
     CPPUNIT_ASSERT(  ( lhsIPA <= rhsIPA ) );
     CPPUNIT_ASSERT(  ( lhsIPA <  rhsIPA ) );
 
+    /* test inequality versus ANYADDR (less than) */
+    lhsIPA.SetAnyAddr();
+    rhsIPA = valHigh;
+    CPPUNIT_ASSERT( lhsIPA.matchIPAddr(rhsIPA) < 0 );
+    CPPUNIT_ASSERT( !( lhsIPA == rhsIPA ) );
+    CPPUNIT_ASSERT(  ( lhsIPA != rhsIPA ) );
+    CPPUNIT_ASSERT( !( lhsIPA >= rhsIPA ) );
+    CPPUNIT_ASSERT( !( lhsIPA >  rhsIPA ) );
+    CPPUNIT_ASSERT(  ( lhsIPA <= rhsIPA ) );
+    CPPUNIT_ASSERT(  ( lhsIPA <  rhsIPA ) );
+
+    /* test inequality versus NOADDR (less than) */
+    lhsIPA = valLow;
+    rhsIPA.SetNoAddr();
+    CPPUNIT_ASSERT( lhsIPA.matchIPAddr(rhsIPA) < 0 );
+    CPPUNIT_ASSERT( !( lhsIPA == rhsIPA ) );
+    CPPUNIT_ASSERT(  ( lhsIPA != rhsIPA ) );
+    CPPUNIT_ASSERT( !( lhsIPA >= rhsIPA ) );
+    CPPUNIT_ASSERT( !( lhsIPA >  rhsIPA ) );
+    CPPUNIT_ASSERT(  ( lhsIPA <= rhsIPA ) );
+    CPPUNIT_ASSERT(  ( lhsIPA <  rhsIPA ) );
+
     /* test inequality (greater than) */
     lhsIPA = valHigh;
+    rhsIPA = valLow;
+    CPPUNIT_ASSERT( lhsIPA.matchIPAddr(rhsIPA) > 0 );
+    CPPUNIT_ASSERT( !( lhsIPA == rhsIPA ) );
+    CPPUNIT_ASSERT(  ( lhsIPA != rhsIPA ) );
+    CPPUNIT_ASSERT(  ( lhsIPA >= rhsIPA ) );
+    CPPUNIT_ASSERT(  ( lhsIPA >  rhsIPA ) );
+    CPPUNIT_ASSERT( !( lhsIPA <= rhsIPA ) );
+    CPPUNIT_ASSERT( !( lhsIPA <  rhsIPA ) );
+
+    /* test inequality (greater than) */
+    lhsIPA = valHigh;
+    rhsIPA.SetAnyAddr();
+    CPPUNIT_ASSERT( lhsIPA.matchIPAddr(rhsIPA) > 0 );
+    CPPUNIT_ASSERT( !( lhsIPA == rhsIPA ) );
+    CPPUNIT_ASSERT(  ( lhsIPA != rhsIPA ) );
+    CPPUNIT_ASSERT(  ( lhsIPA >= rhsIPA ) );
+    CPPUNIT_ASSERT(  ( lhsIPA >  rhsIPA ) );
+    CPPUNIT_ASSERT( !( lhsIPA <= rhsIPA ) );
+    CPPUNIT_ASSERT( !( lhsIPA <  rhsIPA ) );
+
+    /* test inequality versus NOADDR (greater than) */
+    lhsIPA.SetNoAddr();
     rhsIPA = valLow;
     CPPUNIT_ASSERT( lhsIPA.matchIPAddr(rhsIPA) > 0 );
     CPPUNIT_ASSERT( !( lhsIPA == rhsIPA ) );
