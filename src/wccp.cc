@@ -291,7 +291,7 @@ wccpLowestIP(void)
         if (local_ip > wccp_i_see_you.wccp_cache_entry[loop].ip_addr)
             return 0;
 
-        if (wccp_i_see_you.wccp_cache_entry[loop].ip_addr == local_ip)
+        if (local_ip == wccp_i_see_you.wccp_cache_entry[loop].ip_addr)
             found = 1;
     }
 
