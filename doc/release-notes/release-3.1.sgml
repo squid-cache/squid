@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.1.1 release notes</title>
+<title>Squid 3.1.2 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.1.1.
+The Squid Team are pleased to announce the release of Squid-3.1.2.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.1/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -84,11 +84,13 @@ Snapshots generated from 3.HEAD continue to be highly volatile.
 
 <p>All this is previous policy you should be accustomed to. Now we get to the new numbering change.
 
-<p>Initial branch packages will be generated with a 3.X.0.Z version as testing packages.
+<p>Initial branch packages will be generated with a 3.X.0.Z version as beta testing packages.
 Packages and Snapshots generated with these 3-dot numbers are expected to be relatively stable regarding feature behaviors.
 Suitable for testing, but without any guarantees under production loads. This replaces both the old PRE and RC packages.
 
-<p>If a large number of bugs are found several *.0.Z packages may be attempted before any is considered production-ready.
+<p>If a large number of bugs are found several *.0.Z packages may be attempted before any is fully frozen for production use.
+ To be frozen as stable the code must be compiling well and have passed a period of 14 days with no new bugs reported against
+ the new code added in that release.
 
 <p>When one of these Squid-3.X.0.Z packages passes our bug-free standards a 3.X.Y numbered release will be made.
 
