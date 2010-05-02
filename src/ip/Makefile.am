@@ -4,6 +4,7 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libip.la
 
 libip_la_SOURCES = \
+	forward.h \
 	Address.h \
 	Address.cc \
 	Intercept.h \
