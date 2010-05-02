@@ -42,7 +42,7 @@
 #include "ip/IpAddress.h"
 
 
-#if defined(_SQUID_CYGWIN_)
+#if _SQUID_CYGWIN_
 #include <squid_windows.h>
 #endif
 
@@ -52,7 +52,7 @@
          and can be wrapped
  */
 
-#if defined(_SQUID_WIN32_)
+#if _SQUID_WIN32_
 
 struct arpreq {
 
@@ -155,14 +155,14 @@ bool
 Eui::Eui48::lookup(Ip::Address &c)
 {
     struct arpreq arpReq;
-#if !defined(_SQUID_WIN32_)
+#if !_SQUID_WIN32_
     struct sockaddr_in *sa = NULL;
 #endif /* !_SQUID_WIN32_ */
 
     Ip::Address ipAddr = c;
     ipAddr.SetPort(0);
 
-#if defined(_SQUID_LINUX_)
+#if _SQUID_LINUX_
 
     unsigned char ifbuffer[sizeof(struct ifreq) * 64];
     struct ifconf ifc;
@@ -306,7 +306,7 @@ Eui::Eui48::lookup(Ip::Address &c)
 
     close(tmpSocket);
 
-#elif defined(_SQUID_SOLARIS_)
+#elif _SQUID_SOLARIS_
 
     /* IPv6 builds do not provide the first http_port as an IPv4 socket for ARP */
     int tmpSocket = socket(AF_INET,SOCK_STREAM,0);
@@ -347,7 +347,7 @@ Eui::Eui48::lookup(Ip::Address &c)
         return true;
     }
 
-#elif defined(_SQUID_FREEBSD_) || defined(_SQUID_NETBSD_) || defined(_SQUID_OPENBSD_) || defined(_SQUID_DRAGONFLY_) || defined(_SQUID_KFREEBSD_)
+#elif _SQUID_FREEBSD_ || _SQUID_NETBSD_ || _SQUID_OPENBSD_ || _SQUID_DRAGONFLY_ || _SQUID_KFREEBSD_
 
     int mib[6];
 
@@ -446,7 +446,7 @@ Eui::Eui48::lookup(Ip::Address &c)
     set(arpReq.arp_ha.sa_data, 6);
     return true;
 
-#elif defined(_SQUID_WIN32_)
+#elif _SQUID_WIN32_
 
     DWORD           dwNetTable = 0;
 
