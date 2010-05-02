@@ -74,45 +74,36 @@ AuthUserRequest::start(RH * handler, void *data)
     module_start(handler, data);
 }
 
-/*
- * Check a auth_user pointer for validity. Does not check passwords, just data
- * sensability. Broken or Unknown auth_types are not valid for use...
- */
-
-int
-authenticateValidateUser(AuthUserRequest::Pointer auth_user_request)
+bool
+AuthUserRequest::valid()
 {
-    debugs(29, 9, "authenticateValidateUser: Validating Auth_user request '" << auth_user_request << "'.");
+    debugs(29, 9, HERE << "Validating AuthUserRequest '" << this << "'.");
 
-    if (auth_user_request.getRaw() == NULL) {
-        debugs(29, 4, "authenticateValidateUser: Auth_user_request was NULL!");
+    if (getRaw() == NULL) {
+        debugs(29, 4, HERE << "AuthUserRequest was NULL!");
         return 0;
     }
 
-    if (auth_user_request->user() == NULL) {
-        debugs(29, 4, "authenticateValidateUser: No associated auth_user structure");
+    if (user() == NULL) {
+        debugs(29, 4, HERE << "No associated AuthUser data");
         return 0;
     }
 
-    if (auth_user_request->user()->auth_type == AUTH_UNKNOWN) {
-        debugs(29, 4, "authenticateValidateUser: Auth_user '" << auth_user_request->user() << "' uses unknown scheme.");
-        return 0;
+    if (user()->auth_type == AUTH_UNKNOWN) {
+        debugs(29, 4, HERE << "AuthUser '" << user() << "' uses unknown scheme.");
+        return false;
     }
 
-    if (auth_user_request->user()->auth_type == AUTH_BROKEN) {
-        debugs(29, 4, "authenticateValidateUser: Auth_user '" << auth_user_request->user() << "' is broken for it's scheme.");
-        return 0;
+    if (user()->auth_type == AUTH_BROKEN) {
+        debugs(29, 4, HERE << "AuthUser '" << user() << "' is broken for it's scheme.");
+        return false;
     }
 
     /* any other sanity checks that we need in the future */
 
-    /* Thus should a module call to something like authValidate */
-
     /* finally return ok */
-    debugs(29, 5, "authenticateValidateUser: Validated Auth_user request '" << auth_user_request << "'.");
-
-    return 1;
-
+    debugs(29, 5, HERE << "Validated. AuthUserRequest '" << this << "'.");
+    return true;
 }
 
 void *
@@ -214,7 +205,7 @@ authenticateAuthUserRequestIPCount(AuthUserRequest::Pointer auth_user_request)
 int
 authenticateUserAuthenticated(AuthUserRequest::Pointer auth_user_request)
 {
-    if (!authenticateValidateUser(auth_user_request))
+    if (!auth_user_request->valid())
         return 0;
 
     return auth_user_request->authenticated();
@@ -382,7 +373,7 @@ AuthUserRequest::authenticate(AuthUserRequest::Pointer * auth_user_request, http
             debugs(29, 4, "authenticateAuthenticate: no connection authentication type");
 
             *auth_user_request = AuthConfig::CreateAuthUser(proxy_auth);
-            if (!authenticateValidateUser(*auth_user_request)) {
+            if (!(*auth_user_request)->valid()) {
                 if (*auth_user_request == NULL)
                     return AUTH_ACL_CHALLENGE;
 
