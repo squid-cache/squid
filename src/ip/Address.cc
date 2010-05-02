@@ -38,7 +38,7 @@
 #include "compat/inet_ntop.h"
 #include "compat/getaddrinfo.h"
 #include "Debug.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 #include "util.h"
 
 #if HAVE_ASSERT_H

@@ -78,7 +78,7 @@ using namespace Squid;
 #endif
 
 #include "util.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 #ifndef BUFSIZ
 #define BUFSIZ		8192

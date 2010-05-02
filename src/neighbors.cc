@@ -45,7 +45,7 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "icmp/net_db.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 /* count mcast group peers every 15 minutes */
 #define MCAST_COUNT_RATE 900

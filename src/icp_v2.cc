@@ -47,7 +47,7 @@
 #include "SquidTime.h"
 #include "SwapDir.h"
 #include "icmp/net_db.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 #include "rfc1738.h"
 
 /// \ingroup ServerProtocolICPInternal2
