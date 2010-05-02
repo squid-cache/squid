@@ -75,18 +75,13 @@ AuthUserRequest::start(RH * handler, void *data)
 }
 
 bool
-AuthUserRequest::valid()
+AuthUserRequest::valid() const
 {
     debugs(29, 9, HERE << "Validating AuthUserRequest '" << this << "'.");
 
-    if (getRaw() == NULL) {
-        debugs(29, 4, HERE << "AuthUserRequest was NULL!");
-        return 0;
-    }
-
     if (user() == NULL) {
         debugs(29, 4, HERE << "No associated AuthUser data");
-        return 0;
+        return false;
     }
 
     if (user()->auth_type == AUTH_UNKNOWN) {
@@ -205,7 +200,7 @@ authenticateAuthUserRequestIPCount(AuthUserRequest::Pointer auth_user_request)
 int
 authenticateUserAuthenticated(AuthUserRequest::Pointer auth_user_request)
 {
-    if (!auth_user_request->valid())
+    if (auth_user_request == NULL || !auth_user_request->valid())
         return 0;
 
     return auth_user_request->authenticated();
@@ -373,10 +368,9 @@ AuthUserRequest::authenticate(AuthUserRequest::Pointer * auth_user_request, http
             debugs(29, 4, "authenticateAuthenticate: no connection authentication type");
 
             *auth_user_request = AuthConfig::CreateAuthUser(proxy_auth);
-            if (!(*auth_user_request)->valid()) {
-                if (*auth_user_request == NULL)
-                    return AUTH_ACL_CHALLENGE;
-
+            if (*auth_user_request == NULL)
+                return AUTH_ACL_CHALLENGE;
+            else if (!(*auth_user_request)->valid()) {
                 /* the decode might have left a username for logging, or a message to
                  * the user */
 
