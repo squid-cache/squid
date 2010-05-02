@@ -139,16 +139,11 @@ ProxyAuthLookup::checkForAsync(ACLChecklist *cl)const
     ACLFilledChecklist *checklist = Filled(cl);
 
     checklist->asyncInProgress(true);
-    debugs(28, 3, "ACLChecklist::checkForAsync: checking password via authenticator");
+    debugs(28, 3, HERE << "checking password via authenticator");
 
-    AuthUserRequest::Pointer auth_user_request;
     /* make sure someone created auth_user_request for us */
-    assert(checklist->auth_user_request != NULL);
-    auth_user_request = checklist->auth_user_request;
-
-    int validated = authenticateValidateUser(auth_user_request);
-    assert(validated);
-    auth_user_request->start(LookupDone, checklist);
+    assert(checklist->auth_user_request->valid());
+    checklist->auth_user_request->start(LookupDone, checklist);
 }
 
 void
@@ -161,7 +156,7 @@ ProxyAuthLookup::LookupDone(void *data, char *result)
     if (result != NULL)
         fatal("AclLookupProxyAuthDone: Old code floating around somewhere.\nMake clean and if that doesn't work, report a bug to the squid developers.\n");
 
-    if (!authenticateValidateUser(checklist->auth_user_request) || checklist->conn() == NULL) {
+    if (!checklist->auth_user_request->valid() || checklist->conn() == NULL) {
         /* credentials could not be checked either way
          * restart the whole process */
         /* OR the connection was closed, there's no way to continue */
