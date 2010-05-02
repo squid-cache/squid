@@ -56,7 +56,7 @@ SQUIDCEXTERN void comm_exit(void);
 
 SQUIDCEXTERN int comm_open(int, int, IpAddress &, int, const char *note);
 SQUIDCEXTERN int comm_open_uds(int sock_type, int proto, struct sockaddr_un* addr, int flags);
-/// update tables after getting a comm_open() FD from another strand
+/// update Comm state after getting a comm_open() FD from another process
 SQUIDCEXTERN void comm_import_opened(int fd, IpAddress &addr, int flags, const char *note, struct addrinfo *AI);
 
 /**
