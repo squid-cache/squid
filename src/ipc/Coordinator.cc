@@ -7,7 +7,10 @@
 
 
 #include "config.h"
+#include "comm.h"
 #include "ipc/Coordinator.h"
+#include "ipc/FdNotes.h"
+#include "ipc/SharedListen.h"
 
 
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, Coordinator);
@@ -50,6 +53,11 @@ void Ipc::Coordinator::receive(const TypedMsgHdr& message)
         handleRegistrationRequest(StrandCoord(message));
         break;
 
+    case mtSharedListenRequest:
+        debugs(54, 6, HERE << "Shared listen request");
+        handleSharedListenRequest(SharedListenRequest(message));
+        break;
+
     case mtDescriptorGet:
         debugs(54, 6, HERE << "Descriptor get request");
         handleDescriptorGet(Descriptor(message));
@@ -69,6 +77,50 @@ void Ipc::Coordinator::handleRegistrationRequest(const StrandCoord& strand)
     TypedMsgHdr message;
     strand.pack(message);
     SendMessage(MakeAddr(strandAddrPfx, strand.kidId), message);
+}
+
+void
+Ipc::Coordinator::handleSharedListenRequest(const SharedListenRequest& request)
+{
+    debugs(54, 4, HERE << "kid" << request.requestorId <<
+        " needs shared listen FD for " << request.params.addr);
+    Listeners::const_iterator i = listeners.find(request.params);
+    int errNo = 0;
+    const int sock = (i != listeners.end()) ?
+        i->second : openListenSocket(request, errNo);
+
+    debugs(54, 3, HERE << "sending shared listen FD " << sock << " for " <<
+        request.params.addr << " to kid" << request.requestorId <<
+        " mapId=" << request.mapId);
+
+    SharedListenResponse response(sock, errNo, request.mapId);
+    TypedMsgHdr message;
+    response.pack(message);
+    SendMessage(MakeAddr(strandAddrPfx, request.requestorId), message);
+}
+
+int
+Ipc::Coordinator::openListenSocket(const SharedListenRequest& request,
+        int &errNo)
+{
+    const OpenListenerParams &p = request.params;
+
+    debugs(54, 6, HERE << "opening listen FD at " << p.addr << " for kid" <<
+        request.requestorId);
+
+    IpAddress addr = p.addr; // comm_open_listener may modify it
+
+    enter_suid();
+    const int sock = comm_open_listener(p.sock_type, p.proto, addr, p.flags,
+        FdNote(p.fdNote));
+    errNo = (sock >= 0) ? 0 : errno;
+    leave_suid();
+
+    // cache positive results
+    if (sock >= 0)
+        listeners[request.params] = sock;
+
+    return sock;
 }
 
 void Ipc::Coordinator::handleDescriptorGet(const Descriptor& request)
