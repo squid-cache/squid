@@ -16,6 +16,8 @@ else
 	dir="${2}"
 fi
 
+exitCode=0
+
 for f in `cd ${dir} && ls -1 *.h 2>/dev/null`; do
 	echo -n "Testing ${dir}/${f} ..."
 	hdr=`echo "${f}" | sed s/.h//`
@@ -32,11 +34,14 @@ for f in `cd ${dir} && ls -1 *.h 2>/dev/null`; do
 	fi
 	if [ ! -f testHeaderDeps_${hdr}.o ]; then
 		rm testHeaders
-		exit 1
-	fi
+		exitCode=1
+	else
 	echo "OK."
 	# unit-tests require an app to run.
 	# our most-recent object suits this purpose.
 	# let's link or some tests will fail
 	${cc} ./testHeaderDeps_${hdr}.o -o ./testHeaders
+	fi
 done
+
+exit $exitCode
