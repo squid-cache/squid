@@ -101,7 +101,7 @@
 #include "HttpRequest.h"
 #include "ident/Config.h"
 #include "ident/Ident.h"
-#include "ip/IpIntercept.h"
+#include "ip/Intercept.h"
 #include "MemBuf.h"
 #include "MemObject.h"
 #include "ProtoPort.h"

@@ -168,7 +168,7 @@ using namespace Squid;
 #include "util.h"
 #include "profiling.h"
 #include "MemPool.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 #include "structs.h"
 #include "protos.h"
 #include "globals.h"

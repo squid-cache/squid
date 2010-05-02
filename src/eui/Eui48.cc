@@ -39,7 +39,7 @@
 #include "Debug.h"
 #include "eui/Eui48.h"
 #include "globals.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 
 #if _SQUID_CYGWIN_

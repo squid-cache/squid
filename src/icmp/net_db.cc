@@ -53,7 +53,7 @@
 #include "forward.h"
 #include "SquidTime.h"
 #include "wordlist.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 #if USE_ICMP
 #include "icmp/IcmpSquid.h"

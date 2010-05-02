@@ -33,7 +33,7 @@
 #include "squid.h"
 #include "comm.h"
 #include "fde.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 #include "rfc1738.h"
 
 static const char *hello_string = "hi there\n";

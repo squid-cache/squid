@@ -39,7 +39,7 @@
 #include "acl/Eui64.h"
 #include "acl/FilledChecklist.h"
 #include "eui/Eui64.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 #include "wordlist.h"
 
 static void aclParseEuiList(SplayNode<Eui::Eui64 *> **curlist);

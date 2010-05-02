@@ -47,7 +47,7 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "icmp/net_db.h"
-#include "ip/IpIntercept.h"
+#include "ip/Intercept.h"
 
 static PSC fwdStartCompleteWrapper;
 static PF fwdServerClosedWrapper;
