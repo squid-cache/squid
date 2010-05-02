@@ -38,7 +38,7 @@
 #include "compat/getnameinfo.h"
 #include "compat/tempnam.h"
 #include "fde.h"
-#include "ip/IpIntercept.h"
+#include "ip/Intercept.h"
 #include "MemBuf.h"
 #include "ProtoPort.h"
 #include "SquidMath.h"

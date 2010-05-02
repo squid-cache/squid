@@ -33,7 +33,7 @@
 #define _INCLUDE_ICMP_H
 
 #include "config.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 #define PINGER_PAYLOAD_SZ	8192
 
