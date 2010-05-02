@@ -8,6 +8,7 @@
 #ifndef SQUID_IPC_TYPED_MSG_HDR_H
 #define SQUID_IPC_TYPED_MSG_HDR_H
 
+#include "config.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 #if HAVE_SYS_UN_H
