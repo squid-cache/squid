@@ -35,7 +35,7 @@
 
 #include "cbdata.h"
 #include "PingData.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 class ps_state
 {

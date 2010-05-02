@@ -13,7 +13,7 @@
 #include "Debug.h"
 #include "eui/Eui64.h"
 #include "globals.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 bool
 Eui::Eui64::decode(const char *asc)

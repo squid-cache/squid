@@ -15,7 +15,7 @@
 
 #include "cbdata.h"
 
-class Ip::Address;
+#include "ip/forward.h"
 
 namespace Ident
 {

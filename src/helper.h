@@ -35,7 +35,7 @@
 
 #include "squid.h"
 #include "cbdata.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 #include "HelperChildConfig.h"
 
 class helper_request;
