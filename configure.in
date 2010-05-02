@@ -1097,6 +1097,9 @@ if test ${enable_ssl:=no} = "yes" ; then
     else
         SSLLIB='-lssl -lcrypto'
     fi
+    if test -z "$with_openssl"; then
+	with_openssl=yes
+    fi
 fi
 AM_CONDITIONAL(ENABLE_SSL,[ test $enable_ssl = "yes" ])
 AC_MSG_NOTICE([SSL gatewaying support enabled: $enable_ssl])
@@ -1121,11 +1124,10 @@ case "$with_openssl" in
     with_openssl=yes
   esac
 ])
-AC_MSG_NOTICE([SSL/TLS Support: $with_openssl])
 SQUID_DEFINE_UNQUOTED(USE_SSL,$enable_ssl,
    [Define this to include code for SSL gatewaying support])
-AC_MSG_NOTICE([Using OpenSSL MD5 implementation: $with_openssl])
-SQUID_DEFINE_UNQUOTED(USE_OPENSSL,$with_openssl,
+AC_MSG_NOTICE([Using OpenSSL MD5 implementation: ${with_openssl:=no}])
+SQUID_DEFINE_UNQUOTED(USE_OPENSSL,${with_openssl},
    [Define this to make use of the OpenSSL libraries for MD5 calculation rather than Squid-supplied MD5 implementation or if building with SSL encryption])
 if test "$enable_ssl" = "yes"; then
   if test -z "$SSLLIB"; then
