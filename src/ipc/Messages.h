@@ -20,6 +20,7 @@ namespace Ipc
 class TypedMsgHdr;
 
 typedef enum { mtNone = 0, mtRegistration,
+    mtSharedListenRequest, mtSharedListenResponse,
     mtDescriptorGet, mtDescriptorPut } MessageType;
 
 /// Strand location details

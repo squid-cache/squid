@@ -8,6 +8,7 @@
 #include "config.h"
 #include "ipc/Strand.h"
 #include "ipc/Messages.h"
+#include "ipc/SharedListen.h"
 #include "ipc/Kids.h"
 
 
@@ -43,6 +44,10 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
 
     case mtRegistration:
         handleRegistrationResponse(StrandCoord(message));
+        break;
+
+    case mtSharedListenResponse:
+        SharedListenJoined(SharedListenResponse(message));
         break;
 
     case mtDescriptorPut:
