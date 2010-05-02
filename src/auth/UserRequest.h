@@ -97,6 +97,19 @@ public:
      \retval false	Timeouts on cached credentials have occurred or for any reason the credentials are not valid.
      */
     virtual int authenticated() const = 0;
+
+    /**
+     * Check a auth_user pointer for validity.
+     * Does not check passwords, just data sensability. Broken or Unknown auth_types are not valid for use...
+     *
+     * \retval false    User credentials are missing.
+     * \retval false    User credentials use an unknown scheme type.
+     * \retval false    User credentials are broken for their scheme.
+     *
+     * \retval true	User credentials exist and may be able to authenticate.
+     */
+    bool valid() const;
+
     virtual void authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type) = 0;
     /* template method */
     virtual int module_direction() = 0;
@@ -186,8 +199,6 @@ extern int authenticateDirection(AuthUserRequest::Pointer);
 /// \ingroup AuthAPI
 /// See AuthUserRequest::authenticated()
 extern int authenticateUserAuthenticated(AuthUserRequest::Pointer);
-/// \ingroup AuthAPI
-extern int authenticateValidateUser(AuthUserRequest::Pointer);
 
 
 #endif /* SQUID_AUTHUSERREQUEST_H */
