@@ -4,12 +4,18 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libipc.la
 
 libipc_la_SOURCES = \
+	FdNotes.cc \
+	FdNotes.h \
 	Kid.cc \
 	Kid.h \
 	Kids.cc \
 	Kids.h \
 	Messages.cc \
 	Messages.h \
+	StartListening.cc \
+	StartListening.h \
+	SharedListen.cc \
+	SharedListen.h \
 	TypedMsgHdr.cc \
 	TypedMsgHdr.h \
 	Coordinator.cc \

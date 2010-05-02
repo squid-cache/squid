@@ -10,8 +10,10 @@
 
 
 #include "Array.h"
+#include <map>
 #include "ipc/Port.h"
 #include "ipc/Messages.h"
+#include "ipc/SharedListen.h"
 
 namespace Ipc
 {
@@ -35,11 +37,20 @@ protected:
     void registerStrand(const StrandCoord &); ///< adds or updates existing
     void handleRegistrationRequest(const StrandCoord &); ///< register,ACK
 
+    /// returns cached socket or calls openListenSocket()
+    void handleSharedListenRequest(const SharedListenRequest& request);
     void handleDescriptorGet(const Descriptor& request);
+
+    /// calls comm_open_listener()
+    int openListenSocket(const SharedListenRequest& request, int &errNo);
 
 private:
     typedef Vector<StrandCoord> Strands; ///< unsorted strands
     Strands strands; ///< registered processes and threads
+
+    typedef std::map<OpenListenerParams, int> Listeners; ///< params:fd map
+    Listeners listeners; ///< cached comm_open_listener() results
+
     static Coordinator* TheInstance; ///< the only class instance in existence
 
     CBDATA_CLASS2(Coordinator);
