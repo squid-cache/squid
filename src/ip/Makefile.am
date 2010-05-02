@@ -4,10 +4,10 @@ include $(top_srcdir)/src/TestHeaders.am
 noinst_LTLIBRARIES = libip.la
 
 libip_la_SOURCES = \
-	IpAddress.h \
-	IpAddress.cc \
-	IpIntercept.h \
-	IpIntercept.cc \
+	Address.h \
+	Address.cc \
+	Intercept.h \
+	Intercept.cc \
 	QosConfig.h \
 	QosConfig.cc
 
@@ -16,8 +16,8 @@ check_PROGRAMS += testIpAddress
 TESTS += testIpAddress
 
 testIpAddress_SOURCES= \
-	testIpAddress.cc \
-	testIpAddress.h
+	testAddress.cc \
+	testAddress.h
 nodist_testIpAddress_SOURCES= \
 	$(top_srcdir)/src/tests/testMain.cc \
 	$(top_srcdir)/test-suite/test_tools.cc

@@ -39,7 +39,7 @@
 #include "acl/Arp.h"
 #include "acl/FilledChecklist.h"
 #include "eui/Eui48.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 #include "wordlist.h"
 
 static void aclParseArpList(SplayNode<Eui::Eui48 *> **curlist);

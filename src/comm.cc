@@ -49,8 +49,8 @@
 #include "CommCalls.h"
 #include "DescriptorSet.h"
 #include "icmp/net_db.h"
-#include "ip/IpAddress.h"
-#include "ip/IpIntercept.h"
+#include "ip/Address.h"
+#include "ip/Intercept.h"
 
 #if defined(_SQUID_CYGWIN_)
 #include <sys/ioctl.h>
