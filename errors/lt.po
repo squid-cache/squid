@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-03-19 19:26+1300\n"
+"POT-Creation-Date: 2010-05-01 00:17+1300\n"
 "PO-Revision-Date: 2009-06-07 19:27+1300\n"
 "Last-Translator: DVM <dvm382@takas.lt>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -183,8 +183,9 @@ msgid "ERROR: The requested URL could not be retrieved"
 msgstr "KLAIDA: Puslapis nurodytu adresu negali būti atsiųstas"
 
 #: templates/ERR_URN_RESOLVE:1
-msgid "ERROR: The requested URN not be retrieved"
-msgstr "KLAIDA: Nurodytas URN negali būti atsiųstas"
+#, fuzzy
+msgid "ERROR: The requested URN could not be retrieved"
+msgstr "KLAIDA: Puslapis nurodytu adresu negali būti atsiųstas"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
@@ -751,3 +752,6 @@ msgstr ""
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
 msgstr "Atsakymas nulinis"
+
+#~ msgid "ERROR: The requested URN not be retrieved"
+#~ msgstr "KLAIDA: Nurodytas URN negali būti atsiųstas"

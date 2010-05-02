@@ -48,7 +48,7 @@ typedef struct _user_data {
 static void
 my_free(void *p)
 {
-    user_data *u = p;
+    user_data *u = static_cast<user_data*>(p);
     xfree(u->hash.key);
     xfree(u->passwd);
     xfree(u);
@@ -71,7 +71,7 @@ read_passwd_file(const char *passwordFile, int isHa1Mode)
     /* initial setup */
     hash = hash_create((HASHCMP *) strcmp, 7921, hash_string);
     if (NULL == hash) {
-        fprintf(stderr, "digest_pw_auth: cannot create hash table\n");
+        fprintf(stderr, "digest_file_auth: cannot create hash table\n");
         exit(1);
     }
     f = fopen(passwordFile, "r");
@@ -98,14 +98,14 @@ read_passwd_file(const char *passwordFile, int isHa1Mode)
                 /* We cannot accept plaintext passwords when using HA1 encoding,
                  * as the passwords may be output to cache.log if debugging is on.
                  */
-                fprintf(stderr, "digest_pw_auth: ignoring invalid password for %s\n", user);
+                fprintf(stderr, "digest_file_auth: ignoring invalid password for %s\n", user);
                 continue;
             }
-            u = xcalloc(1, sizeof(*u));
+            u = static_cast<user_data*>(xcalloc(1, sizeof(*u)));
             if (realm) {
                 int len = strlen(user) + strlen(realm) + 2;
                 u->hash.key = malloc(len);
-                snprintf(u->hash.key, len, "%s:%s", user, realm);
+                snprintf(static_cast<char*>(u->hash.key), len, "%s:%s", user, realm);
             } else {
                 u->hash.key = xstrdup(user);
             }
@@ -131,7 +131,7 @@ TextArguments(int argc, char **argv)
         passwdfile = argv[2];
     }
     if (!passwdfile) {
-        fprintf(stderr, "Usage: digest_pw_auth [OPTIONS] <passwordfile>\n");
+        fprintf(stderr, "Usage: digest_file_auth [OPTIONS] <passwordfile>\n");
         fprintf(stderr, "  -c   accept digest hashed passwords rather than plaintext in passwordfile\n");
         exit(1);
     }
@@ -157,12 +157,12 @@ GetPassword(RequestData * requestData)
     if (!hash)
         return NULL;
     len = snprintf(buf, sizeof(buf), "%s:%s", requestData->user, requestData->realm);
-    if (len >= sizeof(buf))
+    if (len >= static_cast<int>(sizeof(buf)))
         return NULL;
-    u = (user_data *) hash_lookup(hash, buf);
+    u = (user_data*)hash_lookup(hash, buf);
     if (u)
         return u;
-    u = (user_data *) hash_lookup(hash, requestData->user);
+    u = (user_data*)hash_lookup(hash, requestData->user);
     return u;
 }
 
