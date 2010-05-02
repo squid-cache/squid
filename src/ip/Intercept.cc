@@ -31,7 +31,7 @@
  *
  */
 #include "config.h"
-#include "ip/IpIntercept.h"
+#include "ip/Intercept.h"
 #include "fde.h"
 
 #if IPF_TRANSPARENT

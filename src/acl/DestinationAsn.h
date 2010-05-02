@@ -34,7 +34,7 @@
 
 #include "acl/Asn.h"
 #include "acl/Strategy.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 /// \ingroup ACLAPI
 class ACLDestinationASNStrategy : public ACLStrategy<Ip::Address>

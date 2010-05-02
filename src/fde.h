@@ -31,7 +31,7 @@
 #define SQUID_FDE_H
 
 #include "comm.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 class PconnPool;
 

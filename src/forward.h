@@ -8,7 +8,7 @@ class HttpRequest;
 
 #include "comm.h"
 #include "hier_code.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 class FwdServer
 {
