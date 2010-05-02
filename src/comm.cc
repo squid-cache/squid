@@ -849,6 +849,47 @@ comm_apply_flags(int new_socket,
     return new_socket;
 }
 
+void
+comm_import_opened(int fd,
+            IpAddress &addr,
+            int flags,
+            const char *note,
+            struct addrinfo *AI)
+{
+    debugs(5, 2, HERE << " FD " << fd << " at " << addr);
+    assert(fd >= 0);
+    assert(AI);
+
+    comm_init_opened(fd, addr, 0, note, AI);
+
+    if (!(flags & COMM_NOCLOEXEC))
+        fd_table[fd].flags.close_on_exec = 1;
+
+    if (addr.GetPort() > (u_short) 0) {
+#ifdef _SQUID_MSWIN_
+        if (sock_type != SOCK_DGRAM)
+#endif
+            fd_table[fd].flags.nolinger = 1;
+    }
+
+    if ((flags & COMM_TRANSPARENT))
+        fd_table[fd].flags.transparent = 1;
+
+    if (flags & COMM_NONBLOCKING)
+        fd_table[fd].flags.nonblocking = 1;
+
+#ifdef TCP_NODELAY
+    if (AI->ai_socktype == SOCK_STREAM)
+        fd_table[fd].flags.nodelay = 1;
+#endif
+
+    /* no fd_table[fd].flags. updates needed for these conditions:
+     * if ((flags & COMM_REUSEADDR)) ...
+     * if ((flags & COMM_DOBIND) ...) ...
+     */
+}
+
+
 CBDATA_CLASS_INIT(ConnectStateData);
 
 void *
