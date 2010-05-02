@@ -248,7 +248,7 @@ obtain_challenge()
     const char *ch = NULL;
     for (j = 0; j < numcontrollers; j++) {
         print_debug("obtain_challenge: selecting %s\\%s (attempt #%d)\n",
-              current_dc->domain, current_dc->controller, j + 1);
+                    current_dc->domain, current_dc->controller, j + 1);
         if (current_dc->dead != 0) {
             if (time(NULL) - current_dc->dead >= DEAD_DC_RETRY_INTERVAL) {
                 /* mark helper as retry-worthy if it's so. */
@@ -358,7 +358,7 @@ manage_request()
                 smb_errorcode = SMBlib_Error_Code(SMB_Get_Last_SMB_Err());
                 nb_error = RFCNB_Get_Last_Error();
                 print_debug("No creds. SMBlib error %d, SMB error class %d, SMB error code %d, NB error %d\n",
-                      smblib_err, smb_errorclass, smb_errorcode, nb_error);
+                            smblib_err, smb_errorclass, smb_errorcode, nb_error);
                 /* Should I use smblib_err? Actually it seems I can do as well
                  * without it.. */
                 if (nb_error != 0) {	/* netbios-level error */
