@@ -1109,7 +1109,8 @@ AC_ARG_WITH(openssl,
                   installation can be specified if outside of the
                   system standard directories]), [ 
 case "$with_openssl" in
-  yes|no) AC_MSG_ERROR([--with-openssl requires a path argument])
+  yes|no)
+    : # Nothing special to do here
     ;;
   *)
     if test ! -d $withval ; then
@@ -1117,13 +1118,14 @@ case "$with_openssl" in
     fi
     SSLLIBDIR="$with_openssl/lib"
     CPPFLAGS="-I$with_openssl/include $CPPFLAGS"
-    enable_ssl=yes
+    with_openssl=yes
   esac
 ])
-AC_MSG_NOTICE([Using OpenSSL MD5 implementation: $enable_ssl])
+AC_MSG_NOTICE([SSL/TLS Support: $with_openssl])
 SQUID_DEFINE_UNQUOTED(USE_SSL,$enable_ssl,
    [Define this to include code for SSL gatewaying support])
-SQUID_DEFINE_UNQUOTED(USE_OPENSSL,$enable_ssl,
+AC_MSG_NOTICE([Using OpenSSL MD5 implementation: $with_openssl])
+SQUID_DEFINE_UNQUOTED(USE_OPENSSL,$with_openssl,
    [Define this to make use of the OpenSSL libraries for MD5 calculation rather than Squid-supplied MD5 implementation or if building with SSL encryption])
 if test "$enable_ssl" = "yes"; then
   if test -z "$SSLLIB"; then
