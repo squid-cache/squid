@@ -879,6 +879,11 @@ int IpAddress::matchIPAddr(const IpAddress &rhs) const
     return 0;
 }
 
+int IpAddress::compareWhole(const IpAddress &rhs) const
+{
+    return memcmp(this, &rhs, sizeof(*this));
+}
+
 bool IpAddress::operator ==(const IpAddress &s) const
 {
     return (0 == matchIPAddr(s));
