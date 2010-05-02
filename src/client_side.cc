@@ -102,6 +102,7 @@
 #include "ident/Config.h"
 #include "ident/Ident.h"
 #include "ip/IpIntercept.h"
+#include "ipc/StartListening.h"
 #include "MemBuf.h"
 #include "MemObject.h"
 #include "ProtoPort.h"
@@ -112,6 +113,31 @@
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
 #endif
+
+/// dials clientHttpConnectionOpened or clientHttpsConnectionOpened call
+class ListeningStartedDialer: public CallDialer, public Ipc::StartListeningCb
+{
+public:
+    typedef void (*Handler)(int fd, int errNo, http_port_list *portCfg);
+    ListeningStartedDialer(Handler aHandler, http_port_list *aPortCfg):
+        handler(aHandler), portCfg(aPortCfg) {}
+
+    virtual void print(std::ostream &os) const { startPrint(os) <<
+        ", port=" << (void*)portCfg << ')'; }
+
+    virtual bool canDial(AsyncCall &) const { return true; }
+    virtual void dial(AsyncCall &) { (handler)(fd, errNo, portCfg); }
+
+public:
+    Handler handler;
+
+private:
+    http_port_list *portCfg; ///< from Config.Sockaddr.http
+};
+
+
+static void clientHttpConnectionOpened(int fd, int errNo, http_port_list *s);
+
 
 /* our socket-related context */
 
@@ -3334,7 +3360,6 @@ static void
 clientHttpConnectionsOpen(void)
 {
     http_port_list *s = NULL;
-    int fd = -1;
 #if USE_SSL
     int bumpCount = 0; // counts http_ports with sslBump option
 #endif
@@ -3358,18 +3383,41 @@ clientHttpConnectionsOpen(void)
 
         /* AYJ: 2009-12-27: bit bumpy. new ListenStateData(...) should be doing all the Comm:: stuff ... */
 
-        enter_suid();
+        const int openFlags = COMM_NONBLOCKING |
+            (s->spoof_client_ip ? COMM_TRANSPARENT : 0);
 
-        if (s->spoof_client_ip) {
-            fd = comm_open_listener(SOCK_STREAM, IPPROTO_TCP, s->s, (COMM_NONBLOCKING|COMM_TRANSPARENT), "HTTP Socket");
-        } else {
-            fd = comm_open_listener(SOCK_STREAM, IPPROTO_TCP, s->s, COMM_NONBLOCKING, "HTTP Socket");
-        }
+        AsyncCall::Pointer callback = asyncCall(33,2,
+            "clientHttpConnectionOpened",
+            ListeningStartedDialer(&clientHttpConnectionOpened, s));
+        Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->s, openFlags,
+            Ipc::fdnHttpSocket, callback);
 
-        leave_suid();
+        HttpSockets[NHttpSockets++] = -1; // set in clientHttpConnectionOpened
+    }
 
-        if (fd < 0)
-            continue;
+#if USE_SSL
+    if (bumpCount && !Config.accessList.ssl_bump)
+        debugs(33, 1, "WARNING: http_port(s) with SslBump found, but no " <<
+               std::endl << "\tssl_bump ACL configured. No requests will be " <<
+               "bumped.");
+#endif
+}
+
+static void
+clientHttpConnectionOpened(int fd, int, http_port_list *s)
+{
+    if (fd < 0) {
+        Must(NHttpSockets > 0); // we tried to open some
+        --NHttpSockets; // there will be fewer sockets than planned
+        Must(HttpSockets[NHttpSockets] < 0); // no extra fds received
+
+        if (!NHttpSockets) // we could not open any listen sockets at all
+            fatal("Cannot open HTTP Port");
+
+        return;
+    }
+
+    Must(s);
 
         AsyncCall::Pointer call = commCbCall(5,5, "SomeCommAcceptHandler(httpAccept)",
                                              CommAcceptCbPtrFun(httpAccept, s));
@@ -3384,15 +3432,13 @@ clientHttpConnectionsOpen(void)
                << " HTTP connections at " << s->s
                << ", FD " << fd << "." );
 
-        HttpSockets[NHttpSockets++] = fd;
+    // find any unused slot and finalize its fd
+    bool found = false;
+    for (int i = 0; i < NHttpSockets && !found; i++) {
+        if ((found = HttpSockets[i] < 0))
+            HttpSockets[i] = fd;
     }
-
-#if USE_SSL
-    if (bumpCount && !Config.accessList.ssl_bump)
-        debugs(33, 1, "WARNING: http_port(s) with SslBump found, but no " <<
-               std::endl << "\tssl_bump ACL configured. No requests will be " <<
-               "bumped.");
-#endif
+    Must(found); // otherwise, we have received a fd we did not ask for
 }
 
 #if USE_SSL
@@ -3447,7 +3493,7 @@ clientOpenListenSockets(void)
 #endif
 
     if (NHttpSockets < 1)
-        fatal("Cannot open HTTP Port");
+        fatal("No HTTP or HTTPS ports configured"); // defaults prohibit this?
 }
 
 void
