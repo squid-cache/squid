@@ -1435,8 +1435,8 @@ clientReplyContext::cloneReply()
     reply = HTTPMSGLOCK(rep);
 
     if (reply->sline.protocol == PROTO_HTTP) {
-        /* RFC 2616 requires us to advertise our 1.1 version (but only on real HTTP traffic) */
-        reply->sline.version = HttpVersion(1,1);
+        /* enforce 1.0 reply version (but only on real HTTP traffic) */
+        reply->sline.version = HttpVersion(1,0);
     }
 
     /* do header conversions */
