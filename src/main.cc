@@ -621,6 +621,11 @@ shut_down(int sig)
 static void
 serverConnectionsOpen(void)
 {
+    // Coordinator does not start proxying services
+    if (!opt_no_daemon && Config.main_processes > 1 &&
+       KidIdentifier == Config.main_processes + 1)
+       return;
+
     clientOpenListenSockets();
     icpConnectionsOpen();
 #if USE_HTCP
