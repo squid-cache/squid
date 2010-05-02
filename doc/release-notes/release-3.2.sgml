@@ -108,7 +108,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <sect2>Digest Authentication protocol helpers
 <p><itemize>
-	<item>(none yet converted)
+	<item>digest_pw_auth - digest_file_auth - Authenticate against credentials stored in a simple text file.
 </itemize>
 
 <sect2>External ACL helpers

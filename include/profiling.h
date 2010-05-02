@@ -64,11 +64,8 @@ get_tick(void)
 }
 
 #else
-static inline hrtime_t
-get_tick(void)
-{
-    return 0; // unsupported on this CPU
-}
+/* This CPU is unsupported. Short-circuit, no profiling here */
+#define get_tick() 0
 #undef USE_XPROF_STATS
 #endif
 
