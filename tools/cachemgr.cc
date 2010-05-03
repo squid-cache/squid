@@ -115,7 +115,7 @@ extern "C" {
 #endif
 
 #include "util.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 #include "getfullhostname.h"
 
 #ifndef DEFAULT_CACHEMGR_CONFIG

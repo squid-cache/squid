@@ -57,7 +57,8 @@ private:
 };
 
 
-class Ip::Address;
+#include "ip/forward.h"
+
 class StoreEntry;
 class IdleConnLimit;
 

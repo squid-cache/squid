@@ -150,7 +150,7 @@ usage: dnsserver -Dhv -s nameserver
  \endverbatim
  */
 
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 #if LIBRESOLV_DNS_TTL_HACK
 /// \ingroup dnsserver

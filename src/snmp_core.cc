@@ -34,7 +34,7 @@
 #include "cache_snmp.h"
 #include "comm.h"
 #include "compat/strsep.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 #define SNMP_REQUEST_SIZE 4096
 #define MAX_PROTOSTAT 5
