@@ -37,7 +37,7 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "wordlist.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 /**
  \defgroup IPCacheAPI IP Cache API
