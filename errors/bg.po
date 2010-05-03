@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-03-19 19:26+1300\n"
+"POT-Creation-Date: 2010-05-01 00:17+1300\n"
 "PO-Revision-Date: 2010-03-18 18:28+0200\n"
 "Last-Translator: Evgeni Gechev <etg@setcom.bg>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -188,8 +188,9 @@ msgid "ERROR: The requested URL could not be retrieved"
 msgstr "ГРЕШКА: Заявената страница е недостъпна."
 
 #: templates/ERR_URN_RESOLVE:1
-msgid "ERROR: The requested URN not be retrieved"
-msgstr "ГРЕШКА: Заявеният адрес е недостъпен."
+#, fuzzy
+msgid "ERROR: The requested URN could not be retrieved"
+msgstr "ГРЕШКА: Заявената страница е недостъпна."
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
@@ -754,3 +755,6 @@ msgstr "Вашият web администратор е <a href=\"mailto:%w\">%w<
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
 msgstr "Отговор с нулева големина"
+
+#~ msgid "ERROR: The requested URN not be retrieved"
+#~ msgstr "ГРЕШКА: Заявеният адрес е недостъпен."
