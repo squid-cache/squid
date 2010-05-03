@@ -38,7 +38,8 @@
 
 // Forward-declare Ip classes needed by reference in other parts of the code
 // for passing objects around without actually touching them
-namespace Ip {
+namespace Ip
+{
 class Address;
 }
 #endif /* _SQUID_IP_FORWARD_H */
