@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-03-19 19:26+1300\n"
+"POT-Creation-Date: 2010-05-01 00:17+1300\n"
 "PO-Revision-Date: 2010-03-08 23:50+0200\n"
 "Last-Translator: Bratislav <batailic@gmail.com>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -187,8 +187,9 @@ msgid "ERROR: The requested URL could not be retrieved"
 msgstr "GREŠKA: Tražena adresa (URL) ne može da se učita"
 
 #: templates/ERR_URN_RESOLVE:1
-msgid "ERROR: The requested URN not be retrieved"
-msgstr "GREŠKA: Tražena podatak (URN) ne može da se učita"
+#, fuzzy
+msgid "ERROR: The requested URN could not be retrieved"
+msgstr "GREŠKA: Tražena adresa (URL) ne može da se učita"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
@@ -755,3 +756,6 @@ msgstr "Vaš webmaster je <a href=\"mailto:%w\">%w</a>."
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
 msgstr "Odgovor nulte dužine"
+
+#~ msgid "ERROR: The requested URN not be retrieved"
+#~ msgstr "GREŠKA: Tražena podatak (URN) ne može da se učita"

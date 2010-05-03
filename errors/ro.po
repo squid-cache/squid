@@ -7,14 +7,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-03-19 19:26+1300\n"
+"POT-Creation-Date: 2010-05-01 00:17+1300\n"
 "PO-Revision-Date: 2010-03-20 16:29+0200\n"
 "Last-Translator: Arthur <arthur@psw.ro>\n"
 "Language-Team: Romanian <ro@li.org>\n"
-"Language: ro\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: ro\n"
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100 < "
 "20)) ? 1 : 2);;\n"
 "X-Generator: Pootle 2.0.1\n"
@@ -195,8 +195,9 @@ msgid "ERROR: The requested URL could not be retrieved"
 msgstr "EROARE: URL-ul cerut nu a putut fi accesat"
 
 #: templates/ERR_URN_RESOLVE:1
-msgid "ERROR: The requested URN not be retrieved"
-msgstr "EROARE: URN-ul cerut nu a putut fi accesat"
+#, fuzzy
+msgid "ERROR: The requested URN could not be retrieved"
+msgstr "EROARE: URL-ul cerut nu a putut fi accesat"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
@@ -271,7 +272,8 @@ msgstr "Generat %T de către %h (%s)"
 #: templates/ERR_INVALID_REQ:12
 msgid ""
 "HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
-msgstr "HTTP/1.1 Capabilitatea <q>Expect:</q> este cerută de software HTTP/1.0."
+msgstr ""
+"HTTP/1.1 Capabilitatea <q>Expect:</q> este cerută de software HTTP/1.0."
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
@@ -772,3 +774,6 @@ msgstr "Webmaster-ul este <a href=\"mailto:%w\">%w</a>."
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
 msgstr "Răspuns de lungime zero"
+
+#~ msgid "ERROR: The requested URN not be retrieved"
+#~ msgstr "EROARE: URN-ul cerut nu a putut fi accesat"
