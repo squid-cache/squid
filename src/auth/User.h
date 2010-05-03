@@ -41,7 +41,7 @@ class AuthUserHashPointer;
 /* for auth_type_t */
 #include "enums.h"
 
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 #include "dlink.h"
 
 /**

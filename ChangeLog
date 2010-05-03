@@ -1,3 +1,26 @@
+Changes to squid-3.1.3 (02 May 2010):
+
+	- Remove: Advertise 1.1 on replies
+	- Fix tag ACL type not working
+
+Changes to squid-3.1.2 (01 May 2010):
+
+	- Bug 2913: Fix DB auth warning in new perl version
+	- Bug 2904: Prevent automake creating incomplete files
+	- Bug 2899: Regression: Restore lost rfc1738_unescape() data type
+	- Bug 2895: Regression: TPROXY2 compile errors
+	- Bug 2879: Regression: headers end-finding
+	- Bug 2874: Accept literal IPv6 address in icap_service URL
+	- Bug 2860: Regression: WCCPv1 handshake
+	- Bug 2848: Pass TCP_RST to client on early disconnect
+	- Debian Bug 578047: Correct behaviour of --enable-ipv6
+	- HTTP/1.1: Advertise 1.1 on replies
+	- AIX / UNIX build fixes
+	- Cygwin build fixes
+	- squidclient: -k option to test connection keep-alive or close
+	- Improved helper build for wider compatibility
+	- Ensure the PID file directory exists on install
+
 Changes to squid-3.1.1 (29 Mar 2010):
 
 	- Bug 2873: undefined symbol

@@ -34,7 +34,7 @@
 
 #include "acl/Acl.h"
 #include "splay.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 /// \ingroup ACLAPI
 class acl_ip_data

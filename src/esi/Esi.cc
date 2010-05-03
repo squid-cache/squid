@@ -56,7 +56,7 @@
 #include "esi/Expression.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 /* quick reference on behaviour here.
  * The ESI specification 1.0 requires the ESI processor to be able to

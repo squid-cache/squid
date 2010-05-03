@@ -64,7 +64,7 @@
 #include "DelayBucket.h"
 #include "DelayUser.h"
 #include "DelayTagged.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 /// \ingroup DelayPoolsInternal
 long DelayPools::MemoryUsed = 0;

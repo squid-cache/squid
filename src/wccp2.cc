@@ -37,7 +37,7 @@
 #include "comm.h"
 #include "compat/strsep.h"
 #include "event.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 #include "Parsing.h"
 #include "Store.h"
 #include "SwapDir.h"
