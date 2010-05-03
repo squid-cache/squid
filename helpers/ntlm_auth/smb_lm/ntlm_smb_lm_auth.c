@@ -435,8 +435,7 @@ manage_request()
             SEND("BH unknown authentication packet type");
             return;
         }
-
-
+        /* notreached */
         return;
     }
     if (memcmp(buf, "YR", 2) == 0) {	/* refresh-request */
@@ -494,5 +493,6 @@ main(int argc, char *argv[])
     while (1) {
         manage_request();
     }
+    /* notreached */
     return 0;
 }

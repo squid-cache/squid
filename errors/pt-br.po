@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-03-19 19:26+1300\n"
+"POT-Creation-Date: 2010-05-01 00:17+1300\n"
 "PO-Revision-Date: 2009-09-25 09:18+1300\n"
 "Last-Translator: Aecio F. Neto <aecioneto@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <pt_BR@li.org>\n"
@@ -194,8 +194,9 @@ msgid "ERROR: The requested URL could not be retrieved"
 msgstr "ERRO: A URL requisitada não pode ser recuperada"
 
 #: templates/ERR_URN_RESOLVE:1
-msgid "ERROR: The requested URN not be retrieved"
-msgstr "ERRO: A URN requisitada não pode ser recuperada"
+#, fuzzy
+msgid "ERROR: The requested URN could not be retrieved"
+msgstr "ERRO: A URL requisitada não pode ser recuperada"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
@@ -767,3 +768,6 @@ msgstr "Seu webmaster é <a href=\"mailto:%w\">%w</a>."
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
 msgstr "Resposta de tamanho zero"
+
+#~ msgid "ERROR: The requested URN not be retrieved"
+#~ msgstr "ERRO: A URN requisitada não pode ser recuperada"

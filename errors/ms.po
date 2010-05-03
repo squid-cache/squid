@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-03-19 19:26+1300\n"
+"POT-Creation-Date: 2010-05-01 00:17+1300\n"
 "PO-Revision-Date: 2009-06-05 23:33+0000\n"
 "Last-Translator: Mohamad Faizul bin Zulkifli <piju@mylinux.net.my>\n"
 "Language-Team: Malay <ms@li.org>\n"
@@ -183,8 +183,9 @@ msgid "ERROR: The requested URL could not be retrieved"
 msgstr "RALAT: URL yang diminta tidak dapat diterima"
 
 #: templates/ERR_URN_RESOLVE:1
-msgid "ERROR: The requested URN not be retrieved"
-msgstr ""
+#, fuzzy
+msgid "ERROR: The requested URN could not be retrieved"
+msgstr "RALAT: URL yang diminta tidak dapat diterima"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
