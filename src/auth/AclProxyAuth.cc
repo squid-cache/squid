@@ -165,7 +165,6 @@ ProxyAuthLookup::LookupDone(void *data, char *result)
 
         if (checklist->conn() != NULL) {
             checklist->conn()->auth_user_request = NULL;
-            checklist->conn()->auth_type = AUTH_BROKEN;
         }
     }
 
