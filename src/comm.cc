@@ -2482,7 +2482,7 @@ CommSelectEngine::checkEvents(int timeout)
     };
 }
 
-/// Create a unix-domain socket (UDS)
+/// Create a unix-domain socket (UDS) that only supports FD_MSGHDR I/O.
 int
 comm_open_uds(int sock_type,
               int proto,
