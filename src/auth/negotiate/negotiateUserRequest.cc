@@ -234,7 +234,6 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * c
         auth_state = AUTHENTICATE_STATE_INITIAL;
         safe_free(client_blob);
         client_blob=xstrdup(blob);
-        conn->auth_type = AUTH_NEGOTIATE;
         assert(conn->auth_user_request == NULL);
         conn->auth_user_request = this;
         request = aRequest;
@@ -244,7 +243,6 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * c
    case AUTHENTICATE_STATE_INITIAL:
         debugs(29, 1, HERE << "need to ask helper");
         break;
-
 
     case AUTHENTICATE_STATE_IN_PROGRESS:
         /* we should have received a blob from the client. Hand it off to
