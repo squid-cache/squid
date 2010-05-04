@@ -100,7 +100,11 @@ static char *password = NULL;	/* Workaround for Solaris 2.6 brokenness */
  * expects a single converstation message of type PAM_PROMPT_ECHO_OFF.
  */
 static int
+#if _SQUID_SOLARIS_
+password_conversation(int num_msg, struct pam_message **msg, struct pam_response **resp, void *appdata_ptr)
+#else
 password_conversation(int num_msg, const struct pam_message **msg, struct pam_response **resp, void *appdata_ptr)
+#endif
 {
     if (num_msg != 1 || msg[0]->msg_style != PAM_PROMPT_ECHO_OFF) {
         fprintf(stderr, "ERROR: Unexpected PAM converstaion '%d/%s'\n", msg[0]->msg_style, msg[0]->msg);
