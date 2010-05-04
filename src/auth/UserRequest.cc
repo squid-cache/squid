@@ -299,14 +299,15 @@ AuthUserRequest::authenticate(AuthUserRequest::Pointer * auth_user_request, http
      * connection when we recieve no authentication header.
      */
 
-    if (((proxy_auth == NULL) && (!authenticateUserAuthenticated(authTryGetUser(*auth_user_request,conn,request))))
-            || (conn != NULL  && conn->auth_type == AUTH_BROKEN)) {
+    /* a) can we find other credentials to use? and b) are they logged in already? */
+    if (proxy_auth == NULL && !authenticateUserAuthenticated(authTryGetUser(*auth_user_request,conn,request))) {
         /* no header or authentication failed/got corrupted - restart */
-        debugs(29, 4, "authenticateAuthenticate: broken auth or no proxy_auth header. Requesting auth header.");
+        debugs(29, 4, HERE << "No Proxy-Auth header and no working alternative. Requesting auth header.");
+
         /* something wrong with the AUTH credentials. Force a new attempt */
 
+        /* connection auth we must reset on auth errors */
         if (conn != NULL) {
-            conn->auth_type = AUTH_UNKNOWN;
             conn->auth_user_request = NULL;
         }
 
@@ -323,49 +324,43 @@ AuthUserRequest::authenticate(AuthUserRequest::Pointer * auth_user_request, http
             authenticateUserAuthenticated(conn->auth_user_request) &&
             conn->auth_user_request->connLastHeader() != NULL &&
             strcmp(proxy_auth, conn->auth_user_request->connLastHeader())) {
-        debugs(29, 2, "authenticateAuthenticate: DUPLICATE AUTH - authentication header on already authenticated connection!. AU " <<
+        debugs(29, 2, "WARNING: DUPLICATE AUTH - authentication header on already authenticated connection!. AU " <<
                conn->auth_user_request << ", Current user '" <<
                conn->auth_user_request->username() << "' proxy_auth " <<
                proxy_auth);
 
-        /* remove this request struct - the link is already authed and it can't be to
-         * reauth.
-         */
+        /* remove this request struct - the link is already authed and it can't be to reauth. */
 
         /* This should _only_ ever occur on the first pass through
          * authenticateAuthenticate
          */
         assert(*auth_user_request == NULL);
         conn->auth_user_request = NULL;
-        /* Set the connection auth type */
-        conn->auth_type = AUTH_UNKNOWN;
     }
 
     /* we have a proxy auth header and as far as we know this connection has
      * not had bungled connection oriented authentication happen on it. */
-    debugs(29, 9, "authenticateAuthenticate: header " << (proxy_auth ? proxy_auth : "-") << ".");
+    debugs(29, 9, HERE << "header " << (proxy_auth ? proxy_auth : "-") << ".");
 
     if (*auth_user_request == NULL) {
-        debugs(29, 9, "authenticateAuthenticate: This is a new checklist test on FD:" << (conn != NULL ? conn->fd : -1)  );
+        debugs(29, 9, HERE << "This is a new checklist test on FD:" << (conn != NULL ? conn->fd : -1)  );
 
         if (proxy_auth && request->auth_user_request == NULL && conn != NULL && conn->auth_user_request != NULL) {
             AuthConfig * scheme = AuthConfig::Find(proxy_auth);
 
-            if (!conn->auth_user_request->user() || conn->auth_user_request->user()->config != scheme) {
-                debugs(29, 1, "authenticateAuthenticate: Unexpected change of authentication scheme from '" <<
+            if (conn->auth_user_request->user() == NULL || conn->auth_user_request->user()->config != scheme) {
+                debugs(29, 1, "WARNING: Unexpected change of authentication scheme from '" <<
                        conn->auth_user_request->user()->config->type() <<
                        "' to '" << proxy_auth << "' (client " <<
                        src_addr << ")");
 
                 conn->auth_user_request = NULL;
-                conn->auth_type = AUTH_UNKNOWN;
             }
         }
 
-        if ((!request->auth_user_request)
-                && (conn == NULL || conn->auth_type == AUTH_UNKNOWN)) {
+        if (request->auth_user_request == NULL && (conn == NULL || conn->auth_user_request == NULL)) {
             /* beginning of a new request check */
-            debugs(29, 4, "authenticateAuthenticate: no connection authentication type");
+            debugs(29, 4, HERE << "No connection authentication type");
 
             *auth_user_request = AuthConfig::CreateAuthUser(proxy_auth);
             if (*auth_user_request == NULL)
@@ -382,7 +377,6 @@ AuthUserRequest::authenticate(AuthUserRequest::Pointer * auth_user_request, http
                 return AUTH_ACL_CHALLENGE;
             }
 
-            /* the user_request comes prelocked for the caller to createAuthUser (us) */
         } else if (request->auth_user_request != NULL) {
             *auth_user_request = request->auth_user_request;
         } else {
@@ -391,10 +385,10 @@ AuthUserRequest::authenticate(AuthUserRequest::Pointer * auth_user_request, http
                 *auth_user_request = conn->auth_user_request;
             } else {
                 /* failed connection based authentication */
-                debugs(29, 4, "authenticateAuthenticate: Auth user request " <<
+                debugs(29, 4, HERE << "Auth user request " <<
                        *auth_user_request << " conn-auth user request " <<
                        conn->auth_user_request << " conn type " <<
-                       conn->auth_type << " authentication failed.");
+                       conn->auth_user_request->user()->auth_type << " authentication failed.");
 
                 *auth_user_request = NULL;
                 return AUTH_ACL_CHALLENGE;

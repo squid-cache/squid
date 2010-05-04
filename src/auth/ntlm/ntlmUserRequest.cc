@@ -209,7 +209,6 @@ AuthNTLMUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * conn, 
         auth_state = AUTHENTICATE_STATE_INITIAL;
         safe_free(client_blob);
         client_blob=xstrdup(blob);
-        conn->auth_type = AUTH_NTLM;
         assert(conn->auth_user_request == NULL);
         conn->auth_user_request = this;
         request = aRequest;
