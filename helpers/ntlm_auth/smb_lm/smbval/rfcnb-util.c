@@ -23,12 +23,13 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include <string.h>
-#include <stdlib.h>
+#include "config.h"
 
 #include "std-includes.h"
 #include "rfcnb-priv.h"
 #include "rfcnb-util.h"
+#include <string.h>
+#include <stdlib.h>
 #include "rfcnb-io.h"
 #include <arpa/inet.h>
 
