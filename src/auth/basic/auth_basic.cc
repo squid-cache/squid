@@ -98,17 +98,16 @@ BasicUser::ttl() const
     if (flags.credentials_ok != 1)
         return -1; // TTL is obsolete NOW.
 
-    int32_t basic_ttl = credentials_checkedtime - squid_curtime + static_cast<AuthBasicConfig*>(config)->credentialsTTL;
+    int32_t basic_ttl = expiretime - squid_curtime + static_cast<AuthBasicConfig*>(config)->credentialsTTL;
     int32_t global_ttl = static_cast<int32_t>(expiretime - squid_curtime + Config.authenticateTTL);
 
     return min(basic_ttl, global_ttl);
 }
 
-
 bool
 BasicUser::authenticated() const
 {
-    if ((flags.credentials_ok == 1) && (credentials_checkedtime + static_cast<AuthBasicConfig*>(config)->credentialsTTL > squid_curtime))
+    if ((flags.credentials_ok == 1) && (expiretime + static_cast<AuthBasicConfig*>(config)->credentialsTTL > squid_curtime))
         return true;
 
     debugs(29, 4, "User not authenticated or credentials need rechecking.");
@@ -197,7 +196,7 @@ authenticateBasicHandleReply(void *data, char *reply)
             r->auth_user_request->setDenyMessage(t);
     }
 
-    basic_auth->credentials_checkedtime = squid_curtime;
+    basic_auth->expiretime = squid_curtime;
 
     if (cbdataReferenceValidDone(r->data, &cbdata))
         r->handler(cbdata, NULL);
@@ -306,7 +305,7 @@ BasicUser::deleteSelf() const
     delete this;
 }
 
-BasicUser::BasicUser(AuthConfig *aConfig) : AuthUser(aConfig) , passwd (NULL), credentials_checkedtime(0), auth_queue(NULL), cleartext(NULL), currentRequest(NULL), httpAuthHeader(NULL)
+BasicUser::BasicUser(AuthConfig *aConfig) : AuthUser(aConfig) , passwd (NULL), auth_queue(NULL), cleartext(NULL), currentRequest(NULL), httpAuthHeader(NULL)
 {
     flags.credentials_ok = 0;
 }

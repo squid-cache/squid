@@ -30,7 +30,7 @@ AuthBasicUserRequest::authenticate(HttpRequest * request, ConnStateData * conn, 
         return;
 
     /* are we about to recheck the credentials externally? */
-    if ((basic_auth->credentials_checkedtime + static_cast<AuthBasicConfig*>(AuthConfig::Find("basic"))->credentialsTTL) <= squid_curtime) {
+    if ((basic_auth->expiretime + static_cast<AuthBasicConfig*>(AuthConfig::Find("basic"))->credentialsTTL) <= squid_curtime) {
         debugs(29, 4, "authBasicAuthenticate: credentials expired - rechecking");
         return;
     }
@@ -59,7 +59,7 @@ AuthBasicUserRequest::module_direction()
 
     case 1:                     /* checked & ok */
 
-        if (basic_auth->credentials_checkedtime + static_cast<AuthBasicConfig*>(AuthConfig::Find("basic"))->credentialsTTL <= squid_curtime)
+        if (basic_auth->expiretime + static_cast<AuthBasicConfig*>(AuthConfig::Find("basic"))->credentialsTTL <= squid_curtime)
             return -1;
 
         return 0;
