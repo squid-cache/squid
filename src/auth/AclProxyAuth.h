@@ -82,7 +82,7 @@ public:
     virtual bool empty () const;
     virtual bool requiresRequest() const {return true;}
 
-    virtual ACL *clone()const;
+    virtual ACL *clone() const;
     virtual int matchForCache(ACLChecklist *checklist);
 
 private:
@@ -91,7 +91,6 @@ private:
     static Prototype RegexRegistryProtoype;
     static ACLProxyAuth RegexRegistryEntry_;
     int matchProxyAuth(ACLChecklist *);
-    void checkAuthForCaching(ACLChecklist *) const;
     ACLData<char const *> *data;
     char const *type_;
 };
