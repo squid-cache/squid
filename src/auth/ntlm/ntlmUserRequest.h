@@ -1,7 +1,6 @@
 #ifndef _SQUID_SRC_AUTH_NTLM_USERREQUEST_H
 #define _SQUID_SRC_AUTH_NTLM_USERREQUEST_H
 
-#include "auth/State.h"
 #include "auth/UserRequest.h"
 #include "auth/ntlm/auth_ntlm.h"
 #include "MemPool.h"
@@ -33,9 +32,6 @@ public:
 
     /* what connection is this associated with */
 //    ConnStateData * conn;
-
-    /* how far through the authentication process are we? */
-    auth_state_t auth_state;
 
     /* our current blob to pass to the client */
     char *server_blob;

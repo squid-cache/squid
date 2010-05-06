@@ -3,14 +3,6 @@
 
 #include "auth/UserRequest.h"
 
-typedef enum {
-    AUTHENTICATE_STATE_NONE,
-    AUTHENTICATE_STATE_INITIAL,
-    AUTHENTICATE_STATE_IN_PROGRESS,
-    AUTHENTICATE_STATE_DONE,
-    AUTHENTICATE_STATE_FAILED
-} auth_state_t;                 /* connection level auth state */
-
 /**
  * CBDATA state for NTLM, Negotiate, and Digest stateful authentication.
  */
