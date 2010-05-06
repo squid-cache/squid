@@ -114,8 +114,10 @@ AuthUserRequest::operator delete (void *address)
     fatal ("AuthUserRequest child failed to override operator delete\n");
 }
 
-AuthUserRequest::AuthUserRequest():_auth_user(NULL), message(NULL),
-        lastReply (AUTH_ACL_CANNOT_AUTHENTICATE)
+AuthUserRequest::AuthUserRequest():
+        _auth_user(NULL),
+        message(NULL),
+        lastReply(AUTH_ACL_CANNOT_AUTHENTICATE)
 {
     debugs(29, 5, "AuthUserRequest::AuthUserRequest: initialised request " << this);
 }
@@ -482,7 +484,7 @@ AuthUserRequest::tryToAuthenticateAndSetAuthUser(AuthUserRequest::Pointer * auth
 int
 authenticateDirection(AuthUserRequest::Pointer auth_user_request)
 {
-    if (auth_user_request == NULL)
+    if (auth_user_request == NULL || auth_user_request->user() == NULL)
         return -2;
 
     return auth_user_request->direction();
