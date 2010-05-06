@@ -82,7 +82,7 @@ msgstr ""
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:21
 msgid "It uses B<getpwnam()> and B<getspnam()> routines for authentication."
-msgstr ""
+msgstr "Используйте процедуры B<getpwnam()> и B<getspnam()> для идентификации."
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:23
@@ -93,31 +93,31 @@ msgstr "Это имеет приимущество над модулем NCSA:"
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:23
 #, no-wrap
 msgid "Allows authentication of all known local users"
-msgstr ""
+msgstr "Позволяет идентифицировать всех известных локальных пользователей"
 
 #. type: TP
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:25
 #, no-wrap
 msgid "Allows authentication through nsswitch.conf"
-msgstr ""
+msgstr "Позволяет идентифицировать с помощью nsswitch.conf"
 
 #. type: TP
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:27
 #, no-wrap
 msgid "Can handle NIS(+) requests"
-msgstr ""
+msgstr "Может обрабатывать запросы NIS(+)"
 
 #. type: TP
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:29
 #, no-wrap
 msgid "Can handle LDAP requests"
-msgstr ""
+msgstr "Может обрабатывать запросы LDAP"
 
 #. type: TP
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:31
 #, no-wrap
 msgid "Can handle PAM requests"
-msgstr ""
+msgstr "Может обрабатывать запросы PAM"
 
 #. type: SH
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:34
@@ -156,6 +156,12 @@ msgid ""
 "author cannot be held responsible for any security issues due to such "
 "installations."
 msgstr ""
+"Пожалуйста, обратите внимание, что в такой конфигурации, настоятельно "
+"рекомендуется, что бы программа была перемещена в папку недоступную обычным "
+"пользователям, так как это режим работы позволит любому локальному "
+"пользователю перебрать пароли других пользователей. Также обратите внимание, "
+"программа не была полностью проверена и автор не может нести "
+"ответственность за любые проблемы безопасности из-за такой установки."
 
 #. type: SH
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:61
@@ -180,12 +186,12 @@ msgstr "АВТОР"
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:234
 #: helpers/external_acl/unix_group/squid_unix_group.8:64
 msgid "This program was written by"
-msgstr ""
+msgstr "Эта программа была написана"
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:68
 msgid "Based on original code by"
-msgstr ""
+msgstr "Основан на оригинальном коде"
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:71
@@ -225,6 +231,8 @@ msgstr "АВТОРСКОЕ ПРАВО"
 #: helpers/external_acl/unix_group/squid_unix_group.8:71
 msgid "This program and documentation is copyright to the authors named above."
 msgstr ""
+"Эта программа и документация является интеллектуальной собственностью "
+"вышеуказанных авторов."
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:77
@@ -241,6 +249,8 @@ msgid ""
 "Distributed under the GNU General Public License (GNU GPL) version 2 or "
 "later (GPLv2+)."
 msgstr ""
+"Распространяется согласно лицензии (GNU GPL) версии 2 или более поздних "
+"(GPLv2+)."
 
 #. type: SH
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:78
@@ -309,6 +319,9 @@ msgid ""
 "SquidFaq/BugReporting for details of what you need to include with your bug "
 "report."
 msgstr ""
+"Отчёты об ошибках должны быть написаны на английском языке. См. на "
+"http://wiki.squid-cache.org/SquidFaq/BugReporting, что нужно включать в "
+"отчёт."
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:88
@@ -395,14 +408,14 @@ msgstr ""
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:14
 msgid "attribute"
-msgstr ""
+msgstr "параметр"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:16
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:31
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:18
 msgid "options"
-msgstr ""
+msgstr "опции"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:18
@@ -417,7 +430,7 @@ msgstr "Адрес сервера LDAP"
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:22 src/squid.8.in:17
 #: tools/squidclient.1:28
 msgid "port"
-msgstr ""
+msgstr "порт"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:22
@@ -430,7 +443,7 @@ msgstr "URL"
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:29
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:16
 msgid "LDAP search filter"
-msgstr ""
+msgstr "Фильтр поиска LDAP"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:47
@@ -442,6 +455,12 @@ msgid ""
 "subsequent lines of input to the helper, one username/password pair per line "
 "separated by a space."
 msgstr ""
+"B<basic_ldap_auth> позволяет Squid подключиться к каталогу LDAP для проверки "
+"имени пользователя и пароля для идентификации по HTTP (Basic HTTP "
+"authentication).Опции LDAP задаются в виде параметров в командной строке, а "
+"имя пользователя(ей) и пароль(и) проверяются в каталоге LDAP указанном "
+"следующей строкой ввода в помощнике, одна пара имя пользователя/пароль в "
+"каждой строке, отделена пробелом."
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:56
