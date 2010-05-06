@@ -1356,7 +1356,7 @@ getOutgoingAddr(HttpRequest * request, struct peer *dst_peer)
             ch.src_addr = request->indirect_client_addr;
         else
 #endif
-        ch.src_addr = request->client_addr;
+            ch.src_addr = request->client_addr;
         ch.my_addr = request->my_addr;
     }
 
