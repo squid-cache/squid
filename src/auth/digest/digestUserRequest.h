@@ -16,7 +16,6 @@ class AuthDigestUserRequest : public AuthUserRequest
 {
 
 public:
-    enum CredentialsState {Unchecked, Ok, Pending, Failed};
     MEMPROXY_CLASS(AuthDigestUserRequest);
 
     AuthDigestUserRequest();
@@ -32,9 +31,6 @@ public:
 #endif
 
     virtual void module_start(RH *, void *);
-
-    CredentialsState credentials() const;
-    void credentials(CredentialsState);
 
     char *nonceb64;             /* "dcd98b7102dd2f0e8b11d0f600bfb0c093" */
     char *cnonce;               /* "0a4f113b" */
@@ -55,8 +51,6 @@ public:
     digest_nonce_h *nonce;
 
 private:
-    CredentialsState credentials_ok;
-
     static HLPCB HandleReply;
 };
 

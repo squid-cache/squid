@@ -92,6 +92,21 @@ public:
     void addToNameCache();
     static void UsernameCacheStats(StoreEntry * output);
 
+    enum CredentialsState { Unchecked, Ok, Pending, Handshake, Failed };
+    CredentialsState credentials() const;
+    void credentials(CredentialsState);
+
+private:
+    /**
+     * The current state these credentials are in:
+     *   Unchecked
+     *   Authenticated
+     *   Pending helper result
+     *   Handshake happening in stateful auth.
+     *   Failed auth
+     */
+    CredentialsState credentials_state;
+
 protected:
     AuthUser(AuthConfig *);
 
@@ -112,6 +127,8 @@ private:
     /** what ip addresses has this user been seen at?, plus a list length cache */
     dlink_list ip_list;
 };
+
+extern char *CredentialsState_str[];
 
 #if _USE_INLINE_
 #include "auth/User.cci"

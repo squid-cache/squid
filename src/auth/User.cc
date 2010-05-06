@@ -53,11 +53,15 @@ CBDATA_TYPE(AuthUserIP);
 
 time_t AuthUser::last_discard = 0;
 
+char *CredentialsState_str[] = { "Unchecked", "Ok", "Pending", "Handshake", "Failed" };
+
+
 AuthUser::AuthUser(AuthConfig *aConfig) :
         auth_type(AUTH_UNKNOWN),
         config(aConfig),
         ipcount(0),
         expiretime(0),
+	credentials_state(Unchecked),
         username_(NULL)
 {
     proxy_auth_list.head = proxy_auth_list.tail = NULL;
@@ -65,6 +69,19 @@ AuthUser::AuthUser(AuthConfig *aConfig) :
     ip_list.head = ip_list.tail = NULL;
     debugs(29, 5, "AuthUser::AuthUser: Initialised auth_user '" << this << "'.");
 }
+
+AuthUser::CredentialsState
+AuthUser::credentials() const
+{
+    return credentials_state;
+}
+
+void
+AuthUser::credentials(CredentialsState newCreds)
+{
+    credentials_state = newCreds;
+}
+
 
 /**
  * Combine two user structs. ONLY to be called from within a scheme
@@ -355,19 +372,21 @@ AuthUser::UsernameCacheStats(StoreEntry *output)
     storeAppendPrintf(output, "Next Garbage Collection in %d seconds.\n", static_cast<int32_t>(last_discard + Config.authenticateGCInterval - squid_curtime));
 
     /* cache dump column titles */
-    storeAppendPrintf(output, "\n%-15s %-9s %-9s %s\n",
+    storeAppendPrintf(output, "\n%-15s %-9s %-9s %-9s %s\n",
                       "Type",
+                      "State",
                       "Check TTL",
                       "Cache TTL",
                       "Username");
-    storeAppendPrintf(output, "--------------- --------- --------- ------------------------------\n");
+    storeAppendPrintf(output, "--------------- --------- --------- --------- ------------------------------\n");
 
     hash_first(proxy_auth_username_cache);
     while ((usernamehash = ((AuthUserHashPointer *) hash_next(proxy_auth_username_cache)))) {
         AuthUser::Pointer auth_user = usernamehash->user();
 
-        storeAppendPrintf(output, "%-15s %-9d %-9d %s\n",
+        storeAppendPrintf(output, "%-15s %-9s %-9d %-9d %s\n",
                           AuthType_str[auth_user->auth_type],
+                          CredentialsState_str[auth_user->credentials()],
                           auth_user->ttl(),
                           static_cast<int32_t>(auth_user->expiretime - squid_curtime + Config.authenticateTTL),
                           auth_user->username()

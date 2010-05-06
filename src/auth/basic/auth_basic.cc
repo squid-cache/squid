@@ -95,7 +95,7 @@ AuthBasicConfig::type() const
 int32_t
 BasicUser::ttl() const
 {
-    if (flags.credentials_ok != 1)
+    if (credentials() != Ok && credentials() != Pending)
         return -1; // TTL is obsolete NOW.
 
     int32_t basic_ttl = expiretime - squid_curtime + static_cast<AuthBasicConfig*>(config)->credentialsTTL;
@@ -107,7 +107,7 @@ BasicUser::ttl() const
 bool
 BasicUser::authenticated() const
 {
-    if ((flags.credentials_ok == 1) && (expiretime + static_cast<AuthBasicConfig*>(config)->credentialsTTL > squid_curtime))
+    if ((credentials() == Ok) && (expiretime + static_cast<AuthBasicConfig*>(config)->credentialsTTL > squid_curtime))
         return true;
 
     debugs(29, 4, "User not authenticated or credentials need rechecking.");
@@ -188,9 +188,9 @@ authenticateBasicHandleReply(void *data, char *reply)
     assert(basic_auth != NULL);
 
     if (reply && (strncasecmp(reply, "OK", 2) == 0))
-        basic_auth->flags.credentials_ok = 1;
+        basic_auth->credentials(AuthUser::Ok);
     else {
-        basic_auth->flags.credentials_ok = 3;
+        basic_auth->credentials(AuthUser::Failed);
 
         if (t && *t)
             r->auth_user_request->setDenyMessage(t);
@@ -305,10 +305,14 @@ BasicUser::deleteSelf() const
     delete this;
 }
 
-BasicUser::BasicUser(AuthConfig *aConfig) : AuthUser(aConfig) , passwd (NULL), auth_queue(NULL), cleartext(NULL), currentRequest(NULL), httpAuthHeader(NULL)
-{
-    flags.credentials_ok = 0;
-}
+BasicUser::BasicUser(AuthConfig *aConfig) :
+        AuthUser(aConfig),
+        passwd(NULL),
+        auth_queue(NULL),
+        cleartext(NULL),
+        currentRequest(NULL),
+        httpAuthHeader(NULL)
+{}
 
 bool
 BasicUser::decodeCleartext()
@@ -467,15 +471,15 @@ BasicUser::updateCached(BasicUser *from)
 
     if (strcmp(from->passwd, passwd)) {
         debugs(29, 4, HERE << "new password found. Updating in user master record and resetting auth state to unchecked");
-        flags.credentials_ok = 0;
+        credentials(Unchecked);
         xfree(passwd);
         passwd = from->passwd;
         from->passwd = NULL;
     }
 
-    if (flags.credentials_ok == 3) {
+    if (credentials() == Failed) {
         debugs(29, 4, HERE << "last attempt to authenticate this user failed, resetting auth state to unchecked");
-        flags.credentials_ok = 0;
+        credentials(Unchecked);
     }
 }
 
@@ -592,7 +596,7 @@ void
 BasicUser::submitRequest(AuthUserRequest::Pointer auth_user_request, RH * handler, void *data)
 {
     /* mark the user as having verification in progress */
-    flags.credentials_ok = 2;
+    credentials(Pending);
     authenticateStateData *r = NULL;
     char buf[8192];
     char user[1024], pass[1024];
