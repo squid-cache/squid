@@ -161,6 +161,8 @@ msgstr "COPYRIGHT"
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:75 helpers/basic_auth/LDAP/basic_ldap_auth.8:298 helpers/basic_auth/RADIUS/basic_radius_auth.8:97 helpers/external_acl/ldap_group/squid_ldap_group.8:247 helpers/external_acl/session/squid_session.8:69 helpers/external_acl/unix_group/squid_unix_group.8:71
 msgid "This program and documentation is copyright to the authors named above."
 msgstr ""
+"I diritti d'autore su questo programma e sulla relativa documentazione sono "
+"detenuti dagli autori sopra nominati"
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:77 helpers/basic_auth/LDAP/basic_ldap_auth.8:300 helpers/basic_auth/PAM/basic_pam_auth.8:91 helpers/basic_auth/RADIUS/basic_radius_auth.8:99 helpers/external_acl/ldap_group/squid_ldap_group.8:249 helpers/external_acl/session/squid_session.8:71 helpers/external_acl/unix_group/squid_unix_group.8:73 tools/cachemgr.cgi.8.in:59 tools/squidclient.1:171
@@ -168,12 +170,14 @@ msgid ""
 "Distributed under the GNU General Public License (GNU GPL) version 2 or "
 "later (GPL2+)."
 msgstr ""
+"Distribuito secondo le condizioni di licenza esposte nella GNU General "
+"Public License (GNU GPL) Versione 2 o successive (GPL2+)."
 
 #. type: SH
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:78 helpers/basic_auth/LDAP/basic_ldap_auth.8:301 helpers/basic_auth/NCSA/basic_ncsa_auth.8:50 helpers/basic_auth/PAM/basic_pam_auth.8:92 helpers/basic_auth/RADIUS/basic_radius_auth.8:100 helpers/external_acl/ldap_group/squid_ldap_group.8:250 helpers/external_acl/session/squid_session.8:72 helpers/external_acl/unix_group/squid_unix_group.8:74 src/squid.8.in:243 tools/cachemgr.cgi.8.in:60 tools/squidclient.1:172
 #, no-wrap
 msgid "QUESTIONS"
-msgstr ""
+msgstr "DOMANDE"
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:81 helpers/basic_auth/LDAP/basic_ldap_auth.8:304 helpers/basic_auth/NCSA/basic_ncsa_auth.8:53 helpers/basic_auth/PAM/basic_pam_auth.8:95 helpers/basic_auth/RADIUS/basic_radius_auth.8:103 helpers/external_acl/ldap_group/squid_ldap_group.8:253 helpers/external_acl/session/squid_session.8:75 helpers/external_acl/unix_group/squid_unix_group.8:77 src/squid.8.in:246 tools/cachemgr.cgi.8.in:63 tools/squidclient.1:175
@@ -181,17 +185,21 @@ msgid ""
 "Questions on the usage of this program can be sent to the I<Squid Users "
 "mailing list>"
 msgstr ""
+"Eventuali domande sull'uso di questo programma possono essere inviate alla "
+"I<Mailing list squid-users>"
 
 #. type: SH
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:83 helpers/basic_auth/LDAP/basic_ldap_auth.8:309 helpers/basic_auth/NCSA/basic_ncsa_auth.8:55 helpers/basic_auth/PAM/basic_pam_auth.8:97 helpers/basic_auth/RADIUS/basic_radius_auth.8:108 helpers/external_acl/ldap_group/squid_ldap_group.8:258 helpers/external_acl/session/squid_session.8:77 helpers/external_acl/unix_group/squid_unix_group.8:79 src/squid.8.in:248 tools/cachemgr.cgi.8.in:65 tools/squidclient.1:177
 #, no-wrap
 msgid "REPORTING BUGS"
-msgstr ""
+msgstr "SEGNALAZIONE BUGS"
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:85 helpers/basic_auth/LDAP/basic_ldap_auth.8:311 helpers/basic_auth/NCSA/basic_ncsa_auth.8:57 helpers/basic_auth/PAM/basic_pam_auth.8:99 helpers/basic_auth/RADIUS/basic_radius_auth.8:110 helpers/external_acl/ldap_group/squid_ldap_group.8:260 helpers/external_acl/session/squid_session.8:79 helpers/external_acl/unix_group/squid_unix_group.8:81 src/squid.8.in:250 tools/cachemgr.cgi.8.in:67 tools/squidclient.1:179
 msgid "Report bugs or bug fixes using http://bugs.squid-cache.org/"
 msgstr ""
+"Per segnalare bug o proporre codice o migliorie si può usare http://bugs"
+".squid-cache.org/"
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:88 helpers/basic_auth/LDAP/basic_ldap_auth.8:314 helpers/basic_auth/NCSA/basic_ncsa_auth.8:60 helpers/basic_auth/PAM/basic_pam_auth.8:102 helpers/basic_auth/RADIUS/basic_radius_auth.8:113 helpers/external_acl/ldap_group/squid_ldap_group.8:263 helpers/external_acl/session/squid_session.8:82 helpers/external_acl/unix_group/squid_unix_group.8:84 src/squid.8.in:253 tools/cachemgr.cgi.8.in:70 tools/squidclient.1:182
@@ -199,57 +207,61 @@ msgid ""
 "Report serious security bugs to I<Squid Bugs "
 "E<lt>squid-bugs@squid-cache.orgE<gt>>"
 msgstr ""
+"Per segnalare gravi bug di sicurezza fate riferimento a I<Squid Bugs E<lt"
+">squid-bugs@squid-cache.orgE<gt>>"
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:91 helpers/basic_auth/LDAP/basic_ldap_auth.8:317 helpers/basic_auth/NCSA/basic_ncsa_auth.8:63 helpers/basic_auth/PAM/basic_pam_auth.8:105 helpers/basic_auth/RADIUS/basic_radius_auth.8:116 helpers/external_acl/ldap_group/squid_ldap_group.8:266 helpers/external_acl/session/squid_session.8:85 helpers/external_acl/unix_group/squid_unix_group.8:87 src/squid.8.in:256 tools/cachemgr.cgi.8.in:73 tools/squidclient.1:185
 msgid "Report ideas for new improvements to the I<Squid Developers mailing list>"
 msgstr ""
+"Ci si può rivolgere alla I<mailing list degli sviluppatori di Squid> per "
+"segnalare idee o possibili miglirie"
 
 #. type: SH
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:93 helpers/basic_auth/LDAP/basic_ldap_auth.8:319 helpers/basic_auth/NCSA/basic_ncsa_auth.8:65 helpers/basic_auth/PAM/basic_pam_auth.8:107 helpers/basic_auth/RADIUS/basic_radius_auth.8:118 helpers/external_acl/ldap_group/squid_ldap_group.8:268 helpers/external_acl/session/squid_session.8:87 helpers/external_acl/unix_group/squid_unix_group.8:92 src/squid.8.in:258 tools/cachemgr.cgi.8.in:75 tools/squidclient.1:187
 #, no-wrap
 msgid "SEE ALSO"
-msgstr ""
+msgstr "VEDI ANCHE"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:7
 msgid "LDAP authentication helper for Squid"
-msgstr ""
+msgstr "Helper di autenticazione LDAP per Squid"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:12 helpers/basic_auth/LDAP/basic_ldap_auth.8:27 helpers/external_acl/ldap_group/squid_ldap_group.8:14
 msgid "base DN"
-msgstr ""
+msgstr "base DN"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:14
 msgid "attribute"
-msgstr ""
+msgstr "attributo"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:16 helpers/basic_auth/LDAP/basic_ldap_auth.8:31 helpers/external_acl/ldap_group/squid_ldap_group.8:18
 msgid "options"
-msgstr ""
+msgstr "opzioni"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:18 helpers/basic_auth/LDAP/basic_ldap_auth.8:33
 msgid "LDAP server name"
-msgstr ""
+msgstr "nome del server LDAP"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:20 helpers/basic_auth/LDAP/basic_ldap_auth.8:35 helpers/basic_auth/RADIUS/basic_radius_auth.8:18 helpers/external_acl/ldap_group/squid_ldap_group.8:22 src/squid.8.in:17 tools/squidclient.1:28
 msgid "port"
-msgstr ""
+msgstr "porta"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:22 helpers/basic_auth/LDAP/basic_ldap_auth.8:37 helpers/external_acl/ldap_group/squid_ldap_group.8:24
 msgid "URI"
-msgstr ""
+msgstr "URI"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:29 helpers/external_acl/ldap_group/squid_ldap_group.8:16
 msgid "LDAP search filter"
-msgstr ""
+msgstr "filtro di ricerca LDAP"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:47
@@ -261,6 +273,12 @@ msgid ""
 "subsequent lines of input to the helper, one username/password pair per line "
 "separated by a space."
 msgstr ""
+"B<basic_ldap_auth> consente a Squid di collegarsi a un servizio di directory "
+"LDAP per verificare le credenziali fornite dell'utente tramite lo schema di "
+"autenticazione HTTP Basic. Le opzioni LDAP sono specificate come parametri "
+"della linea di comando, mentre le username e password da verificare vengono "
+"specificate come standard input all'helper, una coppia username/password per "
+"ogni linea, separati da uno spazio."
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:56
@@ -270,6 +288,10 @@ msgid ""
 "either B<OK> or B<ERR> on the following line to show if the specified "
 "credentials are correct according to the LDAP directory."
 msgstr ""
+"Come richiesto dalle API di autenticazione tipo Basic di Squid, questo "
+"helper dopo aver ricevuto nome utente e password seguiti da un carattere di "
+"a capo, risponderà B<OK> o B<ERR> seguiti da un carattere di a capo, "
+"rispettivamente se le credenziali sono corrette o no."
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:61
@@ -279,12 +301,16 @@ msgid ""
 "attribute. In the other mode of operation a search filter is used to locate "
 "valid user DN's below the base DN."
 msgstr ""
+"Questo programma ha due modalità di funzionamento principali. In quella "
+"standard il DN dell'utente è costruito usando il DN base e l'attributo "
+"utente. Nella modalità alternativa viene utilizzato un filtro di ricerca per "
+"trovare il DN dell'utente al di sotto del DN base."
 
 #. type: SH
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:62 helpers/basic_auth/NCSA/basic_ncsa_auth.8:20 helpers/basic_auth/PAM/basic_pam_auth.8:21 helpers/basic_auth/RADIUS/basic_radius_auth.8:31 helpers/external_acl/ldap_group/squid_ldap_group.8:49 helpers/external_acl/session/squid_session.8:26 helpers/external_acl/unix_group/squid_unix_group.8:19 src/squid.8.in:59 tools/squidclient.1:56
 #, no-wrap
 msgid "OPTIONS"
-msgstr ""
+msgstr "OPZIONI"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:67
