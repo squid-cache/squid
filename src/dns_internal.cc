@@ -996,10 +996,8 @@ idnsGrokReply(const char *buf, size_t sz)
     q->error = NULL;
 
     if (n < 0) {
-        debugs(78, 3, "idnsGrokReply: error " << rfc1035_error_message << " (" << rfc1035_errno << ")");
-
-        q->error = rfc1035_error_message;
         q->rcode = -n;
+        debugs(78, 3, "idnsGrokReply: error " << rfc1035ErrorMessage(n) << " (" << q->rcode << ")");
 
         if (q->rcode == 2 && ++q->attempt < MAX_ATTEMPT) {
             /*

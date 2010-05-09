@@ -106,7 +106,6 @@ void testRFC1035::testBugPacketEndingOnCompressionPtr()
     /* Test the MessageUnpack function itself */
     res = rfc1035MessageUnpack(buf, len, &msg);
 
-    CPPUNIT_ASSERT_EQUAL((const char*)NULL, rfc1035_error_message);
     CPPUNIT_ASSERT_EQUAL(1, res);
     CPPUNIT_ASSERT(msg != NULL);
     rfc1035MessageDestroy(&msg);
@@ -132,8 +131,7 @@ void testRFC1035::testBugPacketHeadersOnly()
     /* Test the MessageUnpack function itself */
     res = rfc1035MessageUnpack(buf, len, &msg);
 
-    CPPUNIT_ASSERT(rfc1035_error_message != NULL);
-    CPPUNIT_ASSERT(0 == memcmp("The DNS reply message is corrupt or could not be safely parsed.", rfc1035_error_message, 63));
-    CPPUNIT_ASSERT(res < 0);
+    CPPUNIT_ASSERT(0 == memcmp("The DNS reply message is corrupt or could not be safely parsed.", rfc1035ErrorMessage(res), 63));
+    CPPUNIT_ASSERT(res == 0);
     CPPUNIT_ASSERT(msg == NULL);
 }
