@@ -114,7 +114,6 @@ struct _idns_query {
     IDNSCB *callback;
     void *callback_data;
     int attempt;
-    const char *error;
     int rcode;
     idns_query *queue;
     unsigned short domain;
@@ -993,7 +992,6 @@ idnsGrokReply(const char *buf, size_t sz)
 
     dlinkDelete(&q->lru, &lru_list);
     idnsRcodeCount(n, q->attempt);
-    q->error = NULL;
 
     if (n < 0) {
         q->rcode = -n;
@@ -1117,7 +1115,7 @@ idnsGrokReply(const char *buf, size_t sz)
     /* else initial results were empty. just use the final set as authoritative */
 
     debugs(78, 6, HERE << "Sending " << n << " DNS results to caller.");
-    idnsCallback(q, message->answer, n, q->error);
+    idnsCallback(q, message->answer, n, rfc1035ErrorMessage(n));
     rfc1035MessageDestroy(&message);
     cbdataFree(q);
 }
@@ -1251,7 +1249,7 @@ idnsCheckQueue(void *unused)
                    std::setw(5)<< std::setprecision(2) << tvSubDsec(q->start_t, current_time) << " seconds");
 
             if (q->rcode != 0)
-                idnsCallback(q, NULL, -q->rcode, q->error);
+                idnsCallback(q, NULL, -q->rcode, rfc1035ErrorMessage(q->rcode));
             else
                 idnsCallback(q, NULL, -16, "Timeout");
 
