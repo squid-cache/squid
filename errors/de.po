@@ -3,13 +3,13 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-05-01 00:17+1300\n"
-"PO-Revision-Date: 2010-03-20 02:02+0200\n"
+"PO-Revision-Date: 2010-05-10 15:26+0200\n"
 "Last-Translator: Robert Förster <Dessa@gmake.de>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
+"Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Pootle 2.0.1\n"
 
@@ -188,9 +188,8 @@ msgid "ERROR: The requested URL could not be retrieved"
 msgstr "FEHLER: Die angeforderte URL konnte nicht gefunden werden"
 
 #: templates/ERR_URN_RESOLVE:1
-#, fuzzy
 msgid "ERROR: The requested URN could not be retrieved"
-msgstr "FEHLER: Die angeforderte URL konnte nicht gefunden werden"
+msgstr "FEHLER: Der angeforderte URN konnte nicht gefunden werden"
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
