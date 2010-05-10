@@ -132,6 +132,6 @@ void testRFC1035::testBugPacketHeadersOnly()
     res = rfc1035MessageUnpack(buf, len, &msg);
 
     CPPUNIT_ASSERT(0 == memcmp("The DNS reply message is corrupt or could not be safely parsed.", rfc1035ErrorMessage(res), 63));
-    CPPUNIT_ASSERT(res < 0);
+    CPPUNIT_ASSERT(res == 0);
     CPPUNIT_ASSERT(msg == NULL);
 }
