@@ -91,8 +91,6 @@ AuthScheme::GetSchemes()
 void
 AuthScheme::FreeAll()
 {
-    assert(false); // NP: this should NOT happen during regular progarm execution...
-
     while (GetSchemes().size()) {
         AuthScheme::Pointer scheme = GetSchemes().back();
         GetSchemes().pop_back();
