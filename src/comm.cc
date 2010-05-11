@@ -968,9 +968,6 @@ copyFDFlags(int to, fde *F)
 int
 ConnectStateData::commResetFD()
 {
-    struct addrinfo *AI = NULL;
-    IpAddress nul;
-    int new_family = AF_UNSPEC;
 
 // XXX: do we have to check this?
 //
@@ -979,14 +976,11 @@ ConnectStateData::commResetFD()
 
     statCounter.syscalls.sock.sockets++;
 
-    /* setup a bare-bones addrinfo */
-    /* TODO INET6: for WinXP we may need to check the local_addr type and setup the family properly. */
-    nul.GetAddrInfo(AI);
-    new_family = AI->ai_family;
+    fde *F = &fd_table[fd];
 
+    struct addrinfo *AI = NULL;
+    F->local_addr.GetAddrInfo(AI);
     int fd2 = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
-
-    nul.FreeAddrInfo(AI);
 
     if (fd2 < 0) {
         debugs(5, DBG_CRITICAL, HERE << "WARNING: FD " << fd2 << " socket failed to allocate: " << xstrerror());
@@ -994,6 +988,7 @@ ConnectStateData::commResetFD()
         if (ENFILE == errno || EMFILE == errno)
             fdAdjustReserved();
 
+        F->local_addr.FreeAddrInfo(AI);
         return 0;
     }
 
@@ -1013,17 +1008,15 @@ ConnectStateData::commResetFD()
 
         close(fd2);
 
+        F->local_addr.FreeAddrInfo(AI);
         return 0;
     }
     commResetSelect(fd);
 
     close(fd2);
-    fde *F = &fd_table[fd];
 
-    /* INET6: copy the new sockets family type to the FDE table */
-    fd_table[fd].sock_family = new_family;
+    F->flags.called_connect = 0;
 
-    fd_table[fd].flags.called_connect = 0;
     /*
      * yuck, this has assumptions about comm_open() arguments for
      * the original socket
@@ -1033,9 +1026,6 @@ ConnectStateData::commResetFD()
     if ( F->flags.transparent ) {
         comm_set_transparent(fd);
     }
-
-    AI = NULL;
-    F->local_addr.GetAddrInfo(AI);
 
     if (commBind(fd, *AI) != COMM_OK) {
         debugs(5, DBG_CRITICAL, "WARNING: Reset of FD " << fd << " for " << F->local_addr << " failed to bind: " << xstrerror());
@@ -1104,8 +1094,7 @@ ConnectStateData::defaults()
 void
 ConnectStateData::connect()
 {
-    if (S.IsAnyAddr())
-        defaults();
+    defaults();
 
     debugs(5,5, HERE << "to " << S);
 
@@ -1125,10 +1114,18 @@ ConnectStateData::connect()
 #if USE_IPV6
     case COMM_ERR_PROTOCOL:
         /* problem using the desired protocol over this socket.
-         * count the connection attempt, reset the socket, and immediately try again */
+         * skip to the next address and hope it's more compatible
+         * but do not mark the current address as bad
+         */
         tries++;
-        commResetFD();
-        connect();
+        if (commRetryConnect()) {
+            /* Force an addr cycle to move forward to the next possible address */
+            ipcacheCycleAddr(host, NULL);
+            eventAdd("commReconnect", commReconnect, this, this->addrcount == 1 ? 0.05 : 0.0, 0);
+        } else {
+            debugs(5, 5, HERE << "FD " << fd << ": * - ERR tried too many times already.");
+            callCallback(COMM_ERR_CONNECT, errno);
+        }
         break;
 #endif
 
@@ -1232,7 +1229,6 @@ comm_connect_addr(int sock, const IpAddress &address)
 
     debugs(5, 9, "comm_connect_addr: connecting socket " << sock << " to " << address << " (want family: " << F->sock_family << ")");
 
-    /* BUG 2222 FIX: reset the FD when its found to be IPv4 in IPv6 mode */
     /* inverse case of IPv4 failing to connect on IPv6 socket is handeld post-connect.
      * this case must presently be handled here since the GetAddrInfo asserts on bad mappings.
      * eventually we want it to throw a Must() that gets handled there instead of this if.
