@@ -302,7 +302,7 @@ ipcacheAddEntry(ipcache_entry * i)
     if (NULL != e) {
         /* avoid colission */
         ipcache_entry *q = (ipcache_entry *) e;
-	ipcacheRelease(q);
+        ipcacheRelease(q);
     }
 
     hash_join(ip_table, &i->hash);
