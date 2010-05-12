@@ -572,7 +572,7 @@ main(int argc, char **argv)
 
         /* Parse out the username and password */
         ptr = authstring;
-        while (isspace(*ptr))
+        while (isspace((int)*ptr))
             ptr++;
         if ((end = strchr(ptr, ' ')) == NULL) {
             printf("ERR\n");	/* No password */
@@ -581,7 +581,7 @@ main(int argc, char **argv)
         *end = '\0';
         urldecode(username, ptr, MAXPWNAM);
         ptr = end + 1;
-        while (isspace(*ptr))
+        while (isspace((int)*ptr))
             ptr++;
         urldecode(passwd, ptr, MAXPASS);
 
