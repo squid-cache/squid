@@ -1590,16 +1590,18 @@ msgstr ""
 #: src/squid.8.in:90
 msgid "Don't serve any requests until store is rebuilt."
 msgstr ""
+"Non processare alcuna richiesta finchè non sia completata la ricostruzione "
+"dello stato dei contenuti della cache su disco."
 
 #. type: Plain text
 #: src/squid.8.in:94
 msgid "Print help message."
-msgstr ""
+msgstr "Stampa un messaggio di aiuto."
 
 #. type: Plain text
 #: src/squid.8.in:100
 msgid "Install as a Windows Service (see B<-n> option)."
-msgstr ""
+msgstr "Installa come servizio MS Windows (vedere anche l'opzione B<-n>)."
 
 #. type: Plain text
 #: src/squid.8.in:107
@@ -1607,11 +1609,13 @@ msgid ""
 "Parse configuration file, then send signal to running copy (except B<-k "
 "parse> ) and exit."
 msgstr ""
+"Leggi il file di configurazione, invia un segnale alla copia di Squid in "
+"esecuzione (tranne nel caso del comando B<-k parse>) e esci."
 
 #. type: Plain text
 #: src/squid.8.in:112
 msgid "Use specified syslog facility. implies B<-s>"
-msgstr ""
+msgstr "Usa il marcatore di sottosistema sylog specificato. Implica B<-s>"
 
 #. type: Plain text
 #: src/squid.8.in:117
@@ -1619,72 +1623,83 @@ msgid ""
 "Specify Windows Service name to use for service operations, default is: "
 "B<Squid>"
 msgstr ""
+"Specifica il nome del servizio MS Windows da usare, il default è B<Squid>"
 
 #. type: Plain text
 #: src/squid.8.in:121
 msgid "No daemon mode."
-msgstr ""
+msgstr "Non attivare la modalità servizio (daemon)."
 
 #. type: Plain text
 #: src/squid.8.in:125
 msgid "Set Windows Service Command line options in Registry."
 msgstr ""
+"Imposta le opzioni della linea di comando del servizio MS WIndows nel "
+"Registro di configurazione."
 
 #. type: Plain text
 #: src/squid.8.in:131
 msgid "Remove a Windows Service (see B<-n> option)."
-msgstr ""
+msgstr "Disinstalla un Servizio MS Windows (vedere anche l'opzione B<-n>)."
 
 #. type: Plain text
 #: src/squid.8.in:137
 msgid "Do not set B<REUSEADDR> on port."
-msgstr ""
+msgstr "Non impostare l'opzione B<REUSEADDR> sulla porta."
 
 #. type: Plain text
 #: src/squid.8.in:142
 msgid "Enable logging to syslog. Also configurable in B<@SYSCONFDIR@/squid.conf>"
 msgstr ""
+"Abilita la registrazione degli accessi verso il servizio syslog. Si può "
+"impostare anche nel file di configurazione."
 
 #. type: Plain text
 #: src/squid.8.in:146
 msgid "Double-check swap during rebuild."
 msgstr ""
+"Verifica in maniera approfondita lo stato delle metainformazioni registrate "
+"nei file di stato durante la ricostruzione."
 
 #. type: Plain text
 #: src/squid.8.in:150
 msgid "Specify ICP port number (default: 3130), disable with 0."
 msgstr ""
+"Specifica il numero di porta ICP (default: 3130), la disabilita se impostato "
+"a 0."
 
 #. type: Plain text
 #: src/squid.8.in:154
 msgid "Print version and build details."
-msgstr ""
+msgstr "Stampa la versione e i dettagli dei parametri di configurazione."
 
 #. type: Plain text
 #: src/squid.8.in:158
 msgid "Force full debugging."
-msgstr ""
+msgstr "Abilita la stampa delle informazioni complete di debug."
 
 #. type: Plain text
 #: src/squid.8.in:166
 msgid "Only return B<UDP_HIT> or B<UDP_MISS_NOFETCH> during fast reload."
 msgstr ""
+"Limita le risposte durante un riavvio veloce alle sole B<UDP_HIT> e "
+"B<UDP_MISS_NOFETCH>."
 
 #. type: Plain text
 #: src/squid.8.in:170
 msgid "Create swap directories"
-msgstr ""
+msgstr "Crea la struttura di directory necessaria per la cache."
 
 #. type: SH
 #: src/squid.8.in:171
 #, no-wrap
 msgid "FILES"
-msgstr ""
+msgstr "FILE"
 
 #. type: Plain text
 #: src/squid.8.in:173
 msgid "Squid configuration files located in @SYSCONFDIR@/:"
-msgstr ""
+msgstr "File di configurazione di Squid registrati in @SYSCONFDIR@/:"
 
 #. type: Plain text
 #: src/squid.8.in:178
@@ -1693,6 +1708,9 @@ msgid ""
 "for B<squid> to work. For example, the default configuration does not allow "
 "access from any browser."
 msgstr ""
+"Il file di configurazione principale. Perchè Squid funzioni è necessario "
+"modificare questo file. Ad esempio, la di default non consente accesso ad "
+"alcun utente."
 
 #. type: Plain text
 #: src/squid.8.in:182 src/squid.8.in:188
@@ -1700,6 +1718,8 @@ msgid ""
 "Reference copy of the configuration file. Always kept up to date with the "
 "version of Squid you are using."
 msgstr ""
+"Copia di riferimento del file di configurazione. Viene mantenuta allineata "
+"con la versione di Squid in uso."
 
 #. type: Plain text
 #: src/squid.8.in:184
@@ -1707,6 +1727,8 @@ msgid ""
 "Use this to look up the default configuration settings and syntax after "
 "upgrading."
 msgstr ""
+"La si può usare per verificare quali siano le impostazioni di default o la "
+"sintassi dopo un aggiornamento."
 
 #. type: Plain text
 #: src/squid.8.in:193
@@ -1715,16 +1737,21 @@ msgid ""
 "your build of Squid. The online configuration manual is also available for a "
 "full reference of options.  B<see>http://www.squid-cache.org/Doc/config/"
 msgstr ""
+"La si può usare per leggere la documentazione sulle opzioni di "
+"configurazioni disponibili nella vostra installazione di squid. Per una "
+"vista completa delle opzioni disponibili si può usare il manuale online, "
+"all'indirizzo http://www.squid-cache.org/Doc/config/"
 
 #. type: Plain text
 #: src/squid.8.in:198
 msgid "The main configuration file for the web B<cachemgr.cgi> tools."
 msgstr ""
+"Il file di configurazione principale per il programma web B<cachemgr.cgi>."
 
 #. type: Plain text
 #: src/squid.8.in:201
 msgid "The main configuration file for the Sample MSNT authenticator."
-msgstr ""
+msgstr "Il file di configurazione principale per l'autenticatore MSNT."
 
 #. type: Plain text
 #: src/squid.8.in:206
@@ -1733,21 +1760,25 @@ msgid ""
 "set any company branding you need, it will apply to every language Squid "
 "provides error pages for."
 msgstr ""
+"Foglio di Stile (CSS) per controllare l'aspetto delle pagine di errore. Lo "
+"si può usare per impostare l'aspetto secondo gli standard aziendali. Viene "
+"applicato alle pagine di errore generate da Squid per ogni lingua "
+"supportata."
 
 #. type: Plain text
 #: src/squid.8.in:209
 msgid "Some files also located elsewhere:"
-msgstr ""
+msgstr "Alcuni file sono registrati altrove:"
 
 #. type: Plain text
 #: src/squid.8.in:212
 msgid "MIME type mappings for FTP gatewaying"
-msgstr ""
+msgstr "mappa dei tipi file MIME per le funzioni di gateway FTP"
 
 #. type: Plain text
 #: src/squid.8.in:215
 msgid "Location of Squid error pages and templates."
-msgstr ""
+msgstr "Posizione delle pagine di errore e modelli di Squid."
 
 #. type: Plain text
 #: src/squid.8.in:218
@@ -1755,6 +1786,8 @@ msgid ""
 "Squid was written over many years by a changing team of developers and "
 "maintained in turn by"
 msgstr ""
+"Squid è stato scritto durante il corso di molti anni da una squadra di "
+"sviluppatori in costante evoluzione, e è stato manutenuto nel tempo da"
 
 #. type: Plain text
 #: src/squid.8.in:225
@@ -1763,6 +1796,9 @@ msgid ""
 "CONTRIBUTORS for a full list of individuals who contributed code.  see "
 "CREDITS for a list of major code contributing copyright holders."
 msgstr ""
+"Col contributo di molte altre persone della comunità di Squid. La lista "
+"delle persone che hanno maggiormente contribuito e di coloro che detengono i "
+"diritti d'autore è registrata nel file CREDITS."
 
 #. type: Plain text
 #: src/squid.8.in:233
@@ -1772,6 +1808,11 @@ msgid ""
 "all rights reserved.  UCSD administered the NLANR Cache grants, NCR 9616602 "
 "and NCR 9521745 under which most of this code was developed."
 msgstr ""
+"I diritti di copia suesto prodotto software, SQUID, è sviluppato da una "
+"squadra di persone, sono detenuti (C) 2001 dai Regents dell'Università della "
+"California; tutti i diritti riservati. UCSD ha amministrato le donazioni "
+"NLANR Cache, grants numero NCR 9616602 e NCR 9521745, grazie ai quali gran "
+"parte del codice di squid è stato sviluppato."
 
 #. type: Plain text
 #: src/squid.8.in:240
@@ -1783,6 +1824,12 @@ msgid ""
 "MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General "
 "Public License for more details."
 msgstr ""
+"This program is free software; you can redistribute it and/or modify it "
+"under the terms of the GNU General Public License (version 2) as published "
+"by the Free Software Foundation.  It is distributed in the hope that it will "
+"be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of "
+"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General "
+"Public License for more details."
 
 #. type: Plain text
 #: src/squid.8.in:242
@@ -1790,21 +1837,23 @@ msgid ""
 "see the CREDITS file for further copyright licensing of third-party code "
 "contributions."
 msgstr ""
+"si rimanda al file CREDITS per ulteriori informazioni su copyright e "
+"condizioni di licenza dei contributi di terze parti."
 
 #. type: Plain text
 #: src/squid.8.in:268
 msgid "The Squid FAQ wiki"
-msgstr ""
+msgstr "Il Wiki contenente la FAQ di Squid"
 
 #. type: Plain text
 #: src/squid.8.in:271
 msgid "The Squid Configuration Manual"
-msgstr ""
+msgstr "Il Manuale di Configurazione di Squid"
 
 #. type: Plain text
 #: tools/cachemgr.cgi.8.in:7
 msgid "Squid HTTP proxy manager CGI web interface"
-msgstr ""
+msgstr "L'interfaccia Web CGI Proxy Manager Squid"
 
 #. type: Plain text
 #: tools/cachemgr.cgi.8.in:18
@@ -1814,6 +1863,10 @@ msgid ""
 "is a convenient way to manage the cache and view statistics without logging "
 "into the server."
 msgstr ""
+"Il cache manager ( B<cachemgr.cgi> ) è un tool CGI che consente di mostrare "
+"statistiche sul processo Squid in esecuzione. Il cache manager è un metodo "
+"comodo per gestire Squid e accedere a statistiche di funzionamento senza la "
+"necessità di accedere al sistema operativo."
 
 #. type: Plain text
 #: tools/cachemgr.cgi.8.in:22
@@ -1821,6 +1874,8 @@ msgid ""
 "Configuration examples for many common web servers can be found in the Squid "
 "FAQ wiki."
 msgstr ""
+"Esempi di configurazione per molti diffusi webserver possono essere trovati "
+"nel Wiki di Squid."
 
 #. type: Plain text
 #: tools/cachemgr.cgi.8.in:34
@@ -1829,6 +1884,10 @@ msgid ""
 "via this B<cachemgr.cgi> program. Each line specifies a B<server>:B<port> "
 "followed by an optional description"
 msgstr ""
+"La file di controllo della configurazione di accesso che definisce quali "
+"server Squid possano essere gestiti da questa installazione di "
+"B<cachemgr.cgi>. Ogni linea specifica un server, con il formato "
+"B<server>:B<port> , opzionalmente seguiti da una descrizione"
 
 #. type: Plain text
 #: tools/cachemgr.cgi.8.in:38
@@ -1837,6 +1896,9 @@ msgid ""
 "quick selection dropdown menu is automatically constructed from the simple "
 "server names."
 msgstr ""
+"Il nome del server può contenere caratteri jolly con sintassi shell, come *, "
+"[] ecc. Un menu di selezione viene costruito automaticamente elencando i "
+"nomi dei server."
 
 #. type: Plain text
 #: tools/cachemgr.cgi.8.in:42
@@ -1844,12 +1906,15 @@ msgid ""
 "Specifying :port is optional. If not specified then the default proxy port "
 "is assumed. :* or :any matches any port on the target server."
 msgstr ""
+"La specifica della B<:porta> è opzionale. Se non viene specificata, viene "
+"automaticamente definita la porta standard. La sintassi B<:*> oppure B<:any> "
+"può essere usata per indicare una porta qualsiasi del server."
 
 #. type: SH
 #: tools/cachemgr.cgi.8.in:43
 #, no-wrap
 msgid "SECURITY"
-msgstr ""
+msgstr "SICUREZZA"
 
 #. type: Plain text
 #: tools/cachemgr.cgi.8.in:50
@@ -1859,6 +1924,10 @@ msgid ""
 "recommended to configure your web server to restrict access to the "
 "B<cachemgr.cgi> program."
 msgstr ""
+"B<cachemgr.cgi> accede al server specificato sulla porta specificata in "
+"HTTP, e resituisce una versione processata della risposta. Per evitare che "
+"se ne possa abusare, si raccomanda di configurare il web server in maniera "
+"tale da limitare l'acesso al programma B<cachemgr.cgi>."
 
 #. type: Plain text
 #: tools/cachemgr.cgi.8.in:56 tools/squidclient.1:168
@@ -1868,76 +1937,80 @@ msgid ""
 "Laboratory for Applied Network Research and funded by the National Science "
 "Foundation."
 msgstr ""
+"Derivato da Harvest. Ulteriormente sviluppato da numerose persone della "
+"comunità Internet. Lo sviluppo è guidato da Duane Wessels del  National "
+"Laboratory for Applied Network Research (USA), usando fondi concessi dalla "
+"National Science Foundation (USA)."
 
 #. type: Plain text
 #: tools/squidclient.1:7
 msgid "A simple HTTP web client tool"
-msgstr ""
+msgstr "Un semplice client HTTP"
 
 #. type: Plain text
 #: tools/squidclient.1:12 tools/squidclient.1:32
 msgid "count"
-msgstr ""
+msgstr "conteggio"
 
 #. type: Plain text
 #: tools/squidclient.1:14
 msgid "remote host"
-msgstr ""
+msgstr "sistema remoto"
 
 #. type: Plain text
 #: tools/squidclient.1:16
 msgid "string"
-msgstr ""
+msgstr "stringa"
 
 #. type: Plain text
 #: tools/squidclient.1:18
 msgid "IMS"
-msgstr ""
+msgstr "IMS"
 
 #. type: Plain text
 #: tools/squidclient.1:20
 msgid "ping interval"
-msgstr ""
+msgstr "intervallo di ping"
 
 #. type: Plain text
 #: tools/squidclient.1:22
 msgid "Host header"
-msgstr ""
+msgstr "Header HTTP Host"
 
 #. type: Plain text
 #: tools/squidclient.1:24
 msgid "local host"
-msgstr ""
+msgstr "sistema locale"
 
 #. type: Plain text
 #: tools/squidclient.1:26
 msgid "method"
-msgstr ""
+msgstr "metodo"
 
 #. type: Plain text
 #: tools/squidclient.1:30
 msgid "file"
-msgstr ""
+msgstr "file"
 
 #. type: Plain text
 #: tools/squidclient.1:36 tools/squidclient.1:38
 msgid "user"
-msgstr ""
+msgstr "utente"
 
 #. type: Plain text
 #: tools/squidclient.1:40
 msgid "version"
-msgstr ""
+msgstr "versione"
 
 #. type: Plain text
 #: tools/squidclient.1:42 tools/squidclient.1:44
 msgid "password"
-msgstr ""
+msgstr "password"
 
 #. type: Plain text
 #: tools/squidclient.1:46
 msgid "url"
-msgstr ""
+msgstr "url"
 
 #. type: Plain text
 #: tools/squidclient.1:55
@@ -1948,46 +2021,57 @@ msgid ""
 "Some additional features for access to the B<squid> proxy object cache and "
 "management information are provided."
 msgstr ""
+"B<squidclient> è uno strumento a linea di comando per accedere a URL. È "
+"stato scritto per fare prove verso qualsiasi server web o proxy secondo le "
+"specifiche HTTP versione 0.9, 1.0 o 1.1 . Questo strumento può essere "
+"combinato con script per svolgere qualsiasi operazione HTTP di base. Alcune "
+"funzionalità aggiuntive sono orientate all'accesso di informazioni di "
+"gestione di Squid."
 
 #. type: Plain text
 #: tools/squidclient.1:60
 msgid "Do NOT include Accept: header."
-msgstr ""
+msgstr "Non includere lo header HTTP Accept: ."
 
 #. type: Plain text
 #: tools/squidclient.1:66
 msgid "Ping mode, perform I<count> iterations (0 to loop until interrupted)."
 msgstr ""
+"Modalità Ping, effettua I<count> iterazioni (specificare 0 per continuare "
+"finchè esplicitamente interrotto)"
 
 #. type: Plain text
 #: tools/squidclient.1:71
 msgid "Retrieve URL from cache on hostname.  Default is B<localhost>"
 msgstr ""
+"Richiedi la URL alla cache sul server B<hostname> (default: B<localhost>)"
 
 #. type: Plain text
 #: tools/squidclient.1:77
 msgid "Extra headers to send. Use B<'\\n'> for new lines."
 msgstr ""
+"Header HTTP aggiuntivi da inviare. Per indicare l'acapo si può usare B<'\\\n"
+"'>."
 
 #. type: Plain text
 #: tools/squidclient.1:81
 msgid "If-Modified-Since time (in Epoch seconds)."
-msgstr ""
+msgstr "Tempo per If-Modified-Since (in secondi dalla Epoch)."
 
 #. type: Plain text
 #: tools/squidclient.1:85
 msgid "Ping interval in seconds (default 1 second)."
-msgstr ""
+msgstr "Intervallo di ping in secondi (default: 1 secondo)."
 
 #. type: Plain text
 #: tools/squidclient.1:89
 msgid "Host header content"
-msgstr ""
+msgstr "Continuto dello Header HTTP 'Host:'"
 
 #. type: Plain text
 #: tools/squidclient.1:93
 msgid "Specify a local IP address to bind to.  Default is none."
-msgstr ""
+msgstr "Specifica un indirizzo IP locale da utilizzare. Il default è nessuno."
 
 #. type: Plain text
 #: tools/squidclient.1:108
@@ -2006,63 +2090,75 @@ msgid ""
 "I<manager>\n"
 " access. Here is an example:\n"
 msgstr ""
+"Metodo HTTP per effettuare la richiesta, il default è I<GET>. Squid offre "
+"anche un metodo non standard chiamato I<PURGE>, che può essere usato per "
+"rimuovere dalla cache una specifica URL. Per poterlo fare è necessario avere "
+"impostato correttamente l'accesso alle funzioni I<purge> nella "
+"configurazione di squid, in maniera analoga a quanto fatto per l'accesso "
+"alle funzioni di I<manager>. Ecco un esempio:"
 
 #. type: Plain text
 #: tools/squidclient.1:116
 msgid "Port number of cache.  Default is 3128."
-msgstr ""
+msgstr "Porta di servizio della cache. Il default è 3128."
 
 #. type: Plain text
 #: tools/squidclient.1:120
 msgid "Request body. Using the named file as data."
 msgstr ""
+"Corpo (body) della richiesta, utilizza come contenuto il file passato come "
+"parametro."
 
 #. type: Plain text
 #: tools/squidclient.1:124
 msgid "Force cache to reload URL."
-msgstr ""
+msgstr "Costringi la cache a riscaricare i contenuti della URL."
 
 #. type: Plain text
 #: tools/squidclient.1:128
 msgid "Silent.  Do not print data to stdout."
-msgstr ""
+msgstr "Silenzio. Non scivere nulla su standard output."
 
 #. type: Plain text
 #: tools/squidclient.1:134
 msgid "Trace I<count> HTTP relay or proxy hops"
-msgstr ""
+msgstr "Traccia I<count> passaggi attraverso proxy"
 
 #. type: Plain text
 #: tools/squidclient.1:138
 msgid "Timeout value (seconds) for read/write operations."
 msgstr ""
+"Tempo massimo di attesa (in secondi) per le operazioni di lettura e "
+"scrittura."
 
 #. type: Plain text
 #: tools/squidclient.1:142
 msgid "Proxy authentication username"
-msgstr ""
+msgstr "Nome utente usato per identificarsi al proxy"
 
 #. type: Plain text
 #: tools/squidclient.1:146
 msgid "WWW authentication username"
-msgstr ""
+msgstr "Nome utente usato per identificarsi al server web"
 
 #. type: Plain text
 #: tools/squidclient.1:150
 msgid "Verbose. Print outgoing message to stderr."
-msgstr ""
+msgstr "Prolisso. Stampa il messaggio inviato sullo standard error."
 
 #. type: Plain text
 #: tools/squidclient.1:154
 msgid "HTTP Version. Use '-' for HTTP/0.9 omitted case"
 msgstr ""
+"Versione HTTP. Si può usare il valore '-' per indicare il caso di HTTP/0.9 "
+"senza indicazione esplicita della versione"
 
 #. type: Plain text
 #: tools/squidclient.1:158
 msgid "Proxy authentication password"
-msgstr ""
+msgstr "Password per l'identificazione al proxy"
 
 #. type: Plain text
 #: tools/squidclient.1:162
 msgid "WWW authentication password"
-msgstr ""
+msgstr "Password per l'identificazione al server web"
