@@ -1360,7 +1360,12 @@ getOutgoingAddr(HttpRequest * request, struct peer *dst_peer)
     ch.dst_peer = dst_peer;
 
     if (request) {
-        ch.src_addr = request->client_addr;
+#if FOLLOW_X_FORWARDED_FOR
+        if (Config.onoff.acl_uses_indirect_client)
+            ch.src_addr = request->indirect_client_addr;
+        else
+#endif
+            ch.src_addr = request->client_addr;
         ch.my_addr = request->my_addr;
     }
 
