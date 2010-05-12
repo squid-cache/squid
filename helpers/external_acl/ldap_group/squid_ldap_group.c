@@ -96,7 +96,7 @@ static const char *bindpasswd = NULL;
 static int searchscope = LDAP_SCOPE_SUBTREE;
 static int persistent = 0;
 static int noreferrals = 0;
-static int debug = 0;
+static int show_debug_messages = 0;
 static int aliasderef = LDAP_DEREF_NEVER;
 #if defined(NETSCAPE_SSL)
 static char *sslpath = NULL;
@@ -367,7 +367,7 @@ main(int argc, char **argv)
             break;
 #endif
         case 'd':
-            debug = 1;
+            show_debug_messages = 1;
             break;
         case 'g':
             use_extension_dn = 1;
@@ -572,7 +572,7 @@ recover:
                         break;
                     }
                 }
-                if (debug)
+                if (show_debug_messages)
                     fprintf(stderr, "Connected OK\n");
             }
             if (searchLDAP(ld, group, user, extension_dn) == 0) {
@@ -706,7 +706,7 @@ searchLDAPGroup(LDAP * ld, char *group, char *member, char *extension_dn)
         fprintf(stderr, PROGRAM_NAME " ERROR, Failed to construct LDAP search filter. filter=\"%s\", user=\"%s\", group=\"%s\"\n", filter, member, group);
         return 1;
     }
-    if (debug)
+    if (show_debug_messages)
         fprintf(stderr, "group filter '%s', searchbase '%s'\n", filter, searchbase);
 
     rc = ldap_search_s(ld, searchbase, searchscope, filter, searchattr, 1, &res);
@@ -755,7 +755,7 @@ searchLDAP(LDAP * ld, char *group, char *login, char *extension_dn)
             snprintf(searchbase, sizeof(searchbase), "%s", userbasedn ? userbasedn : basedn);
         ldap_escape_value(escaped_login, sizeof(escaped_login), login);
         snprintf(filter, sizeof(filter), usersearchfilter, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login);
-        if (debug)
+        if (show_debug_messages)
             fprintf(stderr, "user filter '%s', searchbase '%s'\n", filter, searchbase);
         rc = ldap_search_s(ld, searchbase, searchscope, filter, searchattr, 1, &res);
         if (rc != LDAP_SUCCESS) {
