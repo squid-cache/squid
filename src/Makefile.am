@@ -193,16 +193,16 @@ libexec_PROGRAMS = \
 	$(UNLINKD)
 
 cf_gen_SOURCES = cf_gen.cc
-nodist_cf_gen_HEADER = cf_gen_defines.h
+nodist_cf_gen_HEADER = cf_gen_defines.cci
 cf_gen_LDADD= \
 	../compat/libcompat.la \
 	-L../lib -lmiscutil \
 	$(EPOLL_LIBS) \
 	$(MINGW_LIBS) \
 	$(XTRA_LIBS)
-cf_gen.$(OBJEXT): cf_gen_defines.h
+cf_gen.$(OBJEXT): cf_gen_defines.cci
 
-## cf_gen.cc needs src/cf_gen_defines.h
+## cf_gen.cc needs src/cf_gen_defines.cci
 INCLUDES += -I$(top_builddir)/src
 
 
@@ -510,7 +510,7 @@ noinst_HEADERS = \
 nodist_squid_SOURCES = \
 	$(DISKIO_GEN_SOURCE) \
 	repl_modules.cc \
-	cf_parser.h \
+	cf_parser.cci \
 	globals.cc \
 	string_arrays.c
 
@@ -630,8 +630,8 @@ nodist_ufsdump_SOURCES = \
 	globals.cc
 
 BUILT_SOURCES = \
-	cf_gen_defines.h \
-	cf_parser.h \
+	cf_gen_defines.cci \
+	cf_parser.cci \
 	globals.cc \
 	string_arrays.c \
 	repl_modules.cc
@@ -745,16 +745,16 @@ test_cache_digest: test_cache_digest.o CacheDigest.o debug.o globals.o store_key
 	$(CC) -o $@ $(LDFLAGS) $@.o CacheDigest.o debug.o globals.o store_key_md5.o $(STD_APP_LIBS)
 
 ## If autodependency works well this is not needed anymore
-cache_cf.o: cf_parser.h
+cache_cf.o: cf_parser.cci
 
-# squid.conf.default is built by cf_gen when making cf_parser.h
-squid.conf.default squid.conf.documented: cf_parser.h
+# squid.conf.default is built by cf_gen when making cf_parser.cci
+squid.conf.default squid.conf.documented: cf_parser.cci
 	true
 
-cf_parser.h: cf.data cf_gen$(EXEEXT)
+cf_parser.cci: cf.data cf_gen$(EXEEXT)
 	./cf_gen cf.data $(srcdir)/cf.data.depend
 
-cf_gen_defines.h: $(srcdir)/cf_gen_defines $(srcdir)/cf.data.pre
+cf_gen_defines.cci: $(srcdir)/cf_gen_defines $(srcdir)/cf.data.pre
 	$(AWK) -f $(srcdir)/cf_gen_defines <$(srcdir)/cf.data.pre >$@ || ($(RM) -f $@ && exit 1)
 
 
@@ -811,7 +811,7 @@ uninstall-local: squid.conf.default
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_MIME_TABLE) $(srcdir)/mime.conf.default
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_CONFIG_FILE) squid.conf.default
 
-CLEANFILES += cf_gen_defines.h cf.data cf_parser.h squid.conf.default squid.conf.documented \
+CLEANFILES += cf_gen_defines.cci cf.data cf_parser.cci squid.conf.default squid.conf.documented \
 	globals.cc string_arrays.c repl_modules.cc DiskIO/DiskIOModules_gen.cc \
 	test_tools.cc *.a
 

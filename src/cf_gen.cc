@@ -1,5 +1,5 @@
 /*
- * DEBUG: none          Generate squid.conf.default and cf_parser.h
+ * DEBUG: none          Generate squid.conf.default and cf_parser.cci
  * AUTHOR: Max Okumoto
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -36,7 +36,7 @@
  *		(ie it creates the squid.conf.default file from the cf.data file)
  *
  *		The output files are as follows:
- *		cf_parser.h - this file contains, default_all() which
+ *		cf_parser.cci - this file contains, default_all() which
  *			  initializes variables with the default
  *			  values, parse_line() that parses line from
  *			  squid.conf.default, dump_config that dumps the
@@ -48,7 +48,6 @@
 //#include "squid.h"
 #include "config.h"
 //#include "SquidTime.h"
-#include "cf_gen_defines.h"
 #include "util.h"
 
 #if HAVE_STRING_H
@@ -58,8 +57,10 @@
 #include <ctype.h>
 #endif
 
+#include "cf_gen_defines.cci"
+
 #define MAX_LINE	1024	/* longest configuration line */
-#define _PATH_PARSER		"cf_parser.h"
+#define _PATH_PARSER		"cf_parser.cci"
 #define _PATH_SQUID_CONF	"squid.conf.documented"
 #define _PATH_SQUID_CONF_SHORT	"squid.conf.default"
 #define _PATH_CF_DEPEND		"cf.data.depend"
