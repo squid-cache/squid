@@ -49,7 +49,7 @@ typedef struct {
     void *data;
     char *orig_url;
 
-    IpAddress client_addr;
+    Ip::Address client_addr;
     const char *client_ident;
     const char *method_s;
     RH *handler;

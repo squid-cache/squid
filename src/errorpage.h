@@ -36,7 +36,7 @@
 
 #include "squid.h"
 #include "cbdata.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 /**
  \defgroup ErrorPageAPI Error Pages API
@@ -135,7 +135,7 @@ public:
     String dnsError; ///< DNS lookup error message
     time_t ttl;
 
-    IpAddress src_addr;
+    Ip::Address src_addr;
     char *redirect_url;
     ERCB *callback;
     void *callback_data;

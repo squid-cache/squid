@@ -35,7 +35,7 @@
 
 #include "cbdata.h"
 #include "PingData.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 class ps_state
 {
@@ -52,16 +52,16 @@ public:
     void *callback_data;
     FwdServer *servers;
     /*
-     * Why are these IpAddress instead of peer *?  Because a
+     * Why are these Ip::Address instead of peer *?  Because a
      * peer structure can become invalid during the peer selection
      * phase, specifically after a reconfigure.  Thus we need to lookup
      * the peer * based on the address when we are finally ready to
      * reference the peer structure.
      */
 
-    IpAddress first_parent_miss;
+    Ip::Address first_parent_miss;
 
-    IpAddress closest_parent_miss;
+    Ip::Address closest_parent_miss;
     /*
      * ->hit can be peer* because it should only be
      * accessed during the thread when it is set

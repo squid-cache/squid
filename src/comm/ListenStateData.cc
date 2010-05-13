@@ -83,9 +83,9 @@ Comm::ListenStateData::setListen()
 }
 
 Comm::ListenStateData::ListenStateData(int aFd, AsyncCall::Pointer &call, bool accept_many) :
-    fd(aFd),
-    theCallback(call),
-    mayAcceptMore(accept_many)
+        fd(aFd),
+        theCallback(call),
+        mayAcceptMore(accept_many)
 {
     assert(aFd >= 0);
     debugs(5, 5, HERE << "FD " << fd << " AsyncCall: " << call);
@@ -119,8 +119,7 @@ Comm::ListenStateData::doAccept(int fd, void *data)
 
     if (!okToAccept()) {
         AcceptLimiter::Instance().defer(afd);
-    }
-    else {
+    } else {
         afd->acceptNext();
     }
     commSetSelect(fd, COMM_SELECT_READ, Comm::ListenStateData::doAccept, afd, 0);
@@ -210,7 +209,7 @@ Comm::ListenStateData::notify(int newfd, comm_err_t errcode, int xerrno, const C
 }
 
 /**
- * accept() and process 
+ * accept() and process
  * Wait for an incoming connection on FD.
  */
 int

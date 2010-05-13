@@ -82,6 +82,9 @@
  *             - Allow full filter specifications in -f
  */
 
+#define SQUID_NO_ALLOC_PROTECT 1
+#include "config.h"
+
 #define LDAP_DEPRECATED 1
 
 #include "rfc1738.h"
@@ -89,7 +92,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
 #include <ctype.h>
 
 #ifdef _SQUID_MSWIN_		/* Native Windows port and MinGW */
@@ -126,7 +128,7 @@ PFldap_start_tls_s Win32_ldap_start_tls_s;
 
 #endif
 
-#define PROGRAM_NAME "squid_ldap_auth"
+#define PROGRAM_NAME "basic_ldap_auth"
 
 /* Global options */
 static const char *basedn;
@@ -391,7 +393,7 @@ main(int argc, char **argv)
                 free(ldapServer);
                 ldapServer = newhost;
             } else {
-                ldapServer = strdup(value);
+                ldapServer = xstrdup(value);
             }
             break;
         case 'b':
@@ -511,13 +513,13 @@ main(int argc, char **argv)
             free(ldapServer);
             ldapServer = newhost;
         } else {
-            ldapServer = strdup(value);
+            ldapServer = xstrdup(value);
         }
         argc--;
         argv++;
     }
     if (!ldapServer)
-        ldapServer = strdup("localhost");
+        ldapServer = xstrdup("localhost");
 
     if (!basedn) {
         fprintf(stderr, "Usage: " PROGRAM_NAME " -b basedn [options] [ldap_server_name[:port]]...\n\n");

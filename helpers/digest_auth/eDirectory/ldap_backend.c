@@ -5,6 +5,8 @@
  * ldap_backend.c
  * AUTHOR: Flavio Pescuma, MARA Systems AB <flavio@marasystems.com>
  */
+#define SQUID_NO_ALLOC_PROTECT 1
+#include "config.h"
 
 #define LDAP_DEPRECATED 1
 
@@ -61,7 +63,7 @@ static int encrpass = 0;
 static int searchscope = LDAP_SCOPE_SUBTREE;
 static int persistent = 0;
 static int noreferrals = 0;
-static int debug = 0;
+static int show_debug_messages = 0;
 static int port = LDAP_PORT;
 static int strip_nt_domain = 0;
 static int edir_universal_passwd = 0;
@@ -209,7 +211,7 @@ getpassword(char *login, char *realm)
             snprintf(filter, sizeof(filter), usersearchfilter, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login);
 
 retrysrch:
-            if (debug)
+            if (show_debug_messages)
                 fprintf(stderr, "user filter '%s', searchbase '%s'\n", filter, searchbase);
 
             rc = ldap_search_s(ld, searchbase, searchscope, filter, NULL, 0, &res);
@@ -242,17 +244,17 @@ retrysrch:
                 }
             }
         } else if (userdnattr) {
-            sprintf(searchbase, "%s=%s, %s", userdnattr, login, userbasedn);
+            snprintf(searchbase, 8192, "%s=%s, %s", userdnattr, login, userbasedn);
 
 retrydnattr:
-            if (debug)
+            if (show_debug_messages)
                 fprintf(stderr, "searchbase '%s'\n", searchbase);
             rc = ldap_search_s(ld, searchbase, searchscope, NULL, NULL, 0, &res);
         }
         if (rc == LDAP_SUCCESS) {
             entry = ldap_first_entry(ld, res);
             if (entry) {
-                if (debug)
+                if (show_debug_messages)
                     printf("ldap dn: %s\n", ldap_get_dn(ld, entry));
                 if (edir_universal_passwd) {
 
@@ -264,11 +266,11 @@ retrydnattr:
                     /* actually talk to NMAS to get a password */
                     nmas_res = nds_get_password(ld, ldap_get_dn(ld, entry), &universal_password_len, universal_password);
                     if (nmas_res == LDAP_SUCCESS && universal_password) {
-                        if (debug)
+                        if (show_debug_messages)
                             printf("NMAS returned value %s\n", universal_password);
                         values[0] = universal_password;
                     } else {
-                        if (debug)
+                        if (show_debug_messages)
                             printf("Error reading Universal Password: %d = %s\n", nmas_res, ldap_err2string(nmas_res));
                     }
                 } else {
@@ -279,7 +281,7 @@ retrydnattr:
                 return NULL;
             }
             if (!values) {
-                if (debug)
+                if (show_debug_messages)
                     printf("No attribute value found\n");
                 if (edir_universal_passwd)
                     free(universal_password);
@@ -299,10 +301,10 @@ retrydnattr:
                 }
                 value++;
             }
-            if (debug)
+            if (show_debug_messages)
                 printf("password: %s\n", password);
             if (password)
-                password = strdup(password);
+                password = xstrdup(password);
             if (edir_universal_passwd) {
                 free(values);
                 free(universal_password);
@@ -417,7 +419,7 @@ ldapconnect(void)
                 ld = NULL;
             }
         }
-        if (debug)
+        if (show_debug_messages)
             fprintf(stderr, "Connected OK\n");
     }
 }
@@ -468,7 +470,7 @@ LDAPArguments(int argc, char **argv)
                 free(ldapServer);
                 ldapServer = newhost;
             } else {
-                ldapServer = strdup(value);
+                ldapServer = xstrdup(value);
             }
             break;
         case 'A':
@@ -574,7 +576,7 @@ LDAPArguments(int argc, char **argv)
             break;
 #endif
         case 'd':
-            debug = 1;
+            show_debug_messages = 1;
             break;
         case 'E':
             strip_nt_domain = 1;
@@ -597,7 +599,7 @@ LDAPArguments(int argc, char **argv)
             free(ldapServer);
             ldapServer = newhost;
         } else {
-            ldapServer = strdup(value);
+            ldapServer = xstrdup(value);
         }
         argc--;
         argv++;
@@ -665,7 +667,7 @@ readSecret(const char *filename)
     if ((e = strrchr(buf, '\r')))
         *e = 0;
 
-    bindpasswd = strdup(buf);
+    bindpasswd = xstrdup(buf);
     if (!bindpasswd) {
         fprintf(stderr, PROGRAM_NAME " ERROR: can not allocate memory\n");
     }

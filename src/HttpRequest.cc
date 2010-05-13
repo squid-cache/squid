@@ -43,6 +43,7 @@
 #if ICAP_CLIENT
 #include "adaptation/icap/icap_log.h"
 #endif
+#include "acl/FilledChecklist.h"
 
 HttpRequest::HttpRequest() : HttpMsg(hoRequest)
 {
@@ -104,6 +105,7 @@ HttpRequest::init()
     extacl_user = null_string;
     extacl_passwd = null_string;
     extacl_log = null_string;
+    extacl_message = null_string;
     pstate = psReadyToParseStartLine;
 #if FOLLOW_X_FORWARDED_FOR
     indirect_client_addr.SetEmpty();
@@ -114,6 +116,7 @@ HttpRequest::init()
 #if ICAP_CLIENT
     icapHistory_ = NULL;
 #endif
+    rangeOffsetLimit = -2; //a value of -2 means not checked yet
 }
 
 void
@@ -153,6 +156,8 @@ HttpRequest::clean()
     extacl_passwd.clean();
 
     extacl_log.clean();
+
+    extacl_message.clean();
 
 #if USE_ADAPTATION
     adaptHistory_ = NULL;
@@ -207,6 +212,7 @@ HttpRequest::clone() const
     copy->extacl_user = extacl_user;
     copy->extacl_passwd = extacl_passwd;
     copy->extacl_log = extacl_log;
+    copy->extacl_message = extacl_message;
 
     assert(copy->inheritProperties(this));
 
@@ -323,8 +329,9 @@ HttpRequest::pack(Packer * p)
 {
     assert(p);
     /* pack request-line */
-    packerPrintf(p, "%s " SQUIDSTRINGPH " HTTP/1.0\r\n",
-                 RequestMethodStr(method), SQUIDSTRINGPRINT(urlpath));
+    packerPrintf(p, "%s " SQUIDSTRINGPH " HTTP/%d.%d\r\n",
+                 RequestMethodStr(method), SQUIDSTRINGPRINT(urlpath),
+                 http_ver.major, http_ver.minor);
     /* headers */
     header.packInto(p);
     /* trailer */
@@ -608,4 +615,31 @@ void HttpRequest::recordLookup(const DnsLookupDetails &dns)
         else
             dnsWait = dns.wait;
     }
+}
+
+int64_t
+HttpRequest::getRangeOffsetLimit()
+{
+    /* -2 is the starting value of rangeOffsetLimit.
+     * If it is -2, that means we haven't checked it yet.
+     *  Otherwise, return the current value */
+    if (rangeOffsetLimit != -2)
+        return rangeOffsetLimit;
+
+    rangeOffsetLimit = 0; // default value for rangeOffsetLimit
+
+    ACLFilledChecklist ch(NULL, this, NULL);
+    ch.src_addr = client_addr;
+    ch.my_addr =  my_addr;
+
+    for (acl_size_t *l = Config.rangeOffsetLimit; l; l = l -> next) {
+        /* if there is no ACL list or if the ACLs listed match use this limit value */
+        if (!l->aclList || ch.matchAclListFast(l->aclList)) {
+            debugs(58, 4, HERE << "rangeOffsetLimit=" << rangeOffsetLimit);
+            rangeOffsetLimit = l->size; // may be -1
+            break;
+        }
+    }
+
+    return rangeOffsetLimit;
 }

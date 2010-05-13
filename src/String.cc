@@ -34,8 +34,8 @@
  */
 
 #include "squid.h"
+#include "base/TextException.h"
 #include "Store.h"
-#include "TextException.h"
 
 int
 String::psize() const
@@ -492,6 +492,6 @@ String::rfind(char const ch) const
 
 
 
-#ifndef _USE_INLINE_
+#if !_USE_INLINE_
 #include "String.cci"
 #endif

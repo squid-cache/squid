@@ -33,14 +33,18 @@
  */
 
 #include "squid.h"
-#include "ProtoPort.h"
-#include "SwapDir.h"
+#include "compat/initgroups.h"
+#include "compat/getaddrinfo.h"
+#include "compat/getnameinfo.h"
+#include "compat/tempnam.h"
 #include "fde.h"
+#include "ip/Intercept.h"
 #include "MemBuf.h"
-#include "wordlist.h"
+#include "ProtoPort.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
-#include "ip/IpIntercept.h"
+#include "SwapDir.h"
+#include "wordlist.h"
 
 #if HAVE_SYS_PRCTL_H
 #include <sys/prctl.h>
@@ -332,7 +336,7 @@ death(int sig)
     else
         fprintf(debug_log, "FATAL: Received signal %d...dying.\n", sig);
 
-#ifdef PRINT_STACK_TRACE
+#if PRINT_STACK_TRACE
 #ifdef _SQUID_HPUX_
     {
         extern void U_STACK_TRACE(void);	/* link with -lcl */
@@ -405,7 +409,7 @@ sigusr2_handle(int sig)
     /* no debugs() here; bad things happen if the signal is delivered during _db_print() */
 
     if (state == 0) {
-#ifndef MEM_GEN_TRACE
+#if !MEM_GEN_TRACE
         Debug::parseOptions("ALL,7");
 #else
 
@@ -414,7 +418,7 @@ sigusr2_handle(int sig)
 
         state = 1;
     } else {
-#ifndef MEM_GEN_TRACE
+#if !MEM_GEN_TRACE
         Debug::parseOptions(Debug::debugOptions);
 #else
 
@@ -584,7 +588,7 @@ getMyHostname(void)
     LOCAL_ARRAY(char, host, SQUIDHOSTNAMELEN + 1);
     static int present = 0;
     struct addrinfo *AI = NULL;
-    IpAddress sa;
+    Ip::Address sa;
 
     if (Config.visibleHostname != NULL)
         return Config.visibleHostname;
@@ -612,7 +616,7 @@ getMyHostname(void)
 
         sa.GetAddrInfo(AI);
         /* we are looking for a name. */
-        if (xgetnameinfo(AI->ai_addr, AI->ai_addrlen, host, SQUIDHOSTNAMELEN, NULL, 0, NI_NAMEREQD ) == 0) {
+        if (getnameinfo(AI->ai_addr, AI->ai_addrlen, host, SQUIDHOSTNAMELEN, NULL, 0, NI_NAMEREQD ) == 0) {
             /* DNS lookup successful */
             /* use the official name from DNS lookup */
             debugs(50, 4, "getMyHostname: resolved " << sa << " to '" << host << "'");
@@ -636,7 +640,7 @@ getMyHostname(void)
             memset(&hints, 0, sizeof(addrinfo));
             hints.ai_flags = AI_CANONNAME;
 
-            if (xgetaddrinfo(host, NULL, NULL, &AI) == 0) {
+            if (getaddrinfo(host, NULL, NULL, &AI) == 0) {
                 /* DNS lookup successful */
                 /* use the official name from DNS lookup */
                 debugs(50, 6, "getMyHostname: '" << host << "' has rDNS.");
@@ -644,14 +648,14 @@ getMyHostname(void)
 
                 /* AYJ: do we want to flag AI_ALL and cache the result anywhere. ie as our local host IPs? */
                 if (AI) {
-                    xfreeaddrinfo(AI);
+                    freeaddrinfo(AI);
                     AI = NULL;
                 }
 
                 return host;
             }
 
-            if (AI) xfreeaddrinfo(AI);
+            if (AI) freeaddrinfo(AI);
             debugs(50, 1, "WARNING: '" << host << "' rDNS test failed: " << xstrerror());
         }
     }
@@ -1205,10 +1209,10 @@ strwordquote(MemBuf * mb, const char *str)
 void
 keepCapabilities(void)
 {
-#if HAVE_PRCTL && defined(PR_SET_KEEPCAPS) && USE_LIBCAP
+#if USE_LIBCAP && HAVE_PRCTL && defined(PR_SET_KEEPCAPS)
 
     if (prctl(PR_SET_KEEPCAPS, 1, 0, 0, 0)) {
-        IpInterceptor.StopTransparency("capability setting has failed.");
+        Ip::Interceptor.StopTransparency("capability setting has failed.");
     }
 #endif
 }
@@ -1224,18 +1228,15 @@ restoreCapabilities(int keep)
     else
         caps = cap_init();
     if (!caps) {
-        IpInterceptor.StopTransparency("Can't get current capabilities");
+        Ip::Interceptor.StopTransparency("Can't get current capabilities");
     } else {
         int ncaps = 0;
         int rc = 0;
         cap_value_t cap_list[10];
         cap_list[ncaps++] = CAP_NET_BIND_SERVICE;
 
-        if (IpInterceptor.TransparentActive()) {
+        if (Ip::Interceptor.TransparentActive()) {
             cap_list[ncaps++] = CAP_NET_ADMIN;
-#if LINUX_TPROXY2
-            cap_list[ncaps++] = CAP_NET_BROADCAST;
-#endif
         }
 
         cap_clear_flag(caps, CAP_EFFECTIVE);
@@ -1243,12 +1244,12 @@ restoreCapabilities(int keep)
         rc |= cap_set_flag(caps, CAP_PERMITTED, ncaps, cap_list, CAP_SET);
 
         if (rc || cap_set_proc(caps) != 0) {
-            IpInterceptor.StopTransparency("Error enabling needed capabilities.");
+            Ip::Interceptor.StopTransparency("Error enabling needed capabilities.");
         }
         cap_free(caps);
     }
 #elif defined(_SQUID_LINUX_)
-    IpInterceptor.StopTransparency("Missing needed capability support.");
+    Ip::Interceptor.StopTransparency("Missing needed capability support.");
 #endif /* HAVE_SYS_CAPABILITY_H */
 }
 

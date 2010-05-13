@@ -39,11 +39,11 @@
 #include "acl/Eui64.h"
 #include "acl/FilledChecklist.h"
 #include "eui/Eui64.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 #include "wordlist.h"
 
 static void aclParseEuiList(SplayNode<Eui::Eui64 *> **curlist);
-static int aclMatchEui(SplayNode<Eui::Eui64 *> **dataptr, IpAddress &c);
+static int aclMatchEui(SplayNode<Eui::Eui64 *> **dataptr, Ip::Address &c);
 static SplayNode<Eui::Eui64 *>::SPLAYCMP aclEui64Compare;
 static SplayNode<Eui::Eui64 *>::SPLAYWALKEE aclDumpEuiListWalkee;
 
@@ -147,7 +147,7 @@ ACLEui64::match(ACLChecklist *cl)
 /* aclMatchEui */
 /***************/
 int
-aclMatchEui(SplayNode<Eui::Eui64 *> **dataptr, IpAddress &c)
+aclMatchEui(SplayNode<Eui::Eui64 *> **dataptr, Ip::Address &c)
 {
     Eui::Eui64 result;
     SplayNode<Eui::Eui64 *> **Top = dataptr;

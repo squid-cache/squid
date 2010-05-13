@@ -21,7 +21,7 @@
  */
 #define RFC2181_MAXHOSTNAMELEN	256
 
-/// Back-port macro for old squid code still using SQUIDHOSTNAMELEN without RFC reference.
+/** Back-port macro for old squid code still using SQUIDHOSTNAMELEN without RFC reference. */
 #define SQUIDHOSTNAMELEN	RFC2181_MAXHOSTNAMELEN
 
 #endif /* _SQUID_INCLUDE_RFC1123_H */

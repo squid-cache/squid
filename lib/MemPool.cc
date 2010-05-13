@@ -359,7 +359,7 @@ MemPool::createChunk()
  * MemPools::GetInstance().setDefaultPoolChunking() can be called.
  */
 MemPools::MemPools() : pools(NULL), mem_idle_limit(2 * MB),
-        poolCount (0), defaultIsChunked (!DISABLE_POOLS && !RUNNING_ON_VALGRIND)
+        poolCount (0), defaultIsChunked (USE_MEMPOOLS && !RUNNING_ON_VALGRIND)
 {
     char *cfg = getenv("MEMPOOLS");
     if (cfg)
@@ -555,7 +555,7 @@ MemImplementingAllocator::alloc()
 }
 
 void
-MemImplementingAllocator::free(void *obj)
+MemImplementingAllocator::freeOne(void *obj)
 {
     assert(obj != NULL);
     (void) VALGRIND_CHECK_MEM_IS_ADDRESSABLE(obj, obj_size);
@@ -882,9 +882,9 @@ MemAllocatorProxy::alloc()
 }
 
 void
-MemAllocatorProxy::free(void *address)
+MemAllocatorProxy::freeOne(void *address)
 {
-    getAllocator()->free(address);
+    getAllocator()->freeOne(address);
     /* TODO: check for empty, and if so, if the default type has altered,
      * switch
      */

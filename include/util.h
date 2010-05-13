@@ -42,15 +42,8 @@
 #if HAVE_TIME_H
 #include <time.h>
 #endif
-#if HAVE_SYS_TIME_H
-#include <sys/time.h>
-#endif
 #if HAVE_ARPA_INET_H
 #include <arpa/inet.h>
-#endif
-
-#if defined(_SQUID_FREEBSD_)
-#define _etext etext
 #endif
 
 SQUIDCEXTERN const char *mkhttpdlogtime(const time_t *);
@@ -127,10 +120,6 @@ SQUIDCEXTERN double xdiv(double nom, double denom);
 SQUIDCEXTERN const char *xitoa(int num);
 SQUIDCEXTERN const char *xint64toa(int64_t num);
 
-#if !HAVE_DRAND48
-SQUIDCEXTERN double drand48(void);
-#endif
-
 typedef struct {
     size_t count;
     size_t bytes;
@@ -157,7 +146,7 @@ int statMemoryAccounted(void);
 #ifdef _SQUID_MSWIN_
 SQUIDCEXTERN int chroot (const char *);
 SQUIDCEXTERN int ftruncate(int, off_t);
-#ifndef HAVE_GETTIMEOFDAY
+#if !HAVE_GETTIMEOFDAY
 SQUIDCEXTERN int gettimeofday(struct timeval * ,void *);
 #endif
 SQUIDCEXTERN int kill(pid_t, int);

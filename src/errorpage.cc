@@ -716,7 +716,9 @@ ErrorState::Convert(char token, bool url_presentable)
         break;
 
     case 'o':
-        p = external_acl_message ? external_acl_message : "[not available]";
+        p = request ? request->extacl_message.termedBuf() : external_acl_message;
+        if (!p)
+            p = "[not available]";
         break;
 
     case 'p':
@@ -887,11 +889,10 @@ ErrorState::BuildHttpReply()
     HttpReply *rep = new HttpReply;
     const char *name = errorPageName(page_id);
     /* no LMT for error pages; error pages expire immediately */
-    HttpVersion version(1, 0);
 
     if (strchr(name, ':')) {
         /* Redirection */
-        rep->setHeaders(version, HTTP_MOVED_TEMPORARILY, NULL, "text/html", 0, 0, -1);
+        rep->setHeaders(HTTP_MOVED_TEMPORARILY, NULL, "text/html", 0, 0, -1);
 
         if (request) {
             MemBuf redirect_location;
@@ -903,7 +904,7 @@ ErrorState::BuildHttpReply()
         httpHeaderPutStrf(&rep->header, HDR_X_SQUID_ERROR, "%d %s", httpStatus, "Access Denied");
     } else {
         MemBuf *content = BuildContent();
-        rep->setHeaders(version, httpStatus, NULL, "text/html", content->contentSize(), 0, -1);
+        rep->setHeaders(httpStatus, NULL, "text/html", content->contentSize(), 0, -1);
         /*
          * include some information for downstream caches. Implicit
          * replaceable content. This isn't quite sufficient. xerrno is not
@@ -962,9 +963,10 @@ ErrorState::BuildContent()
     int l = 0;
 
     /** error_directory option in squid.conf overrides translations.
+     * Custom errors are always found either in error_directory or the templates directory.
      * Otherwise locate the Accept-Language header
      */
-    if (!Config.errorDirectory && request && request->header.getList(HDR_ACCEPT_LANGUAGE, &hdr) ) {
+    if (!Config.errorDirectory && page_id < ERR_MAX && request && request->header.getList(HDR_ACCEPT_LANGUAGE, &hdr) ) {
 
         size_t pos = 0; // current parsing position in header string
         char *reset = NULL; // where to reset the p pointer for each new tag file

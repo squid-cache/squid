@@ -47,14 +47,14 @@
 #include "SquidTime.h"
 #include "SwapDir.h"
 #include "icmp/net_db.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 #include "rfc1738.h"
 
 /// \ingroup ServerProtocolICPInternal2
-static void icpLogIcp(const IpAddress &, log_type, int, const char *, int);
+static void icpLogIcp(const Ip::Address &, log_type, int, const char *, int);
 
 /// \ingroup ServerProtocolICPInternal2
-static void icpHandleIcpV2(int, IpAddress &, char *, int);
+static void icpHandleIcpV2(int, Ip::Address &, char *, int);
 
 /// \ingroup ServerProtocolICPInternal2
 static void icpCount(void *, int, size_t, int);
@@ -69,7 +69,7 @@ static icpUdpData *IcpQueueHead = NULL;
 static icpUdpData *IcpQueueTail = NULL;
 
 /// \ingroup ServerProtocolICPInternal2
-IpAddress theOutICPAddr;
+Ip::Address theOutICPAddr;
 
 /* icp_common_t */
 _icp_common_t::_icp_common_t() : opcode(ICP_INVALID), version(0), length(0), reqnum(0), flags(0), pad(0), shostid(0)
@@ -174,7 +174,7 @@ ICP2State::created(StoreEntry *newEntry)
 
 /// \ingroup ServerProtocolICPInternal2
 static void
-icpLogIcp(const IpAddress &caddr, log_type logcode, int len, const char *url, int delay)
+icpLogIcp(const Ip::Address &caddr, log_type logcode, int len, const char *url, int delay)
 {
     AccessLogEntry al;
 
@@ -271,7 +271,7 @@ _icp_common_t::createMessage(
 
 int
 icpUdpSend(int fd,
-           const IpAddress &to,
+           const Ip::Address &to,
            icp_common_t * msg,
            log_type logcode,
            int delay)
@@ -381,14 +381,14 @@ icpLogFromICPCode(icp_opcode opcode)
 }
 
 void
-icpCreateAndSend(icp_opcode opcode, int flags, char const *url, int reqnum, int pad, int fd, const IpAddress &from)
+icpCreateAndSend(icp_opcode opcode, int flags, char const *url, int reqnum, int pad, int fd, const Ip::Address &from)
 {
     icp_common_t *reply = _icp_common_t::createMessage(opcode, flags, url, reqnum, pad);
     icpUdpSend(fd, from, reply, icpLogFromICPCode(opcode), 0);
 }
 
 void
-icpDenyAccess(IpAddress &from, char *url, int reqnum, int fd)
+icpDenyAccess(Ip::Address &from, char *url, int reqnum, int fd)
 {
     debugs(12, 2, "icpDenyAccess: Access Denied for " << from << " by " << AclMatchedName << ".");
 
@@ -404,7 +404,7 @@ icpDenyAccess(IpAddress &from, char *url, int reqnum, int fd)
 }
 
 int
-icpAccessAllowed(IpAddress &from, HttpRequest * icp_request)
+icpAccessAllowed(Ip::Address &from, HttpRequest * icp_request)
 {
     /* absent an explicit allow, we deny all */
     if (!Config.accessList.icp)
@@ -427,7 +427,7 @@ icpGetUrlToSend(char *url)
 }
 
 HttpRequest *
-icpGetRequest(char *url, int reqnum, int fd, IpAddress &from)
+icpGetRequest(char *url, int reqnum, int fd, Ip::Address &from)
 {
     if (strpbrk(url, w_space)) {
         url = rfc1738_escape(url);
@@ -445,7 +445,7 @@ icpGetRequest(char *url, int reqnum, int fd, IpAddress &from)
 }
 
 static void
-doV2Query(int fd, IpAddress &from, char *buf, icp_common_t header)
+doV2Query(int fd, Ip::Address &from, char *buf, icp_common_t header)
 {
     int rtt = 0;
     int src_rtt = 0;
@@ -496,7 +496,7 @@ doV2Query(int fd, IpAddress &from, char *buf, icp_common_t header)
 }
 
 void
-_icp_common_t::handleReply(char *buf, IpAddress &from)
+_icp_common_t::handleReply(char *buf, Ip::Address &from)
 {
     if (neighbors_do_private_keys && reqnum == 0) {
         debugs(12, 0, "icpHandleIcpV2: Neighbor " << from << " returned reqnum = 0");
@@ -513,7 +513,7 @@ _icp_common_t::handleReply(char *buf, IpAddress &from)
 }
 
 static void
-icpHandleIcpV2(int fd, IpAddress &from, char *buf, int len)
+icpHandleIcpV2(int fd, Ip::Address &from, char *buf, int len)
 {
     if (len <= 0) {
         debugs(12, 3, "icpHandleIcpV2: ICP message is too small");
@@ -565,8 +565,7 @@ icpHandleIcpV2(int fd, IpAddress &from, char *buf, int len)
 static void
 icpPktDump(icp_common_t * pkt)
 {
-
-    IpAddress a;
+    Ip::Address a;
 
     debugs(12, 9, "opcode:     " << std::setw(3) << pkt->opcode  << " " << icp_opcode_str[pkt->opcode]);
     debugs(12, 9, "version: "<< std::left << std::setw(8) << pkt->version);
@@ -585,7 +584,7 @@ icpHandleUdp(int sock, void *data)
 {
     int *N = &incoming_sockets_accepted;
 
-    IpAddress from;
+    Ip::Address from;
     LOCAL_ARRAY(char, buf, SQUID_UDP_SO_RCVBUF);
     int len;
     int icp_version;
@@ -651,8 +650,7 @@ void
 icpConnectionsOpen(void)
 {
     u_int16_t port;
-
-    IpAddress addr;
+    Ip::Address addr;
 
     struct addrinfo *xai = NULL;
     int x;

@@ -40,15 +40,13 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  */
+#define SQUID_NO_ALLOC_PROTECT 1
 #include "config.h"
 #include "rfc1738.h"
 #include "util.h"
 
 #if HAVE_STDIO_H
 #include <stdio.h>
-#endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
 #endif
 #if HAVE_STRING_H
 #include <string.h>
@@ -60,13 +58,13 @@
 #define NMB_BROADCAST	2
 
 struct SMBDOMAIN {
-    char *name;			/* domain name */
-    char *sname;		/* match this with user input */
-    char *passthrough;		/* pass-through authentication */
-    char *nmbaddr;		/* name service address */
+    const char *name;		/* domain name */
+    const char *sname;		/* match this with user input */
+    const char *passthrough;	/* pass-through authentication */
+    const char *nmbaddr;	/* name service address */
     int nmbcast;		/* broadcast or unicast */
     char *authshare;		/* share name of auth file */
-    char *authfile;		/* pathname of auth file */
+    const char *authfile;	/* pathname of auth file */
     struct SMBDOMAIN *next;	/* linked list */
 };
 
@@ -115,7 +113,7 @@ main(int argc, char *argv[])
     char *domname;
     FILE *p;
     int debug = 0;
-    char *shcmd;
+    const char *shcmd;
 
     /* make standard output line buffered */
     if (setvbuf(stdout, NULL, _IOLBF, 0) != 0)
@@ -139,7 +137,7 @@ main(int argc, char *argv[])
             dom->passthrough = "";
             dom->nmbaddr = "";
             dom->nmbcast = NMB_BROADCAST;
-            dom->authshare = "NETLOGON";
+            dom->authshare = (char *)"NETLOGON";
             dom->authfile = "proxyauth";
             dom->next = NULL;
 
@@ -178,7 +176,7 @@ main(int argc, char *argv[])
         }
         if (strcmp(argv[i], "-S") == 0) {
             if (lastdom != NULL) {
-                if ((lastdom->authshare = strdup(argv[++i])) == NULL)
+                if ((lastdom->authshare = xstrdup(argv[++i])) == NULL)
                     return 1;
 
                 /* convert backslashes to forward slashes */
@@ -202,7 +200,7 @@ main(int argc, char *argv[])
     shcmd = debug ? HELPERSCRIPT : HELPERSCRIPT " > /dev/null 2>&1";
 
     /* pass to helper script */
-    if (putenv("SAMBAPREFIX=" SAMBAPREFIX) != 0)
+    if (putenv((char *)"SAMBAPREFIX=" SAMBAPREFIX) != 0)
         return 1;
 
     while (1) {

@@ -14,7 +14,7 @@ attribute
 .if !'po4a'hide' .B ]\ [
 options
 .if !'po4a'hide' .B ]\ [
-ldap_server_name
+LDAP server name
 .if !'po4a'hide' .B [:
 port
 .if !'po4a'hide' .B ]|
@@ -29,7 +29,7 @@ LDAP search filter
 .if !'po4a'hide' .B \"\ [
 options
 .if !'po4a'hide' .B ]\ [
-ldap_server_name
+LDAP server name
 .if !'po4a'hide' .B [:
 port
 .if !'po4a'hide' .B ]|
@@ -73,16 +73,29 @@ to locate the user DN. Required if the users
 are in a hierarchy below the base DN, or if the login name is
 not what builds the user specific part of the users DN.
 .br
-The search filter can contain up to 15 occurrences of %s
-which will be replaced by the username, as in "uid=%s" for
-RFC2037 directories. For a detailed description of LDAP search
+The search filter can contain up to 15 occurrences of
+.B %s
+which will be replaced by the username, as in
+.B "\"uid\=%s\""
+for RFC2037 directories. For a detailed description of LDAP search
 filter syntax see RFC2254.
+.br
+Will crash if other
+.B %
+values than
+.B %s
+are used, or if more than 15
+.B %s
+are used.
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-u userattr"
 Specifies the name of the DN attribute that contains the username/login.
 Combined with the base DN to construct the users DN when no search filter
-is specified (-f option). Defaults to 'uid'
+is specified (
+.B \-f
+option). Defaults to
+.B uid
 .br
 .B Note:
 This can only be done if all your users are located directly under
@@ -138,8 +151,8 @@ The DN and the name of a file containing the password
 to bind as while performing searches. 
 .br
 Less insecure version of the former parameter pair with two advantages:
-.IP The password does not occur in the process listing, 
-.IP and the password is not being compromised if someone gets the squid 
+The password does not occur in the process listing, 
+and the password is not being compromised if someone gets the squid 
 configuration file without getting the secretfile.
 .
 .if !'po4a'hide' .TP
@@ -231,18 +244,18 @@ For directories using the RFC2307 layout with a single domain, all
 you need to specify is usually the base DN under where your users
 are located and the server name:
 .IP
-.if !'po4a'hide' .R basic_ldap_auth -b "ou=people,dc=your,dc=domain" ldapserver
+.if !'po4a'hide' .B basic_ldap_auth -b "ou=people,dc=your,dc=domain" ldapserver
 .PP
 If you have sub\-domains then you need to use a search filter approach
 to locate your user DNs as these can no longer be constructed direcly
 from the base DN and login name alone:
 .IP
-.if !'po4a'hide' .R basic_ldap_auth -b "dc=your,dc=domain" -f "uid=%s" ldapserver
+.if !'po4a'hide' .B basic_ldap_auth -b "dc=your,dc=domain" -f "uid=%s" ldapserver
 .PP
 And similarily if you only want to allow access to users having a
 specific attribute
 .IP
-.if !'po4a'hide' .R basic_ldap_auth -b "dc=your,dc=domain" -f "(&(uid=%s)(specialattribute=value))" ldapserver
+.if !'po4a'hide' .B basic_ldap_auth -b "dc=your,dc=domain" -f "(&(uid=%s)(specialattribute=value))" ldapserver
 .PP
 Or if the user attribute of the user DN is
 .B "cn"
@@ -251,7 +264,7 @@ instead of
 and you do not want to have to search for the users then you could use something
 like the following example for Active Directory:
 .IP
-.if !'po4a'hide' .R basic_ldap_auth -u cn -b "cn=Users,dc=your,dc=domain" ldapserver
+.if !'po4a'hide' .B basic_ldap_auth -u cn -b "cn=Users,dc=your,dc=domain" ldapserver
 .PP
 If you want to search for the user DN and your directory does not allow
 anonymous searches then you must also use the
@@ -261,7 +274,7 @@ and
 flags to specify a user DN and password to log in as to perform the searches, as in the
 following complex Active Directory example
 .IP
-.if !'po4a'hide' .R basic_ldap_auth -P -R -b "dc=your,dc=domain" -D "cn=squid,cn=users,dc=your,dc=domain" -w "secretsquidpassword" -f "(&(userPrincipalName=%s)(objectClass=Person))" activedirectoryserver
+.if !'po4a'hide' .B basic_ldap_auth -P -R -b "dc=your,dc=domain" -D "cn=squid,cn=users,dc=your,dc=domain" -w "secretsquidpassword" -f "(&(userPrincipalName=%s)(objectClass=Person))" activedirectoryserver
 .
 .PP
 .B NOTE:
@@ -272,10 +285,6 @@ before you attempt to use
 .B basic_ldap_auth.
 This to verify that the filter matches what you expect.
 .
-.SH KNOWN ISSUES
-Will crash if other % values than %s are used in \-f, or if more than 15 %s
-are used.
-.
 .SH AUTHOR
 This program is written by 
 .if !'po4a'hide' .I Glenn Newton <gnewton@wapiti.cisti.nrc.ca>
@@ -285,6 +294,9 @@ This manual is written by
 .if !'po4a'hide' .I Henrik Nordstrom <hno@squid-cache.org>
 .
 .SH COPYRIGHT
+This program and documentation is copyright to the authors named above.
+.PP
+Distributed under the GNU General Public License (GNU GPL) version 2 or later (GPLv2+).
 .
 .SH QUESTIONS
 Questions on the usage of this program can be sent to the
@@ -295,6 +307,9 @@ Or to your favorite LDAP list/friend if the question is more related to
 LDAP than Squid.
 .
 .SH REPORTING BUGS
+Bug reports need to be made in English.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+.PP
 Report bugs or bug fixes using http://bugs.squid-cache.org/
 .PP
 Report serious security bugs to

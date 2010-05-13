@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -43,25 +42,15 @@
 #if HAVE_STDIO_H
 #include <stdio.h>
 #endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
 #if HAVE_STRING_H
 #include <string.h>
 #endif
 #if HAVE_CTYPE_H
 #include <ctype.h>
 #endif
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
 #if HAVE_TIME_H
 #include <time.h>
 #endif
-#if HAVE_SYS_TIME_H
-#include <sys/time.h>
-#endif
-
 #include "util.h"
 
 #define RFC850_STRFTIME "%A, %d-%b-%y %H:%M:%S GMT"
@@ -204,7 +193,7 @@ parse_rfc1123(const char *str)
     if (!tm)
         return -1;
     tm->tm_isdst = -1;
-#ifdef HAVE_TIMEGM
+#if HAVE_TIMEGM
     t = timegm(tm);
 #elif HAVE_TM_TM_GMTOFF
     t = mktime(tm);
@@ -261,7 +250,7 @@ mkhttpdlogtime(const time_t * t)
 
     struct tm *gmt = gmtime(t);
 
-#ifndef USE_GMT
+#if !USE_GMT
     int gmt_min, gmt_hour, gmt_yday, day_offset;
     size_t len;
     struct tm *lt;

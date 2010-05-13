@@ -49,6 +49,7 @@ ERROR_TEMPLATES =  \
 	templates/ERR_WRITE_ERROR
 
 TRANSLATE_LANGUAGES = \
+	af.lang \
 	ar.lang \
 	az.lang \
 	bg.lang \
@@ -111,6 +112,8 @@ translate-warn:
 
 $(TRANSLATE_LANGUAGES): $(ERROR_TEMPLATES)
 
+NOTIDY=`$(PO2HTML) --help | grep -o "\-\-notidy"`
+
 .po.lang:
 	if test "$(PO2HTML)" != "" && test "$(PO2HTML)" != "no" && test "$(PO2HTML)" != "off" && test -f $(top_srcdir)/errors/en.po; then \
 	    lang=`basename $@ .lang`; \
@@ -118,7 +121,7 @@ $(TRANSLATE_LANGUAGES): $(ERROR_TEMPLATES)
 	    echo -n "Translate '$$lang' ..."; \
 	    for f in $(ERROR_TEMPLATES); do \
 			page=`basename $$f`; \
-			$(PO2HTML) --progress=none -i $(top_srcdir)/errors/$$lang.po -t $(top_srcdir)/errors/$$f >$(top_builddir)/errors/$$lang/$$page || exit 1; \
+			$(PO2HTML) $(NOTIDY) --progress=none -i $(top_srcdir)/errors/$$lang.po -t $(top_srcdir)/errors/$$f >$(top_builddir)/errors/$$lang/$$page || exit 1; \
 		done; \
 		echo "done."; \
 	fi; \

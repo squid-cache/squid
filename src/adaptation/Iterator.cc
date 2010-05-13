@@ -3,15 +3,15 @@
  */
 
 #include "squid.h"
-#include "TextException.h"
-#include "HttpRequest.h"
-#include "HttpReply.h"
-#include "HttpMsg.h"
 #include "adaptation/Config.h"
 #include "adaptation/Iterator.h"
 #include "adaptation/Service.h"
 #include "adaptation/ServiceFilter.h"
 #include "adaptation/ServiceGroups.h"
+#include "base/TextException.h"
+#include "HttpRequest.h"
+#include "HttpReply.h"
+#include "HttpMsg.h"
 
 
 Adaptation::Iterator::Iterator(Adaptation::Initiator *anInitiator,

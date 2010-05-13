@@ -53,7 +53,7 @@
 #include "forward.h"
 #include "SquidTime.h"
 #include "wordlist.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 #if USE_ICMP
 #include "icmp/IcmpSquid.h"
@@ -82,10 +82,10 @@ typedef struct {
 static hash_table *addr_table = NULL;
 static hash_table *host_table = NULL;
 
-IpAddress networkFromInaddr(const IpAddress &a);
+Ip::Address networkFromInaddr(const Ip::Address &a);
 static void netdbRelease(netdbEntry * n);
 
-static void netdbHashInsert(netdbEntry * n, IpAddress &addr);
+static void netdbHashInsert(netdbEntry * n, Ip::Address &addr);
 static void netdbHashDelete(const char *key);
 static void netdbHostInsert(netdbEntry * n, const char *hostname);
 static void netdbHostDelete(const net_db_name * x);
@@ -110,7 +110,7 @@ static void netdbExchangeDone(void *);
 static wordlist *peer_names = NULL;
 
 static void
-netdbHashInsert(netdbEntry * n, IpAddress &addr)
+netdbHashInsert(netdbEntry * n, Ip::Address &addr)
 {
     networkFromInaddr(addr).NtoA(n->network, MAX_IPSTRLEN);
     n->hash.key = n->network;
@@ -246,7 +246,7 @@ netdbPurgeLRU(void)
 }
 
 static netdbEntry *
-netdbLookupAddr(const IpAddress &addr)
+netdbLookupAddr(const Ip::Address &addr)
 {
     netdbEntry *n;
     char *key = new char[MAX_IPSTRLEN];
@@ -256,7 +256,7 @@ netdbLookupAddr(const IpAddress &addr)
 }
 
 static netdbEntry *
-netdbAdd(IpAddress &addr)
+netdbAdd(Ip::Address &addr)
 {
     netdbEntry *n;
 
@@ -274,7 +274,7 @@ netdbAdd(IpAddress &addr)
 static void
 netdbSendPing(const ipcache_addrs *ia, const DnsLookupDetails &, void *data)
 {
-    IpAddress addr;
+    Ip::Address addr;
     char *hostname = NULL;
     static_cast<generic_cbdata *>(data)->unwrap(&hostname);
     netdbEntry *n;
@@ -339,10 +339,10 @@ netdbSendPing(const ipcache_addrs *ia, const DnsLookupDetails &, void *data)
     xfree(hostname);
 }
 
-IpAddress
-networkFromInaddr(const IpAddress &in)
+Ip::Address
+networkFromInaddr(const Ip::Address &in)
 {
-    IpAddress out;
+    Ip::Address out;
 
     out = in;
 #if USE_IPV6
@@ -535,7 +535,7 @@ netdbReloadState(void)
     netdbEntry *n;
     netdbEntry N;
 
-    IpAddress addr;
+    Ip::Address addr;
     int count = 0;
 
     struct timeval start = current_time;
@@ -676,7 +676,7 @@ netdbFreeNameEntry(void *data)
 static void
 netdbExchangeHandleReply(void *data, StoreIOBuffer receivedData)
 {
-    IpAddress addr;
+    Ip::Address addr;
 
     netdbExchangeState *ex = (netdbExchangeState *)data;
     int rec_sz = 0;
@@ -936,7 +936,7 @@ netdbPingSite(const char *hostname)
 }
 
 void
-netdbHandlePingReply(const IpAddress &from, int hops, int rtt)
+netdbHandlePingReply(const Ip::Address &from, int hops, int rtt)
 {
 #if USE_ICMP
     netdbEntry *n;
@@ -983,7 +983,7 @@ netdbFreeMemory(void)
 
 #if 0 // AYJ: Looks to be unused code.
 int
-netdbHops(IpAddress &addr)
+netdbHops(Ip::Address &addr)
 {
 #if USE_ICMP
     netdbEntry *n = netdbLookupAddr(addr);
@@ -1150,7 +1150,7 @@ netdbUpdatePeer(HttpRequest * r, peer * e, int irtt, int ihops)
 }
 
 void
-netdbExchangeUpdatePeer(IpAddress &addr, peer * e, double rtt, double hops)
+netdbExchangeUpdatePeer(Ip::Address &addr, peer * e, double rtt, double hops)
 {
 #if USE_ICMP
     netdbEntry *n;
@@ -1192,7 +1192,7 @@ netdbExchangeUpdatePeer(IpAddress &addr, peer * e, double rtt, double hops)
 }
 
 void
-netdbDeleteAddrNetwork(IpAddress &addr)
+netdbDeleteAddrNetwork(Ip::Address &addr)
 {
 #if USE_ICMP
     netdbEntry *n = netdbLookupAddr(addr);
@@ -1213,7 +1213,7 @@ netdbBinaryExchange(StoreEntry * s)
     HttpReply *reply = new HttpReply;
 #if USE_ICMP
 
-    IpAddress addr;
+    Ip::Address addr;
 
     netdbEntry *n;
     int i;
@@ -1223,8 +1223,7 @@ netdbBinaryExchange(StoreEntry * s)
 
     struct in_addr line_addr;
     s->buffer();
-    HttpVersion version(1, 0);
-    reply->setHeaders(version, HTTP_OK, "OK", NULL, -1, squid_curtime, -2);
+    reply->setHeaders(HTTP_OK, "OK", NULL, -1, squid_curtime, -2);
     s->replaceHttpReply(reply);
     rec_sz = 0;
     rec_sz += 1 + sizeof(struct in_addr);
@@ -1287,9 +1286,7 @@ netdbBinaryExchange(StoreEntry * s)
     memFree(buf, MEM_4K_BUF);
 #else
 
-    HttpVersion version(1,0);
-    reply->setHeaders(version, HTTP_BAD_REQUEST, "Bad Request",
-                      NULL, -1, squid_curtime, -2);
+    reply->setHeaders(HTTP_BAD_REQUEST, "Bad Request", NULL, -1, squid_curtime, -2);
     s->replaceHttpReply(reply);
     storeAppendPrintf(s, "NETDB support not compiled into this Squid cache.\n");
 #endif
@@ -1324,7 +1321,7 @@ netdbExchangeStart(void *data)
 
     HTTPMSGLOCK(ex->r);
     assert(NULL != ex->r);
-    ex->r->http_ver = HttpVersion(1,0);
+    ex->r->http_ver = HttpVersion(1,1);
     ex->connstate = STATE_HEADER;
     ex->e = storeCreateEntry(uri, uri, request_flags(), METHOD_GET);
     ex->buf_sz = NETDB_REQBUF_SZ;

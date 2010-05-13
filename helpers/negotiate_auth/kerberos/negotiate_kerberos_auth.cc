@@ -30,6 +30,8 @@
  * Hosted at http://sourceforge.net/projects/squidkerbauth
  */
 #include "config.h"
+#include "compat/getaddrinfo.h"
+#include "compat/getnameinfo.h"
 
 #if HAVE_GSSAPI
 
@@ -38,9 +40,6 @@
 #endif
 #if HAVE_STDOI_H
 #include <stdio.h>
-#endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
 #endif
 #if HAVE_NETDB_H
 #include <netdb.h>
@@ -51,14 +50,9 @@
 #if HAVE_TIME_H
 #include <time.h>
 #endif
-#if HAVE_SYS_TIME_H
-#include <sys/time.h>
-#endif
 
 #include "util.h"
 #include "base64.h"
-#include "getaddrinfo.h"
-#include "getnameinfo.h"
 
 #if HAVE_GSSAPI_GSSAPI_H
 #include <gssapi/gssapi.h>
@@ -120,15 +114,15 @@ gethost_name(void)
 
     rc = gethostname(hostname, sysconf(_SC_HOST_NAME_MAX));
     if (rc) {
-        fprintf(stderr, "%s| %s: error while resolving hostname '%s'\n",
+        fprintf(stderr, "%s| %s: ERROR: resolving hostname '%s' failed\n",
                 LogTime(), PROGRAM, hostname);
         return NULL;
     }
-    rc = xgetaddrinfo(hostname, NULL, NULL, &hres);
+    rc = getaddrinfo(hostname, NULL, NULL, &hres);
     if (rc != 0) {
         fprintf(stderr,
-                "%s| %s: error while resolving hostname with getaddrinfo: %s\n",
-                LogTime(), PROGRAM, xgai_strerror(rc));
+                "%s| %s: ERROR: resolving hostname with getaddrinfo: %s failed\n",
+                LogTime(), PROGRAM, gai_strerror(rc));
         return NULL;
     }
     hres_list = hres;
@@ -137,17 +131,17 @@ gethost_name(void)
         count++;
         hres_list = hres_list->ai_next;
     }
-    rc = xgetnameinfo(hres->ai_addr, hres->ai_addrlen, hostname,
-                      sizeof(hostname), NULL, 0, 0);
+    rc = getnameinfo(hres->ai_addr, hres->ai_addrlen, hostname,
+                     sizeof(hostname), NULL, 0, 0);
     if (rc != 0) {
         fprintf(stderr,
-                "%s| %s: error while resolving ip address with getnameinfo: %s\n",
-                LogTime(), PROGRAM, xgai_strerror(rc));
-        xfreeaddrinfo(hres);
+                "%s| %s: ERROR: resolving ip address with getnameinfo: %s failed\n",
+                LogTime(), PROGRAM, gai_strerror(rc));
+        freeaddrinfo(hres);
         return NULL;
     }
 
-    xfreeaddrinfo(hres);
+    freeaddrinfo(hres);
     hostname[sysconf(_SC_HOST_NAME_MAX) - 1] = '\0';
     return (xstrdup(hostname));
 }
@@ -171,7 +165,7 @@ check_gss_err(OM_uint32 major_status, OM_uint32 minor_status,
                                           GSS_C_GSS_CODE, GSS_C_NULL_OID, &msg_ctx, &status_string);
             if (maj_stat == GSS_S_COMPLETE) {
                 if (sizeof(buf) > len + status_string.length + 1) {
-                    sprintf(buf + len, "%s", (char *) status_string.value);
+                    snprintf(buf + len, (sizeof(buf)-len), "%s", (char *) status_string.value);
                     len += status_string.length;
                 }
                 gss_release_buffer(&min_stat, &status_string);
@@ -180,7 +174,7 @@ check_gss_err(OM_uint32 major_status, OM_uint32 minor_status,
             gss_release_buffer(&min_stat, &status_string);
         }
         if (sizeof(buf) > len + 2) {
-            sprintf(buf + len, "%s", ". ");
+            snprintf(buf + len, (sizeof(buf)-len), "%s", ". ");
             len += 2;
         }
         msg_ctx = 0;
@@ -190,7 +184,7 @@ check_gss_err(OM_uint32 major_status, OM_uint32 minor_status,
                                           GSS_C_MECH_CODE, GSS_C_NULL_OID, &msg_ctx, &status_string);
             if (maj_stat == GSS_S_COMPLETE) {
                 if (sizeof(buf) > len + status_string.length) {
-                    sprintf(buf + len, "%s", (char *) status_string.value);
+                    snprintf(buf + len,(sizeof(buf)-len), "%s", (char *) status_string.value);
                     len += status_string.length;
                 }
                 gss_release_buffer(&min_stat, &status_string);
@@ -199,11 +193,11 @@ check_gss_err(OM_uint32 major_status, OM_uint32 minor_status,
             gss_release_buffer(&min_stat, &status_string);
         }
         if (debug)
-            fprintf(stderr, "%s| %s: %s failed: %s\n", LogTime(), PROGRAM,
+            fprintf(stderr, "%s| %s: ERROR: %s failed: %s\n", LogTime(), PROGRAM,
                     function, buf);
         fprintf(stdout, "BH %s failed: %s\n", function, buf);
         if (log)
-            fprintf(stderr, "%s| %s: User not authenticated\n", LogTime(),
+            fprintf(stderr, "%s| %s: INFO: User not authenticated\n", LogTime(),
                     PROGRAM);
         return (1);
     }
@@ -267,13 +261,13 @@ main(int argc, char *const argv[])
             fprintf(stderr, "default SPN is HTTP/fqdn@DEFAULT_REALM\n");
             exit(0);
         default:
-            fprintf(stderr, "%s| %s: unknown option: -%c.\n", LogTime(),
+            fprintf(stderr, "%s| %s: WARNING: unknown option: -%c.\n", LogTime(),
                     PROGRAM, opt);
         }
     }
 
     if (debug)
-        fprintf(stderr, "%s| %s: Starting version %s\n", LogTime(), PROGRAM,
+        fprintf(stderr, "%s| %s: INFO: Starting version %s\n", LogTime(), PROGRAM,
                 SQUID_KERB_AUTH_VERSION);
     if (service_principal && strcasecmp(service_principal, "GSS_C_NO_NAME")) {
         service.value = service_principal;
@@ -282,7 +276,7 @@ main(int argc, char *const argv[])
         host_name = gethost_name();
         if (!host_name) {
             fprintf(stderr,
-                    "%s| %s: Local hostname could not be determined. Please specify the service principal\n",
+                    "%s| %s: FATAL: Local hostname could not be determined. Please specify the service principal\n",
                     LogTime(), PROGRAM);
             fprintf(stdout, "BH hostname error\n");
             exit(-1);
@@ -298,7 +292,7 @@ main(int argc, char *const argv[])
             if (ferror(stdin)) {
                 if (debug)
                     fprintf(stderr,
-                            "%s| %s: fgets() failed! dying..... errno=%d (%s)\n",
+                            "%s| %s: FATAL: fgets() failed! dying..... errno=%d (%s)\n",
                             LogTime(), PROGRAM, ferror(stdin),
                             strerror(ferror(stdin)));
 
@@ -318,7 +312,7 @@ main(int argc, char *const argv[])
         }
         if (err) {
             if (debug)
-                fprintf(stderr, "%s| %s: Oversized message\n", LogTime(),
+                fprintf(stderr, "%s| %s: ERROR: Oversized message\n", LogTime(),
                         PROGRAM);
             fprintf(stdout, "BH Oversized message\n");
             err = 0;
@@ -326,12 +320,12 @@ main(int argc, char *const argv[])
         }
 
         if (debug)
-            fprintf(stderr, "%s| %s: Got '%s' from squid (length: %d).\n",
+            fprintf(stderr, "%s| %s: DEBUG: Got '%s' from squid (length: %d).\n",
                     LogTime(), PROGRAM, buf, length);
 
         if (buf[0] == '\0') {
             if (debug)
-                fprintf(stderr, "%s| %s: Invalid request\n", LogTime(),
+                fprintf(stderr, "%s| %s: ERROR: Invalid request\n", LogTime(),
                         PROGRAM);
             fprintf(stdout, "BH Invalid request\n");
             continue;
@@ -339,7 +333,7 @@ main(int argc, char *const argv[])
 
         if (strlen(buf) < 2) {
             if (debug)
-                fprintf(stderr, "%s| %s: Invalid request [%s]\n", LogTime(),
+                fprintf(stderr, "%s| %s: ERROR: Invalid request [%s]\n", LogTime(),
                         PROGRAM, buf);
             fprintf(stdout, "BH Invalid request\n");
             continue;
@@ -382,7 +376,7 @@ main(int argc, char *const argv[])
 
         if (strncmp(buf, "YR", 2) && strncmp(buf, "KK", 2)) {
             if (debug)
-                fprintf(stderr, "%s| %s: Invalid request [%s]\n", LogTime(),
+                fprintf(stderr, "%s| %s: ERROR: Invalid request [%s]\n", LogTime(),
                         PROGRAM, buf);
             fprintf(stdout, "BH Invalid request\n");
             continue;
@@ -395,7 +389,7 @@ main(int argc, char *const argv[])
 
         if (strlen(buf) <= 3) {
             if (debug)
-                fprintf(stderr, "%s| %s: Invalid negotiate request [%s]\n",
+                fprintf(stderr, "%s| %s: ERROR: Invalid negotiate request [%s]\n",
                         LogTime(), PROGRAM, buf);
             fprintf(stdout, "BH Invalid negotiate request\n");
             continue;
@@ -403,7 +397,7 @@ main(int argc, char *const argv[])
 
         input_token.length = ska_base64_decode_len(buf + 3);
         if (debug)
-            fprintf(stderr, "%s| %s: Decode '%s' (decoded length: %d).\n",
+            fprintf(stderr, "%s| %s: DEBUG: Decode '%s' (decoded length: %d).\n",
                     LogTime(), PROGRAM, buf + 3, (int) input_token.length);
         input_token.value = xmalloc(input_token.length);
 
@@ -413,7 +407,7 @@ main(int argc, char *const argv[])
         if ((input_token.length >= sizeof ntlmProtocol + 1) &&
                 (!memcmp(input_token.value, ntlmProtocol, sizeof ntlmProtocol))) {
             if (debug)
-                fprintf(stderr, "%s| %s: received type %d NTLM token\n",
+                fprintf(stderr, "%s| %s: WARNING: received type %d NTLM token\n",
                         LogTime(), PROGRAM,
                         (int) *((unsigned char *) input_token.value +
                                 sizeof ntlmProtocol));
@@ -462,7 +456,7 @@ main(int argc, char *const argv[])
             token = (char*)xmalloc(ska_base64_encode_len(spnegoTokenLength));
             if (token == NULL) {
                 if (debug)
-                    fprintf(stderr, "%s| %s: Not enough memory\n", LogTime(),
+                    fprintf(stderr, "%s| %s: ERROR: Not enough memory\n", LogTime(),
                             PROGRAM);
                 fprintf(stdout, "BH Not enough memory\n");
                 goto cleanup;
@@ -476,7 +470,7 @@ main(int argc, char *const argv[])
                 goto cleanup;
             if (major_status & GSS_S_CONTINUE_NEEDED) {
                 if (debug)
-                    fprintf(stderr, "%s| %s: continuation needed\n", LogTime(),
+                    fprintf(stderr, "%s| %s: INFO: continuation needed\n", LogTime(),
                             PROGRAM);
                 fprintf(stdout, "TT %s\n", token);
                 goto cleanup;
@@ -492,7 +486,7 @@ main(int argc, char *const argv[])
             user = (char*)xmalloc(output_token.length + 1);
             if (user == NULL) {
                 if (debug)
-                    fprintf(stderr, "%s| %s: Not enough memory\n", LogTime(),
+                    fprintf(stderr, "%s| %s: ERROR: Not enough memory\n", LogTime(),
                             PROGRAM);
                 fprintf(stdout, "BH Not enough memory\n");
                 goto cleanup;
@@ -504,10 +498,10 @@ main(int argc, char *const argv[])
             }
             fprintf(stdout, "AF %s %s\n", token, user);
             if (debug)
-                fprintf(stderr, "%s| %s: AF %s %s\n", LogTime(), PROGRAM, token,
+                fprintf(stderr, "%s| %s: DEBUG: AF %s %s\n", LogTime(), PROGRAM, token,
                         user);
             if (log)
-                fprintf(stderr, "%s| %s: User %s authenticated\n", LogTime(),
+                fprintf(stderr, "%s| %s: INFO: User %s authenticated\n", LogTime(),
                         PROGRAM, user);
             goto cleanup;
         } else {
@@ -516,7 +510,7 @@ main(int argc, char *const argv[])
                 goto cleanup;
             if (major_status & GSS_S_CONTINUE_NEEDED) {
                 if (debug)
-                    fprintf(stderr, "%s| %s: continuation needed\n", LogTime(),
+                    fprintf(stderr, "%s| %s: INFO: continuation needed\n", LogTime(),
                             PROGRAM);
                 fprintf(stdout, "NA %s\n", token);
                 goto cleanup;
@@ -535,7 +529,7 @@ main(int argc, char *const argv[])
             user = (char*)xmalloc(output_token.length + 1);
             if (user == NULL) {
                 if (debug)
-                    fprintf(stderr, "%s| %s: Not enough memory\n", LogTime(),
+                    fprintf(stderr, "%s| %s: ERROR: Not enough memory\n", LogTime(),
                             PROGRAM);
                 fprintf(stdout, "BH Not enough memory\n");
                 goto cleanup;
@@ -547,10 +541,10 @@ main(int argc, char *const argv[])
             }
             fprintf(stdout, "AF %s %s\n", "AA==", user);
             if (debug)
-                fprintf(stderr, "%s| %s: AF %s %s\n", LogTime(), PROGRAM,
+                fprintf(stderr, "%s| %s: DEBUG: AF %s %s\n", LogTime(), PROGRAM,
                         "AA==", user);
             if (log)
-                fprintf(stderr, "%s| %s: User %s authenticated\n", LogTime(),
+                fprintf(stderr, "%s| %s: INFO: User %s authenticated\n", LogTime(),
                         PROGRAM, user);
 
         }

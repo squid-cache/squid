@@ -455,10 +455,7 @@ MimeIcon::created (StoreEntry *newEntry)
 
     HttpReply *reply = new HttpReply;
 
-    HttpVersion version(1, 0);
-
-    reply->setHeaders(version, HTTP_OK, NULL,
-                      mimeGetContentType(icon), sb.st_size, sb.st_mtime, -1);
+    reply->setHeaders(HTTP_OK, NULL, mimeGetContentType(icon), sb.st_size, sb.st_mtime, -1);
 
     reply->cache_control = httpHdrCcCreate();
 

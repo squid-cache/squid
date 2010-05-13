@@ -1,3 +1,4 @@
+#define SQUID_UNIT_TEST 1
 #include "config.h"
 #include "testUfs.h"
 #include "Store.h"
@@ -142,9 +143,8 @@ testUfs::testUfsSearch()
         request_flags flags;
         flags.cachable = 1;
         StoreEntry *pe = storeCreateEntry("dummy url", "dummy log url", flags, METHOD_GET);
-        HttpVersion version(1, 0);
         HttpReply *rep = (HttpReply *) pe->getReply();	// bypass const
-        rep->setHeaders(version, HTTP_OK, "dummy test object", "x-squid-internal/test", -1, -1, squid_curtime + 100000);
+        rep->setHeaders(HTTP_OK, "dummy test object", "x-squid-internal/test", -1, -1, squid_curtime + 100000);
 
         pe->setPublicKey();
 

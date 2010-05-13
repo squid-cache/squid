@@ -306,7 +306,7 @@ AuthBasicConfig::dump(StoreEntry * entry, const char *name, AuthConfig * scheme)
     storeAppendPrintf(entry, "%s basic casesensitive %s\n", name, casesensitive ? "on" : "off");
 }
 
-AuthBasicConfig::AuthBasicConfig() : authenticateChildren(20,0,1,1)
+AuthBasicConfig::AuthBasicConfig() : authenticateChildren(20)
 {
     /* TODO: move into initialisation list */
     credentialsTTL = 2 * 60 * 60;	/* two hours */

@@ -13,14 +13,16 @@ TTL
 .if !'po4a'hide' .B "] [\-o] [\-1]"
 .
 .SH DESCRIPTION
-This helper allows Squid to connect to a mostly any available PAM
+.B basic_pam_auth
+allows Squid to connect to a mostly any available PAM
 database to validate the user name and password of Basic HTTP
 authentication.
 .
 .SH OPTIONS
 .if !'po4a'hide' .TP 12
 .if !'po4a'hide' .BI "\-s " "service\-name"
-Specifies the PAM service name Squid uses, defaults to "squid"
+Specifies the PAM service name Squid uses, defaults to
+.B squid
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .BI "\-t " TTL
@@ -38,13 +40,16 @@ expiration etc)
 .
 .SH CONFIGURATION
 The program needs a PAM service to be configured in 
-.B /etc/pam.conf
+.BR /etc/pam.conf
 or
-.B /etc/pam.d/<servicename>
+.BR /etc/pam.d/squid
 .PP
-The default service name is "squid", and the program makes use
-of the
-.BR "" ' auth "' and '" account '
+The default service name is
+.B squid
+, and the program makes use of the
+.B auth
+and
+.B account
 management groups to verify the password and the accounts validity.
 .PP
 For details on how to configure PAM services, see the PAM
@@ -60,9 +65,9 @@ program is not recommended, but if you absolutely need to then make
 the program setuid root
 .if !'po4a'hide' .RS
 .if !'po4a'hide' .P
-.if !'po4a'hide' .B chown root pam_auth
+.if !'po4a'hide' .B chown root basic_pam_auth
 .if !'po4a'hide' .br
-.if !'po4a'hide' .B chmod u+s pam_auth
+.if !'po4a'hide' .B chmod u+s basic_pam_auth
 .if !'po4a'hide' .RE
 .PP
 Please note that in such configurations it is also strongly recommended
@@ -82,12 +87,17 @@ Squid
 and this manual is Copyright 1999,2002,2003
 .if !'po4a'hide' .I Henrik Nordstrom <hno@squid-cache.org>
 .
+Distributed under the GNU General Public License (GNU GPL) version 2 or later (GPLv2+).
+.
 .SH QUESTIONS
 Questions on the usage of this program can be sent to the
 .I Squid Users mailing list
 .if !'po4a'hide' <squid-users@squid-cache.org>
 .
 .SH REPORTING BUGS
+Bug reports need to be made in English.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+.PP
 Report bugs or bug fixes using http://bugs.squid-cache.org/
 .PP
 Report serious security bugs to
@@ -99,7 +109,9 @@ Report ideas for new improvements to the
 .
 .SH SEE ALSO
 .if !'po4a'hide' .BR squid "(8), "
-.if !'po4a'hide' .BR pam "(8), "
+.if !'po4a'hide' .BR pam "(3), "
 .if !'po4a'hide' .BR pam.conf "(5), "
+.if !'po4a'hide' .BR chown "(1), "
+.if !'po4a'hide' .BR chmod "(1), "
 .br
 PAM Systems Administrator Guide

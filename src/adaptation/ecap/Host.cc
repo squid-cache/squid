@@ -1,7 +1,7 @@
 #include "squid.h"
 #include <libecap/adapter/service.h>
 #include <libecap/common/names.h>
-#include "TextException.h"
+#include "base/TextException.h"
 #include "adaptation/ecap/ServiceRep.h"
 #include "adaptation/ecap/Host.h"
 

@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -48,14 +47,8 @@
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
 #if HAVE_MEMORY_H
 #include <memory.h>
-#endif
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
 #endif
 #if HAVE_ASSERT_H
 #include <assert.h>
@@ -82,9 +75,6 @@
 #endif
 
 
-
-int rfc1035_errno;
-const char *rfc1035_error_message;
 
 /*
  * rfc1035HeaderPack()
@@ -287,7 +277,10 @@ rfc1035NameUnpack(const char *buf, size_t sz, unsigned int *off, unsigned short 
     size_t len;
     assert(ns > 0);
     do {
-        assert((*off) < sz);
+        if ((*off) >= sz) {
+            RFC1035_UNPACK_DEBUG;
+            return 1;
+        }
         c = *(buf + (*off));
         if (c > 191) {
             /* blasted compression */
@@ -436,39 +429,41 @@ rfc1035RRUnpack(const char *buf, size_t sz, unsigned int *off, rfc1035_rr * RR)
     return 0;
 }
 
-static void
-rfc1035SetErrno(int n)
+const char *
+rfc1035ErrorMessage(int n)
 {
-    switch (rfc1035_errno = n) {
+    if (n < 0)
+        n = -n;
+    switch (n) {
     case 0:
-        rfc1035_error_message = "No error condition";
+        return "No error condition";
         break;
     case 1:
-        rfc1035_error_message = "Format Error: The name server was "
-                                "unable to interpret the query.";
+        return "Format Error: The name server was "
+               "unable to interpret the query.";
         break;
     case 2:
-        rfc1035_error_message = "Server Failure: The name server was "
-                                "unable to process this query.";
+        return "Server Failure: The name server was "
+               "unable to process this query.";
         break;
     case 3:
-        rfc1035_error_message = "Name Error: The domain name does "
-                                "not exist.";
+        return "Name Error: The domain name does "
+               "not exist.";
         break;
     case 4:
-        rfc1035_error_message = "Not Implemented: The name server does "
-                                "not support the requested kind of query.";
+        return "Not Implemented: The name server does "
+               "not support the requested kind of query.";
         break;
     case 5:
-        rfc1035_error_message = "Refused: The name server refuses to "
-                                "perform the specified operation.";
+        return "Refused: The name server refuses to "
+               "perform the specified operation.";
         break;
     case rfc1035_unpack_error:
-        rfc1035_error_message = "The DNS reply message is corrupt or could "
-                                "not be safely parsed.";
+        return "The DNS reply message is corrupt or could "
+               "not be safely parsed.";
         break;
     default:
-        rfc1035_error_message = "Unknown Error";
+        return "Unknown Error";
         break;
     }
 }
@@ -588,17 +583,13 @@ rfc1035MessageUnpack(const char *buf,
     msg = (rfc1035_message*)xcalloc(1, sizeof(*msg));
     if (rfc1035HeaderUnpack(buf + off, sz - off, &off, msg)) {
         RFC1035_UNPACK_DEBUG;
-        rfc1035SetErrno(rfc1035_unpack_error);
         xfree(msg);
         return -rfc1035_unpack_error;
     }
-    rfc1035_errno = 0;
-    rfc1035_error_message = NULL;
     i = (unsigned int) msg->qdcount;
     if (i != 1) {
         /* This can not be an answer to our queries.. */
         RFC1035_UNPACK_DEBUG;
-        rfc1035SetErrno(rfc1035_unpack_error);
         xfree(msg);
         return -rfc1035_unpack_error;
     }
@@ -606,7 +597,6 @@ rfc1035MessageUnpack(const char *buf,
     for (j = 0; j < i; j++) {
         if (rfc1035QueryUnpack(buf, sz, &off, &querys[j])) {
             RFC1035_UNPACK_DEBUG;
-            rfc1035SetErrno(rfc1035_unpack_error);
             rfc1035MessageDestroy(&msg);
             return -rfc1035_unpack_error;
         }
@@ -614,8 +604,7 @@ rfc1035MessageUnpack(const char *buf,
     *answer = msg;
     if (msg->rcode) {
         RFC1035_UNPACK_DEBUG;
-        rfc1035SetErrno((int) msg->rcode);
-        return -rfc1035_errno;
+        return -msg->rcode;
     }
     if (msg->ancount == 0)
         return 0;
@@ -639,7 +628,6 @@ rfc1035MessageUnpack(const char *buf,
          */
         rfc1035MessageDestroy(&msg);
         *answer = NULL;
-        rfc1035SetErrno(rfc1035_unpack_error);
         return -rfc1035_unpack_error;
     }
     return nr;
@@ -739,7 +727,6 @@ rfc1035SetQueryID(char *buf, unsigned short qid)
 
 #if DRIVER
 #include <sys/socket.h>
-#include <sys/time.h>
 int
 main(int argc, char *argv[])
 {
@@ -802,7 +789,7 @@ main(int argc, char *argv[])
                                      &answers,
                                      &rid);
             if (n < 0) {
-                printf("ERROR %d\n", rfc1035_errno);
+                printf("ERROR %d\n", -n);
             } else if (rid != sid) {
                 printf("ERROR, ID mismatch (%#hx, %#hx)\n", sid, rid);
             } else {

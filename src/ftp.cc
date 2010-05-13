@@ -35,6 +35,7 @@
 #include "squid.h"
 #include "comm.h"
 #include "comm/ListenStateData.h"
+#include "compat/strtoll.h"
 #include "ConnectionDetail.h"
 #include "errorpage.h"
 #include "fde.h"
@@ -2296,7 +2297,7 @@ ftpReadEPSV(FtpStateData* ftpState)
     char h1, h2, h3, h4;
     int n;
     u_short port;
-    IpAddress ipa_remote;
+    Ip::Address ipa_remote;
     int fd = ftpState->data.fd;
     char *buf;
     debugs(9, 3, HERE);
@@ -2417,7 +2418,7 @@ ftpReadEPSV(FtpStateData* ftpState)
 static void
 ftpSendPassive(FtpStateData * ftpState)
 {
-    IpAddress addr;
+    Ip::Address addr;
     struct addrinfo *AI = NULL;
 
     /** Checks the server control channel is still available before running. */
@@ -2602,7 +2603,7 @@ ftpReadPasv(FtpStateData * ftpState)
     int p1, p2;
     int n;
     u_short port;
-    IpAddress ipa_remote;
+    Ip::Address ipa_remote;
     int fd = ftpState->data.fd;
     char *buf;
     LOCAL_ARRAY(char, ipaddr, 1024);
@@ -2708,8 +2709,7 @@ static int
 ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
 {
     int fd;
-
-    IpAddress addr;
+    Ip::Address addr;
     struct addrinfo *AI = NULL;
     int on = 1;
     int x = 0;
@@ -2779,8 +2779,7 @@ static void
 ftpSendPORT(FtpStateData * ftpState)
 {
     int fd;
-
-    IpAddress ipa;
+    Ip::Address ipa;
     struct addrinfo *AI = NULL;
     unsigned char *addrptr;
     unsigned char *portptr;
@@ -2851,7 +2850,7 @@ static void
 ftpSendEPRT(FtpStateData * ftpState)
 {
     int fd;
-    IpAddress addr;
+    Ip::Address addr;
     struct addrinfo *AI = NULL;
     char buf[MAX_IPSTRLEN];
 
@@ -2864,10 +2863,10 @@ ftpSendEPRT(FtpStateData * ftpState)
     ftpState->flags.pasv_supported = 0;
     fd = ftpOpenListenSocket(ftpState, 0);
 
-    addr.InitAddrInfo(AI);
+    Ip::Address::InitAddrInfo(AI);
 
     if (getsockname(fd, AI->ai_addr, &AI->ai_addrlen)) {
-        addr.FreeAddrInfo(AI);
+        Ip::Address::FreeAddrInfo(AI);
         debugs(9, DBG_CRITICAL, HERE << "getsockname(" << fd << ",..): " << xstrerror());
 
         /* XXX Need to set error message */
@@ -2887,7 +2886,7 @@ ftpSendEPRT(FtpStateData * ftpState)
     ftpState->writeCommand(cbuf);
     ftpState->state = SENT_EPRT;
 
-    addr.FreeAddrInfo(AI);
+    Ip::Address::FreeAddrInfo(AI);
 }
 
 static void
@@ -3697,11 +3696,9 @@ FtpStateData::appendSuccessHeader()
 
     /* set standard stuff */
 
-    HttpVersion version(1, 0);
     if (0 == getCurrentOffset()) {
         /* Full reply */
-        reply->setHeaders(version, HTTP_OK, "Gatewaying",
-                          mime_type, theSize, mdtm, -2);
+        reply->setHeaders(HTTP_OK, "Gatewaying", mime_type, theSize, mdtm, -2);
     } else if (theSize < getCurrentOffset()) {
         /*
          * DPW 2007-05-04
@@ -3713,15 +3710,13 @@ FtpStateData::appendSuccessHeader()
                " current offset=" << getCurrentOffset() <<
                ", but theSize=" << theSize <<
                ".  assuming full content response");
-        reply->setHeaders(version, HTTP_OK, "Gatewaying",
-                          mime_type, theSize, mdtm, -2);
+        reply->setHeaders(HTTP_OK, "Gatewaying", mime_type, theSize, mdtm, -2);
     } else {
         /* Partial reply */
         HttpHdrRangeSpec range_spec;
         range_spec.offset = getCurrentOffset();
         range_spec.length = theSize - getCurrentOffset();
-        reply->setHeaders(version, HTTP_PARTIAL_CONTENT, "Gatewaying",
-                          mime_type, theSize - getCurrentOffset(), mdtm, -2);
+        reply->setHeaders(HTTP_PARTIAL_CONTENT, "Gatewaying", mime_type, theSize - getCurrentOffset(), mdtm, -2);
         httpHeaderAddContRange(&reply->header, range_spec, theSize);
     }
 
@@ -3959,8 +3954,7 @@ FtpChannel::close()
         comm_remove_close_handler(fd, closer);
         closer = NULL;
         fd = -1;
-    }
-    else if (fd >= 0) {
+    } else if (fd >= 0) {
         comm_remove_close_handler(fd, closer);
         closer = NULL;
         comm_close(fd); // we do not expect to be called back

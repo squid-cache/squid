@@ -22,23 +22,16 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+#define SQUID_NO_ALLOC_PROTECT 1
+#include "config.h"
 
 #include <string.h>
-#include <stdlib.h>
 
 #include "std-includes.h"
 #include "rfcnb-priv.h"
 #include "rfcnb-util.h"
 #include "rfcnb-io.h"
 #include <arpa/inet.h>
-
-#ifndef uint16
-#ifdef u_int16_t
-typedef u_int16_t uint16;
-#else
-typedef unsigned short uint16;
-#endif
-#endif
 
 extern void (*Prot_Print_Routine) ();	/* Pointer to protocol print routine */
 

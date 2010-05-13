@@ -55,7 +55,7 @@ National Laboratory for Applied Network Research and funded by
 the National Science Foundation.
 .
 .SH COPYRIGHT
-Distributed under the GNU Public License version 2 or later (GPL2+).
+Distributed under the GNU General Public License (GNU GPL) version 2 or later (GPLv2+).
 .
 .SH QUESTIONS
 Questions on the usage of this program can be sent to the
@@ -63,6 +63,8 @@ Questions on the usage of this program can be sent to the
 .if !'po4a'hide' <squid-users@squid-cache.org>
 .
 .SH REPORTING BUGS
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+.PP
 Report bugs or bug fixes using http://bugs.squid-cache.org/
 .PP
 Report serious security bugs to

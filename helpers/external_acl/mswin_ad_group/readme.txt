@@ -1,5 +1,5 @@
 
-This is the readme.txt file for mswin_check_ad_group, an external
+This is the readme.txt file for mswin_check_ad_group 2.0, an external
 helper for the External ACL Scheme for Squid.
 
 
@@ -9,18 +9,36 @@ It reads from the standard input the domain username and a list of groups
 and tries to match it against the groups membership of the specified
 username.
 
+Two running mode are available:
+
+- Local mode:
+membership is checked against machine's local groups, cannot be used when
+running on a Domain Controller.
+
+- Active Directory Global mode:
+membership is checked against the whole Active Directory Forest of the
+machine where Squid is running.
+
 The minimal Windows version needed to run mswin_check_ad_group is
 a Windows 2000 SP4 member of an Active Directory Domain.
+
+When running in Active Directory Global mode, all types of Active Directory 
+security groups are supported:
+- Domain Global
+- Domain Local from user's domain
+- Universal
+and Active Directory group nesting is fully supported.
+
 
 ==============
 Program Syntax
 ==============
 
-mswin_check_lm_group [-D domain][-G][-c][-d][-h]
+mswin_check_ad_group [-D domain][-G][-c][-d][-h]
 
 -D domain specify the default user's domain
--G        start helper in Domain Global Group mode
--c        use case insensitive compare
+-G        start helper in Active Directory Global mode
+-c        use case insensitive compare (local mode only)
 -d        enable debugging
 -h        this message
 
@@ -29,10 +47,24 @@ mswin_check_lm_group [-D domain][-G][-c][-d][-h]
 squid.conf usage
 ================
 
+When running in Active Directory Global mode, the AD Group can be specified using the
+following syntax:
+
+1. Plain NT4 Group Name
+2. Full NT4 Group Name
+3. Active Directory Canonical name
+
+As Example:
+1. Proxy-Users
+2. MYDOMAIN\Proxy-Users
+3. mydomain.local/Groups/Proxy-Users
+
+When using Plain NT4 Group Name, the Group is searched in the user's domain.  
+
 external_acl_type AD_global_group %LOGIN c:/squid/libexec/mswin_check_ad_group.exe -G
 external_acl_type NT_local_group %LOGIN c:/squid/libexec/mswin_check_ad_group.exe
 
-acl GProxyUsers external AD_global_group GProxyUsers
+acl GProxyUsers external AD_global_group MYDOMAIN\GProxyUsers
 acl LProxyUsers external NT_local_group LProxyUsers
 acl password proxy_auth REQUIRED
 
@@ -40,7 +72,7 @@ http_access allow password GProxyUsers
 http_access allow password LProxyUsers
 http_access deny all
 
-In the previous example all validated AD users member of GProxyUsers Global 
+In the previous example all validated AD users member of MYDOMAIN\GProxyUsers 
 domain group or member of LProxyUsers machine local group are allowed to 
 use the cache.
 
@@ -55,8 +87,12 @@ and the DomainUsers files will contain only the following line:
 "Domain Users"
 
 NOTES: 
-- The standard group name comparison is case sensitive, so group name
-  must be specified with same case as in the Active Directory Domain.
+- When running in Active Directory Global mode, for better performance,
+  all Domain Controllers of the Active Directory forest should be configured
+  as Global Catalog.
+- When running in local mode, the standard group name comparison is case
+  sensitive, so group name must be specified with same case as in the
+  local SAM database.
   It's possible to enable case insensitive group name comparison (-c),
   but on some not-english locales, the results can be unexpected.
 - Native WIN32 NTLM and Basic Helpers must be used without the

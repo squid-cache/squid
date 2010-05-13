@@ -56,7 +56,8 @@
 #endif
 #include "HttpRequestMethod.h"
 #include "ident/Config.h"
-#include "ip/IpIntercept.h"
+#include "ip/Intercept.h"
+#include "ip/QosConfig.h"
 #include "log/Config.h"
 #include "MemBuf.h"
 #include "Parsing.h"
@@ -86,6 +87,10 @@ static void dump_icap_service_type(StoreEntry *, const char *, const Adaptation:
 static void free_icap_service_type(Adaptation::Icap::Config *);
 static void parse_icap_class_type();
 static void parse_icap_access_type();
+
+static void parse_icap_service_failure_limit(Adaptation::Icap::Config *);
+static void dump_icap_service_failure_limit(StoreEntry *, const char *, const Adaptation::Icap::Config &);
+static void free_icap_service_failure_limit(Adaptation::Icap::Config *);
 #endif
 
 #if USE_ECAP
@@ -150,11 +155,11 @@ static void dump_denyinfo(StoreEntry * entry, const char *name, acl_deny_info_li
 static void free_denyinfo(acl_deny_info_list ** var);
 
 #if USE_WCCPv2
-static void parse_IpAddress_list(IpAddress_list **);
-static void dump_IpAddress_list(StoreEntry *, const char *, const IpAddress_list *);
-static void free_IpAddress_list(IpAddress_list **);
+static void parse_IpAddress_list(Ip::Address_list **);
+static void dump_IpAddress_list(StoreEntry *, const char *, const Ip::Address_list *);
+static void free_IpAddress_list(Ip::Address_list **);
 #if CURRENTLY_UNUSED
-static int check_null_IpAddress_list(const IpAddress_list *);
+static int check_null_IpAddress_list(const Ip::Address_list *);
 #endif /* CURRENTLY_UNUSED */
 #endif /* USE_WCCPv2 */
 
@@ -504,6 +509,12 @@ configDoConfigure(void)
     snprintf(ThisCache2, sizeof(ThisCache), " %s (%s)",
              uniqueHostname(),
              visible_appname_string);
+
+    /* Use visible_hostname as default surrogate_id */
+    if (!Config.Accel.surrogate_id) {
+        const char *t = getMyHostname();
+        Config.Accel.surrogate_id = xstrdup( (t?t:"unset-id") );
+    }
 
     if (!Config.udpMaxHitObjsz || Config.udpMaxHitObjsz > SQUID_UDP_SO_SNDBUF)
         Config.udpMaxHitObjsz = SQUID_UDP_SO_SNDBUF;
@@ -998,14 +1009,14 @@ free_acl_access(acl_access ** head)
 }
 
 static void
-dump_address(StoreEntry * entry, const char *name, IpAddress &addr)
+dump_address(StoreEntry * entry, const char *name, Ip::Address &addr)
 {
     char buf[MAX_IPSTRLEN];
     storeAppendPrintf(entry, "%s %s\n", name, addr.NtoA(buf,MAX_IPSTRLEN) );
 }
 
 static void
-parse_address(IpAddress *addr)
+parse_address(Ip::Address *addr)
 {
     char *token = strtok(NULL, w_space);
 
@@ -1025,7 +1036,7 @@ parse_address(IpAddress *addr)
 }
 
 static void
-free_address(IpAddress *addr)
+free_address(Ip::Address *addr)
 {
     addr->SetEmpty();
 }
@@ -1597,12 +1608,13 @@ dump_peer(StoreEntry * entry, const char *name, peer * p)
     LOCAL_ARRAY(char, xname, 128);
 
     while (p != NULL) {
-        storeAppendPrintf(entry, "%s %s %s %d %d",
+        storeAppendPrintf(entry, "%s %s %s %d %d name=%s",
                           name,
                           p->host,
                           neighborTypeStr(p),
                           p->http_port,
-                          p->icp.port);
+                          p->icp.port,
+                          p->name);
         dump_peer_options(entry, p);
 
         for (d = p->peer_domain; d; d = d->next) {
@@ -1739,6 +1751,10 @@ parse_peer(peer ** head)
             p->options.no_tproxy = 1;
         } else if (!strcasecmp(token, "multicast-responder")) {
             p->options.mcast_responder = 1;
+#if PEER_MULTICAST_SIBLINGS
+        } else if (!strcasecmp(token, "multicast-siblings")) {
+            p->options.mcast_siblings = 1;
+#endif
         } else if (!strncasecmp(token, "weight=", 7)) {
             p->weight = xatoi(token + 7);
         } else if (!strncasecmp(token, "basetime=", 9)) {
@@ -2832,7 +2848,7 @@ dump_memcachemode(StoreEntry * entry, const char *name, SquidConfig &config)
     storeAppendPrintf(entry, "\n");
 }
 
-#include "cf_parser.h"
+#include "cf_parser.cci"
 
 peer_t
 parseNeighborType(const char *s)
@@ -2859,11 +2875,11 @@ parseNeighborType(const char *s)
 
 #if USE_WCCPv2
 static void
-parse_IpAddress_list(IpAddress_list ** head)
+parse_IpAddress_list(Ip::Address_list ** head)
 {
     char *token;
-    IpAddress_list *s;
-    IpAddress ipa;
+    Ip::Address_list *s;
+    Ip::Address ipa;
 
     while ((token = strtok(NULL, w_space))) {
         if (GetHostWithPort(token, &ipa)) {
@@ -2871,7 +2887,7 @@ parse_IpAddress_list(IpAddress_list ** head)
             while (*head)
                 head = &(*head)->next;
 
-            s = static_cast<IpAddress_list *>(xcalloc(1, sizeof(*s)));
+            s = static_cast<Ip::Address_list *>(xcalloc(1, sizeof(*s)));
             s->s = ipa;
 
             *head = s;
@@ -2881,7 +2897,7 @@ parse_IpAddress_list(IpAddress_list ** head)
 }
 
 static void
-dump_IpAddress_list(StoreEntry * e, const char *n, const IpAddress_list * s)
+dump_IpAddress_list(StoreEntry * e, const char *n, const Ip::Address_list * s)
 {
     char ntoabuf[MAX_IPSTRLEN];
 
@@ -2894,7 +2910,7 @@ dump_IpAddress_list(StoreEntry * e, const char *n, const IpAddress_list * s)
 }
 
 static void
-free_IpAddress_list(IpAddress_list ** head)
+free_IpAddress_list(Ip::Address_list ** head)
 {
     if (*head) delete *head;
     *head = NULL;
@@ -2905,7 +2921,7 @@ free_IpAddress_list(IpAddress_list ** head)
  * be used by icp_port and htcp_port
  */
 static int
-check_null_IpAddress_list(const IpAddress_list * s)
+check_null_IpAddress_list(const Ip::Address_list * s)
 {
     return NULL == s;
 }
@@ -2985,37 +3001,97 @@ parse_http_port_specification(http_port_list * s, char *token)
 static void
 parse_http_port_option(http_port_list * s, char *token)
 {
-    if (strncmp(token, "defaultsite=", 12) == 0) {
-        safe_free(s->defaultsite);
-        s->defaultsite = xstrdup(token + 12);
+    /* modes first */
+
+    if (strcmp(token, "accel") == 0) {
+        if (s->intercepted || s->spoof_client_ip) {
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: Accelerator mode requires its own port. It cannot be shared with other modes.");
+            self_destruct();
+        }
         s->accel = 1;
-    } else if (strncmp(token, "name=", 5) == 0) {
-        safe_free(s->name);
-        s->name = xstrdup(token + 5);
-    } else if (strcmp(token, "vhost") == 0) {
-        s->vhost = 1;
-        s->accel = 1;
-    } else if (strcmp(token, "vport") == 0) {
-        s->vport = -1;
-        s->accel = 1;
-    } else if (strncmp(token, "vport=", 6) == 0) {
-        s->vport = xatos(token + 6);
-        s->accel = 1;
-    } else if (strncmp(token, "protocol=", 9) == 0) {
-        s->protocol = xstrdup(token + 9);
-        s->accel = 1;
-    } else if (strcmp(token, "accel") == 0) {
-        s->accel = 1;
-    } else if (strcmp(token, "allow-direct") == 0) {
-        s->allow_direct = 1;
-    } else if (strcmp(token, "ignore-cc") == 0) {
-        s->ignore_cc = 1;
-#if !HTTP_VIOLATIONS
-        if (!s->accel) {
-            debugs(3, DBG_CRITICAL, "FATAL: ignore-cc is only valid in accelerator mode");
+    } else if (strcmp(token, "transparent") == 0 || strcmp(token, "intercept") == 0) {
+        if (s->accel || s->spoof_client_ip) {
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: Intercept mode requires its own interception port. It cannot be shared with other modes.");
+            self_destruct();
+        }
+        s->intercepted = 1;
+        Ip::Interceptor.StartInterception();
+        /* Log information regarding the port modes under interception. */
+        debugs(3, DBG_IMPORTANT, "Starting Authentication on port " << s->s);
+        debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (interception enabled)");
+
+#if USE_IPV6
+        /* INET6: until transparent REDIRECT works on IPv6 SOCKET, force wildcard to IPv4 */
+        debugs(3, DBG_IMPORTANT, "Disabling IPv6 on port " << s->s << " (interception enabled)");
+        if ( !s->s.SetIPv4() ) {
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: IPv6 addresses cannot be transparent (protocol does not provide NAT)" << s->s );
             self_destruct();
         }
 #endif
+    } else if (strcmp(token, "tproxy") == 0) {
+        if (s->intercepted || s->accel) {
+            debugs(3,DBG_CRITICAL, "FATAL: http(s)_port: TPROXY option requires its own interception port. It cannot be shared with other modes.");
+            self_destruct();
+        }
+        s->spoof_client_ip = 1;
+        Ip::Interceptor.StartTransparency();
+        /* Log information regarding the port modes under transparency. */
+        debugs(3, DBG_IMPORTANT, "Starting IP Spoofing on port " << s->s);
+        debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (IP spoofing enabled)");
+
+        if (!Ip::Interceptor.ProbeForTproxy(s->s)) {
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: TPROXY support in the system does not work.");
+            self_destruct();
+        }
+
+    } else if (strncmp(token, "defaultsite=", 12) == 0) {
+        if (!s->accel) {
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: defaultsite option requires Acceleration mode flag.");
+            self_destruct();
+        }
+        safe_free(s->defaultsite);
+        s->defaultsite = xstrdup(token + 12);
+    } else if (strcmp(token, "vhost") == 0) {
+        if (!s->accel) {
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: vhost option requires Acceleration mode flag.");
+            self_destruct();
+        }
+        s->vhost = 1;
+    } else if (strcmp(token, "vport") == 0) {
+        if (!s->accel) {
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: vport option requires Acceleration mode flag.");
+            self_destruct();
+        }
+        s->vport = -1;
+    } else if (strncmp(token, "vport=", 6) == 0) {
+        if (!s->accel) {
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: vport option requires Acceleration mode flag.");
+            self_destruct();
+        }
+        s->vport = xatos(token + 6);
+    } else if (strncmp(token, "protocol=", 9) == 0) {
+        if (!s->accel) {
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: protocol option requires Acceleration mode flag.");
+            self_destruct();
+        }
+        s->protocol = xstrdup(token + 9);
+    } else if (strcmp(token, "allow-direct") == 0) {
+        if (!s->accel) {
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: vport option requires Acceleration mode flag.");
+            self_destruct();
+        }
+        s->allow_direct = 1;
+    } else if (strcmp(token, "ignore-cc") == 0) {
+#if !HTTP_VIOLATIONS
+        if (!s->accel) {
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: ignore-cc option requires Scceleration mode flag.");
+            self_destruct();
+        }
+#endif
+        s->ignore_cc = 1;
+    } else if (strncmp(token, "name=", 5) == 0) {
+        safe_free(s->name);
+        s->name = xstrdup(token + 5);
     } else if (strcmp(token, "no-connection-auth") == 0) {
         s->connection_auth_disabled = true;
     } else if (strcmp(token, "connection-auth=off") == 0) {
@@ -3033,42 +3109,10 @@ parse_http_port_option(http_port_list * s, char *token)
             s->disable_pmtu_discovery = DISABLE_PMTU_ALWAYS;
         else
             self_destruct();
-
-    } else if (strcmp(token, "transparent") == 0 || strcmp(token, "intercept") == 0) {
-        s->intercepted = 1;
-        IpInterceptor.StartInterception();
-        /* Log information regarding the port modes under interception. */
-        debugs(3, DBG_IMPORTANT, "Starting Authentication on port " << s->s);
-        debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (interception enabled)");
-
-#if USE_IPV6
-        /* INET6: until transparent REDIRECT works on IPv6 SOCKET, force wildcard to IPv4 */
-        debugs(3, DBG_IMPORTANT, "Disabling IPv6 on port " << s->s << " (interception enabled)");
-        if ( !s->s.SetIPv4() ) {
-            debugs(3, DBG_CRITICAL, "http(s)_port: IPv6 addresses cannot be transparent (protocol does not provide NAT)" << s->s );
-            self_destruct();
-        }
-#endif
-    } else if (strcmp(token, "tproxy") == 0) {
-        if (s->intercepted || s->accel) {
-            debugs(3,DBG_CRITICAL, "http(s)_port: TPROXY option requires its own interception port. It cannot be shared.");
-            self_destruct();
-        }
-        s->spoof_client_ip = 1;
-        IpInterceptor.StartTransparency();
-        /* Log information regarding the port modes under transparency. */
-        debugs(3, DBG_IMPORTANT, "Starting IP Spoofing on port " << s->s);
-        debugs(3, DBG_IMPORTANT, "Disabling Authentication on port " << s->s << " (IP spoofing enabled)");
-
-        if (!IpInterceptor.ProbeForTproxy(s->s)) {
-            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: TPROXY support in the system does not work.");
-            self_destruct();
-        }
-
     } else if (strcmp(token, "ipv4") == 0) {
 #if USE_IPV6
         if ( !s->s.SetIPv4() ) {
-            debugs(3, 0, "http(s)_port: IPv6 addresses cannot be used a IPv4-Only." << s->s );
+            debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: IPv6 addresses cannot be used a IPv4-Only." << s->s );
             self_destruct();
         }
 #endif
@@ -3090,6 +3134,8 @@ parse_http_port_option(http_port_list * s, char *token)
             t = strchr(t, ',');
         }
 #if USE_SSL
+    } else if (strcmp(token, "sslBump") == 0) {
+        s->sslBump = 1; // accelerated when bumped, otherwise not
     } else if (strncmp(token, "cert=", 5) == 0) {
         safe_free(s->cert);
         s->cert = xstrdup(token + 5);
@@ -3098,7 +3144,6 @@ parse_http_port_option(http_port_list * s, char *token)
         s->key = xstrdup(token + 4);
     } else if (strncmp(token, "version=", 8) == 0) {
         s->version = xatoi(token + 8);
-
         if (s->version < 1 || s->version > 4)
             self_destruct();
     } else if (strncmp(token, "options=", 8) == 0) {
@@ -3128,15 +3173,8 @@ parse_http_port_option(http_port_list * s, char *token)
     } else if (strncmp(token, "sslcontext=", 11) == 0) {
         safe_free(s->sslcontext);
         s->sslcontext = xstrdup(token + 11);
-    } else if (strcmp(token, "sslBump") == 0) {
-        s->sslBump = 1; // accelerated when bumped, otherwise not
 #endif
     } else {
-        self_destruct();
-    }
-
-    if ( s->spoof_client_ip && (s->intercepted || s->accel) ) {
-        debugs(3,DBG_CRITICAL, "http(s)_port: TPROXY option requires its own interception port. It cannot be shared.");
         self_destruct();
     }
 }
@@ -3252,17 +3290,23 @@ dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
                       n,
                       s->s.ToURL(buf,MAX_IPSTRLEN));
 
-    if (s->defaultsite)
-        storeAppendPrintf(e, " defaultsite=%s", s->defaultsite);
-
     if (s->intercepted)
         storeAppendPrintf(e, " intercept");
+
+    if (s->spoof_client_ip)
+        storeAppendPrintf(e, " tproxy");
+
+    if (s->accel)
+        storeAppendPrintf(e, " accel");
 
     if (s->vhost)
         storeAppendPrintf(e, " vhost");
 
     if (s->vport)
         storeAppendPrintf(e, " vport");
+
+    if (s->defaultsite)
+        storeAppendPrintf(e, " defaultsite=%s", s->defaultsite);
 
     if (s->connection_auth_disabled)
         storeAppendPrintf(e, " connection-auth=off");
@@ -3289,6 +3333,9 @@ dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
     }
 
 #if USE_SSL
+    if (s->sslBump)
+        storeAppendPrintf(e, " sslBump");
+
     if (s->cert)
         storeAppendPrintf(e, " cert=%s", s->cert);
 
@@ -3321,9 +3368,6 @@ dump_generic_http_port(StoreEntry * e, const char *n, const http_port_list * s)
 
     if (s->sslcontext)
         storeAppendPrintf(e, " sslcontext=%s", s->sslcontext);
-
-    if (s->sslBump)
-        storeAppendPrintf(e, " sslBump");
 #endif
 }
 
@@ -3708,3 +3752,55 @@ dump_ecap_service_type(StoreEntry * entry, const char *name, const Adaptation::E
 }
 
 #endif /* USE_ECAP */
+
+#if ICAP_CLIENT
+static void parse_icap_service_failure_limit(Adaptation::Icap::Config *cfg)
+{
+    char *token;
+    time_t d;
+    time_t m;
+    cfg->service_failure_limit = GetInteger();
+
+    if ((token = strtok(NULL, w_space)) == NULL)
+        return;
+
+    if (strcmp(token,"in") != 0) {
+        debugs(3, 0, "expecting 'in' on'"  << config_input_line << "'");
+        self_destruct();
+    }
+
+    if ((token = strtok(NULL, w_space)) == NULL) {
+        self_destruct();
+    }
+
+    d = static_cast<time_t> (xatoi(token));
+
+    m = static_cast<time_t> (1);
+
+    if (0 == d)
+        (void) 0;
+    else if ((token = strtok(NULL, w_space)) == NULL) {
+        debugs(3, 0, "No time-units on '" << config_input_line << "'");
+        self_destruct();
+    } else if ((m = parseTimeUnits(token)) == 0)
+        self_destruct();
+
+    cfg->oldest_service_failure = (m * d);
+}
+
+static void dump_icap_service_failure_limit(StoreEntry *entry, const char *name, const Adaptation::Icap::Config &cfg)
+{
+    storeAppendPrintf(entry, "%s %d", name, cfg.service_failure_limit);
+    if (cfg.oldest_service_failure > 0) {
+        storeAppendPrintf(entry, " in %d seconds", (int)cfg.oldest_service_failure);
+    }
+    storeAppendPrintf(entry, "\n");
+}
+
+static void free_icap_service_failure_limit(Adaptation::Icap::Config *cfg)
+{
+    cfg->oldest_service_failure = 0;
+    cfg->service_failure_limit = 0;
+}
+
+#endif
