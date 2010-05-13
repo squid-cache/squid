@@ -128,6 +128,8 @@ protected:
     void handleRequestBodyProductionEnded();
     virtual void handleRequestBodyProducerAborted() = 0;
 
+    /// whether it is not too late to write to the server
+    bool canSend(int fd) const;
     // sending of the request body to the server
     void sendMoreRequestBody();
     // has body; kids overwrite to increment I/O stats counters
