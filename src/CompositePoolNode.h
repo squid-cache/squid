@@ -45,7 +45,7 @@
 #include "DelayPools.h"
 #include "DelayIdComposite.h"
 #include "CommRead.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 class StoreEntry;
 

@@ -1,8 +1,8 @@
 #define SQUID_UNIT_TEST 1
 #include "config.h"
 #include "compat/getaddrinfo.h"
-#include "testIpAddress.h"
-#include "ip/IpAddress.h"
+#include "testAddress.h"
+#include "ip/Address.h"
 
 #if HAVE_CSTRING
 #include <cstring>

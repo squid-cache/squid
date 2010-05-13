@@ -33,7 +33,7 @@
 #include "HttpVersion.h"
 #include "HttpRequestMethod.h"
 #include "HierarchyLogEntry.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 #include "HttpRequestMethod.h"
 #if ICAP_CLIENT
 #include "adaptation/icap/Elements.h"

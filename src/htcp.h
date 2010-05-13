@@ -34,7 +34,7 @@
 
 #include "HttpHeader.h"
 
-class Ip::Address;
+#include "ip/forward.h"
 
 /// \ingroup ServerProtocolHTCP
 class HtcpReplyData

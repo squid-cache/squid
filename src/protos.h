@@ -34,7 +34,7 @@
  */
 #include "Packer.h"
 /* for routines still in this file that take CacheManager parameters */
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 /* for parameters that still need these */
 #include "enums.h"
 /* some parameters stil need this */
