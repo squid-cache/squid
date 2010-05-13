@@ -129,7 +129,7 @@ AC_SUBST(LIBLTDL)
 
 if test $use_loadable_modules = yes;
 then
-    # Why is this needed? Should not libtool's AC_LIBTOOL_DLOPEN do that?
+    # Why is this needed? Should not AC_LIBTOOL_DLOPEN from libtool do that?
     LIBADD_DL=${lt_cv_dlopen_libs}
     AC_SUBST([LIBADD_DL])
 fi
@@ -142,7 +142,8 @@ SQUID_CC_GUESS_OPTIONS
 REGEXLIB=''	# -lregex
 # LIBREGEX=''	# libregex.a
 
-dnl find out the exe extension for this platform. If it's not empty, use it for CGI's as well.
+dnl find out the exe extension for this platform.
+dnl If it is not empty, use it for CGI as well.
 AC_EXEEXT
 AC_OBJEXT
 
@@ -154,8 +155,6 @@ else
 fi
 AC_SUBST(CGIEXT)
 
-dnl this should be expanded to a list of platform sensible support requirements.
-dnl (adding an option like --enable-cygwin-support doesn't make sense :]) - R Collins 2001
 AM_CONDITIONAL(ENABLE_WIN32SPECIFIC,
                [test "$squid_host_os" = "mingw" -o "$squid_host_os" = "cygwin"])
 AM_CONDITIONAL(USE_IPC_WIN32,[test "$squid_host_os" = "mingw"])
@@ -328,7 +327,7 @@ SquidInline="yes"
 
 AC_ARG_ENABLE(optimizations,
   AS_HELP_STRING([--disable-optimizations],
-                 [Don't compile Squid with compiler optimizations enabled.
+                 [Do not compile Squid with compiler optimizations enabled.
                   Optimization is good for production builds, but not
                   good for debugging. During development, use
                   --disable-optimizations to reduce compilation times
@@ -344,7 +343,8 @@ AC_ARG_ENABLE(optimizations,
 
 AH_TEMPLATE(_USE_INLINE_,[Include inline methods into header file])
 AC_ARG_ENABLE(inline,
-  AS_HELP_STRING([--disable-inline],[Don't compile trivial methods as inline. Squid
+  AS_HELP_STRING([--disable-inline],
+                 [Do not compile trivial methods as inline. Squid
                   is coded with much of the code able to be inlined.
                   Inlining is good for production builds, but not
                   good for development. During development, use
@@ -672,7 +672,7 @@ AC_ARG_ENABLE([storeio],
     squid_opt_enable_storeio=yes
 	squid_storeio_module_candidates="`echo $enableval| sed -e 's/,/ /g;s/  */ /g'`"
     # ufs is really always needed as it has low-level routines
-    # if it's a dupe it will be cleaned-up later
+    # if it is a dupe it will be cleaned-up later
     squid_storeio_module_candidates="$squid_storeio_module_candidates ufs"
 	;;
   esac
@@ -783,7 +783,7 @@ AC_ARG_ENABLE(icmp,
   AS_HELP_STRING([--enable-icmp],[Enable ICMP pinging and Network Measurement]),
 [ if test "$enableval" = "yes" ; then
     AC_MSG_NOTICE([ICMP enabled])
-    AC_DEFINE(USE_ICMP,1,[Define to use Squid's ICMP and Network Measurement features (highly recommended!)])
+    AC_DEFINE(USE_ICMP,1,[Define to use Squid ICMP and Network Measurement features (highly recommended!)])
     AM_CONDITIONAL(ENABLE_PINGER, true)
   fi
 ])
@@ -1290,7 +1290,7 @@ AC_ARG_ENABLE(ipf-transparent,
   SQUID_YESNO([$enableval],
       [unrecognized argument to --enable-ipf-transparent: $enableval])
 ])
-#will be AC_DEFINE'd later, after checking for appropriate infrastructure
+#will be AC_DEFINEd later, after checking for appropriate infrastructure
 #IPF currently broken. Default-disabled for now.
 AC_MSG_NOTICE([IPF-based transparent proxying requested: ${enable_ipf_transparent:=no}])
 
@@ -1301,7 +1301,7 @@ AC_ARG_ENABLE(pf-transparent,
   SQUID_YESNO([$enableval],
               [unrecognized argument to --enable-pf-transparent: $enableval])
 ])
-#will be AC_DEFINE'd later, after checking for appropriate infrastructure
+#will be AC_DEFINEd later, after checking for appropriate infrastructure
 AC_MSG_NOTICE([PF-based transparent proxying requested: ${enable_pf_transparent:=auto}])
 
 # Linux Netfilter Transparent Proxy
@@ -1312,7 +1312,7 @@ AC_ARG_ENABLE(linux-netfilter,
               [unrecognized argument to --enable-linux-netfilter: $enableval])
 ])
 AC_MSG_NOTICE([Linux Netfilter support requested: ${enable_linux_netfilter:=auto}])
-#will be AC_DEFINE'd later, after checking for appropriate infrastructure
+#will be AC_DEFINEd later, after checking for appropriate infrastructure
 
 dnl Enable Large file support
 buildmodel=""
@@ -1326,7 +1326,7 @@ AC_ARG_WITH(large-files,
 ])
 
 dnl UNIX Build environment
-dnl AS_HELP_STRING is not suited here because it doesn't allow to specify newlines
+dnl AS_HELP_STRING is not suited here because it cannot to specify newlines
 AC_ARG_WITH(build-environment,
 [  --with-build-environment=model
                           The build environment to use. Normally one of
@@ -1667,7 +1667,7 @@ AC_SUBST(DIGEST_AUTH_HELPERS)
 
 dnl Authentication libraries to build
 dnl This list will not be needed when each auth library has its own Makefile
-dnl this is to be placed AFTER each auth modile's handler
+dnl this is to be placed AFTER each auth module's handler
 AUTH_LIBS_TO_BUILD=
 for module in $AUTH_MODULES; do
     AUTH_LIBS_TO_BUILD="$AUTH_LIBS_TO_BUILD lib${module}.la"
@@ -2146,7 +2146,7 @@ dnl automake handles this AC_PATH_PROG(MAKEDEPEND, makedepend, $TRUE)
 
 case "$host" in
     *-hp-hpux*)
-	AC_MSG_NOTICE([Disabling 'ranlib' for HP-UX...])
+	AC_MSG_NOTICE([Disabling ranlib for HP-UX...])
 	RANLIB=":"
 	;;
 esac
@@ -2735,7 +2735,8 @@ dnl But only usable if it actually works...
       ],[])
   fi
 
-dnl if we can't defer v4-mapping to the OS we are forced to split-stack the FD table.
+dnl if we can't defer v4-mapping to the OS we are forced to split-stack 
+dnl the FD table.
   AC_MSG_CHECKING([for IPv6 stack type/mode])
   if test "$use_v4mapped" = "yes"; then
     AC_DEFINE(IPV6_SPECIAL_V4MAPPED, 1, [Enable v4-mapping through v6 sockets. Requires IPv6 hybrid-stack.])
@@ -3092,8 +3093,8 @@ elif test "$enable_select" != "no" && test "$ac_cv_func_select" = "yes" ; then
     squid_opt_io_loop_engine="select_win32"
   fi
 else
-  AC_MSG_WARN([Eep!  Can't find poll, kqueue, epoll, or select!])
-  AC_MSG_WARN([I'll try select and hope for the best.])
+  AC_MSG_WARN([Eep!  Cannot find poll, kqueue, epoll, or select!])
+  AC_MSG_WARN([Will try select and hope for the best.])
   squid_opt_io_loop_engine="select"
 fi
 
@@ -3115,11 +3116,7 @@ case $squid_opt_io_loop_engine in
   select) AC_DEFINE(USE_SELECT,1,[Use select() for the IO loop]) ;;
 esac
 
-dnl Yay!  Another Linux brokenness.  Its not good enough
-dnl to know that setresuid() exists, because RedHat 5.0 declares
-dnl setresuid() but doesn't implement it.
-dnl
-AC_CACHE_CHECK(if setresuid is implemented, ac_cv_func_setresuid,
+AC_CACHE_CHECK(if setresuid is actually implemented, ac_cv_func_setresuid,
   AC_RUN_IFELSE([AC_LANG_SOURCE([[
 #include <stdlib.h>
   int main(int argc, char **argv) {
@@ -3132,7 +3129,7 @@ AC_CACHE_CHECK(if setresuid is implemented, ac_cv_func_setresuid,
   ]])],[ac_cv_func_setresuid="yes"],[ac_cv_func_setresuid="no"],[])
 )
 if test "$ac_cv_func_setresuid" = "yes" ; then
-  AC_DEFINE(HAVE_SETRESUID,1,[Yay! Another Linux brokenness.  Its not good enough to know that setresuid() exists, because RedHat 5.0 declare setresuid() but doesn't implement it.])
+  AC_DEFINE(HAVE_SETRESUID,1,[Yay! Another Linux brokenness. Knowing that setresuid() exists is not enough, because RedHat 5.0 declares setresuid() but does not implement it.])
 fi
 
 SQUID_CHECK_FUNC_STRNSTR
@@ -3215,7 +3212,7 @@ if test "$enable_linux_netfilter" = "yes" && test "$use_libcap" != "yes" ; then
     AC_MSG_WARN([Missing needed capabilities (libcap or libcap2) for TPROXY])
     AC_MSG_WARN([Linux Transparent Proxy support WILL NOT be enabled])
     AC_MSG_WARN([Reduced support to Interception Proxy])
-    # AC_DEFINE'd later
+    # AC_DEFINEd later
 fi
 
 AC_ARG_ENABLE(gnuregex,
@@ -3293,7 +3290,7 @@ AC_DEFINE_UNQUOTED(DEFAULT_FD_SETSIZE, $DEFAULT_FD_SETSIZE, [Default FD_SETSIZE 
 
 dnl Not cached since people are likely to tune this
 AC_MSG_CHECKING(Maximum number of filedescriptors we can open)
-dnl damn! FreeBSD's pthreads breaks dup2().
+dnl damn! FreeBSD pthreads break dup2().
 TLDFLAGS="$LDFLAGS"
 if test -n "$squid_filedescriptors_num" ; then
   SQUID_MAXFD=$squid_filedescriptors_num
