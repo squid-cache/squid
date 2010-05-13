@@ -1153,7 +1153,7 @@ AC_ARG_ENABLE(forw-via-db,
   AS_HELP_STRING([--enable-forw-via-db],[Enable Forw/Via database]), [
   SQUID_YESNO([$enableval],[unrecognized argument to --enable-forw-via-db: $enableval])
 ])
-SQUID_DEFINE_BOOL(FORW_VIA_DB,${enable_forw_via_db:=no},
+SQUID_DEFINE_BOOL(USE_FORW_VIA_DB,${enable_forw_via_db:=no},
                       [Enable Forw/Via database])
 AC_MSG_NOTICE([Forw/Via database enabled: $enable_forw_via_db])
 
