@@ -149,7 +149,7 @@ private:
 #endif
 
 public:
-    IpAddress host_addr;
+    Ip::Address host_addr;
 
     AuthUserRequest *auth_user_request;
 
@@ -169,10 +169,10 @@ public:
 
     int64_t max_forwards;
 
-    IpAddress client_addr;
+    Ip::Address client_addr;
 
 #if FOLLOW_X_FORWARDED_FOR
-    IpAddress indirect_client_addr;
+    Ip::Address indirect_client_addr;
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
 #if USE_SQUID_EUI
@@ -182,7 +182,7 @@ public:
     Eui::Eui64 client_eui64;
 #endif
 
-    IpAddress my_addr;
+    Ip::Address my_addr;
 
     HierarchyLogEntry hier;
 
@@ -207,6 +207,8 @@ public:
     String extacl_passwd;	/* Password returned by extacl lookup */
 
     String extacl_log;		/* String to be used for access.log purposes */
+
+    String extacl_message;	/* String to be used for error page purposes */
 
 #if FOLLOW_X_FORWARDED_FOR
     String x_forwarded_for_iterator; /* XXX a list of IP addresses */
@@ -247,8 +249,12 @@ public:
         cbdataReferenceDone(pinned_connection);
     }
 
+    int64_t getRangeOffsetLimit(); /* the result of this function gets cached in rangeOffsetLimit */
+
 private:
     const char *packableURI(bool full_uri) const;
+
+    mutable int64_t rangeOffsetLimit;  /* caches the result of getRangeOffsetLimit */
 
 protected:
     virtual void packFirstLineInto(Packer * p, bool full_uri) const;

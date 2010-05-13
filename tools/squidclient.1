@@ -10,17 +10,17 @@ A simple HTTP web client tool
 .if !'po4a'hide' .B "[ \-arsv ] [ \-g"
 count
 .if !'po4a'hide' .B "] [ \-h"
-remote\-host
+remote host
 .if !'po4a'hide' .B "] [ \-H '"
 string
 .if !'po4a'hide' .B "' ] [ \-i"
 IMS
 .if !'po4a'hide' .B "] [ \-I"
-ping\-interval
+ping interval
 .if !'po4a'hide' .B "] [ \-j '"
-Host\-header
+Host header
 .if !'po4a'hide' .B "' ] [ \-l"
-local\-host
+local host
 .if !'po4a'hide' .B "] [ \-m"
 method
 .if !'po4a'hide' .B "] [ \-p"
@@ -32,15 +32,15 @@ count
 .if !'po4a'hide' .B "] [ \-T"
 timeout
 .if !'po4a'hide' .B "] [ \-u"
-proxy\-user
+user
 .if !'po4a'hide' .B "] [ \-U"
-www\-user
+user
 .if !'po4a'hide' .B "] [ \-V"
 version
 .if !'po4a'hide' .B "] [ \-w"
-proxy\-password
+password
 .if !'po4a'hide' .B "] [ \-W"
-www\-password
+password
 .if !'po4a'hide' .B "] "
 url
 .
@@ -71,11 +71,13 @@ Retrieve URL from cache on hostname.  Default is
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-H 'string'"
-Extra headers to send. Use '\\n' for new lines.
+Extra headers to send. Use
+.B '\\n'
+for new lines.
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-i time"
-If-Modified-Since time (in Epoch seconds).
+If\-Modified\-Since time (in Epoch seconds).
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-I interval"
@@ -114,7 +116,7 @@ Port number of cache.  Default is 3128.
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-P file"
-PUT request. Using the named file.
+Request body. Using the named file as data.
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-r"
@@ -126,7 +128,9 @@ Silent.  Do not print data to stdout.
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-t count"
-Trace count cache-hops
+Trace
+.I count
+HTTP relay or proxy hops
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .B "\-T timeout"
@@ -163,7 +167,7 @@ National Laboratory for Applied Network Research and funded by
 the National Science Foundation.
 .
 .SH COPYRIGHT
-Distributed under the GNU Public License version 2 or later (GPL2+).
+Distributed under the GNU General Public License (GNU GPL) version 2 or later (GPLv2+).
 .
 .SH QUESTIONS
 Questions on the usage of this program can be sent to the
@@ -171,6 +175,8 @@ Questions on the usage of this program can be sent to the
 .if !'po4a'hide' <squid-users@squid-cache.org>
 .
 .SH REPORTING BUGS
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+.PP
 Report bugs or bug fixes using http://bugs.squid-cache.org/
 .PP
 Report serious security bugs to

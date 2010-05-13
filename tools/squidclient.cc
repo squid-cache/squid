@@ -46,12 +46,6 @@ using namespace Squid;
 #if HAVE_STDIO_H
 #include <stdio.h>
 #endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
 #endif
@@ -61,8 +55,7 @@ using namespace Squid;
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#if HAVE_NETDB_H && !defined(_SQUID_NETDB_H_)	/* protect NEXTSTEP */
-#define _SQUID_NETDB_H_
+#if HAVE_NETDB_H
 #include <netdb.h>
 #endif
 #if HAVE_SIGNAL_H
@@ -84,10 +77,8 @@ using namespace Squid;
 #include <getopt.h>
 #endif
 
-#include "squid_types.h"
-
 #include "util.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 #ifndef BUFSIZ
 #define BUFSIZ		8192
@@ -102,9 +93,9 @@ using namespace Squid;
 typedef void SIGHDLR(int sig);
 
 /* Local functions */
-static int client_comm_bind(int, const IpAddress &);
+static int client_comm_bind(int, const Ip::Address &);
 
-static int client_comm_connect(int, const IpAddress &, struct timeval *);
+static int client_comm_connect(int, const Ip::Address &, struct timeval *);
 static void usage(const char *progname);
 
 static int Now(struct timeval *);
@@ -135,7 +126,7 @@ usage(const char *progname)
     fprintf(stderr,
             "Version: %s\n"
             "Usage: %s [-arsv] [-g count] [-h remote host] [-H 'string'] [-i IMS] [-I ping-interval] [-j 'Host-header']"
-            "[-l local-host] [-m method] [-p port] [-P file] [-t count] [-T timeout] [-u proxy-user] [-U www-user] "
+            "[-k] [-l local-host] [-m method] [-p port] [-P file] [-t count] [-T timeout] [-u proxy-user] [-U www-user] "
             "[-V version] [-w proxy-password] [-W www-password] url\n"
             "\n"
             "Options:\n"
@@ -146,6 +137,7 @@ usage(const char *progname)
             "    -i IMS       If-Modified-Since time (in Epoch seconds).\n"
             "    -I interval  Ping interval in seconds (default 1 second).\n"
             "    -j hosthdr   Host header content\n"
+            "    -k           Keep the connection active. Default is to do only one request then close.\n"
             "    -l host      Specify a local IP address to bind to.  Default is none.\n"
             "    -m method    Request method, default is GET.\n"
             "    -p port      Port number of cache.  Default is %d.\n"
@@ -175,7 +167,7 @@ main(int argc, char *argv[])
     int opt_noaccept = 0;
     int opt_verbose = 0;
     const char *hostname, *localhost;
-    IpAddress iaddr;
+    Ip::Address iaddr;
     char url[BUFSIZ], msg[MESSAGELEN], buf[BUFSIZ];
     char extra_hdrs[HEADERLEN];
     const char *method = "GET";
@@ -362,7 +354,7 @@ main(int argc, char *argv[])
         if (newhost) {
             char *t;
             newhost += 3;
-            newhost = strdup(newhost);
+            newhost = xstrdup(newhost);
             t = newhost + strcspn(newhost, "@/?");
             if (*t == '@') {
                 newhost = t + 1;
@@ -444,10 +436,10 @@ main(int argc, char *argv[])
                 } else
                     strcat(msg, "Connection: keep-alive\r\n");
             }
-        } else {
-            if (!keep_alive)
-                strcat(msg, "Connection: close\r\n");
         }
+        /* HTTP/1.1 may need close */
+        if (!keep_alive)
+            strcat(msg, "Connection: close\r\n");
 
         strcat(msg, extra_hdrs);
         strcat(msg, "\r\n");
@@ -638,7 +630,7 @@ main(int argc, char *argv[])
 }
 
 static int
-client_comm_bind(int sock, const IpAddress &addr)
+client_comm_bind(int sock, const Ip::Address &addr)
 {
 
     int res;
@@ -657,7 +649,7 @@ client_comm_bind(int sock, const IpAddress &addr)
 }
 
 static int
-client_comm_connect(int sock, const IpAddress &addr, struct timeval *tvp)
+client_comm_connect(int sock, const Ip::Address &addr, struct timeval *tvp)
 {
     int res;
     static struct addrinfo *AI = NULL;

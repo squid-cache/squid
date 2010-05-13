@@ -75,11 +75,11 @@
  *     - gethostbyaddr() is usually not thread safe.
  */
 
-#ifndef HAVE_GETNAMEINFO
+#if !HAVE_GETNAMEINFO
 
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
+#include "compat/inet_ntop.h"
+#include "compat/getaddrinfo.h"
+
 #if HAVE_STDIO_H
 #include <stdio.h>
 #endif
@@ -117,15 +117,9 @@
 #include <inttypes.h>
 #endif
 
-#ifdef _SQUID_MSWIN_
+#if _SQUID_MSWIN_
 #undef IN_ADDR
 #include <ws2tcpip.h>
-#endif
-
-#include "getaddrinfo.h"
-
-#if !HAVE_INET_NTOP
-#include "inet_ntop.h"
 #endif
 
 static const struct afd {
@@ -135,7 +129,7 @@ static const struct afd {
     int a_off;
     int a_portoff;
 } afdl [] = {
-#ifdef INET6
+#if INET6
     {PF_INET6, sizeof(struct in6_addr), sizeof(struct sockaddr_in6),
         offsetof(struct sockaddr_in6, sin6_addr),
         offsetof(struct sockaddr_in6, sin6_port)},
@@ -146,7 +140,7 @@ static const struct afd {
     {0, 0, 0, 0, 0},
 };
 
-#ifdef INET6
+#if INET6
 static int ip6_parsenumeric __P((const struct sockaddr *, const char *, char *,
                                  size_t, int));
 static int ip6_sa2str __P((const struct sockaddr_in6 *, char *, size_t, int));
@@ -175,7 +169,7 @@ int flags;
     if (sa == NULL)
         return EAI_FAIL;
 
-#ifdef HAVE_SA_LEN	/*XXX*/
+#if HAVE_SA_LEN	/*XXX*/
     if (sa->sa_len != salen)
         return EAI_FAIL;
 #endif
@@ -232,7 +226,7 @@ found:
         if (v4a == 0)
             flags |= NI_NUMERICHOST;
         break;
-#ifdef INET6
+#if INET6
     case AF_INET6: {
         const struct sockaddr_in6 *sin6;
         sin6 = (const struct sockaddr_in6 *)sa;
@@ -270,11 +264,11 @@ found:
 
         goto numeric;
     } else {
-#ifdef USE_GETIPNODEBY
+#if USE_GETIPNODEBY
         hp = getipnodebyaddr(addr, afd->a_addrlen, afd->a_af, &h_error);
 #else
         hp = gethostbyaddr(addr, afd->a_addrlen, afd->a_af);
-#ifdef HAVE_H_ERRNO
+#if HAVE_H_ERRNO
         h_error = h_errno;
 #else
         h_error = EINVAL;
@@ -303,13 +297,13 @@ found:
             }
 #endif
             if (strlen(hp->h_name) + 1 > hostlen) {
-#ifdef USE_GETIPNODEBY
+#if USE_GETIPNODEBY
                 freehostent(hp);
 #endif
                 return EAI_OVERFLOW;
             }
             strncpy(host, hp->h_name, hostlen);
-#ifdef USE_GETIPNODEBY
+#if USE_GETIPNODEBY
             freehostent(hp);
 #endif
         } else {
@@ -318,7 +312,7 @@ found:
 
 numeric:
             switch (afd->a_af) {
-#ifdef INET6
+#if INET6
             case AF_INET6: {
                 int error;
 
@@ -330,8 +324,8 @@ numeric:
             }
 #endif
             default:
-                if (xinet_ntop(afd->a_af, addr, host,
-                               hostlen) == NULL)
+                if (inet_ntop(afd->a_af, addr, host,
+                              hostlen) == NULL)
                     return EAI_SYSTEM;
                 break;
             }
@@ -340,7 +334,7 @@ numeric:
     return(0);
 }
 
-#ifdef INET6
+#if INET6
 static int
 ip6_parsenumeric(sa, addr, host, hostlen, flags)
 const struct sockaddr *sa;
@@ -352,7 +346,7 @@ int flags;
     int numaddrlen;
     char numaddr[512];
 
-    if (xinet_ntop(AF_INET6, addr, numaddr, sizeof(numaddr)) == NULL)
+    if (inet_ntop(AF_INET6, addr, numaddr, sizeof(numaddr)) == NULL)
         return EAI_SYSTEM;
 
     numaddrlen = strlen(numaddr);
@@ -397,7 +391,7 @@ int flags;
     ifindex = (unsigned int)sa6->sin6_scope_id;
     a6 = &sa6->sin6_addr;
 
-#ifdef NI_NUMERICSCOPE
+#if NI_NUMERICSCOPE
     if ((flags & NI_NUMERICSCOPE) != 0) {
         n = snprintf(buf, bufsiz, "%u", sa6->sin6_scope_id);
         if (n < 0 || n >= bufsiz)

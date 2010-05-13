@@ -13,11 +13,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
-
+#define SQUID_NO_ALLOC_PROTECT 1
 #include "config.h"
+
 #include "ntlmauth.h"
 #include "ntlm_smb_lm_auth.h"
-#include "squid_endian.h"
 #include "util.h"
 #include "smbval/smblib-common.h"
 #include "smbval/rfcnb-error.h"
@@ -41,16 +41,16 @@ extern int RFCNB_Get_Last_Error(void);
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
-#ifdef HAVE_STRING_H
+#if HAVE_STRING_H
 #include <string.h>
 #endif
-#ifdef HAVE_CTYPE_H
+#if HAVE_CTYPE_H
 #include <ctype.h>
 #endif
-#ifdef HAVE_UNISTD_H
+#if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#ifdef HAVE_ASSERT_H
+#if HAVE_ASSERT_H
 #include <assert.h>
 #endif
 
@@ -62,12 +62,12 @@ const char * obtain_challenge(void);
 void manage_request(void);
 
 
-#ifdef DEBUG
+#if DEBUG
 char error_messages_buffer[BUFFER_SIZE];
 #endif
 
 char load_balance = 0, protocol_pedantic = 0;
-#ifdef NTLM_FAIL_OPEN
+#if NTLM_FAIL_OPEN
 char last_ditch_enabled = 0;
 #endif
 
@@ -112,7 +112,7 @@ lc(char *string)
 void
 send_bh_or_ld(char const *bhmessage, ntlm_authenticate * failedauth, int authlen)
 {
-#ifdef NTLM_FAIL_OPEN
+#if NTLM_FAIL_OPEN
     char *creds = NULL;
     if (last_ditch_enabled) {
         creds = fetch_credentials(failedauth, authlen);
@@ -125,7 +125,7 @@ send_bh_or_ld(char const *bhmessage, ntlm_authenticate * failedauth, int authlen
     } else {
 #endif
         SEND2("BH %s", bhmessage);
-#ifdef NTLM_FAIL_OPEN
+#if NTLM_FAIL_OPEN
     }
 #endif
 }
@@ -171,7 +171,7 @@ process_options(int argc, char *argv[])
             fprintf(stderr,
                     "WARNING. The -f flag is DEPRECATED and always active.\n");
             break;
-#ifdef NTLM_FAIL_OPEN
+#if NTLM_FAIL_OPEN
         case 'l':
             last_ditch_enabled = 1;
             break;
@@ -195,7 +195,7 @@ process_options(int argc, char *argv[])
          * it's going to live as long as the process anyways */
         d = malloc(strlen(argv[j]) + 1);
         strcpy(d, argv[j]);
-        debug("Adding domain-controller %s\n", d);
+        print_debug("Adding domain-controller %s\n", d);
         if (NULL == (c = strchr(d, '\\')) && NULL == (c = strchr(d, '/'))) {
             fprintf(stderr, "Couldn't grok domain-controller %s\n", d);
             free(d);
@@ -247,31 +247,31 @@ obtain_challenge()
     int j = 0;
     const char *ch = NULL;
     for (j = 0; j < numcontrollers; j++) {
-        debug("obtain_challenge: selecting %s\\%s (attempt #%d)\n",
-              current_dc->domain, current_dc->controller, j + 1);
+        print_debug("obtain_challenge: selecting %s\\%s (attempt #%d)\n",
+                    current_dc->domain, current_dc->controller, j + 1);
         if (current_dc->dead != 0) {
             if (time(NULL) - current_dc->dead >= DEAD_DC_RETRY_INTERVAL) {
                 /* mark helper as retry-worthy if it's so. */
-                debug("Reviving DC\n");
+                print_debug("Reviving DC\n");
                 current_dc->dead = 0;
             } else {		/* skip it */
-                debug("Skipping it\n");
+                print_debug("Skipping it\n");
                 continue;
             }
         }
         /* else branch. Here we KNOW that the DC is fine */
-        debug("attempting challenge retrieval\n");
+        print_debug("attempting challenge retrieval\n");
         ch = make_challenge(current_dc->domain, current_dc->controller);
-        debug("make_challenge retuned %p\n", ch);
+        print_debug("make_challenge retuned %p\n", ch);
         if (ch) {
-            debug("Got it\n");
+            print_debug("Got it\n");
             return ch;		/* All went OK, returning */
         }
         /* Huston, we've got a problem. Take this DC out of the loop */
-        debug("Marking DC as DEAD\n");
+        print_debug("Marking DC as DEAD\n");
         current_dc->dead = time(NULL);
         /* Try with the next */
-        debug("moving on to next controller\n");
+        print_debug("moving on to next controller\n");
         current_dc = current_dc->next;
     }
     /* all DCs failed. */
@@ -293,13 +293,13 @@ manage_request()
                 strerror(errno));
         exit(1);		/* BIIG buffer */
     }
-    debug("managing request\n");
+    print_debug("managing request\n");
     ch2 = memchr(buf, '\n', BUFFER_SIZE);	/* safer against overrun than strchr */
     if (ch2) {
         *ch2 = '\0';		/* terminate the string at newline. */
         ch = ch2;
     }
-    debug("ntlm authenticator. Got '%s' from Squid\n", buf);
+    print_debug("ntlm authenticator. Got '%s' from Squid\n", buf);
 
     if (memcmp(buf, "KK ", 3) == 0) {	/* authenticate-request */
         /* figure out what we got */
@@ -357,8 +357,8 @@ manage_request()
                 smb_errorclass = SMBlib_Error_Class(SMB_Get_Last_SMB_Err());
                 smb_errorcode = SMBlib_Error_Code(SMB_Get_Last_SMB_Err());
                 nb_error = RFCNB_Get_Last_Error();
-                debug("No creds. SMBlib error %d, SMB error class %d, SMB error code %d, NB error %d\n",
-                      smblib_err, smb_errorclass, smb_errorcode, nb_error);
+                print_debug("No creds. SMBlib error %d, SMB error class %d, SMB error code %d, NB error %d\n",
+                            smblib_err, smb_errorclass, smb_errorcode, nb_error);
                 /* Should I use smblib_err? Actually it seems I can do as well
                  * without it.. */
                 if (nb_error != 0) {	/* netbios-level error */
@@ -370,7 +370,7 @@ manage_request()
                 }
                 switch (smb_errorclass) {
                 case SMBC_SUCCESS:
-                    debug("Huh? Got a SMB success code but could check auth..");
+                    print_debug("Huh? Got a SMB success code but could check auth..");
                     SEND("NA Authentication failed");
                     /*
                      * send_bh_or_ld("SMB success, but no creds. Internal error?",
@@ -379,7 +379,7 @@ manage_request()
                     return;
                 case SMBC_ERRDOS:
                     /*this is the most important one for errors */
-                    debug("DOS error\n");
+                    print_debug("DOS error\n");
                     switch (smb_errorcode) {
                         /* two categories matter to us: those which could be
                          * server errors, and those which are auth errors */
@@ -401,7 +401,7 @@ manage_request()
                         return;
                     }
                 case SMBC_ERRSRV:	/* server errors */
-                    debug("Server error");
+                    print_debug("Server error");
                     switch (smb_errorcode) {
                         /* mostly same as above */
                     case SMBV_badpw:
@@ -435,8 +435,7 @@ manage_request()
             SEND("BH unknown authentication packet type");
             return;
         }
-
-
+        /* notreached */
         return;
     }
     if (memcmp(buf, "YR", 2) == 0) {	/* refresh-request */
@@ -461,11 +460,11 @@ manage_request()
 int
 main(int argc, char *argv[])
 {
-    debug("ntlm_auth build " __DATE__ ", " __TIME__ " starting up...\n");
-#ifdef DEBUG
-    debug("changing dir to /tmp\n");
+    print_debug("ntlm_auth build " __DATE__ ", " __TIME__ " starting up...\n");
+#if DEBUG
+    print_debug("changing dir to /tmp\n");
     if (chdir("/tmp") != 0) {
-        debug("ERROR: (%d) failed.\n",errno);
+        print_debug("ERROR: (%d) failed.\n",errno);
         return 2;
     }
 #endif
@@ -473,7 +472,7 @@ main(int argc, char *argv[])
     my_program_name = argv[0];
     process_options(argc, argv);
 
-    debug("options processed OK\n");
+    print_debug("options processed OK\n");
 
     /* initialize FDescs */
     setbuf(stdout, NULL);
@@ -485,7 +484,7 @@ main(int argc, char *argv[])
         int n;
         pid_t pid = getpid();
         n = pid % numcontrollers;
-        debug("load balancing. Selected controller #%d\n", n);
+        print_debug("load balancing. Selected controller #%d\n", n);
         while (n > 0) {
             current_dc = current_dc->next;
             n--;
@@ -494,5 +493,6 @@ main(int argc, char *argv[])
     while (1) {
         manage_request();
     }
+    /* notreached */
     return 0;
 }

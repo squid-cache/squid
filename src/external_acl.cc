@@ -128,7 +128,7 @@ public:
         QUOTE_METHOD_URL
     } quote;
 
-    IpAddress local_addr;
+    Ip::Address local_addr;
 };
 
 struct _external_acl_format {
@@ -806,6 +806,9 @@ aclMatchExternal(external_acl_data *acl, ACLFilledChecklist *ch)
 
         if (entry->log.size())
             ch->request->extacl_log = entry->log;
+
+        if (entry->message.size())
+            ch->request->extacl_message = entry->message;
     }
 
     return result;

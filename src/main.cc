@@ -38,6 +38,7 @@
 #include "adaptation/icap/icap_log.h"
 #endif
 #include "auth/Gadgets.h"
+#include "base/TextException.h"
 #include "ConfigParser.h"
 #include "errorpage.h"
 #include "event.h"
@@ -73,7 +74,6 @@
 #include "MemPool.h"
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"
-#include "TextException.h"
 
 #if USE_LOADABLE_MODULES
 #include "LoadableModules.h"
@@ -613,7 +613,7 @@ serverConnectionsOpen(void)
 
     htcpInit();
 #endif
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 
     snmpConnectionOpen();
 #endif
@@ -651,7 +651,7 @@ serverConnectionsClose(void)
 #endif
 
     icmpEngine.Close();
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 
     snmpConnectionShutdown();
 #endif
@@ -680,7 +680,7 @@ mainReconfigureStart(void)
 
     htcpSocketClose();
 #endif
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 
     snmpConnectionClose();
 #endif
@@ -971,7 +971,7 @@ mainInitialize(void)
     Ident::Init();
 #endif
 
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 
     snmpInit();
 
@@ -1455,7 +1455,7 @@ sendSignal(void)
 static void
 mainStartScript(const char *prog)
 {
-    char script[SQUID_MAXPATHLEN];
+    char script[MAXPATHLEN];
     char *t;
     size_t sl = 0;
     pid_t cpid;
@@ -1692,7 +1692,7 @@ SquidShutdown()
 
     htcpSocketClose();
 #endif
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 
     snmpConnectionClose();
 #endif

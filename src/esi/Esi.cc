@@ -56,7 +56,7 @@
 #include "esi/Expression.h"
 #include "HttpRequest.h"
 #include "MemBuf.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 /* quick reference on behaviour here.
  * The ESI specification 1.0 requires the ESI processor to be able to
@@ -1441,7 +1441,7 @@ ESIContext::freeResources ()
     /* don't touch incoming, it's a pointer into buffered anyway */
 }
 
-extern ErrorState *clientBuildError (err_type, http_status, char const *, IpAddress &, HttpRequest *);
+extern ErrorState *clientBuildError (err_type, http_status, char const *, Ip::Address &, HttpRequest *);
 
 
 /* This can ONLY be used before we have sent *any* data to the client */

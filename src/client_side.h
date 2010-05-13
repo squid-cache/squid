@@ -191,11 +191,11 @@ public:
      */
     ClientSocketContext::Pointer currentobject;
 
-    IpAddress peer;
+    Ip::Address peer;
 
-    IpAddress me;
+    Ip::Address me;
 
-    IpAddress log_addr;
+    Ip::Address log_addr;
     char rfc931[USER_IDENT_SZ];
     int nrequests;
 
@@ -250,7 +250,7 @@ public:
      \param peer      if it is not NULL also check if the peer is the pinning peer
      \return          The fd of the server side connection or -1 if fails.
      */
-    int validatePinnedConnection(HttpRequest *request, const struct peer *peer=NULL);
+    int validatePinnedConnection(HttpRequest *request, const struct peer *peer);
     /**
      * returts the pinned peer if exists, NULL otherwise
      */

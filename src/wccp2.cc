@@ -35,11 +35,12 @@
 #if USE_WCCPv2
 
 #include "comm.h"
+#include "compat/strsep.h"
 #include "event.h"
+#include "ip/Address.h"
 #include "Parsing.h"
 #include "Store.h"
 #include "SwapDir.h"
-#include "ip/IpAddress.h"
 
 #if HAVE_NETDB_H
 #include <netdb.h>
@@ -303,7 +304,7 @@ struct wccp2_router_id_element_t {
 
 static struct wccp2_router_id_element_t wccp2_router_id_element;
 
-/** \interface WCCpv2_Protocol
+/** \interface WCCPv2_Protocol
  * Sect 5.6.9 Capabilities Info Component
  */
 struct wccp2_capability_info_header_t {
@@ -677,7 +678,7 @@ wccp2_check_security(struct wccp2_service_list_t *srv, char *security, char *pac
 void
 wccp2Init(void)
 {
-    IpAddress_list *s;
+    Ip::Address_list *s;
     char *ptr;
     uint32_t service_flags;
 
@@ -1178,7 +1179,7 @@ wccp2HandleUdp(int sock, void *not_used)
     commSetSelect(sock, COMM_SELECT_READ, wccp2HandleUdp, NULL, 0);
 
     /* FIXME INET6 : drop conversion boundary */
-    IpAddress from_tmp;
+    Ip::Address from_tmp;
 
     len = comm_udp_recvfrom(sock,
                             &wccp2_i_see_you,
@@ -1542,7 +1543,7 @@ wccp2HereIam(void *voidnotused)
 
     struct wccp2_mask_identity_info_t *wccp2_mask_identity_info_ptr;
 
-    IpAddress router;
+    Ip::Address router;
 
     debugs(80, 6, "wccp2HereIam: Called");
 
@@ -1982,7 +1983,7 @@ wccp2AssignBuckets(void *voidnotused)
 
                 if (wccp2_numrouters > 1) {
                     /* FIXME INET6 : drop temp conversion */
-                    IpAddress tmp_rtr(router);
+                    Ip::Address tmp_rtr(router);
                     comm_udp_sendto(theWccp2Connection,
                                     tmp_rtr,
                                     &wccp_packet,

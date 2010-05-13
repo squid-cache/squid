@@ -8,3 +8,5 @@ basic_getpwnam_auth_LDADD = \
 	$(CRYPTLIB)
 
 man_MANS = basic_getpwnam_auth.8
+
+EXTRA_DIST = basic_getpwnam_auth.8 config.test

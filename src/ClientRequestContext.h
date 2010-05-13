@@ -26,6 +26,7 @@ public:
 
     bool httpStateIsValid();
     void clientAccessCheck();
+    void clientAccessCheck2();
     void clientAccessCheckDone(int answer);
     void clientRedirectStart();
     void clientRedirectDone(char *result);
@@ -42,11 +43,10 @@ public:
     int redirect_state;
 
     bool http_access_done;
+    bool adapted_http_access_done;
 #if USE_ADAPTATION
-
     bool adaptation_acl_check_done;
 #endif
-
     bool redirect_done;
     bool no_cache_done;
     bool interpreted_req_hdrs;

@@ -9,7 +9,7 @@
 #include "adaptation/icap/Xaction.h"
 #include "adaptation/icap/Launcher.h"
 #include "adaptation/icap/Config.h"
-#include "TextException.h"
+#include "base/TextException.h"
 #include "pconn.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
@@ -87,7 +87,7 @@ void Adaptation::Icap::Xaction::start()
 // TODO: obey service-specific, OPTIONS-reported connection limit
 void Adaptation::Icap::Xaction::openConnection()
 {
-    IpAddress client_addr;
+    Ip::Address client_addr;
 
     Must(connection < 0);
 
@@ -115,7 +115,7 @@ void Adaptation::Icap::Xaction::openConnection()
 
     disableRetries(); // we only retry pconn failures
 
-    IpAddress outgoing;
+    Ip::Address outgoing;
     connection = comm_open(SOCK_STREAM, 0, outgoing,
                            COMM_NONBLOCKING, s.cfg().uri.termedBuf());
 
@@ -175,7 +175,7 @@ void Adaptation::Icap::Xaction::closeConnection()
         }
 
         if (reuseConnection) {
-            IpAddress client_addr;
+            Ip::Address client_addr;
             //status() adds leading spaces.
             debugs(93,3, HERE << "pushing pconn" << status());
             AsyncCall::Pointer call = NULL;
@@ -215,7 +215,6 @@ void Adaptation::Icap::Xaction::dieOnConnectionFailure()
 {
     debugs(93, 2, HERE << typeName <<
            " failed to connect to " << service().cfg().uri);
-    theService->noteFailure();
     throw TexcHere("cannot connect to the ICAP service");
 }
 
@@ -259,8 +258,6 @@ void Adaptation::Icap::Xaction::handleCommTimedout()
            theService->cfg().methodStr() << " " <<
            theService->cfg().uri << status());
     reuseConnection = false;
-    service().noteFailure();
-
     throw TexcHere(connector != NULL ?
                    "timed out while connecting to the ICAP service" :
                    "timed out while talking to the ICAP service");
@@ -281,6 +278,7 @@ void Adaptation::Icap::Xaction::handleCommClosed()
 void Adaptation::Icap::Xaction::callException(const std::exception  &e)
 {
     setOutcome(xoError);
+    service().noteFailure();
     Adaptation::Initiate::callException(e);
 }
 

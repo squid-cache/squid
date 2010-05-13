@@ -32,16 +32,26 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
  *
  */
+#include "config.h"
 
+#if HAVE_UNISTD_H
 #include <unistd.h>
-#include <stdlib.h>
+#endif
+#if HAVE_STDIO_H
 #include <stdio.h>
-#include <sys/types.h>
+#endif
+#if HAVE_CTYPE_H
 #include <ctype.h>
-#include <sys/time.h>
+#endif
+#if HAVE_STRINGS_H
 #include <strings.h>
+#endif
+#if HAVE_ASSERT_H
 #include <assert.h>
+#endif
+
 #include "hash.h"
+
 #undef free
 extern void my_free(char *, int, void *);
 
@@ -348,7 +358,7 @@ hashFreeMemory(hash_table * hid)
 }
 
 
-#ifdef USE_HASH_DRIVER
+#if USE_HASH_DRIVER
 /*
  *  hash-driver - Run with a big file as stdin to insert each line into the
  *  hash table, then prints the whole hash table, then deletes a random item,

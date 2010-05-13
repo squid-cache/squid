@@ -14,3 +14,5 @@ basic_nis_auth_LDADD = \
 	$(COMPAT_LIB) \
 	$(CRYPTLIB) \
 	$(XTRA_LIBS)
+
+EXTRA_DIST = config.test

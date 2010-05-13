@@ -1,4 +1,3 @@
-
 #ifndef _PROFILING_H_
 #define _PROFILING_H_
 
@@ -10,12 +9,10 @@
 class CacheManager;
 #endif
 
-#ifdef USE_XPROF_STATS
+#if USE_XPROF_STATS
 
-#if !defined(_SQUID_SOLARIS_)
+#if !_SQUID_SOLARIS_
 typedef int64_t  hrtime_t;
-#else
-#include <sys/time.h>
 #endif
 
 #if defined(__GNUC__) && ( defined(__i386) || defined(__i386__) )
@@ -67,17 +64,14 @@ get_tick(void)
 }
 
 #else
-static inline hrtime_t
-get_tick(void)
-{
-    return 0; // unsupported on this CPU
-}
+/* This CPU is unsupported. Short-circuit, no profiling here */
+#define get_tick() 0
 #undef USE_XPROF_STATS
 #endif
 
 #endif /* USE_XPROF_STATS - maybe disabled above */
 
-#ifdef USE_XPROF_STATS
+#if USE_XPROF_STATS
 
 typedef enum {
     XPROF_PROF_UNACCOUNTED,

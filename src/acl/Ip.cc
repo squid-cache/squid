@@ -34,6 +34,7 @@
  */
 
 #include "squid.h"
+#include "compat/getaddrinfo.h"
 #include "acl/Ip.h"
 #include "acl/Checklist.h"
 #include "MemBuf.h"
@@ -128,7 +129,7 @@ acl_ip_data::toStr(char *buf, int len) const
 int
 aclIpAddrNetworkCompare(acl_ip_data * const &p, acl_ip_data * const &q)
 {
-    IpAddress A = p->addr1;
+    Ip::Address A = p->addr1;
 
     /* apply netmask */
     A.ApplyMask(q->mask);
@@ -195,7 +196,7 @@ acl_ip_data::NetworkCompare(acl_ip_data * const & a, acl_ip_data * const &b)
  * This function should NOT be called if 'asc' is a hostname!
  */
 bool
-acl_ip_data::DecodeMask(const char *asc, IpAddress &mask, int ctype)
+acl_ip_data::DecodeMask(const char *asc, Ip::Address &mask, int ctype)
 {
     char junk;
     int a1 = 0;
@@ -257,7 +258,7 @@ acl_ip_data::FactoryParse(const char *t)
     LOCAL_ARRAY(char, mask, 256);
     acl_ip_data *r = NULL;
     acl_ip_data **Q = NULL;
-    IpAddress temp;
+    Ip::Address temp;
     char c;
     unsigned int changed;
     acl_ip_data *q = new acl_ip_data;
@@ -405,15 +406,15 @@ acl_ip_data::FactoryParse(const char *t)
         addr2[0] = '\0';
     } else if (sscanf(t, "%s", addr1) == 1) {
         /*
-         * Note, must use plain xgetaddrinfo() here because at startup
+         * Note, must use plain getaddrinfo() here because at startup
          * ipcache hasn't been initialized
-         * TODO: offload this to one of the IpAddress lookups.
+         * TODO: offload this to one of the Ip::Address lookups.
          */
 
         debugs(28, 5, "aclIpParseIpData: Lookup Host/IP " << addr1);
         struct addrinfo *hp = NULL, *x = NULL;
         struct addrinfo hints;
-        IpAddress *prev_addr = NULL;
+        Ip::Address *prev_addr = NULL;
 
         memset(&hints, 0, sizeof(struct addrinfo));
 
@@ -425,11 +426,11 @@ acl_ip_data::FactoryParse(const char *t)
         hints.ai_flags |= AI_V4MAPPED | AI_ALL;
 #endif
 
-        int errcode = xgetaddrinfo(addr1,NULL,&hints,&hp);
+        int errcode = getaddrinfo(addr1,NULL,&hints,&hp);
         if (hp == NULL) {
             debugs(28, 0, "aclIpParseIpData: Bad host/IP: '" << addr1 <<
                    "' in '" << t << "', flags=" << hints.ai_flags <<
-                   " : (" << errcode << ") " << xgai_strerror(errcode) );
+                   " : (" << errcode << ") " << gai_strerror(errcode) );
             self_destruct();
             return NULL;
         }
@@ -468,7 +469,7 @@ acl_ip_data::FactoryParse(const char *t)
             return NULL;
         }
 
-        xfreeaddrinfo(hp);
+        freeaddrinfo(hp);
 
         return q;
     }
@@ -560,7 +561,7 @@ ACLIP::empty () const
 }
 
 int
-ACLIP::match(IpAddress &clientip)
+ACLIP::match(Ip::Address &clientip)
 {
     static acl_ip_data ClientAddress;
     /*
@@ -580,4 +581,4 @@ ACLIP::match(IpAddress &clientip)
 
 acl_ip_data::acl_ip_data () :addr1(), addr2(), mask(), next (NULL) {}
 
-acl_ip_data::acl_ip_data (IpAddress const &anAddress1, IpAddress const &anAddress2, IpAddress const &aMask, acl_ip_data *aNext) : addr1(anAddress1), addr2(anAddress2), mask(aMask), next(aNext) {}
+acl_ip_data::acl_ip_data (Ip::Address const &anAddress1, Ip::Address const &anAddress2, Ip::Address const &aMask, acl_ip_data *aNext) : addr1(anAddress1), addr2(anAddress2), mask(aMask), next(aNext) {}
