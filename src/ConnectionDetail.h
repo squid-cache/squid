@@ -35,7 +35,7 @@
 #ifndef _SQUIDCONNECTIONDETAIL_H_
 #define _SQUIDCONNECTIONDETAIL_H_
 
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 class ConnectionDetail
 {
