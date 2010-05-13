@@ -94,7 +94,7 @@ const char *log_tags[] = {
     "LOG_TYPE_MAX"
 };
 
-#if FORW_VIA_DB
+#if USE_FORW_VIA_DB
 
 typedef struct {
     hash_link hash;
@@ -2037,7 +2037,7 @@ void
 accessLogRotate(void)
 {
     customlog *log;
-#if FORW_VIA_DB
+#if USE_FORW_VIA_DB
 
     fvdbClear();
 #endif
@@ -2114,7 +2114,7 @@ hierarchyNote(HierarchyLogEntry * hl,
 static void
 accessLogRegisterWithCacheManager(void)
 {
-#if FORW_VIA_DB
+#if USE_FORW_VIA_DB
     fvdbRegisterWithCacheManager();
 #endif
 }
@@ -2194,7 +2194,7 @@ accessLogInit(void)
     }
 
 #endif
-#if FORW_VIA_DB
+#if USE_FORW_VIA_DB
 
     fvdbInit();
 
@@ -2219,7 +2219,7 @@ accessLogTime(time_t t)
 }
 
 
-#if FORW_VIA_DB
+#if USE_FORW_VIA_DB
 
 static void
 fvdbInit(void)
