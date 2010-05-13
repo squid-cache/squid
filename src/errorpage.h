@@ -37,7 +37,7 @@
 #include "squid.h"
 #include "auth/UserRequest.h"
 #include "cbdata.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 /**
  \defgroup ErrorPageAPI Error Pages API

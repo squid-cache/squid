@@ -38,7 +38,7 @@
 #include "client_side_request.h"
 
 class ErrorState;
-class Ip::Address;
+#include "ip/forward.h"
 
 /* XXX make static method */
 

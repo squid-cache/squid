@@ -8,13 +8,13 @@ msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: FULL NAME <EMAIL@ADDRESS>\n"
 "POT-Creation-Date: 2010-05-01 00:17+1200\n"
-"PO-Revision-Date: 2010-03-20 02:14+0200\n"
+"PO-Revision-Date: 2010-05-10 15:29+0200\n"
 "Last-Translator: Robert Förster <Dessa@gmake.de>\n"
 "Language-Team: German <de@li.org>\n"
+"Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Pootle 2.0.1\n"
 "X-Launchpad-Export-Date: 2010-01-10 09:12+0000\n"
@@ -421,9 +421,8 @@ msgstr ""
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:16
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:31
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:18
-#, fuzzy
 msgid "options"
-msgstr "-O Optionen"
+msgstr "Optionen"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:18
@@ -437,9 +436,8 @@ msgstr ""
 #: helpers/basic_auth/RADIUS/basic_radius_auth.8:18
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:22 src/squid.8.in:17
 #: tools/squidclient.1:28
-#, fuzzy
 msgid "port"
-msgstr "-a port"
+msgstr "Port"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:22

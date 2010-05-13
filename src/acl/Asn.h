@@ -36,7 +36,7 @@
 #include "CbDataList.h"
 #include "acl/Strategised.h"
 #include "acl/Checklist.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 SQUIDCEXTERN int asnMatchIp(CbDataList<int> *, Ip::Address &);
 

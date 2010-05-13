@@ -56,7 +56,7 @@
 #endif
 #include "HttpRequestMethod.h"
 #include "ident/Config.h"
-#include "ip/IpIntercept.h"
+#include "ip/Intercept.h"
 #include "ip/QosConfig.h"
 #include "log/Config.h"
 #include "MemBuf.h"
@@ -2855,7 +2855,7 @@ dump_memcachemode(StoreEntry * entry, const char *name, SquidConfig &config)
     storeAppendPrintf(entry, "\n");
 }
 
-#include "cf_parser.h"
+#include "cf_parser.cci"
 
 peer_t
 parseNeighborType(const char *s)
