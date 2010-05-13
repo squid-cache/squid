@@ -3206,8 +3206,8 @@ if test "$enable_linux_netfilter" != "no" ; then
     fi
   fi
 fi
-#notice and define for LINUX_NETFILTER must be delayed as TPROXY
-# may have something to say about it
+SQUID_DEFINE_BOOL([LINUX_NETFILTER],$enable_linux_netfilter,
+  [Enable support for Transparent Proxy on Linux via Netfilter])
 
 dnl Netfilter TPROXY depends on libcap but the NAT parts can still work.
 AC_MSG_NOTICE([Support for Netfilter-based interception proxy requested: $enable_linux_netfilter])
