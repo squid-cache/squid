@@ -2785,7 +2785,7 @@ dump_removalpolicy(StoreEntry * entry, const char *name, RemovalPolicySettings *
     storeAppendPrintf(entry, "\n");
 }
 
-#include "cf_parser.h"
+#include "cf_parser.cci"
 
 peer_t
 parseNeighborType(const char *s)

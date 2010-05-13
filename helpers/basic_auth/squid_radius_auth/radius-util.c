@@ -90,7 +90,7 @@ static int good_ipaddr(char *addr)
         if (*addr == '.') {
             dot_count++;
             digit_count = 0;
-        } else if (!isdigit(*addr)) {
+        } else if (!isdigit((int)*addr)) {
             dot_count = 5;
         } else {
             digit_count++;
@@ -126,7 +126,7 @@ static u_int32_t ipstr2long(char *ip_str)
         count = 0;
         *ptr = '\0';
         while (*ip_str != '.' && *ip_str != '\0' && count < 4) {
-            if (!isdigit(*ip_str)) {
+            if (!isdigit((int)*ip_str)) {
                 return((u_int32_t)0);
             }
             *ptr++ = *ip_str++;
