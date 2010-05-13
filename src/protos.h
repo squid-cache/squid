@@ -47,7 +47,7 @@
 class HttpRequestMethod;
 
 
-#if FORW_VIA_DB
+#if USE_FORW_VIA_DB
 SQUIDCEXTERN void fvdbCountVia(const char *key);
 SQUIDCEXTERN void fvdbCountForw(const char *key);
 #endif
