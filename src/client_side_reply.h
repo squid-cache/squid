@@ -38,7 +38,7 @@
 #include "client_side_request.h"
 
 class ErrorState;
-class IpAddress;
+#include "ip/forward.h"
 
 /* XXX make static method */
 
@@ -72,7 +72,7 @@ public:
     int storeOKTransferDone() const;
     int storeNotOKTransferDone() const;
 
-    void setReplyToError(err_type, http_status, const HttpRequestMethod&, char const *, IpAddress &, HttpRequest *, const char *, AuthUserRequest *);
+    void setReplyToError(err_type, http_status, const HttpRequestMethod&, char const *, Ip::Address &, HttpRequest *, const char *, AuthUserRequest *);
     void createStoreEntry(const HttpRequestMethod& m, request_flags flags);
     void removeStoreReference(store_client ** scp, StoreEntry ** ep);
     void removeClientStoreReference(store_client **scp, ClientHttpRequest *http);

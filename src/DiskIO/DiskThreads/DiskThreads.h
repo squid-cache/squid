@@ -11,7 +11,7 @@
 #include "dlink.h"
 #include "typedefs.h"
 
-#ifdef AUFS_IO_THREADS
+#if AUFS_IO_THREADS
 #define NUMTHREADS AUFS_IO_THREADS
 #else
 #define NUMTHREADS (Config.cacheSwap.n_configured*16)

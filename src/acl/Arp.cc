@@ -39,11 +39,11 @@
 #include "acl/Arp.h"
 #include "acl/FilledChecklist.h"
 #include "eui/Eui48.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 #include "wordlist.h"
 
 static void aclParseArpList(SplayNode<Eui::Eui48 *> **curlist);
-static int aclMatchArp(SplayNode<Eui::Eui48 *> **dataptr, IpAddress &c);
+static int aclMatchArp(SplayNode<Eui::Eui48 *> **dataptr, Ip::Address &c);
 static SplayNode<Eui::Eui48 *>::SPLAYCMP aclArpCompare;
 static SplayNode<Eui::Eui48 *>::SPLAYWALKEE aclDumpArpListWalkee;
 
@@ -173,7 +173,7 @@ ACLARP::match(ACLChecklist *cl)
 /* aclMatchArp */
 /***************/
 int
-aclMatchArp(SplayNode<Eui::Eui48 *> **dataptr, IpAddress &c)
+aclMatchArp(SplayNode<Eui::Eui48 *> **dataptr, Ip::Address &c)
 {
     Eui::Eui48 result;
     SplayNode<Eui::Eui48 *> **Top = dataptr;

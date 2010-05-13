@@ -47,7 +47,7 @@ struct ipc_params {
     int type;
     int crfd;
     int cwfd;
-    IpAddress local_addr;
+    Ip::Address local_addr;
     struct addrinfo PS;
     const char *prog;
     char **args;
@@ -105,7 +105,7 @@ PutEnvironment()
 }
 
 pid_t
-ipcCreate(int type, const char *prog, const char *const args[], const char *name, IpAddress &local_addr, int *rfd, int *wfd, void **hIpc)
+ipcCreate(int type, const char *prog, const char *const args[], const char *name, Ip::Address &local_addr, int *rfd, int *wfd, void **hIpc)
 {
     unsigned long thread;
 
@@ -115,7 +115,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
     DWORD ecode = 0;
     pid_t pid;
 
-    IpAddress tmp_addr;
+    Ip::Address tmp_addr;
     struct addrinfo *aiCS = NULL;
     struct addrinfo *aiPS = NULL;
 
@@ -252,7 +252,7 @@ ipcCreate(int type, const char *prog, const char *const args[], const char *name
         return ipcCloseAllFD(prfd, pwfd, crfd, cwfd);
     }
 
-    /* NP: tmp_addr was left with eiether empty or aiCS in IpAddress format */
+    /* NP: tmp_addr was left with eiether empty or aiCS in Ip::Address format */
     if (comm_connect_addr(pwfd, tmp_addr) == COMM_ERROR) {
         CloseHandle((HANDLE) thread);
         return ipcCloseAllFD(prfd, pwfd, -1, -1);
@@ -377,8 +377,8 @@ ipc_thread_1(void *in_params)
     int prfd_ipc = -1, pwfd_ipc = -1, crfd_ipc = -1, cwfd_ipc = -1;
     char *prog = NULL, *buf1 = NULL;
 
-    IpAddress PS_ipc;
-    IpAddress CS_ipc;
+    Ip::Address PS_ipc;
+    Ip::Address CS_ipc;
     struct addrinfo *aiPS_ipc = NULL;
     struct addrinfo *aiCS_ipc = NULL;
 
@@ -388,8 +388,8 @@ ipc_thread_1(void *in_params)
     int cwfd = params->cwfd;
     char **args = params->args;
 
-    IpAddress PS = params->PS;
-    IpAddress local_addr = params->local_addr;
+    Ip::Address PS = params->PS;
+    Ip::Address local_addr = params->local_addr;
 
     buf1 = (char *)xcalloc(1, 8192);
     strcpy(buf1, params->prog);

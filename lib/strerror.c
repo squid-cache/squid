@@ -39,7 +39,8 @@
 #endif
 
 extern int sys_nerr;
-#if NEED_SYS_ERRLIST && !defined(_SQUID_NETBSD_)
+
+#if NEED_SYS_ERRLIST
 extern char *sys_errlist[];
 #endif
 

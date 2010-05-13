@@ -59,18 +59,18 @@ struct wccp_here_i_am_t {
 };
 
 struct wccp_cache_entry_t {
-    IpAddress ip_addr;
+    struct in_addr ip_addr;  // WCCP on-the-wire in 32-bit IPv4-only.
     int revision;
     char hash[WCCP_HASH_SIZE];
     int reserved;
 };
 
 struct wccp_i_see_you_t {
-    int type;
-    int version;
-    int change;
-    int id;
-    int number;
+    int32_t type;
+    int32_t version;
+    int32_t change;
+    int32_t id;
+    int32_t number;
 
     struct wccp_cache_entry_t wccp_cache_entry[WCCP_ACTIVE_CACHES];
 };
@@ -91,7 +91,7 @@ static int last_id;
 static int last_assign_buckets_change;
 static unsigned int number_caches;
 
-static IpAddress local_ip;
+static Ip::Address local_ip;
 
 static PF wccpHandleUdp;
 static int wccpLowestIP(void);
@@ -146,6 +146,7 @@ wccpConnectionOpen(void)
     }
 
     Config.Wccp.address.SetPort(WCCP_PORT);
+    Config.Wccp.router.SetPort(WCCP_PORT);
 
     theWccpConnection = comm_open_listener(SOCK_DGRAM,
                                            IPPROTO_UDP,
@@ -202,8 +203,7 @@ wccpConnectionClose(void)
 static void
 wccpHandleUdp(int sock, void *not_used)
 {
-
-    IpAddress from;
+    Ip::Address from;
     int len;
 
     debugs(80, 6, "wccpHandleUdp: Called.");
@@ -287,10 +287,10 @@ wccpLowestIP(void)
     for (loop = 0; loop < (unsigned) ntohl(wccp_i_see_you.number); loop++) {
         assert(loop < WCCP_ACTIVE_CACHES);
 
-        if (wccp_i_see_you.wccp_cache_entry[loop].ip_addr < local_ip)
+        if (local_ip > wccp_i_see_you.wccp_cache_entry[loop].ip_addr)
             return 0;
 
-        if (wccp_i_see_you.wccp_cache_entry[loop].ip_addr == local_ip)
+        if (local_ip == wccp_i_see_you.wccp_cache_entry[loop].ip_addr)
             found = 1;
     }
 

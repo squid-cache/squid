@@ -6,7 +6,6 @@
 #define SQUID_ASYNC_JOB_H
 
 #include "base/AsyncCall.h"
-#include "TextException.h"
 
 /**
  \defgroup AsyncJobAPI Async-Jobs API

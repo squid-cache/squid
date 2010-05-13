@@ -6,7 +6,7 @@
 */
 
 #include "acl/Acl.h"
-#ifdef USE_SQUID_EUI
+#if USE_SQUID_EUI
 #include "acl/Arp.h"
 #include "acl/Eui64.h"
 #endif
@@ -48,7 +48,7 @@
 #include "acl/SourceAsn.h"
 #include "acl/SourceDomain.h"
 #include "acl/SourceIp.h"
-#ifdef USE_SSL
+#if USE_SSL
 #include "acl/SslErrorData.h"
 #include "acl/SslError.h"
 #include "acl/CertificateData.h"
@@ -129,7 +129,7 @@ ACLStrategised<char const *> ACLUrlPath::RegistryEntry_(new ACLRegexData, ACLUrl
 ACL::Prototype ACLUrlPort::RegistryProtoype(&ACLUrlPort::RegistryEntry_, "port");
 ACLStrategised<int> ACLUrlPort::RegistryEntry_(new ACLIntRange, ACLUrlPortStrategy::Instance(), "port");
 
-#ifdef USE_SSL
+#if USE_SSL
 ACL::Prototype ACLSslError::RegistryProtoype(&ACLSslError::RegistryEntry_, "ssl_error");
 ACLStrategised<int> ACLSslError::RegistryEntry_(new ACLSslErrorData, ACLSslErrorStrategy::Instance(), "ssl_error");
 ACL::Prototype ACLCertificate::UserRegistryProtoype(&ACLCertificate::UserRegistryEntry_, "user_cert");
@@ -138,7 +138,7 @@ ACL::Prototype ACLCertificate::CARegistryProtoype(&ACLCertificate::CARegistryEnt
 ACLStrategised<SSL *> ACLCertificate::CARegistryEntry_(new ACLCertificateData (sslGetCAAttribute), ACLCertificateStrategy::Instance(), "ca_cert");
 #endif
 
-#ifdef USE_SQUID_EUI
+#if USE_SQUID_EUI
 ACL::Prototype ACLARP::RegistryProtoype(&ACLARP::RegistryEntry_, "arp");
 ACLARP ACLARP::RegistryEntry_("arp");
 ACL::Prototype ACLEui64::RegistryProtoype(&ACLEui64::RegistryEntry_, "eui64");

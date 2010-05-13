@@ -21,7 +21,7 @@
 
 #include "config.h"
 
-#ifndef HAVE_INET_NTOP
+#if !HAVE_INET_NTOP
 #include "inet_ntop.h"
 
 /*

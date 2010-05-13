@@ -10,5 +10,5 @@ libexec_SCRIPTS	= no_check.pl
 
 EXTRA_DIST = \
 	no_check.pl \
-	README.no_check_ntlm_auth
-
+	README.no_check_ntlm_auth \
+	config.test

@@ -199,6 +199,9 @@ helperStatefulOpenServers(statefulhelper * hlp)
     if (hlp->cmdline == NULL)
         return;
 
+    if (hlp->childs.concurrency)
+        debugs(84, 0, "ERROR: concurrency= is not yet supported for stateful helpers ('" << hlp->cmdline << "')");
+
     char *progname = hlp->cmdline->key;
 
     char *s;
@@ -783,7 +786,7 @@ helperStatefulServerFree(int fd, void *data)
     }
 
     if (srv->data != NULL)
-        hlp->datapool->free(srv->data);
+        hlp->datapool->freeOne(srv->data);
 
     cbdataReferenceDone(srv->parent);
 

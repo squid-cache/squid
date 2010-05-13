@@ -401,8 +401,8 @@ public:
 
     struct dirent *entry;
     DIR *td;
-    char fullpath[SQUID_MAXPATHLEN];
-    char fullfilename[SQUID_MAXPATHLEN];
+    char fullpath[MAXPATHLEN];
+    char fullfilename[MAXPATHLEN];
 
     struct _store_rebuild_data counts;
 
@@ -422,7 +422,7 @@ private:
     void *cbdata;
 };
 
-#ifdef _USE_INLINE_
+#if _USE_INLINE_
 #include "ufscommon.cci"
 #endif
 

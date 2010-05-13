@@ -1,10 +1,10 @@
 #include "config.h"
-#include "globals.h"
-#include "TextException.h"
-#include "SquidTime.h"
-#include "HttpRequest.h" /* for alLogformatHasAdaptToken */
 #include "adaptation/Config.h"
 #include "adaptation/History.h"
+#include "base/TextException.h"
+#include "globals.h"
+#include "HttpRequest.h" /* for alLogformatHasAdaptToken */
+#include "SquidTime.h"
 
 /// impossible services value to identify unset theNextServices
 const static char *TheNullServices = ",null,";

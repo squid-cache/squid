@@ -36,9 +36,9 @@
 #include "CbDataList.h"
 #include "acl/Strategised.h"
 #include "acl/Checklist.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
-SQUIDCEXTERN int asnMatchIp(CbDataList<int> *, IpAddress &);
+SQUIDCEXTERN int asnMatchIp(CbDataList<int> *, Ip::Address &);
 
 /// \ingroup ACLAPI
 SQUIDCEXTERN void asnInit(void);
@@ -47,7 +47,7 @@ SQUIDCEXTERN void asnInit(void);
 SQUIDCEXTERN void asnFreeMemory(void);
 
 /// \ingroup ACLAPI
-class ACLASN : public ACLData<IpAddress>
+class ACLASN : public ACLData<Ip::Address>
 {
 
 public:
@@ -55,18 +55,18 @@ public:
 
     virtual ~ACLASN();
 
-    virtual bool match(IpAddress);
+    virtual bool match(Ip::Address);
     virtual wordlist *dump();
     virtual void parse();
     bool empty() const;
-    virtual ACLData<IpAddress> *clone() const;
+    virtual ACLData<Ip::Address> *clone() const;
     virtual void prepareForUse();
 
 private:
     static ACL::Prototype SourceRegistryProtoype;
-    static ACLStrategised<IpAddress> SourceRegistryEntry_;
+    static ACLStrategised<Ip::Address> SourceRegistryEntry_;
     static ACL::Prototype DestinationRegistryProtoype;
-    static ACLStrategised<IpAddress> DestinationRegistryEntry_;
+    static ACLStrategised<Ip::Address> DestinationRegistryEntry_;
     CbDataList<int> *data;
 };
 

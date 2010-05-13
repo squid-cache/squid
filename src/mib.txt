@@ -929,15 +929,14 @@ squid MODULE-IDENTITY
                     "A list of cache client entries."
        	::= { cacheMesh 2 }
 
-
 	cacheClientEntry OBJECT-TYPE
            SYNTAX CacheClientEntry
            MAX-ACCESS  not-accessible
            STATUS  current
            DESCRIPTION
-                    "An entry in cacheClientTable "
-	   INDEX { cacheClientAddressType, cacheClientAddress }
-	::= { cacheClientTable 1 }
+                    "An IP entry in cacheClientTable "
+	   INDEX { cacheClientAddress }
+	::= { cacheClientTable 2 }
 
 	CacheClientEntry ::= SEQUENCE {
 		cacheClientAddressType  InetAddressType,

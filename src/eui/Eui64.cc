@@ -9,16 +9,11 @@
 
 #if USE_SQUID_EUI
 
+#include "compat/eui64_aton.h"
 #include "Debug.h"
 #include "eui/Eui64.h"
 #include "globals.h"
-#include "ip/IpAddress.h"
-
-#if HAVE_SYS_EUI64_H
-#include <sys/eui64.h>
-#else
-#include "eui64_aton.h"
-#endif
+#include "ip/Address.h"
 
 bool
 Eui::Eui64::decode(const char *asc)
@@ -41,7 +36,7 @@ Eui::Eui64::encode(char *buf, const int len)
 
 // return binary representation of the EUI
 bool
-Eui::Eui64::lookup(IpAddress &c)
+Eui::Eui64::lookup(Ip::Address &c)
 {
     /* try to short-circuit slow OS lookups by using SLAAC data */
     if (lookupSlaac(c)) return true;
@@ -51,7 +46,7 @@ Eui::Eui64::lookup(IpAddress &c)
 }
 
 bool
-Eui::Eui64::lookupSlaac(IpAddress &c)
+Eui::Eui64::lookupSlaac(Ip::Address &c)
 {
 #if USE_IPV6
     /* RFC 4291 Link-Local unicast addresses which contain SLAAC - usually trustable. */
@@ -70,7 +65,7 @@ Eui::Eui64::lookupSlaac(IpAddress &c)
 
 // return binary representation of the EUI
 bool
-Eui::Eui64::lookupNdp(IpAddress &c)
+Eui::Eui64::lookupNdp(Ip::Address &c)
 {
 #if USE_IPV6
 

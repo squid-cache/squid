@@ -37,7 +37,7 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "wordlist.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 /**
  \defgroup IPCacheAPI IP Cache API
@@ -99,10 +99,6 @@ public:
     struct timeval request_time;
     dlink_node lru;
     unsigned short locks;
-#if DNS_CNAME
-    unsigned short cname_wait;
-#endif
-
     struct {
         unsigned int negcached:1;
         unsigned int fromhosts:1;
@@ -135,7 +131,6 @@ static HLPCB ipcacheHandleReply;
 #else
 static IDNSCB ipcacheHandleReply;
 #endif
-static IPH ipcacheHandleCnameRecurse;
 static int ipcacheExpiredEntry(ipcache_entry *);
 #if USE_DNSSERVERS
 static int ipcacheParse(ipcache_entry *, const char *buf);
@@ -304,22 +299,10 @@ ipcacheAddEntry(ipcache_entry * i)
 {
     hash_link *e = (hash_link *)hash_lookup(ip_table, i->hash.key);
 
-#if DNS_CNAME
-    /* INET6 : should NOT be adding this entry until all CNAME have been received. */
-    assert(i->cname_wait == 0);
-#endif
-
     if (NULL != e) {
         /* avoid colission */
         ipcache_entry *q = (ipcache_entry *) e;
-#if DNS_CNAME
-        if (q == i)  {
-            /* can occur with Multiple-depth CNAME Recursion if parent returned early with additional */
-            /* just need to drop from the hash without releasing actual memory */
-            ipcacheRelease(q, false);
-        } else
-#endif
-            ipcacheRelease(q);
+        ipcacheRelease(q);
     }
 
     hash_join(ip_table, &i->hash);
@@ -426,7 +409,7 @@ ipcacheParse(ipcache_entry *i, const char *inbuf)
     if (ipcount > 0) {
         int j, k;
 
-        i->addrs.in_addrs = (IpAddress *)xcalloc(ipcount, sizeof(IpAddress));
+        i->addrs.in_addrs = static_cast<Ip::Address *>(xcalloc(ipcount, sizeof(Ip::Address)));
         for (int l = 0; l < ipcount; l++)
             i->addrs.in_addrs[l].SetEmpty(); // perform same init actions as constructor would.
         i->addrs.bad_mask = (unsigned char *)xcalloc(ipcount, sizeof(unsigned char));
@@ -523,36 +506,12 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
         if (answers[k].type == RFC1035_TYPE_CNAME) {
             cname_found=1;
             IpcacheStats.rr_cname++;
-
-#if DNS_CNAME
-            debugs(14, 5, "ipcacheParse: " << name << " CNAME " << answers[k].rdata << " (checking destination: " << i << ").");
-            const ipcache_addrs *res = ipcache_gethostbyname(answers[k].rdata, 0);
-            if (res) {
-                na += res->count;
-                debugs(14, 5, "ipcacheParse: CNAME " << answers[k].rdata << " already has " << res->count << " IPs cached.");
-            } else {
-                /* keep going on this, but flag the fact that we need to wait for a CNAME lookup to finish */
-                debugs(14, 5, "ipcacheParse: CNAME " << answers[k].rdata << " has no IPs! Recursing.");
-                ipcache_nbgethostbyname(answers[k].rdata, ipcacheHandleCnameRecurse, new generic_cbdata(i) );
-                i->cname_wait++;
-            }
-#endif /* DNS_CNAME */
-
             continue;
         }
 
         // otherwise its an unknown RR. debug at level 9 since we usually want to ignore these and they are common.
         debugs(14, 9, HERE << "Unknown RR type received: type=" << answers[k].type << " starting at " << &(answers[k]) );
     }
-
-#if DNS_CNAME
-    if (na == 0 && i->cname_wait >0 ) {
-        /* don't set any error message (yet). Allow recursion to do its work first. */
-        IpcacheStats.cname_only++;
-        return 0;
-    }
-#endif /* DNS_CNAME */
-
     if (na == 0) {
         debugs(14, 1, "ipcacheParse: No Address records in response to '" << name << "'");
         i->error_message = xstrdup("No Address records");
@@ -561,7 +520,7 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
         return 0;
     }
 
-    i->addrs.in_addrs = (IpAddress *)xcalloc(na, sizeof(IpAddress));
+    i->addrs.in_addrs = static_cast<Ip::Address *>(xcalloc(na, sizeof(Ip::Address)));
     for (int l = 0; l < na; l++)
         i->addrs.in_addrs[l].SetEmpty(); // perform same init actions as constructor would.
     i->addrs.bad_mask = (unsigned char *)xcalloc(na, sizeof(unsigned char));
@@ -592,23 +551,6 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
             j++;
 #endif
         }
-#if DNS_CNAME
-        else if (answers[k].type == RFC1035_TYPE_CNAME) {
-            debugs(14, 3, "ipcacheParse: " << name << " #x CNAME " << answers[k].rdata);
-            const ipcache_addrs *res = ipcache_gethostbyname(answers[k].rdata, 0);
-            if (res) {
-                /* NP: the results of *that* query need to be integrated in place of the CNAME */
-                /* Ideally we should also integrate the min TTL of the above IPA's into ttl.   */
-                for (int l = 0; l < res->count; l++, j++) {
-                    i->addrs.in_addrs[j] = res->in_addrs[l];
-                    debugs(14, 3, "ipcacheParse: " << name << " #" << j << " " << i->addrs.in_addrs[j] );
-                }
-            } else {
-                debugs(14, 9, "ipcacheParse: " << answers[k].rdata << " (CNAME) waiting on A/AAAA records.");
-            }
-        }
-#endif /* DNS_CNAME */
-
         if (ttl == 0 || (int) answers[k].ttl < ttl)
             ttl = answers[k].ttl;
     }
@@ -630,15 +572,7 @@ ipcacheParse(ipcache_entry *i, rfc1035_rr * answers, int nr, const char *error_m
 
     i->flags.negcached = 0;
 
-#if DNS_CNAME
-    /* SPECIAL CASE: may get here IFF CNAME received with Additional records */
-    /*               reurn  0/'wait for further details' value.              */
-    /*               NP: 'No DNS Results' is a return -1 +msg                */
-    if (i->cname_wait)
-        return 0;
-    else
-#endif /* DNS_CNAME */
-        return i->addrs.count;
+    return i->addrs.count;
 }
 
 #endif
@@ -787,8 +721,8 @@ ipcache_init(void)
     memset(&lru_list, '\0', sizeof(lru_list));
     memset(&static_addrs, '\0', sizeof(ipcache_addrs));
 
-    static_addrs.in_addrs = (IpAddress *)xcalloc(1, sizeof(IpAddress));
-    static_addrs.in_addrs->SetEmpty(); // properly setup the IpAddress!
+    static_addrs.in_addrs = static_cast<Ip::Address *>(xcalloc(1, sizeof(Ip::Address)));
+    static_addrs.in_addrs->SetEmpty(); // properly setup the Ip::Address!
     static_addrs.bad_mask = (unsigned char *)xcalloc(1, sizeof(unsigned char));
     ipcache_high = (long) (((float) Config.ipcache.size *
                             (float) Config.ipcache.high) / (float) 100);
@@ -852,7 +786,7 @@ ipcache_gethostbyname(const char *name, int flags)
     IpcacheStats.misses++;
 
     if (flags & IP_LOOKUP_IF_MISS)
-        ipcache_nbgethostbyname(name, ipcacheHandleCnameRecurse, NULL);
+        ipcache_nbgethostbyname(name, NULL, NULL);
 
     return NULL;
 }
@@ -957,224 +891,6 @@ stat_ipcache_get(StoreEntry * sentry)
     }
 }
 
-#if DNS_CNAME
-/**
- * Takes two IpAddress arrays and merges them into a single array
- * which is allocated dynamically to fit the number of unique addresses
- *
- \param aaddrs	One list to merge
- \param alen	Size of list aaddrs
- \param baddrs	Other list to merge
- \param alen	Size of list baddrs
- \param out	Combined list of unique addresses (sorted with IPv6 first in IPv6-mode)
- \param outlen	Size of list out
- */
-void
-ipcacheMergeIPLists(const IpAddress *aaddrs, const int alen,
-                    const IpAddress *baddrs, const int blen,
-                    IpAddress **out, int &outlen )
-{
-    int fc=0, t=0, c=0;
-
-    IpAddress const *ip4ptrs[255];
-#if USE_IPV6
-    IpAddress const *ip6ptrs[255];
-#endif
-    int num_ip4 = 0;
-    int num_ip6 = 0;
-
-    memset(ip4ptrs, 0, sizeof(IpAddress*)*255);
-#if USE_IPV6
-    memset(ip6ptrs, 0, sizeof(IpAddress*)*255);
-#endif
-
-    // for each unique address in list A - grab ptr
-    for (t = 0; t < alen; t++) {
-        if (aaddrs[t].IsIPv4()) {
-            // check against IPv4 pruned list
-            for (c = 0; c <= num_ip4; c++) {
-                if (ip4ptrs[c] && aaddrs[t] == *(ip4ptrs[c]) ) break; // duplicate.
-            }
-            if (c > num_ip4) {
-                ip4ptrs[num_ip4] = &aaddrs[t];
-                num_ip4++;
-            }
-        }
-#if USE_IPV6
-        else if (aaddrs[t].IsIPv6()) {
-            debugs(14,8, HERE << "A[" << t << "]=IPv6 " << aaddrs[t]);
-            // check against IPv6 pruned list
-            for (c = 0; c <= num_ip6; c++) {
-                if (ip6ptrs[c] && aaddrs[t] == *ip6ptrs[c]) break; // duplicate.
-            }
-            if (c > num_ip6) {
-                ip6ptrs[num_ip6] = &aaddrs[t];
-                num_ip6++;
-            }
-        }
-#endif
-    }
-
-    // for each unique address in list B - grab ptr
-    for (t = 0; t < blen; t++) {
-        if (baddrs[t].IsIPv4()) {
-            // check against IPv4 pruned list
-            for (c = 0; c <= num_ip4; c++) {
-                if (ip4ptrs[c] && baddrs[t] == *ip4ptrs[c]) break; // duplicate.
-            }
-            if (c > num_ip4) {
-                ip4ptrs[num_ip4] = &baddrs[t];
-                num_ip4++;
-            }
-        }
-#if USE_IPV6
-        else if (baddrs[t].IsIPv6()) {
-            // check against IPv6 pruned list
-            for (c = 0; c <= num_ip6; c++) {
-                if (ip6ptrs[c] && baddrs[t] == *ip6ptrs[c]) break; // duplicate.
-            }
-            if (c > num_ip6) {
-                ip6ptrs[num_ip6] = &baddrs[t];
-                num_ip6++;
-            }
-        }
-#endif
-    }
-
-    fc = num_ip6 + num_ip4;
-
-    assert(fc > 0);
-
-    debugs(14, 5, "ipcacheMergeIPLists: Merge " << alen << "+" << blen << " into " << fc << " unique IPs.");
-
-    // copy the old IPs into the new list buffer.
-    (*out) = (IpAddress*)xcalloc(fc, sizeof(IpAddress));
-    outlen=0;
-
-    assert(out != NULL);
-
-#if USE_IPV6
-    /* IPv6 are preferred (tried first) over IPv4 */
-
-    for (int l = 0; outlen < num_ip6; l++, outlen++) {
-        (*out)[outlen] = *ip6ptrs[l];
-        debugs(14, 5, "ipcacheMergeIPLists:  #" << outlen << " " << (*out)[outlen] );
-    }
-#endif /* USE_IPV6 */
-
-    for (int l = 0; outlen < num_ip4; l++, outlen++) {
-        (*out)[outlen] = *ip4ptrs[l];
-        debugs(14, 5, "ipcacheMergeIPLists:  #" << outlen << " " << (*out)[outlen] );
-    }
-
-    assert(outlen == fc); // otherwise something broke badly!
-}
-#endif /* DNS_CNAME */
-
-/// \ingroup IPCacheInternal
-/// Callback.
-static void
-ipcacheHandleCnameRecurse(const ipcache_addrs *addrs, const DnsLookupDetails &, void *cbdata)
-{
-#if DNS_CNAME
-    ipcache_entry *i = NULL;
-    char *pname = NULL;
-    IpAddress *tmpbuf = NULL;
-    int fc = 0;
-    int ttl = 0;
-    generic_cbdata* gcb = (generic_cbdata*)cbdata;
-    // count of addrs at parent and child (REQ as .count is a char type!)
-    int ccount = 0, pcount = 0;
-
-    debugs(14, 5, "ipcacheHandleCnameRecurse: Handling basic A/AAAA response.");
-
-    /* IFF no CNAME recursion being processed. do nothing. */
-    if (cbdata == NULL)
-        return;
-
-    gcb->unwrap(&i);
-    assert(i != NULL);
-
-    // make sure we are actualy waiting for a CNAME callback to be run.
-    assert(i->cname_wait > 0);
-    // count this event. its being handled.
-    i->cname_wait--;
-
-    pname = (char*)i->hash.key;
-    assert(pname != NULL);
-
-    debugs(14, 5, "ipcacheHandleCnameRecurse: Handling CNAME recursion. CBDATA('" << gcb->data << "')='" << pname << "' -> " << std::hex << i);
-
-    if (i == NULL) {
-        return; // Parent has expired. Don't merge, just leave for future Ref:
-    }
-
-    /* IFF addrs is NULL (Usually an Error or Timeout occured on lookup.) */
-    /* Ignore it and HOPE that we got some Additional records to use.     */
-    if (addrs == NULL)
-        return;
-
-    ccount = (0+ addrs->count);
-    pcount = (0+ i->addrs.count);
-    ttl = i->expires;
-
-    /* IFF no CNAME results. do none of the processing BUT finish anyway. */
-    if (addrs) {
-
-        debugs(14, 5, "ipcacheHandleCnameRecurse: Merge IP Lists for " << pname << " (" << pcount << "+" << ccount << ")");
-
-        /* add new IP records to entry */
-        tmpbuf = i->addrs.in_addrs;
-        i->addrs.in_addrs = NULL;
-        ipcacheMergeIPLists(tmpbuf, pcount, addrs->in_addrs, ccount, &(i->addrs.in_addrs), fc);
-        debugs(14,8, HERE << "in=" << tmpbuf << ", out=" << i->addrs.in_addrs );
-        assert( (pcount>0 ? tmpbuf!=NULL : tmpbuf==NULL) );
-        safe_free(tmpbuf);
-
-        if ( pcount > 0) {
-            /* IFF the parent initial lookup was given Additional records with A */
-            // clear the 'bad IP mask'
-            safe_free(i->addrs.bad_mask);
-        }
-        // create a new bad IP mask to fit the new size needed.
-        if (fc > 0) {
-            i->addrs.bad_mask = (unsigned char*)xcalloc(fc, sizeof(unsigned char));
-            memset(i->addrs.bad_mask, 0, sizeof(unsigned char)*fc);
-        }
-
-        if (fc < 256)
-            i->addrs.count = (unsigned char) fc;
-        else
-            i->addrs.count = 255;
-
-        if (ttl == 0 || ttl > Config.positiveDnsTtl)
-            ttl = Config.positiveDnsTtl;
-
-        if (ttl < Config.negativeDnsTtl)
-            ttl = Config.negativeDnsTtl;
-
-        i->expires = squid_curtime + ttl;
-
-        i->flags.negcached = 0;
-
-        i->addrs.cur = 0;
-
-        i->addrs.badcount = 0;
-    }
-
-    if (fc == 0) {
-        i->error_message = xstrdup("No DNS Records");
-    }
-
-    /* finish the lookup we were doing on parent when we got side-tracked for CNAME loop */
-    if (i->cname_wait == 0) {
-        ipcacheAddEntry(i);
-        ipcacheCallback(i, i->age()); // age since i creation, includes CNAMEs
-    }
-    // else still more CNAME to be found.
-#endif /* DNS_CNAME */
-}
-
 /// \ingroup IPCacheAPI
 void
 ipcacheInvalidate(const char *name)
@@ -1214,8 +930,7 @@ ipcacheInvalidateNegative(const char *name)
 ipcache_addrs *
 ipcacheCheckNumeric(const char *name)
 {
-
-    IpAddress ip;
+    Ip::Address ip;
     /* check if it's already a IP address in text form. */
 
     /* it may be IPv6-wrapped */
@@ -1319,7 +1034,7 @@ ipcacheCycleAddr(const char *name, ipcache_addrs * ia)
  \param addr	specific addres to be marked bad
  */
 void
-ipcacheMarkBadAddr(const char *name, IpAddress &addr)
+ipcacheMarkBadAddr(const char *name, const Ip::Address &addr)
 {
     ipcache_entry *i;
     ipcache_addrs *ia;
@@ -1354,7 +1069,7 @@ ipcacheMarkBadAddr(const char *name, IpAddress &addr)
 
 /// \ingroup IPCacheAPI
 void
-ipcacheMarkGoodAddr(const char *name, IpAddress &addr)
+ipcacheMarkGoodAddr(const char *name, const Ip::Address &addr)
 {
     ipcache_entry *i;
     ipcache_addrs *ia;
@@ -1437,7 +1152,7 @@ ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
 {
     ipcache_entry *i;
 
-    IpAddress ip;
+    Ip::Address ip;
 
     if (!(ip = ipaddr)) {
 #if USE_IPV6
@@ -1469,7 +1184,7 @@ ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
     i->addrs.cur = 0;
     i->addrs.badcount = 0;
 
-    i->addrs.in_addrs = (IpAddress *)xcalloc(1, sizeof(IpAddress));
+    i->addrs.in_addrs = static_cast<Ip::Address *>(xcalloc(1, sizeof(Ip::Address)));
     i->addrs.bad_mask = (unsigned char *)xcalloc(1, sizeof(unsigned char));
     i->addrs.in_addrs[0] = ip;
     i->addrs.bad_mask[0] = FALSE;
@@ -1479,7 +1194,7 @@ ipcacheAddEntryFromHosts(const char *name, const char *ipaddr)
     return 0;
 }
 
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 /**
  \ingroup IPCacheAPI
  *
@@ -1489,8 +1204,8 @@ variable_list *
 snmp_netIpFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer = NULL;
-    debugs(49, 5, "snmp_netIpFn: Processing request:");
-    snmpDebugOid(5, Var->name, Var->name_length);
+    MemBuf tmp;
+    debugs(49, 5, "snmp_netIpFn: Processing request:" << snmpDebugOid(Var->name, Var->name_length, tmp));
     *ErrP = SNMP_ERR_NOERROR;
 
     switch (Var->name[LEN_SQ_NET + 1]) {

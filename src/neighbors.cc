@@ -45,7 +45,7 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "icmp/net_db.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 /* count mcast group peers every 15 minutes */
 #define MCAST_COUNT_RATE 900
@@ -67,7 +67,7 @@ static void peerCountMcastPeersStart(void *data);
 static void peerCountMcastPeersSchedule(peer * p, time_t when);
 static IRCB peerCountHandleIcpReply;
 
-static void neighborIgnoreNonPeer(const IpAddress &, icp_opcode);
+static void neighborIgnoreNonPeer(const Ip::Address &, icp_opcode);
 static OBJH neighborDumpPeers;
 static OBJH neighborDumpNonPeers;
 static void dump_peers(StoreEntry * sentry, peer * peers);
@@ -95,7 +95,7 @@ neighborTypeStr(const peer * p)
 
 
 peer *
-whichPeer(const IpAddress &from)
+whichPeer(const Ip::Address &from)
 {
     int j;
 
@@ -124,6 +124,11 @@ neighborType(const peer * p, const HttpRequest * request)
             if (d->type != PEER_NONE)
                 return d->type;
     }
+#if PEER_MULTICAST_SIBLINGS
+    if (p->type == PEER_MULTICAST)
+        if (p->options.mcast_siblings)
+            return PEER_SIBLING;
+#endif
 
     return p->type;
 }
@@ -143,6 +148,11 @@ peerAllowedToUse(const peer * p, HttpRequest * request)
     assert(request != NULL);
 
     if (neighborType(p, request) == PEER_SIBLING) {
+#if PEER_MULTICAST_SIBLINGS
+        if (p->type == PEER_MULTICAST && p->options.mcast_siblings &&
+                (request->flags.nocache || request->flags.refresh || request->flags.loopdetect || request->flags.need_validation))
+            debugs(15, 2, "peerAllowedToUse(" << p->name << ", " << request->GetHost() << ") : multicast-siblings optimization match");
+#endif
         if (request->flags.nocache)
             return 0;
 
@@ -544,7 +554,7 @@ neighborsRegisterWithCacheManager()
 void
 neighbors_init(void)
 {
-    IpAddress nul;
+    Ip::Address nul;
     struct addrinfo *AI = NULL;
     struct servent *sep = NULL;
     const char *me = getMyHostname();
@@ -950,7 +960,7 @@ neighborCountIgnored(peer * p)
 static peer *non_peers = NULL;
 
 static void
-neighborIgnoreNonPeer(const IpAddress &from, icp_opcode opcode)
+neighborIgnoreNonPeer(const Ip::Address &from, icp_opcode opcode)
 {
     peer *np;
 
@@ -1010,7 +1020,7 @@ ignoreMulticastReply(peer * p, MemObject * mem)
  * If a hit process is already started, then sobeit
  */
 void
-neighborsUdpAck(const cache_key * key, icp_common_t * header, const IpAddress &from)
+neighborsUdpAck(const cache_key * key, icp_common_t * header, const Ip::Address &from)
 {
     peer *p = NULL;
     StoreEntry *entry;
@@ -1369,7 +1379,7 @@ peerProbeConnect(peer * p)
     if (squid_curtime - p->stats.last_connect_probe == 0)
         return ret;/* don't probe to often */
 
-    IpAddress temp(getOutgoingAddr(NULL,p));
+    Ip::Address temp(getOutgoingAddr(NULL,p));
 
     fd = comm_open(SOCK_STREAM, IPPROTO_TCP, temp, COMM_NONBLOCKING, p->host);
 
@@ -1564,6 +1574,11 @@ dump_peer_options(StoreEntry * sentry, peer * p)
     if (p->options.mcast_responder)
         storeAppendPrintf(sentry, " multicast-responder");
 
+#if PEER_MULTICAST_SIBLINGS
+    if (p->options.mcast_siblings)
+        storeAppendPrintf(sentry, " multicast-siblings");
+#endif
+
     if (p->weight != 1)
         storeAppendPrintf(sentry, " weight=%d", p->weight);
 
@@ -1745,7 +1760,7 @@ dump_peers(StoreEntry * sentry, peer * peers)
 
 #if USE_HTCP
 void
-neighborsHtcpReply(const cache_key * key, htcpReplyData * htcp, const IpAddress &from)
+neighborsHtcpReply(const cache_key * key, htcpReplyData * htcp, const Ip::Address &from)
 {
     StoreEntry *e = Store::Root().get(key);
     MemObject *mem = NULL;

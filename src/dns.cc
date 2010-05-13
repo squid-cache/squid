@@ -140,7 +140,7 @@ dnsSubmit(const char *lookup, HLPCB * callback, void *data)
     helperSubmit(dnsservers, buf, callback, data);
 }
 
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 /*
  * The function to return the DNS via SNMP
  */
@@ -148,8 +148,8 @@ variable_list *
 snmp_netDnsFn(variable_list * Var, snint * ErrP)
 {
     variable_list *Answer = NULL;
-    debugs(49, 5, "snmp_netDnsFn: Processing request: " << Var->name[LEN_SQ_NET + 1]);
-    snmpDebugOid(5, Var->name, Var->name_length);
+    MemBuf tmp;
+    debugs(49, 5, "snmp_netDnsFn: Processing request: " << Var->name[LEN_SQ_NET + 1] << " " << snmpDebugOid(Var->name, Var->name_length, tmp));
     *ErrP = SNMP_ERR_NOERROR;
 
     switch (Var->name[LEN_SQ_NET + 1]) {
@@ -180,5 +180,5 @@ snmp_netDnsFn(variable_list * Var, snint * ErrP)
     return Answer;
 }
 
-#endif /*SQUID_SNMP */
+#endif /* SQUID_SNMP */
 #endif /* USE_DNSSERVERS */

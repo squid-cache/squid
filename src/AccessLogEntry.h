@@ -33,7 +33,7 @@
 #include "HttpVersion.h"
 #include "HttpRequestMethod.h"
 #include "HierarchyLogEntry.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 #include "HttpRequestMethod.h"
 #if ICAP_CLIENT
 #include "adaptation/icap/Elements.h"
@@ -47,10 +47,15 @@ class AccessLogEntry
 {
 
 public:
-    AccessLogEntry() : url(NULL) , reply(NULL), request(NULL) {}
+    AccessLogEntry() : url(NULL) , reply(NULL), request(NULL),
+            adapted_request(NULL) {}
 
     const char *url;
 
+    /** \brief This subclass holds log info for HTTP protocol
+     * \todo Inner class declarations should be moved outside
+     * \todo details of HTTP held in the parent class need moving into here.
+     */
     class HttpDetails
     {
 
@@ -71,15 +76,21 @@ public:
         }
     } http;
 
-    class ICPDetails
+    /** \brief This subclass holds log info for ICP protocol
+     * \todo Inner class declarations should be moved outside
+     */
+    class IcpDetails
     {
 
     public:
-        ICPDetails() : opcode(ICP_INVALID) {}
+        IcpDetails() : opcode(ICP_INVALID) {}
 
         icp_opcode opcode;
     } icp;
 
+    /** \brief This subclass holds log info for HTCP protocol
+     * \todo Inner class declarations should be moved outside
+     */
     class HtcpDetails
     {
     public:
@@ -88,6 +99,11 @@ public:
         const char *opcode;
     } htcp;
 
+    /** \brief This subclass holds log info for Squid internal stats
+     * \todo Inner class declarations should be moved outside
+     * \todo some details relevant to particular protocols need shuffling to other sub-classes
+     * \todo this object field need renaming to 'squid' or something.
+     */
     class CacheDetails
     {
 
@@ -110,7 +126,7 @@ public:
         {;
         }
 
-        IpAddress caddr;
+        Ip::Address caddr;
         int64_t requestSize;
         int64_t replySize;
         int requestHeadersSize; ///< received, including request line
@@ -129,17 +145,25 @@ public:
 
     } cache;
 
+    /** \brief This subclass holds log info for various headers in raw format
+     * \todo shuffle this to the relevant protocol section.
+     */
     class Headers
     {
 
     public:
         Headers() : request(NULL),
+                adapted_request(NULL),
+
 #if ICAP_CLIENT
                 icap(NULL),
 #endif
                 reply(NULL) {}
 
-        char *request;
+        char *request; //< virgin HTTP request headers
+
+        char *adapted_request; //< HTTP request headers after adaptation and redirection
+
 
 #if ICAP_CLIENT
         char * icap;    ///< last matching ICAP response header.
@@ -149,6 +173,7 @@ public:
 
     // Why is this a sub-class and not a set of real "private:" fields?
     // It looks like its duplicating HTTPRequestMethod anyway!
+    // TODO: shuffle this to the relevant protocol section OR replace with request->method
     class Private
     {
 
@@ -159,7 +184,9 @@ public:
     } _private;
     HierarchyLogEntry hier;
     HttpReply *reply;
-    HttpRequest *request;
+    HttpRequest *request; //< virgin HTTP request
+    HttpRequest *adapted_request; //< HTTP request after adaptation and redirection
+
 
 #if ICAP_CLIENT
     /** \brief This subclass holds log info for ICAP part of request
@@ -170,7 +197,7 @@ public:
     public:
         IcapLogEntry():request(NULL),reply(NULL),outcome(Adaptation::Icap::xoUnknown),trTime(0),ioTime(0),resStatus(HTTP_STATUS_NONE) {}
 
-        IpAddress hostAddr; ///< ICAP server IP address
+        Ip::Address hostAddr; ///< ICAP server IP address
         String serviceName;        ///< ICAP service name
         String reqUri;             ///< ICAP Request-URI
         Adaptation::Icap::ICAP::Method reqMethod; ///< ICAP request method

@@ -61,7 +61,7 @@ IdleConnList::~IdleConnList()
     parent->unlinkList(this);
 
     if (nfds_alloc == PCONN_FDS_SZ)
-        pconn_fds_pool->free(fds);
+        pconn_fds_pool->freeOne(fds);
     else
         xfree(fds);
 
@@ -86,7 +86,7 @@ IdleConnList::removeFD(int fd)
 {
     int index = findFDIndex(fd);
     if (index < 0) {
-        debugs(48, 0, "IdleConnList::removeFD: FD " << fd << " NOT FOUND!");
+        debugs(48, 2, "IdleConnList::removeFD: FD " << fd << " NOT FOUND!");
         return;
     }
     debugs(48, 3, "IdleConnList::removeFD: found FD " << fd << " at index " << index);
@@ -118,7 +118,7 @@ IdleConnList::push(int fd)
         xmemcpy(fds, old, nfds * sizeof(int));
 
         if (nfds == PCONN_FDS_SZ)
-            pconn_fds_pool->free(old);
+            pconn_fds_pool->freeOne(old);
         else
             xfree(old);
     }
@@ -177,7 +177,7 @@ IdleConnList::timeout(int fd, void *data)
 /* ========== PconnPool PRIVATE FUNCTIONS ============================================ */
 
 const char *
-PconnPool::key(const char *host, u_short port, const char *domain, IpAddress &client_address)
+PconnPool::key(const char *host, u_short port, const char *domain, Ip::Address &client_address)
 {
     LOCAL_ARRAY(char, buf, SQUIDHOSTNAMELEN * 3 + 10);
     char ntoabuf[MAX_IPSTRLEN];
@@ -248,7 +248,7 @@ PconnPool::~PconnPool()
 }
 
 void
-PconnPool::push(int fd, const char *host, u_short port, const char *domain, IpAddress &client_address)
+PconnPool::push(int fd, const char *host, u_short port, const char *domain, Ip::Address &client_address)
 {
     IdleConnList *list;
     const char *aKey;
@@ -293,7 +293,7 @@ PconnPool::push(int fd, const char *host, u_short port, const char *domain, IpAd
  * transactions create persistent connections but are not retriable.
  */
 int
-PconnPool::pop(const char *host, u_short port, const char *domain, IpAddress &client_address, bool isRetriable)
+PconnPool::pop(const char *host, u_short port, const char *domain, Ip::Address &client_address, bool isRetriable)
 {
     const char * aKey = key(host, port, domain, client_address);
 

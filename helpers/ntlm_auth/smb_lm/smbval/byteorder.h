@@ -46,12 +46,12 @@
 #define IVAL(buf,pos) (SVAL(buf,pos)|SVAL(buf,(pos)+2)<<16)
 #define SSVALX(buf,pos,val) (CVAL(buf,pos)=(val)&0xFF,CVAL(buf,pos+1)=(val)>>8)
 #define SIVALX(buf,pos,val) (SSVALX(buf,pos,val&0xFFFF),SSVALX(buf,pos+2,val>>16))
-#define SVALS(buf,pos) ((int16)SVAL(buf,pos))
-#define IVALS(buf,pos) ((int32)IVAL(buf,pos))
-#define SSVAL(buf,pos,val) SSVALX((buf),(pos),((uint16)(val)))
-#define SIVAL(buf,pos,val) SIVALX((buf),(pos),((uint32)(val)))
-#define SSVALS(buf,pos,val) SSVALX((buf),(pos),((int16)(val)))
-#define SIVALS(buf,pos,val) SIVALX((buf),(pos),((int32)(val)))
+#define SVALS(buf,pos) ((int16_t)SVAL(buf,pos))
+#define IVALS(buf,pos) ((int32_t)IVAL(buf,pos))
+#define SSVAL(buf,pos,val) SSVALX((buf),(pos),((uint16_t)(val)))
+#define SIVAL(buf,pos,val) SIVALX((buf),(pos),((uint32_t)(val)))
+#define SSVALS(buf,pos,val) SSVALX((buf),(pos),((int16_t)(val)))
+#define SIVALS(buf,pos,val) SIVALX((buf),(pos),((int32_t)(val)))
 #else
 /* this handles things for architectures like the 386 that can handle
  * alignment errors */
@@ -59,14 +59,14 @@
  * WARNING: This section is dependent on the length of int16 and int32
  * being correct
  */
-#define SVAL(buf,pos) (*(uint16 *)((char *)(buf) + (pos)))
-#define IVAL(buf,pos) (*(uint32 *)((char *)(buf) + (pos)))
-#define SVALS(buf,pos) (*(int16 *)((char *)(buf) + (pos)))
-#define IVALS(buf,pos) (*(int32 *)((char *)(buf) + (pos)))
-#define SSVAL(buf,pos,val) SVAL(buf,pos)=((uint16)(val))
-#define SIVAL(buf,pos,val) IVAL(buf,pos)=((uint32)(val))
-#define SSVALS(buf,pos,val) SVALS(buf,pos)=((int16)(val))
-#define SIVALS(buf,pos,val) IVALS(buf,pos)=((int32)(val))
+#define SVAL(buf,pos) (*(uint16_t *)((char *)(buf) + (pos)))
+#define IVAL(buf,pos) (*(uint32_t *)((char *)(buf) + (pos)))
+#define SVALS(buf,pos) (*(int16_t *)((char *)(buf) + (pos)))
+#define IVALS(buf,pos) (*(int32_t *)((char *)(buf) + (pos)))
+#define SSVAL(buf,pos,val) SVAL(buf,pos)=((uint16_t)(val))
+#define SIVAL(buf,pos,val) IVAL(buf,pos)=((uint32_t)(val))
+#define SSVALS(buf,pos,val) SVALS(buf,pos)=((int16_t)(val))
+#define SIVALS(buf,pos,val) IVALS(buf,pos)=((int32_t)(val))
 #endif
 
 

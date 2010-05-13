@@ -4,7 +4,9 @@
 
 #include "QosConfig.h"
 
-QosConfig::QosConfig() :
+Ip::Qos::QosConfig Ip::Qos::TheConfig;
+
+Ip::Qos::QosConfig::QosConfig() :
         tos_local_hit(0),
         tos_sibling_hit(0),
         tos_parent_hit(0),
@@ -15,7 +17,7 @@ QosConfig::QosConfig() :
 }
 
 void
-QosConfig::parseConfigLine()
+Ip::Qos::QosConfig::parseConfigLine()
 {
     // %i honors 0 and 0x prefixes, which are important for things like umask
     /* parse options ... */
@@ -43,7 +45,7 @@ QosConfig::parseConfigLine()
  * which means no StoreEntry refrences. Just a basic char* buffer.
  */
 void
-QosConfig::dumpConfigLine(char *entry, const char *name) const
+Ip::Qos::QosConfig::dumpConfigLine(char *entry, const char *name) const
 {
     char *p = entry;
     snprintf(p, 10, "%s", name); // strlen("qos_flows ");

@@ -36,6 +36,7 @@
 #include "event.h"
 #include "CacheManager.h"
 #include "ClientInfo.h"
+#include "ip/Address.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
 #include "Store.h"
@@ -43,7 +44,7 @@
 
 static hash_table *client_table = NULL;
 
-static ClientInfo *clientdbAdd(const IpAddress &addr);
+static ClientInfo *clientdbAdd(const Ip::Address &addr);
 static FREE clientdbFreeItem;
 static void clientdbStartGC(void);
 static void clientdbScheduledGC(void *);
@@ -57,7 +58,7 @@ static int cleanup_removed;
 
 static ClientInfo *
 
-clientdbAdd(const IpAddress &addr)
+clientdbAdd(const Ip::Address &addr)
 {
     ClientInfo *c;
     char *buf = new char[MAX_IPSTRLEN];
@@ -95,7 +96,7 @@ clientdbInit(void)
 }
 
 void
-clientdbUpdate(const IpAddress &addr, log_type ltype, protocol_t p, size_t size)
+clientdbUpdate(const Ip::Address &addr, log_type ltype, protocol_t p, size_t size)
 {
     char key[MAX_IPSTRLEN];
     ClientInfo *c;
@@ -139,7 +140,7 @@ clientdbUpdate(const IpAddress &addr, log_type ltype, protocol_t p, size_t size)
  * -1.  To get the current value, simply call with delta = 0.
  */
 int
-clientdbEstablished(const IpAddress &addr, int delta)
+clientdbEstablished(const Ip::Address &addr, int delta)
 {
     char key[MAX_IPSTRLEN];
     ClientInfo *c;
@@ -166,7 +167,7 @@ clientdbEstablished(const IpAddress &addr, int delta)
 #define CUTOFF_SECONDS 3600
 int
 
-clientdbCutoffDenied(const IpAddress &addr)
+clientdbCutoffDenied(const Ip::Address &addr)
 {
     char key[MAX_IPSTRLEN];
     int NR;
@@ -380,8 +381,8 @@ clientdbStartGC(void)
 
 #if SQUID_SNMP
 
-IpAddress *
-client_entry(IpAddress *current)
+Ip::Address *
+client_entry(Ip::Address *current)
 {
     ClientInfo *c = NULL;
     char key[MAX_IPSTRLEN];
@@ -412,26 +413,37 @@ client_entry(IpAddress *current)
 variable_list *
 snmp_meshCtblFn(variable_list * Var, snint * ErrP)
 {
-    variable_list *Answer = NULL;
-    static char key[16];
+    char key[MAX_IPSTRLEN];
     ClientInfo *c = NULL;
-    int aggr = 0;
+    Ip::Address keyIp;
 
-    log_type l;
     *ErrP = SNMP_ERR_NOERROR;
-    debugs(49, 6, "snmp_meshCtblFn: Current : ");
-    snmpDebugOid(6, Var->name, Var->name_length);
-    /* FIXME INET6 : This must implement the key for IPv6 address */
-    snprintf(key, sizeof(key), "%d.%d.%d.%d", Var->name[LEN_SQ_NET + 3], Var->name[LEN_SQ_NET + 4],
-             Var->name[LEN_SQ_NET + 5], Var->name[LEN_SQ_NET + 6]);
-    debugs(49, 5, "snmp_meshCtblFn: [" << key << "] requested!");
-    c = (ClientInfo *) hash_lookup(client_table, key);
-
-    if (c == NULL) {
-        debugs(49, 5, "snmp_meshCtblFn: not found.");
+    MemBuf tmp;
+    debugs(49, 6, HERE << "Current : length=" << Var->name_length << ": " << snmpDebugOid(Var->name, Var->name_length, tmp));
+    if (Var->name_length == 16 ) {
+        oid2addr(&(Var->name[12]), keyIp, 4);
+#if USE_IPV6
+    } else if (Var->name_length == 28 ) {
+        oid2addr(&(Var->name[12]), keyIp, 16);
+#endif
+    } else {
         *ErrP = SNMP_ERR_NOSUCHNAME;
         return NULL;
     }
+
+    keyIp.NtoA(key, sizeof(key));
+    debugs(49, 5, HERE << "[" << key << "] requested!");
+    c = (ClientInfo *) hash_lookup(client_table, key);
+
+    if (c == NULL) {
+        debugs(49, 5, HERE << "not found.");
+        *ErrP = SNMP_ERR_NOSUCHNAME;
+        return NULL;
+    }
+
+    variable_list *Answer = NULL;
+    int aggr = 0;
+    log_type l;
 
     switch (Var->name[LEN_SQ_NET + 2]) {
 
