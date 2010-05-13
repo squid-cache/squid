@@ -1250,7 +1250,7 @@ if test "$enable_epoll" != "no" ; then
   AC_CHECK_HEADERS([sys/epoll.h])
 
   dnl Verify that epoll really works
-  if test "$ac_cv_func_epoll_ctl" = yes; then
+  if test "x$ac_cv_search_epoll_ctl" != 'xno' ; then
     SQUID_CHECK_EPOLL
   fi
 
