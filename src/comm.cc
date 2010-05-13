@@ -1111,8 +1111,8 @@ ConnectStateData::connect()
         callCallback(COMM_OK, 0);
         break;
 
-#if USE_IPV6
     case COMM_ERR_PROTOCOL:
+        debugs(5, 5, HERE "FD " << fd << ": COMM_ERR_PROTOCOL - try again");
         /* problem using the desired protocol over this socket.
          * skip to the next address and hope it's more compatible
          * but do not mark the current address as bad
@@ -1123,11 +1123,10 @@ ConnectStateData::connect()
             ipcacheCycleAddr(host, NULL);
             eventAdd("commReconnect", commReconnect, this, this->addrcount == 1 ? 0.05 : 0.0, 0);
         } else {
-            debugs(5, 5, HERE << "FD " << fd << ": * - ERR tried too many times already.");
+            debugs(5, 5, HERE << "FD " << fd << ": COMM_ERR_PROTOCOL - ERR tried too many times already.");
             callCallback(COMM_ERR_CONNECT, errno);
         }
         break;
-#endif
 
     default:
         debugs(5, 5, HERE "FD " << fd << ": * - try again");
@@ -1229,17 +1228,25 @@ comm_connect_addr(int sock, const IpAddress &address)
 
     debugs(5, 9, "comm_connect_addr: connecting socket " << sock << " to " << address << " (want family: " << F->sock_family << ")");
 
-    /* inverse case of IPv4 failing to connect on IPv6 socket is handeld post-connect.
+    /* Handle IPv6 over IPv4-only socket case.
      * this case must presently be handled here since the GetAddrInfo asserts on bad mappings.
-     * eventually we want it to throw a Must() that gets handled there instead of this if.
-     * NP: because commresetFD is private to ConnStateData we have to return an error and
+     * NP: because commResetFD is private to ConnStateData we have to return an error and
      *     trust its handled properly.
      */
-#if USE_IPV6
     if (F->sock_family == AF_INET && !address.IsIPv4()) {
         return COMM_ERR_PROTOCOL;
     }
-#endif
+
+    /* Handle IPv4 over IPv6-only socket case.
+     * This case is presently handled here as it's both a known case and it's
+     * uncertain what error will be returned by the IPv6 stack in such case. It's
+     * possible this will also be handled by the errno checks below after connect()
+     * but needs carefull cross-platform verification, and verifying the address
+     * condition here is simple.
+     */
+    if (F->local_addr.IsIPv4() != address.IsIPv4()) {
+        return COMM_ERR_PROTOCOL;
+    }
 
     address.GetAddrInfo(AI, F->sock_family);
 
@@ -1333,23 +1340,10 @@ comm_connect_addr(int sock, const IpAddress &address)
         status = COMM_OK;
     else if (ignoreErrno(errno))
         status = COMM_INPROGRESS;
+    else if (errno == EAFNOSUPPORT || errno == EINVAL)
+	return COMM_ERR_PROTOCOL;
     else
-#if USE_IPV6
-        if ( address.IsIPv4() && F->sock_family == AF_INET6 ) {
-
-            /* failover to trying IPv4-only link if an IPv6 one fails */
-            /* to catch the edge case of apps listening on IPv4-localhost */
-            F->sock_family = AF_INET;
-            int res = comm_connect_addr(sock, address);
-
-            /* if that fails too, undo our temporary socktype hack so the repeat works properly. */
-            if (res == COMM_ERROR)
-                F->sock_family = AF_INET6;
-
-            return res;
-        } else
-#endif
-            return COMM_ERROR;
+	return COMM_ERROR;
 
     address.NtoA(F->ipaddr, MAX_IPSTRLEN);
 
