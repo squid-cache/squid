@@ -718,7 +718,7 @@ comm_openex(int sock_type,
 #if USE_IPV6
     /* under IPv6 there is the possibility IPv6 is present but disabled. */
     /* try again as IPv4-native if possible */
-    if ( sock < 0 && addr.IsIPv6() && addr.SetIPv4() ) {
+    if ( new_socket < 0 && addr.IsIPv6() && addr.SetIPv4() ) {
         /* attempt to open this IPv4-only. */
         addr.FreeAddrInfo(AI);
         /* Setup the socket addrinfo details for use */
@@ -726,7 +726,7 @@ comm_openex(int sock_type,
         AI->ai_socktype = sock_type;
         AI->ai_protocol = proto;
         debugs(50, 3, "comm_openex: Attempt fallback open socket for: " << addr );
-        new_socket = comm_openex(sock_type, proto, addr, flags, 0, note);
+	new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
         debugs(50, 2, HERE << "attempt open " << note << " socket on: " << addr);
     }
 #endif
