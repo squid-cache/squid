@@ -22,9 +22,7 @@ typedef enum {
     COMM_ERR_CONNECT = -8,
     COMM_ERR_DNS = -9,
     COMM_ERR_CLOSING = -10,
-#if USE_IPV6
     COMM_ERR_PROTOCOL = -11, /* IPv4 or IPv6 cannot be used on the fd socket */
-#endif
     COMM_ERR__END__ = -999999 /* Dummy entry to make syntax valid (comma on line above), do not use. New entries added above */
 } comm_err_t;
 
