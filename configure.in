@@ -1267,7 +1267,7 @@ AC_ARG_ENABLE(http-violations,
   SQUID_YESNO([$enableval],
          [unrecognized argument to --disable-http-violations: $enableval])
 ])
-SQUID_DEFINE_BOOL(HTTP_VIOLATIONS, ${enable_http_violations:=yes},
+SQUID_DEFINE_BOOL(USE_HTTP_VIOLATIONS, ${enable_http_violations:=yes},
   [Define to enable code which volates the HTTP standard specification])
 AC_MSG_NOTICE([HTTP violations support enabled: $enable_http_violations])
 

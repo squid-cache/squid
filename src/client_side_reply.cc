@@ -509,7 +509,7 @@ clientReplyContext::cacheHit(StoreIOBuffer result)
     }
 
     if (e->checkNegativeHit()
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
             && !r->flags.nocache_hack
 #endif
        ) {
@@ -1502,7 +1502,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 
     }
 
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
 
     else if (r->flags.nocache_hack) {
 
@@ -1518,7 +1518,7 @@ clientReplyContext::identifyFoundObject(StoreEntry *newEntry)
 
     }
 
-#endif /* HTTP_VIOLATIONS */
+#endif /* USE_HTTP_VIOLATIONS */
 #if USE_CACHE_DIGESTS
 
     lookup_type = http->storeEntry() ? "HIT" : "MISS";
