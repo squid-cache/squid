@@ -1234,6 +1234,7 @@ comm_connect_addr(int sock, const IpAddress &address)
      *     trust its handled properly.
      */
     if (F->sock_family == AF_INET && !address.IsIPv4()) {
+        errno = ENETUNREACH;
         return COMM_ERR_PROTOCOL;
     }
 
@@ -1245,6 +1246,7 @@ comm_connect_addr(int sock, const IpAddress &address)
      * condition here is simple.
      */
     if (!F->local_addr.IsIPv4() && address.IsIPv4()) {
+        errno = ENETUNREACH;
         return COMM_ERR_PROTOCOL;
     }
 
@@ -1341,9 +1343,9 @@ comm_connect_addr(int sock, const IpAddress &address)
     else if (ignoreErrno(errno))
         status = COMM_INPROGRESS;
     else if (errno == EAFNOSUPPORT || errno == EINVAL)
-	return COMM_ERR_PROTOCOL;
+        return COMM_ERR_PROTOCOL;
     else
-	return COMM_ERROR;
+        return COMM_ERROR;
 
     address.NtoA(F->ipaddr, MAX_IPSTRLEN);
 
