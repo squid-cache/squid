@@ -968,9 +968,6 @@ copyFDFlags(int to, fde *F)
 int
 ConnectStateData::commResetFD()
 {
-    struct addrinfo *AI = NULL;
-    IpAddress nul;
-    int new_family = AF_UNSPEC;
 
 // XXX: do we have to check this?
 //
@@ -979,14 +976,13 @@ ConnectStateData::commResetFD()
 
     statCounter.syscalls.sock.sockets++;
 
-    /* setup a bare-bones addrinfo */
-    /* TODO INET6: for WinXP we may need to check the local_addr type and setup the family properly. */
-    nul.GetAddrInfo(AI);
-    new_family = AI->ai_family;
+    fde *F = &fd_table[fd];
 
-    int fd2 = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
+    struct addrinfo *AI = NULL;
+    F->local_addr.GetAddrInfo(AI);
+    int new_family = AI->ai_family;
 
-    nul.FreeAddrInfo(AI);
+    int fd2 = socket(new_family, AI->ai_socktype, AI->ai_protocol);
 
     if (fd2 < 0) {
         debugs(5, DBG_CRITICAL, HERE << "WARNING: FD " << fd2 << " socket failed to allocate: " << xstrerror());
@@ -994,6 +990,7 @@ ConnectStateData::commResetFD()
         if (ENFILE == errno || EMFILE == errno)
             fdAdjustReserved();
 
+        F->local_addr.FreeAddrInfo(AI);
         return 0;
     }
 
@@ -1013,17 +1010,20 @@ ConnectStateData::commResetFD()
 
         close(fd2);
 
+        F->local_addr.FreeAddrInfo(AI);
         return 0;
     }
     commResetSelect(fd);
 
     close(fd2);
-    fde *F = &fd_table[fd];
+
+    debugs(50, 3, "commResetFD: Reset socket FD " << fd << "->" << fd2 << " : family=" << new_family );
 
     /* INET6: copy the new sockets family type to the FDE table */
-    fd_table[fd].sock_family = new_family;
+    F->sock_family = new_family;
 
-    fd_table[fd].flags.called_connect = 0;
+    F->flags.called_connect = 0;
+
     /*
      * yuck, this has assumptions about comm_open() arguments for
      * the original socket
@@ -1033,9 +1033,6 @@ ConnectStateData::commResetFD()
     if ( F->flags.transparent ) {
         comm_set_transparent(fd);
     }
-
-    AI = NULL;
-    F->local_addr.GetAddrInfo(AI);
 
     if (commBind(fd, *AI) != COMM_OK) {
         debugs(5, DBG_CRITICAL, "WARNING: Reset of FD " << fd << " for " << F->local_addr << " failed to bind: " << xstrerror());
@@ -1104,8 +1101,7 @@ ConnectStateData::defaults()
 void
 ConnectStateData::connect()
 {
-    if (S.IsAnyAddr())
-        defaults();
+    defaults();
 
     debugs(5,5, HERE << "to " << S);
 
@@ -1122,15 +1118,22 @@ ConnectStateData::connect()
         callCallback(COMM_OK, 0);
         break;
 
-#if USE_IPV6
     case COMM_ERR_PROTOCOL:
+        debugs(5, 5, HERE "FD " << fd << ": COMM_ERR_PROTOCOL - try again");
         /* problem using the desired protocol over this socket.
-         * count the connection attempt, reset the socket, and immediately try again */
+         * skip to the next address and hope it's more compatible
+         * but do not mark the current address as bad
+         */
         tries++;
-        commResetFD();
-        connect();
+        if (commRetryConnect()) {
+            /* Force an addr cycle to move forward to the next possible address */
+            ipcacheCycleAddr(host, NULL);
+            eventAdd("commReconnect", commReconnect, this, this->addrcount == 1 ? 0.05 : 0.0, 0);
+        } else {
+            debugs(5, 5, HERE << "FD " << fd << ": COMM_ERR_PROTOCOL - ERR tried too many times already.");
+            callCallback(COMM_ERR_CONNECT, errno);
+        }
         break;
-#endif
 
     default:
         debugs(5, 5, HERE "FD " << fd << ": * - try again");
@@ -1232,18 +1235,27 @@ comm_connect_addr(int sock, const IpAddress &address)
 
     debugs(5, 9, "comm_connect_addr: connecting socket " << sock << " to " << address << " (want family: " << F->sock_family << ")");
 
-    /* BUG 2222 FIX: reset the FD when its found to be IPv4 in IPv6 mode */
-    /* inverse case of IPv4 failing to connect on IPv6 socket is handeld post-connect.
+    /* Handle IPv6 over IPv4-only socket case.
      * this case must presently be handled here since the GetAddrInfo asserts on bad mappings.
-     * eventually we want it to throw a Must() that gets handled there instead of this if.
-     * NP: because commresetFD is private to ConnStateData we have to return an error and
+     * NP: because commResetFD is private to ConnStateData we have to return an error and
      *     trust its handled properly.
      */
-#if USE_IPV6
     if (F->sock_family == AF_INET && !address.IsIPv4()) {
+        errno = ENETUNREACH;
         return COMM_ERR_PROTOCOL;
     }
-#endif
+
+    /* Handle IPv4 over IPv6-only socket case.
+     * This case is presently handled here as it's both a known case and it's
+     * uncertain what error will be returned by the IPv6 stack in such case. It's
+     * possible this will also be handled by the errno checks below after connect()
+     * but needs carefull cross-platform verification, and verifying the address
+     * condition here is simple.
+     */
+    if (!F->local_addr.IsIPv4() && address.IsIPv4()) {
+        errno = ENETUNREACH;
+        return COMM_ERR_PROTOCOL;
+    }
 
     address.GetAddrInfo(AI, F->sock_family);
 
@@ -1337,23 +1349,10 @@ comm_connect_addr(int sock, const IpAddress &address)
         status = COMM_OK;
     else if (ignoreErrno(errno))
         status = COMM_INPROGRESS;
+    else if (errno == EAFNOSUPPORT || errno == EINVAL)
+        return COMM_ERR_PROTOCOL;
     else
-#if USE_IPV6
-        if ( address.IsIPv4() && F->sock_family == AF_INET6 ) {
-
-            /* failover to trying IPv4-only link if an IPv6 one fails */
-            /* to catch the edge case of apps listening on IPv4-localhost */
-            F->sock_family = AF_INET;
-            int res = comm_connect_addr(sock, address);
-
-            /* if that fails too, undo our temporary socktype hack so the repeat works properly. */
-            if (res == COMM_ERROR)
-                F->sock_family = AF_INET6;
-
-            return res;
-        } else
-#endif
-            return COMM_ERROR;
+        return COMM_ERROR;
 
     address.NtoA(F->ipaddr, MAX_IPSTRLEN);
 
