@@ -272,7 +272,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
     debugs(22, 3, "\tentry->timestamp:\t" << mkrfc1123(entry->timestamp));
 
     if (EBIT_TEST(entry->flags, ENTRY_REVALIDATE) && staleness > -1
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
             && !R->flags.ignore_must_revalidate
 #endif
        ) {
@@ -290,7 +290,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
             return STALE_FORCED_RELOAD;
         }
 
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
 
         if (!request->flags.nocache_hack) {
             (void) 0;
@@ -311,7 +311,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
 #endif
         if (NULL != cc) {
             if (cc->max_age > -1) {
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
                 if (R->flags.ignore_reload && cc->max_age == 0) {} else
 #endif
                 {
@@ -368,7 +368,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
      * the override options kicks in.
      */
     if (sf.expires) {
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
 
         if (R->flags.override_expire && age < R->min) {
             debugs(22, 3, "refreshCheck: NO: age < min && override-expire");
@@ -383,7 +383,7 @@ refreshCheck(const StoreEntry * entry, HttpRequest * request, time_t delta)
         return STALE_MAX_RULE;
 
     if (sf.lmfactor) {
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
 
         if (R->flags.override_lastmod && age < R->min) {
             debugs(22, 3, "refreshCheck: NO: age < min && override-lastmod");
