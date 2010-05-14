@@ -1424,9 +1424,9 @@ comm_old_accept(int fd, ConnectionDetail &details)
     F->remote_port = details.peer.GetPort();
     F->local_addr.SetPort(details.me.GetPort());
 #if USE_IPV6
-    F->sock_family = AF_INET;
-#else
     F->sock_family = details.me.IsIPv4()?AF_INET:AF_INET6;
+#else
+    F->sock_family = AF_INET;
 #endif
     details.me.FreeAddrInfo(gai);
 
