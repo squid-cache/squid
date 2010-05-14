@@ -1015,6 +1015,8 @@ ConnectStateData::commResetFD()
 
     close(fd2);
 
+    F->sock_family = AI->ai_family;
+
     F->flags.called_connect = 0;
 
     /*
