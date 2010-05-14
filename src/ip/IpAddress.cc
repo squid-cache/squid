@@ -486,6 +486,9 @@ bool IpAddress::LookupHostIP(const char *s, bool nodns)
     operator=(*res);
     SetPort(port);
 
+    /* free the memory xgetaddrinfo() dynamically allocated. */
+    xfreeaddrinfo(res);
+
     res = NULL;
 
     return true;
