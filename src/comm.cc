@@ -630,16 +630,6 @@ comm_open_listener(int sock_type,
     /* attempt native enabled port. */
     sock = comm_openex(sock_type, proto, addr, flags, 0, note);
 
-#if USE_IPV6
-    /* under IPv6 there is the possibility IPv6 is present but disabled. */
-    /* try again as IPv4-native */
-    if ( sock < 0 && addr.IsIPv6() && addr.SetIPv4() ) {
-        /* attempt to open this IPv4-only. */
-        sock = comm_openex(sock_type, proto, addr, flags, 0, note);
-        debugs(50, 2, HERE << "attempt open " << note << " socket on: " << addr);
-    }
-#endif
-
     return sock;
 }
 
@@ -724,7 +714,24 @@ comm_openex(int sock_type,
 
     debugs(50, 3, "comm_openex: Attempt open socket for: " << addr );
 
-    if ((new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol)) < 0) {
+    new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
+#if USE_IPV6
+    /* under IPv6 there is the possibility IPv6 is present but disabled. */
+    /* try again as IPv4-native if possible */
+    if ( sock < 0 && addr.IsIPv6() && addr.SetIPv4() ) {
+        /* attempt to open this IPv4-only. */
+        addr.FreeAddrInfo(AI);
+        /* Setup the socket addrinfo details for use */
+        addr.GetAddrInfo(AI);
+        AI->ai_socktype = sock_type;
+        AI->ai_protocol = proto;
+        debugs(50, 3, "comm_openex: Attempt fallback open socket for: " << addr );
+        new_socket = comm_openex(sock_type, proto, addr, flags, 0, note);
+        debugs(50, 2, HERE << "attempt open " << note << " socket on: " << addr);
+    }
+#endif
+
+    if (new_socket < 0) {
         /* Increase the number of reserved fd's if calls to socket()
          * are failing because the open file table is full.  This
          * limits the number of simultaneous clients */
