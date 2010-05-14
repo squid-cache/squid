@@ -142,7 +142,7 @@ static size_t parseBytesUnits(const char *unit);
 static void free_all(void);
 void requirePathnameExists(const char *name, const char *path);
 static OBJH dump_config;
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
 static void dump_http_header_access(StoreEntry * entry, const char *name, header_mangler header[]);
 static void parse_http_header_access(header_mangler header[]);
 static void free_http_header_access(header_mangler header[]);
@@ -550,7 +550,7 @@ configDoConfigure(void)
     if (Config.errorDirectory)
         requirePathnameExists("Error Directory", Config.errorDirectory);
 
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
 
     {
         const refresh_t *R;
@@ -636,7 +636,7 @@ configDoConfigure(void)
 
     }
 #endif
-#if !HTTP_VIOLATIONS
+#if !USE_HTTP_VIOLATIONS
     Config.onoff.via = 1;
 #else
 
@@ -1278,7 +1278,7 @@ parse_delay_pool_access(DelayConfig * cfg)
 
 #endif
 
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
 static void
 dump_http_header_access(StoreEntry * entry, const char *name, header_mangler header[])
 {
@@ -2254,7 +2254,7 @@ dump_refreshpattern(StoreEntry * entry, const char *name, refresh_t * head)
         if (head->flags.refresh_ims)
             storeAppendPrintf(entry, " refresh-ims");
 
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
 
         if (head->flags.override_expire)
             storeAppendPrintf(entry, " override-expire");
@@ -2300,7 +2300,7 @@ parse_refreshpattern(refresh_t ** head)
     double pct = 0.0;
     time_t max = 0;
     int refresh_ims = 0;
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
 
     int override_expire = 0;
     int override_lastmod = 0;
@@ -2355,7 +2355,7 @@ parse_refreshpattern(refresh_t ** head)
     while ((token = strtok(NULL, w_space)) != NULL) {
         if (!strcmp(token, "refresh-ims")) {
             refresh_ims = 1;
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
 
         } else if (!strcmp(token, "override-expire"))
             override_expire = 1;
@@ -2408,7 +2408,7 @@ parse_refreshpattern(refresh_t ** head)
     if (refresh_ims)
         t->flags.refresh_ims = 1;
 
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
 
     if (override_expire)
         t->flags.override_expire = 1;
@@ -2461,7 +2461,7 @@ free_refreshpattern(refresh_t ** head)
         safe_free(t);
     }
 
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
     refresh_nocache_hack = 0;
 
 #endif
@@ -3082,7 +3082,7 @@ parse_http_port_option(http_port_list * s, char *token)
         }
         s->allow_direct = 1;
     } else if (strcmp(token, "ignore-cc") == 0) {
-#if !HTTP_VIOLATIONS
+#if !USE_HTTP_VIOLATIONS
         if (!s->accel) {
             debugs(3, DBG_CRITICAL, "FATAL: http(s)_port: ignore-cc option requires Scceleration mode flag.");
             self_destruct();

@@ -132,7 +132,7 @@ extern "C" {
     extern const char *StoreDigestMimeStr;	/* "application/cache-digest" */
 
     extern const char *MultipartMsgBoundaryStr;	/* "Unique-Squid-Separator" */
-#if HTTP_VIOLATIONS
+#if USE_HTTP_VIOLATIONS
 
     extern int refresh_nocache_hack;	/* 0 */
 #endif
