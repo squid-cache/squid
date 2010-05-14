@@ -980,7 +980,9 @@ ConnectStateData::commResetFD()
 
     struct addrinfo *AI = NULL;
     F->local_addr.GetAddrInfo(AI);
-    int fd2 = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
+    int new_family = AI->ai_family;
+
+    int fd2 = socket(new_family, AI->ai_socktype, AI->ai_protocol);
 
     if (fd2 < 0) {
         debugs(5, DBG_CRITICAL, HERE << "WARNING: FD " << fd2 << " socket failed to allocate: " << xstrerror());
@@ -1015,7 +1017,8 @@ ConnectStateData::commResetFD()
 
     close(fd2);
 
-    F->sock_family = AI->ai_family;
+    /* INET6: copy the new sockets family type to the FDE table */
+    F->sock_family = new_family;
 
     F->flags.called_connect = 0;
 
