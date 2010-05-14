@@ -330,10 +330,9 @@ SQUIDCEXTERN void ipcacheInvalidateNegative(const char *);
 SQUIDCEXTERN void ipcache_init(void);
 SQUIDCEXTERN void stat_ipcache_get(StoreEntry *);
 SQUIDCEXTERN void ipcacheCycleAddr(const char *name, ipcache_addrs *);
-
 SQUIDCEXTERN void ipcacheMarkBadAddr(const char *name, IpAddress &);
-
 SQUIDCEXTERN void ipcacheMarkGoodAddr(const char *name, IpAddress &);
+SQUIDCEXTERN void ipcacheMarkAllGood(const char *name);
 SQUIDCEXTERN void ipcacheFreeMemory(void);
 SQUIDCEXTERN ipcache_addrs *ipcacheCheckNumeric(const char *name);
 SQUIDCEXTERN void ipcache_restart(void);

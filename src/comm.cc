@@ -726,7 +726,7 @@ comm_openex(int sock_type,
         AI->ai_socktype = sock_type;
         AI->ai_protocol = proto;
         debugs(50, 3, "comm_openex: Attempt fallback open socket for: " << addr );
-	new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
+        new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
         debugs(50, 2, HERE << "attempt open " << note << " socket on: " << addr);
     }
 #endif
@@ -1075,8 +1075,13 @@ ConnectStateData::commRetryConnect()
         if (squid_curtime - connstart > Config.Timeout.connect)
             return 0;
     } else {
-        if (tries > addrcount)
+        if (tries > addrcount) {
+            /* Flush bad address count in case we are
+             * skipping over incompatible protocol
+             */
+            ipcacheMarkAllGood(host);
             return 0;
+        }
     }
 
     return commResetFD();
