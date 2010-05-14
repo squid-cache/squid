@@ -1244,7 +1244,7 @@ comm_connect_addr(int sock, const IpAddress &address)
      * but needs carefull cross-platform verification, and verifying the address
      * condition here is simple.
      */
-    if (F->local_addr.IsIPv4() != address.IsIPv4()) {
+    if (!F->local_addr.IsIPv4() && address.IsIPv4()) {
         return COMM_ERR_PROTOCOL;
     }
 
