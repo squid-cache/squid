@@ -2837,7 +2837,7 @@ DOC_END
 NAME: client_netmask
 TYPE: address
 LOC: Config.Addrs.client_netmask
-DEFAULT: 255.255.255.255
+DEFAULT: no_addr
 DOC_START
 	A netmask for client addresses in logfiles and cachemgr output.
 	Change this to protect the privacy of your cache clients.
@@ -4450,7 +4450,7 @@ COMMENT_END
 NAME: wccp_router
 TYPE: address
 LOC: Config.Wccp.router
-DEFAULT: 0.0.0.0
+DEFAULT: any_addr
 IFDEF: USE_WCCP
 DOC_START
 	Use this option to define your WCCP ``home'' router for
@@ -4816,14 +4816,14 @@ DOC_END
 NAME: snmp_incoming_address
 TYPE: address
 LOC: Config.Addrs.snmp_incoming
-DEFAULT: 0.0.0.0
+DEFAULT: any_addr
 IFDEF: SQUID_SNMP
 DOC_NONE
 
 NAME: snmp_outgoing_address
 TYPE: address
 LOC: Config.Addrs.snmp_outgoing
-DEFAULT: 255.255.255.255
+DEFAULT: no_addr
 IFDEF: SQUID_SNMP
 DOC_START
 	Just like 'udp_incoming_address', but for the SNMP port.
@@ -4833,13 +4833,13 @@ DOC_START
 	snmp_outgoing_address	is used for SNMP packets returned to SNMP
 				agents.
 
-	The default snmp_incoming_address (0.0.0.0) is to listen on all
+	The default snmp_incoming_address is to listen on all
 	available network interfaces.
 
-	If snmp_outgoing_address is set to 255.255.255.255 (the default)
-	it will use the same socket as snmp_incoming_address. Only
-	change this if you want to have SNMP replies sent using another
-	address than where this Squid listens for SNMP queries.
+	If snmp_outgoing_address is not set it will use the same socket
+	as snmp_incoming_address. Only change this if you want to have
+	SNMP replies sent using another address than where this Squid
+	listens for SNMP queries.
 
 	NOTE, snmp_incoming_address and snmp_outgoing_address can not have
 	the same value since they both use port 3401.
@@ -4891,7 +4891,7 @@ DOC_END
 NAME: udp_incoming_address
 TYPE: address
 LOC:Config.Addrs.udp_incoming
-DEFAULT: 0.0.0.0
+DEFAULT: any_addr
 DOC_START
 	udp_incoming_address	is used for UDP packets received from other
 				caches.
@@ -4913,7 +4913,7 @@ DOC_END
 NAME: udp_outgoing_address
 TYPE: address
 LOC: Config.Addrs.udp_outgoing
-DEFAULT: 255.255.255.255
+DEFAULT: no_addr
 DOC_START
 	udp_outgoing_address	is used for UDP packets sent out to other
 				caches.
@@ -5115,7 +5115,7 @@ NAME: mcast_miss_addr
 IFDEF: MULTICAST_MISS_STREAM
 TYPE: address
 LOC: Config.mcast_miss.addr
-DEFAULT: 255.255.255.255
+DEFAULT: no_addr
 DOC_START
 	If you enable this option, every "cache miss" URL will
 	be sent out on the specified multicast address.
