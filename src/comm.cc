@@ -1017,6 +1017,8 @@ ConnectStateData::commResetFD()
 
     close(fd2);
 
+    debugs(50, 3, "commResetFD: Reset socket FD " << fd << "->" << fd2 << " : family=" << new_family );
+
     /* INET6: copy the new sockets family type to the FDE table */
     F->sock_family = new_family;
 
