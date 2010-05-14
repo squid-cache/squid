@@ -333,6 +333,7 @@ SQUIDCEXTERN void stat_ipcache_get(StoreEntry *);
 SQUIDCEXTERN void ipcacheCycleAddr(const char *name, ipcache_addrs *);
 SQUIDCEXTERN void ipcacheMarkBadAddr(const char *name, const Ip::Address &);
 SQUIDCEXTERN void ipcacheMarkGoodAddr(const char *name, const Ip::Address &);
+SQUIDCEXTERN void ipcacheMarkAllGood(const char *name);
 SQUIDCEXTERN void ipcacheFreeMemory(void);
 SQUIDCEXTERN ipcache_addrs *ipcacheCheckNumeric(const char *name);
 SQUIDCEXTERN void ipcache_restart(void);
