@@ -9,7 +9,7 @@ $|=1;
 
 =head1 NAME
 
-db_auth.pl - Database auth helper for Squid
+squid_db_auth - Database auth helper for Squid
 
 =cut
 
@@ -27,7 +27,7 @@ my $persist = 0;
 
 =head1 SYNOPSIS
 
-db_auth.pl [options]
+squid_db_auth [options]
 
 =head1 DESCRIPTOIN
 

@@ -15,7 +15,7 @@ EXTRA_DIST	= passwd.sql \
 		  config.test
 
 squid_db_auth.8: squid_db_auth
-	pod2man squid_db_auth squid_db_auth.8
+	pod2man -s 8 squid_db_auth squid_db_auth.8
 
 squid_db_auth: squid_db_auth.in
 	$(do_subst) < $(srcdir)/squid_db_auth.in  >squid_db_auth
