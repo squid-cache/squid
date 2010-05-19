@@ -267,6 +267,10 @@ peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, v
 
             p = new Comm::Connection();
             p->remote = ia->in_addrs[n];
+            if (fs->_peer)
+                p->remote.SetPort(fs->_peer->http_port);
+            else
+                p->remote.SetPort(psstate->request->port);
             p->peer_type = fs->code;
 
             // check for a configured outgoing address for this destination...
