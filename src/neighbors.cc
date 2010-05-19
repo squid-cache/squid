@@ -46,6 +46,7 @@
 #include "Store.h"
 #include "icmp/net_db.h"
 #include "ip/Address.h"
+#include "comm/ConnectStateData.h"
 
 /* count mcast group peers every 15 minutes */
 #define MCAST_COUNT_RATE 900
@@ -60,7 +61,7 @@ static void neighborAliveHtcp(peer *, const MemObject *, const htcpReplyData *);
 static void neighborCountIgnored(peer *);
 static void peerRefreshDNS(void *);
 static IPH peerDNSConfigure;
-static int peerProbeConnect(peer *);
+static bool peerProbeConnect(peer *);
 static CNCB peerProbeConnectDone;
 static void peerCountMcastPeersDone(void *data);
 static void peerCountMcastPeersStart(void *data);
@@ -1342,68 +1343,45 @@ peerConnectSucceded(peer * p)
         p->tcp_up = p->connect_fail_limit;
 }
 
-/// called by Comm when test_fd is closed while connect is in progress
-static void
-peerProbeClosed(int fd, void *data)
-{
-    peer *p = (peer*)data;
-    p->test_fd = -1;
-    // it is a failure because we failed to connect
-    peerConnectFailedSilent(p);
-}
-
-static void
-peerProbeConnectTimeout(int fd, void *data)
-{
-    peer * p = (peer *)data;
-    comm_remove_close_handler(fd, &peerProbeClosed, p);
-    comm_close(fd);
-    p->test_fd = -1;
-    peerConnectFailedSilent(p);
-}
-
 /*
 * peerProbeConnect will be called on dead peers by neighborUp
 */
-static int
+static bool
 peerProbeConnect(peer * p)
 {
-    int fd;
-    time_t ctimeout = p->connect_timeout > 0 ? p->connect_timeout
-                      : Config.Timeout.peer_connect;
-    int ret = squid_curtime - p->stats.last_connect_failure > ctimeout * 10;
+    time_t ctimeout = p->connect_timeout > 0 ? p->connect_timeout : Config.Timeout.peer_connect;
+    bool ret = (squid_curtime - p->stats.last_connect_failure) > (ctimeout * 10);
 
-    if (p->test_fd != -1)
+    if (p->testing_now)
         return ret;/* probe already running */
 
     if (squid_curtime - p->stats.last_connect_probe == 0)
         return ret;/* don't probe to often */
 
-    Ip::Address temp(getOutgoingAddr(NULL,p));
+    /* for each IP address of this peer. find one that we can connect to and probe it. */
+    Vector<Comm::Connection *> *paths = new Vector<Comm::Connection *>;
+    for (int i = 0; i < p->n_addresses; i++) {
+        Comm::Connection *conn = new Comm::Connection;
+        conn->remote = p->addresses[i];
+        conn->remote.SetPort(p->http_port);
+        getOutgoingAddress(NULL, conn);
+        paths->push_back(conn);
+    }
 
-    fd = comm_open(SOCK_STREAM, IPPROTO_TCP, temp, COMM_NONBLOCKING, p->host);
-
-    if (fd < 0)
-        return ret;
-
-    comm_add_close_handler(fd, &peerProbeClosed, p);
-    commSetTimeout(fd, ctimeout, peerProbeConnectTimeout, p);
-
-    p->test_fd = fd;
-
+    p->testing_now = true;
     p->stats.last_connect_probe = squid_curtime;
 
-    commConnectStart(p->test_fd,
-                     p->host,
-                     p->http_port,
-                     peerProbeConnectDone,
-                     p);
+    AsyncCall::Pointer call = commCbCall(15,3, "peerProbeConnectDone", CommConnectCbPtrFun(peerProbeConnectDone, p));
+    ConnectStateData *cs = new ConnectStateData(paths, call);
+    cs->connect_timeout = ctimeout;
+    cs->host = xstrdup(p->host);
+    cs->connect();
 
     return ret;
 }
 
 static void
-peerProbeConnectDone(int fd, const DnsLookupDetails &, comm_err_t status, int xerrno, void *data)
+peerProbeConnectDone(Comm::Connection *conn, Vector<Comm::Connection*> *unused, comm_err_t status, int xerrno, void *data)
 {
     peer *p = (peer*)data;
 
@@ -1413,9 +1391,8 @@ peerProbeConnectDone(int fd, const DnsLookupDetails &, comm_err_t status, int xe
         peerConnectFailedSilent(p);
     }
 
-    comm_remove_close_handler(fd, &peerProbeClosed, p);
-    comm_close(fd);
-    p->test_fd = -1;
+    comm_close(conn);
+    p->testing_now = false;
     return;
 }
 

@@ -990,7 +990,6 @@ CBDATA_TYPE(GopherStateData);
 void
 gopherStart(FwdState * fwd)
 {
-    int fd = fwd->server_fd;
     StoreEntry *entry = fwd->entry;
     GopherStateData *gopherState;
     CBDATA_INIT_TYPE(GopherStateData);
@@ -1012,7 +1011,7 @@ gopherStart(FwdState * fwd)
     gopher_request_parse(fwd->request,
                          &gopherState->type_id, gopherState->request);
 
-    comm_add_close_handler(fd, gopherStateFree, gopherState);
+    comm_add_close_handler(fwd->conn()->fd, gopherStateFree, gopherState);
 
     if (((gopherState->type_id == GOPHER_INDEX) || (gopherState->type_id == GOPHER_CSO))
             && (strchr(gopherState->request, '?') == NULL)) {
@@ -1032,12 +1031,12 @@ gopherStart(FwdState * fwd)
 
         gopherToHTML(gopherState, (char *) NULL, 0);
         fwd->complete();
-        comm_close(fd);
+        comm_close(fwd->conn());
         return;
     }
 
-    gopherState->fd = fd;
+    gopherState->fd = fwd->conn()->fd; // TODO: save the conn() in gopher instead of the FD
     gopherState->fwd = fwd;
-    gopherSendRequest(fd, gopherState);
-    commSetTimeout(fd, Config.Timeout.read, gopherTimeout, gopherState);
+    gopherSendRequest(fwd->conn()->fd, gopherState);
+    commSetTimeout(fwd->conn()->fd, Config.Timeout.read, gopherTimeout, gopherState);
 }

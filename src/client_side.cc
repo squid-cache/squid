@@ -92,8 +92,8 @@
 #include "ClientRequestContext.h"
 #include "clientStream.h"
 #include "comm.h"
+#include "comm/Connection.h"
 #include "comm/ListenStateData.h"
-#include "ConnectionDetail.h"
 #include "eui/Config.h"
 #include "fde.h"
 #include "HttpHdrContRange.h"
@@ -3057,7 +3057,7 @@ connStateCreate(const Ip::Address &peer, const Ip::Address &me, int fd, http_por
 
 /** Handle a new connection on HTTP socket. */
 void
-httpAccept(int sock, int newfd, ConnectionDetail *details,
+httpAccept(int sock, int newfd, Comm::Connection *details,
            comm_err_t flag, int xerrno, void *data)
 {
     http_port_list *s = (http_port_list *)data;
@@ -3070,7 +3070,7 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
 
     debugs(33, 4, "httpAccept: FD " << newfd << ": accepted");
     fd_note(newfd, "client http connect");
-    connState = connStateCreate(&details->peer, &details->me, newfd, s);
+    connState = connStateCreate(&details->remote, &details->local, newfd, s);
 
     typedef CommCbMemFunT<ConnStateData, CommCloseCbParams> Dialer;
     AsyncCall::Pointer call = asyncCall(33, 5, "ConnStateData::connStateClosed",
@@ -3078,7 +3078,7 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
     comm_add_close_handler(newfd, call);
 
     if (Config.onoff.log_fqdn)
-        fqdncache_gethostbyaddr(details->peer, FQDN_LOOKUP_IF_MISS);
+        fqdncache_gethostbyaddr(details->remote, FQDN_LOOKUP_IF_MISS);
 
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  asyncCall(33, 5, "ConnStateData::requestTimeout",
@@ -3088,19 +3088,19 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
 #if USE_IDENT
     if (Ident::TheConfig.identLookup) {
         ACLFilledChecklist identChecklist(Ident::TheConfig.identLookup, NULL, NULL);
-        identChecklist.src_addr = details->peer;
-        identChecklist.my_addr = details->me;
+        identChecklist.src_addr = details->remote;
+        identChecklist.my_addr = details->local;
         if (identChecklist.fastCheck())
-            Ident::Start(details->me, details->peer, clientIdentDone, connState);
+            Ident::Start(details, clientIdentDone, connState);
     }
 #endif
 
 #if USE_SQUID_EUI
     if (Eui::TheConfig.euiLookup) {
-        if (details->peer.IsIPv4()) {
-            connState->peer_eui48.lookup(details->peer);
-        } else if (details->peer.IsIPv6()) {
-            connState->peer_eui64.lookup(details->peer);
+        if (details->remote.IsIPv4()) {
+            connState->peer_eui48.lookup(details->remote);
+        } else if (details->remote.IsIPv6()) {
+            connState->peer_eui64.lookup(details->remote);
         }
     }
 #endif
@@ -3111,7 +3111,7 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
 
     connState->readSomeData();
 
-    clientdbEstablished(details->peer, 1);
+    clientdbEstablished(details->remote, 1);
 
     incoming_sockets_accepted++;
 }
@@ -3120,7 +3120,7 @@ httpAccept(int sock, int newfd, ConnectionDetail *details,
 
 /** Create SSL connection structure and update fd_table */
 static SSL *
-httpsCreate(int newfd, ConnectionDetail *details, SSL_CTX *sslContext)
+httpsCreate(int newfd, Comm::Connection *details, SSL_CTX *sslContext)
 {
     SSL *ssl = SSL_new(sslContext);
 
@@ -3263,7 +3263,7 @@ clientNegotiateSSL(int fd, void *data)
 
 /** handle a new HTTPS connection */
 static void
-httpsAccept(int sock, int newfd, ConnectionDetail *details,
+httpsAccept(int sock, int newfd, Comm::Connection *details,
             comm_err_t flag, int xerrno, void *data)
 {
     https_port_list *s = (https_port_list *)data;
@@ -3281,7 +3281,7 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
 
     debugs(33, 5, "httpsAccept: FD " << newfd << " accepted, starting SSL negotiation.");
     fd_note(newfd, "client https connect");
-    ConnStateData *connState = connStateCreate(details->peer, details->me,
+    ConnStateData *connState = connStateCreate(details->remote, details->local,
                                newfd, &s->http);
     typedef CommCbMemFunT<ConnStateData, CommCloseCbParams> Dialer;
     AsyncCall::Pointer call = asyncCall(33, 5, "ConnStateData::connStateClosed",
@@ -3289,7 +3289,7 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
     comm_add_close_handler(newfd, call);
 
     if (Config.onoff.log_fqdn)
-        fqdncache_gethostbyaddr(details->peer, FQDN_LOOKUP_IF_MISS);
+        fqdncache_gethostbyaddr(details->remote, FQDN_LOOKUP_IF_MISS);
 
     typedef CommCbMemFunT<ConnStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  asyncCall(33, 5, "ConnStateData::requestTimeout",
@@ -3299,10 +3299,10 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
 #if USE_IDENT
     if (Ident::TheConfig.identLookup) {
         ACLFilledChecklist identChecklist(Ident::TheConfig.identLookup, NULL, NULL);
-        identChecklist.src_addr = details->peer;
-        identChecklist.my_addr = details->me;
+        identChecklist.src_addr = details->remote;
+        identChecklist.my_addr = details->local;
         if (identChecklist.fastCheck())
-            Ident::Start(details->me, details->peer, clientIdentDone, connState);
+            Ident::Start(details, clientIdentDone, connState);
     }
 #endif
 
@@ -3312,7 +3312,7 @@ httpsAccept(int sock, int newfd, ConnectionDetail *details,
 
     commSetSelect(newfd, COMM_SELECT_READ, clientNegotiateSSL, connState, 0);
 
-    clientdbEstablished(details->peer, 1);
+    clientdbEstablished(details->remote, 1);
 
     incoming_sockets_accepted++;
 }
@@ -3329,10 +3329,10 @@ ConnStateData::switchToHttps()
 
     debugs(33, 5, HERE << "converting FD " << fd << " to SSL");
 
-    // fake a ConnectionDetail object; XXX: make ConnState a ConnectionDetail?
-    ConnectionDetail detail;
-    detail.me = me;
-    detail.peer = peer;
+    // fake a Comm::Connection object; XXX: make ConnState a Comm::Connection?
+    Comm::Connection detail;
+    detail.local = me;
+    detail.remote = peer;
 
     SSL_CTX *sslContext = port->sslContext;
     SSL *ssl = NULL;

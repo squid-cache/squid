@@ -35,9 +35,9 @@
 #include "squid.h"
 #include "CommCalls.h"
 #include "comm/AcceptLimiter.h"
+#include "comm/Connection.h"
 #include "comm/comm_internal.h"
 #include "comm/ListenStateData.h"
-#include "ConnectionDetail.h"
 #include "fde.h"
 #include "protos.h"
 #include "SquidTime.h"
@@ -151,8 +151,8 @@ Comm::ListenStateData::acceptOne()
      */
 
     /* Accept a new connection */
-    ConnectionDetail connDetails;
-    int newfd = oldAccept(connDetails);
+    Connection *connDetails = new Connection();
+    int newfd = oldAccept(*connDetails);
 
     /* Check for errors */
     if (newfd < 0) {
@@ -171,7 +171,7 @@ Comm::ListenStateData::acceptOne()
     }
 
     debugs(5, 5, HERE << "accepted: FD " << fd <<
-           " newfd: " << newfd << " from: " << connDetails.peer <<
+           " newfd: " << newfd << " from: " << connDetails->remote <<
            " handler: " << *theCallback);
     notify(newfd, COMM_OK, 0, connDetails);
     return true;
@@ -186,7 +186,7 @@ Comm::ListenStateData::acceptNext()
 }
 
 void
-Comm::ListenStateData::notify(int newfd, comm_err_t errcode, int xerrno, const ConnectionDetail &connDetails)
+Comm::ListenStateData::notify(int newfd, comm_err_t errcode, int xerrno, Comm::Connection *connDetails)
 {
     // listener socket handlers just abandon the port with COMM_ERR_CLOSING
     // it should only happen when this object is deleted...
@@ -213,17 +213,17 @@ Comm::ListenStateData::notify(int newfd, comm_err_t errcode, int xerrno, const C
  * Wait for an incoming connection on FD.
  */
 int
-Comm::ListenStateData::oldAccept(ConnectionDetail &details)
+Comm::ListenStateData::oldAccept(Comm::Connection &details)
 {
     PROF_start(comm_accept);
     statCounter.syscalls.sock.accepts++;
     int sock;
     struct addrinfo *gai = NULL;
-    details.me.InitAddrInfo(gai);
+    details.local.InitAddrInfo(gai);
 
     if ((sock = accept(fd, gai->ai_addr, &gai->ai_addrlen)) < 0) {
 
-        details.me.FreeAddrInfo(gai);
+        details.local.FreeAddrInfo(gai);
 
         PROF_stop(comm_accept);
 
@@ -239,21 +239,21 @@ Comm::ListenStateData::oldAccept(ConnectionDetail &details)
         }
     }
 
-    details.peer = *gai;
+    details.remote = *gai;
 
     if ( Config.client_ip_max_connections >= 0) {
-        if (clientdbEstablished(details.peer, 0) > Config.client_ip_max_connections) {
-            debugs(50, DBG_IMPORTANT, "WARNING: " << details.peer << " attempting more than " << Config.client_ip_max_connections << " connections.");
-            details.me.FreeAddrInfo(gai);
+        if (clientdbEstablished(details.remote, 0) > Config.client_ip_max_connections) {
+            debugs(50, DBG_IMPORTANT, "WARNING: " << details.remote << " attempting more than " << Config.client_ip_max_connections << " connections.");
+            details.local.FreeAddrInfo(gai);
             return COMM_ERROR;
         }
     }
 
-    details.me.InitAddrInfo(gai);
+    details.local.InitAddrInfo(gai);
 
-    details.me.SetEmpty();
+    details.local.SetEmpty();
     getsockname(sock, gai->ai_addr, &gai->ai_addrlen);
-    details.me = *gai;
+    details.local = *gai;
 
     commSetCloseOnExec(sock);
 
@@ -264,15 +264,15 @@ Comm::ListenStateData::oldAccept(ConnectionDetail &details)
     fdd_table[sock].close_line = 0;
 
     fde *F = &fd_table[sock];
-    details.peer.NtoA(F->ipaddr,MAX_IPSTRLEN);
-    F->remote_port = details.peer.GetPort();
-    F->local_addr.SetPort(details.me.GetPort());
+    details.remote.NtoA(F->ipaddr,MAX_IPSTRLEN);
+    F->remote_port = details.remote.GetPort();
+    F->local_addr.SetPort(details.local.GetPort());
 #if USE_IPV6
     F->sock_family = AF_INET;
 #else
-    F->sock_family = details.me.IsIPv4()?AF_INET:AF_INET6;
+    F->sock_family = details.local.IsIPv4()?AF_INET:AF_INET6;
 #endif
-    details.me.FreeAddrInfo(gai);
+    details.local.FreeAddrInfo(gai);
 
     commSetNonBlocking(sock);
 

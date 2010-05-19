@@ -33,16 +33,15 @@
  *
  */
 
-#include "config.h"
 #include "squid.h"
-#include "event.h"
 #include "CacheManager.h"
-#include "SquidTime.h"
-#include "Store.h"
+#include "comm/ConnectStateData.h"
 #include "comm.h"
+#include "event.h"
 #include "fde.h"
 #include "MemBuf.h"
-
+#include "SquidTime.h"
+#include "Store.h"
 #include "wordlist.h"
 
 #if HAVE_ARPA_NAMESER_H
@@ -176,6 +175,7 @@ static void idnsParseWIN32SearchList(const char *);
 #endif
 static void idnsCacheQuery(idns_query * q);
 static void idnsSendQuery(idns_query * q);
+static CNCB idnsInitVCConnected;
 static IOCB idnsReadVCHeader;
 static void idnsDoSendQueryVC(nsvc *vc);
 
@@ -186,6 +186,7 @@ static PF idnsRead;
 static EVH idnsCheckQueue;
 static void idnsTickleQueue(void);
 static void idnsRcodeCount(int, int);
+static void idnsVCClosed(int fd, void *data);
 
 static void
 idnsAddNameserver(const char *buf)
@@ -698,18 +699,21 @@ idnsDoSendQueryVC(nsvc *vc)
 }
 
 static void
-idnsInitVCConnected(int fd, const DnsLookupDetails &, comm_err_t status, int xerrno, void *data)
+idnsInitVCConnected(Comm::Connection *conn, Vector<Comm::Connection *> *unused, comm_err_t status, int xerrno, void *data)
 {
     nsvc * vc = (nsvc *)data;
 
-    if (status != COMM_OK) {
+    if (status != COMM_OK || !conn) {
         char buf[MAX_IPSTRLEN];
-        debugs(78, 1, "idnsInitVCConnected: Failed to connect to nameserver " << nameservers[vc->ns].S.NtoA(buf,MAX_IPSTRLEN) << " using TCP!");
-        comm_close(fd);
+        debugs(78, DBG_IMPORTANT, "Failed to connect to nameserver " << nameservers[vc->ns].S.NtoA(buf,MAX_IPSTRLEN) << " using TCP!");
+        delete conn;
         return;
     }
 
-    comm_read(fd, (char *)&vc->msglen, 2 , idnsReadVCHeader, vc);
+    vc->fd = conn->fd; // TODO: make the vc store the conn instead?
+
+    comm_add_close_handler(conn->fd, idnsVCClosed, vc);
+    comm_read(conn->fd, (char *)&vc->msglen, 2 , idnsReadVCHeader, vc);
     vc->busy = 0;
     idnsDoSendQueryVC(vc);
 }
@@ -741,23 +745,18 @@ idnsInitVC(int ns)
         addr = Config.Addrs.udp_incoming;
 
     vc->queue = new MemBuf;
-
     vc->msg = new MemBuf;
-
-    vc->fd = comm_open(SOCK_STREAM,
-                       IPPROTO_TCP,
-                       addr,
-                       COMM_NONBLOCKING,
-                       "DNS TCP Socket");
-
-    if (vc->fd < 0)
-        fatal("Could not create a DNS socket");
-
-    comm_add_close_handler(vc->fd, idnsVCClosed, vc);
-
     vc->busy = 1;
 
-    commConnectStart(vc->fd, nameservers[ns].S.NtoA(buf,MAX_IPSTRLEN), nameservers[ns].S.GetPort(), idnsInitVCConnected, vc);
+    Comm::Connection *conn = new Comm::Connection;
+    conn->local = addr;
+    conn->remote = nameservers[ns].S;
+
+    AsyncCall::Pointer call = commCbCall(78,3, "idnsInitVCConnected", CommConnectCbPtrFun(idnsInitVCConnected, vc));
+
+    ConnectStateData *cs = new ConnectStateData(conn, call);
+    cs->host = xstrdup("DNS TCP Socket");
+    cs->connect();
 }
 
 static void

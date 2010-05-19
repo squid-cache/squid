@@ -86,7 +86,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"),
     debugs(11,5,HERE << "HttpStateData " << this << " created");
     ignoreCacheControl = false;
     surrogateNoStore = false;
-    fd = fwd->server_fd;
+    fd = fwd->conn()->fd; // TODO: store Comm::Connection instead of FD
     readBuf = new MemBuf;
     readBuf->init();
     orig_request = HTTPMSGLOCK(fwd->request);
@@ -95,8 +95,8 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"),
     orig_request->hier.peer_http_request_sent.tv_sec = 0;
     orig_request->hier.peer_http_request_sent.tv_usec = 0;
 
-    if (fwd->servers)
-        _peer = fwd->servers->_peer;         /* might be NULL */
+    if (fwd->conn())
+        _peer = fwd->conn()->_peer;         /* might be NULL */
 
     if (_peer) {
         const char *url;
@@ -106,8 +106,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"),
         else
             url = entry->url();
 
-        HttpRequest * proxy_req = new HttpRequest(orig_request->method,
-                orig_request->protocol, url);
+        HttpRequest * proxy_req = new HttpRequest(orig_request->method, orig_request->protocol, url);
 
         proxy_req->SetHost(_peer->host);
 

@@ -397,9 +397,6 @@ SQUIDCEXTERN int peerHTTPOkay(const peer *, HttpRequest *);
 
 SQUIDCEXTERN peer *whichPeer(const Ip::Address &from);
 
-SQUIDCEXTERN void peerSelect(HttpRequest *, StoreEntry *, PSC *, void *data);
-SQUIDCEXTERN void peerSelectInit(void);
-
 /* peer_digest.c */
 class PeerDigest;
 SQUIDCEXTERN PeerDigest *peerDigestCreate(peer * p);
@@ -407,7 +404,8 @@ SQUIDCEXTERN void peerDigestNeeded(PeerDigest * pd);
 SQUIDCEXTERN void peerDigestNotePeerGone(PeerDigest * pd);
 SQUIDCEXTERN void peerDigestStatsReport(const PeerDigest * pd, StoreEntry * e);
 
-extern Ip::Address getOutgoingAddr(HttpRequest * request, struct peer *dst_peer);
+#include "comm/Connection.h"
+extern void getOutgoingAddress(HttpRequest * request, Comm::Connection *conn);
 unsigned long getOutgoingTOS(HttpRequest * request);
 
 SQUIDCEXTERN void urnStart(HttpRequest *, StoreEntry *);

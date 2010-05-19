@@ -1922,7 +1922,7 @@ parse_peer(peer ** head)
 
     p->icp.version = ICP_VERSION_CURRENT;
 
-    p->test_fd = -1;
+    p->testing_now = false;
 
 #if USE_CACHE_DIGESTS
 

@@ -908,7 +908,7 @@ struct peer {
     int n_addresses;
     int rr_count;
     peer *next;
-    int test_fd;
+    bool testing_now;
 
     struct {
         unsigned int hash;
