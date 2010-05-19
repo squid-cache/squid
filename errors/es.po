@@ -192,9 +192,8 @@ msgid "ERROR: The requested URL could not be retrieved"
 msgstr "ERROR: El URL solicitado no se ha podido conseguir"
 
 #: templates/ERR_URN_RESOLVE:1
-#, fuzzy
 msgid "ERROR: The requested URN could not be retrieved"
-msgstr "ERROR: El URL solicitado no se ha podido conseguir"
+msgstr "ERROR: La URN requerida no pudo ser obtenida."
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
@@ -270,6 +269,8 @@ msgstr "Generado %T por %h (%s)"
 msgid ""
 "HTTP/1.1 <q>Expect:</q> feature is being asked from an HTTP/1.0 software."
 msgstr ""
+"HTTP/1.1 <q>Esperado:</q> la característica ha sido requerida desde un "
+"software HTTP/1.0."
 
 #: templates/ERR_URN_RESOLVE:6
 msgid "Hey, don't expect too much from URNs on %T :)"
@@ -562,13 +563,12 @@ msgid "The system returned: <i>%E</i>"
 msgstr "El sistema ha devuelto: <i>%E</i>"
 
 #: templates/ERR_NO_RELAY:6
-#, fuzzy
 msgid ""
 "There is no WAIS Relay host defined for this Cache! Yell at the "
 "administrator."
 msgstr ""
-"Este cach&eacute; no tiene definido ninguna pasarela para el protocolo "
-"WAIS !!  &iexcl;Gr&iacute;tele al administrador del cach&eacute; !"
+"No esta definido el host wais relay para este cache. comentar con el "
+"administrador"
 
 #: templates/ERR_TOO_BIG:8
 msgid ""
@@ -636,15 +636,14 @@ msgstr ""
 "Por favor, informe de este error al administrador web."
 
 #: templates/ERR_FTP_NOT_FOUND:7
-#, fuzzy
 msgid ""
 "This might be caused by an FTP URL with an absolute path (which does not "
 "comply with RFC 1738). If this is the cause, then the file can be found at "
 "<a href=\"%B\">%B</a>."
 msgstr ""
-"Esto puede ser causado por un URL FTP con un camino absoluto (y por lo tanto "
-"no cumple con RFC 1738).  Si esta es la causa, entonces el  archivo puede "
-"ser obtenido en <a href=\"%B\">%B</a>."
+"Esto podria ser causado por una URL del FTP con ruta absoluta (La cual no "
+"cumple con el RFC 1738). si esto es la causa, entonces el archivo puede ser "
+"buscado en <a href=\"%B\">%B</a>."
 
 #: templates/ERR_SECURE_CONNECT_FAIL:7
 msgid ""
@@ -682,11 +681,14 @@ msgstr ""
 msgid ""
 "Tools -&gt; Options -&gt; Advanced -&gt; Network -&gt; Connection Settings"
 msgstr ""
+"Herramientas -&gt; Opciones -&gt; Avanzado -&gt; Red -&gt; Ajustes de "
+"conexión"
 
 #: templates/ERR_AGENT_CONFIGURE:13 templates/ERR_AGENT_WPAD:12
 msgid ""
 "Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
 msgstr ""
+"Herramientas -&gt; Opciones -&gt; Avanzado -&gt; Red -&gt; Servidores Proxy"
 
 #: templates/ERR_DNS_FAIL:5
 msgid "Unable to determine IP address from host name <q>%H</q>"

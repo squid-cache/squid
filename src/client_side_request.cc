@@ -937,7 +937,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
             request->flags.loopdetect = 1;
         }
 
-#if FORW_VIA_DB
+#if USE_FORW_VIA_DB
         fvdbCountVia(s.termedBuf());
 
 #endif
@@ -960,7 +960,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         logReferer(fqdnFromAddr(http->getConn()->log_addr), str, http->log_uri);
 
 #endif
-#if FORW_VIA_DB
+#if USE_FORW_VIA_DB
 
     if (req_hdr->has(HDR_X_FORWARDED_FOR)) {
         String s = req_hdr->getList(HDR_X_FORWARDED_FOR);

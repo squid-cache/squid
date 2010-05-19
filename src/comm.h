@@ -14,7 +14,6 @@
 #define COMMIO_FD_WRITECB(fd)   (&commfd_table[(fd)].writecb)
 
 typedef void CNCB(Comm::Connection *conn, Vector<Comm::Connection*> *paths, comm_err_t status, int xerrno, void *data);
-
 typedef void IOCB(int fd, char *, size_t size, comm_err_t flag, int xerrno, void *data);
 
 
