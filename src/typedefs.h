@@ -200,8 +200,6 @@ typedef void IDCB(const char *ident, void *data);
 typedef void IPH(const ipcache_addrs *, const DnsLookupDetails &details, void *);
 typedef void IRCB(struct peer *, peer_t, protocol_t, void *, void *data);
 
-class FwdServer;
-typedef void PSC(FwdServer *, void *);
 typedef void RH(void *data, char *);
 /* in wordlist.h */
 

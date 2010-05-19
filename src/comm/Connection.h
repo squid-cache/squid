@@ -35,18 +35,54 @@
 #ifndef _SQUIDCONNECTIONDETAIL_H_
 #define _SQUIDCONNECTIONDETAIL_H_
 
+#include "hier_code.h"
 #include "ip/Address.h"
 
-class ConnectionDetail
+class peer;
+
+namespace Comm {
+
+/** COMM flags */
+/* TODO: make these a struct of boolean flags instead of a bitmap. */
+#define COMM_UNSET              0x00
+#define COMM_NONBLOCKING        0x01
+#define COMM_NOCLOEXEC          0x02
+#define COMM_REUSEADDR          0x04
+#define COMM_TRANSPARENT        0x08
+#define COMM_DOBIND             0x10
+
+class Connection
 {
-
 public:
+    Connection();
+    Connection(Connection &c);
+    ~Connection();
 
-    ConnectionDetail();
+    /** Address/Port for the Squid end of a TCP link. */
+    Ip::Address local;
 
-    Ip::Address me;
+    /** Address for the Remote end of a TCP link. */
+    Ip::Address remote;
 
-    Ip::Address peer;
+    /** cache_peer data object (if any) */
+    peer *_peer;
+
+    /** Hierarchy code for this connection link */
+    hier_code peer_type;
+
+    /**
+     * Socket used by this connection.
+     * -1 if no socket has been opened.
+     */
+    int fd;
+
+    /** Quality of Service TOS values curtrently sent on this connection */
+    int tos;
+
+    /** COMM flags set on this connection */
+    int flags;
 };
+
+}; // namespace Comm
 
 #endif

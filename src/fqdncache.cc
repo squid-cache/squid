@@ -34,6 +34,7 @@
 
 #include "squid.h"
 #include "cbdata.h"
+#include "DnsLookupDetails.h"
 #include "event.h"
 #include "CacheManager.h"
 #include "SquidTime.h"

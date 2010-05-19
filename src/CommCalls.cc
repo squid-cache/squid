@@ -71,7 +71,6 @@ void
 CommConnectCbParams::print(std::ostream &os) const
 {
     CommCommonCbParams::print(os);
-    os << ", " << dns;
 }
 
 /* CommIoCbParams */
@@ -133,7 +132,7 @@ CommAcceptCbPtrFun::CommAcceptCbPtrFun(IOACB *aHandler,
 void
 CommAcceptCbPtrFun::dial()
 {
-    handler(params.fd, params.nfd, &params.details, params.flag, params.xerrno, params.data);
+    handler(params.fd, params.nfd, params.details, params.flag, params.xerrno, params.data);
 }
 
 void
@@ -157,7 +156,7 @@ CommConnectCbPtrFun::CommConnectCbPtrFun(CNCB *aHandler,
 void
 CommConnectCbPtrFun::dial()
 {
-    handler(params.fd, params.dns, params.flag, params.xerrno, params.data);
+    handler(params.conn, params.paths, params.flag, params.xerrno, params.data);
 }
 
 void

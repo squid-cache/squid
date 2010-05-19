@@ -74,7 +74,7 @@
 #include "MemPool.h"
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"
-
+#include "PeerSelectState.h"
 #if USE_LOADABLE_MODULES
 #include "LoadableModules.h"
 #endif

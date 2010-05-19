@@ -128,8 +128,6 @@ private:
 };
 
 
-class ConnectionDetail;
-
 /** A connection to a socket */
 class ConnStateData : public BodyProducer/*, public RefCountable*/
 {

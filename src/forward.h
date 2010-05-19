@@ -7,9 +7,12 @@ class ErrorState;
 class HttpRequest;
 
 #include "comm.h"
-#include "hier_code.h"
+#include "comm/Connection.h"
+//#include "hier_code.h"
 #include "ip/Address.h"
+#include "Array.h"
 
+#if 0 // replaced by vector of extended Comm::Connection objects (paths)
 class FwdServer
 {
 public:
@@ -17,6 +20,10 @@ public:
     hier_code code;
     FwdServer *next;
 };
+
+typedef void PSC(FwdServer *, void *);
+
+#endif
 
 class FwdState : public RefCountable
 {
@@ -26,8 +33,8 @@ public:
     static void initModule();
 
     static void fwdStart(int fd, StoreEntry *, HttpRequest *);
-    void startComplete(FwdServer *);
-    void startFail();
+    void startComplete();
+//    void startFail();
     void fail(ErrorState *err);
     void unregister(int fd);
     void complete();
@@ -36,7 +43,7 @@ public:
     bool reforwardableStatus(http_status s);
     void serverClosed(int fd);
     void connectStart();
-    void connectDone(int server_fd, const DnsLookupDetails &dns, comm_err_t status, int xerrno);
+    void connectDone(Comm::Connection *conn, Vector<Comm::Connection*> *paths, comm_err_t status, int xerrno);
     void connectTimeout(int fd);
     void initiateSSL();
     void negotiateSSL(int fd);
@@ -53,7 +60,7 @@ public:
 
     void ftpPasvFailed(bool val) { flags.ftp_pasv_failed = val; }
 
-    static void serversFree(FwdServer **);
+    Comm::Connection *conn() const { return paths[0]; };
 
 private:
     // hidden for safer management of self; use static fwdStart
@@ -76,8 +83,6 @@ private:
 public:
     StoreEntry *entry;
     HttpRequest *request;
-    int server_fd;
-    FwdServer *servers;
     static void abort(void*);
 
 private:
@@ -98,7 +103,8 @@ private:
         unsigned int forward_completed:1;
     } flags;
 
-    Ip::Address src; /* Client address for this connection. Needed for transparent operations. */
+    /** possible paths which may be tried (in sequence stored) */
+    Vector<Comm::Connection*> paths;
 
     // NP: keep this last. It plays with private/public
     CBDATA_CLASS2(FwdState);

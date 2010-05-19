@@ -32,12 +32,13 @@
 
 #include "squid.h"
 #include "cbdata.h"
-#include "event.h"
 #include "CacheManager.h"
+#include "DnsLookupDetails.h"
+#include "event.h"
+#include "ip/Address.h"
 #include "SquidTime.h"
 #include "Store.h"
 #include "wordlist.h"
-#include "ip/Address.h"
 
 /**
  \defgroup IPCacheAPI IP Cache API

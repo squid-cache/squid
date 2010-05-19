@@ -7,8 +7,7 @@
 #define SQUID_COMMCALLS_H
 
 #include "comm.h"
-#include "ConnectionDetail.h"
-#include "DnsLookupDetails.h"
+#include "comm/Connection.h"
 #include "base/AsyncCall.h"
 #include "base/AsyncJobCalls.h"
 
@@ -69,7 +68,7 @@ public:
     void print(std::ostream &os) const;
 
 public:
-    ConnectionDetail details;
+    Comm::Connection *details;
     int nfd; // TODO: rename to fdNew or somesuch
 };
 
@@ -84,7 +83,8 @@ public:
     void print(std::ostream &os) const;
 
 public:
-    DnsLookupDetails dns;
+    Comm::Connection *conn;
+    Vector<Comm::Connection *> *paths;
 };
 
 // read/write (I/O) parameters

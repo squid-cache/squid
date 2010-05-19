@@ -8,10 +8,10 @@
 #include <map>
 #endif
 
-class ConnectionDetail;
-
 namespace Comm
 {
+
+class Connection;
 
 class ListenStateData
 {
@@ -23,7 +23,7 @@ public:
 
     void subscribe(AsyncCall::Pointer &call);
     void acceptNext();
-    void notify(int newfd, comm_err_t, int xerrno, const ConnectionDetail &);
+    void notify(int newfd, comm_err_t, int xerrno, Comm::Connection *);
 
     int fd;
 
@@ -42,7 +42,7 @@ private:
     static void doAccept(int fd, void *data);
 
     bool acceptOne();
-    int oldAccept(ConnectionDetail &details);
+    int oldAccept(Comm::Connection &details);
 
     AsyncCall::Pointer theCallback;
     bool mayAcceptMore;
