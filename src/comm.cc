@@ -578,16 +578,6 @@ comm_open_listener(int sock_type,
     /* attempt native enabled port. */
     sock = comm_openex(sock_type, proto, addr, flags, 0, note);
 
-#if USE_IPV6
-    /* under IPv6 there is the possibility IPv6 is present but disabled. */
-    /* try again as IPv4-native */
-    if ( sock < 0 && addr.IsIPv6() && addr.SetIPv4() ) {
-        /* attempt to open this IPv4-only. */
-        sock = comm_openex(sock_type, proto, addr, flags, 0, note);
-        debugs(50, 2, HERE << "attempt open " << note << " socket on: " << addr);
-    }
-#endif
-
     return sock;
 }
 
@@ -670,7 +660,24 @@ comm_openex(int sock_type,
 
     debugs(50, 3, "comm_openex: Attempt open socket for: " << addr );
 
-    if ((new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol)) < 0) {
+    new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
+#if USE_IPV6
+    /* under IPv6 there is the possibility IPv6 is present but disabled. */
+    /* try again as IPv4-native if possible */
+    if ( new_socket < 0 && addr.IsIPv6() && addr.SetIPv4() ) {
+        /* attempt to open this IPv4-only. */
+        addr.FreeAddrInfo(AI);
+        /* Setup the socket addrinfo details for use */
+        addr.GetAddrInfo(AI);
+        AI->ai_socktype = sock_type;
+        AI->ai_protocol = proto;
+        debugs(50, 3, "comm_openex: Attempt fallback open socket for: " << addr );
+        new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
+        debugs(50, 2, HERE << "attempt open " << note << " socket on: " << addr);
+    }
+#endif
+
+    if (new_socket < 0) {
         /* Increase the number of reserved fd's if calls to socket()
          * are failing because the open file table is full.  This
          * limits the number of simultaneous clients */
@@ -926,18 +933,27 @@ comm_connect_addr(int sock, const Ip::Address &address)
 
     debugs(5, 9, "comm_connect_addr: connecting socket " << sock << " to " << address << " (want family: " << F->sock_family << ")");
 
-    /* BUG 2222 FIX: reset the FD when its found to be IPv4 in IPv6 mode */
-    /* inverse case of IPv4 failing to connect on IPv6 socket is handeld post-connect.
+    /* Handle IPv6 over IPv4-only socket case.
      * this case must presently be handled here since the GetAddrInfo asserts on bad mappings.
-     * eventually we want it to throw a Must() that gets handled there instead of this if.
-     * NP: because commresetFD is private to ConnStateData we have to return an error and
+     * NP: because commResetFD is private to ConnStateData we have to return an error and
      *     trust its handled properly.
      */
-#if USE_IPV6
     if (F->sock_family == AF_INET && !address.IsIPv4()) {
+        errno = ENETUNREACH;
         return COMM_ERR_PROTOCOL;
     }
-#endif
+
+    /* Handle IPv4 over IPv6-only socket case.
+     * This case is presently handled here as it's both a known case and it's
+     * uncertain what error will be returned by the IPv6 stack in such case. It's
+     * possible this will also be handled by the errno checks below after connect()
+     * but needs carefull cross-platform verification, and verifying the address
+     * condition here is simple.
+     */
+    if (!F->local_addr.IsIPv4() && address.IsIPv4()) {
+        errno = ENETUNREACH;
+        return COMM_ERR_PROTOCOL;
+    }
 
     address.GetAddrInfo(AI, F->sock_family);
 
@@ -1031,23 +1047,10 @@ comm_connect_addr(int sock, const Ip::Address &address)
         status = COMM_OK;
     else if (ignoreErrno(errno))
         status = COMM_INPROGRESS;
+    else if (errno == EAFNOSUPPORT || errno == EINVAL)
+        return COMM_ERR_PROTOCOL;
     else
-#if USE_IPV6
-        if ( F->sock_family == AF_INET6 && address.IsIPv4() ) {
-
-            /* failover to trying IPv4-only link if an IPv6 one fails */
-            /* to catch the edge case of apps listening on IPv4-localhost */
-            F->sock_family = AF_INET;
-            int res = comm_connect_addr(sock, address);
-
-            /* if that fails too, undo our temporary socktype hack so the repeat works properly. */
-            if (res == COMM_ERROR)
-                F->sock_family = AF_INET6;
-
-            return res;
-        } else
-#endif
-            return COMM_ERROR;
+        return COMM_ERROR;
 
     address.NtoA(F->ipaddr, MAX_IPSTRLEN);
 
