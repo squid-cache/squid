@@ -35,15 +35,16 @@
  */
 
 #include "squid.h"
-#include "HttpRequest.h"
-#include "auth/UserRequest.h"
-#include "HttpHeaderRange.h"
-#include "MemBuf.h"
-#include "Store.h"
+#include "acl/FilledChecklist.h"
 #if ICAP_CLIENT
 #include "adaptation/icap/icap_log.h"
 #endif
-#include "acl/FilledChecklist.h"
+#include "auth/UserRequest.h"
+#include "DnsLookupDetails.h"
+#include "HttpRequest.h"
+#include "HttpHeaderRange.h"
+#include "MemBuf.h"
+#include "Store.h"
 
 HttpRequest::HttpRequest() : HttpMsg(hoRequest)
 {

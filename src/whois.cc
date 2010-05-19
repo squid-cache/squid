@@ -81,7 +81,7 @@ void
 whoisStart(FwdState * fwd)
 {
     WhoisState *p;
-    int fd = fwd->server_fd;
+    int fd = fwd->conn()->fd;
     char *buf;
     size_t l;
     CBDATA_INIT_TYPE(WhoisState);

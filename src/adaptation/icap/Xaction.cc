@@ -4,6 +4,7 @@
 
 #include "squid.h"
 #include "comm.h"
+#include "comm/ConnectStateData.h"
 #include "CommCalls.h"
 #include "HttpMsg.h"
 #include "adaptation/icap/Xaction.h"
@@ -115,32 +116,21 @@ void Adaptation::Icap::Xaction::openConnection()
 
     disableRetries(); // we only retry pconn failures
 
-    Ip::Address outgoing;
-    connection = comm_open(SOCK_STREAM, 0, outgoing,
-                           COMM_NONBLOCKING, s.cfg().uri.termedBuf());
+    Comm::Connection *conn = new Comm::Connection;
 
-    if (connection < 0)
-        dieOnConnectionFailure(); // throws
-
-    debugs(93,3, typeName << " opens connection to " << s.cfg().host << ":" << s.cfg().port);
-
-    // TODO: service bypass status may differ from that of a transaction
-    typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall =  asyncCall(93, 5, "Adaptation::Icap::Xaction::noteCommTimedout",
-                                      TimeoutDialer(this,&Adaptation::Icap::Xaction::noteCommTimedout));
-
-    commSetTimeout(connection, TheConfig.connect_timeout(
-                       service().cfg().bypass), timeoutCall);
-
-    typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommCloseCbParams> CloseDialer;
-    closer =  asyncCall(93, 5, "Adaptation::Icap::Xaction::noteCommClosed",
-                        CloseDialer(this,&Adaptation::Icap::Xaction::noteCommClosed));
-    comm_add_close_handler(connection, closer);
+    // TODO:  where do we get the DNS info for the ICAP server host ??
+    //        Ip::Address will do a BLOCKING lookup if s.cfg().host is a hostname
+    conn->remote = s.cfg().host.termedBuf();
+    conn->remote.SetPort(s.cfg().port);
 
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommConnectCbParams> ConnectDialer;
     connector = asyncCall(93,3, "Adaptation::Icap::Xaction::noteCommConnected",
                           ConnectDialer(this, &Adaptation::Icap::Xaction::noteCommConnected));
-    commConnectStart(connection, s.cfg().host.termedBuf(), s.cfg().port, connector);
+
+    ConnectStateData *cs = new ConnectStateData(conn, connector);
+    cs->host = xstrdup(s.cfg().host.termedBuf());
+    cs->connect_timeout = TheConfig.connect_timeout(service().cfg().bypass);
+    cs->connect();
 }
 
 /*
@@ -200,14 +190,35 @@ void Adaptation::Icap::Xaction::closeConnection()
 // connection with the ICAP service established
 void Adaptation::Icap::Xaction::noteCommConnected(const CommConnectCbParams &io)
 {
+    if (io.flag == COMM_TIMEOUT) {
+        handleCommTimedout();
+        return;
+    }
+
     Must(connector != NULL);
     connector = NULL;
 
     if (io.flag != COMM_OK)
         dieOnConnectionFailure(); // throws
 
-    fd_table[connection].noteUse(icapPconnPool);
+    // TODO: do we still need the timeout handler set?
+    //       there was no mention of un-setting it on success.
 
+    // TODO: service bypass status may differ from that of a transaction
+    typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommTimeoutCbParams> TimeoutDialer;
+    AsyncCall::Pointer timeoutCall =  asyncCall(93, 5, "Adaptation::Icap::Xaction::noteCommTimedout",
+                                      TimeoutDialer(this,&Adaptation::Icap::Xaction::noteCommTimedout));
+
+    commSetTimeout(io.conn->fd, TheConfig.connect_timeout(service().cfg().bypass), timeoutCall);
+
+    typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommCloseCbParams> CloseDialer;
+    closer =  asyncCall(93, 5, "Adaptation::Icap::Xaction::noteCommClosed",
+                        CloseDialer(this,&Adaptation::Icap::Xaction::noteCommClosed));
+    comm_add_close_handler(io.conn->fd, closer);
+
+    fd_table[io.conn->fd].noteUse(icapPconnPool);
+
+    connection = io.conn->fd; // TODO: maybe store the full Comm::Connection object
     handleCommConnected();
 }
 

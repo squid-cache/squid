@@ -34,9 +34,9 @@
 
 #include "squid.h"
 #include "comm.h"
+#include "comm/ConnectStateData.h"
 #include "comm/ListenStateData.h"
 #include "compat/strtoll.h"
-#include "ConnectionDetail.h"
 #include "errorpage.h"
 #include "fde.h"
 #include "forward.h"
@@ -480,7 +480,7 @@ FtpStateData::FtpStateData(FwdState *theFwdState) : AsyncJob("FtpStateData"), Se
     typedef CommCbMemFunT<FtpStateData, CommCloseCbParams> Dialer;
     AsyncCall::Pointer closer = asyncCall(9, 5, "FtpStateData::ctrlClosed",
                                           Dialer(this, &FtpStateData::ctrlClosed));
-    ctrl.opened(theFwdState->server_fd, closer);
+    ctrl.opened(theFwdState->conn()->fd, closer);
 
     if (request->method == METHOD_PUT)
         flags.put = 1;
@@ -2406,7 +2406,15 @@ ftpReadEPSV(FtpStateData* ftpState)
 
     debugs(9, 3, HERE << "connecting to " << ftpState->data.host << ", port " << ftpState->data.port);
 
-    commConnectStart(fd, ftpState->data.host, port, FtpStateData::ftpPasvCallback, ftpState);
+    Comm::Connection *conn = new Comm::Connection;
+    conn->remote = fd_table[ftpState->ctrl.fd].ipaddr; // TODO: do we have a better info source than fd_table?
+    conn->remote.SetPort(port);
+    conn->fd = fd;
+
+    AsyncCall::Pointer call = commCbCall(9,3, "FtpStateData::ftpPasvCallback", CommConnectCbPtrFun(FtpStateData::ftpPasvCallback, ftpState));
+    ConnectStateData *cs = new ConnectStateData(conn, call);
+    cs->host = xstrdup(fd_table[ftpState->ctrl.fd].ipaddr);
+    cs->connect();
 }
 
 /** \ingroup ServerProtocolFTPInternal
@@ -2539,10 +2547,11 @@ ftpSendPassive(FtpStateData * ftpState)
 
     /** Otherwise, Open data channel with the same local address as control channel (on a new random port!) */
     addr.SetPort(0);
-    int fd = comm_open(SOCK_STREAM,
+    int fd = comm_openex(SOCK_STREAM,
                        IPPROTO_TCP,
                        addr,
                        COMM_NONBLOCKING,
+                       0,
                        ftpState->entry->url());
 
     debugs(9, 3, HERE << "Unconnected data socket created on FD " << fd << " from " << addr);
@@ -2682,15 +2691,24 @@ ftpReadPasv(FtpStateData * ftpState)
 
     debugs(9, 3, HERE << "connecting to " << ftpState->data.host << ", port " << ftpState->data.port);
 
-    commConnectStart(fd, ipaddr, port, FtpStateData::ftpPasvCallback, ftpState);
+    Comm::Connection *conn = new Comm::Connection;
+    conn->remote = ipaddr;
+    conn->remote.SetPort(port);
+    conn->fd = ftpState->data.fd;
+
+    AsyncCall::Pointer call = commCbCall(9,3, "FtpStateData::ftpPasvCallback", CommConnectCbPtrFun(FtpStateData::ftpPasvCallback, ftpState));
+    ConnectStateData *cs = new ConnectStateData(conn, call);
+    cs->host = xstrdup(ftpState->data.host);
+    cs->connect_timeout = Config.Timeout.connect;
+    cs->connect();
 }
 
 void
-FtpStateData::ftpPasvCallback(int fd, const DnsLookupDetails &dns, comm_err_t status, int xerrno, void *data)
+FtpStateData::ftpPasvCallback(Comm::Connection *conn, Vector<Comm::Connection*> *unused, comm_err_t status, int xerrno, void *data)
 {
     FtpStateData *ftpState = (FtpStateData *)data;
     debugs(9, 3, HERE);
-    ftpState->request->recordLookup(dns);
+// TODO: dead?    ftpState->request->recordLookup(dns);
 
     if (status != COMM_OK) {
         debugs(9, 2, HERE << "Failed to connect. Retrying without PASV.");
@@ -2931,16 +2949,16 @@ void FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
      * This prevents third-party hacks, but also third-party load balancing handshakes.
      */
     if (Config.Ftp.sanitycheck) {
-        io.details.peer.NtoA(ntoapeer,MAX_IPSTRLEN);
+        io.details->remote.NtoA(ntoapeer,MAX_IPSTRLEN);
 
         if (strcmp(fd_table[ctrl.fd].ipaddr, ntoapeer) != 0) {
             debugs(9, DBG_IMPORTANT,
                    "FTP data connection from unexpected server (" <<
-                   io.details.peer << "), expecting " <<
+                   io.details->remote << "), expecting " <<
                    fd_table[ctrl.fd].ipaddr);
 
-            /* close the bad soures connection down ASAP. */
-            comm_close(io.nfd);
+            /* close the bad sources connection down ASAP. */
+            comm_close(io.details);
 
             /* we are ony accepting once, so need to re-open the listener socket. */
             typedef CommCbMemFunT<FtpStateData, CommAcceptCbParams> acceptDialer;
@@ -2962,11 +2980,11 @@ void FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
      * Replace the Listen socket with the accepted data socket */
     data.close();
     data.opened(io.nfd, dataCloser());
-    data.port = io.details.peer.GetPort();
-    io.details.peer.NtoA(data.host,SQUIDHOSTNAMELEN);
+    data.port = io.details->remote.GetPort();
+    io.details->remote.NtoA(data.host,SQUIDHOSTNAMELEN);
 
     debugs(9, 3, "ftpAcceptDataConnection: Connected data socket on " <<
-           "FD " << io.nfd << " to " << io.details.peer << " FD table says: " <<
+           "FD " << io.nfd << " to " << io.details->remote << " FD table says: " <<
            "ctrl-peer= " << fd_table[ctrl.fd].ipaddr << ", " <<
            "data-peer= " << fd_table[data.fd].ipaddr);
 

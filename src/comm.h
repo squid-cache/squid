@@ -2,34 +2,18 @@
 #define __COMM_H__
 
 #include "squid.h"
+#include "Array.h"
 #include "AsyncEngine.h"
 #include "base/AsyncCall.h"
-#include "StoreIOBuffer.h"
-#include "Array.h"
+#include "comm/comm_err_t.h"
+#include "comm/Connection.h"
 #include "ip/Address.h"
+#include "StoreIOBuffer.h"
 
 #define COMMIO_FD_READCB(fd)    (&commfd_table[(fd)].readcb)
 #define COMMIO_FD_WRITECB(fd)   (&commfd_table[(fd)].writecb)
 
-typedef enum {
-    COMM_OK = 0,
-    COMM_ERROR = -1,
-    COMM_NOMESSAGE = -3,
-    COMM_TIMEOUT = -4,
-    COMM_SHUTDOWN = -5,
-    COMM_IDLE = -6, /* there are no active fds and no pending callbacks. */
-    COMM_INPROGRESS = -7,
-    COMM_ERR_CONNECT = -8,
-    COMM_ERR_DNS = -9,
-    COMM_ERR_CLOSING = -10,
-#if USE_IPV6
-    COMM_ERR_PROTOCOL = -11, /* IPv4 or IPv6 cannot be used on the fd socket */
-#endif
-    COMM_ERR__END__ = -999999 /* Dummy entry to make syntax valid (comma on line above), do not use. New entries added above */
-} comm_err_t;
-
-class DnsLookupDetails;
-typedef void CNCB(int fd, const DnsLookupDetails &dns, comm_err_t status, int xerrno, void *data);
+typedef void CNCB(Comm::Connection *conn, Vector<Comm::Connection*> *paths, comm_err_t status, int xerrno, void *data);
 
 typedef void IOCB(int fd, char *, size_t size, comm_err_t flag, int xerrno, void *data);
 
@@ -42,7 +26,8 @@ SQUIDCEXTERN int commUnsetNonBlocking(int fd);
 SQUIDCEXTERN void commSetCloseOnExec(int fd);
 SQUIDCEXTERN void commSetTcpKeepalive(int fd, int idle, int interval, int timeout);
 extern void _comm_close(int fd, char const *file, int line);
-#define comm_close(fd) (_comm_close((fd), __FILE__, __LINE__))
+extern void _comm_close(Comm::Connection *conn, char const *file, int line);
+#define comm_close(x) (_comm_close((x), __FILE__, __LINE__))
 SQUIDCEXTERN void comm_reset_close(int fd);
 #if LINGERING_CLOSE
 SQUIDCEXTERN void comm_lingering_close(int fd);
@@ -100,8 +85,8 @@ SQUIDCEXTERN void comm_select_init(void);
 SQUIDCEXTERN comm_err_t comm_select(int);
 SQUIDCEXTERN void comm_quick_poll_required(void);
 
-class ConnectionDetail;
-typedef void IOACB(int fd, int nfd, ConnectionDetail *details, comm_err_t flag, int xerrno, void *data);
+#include "comm/Connection.h"
+typedef void IOACB(int fd, int nfd, Comm::Connection *details, comm_err_t flag, int xerrno, void *data);
 extern void comm_add_close_handler(int fd, PF *, void *);
 extern void comm_add_close_handler(int fd, AsyncCall::Pointer &);
 extern void comm_remove_close_handler(int fd, PF *, void *);
