@@ -667,60 +667,42 @@ FwdState::connectDone(Comm::Connection *conn, Vector<Comm::Connection*> *result_
 {
     assert(result_paths == &paths);
 
-    if (Config.onoff.log_ip_on_direct && /* status != COMM_ERR_DNS &&*/ (paths[0])->peer_type == HIER_DIRECT)
-        updateHierarchyInfo();
-
-#if 0 // we no longer are limited to handling this here.
-	// the selectForwardingPaths shoudl handle things like this now.
-    if (status == COMM_ERR_DNS) {
-        /*
-         * Only set the dont_retry flag if the DNS lookup fails on
-         * a direct connection.  If DNS lookup fails when trying
-         * a neighbor cache, we may want to retry another option.
-         */
-
-        if (NULL == fs->_peer)
-            flags.dont_retry = 1;
-
-        debugs(17, 4, "Unknown host: " << request->GetHost());
-
-        ErrorState *anErr = errorCon(ERR_DNS_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
-
-        anErr->dnsError = dns.error;
-
-        fail(anErr);
-
-        comm_close(server_fd);
-    } else
-#endif
-     if (status != COMM_OK) {
+    if (status != COMM_OK) {
         ErrorState *anErr = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
         anErr->xerrno = xerrno;
 
         fail(anErr);
 
-        if (paths[0]->_peer)
-            peerConnectFailed(paths[0]->_peer);
+        /* it might have been a timeout with a partially open link */
+        if (paths.size() > 0) {
+            if (paths[0]->_peer)
+                peerConnectFailed(paths[0]->_peer);
 
-        comm_close(paths[0]);
-    } else {
-        debugs(17, 3, "FD " << paths[0]->fd << ": '" << entry->url() << "'" );
+            comm_close(paths[0]);
+        }
 
-        comm_add_close_handler(conn->fd, fwdServerClosedWrapper, this);
+        return;
+    }
 
-        if (paths[0]->_peer)
-            peerConnectSucceded(paths[0]->_peer);
+    if (Config.onoff.log_ip_on_direct && paths[0]->peer_type == HIER_DIRECT)
+        updateHierarchyInfo();
+
+    debugs(17, 3, "FD " << paths[0]->fd << ": '" << entry->url() << "'" );
+
+    comm_add_close_handler(conn->fd, fwdServerClosedWrapper, this);
+
+    if (paths[0]->_peer)
+        peerConnectSucceded(paths[0]->_peer);
 
 #if USE_SSL
-
-        if ((paths[0]->_peer && paths[0]->_peer->use_ssl) ||
-                (!paths[0]->_peer && request->protocol == PROTO_HTTPS)) {
-            initiateSSL();
-            return;
-        }
-#endif
-        dispatch();
+    if ((paths[0]->_peer && paths[0]->_peer->use_ssl) ||
+            (!paths[0]->_peer && request->protocol == PROTO_HTTPS)) {
+        initiateSSL();
+        return;
     }
+#endif
+
+    dispatch();
 }
 
 void
