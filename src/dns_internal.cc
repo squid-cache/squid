@@ -736,20 +736,17 @@ idnsInitVC(int ns)
     nsvc *vc = cbdataAlloc(nsvc);
     nameservers[ns].vc = vc;
     vc->ns = ns;
-
-    Ip::Address addr;
-
-    if (!Config.Addrs.udp_outgoing.IsNoAddr())
-        addr = Config.Addrs.udp_outgoing;
-    else
-        addr = Config.Addrs.udp_incoming;
-
     vc->queue = new MemBuf;
     vc->msg = new MemBuf;
     vc->busy = 1;
 
     Comm::Connection *conn = new Comm::Connection;
-    conn->local = addr;
+
+    if (!Config.Addrs.udp_outgoing.IsNoAddr())
+        conn->local = Config.Addrs.udp_outgoing;
+    else
+        conn->local = Config.Addrs.udp_incoming;
+
     conn->remote = nameservers[ns].S;
 
     AsyncCall::Pointer call = commCbCall(78,3, "idnsInitVCConnected", CommConnectCbPtrFun(idnsInitVCConnected, vc));
