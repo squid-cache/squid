@@ -221,15 +221,16 @@ peerSelectDnsPaths(ps_state *psstate)
     if (fs) {
         // send the next one off for DNS lookup.
         const char *host = fs->_peer ? fs->_peer->host : psstate->request->GetHost();
+        debugs(44, 2, "Find IP destination for: " << psstate->entry->url() << "' via " << host);
         ipcache_nbgethostbyname(host, peerSelectDnsResults, psstate);
         return;
     }
 
     // done with DNS lookups. pass back to caller
-    PSC *callback;
-
-    callback = psstate->callback;
+    PSC *callback = psstate->callback;
     psstate->callback = NULL;
+
+    debugs(44, 2, "Found IP destination for: " << psstate->entry->url() << "'");
 
     void *cbdata;
     if (cbdataReferenceValidDone(psstate->callback_data, &cbdata)) {
@@ -421,7 +422,9 @@ peerSelectFoo(ps_state * ps)
         break;
     }
 
-    peerSelectCallback(ps);
+    // resolve the possible peers
+    peerSelectDnsPaths(ps);
+// DEAD?    peerSelectCallback(ps);
 }
 
 int peerAllowedToUse(const peer * p, HttpRequest * request);
