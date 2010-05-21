@@ -95,6 +95,12 @@ ConnectStateData::connect()
 
         /* find some socket we can use. will also bind the local address to it if needed. */
         while(paths->size() > 0 && (*i)->fd <= 0) {
+#if USE_IPV6
+            /* outbound sockets have no need to be protocol agnostic. */
+            if ((*i)->local.IsIPv6() && (*i)->local.IsIPv4()) {
+                (*i)->local.SetIPv4();
+            }
+#endif
             (*i)->fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, (*i)->local, (*i)->flags, (*i)->tos, host);
             if ((*i)->fd <= 0) {
                 debugs(5 , 2, HERE << "Unable to connect " << (*i)->local << " -> " << (*i)->remote << " for " << host);
