@@ -781,7 +781,7 @@ FwdState::connectStart()
         debugs(17,2,HERE << " Pinned connection " << pinned_connection << " not valid. Releasing.");
         request->releasePinnedConnection();
         paths.shift();
-        conn = NULL;
+        conn = NULL; // maybe release the conn memory. it's not needed by us anyway.
         connectStart();
         return;
     }
