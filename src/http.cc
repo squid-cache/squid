@@ -2104,9 +2104,9 @@ HttpStateData::doneSendingRequestBody()
             debugs(11, 2, "doneSendingRequestBody: matched brokenPosts");
 
             if (!canSend(fd)) {
-               debugs(11,2, HERE << "cannot send CRLF to closing FD " << fd);
-               assert(closeHandler != NULL);
-               return;
+                debugs(11,2, HERE << "cannot send CRLF to closing FD " << fd);
+                assert(closeHandler != NULL);
+                return;
             }
 
             typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
