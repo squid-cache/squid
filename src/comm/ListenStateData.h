@@ -23,7 +23,7 @@ public:
 
     void subscribe(AsyncCall::Pointer &call);
     void acceptNext();
-    void notify(int newfd, comm_err_t, int xerrno, Comm::Connection *);
+    void notify(int newfd, comm_err_t, int xerrno, Comm::Connection::Pointer);
 
     int fd;
 

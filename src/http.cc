@@ -95,7 +95,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"),
     orig_request->hier.peer_http_request_sent.tv_sec = 0;
     orig_request->hier.peer_http_request_sent.tv_usec = 0;
 
-    if (fwd->conn())
+    if (fwd->conn() != NULL)
         _peer = fwd->conn()->_peer;         /* might be NULL */
 
     if (_peer) {
@@ -1368,7 +1368,7 @@ HttpStateData::processReplyBody()
                 orig_request->pinnedConnection()->pinConnection(fd, orig_request, _peer,
                         (request->flags.connection_auth != 0));
             } else {
-                fwd->pconnPush(fd, _peer, request, orig_request->GetHost(), client_addr);
+                fwd->pconnPush(fwd->conn(), _peer, request, orig_request->GetHost(), client_addr);
             }
 
             fd = -1;

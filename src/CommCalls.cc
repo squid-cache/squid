@@ -45,6 +45,7 @@ CommAcceptCbParams::print(std::ostream &os) const
     CommCommonCbParams::print(os);
     if (nfd >= 0)
         os << ", newFD " << nfd;
+    os << ", " << details;
 }
 
 
@@ -71,6 +72,11 @@ void
 CommConnectCbParams::print(std::ostream &os) const
 {
     CommCommonCbParams::print(os);
+    if (conn != NULL)
+      os << ", from my " << conn->local << " to " << conn->remote;
+    else if (paths && paths->size() > 0) {
+        // TODO: for each path. print the to => from path being attempted.
+    }
 }
 
 /* CommIoCbParams */

@@ -42,9 +42,9 @@
 class HttpRequest;
 class StoreEntry;
 
-typedef void PSC(Vector<Comm::Connection*> *, void *);
+typedef void PSC(Vector<Comm::Connection::Pointer> *, void *);
 
-SQUIDCEXTERN void peerSelect(Vector<Comm::Connection*> *, HttpRequest *, StoreEntry *, PSC *, void *data);
+SQUIDCEXTERN void peerSelect(Vector<Comm::Connection::Pointer> *, HttpRequest *, StoreEntry *, PSC *, void *data);
 SQUIDCEXTERN void peerSelectInit(void);
 
 /**
@@ -78,7 +78,7 @@ public:
     PSC *callback;
     void *callback_data;
 
-    Vector<Comm::Connection*> *paths;  ///< the callers paths array. to be filled with our final results.
+    Vector<Comm::Connection::Pointer> *paths;  ///< the callers paths array. to be filled with our final results.
     FwdServer *servers;                ///< temporary linked list of peers we will pass back.
 
     /*

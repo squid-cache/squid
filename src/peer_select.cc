@@ -124,7 +124,7 @@ peerSelectIcpPing(HttpRequest * request, int direct, StoreEntry * entry)
 
 
 void
-peerSelect(Vector<Comm::Connection*> *paths,
+peerSelect(Vector<Comm::Connection::Pointer> *paths,
            HttpRequest * request,
            StoreEntry * entry,
            PSC * callback,
@@ -253,7 +253,7 @@ peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, v
         assert(ia->cur < ia->count);
 
         // loop over each result address, adding to the possible destinations.
-        Comm::Connection *p;
+        Comm::Connection::Pointer p;
         int ip = ia->cur;
         for (int n = 0; n < ia->count; n++, ip++) {
             if (ip >= ia->count) ip = 0; // looped back to zero.

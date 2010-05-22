@@ -17,9 +17,9 @@ class ConnectStateData
 {
 public:
     /** open first working of a set of connections */
-    ConnectStateData(Vector<Comm::Connection *> *paths, AsyncCall::Pointer handler);
+    ConnectStateData(Vector<Comm::Connection::Pointer> *paths, AsyncCall::Pointer handler);
     /** attempt to open one connection. */
-    ConnectStateData(Comm::Connection *, AsyncCall::Pointer handler);
+    ConnectStateData(Comm::Connection::Pointer, AsyncCall::Pointer handler);
 
     void *operator new(size_t);
     void operator delete(void *);
@@ -62,9 +62,9 @@ public:
     time_t connect_timeout;
 
 private:
-    Vector<Comm::Connection *> *paths;  ///< forwarding paths to be tried. front of the list is the current being opened.
-    Comm::Connection *solo;             ///< single connection currently being opened.
-    AsyncCall::Pointer callback;        ///< handler to be called on connection completion.
+    Vector<Comm::Connection::Pointer> *paths;  ///< forwarding paths to be tried. front of the list is the current being opened.
+    Comm::Connection::Pointer solo;            ///< single connection currently being opened.
+    AsyncCall::Pointer callback;               ///< handler to be called on connection completion.
 
     int total_tries;   ///< total number of connection attempts over all destinations so far.
     int fail_retries;  ///< number of retries current destination has been tried.
