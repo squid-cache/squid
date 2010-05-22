@@ -2,12 +2,13 @@
 #include "comm/ConnectStateData.h"
 #include "comm.h"
 #include "CommCalls.h"
+#include "fde.h"
 #include "icmp/net_db.h"
 #include "SquidTime.h"
 
 CBDATA_CLASS_INIT(ConnectStateData);
 
-ConnectStateData::ConnectStateData(Vector<Comm::Connection*> *paths, AsyncCall::Pointer handler) :
+ConnectStateData::ConnectStateData(Vector<Comm::Connection::Pointer> *paths, AsyncCall::Pointer handler) :
         host(NULL),
         connect_timeout(Config.Timeout.connect),
         paths(paths),
@@ -18,7 +19,7 @@ ConnectStateData::ConnectStateData(Vector<Comm::Connection*> *paths, AsyncCall::
         connstart(0)
 {}
 
-ConnectStateData::ConnectStateData(Comm::Connection *c, AsyncCall::Pointer handler) :
+ConnectStateData::ConnectStateData(Comm::Connection::Pointer c, AsyncCall::Pointer handler) :
         host(NULL),
         connect_timeout(Config.Timeout.connect),
         paths(paths),
@@ -76,7 +77,7 @@ ConnectStateData::callCallback(comm_err_t status, int xerrno)
 void
 ConnectStateData::connect()
 {
-    Comm::Connection *active;
+    Comm::Connection::Pointer active;
 
     /* handle connecting to one single path */
     /* mainly used by components other than forwarding */
@@ -84,10 +85,10 @@ ConnectStateData::connect()
     /* handle connecting to one of multiple paths */
     /* mainly used by forwarding */
 
-    if (solo) {
+    if (solo != NULL) {
         active = solo;
     } else if (paths) {
-        Vector<Comm::Connection*>::iterator i = paths->begin();
+        Vector<Comm::Connection::Pointer>::iterator i = paths->begin();
 
         if (connstart == 0) {
             connstart = squid_curtime;
@@ -131,14 +132,19 @@ ConnectStateData::connect()
     case COMM_OK:
         debugs(5, 5, HERE << "FD " << active->fd << ": COMM_OK - connected");
 
-    /*
-     * stats.conn_open is used to account for the number of
-     * connections that we have open to the peer, so we can limit
-     * based on the max-conn option.  We need to increment here,
-     * even if the connection may fail.
-     */
+        /*
+         * stats.conn_open is used to account for the number of
+         * connections that we have open to the peer, so we can limit
+         * based on the max-conn option.  We need to increment here,
+         * even if the connection may fail.
+         */
         if (active->_peer)
             active->_peer->stats.conn_open++;
+
+        /* TODO: remove this fd_table access. But old code still depends on fd_table flags to
+         *       indicate the state of a raw fd object being passed around.
+         */
+        fd_table[active->fd].flags.open = 1;
 
         ipcacheMarkGoodAddr(host, active->remote);
         callCallback(COMM_OK, 0);

@@ -13,7 +13,7 @@
 #define COMMIO_FD_READCB(fd)    (&commfd_table[(fd)].readcb)
 #define COMMIO_FD_WRITECB(fd)   (&commfd_table[(fd)].writecb)
 
-typedef void CNCB(Comm::Connection *conn, Vector<Comm::Connection*> *paths, comm_err_t status, int xerrno, void *data);
+typedef void CNCB(Comm::Connection::Pointer conn, Vector<Comm::Connection::Pointer> *paths, comm_err_t status, int xerrno, void *data);
 typedef void IOCB(int fd, char *, size_t size, comm_err_t flag, int xerrno, void *data);
 
 
@@ -25,7 +25,7 @@ SQUIDCEXTERN int commUnsetNonBlocking(int fd);
 SQUIDCEXTERN void commSetCloseOnExec(int fd);
 SQUIDCEXTERN void commSetTcpKeepalive(int fd, int idle, int interval, int timeout);
 extern void _comm_close(int fd, char const *file, int line);
-extern void _comm_close(Comm::Connection *conn, char const *file, int line);
+extern void _comm_close(Comm::Connection::Pointer conn, char const *file, int line);
 #define comm_close(x) (_comm_close((x), __FILE__, __LINE__))
 SQUIDCEXTERN void comm_reset_close(int fd);
 #if LINGERING_CLOSE
@@ -85,7 +85,7 @@ SQUIDCEXTERN comm_err_t comm_select(int);
 SQUIDCEXTERN void comm_quick_poll_required(void);
 
 #include "comm/Connection.h"
-typedef void IOACB(int fd, int nfd, Comm::Connection *details, comm_err_t flag, int xerrno, void *data);
+typedef void IOACB(int fd, int nfd, Comm::Connection::Pointer details, comm_err_t flag, int xerrno, void *data);
 extern void comm_add_close_handler(int fd, PF *, void *);
 extern void comm_add_close_handler(int fd, AsyncCall::Pointer &);
 extern void comm_remove_close_handler(int fd, PF *, void *);

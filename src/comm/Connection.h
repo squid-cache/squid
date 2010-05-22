@@ -1,5 +1,6 @@
 /*
  * DEBUG: section 5     Socket Functions
+ * AUTHOR: Amos Jeffries
  * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -30,6 +31,7 @@
  *
  *
  * Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
+ * Copyright (c) 2010, Amos Jeffries <amosjeffries@squid-cache.org>
  */
 
 #ifndef _SQUIDCONNECTIONDETAIL_H_
@@ -37,6 +39,7 @@
 
 #include "hier_code.h"
 #include "ip/Address.h"
+#include "RefCount.h"
 
 class peer;
 
@@ -51,9 +54,11 @@ namespace Comm {
 #define COMM_TRANSPARENT        0x08
 #define COMM_DOBIND             0x10
 
-class Connection
+class Connection : public RefCountable
 {
 public:
+    typedef RefCount<Comm::Connection> Pointer;
+
     Connection();
     Connection(Connection &c);
     ~Connection();

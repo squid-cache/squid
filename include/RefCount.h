@@ -114,7 +114,7 @@ private:
 struct RefCountable_ {
     RefCountable_():count_(0) {}
 
-    virtual ~RefCountable_() {}
+    virtual ~RefCountable_() { assert(RefCountCount() == 0); }
 
     /* Not private, to allow class hierarchies */
     void RefCountReference() const {

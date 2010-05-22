@@ -1359,9 +1359,9 @@ peerProbeConnect(peer * p)
         return ret;/* don't probe to often */
 
     /* for each IP address of this peer. find one that we can connect to and probe it. */
-    Vector<Comm::Connection *> *paths = new Vector<Comm::Connection *>;
+    Vector<Comm::Connection::Pointer> *paths = new Vector<Comm::Connection::Pointer>;
     for (int i = 0; i < p->n_addresses; i++) {
-        Comm::Connection *conn = new Comm::Connection;
+        Comm::Connection::Pointer conn = new Comm::Connection;
         conn->remote = p->addresses[i];
         conn->remote.SetPort(p->http_port);
         getOutgoingAddress(NULL, conn);
@@ -1381,7 +1381,7 @@ peerProbeConnect(peer * p)
 }
 
 static void
-peerProbeConnectDone(Comm::Connection *conn, Vector<Comm::Connection*> *unused, comm_err_t status, int xerrno, void *data)
+peerProbeConnectDone(Comm::Connection::Pointer conn, Vector<Comm::Connection::Pointer> *unused, comm_err_t status, int xerrno, void *data)
 {
     peer *p = (peer*)data;
 

@@ -117,7 +117,7 @@ Ident::Timeout(int fd, void *data)
 }
 
 void
-Ident::ConnectDone(Comm::Connection *conn, Vector<Comm::Connection*> *unused, comm_err_t status, int xerrno, void *data)
+Ident::ConnectDone(Comm::Connection::Pointer conn, Vector<Comm::Connection::Pointer> *unused, comm_err_t status, int xerrno, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
 
@@ -217,7 +217,7 @@ CBDATA_TYPE(IdentStateData);
  * start a TCP connection to the peer host on port 113
  */
 void
-Ident::Start(Comm::Connection *conn, IDCB * callback, void *data)
+Ident::Start(Comm::Connection::Pointer conn, IDCB * callback, void *data)
 {
     IdentStateData *state;
     char key1[IDENT_KEY_SZ];

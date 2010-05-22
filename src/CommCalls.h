@@ -68,7 +68,7 @@ public:
     void print(std::ostream &os) const;
 
 public:
-    Comm::Connection *details;
+    Comm::Connection::Pointer details;
     int nfd; // TODO: rename to fdNew or somesuch
 };
 
@@ -83,8 +83,8 @@ public:
     void print(std::ostream &os) const;
 
 public:
-    Comm::Connection *conn;
-    Vector<Comm::Connection *> *paths;
+    Comm::Connection::Pointer conn;
+    Vector<Comm::Connection::Pointer> *paths;
 };
 
 // read/write (I/O) parameters

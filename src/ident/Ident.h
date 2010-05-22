@@ -27,7 +27,7 @@ namespace Ident
  * Self-registers with a global ident lookup manager,
  * will call Ident::Init() itself if the manager has not been initialized already.
  */
-void Start(Comm::Connection *conn, IDCB * callback, void *cbdata);
+void Start(Comm::Connection::Pointer conn, IDCB * callback, void *cbdata);
 
 /**
  \ingroup IdentAPI
