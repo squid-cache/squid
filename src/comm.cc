@@ -793,43 +793,6 @@ comm_openex(int sock_type,
     return new_socket;
 }
 
-#if 0
-// AYJ: this API is dead. alter the caller which is using this to do its own DNS lookups
-//	and generate a Vector<Comm::Connection*> of possible destinations.
-//	do the rest of this itself...
-void
-commConnectStart(int fd, const char *host, u_short port, AsyncCall::Pointer &cb)
-{
-    debugs(cb->debugSection, cb->debugLevel, "commConnectStart: FD " << fd <<
-           ", cb " << cb << ", " << host << ":" << port); // TODO: just print *cb
-
-    ConnectStateData *cs;
-    cs = new ConnectStateData;
-    cs->fd = fd;
-    cs->host = xstrdup(host);
-    cs->default_port = port;
-    cs->callback = cb;
-
-    comm_add_close_handler(fd, ConnectStateData::Free, cs);
-    ipcache_nbgethostbyname(host, commConnectDnsHandle, cs);
-}
-#endif
-
-#if 0
-// TODO: Remove this and similar callback registration functions by replacing
-// (callback,data) parameters with an AsyncCall so that we do not have to use
-// a generic call name and debug level when creating an AsyncCall. This will
-// also cut the number of callback registration routines in half.
-void
-commConnectStart(int fd, const char *host, u_short port, CNCB * callback, void *data)
-{
-    debugs(5, 5, "commConnectStart: FD " << fd << ", data " << data << ", " << host << ":" << port);
-    AsyncCall::Pointer call = commCbCall(5,3,
-                                         "SomeCommConnectHandler", CommConnectCbPtrFun(callback, data));
-    commConnectStart(fd, host, port, call);
-}
-#endif
-
 static void
 copyFDFlags(int to, fde *F)
 {
@@ -1188,7 +1151,7 @@ comm_close_complete(int fd, void *data)
  * Close the socket fd in use by a connection.
  */
 void
-_comm_close(Comm::Connection *conn, char const *file, int line)
+_comm_close(Comm::Connection::Pointer conn, char const *file, int line)
 {
     _comm_close(conn->fd, file, line);
     conn->fd = -1;

@@ -360,7 +360,7 @@ FwdState::complete()
 /**** CALLBACK WRAPPERS ************************************************************/
 
 static void
-fwdStartCompleteWrapper(Vector<Comm::Connection*> *unused, void *data)
+fwdStartCompleteWrapper(Vector<Comm::Connection::Pointer> *unused, void *data)
 {
     FwdState *fwd = (FwdState *) data;
     fwd->startComplete();
@@ -390,7 +390,7 @@ fwdNegotiateSSLWrapper(int fd, void *data)
 #endif
 
 void
-fwdConnectDoneWrapper(Comm::Connection *conn, Vector<Comm::Connection*> *paths, comm_err_t status, int xerrno, void *data)
+fwdConnectDoneWrapper(Comm::Connection::Pointer conn, Vector<Comm::Connection::Pointer> *paths, comm_err_t status, int xerrno, void *data)
 {
     FwdState *fwd = (FwdState *) data;
     fwd->connectDone(conn, paths, status, xerrno);
@@ -663,7 +663,7 @@ FwdState::initiateSSL()
 #endif
 
 void
-FwdState::connectDone(Comm::Connection *conn, Vector<Comm::Connection*> *result_paths, comm_err_t status, int xerrno)
+FwdState::connectDone(Comm::Connection::Pointer conn, Vector<Comm::Connection::Pointer> *result_paths, comm_err_t status, int xerrno)
 {
     assert(result_paths == &paths);
 
@@ -740,7 +740,7 @@ FwdState::connectStart()
     if (n_tries == 0) // first attempt
         request->hier.first_conn_start = current_time;
 
-    Comm::Connection *conn = paths[0];
+    Comm::Connection::Pointer conn = paths[0];
 
     /* connection timeout */
     int ctimeout;
@@ -781,7 +781,7 @@ FwdState::connectStart()
         debugs(17,2,HERE << " Pinned connection " << pinned_connection << " not valid. Releasing.");
         request->releasePinnedConnection();
         paths.shift();
-        delete conn;
+        conn = NULL;
         connectStart();
         return;
     }
@@ -789,7 +789,8 @@ FwdState::connectStart()
 // TODO: now that we are dealing with actual IP->IP links. should we still anchor pconn on hostname?
 //	or on the remote IP+port?
 // that could reduce the pconns per virtual server a fair amount
-// and prevent crossover between servers hosting the one domain
+// but would prevent crossover between servers hosting the one domain
+// this currently opens the possibility that conn will lie about where the FD goes.
 
     const char *host;
     int port;
@@ -830,18 +831,6 @@ FwdState::connectStart()
     cs->connect_timeout = ctimeout;
     cs->connect();
 }
-
-#if DEAD
-void
-FwdState::startFail()
-{
-    debugs(17, 3, HERE << entry->url()  );
-    ErrorState *anErr = errorCon(ERR_CANNOT_FORWARD, HTTP_SERVICE_UNAVAILABLE, request);
-    anErr->xerrno = errno;
-    fail(anErr);
-    self = NULL;       // refcounted
-}
-#endif
 
 void
 FwdState::dispatch()
@@ -1086,15 +1075,21 @@ FwdState::reforwardableStatus(http_status s)
  *  -  address of the client for which we made the connection
  */
 void
-FwdState::pconnPush(int fd, const peer *_peer, const HttpRequest *req, const char *domain, Ip::Address &client_addr)
+FwdState::pconnPush(Comm::Connection::Pointer conn, const peer *_peer, const HttpRequest *req, const char *domain, Ip::Address &client_addr)
 {
     if (_peer) {
-        fwdPconnPool->push(fd, _peer->name, _peer->http_port, domain, client_addr);
+        fwdPconnPool->push(conn->fd, _peer->name, _peer->http_port, domain, client_addr);
     } else {
         /* small performance improvement, using NULL for domain instead of listing it twice */
         /* although this will leave a gap open for url-rewritten domains to share a link */
-        fwdPconnPool->push(fd, req->GetHost(), req->port, NULL, client_addr);
+        fwdPconnPool->push(conn->fd, req->GetHost(), req->port, NULL, client_addr);
     }
+
+    /* XXX: remove this when Comm::Connection are stored in the pool
+     * this only prevents the persistent FD being closed when the
+     * Comm::Connection currently using it is destroyed.
+     */
+    conn->fd = -1;
 }
 
 void
@@ -1175,24 +1170,6 @@ FwdState::updateHierarchyInfo()
 
 /**** PRIVATE NON-MEMBER FUNCTIONS ********************************************/
 
-#if DEAD
-static Ip::Address
-aclMapAddr(acl_address * head, ACLChecklist * ch)
-{
-    acl_address *l;
-
-    Ip::Address addr;
-
-    for (l = head; l; l = l->next) {
-        if (!l->aclList || ch->matchAclListFast(l->aclList))
-            return l->addr;
-    }
-
-    addr.SetAnyAddr();
-    return addr;
-}
-#endif
-
 /*
  * DPW 2007-05-19
  * Formerly static, but now used by client_side_request.cc
@@ -1211,7 +1188,7 @@ aclMapTOS(acl_tos * head, ACLChecklist * ch)
 }
 
 void
-getOutgoingAddress(HttpRequest * request, Comm::Connection *conn)
+getOutgoingAddress(HttpRequest * request, Comm::Connection::Pointer conn)
 {
     /* skip if an outgoing address is already set. */
     if (!conn->local.IsAnyAddr()) return;

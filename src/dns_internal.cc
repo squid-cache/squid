@@ -699,14 +699,14 @@ idnsDoSendQueryVC(nsvc *vc)
 }
 
 static void
-idnsInitVCConnected(Comm::Connection *conn, Vector<Comm::Connection *> *unused, comm_err_t status, int xerrno, void *data)
+idnsInitVCConnected(Comm::Connection::Pointer conn, Vector<Comm::Connection::Pointer> *unused, comm_err_t status, int xerrno, void *data)
 {
     nsvc * vc = (nsvc *)data;
 
     if (status != COMM_OK || !conn) {
         char buf[MAX_IPSTRLEN];
         debugs(78, DBG_IMPORTANT, "Failed to connect to nameserver " << nameservers[vc->ns].S.NtoA(buf,MAX_IPSTRLEN) << " using TCP!");
-        delete conn;
+        conn = NULL;
         return;
     }
 
@@ -731,8 +731,6 @@ idnsVCClosed(int fd, void *data)
 static void
 idnsInitVC(int ns)
 {
-    char buf[MAX_IPSTRLEN];
-
     nsvc *vc = cbdataAlloc(nsvc);
     nameservers[ns].vc = vc;
     vc->ns = ns;
@@ -740,7 +738,7 @@ idnsInitVC(int ns)
     vc->msg = new MemBuf;
     vc->busy = 1;
 
-    Comm::Connection *conn = new Comm::Connection;
+    Comm::Connection::Pointer conn = new Comm::Connection;
 
     if (!Config.Addrs.udp_outgoing.IsNoAddr())
         conn->local = Config.Addrs.udp_outgoing;

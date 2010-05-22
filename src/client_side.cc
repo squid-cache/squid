@@ -3057,7 +3057,7 @@ connStateCreate(const Ip::Address &peer, const Ip::Address &me, int fd, http_por
 
 /** Handle a new connection on HTTP socket. */
 void
-httpAccept(int sock, int newfd, Comm::Connection *details,
+httpAccept(int sock, int newfd, Comm::Connection::Pointer details,
            comm_err_t flag, int xerrno, void *data)
 {
     http_port_list *s = (http_port_list *)data;
@@ -3120,7 +3120,7 @@ httpAccept(int sock, int newfd, Comm::Connection *details,
 
 /** Create SSL connection structure and update fd_table */
 static SSL *
-httpsCreate(int newfd, Comm::Connection *details, SSL_CTX *sslContext)
+httpsCreate(int newfd, Comm::Connection::Pointer details, SSL_CTX *sslContext)
 {
     SSL *ssl = SSL_new(sslContext);
 
@@ -3263,7 +3263,7 @@ clientNegotiateSSL(int fd, void *data)
 
 /** handle a new HTTPS connection */
 static void
-httpsAccept(int sock, int newfd, Comm::Connection *details,
+httpsAccept(int sock, int newfd, Comm::Connection::Pointer details,
             comm_err_t flag, int xerrno, void *data)
 {
     https_port_list *s = (https_port_list *)data;
