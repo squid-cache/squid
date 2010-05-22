@@ -894,8 +894,9 @@ comm_connect_addr(int sock, const Ip::Address &address)
 
     assert(address.GetPort() != 0);
 
-    debugs(5, 9, "comm_connect_addr: connecting socket " << sock << " to " << address << " (want family: " << F->sock_family << ")");
+    debugs(5, 9, HERE << "connecting socket FD " << sock << " to " << address << " (want family: " << F->sock_family << ")");
 
+#if USE_IPV6
     /* Handle IPv6 over IPv4-only socket case.
      * this case must presently be handled here since the GetAddrInfo asserts on bad mappings.
      * NP: because commResetFD is private to ConnStateData we have to return an error and
@@ -917,6 +918,7 @@ comm_connect_addr(int sock, const Ip::Address &address)
         errno = ENETUNREACH;
         return COMM_ERR_PROTOCOL;
     }
+#endif /* USE_IPV6 */
 
     address.GetAddrInfo(AI, F->sock_family);
 
