@@ -1670,6 +1670,12 @@ FtpStateData::writeCommand(const char *buf)
 
     ctrl.last_command = ebuf;
 
+    if (!canSend(ctrl.fd)) {
+        debugs(9, 2, HERE << "cannot send to closing ctrl FD " << ctrl.fd);
+        // TODO: assert(ctrl.closer != NULL);
+        return;
+    }
+
     typedef CommCbMemFunT<FtpStateData, CommIoCbParams> Dialer;
     AsyncCall::Pointer call = asyncCall(9, 5, "FtpStateData::ftpWriteCommandCallback",
                                         Dialer(this, &FtpStateData::ftpWriteCommandCallback));

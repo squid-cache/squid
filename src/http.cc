@@ -1979,6 +1979,13 @@ HttpStateData::sendRequest()
     MemBuf mb;
 
     debugs(11, 5, "httpSendRequest: FD " << fd << ", request " << request << ", this " << this << ".");
+
+    if (!canSend(fd)) {
+        debugs(11,3, HERE << "cannot send request to closing FD " << fd);
+        assert(closeHandler != NULL);
+        return false;
+    }
+
     typedef CommCbMemFunT<HttpStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  asyncCall(11, 5, "HttpStateData::httpTimeout",
                                       TimeoutDialer(this,&HttpStateData::httpTimeout));
@@ -2081,6 +2088,13 @@ HttpStateData::doneSendingRequestBody()
             sendComplete(io);
         } else {
             debugs(11, 2, "doneSendingRequestBody: matched brokenPosts");
+
+            if (!canSend(fd)) {
+                debugs(11,2, HERE << "cannot send CRLF to closing FD " << fd);
+                assert(closeHandler != NULL);
+                return;
+            }
+
             typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
             Dialer dialer(this, &HttpStateData::sendComplete);
             AsyncCall::Pointer call= asyncCall(11,5, "HttpStateData::SendComplete", dialer);
