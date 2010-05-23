@@ -675,6 +675,9 @@ HttpStateData::processReplyHeader()
 
     assert(!flags.headers_parsed);
 
+    if (!readBuf->hasContent())
+        return;
+
     http_status error = HTTP_STATUS_NONE;
 
     HttpReply *newrep = new HttpReply;
@@ -1126,12 +1129,11 @@ HttpStateData::readReply(const CommIoCbParams &io)
         eof = 1;
         flags.do_next_read = 0;
 
-        /* Bug 2789: Replies may terminate with \r\n then EOF instead of \r\n\r\n
+        /* Bug 2879: Replies may terminate with \r\n then EOF instead of \r\n\r\n
          * Ensure here that we have at minimum two \r\n when EOF is seen.
-         * TODO: When headersEnd() is cleaned up to only be called once we can merge
-         * this as a special case there where it belongs.
+         * TODO: Add eof parameter to headersEnd() and move this hack there.
          */
-        if (!flags.headers_parsed) {
+        if (readBuf->contentSize() && !flags.headers_parsed) {
             /*
              * Yes Henrik, there is a point to doing this.  When we
              * called httpProcessReplyHeader() before, we didn't find
@@ -1140,7 +1142,6 @@ HttpStateData::readReply(const CommIoCbParams &io)
              */
             /* Fake an "end-of-headers" to work around such broken servers */
             readBuf->append("\r\n", 2);
-            len = 2;
         }
     }
 
