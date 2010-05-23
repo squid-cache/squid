@@ -111,7 +111,7 @@ msgstr "Kapcsolat maximális időtartama lejárt"
 
 #: templates/ERR_CONNECT_FAIL:5
 msgid "Connection to %I failed."
-msgstr ""
+msgstr "Csatlakozás a(z) %I-hez/hoz meghiúsult."
 
 #: templates/ERR_INVALID_REQ:10
 msgid "Content-Length missing for POST or PUT requests."
@@ -119,17 +119,15 @@ msgstr "Content-Length hiányzik a POST vagy PUT kérésből"
 
 #: templates/ERR_DIR_LISTING:3
 msgid "Directory Content:"
-msgstr ""
+msgstr "Könyvtár tartalom:"
 
 #: templates/ERR_DIR_LISTING:4
-#, fuzzy
 msgid "Directory Listing"
-msgstr "FTP Könyvtár Listázás"
+msgstr "Könyvtár listázás"
 
 #: templates/ERR_DIR_LISTING:1
-#, fuzzy
 msgid "Directory: %U"
-msgstr "FTP Könyvtár: %U"
+msgstr "Könyvtár: %U"
 
 #: templates/ERR_DIR_LISTING:2
 #, fuzzy
@@ -275,7 +273,7 @@ msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
-msgstr ""
+msgstr "ICAP protokoll hiba."
 
 #: templates/ERR_TOO_BIG:7
 #, fuzzy
@@ -404,9 +402,8 @@ msgstr "A megadott URL formátuma bizonyos szempontból nem megfelelő."
 
 #: templates/ERR_ICAP_FAILURE:8 templates/ERR_INVALID_REQ:5
 #: templates/ERR_INVALID_URL:7
-#, fuzzy
 msgid "Some possible problems are:"
-msgstr "Lehetséges problémák:"
+msgstr "Néhány lehetséges probléma:"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:6
 msgid ""
@@ -697,7 +694,7 @@ msgstr ""
 #: templates/ERR_AGENT_CONFIGURE:1 templates/ERR_AGENT_CONFIGURE:3
 #: templates/ERR_AGENT_WPAD:1 templates/ERR_AGENT_WPAD:3
 msgid "Web Browser Configuration"
-msgstr ""
+msgstr "Webböngésző konfiguráció"
 
 #: templates/ERR_FTP_PUT_ERROR:4
 msgid "While trying to PUT the following URL: <a href=\"%U\">%U</a>"
