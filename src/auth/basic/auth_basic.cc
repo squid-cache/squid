@@ -434,34 +434,6 @@ BasicUser::makeLoggingInstance(AuthUserRequest::Pointer auth_user_request)
     }
 }
 
-#if 0
-/* TODO: instead of duplicating into the cache why not just add a ::Pointer to ourselves there? */
-AuthUser::Pointer
-BasicUser::makeCachedFrom()
-{
-    /* the user doesn't exist in the username cache yet */
-    debugs(29, 9, HERE << "Creating new user '" << username() << "'");
-    BasicUser *basic_user = new BasicUser(config);
-    /* save the credentials */
-    basic_user->username(username());
-    username(NULL);
-    basic_user->passwd = passwd;
-    passwd = NULL;
-    /* set the auth_user type */
-    basic_user->auth_type = AUTH_BASIC;
-    /* current time for timeouts */
-    basic_user->expiretime = current_time.tv_sec;
-
-    /* this basic_user struct is the 'lucky one' to get added to the username cache */
-    /* the requests after this link to the basic_user */
-    /* store user in hash */
-    basic_user->addToNameCache();
-
-    AuthUser::Pointer auth_user = dynamic_cast<AuthUser*>(basic_user);
-    return auth_user;
-}
-#endif
-
 void
 BasicUser::updateCached(BasicUser *from)
 {
