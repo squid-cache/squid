@@ -2996,3 +2996,174 @@ msgstr ""
 "defecto , los usuarios DN se crean con el DN de base y de atributos del "
 "usuario. En el otro modo de operación un filtro de búsqueda se utiliza para "
 "localizar usuarios validos DN por debajo de la base DN."
+
+#. type: Plain text
+#: helpers/basic_auth/SASL/basic_sasl_auth.8:18
+msgid ""
+"B<basic_sasl_auth> is an installed binary helper for Squid. SASL is "
+"configurable (somewhat like PAM).  Each service authenticating against SASL "
+"identifies itself with an application name.  Each application can be "
+"configured independently by the SASL administrator."
+msgstr ""
+"B<basic_sasl_auth> es un binario auxiliar instalado para Squid. SASL es "
+"configurable (algo como a PAM).  Cada servicio que se autentifica con SASL "
+"se identifica a sí mismo con el nombre de una aplicación. Cada aplicación "
+"puede ser configurada independientemente por el administrador de SASL."
+
+#. type: Plain text
+#: helpers/basic_auth/SASL/basic_sasl_auth.8:33
+msgid "Examples:"
+msgstr "Ejemplos:"
+
+#. type: TP
+#: helpers/digest_auth/file/digest_file_auth.8:28
+#, no-wrap
+msgid "- comment lines are possible and should start with a '#';"
+msgstr "- pueden usarse líneas de comentarios y deben de comenzar por '#\";"
+
+#. type: Plain text
+#: helpers/basic_auth/SASL/basic_sasl_auth.8:46
+msgid ""
+"Others methods may be supported by your cyrus-sasl implementation - consult "
+"your cyrus-sasl documentation for information."
+msgstr ""
+
+#. type: Plain text
+#: helpers/digest_auth/file/digest_file_auth.8:7
+msgid "File based digest authentication helper for Squid."
+msgstr ""
+
+#. type: Plain text
+#: helpers/basic_auth/SASL/basic_sasl_auth.8:31
+msgid ""
+"The authentication database is defined by the B<pwcheck_method> parameter.  "
+"Only the B<PLAIN> authentication mechanism is used."
+msgstr ""
+"La base de datos de autenticación es definida por el parámetro "
+"B<pwcheck_method>.  Sólo el mecanismo de autenticación B<BASICO> es usado."
+
+#. type: Plain text
+#: helpers/basic_auth/SASL/basic_sasl_auth.8:59
+msgid ""
+"Typically the authentication database ( B</etc/sasldb> , B</etc/shadow> , "
+"B<PAM> )  can not be accessed by a normal user. You should use setuid/setgid "
+"and an appropriate user/group on the executable to allow the authenticator "
+"to access the appropriate password database. If the access to the database "
+"is not permitted then the authenticator will typically fail with \"-1, "
+"generic error\"."
+msgstr ""
+
+#. type: Plain text
+#: helpers/digest_auth/file/digest_file_auth.8:19
+msgid ""
+"B<digest_file_auth> is an installed binary authentication program for Squid. "
+"It handles digest authentication protocol and authenticates against a text "
+"file backend."
+msgstr ""
+
+#. type: TP
+#: helpers/digest_auth/file/digest_file_auth.8:37
+#, no-wrap
+msgid "- HA1 entry format is username:realm:HA1"
+msgstr ""
+
+#. type: Plain text
+#: helpers/basic_auth/SASL/basic_sasl_auth.8:7
+msgid ""
+"Basic Authentication using SASL (specifically the cyrus-sasl authentication "
+"method)"
+msgstr ""
+"Autenticación Básica usando SASL (específicamente el método de autenticación "
+"cyrus-sasl)"
+
+#. type: TP
+#: helpers/digest_auth/file/digest_file_auth.8:34
+#, no-wrap
+msgid "- plaintext entry format is username:password"
+msgstr ""
+
+#. type: Plain text
+#: helpers/digest_auth/file/digest_file_auth.8:50
+msgid ""
+"To build a directory integrated backend, you need to be able to calculate "
+"the HA1 returned to squid. To avoid storing a plaintext password you can "
+"calculate B<MD5(username:realm:password)> when the user changes their "
+"password, and store the tuple B<username:realm:HA1.> then find the matching "
+"B<username:realm> when squid asks for the HA1."
+msgstr ""
+
+#. type: Plain text
+#: helpers/basic_auth/SASL/basic_sasl_auth.8:24
+msgid ""
+"To configure the authentication method used the file B<basic_sasl_auth.conf> "
+"can be placed in the appropriate location, usually B</usr/lib/sasl.>"
+msgstr ""
+"Para configurar el método de autenticación usado, el archivo "
+"B<basic_sasl_auth.conf> puede ponerse en la ruta apropiada, generalmente en "
+"B</usr/lib/sasl.>"
+
+#. type: Plain text
+#: helpers/digest_auth/file/digest_file_auth.8:58
+msgid ""
+"This implementation could be improved by using such a triple for the file "
+"format.  However storing such a triple does little to improve security: If "
+"compromised the B<username:realm:HA1> combination is \"plaintext "
+"equivalent\" - for the purposes of digest authentication they allow the user "
+"access. Password syncronisation is not tackled by digest - just preventing "
+"on the wire compromise."
+msgstr ""
+
+#. type: Plain text
+#: helpers/basic_auth/SASL/basic_sasl_auth.8:41
+#, no-wrap
+msgid ""
+" - use traditional \n"
+"B</etc/passwd>\n"
+msgstr ""
+
+#. type: Plain text
+#: helpers/basic_auth/SASL/basic_sasl_auth.8:36
+msgid "use sasldb - the default if no conf file is installed."
+msgstr ""
+
+#. type: Plain text
+#: helpers/basic_auth/SASL/basic_sasl_auth.8:43
+#, no-wrap
+msgid " - use slightly less traditional /etc/shadow\n"
+msgstr ""
+
+#. type: Plain text
+#: helpers/digest_auth/file/digest_file_auth.8:64
+msgid "Based on prior work by"
+msgstr ""
+
+#. type: Plain text
+#: helpers/basic_auth/SASL/basic_sasl_auth.8:38
+#, no-wrap
+msgid " - use PAM authentication database\n"
+msgstr ""
+
+#. type: Plain text
+#: helpers/digest_auth/file/digest_file_auth.8:28
+msgid "Username database file format:"
+msgstr ""
+
+#. type: Plain text
+#: helpers/digest_auth/file/digest_file_auth.8:24
+msgid ""
+"Accept digest hashed passwords rather than plaintext in the password file"
+msgstr ""
+
+#. type: TP
+#: helpers/digest_auth/file/digest_file_auth.8:31
+#, no-wrap
+msgid "- empty or blank lines are possible;"
+msgstr ""
+
+#. type: Plain text
+#: helpers/basic_auth/SASL/basic_sasl_auth.8:74
+msgid ""
+"If the application name B<basic_sasl_auth> will also be used for the PAM "
+"service name if B<pwcheck_method:pam> is chosen. And example PAM "
+"configuration file B<basic_sasl_auth.pam> is also included."
+msgstr ""
