@@ -111,11 +111,11 @@ msgstr ""
 
 #: templates/ERR_DIR_LISTING:1
 msgid "Directory: %U"
-msgstr ""
+msgstr "Repertòri : %U"
 
 #: templates/ERR_DIR_LISTING:2
 msgid "Directory: <a href=\"%U\">%U</a>/"
-msgstr ""
+msgstr "Repertòri : <a href=\"%U\">%U</a>/"
 
 #: templates/ERR_ACCESS_DENIED:2 templates/ERR_AGENT_CONFIGURE:2
 #: templates/ERR_AGENT_WPAD:2 templates/ERR_CACHE_ACCESS_DENIED:2
@@ -188,7 +188,7 @@ msgstr ""
 
 #: templates/ERR_FTP_DISABLED:5
 msgid "FTP is Disabled"
-msgstr ""
+msgstr "Lo FTP es desactivat"
 
 #: templates/ERR_SECURE_CONNECT_FAIL:5
 msgid "Failed to establish a secure connection to %I"
@@ -196,11 +196,11 @@ msgstr ""
 
 #: templates/ERR_FTP_PUT_CREATED:3
 msgid "File created"
-msgstr ""
+msgstr "Fichièr creat"
 
 #: templates/ERR_FTP_PUT_MODIFIED:3
 msgid "File updated"
-msgstr ""
+msgstr "Fichièr mes a jorn"
 
 #: templates/ERR_AGENT_CONFIGURE:6 templates/ERR_AGENT_WPAD:6
 msgid "For Firefox browsers go to: <ul>"
@@ -255,7 +255,7 @@ msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:5
 msgid "ICAP protocol error."
-msgstr ""
+msgstr "Error de protocòl ICAP."
 
 #: templates/ERR_TOO_BIG:7
 msgid ""
@@ -292,11 +292,11 @@ msgstr ""
 
 #: templates/ERR_INVALID_REQ:7
 msgid "Missing URL."
-msgstr ""
+msgstr "Abséncia d'URL"
 
 #: templates/ERR_INVALID_URL:9
 msgid "Missing hostname"
-msgstr ""
+msgstr "Nom de maquina absent"
 
 #: templates/ERR_INVALID_URL:8
 msgid ""
@@ -356,7 +356,7 @@ msgstr ""
 
 #: templates/ERR_SOCKET_FAILURE:5
 msgid "Socket Failure"
-msgstr ""
+msgstr "Error de socket"
 
 #: templates/ERR_INVALID_URL:6
 msgid "Some aspect of the requested URL is incorrect."
@@ -365,7 +365,7 @@ msgstr ""
 #: templates/ERR_ICAP_FAILURE:8 templates/ERR_INVALID_REQ:5
 #: templates/ERR_INVALID_URL:7
 msgid "Some possible problems are:"
-msgstr ""
+msgstr "Problèmas envisajables :"
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:6
 msgid ""
@@ -409,7 +409,7 @@ msgstr ""
 
 #: templates/ERR_DNS_FAIL:6
 msgid "The DNS server returned:"
-msgstr ""
+msgstr "Lo servidor DNS a tornat :"
 
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
@@ -484,7 +484,7 @@ msgstr ""
 #: templates/ERR_FTP_NOT_FOUND:6 templates/ERR_FTP_PUT_ERROR:6
 #: templates/ERR_FTP_UNAVAILABLE:6
 msgid "The server responded with:"
-msgstr ""
+msgstr "Lo servidor a respondut :"
 
 #: templates/ERR_CONNECT_FAIL:6 templates/ERR_ICAP_FAILURE:6
 #: templates/ERR_READ_ERROR:6 templates/ERR_READ_TIMEOUT:6
@@ -664,4 +664,4 @@ msgstr ""
 
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"
-msgstr ""
+msgstr "Responsa de talha nulla"
