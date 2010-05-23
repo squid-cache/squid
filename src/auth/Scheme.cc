@@ -64,14 +64,6 @@ AuthScheme::Find(const char *typestr)
     return AuthScheme::Pointer(NULL);
 }
 
-#if 0 // with ref-counting we never have a constant version of *::Pointer
-Vector<AuthScheme::Pointer> const &
-AuthScheme::Schemes()
-{
-    return GetSchemes();
-}
-#endif
-
 Vector<AuthScheme::Pointer> &
 AuthScheme::GetSchemes()
 {
@@ -91,6 +83,8 @@ AuthScheme::GetSchemes()
 void
 AuthScheme::FreeAll()
 {
+//    assert(shutting_down);
+
     while (GetSchemes().size()) {
         AuthScheme::Pointer scheme = GetSchemes().back();
         GetSchemes().pop_back();
