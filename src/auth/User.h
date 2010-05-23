@@ -36,7 +36,7 @@
 
 #include "auth/AuthType.h"
 #include "dlink.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 #include "RefCount.h"
 
 class AuthConfig;

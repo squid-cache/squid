@@ -39,7 +39,7 @@
 #include "auth/Scheme.h"
 #include "auth/User.h"
 #include "dlink.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 #include "typedefs.h"
 #include "HttpHeader.h"
 
