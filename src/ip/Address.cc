@@ -1026,11 +1026,11 @@ Ip::Address::ToHostname(char *buf, const unsigned int blen) const
         p++;
     }
 
-    /* 7 being space for [,], and port */
+    /* 8 being space for [ ] : and port digits */
     if ( IsIPv6() )
-        NtoA(p, blen-7, AF_INET6);
+        NtoA(p, blen-8, AF_INET6);
     else
-        NtoA(p, blen-7, AF_INET);
+        NtoA(p, blen-8, AF_INET);
 
     // find the end of the new string
     while (*p != '\0' && p < buf+blen)
