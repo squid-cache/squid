@@ -137,7 +137,9 @@ private:
 
 
 static void clientHttpConnectionOpened(int fd, int errNo, http_port_list *s);
-
+#if USE_SSL
+static void clientHttpsConnectionOpened(int fd, int errNo, http_port_list *s);
+#endif
 
 /* our socket-related context */
 
@@ -3355,6 +3357,34 @@ ConnStateData::switchToHttps()
 
 #endif /* USE_SSL */
 
+/// check FD after clientHttp[s]ConnectionOpened, adjust HttpSockets as needed
+static bool
+OpenedHttpSocket(int fd, const char *msgIfFail)
+{
+    if (fd < 0) {
+        Must(NHttpSockets > 0); // we tried to open some
+        --NHttpSockets; // there will be fewer sockets than planned
+        Must(HttpSockets[NHttpSockets] < 0); // no extra fds received
+
+        if (!NHttpSockets) // we could not open any listen sockets at all
+            fatal(msgIfFail);
+
+        return false;
+    }
+    return true;
+}
+
+/// find any unused HttpSockets[] slot and store fd there or return false
+static bool
+AddOpenedHttpSocket(int fd)
+{
+    bool found = false;
+    for (int i = 0; i < NHttpSockets && !found; i++) {
+        if ((found = HttpSockets[i] < 0))
+            HttpSockets[i] = fd;
+    }
+    return found;
+}
 
 static void
 clientHttpConnectionsOpen(void)
@@ -3403,19 +3433,12 @@ clientHttpConnectionsOpen(void)
 #endif
 }
 
+/// process clientHttpConnectionsOpen result
 static void
 clientHttpConnectionOpened(int fd, int, http_port_list *s)
 {
-    if (fd < 0) {
-        Must(NHttpSockets > 0); // we tried to open some
-        --NHttpSockets; // there will be fewer sockets than planned
-        Must(HttpSockets[NHttpSockets] < 0); // no extra fds received
-
-        if (!NHttpSockets) // we could not open any listen sockets at all
-            fatal("Cannot open HTTP Port");
-
+    if (!OpenedHttpSocket(fd, "Cannot open HTTP Port"))
         return;
-    }
 
     Must(s);
 
@@ -3432,13 +3455,7 @@ clientHttpConnectionOpened(int fd, int, http_port_list *s)
                << " HTTP connections at " << s->s
                << ", FD " << fd << "." );
 
-    // find any unused slot and finalize its fd
-    bool found = false;
-    for (int i = 0; i < NHttpSockets && !found; i++) {
-        if ((found = HttpSockets[i] < 0))
-            HttpSockets[i] = fd;
-    }
-    Must(found); // otherwise, we have received a fd we did not ask for
+    Must(AddOpenedHttpSocket(fd)); // otherwise, we have received a fd we did not ask for
 }
 
 #if USE_SSL
@@ -3446,7 +3463,6 @@ static void
 clientHttpsConnectionsOpen(void)
 {
     https_port_list *s;
-    int fd;
 
     for (s = Config.Sockaddr.https; s; s = (https_port_list *)s->http.next) {
         if (MAXHTTPPORTS == NHttpSockets) {
@@ -3461,25 +3477,33 @@ clientHttpsConnectionsOpen(void)
             continue;
         }
 
-        enter_suid();
-        fd = comm_open_listener(SOCK_STREAM,
-                                IPPROTO_TCP,
-                                s->http.s,
-                                COMM_NONBLOCKING, "HTTPS Socket");
-        leave_suid();
+        AsyncCall::Pointer call = asyncCall(33, 2, "clientHttpsConnectionOpened",
+            ListeningStartedDialer(&clientHttpsConnectionOpened, &s->http));
 
-        if (fd < 0)
-            continue;
+        Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->http.s, COMM_NONBLOCKING,
+            Ipc::fdnHttpsSocket, call);
+
+        HttpSockets[NHttpSockets++] = -1;
+    }
+}
+
+/// process clientHttpsConnectionsOpen result
+static void
+clientHttpsConnectionOpened(int fd, int, http_port_list *s)
+{
+    if (!OpenedHttpSocket(fd, "Cannot open HTTPS Port"))
+        return;
+
+    Must(s);
 
         AsyncCall::Pointer call = commCbCall(5,5, "SomeCommAcceptHandler(httpsAccept)",
                                              CommAcceptCbPtrFun(httpsAccept, s));
 
         s->listener = new Comm::ListenStateData(fd, call, true);
 
-        debugs(1, 1, "Accepting HTTPS connections at " << s->http.s << ", FD " << fd << ".");
+        debugs(1, 1, "Accepting HTTPS connections at " << s->s << ", FD " << fd << ".");
 
-        HttpSockets[NHttpSockets++] = fd;
-    }
+    Must(AddOpenedHttpSocket(fd)); // otherwise, we have received a fd we did not ask for
 }
 
 #endif

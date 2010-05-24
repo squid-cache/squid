@@ -13,7 +13,8 @@ namespace Ipc
 
 /// We cannot send char* FD notes to other processes. Pass int IDs and convert.
 
-typedef enum { fdnNone, fdnHttpSocket, fdnEnd } FdNoteId; ///< fd_note() label
+/// fd_note() label ID
+typedef enum { fdnNone, fdnHttpSocket, fdnHttpsSocket, fdnEnd } FdNoteId;
 
 extern const char *FdNote(int fdNodeId); ///< converts FdNoteId into a string
 

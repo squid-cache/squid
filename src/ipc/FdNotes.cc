@@ -15,7 +15,8 @@ Ipc::FdNote(int fdNoteId)
 {
     static const char *FdNotes[Ipc::fdnEnd] = {
         "None", // fdnNone
-        "HTTP Socket" // fdnHttpSocket
+        "HTTP Socket", // fdnHttpSocket
+        "HTTPS Socket" // fdnHttpsSocket
     };
 
     if (fdnNone < fdNoteId && fdNoteId < fdnEnd)
