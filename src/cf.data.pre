@@ -808,8 +808,8 @@ DOC_START
 	refer to as the indirect client address.  This address may
 	be treated as the client address for access control, ICAP, delay
 	pools and logging, depending on the acl_uses_indirect_client,
-	icap_uses_indirect_client, delay_pool_uses_indirect_client and
-	log_uses_indirect_client options.
+	icap_uses_indirect_client, delay_pool_uses_indirect_client, 
+	log_uses_indirect_client and tproxy_uses_indirect_client options.
 
 	This clause only supports fast acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
@@ -865,6 +865,18 @@ DOC_START
 	Controls whether the indirect client address
 	(see follow_x_forwarded_for) is used instead of the
 	direct client address in the access log.
+DOC_END
+
+NAME: tproxy_uses_indirect_client
+COMMENT: on|off
+TYPE: onoff
+IFDEF: FOLLOW_X_FORWARDED_FOR&&LINUX_NETFILTER
+DEFAULT: on
+LOC: Config.onoff.tproxy_uses_indirect_client
+DOC_START
+	Controls whether the indirect client address
+	(see follow_x_forwarded_for) is used instead of the
+	direct client address when spoofing the outgoing client.
 DOC_END
 
 NAME: http_access

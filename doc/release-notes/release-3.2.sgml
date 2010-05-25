@@ -181,6 +181,11 @@ This section gives a thorough account of those changes in three categories:
 	<tag>logfile_daemon</tag>
 	<p>Ported from 2.7
 
+	<tag>tproxy_uses_indirect_client</tag>
+	<p>Controls whether the indirect client address found in the X-Forwarded-For
+	header is used for spoofing instead of the directly connected client address.
+	Requires both --enable-follow-x-forwarded-for and --enable-linux-netfilter
+
 </descrip>
 
 <sect1>Changes to existing tags<label id="modifiedtags">
