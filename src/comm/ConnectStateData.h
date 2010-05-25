@@ -10,31 +10,36 @@
 /**
  * State engine handling the opening of a remote outbound connection
  * to one of multiple destinations.
- *
- * Create with a list of possible links and a handler callback to call when connected.
  */
 class ConnectStateData
 {
 public:
     /** open first working of a set of connections */
     ConnectStateData(Vector<Comm::Connection::Pointer> *paths, AsyncCall::Pointer handler);
+
     /** attempt to open one connection. */
     ConnectStateData(Comm::Connection::Pointer, AsyncCall::Pointer handler);
 
-    void *operator new(size_t);
-    void operator delete(void *);
+    ~ConnectStateData();
+
+    /**
+     * Actual connect start function.
+     */
+    void connect();
+
+private:
+    /* These objects may NOT be created without connections to act on. Do not define this operator. */
+    ConnectStateData();
+    /* These objects may NOT be copied. Do not define this operator. */
+    const ConnectStateData operator =(const ConnectStateData &c);
 
     /**
      * Wrapper to start the connection attempts happening.
      */
-    static void Connect(void *data) {
-        ConnectStateData *cs = static_cast<ConnectStateData *>(data);
-        cs->connect();
-    };
-    static void ConnectRetry(int fd, void *data) {
-        ConnectStateData *cs = static_cast<ConnectStateData *>(data);
-        cs->connect();
-    };
+    static void Connect(void *data);
+
+    /** retry */
+    static void ConnectRetry(int fd, void *data);
 
     /**
      * Temporary close handler used during connect.
@@ -43,20 +48,16 @@ public:
     static void EarlyAbort(int fd, void *data);
 
     /**
-     * Actual connect start function.
-     */
-    void connect();
-
-    /**
      * Connection attempt are completed. One way or the other.
      * Pass the results back to the external handler.
      */
     void callCallback(comm_err_t status, int xerrno);
 
+public:
     char *host;                   ///< domain name we are trying to connect to.
 
     /**
-     * time at which to abandone the connection.
+     * time at which to abandon the connection.
      * the connection-done callback will be passed COMM_TIMEOUT
      */
     time_t connect_timeout;
@@ -70,7 +71,7 @@ private:
     int fail_retries;  ///< number of retries current destination has been tried.
     time_t connstart;  ///< time at which this series of connection attempts was started.
 
-    CBDATA_CLASS(ConnectStateData);
+    CBDATA_CLASS2(ConnectStateData);
 };
 
 #endif /* _SQUID_SRC_COMM_CONNECTSTATEDATA_H */
