@@ -871,12 +871,20 @@ NAME: tproxy_uses_indirect_client
 COMMENT: on|off
 TYPE: onoff
 IFDEF: FOLLOW_X_FORWARDED_FOR&&LINUX_NETFILTER
-DEFAULT: on
+DEFAULT: off
 LOC: Config.onoff.tproxy_uses_indirect_client
 DOC_START
 	Controls whether the indirect client address
 	(see follow_x_forwarded_for) is used instead of the
 	direct client address when spoofing the outgoing client.
+
+	This has no effect on requests arriving in non-tproxy
+	mode ports.
+
+	SECURITY WARNING: Usage of this option is dangerous
+	and should not be used trivially. Correct configuration
+	of folow_x_forewarded_for with a limited set of trusted
+	sources is required to prevent abuse of your proxy.
 DOC_END
 
 NAME: http_access
