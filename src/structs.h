@@ -1082,6 +1082,7 @@ struct _refresh_t {
     struct {
         unsigned int icase:1;
         unsigned int refresh_ims:1;
+        unsigned int store_stale:1;
 #if HTTP_VIOLATIONS
         unsigned int override_expire:1;
         unsigned int override_lastmod:1;
