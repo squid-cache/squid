@@ -740,13 +740,12 @@ DOC_START
 	If a request reaches us from a source that is allowed by this
 	configuration item, then we consult the X-Forwarded-For header
 	to see where that host received the request from.  If the
-	X-Forwarded-For header contains multiple addresses, and if
-	acl_uses_indirect_client is on, then we continue backtracking
-	until we reach an address for which we are not allowed to
-	follow the X-Forwarded-For header, or until we reach the first
-	address in the list.  (If acl_uses_indirect_client is off, then
-	it's impossible to backtrack through more than one level of
-	X-Forwarded-For addresses.)
+	X-Forwarded-For header contains multiple addresses, we continue
+	backtracking until we reach an address for which we are not allowed
+	to follow the X-Forwarded-For header, or until we reach the first
+	address in the list. For the purpose of ACL used in the
+	follow_x_forwarded_for directive the src ACL type always matches
+	the address we are testing and srcdomain matches its rDNS.
 
 	The end result of this process is an IP address that we will
 	refer to as the indirect client address.  This address may
