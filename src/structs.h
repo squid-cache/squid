@@ -432,6 +432,9 @@ struct SquidConfig {
         int acl_uses_indirect_client;
         int delay_pool_uses_indirect_client;
         int log_uses_indirect_client;
+#if LINUX_NETFILTER
+        int tproxy_uses_indirect_client;
+#endif
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
         int WIN32_IpAddrChangeMonitor;
