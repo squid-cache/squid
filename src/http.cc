@@ -96,7 +96,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"),
     orig_request->hier.peer_http_request_sent.tv_usec = 0;
 
     if (fwd->conn() != NULL)
-        _peer = fwd->conn()->_peer;         /* might be NULL */
+        _peer = cbdataReference(fwd->conn()->getPeer());         /* might be NULL */
 
     if (_peer) {
         const char *url;

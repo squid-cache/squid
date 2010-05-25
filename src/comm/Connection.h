@@ -41,12 +41,12 @@
 #include "ip/Address.h"
 #include "RefCount.h"
 
-class peer;
+struct peer;
 
 namespace Comm {
 
 /** COMM flags */
-/* TODO: make these a struct of boolean flags instead of a bitmap. */
+/* TODO: make these a struct of boolean flags in connection instead of a bitmap. */
 #define COMM_UNSET              0x00
 #define COMM_NONBLOCKING        0x01
 #define COMM_NOCLOEXEC          0x02
@@ -54,14 +54,37 @@ namespace Comm {
 #define COMM_TRANSPARENT        0x08
 #define COMM_DOBIND             0x10
 
+/**
+ * Store data about the physical and logical attributes of a connection.
+ *
+ * Some link state can be infered from the data, however this is not an
+ * object for state data. But a semantic equivalent for FD with easily
+ * accessible cached properties not requiring repeated complex lookups.
+ *
+ * While the properties may be changed, they should be considered read-only
+ * outside of the Comm layer code.
+ *
+ * These objects must not be passed around directly,
+ * but a Comm::Connection::Pointer must be passed instead.
+ */
 class Connection : public RefCountable
 {
 public:
     typedef RefCount<Comm::Connection> Pointer;
 
+    /** standard empty connection creation */
     Connection();
-    Connection(Connection &c);
+
+    /** Clear the conection properties and close any open socket. */
     ~Connection();
+
+    /** Clone an existing connections properties.
+     * This includes the FD, if one is open its a good idea to set it to -1 (unopen)
+     * on one after copying to prevent both clones calling comm_close() when destructed.
+     */
+    Connection(const Connection &c);
+    /** see Comm::Connection::Connection */
+    const Connection & operator =(const Connection &c);
 
     /** Address/Port for the Squid end of a TCP link. */
     Ip::Address local;
@@ -69,23 +92,32 @@ public:
     /** Address for the Remote end of a TCP link. */
     Ip::Address remote;
 
-    /** cache_peer data object (if any) */
-    peer *_peer;
-
     /** Hierarchy code for this connection link */
     hier_code peer_type;
 
-    /**
-     * Socket used by this connection.
-     * -1 if no socket has been opened.
-     */
+    /** Socket used by this connection. -1 if no socket has been opened. */
     int fd;
 
-    /** Quality of Service TOS values curtrently sent on this connection */
+    /** Quality of Service TOS values currently sent on this connection */
     int tos;
 
     /** COMM flags set on this connection */
     int flags;
+
+    /** retrieve the peer pointer for use.
+     * The caller is responsible for all CBDATA operations regarding the
+     * used of the pointer returned.
+     */
+    peer * const getPeer() const { return _peer; }
+
+    /** alter the stored peer pointer.
+     * Perform appropriate CBDATA operations for locking the peer pointer
+     */
+    void setPeer(peer * p);
+
+private:
+    /** cache_peer data object (if any) */
+    peer *_peer;
 };
 
 }; // namespace Comm

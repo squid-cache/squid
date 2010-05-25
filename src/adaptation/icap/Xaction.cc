@@ -201,16 +201,6 @@ void Adaptation::Icap::Xaction::noteCommConnected(const CommConnectCbParams &io)
     if (io.flag != COMM_OK)
         dieOnConnectionFailure(); // throws
 
-    // TODO: do we still need the timeout handler set?
-    //       there was no mention of un-setting it on success.
-
-    // TODO: service bypass status may differ from that of a transaction
-    typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommTimeoutCbParams> TimeoutDialer;
-    AsyncCall::Pointer timeoutCall =  asyncCall(93, 5, "Adaptation::Icap::Xaction::noteCommTimedout",
-                                      TimeoutDialer(this,&Adaptation::Icap::Xaction::noteCommTimedout));
-
-    commSetTimeout(io.conn->fd, TheConfig.connect_timeout(service().cfg().bypass), timeoutCall);
-
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommCloseCbParams> CloseDialer;
     closer =  asyncCall(93, 5, "Adaptation::Icap::Xaction::noteCommClosed",
                         CloseDialer(this,&Adaptation::Icap::Xaction::noteCommClosed));

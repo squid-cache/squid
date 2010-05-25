@@ -22,7 +22,7 @@ ConnectStateData::ConnectStateData(Vector<Comm::Connection::Pointer> *paths, Asy
 ConnectStateData::ConnectStateData(Comm::Connection::Pointer c, AsyncCall::Pointer handler) :
         host(NULL),
         connect_timeout(Config.Timeout.connect),
-        paths(paths),
+        paths(NULL),
         solo(c),
         callback(handler),
         total_tries(0),
@@ -30,26 +30,18 @@ ConnectStateData::ConnectStateData(Comm::Connection::Pointer c, AsyncCall::Point
         connstart(0)
 {}
 
-void *
-ConnectStateData::operator new(size_t size)
+ConnectStateData::~ConnectStateData()
 {
-    CBDATA_INIT_TYPE(ConnectStateData);
-    return cbdataAlloc(ConnectStateData);
-}
-
-void
-ConnectStateData::operator delete(void *address)
-{
-    cbdataFree(address);
+    safe_free(host);
+    paths = NULL; // caller code owns them.
+    solo = NULL;
 }
 
 void
 ConnectStateData::callCallback(comm_err_t status, int xerrno)
 {
-    assert(paths != NULL);
-
     int fd = -1;
-    if (paths->size() > 0) {
+    if (paths != NULL && paths->size() > 0) {
         fd = (*paths)[0]->fd;
         debugs(5, 3, HERE << "FD " << fd);
         comm_remove_close_handler(fd, ConnectStateData::EarlyAbort, this);
@@ -60,10 +52,13 @@ ConnectStateData::callCallback(comm_err_t status, int xerrno)
     Params &params = GetCommParams<Params>(callback);
     if (solo != NULL) {
         params.conn = solo;
-    } else {
+    } else if (paths != NULL) {
         params.paths = paths;
         if (paths->size() > 0)
             params.conn = (*paths)[0];
+    } else {
+        /* catch the error case. */
+        assert(paths != NULL && solo != NULL);
     }
     params.flag = status;
     params.xerrno = xerrno;
@@ -138,8 +133,8 @@ ConnectStateData::connect()
          * based on the max-conn option.  We need to increment here,
          * even if the connection may fail.
          */
-        if (active->_peer)
-            active->_peer->stats.conn_open++;
+        if (active->getPeer())
+            active->getPeer()->stats.conn_open++;
 
         /* TODO: remove this fd_table access. But old code still depends on fd_table flags to
          *       indicate the state of a raw fd object being passed around.
@@ -188,4 +183,18 @@ ConnectStateData::EarlyAbort(int fd, void *data)
      * remote end rejecting the connection is normal and one of the other paths may be taken.
      * squid shutting down or forcing abort on the connection attempt(s) are the only real fatal cases.
      */
+}
+
+void
+ConnectStateData::Connect(void *data)
+{
+    ConnectStateData *cs = static_cast<ConnectStateData *>(data);
+    cs->connect();
+}
+
+void
+ConnectStateData::ConnectRetry(int fd, void *data)
+{
+    ConnectStateData *cs = static_cast<ConnectStateData *>(data);
+    cs->connect();
 }
