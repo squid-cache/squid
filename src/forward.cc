@@ -487,8 +487,8 @@ FwdState::serverClosed(int fd)
     debugs(17, 2, HERE << "FD " << fd << " " << entry->url());
     assert(paths[0]->fd == fd);
 
-    if (paths[0]->_peer) {
-        paths[0]->_peer->stats.conn_open--;
+    if (paths[0]->getPeer()) {
+        paths[0]->getPeer()->stats.conn_open--;
     }
 
     retryOrBail();
@@ -520,7 +520,7 @@ FwdState::retryOrBail()
             cs->connect();
 
             /* use eventAdd to break potential call sequence loops and to slow things down a little */
-            eventAdd("fwdConnectStart", fwdConnectStartWrapper, this, (paths[0]->_peer == NULL) ? 0.05 : 0.005, 0);
+            eventAdd("fwdConnectStart", fwdConnectStartWrapper, this, (paths[0]->getPeer() == NULL) ? 0.05 : 0.005, 0);
             return;
         }
         // else bail. no more paths possible to try.
@@ -577,9 +577,9 @@ FwdState::negotiateSSL(int fd)
 
             fail(anErr);
 
-            if (paths[0]->_peer) {
-                peerConnectFailed(paths[0]->_peer);
-                paths[0]->_peer->stats.conn_open--;
+            if (paths[0]->getPeer()) {
+                peerConnectFailed(paths[0]->getPeer());
+                paths[0]->getPeer()->stats.conn_open--;
             }
 
             comm_close(paths[0]);
@@ -587,11 +587,11 @@ FwdState::negotiateSSL(int fd)
         }
     }
 
-    if (paths[0]->_peer && !SSL_session_reused(ssl)) {
-        if (paths[0]->_peer->sslSession)
-            SSL_SESSION_free(paths[0]->_peer->sslSession);
+    if (paths[0]->getPeer() && !SSL_session_reused(ssl)) {
+        if (paths[0]->getPeer()->sslSession)
+            SSL_SESSION_free(paths[0]->getPeer()->sslSession);
 
-        paths[0]->_peer->sslSession = SSL_get1_session(ssl);
+        paths[0]->getPeer()->sslSession = SSL_get1_session(ssl);
     }
 
     dispatch();
@@ -602,7 +602,7 @@ FwdState::initiateSSL()
 {
     SSL *ssl;
     SSL_CTX *sslContext = NULL;
-    peer *peer = paths[0]->_peer;
+    const peer *peer = paths[0]->getPeer();
     int fd = paths[0]->fd;
 
     if (peer) {
@@ -675,8 +675,8 @@ FwdState::connectDone(Comm::Connection::Pointer conn, Vector<Comm::Connection::P
 
         /* it might have been a timeout with a partially open link */
         if (paths.size() > 0) {
-            if (paths[0]->_peer)
-                peerConnectFailed(paths[0]->_peer);
+            if (paths[0]->getPeer())
+                peerConnectFailed(paths[0]->getPeer());
 
             comm_close(paths[0]);
         }
@@ -691,12 +691,12 @@ FwdState::connectDone(Comm::Connection::Pointer conn, Vector<Comm::Connection::P
 
     comm_add_close_handler(conn->fd, fwdServerClosedWrapper, this);
 
-    if (paths[0]->_peer)
-        peerConnectSucceded(paths[0]->_peer);
+    if (paths[0]->getPeer())
+        peerConnectSucceded(paths[0]->getPeer());
 
 #if USE_SSL
-    if ((paths[0]->_peer && paths[0]->_peer->use_ssl) ||
-            (!paths[0]->_peer && request->protocol == PROTO_HTTPS)) {
+    if ((paths[0]->getPeer() && paths[0]->getPeer()->use_ssl) ||
+            (!paths[0]->getPeer() && request->protocol == PROTO_HTTPS)) {
         initiateSSL();
         return;
     }
@@ -721,8 +721,8 @@ FwdState::connectTimeout(int fd)
 
         /* This marks the peer DOWN ... */
         if (paths.size() > 0)
-            if (paths[0]->_peer)
-                peerConnectFailed(paths[0]->_peer);
+            if (paths[0]->getPeer())
+                peerConnectFailed(paths[0]->getPeer());
     }
 
     comm_close(paths[0]);
@@ -744,8 +744,8 @@ FwdState::connectStart()
 
     /* connection timeout */
     int ctimeout;
-    if (conn->_peer) {
-        ctimeout = conn->_peer->connect_timeout > 0 ? conn->_peer->connect_timeout : Config.Timeout.peer_connect;
+    if (conn->getPeer()) {
+        ctimeout = conn->getPeer()->connect_timeout > 0 ? conn->getPeer()->connect_timeout : Config.Timeout.peer_connect;
     } else {
         ctimeout = Config.Timeout.connect;
     }
@@ -762,11 +762,11 @@ FwdState::connectStart()
     if (conn->peer_type == PINNED) {
         ConnStateData *pinned_connection = request->pinnedConnection();
         assert(pinned_connection);
-        conn->fd = pinned_connection->validatePinnedConnection(request, conn->_peer);
+        conn->fd = pinned_connection->validatePinnedConnection(request, conn->getPeer());
         if (conn->fd >= 0) {
             pinned_connection->unpinConnection();
 #if 0
-            if (!conn->_peer)
+            if (!conn->getPeer())
                 conn->peer_type = HIER_DIRECT;
 #endif
             n_tries++;
@@ -794,10 +794,10 @@ FwdState::connectStart()
 
     const char *host;
     int port;
-    if (conn->_peer) {
-        host = conn->_peer->host;
-        port = conn->_peer->http_port;
-        conn->fd = fwdPconnPool->pop(conn->_peer->name, conn->_peer->http_port, request->GetHost(), conn->local, checkRetriable());
+    if (conn->getPeer()) {
+        host = conn->getPeer()->host;
+        port = conn->getPeer()->http_port;
+        conn->fd = fwdPconnPool->pop(conn->getPeer()->name, conn->getPeer()->http_port, request->GetHost(), conn->local, checkRetriable());
     } else {
         host = request->GetHost();
         port = request->port;
@@ -809,7 +809,7 @@ FwdState::connectStart()
         debugs(17, 3, HERE << "reusing pconn FD " << conn->fd);
         n_tries++;
 
-        if (!conn->_peer)
+        if (!conn->getPeer())
             origin_tries++;
 
         updateHierarchyInfo();
@@ -898,10 +898,10 @@ FwdState::dispatch()
     }
 #endif
 
-    if (paths.size() > 0 && paths[0]->_peer != NULL) {
-        paths[0]->_peer->stats.fetches++;
-        request->peer_login = paths[0]->_peer->login;
-        request->peer_domain = paths[0]->_peer->domain;
+    if (paths.size() > 0 && paths[0]->getPeer() != NULL) {
+        paths[0]->getPeer()->stats.fetches++;
+        request->peer_login = paths[0]->getPeer()->login;
+        request->peer_domain = paths[0]->getPeer()->domain;
         httpStart(this);
     } else {
         request->peer_login = NULL;
@@ -1152,9 +1152,9 @@ FwdState::updateHierarchyInfo()
 
     char nextHop[256]; // 
 
-    if (paths[0]->_peer) {
+    if (paths[0]->getPeer()) {
         // went to peer, log peer host name
-        snprintf(nextHop,256,"%s", paths[0]->_peer->name);
+        snprintf(nextHop,256,"%s", paths[0]->getPeer()->name);
     } else {
         // went DIRECT, must honor log_ip_on_direct
         if (!Config.onoff.log_ip_on_direct)
@@ -1195,7 +1195,7 @@ getOutgoingAddress(HttpRequest * request, Comm::Connection::Pointer conn)
 
     // maybe use TPROXY client address
     if (request && request->flags.spoof_client_ip) {
-        if (!conn->_peer || !conn->_peer->options.no_tproxy) {
+        if (!conn->getPeer() || !conn->getPeer()->options.no_tproxy) {
             conn->local = request->client_addr;
             // some flags need setting on the socket to use this address
             conn->flags |= COMM_DOBIND;
@@ -1210,7 +1210,7 @@ getOutgoingAddress(HttpRequest * request, Comm::Connection::Pointer conn)
     }
 
     ACLFilledChecklist ch(NULL, request, NULL);
-    ch.dst_peer = conn->_peer;
+    ch.dst_peer = conn->getPeer();
     ch.dst_addr = conn->remote;
 
     // TODO use the connection details in ACL.

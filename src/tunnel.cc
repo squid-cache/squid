@@ -475,9 +475,9 @@ tunnelConnectTimeout(int fd, void *data)
     ErrorState *err = NULL;
 
     if (tunnelState->paths != NULL && tunnelState->paths->size() > 0) {
-        if ((*(tunnelState->paths))[0]->_peer)
+        if ((*(tunnelState->paths))[0]->getPeer())
             hierarchyNote(&tunnelState->request->hier, (*(tunnelState->paths))[0]->peer_type,
-                          (*(tunnelState->paths))[0]->_peer->host);
+                          (*(tunnelState->paths))[0]->getPeer()->host);
         else if (Config.onoff.log_ip_on_direct)
             hierarchyNote(&tunnelState->request->hier, (*(tunnelState->paths))[0]->peer_type,
                           fd_table[tunnelState->server.fd()].ipaddr);
@@ -569,12 +569,12 @@ tunnelConnectDone(Comm::Connection::Pointer unused, Vector<Comm::Connection::Poi
 
 #if DELAY_POOLS
     /* no point using the delayIsNoDelay stuff since tunnel is nice and simple */
-    if (conn->_peer && conn->_peer->options.no_delay)
+    if (conn->getPeer() && conn->getPeer()->options.no_delay)
         tunnelState->server.setDelayId(DelayId());
 #endif
 
-    if (conn != NULL && conn->_peer)
-        hierarchyNote(&tunnelState->request->hier, conn->peer_type, conn->_peer->host);
+    if (conn != NULL && conn->getPeer())
+        hierarchyNote(&tunnelState->request->hier, conn->peer_type, conn->getPeer()->host);
     else if (Config.onoff.log_ip_on_direct)
         hierarchyNote(&tunnelState->request->hier, conn->peer_type, fd_table[conn->fd].ipaddr);
     else
@@ -596,19 +596,19 @@ tunnelConnectDone(Comm::Connection::Pointer unused, Vector<Comm::Connection::Poi
     comm_add_close_handler(tunnelState->server.fd(), tunnelServerClosed, tunnelState);
 
     // TODO: hold the conn. drop these fields.
-    tunnelState->host = conn->_peer ? conn->_peer->host : xstrdup(request->GetHost());
-    request->peer_host = conn->_peer ? conn->_peer->host : NULL;
+    tunnelState->host = conn->getPeer() ? conn->getPeer()->host : xstrdup(request->GetHost());
+    request->peer_host = conn->getPeer() ? conn->getPeer()->host : NULL;
     tunnelState->port = conn->remote.GetPort();
 
-    if (conn->_peer) {
-        tunnelState->request->peer_login = conn->_peer->login;
+    if (conn->getPeer()) {
+        tunnelState->request->peer_login = conn->getPeer()->login;
         tunnelState->request->flags.proxying = 1;
     } else {
         tunnelState->request->peer_login = NULL;
         tunnelState->request->flags.proxying = 0;
     }
 
-    if (conn->_peer)
+    if (conn->getPeer())
         tunnelProxyConnected(tunnelState->server.fd(), tunnelState);
     else {
         tunnelConnected(tunnelState->server.fd(), tunnelState);
