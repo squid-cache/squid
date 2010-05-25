@@ -3445,6 +3445,7 @@ DOC_START
 		 ignore-private
 		 ignore-auth
 		 refresh-ims
+		 store-stale
 
 		override-expire enforces min age even if the server
 		sent an explicit expiry time (e.g., with the
@@ -3501,6 +3502,12 @@ DOC_START
 		when a client issues an If-Modified-Since request. This
 		ensures that the client will receive an updated version
 		if one is available.
+
+		store-stale stores responses even if they don't have explicit 
+		freshness or a validator (i.e., Last-Modified or an ETag) 
+		present, or if they're already stale. By default, Squid will 
+		not cache such responses because they usually can't be
+		reused. Note that such responses will be stale by default.
 
 	Basically a cached object is:
 
