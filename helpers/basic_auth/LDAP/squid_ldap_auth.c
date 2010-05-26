@@ -286,7 +286,7 @@ open_ldap_connection(const char *ldapServer, int port)
 
 #ifdef LDAP_VERSION3
     if (version == -1) {
-        version = LDAP_VERSION2;
+        version = LDAP_VERSION3;
     }
     if (ldap_set_option(ld, LDAP_OPT_PROTOCOL_VERSION, &version) != LDAP_SUCCESS) {
         fprintf(stderr, "Could not set LDAP_OPT_PROTOCOL_VERSION %d\n",
