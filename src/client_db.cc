@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * DEBUG: section 0     Client Database
+ * DEBUG: section 00    Client Database
  * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

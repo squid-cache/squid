@@ -2,7 +2,7 @@
 /*
  * $Id$
  *
- * DEBUG: section 7     Multicast
+ * DEBUG: section 07    Multicast
  * AUTHOR: Martin Hamilton
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
