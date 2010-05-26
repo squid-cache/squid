@@ -1522,8 +1522,6 @@ HttpHeaderEntry::parse(const char *field_start, const char *field_end)
 
     Headers[id].stat.seenCount++;
 
-    Headers[id].stat.aliveCount++;
-
     debugs(55, 9, "parsed HttpHeaderEntry: '" << name.buf() << ": " << value.buf() << "'");
 
     return new HttpHeaderEntry(id, name.buf(), value.buf());
