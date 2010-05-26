@@ -1344,7 +1344,7 @@ getOutgoingAddr(HttpRequest * request, struct peer *dst_peer)
                 return request->indirect_client_addr;
             else
 #endif
-               return request->client_addr;
+                return request->client_addr;
         }
         // else no tproxy today ...
     }
