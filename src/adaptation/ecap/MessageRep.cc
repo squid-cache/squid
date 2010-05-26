@@ -1,7 +1,6 @@
 /*
- * DEBUG: section XXX
+ * DEBUG: section 93    eCAP Interface
  */
-
 #include "squid.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"

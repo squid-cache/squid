@@ -1,5 +1,5 @@
 /*
- * DEBUG: section XXX
+ * DEBUG: section 93    Adaptation
  */
 
 #include "squid.h"
