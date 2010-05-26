@@ -1365,11 +1365,6 @@ This section gives an account of those changes in three categories:
 	<p>Disable error page localization for visitors.
 	<p>error_directory option is required if this option is used.
 
-	<tag>--disable-caps</tag>
-	<p>Build without libcap support. The default is to auto-detect system capabilities
-	   and enable support when possible.
-	<p>NOTE: Disabling this or building without libcap support will break TPROXY support.
-
 	<tag>--disable-ipv6</tag>
 	<p>Build without IPv6 support. The default is to auto-detect system capabilities
 	   and build with IPv6 when possible.
@@ -1385,7 +1380,7 @@ This section gives an account of those changes in three categories:
 	   to the squid developers before doing so.
 
 	<tag>--disable-translation</tag>
-        <p>Prevent Squid generating localized error page templates and manuals.
+        <p>Prevent Squid generating localized error page templates and manuals when built.
            Which is usually tried, but may not be needed.
         <p>This is an optimization for building fast when localization is not needed
            or localization tools are not available.
@@ -1426,6 +1421,11 @@ This section gives an account of those changes in three categories:
 	<tag>--with-po2html=PATH</tag>
 	<p>Absolute path to po2html executable.
 	   Default is to automatically detect the binary.
+
+	<tag>--without-libcap</tag>
+	<p>Build without libcap support. The default is to auto-detect system capabilities
+	   and enable support when possible.
+	<p>NOTE: Disabling this or building without libcap support will break TPROXY support.
 
 </descrip>
 
