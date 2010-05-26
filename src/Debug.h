@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * DEBUG: section 0     Debug Routines
+ * DEBUG: section 00    Debug Routines
  * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

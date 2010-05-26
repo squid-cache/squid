@@ -1,3 +1,6 @@
+/*
+ * DEBUG: section 93    eCAP Interface
+ */
 #include "squid.h"
 #include <libecap/adapter/service.h>
 #include "TextException.h"

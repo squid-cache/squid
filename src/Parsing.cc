@@ -2,7 +2,7 @@
 /*
  * $Id$
  *
- * DEBUG: section 3     Configuration File Parsing
+ * DEBUG: section 03    Configuration File Parsing
  * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

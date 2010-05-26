@@ -1,8 +1,7 @@
-
 /*
  * $Id$
  *
- * DEBUG: section 5     Socket Functions
+ * DEBUG: section 05    Socket Functions
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------

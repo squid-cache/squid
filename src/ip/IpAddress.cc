@@ -1,5 +1,5 @@
 /*
- * DEBUG: section 14   IP Storage and Handling
+ * DEBUG: section 14    IP Storage and Handling
  * AUTHOR: Amos Jeffries
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/

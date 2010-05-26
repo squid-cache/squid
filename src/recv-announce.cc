@@ -2,7 +2,7 @@
 /*
  * $Id$
  *
- * DEBUG: section 0     Announcement Server
+ * DEBUG: section 00    Announcement Server
  * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

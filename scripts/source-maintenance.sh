@@ -1,5 +1,10 @@
 #!/bin/sh
 #
+# This script contains the code run to perform automatic source maintenance
+#
+
+## Source Code Format Enforcement
+#
 # A checker to recursively reformat all source files: .h .c .cc .cci
 # using a custom astyle formatter and to use MD5 to validate that
 # the formatter has not altered the code syntax.
@@ -55,3 +60,12 @@ for FILENAME in `ls -1`; do
     fi
 
 done
+
+#
+#  DEBUG Section listing maintenance
+#
+cat ${ROOT}/{compat,src,lib,include}/*{.,/*.,/*/*.,/*/*/*.}{c,cc,h} 2>/dev/null \
+	| grep " DEBUG:" \
+	| sed -e 's/ \* DEBUG: //' \
+	| sort -u \
+	| sort -n >${ROOT}/doc/debug-sections.txt

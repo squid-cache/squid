@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * DEBUG: section 9     File Transfer Protocol (FTP)
+ * DEBUG: section 09    File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

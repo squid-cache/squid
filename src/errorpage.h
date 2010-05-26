@@ -1,5 +1,5 @@
 /*
- * DEBUG: section 4     Error Generation
+ * DEBUG: section 04    Error Generation
  * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
