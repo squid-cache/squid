@@ -2278,7 +2278,7 @@ parse_wccp2_service_ports(char *options, int portlist[])
         port = strsep(&tmp2, ",");
     }
 
-    if (i == 8) {
+    if (i == WCCP2_NUMPORTS && port) {
         fatalf("parse_wccp2_service_ports: too many ports (maximum: 8) in list '%s'\n", options);
     }
 
