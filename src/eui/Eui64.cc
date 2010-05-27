@@ -1,5 +1,5 @@
 /*
- * DEBUG: section ??	EUI-64 Handling
+ * DEBUG: section 89    EUI-64 Handling
  * AUTHOR: Amos Jeffries
  *
  * Copyright (c) 2009, Amos Jeffries <squid3@treenet.co.nz>

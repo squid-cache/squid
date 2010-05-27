@@ -1,5 +1,5 @@
 /*
- * DEBUG: section 5     Listener Socket Handler
+ * DEBUG: section 05    Listener Socket Handler
  * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
