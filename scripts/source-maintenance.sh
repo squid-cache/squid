@@ -21,7 +21,12 @@ else
 fi
 
 ROOT=`bzr root`
+
+srcformat ()
+{
 PWD=`pwd`
+echo "FORMAT: ${PWD}..."
+
 for FILENAME in `ls -1`; do
 
     case ${FILENAME} in
@@ -55,16 +60,19 @@ for FILENAME in `ls -1`; do
 
     if test -d $FILENAME ; then
 	cd $FILENAME
-	$ROOT/scripts/srcformat.sh || exit 1
+	srcformat || exit 1
 	cd ..
     fi
 
 done
+}
+
+srcformat || exit 1
 
 #
 #  DEBUG Section listing maintenance
 #
-cat ${ROOT}/{compat,src,lib,include}/*{.,/*.,/*/*.,/*/*/*.}{c,cc,h} 2>/dev/null \
+cat ${ROOT}/{compat,src,lib,include}/*{.,/*.,/*/*.,/*/*/*.}{h,c,cc,cci} 2>/dev/null \
 	| grep " DEBUG:" \
 	| sed -e 's/ \* DEBUG: //' \
 	| sort -u \
