@@ -1196,7 +1196,12 @@ getOutgoingAddress(HttpRequest * request, Comm::Connection::Pointer conn)
     // maybe use TPROXY client address
     if (request && request->flags.spoof_client_ip) {
         if (!conn->getPeer() || !conn->getPeer()->options.no_tproxy) {
-            conn->local = request->client_addr;
+#if FOLLOW_X_FORWARDED_FOR && LINUX_NETFILTER
+            if (Config.onoff.tproxy_uses_indirect_client)
+                conn->local = request->indirect_client_addr;
+            else
+#endif
+                conn->local = request->client_addr;
             // some flags need setting on the socket to use this address
             conn->flags |= COMM_DOBIND;
             conn->flags |= COMM_TRANSPARENT;

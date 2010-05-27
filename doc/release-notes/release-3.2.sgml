@@ -163,11 +163,15 @@ This section gives a thorough account of those changes in three categories:
 <sect1>New tags<label id="newtags">
 <p>
 <descrip>
+	<tag>adapted_http_access</tag>
+	<p>Access control based on altered HTTP request following adaptation alterations (ICAP, eCAP, URL rewriter).
+	An upgraded drop-in replacement for <em>http_access2</em> found in Squid-2.
+
 	<tag>eui_lookup</tag>
-	<p> Whether to lookup the EUI or MAC address of a connected client.
+	<p>Whether to lookup the EUI or MAC address of a connected client.
 
 	<tag>memory_cache_mode</tag>
-	<p> Controls which objects to keep in the memory cache (cache_mem)
+	<p>Controls which objects to keep in the memory cache (cache_mem)
 	<verb>
 	'always'  Keep most recently fetched objects in memory (default)
 	
@@ -179,13 +183,23 @@ This section gives a thorough account of those changes in three categories:
 	</verb>
 
 	<tag>logfile_daemon</tag>
-	<p>Ported from 2.7
+	<p>Ported from 2.7. Specify the file I/O daemon helper to run for logging.
+
+	<tag>tproxy_uses_indirect_client</tag>
+	<p>Controls whether the indirect client address found in the X-Forwarded-For
+	header is used for spoofing instead of the directly connected client address.
+	Requires both --enable-follow-x-forwarded-for and --enable-linux-netfilter
 
 </descrip>
 
 <sect1>Changes to existing tags<label id="modifiedtags">
 <p>
 <descrip>
+	<tag>access_log</tag>
+	<p>New <em>daemon</em> module to send each log line as text data to a file I/O daemon.
+	<p>New <em>tcp</em> module to send each log line as text data to a TCP receiver.
+	<p>New <em>udp</em> module to send each log line as text data to a UDP receiver.
+
 	<tag>acl random</tag>
 	<p>New type <em>random</em>. Pseudo-randomly match requests based on a configured probability.
 
@@ -259,6 +273,9 @@ This section gives an account of those changes in three categories:
 	<p>Enable Support for handling EUI operations.
 	   This includes ARP lookups for MAC (EUI-48) addresses and the ACL arp type tests.
 
+	<tag>--enable-log-daemon-auth-helpers</tag>
+	<p>Build helpers for logging I/O.
+
 	<tag>--enable-url-rewrite-helpers</tag>
 	<p>Build helpers for some basic URL-rewrite actions. For use by url_rewrite_program.
 	   If omitted or set to =all then all bundled helpers that are able to build will be built.
@@ -309,6 +326,7 @@ This section gives an account of those changes in three categories:
 	<tag>http_port</tag>
 	<p><em>no-connection-auth</em> replaced by <em>connection-auth=[on|off]</em>. Default is ON.
 	<p><em>transparent</em> option replaced by <em>intercept</em>
+	<p><em>http11</em> obsolete.
 
 	<tag>http_access2</tag>
 	<p>Replaced by <em>adapted_http_access</em>
@@ -462,7 +480,6 @@ This section gives an account of those changes in three categories:
 
 	<tag>http_port</tag>
 	<p><em>act-as-origin</em> not yet ported from 2.7
-	<p><em>http11</em> not yet ported from 2.7
 	<p><em>urlgroup=</em> not yet ported from 2.6
 
 	<tag>ignore_ims_on_miss</tag>

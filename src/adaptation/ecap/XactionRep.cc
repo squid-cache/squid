@@ -1,3 +1,6 @@
+/*
+ * DEBUG: section 93    eCAP Interface
+ */
 #include "squid.h"
 #include <libecap/common/area.h>
 #include <libecap/common/delay.h>

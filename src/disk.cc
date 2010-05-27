@@ -1,8 +1,7 @@
-
 /*
  * $Id$
  *
- * DEBUG: section 6     Disk I/O Routines
+ * DEBUG: section 06    Disk I/O Routines
  * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
