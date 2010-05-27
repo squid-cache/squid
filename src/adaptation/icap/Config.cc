@@ -59,9 +59,7 @@ Adaptation::Icap::Config::~Config()
 Adaptation::ServicePointer
 Adaptation::Icap::Config::createService(const Adaptation::ServiceConfig &cfg)
 {
-    Adaptation::Icap::ServiceRep::Pointer s = new Adaptation::Icap::ServiceRep(cfg);
-    s->setSelf(s);
-    return s.getRaw();
+    return new Adaptation::Icap::ServiceRep(cfg);
 }
 
 time_t Adaptation::Icap::Config::connect_timeout(bool bypassable) const
