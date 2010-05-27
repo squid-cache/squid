@@ -83,7 +83,7 @@ AuthScheme::GetSchemes()
 void
 AuthScheme::FreeAll()
 {
-//    assert(shutting_down);
+    assert(shutting_down);
 
     while (GetSchemes().size()) {
         AuthScheme::Pointer scheme = GetSchemes().back();

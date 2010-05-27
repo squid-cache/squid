@@ -509,7 +509,6 @@ AuthDigestConfig::rotateHelpers()
     /* NP: dynamic helper restart will ensure they start up again as needed. */
 }
 
-
 /** delete the digest request structure. Does NOT delete related structures */
 void
 digestScheme::done()
@@ -645,7 +644,6 @@ DigestUser::ttl() const
 
     return min(nonce_ttl, global_ttl);
 }
-
 
 /* Initialize helpers and the like for this auth scheme. Called AFTER parsing the
  * config file */
