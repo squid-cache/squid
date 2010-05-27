@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * DEBUG: section 0     WWW Client
+ * DEBUG: section --    WWW Client
  * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
