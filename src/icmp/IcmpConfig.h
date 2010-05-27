@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * DEBUG: section 3     Configuration Settings
+ * DEBUG: section 03    Configuration Settings
  * AUTHOR: Amos Jeffries
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

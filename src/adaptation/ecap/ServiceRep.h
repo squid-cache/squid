@@ -1,6 +1,6 @@
-
 /*
  * $Id$
+ * DEBUG: section 93    eCAP Interface
  */
 
 #ifndef SQUID_ECAP_SERVICE_REP_H
@@ -27,12 +27,8 @@ public:
     virtual ~ServiceRep();
 
     typedef libecap::shared_ptr<libecap::adapter::Service> AdapterService;
-    void noteService(const AdapterService &s);
 
     virtual void finalize();
-
-    // call when the service is no longer needed or valid
-    virtual void invalidate();
 
     virtual bool probed() const;
     virtual bool up() const;
@@ -47,10 +43,24 @@ public:
 
     virtual const char *status() const;
 
+    virtual void detach();
+    virtual bool detached() const;
+
 private:
     AdapterService theService; // the actual adaptation service we represent
+    bool           isDetached;
 };
 
+/// register loaded eCAP module service
+extern void RegisterAdapterService(const ServiceRep::AdapterService& adapterService);
+/// unregister loaded eCAP module service by service uri
+extern void UnregisterAdapterService(const String& serviceUri);
+
+/// returns loaded eCAP module service by service uri
+extern ServiceRep::AdapterService FindAdapterService(const String& serviceUri);
+
+/// check for loaded eCAP services without matching ecap_service in squid.conf
+extern void CheckUnusedAdapterServices(const Services& services);
 } // namespace Ecap
 } // namespace Adaptation
 

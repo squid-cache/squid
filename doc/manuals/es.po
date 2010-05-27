@@ -3026,7 +3026,7 @@ msgstr "- pueden usarse líneas de comentarios y deben de comenzar por '#\";"
 msgid ""
 "Others methods may be supported by your cyrus-sasl implementation - consult "
 "your cyrus-sasl documentation for information."
-msgstr ""
+msgstr "Otros métodos puede ser soportados"
 
 #. type: Plain text
 #: helpers/digest_auth/file/digest_file_auth.8:7
@@ -3124,13 +3124,13 @@ msgstr ""
 #. type: Plain text
 #: helpers/basic_auth/SASL/basic_sasl_auth.8:36
 msgid "use sasldb - the default if no conf file is installed."
-msgstr ""
+msgstr "usar sasldb - por defecto si no hay fichero de configuración instalado."
 
 #. type: Plain text
 #: helpers/basic_auth/SASL/basic_sasl_auth.8:43
 #, no-wrap
 msgid " - use slightly less traditional /etc/shadow\n"
-msgstr ""
+msgstr " - usar el ligeramente menos tradicional /etc/shadow\n"
 
 #. type: Plain text
 #: helpers/digest_auth/file/digest_file_auth.8:64

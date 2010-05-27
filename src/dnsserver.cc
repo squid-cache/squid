@@ -1,5 +1,5 @@
 /*
- * DEBUG: section 0     DNS Resolver
+ * DEBUG: section 00    DNS Resolver Daemon
  * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

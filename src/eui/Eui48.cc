@@ -1,5 +1,5 @@
 /*
- * DEBUG: section ??	EUI Lookup
+ * DEBUG: section 89    EUI-48 Lookup
  * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
