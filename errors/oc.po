@@ -78,7 +78,7 @@ msgstr ""
 
 #: templates/ERR_CACHE_ACCESS_DENIED:3 templates/ERR_CACHE_ACCESS_DENIED:5
 msgid "Cache Access Denied."
-msgstr ""
+msgstr "Accès a l'amagatal interdich."
 
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:3
 #: templates/ERR_CACHE_MGR_ACCESS_DENIED:5
@@ -87,15 +87,15 @@ msgstr ""
 
 #: templates/ERR_URN_RESOLVE:5
 msgid "Cannot Resolve URN"
-msgstr ""
+msgstr "Impossible de resòlvre l'URN"
 
 #: templates/ERR_LIFETIME_EXP:5
 msgid "Connection Lifetime Expired"
-msgstr ""
+msgstr "Durada de vida de la connexion depassada"
 
 #: templates/ERR_CONNECT_FAIL:5
 msgid "Connection to %I failed."
-msgstr ""
+msgstr "La connexion a %I a fracassat."
 
 #: templates/ERR_INVALID_REQ:10
 msgid "Content-Length missing for POST or PUT requests."
@@ -164,7 +164,7 @@ msgstr ""
 #: templates/ERR_UNSUP_REQ:1 templates/ERR_WRITE_ERROR:1
 #: templates/ERR_ZERO_SIZE_OBJECT:1
 msgid "ERROR: The requested URL could not be retrieved"
-msgstr ""
+msgstr "ERREUR : L'URL demandada a pas pogut èsser cargada"
 
 #: templates/ERR_URN_RESOLVE:1
 msgid "ERROR: The requested URN could not be retrieved"
@@ -172,7 +172,7 @@ msgstr ""
 
 #: templates/ERR_ESI:5
 msgid "ESI Processing failed."
-msgstr ""
+msgstr "Lo tractament ESI a fracassat."
 
 #: templates/ERR_FTP_PUT_CREATED:1
 msgid "FTP PUT Successful: File Created"
@@ -204,15 +204,15 @@ msgstr "Fichièr mes a jorn"
 
 #: templates/ERR_AGENT_CONFIGURE:6 templates/ERR_AGENT_WPAD:6
 msgid "For Firefox browsers go to: <ul>"
-msgstr ""
+msgstr "Per Firefox, anatz a : <ul>"
 
 #: templates/ERR_AGENT_CONFIGURE:9 templates/ERR_AGENT_WPAD:8
 msgid "For Internet Explorer browsers go to: <ul>"
-msgstr ""
+msgstr "Per Internet Explorer, anatz a : <ul>"
 
 #: templates/ERR_AGENT_CONFIGURE:12 templates/ERR_AGENT_WPAD:11
 msgid "For Opera browsers go to: <ul>"
-msgstr ""
+msgstr "Per Opera, anatz a : <ul>"
 
 #: templates/ERR_FORWARDING_DENIED:5
 msgid "Forwarding Denied."
@@ -288,7 +288,7 @@ msgstr "URL invalida"
 
 #: templates/ERR_INVALID_REQ:8
 msgid "Missing HTTP Identifier (HTTP/1.0)."
-msgstr ""
+msgstr "Abséncia d'identificant HTTP (HTTP/1.0)"
 
 #: templates/ERR_INVALID_REQ:7
 msgid "Missing URL."
@@ -305,7 +305,7 @@ msgstr ""
 
 #: templates/ERR_INVALID_REQ:6
 msgid "Missing or unknown request method."
-msgstr ""
+msgstr "Metòde de requèsta desconegut o perdut."
 
 #: templates/ERR_NO_RELAY:5
 msgid "No Wais Relay"
@@ -313,11 +313,11 @@ msgstr ""
 
 #: templates/ERR_FTP_PUT_CREATED:2 templates/ERR_FTP_PUT_MODIFIED:2
 msgid "Operation successful"
-msgstr ""
+msgstr "Ooperacion capitada"
 
 #: templates/ERR_DIR_LISTING:5
 msgid "Parent Directory"
-msgstr ""
+msgstr "Dorsièr parent"
 
 #: templates/ERR_CACHE_ACCESS_DENIED:7
 msgid ""
@@ -413,7 +413,7 @@ msgstr "Lo servidor DNS a tornat :"
 
 #: templates/ERR_ESI:6
 msgid "The ESI processor returned:"
-msgstr ""
+msgstr "Lo processor ESI a respondut :"
 
 #: templates/ERR_FTP_UNAVAILABLE:4
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
@@ -427,7 +427,7 @@ msgstr ""
 
 #: templates/ERR_ICAP_FAILURE:9
 msgid "The ICAP server is not reachable."
-msgstr ""
+msgstr "Lo servidor ICAP es pas jonhible."
 
 #: templates/ERR_FTP_NOT_FOUND:4
 msgid "The following URL could not be retrieved: <a href=\"%U\">%U</a>"
@@ -449,6 +449,8 @@ msgid ""
 "The following error was encountered while trying to retrieve the URL: <a "
 "href=\"%U\">%U</a>"
 msgstr ""
+"L'error seguenta s'es producha en ensajant d'accedir a l'URL : <a href=\"%U\">"
+"%U</a>"
 
 #: templates/ERR_URN_RESOLVE:4
 msgid ""
@@ -462,7 +464,7 @@ msgstr ""
 
 #: templates/ERR_TOO_BIG:5
 msgid "The request or reply is too large."
-msgstr ""
+msgstr "La requèsta o la responsa es tròp gròssa."
 
 #: templates/ERR_ACCESS_DENIED:3 templates/ERR_CANNOT_FORWARD:3
 #: templates/ERR_CONNECT_FAIL:3 templates/ERR_DNS_FAIL:3 templates/ERR_ESI:3
@@ -478,7 +480,7 @@ msgstr ""
 #: templates/ERR_TOO_BIG:3 templates/ERR_UNSUP_REQ:3
 #: templates/ERR_WRITE_ERROR:3 templates/ERR_ZERO_SIZE_OBJECT:3
 msgid "The requested URL could not be retrieved"
-msgstr ""
+msgstr "L'URL demandada a pas pogut èsser cargada"
 
 #: templates/ERR_FTP_FAILURE:6 templates/ERR_FTP_FORBIDDEN:6
 #: templates/ERR_FTP_NOT_FOUND:6 templates/ERR_FTP_PUT_ERROR:6
@@ -491,7 +493,7 @@ msgstr "Lo servidor a respondut :"
 #: templates/ERR_SECURE_CONNECT_FAIL:6 templates/ERR_SOCKET_FAILURE:6
 #: templates/ERR_WRITE_ERROR:6
 msgid "The system returned: <i>%E</i>"
-msgstr ""
+msgstr "Lo sistèma a tornat : <i>%E</i>"
 
 #: templates/ERR_NO_RELAY:6
 msgid ""
@@ -589,7 +591,7 @@ msgstr ""
 
 #: templates/ERR_DNS_FAIL:5
 msgid "Unable to determine IP address from host name <q>%H</q>"
-msgstr ""
+msgstr "Impossible d'associar una adreça IP a la maquina <q>%H</q>"
 
 #: templates/ERR_CANNOT_FORWARD:5
 msgid "Unable to forward this request at this time."
@@ -650,7 +652,7 @@ msgstr ""
 #: templates/ERR_UNSUP_REQ:7 templates/ERR_URN_RESOLVE:7
 #: templates/ERR_WRITE_ERROR:8 templates/ERR_ZERO_SIZE_OBJECT:7
 msgid "Your cache administrator is <a href=\"mailto:%w%W\">%w</a>."
-msgstr ""
+msgstr "Vòstre administrator d'amagatal es <a href=\"mailto:%w\">%w</a>."
 
 #: templates/ERR_INVALID_RESP:6
 msgid ""
@@ -660,7 +662,7 @@ msgstr ""
 
 #: templates/ERR_ESI:8
 msgid "Your webmaster is <a href=\"mailto:%w\">%w</a>."
-msgstr ""
+msgstr "Vòstre webmèstre es <a href=\"mailto:%w\">%w</a>."
 
 #: templates/ERR_ZERO_SIZE_OBJECT:5
 msgid "Zero Sized Reply"

@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * DEBUG: section 3     Configuration File Parsing
+ * DEBUG: section 03    Configuration File Parsing
  * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -2250,7 +2250,7 @@ static void
 dump_refreshpattern(StoreEntry * entry, const char *name, refresh_t * head)
 {
     while (head != NULL) {
-        storeAppendPrintf(entry, "%s%s %s %d %d%% %d\n",
+        storeAppendPrintf(entry, "%s%s %s %d %d%% %d",
                           name,
                           head->flags.icase ? " -i" : null_string,
                           head->pattern,
@@ -2260,6 +2260,9 @@ dump_refreshpattern(StoreEntry * entry, const char *name, refresh_t * head)
 
         if (head->flags.refresh_ims)
             storeAppendPrintf(entry, " refresh-ims");
+
+        if (head->flags.store_stale)
+            storeAppendPrintf(entry, " store-stale");
 
 #if HTTP_VIOLATIONS
 
@@ -2307,6 +2310,8 @@ parse_refreshpattern(refresh_t ** head)
     double pct = 0.0;
     time_t max = 0;
     int refresh_ims = 0;
+    int store_stale = 0;
+
 #if HTTP_VIOLATIONS
 
     int override_expire = 0;
@@ -2362,6 +2367,8 @@ parse_refreshpattern(refresh_t ** head)
     while ((token = strtok(NULL, w_space)) != NULL) {
         if (!strcmp(token, "refresh-ims")) {
             refresh_ims = 1;
+        } else if (!strcmp(token, "store-stale")) {
+            store_stale = 1;
 #if HTTP_VIOLATIONS
 
         } else if (!strcmp(token, "override-expire"))
@@ -2414,6 +2421,9 @@ parse_refreshpattern(refresh_t ** head)
 
     if (refresh_ims)
         t->flags.refresh_ims = 1;
+
+    if (store_stale)
+        t->flags.store_stale = 1;
 
 #if HTTP_VIOLATIONS
 

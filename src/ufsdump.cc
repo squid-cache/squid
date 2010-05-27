@@ -1,8 +1,7 @@
-
 /*
  * $Id$
  *
- * DEBUG: section 0     UFS Store Dump
+ * DEBUG: section 00    UFS Store Dump Tool
  * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
