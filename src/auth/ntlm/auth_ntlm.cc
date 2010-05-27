@@ -281,7 +281,6 @@ NTLMUser::ttl() const
     return -1; // NTLM credentials cannot be cached.
 }
 
-
 static void
 authenticateNTLMStats(StoreEntry * sentry)
 {
