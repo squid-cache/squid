@@ -1,6 +1,6 @@
-
 /*
  * $Id$
+ * DEBUG: section 93    eCAP Interface
  */
 
 #ifndef SQUID__ECAP__MESSAGE_REP_H

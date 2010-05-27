@@ -1,8 +1,7 @@
-
 /*
  * $Id$
  *
- * DEBUG: section 8     Swap File Bitmap
+ * DEBUG: section 08    Swap File Bitmap
  * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

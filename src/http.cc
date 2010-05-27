@@ -438,7 +438,7 @@ HttpStateData::cacheableReply()
          * unless we know how to refresh it.
          */
 
-        if (!refreshIsCachable(entry)) {
+        if (!refreshIsCachable(entry) && !REFRESH_OVERRIDE(store_stale)) {
             debugs(22, 3, "refreshIsCachable() returned non-cacheable..");
             return 0;
         }
@@ -1205,7 +1205,8 @@ HttpStateData::continueAfterParsingHeader()
             debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: Headers did not parse at all for " << entry->url() << " AKA " << orig_request->GetHost() << orig_request->urlpath.termedBuf() );
         } else {
             error = ERR_ZERO_SIZE_OBJECT;
-            debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: No object data received for " << entry->url() << " AKA " << orig_request->GetHost() << orig_request->urlpath.termedBuf() );
+            debugs(11, (orig_request->flags.accelerated?DBG_IMPORTANT:2), "WARNING: HTTP: Invalid Response: No object data received for " <<
+                   entry->url() << " AKA " << orig_request->GetHost() << orig_request->urlpath.termedBuf() );
         }
     }
 

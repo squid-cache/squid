@@ -1,8 +1,7 @@
-
 /*
  * $Id$
  *
- * DEBUG: section 1     Main Loop
+ * DEBUG: section 01    Main Loop
  * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

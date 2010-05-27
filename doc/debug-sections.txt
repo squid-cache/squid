@@ -1,37 +1,38 @@
-
  * DEBUG:
 none
 none          Common Removal Policy
 none          ETag parsing support
 none          FDE
-none          Generate squid.conf.default and cf_parser.h
+none          Generate squid.conf.default and cf_parser.cci
 none          Linked list functions (deprecated)
 none          LRU Removal Policy
 none          Memory Allocation
 none          Refcount allocator
-section 0     Announcement Server
-section 0     Client Database
-section 0     Debug Routines
-section 0     DNS Resolver
-section 0     Hash Tables
-section 0     UFS Store Dump
-section --    External DISKD process implementation.
-section 1     Main Loop
-section 1     Startup and Main Loop
-section 2     Unlink Daemon
-section 3     Configuration File Parsing
-section 4     Error Generation
-section 5     Comms
-section 5     Socket Functions
-section 6     Disk I/O Routines
-section 7     Multicast
-section 8     Swap File Bitmap
-section 9     File Transfer Protocol (FTP)
+section 00    Announcement Server
+section 00    Client Database
+section 00    Debug Routines
+section 00    DNS Resolver Daemon
+section 00    Hash Tables
+section 00    UFS Store Dump Tool
+section 01    Main Loop
+section 01    Startup and Main Loop
+section 02    Unlink Daemon
+section 03    Configuration File Parsing
+section 03    Configuration Settings
+section 04    Error Generation
+section 05    Comm
+section 05    Listener Socket Handler
+section 05    Socket Functions
+section 06    Disk I/O Routines
+section 07    Multicast
+section 08    Swap File Bitmap
+section 09    File Transfer Protocol (FTP)
 section 10    Gopher
 section 11    Hypertext Transfer Protocol (HTTP)
-section 12    Internet Cache Protocol
+section 12    Internet Cache Protocol (ICP)
 section 13    High Level Memory Pool Management
 section 14    IP Cache
+section 14    IP Storage and Handling
 section 15    Neighbor Routines
 section 16    Cache Manager Objects
 section 17    Request Forwarding
@@ -53,7 +54,8 @@ section 21    Time Functions
 section 22    Refresh Calculation
 section 23    URL Parsing
 section 23    URL Scheme parsing
-section 25    MIME Parsing
+section 25    MiME Header Parsing
+section 25    MIME Parsing and Internal Icons
 section 26    Secure Sockets Layer Proxy
 section 27    Cache Announcer
 section 28    Access Control
@@ -69,6 +71,8 @@ section 35    FQDN Cache
 section 37    ICMP Routines
 section 38    Network Measurement Database
 section 39    Cache Array Routing Protocol
+section 39    Peer source hash based selection
+section 39    Peer user hash based selection
 section 40    Referer Logging
 section 40    User-Agent Logging
 section 41    Event Processing
@@ -113,6 +117,7 @@ section 74    HTTP Message
 section 75    WHOIS protocol
 section 76    Internal Squid Object handling
 section 77    Delay Pools
+section 78    DNS lookups
 section 78    DNS lookups; interacts with lib/rfc1035.c
 section 79    Disk IO Routines
 section 79    Squid-side DISKD I/O functions.
@@ -130,8 +135,14 @@ section 85    Client-side Request Routines
 section 86    ESI processing
 section 87    Client-side Stream routines.
 section 88    Client-side Reply Routines
-section 89    NAT / IP Interception 
+section 89    EUI-48 Lookup
+section 89    EUI-64 Handling
+section 89    NAT / IP Interception
 section 90    HTTP Cache Control Header
 section 90    Storage Manager Client-Side Interface
 section 92    Storage File System
+section 93    Adaptation
+section 93    eCAP Interface
 section 93    ICAP (RFC 3507) Client
+section --    External DISKD process implementation.
+section --    Unlink Daemon
