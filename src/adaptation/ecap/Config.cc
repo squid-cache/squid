@@ -1,8 +1,7 @@
-
 /*
  * $Id$
+ * DEBUG: section 93    eCAP Interface
  */
-
 #include "squid.h"
 
 #include <libecap/common/registry.h>

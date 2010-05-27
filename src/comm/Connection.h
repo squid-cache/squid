@@ -1,5 +1,5 @@
 /*
- * DEBUG: section 5     Socket Functions
+ * DEBUG: section 05    Socket Functions
  * AUTHOR: Amos Jeffries
  * AUTHOR: Robert Collins
  *
