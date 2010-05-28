@@ -1,8 +1,7 @@
-
 /*
  * $Id$
  *
- * DEBUG: section 5     Comm
+ * DEBUG: section 05    Comm
  */
 
 #include "DescriptorSet.h"

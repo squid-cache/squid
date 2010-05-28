@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * DEBUG: section 1     Startup and Main Loop
+ * DEBUG: section 01    Startup and Main Loop
  * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -736,6 +736,24 @@ mainReconfigureFinish(void *)
     parseEtcHosts();
     errorInitialize();		/* reload error pages */
     accessLogInit();
+
+#if USE_LOADABLE_MODULES
+    LoadableModulesConfigure(Config.loadable_module_names);
+#endif
+
+#if USE_ADAPTATION
+    bool enableAdaptation = false;
+#if ICAP_CLIENT
+    Adaptation::Icap::TheConfig.finalize();
+    enableAdaptation = Adaptation::Icap::TheConfig.onoff || enableAdaptation;
+#endif
+#if USE_ECAP
+    Adaptation::Ecap::TheConfig.finalize(); // must be after we load modules
+    enableAdaptation = Adaptation::Ecap::TheConfig.onoff || enableAdaptation;
+#endif
+    Adaptation::Config::Finalize(enableAdaptation);
+#endif
+
 #if ICAP_CLIENT
     icapLogOpen();
 #endif
