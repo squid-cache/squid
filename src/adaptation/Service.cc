@@ -1,5 +1,5 @@
 /*
- * DEBUG: section XXX
+ * DEBUG: section 93    Adaptation
  */
 
 #include "squid.h"
@@ -67,4 +67,10 @@ Adaptation::FindService(const Service::Id& key)
             return *i;
     }
     return NULL;
+}
+
+void Adaptation::DetachServices()
+{
+    while (!AllServices().empty())
+        AllServices().pop_back()->detach();
 }

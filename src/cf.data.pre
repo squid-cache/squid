@@ -796,20 +796,19 @@ DOC_START
 	If a request reaches us from a source that is allowed by this
 	configuration item, then we consult the X-Forwarded-For header
 	to see where that host received the request from.  If the
-	X-Forwarded-For header contains multiple addresses, and if
-	acl_uses_indirect_client is on, then we continue backtracking
-	until we reach an address for which we are not allowed to
-	follow the X-Forwarded-For header, or until we reach the first
-	address in the list.  (If acl_uses_indirect_client is off, then
-	it's impossible to backtrack through more than one level of
-	X-Forwarded-For addresses.)
+	X-Forwarded-For header contains multiple addresses, we continue
+	backtracking until we reach an address for which we are not allowed
+	to follow the X-Forwarded-For header, or until we reach the first
+	address in the list. For the purpose of ACL used in the
+	follow_x_forwarded_for directive the src ACL type always matches
+	the address we are testing and srcdomain matches its rDNS.
 
 	The end result of this process is an IP address that we will
 	refer to as the indirect client address.  This address may
 	be treated as the client address for access control, ICAP, delay
 	pools and logging, depending on the acl_uses_indirect_client,
-	icap_uses_indirect_client, delay_pool_uses_indirect_client and
-	log_uses_indirect_client options.
+	icap_uses_indirect_client, delay_pool_uses_indirect_client, 
+	log_uses_indirect_client and tproxy_uses_indirect_client options.
 
 	This clause only supports fast acl types.
 	See http://wiki.squid-cache.org/SquidFaq/SquidAcl for details.
@@ -865,6 +864,26 @@ DOC_START
 	Controls whether the indirect client address
 	(see follow_x_forwarded_for) is used instead of the
 	direct client address in the access log.
+DOC_END
+
+NAME: tproxy_uses_indirect_client
+COMMENT: on|off
+TYPE: onoff
+IFDEF: FOLLOW_X_FORWARDED_FOR&&LINUX_NETFILTER
+DEFAULT: off
+LOC: Config.onoff.tproxy_uses_indirect_client
+DOC_START
+	Controls whether the indirect client address
+	(see follow_x_forwarded_for) is used instead of the
+	direct client address when spoofing the outgoing client.
+
+	This has no effect on requests arriving in non-tproxy
+	mode ports.
+
+	SECURITY WARNING: Usage of this option is dangerous
+	and should not be used trivially. Correct configuration
+	of folow_x_forewarded_for with a limited set of trusted
+	sources is required to prevent abuse of your proxy.
 DOC_END
 
 NAME: http_access
@@ -2735,6 +2754,10 @@ DOC_START
 		Place: The destination host name or IP and port.
 		Place Format:   \\host:port
 
+	tcp	To send each log line as text data to a TCP receiver.
+		Place: The destination host name or IP and port.
+		Place Format:   \\host:port
+
 	Default:
 		access_log daemon:@DEFAULT_ACCESS_LOG@ squid
 DOC_END
@@ -3445,6 +3468,7 @@ DOC_START
 		 ignore-private
 		 ignore-auth
 		 refresh-ims
+		 store-stale
 
 		override-expire enforces min age even if the server
 		sent an explicit expiry time (e.g., with the
@@ -3501,6 +3525,12 @@ DOC_START
 		when a client issues an If-Modified-Since request. This
 		ensures that the client will receive an updated version
 		if one is available.
+
+		store-stale stores responses even if they don't have explicit 
+		freshness or a validator (i.e., Last-Modified or an ETag) 
+		present, or if they're already stale. By default, Squid will 
+		not cache such responses because they usually can't be
+		reused. Note that such responses will be stale by default.
 
 	Basically a cached object is:
 

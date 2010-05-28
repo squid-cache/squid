@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * DEBUG: section 9     File Transfer Protocol (FTP)
+ * DEBUG: section 09    File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -1520,6 +1520,12 @@ FtpStateData::writeCommand(const char *buf)
     safe_free(ctrl.last_reply);
 
     ctrl.last_command = ebuf;
+
+    if (!canSend(ctrl.fd)) {
+        debugs(9, 2, HERE << "cannot send to closing ctrl FD " << ctrl.fd);
+        // TODO: assert(ctrl.closer != NULL);
+        return;
+    }
 
     typedef CommCbMemFunT<FtpStateData, CommIoCbParams> Dialer;
     AsyncCall::Pointer call = asyncCall(9, 5, "FtpStateData::ftpWriteCommandCallback",

@@ -1338,8 +1338,14 @@ Ip::Address
 getOutgoingAddr(HttpRequest * request, struct peer *dst_peer)
 {
     if (request && request->flags.spoof_client_ip) {
-        if (!dst_peer || !dst_peer->options.no_tproxy)
-            return request->client_addr;
+        if (!dst_peer || !dst_peer->options.no_tproxy) {
+#if FOLLOW_X_FORWARDED_FOR && LINUX_NETFILTER
+            if (Config.onoff.tproxy_uses_indirect_client)
+                return request->indirect_client_addr;
+            else
+#endif
+                return request->client_addr;
+        }
         // else no tproxy today ...
     }
 
