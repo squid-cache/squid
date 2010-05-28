@@ -1963,8 +1963,8 @@ SQUID_YESNO([$enableval],
             [--disable-mempools option takes no arguments])
 ])
 # notice: the definition's value meaning is INVERTED
-SQUID_DEFINE_BOOL(USE_MEMPOOLS,${enable_mempools:=yes},
-   [Disable Memory Pools support and fall back to system malloc])
+SQUID_DEFINE_BOOL(USE_MEMPOOLS,${enable_mempools:=no},
+   [Enable internal Memory Pools support (experimental)])
 AC_MSG_NOTICE([MemPools enabled: $enable_mempools])
 
 dnl Enable WIN32 Service compile mode
