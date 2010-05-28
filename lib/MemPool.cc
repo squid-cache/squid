@@ -218,8 +218,13 @@ MemImplementingAllocator::flushMeters()
     }
     calls = alloc_calls;
     if (calls) {
-        meter.gb_saved.count += calls;
+        meter.gb_allocated.count += calls;
         alloc_calls = 0;
+    }
+    calls = saved_calls;
+    if (calls) {
+        meter.gb_saved.count += calls;
+        saved_calls = 0;
     }
 }
 
@@ -227,6 +232,7 @@ void
 MemImplementingAllocator::flushMetersFull()
 {
     flushMeters();
+    getMeter().gb_allocated.bytes = getMeter().gb_allocated.count * obj_size;
     getMeter().gb_saved.bytes = getMeter().gb_saved.count * obj_size;
     getMeter().gb_freed.bytes = getMeter().gb_freed.count * obj_size;
 }
@@ -237,11 +243,21 @@ MemPoolMeter::flush()
     alloc.level = 0;
     inuse.level = 0;
     idle.level = 0;
+    gb_allocated.count = 0;
+    gb_allocated.bytes = 0;
+    gb_oallocated.count = 0;
+    gb_oallocated.bytes = 0;
     gb_saved.count = 0;
     gb_saved.bytes = 0;
     gb_freed.count = 0;
     gb_freed.bytes = 0;
 }
+
+MemPoolMeter::MemPoolMeter()
+{
+    flush();
+}
+
 /*
  * Updates all pool counters, and recreates TheMeter totals from all pools
  */
@@ -259,8 +275,10 @@ MemPools::flushMeters()
         memMeterAdd(TheMeter.alloc, pool->getMeter().alloc.level * pool->obj_size);
         memMeterAdd(TheMeter.inuse, pool->getMeter().inuse.level * pool->obj_size);
         memMeterAdd(TheMeter.idle, pool->getMeter().idle.level * pool->obj_size);
+        TheMeter.gb_allocated.count += pool->getMeter().gb_allocated.count;
         TheMeter.gb_saved.count += pool->getMeter().gb_saved.count;
         TheMeter.gb_freed.count += pool->getMeter().gb_freed.count;
+        TheMeter.gb_allocated.bytes += pool->getMeter().gb_allocated.bytes;
         TheMeter.gb_saved.bytes += pool->getMeter().gb_saved.bytes;
         TheMeter.gb_freed.bytes += pool->getMeter().gb_freed.bytes;
     }
@@ -441,9 +459,39 @@ MemImplementingAllocator::MemImplementingAllocator(char const *aLabel, size_t aS
         next(NULL),
         alloc_calls(0),
         free_calls(0),
+        saved_calls(0),
         obj_size(RoundedSize(aSize))
 {
-	memPID = ++Pool_id_counter;
+    memPID = ++Pool_id_counter;
+
+    MemImplementingAllocator *last_pool;
+
+    assert(aLabel != NULL && aSize);
+    /* Append as Last */
+    for (last_pool = MemPools::GetInstance().pools; last_pool && last_pool->next;)
+        last_pool = last_pool->next;
+    if (last_pool)
+        last_pool->next = this;
+    else
+        MemPools::GetInstance().pools = this;
+}
+
+MemImplementingAllocator::~MemImplementingAllocator()
+{
+    MemImplementingAllocator *find_pool, *prev_pool;
+
+    assert(MemPools::GetInstance().pools != NULL && "Called MemImplementingAllocator::~MemImplementingAllocator, but no pool exists!");
+
+    /* Pool clean, remove it from List and free */
+    for (find_pool = MemPools::GetInstance().pools, prev_pool = NULL; (find_pool && this != find_pool); find_pool = find_pool->next)
+        prev_pool = find_pool;
+    assert(find_pool != NULL && "pool to destroy not found");
+
+    if (prev_pool)
+        prev_pool->next = next;
+    else
+        MemPools::GetInstance().pools = next;
+    --MemPools::GetInstance().poolCount;
 }
 
 void
