@@ -1,5 +1,5 @@
 /*
- * DEBUG: section 0     CGI Cache Manager
+ * DEBUG: section --    CGI Cache Manager
  * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

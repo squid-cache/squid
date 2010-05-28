@@ -2,7 +2,7 @@
 /*
  * $Id$
  *
- * DEBUG: section 0     Hash Tables
+ * DEBUG: section 00    Hash Tables
  * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

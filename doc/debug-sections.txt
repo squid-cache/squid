@@ -1,17 +1,13 @@
- * DEBUG:
-none
-none          Common Removal Policy
-none          ETag parsing support
-none          FDE
-none          Generate squid.conf.default and cf_parser.cci
-none          Linked list functions (deprecated)
-none          LRU Removal Policy
-none          Memory Allocation
-none          Refcount allocator
+
+section --    CGI Cache Manager
+section --    External DISKD process implementation.
+section --    Refcount allocator
+section --    Unlink Daemon
+section --    WWW Client
 section 00    Announcement Server
 section 00    Client Database
-section 00    Debug Routines
 section 00    DNS Resolver Daemon
+section 00    Debug Routines
 section 00    Hash Tables
 section 00    UFS Store Dump Tool
 section 01    Main Loop
@@ -21,7 +17,6 @@ section 03    Configuration File Parsing
 section 03    Configuration Settings
 section 04    Error Generation
 section 05    Comm
-section 05    Listener Socket Handler
 section 05    Socket Functions
 section 06    Disk I/O Routines
 section 07    Multicast
@@ -54,14 +49,14 @@ section 21    Time Functions
 section 22    Refresh Calculation
 section 23    URL Parsing
 section 23    URL Scheme parsing
-section 25    MiME Header Parsing
 section 25    MIME Parsing and Internal Icons
+section 25    MiME Header Parsing
 section 26    Secure Sockets Layer Proxy
 section 27    Cache Announcer
 section 28    Access Control
 section 29    Authenticator
-section 29    Negotiate Authenticator
 section 29    NTLM Authenticator
+section 29    Negotiate Authenticator
 section 30    Ident (RFC 931)
 section 31    Hypertext Caching Protocol
 section 32    Asynchronous Disk I/O
@@ -125,24 +120,21 @@ section 79    Squid-side Disk I/O functions.
 section 79    Storage Manager COSS Interface
 section 79    Storage Manager UFS Interface
 section 80    WCCP Support
-section 81    aio_xxx() POSIX emulation on Windows
 section 81    CPU Profiling Routines
 section 81    Store HEAP Removal Policies
+section 81    aio_xxx() POSIX emulation on Windows
 section 82    External ACL
 section 83    SSL accelerator support
 section 84    Helper process maintenance
 section 85    Client-side Request Routines
+section 86    ESI Expressions
 section 86    ESI processing
 section 87    Client-side Stream routines.
 section 88    Client-side Reply Routines
-section 89    EUI-48 Lookup
-section 89    EUI-64 Handling
 section 89    NAT / IP Interception
 section 90    HTTP Cache Control Header
 section 90    Storage Manager Client-Side Interface
 section 92    Storage File System
 section 93    Adaptation
-section 93    eCAP Interface
 section 93    ICAP (RFC 3507) Client
-section --    External DISKD process implementation.
-section --    Unlink Daemon
+section 93    eCAP Interface
