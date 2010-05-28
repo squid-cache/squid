@@ -4,6 +4,7 @@
 #include "squid.h"
 #include <libecap/adapter/service.h>
 #include <libecap/common/names.h>
+#include <libecap/common/registry.h>
 #include "TextException.h"
 #include "adaptation/ecap/ServiceRep.h"
 #include "adaptation/ecap/Host.h"
@@ -15,9 +16,14 @@ const libecap::Name Adaptation::Ecap::protocolIcp("ICP", libecap::Name::NextId()
 const libecap::Name Adaptation::Ecap::protocolHtcp("Htcp", libecap::Name::NextId());
 #endif
 
+/// the host application (i.e., Squid) wrapper registered with libecap
+static libecap::shared_ptr<Adaptation::Ecap::Host> TheHost;
+
 Adaptation::Ecap::Host::Host()
 {
     // assign our host-specific IDs to well-known names
+    // this code can run only once
+
     libecap::headerReferer.assignHostId(HDR_REFERER);
 
     libecap::protocolHttp.assignHostId(PROTO_HTTP);
@@ -50,28 +56,8 @@ Adaptation::Ecap::Host::describe(std::ostream &os) const
 void
 Adaptation::Ecap::Host::noteService(const libecap::weak_ptr<libecap::adapter::Service> &weak)
 {
-    // Many ecap_service lines may use the same service URI. Find each
-    // matching service rep, make sure it is an eCAP rep,
-    // and update it with the actual eCAP service.
-    int found = 0;
-
-    libecap::shared_ptr<libecap::adapter::Service> shared(weak);
-    typedef Adaptation::Services::iterator SI;
-    for (SI i = Adaptation::AllServices().begin(); i != Adaptation::AllServices().end(); ++i) {
-        if ((*i)->cfg().uri == shared->uri().c_str()) {
-            ServiceRep *rep = dynamic_cast<ServiceRep*>(i->getRaw());
-            Must(rep);
-            rep->noteService(shared);
-            ++found;
-        }
-    }
-
-    debugs(93,5, HERE << "Found " << found << " ecap_service configs for " <<
-           shared->uri());
-    if (!found) {
-        debugs(93,1, "Warning: ignoring loaded eCAP module service without " <<
-               "a matching ecap_service configuration: " << shared->uri());
-    }
+    Must(!weak.expired());
+    RegisterAdapterService(weak.lock());
 }
 
 static int
@@ -106,4 +92,13 @@ Adaptation::Ecap::Host::closeDebug(std::ostream *debug)
 {
     if (debug)
         Debug::finishDebug();
+}
+
+void
+Adaptation::Ecap::Host::Register()
+{
+    if (!TheHost) {
+        TheHost.reset(new Adaptation::Ecap::Host);
+        libecap::RegisterHost(TheHost);
+    }
 }

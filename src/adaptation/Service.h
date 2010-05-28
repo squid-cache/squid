@@ -27,9 +27,6 @@ public:
     Service(const ServiceConfig &aConfig);
     virtual ~Service();
 
-    // call when the service is no longer needed or valid
-    virtual void invalidate() = 0;
-
     virtual bool probed() const = 0; // see comments above
     virtual bool broken() const;
     virtual bool up() const = 0; // see comments above
@@ -51,6 +48,12 @@ public:
 
     virtual void finalize(); // called after creation
 
+    /// called when removed from the config; the service will be
+    /// auto-destroyed when the last refcounting user leaves
+    virtual void detach() = 0;
+    /// whether detached() was called
+    virtual bool detached() const = 0;
+
 protected:
     ServiceConfig &writeableCfg() { return theConfig; }
 
@@ -63,6 +66,9 @@ typedef Service::Pointer ServicePointer;
 typedef Vector<Adaptation::ServicePointer> Services;
 extern Services &AllServices();
 extern ServicePointer FindService(const Service::Id &key);
+
+/// detach all adaptation services from current configuration
+extern void DetachServices();
 
 } // namespace Adaptation
 

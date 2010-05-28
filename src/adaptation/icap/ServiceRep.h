@@ -89,13 +89,10 @@ public:
     ServiceRep(const Adaptation::ServiceConfig &config);
     virtual ~ServiceRep();
 
-    void setSelf(Pointer &aSelf); // needs self pointer for OptXact
     virtual void finalize();
 
-    void invalidate(); // call when the service is no longer needed or valid
-
-    bool probed() const; // see comments above
-    bool up() const; // see comments above
+    virtual bool probed() const; // see comments above
+    virtual bool up() const; // see comments above
 
     virtual Adaptation::Initiate *makeXactLauncher(Adaptation::Initiator *, HttpMsg *virginHeader, HttpRequest *virginCause);
 
@@ -110,6 +107,9 @@ public:
 
     //AsyncJob virtual methods
     virtual bool doneAll() const { return Adaptation::Initiator::doneAll() && false;}
+
+    virtual void detach();
+    virtual bool detached() const;
 
 public: // treat these as private, they are for callbacks only
     void noteTimeToUpdate();
@@ -163,8 +163,8 @@ private:
 
     const char *status() const;
 
-    Pointer self;
     mutable bool wasAnnouncedUp; // prevent sequential same-state announcements
+    bool isDetached;
     CBDATA_CLASS2(ServiceRep);
 };
 
