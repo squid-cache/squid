@@ -49,6 +49,8 @@ EXTRA_libmiscutil_a_SOURCES = \
 	win32lib.c
 libmiscutil_a_SOURCES = \
 	MemPool.cc \
+	MemPoolChunked.cc \
+	MemPoolMalloc.cc \
 	base64.c \
 	charset.c \
 	getfullhostname.c \
