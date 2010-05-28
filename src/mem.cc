@@ -580,6 +580,9 @@ Mem::PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, std::
     MemPoolMeter *pm = mp_st->meter;
     const char *delim = "\t ";
 
+#if HAVE_IOMANIP
+    stream.setf(std::ios_base::fixed);
+#endif
     stream << std::setw(20) << std::left << mp_st->label << delim;
     stream << std::setw(4) << std::right << mp_st->obj_size << delim;
 
@@ -627,10 +630,10 @@ Mem::PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, std::
     stream << toKB(mp_st->obj_size * pm->idle.hwater_level) << delim;
     /* saved */
     stream << (int)pm->gb_saved.count << delim;
-    stream << std::setprecision(3) << xpercent(pm->gb_saved.count, AllMeter->gb_saved.count) << delim;
-    stream << std::setprecision(3) << xpercent(pm->gb_saved.bytes, AllMeter->gb_saved.bytes) << delim;
-    stream << std::setprecision(3) << xdiv(pm->gb_saved.count - pm->gb_osaved.count, xm_deltat) << "\n";
-    pm->gb_osaved.count = pm->gb_saved.count;
+    stream << std::setprecision(3) << xpercent(pm->gb_saved.count, AllMeter->gb_allocated.count) << delim;
+    stream << std::setprecision(3) << xpercent(pm->gb_saved.bytes, AllMeter->gb_allocated.bytes) << delim;
+    stream << std::setprecision(3) << xdiv(pm->gb_allocated.count - pm->gb_oallocated.count, xm_deltat) << "\n";
+    pm->gb_oallocated.count = pm->gb_allocated.count;
 }
 
 static int
@@ -683,7 +686,7 @@ Mem::Report(std::ostream &stream)
     "In Use\t\t\t\t\t"
     "Idle\t\t\t"
     "Allocations Saved\t\t\t"
-    "Hit Rate\t"
+    "Rate\t"
     "\n"
     " \t (bytes)\t"
     "KB/ch\t obj/ch\t"
@@ -692,7 +695,7 @@ Mem::Report(std::ostream &stream)
     "(#)\t (KB)\t high (KB)\t high (hrs)\t %alloc\t"
     "(#)\t (KB)\t high (KB)\t"
     "(#)\t %cnt\t %vol\t"
-    "(#) / sec\t"
+    "(#)/sec\t"
     "\n";
     xm_deltat = current_dtime - xm_time;
     xm_time = current_dtime;
@@ -712,7 +715,7 @@ Mem::Report(std::ostream &stream)
         if (!mp_stats.pool)	/* pool destroyed */
             continue;
 
-        if (mp_stats.pool->getMeter().gb_saved.count > 0)	/* this pool has been used */
+        if (mp_stats.pool->getMeter().gb_allocated.count > 0)	/* this pool has been used */
             sortme[npools++] = mp_stats;
         else
             not_used++;
@@ -746,7 +749,7 @@ Mem::Report(std::ostream &stream)
     PoolReport(&mp_stats, mp_total.TheMeter, stream);
 
     /* Cumulative */
-    stream << "Cumulative allocated volume: "<< double_to_str(buf, 64, mp_total.TheMeter->gb_saved.bytes) << "\n";
+    stream << "Cumulative allocated volume: "<< double_to_str(buf, 64, mp_total.TheMeter->gb_allocated.bytes) << "\n";
     /* overhead */
     stream << "Current overhead: " << mp_total.tot_overhead << " bytes (" <<
     std::setprecision(3) << xpercent(mp_total.tot_overhead, mp_total.TheMeter->inuse.level) << "%)\n";

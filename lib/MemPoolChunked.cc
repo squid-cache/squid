@@ -173,19 +173,8 @@ MemPoolChunked::MemPoolChunked(const char *aLabel, size_t aSize) : MemImplementi
     nextFreeChunk = 0;
     Chunks = 0;
     next = 0;
-    MemImplementingAllocator *last_pool;
-
-    assert(aLabel != NULL && aSize);
 
     setChunkSize(MEM_CHUNK_SIZE);
-
-    /* Append as Last */
-    for (last_pool = MemPools::GetInstance().pools; last_pool && last_pool->next;)
-        last_pool = last_pool->next;
-    if (last_pool)
-        last_pool->next = this;
-    else
-        MemPools::GetInstance().pools = this;
 }
 
 MemChunk::~MemChunk()
@@ -225,6 +214,8 @@ MemPoolChunked::get()
 {
     void **Free;
 
+    saved_calls++;
+
     /* first, try cache */
     if (freeCache) {
         Free = (void **)freeCache;
@@ -236,6 +227,7 @@ MemPoolChunked::get()
     /* then try perchunk freelist chain */
     if (nextFreeChunk == NULL) {
         /* no chunk with frees, so create new one */
+	saved_calls--; // compensate for the ++ above
         createChunk();
     }
     /* now we have some in perchunk freelist chain */
@@ -323,7 +315,6 @@ MemPoolChunked::setChunkSize(size_t chunksize)
 MemPoolChunked::~MemPoolChunked()
 {
     MemChunk *chunk, *fchunk;
-    MemImplementingAllocator *find_pool, *prev_pool;
 
     flushMetersFull();
     clean(0);
@@ -336,18 +327,6 @@ MemPoolChunked::~MemPoolChunked()
     }
     /* TODO we should be doing something about the original Chunks pointer here. */
 
-    assert(MemPools::GetInstance().pools != NULL && "Called MemPoolChunked::~MemPoolChunked, but no pool exists!");
-
-    /* Pool clean, remove it from List and free */
-    for (find_pool = MemPools::GetInstance().pools, prev_pool = NULL; (find_pool && this != find_pool); find_pool = find_pool->next)
-        prev_pool = find_pool;
-    assert(find_pool != NULL && "pool to destroy not found");
-
-    if (prev_pool)
-        prev_pool->next = next;
-    else
-        MemPools::GetInstance().pools = next;
-    --MemPools::GetInstance().poolCount;
 }
 
 int

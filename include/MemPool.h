@@ -96,16 +96,19 @@ public:
 class MemPoolMeter
 {
 public:
+    MemPoolMeter();
     void flush();
     MemMeter alloc;
     MemMeter inuse;
     MemMeter idle;
 
-    /** account Allocations */
-    mgb_t gb_saved;
 
     /** history Allocations */
-    mgb_t gb_osaved;
+    mgb_t gb_allocated;
+    mgb_t gb_oallocated;
+
+    /** account Saved Allocations */
+    mgb_t gb_saved;
 
     /** account Free calls */
     mgb_t gb_freed;
@@ -317,6 +320,7 @@ class MemImplementingAllocator : public MemAllocator
 {
 public:
     MemImplementingAllocator(char const *aLabel, size_t aSize);
+    ~MemImplementingAllocator();
     virtual MemPoolMeter const &getMeter() const;
     virtual MemPoolMeter &getMeter();
     virtual void flushMetersFull();
@@ -346,6 +350,7 @@ public:
 public:
     size_t alloc_calls;
     size_t free_calls;
+    size_t saved_calls;
     size_t obj_size;
 };
 
