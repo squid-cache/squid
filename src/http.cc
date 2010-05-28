@@ -438,7 +438,7 @@ HttpStateData::cacheableReply()
          * unless we know how to refresh it.
          */
 
-        if (!refreshIsCachable(entry)) {
+        if (!refreshIsCachable(entry) && !REFRESH_OVERRIDE(store_stale)) {
             debugs(22, 3, "refreshIsCachable() returned non-cacheable..");
             return 0;
         }
@@ -671,6 +671,9 @@ HttpStateData::processReplyHeader()
     debugs(11, 3, "processReplyHeader: key '" << entry->getMD5Text() << "'");
 
     assert(!flags.headers_parsed);
+
+    if (!readBuf->hasContent())
+        return;
 
     http_status error = HTTP_STATUS_NONE;
 
@@ -1123,12 +1126,11 @@ HttpStateData::readReply(const CommIoCbParams &io)
         eof = 1;
         flags.do_next_read = 0;
 
-        /* Bug 2789: Replies may terminate with \r\n then EOF instead of \r\n\r\n
+        /* Bug 2879: Replies may terminate with \r\n then EOF instead of \r\n\r\n
          * Ensure here that we have at minimum two \r\n when EOF is seen.
-         * TODO: When headersEnd() is cleaned up to only be called once we can merge
-         * this as a special case there where it belongs.
+         * TODO: Add eof parameter to headersEnd() and move this hack there.
          */
-        if (!flags.headers_parsed) {
+        if (readBuf->contentSize() && !flags.headers_parsed) {
             /*
              * Yes Henrik, there is a point to doing this.  When we
              * called httpProcessReplyHeader() before, we didn't find
@@ -1137,7 +1139,6 @@ HttpStateData::readReply(const CommIoCbParams &io)
              */
             /* Fake an "end-of-headers" to work around such broken servers */
             readBuf->append("\r\n", 2);
-            len = 2;
         }
     }
 
@@ -1204,7 +1205,8 @@ HttpStateData::continueAfterParsingHeader()
             debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: Headers did not parse at all for " << entry->url() << " AKA " << orig_request->GetHost() << orig_request->urlpath.termedBuf() );
         } else {
             error = ERR_ZERO_SIZE_OBJECT;
-            debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: No object data received for " << entry->url() << " AKA " << orig_request->GetHost() << orig_request->urlpath.termedBuf() );
+            debugs(11, (orig_request->flags.accelerated?DBG_IMPORTANT:2), "WARNING: HTTP: Invalid Response: No object data received for " <<
+                   entry->url() << " AKA " << orig_request->GetHost() << orig_request->urlpath.termedBuf() );
         }
     }
 
@@ -1992,6 +1994,13 @@ HttpStateData::sendRequest()
     MemBuf mb;
 
     debugs(11, 5, "httpSendRequest: FD " << fd << ", request " << request << ", this " << this << ".");
+
+    if (!canSend(fd)) {
+        debugs(11,3, HERE << "cannot send request to closing FD " << fd);
+        assert(closeHandler != NULL);
+        return false;
+    }
+
     typedef CommCbMemFunT<HttpStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  asyncCall(11, 5, "HttpStateData::httpTimeout",
                                       TimeoutDialer(this,&HttpStateData::httpTimeout));
@@ -2095,6 +2104,13 @@ HttpStateData::doneSendingRequestBody()
             sendComplete(io);
         } else {
             debugs(11, 2, "doneSendingRequestBody: matched brokenPosts");
+
+            if (!canSend(fd)) {
+                debugs(11,2, HERE << "cannot send CRLF to closing FD " << fd);
+                assert(closeHandler != NULL);
+                return;
+            }
+
             typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
             Dialer dialer(this, &HttpStateData::sendComplete);
             AsyncCall::Pointer call= asyncCall(11,5, "HttpStateData::SendComplete", dialer);

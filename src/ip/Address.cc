@@ -1,5 +1,5 @@
 /*
- * DEBUG: section 14   IP Storage and Handling
+ * DEBUG: section 14    IP Storage and Handling
  * AUTHOR: Amos Jeffries
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
@@ -1026,11 +1026,11 @@ Ip::Address::ToHostname(char *buf, const unsigned int blen) const
         p++;
     }
 
-    /* 7 being space for [,], and port */
+    /* 8 being space for [ ] : and port digits */
     if ( IsIPv6() )
-        NtoA(p, blen-7, AF_INET6);
+        NtoA(p, blen-8, AF_INET6);
     else
-        NtoA(p, blen-7, AF_INET);
+        NtoA(p, blen-8, AF_INET);
 
     // find the end of the new string
     while (*p != '\0' && p < buf+blen)
@@ -1061,9 +1061,9 @@ Ip::Address::ToURL(char* buf, unsigned int blen) const
 
     p += ToHostname(p, blen);
 
-    if (m_SocketAddr.sin6_port > 0 && p < (buf+blen-6) ) {
-        /* 6 is max length of expected ':port' (short int) */
-        snprintf(p, 6,":%d", GetPort() );
+    if (m_SocketAddr.sin6_port > 0 && p <= (buf+blen-7) ) {
+        // ':port' (short int) needs at most 6 bytes plus 1 for 0-terminator
+        snprintf(p, 7, ":%d", GetPort() );
     }
 
     // force a null-terminated string

@@ -19,28 +19,21 @@ Adaptation::Icap::ServiceRep::ServiceRep(const Adaptation::ServiceConfig &svcCfg
         AsyncJob("Adaptation::Icap::ServiceRep"), Adaptation::Service(svcCfg),
         theOptions(NULL), theOptionsFetcher(0), theLastUpdate(0),
         isSuspended(0), notifying(false),
-        updateScheduled(false), self(NULL),
-        wasAnnouncedUp(true) // do not announce an "up" service at startup
+        updateScheduled(false),
+        wasAnnouncedUp(true), // do not announce an "up" service at startup
+        isDetached(false)
 {}
 
 Adaptation::Icap::ServiceRep::~ServiceRep()
 {
     Must(!theOptionsFetcher);
-    changeOptions(0);
-}
-
-void
-Adaptation::Icap::ServiceRep::setSelf(Pointer &aSelf)
-{
-    assert(!self && aSelf != NULL);
-    self = aSelf;
+    delete theOptions;
 }
 
 void
 Adaptation::Icap::ServiceRep::finalize()
 {
     Adaptation::Service::finalize();
-    assert(self != NULL);
 
     // use /etc/services or default port if needed
     const bool have_port = cfg().port >= 0;
@@ -56,18 +49,6 @@ Adaptation::Icap::ServiceRep::finalize()
 
     theSessionFailures.configure(TheConfig.oldest_service_failure > 0 ?
                                  TheConfig.oldest_service_failure : -1);
-}
-
-void Adaptation::Icap::ServiceRep::invalidate()
-{
-    assert(self != NULL);
-    Pointer savedSelf = self; // to prevent destruction when we nullify self
-    self = NULL;
-
-    announceStatusChange("invalidated by reconfigure", false);
-
-    savedSelf = NULL; // may destroy us and, hence, invalidate cbdata(this)
-    // TODO: it would be nice to invalidate cbdata(this) when not destroyed
 }
 
 void Adaptation::Icap::ServiceRep::noteFailure()
@@ -114,7 +95,7 @@ bool Adaptation::Icap::ServiceRep::hasOptions() const
 
 bool Adaptation::Icap::ServiceRep::up() const
 {
-    return self != NULL && !isSuspended && hasOptions();
+    return !isSuspended && hasOptions();
 }
 
 bool Adaptation::Icap::ServiceRep::wantsUrl(const String &urlPath) const
@@ -155,10 +136,10 @@ void ServiceRep_noteTimeToUpdate(void *data)
 
 void Adaptation::Icap::ServiceRep::noteTimeToUpdate()
 {
-    if (self != NULL)
+    if (!detached())
         updateScheduled = false;
 
-    if (!self || theOptionsFetcher) {
+    if (detached() || theOptionsFetcher) {
         debugs(93,5, HERE << "ignores options update " << status());
         return;
     }
@@ -204,11 +185,10 @@ void Adaptation::Icap::ServiceRep::callWhenReady(AsyncCall::Pointer &cb)
     debugs(93,5, HERE << "Adaptation::Icap::Service is asked to call " << *cb <<
            " when ready " << status());
 
-    Must(self != NULL);
     Must(!broken()); // we do not wait for a broken service
 
     Client i;
-    i.service = self; // TODO: is this really needed?
+    i.service = Pointer(this); // TODO: is this really needed?
     i.callback = cb;
     theClients.push_back(i);
 
@@ -229,7 +209,7 @@ void Adaptation::Icap::ServiceRep::scheduleNotification()
 
 bool Adaptation::Icap::ServiceRep::needNewOptions() const
 {
-    return self != NULL && !up();
+    return !detached() && !up();
 }
 
 void Adaptation::Icap::ServiceRep::changeOptions(Adaptation::Icap::Options *newOptions)
@@ -448,8 +428,6 @@ const char *Adaptation::Icap::ServiceRep::status() const
         buf.append("up", 2);
     else {
         buf.append("down", 4);
-        if (!self)
-            buf.append(",gone", 5);
         if (isSuspended)
             buf.append(",susp", 5);
 
@@ -460,6 +438,9 @@ const char *Adaptation::Icap::ServiceRep::status() const
         else if (!theOptions->fresh())
             buf.append(",stale", 6);
     }
+
+    if (detached())
+        buf.append(",detached", 9);
 
     if (theOptionsFetcher)
         buf.append(",fetch", 6);
@@ -474,4 +455,16 @@ const char *Adaptation::Icap::ServiceRep::status() const
     buf.terminate();
 
     return buf.content();
+}
+
+void Adaptation::Icap::ServiceRep::detach()
+{
+    debugs(93,3, HERE << "detaching ICAP service: " << cfg().uri <<
+           ' ' << status());
+    isDetached = true;
+}
+
+bool Adaptation::Icap::ServiceRep::detached() const
+{
+    return isDetached;
 }

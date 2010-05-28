@@ -1,7 +1,6 @@
 /*
- * DEBUG: section XXX
+ * DEBUG: section 93    eCAP Interface
  */
-
 #include "squid.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
@@ -38,7 +37,8 @@ Adaptation::Ecap::HeaderRep::value(const Name &name) const
     const String value = squidId == HDR_OTHER ?
                          theHeader.getByName(name.image().c_str()) :
                          theHeader.getStrOrList(squidId);
-    return Value::FromTempString(value.termedBuf());
+    return value.defined() ?
+           Value::FromTempString(value.termedBuf()) : Value();
 }
 
 void
