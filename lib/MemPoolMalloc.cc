@@ -3,7 +3,7 @@
  * $Id$
  *
  * DEBUG: section 63    Low Level Memory Pool Management
- * AUTHOR: Alex Rousskov, Andres Kroonmaa, Robert Collins
+ * AUTHOR: Alex Rousskov, Andres Kroonmaa, Robert Collins, Henrik Nordstrom
  *
  * SQUID Internet Object Cache  http://squid.nlanr.net/Squid/
  * ----------------------------------------------------------
@@ -54,17 +54,30 @@ extern time_t squid_curtime;
 void *
 MemPoolMalloc::allocate()
 {
-    memMeterInc(meter.alloc);
+    void *obj = freelist.pop();
+    if (obj) {
+	memMeterDec(meter.idle);
+    } else {
+	obj = xcalloc(1, obj_size);
+	memMeterInc(meter.alloc);
+    }
     memMeterInc(meter.inuse);
-    return xcalloc(1, obj_size);
+    return obj;
 }
 
 void
-MemPoolMalloc::deallocate(void *obj)
+MemPoolMalloc::deallocate(void *obj, bool aggressive)
 {
     memMeterDec(meter.inuse);
-    memMeterDec(meter.alloc);
-    xfree(obj);
+    if (aggressive) {
+	xfree(obj);
+	memMeterDec(meter.alloc);
+    } else {
+	if (doZeroOnPush)
+	    memset(obj, 0, obj_size);
+	memMeterInc(meter.idle);
+	freelist.push_back(obj);
+    }
 }
 
 /* TODO extract common logic to MemAllocate */
@@ -76,7 +89,7 @@ MemPoolMalloc::getStats(MemPoolStats * stats, int accumulate)
 
     stats->pool = this;
     stats->label = objectType();
-    stats->meter = &getMeter();
+    stats->meter = &meter;
     stats->obj_size = obj_size;
     stats->chunk_capacity = 0;
 
@@ -104,14 +117,25 @@ MemPoolMalloc::MemPoolMalloc(char const *aLabel, size_t aSize) : MemImplementing
 {
 }
 
+MemPoolMalloc::~MemPoolMalloc()
+{
+    assert(meter.inuse.level == 0 && "While trying to destroy pool");
+    clean(0);
+}
+
 bool
 MemPoolMalloc::idleTrigger(int shift) const
 {
-    return false;
+    return freelist.count >> (shift ? 8 : 0);
 }
 
 void
 MemPoolMalloc::clean(time_t maxage)
 {
+    while (void *obj = freelist.pop()) {
+	memMeterDec(meter.idle);
+	memMeterDec(meter.alloc);
+	xfree(obj);
+    }
 }
 

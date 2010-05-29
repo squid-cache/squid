@@ -38,7 +38,7 @@ public:
     virtual int getInUseCount();
 protected:
     virtual void *allocate();
-    virtual void deallocate(void *);
+    virtual void deallocate(void *, bool aggressive);
 public:
     /**
      * Allows you tune chunk size of pooling. Objects are allocated in chunks

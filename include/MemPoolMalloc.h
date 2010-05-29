@@ -27,6 +27,7 @@ class MemPoolMalloc : public MemImplementingAllocator
 {
 public:
     MemPoolMalloc(char const *label, size_t aSize);
+    ~MemPoolMalloc();
     virtual bool idleTrigger(int shift) const;
     virtual void clean(time_t maxage);
 
@@ -39,8 +40,9 @@ public:
     virtual int getInUseCount();
 protected:
     virtual void *allocate();
-    virtual void deallocate(void *);
+    virtual void deallocate(void *, bool aggressive);
 private:
+    Stack<void *> freelist;
 };
 
 
