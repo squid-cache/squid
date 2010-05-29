@@ -88,7 +88,6 @@
 
 #include "MemPoolChunked.h"
 
-#define FLUSH_LIMIT 1000	/* Flush memPool counters to memMeters after flush limit calls */
 #define MEM_MAX_MMAP_CHUNKS 2048
 
 #if HAVE_STRING_H
@@ -175,6 +174,10 @@ MemPoolChunked::MemPoolChunked(const char *aLabel, size_t aSize) : MemImplementi
     next = 0;
 
     setChunkSize(MEM_CHUNK_SIZE);
+
+#if HAVE_MALLOPT && M_MMAP_MAX
+    mallopt(M_MMAP_MAX, MEM_MAX_MMAP_CHUNKS);
+#endif
 }
 
 MemChunk::~MemChunk()
@@ -318,7 +321,7 @@ MemPoolChunked::~MemPoolChunked()
 
     flushMetersFull();
     clean(0);
-    assert(getMeter().inuse.level == 0 && "While trying to destroy pool");
+    assert(meter.inuse.level == 0 && "While trying to destroy pool");
 
     chunk = Chunks;
     while ( (fchunk = chunk) != NULL) {
@@ -332,7 +335,7 @@ MemPoolChunked::~MemPoolChunked()
 int
 MemPoolChunked::getInUseCount()
 {
-    return getMeter().inuse.level;
+    return meter.inuse.level;
 }
 
 void *
@@ -346,7 +349,7 @@ MemPoolChunked::allocate()
 }
 
 void
-MemPoolChunked::deallocate(void *obj)
+MemPoolChunked::deallocate(void *obj, bool aggressive)
 {
     push(obj);
     assert(meter.inuse.level > 0);
@@ -449,7 +452,7 @@ MemPoolChunked::clean(time_t maxage)
 bool
 MemPoolChunked::idleTrigger(int shift) const
 {
-    return getMeter().idle.level > (chunk_capacity << shift);
+    return meter.idle.level > (chunk_capacity << shift);
 }
 
 /*
@@ -469,7 +472,7 @@ MemPoolChunked::getStats(MemPoolStats * stats, int accumulate)
 
     stats->pool = this;
     stats->label = objectType();
-    stats->meter = &getMeter();
+    stats->meter = &meter;
     stats->obj_size = obj_size;
     stats->chunk_capacity = chunk_capacity;
 
@@ -488,11 +491,11 @@ MemPoolChunked::getStats(MemPoolStats * stats, int accumulate)
     stats->chunks_partial += chunks_partial;
     stats->chunks_free += chunks_free;
 
-    stats->items_alloc += getMeter().alloc.level;
-    stats->items_inuse += getMeter().inuse.level;
-    stats->items_idle += getMeter().idle.level;
+    stats->items_alloc += meter.alloc.level;
+    stats->items_inuse += meter.inuse.level;
+    stats->items_idle += meter.idle.level;
 
     stats->overhead += sizeof(MemPoolChunked) + chunkCount * sizeof(MemChunk) + strlen(objectType()) + 1;
 
-    return getMeter().inuse.level;
+    return meter.inuse.level;
 }

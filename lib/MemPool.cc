@@ -33,54 +33,6 @@
  *
  */
 
-/*
- * Old way:
- *   xmalloc each item separately, upon free stack into idle pool array.
- *   each item is individually malloc()ed from system, imposing libmalloc
- *   overhead, and additionally we add our overhead of pointer size per item
- *   as we keep a list of pointer to free items.
- *
- * Chunking:
- *   xmalloc Chunk that fits at least MEM_MIN_FREE (32) items in an array, but
- *   limit Chunk size to MEM_CHUNK_MAX_SIZE (256K). Chunk size is rounded up to
- *   MEM_PAGE_SIZE (4K), trying to have chunks in multiples of VM_PAGE size.
- *   Minimum Chunk size is MEM_CHUNK_SIZE (16K).
- *   A number of items fits into a single chunk, depending on item size.
- *   Maximum number of items per chunk is limited to MEM_MAX_FREE (65535).
- *
- *   We populate Chunk with a linkedlist, each node at first word of item,
- *   and pointing at next free item. Chunk->FreeList is pointing at first
- *   free node. Thus we stuff free housekeeping into the Chunk itself, and
- *   omit pointer overhead per item.
- *
- *   Chunks are created on demand, and new chunks are inserted into linklist
- *   of chunks so that Chunks with smaller pointer value are placed closer
- *   to the linklist head. Head is a hotspot, servicing most of requests, so
- *   slow sorting occurs and Chunks in highest memory tend to become idle
- *   and freeable.
- *
- *   event is registered that runs every 15 secs and checks reference time
- *   of each idle chunk. If a chunk is not referenced for 15 secs, it is
- *   released.
- *
- *   [If mem_idle_limit is exceeded with pools, every chunk that becomes
- *   idle is immediately considered for release, unless this is the only
- *   chunk with free items in it.] (not implemented)
- *
- *   In cachemgr output, there are new columns for chunking. Special item,
- *   Frag, is shown to estimate approximately fragmentation of chunked
- *   pools. Fragmentation is calculated by taking amount of items in use,
- *   calculating needed amount of chunks to fit all, and then comparing to
- *   actual amount of chunks in use. Frag number, in percent, is showing
- *   how many percent of chunks are in use excessively. 100% meaning that
- *   twice the needed amount of chunks are in use.
- *   "part" item shows number of chunks partially filled. This shows how
- *   badly fragmentation is spread across all chunks.
- *
- *   Andres Kroonmaa.
- *   Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
- */
-
 #include "config.h"
 #if HAVE_ASSERT_H
 #include <assert.h>
@@ -91,7 +43,6 @@
 #include "MemPoolMalloc.h"
 
 #define FLUSH_LIMIT 1000	/* Flush memPool counters to memMeters after flush limit calls */
-#define MEM_MAX_MMAP_CHUNKS 2048
 
 #if HAVE_STRING_H
 #include <string.h>
@@ -173,9 +124,6 @@ MemPools::MemPools() : pools(NULL), mem_idle_limit(2 * MB),
     char *cfg = getenv("MEMPOOLS");
     if (cfg)
         defaultIsChunked = atoi(cfg);
-#if HAVE_MALLOPT && M_MMAP_MAX
-    mallopt(M_MMAP_MAX, MEM_MAX_MMAP_CHUNKS);
-#endif
 }
 
 MemImplementingAllocator *
@@ -299,7 +247,7 @@ MemImplementingAllocator::freeOne(void *obj)
 {
     assert(obj != NULL);
     (void) VALGRIND_CHECK_MEM_IS_ADDRESSABLE(obj, obj_size);
-    deallocate(obj);
+    deallocate(obj, MemPools::GetInstance().mem_idle_limit == 0);
     ++free_calls;
 }
 
