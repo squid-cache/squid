@@ -94,7 +94,7 @@ void Adaptation::Ecap::ServiceRep::detach()
 {
     isDetached = true;
 }
-    
+
 bool Adaptation::Ecap::ServiceRep::detached() const
 {
     return isDetached;
@@ -121,7 +121,7 @@ Adaptation::Ecap::RegisterAdapterService(const Adaptation::Ecap::ServiceRep::Ada
         if (adapterService->uri() == (*s)->uri()) {
             *s = adapterService;
             debugs(93, 3, "updated eCAP module service: " <<
-                adapterService->uri());
+                   adapterService->uri());
             return;
         }
     }
@@ -148,14 +148,14 @@ Adaptation::Ecap::CheckUnusedAdapterServices(const Adaptation::Services& cfgs)
 {
     typedef std::list<ServiceRep::AdapterService>::const_iterator ASCI;
     for (ASCI loaded = TheServices.begin(); loaded != TheServices.end();
-        ++loaded) {
+            ++loaded) {
         bool found = false;
         for (Services::const_iterator cfged = cfgs.begin();
-             cfged != cfgs.end() && !found; ++cfged) {
+                cfged != cfgs.end() && !found; ++cfged) {
             found = (*cfged)->cfg().uri == (*loaded)->uri().c_str();
         }
         if (!found)
             debugs(93, 1, "Warning: loaded eCAP service has no matching " <<
-                "ecap_service config option: " << (*loaded)->uri());
+                   "ecap_service config option: " << (*loaded)->uri());
     }
 }
