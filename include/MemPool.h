@@ -320,7 +320,7 @@ class MemImplementingAllocator : public MemAllocator
 {
 public:
     MemImplementingAllocator(char const *aLabel, size_t aSize);
-    ~MemImplementingAllocator();
+    virtual ~MemImplementingAllocator();
     virtual MemPoolMeter const &getMeter() const;
     virtual MemPoolMeter &getMeter();
     virtual void flushMetersFull();
@@ -342,7 +342,7 @@ public:
     virtual int getInUseCount() = 0;
 protected:
     virtual void *allocate() = 0;
-    virtual void deallocate(void *) = 0;
+    virtual void deallocate(void *, bool aggressive) = 0;
     MemPoolMeter meter;
     int memPID;
 public:
