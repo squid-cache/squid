@@ -1,5 +1,5 @@
 #!@PERL@
-#use strict;
+use strict;
 use DBI;
 use Getopt::Long;
 use Pod::Usage;
