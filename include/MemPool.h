@@ -1,5 +1,5 @@
-#ifndef _MEM_POOLS_H_
-#define _MEM_POOLS_H_
+#ifndef _MEM_POOL_H_
+#define _MEM_POOL_H_
 
 /**
  \defgroup MemPoolsAPI  Memory Management (Memory Pool Allocator)
@@ -63,7 +63,6 @@
 #define MEM_MAX_FREE  65535	/* ushort is max number of items per chunk */
 
 class MemImplementingAllocator;
-class MemChunk;
 class MemPoolStats;
 
 /// \ingroup MemPoolsAPI
@@ -97,16 +96,19 @@ public:
 class MemPoolMeter
 {
 public:
+    MemPoolMeter();
     void flush();
     MemMeter alloc;
     MemMeter inuse;
     MemMeter idle;
 
-    /** account Allocations */
-    mgb_t gb_saved;
 
     /** history Allocations */
-    mgb_t gb_osaved;
+    mgb_t gb_allocated;
+    mgb_t gb_oallocated;
+
+    /** account Saved Allocations */
+    mgb_t gb_saved;
 
     /** account Free calls */
     mgb_t gb_freed;
@@ -128,13 +130,6 @@ public:
      \param obj_size	Size of elements in MemPool.
      */
     MemImplementingAllocator * create(const char *label, size_t obj_size);
-
-    /**
-     \param label	Name for the pool. Displayed in stats.
-     \param obj_size	Size of elements in MemPool.
-     \param chunked	??
-     */
-    MemImplementingAllocator * create(const char *label, size_t obj_size, bool const chunked);
 
     /**
      * Sets upper limit in bytes to amount of free ram kept in pools. This is
@@ -197,7 +192,7 @@ public:
      \param stats	Object to be filled with statistical data about pool.
      \retval		Number of objects in use, ie. allocated.
      */
-    virtual int getStats(MemPoolStats * stats) = 0;
+    virtual int getStats(MemPoolStats * stats, int accumulate = 0) = 0;
 
     virtual MemPoolMeter const &getMeter() const = 0;
 
@@ -325,6 +320,7 @@ class MemImplementingAllocator : public MemAllocator
 {
 public:
     MemImplementingAllocator(char const *aLabel, size_t aSize);
+    virtual ~MemImplementingAllocator();
     virtual MemPoolMeter const &getMeter() const;
     virtual MemPoolMeter &getMeter();
     virtual void flushMetersFull();
@@ -342,108 +338,20 @@ public:
 
     virtual bool idleTrigger(int shift) const = 0;
     virtual void clean(time_t maxage) = 0;
-    /** Hint to the allocator - may be ignored */
-    virtual void setChunkSize(size_t chunksize) {}
     virtual size_t objectSize() const;
     virtual int getInUseCount() = 0;
 protected:
     virtual void *allocate() = 0;
-    virtual void deallocate(void *) = 0;
-private:
+    virtual void deallocate(void *, bool aggressive) = 0;
     MemPoolMeter meter;
+    int memPID;
 public:
     MemImplementingAllocator *next;
 public:
     size_t alloc_calls;
     size_t free_calls;
+    size_t saved_calls;
     size_t obj_size;
-};
-
-/// \ingroup MemPoolsAPI
-class MemPool : public MemImplementingAllocator
-{
-public:
-    friend class MemChunk;
-    MemPool(const char *label, size_t obj_size);
-    ~MemPool();
-    void convertFreeCacheToChunkFreeCache();
-    virtual void clean(time_t maxage);
-
-    /**
-     \param stats	Object to be filled with statistical data about pool.
-     \retval		Number of objects in use, ie. allocated.
-     */
-    virtual int getStats(MemPoolStats * stats);
-
-    void createChunk();
-    void *get();
-    void push(void *obj);
-    virtual int getInUseCount();
-protected:
-    virtual void *allocate();
-    virtual void deallocate(void *);
-public:
-    /**
-     * Allows you tune chunk size of pooling. Objects are allocated in chunks
-     * instead of individually. This conserves memory, reduces fragmentation.
-     * Because of that memory can be freed also only in chunks. Therefore
-     * there is tradeoff between memory conservation due to chunking and free
-     * memory fragmentation.
-     *
-     \note  As a general guideline, increase chunk size only for pools that keep
-     *      very many items for relatively long time.
-     */
-    virtual void setChunkSize(size_t chunksize);
-
-    virtual bool idleTrigger(int shift) const;
-
-    size_t chunk_size;
-    int chunk_capacity;
-    int memPID;
-    int chunkCount;
-    size_t inuse;
-    size_t idle;
-    void *freeCache;
-    MemChunk *nextFreeChunk;
-    MemChunk *Chunks;
-    Splay<MemChunk *> allChunks;
-};
-
-/// \ingroup MemPoolsAPI
-class MemMalloc : public MemImplementingAllocator
-{
-public:
-    MemMalloc(char const *label, size_t aSize);
-    virtual bool idleTrigger(int shift) const;
-    virtual void clean(time_t maxage);
-
-    /**
-     \param stats	Object to be filled with statistical data about pool.
-     \retval		Number of objects in use, ie. allocated.
-     */
-    virtual int getStats(MemPoolStats * stats);
-
-    virtual int getInUseCount();
-protected:
-    virtual void *allocate();
-    virtual void deallocate(void *);
-private:
-    int inuse;
-};
-
-/// \ingroup MemPoolsAPI
-class MemChunk
-{
-public:
-    MemChunk(MemPool *pool);
-    ~MemChunk();
-    void *freeList;
-    void *objCache;
-    int inuse_count;
-    MemChunk *nextFreeChunk;
-    MemChunk *next;
-    time_t lastref;
-    MemPool *pool;
 };
 
 /// \ingroup MemPoolsAPI
@@ -536,4 +444,4 @@ MemAllocatorProxy::MemAllocatorProxy(char const *aLabel, size_t const &aSize) : 
 }
 
 
-#endif /* _MEM_POOLS_H_ */
+#endif /* _MEM_POOL_H_ */
