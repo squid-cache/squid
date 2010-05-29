@@ -1387,15 +1387,6 @@ This section gives an account of those changes in three categories:
         <p>A copy of the latest translated files can instead be downloaded from
 <url url="http://www.squid-cache.org/Versions/langpack/" name="http://www.squid-cache.org/Versions/langpack/">
 
-        <tag>--with-dns-cname</tag>
-        <p>Enable CNAME recursion within the Internal DNS resolver stub squid uses.
-           This has no effect on the external DNS helper.
-        <p>Please note this extension is still experimental and may encounter problems.
-	   To see if it is actually needed you can run squid without it for a period and
-	   check the CNAME-Only Requests statistics squid maintains.
-	<p>If it produces ongoing serious problems the external helper may be needed
-	   but please report the bugs anyway.
-
 	<tag>--with-logdir=PATH</tag>
 	<p>Allow build-time configuration of Default location for squid logs.
 
