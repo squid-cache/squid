@@ -353,8 +353,11 @@ memConfigure(void)
         new_pool_limit = 0;
     else if (Config.MemPools.limit > 0)
         new_pool_limit = Config.MemPools.limit;
-    else
-        new_pool_limit = mem_unlimited_size;
+    else {
+	if (Config.MemPools.limit == 0)
+	    debugs(13, 1, "memory_pools_limit 0 has been chagned to memory_pools_limit none. Please update your config");
+        new_pool_limit = -1;
+    }
 
 #if 0
     /** \par
@@ -762,7 +765,8 @@ Mem::Report(std::ostream &stream)
     stream << "Current overhead: " << mp_total.tot_overhead << " bytes (" <<
     std::setprecision(3) << xpercent(mp_total.tot_overhead, mp_total.TheMeter->inuse.level) << "%)\n";
     /* limits */
-    stream << "Idle pool limit: " << std::setprecision(2) << toMB(mp_total.mem_idle_limit) << " MB\n";
+    if (mp_total.mem_idle_limit >= 0)
+        stream << "Idle pool limit: " << std::setprecision(2) << toMB(mp_total.mem_idle_limit) << " MB\n";
     /* limits */
     stream << "Total Pools created: " << mp_total.tot_pools_alloc << "\n";
     stream << "Pools ever used:     " << mp_total.tot_pools_alloc - not_used << " (shown above)\n";

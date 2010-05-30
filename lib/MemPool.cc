@@ -103,12 +103,12 @@ memPoolIterateNext(MemPoolIterator * iter)
 }
 
 void
-MemPools::setIdleLimit(size_t new_idle_limit)
+MemPools::setIdleLimit(ssize_t new_idle_limit)
 {
     mem_idle_limit = new_idle_limit;
 }
 
-size_t
+ssize_t
 MemPools::idleLimit() const
 {
     return mem_idle_limit;
@@ -263,14 +263,16 @@ MemImplementingAllocator::free(void *obj)
 void
 MemPools::clean(time_t maxage)
 {
-    MemImplementingAllocator *pool;
-    MemPoolIterator *iter;
+    flushMeters();
+    if (mem_idle_limit < 0) // no limit to enforce
+        return;
 
     int shift = 1;
-    flushMeters();
     if (TheMeter.idle.level > mem_idle_limit)
         maxage = shift = 0;
 
+    MemImplementingAllocator *pool;
+    MemPoolIterator *iter;
     iter = memPoolIterate();
     while ((pool = memPoolIterateNext(iter)))
         if (pool->idleTrigger(shift))

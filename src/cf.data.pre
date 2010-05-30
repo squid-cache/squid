@@ -6337,7 +6337,7 @@ DOC_START
 	memory_pools_limit to a reasonably high value even if your
 	configuration will use less memory.
 
-	If set to zero, Squid will keep all memory it can. That is, there
+	If set to none, Squid will keep all memory it can. That is, there
 	will be no limit on the total amount of memory used for safe-keeping.
 
 	To disable memory allocation optimization, do not set
