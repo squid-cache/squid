@@ -45,8 +45,6 @@
 /// \ingroup MemPoolsAPI
 #define MB ((size_t)1024*1024)
 /// \ingroup MemPoolsAPI
-#define mem_unlimited_size 2 * 1024 * MB
-/// \ingroup MemPoolsAPI
 #define toMB(size) ( ((double) size) / MB )
 /// \ingroup MemPoolsAPI
 #define toKB(size) ( (size + 1024 - 1) / 1024 )
@@ -137,9 +135,8 @@ public:
      * totally free chunks are immediately considered for release. Otherwise
      * only chunks that have not been referenced for a long time are checked.
      */
-    void setIdleLimit(size_t new_idle_limit);
-
-    size_t idleLimit() const;
+    void setIdleLimit(ssize_t new_idle_limit);
+    ssize_t idleLimit() const;
 
     /**
      \par
@@ -171,7 +168,7 @@ public:
 
     void setDefaultPoolChunking(bool const &);
     MemImplementingAllocator *pools;
-    int mem_idle_limit;
+    ssize_t mem_idle_limit;
     int poolCount;
     bool defaultIsChunked;
 private:
@@ -396,7 +393,7 @@ struct _MemPoolGlobalStats {
     int tot_items_idle;
 
     int tot_overhead;
-    int mem_idle_limit;
+    ssize_t mem_idle_limit;
 };
 
 /// \ingroup MemPoolsAPI
