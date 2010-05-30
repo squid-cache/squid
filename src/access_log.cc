@@ -1807,7 +1807,7 @@ accessLogCommon(AccessLogEntry * al, Logfile * logfile)
 
     user2 = accessLogFormatName(al->cache.rfc931);
 
-    logfilePrintf(logfile, "%s %s %s [%s] \"%s %s HTTP/%d.%d\" %d %"PRId64" %s:%s",
+    logfilePrintf(logfile, "%s %s %s [%s] \"%s %s HTTP/%d.%d\" %d %"PRId64" %s:%s%s",
                   client,
                   user2 ? user2 : dash_str,
                   user1 ? user1 : dash_str,
@@ -1818,7 +1818,8 @@ accessLogCommon(AccessLogEntry * al, Logfile * logfile)
                   al->http.code,
                   al->cache.replySize,
                   log_tags[al->cache.code],
-                  hier_strings[al->hier.code]);
+                  hier_strings[al->hier.code],
+                  (Config.onoff.log_mime_hdrs?"":"\n"));
 
     safe_free(user1);
 
@@ -1830,10 +1831,7 @@ accessLogCommon(AccessLogEntry * al, Logfile * logfile)
         logfilePrintf(logfile, " [%s] [%s]\n", ereq, erep);
         safe_free(ereq);
         safe_free(erep);
-    } else {
-        logfilePrintf(logfile, "\n");
     }
-
 }
 
 #if ICAP_CLIENT
@@ -2440,4 +2438,3 @@ logTypeIsATcpHit(log_type code)
 
     return 0;
 }
-
