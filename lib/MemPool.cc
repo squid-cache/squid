@@ -33,63 +33,16 @@
  *
  */
 
-/*
- * Old way:
- *   xmalloc each item separately, upon free stack into idle pool array.
- *   each item is individually malloc()ed from system, imposing libmalloc
- *   overhead, and additionally we add our overhead of pointer size per item
- *   as we keep a list of pointer to free items.
- *
- * Chunking:
- *   xmalloc Chunk that fits at least MEM_MIN_FREE (32) items in an array, but
- *   limit Chunk size to MEM_CHUNK_MAX_SIZE (256K). Chunk size is rounded up to
- *   MEM_PAGE_SIZE (4K), trying to have chunks in multiples of VM_PAGE size.
- *   Minimum Chunk size is MEM_CHUNK_SIZE (16K).
- *   A number of items fits into a single chunk, depending on item size.
- *   Maximum number of items per chunk is limited to MEM_MAX_FREE (65535).
- *
- *   We populate Chunk with a linkedlist, each node at first word of item,
- *   and pointing at next free item. Chunk->FreeList is pointing at first
- *   free node. Thus we stuff free housekeeping into the Chunk itself, and
- *   omit pointer overhead per item.
- *
- *   Chunks are created on demand, and new chunks are inserted into linklist
- *   of chunks so that Chunks with smaller pointer value are placed closer
- *   to the linklist head. Head is a hotspot, servicing most of requests, so
- *   slow sorting occurs and Chunks in highest memory tend to become idle
- *   and freeable.
- *
- *   event is registered that runs every 15 secs and checks reference time
- *   of each idle chunk. If a chunk is not referenced for 15 secs, it is
- *   released.
- *
- *   [If mem_idle_limit is exceeded with pools, every chunk that becomes
- *   idle is immediately considered for release, unless this is the only
- *   chunk with free items in it.] (not implemented)
- *
- *   In cachemgr output, there are new columns for chunking. Special item,
- *   Frag, is shown to estimate approximately fragmentation of chunked
- *   pools. Fragmentation is calculated by taking amount of items in use,
- *   calculating needed amount of chunks to fit all, and then comparing to
- *   actual amount of chunks in use. Frag number, in percent, is showing
- *   how many percent of chunks are in use excessively. 100% meaning that
- *   twice the needed amount of chunks are in use.
- *   "part" item shows number of chunks partially filled. This shows how
- *   badly fragmentation is spread across all chunks.
- *
- *   Andres Kroonmaa.
- *   Copyright (c) 2003, Robert Collins <robertc@squid-cache.org>
- */
-
 #include "config.h"
 #if HAVE_ASSERT_H
 #include <assert.h>
 #endif
 
 #include "MemPool.h"
+#include "MemPoolChunked.h"
+#include "MemPoolMalloc.h"
 
 #define FLUSH_LIMIT 1000	/* Flush memPool counters to memMeters after flush limit calls */
-#define MEM_MAX_MMAP_CHUNKS 2048
 
 #if HAVE_STRING_H
 #include <string.h>
@@ -106,10 +59,6 @@ static MemPoolMeter TheMeter;
 static MemPoolIterator Iterator;
 
 static int Pool_id_counter = 0;
-
-/* local prototypes */
-static int memCompChunks(MemChunk * const &, MemChunk * const &);
-static int memCompObjChunks(void * const &, MemChunk * const &);
 
 MemPools &
 MemPools::GetInstance()
@@ -165,293 +114,32 @@ MemPools::idleLimit() const
     return mem_idle_limit;
 }
 
-/* Compare chunks */
-static int
-memCompChunks(MemChunk * const &chunkA, MemChunk * const &chunkB)
-{
-    if (chunkA->objCache > chunkB->objCache)
-        return 1;
-    else if (chunkA->objCache < chunkB->objCache)
-        return -1;
-    else
-        return 0;
-}
-
-/* Compare object to chunk */
-static int
-memCompObjChunks(void *const &obj, MemChunk * const &chunk)
-{
-    /* object is lower in memory than the chunks arena */
-    if (obj < chunk->objCache)
-        return -1;
-    /* object is within the pool */
-    if (obj < (void *) ((char *) chunk->objCache + chunk->pool->chunk_size))
-        return 0;
-    /* object is above the pool */
-    return 1;
-}
-
-MemChunk::MemChunk(MemPool *aPool)
-{
-    /* should have a pool for this too -
-     * note that this requres:
-     * allocate one chunk for the pool of chunks's first chunk
-     * allocate a chunk from that pool
-     * move the contents of one chunk into the other
-     * free the first chunk.
-     */
-    inuse_count = 0;
-    next = NULL;
-    pool = aPool;
-
-    objCache = xcalloc(1, pool->chunk_size);
-    freeList = objCache;
-    void **Free = (void **)freeList;
-
-    for (int i = 1; i < pool->chunk_capacity; i++) {
-        *Free = (void *) ((char *) Free + pool->obj_size);
-        void **nextFree = (void **)*Free;
-        (void) VALGRIND_MAKE_MEM_NOACCESS(Free, pool->obj_size);
-        Free = nextFree;
-    }
-    nextFreeChunk = pool->nextFreeChunk;
-    pool->nextFreeChunk = this;
-
-    memMeterAdd(pool->getMeter().alloc, pool->chunk_capacity);
-    memMeterAdd(pool->getMeter().idle, pool->chunk_capacity);
-    pool->idle += pool->chunk_capacity;
-    pool->chunkCount++;
-    lastref = squid_curtime;
-    pool->allChunks.insert(this, memCompChunks);
-}
-
-MemPool::MemPool(const char *aLabel, size_t aSize) : MemImplementingAllocator(aLabel, aSize)
-{
-    chunk_size = 0;
-    chunk_capacity = 0;
-    memPID = 0;
-    chunkCount = 0;
-    inuse = 0;
-    idle = 0;
-    freeCache = 0;
-    nextFreeChunk = 0;
-    Chunks = 0;
-    next = 0;
-    MemImplementingAllocator *last_pool;
-
-    assert(aLabel != NULL && aSize);
-
-    setChunkSize(MEM_CHUNK_SIZE);
-
-    /* Append as Last */
-    for (last_pool = MemPools::GetInstance().pools; last_pool && last_pool->next;)
-        last_pool = last_pool->next;
-    if (last_pool)
-        last_pool->next = this;
-    else
-        MemPools::GetInstance().pools = this;
-
-    memPID = ++Pool_id_counter;
-}
-
-MemChunk::~MemChunk()
-{
-    memMeterDel(pool->getMeter().alloc, pool->chunk_capacity);
-    memMeterDel(pool->getMeter().idle, pool->chunk_capacity);
-    pool->idle -= pool->chunk_capacity;
-    pool->chunkCount--;
-    pool->allChunks.remove(this, memCompChunks);
-    xfree(objCache);
-}
-
-void
-MemPool::push(void *obj)
-{
-    void **Free;
-    /* XXX We should figure out a sane way of avoiding having to clear
-     * all buffers. For example data buffers such as used by MemBuf do
-     * not really need to be cleared.. There was a condition based on
-     * the object size here, but such condition is not safe.
-     */
-    if (doZeroOnPush)
-        memset(obj, 0, obj_size);
-    Free = (void **)obj;
-    *Free = freeCache;
-    freeCache = obj;
-    (void) VALGRIND_MAKE_MEM_NOACCESS(obj, obj_size);
-}
-
-/*
- * Find a chunk with a free item.
- * Create new chunk on demand if no chunk with frees found.
- * Insert new chunk in front of lowest ram chunk, making it preferred in future,
- * and resulting slow compaction towards lowest ram area.
- */
-void *
-MemPool::get()
-{
-    void **Free;
-
-    /* first, try cache */
-    if (freeCache) {
-        Free = (void **)freeCache;
-        (void) VALGRIND_MAKE_MEM_DEFINED(Free, obj_size);
-        freeCache = *Free;
-        *Free = NULL;
-        return Free;
-    }
-    /* then try perchunk freelist chain */
-    if (nextFreeChunk == NULL) {
-        /* no chunk with frees, so create new one */
-        createChunk();
-    }
-    /* now we have some in perchunk freelist chain */
-    MemChunk *chunk = nextFreeChunk;
-
-    Free = (void **)chunk->freeList;
-    chunk->freeList = *Free;
-    *Free = NULL;
-    chunk->inuse_count++;
-    chunk->lastref = squid_curtime;
-
-    if (chunk->freeList == NULL) {
-        /* last free in this chunk, so remove us from perchunk freelist chain */
-        nextFreeChunk = chunk->nextFreeChunk;
-    }
-    (void) VALGRIND_MAKE_MEM_DEFINED(Free, obj_size);
-    return Free;
-}
-
-/* just create a new chunk and place it into a good spot in the chunk chain */
-void
-MemPool::createChunk()
-{
-    MemChunk *chunk, *newChunk;
-
-    newChunk = new MemChunk(this);
-
-    chunk = Chunks;
-    if (chunk == NULL) {	/* first chunk in pool */
-        Chunks = newChunk;
-        return;
-    }
-    if (newChunk->objCache < chunk->objCache) {
-        /* we are lowest ram chunk, insert as first chunk */
-        newChunk->next = chunk;
-        Chunks = newChunk;
-        return;
-    }
-    while (chunk->next) {
-        if (newChunk->objCache < chunk->next->objCache) {
-            /* new chunk is in lower ram, insert here */
-            newChunk->next = chunk->next;
-            chunk->next = newChunk;
-            return;
-        }
-        chunk = chunk->next;
-    }
-    /* we are the worst chunk in chain, add as last */
-    chunk->next = newChunk;
-}
-
 /* Change the default calue of defaultIsChunked to override
  * all pools - including those used before main() starts where
  * MemPools::GetInstance().setDefaultPoolChunking() can be called.
  */
 MemPools::MemPools() : pools(NULL), mem_idle_limit(2 * MB),
-        poolCount (0), defaultIsChunked (!DISABLE_POOLS && !RUNNING_ON_VALGRIND)
+        poolCount (0), defaultIsChunked (USE_CHUNKEDMEMPOOLS && !RUNNING_ON_VALGRIND)
 {
     char *cfg = getenv("MEMPOOLS");
     if (cfg)
         defaultIsChunked = atoi(cfg);
-#if HAVE_MALLOPT && M_MMAP_MAX
-    mallopt(M_MMAP_MAX, MEM_MAX_MMAP_CHUNKS);
-#endif
-}
-
-void
-MemPool::setChunkSize(size_t chunksize)
-{
-    int cap;
-    size_t csize = chunksize;
-
-    if (Chunks)		/* unsafe to tamper */
-        return;
-
-    csize = ((csize + MEM_PAGE_SIZE - 1) / MEM_PAGE_SIZE) * MEM_PAGE_SIZE;	/* round up to page size */
-    cap = csize / obj_size;
-
-    if (cap < MEM_MIN_FREE)
-        cap = MEM_MIN_FREE;
-    if (cap * obj_size > MEM_CHUNK_MAX_SIZE)
-        cap = MEM_CHUNK_MAX_SIZE / obj_size;
-    if (cap > MEM_MAX_FREE)
-        cap = MEM_MAX_FREE;
-    if (cap < 1)
-        cap = 1;
-
-    csize = cap * obj_size;
-    csize = ((csize + MEM_PAGE_SIZE - 1) / MEM_PAGE_SIZE) * MEM_PAGE_SIZE;	/* round up to page size */
-    cap = csize / obj_size;
-
-    chunk_capacity = cap;
-    chunk_size = csize;
 }
 
 MemImplementingAllocator *
 MemPools::create(const char *label, size_t obj_size)
 {
-    return create (label, obj_size, defaultIsChunked);
-}
-
-MemImplementingAllocator *
-MemPools::create(const char *label, size_t obj_size, bool const chunked)
-{
     ++poolCount;
-    if (chunked)
-        return new MemPool (label, obj_size);
+    if (defaultIsChunked)
+        return new MemPoolChunked (label, obj_size);
     else
-        return new MemMalloc (label, obj_size);
+        return new MemPoolMalloc (label, obj_size);
 }
 
 void
 MemPools::setDefaultPoolChunking(bool const &aBool)
 {
     defaultIsChunked = aBool;
-}
-
-/*
- * warning: we do not clean this entry from Pools assuming destruction
- * is used at the end of the program only
- */
-MemPool::~MemPool()
-{
-    MemChunk *chunk, *fchunk;
-    MemImplementingAllocator *find_pool, *prev_pool;
-
-    flushMetersFull();
-    clean(0);
-    assert(inuse == 0 && "While trying to destroy pool");
-
-    chunk = Chunks;
-    while ( (fchunk = chunk) != NULL) {
-        chunk = chunk->next;
-        delete fchunk;
-    }
-    /* TODO we should be doing something about the original Chunks pointer here. */
-
-    assert(MemPools::GetInstance().pools != NULL && "Called MemPool::~MemPool, but no pool exists!");
-
-    /* Pool clean, remove it from List and free */
-    for (find_pool = MemPools::GetInstance().pools, prev_pool = NULL; (find_pool && this != find_pool); find_pool = find_pool->next)
-        prev_pool = find_pool;
-    assert(find_pool != NULL && "pool to destroy not found");
-
-    if (prev_pool)
-        prev_pool->next = next;
-    else
-        MemPools::GetInstance().pools = next;
-    --MemPools::GetInstance().poolCount;
 }
 
 char const *
@@ -473,17 +161,18 @@ MemImplementingAllocator::flushMeters()
 
     calls = free_calls;
     if (calls) {
-        getMeter().gb_freed.count += calls;
-        memMeterDel(getMeter().inuse, calls);
-        memMeterAdd(getMeter().idle, calls);
+        meter.gb_freed.count += calls;
         free_calls = 0;
     }
     calls = alloc_calls;
     if (calls) {
-        meter.gb_saved.count += calls;
-        memMeterAdd(meter.inuse, calls);
-        memMeterDel(meter.idle, calls);
+        meter.gb_allocated.count += calls;
         alloc_calls = 0;
+    }
+    calls = saved_calls;
+    if (calls) {
+        meter.gb_saved.count += calls;
+        saved_calls = 0;
     }
 }
 
@@ -491,6 +180,7 @@ void
 MemImplementingAllocator::flushMetersFull()
 {
     flushMeters();
+    getMeter().gb_allocated.bytes = getMeter().gb_allocated.count * obj_size;
     getMeter().gb_saved.bytes = getMeter().gb_saved.count * obj_size;
     getMeter().gb_freed.bytes = getMeter().gb_freed.count * obj_size;
 }
@@ -501,11 +191,21 @@ MemPoolMeter::flush()
     alloc.level = 0;
     inuse.level = 0;
     idle.level = 0;
+    gb_allocated.count = 0;
+    gb_allocated.bytes = 0;
+    gb_oallocated.count = 0;
+    gb_oallocated.bytes = 0;
     gb_saved.count = 0;
     gb_saved.bytes = 0;
     gb_freed.count = 0;
     gb_freed.bytes = 0;
 }
+
+MemPoolMeter::MemPoolMeter()
+{
+    flush();
+}
+
 /*
  * Updates all pool counters, and recreates TheMeter totals from all pools
  */
@@ -523,26 +223,14 @@ MemPools::flushMeters()
         memMeterAdd(TheMeter.alloc, pool->getMeter().alloc.level * pool->obj_size);
         memMeterAdd(TheMeter.inuse, pool->getMeter().inuse.level * pool->obj_size);
         memMeterAdd(TheMeter.idle, pool->getMeter().idle.level * pool->obj_size);
+        TheMeter.gb_allocated.count += pool->getMeter().gb_allocated.count;
         TheMeter.gb_saved.count += pool->getMeter().gb_saved.count;
         TheMeter.gb_freed.count += pool->getMeter().gb_freed.count;
+        TheMeter.gb_allocated.bytes += pool->getMeter().gb_allocated.bytes;
         TheMeter.gb_saved.bytes += pool->getMeter().gb_saved.bytes;
         TheMeter.gb_freed.bytes += pool->getMeter().gb_freed.bytes;
     }
     memPoolIterateDone(&iter);
-}
-
-void *
-MemMalloc::allocate()
-{
-    inuse++;
-    return xcalloc(1, obj_size);
-}
-
-void
-MemMalloc::deallocate(void *obj)
-{
-    inuse--;
-    xfree(obj);
 }
 
 void *
@@ -559,125 +247,8 @@ MemImplementingAllocator::free(void *obj)
 {
     assert(obj != NULL);
     (void) VALGRIND_CHECK_MEM_IS_ADDRESSABLE(obj, obj_size);
-    deallocate(obj);
+    deallocate(obj, MemPools::GetInstance().mem_idle_limit == 0);
     ++free_calls;
-}
-
-int
-MemPool::getInUseCount()
-{
-    return inuse;
-}
-
-void *
-MemPool::allocate()
-{
-    void *p = get();
-    assert(idle);
-    --idle;
-    ++inuse;
-    return p;
-}
-
-void
-MemPool::deallocate(void *obj)
-{
-    push(obj);
-    assert(inuse);
-    --inuse;
-    ++idle;
-}
-
-void
-MemPool::convertFreeCacheToChunkFreeCache()
-{
-    void *Free;
-    /*
-     * OK, so we have to go through all the global freeCache and find the Chunk
-     * any given Free belongs to, and stuff it into that Chunk's freelist
-     */
-
-    while ((Free = freeCache) != NULL) {
-        MemChunk *chunk = NULL;
-        chunk = const_cast<MemChunk *>(*allChunks.find(Free, memCompObjChunks));
-        assert(splayLastResult == 0);
-        assert(chunk->inuse_count > 0);
-        chunk->inuse_count--;
-        (void) VALGRIND_MAKE_MEM_DEFINED(Free, sizeof(void *));
-        freeCache = *(void **)Free;	/* remove from global cache */
-        *(void **)Free = chunk->freeList;	/* stuff into chunks freelist */
-        (void) VALGRIND_MAKE_MEM_NOACCESS(Free, sizeof(void *));
-        chunk->freeList = Free;
-        chunk->lastref = squid_curtime;
-    }
-
-}
-
-/* removes empty Chunks from pool */
-void
-MemPool::clean(time_t maxage)
-{
-    MemChunk *chunk, *freechunk, *listTail;
-    time_t age;
-
-    if (!this)
-        return;
-    if (!Chunks)
-        return;
-
-    flushMetersFull();
-    convertFreeCacheToChunkFreeCache();
-    /* Now we have all chunks in this pool cleared up, all free items returned to their home */
-    /* We start now checking all chunks to see if we can release any */
-    /* We start from Chunks->next, so first chunk is not released */
-    /* Recreate nextFreeChunk list from scratch */
-
-    chunk = Chunks;
-    while ((freechunk = chunk->next) != NULL) {
-        age = squid_curtime - freechunk->lastref;
-        freechunk->nextFreeChunk = NULL;
-        if (freechunk->inuse_count == 0)
-            if (age >= maxage) {
-                chunk->next = freechunk->next;
-                delete freechunk;
-                freechunk = NULL;
-            }
-        if (chunk->next == NULL)
-            break;
-        chunk = chunk->next;
-    }
-
-    /* Recreate nextFreeChunk list from scratch */
-    /* Populate nextFreeChunk list in order of "most filled chunk first" */
-    /* in case of equal fill, put chunk in lower ram first */
-    /* First (create time) chunk is always on top, no matter how full */
-
-    chunk = Chunks;
-    nextFreeChunk = chunk;
-    chunk->nextFreeChunk = NULL;
-
-    while (chunk->next) {
-        chunk->next->nextFreeChunk = NULL;
-        if (chunk->next->inuse_count < chunk_capacity) {
-            listTail = nextFreeChunk;
-            while (listTail->nextFreeChunk) {
-                if (chunk->next->inuse_count > listTail->nextFreeChunk->inuse_count)
-                    break;
-                if ((chunk->next->inuse_count == listTail->nextFreeChunk->inuse_count) &&
-                        (chunk->next->objCache < listTail->nextFreeChunk->objCache))
-                    break;
-                listTail = listTail->nextFreeChunk;
-            }
-            chunk->next->nextFreeChunk = listTail->nextFreeChunk;
-            listTail->nextFreeChunk = chunk->next;
-        }
-        chunk = chunk->next;
-    }
-    /* We started from 2nd chunk. If first chunk is full, remove it */
-    if (nextFreeChunk->inuse_count == chunk_capacity)
-        nextFreeChunk = nextFreeChunk->nextFreeChunk;
-
-    return;
 }
 
 /*
@@ -707,94 +278,8 @@ MemPools::clean(time_t maxage)
     memPoolIterateDone(&iter);
 }
 
-bool
-MemPool::idleTrigger(int shift) const
-{
-    return getMeter().idle.level > (chunk_capacity << shift);
-}
-
 /* Persistent Pool stats. for GlobalStats accumulation */
 static MemPoolStats pp_stats;
-
-/*
- * Update MemPoolStats struct for single pool
- */
-int
-MemPool::getStats(MemPoolStats * stats)
-{
-    MemChunk *chunk;
-    int chunks_free = 0;
-    int chunks_partial = 0;
-
-    if (stats != &pp_stats)	/* need skip memset for GlobalStats accumulation */
-        /* XXX Fixme */
-        memset(stats, 0, sizeof(MemPoolStats));
-
-    clean((time_t) 555555);	/* don't want to get chunks released before reporting */
-
-    stats->pool = this;
-    stats->label = objectType();
-    stats->meter = &getMeter();
-    stats->obj_size = obj_size;
-    stats->chunk_capacity = chunk_capacity;
-
-    /* gather stats for each Chunk */
-    chunk = Chunks;
-    while (chunk) {
-        if (chunk->inuse_count == 0)
-            chunks_free++;
-        else if (chunk->inuse_count < chunk_capacity)
-            chunks_partial++;
-        chunk = chunk->next;
-    }
-
-    stats->chunks_alloc += chunkCount;
-    stats->chunks_inuse += chunkCount - chunks_free;
-    stats->chunks_partial += chunks_partial;
-    stats->chunks_free += chunks_free;
-
-    stats->items_alloc += getMeter().alloc.level;
-    stats->items_inuse += getMeter().inuse.level;
-    stats->items_idle += getMeter().idle.level;
-
-    stats->overhead += sizeof(MemPool) + chunkCount * sizeof(MemChunk) + strlen(objectType()) + 1;
-
-    return getMeter().inuse.level;
-}
-
-/* TODO extract common logic to MemAllocate */
-int
-MemMalloc::getStats(MemPoolStats * stats)
-{
-    if (stats != &pp_stats)	/* need skip memset for GlobalStats accumulation */
-        /* XXX Fixme */
-        memset(stats, 0, sizeof(MemPoolStats));
-
-    stats->pool = this;
-    stats->label = objectType();
-    stats->meter = &getMeter();
-    stats->obj_size = obj_size;
-    stats->chunk_capacity = 0;
-
-    stats->chunks_alloc += 0;
-    stats->chunks_inuse += 0;
-    stats->chunks_partial += 0;
-    stats->chunks_free += 0;
-
-    stats->items_alloc += getMeter().alloc.level;
-    stats->items_inuse += getMeter().inuse.level;
-    stats->items_idle += getMeter().idle.level;
-
-    stats->overhead += sizeof(MemMalloc) + strlen(objectType()) + 1;
-
-    return getMeter().inuse.level;
-}
-
-int
-MemMalloc::getInUseCount()
-{
-    return inuse;
-}
 
 /*
  * Totals statistics is returned
@@ -814,7 +299,7 @@ memPoolGetGlobalStats(MemPoolGlobalStats * stats)
     /* gather all stats for Totals */
     iter = memPoolIterate();
     while ((pool = memPoolIterateNext(iter))) {
-        if (pool->getStats(&pp_stats) > 0)
+        if (pool->getStats(&pp_stats, 1) > 0)
             pools_inuse++;
     }
     memPoolIterateDone(&iter);
@@ -833,7 +318,7 @@ memPoolGetGlobalStats(MemPoolGlobalStats * stats)
     stats->tot_items_inuse = pp_stats.items_inuse;
     stats->tot_items_idle = pp_stats.items_idle;
 
-    stats->tot_overhead += pp_stats.overhead + MemPools::GetInstance().poolCount * sizeof(MemPool *);
+    stats->tot_overhead += pp_stats.overhead + MemPools::GetInstance().poolCount * sizeof(MemAllocator *);
     stats->mem_idle_limit = MemPools::GetInstance().mem_idle_limit;
 
     return pools_inuse;
@@ -846,19 +331,6 @@ MemAllocator::MemAllocator(char const *aLabel) : doZeroOnPush(true), label(aLabe
 size_t MemAllocator::RoundedSize(size_t s)
 {
     return ((s + sizeof(void*) - 1) / sizeof(void*)) * sizeof(void*);
-}
-
-MemMalloc::MemMalloc(char const *aLabel, size_t aSize) : MemImplementingAllocator(aLabel, aSize) { inuse = 0; }
-
-bool
-MemMalloc::idleTrigger(int shift) const
-{
-    return false;
-}
-
-void
-MemMalloc::clean(time_t maxage)
-{
 }
 
 int
@@ -935,8 +407,39 @@ MemImplementingAllocator::MemImplementingAllocator(char const *aLabel, size_t aS
         next(NULL),
         alloc_calls(0),
         free_calls(0),
+        saved_calls(0),
         obj_size(RoundedSize(aSize))
 {
+    memPID = ++Pool_id_counter;
+
+    MemImplementingAllocator *last_pool;
+
+    assert(aLabel != NULL && aSize);
+    /* Append as Last */
+    for (last_pool = MemPools::GetInstance().pools; last_pool && last_pool->next;)
+        last_pool = last_pool->next;
+    if (last_pool)
+        last_pool->next = this;
+    else
+        MemPools::GetInstance().pools = this;
+}
+
+MemImplementingAllocator::~MemImplementingAllocator()
+{
+    MemImplementingAllocator *find_pool, *prev_pool;
+
+    assert(MemPools::GetInstance().pools != NULL && "Called MemImplementingAllocator::~MemImplementingAllocator, but no pool exists!");
+
+    /* Pool clean, remove it from List and free */
+    for (find_pool = MemPools::GetInstance().pools, prev_pool = NULL; (find_pool && this != find_pool); find_pool = find_pool->next)
+        prev_pool = find_pool;
+    assert(find_pool != NULL && "pool to destroy not found");
+
+    if (prev_pool)
+        prev_pool->next = next;
+    else
+        MemPools::GetInstance().pools = next;
+    --MemPools::GetInstance().poolCount;
 }
 
 void

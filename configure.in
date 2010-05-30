@@ -1921,20 +1921,22 @@ AC_ARG_WITH(valgrind-debug,
 ])
 
 dnl Disable "memPools" code
-AC_ARG_ENABLE(mempools,
-  AS_HELP_STRING([--disable-mempools],[Disable memPools. Note that this option now simply sets the
-			      default behaviour. Specific classes can override this at runtime, and
-			      only lib/MemPool.c needs to be altered to change the squid-wide 
-			      default for all classes.]),
-[ if test "$enableval" = "no" ; then
-    AC_MSG_NOTICE([memPools disabled])
-    AC_DEFINE(DISABLE_POOLS, 1, [Define if you have problems with memPools and want to disable Pools])
-  else
-    AC_DEFINE(DISABLE_POOLS, 0, [Define if you have problems with memPools and want to disable Pools.])
-  fi
-],
-[ AC_DEFINE(DISABLE_POOLS, 0, [Define if you have problems with memPools and want to disable Pools.])
-])
+#AC_ARG_ENABLE(chunkedmempools,
+#  AS_HELP_STRING([--enable-chunkedmempools],
+#                 [Enable experimental chunked memPools. Note that this option
+#		  simply sets the default behaviour. Specific classes can override this 
+#                  at runtime, and only lib/MemPool.c needs to be altered 
+#                  to change the squid-wide default for all classes.]), [ 
+# if test "x$enableval" = "xyes" ; then
+#    AC_DEFINE(USE_CHUNKEDMEMPOOLS, 1, [Define to Enable chunked Memory Pools support (experimental)])
+#  else
+#    AC_MSG_NOTICE([chunked memPools disabled])
+#    AC_DEFINE(USE_CHUNKEDMEMPOOLS, 0, [Define to Enable chunked Memory Pools support (experimental)])
+#  fi
+#],
+#[ AC_MSG_NOTICE([chunked memPools disabled])
+   AC_DEFINE(USE_CHUNKEDMEMPOOLS, 0, [Define to Enable chunked Memory Pools support (experimental)])
+#])
 
 dnl Enable WIN32 Service compile mode
 AC_ARG_ENABLE(win32-service,

@@ -34,7 +34,7 @@
 
 #include "squid.h"
 
-#if !DISABLE_POOLS
+#if USE_CHUNKEDMEMPOOLS
 
 #include "MemPool.h"
 
@@ -82,12 +82,12 @@ MemPoolTest::run()
     delete Pool;
 }
 
-#endif /* DISABLE_POOLS */
+#endif /* USE_CHUNKEDMEMPOOLS */
 
 int
 main (int argc, char **argv)
 {
-#if !DISABLE_POOLS
+#if USE_CHUNKEDMEMPOOLS
     MemPoolTest aTest;
     aTest.run();
 #endif

@@ -1476,6 +1476,9 @@ This section gives an account of those changes in three categories:
 
 	<tag>--disable-carp</tag>
 	<p>Removed. CARP is required by several peering algoithms. Disabling is not useful.
+
+	<tag>--disable-mempools</tag>
+	<p>Removed. Can be set via squid.conf.
 </descrip>
 
 
