@@ -1,3 +1,24 @@
+Changes to squid-3.1.4 (30 May 2010):
+
+	- Bug 2933: Verification of the max. port number for WCCP2 dynamic service
+	- Bug 2924: RADIUS helper compile issues
+	- Bug 2922: Fix assertion failed: HttpHeader.cc: "Headers[id].stat.aliveCount"
+	- Bug 2919: tcp_outgoing_address ACLs not obeying acl_uses_indirect_client
+	- Bug 2896: Fix assertion failed: comm.cc:2063: "!fd_table[fd].closing()"
+	- Bug 2879: pt2: 3.0 regression in headers end finding
+	- Bug 2877: pt2: only output zero-size warning on reverse-proxy requests
+	- Bug 2876: FD_SETSIZE override not working on all linux distributions
+	- Bug 2810: common log format generates 2 lines of syslog
+	- Bug 2789: Optimize unlimited memory pools, and correctly handle limits over 2GB
+	- Bug 2753: Fall back on IPv4 if IPv6 is not present
+	- Bug 2697: Adaptation leaks and extra requests after reconfiguration
+	- Bug 2633: Fix Ecap::HeaderRep::value(name) fails when there is no named header field
+	- Change LDAP helpers to default to LDAP version 3 if available
+	- Add Joomla and Salted Hash support to squid_db_auth helper
+	- Fixed IpAddress port printing for ports higher than 9999
+	- Disable chunked memory pooling by default.
+	- ... and several build errors.
+
 Changes to squid-3.1.3 (02 May 2010):
 
 	- Remove: Advertise 1.1 on replies
