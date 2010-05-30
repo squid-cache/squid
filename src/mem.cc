@@ -588,8 +588,8 @@ Mem::PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, std::
 
     /* Chunks */
     if (mp_st->chunk_capacity) {
-	stream << std::setw(4) << toKB(mp_st->obj_size * mp_st->chunk_capacity) << delim;
-	stream << std::setw(4) << mp_st->chunk_capacity << delim;
+        stream << std::setw(4) << toKB(mp_st->obj_size * mp_st->chunk_capacity) << delim;
+        stream << std::setw(4) << mp_st->chunk_capacity << delim;
 
         needed = mp_st->items_inuse / mp_st->chunk_capacity;
 
@@ -598,19 +598,19 @@ Mem::PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, std::
 
         excess = mp_st->chunks_inuse - needed;
 
-	stream << std::setw(4) << mp_st->chunks_alloc << delim;
-	stream << std::setw(4) << mp_st->chunks_inuse << delim;
-	stream << std::setw(4) << mp_st->chunks_free << delim;
-	stream << std::setw(4) << mp_st->chunks_partial << delim;
-	stream << std::setprecision(3) << xpercent(excess, needed) << delim;
+        stream << std::setw(4) << mp_st->chunks_alloc << delim;
+        stream << std::setw(4) << mp_st->chunks_inuse << delim;
+        stream << std::setw(4) << mp_st->chunks_free << delim;
+        stream << std::setw(4) << mp_st->chunks_partial << delim;
+        stream << std::setprecision(3) << xpercent(excess, needed) << delim;
     } else {
-	stream << delim;
-	stream << delim;
-	stream << delim;
-	stream << delim;
-	stream << delim;
-	stream << delim;
-	stream << delim;
+        stream << delim;
+        stream << delim;
+        stream << delim;
+        stream << delim;
+        stream << delim;
+        stream << delim;
+        stream << delim;
     }
     /*
      *  Fragmentation calculation:
