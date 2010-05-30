@@ -56,11 +56,11 @@ MemPoolMalloc::allocate()
 {
     void *obj = freelist.pop();
     if (obj) {
-	memMeterDec(meter.idle);
-	saved_calls++;
+        memMeterDec(meter.idle);
+        saved_calls++;
     } else {
-	obj = xcalloc(1, obj_size);
-	memMeterInc(meter.alloc);
+        obj = xcalloc(1, obj_size);
+        memMeterInc(meter.alloc);
     }
     memMeterInc(meter.inuse);
     return obj;
@@ -71,13 +71,13 @@ MemPoolMalloc::deallocate(void *obj, bool aggressive)
 {
     memMeterDec(meter.inuse);
     if (aggressive) {
-	xfree(obj);
-	memMeterDec(meter.alloc);
+        xfree(obj);
+        memMeterDec(meter.alloc);
     } else {
-	if (doZeroOnPush)
-	    memset(obj, 0, obj_size);
-	memMeterInc(meter.idle);
-	freelist.push_back(obj);
+        if (doZeroOnPush)
+            memset(obj, 0, obj_size);
+        memMeterInc(meter.idle);
+        freelist.push_back(obj);
     }
 }
 
@@ -134,9 +134,9 @@ void
 MemPoolMalloc::clean(time_t maxage)
 {
     while (void *obj = freelist.pop()) {
-	memMeterDec(meter.idle);
-	memMeterDec(meter.alloc);
-	xfree(obj);
+        memMeterDec(meter.idle);
+        memMeterDec(meter.alloc);
+        xfree(obj);
     }
 }
 
