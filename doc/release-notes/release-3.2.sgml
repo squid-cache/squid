@@ -227,6 +227,11 @@ This section gives a thorough account of those changes in three categories:
 	<p><em>%>eui</em> EUI logging (EUI-48 / MAC address for IPv4, EUI-64 for IPv6)
 	   Both EUI forms are logged in the same field. Type can be identified by length or byte delimiter.
 
+	<tag>memory_pools_limit</tag>
+	<p>Memory limits have been revised and corrected from 3.1.4 onwards.
+	<p>Please check and update your squid.conf to use the text <em>none</em> for no limit instead of the old 0 (zero).
+	<p>All users upgrading need to be aware that from Squid-3.3 setting this option to 0 (zero) will mean zero bytes of memory get pooled.
+
 	<tag>windows_ipaddrchangemonitor</tag>
 	<p>Now only available to be set in Windows builds.
 
