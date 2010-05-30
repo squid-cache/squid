@@ -3,6 +3,7 @@ use strict;
 use DBI;
 use Getopt::Long;
 use Pod::Usage;
+use Digest::MD5 qw(md5 md5_hex md5_base64);
 $|=1;
 
 =pod
@@ -22,6 +23,9 @@ my $db_passwdcol = "password";
 my $db_cond = "enabled = 1";
 my $plaintext = 0;
 my $persist = 0;
+my $isjoomla = 0;
+my $debug = 0;
+my $hashsalt = undef;
 
 =pod
 
@@ -62,14 +66,24 @@ Password column. Default "password".
 =item	B<--cond>
 
 Condition, defaults to enabled=1. Specify 1 or "" for no condition
+If you use --joomla flag, this condition will be changed to block=0
 
 =item	B<--plaintext>
 
 Database contains plain-text passwords
 
+=item	B<--salt>
+
+Selects the correct salt to evaluate passwords
+
 =item	B<--persist>
 
 Keep a persistent database connection open between queries. 
+
+=item  B<--joomla>
+
+Tells helper that user database is Joomla DB.  So their unusual salt 
+hashing is understood.
 
 =back
 
@@ -85,9 +99,13 @@ GetOptions(
 	'cond=s' => \$db_cond,
 	'plaintext' => \$plaintext,
 	'persist' => \$persist,
+	'joomla' => \$isjoomla,
+	'debug' => \$debug,
+	'salt=s' => \$hashsalt,
 	);
 
 my ($_dbh, $_sth);
+$db_cond = "block = 0" if $isjoomla;
 
 sub close_db()
 {
@@ -105,7 +123,9 @@ sub open_db()
     	warn ("Could not connect to $dsn\n");
 	return undef;
     }
-    $_sth = $_dbh->prepare("SELECT $db_passwdcol FROM $db_table WHERE $db_usercol = ?" . ($db_cond ne "" ? " AND $db_cond" : "")) || die;
+    my $sql_query;
+    $sql_query = "SELECT $db_passwdcol FROM $db_table WHERE $db_usercol = ?" . ($db_cond ne "" ? " AND $db_cond" : "");
+    $_sth = $_dbh->prepare($sql_query) || die;
     return $_sth;
 }
 
@@ -113,9 +133,17 @@ sub check_password($$)
 {
     my ($password, $key) = @_;
 
-    return 1 if crypt($password, $key) eq $key;
-    
-    return 1 if $plaintext && $password eq $key;
+    if ($isjoomla){
+        my $salt;
+        my $key2;
+        ($key2,$salt) = split (/$salt/, $key);
+        return 1 if md5_hex($password.$salt).':'.$salt eq $key;
+    }
+    else{
+        return 1 if defined $hashsalt && crypt($password, $hashsalt) eq $key;
+        return 1 if crypt($password, $key) eq $key;
+        return 1 if $plaintext && $password eq $key;
+    }
 
     return 0;
 }
@@ -155,6 +183,7 @@ while (<>) {
 =head1 COPYRIGHT
 
 Copyright (C) 2007 Henrik Nordstrom <henrik@henriknordstrom.net>
+Copyright (C) 2010 Luis Daniel Lucio Quiroz <dlucio@okay.com.mx> (Joomla support)
 This program is free software. You may redistribute copies of it under the
 terms of the GNU General Public License version 2, or (at youropinion) any
 later version.
