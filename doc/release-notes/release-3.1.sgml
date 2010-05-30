@@ -1,6 +1,6 @@
 <!doctype linuxdoc system>
 <article>
-<title>Squid 3.1.3 release notes</title>
+<title>Squid 3.1.4 release notes</title>
 <author>Squid Developers</author>
 
 <abstract>
@@ -13,7 +13,7 @@ for Applied Network Research and members of the Web Caching community.
 
 <sect>Notice
 <p>
-The Squid Team are pleased to announce the release of Squid-3.1.3.
+The Squid Team are pleased to announce the release of Squid-3.1.4.
 
 This new release is available for download from <url url="http://www.squid-cache.org/Versions/v3/3.1/"> or the <url url="http://www.squid-cache.org/Mirrors/http-mirrors.html" name="mirrors">.
 
@@ -1244,6 +1244,11 @@ NOCOMMENT_START
 	<tag>maximum_object_size_in_memory</tag>
 	<p>Default size limit increased to 512KB.
 
+	<tag>memory_pools_limit</tag>
+	<p>Memory limits have been revised and corrected from 3.1.4 onwards.
+	<p>Please check and update your squid.conf to use the text <em>none</em> for no limit instead of the old 0 (zero).
+	<p>All users upgrading need to be aware that from Squid-3.3 setting this option to 0 (zero) will mean zero bytes of memory get pooled.
+
 	<tag>negative_ttl</tag>
 	<p>New default of 0 seconds. To prevent negative-caching of failure messages unless explicitly
 	   permitted by the message generating web server.
@@ -1478,7 +1483,7 @@ This section gives an account of those changes in three categories:
 	<p>Removed. CARP is required by several peering algoithms. Disabling is not useful.
 
 	<tag>--disable-mempools</tag>
-	<p>Removed. Can be set via squid.conf.
+	<p>Replaced by memory_pools squid.conf option.
 </descrip>
 
 

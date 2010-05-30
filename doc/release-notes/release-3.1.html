@@ -1,11 +1,11 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
 <HEAD>
- <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.66">
- <TITLE>Squid 3.1.3 release notes</TITLE>
+ <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.65">
+ <TITLE>Squid 3.1.4 release notes</TITLE>
 </HEAD>
 <BODY>
-<H1>Squid 3.1.3 release notes</H1>
+<H1>Squid 3.1.4 release notes</H1>
 
 <H2>Squid Developers</H2>
 <HR>
@@ -70,7 +70,7 @@ for Applied Network Research and members of the Web Caching community.</EM>
 <HR>
 <H2><A NAME="s1">1.</A> <A HREF="#toc1">Notice</A></H2>
 
-<P>The Squid Team are pleased to announce the release of Squid-3.1.3.</P>
+<P>The Squid Team are pleased to announce the release of Squid-3.1.4.</P>
 <P>This new release is available for download from 
 <A HREF="http://www.squid-cache.org/Versions/v3/3.1/">http://www.squid-cache.org/Versions/v3/3.1/</A> or the 
 <A HREF="http://www.squid-cache.org/Mirrors/http-mirrors.html">mirrors</A>.</P>
@@ -1426,6 +1426,11 @@ Old forms will be deprecated in some as yet undecided future release.
 <DT><B>maximum_object_size_in_memory</B><DD>
 <P>Default size limit increased to 512KB.</P>
 
+<DT><B>memory_pools_limit</B><DD>
+<P>Memory limits have been revised and corrected from 3.1.4 onwards.</P>
+<P>Please check and update your squid.conf to use the text <EM>none</EM> for no limit instead of the old 0 (zero).</P>
+<P>All users upgrading need to be aware that from Squid-3.3 setting this option to 0 (zero) will mean zero bytes of memory get pooled.</P>
+
 <DT><B>negative_ttl</B><DD>
 <P>New default of 0 seconds. To prevent negative-caching of failure messages unless explicitly
 permitted by the message generating web server.</P>
@@ -1677,6 +1682,9 @@ Use --without-pthreads to disable, but only if you really have to.</P>
 
 <DT><B>--disable-carp</B><DD>
 <P>Removed. CARP is required by several peering algoithms. Disabling is not useful.</P>
+
+<DT><B>--disable-mempools</B><DD>
+<P>Replaced by memory_pools squid.conf option.</P>
 </DL>
 </P>
 
