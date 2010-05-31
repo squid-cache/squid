@@ -1,2 +1,7 @@
-libexec_SCRIPTS	= basic_pop3_auth.pl
-EXTRA_DIST = basic_pop3_auth.pl config.test
+include $(top_srcdir)/src/Common.am
+
+libexec_SCRIPTS	= basic_pop3_auth
+EXTRA_DIST = basic_pop3_auth.pl.in config.test
+
+basic_pop3_auth: basic_pop3_auth.pl.in
+	$(subst_perlshell)
