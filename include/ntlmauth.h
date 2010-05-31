@@ -53,11 +53,9 @@
 #ifndef SQUID_NTLMAUTH_H
 #define SQUID_NTLMAUTH_H
 
-/* int*_t */
 #include "config.h"
 
-/* All of this cruft is little endian */
-#include "squid_endian.h"
+/* NP: All of this cruft is little endian */
 
 /* Used internally. Microsoft seems to think this is right, I believe them.
  * Right. */
@@ -99,60 +97,58 @@
 #define REQUEST_NON_NT_SESSION_KEY     0x400000
 
 
-/* String header. String data resides at the end of the request */
+/** String header. String data resides at the end of the request */
 typedef struct _strhdr {
-    int16_t len;		/* Length in bytes */
-    int16_t maxlen;		/* Allocated space in bytes */
-    int32_t offset;		/* Offset from start of request */
+    int16_t len;		/**< Length in bytes */
+    int16_t maxlen;		/**< Allocated space in bytes */
+    int32_t offset;		/**< Offset from start of request */
 } strhdr;
 
-/* We use this to keep data/lenght couples. Only used internally. */
+/** We use this to keep data/lenght couples. Only used internally. */
 typedef struct _lstring {
-    int32_t l;			/* length, -1 if empty */
-    char *str;			/* the string. NULL if not initialized */
+    int32_t l;			/**< length, -1 if empty */
+    char *str;			/**< the string. NULL if not initialized */
 } lstring;
 
-/* This is an header common to all signatures, it's used to discriminate
- * among the different signature types. */
+/** This is an header common to all signatures, it's used to discriminate
+ * among the different signature types.
+ */
 typedef struct _ntlmhdr {
-    char signature[8];		/* "NTLMSSP" */
-    int32_t type;		/* One of the NTLM_* types above. */
+    char signature[8];		/**< "NTLMSSP" */
+    int32_t type;		/**< One of the NTLM_* types above. */
 } ntlmhdr;
 
-/* Negotiation request sent by client */
+/** Negotiation request sent by client */
 typedef struct _ntlm_negotiate {
-    char signature[8];		/* "NTLMSSP" */
-    int32_t type;		/* LSWAP(0x1) */
-    u_int32_t flags;		/* Request flags */
-    strhdr domain;		/* Domain we wish to authenticate in */
-    strhdr workstation;		/* Client workstation name */
-    char payload[256];		/* String data */
+    ntlmhdr hdr;		/**< "NTLMSSP" , LSWAP(0x1) */
+    u_int32_t flags;		/**< Request flags */
+    strhdr domain;		/**< Domain we wish to authenticate in */
+    strhdr workstation;		/**< Client workstation name */
+    char payload[256];		/**< String data */
 } ntlm_negotiate;
 
-/* Challenge request sent by server. */
+/** Challenge request sent by server. */
 typedef struct _ntlm_challenge {
-    char signature[8];		/* "NTLMSSP" */
-    int32_t type;		/* LSWAP(0x2) */
-    strhdr target;		/* Authentication target (domain/server ...) */
-    u_int32_t flags;		/* Request flags */
-    u_char challenge[NONCE_LEN];	/* Challenge string */
-    u_int32_t context_low;	/* LS part of the server context handle */
-    u_int32_t context_high;	/* MS part of the server context handle */
-    char payload[256];		/* String data */
+    ntlmhdr hdr;		/**< "NTLMSSP" , LSWAP(0x2) */
+    strhdr target;		/**< Authentication target (domain/server ...) */
+    u_int32_t flags;		/**< Request flags */
+    u_char challenge[NONCE_LEN];	/**< Challenge string */
+    u_int32_t context_low;	/**< LS part of the server context handle */
+    u_int32_t context_high;	/**< MS part of the server context handle */
+    char payload[256];		/**< String data */
 } ntlm_challenge;
 
-/* Authentication request sent by client in response to challenge */
+/** Authentication request sent by client in response to challenge */
 typedef struct _ntlm_authenticate {
-    char signature[8];		/* "NTLMSSP" */
-    int32_t type;		/* LSWAP(0x3) */
-    strhdr lmresponse;		/* LANMAN challenge response */
-    strhdr ntresponse;		/* NT challenge response */
-    strhdr domain;		/* Domain to authenticate against */
-    strhdr user;		/* Username */
-    strhdr workstation;		/* Workstation name */
-    strhdr sessionkey;		/* Session key for server's use */
-    int32_t flags;		/* Request flags */
-    char payload[256 * 6];	/* String data */
+    ntlmhdr hdr;		/**< "NTLMSSP" , LSWAP(0x3) */
+    strhdr lmresponse;		/**< LANMAN challenge response */
+    strhdr ntresponse;		/**< NT challenge response */
+    strhdr domain;		/**< Domain to authenticate against */
+    strhdr user;		/**< Username */
+    strhdr workstation;		/**< Workstation name */
+    strhdr sessionkey;		/**< Session key for server's use */
+    int32_t flags;		/**< Request flags */
+    char payload[256 * 6];	/**< String data */
 } ntlm_authenticate;
 
 const char *ntlm_make_challenge(char *domain, char *domain_controller,
