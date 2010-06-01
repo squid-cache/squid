@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!@PERL@
 # $Id$
 
 #if you define this, debugging output will be printed to STDERR.

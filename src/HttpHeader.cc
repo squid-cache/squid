@@ -1748,7 +1748,7 @@ HttpHeader::hasListMember(http_hdr_type id, const char *member, const char separ
     String header (getStrOrList(id));
 
     while (strListGetItem(&header, separator, &item, &ilen, &pos)) {
-        if (strncmp(item, member, mlen) == 0
+        if (strncasecmp(item, member, mlen) == 0
                 && (item[mlen] == '=' || item[mlen] == separator || item[mlen] == ';' || item[mlen] == '\0')) {
             result = 1;
             break;
@@ -1772,7 +1772,7 @@ HttpHeader::hasByNameListMember(const char *name, const char *member, const char
     String header (getByName(name));
 
     while (strListGetItem(&header, separator, &item, &ilen, &pos)) {
-        if (strncmp(item, member, mlen) == 0
+        if (strncasecmp(item, member, mlen) == 0
                 && (item[mlen] == '=' || item[mlen] == separator || item[mlen] == ';' || item[mlen] == '\0')) {
             result = 1;
             break;

@@ -97,12 +97,12 @@ Most user-facing changes are reflected in squid.conf (see below).
 	<item>squid_ldap_auth - basic_ldap_auth - Authenticate with LDAP user accounts.
 	<item>ncsa_auth - basic_ncsa_auth - Authenticate with NCSA httpd-style password file.
 	<item>pam_auth - basic_pam_auth - Authenticate with the system PAM infrastructure.
-	<item>pop3.pl - basic_pop3_auth.pl - Authenticate with a mail server POP3/SMTP credentials
+	<item>pop3.pl - basic_pop3_auth - Authenticate with a mail server POP3/SMTP credentials
 	<item>squid_sasl_auth - basic_sasl_auth - Authenticate with SASL.
 	<item>smb_auth - basic_smb_auth - Authenticate with Samba SMB.
 	<item>yp_auth - basic_nis_auth - Authenticate with NIS security system.
 	<item>mswin_sspi - basic_sspi_auth - Authenticate with a Windows Domain Controller using SSPI.
-	<item>MSNT-multi-domain - basic_msnt_multi_domain_auth.pl - Authenticate with any one of multiple Windows Domain Controllers.
+	<item>MSNT-multi-domain - basic_msnt_multi_domain_auth - Authenticate with any one of multiple Windows Domain Controllers.
 	<item>squid_radius_auth - basic_radius_auth - Authenticate with RADIUS.
 </itemize>
 
@@ -226,6 +226,11 @@ This section gives a thorough account of those changes in three categories:
 	<p><em>%sn</em> Unique sequence number per log line. Ported from 2.7
 	<p><em>%>eui</em> EUI logging (EUI-48 / MAC address for IPv4, EUI-64 for IPv6)
 	   Both EUI forms are logged in the same field. Type can be identified by length or byte delimiter.
+
+	<tag>memory_pools_limit</tag>
+	<p>Memory limits have been revised and corrected from 3.1.4 onwards.
+	<p>Please check and update your squid.conf to use the text <em>none</em> for no limit instead of the old 0 (zero).
+	<p>All users upgrading need to be aware that from Squid-3.3 setting this option to 0 (zero) will mean zero bytes of memory get pooled.
 
 	<tag>windows_ipaddrchangemonitor</tag>
 	<p>Now only available to be set in Windows builds.
