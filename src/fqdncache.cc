@@ -535,8 +535,8 @@ fqdncache_nbgethostbyaddr(const Ip::Address &addr, FQDNH * handler, void *handle
     if (name[0] == '\0') {
         debugs(35, 4, "fqdncache_nbgethostbyaddr: Invalid name!");
         const DnsLookupDetails details("Invalid hostname", -1); // error, no lookup
-	if (handler)
-	    handler(NULL, details, handlerData);
+        if (handler)
+            handler(NULL, details, handlerData);
         return;
     }
 
