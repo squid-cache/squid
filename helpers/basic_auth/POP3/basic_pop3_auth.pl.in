@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!@PERL@
 #
 # POP3 authenticator for Squid
 # Copyright (C) 2006 Henrik Nordstrom <henrik@henriknordstrom.net>
