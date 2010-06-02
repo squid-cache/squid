@@ -757,7 +757,7 @@ mainReconfigureFinish(void *)
 #endif
     Adaptation::Config::Finalize(enableAdaptation);
 #endif
-    
+
 #if ICAP_CLIENT
     icapLogOpen();
 #endif
