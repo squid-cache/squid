@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -57,11 +56,11 @@ authenticateActiveSchemeCount(void)
 {
     int rv = 0;
 
-    for (authConfig::iterator i = Config.authConfiguration.begin(); i != Config.authConfiguration.end(); ++i)
+    for (Auth::authConfig::iterator i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i)
         if ((*i)->configured())
             ++rv;
 
-    debugs(29, 9, "authenticateActiveSchemeCount: " << rv << " active.");
+    debugs(29, 9, HERE << rv << " active.");
 
     return rv;
 }
@@ -69,119 +68,84 @@ authenticateActiveSchemeCount(void)
 int
 authenticateSchemeCount(void)
 {
-    int rv = AuthScheme::Schemes().size();
+    int rv = AuthScheme::GetSchemes().size();
 
-    debugs(29, 9, "authenticateSchemeCount: " << rv << " active.");
+    debugs(29, 9, HERE << rv << " active.");
 
     return rv;
 }
 
 static void
-authenticateRegisterWithCacheManager(authConfig * config)
+authenticateRegisterWithCacheManager(Auth::authConfig * config)
 {
-    for (authConfig::iterator i = config->begin(); i != config->end(); ++i) {
+    for (Auth::authConfig::iterator i = config->begin(); i != config->end(); ++i) {
         AuthConfig *scheme = *i;
         scheme->registerWithCacheManager();
     }
 }
 
 void
-authenticateInit(authConfig * config)
+authenticateInit(Auth::authConfig * config)
 {
-    for (authConfig::iterator i = config->begin(); i != config->end(); ++i) {
-        AuthConfig *scheme = *i;
+    /* Do this first to clear memory and remove dead state on a reconfigure */
+    if (proxy_auth_username_cache)
+        AuthUser::CachedACLsReset();
 
-        if (scheme->configured())
-            scheme->init(scheme);
+    /* If we do not have any auth config state to create stop now. */
+    if (!config)
+        return;
+
+    for (Auth::authConfig::iterator i = config->begin(); i != config->end(); ++i) {
+        AuthConfig *schemeCfg = *i;
+
+        if (schemeCfg->configured())
+            schemeCfg->init(schemeCfg);
     }
 
     if (!proxy_auth_username_cache)
         AuthUser::cacheInit();
-    else
-        AuthUser::CachedACLsReset();
 
-    authenticateRegisterWithCacheManager(&Config.authConfiguration);
+    authenticateRegisterWithCacheManager(config);
 }
 
 void
-authenticateShutdown(void)
+authenticateRotate(void)
 {
-    debugs(29, 2, "authenticateShutdown: shutting down auth schemes");
-    /* free the cache if we are shutting down */
-
-    if (shutting_down) {
-        hashFreeItems(proxy_auth_username_cache, AuthUserHashPointer::removeFromCache);
-        AuthScheme::FreeAll();
-    } else {
-        for (AuthScheme::const_iterator i = AuthScheme::Schemes().begin(); i != AuthScheme::Schemes().end(); ++i)
-            (*i)->done();
-    }
-}
-
-/**
- \retval 0 not in use
- \retval ? in use
- */
-int
-authenticateAuthUserInuse(AuthUser * auth_user)
-{
-    assert(auth_user != NULL);
-    return auth_user->references;
+    for (Auth::authConfig::iterator i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i)
+        if ((*i)->configured())
+            (*i)->rotateHelpers();
 }
 
 void
-authenticateAuthUserMerge(AuthUser * from, AuthUser * to)
+authenticateReset(void)
 {
-    to->absorb (from);
-}
+    debugs(29, 2, HERE << "Reset authentication State.");
 
-/**
- * Cleans all config-dependent data from the auth_user cache.
- \note It DOES NOT Flush the user cache.
- */
-void
-authenticateUserCacheRestart(void)
-{
-    AuthUserHashPointer *usernamehash;
-    AuthUser *auth_user;
-    debugs(29, 3, HERE << "Clearing config dependent cache data.");
+    /* free all username cache entries */
     hash_first(proxy_auth_username_cache);
-
+    AuthUserHashPointer *usernamehash;
     while ((usernamehash = ((AuthUserHashPointer *) hash_next(proxy_auth_username_cache)))) {
-        auth_user = usernamehash->user();
-        debugs(29, 5, "authenticateUserCacheRestat: Clearing cache ACL results for user: " << auth_user->username());
+        debugs(29, 5, HERE << "Clearing entry for user: " << usernamehash->user()->username());
+        hash_remove_link(proxy_auth_username_cache, (hash_link *)usernamehash);
+        delete usernamehash;
     }
+
+    /* schedule shutdown of the helpers */
+    authenticateRotate();
+
+    /* free current global config details too. */
+    Auth::TheConfig.clean();
 }
 
-
-void
-AuthUserHashPointer::removeFromCache(void *usernamehash_p)
-{
-    AuthUserHashPointer *usernamehash = static_cast<AuthUserHashPointer *>(usernamehash_p);
-    AuthUser *auth_user = usernamehash->auth_user;
-
-    if ((authenticateAuthUserInuse(auth_user) - 1))
-        debugs(29, 1, "AuthUserHashPointer::removeFromCache: entry in use - not freeing");
-
-    auth_user->unlock();
-
-    /** \todo change behaviour - we remove from the auth user list here, and then unlock, and the
-     * delete ourselves.
-     */
-}
-
-AuthUserHashPointer::AuthUserHashPointer(AuthUser * anAuth_user):
+AuthUserHashPointer::AuthUserHashPointer(AuthUser::Pointer anAuth_user):
         auth_user(anAuth_user)
 {
     key = (void *)anAuth_user->username();
     next = NULL;
     hash_join(proxy_auth_username_cache, (hash_link *) this);
-
-    /** lock for presence in the cache */
-    auth_user->lock();
 }
 
-AuthUser *
+AuthUser::Pointer
 AuthUserHashPointer::user() const
 {
     return auth_user;

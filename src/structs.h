@@ -486,7 +486,6 @@ struct SquidConfig {
 #endif
     } accessList;
     acl_deny_info_list *denyInfoList;
-    authConfig authConfiguration;
 
     struct {
         size_t list_width;

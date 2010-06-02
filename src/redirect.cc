@@ -136,7 +136,7 @@ redirectStart(ClientHttpRequest * http, RH * handler, void *data)
         r->client_addr.SetNoAddr();
     r->client_ident = NULL;
 
-    if (http->request->auth_user_request)
+    if (http->request->auth_user_request != NULL)
         r->client_ident = http->request->auth_user_request->username();
     else if (http->request->extacl_user.defined()) {
         r->client_ident = http->request->extacl_user.termedBuf();
