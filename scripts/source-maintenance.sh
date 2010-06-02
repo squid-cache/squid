@@ -21,15 +21,22 @@ else
 fi
 
 ROOT=`bzr root`
+
+srcformat ()
+{
 PWD=`pwd`
+echo "FORMAT: ${PWD}..."
+
 for FILENAME in `ls -1`; do
 
     case ${FILENAME} in
 
     *.h|*.c|*.cc|*.cci)
 
+	#
+	# Code Style formatting maintenance
+	#
 	${ROOT}/scripts/formater.pl ${FILENAME}
-
 	if test -e $FILENAME -a -e "$FILENAME.astylebak"; then
 		md51=`cat  $FILENAME| tr -d "\n \t\r" | $MD5`;
 		md52=`cat  $FILENAME.astylebak| tr -d "\n \t\r" | $MD5`;
@@ -41,8 +48,24 @@ for FILENAME in `ls -1`; do
 		else
 			rm -f $FILENAME.astylebak
 		fi
-		continue
         fi
+
+	#
+	# DEBUG Section list maintenance
+	#
+	grep " DEBUG: section" <${FILENAME} | sed -e 's/ \* DEBUG: //' >>${ROOT}/doc/debug-sections.tmp
+
+	#
+	# File permissions maintenance.
+	#
+	chmod 644 ${FILENAME}
+	;;
+
+    *.pl|*.sh)
+	#
+	# File permissions maintenance.
+	#
+	chmod 755 ${FILENAME}
 	;;
 
     Makefile.am)
@@ -55,17 +78,14 @@ for FILENAME in `ls -1`; do
 
     if test -d $FILENAME ; then
 	cd $FILENAME
-	$ROOT/scripts/srcformat.sh || exit 1
+	srcformat ${ROOT} || exit 1
 	cd ..
     fi
 
 done
+}
 
-#
-#  DEBUG Section listing maintenance
-#
-cat ${ROOT}/{compat,src,lib,include}/*{.,/*.,/*/*.,/*/*/*.}{c,cc,h} 2>/dev/null \
-	| grep " DEBUG:" \
-	| sed -e 's/ \* DEBUG: //' \
-	| sort -u \
-	| sort -n >${ROOT}/doc/debug-sections.txt
+echo "" >${ROOT}/doc/debug-sections.tmp
+srcformat || exit 1
+sort -u <${ROOT}/doc/debug-sections.tmp | sort -n >${ROOT}/doc/debug-sections.txt
+rm ${ROOT}/doc/debug-sections.tmp

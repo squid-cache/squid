@@ -2,7 +2,7 @@
 /*
  * $Id$
  *
- * DEBUG: section xx    Refcount allocator
+ * DEBUG: section --    Refcount allocator
  * AUTHOR:  Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

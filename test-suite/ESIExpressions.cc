@@ -2,7 +2,7 @@
 /*
  * $Id$
  *
- * DEBUG: section 86		ESI Expressions
+ * DEBUG: section 86    ESI Expressions
  * AUTHOR:  Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
