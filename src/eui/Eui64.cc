@@ -67,13 +67,11 @@ Eui::Eui64::lookupSlaac(Ip::Address &c)
 bool
 Eui::Eui64::lookupNdp(Ip::Address &c)
 {
+#if 0 /* no actual lookup coded yet */
 #if USE_IPV6
 
-#if 0 /* no OS yet supported for NDP protocol lookup */
-
-#else
+    /* no OS yet supported for NDP protocol lookup */
     debugs(28, 0, "ERROR: ARP / MAC / EUI-* operations not supported on this operating system.");
-#endif
 
     /*
      * Address was not found on any interface
@@ -82,6 +80,7 @@ Eui::Eui64::lookupNdp(Ip::Address &c)
 #else
     debugs(28, 0, "ERROR: IPv6 EUI-64 operations not supported on this operating system.");
 #endif
+#endif /* 0 */
 
     clear();
     return false;
