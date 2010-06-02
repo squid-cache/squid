@@ -35,32 +35,36 @@
 
 #include "hash.h"
 #include "MemPool.h"
-#include "typedefs.h" /* for authConfig */
+#include "auth/Config.h"
+#include "auth/User.h"
 
 class AuthUser;
 
 /**
  \ingroup AuthAPI
  *
- * This is used to link auth_users into the username cache.
+ * This is used to link AuthUsers objects into the username cache.
  * Because some schemes may link in aliases to a user,
  * the link is not part of the AuthUser structure itself.
  *
- \todo Inheritance in a struct? this should be a class.
+ * Code must not hold onto copies of these objects.
+ * They may exist only so long as the AuthUser being referenced
+ * is recorded in the cache. Any caller using hash_remove_link
+ * must then delete the AuthUserHashPointer.
  */
-struct AuthUserHashPointer : public hash_link {
+class AuthUserHashPointer : public hash_link {
     /* first two items must be same as hash_link */
 
 public:
-    static void removeFromCache (void *anAuthUserHashPointer);
     MEMPROXY_CLASS(AuthUserHashPointer);
 
-    AuthUserHashPointer(AuthUser *);
+    AuthUserHashPointer(AuthUser::Pointer);
+    ~AuthUserHashPointer() { auth_user = NULL; };
 
-    AuthUser *user() const;
+    AuthUser::Pointer user() const;
 
 private:
-    AuthUser *auth_user;
+    AuthUser::Pointer auth_user;
 };
 
 MEMPROXY_CLASS_INLINE(AuthUserHashPointer);
@@ -75,19 +79,22 @@ class StoreEntry;
  */
 typedef void AUTHSSTATS(StoreEntry *);
 
-/**
- \ingroup AuthAPI
- * subsumed by the C++ interface
- \todo does 'subsumed' mean deprecated use a C++ API call?
- */
-extern void authenticateAuthUserMerge(AuthUser *, AuthUser *);
+/// \ingroup AuthAPI
+extern void authenticateInit(Auth::authConfig *);
 
-/// \ingroup AuthAPI
-extern void authenticateInit(authConfig *);
-/// \ingroup AuthAPI
-extern void authenticateShutdown(void);
-/// \ingroup AuthAPI
-extern int authenticateAuthUserInuse(AuthUser * auth_user);
+/** \ingroup AuthAPI
+ * Remove all idle authentication state. Intended for use by reconfigure.
+ *
+ * Removes the username cache contents and global configuration state.
+ * Stops just short of detaching the auth components completely.
+ *
+ * Currently active requests should finish. Howevee new requests will not use
+ * authentication unless something causes the global config to be rebuilt.
+ * Such as a configure load action adding config and re-running authenticateInit().
+ */
+extern void authenticateReset(void);
+
+extern void authenticateRotate(void);
 
 /// \ingroup AuthAPI
 extern void authenticateFreeProxyAuthUserACLResults(void *data);
@@ -96,8 +103,6 @@ extern int authenticateActiveSchemeCount(void);
 /// \ingroup AuthAPI
 extern int authenticateSchemeCount(void);
 
-/// \ingroup AuthAPI
-extern void authenticateUserCacheRestart(void);
 /// \ingroup AuthAPI
 extern void authenticateOnCloseConnection(ConnStateData * conn);
 

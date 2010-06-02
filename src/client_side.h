@@ -33,6 +33,7 @@
 #ifndef SQUID_CLIENTSIDE_H
 #define SQUID_CLIENTSIDE_H
 
+#include "auth/UserRequest.h"
 #include "base/AsyncJob.h"
 #include "BodyPipe.h"
 #include "comm.h"
@@ -43,13 +44,8 @@
 #include "StoreIOBuffer.h"
 
 class ConnStateData;
-
 class ClientHttpRequest;
-
 class clientStreamNode;
-
-class AuthUserRequest;
-
 class ChunkedCodingParser;
 class HttpParser;
 
@@ -174,16 +170,10 @@ public:
     int64_t bodySizeLeft();
 
     /**
-     * Is this connection based authentication? if so what type it
-     * is.
-     */
-    auth_type_t auth_type;
-
-    /**
-     * note this is ONLY connection based because NTLM is against HTTP spec.
+     * note this is ONLY connection based because NTLM and Negotiate is against HTTP spec.
      * the user details for connection based authentication
      */
-    AuthUserRequest *auth_user_request;
+    AuthUserRequest::Pointer auth_user_request;
 
     /**
      * used by the owner of the connection, opaque otherwise
