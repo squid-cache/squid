@@ -180,7 +180,7 @@ peerUserHashSelectParent(HttpRequest * request)
     if (n_userhash_peers == 0)
         return NULL;
 
-    if (request->auth_user_request)
+    if (request->auth_user_request != NULL)
         key = request->auth_user_request->username();
 
     if (!key)
