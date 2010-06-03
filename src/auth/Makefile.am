@@ -73,6 +73,8 @@ libnegotiate_la_SOURCES = \
 AuthType.cc: AuthType.h $(top_srcdir)/src/mk-string-arrays.awk
 	$(AWK) -f $(top_srcdir)/src/mk-string-arrays.awk < $(srcdir)/AuthType.h > $@ || (rm -f $@ ; exit 1)
 
+CLEANFILES += AuthType.cc
+
 
 TESTS += testHeaders
 
