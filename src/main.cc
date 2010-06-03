@@ -212,7 +212,12 @@ SignalEngine::doShutdown(time_t wait)
     WIN32_svcstatusupdate(SERVICE_STOP_PENDING, (wait + 1) * 1000);
 #endif
 
+    /* run the closure code which can be shared with reconfigure */
     serverConnectionsClose();
+
+    /* detach the auth components (only do this on full shutdown) */
+    AuthScheme::FreeAll();
+
     eventAdd("SquidShutdown", &StopEventLoop, this, (double) (wait + 1), 1, false);
 }
 
@@ -693,7 +698,7 @@ mainReconfigureStart(void)
 #endif
 
     redirectShutdown();
-    authenticateShutdown();
+    authenticateReset();
     externalAclShutdown();
     storeDirCloseSwapLogs();
     storeLogClose();
@@ -731,7 +736,6 @@ mainReconfigureFinish(void *)
     setEffectiveUser();
     _db_init(Debug::cache_log, Debug::debugOptions);
     ipcache_restart();		/* clear stuck entries */
-    authenticateUserCacheRestart();	/* clear stuck ACL entries */
     fqdncache_restart();	/* sigh, fqdncache too */
     parseEtcHosts();
     errorInitialize();		/* reload error pages */
@@ -753,7 +757,7 @@ mainReconfigureFinish(void *)
 #endif
     Adaptation::Config::Finalize(enableAdaptation);
 #endif
-    
+
 #if ICAP_CLIENT
     icapLogOpen();
 #endif
@@ -769,7 +773,7 @@ mainReconfigureFinish(void *)
 #endif
 
     redirectInit();
-    authenticateInit(&Config.authConfiguration);
+    authenticateInit(&Auth::TheConfig);
     externalAclInit();
 #if USE_WCCP
 
@@ -811,7 +815,7 @@ mainRotate(void)
     dnsShutdown();
 #endif
     redirectShutdown();
-    authenticateShutdown();
+    authenticateRotate();
     externalAclShutdown();
 
     _db_rotate_log();		/* cache.log */
@@ -832,7 +836,7 @@ mainRotate(void)
     dnsInit();
 #endif
     redirectInit();
-    authenticateInit(&Config.authConfiguration);
+    authenticateInit(&Auth::TheConfig);
     externalAclInit();
 }
 
@@ -965,7 +969,7 @@ mainInitialize(void)
 
     redirectInit();
 
-    authenticateInit(&Config.authConfiguration);
+    authenticateInit(&Auth::TheConfig);
 
     externalAclInit();
 
@@ -1280,6 +1284,8 @@ SquidMain(int argc, char **argv)
 
         /* we may want the parsing process to set this up in the future */
         Store::Root(new StoreController);
+
+        InitAuthSchemes();      /* required for config parsing */
 
         parse_err = parseConfigFile(ConfigFile);
 
@@ -1735,7 +1741,7 @@ SquidShutdown()
     DelayPools::FreePools();
 #endif
 
-    authenticateShutdown();
+    authenticateReset();
 #if USE_WIN32_SERVICE
 
     WIN32_svcstatusupdate(SERVICE_STOP_PENDING, 10000);

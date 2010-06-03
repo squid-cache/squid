@@ -31,11 +31,10 @@
 #endif
 
 #include "ntlmauth.h"
-#include "squid_endian.h"
 #include "util.h"		/* for base64-related stuff */
 
 #if UNUSED_CODE
-/* Dumps NTLM flags to standard error for debugging purposes */
+/** Dumps NTLM flags to standard error for debugging purposes */
 void
 ntlm_dump_ntlmssp_flags(u_int32_t flags)
 {
@@ -61,16 +60,16 @@ ntlm_dump_ntlmssp_flags(u_int32_t flags)
             (flags & REQUEST_NON_NT_SESSION_KEY ? "Req_nonnt_sesskey " : "")
            );
 }
-
 #endif
 
 #define lstring_zero(s) s.str=NULL; s.l=-1;
 
-/* fetches a string from the authentication packet.
+/**
+ * Fetches a string from the authentication packet.
  * The lstring data-part points to inside the packet itself.
  * It's up to the user to memcpy() that if the value needs to
- * be used in any way that requires a tailing \0. (he can check whether the
- * value is there though, in that case lstring.length==-1).
+ * be used in any way that requires a tailing \0. (can check whether the
+ * value is there though, in that case lstring.length == -1).
  */
 lstring
 ntlm_fetch_string(char *packet, int32_t length, strhdr * str)
@@ -95,7 +94,8 @@ ntlm_fetch_string(char *packet, int32_t length, strhdr * str)
     return rv;
 }
 
-/* Adds something to the payload. The caller must guarrantee that
+/**
+ * Adds something to the payload. The caller must guarrantee that
  * there is enough space in the payload string to accommodate the
  * added value.
  * payload_length and hdr will be modified as a side-effect.
@@ -117,9 +117,10 @@ ntlm_add_to_payload(char *payload, int *payload_length,
 }
 
 
-/* prepares a base64-encode challenge packet to be sent to the client
- * note: domain should be upper_case
- * note: the storage type for the returned value depends on
+/**
+ * Prepares a base64-encode challenge packet to be sent to the client
+ * \note domain should be upper_case
+ * \note the storage type for the returned value depends on
  *    base64_encode_bin. Currently this means static storage.
  */
 const char *
@@ -130,8 +131,8 @@ ntlm_make_challenge(char *domain, char *domain_controller,
     int pl = 0;
     const char *encoded;
     memset(&ch, 0, sizeof(ntlm_challenge));	/* reset */
-    memcpy(ch.signature, "NTLMSSP", 8);		/* set the signature */
-    ch.type = htole32(NTLM_CHALLENGE);	/* this is a challenge */
+    memcpy(ch.hdr.signature, "NTLMSSP", 8);		/* set the signature */
+    ch.hdr.type = htole32(NTLM_CHALLENGE);	/* this is a challenge */
     ntlm_add_to_payload(ch.payload, &pl, &ch.target, domain, strlen(domain),
                         NTLM_CHALLENGE_HEADER_OFFSET);
     ch.flags = htole32(

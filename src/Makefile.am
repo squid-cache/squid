@@ -154,8 +154,6 @@ noinst_LTLIBRARIES = libsquid.la
 
 # libraries used by many targets
 COMMON_LIBS = \
-	base/libbase.la \
-	libsquid.la \
 	auth/libacls.la \
 	ident/libident.la \
 	acl/libacls.la \
@@ -163,6 +161,8 @@ COMMON_LIBS = \
 	acl/libstate.la \
 	auth/libauth.la \
 	acl/libapi.la \
+	base/libbase.la \
+	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la
 
@@ -754,7 +754,7 @@ snmp_core.o snmp_agent.o: ../snmplib/libsnmp.a $(top_srcdir)/include/cache_snmp.
 globals.cc: globals.h mk-globals-c.awk
 	$(AWK) -f $(srcdir)/mk-globals-c.awk < $(srcdir)/globals.h > $@ || ($(RM) -f $@ && exit 1)
 
-## Generate files containing strng arrays for various enums....
+## Generate files containing string arrays for various enums....
 hier_code.cc: hier_code.h mk-string-arrays.awk
 	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/hier_code.h > $@ || ($(RM) -f $@ && exit 1)
 
@@ -1104,6 +1104,7 @@ tests_testBoilerplate_DEPENDENCIES = \
 
 ## Tests of the CacheManager module.
 tests_testCacheManager_SOURCES = \
+	$(ACL_REGISTRATION_SOURCES) \
 	debug.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
@@ -1283,6 +1284,7 @@ tests_testDiskIO_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 
 ## Tests of the Even module.
 tests_testEvent_SOURCES = \
+	$(ACL_REGISTRATION_SOURCES) \
 	debug.cc \
 	EventLoop.h \
 	EventLoop.cc \
@@ -1438,6 +1440,7 @@ tests_testEvent_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 
 ## Tests of the EventLoop module.
 tests_testEventLoop_SOURCES = \
+	$(ACL_REGISTRATION_SOURCES) \
 	debug.cc \
 	EventLoop.h \
 	EventLoop.cc \
@@ -1591,6 +1594,7 @@ tests_testEventLoop_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	$(SQUID_CPPUNIT_LA)
 
 tests_test_http_range_SOURCES = \
+	$(ACL_REGISTRATION_SOURCES) \
 	tests/test_http_range.cc \
 	BodyPipe.cc \
 	cache_cf.cc \
@@ -1741,6 +1745,7 @@ tests_test_http_range_DEPENDENCIES = \
 
 ## Tests of the HttpRequest module.
 tests_testHttpRequest_SOURCES = \
+	$(ACL_REGISTRATION_SOURCES) \
 	debug.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
@@ -2112,6 +2117,7 @@ tests_testNull_DEPENDENCIES = \
 ## Tests of the URL module.
 ## TODO: Trim this down once the insanity is over.
 tests_testURL_SOURCES = \
+	$(ACL_REGISTRATION_SOURCES) \
 	debug.cc \
 	url.cc \
 	URLScheme.cc \
