@@ -256,7 +256,7 @@ AuthNegotiateUserRequest::authenticate(HttpRequest * aRequest, ConnStateData * c
         /* we've failed somewhere in authentication */
         debugs(29, 9, HERE << "auth state negotiate failed. " << proxy_auth);
         break;
-   }
+    }
 
     return;
 }
@@ -277,7 +277,7 @@ AuthNegotiateUserRequest::HandleReply(void *data, void *lastserver, char *reply)
         cbdataReferenceDone(r->data);
         authenticateStateFree(r);
         return;
-   }
+    }
 
     if (!reply) {
         debugs(29, DBG_IMPORTANT, "ERROR: Negotiate Authentication Helper '" << lastserver << "' crashed!.");

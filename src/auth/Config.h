@@ -129,7 +129,7 @@ public:
     virtual const char * type() const = 0;
 
 public:
-    HelperChildConfig authenticateChildren;    
+    HelperChildConfig authenticateChildren;
     wordlist *authenticate;
 };
 
