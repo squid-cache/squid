@@ -344,6 +344,7 @@ typedef enum {
     LFT_LOCAL_IP,
     LFT_LOCAL_PORT,
     /*LFT_LOCAL_NAME, */
+    LFT_PEER_LOCAL_PORT,
 
     LFT_TIME_SECONDS_SINCE_EPOCH,
     LFT_TIME_SUBSECOND,
@@ -505,6 +506,7 @@ struct logformat_token_table_entry logformat_token_table[] = {
     {"la", LFT_LOCAL_IP},
     {"lp", LFT_LOCAL_PORT},
     /*{ "lA", LFT_LOCAL_NAME }, */
+    {"<lp", LFT_PEER_LOCAL_PORT},
 
     {"ts", LFT_TIME_SECONDS_SINCE_EPOCH},
     {"tu", LFT_TIME_SUBSECOND},
@@ -687,6 +689,14 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
         case LFT_LOCAL_PORT:
             if (al->request) {
                 outint = al->request->my_addr.GetPort();
+                doint = 1;
+            }
+
+            break;
+
+        case LFT_PEER_LOCAL_PORT:
+            if (al->hier.peer_local_port) {
+                outint = al->hier.peer_local_port;
                 doint = 1;
             }
 
@@ -2081,7 +2091,8 @@ HierarchyLogEntry::HierarchyLogEntry() :
         n_ichoices(0),
         peer_reply_status(HTTP_STATUS_NONE),
         peer_response_time(-1),
-        total_response_time(-1)
+        total_response_time(-1),
+        peer_local_port(0)
 {
     memset(host, '\0', SQUIDHOSTNAMELEN);
     memset(cd_host, '\0', SQUIDHOSTNAMELEN);
