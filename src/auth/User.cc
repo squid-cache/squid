@@ -61,7 +61,7 @@ AuthUser::AuthUser(AuthConfig *aConfig) :
         config(aConfig),
         ipcount(0),
         expiretime(0),
-	credentials_state(Unchecked),
+        credentials_state(Unchecked),
         username_(NULL)
 {
     proxy_auth_list.head = proxy_auth_list.tail = NULL;
@@ -390,6 +390,6 @@ AuthUser::UsernameCacheStats(StoreEntry *output)
                           auth_user->ttl(),
                           static_cast<int32_t>(auth_user->expiretime - squid_curtime + Config.authenticateTTL),
                           auth_user->username()
-                          );
+                         );
     }
 }

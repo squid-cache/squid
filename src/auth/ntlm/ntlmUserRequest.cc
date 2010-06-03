@@ -82,7 +82,7 @@ AuthNTLMUserRequest::module_start(RH * handler, void *data)
     if (static_cast<AuthNTLMConfig*>(AuthConfig::Find("ntlm"))->authenticate == NULL) {
         debugs(29, DBG_CRITICAL, "ERROR: NTLM Start: no NTLM program configured.");
         handler(data, NULL);
-       return;
+        return;
     }
 
     r = cbdataAlloc(authenticateStateData);

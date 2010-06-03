@@ -1484,7 +1484,7 @@ free_authparam(Auth::authConfig * cfg)
     }
 
     /* on reconfigure initialize new auth schemes for the new config. */
-    if(reconfiguring) {
+    if (reconfiguring) {
         InitAuthSchemes();
     }
 }

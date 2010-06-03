@@ -52,7 +52,8 @@ class AuthUser;
  * is recorded in the cache. Any caller using hash_remove_link
  * must then delete the AuthUserHashPointer.
  */
-class AuthUserHashPointer : public hash_link {
+class AuthUserHashPointer : public hash_link
+{
     /* first two items must be same as hash_link */
 
 public:
