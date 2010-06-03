@@ -632,7 +632,6 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
     ipcache_entry *i = NULL;
     const ipcache_addrs *addrs = NULL;
     generic_cbdata *c;
-    assert(handler != NULL);
     debugs(14, 4, "ipcache_nbgethostbyname: Name '" << name << "'.");
     IpcacheStats.requests++;
 
@@ -640,7 +639,8 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
         debugs(14, 4, "ipcache_nbgethostbyname: Invalid name!");
         IpcacheStats.invalid++;
         const DnsLookupDetails details("Invalid hostname", -1); // error, no lookup
-        handler(NULL, details, handlerData);
+        if (handler)
+            handler(NULL, details, handlerData);
         return;
     }
 
@@ -648,7 +648,8 @@ ipcache_nbgethostbyname(const char *name, IPH * handler, void *handlerData)
         debugs(14, 4, "ipcache_nbgethostbyname: BYPASS for '" << name << "' (already numeric)");
         IpcacheStats.numeric_hits++;
         const DnsLookupDetails details(NULL, -1); // no error, no lookup
-        handler(addrs, details, handlerData);
+        if (handler)
+            handler(addrs, details, handlerData);
         return;
     }
 

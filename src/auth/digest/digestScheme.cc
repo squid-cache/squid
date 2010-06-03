@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -31,19 +30,18 @@
  *
  */
 
-#include "digestScheme.h"
+#include "config.h"
+#include "auth/digest/digestScheme.h"
+#include "helper.h"
 
-AuthScheme &
+AuthScheme::Pointer
 digestScheme::GetInstance()
 {
-    if (_instance == NULL)
+    if (_instance == NULL) {
         _instance = new digestScheme();
-    return *_instance;
-}
-
-digestScheme::digestScheme()
-{
-    AddScheme(*this);
+        AddScheme(_instance);
+    }
+    return _instance;
 }
 
 char const *
@@ -52,4 +50,28 @@ digestScheme::type () const
     return "digest";
 }
 
-digestScheme *digestScheme::_instance = NULL;
+AuthScheme::Pointer digestScheme::_instance = NULL;
+
+AuthConfig *
+digestScheme::createConfig()
+{
+    AuthDigestConfig *digestCfg = new AuthDigestConfig;
+    return dynamic_cast<AuthConfig*>(digestCfg);
+}
+
+void
+digestScheme::PurgeCredentialsCache(void)
+{
+    AuthUserHashPointer *usernamehash;
+    AuthUser::Pointer auth_user;
+    hash_first(proxy_auth_username_cache);
+
+    while ((usernamehash = static_cast<AuthUserHashPointer *>(hash_next(proxy_auth_username_cache)) )) {
+        auth_user = usernamehash->user();
+
+        if (strcmp(auth_user->config->type(), "digest") == 0) {
+            hash_remove_link(proxy_auth_username_cache, static_cast<hash_link*>(usernamehash));
+            delete usernamehash;
+        }
+    }
+}
