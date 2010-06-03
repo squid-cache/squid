@@ -2611,6 +2611,7 @@ DOC_START
 		<A	Server IP address or peer name
 		la	Local IP address (http_port)
 		lp	Local port number (http_port)
+		<lp     Local port number of the last server or peer connection
 		sn	Unique sequence number per log line entry
 		ts	Seconds since epoch
 		tu	subsecond time (milliseconds)
