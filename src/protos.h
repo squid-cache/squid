@@ -576,7 +576,19 @@ SQUIDCEXTERN pid_t readPidFile(void);
 SQUIDCEXTERN void keepCapabilities(void);
 
 SQUIDCEXTERN void BroadcastSignalIfAny(int& sig);
-SQUIDCEXTERN bool IsPidFileMaintainer();
+/// whether the current process is the parent of all other Squid processes
+SQUIDCEXTERN bool IamMasterProcess();
+/** 
+    whether the current process is dedicated to doing things that only
+    a single process should do, such as PID file maintenance and WCCP
+*/
+SQUIDCEXTERN bool IamPrimaryProcess();
+/// whether the current process coordinates worker processes
+SQUIDCEXTERN bool IamCoordinatorProcess();
+/// whether the current process handles HTTP transactions and such
+SQUIDCEXTERN bool IamWorkerProcess();
+/// Whether there should be more than one worker process running
+SQUIDCEXTERN bool UsingSmp(); // try using specific Iam*() checks above first
 SQUIDCEXTERN int DebugSignal;
 
 /* AYJ debugs function to show locations being reset with memset() */

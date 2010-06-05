@@ -404,10 +404,8 @@ void
 BroadcastSignalIfAny(int& sig)
 {
     if (sig > 0) {
-        if (!opt_no_daemon && Config.main_processes > 1) {
-            if (KidIdentifier == Config.main_processes + 1)
-                Ipc::Coordinator::Instance()->broadcastSignal(sig);
-        }
+        if (IamCoordinatorProcess())
+            Ipc::Coordinator::Instance()->broadcastSignal(sig);
         sig = -1;
     }
 }
@@ -807,23 +805,47 @@ no_suid(void)
 }
 
 bool
-IsPidFileMaintainer()
+IamMasterProcess()
 {
-    if (!opt_no_daemon && Config.main_processes > 0) {
-        if (Config.main_processes > 1) {
-            // multiple kids delegate PID file maintanence to the coordinator
-            if (KidIdentifier <= Config.main_processes)
-                return false;
-        } else {
-            // master process does not maintain PID file when
-            // Config.main_processes == 1
-            if (KidIdentifier == 0)
-                return false;
-        }
-    }
+    return KidIdentifier == 0;
+}
 
-    // if there are no kids, then the master process maintains the PID file
-    return true;
+bool
+IamWorkerProcess()
+{
+    // when there is only one process, it has to be the worker
+    if (opt_no_daemon || Config.main_processes == 0)
+        return true;
+
+    return 0 < KidIdentifier && KidIdentifier <= Config.main_processes;
+}
+
+bool
+UsingSmp()
+{
+    return !opt_no_daemon && Config.main_processes > 1;
+}
+
+bool
+IamCoordinatorProcess()
+{
+    return UsingSmp() && KidIdentifier == Config.main_processes + 1;
+}
+
+bool
+IamPrimaryProcess()
+{
+    // when there is only one process, it has to be primary
+    if (opt_no_daemon || Config.main_processes == 0)
+        return true;
+
+    // when there is a master and worker process, the master delegates
+    // primary functions to its only kid
+    if (Config.main_processes == 1)
+        return IamWorkerProcess();
+
+    // in SMP mode, multiple kids delegate primary functions to the coordinator
+    return IamCoordinatorProcess();
 }
 
 void
@@ -834,7 +856,7 @@ writePidFile(void)
     mode_t old_umask;
     char buf[32];
 
-    if (!IsPidFileMaintainer())
+    if (!IamPrimaryProcess())
         return;
 
     if ((f = Config.pidFilename) == NULL)

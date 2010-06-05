@@ -621,11 +621,19 @@ shut_down(int sig)
 static void
 serverConnectionsOpen(void)
 {
-    // Coordinator does not start proxying services
-    if (!opt_no_daemon && Config.main_processes > 1 &&
-       KidIdentifier == Config.main_processes + 1)
-       return;
+    if (IamPrimaryProcess()) {
+#if USE_WCCP
 
+    wccpConnectionOpen();
+#endif
+
+#if USE_WCCPv2
+
+    wccp2ConnectionOpen();
+#endif
+    }
+    // Coordinator does not start proxying services
+    if (!IamCoordinatorProcess()) {
     clientOpenListenSockets();
     icpConnectionsOpen();
 #if USE_HTCP
@@ -635,15 +643,6 @@ serverConnectionsOpen(void)
 #ifdef SQUID_SNMP
 
     snmpConnectionOpen();
-#endif
-#if USE_WCCP
-
-    wccpConnectionOpen();
-#endif
-
-#if USE_WCCPv2
-
-    wccp2ConnectionOpen();
 #endif
 
     clientdbInit();
@@ -656,12 +655,25 @@ serverConnectionsOpen(void)
     carpInit();
     peerUserHashInit();
     peerSourceHashInit();
+    }
 }
 
 static void
 serverConnectionsClose(void)
 {
     assert(shutting_down || reconfiguring);
+
+    if (IamPrimaryProcess()) {
+#if USE_WCCP
+
+    wccpConnectionClose();
+#endif
+#if USE_WCCPv2
+
+    wccp2ConnectionClose();
+#endif
+    }
+    if (!IamCoordinatorProcess()) {
     clientHttpConnectionsClose();
     icpConnectionShutdown();
 #if USE_HTCP
@@ -674,16 +686,9 @@ serverConnectionsClose(void)
 
     snmpConnectionShutdown();
 #endif
-#if USE_WCCP
-
-    wccpConnectionClose();
-#endif
-#if USE_WCCPv2
-
-    wccp2ConnectionClose();
-#endif
 
     asnFreeMemory();
+    }
 }
 
 static void
@@ -779,6 +784,8 @@ mainReconfigureFinish(void *)
     redirectInit();
     authenticateInit(&Config.authConfiguration);
     externalAclInit();
+
+    if (IamPrimaryProcess()) {
 #if USE_WCCP
 
     wccpInit();
@@ -787,6 +794,7 @@ mainReconfigureFinish(void *)
 
     wccp2Init();
 #endif
+    }
 
     serverConnectionsOpen();
 
@@ -1041,6 +1049,7 @@ mainInitialize(void)
         //   moved to PconnModule::PconnModule()
     }
 
+    if (IamPrimaryProcess()) {
 #if USE_WCCP
     wccpInit();
 
@@ -1050,6 +1059,7 @@ mainInitialize(void)
     wccp2Init();
 
 #endif
+    }
 
     serverConnectionsOpen();
 
@@ -1421,12 +1431,10 @@ SquidMain(int argc, char **argv)
 
     mainLoop.setTimeService(&time_engine);
 
-    if (!opt_no_daemon && Config.main_processes > 1) {
-        if (KidIdentifier == Config.main_processes + 1)
-            AsyncJob::AsyncStart(Ipc::Coordinator::Instance());
-        else if (KidIdentifier != 0)
-            AsyncJob::AsyncStart(new Ipc::Strand);
-    }
+    if (IamCoordinatorProcess())
+        AsyncJob::AsyncStart(Ipc::Coordinator::Instance());
+    else if (UsingSmp() && IamWorkerProcess())
+        AsyncJob::AsyncStart(new Ipc::Strand);
 
     /* at this point we are finished the synchronous startup. */
     starting_up = 0;
@@ -1546,7 +1554,7 @@ static int
 checkRunningPid(void)
 {
     // master process must start alone, but its kids processes may co-exist
-    if (KidIdentifier != 0)
+    if (!IamMasterProcess())
         return 0;
 
     pid_t pid;
@@ -1588,7 +1596,7 @@ watch_child(char *argv[])
 
     int nullfd;
 
-    if (KidIdentifier != 0)
+    if (!IamMasterProcess())
         return;
 
     openlog(APP_SHORTNAME, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
@@ -1853,7 +1861,7 @@ SquidShutdown()
 
 #endif
 
-    if (IsPidFileMaintainer()) {
+    if (IamPrimaryProcess()) {
         if (Config.pidFilename && strcmp(Config.pidFilename, "none") != 0) {
             enter_suid();
             safeunlink(Config.pidFilename, 0);
