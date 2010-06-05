@@ -16,7 +16,9 @@ Ipc::FdNote(int fdNoteId)
     static const char *FdNotes[Ipc::fdnEnd] = {
         "None", // fdnNone
         "HTTP Socket", // fdnHttpSocket
-        "HTTPS Socket" // fdnHttpsSocket
+        "HTTPS Socket", // fdnHttpsSocket
+        "Incoming SNMP Socket", // fdnInSnmpSocket
+        "Outgoing SNMP Socket" // fdnOutSnmpSocket
     };
 
     if (fdnNone < fdNoteId && fdNoteId < fdnEnd)
