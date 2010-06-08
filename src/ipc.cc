@@ -31,7 +31,7 @@
  */
 
 #include "squid.h"
-#include "comm.h"
+#include "comm/Connection.h"
 #include "fde.h"
 #include "ip/Address.h"
 #include "rfc1738.h"

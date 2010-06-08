@@ -65,13 +65,11 @@ namespace Comm {
  * outside of the Comm layer code.
  *
  * These objects must not be passed around directly,
- * but a Comm::Connection::Pointer must be passed instead.
+ * but a Comm::ConnectionPointer must be passed instead.
  */
 class Connection : public RefCountable
 {
 public:
-    typedef RefCount<Comm::Connection> Pointer;
-
     /** standard empty connection creation */
     Connection();
 

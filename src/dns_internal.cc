@@ -699,7 +699,7 @@ idnsDoSendQueryVC(nsvc *vc)
 }
 
 static void
-idnsInitVCConnected(Comm::Connection::Pointer conn, Vector<Comm::Connection::Pointer> *unused, comm_err_t status, int xerrno, void *data)
+idnsInitVCConnected(Comm::ConnectionPointer conn, Comm::PathsPointer unused, comm_err_t status, int xerrno, void *data)
 {
     nsvc * vc = (nsvc *)data;
 
@@ -738,7 +738,7 @@ idnsInitVC(int ns)
     vc->msg = new MemBuf;
     vc->busy = 1;
 
-    Comm::Connection::Pointer conn = new Comm::Connection;
+    Comm::ConnectionPointer conn = new Comm::Connection;
 
     if (!Config.Addrs.udp_outgoing.IsNoAddr())
         conn->local = Config.Addrs.udp_outgoing;

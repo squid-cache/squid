@@ -1,5 +1,6 @@
 #include "config.h"
 #include "comm/ConnectStateData.h"
+#include "comm/Connection.h"
 #include "comm.h"
 #include "CommCalls.h"
 #include "fde.h"
@@ -8,7 +9,7 @@
 
 CBDATA_CLASS_INIT(ConnectStateData);
 
-ConnectStateData::ConnectStateData(Vector<Comm::Connection::Pointer> *paths, AsyncCall::Pointer handler) :
+ConnectStateData::ConnectStateData(Comm::PathsPointer paths, AsyncCall::Pointer handler) :
         host(NULL),
         connect_timeout(Config.Timeout.connect),
         paths(paths),
@@ -19,7 +20,7 @@ ConnectStateData::ConnectStateData(Vector<Comm::Connection::Pointer> *paths, Asy
         connstart(0)
 {}
 
-ConnectStateData::ConnectStateData(Comm::Connection::Pointer c, AsyncCall::Pointer handler) :
+ConnectStateData::ConnectStateData(Comm::ConnectionPointer c, AsyncCall::Pointer handler) :
         host(NULL),
         connect_timeout(Config.Timeout.connect),
         paths(NULL),
@@ -72,7 +73,7 @@ ConnectStateData::callCallback(comm_err_t status, int xerrno)
 void
 ConnectStateData::connect()
 {
-    Comm::Connection::Pointer active;
+    Comm::ConnectionPointer active;
 
     /* handle connecting to one single path */
     /* mainly used by components other than forwarding */
@@ -83,7 +84,7 @@ ConnectStateData::connect()
     if (solo != NULL) {
         active = solo;
     } else if (paths) {
-        Vector<Comm::Connection::Pointer>::iterator i = paths->begin();
+        Comm::Paths::iterator i = paths->begin();
 
         if (connstart == 0) {
             connstart = squid_curtime;
