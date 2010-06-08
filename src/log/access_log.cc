@@ -2138,10 +2138,10 @@ accessLogInit(void)
     assert(sizeof(log_tags) == (LOG_TYPE_MAX + 1) * sizeof(char *));
 
 #if USE_ADAPTATION
-	alLogformatHasAdaptToken = false;
+    alLogformatHasAdaptToken = false;
 #endif
 #if ICAP_CLIENT
-	alLogformatHasIcapToken = false;
+    alLogformatHasIcapToken = false;
 #endif
 
     for (log = Config.Log.accesslogs; log; log = log->next) {
