@@ -59,16 +59,9 @@ static PF fwdServerClosedWrapper;
 #if USE_SSL
 static PF fwdNegotiateSSLWrapper;
 #endif
-#if 0
-static PF fwdConnectTimeoutWrapper;
-static EVH fwdConnectStartWrapper;
-#endif
 static CNCB fwdConnectDoneWrapper;
 
 static OBJH fwdStats;
-#if 0
-static void fwdServerFree(FwdServer * fs);
-#endif
 
 #define MAX_FWD_STATS_IDX 9
 static int FwdReplyCodes[MAX_FWD_STATS_IDX + 1][HTTP_INVALID_HEADER + 1];
@@ -685,15 +678,22 @@ FwdState::connectDone(Comm::ConnectionPointer conn, Comm::PathsPointer result_pa
         return;
     }
 
+#if REDUNDANT_NOW
     if (Config.onoff.log_ip_on_direct && paths[0]->peer_type == HIER_DIRECT)
         updateHierarchyInfo();
+#endif
 
     debugs(17, 3, "FD " << paths[0]->fd << ": '" << entry->url() << "'" );
 
-    comm_add_close_handler(conn->fd, fwdServerClosedWrapper, this);
+    comm_add_close_handler(paths[0]->fd, fwdServerClosedWrapper, this);
 
     if (paths[0]->getPeer())
         peerConnectSucceded(paths[0]->getPeer());
+
+    // TODO: Avoid this if %<lp is not used? F->local_port is often cached.
+    request->hier.peer_local_port = comm_local_port(paths[0]->fd);
+
+    updateHierarchyInfo();
 
 #if USE_SSL
     if ((paths[0]->getPeer() && paths[0]->getPeer()->use_ssl) ||
@@ -816,6 +816,10 @@ FwdState::connectStart()
         updateHierarchyInfo();
 
         comm_add_close_handler(conn->fd, fwdServerClosedWrapper, this);
+
+        // TODO: Avoid this if %<lp is not used? F->local_port is often cached.
+        request->hier.peer_local_port = comm_local_port(conn->fd);
+
         dispatch();
         return;
     }
@@ -823,8 +827,6 @@ FwdState::connectStart()
 #if URL_CHECKSUM_DEBUG
     entry->mem_obj->checkUrlChecksum();
 #endif
-
-    updateHierarchyInfo();
 
     AsyncCall::Pointer call = commCbCall(17,3, "fwdConnectDoneWrapper", CommConnectCbPtrFun(fwdConnectDoneWrapper, this));
     ConnectStateData *cs = new ConnectStateData(&paths, call);

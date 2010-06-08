@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: squid\n"
 "Report-Msgid-Bugs-To: FULL NAME <EMAIL@ADDRESS>\n"
 "POT-Creation-Date: 2010-05-01 00:17+1200\n"
-"PO-Revision-Date: 2010-05-10 15:29+0200\n"
+"PO-Revision-Date: 2010-06-06 10:48+0200\n"
 "Last-Translator: Robert Förster <Dessa@gmake.de>\n"
 "Language-Team: German <de@li.org>\n"
 "Language: de\n"
@@ -167,9 +167,9 @@ msgid ""
 msgstr ""
 "Bitte beachten sie, dass in derartiger Konfiguration dringend empfohlen wird "
 "das Programm in ein Verzeichnis zu verschieben wo normale Nutzer keinen "
-"Zugriff haben, da in diesem Fall ein Brute-forcen der Passwörter anderer "
+"Zugriff haben, da andernfalls ein Brute-forcen der Passwörter anderer "
 "Benutzer durch lokale Nutzer möglich wäre. Beachten sie ausserdem, dass das "
-"Programm keiner vollständigen Sichergheitsprüfung unterzogen wurde und der "
+"Programm keiner vollständigen Sicherheitsprüfung unterzogen wurde und der "
 "Author nicht für Sicherheitsprobleme, die durch derartige Nutzung entstehen, "
 "haftbar gemacht werden kann."
 
@@ -360,13 +360,12 @@ msgstr "Melden sie Bugs oder Bugfixes unter http://bugs.squid-cache.org/"
 #: helpers/external_acl/session/squid_session.8:85
 #: helpers/external_acl/unix_group/squid_unix_group.8:87 src/squid.8.in:256
 #: tools/cachemgr.cgi.8.in:72 tools/squidclient.1:184
-#, fuzzy
 msgid ""
 "Report serious security bugs to I<Squid Bugs E<lt>squid-bugs@squid-cache."
 "orgE<gt>>"
 msgstr ""
-"Fragen zur Verwendung dieses Programms können an die I<Squid Users "
-"E<lt>squid-users@squid-cache.orgE<gt>> Mailingliste gesendet werden."
+"Melden sie schwerwiegende Sicherheitslücken I<Squid Bugs E<lt>squid-bugs"
+"@squid-cache.orgE<gt>>"
 
 #. type: Plain text
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:94
@@ -383,6 +382,8 @@ msgstr ""
 msgid ""
 "Report ideas for new improvements to the I<Squid Developers mailing list>"
 msgstr ""
+"Senden sie Vorschläge für Verbesserungen an die I<Squid Developers mailing "
+"Liste>"
 
 #. type: SH
 #: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:96
@@ -403,32 +404,32 @@ msgstr "SIEHE AUCH"
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:7
 msgid "LDAP authentication helper for Squid"
-msgstr ""
+msgstr "Authentifizierungshelfer für LDAP von Squid"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:12
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:27
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:14
 msgid "base DN"
-msgstr ""
+msgstr "base DN"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:14
 msgid "attribute"
-msgstr ""
+msgstr "attribute"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:16
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:31
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:18
 msgid "options"
-msgstr "Optionen"
+msgstr "options"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:18
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:33
 msgid "LDAP server name"
-msgstr ""
+msgstr "LDAP server name"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:20
@@ -444,13 +445,13 @@ msgstr "Port"
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:37
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:24
 msgid "URI"
-msgstr ""
+msgstr "URI"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:29
 #: helpers/external_acl/ldap_group/squid_ldap_group.8:16
 msgid "LDAP search filter"
-msgstr ""
+msgstr "LDAP Suchfilter"
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:47
@@ -462,6 +463,12 @@ msgid ""
 "subsequent lines of input to the helper, one username/password pair per line "
 "separated by a space."
 msgstr ""
+"B<basic_ldap_auth> erlaubt Squid zu einem LDAP Verzeichnis zu verbinden, um "
+"Benutzername und Passwort der Basic HTTP Authentifizierung zu überprüfen.  "
+"LDAP Optionen werden in der Kommandozeile übergeben, wobei Benutzername und "
+"Passwörter, welche durch LDAP geprüft werden sollen, in darauffolgenden "
+"Zeilen in der Eingabe des Helfers angegeben werden, ein "
+"Benutzername/Password Paar pro Zeile getrennt durch ein Leerzeichen."
 
 #. type: Plain text
 #: helpers/basic_auth/LDAP/basic_ldap_auth.8:56

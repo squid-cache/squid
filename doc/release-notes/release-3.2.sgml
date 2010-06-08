@@ -143,9 +143,11 @@ Most user-facing changes are reflected in squid.conf (see below).
 <p>3.1 began the Internationalization of Squid with the public facing error pages.
    This move begins the Localization of the internal administrator facing manuals.
 
+
 <sect1>Solaris 10 pthreads Support (Experimental)
 
 <p>Automatic detection and use of the pthreads library available from Solaris 10
+
 
 <sect>Changes to squid.conf since Squid-3.1
 <p>
@@ -188,7 +190,7 @@ This section gives a thorough account of those changes in three categories:
 	<tag>tproxy_uses_indirect_client</tag>
 	<p>Controls whether the indirect client address found in the X-Forwarded-For
 	header is used for spoofing instead of the directly connected client address.
-	Requires both --enable-follow-x-forwarded-for and --enable-linux-netfilter
+	Requires both <em>--enable-follow-x-forwarded-for</em> and <em>--enable-linux-netfilter</em>
 
 </descrip>
 
@@ -196,7 +198,12 @@ This section gives a thorough account of those changes in three categories:
 <p>
 <descrip>
 	<tag>access_log</tag>
-	<p>New <em>daemon</em> module to send each log line as text data to a file I/O daemon.
+	<p>New <em>stdio</em> module to send log data directly from Squid to a disk file.
+	This is the historic behaviour of Squid before logging modules were introduced, and
+	remains the default used when no module is selected.
+	It is recommended to upgrade logging to the faster <em>daemon:</em> module.
+	<p>New <em>daemon</em> module to send each log line as text data to a file I/O daemon handling the slow disk I/O.
+	New installs, or installs with no logs configured explicitly will use this module by default.
 	<p>New <em>tcp</em> module to send each log line as text data to a TCP receiver.
 	<p>New <em>udp</em> module to send each log line as text data to a UDP receiver.
 
@@ -223,8 +230,9 @@ This section gives a thorough account of those changes in three categories:
 	<p>Deprecated <em>children=N</em> in favor of <em>children-max=N</em>.
 
 	<tag>logformat</tag>
+	<p><em>%&gt;lp</em> Local TCP port used by transactions with http servers.
 	<p><em>%sn</em> Unique sequence number per log line. Ported from 2.7
-	<p><em>%>eui</em> EUI logging (EUI-48 / MAC address for IPv4, EUI-64 for IPv6)
+	<p><em>%&lt;eui</em> EUI logging (EUI-48 / MAC address for IPv4, EUI-64 for IPv6)
 	   Both EUI forms are logged in the same field. Type can be identified by length or byte delimiter.
 
 	<tag>memory_pools_limit</tag>
@@ -274,11 +282,31 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
+	<tag>--enable-auth-basic[=HELPERS]</tag>
+	<p>Specified without any parameters all helpers will be auto-built.
+	<p>With an explicit empty list <em>=""</em> protocol suport will be built but no helpers.
+	<p>With an explicit list protocol support and just those helpers will be built.
+
+	<tag>--enable-auth-digest[=HELPERS]</tag>
+	<p>Specified without any parameters all helpers will be auto-built.
+	<p>With an explicit empty list <em>=""</em> protocol suport will be built but no helpers.
+	<p>With an explicit list protocol support and just those helpers will be built.
+
+	<tag>--enable-auth-negotiate</tag>
+	<p>Specified without any parameters all helpers will be auto-built.
+	<p>With an explicit empty list <em>=""</em> protocol suport will be built but no helpers.
+	<p>With an explicit list protocol support and just those helpers will be built.
+
+	<tag>--enable-auth-ntlm</tag>
+	<p>Specified without any parameters all helpers will be auto-built.
+	<p>With an explicit empty list <em>=""</em> protocol suport will be built but no helpers.
+	<p>With an explicit list protocol support and just those helpers will be built.
+
 	<tag>--enable-eui</tag>
 	<p>Enable Support for handling EUI operations.
 	   This includes ARP lookups for MAC (EUI-48) addresses and the ACL arp type tests.
 
-	<tag>--enable-log-daemon-auth-helpers</tag>
+	<tag>--enable-log-daemon-helpers</tag>
 	<p>Build helpers for logging I/O.
 
 	<tag>--enable-url-rewrite-helpers</tag>
@@ -293,8 +321,9 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
-	<tag>???alphabetical list within group ordered: enable, disable, with, without) ???</tag>
-	<p> ???explain??
+	<tag>--enable-auth</tag>
+	<p>No longer takes a list of arguments. This option now is restricted to building with or without for authentication.
+	<p>The new <em>--enable-auth-X</em>/<em>--disable-auth-X</em> parameters determine which authentication protocols and helpers are built.
 
 </descrip>
 </p>
@@ -304,6 +333,18 @@ This section gives an account of those changes in three categories:
 <descrip>
 	<tag>--enable-arp-acl</tag>
 	<p>Replaced by --enable-eui
+
+	<tag>--enable-auth-basic-helpers</tag>
+	<p>replaced by <em>--enable-auth-basic</em>.
+
+	<tag>--enable-auth-digest-helpers</tag>
+	<p>replaced by <em>--enable-auth-digest</em>.
+
+	<tag>--enable-auth-negotiate-helpers</tag>
+	<p>replaced by <em>--enable-auth-negotiate</em>.
+
+	<tag>--enable-auth-ntlm-helpers</tag>
+	<p>replaced by <em>--enable-auth-ntlm</em>.
 
 </descrip>
 
