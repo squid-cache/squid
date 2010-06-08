@@ -42,6 +42,7 @@
 #include "acl/RegexData.h"
 #include "acl/UserData.h"
 #include "client_side.h"
+#include "comm/Connection.h"
 #include "ident/AclIdent.h"
 #include "ident/Ident.h"
 

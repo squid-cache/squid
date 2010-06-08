@@ -31,6 +31,8 @@ Comm::Connection::operator =(const Comm::Connection &c)
 
     /* ensure we have a cbdata reference to _peer not a straight ptr copy. */
     _peer = cbdataReference(c._peer);
+
+    return *this;
 }
 
 Comm::Connection::~Connection()

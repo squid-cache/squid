@@ -35,6 +35,7 @@
 #if USE_WCCPv2
 
 #include "comm.h"
+#include "comm/Connection.h"
 #include "compat/strsep.h"
 #include "event.h"
 #include "ip/Address.h"

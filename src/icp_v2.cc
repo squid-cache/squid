@@ -36,19 +36,19 @@
  */
 
 #include "squid.h"
-#include "Store.h"
-#include "comm.h"
-#include "ICP.h"
-#include "HttpRequest.h"
-#include "acl/FilledChecklist.h"
-#include "acl/Acl.h"
 #include "AccessLogEntry.h"
-#include "wordlist.h"
-#include "SquidTime.h"
-#include "SwapDir.h"
+#include "acl/Acl.h"
+#include "acl/FilledChecklist.h"
+#include "comm/Connection.h"
+#include "HttpRequest.h"
 #include "icmp/net_db.h"
+#include "ICP.h"
 #include "ip/Address.h"
 #include "rfc1738.h"
+#include "Store.h"
+#include "SquidTime.h"
+#include "SwapDir.h"
+#include "wordlist.h"
 
 /// \ingroup ServerProtocolICPInternal2
 static void icpLogIcp(const Ip::Address &, log_type, int, const char *, int);

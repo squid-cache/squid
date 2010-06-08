@@ -405,8 +405,8 @@ SQUIDCEXTERN void peerDigestNeeded(PeerDigest * pd);
 SQUIDCEXTERN void peerDigestNotePeerGone(PeerDigest * pd);
 SQUIDCEXTERN void peerDigestStatsReport(const PeerDigest * pd, StoreEntry * e);
 
-#include "comm/Connection.h"
-extern void getOutgoingAddress(HttpRequest * request, Comm::Connection::Pointer conn);
+#include "comm/forward.h"
+extern void getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn);
 unsigned long getOutgoingTOS(HttpRequest * request);
 
 SQUIDCEXTERN void urnStart(HttpRequest *, StoreEntry *);

@@ -35,6 +35,7 @@
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
 #include "CacheManager.h"
+#include "comm/Connection.h"
 #include "comm/ConnectStateData.h"
 #include "CommCalls.h"
 #include "event.h"
@@ -360,7 +361,7 @@ FwdState::complete()
 /**** CALLBACK WRAPPERS ************************************************************/
 
 static void
-fwdStartCompleteWrapper(Vector<Comm::Connection::Pointer> *unused, void *data)
+fwdStartCompleteWrapper(Comm::PathsPointer unused, void *data)
 {
     FwdState *fwd = (FwdState *) data;
     fwd->startComplete();
@@ -390,7 +391,7 @@ fwdNegotiateSSLWrapper(int fd, void *data)
 #endif
 
 void
-fwdConnectDoneWrapper(Comm::Connection::Pointer conn, Vector<Comm::Connection::Pointer> *paths, comm_err_t status, int xerrno, void *data)
+fwdConnectDoneWrapper(Comm::ConnectionPointer conn, Comm::PathsPointer paths, comm_err_t status, int xerrno, void *data)
 {
     FwdState *fwd = (FwdState *) data;
     fwd->connectDone(conn, paths, status, xerrno);
@@ -663,7 +664,7 @@ FwdState::initiateSSL()
 #endif
 
 void
-FwdState::connectDone(Comm::Connection::Pointer conn, Vector<Comm::Connection::Pointer> *result_paths, comm_err_t status, int xerrno)
+FwdState::connectDone(Comm::ConnectionPointer conn, Comm::PathsPointer result_paths, comm_err_t status, int xerrno)
 {
     assert(result_paths == &paths);
 
@@ -740,7 +741,7 @@ FwdState::connectStart()
     if (n_tries == 0) // first attempt
         request->hier.first_conn_start = current_time;
 
-    Comm::Connection::Pointer conn = paths[0];
+    Comm::ConnectionPointer conn = paths[0];
 
     /* connection timeout */
     int ctimeout;
@@ -1075,7 +1076,7 @@ FwdState::reforwardableStatus(http_status s)
  *  -  address of the client for which we made the connection
  */
 void
-FwdState::pconnPush(Comm::Connection::Pointer conn, const peer *_peer, const HttpRequest *req, const char *domain, Ip::Address &client_addr)
+FwdState::pconnPush(Comm::ConnectionPointer conn, const peer *_peer, const HttpRequest *req, const char *domain, Ip::Address &client_addr)
 {
     if (_peer) {
         fwdPconnPool->push(conn->fd, _peer->name, _peer->http_port, domain, client_addr);
@@ -1188,7 +1189,7 @@ aclMapTOS(acl_tos * head, ACLChecklist * ch)
 }
 
 void
-getOutgoingAddress(HttpRequest * request, Comm::Connection::Pointer conn)
+getOutgoingAddress(HttpRequest * request, Comm::ConnectionPointer conn)
 {
     /* skip if an outgoing address is already set. */
     if (!conn->local.IsAnyAddr()) return;

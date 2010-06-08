@@ -6,10 +6,10 @@
 #ifndef SQUID_COMMCALLS_H
 #define SQUID_COMMCALLS_H
 
-#include "comm.h"
-#include "comm/Connection.h"
 #include "base/AsyncCall.h"
 #include "base/AsyncJobCalls.h"
+#include "comm/comm_err_t.h"
+#include "comm/forward.h"
 
 /* CommCalls implement AsyncCall interface for comm_* callbacks.
  * The classes cover two call dialer kinds:
@@ -20,6 +20,10 @@
  *     - connect (CNCB),
  *     - I/O (IOCB).
  */
+
+typedef void IOACB(int fd, int nfd, Comm::ConnectionPointer details, comm_err_t flag, int xerrno, void *data);
+typedef void CNCB(Comm::ConnectionPointer conn, Comm::PathsPointer paths, comm_err_t status, int xerrno, void *data);
+typedef void IOCB(int fd, char *, size_t size, comm_err_t flag, int xerrno, void *data);
 
 /*
  * TODO: When there are no function-pointer-based callbacks left, all
@@ -68,7 +72,7 @@ public:
     void print(std::ostream &os) const;
 
 public:
-    Comm::Connection::Pointer details;
+    Comm::ConnectionPointer details;
     int nfd; // TODO: rename to fdNew or somesuch
 };
 
@@ -83,8 +87,8 @@ public:
     void print(std::ostream &os) const;
 
 public:
-    Comm::Connection::Pointer conn;
-    Vector<Comm::Connection::Pointer> *paths;
+    Comm::ConnectionPointer conn;
+    Comm::PathsPointer paths;
 };
 
 // read/write (I/O) parameters

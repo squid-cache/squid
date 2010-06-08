@@ -68,7 +68,7 @@ public:
     char *host;			/* either request->host or proxy host */
     u_short port;
     HttpRequest *request;
-    Vector<Comm::Connection::Pointer> *paths;
+    Comm::PathsPointer paths;
 
     class Connection
     {
@@ -558,12 +558,12 @@ tunnelErrorComplete(int fdnotused, void *data, size_t sizenotused)
 
 
 static void
-tunnelConnectDone(Comm::Connection::Pointer unused, Vector<Comm::Connection::Pointer> *paths, comm_err_t status, int xerrno, void *data)
+tunnelConnectDone(Comm::ConnectionPointer unused, Comm::PathsPointer paths, comm_err_t status, int xerrno, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     HttpRequest *request = tunnelState->request;
     ErrorState *err = NULL;
-    Comm::Connection::Pointer conn = (*paths)[0];
+    Comm::ConnectionPointer conn = (*paths)[0];
 
     assert(tunnelState->paths == paths);
 
@@ -713,7 +713,7 @@ tunnelProxyConnected(int fd, void *data)
 }
 
 static void
-tunnelPeerSelectComplete(Vector<Comm::Connection::Pointer> *peer_paths, void *data)
+tunnelPeerSelectComplete(Comm::PathsPointer peer_paths, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     HttpRequest *request = tunnelState->request;

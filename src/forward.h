@@ -28,14 +28,14 @@ public:
     bool reforwardableStatus(http_status s);
     void serverClosed(int fd);
     void connectStart();
-    void connectDone(Comm::Connection::Pointer conn, Vector<Comm::Connection::Pointer> *paths, comm_err_t status, int xerrno);
+    void connectDone(Comm::ConnectionPointer conn, Comm::PathsPointer paths, comm_err_t status, int xerrno);
     void connectTimeout(int fd);
     void initiateSSL();
     void negotiateSSL(int fd);
     bool checkRetry();
     bool checkRetriable();
     void dispatch();
-    void pconnPush(Comm::Connection::Pointer conn, const peer *_peer, const HttpRequest *req, const char *domain, Ip::Address &client_addr);
+    void pconnPush(Comm::ConnectionPointer conn, const peer *_peer, const HttpRequest *req, const char *domain, Ip::Address &client_addr);
 
     bool dontRetry() { return flags.dont_retry; }
 
@@ -45,7 +45,7 @@ public:
 
     void ftpPasvFailed(bool val) { flags.ftp_pasv_failed = val; }
 
-    Comm::Connection::Pointer conn() const { return paths[0]; };
+    Comm::ConnectionPointer conn() const { return paths[0]; };
 
 private:
     // hidden for safer management of self; use static fwdStart
@@ -89,7 +89,7 @@ private:
     } flags;
 
     /** possible paths which may be tried (in sequence stored) */
-    Vector<Comm::Connection::Pointer> paths;
+    Comm::Paths paths;
 
     // NP: keep this last. It plays with private/public
     CBDATA_CLASS2(FwdState);

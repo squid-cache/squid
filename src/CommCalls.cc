@@ -1,5 +1,6 @@
 #include "squid.h"
 #include "fde.h"
+#include "comm/Connection.h"
 #include "CommCalls.h"
 
 /* CommCommonCbParams */

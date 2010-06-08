@@ -116,7 +116,7 @@ void Adaptation::Icap::Xaction::openConnection()
 
     disableRetries(); // we only retry pconn failures
 
-    Comm::Connection::Pointer conn = new Comm::Connection;
+    Comm::ConnectionPointer conn = new Comm::Connection;
 
     // TODO:  where do we get the DNS info for the ICAP server host ??
     //        Ip::Address will do a BLOCKING lookup if s.cfg().host is a hostname

@@ -3,7 +3,9 @@
 
 #include "config.h"
 #include "base/AsyncCall.h"
-#include "comm.h"
+#include "comm/comm_err_t.h"
+#include "comm/forward.h"
+
 #if HAVE_MAP
 #include <map>
 #endif
@@ -23,7 +25,7 @@ public:
 
     void subscribe(AsyncCall::Pointer &call);
     void acceptNext();
-    void notify(int newfd, comm_err_t, int xerrno, Comm::Connection::Pointer);
+    void notify(int newfd, comm_err_t, int xerrno, Comm::ConnectionPointer);
 
     int fd;
 
