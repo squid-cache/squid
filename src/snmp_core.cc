@@ -33,6 +33,7 @@
 #include "acl/FilledChecklist.h"
 #include "cache_snmp.h"
 #include "comm.h"
+#include "comm/Connection.h"
 #include "compat/strsep.h"
 #include "ip/Address.h"
 

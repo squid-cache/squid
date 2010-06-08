@@ -18,4 +18,5 @@ libcomm_la_SOURCES= \
 	Connection.cc \
 	Connection.h \
 	comm_err_t.h \
-	comm_internal.h
+	comm_internal.h \
+	forward.h

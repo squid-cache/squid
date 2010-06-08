@@ -186,7 +186,7 @@ Comm::ListenStateData::acceptNext()
 }
 
 void
-Comm::ListenStateData::notify(int newfd, comm_err_t errcode, int xerrno, Comm::Connection::Pointer connDetails)
+Comm::ListenStateData::notify(int newfd, comm_err_t errcode, int xerrno, Comm::ConnectionPointer connDetails)
 {
     // listener socket handlers just abandon the port with COMM_ERR_CLOSING
     // it should only happen when this object is deleted...

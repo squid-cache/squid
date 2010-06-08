@@ -2412,7 +2412,7 @@ ftpReadEPSV(FtpStateData* ftpState)
 
     debugs(9, 3, HERE << "connecting to " << ftpState->data.host << ", port " << ftpState->data.port);
 
-    Comm::Connection::Pointer conn = new Comm::Connection;
+    Comm::ConnectionPointer conn = new Comm::Connection;
     conn->remote = fd_table[ftpState->ctrl.fd].ipaddr; // TODO: do we have a better info source than fd_table?
     conn->remote.SetPort(port);
     conn->fd = fd;
@@ -2697,7 +2697,7 @@ ftpReadPasv(FtpStateData * ftpState)
 
     debugs(9, 3, HERE << "connecting to " << ftpState->data.host << ", port " << ftpState->data.port);
 
-    Comm::Connection::Pointer conn = new Comm::Connection;
+    Comm::ConnectionPointer conn = new Comm::Connection;
     conn->remote = ipaddr;
     conn->remote.SetPort(port);
     conn->fd = ftpState->data.fd;
@@ -2710,7 +2710,7 @@ ftpReadPasv(FtpStateData * ftpState)
 }
 
 void
-FtpStateData::ftpPasvCallback(Comm::Connection::Pointer conn, Vector<Comm::Connection::Pointer> *unused, comm_err_t status, int xerrno, void *data)
+FtpStateData::ftpPasvCallback(Comm::ConnectionPointer conn, Comm::PathsPointer unused, comm_err_t status, int xerrno, void *data)
 {
     FtpStateData *ftpState = (FtpStateData *)data;
     debugs(9, 3, HERE);

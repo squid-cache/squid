@@ -35,16 +35,17 @@
 
 #include "Array.h"
 #include "cbdata.h"
-#include "comm/Connection.h"
+#include "comm/forward.h"
+#include "hier_code.h"
 #include "ip/Address.h"
 #include "PingData.h"
 
 class HttpRequest;
 class StoreEntry;
 
-typedef void PSC(Vector<Comm::Connection::Pointer> *, void *);
+typedef void PSC(Comm::PathsPointer, void *);
 
-SQUIDCEXTERN void peerSelect(Vector<Comm::Connection::Pointer> *, HttpRequest *, StoreEntry *, PSC *, void *data);
+SQUIDCEXTERN void peerSelect(Comm::PathsPointer, HttpRequest *, StoreEntry *, PSC *, void *data);
 SQUIDCEXTERN void peerSelectInit(void);
 
 /**
@@ -78,8 +79,8 @@ public:
     PSC *callback;
     void *callback_data;
 
-    Vector<Comm::Connection::Pointer> *paths;  ///< the callers paths array. to be filled with our final results.
-    FwdServer *servers;                ///< temporary linked list of peers we will pass back.
+    Comm::PathsPointer paths;   ///< the callers paths array. to be filled with our final results.
+    FwdServer *servers;       	///< temporary linked list of peers we will pass back.
 
     /*
      * Why are these Ip::Address instead of peer *?  Because a
