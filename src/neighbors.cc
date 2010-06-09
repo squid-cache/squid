@@ -33,8 +33,10 @@
 #include "squid.h"
 #include "ProtoPort.h"
 #include "acl/FilledChecklist.h"
-#include "event.h"
+#include "comm/Connection.h"
+#include "comm/ConnectStateData.h"
 #include "CacheManager.h"
+#include "event.h"
 #include "htcp.h"
 #include "HttpRequest.h"
 #include "ICP.h"
@@ -46,7 +48,6 @@
 #include "Store.h"
 #include "icmp/net_db.h"
 #include "ip/Address.h"
-#include "comm/ConnectStateData.h"
 
 /* count mcast group peers every 15 minutes */
 #define MCAST_COUNT_RATE 900
@@ -1391,7 +1392,7 @@ peerProbeConnectDone(Comm::ConnectionPointer conn, Comm::PathsPointer unused, co
         peerConnectFailedSilent(p);
     }
 
-    comm_close(conn);
+    conn->close();
     p->testing_now = false;
     return;
 }

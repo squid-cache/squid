@@ -37,6 +37,7 @@
 #if USE_IDENT
 
 #include "comm.h"
+#include "comm/Connection.h"
 #include "comm/ConnectStateData.h"
 #include "CommCalls.h"
 #include "ident/Config.h"
@@ -102,7 +103,7 @@ Ident::Close(int fdnotused, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
     identCallback(state, NULL);
-    comm_close(&(state->conn));
+    state->conn.close();
     hash_remove_link(ident_hash, (hash_link *) state);
     xfree(state->hash.key);
     cbdataFree(state);
@@ -113,7 +114,7 @@ Ident::Timeout(int fd, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
     debugs(30, 3, HERE << "FD " << fd << ", " << state->conn.remote);
-    comm_close(&(state->conn));
+    state->conn.close();
 }
 
 void
@@ -141,7 +142,7 @@ Ident::ConnectDone(Comm::ConnectionPointer conn, Comm::PathsPointer unused, comm
 
     if (c == NULL) {
         /* no clients care */
-        comm_close(conn);
+        conn->close();
         return;
     }
 
@@ -168,7 +169,7 @@ Ident::ReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
     assert(fd == state->conn.fd);
 
     if (flag != COMM_OK || len <= 0) {
-        comm_close(&(state->conn));
+        state->conn.close();
         return;
     }
 
@@ -194,7 +195,7 @@ Ident::ReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
         }
     }
 
-    comm_close(&(state->conn));
+    state->conn.close();
 }
 
 void

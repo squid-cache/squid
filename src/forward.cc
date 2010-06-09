@@ -80,10 +80,7 @@ FwdState::abort(void* d)
     FwdState* fwd = (FwdState*)d;
     Pointer tmp = fwd; // Grab a temporary pointer to keep the object alive during our scope.
 
-    if (fwd->paths[0]->fd >= 0) {
-        comm_close(fwd->paths[0]);
-    }
-
+    fwd->paths[0]->close();
     fwd->self = NULL;
 }
 
@@ -173,7 +170,7 @@ FwdState::~FwdState()
     if (paths[0]->fd > -1) {
         comm_remove_close_handler(paths[0]->fd, fwdServerClosedWrapper, this);
         debugs(17, 3, HERE << "closing FD " << paths[0]->fd);
-        comm_close(paths[0]);
+        paths[0]->close();
     }
 
     paths.clean();
@@ -576,7 +573,7 @@ FwdState::negotiateSSL(int fd)
                 paths[0]->getPeer()->stats.conn_open--;
             }
 
-            comm_close(paths[0]);
+            paths[0]->close();
             return;
         }
     }
@@ -672,7 +669,7 @@ FwdState::connectDone(Comm::ConnectionPointer conn, Comm::PathsPointer result_pa
             if (paths[0]->getPeer())
                 peerConnectFailed(paths[0]->getPeer());
 
-            comm_close(paths[0]);
+            paths[0]->close();
         }
 
         return;
@@ -726,7 +723,7 @@ FwdState::connectTimeout(int fd)
                 peerConnectFailed(paths[0]->getPeer());
     }
 
-    comm_close(paths[0]);
+    paths[0]->close();
 }
 
 /**
@@ -764,7 +761,7 @@ FwdState::connectStart()
         ConnStateData *pinned_connection = request->pinnedConnection();
         assert(pinned_connection);
         conn->fd = pinned_connection->validatePinnedConnection(request, conn->getPeer());
-        if (conn->fd >= 0) {
+        if (conn->isOpen()) {
             pinned_connection->unpinConnection();
 #if 0
             if (!conn->getPeer())
@@ -806,7 +803,7 @@ FwdState::connectStart()
     }
     conn->remote.SetPort(port);
 
-    if (conn->fd >= 0) {
+    if (conn->isOpen()) {
         debugs(17, 3, HERE << "reusing pconn FD " << conn->fd);
         n_tries++;
 
@@ -959,7 +956,7 @@ FwdState::dispatch()
              * transient (network) error; its a bug.
              */
             flags.dont_retry = 1;
-            comm_close(paths[0]);
+            paths[0]->close();
             break;
         }
     }

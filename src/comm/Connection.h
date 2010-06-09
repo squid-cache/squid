@@ -61,8 +61,10 @@ namespace Comm {
  * object for state data. But a semantic equivalent for FD with easily
  * accessible cached properties not requiring repeated complex lookups.
  *
- * While the properties may be changed, they should be considered read-only
- * outside of the Comm layer code.
+ * While the properties may be changed, this is for teh purpose of creating
+ * potential connection descriptors which may be opened. Properties should
+ * be considered read-only outside of the Comm layer code once the connection
+ * is open.
  *
  * These objects must not be passed around directly,
  * but a Comm::ConnectionPointer must be passed instead.
@@ -83,6 +85,11 @@ public:
     Connection(const Connection &c);
     /** see Comm::Connection::Connection */
     const Connection & operator =(const Connection &c);
+
+    void close();
+
+    /** determine whether this object describes an active connection or not. */
+    bool isOpen() { return (fd >= 0); }
 
     /** Address/Port for the Squid end of a TCP link. */
     Ip::Address local;

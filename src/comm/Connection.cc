@@ -37,12 +37,18 @@ Comm::Connection::operator =(const Comm::Connection &c)
 
 Comm::Connection::~Connection()
 {
-    if (fd >= 0) {
-        comm_close(fd);
-    }
+    close();
     if (_peer) {
         cbdataReferenceDone(_peer);
     }
+}
+
+void
+Comm::Connection::close()
+{
+    if (isOpen())
+        comm_close(fd);
+    fd = -1;
 }
 
 void
