@@ -443,6 +443,7 @@ struct SquidConfig {
     } onoff;
 
     int forward_max_tries;
+    int connect_retries;
 
     class ACL *aclList;
 
@@ -521,7 +522,6 @@ struct SquidConfig {
     char *errorStylesheet;
 
     struct {
-        int maxtries;
         int onerror;
     } retry;
 

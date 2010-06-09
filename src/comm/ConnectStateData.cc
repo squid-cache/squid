@@ -156,17 +156,20 @@ ConnectStateData::connect()
             netdbDeleteAddrNetwork(active->remote);
 #endif
 
-        // TODO: do the re-try logic with some sane bounds for handling many paths and retries.
-        if (fail_retries < Config.retry.maxtries)
-            eventAdd("ConnectStateData::Connect", ConnectStateData::Connect, this, 0.5, 0);
-        else if(squid_curtime - connstart > connect_timeout) {
+        // check for timeout FIRST.
+        if(squid_curtime - connstart > connect_timeout) {
             debugs(5, 5, HERE << "FD " << active->fd << ": * - ERR took too long already.");
             callCallback(COMM_TIMEOUT, errno);
+        } else if (fail_retries < Config.connect_retries) {
+            // check if connect_retries extends the single IP re-try limit.
+            eventAdd("ConnectStateData::Connect", ConnectStateData::Connect, this, 0.5, 0);
         } else if (paths && paths->size() > 0) {
+            // check if we have more maybe-useful paths to try.
             paths->shift();
             fail_retries = 0;
             eventAdd("ConnectStateData::Connect", ConnectStateData::Connect, this, 0.0, 0);
         } else {
+            // send ERROR back to the upper layer.
             debugs(5, 5, HERE << "FD " << active->fd << ": * - ERR tried too many times already.");
             callCallback(COMM_ERR_CONNECT, errno);
         }

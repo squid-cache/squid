@@ -169,6 +169,10 @@ This section gives a thorough account of those changes in three categories:
 	<p>Access control based on altered HTTP request following adaptation alterations (ICAP, eCAP, URL rewriter).
 	An upgraded drop-in replacement for <em>http_access2</em> found in Squid-2.
 
+	<tag>connect_retries</tag>
+	<p>Replacement for <em>maximum_single_addr_tries</em>, but instead of only applying to hosts with single addresses.
+	This directive applies to all hosts, extending the number of connection attempts to each IP address.
+
 	<tag>eui_lookup</tag>
 	<p>Whether to lookup the EUI or MAC address of a connected client.
 
@@ -259,6 +263,10 @@ This section gives a thorough account of those changes in three categories:
 <descrip>
 	<tag>ftp_list_width</tag>
 	<p>Obsolete.
+
+	<tag>maximum_single_addr_tries</tag>
+	<p>The behaviour controlled by this directive is no longer possible.
+	It has been replaced by <em>connect_retries</em> option which operates a little differently.
 
 	<tag>url_rewrite_concurrency</tag>
 	<p>Replaced by url_rewrite_children ... concurrency=N option.
