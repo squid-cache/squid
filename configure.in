@@ -2181,6 +2181,7 @@ AC_CHECK_HEADERS( \
 	ipl.h \
 	libc.h \
 	limits.h \
+	linux/posix_types.h \
 	linux/types.h \
 	machine/byte_swap.h \
 	malloc.h \
