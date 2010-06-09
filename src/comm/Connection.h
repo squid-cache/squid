@@ -45,8 +45,10 @@ struct peer;
 
 namespace Comm {
 
-/** COMM flags */
-/* TODO: make these a struct of boolean flags in connection instead of a bitmap. */
+/* TODO: make these a struct of boolean flags members in the connection instead of a bitmap.
+ * we can't do that until all non-comm code uses Commm::Connection objects to create FD
+ * currently there is code still using comm_open() and comm_openex() synchronously!!
+ */
 #define COMM_UNSET              0x00
 #define COMM_NONBLOCKING        0x01
 #define COMM_NOCLOEXEC          0x02
