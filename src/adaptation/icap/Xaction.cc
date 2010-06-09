@@ -30,7 +30,7 @@ Adaptation::Icap::Xaction::Xaction(const char *aTypeName, Adaptation::Initiator 
         icapRequest(NULL),
         icapReply(NULL),
         attempts(0),
-        connection(-1),
+        connection(NULL),
         theService(aService),
         commBuf(NULL), commBufSize(0),
         commEof(false),
@@ -90,23 +90,32 @@ void Adaptation::Icap::Xaction::openConnection()
 {
     Ip::Address client_addr;
 
-    Must(connection < 0);
+    Must(connection == NULL || !connection->isOpen());
 
     const Adaptation::Service &s = service();
 
     if (!TheConfig.reuse_connections)
         disableRetries(); // this will also safely drain pconn pool
 
+    connection = new Comm::Connection;
+
+    /* NP: set these here because it applies whether a pconn or a new conn is used */
+
+    // TODO:  where do we get the DNS info for the ICAP server host ??
+    //        Ip::Address will do a BLOCKING lookup if s.cfg().host is a hostname
+    connection->remote = s.cfg().host.termedBuf();
+    connection->remote.SetPort(s.cfg().port);
+
     // TODO: check whether NULL domain is appropriate here
-    connection = icapPconnPool->pop(s.cfg().host.termedBuf(), s.cfg().port, NULL, client_addr, isRetriable);
-    if (connection >= 0) {
-        debugs(93,3, HERE << "reused pconn FD " << connection);
+    connection->fd = icapPconnPool->pop(s.cfg().host.termedBuf(), s.cfg().port, NULL, client_addr, isRetriable);
+    if (connection->isOpen()) {
+        debugs(93,3, HERE << "reused pconn FD " << connection->fd);
 
         // fake the connect callback
         // TODO: can we sync call Adaptation::Icap::Xaction::noteCommConnected here instead?
         typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommConnectCbParams> Dialer;
         Dialer dialer(this, &Adaptation::Icap::Xaction::noteCommConnected);
-        dialer.params.fd = connection;
+        dialer.params.fd = connection->fd;
         dialer.params.flag = COMM_OK;
         // fake other parameters by copying from the existing connection
         connector = asyncCall(93,3, "Adaptation::Icap::Xaction::noteCommConnected", dialer);
@@ -116,18 +125,11 @@ void Adaptation::Icap::Xaction::openConnection()
 
     disableRetries(); // we only retry pconn failures
 
-    Comm::ConnectionPointer conn = new Comm::Connection;
-
-    // TODO:  where do we get the DNS info for the ICAP server host ??
-    //        Ip::Address will do a BLOCKING lookup if s.cfg().host is a hostname
-    conn->remote = s.cfg().host.termedBuf();
-    conn->remote.SetPort(s.cfg().port);
-
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommConnectCbParams> ConnectDialer;
     connector = asyncCall(93,3, "Adaptation::Icap::Xaction::noteCommConnected",
                           ConnectDialer(this, &Adaptation::Icap::Xaction::noteCommConnected));
 
-    ConnectStateData *cs = new ConnectStateData(conn, connector);
+    ConnectStateData *cs = new ConnectStateData(connection, connector);
     cs->host = xstrdup(s.cfg().host.termedBuf());
     cs->connect_timeout = TheConfig.connect_timeout(service().cfg().bypass);
     cs->connect();
@@ -149,10 +151,10 @@ Adaptation::Icap::Xaction::reusedConnection(void *data)
 
 void Adaptation::Icap::Xaction::closeConnection()
 {
-    if (connection >= 0) {
+    if (connection != NULL && connection->isOpen()) {
 
         if (closer != NULL) {
-            comm_remove_close_handler(connection, closer);
+            comm_remove_close_handler(connection->fd, closer);
             closer = NULL;
         }
 
@@ -169,21 +171,21 @@ void Adaptation::Icap::Xaction::closeConnection()
             //status() adds leading spaces.
             debugs(93,3, HERE << "pushing pconn" << status());
             AsyncCall::Pointer call = NULL;
-            commSetTimeout(connection, -1, call);
-            icapPconnPool->push(connection, theService->cfg().host.termedBuf(),
+            commSetTimeout(connection->fd, -1, call);
+            icapPconnPool->push(connection->fd, theService->cfg().host.termedBuf(),
                                 theService->cfg().port, NULL, client_addr);
             disableRetries();
+            connection->fd = -1; // prevent premature real closing.
         } else {
             //status() adds leading spaces.
             debugs(93,3, HERE << "closing pconn" << status());
             // comm_close will clear timeout
-            comm_close(connection);
+            connection->close();
         }
 
         writer = NULL;
         reader = NULL;
         connector = NULL;
-        connection = -1;
     }
 }
 
@@ -208,7 +210,7 @@ void Adaptation::Icap::Xaction::noteCommConnected(const CommConnectCbParams &io)
 
     fd_table[io.conn->fd].noteUse(icapPconnPool);
 
-    connection = io.conn->fd; // TODO: maybe store the full Comm::Connection object
+    connection = io.conn;
     handleCommConnected();
 }
 
@@ -226,7 +228,7 @@ void Adaptation::Icap::Xaction::scheduleWrite(MemBuf &buf)
     writer = asyncCall(93,3, "Adaptation::Icap::Xaction::noteCommWrote",
                        Dialer(this, &Adaptation::Icap::Xaction::noteCommWrote));
 
-    comm_write_mbuf(connection, &buf, writer);
+    comm_write_mbuf(connection->fd, &buf, writer);
     updateTimeout();
 }
 
@@ -308,19 +310,19 @@ void Adaptation::Icap::Xaction::updateTimeout()
         AsyncCall::Pointer call =  asyncCall(93, 5, "Adaptation::Icap::Xaction::noteCommTimedout",
                                              TimeoutDialer(this,&Adaptation::Icap::Xaction::noteCommTimedout));
 
-        commSetTimeout(connection,
+        commSetTimeout(connection->fd,
                        TheConfig.io_timeout(service().cfg().bypass), call);
     } else {
         // clear timeout when there is no I/O
         // Do we need a lifetime timeout?
         AsyncCall::Pointer call = NULL;
-        commSetTimeout(connection, -1, call);
+        commSetTimeout(connection->fd, -1, call);
     }
 }
 
 void Adaptation::Icap::Xaction::scheduleRead()
 {
-    Must(connection >= 0);
+    Must(connection->isOpen());
     Must(!reader);
     Must(readBuf.hasSpace());
 
@@ -332,7 +334,7 @@ void Adaptation::Icap::Xaction::scheduleRead()
     reader = asyncCall(93,3, "Adaptation::Icap::Xaction::noteCommRead",
                        Dialer(this, &Adaptation::Icap::Xaction::noteCommRead));
 
-    comm_read(connection, commBuf, readBuf.spaceSize(), reader);
+    comm_read(connection->fd, commBuf, readBuf.spaceSize(), reader);
     updateTimeout();
 }
 
@@ -370,7 +372,7 @@ void Adaptation::Icap::Xaction::noteCommRead(const CommIoCbParams &io)
 void Adaptation::Icap::Xaction::cancelRead()
 {
     if (reader != NULL) {
-        comm_read_cancel(connection, reader);
+        comm_read_cancel(connection->fd, reader);
         reader = NULL;
     }
 }
@@ -411,7 +413,7 @@ bool Adaptation::Icap::Xaction::doneWriting() const
 
 bool Adaptation::Icap::Xaction::doneWithIo() const
 {
-    return connection >= 0 && // or we could still be waiting to open it
+    return connection != NULL && connection->isOpen() && // or we could still be waiting to open it
            !connector && !reader && !writer && // fast checks, some redundant
            doneReading() && doneWriting();
 }
@@ -526,8 +528,8 @@ const char *Adaptation::Icap::Xaction::status() const
 
 void Adaptation::Icap::Xaction::fillPendingStatus(MemBuf &buf) const
 {
-    if (connection >= 0) {
-        buf.Printf("FD %d", connection);
+    if (connection->isOpen()) {
+        buf.Printf("FD %d", connection->fd);
 
         if (writer != NULL)
             buf.append("w", 1);
@@ -541,8 +543,8 @@ void Adaptation::Icap::Xaction::fillPendingStatus(MemBuf &buf) const
 
 void Adaptation::Icap::Xaction::fillDoneStatus(MemBuf &buf) const
 {
-    if (connection >= 0 && commEof)
-        buf.Printf("Comm(%d)", connection);
+    if (connection->isOpen() && commEof)
+        buf.Printf("Comm(%d)", connection->fd);
 
     if (stopReason != NULL)
         buf.Printf("Stopped");
