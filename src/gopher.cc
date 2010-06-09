@@ -1031,7 +1031,7 @@ gopherStart(FwdState * fwd)
 
         gopherToHTML(gopherState, (char *) NULL, 0);
         fwd->complete();
-        comm_close(fwd->conn());
+        fwd->conn()->close();
         return;
     }
 

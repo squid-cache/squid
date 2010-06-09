@@ -2619,7 +2619,6 @@ ftpReadPasv(FtpStateData * ftpState)
     int n;
     u_short port;
     Ip::Address ipa_remote;
-    int fd = ftpState->data.fd;
     char *buf;
     LOCAL_ARRAY(char, ipaddr, 1024);
     debugs(9, 3, HERE);
@@ -2964,7 +2963,8 @@ void FtpStateData::ftpAcceptDataConnection(const CommAcceptCbParams &io)
                    fd_table[ctrl.fd].ipaddr);
 
             /* close the bad sources connection down ASAP. */
-            comm_close(io.details);
+            Comm::ConnectionPointer nonConst = io.details;
+            nonConst->close();
 
             /* we are ony accepting once, so need to re-open the listener socket. */
             typedef CommCbMemFunT<FtpStateData, CommAcceptCbParams> acceptDialer;

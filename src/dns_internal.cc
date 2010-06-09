@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -35,6 +34,7 @@
 
 #include "squid.h"
 #include "CacheManager.h"
+#include "comm/Connection.h"
 #include "comm/ConnectStateData.h"
 #include "comm.h"
 #include "event.h"
