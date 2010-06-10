@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2010-05-01 00:17+1300\n"
-"PO-Revision-Date: 2010-06-09 22:08+0200\n"
+"PO-Revision-Date: 2010-06-10 10:13+0200\n"
 "Last-Translator: Robert Förster <Dessa@gmake.de>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
 "Language: de\n"
@@ -25,7 +25,7 @@ msgid ""
 "request:"
 msgstr ""
 "<b>Ungültige Anfrage</b> Fehler erhalten als versucht wurde die Anfrage zu "
-"Bearbeiten:"
+"bearbeiten:"
 
 #: templates/ERR_INVALID_RESP:4
 msgid ""
@@ -197,11 +197,11 @@ msgstr "ESI-Verarbeitung fehlgeschlagen."
 
 #: templates/ERR_FTP_PUT_CREATED:1
 msgid "FTP PUT Successful: File Created"
-msgstr "FTP PUT Erfolgreich: Datei erstellt"
+msgstr "FTP PUT erfolgreich: Datei erstellt"
 
 #: templates/ERR_FTP_PUT_MODIFIED:1
 msgid "FTP PUT Successful: File Updated"
-msgstr "FTP PUT Erfolgreich: Datei aktualisiert"
+msgstr "FTP PUT erfolgreich: Datei aktualisiert"
 
 #: templates/ERR_FTP_PUT_ERROR:3
 msgid "FTP PUT/upload failed"
