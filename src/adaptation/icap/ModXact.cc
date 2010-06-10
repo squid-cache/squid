@@ -16,6 +16,7 @@
 #include "base/TextException.h"
 #include "ChunkedCodingParser.h"
 #include "comm.h"
+#include "comm/Connection.h"
 #include "HttpMsg.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
@@ -463,7 +464,7 @@ bool Adaptation::Icap::ModXact::doneAll() const
 
 void Adaptation::Icap::ModXact::startReading()
 {
-    Must(connection >= 0);
+    Must(connection != NULL && connection->isOpen());
     Must(!reader);
     Must(!adapted.header);
     Must(!adapted.body_pipe);
@@ -621,7 +622,7 @@ void Adaptation::Icap::ModXact::bypassFailure()
     stopParsing();
 
     stopWriting(true); // or should we force it?
-    if (connection >= 0) {
+    if (connection != NULL && connection->isOpen()) {
         reuseConnection = false; // be conservative
         cancelRead(); // may not work; and we cannot stop connecting either
         if (!doneWithIo())
@@ -1441,7 +1442,7 @@ void Adaptation::Icap::ModXact::fillPendingStatus(MemBuf &buf) const
     if (virgin.body_pipe != NULL)
         buf.append("R", 1);
 
-    if (connection > 0 && !doneReading())
+    if (connection != NULL && connection->isOpen() && !doneReading())
         buf.append("r", 1);
 
     if (!state.doneWriting() && state.writing != State::writingInit)
