@@ -4,6 +4,7 @@
 
 #include "squid.h"
 #include "comm.h"
+#include "comm/Connection.h"
 #include "comm/ConnectStateData.h"
 #include "CommCalls.h"
 #include "HttpMsg.h"

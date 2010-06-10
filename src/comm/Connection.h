@@ -91,7 +91,7 @@ public:
     void close();
 
     /** determine whether this object describes an active connection or not. */
-    bool isOpen() { return (fd >= 0); }
+    bool isOpen() const { return (fd >= 0); }
 
     /** Address/Port for the Squid end of a TCP link. */
     Ip::Address local;
