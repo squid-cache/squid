@@ -53,7 +53,7 @@ CBDATA_TYPE(AuthUserIP);
 
 time_t AuthUser::last_discard = 0;
 
-char *CredentialsState_str[] = { "Unchecked", "Ok", "Pending", "Handshake", "Failed" };
+const char *CredentialsState_str[] = { "Unchecked", "Ok", "Pending", "Handshake", "Failed" };
 
 
 AuthUser::AuthUser(AuthConfig *aConfig) :
