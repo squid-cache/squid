@@ -215,7 +215,7 @@ peerSelectDnsPaths(ps_state *psstate)
     FwdServer *fs = psstate->servers;
 
     // convert the list of FwdServer destinations into destinations IP addresses
-    if (fs && psstate->paths->size() < Config.forward_max_tries) {
+    if (fs && psstate->paths->size() < (unsigned int)Config.forward_max_tries) {
         // send the next one off for DNS lookup.
         const char *host = fs->_peer ? fs->_peer->host : psstate->request->GetHost();
         debugs(44, 2, "Find IP destination for: " << psstate->entry->url() << "' via " << host);
@@ -256,7 +256,7 @@ peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, v
             if (ip >= ia->count) ip = 0; // looped back to zero.
 
             // Enforce forward_max_tries configuration.
-            if (psstate->paths->paths() >= Config.forward_max_tries)
+            if (psstate->paths->size() >= (unsigned int)Config.forward_max_tries)
                 break;
 
             // for TPROXY we must skip unusable addresses.
