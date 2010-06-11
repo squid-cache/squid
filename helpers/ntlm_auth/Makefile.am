@@ -3,5 +3,5 @@
 #  $Id$
 #
 
-DIST_SUBDIRS	= fakeauth no_check smb_lm mswin_sspi
+DIST_SUBDIRS	= fake no_check smb_lm mswin_sspi
 SUBDIRS		= $(NTLM_AUTH_HELPERS)
