@@ -3816,7 +3816,7 @@ AC_CONFIG_FILES([\
 	helpers/digest_auth/file/Makefile \
 	helpers/digest_auth/ldap/Makefile \
 	helpers/ntlm_auth/Makefile \
-	helpers/ntlm_auth/fakeauth/Makefile \
+	helpers/ntlm_auth/fake/Makefile \
 	helpers/ntlm_auth/no_check/Makefile \
 	helpers/ntlm_auth/smb_lm/Makefile \
 	helpers/ntlm_auth/smb_lm/smbval/Makefile \

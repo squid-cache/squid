@@ -17,6 +17,8 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
+ *
+ *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
  *
@@ -57,19 +59,79 @@
 
 /* NP: All of this cruft is little endian */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Used internally. Microsoft seems to think this is right, I believe them.
  * Right. */
-#define MAX_FIELD_LENGTH 300	/* max length of an NTLMSSP field */
+#define NTLM_MAX_FIELD_LENGTH 300	/* max length of an NTLMSSP field */
 
 
 /* Here start the NTLMSSP definitions */
-/* NTLM request types that we know about */
-#define NTLM_NEGOTIATE		1
-#define NTLM_CHALLENGE		2
-#define NTLM_CHALLENGE_HEADER_OFFSET 40
-#define NTLM_AUTHENTICATE	3
 
-#define NONCE_LEN 8
+/* these are marked as "extra" fields */
+#define REQUEST_INIT_RESPONSE          0x100000
+#define REQUEST_ACCEPT_RESPONSE        0x200000
+#define REQUEST_NON_NT_SESSION_KEY     0x400000
+
+
+/** String header. String data resides at the end of the request */
+typedef struct _strhdr {
+    int16_t len;		/**< Length in bytes */
+    int16_t maxlen;		/**< Allocated space in bytes */
+    int32_t offset;		/**< Offset from start of request */
+} strhdr;
+
+/** We use this to keep data/length couples. */
+typedef struct _lstring {
+    int32_t l;			/**< length, -1 if empty */
+    char *str;			/**< the string. NULL if not initialized */
+} lstring;
+
+/** Debug dump the given flags field to stderr */
+void ntlm_dump_ntlmssp_flags(const u_int32_t flags);
+
+
+/* ************************************************************************* */
+/* Packet and Payload structures and handling functions */
+/* ************************************************************************* */
+
+/* NTLM request types that we know about */
+#define NTLM_ANY			0
+#define NTLM_NEGOTIATE			1
+#define NTLM_CHALLENGE			2
+#define NTLM_AUTHENTICATE		3
+
+/** This is an header common to all packets, it's used to discriminate
+ * among the different packet signature types.
+ */
+typedef struct _ntlmhdr {
+    char signature[8];		/**< "NTLMSSP" */
+    int32_t type;		/**< One of the NTLM_* types above. */
+} ntlmhdr;
+
+/** Validate the packet type matches one we want. */
+int ntlm_validate_packet(const ntlmhdr *packet, const int type);
+
+/** Retrieve a string from the NTLM packet payload. */
+lstring ntlm_fetch_string(const ntlmhdr *packet,
+                          const int32_t packet_length,
+                          const strhdr *str,
+                          const u_int32_t flags);
+
+/** Append a string to the NTLM packet payload. */
+void ntlm_add_to_payload(const ntlmhdr *packet_hdr,
+                         char *payload,
+                         int *payload_length,
+                         strhdr * hdr,
+                         const char *toadd,
+                         const int toadd_length);
+
+
+/* ************************************************************************* */
+/* Negotiate Packet structures and functions */
+/* ************************************************************************* */
 
 /* negotiate request flags */
 #define NEGOTIATE_UNICODE              0x0001
@@ -86,38 +148,6 @@
 #define NEGOTIATE_THIS_IS_LOCAL_CALL   0x4000
 #define NEGOTIATE_ALWAYS_SIGN          0x8000
 
-/* challenge request flags */
-#define CHALLENGE_TARGET_IS_DOMAIN     0x10000
-#define CHALLENGE_TARGET_IS_SERVER     0x20000
-#define CHALLENGE_TARGET_IS_SHARE      0x40000
-
-/* these are marked as "extra" fields */
-#define REQUEST_INIT_RESPONSE          0x100000
-#define REQUEST_ACCEPT_RESPONSE        0x200000
-#define REQUEST_NON_NT_SESSION_KEY     0x400000
-
-
-/** String header. String data resides at the end of the request */
-typedef struct _strhdr {
-    int16_t len;		/**< Length in bytes */
-    int16_t maxlen;		/**< Allocated space in bytes */
-    int32_t offset;		/**< Offset from start of request */
-} strhdr;
-
-/** We use this to keep data/lenght couples. Only used internally. */
-typedef struct _lstring {
-    int32_t l;			/**< length, -1 if empty */
-    char *str;			/**< the string. NULL if not initialized */
-} lstring;
-
-/** This is an header common to all signatures, it's used to discriminate
- * among the different signature types.
- */
-typedef struct _ntlmhdr {
-    char signature[8];		/**< "NTLMSSP" */
-    int32_t type;		/**< One of the NTLM_* types above. */
-} ntlmhdr;
-
 /** Negotiation request sent by client */
 typedef struct _ntlm_negotiate {
     ntlmhdr hdr;		/**< "NTLMSSP" , LSWAP(0x1) */
@@ -127,16 +157,47 @@ typedef struct _ntlm_negotiate {
     char payload[256];		/**< String data */
 } ntlm_negotiate;
 
+
+/* ************************************************************************* */
+/* Challenge Packet structures and functions */
+/* ************************************************************************* */
+
+#define NTLM_NONCE_LEN 8
+
+/* challenge request flags */
+#define CHALLENGE_TARGET_IS_DOMAIN     0x10000
+#define CHALLENGE_TARGET_IS_SERVER     0x20000
+#define CHALLENGE_TARGET_IS_SHARE      0x40000
+
 /** Challenge request sent by server. */
 typedef struct _ntlm_challenge {
     ntlmhdr hdr;		/**< "NTLMSSP" , LSWAP(0x2) */
     strhdr target;		/**< Authentication target (domain/server ...) */
     u_int32_t flags;		/**< Request flags */
-    u_char challenge[NONCE_LEN];	/**< Challenge string */
+    u_char challenge[NTLM_NONCE_LEN];	/**< Challenge string */
     u_int32_t context_low;	/**< LS part of the server context handle */
     u_int32_t context_high;	/**< MS part of the server context handle */
     char payload[256];		/**< String data */
 } ntlm_challenge;
+
+/* Size of the ntlm_challenge structures formatted fields (excluding payload) */
+#define NTLM_CHALLENGE_HEADER_OFFSET	(sizeof(ntlm_challenge)-256)
+
+/** Generate a challenge request nonce. */
+void ntlm_make_nonce(char *nonce);
+
+/** Generate a challenge request Blob to be sent to the client. */
+void ntlm_make_challenge(ntlm_challenge *ch,
+                         const char *domain,
+                         const char *domain_controller,
+                         const char *challenge_nonce,
+                         const int challenge_nonce_len,
+                         const u_int32_t flags);
+
+
+/* ************************************************************************* */
+/* Authenticate Packet structures and functions */
+/* ************************************************************************* */
 
 /** Authentication request sent by client in response to challenge */
 typedef struct _ntlm_authenticate {
@@ -151,11 +212,15 @@ typedef struct _ntlm_authenticate {
     char payload[256 * 6];	/**< String data */
 } ntlm_authenticate;
 
-const char *ntlm_make_challenge(char *domain, char *domain_controller,
-                                char *challenge_nonce, int challenge_nonce_len);
-lstring ntlm_fetch_string(char *packet, int32_t length, strhdr * str);
-void ntlm_add_to_payload(char *payload, int *payload_length,
-                         strhdr * hdr, char *toadd,
-                         int toadd_length, int base_offset);
+/** Unpack username and domain out of a packet payload. */
+int ntlm_unpack_auth(const ntlm_authenticate *auth,
+                     char *user,
+                     char *domain,
+                     const int32_t size);
+
+
+#if __cplusplus
+}
+#endif
 
 #endif /* SQUID_NTLMAUTH_H */
