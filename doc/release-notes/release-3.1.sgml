@@ -853,6 +853,9 @@ logformat icap_squid %ts.%03tu %6icap::tr %>a %icap::to/%03icap::Hs %icap::<size
 	direct client address in the access log.
 	</verb>
 
+	<tag>max_filedescriptors</tag>
+	<p>Ported from 2.7.
+
 	<tag>netdb_filename</tag>
 	<verb>
 	A filename where Squid stores it's netdb state between restarts.
@@ -1690,9 +1693,6 @@ This section gives an account of those changes in three categories:
 	<tag>logformat</tag>
 	<p><em>%oa</em> tag not yet ported from 2.7
 	<p><em>%sn</em> tag not yet ported from 2.7
-
-	<tag>max_filedescriptors</tag>
-	<p>Not yet ported from 2.7
 
 	<tag>max_stale</tag>
 	<p>Not yet ported from 2.7
