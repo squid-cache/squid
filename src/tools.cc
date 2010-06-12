@@ -888,7 +888,13 @@ setMaxFD(void)
     if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
         debugs(50, DBG_CRITICAL, "setrlimit: RLIMIT_NOFILE: " << xstrerror());
     } else if (Config.max_filedescriptors > 0) {
-        rl.rlim_cur = Config.max_filedescriptors;
+#if USE_SELECT || USE_SELECT_WIN32
+        /* select() breaks if this gets set too big */
+        if (Config.max_filedescriptors > FD_SETSIZE)
+            rl.rlim_cur = FD_SETSIZE;
+        else
+#endif
+            rl.rlim_cur = Config.max_filedescriptors;
         if (rl.rlim_cur > rl.rlim_max)
             rl.rlim_max = rl.rlim_cur;
         if (setrlimit(RLIMIT_NOFILE, &rl)) {
