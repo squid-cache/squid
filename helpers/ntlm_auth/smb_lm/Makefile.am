@@ -17,6 +17,4 @@ ntlm_smb_lm_auth_LDADD = \
 	$(CRYPTLIB) \
 	$(XTRA_LIBS)
 
-ntlm_smb_lm_auth_DEPENDENCIES = $(top_builddir)/lib/libntlmauth.a
-
 EXTRA_DIST = config.test
