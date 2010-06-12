@@ -154,11 +154,11 @@ make_challenge(char *domain, char *domain_controller)
     }
     ntlm_challenge chal;
     u_int32_t flags = REQUEST_NON_NT_SESSION_KEY |
-                   CHALLENGE_TARGET_IS_DOMAIN |
-                   NEGOTIATE_ALWAYS_SIGN |
-                   NEGOTIATE_USE_NTLM |
-                   NEGOTIATE_USE_LM |
-                   NEGOTIATE_ASCII;
+                      CHALLENGE_TARGET_IS_DOMAIN |
+                      NEGOTIATE_ALWAYS_SIGN |
+                      NEGOTIATE_USE_NTLM |
+                      NEGOTIATE_USE_LM |
+                      NEGOTIATE_ASCII;
     ntlm_make_challenge(&chal, my_domain, my_domain_controller, (char *)challenge, NTLM_NONCE_LEN, flags);
     int len = sizeof(chal) - sizeof(chal.payload) + le16toh(chal.target.maxlen);
     return base64_encode_bin((char *)&chal, len);
@@ -268,8 +268,8 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
 
 #if 1
     debug("Empty LM pass detection: user: '%s', ours:'%s', his: '%s'"
-                "(length: %d)\n",
-                user,lmencoded_empty_pass,tmp.str,tmp.l);
+          "(length: %d)\n",
+          user,lmencoded_empty_pass,tmp.str,tmp.l);
     if (memcmp(tmp.str,lmencoded_empty_pass,ENCODED_PASS_LEN)==0) {
         fprintf(stderr,"Empty LM password supplied for user %s\\%s. "
                 "No-auth\n",domain,user);
@@ -280,8 +280,8 @@ ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
     tmp = ntlm_fetch_string(&(auth->hdr), auth_length, &auth->ntresponse, auth->flags);
     if (tmp.str != NULL && tmp.l != 0) {
         debug("Empty NT pass detection: user: '%s', ours:'%s', his: '%s'"
-                    "(length: %d)\n",
-                    user,ntencoded_empty_pass,tmp.str,tmp.l);
+              "(length: %d)\n",
+              user,ntencoded_empty_pass,tmp.str,tmp.l);
         if (memcmp(tmp.str,lmencoded_empty_pass,ENCODED_PASS_LEN)==0) {
             fprintf(stderr,"Empty NT password supplied for user %s\\%s. "
                     "No-auth\n",domain,user);

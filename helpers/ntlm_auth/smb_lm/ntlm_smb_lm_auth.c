@@ -248,7 +248,7 @@ obtain_challenge()
     const char *ch = NULL;
     for (j = 0; j < numcontrollers; j++) {
         debug("obtain_challenge: selecting %s\\%s (attempt #%d)\n",
-                    current_dc->domain, current_dc->controller, j + 1);
+              current_dc->domain, current_dc->controller, j + 1);
         if (current_dc->dead != 0) {
             if (time(NULL) - current_dc->dead >= DEAD_DC_RETRY_INTERVAL) {
                 /* mark helper as retry-worthy if it's so. */
