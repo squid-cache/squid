@@ -2092,6 +2092,13 @@ accessLogInit(void)
 
     assert(sizeof(log_tags) == (LOG_TYPE_MAX + 1) * sizeof(char *));
 
+#if USE_ADAPTATION
+    alLogformatHasAdaptToken = false;
+#endif
+#if ICAP_CLIENT
+    alLogformatHasIcapToken = false;
+#endif
+
     for (log = Config.Log.accesslogs; log; log = log->next) {
         if (log->type == CLF_NONE)
             continue;
@@ -2100,12 +2107,6 @@ accessLogInit(void)
 
         LogfileStatus = LOG_ENABLE;
 
-#if USE_ADAPTATION
-        alLogformatHasAdaptToken = false;
-#endif
-#if ICAP_CLIENT
-        alLogformatHasIcapToken = false;
-#endif
 #if USE_ADAPTATION || ICAP_CLIENT
         for (logformat_token * curr_token = (log->logFormat?log->logFormat->format:NULL); curr_token; curr_token = curr_token->next) {
 #if USE_ADAPTATION
