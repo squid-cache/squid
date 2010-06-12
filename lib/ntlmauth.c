@@ -194,7 +194,7 @@ ntlm_add_to_payload(const ntlmhdr *packet_hdr,
 /* Challenge Packet functions */
 /* ************************************************************************* */
 
-/* 
+/*
  * Generates a challenge request nonce. The randomness of the 8 byte
  * challenge strings can be guarenteed to be poor at best.
  */
@@ -239,9 +239,9 @@ ntlm_make_challenge(const char *domain, const char *dc_UNUSED,
 
     ntlm_make_challenge(&chal, domain, dc_UNUSED, cn, cnl, flags);
 
-/*  ORIGINAL handling of ntlm_challenge object was to encode it like this:
-    TODO: find all old callers and have them do teh decode themselves now.
-*/
+    /*  ORIGINAL handling of ntlm_challenge object was to encode it like this:
+        TODO: find all old callers and have them do teh decode themselves now.
+    */
     return base64_encode_bin((char *)&chal, NTLM_CHALLENGE_HEADER_OFFSET + pl);
 }
 #endif
