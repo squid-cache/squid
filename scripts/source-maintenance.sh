@@ -15,7 +15,7 @@
 # On squid-cache.org we have to use the python scripted md5sum
 HOST=`hostname`
 if test "$HOST" = "squid-cache.org" ; then
-	MD5="python /usr/local/share/python2.4/Tools/scripts/md5sum.py -"
+	MD5="md5"
 else
 	MD5="md5sum"
 fi

@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
 <HTML>
 <HEAD>
- <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.66">
+ <META NAME="GENERATOR" CONTENT="LinuxDoc-Tools 0.9.65">
  <TITLE>Squid 3.2.0.0 release notes</TITLE>
 </HEAD>
 <BODY>
@@ -163,12 +163,12 @@ For several helpers the directory name used in --enable-X-helpers configure opti
 <LI>squid_ldap_auth - basic_ldap_auth - Authenticate with LDAP user accounts.</LI>
 <LI>ncsa_auth - basic_ncsa_auth - Authenticate with NCSA httpd-style password file.</LI>
 <LI>pam_auth - basic_pam_auth - Authenticate with the system PAM infrastructure.</LI>
-<LI>pop3.pl - basic_pop3_auth.pl - Authenticate with a mail server POP3/SMTP credentials</LI>
+<LI>pop3.pl - basic_pop3_auth - Authenticate with a mail server POP3/SMTP credentials</LI>
 <LI>squid_sasl_auth - basic_sasl_auth - Authenticate with SASL.</LI>
 <LI>smb_auth - basic_smb_auth - Authenticate with Samba SMB.</LI>
 <LI>yp_auth - basic_nis_auth - Authenticate with NIS security system.</LI>
 <LI>mswin_sspi - basic_sspi_auth - Authenticate with a Windows Domain Controller using SSPI.</LI>
-<LI>MSNT-multi-domain - basic_msnt_multi_domain_auth.pl - Authenticate with any one of multiple Windows Domain Controllers.</LI>
+<LI>MSNT-multi-domain - basic_msnt_multi_domain_auth - Authenticate with any one of multiple Windows Domain Controllers.</LI>
 <LI>squid_radius_auth - basic_radius_auth - Authenticate with RADIUS.</LI>
 </UL>
 </P>
@@ -201,6 +201,7 @@ For several helpers the directory name used in --enable-X-helpers configure opti
 
 <P>
 <UL>
+<LI>fakeauth_auth - ntlm_fake_auth - Perform NTLMSSP to recover the username but don't verify the password.</LI>
 <LI>ntlm_auth - ntlm_smb_lm_auth - Perform SMB LanManager domain-less authentication over NTLM protocol.</LI>
 </UL>
 </P>
@@ -226,10 +227,12 @@ versions and beginning with 3.2 they are available in languages other than engli
 <P>3.1 began the Internationalization of Squid with the public facing error pages.
 This move begins the Localization of the internal administrator facing manuals.</P>
 
+
 <H2><A NAME="ss2.4">2.4</A> <A HREF="#toc2.4">Solaris 10 pthreads Support (Experimental)</A>
 </H2>
 
 <P>Automatic detection and use of the pthreads library available from Solaris 10</P>
+
 
 <H2><A NAME="s3">3.</A> <A HREF="#toc3">Changes to squid.conf since Squid-3.1</A></H2>
 
@@ -279,7 +282,7 @@ An upgraded drop-in replacement for <EM>http_access2</EM> found in Squid-2.</P>
 <DT><B>tproxy_uses_indirect_client</B><DD>
 <P>Controls whether the indirect client address found in the X-Forwarded-For
 header is used for spoofing instead of the directly connected client address.
-Requires both --enable-follow-x-forwarded-for and --enable-linux-netfilter</P>
+Requires both <EM>--enable-follow-x-forwarded-for</EM> and <EM>--enable-linux-netfilter</EM></P>
 
 </DL>
 </P>
@@ -290,7 +293,12 @@ Requires both --enable-follow-x-forwarded-for and --enable-linux-netfilter</P>
 <P>
 <DL>
 <DT><B>access_log</B><DD>
-<P>New <EM>daemon</EM> module to send each log line as text data to a file I/O daemon.</P>
+<P>New <EM>stdio</EM> module to send log data directly from Squid to a disk file.
+This is the historic behaviour of Squid before logging modules were introduced, and
+remains the default used when no module is selected.
+It is recommended to upgrade logging to the faster <EM>daemon:</EM> module.</P>
+<P>New <EM>daemon</EM> module to send each log line as text data to a file I/O daemon handling the slow disk I/O.
+New installs, or installs with no logs configured explicitly will use this module by default.</P>
 <P>New <EM>tcp</EM> module to send each log line as text data to a TCP receiver.</P>
 <P>New <EM>udp</EM> module to send each log line as text data to a UDP receiver.</P>
 
@@ -317,9 +325,15 @@ Requires both --enable-follow-x-forwarded-for and --enable-linux-netfilter</P>
 <P>Deprecated <EM>children=N</EM> in favor of <EM>children-max=N</EM>.</P>
 
 <DT><B>logformat</B><DD>
+<P><EM>%&gt;lp</EM> Local TCP port used by transactions with http servers.</P>
 <P><EM>%sn</EM> Unique sequence number per log line. Ported from 2.7</P>
-<P><EM>%>eui</EM> EUI logging (EUI-48 / MAC address for IPv4, EUI-64 for IPv6)
+<P><EM>%&lt;eui</EM> EUI logging (EUI-48 / MAC address for IPv4, EUI-64 for IPv6)
 Both EUI forms are logged in the same field. Type can be identified by length or byte delimiter.</P>
+
+<DT><B>memory_pools_limit</B><DD>
+<P>Memory limits have been revised and corrected from 3.1.4 onwards.</P>
+<P>Please check and update your squid.conf to use the text <EM>none</EM> for no limit instead of the old 0 (zero).</P>
+<P>All users upgrading need to be aware that from Squid-3.3 setting this option to 0 (zero) will mean zero bytes of memory get pooled.</P>
 
 <DT><B>windows_ipaddrchangemonitor</B><DD>
 <P>Now only available to be set in Windows builds.</P>
@@ -373,11 +387,31 @@ Both EUI forms are logged in the same field. Type can be identified by length or
 
 <P>
 <DL>
+<DT><B>--enable-auth-basic[=HELPERS]</B><DD>
+<P>Specified without any parameters all helpers will be auto-built.</P>
+<P>With an explicit empty list <EM>=""</EM> protocol suport will be built but no helpers.</P>
+<P>With an explicit list protocol support and just those helpers will be built.</P>
+
+<DT><B>--enable-auth-digest[=HELPERS]</B><DD>
+<P>Specified without any parameters all helpers will be auto-built.</P>
+<P>With an explicit empty list <EM>=""</EM> protocol suport will be built but no helpers.</P>
+<P>With an explicit list protocol support and just those helpers will be built.</P>
+
+<DT><B>--enable-auth-negotiate</B><DD>
+<P>Specified without any parameters all helpers will be auto-built.</P>
+<P>With an explicit empty list <EM>=""</EM> protocol suport will be built but no helpers.</P>
+<P>With an explicit list protocol support and just those helpers will be built.</P>
+
+<DT><B>--enable-auth-ntlm</B><DD>
+<P>Specified without any parameters all helpers will be auto-built.</P>
+<P>With an explicit empty list <EM>=""</EM> protocol suport will be built but no helpers.</P>
+<P>With an explicit list protocol support and just those helpers will be built.</P>
+
 <DT><B>--enable-eui</B><DD>
 <P>Enable Support for handling EUI operations.
 This includes ARP lookups for MAC (EUI-48) addresses and the ACL arp type tests.</P>
 
-<DT><B>--enable-log-daemon-auth-helpers</B><DD>
+<DT><B>--enable-log-daemon-helpers</B><DD>
 <P>Build helpers for logging I/O.</P>
 
 <DT><B>--enable-url-rewrite-helpers</B><DD>
@@ -395,8 +429,9 @@ the helper protocol usage and provide exemplar code.</P>
 
 <P>
 <DL>
-<DT><B>???alphabetical list within group ordered: enable, disable, with, without) ???</B><DD>
-<P> ???explain??</P>
+<DT><B>--enable-auth</B><DD>
+<P>No longer takes a list of arguments. This option now is restricted to building with or without for authentication.</P>
+<P>The new <EM>--enable-auth-X</EM>/<EM>--disable-auth-X</EM> parameters determine which authentication protocols and helpers are built.</P>
 
 </DL>
 </P>
@@ -407,6 +442,18 @@ the helper protocol usage and provide exemplar code.</P>
 <DL>
 <DT><B>--enable-arp-acl</B><DD>
 <P>Replaced by --enable-eui</P>
+
+<DT><B>--enable-auth-basic-helpers</B><DD>
+<P>replaced by <EM>--enable-auth-basic</EM>.</P>
+
+<DT><B>--enable-auth-digest-helpers</B><DD>
+<P>replaced by <EM>--enable-auth-digest</EM>.</P>
+
+<DT><B>--enable-auth-negotiate-helpers</B><DD>
+<P>replaced by <EM>--enable-auth-negotiate</EM>.</P>
+
+<DT><B>--enable-auth-ntlm-helpers</B><DD>
+<P>replaced by <EM>--enable-auth-ntlm</EM>.</P>
 
 </DL>
 </P>
@@ -619,9 +666,6 @@ the helper protocol usage and provide exemplar code.</P>
 
 <DT><B>logformat</B><DD>
 <P><EM>%oa</EM> tag not yet ported from 2.7</P>
-
-<DT><B>max_filedescriptors</B><DD>
-<P>Not yet ported from 2.7</P>
 
 <DT><B>max_stale</B><DD>
 <P>Not yet ported from 2.7</P>

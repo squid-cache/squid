@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -37,12 +36,15 @@
 #include "auth/Config.h"
 #include "auth/UserRequest.h"
 
-/* Get Auth User: Return a filled out auth_user structure for the given
+Auth::authConfig Auth::TheConfig;
+
+/**
+ * Get Auth User: Return a filled out auth_user structure for the given
  * Proxy Auth (or Auth) header. It may be a cached Auth User or a new
  * Unauthenticated structure. The structure is given an inital lock here.
  * It may also be NULL reflecting that no user could be created.
  */
-AuthUserRequest *
+AuthUserRequest::Pointer
 AuthConfig::CreateAuthUser(const char *proxy_auth)
 {
     assert(proxy_auth != NULL);
@@ -55,20 +57,13 @@ AuthConfig::CreateAuthUser(const char *proxy_auth)
         return NULL;
     }
 
-    AuthUserRequest *result = config->decode (proxy_auth);
-
-    /*
-     * DPW 2007-05-08
-     * Do not lock the AuthUserRequest on the caller's behalf.
-     * Callers must manage their own locks.
-     */
-    return result;
+    return config->decode(proxy_auth);
 }
 
 AuthConfig *
 AuthConfig::Find(const char *proxy_auth)
 {
-    for (authConfig::iterator  i = Config.authConfiguration.begin(); i != Config.authConfiguration.end(); ++i)
+    for (Auth::authConfig::iterator  i = Auth::TheConfig.begin(); i != Auth::TheConfig.end(); ++i)
         if (strncasecmp(proxy_auth, (*i)->type(), strlen((*i)->type())) == 0)
             return *i;
 

@@ -66,7 +66,7 @@ COMMENT_END
 
 NAME: auth_param
 TYPE: authparam
-LOC: Config.authConfiguration
+LOC: Auth::TheConfig
 DEFAULT: none
 DOC_START
 	This is used to define parameters for the various authentication
@@ -2611,6 +2611,7 @@ DOC_START
 		<A	Server IP address or peer name
 		la	Local IP address (http_port)
 		lp	Local port number (http_port)
+		<lp     Local port number of the last server or peer connection
 		sn	Unique sequence number per log line entry
 		ts	Seconds since epoch
 		tu	subsecond time (milliseconds)
@@ -4927,7 +4928,7 @@ DOC_END
 NAME: persistent_connection_after_error
 TYPE: onoff
 LOC: Config.onoff.error_pconns
-DEFAULT: off
+DEFAULT: on
 DOC_START
 	With this directive the use of persistent connections after
 	HTTP errors can be disabled. Useful if you have clients
@@ -6969,6 +6970,19 @@ DEFAULT: on
 LOC: Eui::TheConfig.euiLookup
 DOC_START
 	Whether to lookup the EUI or MAC address of a connected client.
+DOC_END
+
+NAME: max_filedescriptors max_filedesc
+TYPE: int
+DEFAULT: 0
+LOC: Config.max_filedescriptors
+DOC_START
+	The maximum number of filedescriptors supported.
+
+	The default "0" means Squid inherits the current ulimit setting.
+
+	Note: Changing this requires a restart of Squid. Also
+	not all comm loops supports large values.
 DOC_END
 
 EOF
