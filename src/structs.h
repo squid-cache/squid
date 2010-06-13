@@ -486,7 +486,6 @@ struct SquidConfig {
 #endif
     } accessList;
     acl_deny_info_list *denyInfoList;
-    authConfig authConfiguration;
 
     struct {
         size_t list_width;
@@ -611,6 +610,7 @@ struct SquidConfig {
 
     char *accept_filter;
     int umask;
+    int max_filedescriptors;
 
 #if USE_LOADABLE_MODULES
     wordlist *loadable_module_names;

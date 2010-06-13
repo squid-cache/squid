@@ -568,6 +568,7 @@ SQUIDCEXTERN void no_suid(void);
 SQUIDCEXTERN void writePidFile(void);
 SQUIDCEXTERN void setSocketShutdownLifetimes(int);
 SQUIDCEXTERN void setMaxFD(void);
+SQUIDCEXTERN void setSystemLimits(void);
 SQUIDCEXTERN void squid_signal(int sig, SIGHDLR *, int flags);
 SQUIDCEXTERN pid_t readPidFile(void);
 SQUIDCEXTERN void keepCapabilities(void);
@@ -789,4 +790,8 @@ class external_acl;
             /* upstream proxy authentication */
             SQUIDCEXTERN char *peer_proxy_negotiate_auth(char *principal_name, char *proxy);
 #endif
+
+            /* call to ensure the auth component schemes exist. */
+            SQUIDCEXTERN void InitAuthSchemes(void);
+
 #endif /* SQUID_PROTOS_H */

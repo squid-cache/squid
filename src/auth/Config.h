@@ -32,10 +32,13 @@
 #ifndef SQUID_AUTHCONFIG_H
 #define SQUID_AUTHCONFIG_H
 
-class AuthUserRequest;
+#include "auth/UserRequest.h"
+#include "HelperChildConfig.h"
+
 class StoreEntry;
 class HttpReply;
 class HttpRequest;
+class wordlist;
 
 /* for http_hdr_type parameters-by-value */
 #include "HttpHeader.h"
@@ -56,10 +59,10 @@ class AuthConfig
 {
 
 public:
-    static AuthUserRequest *CreateAuthUser (const char *proxy_auth);
+    static AuthUserRequest::Pointer CreateAuthUser(const char *proxy_auth);
 
     static AuthConfig *Find(const char *proxy_auth);
-    AuthConfig() {}
+    AuthConfig() : authenticateChildren(20), authenticate(NULL) {}
 
     virtual ~AuthConfig() {}
 
@@ -81,7 +84,7 @@ public:
      \param proxy_auth	Login Pattern to parse.
      \retval *		Details needed to authenticate.
      */
-    virtual AuthUserRequest *decode(char const *proxy_auth) = 0;
+    virtual AuthUserRequest::Pointer decode(char const *proxy_auth) = 0;
 
     /**
      * squid is finished with this config, release any unneeded resources.
@@ -103,13 +106,19 @@ public:
     virtual bool configured() const = 0;
 
     /**
+     * Shutdown just the auth helpers.
+     * For use by log rotate etc. where auth needs to stay running, with the helpers restarted.
+     */
+    virtual void rotateHelpers(void) = 0;
+
+    /**
      * Responsible for writing to the StoreEntry the configuration parameters that a user
      * would put in a config file to recreate the running configuration.
      */
     virtual void dump(StoreEntry *, const char *, AuthConfig *) = 0;
 
     /** add headers as needed when challenging for auth */
-    virtual void fixHeader(AuthUserRequest *, HttpReply *, http_hdr_type, HttpRequest *) = 0;
+    virtual void fixHeader(AuthUserRequest::Pointer, HttpReply *, http_hdr_type, HttpRequest *) = 0;
     /** prepare to handle requests */
     virtual void init(AuthConfig *) = 0;
     /** expose any/all statistics to a CacheManager */
@@ -118,6 +127,19 @@ public:
     virtual void parse(AuthConfig *, int, char *) = 0;
     /** the http string id */
     virtual const char * type() const = 0;
+
+public:
+    HelperChildConfig authenticateChildren;
+    wordlist *authenticate;
 };
+
+namespace Auth
+{
+
+typedef Vector<AuthConfig *> authConfig;
+
+extern authConfig TheConfig;
+
+}; // namespace Auth
 
 #endif /* SQUID_AUTHCONFIG_H */

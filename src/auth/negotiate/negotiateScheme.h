@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -35,6 +34,7 @@
 #define SQUID_NEGOTIATESCHEME_H
 
 #include "auth/Scheme.h"
+#include "auth/negotiate/auth_negotiate.h"
 
 /// \ingroup AuthSchemeAPI
 /// \ingroup AuthAPI
@@ -42,20 +42,21 @@ class negotiateScheme : public AuthScheme
 {
 
 public:
-    static AuthScheme &GetInstance();
-    negotiateScheme();
+    static AuthScheme::Pointer GetInstance();
+    negotiateScheme() {};
     virtual ~negotiateScheme() {};
 
     /* per scheme */
     virtual char const *type () const;
     virtual void done();
     virtual AuthConfig *createConfig();
+
     /* Not implemented */
     negotiateScheme (negotiateScheme const &);
     negotiateScheme &operator=(negotiateScheme const &);
 
 private:
-    static negotiateScheme *_instance;
+    static AuthScheme::Pointer _instance;
 };
 
 #endif /* SQUID_negotiateSCHEME_H */

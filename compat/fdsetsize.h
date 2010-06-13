@@ -40,7 +40,9 @@
 #if (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 2)
 #if SQUID_MAXFD > DEFAULT_FD_SETSIZE
 #include <bits/types.h>
+#if HAVE_LINUX_POSIX_TYPES_H
 #include <linux/posix_types.h>
+#endif
 #undef __FD_SETSIZE
 #define __FD_SETSIZE SQUID_MAXFD
 #endif
