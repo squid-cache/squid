@@ -904,7 +904,7 @@ setMaxFD(void)
         }
     }
     if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
-         debugs(50, DBG_CRITICAL, "setrlimit: RLIMIT_NOFILE: " << xstrerror());
+        debugs(50, DBG_CRITICAL, "setrlimit: RLIMIT_NOFILE: " << xstrerror());
     } else {
         Squid_MaxFD = rl.rlim_cur;
     }
