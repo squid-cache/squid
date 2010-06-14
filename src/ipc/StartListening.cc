@@ -36,7 +36,7 @@ void Ipc::StartListening(int sock_type, int proto, IpAddress &addr,
     p.flags = flags;
     p.fdNote = fdNote;
 
-    if (!opt_no_daemon && Config.main_processes > 1) { // if SMP is on, share
+    if (UsingSmp()) { // if SMP is on, share
         Ipc::JoinSharedListen(p, callback);
         return; // wait for the call back
     }
