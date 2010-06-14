@@ -65,6 +65,8 @@ elif [ -f STABLE_BRANCH ]; then
 fi
 
 cd $startdir
+echo "Preparing to publish: ${PACKAGE}-${VERSION}-${date}.tar.* ..."
+ls -1 ./*.tar.*
 cp -p $tmpdir/${PACKAGE}-${VERSION}-${date}.tar.gz .
 echo ${PACKAGE}-${VERSION}-${date}.tar.gz >>${tag}.out
 cp -p $tmpdir/${PACKAGE}-${VERSION}-${date}.tar.bz2 .
