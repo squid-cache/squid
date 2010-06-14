@@ -48,7 +48,30 @@
 #include "SwapDir.h"
 #include "icmp/net_db.h"
 #include "ip/IpAddress.h"
+#include "ipc/StartListening.h"
 #include "rfc1738.h"
+
+/// dials icpIncomingConnectionOpened call
+class IcpListeningStartedDialer: public CallDialer,
+    public Ipc::StartListeningCb
+{
+public:
+    typedef void (*Handler)(int fd, int errNo, IpAddress& addr);
+    IcpListeningStartedDialer(Handler aHandler, IpAddress& anAddr):
+        handler(aHandler), addr(anAddr) {}
+
+    virtual void print(std::ostream &os) const { startPrint(os) <<
+        ", address=" << addr << ')'; }
+
+    virtual bool canDial(AsyncCall &) const { return true; }
+    virtual void dial(AsyncCall &) { (handler)(fd, errNo, addr); }
+
+public:
+    Handler handler;
+    IpAddress addr;
+};
+
+static void icpIncomingConnectionOpened(int fd, int errNo, IpAddress& addr);
 
 /// \ingroup ServerProtocolICPInternal2
 static void icpLogIcp(const IpAddress &, log_type, int, const char *, int);
@@ -656,35 +679,22 @@ icpConnectionsOpen(void)
 
     struct addrinfo *xai = NULL;
     int x;
-    wordlist *s;
 
     if ((port = Config.Port.icp) <= 0)
         return;
 
-    enter_suid();
-
     addr = Config.Addrs.udp_incoming;
     addr.SetPort(port);
-    theInIcpConnection = comm_open_listener(SOCK_DGRAM,
+
+    AsyncCall::Pointer call = asyncCall(12, 2,
+        "icpIncomingConnectionOpened",
+        IcpListeningStartedDialer(&icpIncomingConnectionOpened, addr));
+
+    Ipc::StartListening(SOCK_DGRAM,
                                             IPPROTO_UDP,
                                             addr,
                                             COMM_NONBLOCKING,
-                                            "ICP Socket");
-    leave_suid();
-
-    if (theInIcpConnection < 0)
-        fatal("Cannot open ICP Port");
-
-    commSetSelect(theInIcpConnection,
-                  COMM_SELECT_READ,
-                  icpHandleUdp,
-                  NULL,
-                  0);
-
-    for (s = Config.mcast_group_list; s; s = s->next)
-        ipcache_nbgethostbyname(s->key, mcastJoinGroups, NULL);
-
-    debugs(12, 1, "Accepting ICP messages at " << addr << ", FD " << theInIcpConnection << ".");
+                                            Ipc::fdnInIcpSocket, call);
 
     addr.SetEmpty(); // clear for next use.
     addr = Config.Addrs.udp_outgoing;
@@ -710,10 +720,6 @@ icpConnectionsOpen(void)
         debugs(12, 1, "Outgoing ICP messages on port " << addr.GetPort() << ", FD " << theOutIcpConnection << ".");
 
         fd_note(theOutIcpConnection, "Outgoing ICP socket");
-
-        fd_note(theInIcpConnection, "Incoming ICP socket");
-    } else {
-        theOutIcpConnection = theInIcpConnection;
     }
 
     theOutICPAddr.SetEmpty();
@@ -728,6 +734,31 @@ icpConnectionsOpen(void)
         theOutICPAddr = *xai;
 
     theOutICPAddr.FreeAddrInfo(xai);
+}
+
+static void
+icpIncomingConnectionOpened(int fd, int errNo, IpAddress& addr)
+{
+    theInIcpConnection = fd;
+
+    if (theInIcpConnection < 0)
+        fatal("Cannot open ICP Port");
+
+    commSetSelect(theInIcpConnection,
+                  COMM_SELECT_READ,
+                  icpHandleUdp,
+                  NULL,
+                  0);
+
+    for (const wordlist *s = Config.mcast_group_list; s; s = s->next)
+        ipcache_nbgethostbyname(s->key, mcastJoinGroups, NULL);
+
+    debugs(12, 1, "Accepting ICP messages at " << addr << ", FD " << theInIcpConnection << ".");
+
+        fd_note(theInIcpConnection, "Incoming ICP socket");
+
+    if (Config.Addrs.udp_outgoing.IsNoAddr())
+        theOutIcpConnection = theInIcpConnection;
 }
 
 /**

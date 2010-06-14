@@ -15,7 +15,8 @@ namespace Ipc
 
 /// fd_note() label ID
 typedef enum { fdnNone, fdnHttpSocket, fdnHttpsSocket,
-               fdnInSnmpSocket, fdnOutSnmpSocket, fdnEnd } FdNoteId;
+               fdnInSnmpSocket, fdnOutSnmpSocket, 
+               fdnInIcpSocket, fdnInHtcpSocket, fdnEnd } FdNoteId;
 
 extern const char *FdNote(int fdNodeId); ///< converts FdNoteId into a string
 

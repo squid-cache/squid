@@ -18,7 +18,9 @@ Ipc::FdNote(int fdNoteId)
         "HTTP Socket", // fdnHttpSocket
         "HTTPS Socket", // fdnHttpsSocket
         "Incoming SNMP Socket", // fdnInSnmpSocket
-        "Outgoing SNMP Socket" // fdnOutSnmpSocket
+        "Outgoing SNMP Socket", // fdnOutSnmpSocket
+        "Incoming ICP Socket", // fdnInIcpSocket
+        "Incoming HTCP Socket" // fdnInHtcpSocket
     };
 
     if (fdnNone < fdNoteId && fdNoteId < fdnEnd)
