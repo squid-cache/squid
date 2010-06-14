@@ -80,6 +80,7 @@ private:
     void parseTrailerHeader();
     void parseMessageEnd();
 
+    void parseChunkExtension(const char *, const char * );
     bool findCrlf(size_t &crlfBeg, size_t &crlfEnd);
 
 private:
@@ -96,6 +97,9 @@ private:
     uint64_t theChunkSize;
     uint64_t theLeftBodySize;
     bool doNeedMoreData;
+
+public:
+    int64_t useOriginBody;
 };
 
 #endif /* SQUID_CHUNKEDCODINGPARSER_H */
