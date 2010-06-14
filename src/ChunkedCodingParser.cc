@@ -21,6 +21,7 @@ void ChunkedCodingParser::reset()
     theChunkSize = theLeftBodySize = 0;
     doNeedMoreData = false;
     theIn = theOut = NULL;
+    useOriginBody = -1;
 }
 
 bool ChunkedCodingParser::parse(MemBuf *rawData, MemBuf *parsedContent)
@@ -73,6 +74,10 @@ void ChunkedCodingParser::parseChunkBeg()
                 throw TexcHere("negative chunk size");
                 return;
             }
+
+            // to allow chunk extensions in any chunk, remove this size check
+            if (size == 0) // is this the last-chunk?
+                parseChunkExtension(p, theIn->content() + crlfBeg);
 
             theIn->consume(crlfEnd);
             theChunkSize = theLeftBodySize = size;
@@ -228,3 +233,35 @@ bool ChunkedCodingParser::findCrlf(size_t &crlfBeg, size_t &crlfEnd)
     return false;
 }
 
+// chunk-extension= *( ";" chunk-ext-name [ "=" chunk-ext-val ] )
+void ChunkedCodingParser::parseChunkExtension(const char *startExt, const char *endExt)
+{
+    // chunk-extension starts at startExt and ends with LF at endEx
+    for (const char *p = startExt; p < endExt;) {
+
+        while (*p == ' ' || *p == '\t') ++p; // skip spaces before ';'
+        
+        if (*p++ != ';') // each ext name=value pair is preceded with ';'
+            return;
+        
+        while (*p == ' ' || *p == '\t') ++p; // skip spaces before name
+        
+        if (p >= endExt)
+            return; // malformed extension: ';' without ext name=value pair
+
+        const int extSize = endExt - p;
+        // TODO: we need debugData() stream manipulator to dump data
+        debugs(94,7, "Found chunk extension; size=" << extSize);
+
+        // TODO: support implied *LWS around '='
+        if (extSize > 18 && strncmp(p, "use-original-body=", 18) == 0) {
+            (void)StringToInt64(p+18, useOriginBody, &p, 10);
+            debugs(94, 3, HERE << "use-original-body=" << useOriginBody);
+            return; // remove to support more than just use-original-body
+        } else {
+            debugs(94, 5, HERE << "skipping unknown chunk extension");
+            // TODO: support quoted-string chunk-ext-val
+            while (p < endExt && *p != ';') ++p; // skip until the next ';'
+        }
+    }
+}

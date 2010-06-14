@@ -195,6 +195,7 @@ private:
     bool virginBodyEndReached(const VirginBodyAct &act) const;
 
     void makeRequestHeaders(MemBuf &buf);
+    void makeAllowHeader(MemBuf &buf);
     void makeUsernameHeader(const HttpRequest *request, MemBuf &buf);
     void addLastRequestChunk(MemBuf &buf);
     void openChunk(MemBuf &buf, size_t chunkSize, bool ieof);
@@ -205,6 +206,9 @@ private:
     void decideOnPreview();
     void decideOnRetries();
     bool shouldAllow204();
+    bool shouldAllow206any();
+    bool shouldAllow206in();
+    bool shouldAllow206out();
     bool canBackupEverything() const;
 
     void prepBackup(size_t expectedSize);
@@ -225,6 +229,7 @@ private:
     bool validate200Ok();
     void handle200Ok();
     void handle204NoContent();
+    void handle206PartialContent();
     void handleUnknownScode();
 
     void bypassFailure();
@@ -233,6 +238,7 @@ private:
     void disableBypass(const char *reason, bool includeGroupBypass);
 
     void prepEchoing();
+    void prepPartialBodyEchoing(uint64_t pos);
     void echoMore();
 
     virtual bool doneAll() const;
@@ -281,6 +287,9 @@ private:
 
         bool serviceWaiting; // waiting for ICAP service options
         bool allowedPostview204; // mmust handle 204 No Content outside preview
+        bool allowedPostview206; // must handle 206 Partial Content outside preview
+        bool allowedPreview206; // must handle 206 Partial Content inside preview
+        bool readyForUob; ///< got a 206 response and expect a use-origin-body
 
         // will not write anything [else] to the ICAP server connection
         bool doneWriting() const { return writing == writingReallyDone; }
@@ -288,7 +297,8 @@ private:
         // will not use virgin.body_pipe
         bool doneConsumingVirgin() const {
             return writing >= writingAlmostDone
-                   && (sending == sendingAdapted || sending == sendingDone);
+                && ((sending == sendingAdapted && !readyForUob) ||
+                    sending == sendingDone);
         }
 
         // parsed entire ICAP response from the ICAP server

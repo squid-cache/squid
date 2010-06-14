@@ -101,6 +101,7 @@ public:
     bool needsMoreData() const { return bodySizeKnown() && unproducedSize() > 0; }
     uint64_t unproducedSize() const; // size of still unproduced data
     bool stillProducing(const Producer *producer) const { return theProducer == producer; }
+    void expectProductionEndAfter(uint64_t extraSize); ///< sets or checks body size
 
     // called by consumers
     bool setConsumerIfNotLate(Consumer *aConsumer);
