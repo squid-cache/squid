@@ -240,12 +240,12 @@ void ChunkedCodingParser::parseChunkExtension(const char *startExt, const char *
     for (const char *p = startExt; p < endExt;) {
 
         while (*p == ' ' || *p == '\t') ++p; // skip spaces before ';'
-        
+
         if (*p++ != ';') // each ext name=value pair is preceded with ';'
             return;
-        
+
         while (*p == ' ' || *p == '\t') ++p; // skip spaces before name
-        
+
         if (p >= endExt)
             return; // malformed extension: ';' without ext name=value pair
 

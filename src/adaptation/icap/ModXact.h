@@ -297,8 +297,8 @@ private:
         // will not use virgin.body_pipe
         bool doneConsumingVirgin() const {
             return writing >= writingAlmostDone
-                && ((sending == sendingAdapted && !readyForUob) ||
-                    sending == sendingDone);
+                   && ((sending == sendingAdapted && !readyForUob) ||
+                       sending == sendingDone);
         }
 
         // parsed entire ICAP response from the ICAP server

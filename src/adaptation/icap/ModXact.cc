@@ -934,7 +934,7 @@ void Adaptation::Icap::ModXact::prepPartialBodyEchoing(uint64_t pos)
 
     // check that use-original-body=N does not point beyond buffered data
     const uint64_t virginDataEnd = virginConsumed +
-        virgin.body_pipe->buf().contentSize();
+                                   virgin.body_pipe->buf().contentSize();
     Must(pos <= virginDataEnd);
     virginBodySending.progress(static_cast<size_t>(pos));
 
@@ -1338,7 +1338,7 @@ void Adaptation::Icap::ModXact::makeAllowHeader(MemBuf &buf)
     const bool allow206out = state.allowedPostview206 = shouldAllow206out();
 
     debugs(93,9, HERE << "Allows: " << allow204in << allow204out <<
-        allow206in << allow206out);
+           allow206in << allow206out);
 
     const bool allow204 = allow204in || allow204out;
     const bool allow206 = allow206in || allow206out;
@@ -1360,7 +1360,7 @@ void Adaptation::Icap::ModXact::makeAllowHeader(MemBuf &buf)
         allowHeader = "Allow: 204\r\n";
     else if (allow206)
         allowHeader = "Allow: 206\r\n";
-    
+
     if (allowHeader) { // may be nil if only allow204in is true
         buf.append(allowHeader, strlen(allowHeader));
         debugs(93,5, HERE << "Will write " << allowHeader);
@@ -1473,7 +1473,7 @@ bool Adaptation::Icap::ModXact::shouldAllow204()
 bool Adaptation::Icap::ModXact::shouldAllow206any()
 {
     return TheConfig.allow206_enable && service().allows206() &&
-        virginBody.expected(); // no need for 206 without a body
+           virginBody.expected(); // no need for 206 without a body
 }
 
 // decides whether to allow 206 responses in preview mode
