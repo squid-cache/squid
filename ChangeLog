@@ -1,3 +1,10 @@
+Changes in development:
+
+	- Bug 2950: HTTP responses with no Date, Last-modified or expired can
+	  now be cached (given an appropriate refresh_pattern). Previously we
+	  were not caching them in case of an infinite loop in cache farms:
+	  however Squid adds Date: headers now which remove that concern.
+
 Changes to squid-3.1.4 (30 May 2010):
 
 	- Bug 2933: Verification of the max. port number for WCCP2 dynamic service
