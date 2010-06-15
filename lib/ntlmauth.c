@@ -286,8 +286,6 @@ ntlm_make_challenge(ntlm_challenge *ch,
 int
 ntlm_unpack_auth(const ntlm_authenticate *auth, char *user, char *domain, const int32_t size)
 {
-    const char *p;
-    unsigned int s;
     lstring rv;
 
     if (ntlm_validate_packet(&auth->hdr, NTLM_AUTHENTICATE)) {

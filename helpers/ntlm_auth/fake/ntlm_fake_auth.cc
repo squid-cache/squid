@@ -226,7 +226,7 @@ main(int argc, char *argv[])
     char buf[BUFFER_SIZE];
     int buflen = 0;
     char user[NTLM_MAX_FIELD_LENGTH], domain[NTLM_MAX_FIELD_LENGTH];
-    char *p, *decoded = NULL;
+    char *p;
     ntlmhdr *packet = NULL;
     char helper_command[3];
     int len;
