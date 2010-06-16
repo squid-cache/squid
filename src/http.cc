@@ -441,8 +441,8 @@ HttpStateData::cacheableReply()
         if (!refreshIsCachable(entry) && !REFRESH_OVERRIDE(store_stale)) {
             debugs(22, 3, "refreshIsCachable() returned non-cacheable..");
             return 0;
-        } else 
-	   return 1;
+        } else
+            return 1;
 
         /* NOTREACHED */
         break;
