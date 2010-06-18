@@ -600,7 +600,7 @@ ErrorState::Convert(char token, bool url_presentable)
     static MemBuf mb;
     const char *p = NULL;	/* takes priority over mb if set */
     int do_quote = 1;
-    int no_urlescape = 1;       /* item is NOT to be further URL-encoded */
+    int no_urlescape = 0;       /* if true then item is NOT to be further URL-encoded */
     char ntoabuf[MAX_IPSTRLEN];
 
     mb.reset();
@@ -615,13 +615,10 @@ ErrorState::Convert(char token, bool url_presentable)
         break;
 
     case 'B':
-        if (url_presentable) break;
         p = request ? ftpUrlWith2f(request) : "[no URL]";
-        no_urlescape = 1;
         break;
 
     case 'c':
-        if (url_presentable) break;
         p = errorPageName(type);
         break;
 
@@ -637,7 +634,6 @@ ErrorState::Convert(char token, bool url_presentable)
         break;
 
     case 'f':
-        if (url_presentable) break;
         /* FTP REQUEST LINE */
         if (ftp.request)
             p = ftp.request;
@@ -646,7 +642,6 @@ ErrorState::Convert(char token, bool url_presentable)
         break;
 
     case 'F':
-        if (url_presentable) break;
         /* FTP REPLY LINE */
         if (ftp.request)
             p = ftp.reply;
@@ -655,7 +650,6 @@ ErrorState::Convert(char token, bool url_presentable)
         break;
 
     case 'g':
-        if (url_presentable) break;
         /* FTP SERVER MESSAGE */
         if (ftp.server_msg)
             wordlistCat(ftp.server_msg, &mb);
@@ -729,7 +723,11 @@ ErrorState::Convert(char token, bool url_presentable)
         break;
 
     case 'P':
-        p = request ? ProtocolStr[request->protocol] : "[unknown protocol]";
+	if (request) {
+	    p = ProtocolStr[request->protocol];
+	} else if (!url_presentable) {
+	    p = "[unknown protocol]";
+	}
         break;
 
     case 'R':
@@ -770,7 +768,10 @@ ErrorState::Convert(char token, bool url_presentable)
         break;
 
     case 'S':
-        if (url_presentable) break;
+        if (url_presentable) {
+            p = visible_appname_string;
+	    break;
+	}
         /* signature may contain %-escapes, recursion */
         if (page_id != ERR_SQUID_SIGNATURE) {
             const int saved_id = page_id;
@@ -798,7 +799,12 @@ ErrorState::Convert(char token, bool url_presentable)
     case 'U':
         /* Using the fake-https version of canonical so error pages see https:// */
         /* even when the url-path cannot be shown as more than '*' */
-        p = request ? urlCanonicalFakeHttps(request) : url ? url : "[no URL]";
+	if (request)
+	    p = urlCanonicalFakeHttps(request);
+	else if (url)
+	    p = url;
+	else if (!url_presentable)
+	    p = "[no URL]";
         break;
 
     case 'u':
@@ -813,9 +819,9 @@ ErrorState::Convert(char token, bool url_presentable)
         break;
 
     case 'W':
-        if (url_presentable) break;
         if (Config.adminEmail && Config.onoff.emailErrData)
             Dump(&mb);
+        no_urlescape = 1;
         break;
 
     case 'z':
@@ -824,7 +830,7 @@ ErrorState::Convert(char token, bool url_presentable)
             p = dnsError.termedBuf();
         else if (ftp.cwd_msg)
             p = ftp.cwd_msg;
-        else
+        else if (!url_presentable)
             p = "[unknown]";
         break;
 
@@ -832,7 +838,7 @@ ErrorState::Convert(char token, bool url_presentable)
         if (url_presentable) break;
         if (err_msg)
             p = err_msg;
-        else
+        else if (!url_presentable)
             p = "[unknown]";
         break;
 
