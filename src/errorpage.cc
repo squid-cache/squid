@@ -723,11 +723,11 @@ ErrorState::Convert(char token, bool url_presentable)
         break;
 
     case 'P':
-	if (request) {
-	    p = ProtocolStr[request->protocol];
-	} else if (!url_presentable) {
-	    p = "[unknown protocol]";
-	}
+        if (request) {
+            p = ProtocolStr[request->protocol];
+        } else if (!url_presentable) {
+            p = "[unknown protocol]";
+        }
         break;
 
     case 'R':
@@ -770,8 +770,8 @@ ErrorState::Convert(char token, bool url_presentable)
     case 'S':
         if (url_presentable) {
             p = visible_appname_string;
-	    break;
-	}
+            break;
+        }
         /* signature may contain %-escapes, recursion */
         if (page_id != ERR_SQUID_SIGNATURE) {
             const int saved_id = page_id;
@@ -799,12 +799,12 @@ ErrorState::Convert(char token, bool url_presentable)
     case 'U':
         /* Using the fake-https version of canonical so error pages see https:// */
         /* even when the url-path cannot be shown as more than '*' */
-	if (request)
-	    p = urlCanonicalFakeHttps(request);
-	else if (url)
-	    p = url;
-	else if (!url_presentable)
-	    p = "[no URL]";
+        if (request)
+            p = urlCanonicalFakeHttps(request);
+        else if (url)
+            p = url;
+        else if (!url_presentable)
+            p = "[no URL]";
         break;
 
     case 'u':
