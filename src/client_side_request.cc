@@ -541,7 +541,7 @@ ClientRequestContext::clientAccessCheck2()
         acl_checklist = clientAclChecklistCreate(Config.accessList.adapted_http, http);
         acl_checklist->nonBlockingCheck(clientAccessCheckDoneWrapper, this);
     } else {
-        debugs(85, 2, HERE << "No adapted_http_access configuration.");
+        debugs(85, 2, HERE << "No adapted_http_access configuration. default: ALLOW");
         clientAccessCheckDone(ACCESS_ALLOWED);
     }
 }

@@ -137,10 +137,11 @@ ConnectStateData::connect()
         if (active->getPeer())
             active->getPeer()->stats.conn_open++;
 
-        /* TODO: remove this fd_table access. But old code still depends on fd_table flags to
+        /* TODO: remove these fd_table accesses. But old code still depends on fd_table flags to
          *       indicate the state of a raw fd object being passed around.
          */
         fd_table[active->fd].flags.open = 1;
+        active->local.SetPort(comm_local_port(active->fd));
 
         ipcacheMarkGoodAddr(host, active->remote);
         callCallback(COMM_OK, 0);
