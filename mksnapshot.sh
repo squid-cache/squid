@@ -25,7 +25,7 @@ trap "rm -rf $tmpdir" 0
 
 rm -f ${tag}.out
 bzr export $tmpdir $BZRROOT/$module/$branchpath || exit 1
-if [ ! -f $tmpdir/configyre ] && [ -f $tmpdir/configure.in ]; then
+if [ ! -f $tmpdir/configure ] && [ -f $tmpdir/configure.in ]; then
 	sh -c "cd $tmpdir && ./bootstrap.sh"
 fi
 if [ ! -f $tmpdir/configure ]; then
@@ -46,7 +46,7 @@ EOS
 
 ./test-builds.sh --cleanup || exit 1
 ./configure --silent
-make -s dist-all
+make -s dist-all || echo "ERROR: make dist-all failed."
 
 basetarball=/server/httpd/htdocs/squid-cache.org/Versions/v`echo $VERSION | cut -d. -f1`/`echo $VERSION | cut -d. -f-2|cut -d- -f1`/${PACKAGE}-${VERSION}.tar.bz2
 if (echo $VERSION | grep PRE) || (echo $VERSION | grep STABLE); then
@@ -66,6 +66,7 @@ fi
 
 cd $startdir
 echo "Preparing to publish: ${PACKAGE}-${VERSION}-${date}.tar.* ..."
+pwd
 ls -1 ./*.tar.*
 ls -1 $tmpdir/*.tar.*
 cp -p $tmpdir/${PACKAGE}-${VERSION}-${date}.tar.gz .
