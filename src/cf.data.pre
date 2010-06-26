@@ -2852,6 +2852,17 @@ LOC: Log::TheConfig.logfile_daemon
 DOC_START
 	Specify the path to the logfile-writing daemon. This daemon is
 	used to write the access and store logs, if configured.
+
+	Squid sends a number of commands to the log daemon:
+	  L<data>\n - logfile data
+	  R\n - rotate file
+	  T\n - truncate file
+	  O\n - repoen file
+	  F\n - flush file
+	  r<n>\n - set rotate count to <n>
+	  b<n>\n - 1 = buffer output, 0 = don't buffer output
+
+	No responses is expected.
 DOC_END
 
 NAME: log_access
