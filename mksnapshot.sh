@@ -56,23 +56,24 @@ echo "TMPDIR: ${tmpdir}"
 make -s dist-all || echo "ERROR: make dist-all failed."
 
 basetarball=/server/httpd/htdocs/squid-cache.org/Versions/v`echo $VERSION | cut -d. -f1`/`echo $VERSION | cut -d. -f-2|cut -d- -f1`/${PACKAGE}-${VERSION}.tar.bz2
-if (echo $VERSION | grep PRE) || (echo $VERSION | grep STABLE); then
-	echo "Building Tarball (${basetarball}) ..."
+#if (echo $VERSION | grep PRE) || (echo $VERSION | grep STABLE); then
+	echo "Building Tarball diff (${basetarball}) ..."
 	if [ -f $basetarball ]; then
 		tar jxf ${PACKAGE}-${VERSION}-${date}.tar.bz2
 		tar jxf $basetarball
 		echo "Differences from ${PACKAGE}-${VERSION} to ${PACKAGE}-${VERSION}-${date}" >${PACKAGE}-${VERSION}-${date}.diff
 		diff -ruN ${PACKAGE}-${VERSION} ${PACKAGE}-${VERSION}-${date} >>${PACKAGE}-${VERSION}-${date}.diff || true
 	else
+		echo "Building Tarball diff ... skipped (no tarball exists)."
 		#cvs -q rdiff -u -r SQUID_`echo $VERSION | tr .- __` -r $tag $module >>${PACKAGE}-${VERSION}-${date}.diff || true
 	fi
 #elif [ -f STABLE_BRANCH ]; then
 	#stable=`cat STABLE_BRANCH`
 	#echo "Differences from ${stable} to ${PACKAGE}-${VERSION}-${date}" >${PACKAGE}-${VERSION}-${date}.diff
 	#cvs -q rdiff -u -r $stable -r $tag $module >>${PACKAGE}-${VERSION}-${date}.diff
-else
-	echo "Building Tarball ... skipped."
-fi
+#else
+#	echo "Building Tarball ... skipped."
+#fi
 
 cd $startdir
 echo "Preparing to publish: ${PACKAGE}-${VERSION}-${date}.tar.* ..."
