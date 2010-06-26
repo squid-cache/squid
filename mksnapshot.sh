@@ -21,7 +21,7 @@ date=`env TZ=GMT date +%Y%m%d`
 tmpdir=${TMPDIR:-${PWD}}/${module}-${tag}-mksnapshot
 
 rm -rf $tmpdir
-# trap "rm -rf $tmpdir" 0
+trap "rm -rf $tmpdir" 0
 
 rm -f ${tag}.out
 bzr export $tmpdir $BZRROOT/$module/$branchpath || exit 1
@@ -51,9 +51,9 @@ echo "TAG: ${tag}"
 echo "STARTDIR: ${startdir}"
 echo "TMPDIR: ${tmpdir}"
 
-# ./test-builds.sh --cleanup || exit 1
+./test-builds.sh --cleanup || exit 1
 ./configure --silent
-make -s dist-all || echo "ERROR: make dist-all failed."
+make -s dist-all
 
 basetarball=/server/httpd/htdocs/squid-cache.org/Versions/v`echo $VERSION | cut -d. -f1`/`echo $VERSION | cut -d. -f-2|cut -d- -f1`/${PACKAGE}-${VERSION}.tar.bz2
 
@@ -82,10 +82,9 @@ fi
 #fi
 
 cd $startdir
-echo "Preparing to publish: ${PACKAGE}-${VERSION}-${date}.tar.* ..."
-echo "LOCAL: " ; pwd
-echo "BUILT TARS: " ; ls -1 $tmpdir/*.tar.* || true
-echo "BUILT TARS SUB: " ; ls -1 $tmpdir/*/*.tar.* || true
+echo "Preparing to publish: $tmpdir/${PACKAGE}-${VERSION}-${date}.tar.* ..."
+#echo "LOCAL: " ; pwd
+#echo "BUILT TARS: " ; ls -1 $tmpdir/*.tar.* || true
 
 cp -p $tmpdir/${PACKAGE}-${VERSION}-${date}.tar.gz .
 echo ${PACKAGE}-${VERSION}-${date}.tar.gz >>${tag}.out
