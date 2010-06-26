@@ -21,7 +21,7 @@ date=`env TZ=GMT date +%Y%m%d`
 tmpdir=${TMPDIR:-${PWD}}/${module}-${tag}-mksnapshot
 
 rm -rf $tmpdir
-trap "rm -rf $tmpdir" 0
+# trap "rm -rf $tmpdir" 0
 
 rm -f ${tag}.out
 bzr export $tmpdir $BZRROOT/$module/$branchpath || exit 1
@@ -84,9 +84,8 @@ fi
 cd $startdir
 echo "Preparing to publish: ${PACKAGE}-${VERSION}-${date}.tar.* ..."
 echo "LOCAL: " ; pwd
-echo "LOCAL TARS: " ; ls -1 ./*.tar.*
-echo "BUILT TARS: " ; ls -1 $tmpdir/*.tar.*
-echo "BUILT TARS SUB: " ; ls -1 $tmpdir/*/*.tar.*
+echo "BUILT TARS: " ; ls -1 $tmpdir/*.tar.* || true
+echo "BUILT TARS SUB: " ; ls -1 $tmpdir/*/*.tar.* || true
 
 cp -p $tmpdir/${PACKAGE}-${VERSION}-${date}.tar.gz .
 echo ${PACKAGE}-${VERSION}-${date}.tar.gz >>${tag}.out
