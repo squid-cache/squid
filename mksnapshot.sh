@@ -33,7 +33,7 @@ if [ ! -f $tmpdir/configure ]; then
 fi
 
 cd $tmpdir
-eval `grep "^ *PACKAGE_VERSION=" configure | sed -e 's/-BZR//' | sed -e 's/-CVS//' | sed -e 's/PACKAGE_//'`
+eval `grep "^ *PACKAGE_VERSION=" configure | sed -e 's/-BZR//' | sed -e 's/PACKAGE_//'`
 eval `grep "^ *PACKAGE_TARNAME=" configure | sed -e 's/_TARNAME//'`
 ed -s configure.in <<EOS
 g/${VERSION}-[A-Z]*/ s//${VERSION}-${date}/
@@ -56,6 +56,12 @@ echo "TMPDIR: ${tmpdir}"
 make -s dist-all || echo "ERROR: make dist-all failed."
 
 basetarball=/server/httpd/htdocs/squid-cache.org/Versions/v`echo $VERSION | cut -d. -f1`/`echo $VERSION | cut -d. -f-2|cut -d- -f1`/${PACKAGE}-${VERSION}.tar.bz2
+
+# 3.HEAD shows up as /v3/3.HEAD in the above. do it special.
+if (echo $VERSION | grep HEAD); then
+	basetarball=/server/httpd/htdocs/squid-cache.org/Versions/v`echo $VERSION | cut -d. -f1`/`echo $VERSION | cut -d. -f2|cut -d- -f1`/${PACKAGE}-${VERSION}.tar.bz2
+fi
+
 #if (echo $VERSION | grep PRE) || (echo $VERSION | grep STABLE); then
 	echo "Building Tarball diff (${basetarball}) ..."
 	if [ -f $basetarball ]; then
@@ -77,9 +83,10 @@ basetarball=/server/httpd/htdocs/squid-cache.org/Versions/v`echo $VERSION | cut 
 
 cd $startdir
 echo "Preparing to publish: ${PACKAGE}-${VERSION}-${date}.tar.* ..."
-pwd
-ls -1 ./*.tar.*
-ls -1 $tmpdir/*.tar.*
+echo "LOCAL: " ; pwd
+echo "LOCAL TARS: " ; ls -1 ./*.tar.*
+echo "BUILT TARS: " ; ls -1 $tmpdir/*.tar.*
+
 cp -p $tmpdir/${PACKAGE}-${VERSION}-${date}.tar.gz .
 echo ${PACKAGE}-${VERSION}-${date}.tar.gz >>${tag}.out
 cp -p $tmpdir/${PACKAGE}-${VERSION}-${date}.tar.bz2 .
