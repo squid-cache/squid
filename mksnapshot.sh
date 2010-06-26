@@ -86,6 +86,7 @@ echo "Preparing to publish: ${PACKAGE}-${VERSION}-${date}.tar.* ..."
 echo "LOCAL: " ; pwd
 echo "LOCAL TARS: " ; ls -1 ./*.tar.*
 echo "BUILT TARS: " ; ls -1 $tmpdir/*.tar.*
+echo "BUILT TARS SUB: " ; ls -1 $tmpdir/*/*.tar.*
 
 cp -p $tmpdir/${PACKAGE}-${VERSION}-${date}.tar.gz .
 echo ${PACKAGE}-${VERSION}-${date}.tar.gz >>${tag}.out
