@@ -1060,6 +1060,8 @@ idnsGrokReply(const char *buf, size_t sz)
         // remove the hashed query info
         idnsDropMessage(message, q);
 
+        // reset the query as an A query
+        q->nsends = 0;
         q->start_t = current_time;
         q->id = idnsQueryID();
         rfc1035SetQueryID(q->buf, q->id);
