@@ -932,7 +932,7 @@ mainInitialize(void)
 #endif
 
     debugs(1, 1, "Process ID " << getpid());
-
+    setSystemLimits();
     debugs(1, 1, "With " << Squid_MaxFD << " file descriptors available");
 
 #ifdef _SQUID_MSWIN_

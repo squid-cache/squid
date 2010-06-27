@@ -936,7 +936,7 @@ snmpLookupNodeStr(mib_tree_entry *root, const char *str)
     }
 
     int i, r = 1;
-    while (r <= namelen) {
+    while (r < namelen) {
 
         /* Find the child node which matches this */
         for (i = 0; i < e->children && e->leaves[i]->name[r] != name[r]; i++) ; // seek-loop
@@ -964,9 +964,10 @@ snmpCreateOidFromStr(const char *str, oid **name, int *nl)
     *name = NULL;
     *nl = 0;
     char *s = xstrdup(str);
+    char *s_ = s;
 
     /* Parse the OID string into oid bits */
-    while ( (p = strsep(&s, delim)) != NULL) {
+    while ( (p = strsep(&s_, delim)) != NULL) {
         *name = (oid*)xrealloc(*name, sizeof(oid) * ((*nl) + 1));
         (*name)[*nl] = atoi(p);
         (*nl)++;
