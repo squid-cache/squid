@@ -180,6 +180,15 @@ uint64_t BodyPipe::unproducedSize() const
     return bodySize() - thePutSize; // bodySize() asserts that size is known
 }
 
+void BodyPipe::expectProductionEndAfter(uint64_t size)
+{
+    const uint64_t expectedSize = thePutSize + size;
+    if (bodySizeKnown())
+        Must(bodySize() == expectedSize);
+    else
+        theBodySize = expectedSize;
+}
+
 void
 BodyPipe::clearProducer(bool atEof)
 {

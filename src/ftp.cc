@@ -3338,7 +3338,7 @@ FtpStateData::completedListing()
     entry->lock();
     ErrorState *ferr = errorCon(ERR_DIR_LISTING, HTTP_OK, request);
     ferr->ftp.listing = &listing;
-    ferr->ftp.cwd_msg = xstrdup(cwd_message.termedBuf());
+    ferr->ftp.cwd_msg = xstrdup(cwd_message.size()? cwd_message.termedBuf() : "");
     ferr->ftp.server_msg = ctrl.message;
     ctrl.message = NULL;
     entry->replaceHttpReply( ferr->BuildHttpReply() );

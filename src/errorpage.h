@@ -110,10 +110,10 @@ private:
      * Several of the codes produce blocks of non-URL compatible results.
      * When processing the deny_info location URL they will be skipped.
      *
-     * \param token             The token following % which need to be converted
-     * \param url_presentable   URL-encode the the output for deny_info redirect
+     * \param token                    The token following % which need to be converted
+     * \param building_deny_info_url   Perform special deny_info actions, such as URL-encoding and token skipping.
      */
-    const char *Convert(char token, bool url_presentable);
+    const char *Convert(char token, bool building_deny_info_url);
 
     /**
      * CacheManager / Debug dump of the ErrorState object.

@@ -123,7 +123,9 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <sect2>NTLM Authentication protocol helpers
 <p><itemize>
+	<item>fakeauth_auth - ntlm_fake_auth - Perform NTLMSSP to recover the username but don't verify the password.
 	<item>ntlm_auth - ntlm_smb_lm_auth - Perform SMB LanManager domain-less authentication over NTLM protocol.
+	<item>no_check.pl - Deprecated. - Use the faster and less decryptable ntlm_fake_auth instead.
 </itemize>
 
 <sect2>URL re-write helpers
@@ -553,9 +555,6 @@ This section gives an account of those changes in three categories:
 
 	<tag>logformat</tag>
 	<p><em>%oa</em> tag not yet ported from 2.7
-
-	<tag>max_filedescriptors</tag>
-	<p>Not yet ported from 2.7
 
 	<tag>max_stale</tag>
 	<p>Not yet ported from 2.7
