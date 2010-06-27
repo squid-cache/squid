@@ -95,6 +95,9 @@
 #define xmemmove(d,s,n) bcopy((s),(d),(n))
 #endif
 
+#if HAVE_CTYPE_H
+#include <ctype.h>
+#endif
 #define xisspace(x) isspace((unsigned char)x)
 #define xtoupper(x) toupper((unsigned char)x)
 #define xtolower(x) tolower((unsigned char)x)
