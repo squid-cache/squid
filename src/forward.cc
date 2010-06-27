@@ -329,12 +329,7 @@ FwdState::complete()
         /* the call to reforward() has already dropped the last path off the
          * selection list. all we have now are the next path(s) to be tried.
          */
-
-        AsyncCall::Pointer call = commCbCall(17,3, "fwdConnectDoneWrapper", CommConnectCbPtrFun(fwdConnectDoneWrapper, this));
-        ConnOpener *cs = new ConnOpener(paths[0], call);
-        cs->setHost(entry->url());
-        cs->connect_timeout = Config.Timeout.connect;
-        cs->start();
+        connectStart();
     } else {
         debugs(17, 3, HERE << "server FD " << paths[0]->fd << " not re-forwarding status " << entry->getReply()->sline.status);
         EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
@@ -714,8 +709,9 @@ FwdState::connectTimeout(int fd)
 }
 
 /**
- * Called after Forwarding path selection (via peer select) has taken place
- * We have a vector of possible paths now ready to start being connected.
+ * Called after Forwarding path selection (via peer select) has taken place.
+ * And whenever forwarding needs to attempt a new connection (routing failover)
+ * We have a vector of possible localIP->remoteIP paths now ready to start being connected.
  */
 void
 FwdState::connectStart()
