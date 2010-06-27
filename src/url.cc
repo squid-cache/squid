@@ -351,7 +351,12 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
         return NULL;
     }
 
+#if USE_IPV6
+    /* For IPV6 addresses also check for a colon */
+    if (Config.appendDomain && !strchr(host, '.') && !strchr(host, ':'))
+#else
     if (Config.appendDomain && !strchr(host, '.'))
+#endif
         strncat(host, Config.appendDomain, SQUIDHOSTNAMELEN - strlen(host) - 1);
 
     /* remove trailing dots from hostnames */
