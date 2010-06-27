@@ -43,9 +43,9 @@
 class HttpRequest;
 class StoreEntry;
 
-typedef void PSC(Comm::PathsPointer, void *);
+typedef void PSC(Comm::Paths *, void *);
 
-SQUIDCEXTERN void peerSelect(Comm::PathsPointer, HttpRequest *, StoreEntry *, PSC *, void *data);
+SQUIDCEXTERN void peerSelect(Comm::Paths *, HttpRequest *, StoreEntry *, PSC *, void *data);
 SQUIDCEXTERN void peerSelectInit(void);
 
 /**
@@ -79,8 +79,8 @@ public:
     PSC *callback;
     void *callback_data;
 
-    Comm::PathsPointer paths;   ///< the callers paths array. to be filled with our final results.
-    FwdServer *servers;       	///< temporary linked list of peers we will pass back.
+    Comm::Paths *paths;    ///< the callers paths array. to be filled with our final results.
+    FwdServer *servers;    ///< temporary linked list of peers we will pass back.
 
     /*
      * Why are these Ip::Address instead of peer *?  Because a
@@ -104,6 +104,5 @@ public:
 private:
     CBDATA_CLASS(ps_state);
 };
-
 
 #endif /* SQUID_PEERSELECTSTATE_H */

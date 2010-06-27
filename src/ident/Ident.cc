@@ -38,7 +38,7 @@
 
 #include "comm.h"
 #include "comm/Connection.h"
-#include "comm/ConnectStateData.h"
+#include "comm/ConnOpener.h"
 #include "CommCalls.h"
 #include "ident/Config.h"
 #include "ident/Ident.h"
@@ -59,7 +59,7 @@ typedef struct _IdentClient {
 
 typedef struct _IdentStateData {
     hash_link hash;		/* must be first */
-    Comm::Connection conn;
+    Comm::ConnectionPointer conn;
     IdentClient *clients;
     char buf[4096];
 } IdentStateData;
@@ -103,7 +103,7 @@ Ident::Close(int fdnotused, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
     identCallback(state, NULL);
-    state->conn.close();
+    state->conn->close();
     hash_remove_link(ident_hash, (hash_link *) state);
     xfree(state->hash.key);
     cbdataFree(state);
@@ -113,23 +113,23 @@ void
 Ident::Timeout(int fd, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
-    debugs(30, 3, HERE << "FD " << fd << ", " << state->conn.remote);
-    state->conn.close();
+    debugs(30, 3, HERE << "FD " << fd << ", " << state->conn->remote);
+    state->conn->close();
 }
 
 void
-Ident::ConnectDone(Comm::ConnectionPointer conn, Comm::PathsPointer unused, comm_err_t status, int xerrno, void *data)
+Ident::ConnectDone(Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
 {
     IdentStateData *state = (IdentStateData *)data;
 
     if (status != COMM_OK) {
         if (status == COMM_TIMEOUT) {
-            debugs(30, 3, "IDENT connection timeout to " << state->conn.remote);
+            debugs(30, 3, "IDENT connection timeout to " << state->conn->remote);
         }
         return;
     }
 
-    assert(conn != NULL && conn == &(state->conn));
+    assert(conn != NULL && conn == state->conn);
 
     /*
      * see if any of our clients still care
@@ -166,10 +166,10 @@ Ident::ReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
     char *t = NULL;
 
     assert(buf == state->buf);
-    assert(fd == state->conn.fd);
+    assert(fd == state->conn->fd);
 
     if (flag != COMM_OK || len <= 0) {
-        state->conn.close();
+        state->conn->close();
         return;
     }
 
@@ -195,7 +195,7 @@ Ident::ReadReply(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, voi
         }
     }
 
-    state->conn.close();
+    state->conn->close();
 }
 
 void
@@ -218,7 +218,7 @@ CBDATA_TYPE(IdentStateData);
  * start a TCP connection to the peer host on port 113
  */
 void
-Ident::Start(Comm::ConnectionPointer conn, IDCB * callback, void *data)
+Ident::Start(Comm::ConnectionPointer &conn, IDCB * callback, void *data)
 {
     IdentStateData *state;
     char key1[IDENT_KEY_SZ];
@@ -240,19 +240,19 @@ Ident::Start(Comm::ConnectionPointer conn, IDCB * callback, void *data)
     CBDATA_INIT_TYPE(IdentStateData);
     state = cbdataAlloc(IdentStateData);
     state->hash.key = xstrdup(key);
-    /* clone the conn. we are about to destroy the conn
-     * for re-use of the addresses etc by IDENT. */
-    state->conn = *conn;
-    state->conn.local.SetPort(0); // NP: use random port for secure outbound to IDENT_PORT
-    state->conn.flags |= COMM_NONBLOCKING;
+
+    // copy the conn details. We dont want the original FD to be re-used by IDENT.
+    state->conn = conn->copyDetails();
+    // NP: use random port for secure outbound to IDENT_PORT
+    state->conn->local.SetPort(0);
 
     ClientAdd(state, callback, data);
     hash_join(ident_hash, &state->hash);
 
     AsyncCall::Pointer call = commCbCall(30,3, "Ident::ConnectDone", CommConnectCbPtrFun(Ident::ConnectDone, state));
-    ConnectStateData *cs = new ConnectStateData(&(state->conn), call);
+    ConnOpener *cs = new ConnOpener(state->conn, call);
     cs->connect_timeout = Ident::TheConfig.timeout;
-    cs->connect();
+    cs->start();
 }
 
 void

@@ -99,6 +99,7 @@ protected:
     void openConnection();
     void closeConnection();
     void dieOnConnectionFailure();
+    bool haveConnection() const;
 
     void scheduleRead();
     void scheduleWrite(MemBuf &buf);
@@ -140,7 +141,7 @@ private:
     void maybeLog();
 
 protected:
-    Comm::ConnectionPointer connection;     // Handle to the ICAP server connection
+    Comm::ConnectionPointer connection;     ///< ICAP server connection
     Adaptation::Icap::ServiceRep::Pointer theService;
 
     /*

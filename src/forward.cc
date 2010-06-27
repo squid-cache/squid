@@ -36,7 +36,7 @@
 #include "acl/Gadgets.h"
 #include "CacheManager.h"
 #include "comm/Connection.h"
-#include "comm/ConnectStateData.h"
+#include "comm/ConnOpener.h"
 #include "CommCalls.h"
 #include "event.h"
 #include "errorpage.h"
@@ -331,10 +331,10 @@ FwdState::complete()
          */
 
         AsyncCall::Pointer call = commCbCall(17,3, "fwdConnectDoneWrapper", CommConnectCbPtrFun(fwdConnectDoneWrapper, this));
-        ConnectStateData *cs = new ConnectStateData(&paths, call);
-        cs->host = xstrdup(entry->url());
+        ConnOpener *cs = new ConnOpener(paths[0], call);
+        cs->setHost(entry->url());
         cs->connect_timeout = Config.Timeout.connect;
-        cs->connect();
+        cs->start();
     } else {
         debugs(17, 3, HERE << "server FD " << paths[0]->fd << " not re-forwarding status " << entry->getReply()->sline.status);
         EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
@@ -351,7 +351,7 @@ FwdState::complete()
 /**** CALLBACK WRAPPERS ************************************************************/
 
 static void
-fwdStartCompleteWrapper(Comm::PathsPointer unused, void *data)
+fwdStartCompleteWrapper(Comm::Paths * unused, void *data)
 {
     FwdState *fwd = (FwdState *) data;
     fwd->startComplete();
@@ -381,10 +381,10 @@ fwdNegotiateSSLWrapper(int fd, void *data)
 #endif
 
 void
-fwdConnectDoneWrapper(Comm::ConnectionPointer conn, Comm::PathsPointer paths, comm_err_t status, int xerrno, void *data)
+fwdConnectDoneWrapper(Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
 {
     FwdState *fwd = (FwdState *) data;
-    fwd->connectDone(conn, paths, status, xerrno);
+    fwd->connectDone(conn, status, xerrno);
 }
 
 /**** PRIVATE *****************************************************************/
@@ -504,14 +504,7 @@ FwdState::retryOrBail()
              * A new one will be created if there's another problem */
             err = NULL;
 
-            AsyncCall::Pointer call = commCbCall(17,3,"fwdConnectDoneWrapper", CommConnectCbPtrFun(fwdConnectDoneWrapper, this));
-            ConnectStateData *cs = new ConnectStateData(&paths, call);
-            cs->host = xstrdup(entry->url());
-            cs->connect_timeout = Config.Timeout.connect;
-            cs->connect();
-
-            /* use eventAdd to break potential call sequence loops and to slow things down a little */
-            eventAdd("fwdConnectStart", fwdConnectStartWrapper, this, (paths[0]->getPeer() == NULL) ? 0.05 : 0.005, 0);
+            connectStart();
             return;
         }
         // else bail. no more paths possible to try.
@@ -654,14 +647,11 @@ FwdState::initiateSSL()
 #endif
 
 void
-FwdState::connectDone(Comm::ConnectionPointer conn, Comm::PathsPointer result_paths, comm_err_t status, int xerrno)
+FwdState::connectDone(Comm::ConnectionPointer &conn, comm_err_t status, int xerrno)
 {
-    assert(result_paths == &paths);
-
     if (status != COMM_OK) {
         ErrorState *anErr = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
         anErr->xerrno = xerrno;
-
         fail(anErr);
 
         /* it might have been a timeout with a partially open link */
@@ -671,7 +661,7 @@ FwdState::connectDone(Comm::ConnectionPointer conn, Comm::PathsPointer result_pa
 
             paths[0]->close();
         }
-
+        retryOrBail();
         return;
     }
 
@@ -686,9 +676,6 @@ FwdState::connectDone(Comm::ConnectionPointer conn, Comm::PathsPointer result_pa
 
     if (paths[0]->getPeer())
         peerConnectSucceded(paths[0]->getPeer());
-
-    // TODO: Avoid this if %<lp is not used? F->local_port is often cached.
-    request->hier.peer_local_port = comm_local_port(paths[0]->fd);
 
     updateHierarchyInfo();
 
@@ -772,7 +759,7 @@ FwdState::connectStart()
             if (pinned_connection->pinnedAuth())
                 request->flags.auth = 1;
             updateHierarchyInfo();
-            FwdState::connectDone(conn, &paths, COMM_OK, 0);
+            FwdState::connectDone(conn, COMM_OK, 0);
             return;
         }
         /* Failure. Fall back on next path */
@@ -814,9 +801,6 @@ FwdState::connectStart()
 
         comm_add_close_handler(conn->fd, fwdServerClosedWrapper, this);
 
-        // TODO: Avoid this if %<lp is not used? F->local_port is often cached.
-        request->hier.peer_local_port = comm_local_port(conn->fd);
-
         dispatch();
         return;
     }
@@ -826,10 +810,10 @@ FwdState::connectStart()
 #endif
 
     AsyncCall::Pointer call = commCbCall(17,3, "fwdConnectDoneWrapper", CommConnectCbPtrFun(fwdConnectDoneWrapper, this));
-    ConnectStateData *cs = new ConnectStateData(&paths, call);
-    cs->host = xstrdup(host);
+    ConnOpener *cs = new ConnOpener(paths[0], call);
+    cs->setHost(host);
     cs->connect_timeout = ctimeout;
-    cs->connect();
+    cs->start();
 }
 
 void
@@ -1162,6 +1146,8 @@ FwdState::updateHierarchyInfo()
         else
             paths[0]->remote.NtoA(nextHop, 256);
     }
+
+    request->hier.peer_local_port = paths[0]->local.GetPort();
 
     assert(nextHop[0]);
     hierarchyNote(&request->hier, paths[0]->peer_type, nextHop);

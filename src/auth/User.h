@@ -128,7 +128,7 @@ private:
     dlink_list ip_list;
 };
 
-extern char *CredentialsState_str[];
+extern const char *CredentialsState_str[];
 
 #if _USE_INLINE_
 #include "auth/User.cci"

@@ -35,7 +35,7 @@
 #include "squid.h"
 #include "CacheManager.h"
 #include "comm/Connection.h"
-#include "comm/ConnectStateData.h"
+#include "comm/ConnOpener.h"
 #include "comm.h"
 #include "event.h"
 #include "fde.h"
@@ -699,7 +699,7 @@ idnsDoSendQueryVC(nsvc *vc)
 }
 
 static void
-idnsInitVCConnected(Comm::ConnectionPointer conn, Comm::PathsPointer unused, comm_err_t status, int xerrno, void *data)
+idnsInitVCConnected(Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
 {
     nsvc * vc = (nsvc *)data;
 
@@ -749,9 +749,9 @@ idnsInitVC(int ns)
 
     AsyncCall::Pointer call = commCbCall(78,3, "idnsInitVCConnected", CommConnectCbPtrFun(idnsInitVCConnected, vc));
 
-    ConnectStateData *cs = new ConnectStateData(conn, call);
-    cs->host = xstrdup("DNS TCP Socket");
-    cs->connect();
+    ConnOpener *cs = new ConnOpener(conn, call);
+    cs->setHost("DNS TCP Socket");
+    cs->start();
 }
 
 static void
