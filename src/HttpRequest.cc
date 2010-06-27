@@ -571,6 +571,9 @@ bool HttpRequest::inheritProperties(const HttpMsg *aMsg)
         return false;
 
     client_addr = aReq->client_addr;
+#if FOLLOW_X_FORWARDED_FOR
+    indirect_client_addr = aReq->indirect_client_addr;
+#endif
     my_addr = aReq->my_addr;
 
     dnsWait = aReq->dnsWait;
