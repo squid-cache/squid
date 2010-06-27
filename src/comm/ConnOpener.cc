@@ -29,11 +29,13 @@ ConnOpener::~ConnOpener()
 void
 ConnOpener::setHost(const char * new_host)
 {
-    if (host == NULL) {
-        safe_free(host); // unset and erase if already set.
-    } else {
+    // unset and erase if already set.
+    if (host != NULL)
+        safe_free(host);
+
+    // set the new one if given.
+    if (new_host != NULL)
         host = xstrdup(new_host);
-    }
 }
 
 const char *
@@ -118,14 +120,16 @@ ConnOpener::start()
         fd_table[solo->fd].flags.open = 1;
         solo->local.SetPort(comm_local_port(solo->fd));
 
-        ipcacheMarkGoodAddr(host, solo->remote);
+        if (host != NULL)
+            ipcacheMarkGoodAddr(host, solo->remote);
         callCallback(COMM_OK, 0);
         break;
 
     default:
         debugs(5, 5, HERE "FD " << solo->fd << ": * - try again");
         fail_retries++;
-        ipcacheMarkBadAddr(host, solo->remote);
+        if (host != NULL)
+            ipcacheMarkBadAddr(host, solo->remote);
 #if USE_ICMP
         if (Config.onoff.test_reachability)
             netdbDeleteAddrNetwork(solo->remote);
