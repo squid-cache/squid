@@ -34,7 +34,7 @@
 
 #include "squid.h"
 #include "comm.h"
-#include "comm/ConnectStateData.h"
+#include "comm/ConnOpener.h"
 #include "comm/ListenStateData.h"
 #include "compat/strtoll.h"
 #include "errorpage.h"
@@ -2418,9 +2418,9 @@ ftpReadEPSV(FtpStateData* ftpState)
     conn->fd = fd;
 
     AsyncCall::Pointer call = commCbCall(9,3, "FtpStateData::ftpPasvCallback", CommConnectCbPtrFun(FtpStateData::ftpPasvCallback, ftpState));
-    ConnectStateData *cs = new ConnectStateData(conn, call);
-    cs->host = xstrdup(fd_table[ftpState->ctrl.fd].ipaddr);
-    cs->connect();
+    ConnOpener *cs = new ConnOpener(conn, call);
+    cs->setHost(ftpState->data.host);
+    cs->start();
 }
 
 /** \ingroup ServerProtocolFTPInternal
@@ -2702,18 +2702,17 @@ ftpReadPasv(FtpStateData * ftpState)
     conn->fd = ftpState->data.fd;
 
     AsyncCall::Pointer call = commCbCall(9,3, "FtpStateData::ftpPasvCallback", CommConnectCbPtrFun(FtpStateData::ftpPasvCallback, ftpState));
-    ConnectStateData *cs = new ConnectStateData(conn, call);
-    cs->host = xstrdup(ftpState->data.host);
+    ConnOpener *cs = new ConnOpener(conn, call);
+    cs->setHost(ftpState->data.host);
     cs->connect_timeout = Config.Timeout.connect;
-    cs->connect();
+    cs->start();
 }
 
 void
-FtpStateData::ftpPasvCallback(Comm::ConnectionPointer conn, Comm::PathsPointer unused, comm_err_t status, int xerrno, void *data)
+FtpStateData::ftpPasvCallback(Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
 {
     FtpStateData *ftpState = (FtpStateData *)data;
     debugs(9, 3, HERE);
-// TODO: dead?    ftpState->request->recordLookup(dns);
 
     if (status != COMM_OK) {
         debugs(9, 2, HERE << "Failed to connect. Retrying without PASV.");

@@ -6793,8 +6793,9 @@ TYPE: int
 LOC: Config.connect_retries
 DEFAULT: 0
 DOC_START
-	This sets the maximum number of connection attempts for each
-	potential host address selected by forwarding.
+	This sets the maximum number of connection attempts made for each
+	TCP connection. The connect_retries attempts must all still
+	complete within the connection timeout period.
 
 	The default is not to re-try if the first connection attempt fails.
 	The (not recommended) maximum is 10 tries.
@@ -6805,9 +6806,6 @@ DOC_START
 	Note: These re-tries are in addition to forward_max_tries
 	which limit how many different addresses may be tried to find
 	a useful server.
-
-	The connect_retries * forward_max_tries attempts must all still
-	complete within the connection timeout period.
 DOC_END
 
 NAME: retry_on_error

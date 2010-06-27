@@ -11,7 +11,6 @@ class Connection;
 typedef RefCount<Comm::Connection> ConnectionPointer;
 
 typedef Vector<Comm::ConnectionPointer> Paths;
-typedef Vector<Comm::ConnectionPointer>* PathsPointer;
 
 }; // namespace Comm
 

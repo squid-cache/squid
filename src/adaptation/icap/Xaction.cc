@@ -5,7 +5,7 @@
 #include "squid.h"
 #include "comm.h"
 #include "comm/Connection.h"
-#include "comm/ConnectStateData.h"
+#include "comm/ConnOpener.h"
 #include "CommCalls.h"
 #include "HttpMsg.h"
 #include "adaptation/icap/Xaction.h"
@@ -91,7 +91,7 @@ void Adaptation::Icap::Xaction::openConnection()
 {
     Ip::Address client_addr;
 
-    Must(connection == NULL || !connection->isOpen());
+    Must(!haveConnection());
 
     const Adaptation::Service &s = service();
 
@@ -102,8 +102,7 @@ void Adaptation::Icap::Xaction::openConnection()
 
     /* NP: set these here because it applies whether a pconn or a new conn is used */
 
-    // TODO:  where do we get the DNS info for the ICAP server host ??
-    //        Ip::Address will do a BLOCKING lookup if s.cfg().host is a hostname
+    // TODO: Avoid blocking lookup if s.cfg().host is a hostname
     connection->remote = s.cfg().host.termedBuf();
     connection->remote.SetPort(s.cfg().port);
 
@@ -130,10 +129,10 @@ void Adaptation::Icap::Xaction::openConnection()
     connector = asyncCall(93,3, "Adaptation::Icap::Xaction::noteCommConnected",
                           ConnectDialer(this, &Adaptation::Icap::Xaction::noteCommConnected));
 
-    ConnectStateData *cs = new ConnectStateData(connection, connector);
-    cs->host = xstrdup(s.cfg().host.termedBuf());
+    ConnOpener *cs = new ConnOpener(connection, connector);
+    cs->setHost(s.cfg().host.termedBuf());
     cs->connect_timeout = TheConfig.connect_timeout(service().cfg().bypass);
-    cs->connect();
+    cs->start();
 }
 
 /*
@@ -152,7 +151,7 @@ Adaptation::Icap::Xaction::reusedConnection(void *data)
 
 void Adaptation::Icap::Xaction::closeConnection()
 {
-    if (connection != NULL && connection->isOpen()) {
+    if (haveConnection()) {
 
         if (closer != NULL) {
             comm_remove_close_handler(connection->fd, closer);
@@ -211,7 +210,6 @@ void Adaptation::Icap::Xaction::noteCommConnected(const CommConnectCbParams &io)
 
     fd_table[io.conn->fd].noteUse(icapPconnPool);
 
-    connection = io.conn;
     handleCommConnected();
 }
 
@@ -224,6 +222,8 @@ void Adaptation::Icap::Xaction::dieOnConnectionFailure()
 
 void Adaptation::Icap::Xaction::scheduleWrite(MemBuf &buf)
 {
+    Must(haveConnection());
+
     // comm module will free the buffer
     typedef CommCbMemFunT<Adaptation::Icap::Xaction, CommIoCbParams> Dialer;
     writer = asyncCall(93,3, "Adaptation::Icap::Xaction::noteCommWrote",
@@ -303,6 +303,8 @@ bool Adaptation::Icap::Xaction::doneAll() const
 
 void Adaptation::Icap::Xaction::updateTimeout()
 {
+    Must(haveConnection());
+
     if (reader != NULL || writer != NULL) {
         // restart the timeout before each I/O
         // XXX: why does Config.Timeout lacks a write timeout?
@@ -323,7 +325,7 @@ void Adaptation::Icap::Xaction::updateTimeout()
 
 void Adaptation::Icap::Xaction::scheduleRead()
 {
-    Must(connection->isOpen());
+    Must(haveConnection());
     Must(!reader);
     Must(readBuf.hasSpace());
 
@@ -373,6 +375,7 @@ void Adaptation::Icap::Xaction::noteCommRead(const CommIoCbParams &io)
 void Adaptation::Icap::Xaction::cancelRead()
 {
     if (reader != NULL) {
+        Must(haveConnection());
         comm_read_cancel(connection->fd, reader);
         reader = NULL;
     }
@@ -414,9 +417,14 @@ bool Adaptation::Icap::Xaction::doneWriting() const
 
 bool Adaptation::Icap::Xaction::doneWithIo() const
 {
-    return connection != NULL && connection->isOpen() && // or we could still be waiting to open it
+    return haveConnection() &&
            !connector && !reader && !writer && // fast checks, some redundant
            doneReading() && doneWriting();
+}
+
+bool Adaptation::Icap::Xaction::haveConnection() const
+{
+    return connection != NULL && connection->isOpen();
 }
 
 // initiator aborted
@@ -529,7 +537,7 @@ const char *Adaptation::Icap::Xaction::status() const
 
 void Adaptation::Icap::Xaction::fillPendingStatus(MemBuf &buf) const
 {
-    if (connection->isOpen()) {
+    if (haveConnection()) {
         buf.Printf("FD %d", connection->fd);
 
         if (writer != NULL)
@@ -544,7 +552,7 @@ void Adaptation::Icap::Xaction::fillPendingStatus(MemBuf &buf) const
 
 void Adaptation::Icap::Xaction::fillDoneStatus(MemBuf &buf) const
 {
-    if (connection->isOpen() && commEof)
+    if (haveConnection() && commEof)
         buf.Printf("Comm(%d)", connection->fd);
 
     if (stopReason != NULL)

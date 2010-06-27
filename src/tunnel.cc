@@ -37,7 +37,7 @@
 #include "Array.h"
 #include "comm.h"
 #include "comm/Connection.h"
-#include "comm/ConnectStateData.h"
+#include "comm/ConnOpener.h"
 #include "client_side.h"
 #include "client_side_request.h"
 #if DELAY_POOLS
@@ -68,7 +68,7 @@ public:
     char *host;			/* either request->host or proxy host */
     u_short port;
     HttpRequest *request;
-    Comm::PathsPointer paths;
+    Comm::Paths paths;
 
     class Connection
     {
@@ -176,7 +176,7 @@ tunnelStateFree(TunnelStateData * tunnelState)
     assert(tunnelState != NULL);
     assert(tunnelState->noConnections());
     safe_free(tunnelState->url);
-    if (tunnelState->paths) tunnelState->paths->clean();
+    tunnelState->paths.clean();
     tunnelState->host = NULL;
     HTTPMSGUNLOCK(tunnelState->request);
     delete tunnelState;
@@ -466,44 +466,6 @@ TunnelStateData::copyRead(Connection &from, IOCB *completion)
     comm_read(from.fd(), from.buf, from.bytesWanted(1, SQUID_TCP_SO_RCVBUF), completion, this);
 }
 
-#if UNUSED //?
-static void
-tunnelConnectTimeout(int fd, void *data)
-{
-    TunnelStateData *tunnelState = (TunnelStateData *)data;
-    HttpRequest *request = tunnelState->request;
-    ErrorState *err = NULL;
-
-    if (tunnelState->paths != NULL && tunnelState->paths->size() > 0) {
-        if ((*(tunnelState->paths))[0]->getPeer())
-            hierarchyNote(&tunnelState->request->hier, (*(tunnelState->paths))[0]->peer_type,
-                          (*(tunnelState->paths))[0]->getPeer()->host);
-        else if (Config.onoff.log_ip_on_direct)
-            hierarchyNote(&tunnelState->request->hier, (*(tunnelState->paths))[0]->peer_type,
-                          fd_table[tunnelState->server.fd()].ipaddr);
-        else
-            hierarchyNote(&tunnelState->request->hier, (*(tunnelState->paths))[0]->peer_type,
-                          tunnelState->host);
-    } else
-        debugs(26, DBG_IMPORTANT, "tunnelConnectTimeout(): no forwarding destinations available.");
-
-    err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
-
-    *tunnelState->status_ptr = HTTP_SERVICE_UNAVAILABLE;
-
-    err->xerrno = ETIMEDOUT;
-
-    err->port = tunnelState->port;
-
-    err->callback = tunnelErrorComplete;
-
-    err->callback_data = tunnelState;
-
-    errorSend(tunnelState->client.fd(), err);
-    comm_close(fd);
-}
-#endif
-
 static void
 tunnelConnectedWriteDone(int fd, char *buf, size_t size, comm_err_t flag, int xerrno, void *data)
 {
@@ -558,14 +520,11 @@ tunnelErrorComplete(int fdnotused, void *data, size_t sizenotused)
 
 
 static void
-tunnelConnectDone(Comm::ConnectionPointer unused, Comm::PathsPointer paths, comm_err_t status, int xerrno, void *data)
+tunnelConnectDone(Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     HttpRequest *request = tunnelState->request;
     ErrorState *err = NULL;
-    Comm::ConnectionPointer conn = (*paths)[0];
-
-    assert(tunnelState->paths == paths);
 
 #if DELAY_POOLS
     /* no point using the delayIsNoDelay stuff since tunnel is nice and simple */
@@ -581,14 +540,27 @@ tunnelConnectDone(Comm::ConnectionPointer unused, Comm::PathsPointer paths, comm
         hierarchyNote(&tunnelState->request->hier, conn->peer_type, tunnelState->host);
 
     if (status != COMM_OK) {
-        err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
-        *tunnelState->status_ptr = HTTP_SERVICE_UNAVAILABLE;
-        err->xerrno = xerrno;
-        // on timeout is this still:    err->xerrno = ETIMEDOUT;
-        err->port = conn->remote.GetPort();
-        err->callback = tunnelErrorComplete;
-        err->callback_data = tunnelState;
-        errorSend(tunnelState->client.fd(), err);
+        /* At this point only the TCP handshake has failed. no data has been passed.
+         * we are allowed to re-try the TCP-level connection to alternate IPs for CONNECT.
+         */
+        tunnelState->paths.shift();
+        if (status != COMM_TIMEOUT && tunnelState->paths.size() > 0) {
+            /* Try another IP of this destination host */
+            AsyncCall::Pointer call = commCbCall(26,3, "tunnelConnectDone", CommConnectCbPtrFun(tunnelConnectDone, tunnelState));
+            ConnOpener *cs = new ConnOpener(tunnelState->paths[0], call);
+            cs->setHost(tunnelState->url);
+            cs->connect_timeout = Config.Timeout.connect;
+            cs->start();
+        } else {
+            err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
+            *tunnelState->status_ptr = HTTP_SERVICE_UNAVAILABLE;
+            err->xerrno = xerrno;
+            // on timeout is this still:    err->xerrno = ETIMEDOUT;
+            err->port = conn->remote.GetPort();
+            err->callback = tunnelErrorComplete;
+            err->callback_data = tunnelState;
+            errorSend(tunnelState->client.fd(), err);
+        }
         return;
     }
 
@@ -672,7 +644,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
                    tunnelTimeout,
                    tunnelState);
 
-    peerSelect(tunnelState->paths, request,
+    peerSelect(&(tunnelState->paths), request,
                NULL,
                tunnelPeerSelectComplete,
                tunnelState);
@@ -713,7 +685,7 @@ tunnelProxyConnected(int fd, void *data)
 }
 
 static void
-tunnelPeerSelectComplete(Comm::PathsPointer peer_paths, void *data)
+tunnelPeerSelectComplete(Comm::Paths *peer_paths, void *data)
 {
     TunnelStateData *tunnelState = (TunnelStateData *)data;
     HttpRequest *request = tunnelState->request;
@@ -729,10 +701,10 @@ tunnelPeerSelectComplete(Comm::PathsPointer peer_paths, void *data)
     }
 
     AsyncCall::Pointer call = commCbCall(26,3, "tunnelConnectDone", CommConnectCbPtrFun(tunnelConnectDone, tunnelState));
-    ConnectStateData *cs = new ConnectStateData(tunnelState->paths, call);
-    cs->host = xstrdup(tunnelState->url);
+    ConnOpener *cs = new ConnOpener(tunnelState->paths[0], call);
+    cs->setHost(tunnelState->url);
     cs->connect_timeout = Config.Timeout.connect;
-    cs->connect();
+    cs->start();
 }
 
 CBDATA_CLASS_INIT(TunnelStateData);

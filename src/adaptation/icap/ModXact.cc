@@ -464,7 +464,7 @@ bool Adaptation::Icap::ModXact::doneAll() const
 
 void Adaptation::Icap::ModXact::startReading()
 {
-    Must(connection != NULL && connection->isOpen());
+    Must(haveConnection());
     Must(!reader);
     Must(!adapted.header);
     Must(!adapted.body_pipe);
@@ -622,7 +622,7 @@ void Adaptation::Icap::ModXact::bypassFailure()
     stopParsing();
 
     stopWriting(true); // or should we force it?
-    if (connection != NULL && connection->isOpen()) {
+    if (haveConnection()) {
         reuseConnection = false; // be conservative
         cancelRead(); // may not work; and we cannot stop connecting either
         if (!doneWithIo())
@@ -1442,7 +1442,7 @@ void Adaptation::Icap::ModXact::fillPendingStatus(MemBuf &buf) const
     if (virgin.body_pipe != NULL)
         buf.append("R", 1);
 
-    if (connection != NULL && connection->isOpen() && !doneReading())
+    if (haveConnection() && !doneReading())
         buf.append("r", 1);
 
     if (!state.doneWriting() && state.writing != State::writingInit)

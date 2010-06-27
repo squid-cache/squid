@@ -21,8 +21,8 @@
  *     - I/O (IOCB).
  */
 
-typedef void IOACB(int fd, int nfd, Comm::ConnectionPointer details, comm_err_t flag, int xerrno, void *data);
-typedef void CNCB(Comm::ConnectionPointer conn, Comm::PathsPointer paths, comm_err_t status, int xerrno, void *data);
+typedef void IOACB(int fd, int nfd, Comm::ConnectionPointer &details, comm_err_t flag, int xerrno, void *data);
+typedef void CNCB(Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data);
 typedef void IOCB(int fd, char *, size_t size, comm_err_t flag, int xerrno, void *data);
 
 /*
@@ -88,7 +88,6 @@ public:
 
 public:
     Comm::ConnectionPointer conn;
-    Comm::PathsPointer paths;
 };
 
 // read/write (I/O) parameters

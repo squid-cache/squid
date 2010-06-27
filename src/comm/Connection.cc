@@ -13,34 +13,32 @@ Comm::Connection::Connection() :
         _peer(NULL)
 {}
 
-Comm::Connection::Connection(const Comm::Connection &c) :
-        local(c.local),
-        remote(c.remote),
-        peer_type(c.peer_type),
-        fd(c.fd),
-        tos(c.tos),
-        flags(c.flags)
-{
-    _peer = cbdataReference(c._peer);
-}
-
-const Comm::Connection &
-Comm::Connection::operator =(const Comm::Connection &c)
-{
-    memcpy(this, &c, sizeof(Comm::Connection));
-
-    /* ensure we have a cbdata reference to _peer not a straight ptr copy. */
-    _peer = cbdataReference(c._peer);
-
-    return *this;
-}
-
 Comm::Connection::~Connection()
 {
     close();
     if (_peer) {
         cbdataReferenceDone(_peer);
     }
+}
+
+Comm::ConnectionPointer &
+Comm::Connection::copyDetails() const
+{
+    ConnectionPointer c = new Comm::Connection;
+
+    c->local = local;
+    c->remote = remote;
+    c->peer_type = peer_type;
+    c->tos = tos;
+    c->flags = flags;
+ 
+    // ensure FD is not open in the new copy.
+    c->fd = -1;
+
+    // ensure we have a cbdata reference to _peer not a straight ptr copy.
+    c->_peer = cbdataReference(_peer);
+
+    return c;
 }
 
 void

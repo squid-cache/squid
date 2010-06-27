@@ -910,7 +910,7 @@ struct peer {
     int n_addresses;
     int rr_count;
     peer *next;
-    bool testing_now;
+    int testing_now;
 
     struct {
         unsigned int hash;

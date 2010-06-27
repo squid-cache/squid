@@ -3054,7 +3054,7 @@ connStateCreate(const Ip::Address &peer, const Ip::Address &me, int fd, http_por
 
 /** Handle a new connection on HTTP socket. */
 void
-httpAccept(int sock, int newfd, Comm::ConnectionPointer details,
+httpAccept(int sock, int newfd, Comm::ConnectionPointer &details,
            comm_err_t flag, int xerrno, void *data)
 {
     http_port_list *s = (http_port_list *)data;
