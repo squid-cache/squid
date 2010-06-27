@@ -595,7 +595,7 @@ ErrorState::Dump(MemBuf * mb)
 #define CVT_BUF_SZ 512
 
 const char *
-ErrorState::Convert(char token, bool url_presentable)
+ErrorState::Convert(char token, bool building_deny_info_url)
 {
     static MemBuf mb;
     const char *p = NULL;	/* takes priority over mb if set */
@@ -615,10 +615,12 @@ ErrorState::Convert(char token, bool url_presentable)
         break;
 
     case 'B':
+        if (building_deny_info_url) break;
         p = request ? ftpUrlWith2f(request) : "[no URL]";
         break;
 
     case 'c':
+        if (building_deny_info_url) break;
         p = errorPageName(type);
         break;
 
@@ -634,6 +636,7 @@ ErrorState::Convert(char token, bool url_presentable)
         break;
 
     case 'f':
+        if (building_deny_info_url) break;
         /* FTP REQUEST LINE */
         if (ftp.request)
             p = ftp.request;
@@ -642,6 +645,7 @@ ErrorState::Convert(char token, bool url_presentable)
         break;
 
     case 'F':
+        if (building_deny_info_url) break;
         /* FTP REPLY LINE */
         if (ftp.request)
             p = ftp.reply;
@@ -650,6 +654,7 @@ ErrorState::Convert(char token, bool url_presentable)
         break;
 
     case 'g':
+        if (building_deny_info_url) break;
         /* FTP SERVER MESSAGE */
         if (ftp.server_msg)
             wordlistCat(ftp.server_msg, &mb);
@@ -669,7 +674,7 @@ ErrorState::Convert(char token, bool url_presentable)
                 p = request->hier.host;
             else
                 p = request->GetHost();
-        } else if (!url_presentable)
+        } else if (!building_deny_info_url)
             p = "[unknown host]";
         break;
 
@@ -680,44 +685,47 @@ ErrorState::Convert(char token, bool url_presentable)
     case 'I':
         if (request && request->hier.host[0] != '\0') // if non-empty string
             mb.Printf("%s", request->hier.host);
-        else if (!url_presentable)
+        else if (!building_deny_info_url)
             p = "[unknown]";
         break;
 
     case 'l':
-        if (url_presentable) break;
+        if (building_deny_info_url) break;
         mb.append(error_stylesheet.content(), error_stylesheet.contentSize());
         do_quote = 0;
         break;
 
     case 'L':
-        if (url_presentable) break;
+        if (building_deny_info_url) break;
         if (Config.errHtmlText) {
             mb.Printf("%s", Config.errHtmlText);
             do_quote = 0;
-        } else if (!url_presentable)
+        } else
             p = "[not available]";
         break;
 
     case 'm':
-        if (url_presentable) break;
+        if (building_deny_info_url) break;
         p = auth_user_request->denyMessage("[not available]");
         break;
 
     case 'M':
-        p = request ? RequestMethodStr(request->method) : "[unknown method]";
+        if (request)
+            p = RequestMethodStr(request->method);
+        else if (!building_deny_info_url)
+            p= "[unknown method]";
         break;
 
     case 'o':
         p = request ? request->extacl_message.termedBuf() : external_acl_message;
-        if (!p)
+        if (!p && !building_deny_info_url)
             p = "[not available]";
         break;
 
     case 'p':
         if (request) {
             mb.Printf("%d", (int) request->port);
-        } else if (!url_presentable) {
+        } else if (!building_deny_info_url) {
             p = "[unknown port]";
         }
         break;
@@ -725,13 +733,13 @@ ErrorState::Convert(char token, bool url_presentable)
     case 'P':
         if (request) {
             p = ProtocolStr[request->protocol];
-        } else if (!url_presentable) {
+        } else if (!building_deny_info_url) {
             p = "[unknown protocol]";
         }
         break;
 
     case 'R':
-        if (url_presentable) {
+        if (building_deny_info_url) {
             p = (request->urlpath.size() != 0 ? request->urlpath.termedBuf() : "/");
             break;
         }
@@ -760,7 +768,7 @@ ErrorState::Convert(char token, bool url_presentable)
 
     case 's':
         /* for backward compat we make %s show the full URL. Drop this in some future release. */
-        if (url_presentable) {
+        if (building_deny_info_url) {
             p = request ? urlCanonical(request) : url;
             debugs(0,0, "WARNING: deny_info now accepts coded tags. Use %u to get the full URL instead of %s");
         } else
@@ -768,7 +776,7 @@ ErrorState::Convert(char token, bool url_presentable)
         break;
 
     case 'S':
-        if (url_presentable) {
+        if (building_deny_info_url) {
             p = visible_appname_string;
             break;
         }
@@ -803,42 +811,48 @@ ErrorState::Convert(char token, bool url_presentable)
             p = urlCanonicalFakeHttps(request);
         else if (url)
             p = url;
-        else if (!url_presentable)
+        else if (!building_deny_info_url)
             p = "[no URL]";
         break;
 
     case 'u':
-        p = request ? urlCanonical(request) : url ? url : "[no URL]";
+        if (request)
+            p = urlCanonical(request);
+        else if (url)
+            p = url;
+        else if (!building_deny_info_url)
+            p = "[no URL]";
         break;
 
     case 'w':
         if (Config.adminEmail)
             mb.Printf("%s", Config.adminEmail);
-        else if (!url_presentable)
+        else if (!building_deny_info_url)
             p = "[unknown]";
         break;
 
     case 'W':
+        if (building_deny_info_url) break;
         if (Config.adminEmail && Config.onoff.emailErrData)
             Dump(&mb);
         no_urlescape = 1;
         break;
 
     case 'z':
-        if (url_presentable) break;
+        if (building_deny_info_url) break;
         if (dnsError.size() > 0)
             p = dnsError.termedBuf();
         else if (ftp.cwd_msg)
             p = ftp.cwd_msg;
-        else if (!url_presentable)
+        else
             p = "[unknown]";
         break;
 
     case 'Z':
-        if (url_presentable) break;
+        if (building_deny_info_url) break;
         if (err_msg)
             p = err_msg;
-        else if (!url_presentable)
+        else
             p = "[unknown]";
         break;
 
@@ -862,7 +876,7 @@ ErrorState::Convert(char token, bool url_presentable)
     if (do_quote)
         p = html_quote(p);
 
-    if (url_presentable && !no_urlescape)
+    if (building_deny_info_url && !no_urlescape)
         p = rfc1738_escape_part(p);
 
     return p;
