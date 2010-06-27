@@ -1,36 +1,31 @@
-#ifndef _SQUID_SRC_COMM_CONNECTSTATEDATA_H
-#define _SQUID_SRC_COMM_CONNECTSTATEDATA_H
+#ifndef _SQUID_SRC_COMM_OPENERSTATEDATA_H
+#define _SQUID_SRC_COMM_OPENERSTATEDATA_H
 
 #include "base/AsyncCall.h"
+#include "base/AsyncJob.h"
 #include "cbdata.h"
 #include "comm/comm_err_t.h"
 #include "comm/forward.h"
 
 /**
- * State engine handling the opening of a remote outbound connection
- * to one of multiple destinations.
+ * Async-opener of a Comm connection.
  */
-class ConnectStateData
+class ConnOpener : public AsyncJob
 {
 public:
-    /** open first working of a set of connections */
-    ConnectStateData(Comm::PathsPointer paths, AsyncCall::Pointer handler);
+    /** attempt to open a connection. */
+    ConnOpener(Comm::ConnectionPointer &, AsyncCall::Pointer handler);
 
-    /** attempt to open one connection. */
-    ConnectStateData(Comm::ConnectionPointer, AsyncCall::Pointer handler);
+    ~ConnOpener();
 
-    ~ConnectStateData();
-
-    /**
-     * Actual connect start function.
-     */
-    void connect();
+    /** Actual start opening a TCP connection. */
+    void start();
 
 private:
     /* These objects may NOT be created without connections to act on. Do not define this operator. */
-    ConnectStateData();
+    ConnOpener(const ConnOpener &);
     /* These objects may NOT be copied. Do not define this operator. */
-    const ConnectStateData operator =(const ConnectStateData &c);
+    ConnOpener operator =(const ConnOpener &c);
 
     /**
      * Wrapper to start the connection attempts happening.
@@ -47,22 +42,30 @@ private:
     static void EarlyAbort(int fd, void *data);
 
     /**
+     * Temporary timeout handler used during connect.
+     * Handles the case(s) when a partially setup connection gets timed out.
+     */
+    static void ConnectTimeout(int fd, void *data);
+
+    /**
      * Connection attempt are completed. One way or the other.
      * Pass the results back to the external handler.
      */
     void callCallback(comm_err_t status, int xerrno);
 
 public:
-    char *host;                   ///< domain name we are trying to connect to.
-
     /**
      * time at which to abandon the connection.
      * the connection-done callback will be passed COMM_TIMEOUT
      */
     time_t connect_timeout;
 
+    void setHost(const char *);        ///< set the hostname note for this connection
+    const char * getHost(void) const;  ///< get the hostname noted for this connection
+
 private:
-    Comm::PathsPointer paths;           ///< forwarding paths to be tried. front of the list is the current being opened.
+    char *host;                         ///< domain name we are trying to connect to.
+
     Comm::ConnectionPointer solo;       ///< single connection currently being opened.
     AsyncCall::Pointer callback;        ///< handler to be called on connection completion.
 
@@ -70,7 +73,7 @@ private:
     int fail_retries;  ///< number of retries current destination has been tried.
     time_t connstart;  ///< time at which this series of connection attempts was started.
 
-    CBDATA_CLASS2(ConnectStateData);
+    CBDATA_CLASS2(ConnOpener);
 };
 
-#endif /* _SQUID_SRC_COMM_CONNECTSTATEDATA_H */
+#endif /* _SQUID_SRC_COMM_CONNOPENER_H */

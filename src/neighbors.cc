@@ -34,7 +34,7 @@
 #include "ProtoPort.h"
 #include "acl/FilledChecklist.h"
 #include "comm/Connection.h"
-#include "comm/ConnectStateData.h"
+#include "comm/ConnOpener.h"
 #include "CacheManager.h"
 #include "event.h"
 #include "htcp.h"
@@ -1353,36 +1353,35 @@ peerProbeConnect(peer * p)
     time_t ctimeout = p->connect_timeout > 0 ? p->connect_timeout : Config.Timeout.peer_connect;
     bool ret = (squid_curtime - p->stats.last_connect_failure) > (ctimeout * 10);
 
-    if (p->testing_now)
+    if (p->testing_now > 0)
         return ret;/* probe already running */
 
     if (squid_curtime - p->stats.last_connect_probe == 0)
         return ret;/* don't probe to often */
 
     /* for each IP address of this peer. find one that we can connect to and probe it. */
-    Comm::PathsPointer paths = new Comm::Paths;
     for (int i = 0; i < p->n_addresses; i++) {
         Comm::ConnectionPointer conn = new Comm::Connection;
         conn->remote = p->addresses[i];
         conn->remote.SetPort(p->http_port);
         getOutgoingAddress(NULL, conn);
-        paths->push_back(conn);
+
+        p->testing_now++;
+
+        AsyncCall::Pointer call = commCbCall(15,3, "peerProbeConnectDone", CommConnectCbPtrFun(peerProbeConnectDone, p));
+        ConnOpener *cs = new ConnOpener(conn, call);
+        cs->connect_timeout = ctimeout;
+        cs->setHost(p->host);
+        cs->start();
     }
 
-    p->testing_now = true;
     p->stats.last_connect_probe = squid_curtime;
-
-    AsyncCall::Pointer call = commCbCall(15,3, "peerProbeConnectDone", CommConnectCbPtrFun(peerProbeConnectDone, p));
-    ConnectStateData *cs = new ConnectStateData(paths, call);
-    cs->connect_timeout = ctimeout;
-    cs->host = xstrdup(p->host);
-    cs->connect();
 
     return ret;
 }
 
 static void
-peerProbeConnectDone(Comm::ConnectionPointer conn, Comm::PathsPointer unused, comm_err_t status, int xerrno, void *data)
+peerProbeConnectDone(Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, void *data)
 {
     peer *p = (peer*)data;
 
@@ -1393,7 +1392,7 @@ peerProbeConnectDone(Comm::ConnectionPointer conn, Comm::PathsPointer unused, co
     }
 
     conn->close();
-    p->testing_now = false;
+    p->testing_now--;
     return;
 }
 

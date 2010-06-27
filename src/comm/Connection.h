@@ -77,17 +77,21 @@ public:
     /** standard empty connection creation */
     Connection();
 
-    /** Clear the conection properties and close any open socket. */
+    /** These objects may not be exactly duplicated. Use copyDetails() instead. */
+    Connection(const Connection &c);
+
+    /** Clear the connection properties and close any open socket. */
     ~Connection();
 
-    /** Clone an existing connections properties.
-     * This includes the FD, if one is open its a good idea to set it to -1 (unopen)
-     * on one after copying to prevent both clones calling comm_close() when destructed.
+    /** Copy an existing connections IP and properties.
+     * This excludes the FD. The new copy will be a closed connection.
      */
-    Connection(const Connection &c);
-    /** see Comm::Connection::Connection */
-    const Connection & operator =(const Connection &c);
+    ConnectionPointer & copyDetails() const;
 
+    /** These objects may not be exactly duplicated. Use clone() instead. */
+    Connection & operator =(const Connection &c);
+
+    /** Close any open socket. */
     void close();
 
     /** determine whether this object describes an active connection or not. */

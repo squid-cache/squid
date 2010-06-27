@@ -12,8 +12,8 @@ libcomm_la_SOURCES= \
 	ListenStateData.cc \
 	ListenStateData.h \
 	\
-	ConnectStateData.cc \
-	ConnectStateData.h \
+	ConnOpener.cc \
+	ConnOpener.h \
 	\
 	Connection.cc \
 	Connection.h \

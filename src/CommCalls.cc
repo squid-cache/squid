@@ -75,9 +75,6 @@ CommConnectCbParams::print(std::ostream &os) const
     CommCommonCbParams::print(os);
     if (conn != NULL)
       os << ", from my " << conn->local << " to " << conn->remote;
-    else if (paths && paths->size() > 0) {
-        // TODO: for each path. print the to => from path being attempted.
-    }
 }
 
 /* CommIoCbParams */
@@ -163,7 +160,7 @@ CommConnectCbPtrFun::CommConnectCbPtrFun(CNCB *aHandler,
 void
 CommConnectCbPtrFun::dial()
 {
-    handler(params.conn, params.paths, params.flag, params.xerrno, params.data);
+    handler(params.conn, params.flag, params.xerrno, params.data);
 }
 
 void

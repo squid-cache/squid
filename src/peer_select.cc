@@ -124,7 +124,7 @@ peerSelectIcpPing(HttpRequest * request, int direct, StoreEntry * entry)
 
 
 void
-peerSelect(Comm::PathsPointer paths,
+peerSelect(Comm::Paths * paths,
            HttpRequest * request,
            StoreEntry * entry,
            PSC * callback,
