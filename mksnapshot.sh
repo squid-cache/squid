@@ -10,7 +10,7 @@ module=squid3
 BZRROOT=${BZRROOT:-/bzr}
 
 # generate a tarball name from the branch ($1) note that trunk is at
-# /bzr/trunk, but we call it HEAD for consistency with CVS (squid 2.x), and
+# /bzr/trunk, but we call it 3.HEAD for consistency with CVS (squid 2.x), and
 # branches are in /bzr/branches/ but we don't want 'branches/' in the tarball
 # name so we strip that.
 branchpath=${1:-trunk}
@@ -55,31 +55,18 @@ echo "TMPDIR: ${tmpdir}"
 ./configure --silent
 make -s dist-all
 
-basetarball=/server/httpd/htdocs/squid-cache.org/Versions/v`echo $VERSION | cut -d. -f1`/`echo $VERSION | cut -d. -f-2|cut -d- -f1`/${PACKAGE}-${VERSION}.tar.bz2
+webbase=/server/httpd/htdocs/squid-cache.org/content/
+basetarball=${webbase}/Versions/v`echo $VERSION | cut -d. -f1`/`echo $VERSION | cut -d. -f-2|cut -d- -f1`/${PACKAGE}-${VERSION}.tar.bz2
 
-# 3.HEAD shows up as /v3/3.HEAD in the above. do it special.
-if (echo $VERSION | grep HEAD); then
-	basetarball=/server/httpd/htdocs/squid-cache.org/Versions/v`echo $VERSION | cut -d. -f1`/`echo $VERSION | cut -d. -f2|cut -d- -f1`/${PACKAGE}-${VERSION}.tar.bz2
+echo "Building Tarball diff (${basetarball}) ..."
+if [ -f $basetarball ]; then
+	tar jxf ${PACKAGE}-${VERSION}-${date}.tar.bz2
+	tar jxf $basetarball
+	echo "Differences from ${PACKAGE}-${VERSION} to ${PACKAGE}-${VERSION}-${date}" >${PACKAGE}-${VERSION}-${date}.diff
+	diff -ruN ${PACKAGE}-${VERSION} ${PACKAGE}-${VERSION}-${date} >>${PACKAGE}-${VERSION}-${date}.diff || true
+else
+	echo "Building Tarball diff ... skipped (no tarball exists)."
 fi
-
-#if (echo $VERSION | grep PRE) || (echo $VERSION | grep STABLE); then
-	echo "Building Tarball diff (${basetarball}) ..."
-	if [ -f $basetarball ]; then
-		tar jxf ${PACKAGE}-${VERSION}-${date}.tar.bz2
-		tar jxf $basetarball
-		echo "Differences from ${PACKAGE}-${VERSION} to ${PACKAGE}-${VERSION}-${date}" >${PACKAGE}-${VERSION}-${date}.diff
-		diff -ruN ${PACKAGE}-${VERSION} ${PACKAGE}-${VERSION}-${date} >>${PACKAGE}-${VERSION}-${date}.diff || true
-	else
-		echo "Building Tarball diff ... skipped (no tarball exists)."
-		#cvs -q rdiff -u -r SQUID_`echo $VERSION | tr .- __` -r $tag $module >>${PACKAGE}-${VERSION}-${date}.diff || true
-	fi
-#elif [ -f STABLE_BRANCH ]; then
-	#stable=`cat STABLE_BRANCH`
-	#echo "Differences from ${stable} to ${PACKAGE}-${VERSION}-${date}" >${PACKAGE}-${VERSION}-${date}.diff
-	#cvs -q rdiff -u -r $stable -r $tag $module >>${PACKAGE}-${VERSION}-${date}.diff
-#else
-#	echo "Building Tarball ... skipped."
-#fi
 
 cd $startdir
 echo "Preparing to publish: $tmpdir/${PACKAGE}-${VERSION}-${date}.tar.* ..."
@@ -136,8 +123,8 @@ if (groff --help >/dev/null); then
 fi
 
 # Generate language-pack tarballs
-# NP: Only to be done on HEAD branch.
-if test "${VERSION}" = "3.HEAD" ; then
+# NP: Only to be done on trunk.
+if test "${tag}" = "trunk" ; then
 	sh -c "cd $tmpdir/errors && tar -zcf ${PWD}/${PACKAGE}-${VERSION}-${date}-langpack.tar.gz ./*/* ./alias* ./TRANSLATORS ./COPYRIGHT "
 	echo ${PACKAGE}-${VERSION}-${date}-langpack.tar.gz >>${tag}.out
 fi
