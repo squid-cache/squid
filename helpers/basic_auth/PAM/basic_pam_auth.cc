@@ -67,7 +67,7 @@
  */
 #define SQUID_NO_ALLOC_PROTECT 1
 #include "config.h"
-
+#include "helpers/defines.h"
 #include "rfc1738.h"
 #include "util.h"
 
@@ -93,9 +93,6 @@
 #include <security/pam_appl.h>
 #endif
 
-#define BUFSIZE 8192
-
-
 /* The default PAM service name */
 #ifndef DEFAULT_SQUID_PAM_SERVICE
 #define DEFAULT_SQUID_PAM_SERVICE "squid"
@@ -120,7 +117,7 @@ static int
 password_conversation(int num_msg, PAM_CONV_FUNC_CONST_PARM struct pam_message **msg, struct pam_response **resp, void *appdata_ptr)
 {
     if (num_msg != 1 || msg[0]->msg_style != PAM_PROMPT_ECHO_OFF) {
-        fprintf(stderr, "ERROR: Unexpected PAM converstaion '%d/%s'\n", msg[0]->msg_style, msg[0]->msg);
+        debug("ERROR: Unexpected PAM converstaion '%d/%s'\n", msg[0]->msg_style, msg[0]->msg);
         return PAM_CONV_ERR;
     }
 #if _SQUID_SOLARIS_
@@ -132,12 +129,12 @@ password_conversation(int num_msg, PAM_CONV_FUNC_CONST_PARM struct pam_message *
     }
 #endif
     if (!appdata_ptr) {
-        fprintf(stderr, "ERROR: No password available to password_converstation!\n");
+        debug("ERROR: No password available to password_converstation!\n");
         return PAM_CONV_ERR;
     }
     *resp = static_cast<struct pam_response *>(calloc(num_msg, sizeof(struct pam_response)));
     if (!*resp) {
-        fprintf(stderr, "ERROR: Out of memory!\n");
+        debug("ERROR: Out of memory!\n");
         return PAM_CONV_ERR;
     }
     (*resp)[0].resp = xstrdup((char *) appdata_ptr);
@@ -170,7 +167,7 @@ main(int argc, char *argv[])
     int retval = PAM_SUCCESS;
     char *user;
     char *password_buf;
-    char buf[BUFSIZE];
+    char buf[HELPER_INPUT_BUFFER];
     time_t pamh_created = 0;
     int ttl = DEFAULT_SQUID_PAM_TTL;
     const char *service = DEFAULT_SQUID_PAM_SERVICE;
@@ -197,29 +194,29 @@ main(int argc, char *argv[])
             no_acct_mgmt = 1;
             break;
         default:
-            fprintf(stderr, "Unknown getopt value '%c'\n", ch);
+            fprintf(stderr, "FATAL: Unknown getopt value '%c'\n", ch);
             usage(argv[0]);
             exit(1);
         }
     }
 start:
     if (optind < argc) {
-        fprintf(stderr, "Unknown option '%s'\n", argv[optind]);
+        fprintf(stderr, "FATAL: Unknown option '%s'\n", argv[optind]);
         usage(argv[0]);
         exit(1);
     }
 
-    while (fgets(buf, BUFSIZE, stdin)) {
+    while (fgets(buf, HELPER_INPUT_BUFFER, stdin)) {
         user = buf;
         password_buf = strchr(buf, '\n');
         if (!password_buf) {
-            fprintf(stderr, "authenticator: Unexpected input '%s'\n", buf);
+            debug("ERROR: %s: Unexpected input '%s'\n", argv[0], buf);
             goto error;
         }
         *password_buf = '\0';
         password_buf = strchr(buf, ' ');
         if (!password_buf) {
-            fprintf(stderr, "authenticator: Unexpected input '%s'\n", buf);
+            debug("ERROR: %s: Unexpected input '%s'\n", argv[0], buf);
             goto error;
         }
         *password_buf++ = '\0';
@@ -237,7 +234,7 @@ start:
             /* Create PAM connection */
             retval = pam_start(service, user, &conv, &pamh);
             if (retval != PAM_SUCCESS) {
-                fprintf(stderr, "ERROR: failed to create PAM authenticator\n");
+                debug("ERROR: failed to create PAM authenticator\n");
                 goto error;
             }
         } else if (!pamh || (time(NULL) - pamh_created) >= ttl || pamh_created > time(NULL)) {
@@ -245,14 +242,14 @@ start:
             if (pamh) {
                 retval = pam_end(pamh, retval);
                 if (retval != PAM_SUCCESS) {
-                    fprintf(stderr, "WARNING: failed to release PAM authenticator\n");
+                    debug("WARNING: failed to release PAM authenticator\n");
                 }
                 pamh = NULL;
             }
             /* Initialize persistent PAM connection */
             retval = pam_start(service, "squid@", &conv, &pamh);
             if (retval != PAM_SUCCESS) {
-                fprintf(stderr, "ERROR: failed to create PAM authenticator\n");
+                debug("ERROR: failed to create PAM authenticator\n");
                 goto error;
             }
             pamh_created = time(NULL);
@@ -270,10 +267,10 @@ start:
         if (retval == PAM_SUCCESS && !no_acct_mgmt)
             retval = pam_acct_mgmt(pamh, 0);
         if (retval == PAM_SUCCESS) {
-            fprintf(stdout, "OK\n");
+            SEND_OK("");
         } else {
 error:
-            fprintf(stdout, "ERR\n");
+            SEND_ERR("");
         }
         /* cleanup */
         retval = PAM_SUCCESS;
@@ -286,7 +283,7 @@ error:
         if (ttl == 0 || retval != PAM_SUCCESS) {
             retval = pam_end(pamh, retval);
             if (retval != PAM_SUCCESS) {
-                fprintf(stderr, "WARNING: failed to release PAM authenticator\n");
+                debug("WARNING: failed to release PAM authenticator\n");
             }
             pamh = NULL;
         }
@@ -296,7 +293,7 @@ error:
         retval = pam_end(pamh, retval);
         if (retval != PAM_SUCCESS) {
             pamh = NULL;
-            fprintf(stderr, "ERROR: failed to release PAM authenticator\n");
+            debug("ERROR: failed to release PAM authenticator\n");
         }
     }
     return 0;

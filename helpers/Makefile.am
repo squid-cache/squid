@@ -6,3 +6,5 @@ SUBDIRS = \
 	negotiate_auth \
 	ntlm_auth \
 	url_rewrite
+
+EXTRA_DIST = defines.h
