@@ -653,13 +653,18 @@ void
 HttpStateData::processReplyHeader()
 {
     /** Creates a blank header. If this routine is made incremental, this will not do */
+
+    /* NP: all exit points to this function MUST call ctx_exit(ctx) */
     Ctx ctx = ctx_enter(entry->mem_obj->url);
+
     debugs(11, 3, "processReplyHeader: key '" << entry->getMD5Text() << "'");
 
     assert(!flags.headers_parsed);
 
-    if (!readBuf->hasContent())
+    if (!readBuf->hasContent()) {
+        ctx_exit(ctx);
         return;
+    }
 
     http_status error = HTTP_STATUS_NONE;
 
@@ -745,7 +750,6 @@ HttpStateData::processReplyHeader()
     orig_request->hier.peer_reply_status = newrep->sline.status;
 
     ctx_exit(ctx);
-
 }
 
 /**
