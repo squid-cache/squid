@@ -1577,6 +1577,7 @@ if test "$enable_auth_ntlm" != "no" ; then
     done
 fi
 AC_MSG_NOTICE([NTLM auth helpers built: $NTLM_AUTH_HELPERS])
+AM_CONDITIONAL(ENABLE_AUTH_NTLM, test "$enable_auth_ntlm" != "no")
 AC_SUBST(NTLM_AUTH_HELPERS)
 
 AC_ARG_ENABLE(auth-negotiate,
@@ -3819,7 +3820,7 @@ AC_CONFIG_FILES([\
 	helpers/ntlm_auth/fake/Makefile \
 	helpers/ntlm_auth/smb_lm/Makefile \
 	helpers/ntlm_auth/smb_lm/smbval/Makefile \
-	helpers/ntlm_auth/mswin_sspi/Makefile \
+	helpers/ntlm_auth/SSPI/Makefile \
 	helpers/negotiate_auth/Makefile \
 	helpers/negotiate_auth/kerberos/Makefile \
 	helpers/negotiate_auth/mswin_sspi/Makefile \
