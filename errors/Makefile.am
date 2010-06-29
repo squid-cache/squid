@@ -12,6 +12,10 @@ DEFAULT_STYLESHEET	= $(sysconfdir)/errorpage.css
 
 ## List of automated translations possible:
 ERROR_TEMPLATES =  \
+	templates/ERR_AGENT_PAC \
+	templates/ERR_AGENT_WPAD \
+	templates/ERR_AGENT_CONFIGURE \
+	templates/ERR_BLANK \
 	templates/ERR_FTP_PUT_MODIFIED \
 	templates/ERR_ESI \
 	templates/ERR_SECURE_CONNECT_FAIL \
