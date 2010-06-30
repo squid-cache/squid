@@ -24,21 +24,21 @@
  */
 #define SQUID_NO_ALLOC_PROTECT 1
 #include "config.h"
+#include "libntlmauth/rfcnb.h"
+#include "libntlmauth/smblib-priv.h"
+#include "libntlmauth/smb-byteorder.h"
 
-#include "smblib-priv.h"
 #include <string.h>
-
-#include "rfcnb.h"
 
 /* local functions */
 char * SMB_DOSTimToStr(int DOS_time);
-char * SMB_AtrToStr(int attribs, BOOL verbose);
+char * SMB_AtrToStr(int attribs, int verbose);
 int SMB_Get_Tree_MBS(SMB_Tree_Handle tree);
 int SMB_Get_Max_Buf_Siz(SMB_Handle_Type Con_Handle);
 int SMB_Get_Protocol_IDX(SMB_Handle_Type Con_Handle);
 int SMB_Get_Protocol(SMB_Handle_Type Con_Handle);
 int SMB_Figure_Protocol(char const *dialects[], int prot_index);
-int SMB_TreeDisconnect(SMB_Tree_Handle Tree_Handle, BOOL discard);
+int SMB_TreeDisconnect(SMB_Tree_Handle Tree_Handle, int discard);
 // int SMB_Get_Last_Error(void);
 int SMB_Get_Last_SMB_Err(void);
 
@@ -78,7 +78,7 @@ static char const *SMB_Prots[] = {"PC NETWORK PROGRAM 1.0",
 /* Print out an SMB pkt in all its gory detail ... */
 #if 0 // DEAD CODE
 void
-SMB_Print_Pkt(FILE fd, RFCNB_Pkt * pkt, BOOL command, int Offset, int Len)
+SMB_Print_Pkt(FILE fd, RFCNB_Pkt * pkt, int command, int Offset, int Len)
 {
 
     /* Well, just how do we do this ... print it I suppose */
@@ -126,7 +126,7 @@ SMB_DOSTimToStr(int DOS_time)
  * true, we print out long form of strings ...
  */
 char *
-SMB_AtrToStr(int attribs, BOOL verbose)
+SMB_AtrToStr(int attribs, int verbose)
 {
     static char SMB_Attrib_Temp[128];
 
@@ -608,7 +608,7 @@ SMB_TreeConnect(SMB_Handle_Type Con_Handle,
 }
 
 int
-SMB_TreeDisconnect(SMB_Tree_Handle Tree_Handle, BOOL discard)
+SMB_TreeDisconnect(SMB_Tree_Handle Tree_Handle, int discard)
 {
     struct RFCNB_Pkt *pkt;
     int pkt_len;
@@ -689,7 +689,7 @@ SMB_TreeDisconnect(SMB_Tree_Handle Tree_Handle, BOOL discard)
 
     /* What about the tree handle ? */
 
-    if (discard == TRUE) {	/* Unlink it and free it ... */
+    if (discard) {	/* Unlink it and free it ... */
 
         if (Tree_Handle->next == NULL)
             Tree_Handle->con->first_tree = Tree_Handle->prev;

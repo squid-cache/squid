@@ -26,13 +26,15 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-/* Defines we need */
+/* The Public API stuff */
+#include "libntlmauth/rfcnb.h"
 
-#define GLOBAL extern
+/* The internals */
+#include "libntlmauth/smb-byteorder.h"
 
-#include "rfcnb-error.h"
-#include "rfcnb-common.h"
-#include "byteorder.h"
+#if HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
 
 #ifdef RFCNB_PORT
 #define RFCNB_Default_Port RFCNB_PORT
@@ -52,27 +54,6 @@
 #define RFCNB_SESSION_KEEP_ALIVE 0x85
 
 /* Structures      */
-
-typedef struct redirect_addr *redirect_ptr;
-
-struct redirect_addr {
-
-    struct in_addr ip_addr;
-    int port;
-    redirect_ptr next;
-
-};
-
-typedef struct RFCNB_Con {
-
-    int fd;			/* File descripter for TCP/IP connection */
-    int rfc_errno;		/* last error                            */
-    int timeout;		/* How many milli-secs before IO times out */
-    int redirects;		/* How many times we were redirected     */
-    struct redirect_addr *redirect_list;	/* First is first address */
-    struct redirect_addr *last_addr;
-
-} RFCNB_Con;
 
 typedef char RFCNB_Hdr[4];	/* The header is 4 bytes long with  */
 /* char[0] as the type, char[1] the */
@@ -150,5 +131,39 @@ typedef char RFCNB_Hdr[4];	/* The header is 4 bytes long with  */
 extern int RFCNB_errno;
 extern int RFCNB_saved_errno;	/* Save this from point of error */
 #endif
+
+/* I/O functions */
+extern int RFCNB_Put_Pkt(RFCNB_Con *con, RFCNB_Pkt *pkt, int len);
+
+extern int RFCNB_Get_Pkt(RFCNB_Con *con, RFCNB_Pkt *pkt, int len);
+
+extern void RFCNB_Free_Pkt(RFCNB_Pkt *pkt);
+
+/* Util functions */
+
+void RFCNB_CvtPad_Name(char *name1, char *name2);
+
+void RFCNB_AName_To_NBName(char *AName, char *NBName);
+
+void RFCNB_NBName_To_AName(char *NBName, char *AName);
+
+void RFCNB_Print_Hex(FILE * fd, RFCNB_Pkt *pkt, int Offset, int Len);
+
+RFCNB_Pkt *RFCNB_Alloc_Pkt(int n);
+
+void RFCNB_Print_Pkt(FILE * fd, char *dirn, RFCNB_Pkt *pkt, int len);
+
+int RFCNB_Name_To_IP(char *host, struct in_addr *Dest_IP);
+
+int RFCNB_Close(int socket);
+
+int RFCNB_IP_Connect(struct in_addr Dest_IP, int port);
+
+int RFCNB_Session_Req(RFCNB_Con *con,
+                      char *Called_Name,
+                      char *Calling_Name,
+                      int * redirect,
+                      struct in_addr *Dest_IP,
+                      int *port);
 
 #endif /* __RFCNB_H__ */

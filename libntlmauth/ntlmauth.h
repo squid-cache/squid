@@ -67,14 +67,32 @@ extern "C" {
      * Right. */
 #define NTLM_MAX_FIELD_LENGTH 300	/* max length of an NTLMSSP field */
 
+    /* max length of the BLOB data. (and helper input/output buffer) */
+#define NTLM_BLOB_BUFFER_SIZE 10240
 
     /* Here start the NTLMSSP definitions */
 
     /* these are marked as "extra" fields */
-#define REQUEST_INIT_RESPONSE          0x100000
-#define REQUEST_ACCEPT_RESPONSE        0x200000
-#define REQUEST_NON_NT_SESSION_KEY     0x400000
+#define NTLM_REQUEST_INIT_RESPONSE          0x100000
+#define NTLM_REQUEST_ACCEPT_RESPONSE        0x200000
+#define NTLM_REQUEST_NON_NT_SESSION_KEY     0x400000
 
+    /* NTLM error codes */
+#define NTLM_ERR_INTERNAL         -3
+#define NTLM_ERR_BLOB             -2
+#define NTLM_ERR_BAD_PROTOCOL     -1
+#define NTLM_ERR_NONE              0    /* aka. SMBLM_ERR_NONE */
+    /* codes used by smb_lm helper */
+#define NTLM_ERR_SERVER            1    /* aka. SMBLM_ERR_SERVER   */
+#define NTLM_ERR_PROTOCOL          2    /* aka. SMBLM_ERR_PROTOCOL */
+#define NTLM_ERR_LOGON             3    /* aka. SMBLM_ERR_LOGON    */
+#define NTLM_ERR_UNTRUSTED_DOMAIN  4
+#define NTLM_ERR_NOT_CONNECTED     10
+    /* codes used by mswin_ntlmsspi helper */
+#define NTLM_SSPI_ERROR         1
+#define NTLM_BAD_NTGROUP        2
+#define NTLM_BAD_REQUEST        3
+    /* TODO: reduce the above codes down to one set non-overlapping. */
 
     /** String header. String data resides at the end of the request */
     typedef struct _strhdr {
@@ -134,27 +152,27 @@ extern "C" {
     /* ************************************************************************* */
 
     /* negotiate request flags */
-#define NEGOTIATE_UNICODE              0x0001
-#define NEGOTIATE_ASCII                0x0002
-#define NEGOTIATE_REQUEST_TARGET       0x0004
-#define NEGOTIATE_REQUEST_SIGN         0x0010
-#define NEGOTIATE_REQUEST_SEAL         0x0020
-#define NEGOTIATE_DATAGRAM_STYLE       0x0040
-#define NEGOTIATE_USE_LM               0x0080
-#define NEGOTIATE_USE_NETWARE          0x0100
-#define NEGOTIATE_USE_NTLM             0x0200
-#define NEGOTIATE_DOMAIN_SUPPLIED      0x1000
-#define NEGOTIATE_WORKSTATION_SUPPLIED 0x2000
-#define NEGOTIATE_THIS_IS_LOCAL_CALL   0x4000
-#define NEGOTIATE_ALWAYS_SIGN          0x8000
+#define NTLM_NEGOTIATE_UNICODE              0x0001
+#define NTLM_NEGOTIATE_ASCII                0x0002
+#define NTLM_NEGOTIATE_REQUEST_TARGET       0x0004
+#define NTLM_NEGOTIATE_REQUEST_SIGN         0x0010
+#define NTLM_NEGOTIATE_REQUEST_SEAL         0x0020
+#define NTLM_NEGOTIATE_DATAGRAM_STYLE       0x0040
+#define NTLM_NEGOTIATE_USE_LM               0x0080
+#define NTLM_NEGOTIATE_USE_NETWARE          0x0100
+#define NTLM_NEGOTIATE_USE_NTLM             0x0200
+#define NTLM_NEGOTIATE_DOMAIN_SUPPLIED      0x1000
+#define NTLM_NEGOTIATE_WORKSTATION_SUPPLIED 0x2000
+#define NTLM_NEGOTIATE_THIS_IS_LOCAL_CALL   0x4000
+#define NTLM_NEGOTIATE_ALWAYS_SIGN          0x8000
 
     /** Negotiation request sent by client */
     typedef struct _ntlm_negotiate {
         ntlmhdr hdr;		/**< "NTLMSSP" , LSWAP(0x1) */
-        u_int32_t flags;		/**< Request flags */
+        u_int32_t flags;	/**< Request flags */
         strhdr domain;		/**< Domain we wish to authenticate in */
-        strhdr workstation;		/**< Client workstation name */
-        char payload[256];		/**< String data */
+        strhdr workstation;	/**< Client workstation name */
+        char payload[256];	/**< String data */
     } ntlm_negotiate;
 
 
@@ -165,9 +183,9 @@ extern "C" {
 #define NTLM_NONCE_LEN 8
 
     /* challenge request flags */
-#define CHALLENGE_TARGET_IS_DOMAIN     0x10000
-#define CHALLENGE_TARGET_IS_SERVER     0x20000
-#define CHALLENGE_TARGET_IS_SHARE      0x40000
+#define NTLM_CHALLENGE_TARGET_IS_DOMAIN     0x10000
+#define NTLM_CHALLENGE_TARGET_IS_SERVER     0x20000
+#define NTLM_CHALLENGE_TARGET_IS_SHARE      0x40000
 
     /** Challenge request sent by server. */
     typedef struct _ntlm_challenge {

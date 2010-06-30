@@ -15,26 +15,24 @@
  */
 #define SQUID_NO_ALLOC_PROTECT 1
 #include "config.h"
+#include "libntlmauth/ntlmauth.h"
+#include "libntlmauth/smb.h"
+#include "libntlmauth/rfcnb.h"
+#include "libntlmauth/support_bits.cci"
+#include "util.h"		/* from Squid */
 
-#include "ntlmauth.h"
-#include "ntlm_smb_lm_auth.h"
-#include "util.h"
-#include "smbval/smblib-common.h"
-#include "smbval/rfcnb-error.h"
-
+#if HAVE_STRING_H
+#include <string.h>
+#endif
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#if HAVE_SIGNAL_H
 #include <signal.h>
-
-/* these are part of rfcnb-priv.h and smblib-priv.h */
-extern int SMB_Get_Error_Msg(int msg, char *msgbuf, int len);
-extern int SMB_Get_Last_Error(void);
-extern int SMB_Get_Last_SMB_Err(void);
-extern int RFCNB_Get_Last_Error(void);
-
-
+#endif
+#if HAVE_ERRNO_H
 #include <errno.h>
-
-#define BUFFER_SIZE 10240
-
+#endif
 #if HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
@@ -53,6 +51,41 @@ extern int RFCNB_Get_Last_Error(void);
 #if HAVE_ASSERT_H
 #include <assert.h>
 #endif
+#if HAVE_TIME_H
+#include <time.h>
+#endif
+
+
+/************* CONFIGURATION ***************/
+
+#define DEAD_DC_RETRY_INTERVAL 30
+
+/************* END CONFIGURATION ***************/
+
+/* A couple of harmless helper macros */
+#define SEND(X) debug("sending '%s' to squid\n",X); printf(X "\n");
+#ifdef __GNUC__
+#define SEND2(X,Y...) debug("sending '" X "' to squid\n",Y); printf(X "\n",Y);
+#define SEND3(X,Y...) debug("sending '" X "' to squid\n",Y); printf(X "\n",Y);
+#else
+/* no gcc, no debugging. varargs macros are a gcc extension */
+#define SEND2 printf
+#define SEND3 printf
+#endif
+
+const char *make_challenge(char *domain, char *controller);
+char *ntlm_check_auth(ntlm_authenticate * auth, int auth_length);
+void dc_disconnect(void);
+int connectedp(void);
+int is_dc_ok(char *domain, char *domain_controller);
+
+typedef struct _dc dc;
+struct _dc {
+    char *domain;
+    char *controller;
+    time_t dead;		/* 0 if it's alive, otherwise time of death */
+    dc *next;
+};
 
 /* local functions */
 void send_bh_or_ld(char const *bhmessage, ntlm_authenticate * failedauth, int authlen);
@@ -61,21 +94,254 @@ void process_options(int argc, char *argv[]);
 const char * obtain_challenge(void);
 void manage_request(void);
 
+/* these are part of rfcnb-priv.h and smblib-priv.h */
+extern int SMB_Get_Error_Msg(int msg, char *msgbuf, int len);
+extern int SMB_Get_Last_Error();
+extern int RFCNB_Get_Last_Errno();
+extern int RFCNB_Get_Last_Error(void);
+extern int SMB_Get_Last_SMB_Err(void);
 
+
+/* a few forward-declarations. Hackish, but I don't care right now */
+SMB_Handle_Type SMB_Connect_Server(SMB_Handle_Type Con_Handle, char *server, char *NTdomain);
+
+/* this one is reallllly haackiish. We really should be using anything from smblib-priv.h
+ */
+static char const *SMB_Prots[] = {"PC NETWORK PROGRAM 1.0",
+                                  "MICROSOFT NETWORKS 1.03",
+                                  "MICROSOFT NETWORKS 3.0",
+                                  "DOS LANMAN1.0",
+                                  "LANMAN1.0",
+                                  "DOS LM1.2X002",
+                                  "LM1.2X002",
+                                  "DOS LANMAN2.1",
+                                  "LANMAN2.1",
+                                  "Samba",
+                                  "NT LM 0.12",
+                                  "NT LANMAN 1.0",
+                                  NULL
+                                 };
+
+#define ENCODED_PASS_LEN 24
+#define MAX_USERNAME_LEN 255
+#define MAX_DOMAIN_LEN 255
+#define MAX_PASSWD_LEN 31
+
+static unsigned char challenge[NTLM_NONCE_LEN];
+static unsigned char lmencoded_empty_pass[ENCODED_PASS_LEN],
+ntencoded_empty_pass[ENCODED_PASS_LEN];
+SMB_Handle_Type handle = NULL;
+int ntlm_errno;
+static char credentials[MAX_USERNAME_LEN+MAX_DOMAIN_LEN+2];	/* we can afford to waste */
+static char my_domain[100], my_domain_controller[100];
+static char errstr[1001];
 #if DEBUG
-char error_messages_buffer[BUFFER_SIZE];
+char error_messages_buffer[NTLM_BLOB_BUFFER_SIZE];
 #endif
-
 char load_balance = 0, protocol_pedantic = 0;
 #if NTLM_FAIL_OPEN
 char last_ditch_enabled = 0;
 #endif
-
 dc *controllers = NULL;
 int numcontrollers = 0;
 dc *current_dc;
-
 char smb_error_buffer[1000];
+
+
+/* Disconnects from the DC. A reconnection will be done upon the next request
+ */
+void
+dc_disconnect()
+{
+    if (handle != NULL)
+        SMB_Discon(handle, 0);
+    handle = NULL;
+}
+
+int
+connectedp()
+{
+    return (handle != NULL);
+}
+
+/* Tries to connect to a DC. Returns 0 on failure, 1 on OK */
+int
+is_dc_ok(char *domain, char *domain_controller)
+{
+    SMB_Handle_Type h = SMB_Connect_Server(NULL, domain_controller, domain);
+    if (h == NULL)
+        return 0;
+    SMB_Discon(h, 0);
+    return 1;
+}
+
+/* returns 0 on success, > 0 on failure */
+static int
+init_challenge(char *domain, char *domain_controller)
+{
+    int smberr;
+
+    if (handle != NULL) {
+        return 0;
+    }
+    debug("Connecting to server %s domain %s\n", domain_controller, domain);
+    handle = SMB_Connect_Server(NULL, domain_controller, domain);
+    smberr = SMB_Get_Last_Error();
+    SMB_Get_Error_Msg(smberr, errstr, 1000);
+
+
+    if (handle == NULL) {	/* couldn't connect */
+        debug("Couldn't connect to SMB Server. Error:%s\n", errstr);
+        return 1;
+    }
+    if (SMB_Negotiate(handle, SMB_Prots) < 0) {		/* An error */
+        debug("Error negotiating protocol with SMB Server\n");
+        SMB_Discon(handle, 0);
+        handle = NULL;
+        return 2;
+    }
+    if (handle->Security == 0) {	/* share-level security, unuseable */
+        debug("SMB Server uses share-level security .. we need user security.\n");
+        SMB_Discon(handle, 0);
+        handle = NULL;
+        return 3;
+    }
+    memcpy(challenge, handle->Encrypt_Key, NTLM_NONCE_LEN);
+    SMBencrypt((unsigned char *)"",challenge,lmencoded_empty_pass);
+    SMBNTencrypt((unsigned char *)"",challenge,ntencoded_empty_pass);
+    return 0;
+}
+
+const char *
+make_challenge(char *domain, char *domain_controller)
+{
+    /* trying to circumvent some strange problem wih pointers in SMBLib */
+    /* Ugly as hell, but the lib is going to be dropped... */
+    strcpy(my_domain,domain);
+    strcpy(my_domain_controller,domain_controller);
+    if (init_challenge(my_domain, my_domain_controller) > 0) {
+        return NULL;
+    }
+    ntlm_challenge chal;
+    u_int32_t flags = NTLM_REQUEST_NON_NT_SESSION_KEY |
+                      NTLM_CHALLENGE_TARGET_IS_DOMAIN |
+                      NTLM_NEGOTIATE_ALWAYS_SIGN |
+                      NTLM_NEGOTIATE_USE_NTLM |
+                      NTLM_NEGOTIATE_USE_LM |
+                      NTLM_NEGOTIATE_ASCII;
+    ntlm_make_challenge(&chal, my_domain, my_domain_controller, (char *)challenge, NTLM_NONCE_LEN, flags);
+    int len = sizeof(chal) - sizeof(chal.payload) + le16toh(chal.target.maxlen);
+    return base64_encode_bin((char *)&chal, len);
+}
+
+/* returns NULL on failure, or a pointer to
+ * the user's credentials (domain\\username)
+ * upon success. WARNING. It's pointing to static storage.
+ * In case of problem sets as side-effect ntlm_errno to one of the
+ * codes defined in ntlm.h
+ */
+char *
+ntlm_check_auth(ntlm_authenticate * auth, int auth_length)
+{
+    int rv;
+    char pass[MAX_PASSWD_LEN+1];
+    char *domain = credentials;
+    char *user;
+    lstring tmp;
+
+    if (handle == NULL) {	/*if null we aren't connected, but it shouldn't happen */
+        debug("Weird, we've been disconnected\n");
+        ntlm_errno = NTLM_ERR_NOT_CONNECTED;
+        return NULL;
+    }
+
+    /*      debug("fetching domain\n"); */
+    tmp = ntlm_fetch_string(&(auth->hdr), auth_length, &auth->domain, auth->flags);
+    if (tmp.str == NULL || tmp.l == 0) {
+        debug("No domain supplied. Returning no-auth\n");
+        ntlm_errno = NTLM_ERR_LOGON;
+        return NULL;
+    }
+    if (tmp.l > MAX_DOMAIN_LEN) {
+        debug("Domain string exceeds %d bytes, rejecting\n", MAX_DOMAIN_LEN);
+        ntlm_errno = NTLM_ERR_LOGON;
+        return NULL;
+    }
+    memcpy(domain, tmp.str, tmp.l);
+    user = domain + tmp.l;
+    *user++ = '\0';
+
+    /*      debug("fetching user name\n"); */
+    tmp = ntlm_fetch_string(&(auth->hdr), auth_length, &auth->user, auth->flags);
+    if (tmp.str == NULL || tmp.l == 0) {
+        debug("No username supplied. Returning no-auth\n");
+        ntlm_errno = NTLM_ERR_LOGON;
+        return NULL;
+    }
+    if (tmp.l > MAX_USERNAME_LEN) {
+        debug("Username string exceeds %d bytes, rejecting\n", MAX_USERNAME_LEN);
+        ntlm_errno = NTLM_ERR_LOGON;
+        return NULL;
+    }
+    memcpy(user, tmp.str, tmp.l);
+    *(user + tmp.l) = '\0';
+
+
+    /* Authenticating against the NT response doesn't seem to work... */
+    tmp = ntlm_fetch_string(&(auth->hdr), auth_length, &auth->lmresponse, auth->flags);
+    if (tmp.str == NULL || tmp.l == 0) {
+        fprintf(stderr, "No auth at all. Returning no-auth\n");
+        ntlm_errno = NTLM_ERR_LOGON;
+        return NULL;
+    }
+    if (tmp.l > MAX_PASSWD_LEN) {
+        debug("Password string exceeds %d bytes, rejecting\n", MAX_PASSWD_LEN);
+        ntlm_errno = NTLM_ERR_LOGON;
+        return NULL;
+    }
+
+    memcpy(pass, tmp.str, tmp.l);
+    pass[min(MAX_PASSWD_LEN,tmp.l)] = '\0';
+
+#if 1
+    debug("Empty LM pass detection: user: '%s', ours:'%s', his: '%s' (length: %d)\n",
+          user,lmencoded_empty_pass,tmp.str,tmp.l);
+    if (memcmp(tmp.str,lmencoded_empty_pass,ENCODED_PASS_LEN)==0) {
+        fprintf(stderr,"Empty LM password supplied for user %s\\%s. "
+                "No-auth\n",domain,user);
+        ntlm_errno=NTLM_ERR_LOGON;
+        return NULL;
+    }
+
+    tmp = ntlm_fetch_string(&(auth->hdr), auth_length, &auth->ntresponse, auth->flags);
+    if (tmp.str != NULL && tmp.l != 0) {
+        debug("Empty NT pass detection: user: '%s', ours:'%s', his: '%s' (length: %d)\n",
+              user,ntencoded_empty_pass,tmp.str,tmp.l);
+        if (memcmp(tmp.str,lmencoded_empty_pass,ENCODED_PASS_LEN)==0) {
+            fprintf(stderr,"ERROR: Empty NT password supplied for user %s\\%s. No-auth\n", domain, user);
+            ntlm_errno = NTLM_ERR_LOGON;
+            return NULL;
+        }
+    }
+#endif
+
+    /* TODO: check against empty password!!!!! */
+
+
+    debug("checking domain: '%s', user: '%s', pass='%s'\n", domain, user, pass);
+
+    rv = SMB_Logon_Server(handle, user, pass, domain, 1);
+    debug("Login attempt had result %d\n", rv);
+
+    if (rv != NTLM_ERR_NONE) {	/* failed */
+        ntlm_errno = rv;
+        return NULL;
+    }
+    *(user - 1) = '\\';		/* hack. Performing, but ugly. */
+
+    debug("credentials: %s\n", credentials);
+    return credentials;
+}
 
 /* signal handler to be invoked when the authentication operation
  * times out */
@@ -86,39 +352,19 @@ timeout_during_auth(int signum)
     dc_disconnect();
 }
 
-/* makes a null-terminated string upper-case. Changes CONTENTS! */
-static void
-uc(char *string)
-{
-    char *p = string, c;
-    while ((c = *p)) {
-        *p = xtoupper(c);
-        p++;
-    }
-}
-
-/* makes a null-terminated string lower-case. Changes CONTENTS! */
-static void
-lc(char *string)
-{
-    char *p = string, c;
-    while ((c = *p)) {
-        *p = xtolower(c);
-        p++;
-    }
-}
-
-
 void
 send_bh_or_ld(char const *bhmessage, ntlm_authenticate * failedauth, int authlen)
 {
 #if NTLM_FAIL_OPEN
-    char *creds = NULL;
+    char user[NTLM_MAX_FIELD_LENGTH];
+    char domain[NTLM_MAX_FIELD_LENGTH];
     if (last_ditch_enabled) {
-        creds = fetch_credentials(failedauth, authlen);
-        if (creds) {
-            lc(creds);
-            SEND2("LD %s", creds);
+        user[0] = '\0';
+        domain[0] = '\0';
+        if (ntlm_unpack_auth(failedauth, user, domain, authlen) == 0) {
+            lc(domain);
+            lc(user);
+            SEND3("LD %s%s%s", domain, (domain[0]!='\0'?"//":""), user);
         } else {
             SEND("NA last-ditch on, but no credentials");
         }
@@ -193,7 +439,7 @@ process_options(int argc, char *argv[])
         char *d, *c;
         /* d will not be freed in case of non-error. Since we don't reconfigure,
          * it's going to live as long as the process anyways */
-        d = malloc(strlen(argv[j]) + 1);
+        d = (char*)malloc(strlen(argv[j]) + 1);
         strcpy(d, argv[j]);
         debug("Adding domain-controller %s\n", d);
         if (NULL == (c = strchr(d, '\\')) && NULL == (c = strchr(d, '/'))) {
@@ -283,18 +529,18 @@ void
 manage_request()
 {
     ntlmhdr *fast_header;
-    char buf[BUFFER_SIZE];
+    char buf[NTLM_BLOB_BUFFER_SIZE];
     const char *ch;
     char *ch2, *decoded, *cred = NULL;
     int plen;
 
-    if (fgets(buf, BUFFER_SIZE, stdin) == NULL) {
+    if (fgets(buf, NTLM_BLOB_BUFFER_SIZE, stdin) == NULL) {
         fprintf(stderr, "fgets() failed! dying..... errno=%d (%s)\n", errno,
                 strerror(errno));
         exit(1);		/* BIIG buffer */
     }
     debug("managing request\n");
-    ch2 = memchr(buf, '\n', BUFFER_SIZE);	/* safer against overrun than strchr */
+    ch2 = (char*)memchr(buf, '\n', NTLM_BLOB_BUFFER_SIZE);	/* safer against overrun than strchr */
     if (ch2) {
         *ch2 = '\0';		/* terminate the string at newline. */
         ch = ch2;
@@ -313,10 +559,10 @@ manage_request()
             return;
         }
         /* fast-track-decode request type. */
-        fast_header = (struct _ntlmhdr *) decoded;
+        fast_header = (ntlmhdr *) decoded;
 
         /* sanity-check: it IS a NTLMSSP packet, isn't it? */
-        if (memcmp(fast_header->signature, "NTLMSSP", 8) != 0) {
+        if (ntlm_validate_packet(fast_header, NTLM_ANY) < 0) {
             SEND("NA Broken authentication packet");
             return;
         }
@@ -345,7 +591,7 @@ manage_request()
             }
             if (cred == NULL) {
                 int smblib_err, smb_errorclass, smb_errorcode, nb_error;
-                if (ntlm_errno == NTLM_LOGON_ERROR) {	/* hackish */
+                if (ntlm_errno == NTLM_ERR_LOGON) {	/* hackish */
                     SEND("NA Logon Failure");
                     return;
                 }

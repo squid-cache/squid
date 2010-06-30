@@ -26,65 +26,47 @@
 #define SQUID_NO_ALLOC_PROTECT 1
 #include "config.h"
 
+#include "libntlmauth/rfcnb.h"
+#include "libntlmauth/smblib-priv.h"
+#include "libntlmauth/smb-byteorder.h"
+//#include "smbencrypt.h"
+
 #include <ctype.h>
+#include <signal.h>
 #include <string.h>
 
 int SMBlib_errno;
 int SMBlib_SMB_Error;
-#define SMBLIB_ERRNO
-#define uchar unsigned char
-#include "smblib-priv.h"
-
-#include "rfcnb.h"
-#include "smbencrypt.h"
-
-#include <signal.h>
+SMB_State_Types SMBlib_State;
 
 /* local functions */
 int SMB_Term(void);
 SMB_Handle_Type SMB_Create_Con_Handle(void);
-int SMBlib_Set_Sock_NoDelay(SMB_Handle_Type Con_Handle, BOOL yn);
-SMB_Handle_Type SMB_Connect_Server(SMB_Handle_Type Con_Handle, char *server, char *NTdomain);
-SMB_Handle_Type SMB_Connect(SMB_Handle_Type Con_Handle, SMB_Tree_Handle * tree, char *service, char *username, char *password);
+int SMBlib_Set_Sock_NoDelay(SMB_Handle_Type Con_Handle, int yn);
 
 
-/* #define DEBUG */
-
-SMB_State_Types SMBlib_State;
-
-/* Initialize the SMBlib package     */
+/** Initialize the SMBlib package     */
 
 int
 SMB_Init()
 {
-
     SMBlib_State = SMB_State_Started;
-
     signal(SIGPIPE, SIG_IGN);	/* Ignore these ... */
 
     /* If SMBLIB_Instrument is defines, turn on the instrumentation stuff */
 #ifdef SMBLIB_INSTRUMENT
-
     SMBlib_Instrument_Init();
-
 #endif
-
     return 0;
-
 }
 
 int
 SMB_Term()
 {
-
 #ifdef SMBLIB_INSTRUMENT
-
     SMBlib_Instrument_Term();	/* Clean up and print results */
-
 #endif
-
     return 0;
-
 }
 
 /**
@@ -99,7 +81,7 @@ SMB_Create_Con_Handle()
 }
 
 int
-SMBlib_Set_Sock_NoDelay(SMB_Handle_Type Con_Handle, BOOL yn)
+SMBlib_Set_Sock_NoDelay(SMB_Handle_Type Con_Handle, int yn)
 {
     if (RFCNB_Set_Sock_NoDelay(Con_Handle->Trans_Connect, yn) < 0) {
         fprintf(stderr, "Setting no-delay on TCP socket failed ...\n");
@@ -118,20 +100,16 @@ SMB_Connect_Server(SMB_Handle_Type Con_Handle,
     int i;
 
     /* Get a connection structure if one does not exist */
-
     con = Con_Handle;
 
     if (Con_Handle == NULL) {
-
         if ((con = (struct SMB_Connect_Def *) malloc(sizeof(struct SMB_Connect_Def))) == NULL) {
-
-
             SMBlib_errno = SMBlibE_NoSpace;
             return NULL;
         }
     }
-    /* Init some things ... */
 
+    /* Init some things ... */
     strcpy(con->service, "");
     strcpy(con->username, "");
     strcpy(con->password, "");
@@ -155,11 +133,9 @@ SMB_Connect_Server(SMB_Handle_Type Con_Handle,
         }
     }
 
-
     con->port = 0;		/* No port selected */
 
     /* Get some things we need for the SMB Header */
-
     con->pid = getpid();
     con->mid = con->pid;	/* This will do for now ... */
     con->uid = 0;		/* Until we have done a logon, no uid ... */
@@ -189,9 +165,7 @@ SMB_Connect_Server(SMB_Handle_Type Con_Handle,
                                     con->port);
 
     /* Did we get one? */
-
     if (con->Trans_Connect == NULL) {
-
         if (Con_Handle == NULL) {
             Con_Handle = NULL;
             free(con);
@@ -201,7 +175,6 @@ SMB_Connect_Server(SMB_Handle_Type Con_Handle,
 
     }
     return (con);
-
 }
 
 /* SMB_Connect: Connect to the indicated server                       */
@@ -226,19 +199,16 @@ SMB_Connect(SMB_Handle_Type Con_Handle,
     int i;
 
     /* Get a connection structure if one does not exist */
-
     con = Con_Handle;
 
     if (Con_Handle == NULL) {
-
         if ((con = (struct SMB_Connect_Def *) malloc(sizeof(struct SMB_Connect_Def))) == NULL) {
-
             SMBlib_errno = SMBlibE_NoSpace;
             return NULL;
         }
     }
-    /* Init some things ... */
 
+    /* Init some things ... */
     strcpy(con->service, service);
     strcpy(con->username, username);
     strcpy(con->password, password);
@@ -254,14 +224,12 @@ SMB_Connect(SMB_Handle_Type Con_Handle,
     con->port = 0;		/* No port selected */
 
     /* Get some things we need for the SMB Header */
-
     con->pid = getpid();
     con->mid = con->pid;	/* This will do for now ... */
     con->uid = 0;		/* Until we have done a logon, no uid */
     con->gid = getgid();
 
     /* Now figure out the host portion of the service */
-
     strcpy(temp, service);
     host = (char *) strtok(temp, "/\\");	/* Separate host name portion */
     strcpy(con->desthost, host);
@@ -292,14 +260,12 @@ SMB_Connect(SMB_Handle_Type Con_Handle,
     /* Did we get one? */
 
     if (con->Trans_Connect == NULL) {
-
         if (Con_Handle == NULL) {
             free(con);
             Con_Handle = NULL;
         }
         SMBlib_errno = -SMBlibE_CallFailed;
         return NULL;
-
     }
 
     /* Now, negotiate the protocol */
@@ -315,12 +281,10 @@ SMB_Connect(SMB_Handle_Type Con_Handle,
         return NULL;
     }
     return (con);
-
 }
 
 /* Logon to the server. That is, do a session setup if we can. We do not do */
 /* Unicode yet!                                                             */
-
 int
 SMB_Logon_Server(SMB_Handle_Type Con_Handle, char *UserName,
                  char *PassWord, char *UserDomain, int precrypted)
@@ -332,12 +296,9 @@ SMB_Logon_Server(SMB_Handle_Type Con_Handle, char *UserName,
     /* First we need a packet etc ... but we need to know what protocol has  */
     /* been negotiated to figure out if we can do it and what SMB format to  */
     /* use ...                                                               */
-
     if (Con_Handle->protocol < SMB_P_LanMan1) {
-
         SMBlib_errno = SMBlibE_ProtLow;
         return (SMBlibE_BAD);
-
     }
     if (precrypted) {
         pass_len = 24;
@@ -346,13 +307,12 @@ SMB_Logon_Server(SMB_Handle_Type Con_Handle, char *UserName,
         strcpy(pword, PassWord);
         if (Con_Handle->encrypt_passwords) {
             pass_len = 24;
-            SMBencrypt((uchar *) PassWord, (uchar *) Con_Handle->Encrypt_Key, (uchar *) pword);
+            SMBencrypt((unsigned char *) PassWord, (unsigned char *) Con_Handle->Encrypt_Key, (unsigned char *) pword);
         } else
             pass_len = strlen(pword);
     }
 
     /* Now build the correct structure */
-
     if (Con_Handle->protocol < SMB_P_NT1) {
 
         param_len = strlen(UserName) + 1 + pass_len + 1 +
@@ -486,55 +446,44 @@ SMB_Logon_Server(SMB_Handle_Type Con_Handle, char *UserName,
     }
 
     /* Now send it and get a response */
-
     if (RFCNB_Send(Con_Handle->Trans_Connect, pkt, pkt_len) < 0) {
-
 #ifdef DEBUG
         fprintf(stderr, "Error sending SessSetupX request\n");
 #endif
-
         RFCNB_Free_Pkt(pkt);
         SMBlib_errno = SMBlibE_SendFailed;
         return (SMBlibE_BAD);
-
     }
+
     /* Now get the response ... */
-
     if (RFCNB_Recv(Con_Handle->Trans_Connect, pkt, pkt_len) < 0) {
-
 #ifdef DEBUG
         fprintf(stderr, "Error receiving response to SessSetupAndX\n");
 #endif
-
         RFCNB_Free_Pkt(pkt);
         SMBlib_errno = SMBlibE_RecvFailed;
         return (SMBlibE_BAD);
-
     }
+
     /* Check out the response type ... */
-
     if (CVAL(SMB_Hdr(pkt), SMB_hdr_rcls_offset) != SMBC_SUCCESS) {	/* Process error */
-
 #ifdef DEBUG
         fprintf(stderr, "SMB_SessSetupAndX failed with errorclass = %i, Error Code = %i\n",
                 CVAL(SMB_Hdr(pkt), SMB_hdr_rcls_offset),
                 SVAL(SMB_Hdr(pkt), SMB_hdr_err_offset));
 #endif
-
         SMBlib_SMB_Error = IVAL(SMB_Hdr(pkt), SMB_hdr_rcls_offset);
         RFCNB_Free_Pkt(pkt);
         SMBlib_errno = SMBlibE_Remote;
         return (SMBlibE_BAD);
-
     }
+
     /** @@@ mdz: check for guest login { **/
     if (SVAL(SMB_Hdr(pkt), SMB_ssetpr_act_offset) & 0x1) {
         /* do we allow guest login? NO! */
         return (SMBlibE_BAD);
-
     }
     /** @@@ mdz: } **/
-
 
 #ifdef DEBUG
     fprintf(stderr, "SessSetupAndX response. Action = %i\n",
@@ -542,21 +491,15 @@ SMB_Logon_Server(SMB_Handle_Type Con_Handle, char *UserName,
 #endif
 
     /* Now pick up the UID for future reference ... */
-
     Con_Handle->uid = SVAL(SMB_Hdr(pkt), SMB_hdr_uid_offset);
     RFCNB_Free_Pkt(pkt);
-
     return (0);
-
 }
 
-
 /* Disconnect from the server, and disconnect all tree connects */
-
 int
-SMB_Discon(SMB_Handle_Type Con_Handle, BOOL KeepHandle)
+SMB_Discon(SMB_Handle_Type Con_Handle, int KeepHandle)
 {
-
     /* We just disconnect the connection for now ... */
     if (Con_Handle != NULL)
         RFCNB_Hangup(Con_Handle->Trans_Connect);
@@ -565,5 +508,4 @@ SMB_Discon(SMB_Handle_Type Con_Handle, BOOL KeepHandle)
         free(Con_Handle);
 
     return (0);
-
 }

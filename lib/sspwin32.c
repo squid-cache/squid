@@ -35,7 +35,7 @@
 
 #include "util.h"
 
-#include "ntlmauth.h"
+#include "libntlmauth/ntlmauth.h"
 #include "sspwin32.h"
 
 typedef struct _AUTH_SEQ {

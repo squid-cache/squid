@@ -44,8 +44,8 @@
  * should confirm it for yourself (and maybe let me know if you come
  * up with a different answer to the one above)
  */
-
-#include "smbdes.h"
+#include "config.h"
+#include "libntlmauth/smb-des.h"
 
 /* local functions */
 void cred_hash1(unsigned char *out, unsigned char *in, unsigned char *key);
