@@ -124,8 +124,9 @@ Most user-facing changes are reflected in squid.conf (see below).
 <sect2>NTLM Authentication protocol helpers
 <p><itemize>
 	<item>fakeauth_auth - ntlm_fake_auth - Perform NTLMSSP to recover the username but don't verify the password.
+	<item>mswin_ntlm_auth - ntlm_sspi_auth - Perform NTLMSSP authentication using Windows native Security Support Provider Interface API.
 	<item>ntlm_auth - ntlm_smb_lm_auth - Perform SMB LanManager domain-less authentication over NTLM protocol.
-	<item>no_check.pl - Deprecated. - Use the faster and less decryptable ntlm_fake_auth instead.
+	<item>no_check.pl - Deprecated. - Use the faster and less easily decrypted ntlm_fake_auth instead.
 </itemize>
 
 <sect2>URL re-write helpers

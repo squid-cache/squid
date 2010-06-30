@@ -22,12 +22,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* #include <features.h> */
 #include "config.h"
-#include "std-includes.h"
-#include "rfcnb-priv.h"
-#include "rfcnb-util.h"
-#include "rfcnb-io.h"
+#include "libntlmauth/rfcnb-priv.h"
+
 #include <sys/uio.h>
 #include <sys/signal.h>
 #include <string.h>
@@ -228,7 +225,7 @@ RFCNB_Get_Pkt(struct RFCNB_Con *con, struct RFCNB_Pkt *pkt, int len)
     char hdr[RFCNB_Pkt_Hdr_Len];	/* Local space for the header */
     struct RFCNB_Pkt *pkt_frag;
     int more, this_time, offset, frag_len, this_len;
-    BOOL seen_keep_alive = TRUE;
+    int seen_keep_alive = 1;
 
     /* Read that header straight into the buffer */
 
@@ -285,7 +282,7 @@ RFCNB_Get_Pkt(struct RFCNB_Con *con, struct RFCNB_Pkt *pkt, int len)
 #endif
 
         } else {
-            seen_keep_alive = FALSE;
+            seen_keep_alive = 0;
         }
 
     }

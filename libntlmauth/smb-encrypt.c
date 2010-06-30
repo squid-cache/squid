@@ -19,8 +19,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+#include "config.h"
+#include "libntlmauth/smb-byteorder.h"
+#include "libntlmauth/smb-des.h"
+#include "libntlmauth/smb-md4.h"
+#include "libntlmauth/smblib-priv.h"
 
-#include "std-includes.h"
 #include <string.h>
 #include <ctype.h>
 #include <dirent.h>
@@ -28,20 +32,12 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "smblib-priv.h"
-#include "md4.h"
-#include "smbdes.h"
-
-#define uchar unsigned char
 extern int DEBUGLEVEL;
-
-#include "byteorder.h"
-#include "smbencrypt.h"
 
 /* local functions */
 char *StrnCpy(char *dest, char *src, int n);
 void strupper(char *s);
-void E_md4hash(uchar * passwd, uchar * p16);
+void E_md4hash(unsigned char * passwd, unsigned char * p16);
 void nt_lm_owf_gen(char *pwd, char *nt_p16, char *p16);
 
 /*
@@ -49,9 +45,9 @@ void nt_lm_owf_gen(char *pwd, char *nt_p16, char *p16);
  * It takes a password, a 8 byte "crypt key" and puts 24 bytes of
  * encrypted password into p24 */
 void
-SMBencrypt(uchar * passwd, uchar * c8, uchar * p24)
+SMBencrypt(unsigned char * passwd, unsigned char * c8, unsigned char * p24)
 {
-    uchar p14[15], p21[21];
+    unsigned char p14[15], p21[21];
 
     memset(p21, '\0', 21);
     memset(p14, '\0', 14);
@@ -64,7 +60,7 @@ SMBencrypt(uchar * passwd, uchar * c8, uchar * p24)
 
 /* Routines for Windows NT MD4 Hash functions. */
 static int
-_my_wcslen(int16 * str)
+_my_wcslen(int16_t * str)
 {
     int len = 0;
     while (*str++ != 0)
@@ -80,10 +76,10 @@ _my_wcslen(int16 * str)
  */
 
 static int
-_my_mbstowcs(int16 * dst, uchar * src, int len)
+_my_mbstowcs(int16_t * dst, unsigned char * src, int len)
 {
     int i;
-    int16 val;
+    int16_t val;
 
     for (i = 0; i < len; i++) {
         val = *src;
@@ -100,10 +96,10 @@ _my_mbstowcs(int16 * dst, uchar * src, int len)
  * Creates the MD4 Hash of the users password in NT UNICODE.
  */
 void
-E_md4hash(uchar * passwd, uchar * p16)
+E_md4hash(unsigned char * passwd, unsigned char * p16)
 {
     int len;
-    int16 wpwd[129];
+    int16_t wpwd[129];
 
     /* Password cannot be longer than 128 characters */
     len = strlen((char *) passwd);
@@ -113,16 +109,16 @@ E_md4hash(uchar * passwd, uchar * p16)
     _my_mbstowcs(wpwd, passwd, len);
     wpwd[len] = 0;		/* Ensure string is null terminated */
     /* Calculate length in bytes */
-    len = _my_wcslen(wpwd) * sizeof(int16);
+    len = _my_wcslen(wpwd) * sizeof(int16_t);
 
     mdfour(p16, (unsigned char *) wpwd, len);
 }
 
 /* Does the NT MD4 hash then des encryption. */
 void
-SMBNTencrypt(uchar * passwd, uchar * c8, uchar * p24)
+SMBNTencrypt(unsigned char * passwd, unsigned char * c8, unsigned char * p24)
 {
-    uchar p21[21];
+    unsigned char p21[21];
 
     memset(p21, '\0', 21);
 
@@ -139,7 +135,7 @@ nt_lm_owf_gen(char *pwd, char *nt_p16, char *p16)
 
     /* Calculate the MD4 hash (NT compatible) of the password */
     memset(nt_p16, '\0', 16);
-    E_md4hash((uchar *) passwd, (uchar *) nt_p16);
+    E_md4hash((unsigned char *) passwd, (unsigned char *) nt_p16);
 
     /* Mangle the passwords into Lanman format */
     passwd[14] = '\0';
@@ -148,7 +144,7 @@ nt_lm_owf_gen(char *pwd, char *nt_p16, char *p16)
     /* Calculate the SMB (lanman) hash functions of the password */
 
     memset(p16, '\0', 16);
-    E_P16((uchar *) passwd, (uchar *) p16);
+    E_P16((unsigned char *) passwd, (unsigned char *) p16);
 
     /* clear out local copy of user's password (just being paranoid). */
     memset(passwd, 0, sizeof(passwd));

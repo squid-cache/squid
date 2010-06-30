@@ -3773,6 +3773,7 @@ AC_CONFIG_FILES([\
 	Makefile \
 	compat/Makefile \
 	lib/Makefile \
+	libntlmauth/Makefile \
 	scripts/Makefile \
 	src/Makefile \
 	src/base/Makefile \
@@ -3819,7 +3820,6 @@ AC_CONFIG_FILES([\
 	helpers/ntlm_auth/Makefile \
 	helpers/ntlm_auth/fake/Makefile \
 	helpers/ntlm_auth/smb_lm/Makefile \
-	helpers/ntlm_auth/smb_lm/smbval/Makefile \
 	helpers/ntlm_auth/SSPI/Makefile \
 	helpers/negotiate_auth/Makefile \
 	helpers/negotiate_auth/kerberos/Makefile \

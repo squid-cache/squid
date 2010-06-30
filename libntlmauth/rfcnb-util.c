@@ -24,14 +24,10 @@
  */
 #define SQUID_NO_ALLOC_PROTECT 1
 #include "config.h"
+#include "libntlmauth/rfcnb-priv.h"
 
-#include <string.h>
-
-#include "std-includes.h"
-#include "rfcnb-priv.h"
-#include "rfcnb-util.h"
-#include "rfcnb-io.h"
 #include <arpa/inet.h>
+#include <string.h>
 
 extern void (*Prot_Print_Routine) ();	/* Pointer to protocol print routine */
 
@@ -408,7 +404,7 @@ int
 RFCNB_Session_Req(struct RFCNB_Con *con,
                   char *Called_Name,
                   char *Calling_Name,
-                  BOOL * redirect,
+                  int * redirect,
                   struct in_addr *Dest_IP,
                   int *port)
 {
@@ -507,7 +503,7 @@ RFCNB_Session_Req(struct RFCNB_Con *con,
 
     case RFCNB_SESSION_RETARGET:	/* Go elsewhere                */
 
-        *redirect = TRUE;	/* Copy port and ip addr       */
+        *redirect = 1;	/* Copy port and ip addr       */
 
         memcpy(Dest_IP, (resp + RFCNB_Pkt_IP_Offset), sizeof(struct in_addr));
         *port = SVAL(resp, RFCNB_Pkt_Port_Offset);
