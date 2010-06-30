@@ -1,4 +1,7 @@
 #include "config.h"
+#include "libntlmauth/ntlmauth.h"
+#include "libntlmauth/smblmauth.h"
+#include "libntlmauth/smb.h"
 
 #if HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -13,13 +16,11 @@
 #include <string.h>
 #endif
 
-#include "smblib-priv.h"
-#include "valid.h"
-
-SMB_Handle_Type SMB_Connect_Server(void *, char *, char *);
-
+/** Do a full authentication sequence against the given server with user/pass/domain.
+ * Password is pre-encrypted.
+ */
 int
-Valid_User(char *username, char *password, char *server, char *backup, char *domain)
+smblm_authenticate_atomic(char *username, char *password, char *server, char *backup, char *domain)
 {
     int pass_is_precrypted_p = 0;
     char const *supportedDialects[] = {
@@ -40,28 +41,29 @@ Valid_User(char *username, char *password, char *server, char *backup, char *dom
     if (con == NULL) {		/* Error ... */
         con = SMB_Connect_Server(NULL, backup, domain);
         if (con == NULL) {
-            return (NTV_SERVER_ERROR);
+            return SMBLM_ERR_SERVER;
         }
     }
     if (SMB_Negotiate(con, supportedDialects) < 0) {	/* An error */
         SMB_Discon(con, 0);
-        return (NTV_PROTOCOL_ERROR);
+        return SMBLM_ERR_PROTOCOL;
     }
     /* Test for a server in share level mode do not authenticate against it */
     if (con->Security == 0) {
         SMB_Discon(con, 0);
-        return (NTV_PROTOCOL_ERROR);
+        return SMBLM_ERR_PROTOCOL;
     }
     if (SMB_Logon_Server(con, username, password, domain, pass_is_precrypted_p) < 0) {
         SMB_Discon(con, 0);
-        return (NTV_LOGON_ERROR);
+        return SMBLM_ERR_LOGON;
     }
     SMB_Discon(con, 0);
-    return (NTV_NO_ERROR);
+    return SMBLM_ERR_NONE;
 }
 
+/** Fetches a SMB LanMan challenge nonce from the given server. */
 void *
-NTLM_Connect(char *server, char *backup, char *domain, char *nonce)
+smblm_get_nonce(char *server, char *backup, char *domain, char *nonce)
 {
     char const *SMB_Prots[] = {
         /*              "PC NETWORK PROGRAM 1.0", */
@@ -84,34 +86,30 @@ NTLM_Connect(char *server, char *backup, char *domain, char *nonce)
             return (NULL);
         }
     }
+
     if (SMB_Negotiate(con, SMB_Prots) < 0) {	/* An error */
         SMB_Discon(con, 0);
         return (NULL);
     }
+
     /* Test for a server in share level mode do not authenticate against it */
     if (con->Security == 0) {
         SMB_Discon(con, 0);
         return (NULL);
     }
-    memcpy(nonce, con->Encrypt_Key, 8);
 
+    memcpy(nonce, con->Encrypt_Key, 8);
     return (con);
 }
 
+/** Authenticate with given username/password */
 int
-NTLM_Auth(void *handle, char *username, char *password, int flag)
+smblm_authenticate(void *handle, char *username, char *password, int flag)
 {
     SMB_Handle_Type con = handle;
 
     if (SMB_Logon_Server(con, username, password, NULL, flag) < 0) {
-        return (NTV_LOGON_ERROR);
+        return SMBLM_ERR_LOGON;
     }
-    return (NTV_NO_ERROR);
-}
-
-void
-NTLM_Disconnect(void *handle)
-{
-    SMB_Handle_Type con = handle;
-    SMB_Discon(con, 0);
+    return SMBLM_ERR_NONE;
 }

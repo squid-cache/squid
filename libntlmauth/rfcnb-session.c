@@ -24,24 +24,17 @@
  */
 #define SQUID_NO_ALLOC_PROTECT 1
 #include "config.h"
+#include "libntlmauth/rfcnb-priv.h"
 
+#include <netinet/tcp.h>
 #include <string.h>
 
 int RFCNB_errno = 0;
 int RFCNB_saved_errno = 0;
-#define RFCNB_ERRNO
-
-#include "std-includes.h"
-#include <netinet/tcp.h>
-#include "rfcnb-priv.h"
-#include "rfcnb-util.h"
-#include "rfcnb-io.h"
-#include "rfcnb.h"
+//#define RFCNB_ERRNO
 
 
 /* local functions */
-
-int RFCNB_Get_Last_Error(void);
 int RFCNB_Get_Last_Errno(void);
 void RFCNB_Get_Error_Msg(int code, char *msg_buf, int len);
 void RFCNB_Register_Print_Routine(void (*fn) ());
@@ -88,7 +81,7 @@ RFCNB_Call(char *Called_Name, char *Calling_Name, char *Called_Address,
     struct RFCNB_Con *con;
     struct in_addr Dest_IP;
     int Client;
-    BOOL redirect;
+    int redirect;
     struct redirect_addr *redir_addr;
     char *Service_Address;
 
@@ -127,11 +120,11 @@ RFCNB_Call(char *Called_Name, char *Calling_Name, char *Called_Address,
     }
     /* Now connect to the remote end */
 
-    redirect = TRUE;		/* Fudge this one so we go once through */
+    redirect = 1;		/* Fudge this one so we go once through */
 
     while (redirect) {		/* Connect and get session info etc */
 
-        redirect = FALSE;	/* Assume all OK */
+        redirect = 0;	/* Assume all OK */
 
         /* Build the redirect info. First one is first addr called */
         /* And tack it onto the list of addresses we called        */
@@ -323,7 +316,7 @@ RFCNB_Hangup(struct RFCNB_Con *con_Handle)
 /* Set TCP_NODELAY on the socket                                          */
 
 int
-RFCNB_Set_Sock_NoDelay(struct RFCNB_Con *con_Handle, BOOL yn)
+RFCNB_Set_Sock_NoDelay(struct RFCNB_Con *con_Handle, int yn)
 {
 
     return (setsockopt(con_Handle->fd, IPPROTO_TCP, TCP_NODELAY,

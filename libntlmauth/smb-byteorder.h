@@ -18,6 +18,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+#ifndef _LIBNTLMAUTH_SMB_BYTEORER_H
+#define _LIBNTLMAUTH_SMB_BYTEORER_H
 
 /*
  * This file implements macros for machine independent short and
@@ -78,3 +80,5 @@
 #define RIVAL(buf,pos) IREV(IVAL(buf,pos))
 #define RSSVAL(buf,pos,val) SSVAL(buf,pos,SREV(val))
 #define RSIVAL(buf,pos,val) SIVAL(buf,pos,IREV(val))
+
+#endif /* LIBNTLMAUTH_SMB_BYTEORER_H */

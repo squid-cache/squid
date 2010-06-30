@@ -26,11 +26,14 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include "std-defines.h"
-#include "smblib-common.h"
+/* The public API bits */
+#define PRIVATE_API
+#include "libntlmauth/smb.h"
+
+//#include "std-defines.h"
 #include <unistd.h>
 
-#include "byteorder.h"		/* Hmmm ... hot good */
+//#include "byteorder.h"		/* Hmmm ... not good */
 
 #ifndef max
 #define max(a,b) ((a) < (b) ? (b) : (a))
@@ -131,11 +134,14 @@
 #define SMB_FLG2_EXT_ATR    0x02	/* We know about Extended Attributes */
 #define SMB_FLG2_LNG_NAM    0x04	/* Long names ?                      */
 
+/* Not good */
+#if 0
 typedef unsigned short WORD;
 typedef unsigned short UWORD;
 typedef unsigned int ULONG;
 typedef unsigned char BYTE;
 typedef unsigned char UCHAR;
+#endif
 
 /* Some macros to allow access to actual packet data so that we */
 /* can change the underlying representation of packets.         */
@@ -159,7 +165,7 @@ typedef unsigned char UCHAR;
 /* We define these as offsets into a char SMB[] array for the   */
 /* sake of portability                                          */
 
-/* NOTE!. Some of the lenght defines, SMB_<protreq>_len do not include */
+/* NOTE!. Some of the length defines, SMB_<protreq>_len do not include */
 /* the data that follows in the SMB packet, so the code will have to   */
 /* take that into account.                                             */
 
@@ -548,50 +554,8 @@ typedef struct SMB_Status {
     } status;
 } SMB_Status;
 
-typedef struct SMB_Tree_Structure *SMB_Tree_Handle;
-
-typedef struct SMB_Connect_Def *SMB_Handle_Type;
-
-struct SMB_Connect_Def {
-
-    SMB_Handle_Type Next_Con, Prev_Con;		/* Next and previous conn */
-    int protocol;		/* What is the protocol   */
-    int prot_IDX;		/* And what is the index  */
-    void *Trans_Connect;	/* The connection         */
-
-    /* All these strings should be malloc'd */
-
-    char service[80], username[80], password[80], desthost[80], sock_options[80];
-    char address[80], myname[80];
-
-    SMB_Tree_Handle first_tree, last_tree;	/* List of trees on this server */
-
-    int gid;			/* Group ID, do we need it?                      */
-    int mid;			/* Multiplex ID? We might need one per con       */
-    int pid;			/* Process ID                                    */
-
-    int uid;			/* Authenticated user id.                        */
-
-    /* It is pretty clear that we need to bust some of */
-    /* these out into a per TCon record, as there may  */
-    /* be multiple TCon's per server, etc ... later    */
-
-    int port;			/* port to use in case not default, this is a TCPism! */
-
-    int max_xmit;		/* Max xmit permitted by server                  */
-    int Security;		/* 0 = share, 1 = user                           */
-    int Raw_Support;		/* bit 0 = 1 = Read Raw supported, 1 = 1 Write raw */
-    BOOL encrypt_passwords;	/* FALSE = don't                          */
-    int MaxMPX, MaxVC, MaxRaw;
-    unsigned int SessionKey, Capabilities;
-    int SvrTZ;			/* Server Time Zone */
-    int Encrypt_Key_Len;
-    char Encrypt_Key[80], Domain[80], PDomain[80], OSName[80], LMType[40];
-    char Svr_OS[80], Svr_LMType[80], Svr_PDom[80];
-
-};
-
-#ifndef SMBLIB_DEFAULT_DOMAIN
+#if 0
+// #ifndef SMBLIB_DEFAULT_DOMAIN
 #define SMBLIB_DEFAULT_DOMAIN "STAFF"
 #endif
 #define SMBLIB_DEFAULT_OSNAME "UNIX of some type"
@@ -601,52 +565,25 @@ struct SMB_Connect_Def {
 #define SMB_Sec_Mode_Share 0
 #define SMB_Sec_Mode_User  1
 
-/* A Tree_Structure                       */
-
-struct SMB_Tree_Structure {
-
-    SMB_Tree_Handle next, prev;
-    SMB_Handle_Type con;
-    char path[129];
-    char device_type[20];
-    int mbs;			/* Local MBS */
-    int tid;
-
-};
-
 typedef struct SMB_File_Def SMB_File;
 
 struct SMB_File_Def {
-
     SMB_Tree_Handle tree;
     char filename[256];		/* We should malloc this ... */
-    UWORD fid;
+    unsigned short /*UWORD*/ fid;
     unsigned int lastmod;
     unsigned int size;		/* Could blow up if 64bit files supported */
-    UWORD access;
+    unsigned short /*UWORD*/ access;
     off_t fileloc;
-
 };
 
 /* global Variables for the library */
-
 extern SMB_State_Types SMBlib_State;
-
-#ifndef SMBLIB_ERRNO
 extern int SMBlib_errno;
 extern int SMBlib_SMB_Error;	/* last Error             */
-#endif
 
-extern SMB_Tree_Handle SMB_TreeConnect(SMB_Handle_Type con, SMB_Tree_Handle tree,
-                                       char *path, char *password, char const *dev);
-
-extern int SMB_Init(void);
 extern void SMB_Get_My_Name(char *name, int len);
-extern int SMB_Negotiate(SMB_Handle_Type Con_Handle, char const *Prots[]);
-extern int SMB_Discon(SMB_Handle_Type Con_Handle, BOOL KeepHandle);
-
-extern int SMB_Logon_Server(SMB_Handle_Type Con_Handle, char *UserName,
-                            char *PassWord, char *UserDomain, int precrypted);
+extern int SMB_Discon(SMB_Handle_Type Con_Handle, int KeepHandle);
 
 extern int SMB_Get_Error_Msg(int msg, char *msgbuf, int len);
 

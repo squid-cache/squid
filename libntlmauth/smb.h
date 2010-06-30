@@ -1,10 +1,7 @@
-#ifndef __SMBLIB_COMMON_H__
-#define __SMBLIB_COMMON_H__
-
 /* UNIX SMBlib NetBIOS implementation
  *
  * Version 1.0
- * SMBlib Common Defines
+ * SMBlib Defines
  *
  * Copyright (C) Richard Sharpe 1996
  *
@@ -25,6 +22,26 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+#ifndef _SMBVAL_SMBLIB_H
+#define _SMBVAL_SMBLIB_H
+
+#include <netdb.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <signal.h>
+#include <errno.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <strings.h>
+
+#ifdef PRIVATE_API
+#define SMBLIB_DEFAULT_DOMAIN "anydom"
+#endif /* PRIVATE_API */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* To get the error class we want the first 8 bits */
 /* Because we just grab 4bytes from the SMB header, we have to re-order */
@@ -186,4 +203,156 @@ typedef struct {		/* A structure for a Dirent */
 
 } SMB_CP_dirent;
 
-#endif /* __SMBLIB_COMMON_H__ */
+/* Handle Structures */
+
+typedef struct SMB_Tree_Structure * SMB_Tree_Handle;
+typedef struct SMB_Connect_Def * SMB_Handle_Type;
+
+struct SMB_Tree_Structure {
+    SMB_Tree_Handle next, prev;
+    SMB_Handle_Type con;
+    char path[129];
+    char device_type[20];
+    int mbs;                    /* Local MBS */
+    int tid;
+};
+
+struct SMB_Connect_Def {
+    SMB_Handle_Type Next_Con, Prev_Con;         /* Next and previous conn */
+    int protocol;               /* What is the protocol   */
+    int prot_IDX;               /* And what is the index  */
+    void *Trans_Connect;        /* The connection         */
+
+    /* All these strings should be malloc'd */
+
+    char service[80], username[80], password[80], desthost[80], sock_options[80];
+    char address[80], myname[80];
+
+    SMB_Tree_Handle first_tree, last_tree;      /* List of trees on this server */
+
+    int gid;                    /* Group ID, do we need it?                      */
+    int mid;                    /* Multiplex ID? We might need one per con       */
+    int pid;                    /* Process ID                                    */
+
+    int uid;                    /* Authenticated user id.                        */
+
+    /* It is pretty clear that we need to bust some of */
+    /* these out into a per TCon record, as there may  */
+    /* be multiple TCon's per server, etc ... later    */
+
+    int port;                   /* port to use in case not default, this is a TCPism! */
+
+    int max_xmit;               /* Max xmit permitted by server                  */
+    int Security;               /* 0 = share, 1 = user                           */
+    int Raw_Support;            /* bit 0 = 1 = Read Raw supported, 1 = 1 Write raw */
+    int16_t encrypt_passwords;     /* TRUE/FALSE. FALSE = don't                  */
+    int MaxMPX, MaxVC, MaxRaw;
+    unsigned int SessionKey, Capabilities;
+    int SvrTZ;                  /* Server Time Zone */
+    int Encrypt_Key_Len;
+    char Encrypt_Key[80], Domain[80], PDomain[80], OSName[80], LMType[40];
+    char Svr_OS[80], Svr_LMType[80], Svr_PDom[80];
+};
+
+/* Initialize the SMBlib package */
+int SMB_Init(void);
+
+/* Create a handle to allow us to set/override some parameters ...       */
+SMB_Handle_Type SMB_Create_Con_Handle();
+
+/* Connect to a server, but do not do a tree con etc ... */
+SMB_Handle_Type SMB_Connect_Server(SMB_Handle_Type Con_Handle,
+                                   char *server,
+                                   char *NTdomain);
+
+/* Connect to a server and give us back a handle. If Con == NULL, create */
+/* The handle and populate it with defaults                              */
+SMB_Handle_Type SMB_Connect(SMB_Handle_Type Con_Handle,
+                            SMB_Tree_Handle * tree,
+                            char *service,
+                            char *username,
+                            char *password);
+
+int SMB_Logon_Server(SMB_Handle_Type Con_Handle,
+                     char *UserName,
+                     char *PassWord,
+                     char *UserDomain,
+                     int precrypted);
+
+/* Negotiate a protocol                                                  */
+int SMB_Negotiate(SMB_Handle_Type con, char const *Prots[]);
+
+/* Connect to a tree ...                                                 */
+SMB_Tree_Handle SMB_TreeConnect(SMB_Handle_Type con,
+                                SMB_Tree_Handle tree,
+                                char *path,
+                                char *password,
+                                char const *device);
+
+
+/* Disconnect a tree ...                                                 */
+int SMB_TreeDisconect(void *tree_handle);
+
+/* Open a file                                                           */
+void *SMB_Open(void *tree_handle,
+               void *file_handle,
+               char *file_name,
+               unsigned short mode,
+               unsigned short search);
+
+/* Close a file                                                          */
+int SMB_Close(void *file_handle);
+
+/* Disconnect from server. Has flag to specify whether or not we keep the */
+/* handle.                                                                */
+int SMB_Discon(SMB_Handle_Type Con,
+               int KeepHandle);
+
+void *SMB_Create(void *Tree_Handle,
+                 void *File_Handle,
+                 char *file_name,
+                 short search);
+
+int SMB_Delete(void *tree,
+               char *file_name,
+               short search);
+
+int SMB_Create_Dir(void *tree,
+                   char *dir_name);
+
+int SMB_Delete_Dir(void *tree,
+                   char *dir_name);
+
+int SMB_Check_Dir(void *tree,
+                  char *dir_name);
+
+int SMB_Get_Last_Error();
+
+int SMB_Get_Last_SMB_Err();
+
+int SMB_Get_Error_Msg(int msg,
+                      char *msgbuf,
+                      int len);
+
+void *SMB_Logon_And_TCon(SMB_Handle_Type Con_Handle,
+                         void *tree,
+                         char *user,
+                         char *pass,
+                         char *service,
+                         char *st);
+
+/* Encryption Functions */
+
+void SMBencrypt(unsigned char * passwd,
+                       unsigned char * c8,
+                       unsigned char * p24);
+
+void SMBNTencrypt(unsigned char * passwd,
+                         unsigned char * c8,
+                         unsigned char * p24);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* _SMBVAL_SMBLIB_H */

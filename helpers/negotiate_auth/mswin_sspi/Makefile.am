@@ -14,6 +14,10 @@ libexec_PROGRAMS = mswin_negotiate_auth
 
 mswin_negotiate_auth_SOURCES = libnegotiatessp.c negotiate_auth.c negotiate.h
 
-LDADD		= -L$(top_builddir)/lib -lsspwin32 -ladvapi32 -lmiscutil $(XTRA_LIBS)
+LDADD	= \
+	-L$(top_builddir)/lib -lsspwin32 \
+	$(COMPAT_LIB) \
+	-ladvapi32 \
+	$(XTRA_LIBS)
 
 EXTRA_DIST = readme.txt config.test

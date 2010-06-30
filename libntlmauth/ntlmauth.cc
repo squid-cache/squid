@@ -34,7 +34,7 @@
 #include <strings.h>
 #endif
 
-#include "ntlmauth.h"
+#include "libntlmauth/ntlmauth.h"
 #include "util.h"		/* for base64-related stuff */
 
 /* ************************************************************************* */
@@ -46,25 +46,25 @@ void
 ntlm_dump_ntlmssp_flags(u_int32_t flags)
 {
     fprintf(stderr, "flags: %s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s\n",
-            (flags & NEGOTIATE_UNICODE ? "Unicode " : ""),
-            (flags & NEGOTIATE_ASCII ? "ASCII " : ""),
-            (flags & NEGOTIATE_REQUEST_TARGET ? "ReqTgt " : ""),
-            (flags & NEGOTIATE_REQUEST_SIGN ? "ReqSign " : ""),
-            (flags & NEGOTIATE_REQUEST_SEAL ? "ReqSeal " : ""),
-            (flags & NEGOTIATE_DATAGRAM_STYLE ? "Dgram " : ""),
-            (flags & NEGOTIATE_USE_LM ? "UseLM " : ""),
-            (flags & NEGOTIATE_USE_NETWARE ? "UseNW " : ""),
-            (flags & NEGOTIATE_USE_NTLM ? "UseNTLM " : ""),
-            (flags & NEGOTIATE_DOMAIN_SUPPLIED ? "HaveDomain " : ""),
-            (flags & NEGOTIATE_WORKSTATION_SUPPLIED ? "HaveWKS " : ""),
-            (flags & NEGOTIATE_THIS_IS_LOCAL_CALL ? "LocalCall " : ""),
-            (flags & NEGOTIATE_ALWAYS_SIGN ? "AlwaysSign " : ""),
-            (flags & CHALLENGE_TARGET_IS_DOMAIN ? "Tgt_is_domain" : ""),
-            (flags & CHALLENGE_TARGET_IS_SERVER ? "Tgt_is_server " : ""),
-            (flags & CHALLENGE_TARGET_IS_SHARE ? "Tgt_is_share " : ""),
-            (flags & REQUEST_INIT_RESPONSE ? "Req_init_response " : ""),
-            (flags & REQUEST_ACCEPT_RESPONSE ? "Req_accept_response " : ""),
-            (flags & REQUEST_NON_NT_SESSION_KEY ? "Req_nonnt_sesskey " : "")
+            (flags & NTLM_NEGOTIATE_UNICODE ? "Unicode " : ""),
+            (flags & NTLM_NEGOTIATE_ASCII ? "ASCII " : ""),
+            (flags & NTLM_NEGOTIATE_REQUEST_TARGET ? "ReqTgt " : ""),
+            (flags & NTLM_NEGOTIATE_REQUEST_SIGN ? "ReqSign " : ""),
+            (flags & NTLM_NEGOTIATE_REQUEST_SEAL ? "ReqSeal " : ""),
+            (flags & NTLM_NEGOTIATE_DATAGRAM_STYLE ? "Dgram " : ""),
+            (flags & NTLM_NEGOTIATE_USE_LM ? "UseLM " : ""),
+            (flags & NTLM_NEGOTIATE_USE_NETWARE ? "UseNW " : ""),
+            (flags & NTLM_NEGOTIATE_USE_NTLM ? "UseNTLM " : ""),
+            (flags & NTLM_NEGOTIATE_DOMAIN_SUPPLIED ? "HaveDomain " : ""),
+            (flags & NTLM_NEGOTIATE_WORKSTATION_SUPPLIED ? "HaveWKS " : ""),
+            (flags & NTLM_NEGOTIATE_THIS_IS_LOCAL_CALL ? "LocalCall " : ""),
+            (flags & NTLM_NEGOTIATE_ALWAYS_SIGN ? "AlwaysSign " : ""),
+            (flags & NTLM_CHALLENGE_TARGET_IS_DOMAIN ? "Tgt_is_domain" : ""),
+            (flags & NTLM_CHALLENGE_TARGET_IS_SERVER ? "Tgt_is_server " : ""),
+            (flags & NTLM_CHALLENGE_TARGET_IS_SHARE ? "Tgt_is_share " : ""),
+            (flags & NTLM_REQUEST_INIT_RESPONSE ? "Req_init_response " : ""),
+            (flags & NTLM_REQUEST_ACCEPT_RESPONSE ? "Req_accept_response " : ""),
+            (flags & NTLM_REQUEST_NON_NT_SESSION_KEY ? "Req_nonnt_sesskey " : "")
            );
 }
 
@@ -73,7 +73,11 @@ ntlm_dump_ntlmssp_flags(u_int32_t flags)
 /* ************************************************************************* */
 
 /**
- * Check the validity of a decoded NTLM packet. Return -1 on error.
+ * Check the validity of a decoded NTLM packet.
+ *
+ * \retval NTLM_ERR_NONE      Packet is okay
+ * \retval NTLM_ERR_BLOB      Packet is not even an NTLMSSP packet at all.
+ * \retval NTLM_ERR_PROTOCOL  Packet is not the expected type.
  */
 int
 ntlm_validate_packet(const ntlmhdr * hdr, const int type)
@@ -84,17 +88,17 @@ ntlm_validate_packet(const ntlmhdr * hdr, const int type)
      */
     if (memcmp(hdr->signature, "NTLMSSP", 8) != 0) {
         fprintf(stderr, "ntlmCheckHeader: bad header signature\n");
-        return (-1);
+        return NTLM_ERR_BLOB;
     }
     if (type == NTLM_ANY)
-        return 0;
+        return NTLM_ERR_NONE;
 
     if (le32toh(hdr->type) != type) {
         /* don't report this error - it's ok as we do a if() around this function */
 //      fprintf(stderr, "ntlmCheckHeader: type is %d, wanted %d\n", le32toh(hdr->type), type);
-        return (-1);
+        return NTLM_ERR_PROTOCOL;
     }
-    return (0);
+    return NTLM_ERR_NONE;
 }
 
 #define lstring_zero(s) s.str=NULL; s.l=-1;
@@ -106,7 +110,7 @@ ntlm_validate_packet(const ntlmhdr * hdr, const int type)
  * be used in any way that requires a tailing \0. (can check whether the
  * value is there though, in that case lstring.length == -1).
  *
- * String may be either ASCII or UNICODE depending on whether flags contains NEGOTIATE_ASCII
+ * String may be either ASCII or UNICODE depending on whether flags contains NTLM_NEGOTIATE_ASCII
  */
 lstring
 ntlm_fetch_string(const ntlmhdr *packet, const int32_t packet_size, const strhdr * str, const u_int32_t flags)
@@ -129,7 +133,7 @@ ntlm_fetch_string(const ntlmhdr *packet, const int32_t packet_size, const strhdr
         return rv;
     }
     rv.str = (char *)packet + o;
-    if ((flags & NEGOTIATE_ASCII) == 0) {
+    if ((flags & NTLM_NEGOTIATE_ASCII) == 0) {
         /* UNICODE string */
         s = (u_short *) ((char *) packet + o);
         rv.str = d = buf;
@@ -187,7 +191,7 @@ ntlm_add_to_payload(const ntlmhdr *packet_hdr,
 /* Negotiate Packet functions */
 /* ************************************************************************* */
 
-// ??
+// ?
 
 
 /* ************************************************************************* */
@@ -212,39 +216,6 @@ ntlm_make_nonce(char *nonce)
     }
     hash = r;
 }
-
-#if DEAD_API
-/**
- * Prepares a base64-encode challenge packet to be sent to the client
- * \note domain should be upper_case
- * \note the storage type for the returned value depends on
- *    base64_encode_bin. Currently this means static storage.
- */
-void
-ntlm_make_challenge(const char *domain, const char *dc_UNUSED,
-                    const char *cn, const int cnl)
-{
-    /* This function API has changes somewhat, and not all user helpers */
-    ntlm_challenge chal;
-
-    /*  ORIGINAL flags was HARD-CODED set to these:
-        TODO: find all old callers (without flags field) and have them send these in manually now...
-    */
-    u_int32_t flags = REQUEST_NON_NT_SESSION_KEY |
-                      CHALLENGE_TARGET_IS_DOMAIN |
-                      NEGOTIATE_ALWAYS_SIGN |
-                      NEGOTIATE_USE_NTLM |
-                      NEGOTIATE_USE_LM |
-                      NEGOTIATE_ASCII;
-
-    ntlm_make_challenge(&chal, domain, dc_UNUSED, cn, cnl, flags);
-
-    /*  ORIGINAL handling of ntlm_challenge object was to encode it like this:
-        TODO: find all old callers and have them do teh decode themselves now.
-    */
-    return base64_encode_bin((char *)&chal, NTLM_CHALLENGE_HEADER_OFFSET + pl);
-}
-#endif
 
 /**
  * Prepares a challenge packet to be sent to the client
@@ -279,9 +250,10 @@ ntlm_make_challenge(ntlm_challenge *ch,
  * this function will only insert data if the packet contains any. Otherwise
  * the buffers will be left untouched.
  *
- * \retval -1	packet type is not an authentication packet.
- * \retval  0	username present and maybe also domain.
- * \retval  1	no username.
+ * \retval NTLM_ERR_NONE	username present, maybe also domain.
+ * \retval NTLM_ERR_PROTOCOL	packet type is not an authentication packet.
+ * \retval NTLM_ERR_LOGON	no username.
+ * \retval NTLM_ERR_BLOB	domain field is apparently larger than the packet.
  */
 int
 ntlm_unpack_auth(const ntlm_authenticate *auth, char *user, char *domain, const int32_t size)
@@ -290,7 +262,7 @@ ntlm_unpack_auth(const ntlm_authenticate *auth, char *user, char *domain, const 
 
     if (ntlm_validate_packet(&auth->hdr, NTLM_AUTHENTICATE)) {
         fprintf(stderr, "ntlmDecodeAuth: header check fails\n");
-        return -1;
+        return NTLM_ERR_PROTOCOL;
     }
     debug("ntlmDecodeAuth: size of %d\n", size);
     debug("ntlmDecodeAuth: flg %08x\n", auth->flags);
@@ -303,7 +275,7 @@ ntlm_unpack_auth(const ntlm_authenticate *auth, char *user, char *domain, const 
         debug("ntlm_unpack_auth: Domain '%s'.\n", domain);
     }
     if (rv.l >= size)
-        return 1;
+        return NTLM_ERR_BLOB;
 
     rv = ntlm_fetch_string(&auth->hdr, size, &auth->user, auth->flags);
     if (rv.l > 0) {
@@ -311,7 +283,7 @@ ntlm_unpack_auth(const ntlm_authenticate *auth, char *user, char *domain, const 
         user[rv.l] = '\0';
         debug("ntlm_unpack_auth: Username '%s'.\n", user);
     } else
-        return 1;
+        return NTLM_ERR_LOGON;
 
-    return 0;
+    return NTLM_ERR_NONE;
 }
