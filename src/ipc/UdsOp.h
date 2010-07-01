@@ -81,11 +81,11 @@ private:
     int timeout; ///< total time to send the message
     bool writing; ///< whether Comm started and did not finish writing
 
-    CBDATA_CLASS2(UdsSender);
-
 private:
     UdsSender(const UdsSender&); // not implemented
     UdsSender& operator= (const UdsSender&); // not implemented
+
+    CBDATA_CLASS2(UdsSender);
 };
 
 
