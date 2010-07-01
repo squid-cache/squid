@@ -551,7 +551,8 @@ debugLogKid(void)
 {
     if (KidIdentifier != 0) {
 		static char buf[16];
-        snprintf(buf, sizeof(buf), " kid%d", KidIdentifier);
+        if (!*buf) // optimization: fill only once after KidIdentifier is set
+            snprintf(buf, sizeof(buf), " kid%d", KidIdentifier);
 		return buf;
     }
 
