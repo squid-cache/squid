@@ -53,11 +53,11 @@ private:
 
     static Coordinator* TheInstance; ///< the only class instance in existence
 
-    CBDATA_CLASS2(Coordinator);
-
 private:
     Coordinator(const Coordinator&); // not implemented
     Coordinator& operator =(const Coordinator&); // not implemented
+
+    CBDATA_CLASS2(Coordinator);
 };
 
 

@@ -37,11 +37,11 @@ private:
 private:
     bool isRegistered; ///< whether Coordinator ACKed registration (unused)
 
-    CBDATA_CLASS2(Strand);
-
 private:
     Strand(const Strand&); // not implemented
     Strand& operator =(const Strand&); // not implemented
+
+    CBDATA_CLASS2(Strand);
 };
 
 
