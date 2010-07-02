@@ -1,3 +1,15 @@
+Changes to squid-3.1.5 (02 Jul 2010):
+
+	- Bug 2967: raw-IPv6 address URL with append_domain broken
+	- Bug 2950: HTTP responses with no Date, L-M or Expires can now be cached
+	- Bug 2943: ICAP tokens not logged when using multiple access
+	- Bug 2937: Fails to detect chunked encoding if not given in all lower case
+	- Bug 2903: does not send indirect X-Client-Ip in ICAP respmod
+	- Fix free memory corruption and off-by-one error when comparing SNMP OIDs
+	- Port from 2.7: max_filedescriptor config option
+	- Fix persistent_connection_after_error is meant to be on by default
+	- ... and several build errors.
+
 Changes to squid-3.1.4 (30 May 2010):
 
 	- Bug 2933: Verification of the max. port number for WCCP2 dynamic service
@@ -21,7 +33,7 @@ Changes to squid-3.1.4 (30 May 2010):
 
 Changes to squid-3.1.3 (02 May 2010):
 
-	- Remove: Advertise 1.1 on replies
+	- Remove: Advertise 1.1 on replies to clients (broken chunked handling)
 	- Fix tag ACL type not working
 
 Changes to squid-3.1.2 (01 May 2010):
@@ -35,7 +47,8 @@ Changes to squid-3.1.2 (01 May 2010):
 	- Bug 2860: Regression: WCCPv1 handshake
 	- Bug 2848: Pass TCP_RST to client on early disconnect
 	- Debian Bug 578047: Correct behaviour of --enable-ipv6
-	- HTTP/1.1: Advertise 1.1 on replies
+	- HTTP/1.1: Advertise 1.1 on requests to servers
+	- HTTP/1.1: Advertise 1.1 on replies to clients
 	- AIX / UNIX build fixes
 	- Cygwin build fixes
 	- squidclient: -k option to test connection keep-alive or close
