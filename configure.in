@@ -1918,26 +1918,18 @@ AC_SUBST(URL_REWRITE_HELPERS)
 AC_ARG_WITH(valgrind-debug,
   AS_HELP_STRING([--with-valgrind-debug],
                  [Include debug instrumentation for use with valgrind]),
-[ case $withval in
-  yes)
-	valgrind=1
-	;;
-  no)
-	valgrind=
-	;;
-  *)
-	CPPFLAGS="$CPPFLAGS -I${enableval}/include"
-	valgrind=1
-	;;
-  esac
-  if test $valgrind; then
-    AC_CHECK_HEADERS(valgrind/memcheck.h,
-      [ AC_DEFINE(WITH_VALGRIND, 1, [Valgrind memory debugger support])
-	AC_MSG_NOTICE([Valgrind debug support enabled]) ],
-      [ AC_MSG_WARN([Valgrind header not found. Valgrind support disabled.]) ]
-    )
+[
+  SQUID_YESNO([$withval],
+            [unrecognized argument to --with-valgrind-debug: $withval])
+  if test $withval != "no" ; then
+    AC_CHECK_HEADERS(valgrind/memcheck.h,[],[
+      AC_MSG_ERROR([Valgrind support requested, needed headers not found.])
+    ])
   fi
 ])
+SQUID_DEFINE_BOOL(WITH_VALGRIND,${with_valgrind_debug:=no},
+                  [Valgrind memory debugger support])
+AC_MSG_NOTICE([Valgrind debug support enabled: $with_valgrind_debug])
 
 dnl Disable "memPools" code
 #AC_ARG_ENABLE(chunkedmempools,
