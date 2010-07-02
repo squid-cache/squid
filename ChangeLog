@@ -1,9 +1,14 @@
-Changes in development:
+Changes to squid-3.1.5 (02 Jul 2010):
 
-	- Bug 2950: HTTP responses with no Date, Last-modified or expired can
-	  now be cached (given an appropriate refresh_pattern). Previously we
-	  were not caching them in case of an infinite loop in cache farms:
-	  however Squid adds Date: headers now which remove that concern.
+	- Bug 2967: raw-IPv6 address URL with append_domain broken
+	- Bug 2950: HTTP responses with no Date, L-M or Expires can now be cached
+	- Bug 2943: ICAP tokens not logged when using multiple access
+	- Bug 2937: Fails to detect chunked encoding if not given in all lower case
+	- Bug 2903: does not send indirect X-Client-Ip in ICAP respmod
+	- Fix free memory corruption and off-by-on error when comparing SNMP OIDs
+	- Port from 2.7: max_filedescriptor config option
+	- Fix persistent_connection_after_error is meant to be on by default
+	- ... and several build errors.
 
 Changes to squid-3.1.4 (30 May 2010):
 
