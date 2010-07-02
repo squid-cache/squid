@@ -34,6 +34,7 @@ The 3.2 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 
 <p>The most important of these new features are:
 <itemize>
+	<item>SMP scalability
 	<item>Helper Multiplexer
 	<item>Helper Name Changes
 	<item>Multi-Lingual manuals
@@ -41,6 +42,49 @@ The 3.2 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
+
+<sect1>SMP scalability
+<p>The new "workers" squid.conf option can be used to launch multiple worker
+   processes and utilize multiple CPU cores. The overall intent is to make
+   multiple workers look like one to an outside observer, while providing
+   knobs to customize each worker behavior if needed.
+
+<p>By default, all worker processes are configured identically and do what a
+   single Squid instance would have done. Squid.conf macro substitutions and
+   conditionals (see below) can be used to customize individual worker
+   configurations. In the paragraphs below, "can share" implies "will share by
+   default".
+
+<p>Workers can share HTTP, HTTPS, SNMP, ICP, and HTCP listening addresses.
+   Configuration related to ICP and HTCP clients must be adjusted to avoid
+   source address conflicts: Modify the IP address and/or the port used for
+   the protocol. Workers do not share DNS addresses by default because the OS
+   assigns each worker a unique DNS port.
+
+<p>Workers can share logs.
+
+<p>Workers cannot share caches, for now. Cache_dir options must be adjusted to
+   point each disk-caching worker to its own disk area. ICP and HTCP responses
+   are based on the responding worker cache state. Overall, SMP Squid behaves
+   as a Squid farm behind a load-balancer with no cache affinity awareness.
+   This is perfect for non-caching Squids but inappropriate for Squids that
+   must coordinate caching activities (in-between environments are in a gray
+   area requiring case-by-case analysis).
+
+<p>Cache manager and SNMP statistics are reported from a worker point of
+   view, for now.
+
+<p>Startup, reconfiguration, shutdown, and log rotation are handled as for a
+   monolithic Squid. Abnormally terminated workers are restarted while
+   other workers continue serving traffic.
+
+
+<sect2>Squid.conf macros and conditionals
+<p>Added support for process_name and process_number macros as well as simple
+   if-statement conditionals in squid.conf. These features allow individual
+   worker customization in SMP mode. For details, search for "Conditional
+   configuration" and "SMP-Related Macros" sections in squid.conf.documented.
+
 
 <sect1>Helper Multiplexer
 <p>The helper multiplexer's purpose is to relieve some of the burden
