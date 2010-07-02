@@ -1658,7 +1658,7 @@ watch_child(char *argv[])
             if ((pid = fork()) == 0) {
                 /* child */
                 openlog(APP_SHORTNAME, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
-                prog = xstrdup(argv[0]);    /* XXX: leak */
+                prog = argv[0];
                 argv[0] = const_cast<char*>(kid.name().termedBuf());
                 execvp(prog, argv);
                 syslog(LOG_ALERT, "execvp failed: %s", xstrerror());
