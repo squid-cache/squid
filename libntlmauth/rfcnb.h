@@ -45,8 +45,8 @@
 extern "C" {
 #endif
 
-/* Error responses */
-/* these should follow the spec ... is there one ? */
+    /* Error responses */
+    /* these should follow the spec ... is there one ? */
 
 #define RFCNBE_Bad           -1 /* Bad response                           */
 #define RFCNBE_OK             0 /* Routine completed successfully.        */
@@ -67,80 +67,80 @@ extern "C" {
 #define RFCNBE_BadParam      15 /* Bad parameters passed ...              */
 #define RFCNBE_Timeout       16 /* IO Timed out                           */
 
-/* Text strings for the error responses */
-extern char const *RFCNB_Error_Strings[];
-/*
- * static char *RFCNB_Error_Strings[] = {
- *
- * "RFCNBE_OK: Routine completed successfully.",
- * "RFCNBE_NoSpace: No space available for a malloc call.",
- * "RFCNBE_BadName: NetBIOS name could not be translated to IP address.",
- * "RFCNBE_BadRead: Read system call returned an error. Check errno.",
- * "RFCNBE_BadWrite: Write system call returned an error. Check errno.",
- * "RFCNBE_ProtErr: A protocol error has occurred.",
- * "RFCNBE_ConGone: Connection dropped during a read or write system call.",
- * "RFCNBE_BadHandle: Bad connection handle passed.",
- * "RFCNBE_BadSocket: Problems creating socket.",
- * "RFCNBE_ConnectFailed: Connection failed. See errno.",
- * "RFCNBE_CallRejNLOCN: Call rejected. Not listening on called name.",
- * "RFCNBE_CallRejNLFCN: Call rejected. Not listening for called name.",
- * "RFCNBE_CallRejCNNP: Call rejected. Called name not present.",
- * "RFCNBE_CallRejInfRes: Call rejected. Name present, but insufficient resources.",
- * "RFCNBE_CallRejUnSpec: Call rejected. Unspecified error.",
- * "RFCNBE_BadParam: Bad parameters passed to a routine.",
- * "RFCNBE_Timeout: IO Operation timed out ..."
- *
- * };
- */
+    /* Text strings for the error responses */
+    extern char const *RFCNB_Error_Strings[];
+    /*
+     * static char *RFCNB_Error_Strings[] = {
+     *
+     * "RFCNBE_OK: Routine completed successfully.",
+     * "RFCNBE_NoSpace: No space available for a malloc call.",
+     * "RFCNBE_BadName: NetBIOS name could not be translated to IP address.",
+     * "RFCNBE_BadRead: Read system call returned an error. Check errno.",
+     * "RFCNBE_BadWrite: Write system call returned an error. Check errno.",
+     * "RFCNBE_ProtErr: A protocol error has occurred.",
+     * "RFCNBE_ConGone: Connection dropped during a read or write system call.",
+     * "RFCNBE_BadHandle: Bad connection handle passed.",
+     * "RFCNBE_BadSocket: Problems creating socket.",
+     * "RFCNBE_ConnectFailed: Connection failed. See errno.",
+     * "RFCNBE_CallRejNLOCN: Call rejected. Not listening on called name.",
+     * "RFCNBE_CallRejNLFCN: Call rejected. Not listening for called name.",
+     * "RFCNBE_CallRejCNNP: Call rejected. Called name not present.",
+     * "RFCNBE_CallRejInfRes: Call rejected. Name present, but insufficient resources.",
+     * "RFCNBE_CallRejUnSpec: Call rejected. Unspecified error.",
+     * "RFCNBE_BadParam: Bad parameters passed to a routine.",
+     * "RFCNBE_Timeout: IO Operation timed out ..."
+     *
+     * };
+     */
 
 #define RFCNB_Default_Port 139
 
-/* API Structures */
+    /* API Structures */
 
-typedef struct redirect_addr * redirect_ptr;
+    typedef struct redirect_addr * redirect_ptr;
 
-struct redirect_addr {
-    struct in_addr ip_addr;
-    int port;
-    redirect_ptr next;
-};
+    struct redirect_addr {
+        struct in_addr ip_addr;
+        int port;
+        redirect_ptr next;
+    };
 
-typedef struct RFCNB_Con {
-    int fd;                     /* File descripter for TCP/IP connection */
-    int rfc_errno;              /* last error                            */
-    int timeout;                /* How many milli-secs before IO times out */
-    int redirects;              /* How many times we were redirected     */
-    struct redirect_addr *redirect_list;        /* First is first address */
-    struct redirect_addr *last_addr;
-} RFCNB_Con;
+    typedef struct RFCNB_Con {
+        int fd;                     /* File descripter for TCP/IP connection */
+        int rfc_errno;              /* last error                            */
+        int timeout;                /* How many milli-secs before IO times out */
+        int redirects;              /* How many times we were redirected     */
+        struct redirect_addr *redirect_list;        /* First is first address */
+        struct redirect_addr *last_addr;
+    } RFCNB_Con;
 
-typedef struct RFCNB_Pkt {
-    char *data;                 /* The data in this portion */
-    int len;
-    struct RFCNB_Pkt *next;
-} RFCNB_Pkt;
+    typedef struct RFCNB_Pkt {
+        char *data;                 /* The data in this portion */
+        int len;
+        struct RFCNB_Pkt *next;
+    } RFCNB_Pkt;
 
-/* API Definition of routines we define */
+    /* API Definition of routines we define */
 
-void *RFCNB_Call(char *Called_Name, char *Calling_Name, char *Called_Address, int port);
+    void *RFCNB_Call(char *Called_Name, char *Calling_Name, char *Called_Address, int port);
 
-int RFCNB_Send(RFCNB_Con *Con_Handle, RFCNB_Pkt *Data, int Length);
+    int RFCNB_Send(RFCNB_Con *Con_Handle, RFCNB_Pkt *Data, int Length);
 
-int RFCNB_Recv(void *Con_Handle, RFCNB_Pkt *Data, int Length);
+    int RFCNB_Recv(void *Con_Handle, RFCNB_Pkt *Data, int Length);
 
-int RFCNB_Hangup(RFCNB_Con *con_Handle);
+    int RFCNB_Hangup(RFCNB_Con *con_Handle);
 
-void *RFCNB_Listen(void);
+    void *RFCNB_Listen(void);
 
-void RFCNB_Get_Error(char *buffer, int buf_len);
+    void RFCNB_Get_Error(char *buffer, int buf_len);
 
-int RFCNB_Get_Last_Error(void);
+    int RFCNB_Get_Last_Error(void);
 
-RFCNB_Pkt *RFCNB_Alloc_Pkt(int n);
+    RFCNB_Pkt *RFCNB_Alloc_Pkt(int n);
 
-void RFCNB_Free_Pkt(RFCNB_Pkt *pkt);
+    void RFCNB_Free_Pkt(RFCNB_Pkt *pkt);
 
-int RFCNB_Set_Sock_NoDelay(RFCNB_Con *con_Handle, int yn);
+    int RFCNB_Set_Sock_NoDelay(RFCNB_Con *con_Handle, int yn);
 
 #ifdef __cplusplus
 };
