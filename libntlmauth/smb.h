@@ -43,17 +43,17 @@
 extern "C" {
 #endif
 
-/* To get the error class we want the first 8 bits */
-/* Because we just grab 4bytes from the SMB header, we have to re-order */
-/* here, but it makes the NtStatus part easier in future                */
+    /* To get the error class we want the first 8 bits */
+    /* Because we just grab 4bytes from the SMB header, we have to re-order */
+    /* here, but it makes the NtStatus part easier in future                */
 
 #define SMBlib_Error_Class(p) (p & 0x000000FF)
 
-/* To get the error code, we want the bottom 16 bits */
+    /* To get the error code, we want the bottom 16 bits */
 
 #define SMBlib_Error_Code(p) (((unsigned int)p & 0xFFFF0000) >>16)
 
-/* Error CLASS codes and etc ... */
+    /* Error CLASS codes and etc ... */
 
 #define SMBC_SUCCESS        0
 #define SMBC_ERRDOS         0x01
@@ -61,13 +61,13 @@ extern "C" {
 #define SMBC_ERRHRD         0x03
 #define SMBC_ERRCMD         0xFF
 
-/* Success error codes    */
+    /* Success error codes    */
 
 #define SMBS_BUFFERED       0x54
 #define SMBS_LOGGED         0x55
 #define SMBS_DISPLAYED      0x56
 
-/* ERRDOS Error codes     */
+    /* ERRDOS Error codes     */
 
 #define SMBD_badfunc        0x01
 #define SMBD_badfile        0x02
@@ -91,7 +91,7 @@ extern "C" {
 #define SMBD_errlock        0x21
 #define SMBD_filexists      0x50
 
-/* Server errors ... */
+    /* Server errors ... */
 
 #define SMBV_error          0x01	/* Generic error */
 #define SMBV_badpw          0x02
@@ -110,7 +110,7 @@ extern "C" {
 #define SMBV_rmuns          0x57
 #define SMBV_nosupport      0xFFFF
 
-/* Hardware error codes ... */
+    /* Hardware error codes ... */
 
 #define SMBH_nowrite        0x13
 #define SMBH_badunit        0x14
@@ -127,7 +127,7 @@ extern "C" {
 #define SMBH_general        0x1F
 #define SMBH_badshare       0x20
 
-/* Access mode defines ... */
+    /* Access mode defines ... */
 
 #define SMB_AMODE_WTRU      0x4000
 #define SMB_AMODE_NOCACHE   0x1000
@@ -146,7 +146,7 @@ extern "C" {
 #define SMB_AMODE_LOCMRAN   0x0200
 #define SMB_AMODE_LOCRAL    0x0300
 
-/* File attribute encoding ... */
+    /* File attribute encoding ... */
 
 #define SMB_FA_ORD          0x00
 #define SMB_FA_ROF          0x01
@@ -156,7 +156,7 @@ extern "C" {
 #define SMB_FA_DIR          0x10
 #define SMB_FA_ARC          0x20
 
-/* Define the protocol types ... */
+    /* Define the protocol types ... */
 
 #define SMB_P_Unknown      -1	/* Hmmm, is this smart? */
 #define SMB_P_Core         0
@@ -169,13 +169,13 @@ extern "C" {
 #define SMB_P_LanMan2_1    7
 #define SMB_P_NT1          8
 
-/* SMBlib return codes */
-/* We want something that indicates whether or not the return code was a   */
-/* remote error, a local error in SMBlib or returned from lower layer ...  */
-/* Wonder if this will work ...                                            */
-/* SMBlibE_Remote = 1 indicates remote error                               */
-/* SMBlibE_ values < 0 indicate local error with more info available       */
-/* SMBlibE_ values >1 indicate local from SMBlib code errors?              */
+    /* SMBlib return codes */
+    /* We want something that indicates whether or not the return code was a   */
+    /* remote error, a local error in SMBlib or returned from lower layer ...  */
+    /* Wonder if this will work ...                                            */
+    /* SMBlibE_Remote = 1 indicates remote error                               */
+    /* SMBlibE_ values < 0 indicate local error with more info available       */
+    /* SMBlibE_ values >1 indicate local from SMBlib code errors?              */
 
 #define SMBlibE_Success 0
 #define SMBlibE_Remote  1	/* Remote error, get more info from con        */
@@ -193,163 +193,163 @@ extern "C" {
 #define SMBlibE_ProtUnknown 12	/* Protocol unknown                          */
 #define SMBlibE_NoSuchMsg  13	/* Keep this up to date                       */
 
-typedef struct {		/* A structure for a Dirent */
+    typedef struct {		/* A structure for a Dirent */
 
-    unsigned char resume_key[21];	/* Don't touch this          */
-    unsigned char file_attributes;	/* Attributes of file        */
-    unsigned int date_time;	/* date and time of last mod */
-    unsigned int size;
-    char filename[13];		/* The name of the file      */
+        unsigned char resume_key[21];	/* Don't touch this          */
+        unsigned char file_attributes;	/* Attributes of file        */
+        unsigned int date_time;	/* date and time of last mod */
+        unsigned int size;
+        char filename[13];		/* The name of the file      */
 
-} SMB_CP_dirent;
+    } SMB_CP_dirent;
 
-/* Handle Structures */
+    /* Handle Structures */
 
-typedef struct SMB_Tree_Structure * SMB_Tree_Handle;
-typedef struct SMB_Connect_Def * SMB_Handle_Type;
+    typedef struct SMB_Tree_Structure * SMB_Tree_Handle;
+    typedef struct SMB_Connect_Def * SMB_Handle_Type;
 
-struct SMB_Tree_Structure {
-    SMB_Tree_Handle next, prev;
-    SMB_Handle_Type con;
-    char path[129];
-    char device_type[20];
-    int mbs;                    /* Local MBS */
-    int tid;
-};
+    struct SMB_Tree_Structure {
+        SMB_Tree_Handle next, prev;
+        SMB_Handle_Type con;
+        char path[129];
+        char device_type[20];
+        int mbs;                    /* Local MBS */
+        int tid;
+    };
 
-struct SMB_Connect_Def {
-    SMB_Handle_Type Next_Con, Prev_Con;         /* Next and previous conn */
-    int protocol;               /* What is the protocol   */
-    int prot_IDX;               /* And what is the index  */
-    void *Trans_Connect;        /* The connection         */
+    struct SMB_Connect_Def {
+        SMB_Handle_Type Next_Con, Prev_Con;         /* Next and previous conn */
+        int protocol;               /* What is the protocol   */
+        int prot_IDX;               /* And what is the index  */
+        void *Trans_Connect;        /* The connection         */
 
-    /* All these strings should be malloc'd */
+        /* All these strings should be malloc'd */
 
-    char service[80], username[80], password[80], desthost[80], sock_options[80];
-    char address[80], myname[80];
+        char service[80], username[80], password[80], desthost[80], sock_options[80];
+        char address[80], myname[80];
 
-    SMB_Tree_Handle first_tree, last_tree;      /* List of trees on this server */
+        SMB_Tree_Handle first_tree, last_tree;      /* List of trees on this server */
 
-    int gid;                    /* Group ID, do we need it?                      */
-    int mid;                    /* Multiplex ID? We might need one per con       */
-    int pid;                    /* Process ID                                    */
+        int gid;                    /* Group ID, do we need it?                      */
+        int mid;                    /* Multiplex ID? We might need one per con       */
+        int pid;                    /* Process ID                                    */
 
-    int uid;                    /* Authenticated user id.                        */
+        int uid;                    /* Authenticated user id.                        */
 
-    /* It is pretty clear that we need to bust some of */
-    /* these out into a per TCon record, as there may  */
-    /* be multiple TCon's per server, etc ... later    */
+        /* It is pretty clear that we need to bust some of */
+        /* these out into a per TCon record, as there may  */
+        /* be multiple TCon's per server, etc ... later    */
 
-    int port;                   /* port to use in case not default, this is a TCPism! */
+        int port;                   /* port to use in case not default, this is a TCPism! */
 
-    int max_xmit;               /* Max xmit permitted by server                  */
-    int Security;               /* 0 = share, 1 = user                           */
-    int Raw_Support;            /* bit 0 = 1 = Read Raw supported, 1 = 1 Write raw */
-    int16_t encrypt_passwords;     /* TRUE/FALSE. FALSE = don't                  */
-    int MaxMPX, MaxVC, MaxRaw;
-    unsigned int SessionKey, Capabilities;
-    int SvrTZ;                  /* Server Time Zone */
-    int Encrypt_Key_Len;
-    char Encrypt_Key[80], Domain[80], PDomain[80], OSName[80], LMType[40];
-    char Svr_OS[80], Svr_LMType[80], Svr_PDom[80];
-};
+        int max_xmit;               /* Max xmit permitted by server                  */
+        int Security;               /* 0 = share, 1 = user                           */
+        int Raw_Support;            /* bit 0 = 1 = Read Raw supported, 1 = 1 Write raw */
+        int16_t encrypt_passwords;     /* TRUE/FALSE. FALSE = don't                  */
+        int MaxMPX, MaxVC, MaxRaw;
+        unsigned int SessionKey, Capabilities;
+        int SvrTZ;                  /* Server Time Zone */
+        int Encrypt_Key_Len;
+        char Encrypt_Key[80], Domain[80], PDomain[80], OSName[80], LMType[40];
+        char Svr_OS[80], Svr_LMType[80], Svr_PDom[80];
+    };
 
-/* Initialize the SMBlib package */
-int SMB_Init(void);
+    /* Initialize the SMBlib package */
+    int SMB_Init(void);
 
-/* Create a handle to allow us to set/override some parameters ...       */
-SMB_Handle_Type SMB_Create_Con_Handle();
+    /* Create a handle to allow us to set/override some parameters ...       */
+    SMB_Handle_Type SMB_Create_Con_Handle();
 
-/* Connect to a server, but do not do a tree con etc ... */
-SMB_Handle_Type SMB_Connect_Server(SMB_Handle_Type Con_Handle,
-                                   char *server,
-                                   char *NTdomain);
+    /* Connect to a server, but do not do a tree con etc ... */
+    SMB_Handle_Type SMB_Connect_Server(SMB_Handle_Type Con_Handle,
+                                       char *server,
+                                       char *NTdomain);
 
-/* Connect to a server and give us back a handle. If Con == NULL, create */
-/* The handle and populate it with defaults                              */
-SMB_Handle_Type SMB_Connect(SMB_Handle_Type Con_Handle,
-                            SMB_Tree_Handle * tree,
-                            char *service,
-                            char *username,
-                            char *password);
+    /* Connect to a server and give us back a handle. If Con == NULL, create */
+    /* The handle and populate it with defaults                              */
+    SMB_Handle_Type SMB_Connect(SMB_Handle_Type Con_Handle,
+                                SMB_Tree_Handle * tree,
+                                char *service,
+                                char *username,
+                                char *password);
 
-int SMB_Logon_Server(SMB_Handle_Type Con_Handle,
-                     char *UserName,
-                     char *PassWord,
-                     char *UserDomain,
-                     int precrypted);
+    int SMB_Logon_Server(SMB_Handle_Type Con_Handle,
+                         char *UserName,
+                         char *PassWord,
+                         char *UserDomain,
+                         int precrypted);
 
-/* Negotiate a protocol                                                  */
-int SMB_Negotiate(SMB_Handle_Type con, char const *Prots[]);
+    /* Negotiate a protocol                                                  */
+    int SMB_Negotiate(SMB_Handle_Type con, char const *Prots[]);
 
-/* Connect to a tree ...                                                 */
-SMB_Tree_Handle SMB_TreeConnect(SMB_Handle_Type con,
-                                SMB_Tree_Handle tree,
-                                char *path,
-                                char *password,
-                                char const *device);
+    /* Connect to a tree ...                                                 */
+    SMB_Tree_Handle SMB_TreeConnect(SMB_Handle_Type con,
+                                    SMB_Tree_Handle tree,
+                                    char *path,
+                                    char *password,
+                                    char const *device);
 
 
-/* Disconnect a tree ...                                                 */
-int SMB_TreeDisconect(void *tree_handle);
+    /* Disconnect a tree ...                                                 */
+    int SMB_TreeDisconect(void *tree_handle);
 
-/* Open a file                                                           */
-void *SMB_Open(void *tree_handle,
-               void *file_handle,
-               char *file_name,
-               unsigned short mode,
-               unsigned short search);
+    /* Open a file                                                           */
+    void *SMB_Open(void *tree_handle,
+                   void *file_handle,
+                   char *file_name,
+                   unsigned short mode,
+                   unsigned short search);
 
-/* Close a file                                                          */
-int SMB_Close(void *file_handle);
+    /* Close a file                                                          */
+    int SMB_Close(void *file_handle);
 
-/* Disconnect from server. Has flag to specify whether or not we keep the */
-/* handle.                                                                */
-int SMB_Discon(SMB_Handle_Type Con,
-               int KeepHandle);
+    /* Disconnect from server. Has flag to specify whether or not we keep the */
+    /* handle.                                                                */
+    int SMB_Discon(SMB_Handle_Type Con,
+                   int KeepHandle);
 
-void *SMB_Create(void *Tree_Handle,
-                 void *File_Handle,
-                 char *file_name,
-                 short search);
+    void *SMB_Create(void *Tree_Handle,
+                     void *File_Handle,
+                     char *file_name,
+                     short search);
 
-int SMB_Delete(void *tree,
-               char *file_name,
-               short search);
+    int SMB_Delete(void *tree,
+                   char *file_name,
+                   short search);
 
-int SMB_Create_Dir(void *tree,
-                   char *dir_name);
+    int SMB_Create_Dir(void *tree,
+                       char *dir_name);
 
-int SMB_Delete_Dir(void *tree,
-                   char *dir_name);
+    int SMB_Delete_Dir(void *tree,
+                       char *dir_name);
 
-int SMB_Check_Dir(void *tree,
-                  char *dir_name);
+    int SMB_Check_Dir(void *tree,
+                      char *dir_name);
 
-int SMB_Get_Last_Error();
+    int SMB_Get_Last_Error();
 
-int SMB_Get_Last_SMB_Err();
+    int SMB_Get_Last_SMB_Err();
 
-int SMB_Get_Error_Msg(int msg,
-                      char *msgbuf,
-                      int len);
+    int SMB_Get_Error_Msg(int msg,
+                          char *msgbuf,
+                          int len);
 
-void *SMB_Logon_And_TCon(SMB_Handle_Type Con_Handle,
-                         void *tree,
-                         char *user,
-                         char *pass,
-                         char *service,
-                         char *st);
+    void *SMB_Logon_And_TCon(SMB_Handle_Type Con_Handle,
+                             void *tree,
+                             char *user,
+                             char *pass,
+                             char *service,
+                             char *st);
 
-/* Encryption Functions */
+    /* Encryption Functions */
 
-void SMBencrypt(unsigned char * passwd,
-                       unsigned char * c8,
-                       unsigned char * p24);
+    void SMBencrypt(unsigned char * passwd,
+                    unsigned char * c8,
+                    unsigned char * p24);
 
-void SMBNTencrypt(unsigned char * passwd,
-                         unsigned char * c8,
-                         unsigned char * p24);
+    void SMBNTencrypt(unsigned char * passwd,
+                      unsigned char * c8,
+                      unsigned char * p24);
 
 #ifdef __cplusplus
 }

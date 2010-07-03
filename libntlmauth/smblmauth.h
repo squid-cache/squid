@@ -4,7 +4,7 @@
 /* TODO: copyright. who owns this? there was none in the original code!! */
 /* Maybe Richard Sharpe or maybe not. */
 
- /* SMB LM Error Codes */
+/* SMB LM Error Codes */
 #define SMBLM_ERR_NONE        0
 #define SMBLM_ERR_SERVER      1
 #define SMBLM_ERR_PROTOCOL    2
