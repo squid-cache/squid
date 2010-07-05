@@ -814,34 +814,34 @@ bool
 IamWorkerProcess()
 {
     // when there is only one process, it has to be the worker
-    if (opt_no_daemon || Config.main_processes == 0)
+    if (opt_no_daemon || Config.workers == 0)
         return true;
 
-    return 0 < KidIdentifier && KidIdentifier <= Config.main_processes;
+    return 0 < KidIdentifier && KidIdentifier <= Config.workers;
 }
 
 bool
 UsingSmp()
 {
-    return !opt_no_daemon && Config.main_processes > 1;
+    return !opt_no_daemon && Config.workers > 1;
 }
 
 bool
 IamCoordinatorProcess()
 {
-    return UsingSmp() && KidIdentifier == Config.main_processes + 1;
+    return UsingSmp() && KidIdentifier == Config.workers + 1;
 }
 
 bool
 IamPrimaryProcess()
 {
     // when there is only one process, it has to be primary
-    if (opt_no_daemon || Config.main_processes == 0)
+    if (opt_no_daemon || Config.workers == 0)
         return true;
 
     // when there is a master and worker process, the master delegates
     // primary functions to its only kid
-    if (Config.main_processes == 1)
+    if (Config.workers == 1)
         return IamWorkerProcess();
 
     // in SMP mode, multiple kids delegate primary functions to the coordinator

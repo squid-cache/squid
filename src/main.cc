@@ -745,16 +745,16 @@ mainReconfigureFinish(void *)
         Config2.onoff.enable_purge = 2;
 
     // parse the config returns a count of errors encountered.
-    const int oldMainProcesses = Config.main_processes;
+    const int oldWorkers = Config.workers;
     if ( parseConfigFile(ConfigFile) != 0) {
         // for now any errors are a fatal condition...
         self_destruct();
     }
-    if (oldMainProcesses != Config.main_processes) {
-        debugs(1, DBG_CRITICAL, "WARNING: Changing 'main_processes' (from " <<
-            oldMainProcesses << " to " << Config.main_processes <<
+    if (oldWorkers != Config.workers) {
+        debugs(1, DBG_CRITICAL, "WARNING: Changing 'workers' (from " <<
+            oldWorkers << " to " << Config.workers <<
             ") is not supported and ignored");
-        Config.main_processes = oldMainProcesses;
+        Config.workers = oldWorkers;
     }
 
     setUmask(Config.umask);
@@ -1375,7 +1375,7 @@ SquidMain(int argc, char **argv)
         return 0;
     }
 
-    if (!opt_no_daemon && Config.main_processes > 0)
+    if (!opt_no_daemon && Config.workers > 0)
         watch_child(argv);
 
     setMaxFD();
@@ -1638,12 +1638,12 @@ watch_child(char *argv[])
         dup2(nullfd, 2);
     }
 
-    if (Config.main_processes > 128) {
-        syslog(LOG_ALERT, "Suspiciously high main_processes value: %d",
-            Config.main_processes);
+    if (Config.workers > 128) {
+        syslog(LOG_ALERT, "Suspiciously high workers value: %d",
+            Config.workers);
         // but we keep going in hope that user knows best
 	}
-    TheKids.init(Config.main_processes);
+    TheKids.init(Config.workers);
 
     // keep [re]starting kids until it is time to quit
     for (;;) {
