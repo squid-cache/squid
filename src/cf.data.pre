@@ -6844,15 +6844,18 @@ DOC_START
 	Whether to lookup the EUI or MAC address of a connected client.
 DOC_END
 
-NAME: main_processes
+NAME: workers
 TYPE: int
-LOC: Config.main_processes
+LOC: Config.workers
 DEFAULT: 1
 DOC_START
-	Number of main Squid processes to fork.
+	Number of main Squid processes or "workers" to fork and maintain.
 	0: "no daemon" mode, like running "squid -N ..."
 	1: "no SMP" mode, start one main Squid process daemon (default)
-	N: start N main Squid process daemons
+	N: start N main Squid process daemons (i.e., SMP mode)
+
+        In SMP mode, each worker does nearly all what a single Squid daemon
+        does (e.g., listen on http_port and forward HTTP requests).
 DOC_END
 
 EOF
