@@ -2044,7 +2044,7 @@ SQUID_DEFINE_BOOL([USE_ZPH_QOS],${enable_zph_qos:=no},
 AC_MSG_NOTICE([ZPH QOS enabled: $enable_zph_qos])
 
 dnl --with-maxfd present for compatibility with Squid-2.
-dnl undocumented in ./configure --help  to encourage using the Squid-3 directive.
+dnl undocumented in ./configure --help  to encourage using the Squid-3 directive
 AC_ARG_WITH(maxfd,,
 [ 
   case ${withval} in
@@ -2056,8 +2056,10 @@ AC_ARG_WITH(maxfd,,
       ;;
     esac
 ])
+
 AC_ARG_WITH(filedescriptors,
-  AS_HELP_STRING([--with-filedescriptors=NUMBER],[Force squid to support NUMBER filedescriptors]),
+  AS_HELP_STRING([--with-filedescriptors=NUMBER],
+                 [Force squid to support NUMBER filedescriptors]),
 [ 
   case ${withval} in
     [[0-9]]*)
@@ -2084,8 +2086,8 @@ else
 fi
 
 AC_ARG_WITH(cppunit-basedir,
-  AS_HELP_STRING([--with-cppunit-basedir=PATH],[Path where the cppunit headers are libraries are found 
-                  for unit testing.]),
+  AS_HELP_STRING([--with-cppunit-basedir=PATH],
+                 [Path where the cppunit headers are libraries can be found ]),
 [ if test -f $withval/include/cppunit/TestCase.h; then
 	AC_MSG_NOTICE([Using cppunit includes from $withval])
 	SQUID_CPPUNIT_INC="-I${withval}/include"
