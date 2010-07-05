@@ -57,6 +57,7 @@ public:
     int default_options_ttl;
     int preview_enable;
     int preview_size;
+    int allow206_enable;
     time_t connect_timeout_raw;
     time_t io_timeout_raw;
     int reuse_connections;

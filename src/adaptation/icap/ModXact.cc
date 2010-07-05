@@ -726,6 +726,10 @@ void Adaptation::Icap::ModXact::parseIcapHead()
         handle204NoContent();
         break;
 
+    case 206:
+        handle206PartialContent();
+        break;
+
     default:
         debugs(93, 5, HERE << "ICAP status " << icapReply->sline.status);
         handleUnknownScode();
@@ -797,8 +801,9 @@ void Adaptation::Icap::ModXact::handle100Continue()
     // server must not respond before the end of preview: we may send ieof
     Must(preview.enabled() && preview.done() && !preview.ieof());
 
-    // 100 "Continue" cancels our preview commitment, not 204s outside preview
-    if (!state.allowedPostview204)
+    // 100 "Continue" cancels our Preview commitment,
+    // but not commitment to handle 204 or 206 outside Preview
+    if (!state.allowedPostview204 && !state.allowedPostview206)
         stopBackup();
 
     state.parsing = State::psIcapHeader; // eventually
@@ -821,6 +826,23 @@ void Adaptation::Icap::ModXact::handle204NoContent()
 {
     stopParsing();
     prepEchoing();
+}
+
+void Adaptation::Icap::ModXact::handle206PartialContent()
+{
+    if (state.writing == State::writingPaused) {
+        Must(preview.enabled());
+        Must(state.allowedPreview206);
+        debugs(93, 7, HERE << "206 inside preview");
+    } else {
+        Must(state.writing > State::writingPaused);
+        Must(state.allowedPostview206);
+        debugs(93, 7, HERE << "206 outside preview");
+    }
+    state.parsing = State::psHttpHeader;
+    state.sending = State::sendingAdapted;
+    state.readyForUob = true;
+    checkConsuming();
 }
 
 // Called when we receive a 204 No Content response and
@@ -896,6 +918,37 @@ void Adaptation::Icap::ModXact::prepEchoing()
         debugs(93, 7, HERE << "no virgin body to echo");
         stopSending(true);
     }
+}
+
+/// Called when we received use-original-body chunk extension in 206 response.
+/// We actually start sending (echoing or not) in startSending().
+void Adaptation::Icap::ModXact::prepPartialBodyEchoing(uint64_t pos)
+{
+    Must(virginBodySending.active());
+    Must(virgin.header->body_pipe != NULL);
+
+    setOutcome(xoPartEcho);
+
+    debugs(93, 7, HERE << "will echo virgin body suffix from " <<
+           virgin.header->body_pipe << " offset " << pos );
+
+    // check that use-original-body=N does not point beyond buffered data
+    const uint64_t virginDataEnd = virginConsumed +
+                                   virgin.body_pipe->buf().contentSize();
+    Must(pos <= virginDataEnd);
+    virginBodySending.progress(static_cast<size_t>(pos));
+
+    state.sending = State::sendingVirgin;
+    checkConsuming();
+
+    if (virgin.header->body_pipe->bodySizeKnown())
+        adapted.body_pipe->expectProductionEndAfter(virgin.header->body_pipe->bodySize() - pos);
+
+    debugs(93, 7, HERE << "will echo virgin body suffix to " <<
+           adapted.body_pipe);
+
+    // Start echoing data
+    echoMore();
 }
 
 void Adaptation::Icap::ModXact::handleUnknownScode()
@@ -997,6 +1050,13 @@ void Adaptation::Icap::ModXact::parseBody()
     }
 
     if (parsed) {
+        if (state.readyForUob && bodyParser->useOriginBody >= 0) {
+            prepPartialBodyEchoing(
+                static_cast<uint64_t>(bodyParser->useOriginBody));
+            stopParsing();
+            return;
+        }
+
         stopParsing();
         stopSending(true); // the parser succeeds only if all parsed data fits
         return;
@@ -1235,19 +1295,11 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
 
     if (preview.enabled()) {
         buf.Printf("Preview: %d\r\n", (int)preview.ad());
-        if (virginBody.expected()) // there is a body to preview
-            virginBodySending.plan();
-        else
+        if (!virginBody.expected()) // there is no body to preview
             finishNullOrEmptyBodyPreview(httpBuf);
     }
 
-    if (shouldAllow204()) {
-        debugs(93,5, HERE << "will allow 204s outside of preview");
-        state.allowedPostview204 = true;
-        buf.Printf("Allow: 204\r\n");
-        if (virginBody.expected()) // there is a body to echo
-            virginBodySending.plan();
-    }
+    makeAllowHeader(buf);
 
     if (TheConfig.send_client_ip && request) {
         Ip::Address client_addr;
@@ -1275,6 +1327,44 @@ void Adaptation::Icap::ModXact::makeRequestHeaders(MemBuf &buf)
     buf.append(httpBuf.content(), httpBuf.contentSize());
 
     httpBuf.clean();
+}
+
+// decides which Allow values to write and updates the request buffer
+void Adaptation::Icap::ModXact::makeAllowHeader(MemBuf &buf)
+{
+    const bool allow204in = preview.enabled(); // TODO: add shouldAllow204in()
+    const bool allow204out = state.allowedPostview204 = shouldAllow204();
+    const bool allow206in = state.allowedPreview206 = shouldAllow206in();
+    const bool allow206out = state.allowedPostview206 = shouldAllow206out();
+
+    debugs(93,9, HERE << "Allows: " << allow204in << allow204out <<
+           allow206in << allow206out);
+
+    const bool allow204 = allow204in || allow204out;
+    const bool allow206 = allow206in || allow206out;
+
+    if (!allow204 && !allow206)
+        return; // nothing to do
+
+    if (virginBody.expected()) // if there is a virgin body, plan to send it
+        virginBodySending.plan();
+
+    // writing Preview:...   means we will honor 204 inside preview
+    // writing Allow/204     means we will honor 204 outside preview
+    // writing Allow:206     means we will honor 206 inside preview
+    // writing Allow:204,206 means we will honor 206 outside preview
+    const char *allowHeader = NULL;
+    if (allow204out && allow206)
+        allowHeader = "Allow: 204, 206\r\n";
+    else if (allow204out)
+        allowHeader = "Allow: 204\r\n";
+    else if (allow206)
+        allowHeader = "Allow: 206\r\n";
+
+    if (allowHeader) { // may be nil if only allow204in is true
+        buf.append(allowHeader, strlen(allowHeader));
+        debugs(93,5, HERE << "Will write " << allowHeader);
+    }
 }
 
 void Adaptation::Icap::ModXact::makeUsernameHeader(const HttpRequest *request, MemBuf &buf)
@@ -1379,6 +1469,25 @@ bool Adaptation::Icap::ModXact::shouldAllow204()
     return canBackupEverything();
 }
 
+// decides whether to allow 206 responses in some mode
+bool Adaptation::Icap::ModXact::shouldAllow206any()
+{
+    return TheConfig.allow206_enable && service().allows206() &&
+           virginBody.expected(); // no need for 206 without a body
+}
+
+// decides whether to allow 206 responses in preview mode
+bool Adaptation::Icap::ModXact::shouldAllow206in()
+{
+    return shouldAllow206any() && preview.enabled();
+}
+
+// decides whether to allow 206 responses outside of preview
+bool Adaptation::Icap::ModXact::shouldAllow206out()
+{
+    return shouldAllow206any() && canBackupEverything();
+}
+
 // used by shouldAllow204 and decideOnRetries
 bool Adaptation::Icap::ModXact::canBackupEverything() const
 {
@@ -1460,6 +1569,9 @@ void Adaptation::Icap::ModXact::fillPendingStatus(MemBuf &buf) const
 
     if (!doneSending() && state.sending != State::sendingUndecided)
         buf.Printf("S(%d)", state.sending);
+
+    if (state.readyForUob)
+        buf.append("6", 1);
 
     if (canStartBypass)
         buf.append("Y", 1);

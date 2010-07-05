@@ -103,6 +103,7 @@ public:
     bool wantsUrl(const String &urlPath) const;
     bool wantsPreview(const String &urlPath, size_t &wantedSize) const;
     bool allows204() const;
+    bool allows206() const;
 
     void noteFailure(); // called by transactions to report service failure
 

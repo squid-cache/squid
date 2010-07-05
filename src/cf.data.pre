@@ -2852,6 +2852,17 @@ LOC: Log::TheConfig.logfile_daemon
 DOC_START
 	Specify the path to the logfile-writing daemon. This daemon is
 	used to write the access and store logs, if configured.
+
+	Squid sends a number of commands to the log daemon:
+	  L<data>\n - logfile data
+	  R\n - rotate file
+	  T\n - truncate file
+	  O\n - repoen file
+	  F\n - flush file
+	  r<n>\n - set rotate count to <n>
+	  b<n>\n - 1 = buffer output, 0 = don't buffer output
+
+	No responses is expected.
 DOC_END
 
 NAME: log_access
@@ -5962,6 +5973,28 @@ DOC_START
 	The default size of preview data to be sent to the ICAP server.
 	-1 means no preview. This value might be overwritten on a per server
 	basis by OPTIONS requests.
+DOC_END
+
+NAME: icap_206_enable
+TYPE: onoff
+IFDEF: ICAP_CLIENT
+COMMENT: on|off
+LOC: Adaptation::Icap::TheConfig.allow206_enable
+DEFAULT: on
+DOC_START
+	206 (Partial Content) responses is an ICAP extension that allows the
+	ICAP agents to optionally combine adapted and original HTTP message
+	content. The decision to combine is postponed until the end of the
+	ICAP response. Squid supports Partial Content extension by default.
+
+	Activation of the Partial Content extension is negotiated with each
+	ICAP service during OPTIONS exchange. Most ICAP servers should handle
+	negotation correctly even if they do not support the extension, but
+	some might fail. To disable Partial Content support for all ICAP
+	services and to avoid any negotiation, set this option to "off".
+
+	Example:
+	    icap_206_enable off
 DOC_END
 
 NAME: icap_default_options_ttl
