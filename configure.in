@@ -405,11 +405,12 @@ AH_TEMPLATE(XMALLOC_STATISTICS,[Define to have malloc statistics])
 AC_ARG_ENABLE(xmalloc-statistics,
   AS_HELP_STRING([--enable-xmalloc-statistics],
                  [Show malloc statistics in status page]), [
-if test "$enableval" = "yes" ; then
-  AC_MSG_NOTICE([malloc statistics enabled])
-  AC_DEFINE(XMALLOC_STATISTICS,1)
-fi
+SQUID_YESNO([$enableval],
+    [unrecognized argument to --enable-xmalloc-statistics: $enableval])
 ])
+SQUID_DEFINE_BOOL(XMALLOC_STATISTICS,${enable_xmalloc_statistics:=no},
+    [Show malloc statistics in status page])
+AC_MSG_NOTICE([xmalloc stats display: $enable_xmalloc_statistics])
 
 squid_opt_aufs_threads=""
 AC_ARG_WITH(aufs-threads,
