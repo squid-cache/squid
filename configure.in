@@ -3826,7 +3826,7 @@ AC_CONFIG_FILES([\
 	helpers/ntlm_auth/SSPI/Makefile \
 	helpers/negotiate_auth/Makefile \
 	helpers/negotiate_auth/kerberos/Makefile \
-	helpers/negotiate_auth/mswin_sspi/Makefile \
+	helpers/negotiate_auth/SSPI/Makefile \
 	helpers/external_acl/Makefile \
 	helpers/external_acl/ip_user/Makefile \
 	helpers/external_acl/ldap_group/Makefile \
