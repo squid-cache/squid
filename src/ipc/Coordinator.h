@@ -39,7 +39,6 @@ protected:
 
     /// returns cached socket or calls openListenSocket()
     void handleSharedListenRequest(const SharedListenRequest& request);
-    void handleDescriptorGet(const Descriptor& request);
 
     /// calls comm_open_listener()
     int openListenSocket(const SharedListenRequest& request, int &errNo);
