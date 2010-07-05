@@ -118,13 +118,16 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <sect2>Negotiate Authentication protocol helpers
 <p><itemize>
+	<item>mswin_sspi - negotiate_sspi_auth - Authenticate with a Windows Domain Controller using SSPI.
 	<item>squid_kerb_auth - negotiate_kerberos_auth - Authenticate with Kerberos servers.
 </itemize>
 
 <sect2>NTLM Authentication protocol helpers
 <p><itemize>
 	<item>fakeauth_auth - ntlm_fake_auth - Perform NTLMSSP to recover the username but don't verify the password.
+	<item>mswin_ntlm_auth - ntlm_sspi_auth - Perform NTLMSSP authentication using Windows native Security Support Provider Interface API.
 	<item>ntlm_auth - ntlm_smb_lm_auth - Perform SMB LanManager domain-less authentication over NTLM protocol.
+	<item>no_check.pl - Deprecated. - Use the faster and less easily decrypted ntlm_fake_auth instead.
 </itemize>
 
 <sect2>URL re-write helpers

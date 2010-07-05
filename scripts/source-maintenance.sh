@@ -76,7 +76,9 @@ for FILENAME in `ls -1`; do
 
     esac
 
-    if test -d $FILENAME ; then
+    if test "$FILENAME" = "libltdl" ; then
+        :
+    elif test -d $FILENAME ; then
 	cd $FILENAME
 	srcformat ${ROOT} || exit 1
 	cd ..

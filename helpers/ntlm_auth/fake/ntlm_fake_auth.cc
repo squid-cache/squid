@@ -54,7 +54,8 @@
 #define IGNORANCE_IS_BLISS
 
 #include "config.h"
-#include "ntlmauth.h"
+#include "libntlmauth/ntlmauth.h"
+#include "libntlmauth/support_bits.cci"
 #include "util.h"
 
 #if HAVE_CTYPE_H
@@ -72,9 +73,6 @@
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
-
-
-#define safe_free(x)	if (x) { free(x); x = NULL; }
 
 /* A couple of harmless helper macros */
 #define SEND(X) debug("sending '%s' to squid\n",X); printf(X "\n");
@@ -95,76 +93,6 @@
 const char *authenticate_ntlm_domain = "WORKGROUP";
 int strip_domain_enabled = 0;
 int NTLM_packet_debug_enabled = 0;
-
-static void
-hex_dump(unsigned char *data, int size)
-{
-    /* dumps size bytes of *data to stdout. Looks like:
-     * [0000] 75 6E 6B 6E 6F 77 6E 20
-     *                  30 FF 00 00 00 00 39 00 unknown 0.....9.
-     * (in a single line of course)
-     */
-
-    if (!data)
-        return;
-
-    if (debug_enabled) {
-        unsigned char *p = data;
-        unsigned char c;
-        int n;
-        char bytestr[4] = {0};
-        char addrstr[10] = {0};
-        char hexstr[16 * 3 + 5] = {0};
-        char charstr[16 * 1 + 5] = {0};
-        for (n = 1; n <= size; n++) {
-            if (n % 16 == 1) {
-                /* store address for this line */
-                snprintf(addrstr, sizeof(addrstr), "%.4x",
-                         (int) (p - data));
-            }
-            c = *p;
-            if (xisalnum(c) == 0) {
-                c = '.';
-            }
-            /* store hex str (for left side) */
-            snprintf(bytestr, sizeof(bytestr), "%02X ", *p);
-            strncat(hexstr, bytestr, sizeof(hexstr) - strlen(hexstr) - 1);
-
-            /* store char str (for right side) */
-            snprintf(bytestr, sizeof(bytestr), "%c", c);
-            strncat(charstr, bytestr, sizeof(charstr) - strlen(charstr) - 1);
-
-            if (n % 16 == 0) {
-                /* line completed */
-                fprintf(stderr, "[%4.4s]   %-50.50s  %s\n", addrstr, hexstr, charstr);
-                hexstr[0] = 0;
-                charstr[0] = 0;
-            } else if (n % 8 == 0) {
-                /* half line: add whitespaces */
-                strncat(hexstr, "  ", sizeof(hexstr) - strlen(hexstr) - 1);
-                strncat(charstr, " ", sizeof(charstr) - strlen(charstr) - 1);
-            }
-            p++;		/* next byte */
-        }
-
-        if (strlen(hexstr) > 0) {
-            /* print rest of buffer if not empty */
-            fprintf(stderr, "[%4.4s]   %-50.50s  %s\n", addrstr, hexstr, charstr);
-        }
-    }
-}
-
-
-/* makes a null-terminated string lower-case. Changes CONTENTS! */
-static void
-lc(char *string)
-{
-    char *p = string, c;
-    while ((c = *p)) {
-        *p = xtolower(c);
-        p++;
-    }
-}
 
 /*
  * options:
@@ -226,7 +154,7 @@ main(int argc, char *argv[])
     char buf[BUFFER_SIZE];
     int buflen = 0;
     char user[NTLM_MAX_FIELD_LENGTH], domain[NTLM_MAX_FIELD_LENGTH];
-    char *p, *decoded = NULL;
+    char *p;
     ntlmhdr *packet = NULL;
     char helper_command[3];
     int len;
@@ -266,7 +194,7 @@ main(int argc, char *argv[])
                 ntlm_negotiate *nego = (ntlm_negotiate *)packet;
                 ntlm_make_challenge(&chal, authenticate_ntlm_domain, NULL, nonce, NTLM_NONCE_LEN, nego->flags);
             } else {
-                ntlm_make_challenge(&chal, authenticate_ntlm_domain, NULL, nonce, NTLM_NONCE_LEN, NEGOTIATE_ASCII);
+                ntlm_make_challenge(&chal, authenticate_ntlm_domain, NULL, nonce, NTLM_NONCE_LEN, NTLM_NEGOTIATE_ASCII);
             }
             // TODO: find out what this context means, and why only the fake auth helper contains it.
             chal.context_high = htole32(0x003a<<16);
@@ -282,8 +210,8 @@ main(int argc, char *argv[])
         } else if (strncasecmp(buf, "KK ", 3) == 0) {
             if (!packet) {
                 SEND("BH received KK with no data! user=");
-            } else if (!ntlm_validate_packet(packet, NTLM_AUTHENTICATE)) {
-                if (ntlm_unpack_auth((ntlm_authenticate *)packet, user, domain, (buflen-3)) == 0) {
+            } else if (ntlm_validate_packet(packet, NTLM_AUTHENTICATE) == NTLM_ERR_NONE) {
+                if (ntlm_unpack_auth((ntlm_authenticate *)packet, user, domain, (buflen-3)) == NTLM_ERR_NONE) {
                     lc(user);
                     lc(domain);
                     if (strip_domain_enabled) {

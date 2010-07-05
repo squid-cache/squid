@@ -81,6 +81,7 @@ public:
     String serviceId;
     int max_connections;
     bool allow204;
+    bool allow206;
     int preview;
 
 protected:

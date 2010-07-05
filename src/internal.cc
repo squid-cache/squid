@@ -114,7 +114,12 @@ internalRemoteUri(const char *host, u_short port, const char *dir, const char *n
      * domains
      */
 
+#if USE_IPV6
+    /* For IPV6 addresses also check for a colon */
+    if (Config.appendDomain && !strchr(lc_host, '.') && !strchr(lc_host, ':'))
+#else
     if (Config.appendDomain && !strchr(lc_host, '.'))
+#endif
         strncat(lc_host, Config.appendDomain, SQUIDHOSTNAMELEN -
                 strlen(lc_host) - 1);
 
@@ -154,7 +159,12 @@ internalHostname(void)
     LOCAL_ARRAY(char, host, SQUIDHOSTNAMELEN + 1);
     xstrncpy(host, getMyHostname(), SQUIDHOSTNAMELEN);
 
+#if USE_IPV6
+    /* For IPV6 addresses also check for a colon */
+    if (Config.appendDomain && !strchr(host, '.') && !strchr(host, ':'))
+#else
     if (Config.appendDomain && !strchr(host, '.'))
+#endif
         strncat(host, Config.appendDomain, SQUIDHOSTNAMELEN -
                 strlen(host) - 1);
 
