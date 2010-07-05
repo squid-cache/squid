@@ -103,8 +103,12 @@ bootstrap_libtoolize() {
         chmod u-w $makefile
 
         # Libtool 2.2.6b we bundle is slightly broken with non-portable dependencies
-        sed 's/<libltdl/\"libltdl/g' $src/ltdl.h | sed 's/.h>/.h\"/g' > $src/ltdl.h.new;
+        sed 's/<libltdl\/lt_system.h>/\"libltdl\/lt_system.h\"/g' $src/ltdl.h |
+            sed 's/<libltdl\/lt_error.h>/\"libltdl\/lt_error.h\"/g' |
+            sed 's/<libltdl\/lt_dlloader.h>/\"libltdl\/lt_dlloader.h\"/g' > $src/ltdl.h.new;
+        chmod u+w $src/ltdl.h
         mv $src/ltdl.h.new $src/ltdl.h
+        chmod u-w $src/ltdl.h
     fi
 }
 
