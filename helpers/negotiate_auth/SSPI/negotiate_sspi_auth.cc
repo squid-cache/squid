@@ -1,6 +1,5 @@
-
 /*
- * mswin_negotiate_auth: helper for Negotiate Authentication for Squid Cache
+ * negotiate_sspi_auth: helper for Negotiate Authentication for Squid Cache
  *
  * (C)2005 Guido Serassio - Acme Consulting S.r.l.
  *
@@ -37,53 +36,37 @@
  *
  *
  */
-
+#include "config.h"
+#include "helpers/defines.h"
+#include "libntlmauth/support_bits.cci"
+#include "sspwin32.h"
 #include "util.h"
+
+#include <windows.h>
+#include <sspi.h>
+#include <security.h>
 #if HAVE_GETOPT_H
 #include <getopt.h>
 #endif
-#include "negotiate.h"
 #if HAVE_CTYPE_H
 #include <ctype.h>
 #endif
 
-#define BUFFER_SIZE 10240
-
-int debug_enabled = 0;
 int Negotiate_packet_debug_enabled = 0;
-
 static int have_serverblob;
 
-/* makes a null-terminated string upper-case. Changes CONTENTS! */
-void
-uc(char *string)
-{
-    char *p = string, c;
-    while ((c = *p)) {
-        *p = xtoupper(c);
-        p++;
-    }
-}
-
-/* makes a null-terminated string lower-case. Changes CONTENTS! */
-static void
-lc(char *string)
-{
-    char *p = string, c;
-    while ((c = *p)) {
-        *p = xtolower(c);
-        p++;
-    }
-}
-
-void
-helperfail(const char *reason)
-{
-#if FAIL_DEBUG
-    fail_debug_enabled = 1;
+/* A couple of harmless helper macros */
+#define SEND(X) debug("sending '%s' to squid\n",X); printf(X "\n");
+#ifdef __GNUC__
+#define SEND2(X,Y...) debug("sending '" X "' to squid\n",Y); printf(X "\n",Y);
+#define SEND3(X,Y...) debug("sending '" X "' to squid\n",Y); printf(X "\n",Y);
+#else
+/* no gcc, no debugging. varargs macros are a gcc extension */
+#define SEND2(X,Y) debug("sending '" X "' to squid\n",Y); printf(X "\n",Y);
+#define SEND3(X,Y,Z) debug("sending '" X "' to squid\n",Y,Z); printf(X "\n",Y,Z);
 #endif
-    SEND2("BH %s", reason);
-}
+
+char *negotiate_check_auth(SSP_blobP auth, int auth_length);
 
 /*
  * options:
@@ -102,7 +85,6 @@ usage()
             " -h  this message\n\n",
             my_program_name);
 }
-
 
 void
 process_options(int argc, char *argv[])
@@ -126,7 +108,7 @@ process_options(int argc, char *argv[])
             opt = optopt;
             /* fall thru to default */
         default:
-            fprintf(stderr, "unknown option: -%c. Exiting\n", opt);
+            fprintf(stderr, "ERROR: unknown option: -%c. Exiting\n", opt);
             usage();
             had_error = 1;
         }
@@ -138,7 +120,7 @@ process_options(int argc, char *argv[])
 int
 manage_request()
 {
-    char buf[BUFFER_SIZE];
+    char buf[HELPER_INPUT_BUFFER];
     char helper_command[3];
     char *c, *decoded;
     int plen, status;
@@ -148,14 +130,14 @@ manage_request()
     BOOL Done = FALSE;
 
 try_again:
-    if (fgets(buf, BUFFER_SIZE, stdin) == NULL)
+    if (fgets(buf, HELPER_INPUT_BUFFER, stdin))
         return 0;
 
-    c = memchr(buf, '\n', BUFFER_SIZE);		/* safer against overrun than strchr */
+    c = memchr(buf, '\n', HELPER_INPUT_BUFFER);		/* safer against overrun than strchr */
     if (c) {
         if (oversized) {
-            helperfail("illegal request received");
-            fprintf(stderr, "Illegal request received: '%s'\n", buf);
+            SEND("BH illegal request received");
+            fprintf(stderr, "ERROR: Illegal request received: '%s'\n", buf);
             return 1;
         }
         *c = '\0';
@@ -214,12 +196,12 @@ try_again:
                 have_serverblob = 1;
             }
         } else
-            helperfail("can't obtain server blob");
+            SEND("BH can't obtain server blob");
         return 1;
     }
     if (memcmp(buf, "KK ", 3) == 0) {	/* authenticate-request */
         if (!have_serverblob) {
-            helperfail("invalid server blob");
+            SEND("BH invalid server blob");
             return 1;
         }
         /* figure out what we got */
@@ -236,9 +218,6 @@ try_again:
         c = (char *) SSP_ValidateNegotiateCredentials(decoded, plen, &Done, &status, cred);
 
         if (status == SSP_ERROR) {
-#if FAIL_DEBUG
-            fail_debug_enabled = 1;
-#endif
             FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
                           FORMAT_MESSAGE_IGNORE_INSERTS,
                           NULL,
@@ -283,11 +262,11 @@ try_again:
         }
 
     } else {			/* not an auth-request */
-        helperfail("illegal request received");
+        SEND("BH illegal request received");
         fprintf(stderr, "Illegal request received: '%s'\n", buf);
         return 1;
     }
-    helperfail("detected protocol error");
+    SEND("BH detected protocol error");
     return 1;
     /********* END ********/
 }
@@ -302,7 +281,7 @@ main(int argc, char *argv[])
     debug("%s build " __DATE__ ", " __TIME__ " starting up...\n", my_program_name);
 
     if (LoadSecurityDll(SSP_NTLM, NEGOTIATE_PACKAGE_NAME) == NULL) {
-        fprintf(stderr, "FATAL, can't initialize SSPI, exiting.\n");
+        fprintf(stderr, "FATAL: %s: can't initialize SSPI, exiting.\n", argv[0]);
         exit(1);
     }
     debug("SSPI initialized OK\n");

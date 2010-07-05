@@ -118,6 +118,7 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <sect2>Negotiate Authentication protocol helpers
 <p><itemize>
+	<item>mswin_sspi - negotiate_sspi_auth - Authenticate with a Windows Domain Controller using SSPI.
 	<item>squid_kerb_auth - negotiate_kerberos_auth - Authenticate with Kerberos servers.
 </itemize>
 
