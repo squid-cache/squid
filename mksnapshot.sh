@@ -118,7 +118,7 @@ if (groff --help >/dev/null); then
 	for f in `ls -1 ${tmpdir}/doc/manuals/*.1  ${tmpdir}/doc/manuals/*.8 2>/dev/null` ; do
 		cat ${f} | groff -E -Thtml -mandoc >${f}.html
 	done
-	sh -c "cd ${tmpdir}/doc/manuals && tar -zcf $PWD/${PACKAGE}-${VERSION}-${date}-manuals.tar.gz *.html *.1 *.8"
+	sh -c "cd ${tmpdir}/doc/manuals && tar -zcf ${PWD}/${PACKAGE}-${VERSION}-${date}-manuals.tar.gz *.html *.1 *.8"
 	echo ${PACKAGE}-${VERSION}-${date}-manuals.tar.gz >>${tag}.out
 fi
 
