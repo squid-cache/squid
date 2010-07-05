@@ -50,10 +50,6 @@ void Ipc::Strand::receive(const TypedMsgHdr &message)
         SharedListenJoined(SharedListenResponse(message));
         break;
 
-    case mtDescriptorPut:
-        putDescriptor(Descriptor(message));
-        break;
-
     default:
         debugs(54, 1, HERE << "Unhandled message type: " << message.type());
         break;
@@ -66,27 +62,11 @@ void Ipc::Strand::handleRegistrationResponse(const StrandCoord &strand)
     if (strand.kidId == KidIdentifier && strand.pid == getpid()) {
         debugs(54, 6, "kid" << KidIdentifier << " registered");
         clearTimeout(); // we are done
-
-        debugs(54, 6, HERE << "requesting FD");
-        Descriptor request(KidIdentifier, -1);
-        TypedMsgHdr message;
-        request.pack(message);
-        SendMessage(coordinatorAddr, message);
     } else {
         // could be an ACK to the registration message of our dead predecessor
         debugs(54, 6, "kid" << KidIdentifier << " is not yet registered");
         // keep listening, with a timeout
     }
-}
-
-/// receive descriptor we asked for
-void Ipc::Strand::putDescriptor(const Descriptor &message)
-{
-    debugs(54, 6, HERE << "got FD " << message.fd);
-    char buffer[64];
-    const int n = snprintf(buffer, sizeof(buffer), "strand: kid%d wrote using FD %d\n", KidIdentifier, message.fd);
-    ssize_t bytes = write(message.fd, buffer, n);
-    Must(bytes == n);
 }
 
 void Ipc::Strand::timedout()
