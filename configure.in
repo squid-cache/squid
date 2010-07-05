@@ -1953,13 +1953,13 @@ dnl Enable WIN32 Service compile mode
 AC_ARG_ENABLE(win32-service,
   AS_HELP_STRING([--enable-win32-service],
                  [Compile Squid as a WIN32 Service.
-                  Works only on MS-Windows platforms]),
-[ if test "$enableval" = "yes" ; then
-    AC_MSG_NOTICE([Enabling WIN32 run service mode])
-    AC_DEFINE(USE_WIN32_SERVICE,1,
-              [Define Windows NT & Windows 2000 run service mode])
-  fi
+                  Works only on MS-Windows platforms]), [
+SQUID_YESNO([$enableval],
+            [unrecognized argument to --enable-win32-service: $enableval])
 ])
+SQUID_DEFINE_BOOL(USE_WIN32_SERVICE,${enable_win32_service:=no},
+   [Enable code supporting MS Windows service mode])
+AC_MSG_NOTICE([MS Windows service mode enabled: $enable_win32_service])
 
 
 # Check for Cyrus SASL
