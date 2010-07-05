@@ -275,11 +275,6 @@ if test -z "$PRESET_CFLAGS"; then
 		-Wl,-woff,85,-woff,84,-woff,134 \
 		-nostdinc -I/usr/include -D_BSD_SIGNALS $CXXFLAGS"
 	    ;;
-	alpha-dec-osf4.*)
-	    # Mogul says DEC compilers take both -g and -O2
-	    CFLAGS=`echo $CFLAGS | sed -e 's/-g/-g3/'`
-	    CFLAGS="$squid_cv_cc_option_optimize $CFLAGS"
-	    ;;
 	*)
 	    ;;
 	esac
@@ -2109,13 +2104,6 @@ AC_SUBST(SQUID_CPPUNIT_INC)
 # Force some compilers to use ANSI features
 #
 case "$host" in
-    alpha-dec-osf*)
-	if test "$ac_cv_prog_CC" = "cc" ; then
-		AC_MSG_NOTICE([adding '-std1' to cc args for $host])
-		CC="cc -std1";
-		ac_cv_prog_CC="$CC"
-	fi
-	;;
     *-hp-hpux*)
 	if test "$ac_cv_prog_CC" = "cc" ; then
 		AC_MSG_NOTICE([adding '-Ae' to cc args for $host])
@@ -2942,11 +2930,6 @@ dnl This has to be before AC_CHECK_FUNCS
 # when running configure.
 if test -z "$ac_cv_func_poll"; then
 	case "$host" in
-		[alpha-dec-osf3.*])
-			# John Kay (jkay@nlanr.net) 19970818
-			AC_MSG_NOTICE([disabling poll for $host...])
-			ac_cv_func_poll='no'
-			;;
 		[*-hp-hpux*.*])
 			# Duane Wessels
 			AC_MSG_NOTICE([disabling poll for $host...])
