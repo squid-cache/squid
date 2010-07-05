@@ -1,0 +1,93 @@
+#ifndef _SQUID_LIBNTLMAUTH_SUPPORT_BITS_CCI
+#define _SQUID_LIBNTLMAUTH_SUPPORT_BITS_CCI
+
+#if HAVE_STRING_H
+#include <string.h>
+#endif
+
+/*
+ * Defines several functions which are used and mutually shared by the NTLM helpers
+ * These do not (yet) have a defined stable home to go to.
+ * For now include this file into helper main .cc where needed.
+ */
+
+/* makes a null-terminated string upper-case. Changes CONTENTS! */
+static void
+uc(char *string)
+{
+    char *p = string, c;
+    while ((c = *p)) {
+        *p = xtoupper(c);
+        p++;
+    }
+}
+
+/* makes a null-terminated string lower-case. Changes CONTENTS! */
+static void
+lc(char *string)
+{
+    char *p = string, c;
+    while ((c = *p)) {
+        *p = xtolower(c);
+        p++;
+    }
+}
+
+static void
+hex_dump(unsigned char *data, int size)
+{
+    /* dumps size bytes of *data to stdout. Looks like:
+     * [0000] 75 6E 6B 6E 6F 77 6E 20
+     *                  30 FF 00 00 00 00 39 00 unknown 0.....9.
+     * (in a single line of course)
+     */
+
+    if (!data)
+        return;
+
+    if (debug_enabled) {
+        unsigned char *p = data;
+        unsigned char c;
+        int n;
+        char bytestr[4] = {0};
+        char addrstr[10] = {0};
+        char hexstr[16 * 3 + 5] = {0};
+        char charstr[16 * 1 + 5] = {0};
+        for (n = 1; n <= size; n++) {
+            if (n % 16 == 1) {
+                /* store address for this line */
+                snprintf(addrstr, sizeof(addrstr), "%.4x", (int) (p - data));
+            }
+            c = *p;
+            if (xisalnum(c) == 0) {
+                c = '.';
+            }
+            /* store hex str (for left side) */
+            snprintf(bytestr, sizeof(bytestr), "%02X ", *p);
+            strncat(hexstr, bytestr, sizeof(hexstr) - strlen(hexstr) - 1);
+
+            /* store char str (for right side) */
+            snprintf(bytestr, sizeof(bytestr), "%c", c);
+            strncat(charstr, bytestr, sizeof(charstr) - strlen(charstr) - 1);
+
+            if (n % 16 == 0) {
+                /* line completed */
+                fprintf(stderr, "[%4.4s]   %-50.50s  %s\n", addrstr, hexstr, charstr);
+                hexstr[0] = 0;
+                charstr[0] = 0;
+            } else if (n % 8 == 0) {
+                /* half line: add whitespaces */
+                strncat(hexstr, "  ", sizeof(hexstr) - strlen(hexstr) - 1);
+                strncat(charstr, " ", sizeof(charstr) - strlen(charstr) - 1);
+            }
+            p++;                /* next byte */
+        }
+
+        if (strlen(hexstr) > 0) {
+            /* print rest of buffer if not empty */
+            fprintf(stderr, "[%4.4s]   %-50.50s  %s\n", addrstr, hexstr, charstr);
+        }
+    }
+}
+
+#endif /* _SQUID_LIBNTLMAUTH_SUPPORT_BITS_CCI */

@@ -441,22 +441,8 @@ HttpStateData::cacheableReply()
         if (!refreshIsCachable(entry) && !REFRESH_OVERRIDE(store_stale)) {
             debugs(22, 3, "refreshIsCachable() returned non-cacheable..");
             return 0;
-        }
-
-        /* don't cache objects from peers w/o LMT, Date, or Expires */
-        /* check that is it enough to check headers @?@ */
-        if (rep->date > -1)
+        } else
             return 1;
-        else if (rep->last_modified > -1)
-            return 1;
-        else if (!_peer)
-            return 1;
-
-        /* @?@ (here and 302): invalid expires header compiles to squid_curtime */
-        else if (rep->expires > -1)
-            return 1;
-        else
-            return 0;
 
         /* NOTREACHED */
         break;
@@ -667,13 +653,18 @@ void
 HttpStateData::processReplyHeader()
 {
     /** Creates a blank header. If this routine is made incremental, this will not do */
+
+    /* NP: all exit points to this function MUST call ctx_exit(ctx) */
     Ctx ctx = ctx_enter(entry->mem_obj->url);
+
     debugs(11, 3, "processReplyHeader: key '" << entry->getMD5Text() << "'");
 
     assert(!flags.headers_parsed);
 
-    if (!readBuf->hasContent())
+    if (!readBuf->hasContent()) {
+        ctx_exit(ctx);
         return;
+    }
 
     http_status error = HTTP_STATUS_NONE;
 
@@ -759,7 +750,6 @@ HttpStateData::processReplyHeader()
     orig_request->hier.peer_reply_status = newrep->sline.status;
 
     ctx_exit(ctx);
-
 }
 
 /**
