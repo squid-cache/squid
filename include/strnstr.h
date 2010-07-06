@@ -1,11 +1,8 @@
-/*
- * Squid VCS $Id$
- */
 #include "config.h"
 
 #if HAVE_STRNSTR
 
-/* Is strnstr exists and is usablewe do so. */
+/* Is strnstr exists and is usable we do so. */
 #define squid_strnstr(a,b,c)	strnstr(a,b,c)
 
 #else /* not HAVE_STRNSTR */

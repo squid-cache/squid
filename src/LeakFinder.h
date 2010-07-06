@@ -1,13 +1,15 @@
-
-
-
 #ifndef SQUID_LEAKFINDER_H
 #define SQUID_LEAKFINDER_H
 
+#include "config.h"
+
 #if USE_LEAKFINDER
-#define leakAdd(p,l) if (l) l->add(p,__FILE__,__LINE__)
+
+#include "hash.h"
+
+#define leakAdd(p,l) if (l) l->addSome(p,__FILE__,__LINE__)
 #define leakTouch(p,l) if (l) l->touch(p,__FILE__,__LINE__)
-#define leakFree(p,l) if (l) l->free(p,__FILE__,__LINE__)
+#define leakFree(p,l) if (l) l->freeSome(p,__FILE__,__LINE__)
 
 class LeakFinderPtr : public hash_link
 {
@@ -26,12 +28,11 @@ public:
     LeakFinder();
     ~LeakFinder();
 
-    void *add
-    (void *, const char *, const int);
+    void *addSome(void *, const char *, const int);
 
     void *touch(void *, const char *, const int);
 
-    void *free(void *, const char *, const int);
+    void *freeSome(void *, const char *, const int);
 
     void dump();
 

@@ -27,6 +27,13 @@
 #define getrusage(a, b)  syscall(SYS_GETRUSAGE, a, b)
 #endif
 
+/*
+ * getpagesize(...) not available on HPUX
+ */
+#if !defined(HAVE_GETPAGESIZE)
+#define HAVE_GETPAGESIZE
+#define getpagesize( )   sysconf(_SC_PAGE_SIZE)
+#endif
 
 #endif /* _SQUID_HPUX_ */
 #endif /* SQUID_OS_HPUX_H */

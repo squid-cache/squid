@@ -1,6 +1,6 @@
-
 /*
  * $Id$
+ * DEBUG: section 93    eCAP Interface
  */
 
 #ifndef SQUID_ECAP_HOST_H
@@ -17,8 +17,6 @@ namespace Ecap
 class Host : public libecap::host::Host
 {
 public:
-    Host();
-
     // About
     virtual std::string uri() const; // unique across all vendors
     virtual void describe(std::ostream &os) const; // free-format info
@@ -29,6 +27,13 @@ public:
     // Logging
     virtual std::ostream *openDebug(libecap::LogVerbosity lv);
     virtual void closeDebug(std::ostream *debug);
+
+    static void Register(); ///< register adaptation host
+
+private:
+    Host();
+    Host (const Host&); ///< not implemented
+    Host& operator= (const Host&); ///< not implemented
 };
 
 extern const libecap::Name protocolInternal;

@@ -1,7 +1,7 @@
-#  Makefile for digest auth helpers in the Squid Object Cache server
-#
-#  $Id$
-#
+## Alphabetical list of sub-directories to distribute with Squid:
+DIST_SUBDIRS= \
+	eDirectory \
+	file \
+	ldap
 
-DIST_SUBDIRS	= password ldap eDirectory
-SUBDIRS		= $(DIGEST_AUTH_HELPERS)
+SUBDIRS= $(DIGEST_AUTH_HELPERS)

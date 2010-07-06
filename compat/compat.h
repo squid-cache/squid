@@ -42,7 +42,7 @@
 /** On linux this must be defined to get PRId64 and friends */
 #define __STDC_FORMAT_MACROS
 
-#include "squid_types.h"
+#include "compat/types.h"
 
 /*****************************************************/
 /* per-OS hacks. One file per OS.                    */
@@ -55,6 +55,7 @@
 #include "compat/os/hpux.h"
 #include "compat/os/linux.h"
 #include "compat/os/mswin.h"
+#include "compat/os/netbsd.h"
 #include "compat/os/next.h"
 #include "compat/os/openbsd.h"
 #include "compat/os/os2.h"
@@ -95,5 +96,7 @@
  */
 #include "compat/GnuRegex.h"
 
+/* some functions are unsafe to be used in Squid. */
+#include "compat/unsafe.h"
 
 #endif /* _SQUID_COMPAT_H */

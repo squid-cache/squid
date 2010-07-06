@@ -60,7 +60,7 @@ send_announce(const ipcache_addrs *ia, const DnsLookupDetails &, void *junk)
     LOCAL_ARRAY(char, tbuf, 256);
     LOCAL_ARRAY(char, sndbuf, BUFSIZ);
 
-    IpAddress S;
+    Ip::Address S;
     char *host = Config.Announce.host;
     char *file = NULL;
     u_short port = Config.Announce.port;

@@ -93,6 +93,7 @@
 #include "clientStream.h"
 #include "comm.h"
 #include "comm/ListenStateData.h"
+#include "base/TextException.h"
 #include "ConnectionDetail.h"
 #include "eui/Config.h"
 #include "fde.h"
@@ -101,7 +102,7 @@
 #include "HttpRequest.h"
 #include "ident/Config.h"
 #include "ident/Ident.h"
-#include "ip/IpIntercept.h"
+#include "ip/Intercept.h"
 #include "ipc/StartListening.h"
 #include "MemBuf.h"
 #include "MemObject.h"
@@ -200,7 +201,7 @@ static void connNoteUseOfBuffer(ConnStateData* conn, size_t byteCount);
 static int connKeepReadingIncompleteRequest(ConnStateData * conn);
 static void connCancelIncompleteRequests(ConnStateData * conn);
 
-static ConnStateData *connStateCreate(const IpAddress &peer, const IpAddress &me, int fd, http_port_list *port);
+static ConnStateData *connStateCreate(const Ip::Address &peer, const Ip::Address &me, int fd, http_port_list *port);
 
 
 int
@@ -529,13 +530,12 @@ prepareLogWithRequestDetails(HttpRequest * request, AccessLogEntry * aLogEntry)
         aLogEntry->cache.requestSize += request->content_length;
     aLogEntry->cache.extuser = request->extacl_user.termedBuf();
 
-    if (request->auth_user_request) {
+    if (request->auth_user_request != NULL) {
 
         if (request->auth_user_request->username())
-            aLogEntry->cache.authuser =
-                xstrdup(request->auth_user_request->username());
+            aLogEntry->cache.authuser = xstrdup(request->auth_user_request->username());
 
-        AUTHUSERREQUESTUNLOCK(request->auth_user_request, "request via clientPrepareLogWithRequestDetails");
+// WTF??        request->auth_user_request = NULL;
     }
 }
 
@@ -721,8 +721,6 @@ ConnStateData::~ConnStateData()
     if (!flags.swanSang)
         debugs(33, 1, "BUG: ConnStateData was not destroyed properly; FD " << fd);
 
-    AUTHUSERREQUESTUNLOCK(auth_user_request, "~conn");
-
     cbdataReferenceDone(port);
 
     if (bodyPipe != NULL)
@@ -746,8 +744,8 @@ clientSetKeepaliveFlag(ClientHttpRequest * http)
     debugs(33, 3, "clientSetKeepaliveFlag: method = " <<
            RequestMethodStr(request->method));
 
-    HttpVersion http_ver(1,0);
-    /* we are HTTP/1.0, no matter what the client requests... */
+    /* We are HTTP/1.1 facing clients now*/
+    HttpVersion http_ver(1,1);
 
     if (httpMsgIsPersistent(http_ver, req_hdr))
         request->flags.proxy_keepalive = 1;
@@ -1157,6 +1155,8 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
     assert(request->range);
     /* check if we still want to do ranges */
 
+    int64_t roffLimit = request->getRangeOffsetLimit();
+
     if (!rep)
         range_err = "no [parse-able] reply";
     else if ((rep->sline.status != HTTP_OK) && (rep->sline.status != HTTP_PARTIAL_CONTENT))
@@ -1177,7 +1177,7 @@ ClientSocketContext::buildRangeHeader(HttpReply * rep)
         range_err = "canonization failed";
     else if (http->request->range->isComplex())
         range_err = "too complex range header";
-    else if (!logTypeIsATcpHit(http->logType) && http->request->range->offsetLimitExceeded())
+    else if (!logTypeIsATcpHit(http->logType) && http->request->range->offsetLimitExceeded(roffLimit))
         range_err = "range outside range_offset_limit";
 
     /* get rid of our range specs on error */
@@ -2454,10 +2454,10 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
      * If transparent or interception mode is working clone the transparent and interception flags
      * from the port settings to the request.
      */
-    if (IpInterceptor.InterceptActive()) {
+    if (Ip::Interceptor.InterceptActive()) {
         request->flags.intercepted = http->flags.intercepted;
     }
-    if (IpInterceptor.TransparentActive()) {
+    if (Ip::Interceptor.TransparentActive()) {
         request->flags.spoof_client_ip = conn->port->spoof_client_ip;
     }
 
@@ -2525,6 +2525,27 @@ clientProcessRequest(ConnStateData *conn, HttpParser *hp, ClientSocketContext *c
         context->pullData();
         conn->flags.readMoreRequests = false;
         goto finish;
+    }
+
+    if (request->header.has(HDR_EXPECT)) {
+        int ignore = 0;
+#if HTTP_VIOLATIONS
+        if (Config.onoff.ignore_expect_100) {
+            String expect = request->header.getList(HDR_EXPECT);
+            if (expect.caseCmp("100-continue") == 0)
+                ignore = 1;
+            expect.clean();
+        }
+#endif
+        if (!ignore) {
+            clientStreamNode *node = context->getClientReplyContext();
+            clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
+            assert (repContext);
+            repContext->setReplyToError(ERR_INVALID_REQ, HTTP_EXPECTATION_FAILED, request->method, http->uri, conn->peer, request, NULL, NULL);
+            assert(context->http->out.offset == 0);
+            context->pullData();
+            goto finish;
+        }
     }
 
     http->request = HTTPMSGLOCK(request);
@@ -3017,7 +3038,7 @@ clientLifetimeTimeout(int fd, void *data)
 }
 
 ConnStateData *
-connStateCreate(const IpAddress &peer, const IpAddress &me, int fd, http_port_list *port)
+connStateCreate(const Ip::Address &peer, const Ip::Address &me, int fd, http_port_list *port)
 {
     ConnStateData *result = new ConnStateData;
 
@@ -3030,9 +3051,9 @@ connStateCreate(const IpAddress &peer, const IpAddress &me, int fd, http_port_li
     result->port = cbdataReference(port);
 
     if (port->intercepted || port->spoof_client_ip) {
-        IpAddress client, dst;
+        Ip::Address client, dst;
 
-        if (IpInterceptor.NatLookup(fd, me, peer, client, dst) == 0) {
+        if (Ip::Interceptor.NatLookup(fd, me, peer, client, dst) == 0) {
             result->me = client;
             result->peer = dst;
             result->transparent(true);

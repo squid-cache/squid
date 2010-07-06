@@ -78,9 +78,4 @@ SQUIDCEXTERN ssize_t rfc3596BuildHostQuery(const char *hostname,
 /* RFC3596 section 2.1 defines new RR type AAAA as 28 */
 #define RFC1035_TYPE_AAAA 28
 
-/* rfc3596 library wraps rfc1035 errno and error_message */
-#define rfc3596_errno		rfc1035_errno
-#define rfc3596_error_message	rfc1035_error_message
-
-
 #endif /* SQUID_RFC3596_H */

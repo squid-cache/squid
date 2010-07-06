@@ -34,7 +34,6 @@ EXTRA_LIBRARIES = \
 	libsspwin32.a
 noinst_LIBRARIES = \
 	libmiscutil.a \
-	libntlmauth.a \
 	$(LIBSSPWIN32)
 
 #
@@ -49,6 +48,8 @@ EXTRA_libmiscutil_a_SOURCES = \
 	win32lib.c
 libmiscutil_a_SOURCES = \
 	MemPool.cc \
+	MemPoolChunked.cc \
+	MemPoolMalloc.cc \
 	base64.c \
 	charset.c \
 	getfullhostname.c \
@@ -75,10 +76,6 @@ libmiscutil_a_SOURCES = \
 libmiscutil_a_LIBADD = $(LIBOBJS)
 
 # $(top_srcdir)/include/version.h should be a dependency
-libntlmauth_a_SOURCES = \
-	ntlmauth.c
-libntlmauth_a_LIBADD = \
-	$(LIBOBJS)
 libsspwin32_a_SOURCES = \
 	base64.c \
 	sspwin32.c

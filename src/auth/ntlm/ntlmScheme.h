@@ -35,6 +35,7 @@
 #define SQUID_NTLMSCHEME_H
 
 #include "auth/Scheme.h"
+#include "auth/ntlm/auth_ntlm.h"
 
 /// \ingroup AuthSchemeAPI
 /// \ingroup AuthAPI
@@ -42,20 +43,25 @@ class ntlmScheme : public AuthScheme
 {
 
 public:
-    static AuthScheme &GetInstance();
-    ntlmScheme();
+    static AuthScheme::Pointer GetInstance();
+    ntlmScheme() {};
     virtual ~ntlmScheme() {};
 
     /* per scheme */
     virtual char const *type () const;
     virtual void done();
     virtual AuthConfig *createConfig();
+
     /* Not implemented */
     ntlmScheme (ntlmScheme const &);
     ntlmScheme &operator=(ntlmScheme const &);
 
 private:
-    static ntlmScheme *_instance;
+    /**
+     * Main instance of this authentication Scheme.
+     * NULL when the scheme is not being used.
+     */
+    static AuthScheme::Pointer _instance;
 };
 
 #endif /* SQUID_ntlmSCHEME_H */

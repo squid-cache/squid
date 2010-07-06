@@ -1,14 +1,18 @@
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <ctype.h>
-#include <sys/time.h>
-#include <strings.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-
+#include "config.h"
 #include "hash.h"
+
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#if HAVE_STDIO_H
+#include <stdio.h>
+#endif
+#if HAVE_CTYPE_H
+#include <ctype.h>
+#endif
+#if HAVE_STRINGS_H
+#include <strings.h>
+#endif
 
 static hash_table *mem_table = NULL;
 static hash_link *mem_entry;

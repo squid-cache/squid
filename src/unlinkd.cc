@@ -2,7 +2,7 @@
 /*
  * $Id$
  *
- * DEBUG: section 2     Unlink Daemon
+ * DEBUG: section 02    Unlink Daemon
  * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -192,7 +192,7 @@ void
 unlinkdInit(void)
 {
     const char *args[2];
-    IpAddress localhost;
+    Ip::Address localhost;
 
     args[0] = "(unlinkd)";
     args[1] = NULL;

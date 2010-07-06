@@ -1,11 +1,11 @@
 /*
- * DEBUG: section XXX
+ * DEBUG: section 93    Adaptation
  */
 
 #include "squid.h"
-#include "HttpMsg.h"
-#include "TextException.h"
 #include "adaptation/Message.h"
+#include "base/TextException.h"
+#include "HttpMsg.h"
 
 Adaptation::Message::Message(): header(NULL)
 {

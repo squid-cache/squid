@@ -137,7 +137,6 @@ static void fqdncacheRelease(fqdncache_entry *);
 static fqdncache_entry *fqdncacheCreateEntry(const char *name);
 static void fqdncacheCallback(fqdncache_entry *, int wait);
 static fqdncache_entry *fqdncache_get(const char *);
-static FQDNH dummy_handler;
 static int fqdncacheExpiredEntry(const fqdncache_entry *);
 static void fqdncacheLockEntry(fqdncache_entry * f);
 static void fqdncacheUnlockEntry(fqdncache_entry * f);
@@ -524,12 +523,11 @@ fqdncacheHandleReply(void *data, rfc1035_rr * answers, int na, const char *error
  * 			and does not affect the FQDN cache.
  */
 void
-fqdncache_nbgethostbyaddr(IpAddress &addr, FQDNH * handler, void *handlerData)
+fqdncache_nbgethostbyaddr(const Ip::Address &addr, FQDNH * handler, void *handlerData)
 {
     fqdncache_entry *f = NULL;
     char name[MAX_IPSTRLEN];
     generic_cbdata *c;
-    assert(handler);
     addr.NtoA(name,MAX_IPSTRLEN);
     debugs(35, 4, "fqdncache_nbgethostbyaddr: Name '" << name << "'.");
     FqdncacheStats.requests++;
@@ -537,7 +535,8 @@ fqdncache_nbgethostbyaddr(IpAddress &addr, FQDNH * handler, void *handlerData)
     if (name[0] == '\0') {
         debugs(35, 4, "fqdncache_nbgethostbyaddr: Invalid name!");
         const DnsLookupDetails details("Invalid hostname", -1); // error, no lookup
-        handler(NULL, details, handlerData);
+        if (handler)
+            handler(NULL, details, handlerData);
         return;
     }
 
@@ -642,7 +641,7 @@ fqdncache_init(void)
  *
  */
 const char *
-fqdncache_gethostbyaddr(IpAddress &addr, int flags)
+fqdncache_gethostbyaddr(const Ip::Address &addr, int flags)
 {
     char name[MAX_IPSTRLEN];
     fqdncache_entry *f = NULL;
@@ -676,7 +675,7 @@ fqdncache_gethostbyaddr(IpAddress &addr, int flags)
     FqdncacheStats.misses++;
 
     if (flags & FQDN_LOOKUP_IF_MISS) {
-        fqdncache_nbgethostbyaddr(addr, dummy_handler, NULL);
+        fqdncache_nbgethostbyaddr(addr, NULL, NULL);
     }
 
     return NULL;
@@ -738,16 +737,9 @@ fqdnStats(StoreEntry * sentry)
     }
 }
 
-/// \ingroup FQDNCacheInternal
-static void
-dummy_handler(const char *, const DnsLookupDetails &, void *)
-{
-    return;
-}
-
 /// \ingroup FQDNCacheAPI
 const char *
-fqdnFromAddr(IpAddress &addr)
+fqdnFromAddr(const Ip::Address &addr)
 {
     const char *n;
     static char buf[MAX_IPSTRLEN];
@@ -873,7 +865,7 @@ fqdncacheAddEntryFromHosts(char *addr, wordlist * hostnames)
 }
 
 
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 /**
  *  \ingroup FQDNCacheAPI
  * The function to return the FQDN statistics via SNMP

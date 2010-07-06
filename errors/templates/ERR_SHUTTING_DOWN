@@ -19,7 +19,7 @@ body
 <div id="content">
 <p>The following error was encountered while trying to retrieve the URL: <a href="%U">%U</a></p>
 
-<p>This cache is in the process of shutting down and can not service your request at this time.  Please retry your request again soon.</p>
+<p>This cache is in the process of shutting down and can not service your request at this time. Please retry your request again soon.</p>
 
 <p>Your cache administrator is <a href="mailto:%w%W">%w</a>.</p>
 <br>

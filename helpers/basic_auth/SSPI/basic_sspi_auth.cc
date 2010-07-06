@@ -25,6 +25,7 @@
 */
 
 #include "config.h"
+#include "helpers/defines.h"
 #include "util.h"
 
 #if HAVE_STDIO_H
@@ -57,20 +58,19 @@ char *my_program_name = NULL;
 void
 usage()
 {
-    fprintf(stderr,
-            "%s usage:\n%s [-A|D UserGroup][-O DefaultDomain][-d]\n"
+    fprintf(stderr, "Usage:\n%s [-A|D UserGroup][-O DefaultDomain][-d]\n"
             "-A can specify a Windows Local Group name allowed to authenticate\n"
             "-D can specify a Windows Local Group name not allowed to authenticate\n"
             "-O can specify the default Domain against to authenticate\n"
             "-d enable debugging.\n"
             "-h this message\n\n",
-            my_program_name, my_program_name);
+            my_program_name);
 }
 
 void
 process_options(int argc, char *argv[])
 {
-    int opt, had_error = 0;
+    int opt;
     while (-1 != (opt = getopt(argc, argv, "dhA:D:O:"))) {
         switch (opt) {
         case 'A':
@@ -96,25 +96,20 @@ process_options(int argc, char *argv[])
             opt = optopt;
             /* fall thru to default */
         default:
-            fprintf(stderr, "Unknown option: -%c. Exiting\n", opt);
-            had_error = 1;
+            fprintf(stderr, "FATAL: Unknown option: -%c\n", opt);
+            usage();
+            exit(1);
         }
-    }
-    if (had_error) {
-        usage();
-        exit(1);
     }
 }
 
 /* Main program for simple authentication.
    Scans and checks for Squid input, and attempts to validate the user.
 */
-
 int
 main(int argc, char **argv)
-
 {
-    char wstr[256];
+    char wstr[HELPER_INPUT_BUFFER];
     char username[256];
     char password[256];
     char *p;
@@ -123,10 +118,8 @@ main(int argc, char **argv)
     my_program_name = argv[0];
     process_options(argc, argv);
 
-    debug("%s build " __DATE__ ", " __TIME__ " starting up...\n", my_program_name);
-
     if (LoadSecurityDll(SSP_BASIC, NTLM_PACKAGE_NAME) == NULL) {
-        fprintf(stderr, "FATAL, can't initialize SSPI, exiting.\n");
+        fprintf(stderr, "FATAL: can't initialize SSPI, exiting.\n");
         exit(1);
     }
     debug("SSPI initialized OK\n");
@@ -137,19 +130,17 @@ main(int argc, char **argv)
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
 
-    while (1) {
-        /* Read whole line from standard input. Terminate on break. */
-        if (fgets(wstr, 255, stdin) == NULL)
-            break;
+    while (fgets(wstr, HELPER_INPUT_BUFFER, stdin) != NULL) {
 
         if (NULL == strchr(wstr, '\n')) {
             err = 1;
             continue;
         }
         if (err) {
-            fprintf(stderr, "Oversized message\n");
-            puts("ERR");
-            goto error;
+            SEND_ERR("Oversized message");
+            err = 0;
+            fflush(stdout);
+            continue;
         }
 
         if ((p = strchr(wstr, '\n')) != NULL)
@@ -165,8 +156,7 @@ main(int argc, char **argv)
 
         /* Check for invalid or blank entries */
         if ((username[0] == '\0') || (password[0] == '\0')) {
-            fprintf(stderr, "Invalid Request\n");
-            puts("ERR");
+            SEND_ERR("Invalid Request");
             fflush(stdout);
             continue;
         }
@@ -176,10 +166,9 @@ main(int argc, char **argv)
         debug("Trying to validate; %s %s\n", username, password);
 
         if (Valid_User(username, password, NTGroup) == NTV_NO_ERROR)
-            puts("OK");
+            SEND_OK("");
         else
-            printf("ERR %s\n", errormsg);
-error:
+            SEND_ERR(errormsg);
         err = 0;
         fflush(stdout);
     }

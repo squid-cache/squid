@@ -33,7 +33,7 @@
 #include "squid.h"
 #include "comm.h"
 #include "fde.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 #include "rfc1738.h"
 
 static const char *hello_string = "hi there\n";
@@ -73,11 +73,11 @@ PutEnvironment()
 }
 
 pid_t
-ipcCreate(int type, const char *prog, const char *const args[], const char *name, IpAddress &local_addr, int *rfd, int *wfd, void **hIpc)
+ipcCreate(int type, const char *prog, const char *const args[], const char *name, Ip::Address &local_addr, int *rfd, int *wfd, void **hIpc)
 {
     pid_t pid;
-    IpAddress ChS;
-    IpAddress PaS;
+    Ip::Address ChS;
+    Ip::Address PaS;
     struct addrinfo *AI = NULL;
     int crfd = -1;
     int prfd = -1;

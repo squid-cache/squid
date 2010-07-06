@@ -1,7 +1,7 @@
 #!/bin/sh -e
 # Nightly cron job to generate snapshot releases
 top=$PWD
-versions=/server/httpd/htdocs/squid-cache.org/Versions/
+versions=/server/httpd/htdocs/squid-cache.org/content/Versions/
 TMPDIR=/home/squidadm/$LOGNAME.cron
 export TMPDIR
 if [ -d $TMPDIR ]; then
@@ -94,23 +94,23 @@ set +e
 
 # autotool derived files not kept in trunk, but still need to bootstrap for make dist
 ../commit/bootstrap squid-3
-make_snapshot ../commit/squid-3/mksnapshot.sh trunk v3 HEAD 6
+make_snapshot ../commit/squid-3/mksnapshot.sh trunk v3 3.HEAD 6
 
 rm -f /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new
 cp ../commit/squid-3/CONTRIBUTORS /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new
 chmod 444 /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new
-mv -f /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.txt
+mv -f /server/httpd/htdocs/squid-cache.org/CONTRIBUTORS.new /server/httpd/htdocs/squid-cache.org/content/CONTRIBUTORS.txt
 
 rm -f /server/httpd/htdocs/squid-cache.org/SPONSORS.new
 cp ../commit/squid-3/SPONSORS /server/httpd/htdocs/squid-cache.org/SPONSORS.new
 chmod 444 /server/httpd/htdocs/squid-cache.org/SPONSORS.new
-mv -f /server/httpd/htdocs/squid-cache.org/SPONSORS.new /server/httpd/htdocs/squid-cache.org/SPONSORS.txt
+mv -f /server/httpd/htdocs/squid-cache.org/SPONSORS.new /server/httpd/htdocs/squid-cache.org/content/SPONSORS.txt
 
 ../commit/bootstrap squid-3.1
 make_snapshot ../commit/squid-3/mksnapshot.sh branches/SQUID_3_1 v3 3.1 3
 
-../commit/bootstrap squid-3.0
-make_snapshot ../commit/squid-3/mksnapshot.sh branches/SQUID_3_0 v3 3.0 3
+#../commit/bootstrap squid-3.0
+#make_snapshot ../commit/squid-3/mksnapshot.sh branches/SQUID_3_0 v3 3.0 3
 
 ../commit/bootstrap squid-2
 make_snapshot ../commit/squid-2/mksnapshot.sh HEAD v2 HEAD 3

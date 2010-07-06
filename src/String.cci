@@ -35,7 +35,7 @@
 #include "config.h"
 #include <cstring>
 
-#ifdef HAVE_STDINT_H
+#if HAVE_STDINT_H
 #include <stdint.h> //for INT_MAX
 #else /* HAVE_STDINT_H */
 #ifndef INT_MAX

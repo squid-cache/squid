@@ -91,7 +91,6 @@ OPTS=" \
 	--without-pthreads \
 	--without-aio \
 	--without-dl \
-	--without-openssl \
 	--without-large-files \
 	--without-valgrind-debug \
 	--without-ipv6-split-stack \

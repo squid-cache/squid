@@ -52,10 +52,10 @@ public:
     virtual int Open();
     virtual void Close();
 
-    void DomainPing(IpAddress &to, const char *domain);
+    void DomainPing(Ip::Address &to, const char *domain);
 
 #if USE_ICMP
-    virtual void SendEcho(IpAddress &to, int opcode, const char* payload=NULL, int len=0);
+    virtual void SendEcho(Ip::Address &to, int opcode, const char* payload=NULL, int len=0);
     virtual void Recv(void);
 #endif
 };

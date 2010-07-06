@@ -47,7 +47,8 @@ protected:
     void construction();
 };
 
-#ifdef HAVE_AUTH_MODULE_BASIC
+#if HAVE_AUTH_MODULE_BASIC
+#include "auth/basic/basicUserRequest.h"
 class testAuthBasicUserRequest : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( testAuthBasicUserRequest );
@@ -63,7 +64,8 @@ protected:
 };
 #endif
 
-#ifdef HAVE_AUTH_MODULE_DIGEST
+#if HAVE_AUTH_MODULE_DIGEST
+#include "auth/digest/digestUserRequest.h"
 class testAuthDigestUserRequest : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( testAuthDigestUserRequest );
@@ -79,7 +81,8 @@ protected:
 };
 #endif
 
-#ifdef HAVE_AUTH_MODULE_NTLM
+#if HAVE_AUTH_MODULE_NTLM
+#include "auth/ntlm/ntlmUserRequest.h"
 class testAuthNTLMUserRequest : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( testAuthNTLMUserRequest );
@@ -95,7 +98,8 @@ protected:
 };
 #endif
 
-#ifdef HAVE_AUTH_MODULE_NEGOTIATE
+#if HAVE_AUTH_MODULE_NEGOTIATE
+#include "auth/negotiate/negotiateUserRequest.h"
 class testAuthNegotiateUserRequest : public CPPUNIT_NS::TestFixture
 {
     CPPUNIT_TEST_SUITE( testAuthNegotiateUserRequest );

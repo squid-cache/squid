@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -31,19 +30,23 @@
  *
  */
 
-#include "basicScheme.h"
+#include "config.h"
+#include "auth/basic/basicScheme.h"
+#include "helper.h"
 
-AuthScheme &
+/* for AuthConfig */
+#include "auth/basic/auth_basic.h"
+
+AuthScheme::Pointer basicScheme::_instance = NULL;
+
+AuthScheme::Pointer
 basicScheme::GetInstance()
 {
-    if (_instance == NULL)
+    if (_instance == NULL) {
         _instance = new basicScheme();
-    return *_instance;
-}
-
-basicScheme::basicScheme()
-{
-    AddScheme(*this);
+        AddScheme(_instance);
+    }
+    return _instance;
 }
 
 char const *
@@ -52,4 +55,18 @@ basicScheme::type () const
     return "basic";
 }
 
-basicScheme *basicScheme::_instance = NULL;
+void
+basicScheme::done()
+{
+    /* clear the global handle to this scheme. */
+    _instance = NULL;
+
+    debugs(29, DBG_CRITICAL, HERE << "Basic authentication Schema Detached.");
+}
+
+AuthConfig *
+basicScheme::createConfig()
+{
+    AuthBasicConfig *newCfg = new AuthBasicConfig;
+    return dynamic_cast<AuthConfig*>(newCfg);
+}

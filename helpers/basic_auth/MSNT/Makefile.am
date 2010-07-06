@@ -1,11 +1,3 @@
-#
-#  Makefile for the Squid Object Cache server
-#
-#  $Id$
-#
-#  Uncomment and customize the following to suit your needs:
-#
-
 include $(top_srcdir)/src/Common.am
 
 MSNTAUTH_CONF = $(sysconfdir)/msntauth.conf
@@ -22,15 +14,15 @@ msnt_auth_SOURCES = md4.c rfcnb-io.c rfcnb-util.c session.c msntauth.c \
 		md4.h  smbdes.h smbencrypt.h usersfile.h
 
 EXTRA_DIST = \
-	COPYING-2.0 \
 	msntauth.conf.default \
 	msntauth-v2.0.lsm \
-	README.html
+	README.html \
+	config.test
 
 sysconf_DATA = \
 	msntauth.conf.default
 
-LDADD = -L$(top_builddir)/lib -lmiscutil $(XTRA_LIBS) $(top_builddir)/compat/libcompat.la
+LDADD = $(COMPAT_LIB) $(XTRA_LIBS)
 
 ## we need our local files too (but avoid -I. at all costs)
 INCLUDES += -I$(srcdir)
@@ -38,7 +30,7 @@ INCLUDES += -I$(srcdir)
 confload.o: confload.c
 	$(COMPILE) -DSYSCONFDIR=\"$(sysconfdir)\" -c $(srcdir)/confload.c -o $@
 
-install-data-local:
+install-data-local: msntauth.conf.default
 	@if test -f $(DESTDIR)$(MSNTAUTH_CONF) ; then \
 		echo "$@ will not overwrite existing $(DESTDIR)$(MSNTAUTH_CONF)" ; \
 	else \

@@ -1,7 +1,7 @@
 #ifndef SQUID__SRC_CLIENTINFO_H
 #define SQUID__SRC_CLIENTINFO_H
 
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 #include "hash.h"
 #include "enums.h"
 #include "typedefs.h"
@@ -11,7 +11,7 @@ class ClientInfo
 public:
     hash_link hash;             /* must be first */
 
-    IpAddress addr;
+    Ip::Address addr;
 
     struct {
         int result_hist[LOG_TYPE_MAX];

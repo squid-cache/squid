@@ -17,6 +17,9 @@
 #if HAVE_CSTRING
 #include <cstring>
 #endif
+#if HAVE_STRING_H
+#include <string.h>
+#endif
 
 #define BUFFER_SIZE 10240
 
@@ -26,7 +29,7 @@
  * -h interface help.
  */
 char *my_program_name = NULL;
-int debug_enabled = 0;
+int print_debug_messages = 0;
 
 static void
 usage(void)
@@ -47,7 +50,7 @@ process_options(int argc, char *argv[])
     while (-1 != (opt = getopt(argc, argv, "hd"))) {
         switch (opt) {
         case 'd':
-            debug_enabled = 1;
+            print_debug_messages = 1;
             break;
         case 'h':
             usage();

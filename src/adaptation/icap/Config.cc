@@ -46,6 +46,7 @@
 Adaptation::Icap::Config Adaptation::Icap::TheConfig;
 
 Adaptation::Icap::Config::Config(): preview_enable(0), preview_size(0),
+        allow206_enable(0),
         connect_timeout_raw(0), io_timeout_raw(0), reuse_connections(0),
         client_username_header(NULL), client_username_encode(0), repeat(NULL)
 {
@@ -59,9 +60,7 @@ Adaptation::Icap::Config::~Config()
 Adaptation::ServicePointer
 Adaptation::Icap::Config::createService(const Adaptation::ServiceConfig &cfg)
 {
-    Adaptation::Icap::ServiceRep::Pointer s = new Adaptation::Icap::ServiceRep(cfg);
-    s->setSelf(s);
-    return s.getRaw();
+    return new Adaptation::Icap::ServiceRep(cfg);
 }
 
 time_t Adaptation::Icap::Config::connect_timeout(bool bypassable) const

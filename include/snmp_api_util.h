@@ -79,7 +79,7 @@ struct snmp_internal_session {
 #undef timerisset
 #define timerisset(tvp) ((tvp)->tv_sec || (tvp)->tv_usec)
 
-#ifdef HAVE_SRAND
+#if HAVE_SRAND
 #define random rand
 #define srandom srand
 #endif /* HAVE_SRAND */

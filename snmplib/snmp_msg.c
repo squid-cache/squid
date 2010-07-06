@@ -57,10 +57,10 @@
 #if HAVE_MEMORY_H
 #include <memory.h>
 #endif
-#ifdef HAVE_STRING_H
+#if HAVE_STRING_H
 #include <string.h>
 #endif
-#ifdef HAVE_STRINGS_H
+#if HAVE_STRINGS_H
 #include <strings.h>
 #endif
 #if HAVE_BSTRING_H
@@ -206,7 +206,7 @@ snmp_msg_Encode(u_char * Buffer, int *BufLenP,
 
     /* Cool.  Now insert the appropriate lengths.
      */
-#ifdef DEBUG_MSG_ENCODE
+#if DEBUG_MSG_ENCODE
     snmplib_debug(9, "Msg:  Vars returned 0x%x.  PDU Started at 0x%x\n",
                   bufp, PDUHeaderPtr);
     snmplib_debug(9, "MSG:  Entire PDU length is %d (0x%x - 0x%x)\n",
@@ -219,7 +219,7 @@ snmp_msg_Encode(u_char * Buffer, int *BufLenP,
     if (tmp == NULL)
         return (NULL);
 
-#ifdef DEBUG_MSG_ENCODE
+#if DEBUG_MSG_ENCODE
     snmplib_debug(9, "MSG:  Entire message length is %d (0x%x - 0x%x)\n",
                   (int) (bufp - MsgPtr), MsgPtr, bufp);
 #endif

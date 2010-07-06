@@ -63,21 +63,10 @@
 
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
 
-typedef unsigned char uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned int uint32_t;
-typedef unsigned __int64 uint64_t;
-
-typedef long pid_t;
-
 #if defined __USE_FILE_OFFSET64
-typedef int64_t off_t;
 typedef uint64_t ino_t;
-
 #else
-typedef long off_t;
 typedef unsigned long ino_t;
-
 #endif
 
 #define INT64_MAX _I64_MAX
@@ -177,8 +166,10 @@ typedef unsigned long ino_t;
 #define SIGUSR2 31	/* user defined signal 2 */
 
 typedef unsigned short int ushort;
+#if !_SQUID_CYGWIN_
 typedef int uid_t;
 typedef int gid_t;
+#endif
 
 struct passwd {
     char    *pw_name;      /* user name */
@@ -210,7 +201,7 @@ struct statfs {
     long    f_spare[6]; /* spare for later */
 };
 
-#ifndef HAVE_GETTIMEOFDAY
+#if !HAVE_GETTIMEOFDAY
 struct timezone {
     int	tz_minuteswest;	/* minutes west of Greenwich */
     int	tz_dsttime;	/* type of dst correction */
@@ -222,7 +213,6 @@ struct timezone {
 #define FD_SETSIZE SQUID_MAXFD
 #endif
 
-#include <stddef.h>
 #include <process.h>
 #include <errno.h>
 #if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
@@ -245,7 +235,6 @@ struct timezone {
 #pragma warning (pop)
 #endif
 #include <io.h>
-#include <stdlib.h>
 
 typedef char * caddr_t;
 
@@ -253,16 +242,37 @@ typedef char * caddr_t;
 #undef FD_OPEN
 #undef FD_READ
 #undef FD_WRITE
+
+#ifndef EISCONN
 #define EISCONN WSAEISCONN
+#endif
+#ifndef EINPROGRESS
 #define EINPROGRESS WSAEINPROGRESS
+#endif
+#ifndef EWOULDBLOCK
 #define EWOULDBLOCK WSAEWOULDBLOCK
+#endif
+#ifndef EALREADY
 #define EALREADY WSAEALREADY
+#endif
+#ifndef ETIMEDOUT
 #define ETIMEDOUT WSAETIMEDOUT
+#endif
+#ifndef ECONNREFUSED
 #define ECONNREFUSED WSAECONNREFUSED
+#endif
+#ifndef ECONNRESET
 #define ECONNRESET WSAECONNRESET
+#endif
+#ifndef ENOTCONN
 #define ENOTCONN WSAENOTCONN
+#endif
+#ifndef ERESTART
 #define ERESTART WSATRY_AGAIN
+#endif
+#ifndef EAFNOSUPPORT
 #define EAFNOSUPPORT WSAEAFNOSUPPORT
+#endif
 
 #undef h_errno
 #define h_errno errno /* we'll set it ourselves */
@@ -336,6 +346,7 @@ SQUIDCEXTERN int _free_osfhnd(int);
 SQUIDCEXTERN THREADLOCAL int ws32_result;
 
 #define strerror(e) WIN32_strerror(e)
+#define HAVE_STRERROR 1
 
 #ifdef __cplusplus
 
@@ -705,6 +716,9 @@ int WSASocket(int a, int t, int p, LPWSAPROTOCOL_INFO i, GROUP g, DWORD f)
 #define open       _open /* Needed in win32lib.c */
 #endif /* #ifdef __cplusplus */
 
+#if HAVE_SYS_RESOURCE_H
+#include <sys/resource.h>
+#else
 #define	RUSAGE_SELF	0		/* calling process */
 #define	RUSAGE_CHILDREN	-1		/* terminated child processes */
 
@@ -726,8 +740,14 @@ struct rusage {
     long ru_nvcsw;			/* voluntary context switches */
     long ru_nivcsw;			/* involuntary context switches */
 };
+#endif /* HAVE_SYS_RESOURCE_H */
 
 #undef ACL
+
+#if !defined(getpagesize)
+/* Windows may lack getpagesize() prototype */
+SQUIDCEXTERN size_t getpagesize(void);
+#endif
 
 #endif /* _SQUID_WIN32_ */
 #endif /* SQUID_OS_MSWIN_H */

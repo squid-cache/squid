@@ -25,7 +25,7 @@ body
 
 <p id="sysmsg">The system returned: <i>%E</i></p>
 
-<p>A Timeout occurred while waiting to read data from the network.  The network or server may be down or congested.  Please retry your request.</p>
+<p>A Timeout occurred while waiting to read data from the network. The network or server may be down or congested. Please retry your request.</p>
 
 <p>Your cache administrator is <a href="mailto:%w%W">%w</a>.</p>
 <br>

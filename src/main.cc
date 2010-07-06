@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * DEBUG: section 1     Startup and Main Loop
+ * DEBUG: section 01    Startup and Main Loop
  * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -38,6 +38,7 @@
 #include "adaptation/icap/icap_log.h"
 #endif
 #include "auth/Gadgets.h"
+#include "base/TextException.h"
 #include "ConfigParser.h"
 #include "errorpage.h"
 #include "event.h"
@@ -76,7 +77,6 @@
 #include "MemPool.h"
 #include "icmp/IcmpSquid.h"
 #include "icmp/net_db.h"
-#include "TextException.h"
 
 #if USE_LOADABLE_MODULES
 #include "LoadableModules.h"
@@ -223,7 +223,12 @@ SignalEngine::doShutdown(time_t wait)
     WIN32_svcstatusupdate(SERVICE_STOP_PENDING, (wait + 1) * 1000);
 #endif
 
+    /* run the closure code which can be shared with reconfigure */
     serverConnectionsClose();
+
+    /* detach the auth components (only do this on full shutdown) */
+    AuthScheme::FreeAll();
+
     eventAdd("SquidShutdown", &StopEventLoop, this, (double) (wait + 1), 1, false);
 }
 
@@ -599,7 +604,7 @@ shut_down(int sig)
 
 #endif
 #ifndef _SQUID_MSWIN_
-#ifdef KILL_PARENT_OPT
+#if KILL_PARENT_OPT
 
     if (getppid() > 1) {
         debugs(1, 1, "Killing master process, pid " << getppid());
@@ -640,7 +645,7 @@ serverConnectionsOpen(void)
 
         htcpInit();
 #endif
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 
         snmpConnectionOpen();
 #endif
@@ -682,7 +687,7 @@ serverConnectionsClose(void)
 #endif
 
         icmpEngine.Close();
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 
         snmpConnectionShutdown();
 #endif
@@ -704,7 +709,7 @@ mainReconfigureStart(void)
 
     htcpSocketClose();
 #endif
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 
     snmpConnectionClose();
 #endif
@@ -717,7 +722,7 @@ mainReconfigureStart(void)
 #endif
 
     redirectShutdown();
-    authenticateShutdown();
+    authenticateReset();
     externalAclShutdown();
     storeDirCloseSwapLogs();
     storeLogClose();
@@ -762,11 +767,28 @@ mainReconfigureFinish(void *)
     setEffectiveUser();
     _db_init(Debug::cache_log, Debug::debugOptions);
     ipcache_restart();		/* clear stuck entries */
-    authenticateUserCacheRestart();	/* clear stuck ACL entries */
     fqdncache_restart();	/* sigh, fqdncache too */
     parseEtcHosts();
     errorInitialize();		/* reload error pages */
     accessLogInit();
+
+#if USE_LOADABLE_MODULES
+    LoadableModulesConfigure(Config.loadable_module_names);
+#endif
+
+#if USE_ADAPTATION
+    bool enableAdaptation = false;
+#if ICAP_CLIENT
+    Adaptation::Icap::TheConfig.finalize();
+    enableAdaptation = Adaptation::Icap::TheConfig.onoff || enableAdaptation;
+#endif
+#if USE_ECAP
+    Adaptation::Ecap::TheConfig.finalize(); // must be after we load modules
+    enableAdaptation = Adaptation::Ecap::TheConfig.onoff || enableAdaptation;
+#endif
+    Adaptation::Config::Finalize(enableAdaptation);
+#endif
+
 #if ICAP_CLIENT
     icapLogOpen();
 #endif
@@ -782,7 +804,7 @@ mainReconfigureFinish(void *)
 #endif
 
     redirectInit();
-    authenticateInit(&Config.authConfiguration);
+    authenticateInit(&Auth::TheConfig);
     externalAclInit();
 
     if (IamPrimaryProcess()) {
@@ -827,7 +849,7 @@ mainRotate(void)
     dnsShutdown();
 #endif
     redirectShutdown();
-    authenticateShutdown();
+    authenticateRotate();
     externalAclShutdown();
 
     _db_rotate_log();		/* cache.log */
@@ -848,7 +870,7 @@ mainRotate(void)
     dnsInit();
 #endif
     redirectInit();
-    authenticateInit(&Config.authConfiguration);
+    authenticateInit(&Auth::TheConfig);
     externalAclInit();
 }
 
@@ -944,7 +966,7 @@ mainInitialize(void)
 #endif
 
     debugs(1, 1, "Process ID " << getpid());
-
+    setSystemLimits();
     debugs(1, 1, "With " << Squid_MaxFD << " file descriptors available");
 
 #ifdef _SQUID_MSWIN_
@@ -981,7 +1003,7 @@ mainInitialize(void)
 
     redirectInit();
 
-    authenticateInit(&Config.authConfiguration);
+    authenticateInit(&Auth::TheConfig);
 
     externalAclInit();
 
@@ -1005,7 +1027,7 @@ mainInitialize(void)
     Ident::Init();
 #endif
 
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 
     snmpInit();
 
@@ -1318,6 +1340,8 @@ SquidMain(int argc, char **argv)
         /* we may want the parsing process to set this up in the future */
         Store::Root(new StoreController);
 
+        InitAuthSchemes();      /* required for config parsing */
+
         parse_err = parseConfigFile(ConfigFile);
 
         Mem::Report();
@@ -1515,7 +1539,7 @@ sendSignal(void)
 static void
 mainStartScript(const char *prog)
 {
-    char script[SQUID_MAXPATHLEN];
+    char script[MAXPATHLEN];
     char *t;
     size_t sl = 0;
     pid_t cpid;
@@ -1764,7 +1788,7 @@ SquidShutdown()
 
     htcpSocketClose();
 #endif
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 
     snmpConnectionClose();
 #endif
@@ -1789,7 +1813,7 @@ SquidShutdown()
     DelayPools::FreePools();
 #endif
 
-    authenticateShutdown();
+    authenticateReset();
 #if USE_WIN32_SERVICE
 
     WIN32_svcstatusupdate(SERVICE_STOP_PENDING, 10000);

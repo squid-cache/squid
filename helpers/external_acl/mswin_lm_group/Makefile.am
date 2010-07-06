@@ -24,4 +24,4 @@ LDADD = \
 	-lntdll \
 	$(XTRA_LIBS)
 
-EXTRA_DIST = readme.txt
+EXTRA_DIST = readme.txt config.test

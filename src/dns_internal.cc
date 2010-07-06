@@ -56,7 +56,7 @@
    #ifndef to exclude the internal DNS code from compile process when
    using external DNS process.
  */
-#ifndef USE_DNSSERVERS
+#if !USE_DNSSERVERS
 #ifdef _SQUID_WIN32_
 #include "squid_windows.h"
 #define REG_TCPIP_PARA_INTERFACES "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces"
@@ -114,7 +114,6 @@ struct _idns_query {
     IDNSCB *callback;
     void *callback_data;
     int attempt;
-    const char *error;
     int rcode;
     idns_query *queue;
     unsigned short domain;
@@ -137,7 +136,7 @@ struct _nsvc {
 };
 
 struct _ns {
-    IpAddress S;
+    Ip::Address S;
     int nqueries;
     int nreplies;
     nsvc *vc;
@@ -180,7 +179,7 @@ static void idnsSendQuery(idns_query * q);
 static IOCB idnsReadVCHeader;
 static void idnsDoSendQueryVC(nsvc *vc);
 
-static int idnsFromKnownNameserver(IpAddress const &from);
+static int idnsFromKnownNameserver(Ip::Address const &from);
 static idns_query *idnsFindQuery(unsigned short id);
 static void idnsGrokReply(const char *buf, size_t sz);
 static PF idnsRead;
@@ -191,7 +190,7 @@ static void idnsRcodeCount(int, int);
 static void
 idnsAddNameserver(const char *buf)
 {
-    IpAddress A;
+    Ip::Address A;
 
     if (!(A = buf)) {
         debugs(78, 0, "WARNING: rejecting '" << buf << "' as a name server, because it is not a numeric IP address");
@@ -734,7 +733,7 @@ idnsInitVC(int ns)
     nameservers[ns].vc = vc;
     vc->ns = ns;
 
-    IpAddress addr;
+    Ip::Address addr;
 
     if (!Config.Addrs.udp_outgoing.IsNoAddr())
         addr = Config.Addrs.udp_outgoing;
@@ -856,7 +855,7 @@ idnsSendQuery(idns_query * q)
 }
 
 static int
-idnsFromKnownNameserver(IpAddress const &from)
+idnsFromKnownNameserver(Ip::Address const &from)
 {
     int i;
 
@@ -993,13 +992,10 @@ idnsGrokReply(const char *buf, size_t sz)
 
     dlinkDelete(&q->lru, &lru_list);
     idnsRcodeCount(n, q->attempt);
-    q->error = NULL;
 
     if (n < 0) {
-        debugs(78, 3, "idnsGrokReply: error " << rfc1035_error_message << " (" << rfc1035_errno << ")");
-
-        q->error = rfc1035_error_message;
         q->rcode = -n;
+        debugs(78, 3, "idnsGrokReply: error " << rfc1035ErrorMessage(n) << " (" << q->rcode << ")");
 
         if (q->rcode == 2 && ++q->attempt < MAX_ATTEMPT) {
             /*
@@ -1078,6 +1074,8 @@ idnsGrokReply(const char *buf, size_t sz)
         // remove the hashed query info
         idnsDropMessage(message, q);
 
+        // reset the query as an A query
+        q->nsends = 0;
         q->start_t = current_time;
         q->id = idnsQueryID();
         rfc1035SetQueryID(q->buf, q->id);
@@ -1119,7 +1117,7 @@ idnsGrokReply(const char *buf, size_t sz)
     /* else initial results were empty. just use the final set as authoritative */
 
     debugs(78, 6, HERE << "Sending " << n << " DNS results to caller.");
-    idnsCallback(q, message->answer, n, q->error);
+    idnsCallback(q, message->answer, n, rfc1035ErrorMessage(n));
     rfc1035MessageDestroy(&message);
     cbdataFree(q);
 }
@@ -1132,7 +1130,7 @@ idnsRead(int fd, void *data)
     int max = INCOMING_DNS_MAX;
     static char rbuf[SQUID_UDP_SO_RCVBUF];
     int ns;
-    IpAddress from;
+    Ip::Address from;
 
     debugs(78, 3, "idnsRead: starting with FD " << fd);
 
@@ -1143,7 +1141,7 @@ idnsRead(int fd, void *data)
      *  The cause of this is still unknown, however copying the data appears
      *  to allow it to be passed further without this erasure.
      */
-    IpAddress bugbypass;
+    Ip::Address bugbypass;
 
     while (max--) {
         len = comm_udp_recvfrom(fd, rbuf, SQUID_UDP_SO_RCVBUF, 0, bugbypass);
@@ -1253,7 +1251,7 @@ idnsCheckQueue(void *unused)
                    std::setw(5)<< std::setprecision(2) << tvSubDsec(q->start_t, current_time) << " seconds");
 
             if (q->rcode != 0)
-                idnsCallback(q, NULL, -q->rcode, q->error);
+                idnsCallback(q, NULL, -q->rcode, rfc1035ErrorMessage(q->rcode));
             else
                 idnsCallback(q, NULL, -16, "Timeout");
 
@@ -1359,7 +1357,7 @@ idnsInit(void)
     if (DnsSocketA < 0 && DnsSocketB < 0) {
         int port;
 
-        IpAddress addr; // since we don't want to alter Config.Addrs.udp_* and dont have one of our own.
+        Ip::Address addr; // since we don't want to alter Config.Addrs.udp_* and dont have one of our own.
 
         if (!Config.Addrs.udp_outgoing.IsNoAddr())
             addr = Config.Addrs.udp_outgoing;
@@ -1367,7 +1365,7 @@ idnsInit(void)
             addr = Config.Addrs.udp_incoming;
 
 #if IPV6_SPECIAL_SPLITSTACK
-        IpAddress addr4 = addr;
+        Ip::Address addr4 = addr;
 
         if ( addr.IsAnyAddr() || addr.IsIPv6() ) {
             debugs(78, 2, "idnsInit: attempt open DNS socket to: " << addr);
@@ -1580,7 +1578,7 @@ idnsALookup(const char *name, IDNSCB * callback, void *data)
 }
 
 void
-idnsPTRLookup(const IpAddress &addr, IDNSCB * callback, void *data)
+idnsPTRLookup(const Ip::Address &addr, IDNSCB * callback, void *data)
 {
     idns_query *q;
 
@@ -1634,7 +1632,7 @@ idnsPTRLookup(const IpAddress &addr, IDNSCB * callback, void *data)
     idnsSendQuery(q);
 }
 
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 /*
  * The function to return the DNS via SNMP
  */

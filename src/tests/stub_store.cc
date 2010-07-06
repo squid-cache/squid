@@ -49,6 +49,6 @@ storeAppendVPrintf(StoreEntry * e, const char *fmt, va_list vargs)
     fatal("storeAppendVPrintf: Not implemented");
 }
 
-#ifndef _USE_INLINE_
+#if !_USE_INLINE_
 #include "Store.cci"
 #endif

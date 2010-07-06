@@ -1,12 +1,15 @@
+/*
+ * DEBUG: section 93    eCAP Interface
+ */
 #include "squid.h"
 #include <libecap/common/area.h>
 #include <libecap/common/delay.h>
 #include <libecap/adapter/xaction.h>
-#include "TextException.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "SquidTime.h"
 #include "adaptation/ecap/XactionRep.h"
+#include "base/TextException.h"
 
 CBDATA_NAMESPACED_CLASS_INIT(Adaptation::Ecap::XactionRep, XactionRep);
 

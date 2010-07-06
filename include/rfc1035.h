@@ -110,8 +110,7 @@ SQUIDCEXTERN int rfc1035MessageUnpack(const char *buf,
 SQUIDCEXTERN int rfc1035QueryCompare(const rfc1035_query *, const rfc1035_query *);
 SQUIDCEXTERN void rfc1035RRDestroy(rfc1035_rr ** rr, int n);
 SQUIDCEXTERN void rfc1035MessageDestroy(rfc1035_message ** message);
-SQUIDCEXTERN int rfc1035_errno;
-SQUIDCEXTERN const char *rfc1035_error_message;
+SQUIDCEXTERN const char * rfc1035ErrorMessage(int n);
 
 #define RFC1035_TYPE_A 1
 #define RFC1035_TYPE_CNAME 5

@@ -1,6 +1,8 @@
 #ifndef SQUID_SRC_TEST_URL_H
 #define SQUID_SRC_TEST_URL_H
 
+#define SQUID_UNIT_TEST 1
+
 #include "Icmp.h"
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -15,7 +17,7 @@ public:
     virtual void Close() {};
 
     /// Construct ECHO request
-    virtual void SendEcho(IpAddress &to, int opcode, const char *payload, int len) {};
+    virtual void SendEcho(Ip::Address &to, int opcode, const char *payload, int len) {};
 
     /// Handle ICMP responses.
     virtual void Recv(void) {};

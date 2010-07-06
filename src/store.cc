@@ -169,7 +169,7 @@ StoreEntry::operator new (size_t bytecount)
 void
 StoreEntry::operator delete (void *address)
 {
-    pool->free(address);
+    pool->freeOne(address);
 }
 
 void
@@ -1707,10 +1707,13 @@ void
 storeReplAdd(const char *type, REMOVALPOLICYCREATE * create)
 {
     int i;
-    /* find the number of currently known repl types */
 
+    /* find the number of currently known repl types */
     for (i = 0; storerepl_list && storerepl_list[i].typestr; i++) {
-        assert(strcmp(storerepl_list[i].typestr, type) != 0);
+        if (strcmp(storerepl_list[i].typestr, type) == 0) {
+            debugs(20, 1, "WARNING: Trying to load store replacement policy " << type << " twice.");
+            return;
+        }
     }
 
     /* add the new type */
@@ -1957,6 +1960,6 @@ NullStoreEntry::getSerialisedMetaData()
     return NULL;
 }
 
-#ifndef _USE_INLINE_
+#if !_USE_INLINE_
 #include "Store.cci"
 #endif

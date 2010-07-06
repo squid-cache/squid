@@ -31,7 +31,7 @@
 #endif
 
 /* Make sure syslog goes after stdarg/varargs */
-#ifdef HAVE_SYSLOG_H
+#if HAVE_SYSLOG_H
 #include <syslog.h>
 #endif
 

@@ -42,6 +42,7 @@
 
 #include "acl/FilledChecklist.h"
 #include "auth/UserRequest.h"
+#include "base/TextException.h"
 #if DELAY_POOLS
 #include "DelayPools.h"
 #endif
@@ -59,7 +60,6 @@
 #include "rfc1738.h"
 #include "SquidTime.h"
 #include "Store.h"
-#include "TextException.h"
 
 
 #define SQUID_ENTER_THROWING_CODE() try {
@@ -438,25 +438,11 @@ HttpStateData::cacheableReply()
          * unless we know how to refresh it.
          */
 
-        if (!refreshIsCachable(entry)) {
+        if (!refreshIsCachable(entry) && !REFRESH_OVERRIDE(store_stale)) {
             debugs(22, 3, "refreshIsCachable() returned non-cacheable..");
             return 0;
-        }
-
-        /* don't cache objects from peers w/o LMT, Date, or Expires */
-        /* check that is it enough to check headers @?@ */
-        if (rep->date > -1)
+        } else
             return 1;
-        else if (rep->last_modified > -1)
-            return 1;
-        else if (!_peer)
-            return 1;
-
-        /* @?@ (here and 302): invalid expires header compiles to squid_curtime */
-        else if (rep->expires > -1)
-            return 1;
-        else
-            return 0;
 
         /* NOTREACHED */
         break;
@@ -667,10 +653,18 @@ void
 HttpStateData::processReplyHeader()
 {
     /** Creates a blank header. If this routine is made incremental, this will not do */
+
+    /* NP: all exit points to this function MUST call ctx_exit(ctx) */
     Ctx ctx = ctx_enter(entry->mem_obj->url);
+
     debugs(11, 3, "processReplyHeader: key '" << entry->getMD5Text() << "'");
 
     assert(!flags.headers_parsed);
+
+    if (!readBuf->hasContent()) {
+        ctx_exit(ctx);
+        return;
+    }
 
     http_status error = HTTP_STATUS_NONE;
 
@@ -689,7 +683,7 @@ HttpStateData::processReplyHeader()
         if (!parsed && error > 0) { // unrecoverable parsing error
             debugs(11, 3, "processReplyHeader: Non-HTTP-compliant header: '" <<  readBuf->content() << "'");
             flags.headers_parsed = 1;
-            newrep->sline.version = HttpVersion(1,0);
+            newrep->sline.version = HttpVersion(1,1);
             newrep->sline.status = error;
             HttpReply *vrep = setVirginReply(newrep);
             entry->replaceHttpReply(vrep);
@@ -709,6 +703,26 @@ HttpStateData::processReplyHeader()
 
         header_bytes_read = headersEnd(readBuf->content(), readBuf->contentSize());
         readBuf->consume(header_bytes_read);
+    }
+
+    /* Skip 1xx messages for now. Advertised in Via as an internal 1.0 hop */
+    if (newrep->sline.protocol == PROTO_HTTP && newrep->sline.status >= 100 && newrep->sline.status < 200) {
+
+#if WHEN_HTTP11_EXPECT_HANDLED
+        /* When HTTP/1.1 check if the client is expecting a 1xx reply and maybe pass it on */
+        if (orig_request->header.has(HDR_EXPECT)) {
+            // TODO: pass to the client anyway?
+        }
+#endif
+        delete newrep;
+        debugs(11, 2, HERE << "1xx headers consume " << header_bytes_read << " bytes header.");
+        header_bytes_read = 0;
+        if (reply_bytes_read > 0)
+            debugs(11, 2, HERE << "1xx headers consume " << reply_bytes_read << " bytes reply.");
+        reply_bytes_read = 0;
+        ctx_exit(ctx);
+        processReplyHeader();
+        return;
     }
 
     flags.chunked = 0;
@@ -736,7 +750,6 @@ HttpStateData::processReplyHeader()
     orig_request->hier.peer_reply_status = newrep->sline.status;
 
     ctx_exit(ctx);
-
 }
 
 /**
@@ -1102,6 +1115,21 @@ HttpStateData::readReply(const CommIoCbParams &io)
     if (len == 0) { // reached EOF?
         eof = 1;
         flags.do_next_read = 0;
+
+        /* Bug 2879: Replies may terminate with \r\n then EOF instead of \r\n\r\n
+         * Ensure here that we have at minimum two \r\n when EOF is seen.
+         * TODO: Add eof parameter to headersEnd() and move this hack there.
+         */
+        if (readBuf->contentSize() && !flags.headers_parsed) {
+            /*
+             * Yes Henrik, there is a point to doing this.  When we
+             * called httpProcessReplyHeader() before, we didn't find
+             * the end of headers, but now we are definately at EOF, so
+             * we want to process the reply headers.
+             */
+            /* Fake an "end-of-headers" to work around such broken servers */
+            readBuf->append("\r\n", 2);
+        }
     }
 
     if (!flags.headers_parsed) { // have not parsed headers yet?
@@ -1167,7 +1195,8 @@ HttpStateData::continueAfterParsingHeader()
             debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: Headers did not parse at all for " << entry->url() << " AKA " << orig_request->GetHost() << orig_request->urlpath.termedBuf() );
         } else {
             error = ERR_ZERO_SIZE_OBJECT;
-            debugs(11, DBG_IMPORTANT, "WARNING: HTTP: Invalid Response: No object data received for " << entry->url() << " AKA " << orig_request->GetHost() << orig_request->urlpath.termedBuf() );
+            debugs(11, (orig_request->flags.accelerated?DBG_IMPORTANT:2), "WARNING: HTTP: Invalid Response: No object data received for " <<
+                   entry->url() << " AKA " << orig_request->GetHost() << orig_request->urlpath.termedBuf() );
         }
     }
 
@@ -1254,7 +1283,7 @@ void
 HttpStateData::processReplyBody()
 {
     AsyncCall::Pointer call;
-    IpAddress client_addr;
+    Ip::Address client_addr;
     bool ispinned = false;
 
     if (!flags.headers_parsed) {
@@ -1491,7 +1520,7 @@ httpFixupAuthentication(HttpRequest * request, HttpRequest * orig_request, const
 
         if (orig_request->extacl_user.size())
             username = orig_request->extacl_user.termedBuf();
-        else if (orig_request->auth_user_request)
+        else if (orig_request->auth_user_request != NULL)
             username = orig_request->auth_user_request->username();
 
         snprintf(loginbuf, sizeof(loginbuf), "%s%s", username, orig_request->peer_login + 1);
@@ -1899,8 +1928,10 @@ HttpStateData::decideIfWeDoRanges (HttpRequest * orig_request)
      *  the server and fetch only the requested content)
      */
 
+    int64_t roffLimit = orig_request->getRangeOffsetLimit();
+
     if (NULL == orig_request->range || !orig_request->flags.cachable
-            || orig_request->range->offsetLimitExceeded() || orig_request->flags.connection_auth)
+            || orig_request->range->offsetLimitExceeded(roffLimit) || orig_request->flags.connection_auth)
         result = false;
 
     debugs(11, 8, "decideIfWeDoRanges: range specs: " <<
@@ -1920,7 +1951,7 @@ HttpStateData::buildRequestPrefix(HttpRequest * aRequest,
                                   http_state_flags stateFlags)
 {
     const int offset = mb->size;
-    HttpVersion httpver(1,0);
+    HttpVersion httpver(1,1);
     mb->Printf("%s %s HTTP/%d.%d\r\n",
                RequestMethodStr(aRequest->method),
                aRequest->urlpath.size() ? aRequest->urlpath.termedBuf() : "/",
@@ -1953,6 +1984,13 @@ HttpStateData::sendRequest()
     MemBuf mb;
 
     debugs(11, 5, "httpSendRequest: FD " << fd << ", request " << request << ", this " << this << ".");
+
+    if (!canSend(fd)) {
+        debugs(11,3, HERE << "cannot send request to closing FD " << fd);
+        assert(closeHandler != NULL);
+        return false;
+    }
+
     typedef CommCbMemFunT<HttpStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  asyncCall(11, 5, "HttpStateData::httpTimeout",
                                       TimeoutDialer(this,&HttpStateData::httpTimeout));
@@ -2056,6 +2094,13 @@ HttpStateData::doneSendingRequestBody()
             sendComplete(io);
         } else {
             debugs(11, 2, "doneSendingRequestBody: matched brokenPosts");
+
+            if (!canSend(fd)) {
+                debugs(11,2, HERE << "cannot send CRLF to closing FD " << fd);
+                assert(closeHandler != NULL);
+                return;
+            }
+
             typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
             Dialer dialer(this, &HttpStateData::sendComplete);
             AsyncCall::Pointer call= asyncCall(11,5, "HttpStateData::SendComplete", dialer);
@@ -2142,15 +2187,6 @@ HttpStateData::abortTransaction(const char *reason)
     fwd->handleUnregisteredServerEnd();
     deleteThis("HttpStateData::abortTransaction");
 }
-
-#if DEAD_CODE
-void
-httpBuildVersion(HttpVersion * version, unsigned int major, unsigned int minor)
-{
-    version->major = major;
-    version->minor = minor;
-}
-#endif
 
 HttpRequest *
 HttpStateData::originalRequest()
