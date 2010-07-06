@@ -120,10 +120,12 @@ class ListeningStartedDialer: public CallDialer, public Ipc::StartListeningCb
 public:
     typedef void (*Handler)(int fd, int errNo, http_port_list *portCfg);
     ListeningStartedDialer(Handler aHandler, http_port_list *aPortCfg):
-        handler(aHandler), portCfg(aPortCfg) {}
+            handler(aHandler), portCfg(aPortCfg) {}
 
-    virtual void print(std::ostream &os) const { startPrint(os) <<
-        ", port=" << (void*)portCfg << ')'; }
+    virtual void print(std::ostream &os) const {
+        startPrint(os) <<
+        ", port=" << (void*)portCfg << ')';
+    }
 
     virtual bool canDial(AsyncCall &) const { return true; }
     virtual void dial(AsyncCall &) { (handler)(fd, errNo, portCfg); }
@@ -3414,13 +3416,13 @@ clientHttpConnectionsOpen(void)
         /* AYJ: 2009-12-27: bit bumpy. new ListenStateData(...) should be doing all the Comm:: stuff ... */
 
         const int openFlags = COMM_NONBLOCKING |
-            (s->spoof_client_ip ? COMM_TRANSPARENT : 0);
+                              (s->spoof_client_ip ? COMM_TRANSPARENT : 0);
 
         AsyncCall::Pointer callback = asyncCall(33,2,
-            "clientHttpConnectionOpened",
-            ListeningStartedDialer(&clientHttpConnectionOpened, s));
+                                                "clientHttpConnectionOpened",
+                                                ListeningStartedDialer(&clientHttpConnectionOpened, s));
         Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->s, openFlags,
-            Ipc::fdnHttpSocket, callback);
+                            Ipc::fdnHttpSocket, callback);
 
         HttpSockets[NHttpSockets++] = -1; // set in clientHttpConnectionOpened
     }
@@ -3442,18 +3444,18 @@ clientHttpConnectionOpened(int fd, int, http_port_list *s)
 
     Must(s);
 
-        AsyncCall::Pointer call = commCbCall(5,5, "SomeCommAcceptHandler(httpAccept)",
-                                             CommAcceptCbPtrFun(httpAccept, s));
+    AsyncCall::Pointer call = commCbCall(5,5, "SomeCommAcceptHandler(httpAccept)",
+                                         CommAcceptCbPtrFun(httpAccept, s));
 
-        s->listener = new Comm::ListenStateData(fd, call, true);
+    s->listener = new Comm::ListenStateData(fd, call, true);
 
-        debugs(1, 1, "Accepting " <<
-               (s->intercepted ? " intercepted" : "") <<
-               (s->spoof_client_ip ? " spoofing" : "") <<
-               (s->sslBump ? " bumpy" : "") <<
-               (s->accel ? " accelerated" : "")
-               << " HTTP connections at " << s->s
-               << ", FD " << fd << "." );
+    debugs(1, 1, "Accepting " <<
+           (s->intercepted ? " intercepted" : "") <<
+           (s->spoof_client_ip ? " spoofing" : "") <<
+           (s->sslBump ? " bumpy" : "") <<
+           (s->accel ? " accelerated" : "")
+           << " HTTP connections at " << s->s
+           << ", FD " << fd << "." );
 
     Must(AddOpenedHttpSocket(fd)); // otherwise, we have received a fd we did not ask for
 }
@@ -3478,10 +3480,10 @@ clientHttpsConnectionsOpen(void)
         }
 
         AsyncCall::Pointer call = asyncCall(33, 2, "clientHttpsConnectionOpened",
-            ListeningStartedDialer(&clientHttpsConnectionOpened, &s->http));
+                                            ListeningStartedDialer(&clientHttpsConnectionOpened, &s->http));
 
         Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->http.s, COMM_NONBLOCKING,
-            Ipc::fdnHttpsSocket, call);
+                            Ipc::fdnHttpsSocket, call);
 
         HttpSockets[NHttpSockets++] = -1;
     }
@@ -3496,12 +3498,12 @@ clientHttpsConnectionOpened(int fd, int, http_port_list *s)
 
     Must(s);
 
-        AsyncCall::Pointer call = commCbCall(5,5, "SomeCommAcceptHandler(httpsAccept)",
-                                             CommAcceptCbPtrFun(httpsAccept, s));
+    AsyncCall::Pointer call = commCbCall(5,5, "SomeCommAcceptHandler(httpsAccept)",
+                                         CommAcceptCbPtrFun(httpsAccept, s));
 
-        s->listener = new Comm::ListenStateData(fd, call, true);
+    s->listener = new Comm::ListenStateData(fd, call, true);
 
-        debugs(1, 1, "Accepting HTTPS connections at " << s->s << ", FD " << fd << ".");
+    debugs(1, 1, "Accepting HTTPS connections at " << s->s << ", FD " << fd << ".");
 
     Must(AddOpenedHttpSocket(fd)); // otherwise, we have received a fd we did not ask for
 }

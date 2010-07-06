@@ -578,7 +578,7 @@ SQUIDCEXTERN void keepCapabilities(void);
 SQUIDCEXTERN void BroadcastSignalIfAny(int& sig);
 /// whether the current process is the parent of all other Squid processes
 SQUIDCEXTERN bool IamMasterProcess();
-/** 
+/**
     whether the current process is dedicated to doing things that only
     a single process should do, such as PID file maintenance and WCCP
 */

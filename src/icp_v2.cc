@@ -53,15 +53,17 @@
 
 /// dials icpIncomingConnectionOpened call
 class IcpListeningStartedDialer: public CallDialer,
-    public Ipc::StartListeningCb
+        public Ipc::StartListeningCb
 {
 public:
     typedef void (*Handler)(int fd, int errNo, IpAddress& addr);
     IcpListeningStartedDialer(Handler aHandler, IpAddress& anAddr):
-        handler(aHandler), addr(anAddr) {}
+            handler(aHandler), addr(anAddr) {}
 
-    virtual void print(std::ostream &os) const { startPrint(os) <<
-        ", address=" << addr << ')'; }
+    virtual void print(std::ostream &os) const {
+        startPrint(os) <<
+        ", address=" << addr << ')';
+    }
 
     virtual bool canDial(AsyncCall &) const { return true; }
     virtual void dial(AsyncCall &) { (handler)(fd, errNo, addr); }
@@ -687,14 +689,14 @@ icpConnectionsOpen(void)
     addr.SetPort(port);
 
     AsyncCall::Pointer call = asyncCall(12, 2,
-        "icpIncomingConnectionOpened",
-        IcpListeningStartedDialer(&icpIncomingConnectionOpened, addr));
+                                        "icpIncomingConnectionOpened",
+                                        IcpListeningStartedDialer(&icpIncomingConnectionOpened, addr));
 
     Ipc::StartListening(SOCK_DGRAM,
-                                            IPPROTO_UDP,
-                                            addr,
-                                            COMM_NONBLOCKING,
-                                            Ipc::fdnInIcpSocket, call);
+                        IPPROTO_UDP,
+                        addr,
+                        COMM_NONBLOCKING,
+                        Ipc::fdnInIcpSocket, call);
 
     addr.SetEmpty(); // clear for next use.
     addr = Config.Addrs.udp_outgoing;
@@ -755,7 +757,7 @@ icpIncomingConnectionOpened(int fd, int errNo, IpAddress& addr)
 
     debugs(12, 1, "Accepting ICP messages at " << addr << ", FD " << theInIcpConnection << ".");
 
-        fd_note(theInIcpConnection, "Incoming ICP socket");
+    fd_note(theInIcpConnection, "Incoming ICP socket");
 
     if (Config.Addrs.udp_outgoing.IsNoAddr())
         theOutIcpConnection = theInIcpConnection;

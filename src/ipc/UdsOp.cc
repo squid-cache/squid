@@ -13,10 +13,10 @@
 
 
 Ipc::UdsOp::UdsOp(const String& pathAddr):
-    AsyncJob("Ipc::UdsOp"),
-    address(PathToAddress(pathAddr)),
-    options(COMM_NONBLOCKING),
-    fd_(-1)
+        AsyncJob("Ipc::UdsOp"),
+        address(PathToAddress(pathAddr)),
+        options(COMM_NONBLOCKING),
+        fd_(-1)
 {
     debugs(54, 5, HERE << '[' << this << "] pathAddr=" << pathAddr);
 }
@@ -47,8 +47,8 @@ int Ipc::UdsOp::fd()
 void Ipc::UdsOp::setTimeout(int seconds, const char *handlerName)
 {
     AsyncCall::Pointer handler = asyncCall(54,5, handlerName,
-        CommCbMemFunT<UdsOp, CommTimeoutCbParams>(this,
-            &UdsOp::noteTimeout));
+                                           CommCbMemFunT<UdsOp, CommTimeoutCbParams>(this,
+                                                   &UdsOp::noteTimeout));
     commSetTimeout(fd(), seconds, handler);
 }
 
@@ -64,8 +64,7 @@ void Ipc::UdsOp::noteTimeout(const CommTimeoutCbParams &)
 
 
 struct sockaddr_un
-Ipc::PathToAddress(const String& pathAddr)
-{
+Ipc::PathToAddress(const String& pathAddr) {
     assert(pathAddr.size() != 0);
     struct sockaddr_un unixAddr;
     memset(&unixAddr, 0, sizeof(unixAddr));
@@ -78,11 +77,11 @@ Ipc::PathToAddress(const String& pathAddr)
 CBDATA_NAMESPACED_CLASS_INIT(Ipc, UdsSender);
 
 Ipc::UdsSender::UdsSender(const String& pathAddr, const TypedMsgHdr& aMessage):
-    UdsOp(pathAddr),
-    message(aMessage),
-    retries(10), // TODO: make configurable?
-    timeout(10), // TODO: make configurable?
-    writing(false)
+        UdsOp(pathAddr),
+        message(aMessage),
+        retries(10), // TODO: make configurable?
+        timeout(10), // TODO: make configurable?
+        writing(false)
 {
     message.address(address);
 }
@@ -104,7 +103,7 @@ void Ipc::UdsSender::write()
 {
     debugs(54, 5, HERE);
     AsyncCall::Pointer writeHandler = asyncCall(54, 5, "Ipc::UdsSender::wrote",
-        CommCbMemFunT<UdsSender, CommIoCbParams>(this, &UdsSender::wrote));
+                                      CommCbMemFunT<UdsSender, CommIoCbParams>(this, &UdsSender::wrote));
     comm_write(fd(), message.raw(), message.size(), writeHandler);
     writing = true;
 }
