@@ -624,37 +624,37 @@ serverConnectionsOpen(void)
     if (IamPrimaryProcess()) {
 #if USE_WCCP
 
-    wccpConnectionOpen();
+        wccpConnectionOpen();
 #endif
 
 #if USE_WCCPv2
 
-    wccp2ConnectionOpen();
+        wccp2ConnectionOpen();
 #endif
     }
     // Coordinator does not start proxying services
     if (!IamCoordinatorProcess()) {
-    clientOpenListenSockets();
-    icpConnectionsOpen();
+        clientOpenListenSockets();
+        icpConnectionsOpen();
 #if USE_HTCP
 
-    htcpInit();
+        htcpInit();
 #endif
 #ifdef SQUID_SNMP
 
-    snmpConnectionOpen();
+        snmpConnectionOpen();
 #endif
 
-    clientdbInit();
-    icmpEngine.Open();
-    netdbInit();
-    asnInit();
-    ACL::Initialize();
-    peerSelectInit();
+        clientdbInit();
+        icmpEngine.Open();
+        netdbInit();
+        asnInit();
+        ACL::Initialize();
+        peerSelectInit();
 
-    carpInit();
-    peerUserHashInit();
-    peerSourceHashInit();
+        carpInit();
+        peerUserHashInit();
+        peerSourceHashInit();
     }
 }
 
@@ -666,28 +666,28 @@ serverConnectionsClose(void)
     if (IamPrimaryProcess()) {
 #if USE_WCCP
 
-    wccpConnectionClose();
+        wccpConnectionClose();
 #endif
 #if USE_WCCPv2
 
-    wccp2ConnectionClose();
+        wccp2ConnectionClose();
 #endif
     }
     if (!IamCoordinatorProcess()) {
-    clientHttpConnectionsClose();
-    icpConnectionShutdown();
+        clientHttpConnectionsClose();
+        icpConnectionShutdown();
 #if USE_HTCP
 
-    htcpSocketShutdown();
+        htcpSocketShutdown();
 #endif
 
-    icmpEngine.Close();
+        icmpEngine.Close();
 #ifdef SQUID_SNMP
 
-    snmpConnectionShutdown();
+        snmpConnectionShutdown();
 #endif
 
-    asnFreeMemory();
+        asnFreeMemory();
     }
 }
 
@@ -752,8 +752,8 @@ mainReconfigureFinish(void *)
     }
     if (oldWorkers != Config.workers) {
         debugs(1, DBG_CRITICAL, "WARNING: Changing 'workers' (from " <<
-            oldWorkers << " to " << Config.workers <<
-            ") is not supported and ignored");
+               oldWorkers << " to " << Config.workers <<
+               ") is not supported and ignored");
         Config.workers = oldWorkers;
     }
 
@@ -788,11 +788,11 @@ mainReconfigureFinish(void *)
     if (IamPrimaryProcess()) {
 #if USE_WCCP
 
-    wccpInit();
+        wccpInit();
 #endif
 #if USE_WCCPv2
 
-    wccp2Init();
+        wccp2Init();
 #endif
     }
 
@@ -1051,12 +1051,12 @@ mainInitialize(void)
 
     if (IamPrimaryProcess()) {
 #if USE_WCCP
-    wccpInit();
+        wccpInit();
 
 #endif
 #if USE_WCCPv2
 
-    wccp2Init();
+        wccp2Init();
 
 #endif
     }
@@ -1189,7 +1189,7 @@ SquidMainSafe(int argc, char **argv)
 static void
 ConfigureCurrentKid(const char *processName)
 {
-	// kids are marked with parenthesis around their process names
+    // kids are marked with parenthesis around their process names
     if (processName && processName[0] == '(') {
         if (const char *idStart = strrchr(processName, '-')) {
             KidIdentifier = atoi(idStart + 1);
@@ -1640,9 +1640,9 @@ watch_child(char *argv[])
 
     if (Config.workers > 128) {
         syslog(LOG_ALERT, "Suspiciously high workers value: %d",
-            Config.workers);
+               Config.workers);
         // but we keep going in hope that user knows best
-	}
+    }
     TheKids.init(Config.workers);
 
     // keep [re]starting kids until it is time to quit
@@ -1683,19 +1683,18 @@ watch_child(char *argv[])
 
 #endif
         // Loop to collect all stopped kids before we go to sleep below.
-        do
-        {
+        do {
             Kid* kid = TheKids.find(pid);
             if (kid) {
                 kid->stop(status);
                 if (kid->calledExit()) {
                     syslog(LOG_NOTICE,
-                       "Squid Parent: child process %d exited with status %d",
-                        kid->getPid(), kid->exitStatus());
+                           "Squid Parent: child process %d exited with status %d",
+                           kid->getPid(), kid->exitStatus());
                 } else if (kid->signaled()) {
                     syslog(LOG_NOTICE,
-                       "Squid Parent: child process %d exited due to signal %d with status %d",
-                        kid->getPid(), kid->termSignal(), kid->exitStatus());
+                           "Squid Parent: child process %d exited due to signal %d with status %d",
+                           kid->getPid(), kid->termSignal(), kid->exitStatus());
                 } else {
                     syslog(LOG_NOTICE, "Squid Parent: child process %d exited", kid->getPid());
                 }
@@ -1705,7 +1704,8 @@ watch_child(char *argv[])
 #ifdef _SQUID_NEXT_
         } while ((pid = wait3(&status, WNOHANG, NULL)) > 0);
 #else
-        } while ((pid = waitpid(-1, &status, WNOHANG)) > 0);
+        }
+        while ((pid = waitpid(-1, &status, WNOHANG)) > 0);
 #endif
 
         if (TheKids.allExitedHappy()) {

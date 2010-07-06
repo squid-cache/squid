@@ -27,7 +27,7 @@ std::ostream &Ipc::StartListeningCb::startPrint(std::ostream &os) const
 
 
 void Ipc::StartListening(int sock_type, int proto, IpAddress &addr,
-    int flags, FdNoteId fdNote, AsyncCall::Pointer &callback)
+                         int flags, FdNoteId fdNote, AsyncCall::Pointer &callback)
 {
     OpenListenerParams p;
     p.sock_type = sock_type;
@@ -43,7 +43,7 @@ void Ipc::StartListening(int sock_type, int proto, IpAddress &addr,
 
     enter_suid();
     const int sock = comm_open_listener(p.sock_type, p.proto, p.addr, p.flags,
-        FdNote(p.fdNote));
+                                        FdNote(p.fdNote));
     const int errNo = (sock >= 0) ? 0 : errno;
     leave_suid();
 

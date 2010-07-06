@@ -39,7 +39,7 @@ protected:
     void setTimeout(int seconds, const char *handlerName);
     void clearTimeout(); ///< remove previously set timeout, if any
 
-	void setOptions(int newOptions); ///< changes socket options
+    void setOptions(int newOptions); ///< changes socket options
 
 private:
     /// Comm timeout callback; calls timedout()

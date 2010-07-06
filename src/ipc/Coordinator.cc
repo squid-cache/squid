@@ -18,7 +18,7 @@ Ipc::Coordinator* Ipc::Coordinator::TheInstance = NULL;
 
 
 Ipc::Coordinator::Coordinator():
-    Port(coordinatorAddr)
+        Port(coordinatorAddr)
 {
 }
 
@@ -78,15 +78,15 @@ void
 Ipc::Coordinator::handleSharedListenRequest(const SharedListenRequest& request)
 {
     debugs(54, 4, HERE << "kid" << request.requestorId <<
-        " needs shared listen FD for " << request.params.addr);
+           " needs shared listen FD for " << request.params.addr);
     Listeners::const_iterator i = listeners.find(request.params);
     int errNo = 0;
     const int sock = (i != listeners.end()) ?
-        i->second : openListenSocket(request, errNo);
+                     i->second : openListenSocket(request, errNo);
 
     debugs(54, 3, HERE << "sending shared listen FD " << sock << " for " <<
-        request.params.addr << " to kid" << request.requestorId <<
-        " mapId=" << request.mapId);
+           request.params.addr << " to kid" << request.requestorId <<
+           " mapId=" << request.mapId);
 
     SharedListenResponse response(sock, errNo, request.mapId);
     TypedMsgHdr message;
@@ -96,18 +96,18 @@ Ipc::Coordinator::handleSharedListenRequest(const SharedListenRequest& request)
 
 int
 Ipc::Coordinator::openListenSocket(const SharedListenRequest& request,
-        int &errNo)
+                                   int &errNo)
 {
     const OpenListenerParams &p = request.params;
 
     debugs(54, 6, HERE << "opening listen FD at " << p.addr << " for kid" <<
-        request.requestorId);
+           request.requestorId);
 
     IpAddress addr = p.addr; // comm_open_listener may modify it
 
     enter_suid();
     const int sock = comm_open_listener(p.sock_type, p.proto, addr, p.flags,
-        FdNote(p.fdNote));
+                                        FdNote(p.fdNote));
     errNo = (sock >= 0) ? 0 : errno;
     leave_suid();
 
@@ -123,7 +123,7 @@ void Ipc::Coordinator::broadcastSignal(int sig) const
     typedef Strands::const_iterator SCI;
     for (SCI iter = strands.begin(); iter != strands.end(); ++iter) {
         debugs(54, 5, HERE << "signal " << sig << " to kid" << iter->kidId <<
-            ", PID=" << iter->pid);
+               ", PID=" << iter->pid);
         kill(iter->pid, sig);
     }
 }
