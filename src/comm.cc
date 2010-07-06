@@ -757,10 +757,10 @@ comm_openex(int sock_type,
 /// update FD tables after a local or remote (IPC) comm_openex();
 void
 comm_init_opened(int new_socket,
-            IpAddress &addr,
-            unsigned char TOS,
-            const char *note,
-            struct addrinfo *AI)
+                 IpAddress &addr,
+                 unsigned char TOS,
+                 const char *note,
+                 struct addrinfo *AI)
 {
     assert(new_socket >= 0);
     assert(AI);
@@ -790,9 +790,9 @@ comm_init_opened(int new_socket,
 /// returns new_socket or -1 on error
 static int
 comm_apply_flags(int new_socket,
-            IpAddress &addr,
-            int flags,
-            struct addrinfo *AI)
+                 IpAddress &addr,
+                 int flags,
+                 struct addrinfo *AI)
 {
     assert(new_socket >= 0);
     assert(AI);
@@ -851,10 +851,10 @@ comm_apply_flags(int new_socket,
 
 void
 comm_import_opened(int fd,
-            IpAddress &addr,
-            int flags,
-            const char *note,
-            struct addrinfo *AI)
+                   IpAddress &addr,
+                   int flags,
+                   const char *note,
+                   struct addrinfo *AI)
 {
     debugs(5, 2, HERE << " FD " << fd << " at " << addr);
     assert(fd >= 0);

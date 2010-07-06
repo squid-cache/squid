@@ -42,7 +42,7 @@
 
 /// dials snmpConnectionOpened call
 class SnmpListeningStartedDialer: public CallDialer,
-    public Ipc::StartListeningCb
+        public Ipc::StartListeningCb
 {
 public:
     typedef void (*Handler)(int fd, int errNo);
@@ -307,27 +307,27 @@ snmpConnectionOpen(void)
         Config.Addrs.snmp_incoming.SetPort(Config.Port.snmp);
 
         AsyncCall::Pointer call = asyncCall(49, 2,
-            "snmpIncomingConnectionOpened",
-            SnmpListeningStartedDialer(&snmpIncomingConnectionOpened));
+                                            "snmpIncomingConnectionOpened",
+                                            SnmpListeningStartedDialer(&snmpIncomingConnectionOpened));
 
         Ipc::StartListening(SOCK_DGRAM,
-                              IPPROTO_UDP,
-                              Config.Addrs.snmp_incoming,
-                              COMM_NONBLOCKING,
-                              Ipc::fdnInSnmpSocket, call);
+                            IPPROTO_UDP,
+                            Config.Addrs.snmp_incoming,
+                            COMM_NONBLOCKING,
+                            Ipc::fdnInSnmpSocket, call);
 
         if (!Config.Addrs.snmp_outgoing.IsNoAddr()) {
             Config.Addrs.snmp_outgoing.SetPort(Config.Port.snmp);
 
             AsyncCall::Pointer call = asyncCall(49, 2,
-                "snmpOutgoingConnectionOpened",
-                SnmpListeningStartedDialer(&snmpOutgoingConnectionOpened));
+                                                "snmpOutgoingConnectionOpened",
+                                                SnmpListeningStartedDialer(&snmpOutgoingConnectionOpened));
 
-             Ipc::StartListening(SOCK_DGRAM,
-                                   IPPROTO_UDP,
-                                   Config.Addrs.snmp_outgoing,
-                                   COMM_NONBLOCKING,
-                                   Ipc::fdnOutSnmpSocket, call);
+            Ipc::StartListening(SOCK_DGRAM,
+                                IPPROTO_UDP,
+                                Config.Addrs.snmp_outgoing,
+                                COMM_NONBLOCKING,
+                                Ipc::fdnOutSnmpSocket, call);
         }
     }
 }
@@ -340,10 +340,10 @@ snmpIncomingConnectionOpened(int fd, int errNo)
         fatal("Cannot open Incoming SNMP Port");
 
     commSetSelect(theInSnmpConnection, COMM_SELECT_READ, snmpHandleUdp, NULL,
-        0);
+                  0);
 
     debugs(1, 1, "Accepting SNMP messages on " << Config.Addrs.snmp_incoming <<
-        ", FD " << theInSnmpConnection << ".");
+           ", FD " << theInSnmpConnection << ".");
 
     if (Config.Addrs.snmp_outgoing.IsNoAddr())
         theOutSnmpConnection = theInSnmpConnection;
@@ -357,10 +357,10 @@ snmpOutgoingConnectionOpened(int fd, int errNo)
         fatal("Cannot open Outgoing SNMP Port");
 
     commSetSelect(theOutSnmpConnection, COMM_SELECT_READ, snmpHandleUdp, NULL,
-        0);
+                  0);
 
     debugs(1, 1, "Outgoing SNMP messages on " << Config.Addrs.snmp_outgoing <<
-        ", FD " << theOutSnmpConnection << ".");
+           ", FD " << theOutSnmpConnection << ".");
 
     {
         struct addrinfo *xaddr = NULL;

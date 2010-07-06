@@ -35,7 +35,7 @@ public:
 /// Depending on whether SMP is on, either ask Coordinator to send us
 /// the listening FD or call comm_open_listener() directly.
 extern void StartListening(int sock_type, int proto, IpAddress &addr,
-    int flags, FdNoteId fdNote, AsyncCall::Pointer &callback);
+                           int flags, FdNoteId fdNote, AsyncCall::Pointer &callback);
 
 } // namespace Ipc;
 

@@ -80,12 +80,12 @@ void Ipc::SharedListenRequest::pack(TypedMsgHdr &hdrMsg) const
 
 
 Ipc::SharedListenResponse::SharedListenResponse(int aFd, int anErrNo, int aMapId):
-    fd(aFd), errNo(anErrNo), mapId(aMapId)
+        fd(aFd), errNo(anErrNo), mapId(aMapId)
 {
 }
 
 Ipc::SharedListenResponse::SharedListenResponse(const TypedMsgHdr &hdrMsg):
-    fd(-1), errNo(0), mapId(-1)
+        fd(-1), errNo(0), mapId(-1)
 {
     hdrMsg.getData(mtSharedListenResponse, this, sizeof(*this));
     fd = hdrMsg.getFd();
@@ -99,7 +99,7 @@ void Ipc::SharedListenResponse::pack(TypedMsgHdr &hdrMsg) const
 
 
 void Ipc::JoinSharedListen(const OpenListenerParams &params,
-    AsyncCall::Pointer &callback)
+                           AsyncCall::Pointer &callback)
 {
     PendingOpenRequest por;
     por.params = params;
@@ -111,7 +111,7 @@ void Ipc::JoinSharedListen(const OpenListenerParams &params,
     request.mapId = AddToMap(por);
 
     debugs(54, 3, HERE << "getting listening FD for " << request.params.addr <<
-        " mapId=" << request.mapId);
+           " mapId=" << request.mapId);
 
     TypedMsgHdr message;
     request.pack(message);
@@ -123,7 +123,7 @@ void Ipc::SharedListenJoined(const SharedListenResponse &response)
     const int fd = response.fd;
 
     debugs(54, 3, HERE << "got listening FD " << fd << " errNo=" <<
-        response.errNo << " mapId=" << response.mapId);
+           response.errNo << " mapId=" << response.mapId);
 
     Must(TheSharedListenRequestMap.find(response.mapId) != TheSharedListenRequestMap.end());
     PendingOpenRequest por = TheSharedListenRequestMap[response.mapId];

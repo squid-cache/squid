@@ -15,7 +15,7 @@ const char Ipc::strandAddrPfx[] = DEFAULT_PREFIX "/var/run/squid";
 
 
 Ipc::Port::Port(const String& aListenAddr):
-    UdsOp(aListenAddr)
+        UdsOp(aListenAddr)
 {
     setOptions(COMM_NONBLOCKING | COMM_DOBIND);
 }
@@ -31,7 +31,7 @@ void Ipc::Port::listen()
     debugs(54, 6, HERE);
     buf.prepForReading();
     AsyncCall::Pointer readHandler = asyncCall(54, 6, "Ipc::Port::noteRead",
-        CommCbMemFunT<Port, CommIoCbParams>(this, &Port::noteRead));
+                                     CommCbMemFunT<Port, CommIoCbParams>(this, &Port::noteRead));
     comm_read(fd(), buf.raw(), buf.size(), readHandler);
 }
 
@@ -53,7 +53,7 @@ String Ipc::Port::MakeAddr(const char* pathAddr, int id)
 void Ipc::Port::noteRead(const CommIoCbParams& params)
 {
     debugs(54, 6, HERE << "FD " << params.fd << " flag " << params.flag <<
-        " [" << this << ']');
+           " [" << this << ']');
     if (params.flag == COMM_OK) {
         assert(params.buf == buf.raw());
         receive(buf);

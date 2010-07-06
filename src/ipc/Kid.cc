@@ -9,19 +9,19 @@
 #include "ipc/Kid.h"
 
 Kid::Kid():
-    badFailures(0),
-    pid(-1),
-    startTime(0),
-    isRunning(false)
+        badFailures(0),
+        pid(-1),
+        startTime(0),
+        isRunning(false)
 {
 }
 
 Kid::Kid(const String& kid_name):
-    theName(kid_name),
-    badFailures(0),
-    pid(-1),
-    startTime(0),
-    isRunning(false)
+        theName(kid_name),
+        badFailures(0),
+        pid(-1),
+        startTime(0),
+        isRunning(false)
 {
 }
 

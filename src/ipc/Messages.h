@@ -19,10 +19,12 @@ class TypedMsgHdr;
 
 /// message class identifier
 typedef enum { mtNone = 0, mtRegistration,
-    mtSharedListenRequest, mtSharedListenResponse } MessageType;
+               mtSharedListenRequest, mtSharedListenResponse
+             } MessageType;
 
 /// Strand location details
-class StrandCoord {
+class StrandCoord
+{
 public:
     StrandCoord(); ///< unknown location
     StrandCoord(int akidId, pid_t aPid); ///< from registrant

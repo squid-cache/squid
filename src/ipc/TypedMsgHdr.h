@@ -31,35 +31,35 @@ public:
     void address(const struct sockaddr_un& addr); ///< sets [dest.] address
     void getData(int ofType, void *raw, size_t size) const; ///< checks type
     void putData(int aType, const void *raw, size_t size); ///< stores type
-	void putFd(int aFd); ///< stores descriptor
-	int getFd() const; ///< returns descriptor
+    void putFd(int aFd); ///< stores descriptor
+    int getFd() const; ///< returns descriptor
 
     /// raw, type-independent access for I/O
-	void prepForReading(); ///< reset and provide all buffers
-	char *raw() { return reinterpret_cast<char*>(this); }
-	const char *raw() const { return reinterpret_cast<const char*>(this); }
+    void prepForReading(); ///< reset and provide all buffers
+    char *raw() { return reinterpret_cast<char*>(this); }
+    const char *raw() const { return reinterpret_cast<const char*>(this); }
     size_t size() const { return sizeof(*this); } ///< not true message size
 
 private:
-	void sync();
-	void allocData();
-	void allocName();
-	void allocControl();
+    void sync();
+    void allocData();
+    void allocName();
+    void allocControl();
 
 private:
-	struct sockaddr_un name; ///< same as .msg_name
+    struct sockaddr_un name; ///< same as .msg_name
 
-	struct iovec ios[1]; ///< same as .msg_iov[]
+    struct iovec ios[1]; ///< same as .msg_iov[]
 
-	struct DataBuffer {
-		int type_; ///< Message kind, uses MessageType values
-		size_t size; ///< actual raw data size (for sanity checks)
-		char raw[250]; ///< buffer with type-specific data
-	} data; ///< same as .msg_iov[0].iov_base
+    struct DataBuffer {
+        int type_; ///< Message kind, uses MessageType values
+        size_t size; ///< actual raw data size (for sanity checks)
+        char raw[250]; ///< buffer with type-specific data
+    } data; ///< same as .msg_iov[0].iov_base
 
-	struct CtrlBuffer {
-		char raw[CMSG_SPACE(sizeof(int))]; ///< control buffer space for one fd
-	} ctrl; ///< same as .msg_control
+    struct CtrlBuffer {
+        char raw[CMSG_SPACE(sizeof(int))]; ///< control buffer space for one fd
+    } ctrl; ///< same as .msg_control
 };
 
 } // namespace Ipc
