@@ -15,11 +15,11 @@
 
 \verbatim
         int16_t    -  16 bit signed.
-        u_int16_t  -  16 bit unsigned.
+        uint16_t  -  16 bit unsigned.
         int32_t    -  32 bit signed.
-        u_int32_t  -  32 bit unsigned.
+        uint32_t  -  32 bit unsigned.
         int64_t    -  64 bit signed.
-        u_int64_t  -  64 bit unsigned.
+        uint64_t  -  64 bit unsigned.
 \endverbatim
 
 \section Documentation Documentation Conventions

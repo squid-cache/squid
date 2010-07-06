@@ -55,11 +55,11 @@ struct _icp_common_t {
     /** total length (bytes) */
     unsigned short length;
     /** req number (req'd for UDP) */
-    u_int32_t reqnum;
-    u_int32_t flags;
-    u_int32_t pad;
+    uint32_t reqnum;
+    uint32_t flags;
+    uint32_t pad;
     /** sender host id */
-    u_int32_t shostid;
+    uint32_t shostid;
 
 /// \todo I don't believe this header is included in non-c++ code anywhere
 ///		the struct should become a public POD class and kill these ifdef.

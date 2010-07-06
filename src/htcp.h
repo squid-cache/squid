@@ -44,7 +44,7 @@ public:
     HtcpReplyData();
     int hit;
     HttpHeader hdr;
-    u_int32_t msg_id;
+    uint32_t msg_id;
     double version;
 
     struct cto_t {
