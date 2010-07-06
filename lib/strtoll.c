@@ -75,9 +75,9 @@ int64_t
 strtoll (const char *nptr, char **endptr, int base)
 {
     register const char *s = nptr;
-    register u_int64_t acc;
+    register uint64_t acc;
     register int c;
-    register u_int64_t cutoff;
+    register uint64_t cutoff;
     register int neg = 0, any, cutlim;
 
     /*
@@ -118,9 +118,9 @@ strtoll (const char *nptr, char **endptr, int base)
      * Set any if any `digits' consumed; make it negative to indicate
      * overflow.
      */
-    cutoff = neg ? -(u_int64_t) INT64_MIN : INT64_MAX;
-    cutlim = cutoff % (u_int64_t) base;
-    cutoff /= (u_int64_t) base;
+    cutoff = neg ? -(uint64_t) INT64_MIN : INT64_MAX;
+    cutlim = cutoff % (uint64_t) base;
+    cutoff /= (uint64_t) base;
     for (acc = 0, any = 0;; c = *s++) {
         if (xisdigit(c))
             c -= '0';
