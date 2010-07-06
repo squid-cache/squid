@@ -141,18 +141,18 @@ Most user-facing changes are reflected in squid.conf (see below).
 	<item>squid_ldap_auth - basic_ldap_auth - Authenticate with LDAP user accounts.
 	<item>ncsa_auth - basic_ncsa_auth - Authenticate with NCSA httpd-style password file.
 	<item>pam_auth - basic_pam_auth - Authenticate with the system PAM infrastructure.
-	<item>pop3.pl - basic_pop3_auth.pl - Authenticate with a mail server POP3/SMTP credentials
+	<item>pop3.pl - basic_pop3_auth - Authenticate with a mail server POP3/SMTP credentials
 	<item>squid_sasl_auth - basic_sasl_auth - Authenticate with SASL.
 	<item>smb_auth - basic_smb_auth - Authenticate with Samba SMB.
 	<item>yp_auth - basic_nis_auth - Authenticate with NIS security system.
 	<item>mswin_sspi - basic_sspi_auth - Authenticate with a Windows Domain Controller using SSPI.
-	<item>MSNT-multi-domain - basic_msnt_multi_domain_auth.pl - Authenticate with any one of multiple Windows Domain Controllers.
+	<item>MSNT-multi-domain - basic_msnt_multi_domain_auth - Authenticate with any one of multiple Windows Domain Controllers.
 	<item>squid_radius_auth - basic_radius_auth - Authenticate with RADIUS.
 </itemize>
 
 <sect2>Digest Authentication protocol helpers
 <p><itemize>
-	<item>(none yet converted)
+	<item>digest_pw_auth - digest_file_auth - Authenticate against credentials stored in a simple text file.
 </itemize>
 
 <sect2>External ACL helpers
@@ -162,12 +162,16 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <sect2>Negotiate Authentication protocol helpers
 <p><itemize>
+	<item>mswin_sspi - negotiate_sspi_auth - Authenticate with a Windows Domain Controller using SSPI.
 	<item>squid_kerb_auth - negotiate_kerberos_auth - Authenticate with Kerberos servers.
 </itemize>
 
 <sect2>NTLM Authentication protocol helpers
 <p><itemize>
+	<item>fakeauth_auth - ntlm_fake_auth - Perform NTLMSSP to recover the username but don't verify the password.
+	<item>mswin_ntlm_auth - ntlm_sspi_auth - Perform NTLMSSP authentication using Windows native Security Support Provider Interface API.
 	<item>ntlm_auth - ntlm_smb_lm_auth - Perform SMB LanManager domain-less authentication over NTLM protocol.
+	<item>no_check.pl - Deprecated. - Use the faster and less easily decrypted ntlm_fake_auth instead.
 </itemize>
 
 <sect2>URL re-write helpers
@@ -187,9 +191,11 @@ Most user-facing changes are reflected in squid.conf (see below).
 <p>3.1 began the Internationalization of Squid with the public facing error pages.
    This move begins the Localization of the internal administrator facing manuals.
 
+
 <sect1>Solaris 10 pthreads Support (Experimental)
 
 <p>Automatic detection and use of the pthreads library available from Solaris 10
+
 
 <sect>Changes to squid.conf since Squid-3.1
 <p>
@@ -207,11 +213,15 @@ This section gives a thorough account of those changes in three categories:
 <sect1>New tags<label id="newtags">
 <p>
 <descrip>
+	<tag>adapted_http_access</tag>
+	<p>Access control based on altered HTTP request following adaptation alterations (ICAP, eCAP, URL rewriter).
+	An upgraded drop-in replacement for <em>http_access2</em> found in Squid-2.
+
 	<tag>eui_lookup</tag>
-	<p> Whether to lookup the EUI or MAC address of a connected client.
+	<p>Whether to lookup the EUI or MAC address of a connected client.
 
 	<tag>memory_cache_mode</tag>
-	<p> Controls which objects to keep in the memory cache (cache_mem)
+	<p>Controls which objects to keep in the memory cache (cache_mem)
 	<verb>
 	'always'  Keep most recently fetched objects in memory (default)
 	
@@ -223,13 +233,28 @@ This section gives a thorough account of those changes in three categories:
 	</verb>
 
 	<tag>logfile_daemon</tag>
-	<p>Ported from 2.7
+	<p>Ported from 2.7. Specify the file I/O daemon helper to run for logging.
+
+	<tag>tproxy_uses_indirect_client</tag>
+	<p>Controls whether the indirect client address found in the X-Forwarded-For
+	header is used for spoofing instead of the directly connected client address.
+	Requires both <em>--enable-follow-x-forwarded-for</em> and <em>--enable-linux-netfilter</em>
 
 </descrip>
 
 <sect1>Changes to existing tags<label id="modifiedtags">
 <p>
 <descrip>
+	<tag>access_log</tag>
+	<p>New <em>stdio</em> module to send log data directly from Squid to a disk file.
+	This is the historic behaviour of Squid before logging modules were introduced, and
+	remains the default used when no module is selected.
+	It is recommended to upgrade logging to the faster <em>daemon:</em> module.
+	<p>New <em>daemon</em> module to send each log line as text data to a file I/O daemon handling the slow disk I/O.
+	New installs, or installs with no logs configured explicitly will use this module by default.
+	<p>New <em>tcp</em> module to send each log line as text data to a TCP receiver.
+	<p>New <em>udp</em> module to send each log line as text data to a UDP receiver.
+
 	<tag>acl random</tag>
 	<p>New type <em>random</em>. Pseudo-randomly match requests based on a configured probability.
 
@@ -253,9 +278,15 @@ This section gives a thorough account of those changes in three categories:
 	<p>Deprecated <em>children=N</em> in favor of <em>children-max=N</em>.
 
 	<tag>logformat</tag>
+	<p><em>%&gt;lp</em> Local TCP port used by transactions with http servers.
 	<p><em>%sn</em> Unique sequence number per log line. Ported from 2.7
-	<p><em>%>eui</em> EUI logging (EUI-48 / MAC address for IPv4, EUI-64 for IPv6)
+	<p><em>%&lt;eui</em> EUI logging (EUI-48 / MAC address for IPv4, EUI-64 for IPv6)
 	   Both EUI forms are logged in the same field. Type can be identified by length or byte delimiter.
+
+	<tag>memory_pools_limit</tag>
+	<p>Memory limits have been revised and corrected from 3.1.4 onwards.
+	<p>Please check and update your squid.conf to use the text <em>none</em> for no limit instead of the old 0 (zero).
+	<p>All users upgrading need to be aware that from Squid-3.3 setting this option to 0 (zero) will mean zero bytes of memory get pooled.
 
 	<tag>windows_ipaddrchangemonitor</tag>
 	<p>Now only available to be set in Windows builds.
@@ -299,9 +330,32 @@ This section gives an account of those changes in three categories:
 <sect1>New options<label id="newoptions">
 <p>
 <descrip>
+	<tag>--enable-auth-basic[=HELPERS]</tag>
+	<p>Specified without any parameters all helpers will be auto-built.
+	<p>With an explicit empty list <em>=""</em> protocol suport will be built but no helpers.
+	<p>With an explicit list protocol support and just those helpers will be built.
+
+	<tag>--enable-auth-digest[=HELPERS]</tag>
+	<p>Specified without any parameters all helpers will be auto-built.
+	<p>With an explicit empty list <em>=""</em> protocol suport will be built but no helpers.
+	<p>With an explicit list protocol support and just those helpers will be built.
+
+	<tag>--enable-auth-negotiate</tag>
+	<p>Specified without any parameters all helpers will be auto-built.
+	<p>With an explicit empty list <em>=""</em> protocol suport will be built but no helpers.
+	<p>With an explicit list protocol support and just those helpers will be built.
+
+	<tag>--enable-auth-ntlm</tag>
+	<p>Specified without any parameters all helpers will be auto-built.
+	<p>With an explicit empty list <em>=""</em> protocol suport will be built but no helpers.
+	<p>With an explicit list protocol support and just those helpers will be built.
+
 	<tag>--enable-eui</tag>
 	<p>Enable Support for handling EUI operations.
 	   This includes ARP lookups for MAC (EUI-48) addresses and the ACL arp type tests.
+
+	<tag>--enable-log-daemon-helpers</tag>
+	<p>Build helpers for logging I/O.
 
 	<tag>--enable-url-rewrite-helpers</tag>
 	<p>Build helpers for some basic URL-rewrite actions. For use by url_rewrite_program.
@@ -315,8 +369,9 @@ This section gives an account of those changes in three categories:
 <sect1>Changes to existing options<label id="modifiedoptions">
 <p>
 <descrip>
-	<tag>???alphabetical list within group ordered: enable, disable, with, without) ???</tag>
-	<p> ???explain??
+	<tag>--enable-auth</tag>
+	<p>No longer takes a list of arguments. This option now is restricted to building with or without for authentication.
+	<p>The new <em>--enable-auth-X</em>/<em>--disable-auth-X</em> parameters determine which authentication protocols and helpers are built.
 
 </descrip>
 </p>
@@ -326,6 +381,18 @@ This section gives an account of those changes in three categories:
 <descrip>
 	<tag>--enable-arp-acl</tag>
 	<p>Replaced by --enable-eui
+
+	<tag>--enable-auth-basic-helpers</tag>
+	<p>replaced by <em>--enable-auth-basic</em>.
+
+	<tag>--enable-auth-digest-helpers</tag>
+	<p>replaced by <em>--enable-auth-digest</em>.
+
+	<tag>--enable-auth-negotiate-helpers</tag>
+	<p>replaced by <em>--enable-auth-negotiate</em>.
+
+	<tag>--enable-auth-ntlm-helpers</tag>
+	<p>replaced by <em>--enable-auth-ntlm</em>.
 
 </descrip>
 
@@ -340,6 +407,9 @@ This section gives an account of those changes in three categories:
 	<tag>auth_param</tag>
 	<p><em>blankpassword</em> option for basic scheme removed.
 
+	<tag>cache_peer</tag>
+	<p><em>http11</em> Obsolete.
+
 	<tag>external_acl_type</tag>
 	<p>Format tag <em>%{Header}</em> replaced by <em>%>{Header}</em>
 	<p>Format tag <em>%{Header:member}</em> replaced by <em>%>{Header:member}</em>
@@ -350,9 +420,10 @@ This section gives an account of those changes in three categories:
 	<tag>http_port</tag>
 	<p><em>no-connection-auth</em> replaced by <em>connection-auth=[on|off]</em>. Default is ON.
 	<p><em>transparent</em> option replaced by <em>intercept</em>
+	<p><em>http11</em> obsolete.
 
 	<tag>http_access2</tag>
-	<p>Repalced by <em>adapted_http_access</em>
+	<p>Replaced by <em>adapted_http_access</em>
 
 	<tag>httpd_accel_no_pmtu_disc</tag>
 	<p>Replaced by <em>http_port disable-pmtu-discovery=</em> option
@@ -362,6 +433,9 @@ This section gives an account of those changes in three categories:
 
 	<tag>redirector_bypass</tag>
 	<p>Replaced by <em>url_rewrite_bypass</em>
+
+	<tag>server_http11</tag>
+	<p>Obsolete.
 
 	<tag>upgrade_http0.9</tag>
 	<p>Obsolete.
@@ -477,7 +551,6 @@ This section gives an account of those changes in three categories:
 
 	<tag>cache_peer</tag>
 	<p><em>idle=</em> not yet ported from 2.7
-	<p><em>http11</em> not yet ported from 2.7
 	<p><em>monitorinterval=</em> not yet ported from 2.6
 	<p><em>monitorsize=</em> not yet ported from 2.6
 	<p><em>monitortimeout=</em> not yet ported from 2.6
@@ -501,11 +574,7 @@ This section gives an account of those changes in three categories:
 
 	<tag>http_port</tag>
 	<p><em>act-as-origin</em> not yet ported from 2.7
-	<p><em>http11</em> not yet ported from 2.7
 	<p><em>urlgroup=</em> not yet ported from 2.6
-
-	<tag>ignore_expect_100</tag>
-	<p>Not yet ported from 2.7
 
 	<tag>ignore_ims_on_miss</tag>
 	<p>Not yet ported from 2.7
@@ -525,9 +594,6 @@ This section gives an account of those changes in three categories:
 	<tag>logformat</tag>
 	<p><em>%oa</em> tag not yet ported from 2.7
 
-	<tag>max_filedescriptors</tag>
-	<p>Not yet ported from 2.7
-
 	<tag>max_stale</tag>
 	<p>Not yet ported from 2.7
 
@@ -538,9 +604,6 @@ This section gives an account of those changes in three categories:
 	<p><em>negative-ttl=</em> not yet ported from 2.7
 
 	<tag>refresh_stale_hit</tag>
-	<p>Not yet ported from 2.7
-
-	<tag>server_http11</tag>
 	<p>Not yet ported from 2.7
 
 	<tag>storeurl_access</tag>

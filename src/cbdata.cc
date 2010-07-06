@@ -173,7 +173,7 @@ MEMPROXY_CLASS_INLINE(cbdata);
 #endif
 
 static OBJH cbdataDump;
-#ifdef CBDATA_DEBUG
+#if CBDATA_DEBUG
 static OBJH cbdataDumpHistory;
 #endif
 
@@ -379,10 +379,10 @@ cbdataInternalFree(void *p)
 #if HASHED_CBDATA
     hash_remove_link(cbdata_htable, &c->hash);
     delete c;
-    cbdata_index[theType].pool->free((void *)p);
+    cbdata_index[theType].pool->freeOne((void *)p);
 #else
     c->cbdata::~cbdata();
-    cbdata_index[theType].pool->free(c);
+    cbdata_index[theType].pool->freeOne(c);
 #endif
     return NULL;
 }
@@ -489,10 +489,10 @@ cbdataInternalUnlock(const void *p)
 #if HASHED_CBDATA
     hash_remove_link(cbdata_htable, &c->hash);
     delete c;
-    cbdata_index[theType].pool->free((void *)p);
+    cbdata_index[theType].pool->freeOne((void *)p);
 #else
     c->cbdata::~cbdata();
-    cbdata_index[theType].pool->free(c);
+    cbdata_index[theType].pool->freeOne(c);
 #endif
 }
 

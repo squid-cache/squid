@@ -2,7 +2,7 @@
 /*
  * $Id$
  *
- * DEBUG: section 3     Configuration File Parsing
+ * DEBUG: section 03    Configuration File Parsing
  * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -61,11 +61,11 @@ extern bool StringToInt(const char *str, int &result, const char **p, int base);
 extern bool StringToInt64(const char *str, int64_t &result, const char **p, int base);
 
 /**
- * Parse a socket address (host:port), fill the given IpAddress object
+ * Parse a socket address (host:port), fill the given Ip::Address object
  * \retval false     Failure.
  * \retval true      Success.
  * Destroys token during parse.
  */
-extern bool GetHostWithPort(char *token, IpAddress *ipa);
+extern bool GetHostWithPort(char *token, Ip::Address *ipa);
 
 #endif /* SQUID_PARSING_H */

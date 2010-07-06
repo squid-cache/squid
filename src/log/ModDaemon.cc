@@ -242,7 +242,7 @@ logfile_mod_daemon_open(Logfile * lf, const char *path, size_t bufsz, int fatal_
     lf->data = ll;
     ll->eol = 1;
     {
-        IpAddress localhost;
+        Ip::Address localhost;
         args[0] = "(logfile-daemon)";
         args[1] = path;
         args[2] = NULL;

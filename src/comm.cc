@@ -1,5 +1,5 @@
 /*
- * DEBUG: section 5     Socket Functions
+ * DEBUG: section 05    Socket Functions
  * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -49,8 +49,8 @@
 #include "CommCalls.h"
 #include "DescriptorSet.h"
 #include "icmp/net_db.h"
-#include "ip/IpAddress.h"
-#include "ip/IpIntercept.h"
+#include "ip/Address.h"
+#include "ip/Intercept.h"
 
 #if defined(_SQUID_CYGWIN_)
 #include <sys/ioctl.h>
@@ -71,8 +71,8 @@ typedef enum {
 
 static void commStopHalfClosedMonitor(int fd);
 static IOCB commHalfClosedReader;
-static void comm_init_opened(int new_socket, IpAddress &addr, unsigned char TOS, const char *note, struct addrinfo *AI);
-static int comm_apply_flags(int new_socket, IpAddress &addr, int flags, struct addrinfo *AI);
+static void comm_init_opened(int new_socket, Ip::Address &addr, unsigned char TOS, const char *note, struct addrinfo *AI);
+static int comm_apply_flags(int new_socket, Ip::Address &addr, int flags, struct addrinfo *AI);
 
 
 struct comm_io_callback_t {
@@ -211,11 +211,11 @@ public:
 // defaults given by client
     char *host;
     u_short default_port;
-    IpAddress default_addr;
+    Ip::Address default_addr;
     // NP: CANNOT store the default addr:port together as it gets set/reset differently.
 
     DnsLookupDetails dns; ///< host lookup details
-    IpAddress S;
+    Ip::Address S;
     AsyncCall::Pointer callback;
 
     int fd;
@@ -472,7 +472,7 @@ comm_read_cancel(int fd, AsyncCall::Pointer &callback)
  * synchronous wrapper around udp socket functions
  */
 int
-comm_udp_recvfrom(int fd, void *buf, size_t len, int flags, IpAddress &from)
+comm_udp_recvfrom(int fd, void *buf, size_t len, int flags, Ip::Address &from)
 {
     statCounter.syscalls.sock.recvfroms++;
     int x = 0;
@@ -496,7 +496,7 @@ comm_udp_recvfrom(int fd, void *buf, size_t len, int flags, IpAddress &from)
 int
 comm_udp_recv(int fd, void *buf, size_t len, int flags)
 {
-    IpAddress nul;
+    Ip::Address nul;
     return comm_udp_recvfrom(fd, buf, len, flags, nul);
 }
 
@@ -523,7 +523,7 @@ comm_has_incomplete_write(int fd)
 u_short
 comm_local_port(int fd)
 {
-    IpAddress temp;
+    Ip::Address temp;
     struct addrinfo *addr = NULL;
     fde *F = &fd_table[fd];
 
@@ -590,7 +590,7 @@ commBind(int s, struct addrinfo &inaddr)
 int
 comm_open(int sock_type,
           int proto,
-          IpAddress &addr,
+          Ip::Address &addr,
           int flags,
           const char *note)
 {
@@ -600,7 +600,7 @@ comm_open(int sock_type,
 int
 comm_open_listener(int sock_type,
                    int proto,
-                   IpAddress &addr,
+                   Ip::Address &addr,
                    int flags,
                    const char *note)
 {
@@ -611,16 +611,6 @@ comm_open_listener(int sock_type,
 
     /* attempt native enabled port. */
     sock = comm_openex(sock_type, proto, addr, flags, 0, note);
-
-#if USE_IPV6
-    /* under IPv6 there is the possibility IPv6 is present but disabled. */
-    /* try again as IPv4-native */
-    if ( sock < 0 && addr.IsIPv6() && addr.SetIPv4() ) {
-        /* attempt to open this IPv4-only. */
-        sock = comm_openex(sock_type, proto, addr, flags, 0, note);
-        debugs(50, 2, HERE << "attempt open " << note << " socket on: " << addr);
-    }
-#endif
 
     return sock;
 }
@@ -683,7 +673,7 @@ comm_set_transparent(int fd)
 int
 comm_openex(int sock_type,
             int proto,
-            IpAddress &addr,
+            Ip::Address &addr,
             int flags,
             unsigned char TOS,
             const char *note)
@@ -703,7 +693,24 @@ comm_openex(int sock_type,
 
     debugs(50, 3, "comm_openex: Attempt open socket for: " << addr );
 
-    if ((new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol)) < 0) {
+    new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
+#if USE_IPV6
+    /* under IPv6 there is the possibility IPv6 is present but disabled. */
+    /* try again as IPv4-native if possible */
+    if ( new_socket < 0 && addr.IsIPv6() && addr.SetIPv4() ) {
+        /* attempt to open this IPv4-only. */
+        addr.FreeAddrInfo(AI);
+        /* Setup the socket addrinfo details for use */
+        addr.GetAddrInfo(AI);
+        AI->ai_socktype = sock_type;
+        AI->ai_protocol = proto;
+        debugs(50, 3, "comm_openex: Attempt fallback open socket for: " << addr );
+        new_socket = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
+        debugs(50, 2, HERE << "attempt open " << note << " socket on: " << addr);
+    }
+#endif
+
+    if (new_socket < 0) {
         /* Increase the number of reserved fd's if calls to socket()
          * are failing because the open file table is full.  This
          * limits the number of simultaneous clients */
@@ -757,7 +764,7 @@ comm_openex(int sock_type,
 /// update FD tables after a local or remote (IPC) comm_openex();
 void
 comm_init_opened(int new_socket,
-                 IpAddress &addr,
+                 Ip::Address &addr,
                  unsigned char TOS,
                  const char *note,
                  struct addrinfo *AI)
@@ -790,7 +797,7 @@ comm_init_opened(int new_socket,
 /// returns new_socket or -1 on error
 static int
 comm_apply_flags(int new_socket,
-                 IpAddress &addr,
+                 Ip::Address &addr,
                  int flags,
                  struct addrinfo *AI)
 {
@@ -851,7 +858,7 @@ comm_apply_flags(int new_socket,
 
 void
 comm_import_opened(int fd,
-                   IpAddress &addr,
+                   Ip::Address &addr,
                    int flags,
                    const char *note,
                    struct addrinfo *AI)
@@ -1018,9 +1025,6 @@ copyFDFlags(int to, fde *F)
 int
 ConnectStateData::commResetFD()
 {
-    struct addrinfo *AI = NULL;
-    IpAddress nul;
-    int new_family = AF_UNSPEC;
 
 // XXX: do we have to check this?
 //
@@ -1029,14 +1033,13 @@ ConnectStateData::commResetFD()
 
     statCounter.syscalls.sock.sockets++;
 
-    /* setup a bare-bones addrinfo */
-    /* TODO INET6: for WinXP we may need to check the local_addr type and setup the family properly. */
-    nul.GetAddrInfo(AI);
-    new_family = AI->ai_family;
+    fde *F = &fd_table[fd];
 
-    int fd2 = socket(AI->ai_family, AI->ai_socktype, AI->ai_protocol);
+    struct addrinfo *AI = NULL;
+    F->local_addr.GetAddrInfo(AI);
+    int new_family = AI->ai_family;
 
-    nul.FreeAddrInfo(AI);
+    int fd2 = socket(new_family, AI->ai_socktype, AI->ai_protocol);
 
     if (fd2 < 0) {
         debugs(5, DBG_CRITICAL, HERE << "WARNING: FD " << fd2 << " socket failed to allocate: " << xstrerror());
@@ -1044,6 +1047,7 @@ ConnectStateData::commResetFD()
         if (ENFILE == errno || EMFILE == errno)
             fdAdjustReserved();
 
+        F->local_addr.FreeAddrInfo(AI);
         return 0;
     }
 
@@ -1063,19 +1067,20 @@ ConnectStateData::commResetFD()
 
         close(fd2);
 
+        F->local_addr.FreeAddrInfo(AI);
         return 0;
     }
     commResetSelect(fd);
 
     close(fd2);
-    fde *F = &fd_table[fd];
 
     debugs(50, 3, "commResetFD: Reset socket FD " << fd << "->" << fd2 << " : family=" << new_family );
 
     /* INET6: copy the new sockets family type to the FDE table */
-    fd_table[fd].sock_family = new_family;
+    F->sock_family = new_family;
 
-    fd_table[fd].flags.called_connect = 0;
+    F->flags.called_connect = 0;
+
     /*
      * yuck, this has assumptions about comm_open() arguments for
      * the original socket
@@ -1085,9 +1090,6 @@ ConnectStateData::commResetFD()
     if ( F->flags.transparent ) {
         comm_set_transparent(fd);
     }
-
-    AI = NULL;
-    F->local_addr.GetAddrInfo(AI);
 
     if (commBind(fd, *AI) != COMM_OK) {
         debugs(5, DBG_CRITICAL, "WARNING: Reset of FD " << fd << " for " << F->local_addr << " failed to bind: " << xstrerror());
@@ -1121,8 +1123,13 @@ ConnectStateData::commRetryConnect()
         if (squid_curtime - connstart > Config.Timeout.connect)
             return 0;
     } else {
-        if (tries > addrcount)
+        if (tries > addrcount) {
+            /* Flush bad address count in case we are
+             * skipping over incompatible protocol
+             */
+            ipcacheMarkAllGood(host);
             return 0;
+        }
     }
 
     return commResetFD();
@@ -1154,8 +1161,7 @@ ConnectStateData::defaults()
 void
 ConnectStateData::connect()
 {
-    if (S.IsAnyAddr())
-        defaults();
+    defaults();
 
     debugs(5,5, HERE << "to " << S);
 
@@ -1172,15 +1178,22 @@ ConnectStateData::connect()
         callCallback(COMM_OK, 0);
         break;
 
-#if USE_IPV6
     case COMM_ERR_PROTOCOL:
+        debugs(5, 5, HERE "FD " << fd << ": COMM_ERR_PROTOCOL - try again");
         /* problem using the desired protocol over this socket.
-         * count the connection attempt, reset the socket, and immediately try again */
+         * skip to the next address and hope it's more compatible
+         * but do not mark the current address as bad
+         */
         tries++;
-        commResetFD();
-        connect();
+        if (commRetryConnect()) {
+            /* Force an addr cycle to move forward to the next possible address */
+            ipcacheCycleAddr(host, NULL);
+            eventAdd("commReconnect", commReconnect, this, this->addrcount == 1 ? 0.05 : 0.0, 0);
+        } else {
+            debugs(5, 5, HERE << "FD " << fd << ": COMM_ERR_PROTOCOL - ERR tried too many times already.");
+            callCallback(COMM_ERR_CONNECT, errno);
+        }
         break;
-#endif
 
     default:
         debugs(5, 5, HERE "FD " << fd << ": * - try again");
@@ -1268,7 +1281,7 @@ int commSetTimeout(int fd, int timeout, AsyncCall::Pointer &callback)
 }
 
 int
-comm_connect_addr(int sock, const IpAddress &address)
+comm_connect_addr(int sock, const Ip::Address &address)
 {
     comm_err_t status = COMM_OK;
     fde *F = &fd_table[sock];
@@ -1280,20 +1293,31 @@ comm_connect_addr(int sock, const IpAddress &address)
 
     assert(address.GetPort() != 0);
 
-    debugs(5, 9, "comm_connect_addr: connecting socket " << sock << " to " << address << " (want family: " << F->sock_family << ")");
+    debugs(5, 9, HERE << "connecting socket FD " << sock << " to " << address << " (want family: " << F->sock_family << ")");
 
-    /* BUG 2222 FIX: reset the FD when its found to be IPv4 in IPv6 mode */
-    /* inverse case of IPv4 failing to connect on IPv6 socket is handeld post-connect.
+#if USE_IPV6
+    /* Handle IPv6 over IPv4-only socket case.
      * this case must presently be handled here since the GetAddrInfo asserts on bad mappings.
-     * eventually we want it to throw a Must() that gets handled there instead of this if.
-     * NP: because commresetFD is private to ConnStateData we have to return an error and
+     * NP: because commResetFD is private to ConnStateData we have to return an error and
      *     trust its handled properly.
      */
-#if USE_IPV6
     if (F->sock_family == AF_INET && !address.IsIPv4()) {
+        errno = ENETUNREACH;
         return COMM_ERR_PROTOCOL;
     }
-#endif
+
+    /* Handle IPv4 over IPv6-only socket case.
+     * This case is presently handled here as it's both a known case and it's
+     * uncertain what error will be returned by the IPv6 stack in such case. It's
+     * possible this will also be handled by the errno checks below after connect()
+     * but needs carefull cross-platform verification, and verifying the address
+     * condition here is simple.
+     */
+    if (!F->local_addr.IsIPv4() && address.IsIPv4()) {
+        errno = ENETUNREACH;
+        return COMM_ERR_PROTOCOL;
+    }
+#endif /* USE_IPV6 */
 
     address.GetAddrInfo(AI, F->sock_family);
 
@@ -1387,23 +1411,10 @@ comm_connect_addr(int sock, const IpAddress &address)
         status = COMM_OK;
     else if (ignoreErrno(errno))
         status = COMM_INPROGRESS;
+    else if (errno == EAFNOSUPPORT || errno == EINVAL)
+        return COMM_ERR_PROTOCOL;
     else
-#if USE_IPV6
-        if ( F->sock_family == AF_INET6 && address.IsIPv4() ) {
-
-            /* failover to trying IPv4-only link if an IPv6 one fails */
-            /* to catch the edge case of apps listening on IPv4-localhost */
-            F->sock_family = AF_INET;
-            int res = comm_connect_addr(sock, address);
-
-            /* if that fails too, undo our temporary socktype hack so the repeat works properly. */
-            if (res == COMM_ERROR)
-                F->sock_family = AF_INET6;
-
-            return res;
-        } else
-#endif
-            return COMM_ERROR;
+        return COMM_ERROR;
 
     address.NtoA(F->ipaddr, MAX_IPSTRLEN);
 
@@ -1498,7 +1509,7 @@ comm_reset_close(int fd)
     L.l_linger = 0;
 
     if (setsockopt(fd, SOL_SOCKET, SO_LINGER, (char *) &L, sizeof(L)) < 0)
-        debugs(50, 0, "commResetTCPClose: FD " << fd << ": " << xstrerror());
+        debugs(50, DBG_CRITICAL, "ERROR: Closing FD " << fd << " with TCP RST: " << xstrerror());
 
     comm_close(fd);
 }
@@ -1616,7 +1627,7 @@ _comm_close(int fd, char const *file, int line)
 /* Send a udp datagram to specified TO_ADDR. */
 int
 comm_udp_sendto(int fd,
-                const IpAddress &to_addr,
+                const Ip::Address &to_addr,
                 const void *buf,
                 int len)
 {
@@ -2113,8 +2124,8 @@ commCloseAllSockets(void)
             debugs(5, 5, "commCloseAllSockets: FD " << fd << ": Calling timeout handler");
             ScheduleCallHere(callback);
         } else {
-            debugs(5, 5, "commCloseAllSockets: FD " << fd << ": calling comm_close()");
-            comm_close(fd);
+            debugs(5, 5, "commCloseAllSockets: FD " << fd << ": calling comm_reset_close()");
+            comm_reset_close(fd);
         }
     }
 }
@@ -2489,7 +2500,7 @@ comm_open_uds(int sock_type,
               struct sockaddr_un* addr,
               int flags)
 {
-    // TODO: merge with comm_openex() when IpAddress becomes NetAddress
+    // TODO: merge with comm_openex() when Ip::Address becomes NetAddress
 
     int new_socket;
 

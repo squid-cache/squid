@@ -182,7 +182,7 @@ kill(pid_t pid, int sig)
         return 0;
 }
 
-#ifndef HAVE_GETTIMEOFDAY
+#if !HAVE_GETTIMEOFDAY
 int
 gettimeofday(struct timeval *pcur_time, void *tzp)
 {

@@ -8,6 +8,7 @@
 #include "config.h"
 #include <map>
 #include "comm.h"
+#include "base/TextException.h"
 #include "ipc/Port.h"
 #include "ipc/Messages.h"
 #include "ipc/Kids.h"

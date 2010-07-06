@@ -200,7 +200,7 @@ are supported.
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .BI \-v " 2|3"
-LDAP protocol version. Defaults to 2 if not specified.
+LDAP protocol version. Defaults to 3 if not specified.
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .BI \-Z
@@ -245,7 +245,7 @@ This manual was written by
 .SH COPYRIGHT
 This program and documentation is copyright to the authors named above.
 .PP
-Distributed under the GNU General Public License (GNU GPL) version 2 or later (GPL2+).
+Distributed under the GNU General Public License (GNU GPL) version 2 or later (GPLv2+).
 .
 .SH QUESTIONS
 Questions on the usage of this program can be sent to the
@@ -256,6 +256,9 @@ Or contact your favorite LDAP list/friend if the question is more related to
 LDAP than Squid.
 .
 .SH REPORTING BUGS
+Bug reports need to be made in English.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+.PP
 Report bugs or bug fixes using http://bugs.squid-cache.org/
 .PP
 Report serious security bugs to
@@ -267,9 +270,16 @@ Report ideas for new improvements to the
 .
 .SH SEE ALSO
 .if !'po4a'hide' .BR squid "(8), "
-.if !'po4a'hide' .BR squid_ldap_auth "(8), "
+.if !'po4a'hide' .BR basic_ldap_auth "(8), "
 .if !'po4a'hide' .BR ldapsearch "(1), "
+.if !'po4a'hide' .BR GPL "(7), "
 .br
 Your favorite LDAP documentation
 .br
 .BR RFC2254 " - The String Representation of LDAP Search Filters,"
+.br
+The Squid FAQ wiki
+.if !'po4a'hide' http://wiki.squid-cache.org/SquidFaq
+.br
+The Squid Configuration Manual
+.if !'po4a'hide' http://www.squid-cache.org/Doc/config/

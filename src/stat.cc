@@ -107,7 +107,7 @@ static OBJH statUtilization;
 static OBJH statCountersHistograms;
 static OBJH statClientRequests;
 
-#ifdef XMALLOC_STATISTICS
+#if XMALLOC_STATISTICS
 static void info_get_mallstat(int, int, int, void *);
 static double xm_time;
 static double xm_deltat;
@@ -425,7 +425,7 @@ statOpenfdObj(StoreEntry * sentry)
 
 #endif
 
-#ifdef XMALLOC_STATISTICS
+#if XMALLOC_STATISTICS
 static void
 info_get_mallstat(int size, int number, int oldnum, void *data)
 {
@@ -462,7 +462,7 @@ info_get(StoreEntry * sentry)
     storeAppendPrintf(sentry, "Squid Object Cache: Version %s\n",
                       version_string);
 
-#ifdef _SQUID_WIN32_
+#if _SQUID_WIN32_
 
     if (WIN32_run_mode == _WIN_SQUID_RUN_MODE_SERVICE) {
         storeAppendPrintf(sentry,"\nRunning as %s Windows System Service on %s\n",
@@ -1040,6 +1040,9 @@ statRegisterWithCacheManager(void)
     manager->registerAction("active_requests",
                             "Client-side Active Requests",
                             statClientRequests, 0, 1);
+    manager->registerAction("username_cache",
+                            "Active Cached Usernames",
+                            AuthUser::UsernameCacheStats, 0, 1);
 #if DEBUG_OPENFD
     manager->registerAction("openfd_objects", "Objects with Swapout files open",
                             statOpenfdObj, 0, 0);
@@ -1653,7 +1656,7 @@ statClientRequests(StoreEntry * s)
                           (int) http->start_time.tv_usec,
                           tvSubDsec(http->start_time, current_time));
 
-        if (http->request->auth_user_request)
+        if (http->request->auth_user_request != NULL)
             p = http->request->auth_user_request->username();
         else if (http->request->extacl_user.defined()) {
             p = http->request->extacl_user.termedBuf();

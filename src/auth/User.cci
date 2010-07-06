@@ -47,7 +47,7 @@ AuthUser::username () const
 }
 
 void
-AuthUser::username(char const*aString)
+AuthUser::username(char const *aString)
 {
     if (aString) {
         assert(!username_);
@@ -55,15 +55,4 @@ AuthUser::username(char const*aString)
     } else {
         safe_free(username_);
     }
-}
-
-void
-AuthUser::addRequest(AuthUserRequest *request)
-{
-    /* lock for the request link */
-
-    lock();
-    dlink_node *node = dlinkNodeNew();
-
-    dlinkAdd(request, node, &requests);
 }

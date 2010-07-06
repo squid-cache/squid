@@ -1,8 +1,12 @@
 #!/bin/sh
-if [ -x ${SAMBAPREFIX:-/usr/local/samba}/bin/wbinfo -a -x /usr/bin/perl ]; then
-	exit 0
-fi
-if [ -x /usr/bin/wbinfo -a -x /usr/bin/perl ]; then
-	exit 0
-fi
+
+for sambaprefix in ${SAMBAPREFIX} /usr/local /opt /opt/samba /usr/local/samba /usr
+do
+    for perlprefix in /usr /usr/local /opt /opt/perl
+    do
+        if [ -x $sambaprefix/bin/wbinfo -a -x $perlprefix/bin/perl ]; then
+            exit 0
+        fi
+    done
+done
 exit 1

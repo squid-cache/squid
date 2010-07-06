@@ -1,13 +1,14 @@
 #include "squid.h"
-#include "wordlist.h"
-#include "HttpReply.h"
-#include "adaptation/icap/Options.h"
-#include "TextException.h"
 #include "adaptation/icap/Config.h"
+#include "adaptation/icap/Options.h"
+#include "base/TextException.h"
+#include "HttpReply.h"
 #include "SquidTime.h"
+#include "wordlist.h"
 
 Adaptation::Icap::Options::Options(): error("unconfigured"),
         max_connections(-1), allow204(false),
+        allow206(false),
         preview(-1), theTTL(-1)
 {
     theTransfers.preview.name = "Transfer-Preview";
@@ -103,6 +104,9 @@ void Adaptation::Icap::Options::configure(const HttpReply *reply)
 
     if (h->hasListMember(HDR_ALLOW, "204", ','))
         allow204 = true;
+
+    if (h->hasListMember(HDR_ALLOW, "206", ','))
+        allow206 = true;
 
     cfgIntHeader(h, "Preview", preview);
 

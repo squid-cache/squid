@@ -154,8 +154,6 @@ noinst_LTLIBRARIES = libsquid.la
 
 # libraries used by many targets
 COMMON_LIBS = \
-	base/libbase.la \
-	libsquid.la \
 	auth/libacls.la \
 	ident/libident.la \
 	acl/libacls.la \
@@ -163,6 +161,8 @@ COMMON_LIBS = \
 	acl/libstate.la \
 	auth/libauth.la \
 	acl/libapi.la \
+	base/libbase.la \
+	libsquid.la \
 	ip/libip.la \
 	fs/libfs.la \
 	ipc/libipc.la
@@ -174,14 +174,14 @@ EXTRA_PROGRAMS = \
 	recv-announce \
 	tests/testUfs \
 	tests/testCoss \
-	tests/testNull
+	tests/testNull \
+	ufsdump
 
 ## cfgen is used when building squid
 ## ufsdump is a debug utility, it is possibly useful for end users with cache
 ## corruption, but at this point we do not install it.
 noinst_PROGRAMS = \
-	cf_gen \
-	ufsdump
+	cf_gen
 
 sbin_PROGRAMS = \
 	squid
@@ -195,15 +195,15 @@ libexec_PROGRAMS = \
 	$(UNLINKD)
 
 cf_gen_SOURCES = cf_gen.cc
-nodist_cf_gen_HEADER = cf_gen_defines.h
+nodist_cf_gen_HEADER = cf_gen_defines.cci
 cf_gen_LDADD= \
 	$(COMPAT_LIB) \
 	$(EPOLL_LIBS) \
 	$(MINGW_LIBS) \
 	$(XTRA_LIBS)
-cf_gen.$(OBJEXT): cf_gen_defines.h
+cf_gen.$(OBJEXT): cf_gen_defines.cci
 
-## cf_gen.cc needs src/cf_gen_defines.h
+## cf_gen.cc needs src/cf_gen_defines.cci
 INCLUDES += -I$(top_builddir)/src
 
 
@@ -250,9 +250,7 @@ libsquid_la_SOURCES = \
 	CommCalls.h \
 	DescriptorSet.cc \
 	DescriptorSet.h \
-	SquidConfig.cc \
-        TextException.cc \
-        TextException.h
+	SquidConfig.cc
 
 squid_SOURCES = \
 	$(ACL_REGISTRATION_SOURCES) \
@@ -315,6 +313,8 @@ squid_SOURCES = \
 	ExternalACL.h \
 	ExternalACLEntry.cc \
 	ExternalACLEntry.h \
+	FadingCounter.h \
+	FadingCounter.cc \
 	fd.cc \
 	fde.cc \
 	fde.h \
@@ -515,8 +515,8 @@ noinst_HEADERS = \
 	SquidTime.h
 
 BUILT_SOURCES = \
-	cf_gen_defines.h \
-	cf_parser.h \
+	cf_gen_defines.cci \
+	cf_parser.cci \
 	err_type.cc \
 	globals.cc \
 	hier_code.cc \
@@ -623,6 +623,7 @@ ufsdump_SOURCES = \
 	StoreMetaURL.cc \
 	StoreMetaVary.cc \
 	String.cc \
+	SquidNew.cc \
 	time.cc \
 	ufsdump.cc \
 	dlink.h \
@@ -722,7 +723,7 @@ libDiskThreads_a_SOURCES = \
 		DiskIO/DiskThreads/DiskThreadsIOStrategy.h
 
 DiskIO_DiskDaemon_diskd_SOURCES = DiskIO/DiskDaemon/diskd.cc 
-DiskIO_DiskDaemon_diskd_LDADD = $(top_builddir)/lib/libmiscutil.a $(XTRA_LIBS)
+DiskIO_DiskDaemon_diskd_LDADD = $(COMPAT_LIB) $(XTRA_LIBS)
 
 
 DEFAULT_HTTP_PORT	= $(CACHE_HTTP_PORT)
@@ -753,23 +754,23 @@ DEFS += -DDEFAULT_CONFIG_FILE=\"$(DEFAULT_CONFIG_FILE)\" -DDEFAULT_SQUID_DATA_DI
 snmp_core.o snmp_agent.o: ../snmplib/libsnmp.a $(top_srcdir)/include/cache_snmp.h
 
 globals.cc: globals.h mk-globals-c.awk
-	$(AWK) -f $(srcdir)/mk-globals-c.awk < $(srcdir)/globals.h > $@
+	$(AWK) -f $(srcdir)/mk-globals-c.awk < $(srcdir)/globals.h > $@ || ($(RM) -f $@ && exit 1)
 
-## Generate files containing strng arrays for various enums....
+## Generate files containing string arrays for various enums....
 hier_code.cc: hier_code.h mk-string-arrays.awk
-	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/hier_code.h > $@
+	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/hier_code.h > $@ || ($(RM) -f $@ && exit 1)
 
 err_type.cc: err_type.h mk-string-arrays.awk
-	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/err_type.h > $@
+	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/err_type.h > $@ || ($(RM) -f $@ && exit 1)
 
 lookup_t.cc: lookup_t.h mk-string-arrays.awk
-	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/lookup_t.h > $@
+	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/lookup_t.h > $@ || ($(RM) -f $@ && exit 1)
 
 icp_opcode.cc: icp_opcode.h mk-string-arrays.awk
-	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/icp_opcode.h > $@
+	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/icp_opcode.h > $@ || ($(RM) -f $@ && exit 1)
 
 swap_log_op.cc: swap_log_op.h mk-string-arrays.awk
-	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/swap_log_op.h > $@
+	$(AWK) -f $(srcdir)/mk-string-arrays.awk < $(srcdir)/swap_log_op.h > $@ || ($(RM) -f $@ && exit 1)
 
 
 ## other generated files...
@@ -781,17 +782,17 @@ test_cache_digest: test_cache_digest.o CacheDigest.o debug.o globals.o store_key
 	$(CC) -o $@ $(LDFLAGS) $@.o CacheDigest.o debug.o globals.o store_key_md5.o $(STD_APP_LIBS)
 
 ## If autodependency works well this is not needed anymore
-cache_cf.o: cf_parser.h
+cache_cf.o: cf_parser.cci
 
-# squid.conf.default is built by cf_gen when making cf_parser.h
-squid.conf.default squid.conf.documented: cf_parser.h
+# squid.conf.default is built by cf_gen when making cf_parser.cci
+squid.conf.default squid.conf.documented: cf_parser.cci
 	true
 
-cf_parser.h: cf.data cf_gen$(EXEEXT)
+cf_parser.cci: cf.data cf_gen$(EXEEXT)
 	./cf_gen cf.data $(srcdir)/cf.data.depend
 
-cf_gen_defines.h: $(srcdir)/cf_gen_defines $(srcdir)/cf.data.pre
-	$(AWK) -f $(srcdir)/cf_gen_defines <$(srcdir)/cf.data.pre >cf_gen_defines.h
+cf_gen_defines.cci: $(srcdir)/cf_gen_defines $(srcdir)/cf.data.pre
+	$(AWK) -f $(srcdir)/cf_gen_defines <$(srcdir)/cf.data.pre >$@ || ($(RM) -f $@ && exit 1)
 
 
 ## FIXME: generate a sed command file from configure. Then this doesn't
@@ -850,7 +851,8 @@ install-data-local: install-sysconfDATA install-dataDATA
 	$(INSTALL_DATA) squid.conf.default $(DESTDIR)$(DEFAULT_CONFIG_FILE).default; \
 	echo "$(INSTALL_DATA) squid.conf.documented $(DESTDIR)$(DEFAULT_CONFIG_FILE).documented"; \
 	$(INSTALL_DATA) squid.conf.documented $(DESTDIR)$(DEFAULT_CONFIG_FILE).documented; \
-	$(mkinstalldirs) $(DESTDIR)$(DEFAULT_LOG_PREFIX)
+	$(mkinstalldirs) $(DESTDIR)$(DEFAULT_LOG_PREFIX); \
+	$(mkinstalldirs) $(DESTDIR)`dirname $(DEFAULT_PIDFILE)`
 
 uninstall-local: squid.conf.default
 	@$(SHELL) $(top_srcdir)/scripts/remove-cfg.sh "$(RM)" $(DESTDIR)$(DEFAULT_MIME_TABLE) $(srcdir)/mime.conf.default
@@ -968,9 +970,10 @@ tests_testHttpReply_LDADD=\
 	acl/libstate.la \
 	auth/libauth.la \
 	ip/libip.la \
+	base/libbase.la \
 	$(SQUID_CPPUNIT_LIBS) \
 	$(SQUID_CPPUNIT_LA) \
-	-L../lib -lmiscutil \
+	$(COMPAT_LIB) \
 	$(XTRA_LIBS)
 tests_testHttpReply_DEPENDENCIES= $(SQUID_CPPUNIT_LA) \
 	$(top_builddir)/lib/libmiscutil.a
@@ -1103,6 +1106,7 @@ tests_testBoilerplate_DEPENDENCIES = \
 
 ## Tests of the CacheManager module.
 tests_testCacheManager_SOURCES = \
+	$(ACL_REGISTRATION_SOURCES) \
 	debug.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
@@ -1227,6 +1231,7 @@ tests_testCacheManager_SOURCES = \
 	useragent.cc \
 	wccp2.cc \
 	whois.cc \
+	FadingCounter.cc \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testCacheManager_SOURCES = \
@@ -1281,6 +1286,7 @@ tests_testDiskIO_DEPENDENCIES = $(top_builddir)/lib/libmiscutil.a \
 
 ## Tests of the Even module.
 tests_testEvent_SOURCES = \
+	$(ACL_REGISTRATION_SOURCES) \
 	debug.cc \
 	EventLoop.h \
 	EventLoop.cc \
@@ -1408,6 +1414,7 @@ tests_testEvent_SOURCES = \
 	useragent.cc \
 	wccp2.cc \
 	whois.cc \
+	FadingCounter.cc \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testEvent_SOURCES = \
@@ -1435,6 +1442,7 @@ tests_testEvent_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 
 ## Tests of the EventLoop module.
 tests_testEventLoop_SOURCES = \
+	$(ACL_REGISTRATION_SOURCES) \
 	debug.cc \
 	EventLoop.h \
 	EventLoop.cc \
@@ -1561,6 +1569,7 @@ tests_testEventLoop_SOURCES = \
 	useragent.cc \
 	wccp2.cc \
 	whois.cc \
+	FadingCounter.cc \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testEventLoop_SOURCES = \
@@ -1587,6 +1596,7 @@ tests_testEventLoop_DEPENDENCIES =  $(top_builddir)/lib/libmiscutil.a \
 	$(SQUID_CPPUNIT_LA)
 
 tests_test_http_range_SOURCES = \
+	$(ACL_REGISTRATION_SOURCES) \
 	tests/test_http_range.cc \
 	BodyPipe.cc \
 	cache_cf.cc \
@@ -1707,6 +1717,7 @@ tests_test_http_range_SOURCES = \
 	useragent.cc \
 	wccp2.cc \
 	whois.cc \
+	FadingCounter.cc \
 	$(WIN32_SOURCE) \
 	wordlist.cc \
 	Packer.cc \
@@ -1736,6 +1747,7 @@ tests_test_http_range_DEPENDENCIES = \
 
 ## Tests of the HttpRequest module.
 tests_testHttpRequest_SOURCES = \
+	$(ACL_REGISTRATION_SOURCES) \
 	debug.cc \
 	HttpRequest.cc \
 	HttpRequestMethod.cc \
@@ -1862,6 +1874,7 @@ tests_testHttpRequest_SOURCES = \
 	useragent.cc \
 	wccp2.cc \
 	whois.cc \
+	FadingCounter.cc \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testHttpRequest_SOURCES = \
@@ -2076,6 +2089,8 @@ tests_testCoss_SOURCES = \
 	$(SWAP_TEST_SOURCES)
 nodist_tests_testCoss_SOURCES = \
 	swap_log_op.cc \
+	SquidMath.cc \
+	SquidMath.h \
 	$(SWAP_TEST_GEN_SOURCES)
 tests_testCoss_LDADD = \
 	libsquid.la \
@@ -2104,6 +2119,7 @@ tests_testNull_DEPENDENCIES = \
 ## Tests of the URL module.
 ## TODO: Trim this down once the insanity is over.
 tests_testURL_SOURCES = \
+	$(ACL_REGISTRATION_SOURCES) \
 	debug.cc \
 	url.cc \
 	URLScheme.cc \
@@ -2230,6 +2246,7 @@ tests_testURL_SOURCES = \
 	useragent.cc \
 	wccp2.cc \
 	whois.cc \
+	FadingCounter.cc \
 	$(WIN32_SOURCE) \
 	wordlist.cc
 nodist_tests_testURL_SOURCES = \

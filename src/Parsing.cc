@@ -1,8 +1,7 @@
-
 /*
  * $Id$
  *
- * DEBUG: section 3     Configuration File Parsing
+ * DEBUG: section 03    Configuration File Parsing
  * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -33,6 +32,8 @@
  *
  */
 
+#include "config.h"
+#include "compat/strtoll.h"
 #include "Parsing.h"
 
 /*
@@ -162,7 +163,7 @@ StringToInt64(const char *s, int64_t &result, const char **p, int base)
 }
 
 bool
-GetHostWithPort(char *token, IpAddress *ipa)
+GetHostWithPort(char *token, Ip::Address *ipa)
 {
     char *t;
     char *host;

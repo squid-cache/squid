@@ -1,8 +1,7 @@
-
 /*
  * $Id$
  *
- * DEBUG: section 5     Socket Functions
+ * DEBUG: section 05    Socket Functions
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -37,7 +36,7 @@
 #include "CacheManager.h"
 #include "SquidTime.h"
 
-#ifdef USE_SELECT_WIN32
+#if USE_SELECT_WIN32
 #include "Store.h"
 #include "fde.h"
 

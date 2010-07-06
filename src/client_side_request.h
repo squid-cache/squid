@@ -198,7 +198,7 @@ SQUIDCEXTERN void redirectStart(ClientHttpRequest *, RH *, void *);
 
 SQUIDCEXTERN void tunnelStart(ClientHttpRequest *, int64_t *, int *);
 
-#ifdef _USE_INLINE_
+#if _USE_INLINE_
 #include "Store.h"
 #include "client_side_request.cci"
 #endif

@@ -47,10 +47,10 @@ SOFTWARE.
 #if HAVE_MEMORY_H
 #include <memory.h>
 #endif
-#ifdef HAVE_STRING_H
+#if HAVE_STRING_H
 #include <string.h>
 #endif
-#ifdef HAVE_STRINGS_H
+#if HAVE_STRINGS_H
 #include <strings.h>
 #endif
 #if HAVE_BSTRING_H
@@ -271,7 +271,7 @@ print_error(const char *string, const char *token, int type)
         snmplib_debug(0, "%s: On or around line %d\n", string, Line);
 }
 
-#ifdef TEST
+#if TEST
 print_subtree(tree, count)
 struct snmp_mib_tree *tree;
 int count;
@@ -424,7 +424,7 @@ do_subtree(struct snmp_mib_tree *root, struct node **nodes)
         xfree(oldnp);
 }
 
-#ifndef TEST
+#if !TEST
 static
 #endif
 struct snmp_mib_tree *
@@ -447,7 +447,7 @@ build_tree(struct node *nodes) {
     init_node_hash(nodes);
     /* XXX nodes isn't needed in do_subtree() ??? */
     do_subtree(tp, &nodes);
-#ifdef TEST
+#if TEST
     print_subtree(tp, 0);
 #endif /* TEST */
     /* If any nodes are left, the tree is probably inconsistent */
@@ -974,7 +974,7 @@ parse_objecttype(register FILE *fp, char *name) {
  * Parses a mib file and returns a linked list of nodes found in the file.
  * Returns NULL on error.
  */
-#ifndef TEST
+#if !TEST
 static
 #endif
 struct node *
@@ -1042,7 +1042,7 @@ parse(FILE *fp) {
             return NULL;
         }
     }
-#ifdef TEST
+#if TEST
     {
         struct enum_list *ep;
 

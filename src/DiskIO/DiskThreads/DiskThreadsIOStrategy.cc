@@ -166,7 +166,7 @@ DiskThreadsIOStrategy::callback()
         if (ctrlp->operation == _AIO_READ)
             squidaio_xfree(ctrlp->bufp, ctrlp->len);
 
-        squidaio_ctrl_pool->free(ctrlp);
+        squidaio_ctrl_pool->freeOne(ctrlp);
     }
 
     return retval;

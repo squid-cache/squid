@@ -1,8 +1,7 @@
-
 /*
  * $Id$
  *
- * DEBUG: section 5     Socket Functions
+ * DEBUG: section 05    Socket Functions
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
  * ----------------------------------------------------------
@@ -59,7 +58,7 @@
 #include "fde.h"
 #include "SquidTime.h"
 
-#ifdef USE_EPOLL
+#if USE_EPOLL
 
 #define DEBUG_EPOLL 0
 

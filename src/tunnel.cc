@@ -640,7 +640,7 @@ tunnelStart(ClientHttpRequest * http, int64_t * size_ptr, int *status_ptr)
     statCounter.server.all.requests++;
     statCounter.server.other.requests++;
     /* Create socket. */
-    IpAddress temp = getOutgoingAddr(request,NULL);
+    Ip::Address temp = getOutgoingAddr(request,NULL);
     int flags = COMM_NONBLOCKING;
     if (request->flags.spoof_client_ip) {
         flags |= COMM_TRANSPARENT;
@@ -710,7 +710,7 @@ tunnelProxyConnected(int fd, void *data)
     flags.proxying = tunnelState->request->flags.proxying;
     MemBuf mb;
     mb.init();
-    mb.Printf("CONNECT %s HTTP/1.0\r\n", tunnelState->url);
+    mb.Printf("CONNECT %s HTTP/1.1\r\n", tunnelState->url);
     HttpStateData::httpBuildRequestHeader(tunnelState->request,
                                           tunnelState->request,
                                           NULL,			/* StoreEntry */

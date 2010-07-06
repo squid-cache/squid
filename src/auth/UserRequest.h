@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -36,28 +35,40 @@
 #ifndef SQUID_AUTHUSERREQUEST_H
 #define SQUID_AUTHUSERREQUEST_H
 
-#include "client_side.h"
-
-class AuthUser;
+#include "auth/AuthAclState.h"
+#include "auth/Scheme.h"
+#include "auth/User.h"
+#include "dlink.h"
+#include "ip/Address.h"
+#include "typedefs.h"
+#include "HttpHeader.h"
 
 class ConnStateData;
+class HttpReply;
+class HttpRequest;
 
-class AuthScheme;
-
-struct AuthUserIP {
+/// \ingroup AuthAPI
+class AuthUserIP
+{
+public:
     dlink_node node;
     /* IP addr this user authenticated from */
 
-    IpAddress ipaddr;
+    Ip::Address ipaddr;
     time_t ip_expiretime;
 };
 
 /**
  \ingroup AuthAPI
  * This is a short lived structure is the visible aspect of the authentication framework.
+ *
+ * It and its children hold the state data while processing authentication for a client request.
+ * The AuthenticationStateData object is merely a CBDATA wrapper for one of these.
  */
-class AuthUserRequest
+class AuthUserRequest : public RefCountable
 {
+public:
+    typedef RefCount<AuthUserRequest> Pointer;
 
 public:
     /**
@@ -65,7 +76,7 @@ public:
      * it has request specific data, and links to user specific data
      * the user
      */
-    AuthUser *_auth_user;
+    AuthUser::Pointer _auth_user;
 
     /**
      *  Used by squid to determine what the next step in performing authentication for a given scheme is.
@@ -86,6 +97,19 @@ public:
      \retval false	Timeouts on cached credentials have occurred or for any reason the credentials are not valid.
      */
     virtual int authenticated() const = 0;
+
+    /**
+     * Check a auth_user pointer for validity.
+     * Does not check passwords, just data sensability. Broken or Unknown auth_types are not valid for use...
+     *
+     * \retval false    User credentials are missing.
+     * \retval false    User credentials use an unknown scheme type.
+     * \retval false    User credentials are broken for their scheme.
+     *
+     * \retval true	User credentials exist and may be able to authenticate.
+     */
+    bool valid() const;
+
     virtual void authenticate(HttpRequest * request, ConnStateData * conn, http_hdr_type type) = 0;
     /* template method */
     virtual int module_direction() = 0;
@@ -102,14 +126,14 @@ public:
      */
     virtual void module_start(RH *handler, void *data) = 0;
 
-    virtual AuthUser *user() {return _auth_user;}
+    virtual AuthUser::Pointer user() {return _auth_user;}
 
-    virtual const AuthUser *user() const {return _auth_user;}
+    virtual const AuthUser::Pointer user() const {return _auth_user;}
 
-    virtual void user(AuthUser *aUser) {_auth_user=aUser;}
+    virtual void user(AuthUser::Pointer aUser) {_auth_user=aUser;}
 
-    static auth_acl_t tryToAuthenticateAndSetAuthUser(AuthUserRequest **, http_hdr_type, HttpRequest *, ConnStateData *, IpAddress &);
-    static void addReplyAuthHeader(HttpReply * rep, AuthUserRequest * auth_user_request, HttpRequest * request, int accelerated, int internal);
+    static AuthAclState tryToAuthenticateAndSetAuthUser(AuthUserRequest::Pointer *, http_hdr_type, HttpRequest *, ConnStateData *, Ip::Address &);
+    static void addReplyAuthHeader(HttpReply * rep, AuthUserRequest::Pointer auth_user_request, HttpRequest * request, int accelerated, int internal);
 
     AuthUserRequest();
 
@@ -126,10 +150,6 @@ public:
     /** Possibly overrideable in future */
     char const * getDenyMessage();
 
-    size_t refCount() const;
-    void _lock();            /**< \note please use AUTHUSERREQUESTLOCK()   */
-    void _unlock();          /**< \note please use AUTHUSERREQUESTUNLOCK() */
-
     /**
      * Squid does not make assumptions about where the username is stored.
      * This function must return a pointer to a NULL terminated string to be used in logging the request.
@@ -140,64 +160,45 @@ public:
      */
     char const *username() const;
 
-    AuthScheme *scheme() const;
+    AuthScheme::Pointer scheme() const;
 
     virtual const char * connLastHeader();
 
 private:
 
-    static auth_acl_t authenticate(AuthUserRequest ** auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, IpAddress &src_addr);
+    static AuthAclState authenticate(AuthUserRequest::Pointer * auth_user_request, http_hdr_type headertype, HttpRequest * request, ConnStateData * conn, Ip::Address &src_addr);
 
     /** return a message on the 407 error pages */
     char *message;
-
-    /** how many 'processes' are working on this data */
-    size_t references;
 
     /**
      * We only attempt authentication once per http request. This
      * is to allow multiple auth acl references from different _access areas
      * when using connection based authentication
      */
-    auth_acl_t lastReply;
+    AuthAclState lastReply;
 };
 
 /* AuthUserRequest */
 
-/**
- \ingroup AuthAPI
- \deprecated Use AuthUserRequest::refCount() instead.
- */
-extern size_t authenticateRequestRefCount (AuthUserRequest *);
+/// \ingroup AuthAPI
+extern void authenticateFixHeader(HttpReply *, AuthUserRequest::Pointer, HttpRequest *, int, int);
+/// \ingroup AuthAPI
+extern void authenticateAddTrailer(HttpReply *, AuthUserRequest::Pointer, HttpRequest *, int);
 
 /// \ingroup AuthAPI
-extern void authenticateFixHeader(HttpReply *, AuthUserRequest *, HttpRequest *, int, int);
+extern void authenticateAuthUserRequestRemoveIp(AuthUserRequest::Pointer, Ip::Address const &);
 /// \ingroup AuthAPI
-extern void authenticateAddTrailer(HttpReply *, AuthUserRequest *, HttpRequest *, int);
-
+extern void authenticateAuthUserRequestClearIp(AuthUserRequest::Pointer);
 /// \ingroup AuthAPI
-extern void authenticateAuthUserRequestRemoveIp(AuthUserRequest *, IpAddress const &);
-/// \ingroup AuthAPI
-extern void authenticateAuthUserRequestClearIp(AuthUserRequest *);
-/// \ingroup AuthAPI
-extern int authenticateAuthUserRequestIPCount(AuthUserRequest *);
+extern int authenticateAuthUserRequestIPCount(AuthUserRequest::Pointer);
 /// \ingroup AuthAPI
 /// \deprecated Use AuthUserRequest::direction() instead.
-extern int authenticateDirection(AuthUserRequest *);
+extern int authenticateDirection(AuthUserRequest::Pointer);
 
 /// \ingroup AuthAPI
 /// See AuthUserRequest::authenticated()
-extern int authenticateUserAuthenticated(AuthUserRequest *);
-/// \ingroup AuthAPI
-extern int authenticateValidateUser(AuthUserRequest *);
-
-/// \todo Drop dead code? or make a debugging option.
-#if 0
-#define AUTHUSERREQUESTUNLOCK(a,b) if(a){(a)->_unlock();debugs(0,0,HERE << "auth_user_request " << a << " was unlocked for " << b); (a)=NULL;}
-#define AUTHUSERREQUESTLOCK(a,b) { (a)->_lock(); debugs(0,0,HERE << "auth_user_request " << a << " was locked for " << b); }
-#endif
-#define AUTHUSERREQUESTUNLOCK(a,b) if(a){(a)->_unlock();(a)=NULL;}
-#define AUTHUSERREQUESTLOCK(a,b) (a)->_lock()
+extern int authenticateUserAuthenticated(AuthUserRequest::Pointer);
 
 
 #endif /* SQUID_AUTHUSERREQUEST_H */

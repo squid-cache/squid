@@ -1,13 +1,13 @@
 /*
- * DEBUG: section 93  ICAP (RFC 3507) Client
+ * DEBUG: section 93    ICAP (RFC 3507) Client
  */
 
 #include "squid.h"
+#include "base/AsyncCall.h"
+#include "base/AsyncJob.h"
+#include "base/TextException.h"
 #include "cbdata.h"
 #include "MemBuf.h"
-#include "TextException.h"
-#include "base/AsyncJob.h"
-#include "base/AsyncCall.h"
 
 
 unsigned int AsyncJob::TheLastId = 0;

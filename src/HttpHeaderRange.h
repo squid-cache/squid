@@ -103,7 +103,7 @@ public:
     bool willBeComplex() const;
     int64_t firstOffset() const;
     int64_t lowestOffset(int64_t) const;
-    bool offsetLimitExceeded() const;
+    bool offsetLimitExceeded(const int64_t limit) const;
     bool contains(HttpHdrRangeSpec& r) const;
     Vector<HttpHdrRangeSpec *> specs;
 

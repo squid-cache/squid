@@ -9,10 +9,9 @@
 #define SQUID_IPC_START_LISTENING_H
 
 #include <iosfwd>
+#include "ip/forward.h"
 #include "ipc/FdNotes.h"
 #include "base/AsyncCall.h"
-
-class IpAddress;
 
 namespace Ipc
 {
@@ -34,7 +33,7 @@ public:
 
 /// Depending on whether SMP is on, either ask Coordinator to send us
 /// the listening FD or call comm_open_listener() directly.
-extern void StartListening(int sock_type, int proto, IpAddress &addr,
+extern void StartListening(int sock_type, int proto, Ip::Address &addr,
                            int flags, FdNoteId fdNote, AsyncCall::Pointer &callback);
 
 } // namespace Ipc;

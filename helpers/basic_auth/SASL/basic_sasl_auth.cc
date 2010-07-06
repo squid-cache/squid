@@ -27,6 +27,7 @@
  *
  */
 #include "config.h"
+#include "helpers/defines.h"
 #include "rfc1738.h"
 #include "util.h"
 
@@ -42,7 +43,7 @@
 #if HAVE_STRING_H
 #include <string.h>
 #endif
-#ifdef HAVE_SASL_SASL_H
+#if HAVE_SASL_SASL_H
 #include <sasl/sasl.h>
 #else
 #include <sasl.h>
@@ -53,7 +54,7 @@
 int
 main(int argc, char *argv[])
 {
-    char line[8192];
+    char line[HELPER_INPUT_BUFFER];
     char *username, *password;
 #if SASL_VERSION_MAJOR < 2
     const char *errstr;
@@ -68,8 +69,7 @@ main(int argc, char *argv[])
     rc = sasl_server_init( NULL, APP_NAME_SASL );
 
     if ( rc != SASL_OK ) {
-        fprintf( stderr, "error %d %s\n", rc, sasl_errstring(rc, NULL, NULL ));
-        fprintf( stdout, "ERR\n" );
+        fprintf(stderr, "FATAL: %d %s\n", rc, sasl_errstring(rc, NULL, NULL ));
         return 1;
     }
 
@@ -80,24 +80,23 @@ main(int argc, char *argv[])
 #endif
 
     if ( rc != SASL_OK ) {
-        fprintf( stderr, "error %d %s\n", rc, sasl_errstring(rc, NULL, NULL ));
-        fprintf( stdout, "ERR\n" );
+        fprintf(stderr, "FATAL: %d %s\n", rc, sasl_errstring(rc, NULL, NULL ));
         return 1;
     }
 
-    while ( fgets( line, sizeof( line ), stdin )) {
+    while ( fgets( line, HELPER_INPUT_BUFFER, stdin )) {
         username = &line[0];
         password = strchr( line, '\n' );
-        if ( !password) {
-            fprintf( stderr, "authenticator: Unexpected input '%s'\n", line );
-            fprintf( stdout, "ERR\n" );
+        if (!password) {
+            debug("ERROR: %s: Unexpected input '%s'\n", argv[0], line);
+            SEND_ERR("Unexpected Empty Input");
             continue;
         }
         *password = '\0';
         password = strchr ( line, ' ' );
-        if ( !password) {
-            fprintf( stderr, "authenticator: Unexpected input '%s'\n", line );
-            fprintf( stdout, "ERR\n" );
+        if (!password) {
+            debug("ERROR: %s: Unexpected input '%s' (no password)\n", argv[0], line );
+            SEND_ERR("No Password");
             continue;
         }
         *password++ = '\0';
@@ -114,21 +113,20 @@ main(int argc, char *argv[])
         if ( rc != SASL_OK ) {
 #if SASL_VERSION_MAJOR < 2
             if ( errstr ) {
-                fprintf( stderr, "errstr %s\n", errstr );
+                debug("errstr %s\n", errstr);
             }
             if ( rc != SASL_BADAUTH ) {
-                fprintf( stderr, "error %d %s\n", rc, sasl_errstring(rc, NULL, NULL ));
-            }
+                debug("ERROR: %d %s\n", rc, sasl_errstring(rc, NULL, NULL));
+                SEND_ERR(sasl_errstring(rc, NULL, NULL));
+            } else
 #endif
-            fprintf( stdout, "ERR\n" );
+                SEND_ERR("");
         } else {
-            fprintf( stdout, "OK\n" );
+            SEND_OK("");
         }
-
     }
 
-    sasl_dispose( &conn );
+    sasl_dispose(&conn);
     sasl_done();
-
     return 0;
 }

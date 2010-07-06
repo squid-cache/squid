@@ -4,6 +4,10 @@
 #include "config.h"
 #include "dlink.h"
 
+#if HAVE_SYS_PARAM_H
+#include <sys/param.h>
+#endif
+
 class logfile_buffer_t
 {
 public:
@@ -27,7 +31,7 @@ class Logfile
 {
 
 public:
-    char path[SQUID_MAXPATHLEN];
+    char path[MAXPATHLEN];
 
     struct {
         unsigned int fatal;

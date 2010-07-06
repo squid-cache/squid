@@ -14,7 +14,7 @@ struct http_port_list {
 
     http_port_list *next;
 
-    IpAddress s;
+    Ip::Address s;
     char *protocol;            /* protocol name */
     char *name;                /* visible name */
     char *defaultsite;         /* default web site */

@@ -22,11 +22,8 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+#define SQUID_NO_ALLOC_PROTECT 1
 
-int SMBlib_errno;
-int SMBlib_SMB_Error;
-#define SMBLIB_ERRNO
-#define uchar unsigned char
 #include "util.h"
 #include "smblib-priv.h"
 #include "smblib.h"
@@ -41,6 +38,11 @@ int SMBlib_SMB_Error;
 #include <string.h>
 #include <signal.h>
 
+#define SMBLIB_ERRNO
+#define uchar unsigned char
+
+int SMBlib_errno;
+int SMBlib_SMB_Error;
 SMB_State_Types SMBlib_State;
 
 /* Initialize the SMBlib package     */

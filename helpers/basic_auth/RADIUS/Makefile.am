@@ -5,7 +5,7 @@ INCLUDES += -I$(srcdir)
 
 libexec_PROGRAMS 	= basic_radius_auth
 man_MANS 		= basic_radius_auth.8
-EXTRA_DIST		= basic_radius_auth.8
+EXTRA_DIST		= basic_radius_auth.8 config.test
 basic_radius_auth_SOURCES = \
 			basic_radius_auth.cc \
 			radius.h \

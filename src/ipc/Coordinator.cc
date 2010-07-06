@@ -103,7 +103,7 @@ Ipc::Coordinator::openListenSocket(const SharedListenRequest& request,
     debugs(54, 6, HERE << "opening listen FD at " << p.addr << " for kid" <<
            request.requestorId);
 
-    IpAddress addr = p.addr; // comm_open_listener may modify it
+    Ip::Address addr = p.addr; // comm_open_listener may modify it
 
     enter_suid();
     const int sock = comm_open_listener(p.sock_type, p.proto, addr, p.flags,

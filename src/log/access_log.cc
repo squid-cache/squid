@@ -94,7 +94,7 @@ const char *log_tags[] = {
     "LOG_TYPE_MAX"
 };
 
-#if FORW_VIA_DB
+#if USE_FORW_VIA_DB
 
 typedef struct {
     hash_link hash;
@@ -344,6 +344,7 @@ typedef enum {
     LFT_LOCAL_IP,
     LFT_LOCAL_PORT,
     /*LFT_LOCAL_NAME, */
+    LFT_PEER_LOCAL_PORT,
 
     LFT_TIME_SECONDS_SINCE_EPOCH,
     LFT_TIME_SUBSECOND,
@@ -505,6 +506,7 @@ struct logformat_token_table_entry logformat_token_table[] = {
     {"la", LFT_LOCAL_IP},
     {"lp", LFT_LOCAL_PORT},
     /*{ "lA", LFT_LOCAL_NAME }, */
+    {"<lp", LFT_PEER_LOCAL_PORT},
 
     {"ts", LFT_TIME_SECONDS_SINCE_EPOCH},
     {"tu", LFT_TIME_SUBSECOND},
@@ -687,6 +689,14 @@ accessLogCustom(AccessLogEntry * al, customlog * log)
         case LFT_LOCAL_PORT:
             if (al->request) {
                 outint = al->request->my_addr.GetPort();
+                doint = 1;
+            }
+
+            break;
+
+        case LFT_PEER_LOCAL_PORT:
+            if (al->hier.peer_local_port) {
+                outint = al->hier.peer_local_port;
                 doint = 1;
             }
 
@@ -1574,10 +1584,10 @@ accessLogDumpLogFormat(StoreEntry * entry, const char *name, logformat * definit
     logformat *format;
 
     struct logformat_token_table_entry *te;
-    debugs(46, 0, "accessLogDumpLogFormat called");
+    debugs(46, 4, "accessLogDumpLogFormat called");
 
     for (format = definitions; format; format = format->next) {
-        debugs(46, 0, "Dumping logformat definition for " << format->name);
+        debugs(46, 3, "Dumping logformat definition for " << format->name);
         storeAppendPrintf(entry, "logformat %s ", format->name);
 
         for (t = format->format; t; t = t->next) {
@@ -1845,7 +1855,7 @@ accessLogCommon(AccessLogEntry * al, Logfile * logfile)
 
     user2 = accessLogFormatName(al->cache.rfc931);
 
-    logfilePrintf(logfile, "%s %s %s [%s] \"%s %s HTTP/%d.%d\" %d %"PRId64" %s%s:%s",
+    logfilePrintf(logfile, "%s %s %s [%s] \"%s %s HTTP/%d.%d\" %d %"PRId64" %s%s:%s%s",
                   client,
                   user2 ? user2 : dash_str,
                   user1 ? user1 : dash_str,
@@ -1857,7 +1867,8 @@ accessLogCommon(AccessLogEntry * al, Logfile * logfile)
                   al->cache.replySize,
                   log_tags[al->cache.code],
                   al->http.statusSfx(),
-                  hier_code_str[al->hier.code]);
+                  hier_code_str[al->hier.code],
+                  (Config.onoff.log_mime_hdrs?"":"\n"));
 
     safe_free(user1);
 
@@ -1869,10 +1880,7 @@ accessLogCommon(AccessLogEntry * al, Logfile * logfile)
         logfilePrintf(logfile, " [%s] [%s]\n", ereq, erep);
         safe_free(ereq);
         safe_free(erep);
-    } else {
-        logfilePrintf(logfile, "\n");
     }
-
 }
 
 #if ICAP_CLIENT
@@ -2037,7 +2045,7 @@ void
 accessLogRotate(void)
 {
     customlog *log;
-#if FORW_VIA_DB
+#if USE_FORW_VIA_DB
 
     fvdbClear();
 #endif
@@ -2083,7 +2091,8 @@ HierarchyLogEntry::HierarchyLogEntry() :
         n_ichoices(0),
         peer_reply_status(HTTP_STATUS_NONE),
         peer_response_time(-1),
-        total_response_time(-1)
+        total_response_time(-1),
+        peer_local_port(0)
 {
     memset(host, '\0', SQUIDHOSTNAMELEN);
     memset(cd_host, '\0', SQUIDHOSTNAMELEN);
@@ -2114,7 +2123,7 @@ hierarchyNote(HierarchyLogEntry * hl,
 static void
 accessLogRegisterWithCacheManager(void)
 {
-#if FORW_VIA_DB
+#if USE_FORW_VIA_DB
     fvdbRegisterWithCacheManager();
 #endif
 }
@@ -2128,6 +2137,13 @@ accessLogInit(void)
 
     assert(sizeof(log_tags) == (LOG_TYPE_MAX + 1) * sizeof(char *));
 
+#if USE_ADAPTATION
+    alLogformatHasAdaptToken = false;
+#endif
+#if ICAP_CLIENT
+    alLogformatHasIcapToken = false;
+#endif
+
     for (log = Config.Log.accesslogs; log; log = log->next) {
         if (log->type == CLF_NONE)
             continue;
@@ -2136,12 +2152,6 @@ accessLogInit(void)
 
         LogfileStatus = LOG_ENABLE;
 
-#if USE_ADAPTATION
-        alLogformatHasAdaptToken = false;
-#endif
-#if ICAP_CLIENT
-        alLogformatHasIcapToken = false;
-#endif
 #if USE_ADAPTATION || ICAP_CLIENT
         for (logformat_token * curr_token = (log->logFormat?log->logFormat->format:NULL); curr_token; curr_token = curr_token->next) {
 #if USE_ADAPTATION
@@ -2194,7 +2204,7 @@ accessLogInit(void)
     }
 
 #endif
-#if FORW_VIA_DB
+#if USE_FORW_VIA_DB
 
     fvdbInit();
 
@@ -2219,7 +2229,7 @@ accessLogTime(time_t t)
 }
 
 
-#if FORW_VIA_DB
+#if USE_FORW_VIA_DB
 
 static void
 fvdbInit(void)
@@ -2468,4 +2478,3 @@ logTypeIsATcpHit(log_type code)
 
     return 0;
 }
-

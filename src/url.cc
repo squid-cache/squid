@@ -351,7 +351,12 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
         return NULL;
     }
 
+#if USE_IPV6
+    /* For IPV6 addresses also check for a colon */
+    if (Config.appendDomain && !strchr(host, '.') && !strchr(host, ':'))
+#else
     if (Config.appendDomain && !strchr(host, '.'))
+#endif
         strncat(host, Config.appendDomain, SQUIDHOSTNAMELEN - strlen(host) - 1);
 
     /* remove trailing dots from hostnames */
@@ -369,7 +374,7 @@ urlParse(const HttpRequestMethod& method, char *url, HttpRequest *request)
         return NULL;
     }
 
-#ifdef HARDCODE_DENY_PORTS
+#if HARDCODE_DENY_PORTS
     /* These ports are filtered in the default squid.conf, but
      * maybe someone wants them hardcoded... */
     if (port == 7 || port == 9 || port == 19) {
@@ -810,7 +815,7 @@ urlCheckRequest(const HttpRequest * r)
         break;
 
     case PROTO_HTTPS:
-#ifdef USE_SSL
+#if USE_SSL
 
         rc = 1;
 

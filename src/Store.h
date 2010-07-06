@@ -380,7 +380,7 @@ SQUIDCEXTERN void packerToStoreInit(Packer * p, StoreEntry * e);
 /// \ingroup StoreAPI
 SQUIDCEXTERN void storeGetMemSpace(int size);
 
-#ifdef _USE_INLINE_
+#if _USE_INLINE_
 #include "Store.cci"
 #endif
 

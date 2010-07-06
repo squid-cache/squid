@@ -2,7 +2,7 @@
 /*
  * $Id$
  *
- * DEBUG: section 0     Hash Tables
+ * DEBUG: section 00    Hash Tables
  * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -362,7 +362,7 @@ hashKeyStr(hash_link * hl)
 }
 
 
-#ifdef USE_HASH_DRIVER
+#if USE_HASH_DRIVER
 /*
  *  hash-driver - Run with a big file as stdin to insert each line into the
  *  hash table, then prints the whole hash table, then deletes a random item,

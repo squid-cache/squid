@@ -64,6 +64,7 @@ public:
     int64_t peer_response_time; ///< last peer response delay
     timeval first_conn_start; ///< first connection use among all peers
     int64_t total_response_time; ///< cumulative for all peers
+    u_short peer_local_port; //< local port of the last server-side connection
 };
 
 extern void hierarchyNote(HierarchyLogEntry *, hier_code, const char *);

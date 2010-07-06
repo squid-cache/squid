@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * DEBUG: section 9     File Transfer Protocol (FTP)
+ * DEBUG: section 09    File Transfer Protocol (FTP)
  * AUTHOR: Harvest Derived
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,6 +35,7 @@
 #include "squid.h"
 #include "comm.h"
 #include "comm/ListenStateData.h"
+#include "compat/strtoll.h"
 #include "ConnectionDetail.h"
 #include "errorpage.h"
 #include "fde.h"
@@ -1520,6 +1521,12 @@ FtpStateData::writeCommand(const char *buf)
 
     ctrl.last_command = ebuf;
 
+    if (!canSend(ctrl.fd)) {
+        debugs(9, 2, HERE << "cannot send to closing ctrl FD " << ctrl.fd);
+        // TODO: assert(ctrl.closer != NULL);
+        return;
+    }
+
     typedef CommCbMemFunT<FtpStateData, CommIoCbParams> Dialer;
     AsyncCall::Pointer call = asyncCall(9, 5, "FtpStateData::ftpWriteCommandCallback",
                                         Dialer(this, &FtpStateData::ftpWriteCommandCallback));
@@ -2296,7 +2303,7 @@ ftpReadEPSV(FtpStateData* ftpState)
     char h1, h2, h3, h4;
     int n;
     u_short port;
-    IpAddress ipa_remote;
+    Ip::Address ipa_remote;
     int fd = ftpState->data.fd;
     char *buf;
     debugs(9, 3, HERE);
@@ -2417,7 +2424,7 @@ ftpReadEPSV(FtpStateData* ftpState)
 static void
 ftpSendPassive(FtpStateData * ftpState)
 {
-    IpAddress addr;
+    Ip::Address addr;
     struct addrinfo *AI = NULL;
 
     /** Checks the server control channel is still available before running. */
@@ -2602,7 +2609,7 @@ ftpReadPasv(FtpStateData * ftpState)
     int p1, p2;
     int n;
     u_short port;
-    IpAddress ipa_remote;
+    Ip::Address ipa_remote;
     int fd = ftpState->data.fd;
     char *buf;
     LOCAL_ARRAY(char, ipaddr, 1024);
@@ -2708,8 +2715,7 @@ static int
 ftpOpenListenSocket(FtpStateData * ftpState, int fallback)
 {
     int fd;
-
-    IpAddress addr;
+    Ip::Address addr;
     struct addrinfo *AI = NULL;
     int on = 1;
     int x = 0;
@@ -2779,8 +2785,7 @@ static void
 ftpSendPORT(FtpStateData * ftpState)
 {
     int fd;
-
-    IpAddress ipa;
+    Ip::Address ipa;
     struct addrinfo *AI = NULL;
     unsigned char *addrptr;
     unsigned char *portptr;
@@ -2851,7 +2856,7 @@ static void
 ftpSendEPRT(FtpStateData * ftpState)
 {
     int fd;
-    IpAddress addr;
+    Ip::Address addr;
     struct addrinfo *AI = NULL;
     char buf[MAX_IPSTRLEN];
 
@@ -2864,10 +2869,10 @@ ftpSendEPRT(FtpStateData * ftpState)
     ftpState->flags.pasv_supported = 0;
     fd = ftpOpenListenSocket(ftpState, 0);
 
-    addr.InitAddrInfo(AI);
+    Ip::Address::InitAddrInfo(AI);
 
     if (getsockname(fd, AI->ai_addr, &AI->ai_addrlen)) {
-        addr.FreeAddrInfo(AI);
+        Ip::Address::FreeAddrInfo(AI);
         debugs(9, DBG_CRITICAL, HERE << "getsockname(" << fd << ",..): " << xstrerror());
 
         /* XXX Need to set error message */
@@ -2887,7 +2892,7 @@ ftpSendEPRT(FtpStateData * ftpState)
     ftpState->writeCommand(cbuf);
     ftpState->state = SENT_EPRT;
 
-    addr.FreeAddrInfo(AI);
+    Ip::Address::FreeAddrInfo(AI);
 }
 
 static void
@@ -3316,7 +3321,7 @@ FtpStateData::completedListing()
     entry->lock();
     ErrorState *ferr = errorCon(ERR_DIR_LISTING, HTTP_OK, request);
     ferr->ftp.listing = &listing;
-    ferr->ftp.cwd_msg = xstrdup(cwd_message.termedBuf());
+    ferr->ftp.cwd_msg = xstrdup(cwd_message.size()? cwd_message.termedBuf() : "");
     ferr->ftp.server_msg = ctrl.message;
     ctrl.message = NULL;
     entry->replaceHttpReply( ferr->BuildHttpReply() );

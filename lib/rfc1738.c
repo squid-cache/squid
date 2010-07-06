@@ -133,7 +133,7 @@ rfc1738_do_escape(const char *url, int flags)
          * allocated - KA */
 
         if (do_escape == 1) {
-            (void) sprintf(q, "%%%02X", (unsigned char) *p);
+            (void) snprintf(q, (bufsize-(p-buf)), "%%%02X", (unsigned char) *p);
             q += sizeof(char) * 2;
         } else {
             *q = *p;
@@ -143,43 +143,10 @@ rfc1738_do_escape(const char *url, int flags)
     return (buf);
 }
 
-#if 0 /* legacy API */
 /*
- * rfc1738_escape - Returns a static buffer that contains the RFC
- * 1738 compliant, escaped version of the given url.
+ * Converts a ascii hex code into a binary character.
  */
-char *
-rfc1738_escape(const char *url)
-{
-    return rfc1738_do_escape(url, 0);
-}
-
-/*
- * rfc1738_escape_unescaped - Returns a static buffer that contains
- * the RFC 1738 compliant, escaped version of the given url.
- */
-char *
-rfc1738_escape_unescaped(const char *url)
-{
-    return rfc1738_do_escape(url, -1);
-}
-
-/*
- * rfc1738_escape_part - Returns a static buffer that contains the
- * RFC 1738 compliant, escaped version of the given url segment.
- */
-char *
-rfc1738_escape_part(const char *url)
-{
-    return rfc1738_do_escape(url, 1);
-}
-#endif /* 0 */
-
-/*
- *  rfc1738_unescape() - Converts escaped characters (%xy numbers) in
- *  given the string.  %% is a %. %ab is the 8-bit hexadecimal number "ab"
- */
-static inline int
+static int
 fromhex(char ch)
 {
     if (ch >= '0' && ch <= '9')
@@ -191,6 +158,10 @@ fromhex(char ch)
     return -1;
 }
 
+/*
+ *  rfc1738_unescape() - Converts escaped characters (%xy numbers) in
+ *  given the string.  %% is a %. %ab is the 8-bit hexadecimal number "ab"
+ */
 void
 rfc1738_unescape(char *s)
 {
@@ -203,8 +174,7 @@ rfc1738_unescape(char *s)
             j++;		/* Skip % */
         } else {
             /* decode */
-            char v1, v2;
-            int x;
+            int v1, v2, x;
             v1 = fromhex(s[j + 1]);
             if (v1 < 0)
                 continue;  /* non-hex or \0 */

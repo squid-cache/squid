@@ -47,7 +47,7 @@
 #include "SquidTime.h"
 #include "Store.h"
 #include "icmp/net_db.h"
-#include "ip/IpIntercept.h"
+#include "ip/Intercept.h"
 
 static PSC fwdStartCompleteWrapper;
 static PF fwdServerClosedWrapper;
@@ -773,9 +773,9 @@ FwdState::connectStart()
     int ctimeout;
     int ftimeout = Config.Timeout.forward - (squid_curtime - start_t);
 
-    IpAddress outgoing;
+    Ip::Address outgoing;
     unsigned short tos;
-    IpAddress client_addr;
+    Ip::Address client_addr;
     assert(fs);
     assert(server_fd == -1);
     debugs(17, 3, "fwdConnectStart: " << url);
@@ -854,6 +854,9 @@ FwdState::connectStart()
 
         comm_add_close_handler(fd, fwdServerClosedWrapper, this);
 
+        // TODO: Avoid this if %<lp is not used? F->local_port is often cached.
+        request->hier.peer_local_port = comm_local_port(fd);
+
         dispatch();
 
         return;
@@ -895,6 +898,8 @@ FwdState::connectStart()
     if (!fs->_peer)
         origin_tries++;
 
+    request->hier.peer_local_port = comm_local_port(fd);
+
     /*
      * stats.conn_open is used to account for the number of
      * connections that we have open to the peer, so we can limit
@@ -910,16 +915,6 @@ FwdState::connectStart()
     comm_add_close_handler(fd, fwdServerClosedWrapper, this);
 
     commSetTimeout(fd, ctimeout, fwdConnectTimeoutWrapper, this);
-
-#if LINUX_TPROXY2
-    if (!fs->_peer && request->flags.spoof_client_ip) {
-        // try to set the outgoing address using TPROXY v2
-        // if it fails we abort any further TPROXY actions on this connection
-        if (IpInterceptor.SetTproxy2OutgoingAddr(int fd, const IpAddress &src) == -1) {
-            request->flags.spoof_client_ip = 0;
-        }
-    }
-#endif
 
     updateHierarchyInfo();
     commConnectStart(fd, host, port, fwdConnectDoneWrapper, this);
@@ -1197,7 +1192,7 @@ FwdState::reforwardableStatus(http_status s)
  *  -  address of the client for which we made the connection
  */
 void
-FwdState::pconnPush(int fd, const peer *_peer, const HttpRequest *req, const char *domain, IpAddress &client_addr)
+FwdState::pconnPush(int fd, const peer *_peer, const HttpRequest *req, const char *domain, Ip::Address &client_addr)
 {
     if (_peer) {
         fwdPconnPool->push(fd, _peer->name, _peer->http_port, domain, client_addr);
@@ -1311,12 +1306,12 @@ fwdServerFree(FwdServer * fs)
     memFree(fs, MEM_FWD_SERVER);
 }
 
-static IpAddress
+static Ip::Address
 aclMapAddr(acl_address * head, ACLChecklist * ch)
 {
     acl_address *l;
 
-    IpAddress addr;
+    Ip::Address addr;
 
     for (l = head; l; l = l->next) {
         if (!l->aclList || ch->matchAclListFast(l->aclList))
@@ -1344,24 +1339,35 @@ aclMapTOS(acl_tos * head, ACLChecklist * ch)
     return 0;
 }
 
-IpAddress
+Ip::Address
 getOutgoingAddr(HttpRequest * request, struct peer *dst_peer)
 {
     if (request && request->flags.spoof_client_ip) {
-        if (!dst_peer || !dst_peer->options.no_tproxy)
-            return request->client_addr;
+        if (!dst_peer || !dst_peer->options.no_tproxy) {
+#if FOLLOW_X_FORWARDED_FOR && LINUX_NETFILTER
+            if (Config.onoff.tproxy_uses_indirect_client)
+                return request->indirect_client_addr;
+            else
+#endif
+                return request->client_addr;
+        }
         // else no tproxy today ...
     }
 
     if (!Config.accessList.outgoing_address) {
-        return IpAddress(); // anything will do.
+        return Ip::Address(); // anything will do.
     }
 
     ACLFilledChecklist ch(NULL, request, NULL);
     ch.dst_peer = dst_peer;
 
     if (request) {
-        ch.src_addr = request->client_addr;
+#if FOLLOW_X_FORWARDED_FOR
+        if (Config.onoff.acl_uses_indirect_client)
+            ch.src_addr = request->indirect_client_addr;
+        else
+#endif
+            ch.src_addr = request->client_addr;
         ch.my_addr = request->my_addr;
     }
 

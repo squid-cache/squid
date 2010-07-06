@@ -25,7 +25,7 @@ public:
 
     int sock_type;
     int proto;
-    IpAddress addr; ///< will be memset and memcopied
+    Ip::Address addr; ///< will be memset and memcopied
     int flags;
     int fdNote; ///< index into fd_note() comment strings
 };

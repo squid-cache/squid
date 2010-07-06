@@ -1,5 +1,5 @@
 /*
- * DEBUG: section 5     Socket Functions
+ * DEBUG: section 05    Socket Functions
  * AUTHOR: Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,7 +35,7 @@
 #ifndef _SQUIDCONNECTIONDETAIL_H_
 #define _SQUIDCONNECTIONDETAIL_H_
 
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 class ConnectionDetail
 {
@@ -44,9 +44,9 @@ public:
 
     ConnectionDetail();
 
-    IpAddress me;
+    Ip::Address me;
 
-    IpAddress peer;
+    Ip::Address peer;
 };
 
 #endif
