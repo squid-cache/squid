@@ -108,7 +108,7 @@ extern "C" {
     } lstring;
 
     /** Debug dump the given flags field to stderr */
-    void ntlm_dump_ntlmssp_flags(const u_int32_t flags);
+    void ntlm_dump_ntlmssp_flags(const uint32_t flags);
 
 
     /* ************************************************************************* */
@@ -136,7 +136,7 @@ extern "C" {
     lstring ntlm_fetch_string(const ntlmhdr *packet,
                               const int32_t packet_length,
                               const strhdr *str,
-                              const u_int32_t flags);
+                              const uint32_t flags);
 
     /** Append a string to the NTLM packet payload. */
     void ntlm_add_to_payload(const ntlmhdr *packet_hdr,
@@ -169,7 +169,7 @@ extern "C" {
     /** Negotiation request sent by client */
     typedef struct _ntlm_negotiate {
         ntlmhdr hdr;		/**< "NTLMSSP" , LSWAP(0x1) */
-        u_int32_t flags;	/**< Request flags */
+        uint32_t flags;	/**< Request flags */
         strhdr domain;		/**< Domain we wish to authenticate in */
         strhdr workstation;	/**< Client workstation name */
         char payload[256];	/**< String data */
@@ -191,10 +191,10 @@ extern "C" {
     typedef struct _ntlm_challenge {
         ntlmhdr hdr;		/**< "NTLMSSP" , LSWAP(0x2) */
         strhdr target;		/**< Authentication target (domain/server ...) */
-        u_int32_t flags;		/**< Request flags */
+        uint32_t flags;		/**< Request flags */
         u_char challenge[NTLM_NONCE_LEN];	/**< Challenge string */
-        u_int32_t context_low;	/**< LS part of the server context handle */
-        u_int32_t context_high;	/**< MS part of the server context handle */
+        uint32_t context_low;	/**< LS part of the server context handle */
+        uint32_t context_high;	/**< MS part of the server context handle */
         char payload[256];		/**< String data */
     } ntlm_challenge;
 
@@ -210,7 +210,7 @@ extern "C" {
                              const char *domain_controller,
                              const char *challenge_nonce,
                              const int challenge_nonce_len,
-                             const u_int32_t flags);
+                             const uint32_t flags);
 
 
     /* ************************************************************************* */

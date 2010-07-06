@@ -2350,16 +2350,15 @@ AC_CHECK_TYPE(char,[
 
 dnl unsigned 8 bit ints - u_int8_t
 dnl if this is defined we trust it to be 8 bits
-AC_CHECK_TYPE(u_int8_t,[
-  AC_CHECK_SIZEOF(u_int8_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
-  AC_DEFINE(HAVE_U_INT8_T,1,[u_int8_t is defined in system headers])
-  ],,SQUID_DEFAULT_INCLUDES)
-
-dnl fallback #1
-dnl if this is defined we trust it to be 8 bits
 AC_CHECK_TYPE(uint8_t,[
   AC_CHECK_SIZEOF(uint8_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
   AC_DEFINE(HAVE_UINT8_T,1,[uint8_t is defined in system headers])
+  ],,SQUID_DEFAULT_INCLUDES)
+
+dnl if this is defined we trust it to be 8 bits
+AC_CHECK_TYPE(u_int8_t,[
+  AC_CHECK_SIZEOF(u_int8_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
+  AC_DEFINE(HAVE_U_INT8_T,1,[u_int8_t is defined in system headers])
   ],,SQUID_DEFAULT_INCLUDES)
 
 dnl 16 bit integers - int16_t
@@ -2381,18 +2380,17 @@ AC_CHECK_TYPE(int,[
   AC_DEFINE(HAVE_INT,1,[int is defined in system headers])
   ],,SQUID_DEFAULT_INCLUDES)
 
-dnl unsigned 16 bit ints - u_int16_t
-dnl if this is defined we trust it to be 16 bits
-AC_CHECK_TYPE(u_int16_t,[
-  AC_CHECK_SIZEOF(u_int16_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
-  AC_DEFINE(HAVE_U_INT16_T,1,[u_int16_t is defined in system headers])
-  ],,SQUID_DEFAULT_INCLUDES)
-
-dnl fallback #1
+dnl unsigned 16 bit ints - uint16_t
 dnl if this is defined we trust it to be 16 bits
 AC_CHECK_TYPE(uint16_t,[
   AC_CHECK_SIZEOF(uint16_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
   AC_DEFINE(HAVE_UINT16_T,1,[uint16_t is defined in system headers])
+  ],,SQUID_DEFAULT_INCLUDES)
+
+dnl if this is defined we trust it to be 16 bits
+AC_CHECK_TYPE(u_int16_t,[
+  AC_CHECK_SIZEOF(u_int16_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
+  AC_DEFINE(HAVE_U_INT16_T,1,[u_int16_t is defined in system headers])
   ],,SQUID_DEFAULT_INCLUDES)
 
 dnl 32 bit signed int - int32_t
@@ -2408,18 +2406,17 @@ AC_CHECK_TYPE(long,[
   AC_DEFINE(HAVE_LONG,1,[long is defined in system headers])
   ],,SQUID_DEFAULT_INCLUDES)
 
-dnl 32 bit unsigned int - u_int32_t
-dnl if this is defined we trust it to be 32 bits
-AC_CHECK_TYPE(u_int32_t,[
-  AC_CHECK_SIZEOF(u_int32_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
-  AC_DEFINE(HAVE_U_INT32_T,1,[u_int32_t is defined in system headers])
-  ],,SQUID_DEFAULT_INCLUDES)
-
-dnl fallback #1
+dnl 32 bit unsigned int - uint32_t
 dnl if this is defined we trust it to be 32 bits
 AC_CHECK_TYPE(uint32_t,[
   AC_CHECK_SIZEOF(uint32_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
   AC_DEFINE(HAVE_UINT32_T,1,[uint32_t is defined in system headers])
+  ],,SQUID_DEFAULT_INCLUDES)
+
+dnl if this is defined we trust it to be 32 bits
+AC_CHECK_TYPE(u_int32_t,[
+  AC_CHECK_SIZEOF(u_int32_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
+  AC_DEFINE(HAVE_U_INT32_T,1,[u_int32_t is defined in system headers])
   ],,SQUID_DEFAULT_INCLUDES)
 
 dnl 64 bit signed - int64_t
@@ -2449,7 +2446,7 @@ AC_CHECK_TYPE(u_int64_t,[
   AC_DEFINE(HAVE_U_INT64_T,1,[u_int64_t is defined in system headers])
   ],,SQUID_DEFAULT_INCLUDES)
 
-dnl fallback #1
+dnl 64 bit unsigned - uint64_t
 dnl if this is defind we trust it to be 64 bits
 AC_CHECK_TYPE(uint64_t,[
   AC_CHECK_SIZEOF(uint64_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
