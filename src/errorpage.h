@@ -1,5 +1,5 @@
 /*
- * DEBUG: section 4     Error Generation
+ * DEBUG: section 04    Error Generation
  * AUTHOR: Duane Wessels
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -35,8 +35,9 @@
 #define   SQUID_ERRORPAGE_H
 
 #include "squid.h"
+#include "auth/UserRequest.h"
 #include "cbdata.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 /**
  \defgroup ErrorPageAPI Error Pages API
@@ -78,7 +79,6 @@
  \endverbatim
  */
 
-class AuthUserRequest;
 class HttpReply;
 class MemBuf;
 
@@ -110,10 +110,10 @@ private:
      * Several of the codes produce blocks of non-URL compatible results.
      * When processing the deny_info location URL they will be skipped.
      *
-     * \param token             The token following % which need to be converted
-     * \param url_presentable   URL-encode the the output for deny_info redirect
+     * \param token                    The token following % which need to be converted
+     * \param building_deny_info_url   Perform special deny_info actions, such as URL-encoding and token skipping.
      */
-    const char *Convert(char token, bool url_presentable);
+    const char *Convert(char token, bool building_deny_info_url);
 
     /**
      * CacheManager / Debug dump of the ErrorState object.
@@ -127,7 +127,7 @@ public:
     int page_id;
     char *err_language;
     http_status httpStatus;
-    AuthUserRequest *auth_user_request;
+    AuthUserRequest::Pointer auth_user_request;
     HttpRequest *request;
     char *url;
     int xerrno;
@@ -135,7 +135,7 @@ public:
     String dnsError; ///< DNS lookup error message
     time_t ttl;
 
-    IpAddress src_addr;
+    Ip::Address src_addr;
     char *redirect_url;
     ERCB *callback;
     void *callback_data;

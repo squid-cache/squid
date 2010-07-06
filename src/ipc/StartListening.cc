@@ -7,7 +7,7 @@
 
 #include "config.h"
 #include "comm.h"
-#include "TextException.h"
+#include "base/TextException.h"
 #include "ipc/SharedListen.h"
 #include "ipc/StartListening.h"
 
@@ -26,7 +26,7 @@ std::ostream &Ipc::StartListeningCb::startPrint(std::ostream &os) const
 }
 
 
-void Ipc::StartListening(int sock_type, int proto, IpAddress &addr,
+void Ipc::StartListening(int sock_type, int proto, Ip::Address &addr,
                          int flags, FdNoteId fdNote, AsyncCall::Pointer &callback)
 {
     OpenListenerParams p;

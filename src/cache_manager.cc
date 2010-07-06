@@ -326,7 +326,7 @@ CacheManager::Start(int fd, HttpRequest * request, StoreEntry * entry)
         return;
     }
 
-    debugs(16, DBG_IMPORTANT, "CacheManager: " <<
+    debugs(16, 2, "CacheManager: " <<
            (mgr->user_name ? mgr->user_name : "<unknown>") << "@" <<
            fd_table[fd].ipaddr << " requesting '" <<
            mgr->action << "'" );

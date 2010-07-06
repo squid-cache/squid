@@ -10,7 +10,7 @@ module=squid3
 BZRROOT=${BZRROOT:-/bzr}
 
 # generate a tarball name from the branch ($1) note that trunk is at
-# /bzr/trunk, but we call it HEAD for consistency with CVS (squid 2.x), and
+# /bzr/trunk, but we call it 3.HEAD for consistency with CVS (squid 2.x), and
 # branches are in /bzr/branches/ but we don't want 'branches/' in the tarball
 # name so we strip that.
 branchpath=${1:-trunk}
@@ -25,7 +25,7 @@ trap "rm -rf $tmpdir" 0
 
 rm -f ${tag}.out
 bzr export $tmpdir $BZRROOT/$module/$branchpath || exit 1
-if [ ! -f $tmpdir/configyre ] && [ -f $tmpdir/configure.in ]; then
+if [ ! -f $tmpdir/configure ] && [ -f $tmpdir/configure.in ]; then
 	sh -c "cd $tmpdir && ./bootstrap.sh"
 fi
 if [ ! -f $tmpdir/configure ]; then
@@ -33,8 +33,8 @@ if [ ! -f $tmpdir/configure ]; then
 fi
 
 cd $tmpdir
-eval `grep "^ *VERSION=" configure | sed -e 's/-BZR//' | sed -e 's/-CVS//'`
-eval `grep "^ *PACKAGE=" configure`
+eval `grep "^ *PACKAGE_VERSION=" configure | sed -e 's/-BZR//' | sed -e 's/PACKAGE_//'`
+eval `grep "^ *PACKAGE_TARNAME=" configure | sed -e 's/_TARNAME//'`
 ed -s configure.in <<EOS
 g/${VERSION}-[A-Z]*/ s//${VERSION}-${date}/
 w
@@ -44,27 +44,35 @@ g/${VERSION}-[A-Z]*/ s//${VERSION}-${date}/
 w
 EOS
 
+echo "STATE..."
+echo "PACKAGE: ${PACKAGE}"
+echo "VERSION: ${VERSION}"
+echo "TAG: ${tag}"
+echo "STARTDIR: ${startdir}"
+echo "TMPDIR: ${tmpdir}"
+
 ./test-builds.sh --cleanup || exit 1
 ./configure --silent
 make -s dist-all
 
-basetarball=/server/httpd/htdocs/squid-cache.org/Versions/v`echo $VERSION | cut -d. -f1`/`echo $VERSION | cut -d. -f-2|cut -d- -f1`/${PACKAGE}-${VERSION}.tar.bz2
-if (echo $VERSION | grep PRE) || (echo $VERSION | grep STABLE); then
-	if [ -f $basetarball ]; then
-		tar jxf ${PACKAGE}-${VERSION}-${date}.tar.bz2
-		tar jxf $basetarball
-		echo "Differences from ${PACKAGE}-${VERSION} to ${PACKAGE}-${VERSION}-${date}" >${PACKAGE}-${VERSION}-${date}.diff
-		diff -ruN ${PACKAGE}-${VERSION} ${PACKAGE}-${VERSION}-${date} >>${PACKAGE}-${VERSION}-${date}.diff || true
-	else
-		#cvs -q rdiff -u -r SQUID_`echo $VERSION | tr .- __` -r $tag $module >>${PACKAGE}-${VERSION}-${date}.diff || true
-	fi
-elif [ -f STABLE_BRANCH ]; then
-	#stable=`cat STABLE_BRANCH`
-	#echo "Differences from ${stable} to ${PACKAGE}-${VERSION}-${date}" >${PACKAGE}-${VERSION}-${date}.diff
-	#cvs -q rdiff -u -r $stable -r $tag $module >>${PACKAGE}-${VERSION}-${date}.diff
+webbase=/server/httpd/htdocs/squid-cache.org/content/
+basetarball=${webbase}/Versions/v`echo $VERSION | cut -d. -f1`/`echo $VERSION | cut -d. -f-2|cut -d- -f1`/${PACKAGE}-${VERSION}.tar.bz2
+
+echo "Building Tarball diff (${basetarball}) ..."
+if [ -f $basetarball ]; then
+	tar jxf ${PACKAGE}-${VERSION}-${date}.tar.bz2
+	tar jxf $basetarball
+	echo "Differences from ${PACKAGE}-${VERSION} to ${PACKAGE}-${VERSION}-${date}" >${PACKAGE}-${VERSION}-${date}.diff
+	diff -ruN ${PACKAGE}-${VERSION} ${PACKAGE}-${VERSION}-${date} >>${PACKAGE}-${VERSION}-${date}.diff || true
+else
+	echo "Building Tarball diff ... skipped (no tarball exists)."
 fi
 
 cd $startdir
+echo "Preparing to publish: $tmpdir/${PACKAGE}-${VERSION}-${date}.tar.* ..."
+#echo "LOCAL: " ; pwd
+#echo "BUILT TARS: " ; ls -1 $tmpdir/*.tar.* || true
+
 cp -p $tmpdir/${PACKAGE}-${VERSION}-${date}.tar.gz .
 echo ${PACKAGE}-${VERSION}-${date}.tar.gz >>${tag}.out
 cp -p $tmpdir/${PACKAGE}-${VERSION}-${date}.tar.bz2 .
@@ -110,13 +118,13 @@ if (groff --help >/dev/null); then
 	for f in `ls -1 ${tmpdir}/doc/manuals/*.1  ${tmpdir}/doc/manuals/*.8 2>/dev/null` ; do
 		cat ${f} | groff -E -Thtml -mandoc >${f}.html
 	done
-	sh -c "cd ${tmpdir}/doc/manuals && tar -zcf $PWD/${PACKAGE}-${VERSION}-${date}-manuals.tar.gz *.html *.1 *.8"
+	sh -c "cd ${tmpdir}/doc/manuals && tar -zcf ${PWD}/${PACKAGE}-${VERSION}-${date}-manuals.tar.gz *.html *.1 *.8"
 	echo ${PACKAGE}-${VERSION}-${date}-manuals.tar.gz >>${tag}.out
 fi
 
 # Generate language-pack tarballs
-# NP: Only to be done on HEAD branch.
-if test "${VERSION}" = "3.HEAD" ; then
+# NP: Only to be done on trunk.
+if test "${tag}" = "trunk" ; then
 	sh -c "cd $tmpdir/errors && tar -zcf ${PWD}/${PACKAGE}-${VERSION}-${date}-langpack.tar.gz ./*/* ./alias* ./TRANSLATORS ./COPYRIGHT "
 	echo ${PACKAGE}-${VERSION}-${date}-langpack.tar.gz >>${tag}.out
 fi

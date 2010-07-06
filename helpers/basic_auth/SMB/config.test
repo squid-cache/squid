@@ -1,5 +1,8 @@
 #!/bin/sh
-if [ -x ${SAMBAPREFIX:-/usr/local/samba}/bin/smbclient ]; then
-	exit 0
-fi
+for prefix in ${SAMBAPREFIX} /usr/local /opt /opt/samba /usr/local/samba /usr
+do
+    if [ -x ${prefix}/bin/smbclient ]; then
+        exit 0
+    fi
+done
 exit 1

@@ -33,7 +33,8 @@
  *
  */
 
-/* #define _SQUID_EXTERNNEW_ */ /* Why? kinkie */
+#define _SQUID_EXTERNNEW_
+
 #include "squid.h"
 
 

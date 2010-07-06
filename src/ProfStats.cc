@@ -35,7 +35,7 @@
 
 #include "squid.h"
 
-#ifdef USE_XPROF_STATS
+#if USE_XPROF_STATS
 
 #include "CacheManager.h"
 #include "event.h"

@@ -41,14 +41,13 @@
 
 #if DELAY_POOLS
 #include "squid.h"
+#include "auth/UserRequest.h"
 #include "DelayPools.h"
 #include "DelayIdComposite.h"
 #include "CommRead.h"
-#include "ip/IpAddress.h"
+#include "ip/Address.h"
 
 class StoreEntry;
-
-class AuthUserRequest;
 
 /// \ingroup DelayPoolsAPI
 class CompositePoolNode : public RefCountable, public Updateable
@@ -76,8 +75,8 @@ public:
     public:
         CompositeSelectionDetails() {}
 
-        IpAddress src_addr;
-        AuthUserRequest *user;
+        Ip::Address src_addr;
+        AuthUserRequest::Pointer user;
         String tag;
     };
 

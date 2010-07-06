@@ -1,18 +1,17 @@
 /*
- * DEBUG: section XXX
+ * DEBUG: section 93    eCAP Interface
  */
-
 #include "squid.h"
 #include "HttpRequest.h"
 #include "HttpReply.h"
 #include "BodyPipe.h"
-#include "TextException.h"
 #include <libecap/common/names.h>
 #include <libecap/common/area.h>
 #include <libecap/common/version.h>
 #include "adaptation/ecap/MessageRep.h"
 #include "adaptation/ecap/XactionRep.h"
 #include "adaptation/ecap/Host.h" /* for protocol constants */
+#include "base/TextException.h"
 
 /* HeaderRep */
 
@@ -38,7 +37,8 @@ Adaptation::Ecap::HeaderRep::value(const Name &name) const
     const String value = squidId == HDR_OTHER ?
                          theHeader.getByName(name.image().c_str()) :
                          theHeader.getStrOrList(squidId);
-    return Value::FromTempString(value.termedBuf());
+    return value.defined() ?
+           Value::FromTempString(value.termedBuf()) : Value();
 }
 
 void

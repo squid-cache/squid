@@ -48,13 +48,6 @@ extern "C" {
     /* POSIX says that <sys/types.h> must be included (by the caller) before
      * <regex.h>.  */
 
-#ifdef VMS
-    /* VMS doesn't have `size_t' in <sys/types.h>, even though POSIX says it
-     * should be there.  */
-#include <stddef.h>
-#endif
-
-
     /* The following bits are used to determine the regexp syntax we
      * recognize.  The set/not-set meanings are chosen so that Emacs syntax
      * remains the value 0.  The bits are given in alphabetical order, and
@@ -405,21 +398,11 @@ extern "C" {
      * unfortunately clutters up the declarations a bit, but I think it's
      * worth it.  */
 
-#if STDC_HEADERS
-
-#define _RE_ARGS(args) args
-
-#else /* not __STDC__ */
-
-#define _RE_ARGS(args) ()
-
-#endif /* not __STDC__ */
-
     /* POSIX compatibility.  */
-    extern int regcomp _RE_ARGS((regex_t * preg, const char *pattern, int cflags));
-    extern int regexec _RE_ARGS((const regex_t * preg, const char *string, size_t nmatch, regmatch_t pmatch[], int eflags));
-    extern size_t regerror _RE_ARGS((int errcode, const regex_t * preg, char *errbuf, size_t errbuf_size));
-    extern void regfree _RE_ARGS((regex_t * preg));
+    extern int regcomp(regex_t * preg, const char *pattern, int cflags);
+    extern int regexec(const regex_t * preg, const char *string, size_t nmatch, regmatch_t pmatch[], int eflags);
+    extern size_t regerror(int errcode, const regex_t * preg, char *errbuf, size_t errbuf_size);
+    extern void regfree(regex_t * preg);
 
 #ifdef __cplusplus
 }

@@ -1,4 +1,3 @@
-
 /*
  * usersfile.c
  * (C) 2000 Antonino Iannella, Stellar-X Pty Ltd
@@ -9,8 +8,11 @@
  * The code originated from denyusers.c.
  */
 
+#define SQUID_NO_ALLOC_PROTECT 1
+#include "config.h"
+#include "util.h"
+
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <syslog.h>
 #include <unistd.h>
@@ -66,7 +68,7 @@ Read_usersfile(const char *path, usersfile * uf)
     } else {
         if (uf->path)
             free(uf->path);
-        uf->path = strdup(path);
+        uf->path = xstrdup(path);
     }
 
     /* Open the users file. Report any errors. */
@@ -113,7 +115,7 @@ Read_usersfile(const char *path, usersfile * uf)
                    '\0',
                    (uf->Alloc >> 1) * sizeof(*uf->names));
         }
-        uf->names[uf->Inuse] = strdup(buf);
+        uf->names[uf->Inuse] = xstrdup(buf);
         uf->Inuse++;
     }
     fclose(fp);

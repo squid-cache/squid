@@ -62,6 +62,11 @@ Adaptation::Config::parseService()
 void
 Adaptation::Config::freeService()
 {
+    FreeAccess();
+    FreeServiceGroups();
+
+    DetachServices();
+
     while (!serviceConfigs.empty()) {
         delete serviceConfigs.back();
         serviceConfigs.pop_back();
@@ -208,14 +213,5 @@ Adaptation::Config::Config()
 // with global arrays shared by those individual configs
 Adaptation::Config::~Config()
 {
-    FreeAccess();
-    FreeServiceGroups();
-
-    // invalidate each service so that it can be deleted when refcount=0
-    while (!AllServices().empty()) {
-        AllServices().back()->invalidate();
-        AllServices().pop_back();
-    }
-
     freeService();
 }

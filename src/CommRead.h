@@ -1,8 +1,7 @@
-
 /*
  * $Id$
  *
- * DEBUG: section 5     Comms
+ * DEBUG: section 05    Comm
  * AUTHOR: Robert Collins <robertc@squid-cache.org>
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/

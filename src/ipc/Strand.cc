@@ -6,6 +6,7 @@
  */
 
 #include "config.h"
+#include "base/TextException.h"
 #include "ipc/Strand.h"
 #include "ipc/Messages.h"
 #include "ipc/SharedListen.h"

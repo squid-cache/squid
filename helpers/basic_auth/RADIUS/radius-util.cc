@@ -38,14 +38,8 @@ char util_sccsid[] =
 
 #include	"config.h"
 
-#if HAVE_SYS_TYES_H
-#include	<sys/types.h>
-#endif
 #if HAVE_SYS_SOCKET_H
 #include	<sys/socket.h>
-#endif
-#if HAVE_SYS_TIME_H
-#include	<sys/time.h>
 #endif
 #if HAVE_NETINET_IN_H
 #include	<netinet/in.h>
@@ -53,9 +47,6 @@ char util_sccsid[] =
 
 #if HAVE_STDIO_H
 #include	<stdio.h>
-#endif
-#if HAVE_STDLIB_H
-#include	<stdlib.h>
 #endif
 #if HAVE_NETDB_H
 #include	<netdb.h>

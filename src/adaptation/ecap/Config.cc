@@ -1,11 +1,9 @@
-
 /*
  * $Id$
+ * DEBUG: section 93    eCAP Interface
  */
-
 #include "squid.h"
 
-#include <libecap/common/registry.h>
 #include "adaptation/ecap/Host.h"
 #include "adaptation/ecap/ServiceRep.h"
 #include "adaptation/ecap/Config.h"
@@ -24,8 +22,8 @@ void
 Adaptation::Ecap::Config::finalize()
 {
     Adaptation::Config::finalize();
-    libecap::shared_ptr<Adaptation::Ecap::Host> host(new Adaptation::Ecap::Host);
-    libecap::RegisterHost(host);
+    Host::Register();
+    CheckUnusedAdapterServices(AllServices());
 }
 
 Adaptation::ServicePointer

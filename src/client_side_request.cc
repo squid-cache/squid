@@ -43,24 +43,8 @@
  */
 
 #include "squid.h"
-#include "clientStream.h"
-#include "client_side_request.h"
-#include "auth/UserRequest.h"
-#include "HttpRequest.h"
-#include "ProtoPort.h"
 #include "acl/FilledChecklist.h"
 #include "acl/Gadgets.h"
-#include "client_side.h"
-#include "client_side_reply.h"
-#include "Store.h"
-#include "HttpReply.h"
-#include "MemObject.h"
-#include "ClientRequestContext.h"
-#include "SquidTime.h"
-#include "wordlist.h"
-#include "inet_pton.h"
-#include "fde.h"
-
 #if USE_ADAPTATION
 #include "adaptation/AccessCheck.h"
 #include "adaptation/Iterator.h"
@@ -68,9 +52,22 @@
 #if ICAP_CLIENT
 #include "adaptation/icap/History.h"
 #endif
-//static void adaptationAclCheckDoneWrapper(Adaptation::ServicePointer service, void *data);
 #endif
-
+#include "auth/UserRequest.h"
+#include "clientStream.h"
+#include "client_side.h"
+#include "client_side_reply.h"
+#include "client_side_request.h"
+#include "ClientRequestContext.h"
+#include "compat/inet_pton.h"
+#include "fde.h"
+#include "HttpReply.h"
+#include "HttpRequest.h"
+#include "MemObject.h"
+#include "ProtoPort.h"
+#include "Store.h"
+#include "SquidTime.h"
+#include "wordlist.h"
 
 
 #if LINGERING_CLOSE
@@ -367,8 +364,8 @@ clientBeginRequest(const HttpRequestMethod& method, char const *url, CSCB * stre
 
     request->my_addr.SetPort(0);
 
-    /* RFC 2616 says 'upgrade' to our 1.0 regardless of what the client is */
-    HttpVersion http_ver(1,0);
+    /* Our version is HTTP/1.1 */
+    HttpVersion http_ver(1,1);
     request->http_ver = http_ver;
 
     http->request = HTTPMSGLOCK(request);
@@ -443,7 +440,7 @@ clientFollowXForwardedForCheck(int answer, void *data)
         const char *p;
         const char *asciiaddr;
         int l;
-        IpAddress addr;
+        Ip::Address addr;
         p = request->x_forwarded_for_iterator.termedBuf();
         l = request->x_forwarded_for_iterator.size();
 
@@ -619,14 +616,14 @@ ClientRequestContext::clientAccessCheckDone(int answer)
         clientStreamNode *node = (clientStreamNode *)http->client_stream.tail->prev->data;
         clientReplyContext *repContext = dynamic_cast<clientReplyContext *>(node->data.getRaw());
         assert (repContext);
-        IpAddress tmpnoaddr;
+        Ip::Address tmpnoaddr;
         tmpnoaddr.SetNoAddr();
         repContext->setReplyToError(page_id, status,
                                     http->request->method, NULL,
                                     http->getConn() != NULL ? http->getConn()->peer : tmpnoaddr,
                                     http->request,
                                     NULL,
-                                    http->getConn() != NULL && http->getConn()->auth_user_request ?
+                                    http->getConn() != NULL && http->getConn()->auth_user_request != NULL ?
                                     http->getConn()->auth_user_request : http->request->auth_user_request);
 
         node = (clientStreamNode *)http->client_stream.tail->data;
@@ -940,7 +937,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
             request->flags.loopdetect = 1;
         }
 
-#if FORW_VIA_DB
+#if USE_FORW_VIA_DB
         fvdbCountVia(s.termedBuf());
 
 #endif
@@ -963,7 +960,7 @@ clientInterpretRequestHeaders(ClientHttpRequest * http)
         logReferer(fqdnFromAddr(http->getConn()->log_addr), str, http->log_uri);
 
 #endif
-#if FORW_VIA_DB
+#if USE_FORW_VIA_DB
 
     if (req_hdr->has(HDR_X_FORWARDED_FOR)) {
         String s = req_hdr->getList(HDR_X_FORWARDED_FOR);
@@ -1041,11 +1038,7 @@ ClientRequestContext::clientRedirectDone(char *result)
         new_request->my_addr = old_request->my_addr;
         new_request->flags = old_request->flags;
         new_request->flags.redirected = 1;
-
-        if (old_request->auth_user_request) {
-            new_request->auth_user_request = old_request->auth_user_request;
-            AUTHUSERREQUESTLOCK(new_request->auth_user_request, "new request");
-        }
+        new_request->auth_user_request = old_request->auth_user_request;
 
         if (old_request->body_pipe != NULL) {
             new_request->body_pipe = old_request->body_pipe;
@@ -1364,7 +1357,7 @@ ClientHttpRequest::doCallouts()
 #endif
 }
 
-#ifndef _USE_INLINE_
+#if !_USE_INLINE_
 #include "client_side_request.cci"
 #endif
 
@@ -1521,13 +1514,13 @@ ClientHttpRequest::handleAdaptationFailure(bool bypassable)
     // The original author of the code also wanted to pass an errno to
     // setReplyToError, but it seems unlikely that the errno reflects the
     // true cause of the error at this point, so I did not pass it.
-    IpAddress noAddr;
+    Ip::Address noAddr;
     noAddr.SetNoAddr();
     ConnStateData * c = getConn();
     repContext->setReplyToError(ERR_ICAP_FAILURE, HTTP_INTERNAL_SERVER_ERROR,
                                 request->method, NULL,
                                 (c != NULL ? c->peer : noAddr), request, NULL,
-                                (c != NULL && c->auth_user_request ?
+                                (c != NULL && c->auth_user_request != NULL ?
                                  c->auth_user_request : request->auth_user_request));
 
     node = (clientStreamNode *)client_stream.tail->data;

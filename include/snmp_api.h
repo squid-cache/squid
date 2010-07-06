@@ -1,14 +1,7 @@
-/*
- * $Id$
- */
-
 #ifndef SQUID_SNMP_API_H
 #define SQUID_SNMP_API_H
 
 #include "config.h"
-#ifdef HAVE_SYS_TIME_H
-#include <sys/time.h>
-#endif
 
 /***********************************************************
 	Copyright 1989 by Carnegie Mellon University

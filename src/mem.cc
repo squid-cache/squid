@@ -186,7 +186,7 @@ memAllocate(mem_type type)
 void
 memFree(void *p, int type)
 {
-    MemPools[type]->free(p);
+    MemPools[type]->freeOne(p);
 }
 
 /* allocate a variable size buffer using best-fit pool */
@@ -241,7 +241,7 @@ memFreeString(size_t size, void *buf)
 
     memMeterDec(StrCountMeter);
     memMeterDel(StrVolumeMeter, size);
-    pool ? pool->free(buf) : xfree(buf);
+    pool ? pool->freeOne(buf) : xfree(buf);
 }
 
 /* Find the best fit MEM_X_BUF type */
@@ -353,8 +353,11 @@ memConfigure(void)
         new_pool_limit = 0;
     else if (Config.MemPools.limit > 0)
         new_pool_limit = Config.MemPools.limit;
-    else
-        new_pool_limit = mem_unlimited_size;
+    else {
+        if (Config.MemPools.limit == 0)
+            debugs(13, 1, "memory_pools_limit 0 has been chagned to memory_pools_limit none. Please update your config");
+        new_pool_limit = -1;
+    }
 
 #if 0
     /** \par
@@ -580,27 +583,38 @@ Mem::PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, std::
     MemPoolMeter *pm = mp_st->meter;
     const char *delim = "\t ";
 
+#if HAVE_IOMANIP
+    stream.setf(std::ios_base::fixed);
+#endif
     stream << std::setw(20) << std::left << mp_st->label << delim;
     stream << std::setw(4) << std::right << mp_st->obj_size << delim;
 
     /* Chunks */
-    stream << std::setw(4) << toKB(mp_st->obj_size * mp_st->chunk_capacity) << delim;
-    stream << std::setw(4) << mp_st->chunk_capacity << delim;
-
     if (mp_st->chunk_capacity) {
+        stream << std::setw(4) << toKB(mp_st->obj_size * mp_st->chunk_capacity) << delim;
+        stream << std::setw(4) << mp_st->chunk_capacity << delim;
+
         needed = mp_st->items_inuse / mp_st->chunk_capacity;
 
         if (mp_st->items_inuse % mp_st->chunk_capacity)
             needed++;
 
         excess = mp_st->chunks_inuse - needed;
-    }
 
-    stream << std::setw(4) << mp_st->chunks_alloc << delim;
-    stream << std::setw(4) << mp_st->chunks_inuse << delim;
-    stream << std::setw(4) << mp_st->chunks_free << delim;
-    stream << std::setw(4) << mp_st->chunks_partial << delim;
-    stream << std::setprecision(3) << xpercent(excess, needed) << delim;
+        stream << std::setw(4) << mp_st->chunks_alloc << delim;
+        stream << std::setw(4) << mp_st->chunks_inuse << delim;
+        stream << std::setw(4) << mp_st->chunks_free << delim;
+        stream << std::setw(4) << mp_st->chunks_partial << delim;
+        stream << std::setprecision(3) << xpercent(excess, needed) << delim;
+    } else {
+        stream << delim;
+        stream << delim;
+        stream << delim;
+        stream << delim;
+        stream << delim;
+        stream << delim;
+        stream << delim;
+    }
     /*
      *  Fragmentation calculation:
      *    needed = inuse.level / chunk_capacity
@@ -627,10 +641,10 @@ Mem::PoolReport(const MemPoolStats * mp_st, const MemPoolMeter * AllMeter, std::
     stream << toKB(mp_st->obj_size * pm->idle.hwater_level) << delim;
     /* saved */
     stream << (int)pm->gb_saved.count << delim;
-    stream << std::setprecision(3) << xpercent(pm->gb_saved.count, AllMeter->gb_saved.count) << delim;
-    stream << std::setprecision(3) << xpercent(pm->gb_saved.bytes, AllMeter->gb_saved.bytes) << delim;
-    stream << std::setprecision(3) << xdiv(pm->gb_saved.count - pm->gb_osaved.count, xm_deltat) << "\n";
-    pm->gb_osaved.count = pm->gb_saved.count;
+    stream << std::setprecision(3) << xpercent(pm->gb_saved.count, AllMeter->gb_allocated.count) << delim;
+    stream << std::setprecision(3) << xpercent(pm->gb_saved.bytes, AllMeter->gb_allocated.bytes) << delim;
+    stream << std::setprecision(3) << xdiv(pm->gb_allocated.count - pm->gb_oallocated.count, xm_deltat) << "\n";
+    pm->gb_oallocated.count = pm->gb_allocated.count;
 }
 
 static int
@@ -683,7 +697,7 @@ Mem::Report(std::ostream &stream)
     "In Use\t\t\t\t\t"
     "Idle\t\t\t"
     "Allocations Saved\t\t\t"
-    "Hit Rate\t"
+    "Rate\t"
     "\n"
     " \t (bytes)\t"
     "KB/ch\t obj/ch\t"
@@ -692,7 +706,7 @@ Mem::Report(std::ostream &stream)
     "(#)\t (KB)\t high (KB)\t high (hrs)\t %alloc\t"
     "(#)\t (KB)\t high (KB)\t"
     "(#)\t %cnt\t %vol\t"
-    "(#) / sec\t"
+    "(#)/sec\t"
     "\n";
     xm_deltat = current_dtime - xm_time;
     xm_time = current_dtime;
@@ -712,7 +726,7 @@ Mem::Report(std::ostream &stream)
         if (!mp_stats.pool)	/* pool destroyed */
             continue;
 
-        if (mp_stats.pool->getMeter().gb_saved.count > 0)	/* this pool has been used */
+        if (mp_stats.pool->getMeter().gb_allocated.count > 0)	/* this pool has been used */
             sortme[npools++] = mp_stats;
         else
             not_used++;
@@ -746,12 +760,13 @@ Mem::Report(std::ostream &stream)
     PoolReport(&mp_stats, mp_total.TheMeter, stream);
 
     /* Cumulative */
-    stream << "Cumulative allocated volume: "<< double_to_str(buf, 64, mp_total.TheMeter->gb_saved.bytes) << "\n";
+    stream << "Cumulative allocated volume: "<< double_to_str(buf, 64, mp_total.TheMeter->gb_allocated.bytes) << "\n";
     /* overhead */
     stream << "Current overhead: " << mp_total.tot_overhead << " bytes (" <<
     std::setprecision(3) << xpercent(mp_total.tot_overhead, mp_total.TheMeter->inuse.level) << "%)\n";
     /* limits */
-    stream << "Idle pool limit: " << std::setprecision(2) << toMB(mp_total.mem_idle_limit) << " MB\n";
+    if (mp_total.mem_idle_limit >= 0)
+        stream << "Idle pool limit: " << std::setprecision(2) << toMB(mp_total.mem_idle_limit) << " MB\n";
     /* limits */
     stream << "Total Pools created: " << mp_total.tot_pools_alloc << "\n";
     stream << "Pools ever used:     " << mp_total.tot_pools_alloc - not_used << " (shown above)\n";

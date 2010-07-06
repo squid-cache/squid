@@ -20,7 +20,7 @@
 
 #include "config.h"
 
-#ifndef HAVE_INET_PTON
+#if !HAVE_INET_PTON
 
 /*
  * Copyright (c) 2004 by Internet Systems Consortium, Inc. ("ISC")

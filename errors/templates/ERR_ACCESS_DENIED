@@ -23,7 +23,7 @@ body
 <p><b>Access Denied.</b></p>
 </blockquote>
 
-<p>Access control configuration prevents your request from being allowed at this time.  Please contact your service provider if you feel this is incorrect.</p>
+<p>Access control configuration prevents your request from being allowed at this time. Please contact your service provider if you feel this is incorrect.</p>
 
 <p>Your cache administrator is <a href="mailto:%w%W">%w</a>.</p>
 <br>

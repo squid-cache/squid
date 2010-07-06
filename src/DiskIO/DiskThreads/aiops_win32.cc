@@ -36,18 +36,17 @@
 
 #include "squid.h"
 #include "squid_windows.h"
+#include "CommIO.h"
 #include "DiskThreads.h"
+#include "SquidTime.h"
+#include "Store.h"
 
 #include	<stdio.h>
-#include	<sys/types.h>
 #include	<sys/stat.h>
 #include	<fcntl.h>
 #include	<errno.h>
 #include	<dirent.h>
 #include	<signal.h>
-#include "CommIO.h"
-#include "SquidTime.h"
-#include "Store.h"
 
 #define RIDICULOUS_LENGTH	4096
 

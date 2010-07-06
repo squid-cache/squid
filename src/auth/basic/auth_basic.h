@@ -5,6 +5,7 @@
 
 #ifndef __AUTH_BASIC_H__
 #define __AUTH_BASIC_H__
+
 #include "auth/Gadgets.h"
 #include "auth/User.h"
 #include "auth/UserRequest.h"
@@ -13,30 +14,16 @@
 
 #define DefaultAuthenticateChildrenMax  32	/* 32 processes */
 
-/* Generic */
-
-class AuthenticateStateData
-{
-
-public:
-    void *data;
-    AuthUserRequest *auth_user_request;
-    RH *handler;
-};
-
-/* queue of auth requests waiting for verification to occur */
-
+/** queue of auth requests waiting for verification to occur */
 class BasicAuthQueueNode
 {
 
 public:
     BasicAuthQueueNode *next;
-    AuthUserRequest *auth_user_request;
+    AuthUserRequest::Pointer auth_user_request;
     RH *handler;
     void *data;
 };
-
-class AuthBasicUserRequest;
 
 class BasicUser : public AuthUser
 {
@@ -48,23 +35,20 @@ public:
     BasicUser(AuthConfig *);
     ~BasicUser();
     bool authenticated() const;
-    void queueRequest(AuthUserRequest * auth_user_request, RH * handler, void *data);
-    void submitRequest (AuthUserRequest * auth_user_request, RH * handler, void *data);
-    void decode(char const *credentials, AuthUserRequest *);
+    void queueRequest(AuthUserRequest::Pointer auth_user_request, RH * handler, void *data);
+    void submitRequest(AuthUserRequest::Pointer auth_user_request, RH * handler, void *data);
+    void decode(char const *credentials, AuthUserRequest::Pointer);
     char *getCleartext() {return cleartext;}
 
     bool valid() const;
-    void makeLoggingInstance(AuthBasicUserRequest *auth_user_request);
-    AuthUser * makeCachedFrom();
+    void makeLoggingInstance(AuthUserRequest::Pointer auth_user_request);
+
+    /** Update the cached password for a username. */
     void updateCached(BasicUser *from);
+    virtual int32_t ttl() const;
+
     char *passwd;
-    time_t credentials_checkedtime;
 
-    struct {
-
-unsigned int credentials_ok:
-        2;	/*0=unchecked,1=ok,2=failed */
-    } flags;
     BasicAuthQueueNode *auth_queue;
 
 private:
@@ -72,42 +56,11 @@ private:
     void extractUsername();
     void extractPassword();
     char *cleartext;
-    AuthUserRequest *currentRequest;
+    AuthUserRequest::Pointer currentRequest;
     char const *httpAuthHeader;
 };
 
 MEMPROXY_CLASS_INLINE(BasicUser);
-
-typedef class BasicUser basic_data;
-
-/* follows the http request around */
-
-class AuthBasicUserRequest : public AuthUserRequest
-{
-
-public:
-    MEMPROXY_CLASS(AuthBasicUserRequest);
-
-    AuthBasicUserRequest();
-    virtual ~AuthBasicUserRequest();
-
-    virtual int authenticated() const;
-    virtual void authenticate(HttpRequest * request, ConnStateData *conn, http_hdr_type type);
-    virtual int module_direction();
-    virtual void module_start(RH *, void *);
-    virtual AuthUser *user() {return _theUser;}
-
-    virtual const AuthUser *user() const {return _theUser;}
-
-    virtual void user (AuthUser *aUser) {_theUser=dynamic_cast<BasicUser *>(aUser);}
-
-private:
-    BasicUser *_theUser;
-};
-
-MEMPROXY_CLASS_INLINE(AuthBasicUserRequest);
-
-#include "HelperChildConfig.h"
 
 /* configuration runtime data */
 
@@ -119,20 +72,19 @@ public:
     ~AuthBasicConfig();
     virtual bool active() const;
     virtual bool configured() const;
-    virtual AuthUserRequest *decode(char const *proxy_auth);
+    virtual AuthUserRequest::Pointer decode(char const *proxy_auth);
     virtual void done();
+    virtual void rotateHelpers();
     virtual void dump(StoreEntry *, const char *, AuthConfig *);
-    virtual void fixHeader(AuthUserRequest *, HttpReply *, http_hdr_type, HttpRequest *);
+    virtual void fixHeader(AuthUserRequest::Pointer, HttpReply *, http_hdr_type, HttpRequest *);
     virtual void init(AuthConfig *);
     virtual void parse(AuthConfig *, int, char *);
     virtual void registerWithCacheManager(void);
     virtual const char * type() const;
-    HelperChildConfig authenticateChildren;
     char *basicAuthRealm;
-    wordlist *authenticate;
     time_t credentialsTTL;
     int casesensitive;
     int utf8;
 };
 
-#endif
+#endif /* __AUTH_BASIC_H__ */

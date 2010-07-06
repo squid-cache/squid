@@ -57,10 +57,10 @@
 #if HAVE_MEMORY_H
 #include <memory.h>
 #endif
-#ifdef HAVE_STRING_H
+#if HAVE_STRING_H
 #include <string.h>
 #endif
-#ifdef HAVE_STRINGS_H
+#if HAVE_STRINGS_H
 #include <strings.h>
 #endif
 #if HAVE_BSTRING_H
@@ -107,7 +107,7 @@ struct snmp_pdu *
 snmp_pdu_create(int command) {
     struct snmp_pdu *pdu;
 
-#ifdef DEBUG_PDU
+#if DEBUG_PDU
     snmplib_debug(8, "PDU:  Creating\n");
 #endif
 
@@ -126,7 +126,7 @@ snmp_pdu_create(int command) {
     pdu->enterprise_length = 0;
     pdu->variables = NULL;
 
-#ifdef DEBUG_PDU
+#if DEBUG_PDU
     snmplib_debug(8, "PDU:  Created %x\n", (unsigned int) pdu);
 #endif
 
@@ -141,7 +141,7 @@ struct snmp_pdu *
 snmp_pdu_clone(struct snmp_pdu *Src) {
     struct snmp_pdu *Dest;
 
-#ifdef DEBUG_PDU
+#if DEBUG_PDU
     snmplib_debug(8, "PDU %x:  Cloning\n", (unsigned int) Src);
 #endif
 
@@ -152,7 +152,7 @@ snmp_pdu_clone(struct snmp_pdu *Src) {
     }
     xmemcpy((char *) Dest, (char *) Src, sizeof(struct snmp_pdu));
 
-#ifdef DEBUG_PDU
+#if DEBUG_PDU
     snmplib_debug(8, "PDU %x:  Created %x\n", (unsigned int) Src, (unsigned int) Dest);
 #endif
     return (Dest);
@@ -183,7 +183,7 @@ snmp_fix_pdu(struct snmp_pdu *pdu, int command) {
     int i;
     int copied = 0;
 
-#ifdef DEBUG_PDU
+#if DEBUG_PDU
     snmplib_debug(8, "PDU %x:  Fixing.  Err index is %d\n",
                   (unsigned int) pdu, (unsigned int) pdu->errindex);
 #endif
@@ -256,7 +256,7 @@ snmp_fix_pdu(struct snmp_pdu *pdu, int command) {
         snmp_set_api_error(SNMPERR_UNABLE_TO_FIX);
         return (NULL);
     }
-#ifdef DEBUG_PDU
+#if DEBUG_PDU
     snmplib_debug(8, "PDU %x:  Fixed PDU is %x\n",
                   (unsigned int) pdu, (unsigned int) newpdu);
 #endif
@@ -347,7 +347,7 @@ snmp_pdu_encode(u_char * DestBuf, int *DestBufLen,
 {
     u_char *bufp;
 
-#ifdef DEBUG_PDU_ENCODE
+#if DEBUG_PDU_ENCODE
     snmplib_debug(8, "PDU: Encoding %d\n", PDU->command);
 #endif
 
@@ -355,7 +355,7 @@ snmp_pdu_encode(u_char * DestBuf, int *DestBufLen,
     switch (PDU->command) {
 
         /**********************************************************************/
-#ifdef TRP_REQ_MSG
+#if TRP_REQ_MSG
     case TRP_REQ_MSG:
 
         /* SNMPv1 Trap */
@@ -436,7 +436,7 @@ snmp_pdu_encode(u_char * DestBuf, int *DestBufLen,
         /* Normal PDU Encoding */
 
         /* request id */
-#ifdef DEBUG_PDU_ENCODE
+#if DEBUG_PDU_ENCODE
         snmplib_debug(8, "PDU: Request ID %d (0x%x)\n", PDU->reqid, DestBuf);
 #endif
         bufp = asn_build_int(DestBuf, DestBufLen,
@@ -446,7 +446,7 @@ snmp_pdu_encode(u_char * DestBuf, int *DestBufLen,
             return (NULL);
 
         /* error status */
-#ifdef DEBUG_PDU_ENCODE
+#if DEBUG_PDU_ENCODE
         snmplib_debug(8, "PDU: Error Status %d (0x%x)\n", PDU->errstat, bufp);
 #endif
         bufp = asn_build_int(bufp, DestBufLen,
@@ -456,7 +456,7 @@ snmp_pdu_encode(u_char * DestBuf, int *DestBufLen,
             return (NULL);
 
         /* error index */
-#ifdef DEBUG_PDU_ENCODE
+#if DEBUG_PDU_ENCODE
         snmplib_debug(8, "PDU: Error index %d (0x%x)\n", PDU->errindex, bufp);
 #endif
         bufp = asn_build_int(bufp, DestBufLen,
@@ -485,7 +485,7 @@ snmp_pdu_decode(u_char * Packet,	/* data */
     u_char *bufp;
     u_char PDUType;
     u_char ASNType;
-#ifdef UNUSED_CODE
+#if UNUSED_CODE
     int four;
     oid objid[MAX_NAME_LEN];
 #endif
@@ -494,14 +494,14 @@ snmp_pdu_decode(u_char * Packet,	/* data */
     if (bufp == NULL)
         ASN_PARSE_ERROR(NULL);
 
-#ifdef DEBUG_PDU_DECODE
+#if DEBUG_PDU_DECODE
     snmplib_debug(8, "PDU Type: %d\n", PDUType);
 #endif
 
     PDU->command = PDUType;
     switch (PDUType) {
 
-#ifdef TRP_REQ_MSG
+#if TRP_REQ_MSG
     case TRP_REQ_MSG:
 
         /* SNMPv1 Trap Message */
@@ -596,7 +596,7 @@ snmp_pdu_decode(u_char * Packet,	/* data */
         if (bufp == NULL)
             ASN_PARSE_ERROR(NULL);
 
-#ifdef DEBUG_PDU_DECODE
+#if DEBUG_PDU_DECODE
         snmplib_debug(8, "PDU Request ID: %d\n", PDU->reqid);
 #endif
 
@@ -607,7 +607,7 @@ snmp_pdu_decode(u_char * Packet,	/* data */
         if (bufp == NULL)
             ASN_PARSE_ERROR(NULL);
 
-#ifdef DEBUG_PDU_DECODE
+#if DEBUG_PDU_DECODE
         snmplib_debug(8, "PDU Error Status: %d\n", PDU->errstat);
 #endif
 
@@ -618,7 +618,7 @@ snmp_pdu_decode(u_char * Packet,	/* data */
         if (bufp == NULL)
             ASN_PARSE_ERROR(NULL);
 
-#ifdef DEBUG_PDU_DECODE
+#if DEBUG_PDU_DECODE
         snmplib_debug(8, "PDU Error Index: %d\n", PDU->errindex);
 #endif
 

@@ -702,7 +702,7 @@ RebuildState::getNextFile(sfileno * filn_p, int *size)
         }
 
         if (0 == in_dir) {	/* we need to read in a new directory */
-            snprintf(fullpath, SQUID_MAXPATHLEN, "%s/%02X/%02X",
+            snprintf(fullpath, MAXPATHLEN, "%s/%02X/%02X",
                      sd->path,
                      curlvl1, curlvl2);
 
@@ -747,7 +747,7 @@ RebuildState::getNextFile(sfileno * filn_p, int *size)
                 continue;
             }
 
-            snprintf(fullfilename, SQUID_MAXPATHLEN, "%s/%s",
+            snprintf(fullfilename, MAXPATHLEN, "%s/%s",
                      fullpath, entry->d_name);
             debugs(47, 3, "commonUfsDirGetNextFile: Opening " << fullfilename);
             fd = file_open(fullfilename, O_RDONLY | O_BINARY);
@@ -821,6 +821,6 @@ RebuildState::currentItem()
     return currentEntry();
 }
 
-#ifndef _USE_INLINE_
+#if !_USE_INLINE_
 #include "ufscommon.cci"
 #endif

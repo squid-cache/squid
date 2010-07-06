@@ -163,12 +163,12 @@ For several helpers the directory name used in --enable-X-helpers configure opti
 <LI>squid_ldap_auth - basic_ldap_auth - Authenticate with LDAP user accounts.</LI>
 <LI>ncsa_auth - basic_ncsa_auth - Authenticate with NCSA httpd-style password file.</LI>
 <LI>pam_auth - basic_pam_auth - Authenticate with the system PAM infrastructure.</LI>
-<LI>pop3.pl - basic_pop3_auth.pl - Authenticate with a mail server POP3/SMTP credentials</LI>
-<LI>squid_sasl_auth - basic_sasl_auth - Authenticate with SASL ???</LI>
-<LI>smb_auth - basic_smb_auth - Authenticate with Samba SMB ???</LI>
+<LI>pop3.pl - basic_pop3_auth - Authenticate with a mail server POP3/SMTP credentials</LI>
+<LI>squid_sasl_auth - basic_sasl_auth - Authenticate with SASL.</LI>
+<LI>smb_auth - basic_smb_auth - Authenticate with Samba SMB.</LI>
 <LI>yp_auth - basic_nis_auth - Authenticate with NIS security system.</LI>
 <LI>mswin_sspi - basic_sspi_auth - Authenticate with a Windows Domain Controller using SSPI.</LI>
-<LI>MSNT-muti-domain - basic_msnt_multi_domain_auth.pl - Authenticate with any one of multiple Windows Domain Controllers.</LI>
+<LI>MSNT-multi-domain - basic_msnt_multi_domain_auth - Authenticate with any one of multiple Windows Domain Controllers.</LI>
 <LI>squid_radius_auth - basic_radius_auth - Authenticate with RADIUS.</LI>
 </UL>
 </P>
@@ -177,7 +177,7 @@ For several helpers the directory name used in --enable-X-helpers configure opti
 
 <P>
 <UL>
-<LI>(none yet converted)</LI>
+<LI>digest_pw_auth - digest_file_auth - Authenticate against credentials stored in a simple text file.</LI>
 </UL>
 </P>
 
@@ -201,6 +201,7 @@ For several helpers the directory name used in --enable-X-helpers configure opti
 
 <P>
 <UL>
+<LI>fakeauth_auth - ntlm_fake_auth - Perform NTLMSSP to recover the username but don't verify the password.</LI>
 <LI>ntlm_auth - ntlm_smb_lm_auth - Perform SMB LanManager domain-less authentication over NTLM protocol.</LI>
 </UL>
 </P>
@@ -226,10 +227,12 @@ versions and beginning with 3.2 they are available in languages other than engli
 <P>3.1 began the Internationalization of Squid with the public facing error pages.
 This move begins the Localization of the internal administrator facing manuals.</P>
 
+
 <H2><A NAME="ss2.4">2.4</A> <A HREF="#toc2.4">Solaris 10 pthreads Support (Experimental)</A>
 </H2>
 
 <P>Automatic detection and use of the pthreads library available from Solaris 10</P>
+
 
 <H2><A NAME="s3">3.</A> <A HREF="#toc3">Changes to squid.conf since Squid-3.1</A></H2>
 
@@ -252,11 +255,15 @@ This move begins the Localization of the internal administrator facing manuals.<
 
 <P>
 <DL>
+<DT><B>adapted_http_access</B><DD>
+<P>Access control based on altered HTTP request following adaptation alterations (ICAP, eCAP, URL rewriter).
+An upgraded drop-in replacement for <EM>http_access2</EM> found in Squid-2.</P>
+
 <DT><B>eui_lookup</B><DD>
-<P> Whether to lookup the EUI or MAC address of a connected client.</P>
+<P>Whether to lookup the EUI or MAC address of a connected client.</P>
 
 <DT><B>memory_cache_mode</B><DD>
-<P> Controls which objects to keep in the memory cache (cache_mem)
+<P>Controls which objects to keep in the memory cache (cache_mem)
 <PRE>
         'always'  Keep most recently fetched objects in memory (default)
         
@@ -270,7 +277,12 @@ This move begins the Localization of the internal administrator facing manuals.<
 </P>
 
 <DT><B>logfile_daemon</B><DD>
-<P>Ported from 2.7</P>
+<P>Ported from 2.7. Specify the file I/O daemon helper to run for logging.</P>
+
+<DT><B>tproxy_uses_indirect_client</B><DD>
+<P>Controls whether the indirect client address found in the X-Forwarded-For
+header is used for spoofing instead of the directly connected client address.
+Requires both <EM>--enable-follow-x-forwarded-for</EM> and <EM>--enable-linux-netfilter</EM></P>
 
 </DL>
 </P>
@@ -280,6 +292,16 @@ This move begins the Localization of the internal administrator facing manuals.<
 
 <P>
 <DL>
+<DT><B>access_log</B><DD>
+<P>New <EM>stdio</EM> module to send log data directly from Squid to a disk file.
+This is the historic behaviour of Squid before logging modules were introduced, and
+remains the default used when no module is selected.
+It is recommended to upgrade logging to the faster <EM>daemon:</EM> module.</P>
+<P>New <EM>daemon</EM> module to send each log line as text data to a file I/O daemon handling the slow disk I/O.
+New installs, or installs with no logs configured explicitly will use this module by default.</P>
+<P>New <EM>tcp</EM> module to send each log line as text data to a TCP receiver.</P>
+<P>New <EM>udp</EM> module to send each log line as text data to a UDP receiver.</P>
+
 <DT><B>acl random</B><DD>
 <P>New type <EM>random</EM>. Pseudo-randomly match requests based on a configured probability.</P>
 
@@ -303,9 +325,15 @@ This move begins the Localization of the internal administrator facing manuals.<
 <P>Deprecated <EM>children=N</EM> in favor of <EM>children-max=N</EM>.</P>
 
 <DT><B>logformat</B><DD>
+<P><EM>%&gt;lp</EM> Local TCP port used by transactions with http servers.</P>
 <P><EM>%sn</EM> Unique sequence number per log line. Ported from 2.7</P>
-<P><EM>%>eui</EM> EUI logging (EUI-48 / MAC address for IPv4, EUI-64 for IPv6)
+<P><EM>%&lt;eui</EM> EUI logging (EUI-48 / MAC address for IPv4, EUI-64 for IPv6)
 Both EUI forms are logged in the same field. Type can be identified by length or byte delimiter.</P>
+
+<DT><B>memory_pools_limit</B><DD>
+<P>Memory limits have been revised and corrected from 3.1.4 onwards.</P>
+<P>Please check and update your squid.conf to use the text <EM>none</EM> for no limit instead of the old 0 (zero).</P>
+<P>All users upgrading need to be aware that from Squid-3.3 setting this option to 0 (zero) will mean zero bytes of memory get pooled.</P>
 
 <DT><B>windows_ipaddrchangemonitor</B><DD>
 <P>Now only available to be set in Windows builds.</P>
@@ -359,9 +387,32 @@ Both EUI forms are logged in the same field. Type can be identified by length or
 
 <P>
 <DL>
+<DT><B>--enable-auth-basic[=HELPERS]</B><DD>
+<P>Specified without any parameters all helpers will be auto-built.</P>
+<P>With an explicit empty list <EM>=""</EM> protocol suport will be built but no helpers.</P>
+<P>With an explicit list protocol support and just those helpers will be built.</P>
+
+<DT><B>--enable-auth-digest[=HELPERS]</B><DD>
+<P>Specified without any parameters all helpers will be auto-built.</P>
+<P>With an explicit empty list <EM>=""</EM> protocol suport will be built but no helpers.</P>
+<P>With an explicit list protocol support and just those helpers will be built.</P>
+
+<DT><B>--enable-auth-negotiate</B><DD>
+<P>Specified without any parameters all helpers will be auto-built.</P>
+<P>With an explicit empty list <EM>=""</EM> protocol suport will be built but no helpers.</P>
+<P>With an explicit list protocol support and just those helpers will be built.</P>
+
+<DT><B>--enable-auth-ntlm</B><DD>
+<P>Specified without any parameters all helpers will be auto-built.</P>
+<P>With an explicit empty list <EM>=""</EM> protocol suport will be built but no helpers.</P>
+<P>With an explicit list protocol support and just those helpers will be built.</P>
+
 <DT><B>--enable-eui</B><DD>
 <P>Enable Support for handling EUI operations.
 This includes ARP lookups for MAC (EUI-48) addresses and the ACL arp type tests.</P>
+
+<DT><B>--enable-log-daemon-helpers</B><DD>
+<P>Build helpers for logging I/O.</P>
 
 <DT><B>--enable-url-rewrite-helpers</B><DD>
 <P>Build helpers for some basic URL-rewrite actions. For use by url_rewrite_program.
@@ -378,8 +429,9 @@ the helper protocol usage and provide exemplar code.</P>
 
 <P>
 <DL>
-<DT><B>???alphabetical list within group ordered: enable, disable, with, without) ???</B><DD>
-<P> ???explain??</P>
+<DT><B>--enable-auth</B><DD>
+<P>No longer takes a list of arguments. This option now is restricted to building with or without for authentication.</P>
+<P>The new <EM>--enable-auth-X</EM>/<EM>--disable-auth-X</EM> parameters determine which authentication protocols and helpers are built.</P>
 
 </DL>
 </P>
@@ -390,6 +442,18 @@ the helper protocol usage and provide exemplar code.</P>
 <DL>
 <DT><B>--enable-arp-acl</B><DD>
 <P>Replaced by --enable-eui</P>
+
+<DT><B>--enable-auth-basic-helpers</B><DD>
+<P>replaced by <EM>--enable-auth-basic</EM>.</P>
+
+<DT><B>--enable-auth-digest-helpers</B><DD>
+<P>replaced by <EM>--enable-auth-digest</EM>.</P>
+
+<DT><B>--enable-auth-negotiate-helpers</B><DD>
+<P>replaced by <EM>--enable-auth-negotiate</EM>.</P>
+
+<DT><B>--enable-auth-ntlm-helpers</B><DD>
+<P>replaced by <EM>--enable-auth-ntlm</EM>.</P>
 
 </DL>
 </P>
@@ -407,6 +471,9 @@ the helper protocol usage and provide exemplar code.</P>
 <DT><B>auth_param</B><DD>
 <P><EM>blankpassword</EM> option for basic scheme removed.</P>
 
+<DT><B>cache_peer</B><DD>
+<P><EM>http11</EM> Obsolete.</P>
+
 <DT><B>external_acl_type</B><DD>
 <P>Format tag <EM>%{Header}</EM> replaced by <EM>%>{Header}</EM></P>
 <P>Format tag <EM>%{Header:member}</EM> replaced by <EM>%>{Header:member}</EM></P>
@@ -417,6 +484,10 @@ the helper protocol usage and provide exemplar code.</P>
 <DT><B>http_port</B><DD>
 <P><EM>no-connection-auth</EM> replaced by <EM>connection-auth=[on|off]</EM>. Default is ON.</P>
 <P><EM>transparent</EM> option replaced by <EM>intercept</EM></P>
+<P><EM>http11</EM> obsolete.</P>
+
+<DT><B>http_access2</B><DD>
+<P>Replaced by <EM>adapted_http_access</EM></P>
 
 <DT><B>httpd_accel_no_pmtu_disc</B><DD>
 <P>Replaced by <EM>http_port disable-pmtu-discovery=</EM> option</P>
@@ -426,6 +497,9 @@ the helper protocol usage and provide exemplar code.</P>
 
 <DT><B>redirector_bypass</B><DD>
 <P>Replaced by <EM>url_rewrite_bypass</EM></P>
+
+<DT><B>server_http11</B><DD>
+<P>Obsolete.</P>
 
 <DT><B>upgrade_http0.9</B><DD>
 <P>Obsolete.</P>
@@ -549,9 +623,7 @@ the helper protocol usage and provide exemplar code.</P>
 <P>COSS <EM>maxfullbufs=</EM> option not yet ported from 2.6</P>
 
 <DT><B>cache_peer</B><DD>
-<P><EM>multicast-siblings</EM> not yet ported from 2.7</P>
 <P><EM>idle=</EM> not yet ported from 2.7</P>
-<P><EM>http11</EM> not yet ported from 2.7</P>
 <P><EM>monitorinterval=</EM> not yet ported from 2.6</P>
 <P><EM>monitorsize=</EM> not yet ported from 2.6</P>
 <P><EM>monitortimeout=</EM> not yet ported from 2.6</P>
@@ -573,16 +645,9 @@ the helper protocol usage and provide exemplar code.</P>
 <DT><B>external_refresh_check</B><DD>
 <P>Not yet ported from 2.7</P>
 
-<DT><B>http_access2</B><DD>
-<P>Not yet ported from 2.6</P>
-
 <DT><B>http_port</B><DD>
 <P><EM>act-as-origin</EM> not yet ported from 2.7</P>
-<P><EM>http11</EM> not yet ported from 2.7</P>
 <P><EM>urlgroup=</EM> not yet ported from 2.6</P>
-
-<DT><B>ignore_expect_100</B><DD>
-<P>Not yet ported from 2.7</P>
 
 <DT><B>ignore_ims_on_miss</B><DD>
 <P>Not yet ported from 2.7</P>
@@ -602,9 +667,6 @@ the helper protocol usage and provide exemplar code.</P>
 <DT><B>logformat</B><DD>
 <P><EM>%oa</EM> tag not yet ported from 2.7</P>
 
-<DT><B>max_filedescriptors</B><DD>
-<P>Not yet ported from 2.7</P>
-
 <DT><B>max_stale</B><DD>
 <P>Not yet ported from 2.7</P>
 
@@ -615,9 +677,6 @@ the helper protocol usage and provide exemplar code.</P>
 <P><EM>negative-ttl=</EM> not yet ported from 2.7</P>
 
 <DT><B>refresh_stale_hit</B><DD>
-<P>Not yet ported from 2.7</P>
-
-<DT><B>server_http11</B><DD>
 <P>Not yet ported from 2.7</P>
 
 <DT><B>storeurl_access</B><DD>

@@ -34,7 +34,7 @@
 
 #include "HttpHeader.h"
 
-class IpAddress;
+#include "ip/forward.h"
 
 /// \ingroup ServerProtocolHTCP
 class HtcpReplyData
@@ -59,7 +59,7 @@ public:
 typedef class HtcpReplyData htcpReplyData;
 
 /// \ingroup ServerProtocolHTCP
-SQUIDCEXTERN void neighborsHtcpReply(const cache_key *, htcpReplyData *, const IpAddress &);
+SQUIDCEXTERN void neighborsHtcpReply(const cache_key *, htcpReplyData *, const Ip::Address &);
 
 /// \ingroup ServerProtocolHTCP
 SQUIDCEXTERN void htcpInit(void);

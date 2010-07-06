@@ -38,6 +38,7 @@ public:
     int send_client_ip;
     int send_client_username;
     int service_failure_limit;
+    time_t oldest_service_failure;
     int service_revival_delay;
     int icap_uses_indirect_client;
 

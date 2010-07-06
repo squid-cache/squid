@@ -33,16 +33,20 @@
  */
 
 #include "squid.h"
-#include "ProtoPort.h"
-#include "SwapDir.h"
+#include "compat/initgroups.h"
+#include "compat/getaddrinfo.h"
+#include "compat/getnameinfo.h"
+#include "compat/tempnam.h"
 #include "fde.h"
+#include "ip/Intercept.h"
 #include "MemBuf.h"
-#include "wordlist.h"
+#include "ProtoPort.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
-#include "ip/IpIntercept.h"
 #include "ipc/Kids.h"
 #include "ipc/Coordinator.h"
+#include "SwapDir.h"
+#include "wordlist.h"
 
 #if HAVE_SYS_PRCTL_H
 #include <sys/prctl.h>
@@ -335,7 +339,7 @@ death(int sig)
     else
         fprintf(debug_log, "FATAL: Received signal %d...dying.\n", sig);
 
-#ifdef PRINT_STACK_TRACE
+#if PRINT_STACK_TRACE
 #ifdef _SQUID_HPUX_
     {
         extern void U_STACK_TRACE(void);	/* link with -lcl */
@@ -419,7 +423,7 @@ sigusr2_handle(int sig)
     DebugSignal = sig;
 
     if (state == 0) {
-#ifndef MEM_GEN_TRACE
+#if !MEM_GEN_TRACE
         Debug::parseOptions("ALL,7");
 #else
 
@@ -428,7 +432,7 @@ sigusr2_handle(int sig)
 
         state = 1;
     } else {
-#ifndef MEM_GEN_TRACE
+#if !MEM_GEN_TRACE
         Debug::parseOptions(Debug::debugOptions);
 #else
 
@@ -598,7 +602,7 @@ getMyHostname(void)
     LOCAL_ARRAY(char, host, SQUIDHOSTNAMELEN + 1);
     static int present = 0;
     struct addrinfo *AI = NULL;
-    IpAddress sa;
+    Ip::Address sa;
 
     if (Config.visibleHostname != NULL)
         return Config.visibleHostname;
@@ -626,7 +630,7 @@ getMyHostname(void)
 
         sa.GetAddrInfo(AI);
         /* we are looking for a name. */
-        if (xgetnameinfo(AI->ai_addr, AI->ai_addrlen, host, SQUIDHOSTNAMELEN, NULL, 0, NI_NAMEREQD ) == 0) {
+        if (getnameinfo(AI->ai_addr, AI->ai_addrlen, host, SQUIDHOSTNAMELEN, NULL, 0, NI_NAMEREQD ) == 0) {
             /* DNS lookup successful */
             /* use the official name from DNS lookup */
             debugs(50, 4, "getMyHostname: resolved " << sa << " to '" << host << "'");
@@ -650,7 +654,7 @@ getMyHostname(void)
             memset(&hints, 0, sizeof(addrinfo));
             hints.ai_flags = AI_CANONNAME;
 
-            if (xgetaddrinfo(host, NULL, NULL, &AI) == 0) {
+            if (getaddrinfo(host, NULL, NULL, &AI) == 0) {
                 /* DNS lookup successful */
                 /* use the official name from DNS lookup */
                 debugs(50, 6, "getMyHostname: '" << host << "' has rDNS.");
@@ -658,14 +662,14 @@ getMyHostname(void)
 
                 /* AYJ: do we want to flag AI_ALL and cache the result anywhere. ie as our local host IPs? */
                 if (AI) {
-                    xfreeaddrinfo(AI);
+                    freeaddrinfo(AI);
                     AI = NULL;
                 }
 
                 return host;
             }
 
-            if (AI) xfreeaddrinfo(AI);
+            if (AI) freeaddrinfo(AI);
             debugs(50, 1, "WARNING: '" << host << "' rDNS test failed: " << xstrerror());
         }
     }
@@ -929,69 +933,82 @@ readPidFile(void)
     return pid;
 }
 
+/* A little piece of glue for odd systems */
+#ifndef RLIMIT_NOFILE
+#ifdef RLIMIT_OFILE
+#define RLIMIT_NOFILE RLIMIT_OFILE
+#endif
+#endif
 
+/** Figure out the number of supported filedescriptors */
 void
 setMaxFD(void)
 {
-#if HAVE_SETRLIMIT
-    /* try to use as many file descriptors as possible */
-    /* System V uses RLIMIT_NOFILE and BSD uses RLIMIT_OFILE */
-
+#if HAVE_SETRLIMIT && defined(RLIMIT_NOFILE)
     struct rlimit rl;
-#if defined(RLIMIT_NOFILE)
-
     if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
-        debugs(50, 0, "setrlimit: RLIMIT_NOFILE: " << xstrerror());
-    } else {
-        rl.rlim_cur = Squid_MaxFD;
-
-        if (rl.rlim_cur > rl.rlim_max)
-            Squid_MaxFD = rl.rlim_cur = rl.rlim_max;
-
-        if (setrlimit(RLIMIT_NOFILE, &rl) < 0) {
-            snprintf(tmp_error_buf, ERROR_BUF_SZ,
-                     "setrlimit: RLIMIT_NOFILE: %s", xstrerror());
-            fatal_dump(tmp_error_buf);
-        }
-    }
-
-#elif defined(RLIMIT_OFILE)
-    if (getrlimit(RLIMIT_OFILE, &rl) < 0) {
-        debugs(50, 0, "setrlimit: RLIMIT_NOFILE: " << xstrerror());
-    } else {
-        rl.rlim_cur = Squid_MaxFD;
-
-        if (rl.rlim_cur > rl.rlim_max)
-            Squid_MaxFD = rl.rlim_cur = rl.rlim_max;
-
-        if (setrlimit(RLIMIT_OFILE, &rl) < 0) {
-            snprintf(tmp_error_buf, ERROR_BUF_SZ,
-                     "setrlimit: RLIMIT_OFILE: %s", xstrerror());
-            fatal_dump(tmp_error_buf);
-        }
-    }
-
+        debugs(50, DBG_CRITICAL, "setrlimit: RLIMIT_NOFILE: " << xstrerror());
+    } else if (Config.max_filedescriptors > 0) {
+#if USE_SELECT || USE_SELECT_WIN32
+        /* select() breaks if this gets set too big */
+        if (Config.max_filedescriptors > FD_SETSIZE)
+            rl.rlim_cur = FD_SETSIZE;
+        else
 #endif
-#else /* HAVE_SETRLIMIT */
-    debugs(21, 1, "setMaxFD: Cannot increase: setrlimit() not supported on this system");
+            rl.rlim_cur = Config.max_filedescriptors;
+        if (rl.rlim_cur > rl.rlim_max)
+            rl.rlim_max = rl.rlim_cur;
+        if (setrlimit(RLIMIT_NOFILE, &rl)) {
+            debugs(50, DBG_CRITICAL, "setrlimit: RLIMIT_NOFILE: " << xstrerror());
+            getrlimit(RLIMIT_NOFILE, &rl);
+            rl.rlim_cur = rl.rlim_max;
+            if (setrlimit(RLIMIT_NOFILE, &rl)) {
+                debugs(50, DBG_CRITICAL, "setrlimit: RLIMIT_NOFILE: " << xstrerror());
+            }
+        }
+    }
+    if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
+        debugs(50, DBG_CRITICAL, "setrlimit: RLIMIT_NOFILE: " << xstrerror());
+    } else {
+        Squid_MaxFD = rl.rlim_cur;
+    }
 
+#endif /* HAVE_SETRLIMIT */
+}
+
+void
+setSystemLimits(void)
+{
+#if HAVE_SETRLIMIT && defined(RLIMIT_NOFILE) && !defined(_SQUID_CYGWIN_)
+    /* limit system filedescriptors to our own limit */
+    struct rlimit rl;
+    if (getrlimit(RLIMIT_NOFILE, &rl) < 0) {
+        debugs(50, DBG_CRITICAL, "setrlimit: RLIMIT_NOFILE: " << xstrerror());
+    } else {
+        rl.rlim_cur = Squid_MaxFD;
+        if (setrlimit(RLIMIT_NOFILE, &rl) < 0) {
+            snprintf(tmp_error_buf, ERROR_BUF_SZ, "setrlimit: RLIMIT_NOFILE: %s", xstrerror());
+            fatal_dump(tmp_error_buf);
+        }
+    }
 #endif /* HAVE_SETRLIMIT */
 
 #if HAVE_SETRLIMIT && defined(RLIMIT_DATA)
-
     if (getrlimit(RLIMIT_DATA, &rl) < 0) {
-        debugs(50, 0, "getrlimit: RLIMIT_DATA: " << xstrerror());
+        debugs(50, DBG_CRITICAL, "getrlimit: RLIMIT_DATA: " << xstrerror());
     } else if (rl.rlim_max > rl.rlim_cur) {
         rl.rlim_cur = rl.rlim_max;	/* set it to the max */
 
         if (setrlimit(RLIMIT_DATA, &rl) < 0) {
-            snprintf(tmp_error_buf, ERROR_BUF_SZ,
-                     "setrlimit: RLIMIT_DATA: %s", xstrerror());
+            snprintf(tmp_error_buf, ERROR_BUF_SZ, "setrlimit: RLIMIT_DATA: %s", xstrerror());
             fatal_dump(tmp_error_buf);
         }
     }
-
 #endif /* RLIMIT_DATA */
+    if (Config.max_filedescriptors > Squid_MaxFD) {
+        debugs(50, DBG_IMPORTANT, "NOTICE: Could not increase the number of filedescriptors");
+    }
+
 #if HAVE_SETRLIMIT && defined(RLIMIT_VMEM)
     if (getrlimit(RLIMIT_VMEM, &rl) < 0) {
         debugs(50, 0, "getrlimit: RLIMIT_VMEM: " << xstrerror());
@@ -999,12 +1016,10 @@ setMaxFD(void)
         rl.rlim_cur = rl.rlim_max;	/* set it to the max */
 
         if (setrlimit(RLIMIT_VMEM, &rl) < 0) {
-            snprintf(tmp_error_buf, ERROR_BUF_SZ,
-                     "setrlimit: RLIMIT_VMEM: %s", xstrerror());
+            snprintf(tmp_error_buf, ERROR_BUF_SZ, "setrlimit: RLIMIT_VMEM: %s", xstrerror());
             fatal_dump(tmp_error_buf);
         }
     }
-
 #endif /* RLIMIT_VMEM */
 }
 
@@ -1159,7 +1174,12 @@ parseEtcHosts(void)
             *nt = '\0';
             debugs(1, 5, "etc_hosts: got hostname '" << lt << "'");
 
+#if USE_IPV6
+            /* For IPV6 addresses also check for a colon */
+            if (Config.appendDomain && !strchr(lt, '.') && !strchr(lt, ':')) {
+#else
             if (Config.appendDomain && !strchr(lt, '.')) {
+#endif
                 /* I know it's ugly, but it's only at reconfig */
                 strncpy(buf2, lt, 512);
                 strncat(buf2, Config.appendDomain, 512 - strlen(lt) - 1);
@@ -1266,10 +1286,10 @@ strwordquote(MemBuf * mb, const char *str)
 void
 keepCapabilities(void)
 {
-#if HAVE_PRCTL && defined(PR_SET_KEEPCAPS) && USE_LIBCAP
+#if USE_LIBCAP && HAVE_PRCTL && defined(PR_SET_KEEPCAPS)
 
     if (prctl(PR_SET_KEEPCAPS, 1, 0, 0, 0)) {
-        IpInterceptor.StopTransparency("capability setting has failed.");
+        Ip::Interceptor.StopTransparency("capability setting has failed.");
     }
 #endif
 }
@@ -1285,18 +1305,15 @@ restoreCapabilities(int keep)
     else
         caps = cap_init();
     if (!caps) {
-        IpInterceptor.StopTransparency("Can't get current capabilities");
+        Ip::Interceptor.StopTransparency("Can't get current capabilities");
     } else {
         int ncaps = 0;
         int rc = 0;
         cap_value_t cap_list[10];
         cap_list[ncaps++] = CAP_NET_BIND_SERVICE;
 
-        if (IpInterceptor.TransparentActive()) {
+        if (Ip::Interceptor.TransparentActive()) {
             cap_list[ncaps++] = CAP_NET_ADMIN;
-#if LINUX_TPROXY2
-            cap_list[ncaps++] = CAP_NET_BROADCAST;
-#endif
         }
 
         cap_clear_flag(caps, CAP_EFFECTIVE);
@@ -1304,12 +1321,12 @@ restoreCapabilities(int keep)
         rc |= cap_set_flag(caps, CAP_PERMITTED, ncaps, cap_list, CAP_SET);
 
         if (rc || cap_set_proc(caps) != 0) {
-            IpInterceptor.StopTransparency("Error enabling needed capabilities.");
+            Ip::Interceptor.StopTransparency("Error enabling needed capabilities.");
         }
         cap_free(caps);
     }
 #elif defined(_SQUID_LINUX_)
-    IpInterceptor.StopTransparency("Missing needed capability support.");
+    Ip::Interceptor.StopTransparency("Missing needed capability support.");
 #endif /* HAVE_SYS_CAPABILITY_H */
 }
 

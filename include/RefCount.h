@@ -1,7 +1,7 @@
 /*
  * $Id$
  *
- * DEBUG: none          Refcount allocator
+ * DEBUG: section --    Refcount allocator
  * AUTHOR:  Robert Collins
  *
  * SQUID Web Proxy Cache          http://www.squid-cache.org/
@@ -114,7 +114,7 @@ private:
 struct RefCountable_ {
     RefCountable_():count_(0) {}
 
-    virtual ~RefCountable_() {}
+    virtual ~RefCountable_() { assert(count_ == 0); }
 
     /* Not private, to allow class hierarchies */
     void RefCountReference() const {

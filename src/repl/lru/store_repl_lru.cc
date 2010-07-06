@@ -135,7 +135,7 @@ lru_remove(RemovalPolicy * policy, StoreEntry * entry, RemovalPolicyNode * node)
 
     dlinkDelete(&lru_node->node, &lru->list);
 
-    lru_node_pool->free(lru_node);
+    lru_node_pool->freeOne(lru_node);
 
     lru->count -= 1;
 }
@@ -249,7 +249,7 @@ try_again:
         goto try_again;
     }
 
-    lru_node_pool->free(lru_node);
+    lru_node_pool->freeOne(lru_node);
     lru->count -= 1;
     lru->setPolicyNode(entry, NULL);
     return entry;

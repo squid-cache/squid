@@ -25,7 +25,7 @@ body
 
 <p id="sysmsg">The system returned: <i>%E</i></p>
 
-<p>An error condition occurred while writing to the network.  Please retry your request.</p>
+<p>An error condition occurred while writing to the network. Please retry your request.</p>
 
 <p>Your cache administrator is <a href="mailto:%w%W">%w</a>.</p>
 <br>

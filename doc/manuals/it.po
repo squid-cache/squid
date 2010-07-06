@@ -1,0 +1,2164 @@
+# SOME DESCRIPTIVE TITLE
+# Copyright (C) YEAR Free Software Foundation, Inc.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2010-02-13 00:05+1400\n"
+"PO-Revision-Date: 2010-05-06 12:33+0200\n"
+"Last-Translator: Francesco Chemolli <kinkie@squid-cache.org>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: it\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Pootle 2.0.1\n"
+
+#. type: SH
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:3 helpers/basic_auth/LDAP/basic_ldap_auth.8:3 helpers/basic_auth/NCSA/basic_ncsa_auth.8:3 helpers/basic_auth/PAM/basic_pam_auth.8:3 helpers/basic_auth/RADIUS/basic_radius_auth.8:3 helpers/external_acl/ldap_group/squid_ldap_group.8:3 helpers/external_acl/session/squid_session.8:3 helpers/external_acl/unix_group/squid_unix_group.8:3 src/squid.8.in:3 tools/cachemgr.cgi.8.in:3 tools/squidclient.1:3
+#, no-wrap
+msgid "NAME"
+msgstr "NOME"
+
+#. type: Plain text
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:7
+msgid "Local Users auth helper for Squid"
+msgstr "Helper di autenticazione per database utenti di sistema per Squid"
+
+#. type: SH
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:8 helpers/basic_auth/LDAP/basic_ldap_auth.8:8 helpers/basic_auth/NCSA/basic_ncsa_auth.8:8 helpers/basic_auth/PAM/basic_pam_auth.8:8 helpers/basic_auth/RADIUS/basic_radius_auth.8:8 helpers/external_acl/ldap_group/squid_ldap_group.8:10 helpers/external_acl/session/squid_session.8:10 helpers/external_acl/unix_group/squid_unix_group.8:8 src/squid.8.in:8 tools/cachemgr.cgi.8.in:8 tools/squidclient.1:8
+#, no-wrap
+msgid "SYNOPSIS"
+msgstr "SINOSSI"
+
+#. type: SH
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:11 helpers/basic_auth/LDAP/basic_ldap_auth.8:39 helpers/basic_auth/NCSA/basic_ncsa_auth.8:12 helpers/basic_auth/PAM/basic_pam_auth.8:15 helpers/basic_auth/RADIUS/basic_radius_auth.8:26 helpers/external_acl/ldap_group/squid_ldap_group.8:26 helpers/external_acl/session/squid_session.8:18 helpers/external_acl/unix_group/squid_unix_group.8:15 src/squid.8.in:25 tools/cachemgr.cgi.8.in:11 tools/squidclient.1:47
+#, no-wrap
+msgid "DESCRIPTION"
+msgstr "DESCRIZIONE"
+
+#. type: Plain text
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:15
+msgid ""
+"B<basic_getpwnam_auth> allows Squid to authenticate any local user accounts "
+"to validate the user name and password of Basic HTTP authentication."
+msgstr ""
+"B<basic_getpwnam_auth> consente a Squid di verifiare l'identità di utenti di "
+"sistema, usando il meccanismo di autenticazione HTTP Basic."
+
+#. type: Plain text
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:21
+msgid "It uses B<getpwnam()> and B<getspnam()> routines for authentication."
+msgstr ""
+"Utilizza le API B<getpwnam()> e B<getspnam()> per effettuare "
+"l'autenticazione."
+
+#. type: Plain text
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:23
+msgid "This has the following advantages over the NCSA module:"
+msgstr "Questo offre i seguenti vantaggi rispetto al modulo NCSA:"
+
+#. type: TP
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:23
+#, no-wrap
+msgid "Allows authentication of all known local users"
+msgstr "Consente l'autenticazione di tutti gli utenti locali noti"
+
+#. type: TP
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:25
+#, no-wrap
+msgid "Allows authentication through nsswitch.conf"
+msgstr "Consente l'autenticazione tramite nsswitch.conf"
+
+#. type: TP
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:27
+#, no-wrap
+msgid "Can handle NIS(+) requests"
+msgstr "Può gestire richieste NIS e NIS+"
+
+#. type: TP
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:29
+#, no-wrap
+msgid "Can handle LDAP request"
+msgstr "Può gestire richieste LDAP"
+
+#. type: TP
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:31
+#, no-wrap
+msgid "Can handle PAM request"
+msgstr "Può gestire richieste PAM"
+
+#. type: SH
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:34 helpers/basic_auth/LDAP/basic_ldap_auth.8:242 helpers/basic_auth/NCSA/basic_ncsa_auth.8:24 helpers/basic_auth/PAM/basic_pam_auth.8:41 helpers/basic_auth/RADIUS/basic_radius_auth.8:61 helpers/external_acl/ldap_group/squid_ldap_group.8:209 helpers/external_acl/session/squid_session.8:50 helpers/external_acl/unix_group/squid_unix_group.8:33 tools/cachemgr.cgi.8.in:19
+#, no-wrap
+msgid "CONFIGURATION"
+msgstr "CONFIGURAZIONE"
+
+#. type: Plain text
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:47
+msgid ""
+"When used for authenticating to local UNIX shadow password databases the "
+"program must be running as root or else it won't have sufficient permissions "
+"to access the user password database. Such use of this program is not "
+"recommended, but if you absolutely need to then make the program B<setuid> "
+"B<root>"
+msgstr ""
+"Quando viene usato per autenticare gli utenti contro il database di shadow "
+"password, il programma deve essere in esecuzione con utentza root, o non "
+"avrà permessi di accesso sufficienti al database. Questo tipo di utilizzo "
+"non è raccomandato, ma se assolutamente necessario allora occorre rendere il "
+"programma B<setuid> B<root>"
+
+#. type: Plain text
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:60 helpers/basic_auth/PAM/basic_pam_auth.8:79
+msgid ""
+"Please note that in such configurations it is also strongly recommended that "
+"the program is moved into a directory where normal users cannot access it, "
+"as this mode of operation will allow any local user to brute-force other "
+"users passwords. Also note the program has not been fully audited and the "
+"author cannot be held responsible for any security issues due to such "
+"installations."
+msgstr ""
+"Notare anche che in queste configurazioni è anche fortemente raccomandato di "
+"spostare il programma in una directory dove gli utenti del sistema non "
+"abbiano accesso, perchè altrimenti avranno la possibilità di tentare di "
+"forzare le password. Tenete anche presente che il software non è stato "
+"completamente analizzato dal punto di vista della sicurezza, e l'autore non "
+"può essere ritenuto responsabile per qualsiasi problema di sicurezza "
+"derivante da installazioni di questo tipo."
+
+#. type: SH
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:61 helpers/basic_auth/LDAP/basic_ldap_auth.8:288 helpers/basic_auth/NCSA/basic_ncsa_auth.8:30 helpers/basic_auth/PAM/basic_pam_auth.8:80 helpers/basic_auth/RADIUS/basic_radius_auth.8:85 helpers/external_acl/ldap_group/squid_ldap_group.8:232 helpers/external_acl/session/squid_session.8:63 helpers/external_acl/unix_group/squid_unix_group.8:62 src/squid.8.in:216 tools/cachemgr.cgi.8.in:51 tools/squidclient.1:163
+#, no-wrap
+msgid "AUTHOR"
+msgstr "AUTORE"
+
+#. type: Plain text
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:63 helpers/external_acl/ldap_group/squid_ldap_group.8:234 helpers/external_acl/unix_group/squid_unix_group.8:64
+msgid "This program was written by"
+msgstr "Questo programma è stato scritto da"
+
+#. type: Plain text
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:68
+msgid "Based on original code by"
+msgstr "Basto su codice originariamente scritto da"
+
+#. type: Plain text
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:71 helpers/basic_auth/NCSA/basic_ncsa_auth.8:32 helpers/basic_auth/RADIUS/basic_radius_auth.8:93 helpers/external_acl/ldap_group/squid_ldap_group.8:243 helpers/external_acl/unix_group/squid_unix_group.8:67
+msgid "This manual was written by"
+msgstr "Questo manuale è stato scritto da"
+
+#. type: SH
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:73 helpers/basic_auth/LDAP/basic_ldap_auth.8:296 helpers/basic_auth/NCSA/basic_ncsa_auth.8:37 helpers/basic_auth/PAM/basic_pam_auth.8:84 helpers/basic_auth/RADIUS/basic_radius_auth.8:95 helpers/external_acl/ldap_group/squid_ldap_group.8:245 helpers/external_acl/session/squid_session.8:67 helpers/external_acl/unix_group/squid_unix_group.8:69 src/squid.8.in:226 tools/cachemgr.cgi.8.in:57 tools/squidclient.1:169
+#, no-wrap
+msgid "COPYRIGHT"
+msgstr "COPYRIGHT"
+
+#. type: Plain text
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:75 helpers/basic_auth/LDAP/basic_ldap_auth.8:298 helpers/basic_auth/RADIUS/basic_radius_auth.8:97 helpers/external_acl/ldap_group/squid_ldap_group.8:247 helpers/external_acl/session/squid_session.8:69 helpers/external_acl/unix_group/squid_unix_group.8:71
+msgid "This program and documentation is copyright to the authors named above."
+msgstr ""
+"I diritti d'autore su questo programma e sulla relativa documentazione sono "
+"detenuti dagli autori sopra nominati"
+
+#. type: Plain text
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:77 helpers/basic_auth/LDAP/basic_ldap_auth.8:300 helpers/basic_auth/PAM/basic_pam_auth.8:91 helpers/basic_auth/RADIUS/basic_radius_auth.8:99 helpers/external_acl/ldap_group/squid_ldap_group.8:249 helpers/external_acl/session/squid_session.8:71 helpers/external_acl/unix_group/squid_unix_group.8:73 tools/cachemgr.cgi.8.in:59 tools/squidclient.1:171
+msgid ""
+"Distributed under the GNU General Public License (GNU GPL) version 2 or "
+"later (GPL2+)."
+msgstr ""
+"Distribuito secondo le condizioni di licenza esposte nella GNU General "
+"Public License (GNU GPL) Versione 2 o successive (GPL2+)."
+
+#. type: SH
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:78 helpers/basic_auth/LDAP/basic_ldap_auth.8:301 helpers/basic_auth/NCSA/basic_ncsa_auth.8:50 helpers/basic_auth/PAM/basic_pam_auth.8:92 helpers/basic_auth/RADIUS/basic_radius_auth.8:100 helpers/external_acl/ldap_group/squid_ldap_group.8:250 helpers/external_acl/session/squid_session.8:72 helpers/external_acl/unix_group/squid_unix_group.8:74 src/squid.8.in:243 tools/cachemgr.cgi.8.in:60 tools/squidclient.1:172
+#, no-wrap
+msgid "QUESTIONS"
+msgstr "DOMANDE"
+
+#. type: Plain text
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:81 helpers/basic_auth/LDAP/basic_ldap_auth.8:304 helpers/basic_auth/NCSA/basic_ncsa_auth.8:53 helpers/basic_auth/PAM/basic_pam_auth.8:95 helpers/basic_auth/RADIUS/basic_radius_auth.8:103 helpers/external_acl/ldap_group/squid_ldap_group.8:253 helpers/external_acl/session/squid_session.8:75 helpers/external_acl/unix_group/squid_unix_group.8:77 src/squid.8.in:246 tools/cachemgr.cgi.8.in:63 tools/squidclient.1:175
+msgid ""
+"Questions on the usage of this program can be sent to the I<Squid Users "
+"mailing list>"
+msgstr ""
+"Eventuali domande sull'uso di questo programma possono essere inviate alla "
+"I<Mailing list squid-users>"
+
+#. type: SH
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:83 helpers/basic_auth/LDAP/basic_ldap_auth.8:309 helpers/basic_auth/NCSA/basic_ncsa_auth.8:55 helpers/basic_auth/PAM/basic_pam_auth.8:97 helpers/basic_auth/RADIUS/basic_radius_auth.8:108 helpers/external_acl/ldap_group/squid_ldap_group.8:258 helpers/external_acl/session/squid_session.8:77 helpers/external_acl/unix_group/squid_unix_group.8:79 src/squid.8.in:248 tools/cachemgr.cgi.8.in:65 tools/squidclient.1:177
+#, no-wrap
+msgid "REPORTING BUGS"
+msgstr "SEGNALAZIONE BUGS"
+
+#. type: Plain text
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:85 helpers/basic_auth/LDAP/basic_ldap_auth.8:311 helpers/basic_auth/NCSA/basic_ncsa_auth.8:57 helpers/basic_auth/PAM/basic_pam_auth.8:99 helpers/basic_auth/RADIUS/basic_radius_auth.8:110 helpers/external_acl/ldap_group/squid_ldap_group.8:260 helpers/external_acl/session/squid_session.8:79 helpers/external_acl/unix_group/squid_unix_group.8:81 src/squid.8.in:250 tools/cachemgr.cgi.8.in:67 tools/squidclient.1:179
+msgid "Report bugs or bug fixes using http://bugs.squid-cache.org/"
+msgstr ""
+"Per segnalare bug o proporre codice o migliorie si può usare http://bugs"
+".squid-cache.org/"
+
+#. type: Plain text
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:88 helpers/basic_auth/LDAP/basic_ldap_auth.8:314 helpers/basic_auth/NCSA/basic_ncsa_auth.8:60 helpers/basic_auth/PAM/basic_pam_auth.8:102 helpers/basic_auth/RADIUS/basic_radius_auth.8:113 helpers/external_acl/ldap_group/squid_ldap_group.8:263 helpers/external_acl/session/squid_session.8:82 helpers/external_acl/unix_group/squid_unix_group.8:84 src/squid.8.in:253 tools/cachemgr.cgi.8.in:70 tools/squidclient.1:182
+msgid ""
+"Report serious security bugs to I<Squid Bugs "
+"E<lt>squid-bugs@squid-cache.orgE<gt>>"
+msgstr ""
+"Per segnalare gravi bug di sicurezza fate riferimento a I<Squid Bugs E<lt"
+">squid-bugs@squid-cache.orgE<gt>>"
+
+#. type: Plain text
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:91 helpers/basic_auth/LDAP/basic_ldap_auth.8:317 helpers/basic_auth/NCSA/basic_ncsa_auth.8:63 helpers/basic_auth/PAM/basic_pam_auth.8:105 helpers/basic_auth/RADIUS/basic_radius_auth.8:116 helpers/external_acl/ldap_group/squid_ldap_group.8:266 helpers/external_acl/session/squid_session.8:85 helpers/external_acl/unix_group/squid_unix_group.8:87 src/squid.8.in:256 tools/cachemgr.cgi.8.in:73 tools/squidclient.1:185
+msgid "Report ideas for new improvements to the I<Squid Developers mailing list>"
+msgstr ""
+"Ci si può rivolgere alla I<mailing list degli sviluppatori di Squid> per "
+"segnalare idee o possibili miglirie"
+
+#. type: SH
+#: helpers/basic_auth/getpwnam/basic_getpwnam_auth.8:93 helpers/basic_auth/LDAP/basic_ldap_auth.8:319 helpers/basic_auth/NCSA/basic_ncsa_auth.8:65 helpers/basic_auth/PAM/basic_pam_auth.8:107 helpers/basic_auth/RADIUS/basic_radius_auth.8:118 helpers/external_acl/ldap_group/squid_ldap_group.8:268 helpers/external_acl/session/squid_session.8:87 helpers/external_acl/unix_group/squid_unix_group.8:92 src/squid.8.in:258 tools/cachemgr.cgi.8.in:75 tools/squidclient.1:187
+#, no-wrap
+msgid "SEE ALSO"
+msgstr "VEDI ANCHE"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:7
+msgid "LDAP authentication helper for Squid"
+msgstr "Helper di autenticazione LDAP per Squid"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:12 helpers/basic_auth/LDAP/basic_ldap_auth.8:27 helpers/external_acl/ldap_group/squid_ldap_group.8:14
+msgid "base DN"
+msgstr "base DN"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:14
+msgid "attribute"
+msgstr "attributo"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:16 helpers/basic_auth/LDAP/basic_ldap_auth.8:31 helpers/external_acl/ldap_group/squid_ldap_group.8:18
+msgid "options"
+msgstr "opzioni"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:18 helpers/basic_auth/LDAP/basic_ldap_auth.8:33
+msgid "LDAP server name"
+msgstr "nome del server LDAP"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:20 helpers/basic_auth/LDAP/basic_ldap_auth.8:35 helpers/basic_auth/RADIUS/basic_radius_auth.8:18 helpers/external_acl/ldap_group/squid_ldap_group.8:22 src/squid.8.in:17 tools/squidclient.1:28
+msgid "port"
+msgstr "porta"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:22 helpers/basic_auth/LDAP/basic_ldap_auth.8:37 helpers/external_acl/ldap_group/squid_ldap_group.8:24
+msgid "URI"
+msgstr "URI"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:29 helpers/external_acl/ldap_group/squid_ldap_group.8:16
+msgid "LDAP search filter"
+msgstr "filtro di ricerca LDAP"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:47
+msgid ""
+"B<basic_ldap_auth> allows Squid to connect to a LDAP directory to validate "
+"the user name and password of Basic HTTP authentication.  LDAP options are "
+"specified as parameters on the command line, while the username(s) and "
+"password(s) to be checked against the LDAP directory are specified on "
+"subsequent lines of input to the helper, one username/password pair per line "
+"separated by a space."
+msgstr ""
+"B<basic_ldap_auth> consente a Squid di collegarsi a un servizio di directory "
+"LDAP per verificare le credenziali fornite dell'utente tramite lo schema di "
+"autenticazione HTTP Basic. Le opzioni LDAP sono specificate come parametri "
+"della linea di comando, mentre le username e password da verificare vengono "
+"specificate come standard input all'helper, una coppia username/password per "
+"ogni linea, separati da uno spazio."
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:56
+msgid ""
+"As expected by the basic authentication construct of Squid, after specifying "
+"a username and password followed by a new line, this helper will produce "
+"either B<OK> or B<ERR> on the following line to show if the specified "
+"credentials are correct according to the LDAP directory."
+msgstr ""
+"Come richiesto dalle API di autenticazione tipo Basic di Squid, questo "
+"helper dopo aver ricevuto nome utente e password seguiti da un carattere di "
+"a capo, risponderà B<OK> o B<ERR> seguiti da un carattere di a capo, "
+"rispettivamente se le credenziali sono corrette o no."
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:61
+msgid ""
+"The program has two major modes of operation. In the default mode of "
+"operation the users DN is constructed using the base DN and user "
+"attribute. In the other mode of operation a search filter is used to locate "
+"valid user DN's below the base DN."
+msgstr ""
+"Questo programma ha due modalità di funzionamento principali. In quella "
+"standard il DN dell'utente è costruito usando il DN base e l'attributo "
+"utente. Nella modalità alternativa viene utilizzato un filtro di ricerca per "
+"trovare il DN dell'utente al di sotto del DN base."
+
+#. type: SH
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:62 helpers/basic_auth/NCSA/basic_ncsa_auth.8:20 helpers/basic_auth/PAM/basic_pam_auth.8:21 helpers/basic_auth/RADIUS/basic_radius_auth.8:31 helpers/external_acl/ldap_group/squid_ldap_group.8:49 helpers/external_acl/session/squid_session.8:26 helpers/external_acl/unix_group/squid_unix_group.8:19 src/squid.8.in:59 tools/squidclient.1:56
+#, no-wrap
+msgid "OPTIONS"
+msgstr "OPZIONI"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:67
+msgid "B<REQUIRED.> Specifies the base DN under which the users are located."
+msgstr ""
+"B<NECESSARIO>. Specifica il DN base sotto il quale sono registrati gli "
+"utenti."
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:75
+msgid ""
+"LDAP search B<filter> to locate the user DN. Required if the users are in a "
+"hierarchy below the base DN, or if the login name is not what builds the "
+"user specific part of the users DN."
+msgstr ""
+"B<Filtro> di ricerca LDAP per trovare il DN dell'utente. Necessario se gli "
+"utenti sono registrati in una gerarchia al di sotto del Base DN, o se il "
+"nome utente non è l'unico elemento costituente della porzione del DN "
+"specifico dell'utente."
+
+#. uid\=%s\""
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:82
+msgid ""
+"The search filter can contain up to 15 occurrences of B<%s> which will be "
+"replaced by the username, as in B<\\&\\&> for RFC2037 directories. For a "
+"detailed description of LDAP search filter syntax see RFC2254."
+msgstr ""
+"Il filtro di ricerca può contenere fino a 15 istanza di B<%s> che verrà "
+"sostituito dal nome utente, comportamento analogo a B<\\&\\&> nelle directory "
+"RFC2037. Per una descrizione dettagliata della sintassi da usare per "
+"esprimere filtri di ricerca LDAP si veda la RFC2254."
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:90
+msgid ""
+"Will crash if other B<%> values than B<%s> are used, or if more than 15 "
+"B<%s> are used."
+msgstr ""
+"Non si avvierà se vengono usati simboli B<%> diversi da B<%s>, o se B<%s> "
+"viene utilizzato più di 15 volte."
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:99
+msgid ""
+"Specifies the name of the DN attribute that contains the username/login.  "
+"Combined with the base DN to construct the users DN when no search filter is "
+"specified ( B<-f> option). Defaults to B<uid>"
+msgstr ""
+"Specifica il nome dell'attributo del DN che contiene il nome utente. Viene "
+"combinato con il Base DN per costruire il DN dell'utente quando non viene "
+"specificato alcun filtro di ricerca (opzione B<-f>). Di default è B<uid>"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:108
+msgid ""
+"B<Note:> This can only be done if all your users are located directly under "
+"the same position in the LDAP tree and the login name is used for naming "
+"each user object. If your LDAP tree does not match these criterias or if you "
+"want to filter who are valid users then you need to use a search filter to "
+"search for your users DN ( B<-f> option)."
+msgstr ""
+"B<Nota:> questo è fattibile soltanto se tutti gli utenti sono registrati "
+"nella stessa posizione nell'alberatura LDAP, e il nome utente viene "
+"utilizzato come chiave per identificarli. Se l'alberatura LDAP non rispetta "
+"questi criteri, o se si vuole filtrare con più accuratezza quali siano gli "
+"utenti validi, conviene utilizzare un filtro di ricerca per localizzare il "
+"DN degli utenti (opzione B<-f>)."
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:118
+msgid ""
+"Use I<ldap_compare> instead of I<ldap_simple_bind> to verify the users "
+"password.  B<passwordattr> is the LDAP attribute storing the users password."
+msgstr ""
+"Utilizza la chiamata I<ldap_compare> invece di I<ldap_simple_bind> per "
+"verificare la password dell'utente. B<passwordattr> specifica il nome "
+"dell'attributo LDAP dove viene registrata la password dell'utente."
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:126
+msgid ""
+"Search scope when performing user DN searches specified by the B<-f> "
+"option. Defaults to B<sub>"
+msgstr ""
+"Lo scope della ricerca da utilizzare quando si ricerca il DN degli utenti "
+"con l'opzione B<-f>. Il valore di default è B<sub>."
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:130 helpers/external_acl/ldap_group/squid_ldap_group.8:178
+msgid "B<base> object only,"
+msgstr "Solo l'oggetto B<base>,"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:133 helpers/external_acl/ldap_group/squid_ldap_group.8:181
+msgid "B<one> level below the base object or"
+msgstr "B<one>: un livello al di sotto dell'oggetto base, oppure"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:136 helpers/external_acl/ldap_group/squid_ldap_group.8:184
+msgid "B<sub>tree below the base object"
+msgstr "B<sub> l'intero albero al di sotto dell'oggetto base"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:142
+msgid ""
+"The DN and password to bind as while performing searches. Required by the "
+"B<-f> flag if the directory does not allow anonymous searches."
+msgstr ""
+"Il DN e la password tecnici da utilizzare per effettuare la ricerca "
+"dell'oggetto utente. È necessario specificarlo se si utilizza l'opzione "
+"B<-f> e il server LDAP non consente di effettuare ricerche all'utente "
+"anonimo."
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:147
+msgid ""
+"As the password needs to be printed in plain text in your Squid "
+"configuration it is strongly recommended to use a account with minimal "
+"associated privileges.  This to limit the damage in case someone could get "
+"hold of a copy of your Squid configuration file."
+msgstr ""
+"Siccome la password deve essere scritta nel file di configurazione in "
+"maniera leggibile, si raccomanda di utilizzare una utenza techica con il "
+"livello di diritti di accesso minore possibile. Questo potrebbe aiutare a "
+"limitare i danni nel caso qualcuno non autorizzato riuscisse a ottenere una "
+"copia del file di configurazione di Squid."
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:152 helpers/external_acl/ldap_group/squid_ldap_group.8:98
+msgid ""
+"The DN and the name of a file containing the password to bind as while "
+"performing searches."
+msgstr ""
+"Il DN e il nome di un file che contiene la password da utilizzare per "
+"l'utenza tecnica che effettua le ricerche."
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:157 helpers/external_acl/ldap_group/squid_ldap_group.8:103
+msgid ""
+"Less insecure version of the former parameter pair with two advantages: The "
+"password does not occur in the process listing, and the password is not "
+"being compromised if someone gets the squid configuration file without "
+"getting the secretfile."
+msgstr ""
+"È una versione meno insicura della precedente coppia di parametri, con due "
+"vantaggi: la password non compare nell'elenco dei processi in esecuzione nel "
+"sitema, e non compare nel file di configurazione di Squid."
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:165
+msgid ""
+"Use a persistent LDAP connection. Normally the LDAP connection is only open "
+"while validating a username to preserve resources at the LDAP server. This "
+"option causes the LDAP connection to be kept open, allowing it to be reused "
+"for further user validations. Recommended for larger installations."
+msgstr ""
+"Usa una connessione LDAP di lunga durata. Normalmente la connessione LDAP "
+"viene mantenuta attiva soltanto mentre vengono verificate le credenziali "
+"utente, per risparmiare risorse sul server LDAP. Questa opzione fa sì che la "
+"connessione venga mantenuta aperta, consentendo di riutilizzarla per "
+"verifiche successive. Si raccomanda di attivarla per installazioni di grosse "
+"dimensioni."
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:178
+msgid ""
+"Only bind once per LDAP connection. Some LDAP servers do not allow "
+"re-binding as another user after a successful I<ldap_bind.> The use of this "
+"option always opens a new connection for each login attempt. If combined "
+"with the B<-P> option for persistent LDAP connection then the connection "
+"used for searching for the user DN is kept persistent but a new connection "
+"is opened to verify each users password once the DN is found."
+msgstr ""
+"Effettua una sola operazione di LDAP Bind per connessione. Alcuni server "
+"LDAP non consentono di cambiare l'utenza collegata (re-bind) dopo che la "
+"prima identificazione ha avuto successo. Se viene usata insieme all'opzione "
+"B<-P>, l'effetto è di mantenere aperta la connessione su cui vengono fatte "
+"le ricerche per localizzare il DN degli utenti, ma di utilizzare una nuova "
+"connessione ogni volta che viene verificata la password dell'utente."
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:182 helpers/external_acl/ldap_group/squid_ldap_group.8:170
+msgid "Do not follow referrals"
+msgstr "Non seguire i referrals"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:187
+msgid "when to dereference aliases. Defaults to B<never>"
+msgstr "quando si ebba risolvere gli alias. Il default è B<never> (mai)"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:196
+msgid ""
+"B<never> dereference aliases (default), B<always> dereference aliases, only "
+"while B<search ing> or only to B<find> the base object."
+msgstr ""
+"B<never>: non risolvere mai gli alias, B<always>: risolvi sempre gli alias, "
+"B<search ing>: solo durante le ricerche, o B<find>: solo per la ricerca dell"
+"'oggetto-base."
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:201
+msgid ""
+"Specity the LDAP server to connect to by LDAP URI (requires OpenLDAP "
+"libraries).  Servers can also be specified last on the command line."
+msgstr ""
+"Indica la URI LDAP con l'indirizzo del server (richiede la disponibilità "
+"delle librerie OpenLDAP). I server possono anche essere specificati come "
+"ultimo argomento della linea di comando"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:206
+msgid ""
+"Specify the LDAP server to connect to. Servers can also be specified last on "
+"the command line."
+msgstr ""
+"Specifica il server LDAP a cui connettersi. I server possono anche essere "
+"specificati alla fine della linea di comando"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:212
+msgid ""
+"Specify an alternate TCP port where the ldap server is listening if other "
+"than the default LDAP port 389. Can also be specified within the server "
+"specificiation by using servername:port syntax."
+msgstr ""
+"Specifica una porta TCP alternativa, nel caso il server non sia alla porta "
+"standard (389). Può anche essere indicato insieme al nome host usando la "
+"sintassi nomeserver:porta."
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:216 helpers/external_acl/ldap_group/squid_ldap_group.8:204
+msgid "LDAP protocol version. Defaults to 2 if not specified."
+msgstr ""
+"Versione del protocollo LDAP da usare. Se non specificato, usa la versione "
+"2."
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:220 helpers/external_acl/ldap_group/squid_ldap_group.8:208
+msgid "Use TLS encryption"
+msgstr "Usa la cifratura TLS"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:224 helpers/external_acl/ldap_group/squid_ldap_group.8:107
+msgid "Enable LDAP over SSL (requires Netscape LDAP API libraries)"
+msgstr ""
+"Abilita la cifratura SSL del protocollo LDAP. Richiede le librerie LDAP di "
+"Netscape"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:231
+msgid ""
+"Specify B<timeout> used when connecting to LDAP servers (requires Netscape "
+"LDAP API libraries)"
+msgstr ""
+"Specifica il B<timeout> per la connessione al server LDAP (richiede le "
+"librerie LDAP di Netscape)"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:235 helpers/external_acl/ldap_group/squid_ldap_group.8:192
+msgid "Specify time limit on LDAP search operations"
+msgstr ""
+"Specifica il massimo tempo a disposizione per completare le operazioni di "
+"ricerca LDAP"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:241 helpers/external_acl/ldap_group/squid_ldap_group.8:82
+msgid ""
+"Debug mode where each step taken will get reported in detail.  Useful for "
+"understanding what goes wrong if the results is not what is expected."
+msgstr ""
+"Modalità debug, che documenta ogni passo del processo con grande dettaglio. "
+"Utile per capire cosa sta malfunzionando, se i risultati sono diversi da "
+"quelli attesi."
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:246
+msgid ""
+"For directories using the RFC2307 layout with a single domain, all you need "
+"to specify is usually the base DN under where your users are located and the "
+"server name:"
+msgstr ""
+"Per le directory che usano la disposizione specificata nella RFC2307 con un "
+"singolo dominio, normalmente è sufficente specificare il Base DN sotto il "
+"quale si trovano tutti gli utenti, e il nome server:"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:252
+msgid ""
+"If you have sub-domains then you need to use a search filter approach to "
+"locate your user DNs as these can no longer be constructed direcly from the "
+"base DN and login name alone:"
+msgstr ""
+"Se utilizzate dei sottodmini, allora è necessario utilizzare un approccio "
+"basato su un filtro di ricerca per trovare i DN degli utenti, perchè in "
+"questo caso non è possibile costruirli direttamente partendo dal solo Base "
+"DN e nome utente:"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:257
+msgid ""
+"And similarily if you only want to allow access to users having a specific "
+"attribute"
+msgstr ""
+"Analogamente se si vuole consentire l'accesso soltanto a utenti con uno "
+"specifico attributo"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:266
+msgid ""
+"Or if the user attribute of the user DN is B<cn> instead of B<uid> and you "
+"do not want to have to search for the users then you could use something "
+"like the following example for Active Directory:"
+msgstr ""
+"O se l'attributo utente del DN e` B<cn> invece che B<uid> e non si vuole "
+"effettuare una ricerca per individuare gli oggetti utente, si può fare "
+"qualcosa di simile al seguente esempio per MS Active Directory:"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:276
+msgid ""
+"If you want to search for the user DN and your directory does not allow "
+"anonymous searches then you must also use the B<-D> and B<-w> flags to "
+"specify a user DN and password to log in as to perform the searches, as in "
+"the following complex Active Directory example"
+msgstr ""
+"Se si vuole cercare il DN dell'utente e il server non consente le ricerche "
+"anonime, è necessario usare le opzioni B<-D> e B<-w> per specificare le "
+"credenziali da utilizzare per effettuare le ricerche, come mostrato nel "
+"seguente esempio relativo a MS Active Directory"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:287
+msgid ""
+"B<NOTE:> When constructing search filters it is strongly recommended to test "
+"the filter using B<ldapsearch> before you attempt to use B<basic_ldap_auth.> "
+"This to verify that the filter matches what you expect."
+msgstr ""
+"B<NOTA:> quando si scrivono i filtri di ricerca si raccomanda di verificarne "
+"il corretto funzionamento tramite il comando B<ldapsearch> prima di "
+"utilizzarli per B<basic_ldap_auth>"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:290 helpers/basic_auth/RADIUS/basic_radius_auth.8:87
+msgid "This program is written by"
+msgstr "Questo programma è stato scritto da"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:294
+msgid "This manual is written by"
+msgstr "Questo manuale è stato scritto da"
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:308
+msgid ""
+"Or to your favorite LDAP list/friend if the question is more related to LDAP "
+"than Squid."
+msgstr ""
+"O a una lista di supporto su LDAP se la domanda è legata più a LDAP che non "
+"a Squid."
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:324
+msgid "Your favorite LDAP documentation."
+msgstr "La vostra documentazione LDAP di riferimento."
+
+#. type: Plain text
+#: helpers/basic_auth/LDAP/basic_ldap_auth.8:325 helpers/external_acl/ldap_group/squid_ldap_group.8:275
+msgid "B<RFC2254> - The String Representation of LDAP Search Filters,"
+msgstr "B<RFC2254> - Rappresentazione testuale di filtri di ricerca LDAP,"
+
+#. type: Plain text
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:7
+msgid "NCSA httpd-style password file authentication helper for Squid"
+msgstr ""
+"Helper di autenticazione per Squid basato su in file di password stile "
+"Apache"
+
+#. type: Plain text
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:11
+msgid "passwd file"
+msgstr "file di password"
+
+#. type: Plain text
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:16
+msgid ""
+"B<basic_ncsa_auth> allows Squid to read and authenticate user and password "
+"information from an NCSA/Apache httpd-style password file when using basic "
+"HTTP authentication."
+msgstr ""
+"B<basic_ncsa_auth> consente a squid di identificare gli utenti leggendo le "
+"informazioni da un file di password in stile Apache, per l'autenticazione "
+"HTTP di tipo Basic."
+
+#. type: Plain text
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:19
+msgid "This password file can be manipulated using B<htpasswd.>"
+msgstr ""
+"Questo file di password può essere gestito usando il programma B<htpasswd>."
+
+#. type: Plain text
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:23
+msgid ""
+"The only parameter is the password file.  It must have permissions to be "
+"read by the user that Squid is running as."
+msgstr ""
+"Il solo parametro è il percorso del file di password. I permessi di accesso "
+"a tale file devono consentire la lettura all'utente che esegue squid."
+
+#. type: Plain text
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:29
+msgid "B<basic_ncsa_auth> must have access to the password file to be executed."
+msgstr ""
+"B<basic_ncsa_auth> deve avere accesso al file di password per consentire "
+"l'esecuzione."
+
+#. type: Plain text
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:35
+msgid "Based on original documentation by"
+msgstr "Basato su documentazione originariamente scritta da"
+
+#. type: Plain text
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:43
+msgid ""
+"This file is distributed in the hope that it will be useful, but WITHOUT ANY "
+"WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS "
+"FOR A PARTICULAR PURPOSE. See the GNU General Public License for more "
+"details."
+msgstr ""
+"Questo file viene distribuito nella speranza che sia utile, ma SENZA ALCUNA "
+"GARANZIA; inclusa la garanzia implicita di COMMERCIABILITÀ o di "
+"UTILIZZABILITÀ PER QUALCHE SCOPO SPECIFICO. Si rimanda alla GNU General "
+"Public License per ulteriori dettagli."
+
+#. type: Plain text
+#: helpers/basic_auth/NCSA/basic_ncsa_auth.8:48
+msgid ""
+"You should have received a copy of the GNU General Public License along with "
+"this file; if not, write to the Free Software Foundation, Inc., 59 Temple "
+"Place, Suite 330, Boston, MA 02111-1307 USA"
+msgstr ""
+"Dovreste aver ricevuto una copia della GNU General Public License insieme a "
+"questo file; se no vi invitiamo a scrivere alla Free Software Foundation, "
+"Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA"
+
+#. type: Plain text
+#: helpers/basic_auth/PAM/basic_pam_auth.8:7
+msgid "Squid PAM Basic authentication helper"
+msgstr "Helper di autenticazione per Squid per schema HTTP Basic e backend PAM"
+
+#. type: Plain text
+#: helpers/basic_auth/PAM/basic_pam_auth.8:11
+msgid "service name"
+msgstr "nome del servizio"
+
+#. type: Plain text
+#: helpers/basic_auth/PAM/basic_pam_auth.8:13
+msgid "TTL"
+msgstr "TTL"
+
+#. type: Plain text
+#: helpers/basic_auth/PAM/basic_pam_auth.8:20
+msgid ""
+"B<basic_pam_auth> allows Squid to connect to a mostly any available PAM "
+"database to validate the user name and password of Basic HTTP "
+"authentication."
+msgstr ""
+"B<basic_pam_auth> consente a squid di utilizzare quasi ogni possibile tipo "
+"di database supportato da PAM per verificare nome utente e password forniti "
+"dall'utente con lo schema di autehticazione HTTP Basic."
+
+#. type: Plain text
+#: helpers/basic_auth/PAM/basic_pam_auth.8:26
+msgid "Specifies the PAM service name Squid uses, defaults to B<squid>"
+msgstr ""
+"Specifica il nome del servizio PAM utilizzato da Squid, il default è "
+"B<squid>"
+
+#. type: Plain text
+#: helpers/basic_auth/PAM/basic_pam_auth.8:35
+msgid ""
+"Enables persistent PAM connections where the connection to the PAM database "
+"is kept open and reused for new logins. The TTL specifies how long the "
+"connection will be kept open (in seconds).  Default is to not keep PAM "
+"connections open. Please note that the use of persistent PAM connections is "
+"slightly outside the PAM specification and may not work with all PAM "
+"configurations."
+msgstr ""
+"Consente l'utilizzo di connessioni PAM persistenti, dove la connessione al "
+"database PAM è mantenuta aperta e riutilizzata per più identificazioni. il "
+"parametro TTL specifica quanto a lungo mantenere aperta la la connessione "
+"(in secondi). Il valore di default è di chiudere la connessione PAM. Notare "
+"che l'utilizzo di connessioni PAM persistenti non è parte delle specifiche "
+"di PAM, e potrebbe non funzionare in tutte le possibili configurazioni."
+
+#. type: Plain text
+#: helpers/basic_auth/PAM/basic_pam_auth.8:40
+msgid "Do not perform the PAM account management group (account expiration etc)"
+msgstr "Non effettuare le operazioni di gestione account (scadenza, ecc)"
+
+#. type: Plain text
+#: helpers/basic_auth/PAM/basic_pam_auth.8:46
+msgid ""
+"The program needs a PAM service to be configured in B</etc/pam.conf> or "
+"B</etc/pam.d/squid>"
+msgstr ""
+"Questo programma richiede che sia stato configurato un servizio PAM di "
+"sistema in B</etc/pam.conf> oppure in B</etc/pam.d/squid>"
+
+#. type: Plain text
+#: helpers/basic_auth/PAM/basic_pam_auth.8:54
+msgid ""
+"The default service name is B<squid> , and the program makes use of the "
+"B<auth> and B<account> management groups to verify the password and the "
+"accounts validity."
+msgstr ""
+"Il nome del servizio di default è B<squid>, e il programma utilizza i gruppi "
+"di gestione B<auth> e B<account> per verificare rispettivamente la password "
+"e la validità dell'account."
+
+#. type: Plain text
+#: helpers/basic_auth/PAM/basic_pam_auth.8:58
+msgid ""
+"For details on how to configure PAM services, see the PAM documentation for "
+"your system. This manual does not cover PAM configuration details."
+msgstr ""
+"Per ulteriori dettagli su come configurare i servizi PAM, si rimanda alla "
+"documentazione dell'implementazione di PAM per il vostro sistema. Questo "
+"manuale NON copre i dettagli della configurazione PAM."
+
+#. type: SH
+#: helpers/basic_auth/PAM/basic_pam_auth.8:59
+#, no-wrap
+msgid "NOTES"
+msgstr "NOTE"
+
+#. type: Plain text
+#: helpers/basic_auth/PAM/basic_pam_auth.8:66
+msgid ""
+"When used for authenticating to local UNIX shadow password databases the "
+"program must be running as root or else it won't have sufficient permissions "
+"to access the user password database. Such use of this program is not "
+"recommended, but if you absolutely need to then make the program setuid root"
+msgstr ""
+"Quando viene usato per autenticare gli utenti contro il database di shadow "
+"password, il programma deve essere in esecuzione con utentza root, o non "
+"avrà permessi di accesso sufficienti al database. Questo tipo di utilizzo "
+"non è raccomandato, ma se assolutamente necessario allora occorre rendere il "
+"programma B<setuid> B<root>"
+
+#. type: Plain text
+#: helpers/basic_auth/PAM/basic_pam_auth.8:82 helpers/external_acl/session/squid_session.8:65
+msgid "This program and documentation was written by"
+msgstr "Questo programma e la relativa documentazione sono stati scritti da"
+
+#. type: Plain text
+#: helpers/basic_auth/PAM/basic_pam_auth.8:88
+msgid "Squid B<basic_pam_auth> and this manual is Copyright 1999,2002,2003"
+msgstr ""
+"Squid B<basic_pam_auth> e questo manuale sono Copyright 1999,2002,2003,2010"
+
+#. type: Plain text
+#: helpers/basic_auth/PAM/basic_pam_auth.8:114
+msgid "PAM Systems Administrator Guide"
+msgstr "Guida a PAM per gli amministratori di sistema"
+
+#. type: Plain text
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:7
+msgid "Squid RADIUS authentication helper"
+msgstr ""
+"Helper di autenticazione per Squid per schema HTTP Basic e backend RADIUS"
+
+#. type: Plain text
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:12
+msgid "config file"
+msgstr "file di configurazione"
+
+#. type: Plain text
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:16
+msgid "server name"
+msgstr "nome server"
+
+#. type: Plain text
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:20
+msgid "identifier"
+msgstr "identificativo"
+
+#. type: Plain text
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:22
+msgid "secret"
+msgstr "segreto"
+
+#. type: Plain text
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:24 helpers/external_acl/session/squid_session.8:14 tools/squidclient.1:34
+msgid "timeout"
+msgstr "timeout"
+
+#. type: Plain text
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:30
+msgid ""
+"B<basic_radius_auth> allows Squid to connect to a RADIUS server to validate "
+"the user name and password of Basic HTTP authentication."
+msgstr ""
+"B<basic_radius_auth> consente a Squid di collegarsi a un server RADIUS per "
+"verificare nome utente e password ottenuti tramite schema di autenticazione "
+"HTTP Basic."
+
+#. type: Plain text
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:36
+msgid ""
+"Specifies the path to a configuration file. See the CONFIGURATION section "
+"for details on the file content."
+msgstr ""
+"Specifica il percorso del file di configurazione. Si veda la sezione "
+"CONFIGURAZIONE per i dettagli sui contenuti di tale file."
+
+#. type: Plain text
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:40
+msgid "Alternative method of specifying the server to connect to"
+msgstr "Un modo alternativo per specificare il server a cui collegarsi"
+
+#. type: Plain text
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:45
+msgid ""
+"Specify another server port where the RADIUS server listens for requests if "
+"different from the default RADIUS port.  Normally not specified."
+msgstr ""
+"Specifica una porta per contattare il server RADIUS, necessario se il "
+"servizio non si trova alla porta standard. Normalmente non viene "
+"specificata."
+
+#. type: Plain text
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:50
+msgid ""
+"Unique identifier identifying this Squid proxy to the RADIUS server.  If not "
+"specified the IP address is used to identify the proxy."
+msgstr ""
+"Identificatore univoco per l'istanza di Squid nei confronti del server "
+"RADIUS. Se non viene specificato, viene utilizzato l'indirizzo IP del server "
+"di Squid."
+
+#. type: Plain text
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:56
+msgid ""
+"Alternative method of specifying the shared secret. Using the B<-f> option "
+"with a configuration file is generally more secure and recommended."
+msgstr ""
+"Metodo alternativo per specificare il segreto condiviso. L'uso dell'opzione "
+"B<-f> associata a un file di configurazione esterno è in generale più sicuro "
+"e pertanto raccomandato."
+
+#. type: Plain text
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:60
+msgid "RADIUS request timeout. Default is 10 seconds."
+msgstr ""
+"Tempo massimo di attesa di risposta dal server RADIUS. Il default è 10 "
+"secondi."
+
+#. type: Plain text
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:67
+msgid ""
+"The configuration specifies how the helper connects to RADIUS.  The file "
+"contains a list of directives (one per line). Lines beginning with a B<#> "
+"are ignored."
+msgstr ""
+"La configurazione specifica come l'helper si collega al server RADIUS. Il "
+"file contiene una lista di direttive (una per riga). Le righe che iniziano "
+"con B<#> sono ignorate."
+
+#. type: Plain text
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:71
+msgid "specifies the name or address of the RADIUS server to connect to."
+msgstr "specifica il nome o indirizzo del server RADIUS a cui connettersi."
+
+#. type: Plain text
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:75
+msgid "specifies the shared RADIUS secret."
+msgstr "specifica il segreto condiviso RADIUS."
+
+#. type: Plain text
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:80
+msgid ""
+"specifies what name the proxy should use to identify itself to the RADIUS "
+"server.  This directive is optional."
+msgstr ""
+"specifica con quale nome il proxy si deve identificare al server RADIUS. "
+"Questa direttiva è facoltativa."
+
+#. type: Plain text
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:84
+msgid "Specifies the port number or service name where the helper should connect."
+msgstr ""
+"Specifica il numero di porta (o nome di servizio) dove l'helper dovrebbe "
+"collegarsi."
+
+#. type: Plain text
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:91
+msgid "With contributions from many others."
+msgstr "Con il contributo di molti altri."
+
+#. type: Plain text
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:107
+msgid ""
+"Or contact your favorite RADIUS list/friend if the question is more related "
+"to RADIUS than Squid."
+msgstr ""
+"O a una lista di supporto su RADIUS se la domanda è legata più a RADIUS che "
+"non a Squid."
+
+#. type: Plain text
+#: helpers/basic_auth/RADIUS/basic_radius_auth.8:121
+msgid "B<RFC2058> - Remote Authentication Dial In User Service (RADIUS)"
+msgstr "B<RFC2058> - Remote Authentication Dial In User Service (RADIUS)"
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:7
+msgid "Squid LDAP external acl group helper"
+msgstr "Helper di SQUID per ACL esterne basate su LDAP"
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:9
+msgid "Version 2.17"
+msgstr "Versione 2.17"
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:20
+msgid "ldap_server_name"
+msgstr "ldap_server_name"
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:33
+msgid ""
+"B<squid_ldap_group> allows Squid to connect to a LDAP directory to authorize "
+"users via LDAP groups.  LDAP options are specified as parameters on the "
+"command line, while the username(s) and group(s) to be checked against the "
+"LDAP directory are specified on subsequent lines of input to the helper, one "
+"username/group pair per line separated by a space."
+msgstr ""
+"B<squid_ldap_group> consente a Squid di collegarsi a un server LDAP per "
+"effettuare l'autorizzazione degli utenti via gruppi LDAP. Le opzioni LDAP "
+"sono specificate sulla linea di comando, mentre le utenze e i gruppi sui "
+"quali fare le verifiche sono passati come input all'helper, una coppia "
+"username/gruppo per linea separati da uno spazio."
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:44
+msgid ""
+"As expected by the B<external_acl_type> construct of Squid, after specifying "
+"a username and group followed by a new line, this helper will produce either "
+"B<OK> or B<ERR> on the following line to show if the user is a member of the "
+"specified group."
+msgstr ""
+"Come previsto dal meccanismo di B<external_acl_type> di Squid, dovo aver "
+"specificato nome utente e gruppo, seguiti da un acapo, questo helper dovrà "
+"rispondere B<OK> oppure B<ERR> seguiti da acapo, per dichiarare se l'utente "
+"sia membro del gruppo specificato."
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:48
+msgid ""
+"The program operates by searching with a search filter based on the users "
+"user name and requested group, and if a match is found it is determined that "
+"the user belongs to the group."
+msgstr ""
+"Il programma effettua una ricerca basata su un filtro derivato dal nome "
+"utente e dal gruppo richiesto, e se viene trovata una corrispondenza "
+"significa che l'utente appartiene al gruppo specificato."
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:53
+msgid "When to dereference aliases. Defaults to 'never'"
+msgstr "Quando seguire gli alias. Il default è 'never' (mai)"
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:62
+msgid ""
+"B<never> dereference aliases (default), B<always> dereference aliases, only "
+"while B<search>ing or only to B<find> the base object"
+msgstr ""
+"B<never>: non risolvere mai gli alias, B<always>: risolvi sempre gli alias, "
+"B<search>: solo durante le ricerche, o B<find>: solo per la ricerca dell"
+"'oggetto-base."
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:67
+msgid "B<REQUIRED.> Specifies the base DN under which the groups are located."
+msgstr ""
+"B<OBBLIGATORIO>. Specifica il Base-DN sotto il quale sono registrati i "
+"gruppi."
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:71
+msgid "Specifies the base DN under which the users are located (if different)"
+msgstr ""
+"Specifica il Base-DN sotto il quale sono registrati gli utenti (se è "
+"diverso)"
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:76
+msgid ""
+"Specify timeout used when connecting to LDAP servers (requires Netscape LDAP "
+"API libraries)"
+msgstr ""
+"Specifica il timeout da usare quando ci si collega ai server LDAP (richiede "
+"le liberie LDAP Netscape)"
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:87
+msgid ""
+"The DN and password to bind as while performing searches. Required if the "
+"directory does not allow anonymous searches."
+msgstr ""
+"Il DN e la password da utilizzare quando si effettuano ricerche. È "
+"necessario se il server LDAP non consente richerche all'utente anonimo."
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:93
+msgid ""
+"As the password needs to be printed in plain text in your Squid "
+"configuration and will be sent on the command line to the helper it is "
+"strongly recommended to use a account with minimal associated privileges.  "
+"This to limit the damage in case someone could get hold of a copy of your "
+"Squid configuration file or extracts the password used from a process "
+"listing."
+msgstr ""
+"Siccome la password deve essere scritta nel file di configurazione in "
+"maniera leggibile, si raccomanda di utilizzare una utenza techica con il "
+"livello di diritti di accesso minore possibile. Questo potrebbe aiutare a "
+"limitare i danni nel caso qualcuno non autorizzato riuscisse a ottenere una "
+"copia del file di configurazione di Squid."
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:123
+msgid ""
+"LDAP search filter used to search the LDAP directory for any matching group "
+"memberships.  In the filter B<%u> will be replaced by the user name (or DN "
+"if the B<-F> or B<-u> options are used) and B<%g> by the requested group "
+"name."
+msgstr ""
+"Il filtro di ricerca LDAP da utilizzare per cercare nella directory le "
+"appartenenze a gruppi. Nel filtro B<%u> viene sostituito con il nome utente "
+"(o il DN dell'utente se sono usate le opzioni B<-F> o B<-u>), e B<%g> viene "
+"sostituito dal nome del gruppo ricercato."
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:135
+msgid ""
+"LDAP search filter used to search the LDAP directory for any matching "
+"users.  In the filter B<%s> will be replaced by the user name. If B<%> is to "
+"be included literally in the filter then use B<%%>"
+msgstr ""
+"Il filtro di ricerca LDAP da usare per cercare gli utenti. Nel filtro B<%s> "
+"viene sostituito dal nome utente; se si vuole usare la lettera B<%> nel "
+"filtro, la si deve esprimere con B<%%>"
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:141
+msgid ""
+"Specifies that the first query argument sent to the helper by Squid is a "
+"extension to the basedn and will be temporarily added in front of the global "
+"basedn for this query."
+msgstr ""
+"Specifica che la prima richiesta inviata da squid allo helper è una "
+"estensione al Base-DN, e verrà aggiunta temporaneamente a Base-DN globale "
+"per questa richiesta."
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:145
+msgid "Specify the LDAP server to connect to"
+msgstr "Specifica il server LDAP a cui connettersi"
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:149
+msgid ""
+"Specity the LDAP server to connect to by a LDAP URI (requires OpenLDAP "
+"libraries)"
+msgstr ""
+"Specifica il server LDAP a cui connettersi come URI LDAP (richiede le "
+"librerie OpenLDAP)"
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:153
+msgid "Strip Kerberos Realm component from user names (@ separated)"
+msgstr ""
+"Rimuovi la componente di Reame Kerberos dai nomi utente (delimitata dal "
+"carattere B<@>)"
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:158
+msgid ""
+"Specify an alternate TCP port where the ldap server is listening if other "
+"than the default LDAP port 389."
+msgstr ""
+"Specifica una porta TCP da usare per il collegamento al server, se diversa "
+"dalla porta standard LDAP (389)."
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:166
+msgid ""
+"Use a persistent LDAP connection. Normally the LDAP connection is only open "
+"while verifying a users group membership to preserve resources at the LDAP "
+"server. This option causes the LDAP connection to be kept open, allowing it "
+"to be reused for further user validations. Recommended for larger "
+"installations."
+msgstr ""
+"Usa una connessione LDAP di lunga durata. Normalmente la connessione LDAP "
+"viene mantenuta attiva soltanto mentre vengono verificate le credenziali "
+"utente, per risparmiare risorse sul server LDAP. Questa opzione fa sì che la "
+"connessione venga mantenuta aperta, consentendo di riutilizzarla per "
+"verifiche successive. Si raccomanda di attivarla per installazioni di grosse "
+"dimensioni."
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:175
+msgid "search scope. Defaults to B<sub>"
+msgstr "scope della ricerca. Il default è B<sub>"
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:188 helpers/external_acl/unix_group/squid_unix_group.8:32
+msgid "Strip NT domain name component from user names (/ or \\e separated)"
+msgstr ""
+"Rimuovi la componente del nome di dominio Windows dai nomi utente "
+"(delimitata dal carattere B</> o B<\\>)"
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:200
+msgid ""
+"LDAP attribute used to construct the user DN from the user name and base dn "
+"without needing to search for the user.  A maximum of 16 occurrences of "
+"B<%s> are supported."
+msgstr ""
+"Attributo LDAP utilizzato per costruire il DN dell'utente partendo dal nome "
+"utente e da un Base-DN, senza richiedere di effettuare una ricerca. Sono "
+"supportate al massimo 16 ricorrenze di B<%s>."
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:214
+msgid ""
+"This helper is intended to be used as an B<external_acl_type> helper in "
+"B<squid.conf.>"
+msgstr ""
+"Questo helper è progettato per essere usato come B<external_acl_type> nella "
+"configurazione di Squid."
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:231
+msgid ""
+"B<NOTE:> When constructing search filters it is recommended to first test "
+"the filter using B<ldapsearch> to verify that the filter matches what you "
+"expect before you attempt to use B<squid_ldap_group>"
+msgstr ""
+"B<NOTA:> quando si costruiscono dei filtri di ricerca, è raccomandato di "
+"verificarne il corretto funzionamento con il programma B<ldapsearch> prima "
+"di utilizzarli con B<squid_ldap_group>, per verificare che i risultati siano "
+"quelli attesi."
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:240
+msgid "Based on prior work in B<squid_ldap_auth> by"
+msgstr "Basato su un lavoro precedente in B<squid_ldap_auth> fatto da"
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:257
+msgid ""
+"Or contact your favorite LDAP list/friend if the question is more related to "
+"LDAP than Squid."
+msgstr ""
+"O a una lista di supporto su LDAP se la domanda è legata più a LDAP che non "
+"a Squid."
+
+#. type: Plain text
+#: helpers/external_acl/ldap_group/squid_ldap_group.8:274
+msgid "Your favorite LDAP documentation"
+msgstr "La vostra documentazione LDAP di riferimento."
+
+#. type: Plain text
+#: helpers/external_acl/session/squid_session.8:7
+msgid "Squid session tracking external acl group helper."
+msgstr "Helper di controllo accessi esterno basato sul tracciamento sessione."
+
+#. type: Plain text
+#: helpers/external_acl/session/squid_session.8:9
+msgid "Version 1.0"
+msgstr "Versione 1.0"
+
+#. type: Plain text
+#: helpers/external_acl/session/squid_session.8:16
+msgid "database"
+msgstr "base dati"
+
+#. type: Plain text
+#: helpers/external_acl/session/squid_session.8:23
+msgid ""
+"B<squid_session> maintains a concept of sessions by monitoring requests and "
+"timing out sessions if no requests have been seen for the idle timeout "
+"timer."
+msgstr ""
+"B<squid_session> mantiene una tabella di sessione, controllando le richieste "
+"e utilizzando un timeout di inattività per chiuderle."
+
+#. type: Plain text
+#: helpers/external_acl/session/squid_session.8:25
+msgid "Intended use is for displaying \"terms of use\" pages, ad popups etc."
+msgstr ""
+"Il suo scopo è di aiutare nel mostrare pagine di condizioni di utilizzo, "
+"pubblicità ecc."
+
+#. type: Plain text
+#: helpers/external_acl/session/squid_session.8:31
+msgid "B<Timeout> for any session. If not specified the default is 3600 seconds."
+msgstr ""
+"B<Tempo di vita> per le sessioni. Se non specificato, il default è 3600 "
+"secondi."
+
+#. type: Plain text
+#: helpers/external_acl/session/squid_session.8:38
+msgid ""
+"B<Path> to persistent database. If not specified the session details will be "
+"kept in memory only and all sessions will reset each time Squid restarts "
+"it's helpers (Squid restart or rotation of logs)."
+msgstr ""
+"B<Percorso> alla base dati persistente. Se non specificato, la tabella delle "
+"sessioni viene tenuta in memoria, e viene azzerata ogni volta che gli "
+"helper vengono riavviati (riavvio di Squid oppure rotazione dei log)"
+
+#. type: Plain text
+#: helpers/external_acl/session/squid_session.8:46
+msgid ""
+"Active mode. In this mode sessions are started by evaluating an acl with the "
+"argument B<LOGIN> , or terminated by the argument B<LOGOUT>"
+msgstr ""
+"Modalità attiva. Quando è usata, le sessioni vengono iniziate valutando una "
+"acl con parametro B<LOGIN>, o terminate con il parametro B<LOGOUT>"
+
+#. type: Plain text
+#: helpers/external_acl/session/squid_session.8:49
+msgid ""
+"Without this flag the helper automatically starts the session after the "
+"first request."
+msgstr ""
+"Senza questa opzione, lo helper inizia automaticamente la sessione dopo la "
+"prima richiesta."
+
+#. type: Plain text
+#: helpers/external_acl/session/squid_session.8:53
+msgid "Configuration example using the default automatic mode"
+msgstr "Esempio di configurazione che usa la modalità automatica (il default)"
+
+#. type: Plain text
+#: helpers/external_acl/session/squid_session.8:62
+msgid ""
+"Then set up http://your.server.example.com/bannerpage to display a session "
+"startup page and then redirect the user back to the requested URL given in "
+"the url query parameter."
+msgstr ""
+"Poi occorre allestire un sito web http://your.server.example.com/bannerpage "
+"che mostri una pagina di avvio di sessione, e poi reindirizzi l'utente alla "
+"URL originale, che viene passata come parametro \"url\" della richiesta HTTP."
+
+#. type: Plain text
+#: helpers/external_acl/unix_group/squid_unix_group.8:7
+msgid "Squid UNIX Group helper"
+msgstr "Helper per Squid basato su gruppi UNIX"
+
+#. type: Plain text
+#: helpers/external_acl/unix_group/squid_unix_group.8:11 helpers/external_acl/unix_group/squid_unix_group.8:13
+msgid "group"
+msgstr "gruppo"
+
+#. type: Plain text
+#: helpers/external_acl/unix_group/squid_unix_group.8:18
+msgid ""
+"B<squid_unix_group> allows Squid to base access controls on users "
+"memberships in UNIX groups."
+msgstr ""
+"B<squid_unix_group> consente a Squid di basare i controlli di accesso "
+"sull'appartenenza dell'utente a gruppi UNIX."
+
+#. type: Plain text
+#: helpers/external_acl/unix_group/squid_unix_group.8:23
+msgid "Specifies a group name to match."
+msgstr "Specifica un nome di gruppo per la verifica."
+
+#. type: Plain text
+#: helpers/external_acl/unix_group/squid_unix_group.8:28
+msgid "Also match the users primary group from B</etc/passwd>"
+msgstr ""
+"Verifica anche il gruppo primario di appartenenza dell'utente nel file "
+"B</etc/passwd>"
+
+#. type: Plain text
+#: helpers/external_acl/unix_group/squid_unix_group.8:46
+msgid ""
+"This B<squid.conf> example defines two Squid acls.  I<usergroup1> matches "
+"users in I<group1> , and I<usergroup2> matches users in I<group2> or "
+"I<group3>"
+msgstr ""
+"Questo esempio di configurazione di Squid definisce due acl. I<usergroup1> "
+"verifica gli utenti nel gruppo I<group1>, e I<usergroup2> verifica gli "
+"utenti nei gruppi I<group2> o I<group3>"
+
+#. type: Plain text
+#: helpers/external_acl/unix_group/squid_unix_group.8:56
+msgid ""
+"By default up to 11 groups can be matched in one acl (including commandline "
+"specified groups). This limit is defined by B<MAX_GROUPS> in the source "
+"code."
+msgstr ""
+"Per default una singola acl può verificare fino a 11 gruppi (inclusi quelli "
+"specificati sulla linea di comando). Questo limite è definito dal parametro "
+"B<MAX_GROUPS> nel codice sorgente."
+
+#. type: SH
+#: helpers/external_acl/unix_group/squid_unix_group.8:57
+#, no-wrap
+msgid "KNOWN ISSUES"
+msgstr "LIMITAZIONI NOTE"
+
+#. type: Plain text
+#: helpers/external_acl/unix_group/squid_unix_group.8:61
+msgid ""
+"Does not understand GID aliased groups sometimes used to work around groups "
+"size limitations. If you are using GID aliased groups then you must specify "
+"each alias by name."
+msgstr ""
+"Non riesce a gestire i gruppi con alias di GID, che vengono talvolta "
+"utilizzati per aggirare limitazioni alle dimensioni dei gruppi. Se vengono "
+"utilizzati alias di GID, occorre specificare ogni alias per nome."
+
+#. type: Plain text
+#: helpers/external_acl/unix_group/squid_unix_group.8:90
+msgid "Additionally bugs or bug-fixes can be reported to"
+msgstr "Inoltre, bug o soluzioni di bug possono essere segnalati a"
+
+#. type: Plain text
+#: src/squid.8.in:7
+msgid "HTTP web proxy caching server"
+msgstr "server proxy caching HTTP"
+
+#. type: Plain text
+#: src/squid.8.in:13
+msgid "facility"
+msgstr "sottosistema"
+
+#. type: Plain text
+#: src/squid.8.in:15
+msgid "config-file"
+msgstr "file di configurazione"
+
+#. type: Plain text
+#: src/squid.8.in:19
+msgid "signal"
+msgstr "segnale"
+
+#. type: Plain text
+#: src/squid.8.in:21
+msgid "service-name"
+msgstr "nome del servizio"
+
+#. type: Plain text
+#: src/squid.8.in:23
+msgid "command-line"
+msgstr "linea di comando"
+
+#. type: Plain text
+#: src/squid.8.in:32
+msgid ""
+"B<squid> is a high-performance proxy caching server for web clients, "
+"supporting FTP, gopher, ICAP, ICP, HTCP and HTTP data objects.  Unlike "
+"traditional caching software, Squid handles all requests in a single, "
+"non-blocking process."
+msgstr ""
+"B<squid> è un server proxy con cache ad alte prestazioni per client WWW, con "
+"supporto supporta i protocolli FTP, gopher, ICAP, ICP, HTCP e HTTP. A "
+"differenza di altri software, Squid gestisce tutte operazioni all'interno di "
+"un singolo processo con I/O non bloccante."
+
+#. type: Plain text
+#: src/squid.8.in:36
+msgid ""
+"Squid keeps meta data and especially hot objects cached in RAM, caches DNS "
+"lookups, supports non-blocking DNS lookups, and implements negative caching "
+"of failed requests."
+msgstr ""
+"Squid tiene traccia delle informazioni sugli oggetti in cache e gli oggetti "
+"più richiesti in RAM, effettua caching delle richieste DNS, supporta "
+"richieste DNS non bloccanti, e implementa il caching negativo delle "
+"richieste fallite."
+
+#. type: Plain text
+#: src/squid.8.in:41
+msgid ""
+"Squid supports SSL, extensive access controls, and full request logging.  By "
+"using the lightweight Internet Cache Protocols ICP, HTCP or CARP, Squid "
+"caches can be arranged in a hierarchy or mesh for additional bandwidth "
+"savings."
+msgstr ""
+"Squid supporta SSL, ha meccanismi di controllo accessi molto evoluti, e "
+"consente di registrare le richieste ricevute. Utilizzando i protocolli di "
+"coordinamento tra server cache ICP, HTCP e CARP, più server Squid possono "
+"essere collegati in maniera gerarchica per ottenere ulteriori risparmi di "
+"banda."
+
+#. type: Plain text
+#: src/squid.8.in:49
+msgid ""
+"Squid consists of a main server program B<squid> , some optional programs "
+"for custom processing and authentication, and some management and client "
+"tools.  When squid starts up, it spawns a configurable number of helper "
+"processes, each of which can perform parallel lookups.  This reduces the "
+"amount of time the cache waits for results."
+msgstr ""
+"Squid consiste di un programma primario B<squid>, e alcuni programmi "
+"opzionali che svolgono funzioni specifiche, e alcuni strumenti di gestione e "
+"client. Quando Squid viene avviato, lancia un numero configurabile di "
+"processi ausiliari, ciascuno dei quali può lavorare in parallelo. Questo "
+"riduce il tempo di attesa di risultati."
+
+#. type: Plain text
+#: src/squid.8.in:51
+msgid "Squid is derived from the ARPA-funded Harvest Project."
+msgstr "Squid deriva dal progetto Harvest, sponsorizzato da ARPA."
+
+#. type: Plain text
+#: src/squid.8.in:57
+msgid ""
+"This manual page only lists the command line arguments.  For details on how "
+"to configure Squid see the file B<@SYSCONFDIR@/squid.conf.documented,> the "
+"Squid wiki FAQ and examples at http://wiki.squid-cache.org/ , or the "
+"configuration manual on the Squid home page"
+msgstr ""
+"Questa pagina di manuale elenca solo le opzioni da linea di comando. Per "
+"avere ulteriori dettagli su come configurare Squid, si veda il file "
+"B<@SYSCONFDIR@/squid.conf.documented> , il Wiki di squid, la FAQ oppure gli "
+"esempi all'indirizzo http://wiki.squid-cache.org/ , oppure il manuale di "
+"configurazione all'indirizzo http://www.squid-cache.org/ o uno dei suoi "
+"mirror."
+
+#. type: Plain text
+#: src/squid.8.in:66
+msgid ""
+"Specify HTTP port number where Squid should listen for requests, in addition "
+"to any B<http_port> specifications in B<squid.conf>"
+msgstr ""
+"Specifica il numero di porta dove Squid deve rimanere in attesa di richieste "
+"HTTP, in aggiunta a quelle specificate dalla direttiva B<http_port> nel "
+"file di configurazione"
+
+#. type: Plain text
+#: src/squid.8.in:70
+msgid "Do not catch fatal signals."
+msgstr "Non intercettare i messaggi di errore fatale."
+
+#. type: Plain text
+#: src/squid.8.in:74
+msgid "Write debugging to stderr also."
+msgstr "Scrive le informazioni di debug anche sullo standard error."
+
+#. type: Plain text
+#: src/squid.8.in:86
+msgid ""
+"Use the given config-file instead of B<@SYSCONFDIR@/squid.conf .> If the "
+"file name starts with a B<!> or B<|> then it is assumed to be an external "
+"command or command line.  Can for example be used to pre-process the "
+"configuration before it is being read by Squid.  To facilitate this Squid "
+"also understands the common #line notion to indicate the real source file."
+msgstr ""
+"Utilizza il file di configurazione specificato invece di "
+"B<@SYSCONFDIR@/squid.conf> . Se il nome file inizia col carattere B<!> o "
+"B<|> allora viene interpretato come comando esterno. Questo può essere utile "
+"per fare elaborazioni specifiche della configurazione prima che Squid la "
+"legga. Per agevolare questo processo Squid comprende anche la notazione "
+"#linea per indicare quale sia il nome reale del file."
+
+#. type: Plain text
+#: src/squid.8.in:90
+msgid "Don't serve any requests until store is rebuilt."
+msgstr ""
+"Non processare alcuna richiesta finchè non sia completata la ricostruzione "
+"dello stato dei contenuti della cache su disco."
+
+#. type: Plain text
+#: src/squid.8.in:94
+msgid "Print help message."
+msgstr "Stampa un messaggio di aiuto."
+
+#. type: Plain text
+#: src/squid.8.in:100
+msgid "Install as a Windows Service (see B<-n> option)."
+msgstr "Installa come servizio MS Windows (vedere anche l'opzione B<-n>)."
+
+#. type: Plain text
+#: src/squid.8.in:107
+msgid ""
+"Parse configuration file, then send signal to running copy (except B<-k "
+"parse> ) and exit."
+msgstr ""
+"Leggi il file di configurazione, invia un segnale alla copia di Squid in "
+"esecuzione (tranne nel caso del comando B<-k parse>) e esci."
+
+#. type: Plain text
+#: src/squid.8.in:112
+msgid "Use specified syslog facility. implies B<-s>"
+msgstr "Usa il marcatore di sottosistema sylog specificato. Implica B<-s>"
+
+#. type: Plain text
+#: src/squid.8.in:117
+msgid ""
+"Specify Windows Service name to use for service operations, default is: "
+"B<Squid>"
+msgstr ""
+"Specifica il nome del servizio MS Windows da usare, il default è B<Squid>"
+
+#. type: Plain text
+#: src/squid.8.in:121
+msgid "No daemon mode."
+msgstr "Non attivare la modalità servizio (daemon)."
+
+#. type: Plain text
+#: src/squid.8.in:125
+msgid "Set Windows Service Command line options in Registry."
+msgstr ""
+"Imposta le opzioni della linea di comando del servizio MS WIndows nel "
+"Registro di configurazione."
+
+#. type: Plain text
+#: src/squid.8.in:131
+msgid "Remove a Windows Service (see B<-n> option)."
+msgstr "Disinstalla un Servizio MS Windows (vedere anche l'opzione B<-n>)."
+
+#. type: Plain text
+#: src/squid.8.in:137
+msgid "Do not set B<REUSEADDR> on port."
+msgstr "Non impostare l'opzione B<REUSEADDR> sulla porta."
+
+#. type: Plain text
+#: src/squid.8.in:142
+msgid "Enable logging to syslog. Also configurable in B<@SYSCONFDIR@/squid.conf>"
+msgstr ""
+"Abilita la registrazione degli accessi verso il servizio syslog. Si può "
+"impostare anche nel file di configurazione."
+
+#. type: Plain text
+#: src/squid.8.in:146
+msgid "Double-check swap during rebuild."
+msgstr ""
+"Verifica in maniera approfondita lo stato delle metainformazioni registrate "
+"nei file di stato durante la ricostruzione."
+
+#. type: Plain text
+#: src/squid.8.in:150
+msgid "Specify ICP port number (default: 3130), disable with 0."
+msgstr ""
+"Specifica il numero di porta ICP (default: 3130), la disabilita se impostato "
+"a 0."
+
+#. type: Plain text
+#: src/squid.8.in:154
+msgid "Print version and build details."
+msgstr "Stampa la versione e i dettagli dei parametri di configurazione."
+
+#. type: Plain text
+#: src/squid.8.in:158
+msgid "Force full debugging."
+msgstr "Abilita la stampa delle informazioni complete di debug."
+
+#. type: Plain text
+#: src/squid.8.in:166
+msgid "Only return B<UDP_HIT> or B<UDP_MISS_NOFETCH> during fast reload."
+msgstr ""
+"Limita le risposte durante un riavvio veloce alle sole B<UDP_HIT> e "
+"B<UDP_MISS_NOFETCH>."
+
+#. type: Plain text
+#: src/squid.8.in:170
+msgid "Create swap directories"
+msgstr "Crea la struttura di directory necessaria per la cache."
+
+#. type: SH
+#: src/squid.8.in:171
+#, no-wrap
+msgid "FILES"
+msgstr "FILE"
+
+#. type: Plain text
+#: src/squid.8.in:173
+msgid "Squid configuration files located in @SYSCONFDIR@/:"
+msgstr "File di configurazione di Squid registrati in @SYSCONFDIR@/:"
+
+#. type: Plain text
+#: src/squid.8.in:178
+msgid ""
+"The main configuration file. You must initially make changes to this file "
+"for B<squid> to work. For example, the default configuration does not allow "
+"access from any browser."
+msgstr ""
+"Il file di configurazione principale. Perchè Squid funzioni è necessario "
+"modificare questo file. Ad esempio, la di default non consente accesso ad "
+"alcun utente."
+
+#. type: Plain text
+#: src/squid.8.in:182 src/squid.8.in:188
+msgid ""
+"Reference copy of the configuration file. Always kept up to date with the "
+"version of Squid you are using."
+msgstr ""
+"Copia di riferimento del file di configurazione. Viene mantenuta allineata "
+"con la versione di Squid in uso."
+
+#. type: Plain text
+#: src/squid.8.in:184
+msgid ""
+"Use this to look up the default configuration settings and syntax after "
+"upgrading."
+msgstr ""
+"La si può usare per verificare quali siano le impostazioni di default o la "
+"sintassi dopo un aggiornamento."
+
+#. type: Plain text
+#: src/squid.8.in:193
+msgid ""
+"Use this to read the documentation for configuration options available in "
+"your build of Squid. The online configuration manual is also available for a "
+"full reference of options.  B<see>http://www.squid-cache.org/Doc/config/"
+msgstr ""
+"La si può usare per leggere la documentazione sulle opzioni di "
+"configurazioni disponibili nella vostra installazione di squid. Per una "
+"vista completa delle opzioni disponibili si può usare il manuale online, "
+"all'indirizzo http://www.squid-cache.org/Doc/config/"
+
+#. type: Plain text
+#: src/squid.8.in:198
+msgid "The main configuration file for the web B<cachemgr.cgi> tools."
+msgstr ""
+"Il file di configurazione principale per il programma web B<cachemgr.cgi>."
+
+#. type: Plain text
+#: src/squid.8.in:201
+msgid "The main configuration file for the Sample MSNT authenticator."
+msgstr "Il file di configurazione principale per l'autenticatore MSNT."
+
+#. type: Plain text
+#: src/squid.8.in:206
+msgid ""
+"CSS Stylesheet to control the display of generated error pages.  Use this to "
+"set any company branding you need, it will apply to every language Squid "
+"provides error pages for."
+msgstr ""
+"Foglio di Stile (CSS) per controllare l'aspetto delle pagine di errore. Lo "
+"si può usare per impostare l'aspetto secondo gli standard aziendali. Viene "
+"applicato alle pagine di errore generate da Squid per ogni lingua "
+"supportata."
+
+#. type: Plain text
+#: src/squid.8.in:209
+msgid "Some files also located elsewhere:"
+msgstr "Alcuni file sono registrati altrove:"
+
+#. type: Plain text
+#: src/squid.8.in:212
+msgid "MIME type mappings for FTP gatewaying"
+msgstr "mappa dei tipi file MIME per le funzioni di gateway FTP"
+
+#. type: Plain text
+#: src/squid.8.in:215
+msgid "Location of Squid error pages and templates."
+msgstr "Posizione delle pagine di errore e modelli di Squid."
+
+#. type: Plain text
+#: src/squid.8.in:218
+msgid ""
+"Squid was written over many years by a changing team of developers and "
+"maintained in turn by"
+msgstr ""
+"Squid è stato scritto durante il corso di molti anni da una squadra di "
+"sviluppatori in costante evoluzione, e è stato manutenuto nel tempo da"
+
+#. type: Plain text
+#: src/squid.8.in:225
+msgid ""
+"With contributions from many others in the Squid community.  see "
+"CONTRIBUTORS for a full list of individuals who contributed code.  see "
+"CREDITS for a list of major code contributing copyright holders."
+msgstr ""
+"Col contributo di molte altre persone della comunità di Squid. La lista "
+"delle persone che hanno maggiormente contribuito e di coloro che detengono i "
+"diritti d'autore è registrata nel file CREDITS."
+
+#. type: Plain text
+#: src/squid.8.in:233
+msgid ""
+"This software product, SQUID, is developed by a team of individuals, and "
+"copyrighted (C) 2001 by the Regents of the University of California, with "
+"all rights reserved.  UCSD administered the NLANR Cache grants, NCR 9616602 "
+"and NCR 9521745 under which most of this code was developed."
+msgstr ""
+"I diritti di copia suesto prodotto software, SQUID, è sviluppato da una "
+"squadra di persone, sono detenuti (C) 2001 dai Regents dell'Università della "
+"California; tutti i diritti riservati. UCSD ha amministrato le donazioni "
+"NLANR Cache, grants numero NCR 9616602 e NCR 9521745, grazie ai quali gran "
+"parte del codice di squid è stato sviluppato."
+
+#. type: Plain text
+#: src/squid.8.in:240
+msgid ""
+"This program is free software; you can redistribute it and/or modify it "
+"under the terms of the GNU General Public License (version 2) as published "
+"by the Free Software Foundation.  It is distributed in the hope that it will "
+"be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of "
+"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General "
+"Public License for more details."
+msgstr ""
+"This program is free software; you can redistribute it and/or modify it "
+"under the terms of the GNU General Public License (version 2) as published "
+"by the Free Software Foundation.  It is distributed in the hope that it will "
+"be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of "
+"MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General "
+"Public License for more details."
+
+#. type: Plain text
+#: src/squid.8.in:242
+msgid ""
+"see the CREDITS file for further copyright licensing of third-party code "
+"contributions."
+msgstr ""
+"si rimanda al file CREDITS per ulteriori informazioni su copyright e "
+"condizioni di licenza dei contributi di terze parti."
+
+#. type: Plain text
+#: src/squid.8.in:268
+msgid "The Squid FAQ wiki"
+msgstr "Il Wiki contenente la FAQ di Squid"
+
+#. type: Plain text
+#: src/squid.8.in:271
+msgid "The Squid Configuration Manual"
+msgstr "Il Manuale di Configurazione di Squid"
+
+#. type: Plain text
+#: tools/cachemgr.cgi.8.in:7
+msgid "Squid HTTP proxy manager CGI web interface"
+msgstr "L'interfaccia Web CGI Proxy Manager Squid"
+
+#. type: Plain text
+#: tools/cachemgr.cgi.8.in:18
+msgid ""
+"The cache manager ( B<cachemgr.cgi> ) is a CGI utility for displaying "
+"statistics about the Squid HTTP proxy process as it runs. The cache manager "
+"is a convenient way to manage the cache and view statistics without logging "
+"into the server."
+msgstr ""
+"Il cache manager ( B<cachemgr.cgi> ) è un tool CGI che consente di mostrare "
+"statistiche sul processo Squid in esecuzione. Il cache manager è un metodo "
+"comodo per gestire Squid e accedere a statistiche di funzionamento senza la "
+"necessità di accedere al sistema operativo."
+
+#. type: Plain text
+#: tools/cachemgr.cgi.8.in:22
+msgid ""
+"Configuration examples for many common web servers can be found in the Squid "
+"FAQ wiki."
+msgstr ""
+"Esempi di configurazione per molti diffusi webserver possono essere trovati "
+"nel Wiki di Squid."
+
+#. type: Plain text
+#: tools/cachemgr.cgi.8.in:34
+msgid ""
+"The access configuration file defining which Squid servers may be managed "
+"via this B<cachemgr.cgi> program. Each line specifies a B<server>:B<port> "
+"followed by an optional description"
+msgstr ""
+"La file di controllo della configurazione di accesso che definisce quali "
+"server Squid possano essere gestiti da questa installazione di "
+"B<cachemgr.cgi>. Ogni linea specifica un server, con il formato "
+"B<server>:B<port> , opzionalmente seguiti da una descrizione"
+
+#. type: Plain text
+#: tools/cachemgr.cgi.8.in:38
+msgid ""
+"The server name may contain shell wildcard characters such as *, [] etc.  A "
+"quick selection dropdown menu is automatically constructed from the simple "
+"server names."
+msgstr ""
+"Il nome del server può contenere caratteri jolly con sintassi shell, come *, "
+"[] ecc. Un menu di selezione viene costruito automaticamente elencando i "
+"nomi dei server."
+
+#. type: Plain text
+#: tools/cachemgr.cgi.8.in:42
+msgid ""
+"Specifying :port is optional. If not specified then the default proxy port "
+"is assumed. :* or :any matches any port on the target server."
+msgstr ""
+"La specifica della B<:porta> è opzionale. Se non viene specificata, viene "
+"automaticamente definita la porta standard. La sintassi B<:*> oppure B<:any> "
+"può essere usata per indicare una porta qualsiasi del server."
+
+#. type: SH
+#: tools/cachemgr.cgi.8.in:43
+#, no-wrap
+msgid "SECURITY"
+msgstr "SICUREZZA"
+
+#. type: Plain text
+#: tools/cachemgr.cgi.8.in:50
+msgid ""
+"B<cachemgr.cgi> calls the requested server on the requested port using HTTP "
+"and returns a formatted version of the response. To avoid abuse it is "
+"recommended to configure your web server to restrict access to the "
+"B<cachemgr.cgi> program."
+msgstr ""
+"B<cachemgr.cgi> accede al server specificato sulla porta specificata in "
+"HTTP, e resituisce una versione processata della risposta. Per evitare che "
+"se ne possa abusare, si raccomanda di configurare il web server in maniera "
+"tale da limitare l'acesso al programma B<cachemgr.cgi>."
+
+#. type: Plain text
+#: tools/cachemgr.cgi.8.in:56 tools/squidclient.1:168
+msgid ""
+"Derived from Harvest. Further developed by by numerous individuals from the "
+"internet community. Development is led by Duane Wessels of the National "
+"Laboratory for Applied Network Research and funded by the National Science "
+"Foundation."
+msgstr ""
+"Derivato da Harvest. Ulteriormente sviluppato da numerose persone della "
+"comunità Internet. Lo sviluppo è guidato da Duane Wessels del  National "
+"Laboratory for Applied Network Research (USA), usando fondi concessi dalla "
+"National Science Foundation (USA)."
+
+#. type: Plain text
+#: tools/squidclient.1:7
+msgid "A simple HTTP web client tool"
+msgstr "Un semplice client HTTP"
+
+#. type: Plain text
+#: tools/squidclient.1:12 tools/squidclient.1:32
+msgid "count"
+msgstr "conteggio"
+
+#. type: Plain text
+#: tools/squidclient.1:14
+msgid "remote host"
+msgstr "sistema remoto"
+
+#. type: Plain text
+#: tools/squidclient.1:16
+msgid "string"
+msgstr "stringa"
+
+#. type: Plain text
+#: tools/squidclient.1:18
+msgid "IMS"
+msgstr "IMS"
+
+#. type: Plain text
+#: tools/squidclient.1:20
+msgid "ping interval"
+msgstr "intervallo di ping"
+
+#. type: Plain text
+#: tools/squidclient.1:22
+msgid "Host header"
+msgstr "Header HTTP Host"
+
+#. type: Plain text
+#: tools/squidclient.1:24
+msgid "local host"
+msgstr "sistema locale"
+
+#. type: Plain text
+#: tools/squidclient.1:26
+msgid "method"
+msgstr "metodo"
+
+#. type: Plain text
+#: tools/squidclient.1:30
+msgid "file"
+msgstr "file"
+
+#. type: Plain text
+#: tools/squidclient.1:36 tools/squidclient.1:38
+msgid "user"
+msgstr "utente"
+
+#. type: Plain text
+#: tools/squidclient.1:40
+msgid "version"
+msgstr "versione"
+
+#. type: Plain text
+#: tools/squidclient.1:42 tools/squidclient.1:44
+msgid "password"
+msgstr "password"
+
+#. type: Plain text
+#: tools/squidclient.1:46
+msgid "url"
+msgstr "url"
+
+#. type: Plain text
+#: tools/squidclient.1:55
+msgid ""
+"B<squidclient> is a tool providing a command line interface for retrieving "
+"URLs.  Designed for testing any HTTP 0.9, 1.0, or 1.1 web server or proxy.  "
+"This tool can be combined with scripts to perform any basic HTTP operation.  "
+"Some additional features for access to the B<squid> proxy object cache and "
+"management information are provided."
+msgstr ""
+"B<squidclient> è uno strumento a linea di comando per accedere a URL. È "
+"stato scritto per fare prove verso qualsiasi server web o proxy secondo le "
+"specifiche HTTP versione 0.9, 1.0 o 1.1 . Questo strumento può essere "
+"combinato con script per svolgere qualsiasi operazione HTTP di base. Alcune "
+"funzionalità aggiuntive sono orientate all'accesso di informazioni di "
+"gestione di Squid."
+
+#. type: Plain text
+#: tools/squidclient.1:60
+msgid "Do NOT include Accept: header."
+msgstr "Non includere lo header HTTP Accept: ."
+
+#. type: Plain text
+#: tools/squidclient.1:66
+msgid "Ping mode, perform I<count> iterations (0 to loop until interrupted)."
+msgstr ""
+"Modalità Ping, effettua I<count> iterazioni (specificare 0 per continuare "
+"finchè esplicitamente interrotto)"
+
+#. type: Plain text
+#: tools/squidclient.1:71
+msgid "Retrieve URL from cache on hostname.  Default is B<localhost>"
+msgstr ""
+"Richiedi la URL alla cache sul server B<hostname> (default: B<localhost>)"
+
+#. type: Plain text
+#: tools/squidclient.1:77
+msgid "Extra headers to send. Use B<'\\n'> for new lines."
+msgstr ""
+"Header HTTP aggiuntivi da inviare. Per indicare l'acapo si può usare B<'\\\n"
+"'>."
+
+#. type: Plain text
+#: tools/squidclient.1:81
+msgid "If-Modified-Since time (in Epoch seconds)."
+msgstr "Tempo per If-Modified-Since (in secondi dalla Epoch)."
+
+#. type: Plain text
+#: tools/squidclient.1:85
+msgid "Ping interval in seconds (default 1 second)."
+msgstr "Intervallo di ping in secondi (default: 1 secondo)."
+
+#. type: Plain text
+#: tools/squidclient.1:89
+msgid "Host header content"
+msgstr "Continuto dello Header HTTP 'Host:'"
+
+#. type: Plain text
+#: tools/squidclient.1:93
+msgid "Specify a local IP address to bind to.  Default is none."
+msgstr "Specifica un indirizzo IP locale da utilizzare. Il default è nessuno."
+
+#. type: Plain text
+#: tools/squidclient.1:108
+#, no-wrap
+msgid ""
+"Request method, default is\n"
+"I<GET.>\n"
+"Squid also supports a non-standard method called\n"
+"I<PURGE.>\n"
+"You can use that to purge a specific URL from the cache.\n"
+"You need to have\n"
+"I<purge>\n"
+"access setup in\n"
+"B<squid.conf>\n"
+"similar to\n"
+"I<manager>\n"
+" access. Here is an example:\n"
+msgstr ""
+"Metodo HTTP per effettuare la richiesta, il default è I<GET>. Squid offre "
+"anche un metodo non standard chiamato I<PURGE>, che può essere usato per "
+"rimuovere dalla cache una specifica URL. Per poterlo fare è necessario avere "
+"impostato correttamente l'accesso alle funzioni I<purge> nella "
+"configurazione di squid, in maniera analoga a quanto fatto per l'accesso "
+"alle funzioni di I<manager>. Ecco un esempio:"
+
+#. type: Plain text
+#: tools/squidclient.1:116
+msgid "Port number of cache.  Default is 3128."
+msgstr "Porta di servizio della cache. Il default è 3128."
+
+#. type: Plain text
+#: tools/squidclient.1:120
+msgid "Request body. Using the named file as data."
+msgstr ""
+"Corpo (body) della richiesta, utilizza come contenuto il file passato come "
+"parametro."
+
+#. type: Plain text
+#: tools/squidclient.1:124
+msgid "Force cache to reload URL."
+msgstr "Costringi la cache a riscaricare i contenuti della URL."
+
+#. type: Plain text
+#: tools/squidclient.1:128
+msgid "Silent.  Do not print data to stdout."
+msgstr "Silenzio. Non scivere nulla su standard output."
+
+#. type: Plain text
+#: tools/squidclient.1:134
+msgid "Trace I<count> HTTP relay or proxy hops"
+msgstr "Traccia I<count> passaggi attraverso proxy"
+
+#. type: Plain text
+#: tools/squidclient.1:138
+msgid "Timeout value (seconds) for read/write operations."
+msgstr ""
+"Tempo massimo di attesa (in secondi) per le operazioni di lettura e "
+"scrittura."
+
+#. type: Plain text
+#: tools/squidclient.1:142
+msgid "Proxy authentication username"
+msgstr "Nome utente usato per identificarsi al proxy"
+
+#. type: Plain text
+#: tools/squidclient.1:146
+msgid "WWW authentication username"
+msgstr "Nome utente usato per identificarsi al server web"
+
+#. type: Plain text
+#: tools/squidclient.1:150
+msgid "Verbose. Print outgoing message to stderr."
+msgstr "Prolisso. Stampa il messaggio inviato sullo standard error."
+
+#. type: Plain text
+#: tools/squidclient.1:154
+msgid "HTTP Version. Use '-' for HTTP/0.9 omitted case"
+msgstr ""
+"Versione HTTP. Si può usare il valore '-' per indicare il caso di HTTP/0.9 "
+"senza indicazione esplicita della versione"
+
+#. type: Plain text
+#: tools/squidclient.1:158
+msgid "Proxy authentication password"
+msgstr "Password per l'identificazione al proxy"
+
+#. type: Plain text
+#: tools/squidclient.1:162
+msgid "WWW authentication password"
+msgstr "Password per l'identificazione al server web"

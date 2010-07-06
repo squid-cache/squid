@@ -9,6 +9,7 @@
 #include "config.h"
 #include "comm.h"
 #include "CommCalls.h"
+#include "base/TextException.h"
 #include "ipc/UdsOp.h"
 
 

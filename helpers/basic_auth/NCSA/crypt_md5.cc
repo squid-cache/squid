@@ -189,7 +189,7 @@ char *md5sum(const char *s)
     SquidMD5Final(digest,&ctx);
 
     for (idx=0; idx<16; idx++)
-        sprintf(&sum[idx*2],"%02x",digest[idx]);
+        snprintf(&sum[idx*2],(33-(idx*2)),"%02x",digest[idx]);
 
     sum[32]='\0';
 

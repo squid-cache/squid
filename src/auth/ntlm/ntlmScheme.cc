@@ -1,4 +1,3 @@
-
 /*
  * $Id$
  *
@@ -31,19 +30,19 @@
  *
  */
 
-#include "ntlmScheme.h"
+#include "config.h"
+#include "auth/ntlm/auth_ntlm.h"
+#include "auth/ntlm/ntlmScheme.h"
+#include "helper.h"
 
-AuthScheme &
+AuthScheme::Pointer
 ntlmScheme::GetInstance()
 {
-    if (_instance == NULL)
+    if (_instance == NULL) {
         _instance = new ntlmScheme();
-    return *_instance;
-}
-
-ntlmScheme::ntlmScheme()
-{
-    AddScheme(*this);
+        AddScheme(_instance);
+    }
+    return _instance;
 }
 
 char const *
@@ -52,4 +51,20 @@ ntlmScheme::type () const
     return "ntlm";
 }
 
-ntlmScheme *ntlmScheme::_instance = NULL;
+AuthScheme::Pointer ntlmScheme::_instance = NULL;
+
+void
+ntlmScheme::done()
+{
+    /* clear the global handle to this scheme. */
+    _instance = NULL;
+
+    debugs(29, 2, "ntlmScheme::done: NTLM authentication Shutdown.");
+}
+
+AuthConfig *
+ntlmScheme::createConfig()
+{
+    auth_ntlm_config *ntlmCfg = new auth_ntlm_config;
+    return dynamic_cast<AuthConfig*>(ntlmCfg);
+}

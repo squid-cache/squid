@@ -181,7 +181,7 @@ private:
 
 _SQUID_INLINE_ std::ostream & operator<<(std::ostream& os, String const &aString);
 
-#ifdef _USE_INLINE_
+#if _USE_INLINE_
 #include "String.cci"
 #endif
 

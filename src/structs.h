@@ -75,7 +75,7 @@ struct _snmp_request_t {
     long reqid;
     int outlen;
 
-    IpAddress from;
+    Ip::Address from;
 
     struct snmp_pdu *PDU;
     ACLChecklist *acl_checklist;
@@ -92,7 +92,7 @@ struct acl_address {
     acl_address *next;
     ACLList *aclList;
 
-    IpAddress addr;
+    Ip::Address addr;
 };
 
 struct acl_tos {
@@ -124,10 +124,6 @@ struct relist {
 
 #if USE_ICMP
 #include "icmp/IcmpConfig.h"
-#endif
-
-#if USE_ZPH_QOS
-#include "ip/QosConfig.h"
 #endif
 
 #include "HelperChildConfig.h"
@@ -225,19 +221,16 @@ struct SquidConfig {
 #if USE_WCCP
 
     struct {
-
-        IpAddress router;
-
-        IpAddress address;
+        Ip::Address router;
+        Ip::Address address;
         int version;
     } Wccp;
 #endif
 #if USE_WCCPv2
 
     struct {
-        IpAddress_list *router;
-
-        IpAddress address;
+        Ip::Address_list *router;
+        Ip::Address address;
         int forwarding_method;
         int return_method;
         int assignment_method;
@@ -337,17 +330,14 @@ struct SquidConfig {
 
     struct {
 
-        IpAddress udp_incoming;
-
-        IpAddress udp_outgoing;
+        Ip::Address udp_incoming;
+        Ip::Address udp_outgoing;
 #if SQUID_SNMP
-
-        IpAddress snmp_incoming;
-
-        IpAddress snmp_outgoing;
+        Ip::Address snmp_incoming;
+        Ip::Address snmp_outgoing;
 #endif
         /* FIXME INET6 : this should really be a CIDR value */
-        IpAddress client_netmask;
+        Ip::Address client_netmask;
     } Addrs;
     size_t tcpRcvBufsz;
     size_t udpMaxHitObjsz;
@@ -403,6 +393,7 @@ struct SquidConfig {
 #if HTTP_VIOLATIONS
 
         int reload_into_ims;
+        int ignore_expect_100;
 #endif
 
         int offline;
@@ -441,6 +432,9 @@ struct SquidConfig {
         int acl_uses_indirect_client;
         int delay_pool_uses_indirect_client;
         int log_uses_indirect_client;
+#if LINUX_NETFILTER
+        int tproxy_uses_indirect_client;
+#endif
 #endif /* FOLLOW_X_FORWARDED_FOR */
 
         int WIN32_IpAddrChangeMonitor;
@@ -492,7 +486,6 @@ struct SquidConfig {
 #endif
     } accessList;
     acl_deny_info_list *denyInfoList;
-    authConfig authConfiguration;
 
     struct {
         size_t list_width;
@@ -511,6 +504,10 @@ struct SquidConfig {
         int n_allocated;
         int n_configured;
     } cacheSwap;
+    /*
+     * I'm sick of having to keep doing this ..
+     */
+#define INDEXSD(i)   (Config.cacheSwap.swapDirs[(i)].getRaw())
 
     struct {
         char *directory;
@@ -546,12 +543,12 @@ struct SquidConfig {
     } comm_incoming;
     int max_open_disk_fds;
     int uri_whitespace;
-    int64_t rangeOffsetLimit;
+    acl_size_t *rangeOffsetLimit;
 #if MULTICAST_MISS_STREAM
 
     struct {
 
-        IpAddress addr;
+        Ip::Address addr;
         int ttl;
         unsigned short port;
         char *encode_key;
@@ -594,10 +591,6 @@ struct SquidConfig {
     time_t minimum_expiry_time;	/* seconds */
     external_acl *externalAclHelperList;
 
-#if USE_ZPH_QOS
-    QosConfig zph;
-#endif
-
 #if USE_SSL
 
     struct {
@@ -617,6 +610,7 @@ struct SquidConfig {
 
     char *accept_filter;
     int umask;
+    int max_filedescriptors;
     int workers;
 
 #if USE_LOADABLE_MODULES
@@ -778,7 +772,7 @@ struct _http_state_flags {
 };
 
 struct _ipcache_addrs {
-    IpAddress *in_addrs;
+    Ip::Address *in_addrs;
     unsigned char *bad_mask;
     unsigned char count;
     unsigned char cur;
@@ -820,7 +814,7 @@ struct peer {
     char *host;
     peer_t type;
 
-    IpAddress in_addr;
+    Ip::Address in_addr;
 
     struct {
         int pings_sent;
@@ -914,7 +908,7 @@ struct peer {
 
     int tcp_up;			/* 0 if a connect() fails */
 
-    IpAddress addresses[10];
+    Ip::Address addresses[10];
     int n_addresses;
     int rr_count;
     peer *next;
@@ -1092,6 +1086,7 @@ struct _refresh_t {
     struct {
         unsigned int icase:1;
         unsigned int refresh_ims:1;
+        unsigned int store_stale:1;
 #if HTTP_VIOLATIONS
         unsigned int override_expire:1;
         unsigned int override_lastmod:1;

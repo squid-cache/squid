@@ -39,6 +39,7 @@
 #include "log/ModStdio.h"
 #include "log/ModSyslog.h"
 #include "log/ModUdp.h"
+#include "log/ModTcp.h"
 
 CBDATA_TYPE(Logfile);
 
@@ -61,6 +62,9 @@ logfileOpen(const char *path, size_t bufsz, int fatal_flag)
     } else if (strncmp(path, "daemon:", 7) == 0) {
         patharg = path + 7;
         ret = logfile_mod_daemon_open(lf, patharg, bufsz, fatal_flag);
+    } else if (strncmp(path, "tcp:", 4) == 0) {
+        patharg = path + 4;
+        ret = logfile_mod_tcp_open(lf, patharg, bufsz, fatal_flag);
     } else if (strncmp(path, "udp:", 4) == 0) {
         patharg = path + 4;
         ret = logfile_mod_udp_open(lf, patharg, bufsz, fatal_flag);

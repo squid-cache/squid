@@ -1,0 +1,102 @@
+.if !'po4a'hide' .TH digest_file_auth 8
+.
+.SH NAME
+.if !'po4a'hide' .B digest_file_auth
+.if !'po4a'hide' \-
+File based digest authentication helper for Squid.
+.PP
+Version 1.0
+.
+.SH SYNOPSIS
+.if !'po4a'hide' .B digest_file_auth
+.if !'po4a'hide' .B [\-c]
+file
+.
+.SH DESCRIPTION
+.B digest_file_auth
+is an installed binary authentication program for Squid. It handles digest 
+authentication protocol and authenticates against a text file backend.
+.
+.SH OPTIONS
+.if !'po4a'hide' .TP 12
+.if !'po4a'hide' .B \-c
+Accept digest hashed passwords rather than plaintext in the password file
+.
+.SH CONFIGURATION
+.PP
+Username database file format:
+.TP 6
+- comment lines are possible and should start with a '#';
+.
+.TP
+- empty or blank lines are possible;
+.
+.TP
+- plaintext entry format is username:password
+.
+.TP
+- HA1 entry format is username:realm:HA1
+.
+.PP
+To build a directory integrated backend, you need to be able to
+calculate the HA1 returned to squid. To avoid storing a plaintext
+password you can calculate 
+.B MD5(username:realm:password) 
+when the user changes their password, and store the tuple 
+.B username:realm:HA1.
+then find the matching 
+.B username:realm 
+when squid asks for the HA1.
+.PP
+This implementation could be improved by using such a triple for
+the file format.  However storing such a triple does little to
+improve security: If compromised the
+.B username:realm:HA1 
+combination is "plaintext equivalent" - for the purposes of digest authentication
+they allow the user access. Password syncronisation is not tackled
+by digest - just preventing on the wire compromise.
+.
+.SH AUTHOR
+This program was written by
+.if !'po4a'hide' .I Robert Collins <robertc@squid-cache.org>
+.PP
+Based on prior work by
+.if !'po4a'hide' .I Arjan de Vet <Arjan.deVet@adv.iae.nl>
+.if !'po4a.hide' .I Jon Thackray <jrmt@uk.gdscorp.com>
+.PP
+This manual was written by
+.if !'po4a'hide' .I Robert Collins <robertc@squid-cache.org>
+.if !'po4a'hide' .I Amos Jeffries <amosjeffries@squid-cache.org>
+.
+.SH COPYRIGHT
+This program and documentation is copyright to the authors named above.
+.PP
+Distributed under the GNU General Public License (GNU GPL) version 2 or later (GPLv2+).
+.
+.SH QUESTIONS
+Questions on the usage of this program can be sent to the
+.I Squid Users mailing list
+.if !'po4a'hide' <squid-users@squid-cache.org>
+.
+.SH REPORTING BUGS
+Bug reports need to be made in English.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+.PP
+Report bugs or bug fixes using http://bugs.squid-cache.org/
+.PP
+Report serious security bugs to
+.I Squid Bugs <squid-bugs@squid-cache.org>
+.PP
+Report ideas for new improvements to the
+.I Squid Developers mailing list
+.if !'po4a'hide' <squid-dev@squid-cache.org>
+.
+.SH SEE ALSO
+.if !'po4a'hide' .BR squid "(8), "
+.if !'po4a'hide' .BR GPL "(7), "
+.br
+The Squid FAQ wiki
+.if !'po4a'hide' http://wiki.squid-cache.org/SquidFaq
+.br
+The Squid Configuration Manual
+.if !'po4a'hide' http://www.squid-cache.org/Doc/config/

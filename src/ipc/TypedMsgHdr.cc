@@ -8,7 +8,8 @@
 
 #include "config.h"
 #include <string.h>
-#include "TextException.h"
+#include "protos.h"
+#include "base/TextException.h"
 #include "ipc/TypedMsgHdr.h"
 
 Ipc::TypedMsgHdr::TypedMsgHdr()

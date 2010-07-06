@@ -35,6 +35,7 @@
 #define SQUID_ICAPSERVICEREP_H
 
 #include "cbdata.h"
+#include "FadingCounter.h"
 #include "adaptation/Service.h"
 #include "adaptation/forward.h"
 #include "adaptation/Initiator.h"
@@ -89,13 +90,10 @@ public:
     ServiceRep(const Adaptation::ServiceConfig &config);
     virtual ~ServiceRep();
 
-    void setSelf(Pointer &aSelf); // needs self pointer for OptXact
     virtual void finalize();
 
-    void invalidate(); // call when the service is no longer needed or valid
-
-    bool probed() const; // see comments above
-    bool up() const; // see comments above
+    virtual bool probed() const; // see comments above
+    virtual bool up() const; // see comments above
 
     virtual Adaptation::Initiate *makeXactLauncher(Adaptation::Initiator *, HttpMsg *virginHeader, HttpRequest *virginCause);
 
@@ -105,11 +103,15 @@ public:
     bool wantsUrl(const String &urlPath) const;
     bool wantsPreview(const String &urlPath, size_t &wantedSize) const;
     bool allows204() const;
+    bool allows206() const;
 
     void noteFailure(); // called by transactions to report service failure
 
     //AsyncJob virtual methods
     virtual bool doneAll() const { return Adaptation::Initiator::doneAll() && false;}
+
+    virtual void detach();
+    virtual bool detached() const;
 
 public: // treat these as private, they are for callbacks only
     void noteTimeToUpdate();
@@ -134,8 +136,7 @@ private:
     Adaptation::Initiate *theOptionsFetcher; // pending ICAP OPTIONS transaction
     time_t theLastUpdate; // time the options were last updated
 
-    static const int TheSessionFailureLimit;
-    int theSessionFailures;
+    FadingCounter theSessionFailures;
     const char *isSuspended; // also stores suspension reason for debugging
 
     bool notifying; // may be true in any state except for the initial
@@ -163,8 +164,8 @@ private:
 
     const char *status() const;
 
-    Pointer self;
     mutable bool wasAnnouncedUp; // prevent sequential same-state announcements
+    bool isDetached;
     CBDATA_CLASS2(ServiceRep);
 };
 

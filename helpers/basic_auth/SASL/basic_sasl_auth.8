@@ -1,0 +1,120 @@
+.if !'po4a'hide' .TH basic_sasl_auth 8
+.
+.SH NAME
+.if !'po4a'hide' .B basic_sasl_auth
+.if !'po4a'hide' \-
+Basic Authentication using SASL (specifically the cyrus-sasl authentication method)
+.PP
+Version 1.0
+.
+.SH SYNOPSIS
+.if !'po4a'hide' .B basic_sasl_auth
+.
+.SH DESCRIPTION
+.B basic_sasl_auth
+is an installed binary helper for Squid. SASL is configurable (somewhat like PAM).
+Each service authenticating against SASL identifies itself with an application name.
+Each application can be configured independently by the SASL administrator.
+.
+.SH CONFIGURATION
+To configure the authentication method used the file 
+.B basic_sasl_auth.conf
+can be placed in the appropriate location, usually
+.B /usr/lib/sasl.
+.PP
+The authentication database is defined by the 
+.B pwcheck_method 
+parameter.
+Only the 
+.B PLAIN 
+authentication mechanism is used.
+.PP
+Examples:
+.
+.if !'po4a'hide' .B pwcheck_method:sasldb
+use sasldb - the default if no conf file is installed.
+.if !'po4a'hide' .B pwcheck_method:pam
+ - use PAM authentication database
+.if !'po4a'hide' .B pwcheck_method:passwd
+ - use traditional 
+.B /etc/passwd
+.if !'po4a'hide' .B pwcheck_method:shadow
+ - use slightly less traditional /etc/shadow
+.PP
+Others methods may be supported by your cyrus-sasl implementation -
+consult your cyrus-sasl documentation for information.
+.PP
+Typically the authentication database (
+.B /etc/sasldb
+, 
+.B /etc/shadow
+, 
+.B PAM
+)
+can not be accessed by a normal user. You should use setuid/setgid
+and an appropriate user/group on the executable to allow the
+authenticator to access the appropriate password database. If the
+access to the database is not permitted then the authenticator
+will typically fail with "-1, generic error".
+.PP
+.if !'po4a'hide' .RS
+.if !'po4a'hide' .P
+.if !'po4a'hide' .B chown root.mail basic_sasl_auth
+.if !'po4a'hide' .br
+.if !'po4a'hide' .B chmod ug+s basic_sasl_auth
+.if !'po4a'hide' .RE
+.PP
+If the application name 
+.B basic_sasl_auth
+will also be used for the PAM service name if 
+.B pwcheck_method:pam
+is chosen. And example PAM configuration file 
+.B basic_sasl_auth.pam
+is also included.
+.
+.SH AUTHOR
+This program was written by
+.if !'po4a'hide' .I Ian Castle <ian.castle@coldcomfortfarm.net>
+.PP
+This manual was written by
+.if !'po4a'hide' .I Ian Castle <ian.castle@coldcomfortfarm.net>
+.if !'po4a'hide' .I Amos Jeffries <amosjeffries@squid-cache.org>
+.
+.SH COPYRIGHT
+This program and documentation is copyright to the authors named above.
+.PP
+Distributed under the GNU General Public License (GNU GPL) version 2 or later (GPLv2+).
+.
+.SH QUESTIONS
+Questions on the usage of this program can be sent to the
+.I Squid Users mailing list
+.if !'po4a'hide' <squid-users@squid-cache.org>
+.
+.SH REPORTING BUGS
+Bug reports need to be made in English.
+See http://wiki.squid-cache.org/SquidFaq/BugReporting for details of what you need to include with your bug report.
+.PP
+Report bugs or bug fixes using http://bugs.squid-cache.org/
+.PP
+Report serious security bugs to
+.I Squid Bugs <squid-bugs@squid-cache.org>
+.PP
+Report ideas for new improvements to the
+.I Squid Developers mailing list
+.if !'po4a'hide' <squid-dev@squid-cache.org>
+.
+.SH SEE ALSO
+.if !'po4a'hide' .BR squid "(8), "
+.if !'po4a'hide' .BR SASL "(3), "
+.if !'po4a'hide' .BR PAM "(7), "
+.if !'po4a'hide' .BR passwd "(1), "
+.if !'po4a'hide' .BR shadow "(5), "
+.if !'po4a'hide' .BR chown "(1), "
+.if !'po4a'hide' .BR chmod "(1), "
+.if !'po4a'hide' .BR GPL "(7), "
+.br
+The Squid FAQ wiki
+.if !'po4a'hide' http://wiki.squid-cache.org/SquidFaq
+.br
+The Squid Configuration Manual
+.if !'po4a'hide' http://www.squid-cache.org/Doc/config/
