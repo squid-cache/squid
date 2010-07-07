@@ -611,6 +611,7 @@ struct SquidConfig {
     char *accept_filter;
     int umask;
     int max_filedescriptors;
+    int workers;
 
 #if USE_LOADABLE_MODULES
     wordlist *loadable_module_names;
