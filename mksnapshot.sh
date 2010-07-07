@@ -21,7 +21,7 @@ date=`env TZ=GMT date +%Y%m%d`
 tmpdir=${TMPDIR:-${PWD}}/${module}-${tag}-mksnapshot
 
 rm -rf ${tmpdir}
-trap "rm -rf ${tmpdir}" 0
+trap "echo FAIL-BUILD_${VERSION} ; rm -rf ${tmpdir}" 0
 
 rm -f ${tag}.out
 bzr export ${tmpdir} ${BZRROOT}/${module}/${branchpath} || exit 1
