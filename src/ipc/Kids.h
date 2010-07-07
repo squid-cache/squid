@@ -48,7 +48,7 @@ private:
 
 extern Kids TheKids; ///< All kids being maintained
 
-typedef char KidName[64]; ///< Squid process name (e.g., squid2)
+typedef char KidName[64]; ///< Squid process name (e.g., "squid-coord")
 extern KidName TheKidName; ///< current Squid process name
 
 
