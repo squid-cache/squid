@@ -1,15 +1,15 @@
 #!/bin/sh -e
 # Nightly cron job to generate snapshot releases
-top=$PWD
+top=${PWD}
 versions=/server/httpd/htdocs/squid-cache.org/content/Versions/
-TMPDIR=/home/squidadm/$LOGNAME.cron
+TMPDIR=/home/squidadm/${LOGNAME}.cron
 export TMPDIR
-if [ -d $TMPDIR ]; then
-	chmod -R +w $TMPDIR
-	rm -rf $TMPDIR
+if [ -d ${TMPDIR} ]; then
+	chmod -R +w ${TMPDIR}
+	rm -rf ${TMPDIR}
 fi
-mkdir -p $TMPDIR
-trap "cd /; chmod -R +w $TMPDIR; rm -rf $TMPDIR" 0
+mkdir -p ${TMPDIR}
+trap "echo FAIL-BUILD; cd /; chmod -R +w ${TMPDIR}; rm -rf ${TMPDIR}" 0
 
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin
 export PATH
@@ -21,16 +21,16 @@ make_snapshot()
 { {
   set -e
   cd ../release
-  mksnap=$1
-  branch=$2
-  dir=$3
-  ver=$4
+  mksnap=${1}
+  branch=${2}
+  dir=${3}
+  ver=${4}
   save=${5:-3}
-  dst=$versions/$dir/$ver
+  dst=${versions}/${dir}/${ver}
   out=${6:-`basename $branch`}
-  $mksnap $branch $6 2>&1 | grep -v "set owner/group"
-  for file in `cat $out.out` ; do
-    case $file in
+  $mksnap ${branch} ${6} 2>&1 | grep -v "set owner/group"
+  for file in `cat ${out}.out` ; do
+    case ${file} in
     *-cfgman.tar.gz)
 	type=-cfgman.tar.gz
 	;;
@@ -41,51 +41,51 @@ make_snapshot()
 	type=-manuals.tar.gz
 	;;
     *)
-	type=`echo $file | sed -e 's/.*\.tar\.gz/.tar.gz/' -e 's/.*\.tar\.bz2/.tar.bz2/' -e 's/.*\.patch/.patch/' -e 's/.*\.diff/.diff/' -e 's/.*-RELEASENOTES.html/-RELEASENOTES.html/' -e 's/^.*ChangeLog.txt$/-ChangeLog.txt/' -e 's/.*-cfgman/-cfgman/'`
+	type=`echo ${file} | sed -e 's/.*\.tar\.gz/.tar.gz/' -e 's/.*\.tar\.bz2/.tar.bz2/' -e 's/.*\.patch/.patch/' -e 's/.*\.diff/.diff/' -e 's/.*-RELEASENOTES.html/-RELEASENOTES.html/' -e 's/^.*ChangeLog.txt$/-ChangeLog.txt/' -e 's/.*-cfgman/-cfgman/'`
     esac
 
     # move tarball
-    rm -f $dst/$file.md5
-    rm -f $dst/$file
-    md5 $file >$dst/$file.md5
-    cp -p $file $dst/$file
-    rm -f $file
+    rm -f ${dst}/${file}.md5
+    rm -f ${dst}/${file}
+    md5 ${file} >${dst}/${file}.md5
+    cp -p ${file} ${dst}/${file}
+    rm -f ${file}
 
     # update snapshot symlink
-    rm -f $dst/squid-$ver.snapshot$type
-    ln -s $file $dst/squid-$ver.snapshot$type
-    rm -f $dst/squid-$ver.snapshot$type.md5
-    ln -s $file.md5 $dst/squid-$ver.snapshot$type.md5
+    rm -f ${dst}/squid-${ver}.snapshot$type
+    ln -s ${file} ${dst}/squid-${ver}.snapshot${type}
+    rm -f ${dst}/squid-${ver}.snapshot${type}.md5
+    ln -s ${file}.md5 ${dst}/squid-${ver}.snapshot${type}.md5
 
     # cleanup old snapshots
-    ls $dst/*-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]$type | sed -e 's/.*-\([0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'$type'\)/\1/' | sort -r | tail +$save | while read f; do
-	rm -f $dst/*-$f $dst/*-$f.md5
+    ls ${dst}/*-[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]${type} | sed -e 's/.*-\([0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'${type}'\)/\1/' | sort -r | tail +${save} | while read f; do
+	rm -f ${dst}/*-${f} ${dst}/*-${f}.md5
     done
 
     # Special cases
-    case $file in
+    case ${file} in
     *-cfgman.tar.gz)
-	mkdir -p $dst/cfgman
-	tar -C $dst/cfgman -zxf $dst/$file
+	mkdir -p ${dst}/cfgman
+	tar -C ${dst}/cfgman -zxf ${dst}/${file}
 	;;
     *-cfgman.html)
-	rm -f $dst/cfgman.html
-	ln -s $dst/$file $dst/cfgman.html
+	rm -f ${dst}/cfgman.html
+	ln -s ${dst}/${file} ${dst}/cfgman.html
 	;;
     *-cfgman.html.gz)
-	rm -f $dst/cfgman.html.gz
-	ln -s $dst/$file $dst/cfgman.html.gz
+	rm -f ${dst}/cfgman.html.gz
+	ln -s ${dst}/${file} ${dst}/cfgman.html.gz
 	;;
     *-manuals.tar.gz)
-	mkdir -p $dst/manuals
-	tar -C $dst/manuals -zxf $dst/$file
+	mkdir -p ${dst}/manuals
+	tar -C ${dst}/manuals -zxf ${dst}/${file}
 	;;
     esac
   done
 
   # update web page
-  if [ -x $dst/make.sh ]; then
-      $dst/make.sh
+  if [ -x ${dst}/make.sh ]; then
+      ${dst}/make.sh
   fi
 
 } }
