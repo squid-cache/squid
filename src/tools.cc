@@ -43,6 +43,8 @@
 #include "ProtoPort.h"
 #include "SquidMath.h"
 #include "SquidTime.h"
+#include "ipc/Kids.h"
+#include "ipc/Coordinator.h"
 #include "SwapDir.h"
 #include "wordlist.h"
 
@@ -68,6 +70,7 @@ extern void log_trace_done();
 extern void log_trace_init(char *);
 #endif
 static void restoreCapabilities(int keep);
+int DebugSignal = -1;
 
 #ifdef _SQUID_LINUX_
 /* Workaround for crappy glic header files */
@@ -401,12 +404,23 @@ death(int sig)
     abort();
 }
 
+void
+BroadcastSignalIfAny(int& sig)
+{
+    if (sig > 0) {
+        if (IamCoordinatorProcess())
+            Ipc::Coordinator::Instance()->broadcastSignal(sig);
+        sig = -1;
+    }
+}
 
 void
 sigusr2_handle(int sig)
 {
     static int state = 0;
     /* no debugs() here; bad things happen if the signal is delivered during _db_print() */
+
+    DebugSignal = sig;
 
     if (state == 0) {
 #if !MEM_GEN_TRACE
@@ -794,6 +808,50 @@ no_suid(void)
 #endif
 }
 
+bool
+IamMasterProcess()
+{
+    return KidIdentifier == 0;
+}
+
+bool
+IamWorkerProcess()
+{
+    // when there is only one process, it has to be the worker
+    if (opt_no_daemon || Config.workers == 0)
+        return true;
+
+    return 0 < KidIdentifier && KidIdentifier <= Config.workers;
+}
+
+bool
+UsingSmp()
+{
+    return !opt_no_daemon && Config.workers > 1;
+}
+
+bool
+IamCoordinatorProcess()
+{
+    return UsingSmp() && KidIdentifier == Config.workers + 1;
+}
+
+bool
+IamPrimaryProcess()
+{
+    // when there is only one process, it has to be primary
+    if (opt_no_daemon || Config.workers == 0)
+        return true;
+
+    // when there is a master and worker process, the master delegates
+    // primary functions to its only kid
+    if (Config.workers == 1)
+        return IamWorkerProcess();
+
+    // in SMP mode, multiple kids delegate primary functions to the coordinator
+    return IamCoordinatorProcess();
+}
+
 void
 writePidFile(void)
 {
@@ -801,6 +859,9 @@ writePidFile(void)
     const char *f = NULL;
     mode_t old_umask;
     char buf[32];
+
+    if (!IamPrimaryProcess())
+        return;
 
     if ((f = Config.pidFilename) == NULL)
         return;
