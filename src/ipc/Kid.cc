@@ -8,6 +8,10 @@
 #include "config.h"
 #include "ipc/Kid.h"
 
+#if HAVE_SYS_WAIT_H
+#include <sys/wait.h>
+#endif
+
 Kid::Kid():
         badFailures(0),
         pid(-1),
