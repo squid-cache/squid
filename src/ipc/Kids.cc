@@ -9,7 +9,7 @@
 #include "ipc/Kids.h"
 
 Kids TheKids;
-char KidName[NAME_MAX];
+KidName TheKidName;
 
 Kids::Kids()
 {
