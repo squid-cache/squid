@@ -613,7 +613,7 @@ shut_down(int sig)
             debugs(1, 1, "kill " << getppid() << ": " << xstrerror());
     }
 
-#endif
+#endif /* KILL_PARENT_OPT */
 #if SA_RESETHAND == 0
     signal(SIGTERM, SIG_DFL);
 
