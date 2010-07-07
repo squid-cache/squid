@@ -888,6 +888,12 @@ Ip::Address::matchIPAddr(const Ip::Address &rhs) const
     return 0;
 }
 
+int
+Ip::Address::compareWhole(const Ip::Address &rhs) const
+{
+    return memcmp(this, &rhs, sizeof(*this));
+}
+
 bool
 Ip::Address::operator ==(const Ip::Address &s) const
 {

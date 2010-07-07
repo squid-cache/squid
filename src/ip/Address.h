@@ -321,6 +321,13 @@ public:
      */
     int matchIPAddr(const Address &rhs) const;
 
+    /** Compare taking IP, port, protocol, etc. into account. Returns an
+        integer  less  than,  equal  to,  or greater than zero if the object
+        is found, respectively, to be less than, to match, or to be greater
+        than rhs. The exact ordering algorithm is not specified and may change.
+    */
+    int compareWhole(const Ip::Address &rhs) const;
+
     /**
      *  Get RFC 3493 addrinfo structure from the Ip::Address data
      *  for protocol-neutral socket operations.

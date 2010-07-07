@@ -34,6 +34,7 @@ The 3.2 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 
 <p>The most important of these new features are:
 <itemize>
+	<item>SMP scalability
 	<item>Helper Multiplexer
 	<item>Helper Name Changes
 	<item>Multi-Lingual manuals
@@ -41,6 +42,49 @@ The 3.2 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
+
+<sect1>SMP scalability
+<p>The new "workers" squid.conf option can be used to launch multiple worker
+   processes and utilize multiple CPU cores. The overall intent is to make
+   multiple workers look like one to an outside observer, while providing
+   knobs to customize each worker behavior if needed.
+
+<p>By default, all worker processes are configured identically and do what a
+   single Squid instance would have done. Squid.conf macro substitutions and
+   conditionals (see below) can be used to customize individual worker
+   configurations. In the paragraphs below, "can share" implies "will share by
+   default".
+
+<p>Workers can share HTTP, HTTPS, SNMP, ICP, and HTCP listening addresses.
+   Configuration related to ICP and HTCP clients must be adjusted to avoid
+   source address conflicts: Modify the IP address and/or the port used for
+   the protocol. Workers do not share DNS addresses by default because the OS
+   assigns each worker a unique DNS port.
+
+<p>Workers can share logs.
+
+<p>Workers cannot share caches, for now. Cache_dir options must be adjusted to
+   point each disk-caching worker to its own disk area. ICP and HTCP responses
+   are based on the responding worker cache state. Overall, SMP Squid behaves
+   as a Squid farm behind a load-balancer with no cache affinity awareness.
+   This is perfect for non-caching Squids but inappropriate for Squids that
+   must coordinate caching activities (in-between environments are in a gray
+   area requiring case-by-case analysis).
+
+<p>Cache manager and SNMP statistics are reported from a worker point of
+   view, for now.
+
+<p>Startup, reconfiguration, shutdown, and log rotation are handled as for a
+   monolithic Squid. Abnormally terminated workers are restarted while
+   other workers continue serving traffic.
+
+
+<sect2>Squid.conf macros and conditionals
+<p>Added support for process_name and process_number macros as well as simple
+   if-statement conditionals in squid.conf. These features allow individual
+   worker customization in SMP mode. For details, search for "Conditional
+   configuration" and "SMP-Related Macros" sections in squid.conf.documented.
+
 
 <sect1>Helper Multiplexer
 <p>The helper multiplexer's purpose is to relieve some of the burden
@@ -173,8 +217,20 @@ This section gives a thorough account of those changes in three categories:
 	<p>Access control based on altered HTTP request following adaptation alterations (ICAP, eCAP, URL rewriter).
 	An upgraded drop-in replacement for <em>http_access2</em> found in Squid-2.
 
+	<tag>else</tag>
+	<p>Part of conditional SMP support syyntax. see <em>if</em>
+
+	<tag>endif</tag>
+	<p>Part of conditional SMP support syyntax. see <em>if</em>
+
 	<tag>eui_lookup</tag>
 	<p>Whether to lookup the EUI or MAC address of a connected client.
+
+	<tag>if</tag>
+	<p>New conditional syntax for SMP multiple-worker. 
+	If-statements can be used to make configuration directives depend on conditions.
+	<p>The else part is optional. The keywords <em>if</em>, <em>else</em> and <em>endif</em> 
+	must be typed on their own lines, as if they were regular configuration directives.
 
 	<tag>memory_cache_mode</tag>
 	<p>Controls which objects to keep in the memory cache (cache_mem)
@@ -196,6 +252,15 @@ This section gives a thorough account of those changes in three categories:
 	header is used for spoofing instead of the directly connected client address.
 	Requires both <em>--enable-follow-x-forwarded-for</em> and <em>--enable-linux-netfilter</em>
 
+	<tag>workers</tag>
+	<p>Number of main Squid processes or "workers" to fork and maintain.
+	In SMP mode, each worker does nearly all what a single Squid daemon
+	does (e.g., listen on http_port and forward HTTP requests).
+	<verb>
+	0: "no daemon" mode, like running "squid -N ..."
+	1: "no SMP" mode, start one main Squid process daemon (default)
+	N: start N main Squid process daemons (i.e., SMP mode)
+	</verb>
 </descrip>
 
 <sect1>Changes to existing tags<label id="modifiedtags">
