@@ -1,4 +1,5 @@
 #!/bin/sh -e
+echo "RUN: $0"
 # Nightly cron job to generate snapshot releases
 top=${PWD}
 versions=/server/httpd/htdocs/squid-cache.org/content/Versions/
@@ -9,7 +10,7 @@ if [ -d ${TMPDIR} ]; then
 	rm -rf ${TMPDIR}
 fi
 mkdir -p ${TMPDIR}
-trap "echo FAIL-BUILD; cd /; chmod -R +w ${TMPDIR}; rm -rf ${TMPDIR}" 0
+trap "echo FAIL-BUILD_snapshot-cron; cd /; chmod -R +w ${TMPDIR}; rm -rf ${TMPDIR}" 0
 
 PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin
 export PATH
