@@ -171,6 +171,9 @@ extern "C" {
     extern int opt_send_signal;	/* -1 */
     extern int opt_no_daemon; /* 0 */
 
+/// current Squid process number (e.g., 4).
+/// Zero for SMP-unaware code and in no-SMP mode.
+    extern int KidIdentifier; /* 0 */
 
 #ifdef __cplusplus
 }

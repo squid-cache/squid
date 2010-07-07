@@ -49,7 +49,6 @@ private:
 extern Kids TheKids; ///< All kids being maintained
 
 extern char KidName[NAME_MAX]; ///< current Squid process name (e.g., squid2)
-extern int KidIdentifier; ///< current Squid process number (e.g., 4)
 
 
 #endif /* SQUID_IPC_KIDS_H */
