@@ -38,6 +38,14 @@
 #include "SquidTime.h"
 #include "Debug.h"
 
+
+// Solaris and possibly others lack MSG_NOSIGNAL optimization
+// TODO: move this into compat/? Use a dedicated compat file to avoid dragging
+// sys/types.h and sys/socket.h into the rest of Squid??
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
+#endif
+
 int default_read_method(int, char *, int);
 int default_write_method(int, const char *, int);
 #ifdef _SQUID_MSWIN_
