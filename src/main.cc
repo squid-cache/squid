@@ -56,6 +56,9 @@
 #include "StoreFileSystem.h"
 #include "DiskIO/DiskIOModule.h"
 #include "comm.h"
+#include "ipc/Kids.h"
+#include "ipc/Coordinator.h"
+#include "ipc/Strand.h"
 #if USE_EPOLL
 #include "comm_epoll.h"
 #endif
@@ -123,6 +126,10 @@ static volatile int do_reconfigure = 0;
 static volatile int do_rotate = 0;
 static volatile int do_shutdown = 0;
 static volatile int shutdown_status = 0;
+
+static int RotateSignal = -1;
+static int ReconfigureSignal = -1;
+static int ShutdownSignal = -1;
 
 static void mainRotate(void);
 static void mainReconfigureStart(void);
@@ -195,6 +202,10 @@ SignalEngine::checkEvents(int timeout)
         doShutdown(do_shutdown > 0 ? (int) Config.shutdownLifetime : 0);
         do_shutdown = 0;
     }
+    BroadcastSignalIfAny(DebugSignal);
+    BroadcastSignalIfAny(RotateSignal);
+    BroadcastSignalIfAny(ReconfigureSignal);
+    BroadcastSignalIfAny(ShutdownSignal);
 
     PROF_stop(SignalEngine_checkEvents);
     return EVENT_IDLE;
@@ -558,6 +569,7 @@ void
 rotate_logs(int sig)
 {
     do_rotate = 1;
+    RotateSignal = sig;
 #ifndef _SQUID_MSWIN_
 #if !HAVE_SIGACTION
 
@@ -571,6 +583,7 @@ void
 reconfigure(int sig)
 {
     do_reconfigure = 1;
+    ReconfigureSignal = sig;
 #ifndef _SQUID_MSWIN_
 #if !HAVE_SIGACTION
 
@@ -583,6 +596,7 @@ void
 shut_down(int sig)
 {
     do_shutdown = sig == SIGINT ? -1 : 1;
+    ShutdownSignal = sig;
 #ifdef SIGTTIN
 
     if (SIGTTIN == sig)
@@ -590,7 +604,7 @@ shut_down(int sig)
 
 #endif
 #ifndef _SQUID_MSWIN_
-#ifdef KILL_PARENT_OPT
+#if KILL_PARENT_OPT
 
     if (getppid() > 1) {
         debugs(1, 1, "Killing master process, pid " << getppid());
@@ -599,7 +613,7 @@ shut_down(int sig)
             debugs(1, 1, "kill " << getppid() << ": " << xstrerror());
     }
 
-#endif
+#endif /* KILL_PARENT_OPT */
 #if SA_RESETHAND == 0
     signal(SIGTERM, SIG_DFL);
 
@@ -612,64 +626,74 @@ shut_down(int sig)
 static void
 serverConnectionsOpen(void)
 {
-    clientOpenListenSockets();
-    icpConnectionsOpen();
-#if USE_HTCP
-
-    htcpInit();
-#endif
-#if SQUID_SNMP
-
-    snmpConnectionOpen();
-#endif
+    if (IamPrimaryProcess()) {
 #if USE_WCCP
 
-    wccpConnectionOpen();
+        wccpConnectionOpen();
 #endif
 
 #if USE_WCCPv2
 
-    wccp2ConnectionOpen();
+        wccp2ConnectionOpen();
+#endif
+    }
+    // Coordinator does not start proxying services
+    if (!IamCoordinatorProcess()) {
+        clientOpenListenSockets();
+        icpConnectionsOpen();
+#if USE_HTCP
+
+        htcpInit();
+#endif
+#if SQUID_SNMP
+
+        snmpConnectionOpen();
 #endif
 
-    clientdbInit();
-    icmpEngine.Open();
-    netdbInit();
-    asnInit();
-    ACL::Initialize();
-    peerSelectInit();
+        clientdbInit();
+        icmpEngine.Open();
+        netdbInit();
+        asnInit();
+        ACL::Initialize();
+        peerSelectInit();
 
-    carpInit();
-    peerUserHashInit();
-    peerSourceHashInit();
+        carpInit();
+        peerUserHashInit();
+        peerSourceHashInit();
+    }
 }
 
 static void
 serverConnectionsClose(void)
 {
     assert(shutting_down || reconfiguring);
-    clientHttpConnectionsClose();
-    icpConnectionShutdown();
-#if USE_HTCP
 
-    htcpSocketShutdown();
-#endif
-
-    icmpEngine.Close();
-#if SQUID_SNMP
-
-    snmpConnectionShutdown();
-#endif
+    if (IamPrimaryProcess()) {
 #if USE_WCCP
 
-    wccpConnectionClose();
+        wccpConnectionClose();
 #endif
 #if USE_WCCPv2
 
-    wccp2ConnectionClose();
+        wccp2ConnectionClose();
+#endif
+    }
+    if (!IamCoordinatorProcess()) {
+        clientHttpConnectionsClose();
+        icpConnectionShutdown();
+#if USE_HTCP
+
+        htcpSocketShutdown();
 #endif
 
-    asnFreeMemory();
+        icmpEngine.Close();
+#if SQUID_SNMP
+
+        snmpConnectionShutdown();
+#endif
+
+        asnFreeMemory();
+    }
 }
 
 static void
@@ -726,9 +750,16 @@ mainReconfigureFinish(void *)
         Config2.onoff.enable_purge = 2;
 
     // parse the config returns a count of errors encountered.
+    const int oldWorkers = Config.workers;
     if ( parseConfigFile(ConfigFile) != 0) {
         // for now any errors are a fatal condition...
         self_destruct();
+    }
+    if (oldWorkers != Config.workers) {
+        debugs(1, DBG_CRITICAL, "WARNING: Changing 'workers' (from " <<
+               oldWorkers << " to " << Config.workers <<
+               ") is not supported and ignored");
+        Config.workers = oldWorkers;
     }
 
     setUmask(Config.umask);
@@ -775,14 +806,17 @@ mainReconfigureFinish(void *)
     redirectInit();
     authenticateInit(&Auth::TheConfig);
     externalAclInit();
+
+    if (IamPrimaryProcess()) {
 #if USE_WCCP
 
-    wccpInit();
+        wccpInit();
 #endif
 #if USE_WCCPv2
 
-    wccp2Init();
+        wccp2Init();
 #endif
+    }
 
     serverConnectionsOpen();
 
@@ -1037,15 +1071,17 @@ mainInitialize(void)
         //   moved to PconnModule::PconnModule()
     }
 
+    if (IamPrimaryProcess()) {
 #if USE_WCCP
-    wccpInit();
+        wccpInit();
 
 #endif
 #if USE_WCCPv2
 
-    wccp2Init();
+        wccp2Init();
 
 #endif
+    }
 
     serverConnectionsOpen();
 
@@ -1171,9 +1207,28 @@ SquidMainSafe(int argc, char **argv)
     return -1; // not reached
 }
 
+/// computes name and ID for the current kid process
+static void
+ConfigureCurrentKid(const char *processName)
+{
+    // kids are marked with parenthesis around their process names
+    if (processName && processName[0] == '(') {
+        if (const char *idStart = strrchr(processName, '-')) {
+            KidIdentifier = atoi(idStart + 1);
+            const int nameLen = idStart - (processName + 1);
+            xstrncpy(KidName, processName + 1, nameLen + 1);
+        }
+    } else {
+        xstrncpy(KidName, APP_SHORTNAME, sizeof(KidName));
+        KidIdentifier = 0;
+    }
+}
+
 int
 SquidMain(int argc, char **argv)
 {
+    ConfigureCurrentKid(argv[0]);
+
 #ifdef _SQUID_WIN32_
 
     int WIN32_init_err;
@@ -1344,7 +1399,7 @@ SquidMain(int argc, char **argv)
         return 0;
     }
 
-    if (!opt_no_daemon)
+    if (!opt_no_daemon && Config.workers > 0)
         watch_child(argv);
 
     setMaxFD();
@@ -1399,6 +1454,11 @@ SquidMain(int argc, char **argv)
     TimeEngine time_engine;
 
     mainLoop.setTimeService(&time_engine);
+
+    if (IamCoordinatorProcess())
+        AsyncJob::AsyncStart(Ipc::Coordinator::Instance());
+    else if (UsingSmp() && IamWorkerProcess())
+        AsyncJob::AsyncStart(new Ipc::Strand);
 
     /* at this point we are finished the synchronous startup. */
     starting_up = 0;
@@ -1501,11 +1561,11 @@ mainStartScript(const char *prog)
         do {
 #ifdef _SQUID_NEXT_
             union wait status;
-            rpid = wait3(&status, 0, NULL);
+            rpid = wait4(cpid, &status, 0, NULL);
 #else
 
             int status;
-            rpid = waitpid(-1, &status, 0);
+            rpid = waitpid(cpid, &status, 0);
 #endif
 
         } while (rpid != cpid);
@@ -1517,6 +1577,10 @@ mainStartScript(const char *prog)
 static int
 checkRunningPid(void)
 {
+    // master process must start alone, but its kids processes may co-exist
+    if (!IamMasterProcess())
+        return 0;
+
     pid_t pid;
 
     if (!debug_log)
@@ -1540,9 +1604,6 @@ watch_child(char *argv[])
 {
 #ifndef _SQUID_MSWIN_
     char *prog;
-    int failcount = 0;
-    time_t start;
-    time_t stop;
 #ifdef _SQUID_NEXT_
 
     union wait status;
@@ -1559,7 +1620,7 @@ watch_child(char *argv[])
 
     int nullfd;
 
-    if (*(argv[0]) == '(')
+    if (!IamMasterProcess())
         return;
 
     openlog(APP_SHORTNAME, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
@@ -1601,24 +1662,38 @@ watch_child(char *argv[])
         dup2(nullfd, 2);
     }
 
+    if (Config.workers > 128) {
+        syslog(LOG_ALERT, "Suspiciously high workers value: %d",
+               Config.workers);
+        // but we keep going in hope that user knows best
+    }
+    TheKids.init(Config.workers);
+
+    // keep [re]starting kids until it is time to quit
     for (;;) {
         mainStartScript(argv[0]);
 
-        if ((pid = fork()) == 0) {
-            /* child */
-            openlog(APP_SHORTNAME, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
-            prog = xstrdup(argv[0]);
-            argv[0] = xstrdup("(squid)");
-            execvp(prog, argv);
-            syslog(LOG_ALERT, "execvp failed: %s", xstrerror());
+        // start each kid that needs to be [re]started; once
+        for (int i = TheKids.count() - 1; i >= 0; --i) {
+            Kid& kid = TheKids.get(i);
+            if (kid.hopeless() || kid.exitedHappy() || kid.running())
+                continue;
+
+            if ((pid = fork()) == 0) {
+                /* child */
+                openlog(APP_SHORTNAME, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
+                prog = argv[0];
+                argv[0] = const_cast<char*>(kid.name().termedBuf());
+                execvp(prog, argv);
+                syslog(LOG_ALERT, "execvp failed: %s", xstrerror());
+            }
+
+            kid.start(pid);
+            syslog(LOG_NOTICE, "Squid Parent: child process %d started", pid);
         }
 
         /* parent */
         openlog(APP_SHORTNAME, LOG_PID | LOG_NDELAY | LOG_CONS, LOG_LOCAL4);
-
-        syslog(LOG_NOTICE, "Squid Parent: child process %d started", pid);
-
-        time(&start);
 
         squid_signal(SIGINT, SIG_IGN, SA_RESTART);
 
@@ -1631,51 +1706,48 @@ watch_child(char *argv[])
         pid = waitpid(-1, &status, 0);
 
 #endif
+        // Loop to collect all stopped kids before we go to sleep below.
+        do {
+            Kid* kid = TheKids.find(pid);
+            if (kid) {
+                kid->stop(status);
+                if (kid->calledExit()) {
+                    syslog(LOG_NOTICE,
+                           "Squid Parent: child process %d exited with status %d",
+                           kid->getPid(), kid->exitStatus());
+                } else if (kid->signaled()) {
+                    syslog(LOG_NOTICE,
+                           "Squid Parent: child process %d exited due to signal %d with status %d",
+                           kid->getPid(), kid->termSignal(), kid->exitStatus());
+                } else {
+                    syslog(LOG_NOTICE, "Squid Parent: child process %d exited", kid->getPid());
+                }
+            } else {
+                syslog(LOG_NOTICE, "Squid Parent: unknown child process %d exited", pid);
+            }
+#ifdef _SQUID_NEXT_
+        } while ((pid = wait3(&status, WNOHANG, NULL)) > 0);
+#else
+        }
+        while ((pid = waitpid(-1, &status, WNOHANG)) > 0);
+#endif
 
-        time(&stop);
-
-        if (WIFEXITED(status)) {
-            syslog(LOG_NOTICE,
-                   "Squid Parent: child process %d exited with status %d",
-                   pid, WEXITSTATUS(status));
-        } else if (WIFSIGNALED(status)) {
-            syslog(LOG_NOTICE,
-                   "Squid Parent: child process %d exited due to signal %d with status %d",
-                   pid, WTERMSIG(status), WEXITSTATUS(status));
-        } else {
-            syslog(LOG_NOTICE, "Squid Parent: child process %d exited", pid);
+        if (TheKids.allExitedHappy()) {
+            exit(0);
         }
 
-        if (stop - start < 10)
-            failcount++;
-        else
-            failcount = 0;
-
-        if (failcount == 5) {
+        if (TheKids.allHopeless()) {
             syslog(LOG_ALERT, "Exiting due to repeated, frequent failures");
             exit(1);
         }
 
-        if (WIFEXITED(status))
-            if (WEXITSTATUS(status) == 0)
-                exit(0);
+        if (TheKids.allSignaled(SIGKILL)) {
+            exit(0);
+        }
 
-        if (WIFSIGNALED(status)) {
-            switch (WTERMSIG(status)) {
-
-            case SIGKILL:
-                exit(0);
-                break;
-
-            case SIGINT:
-            case SIGTERM:
-                syslog(LOG_ALERT, "Exiting due to unexpected forced shutdown");
-                exit(1);
-                break;
-
-            default:
-                break;
-            }
+        if (TheKids.allSignaled(SIGINT) || TheKids.allSignaled(SIGTERM)) {
+            syslog(LOG_ALERT, "Exiting due to unexpected forced shutdown");
+            exit(1);
         }
 
         squid_signal(SIGINT, SIG_DFL, SA_RESTART);
@@ -1813,10 +1885,12 @@ SquidShutdown()
 
 #endif
 
-    if (Config.pidFilename && strcmp(Config.pidFilename, "none") != 0) {
-        enter_suid();
-        safeunlink(Config.pidFilename, 0);
-        leave_suid();
+    if (IamPrimaryProcess()) {
+        if (Config.pidFilename && strcmp(Config.pidFilename, "none") != 0) {
+            enter_suid();
+            safeunlink(Config.pidFilename, 0);
+            leave_suid();
+        }
     }
 
     debugs(1, 1, "Squid Cache (Version " << version_string << "): Exiting normally.");

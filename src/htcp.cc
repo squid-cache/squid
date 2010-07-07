@@ -46,6 +46,24 @@
 #include "http.h"
 #include "icmp/net_db.h"
 #include "AccessLogEntry.h"
+#include "ipc/StartListening.h"
+
+/// dials htcpIncomingConnectionOpened call
+class HtcpListeningStartedDialer: public CallDialer,
+        public Ipc::StartListeningCb
+{
+public:
+    typedef void (*Handler)(int fd, int errNo);
+    HtcpListeningStartedDialer(Handler aHandler): handler(aHandler) {}
+
+    virtual void print(std::ostream &os) const { startPrint(os) << ')'; }
+
+    virtual bool canDial(AsyncCall &) const { return true; }
+    virtual void dial(AsyncCall &) { (handler)(fd, errNo); }
+
+public:
+    Handler handler;
+};
 
 typedef struct _Countstr Countstr;
 
@@ -225,7 +243,9 @@ enum {
     RR_RESPONSE
 };
 
+static void htcpIncomingConnectionOpened(int fd, int errNo);
 static uint32_t msg_id_counter = 0;
+
 static int htcpInSocket = -1;
 static int htcpOutSocket = -1;
 #define N_QUERIED_KEYS 8192
@@ -1483,20 +1503,15 @@ htcpInit(void)
     Ip::Address incomingAddr = Config.Addrs.udp_incoming;
     incomingAddr.SetPort(Config.Port.htcp);
 
-    enter_suid();
-    htcpInSocket = comm_open_listener(SOCK_DGRAM,
-                                      IPPROTO_UDP,
-                                      incomingAddr,
-                                      COMM_NONBLOCKING,
-                                      "HTCP Socket");
-    leave_suid();
+    AsyncCall::Pointer call = asyncCall(31, 2,
+                                        "htcpIncomingConnectionOpened",
+                                        HtcpListeningStartedDialer(&htcpIncomingConnectionOpened));
 
-    if (htcpInSocket < 0)
-        fatal("Cannot open HTCP Socket");
-
-    commSetSelect(htcpInSocket, COMM_SELECT_READ, htcpRecv, NULL, 0);
-
-    debugs(31, 1, "Accepting HTCP messages on port " << Config.Port.htcp << ", FD " << htcpInSocket << ".");
+    Ipc::StartListening(SOCK_DGRAM,
+                        IPPROTO_UDP,
+                        incomingAddr,
+                        COMM_NONBLOCKING,
+                        Ipc::fdnInHtcpSocket, call);
 
     if (!Config.Addrs.udp_outgoing.IsNoAddr()) {
         Ip::Address outgoingAddr = Config.Addrs.udp_outgoing;
@@ -1518,13 +1533,27 @@ htcpInit(void)
         debugs(31, 1, "Outgoing HTCP messages on port " << Config.Port.htcp << ", FD " << htcpOutSocket << ".");
 
         fd_note(htcpInSocket, "Incoming HTCP socket");
-    } else {
-        htcpOutSocket = htcpInSocket;
     }
 
     if (!htcpDetailPool) {
         htcpDetailPool = memPoolCreate("htcpDetail", sizeof(htcpDetail));
     }
+}
+
+static void
+htcpIncomingConnectionOpened(int fd, int errNo)
+{
+    htcpInSocket = fd;
+
+    if (htcpInSocket < 0)
+        fatal("Cannot open HTCP Socket");
+
+    commSetSelect(htcpInSocket, COMM_SELECT_READ, htcpRecv, NULL, 0);
+
+    debugs(31, 1, "Accepting HTCP messages on port " << Config.Port.htcp << ", FD " << htcpInSocket << ".");
+
+    if (Config.Addrs.udp_outgoing.IsNoAddr())
+        htcpOutSocket = htcpInSocket;
 }
 
 int
