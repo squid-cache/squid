@@ -25,7 +25,7 @@ trap "echo FAIL-BUILD_${VERSION} ; rm -rf ${tmpdir}" 0
 
 rm -f ${tag}.out
 bzr export ${tmpdir} ${BZRROOT}/${module}/${branchpath} || exit 1
-if [ ! -f ${tmpdir}/configure ] && [ -f{ $tmpdir}/configure.in ]; then
+if [ ! -f ${tmpdir}/configure ] && [ -f ${tmpdir}/configure.in ]; then
 	sh -c "cd ${tmpdir} && ./bootstrap.sh"
 fi
 if [ ! -f ${tmpdir}/configure ]; then
