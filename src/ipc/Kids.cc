@@ -10,7 +10,6 @@
 
 Kids TheKids;
 char KidName[NAME_MAX];
-int  KidIdentifier;
 
 Kids::Kids()
 {
