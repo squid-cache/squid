@@ -93,6 +93,7 @@
 #include "clientStream.h"
 #include "comm.h"
 #include "comm/ListenStateData.h"
+#include "base/TextException.h"
 #include "ConnectionDetail.h"
 #include "eui/Config.h"
 #include "fde.h"
@@ -102,6 +103,7 @@
 #include "ident/Config.h"
 #include "ident/Ident.h"
 #include "ip/Intercept.h"
+#include "ipc/StartListening.h"
 #include "MemBuf.h"
 #include "MemObject.h"
 #include "ProtoPort.h"
@@ -111,6 +113,35 @@
 
 #if LINGERING_CLOSE
 #define comm_close comm_lingering_close
+#endif
+
+/// dials clientHttpConnectionOpened or clientHttpsConnectionOpened call
+class ListeningStartedDialer: public CallDialer, public Ipc::StartListeningCb
+{
+public:
+    typedef void (*Handler)(int fd, int errNo, http_port_list *portCfg);
+    ListeningStartedDialer(Handler aHandler, http_port_list *aPortCfg):
+            handler(aHandler), portCfg(aPortCfg) {}
+
+    virtual void print(std::ostream &os) const {
+        startPrint(os) <<
+        ", port=" << (void*)portCfg << ')';
+    }
+
+    virtual bool canDial(AsyncCall &) const { return true; }
+    virtual void dial(AsyncCall &) { (handler)(fd, errNo, portCfg); }
+
+public:
+    Handler handler;
+
+private:
+    http_port_list *portCfg; ///< from Config.Sockaddr.http
+};
+
+
+static void clientHttpConnectionOpened(int fd, int errNo, http_port_list *s);
+#if USE_SSL
+static void clientHttpsConnectionOpened(int fd, int errNo, http_port_list *s);
 #endif
 
 /* our socket-related context */
@@ -3349,12 +3380,39 @@ ConnStateData::switchToHttps()
 
 #endif /* USE_SSL */
 
+/// check FD after clientHttp[s]ConnectionOpened, adjust HttpSockets as needed
+static bool
+OpenedHttpSocket(int fd, const char *msgIfFail)
+{
+    if (fd < 0) {
+        Must(NHttpSockets > 0); // we tried to open some
+        --NHttpSockets; // there will be fewer sockets than planned
+        Must(HttpSockets[NHttpSockets] < 0); // no extra fds received
+
+        if (!NHttpSockets) // we could not open any listen sockets at all
+            fatal(msgIfFail);
+
+        return false;
+    }
+    return true;
+}
+
+/// find any unused HttpSockets[] slot and store fd there or return false
+static bool
+AddOpenedHttpSocket(int fd)
+{
+    bool found = false;
+    for (int i = 0; i < NHttpSockets && !found; i++) {
+        if ((found = HttpSockets[i] < 0))
+            HttpSockets[i] = fd;
+    }
+    return found;
+}
 
 static void
 clientHttpConnectionsOpen(void)
 {
     http_port_list *s = NULL;
-    int fd = -1;
 #if USE_SSL
     int bumpCount = 0; // counts http_ports with sslBump option
 #endif
@@ -3378,33 +3436,16 @@ clientHttpConnectionsOpen(void)
 
         /* AYJ: 2009-12-27: bit bumpy. new ListenStateData(...) should be doing all the Comm:: stuff ... */
 
-        enter_suid();
+        const int openFlags = COMM_NONBLOCKING |
+                              (s->spoof_client_ip ? COMM_TRANSPARENT : 0);
 
-        if (s->spoof_client_ip) {
-            fd = comm_open_listener(SOCK_STREAM, IPPROTO_TCP, s->s, (COMM_NONBLOCKING|COMM_TRANSPARENT), "HTTP Socket");
-        } else {
-            fd = comm_open_listener(SOCK_STREAM, IPPROTO_TCP, s->s, COMM_NONBLOCKING, "HTTP Socket");
-        }
+        AsyncCall::Pointer callback = asyncCall(33,2,
+                                                "clientHttpConnectionOpened",
+                                                ListeningStartedDialer(&clientHttpConnectionOpened, s));
+        Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->s, openFlags,
+                            Ipc::fdnHttpSocket, callback);
 
-        leave_suid();
-
-        if (fd < 0)
-            continue;
-
-        AsyncCall::Pointer call = commCbCall(5,5, "SomeCommAcceptHandler(httpAccept)",
-                                             CommAcceptCbPtrFun(httpAccept, s));
-
-        s->listener = new Comm::ListenStateData(fd, call, true);
-
-        debugs(1, 1, "Accepting " <<
-               (s->intercepted ? " intercepted" : "") <<
-               (s->spoof_client_ip ? " spoofing" : "") <<
-               (s->sslBump ? " bumpy" : "") <<
-               (s->accel ? " accelerated" : "")
-               << " HTTP connections at " << s->s
-               << ", FD " << fd << "." );
-
-        HttpSockets[NHttpSockets++] = fd;
+        HttpSockets[NHttpSockets++] = -1; // set in clientHttpConnectionOpened
     }
 
 #if USE_SSL
@@ -3415,12 +3456,36 @@ clientHttpConnectionsOpen(void)
 #endif
 }
 
+/// process clientHttpConnectionsOpen result
+static void
+clientHttpConnectionOpened(int fd, int, http_port_list *s)
+{
+    if (!OpenedHttpSocket(fd, "Cannot open HTTP Port"))
+        return;
+
+    Must(s);
+
+    AsyncCall::Pointer call = commCbCall(5,5, "SomeCommAcceptHandler(httpAccept)",
+                                         CommAcceptCbPtrFun(httpAccept, s));
+
+    s->listener = new Comm::ListenStateData(fd, call, true);
+
+    debugs(1, 1, "Accepting " <<
+           (s->intercepted ? " intercepted" : "") <<
+           (s->spoof_client_ip ? " spoofing" : "") <<
+           (s->sslBump ? " bumpy" : "") <<
+           (s->accel ? " accelerated" : "")
+           << " HTTP connections at " << s->s
+           << ", FD " << fd << "." );
+
+    Must(AddOpenedHttpSocket(fd)); // otherwise, we have received a fd we did not ask for
+}
+
 #if USE_SSL
 static void
 clientHttpsConnectionsOpen(void)
 {
     https_port_list *s;
-    int fd;
 
     for (s = Config.Sockaddr.https; s; s = (https_port_list *)s->http.next) {
         if (MAXHTTPPORTS == NHttpSockets) {
@@ -3435,25 +3500,33 @@ clientHttpsConnectionsOpen(void)
             continue;
         }
 
-        enter_suid();
-        fd = comm_open_listener(SOCK_STREAM,
-                                IPPROTO_TCP,
-                                s->http.s,
-                                COMM_NONBLOCKING, "HTTPS Socket");
-        leave_suid();
+        AsyncCall::Pointer call = asyncCall(33, 2, "clientHttpsConnectionOpened",
+                                            ListeningStartedDialer(&clientHttpsConnectionOpened, &s->http));
 
-        if (fd < 0)
-            continue;
+        Ipc::StartListening(SOCK_STREAM, IPPROTO_TCP, s->http.s, COMM_NONBLOCKING,
+                            Ipc::fdnHttpsSocket, call);
 
-        AsyncCall::Pointer call = commCbCall(5,5, "SomeCommAcceptHandler(httpsAccept)",
-                                             CommAcceptCbPtrFun(httpsAccept, s));
-
-        s->listener = new Comm::ListenStateData(fd, call, true);
-
-        debugs(1, 1, "Accepting HTTPS connections at " << s->http.s << ", FD " << fd << ".");
-
-        HttpSockets[NHttpSockets++] = fd;
+        HttpSockets[NHttpSockets++] = -1;
     }
+}
+
+/// process clientHttpsConnectionsOpen result
+static void
+clientHttpsConnectionOpened(int fd, int, http_port_list *s)
+{
+    if (!OpenedHttpSocket(fd, "Cannot open HTTPS Port"))
+        return;
+
+    Must(s);
+
+    AsyncCall::Pointer call = commCbCall(5,5, "SomeCommAcceptHandler(httpsAccept)",
+                                         CommAcceptCbPtrFun(httpsAccept, s));
+
+    s->listener = new Comm::ListenStateData(fd, call, true);
+
+    debugs(1, 1, "Accepting HTTPS connections at " << s->s << ", FD " << fd << ".");
+
+    Must(AddOpenedHttpSocket(fd)); // otherwise, we have received a fd we did not ask for
 }
 
 #endif
@@ -3467,7 +3540,7 @@ clientOpenListenSockets(void)
 #endif
 
     if (NHttpSockets < 1)
-        fatal("Cannot open HTTP Port");
+        fatal("No HTTP or HTTPS ports configured");
 }
 
 void

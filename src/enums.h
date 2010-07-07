@@ -69,6 +69,7 @@ enum fd_type {
     FD_FILE,
     FD_SOCKET,
     FD_PIPE,
+    FD_MSGHDR,
     FD_UNKNOWN
 };
 
