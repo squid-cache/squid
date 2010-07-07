@@ -217,8 +217,20 @@ This section gives a thorough account of those changes in three categories:
 	<p>Access control based on altered HTTP request following adaptation alterations (ICAP, eCAP, URL rewriter).
 	An upgraded drop-in replacement for <em>http_access2</em> found in Squid-2.
 
+	<tag>else</tag>
+	<p>Part of conditional SMP support syyntax. see <em>if</em>
+
+	<tag>endif</tag>
+	<p>Part of conditional SMP support syyntax. see <em>if</em>
+
 	<tag>eui_lookup</tag>
 	<p>Whether to lookup the EUI or MAC address of a connected client.
+
+	<tag>if</tag>
+	<p>New conditional syntax for SMP multiple-worker. 
+	If-statements can be used to make configuration directives depend on conditions.
+	<p>The else part is optional. The keywords <em>if</em>, <em>else</em> and <em>endif</em> 
+	must be typed on their own lines, as if they were regular configuration directives.
 
 	<tag>memory_cache_mode</tag>
 	<p>Controls which objects to keep in the memory cache (cache_mem)
@@ -240,6 +252,15 @@ This section gives a thorough account of those changes in three categories:
 	header is used for spoofing instead of the directly connected client address.
 	Requires both <em>--enable-follow-x-forwarded-for</em> and <em>--enable-linux-netfilter</em>
 
+	<tag>workers</tag>
+	<p>Number of main Squid processes or "workers" to fork and maintain.
+	In SMP mode, each worker does nearly all what a single Squid daemon
+	does (e.g., listen on http_port and forward HTTP requests).
+	<verb>
+	0: "no daemon" mode, like running "squid -N ..."
+	1: "no SMP" mode, start one main Squid process daemon (default)
+	N: start N main Squid process daemons (i.e., SMP mode)
+	</verb>
 </descrip>
 
 <sect1>Changes to existing tags<label id="modifiedtags">
