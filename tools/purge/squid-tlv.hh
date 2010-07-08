@@ -65,7 +65,9 @@ enum SquidMetaType {
   STORE_META_STD,		// standard metadata
   STORE_META_HITMETERING,	// reserved for hit metering
   STORE_META_VALID,
-  STORE_META_END
+  STORE_META_VARY_HEADERS,	// Stores Vary request headers
+  STORE_META_STD_LFS,		// standard metadata in lfs format
+  STORE_META_OBJSIZE,		// object size, if its known
 };
 
 // taken from Squid-2.x
@@ -75,6 +77,16 @@ struct StoreMetaStd {
   time_t  expires;
   time_t  lastmod;
   size_t  swap_file_sz;
+  u_short refcount;
+  u_short flags;
+};
+
+struct StoreMetaStdLFS {
+  time_t  timestamp;
+  time_t  lastref;
+  time_t  expires;
+  time_t  lastmod;
+  uint64_t  swap_file_sz;
   u_short refcount;
   u_short flags;
 };

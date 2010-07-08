@@ -49,13 +49,8 @@ static const char* RCS_ID =
 SquidTLV::SquidTLV( SquidMetaType _type, size_t _size, void* _data )
   :next(0),size(_size)
 {
-  if ( size ) {
-    type = _type;
-    data = (char*) _data;
-  } else {
-    type = STORE_META_END;
-    data = 0;
-  }
+  type = _type;
+  data = (char*) _data;
 }
 
 SquidMetaList::SquidMetaList()
