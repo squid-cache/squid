@@ -86,7 +86,7 @@ make_snapshot()
 
   # update web page
   if [ -x ${dst}/make.sh ]; then
-      ${dst}/make.sh
+    cd ${dst} ; ./make.sh
   fi
 
 } }
