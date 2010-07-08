@@ -104,7 +104,8 @@ static int berEncodePasswordData(
     /* Allocate a BerElement for the request parameters. */
     if ((requestBer = ber_alloc()) == NULL) {
         err = LDAP_ENCODING_ERROR;
-        goto Cleanup;
+        ber_free(requestBer, 1);
+        return err;
     }
 
     if (password != NULL && password2 != NULL) {
@@ -120,18 +121,13 @@ static int berEncodePasswordData(
 
     if (rc < 0) {
         err = LDAP_ENCODING_ERROR;
-        goto Cleanup;
     } else {
         err = 0;
+        /* Convert the BER we just built to a berval that we'll send with the extended request. */
+        if ((ber_tag_t)ber_flatten(requestBer, requestBV) == LBER_ERROR) {
+            err = LDAP_ENCODING_ERROR;
+        }
     }
-
-    /* Convert the BER we just built to a berval that we'll send with the extended request. */
-    if (ber_flatten(requestBer, requestBV) == LBER_ERROR) {
-        err = LDAP_ENCODING_ERROR;
-        goto Cleanup;
-    }
-
-Cleanup:
 
     if (requestBer) {
         ber_free(requestBer, 1);
@@ -175,7 +171,7 @@ static int berEncodeLoginData(
     /* Allocate a BerElement for the request parameters. */
     if ((requestBer = ber_alloc()) == NULL) {
         err = LDAP_ENCODING_ERROR;
-        goto Cleanup;
+        return err;
     }
 
     /* BER encode the NMAS Version and the objectDN */
@@ -202,17 +198,10 @@ static int berEncodeLoginData(
         err = (ber_printf(requestBer, "o}", utf8TagPtr, utf8TagSize) < 0) ? LDAP_ENCODING_ERROR : 0;
     }
 
-    if (err) {
-        goto Cleanup;
-    }
-
     /* Convert the BER we just built to a berval that we'll send with the extended request. */
-    if (ber_flatten(requestBer, requestBV) == LBER_ERROR) {
+    if (!err && (ber_tag_t)ber_flatten(requestBer, requestBV) == LBER_ERROR) {
         err = LDAP_ENCODING_ERROR;
-        goto Cleanup;
     }
-
-Cleanup:
 
     if (requestBer) {
         ber_free(requestBer, 1);
@@ -240,18 +229,14 @@ static int berDecodeLoginData(
 
     if ((replyBer = ber_init(replyBV)) == NULL) {
         err = LDAP_OPERATIONS_ERROR;
-        goto Cleanup;
     }
-
-    if (retData) {
+    else if (retData) {
         retOctStrLen = *retDataLen + 1;
-        retOctStr = SMB_MALLOC_ARRAY(char, retOctStrLen);
+        retOctStr = (char*)SMB_MALLOC_ARRAY(char, retOctStrLen);
         if (!retOctStr) {
             err = LDAP_OPERATIONS_ERROR;
-            goto Cleanup;
         }
-
-        if (ber_scanf(replyBer, "{iis}", serverVersion, &err, retOctStr, &retOctStrLen) != -1) {
+        else if (ber_scanf(replyBer, "{iis}", serverVersion, &err, retOctStr, &retOctStrLen) != LBER_ERROR) {
             if (*retDataLen >= retOctStrLen) {
                 memcpy(retData, retOctStr, retOctStrLen);
             } else if (!err) {
@@ -263,14 +248,12 @@ static int berDecodeLoginData(
             err = LDAP_DECODING_ERROR;
         }
     } else {
-        if (ber_scanf(replyBer, "{ii}", serverVersion, &err) == -1) {
+        if (ber_scanf(replyBer, "{ii}", serverVersion, &err) == LBER_ERROR) {
             if (!err) {
                 err = LDAP_DECODING_ERROR;
             }
         }
     }
-
-Cleanup:
 
     if (replyBer) {
         ber_free(replyBer, 1);
@@ -311,43 +294,31 @@ static int getLoginConfig(
 
     err = berEncodeLoginData(&requestBV, objectDN, methodIDLen, methodID, tag, 0, NULL);
     if (err) {
-        goto Cleanup;
-    }
-
-    /* Call the ldap_extended_operation (synchronously) */
-    if ((err = ldap_extended_operation_s(ld, NMASLDAP_GET_LOGIN_CONFIG_REQUEST,
+        ;
+    } else if (!err && (err = ldap_extended_operation_s(ld, NMASLDAP_GET_LOGIN_CONFIG_REQUEST,
                                          requestBV, NULL, NULL, &replyOID, &replyBV))) {
-        goto Cleanup;
-    }
-
-    /* Make sure there is a return OID */
-    if (!replyOID) {
+        /* Call the ldap_extended_operation (synchronously) */
+        ;
+    } else if (!replyOID) {
+        /* Make sure there is a return OID */
         err = LDAP_NOT_SUPPORTED;
-        goto Cleanup;
-    }
-
-    /* Is this what we were expecting to get back. */
-    if (strcmp(replyOID, NMASLDAP_GET_LOGIN_CONFIG_RESPONSE)) {
+    } else if (strcmp(replyOID, NMASLDAP_GET_LOGIN_CONFIG_RESPONSE)) {
+        /* Is this what we were expecting to get back. */
         err = LDAP_NOT_SUPPORTED;
-        goto Cleanup;
-    }
+    } else if (!replyBV) {
+        /* Do we have a good returned berval? */
 
-    /* Do we have a good returned berval? */
-    if (!replyBV) {
         /* No; returned berval means we experienced a rather drastic error. */
         /* Return operations error. */
         err = LDAP_OPERATIONS_ERROR;
-        goto Cleanup;
+    } else {
+
+        err = berDecodeLoginData(replyBV, &serverVersion, dataLen, data);
+
+        if (serverVersion != NMAS_LDAP_EXT_VERSION) {
+            err = LDAP_OPERATIONS_ERROR;
+        }
     }
-
-    err = berDecodeLoginData(replyBV, &serverVersion, dataLen, data);
-
-    if (serverVersion != NMAS_LDAP_EXT_VERSION) {
-        err = LDAP_OPERATIONS_ERROR;
-        goto Cleanup;
-    }
-
-Cleanup:
 
     if (replyBV) {
         ber_bvfree(replyBV);
@@ -385,7 +356,7 @@ static int nmasldap_get_simple_pwd(
     size_t  pwdBufLen, bufferLen;
 
     bufferLen = pwdBufLen = pwdLen+2;
-    pwdBuf = SMB_MALLOC_ARRAY(char, pwdBufLen); /* digest and null */
+    pwdBuf = (char*)SMB_MALLOC_ARRAY(char, pwdBufLen); /* digest and null */
     if (pwdBuf == NULL) {
         return LDAP_NO_MEMORY;
     }
@@ -451,57 +422,41 @@ static int nmasldap_get_password(
     }
 
     bufferLen = pwdBufLen = *pwdSize;
-    pwdBuf = SMB_MALLOC_ARRAY(char, pwdBufLen+2);
+    pwdBuf = (char*)SMB_MALLOC_ARRAY(char, pwdBufLen+2);
     if (pwdBuf == NULL) {
         return LDAP_NO_MEMORY;
     }
 
     err = berEncodePasswordData(&requestBV, objectDN, NULL, NULL);
     if (err) {
-        goto Cleanup;
-    }
-
-    /* Call the ldap_extended_operation (synchronously) */
-    if ((err = ldap_extended_operation_s(ld, NMASLDAP_GET_PASSWORD_REQUEST, requestBV, NULL, NULL, &replyOID, &replyBV))) {
-        goto Cleanup;
-    }
-
-    /* Make sure there is a return OID */
-    if (!replyOID) {
+        ;
+    } else if ((err = ldap_extended_operation_s(ld, NMASLDAP_GET_PASSWORD_REQUEST, requestBV, NULL, NULL, &replyOID, &replyBV))) {
+        ; /* Call the ldap_extended_operation (synchronously) */
+    } else if (!replyOID) {
+        /* Make sure there is a return OID */
         err = LDAP_NOT_SUPPORTED;
-        goto Cleanup;
-    }
-
-    /* Is this what we were expecting to get back. */
-    if (strcmp(replyOID, NMASLDAP_GET_PASSWORD_RESPONSE)) {
+    } else if (strcmp(replyOID, NMASLDAP_GET_PASSWORD_RESPONSE)) {
+        /* Is this what we were expecting to get back. */
         err = LDAP_NOT_SUPPORTED;
-        goto Cleanup;
-    }
-
-    /* Do we have a good returned berval? */
-    if (!replyBV) {
+    } else if (!replyBV) {
+        /* Do we have a good returned berval? */
         /* No; returned berval means we experienced a rather drastic error. */
         /* Return operations error. */
         err = LDAP_OPERATIONS_ERROR;
-        goto Cleanup;
-    }
+    } else {
+        err = berDecodeLoginData(replyBV, &serverVersion, &pwdBufLen, pwdBuf);
 
-    err = berDecodeLoginData(replyBV, &serverVersion, &pwdBufLen, pwdBuf);
+        if (serverVersion != NMAS_LDAP_EXT_VERSION) {
+            err = LDAP_OPERATIONS_ERROR;
 
-    if (serverVersion != NMAS_LDAP_EXT_VERSION) {
-        err = LDAP_OPERATIONS_ERROR;
-        goto Cleanup;
-    }
-
-    if (!err && pwdBufLen != 0) {
-        if (*pwdSize >= pwdBufLen+1 && pwd != NULL) {
-            memcpy(pwd, pwdBuf, pwdBufLen);
-            pwd[pwdBufLen] = 0; /* add null termination */
+        } else if (!err && pwdBufLen != 0) {
+            if (*pwdSize >= pwdBufLen+1 && pwd != NULL) {
+                memcpy(pwd, pwdBuf, pwdBufLen);
+                pwd[pwdBufLen] = 0; /* add null termination */
+            }
+            *pwdSize = pwdBufLen; /* does not include null termination */
         }
-        *pwdSize = pwdBufLen; /* does not include null termination */
     }
-
-Cleanup:
 
     if (replyBV) {
         ber_bvfree(replyBV);

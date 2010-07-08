@@ -3821,7 +3821,7 @@ AC_CONFIG_FILES([\
 	helpers/digest_auth/Makefile \
 	helpers/digest_auth/eDirectory/Makefile \
 	helpers/digest_auth/file/Makefile \
-	helpers/digest_auth/ldap/Makefile \
+	helpers/digest_auth/LDAP/Makefile \
 	helpers/ntlm_auth/Makefile \
 	helpers/ntlm_auth/fake/Makefile \
 	helpers/ntlm_auth/smb_lm/Makefile \
