@@ -13,6 +13,7 @@
  */
 
 #include "config.h"
+#include "helpers/defines.h"
 
 #if HAVE_CSTRING
 #include <cstring>
@@ -21,15 +22,12 @@
 #include <string.h>
 #endif
 
-#define BUFFER_SIZE 10240
-
 /**
  * options:
  * -d enable debugging.
  * -h interface help.
  */
 char *my_program_name = NULL;
-int print_debug_messages = 0;
 
 static void
 usage(void)
@@ -50,7 +48,7 @@ process_options(int argc, char *argv[])
     while (-1 != (opt = getopt(argc, argv, "hd"))) {
         switch (opt) {
         case 'd':
-            print_debug_messages = 1;
+            debug_enabled = 1;
             break;
         case 'h':
             usage();
@@ -71,7 +69,7 @@ process_options(int argc, char *argv[])
 int
 main(int argc, char *argv[])
 {
-    char buf[BUFFER_SIZE];
+    char buf[HELPER_INPUT_BUFFER];
     int buflen = 0;
 
     setbuf(stdout, NULL);
@@ -83,7 +81,7 @@ main(int argc, char *argv[])
 
     debug("%s build " __DATE__ ", " __TIME__ " starting up...\n", my_program_name);
 
-    while (fgets(buf, BUFFER_SIZE, stdin) != NULL) {
+    while (fgets(buf, HELPER_INPUT_BUFFER, stdin) != NULL) {
         char *p;
 
         if ((p = strchr(buf, '\n')) != NULL) {
