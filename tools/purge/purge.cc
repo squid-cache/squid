@@ -289,6 +289,13 @@ log_extended( const char* fn, int code, long size, const SquidMetaList* meta )
     sprintf( timeb, "%08x %08x %08x %08x %04x %5hu ",
 	     temp.timestamp, temp.lastref,
 	     temp.expires, temp.lastmod, temp.flags, temp.refcount );
+  } else if ( meta && (findings = meta->search( STORE_META_STD_LFS )) ) {
+    StoreMetaStdLFS temp;
+    // make data aligned, avoid SIGBUS on RISC machines (ARGH!)
+    memcpy( &temp, findings->data, sizeof(StoreMetaStd) );
+    sprintf( timeb, "%08x %08x %08x %08x %04x %5hu ",
+	     temp.timestamp, temp.lastref,
+	     temp.expires, temp.lastmod, temp.flags, temp.refcount );
   } else {
     sprintf( timeb, "%08x %08x %08x %08x %04x %5hu ", -1, -1, -1, -1, 0, 0 );
   }
@@ -417,7 +424,7 @@ match( const char* fn, const REList* list )
       // the URL as part of the list. First, gobble all meta data.
       unsigned int offset = addon;
       SquidMetaList meta;
-      while ( offset < datastart && *(offset+linebuffer) != STORE_META_END ) {
+      while ( offset + addon <= datastart ) {
 	unsigned int size = 0;
 	memcpy( &size, linebuffer+offset+sizeof(char), sizeof(unsigned int) );
 	meta.append( SquidMetaType(*(linebuffer+offset)),

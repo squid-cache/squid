@@ -108,10 +108,10 @@ ifeq (LINUX,${SYSTEM})
 LIBCVER = $(shell /bin/ls /lib/libc.so.? | \
 	awk -F'.' '{ if (m<$$3) m=$$3;} END { print m} ')
 ifeq (6,${LIBCVER})
-SOCKLEN	= size_t
+SOCKLEN	= socklen_t
 endif
 CXXFLAGS += -DHAS_PSIGNAL -DLIBCVERSION=$(LIBCVER) -pipe # -Wall -pedantic
-OPT_NORM = -march=pentium -O2
+OPT_NORM = -O2
 # if your g++ balks (e.g. SuSE still uses 2.7.2.3)
 #CXXFLAGS += -DHAS_PSIGNAL -DLIBCVERSION=$(LIBCVER) -m486
 LD	= $(CC)
