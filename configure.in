@@ -2239,6 +2239,7 @@ AC_CHECK_HEADERS( \
 	sys/syscall.h \
 	sys/time.h \
 	sys/types.h \
+	sys/uio.h \
 	sys/un.h \
 	sys/vfs.h \
 	sys/wait.h \
