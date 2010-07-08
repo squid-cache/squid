@@ -29,9 +29,11 @@
  *
  * Copyright (c) 2003  Robert Collins  <robertc@squid-cache.org>
  */
-
+#include "config.h"
 #include "digest_common.h"
+#include "helpers/defines.h"
 #include "ldap_backend.h"
+
 #define PROGRAM_NAME "digest_ldap_auth"
 
 
@@ -63,7 +65,7 @@ OutputHHA1(RequestData * requestData)
     requestData->error = 0;
     GetHHA1(requestData);
     if (requestData->error) {
-        printf("ERR No such user\n");
+        SEND_ERR("No such user");
         return;
     }
     printf("%s\n", requestData->HHA1);
@@ -75,7 +77,7 @@ DoOneRequest(char *buf)
     RequestData requestData;
     ParseBuffer(buf, &requestData);
     if (!requestData.parsed) {
-        printf("ERR\n");
+        SEND_ERR("");
         return;
     }
     OutputHHA1(&requestData);
@@ -93,10 +95,10 @@ ProcessArguments(int argc, char **argv)
 int
 main(int argc, char **argv)
 {
-    char buf[256];
+    char buf[HELPER_INPUT_BUFFER];
     setbuf(stdout, NULL);
     ProcessArguments(argc, argv);
-    while (fgets(buf, 256, stdin) != NULL)
+    while (fgets(buf, HELPER_INPUT_BUFFER, stdin) != NULL)
         DoOneRequest(buf);
     exit(0);
 }
