@@ -1,0 +1,91 @@
+//
+// $Id: squid-tlv.cc,v 1.1 1999/06/15 21:10:16 voeckler Exp $
+//
+// Author:  Jens-S. Vöckler <voeckler@rvs.uni-hannover.de>
+//
+// File:    squid-tlv.cc
+//          Tue Jun 15 1999
+//
+// (c) 1999 Lehrgebiet Rechnernetze und Verteilte Systeme
+//          Universität Hannover, Germany
+//
+// Permission to use, copy, modify, distribute, and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that (i) the above copyright notices and this permission
+// notice appear in all copies of the software and related documentation,
+// and (ii) the names of the Lehrgebiet Rechnernetze und Verteilte
+// Systeme and the University of Hannover may not be used in any
+// advertising or publicity relating to the software without the
+// specific, prior written permission of Lehrgebiet Rechnernetze und
+// Verteilte Systeme and the University of Hannover.
+//
+// THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
+// WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+//
+// IN NO EVENT SHALL THE LEHRGEBIET RECHNERNETZE UND VERTEILTE SYSTEME OR
+// THE UNIVERSITY OF HANNOVER BE LIABLE FOR ANY SPECIAL, INCIDENTAL,
+// INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND, OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER OR NOT
+// ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF LIABILITY,
+// ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
+// SOFTWARE.
+//
+// $Log: squid-tlv.cc,v $
+// Revision 1.1  1999/06/15 21:10:16  voeckler
+// Initial revision
+//
+//
+#if defined(__GNUC__) || defined(__GNUG__)
+#pragma implementation
+#endif
+
+#include <assert.h>
+#include "squid-tlv.hh"
+
+static const char* RCS_ID =
+"$Id: squid-tlv.cc,v 1.1 1999/06/15 21:10:16 voeckler Exp $";
+
+SquidTLV::SquidTLV( SquidMetaType _type, size_t _size, void* _data )
+  :next(0),size(_size)
+{
+  if ( size ) {
+    type = _type;
+    data = (char*) _data;
+  } else {
+    type = STORE_META_END;
+    data = 0;
+  }
+}
+
+SquidMetaList::SquidMetaList()
+{
+  head = tail = 0;
+}
+
+SquidMetaList::~SquidMetaList()
+{
+  for ( SquidTLV* temp = head; temp; temp = head ) {
+    head = temp->next;
+    delete temp;
+  }
+}
+
+void
+SquidMetaList::append( SquidMetaType type, size_t size, void* data )
+{
+  SquidTLV* temp = new SquidTLV( type, size, data );
+  if ( head == 0 ) head = tail = temp;
+  else {
+    tail->next = temp;
+    tail = temp;
+  }
+}
+
+const SquidTLV*
+SquidMetaList::search( SquidMetaType type ) const
+{
+  const SquidTLV* temp = head;
+  while ( temp && temp->type != type ) temp = temp->next;
+  return temp;
+}
