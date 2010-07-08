@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh -ex
 echo "RUN: $0"
 # Nightly cron job to generate snapshot releases
 top=${PWD}
