@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh -ex
 
 if [ $# -lt 1 ]; then
 	echo "Usage: $0 [branch]"
