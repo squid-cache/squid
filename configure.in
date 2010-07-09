@@ -2336,123 +2336,23 @@ AC_CHECK_MEMBERS([struct iphdr.ip_hl],,,[
 dnl Check for typedefs
 AC_CHECK_SIZEOF(void *)
 
-dnl 8 bit integers - int8_t
-dnl if this is defined we trust it to be 8 bits
-AC_CHECK_TYPE(int8_t,[
-  AC_CHECK_SIZEOF(int8_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
-  AC_DEFINE(HAVE_INT8_T,1,[int8_t is defined in system headers])
-  ],,SQUID_DEFAULT_INCLUDES)
-
-dnl fallback #1
-AC_CHECK_TYPE(char,[
-  AC_CHECK_SIZEOF(char,,SQUID_DEFAULT_SIZEOF_INCLUDES)
-  AC_DEFINE(HAVE_CHAR,1,[char is defined in system headers])
-  ],,SQUID_DEFAULT_INCLUDES)
-
-dnl unsigned 8 bit ints - u_int8_t
-dnl if this is defined we trust it to be 8 bits
-AC_CHECK_TYPE(uint8_t,[
-  AC_CHECK_SIZEOF(uint8_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
-  AC_DEFINE(HAVE_UINT8_T,1,[uint8_t is defined in system headers])
-  ],,SQUID_DEFAULT_INCLUDES)
-
-dnl if this is defined we trust it to be 8 bits
-AC_CHECK_TYPE(u_int8_t,[
-  AC_CHECK_SIZEOF(u_int8_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
-  AC_DEFINE(HAVE_U_INT8_T,1,[u_int8_t is defined in system headers])
-  ],,SQUID_DEFAULT_INCLUDES)
-
-dnl 16 bit integers - int16_t
-dnl if this is defined we trust it to be 16 bits
-AC_CHECK_TYPE(int16_t,[
-  AC_CHECK_SIZEOF(int16_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
-  AC_DEFINE(HAVE_INT16_T,1,[int16_t is defined in system headers])
-  ],,SQUID_DEFAULT_INCLUDES)
-
-dnl fallback #1
-AC_CHECK_TYPE(short,[
-  AC_CHECK_SIZEOF(short,,SQUID_DEFAULT_SIZEOF_INCLUDES)
-  AC_DEFINE(HAVE_SHORT,1,[short is defined in system headers])
-  ],,SQUID_DEFAULT_INCLUDES)
-
-dnl fallback #2
-AC_CHECK_TYPE(int,[
-  AC_CHECK_SIZEOF(int,,SQUID_DEFAULT_SIZEOF_INCLUDES)
-  AC_DEFINE(HAVE_INT,1,[int is defined in system headers])
-  ],,SQUID_DEFAULT_INCLUDES)
-
-dnl unsigned 16 bit ints - uint16_t
-dnl if this is defined we trust it to be 16 bits
-AC_CHECK_TYPE(uint16_t,[
-  AC_CHECK_SIZEOF(uint16_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
-  AC_DEFINE(HAVE_UINT16_T,1,[uint16_t is defined in system headers])
-  ],,SQUID_DEFAULT_INCLUDES)
-
-dnl if this is defined we trust it to be 16 bits
-AC_CHECK_TYPE(u_int16_t,[
-  AC_CHECK_SIZEOF(u_int16_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
-  AC_DEFINE(HAVE_U_INT16_T,1,[u_int16_t is defined in system headers])
-  ],,SQUID_DEFAULT_INCLUDES)
-
-dnl 32 bit signed int - int32_t
-dnl if this is defined we trust it to be 32 bits
-AC_CHECK_TYPE(int32_t,[
-  AC_CHECK_SIZEOF(int32_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
-  AC_DEFINE(HAVE_INT32_T,1,[int32_t is defined in system headers])
-  ],,SQUID_DEFAULT_INCLUDES)
-
-dnl fallback #1
-AC_CHECK_TYPE(long,[
-  AC_CHECK_SIZEOF(long,,SQUID_DEFAULT_SIZEOF_INCLUDES)
-  AC_DEFINE(HAVE_LONG,1,[long is defined in system headers])
-  ],,SQUID_DEFAULT_INCLUDES)
-
-dnl 32 bit unsigned int - uint32_t
-dnl if this is defined we trust it to be 32 bits
-AC_CHECK_TYPE(uint32_t,[
-  AC_CHECK_SIZEOF(uint32_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
-  AC_DEFINE(HAVE_UINT32_T,1,[uint32_t is defined in system headers])
-  ],,SQUID_DEFAULT_INCLUDES)
-
-dnl if this is defined we trust it to be 32 bits
-AC_CHECK_TYPE(u_int32_t,[
-  AC_CHECK_SIZEOF(u_int32_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
-  AC_DEFINE(HAVE_U_INT32_T,1,[u_int32_t is defined in system headers])
-  ],,SQUID_DEFAULT_INCLUDES)
-
-dnl 64 bit signed - int64_t
-dnl if this is defind we trust it to be 64 bits
-AC_CHECK_TYPE(int64_t,[
-  AC_CHECK_SIZEOF(int64_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
-  AC_DEFINE(HAVE_INT64_T,1,[int64_t is defined in system headers])
-  ],,SQUID_DEFAULT_INCLUDES)
-
-dnl fallback #1
-dnl if this is defind we trust it to be 64 bits
-AC_CHECK_TYPE(__int64,[
-  AC_CHECK_SIZEOF(__int64,,SQUID_DEFAULT_SIZEOF_INCLUDES)
-  AC_DEFINE(HAVE___INT64,1,[__int64 is defined in system headers])
-  ],,SQUID_DEFAULT_INCLUDES)
-
-dnl fallback #2
-AC_CHECK_TYPE(long long,[
-  AC_CHECK_SIZEOF(long long,,SQUID_DEFAULT_SIZEOF_INCLUDES)
-  AC_DEFINE(HAVE_LONG_LONG,1,[long long is defined in system headers])
-  ],,SQUID_DEFAULT_INCLUDES)
-
-dnl 64 bit unsigned - u_int64_t
-dnl if this is defind we trust it to be 64 bits
-AC_CHECK_TYPE(u_int64_t,[
-  AC_CHECK_SIZEOF(u_int64_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
-  AC_DEFINE(HAVE_U_INT64_T,1,[u_int64_t is defined in system headers])
-  ],,SQUID_DEFAULT_INCLUDES)
-
-dnl 64 bit unsigned - uint64_t
-dnl if this is defind we trust it to be 64 bits
-AC_CHECK_TYPE(uint64_t,[
-  AC_CHECK_SIZEOF(uint64_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
-  AC_DEFINE(HAVE_UINT64_T,1,[uint64_t is defined in system headers])
-  ],,SQUID_DEFAULT_INCLUDES)
+# check for a bunch of types
+AC_TYPE_INT8_T
+AC_TYPE_UINT8_T
+AC_TYPE_INT16_T
+AC_TYPE_UINT16_T
+AC_TYPE_INT32_T
+AC_TYPE_UINT32_T
+AC_TYPE_INT64_T
+AC_TYPE_UINT64_T
+AC_TYPE_PID_T
+AC_TYPE_SIZE_T
+AC_TYPE_SSIZE_T
+AC_TYPE_OFF_T
+AC_TYPE_UID_T
+#need the defines for PRId64
+AC_CHECK_SIZEOF(int64_t)
+AC_CHECK_SIZEOF(long)
 
 dnl On Solaris 9 x86, gcc may includes a "fixed" set of old system include files
 dnl that is incompatible with the updated Solaris header files.
@@ -2465,12 +2365,6 @@ AC_CHECK_TYPE(upad128_t,
   AC_DEFINE(HAVE_UPAD128_T,1,[upad128_t is defined in system headers]),
   ,SQUID_DEFAULT_INCLUDES)
 
-AC_CHECK_TYPE(pid_t, AC_DEFINE(HAVE_PID_T,1,[pid_t is defined by the system headers]),,SQUID_DEFAULT_INCLUDES)
-AC_CHECK_TYPE(size_t, [AC_CHECK_SIZEOF(size_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
-  AC_DEFINE(HAVE_SIZE_T,1,[size_t is defined by the system headers])],,SQUID_DEFAULT_INCLUDES)
-AC_CHECK_TYPE(ssize_t, AC_DEFINE(HAVE_SSIZE_T,1,[ssize_t is defined by the system headers]),,SQUID_DEFAULT_INCLUDES)
-AC_CHECK_TYPE(off_t,[ AC_CHECK_SIZEOF(off_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
-  AC_DEFINE(HAVE_OFF_T,1,[off_t is defined by the system headers])],,SQUID_DEFAULT_INCLUDES)
 AC_CHECK_TYPE(mode_t, AC_DEFINE(HAVE_MODE_T,1,[mode_t is defined by the system headers]),,SQUID_DEFAULT_INCLUDES)
 AC_CHECK_TYPE(fd_mask,  AC_DEFINE(HAVE_FD_MASK,1,[fd_mask is defined by the system headers]),,SQUID_DEFAULT_INCLUDES)
 
@@ -2521,7 +2415,8 @@ SQUID_DEFINE_BOOL(LIBCAP_BROKEN,${squid_cv_sys_capability_works:=no},
 AC_MSG_NOTICE([libcap2 headers are ok: $squid_cv_sys_capability_works])
 
 
-AC_CHECK_TYPE(mtyp_t,AC_DEFINE(HAVE_MTYP_T,1,[mtyp_t is defined by the system headers]),,[#include <sys/types.h>
+AC_CHECK_TYPE(mtyp_t,AC_DEFINE(HAVE_MTYP_T,1,
+   [mtyp_t is defined by the system headers]),,[#include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>])
 
