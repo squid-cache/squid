@@ -2486,47 +2486,39 @@ AC_CHECK_TYPE(socklen_t,AC_DEFINE(HAVE_SOCKLEN_T,1,[socklen_t is defined by the 
 #endif])
 
 dnl Check for libcap header (assume its not broken unless 
-use_libcap=auto
-AC_ARG_WITH(libcap, AS_HELP_STRING([--without-libcap],[disable usage of Linux capabilities library to control privileges]),
-[ if test "x$withval" = "xyes" ; then
-    AC_MSG_RESULT(libcap forced enabled)
-    use_libcap=yes
-  else
-    AC_MSG_RESULT(libcap forced disabled)
-    use_libcap=no
-  fi
-])
-if test "x$use_libcap" != "xno"; then
+AC_ARG_WITH(libcap, AS_HELP_STRING([--without-libcap],
+       [disable usage of Linux capabilities library to control privileges]), [
+SQUID_YESNO([$withval],[unrecognized argument to --without-libcap: $withval])
+],[with_libcap=auto])
+
+if test "x$with_libcap" != "xno"; then
   # cap_clear_flag is the most recent libcap function we require
+  AC_CHECK_HEADERS(sys/capability.h)
   AC_CHECK_LIB(cap, cap_clear_flag)
-  if test "x$ac_cv_lib_cap_cap_clear_flag" = xyes; then
-    use_libcap=yes
-  else
-    if test "x$use_libcap" = "xyes"; then
+  SQUID_CHECK_FUNCTIONAL_LIBCAP2
+
+  # if it can't be supported..
+  if test "x$ac_cv_header_sys_capability_h" = "no" -o \
+    "x$ac_cv_lib_cap_cap_clear_flag" = "no"; then
+    # and it was forced on: error
+    if "x$with_libcap" = "yes" ; then
       AC_MSG_ERROR([libcap forced enabled but not available or not usable, requires libcap-2.09 or later])
     fi
-    use_libcap=no
+    # with_libcap is "auto"; it can't be supported. Disable.
+    with_libcap=no
+  else
+    # header and lib are ok, we support
+    with_libcap=yes
   fi
+
 fi
 
-if test "x$use_libcap" = "xyes"; then
-  AC_DEFINE(USE_LIBCAP, 1, [use libcap to set capabilities required for TPROXY])
-  dnl Check for libcap headader breakage.
-  AC_CHECK_HEADERS(sys/capability.h)
-  AC_CACHE_CHECK([for operational libcap2 headers], squid_cv_sys_capability_works,
-    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-#include <stdlib.h>
-#include <stddef.h>
-#include <sys/capability.h>
-]], [[
-capget(NULL, NULL);
-capset(NULL, NULL);
-                   ]])],[squid_cv_sys_capability_works=yes],[squid_cv_sys_capability_works=no])
-  )
-  if test x$squid_cv_sys_capability_works != xyes; then
-    AC_DEFINE([LIBCAP_BROKEN],1,[if libcap2 headers are broken and clashing with glibc])
-  fi
-fi
+SQUID_DEFINE_BOOL(USE_LIBCAP,$with_libcap,
+   [use libcap to set capabilities required for TPROXY])
+AC_MSG_NOTICE([libcap support enabled: $with_libcap])
+SQUID_DEFINE_BOOL(LIBCAP_BROKEN,${squid_cv_sys_capability_works:=no},
+   [libcap2 headers are broken and clashing with glibc])
+AC_MSG_NOTICE([libcap2 headers are ok: $squid_cv_sys_capability_works])
 
 
 AC_CHECK_TYPE(mtyp_t,AC_DEFINE(HAVE_MTYP_T,1,[mtyp_t is defined by the system headers]),,[#include <sys/types.h>
@@ -3180,7 +3172,7 @@ SQUID_DEFINE_BOOL(LINUX_NETFILTER,$enable_linux_netfilter,
 
 dnl Netfilter TPROXY depends on libcap but the NAT parts can still work.
 AC_MSG_NOTICE([Support for Netfilter-based interception proxy requested: $enable_linux_netfilter])
-if test "$enable_linux_netfilter" = "yes" && test "$use_libcap" != "yes" ; then
+if test "$enable_linux_netfilter" = "yes" && test "$with_libcap" != "yes" ; then
     AC_MSG_WARN([Missing needed capabilities (libcap or libcap2) for TPROXY])
     AC_MSG_WARN([Linux Transparent Proxy support WILL NOT be enabled])
     AC_MSG_WARN([Reduced support to Interception Proxy])
