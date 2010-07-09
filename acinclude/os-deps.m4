@@ -135,3 +135,22 @@ int main(int argc, char **argv)
       ]])],[squid_cv_epoll_works=yes],[squid_cv_epoll_works=no],[]))
 
 ]) dnl SQUID_CHECK_EPOLL
+
+dnl check that we have functional libcap2 headers
+dnl sets squid_cv_sys_capability_works to "yes" or "no"
+AC_DEFUN([SQUID_CHECK_FUNCTIONAL_LIBCAP2],[
+  AC_CACHE_CHECK([for operational libcap2 headers], 
+                 squid_cv_sys_capability_works,
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <stdlib.h>
+#include <stddef.h>
+#include <sys/capability.h>
+]], [[
+    capget(NULL, NULL);
+    capset(NULL, NULL);
+]])],
+   [squid_cv_sys_capability_works=yes],
+   [squid_cv_sys_capability_works=no])
+  )
+])
+
