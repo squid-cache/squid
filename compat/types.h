@@ -116,34 +116,6 @@
 #endif
 #endif
 
-#ifndef HAVE_PID_T
-#if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
-typedef long pid_t;
-#else
-typedef int pid_t;
-#endif
-#endif
-
-#ifndef HAVE_SIZE_T
-typedef unsigned int size_t;
-#endif
-
-#ifndef HAVE_SSIZE_T
-typedef int ssize_t;
-#endif
-
-#ifndef HAVE_OFF_T
-#if defined(_MSC_VER) /* Microsoft C Compiler ONLY */
-#if defined(_FILE_OFFSET_BITS) && _FILE_OFFSET_BITS == 64
-typedef int64_t off_t;
-#else
-typedef long off_t;
-#endif
-#else
-typedef int off_t;
-#endif
-#endif
-
 #ifndef HAVE_MODE_T
 typedef unsigned short mode_t;
 #endif

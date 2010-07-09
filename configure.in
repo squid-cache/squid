@@ -2397,9 +2397,10 @@ if test "x$with_libcap" != "xno"; then
     # and it was forced on: error
     if "x$with_libcap" = "yes" ; then
       AC_MSG_ERROR([libcap forced enabled but not available or not usable, requires libcap-2.09 or later])
+    else
+      # with_libcap is "auto"; it can't be supported. Disable.
+      with_libcap=no
     fi
-    # with_libcap is "auto"; it can't be supported. Disable.
-    with_libcap=no
   else
     # header and lib are ok, we support
     with_libcap=yes
