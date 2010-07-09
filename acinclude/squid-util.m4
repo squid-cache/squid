@@ -163,7 +163,7 @@ squid_tmp_define=""
 case "$2" in 
   yes|true|1) squid_tmp_define="1" ;;
   no|false|0|"") squid_tmp_define="0" ;;
-  *) AC_MSG_ERROR([SQUID_DEFINE[]_BOOL: unrecognized value: '$2']) ;;
+  *) AC_MSG_ERROR([SQUID_DEFINE[]_BOOL: unrecognized value for $1: '$2']) ;;
 esac
 ifelse([$#],3, 
   [AC_DEFINE_UNQUOTED([$1], [$squid_tmp_define],[$3])],
