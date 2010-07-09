@@ -229,14 +229,12 @@ static int berDecodeLoginData(
 
     if ((replyBer = ber_init(replyBV)) == NULL) {
         err = LDAP_OPERATIONS_ERROR;
-    }
-    else if (retData) {
+    } else if (retData) {
         retOctStrLen = *retDataLen + 1;
         retOctStr = (char*)SMB_MALLOC_ARRAY(char, retOctStrLen);
         if (!retOctStr) {
             err = LDAP_OPERATIONS_ERROR;
-        }
-        else if (ber_scanf(replyBer, "{iis}", serverVersion, &err, retOctStr, &retOctStrLen) != LBER_ERROR) {
+        } else if (ber_scanf(replyBer, "{iis}", serverVersion, &err, retOctStr, &retOctStrLen) != LBER_ERROR) {
             if (*retDataLen >= retOctStrLen) {
                 memcpy(retData, retOctStr, retOctStrLen);
             } else if (!err) {
@@ -296,7 +294,7 @@ static int getLoginConfig(
     if (err) {
         ;
     } else if (!err && (err = ldap_extended_operation_s(ld, NMASLDAP_GET_LOGIN_CONFIG_REQUEST,
-                                         requestBV, NULL, NULL, &replyOID, &replyBV))) {
+                              requestBV, NULL, NULL, &replyOID, &replyBV))) {
         /* Call the ldap_extended_operation (synchronously) */
         ;
     } else if (!replyOID) {

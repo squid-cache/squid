@@ -44,43 +44,43 @@
 #include "squid-tlv.hh"
 
 static const char* RCS_ID =
-"$Id: squid-tlv.cc,v 1.1 1999/06/15 21:10:16 voeckler Exp $";
+    "$Id: squid-tlv.cc,v 1.1 1999/06/15 21:10:16 voeckler Exp $";
 
 SquidTLV::SquidTLV( SquidMetaType _type, size_t _size, void* _data )
-  :next(0),size(_size)
+        :next(0),size(_size)
 {
-  type = _type;
-  data = (char*) _data;
+    type = _type;
+    data = (char*) _data;
 }
 
 SquidMetaList::SquidMetaList()
 {
-  head = tail = 0;
+    head = tail = 0;
 }
 
 SquidMetaList::~SquidMetaList()
 {
-  for ( SquidTLV* temp = head; temp; temp = head ) {
-    head = temp->next;
-    delete temp;
-  }
+    for ( SquidTLV* temp = head; temp; temp = head ) {
+        head = temp->next;
+        delete temp;
+    }
 }
 
 void
 SquidMetaList::append( SquidMetaType type, size_t size, void* data )
 {
-  SquidTLV* temp = new SquidTLV( type, size, data );
-  if ( head == 0 ) head = tail = temp;
-  else {
-    tail->next = temp;
-    tail = temp;
-  }
+    SquidTLV* temp = new SquidTLV( type, size, data );
+    if ( head == 0 ) head = tail = temp;
+    else {
+        tail->next = temp;
+        tail = temp;
+    }
 }
 
 const SquidTLV*
 SquidMetaList::search( SquidMetaType type ) const
 {
-  const SquidTLV* temp = head;
-  while ( temp && temp->type != type ) temp = temp->next;
-  return temp;
+    const SquidTLV* temp = head;
+    while ( temp && temp->type != type ) temp = temp->next;
+    return temp;
 }
