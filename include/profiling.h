@@ -67,6 +67,7 @@ get_tick(void)
 /* This CPU is unsupported. Short-circuit, no profiling here */
 #define get_tick() 0
 #undef USE_XPROF_STATS
+#define USE_XPROF_STATS 0
 #endif
 
 #endif /* USE_XPROF_STATS - maybe disabled above */

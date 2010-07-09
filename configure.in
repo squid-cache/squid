@@ -2214,6 +2214,7 @@ AC_CHECK_HEADERS( \
 	sys/syscall.h \
 	sys/time.h \
 	sys/types.h \
+	sys/uio.h \
 	sys/un.h \
 	sys/vfs.h \
 	sys/wait.h \
@@ -3787,7 +3788,7 @@ AC_CONFIG_FILES([\
 	helpers/digest_auth/Makefile \
 	helpers/digest_auth/eDirectory/Makefile \
 	helpers/digest_auth/file/Makefile \
-	helpers/digest_auth/ldap/Makefile \
+	helpers/digest_auth/LDAP/Makefile \
 	helpers/ntlm_auth/Makefile \
 	helpers/ntlm_auth/fake/Makefile \
 	helpers/ntlm_auth/smb_lm/Makefile \

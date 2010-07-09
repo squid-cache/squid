@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh -ex
 echo "RUN: $0"
 # Nightly cron job to generate snapshot releases
 top=${PWD}
@@ -86,7 +86,7 @@ make_snapshot()
 
   # update web page
   if [ -x ${dst}/make.sh ]; then
-      ${dst}/make.sh
+    cd ${dst} ; ./make.sh
   fi
 
 } }
