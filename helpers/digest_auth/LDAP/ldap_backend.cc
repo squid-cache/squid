@@ -63,7 +63,6 @@ static int encrpass = 0;
 static int searchscope = LDAP_SCOPE_SUBTREE;
 static int persistent = 0;
 static int noreferrals = 0;
-static int show_debug_messages = 0;
 static int port = LDAP_PORT;
 static int strip_nt_domain = 0;
 static int aliasderef = LDAP_DEREF_NEVER;
@@ -94,7 +93,7 @@ squid_ldap_set_aliasderef(int deref)
 static void
 squid_ldap_set_referrals(int referrals)
 {
-    int *value = referrals ? LDAP_OPT_ON :LDAP_OPT_OFF;
+    int *value = static_cast<int*>(referrals ? LDAP_OPT_ON :LDAP_OPT_OFF);
     ldap_set_option(ld, LDAP_OPT_REFERRALS, value);
 }
 static void
@@ -207,8 +206,7 @@ getpassword(char *login, char *realm)
             snprintf(filter, sizeof(filter), usersearchfilter, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login);
 
 retrysrch:
-            if (show_debug_messages)
-                fprintf(stderr, "user filter '%s', searchbase '%s'\n", filter, searchbase);
+            debug("user filter '%s', searchbase '%s'\n", filter, searchbase);
 
             rc = ldap_search_s(ld, searchbase, searchscope, filter, NULL, 0, &res);
             if (rc != LDAP_SUCCESS) {
@@ -243,8 +241,7 @@ retrysrch:
             snprintf(searchbase, 8192, "%s=%s, %s", userdnattr, login, userbasedn);
 
 retrydnattr:
-            if (show_debug_messages)
-                fprintf(stderr, "searchbase '%s'\n", searchbase);
+            debug("searchbase '%s'\n", searchbase);
             rc = ldap_search_s(ld, searchbase, searchscope, NULL, NULL, 0, &res);
         }
         if (rc == LDAP_SUCCESS) {
@@ -256,8 +253,7 @@ retrydnattr:
                 return NULL;
             }
             if (!values) {
-                if (show_debug_messages)
-                    printf("No attribute value found\n");
+                debug("No attribute value found\n");
                 ldap_msgfree(res);
                 return NULL;
             }
@@ -274,8 +270,7 @@ retrydnattr:
                 }
                 value++;
             }
-            if (show_debug_messages)
-                printf("password: %s\n", password);
+            debug("password: %s\n", password);
             if (password)
                 password = xstrdup(password);
             ldap_value_free(values);
@@ -389,8 +384,7 @@ ldapconnect(void)
                 ld = NULL;
             }
         }
-        if (show_debug_messages)
-            fprintf(stderr, "Connected OK\n");
+        debug("Connected OK\n");
     }
 }
 int
@@ -433,7 +427,7 @@ LDAPArguments(int argc, char **argv)
         case 'h':
             if (ldapServer) {
                 int len = strlen(ldapServer) + 1 + strlen(value) + 1;
-                char *newhost = malloc(len);
+                char *newhost = (char*)malloc(len);
                 snprintf(newhost, len, "%s %s", ldapServer, value);
                 free(ldapServer);
                 ldapServer = newhost;
@@ -544,7 +538,7 @@ LDAPArguments(int argc, char **argv)
             break;
 #endif
         case 'd':
-            show_debug_messages = 1;
+            debug_enabled = 1;
             break;
         case 'E':
             strip_nt_domain = 1;
@@ -559,7 +553,7 @@ LDAPArguments(int argc, char **argv)
         char *value = argv[1];
         if (ldapServer) {
             int len = strlen(ldapServer) + 1 + strlen(value) + 1;
-            char *newhost = malloc(len);
+            char *newhost = (char*)malloc(len);
             snprintf(newhost, len, "%s %s", ldapServer, value);
             free(ldapServer);
             ldapServer = newhost;

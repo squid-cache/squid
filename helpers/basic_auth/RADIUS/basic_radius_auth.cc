@@ -119,7 +119,6 @@ static uint32_t auth_ipaddr;
 static int retries = 30;
 
 char progname[] = "basic_radius_auth";
-int debug_flag = 0;
 
 #ifdef _SQUID_MSWIN_
 void
@@ -456,6 +455,9 @@ main(int argc, char **argv)
 
     while ((c = getopt(argc, argv, "h:p:f:w:i:t:")) != -1) {
         switch (c) {
+        case 'd':
+            debug_enabled = 1;
+            break;
         case 'f':
             cfname = optarg;
             break;
