@@ -1215,11 +1215,12 @@ ConfigureCurrentKid(const char *processName)
     if (processName && processName[0] == '(') {
         if (const char *idStart = strrchr(processName, '-')) {
             KidIdentifier = atoi(idStart + 1);
-            const int nameLen = idStart - (processName + 1);
-            xstrncpy(KidName, processName + 1, nameLen + 1);
+            const size_t nameLen = idStart - (processName + 1);
+            assert(nameLen < sizeof(TheKidName));
+            xstrncpy(TheKidName, processName + 1, nameLen + 1);
         }
     } else {
-        xstrncpy(KidName, APP_SHORTNAME, sizeof(KidName));
+        xstrncpy(TheKidName, APP_SHORTNAME, sizeof(TheKidName));
         KidIdentifier = 0;
     }
 }
