@@ -1,14 +1,14 @@
-.if !'po4a'hide' .TH squid_ldap_group 8 "30 January 2005"
+.if !'po4a'hide' .TH ext_ldap_group_acl 8 "30 January 2005"
 .
 .SH NAME
-.if !'po4a'hide' .B squid_ldap_group
+.if !'po4a'hide' .B ext_ldap_group_acl
 .if !'po4a'hide' \-
 Squid LDAP external acl group helper
 .PP
 Version 2.17
 .
 .SH SYNOPSIS
-.if !'po4a'hide' .B squid_ldap_group
+.if !'po4a'hide' .B ext_ldap_group_acl
 .if !'po4a'hide' .B "\-b \""
 base DN
 .if !'po4a'hide' .B "\" \-f \""
@@ -16,7 +16,7 @@ LDAP search filter
 .if !'po4a'hide' .B "\" ["
 options
 .if !'po4a'hide' .B "] ["
-ldap_server_name
+LDAP server name
 .if !'po4a'hide' .B "[:"
 port
 .if !'po4a'hide' .B "]|"
@@ -24,7 +24,7 @@ URI
 .if !'po4a'hide' .B "]..."
 .
 .SH DESCRIPTION
-.B squid_ldap_group
+.B ext_ldap_group_acl
 allows Squid to connect to a LDAP directory to authorize users via LDAP groups.
 LDAP options are specified as parameters on the command line,
 while the username(s) and group(s) to be checked against the
@@ -77,13 +77,13 @@ Netscape LDAP API libraries)
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .BI \-d
 Debug mode where each step taken will get reported in detail.
-Useful for understanding what goes wrong if the results is
-not what is expected.
+Useful for understanding what goes wrong if the result is
+not what was expected.
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .BI "\-D " "binddn " "\-w " password
 The DN and password to bind as while performing searches. Required
-if the directory does not allow anonymous searches.
+if the LDAP directory does not allow anonymous searches.
 .IP
 As the password needs to be printed in plain text in your Squid configuration
 and will be sent on the command line to the helper it is strongly recommended
@@ -153,7 +153,7 @@ Strip Kerberos Realm component from user names (@ separated)
 .
 .if !'po4a'hide' .TP
 .if !'po4a'hide' .BI \-p " ldapport"
-Specify an alternate TCP port where the ldap server is listening if
+Specify an alternate TCP port where the LDAP server is listening if
 other than the default LDAP port 389.
 .
 .if !'po4a'hide' .TP
@@ -214,7 +214,7 @@ helper in
 .if !'po4a'hide' .P
 .if !'po4a'hide' .ft CR
 .if !'po4a'hide' .nf
-.if !'po4a'hide' external_acl_type ldap_group %LOGIN /path/to/squid_ldap_group ...
+.if !'po4a'hide' external_acl_type ldap_group %LOGIN /path/to/ext_ldap_group_acl ...
 .if !'po4a'hide' .br
 .if !'po4a'hide' acl group1 external ldap_group Group1
 .if !'po4a'hide' .br
@@ -227,7 +227,7 @@ When constructing search filters it is recommended to first test the filter
 using
 .B ldapsearch
 to verify that the filter matches what you expect before you attempt to use
-.B squid_ldap_group
+.B ext_ldap_group_acl
 .
 .SH AUTHOR
 This program was written by 

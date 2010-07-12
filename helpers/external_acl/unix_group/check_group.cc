@@ -55,20 +55,29 @@
  * Initial revision
  *
  */
-
+#include "config.h"
+#include "helpers/defines.h"
 #include "rfc1738.h"
 #include "util.h"
 
+#if HAVE_STDIO_H
 #include <stdio.h>
-#include <stdlib.h>
+#endif
+#if HAVE_STRING_H
 #include <string.h>
-#include <sys/types.h>
+#endif
+#if HAVE_GRP_H
 #include <grp.h>
+#endif
+#if HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+#if HAVE_PWD_H
 #include <pwd.h>
+#endif
+#if HAVE_CTYPE_H
 #include <ctype.h>
-
-#define BUFSIZE 8192		/* the stdin buffer size */
+#endif
 
 /*
  * Verify if user´s primary group matches groupname
@@ -83,7 +92,7 @@ validate_user_pw(char *username, char *groupname)
 
     if ((p = getpwnam(username)) == NULL) {
         /* Returns an error if user does not exist in the /etc/passwd */
-        fprintf(stderr, "helper: User does not exist '%s'\n", username);
+        fprintf(stderr, "ERROR: User does not exist '%s'\n", username);
         return 0;
     } else {
         /* Verify if the this is the primary user group */
@@ -106,8 +115,7 @@ validate_user_gr(char *username, char *groupname)
     struct group *g;
 
     if ((g = getgrnam(groupname)) == NULL) {
-        fprintf(stderr, "helper: Group does not exist '%s'\n",
-                groupname);
+        fprintf(stderr, "ERROR: Group does not exist '%s'\n", groupname);
         return 0;
     } else {
         while (*(g->gr_mem) != NULL) {
@@ -140,7 +148,7 @@ int
 main(int argc, char *argv[])
 {
     char *user, *suser, *p;
-    char buf[BUFSIZE];
+    char buf[HELPER_INPUT_BUFFER];
     char **grents = NULL;
     int check_pw = 0, ch, ngroups = 0, i, j = 0, strip_dm = 0;
 
@@ -148,8 +156,11 @@ main(int argc, char *argv[])
     setvbuf(stdout, NULL, _IOLBF, 0);
 
     /* get user options */
-    while ((ch = getopt(argc, argv, "spg:")) != -1) {
+    while ((ch = getopt(argc, argv, "dspg:")) != -1) {
         switch (ch) {
+        case 'd':
+            debug_enabled = 1;
+            break;
         case 's':
             strip_dm = 1;
             break;
@@ -157,7 +168,7 @@ main(int argc, char *argv[])
             check_pw = 1;
             break;
         case 'g':
-            grents = realloc(grents, sizeof(*grents) * (ngroups+1));
+            grents = (char**)realloc(grents, sizeof(*grents) * (ngroups+1));
             grents[ngroups++] = optarg;
             break;
         case '?':
@@ -173,25 +184,27 @@ main(int argc, char *argv[])
         }
     }
     if (optind < argc) {
-        fprintf(stderr, "Unknown option '%s'\n", argv[optind]);
+        fprintf(stderr, "FATAL: Unknown option '%s'\n", argv[optind]);
         usage(argv[0]);
         exit(1);
     }
-    while (fgets(buf, sizeof(buf), stdin)) {
+    while (fgets(buf, HELPER_INPUT_BUFFER, stdin)) {
         j = 0;
         if ((p = strchr(buf, '\n')) == NULL) {
             /* too large message received.. skip and deny */
-            fprintf(stderr, "%s: ERROR: Too large: %s\n", argv[0], buf);
+            fprintf(stderr, "ERROR: %s: Too large: %s\n", argv[0], buf);
             while (fgets(buf, sizeof(buf), stdin)) {
-                fprintf(stderr, "%s: ERROR: Too large..: %s\n", argv[0], buf);
+                fprintf(stderr, "ERROR: %s: Too large..: %s\n", argv[0], buf);
                 if (strchr(buf, '\n') != NULL)
                     break;
             }
-            goto error;
+            SEND_ERR("Username Input too large.");
+            continue;
         }
         *p = '\0';
         if ((p = strtok(buf, " ")) == NULL) {
-            goto error;
+            SEND_ERR("No username given.");
+            continue;
         } else {
             user = p;
             rfc1738_unescape(user);
@@ -218,10 +231,9 @@ main(int argc, char *argv[])
         }
 
         if (j > 0) {
-            printf("OK\n");
+            SEND_OK("");
         } else {
-error:
-            printf("ERR\n");
+            SEND_ERR("");
         }
     }
     return 0;
