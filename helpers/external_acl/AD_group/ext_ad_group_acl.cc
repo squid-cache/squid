@@ -1,5 +1,5 @@
 /*
- * mswin_check_ad_group: lookup group membership in a Windows
+ * ext_ad_group_acl: lookup group membership in a Windows
  * Active Directory domain
  *
  * (C)2008-2009 Guido Serassio - Acme Consulting S.r.l.
@@ -58,10 +58,14 @@
  */
 
 #include "config.h"
+#include "helpers/defines.h"
+#include "include/util.h"
+
 #ifdef _SQUID_CYGWIN_
 #include <wchar.h>
 int _wcsicmp(const wchar_t *, const wchar_t *);
 #endif
+
 #if HAVE_STDIO_H
 #include <stdio.h>
 #endif
@@ -87,17 +91,13 @@ int _wcsicmp(const wchar_t *, const wchar_t *);
 #include <dsrole.h>
 #include <sddl.h>
 
-#include "util.h"
-
 enum ADSI_PATH {
     LDAP_MODE,
     GC_MODE
 } ADSI_Path;
 
-#define BUFSIZE 8192		/* the stdin buffer size */
 int use_global = 0;
-char debug_enabled = 0;
-char *myname;
+char *program_name;
 pid_t mypid;
 char *machinedomain;
 int use_case_insensitive_compare = 0;
@@ -108,8 +108,6 @@ int WIN32_COM_initialized = 0;
 char *WIN32_ErrorMessage = NULL;
 wchar_t **User_Groups;
 int User_Groups_Count = 0;
-
-#include "mswin_check_ad_group.h"
 
 wchar_t *My_NameTranslate(wchar_t *, int, int);
 char *Get_WIN32_ErrorMessage(HRESULT);
@@ -734,7 +732,7 @@ Valid_Global_Groups(char *UserName, const char **Groups)
 }
 
 static void
-usage(char *program)
+usage(const char *program)
 {
     fprintf(stderr, "Usage: %s [-D domain][-G][-c][-d][-h]\n"
             " -D    default user Domain\n"
@@ -773,7 +771,7 @@ process_options(int argc, char *argv[])
             opt = optopt;
             /* fall thru to default */
         default:
-            fprintf(stderr, "%s Unknown option: -%c. Exiting\n", myname, opt);
+            fprintf(stderr, "%s: FATAL: Unknown option: -%c. Exiting\n", program_name, opt);
             usage(argv[0]);
             exit(1);
             break;		/* not reached */
@@ -787,19 +785,18 @@ int
 main(int argc, char *argv[])
 {
     char *p;
-    char buf[BUFSIZE];
+    char buf[HELPER_INPUT_BUFFER];
     char *username;
     char *group;
-    int err = 0;
     const char *groups[512];
     int n;
 
     if (argc > 0) {		/* should always be true */
-        myname = strrchr(argv[0], '/');
-        if (myname == NULL)
-            myname = argv[0];
+        program_name = strrchr(argv[0], '/');
+        if (program_name == NULL)
+            program_name = argv[0];
     } else {
-        myname = "(unknown)";
+        program_name = "(unknown)";
     }
     mypid = getpid();
 
@@ -811,7 +808,7 @@ main(int argc, char *argv[])
 
     if (use_global) {
         if ((machinedomain = GetDomainName()) == NULL) {
-            fprintf(stderr, "%s Can't read machine domain\n", myname);
+            fprintf(stderr, "%s: FATAL: Can't read machine domain\n", program_name);
             exit(1);
         }
         strlwr(machinedomain);
@@ -829,16 +826,17 @@ main(int argc, char *argv[])
 
 
     /* Main Loop */
-    while (fgets(buf, sizeof(buf), stdin)) {
+    while (fgets(buf, HELPER_INPUT_BUFFER, stdin)) {
         if (NULL == strchr(buf, '\n')) {
             /* too large message received.. skip and deny */
             fprintf(stderr, "%s: ERROR: Too large: %s\n", argv[0], buf);
-            while (fgets(buf, sizeof(buf), stdin)) {
+            while (fgets(buf, HELPER_INPUT_BUFFER, stdin)) {
                 fprintf(stderr, "%s: ERROR: Too large..: %s\n", argv[0], buf);
                 if (strchr(buf, '\n') != NULL)
                     break;
             }
-            goto error;
+            SEND_ERR("Invalid Request. Too Long.");
+            continue;
         }
         if ((p = strchr(buf, '\n')) != NULL)
             *p = '\0';		/* strip \n */
@@ -848,8 +846,8 @@ main(int argc, char *argv[])
         debug("Got '%s' from Squid (length: %d).\n", buf, strlen(buf));
 
         if (buf[0] == '\0') {
-            fprintf(stderr, "Invalid Request\n");
-            goto error;
+            SEND_ERR("Invalid Request. No Input.");
+            continue;
         }
         username = strtok(buf, " ");
         for (n = 0; (group = strtok(NULL, " ")) != NULL; n++) {
@@ -860,16 +858,15 @@ main(int argc, char *argv[])
         numberofgroups = n;
 
         if (NULL == username) {
-            fprintf(stderr, "Invalid Request\n");
-            goto error;
+            SEND_ERR("Invalid Request. No Username.");
+            continue;
         }
         rfc1738_unescape(username);
 
         if ((use_global ? Valid_Global_Groups(username, groups) : Valid_Local_Groups(username, groups))) {
-            SEND("OK");
+            SEND_OK("");
         } else {
-error:
-            SEND("ERR");
+            SEND_ERR("");
         }
         err = 0;
     }
