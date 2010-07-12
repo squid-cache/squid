@@ -1,14 +1,14 @@
-.if !'po4a'hide' .TH squid_session 8 "19 March 2006"
+.if !'po4a'hide' .TH ext_session_acl 8 "19 March 2006"
 .
 .SH NAME
-.if !'po4a'hide' .B squid_session
+.if !'po4a'hide' .B ext_session_acl
 .if !'po4a'hide' \-
-Squid session tracking external acl group helper.
+Squid session tracking external acl helper.
 .PP
 Version 1.0
 .
 .SH SYNOPSIS
-.if !'po4a'hide' .B squid_session
+.if !'po4a'hide' .B ext_session_acl
 .if !'po4a'hide' .B "[\-t"
 timeout
 .if !'po4a'hide' .B "] [\-b"
@@ -16,7 +16,7 @@ database
 .if !'po4a'hide' .B "] [\-a]"
 .
 .SH DESCRIPTION
-.B squid_session
+.B ext_session_acl
 maintains a concept of sessions by monitoring requests
 and timing out sessions if no requests have been seen for the idle timeout
 timer.
@@ -51,7 +51,7 @@ the first request.
 .PP
 Configuration example using the default automatic mode
 .if !'po4a'hide' .RS
-.if !'po4a'hide' external_acl_type session ttl=300 negative_ttl=0 children=1 concurrency=200 %LOGIN /usr/local/squid/libexec/squid_session
+.if !'po4a'hide' external_acl_type session ttl=300 negative_ttl=0 children=1 concurrency=200 %LOGIN /usr/local/squid/libexec/ext_session_acl
 .if !'po4a'hide' acl session external session
 .if !'po4a'hide' http_access deny !session
 .if !'po4a'hide' deny_info http://your.server.example.com/bannerpage?url=%s session

@@ -1,23 +1,26 @@
-.if !'po4a'hide' .TH squid_unix_group 8 "12 August 2002"
+.if !'po4a'hide' .TH ext_unix_group_acl 8 "12 August 2002"
 .
 .SH NAME
-.if !'po4a'hide' .B squid_unix_group
+.if !'po4a'hide' .B ext_unix_group_acl
 .if !'po4a'hide' \-
-Squid UNIX Group helper
+Squid UNIX Group ACL helper
 .
 .SH SYNOPSIS
-.if !'po4a'hide' .B "squid_unix_group [\-g "
+.if !'po4a'hide' .B "ext_unix_group_acl [\-d] [\-g "
 group
 .if !'po4a'hide' .B "] [\-g "
 group
-.if !'po4a'hide' .B "...] [\-p] [\-s]"
+.if !'po4a'hide' .B " ...] [\-p] [\-s]"
 .
 .SH DESCRIPTION
-.B squid_unix_group
+.B ext_unix_group_acl
 allows Squid to base access controls on users memberships in UNIX groups.
 .
 .SH OPTIONS
 .if !'po4a'hide' .TP
+.if !'po4a'hide' .BI "\-d "
+Write debug info to stderr.
+.
 .if !'po4a'hide' .BI "\-g " "group "
 Specifies a group name to match.
 .
@@ -44,7 +47,7 @@ matches users in
 or
 .I group3
 .if !'po4a'hide' .RS
-.if !'po4a'hide' .IP external_acl_type unix_group %LOGIN /usr/local/squid/libexec/squid_unix_group -p
+.if !'po4a'hide' .IP external_acl_type unix_group %LOGIN /usr/local/squid/libexec/ext_unix_group_acl -p
 .if !'po4a'hide' .IP acl usergroup1 external unix_group group1
 .if !'po4a'hide' .IP acl usergroup2 external unix_group group2 group3
 .if !'po4a'hide' .RE
@@ -103,4 +106,3 @@ The Squid FAQ wiki
 .br
 The Squid Configuration Manual
 .if !'po4a'hide' http://www.squid-cache.org/Doc/config/
-

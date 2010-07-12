@@ -2183,6 +2183,8 @@ AC_CHECK_HEADERS( \
 	ip_fil.h \
 	ip_nat.h \
 	ipl.h \
+	lber.h \
+	ldap.h \
 	libc.h \
 	limits.h \
 	linux/posix_types.h \
@@ -3806,6 +3808,7 @@ AC_CONFIG_FILES([\
 	helpers/Makefile \
 	helpers/basic_auth/Makefile \
 	helpers/basic_auth/DB/Makefile \
+	helpers/basic_auth/fake/Makefile \
 	helpers/basic_auth/getpwnam/Makefile \
 	helpers/basic_auth/LDAP/Makefile \
 	helpers/basic_auth/MSNT/Makefile \
@@ -3830,13 +3833,13 @@ AC_CONFIG_FILES([\
 	helpers/negotiate_auth/kerberos/Makefile \
 	helpers/negotiate_auth/SSPI/Makefile \
 	helpers/external_acl/Makefile \
-	helpers/external_acl/ip_user/Makefile \
-	helpers/external_acl/ldap_group/Makefile \
+	helpers/external_acl/AD_group/Makefile \
+	helpers/external_acl/file_userip/Makefile \
+	helpers/external_acl/LDAP_group/Makefile \
+	helpers/external_acl/LM_group/Makefile \
 	helpers/external_acl/session/Makefile \
 	helpers/external_acl/unix_group/Makefile \
 	helpers/external_acl/wbinfo_group/Makefile \
-	helpers/external_acl/mswin_ad_group/Makefile \
-	helpers/external_acl/mswin_lm_group/Makefile \
 	helpers/log_daemon/Makefile \
 	helpers/log_daemon/file/Makefile \
 	helpers/url_rewrite/Makefile \
