@@ -11,3 +11,5 @@ man_MANS = ext_wbinfo_group_acl.8
 
 ext_wbinfo_group_acl.8: ext_wbinfo_group_acl.pl.in
 	pod2man $(srcdir)/ext_wbinfo_group_acl.pl.in ext_wbinfo_group_acl.8
+
+CLEANFILES += ext_wbinfo_group_acl.8
