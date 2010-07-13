@@ -70,8 +70,7 @@ int dict_lookup(struct ip_user_dict *, char *, char *);
  * It returns a pointer to the first entry of the linked list
  */
 struct ip_user_dict *
-load_dict(FILE * FH)
-{
+load_dict(FILE * FH) {
     struct ip_user_dict *current_entry;	/* the structure used to
 					   store data */
     struct ip_user_dict *first_entry = NULL;	/* the head of the
@@ -145,8 +144,8 @@ dict_lookup(struct ip_user_dict *first_entry, char *username,
 
     while (current_entry->username != NULL) {
         debug("user: %s\naddr: %lu\nmask: %lu\n\n",
-                current_entry->username, current_entry->address,
-                current_entry->netmask);
+              current_entry->username, current_entry->address,
+              current_entry->netmask);
 
         if ((inet_addr (address) & (unsigned long) current_entry->
                 netmask) == current_entry->address) {
