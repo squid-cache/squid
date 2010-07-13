@@ -43,7 +43,7 @@ private:
     /// Method callback for whenever an FD is ready to accept a client connection.
     static void doAccept(int fd, void *data);
 
-    bool acceptOne();
+    void acceptOne();
     int oldAccept(Comm::Connection &details);
 
     AsyncCall::Pointer theCallback;

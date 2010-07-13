@@ -34,6 +34,7 @@ The 3.2 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 
 <p>The most important of these new features are:
 <itemize>
+	<item>SMP scalability
 	<item>Helper Multiplexer
 	<item>Helper Name Changes
 	<item>Multi-Lingual manuals
@@ -41,6 +42,49 @@ The 3.2 change history can be <url url="http://www.squid-cache.org/Versions/v3/3
 </itemize>
 
 Most user-facing changes are reflected in squid.conf (see below).
+
+<sect1>SMP scalability
+<p>The new "workers" squid.conf option can be used to launch multiple worker
+   processes and utilize multiple CPU cores. The overall intent is to make
+   multiple workers look like one to an outside observer, while providing
+   knobs to customize each worker behavior if needed.
+
+<p>By default, all worker processes are configured identically and do what a
+   single Squid instance would have done. Squid.conf macro substitutions and
+   conditionals (see below) can be used to customize individual worker
+   configurations. In the paragraphs below, "can share" implies "will share by
+   default".
+
+<p>Workers can share HTTP, HTTPS, SNMP, ICP, and HTCP listening addresses.
+   Configuration related to ICP and HTCP clients must be adjusted to avoid
+   source address conflicts: Modify the IP address and/or the port used for
+   the protocol. Workers do not share DNS addresses by default because the OS
+   assigns each worker a unique DNS port.
+
+<p>Workers can share logs.
+
+<p>Workers cannot share caches, for now. Cache_dir options must be adjusted to
+   point each disk-caching worker to its own disk area. ICP and HTCP responses
+   are based on the responding worker cache state. Overall, SMP Squid behaves
+   as a Squid farm behind a load-balancer with no cache affinity awareness.
+   This is perfect for non-caching Squids but inappropriate for Squids that
+   must coordinate caching activities (in-between environments are in a gray
+   area requiring case-by-case analysis).
+
+<p>Cache manager and SNMP statistics are reported from a worker point of
+   view, for now.
+
+<p>Startup, reconfiguration, shutdown, and log rotation are handled as for a
+   monolithic Squid. Abnormally terminated workers are restarted while
+   other workers continue serving traffic.
+
+
+<sect2>Squid.conf macros and conditionals
+<p>Added support for process_name and process_number macros as well as simple
+   if-statement conditionals in squid.conf. These features allow individual
+   worker customization in SMP mode. For details, search for "Conditional
+   configuration" and "SMP-Related Macros" sections in squid.conf.documented.
+
 
 <sect1>Helper Multiplexer
 <p>The helper multiplexer's purpose is to relieve some of the burden
@@ -95,15 +139,15 @@ Most user-facing changes are reflected in squid.conf (see below).
 	<item>squid_db_auth - basic_db_auth - Retrieve authentication details from a simple SQL database table.
 	<item>getpwnam_auth - basic_getpwname_auth - Authenticate with local system user accounts.
 	<item>squid_ldap_auth - basic_ldap_auth - Authenticate with LDAP user accounts.
+	<item>MSNT-multi-domain - basic_msnt_multi_domain_auth - Authenticate with any one of multiple Windows Domain Controllers.
 	<item>ncsa_auth - basic_ncsa_auth - Authenticate with NCSA httpd-style password file.
+	<item>yp_auth - basic_nis_auth - Authenticate with NIS security system.
 	<item>pam_auth - basic_pam_auth - Authenticate with the system PAM infrastructure.
 	<item>pop3.pl - basic_pop3_auth - Authenticate with a mail server POP3/SMTP credentials
+	<item>squid_radius_auth - basic_radius_auth - Authenticate with RADIUS.
 	<item>squid_sasl_auth - basic_sasl_auth - Authenticate with SASL.
 	<item>smb_auth - basic_smb_auth - Authenticate with Samba SMB.
-	<item>yp_auth - basic_nis_auth - Authenticate with NIS security system.
 	<item>mswin_sspi - basic_sspi_auth - Authenticate with a Windows Domain Controller using SSPI.
-	<item>MSNT-multi-domain - basic_msnt_multi_domain_auth - Authenticate with any one of multiple Windows Domain Controllers.
-	<item>squid_radius_auth - basic_radius_auth - Authenticate with RADIUS.
 </itemize>
 
 <sect2>Digest Authentication protocol helpers
@@ -113,19 +157,27 @@ Most user-facing changes are reflected in squid.conf (see below).
 
 <sect2>External ACL helpers
 <p><itemize>
-	<item>(none yet converted)
+	<item>mswin_check_ad_group - ext_ad_group_acl - Check logged in users Group membership using Active Directory.
+	<item>ip_user_check - ext_file_userip_acl - Restrict users to cetain IP addresses, using a text file backend.
+	<item>squid_ldap_group - ext_ldap_group_acl - Check logged in users Group membership using LDAP.
+	<item>mswin_check_lm_group - ext_lm_group_acl - Check logged in users Group membership using LanManager.
+	<item>squid_session - ext_session_acl - Maintain a session cache of client identifiers (usually IP address).
+	<item>squid_unix_group - ext_unix_group_acl - Check logged in users Group membership using local UNIX groups.
+	<item>wbinfo_group.pl - ext_wbinfo_group_acl - Check logged in users Group membership using wbinfo.
 </itemize>
 
 <sect2>Negotiate Authentication protocol helpers
 <p><itemize>
 	<item>squid_kerb_auth - negotiate_kerberos_auth - Authenticate with Kerberos servers.
+	<item>mswin_sspi - negotiate_sspi_auth - Authenticate with a Windows Domain Controller using SSPI.
 </itemize>
 
 <sect2>NTLM Authentication protocol helpers
 <p><itemize>
+	<item>no_check.pl - Deprecated. - Use the faster and less easily decrypted ntlm_fake_auth instead.
 	<item>fakeauth_auth - ntlm_fake_auth - Perform NTLMSSP to recover the username but don't verify the password.
 	<item>ntlm_auth - ntlm_smb_lm_auth - Perform SMB LanManager domain-less authentication over NTLM protocol.
-	<item>no_check.pl - Deprecated. - Use the faster and less decryptable ntlm_fake_auth instead.
+	<item>mswin_ntlm_auth - ntlm_sspi_auth - Perform NTLMSSP authentication using Windows native Security Support Provider Interface API.
 </itemize>
 
 <sect2>URL re-write helpers
@@ -175,8 +227,20 @@ This section gives a thorough account of those changes in three categories:
 	<p>Replacement for <em>maximum_single_addr_tries</em>, but instead of only applying to hosts with single addresses.
 	This directive applies to all hosts, extending the number of connection attempts to each IP address.
 
+	<tag>else</tag>
+	<p>Part of conditional SMP support syyntax. see <em>if</em>
+
+	<tag>endif</tag>
+	<p>Part of conditional SMP support syyntax. see <em>if</em>
+
 	<tag>eui_lookup</tag>
 	<p>Whether to lookup the EUI or MAC address of a connected client.
+
+	<tag>if</tag>
+	<p>New conditional syntax for SMP multiple-worker. 
+	If-statements can be used to make configuration directives depend on conditions.
+	<p>The else part is optional. The keywords <em>if</em>, <em>else</em> and <em>endif</em> 
+	must be typed on their own lines, as if they were regular configuration directives.
 
 	<tag>memory_cache_mode</tag>
 	<p>Controls which objects to keep in the memory cache (cache_mem)
@@ -198,6 +262,15 @@ This section gives a thorough account of those changes in three categories:
 	header is used for spoofing instead of the directly connected client address.
 	Requires both <em>--enable-follow-x-forwarded-for</em> and <em>--enable-linux-netfilter</em>
 
+	<tag>workers</tag>
+	<p>Number of main Squid processes or "workers" to fork and maintain.
+	In SMP mode, each worker does nearly all what a single Squid daemon
+	does (e.g., listen on http_port and forward HTTP requests).
+	<verb>
+	0: "no daemon" mode, like running "squid -N ..."
+	1: "no SMP" mode, start one main Squid process daemon (default)
+	N: start N main Squid process daemons (i.e., SMP mode)
+	</verb>
 </descrip>
 
 <sect1>Changes to existing tags<label id="modifiedtags">

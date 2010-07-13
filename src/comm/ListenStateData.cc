@@ -141,7 +141,7 @@ Comm::ListenStateData::okToAccept()
     return false;
 }
 
-bool
+void
 Comm::ListenStateData::acceptOne()
 {
     /*
@@ -159,22 +159,22 @@ Comm::ListenStateData::acceptOne()
 
         if (newfd == COMM_NOMESSAGE) {
             /* register interest again */
-            debugs(5, 5, HERE << "try later: FD " << fd << " handler: " << *theCallback);
+            debugs(5, 5, HERE << "try later: FD " << fd << " handler: " << theCallback);
             commSetSelect(fd, COMM_SELECT_READ, doAccept, this, 0);
-            return false;
+            return;
         }
 
         // A non-recoverable error; notify the caller */
-        debugs(5, 5, HERE << "non-recoverable error: FD " << fd << " handler: " << *theCallback);
+        debugs(5, 5, HERE << "non-recoverable error: FD " << fd << " handler: " << theCallback);
         notify(-1, COMM_ERROR, errno, connDetails);
-        return false;
+        mayAcceptMore = false;
+        return;
     }
 
     debugs(5, 5, HERE << "accepted: FD " << fd <<
            " newfd: " << newfd << " from: " << connDetails->remote <<
-           " handler: " << *theCallback);
+           " handler: " << theCallback);
     notify(newfd, COMM_OK, 0, connDetails);
-    return true;
 }
 
 void
@@ -182,7 +182,7 @@ Comm::ListenStateData::acceptNext()
 {
     assert(isOpen(fd));
     debugs(5, 2, HERE << "connection on FD " << fd);
-    mayAcceptMore = acceptOne();
+    acceptOne();
 }
 
 void

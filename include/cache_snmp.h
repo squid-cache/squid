@@ -4,7 +4,7 @@
 #ifndef SQUID_CACHE_SNMP_H
 #define SQUID_CACHE_SNMP_H
 
-#ifdef SQUID_SNMP
+#if SQUID_SNMP
 
 #if SIZEOF_LONG == 8
 #define snint int
