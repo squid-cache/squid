@@ -1,14 +1,10 @@
 include $(top_srcdir)/src/Common.am
 
-## we need our local files too (but avoid -I. at all costs)
-INCLUDES += -I$(srcdir)
-
-
-libexec_PROGRAMS 		= squid_session
-man_MANS 			= squid_session.8
-EXTRA_DIST			= squid_session.8 config.test
-squid_session_SOURCES		= squid_session.c
+libexec_PROGRAMS 		= ext_session_acl
+man_MANS 			= ext_session_acl.8
+EXTRA_DIST			= ext_session_acl.8 config.test
+ext_session_acl_SOURCES		= ext_session_acl.cc
 
 LDADD = \
-	$(top_builddir)/compat/libcompat.la \
+	$(COMPAT_LIB) \
 	$(LIB_DB)

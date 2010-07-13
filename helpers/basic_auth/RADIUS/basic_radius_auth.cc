@@ -45,10 +45,11 @@
  * and many others
  */
 
-#include	"config.h"
-#include	"md5.h"
-#include	"radius.h"
-#include	"radius-util.h"
+#include "config.h"
+#include "helpers/defines.h"
+#include "md5.h"
+#include "radius.h"
+#include "radius-util.h"
 
 #if HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
@@ -93,9 +94,10 @@
 #include <errno.h>
 #endif
 
+/* AYJ: helper input buffer may be a lot larger than this used to expect... */
 #define MAXPWNAM	254
 #define MAXPASS		254
-#define MAXLINE         254
+#define MAXLINE		254
 
 static void md5_calc(uint8_t out[16], void *in, size_t len);
 
@@ -117,7 +119,6 @@ static u_int32_t auth_ipaddr;
 static int retries = 30;
 
 char progname[] = "basic_radius_auth";
-int debug_flag = 0;
 
 #ifdef _SQUID_MSWIN_
 void
@@ -177,9 +178,7 @@ result_recv(u_int32_t host, u_short udp_port, char *buffer, int length)
     totallen = ntohs(auth->length);
 
     if (totallen != length) {
-        fprintf(stderr,
-                "basic_radius_auth: Received invalid reply length from server (want %d/ got %d)\n",
-                totallen, length);
+        debug("Received invalid reply length from server (want %d/ got %d)\n", totallen, length);
         return -1;
     }
     if (auth->id != request_id) {
@@ -194,7 +193,7 @@ result_recv(u_int32_t host, u_short udp_port, char *buffer, int length)
     md5_calc(calc_digest, (unsigned char *) auth, length + secretlen);
 
     if (memcmp(reply_digest, calc_digest, AUTH_VECTOR_LEN) != 0) {
-        fprintf(stderr, "Warning: Received invalid reply digest from server\n");
+        debug("WARNING: Received invalid reply digest from server\n");
         return -1;
     }
     if (auth->code != PW_AUTHENTICATION_ACK)
@@ -448,7 +447,7 @@ main(int argc, char **argv)
     char username[MAXPWNAM];
     char passwd[MAXPASS];
     char *ptr;
-    char authstring[MAXLINE];
+    char buf[HELPER_INPUT_BUFFER];
     const char *cfname = NULL;
     int err = 0;
     socklen_t salen;
@@ -456,6 +455,9 @@ main(int argc, char **argv)
 
     while ((c = getopt(argc, argv, "h:p:f:w:i:t:")) != -1) {
         switch (c) {
+        case 'd':
+            debug_enabled = 1;
+            break;
         case 'f':
             cfname = optarg;
             break;
@@ -482,16 +484,16 @@ main(int argc, char **argv)
 
     if (cfname) {
         if (rad_auth_config(cfname) < 0) {
-            fprintf(stderr, "%s: can't open configuration file '%s'.\n", argv[0], cfname);
+            fprintf(stderr, "FATAL: %s: can't open configuration file '%s'.\n", argv[0], cfname);
             exit(1);
         }
     }
     if (!*server) {
-        fprintf(stderr, "%s: Server not specified\n", argv[0]);
+        fprintf(stderr, "FATAL: %s: Server not specified\n", argv[0]);
         exit(1);
     }
     if (!*secretkey) {
-        fprintf(stderr, "%s: Shared secret not specified\n", argv[0]);
+        fprintf(stderr, "FATAL: %s: Shared secret not specified\n", argv[0]);
         exit(1);
     }
 #ifdef _SQUID_MSWIN_
@@ -514,7 +516,7 @@ main(int argc, char **argv)
 
     /* Get the IP address of the authentication server */
     if ((auth_ipaddr = get_ipaddr(server)) == 0) {
-        fprintf(stderr, "Couldn't find host %s\n", server);
+        fprintf(stderr, "FATAL: %s: Couldn't find host %s\n", argv[0], server);
         exit(1);
     }
     sockfd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -540,31 +542,31 @@ main(int argc, char **argv)
     fcntl(sockfd, F_SETFL, fcntl(sockfd, F_GETFL, 0) | O_NONBLOCK);
 #endif
     nas_ipaddr = ntohl(salocal.sin_addr.s_addr);
-    while (fgets(authstring, MAXLINE, stdin) != NULL) {
+    while (fgets(buf, HELPER_INPUT_BUFFER, stdin) != NULL) {
         char *end;
         /* protect me form to long lines */
-        if ((end = strchr(authstring, '\n')) == NULL) {
+        if ((end = strchr(buf, '\n')) == NULL) {
             err = 1;
             continue;
         }
         if (err) {
-            printf("ERR\n");
+            SEND_ERR("");
             err = 0;
             continue;
         }
-        if (strlen(authstring) > MAXLINE) {
-            printf("ERR\n");
+        if (strlen(buf) > HELPER_INPUT_BUFFER) {
+            SEND_ERR("");
             continue;
         }
         /* Strip off the trailing newline */
         *end = '\0';
 
         /* Parse out the username and password */
-        ptr = authstring;
+        ptr = buf;
         while (isspace(*ptr))
             ptr++;
         if ((end = strchr(ptr, ' ')) == NULL) {
-            printf("ERR\n");	/* No password */
+            SEND_ERR("No password");
             continue;
         }
         *end = '\0';
@@ -575,9 +577,9 @@ main(int argc, char **argv)
         urldecode(passwd, ptr, MAXPASS);
 
         if (authenticate(sockfd, username, passwd))
-            printf("OK\n");
+            SEND_OK("");
         else
-            printf("ERR\n");
+            SEND_ERR("");
     }
     close(sockfd);
     exit(1);
