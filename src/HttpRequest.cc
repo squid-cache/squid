@@ -194,7 +194,7 @@ HttpRequest::clone() const
     // urlPath handled in ctor
     copy->canonical = canonical ? xstrdup(canonical) : NULL;
 
-    copy->range = range ? new HttpHdrRange(*range) : NULL;
+    // range handled in hdrCacheInit()
     copy->ims = ims;
     copy->imslen = imslen;
     copy->max_forwards = max_forwards;
@@ -364,6 +364,7 @@ HttpRequest::hdrCacheInit()
 {
     HttpMsg::hdrCacheInit();
 
+    assert(!range);
     range = header.getRange();
 }
 
