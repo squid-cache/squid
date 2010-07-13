@@ -148,7 +148,6 @@ static int sslinit = 0;
 #endif
 static int connect_timeout = 0;
 static int timelimit = LDAP_NO_LIMIT;
-static int debug_mode = 0;
 
 /* Added for TLS support and version 3 */
 static int use_tls = 0;
@@ -496,7 +495,7 @@ main(int argc, char **argv)
             break;
 #endif
         case 'd':
-            debug_mode++;
+            debug_enabled = 1;
             break;
         default:
             fprintf(stderr, PROGRAM_NAME ": ERROR: Unknown command line option '%c'\n", option);
@@ -650,8 +649,7 @@ checkLDAP(LDAP * persistent_ld, const char *userid, const char *password, const 
         /* LDAP can't bind with a blank password. Seen as "anonymous"
          * and always granted access
          */
-        if (debug_mode)
-            fprintf(stderr, "Blank password given\n");
+        debug("Blank password given\n");
         return 1;
     }
     if (searchfilter) {
@@ -677,16 +675,14 @@ checkLDAP(LDAP * persistent_ld, const char *userid, const char *password, const 
             }
         }
         snprintf(filter, sizeof(filter), searchfilter, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login, escaped_login);
-        if (debug_mode)
-            fprintf(stderr, "user filter '%s', searchbase '%s'\n", filter, basedn);
+        debug("user filter '%s', searchbase '%s'\n", filter, basedn);
         rc = ldap_search_s(search_ld, basedn, searchscope, filter, searchattr, 1, &res);
         if (rc != LDAP_SUCCESS) {
             if (noreferrals && rc == LDAP_PARTIAL_RESULTS) {
                 /* Everything is fine. This is expected when referrals
                  * are disabled.
                  */
-                if (debug_mode)
-                    fprintf(stderr, "noreferrals && rc == LDAP_PARTIAL_RESULTS\n");
+                debug("noreferrals && rc == LDAP_PARTIAL_RESULTS\n");
             } else {
                 fprintf(stderr, PROGRAM_NAME ": WARNING, LDAP search error '%s'\n", ldap_err2string(rc));
 #if defined(NETSCAPE_SSL)
@@ -701,8 +697,7 @@ checkLDAP(LDAP * persistent_ld, const char *userid, const char *password, const 
         }
         entry = ldap_first_entry(search_ld, res);
         if (!entry) {
-            if (debug_mode)
-                fprintf(stderr, "Ldap search returned nothing\n");
+            debug("Ldap search returned nothing\n");
             ret = 1;
             goto search_done;
         }
@@ -735,8 +730,7 @@ search_done:
         snprintf(dn, sizeof(dn), "%s=%s,%s", userattr, userid, basedn);
     }
 
-    if (debug_mode)
-        fprintf(stderr, "attempting to authenticate user '%s'\n", dn);
+    debug("attempting to authenticate user '%s'\n", dn);
     if (!bind_ld && !bind_once)
         bind_ld = persistent_ld;
     if (!bind_ld)

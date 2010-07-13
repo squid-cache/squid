@@ -1,6 +1,4 @@
 /*
- * ncsa_auth.c
- *
  * AUTHOR: Arjan de Vet <Arjan.deVet@adv.iae.nl>
  *
  * Example authentication program for Squid, based on the original
@@ -18,13 +16,14 @@
  */
 
 #include "config.h"
+#include "crypt_md5.h"
+#include "hash.h"
+#include "helpers/defines.h"
 #include "rfc1738.h"
+#include "util.h"
 
 #if HAVE_STDIO_H
 #include <stdio.h>
-#endif
-#if HAVE_STDLIB_H
-#include <stdlib.h>
 #endif
 #if HAVE_UNISTD_H
 #include <unistd.h>
@@ -32,19 +31,12 @@
 #if HAVE_STRING_H
 #include <string.h>
 #endif
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
 #if HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif
 #if HAVE_CRYPT_H
 #include <crypt.h>
 #endif
-
-#include "util.h"
-#include "hash.h"
-#include "crypt_md5.h"
 
 static hash_table *hash = NULL;
 static HASHFREE my_free;
@@ -80,12 +72,12 @@ read_passwd_file(const char *passwdfile)
     /* initial setup */
     hash = hash_create((HASHCMP *) strcmp, 7921, hash_string);
     if (NULL == hash) {
-        fprintf(stderr, "ncsa_auth: cannot create hash table\n");
+        fprintf(stderr, "FATAL: Cannot create hash table\n");
         exit(1);
     }
     f = fopen(passwdfile, "r");
     if (NULL == f) {
-        fprintf(stderr, "%s: %s\n", passwdfile, xstrerror());
+        fprintf(stderr, "FATAL: %s: %s\n", passwdfile, xstrerror());
         exit(1);
     }
     while (fgets(buf, 8192, f) != NULL) {
@@ -109,7 +101,7 @@ main(int argc, char **argv)
 {
     struct stat sb;
     time_t change_time = -1;
-    char buf[256];
+    char buf[HELPER_INPUT_BUFFER];
     char *user, *passwd, *p;
     user_data *u;
     setbuf(stdout, NULL);
@@ -118,10 +110,10 @@ main(int argc, char **argv)
         exit(1);
     }
     if (stat(argv[1], &sb) != 0) {
-        fprintf(stderr, "cannot stat %s\n", argv[1]);
+        fprintf(stderr, "FATAL: cannot stat %s\n", argv[1]);
         exit(1);
     }
-    while (fgets(buf, 256, stdin) != NULL) {
+    while (fgets(buf, HELPER_INPUT_BUFFER, stdin) != NULL) {
         if ((p = strchr(buf, '\n')) != NULL)
             *p = '\0';		/* strip \n */
         if (stat(argv[1], &sb) == 0) {
@@ -131,28 +123,28 @@ main(int argc, char **argv)
             }
         }
         if ((user = strtok(buf, " ")) == NULL) {
-            printf("ERR\n");
+            SEND_ERR("");
             continue;
         }
         if ((passwd = strtok(NULL, "")) == NULL) {
-            printf("ERR\n");
+            SEND_ERR("");
             continue;
         }
         rfc1738_unescape(user);
         rfc1738_unescape(passwd);
         u = (user_data *) hash_lookup(hash, user);
         if (u == NULL) {
-            printf("ERR No such user\n");
+            SEND_ERR("No such user");
 #if HAVE_CRYPT
         } else if (strcmp(u->passwd, (char *) crypt(passwd, u->passwd)) == 0) {
-            printf("OK\n");
+            SEND_OK("");
 #endif
         } else if (strcmp(u->passwd, (char *) crypt_md5(passwd, u->passwd)) == 0) {
-            printf("OK\n");
+            SEND_OK("");
         } else if (strcmp(u->passwd, (char *) md5sum(passwd)) == 0) {	/* md5 without salt and magic strings - Added by Ramon de Carvalho and Rodrigo Rubira Branco */
-            printf("OK\n");
+            SEND_OK("");
         } else {
-            printf("ERR Wrong password\n");
+            SEND_ERR("Wrong password");
         }
     }
     if (hash != NULL) {

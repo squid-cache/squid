@@ -1,6 +1,7 @@
 ## Alphabetical list of sub-directories to distribute with Squid:
 DIST_SUBDIRS = \
 	DB \
+	fake \
 	getpwnam \
 	LDAP \
 	MSNT \

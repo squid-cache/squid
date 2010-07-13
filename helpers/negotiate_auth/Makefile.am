@@ -1,3 +1,3 @@
 
-DIST_SUBDIRS	= mswin_sspi kerberos
+DIST_SUBDIRS	= kerberos SSPI
 SUBDIRS		= $(NEGOTIATE_AUTH_HELPERS)

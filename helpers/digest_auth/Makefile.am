@@ -2,6 +2,6 @@
 DIST_SUBDIRS= \
 	eDirectory \
 	file \
-	ldap
+	LDAP
 
 SUBDIRS= $(DIGEST_AUTH_HELPERS)

@@ -1,0 +1,226 @@
+Version 2.17
+
+2010-07-12 Amos Jeffries <amosjeffries@squid-cache.org>
+
+	Rename to ext_ldap_group_acl (Squid-3 helper naming schema)
+	Convert to build under C++
+	Remove several goto statements.
+	Update to use helper macro API
+
+2005-03-19 Henrik Nordstrom <hno@squid-cache.org>
+
+	Bug #1258: LDAP helpers fails to compile with SUN LDAP SDK
+
+2005-02-05 Henrik Nordstrom <hno@squid-cache.org>
+
+	Define LDAP_NO_ATTRS if not defined in LDAP API headers
+
+2005-02-04 Henrik Nordstrom <hno@squid-cache.org>
+
+	Fix LDAP helpers to send a proper NO_ATTR search when looking
+	for the user DN
+
+2005-01-30 Oliver Hookins
+
+	LDAP helper documentation updates
+
+Version 2.16
+
+2004-10-21 Henrik Nordstrom <hno@squid-cache.org>
+
+	Documentation fixes
+
+Version 2.15
+
+2004-08-15 Henrik Nordstrom <hno@squid-cache.org>
+	Helper format changed in Squid-3.0 to use URL escaped
+	strings. Simplifies things a bit and well known encoding.
+
+Version 2.14
+
+2004-03-02 Henrik Nordstrom <hno@squid-cache.org>
+	Added -d (debug) flag
+
+2004-02-09 Henrik Nordstrom <hno@squid-cache.org>
+	-E and -S options mismatch
+
+2004-01-08 Henrik Nordstrom <hno@squid-cache.org>
+	Increase buffer size when reading group lookups from Squid
+
+Version 2.13
+
+2004-01-05 Henrik Nordstrom <hno@squid-cache.org>
+	Corrected TLS mode (-Z)
+
+Version 2.12
+
+2003-03-01 Christoph Lechleitner <lech@ibcl.at>
+        Added -W option to read bindpasswd from file, 
+        e.g. from /etc/ldap.secret
+
+2003-03-01 Juerg Michel
+
+	Added support for ldap URI via the -H option
+
+Version 2.11
+
+2003-01-31 Henrik Nordstrom <hno@marasystems.com>
+
+	Packaged as a distribution, with Makefile, README
+	and INSTALL
+
+	Corrected the squid.conf examples in the manpage and
+	some spelling in the same
+
+	Separated the changelog/history to a separate
+	ChangeLog file (this file)
+
+2003-01-27 Henrik Nordstrom <hno@marasystems.com>
+
+	Cleaned up error messages shown when a nonexisting
+	user tries to log in
+
+Version 2.10
+
+2003-01-07 Jon Kinred
+
+	Fixed user search mode (-F/-u) when -g is not used
+
+Version 2.9
+
+2003-01-03 Henrik Nordstrom <hno@marasystems.com>
+
+	Fixed missing string termination on ldap_escape_vale,
+	and corrected build problem with LDAPv2 libraries
+
+Version 2.8
+
+2002-11-27 Henrik Nordstrom <hno@marasystems.com>
+
+	Replacement for ldap_build_filter. Also changed
+	the % codes to %u (user) and %g (group) which
+	is a bit more intuitive.
+
+2002-11-21 Gerard Eviston
+
+	Fix ldap_search_s error management. This fixes
+	a core dump if there is a LDAP search filter
+	syntax error (possibly caused by malformed input).
+
+Version 2.7
+
+2002-10-22: Henrik Nordstrom <hno@marasystems.com>
+
+	strwordtok bugfix
+
+Version 2.6
+
+2002-09-21: Gerard Eviston
+
+	-S option to strip NT domain names from
+	login names
+
+Version 2.5
+
+2002-09-09: Henrik Nordstrom <hno@marasystems.com>
+
+	Added support for user DN lookups
+	(-u -B -F options)
+
+Version 2.4
+
+2002-09-06: Henrik Nordstrom <hno@marasystems.com>
+
+	Many bugfixes in connection management
+
+	-g option added, and added support
+	for multiple groups. Prior versions
+	only supported one group and an optional
+	group base RDN
+
+Version 2.3
+
+2002-09-04: Henrik Nordstrom <hno@marasystems.com>
+
+	Minor cleanups
+
+Version 2.2
+
+2002-09-04: Henrik Nordstrom <hno@marasystems.com>
+
+	Merged changes from squid_ldap_auth.c
+	- TLS support (Michael Cunningham)
+	- -p option to specify port
+		
+	Documented the % codes to use in -f
+
+Version 2.1
+
+2002-08-21: Henrik Nordstrom <hno@marasystems.com>
+
+	Support groups or usernames having spaces
+
+Version 2.0
+
+2002-01-22: Henrik Nordstrom <hno@marasystems.com>
+
+	Added optional third query argument for search RDN
+
+2002-01-22: Henrik Nordstrom <hno@marasystems.com>
+
+	Removed unused options, and fully changed name
+	to squid_ldap_match.
+
+Version 1.0
+
+2001-07-17: Flavio Pescuma <flavio@marasystems.com>
+
+	Using the main function from squid_ldap_auth
+	wrote squid_ldap_match. This program replaces 
+	the %a and %v (ldapfilter.conf) from the filter 
+	template supplied with -f with the two arguments 
+	sent by squid. Returns OK if the ldap_search 
+	using the composed filter succeeds.
+
+Changes from squid_ldap_auth.c:
+
+2001-12-12: Michael Cunningham <m.cunningham@xpedite.com>
+
+	- Added TLS support and partial ldap version 3 support. 
+
+2001-09-05: Henrik Nordstrom <hno@squid-cache.org>
+
+	- Added ability to specify another default LDAP port to
+	  connect to. Persistent connections moved to -P
+
+2001-05-02: Henrik Nordstrom <hno@squid-cache.org>
+
+	- Support newer OpenLDAP 2.x libraries using the
+	  revised Internet Draft API which unfortunately
+	  is not backwards compatible with RFC1823..
+
+2001-04-15: Henrik Nordstrom <hno@squid-cache.org>
+
+	- Added command line option for basedn
+
+	- Added the ability to search for the user DN
+
+2001-04-16: Henrik Nordstrom <hno@squid-cache.org>
+
+	- Added -D binddn -w bindpasswd.
+
+2001-04-17: Henrik Nordstrom <hno@squid-cache.org>
+
+	- Added -R to disable referrals
+
+	- Added -a to control alias dereferencing
+
+2001-04-17: Henrik Nordstrom <hno@squid-cache.org>
+
+	- Added -u, DN username attribute name
+
+2001-04-18: Henrik Nordstrom <hno@squid-cache.org>
+
+	- Allow full filter specifications in -f
+
+-- END --

@@ -42,6 +42,7 @@
  */
 #define SQUID_NO_ALLOC_PROTECT 1
 #include "config.h"
+#include "helpers/defines.h"
 #include "rfc1738.h"
 #include "util.h"
 
@@ -53,7 +54,6 @@
 #endif
 
 
-#define BUFSIZE			256
 #define NMB_UNICAST		1
 #define NMB_BROADCAST	2
 
@@ -79,12 +79,12 @@ struct SMBDOMAIN *lastdom = NULL;
 void
 print_esc(FILE * p, char *s)
 {
-    char buf[256];
+    char buf[HELPER_INPUT_BUFFER];
     char *t;
     int i = 0;
 
     for (t = s; *t != '\0'; t++) {
-        if (i > 250) {
+        if (i > HELPER_INPUT_BUFFER-2) {
             buf[i] = '\0';
             (void) fputs(buf, p);
             i = 0;
@@ -105,14 +105,13 @@ int
 main(int argc, char *argv[])
 {
     int i;
-    char buf[BUFSIZE];
+    char buf[HELPER_INPUT_BUFFER];
     struct SMBDOMAIN *dom;
     char *s;
     char *user;
     char *pass;
     char *domname;
     FILE *p;
-    int debug = 0;
     const char *shcmd;
 
     /* make standard output line buffered */
@@ -122,7 +121,7 @@ main(int argc, char *argv[])
     /* parse command line arguments */
     for (i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-d") == 0) {
-            debug = 1;
+            debug_enabled = 1;
             continue;
         }
         /* the next options require an argument */
@@ -197,22 +196,20 @@ main(int argc, char *argv[])
         }
     }
 
-    shcmd = debug ? HELPERSCRIPT : HELPERSCRIPT " > /dev/null 2>&1";
+    shcmd = debug_enabled ? HELPERSCRIPT : HELPERSCRIPT " > /dev/null 2>&1";
 
     /* pass to helper script */
     if (putenv((char *)"SAMBAPREFIX=" SAMBAPREFIX) != 0)
         return 1;
 
-    while (1) {
-        if (fgets(buf, BUFSIZE, stdin) == NULL)
-            break;
+    while (fgets(buf, HELPER_INPUT_BUFFER, stdin) != NULL) {
 
         if ((s = strchr(buf, '\n')) == NULL)
             continue;
         *s = '\0';
 
         if ((s = strchr(buf, ' ')) == NULL) {
-            (void) printf("ERR\n");
+            SEND_ERR("");
             continue;
         }
         *s = '\0';
@@ -238,11 +235,11 @@ main(int argc, char *argv[])
             dom = firstdom;
 
         if (dom == NULL) {
-            (void) printf("ERR\n");
+            SEND_ERR("");
             continue;
         }
         if ((p = popen(shcmd, "w")) == NULL) {
-            (void) printf("ERR\n");
+            SEND_ERR("");
             continue;
         }
         (void) fprintf(p, "%s\n", dom->name);
@@ -258,10 +255,9 @@ main(int argc, char *argv[])
         (void) fflush(p);
 
         if (pclose(p) == 0)
-            (void) printf("OK\n");
+            SEND_OK("");
         else
-            (void) printf("ERR\n");
-
+            SEND_ERR("");
     }				/* while (1) */
     return 0;
 }

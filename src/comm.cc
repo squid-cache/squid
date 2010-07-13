@@ -72,6 +72,8 @@ typedef enum {
 
 static void commStopHalfClosedMonitor(int fd);
 static IOCB commHalfClosedReader;
+static void comm_init_opened(int new_socket, Ip::Address &addr, unsigned char TOS, const char *note, struct addrinfo *AI);
+static int comm_apply_flags(int new_socket, Ip::Address &addr, int flags, struct addrinfo *AI);
 
 
 struct comm_io_callback_t {
@@ -645,7 +647,6 @@ comm_openex(int sock_type,
             const char *note)
 {
     int new_socket;
-    fde *F = NULL;
     int tos = 0;
     struct addrinfo *AI = NULL;
 
@@ -718,6 +719,29 @@ comm_openex(int sock_type,
 
 #endif
 
+    comm_init_opened(new_socket, addr, TOS, note, AI);
+    new_socket = comm_apply_flags(new_socket, addr, flags, AI);
+
+    addr.FreeAddrInfo(AI);
+
+    PROF_stop(comm_open);
+
+    return new_socket;
+}
+
+/// update FD tables after a local or remote (IPC) comm_openex();
+void
+comm_init_opened(int new_socket,
+                 Ip::Address &addr,
+                 unsigned char TOS,
+                 const char *note,
+                 struct addrinfo *AI)
+{
+    assert(new_socket >= 0);
+    assert(AI);
+
+    fde *F = NULL;
+
     /* update fdstat */
     debugs(5, 5, "comm_open: FD " << new_socket << " is a new socket");
 
@@ -735,6 +759,19 @@ comm_openex(int sock_type,
     F->tos = TOS;
 
     F->sock_family = AI->ai_family;
+}
+
+/// apply flags after a local comm_open*() call;
+/// returns new_socket or -1 on error
+static int
+comm_apply_flags(int new_socket,
+                 Ip::Address &addr,
+                 int flags,
+                 struct addrinfo *AI)
+{
+    assert(new_socket >= 0);
+    assert(AI);
+    const int sock_type = AI->ai_socktype;
 
     if (!(flags & COMM_NOCLOEXEC))
         commSetCloseOnExec(new_socket);
@@ -765,18 +802,14 @@ comm_openex(int sock_type,
 
         if (commBind(new_socket, *AI) != COMM_OK) {
             comm_close(new_socket);
-            addr.FreeAddrInfo(AI);
             return -1;
-            PROF_stop(comm_open);
         }
     }
 
-    addr.FreeAddrInfo(AI);
-
     if (flags & COMM_NONBLOCKING)
         if (commSetNonBlocking(new_socket) == COMM_ERROR) {
+            comm_close(new_socket);
             return -1;
-            PROF_stop(comm_open);
         }
 
 #ifdef TCP_NODELAY
@@ -788,9 +821,47 @@ comm_openex(int sock_type,
     if (Config.tcpRcvBufsz > 0 && sock_type == SOCK_STREAM)
         commSetTcpRcvbuf(new_socket, Config.tcpRcvBufsz);
 
-    PROF_stop(comm_open);
-
     return new_socket;
+}
+
+void
+comm_import_opened(int fd,
+                   Ip::Address &addr,
+                   int flags,
+                   const char *note,
+                   struct addrinfo *AI)
+{
+    debugs(5, 2, HERE << " FD " << fd << " at " << addr);
+    assert(fd >= 0);
+    assert(AI);
+
+    comm_init_opened(fd, addr, 0, note, AI);
+
+    if (!(flags & COMM_NOCLOEXEC))
+        fd_table[fd].flags.close_on_exec = 1;
+
+    if (addr.GetPort() > (u_short) 0) {
+#ifdef _SQUID_MSWIN_
+        if (sock_type != SOCK_DGRAM)
+#endif
+            fd_table[fd].flags.nolinger = 1;
+    }
+
+    if ((flags & COMM_TRANSPARENT))
+        fd_table[fd].flags.transparent = 1;
+
+    if (flags & COMM_NONBLOCKING)
+        fd_table[fd].flags.nonblocking = 1;
+
+#ifdef TCP_NODELAY
+    if (AI->ai_socktype == SOCK_STREAM)
+        fd_table[fd].flags.nodelay = 1;
+#endif
+
+    /* no fd_table[fd].flags. updates needed for these conditions:
+     * if ((flags & COMM_REUSEADDR)) ...
+     * if ((flags & COMM_DOBIND) ...) ...
+     */
 }
 
 static void
@@ -2088,4 +2159,98 @@ CommSelectEngine::checkEvents(int timeout)
         fatal_dump("comm.cc: Internal error -- this should never happen.");
         return EVENT_ERROR;
     };
+}
+
+/// Create a unix-domain socket (UDS) that only supports FD_MSGHDR I/O.
+int
+comm_open_uds(int sock_type,
+              int proto,
+              struct sockaddr_un* addr,
+              int flags)
+{
+    // TODO: merge with comm_openex() when Ip::Address becomes NetAddress
+
+    int new_socket;
+
+    PROF_start(comm_open);
+    /* Create socket for accepting new connections. */
+    statCounter.syscalls.sock.sockets++;
+
+    /* Setup the socket addrinfo details for use */
+    struct addrinfo AI;
+    AI.ai_flags = 0;
+    AI.ai_family = PF_UNIX;
+    AI.ai_socktype = sock_type;
+    AI.ai_protocol = proto;
+    AI.ai_addrlen = SUN_LEN(addr);
+    AI.ai_addr = (sockaddr*)addr;
+    AI.ai_canonname = NULL;
+    AI.ai_next = NULL;
+
+    debugs(50, 3, HERE << "Attempt open socket for: " << addr->sun_path);
+
+    if ((new_socket = socket(AI.ai_family, AI.ai_socktype, AI.ai_protocol)) < 0) {
+        /* Increase the number of reserved fd's if calls to socket()
+         * are failing because the open file table is full.  This
+         * limits the number of simultaneous clients */
+
+        if (limitError(errno)) {
+            debugs(50, DBG_IMPORTANT, HERE << "socket failure: " << xstrerror());
+            fdAdjustReserved();
+        } else {
+            debugs(50, DBG_CRITICAL, HERE << "socket failure: " << xstrerror());
+        }
+
+        PROF_stop(comm_open);
+        return -1;
+    }
+
+    debugs(50, 3, HERE "Opened UDS FD " << new_socket << " : family=" << AI.ai_family << ", type=" << AI.ai_socktype << ", protocol=" << AI.ai_protocol);
+
+    /* update fdstat */
+    debugs(50, 5, HERE << "FD " << new_socket << " is a new socket");
+
+    assert(!isOpen(new_socket));
+    fd_open(new_socket, FD_MSGHDR, NULL);
+
+    fdd_table[new_socket].close_file = NULL;
+
+    fdd_table[new_socket].close_line = 0;
+
+    fd_table[new_socket].sock_family = AI.ai_family;
+
+    if (!(flags & COMM_NOCLOEXEC))
+        commSetCloseOnExec(new_socket);
+
+    if (flags & COMM_REUSEADDR)
+        commSetReuseAddr(new_socket);
+
+    if (flags & COMM_NONBLOCKING) {
+        if (commSetNonBlocking(new_socket) != COMM_OK) {
+            comm_close(new_socket);
+            PROF_stop(comm_open);
+            return -1;
+        }
+    }
+
+    if (flags & COMM_DOBIND) {
+        if (commBind(new_socket, AI) != COMM_OK) {
+            comm_close(new_socket);
+            PROF_stop(comm_open);
+            return -1;
+        }
+    }
+
+#ifdef TCP_NODELAY
+    if (sock_type == SOCK_STREAM)
+        commSetTcpNoDelay(new_socket);
+
+#endif
+
+    if (Config.tcpRcvBufsz > 0 && sock_type == SOCK_STREAM)
+        commSetTcpRcvbuf(new_socket, Config.tcpRcvBufsz);
+
+    PROF_stop(comm_open);
+
+    return new_socket;
 }
