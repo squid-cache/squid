@@ -4,7 +4,7 @@
  * AUTHOR: Robert Collins.
  *
  * Based on ncsa_auth.c by Arjan de Vet <Arjan.deVet@adv.iae.nl>
- * 
+ *
  * LDAP backend extension by Flavio Pescuma,
  * MARA Systems AB <flavio@marasystems.com>
  *
