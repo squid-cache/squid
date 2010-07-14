@@ -136,7 +136,7 @@ sub check_password($$)
     if ($isjoomla){
         my $salt;
         my $key2;
-        ($key2,$salt) = split (/$salt/, $key);
+        ($key2,$salt) = split (/:/, $key);
         return 1 if md5_hex($password.$salt).':'.$salt eq $key;
     }
     else{
