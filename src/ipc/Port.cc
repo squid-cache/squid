@@ -5,9 +5,10 @@
  *
  */
 
-
 #include "config.h"
+#include "comm.h"
 #include "CommCalls.h"
+#include "comm/Connection.h"
 #include "ipc/Port.h"
 
 const char Ipc::coordinatorAddr[] = DEFAULT_PREFIX "/var/run/coordinator.ipc";
