@@ -497,7 +497,10 @@ FwdState::retryOrBail()
         if (paths.size() > 0) {
             /* Ditch error page if it was created before.
              * A new one will be created if there's another problem */
-            err = NULL;
+            if (err) {
+                errorStateFree(err);
+                err = NULL;
+            }
 
             connectStart();
             return;
