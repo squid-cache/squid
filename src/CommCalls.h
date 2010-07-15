@@ -314,6 +314,9 @@ CommCbFunPtrCallT<Dialer>::canFire()
     if (!dialer.params.syncWithComm())
         return cancel("out of sync w/comm");
 
+    if (!dialer.handler)
+        return cancel("no callback requested");
+
     return true;
 }
 
