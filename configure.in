@@ -2503,6 +2503,9 @@ AC_CHECK_TYPE(off_t,[ AC_CHECK_SIZEOF(off_t,,SQUID_DEFAULT_SIZEOF_INCLUDES)
 AC_CHECK_TYPE(mode_t, AC_DEFINE(HAVE_MODE_T,1,[mode_t is defined by the system headers]),,SQUID_DEFAULT_INCLUDES)
 AC_CHECK_TYPE(fd_mask,  AC_DEFINE(HAVE_FD_MASK,1,[fd_mask is defined by the system headers]),,SQUID_DEFAULT_INCLUDES)
 
+dnl On AIX uchar is pre-defined by the headers
+AC_CHECK_TYPE(uchar,[AC_DEFINE([HAVE_UCHAR],[1],[uchar is defined in system headers])],,SQUID_DEFAULT_INCLUDES)
+
 dnl Check for special functions
 AC_FUNC_ALLOCA
 

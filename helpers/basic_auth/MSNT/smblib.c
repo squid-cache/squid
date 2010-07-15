@@ -22,11 +22,14 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+#include "config.h"
 
 int SMBlib_errno;
 int SMBlib_SMB_Error;
 #define SMBLIB_ERRNO
+#ifndef HAVE_UCHAR
 #define uchar unsigned char
+#endif
 #include "util.h"
 #include "smblib-priv.h"
 #include "smblib.h"
