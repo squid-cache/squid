@@ -4,12 +4,11 @@
  * DEBUG: section 54    Interprocess Communication
  *
  */
-
-
 #include "config.h"
+#include "base/TextException.h"
 #include "comm.h"
 #include "CommCalls.h"
-#include "base/TextException.h"
+#include "comm/Connection.h"
 #include "ipc/UdsOp.h"
 
 
