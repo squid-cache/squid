@@ -32,7 +32,9 @@
 int SMBlib_errno;
 int SMBlib_SMB_Error;
 #define SMBLIB_ERRNO
+#ifndef HAVE_UCHAR
 #define uchar unsigned char
+#endif
 #include "smblib-priv.h"
 
 #include "rfcnb.h"
