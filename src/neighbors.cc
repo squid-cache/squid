@@ -1372,7 +1372,7 @@ peerProbeConnect(peer * p)
         ConnOpener *cs = new ConnOpener(conn, call);
         cs->connect_timeout = ctimeout;
         cs->setHost(p->host);
-        cs->start();
+        AsyncJob::AsyncStart(cs);
     }
 
     p->stats.last_connect_probe = squid_curtime;

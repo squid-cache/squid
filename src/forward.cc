@@ -812,7 +812,7 @@ FwdState::connectStart()
     ConnOpener *cs = new ConnOpener(paths[0], call);
     cs->setHost(host);
     cs->connect_timeout = ctimeout;
-    cs->start();
+    AsyncJob::AsyncStart(cs);
 }
 
 void

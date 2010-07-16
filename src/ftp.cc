@@ -2420,7 +2420,7 @@ ftpReadEPSV(FtpStateData* ftpState)
     AsyncCall::Pointer call = commCbCall(9,3, "FtpStateData::ftpPasvCallback", CommConnectCbPtrFun(FtpStateData::ftpPasvCallback, ftpState));
     ConnOpener *cs = new ConnOpener(conn, call);
     cs->setHost(ftpState->data.host);
-    cs->start();
+    AsyncJob::AsyncStart(cs);
 }
 
 /** \ingroup ServerProtocolFTPInternal
@@ -2705,7 +2705,7 @@ ftpReadPasv(FtpStateData * ftpState)
     ConnOpener *cs = new ConnOpener(conn, call);
     cs->setHost(ftpState->data.host);
     cs->connect_timeout = Config.Timeout.connect;
-    cs->start();
+    AsyncJob::AsyncStart(cs);
 }
 
 void

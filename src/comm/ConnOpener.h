@@ -21,6 +21,7 @@ public:
     /** Actual start opening a TCP connection. */
     void start();
 
+    virtual bool doneAll() const;
 private:
     /* These objects may NOT be created without connections to act on. Do not define this operator. */
     ConnOpener(const ConnOpener &);
