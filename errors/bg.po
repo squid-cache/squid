@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-05-01 00:17+1300\n"
+"POT-Creation-Date: 2010-07-13 03:02+1300\n"
 "PO-Revision-Date: 2010-05-06 12:49+0200\n"
 "Last-Translator: Evgeni Gechev <etg@setcom.bg>\n"
 "Language-Team: Squid Developers <squid-dev@squid-cache.org>\n"
@@ -464,8 +464,8 @@ msgstr "Обработката на ESI заявката върна следни
 #: templates/ERR_FTP_UNAVAILABLE:4
 msgid "The FTP server was too busy to retrieve the URL: <a href=\"%U\">%U</a>"
 msgstr ""
-"FTP сървърът е претоварен и не може да бъде изтеглен файлът: <a href=\"%U\">%"
-"U</a>"
+"FTP сървърът е претоварен и не може да бъде изтеглен файлът: <a href=\"%U\">"
+"%U</a>"
 
 #: templates/ERR_INVALID_RESP:5
 msgid ""
