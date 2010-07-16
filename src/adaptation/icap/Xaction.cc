@@ -132,7 +132,7 @@ void Adaptation::Icap::Xaction::openConnection()
     ConnOpener *cs = new ConnOpener(connection, connector);
     cs->setHost(s.cfg().host.termedBuf());
     cs->connect_timeout = TheConfig.connect_timeout(service().cfg().bypass);
-    cs->start();
+    AsyncJob::AsyncStart(cs);
 }
 
 /*
