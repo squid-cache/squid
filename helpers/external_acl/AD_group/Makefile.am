@@ -1,11 +1,8 @@
-libexec_PROGRAMS = mswin_check_ad_group
+include $(top_srcdir)/src/Common.am
 
-mswin_check_ad_group_SOURCES = mswin_check_ad_group.c mswin_check_ad_group.h
-
-INCLUDES = \
-	-I$(top_srcdir) \
-	-I$(top_srcdir)/src \
-	-I$(top_srcdir)/include
+libexec_PROGRAMS = ext_ad_group_acl
+ext_ad_group_acl_SOURCES = ext_ad_group_acl.cc
+man_MANS = ext_ad_group_acl.8
 
 #
 # Currently activeds and adsiid libraries are not available on MinGW or Cygwin,
@@ -13,8 +10,7 @@ INCLUDES = \
 # This helper can be compiled only using Microsoft Visual Studio.
 #
 LDADD = \
-	$(top_builddir)/compat/libcompat.la \
-	-L$(top_builddir)/lib -lmiscutil \
+	$(COMPAT_LIB) \
 	-lnetapi32 \
 	-ladvapi32 \
 	-lole32 \
@@ -24,4 +20,4 @@ LDADD = \
 	-ladsiid \
 	$(XTRA_LIBS)
 
-EXTRA_DIST = readme.txt config.test
+EXTRA_DIST = config.test ext_ad_group_acl.8

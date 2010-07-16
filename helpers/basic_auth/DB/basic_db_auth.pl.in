@@ -22,6 +22,7 @@ my $db_usercol = "user";
 my $db_passwdcol = "password";
 my $db_cond = "enabled = 1";
 my $plaintext = 0;
+my $md5 = 0;
 my $persist = 0;
 my $isjoomla = 0;
 my $debug = 0;
@@ -72,6 +73,10 @@ If you use --joomla flag, this condition will be changed to block=0
 
 Database contains plain-text passwords
 
+=item   B<--md5>
+
+Database contains unsalted md5 passwords
+
 =item	B<--salt>
 
 Selects the correct salt to evaluate passwords
@@ -98,6 +103,7 @@ GetOptions(
 	'passwdcol=s' => \$db_passwdcol,
 	'cond=s' => \$db_cond,
 	'plaintext' => \$plaintext,
+	'md5' => \$md5,
 	'persist' => \$persist,
 	'joomla' => \$isjoomla,
 	'debug' => \$debug,
@@ -136,12 +142,13 @@ sub check_password($$)
     if ($isjoomla){
         my $salt;
         my $key2;
-        ($key2,$salt) = split (/$salt/, $key);
+        ($key2,$salt) = split (/:/, $key);
         return 1 if md5_hex($password.$salt).':'.$salt eq $key;
     }
     else{
         return 1 if defined $hashsalt && crypt($password, $hashsalt) eq $key;
         return 1 if crypt($password, $key) eq $key;
+        return 1 if $md5 && md5_hex($password) eq $key;
         return 1 if $plaintext && $password eq $key;
     }
 

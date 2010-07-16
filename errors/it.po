@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Squid-3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-05-01 00:17+1300\n"
+"POT-Creation-Date: 2010-07-13 03:02+1300\n"
 "PO-Revision-Date: 2010-05-05 13:38+0200\n"
 "Last-Translator: Francesco Chemolli <kinkie@squid-cache.org>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,8 @@ msgstr ""
 #: templates/ERR_DIR_LISTING:6
 msgid "<a href=\"../\">Parent Directory</a> (<a href=\"/\">Root Directory</a>)"
 msgstr ""
-"<a href=\"../\">Directory superiore</a> (<a href=\"/\">Directory principale</a>)"
+"<a href=\"../\">Directory superiore</a> (<a href=\"/\">Directory principale</"
+"a>)"
 
 #: templates/ERR_INVALID_REQ:4
 msgid ""
@@ -299,7 +300,8 @@ msgstr ""
 
 #: templates/ERR_INVALID_REQ:11 templates/ERR_INVALID_URL:11
 msgid "Illegal character in hostname; underscores are not allowed."
-msgstr "Nome host non valido: i caratteri underscore (\"_\") non sono consentiti."
+msgstr ""
+"Nome host non valido: i caratteri underscore (\"_\") non sono consentiti."
 
 #: templates/ERR_INVALID_URL:10
 msgid "Illegal double-escape in the URL-Path"
@@ -665,8 +667,8 @@ msgstr ""
 msgid ""
 "Tools -&gt; Internet Options -&gt; Connection -&gt; LAN Settings -&gt;Proxy"
 msgstr ""
-"Strumenti -&gt; Opzioni Internet -&gt; Connessioni -&gt; Impostazioni LAN "
-"-&gt;Proxy"
+"Strumenti -&gt; Opzioni Internet -&gt; Connessioni -&gt; Impostazioni LAN -"
+"&gt;Proxy"
 
 #: templates/ERR_AGENT_CONFIGURE:7 templates/ERR_AGENT_WPAD:7
 msgid ""
@@ -678,7 +680,8 @@ msgstr ""
 #: templates/ERR_AGENT_CONFIGURE:13 templates/ERR_AGENT_WPAD:12
 msgid ""
 "Tools -&gt; Preferences -&gt; Advanced -&gt; Network -&gt; Proxy Servers"
-msgstr "Strumenti -&gt; Preferenze -&gt; Avanzate -&gt; Rete -&gt; Server proxy"
+msgstr ""
+"Strumenti -&gt; Preferenze -&gt; Avanzate -&gt; Rete -&gt; Server proxy"
 
 #: templates/ERR_DNS_FAIL:5
 msgid "Unable to determine IP address from host name <q>%H</q>"
