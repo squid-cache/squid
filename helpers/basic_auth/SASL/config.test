@@ -6,8 +6,5 @@ if [ -f /usr/include/sasl.h -o -f /usr/include/sasl/sasl.h ]; then
 	if [ -f /usr/lib/libsasl.la -o -f /usr/lib/libsasl2.la ]; then
 		exit 0
 	fi
-	if [ -f /usr/lib/libsasl.so -o -f /usr/lib/libsasl2.so ]; then
-		exit 0
-	fi
 fi
 exit 1

@@ -1,5 +1,12 @@
 Version 2.17
 
+2010-07-12 Amos Jeffries <amosjeffries@squid-cache.org>
+
+	Rename to ext_ldap_group_acl (Squid-3 helper naming schema)
+	Convert to build under C++
+	Remove several goto statements.
+	Update to use helper macro API
+
 2005-03-19 Henrik Nordstrom <hno@squid-cache.org>
 
 	Bug #1258: LDAP helpers fails to compile with SUN LDAP SDK

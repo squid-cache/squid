@@ -607,6 +607,7 @@ HttpReply *
 HttpReply::clone() const
 {
     HttpReply *rep = new HttpReply();
+    rep->sline = sline; // used in hdrCacheInit() call below
     rep->header.append(&header);
     rep->hdrCacheInit();
     rep->hdr_sz = hdr_sz;
@@ -615,8 +616,7 @@ HttpReply::clone() const
     rep->body_pipe = body_pipe;
 
     rep->protocol = protocol;
-    rep->sline = sline;
-    rep->keep_alive = keep_alive;
+    // keep_alive is handled in hdrCacheInit()
     return rep;
 }
 
