@@ -26,6 +26,20 @@ ConnOpener::~ConnOpener()
     solo = NULL;
 }
 
+bool
+ConnOpener::doneAll() const
+{
+    // is the conn to be opened still waiting?
+    if (solo != NULL)
+        return false;
+
+    // is the callback still to be called?
+    if (callback != NULL)
+        return false;
+
+    return true;
+}
+
 void
 ConnOpener::setHost(const char * new_host)
 {
@@ -47,19 +61,24 @@ ConnOpener::getHost() const
 void
 ConnOpener::callCallback(comm_err_t status, int xerrno)
 {
-    /* remove handlers we don't want to happen now */
-    comm_remove_close_handler(solo->fd, ConnOpener::EarlyAbort, this);
-    commSetTimeout(solo->fd, -1, NULL, NULL);
+    /* remove handlers we don't want to happen anymore */
+    if (solo != NULL && solo->fd > 0) {
+        comm_remove_close_handler(solo->fd, ConnOpener::EarlyAbort, this);
+        commSetTimeout(solo->fd, -1, NULL, NULL);
+    }
 
-    typedef CommConnectCbParams Params;
-    Params &params = GetCommParams<Params>(callback);
-    params.conn = solo;
-    params.flag = status;
-    params.xerrno = xerrno;
-    ScheduleCallHere(callback);
+    if (callback != NULL) {
+        typedef CommConnectCbParams Params;
+        Params &params = GetCommParams<Params>(callback);
+        params.conn = solo;
+        params.flag = status;
+        params.xerrno = xerrno;
+        ScheduleCallHere(callback);
+        callback = NULL;
+    }
 
-    callback = NULL;
-    delete this;
+    /* ensure cleared local state, we are done. */
+    solo = NULL;
 }
 
 void
@@ -74,7 +93,7 @@ ConnOpener::start()
         }
 #endif
         solo->fd = comm_openex(SOCK_STREAM, IPPROTO_TCP, solo->local, solo->flags, solo->tos, host);
-        if (solo->fd <= 0) {
+        if (solo->fd < 0) {
             callCallback(COMM_ERR_CONNECT, 0);
             return;
         }
@@ -98,8 +117,15 @@ ConnOpener::start()
     switch (comm_connect_addr(solo->fd, solo->remote) ) {
 
     case COMM_INPROGRESS:
-        debugs(5, 5, HERE << "FD " << solo->fd << ": COMM_INPROGRESS");
-        commSetSelect(solo->fd, COMM_SELECT_WRITE, ConnOpener::ConnectRetry, this, 0);
+        // check for timeout FIRST.
+        if(squid_curtime - connstart > connect_timeout) {
+            debugs(5, 5, HERE << "FD " << solo->fd << ": * - ERR took too long already.");
+            callCallback(COMM_TIMEOUT, errno);
+            return;
+        } else {
+            debugs(5, 5, HERE << "FD " << solo->fd << ": COMM_INPROGRESS");
+            commSetSelect(solo->fd, COMM_SELECT_WRITE, ConnOpener::ConnectRetry, this, 0);
+        }
         break;
 
     case COMM_OK:
@@ -155,12 +181,6 @@ ConnOpener::EarlyAbort(int fd, void *data)
     ConnOpener *cs = static_cast<ConnOpener *>(data);
     debugs(5, 3, HERE << "FD " << fd);
     cs->callCallback(COMM_ERR_CLOSING, errno); // NP: is closing or shutdown better?
-
-    /* TODO split cases:
-     * remote end rejecting the connection is normal and one of the other paths may be taken.
-     * squid shutting down or forcing abort on the connection attempt(s) are the only real fatal cases.
-     * we may need separate error codes to send back for these two.
-     */
 }
 
 void
@@ -183,4 +203,3 @@ ConnOpener::ConnectTimeout(int fd, void *data)
     ConnOpener *cs = static_cast<ConnOpener *>(data);
     cs->start();
 }
-

@@ -550,7 +550,7 @@ tunnelConnectDone(Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, 
             ConnOpener *cs = new ConnOpener(tunnelState->paths[0], call);
             cs->setHost(tunnelState->url);
             cs->connect_timeout = Config.Timeout.connect;
-            cs->start();
+            AsyncJob::AsyncStart(cs);
         } else {
             err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
             *tunnelState->status_ptr = HTTP_SERVICE_UNAVAILABLE;
@@ -704,7 +704,7 @@ tunnelPeerSelectComplete(Comm::Paths *peer_paths, void *data)
     ConnOpener *cs = new ConnOpener(tunnelState->paths[0], call);
     cs->setHost(tunnelState->url);
     cs->connect_timeout = Config.Timeout.connect;
-    cs->start();
+    AsyncJob::AsyncStart(cs);
 }
 
 CBDATA_CLASS_INIT(TunnelStateData);
