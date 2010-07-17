@@ -80,7 +80,11 @@ FwdState::abort(void* d)
     FwdState* fwd = (FwdState*)d;
     Pointer tmp = fwd; // Grab a temporary pointer to keep the object alive during our scope.
 
-    fwd->paths[0]->close();
+    if (fwd->paths.size() > 0 && fwd->paths[0]->fd > -1) {
+        comm_remove_close_handler(fwd->paths[0]->fd, fwdServerClosedWrapper, fwd);
+        fwd->paths[0]->close();
+    }
+    fwd->paths.clean();
     fwd->self = NULL;
 }
 
@@ -167,7 +171,7 @@ FwdState::~FwdState()
 
     entry = NULL;
 
-    if (paths[0]->fd > -1) {
+    if (paths.size() > 0 && paths[0]->fd > -1) {
         comm_remove_close_handler(paths[0]->fd, fwdServerClosedWrapper, this);
         debugs(17, 3, HERE << "closing FD " << paths[0]->fd);
         paths[0]->close();
