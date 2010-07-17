@@ -2418,7 +2418,7 @@ ftpReadEPSV(FtpStateData* ftpState)
     conn->fd = fd;
 
     AsyncCall::Pointer call = commCbCall(9,3, "FtpStateData::ftpPasvCallback", CommConnectCbPtrFun(FtpStateData::ftpPasvCallback, ftpState));
-    ConnOpener *cs = new ConnOpener(conn, call);
+    ConnOpener *cs = new ConnOpener(conn, call, Config.Timeout.connect);
     cs->setHost(ftpState->data.host);
     AsyncJob::AsyncStart(cs);
 }
@@ -2702,9 +2702,8 @@ ftpReadPasv(FtpStateData * ftpState)
     conn->fd = ftpState->data.fd;
 
     AsyncCall::Pointer call = commCbCall(9,3, "FtpStateData::ftpPasvCallback", CommConnectCbPtrFun(FtpStateData::ftpPasvCallback, ftpState));
-    ConnOpener *cs = new ConnOpener(conn, call);
+    ConnOpener *cs = new ConnOpener(conn, call, Config.Timeout.connect);
     cs->setHost(ftpState->data.host);
-    cs->connect_timeout = Config.Timeout.connect;
     AsyncJob::AsyncStart(cs);
 }
 
