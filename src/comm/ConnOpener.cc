@@ -56,11 +56,6 @@ ConnOpener::doneAll() const
 void
 ConnOpener::swanSong()
 {
-    // recover what we can from the job
-    if (solo != NULL && solo->fd > -1) {
-        callCallback(COMM_ERR_CONNECT, 0);
-    }
-
     // cancel any event watchers
     if (calls.earlyabort != NULL) {
         calls.earlyabort->cancel("ConnOpener::swanSong");
@@ -69,6 +64,11 @@ ConnOpener::swanSong()
     if (calls.timeout != NULL) {
         calls.timeout->cancel("ConnOpener::swanSong");
         calls.timeout = NULL;
+    }
+
+    // recover what we can from the job
+    if (solo != NULL && solo->fd > -1) {
+        callCallback(COMM_ERR_CONNECT, 0);
     }
 }
 
