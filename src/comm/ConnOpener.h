@@ -22,10 +22,11 @@ public:
     virtual bool doneAll() const;
     virtual void swanSong();
 
+public:
     // ****** ConnOpener API iplementation ******
 
     /** attempt to open a connection. */
-    ConnOpener(Comm::ConnectionPointer &, AsyncCall::Pointer handler);
+    ConnOpener(Comm::ConnectionPointer &, AsyncCall::Pointer &handler, time_t connect_timeout);
     ~ConnOpener();
 
     void setHost(const char *);    ///< set the hostname note for this connection
@@ -63,14 +64,13 @@ private:
     // As soon as comm IO accepts Async calls we can use a ConnOpener::connect call
     static void ConnectRetry(int fd, void *data);
 
-public:
+private:
     /**
      * time at which to abandon the connection.
      * the connection-done callback will be passed COMM_TIMEOUT
      */
     time_t connect_timeout;
 
-private:
     char *host;                         ///< domain name we are trying to connect to.
 
     Comm::ConnectionPointer solo;       ///< single connection currently being opened.

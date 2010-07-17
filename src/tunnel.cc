@@ -547,9 +547,8 @@ tunnelConnectDone(Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, 
         if (status != COMM_TIMEOUT && tunnelState->paths.size() > 0) {
             /* Try another IP of this destination host */
             AsyncCall::Pointer call = commCbCall(26,3, "tunnelConnectDone", CommConnectCbPtrFun(tunnelConnectDone, tunnelState));
-            ConnOpener *cs = new ConnOpener(tunnelState->paths[0], call);
+            ConnOpener *cs = new ConnOpener(tunnelState->paths[0], call, Config.Timeout.connect);
             cs->setHost(tunnelState->url);
-            cs->connect_timeout = Config.Timeout.connect;
             AsyncJob::AsyncStart(cs);
         } else {
             err = errorCon(ERR_CONNECT_FAIL, HTTP_SERVICE_UNAVAILABLE, request);
@@ -701,9 +700,8 @@ tunnelPeerSelectComplete(Comm::Paths *peer_paths, void *data)
     }
 
     AsyncCall::Pointer call = commCbCall(26,3, "tunnelConnectDone", CommConnectCbPtrFun(tunnelConnectDone, tunnelState));
-    ConnOpener *cs = new ConnOpener(tunnelState->paths[0], call);
+    ConnOpener *cs = new ConnOpener(tunnelState->paths[0], call, Config.Timeout.connect);
     cs->setHost(tunnelState->url);
-    cs->connect_timeout = Config.Timeout.connect;
     AsyncJob::AsyncStart(cs);
 }
 

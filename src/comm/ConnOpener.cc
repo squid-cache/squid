@@ -3,6 +3,7 @@
  */
 
 #include "config.h"
+#include "base/TextException.h"
 #include "comm/ConnOpener.h"
 #include "comm/Connection.h"
 #include "comm.h"
@@ -12,9 +13,9 @@
 
 CBDATA_CLASS_INIT(ConnOpener);
 
-ConnOpener::ConnOpener(Comm::ConnectionPointer &c, AsyncCall::Pointer handler) :
+ConnOpener::ConnOpener(Comm::ConnectionPointer &c, AsyncCall::Pointer &handler, time_t ctimeout) :
         AsyncJob("ConnOpener"),
-        connect_timeout(Config.Timeout.connect),
+        connect_timeout(ctimeout),
         host(NULL),
         solo(c),
         callback(handler),
@@ -37,13 +38,18 @@ bool
 ConnOpener::doneAll() const
 {
     // is the conn to be opened still waiting?
-    if (solo != NULL)
+    if (solo != NULL) {
+        debugs(5, 6, HERE << " ConnOpener::doneAll() ? NO. 'solo' is still set");
         return false;
+    }
 
     // is the callback still to be called?
-    if (callback != NULL)
+    if (callback != NULL) {
+        debugs(5, 6, HERE << " ConnOpener::doneAll() ? NO. callback is still set");
         return false;
+    }
 
+    debugs(5, 6, HERE << " ConnOpener::doneAll() ? YES.");
     return true;
 }
 
