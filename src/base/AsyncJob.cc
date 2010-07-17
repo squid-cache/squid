@@ -27,6 +27,8 @@ AsyncJob::AsyncJob(const char *aTypeName): typeName(aTypeName), inCall(NULL), id
 
 AsyncJob::~AsyncJob()
 {
+    debugs(93,3, "AsyncJob of type " << typeName << " destructed, this=" << this <<
+           " [async" << id << ']');
 }
 
 void AsyncJob::noteStart()
