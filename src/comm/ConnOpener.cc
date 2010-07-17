@@ -2,7 +2,6 @@
 #include "comm/ConnOpener.h"
 #include "comm/Connection.h"
 #include "comm.h"
-#include "CommCalls.h"
 #include "fde.h"
 #include "icmp/net_db.h"
 #include "SquidTime.h"
@@ -18,12 +17,16 @@ ConnOpener::ConnOpener(Comm::ConnectionPointer &c, AsyncCall::Pointer handler) :
         total_tries(0),
         fail_retries(0),
         connstart(0)
-{}
+{
+    memset(&calls, 0, sizeof(calls));
+}
 
 ConnOpener::~ConnOpener()
 {
     safe_free(host);
     solo = NULL;
+    calls.earlyabort = NULL;
+    calls.timeout = NULL;
 }
 
 bool
@@ -38,6 +41,25 @@ ConnOpener::doneAll() const
         return false;
 
     return true;
+}
+
+void
+ConnOpener::swanSong()
+{
+    // recover what we can from the job
+    if (solo != NULL && solo->fd > -1) {
+        callCallback(COMM_ERR_CONNECT, 0);
+    }
+
+    // cancel any event watchers
+    if (calls.earlyabort != NULL) {
+        calls.earlyabort->cancel("ConnOpener::swanSong");
+        calls.earlyabort = NULL;
+    }
+    if (calls.timeout != NULL) {
+        calls.timeout->cancel("ConnOpener::swanSong");
+        calls.timeout = NULL;
+    }
 }
 
 void
@@ -63,8 +85,16 @@ ConnOpener::callCallback(comm_err_t status, int xerrno)
 {
     /* remove handlers we don't want to happen anymore */
     if (solo != NULL && solo->fd > 0) {
-        comm_remove_close_handler(solo->fd, ConnOpener::EarlyAbort, this);
-        commSetTimeout(solo->fd, -1, NULL, NULL);
+        if (calls.earlyabort != NULL) {
+            comm_remove_close_handler(solo->fd, calls.earlyabort);
+            calls.earlyabort->cancel("ConnOpener completed.");
+            calls.earlyabort = NULL;
+        }
+        if (calls.timeout != NULL) {
+            commSetTimeout(solo->fd, -1, NULL, NULL);
+            calls.timeout->cancel("ConnOpener completed.");
+            calls.timeout = NULL;
+        }
     }
 
     if (callback != NULL) {
@@ -98,14 +128,20 @@ ConnOpener::start()
             return;
         }
 
-        AsyncCall::Pointer ea_call = commCbCall(5,4, "ConnOpener::EarlyAbort",
-                                                CommCloseCbPtrFun(ConnOpener::EarlyAbort, this));
-        comm_add_close_handler(solo->fd, ea_call);
+        if (calls.earlyabort == NULL) {
+            typedef CommCbMemFunT<ConnOpener, CommConnectCbParams> Dialer;
+            calls.earlyabort = asyncCall(5, 4, "ConnOpener::earlyAbort",
+                                         Dialer(this, &ConnOpener::earlyAbort));
+        }
+        comm_add_close_handler(solo->fd, calls.earlyabort);
 
-        AsyncCall::Pointer timeout_call = commCbCall(5,4, "ConnOpener::ConnectTimeout",
-                                                     CommTimeoutCbPtrFun(ConnOpener::ConnectTimeout, this));
+        if (calls.timeout == NULL) {
+            typedef CommCbMemFunT<ConnOpener, CommTimeoutCbParams> Dialer;
+            calls.timeout = asyncCall(5, 4, "ConnOpener::connect Timeout",
+                                      Dialer(this, &ConnOpener::timeout));
+        }
         debugs(5, 3, HERE << "FD " << solo->fd << " timeout " << connect_timeout);
-        commSetTimeout(solo->fd, connect_timeout, timeout_call);
+        commSetTimeout(solo->fd, connect_timeout, calls.timeout);
 
         if (connstart == 0) {
             connstart = squid_curtime;
@@ -176,29 +212,26 @@ ConnOpener::start()
 }
 
 void
-ConnOpener::EarlyAbort(int fd, void *data)
+ConnOpener::earlyAbort(const CommConnectCbParams &io)
 {
-    ConnOpener *cs = static_cast<ConnOpener *>(data);
-    debugs(5, 3, HERE << "FD " << fd);
-    cs->callCallback(COMM_ERR_CLOSING, errno); // NP: is closing or shutdown better?
+    debugs(5, 3, HERE << "FD " << io.conn->fd);
+    callCallback(COMM_ERR_CLOSING, io.xerrno); // NP: is closing or shutdown better?
 }
 
 void
-ConnOpener::Connect(void *data)
+ConnOpener::connect(const CommConnectCbParams &unused)
 {
-    ConnOpener *cs = static_cast<ConnOpener *>(data);
-    cs->start();
+    start();
+}
+
+void
+ConnOpener::timeout(const CommTimeoutCbParams &unused)
+{
+    start();
 }
 
 void
 ConnOpener::ConnectRetry(int fd, void *data)
-{
-    ConnOpener *cs = static_cast<ConnOpener *>(data);
-    cs->start();
-}
-
-void
-ConnOpener::ConnectTimeout(int fd, void *data)
 {
     ConnOpener *cs = static_cast<ConnOpener *>(data);
     cs->start();

@@ -3291,7 +3291,7 @@ clientNegotiateSSL(int fd, void *data)
 
 /** handle a new HTTPS connection */
 static void
-httpsAccept(int sock, int newfd, Comm::ConnectionPointer details,
+httpsAccept(int sock, int newfd, Comm::ConnectionPointer& details,
             comm_err_t flag, int xerrno, void *data)
 {
     https_port_list *s = (https_port_list *)data;
