@@ -813,9 +813,8 @@ FwdState::connectStart()
 #endif
 
     AsyncCall::Pointer call = commCbCall(17,3, "fwdConnectDoneWrapper", CommConnectCbPtrFun(fwdConnectDoneWrapper, this));
-    ConnOpener *cs = new ConnOpener(paths[0], call);
+    ConnOpener *cs = new ConnOpener(paths[0], call, ctimeout);
     cs->setHost(host);
-    cs->connect_timeout = ctimeout;
     AsyncJob::AsyncStart(cs);
 }
 

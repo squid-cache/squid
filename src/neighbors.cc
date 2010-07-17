@@ -1369,8 +1369,7 @@ peerProbeConnect(peer * p)
         p->testing_now++;
 
         AsyncCall::Pointer call = commCbCall(15,3, "peerProbeConnectDone", CommConnectCbPtrFun(peerProbeConnectDone, p));
-        ConnOpener *cs = new ConnOpener(conn, call);
-        cs->connect_timeout = ctimeout;
+        ConnOpener *cs = new ConnOpener(conn, call, ctimeout);
         cs->setHost(p->host);
         AsyncJob::AsyncStart(cs);
     }
