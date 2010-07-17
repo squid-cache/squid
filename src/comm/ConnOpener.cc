@@ -1,3 +1,7 @@
+/*
+ * DEBUG: section 05    Socket Connection Opener
+ */
+
 #include "config.h"
 #include "comm/ConnOpener.h"
 #include "comm/Connection.h"
@@ -114,6 +118,8 @@ ConnOpener::callCallback(comm_err_t status, int xerrno)
 void
 ConnOpener::start()
 {
+    Must(solo != NULL);
+
     /* handle connecting to one single path */
     if (solo->fd < 0) {
 #if USE_IPV6
@@ -137,7 +143,7 @@ ConnOpener::start()
 
         if (calls.timeout == NULL) {
             typedef CommCbMemFunT<ConnOpener, CommTimeoutCbParams> Dialer;
-            calls.timeout = asyncCall(5, 4, "ConnOpener::connect Timeout",
+            calls.timeout = asyncCall(5, 4, "ConnOpener::timeout",
                                       Dialer(this, &ConnOpener::timeout));
         }
         debugs(5, 3, HERE << "FD " << solo->fd << " timeout " << connect_timeout);
