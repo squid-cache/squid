@@ -74,7 +74,7 @@ CommConnectCbParams::print(std::ostream &os) const
 {
     CommCommonCbParams::print(os);
     if (conn != NULL)
-      os << ", from my " << conn->local << " to " << conn->remote;
+      os << ", conn.local=" << conn->local << ", conn.remote=" << conn->remote;
 }
 
 /* CommIoCbParams */
