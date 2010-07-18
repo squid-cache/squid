@@ -250,7 +250,7 @@ Ident::Start(Comm::ConnectionPointer &conn, IDCB * callback, void *data)
     hash_join(ident_hash, &state->hash);
 
     AsyncCall::Pointer call = commCbCall(30,3, "Ident::ConnectDone", CommConnectCbPtrFun(Ident::ConnectDone, state));
-    AsyncJob::AsyncStart(new ConnOpener(state->conn, call, Ident::TheConfig.timeout));
+    AsyncJob::AsyncStart(new Comm::ConnOpener(state->conn, call, Ident::TheConfig.timeout));
 }
 
 void

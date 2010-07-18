@@ -129,7 +129,7 @@ void Adaptation::Icap::Xaction::openConnection()
     connector = asyncCall(93,3, "Adaptation::Icap::Xaction::noteCommConnected",
                           ConnectDialer(this, &Adaptation::Icap::Xaction::noteCommConnected));
 
-    ConnOpener *cs = new ConnOpener(connection, connector, TheConfig.connect_timeout(service().cfg().bypass));
+    Comm::ConnOpener *cs = new Comm::ConnOpener(connection, connector, TheConfig.connect_timeout(service().cfg().bypass));
     cs->setHost(s.cfg().host.termedBuf());
     AsyncJob::AsyncStart(cs);
 }

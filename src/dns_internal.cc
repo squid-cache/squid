@@ -749,7 +749,7 @@ idnsInitVC(int ns)
 
     AsyncCall::Pointer call = commCbCall(78,3, "idnsInitVCConnected", CommConnectCbPtrFun(idnsInitVCConnected, vc));
 
-    ConnOpener *cs = new ConnOpener(conn, call, Config.Timeout.connect);
+    Comm::ConnOpener *cs = new Comm::ConnOpener(conn, call, Config.Timeout.connect);
     cs->setHost("DNS TCP Socket");
     AsyncJob::AsyncStart(cs);
 }
