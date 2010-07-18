@@ -521,16 +521,12 @@ comm_local_port(int fd)
 
     temp.FreeAddrInfo(addr);
 
-    F->local_addr.SetPort(temp.GetPort());
-
-#if 0 // seems to undo comm_open actions on the FD ...
-    // grab default socket information for this address
-    temp.GetAddrInfo(addr);
-
-    F->sock_family = addr->ai_family;
-
-    temp.FreeAddrInfo(addr);
-#endif
+    if (F->local_addr.IsAnyAddr()) {
+        /* save the whole local address, not just the port. */
+        F->local_addr = temp;
+    } else {
+        F->local_addr.SetPort(temp.GetPort());
+    }
 
     debugs(5, 6, "comm_local_port: FD " << fd << ": port " << F->local_addr.GetPort() << "(family=" << F->sock_family << ")");
     return F->local_addr.GetPort();
