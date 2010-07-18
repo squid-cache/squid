@@ -80,7 +80,7 @@ FwdState::abort(void* d)
     FwdState* fwd = (FwdState*)d;
     Pointer tmp = fwd; // Grab a temporary pointer to keep the object alive during our scope.
 
-    if (fwd->paths.size() > 0 && fwd->paths[0]->fd > -1) {
+    if (fwd->paths.size() > 0 && fwd->paths[0]->isOpen()) {
         comm_remove_close_handler(fwd->paths[0]->fd, fwdServerClosedWrapper, fwd);
         fwd->paths[0]->close();
     }
@@ -171,7 +171,7 @@ FwdState::~FwdState()
 
     entry = NULL;
 
-    if (paths.size() > 0 && paths[0]->fd > -1) {
+    if (paths.size() > 0 && paths[0]->isOpen()) {
         comm_remove_close_handler(paths[0]->fd, fwdServerClosedWrapper, this);
         debugs(17, 3, HERE << "closing FD " << paths[0]->fd);
         paths[0]->close();
@@ -815,7 +815,7 @@ FwdState::connectStart()
 #endif
 
     AsyncCall::Pointer call = commCbCall(17,3, "fwdConnectDoneWrapper", CommConnectCbPtrFun(fwdConnectDoneWrapper, this));
-    ConnOpener *cs = new ConnOpener(paths[0], call, ctimeout);
+    Comm::ConnOpener *cs = new Comm::ConnOpener(paths[0], call, ctimeout);
     cs->setHost(host);
     AsyncJob::AsyncStart(cs);
 }

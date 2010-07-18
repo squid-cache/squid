@@ -11,10 +11,12 @@
 #include "icmp/net_db.h"
 #include "SquidTime.h"
 
-CBDATA_CLASS_INIT(ConnOpener);
+namespace Comm {
+    CBDATA_CLASS_INIT(ConnOpener);
+};
 
-ConnOpener::ConnOpener(Comm::ConnectionPointer &c, AsyncCall::Pointer &handler, time_t ctimeout) :
-        AsyncJob("ConnOpener"),
+Comm::ConnOpener::ConnOpener(Comm::ConnectionPointer &c, AsyncCall::Pointer &handler, time_t ctimeout) :
+        AsyncJob("Comm::ConnOpener"),
         connect_timeout(ctimeout),
         host(NULL),
         solo(c),
@@ -26,7 +28,7 @@ ConnOpener::ConnOpener(Comm::ConnectionPointer &c, AsyncCall::Pointer &handler, 
     memset(&calls, 0, sizeof(calls));
 }
 
-ConnOpener::~ConnOpener()
+Comm::ConnOpener::~ConnOpener()
 {
     safe_free(host);
     solo = NULL;
@@ -35,34 +37,34 @@ ConnOpener::~ConnOpener()
 }
 
 bool
-ConnOpener::doneAll() const
+Comm::ConnOpener::doneAll() const
 {
     // is the conn to be opened still waiting?
     if (solo != NULL) {
-        debugs(5, 6, HERE << " ConnOpener::doneAll() ? NO. 'solo' is still set");
+        debugs(5, 6, HERE << " Comm::ConnOpener::doneAll() ? NO. 'solo' is still set");
         return false;
     }
 
     // is the callback still to be called?
     if (callback != NULL) {
-        debugs(5, 6, HERE << " ConnOpener::doneAll() ? NO. callback is still set");
+        debugs(5, 6, HERE << " Comm::ConnOpener::doneAll() ? NO. callback is still set");
         return false;
     }
 
-    debugs(5, 6, HERE << " ConnOpener::doneAll() ? YES.");
+    debugs(5, 6, HERE << " Comm::ConnOpener::doneAll() ? YES.");
     return true;
 }
 
 void
-ConnOpener::swanSong()
+Comm::ConnOpener::swanSong()
 {
     // cancel any event watchers
     if (calls.earlyabort != NULL) {
-        calls.earlyabort->cancel("ConnOpener::swanSong");
+        calls.earlyabort->cancel("Comm::ConnOpener::swanSong");
         calls.earlyabort = NULL;
     }
     if (calls.timeout != NULL) {
-        calls.timeout->cancel("ConnOpener::swanSong");
+        calls.timeout->cancel("Comm::ConnOpener::swanSong");
         calls.timeout = NULL;
     }
 
@@ -77,7 +79,7 @@ ConnOpener::swanSong()
 }
 
 void
-ConnOpener::setHost(const char * new_host)
+Comm::ConnOpener::setHost(const char * new_host)
 {
     // unset and erase if already set.
     if (host != NULL)
@@ -89,24 +91,24 @@ ConnOpener::setHost(const char * new_host)
 }
 
 const char *
-ConnOpener::getHost() const
+Comm::ConnOpener::getHost() const
 {
     return host;
 }
 
 void
-ConnOpener::callCallback(comm_err_t status, int xerrno)
+Comm::ConnOpener::callCallback(comm_err_t status, int xerrno)
 {
     /* remove handlers we don't want to happen anymore */
     if (solo != NULL && solo->fd > 0) {
         if (calls.earlyabort != NULL) {
             comm_remove_close_handler(solo->fd, calls.earlyabort);
-            calls.earlyabort->cancel("ConnOpener completed.");
+            calls.earlyabort->cancel("Comm::ConnOpener completed.");
             calls.earlyabort = NULL;
         }
         if (calls.timeout != NULL) {
             commSetTimeout(solo->fd, -1, NULL, NULL);
-            calls.timeout->cancel("ConnOpener completed.");
+            calls.timeout->cancel("Comm::ConnOpener completed.");
             calls.timeout = NULL;
         }
     }
@@ -128,7 +130,7 @@ ConnOpener::callCallback(comm_err_t status, int xerrno)
 }
 
 void
-ConnOpener::start()
+Comm::ConnOpener::start()
 {
     Must(solo != NULL);
 
@@ -147,16 +149,16 @@ ConnOpener::start()
         }
 
         if (calls.earlyabort == NULL) {
-            typedef CommCbMemFunT<ConnOpener, CommConnectCbParams> Dialer;
-            calls.earlyabort = asyncCall(5, 4, "ConnOpener::earlyAbort",
-                                         Dialer(this, &ConnOpener::earlyAbort));
+            typedef CommCbMemFunT<Comm::ConnOpener, CommConnectCbParams> Dialer;
+            calls.earlyabort = asyncCall(5, 4, "Comm::ConnOpener::earlyAbort",
+                                         Dialer(this, &Comm::ConnOpener::earlyAbort));
         }
         comm_add_close_handler(solo->fd, calls.earlyabort);
 
         if (calls.timeout == NULL) {
-            typedef CommCbMemFunT<ConnOpener, CommTimeoutCbParams> Dialer;
-            calls.timeout = asyncCall(5, 4, "ConnOpener::timeout",
-                                      Dialer(this, &ConnOpener::timeout));
+            typedef CommCbMemFunT<Comm::ConnOpener, CommTimeoutCbParams> Dialer;
+            calls.timeout = asyncCall(5, 4, "Comm::ConnOpener::timeout",
+                                      Dialer(this, &Comm::ConnOpener::timeout));
         }
         debugs(5, 3, HERE << "FD " << solo->fd << " timeout " << connect_timeout);
         commSetTimeout(solo->fd, connect_timeout, calls.timeout);
@@ -178,7 +180,7 @@ ConnOpener::start()
             return;
         } else {
             debugs(5, 5, HERE << "FD " << solo->fd << ": COMM_INPROGRESS");
-            commSetSelect(solo->fd, COMM_SELECT_WRITE, ConnOpener::ConnectRetry, this, 0);
+            commSetSelect(solo->fd, COMM_SELECT_WRITE, Comm::ConnOpener::ConnectRetry, this, 0);
         }
         break;
 
@@ -235,32 +237,32 @@ ConnOpener::start()
 }
 
 void
-ConnOpener::earlyAbort(const CommConnectCbParams &io)
+Comm::ConnOpener::earlyAbort(const CommConnectCbParams &io)
 {
     debugs(5, 3, HERE << "FD " << io.conn->fd);
     callCallback(COMM_ERR_CLOSING, io.xerrno); // NP: is closing or shutdown better?
 }
 
 void
-ConnOpener::connect(const CommConnectCbParams &unused)
+Comm::ConnOpener::connect(const CommConnectCbParams &unused)
 {
     start();
 }
 
 void
-ConnOpener::timeout(const CommTimeoutCbParams &unused)
+Comm::ConnOpener::timeout(const CommTimeoutCbParams &unused)
 {
     start();
 }
 
 void
-ConnOpener::ConnectRetry(int fd, void *data)
+Comm::ConnOpener::ConnectRetry(int fd, void *data)
 {
-    ConnOpener *cs = static_cast<ConnOpener *>(data);
+    ConnOpener *cs = static_cast<Comm::ConnOpener *>(data);
     cs->start();
 
-    // see if its done and delete ConnOpener? comm Writes are not yet a Job call.
+    // see if its done and delete Comm::ConnOpener? comm Writes are not yet a Job call.
     // so the automatic cleanup on call completion does not seem to happen
     if (cs->doneAll());
-        cs->deleteThis("Done after ConnOpener::ConnectRetry()");
+        cs->deleteThis("Done after Comm::ConnOpener::ConnectRetry()");
 }
