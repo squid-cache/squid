@@ -82,7 +82,6 @@ FwdState::abort(void* d)
 
     if (fwd->paths.size() > 0 && fwd->paths[0]->isOpen()) {
         comm_remove_close_handler(fwd->paths[0]->fd, fwdServerClosedWrapper, fwd);
-        fwd->paths[0]->close();
     }
     fwd->paths.clean();
     fwd->self = NULL;
