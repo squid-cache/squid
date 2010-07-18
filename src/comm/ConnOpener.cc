@@ -68,6 +68,10 @@ ConnOpener::swanSong()
 
     // recover what we can from the job
     if (solo != NULL && solo->fd > -1) {
+        // it never reached fully open, so abort the FD
+        close(solo->fd);
+        fd_table[solo->fd].flags.open = 0;
+        // inform the caller
         callCallback(COMM_ERR_CONNECT, 0);
     }
 }
@@ -119,6 +123,8 @@ ConnOpener::callCallback(comm_err_t status, int xerrno)
 
     /* ensure cleared local state, we are done. */
     solo = NULL;
+
+    assert(doneAll());
 }
 
 void
@@ -190,9 +196,14 @@ ConnOpener::start()
 
         /* TODO: remove these fd_table accesses. But old code still depends on fd_table flags to
          *       indicate the state of a raw fd object being passed around.
+         *       Also, legacy code still depends on comm_local_port() with no access to Comm::Connection
+         *       when those are done comm_local_port can become one of our member functions to do the below.
          */
         fd_table[solo->fd].flags.open = 1;
         solo->local.SetPort(comm_local_port(solo->fd));
+        if (solo->local.IsAnyAddr()) {
+            solo->local = fd_table[solo->fd].local_addr;
+        }
 
         if (host != NULL)
             ipcacheMarkGoodAddr(host, solo->remote);
@@ -247,4 +258,9 @@ ConnOpener::ConnectRetry(int fd, void *data)
 {
     ConnOpener *cs = static_cast<ConnOpener *>(data);
     cs->start();
+
+    // see if its done and delete ConnOpener? comm Writes are not yet a Job call.
+    // so the automatic cleanup on call completion does not seem to happen
+    if (cs->doneAll());
+        cs->deleteThis("Done after ConnOpener::ConnectRetry()");
 }
