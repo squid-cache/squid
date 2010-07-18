@@ -8,6 +8,8 @@
 #include "comm/comm_err_t.h"
 #include "comm/forward.h"
 
+namespace Comm {
+
 /**
  * Async-opener of a Comm connection.
  */
@@ -88,5 +90,7 @@ private:
 
     CBDATA_CLASS2(ConnOpener);
 };
+
+}; // namespace Comm
 
 #endif /* _SQUID_SRC_COMM_CONNOPENER_H */
