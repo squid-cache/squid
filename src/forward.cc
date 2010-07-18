@@ -363,12 +363,14 @@ fwdServerClosedWrapper(int fd, void *data)
     fwd->serverClosed(fd);
 }
 
+#if 0
 static void
 fwdConnectStartWrapper(void *data)
 {
     FwdState *fwd = (FwdState *) data;
     fwd->connectStart();
 }
+#endif
 
 #if USE_SSL
 static void
