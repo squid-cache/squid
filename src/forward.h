@@ -8,6 +8,7 @@ class HttpRequest;
 
 #include "comm.h"
 #include "comm/Connection.h"
+#include "fde.h"
 #include "ip/Address.h"
 #include "Array.h"
 
@@ -50,7 +51,11 @@ public:
     Comm::ConnectionPointer serverConnection() const { assert(paths.size() > 0); return paths[0]; };
 
     /** test if the current server connection is open */
-    bool isServerConnectionOpen() const { return (paths.size() > 0 && serverConnection()->isOpen()); };
+    bool isServerConnectionOpen() const {
+        if (paths.size() > 0 && serverConnection()->fd >= 0)
+            assert(fd_table[serverConnection()->fd].flags.open == serverConnection()->isOpen());
+        return (paths.size() > 0 && serverConnection()->isOpen());
+    };
 
 private:
     // hidden for safer management of self; use static fwdStart

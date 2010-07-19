@@ -43,6 +43,7 @@
 #include "acl/FilledChecklist.h"
 #include "auth/UserRequest.h"
 #include "base/TextException.h"
+#include "comm/Connection.h"
 #if DELAY_POOLS
 #include "DelayPools.h"
 #endif
@@ -86,7 +87,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"),
     debugs(11,5,HERE << "HttpStateData " << this << " created");
     ignoreCacheControl = false;
     surrogateNoStore = false;
-    fd = fwd->serverConnection()->fd; // TODO: store Comm::Connection instead of FD
+    serverConnection = fwd->serverConnection();
     readBuf = new MemBuf;
     readBuf->init();
     orig_request = HTTPMSGLOCK(fwd->request);
@@ -143,7 +144,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"),
     typedef CommCbMemFunT<HttpStateData, CommCloseCbParams> Dialer;
     closeHandler = asyncCall(9, 5, "httpStateData::httpStateConnClosed",
                              Dialer(this,&HttpStateData::httpStateConnClosed));
-    comm_add_close_handler(fd, closeHandler);
+    comm_add_close_handler(serverConnection->fd, closeHandler);
 }
 
 HttpStateData::~HttpStateData()
@@ -164,14 +165,17 @@ HttpStateData::~HttpStateData()
 
     cbdataReferenceDone(_peer);
 
-    debugs(11,5, HERE << "HttpStateData " << this << " destroyed; FD " << fd);
+    debugs(11,5, HERE << "HttpStateData " << this << " destroyed; FD " << dataDescriptor());
 }
 
 int
 HttpStateData::dataDescriptor() const
 {
-    return fd;
+    if (serverConnection == NULL)
+        return -1;
+    return serverConnection->fd;
 }
+
 /*
 static void
 httpStateFree(int fd, void *data)
@@ -204,13 +208,13 @@ httpCachable(const HttpRequestMethod& method)
 void
 HttpStateData::httpTimeout(const CommTimeoutCbParams &params)
 {
-    debugs(11, 4, "httpTimeout: FD " << fd << ": '" << entry->url() << "'" );
+    debugs(11, 4, "httpTimeout: FD " << serverConnection->fd << ": '" << entry->url() << "'" );
 
     if (entry->store_status == STORE_PENDING) {
         fwd->fail(errorCon(ERR_READ_TIMEOUT, HTTP_GATEWAY_TIMEOUT, fwd->request));
     }
 
-    comm_close(fd);
+    serverConnection->close();
 }
 
 static void
@@ -955,7 +959,7 @@ HttpStateData::statusIfComplete() const
 HttpStateData::ConnectionStatus
 HttpStateData::persistentConnStatus() const
 {
-    debugs(11, 3, "persistentConnStatus: FD " << fd << " eof=" << eof);
+    debugs(11, 3, "persistentConnStatus: FD " << serverConnection->fd << " eof=" << eof);
     const HttpReply *vrep = virginReply();
     debugs(11, 5, "persistentConnStatus: content_length=" << vrep->content_length);
 
@@ -1013,7 +1017,7 @@ void
 HttpStateData::ReadReplyWrapper(int fd, char *buf, size_t len, comm_err_t flag, int xerrno, void *data)
 {
     HttpStateData *httpState = static_cast<HttpStateData *>(data);
-    assert (fd == httpState->fd);
+    assert (fd == httpState->serverConnection->fd);
     // assert(buf == readBuf->content());
     PROF_start(HttpStateData_readReply);
     httpState->readReply(len, flag, xerrno);
@@ -1029,11 +1033,11 @@ HttpStateData::readReply(const CommIoCbParams &io)
     int clen;
     int len = io.size;
 
-    assert(fd == io.fd);
+    assert(serverConnection->fd == io.fd);
 
     flags.do_next_read = 0;
 
-    debugs(11, 5, "httpReadReply: FD " << fd << ": len " << len << ".");
+    debugs(11, 5, "httpReadReply: FD " << io.fd << ": len " << len << ".");
 
     // Bail out early on COMM_ERR_CLOSING - close handlers will tidy up for us
     if (io.flag == COMM_ERR_CLOSING) {
@@ -1048,7 +1052,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
 
     // handle I/O errors
     if (io.flag != COMM_OK || len < 0) {
-        debugs(11, 2, "httpReadReply: FD " << fd << ": read failure: " << xstrerror() << ".");
+        debugs(11, 2, "httpReadReply: FD " << io.fd << ": read failure: " << xstrerror() << ".");
 
         if (ignoreErrno(io.xerrno)) {
             flags.do_next_read = 1;
@@ -1058,9 +1062,8 @@ HttpStateData::readReply(const CommIoCbParams &io)
             err->xerrno = io.xerrno;
             fwd->fail(err);
             flags.do_next_read = 0;
-            comm_close(fd);
+            serverConnection->close();
         }
-
         return;
     }
 
@@ -1096,7 +1099,7 @@ HttpStateData::readReply(const CommIoCbParams &io)
      * not allowing connection reuse in the first place.
      */
 #if DONT_DO_THIS
-    if (!flags.headers_parsed && len > 0 && fd_table[fd].uses > 1) {
+    if (!flags.headers_parsed && len > 0 && fd_table[serverConnection->fd].uses > 1) {
         /* Skip whitespace between replies */
 
         while (len > 0 && xisspace(*buf))
@@ -1205,7 +1208,7 @@ HttpStateData::continueAfterParsingHeader()
     entry->reset();
     fwd->fail(errorCon(error, HTTP_BAD_GATEWAY, fwd->request));
     flags.do_next_read = 0;
-    comm_close(fd);
+    serverConnection->close();
     return false; // quit on error
 }
 
@@ -1328,10 +1331,10 @@ HttpStateData::processReplyBody()
             /* Wait for more data or EOF condition */
             if (flags.keepalive_broken) {
                 call = NULL;
-                commSetTimeout(fd, 10, call);
+                commSetTimeout(serverConnection->fd, 10, call);
             } else {
                 call = NULL;
-                commSetTimeout(fd, Config.Timeout.read, call);
+                commSetTimeout(serverConnection->fd, Config.Timeout.read, call);
             }
 
             flags.do_next_read = 1;
@@ -1341,12 +1344,12 @@ HttpStateData::processReplyBody()
             debugs(11, 5, "processReplyBody: COMPLETE_PERSISTENT_MSG");
             /* yes we have to clear all these! */
             call = NULL;
-            commSetTimeout(fd, -1, call);
+            commSetTimeout(serverConnection->fd, -1, call);
             flags.do_next_read = 0;
 
-            comm_remove_close_handler(fd, closeHandler);
+            comm_remove_close_handler(serverConnection->fd, closeHandler);
             closeHandler = NULL;
-            fwd->unregister(fd);
+            fwd->unregister(serverConnection);
 
             if (orig_request->flags.spoof_client_ip)
                 client_addr = orig_request->client_addr;
@@ -1359,13 +1362,13 @@ HttpStateData::processReplyBody()
             }
 
             if (orig_request->pinnedConnection() && ispinned) {
-                orig_request->pinnedConnection()->pinConnection(fd, orig_request, _peer,
+                orig_request->pinnedConnection()->pinConnection(serverConnection->fd, orig_request, _peer,
                         (request->flags.connection_auth != 0));
             } else {
-                fwd->pconnPush(fwd->serverConnection(), _peer, request, orig_request->GetHost(), client_addr);
+                fwd->pconnPush(serverConnection, _peer, request, orig_request->GetHost(), client_addr);
             }
 
-            fd = -1;
+            serverConnection = NULL;
 
             serverComplete();
             return;
@@ -1387,7 +1390,7 @@ HttpStateData::maybeReadVirginBody()
     const int read_size = replyBodySpace(*readBuf, minRead);
 
     debugs(11,9, HERE << (flags.do_next_read ? "may" : "wont") <<
-           " read up to " << read_size << " bytes from FD " << fd);
+           " read up to " << read_size << " bytes from FD " << serverConnection->fd);
 
     /*
      * why <2? Because delayAwareRead() won't actually read if
@@ -1403,7 +1406,7 @@ HttpStateData::maybeReadVirginBody()
     if (flags.do_next_read) {
         flags.do_next_read = 0;
         typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
-        entry->delayAwareRead(fd, readBuf->space(read_size), read_size,
+        entry->delayAwareRead(serverConnection->fd, readBuf->space(read_size), read_size,
                               asyncCall(11, 5, "HttpStateData::readReply",
                                         Dialer(this, &HttpStateData::readReply)));
     }
@@ -1415,14 +1418,15 @@ HttpStateData::maybeReadVirginBody()
 void
 HttpStateData::sendComplete(const CommIoCbParams &io)
 {
-    debugs(11, 5, "httpSendComplete: FD " << fd << ": size " << io.size << ": errflag " << io.flag << ".");
+    assert(serverConnection->fd == io.fd);
+    debugs(11, 5, "httpSendComplete: FD " << serverConnection->fd << ": size " << io.size << ": errflag " << io.flag << ".");
 #if URL_CHECKSUM_DEBUG
 
     entry->mem_obj->checkUrlChecksum();
 #endif
 
     if (io.size > 0) {
-        fd_bytes(fd, io.size, FD_WRITE);
+        fd_bytes(serverConnection->fd, io.size, FD_WRITE);
         kb_incr(&statCounter.server.all.kbytes_out, io.size);
         kb_incr(&statCounter.server.http.kbytes_out, io.size);
     }
@@ -1435,7 +1439,7 @@ HttpStateData::sendComplete(const CommIoCbParams &io)
         err = errorCon(ERR_WRITE_ERROR, HTTP_BAD_GATEWAY, fwd->request);
         err->xerrno = io.xerrno;
         fwd->fail(err);
-        comm_close(fd);
+        serverConnection->close();
         return;
     }
 
@@ -1451,7 +1455,7 @@ HttpStateData::sendComplete(const CommIoCbParams &io)
     AsyncCall::Pointer timeoutCall =  asyncCall(11, 5, "HttpStateData::httpTimeout",
                                       TimeoutDialer(this,&HttpStateData::httpTimeout));
 
-    commSetTimeout(fd, Config.Timeout.read, timeoutCall);
+    commSetTimeout(serverConnection->fd, Config.Timeout.read, timeoutCall);
 
     flags.request_sent = 1;
 
@@ -1462,23 +1466,21 @@ HttpStateData::sendComplete(const CommIoCbParams &io)
 void
 HttpStateData::closeServer()
 {
-    debugs(11,5, HERE << "closing HTTP server FD " << fd << " this " << this);
+    debugs(11,5, HERE << "closing HTTP server FD " << serverConnection->fd << " this " << this);
 
-    if (fd >= 0) {
-        fwd->unregister(fd);
-        comm_remove_close_handler(fd, closeHandler);
+    if (serverConnection->isOpen()) {
+        fwd->unregister(serverConnection);
+        comm_remove_close_handler(serverConnection->fd, closeHandler);
         closeHandler = NULL;
-        comm_close(fd);
-        fd = -1;
+        serverConnection->close();
     }
 }
 
 bool
 HttpStateData::doneWithServer() const
 {
-    return fd < 0;
+    return serverConnection == NULL || !serverConnection->isOpen();
 }
-
 
 /*
  * Fixup authentication request headers for special cases
@@ -1984,10 +1986,10 @@ HttpStateData::sendRequest()
 {
     MemBuf mb;
 
-    debugs(11, 5, "httpSendRequest: FD " << fd << ", request " << request << ", this " << this << ".");
+    debugs(11, 5, "httpSendRequest: FD " << serverConnection->fd << ", request " << request << ", this " << this << ".");
 
-    if (!canSend(fd)) {
-        debugs(11,3, HERE << "cannot send request to closing FD " << fd);
+    if (!canSend(serverConnection->fd)) {
+        debugs(11,3, HERE << "cannot send request to closing FD " << serverConnection->fd);
         assert(closeHandler != NULL);
         return false;
     }
@@ -1995,7 +1997,7 @@ HttpStateData::sendRequest()
     typedef CommCbMemFunT<HttpStateData, CommTimeoutCbParams> TimeoutDialer;
     AsyncCall::Pointer timeoutCall =  asyncCall(11, 5, "HttpStateData::httpTimeout",
                                       TimeoutDialer(this,&HttpStateData::httpTimeout));
-    commSetTimeout(fd, Config.Timeout.lifetime, timeoutCall);
+    commSetTimeout(serverConnection->fd, Config.Timeout.lifetime, timeoutCall);
     flags.do_next_read = 1;
     maybeReadVirginBody();
 
@@ -2051,8 +2053,8 @@ HttpStateData::sendRequest()
     mb.init();
     request->peer_host=_peer?_peer->host:NULL;
     buildRequestPrefix(request, orig_request, entry, &mb, flags);
-    debugs(11, 6, "httpSendRequest: FD " << fd << ":\n" << mb.buf);
-    comm_write_mbuf(fd, &mb, requestSender);
+    debugs(11, 6, "httpSendRequest: FD " << serverConnection->fd << ":\n" << mb.buf);
+    comm_write_mbuf(serverConnection->fd, &mb, requestSender);
 
     return true;
 }
@@ -2082,7 +2084,7 @@ httpStart(FwdState *fwd)
 void
 HttpStateData::doneSendingRequestBody()
 {
-    debugs(11,5, HERE << "doneSendingRequestBody: FD " << fd);
+    debugs(11,5, HERE << "doneSendingRequestBody: FD " << serverConnection->fd);
 
 #if HTTP_VIOLATIONS
     if (Config.accessList.brokenPosts) {
@@ -2090,14 +2092,14 @@ HttpStateData::doneSendingRequestBody()
         if (!ch.fastCheck()) {
             debugs(11, 5, "doneSendingRequestBody: didn't match brokenPosts");
             CommIoCbParams io(NULL);
-            io.fd=fd;
-            io.flag=COMM_OK;
+            io.fd = serverConnection->fd;
+            io.flag = COMM_OK;
             sendComplete(io);
         } else {
             debugs(11, 2, "doneSendingRequestBody: matched brokenPosts");
 
-            if (!canSend(fd)) {
-                debugs(11,2, HERE << "cannot send CRLF to closing FD " << fd);
+            if (!canSend(serverConnection->fd)) {
+                debugs(11,2, HERE << "cannot send CRLF to closing FD " << serverConnection->fd);
                 assert(closeHandler != NULL);
                 return;
             }
@@ -2105,7 +2107,7 @@ HttpStateData::doneSendingRequestBody()
             typedef CommCbMemFunT<HttpStateData, CommIoCbParams> Dialer;
             Dialer dialer(this, &HttpStateData::sendComplete);
             AsyncCall::Pointer call= asyncCall(11,5, "HttpStateData::SendComplete", dialer);
-            comm_write(fd, "\r\n", 2, call);
+            comm_write(serverConnection->fd, "\r\n", 2, call);
         }
         return;
     }
@@ -2113,8 +2115,8 @@ HttpStateData::doneSendingRequestBody()
 #endif /* HTTP_VIOLATIONS */
 
     CommIoCbParams io(NULL);
-    io.fd=fd;
-    io.flag=COMM_OK;
+    io.fd = serverConnection->fd;
+    io.flag = COMM_OK;
     sendComplete(io);
 }
 
@@ -2122,7 +2124,7 @@ HttpStateData::doneSendingRequestBody()
 void
 HttpStateData::handleMoreRequestBodyAvailable()
 {
-    if (eof || fd < 0) {
+    if (eof || !serverConnection->isOpen()) {
         // XXX: we should check this condition in other callbacks then!
         // TODO: Check whether this can actually happen: We should unsubscribe
         // as a body consumer when the above condition(s) are detected.
@@ -2140,7 +2142,7 @@ HttpStateData::handleMoreRequestBodyAvailable()
             debugs(11, 1, "http handleMoreRequestBodyAvailable: Likely proxy abuse detected '" << orig_request->client_addr << "' -> '" << entry->url() << "'" );
 
             if (virginReply()->sline.status == HTTP_INVALID_HEADER) {
-                comm_close(fd);
+                serverConnection->close();
                 return;
             }
         }
@@ -2156,8 +2158,8 @@ HttpStateData::handleRequestBodyProducerAborted()
     ServerStateData::handleRequestBodyProducerAborted();
     // XXX: SendComplete(COMM_ERR_CLOSING) does little. Is it enough?
     CommIoCbParams io(NULL);
-    io.fd=fd;
-    io.flag=COMM_ERR_CLOSING;
+    io.fd = serverConnection->fd;
+    io.flag = COMM_ERR_CLOSING;
     sendComplete(io);
 }
 
@@ -2178,10 +2180,10 @@ void
 HttpStateData::abortTransaction(const char *reason)
 {
     debugs(11,5, HERE << "aborting transaction for " << reason <<
-           "; FD " << fd << ", this " << this);
+           "; FD " << serverConnection->fd << ", this " << this);
 
-    if (fd >= 0) {
-        comm_close(fd);
+    if (serverConnection->isOpen()) {
+        serverConnection->close();
         return;
     }
 
