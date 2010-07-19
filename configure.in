@@ -110,10 +110,7 @@ else
 fi
 
 LT_INIT([dlopen])
-if test $use_loadable_modules = yes;
-then
-    LTDL_INIT
-fi
+LTDL_INIT([recursive])
 
 dnl LibTool environment is now prepared for setup. Check that it is usable and initialize.
 LT_LIB_DLLOAD
