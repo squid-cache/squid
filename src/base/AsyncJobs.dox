@@ -44,8 +44,9 @@ you call AsyncStart with a job pointer.
 
 \section Rules Basic rules
 
-- To start a job, use AsyncStart. Do not call start() directly. There
-are examples in the code.
+- To start a job, use AsyncStart. Do not start the same job more than once.
+
+- Never call start() directly. Treat this method as main() in C/C++.
 
 - Never call swanSong() directly. If you are outside an AsyncCall
 handler, and want to kill the job, then call deleteThis(). If you are
