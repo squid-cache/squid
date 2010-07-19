@@ -131,11 +131,10 @@ IdentLookup::checkForAsync(ACLChecklist *cl)const
         debugs(28, 3, HERE << "Doing ident lookup" );
         checklist->asyncInProgress(true);
         // TODO: store a Comm::Connection in either checklist or ConnStateData one day.
-        Comm::Connection cc; // IDENT will clone it's own copy for alterations.
-        cc.local = checklist->conn()->me;
-        cc.remote = checklist->conn()->peer;
-        Comm::ConnectionPointer ccp = &cc;
-        Ident::Start(ccp, LookupDone, checklist);
+        Comm::ConnectionPointer cc = new Comm::Connection;
+        cc->local = checklist->conn()->me;
+        cc->remote = checklist->conn()->peer;
+        Ident::Start(cc, LookupDone, checklist);
     } else {
         debugs(28, DBG_IMPORTANT, "IdentLookup::checkForAsync: Can't start ident lookup. No client connection" );
         checklist->currentAnswer(ACCESS_DENIED);

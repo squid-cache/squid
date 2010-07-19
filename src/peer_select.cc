@@ -250,9 +250,10 @@ peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, v
         assert(ia->cur < ia->count);
 
         // loop over each result address, adding to the possible destinations.
-        Comm::ConnectionPointer p;
         int ip = ia->cur;
         for (int n = 0; n < ia->count; n++, ip++) {
+            Comm::ConnectionPointer p;
+
             if (ip >= ia->count) ip = 0; // looped back to zero.
 
             // Enforce forward_max_tries configuration.
@@ -273,7 +274,7 @@ peerSelectDnsResults(const ipcache_addrs *ia, const DnsLookupDetails &details, v
                 p->remote.SetPort(fs->_peer->http_port);
             else
                 p->remote.SetPort(psstate->request->port);
-            p->peer_type = fs->code;
+            p->peerType = fs->code;
 
             // check for a configured outgoing address for this destination...
             getOutgoingAddress(psstate->request, p);

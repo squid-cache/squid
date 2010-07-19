@@ -21,6 +21,7 @@ public:
     static void fwdStart(int fd, StoreEntry *, HttpRequest *);
     void startComplete();
     void fail(ErrorState *err);
+    void unregister(Comm::ConnectionPointer conn);
     void unregister(int fd);
     void complete();
     void handleUnregisteredServerEnd();
@@ -45,7 +46,11 @@ public:
 
     void ftpPasvFailed(bool val) { flags.ftp_pasv_failed = val; }
 
-    Comm::ConnectionPointer conn() const { return paths[0]; };
+    /** return a ConnectionPointer to the current server connection (may or may not be open) */
+    Comm::ConnectionPointer serverConnection() const { assert(paths.size() > 0); return paths[0]; };
+
+    /** test if the current server connection is open */
+    bool isServerConnectionOpen() const { return (paths.size() > 0 && serverConnection()->isOpen()); };
 
 private:
     // hidden for safer management of self; use static fwdStart
@@ -88,7 +93,7 @@ private:
         unsigned int forward_completed:1;
     } flags;
 
-    /** possible paths which may be tried (in sequence stored) */
+    /** connections to open, in order, until successful */
     Comm::Paths paths;
 
     // NP: keep this last. It plays with private/public

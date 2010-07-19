@@ -77,9 +77,6 @@ public:
     /** standard empty connection creation */
     Connection();
 
-    /** These objects may not be exactly duplicated. Use copyDetails() instead. */
-    Connection(const Connection &c);
-
     /** Clear the connection properties and close any open socket. */
     ~Connection();
 
@@ -88,32 +85,11 @@ public:
      */
     ConnectionPointer & copyDetails() const;
 
-    /** These objects may not be exactly duplicated. Use clone() instead. */
-    Connection & operator =(const Connection &c);
-
     /** Close any open socket. */
     void close();
 
     /** determine whether this object describes an active connection or not. */
     bool isOpen() const { return (fd >= 0); }
-
-    /** Address/Port for the Squid end of a TCP link. */
-    Ip::Address local;
-
-    /** Address for the Remote end of a TCP link. */
-    Ip::Address remote;
-
-    /** Hierarchy code for this connection link */
-    hier_code peer_type;
-
-    /** Socket used by this connection. -1 if no socket has been opened. */
-    int fd;
-
-    /** Quality of Service TOS values currently sent on this connection */
-    int tos;
-
-    /** COMM flags set on this connection */
-    int flags;
 
     /** retrieve the peer pointer for use.
      * The caller is responsible for all CBDATA operations regarding the
@@ -125,6 +101,32 @@ public:
      * Perform appropriate CBDATA operations for locking the peer pointer
      */
     void setPeer(peer * p);
+
+private:
+    /** These objects may not be exactly duplicated. Use copyDetails() instead. */
+    Connection(const Connection &c);
+
+    /** These objects may not be exactly duplicated. Use copyDetails() instead. */
+    Connection & operator =(const Connection &c);
+
+public:
+    /** Address/Port for the Squid end of a TCP link. */
+    Ip::Address local;
+
+    /** Address for the Remote end of a TCP link. */
+    Ip::Address remote;
+
+    /** Hierarchy code for this connection link */
+    hier_code peerType;
+
+    /** Socket used by this connection. -1 if no socket has been opened. */
+    int fd;
+
+    /** Quality of Service TOS values currently sent on this connection */
+    int tos;
+
+    /** COMM flags set on this connection */
+    int flags;
 
 private:
     /** cache_peer data object (if any) */

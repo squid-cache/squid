@@ -180,6 +180,7 @@ void Adaptation::Icap::Xaction::closeConnection()
             debugs(93,3, HERE << "closing pconn" << status());
             // comm_close will clear timeout
             connection->close();
+            connection = NULL;
         }
 
         writer = NULL;
