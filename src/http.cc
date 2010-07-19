@@ -86,7 +86,7 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"),
     debugs(11,5,HERE << "HttpStateData " << this << " created");
     ignoreCacheControl = false;
     surrogateNoStore = false;
-    fd = fwd->conn()->fd; // TODO: store Comm::Connection instead of FD
+    fd = fwd->serverConnection()->fd; // TODO: store Comm::Connection instead of FD
     readBuf = new MemBuf;
     readBuf->init();
     orig_request = HTTPMSGLOCK(fwd->request);
@@ -95,8 +95,8 @@ HttpStateData::HttpStateData(FwdState *theFwdState) : AsyncJob("HttpStateData"),
     orig_request->hier.peer_http_request_sent.tv_sec = 0;
     orig_request->hier.peer_http_request_sent.tv_usec = 0;
 
-    if (fwd->conn() != NULL)
-        _peer = cbdataReference(fwd->conn()->getPeer());         /* might be NULL */
+    if (fwd->serverConnection() != NULL)
+        _peer = cbdataReference(fwd->serverConnection()->getPeer());         /* might be NULL */
 
     if (_peer) {
         const char *url;
@@ -161,6 +161,8 @@ HttpStateData::~HttpStateData()
         delete httpChunkDecoder;
 
     HTTPMSGUNLOCK(orig_request);
+
+    cbdataReferenceDone(_peer);
 
     debugs(11,5, HERE << "HttpStateData " << this << " destroyed; FD " << fd);
 }
@@ -1360,7 +1362,7 @@ HttpStateData::processReplyBody()
                 orig_request->pinnedConnection()->pinConnection(fd, orig_request, _peer,
                         (request->flags.connection_auth != 0));
             } else {
-                fwd->pconnPush(fwd->conn(), _peer, request, orig_request->GetHost(), client_addr);
+                fwd->pconnPush(fwd->serverConnection(), _peer, request, orig_request->GetHost(), client_addr);
             }
 
             fd = -1;

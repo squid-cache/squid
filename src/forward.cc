@@ -80,8 +80,8 @@ FwdState::abort(void* d)
     FwdState* fwd = (FwdState*)d;
     Pointer tmp = fwd; // Grab a temporary pointer to keep the object alive during our scope.
 
-    if (fwd->paths.size() > 0 && fwd->paths[0]->isOpen()) {
-        comm_remove_close_handler(fwd->paths[0]->fd, fwdServerClosedWrapper, fwd);
+    if (fwd->isServerConnectionOpen()) {
+        comm_remove_close_handler(fwd->serverConnection()->fd, fwdServerClosedWrapper, fwd);
     }
     fwd->paths.clean();
     fwd->self = NULL;
@@ -170,10 +170,10 @@ FwdState::~FwdState()
 
     entry = NULL;
 
-    if (paths.size() > 0 && paths[0]->isOpen()) {
-        comm_remove_close_handler(paths[0]->fd, fwdServerClosedWrapper, this);
-        debugs(17, 3, HERE << "closing FD " << paths[0]->fd);
-        paths[0]->close();
+    if (isServerConnectionOpen()) {
+        comm_remove_close_handler(serverConnection()->fd, fwdServerClosedWrapper, this);
+        debugs(17, 3, HERE << "closing FD " << serverConnection()->fd);
+        serverConnection()->close();
     }
 
     paths.clean();
@@ -295,12 +295,23 @@ FwdState::fail(ErrorState * errorState)
  * Frees fwdState without closing FD or generating an abort
  */
 void
+FwdState::unregister(Comm::ConnectionPointer conn)
+{
+    debugs(17, 3, HERE << entry->url() );
+    assert(serverConnection() == conn);
+    assert(conn->isOpen());
+    comm_remove_close_handler(conn->fd, fwdServerClosedWrapper, this);
+}
+
+// Legacy method to be removed in favor of the above as soon as possible
+void
 FwdState::unregister(int fd)
 {
-    debugs(17, 3, HERE << entry->url()  );
-    assert(fd == paths[0]->fd);
+    debugs(17, 3, HERE << entry->url() );
+    assert(fd == serverConnection()->fd);
     assert(fd > -1);
     comm_remove_close_handler(fd, fwdServerClosedWrapper, this);
+    serverConnection()->fd = -1;
 }
 
 /**
@@ -324,8 +335,8 @@ FwdState::complete()
     if (reforward()) {
         debugs(17, 3, HERE << "re-forwarding " << entry->getReply()->sline.status << " " << entry->url());
 
-        if (paths[0]->fd > -1)
-            unregister(paths[0]->fd);
+        if (isServerConnectionOpen())
+            unregister(serverConnection());
 
         entry->reset();
 
@@ -334,11 +345,11 @@ FwdState::complete()
          */
         connectStart();
     } else {
-        debugs(17, 3, HERE << "server FD " << paths[0]->fd << " not re-forwarding status " << entry->getReply()->sline.status);
+        debugs(17, 3, HERE << "server FD " << serverConnection()->fd << " not re-forwarding status " << entry->getReply()->sline.status);
         EBIT_CLR(entry->flags, ENTRY_FWD_HDR_WAIT);
         entry->complete();
 
-        if (paths[0]->fd < 0)
+        if (!isServerConnectionOpen())
             completed();
 
         self = NULL; // refcounted
@@ -476,10 +487,10 @@ void
 FwdState::serverClosed(int fd)
 {
     debugs(17, 2, HERE << "FD " << fd << " " << entry->url());
-    assert(paths[0]->fd == fd);
+    assert(serverConnection()->fd == fd);
 
-    if (paths[0]->getPeer()) {
-        paths[0]->getPeer()->stats.conn_open--;
+    if (serverConnection()->getPeer()) {
+        serverConnection()->getPeer()->stats.conn_open--;
     }
 
     retryOrBail();
@@ -525,7 +536,7 @@ void
 FwdState::handleUnregisteredServerEnd()
 {
     debugs(17, 2, HERE << "self=" << self << " err=" << err << ' ' << entry->url());
-    assert(paths[0]->fd < 0);
+    assert(!isServerConnectionOpen());
     retryOrBail();
 }
 
@@ -564,21 +575,21 @@ FwdState::negotiateSSL(int fd)
 
             fail(anErr);
 
-            if (paths[0]->getPeer()) {
-                peerConnectFailed(paths[0]->getPeer());
-                paths[0]->getPeer()->stats.conn_open--;
+            if (serverConnection()->getPeer()) {
+                peerConnectFailed(serverConnection()->getPeer());
+                serverConnection()->getPeer()->stats.conn_open--;
             }
 
-            paths[0]->close();
+            serverConnection()->close();
             return;
         }
     }
 
-    if (paths[0]->getPeer() && !SSL_session_reused(ssl)) {
-        if (paths[0]->getPeer()->sslSession)
-            SSL_SESSION_free(paths[0]->getPeer()->sslSession);
+    if (serverConnection()->getPeer() && !SSL_session_reused(ssl)) {
+        if (serverConnection()->getPeer()->sslSession)
+            SSL_SESSION_free(serverConnection()->getPeer()->sslSession);
 
-        paths[0]->getPeer()->sslSession = SSL_get1_session(ssl);
+        serverConnection()->getPeer()->sslSession = SSL_get1_session(ssl);
     }
 
     dispatch();
@@ -589,8 +600,8 @@ FwdState::initiateSSL()
 {
     SSL *ssl;
     SSL_CTX *sslContext = NULL;
-    const peer *peer = paths[0]->getPeer();
-    int fd = paths[0]->fd;
+    const peer *peer = serverConnection()->getPeer();
+    int fd = serverConnection()->fd;
 
     if (peer) {
         assert(peer->use_ssl);
@@ -659,32 +670,32 @@ FwdState::connectDone(Comm::ConnectionPointer &conn, comm_err_t status, int xerr
 
         /* it might have been a timeout with a partially open link */
         if (paths.size() > 0) {
-            if (paths[0]->getPeer())
-                peerConnectFailed(paths[0]->getPeer());
+            if (serverConnection()->getPeer())
+                peerConnectFailed(serverConnection()->getPeer());
 
-            paths[0]->close();
+            serverConnection()->close();
         }
         retryOrBail();
         return;
     }
 
 #if REDUNDANT_NOW
-    if (Config.onoff.log_ip_on_direct && paths[0]->peer_type == HIER_DIRECT)
+    if (Config.onoff.log_ip_on_direct && serverConnection()->peerType == HIER_DIRECT)
         updateHierarchyInfo();
 #endif
 
-    debugs(17, 3, "FD " << paths[0]->fd << ": '" << entry->url() << "'" );
+    debugs(17, 3, "FD " << serverConnection()->fd << ": '" << entry->url() << "'" );
 
-    comm_add_close_handler(paths[0]->fd, fwdServerClosedWrapper, this);
+    comm_add_close_handler(serverConnection()->fd, fwdServerClosedWrapper, this);
 
-    if (paths[0]->getPeer())
-        peerConnectSucceded(paths[0]->getPeer());
+    if (serverConnection()->getPeer())
+        peerConnectSucceded(serverConnection()->getPeer());
 
     updateHierarchyInfo();
 
 #if USE_SSL
-    if ((paths[0]->getPeer() && paths[0]->getPeer()->use_ssl) ||
-            (!paths[0]->getPeer() && request->protocol == PROTO_HTTPS)) {
+    if ((serverConnection()->getPeer() && serverConnection()->getPeer()->use_ssl) ||
+            (!serverConnection()->getPeer() && request->protocol == PROTO_HTTPS)) {
         initiateSSL();
         return;
     }
@@ -697,9 +708,9 @@ void
 FwdState::connectTimeout(int fd)
 {
     debugs(17, 2, "fwdConnectTimeout: FD " << fd << ": '" << entry->url() << "'" );
-    assert(fd == paths[0]->fd);
+    assert(fd == serverConnection()->fd);
 
-    if (Config.onoff.log_ip_on_direct && paths[0]->peer_type == HIER_DIRECT)
+    if (Config.onoff.log_ip_on_direct && serverConnection()->peerType == HIER_DIRECT)
         updateHierarchyInfo();
 
     if (entry->isEmpty()) {
@@ -709,11 +720,11 @@ FwdState::connectTimeout(int fd)
 
         /* This marks the peer DOWN ... */
         if (paths.size() > 0)
-            if (paths[0]->getPeer())
-                peerConnectFailed(paths[0]->getPeer());
+            if (serverConnection()->getPeer())
+                peerConnectFailed(serverConnection()->getPeer());
     }
 
-    paths[0]->close();
+    serverConnection()->close();
 }
 
 /**
@@ -729,12 +740,11 @@ FwdState::connectStart()
     if (n_tries == 0) // first attempt
         request->hier.first_conn_start = current_time;
 
-    Comm::ConnectionPointer conn = paths[0];
-
     /* connection timeout */
     int ctimeout;
-    if (conn->getPeer()) {
-        ctimeout = conn->getPeer()->connect_timeout > 0 ? conn->getPeer()->connect_timeout : Config.Timeout.peer_connect;
+    if (serverConnection()->getPeer()) {
+        ctimeout = serverConnection()->getPeer()->connect_timeout > 0 ?
+                   serverConnection()->getPeer()->connect_timeout : Config.Timeout.peer_connect;
     } else {
         ctimeout = Config.Timeout.connect;
     }
@@ -748,21 +758,22 @@ FwdState::connectStart()
         ctimeout = ftimeout;
 
     request->flags.pinned = 0;
-    if (conn->peer_type == PINNED) {
+    if (serverConnection()->peerType == PINNED) {
         ConnStateData *pinned_connection = request->pinnedConnection();
         assert(pinned_connection);
-        conn->fd = pinned_connection->validatePinnedConnection(request, conn->getPeer());
-        if (conn->isOpen()) {
+        serverConnection()->fd = pinned_connection->validatePinnedConnection(request, serverConnection()->getPeer());
+        if (isServerConnectionOpen()) {
             pinned_connection->unpinConnection();
 #if 0
-            if (!conn->getPeer())
-                conn->peer_type = HIER_DIRECT;
+            if (!serverConnection()->getPeer())
+                serverConnection()->peerType = HIER_DIRECT;
 #endif
             n_tries++;
             request->flags.pinned = 1;
             if (pinned_connection->pinnedAuth())
                 request->flags.auth = 1;
             updateHierarchyInfo();
+            Comm::ConnectionPointer conn = serverConnection();
             FwdState::connectDone(conn, COMM_OK, 0);
             return;
         }
@@ -770,7 +781,6 @@ FwdState::connectStart()
         debugs(17,2,HERE << " Pinned connection " << pinned_connection << " not valid. Releasing.");
         request->releasePinnedConnection();
         paths.shift();
-        conn = NULL; // maybe release the conn memory. it's not needed by us anyway.
         connectStart();
         return;
     }
@@ -783,27 +793,30 @@ FwdState::connectStart()
 
     const char *host;
     int port;
-    if (conn->getPeer()) {
-        host = conn->getPeer()->host;
-        port = conn->getPeer()->http_port;
-        conn->fd = fwdPconnPool->pop(conn->getPeer()->name, conn->getPeer()->http_port, request->GetHost(), conn->local, checkRetriable());
+    if (serverConnection()->getPeer()) {
+        host = serverConnection()->getPeer()->host;
+        port = serverConnection()->getPeer()->http_port;
+        serverConnection()->fd = fwdPconnPool->pop(serverConnection()->getPeer()->name,
+                                                   serverConnection()->getPeer()->http_port,
+                                                   request->GetHost(), serverConnection()->local,
+                                                   checkRetriable());
     } else {
         host = request->GetHost();
         port = request->port;
-        conn->fd = fwdPconnPool->pop(host, port, NULL, conn->local, checkRetriable());
+        serverConnection()->fd = fwdPconnPool->pop(host, port, NULL, serverConnection()->local, checkRetriable());
     }
-    conn->remote.SetPort(port);
+    serverConnection()->remote.SetPort(port);
 
-    if (conn->isOpen()) {
-        debugs(17, 3, HERE << "reusing pconn FD " << conn->fd);
+    if (isServerConnectionOpen()) {
+        debugs(17, 3, HERE << "reusing pconn FD " << serverConnection()->fd);
         n_tries++;
 
-        if (!conn->getPeer())
+        if (!serverConnection()->getPeer())
             origin_tries++;
 
         updateHierarchyInfo();
 
-        comm_add_close_handler(conn->fd, fwdServerClosedWrapper, this);
+        comm_add_close_handler(serverConnection()->fd, fwdServerClosedWrapper, this);
 
         dispatch();
         return;
@@ -814,7 +827,8 @@ FwdState::connectStart()
 #endif
 
     AsyncCall::Pointer call = commCbCall(17,3, "fwdConnectDoneWrapper", CommConnectCbPtrFun(fwdConnectDoneWrapper, this));
-    Comm::ConnOpener *cs = new Comm::ConnOpener(paths[0], call, ctimeout);
+    Comm::ConnectionPointer conn = serverConnection();
+    Comm::ConnOpener *cs = new Comm::ConnOpener(conn, call, ctimeout);
     cs->setHost(host);
     AsyncJob::AsyncStart(cs);
 }
@@ -828,11 +842,11 @@ FwdState::dispatch()
      * is attached to something and will be deallocated when server_fd
      * is closed.
      */
-    assert(paths.size() > 0 && paths[0]->fd > -1);
+    assert(isServerConnectionOpen());
 
-    fd_note(paths[0]->fd, entry->url());
+    fd_note(serverConnection()->fd, entry->url());
 
-    fd_table[paths[0]->fd].noteUse(fwdPconnPool);
+    fd_table[serverConnection()->fd].noteUse(fwdPconnPool);
 
     /*assert(!EBIT_TEST(entry->flags, ENTRY_DISPATCHED)); */
     assert(entry->ping_status != PING_WAITING);
@@ -855,10 +869,10 @@ FwdState::dispatch()
         int tos = 1;
         int tos_len = sizeof(tos);
         clientFde->upstreamTOS = 0;
-        if (setsockopt(paths[0]->fd,SOL_IP,IP_RECVTOS,&tos,tos_len)==0) {
+        if (setsockopt(serverConnection()->fd, SOL_IP, IP_RECVTOS, &tos, tos_len)==0) {
             unsigned char buf[512];
             int len = 512;
-            if (getsockopt(paths[0]->fd,SOL_IP,IP_PKTOPTIONS,buf,(socklen_t*)&len) == 0) {
+            if (getsockopt(serverConnection()->fd, SOL_IP, IP_PKTOPTIONS, buf, (socklen_t*)&len) == 0) {
                 /* Parse the PKTOPTIONS structure to locate the TOS data message
                  * prepared in the kernel by the ZPH incoming TCP TOS preserving
                  * patch.
@@ -877,18 +891,18 @@ FwdState::dispatch()
                     pbuf += CMSG_LEN(o->cmsg_len);
                 }
             } else {
-                debugs(33, DBG_IMPORTANT, "ZPH: error in getsockopt(IP_PKTOPTIONS) on FD " << paths[0]->fd << " " << xstrerror());
+                debugs(33, DBG_IMPORTANT, "ZPH: error in getsockopt(IP_PKTOPTIONS) on FD " << serverConnection()->fd << " " << xstrerror());
             }
         } else {
-            debugs(33, DBG_IMPORTANT, "ZPH: error in setsockopt(IP_RECVTOS) on FD " << paths[0]->fd << " " << xstrerror());
+            debugs(33, DBG_IMPORTANT, "ZPH: error in setsockopt(IP_RECVTOS) on FD " << serverConnection()->fd << " " << xstrerror());
         }
     }
 #endif
 
-    if (paths.size() > 0 && paths[0]->getPeer() != NULL) {
-        paths[0]->getPeer()->stats.fetches++;
-        request->peer_login = paths[0]->getPeer()->login;
-        request->peer_domain = paths[0]->getPeer()->domain;
+    if (serverConnection()->getPeer() != NULL) {
+        serverConnection()->getPeer()->stats.fetches++;
+        request->peer_login = serverConnection()->getPeer()->login;
+        request->peer_domain = serverConnection()->getPeer()->domain;
         httpStart(this);
     } else {
         request->peer_login = NULL;
@@ -943,7 +957,7 @@ FwdState::dispatch()
              * transient (network) error; its a bug.
              */
             flags.dont_retry = 1;
-            paths[0]->close();
+            serverConnection()->close();
             break;
         }
     }
@@ -1137,23 +1151,23 @@ FwdState::updateHierarchyInfo()
 
     assert(paths.size() > 0);
 
-    char nextHop[256]; // 
+    char nextHop[256];
 
-    if (paths[0]->getPeer()) {
+    if (serverConnection()->getPeer()) {
         // went to peer, log peer host name
-        snprintf(nextHop,256,"%s", paths[0]->getPeer()->name);
+        snprintf(nextHop,256,"%s", serverConnection()->getPeer()->name);
     } else {
         // went DIRECT, must honor log_ip_on_direct
         if (!Config.onoff.log_ip_on_direct)
             snprintf(nextHop,256,"%s",request->GetHost()); // domain name
         else
-            paths[0]->remote.NtoA(nextHop, 256);
+            serverConnection()->remote.NtoA(nextHop, 256);
     }
 
-    request->hier.peer_local_port = paths[0]->local.GetPort();
+    request->hier.peer_local_port = serverConnection()->local.GetPort();
 
     assert(nextHop[0]);
-    hierarchyNote(&request->hier, paths[0]->peer_type, nextHop);
+    hierarchyNote(&request->hier, serverConnection()->peerType, nextHop);
 }
 
 

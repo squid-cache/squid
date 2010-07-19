@@ -480,7 +480,7 @@ FtpStateData::FtpStateData(FwdState *theFwdState) : AsyncJob("FtpStateData"), Se
     typedef CommCbMemFunT<FtpStateData, CommCloseCbParams> Dialer;
     AsyncCall::Pointer closer = asyncCall(9, 5, "FtpStateData::ctrlClosed",
                                           Dialer(this, &FtpStateData::ctrlClosed));
-    ctrl.opened(theFwdState->conn()->fd, closer);
+    ctrl.opened(theFwdState->serverConnection()->fd, closer);
 
     if (request->method == METHOD_PUT)
         flags.put = 1;

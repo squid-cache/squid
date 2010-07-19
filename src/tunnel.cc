@@ -533,11 +533,11 @@ tunnelConnectDone(Comm::ConnectionPointer &conn, comm_err_t status, int xerrno, 
 #endif
 
     if (conn != NULL && conn->getPeer())
-        hierarchyNote(&tunnelState->request->hier, conn->peer_type, conn->getPeer()->host);
+        hierarchyNote(&tunnelState->request->hier, conn->peerType, conn->getPeer()->host);
     else if (Config.onoff.log_ip_on_direct)
-        hierarchyNote(&tunnelState->request->hier, conn->peer_type, fd_table[conn->fd].ipaddr);
+        hierarchyNote(&tunnelState->request->hier, conn->peerType, fd_table[conn->fd].ipaddr);
     else
-        hierarchyNote(&tunnelState->request->hier, conn->peer_type, tunnelState->host);
+        hierarchyNote(&tunnelState->request->hier, conn->peerType, tunnelState->host);
 
     if (status != COMM_OK) {
         /* At this point only the TCP handshake has failed. no data has been passed.

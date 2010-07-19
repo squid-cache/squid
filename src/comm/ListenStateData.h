@@ -13,8 +13,6 @@
 namespace Comm
 {
 
-class Connection;
-
 class ListenStateData
 {
 
