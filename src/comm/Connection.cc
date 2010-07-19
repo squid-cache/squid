@@ -6,7 +6,7 @@
 Comm::Connection::Connection() :
         local(),
         remote(),
-        peer_type(HIER_NONE),
+        peerType(HIER_NONE),
         fd(-1),
         tos(0),
         flags(COMM_NONBLOCKING),
@@ -16,9 +16,7 @@ Comm::Connection::Connection() :
 Comm::Connection::~Connection()
 {
     close();
-    if (_peer) {
-        cbdataReferenceDone(_peer);
-    }
+    cbdataReferenceDone(_peer);
 }
 
 Comm::ConnectionPointer &
@@ -28,7 +26,7 @@ Comm::Connection::copyDetails() const
 
     c->local = local;
     c->remote = remote;
-    c->peer_type = peer_type;
+    c->peerType = peerType;
     c->tos = tos;
     c->flags = flags;
  
@@ -44,9 +42,10 @@ Comm::Connection::copyDetails() const
 void
 Comm::Connection::close()
 {
-    if (isOpen())
+    if (isOpen()) {
         comm_close(fd);
-    fd = -1;
+        fd = -1;
+    }
 }
 
 void
