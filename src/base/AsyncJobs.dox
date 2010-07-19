@@ -84,6 +84,12 @@ one parameter ("data") or two simple parameters.
 cleaning up your job. It does not matter whether the [current] parent
 swanSong() does nothing.
 
+- You must implement start() and doneAll() methods. These methods may be
+marked as pure virtual in future releases.
+
+- In doneAll(), always call doneAll() of the parent. If the parent is not
+done, you are not done. It does not matter whether the [current] parent
+doneAll() always returns true.
 
 - If a job does not have a doneAll() method implemented, it is probably
 buggy. Any job must know what it wants to accomplish. Please note that
