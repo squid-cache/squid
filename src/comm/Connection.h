@@ -37,6 +37,7 @@
 #ifndef _SQUIDCONNECTIONDETAIL_H_
 #define _SQUIDCONNECTIONDETAIL_H_
 
+#include "comm/forward.h"
 #include "hier_code.h"
 #include "ip/Address.h"
 #include "RefCount.h"
