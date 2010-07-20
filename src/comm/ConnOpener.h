@@ -61,6 +61,7 @@ private:
 
     /// handles to calls which we may need to cancel.
     struct Calls {
+        AsyncCall::Pointer connect_;
         AsyncCall::Pointer earlyAbort_;
         AsyncCall::Pointer timeout_;
     } calls_;
