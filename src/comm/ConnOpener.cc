@@ -148,11 +148,17 @@ void Comm::ConnOpener::start()
         }
     }
 
-    tryConnecting();
+    typedef CommCbMemFunT<Comm::ConnOpener, CommConnectCbParams> Dialer;
+    calls_.connect_ = asyncCall(5, 4, "Comm::ConnOpener::connect",
+                                Dialer(this, &Comm::ConnOpener::connect));
+    ScheduleCallHere(calls_.connect_);
 }
 
+/** Make an FD connection attempt.
+ * Handles the case(s) when a partially setup connection gets closed early.
+ */
 void
-Comm::ConnOpener::tryConnecting()
+Comm::ConnOpener::connect(const CommConnectCbParams &unused)
 {
     Must(conn_ != NULL);
 
@@ -215,7 +221,7 @@ Comm::ConnOpener::tryConnecting()
             debugs(5, 5, HERE << "FD " << conn_->fd << ": * - ERR took too long already.");
             doneConnecting(COMM_TIMEOUT, errno);
         } else if (failRetries_ < Config.connect_retries) {
-            tryConnecting();
+            ScheduleCallHere(calls_.connect_);
         } else {
             // send ERROR back to the upper layer.
             debugs(5, 5, HERE << "FD " << conn_->fd << ": * - ERR tried too many times already.");
@@ -234,15 +240,6 @@ Comm::ConnOpener::earlyAbort(const CommConnectCbParams &io)
     doneConnecting(COMM_ERR_CLOSING, io.xerrno); // NP: is closing or shutdown better?
 }
 
-/** Make an FD connection attempt.
- * Handles the case(s) when a partially setup connection gets closed early.
- */
-void
-Comm::ConnOpener::connect(const CommConnectCbParams &unused)
-{
-    tryConnecting();
-}
-
 /**
  * Handles the case(s) when a partially setup connection gets timed out.
  * NP: When commSetTimeout accepts generic CommCommonCbParams this can die.
@@ -250,7 +247,7 @@ Comm::ConnOpener::connect(const CommConnectCbParams &unused)
 void
 Comm::ConnOpener::timeout(const CommTimeoutCbParams &unused)
 {
-    tryConnecting();
+    ScheduleCallHere(calls_.connect_);
 }
 
 /* Legacy Wrapper for the retry event after COMM_INPROGRESS
@@ -260,10 +257,11 @@ void
 Comm::ConnOpener::ConnectRetry(int fd, void *data)
 {
     ConnOpener *cs = static_cast<Comm::ConnOpener *>(data);
-    cs->tryConnecting();
 
-    // see if its done and delete Comm::ConnOpener? comm Writes are not yet a Job call.
-    // so the automatic cleanup on call completion does not seem to happen
-    if (cs->doneAll());
-        cs->deleteThis("Done after Comm::ConnOpener::ConnectRetry()");
+    // Ew. we are now outside the all AsyncJob protections.
+    // get back inside by scheduling another call...
+    typedef CommCbMemFunT<Comm::ConnOpener, CommConnectCbParams> Dialer;
+    AsyncCall::Pointer call = asyncCall(5, 4, "Comm::ConnOpener::connect",
+                                        Dialer(cs, &Comm::ConnOpener::connect));
+    ScheduleCallHere(call);
 }
