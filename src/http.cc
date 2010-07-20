@@ -1418,7 +1418,6 @@ HttpStateData::maybeReadVirginBody()
 void
 HttpStateData::sendComplete(const CommIoCbParams &io)
 {
-    assert(serverConnection->fd == io.fd);
     debugs(11, 5, "httpSendComplete: FD " << serverConnection->fd << ": size " << io.size << ": errflag " << io.flag << ".");
 #if URL_CHECKSUM_DEBUG
 
@@ -1426,7 +1425,7 @@ HttpStateData::sendComplete(const CommIoCbParams &io)
 #endif
 
     if (io.size > 0) {
-        fd_bytes(serverConnection->fd, io.size, FD_WRITE);
+        fd_bytes(io.fd, io.size, FD_WRITE);
         kb_incr(&statCounter.server.all.kbytes_out, io.size);
         kb_incr(&statCounter.server.http.kbytes_out, io.size);
     }
