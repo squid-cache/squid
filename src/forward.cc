@@ -487,12 +487,6 @@ void
 FwdState::serverClosed(int fd)
 {
     debugs(17, 2, HERE << "FD " << fd << " " << entry->url());
-    assert(serverConnection()->fd == fd);
-
-    if (serverConnection()->getPeer()) {
-        serverConnection()->getPeer()->stats.conn_open--;
-    }
-
     retryOrBail();
 }
 
@@ -577,7 +571,6 @@ FwdState::negotiateSSL(int fd)
 
             if (serverConnection()->getPeer()) {
                 peerConnectFailed(serverConnection()->getPeer());
-                serverConnection()->getPeer()->stats.conn_open--;
             }
 
             serverConnection()->close();
@@ -724,7 +717,9 @@ FwdState::connectTimeout(int fd)
                 peerConnectFailed(serverConnection()->getPeer());
     }
 
-    serverConnection()->close();
+    if (isServerConnectionOpen()) {
+        serverConnection()->close();
+    }
 }
 
 /**
@@ -953,11 +948,13 @@ FwdState::dispatch()
              */
             request->flags.proxy_keepalive = 0;
             /*
-             * Set the dont_retry flag becuase this is not a
+             * Set the dont_retry flag because this is not a
              * transient (network) error; its a bug.
              */
             flags.dont_retry = 1;
-            serverConnection()->close();
+            if (isServerConnectionOpen()) {
+                serverConnection()->close();
+            }
             break;
         }
     }
