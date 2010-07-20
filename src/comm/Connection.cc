@@ -45,6 +45,8 @@ Comm::Connection::close()
     if (isOpen()) {
         comm_close(fd);
         fd = -1;
+        if (_peer)
+            _peer->stats.conn_open--;
     }
 }
 
@@ -61,8 +63,8 @@ Comm::Connection::setPeer(peer *p)
         _peer = NULL;
     }
 
-   /* set the new one (unless it is NULL */
-   if (p) {
+    /* set the new one (unless it is NULL */
+    if (p) {
         _peer = cbdataReference(p);
-   }
+    }
 }
